@@ -34,7 +34,7 @@ MODULE MOD_Thermal
                       BA_alpha    ,BA_beta                              ,&
                       lai         ,laisun      ,laisha                  ,&
                       sai         ,htop        ,hbot        ,sqrtdi     ,&
-                      rootfr      ,rstfacsun_out   ,rstfacsha_out       ,&
+                      rootfr      ,rstfacsun_out,rstfacsha_out,rss      ,&
                       gssun_out   ,gssha_out   ,&
                       assimsun_out,etrsun_out  ,assimsha_out,etrsha_out ,&
 !photosynthesis and plant hydraulic variables
@@ -63,6 +63,7 @@ MODULE MOD_Thermal
                       rootr       ,qseva       ,qsdew       ,qsubl      ,&
                       qfros       ,sm          ,tref        ,qref       ,&
                       trad        ,rst         ,assim       ,respc      ,&
+
                       errore      ,emis        ,z0m         ,zol        ,&
                       rib         ,ustar       ,qstar       ,tstar      ,&
                       fm          ,fh          ,fq          ,pg_rain    ,&
@@ -107,6 +108,7 @@ MODULE MOD_Thermal
   USE MOD_LeafTemperaturePC
   USE MOD_GroundTemperature
   USE MOD_Qsadv
+  USE MOD_SoilSurfaceResistance
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
   USE MOD_LandPFT, only: patch_pft_s, patch_pft_e
   USE MOD_Vars_TimeInvariants, only: patchclass
@@ -118,7 +120,7 @@ MODULE MOD_Thermal
   USE MOD_Hydro_SoilFunction, only: soil_psi_from_vliq
 #endif
   USE MOD_SPMD_Task
-  USE MOD_Namelist, only: DEF_USE_PLANTHYDRAULICS, &
+  USE MOD_Namelist, only: DEF_USE_PLANTHYDRAULICS, DEF_RSS_SCHEME, &
                           DEF_USE_LCT,DEF_USE_PFT,DEF_USE_PC
 
   IMPLICIT NONE
@@ -309,11 +311,10 @@ MODULE MOD_Thermal
         tref,        &! 2 m height air temperature [kelvin]
         qref,        &! 2 m height air specific humidity
         trad,        &! radiative temperature [K]
-
+        rss,         &! bare soil resistance for evaporation [s/m]
         rst,         &! stomatal resistance (s m-1)
         assim,       &! assimilation
         respc,       &! respiration
-
         ! additional variables required by coupling with WRF or RSM model
         emis,        &! averaged bulk surface emissivity
         z0m,         &! effective roughness [m]
@@ -434,7 +435,6 @@ MODULE MOD_Thermal
       qref   = 0.;  rst    = 2.0e4
       assim  = 0.;  respc  = 0.
       hprl   = 0.
-
       emis   = 0.;  z0m    = 0.
       zol    = 0.;  rib    = 0.
       ustar  = 0.;  qstar  = 0.
@@ -462,9 +462,10 @@ MODULE MOD_Thermal
 
 !=======================================================================
 ! [2] specific humidity and its derivative at ground surface
+!     calculate soil surface resistance
 !=======================================================================
-
       qred = 1.
+
       CALL qsadv(t_grnd,forc_psrf,eg,degdT,qsatg,qsatgdT)
 
       IF (patchtype<=1) THEN            !soil ground
@@ -496,6 +497,25 @@ MODULE MOD_Thermal
         qg = forc_q; dqgdT = 0.
       ENDIF
 
+      ! calculate soil surface resistance (rss)
+      ! ------------------------------------------------
+      !NOTE: (1) DEF_RSS_SCHEME=0 means no rss considered
+      !      (2) Do NOT calculate rss for the first timestep
+      IF (DEF_RSS_SCHEME>0 .and. rss/=spval) THEN
+
+         !NOTE: If the beta scheme is used, the rss is not soil resistance,
+         !but soil beta factor (soil wetness relative to field capacity [0-1]).
+         CALL SoilSurfaceResistance (nl_soil,forc_rhoair,hksati,porsl,psi0, &
+#ifdef Campbell_SOIL_MODEL
+                            bsw, &
+#endif
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
+                            theta_r, alpha_vgm, n_vgm, L_vgm, sc_vgm, fc_vgm, &
+#endif
+                            dz_soisno,t_soisno,wliq_soisno,wice_soisno,fsno,qg,rss)
+      ELSE
+         rss = 0.
+      ENDIF
 
 !=======================================================================
 ! [3] Compute sensible and latent fluxes and their derivatives with respect
@@ -506,7 +526,7 @@ MODULE MOD_Thermal
       ! Always CALL GroundFluxes for bare ground CASE
       CALL GroundFluxes (zlnd,zsno,forc_hgt_u,forc_hgt_t,forc_hgt_q,forc_hpbl, &
                          forc_us,forc_vs,forc_t,forc_q,forc_rhoair,forc_psrf, &
-                         ur,thm,th,thv,t_grnd,qg,dqgdT,htvp, &
+                         ur,thm,th,thv,t_grnd,qg,rss,dqgdT,htvp, &
                          fsno,cgrnd,cgrndl,cgrnds, &
                          taux,tauy,fseng,fevpg,tref,qref, &
                          z0m_g,z0h_g,zol_g,rib_g,ustar_g,qstar_g,tstar_g,fm_g,fh_g,fq_g)
@@ -555,7 +575,7 @@ IF ( patchtype==0.and.DEF_USE_LCT .or. patchtype>0 ) THEN
                  thermk     ,rstfacsun_out         ,rstfacsha_out          ,&
                  gssun_out  ,gssha_out  ,forc_po2m ,forc_pco2m ,z0h_g      ,&
                  obu_g      ,ustar_g    ,zlnd      ,zsno       ,fsno       ,&
-                 sigf       ,etrc       ,t_grnd    ,qg         ,dqgdT      ,&
+                 sigf       ,etrc       ,t_grnd    ,qg,rss     ,dqgdT      ,&
                  emg        ,tleaf      ,ldew      ,ldew_rain  ,ldew_snow  ,&
                  taux       ,tauy       ,&
                  fseng      ,fevpg      ,cgrnd     ,cgrndl     ,cgrnds     ,&
@@ -685,7 +705,7 @@ IF (DEF_USE_PFT .or. patchclass(ipatch)==CROPLAND) THEN
                  thermk_p(i),rstfacsun_p(i)         ,rstfacsha_p(i)         ,&
                  gssun_p(i) ,gssha_p(i) ,forc_po2m  ,forc_pco2m ,z0h_g      ,&
                  obu_g      ,ustar_g    ,zlnd       ,zsno       ,fsno       ,&
-                 sigf_p(i)  ,etrc_p(i)  ,t_grnd     ,qg         ,dqgdT      ,&
+                 sigf_p(i)  ,etrc_p(i)  ,t_grnd     ,qg,rss     ,dqgdT      ,&
                  emg        ,tleaf_p(i) ,ldew_p(i)  ,ldew_rain_p(i),ldew_snow_p(i),&
                  taux_p(i)  ,tauy_p(i)  ,&
                  fseng_p(i) ,fevpg_p(i) ,cgrnd_p(i) ,cgrndl_p(i),cgrnds_p(i),&
@@ -709,7 +729,7 @@ IF (DEF_USE_PFT .or. patchclass(ipatch)==CROPLAND) THEN
 
             CALL GroundFluxes (zlnd,zsno,forc_hgt_u,forc_hgt_t,forc_hgt_q,forc_hpbl, &
                                forc_us,forc_vs,forc_t,forc_q,forc_rhoair,forc_psrf, &
-                               ur,thm,th,thv,t_grnd,qg,dqgdT,htvp, &
+                               ur,thm,th,thv,t_grnd,qg,rss,dqgdT,htvp, &
                                fsno,cgrnd_p(i),cgrndl_p(i),cgrnds_p(i), &
                                taux_p(i),tauy_p(i),fseng_p(i),fevpg_p(i),tref_p(i),qref_p(i), &
                                z0m_p(i),z0h_g,zol_p(i),rib_p(i),ustar_p(i),&
@@ -770,7 +790,7 @@ IF (DEF_USE_PC .and. patchclass(ipatch)/=CROPLAND) THEN
             rstfacsun_p(:)  ,rstfacsha_p(:)    ,&
             gssun_p(:)      ,gssha_p(:)        ,forc_po2m     ,forc_pco2m         ,z0h_g       ,obu_g ,&
             ustar_g         ,zlnd              ,zsno          ,fsno               ,sigf_p(ps:pe)      ,&
-            etrc_p(:)       ,t_grnd            ,qg            ,dqgdT              ,emg                ,&
+            etrc_p(:)       ,t_grnd            ,qg,rss        ,dqgdT              ,emg                ,&
             z0m_p(ps:pe)    ,tleaf_p(ps:pe)    ,ldew_p(ps:pe) ,ldew_rain_p(ps:pe) ,ldew_snow_p(ps:pe) ,&
             taux            ,tauy              ,&
             fseng           ,fevpg             ,cgrnd         ,cgrndl             ,cgrnds             ,&

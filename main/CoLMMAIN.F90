@@ -70,7 +70,7 @@ SUBROUTINE CoLMMAIN ( &
            mss_dst1,     mss_dst2,     mss_dst3,      mss_dst4,     &
 
          ! additional diagnostic variables for output
-           laisun,       laisha,       rootr,                       &
+           laisun,       laisha,       rootr,        rss,           &
            rstfacsun_out,rstfacsha_out,gssun_out,    gssha_out,     &
            assimsun_out, etrsun_out,   assimsha_out, etrsha_out,    &
            h2osoi,       wat,           &
@@ -375,6 +375,7 @@ SUBROUTINE CoLMMAIN ( &
         gssun_out     ,&! sunlit stomata conductance
         gssha_out     ,&! shaded stomata conductance
         wat           ,&! total water storage
+        rss           ,&! soil surface resistance [s/m]
         rootr(nl_soil),&! water exchange between soil and root. Positive: soil->root [?]
         h2osoi(nl_soil) ! volumetric soil water in layers [m3/m3]
 
@@ -663,17 +664,17 @@ ENDIF
            vf_gravels        ,vf_om             ,vf_sand           ,wf_gravels        ,&
            wf_sand           ,csol              ,porsl             ,psi0              ,&
 #ifdef Campbell_SOIL_MODEL
-           bsw               ,                                                         &
+           bsw               ,&
 #endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
            theta_r           ,alpha_vgm         ,n_vgm             ,L_vgm             ,&
-           sc_vgm            ,fc_vgm            ,                                      &
+           sc_vgm            ,fc_vgm            ,&
 #endif
            k_solids          ,dksatu            ,dksatf            ,dkdry             ,&
            BA_alpha          ,BA_beta                                                 ,&
            lai               ,laisun            ,laisha                               ,&
            sai               ,htop              ,hbot              ,sqrtdi            ,&
-           rootfr            ,rstfacsun_out     ,rstfacsha_out     ,&
+           rootfr            ,rstfacsun_out     ,rstfacsha_out     ,rss               ,&
            gssun_out         ,gssha_out         ,&
            assimsun_out      ,etrsun_out        ,assimsha_out      ,etrsha_out        ,&
 
@@ -703,6 +704,7 @@ ENDIF
            rootr             ,qseva             ,qsdew             ,qsubl             ,&
            qfros             ,sm                ,tref              ,qref              ,&
            trad              ,rst               ,assim             ,respc             ,&
+
            errore            ,emis              ,z0m               ,zol               ,&
            rib               ,ustar             ,qstar             ,tstar             ,&
            fm                ,fh                ,fq                ,pg_rain           ,&

@@ -273,6 +273,7 @@ OBJS_MAIN = \
 				MOD_NetSolar.o                            \
 				MOD_WetBulb.o                             \
 				MOD_RainSnowTemp.o                        \
+				MOD_SoilSurfaceResistance.o               \
 				MOD_NewSnow.o                             \
 				MOD_Thermal.o                             \
 				MOD_Vars_1DAccFluxes.o                    \
