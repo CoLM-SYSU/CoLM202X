@@ -793,6 +793,11 @@ contains
              a_gssha, file_hist, 'f_gssha', itime_in_file, sumarea, filter, &
              'Ecosystem level canopy conductance on shaded canopy','mol m-2 s-1')
 
+         ! soil resistance [m/s]
+         call write_history_variable_2d ( DEF_hist_vars%rss, &
+             a_rss, file_hist, 'f_rss', itime_in_file, sumarea, filter, &
+             'soil surface resistance','s/m')
+
 #ifdef BGC
          ! leaf carbon display pool
          call write_history_variable_2d ( DEF_hist_vars%leafc, &

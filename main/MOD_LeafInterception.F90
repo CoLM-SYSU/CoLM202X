@@ -33,7 +33,7 @@ MODULE MOD_LeafInterception
    USE MOD_Const_Physical, only: tfrz, denh2o, denice
    USE MOD_Namelist, only : DEF_Interception_scheme, DEF_USE_IRRIGATION
 #ifdef CROP
-   USE MOD_Irrigation, only: CalIrrigationApplicationFluxes   
+   USE MOD_Irrigation, only: CalIrrigationApplicationFluxes
 #endif
 
    IMPLICIT NONE
@@ -717,11 +717,11 @@ contains
             unl_snow_temp =  max(unl_snow_temp,0.0)
             unl_snow_wind =  U10*ldew_snow/(1.56*1.e5)
             unl_snow_temp =  max(unl_snow_wind,0.0)
-            unl_snow      =  unl_snow_temp+unl_snow_wind 
+            unl_snow      =  unl_snow_temp+unl_snow_wind
             unl_snow      =  min(unl_snow,ldew_snow)
-           
+
             xsc_snow      =  xsc_snow+unl_snow
-            ldew_snow     = ldew_snow - unl_snow    
+            ldew_snow     = ldew_snow - unl_snow
          ENDIF
 
          ldew          = ldew - (xsc_rain + xsc_snow)
@@ -758,7 +758,7 @@ contains
          thru_rain = tti_rain + tex_rain
          thru_snow = tti_snow + tex_snow
          pinf      = p0 - (thru_rain + thru_snow)
-         ldew_rain = ldew_rain+ (prc_rain + prl_rain + qflx_irrig_sprinkler)*deltim - thru_rain 
+         ldew_rain = ldew_rain+ (prc_rain + prl_rain + qflx_irrig_sprinkler)*deltim - thru_rain
          ldew_snow = ldew_snow+ (prc_snow + prl_snow)*deltim  - thru_snow
 
          ldew      = ldew_rain+ldew_snow !+ pinf
@@ -891,9 +891,9 @@ contains
             FT = MAX(0.0,(tair - 270.15) / 1.87E5)
             FV = SQRT(forc_us*forc_us + forc_vs*forc_vs) / 1.56E5
             ICEDRIP = MAX(0.,ldew_snow) * (FV+FT)    !MB: removed /DT
-            ICEDRIP = MIN(ICEDRIP,ldew_snow)           
+            ICEDRIP = MIN(ICEDRIP,ldew_snow)
             xsc_snow      =  xsc_snow+ICEDRIP
-            ldew_snow     =  ldew_snow - ICEDRIP    
+            ldew_snow     =  ldew_snow - ICEDRIP
          ENDIF
 
          ! phase change and excess !
@@ -904,7 +904,7 @@ contains
                ldew_snow  = ldew_snow-ldew_smelt
                ldew_rain  = ldew_rain+ldew_smelt
                xsc_rain   = xsc_rain + MAX(0., ldew_rain-satcap_rain)
-               ldew_rain  = ldew_rain - MAX(0., ldew_rain-satcap_rain)  
+               ldew_rain  = ldew_rain - MAX(0., ldew_rain-satcap_rain)
             ENDIF
             ! tleaf      = fvegc*tfrz+ (1.0-fwet)*tleaf
          ELSE
@@ -933,7 +933,7 @@ contains
             int_snow=max(0.,int_snow)*deltim
 
             tex_rain = (prc_rain+prl_rain+qflx_irrig_sprinkler)*fvegc*deltim  - int_rain
-            tex_snow = (prc_snow+prl_snow)*fvegc*deltim - int_snow 
+            tex_snow = (prc_snow+prl_snow)*fvegc*deltim - int_snow
 #if(defined CoLMDEBUG)
             IF (tex_rain+tex_snow+tti_rain+tti_snow-p0 > 1.e-10) THEN
                write(6,*) 'tex_ + tti_ > p0 in interception code : '
@@ -1066,7 +1066,7 @@ contains
       !local
       REAL(r8) :: fint, Ac, dewmx_MATSIRO,ldew_rain_s, ldew_snow_s,ldew_rain_n, ldew_snow_n
       REAL(r8) :: tex_rain_n,tex_rain_s,tex_snow_n,tex_snow_s,tti_rain_n,tti_rain_s,tti_snow_n,tti_snow_s
-      
+
       !the canopy water capacity per leaf area index is set to 0.2mm
       dewmx_MATSIRO = 0.2
       !the fracrtion of the convective precipitation area is assumed to be uniform (0.1)
@@ -1097,7 +1097,7 @@ contains
                ldew_snow  = ldew_snow-ldew_smelt
                ldew_rain  = ldew_rain+ldew_smelt
                xsc_rain   = xsc_rain + MAX(0., ldew_rain-satcap_rain)
-               ldew_rain  = ldew_rain - MAX(0., ldew_rain-satcap_rain)  
+               ldew_rain  = ldew_rain - MAX(0., ldew_rain-satcap_rain)
             ENDIF
             ! tleaf      = fvegc*tfrz+ (1.0-fwet)*tleaf
          ELSE
@@ -1114,7 +1114,7 @@ contains
          ldew          = ldew - (xsc_rain + xsc_snow)
 
          IF (p0 > 1.e-8) THEN
-            ! interception efficiency 
+            ! interception efficiency
             fpi_rain  = min(1.0,lai+sai)
             fpi_snow  = min(1.0,lai+sai)
 
@@ -1136,7 +1136,7 @@ contains
             tex_snow_s  = min(tex_snow_s, ldew_snow_s)
             ldew_snow_s = ldew_snow_s - tex_snow_s
 
-            
+
 
             !-------------------------------------------------------------------------
             ! Non-storm area
@@ -1157,7 +1157,7 @@ contains
             tex_snow_n  =  max(ldew_snow_n - satcap_snow, 0.d0) + (1.14d-11)*1000.*deltim*exp(min(ldew_snow_n,satcap_snow)/1000.* 3.7d3 )
             tex_snow_n  =  min(tex_snow_n, ldew_snow_n)
             ldew_snow_n =  ldew_snow_n - tex_snow_n
-            !-------------------------------------------------------------------------    
+            !-------------------------------------------------------------------------
 
 
             !-------------------------------------------------------------------------
@@ -1167,16 +1167,16 @@ contains
             ldew_snow = ldew_snow_n + (ldew_snow_s - ldew_snow_n) * Ac
             ldew_rain = max(0.0,ldew_rain)
             ldew_snow = max(0.0,ldew_snow)
-       
-            tti_rain  = tti_rain_n*(1-Ac)+tti_rain_s*Ac 
-            tti_snow  = tti_snow_n+(tti_snow_s-tti_snow_n) * Ac      
+
+            tti_rain  = tti_rain_n*(1-Ac)+tti_rain_s*Ac
+            tti_snow  = tti_snow_n+(tti_snow_s-tti_snow_n) * Ac
             tti_rain  = max(0.0,tti_rain)
-            tti_snow  = max(0.0,tti_snow)                   
+            tti_snow  = max(0.0,tti_snow)
 
             tex_rain  = tex_rain_n+(tex_rain_s-tex_rain_n)*Ac
             tex_snow  = tex_snow_n+(tex_snow_s-tex_snow_n)*Ac
             tex_rain  = max(0.0,tex_rain)
-            tex_snow  = max(0.0,tex_snow)         
+            tex_snow  = max(0.0,tex_snow)
             !-------------------------------------------------------------------------
 
 
@@ -1313,7 +1313,7 @@ contains
       real(r8) :: Imax1,Lr,ldew_max_snow,Snow,Rain,DeltaSnowInt,Wind,BlownSnow,SnowThroughFall
       real(r8) :: MaxInt,MaxWaterInt,RainThroughFall,Overload,IntRainFract,IntSnowFract,ldew_smelt
       real(r8) :: drip
-      
+
       IF (lai+sai > 1e-6) THEN
          lsai   = lai + sai
          vegt   = lsai
@@ -1350,7 +1350,7 @@ contains
                ldew_snow  = ldew_snow-ldew_smelt
                ldew_rain  = ldew_rain+ldew_smelt
                xsc_rain   = xsc_rain  + MAX(0., ldew_rain-satcap_rain)
-               ldew_rain  = ldew_rain - MAX(0., ldew_rain-satcap_rain)  
+               ldew_rain  = ldew_rain - MAX(0., ldew_rain-satcap_rain)
             ENDIF
             ! tleaf      = fvegc*tfrz+ (1.0-fwet)*tleaf
          ELSE
@@ -1363,28 +1363,28 @@ contains
                ldew_snow  = ldew_snow - MAX(0., ldew_snow-satcap_snow)
             ENDIF
             !tleaf      = fvegc*tfrz+ (1.0-fwet)*tleaf
-         ENDIF  
+         ENDIF
 
          ldew          = ldew -(xsc_rain+xsc_snow)
 
          IF (p0 > 1.e-8) THEN
-            ! interception efficiency 
+            ! interception efficiency
             fpi_rain  = min(1.0,lai+sai)
             fpi_snow  = min(1.0,lai+sai)
 
             tti_rain    = (prc_rain+prl_rain+ qflx_irrig_sprinkler)*deltim * ( 1. - fpi_rain )
             tti_snow    = (prc_snow+prl_snow)*deltim * ( 1. - fpi_snow )
 
-            ldew_rain   = ldew_rain + (prc_rain+prl_rain+ qflx_irrig_sprinkler)*deltim * fpi_rain 
-            ldew_snow   = ldew_snow + (prc_snow+prl_snow)*deltim  * fpi_snow 
+            ldew_rain   = ldew_rain + (prc_rain+prl_rain+ qflx_irrig_sprinkler)*deltim * fpi_rain
+            ldew_snow   = ldew_snow + (prc_snow+prl_snow)*deltim  * fpi_snow
 
             tex_rain    = max(0.0,ldew_rain-satcap_rain)
             tex_snow    = max(0.0,ldew_snow-satcap_snow)
-           
+
             ldew_rain   = ldew_rain - tex_rain
             ldew_snow   = ldew_snow - tex_snow
 
-            !unload of snow 
+            !unload of snow
             !* Reduce the amount of intercepted snow if windy and cold.
             !Ringyo Shikenjo Tokyo, #54, 1952.
             !Bulletin of the Govt. Forest Exp. Station,
@@ -1415,7 +1415,7 @@ contains
                ! /*THEN trigger structural unloading*/
                Overload = (ldew_snow + ldew_rain) - Imax1
                IntRainFract = ldew_rain / (ldew_rain + ldew_snow)
-               IntSnowFract = 1.0 - IntRainFract 
+               IntSnowFract = 1.0 - IntRainFract
                ldew_rain = ldew_rain - Overload * IntRainFract
                ldew_snow = ldew_snow - Overload * IntSnowFract
                tex_rain  = tex_rain  + Overload*IntRainFract
@@ -1496,13 +1496,13 @@ contains
 
    !Original Author:
    !-------------------
-      !---JULES development and research community 
+      !---JULES development and research community
 
    !References:
    !-------------------
       !---Best et al. (2011): The Joint UK Land Environment Simulator (JULES), model description –
       !   Part 1: Energy and water fluxes. Geosci. Model Dev. 4:677–699.
-      !---Clark et al. (2011): The Joint UK Land Environment Simulator (JULES), model description – 
+      !---Clark et al. (2011): The Joint UK Land Environment Simulator (JULES), model description –
       !   Part 2: Carbon fluxes and vegetation dynamics. Geosci. Model Dev. 4:701–722.
 
    !ANCILLARY FUNCTIONS AND SUBROUTINES
@@ -1574,12 +1574,12 @@ contains
          !snow unloading
          !something wrong with this part in JULES, need to be checked
 !         IF (ldew_snow>1.e-8) THEN
-!            Wind= SQRT(forc_us*forc_us + forc_vs*forc_vs) 
+!            Wind= SQRT(forc_us*forc_us + forc_vs*forc_vs)
 !            if (Wind > 1.0) THEN
 !               ICEDRIP       =  unload_rate_cnst + unload_rate_u * Wind
-!               ICEDRIP       =  MIN(ICEDRIP,ldew_snow)           
+!               ICEDRIP       =  MIN(ICEDRIP,ldew_snow)
 !               xsc_snow      =  xsc_snow+ICEDRIP
-!               ldew_snow     =  ldew_snow - ICEDRIP    
+!               ldew_snow     =  ldew_snow - ICEDRIP
 !            endif
 !         ENDIF
 
@@ -1591,7 +1591,7 @@ contains
                ldew_snow  = ldew_snow-ldew_smelt
                ldew_rain  = ldew_rain+ldew_smelt
                xsc_rain   = xsc_rain + MAX(0., ldew_rain-satcap_rain)
-               ldew_rain  = ldew_rain - MAX(0., ldew_rain-satcap_rain)  
+               ldew_rain  = ldew_rain - MAX(0., ldew_rain-satcap_rain)
             ENDIF
             ! tleaf      = fvegc*tfrz+ (1.0-fwet)*tleaf
          ELSE
@@ -1617,7 +1617,7 @@ contains
             int_snow = max(0.,int_snow)*deltim
 
             tex_rain = (prc_rain+prl_rain+qflx_irrig_sprinkler)*fvegc*deltim  - int_rain
-            tex_snow = (prc_snow+prl_snow)*fvegc*deltim - int_snow 
+            tex_snow = (prc_snow+prl_snow)*fvegc*deltim - int_snow
 #if(defined CoLMDEBUG)
             IF (tex_rain+tex_snow+tti_rain+tti_snow-p0 > 1.e-10) THEN
                write(6,*) 'tex_ + tti_ > p0 in interception code : '
@@ -1642,7 +1642,7 @@ contains
          pg_rain = (xsc_rain + thru_rain) / deltim
          pg_snow = (xsc_snow + thru_snow) / deltim
          qintr   = pinf / deltim
-         
+
          qintr_rain = prc_rain + prl_rain + qflx_irrig_sprinkler - thru_rain / deltim
          qintr_snow = prc_snow + prl_snow - thru_snow / deltim
 #if(defined CoLMDEBUG)
@@ -1917,7 +1917,7 @@ contains
             pg_rain_tmp = pg_rain_tmp + pg_rain*pftfrac(i)
             pg_snow_tmp = pg_snow_tmp + pg_snow*pftfrac(i)
          ENDDO
-      END IF s
+      END IF
 
      pg_rain = pg_rain_tmp
      pg_snow = pg_snow_tmp

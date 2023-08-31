@@ -56,7 +56,7 @@ module MOD_Forcing
 
    type(block_data_real8_2d) :: avgcos   ! time-average of cos(zenith)
    type(block_data_real8_2d) :: metdata  ! forcing data
-#if(defined URBAN_MODEL  && defined SinglePoint)
+#ifdef URBAN_MODEL
    type(block_data_real8_2d) :: rainf
    type(block_data_real8_2d) :: snowf
 #endif
@@ -687,6 +687,7 @@ contains
             ! read forcing data
             filename = trim(dir_forcing)//trim(metfilename(year, month, day, ivar))
             IF (trim(DEF_forcing%dataset) == 'POINT') THEN
+
 #ifndef URBAN_MODEL
                IF (forcing_read_ahead) THEN
                   metdata%blk(gblock%xblkme(1),gblock%yblkme(1))%val = forc_disk(time_i,ivar)
@@ -732,6 +733,7 @@ contains
                ! read forcing data
                filename = trim(dir_forcing)//trim(metfilename(year, month, day, ivar))
                IF (trim(DEF_forcing%dataset) == 'POINT') THEN
+
 #ifndef URBAN_MODEL
                   IF (forcing_read_ahead) THEN
                      metdata%blk(gblock%xblkme(1),gblock%yblkme(1))%val = forc_disk(time_i,ivar)
