@@ -103,6 +103,7 @@ contains
       use MOD_TimeManager
       use MOD_SPMD_Task
       use MOD_Vars_1DAccFluxes
+      USE MOD_Vars_TimeVariables, only : wa, wat, wdsrf
       use MOD_Block
       use MOD_DataType
       use MOD_LandPatch
@@ -495,6 +496,15 @@ contains
          call write_history_variable_2d ( DEF_hist_vars%wat, &
             a_wat, file_hist, 'f_wat', itime_in_file, sumarea, filter, &
             'total water storage','mm')
+
+         ! instantaneous total water storage [mm]
+         IF (p_is_worker) THEN
+            vecacc = wat
+            WHERE(vecacc /= spval) vecacc = vecacc * nac
+         ENDIF
+         call write_history_variable_2d ( DEF_hist_vars%wat_inst, &
+            vecacc, file_hist, 'f_wat_inst', itime_in_file, sumarea, filter, &
+            'instantaneous total water storage','mm')
 
          ! canopy assimilation rate [mol m-2 s-1]
          call write_history_variable_2d ( DEF_hist_vars%assim, &
@@ -3264,18 +3274,13 @@ contains
             a_zwt, file_hist, 'f_zwt', itime_in_file, sumarea, filter, &
             'the depth to water table','m')
 
-         ! water storage in aquifer [mm]
-         call write_history_variable_2d ( DEF_hist_vars%wa, &
-            a_wa, file_hist, 'f_wa', itime_in_file, sumarea, filter, &
-            'water storage in aquifer','mm')
-
          ! --------------------------------------------------------------------
-         ! depth of surface water (excluding land ice and ocean patches)
+         ! depth of surface water (including land ice and ocean patches)
          ! --------------------------------------------------------------------
          if (p_is_worker) then
             if (numpatch > 0) then
 
-               filter(:) = (patchtype <= 2) .or. (patchtype == 4)
+               filter(:) = (patchtype <= 4) 
 
                IF (DEF_forcing%has_missing_value) THEN
                   filter = filter .and. forcmask
@@ -3289,10 +3294,33 @@ contains
             call mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
          ENDIF
 
-         ! depth of surface water [m]
+         ! water storage in aquifer [mm]
+         call write_history_variable_2d ( DEF_hist_vars%wa, &
+            a_wa, file_hist, 'f_wa', itime_in_file, sumarea, filter, &
+            'water storage in aquifer','mm')
+
+         ! instantaneous water storage in aquifer [mm]
+         IF (p_is_worker) THEN
+            vecacc = wa
+            WHERE(vecacc /= spval) vecacc = vecacc * nac
+         ENDIF
+         call write_history_variable_2d ( DEF_hist_vars%wa_inst, &
+            vecacc, file_hist, 'f_wa_inst', itime_in_file, sumarea, filter, &
+            'instantaneous water storage in aquifer','mm')
+
+         ! depth of surface water [mm]
          call write_history_variable_2d ( DEF_hist_vars%wdsrf, &
             a_wdsrf, file_hist, 'f_wdsrf', itime_in_file, sumarea, filter, &
             'depth of surface water','mm')
+
+         ! instantaneous depth of surface water [mm]
+         IF (p_is_worker) THEN
+            vecacc = wdsrf
+            WHERE(vecacc /= spval) vecacc = vecacc * nac
+         ENDIF
+         call write_history_variable_2d ( DEF_hist_vars%wdsrf_inst, &
+            vecacc, file_hist, 'f_wdsrf_inst', itime_in_file, sumarea, filter, &
+            'instantaneous depth of surface water','mm')
 
          ! -----------------------------------------------
          ! Land water bodies' ice fraction and temperature

@@ -858,7 +858,7 @@ ENDIF
 
 #if(defined CoLMDEBUG)
       IF (abs(errorw) > 1.e-3) THEN
-         write(6,*) 'Warning: water balance violation', ipatch,errorw,patchclass,p_iam_glb
+         write(6,*) 'Warning: water balance violation (soil)', ipatch,errorw,patchclass,p_iam_glb
          ! CALL CoLM_stop ()
       ENDIF
       IF(abs(errw_rsub*deltim)>1.e-3) THEN
@@ -891,7 +891,7 @@ ELSE IF(patchtype == 3)THEN   ! <=== is LAND ICE (glacier/ice sheet) (patchtype 
 
       totwb = scv + sum(wice_soisno(1:)+wliq_soisno(1:))
 #ifdef LATERAL_FLOW
-      totwb = totwb + wdsrf
+      totwb = wdsrf + totwb
 #endif
       fiold(:) = 0.0
       IF (snl <0 ) THEN
@@ -981,12 +981,23 @@ ELSE IF(patchtype == 3)THEN   ! <=== is LAND ICE (glacier/ice sheet) (patchtype 
       ! ----------------------------------------
       zerr=errore
 
-      endwb=scv+sum(wice_soisno(1:)+wliq_soisno(1:))
+      endwb = scv + sum(wice_soisno(1:)+wliq_soisno(1:))
 #ifdef LATERAL_FLOW
-      endwb = endwb + wdsrf
+      endwb = wdsrf + endwb 
 #endif
 
+#ifndef LATERAL_FLOW
       errorw=(endwb-totwb)-(pg_rain+pg_snow-fevpa-rnof)*deltim
+#else
+      errorw=(endwb-totwb)-(pg_rain+pg_snow-fevpa)*deltim
+#endif
+
+#if(defined CoLMDEBUG)
+      IF (abs(errorw) > 1.e-3) THEN
+         write(6,*) 'Warning: water balance violation (land ice) ', errorw
+         ! CALL CoLM_stop ()
+      ENDIF
+#endif
 #ifdef CROP
    if (DEF_USE_IRRIGATION) errorw = errorw - irrig_rate(ipatch)*deltim
 #endif
@@ -1109,11 +1120,7 @@ ELSE IF(patchtype == 4) THEN   ! <=== is LAND WATER BODIES (lake, reservior and 
 #else
       ! for lateral flow, only water change vertically is calculated here.
       ! TODO : snow should be considered.
-      IF (snl < 0) THEN
-         wdsrf = wdsrf + gwat * deltim
-      ELSE
-         wdsrf = wdsrf + (pg_rain - qseva + qsdew) * deltim
-      ENDIF
+      wdsrf = wdsrf + (pg_rain + pg_snow - aa - a) * deltim
 
       IF (wdsrf + wa < 0) THEN
          wa = wa + wdsrf

@@ -348,6 +348,7 @@ MODULE MOD_Namelist
       LOGICAL :: qinfl        = .true.
       LOGICAL :: qdrip        = .true.
       LOGICAL :: wat          = .true.
+      LOGICAL :: wat_inst     = .true.
       LOGICAL :: assim        = .true.
       LOGICAL :: respc        = .true.
       LOGICAL :: qcharge      = .true.
@@ -584,8 +585,10 @@ MODULE MOD_Namelist
       LOGICAL :: wfc          = .true.
       LOGICAL :: OM_density   = .true.
       LOGICAL :: wdsrf        = .true.
+      LOGICAL :: wdsrf_inst   = .true.
       LOGICAL :: zwt          = .true.
       LOGICAL :: wa           = .true.
+      LOGICAL :: wa_inst      = .true.
 
       LOGICAL :: t_lake       = .true.
       LOGICAL :: lake_icefrac = .true.
@@ -838,6 +841,12 @@ CONTAINS
          write(*,*) '                  *****                  '
          write(*,*) 'Note: DEF_USE_VARIABLY_SATURATED_FLOW is automaticlly set to .true.  '
          write(*,*) 'when using vanGenuchten_Mualem_SOIL_MODEL. '
+         DEF_USE_VARIABLY_SATURATED_FLOW = .true.
+#endif
+#if (defined LATERAL_FLOW)
+         write(*,*) '                  *****                  '
+         write(*,*) 'Note: DEF_USE_VARIABLY_SATURATED_FLOW is automaticlly set to .true.  '
+         write(*,*) 'when defined LATERAL_FLOW. '
          DEF_USE_VARIABLY_SATURATED_FLOW = .true.
 #endif
 
@@ -1286,6 +1295,7 @@ CONTAINS
       CALL sync_hist_vars_one (DEF_hist_vars%qinfl       ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%qdrip       ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%wat         ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%wat_inst    ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%assim       ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%respc       ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%qcharge     ,  set_defaults)
@@ -1495,8 +1505,10 @@ CONTAINS
       CALL sync_hist_vars_one (DEF_hist_vars%wfc         ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%OM_density  ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%wdsrf       ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%wdsrf_inst  ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%zwt         ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%wa          ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%wa_inst     ,  set_defaults)
 
       CALL sync_hist_vars_one (DEF_hist_vars%t_lake      ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%lake_icefrac,  set_defaults)

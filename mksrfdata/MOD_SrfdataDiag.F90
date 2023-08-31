@@ -51,7 +51,6 @@ CONTAINS
    SUBROUTINE srfdata_diag_init (dir_landdata)
 
       USE MOD_SPMD_Task
-      USE MOD_Block
       USE MOD_LandElm
       USE MOD_LandPatch
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
