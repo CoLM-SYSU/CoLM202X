@@ -1002,10 +1002,12 @@ ELSE IF(patchtype == 3)THEN   ! <=== is LAND ICE (glacier/ice sheet) (patchtype 
 #endif
 
 #if(defined CoLMDEBUG)
+#ifdef LATERAL_FLOW
       IF (abs(errorw) > 1.e-3) THEN
          write(6,*) 'Warning: water balance violation (land ice) ', errorw
          ! CALL CoLM_stop ()
       ENDIF
+#endif
 #endif
 #ifdef CROP
    if (DEF_USE_IRRIGATION) errorw = errorw - irrig_rate(ipatch)*deltim
