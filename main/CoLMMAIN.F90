@@ -972,7 +972,14 @@ ELSE IF(patchtype == 3)THEN   ! <=== is LAND ICE (glacier/ice sheet) (patchtype 
       rsur = max(0.0,gwat)
       rnof = rsur
 #else
-      wdsrf = wdsrf + max(0.0,gwat) * deltim
+      a = wdsrf + wliq_soisno(1) + gwat * deltim
+      IF (a > dz_soisno(1)*denh2o) THEN
+         wliq_soisno(1) = dz_soisno(1)*denh2o
+         wdsrf = a - wliq_soisno(1)
+      ELSE
+         wdsrf = 0.
+         wliq_soisno(1) = max(a, 1.e-4)
+      ENDIF
 #endif
 
       lb = snl + 1

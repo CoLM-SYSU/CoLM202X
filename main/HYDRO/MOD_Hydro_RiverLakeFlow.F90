@@ -311,6 +311,11 @@ CONTAINS
                   totalvolume = totalvolume - sum_hflux_riv(i) * dt_this
 
                   IF (totalvolume < VOLUMEMIN) THEN
+                     DO j = 1, hillslope_network(i)%nhru
+                        IF (hillslope_network(i)%hand(j) <= wdsrf_bsn(i)) THEN
+                           wdsrf_hru(j+hs-1) = 0.
+                        ENDIF
+                     ENDDO
                      wdsrf_bsn(i) = 0
                   ELSE
 

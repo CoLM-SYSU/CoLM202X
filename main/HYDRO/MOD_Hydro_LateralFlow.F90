@@ -33,16 +33,53 @@ MODULE MOD_Hydro_LateralFlow
    INTEGER, parameter :: nsubstep = 20
    real(r8) :: dt_average
 
+#ifdef CoLMDEBUG
+   real(r8) :: landarea
+   real(r8), allocatable :: patcharea (:)  ! m^2
+#endif
+
 CONTAINS
 
    ! ----------
    SUBROUTINE lateral_flow_init ()
 
+#ifdef CoLMDEBUG
+      USE MOD_SPMD_Task
+      USE MOD_Mesh
+      USE MOD_Pixel
+      USE MOD_LandPatch
+      USE MOD_Utils
+#endif
       IMPLICIT NONE
+
+#ifdef CoLMDEBUG
+      integer :: ip ,ie, ipxl
+#endif
 
       CALL hillslope_network_init  ()
       CALL river_lake_network_init (use_calc_rivdpt = .true.)
       CALL basin_neighbour_init    ()
+
+#ifdef CoLMDEBUG
+      IF (p_is_worker) THEN
+         allocate (patcharea (numpatch))
+         DO ip = 1, numpatch
+            patcharea(ip) = 0.
+            ie = landpatch%ielm(ip)
+            DO ipxl = landpatch%ipxstt(ip), landpatch%ipxend(ip)
+               patcharea(ip) = patcharea(ip) + 1.0e6 * areaquad ( &
+                  pixel%lat_s(mesh(ie)%ilat(ipxl)), pixel%lat_n(mesh(ie)%ilat(ipxl)), &
+                  pixel%lon_w(mesh(ie)%ilon(ipxl)), pixel%lon_e(mesh(ie)%ilon(ipxl)) )
+            ENDDO
+         ENDDO
+
+         landarea = 0.
+         IF (numpatch > 0) landarea = sum(patcharea)
+#ifdef USEMPI
+         CALL mpi_allreduce (MPI_IN_PLACE, landarea, 1, MPI_REAL8, MPI_SUM, p_comm_worker, p_err)
+#endif
+      ENDIF
+#endif
 
    END SUBROUTINE lateral_flow_init
 
@@ -67,6 +104,9 @@ CONTAINS
       ! Local Variables
       INTEGER  :: numbasin, ibasin, ihru, i, j, ps, pe, istep
       real(r8), allocatable :: wdsrf_p (:)
+#ifdef CoLMDEBUG
+      real(r8) :: dtolw
+#endif
 
       IF (p_is_worker) THEN
 
@@ -172,6 +212,30 @@ CONTAINS
       CALL check_vector_data ('Subsurface bt basin [m/s]', xsubs_bsn)
       CALL check_vector_data ('Subsurface bt HRU   [m/s]', xsubs_hru)
       CALL check_vector_data ('Subsurface bt patch [m/s]', xsubs_pch)
+
+#ifdef CoLMDEBUG
+      IF (p_is_worker) THEN
+         dtolw = 0
+         IF (numpatch > 0) dtolw = sum(patcharea * xwsur) / 1.e3 * deltime
+#ifdef USEMPI
+         CALL mpi_allreduce (MPI_IN_PLACE, dtolw, 1, MPI_REAL8, MPI_SUM, p_comm_worker, p_err)
+#endif
+         if (p_iam_worker == 0) then
+            write(*,'(A,F12.5,A,ES12.3,A)') 'Total surface water error: ', dtolw, &
+               '(m^3) in area ', landarea, '(m^2)'
+         endif
+
+         dtolw = 0
+         IF (numpatch > 0) dtolw = sum(patcharea * xwsub) / 1.e3 * deltime
+#ifdef USEMPI
+         CALL mpi_allreduce (MPI_IN_PLACE, dtolw, 1, MPI_REAL8, MPI_SUM, p_comm_worker, p_err)
+#endif
+         if (p_iam_worker == 0) then
+            write(*,'(A,F12.5,A,ES12.3,A)') 'Total ground  water error: ', dtolw, &
+               '(m^3) in area ', landarea, '(m^2)'
+         endif
+      ENDIF
+#endif
 #endif
 
    END SUBROUTINE lateral_flow
@@ -184,6 +248,10 @@ CONTAINS
       CALL hillslope_network_final  ()
       CALL river_lake_network_final ()
       CALL basin_neighbour_final    ()
+
+#ifdef CoLMDEBUG
+      IF (allocated(patcharea)) deallocate(patcharea)
+#endif
 
    END SUBROUTINE lateral_flow_final
 
