@@ -200,6 +200,7 @@ CONTAINS
             sabg  = sabvg
          ENDIF
 
+         ! calculate soil and snow solar absorption
          sabg_soil = forc_sols*ssoi(1,1) + forc_solsd*ssoi(1,2) &
                    + forc_soll*ssoi(2,1) + forc_solld*ssoi(2,2)
          sabg_snow = forc_sols*ssno(1,1) + forc_solsd*ssno(1,2) &
@@ -208,6 +209,7 @@ CONTAINS
          sabg_soil = sabg_soil * (1.-fsno)
          sabg_snow = sabg_snow * fsno
 
+         ! balance check and adjustment for soil and snow absorption
          IF (sabg_soil+sabg_snow-sabg>1.e-6) THEN ! this could happen when there is adjust to ssun,ssha
             print *, "MOD_NetSolar.F90: NOTE imbalance in spliting soil and snow surface!"
             print *, "sabg:", sabg, "sabg_soil:", sabg_soil, "sabg_snow", sabg_snow
@@ -221,12 +223,10 @@ CONTAINS
                ssoi(:,:) = ssoi(:,:) * sabg/sabg_noadj
                ssno(:,:) = ssno(:,:) * sabg/sabg_noadj
             ENDIF
-
-            !CALL CoLM_stop()
          ENDIF
 
+         ! snow layer absorption calculation and adjustment for SNICAR model
          IF (DEF_USE_SNICAR) THEN
-
             ! adjust snow layer absorption due to multiple reflection between ground and canopy
             IF(sum(ssno_lyr(1,1,:))>0.) ssno_lyr(1,1,:) = ssno(1,1) * ssno_lyr(1,1,:)/sum(ssno_lyr(1,1,:))
             IF(sum(ssno_lyr(1,2,:))>0.) ssno_lyr(1,2,:) = ssno(1,2) * ssno_lyr(1,2,:)/sum(ssno_lyr(1,2,:))
@@ -237,21 +237,14 @@ CONTAINS
             sabg_snow_lyr(:) = forc_sols*ssno_lyr(1,1,:) + forc_solsd*ssno_lyr(1,2,:) &
                              + forc_soll*ssno_lyr(2,1,:) + forc_solld*ssno_lyr(2,2,:)
 
+            ! convert to the whole area producted by snow fractional cover
             sabg_snow_lyr(:) = sabg_snow_lyr(:)*fsno
-
-            print *, "ssno:", ssno(1,1),ssno(2,1),ssno(1,2),ssno(2,2)
-            print *, "ssno_lyr:", sum(ssno_lyr(1,1,:)), sum(ssno_lyr(2,1,:)),sum(ssno_lyr(1,2,:)),sum(ssno_lyr(2,2,:))
-            print *, "sabg_snow:", sabg_snow, "sabg_snow_lyr:", sum(sabg_snow_lyr(:0))
 
             ! attribute the first layer absorption to soil absorption
             sabg_soil = sabg_soil + sabg_snow_lyr(1)
             sabg_snow = sabg_snow - sabg_snow_lyr(1)
-
-            print *, "----- after adjust -----"
-            print *, "sabg_snow:", sabg_snow, "sabg_snow_lyr:", sum(sabg_snow_lyr(:0))
-            print *, sabg_snow_lyr
-
          ENDIF
+
       ENDIF
 
       solvd = forc_sols

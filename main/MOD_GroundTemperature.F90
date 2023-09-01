@@ -292,7 +292,7 @@ MODULE MOD_GroundTemperature
          print *, "sabg:", sabg, "sabg_soil:", sabg_soil, "sabg_snow", sabg_snow
          print *, "hs", hs, "hs_soil", hs_soil, "hs_snow:", hs_snow, "fsno:", fsno
          print *, "hs_soil+hs_snow", hs_soil+hs_snow, "sabg_soil+sabg_snow:", sabg_soil+sabg_snow
-         print *, "lb:", lb, sabg_snow_lyr
+         print *, "lb:", lb, "sabg_snow_lyr:", sabg_snow_lyr
          CALL CoLM_stop()
       ENDIF
    ENDIF

@@ -1201,7 +1201,7 @@ ENDIF
             ssun_p(:,:,i) = 0.
             ssha_p(:,:,i) = 0.
             tran_p(:,1,i) = 0.
-            tran_p(:,2,i) = 0.
+            tran_p(:,2,i) = 1.
             tran_p(:,3,i) = 1.
          ENDIF
       ENDDO
@@ -1911,8 +1911,6 @@ ENDIF
                    flx_absdn(i) = flx_absd_snw(i,ib)*(1.-albsnd(ib))
                    flx_absin(i) = flx_absi_snw(i,ib)*(1.-albsni(ib))
                 ENDIF
-                !NOTE: the below should be the same
-                !print *, "sum of flx_absd_snw:", sum(flx_absd_snw(:,ib)), 1-albsnd(ib)
              ENDIF
           ENDDO
        ENDIF

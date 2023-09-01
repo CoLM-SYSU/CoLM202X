@@ -1177,13 +1177,6 @@ ENDIF
       ! one way to check energy
       errore = sabv + sabg + frl - olrg - fsena - lfevpa - fgrnd + hprl &
              + cpliq*pg_rain*(t_precip-t_grnd) + cpice*pg_snow*(t_precip-t_grnd)
-      IF (abs(errore) > .5) THEN
-      print *, " one way:", errore
-      write(6,*) 'MOD_Thermal.F90: energy balance violation'
-      write(6,*) ipatch,errore,sabv,sabg,frl,olrg,fsenl,fseng,hvap*fevpl,htvp*fevpg,xmf,hprl
-      write(6,*) cpliq*pg_rain*(t_precip-t_grnd), cpice*pg_snow*(t_precip-t_grnd)
-      CALL CoLM_stop ()
-      ENDIF
 
       ! another way to check energy
       errore = sabv + sabg + frl - olrg - fsena - lfevpa - xmf + hprl &
@@ -1191,12 +1184,6 @@ ENDIF
       DO j = lb, nl_soil
          errore = errore - (t_soisno(j)-t_soisno_bef(j))/fact(j)
       ENDDO
-      IF (abs(errore) > .5) THEN
-      print *, " another way:", errore
-      print *, "fgrnd:", fgrnd, "lb:", lb, "fsno:", fsno
-      print *, "sabg_snow_lyr", sabg_snow_lyr
-      print *, "xmf+delta_soil_heat", xmf+sum((t_soisno-t_soisno_bef)/fact), xmf, sum((t_soisno-t_soisno_bef)/fact)
-      ENDIF
 
 #if (defined CoLMDEBUG)
       IF (abs(errore) > .5) THEN
