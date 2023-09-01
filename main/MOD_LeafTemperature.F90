@@ -688,10 +688,16 @@ CONTAINS
 
 ! longwave absorption and their derivatives
          ! 10/16/2017, yuan: added reflected longwave by the ground
+
+IF (.not.DEF_SPLIT_SOILSNOW) THEN
+         irab = (frl - 2. * stefnc * tl**4 + emg*stefnc*tg**4 ) * fac &
+              + (1-emg)*thermk*fac*frl + (1-emg)*(1-thermk)*fac*stefnc*tl**4
+ELSE
          irab = (frl - 2. * stefnc * tl**4 &
               + (1.-fsno)*emg*stefnc*t_soil**4 &
               + fsno*emg*stefnc*t_snow**4 )                     * fac &
               + (1-emg)*thermk*fac*frl + (1-emg)*(1-thermk)*fac*stefnc*tl**4
+ENDIF
          dirab_dtl = - 8. * stefnc * tl**3                      * fac &
                    + 4.*(1-emg)*(1-thermk)*fac*stefnc*tl**3
 
@@ -936,13 +942,20 @@ CONTAINS
        ! 10/16/2017, yuan: added reflected longwave by the ground
        dlrad = thermk * frl &
              + stefnc * fac * tlbef**3 * (tlbef + 4.*dtl(it-1))
+IF (.not.DEF_SPLIT_SOILSNOW) THEN
        ulrad = stefnc * ( fac * tlbef**3 * (tlbef + 4.*dtl(it-1)) &
-             !+ thermk*emg*tg**4 ) &
+             + thermk*emg*tg**4 ) &
+             + (1-emg)*thermk*thermk*frl &
+             + (1-emg)*thermk*fac*stefnc*tlbef**4 &
+             + 4.*(1-emg)*thermk*fac*stefnc*tlbef**3*dtl(it-1)
+ELSE
+       ulrad = stefnc * ( fac * tlbef**3 * (tlbef + 4.*dtl(it-1)) &
              + (1.-fsno)*thermk*emg*t_soil**4 &
              + fsno*thermk*emg*t_snow**4 ) &
              + (1-emg)*thermk*thermk*frl &
              + (1-emg)*thermk*fac*stefnc*tlbef**4 &
              + 4.*(1-emg)*thermk*fac*stefnc*tlbef**3*dtl(it-1)
+ENDIF
        hprl = cpliq * qintr_rain*(t_precip-tl) + cpice * qintr_snow*(t_precip-tl)
 
 !-----------------------------------------------------------------------

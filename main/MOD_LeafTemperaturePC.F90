@@ -1291,9 +1291,13 @@ MODULE MOD_LeafTemperaturePC
 
 ! calcilate Lg = (1-emg)*dlrad + emg*stefnc*tg**4
 ! dlrad = Lin(0)
+IF (.not.DEF_SPLIT_SOILSNOW) THEN
+          Lg = (1 - emg)*Lin(0) + emg*stefnc*tg**4
+ELSE
           Lg = (1 - emg)*Lin(0) &
              + (1.-fsno)*emg*stefnc*t_soil**4 &
              + fsno*emg*stefnc*t_snow**4
+ENDIF
 
 ! calculate Ltu
           Ltu(1) = thermk_lay(1) * tup(0,1) * Lg

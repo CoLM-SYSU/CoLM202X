@@ -53,7 +53,7 @@
                     errore      ,emis       ,z0m         ,zol         ,&
                     rib         ,ustar      ,qstar       ,tstar       ,&
                     fm          ,fh         ,fq          ,pg_rain     ,&
-                    pg_snow     ,t_precip   ,snofrz      ,sabg_lyr     )
+                    pg_snow     ,t_precip   ,snofrz      ,sabg_snow_lyr)
 
 !=======================================================================
 ! this is the main subroutine to execute the calculation
@@ -119,7 +119,7 @@
         zi_icesno(lb-1:nl_ice)  ! interface depth [m]
 
   REAL(r8), intent(in) :: &
-        sabg_lyr (lb:1)    ! snow layer absorption [W/m-2]
+        sabg_snow_lyr (lb:1)    ! snow layer absorption [W/m-2]
 
         ! State variables (2)
   real(r8), INTENT(inout) :: &
@@ -249,7 +249,7 @@
       call groundtem_glacier (patchtype,lb,nl_ice,deltim,&
                      capr,cnfac,dz_icesno,z_icesno,zi_icesno,&
                      t_icesno,wice_icesno,wliq_icesno,scv,snowdp,&
-                     forc_frl,sabg,sabg_lyr,fseng,fevpg,cgrnd,htvp,emg,&
+                     forc_frl,sabg,sabg_snow_lyr,fseng,fevpg,cgrnd,htvp,emg,&
                      imelt,snofrz,sm,xmf,fact,pg_rain,pg_snow,t_precip)
 
 !=======================================================================
@@ -564,7 +564,7 @@
  subroutine groundtem_glacier (patchtype,lb,nl_ice,deltim,&
                       capr,cnfac,dz_icesno,z_icesno,zi_icesno,&
                       t_icesno,wice_icesno,wliq_icesno,scv,snowdp,&
-                      forc_frl,sabg,sabg_lyr,fseng,fevpg,cgrnd,htvp,emg,&
+                      forc_frl,sabg,sabg_snow_lyr,fseng,fevpg,cgrnd,htvp,emg,&
                       imelt,snofrz,sm,xmf,fact,pg_rain,pg_snow,t_precip)
 
 !=======================================================================
@@ -623,9 +623,9 @@
   real(r8), INTENT(in) :: pg_rain   ! rainfall  [kg/(m2 s)]
   real(r8), INTENT(in) :: pg_snow   ! snowfall  [kg/(m2 s)]
 
-  REAL(r8), intent(in) :: sabg_lyr (lb:1)         !snow layer absorption [W/m-2]
+  REAL(r8), intent(in) :: sabg_snow_lyr (lb:1)      !snow layer absorption [W/m-2]
 
-  real(r8), INTENT(inout) :: t_icesno (lb:nl_ice) !snow and ice temperature [K]
+  real(r8), INTENT(inout) :: t_icesno (lb:nl_ice)   !snow and ice temperature [K]
   real(r8), INTENT(inout) :: wice_icesno(lb:nl_ice) !ice lens [kg/m2]
   real(r8), INTENT(inout) :: wliq_icesno(lb:nl_ice) !liqui water [kg/m2]
   real(r8), INTENT(inout) :: scv    !snow cover, water equivalent [mm, kg/m2]
@@ -734,7 +734,7 @@
 
 ! net ground heat flux into the surface and its temperature derivative
       IF (DEF_USE_SNICAR) THEN
-         hs = sabg_lyr(lb) + emg*forc_frl - emg*stefnc*t_icesno(lb)**4 - (fseng+fevpg*htvp) +&
+         hs = sabg_snow_lyr(lb) + emg*forc_frl - emg*stefnc*t_icesno(lb)**4 - (fseng+fevpg*htvp) +&
               cpliq * pg_rain * (t_precip - t_icesno(lb)) + cpice * pg_snow * (t_precip - t_icesno(lb))
       ELSE
          hs = sabg + emg*forc_frl - emg*stefnc*t_icesno(lb)**4 - (fseng+fevpg*htvp) +&
@@ -773,7 +773,7 @@
              at(j) =   - (1.-cnfac)*fact(j)* tk(j-1)/dzm
              bt(j) = 1.+ (1.-cnfac)*fact(j)*(tk(j)/dzp + tk(j-1)/dzm)
              ct(j) =   - (1.-cnfac)*fact(j)* tk(j)/dzp
-             rt(j) = t_icesno(j) + fact(j)*sabg_lyr(j) + cnfac*fact(j)*( fn(j) - fn(j-1) )
+             rt(j) = t_icesno(j) + fact(j)*sabg_snow_lyr(j) + cnfac*fact(j)*( fn(j) - fn(j-1) )
           end do
       endif
 
@@ -823,7 +823,7 @@
                   !NOTE: compatibility settings for spliting soil&snow temproal input,
                   ! cause glacier patch doesn't support split soil&snow
                   ! hs_soil=hs, hs_snow=hs, fsno=1. not go into effect.
-                  fact(lb:),brr(lb:),hs,hs,hs,1.,sabg_lyr,dhsdT, &
+                  fact(lb:),brr(lb:),hs,hs,hs,1.,sabg_snow_lyr,dhsdT, &
                   t_icesno_bef(lb:),t_icesno(lb:),wliq_icesno(lb:),wice_icesno(lb:),imelt(lb:), &
                   scv,snowdp,sm,xmf,porsl,psi0,&
 #ifdef Campbell_SOIL_MODEL

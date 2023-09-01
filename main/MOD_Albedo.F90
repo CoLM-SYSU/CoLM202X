@@ -223,7 +223,7 @@ MODULE MOD_Albedo
       ssun(:,:) = 0.   ! sunlit leaf absorption
       ssha(:,:) = 0.   ! shaded leaf absorption
       tran(:,1) = 0.   ! incident direct  radiation duffuse transmittance
-      tran(:,2) = 0.   ! incident diffuse radiation diffuse transmittance
+      tran(:,2) = 1.   ! incident diffuse radiation diffuse transmittance
       tran(:,3) = 1.   ! incident direct  radiation direct  transmittance
 
       ! 07/06/2023, yuan: use the values of previous timestep.
@@ -236,15 +236,15 @@ MODULE MOD_Albedo
       extkd     = 0.718
 
       albsno    (:,:) = 0.     !set initial snow albedo
-      albsno_pur(:,:) = 0.     !set initial snow albedo
-      albsno_bc (:,:) = 0.     !set initial snow albedo
-      albsno_oc (:,:) = 0.     !set initial snow albedo
-      albsno_dst(:,:) = 0.     !set initial snow albedo
+      albsno_pur(:,:) = 0.     !set initial pure snow albedo
+      albsno_bc (:,:) = 0.     !set initial BC   snow albedo
+      albsno_oc (:,:) = 0.     !set initial OC   snow albedo
+      albsno_dst(:,:) = 0.     !set initial dust snow albedo
 
       ! soil and snow absorption
-      ssoi      (:,:) = 0.
-      ssno      (:,:) = 0.
-      ssno_lyr(:,:,:) = 0.     !set initial snow absorption
+      ssoi      (:,:) = 0.     !set initial soil absorption
+      ssno      (:,:) = 0.     !set initial snow absorption
+      ssno_lyr(:,:,:) = 0.     !set initial snow layer absorption
 
 IF (patchtype == 0) THEN
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
@@ -408,15 +408,19 @@ ENDIF
             CALL twostream (chil,rho,tau,green,lai,sai,&
                             czen,albg,albv,tran,thermk,extkb,extkd,ssun,ssha)
 
-            albv(:,:) = (1.-  wt)*albv(:,:) + wt*albsno(:,:)
-            alb (:,:) = (1.-fveg)*albg(:,:) + fveg*albv(:,:)
+            ! 08/31/2023, yuan: to be consistent with PFT and PC
+            !albv(:,:) = (1.-  wt)*albv(:,:) + wt*albsno(:,:)
+            !alb (:,:) = (1.-fveg)*albg(:,:) + fveg*albv(:,:)
+            alb(:,:) = albv(:,:)
 #endif
          ELSE  !other patchtypes (/=0)
             CALL twostream (chil,rho,tau,green,lai,sai,&
                             czen,albg,albv,tran,thermk,extkb,extkd,ssun,ssha)
 
-            albv(:,:) = (1.-  wt)*albv(:,:) + wt*albsno(:,:)
-            alb (:,:) = (1.-fveg)*albg(:,:) + fveg*albv(:,:)
+            ! 08/31/2023, yuan: to be consistent with PFT and PC
+            !albv(:,:) = (1.-  wt)*albv(:,:) + wt*albsno(:,:)
+            !alb (:,:) = (1.-fveg)*albg(:,:) + fveg*albv(:,:)
+            alb(:,:) = albv(:,:)
 
          ENDIF
       ENDIF
@@ -1848,28 +1852,39 @@ ENDIF
        IF (coszen_col > 0._r8) THEN
           ! ground albedo was originally computed in SoilAlbedo, but is now computed here
           ! because the order of SoilAlbedo and SNICAR_RT/SNICAR_AD_RT was switched for SNICAR/SNICAR_AD_RT.
-          albgrd(ib) = albsod(ib)*(1._r8-frac_sno) + albsnd(ib)*frac_sno
-          albgri(ib) = albsoi(ib)*(1._r8-frac_sno) + albsni(ib)*frac_sno
+          ! 09/01/2023, yuan: change to only snow albedo, the same below
+          !albgrd(ib) = albsod(ib)*(1._r8-frac_sno) + albsnd(ib)*frac_sno
+          !albgri(ib) = albsoi(ib)*(1._r8-frac_sno) + albsni(ib)*frac_sno
+          albgrd(ib) = albsnd(ib)
+          albgri(ib) = albsni(ib)
 
           ! albedos for radiative forcing calculations:
           IF (use_snicar_frc) THEN
              ! pure snow albedo for all-aerosol radiative forcing
-             albgrd_pur(ib) = albsod(ib)*(1.-frac_sno) + albsnd_pur(ib)*frac_sno
-             albgri_pur(ib) = albsoi(ib)*(1.-frac_sno) + albsni_pur(ib)*frac_sno
+             !albgrd_pur(ib) = albsod(ib)*(1.-frac_sno) + albsnd_pur(ib)*frac_sno
+             !albgri_pur(ib) = albsoi(ib)*(1.-frac_sno) + albsni_pur(ib)*frac_sno
+             albgrd_pur(ib) = albsnd_pur(ib)
+             albgri_pur(ib) = albsni_pur(ib)
 
              ! BC forcing albedo
-             albgrd_bc(ib) = albsod(ib)*(1.-frac_sno) + albsnd_bc(ib)*frac_sno
-             albgri_bc(ib) = albsoi(ib)*(1.-frac_sno) + albsni_bc(ib)*frac_sno
+             !albgrd_bc(ib) = albsod(ib)*(1.-frac_sno) + albsnd_bc(ib)*frac_sno
+             !albgri_bc(ib) = albsoi(ib)*(1.-frac_sno) + albsni_bc(ib)*frac_sno
+             albgrd_bc(ib) = albsnd_bc(ib)
+             albgri_bc(ib) = albsni_bc(ib)
 
              IF (DO_SNO_OC) THEN
                 ! OC forcing albedo
-                albgrd_oc(ib) = albsod(ib)*(1.-frac_sno) + albsnd_oc(ib)*frac_sno
-                albgri_oc(ib) = albsoi(ib)*(1.-frac_sno) + albsni_oc(ib)*frac_sno
+                !albgrd_oc(ib) = albsod(ib)*(1.-frac_sno) + albsnd_oc(ib)*frac_sno
+                !albgri_oc(ib) = albsoi(ib)*(1.-frac_sno) + albsni_oc(ib)*frac_sno
+                albgrd_oc(ib) = albsnd_oc(ib)
+                albgri_oc(ib) = albsni_oc(ib)
              ENDIF
 
              ! dust forcing albedo
-             albgrd_dst(ib) = albsod(ib)*(1.-frac_sno) + albsnd_dst(ib)*frac_sno
-             albgri_dst(ib) = albsoi(ib)*(1.-frac_sno) + albsni_dst(ib)*frac_sno
+             !albgrd_dst(ib) = albsod(ib)*(1.-frac_sno) + albsnd_dst(ib)*frac_sno
+             !albgri_dst(ib) = albsoi(ib)*(1.-frac_sno) + albsni_dst(ib)*frac_sno
+             albgrd_dst(ib) = albsnd_dst(ib)
+             albgri_dst(ib) = albsni_dst(ib)
           ENDIF
 
           ! also in this loop (but optionally in a different loop for vectorized code)
@@ -1896,6 +1911,8 @@ ENDIF
                    flx_absdn(i) = flx_absd_snw(i,ib)*(1.-albsnd(ib))
                    flx_absin(i) = flx_absi_snw(i,ib)*(1.-albsni(ib))
                 ENDIF
+                !NOTE: the below should be the same
+                !print *, "sum of flx_absd_snw:", sum(flx_absd_snw(:,ib)), 1-albsnd(ib)
              ENDIF
           ENDDO
        ENDIF

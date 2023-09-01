@@ -118,7 +118,7 @@ CONTAINS
 
 ! ----------------local variables ---------------------------------
    integer  :: local_secs
-   real(r8) :: radpsec, sabvg
+   real(r8) :: radpsec, sabvg, sabg_noadj
 
    integer ps, pe, p
 
@@ -181,14 +181,6 @@ CONTAINS
                     + forc_soll *(1.-alb(2,1)) + forc_solld*(1.-alb(2,2))
             sabg    = sabvg - sabvsun - sabvsha
 
-            sabg_soil = forc_sols*ssoi(1,1) + forc_solsd*ssoi(1,2) &
-                      + forc_soll*ssoi(2,1) + forc_solld*ssoi(2,2)
-            sabg_snow = forc_sols*ssno(1,1) + forc_solsd*ssno(1,2) &
-                      + forc_soll*ssno(2,1) + forc_solld*ssno(2,2)
-
-            sabg_soil = sabg_soil * (1.-fsno)
-            sabg_snow = sabg_snow * fsno
-
             IF (patchtype == 0) THEN
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
@@ -208,39 +200,57 @@ CONTAINS
             sabg  = sabvg
          ENDIF
 
+         sabg_soil = forc_sols*ssoi(1,1) + forc_solsd*ssoi(1,2) &
+                   + forc_soll*ssoi(2,1) + forc_solld*ssoi(2,2)
+         sabg_snow = forc_sols*ssno(1,1) + forc_solsd*ssno(1,2) &
+                   + forc_soll*ssno(2,1) + forc_solld*ssno(2,2)
+
+         sabg_soil = sabg_soil * (1.-fsno)
+         sabg_snow = sabg_snow * fsno
+
+         IF (sabg_soil+sabg_snow-sabg>1.e-6) THEN ! this could happen when there is adjust to ssun,ssha
+            print *, "MOD_NetSolar.F90: NOTE imbalance in spliting soil and snow surface!"
+            print *, "sabg:", sabg, "sabg_soil:", sabg_soil, "sabg_snow", sabg_snow
+            print *, "sabg_soil+sabg_snow:", sabg_soil+sabg_snow, "fsno:", fsno
+
+            sabg_noadj = sabg_soil + sabg_snow
+
+            IF (sabg_noadj > 0.) THEN
+               sabg_soil = sabg_soil * sabg/sabg_noadj
+               sabg_snow = sabg_snow * sabg/sabg_noadj
+               ssoi(:,:) = ssoi(:,:) * sabg/sabg_noadj
+               ssno(:,:) = ssno(:,:) * sabg/sabg_noadj
+            ENDIF
+
+            !CALL CoLM_stop()
+         ENDIF
+
          IF (DEF_USE_SNICAR) THEN
 
-            IF (patchtype < 4) THEN !non lake and ocean
-               !TODO-done: add DEF_SPLIT_SOILSNOW
-               IF (.not.DEF_SPLIT_SOILSNOW) THEN
-                  ! normalization
-                  IF(sum(ssno_lyr(1,1,:))>0.) ssno_lyr(1,1,:) = (1-alb(1,1)-ssun(1,1)-ssha(1,1)) * ssno_lyr(1,1,:)/sum(ssno_lyr(1,1,:))
-                  IF(sum(ssno_lyr(1,2,:))>0.) ssno_lyr(1,2,:) = (1-alb(1,2)-ssun(1,2)-ssha(1,2)) * ssno_lyr(1,2,:)/sum(ssno_lyr(1,2,:))
-                  IF(sum(ssno_lyr(2,1,:))>0.) ssno_lyr(2,1,:) = (1-alb(2,1)-ssun(2,1)-ssha(2,1)) * ssno_lyr(2,1,:)/sum(ssno_lyr(2,1,:))
-                  IF(sum(ssno_lyr(2,2,:))>0.) ssno_lyr(2,2,:) = (1-alb(2,2)-ssun(2,2)-ssha(2,2)) * ssno_lyr(2,2,:)/sum(ssno_lyr(2,2,:))
-               ELSE
-                  ssno_lyr(:,:,:) = ssno_lyr(:,:,:)*fsno
-               ENDIF
-            ELSE                    !lake and ocean
-               !TODO-done: add DEF_SPLIT_SOILSNOW
-               IF (.not.DEF_SPLIT_SOILSNOW) THEN
-                  ! normalization
-                  IF(sum(ssno_lyr(1,1,:))>0.) ssno_lyr(1,1,:) = (1-alb(1,1)) * ssno_lyr(1,1,:)/sum(ssno_lyr(1,1,:))
-                  IF(sum(ssno_lyr(1,2,:))>0.) ssno_lyr(1,2,:) = (1-alb(1,2)) * ssno_lyr(1,2,:)/sum(ssno_lyr(1,2,:))
-                  IF(sum(ssno_lyr(2,1,:))>0.) ssno_lyr(2,1,:) = (1-alb(2,1)) * ssno_lyr(2,1,:)/sum(ssno_lyr(2,1,:))
-                  IF(sum(ssno_lyr(2,2,:))>0.) ssno_lyr(2,2,:) = (1-alb(2,2)) * ssno_lyr(2,2,:)/sum(ssno_lyr(2,2,:))
-               ELSE
-                  ssno_lyr(:,:,:) = ssno_lyr(:,:,:)*fsno
-               ENDIF
-            ENDIF
+            ! adjust snow layer absorption due to multiple reflection between ground and canopy
+            IF(sum(ssno_lyr(1,1,:))>0.) ssno_lyr(1,1,:) = ssno(1,1) * ssno_lyr(1,1,:)/sum(ssno_lyr(1,1,:))
+            IF(sum(ssno_lyr(1,2,:))>0.) ssno_lyr(1,2,:) = ssno(1,2) * ssno_lyr(1,2,:)/sum(ssno_lyr(1,2,:))
+            IF(sum(ssno_lyr(2,1,:))>0.) ssno_lyr(2,1,:) = ssno(2,1) * ssno_lyr(2,1,:)/sum(ssno_lyr(2,1,:))
+            IF(sum(ssno_lyr(2,2,:))>0.) ssno_lyr(2,2,:) = ssno(2,2) * ssno_lyr(2,2,:)/sum(ssno_lyr(2,2,:))
 
             ! snow layer absorption
             sabg_snow_lyr(:) = forc_sols*ssno_lyr(1,1,:) + forc_solsd*ssno_lyr(1,2,:) &
                              + forc_soll*ssno_lyr(2,1,:) + forc_solld*ssno_lyr(2,2,:)
 
+            sabg_snow_lyr(:) = sabg_snow_lyr(:)*fsno
+
+            print *, "ssno:", ssno(1,1),ssno(2,1),ssno(1,2),ssno(2,2)
+            print *, "ssno_lyr:", sum(ssno_lyr(1,1,:)), sum(ssno_lyr(2,1,:)),sum(ssno_lyr(1,2,:)),sum(ssno_lyr(2,2,:))
+            print *, "sabg_snow:", sabg_snow, "sabg_snow_lyr:", sum(sabg_snow_lyr(:0))
+
             ! attribute the first layer absorption to soil absorption
-            !TODO: need double check
             sabg_soil = sabg_soil + sabg_snow_lyr(1)
+            sabg_snow = sabg_snow - sabg_snow_lyr(1)
+
+            print *, "----- after adjust -----"
+            print *, "sabg_snow:", sabg_snow, "sabg_snow_lyr:", sum(sabg_snow_lyr(:0))
+            print *, sabg_snow_lyr
+
          ENDIF
       ENDIF
 

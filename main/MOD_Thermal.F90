@@ -121,7 +121,7 @@ MODULE MOD_Thermal
   USE MOD_Hydro_SoilFunction, only: soil_psi_from_vliq
 #endif
   USE MOD_SPMD_Task
-  USE MOD_Namelist, only: DEF_USE_PLANTHYDRAULICS, &
+  USE MOD_Namelist, only: DEF_USE_PLANTHYDRAULICS, DEF_SPLIT_SOILSNOW, &
                           DEF_USE_LCT,DEF_USE_PFT,DEF_USE_PC
 
   IMPLICIT NONE
@@ -454,10 +454,6 @@ MODULE MOD_Thermal
       fevpl  = 0.;  etr    = 0.
       fseng  = 0.;  fevpg  = 0.
 
-      !dlrad  = frl
-      !ulrad  = frl*(1.-emg) &
-      !       + emg*stefnc*t_soisno(lb)**4
-
       cgrnds = 0.;  cgrndl = 0.
       cgrnd  = 0.;  tref   = 0.
       qref   = 0.;  rst    = 2.0e4
@@ -469,16 +465,21 @@ MODULE MOD_Thermal
       ustar  = 0.;  qstar  = 0.
       tstar  = 0.;  rootr  = 0.
 
-      ! temperature and water mass from previous time step
-      !t_grnd = t_soisno(lb)
+      dlrad  = frl
+
       t_soil = t_soisno(1)
       t_snow = t_soisno(lb)
-      t_grnd = (1.-fsno)*t_soil + fsno*t_snow
-      dlrad  = frl
-      ulrad  = frl*(1.-emg) &
-             + fsno*emg*stefnc*t_snow**4 &
-             + (1.-fsno)*emg*stefnc*t_soil**4
 
+IF (.not.DEF_SPLIT_SOILSNOW) THEN
+      t_grnd = t_soisno(lb)
+      ulrad  = frl*(1.-emg) + emg*stefnc*t_grnd**4
+ELSE
+      t_grnd = fsno*t_snow  + (1.-fsno)*t_soil
+      ulrad  = frl*(1.-emg) + fsno*emg*stefnc*t_snow**4 &
+             + (1.-fsno)*emg*stefnc*t_soil**4
+ENDIF
+
+      ! temperature and water mass from previous time step
       t_soisno_bef(lb:) = t_soisno(lb:)
       t_grnd_bef = t_grnd
       wice0(lb:) = wice_soisno(lb:)
@@ -803,11 +804,13 @@ IF (DEF_USE_PFT .or. patchclass(ipatch)==CROPLAND) THEN
             fevpl_p      (i) = 0.
             etr_p        (i) = 0.
             dlrad_p      (i) = frl
-            !ulrad_p      (i) = frl*(1.-emg) + emg*stefnc*t_grnd**4
 
-            ulrad_p      (i) = frl*(1.-emg) &
-                             + fsno*emg*stefnc*t_snow**4 &
+IF (.not.DEF_SPLIT_SOILSNOW) THEN
+            ulrad_p      (i) = frl*(1.-emg) + emg*stefnc*t_grnd**4
+ELSE
+            ulrad_p      (i) = frl*(1.-emg) + fsno*emg*stefnc*t_snow**4 &
                              + (1.-fsno)*emg*stefnc*t_soil**4
+ENDIF
             hprl_p       (i) = 0.
 
             IF (DEF_USE_PLANTHYDRAULICS) THEN
@@ -1001,14 +1004,18 @@ ENDIF
 ! [6] Correct fluxes to present soil temperature
 !=======================================================================
 
-      !t_grnd = t_soisno(lb)
-      !tinc   = t_soisno(lb) - t_soisno_bef(lb)
-      t_grnd = fsno*t_soisno(lb) + (1.0-fsno)*t_soisno(1)
-      tinc   = t_grnd - t_grnd_bef
-      fseng  = fseng + tinc*cgrnds
+      IF (.not.DEF_SPLIT_SOILSNOW) THEN
+         t_grnd = t_soisno(lb)
+         tinc   = t_soisno(lb) - t_soisno_bef(lb)
+      ELSE
+         t_grnd = fsno*t_soisno(lb) + (1.0-fsno)*t_soisno(1)
+         tinc   = t_grnd - t_grnd_bef
+      ENDIF
+
+      fseng      = fseng      + tinc*cgrnds
       fseng_soil = fseng_soil + tinc*cgrnds
       fseng_snow = fseng_snow + tinc*cgrnds
-      fevpg  = fevpg + tinc*cgrndl
+      fevpg      = fevpg      + tinc*cgrndl
       fevpg_soil = fevpg_soil + tinc*cgrndl
       fevpg_snow = fevpg_snow + tinc*cgrndl
 
@@ -1112,14 +1119,22 @@ ENDIF
       lfevpa = hvap*fevpl + htvp*fevpg   ! W/m^2 (accouting for sublimation)
 
 ! ground heat flux
+IF (.not.DEF_SPLIT_SOILSNOW) THEN
       fgrnd = sabg + dlrad*emg &
-            !- emg*stefnc*t_grnd_bef**4 &
-            - (1.-fsno)*emg*stefnc*t_soil**4 &
-            - fsno*emg*stefnc*t_snow**4 &
+            - emg*stefnc*t_grnd_bef**4 &
             - emg*stefnc*t_grnd_bef**3*(4.*tinc) &
             - (fseng+fevpg*htvp) &
             + cpliq*pg_rain*(t_precip-t_grnd) &
             + cpice*pg_snow*(t_precip-t_grnd)
+ELSE
+      fgrnd = sabg + dlrad*emg &
+            - fsno*emg*stefnc*t_snow**4 &
+            - (1.-fsno)*emg*stefnc*t_soil**4 &
+            - emg*stefnc*t_grnd_bef**3*(4.*tinc) &
+            - (fseng+fevpg*htvp) &
+            + cpliq*pg_rain*(t_precip-t_grnd) &
+            + cpice*pg_snow*(t_precip-t_grnd)
+ENDIF
 
 ! outgoing long-wave radiation from canopy + ground
       olrg = ulrad &
@@ -1160,19 +1175,34 @@ ENDIF
 !=======================================================================
 
       ! one way to check energy
-      errore = sabv + sabg + frl - olrg - fsena - lfevpa - fgrnd
+      errore = sabv + sabg + frl - olrg - fsena - lfevpa - fgrnd + hprl &
+             + cpliq*pg_rain*(t_precip-t_grnd) + cpice*pg_snow*(t_precip-t_grnd)
+      IF (abs(errore) > .5) THEN
+      print *, " one way:", errore
+      write(6,*) 'MOD_Thermal.F90: energy balance violation'
+      write(6,*) ipatch,errore,sabv,sabg,frl,olrg,fsenl,fseng,hvap*fevpl,htvp*fevpg,xmf,hprl
+      write(6,*) cpliq*pg_rain*(t_precip-t_grnd), cpice*pg_snow*(t_precip-t_grnd)
+      CALL CoLM_stop ()
+      ENDIF
 
       ! another way to check energy
-      errore = sabv + sabg + frl - olrg - fsena - lfevpa - xmf + hprl + &
-               cpliq*pg_rain*(t_precip-t_grnd) + cpice*pg_snow*(t_precip-t_grnd)
+      errore = sabv + sabg + frl - olrg - fsena - lfevpa - xmf + hprl &
+             + cpliq*pg_rain*(t_precip-t_grnd) + cpice*pg_snow*(t_precip-t_grnd)
       DO j = lb, nl_soil
          errore = errore - (t_soisno(j)-t_soisno_bef(j))/fact(j)
       ENDDO
+      IF (abs(errore) > .5) THEN
+      print *, " another way:", errore
+      print *, "fgrnd:", fgrnd, "lb:", lb, "fsno:", fsno
+      print *, "sabg_snow_lyr", sabg_snow_lyr
+      print *, "xmf+delta_soil_heat", xmf+sum((t_soisno-t_soisno_bef)/fact), xmf, sum((t_soisno-t_soisno_bef)/fact)
+      ENDIF
 
 #if (defined CoLMDEBUG)
       IF (abs(errore) > .5) THEN
       write(6,*) 'MOD_Thermal.F90: energy balance violation'
       write(6,*) ipatch,errore,sabv,sabg,frl,olrg,fsenl,fseng,hvap*fevpl,htvp*fevpg,xmf,hprl
+      write(6,*) cpliq*pg_rain*(t_precip-t_grnd), cpice*pg_snow*(t_precip-t_grnd)
       CALL CoLM_stop ()
       ENDIF
 100   format(10(f15.3))

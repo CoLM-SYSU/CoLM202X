@@ -173,7 +173,7 @@ MODULE MOD_GroundTemperature
    real(r8) hs                       !net energy flux into the surface (w/m2)
    real(r8) hs_soil                  !net energy flux into the surface soil (w/m2)
    real(r8) hs_snow                  !net energy flux into the surface snow (w/m2)
-   real(r8) dhsdt                    !d(hs)/dT
+   real(r8) dhsdT                    !d(hs)/dT
    real(r8) brr    (lb:nl_soil)      !temporay set
    real(r8) vf_water(1:nl_soil)      !volumetric fraction liquid water within soil
    real(r8) vf_ice  (1:nl_soil)      !volumetric fraction ice len within soil
@@ -242,34 +242,35 @@ MODULE MOD_GroundTemperature
    tk(nl_soil) = 0.
 
 ! net ground heat flux into the surface and its temperature derivative
-   IF (DEF_USE_SNICAR .and. lb < 1) THEN
-      hs = sabg_snow_lyr(lb) + dlrad*emg &
-         ! 08/19/2021, yuan: NOTE! removed sigf, LAI->100% cover
-         !- emg*stefnc*t_grnd**4 &
-! 03/08/2020, yuan: separate soil and snow
-         - (1.-fsno)*emg*stefnc*t_soil**4 &
-         - fsno*emg*stefnc*t_snow**4 &
+
+   ! 08/19/2021, yuan: NOTE! removed sigf, LAI->100% cover
+   IF (DEF_USE_SNICAR.and. lb < 1) THEN
+      hs = sabg_snow_lyr(lb) + sabg_soil + dlrad*emg &
          - (fseng+fevpg*htvp) &
          + cpliq*pg_rain*(t_precip-t_grnd) &
          + cpice*pg_snow*(t_precip-t_grnd)
    ELSE
       hs = sabg + dlrad*emg &
-         !- emg*stefnc*t_grnd**4
-         - (1.-fsno)*emg*stefnc*t_soil**4 &
-         - fsno*emg*stefnc*t_snow**4 &
          - (fseng+fevpg*htvp) &
          + cpliq*pg_rain*(t_precip-t_grnd) &
          + cpice*pg_snow*(t_precip-t_grnd)
    ENDIF
 
-! 03/08/2020, yuan: calculate hs_soil, hs_snow for
-! soil/snow fractional cover separately.
-   IF (DEF_SPLIT_SOILSNOW) THEN
+   IF (.not.DEF_SPLIT_SOILSNOW) THEN
+      hs = hs - emg*stefnc*t_grnd**4
+   ELSE
+      ! 03/08/2020, yuan: separate soil and snow
+      hs = hs - fsno*emg*stefnc*t_snow**4 &
+         - (1.-fsno)*emg*stefnc*t_soil**4
+
+      ! 03/08/2020, yuan: calculate hs_soil, hs_snow for
+      ! soil/snow fractional cover separately.
       hs_soil = dlrad*emg &
               - emg*stefnc*t_soil**4 &
               - (fseng_soil+fevpg_soil*htvp) &
               + cpliq*pg_rain*(t_precip-t_soil) &
               + cpice*pg_snow*(t_precip-t_soil)
+
       hs_soil = hs_soil*(1.-fsno) + sabg_soil
 
       hs_snow = dlrad*emg &
@@ -277,18 +278,25 @@ MODULE MOD_GroundTemperature
               - (fseng_snow+fevpg_snow*htvp) &
               + cpliq*pg_rain*(t_precip-t_snow) &
               + cpice*pg_snow*(t_precip-t_snow)
-      hs_snow = hs_snow*fsno + sabg_snow
 
-      IF (sabg_soil+sabg_snow-sabg>1.e-3 .or. hs_soil+hs_snow-hs>1.e-3) THEN
+      IF (DEF_USE_SNICAR .and. lb < 1) THEN
+         hs_snow = hs_snow*fsno + sabg_snow_lyr(lb)
+      ELSE
+         hs_snow = hs_snow*fsno + sabg_snow
+      ENDIF
+
+      dhsdT = -cgrnd - 4.*emg*stefnc*t_grnd**3 - cpliq*pg_rain - cpice*pg_snow
+
+      IF (sabg_soil+sabg_snow-sabg>1.e-6 .or. hs_soil+hs_snow-hs>1.e-6) THEN
          print *, "MOD_GroundTemperature.F90: Error in spliting soil and snow surface!"
          print *, "sabg:", sabg, "sabg_soil:", sabg_soil, "sabg_snow", sabg_snow
-         print *, "hs", hs, "hs_soil", hs_soil, "hs_snow:", hs_snow
+         print *, "hs", hs, "hs_soil", hs_soil, "hs_snow:", hs_snow, "fsno:", fsno
          print *, "hs_soil+hs_snow", hs_soil+hs_snow, "sabg_soil+sabg_snow:", sabg_soil+sabg_snow
+         print *, "lb:", lb, sabg_snow_lyr
          CALL CoLM_stop()
       ENDIF
    ENDIF
 
-   ! simple method, double check
    dhsdT = -cgrnd - 4.*emg*stefnc*t_grnd**3 - cpliq*pg_rain - cpice*pg_snow
    t_soisno_bef(lb:) = t_soisno(lb:)
 
@@ -315,7 +323,7 @@ MODULE MOD_GroundTemperature
    IF (j<1 .and. DEF_SPLIT_SOILSNOW) THEN ! snow covered and split soil and snow
       bt(j) = 1+(1.-cnfac)*fact(j)*tk(j)/dzp-fact(j)*fsno*dhsdT
       rt(j) = t_soisno(j) +fact(j)*( hs_snow - fsno*dhsdT*t_soisno(j) + cnfac*fn(j) )
-   ELSE            ! no snow case
+   ELSE            ! not a snow layer or don't split soil and snow
       bt(j) = 1+(1.-cnfac)*fact(j)*tk(j)/dzp-fact(j)*dhsdT
       rt(j) = t_soisno(j) +fact(j)*( hs - dhsdT*t_soisno(j) + cnfac*fn(j) )
    ENDIF
@@ -338,12 +346,13 @@ MODULE MOD_GroundTemperature
 
       IF (j == 1) THEN  ! the first soil layer
          at(j) =   - (1.-cnfac)*fact(j)* tk(j-1)/dzm
-         bt(j) = 1.+ (1.-cnfac)*fact(j)*(tk(j)/dzp + tk(j-1)/dzm) &
-                   - (1.-fsno)*fact(j)*dhsdT
          ct(j) =   - (1.-cnfac)*fact(j)* tk(j)/dzp
          IF (.not.DEF_SPLIT_SOILSNOW) THEN
+            bt(j) = 1.+ (1.-cnfac)*fact(j)*(tk(j)/dzp + tk(j-1)/dzm)
             rt(j) = t_soisno(j) + cnfac*fact(j)*( fn(j) - fn(j-1) )
          ELSE
+            bt(j) = 1.+ (1.-cnfac)*fact(j)*(tk(j)/dzp + tk(j-1)/dzm) &
+                  - (1.-fsno)*dhsdT*fact(j)
             rt(j) = t_soisno(j) + cnfac*fact(j)*( fn(j) - fn(j-1) ) &
                   + fact(j)*( hs_soil - (1.-fsno)*dhsdT*t_soisno(j) )
          ENDIF

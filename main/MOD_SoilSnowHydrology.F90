@@ -193,12 +193,12 @@ MODULE MOD_SoilSnowHydrology
 !=======================================================================
 
 
-IF (.not. DEF_SPLIT_SOILSNOW .or. (patchtype==1 .and. DEF_URBAN_RUN)) THEN
+IF ((.not.DEF_SPLIT_SOILSNOW) .or. (patchtype==1 .and. DEF_URBAN_RUN)) THEN
 
       if (lb>=1)then
          gwat = pg_rain + sm - qseva
       else
-         IF (.not. DEF_USE_SNICAR .or. (patchtype==1 .and. DEF_URBAN_RUN)) THEN
+         IF ((.not.DEF_USE_SNICAR) .or. (patchtype==1 .and. DEF_URBAN_RUN)) THEN
             call snowwater (lb,deltim,ssi,wimp,&
                          pg_rain,qseva,qsdew,qsubl,qfros,&
                          dz_soisno(lb:0),wice_soisno(lb:0),wliq_soisno(lb:0),gwat)
@@ -343,7 +343,7 @@ ENDIF
       rnof = rsubst + rsur
 
       ! Renew the ice and liquid mass due to condensation
-IF (.not. DEF_SPLIT_SOILSNOW .or. (patchtype==1 .and. DEF_URBAN_RUN)) THEN
+IF ((.not.DEF_SPLIT_SOILSNOW) .or. (patchtype==1 .and. DEF_URBAN_RUN)) THEN
       if(lb >= 1)then
          ! make consistent with how evap_grnd removed in infiltration
          wliq_soisno(1) = max(0., wliq_soisno(1) + qsdew * deltim)
@@ -623,13 +623,13 @@ ENDIF
 ! [1] update the liquid water within snow layer and the water onto soil
 !=======================================================================
 
-IF (.not. DEF_SPLIT_SOILSNOW .or. (patchtype==1 .and. DEF_URBAN_RUN)) THEN
+IF ((.not.DEF_SPLIT_SOILSNOW) .or. (patchtype==1 .and. DEF_URBAN_RUN)) THEN
 
       if (lb>=1)then
          gwat = pg_rain + sm - qseva
       else
 
-         IF (.not. DEF_USE_SNICAR .or. (patchtype==1 .and. DEF_URBAN_RUN)) THEN
+         IF ((.not.DEF_USE_SNICAR) .or. (patchtype==1 .and. DEF_URBAN_RUN)) THEN
             call snowwater (lb,deltim,ssi,wimp,&
                          pg_rain,qseva,qsdew,qsubl,qfros,&
                          dz_soisno(lb:0),wice_soisno(lb:0),wliq_soisno(lb:0),gwat)
@@ -883,7 +883,7 @@ ENDIF
       zwt = zwtmm/1000.0
 
       ! Renew the ice and liquid mass due to condensation
-IF (.not. DEF_SPLIT_SOILSNOW .or. (patchtype==1 .and. DEF_URBAN_RUN)) THEN
+IF ((.not.DEF_SPLIT_SOILSNOW) .or. (patchtype==1 .and. DEF_URBAN_RUN)) THEN
       if(lb >= 1)then
          ! make consistent with how evap_grnd removed in infiltration
          wliq_soisno(1) = max(0., wliq_soisno(1) + qsdew * deltim)
@@ -912,7 +912,7 @@ ENDIF
          - (gwat-etr)*deltim
 #endif
 
-IF (.not. DEF_SPLIT_SOILSNOW .or. (patchtype==1 .and. DEF_URBAN_RUN)) THEN
+IF ((.not.DEF_SPLIT_SOILSNOW) .or. (patchtype==1 .and. DEF_URBAN_RUN)) THEN
       if(lb >= 1)then
          err_solver = err_solver - (qsdew+qfros-qsubl)*deltim
       endif
@@ -1743,7 +1743,7 @@ ENDIF
 
     ! Compute matric potential and derivative based on liquid water content only
     do j = 1, nl_soil
-       if(DEF_USE_PLANTHYDRAULICS .and. (patchtype/=1 .or. .not.DEF_URBAN_RUN))then
+       if(DEF_USE_PLANTHYDRAULICS .and. (patchtype/=1 .or. (.not.DEF_URBAN_RUN)))then
           if(t_soisno(j)>=tfrz) then
              if(porsl(j)<1.e-6)then     ! bed rock
                 s_node = 0.001
@@ -1859,7 +1859,7 @@ ENDIF
     amx(j) = 0.
     bmx(j) = dzmm(j)/deltim + dqodw1(j)
     cmx(j) = dqodw2(j)
-    if(DEF_USE_PLANTHYDRAULICS .and. (patchtype/=1 .or. .not.DEF_URBAN_RUN))then
+    if(DEF_USE_PLANTHYDRAULICS .and. (patchtype/=1 .or. (.not.DEF_URBAN_RUN)))then
        rmx(j) =  qin(j) - qout(j) - rootr(j)
     else
        rmx(j) =  qin(j) - qout(j) - etr*rootr(j)
@@ -1879,7 +1879,7 @@ ENDIF
        amx(j) = -dqidw0(j)
        bmx(j) =  dzmm(j)/deltim - dqidw1(j) + dqodw1(j)
        cmx(j) =  dqodw2(j)
-       if(DEF_USE_PLANTHYDRAULICS .and. (patchtype/=1 .or. .not.DEF_URBAN_RUN))then
+       if(DEF_USE_PLANTHYDRAULICS .and. (patchtype/=1 .or. (.not.DEF_URBAN_RUN)))then
           rmx(j) =  qin(j) - qout(j) - rootr(j)
        else
           rmx(j) =  qin(j) - qout(j) - etr*rootr(j)
@@ -1906,7 +1906,7 @@ ENDIF
     amx(j) = -dqidw0(j)
     bmx(j) =  dzmm(j)/deltim - dqidw1(j) + dqodw1(j)
     cmx(j) =  dqodw2(j)
-    if(DEF_USE_PLANTHYDRAULICS .and. (patchtype/=1 .or. .not.DEF_URBAN_RUN))then
+    if(DEF_USE_PLANTHYDRAULICS .and. (patchtype/=1 .or. (.not.DEF_URBAN_RUN)))then
        rmx(j) =  qin(j) - qout(j) - rootr(j)
     else
        rmx(j) =  qin(j) - qout(j) - etr*rootr(j)
@@ -1920,7 +1920,7 @@ ENDIF
 ! The mass balance error (mm) for this time step is
     errorw = -deltim*(qin(1)-qout(nl_soil)-dqodw1(nl_soil)*dwat(nl_soil))
     do j = 1, nl_soil
-       if(DEF_USE_PLANTHYDRAULICS .and. (patchtype/=1 .or. .not.DEF_URBAN_RUN))then
+       if(DEF_USE_PLANTHYDRAULICS .and. (patchtype/=1 .or. (.not.DEF_URBAN_RUN)))then
           errorw = errorw+dwat(j)*dzmm(j)+rootr(j)*deltim
        else
           errorw = errorw+dwat(j)*dzmm(j)+etr*rootr(j)*deltim
