@@ -105,7 +105,7 @@ CONTAINS
       INTEGER  :: numbasin, ibasin, ihru, i, j, ps, pe, istep
       real(r8), allocatable :: wdsrf_p (:)
 #ifdef CoLMDEBUG
-      real(r8) :: dtolw
+      real(r8) :: dtolw, toldis
 #endif
 
       IF (p_is_worker) THEN
@@ -215,23 +215,34 @@ CONTAINS
 
 #ifdef CoLMDEBUG
       IF (p_is_worker) THEN
-         dtolw = 0
-         IF (numpatch > 0) dtolw = sum(patcharea * xwsur) / 1.e3 * deltime
+         
+         dtolw  = 0
+         toldis = 0
+        
+         IF (numpatch > 0) THEN
+            dtolw = sum(patcharea * xwsur) / 1.e3 * deltime
+         ENDIF
+         IF (numelm > 0) THEN
+            toldis = sum(discharge*deltime, mask = riverdown == 0)
+            dtolw  = dtolw - toldis
+         ENDIF
+
 #ifdef USEMPI
-         CALL mpi_allreduce (MPI_IN_PLACE, dtolw, 1, MPI_REAL8, MPI_SUM, p_comm_worker, p_err)
+         CALL mpi_allreduce (MPI_IN_PLACE, dtolw,  1, MPI_REAL8, MPI_SUM, p_comm_worker, p_err)
+         CALL mpi_allreduce (MPI_IN_PLACE, toldis, 1, MPI_REAL8, MPI_SUM, p_comm_worker, p_err)
 #endif
          if (p_iam_worker == 0) then
-            write(*,'(A,F12.5,A,ES12.3,A)') 'Total surface water error: ', dtolw, &
-               '(m^3) in area ', landarea, '(m^2)'
+            write(*,'(A,F10.5,A,ES10.3,A,ES10.3,A)') 'Total surface water error: ', dtolw, &
+               '(m^3) in area ', landarea, '(m^2), discharge ', toldis, '(m^3)' 
          endif
 
          dtolw = 0
          IF (numpatch > 0) dtolw = sum(patcharea * xwsub) / 1.e3 * deltime
 #ifdef USEMPI
-         CALL mpi_allreduce (MPI_IN_PLACE, dtolw, 1, MPI_REAL8, MPI_SUM, p_comm_worker, p_err)
+         CALL mpi_allreduce (MPI_IN_PLACE, dtolw,  1, MPI_REAL8, MPI_SUM, p_comm_worker, p_err)
 #endif
          if (p_iam_worker == 0) then
-            write(*,'(A,F12.5,A,ES12.3,A)') 'Total ground  water error: ', dtolw, &
+            write(*,'(A,F10.5,A,ES10.3,A)') 'Total ground  water error: ', dtolw, &
                '(m^3) in area ', landarea, '(m^2)'
          endif
       ENDIF
