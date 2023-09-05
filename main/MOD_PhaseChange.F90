@@ -189,19 +189,19 @@ MODULE MOD_PhaseChange
          tinc = t_soisno(j)-t_soisno_bef(j)
 
          if(j > lb)then             ! => not the top layer
-            IF (j==1 .and. DEF_SPLIT_SOILSNOW .and. (patchtype==0.or.patchtype==2)) THEN
+            IF (j==1 .and. DEF_SPLIT_SOILSNOW .and. patchtype<3) THEN
                                     ! -> interface soil layer
-               ! 03/08/2020, yuan: seperate soil/snow heat flux, exclude urban(1) and glacier(3)
+               ! 03/08/2020, yuan: seperate soil/snow heat flux, exclude glacier(3)
                hm(j) = hs_soil + (1.-fsno)*dhsdT*tinc + brr(j) - tinc/fact(j)
             ELSE                    ! -> internal layers other than the interface soil layer
                hm(j) = brr(j) - tinc/fact(j)
             ENDIF
          else                       ! => top layer
-            IF (j==1 .or. (.not.DEF_SPLIT_SOILSNOW) .or. (patchtype==1.or.patchtype==3)) THEN
+            IF (j==1 .or. (.not.DEF_SPLIT_SOILSNOW) .or. patchtype==3) THEN
                                     ! -> soil layer
                hm(j) = hs + dhsdT*tinc + brr(j) - tinc/fact(j)
             ELSE                    ! -> snow cover
-               ! 03/08/2020, yuan: seperate soil/snow heat flux, exclude urban(1) and glacier(3)
+               ! 03/08/2020, yuan: seperate soil/snow heat flux, exclude glacier(3)
                hm(j) = hs_snow + fsno*dhsdT*tinc + brr(j) - tinc/fact(j)
             ENDIF
          endif
@@ -271,14 +271,14 @@ MODULE MOD_PhaseChange
 
          if(abs(heatr) > 0.)then
             if(j > lb)then             ! => not the top layer
-               IF (j==1 .and. DEF_SPLIT_SOILSNOW .and. (patchtype==0.or.patchtype==2)) THEN
+               IF (j==1 .and. DEF_SPLIT_SOILSNOW .and. patchtype<3) THEN
                                        ! -> interface soil layer
                   t_soisno(j) = t_soisno(j) + fact(j)*heatr/(1.-fact(j)*(1.-fsno)*dhsdT)
                ELSE                    ! -> internal layers other than the interface soil layer
                   t_soisno(j) = t_soisno(j) + fact(j)*heatr
                ENDIF
             else                       ! => top layer
-               IF (j==1 .or. (.not.DEF_SPLIT_SOILSNOW) .or. (patchtype==1.or.patchtype==3)) THEN
+               IF (j==1 .or. (.not.DEF_SPLIT_SOILSNOW) .or. patchtype==3) THEN
                                        ! -> soil layer
                   t_soisno(j) = t_soisno(j) + fact(j)*heatr/(1.-fact(j)*dhsdT)
                ELSE                    ! -> snow cover
@@ -488,9 +488,9 @@ MODULE MOD_PhaseChange
          tinc = t_soisno(j)-t_soisno_bef(j)
 
          if(j > lb)then             ! => not the top layer
-            IF (j==1 .and. DEF_SPLIT_SOILSNOW .and. (patchtype==0.or.patchtype==2)) THEN
+            IF (j==1 .and. DEF_SPLIT_SOILSNOW .and. patchtype<3) THEN
                                     ! -> interface soil layer
-               ! 03/08/2020, yuan: seperate soil/snow heat flux, exclude urban(1) and glacier(3)
+               ! 03/08/2020, yuan: seperate soil/snow heat flux, exclude glacier(3)
                hm(j) = hs_soil + (1.-fsno)*dhsdT*tinc + brr(j) - tinc/fact(j)
             ELSE                    ! -> internal layers other than the interface soil layer
                IF (j <= 0) THEN
@@ -500,11 +500,11 @@ MODULE MOD_PhaseChange
                ENDIF
             ENDIF
          else                       ! => top layer
-            IF (j==1 .or. (.not.DEF_SPLIT_SOILSNOW) .or. (patchtype==1.or.patchtype==3)) THEN
+            IF (j==1 .or. (.not.DEF_SPLIT_SOILSNOW) .or. patchtype==3) THEN
                                     ! -> soil layer
                hm(j) = hs + dhsdT*tinc + brr(j) - tinc/fact(j)
             ELSE                    ! -> snow cover
-               ! 03/08/2020, yuan: seperate soil/snow heat flux, exclude urban(1) and glacier(3)
+               ! 03/08/2020, yuan: seperate soil/snow heat flux, exclude glacier(3)
                hm(j) = hs_snow + fsno*dhsdT*tinc + brr(j) - tinc/fact(j)
             ENDIF
          endif
@@ -574,14 +574,14 @@ MODULE MOD_PhaseChange
 
          if(abs(heatr) > 0.)then
             if(j > lb)then             ! => not the top layer
-               IF (j==1 .and. DEF_SPLIT_SOILSNOW .and. (patchtype==0.or.patchtype==2)) THEN
+               IF (j==1 .and. DEF_SPLIT_SOILSNOW .and. patchtype<3) THEN
                                        ! -> interface soil layer
                   t_soisno(j) = t_soisno(j) + fact(j)*heatr/(1.-fact(j)*(1.-fsno)*dhsdT)
                ELSE                    ! -> internal layers other than the interface soil layer
                   t_soisno(j) = t_soisno(j) + fact(j)*heatr
                ENDIF
             else                       ! => top layer
-               IF (j==1 .or. (.not.DEF_SPLIT_SOILSNOW) .or. (patchtype==1.or.patchtype==3)) THEN
+               IF (j==1 .or. (.not.DEF_SPLIT_SOILSNOW) .or. patchtype==3) THEN
                                        ! -> soil layer
                   t_soisno(j) = t_soisno(j) + fact(j)*heatr/(1.-fact(j)*dhsdT)
                ELSE                    ! -> snow cover
