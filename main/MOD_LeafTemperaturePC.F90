@@ -1752,8 +1752,8 @@ ENDIF
 
 ! 03/07/2020, yuan: TODO-done, calculate fseng_soil/snow, fevpg_soil/snow
        IF (numlay .EQ. 1) THEN
-          ttaf = taf(botlay)
-          tqaf = qaf(botlay)
+          ttaf = thm
+          tqaf = qm
        ENDIF
 
        IF (numlay .EQ. 2) THEN
