@@ -444,7 +444,7 @@ CONTAINS
             zwt = (25. + z_soisno(nl_soil))+dz_soisno(nl_soil)/2. - wa/1000./0.2 !to result in zwt = zi(nl_soil) + 1.0 m
          ENDIF
       ELSE
-         IF (patchtype <= 2) THEN
+         IF (patchtype <= 1) THEN
             CALL get_water_equilibrium_state (zwtmm, nl_soil, wliq_soisno(1:nl_soil), smp, hk, wa, &
                zc_soimm, zi_soimm, porsl, vliq_r, psi0, hksati, nprms, prms)
          ELSE

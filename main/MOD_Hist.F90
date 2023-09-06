@@ -103,7 +103,7 @@ contains
       use MOD_TimeManager
       use MOD_SPMD_Task
       use MOD_Vars_1DAccFluxes
-      USE MOD_Vars_TimeVariables, only : wa, wat, wdsrf
+      USE MOD_Vars_TimeVariables, only : wa, wat, wetwat, wdsrf
       use MOD_Block
       use MOD_DataType
       use MOD_LandPatch
@@ -497,6 +497,11 @@ contains
             a_wat, file_hist, 'f_wat', itime_in_file, sumarea, filter, &
             'total water storage','mm')
 
+         ! wetland water storage [mm]
+         call write_history_variable_2d ( DEF_hist_vars%wetwat, &
+            a_wetwat, file_hist, 'f_wetwat', itime_in_file, sumarea, filter, &
+            'wetland water storage','mm')
+
          ! instantaneous total water storage [mm]
          IF (p_is_worker) THEN
             vecacc = wat
@@ -505,6 +510,15 @@ contains
          call write_history_variable_2d ( DEF_hist_vars%wat_inst, &
             vecacc, file_hist, 'f_wat_inst', itime_in_file, sumarea, filter, &
             'instantaneous total water storage','mm')
+
+         ! instantaneous wetland water storage [mm]
+         IF (p_is_worker) THEN
+            vecacc = wetwat
+            WHERE(vecacc /= spval) vecacc = vecacc * nac
+         ENDIF
+         call write_history_variable_2d ( DEF_hist_vars%wetwat_inst, &
+            vecacc, file_hist, 'f_wetwat_inst', itime_in_file, sumarea, filter, &
+            'instantaneous wetland water storage','mm')
 
          ! canopy assimilation rate [mol m-2 s-1]
          call write_history_variable_2d ( DEF_hist_vars%assim, &

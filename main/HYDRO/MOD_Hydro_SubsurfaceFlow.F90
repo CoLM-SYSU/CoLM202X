@@ -482,7 +482,7 @@ CONTAINS
          
          DO ipatch = 1, numpatch
 
-            IF (patchtype(ipatch) <= 2) THEN 
+            IF (patchtype(ipatch) <= 1) THEN 
 #if(defined CoLMDEBUG)
                ! For water balance check, the sum of water in soil column before the calcultion
                w_sum_before = sum(wliq_soisno(1:nl_soil,ipatch)) + sum(wice_soisno(1:nl_soil,ipatch)) &
@@ -584,7 +584,25 @@ CONTAINS
                   CALL CoLM_stop ()
                endif
 #endif
+            ELSEIF (patchtype(ipatch) == 2) THEN ! wetland
+
+               wetwat(ipatch) = wdsrf(ipatch) + wa(ipatch) + wetwat(ipatch)  - xwsub(ipatch)*deltime
+
+               IF (wetwat(ipatch) > wetwatmax) THEN
+                  wdsrf(ipatch)  = wetwat(ipatch) - wetwatmax
+                  wetwat(ipatch) = wetwatmax
+                  wa     = 0.
+               ELSEIF (wetwat(ipatch) < 0) THEN
+                  wa(ipatch)     = wetwat(ipatch)
+                  wdsrf(ipatch)  = 0.
+                  wetwat(ipatch) = 0.
+               ELSE
+                  wdsrf(ipatch) = 0.
+                  wa(ipatch)    = 0.
+               ENDIF
+
             ELSEIF (patchtype(ipatch) == 4) THEN ! land water bodies
+
                IF (wa(ipatch) < 0) THEN
                   wa(ipatch) = wa(ipatch) - xwsub(ipatch)*deltime
                   IF (wa(ipatch) > 0) THEN
@@ -598,6 +616,7 @@ CONTAINS
                      wdsrf(ipatch) = 0
                   ENDIF
                ENDIF
+
             ENDIF
 
          ENDDO

@@ -358,6 +358,8 @@ MODULE MOD_Namelist
       LOGICAL :: qdrip        = .true.
       LOGICAL :: wat          = .true.
       LOGICAL :: wat_inst     = .true.
+      LOGICAL :: wetwat       = .true.
+      LOGICAL :: wetwat_inst  = .true.
       LOGICAL :: assim        = .true.
       LOGICAL :: respc        = .true.
       LOGICAL :: qcharge      = .true.
@@ -1309,6 +1311,8 @@ CONTAINS
       CALL sync_hist_vars_one (DEF_hist_vars%qdrip       ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%wat         ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%wat_inst    ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%wetwat      ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%wetwat_inst ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%assim       ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%respc       ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%qcharge     ,  set_defaults)
