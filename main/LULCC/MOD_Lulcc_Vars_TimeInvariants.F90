@@ -7,6 +7,8 @@ MODULE MOD_Lulcc_Vars_TimeInvariants
 ! !REVISIONS:
 !
 ! !TODO: add authors
+! 07/2023, [add authors]: porting to MPI version
+! 08/2023, Hua Yuan: unified PFT and PC process
 ! -------------------------------
 
   USE MOD_Precision
