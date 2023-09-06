@@ -3,7 +3,9 @@
 MODULE MOD_Lulcc_PatchTrace
 ! -------------------------------
 ! Created by Wanyi Lin, Shupeng Zhang and Hua Yuan, 07/2023
-! may be renamed as MOD_Lulcc_PatchTrace
+!
+! !DESCRIPTION:
+! TODO@Wanyi: add description
 ! -------------------------------
 
    USE MOD_Precision

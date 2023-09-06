@@ -166,13 +166,13 @@ contains
       case ('TIMESTEP')
          lwrite = .true.
       case ('HOURLY')
-         lwrite = isendofhour (idate, deltim)
+         lwrite = isendofhour (idate, deltim) .or. (.not. (itstamp < etstamp))
       case ('DAILY')
-         lwrite = isendofday(idate, deltim)
+         lwrite = isendofday  (idate, deltim) .or. (.not. (itstamp < etstamp))
       case ('MONTHLY')
-         lwrite = isendofmonth(idate, deltim)
+         lwrite = isendofmonth(idate, deltim) .or. (.not. (itstamp < etstamp))
       case ('YEARLY')
-         lwrite = isendofyear(idate, deltim)
+         lwrite = isendofyear (idate, deltim) .or. (.not. (itstamp < etstamp))
       case default
          write(*,*) 'Warning : Please use one of TIMESTEP/HOURLY/DAILY/MONTHLY/YEARLY for history frequency.'
       end select
@@ -782,6 +782,11 @@ contains
          call write_history_variable_2d ( DEF_hist_vars%gssha, &
              a_gssha, file_hist, 'f_gssha', itime_in_file, sumarea, filter, &
              'Ecosystem level canopy conductance on shaded canopy','mol m-2 s-1')
+
+         ! soil resistance [m/s]
+         call write_history_variable_2d ( DEF_hist_vars%rss, &
+             a_rss, file_hist, 'f_rss', itime_in_file, sumarea, filter, &
+             'soil surface resistance','s/m')
 
 #ifdef BGC
          ! leaf carbon display pool

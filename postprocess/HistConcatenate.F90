@@ -85,6 +85,9 @@ program hist_concatenate
    call hist_concatenate_var_2d (filehist, 'f_fevpa  ', timelen, compress, &
       'evapotranspiration from canopy height to atmosphere','mm/s')
 
+   call hist_concatenate_var_2d (filehist, 'f_fevpg  ', timelen, compress, &
+      'evaporation heat flux from ground [mm/s]')
+
    call hist_concatenate_var_2d (filehist, 'f_fsenl  ', timelen, compress, &
       'sensible heat from leaves','W/m2')
 

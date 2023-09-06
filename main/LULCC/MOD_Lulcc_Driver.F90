@@ -30,7 +30,9 @@ MODULE MOD_Lulcc_Driver
 ! Created by Hua Yuan, 04/08/2022
 !
 ! !REVISONS:
-! TODO: add authors Wanyi Lin and Wenzong Dong.
+! TODO@wenzong, wanyi: check below
+! 07/2023, Wenzong Dong: porting to MPI version.
+! 08/2023, Wanyi Lin: add interface for conserved scheme.
 !
 !=======================================================================
 
@@ -94,6 +96,7 @@ MODULE MOD_Lulcc_Driver
       CALL deallocate_LulccPatchTrace()
    ENDIF
 
+   !TODO@wanyi: check the below. it shows in CoLM.F90 also.
    ! write out state variables
    CALL WRITE_TimeVariables (idate, idate(1), casename, dir_restart)
 

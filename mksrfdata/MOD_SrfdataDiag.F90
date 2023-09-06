@@ -27,6 +27,8 @@ MODULE MOD_SrfdataDiag
 
    ! PUBLIC variables and subroutines
    type(grid_type) :: gdiag
+   
+   TYPE(mapping_pset2grid_type) :: m_elm2diag
 
    TYPE(mapping_pset2grid_type) :: m_patch2diag
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
@@ -49,6 +51,8 @@ CONTAINS
    SUBROUTINE srfdata_diag_init (dir_landdata)
 
       USE MOD_SPMD_Task
+      USE MOD_Block
+      USE MOD_LandElm
       USE MOD_LandPatch
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
       USE MOD_LandPFT
@@ -65,6 +69,7 @@ CONTAINS
       CHARACTER(len=256) :: landdir, landname
       INTEGER :: ityp
       INTEGER :: typindex(N_land_classification+1)
+      real(r8), allocatable :: elmid(:)
 
       landdir = trim(dir_landdata) // '/diag/'
       IF (p_is_master) THEN
@@ -72,6 +77,8 @@ CONTAINS
       ENDIF
 
       call srf_concat%set (gdiag)
+      
+      CALL m_elm2diag%build (landelm, gdiag)
 
 #ifndef CROP
       CALL m_patch2diag%build (landpatch, gdiag)
@@ -88,6 +95,16 @@ CONTAINS
 #endif
 
       srf_data_id = 666
+
+      IF (p_is_worker) THEN
+         allocate (elmid (landelm%nset)); elmid = real(landelm%eindex, r8)
+      ENDIF
+
+      landname = trim(dir_landdata)//'/diag/element.nc'
+      CALL srfdata_map_and_write (elmid, landelm%settyp, (/0/), m_elm2diag, &
+         -1.0e36_r8, landname, 'element', compress = 1, write_mode = 'one')
+      
+      IF (p_is_worker) deallocate (elmid)
 
       typindex = (/(ityp, ityp = 0, N_land_classification)/)
       landname = trim(dir_landdata)//'/diag/patchfrac_elm.nc'
@@ -235,6 +252,7 @@ CONTAINS
 
             inquire (file=trim(filename), exist=fexists)
             IF (.not. fexists) THEN
+
                CALL ncio_create_file (filename)
 
                call ncio_define_dimension (filename, 'TypeIndex', ntyps)

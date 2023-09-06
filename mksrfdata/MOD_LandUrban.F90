@@ -42,6 +42,7 @@ CONTAINS
    SUBROUTINE landurban_build (lc_year)
 
       USE MOD_Precision
+      USE MOD_Vars_Global
       USE MOD_SPMD_Task
       USE MOD_NetCDFBlock
       USE MOD_Grid
@@ -303,22 +304,23 @@ ENDIF
 #endif
 
 #ifdef SinglePoint
+
       allocate  ( SITE_urbtyp   (numurban) )
       allocate  ( SITE_lucyid   (numurban) )
-      
-      IF (.not. USE_SITE_urban_paras) THEN
-         allocate  ( SITE_fveg_urb (numurban) )
-         allocate  ( SITE_htop_urb (numurban) )
-         allocate  ( SITE_flake_urb(numurban) )
 
-         allocate  ( SITE_popden   (numurban) )
-         allocate  ( SITE_froof    (numurban) )
-         allocate  ( SITE_hroof    (numurban) )
-         allocate  ( SITE_hwr      (numurban) )
-         allocate  ( SITE_fgper    (numurban) )
-         allocate  ( SITE_fgimp    (numurban) )
-      ENDIF
-      
+IF (.not. USE_SITE_urban_paras) THEN
+      allocate  ( SITE_fveg_urb (numurban) )
+      allocate  ( SITE_htop_urb (numurban) )
+      allocate  ( SITE_flake_urb(numurban) )
+
+      allocate  ( SITE_popden   (numurban) )
+      allocate  ( SITE_froof    (numurban) )
+      allocate  ( SITE_hroof    (numurban) )
+      allocate  ( SITE_hwr      (numurban) )
+      allocate  ( SITE_fgper    (numurban) )
+      allocate  ( SITE_fgimp    (numurban) )
+ENDIF
+
       allocate  ( SITE_em_roof  (numurban) )
       allocate  ( SITE_em_wall  (numurban) )
       allocate  ( SITE_em_gimp  (numurban) )
@@ -328,25 +330,26 @@ ENDIF
       allocate  ( SITE_thickroof(numurban) )
       allocate  ( SITE_thickwall(numurban) )
 
-      allocate  ( SITE_cv_roof(10) )
-      allocate  ( SITE_cv_wall(10) )
-      allocate  ( SITE_cv_gimp(10) )
-      allocate  ( SITE_tk_roof(10) )
-      allocate  ( SITE_tk_wall(10) )
-      allocate  ( SITE_tk_gimp(10) )
+      allocate  ( SITE_cv_roof  (nl_roof) )
+      allocate  ( SITE_cv_wall  (nl_wall) )
+      allocate  ( SITE_cv_gimp  (nl_soil) )
+      allocate  ( SITE_tk_roof  (nl_roof) )
+      allocate  ( SITE_tk_wall  (nl_wall) )
+      allocate  ( SITE_tk_gimp  (nl_soil) )
 
-      allocate  ( SITE_alb_roof(2, 2) )
-      allocate  ( SITE_alb_wall(2, 2) )
-      allocate  ( SITE_alb_gimp(2, 2) )
-      allocate  ( SITE_alb_gper(2, 2) )
+      allocate  ( SITE_alb_roof (2, 2) )
+      allocate  ( SITE_alb_wall (2, 2) )
+      allocate  ( SITE_alb_gimp (2, 2) )
+      allocate  ( SITE_alb_gper (2, 2) )
 
       SITE_urbtyp(:) = landurban%settyp
 #endif
 
 #if (defined CROP)
+      !TODO: need to be consistent with MOD_LandPatch.F90
+      !NOTE: how to change automatically.
       IF (p_is_io) THEN
-         !file_patch = trim(DEF_dir_rawdata) // '/global_0.5x0.5.MOD2005_V4.5_CFT_mergetoclmpft.nc'
-         file_patch = trim(DEF_dir_rawdata) // '/global_0.5x0.5.MOD2005_V4.5_CFT_lf-merged-20220930.nc'
+         file_patch = trim(DEF_dir_rawdata) // '/global_CFT_surface_data.nc'
          CALL allocate_block_data (gcrop, cropdata, N_CFT)
          CALL ncio_read_block (file_patch, 'PCT_CFT', gcrop, N_CFT, cropdata)
       ENDIF

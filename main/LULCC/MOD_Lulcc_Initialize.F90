@@ -23,7 +23,9 @@ MODULE MOD_Lulcc_Initialize
 !
 ! Created by Hua Yuan, 04/08/2022
 !
-! TODO: add authors Wenzong Dong
+! !REVISONS:
+! 08/2023, Wenzong Dong: porting to MPI version and share the same code with
+!                        MOD_Initialize:initialize
 ! ======================================================================
 
    USE MOD_Precision

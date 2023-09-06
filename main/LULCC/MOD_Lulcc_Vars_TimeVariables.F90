@@ -5,7 +5,8 @@ MODULE MOD_Lulcc_Vars_TimeVariables
 ! Created by Hua Yuan, 04/2022
 !
 ! !TODO: add authors
-!
+! 07/2023, [add authors]: porting to MPI version
+! 08/2023, Hua Yuan: unified PFT and PC process
 ! -------------------------------
 
   USE MOD_Precision
