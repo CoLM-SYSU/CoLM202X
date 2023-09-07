@@ -1023,9 +1023,7 @@ ELSE IF(patchtype == 3)THEN   ! <=== is LAND ICE (glacier/ice sheet) (patchtype 
       ENDIF
 #endif
 #endif
-#ifdef CROP
-   if (DEF_USE_IRRIGATION) errorw = errorw - irrig_rate(ipatch)*deltim
-#endif
+
       xerr=errorw/deltim
 
 !======================================================================
@@ -1034,7 +1032,9 @@ ELSE IF(patchtype == 4) THEN   ! <=== is LAND WATER BODIES (lake, reservior and 
 
 !======================================================================
 
+#ifdef LATERAL_FLOW
       totwb = scv + sum(wice_soisno(1:)+wliq_soisno(1:)) + wa + wdsrf
+#endif
 
       snl = 0
       DO j = maxsnl+1, 0
@@ -1142,8 +1142,9 @@ ELSE IF(patchtype == 4) THEN   ! <=== is LAND WATER BODIES (lake, reservior and 
       a = (sum(wliq_soisno(1:))+sum(wice_soisno(1:))+scv-w_old-scvold)/deltim
       aa = qseva+qsubl-qsdew-qfros
 #ifndef LATERAL_FLOW
-      rsur = pg_rain + pg_snow - aa - a
+      rsur = max(0., pg_rain + pg_snow - aa - a)
       rnof = rsur
+      xerr = 0.
 #else
       ! for lateral flow, only water change vertically is calculated here.
       ! TODO : snow should be considered.
@@ -1156,21 +1157,16 @@ ELSE IF(patchtype == 4) THEN   ! <=== is LAND WATER BODIES (lake, reservior and 
          wdsrf = wa + wdsrf
          wa = 0
       ENDIF
-#endif
       
       endwb  = scv + sum(wice_soisno(1:)+wliq_soisno(1:)) + wa + wdsrf
-#ifndef LATERAL_FLOW
-      errorw = (endwb-totwb)/deltim -(forc_prc+forc_prl-fevpa-rnof)
-#else
       errorw = (endwb-totwb)/deltim -(forc_prc+forc_prl-fevpa)
-#endif
+      xerr   = errorw / deltim
       
-      xerr = errorw / deltim
-
       IF (abs(errorw) > 1.e-3) THEN
          write(*,*) 'Warning: water balance violation in CoLMMAIN (lake) ', errorw
       ENDIF
-
+#endif
+      
       ! Set zero to the empty node
       IF (snl > maxsnl) THEN
          wice_soisno(maxsnl+1:snl) = 0.
