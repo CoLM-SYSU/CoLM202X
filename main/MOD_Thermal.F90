@@ -1036,8 +1036,8 @@ ENDIF
       qfros_snow = 0.
       qsdew_snow = 0.
 
-IF (.not. DEF_SPLIT_SOILSNOW) THEN
 
+IF (.not. DEF_SPLIT_SOILSNOW) THEN
       egsmax = (wice_soisno(lb)+wliq_soisno(lb)) / deltim
       egidif = max( 0., fevpg - egsmax )
       fevpg  = min( fevpg, egsmax )
@@ -1056,11 +1056,13 @@ IF (.not. DEF_SPLIT_SOILSNOW) THEN
       ENDIF
 
 ELSE
-      IF (lb < 1) THEN
+      IF (lb < 1) THEN   ! snow layer exist
          egsmax = (wice_soisno(lb)+wliq_soisno(lb)) / deltim
          egidif = max( 0., fevpg_snow - egsmax )
          fevpg_snow = min ( fevpg_snow, egsmax )
          fseng_snow = fseng_snow + htvp*egidif
+      ELSE               ! no snow layer, attribute to soil
+         fevpg_soil = fevpg_soil*(1.-fsno) + fevpg_snow*fsno
       ENDIF
 
       egsmax = (wice_soisno(1)+wliq_soisno(1)) / deltim
@@ -1068,48 +1070,46 @@ ELSE
       fevpg_soil = min ( fevpg_soil, egsmax )
       fseng_soil = fseng_soil + htvp*egidif
 
-      fseng = fseng_soil*(1.-fsno) + fseng_snow*fsno
-      fevpg = fevpg_soil*(1.-fsno) + fevpg_snow*fsno
-
-      IF (lb < 1) THEN
-         if(fevpg_snow >= 0.)then
-! not allow for sublimation in melting (melting ==> evap. ==> sublimation)
-            qseva_snow = min(wliq_soisno(lb)/deltim, fevpg_snow)
-            qsubl_snow = fevpg_snow - qseva_snow
-            qseva_snow = qseva_snow*fsno
-            qsubl_snow = qsubl_snow*fsno
-         else
-            if(t_snow < tfrz)then
-               qfros_snow = abs(fevpg_snow*fsno)
-            else
-               qsdew_snow = abs(fevpg_snow*fsno)
-            endif
-         endif
+      IF (lb < 1) THEN   ! snow layer exist
+         fseng = fseng_soil*(1.-fsno) + fseng_snow*fsno
+         fevpg = fevpg_soil*(1.-fsno) + fevpg_snow*fsno
+      ELSE               ! no snow layer, attribute to soil
+         fseng = fseng_soil; fseng_snow = 0.
+         fevpg = fevpg_soil; fevpg_snow = 0.
       ENDIF
+
+      if(fevpg_snow >= 0.)then
+! not allow for sublimation in melting (melting ==> evap. ==> sublimation)
+         qseva_snow = min(wliq_soisno(lb)/deltim, fevpg_snow)
+         qsubl_snow = fevpg_snow - qseva_snow
+         qseva_snow = qseva_snow*fsno
+         qsubl_snow = qsubl_snow*fsno
+      else
+         if(t_snow < tfrz)then
+            qfros_snow = abs(fevpg_snow*fsno)
+         else
+            qsdew_snow = abs(fevpg_snow*fsno)
+         endif
+      endif
 
       if(fevpg_soil >= 0.)then
 ! not allow for sublimation in melting (melting ==> evap. ==> sublimation)
          qseva_soil = min(wliq_soisno(1)/deltim, fevpg_soil)
          qsubl_soil = fevpg_soil - qseva_soil
-         IF (lb < 1) THEN ! snow layer exists
-            qseva_soil = qseva_soil*(1.-fsno)
-            qsubl_soil = qsubl_soil*(1.-fsno)
-         ENDIF
       else
          if(t_soil < tfrz)then
-            IF (lb < 1) THEN ! snow layer exists
-               qfros_soil = abs(fevpg_soil*(1.-fsno))
-            ELSE
-               qfros_soil = abs(fevpg_soil)
-            ENDIF
+            qfros_soil = abs(fevpg_soil)
          else
-            IF (lb < 1) THEN ! snow layer exists
-               qsdew_soil = abs(fevpg_soil*(1.-fsno))
-            ELSE
-               qsdew_soil = abs(fevpg_soil)
-            ENDIF
+            qsdew_soil = abs(fevpg_soil)
          endif
       endif
+
+      IF (lb < 1) THEN ! snow layer exists
+         qseva_soil = qseva_soil*(1.-fsno)
+         qsubl_soil = qsubl_soil*(1.-fsno)
+         qfros_soil = qfros_soil*(1.-fsno)
+         qsdew_soil = qsdew_soil*(1.-fsno)
+      ENDIF
 ENDIF
 
 

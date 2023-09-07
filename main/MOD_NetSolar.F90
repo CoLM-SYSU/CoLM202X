@@ -243,6 +243,9 @@ CONTAINS
             ! attribute the first layer absorption to soil absorption
             sabg_soil = sabg_soil + sabg_snow_lyr(1)
             sabg_snow = sabg_snow - sabg_snow_lyr(1)
+
+            ! make the soil absorption consistent
+            sabg_snow_lyr(1) = sabg_soil
          ENDIF
 
       ENDIF

@@ -659,10 +659,10 @@ ENDIF
                     wliq_soisno(:0),wice_soisno(:0),fiold(:0),snl,sag,scv,snowdp,fsno)
 
       ! new snow layer emerge, pull up the snow layer absorption
-      IF (snl .lt. snl_bef) THEN
-         sabg_snow_lyr(snl+1:snl-snl_bef+1) = sabg_snow_lyr(snl_bef+1:1)
-         sabg_snow_lyr(snl-snl_bef+2:1) = 0.
-      ENDIF
+      !IF (snl .lt. snl_bef) THEN
+      !   sabg_snow_lyr(snl+1:snl-snl_bef+1) = sabg_snow_lyr(snl_bef+1:1)
+      !   sabg_snow_lyr(snl-snl_bef+2:1) = 0.
+      !ENDIF
 
 !----------------------------------------------------------------------
 ! [4] Energy and Water balance
@@ -881,7 +881,7 @@ ENDIF
 #if(defined CoLMDEBUG)
       IF (abs(errorw) > 1.e-3) THEN
          write(6,*) 'Warning: water balance violation', ipatch,errorw,patchclass,p_iam_glb
-         ! CALL CoLM_stop ()
+         !CALL CoLM_stop ()
       ENDIF
       IF(abs(errw_rsub*deltim)>1.e-3) THEN
          write(6,*) 'Subsurface runoff deficit due to PHS', errw_rsub*deltim
@@ -933,11 +933,11 @@ ELSE IF(patchtype == 3)THEN   ! <=== is LAND ICE (glacier/ice sheet) (patchtype 
                     t_precip,zi_soisno(:0),z_soisno(:0),dz_soisno(:0),t_soisno(:0),&
                     wliq_soisno(:0),wice_soisno(:0),fiold(:0),snl,sag,scv,snowdp,fsno)
 
-      ! new snow layer
-      IF (snl .lt. snl_bef) THEN
-         sabg_snow_lyr(snl+1:snl-snl_bef+1) = sabg_snow_lyr(snl_bef+1:1)
-         sabg_snow_lyr(snl-snl_bef+2:1) = 0.
-      ENDIF
+      ! new snow layer emerge, pull up the snow layer absorption
+      !IF (snl .lt. snl_bef) THEN
+      !   sabg_snow_lyr(snl+1:snl-snl_bef+1) = sabg_snow_lyr(snl_bef+1:1)
+      !   sabg_snow_lyr(snl-snl_bef+2:1) = 0.
+      !ENDIF
 
       !----------------------------------------------------------------
       ! Energy and Water balance
