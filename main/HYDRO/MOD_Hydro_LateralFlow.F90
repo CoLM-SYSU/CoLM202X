@@ -28,6 +28,9 @@ MODULE MOD_Hydro_LateralFlow
    USE MOD_Hydro_HillslopeFlow
    USE MOD_Hydro_SubsurfaceFlow
    USE MOD_Hydro_RiverLakeFlow
+   USE MOD_Vars_TimeVariables
+   USE MOD_Vars_Global,    only : dz_soi
+   USE MOD_Const_Physical, only : denice, denh2o
    IMPLICIT NONE 
 
    INTEGER, parameter :: nsubstep = 20
@@ -195,6 +198,11 @@ CONTAINS
          IF (numpatch > 0) THEN
             rnof(:) = rsur(:) + rsub(:)
          ENDIF
+       
+         DO i = 1, numpatch
+            h2osoi(:,i) = wliq_soisno(1:,i)/(dz_soi(1:)*denh2o) + wice_soisno(1:,i)/(dz_soi(1:)*denice)
+            wat(i)      = sum(wice_soisno(1:,i)+wliq_soisno(1:,i)) + ldew(i) + scv(i) + wetwat(i)
+         ENDDO
 
       ENDIF
 
