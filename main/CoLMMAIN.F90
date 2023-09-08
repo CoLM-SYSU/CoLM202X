@@ -723,7 +723,7 @@ ENDIF
            rib               ,ustar             ,qstar             ,tstar             ,&
            fm                ,fh                ,fq                ,pg_rain           ,&
            pg_snow           ,t_precip          ,qintr_rain        ,qintr_snow        ,&
-           snofrz(lbsn:0)    ,sabg_snow_lyr(lb:0)                                      )
+           snofrz(lbsn:0)    ,sabg_snow_lyr(lb:1)                                      )
 
       IF (.not. DEF_USE_VARIABLY_SATURATED_FLOW) THEN
 

@@ -367,7 +367,7 @@ MODULE MOD_PhaseChange
    real(r8), INTENT(in) :: hs_snow             ! net ground heat flux into the surface snow
    real(r8), INTENT(in) :: fsno                ! snow fractional cover
    real(r8), INTENT(in) :: dhsdT               ! temperature derivative of "hs"
-   real(r8), INTENT(in) :: sabg_snow_lyr (lb:0)! snow layer absorption [W/m-2]
+   real(r8), INTENT(in) :: sabg_snow_lyr (lb:1)! snow layer absorption [W/m-2]
    real(r8), INTENT(in) :: porsl(1:nl_soil)    ! soil porosity [-]
    real(r8), INTENT(in) :: psi0 (1:nl_soil)    ! soil water suction, negative potential [mm]
 #ifdef Campbell_SOIL_MODEL
@@ -493,7 +493,7 @@ MODULE MOD_PhaseChange
                ! 03/08/2020, yuan: seperate soil/snow heat flux, exclude glacier(3)
                hm(j) = hs_soil + (1.-fsno)*dhsdT*tinc + brr(j) - tinc/fact(j)
             ELSE                    ! -> internal layers other than the interface soil layer
-               IF (j <= 0) THEN
+               IF (j <= 1) THEN
                   hm(j) = brr(j) - tinc/fact(j) + sabg_snow_lyr(j)
                ELSE
                   hm(j) = brr(j) - tinc/fact(j)

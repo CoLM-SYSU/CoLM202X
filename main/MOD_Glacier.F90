@@ -295,7 +295,8 @@
 ! ground heat flux
       fgrnd = sabg + emg*forc_frl &
             - emg*stefnc*t_icesno_bef(lb)**3*(t_icesno_bef(lb) + 4.*tinc) &
-            - (fseng+fevpg*htvp) + cpliq * pg_rain * (t_precip - t_icesno(lb)) &
+            - (fseng+fevpg*htvp) &
+            + cpliq * pg_rain * (t_precip - t_icesno(lb)) &
             + cpice * pg_snow * (t_precip - t_icesno(lb))
 
 ! outgoing long-wave radiation from ground
@@ -313,19 +314,20 @@
 ! [6] energy balance error
 !=======================================================================
 
-      errore = sabg + forc_frl - olrg - fsena - lfevpa - xmf + &
-               cpliq * pg_rain * (t_precip - t_icesno(lb)) &
-               + cpice * pg_snow * (t_precip - t_icesno(lb))
+      errore = sabg + forc_frl - olrg - fsena - lfevpa - xmf &
+             + cpliq * pg_rain * (t_precip-t_icesno(lb)) &
+             + cpice * pg_snow * (t_precip-t_icesno(lb))
       do j = lb, nl_ice
          errore = errore - (t_icesno(j)-t_icesno_bef(j))/fact(j)
       enddo
 
 #if (defined CoLMDEBUG)
      if(abs(errore)>.2)then
-        write(6,*) 'GLACIER_TEMP.F90 : energy  balance violation'
+        write(6,*) 'GLACIER_TEMP.F90 : energy balance violation'
         write(6,100) errore,sabg,forc_frl,olrg,fsena,lfevpa,xmf,t_precip,t_icesno(lb)
+        STOP
      endif
-100  format(10(f7.3))
+100  format(10(f10.3))
 #endif
 
  end subroutine GLACIER_TEMP
@@ -820,12 +822,12 @@
          wice_icesno_bef(lb:0) = wice_icesno(lb:0)
 
          call meltf_snicar (patchtype,lb,nl_ice,deltim, &
-                  !NOTE: compatibility settings for spliting soil&snow temproal input,
-                  ! cause glacier patch doesn't support split soil&snow
-                  ! hs_soil=hs, hs_snow=hs, fsno=1. not go into effect.
-                  fact(lb:),brr(lb:),hs,hs,hs,1.,sabg_snow_lyr,dhsdT, &
-                  t_icesno_bef(lb:),t_icesno(lb:),wliq_icesno(lb:),wice_icesno(lb:),imelt(lb:), &
-                  scv,snowdp,sm,xmf,porsl,psi0,&
+                   !NOTE: compatibility settings for spliting soil&snow temproal input,
+                   ! cause glacier patch doesn't support split soil&snow
+                   ! hs_soil=hs, hs_snow=hs, fsno=1. not go into effect.
+                   fact(lb:),brr(lb:),hs,hs,hs,1.,sabg_snow_lyr(lb:),dhsdT, &
+                   t_icesno_bef(lb:),t_icesno(lb:),wliq_icesno(lb:),wice_icesno(lb:),imelt(lb:), &
+                   scv,snowdp,sm,xmf,porsl,psi0,&
 #ifdef Campbell_SOIL_MODEL
                    bsw,&
 #endif

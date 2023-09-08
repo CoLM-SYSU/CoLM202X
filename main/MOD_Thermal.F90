@@ -244,7 +244,7 @@ MODULE MOD_Thermal
         zi_soisno(lb-1:nl_soil)  ! interface depth [m]
 
   real(r8), intent(in) :: &
-        sabg_snow_lyr(lb:0)      ! snow layer aborption
+        sabg_snow_lyr(lb:1)      ! snow layer aborption
 
         ! state variables (2)
   real(r8), intent(inout) :: &

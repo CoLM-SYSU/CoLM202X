@@ -115,7 +115,7 @@ MODULE MOD_GroundTemperature
    real(r8), intent(in) :: z_soisno (lb:nl_soil)      !node depth [m]
    real(r8), intent(in) :: zi_soisno(lb-1:nl_soil)    !interface depth [m]
 
-   real(r8), intent(in) :: sabg_snow_lyr(lb:0)        !snow layer absorption [W/m-2]
+   real(r8), intent(in) :: sabg_snow_lyr(lb:1)        !snow layer absorption [W/m-2]
 
    real(r8), intent(in) :: t_grnd                     !ground surface temperature [K]
    real(r8), intent(in) :: t_soil                     !ground soil temperature [K]
@@ -399,7 +399,7 @@ MODULE MOD_GroundTemperature
       wice_soisno_bef(lb:0) = wice_soisno(lb:0)
 
       CALL meltf_snicar (patchtype,lb,nl_soil,deltim, &
-               fact(lb:),brr(lb:),hs,hs_soil,hs_snow,fsno,sabg_snow_lyr,dhsdT, &
+               fact(lb:),brr(lb:),hs,hs_soil,hs_snow,fsno,sabg_snow_lyr(lb:),dhsdT, &
                t_soisno_bef(lb:),t_soisno(lb:),wliq_soisno(lb:),wice_soisno(lb:),imelt(lb:), &
                scv,snowdp,sm,xmf,porsl,psi0,&
 #ifdef Campbell_SOIL_MODEL
