@@ -55,6 +55,7 @@ module MOD_Vars_1DAccFluxes
    real(r8), allocatable :: a_zwt    (:)
    real(r8), allocatable :: a_wa     (:)
    real(r8), allocatable :: a_wat    (:)
+   real(r8), allocatable :: a_wetwat (:)
    real(r8), allocatable :: a_assim  (:)
    real(r8), allocatable :: a_respc  (:)
    real(r8), allocatable :: a_assimsun   (:) !1
@@ -386,6 +387,7 @@ contains
             allocate (a_zwt       (numpatch))
             allocate (a_wa        (numpatch))
             allocate (a_wat       (numpatch))
+            allocate (a_wetwat    (numpatch))
             allocate (a_assim     (numpatch))
             allocate (a_respc     (numpatch))
 
@@ -726,6 +728,7 @@ contains
             deallocate (a_zwt       )
             deallocate (a_wa        )
             deallocate (a_wat       )
+            deallocate (a_wetwat    )
             deallocate (a_assim     )
             deallocate (a_respc     )
 
@@ -1065,6 +1068,7 @@ contains
             a_zwt     (:) = spval
             a_wa      (:) = spval
             a_wat     (:) = spval
+            a_wetwat  (:) = spval
             a_assim   (:) = spval
             a_respc   (:) = spval
             a_assimsun(:) = spval !1
@@ -1475,6 +1479,7 @@ contains
             call acc1d (zwt    , a_zwt    )
             call acc1d (wa     , a_wa     )
             call acc1d (wat    , a_wat    )
+            call acc1d (wetwat , a_wetwat )
             call acc1d (assim  , a_assim  )
             call acc1d (respc  , a_respc  )
             call acc1d (assimsun_out  , a_assimsun      )

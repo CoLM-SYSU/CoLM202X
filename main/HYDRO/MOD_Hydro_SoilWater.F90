@@ -3590,10 +3590,6 @@ contains
             CALL mpi_send (count_wet2dry_accum,  1, MPI_INTEGER, 0, mpi_tag_mesg, p_comm_glb, p_err)
 #endif
          ENDIF
-
-         count_implicit = 0
-         count_explicit = 0
-         count_wet2dry  = 0
       ENDIF
 
       IF (p_is_master) THEN
@@ -3615,6 +3611,10 @@ contains
             count_wet2dry_accum, ' (wet2dry)'
       ENDIF
 #endif
+
+      count_implicit = 0
+      count_explicit = 0
+      count_wet2dry  = 0
 
    END SUBROUTINE print_VSF_iteration_stat_info
 
