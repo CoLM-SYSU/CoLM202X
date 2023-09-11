@@ -5,7 +5,12 @@ MODULE MOD_Lulcc_PatchTrace
 ! Created by Wanyi Lin, Shupeng Zhang and Hua Yuan, 07/2023
 !
 ! !DESCRIPTION:
-! TODO@Wanyi: add description
+! TODO@Wanyi: add description -DONE
+! The transfer matrix and patch tracing vector were created using the land
+! cover type data of the adjacent two years. Based on next year's patch,
+! the pixels within the patch and last years' land cover type of these
+! pixels were obtained. Then the percent of source land cover type of each
+! patch was derived.
 ! -------------------------------
 
    USE MOD_Precision
@@ -201,7 +206,7 @@ MODULE MOD_Lulcc_PatchTrace
       lndname  = trim(dir_landdata) // '/diag/transfer_matrix'// trim(lastyr)//'-'// trim(thisyr) // '.nc'
       DO ilc = 0, N_land_classification
          CALL srfdata_map_and_write (lccpct_matrix(:,ilc), landpatch%settyp, typindex, m_patch2diag, &
-         -1.0e36_r8, lndname, 'TRANSFER_MATRIX', compress = 0, write_mode = 'one', lastdimname = 'land cover type', lastdimvalue = ilc)
+         -1.0e36_r8, lndname, 'TRANSFER_MATRIX', compress = 0, write_mode = 'one', lastdimname = 'source_patch', lastdimvalue = ilc)
       ENDDO
       deallocate(typindex)
 #endif
