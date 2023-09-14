@@ -358,7 +358,7 @@ CONTAINS
    INTEGER it, nmozsgn
 
    REAL(r8) delta, fac
-   REAL(r8) evplwet, evplwet_dtl, etr_dtl, elwmax, elwdif,etr0
+   REAL(r8) evplwet, evplwet_dtl, etr_dtl, elwmax, elwdif, etr0, sumrootr
    REAL(r8) irab, dirab_dtl, fsenl_dtl, fevpl_dtl
    REAL(r8) w, csoilcn, z0mg, cintsun(3), cintsha(3)
    REAL(r8) fevpl_bef, fevpl_noadj, dtl_noadj, errt, erre
@@ -898,13 +898,25 @@ CONTAINS
                + hvap*erre
        etr0  = etr
        etr   = etr + etr_dtl*dtl(it-1)
-      if (DEF_USE_PLANTHYDRAULICS) then
-         if (abs(etr0) .ge. 1.e-15) then
-             rootr = rootr * etr / etr0
-         else
-             rootr = rootr + dz_soi / sum(dz_soi) * etr_dtl* dtl(it-1)
-         end if
-      end if
+
+       IF (DEF_USE_PLANTHYDRAULICS) THEN
+          !TODO@yuan: rootr may not be consistent with etr,
+          !           water imbalance could happen.
+          IF (abs(etr0) .ge. 1.e-15) THEN
+              rootr = rootr * etr / etr0
+          ELSE
+              rootr = rootr + dz_soi / sum(dz_soi) * etr_dtl* dtl(it-1)
+          ENDIF
+
+          !NOTE: temporal solution to make etr and rootr consistent.
+          !TODO: need double check
+          sumrootr = sum(rootr(:), rootr(:)>0.)
+          IF (abs(sumrootr) > 0.) THEN
+             rootr(:) = max(rootr(:),0.) * (etr/sumrootr)
+          ELSE
+             rootr(:) = etr*rootfr(:)
+          ENDIF
+       ENDIF
 
        evplwet = evplwet + evplwet_dtl*dtl(it-1)
        fevpl   = fevpl_noadj
