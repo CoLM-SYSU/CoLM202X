@@ -61,11 +61,11 @@ MODULE MOD_PercentagesPFTReadin
       lndname = trim(dir_landdata)//'/pctpft/'//trim(cyear)//'/pct_crops.nc'
       call ncio_read_vector (lndname, 'pct_crops', landpatch, pctshrpch)
 #else
-      allocate (pctcrop (numpatch))
+      allocate (pctshrpch (numpatch))
       IF (SITE_landtype == CROPLAND) THEN
-         pctcrop = pack(SITE_pctcrop, SITE_pctcrop > 0.)
+         pctshrpch = pack(SITE_pctcrop, SITE_pctcrop > 0.)
       ELSE
-         pctcrop = 0.
+         pctshrpch = 0.
       ENDIF
 #endif
 #endif

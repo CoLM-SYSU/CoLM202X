@@ -19,7 +19,6 @@ MODULE MOD_LandCrop
    ! ---- Instance ----
    TYPE(grid_type) :: gcrop
    INTEGER,  allocatable :: cropclass (:)
-   REAL(r8), allocatable :: pctcrop   (:)
    REAL(r8), allocatable :: pctshrpch (:)
 
 CONTAINS
@@ -68,12 +67,12 @@ CONTAINS
 
          numpatch = count(SITE_pctcrop > 0.)
 
-         allocate (pctcrop  (numpatch))
+         allocate (pctshrpch (numpatch))
          allocate (cropclass(numpatch))
          cropclass = pack(SITE_croptyp, SITE_pctcrop > 0.)
-         pctcrop   = pack(SITE_pctcrop, SITE_pctcrop > 0.)
+         pctshrpch = pack(SITE_pctcrop, SITE_pctcrop > 0.)
 
-         pctcrop = pctcrop / sum(pctcrop)
+         pctshrpch = pctshrpch / sum(pctshrpch)
 
          allocate (landpatch%eindex (numpatch))
          allocate (landpatch%ipxstt (numpatch))
