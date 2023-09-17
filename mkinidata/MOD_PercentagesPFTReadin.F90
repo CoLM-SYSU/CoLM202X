@@ -25,6 +25,9 @@ MODULE MOD_PercentagesPFTReadin
       use MOD_SPMD_Task
       USE MOD_NetCDFVector
       USE MOD_LandPatch
+#ifdef CROP
+      USE MOD_LandCrop
+#endif
 #ifdef RangeCheck
       USE MOD_RangeCheck
 #endif
@@ -56,7 +59,7 @@ MODULE MOD_PercentagesPFTReadin
 #if (defined CROP)
 #ifndef SinglePoint
       lndname = trim(dir_landdata)//'/pctpft/'//trim(cyear)//'/pct_crops.nc'
-      call ncio_read_vector (lndname, 'pct_crops', landpatch, pctcrop)
+      call ncio_read_vector (lndname, 'pct_crops', landpatch, pctshrpch)
 #else
       allocate (pctcrop (numpatch))
       IF (SITE_landtype == CROPLAND) THEN
@@ -84,7 +87,7 @@ MODULE MOD_PercentagesPFTReadin
 
       CALL check_vector_data ('Sum PFT pct', sumpct)
 #if (defined CROP)
-      CALL check_vector_data ('CROP pct', pctcrop)
+      CALL check_vector_data ('CROP pct', pctshrpch)
 #endif
 
 #endif
