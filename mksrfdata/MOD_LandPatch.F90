@@ -36,12 +36,6 @@ MODULE MOD_LandPatch
    TYPE(grid_type)     :: gpatch
    TYPE(pixelset_type) :: landpatch
 
-#if (defined CROP)
-   TYPE(grid_type) :: gcrop
-   REAL(r8), allocatable :: pctcrop   (:)
-   INTEGER,  allocatable :: cropclass (:)
-#endif
-
    TYPE(subset_type)   :: elm_patch
    TYPE(superset_type) :: patch2elm
 
@@ -68,9 +62,6 @@ CONTAINS
 #endif
       USE MOD_Namelist
       USE MOD_NetCDFBlock
-#if (defined CROP)
-      USE MOD_PixelsetShadow
-#endif
       USE MOD_AggregationRequestData
 
       IMPLICIT NONE
@@ -86,10 +77,6 @@ CONTAINS
       INTEGER, allocatable :: eindex_tmp(:), settyp_tmp(:), ipxstt_tmp(:), ipxend_tmp(:), ielm_tmp(:)
       LOGICAL, allocatable :: msk(:)
       INTEGER :: npatch_glb
-#if (defined CROP)
-      TYPE(block_data_real8_3d) :: cropdata
-      INTEGER :: cropfilter(1)
-#endif
       INTEGER :: dominant_type
       INTEGER, allocatable :: npxl_types (:)
 
@@ -98,35 +85,31 @@ CONTAINS
          write(*,'(A)') 'Making land patches :'
       ENDIF
 
-#if (defined SinglePoint && defined LULC_IGBP_PFT && defined CROP)
-      IF ((SITE_landtype == CROPLAND) .and. (USE_SITE_pctcrop)) THEN
-
-         numpatch = count(SITE_pctcrop > 0.)
-
-         allocate (pctcrop  (numpatch))
-         allocate (cropclass(numpatch))
-         cropclass = pack(SITE_croptyp, SITE_pctcrop > 0.)
-         pctcrop   = pack(SITE_pctcrop, SITE_pctcrop > 0.)
-
-         pctcrop = pctcrop / sum(pctcrop)
-
-         allocate (landpatch%eindex (numpatch))
-         allocate (landpatch%ipxstt (numpatch))
-         allocate (landpatch%ipxend (numpatch))
-         allocate (landpatch%settyp (numpatch))
-         allocate (landpatch%ielm   (numpatch))
-
-         landpatch%eindex(:) = 1
-         landpatch%ielm  (:) = 1
-         landpatch%ipxstt(:) = 1
-         landpatch%ipxend(:) = 1
-         landpatch%settyp(:) = CROPLAND
-
-         landpatch%nset = numpatch
-         CALL landpatch%set_vecgs
-
+#ifdef SinglePoint
+#ifdef CROP
+      IF ((SITE_landtype == CROPLAND) .and. USE_SITE_pctcrop) THEN
          RETURN
       ENDIF
+#endif
+
+      numpatch = 1
+
+      allocate (landpatch%eindex (numpatch))
+      allocate (landpatch%ipxstt (numpatch))
+      allocate (landpatch%ipxend (numpatch))
+      allocate (landpatch%settyp (numpatch))
+      allocate (landpatch%ielm   (numpatch))
+
+      landpatch%eindex(:) = 1
+      landpatch%ielm  (:) = 1
+      landpatch%ipxstt(:) = 1
+      landpatch%ipxend(:) = 1
+      landpatch%settyp(:) = SITE_landtype
+
+      landpatch%nset = numpatch
+      CALL landpatch%set_vecgs
+
+      RETURN
 #endif
 
 #ifdef USEMPI
@@ -208,27 +191,22 @@ CONTAINS
                ! set land in MERITHydro while ocean in landtype data as water body
                types = WATERBODY
             END WHERE
+            WHERE (types == 11)
+               types = 10
+            END WHERE 
 #endif
 
-IF ((DEF_USE_PFT .and. .not.DEF_SOLO_PFT) .or. DEF_FAST_PC) THEN
-            ! For classification of plant function types or fast PC,
-            ! merge all land types with soil ground
-            DO ipxl = ipxstt, ipxend
-               IF (types(ipxl) > 0) THEN
-                  IF (patchtypes(types(ipxl)) == 0) THEN
-#if (defined CROP)
-                     !12  Croplands
-                     !14  Cropland/Natural Vegetation Mosaics  ?
-                     IF (types(ipxl) /= CROPLAND) THEN
+            IF ((DEF_USE_PFT .and. (.not. DEF_SOLO_PFT)) .or. DEF_FAST_PC) THEN
+               ! For classification of plant function types or fast PC,
+               ! merge all land types with soil ground
+               DO ipxl = ipxstt, ipxend
+                  IF (types(ipxl) > 0) THEN
+                     IF (patchtypes(types(ipxl)) == 0) THEN
                         types(ipxl) = 1
                      ENDIF
-#else
-                     types(ipxl) = 1
-#endif
                   ENDIF
-               ENDIF
-            ENDDO
-ENDIF
+               ENDDO
+            ENDIF
 
             allocate (order (ipxstt:ipxend))
             order = (/ (ipxl, ipxl = ipxstt, ipxend) /)
@@ -321,24 +299,7 @@ ENDIF
          IF (allocated(msk)) deallocate(msk)
       ENDIF
 
-#ifdef URBAN_MODEL
-      continue
-#else
-#if (defined CROP)
-      IF (p_is_io) THEN
-         file_patch = trim(DEF_dir_rawdata) // '/global_CFT_surface_data.nc'
-         CALL allocate_block_data (gcrop, cropdata, N_CFT)
-         CALL ncio_read_block (file_patch, 'PCT_CFT', gcrop, N_CFT, cropdata)
-      ENDIF
-
-      cropfilter = (/ CROPLAND /)
-
-      CALL pixelsetshadow_build (landpatch, gcrop, cropdata, N_CFT, cropfilter, &
-         pctcrop, cropclass)
-
-      numpatch = landpatch%nset
-#endif
-
+#if (!defined(URBAN_MODEL) && !defined(CROP))
 #ifdef USEMPI
       IF (p_is_worker) THEN
          CALL mpi_reduce (numpatch, npatch_glb, 1, MPI_INTEGER, MPI_SUM, p_root, p_comm_worker, p_err)
@@ -352,22 +313,14 @@ ENDIF
       write(*,'(A,I12,A)') 'Total: ', numpatch, ' patches.'
 #endif
 
-#if (defined CROP)
-      CALL elm_patch%build (landelm, landpatch, use_frac = .true., shadowfrac = pctcrop)
-#else
       CALL elm_patch%build (landelm, landpatch, use_frac = .true.)
-#endif
-
 #ifdef CATCHMENT
-#if (defined CROP)
-      CALL hru_patch%build (landhru, landpatch, use_frac = .true., shadowfrac = pctcrop)
-#else
       CALL hru_patch%build (landhru, landpatch, use_frac = .true.)
-#endif
 #endif
 
       CALL write_patchfrac (DEF_dir_landdata, lc_year)
 #endif
+
    END SUBROUTINE landpatch_build
 
    ! -----

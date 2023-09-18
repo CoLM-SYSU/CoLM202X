@@ -558,7 +558,7 @@ CONTAINS
          DO ibasin = 1, numbasin
             IF (lake_id(ibasin) == 0) THEN
                IF ((to_lake(ibasin)) .or. (riverdown(ibasin) <= 0)) THEN
-                  ! river to lake, ocean or inland depression
+                  ! river to lake, ocean, inland depression or out of region
                   outletwth(ibasin) = riverwth(ibasin)
                ELSE
                   ! river to river

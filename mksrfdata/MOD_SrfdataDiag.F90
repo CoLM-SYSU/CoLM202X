@@ -53,6 +53,9 @@ CONTAINS
       USE MOD_SPMD_Task
       USE MOD_LandElm
       USE MOD_LandPatch
+#ifdef CROP
+      USE MOD_LandCrop
+#endif
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
       USE MOD_LandPFT
 #endif
@@ -82,7 +85,7 @@ CONTAINS
 #ifndef CROP
       CALL m_patch2diag%build (landpatch, gdiag)
 #else
-      CALL m_patch2diag%build (landpatch, gdiag, pctcrop)
+      CALL m_patch2diag%build (landpatch, gdiag, pctshrpch)
 #endif
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)

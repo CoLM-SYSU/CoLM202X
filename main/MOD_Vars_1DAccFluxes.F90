@@ -332,6 +332,9 @@ contains
       USE MOD_LandElm
       use MOD_LandPatch
       USE MOD_LandUrban, only: numurban
+#ifdef CROP
+      USE MOD_LandCrop
+#endif
       USE MOD_Vars_Global
       implicit none
 
@@ -661,7 +664,7 @@ contains
 
       IF (p_is_worker) THEN
 #if (defined CROP)
-         CALL elm_patch%build (landelm, landpatch, use_frac = .true., shadowfrac = pctcrop)
+         CALL elm_patch%build (landelm, landpatch, use_frac = .true., sharedfrac = pctshrpch)
 #else
          CALL elm_patch%build (landelm, landpatch, use_frac = .true.)
 #endif

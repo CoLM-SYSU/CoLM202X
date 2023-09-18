@@ -231,7 +231,7 @@ CONTAINS
             dtolw = sum(patcharea * xwsur) / 1.e3 * deltime
          ENDIF
          IF (numelm > 0) THEN
-            toldis = sum(discharge*deltime, mask = riverdown == 0)
+            toldis = sum(discharge*deltime, mask = (riverdown == 0) .or. (riverdown == -3))
             dtolw  = dtolw - toldis
          ENDIF
 

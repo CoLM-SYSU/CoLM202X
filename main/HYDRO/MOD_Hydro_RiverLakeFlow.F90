@@ -25,8 +25,8 @@ MODULE MOD_Hydro_RiverLakeFlow
    
    REAL(r8), parameter :: nmanning_riv = 0.03
    
-   REAL(r8), parameter :: RIVERMIN  = 1.e-4_r8 
-   REAL(r8), parameter :: VOLUMEMIN = 1.e-4_r8
+   REAL(r8), parameter :: RIVERMIN  = 1.e-5_r8 
+   REAL(r8), parameter :: VOLUMEMIN = 1.e-5_r8
 
    integer :: ntimestep_riverlake
    
@@ -223,10 +223,54 @@ CONTAINS
 
                   zgrad_dn(i) = outletwth(i) * 0.5*grav * height_dn**2
                   
-               ELSE ! inland depression
+               ELSEIF (riverdown(i) == -3) THEN 
+                  ! downstream is not in model region.
+                  ! assume: 1. downstream river bed is equal to this river bed.
+                  !         2. downstream water surface is equal to this river depth.
+                  !         3. downstream water velocity is equal to this velocity.
+                     
+                  veloc_riv(i) = max(veloc_riv(i), 0.)
+
+                  IF (wdsrf_bsn(i) > riverdpth(i)) THEN
+
+                     ! reconstruction of height of water near interface
+                     height_up = wdsrf_bsn(i) 
+                     height_dn = riverdpth(i)
+
+                     veloct_fc = veloc_riv(i) + sqrt(grav * height_up) - sqrt(grav * height_dn)
+                     height_fc = 1/grav * (0.5*(sqrt(grav*height_up) + sqrt(grav*height_dn))) ** 2
+
+                     vwave_up = min(veloc_riv(i)-sqrt(grav*height_up), veloct_fc-sqrt(grav*height_fc))
+                     vwave_dn = max(veloc_riv(i)+sqrt(grav*height_dn), veloct_fc+sqrt(grav*height_fc))
+
+                     hflux_up = veloc_riv(i) * height_up
+                     hflux_dn = veloc_riv(i) * height_dn
+                     mflux_up = veloc_riv(i)**2 * height_up + 0.5*grav * height_up**2 
+                     mflux_dn = veloc_riv(i)**2 * height_dn + 0.5*grav * height_dn**2 
+
+                     IF (vwave_up >= 0.) THEN
+                        hflux_fc(i) = outletwth(i) * hflux_up
+                        mflux_fc(i) = outletwth(i) * mflux_up
+                     ELSEIF (vwave_dn <= 0.) THEN
+                        hflux_fc(i) = outletwth(i) * hflux_dn
+                        mflux_fc(i) = outletwth(i) * mflux_dn
+                     ELSE
+                        hflux_fc(i) = outletwth(i) * (vwave_dn*hflux_up - vwave_up*hflux_dn &
+                           + vwave_up*vwave_dn*(height_dn-height_up)) / (vwave_dn-vwave_up)
+                        mflux_fc(i) = outletwth(i) * (vwave_dn*mflux_up - vwave_up*mflux_dn &
+                           + vwave_up*vwave_dn*(hflux_dn-hflux_up)) / (vwave_dn-vwave_up)
+                     ENDIF
+
+                     sum_zgrad_riv(i) = sum_zgrad_riv(i) + outletwth(i) * 0.5*grav * height_up**2
+
+                  ELSE
+                     hflux_fc(i) = 0
+                     mflux_fc(i) = 0
+                  ENDIF
+
+               ELSEIF (riverdown(i) == -1) THEN ! inland depression
                   hflux_fc(i) = 0
                   mflux_fc(i) = 0
-                  zgrad_dn(i) = 0
                ENDIF
 
                IF ((lake_id(i) < 0) .and. (hflux_fc(i) < 0)) THEN
@@ -281,7 +325,7 @@ CONTAINS
                   dt_this = min(dt_this, totalvolume / sum_hflux_riv(i))
                   
                ENDIF
-
+               
                ! constraint 3: Avoid change of flow direction (only for rivers)
                IF (lake_id(i) == 0) THEN
                   IF ((abs(veloc_riv(i)) > 0.1) &
@@ -393,7 +437,7 @@ CONTAINS
                ENDIF
             
                ! inland depression river
-               IF ((lake_id(i) == 0) .and. (riverdown(i) < 0)) THEN
+               IF ((lake_id(i) == 0) .and. (riverdown(i) == -1)) THEN
                   momen_riv(i) = min(0., momen_riv(i))
                   veloc_riv(i) = min(0., veloc_riv(i))
                ENDIF
