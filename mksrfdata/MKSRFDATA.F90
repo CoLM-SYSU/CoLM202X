@@ -65,6 +65,9 @@ PROGRAM MKSRFDATA
 #ifdef URBAN_MODEL
    USE MOD_LandUrban
 #endif
+#ifdef CROP
+   USE MOD_LandCrop
+#endif
    USE MOD_RegionClip
 #ifdef SrfdataDiag
    USE MOD_SrfdataDiag, only : gdiag, srfdata_diag_init
@@ -293,6 +296,10 @@ PROGRAM MKSRFDATA
    CALL landurban_build(lc_year)
 #endif
 
+#ifdef CROP
+   CALL landcrop_build (lc_year)
+#endif
+
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
    CALL landpft_build(lc_year)
 #endif
@@ -327,6 +334,11 @@ PROGRAM MKSRFDATA
    ! 3. Mapping land characteristic parameters to the model grids
    ! ................................................................
 #ifdef SrfdataDiag
+#if (defined CROP)
+   CALL elm_patch%build (landelm, landpatch, use_frac = .true., sharedfrac = pctshrpch)
+#else
+   CALL elm_patch%build (landelm, landpatch, use_frac = .true.)
+#endif
 #ifdef GRIDBASED
    CALL gdiag%define_by_copy (gridmesh)
 #else

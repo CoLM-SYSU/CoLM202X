@@ -384,8 +384,8 @@ MODULE MOD_SoilSnowHydrology
              etr         ,qseva       ,qsdew       ,qsubl   ,qfros  ,&
              rsur        ,rnof        ,qinfl       ,wtfact  ,ssi    ,&
              pondmx      ,                                           &
-             wimp        ,zwt         ,wdsrf       ,wa      ,qcharge,&
-             errw_rsub                 &
+             wimp        ,zwt         ,wdsrf       ,wa      ,wetwat ,&
+             qcharge     ,errw_rsub                                  &
 #if(defined CaMa_Flood)
              ,flddepth,fldfrc,qinfl_fld&
 #endif
@@ -419,6 +419,7 @@ MODULE MOD_SoilSnowHydrology
 
   use MOD_Precision
   USE MOD_Hydro_SoilWater
+  USE MOD_Vars_TimeInvariants, only : wetwatmax
   use MOD_Const_Physical, only : denice, denh2o, tfrz
 
   implicit none
@@ -479,7 +480,8 @@ MODULE MOD_SoilSnowHydrology
         hk (1:nl_soil)   , &! hydraulic conductivity [mm h2o/m]
         zwt              , &! the depth from ground (soil) surface to water table [m]
         wdsrf            , &! depth of surface water [mm]
-        wa                  ! water storage in aquifer [mm]
+        wa               , &! water storage in aquifer [mm]
+        wetwat              ! water storage in wetland [mm]
 
   real(r8), INTENT(out) :: &
         rsur             , &! surface runoff (mm h2o/s)
@@ -840,21 +842,38 @@ MODULE MOD_SoilSnowHydrology
   else
       if(patchtype==2)then        ! WETLAND
          qinfl = 0.
+         zwt = 0.
+         qcharge = 0.
+         
+         IF (lb >= 1) THEN
+            wetwat = wdsrf + wa + wetwat + (gwat - etr + qsdew + qfros - qsubl) * deltim
+         ELSE
+            wetwat = wdsrf + wa + wetwat + (gwat - etr) * deltim
+         ENDIF
+
+         IF (wetwat > wetwatmax) THEN
+            wdsrf  = wetwat - wetwatmax
+            wetwat = wetwatmax
+            wa     = 0.
+         ELSEIF (wetwat < 0) THEN
+            wa     = wetwat
+            wdsrf  = 0.
+            wetwat = 0.
+         ELSE
+            wdsrf = 0.
+            wa    = 0.
+         ENDIF
+      
 #ifndef LATERAL_FLOW
-         rsur = max(0.,gwat)
+         IF (wdsrf > pondmx) THEN
+            rsur = rsur + (wdsrf - pondmx) / deltim
+            wdsrf = pondmx
+         ELSE
+            rsur = 0.
+         ENDIF
          rnof = rsur
 #endif
-         do j = 1, nl_soil
-            if(t_soisno(j)>tfrz)then
-               wice_soisno(j) = 0.0
-               wliq_soisno(j) = porsl(j)*dz_soisno(j)*1000.
-            endif
-         enddo
       endif
-
-      wa = 0.
-      zwt = 0.
-      qcharge = 0.
 
   endif
 

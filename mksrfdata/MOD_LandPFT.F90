@@ -54,6 +54,9 @@ CONTAINS
       USE MOD_LandPatch
       USE MOD_AggregationRequestData
       USE MOD_Const_LC
+#ifdef CROP
+      USE MOD_LandCrop
+#endif
 
       IMPLICIT NONE
 

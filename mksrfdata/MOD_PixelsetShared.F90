@@ -1,23 +1,23 @@
 #include <define.h>
 
-MODULE MOD_PixelsetShadow
+MODULE MOD_PixelsetShared
    !----------------------------------------------------------------------------------------
    ! DESCRIPTION:
    !
-   !    Shadows of pixelset refer to two or more pixelsets sharing the same geographic area.
+   !    Shared pixelset refer to two or more pixelsets sharing the same geographic area.
    ! 
    !    For example, for patch of crops, multiple crops can be planted on a piece of land.
    !    When planting these crops, different irrigation schemes may be used. Thus the water 
    !    and energy processes have difference in crops and should be modeled independently.
-   !    By using shadows, crop patch is splitted to two or more shadowed patches.
-   !    Each shadow is assigned with a percentage of area and has its own states.
+   !    By using shared pixelset, crop patch is splitted to two or more shared patches.
+   !    Each shared patch is assigned with a percentage of area and has its own states.
    !
-   !                Example of shadowed pixelsets
+   !                Example of shared pixelsets
    !        |<------------------- ELEMENT ------------------>| <-- level 1
    !        |   subset 1  |       subset 2        | subset 3 | <-- level 2
-   !                      | subset 2 shadow 1 50% |            
-   !                      | subset 2 shadow 2 20% |            <-- subset 2 shadows
-   !                      | subset 2 shadow 3 30% |            
+   !                      | subset 2 shared 1 50% |            
+   !                      | subset 2 shared 2 20% |            <-- subset 2 shares
+   !                      | subset 2 shared 3 30% |            
    !
    !
    ! Created by Shupeng Zhang, May 2023
@@ -26,8 +26,8 @@ MODULE MOD_PixelsetShadow
 
 CONTAINS
 
-   SUBROUTINE pixelsetshadow_build (pixelset, gshadow, datashadow, nmaxshadow, typfilter, &
-         fracout, shadowclass, fracin)
+   SUBROUTINE pixelsetshared_build (pixelset, gshared, datashared, nmaxshared, typfilter, &
+         fracout, sharedclass, fracin)
 
       USE MOD_SPMD_Task
       USE MOD_Grid
@@ -40,20 +40,20 @@ CONTAINS
       IMPLICIT NONE
 
       TYPE(pixelset_type),       intent(inout) :: pixelset
-      TYPE(grid_type),           intent(in)    :: gshadow
-      TYPE(block_data_real8_3d), intent(in)    :: datashadow
-      INTEGER, intent(in) :: nmaxshadow
+      TYPE(grid_type),           intent(in)    :: gshared
+      TYPE(block_data_real8_3d), intent(in)    :: datashared
+      INTEGER, intent(in) :: nmaxshared
       INTEGER, intent(in) :: typfilter(:)
 
       REAL(r8), intent(out), allocatable :: fracout(:)
-      INTEGER,  intent(out), allocatable :: shadowclass(:)
+      INTEGER,  intent(out), allocatable :: sharedclass(:)
       REAL(r8), intent(in),  optional    :: fracin (:)
 
       ! Local Variables
-      REAL(r8), allocatable :: pctshadow(:,:)
-      REAL(r8), allocatable :: datashadow1d(:,:), areapixel(:), rbuff(:,:)
-      INTEGER  :: nsetshadow, ipset, jpset
-      INTEGER  :: ipxl, ie, ipxstt, ipxend, ishadow
+      REAL(r8), allocatable :: pctshared(:,:)
+      REAL(r8), allocatable :: datashared1d(:,:), areapixel(:), rbuff(:,:)
+      INTEGER  :: nsetshared, ipset, jpset
+      INTEGER  :: ipxl, ie, ipxstt, ipxend, ishared
       INTEGER,  allocatable :: eindex1(:), ielm1(:), ipxstt1(:), ipxend1(:), settyp1(:)
 
 #ifdef USEMPI
@@ -62,15 +62,15 @@ CONTAINS
          
 #ifdef USEMPI
       IF (p_is_io) THEN
-         CALL aggregation_data_daemon (gshadow, data_r8_3d_in1 = datashadow, n1_r8_3d_in1 = nmaxshadow)
+         CALL aggregation_data_daemon (gshared, data_r8_3d_in1 = datashared, n1_r8_3d_in1 = nmaxshared)
       ENDIF
 #endif
          
       IF (p_is_worker) THEN
 
-         nsetshadow = 0
+         nsetshared = 0
 
-         allocate (pctshadow(nmaxshadow,pixelset%nset))
+         allocate (pctshared(nmaxshared,pixelset%nset))
 
          DO ipset = 1, pixelset%nset
             IF (any(typfilter(:) == pixelset%settyp(ipset))) THEN
@@ -79,12 +79,12 @@ CONTAINS
                ipxstt = pixelset%ipxstt(ipset)
                ipxend = pixelset%ipxend(ipset)
       
-               allocate (datashadow1d (nmaxshadow, ipxstt:ipxend))
+               allocate (datashared1d (nmaxshared, ipxstt:ipxend))
 
-               CALL aggregation_request_data (pixelset, ipset, gshadow, zip = .false., &
-                  data_r8_3d_in1 = datashadow, data_r8_3d_out1 = rbuff, n1_r8_3d_in1 = nmaxshadow)
+               CALL aggregation_request_data (pixelset, ipset, gshared, zip = .false., &
+                  data_r8_3d_in1 = datashared, data_r8_3d_out1 = rbuff, n1_r8_3d_in1 = nmaxshared)
 
-               datashadow1d = rbuff
+               datashared1d = rbuff
 
                allocate (areapixel(ipxstt:ipxend))
                DO ipxl = ipxstt, ipxend
@@ -93,21 +93,21 @@ CONTAINS
                      pixel%lon_w(mesh(ie)%ilon(ipxl)), pixel%lon_e(mesh(ie)%ilon(ipxl)) )
                ENDDO
 
-               DO ishadow = 1, nmaxshadow
-                  pctshadow(ishadow,ipset) = sum(datashadow1d(ishadow,:) * areapixel)
+               DO ishared = 1, nmaxshared
+                  pctshared(ishared,ipset) = sum(datashared1d(ishared,:) * areapixel)
                ENDDO
 
-               IF (any(pctshadow(:,ipset) > 0.)) THEN
-                  nsetshadow = nsetshadow + count(pctshadow(:,ipset) > 0.)
-                  pctshadow(:,ipset) = pctshadow(:,ipset) / sum(pctshadow(:,ipset))
+               IF (any(pctshared(:,ipset) > 0.)) THEN
+                  nsetshared = nsetshared + count(pctshared(:,ipset) > 0.)
+                  pctshared(:,ipset) = pctshared(:,ipset) / sum(pctshared(:,ipset))
                ENDIF
 
                deallocate (rbuff       )
                deallocate (areapixel   )
-               deallocate (datashadow1d)
+               deallocate (datashared1d)
 
             ELSE
-               nsetshadow = nsetshadow + 1
+               nsetshared = nsetshared + 1
             ENDIF
              
          ENDDO
@@ -139,21 +139,21 @@ CONTAINS
             deallocate (pixelset%settyp)
             deallocate (pixelset%ielm  )
 
-            allocate (pixelset%eindex(nsetshadow))
-            allocate (pixelset%ipxstt(nsetshadow))
-            allocate (pixelset%ipxend(nsetshadow))
-            allocate (pixelset%settyp(nsetshadow))
-            allocate (pixelset%ielm  (nsetshadow))
+            allocate (pixelset%eindex(nsetshared))
+            allocate (pixelset%ipxstt(nsetshared))
+            allocate (pixelset%ipxend(nsetshared))
+            allocate (pixelset%settyp(nsetshared))
+            allocate (pixelset%ielm  (nsetshared))
 
-            allocate (fracout    (nsetshadow))
-            allocate (shadowclass(nsetshadow))
+            allocate (fracout    (nsetshared))
+            allocate (sharedclass(nsetshared))
 
             jpset = 0
             DO ipset = 1, pixelset%nset
                IF (any(typfilter(:) == settyp1(ipset))) THEN
-                  IF (any(pctshadow(:,ipset) > 0.)) THEN
-                     DO ishadow = 1, nmaxshadow
-                        IF (pctshadow(ishadow,ipset) > 0.) THEN
+                  IF (any(pctshared(:,ipset) > 0.)) THEN
+                     DO ishared = 1, nmaxshared
+                        IF (pctshared(ishared,ipset) > 0.) THEN
                            jpset = jpset + 1
                            pixelset%eindex(jpset) = eindex1(ipset)
                            pixelset%ipxstt(jpset) = ipxstt1(ipset)
@@ -162,12 +162,12 @@ CONTAINS
                            pixelset%ielm  (jpset) = ielm1  (ipset)
 
                            IF (present(fracin)) THEN
-                              fracout(jpset) = fracin(ipset) * pctshadow(ishadow,ipset)
+                              fracout(jpset) = fracin(ipset) * pctshared(ishared,ipset)
                            ELSE
-                              fracout(jpset) = pctshadow(ishadow,ipset)
+                              fracout(jpset) = pctshared(ishared,ipset)
                            ENDIF
 
-                           shadowclass(jpset) = ishadow
+                           sharedclass(jpset) = ishared
                         ENDIF
                      ENDDO
                   ENDIF
@@ -185,18 +185,18 @@ CONTAINS
                      fracout(jpset) = 1.
                   ENDIF
 
-                  shadowclass(jpset) = 0 ! no meaning
+                  sharedclass(jpset) = 0 ! no meaning
                ENDIF
             ENDDO
 
-            pixelset%nset = nsetshadow
+            pixelset%nset = nsetshared
 
             deallocate (eindex1)
             deallocate (ipxstt1)
             deallocate (ipxend1)
             deallocate (settyp1)
             deallocate (ielm1  )
-            deallocate (pctshadow)
+            deallocate (pctshared)
 
          ENDIF
 
@@ -204,6 +204,6 @@ CONTAINS
          
       CALL pixelset%set_vecgs
 
-   END SUBROUTINE pixelsetshadow_build
+   END SUBROUTINE pixelsetshared_build
 
-END MODULE MOD_PixelsetShadow
+END MODULE MOD_PixelsetShared
