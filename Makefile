@@ -46,7 +46,7 @@ OBJS_SHARED =    \
 				  MOD_Mapping_Grid2Pset.o      \
 				  MOD_Mapping_Pset2Grid.o      \
 				  MOD_AggregationRequestData.o \
-				  MOD_PixelsetShadow.o         \
+				  MOD_PixelsetShared.o         \
 				  MOD_LandElm.o                \
 				  MOD_LandHRU.o                \
 				  MOD_LandPatch.o              \
