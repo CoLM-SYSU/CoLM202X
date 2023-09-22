@@ -3,21 +3,20 @@
 MODULE MOD_LeafTemperaturePC
 
 !-----------------------------------------------------------------------
- USE MOD_Precision
- IMPLICIT NONE
- SAVE
+  USE MOD_Precision
+  IMPLICIT NONE
+  SAVE
 
 ! PUBLIC MEMBER FUNCTIONS:
   PUBLIC :: LeafTemperaturePC
 
 ! PRIVATE MEMBER FUNCTIONS:
   PRIVATE :: dewfraction
-  PRIVATE :: cal_z0_displa
 
 
 !-----------------------------------------------------------------------
 
-  CONTAINS
+CONTAINS
 
 !-----------------------------------------------------------------------
 
@@ -79,7 +78,9 @@ MODULE MOD_LeafTemperaturePC
   USE MOD_Const_Physical, only: vonkar, grav, hvap, cpair, stefnc, cpliq, cpice
   USE MOD_Const_PFT
   USE MOD_FrictionVelocity
-  USE MOD_Namelist, only: DEF_USE_CBL_HEIGHT, DEF_USE_PLANTHYDRAULICS, DEF_USE_OZONESTRESS, DEF_RSS_SCHEME, DEF_Interception_scheme
+  USE MOD_CanopyLayerProfile
+  USE MOD_Namelist, only: DEF_USE_CBL_HEIGHT, DEF_USE_PLANTHYDRAULICS, DEF_USE_OZONESTRESS, &
+                          DEF_RSS_SCHEME, DEF_Interception_scheme
   USE MOD_TurbulenceLEddy
   USE MOD_Qsadv
   USE MOD_AssimStomataConductance
@@ -358,7 +359,7 @@ MODULE MOD_LeafTemperaturePC
 
    integer it, nmozsgn
 
-   real(r8) w, csoilcn, z0mg, z0hg, z0qg, elwmax, elwdif
+   real(r8) w, csoilcn, z0mg, z0hg, z0qg, elwmax, elwdif, sumrootr
    real(r8) cintsun(3, ps:pe), cintsha(3, ps:pe)
    real(r8),dimension(ps:pe)   :: delta, fac, etr0
    real(r8),dimension(ps:pe)   :: irab, dirab_dtl, fsenl_dtl, fevpl_dtl
@@ -1624,13 +1625,26 @@ MODULE MOD_LeafTemperaturePC
 
              etr0(i)    = etr(i)
              etr(i)     = etr(i)     +     etr_dtl(i)*dtl(it-1,i)
-             IF(DEF_USE_PLANTHYDRAULICS)THEN
+
+             IF (DEF_USE_PLANTHYDRAULICS) THEN
+                !TODO@yuan: rootr may not be consistent with etr,
+                !           water imbalance could happen.
                 IF(abs(etr0(i)) .ge. 1.e-15)THEN
                    rootr(:,i) = rootr(:,i) * etr(i) / etr0(i)
                 ELSE
                    rootr(:,i) = rootr(:,i) + dz_soi / sum(dz_soi) * etr_dtl(i)* dtl(it-1,i)
-                END IF
-             END IF
+                ENDIF
+
+                !NOTE: temporal solution to make etr and rootr consistent.
+                !TODO: need double check
+                sumrootr = sum(rootr(:,i), rootr(:,i)>0.)
+                IF (abs(sumrootr) > 0.) THEN
+                   rootr(:,i) = max(rootr(:,i),0.) * (etr(i)/sumrootr)
+                ELSE
+                   rootr(:,i) = etr(i)*rootfr(:,i)
+                ENDIF
+             ENDIF
+
              evplwet(i) = evplwet(i) + evplwet_dtl(i)*dtl(it-1,i)
              fevpl(i)   = fevpl_noadj(i)
              fevpl(i)   = fevpl(i)   +   fevpl_dtl(i)*dtl(it-1,i)
@@ -1814,594 +1828,5 @@ MODULE MOD_LeafTemperaturePC
 
 
   END SUBROUTINE dewfraction
-!----------------------------------------------------------------------
-
-  real(r8) FUNCTION uprofile(utop, fc, bee, alpha, z0mg, htop, hbot, z)
-
-     USE MOD_Precision
-     USE MOD_FrictionVelocity
-     IMPLICIT NONE
-
-     real(r8), intent(in) :: utop
-     real(r8), intent(in) :: fc
-     real(r8), intent(in) :: bee
-     real(r8), intent(in) :: alpha
-     real(r8), intent(in) :: z0mg
-     real(r8), intent(in) :: htop
-     real(r8), intent(in) :: hbot
-     real(r8), intent(in) :: z
-
-     real(r8) :: ulog,uexp
-
-     ! when canopy LAI->0, z0->zs, fac->1, u->umoninobuk
-     ! canopy LAI->large, fac->0 or=0, u->log profile
-     ulog = utop*log(z/z0mg)/log(htop/z0mg)
-     uexp = utop*exp(-alpha*(1-(z-hbot)/(htop-hbot)))
-
-     uprofile = bee*fc*min(uexp,ulog) + (1-bee*fc)*ulog
-
-     RETURN
-  END FUNCTION uprofile
-
-  real(r8) FUNCTION kprofile(ktop, fc, bee, alpha, &
-                    displah, htop, hbot, obu, ustar, z)
-
-     USE MOD_Precision
-     USE MOD_FrictionVelocity
-     IMPLICIT NONE
-
-     real(r8), parameter :: com1 = 0.4
-     real(r8), parameter :: com2 = 0.08
-
-     real(r8), intent(in) :: ktop
-     real(r8), intent(in) :: fc
-     real(r8), intent(in) :: bee
-     real(r8), intent(in) :: alpha
-     real(r8), intent(in) :: displah
-     real(r8), intent(in) :: htop
-     real(r8), intent(in) :: hbot
-     real(r8), intent(in) :: obu
-     real(r8), intent(in) :: ustar
-     real(r8), intent(in) :: z
-
-     real(r8) :: fac
-     real(r8) :: kcob, klin, kexp
-
-     klin = ktop*z/htop
-
-     fac  = 1. / (1.+exp(-(displah-com1)/com2))
-     kcob = 1. / (fac/klin + (1.-fac)/kmoninobuk(0.,obu,ustar,z))
-
-     kexp = ktop*exp(-alpha*(1-(z-hbot)/(htop-hbot)))
-
-     kprofile = 1./( bee*fc/min(kexp,kcob) + (1-bee*fc)/kcob )
-
-     RETURN
-  END FUNCTION kprofile
-
-  real(r8) FUNCTION uintegral(utop, fc, bee, alpha, z0mg, htop, hbot)
-
-     USE MOD_Precision
-     IMPLICIT NONE
-
-     real(r8), intent(in) :: utop
-     real(r8), intent(in) :: fc
-     real(r8), intent(in) :: bee
-     real(r8), intent(in) :: alpha
-     real(r8), intent(in) :: z0mg
-     real(r8), intent(in) :: htop
-     real(r8), intent(in) :: hbot
-
-     integer  :: i, n
-     real(r8) :: dz, z, u
-
-     ! 09/26/2017: change fixed n -> fixed dz
-     dz = 0.01
-     n  = int( (htop-hbot) / dz ) + 1
-
-     uintegral = 0.
-
-     DO i = 1, n
-        IF (i < n) THEN
-           z = htop - (i-0.5)*dz
-        ELSE
-           dz = htop - hbot - (n-1)*dz
-           z  = hbot + 0.5*dz
-        ENDIF
-
-        u = uprofile(utop, fc, bee, alpha, z0mg, htop, hbot, z)
-
-        u = max(0._r8, u)
-        !uintegral = uintegral + sqrt(u)*dz / (htop-hbot)
-! 03/04/2020, yuan: NOTE: the above is hard to solve
-        !NOTE: The integral cannot be solved analytically after
-        !the square root sign of u, and the integral can be approximated
-        !directly for u, In this way, there is no need to square
-        uintegral = uintegral + u*dz / (htop-hbot)
-     ENDDO
-
-     !uintegral = uintegral * uintegral
-
-     RETURN
-  END FUNCTION uintegral
-
-
-  real(r8) FUNCTION ueffect(utop, htop, hbot, &
-                            z0mg, alpha, bee, fc)
-     USE MOD_Precision
-     IMPLICIT NONE
-
-     real(r8), intent(in) :: utop
-     real(r8), intent(in) :: htop
-     real(r8), intent(in) :: hbot
-     real(r8), intent(in) :: z0mg
-     real(r8), intent(in) :: alpha
-     real(r8), intent(in) :: bee
-     real(r8), intent(in) :: fc
-
-     real(r8) :: roots(2), uint
-     integer  :: rootn
-
-     rootn = 0
-     uint  = 0.
-
-     CALL ufindroots(htop,hbot,(htop+hbot)/2., &
-        utop, htop, hbot, z0mg, alpha, roots, rootn)
-
-     IF (rootn == 0) THEN !no root
-        uint = uint + fuint(utop, htop, hbot, &
-           htop, hbot, z0mg, alpha, bee, fc)
-     ENDIF
-
-     IF (rootn == 1) THEN
-        uint = uint + fuint(utop, htop, roots(1), &
-           htop, hbot, z0mg, alpha, bee, fc)
-        uint = uint + fuint(utop, roots(1), hbot, &
-           htop, hbot, z0mg, alpha, bee, fc)
-     ENDIF
-
-     IF (rootn == 2) THEN
-        uint = uint + fuint(utop, htop,     roots(1), &
-           htop, hbot, z0mg, alpha, bee, fc)
-        uint = uint + fuint(utop, roots(1), roots(2), &
-           htop, hbot, z0mg, alpha, bee, fc)
-        uint = uint + fuint(utop, roots(2), hbot,     &
-           htop, hbot, z0mg, alpha, bee, fc)
-     ENDIF
-
-     ueffect = uint / (htop-hbot)
-
-     RETURN
-  END FUNCTION ueffect
-
-
-  real(r8) FUNCTION fuint(utop, ztop, zbot, &
-        htop, hbot, z0mg, alpha, bee, fc)
-
-     USE MOD_Precision
-     IMPLICIT NONE
-
-     real(r8), intent(in) :: utop, ztop, zbot
-     real(r8), intent(in) :: htop, hbot
-     real(r8), intent(in) :: z0mg, alpha
-     real(r8), intent(in) :: bee, fc
-
-     ! local variables
-     real(r8) :: fuexpint, fulogint
-
-     fulogint = utop/log(htop/z0mg) *&
-        (ztop*log(ztop/z0mg) - zbot*log(zbot/z0mg) + zbot - ztop)
-
-     IF (udif((ztop+zbot)/2.,utop,htop,hbot,z0mg,alpha) <= 0) THEN
-        ! uexp is smaller
-        fuexpint = utop*(htop-hbot)/alpha*( &
-           exp(-alpha*(htop-ztop)/(htop-hbot))-&
-           exp(-alpha*(htop-zbot)/(htop-hbot)) )
-
-        fuint = bee*fc*fuexpint + (1.-bee*fc)*fulogint
-     ELSE
-        ! ulog is smaller
-        fuint = fulogint
-     ENDIF
-
-     RETURN
-  END FUNCTION fuint
-
-
-  RECURSIVE SUBROUTINE ufindroots(ztop,zbot,zmid, &
-     utop, htop, hbot, z0mg, alpha, roots, rootn)
-
-     USE MOD_Precision
-     IMPLICIT NONE
-
-     real(r8), intent(in) :: ztop, zbot, zmid
-     real(r8), intent(in) :: utop, htop, hbot
-     real(r8), intent(in) :: z0mg, alpha
-
-     real(r8), intent(inout) :: roots(2)
-     integer,  intent(inout) :: rootn
-
-     ! local variables
-     real(r8) :: udif_ub, udif_lb
-
-     udif_ub = udif(ztop,utop,htop,hbot,z0mg,alpha)
-     udif_lb = udif(zmid,utop,htop,hbot,z0mg,alpha)
-
-     IF (udif_ub*udif_lb == 0) THEN
-        IF (udif_lb == 0) THEN !root found
-           rootn = rootn + 1
-           IF (rootn > 2) THEN
-              print *, "U root number > 2, abort!"
-              CALL abort
-           ENDIF
-           roots(rootn) = zmid
-        ENDIF
-     ELSE IF (udif_ub*udif_lb < 0) THEN
-        IF (ztop-zmid < 0.01) THEN
-           rootn = rootn + 1 !root found
-           IF (rootn > 2) THEN
-              print *, "U root number > 2, abort!"
-              CALL abort
-           ENDIF
-           roots(rootn) = (ztop+zmid)/2.
-        ELSE
-           CALL ufindroots(ztop,zmid,(ztop+zmid)/2., &
-              utop, htop, hbot, z0mg, alpha, roots, rootn)
-        ENDIF
-     ENDIF
-
-     udif_ub = udif(zmid,utop,htop,hbot,z0mg,alpha)
-     udif_lb = udif(zbot,utop,htop,hbot,z0mg,alpha)
-
-     IF (udif_ub*udif_lb == 0) THEN
-        IF (udif_ub == 0) THEN !root found
-           rootn = rootn + 1
-           IF (rootn > 2) THEN
-              print *, "U root number > 2, abort!"
-              CALL abort
-           ENDIF
-           roots(rootn) = zmid
-        ENDIF
-     ELSE IF (udif_ub*udif_lb < 0) THEN
-        IF (zmid-zbot < 0.01) THEN
-           rootn = rootn + 1 !root found
-           IF (rootn > 2) THEN
-              print *, "U root number > 2, abort!"
-              CALL abort
-           ENDIF
-           roots(rootn) = (zmid+zbot)/2.
-        ELSE
-           CALL ufindroots(zmid,zbot,(zmid+zbot)/2., &
-              utop, htop, hbot, z0mg, alpha, roots, rootn)
-        ENDIF
-     ENDIF
-
-  END SUBROUTINE ufindroots
-
-
-  real(r8) FUNCTION udif(z, utop, htop, hbot, z0mg, alpha)
-
-     USE MOD_Precision
-     IMPLICIT NONE
-
-     real(r8), intent(in) :: z, utop, htop, hbot
-     real(r8), intent(in) :: z0mg, alpha
-
-     real(r8) :: uexp, ulog
-
-     uexp = utop*exp(-alpha*(1-(z-hbot)/(htop-hbot)))
-     ulog = utop*log(z/z0mg)/log(htop/z0mg)
-
-     udif = uexp - ulog
-
-     RETURN
-  END FUNCTION udif
-
-
-  real(r8) FUNCTION kintegral(ktop, fc, bee, alpha, z0mg, &
-                    displah, htop, hbot, obu, ustar, ztop, zbot)
-     USE MOD_Precision
-     IMPLICIT NONE
-
-     real(r8), intent(in) :: ktop
-     real(r8), intent(in) :: fc
-     real(r8), intent(in) :: bee
-     real(r8), intent(in) :: alpha
-     real(r8), intent(in) :: z0mg
-     real(r8), intent(in) :: displah
-     real(r8), intent(in) :: htop
-     real(r8), intent(in) :: hbot
-     real(r8), intent(in) :: obu
-     real(r8), intent(in) :: ustar
-     real(r8), intent(in) :: ztop
-     real(r8), intent(in) :: zbot
-
-     integer  :: i, n
-     real(r8) :: dz, z, k
-
-     kintegral = 0.
-
-     IF (ztop <= zbot) THEN
-        RETURN
-     ENDIF
-
-     ! 09/26/2017: change fixed n -> fixed dz
-     dz = 0.01
-     n  = int( (ztop-zbot) / dz ) + 1
-
-     DO i = 1, n
-        IF (i < n) THEN
-           z  = ztop - (i-0.5)*dz
-        ELSE
-           dz = ztop - zbot - (n-1)*dz
-           z  = zbot + 0.5*dz
-        ENDIF
-
-        k = kprofile(ktop, fc, bee, alpha, &
-           displah, htop, hbot, obu, ustar, z)
-
-        kintegral = kintegral + 1./k * dz
-
-     ENDDO
-
-     RETURN
-  END FUNCTION kintegral
-
-  real(r8) FUNCTION frd(ktop, htop, hbot, &
-        ztop, zbot, displah, z0h, obu, ustar, &
-        z0mg, alpha, bee, fc)
-
-     USE MOD_Precision
-     IMPLICIT NONE
-
-     real(r8), intent(in) :: ktop, htop, hbot
-     real(r8), intent(in) :: ztop, zbot
-     real(r8), intent(in) :: displah, z0h, obu, ustar
-     real(r8), intent(in) :: z0mg, alpha, bee, fc
-
-     ! local parameters
-     real(r8), parameter :: com1 = 0.4
-     real(r8), parameter :: com2 = 0.08
-
-     real(r8) :: roots(2), fac, kint
-     integer  :: rootn
-
-     rootn = 0
-     kint  = 0.
-
-     ! calculate fac
-     fac = 1. / (1.+exp(-(displah-com1)/com2))
-
-     CALL kfindroots(ztop,zbot,(ztop+zbot)/2., &
-        ktop, htop, hbot, obu, ustar, fac, alpha, roots, rootn)
-
-     !print *, roots, rootn
-     IF (rootn == 0) THEN !no root
-        kint = kint + fkint(ktop, ztop, zbot, htop, hbot, &
-           z0h, obu, ustar, fac, alpha, bee, fc)
-     ENDIF
-
-     IF (rootn == 1) THEN
-        kint = kint + fkint(ktop, ztop, roots(1), htop, hbot, &
-           z0h, obu, ustar, fac, alpha, bee, fc)
-        kint = kint + fkint(ktop, roots(1), zbot, htop, hbot, &
-           z0h, obu, ustar, fac, alpha, bee, fc)
-     ENDIF
-
-     IF (rootn == 2) THEN
-        kint = kint + fkint(ktop, ztop, roots(1), htop, hbot, &
-           z0h, obu, ustar, fac, alpha, bee, fc)
-        kint = kint + fkint(ktop, roots(1), roots(2), htop, hbot, &
-           z0h, obu, ustar, fac, alpha, bee, fc)
-        kint = kint + fkint(ktop, roots(2), zbot, htop, hbot, &
-           z0h, obu, ustar, fac, alpha, bee, fc)
-     ENDIF
-
-     frd = kint
-
-     RETURN
-  END FUNCTION frd
-
-
-  real(r8) FUNCTION fkint(ktop, ztop, zbot, htop, hbot, &
-        z0h, obu, ustar, fac, alpha, bee, fc)
-
-     USE MOD_Precision
-     USE MOD_FrictionVelocity
-     IMPLICIT NONE
-
-     real(r8), intent(in) :: ktop, ztop, zbot
-     real(r8), intent(in) :: htop, hbot
-     real(r8), intent(in) :: z0h, obu, ustar, fac, alpha
-     real(r8), intent(in) :: bee, fc
-
-     ! local variables
-     real(r8) :: fkexpint, fkcobint
-
-     !NOTE:
-     ! klin = ktop*z/htop
-     ! kcob = 1./(fac/klin + (1.-fac)/kmoninobuk(0.,obu,ustar,z))
-     fkcobint = fac*htop/ktop*(log(ztop)-log(zbot)) +&
-        (1.-fac)*kintmoninobuk(0.,z0h,obu,ustar,ztop,zbot)
-
-     IF (kdif((ztop+zbot)/2.,ktop,htop,hbot,obu,ustar,fac,alpha) <= 0) THEN
-        ! kexp is smaller
-        IF (alpha > 0) THEN
-           fkexpint = -(htop-hbot)/alpha/ktop*( &
-              exp(alpha*(htop-ztop)/(htop-hbot))-&
-              exp(alpha*(htop-zbot)/(htop-hbot)) )
-        ELSE
-           fkexpint = (ztop-zbot)/ktop
-        ENDIF
-
-        fkint = bee*fc*fkexpint + (1.-bee*fc)*fkcobint
-     ELSE
-        ! kcob is smaller
-        fkint = fkcobint
-     ENDIF
-
-     RETURN
-  END FUNCTION fkint
-
-
-  RECURSIVE SUBROUTINE kfindroots(ztop,zbot,zmid, &
-     ktop, htop, hbot, obu, ustar, fac, alpha, roots, rootn)
-
-     USE MOD_Precision
-     IMPLICIT NONE
-
-     real(r8), intent(in) :: ztop, zbot, zmid
-     real(r8), intent(in) :: ktop, htop, hbot
-     real(r8), intent(in) :: obu, ustar, fac, alpha
-
-     real(r8), intent(inout) :: roots(2)
-     integer,  intent(inout) :: rootn
-
-     ! local variables
-     real(r8) :: kdif_ub, kdif_lb
-
-     !print *, "*** CALL recursive SUBROUTINE kfindroots!!"
-     kdif_ub = kdif(ztop,ktop,htop,hbot,obu,ustar,fac,alpha)
-     kdif_lb = kdif(zmid,ktop,htop,hbot,obu,ustar,fac,alpha)
-
-     IF (kdif_ub*kdif_lb == 0) THEN
-        IF (kdif_lb == 0) THEN !root found
-           rootn = rootn + 1
-           IF (rootn > 2) THEN
-              print *, "K root number > 2, abort!"
-              CALL abort
-           ENDIF
-           roots(rootn) = zmid
-        ENDIF
-     ELSE IF (kdif_ub*kdif_lb < 0) THEN
-        IF (ztop-zmid < 0.01) THEN
-           rootn = rootn + 1 !root found
-           IF (rootn > 2) THEN
-              print *, "K root number > 2, abort!"
-              CALL abort
-           ENDIF
-           roots(rootn) = (ztop+zmid)/2.
-        ELSE
-           CALL kfindroots(ztop,zmid,(ztop+zmid)/2., &
-              ktop, htop, hbot, obu, ustar, fac, alpha, roots, rootn)
-        ENDIF
-     ENDIF
-
-     kdif_ub = kdif(zmid,ktop,htop,hbot,obu,ustar,fac,alpha)
-     kdif_lb = kdif(zbot,ktop,htop,hbot,obu,ustar,fac,alpha)
-
-     IF (kdif_ub*kdif_lb == 0) THEN
-        IF (kdif_ub == 0) THEN !root found
-           rootn = rootn + 1
-           IF (rootn > 2) THEN
-              print *, "K root number > 2, abort!"
-              CALL abort
-           ENDIF
-           roots(rootn) = zmid
-        ENDIF
-     ELSE IF (kdif_ub*kdif_lb < 0) THEN
-        IF (zmid-zbot < 0.01) THEN
-           rootn = rootn + 1 !root found
-           IF (rootn > 2) THEN
-              print *, "K root number > 2, abort!"
-              CALL abort
-           ENDIF
-           roots(rootn) = (zmid+zbot)/2.
-        ELSE
-           CALL kfindroots(zmid,zbot,(zmid+zbot)/2., &
-              ktop, htop, hbot, obu, ustar, fac, alpha, roots, rootn)
-        ENDIF
-     ENDIF
-
-  END SUBROUTINE kfindroots
-
-
-  real(r8) FUNCTION kdif(z, ktop, htop, hbot, &
-        obu, ustar, fac, alpha)
-
-     USE MOD_Precision
-     USE MOD_FrictionVelocity
-     IMPLICIT NONE
-
-     real(r8), intent(in) :: z, ktop, htop, hbot
-     real(r8), intent(in) :: obu, ustar, fac, alpha
-
-     real(r8) :: kexp, klin, kcob
-
-     kexp = ktop*exp(-alpha*(1-(z-hbot)/(htop-hbot)))
-
-     klin = ktop*z/htop
-     kcob = 1./(fac/klin + (1.-fac)/kmoninobuk(0.,obu,ustar,z))
-
-     kdif = kexp - kcob
-
-     RETURN
-  END FUNCTION kdif
-
-
-  SUBROUTINE cal_z0_displa (lai, h, fc, z0, displa)
-
-     USE MOD_Const_Physical, only: vonkar
-     IMPLICIT NONE
-
-     real(r8), intent(in)  :: lai
-     real(r8), intent(in)  :: h
-     real(r8), intent(in)  :: fc
-     real(r8), intent(out) :: z0
-     real(r8), intent(out) :: displa
-
-     real(r8), parameter :: Cd   = 0.2   !leaf drag coefficient
-     real(r8), parameter :: cd1  = 7.5   !a free parameter for d/h calculation, Raupach 1992, 1994
-     real(r8), parameter :: psih = 0.193 !psih = ln(cw) - 1 + cw^-1, cw = 2, Raupach 1994
-
-     ! local variables
-     real(r8) :: fai, sqrtdragc, temp1, delta , lai0
-
-     ! when assume z0=0.01, displa=0
-     ! to calculate lai0, delta displa
-     !----------------------------------------------------
-     sqrtdragc = -vonkar/(log(0.01/h) - psih)
-     sqrtdragc = max(sqrtdragc, 0.0031**0.5)
-     IF (sqrtdragc .le. 0.3) THEN
-        fai = (sqrtdragc**2-0.003) / 0.3
-        fai = min(fai, fc*(1-exp(-20.)))
-     ELSE
-        fai = 0.29
-        print *, "z0m, displa error!"
-     ENDIF
-
-     ! calculate delta displa when z0 = 0.01
-     lai0  = -log(1.-fai/fc)/0.5
-     temp1 = (2.*cd1*fai)**0.5
-     delta = -h * ( fc*1.1*log(1. + (Cd*lai0*fc)**0.25) + &
-        (1.-fc)*(1.-(1.-exp(-temp1))/temp1) )
-
-     ! calculate z0m, displa
-     !----------------------------------------------------
-     ! NOTE: potential bug below, only apply for spheric
-     ! crowns. For other cases, fc*(...) ==> a*fc*(...)
-     fai   = fc*(1. - exp(-0.5*lai))
-     sqrtdragc = min( (0.003+0.3*fai)**0.5, 0.3 )
-     temp1 = (2.*cd1*fai)**0.5
-
-     IF (lai > lai0) THEN
-        displa = delta + h*( &
-           (  fc)*1.1*log(1. + (Cd*lai*fc)**0.25) + &
-           (1-fc)*(1.-(1.-exp(-temp1))/temp1) )
-     ELSE
-        displa = h*( &
-           (  fc)*1.1*log(1. + (Cd*lai*fc)**0.25) + &
-           (1-fc)*(1.-(1.-exp(-temp1))/temp1) )
-     ENDIF
-
-     displa = max(displa, 0.)
-     z0 = (h-displa) * exp(-vonkar/sqrtdragc + psih)
-
-     IF (z0 < 0.01) THEN
-        z0 = 0.01
-        displa = 0.
-     ENDIF
-
-  END SUBROUTINE cal_z0_displa
 
 END MODULE MOD_LeafTemperaturePC

@@ -248,7 +248,7 @@ OBJS_MAIN = \
 				MOD_BGC_Veg_CNNDynamics.o                 \
 				MOD_BGC_Veg_CNFireBase.o                  \
 				MOD_BGC_Veg_CNFireLi2016.o                \
-				MOD_Irrigation.o 						  \
+				MOD_Irrigation.o                          \
 				MOD_BGC_driver.o                          \
 				MOD_Vars_2DForcing.o                      \
 				MOD_UserSpecifiedForcing.o                \
@@ -259,6 +259,7 @@ OBJS_MAIN = \
 				MOD_FrictionVelocity.o                    \
 				MOD_TurbulenceLEddy.o                     \
 				MOD_Ozone.o                               \
+				MOD_CanopyLayerProfile.o                  \
 				MOD_LeafTemperature.o                     \
 				MOD_LeafTemperaturePC.o                   \
 				MOD_SoilThermalParameters.o               \

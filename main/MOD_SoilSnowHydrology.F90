@@ -761,7 +761,7 @@ MODULE MOD_SoilSnowHydrology
             ENDIF
          ELSE
             wliq_soisno(1) = max(0., wliq_soisno(1) + qgtop * deltim)
-         ENDIF 
+         ENDIF
 
          qgtop = 0.
 
@@ -793,7 +793,7 @@ MODULE MOD_SoilSnowHydrology
       ENDDO
 
       zwt = zwtmm/1000.0
-      
+
       ! Renew the ice and liquid mass due to condensation
       if(lb >= 1)then
          ! make consistent with how evap_grnd removed in infiltration
@@ -836,7 +836,7 @@ MODULE MOD_SoilSnowHydrology
 #endif
 
 !=======================================================================
-! [6] assumed hydrological scheme for the wetland 
+! [6] assumed hydrological scheme for the wetland
 !=======================================================================
 
   else
