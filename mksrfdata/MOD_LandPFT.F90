@@ -182,15 +182,16 @@ CONTAINS
                CALL aggregation_request_data (landpatch, ipatch, gpatch, zip = .false., area = area_one, &
                   data_r8_3d_in1 = pctpft, data_r8_3d_out1 = pctpft_one, n1_r8_3d_in1 = N_PFT_modis, lb1_r8_3d_in1 = 0)
 
-               sumarea = sum(area_one)
+               sumarea = sum(area_one * sum(pctpft_one(0:N_PFT-1,:),dim=1))
 
-               DO ipft = 0, N_PFT-1
-                  pctpft_patch(ipft,ipatch) = sum(pctpft_one(ipft,:) * area_one) / sumarea
-               ENDDO
-
-               IF (sum(pctpft_patch(:,ipatch)) <= 0.0) THEN
+               IF (sumarea <= 0.0) THEN
                   patchmask(ipatch) = .false.
+               ELSE
+                  DO ipft = 0, N_PFT-1
+                     pctpft_patch(ipft,ipatch) = sum(pctpft_one(ipft,:) * area_one) / sumarea
+                  ENDDO
                ENDIF
+
             ENDIF
          ENDDO
 
@@ -340,7 +341,7 @@ CONTAINS
 
                DO WHILE (ipft <= numpft)
                   IF ((landpft%eindex(ipft) == landpatch%eindex(ipatch))  &
-                     .and. (landpft%ipxstt(ipft) == landpatch%ipxstt(ipatch))) THEN
+                     .and. (landpft%settyp(ipft) < N_PFT)) THEN
                      pft2patch  (ipft  ) = ipatch
                      patch_pft_e(ipatch) = ipft
                      ipft = ipft + 1
