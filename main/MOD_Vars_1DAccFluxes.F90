@@ -50,10 +50,12 @@ module MOD_Vars_1DAccFluxes
    real(r8), allocatable :: a_rstfacsha (:)
    real(r8), allocatable :: a_gssun (:)
    real(r8), allocatable :: a_gssha (:)
+   real(r8), allocatable :: a_rss   (:)
    real(r8), allocatable :: a_wdsrf  (:)
    real(r8), allocatable :: a_zwt    (:)
    real(r8), allocatable :: a_wa     (:)
    real(r8), allocatable :: a_wat    (:)
+   real(r8), allocatable :: a_wetwat (:)
    real(r8), allocatable :: a_assim  (:)
    real(r8), allocatable :: a_respc  (:)
    real(r8), allocatable :: a_assimsun   (:) !1
@@ -330,6 +332,9 @@ contains
       USE MOD_LandElm
       use MOD_LandPatch
       USE MOD_LandUrban, only: numurban
+#ifdef CROP
+      USE MOD_LandCrop
+#endif
       USE MOD_Vars_Global
       implicit none
 
@@ -379,11 +384,13 @@ contains
             allocate (a_rstfacsha (numpatch))
             allocate (a_gssun     (numpatch))
             allocate (a_gssha     (numpatch))
+            allocate (a_rss       (numpatch))
             allocate (a_wdsrf     (numpatch))
 
             allocate (a_zwt       (numpatch))
             allocate (a_wa        (numpatch))
             allocate (a_wat       (numpatch))
+            allocate (a_wetwat    (numpatch))
             allocate (a_assim     (numpatch))
             allocate (a_respc     (numpatch))
 
@@ -657,7 +664,7 @@ contains
 
       IF (p_is_worker) THEN
 #if (defined CROP)
-         CALL elm_patch%build (landelm, landpatch, use_frac = .true., shadowfrac = pctcrop)
+         CALL elm_patch%build (landelm, landpatch, use_frac = .true., sharedfrac = pctshrpch)
 #else
          CALL elm_patch%build (landelm, landpatch, use_frac = .true.)
 #endif
@@ -716,13 +723,15 @@ contains
             deallocate (a_qdrip     )
             deallocate (a_rstfacsun )
             deallocate (a_rstfacsha )
-            deallocate (a_gssun )
-            deallocate (a_gssha )
+            deallocate (a_gssun     )
+            deallocate (a_gssha     )
+            deallocate (a_rss       )
             deallocate (a_wdsrf     )
 
             deallocate (a_zwt       )
             deallocate (a_wa        )
             deallocate (a_wat       )
+            deallocate (a_wetwat    )
             deallocate (a_assim     )
             deallocate (a_respc     )
 
@@ -1056,11 +1065,13 @@ contains
             a_rstfacsha(:) = spval
             a_gssun   (:) = spval
             a_gssha   (:) = spval
+            a_rss     (:) = spval
 
             a_wdsrf   (:) = spval
             a_zwt     (:) = spval
             a_wa      (:) = spval
             a_wat     (:) = spval
+            a_wetwat  (:) = spval
             a_assim   (:) = spval
             a_respc   (:) = spval
             a_assimsun(:) = spval !1
@@ -1364,7 +1375,6 @@ contains
       ! Local Variables
 
       real(r8), allocatable :: r_trad  (:)
-
       real(r8), allocatable :: r_ustar (:)
       real(r8), allocatable :: r_ustar2(:) !define a temporary for estimating us10m only, output should be r_ustar. Shaofeng, 2023.05.20
       real(r8), allocatable :: r_tstar (:)
@@ -1444,6 +1454,13 @@ contains
             call acc1d (xerr    , a_xerr   )
             call acc1d (zerr    , a_zerr   )
             call acc1d (rsur    , a_rsur   )
+#ifndef LATERAL_FLOW
+            WHERE ((rsur /= spval) .and. (rnof /= spval))
+               rsub = rnof - rsur
+            ELSEWHERE
+               rsub = spval
+            END WHERE 
+#endif
             call acc1d (rsub    , a_rsub   )
             call acc1d (rnof    , a_rnof   )
 #ifdef LATERAL_FLOW
@@ -1460,10 +1477,12 @@ contains
             call acc1d (gssun_out     , a_gssun )
             call acc1d (gssha_out     , a_gssha )
 
+            call acc1d (rss    , a_rss    )
             call acc1d (wdsrf  , a_wdsrf  )
             call acc1d (zwt    , a_zwt    )
             call acc1d (wa     , a_wa     )
             call acc1d (wat    , a_wat    )
+            call acc1d (wetwat , a_wetwat )
             call acc1d (assim  , a_assim  )
             call acc1d (respc  , a_respc  )
             call acc1d (assimsun_out  , a_assimsun      )

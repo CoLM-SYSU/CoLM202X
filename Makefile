@@ -46,11 +46,12 @@ OBJS_SHARED =    \
 				  MOD_Mapping_Grid2Pset.o      \
 				  MOD_Mapping_Pset2Grid.o      \
 				  MOD_AggregationRequestData.o \
-				  MOD_PixelsetShadow.o         \
+				  MOD_PixelsetShared.o         \
 				  MOD_LandElm.o                \
 				  MOD_LandHRU.o                \
 				  MOD_LandPatch.o              \
 				  MOD_LandUrban.o              \
+                                  MOD_LandCrop.o               \
 				  MOD_LandPFT.o                \
 				  MOD_SrfdataDiag.o            \
 				  MOD_SrfdataRestart.o         \
@@ -247,7 +248,7 @@ OBJS_MAIN = \
 				MOD_BGC_Veg_CNNDynamics.o                 \
 				MOD_BGC_Veg_CNFireBase.o                  \
 				MOD_BGC_Veg_CNFireLi2016.o                \
-				MOD_Irrigation.o 						  \
+				MOD_Irrigation.o                          \
 				MOD_BGC_driver.o                          \
 				MOD_Vars_2DForcing.o                      \
 				MOD_UserSpecifiedForcing.o                \
@@ -258,6 +259,7 @@ OBJS_MAIN = \
 				MOD_FrictionVelocity.o                    \
 				MOD_TurbulenceLEddy.o                     \
 				MOD_Ozone.o                               \
+				MOD_CanopyLayerProfile.o                  \
 				MOD_LeafTemperature.o                     \
 				MOD_LeafTemperaturePC.o                   \
 				MOD_SoilThermalParameters.o               \
@@ -273,6 +275,7 @@ OBJS_MAIN = \
 				MOD_NetSolar.o                            \
 				MOD_WetBulb.o                             \
 				MOD_RainSnowTemp.o                        \
+				MOD_SoilSurfaceResistance.o               \
 				MOD_NewSnow.o                             \
 				MOD_Thermal.o                             \
 				MOD_Vars_1DAccFluxes.o                    \

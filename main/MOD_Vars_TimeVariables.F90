@@ -453,8 +453,10 @@ MODULE MOD_Vars_TimeVariables
      real(r8), allocatable :: extkd        (:) ! diffuse and scattered diffuse PAR extinction coefficient
      real(r8), allocatable :: zwt          (:) ! the depth to water table [m]
      real(r8), allocatable :: wa           (:) ! water storage in aquifer [mm]
+     real(r8), allocatable :: wetwat       (:) ! water storage in wetland [mm]
      real(r8), allocatable :: wat          (:) ! total water storage [mm]
      real(r8), allocatable :: wdsrf        (:) ! depth of surface water [mm]
+     real(r8), allocatable :: rss          (:) ! soil surface resistance [s/m]
 
      real(r8), allocatable :: t_lake      (:,:)! lake layer teperature [K]
      real(r8), allocatable :: lake_icefrac(:,:)! lake mass fraction of lake layer that is frozen
@@ -600,9 +602,10 @@ MODULE MOD_Vars_TimeVariables
            allocate (extkd                       (numpatch)); extkd         (:) = spval
            allocate (zwt                         (numpatch)); zwt           (:) = spval
            allocate (wa                          (numpatch)); wa            (:) = spval
+           allocate (wetwat                      (numpatch)); wetwat        (:) = spval
            allocate (wat                         (numpatch)); wat           (:) = spval
            allocate (wdsrf                       (numpatch)); wdsrf         (:) = spval
-
+           allocate (rss                         (numpatch)); rss           (:) = spval
            allocate (t_lake              (nl_lake,numpatch)); t_lake      (:,:) = spval
            allocate (lake_icefrac        (nl_lake,numpatch)); lake_icefrac(:,:) = spval
            allocate (savedtke1                   (numpatch)); savedtke1     (:) = spval
@@ -752,8 +755,10 @@ MODULE MOD_Vars_TimeVariables
            deallocate (extkd                  )
            deallocate (zwt                    )
            deallocate (wa                     )
+           deallocate (wetwat                 )
            deallocate (wat                    )
            deallocate (wdsrf                  )
+           deallocate (rss                    )
 
            deallocate (t_lake                 ) ! new lake scheme
            deallocate (lake_icefrac           ) ! new lake scheme
@@ -957,7 +962,9 @@ ENDIF
      CALL ncio_write_vector (file_restart, 'extkd   '   , 'patch', landpatch, extkd     , compress)                    ! diffuse and scattered diffuse PAR extinction coefficient
      CALL ncio_write_vector (file_restart, 'zwt     '   , 'patch', landpatch, zwt       , compress)                    ! the depth to water table [m]
      CALL ncio_write_vector (file_restart, 'wa      '   , 'patch', landpatch, wa        , compress)                    ! water storage in aquifer [mm]
+     CALL ncio_write_vector (file_restart, 'wetwat  '   , 'patch', landpatch, wetwat    , compress)                    ! water storage in wetland [mm]
      CALL ncio_write_vector (file_restart, 'wdsrf   '   , 'patch', landpatch, wdsrf     , compress)                    ! depth of surface water [mm]
+     CALL ncio_write_vector (file_restart, 'rss     '   , 'patch', landpatch, rss       , compress)                    ! soil surface resistance [s/m]
 
      CALL ncio_write_vector (file_restart, 't_lake  '   , 'lake', nl_lake, 'patch', landpatch, t_lake      , compress) !
      CALL ncio_write_vector (file_restart, 'lake_icefrc', 'lake', nl_lake, 'patch', landpatch, lake_icefrac, compress) !
@@ -1117,7 +1124,9 @@ ENDIF
      CALL ncio_read_vector (file_restart, 'extkd   '   , landpatch, extkd      ) ! diffuse and scattered diffuse PAR extinction coefficient
      CALL ncio_read_vector (file_restart, 'zwt     '   , landpatch, zwt        ) ! the depth to water table [m]
      CALL ncio_read_vector (file_restart, 'wa      '   , landpatch, wa         ) ! water storage in aquifer [mm]
+     CALL ncio_read_vector (file_restart, 'wetwat  '   , landpatch, wetwat     ) ! water storage in wetland [mm]
      CALL ncio_read_vector (file_restart, 'wdsrf   '   , landpatch, wdsrf      ) ! depth of surface water [mm]
+     CALL ncio_read_vector (file_restart, 'rss     '   , landpatch, rss        ) ! soil surface resistance [s/m]
 
      CALL ncio_read_vector (file_restart, 't_lake  '   , nl_lake, landpatch, t_lake      ) !
      CALL ncio_read_vector (file_restart, 'lake_icefrc', nl_lake, landpatch, lake_icefrac) !
@@ -1220,27 +1229,6 @@ ENDIF
         write(*,'(/,A27)') 'Checking Time Variables ...'
      ENDIF
 
-     CALL check_vector_data ('z_sno       [m]    ', z_sno )      ! node depth [m]
-     CALL check_vector_data ('dz_sno      [m]    ', dz_sno)      ! interface depth [m]
-     CALL check_vector_data ('t_soisno    [K]    ', t_soisno   ) ! soil temperature [K]
-     CALL check_vector_data ('wliq_soisno [kg/m2]', wliq_soisno) ! liquid water in layers [kg/m2]
-     CALL check_vector_data ('wice_soisno [kg/m2]', wice_soisno) ! ice lens in layers [kg/m2]
-     CALL check_vector_data ('smp         [mm]   ', smp        ) ! soil matrix potential [mm]
-     CALL check_vector_data ('hk          [mm/s] ', hk         ) ! hydraulic conductivity [mm h2o/s]
-IF(DEF_USE_PLANTHYDRAULICS)THEN
-     CALL check_vector_data ('vegwp       [m]    ', vegwp      ) ! vegetation water potential [mm]
-     CALL check_vector_data ('gs0sun      []     ', gs0sun     ) ! working copy of sunlit stomata conductance
-     CALL check_vector_data ('gs0sha      []     ', gs0sha     ) ! working copy of shalit stomata conductance
-ENDIF
-IF(DEF_USE_OZONESTRESS)THEN
-     CALL check_vector_data ('o3coefv_sun        ', o3coefv_sun)
-     CALL check_vector_data ('o3coefv_sha        ', o3coefv_sha)
-     CALL check_vector_data ('o3coefg_sun        ', o3coefg_sun)
-     CALL check_vector_data ('o3coefg_sha        ', o3coefg_sha)
-     CALL check_vector_data ('lai_old            ', lai_old    )
-     CALL check_vector_data ('o3uptakesun        ', o3uptakesun)
-     CALL check_vector_data ('o3uptakesha        ', o3uptakesha)
-ENDIF
      CALL check_vector_data ('t_grnd      [K]    ', t_grnd     ) ! ground surface temperature [K]
      CALL check_vector_data ('tleaf       [K]    ', tleaf      ) ! leaf temperature [K]
      CALL check_vector_data ('ldew        [mm]   ', ldew       ) ! depth of water on foliage [mm]
@@ -1266,12 +1254,33 @@ ENDIF
      CALL check_vector_data ('extkd       [-]    ', extkd      ) ! diffuse and scattered diffuse PAR extinction coefficient
      CALL check_vector_data ('zwt         [m]    ', zwt        ) ! the depth to water table [m]
      CALL check_vector_data ('wa          [mm]   ', wa         ) ! water storage in aquifer [mm]
+     CALL check_vector_data ('wetwat      [mm]   ', wetwat     ) ! water storage in wetland [mm]
      CALL check_vector_data ('wdsrf       [mm]   ', wdsrf      ) ! depth of surface water [mm]
-
+     CALL check_vector_data ('rss         [s/m]  ', rss        ) ! soil surface resistance [s/m]
      CALL check_vector_data ('t_lake      [K]    ', t_lake      )!
      CALL check_vector_data ('lake_icefrc [-]    ', lake_icefrac)!
      CALL check_vector_data ('savedtke1   [W/m K]', savedtke1   )!
-
+     CALL check_vector_data ('z_sno       [m]    ', z_sno )      ! node depth [m]
+     CALL check_vector_data ('dz_sno      [m]    ', dz_sno)      ! interface depth [m]
+     CALL check_vector_data ('t_soisno    [K]    ', t_soisno   ) ! soil temperature [K]
+     CALL check_vector_data ('wliq_soisno [kg/m2]', wliq_soisno) ! liquid water in layers [kg/m2]
+     CALL check_vector_data ('wice_soisno [kg/m2]', wice_soisno) ! ice lens in layers [kg/m2]
+     CALL check_vector_data ('smp         [mm]   ', smp        ) ! soil matrix potential [mm]
+     CALL check_vector_data ('hk          [mm/s] ', hk         ) ! hydraulic conductivity [mm h2o/s]
+IF(DEF_USE_PLANTHYDRAULICS)THEN
+     CALL check_vector_data ('vegwp       [m]    ', vegwp      ) ! vegetation water potential [mm]
+     CALL check_vector_data ('gs0sun      []     ', gs0sun     ) ! working copy of sunlit stomata conductance
+     CALL check_vector_data ('gs0sha      []     ', gs0sha     ) ! working copy of shalit stomata conductance
+ENDIF
+IF(DEF_USE_OZONESTRESS)THEN
+     CALL check_vector_data ('o3coefv_sun        ', o3coefv_sun)
+     CALL check_vector_data ('o3coefv_sha        ', o3coefv_sha)
+     CALL check_vector_data ('o3coefg_sun        ', o3coefg_sun)
+     CALL check_vector_data ('o3coefg_sha        ', o3coefg_sha)
+     CALL check_vector_data ('lai_old            ', lai_old    )
+     CALL check_vector_data ('o3uptakesun        ', o3uptakesun)
+     CALL check_vector_data ('o3uptakesha        ', o3uptakesha)
+ENDIF
 IF (DEF_USE_IRRIGATION) THEN
      CALL check_vector_data ('irrig_rate            ' , irrig_rate            )
      CALL check_vector_data ('deficit_irrig         ' , deficit_irrig         )
@@ -1294,7 +1303,6 @@ IF (DEF_USE_IRRIGATION) THEN
      CALL check_vector_data ('irrig_method_rice2    ' , irrig_method_rice2    )
      CALL check_vector_data ('irrig_method_sugarcane' , irrig_method_sugarcane)
 ENDIF
-
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
      CALL check_PFTimeVariables

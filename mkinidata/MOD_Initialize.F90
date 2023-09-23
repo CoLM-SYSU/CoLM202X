@@ -217,6 +217,9 @@ MODULE MOD_Initialize
       IF (p_is_worker) THEN
          IF (numpatch > 0) THEN
             wdsrf(:) = 0._r8
+
+            wetwat(:) = 0._r8
+            WHERE (patchtype == 2) wetwat = 1000._r8 ! for wetland
          ENDIF
       ENDIF
       ! ------------------------------------------
@@ -273,6 +276,7 @@ MODULE MOD_Initialize
       smpmin = -1.e8   !Restriction for min of soil poten. (mm)
       trsmx0 = 2.e-4   !Max transpiration for moist soil+100% veg. [mm/s]
       tcrit  = 2.5     !critical temp. to determine rain or snow
+      wetwatmax = 2000.0 !maximum wetland water (mm)
 
 #ifdef BGC
    ! bgc constant
@@ -515,6 +519,7 @@ MODULE MOD_Initialize
                // ' to initialize soil water content: ', trim(fwtd)
          ENDIF
       ENDIF
+
 #ifdef USEMPI
       call mpi_bcast (use_wtd, 1, MPI_LOGICAL, p_root, p_comm_glb, p_err)
 #endif
@@ -613,7 +618,7 @@ MODULE MOD_Initialize
       if(DEF_USE_IRRIGATION)then
          irrig_rate(:) = 0._r8
          deficit_irrig(:) = 0._r8
-         sum_irrig(:) = 0._r8        
+         sum_irrig(:) = 0._r8
          sum_irrig_count(:) = 0._r8
          n_irrig_steps_left(:) = 0
       end if
@@ -811,7 +816,7 @@ MODULE MOD_Initialize
 
          IF (numpatch > 0) THEN
             wdsrf(:) = 0.
-         ENDIF 
+         ENDIF
 
          DO i = 1, numelm
             IF (lake_id(i) > 0) THEN
@@ -846,7 +851,7 @@ MODULE MOD_Initialize
                IF (lake_id(i) <= 0) THEN
                   wdsrf_bsn(i) = minval(hillslope_network(i)%hand + wdsrf_hru(hs:he))
                ELSE
-                  ! lake 
+                  ! lake
                   totalvolume  = sum(wdsrf_hru(hs:he) * lakes(i)%area0)
                   wdsrf_bsn(i) = lakes(i)%surface(totalvolume)
                ENDIF

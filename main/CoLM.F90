@@ -472,6 +472,9 @@ PROGRAM CoLM
 #ifdef RangeCheck
       CALL check_TimeVariables ()
 #endif
+#ifdef CoLMDEBUG
+      CALL print_VSF_iteration_stat_info ()
+#endif
 
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
@@ -497,10 +500,6 @@ PROGRAM CoLM
       ENDIF
 
       istep = istep + 1
-
-#ifdef CoLMDEBUG
-      CALL print_VSF_iteration_stat_info ()
-#endif
 
    ENDDO TIMELOOP
 
