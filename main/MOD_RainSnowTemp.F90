@@ -112,11 +112,11 @@ MODULE MOD_RainSnowTemp
    ! Estimating precipitation phase using a psychrometric energy
    ! balance method . Hydrol Process, 27, 1901–1914
    ! Hydromet_Temp [K]
-      call Hydromet_Temp(forc_t-273.15,forc_psrf,forc_q,t_hydro)
+      CALL Hydromet_Temp(forc_psrf,(forc_t-273.15),forc_q,t_hydro) 
 
-      if(t_hydro > 5.0)then
+      if(t_hydro > 3.0)then
          flfall = 1.0      ! fraction of liquid water within falling precip
-      else if ((t_hydro >= -5.0).and.(t_hydro <= 5.0))then
+      else if ((t_hydro >= -3.0).and.(t_hydro <= 3.0))then
          flfall = max(0.0, 1.0/(1.0+2.50286*0.125006**t_hydro))
       else
          flfall = 0.0
