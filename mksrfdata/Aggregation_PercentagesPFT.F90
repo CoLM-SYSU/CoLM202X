@@ -125,6 +125,10 @@ SUBROUTINE Aggregation_PercentagesPFT (gland, dir_rawdata, dir_model_landdata, l
             CALL aggregation_request_data (landpatch, ipatch, gland, zip = USE_zip_for_aggregation, area = area_one, &
                data_r8_3d_in1 = pftPCT, data_r8_3d_out1 = pct_pft_one, n1_r8_3d_in1 = N_PFT_modis, lb1_r8_3d_in1 = 0)
 
+#ifdef CROP
+            pct_pft_one(N_PFT_modis-1,:) = 0.
+#endif
+
             pct_one = sum(pct_pft_one, dim=1)
             pct_one = max(pct_one, 1.0e-6)
             sumarea = sum(area_one)
