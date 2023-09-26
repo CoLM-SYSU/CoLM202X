@@ -7,12 +7,8 @@
 ROOT=/public/home/sysu_daiyj_01/data/luxj/CoLM202X-GPAM/
 RAWDATA=/data/sysu_daiyj_01/data_mpi/CLMrawdata_igbp/
 RUNTIME=/data/sysu_daiyj_01/data_mpi/CoLMruntime/
-MAKEOPTION=/data/sysu_daiyj_01/CoLM202X-master/include/Makeoptions.intel
-FORCINGNML=/data/sysu_daiyj_01/CoLM202X-master/run/forcing/GSWP3.nml
-
-iyr_s=1981
-iyr_e=1981
-nloop=100
+MAKEOPTION=$ROOT/include/Makeoptions
+FORCINGNML=$ROOT/run/forcing/GSWP3.nml
 
 #--------------------------------------------------------------------------------------
 
@@ -87,142 +83,6 @@ cat>input_${CASENAME}.nml<<EOF
    ! Canopy DEF Interception scheme selection
    DEF_Interception_scheme=1 !1:CoLM2014；2:CLM4.5; 3:CLM5; 4:Noah-MP; 5:MATSIRO; 6:VIC
 !   DEF_USE_IRRIGATION = .true.
-
-   ! ----- forcing -----
-   ! Options :
-   ! PRINCETON | GSWP3   | QIAN  | CRUNCEPV4 | CRUNCEPV7 | ERA5LAND | ERA5 |  MSWX
-   ! WFDE5     | CRUJRA  | WFDEI | JRA55     | GDAS      | CMFD     | POINT
-   DEF_forcing_namelist = '$FORCINGNML'
-
-   ! ----- history -----
-   DEF_hist_lon_res = 2.5
-   DEF_hist_lat_res = 1.875
-   DEF_WRST_FREQ = 'YEARLY' ! write restart file frequency: HOURLY/DAILY/MONTHLY/YEARLY
-   DEF_HIST_FREQ = 'MONTHLY' ! write history file frequency: HOURLY/DAILY/MONTHLY/YEARLY
-   DEF_HIST_groupby = 'MONTH' ! history in one file: DAY/MONTH/YEAR
-   DEF_HIST_mode = 'one' ! history in one or block
-   DEF_REST_COMPRESS_LEVEL = 1
-   DEF_HIST_COMPRESS_LEVEL = 1
-
-   DEF_hist_vars_namelist = '$CASEPATH/$CASENAME/history.nml'
-   DEF_hist_vars_out_default = .true.
-
-/
-EOF
-
-cat>input_${CASENAME}-PN.nml<<EOF
-&nl_colm
-
-   DEF_CASE_NAME = '$CASENAME'
-
-   DEF_domain%edges = -90.0
-   DEF_domain%edgen = 90.0
-   DEF_domain%edgew = -180.0
-   DEF_domain%edgee = 180.0
-
-   DEF_nx_blocks = 3
-   DEF_ny_blocks = 3
-   DEF_PIO_groupsize = 6
-
-   DEF_simulation_time%greenwich    = .TRUE.
-   DEF_simulation_time%start_year   = `expr $iyr_s - 1`
-   DEF_simulation_time%start_month  = 12
-   DEF_simulation_time%start_day    = 31
-   DEF_simulation_time%start_sec    = 86400
-   DEF_simulation_time%end_year     = $iyr_e
-   DEF_simulation_time%end_month    = 12
-   DEF_simulation_time%end_day      = 31
-   DEF_simulation_time%end_sec      = 86400
-   DEF_simulation_time%spinup_year  = 1980
-   DEF_simulation_time%spinup_month = 1
-   DEF_simulation_time%spinup_day   = 365
-   DEF_simulation_time%spinup_sec   = 86400
-
-   DEF_simulation_time%timestep     = 1800.
-
-   DEF_dir_rawdata  = '$RAWDATA/'
-   DEF_dir_runtime  = '$RUNTIME/'
-   DEF_dir_output   = '$CASEPATH/'
-
-   ! ----- land units and land sets -----
-   ! for GRIDBASED
-   DEF_file_mesh = '$RAWDATA/landmask_igbp_144x96.nc'
-
-   ! LAI setting
-   DEF_LAI_MONTHLY = .true.
-
-   ! Canopy DEF Interception scheme selection
-   DEF_Interception_scheme=1 !1:CoLM2014；2:CLM4.5; 3:CLM5; 4:Noah-MP; 5:MATSIRO; 6:VIC
-   DEF_USE_PN = .true.
-   DEF_USE_IRRIGATION = .true.
-
-   ! ----- forcing -----
-   ! Options :
-   ! PRINCETON | GSWP3   | QIAN  | CRUNCEPV4 | CRUNCEPV7 | ERA5LAND | ERA5 |  MSWX
-   ! WFDE5     | CRUJRA  | WFDEI | JRA55     | GDAS      | CMFD     | POINT
-   DEF_forcing_namelist = '$FORCINGNML'
-
-   ! ----- history -----
-   DEF_hist_lon_res = 2.5
-   DEF_hist_lat_res = 1.875
-   DEF_WRST_FREQ = 'YEARLY' ! write restart file frequency: HOURLY/DAILY/MONTHLY/YEARLY
-   DEF_HIST_FREQ = 'MONTHLY' ! write history file frequency: HOURLY/DAILY/MONTHLY/YEARLY
-   DEF_HIST_groupby = 'MONTH' ! history in one file: DAY/MONTH/YEAR
-   DEF_HIST_mode = 'one' ! history in one or block
-   DEF_REST_COMPRESS_LEVEL = 1
-   DEF_HIST_COMPRESS_LEVEL = 1
-
-   DEF_hist_vars_namelist = '$CASEPATH/$CASENAME/history.nml'
-   DEF_hist_vars_out_default = .true.
-
-/
-EOF
-
-cat>input_${CASENAME}-SASU.nml<<EOF
-&nl_colm
-
-   DEF_CASE_NAME = '$CASENAME'
-
-   DEF_domain%edges = -90.0
-   DEF_domain%edgen = 90.0
-   DEF_domain%edgew = -180.0
-   DEF_domain%edgee = 180.0
-
-   DEF_nx_blocks = 3
-   DEF_ny_blocks = 3
-   DEF_PIO_groupsize = 6
-
-   DEF_simulation_time%greenwich    = .TRUE.
-   DEF_simulation_time%start_year   = `expr $iyr_s - 1`
-   DEF_simulation_time%start_month  = 12
-   DEF_simulation_time%start_day    = 31
-   DEF_simulation_time%start_sec    = 86400
-   DEF_simulation_time%end_year     = $iyr_e
-   DEF_simulation_time%end_month    = 12
-   DEF_simulation_time%end_day      = 31
-   DEF_simulation_time%end_sec      = 86400
-   DEF_simulation_time%spinup_year  = 1980
-   DEF_simulation_time%spinup_month = 1
-   DEF_simulation_time%spinup_day   = 365
-   DEF_simulation_time%spinup_sec   = 86400
-
-   DEF_simulation_time%timestep     = 1800.
-
-   DEF_dir_rawdata  = '$RAWDATA/'
-   DEF_dir_runtime  = '$RUNTIME/'
-   DEF_dir_output   = '$CASEPATH/'
-
-   ! ----- land units and land sets -----
-   ! for GRIDBASED
-   DEF_file_mesh = '$RAWDATA/landmask_igbp_144x96.nc'
-
-   ! LAI setting
-   DEF_LAI_MONTHLY = .true.
-
-   ! Canopy DEF Interception scheme selection
-   DEF_Interception_scheme=1 !1:CoLM2014；2:CLM4.5; 3:CLM5; 4:Noah-MP; 5:MATSIRO; 6:VIC
-   DEF_USE_SASU = .true.
-   DEF_USE_IRRIGATION = .true.
 
    ! ----- forcing -----
    ! Options :
@@ -367,7 +227,7 @@ YEARMON='${iyr}-${i}'
 cat>mksrf.submit<<EOF
 #!/bin/bash
 
-#BSUB -J colm_noupdatePHSgs2qflx-mksrf
+#BSUB -J colm_${CASENAME}-mksrf
 #BSUB -q normal
 #BSUB -o %J.out
 #BSUB -e mksrf.err
@@ -382,10 +242,10 @@ EOF
 cat>init.submit<<EOF
 #!/bin/bash
 
-#BSUB -J colm_noupdatePHSgs2qflx-mksrf
+#BSUB -J colm_${CASENAME}-mkini
 #BSUB -q normal
 #BSUB -o %J.out
-#BSUB -e mksrf.err
+#BSUB -e mkini.err
 #BSUB -R rusage[mem=180G]
 #BSUB -n 48
 #BSUB -R span[ptile=48]
@@ -397,10 +257,10 @@ EOF
 cat>'case.submit'<<EOF
 #!/bin/bash
 
-#BSUB -J colm_noupdatePHSgs2qflx-mksrf
+#BSUB -J colm_${CASENAME}-run
 #BSUB -q normal
 #BSUB -o %J.out
-#BSUB -e mksrf.err
+#BSUB -e case.err
 #BSUB -R rusage[mem=900G]
 #BSUB -n 240
 #BSUB -R span[ptile=48]
