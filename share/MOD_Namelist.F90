@@ -116,7 +116,12 @@ MODULE MOD_Namelist
    !To allow read satellite observed LAI
    ! 06/2023, note by hua yuan: change DEF_LAI_CLIM to DEF_LAI_MONTHLY
    logical :: DEF_LAI_MONTHLY = .true.
-   INTEGER :: DEF_Interception_scheme = 1  !1:CoLM；2:CLM4.5; 3:CLM5; 4:Noah-MP; 5:MATSIRO; 6:VIC
+   ! ----- Atmospheric Nitrogen Deposition -----
+   !add by Fang Shang @ pku 2023/08
+   !1: To allow annuaul ndep data to be read in
+   !2: To allow monthly ndep data to be read in
+   INTEGER :: DEF_NDEP_FREQUENCY = 1
+   INTEGER :: DEF_Interception_scheme = 1  !1:CoLM；2:CLM4.5; 3:CLM5; 4:Noah-MP; 5:MATSIRO; 6:VIC; 7:JULES
 
    ! ------LAI change and Land cover year setting ----------
    ! 06/2023, add by wenzong dong and hua yuan: use for updating LAI with simulation year
@@ -170,6 +175,15 @@ MODULE MOD_Namelist
    ! 2: Read a global soil color map from CLM
    INTEGER :: DEF_SOIL_REFL_SCHEME = 2
 
+   ! Options for soil surface resistance schemes
+   ! 0: NONE soil surface resistance
+   ! 1: SL14, Swenson and Lawrence (2014)
+   ! 2: SZ09, Sakaguchi and Zeng (2009)
+   ! 3: TR13, Tang and Riley (2013)
+   ! 4: LP92, Lee and Pielke (1992)
+   ! 5: S92,  Sellers et al (1992)
+   INTEGER :: DEF_RSS_SCHEME = 1
+
    ! ----- Model settings -----
    LOGICAL :: DEF_LANDONLY                    = .true.
    LOGICAL :: DEF_USE_DOMINANT_PATCHTYPE      = .false.
@@ -179,7 +193,7 @@ MODULE MOD_Namelist
    LOGICAL :: DEF_USE_OZONEDATA               = .false.
 
    ! .true. for running SNICAR model
-   logical :: DEF_USE_SNICAR                  = .true.
+   logical :: DEF_USE_SNICAR                  = .false.
 
    ! .true. read aerosol deposition data from file or .false. set in the code
    logical :: DEF_Aerosol_Readin              = .true.
@@ -191,7 +205,7 @@ MODULE MOD_Namelist
    CHARACTER(len=256) :: DEF_SSP='585' ! Co2 path for CMIP6 future scenario.
 
    ! !  irrigation method temporary
-   ! INTEGER :: DEF_IRRIGATION_METHOD = 1
+   INTEGER :: DEF_IRRIGATION_METHOD = 1
 
    ! ----- Initialization -----
    LOGICAL            :: DEF_USE_SOIL_INIT  = .false.
@@ -343,6 +357,9 @@ MODULE MOD_Namelist
       LOGICAL :: qinfl        = .true.
       LOGICAL :: qdrip        = .true.
       LOGICAL :: wat          = .true.
+      LOGICAL :: wat_inst     = .true.
+      LOGICAL :: wetwat       = .true.
+      LOGICAL :: wetwat_inst  = .true.
       LOGICAL :: assim        = .true.
       LOGICAL :: respc        = .true.
       LOGICAL :: qcharge      = .true.
@@ -362,6 +379,7 @@ MODULE MOD_Namelist
       LOGICAL :: emis         = .true.
       LOGICAL :: z0m          = .true.
       LOGICAL :: trad         = .true.
+      LOGICAL :: rss          = .true.
       LOGICAL :: tref         = .true.
       LOGICAL :: qref         = .true.
 #ifdef URBAN_MODEL
@@ -579,8 +597,10 @@ MODULE MOD_Namelist
       LOGICAL :: wfc          = .true.
       LOGICAL :: OM_density   = .true.
       LOGICAL :: wdsrf        = .true.
+      LOGICAL :: wdsrf_inst   = .true.
       LOGICAL :: zwt          = .true.
       LOGICAL :: wa           = .true.
+      LOGICAL :: wa_inst      = .true.
 
       LOGICAL :: t_lake       = .true.
       LOGICAL :: lake_icefrac = .true.
@@ -703,13 +723,14 @@ CONTAINS
          DEF_SUBGRID_SCHEME,              &
 
          DEF_LAI_MONTHLY,                 &   !add by zhongwang wei @ sysu 2021/12/23
+         DEF_NDEP_FREQUENCY,              &   !add by Fang Shang    @ pku  2023/08
          DEF_Interception_scheme,         &   !add by zhongwang wei @ sysu 2022/05/23
          DEF_SSP,                         &   !add by zhongwang wei @ sysu 2023/02/07
 
          DEF_LAI_CHANGE_YEARLY,           &
          DEF_USE_LAIFEEDBACK,             &   !add by Xingjie Lu, use for updating LAI with leaf carbon
          DEF_USE_IRRIGATION,              &   ! use irrigation
-         ! DEF_IRRIGATION_METHOD,           &   ! use irrigation temporary
+         DEF_IRRIGATION_METHOD,           &   ! use irrigation temporary
 
          DEF_LC_YEAR,                     &
          DEF_LULCC_SCHEME,                &
@@ -726,6 +747,7 @@ CONTAINS
          DEF_THERMAL_CONDUCTIVITY_SCHEME, &
          DEF_USE_SUPERCOOL_WATER,         &
          DEF_SOIL_REFL_SCHEME,            &
+         DEF_RSS_SCHEME,                  &
 
          DEF_dir_existing_srfdata,        &
          USE_srfdata_from_larger_region,  &
@@ -832,6 +854,12 @@ CONTAINS
          write(*,*) '                  *****                  '
          write(*,*) 'Note: DEF_USE_VARIABLY_SATURATED_FLOW is automaticlly set to .true.  '
          write(*,*) 'when using vanGenuchten_Mualem_SOIL_MODEL. '
+         DEF_USE_VARIABLY_SATURATED_FLOW = .true.
+#endif
+#if (defined LATERAL_FLOW)
+         write(*,*) '                  *****                  '
+         write(*,*) 'Note: DEF_USE_VARIABLY_SATURATED_FLOW is automaticlly set to .true.  '
+         write(*,*) 'when defined LATERAL_FLOW. '
          DEF_USE_VARIABLY_SATURATED_FLOW = .true.
 #endif
 
@@ -1123,8 +1151,11 @@ CONTAINS
 
       ! 06/2023, added by hua yuan
       CALL mpi_bcast (DEF_SOIL_REFL_SCHEME,             1, mpi_integer, p_root, p_comm_glb, p_err)
+      ! 07/2023, added by zhuo liu
+      CALL mpi_bcast (DEF_RSS_SCHEME,                   1, mpi_integer, p_root, p_comm_glb, p_err)
 
       call mpi_bcast (DEF_LAI_MONTHLY,         1, mpi_logical, p_root, p_comm_glb, p_err)
+      call mpi_bcast (DEF_NDEP_FREQUENCY,      1, mpi_integer, p_root, p_comm_glb, p_err)
       call mpi_bcast (DEF_Interception_scheme, 1, mpi_integer, p_root, p_comm_glb, p_err)
       call mpi_bcast (DEF_SSP,             256, mpi_character, p_root, p_comm_glb, p_err)
 
@@ -1279,6 +1310,9 @@ CONTAINS
       CALL sync_hist_vars_one (DEF_hist_vars%qinfl       ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%qdrip       ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%wat         ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%wat_inst    ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%wetwat      ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%wetwat_inst ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%assim       ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%respc       ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%qcharge     ,  set_defaults)
@@ -1298,6 +1332,7 @@ CONTAINS
       CALL sync_hist_vars_one (DEF_hist_vars%emis        ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%z0m         ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%trad        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%rss         ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%tref        ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%qref        ,  set_defaults)
 #ifdef URBAN_MODEL
@@ -1488,8 +1523,10 @@ CONTAINS
       CALL sync_hist_vars_one (DEF_hist_vars%wfc         ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%OM_density  ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%wdsrf       ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%wdsrf_inst  ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%zwt         ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%wa          ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%wa_inst     ,  set_defaults)
 
       CALL sync_hist_vars_one (DEF_hist_vars%t_lake      ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%lake_icefrac,  set_defaults)

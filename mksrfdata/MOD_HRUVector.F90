@@ -37,6 +37,9 @@ CONTAINS
       USE MOD_LandHRU
       USE MOD_LandPatch
       USE MOD_ElmVector
+#ifdef CROP
+      USE MOD_LandCrop
+#endif
       IMPLICIT NONE
 
       ! Local Variables
@@ -56,7 +59,7 @@ CONTAINS
          CALL basin_hru%build (landelm, landhru,   use_frac = .true.)
 
 #if (defined CROP) 
-         CALL hru_patch%build (landhru, landpatch, use_frac = .true., shadowfrac = pctcrop)
+         CALL hru_patch%build (landhru, landpatch, use_frac = .true., sharedfrac = pctshrpch)
 #else
          CALL hru_patch%build (landhru, landpatch, use_frac = .true.)
 #endif
