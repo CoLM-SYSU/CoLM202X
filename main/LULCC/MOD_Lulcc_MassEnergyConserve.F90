@@ -206,6 +206,8 @@ ENDIF
                      dz_sno      (:,np)                = 0  !interface depth [m]
                      t_grnd        (np)                = 0  !ground surface temperature [K]
                      ldew          (np)                = 0  !depth of water on foliage [mm]
+                     ldew_rain     (np)                = 0  !depth of rain on foliage [mm]
+                     ldew_snow     (np)                = 0  !depth of snow on foliage [mm]
                      sag           (np)                = 0  !non dimensional snow age [-]
                      scv           (np)                = 0  !snow cover, water equivalent [mm]
                      snowdp        (np)                = 0  !snow depth [meter]
@@ -213,11 +215,48 @@ ENDIF
                      sigf          (np)                = 0  !fraction of veg cover, excluding snow-covered veg [-]
                      zwt           (np)                = 0  !the depth to water table [m]
                      wa            (np)                = 0  !water storage in aquifer [mm]
+                     
+                     smp         (:,np)                = 0  !soil matrix potential [mm]
+                     hk          (:,np)                = 0  !hydraulic conductivity [mm h2o/s]
+                     
+                     IF(DEF_USE_PLANTHYDRAULICS)THEN
+                        vegwp    (:,np)                = 0  !vegetation water potential [mm]
+                        gs0sun     (np)                = 0  !working copy of sunlit stomata conductance
+                        gs0sha     (np)                = 0  !working copy of shalit stomata conductance
+                     ENDIF
 
-                     cvsoil_(:,:) = 0
-                     ! Weight of temperature adjustment
+                     wdsrf         (np)                = 0  !depth of surface water [mm]
+
+                     snw_rds     (:,np)                = 0  !effective grain radius (col,lyr) [microns, m-6]
+                     mss_bcpho   (:,np)                = 0  !mass of hydrophobic BC in snow  (col,lyr) [kg]
+                     mss_bcphi   (:,np)                = 0  !mass of hydrophillic BC in snow (col,lyr) [kg]
+                     mss_ocpho   (:,np)                = 0  !mass of hydrophobic OC in snow  (col,lyr) [kg]
+                     mss_ocphi   (:,np)                = 0  !mass of hydrophillic OC in snow (col,lyr) [kg]
+                     mss_dst1    (:,np)                = 0  !mass of dust species 1 in snow  (col,lyr) [kg]
+                     mss_dst2    (:,np)                = 0  !mass of dust species 2 in snow  (col,lyr) [kg]
+                     mss_dst3    (:,np)                = 0  !mass of dust species 3 in snow  (col,lyr) [kg]
+                     mss_dst4    (:,np)                = 0  !mass of dust species 4 in snow  (col,lyr) [kg]
+
+                     trad          (np)                = 0  !radiative temperature of surface [K]
+                     tref          (np)                = 0  !2 m height air temperature [kelvin]
+                     qref          (np)                = 0  !2 m height air specific humidity
+                     rst           (np)                = 0  !canopy stomatal resistance (s/m)
+                     emis          (np)                = 0  !averaged bulk surface emissivity
+                     z0m           (np)                = 0  !effective roughness [m]
+                     zol           (np)                = 0  !dimensionless height (z/L) used in Monin-Obukhov theory
+                     rib           (np)                = 0  !bulk Richardson number in surface layer
+                     ustar         (np)                = 0  !u* in similarity theory [m/s]
+                     qstar         (np)                = 0  !q* in similarity theory [kg/kg]
+                     tstar         (np)                = 0  !t* in similarity theory [K]
+                     fm            (np)                = 0  !integral of profile function for momentum
+                     fh            (np)                = 0  !integral of profile function for heat
+                     fq            (np)                = 0  !integral of profile function for moisture
+
+
+                     ! Calculate the weight of temperature adjustment
                      c_water = cpliq * denh2o ! J/(m3 K) = 4188   [J/(kg K)]*1000(kg/m3)
                      c_ice   = cpice * denice ! J/(m3 K) = 2117.27[J/(kg K)]*917 (kg/m3)
+                     cvsoil_(:,:) = 0
                      wgt(maxsnl+1:nl_soil) = 0
 
                      DO k = 1, num
@@ -229,7 +268,8 @@ ENDIF
                            cvsoil_(l,k) = hcap*dz_soi(l)
                         ENDDO
 
-                        IF( dz_sno_(0,frnp_(k))>0 .and. scv_(frnp_(k))>0.) THEN
+                        ! no snow layer exist
+                        IF( dz_sno_(0,frnp_(k))<1.e-6 .and. scv_(frnp_(k))>0.) THEN
                            cvsoil_(1,k) = cvsoil_(1,k) + cpice*scv_(frnp_(k))
                         ENDIF
 
@@ -409,11 +449,49 @@ ENDIF
                            + wice_soisno_(1:nl_soil,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
                         t_soisno (1:nl_soil,np) = t_soisno (1:nl_soil,np) &
                            + t_soisno_(1:nl_soil,frnp_(k))*cvsoil_(1:nl_soil,k)*lccpct_np(patchclass_(frnp_(k)))/wgt(1:nl_soil)
-                        ldew  (np) = ldew  (np) + ldew_   (frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
-                        sag   (np) = sag   (np) + sag_    (frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
-                        ! use MOD_SnowFraction.F90 to calculate sigf later
+                        ldew      (np) = ldew      (np) + ldew_      (frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                        ldew_rain (np) = ldew_rain (np) + ldew_rain_ (frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                        ldew_snow (np) = ldew_snow (np) + ldew_snow_ (frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                        sag       (np) = sag       (np) + sag_       (frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                        ! TODO: use MOD_SnowFraction.F90 to calculate sigf later
                         sigf  (np) = sigf  (np) + sigf_   (frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
                         wa    (np) = wa    (np) + wa_     (frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                        wdsrf (np) = wdsrf (np) + wdsrf_  (frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+
+                        snw_rds   (:,np) = snw_rds   (:,np) + snw_rds_   (:,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np 
+                        mss_bcpho (:,np) = mss_bcpho (:,np) + mss_bcpho_ (:,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                        mss_bcphi (:,np) = mss_bcphi (:,np) + mss_bcphi_ (:,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                        mss_ocpho (:,np) = mss_ocpho (:,np) + mss_ocpho_ (:,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                        mss_ocphi (:,np) = mss_ocphi (:,np) + mss_ocphi_ (:,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                        mss_dst1  (:,np) = mss_dst1  (:,np) + mss_dst1_  (:,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                        mss_dst2  (:,np) = mss_dst2  (:,np) + mss_dst2_  (:,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                        mss_dst3  (:,np) = mss_dst3  (:,np) + mss_dst3_  (:,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                        mss_dst4  (:,np) = mss_dst4  (:,np) + mss_dst4_  (:,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+
+                        ! TODO:or use same type assignment
+                        smp   (np) = smp   (np) + smp_    (frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                        hk    (np) = hk    (np) + hk_     (frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                        
+                        IF(DEF_USE_PLANTHYDRAULICS)THEN
+                           vegwp  (:,np) = vegwp  (:,np) + vegwp_ (:,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                           gs0sun   (np) = gs0sun   (np) + gs0sun_  (frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                           gs0sha   (np) = gs0sha   (np) + gs0sha_  (frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                        ENDIF
+
+                        trad        (np) = trad     (np) + trad_    (frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                        tref        (np) = tref     (np) + tref_    (frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                        qref        (np) = qref     (np) + qref_    (frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                        rst         (np) = rst      (np) + rst_     (frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                        emis        (np) = emis     (np) + emis_    (frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                        z0m         (np) = z0m      (np) + z0m_     (frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                        zol         (np) = zol      (np) + zol_     (frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                        rib         (np) = rib      (np) + rib_     (frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                        ustar       (np) = ustar    (np) + ustar_   (frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                        qstar       (np) = qstar    (np) + qstar_   (frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                        tstar       (np) = tstar    (np) + tstar_   (frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                        fm          (np) = fm       (np) + fm_      (frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                        fh          (np) = fh       (np) + fh_      (frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                        fq          (np) = fq       (np) + fq_      (frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
                      ENDDO
 
                      ! Get the lowest zwt from source patches and assign to np suggested by Shupeng Zhang
@@ -484,7 +562,7 @@ ENDIF
 
                   ELSE
                   ! Patch area stay unchanged or decrease, use restart value or remain initialized
-
+!                   TODO: CALL REST
                      inp_ = np_
                      DO WHILE (inp_ .le. grid_patch_e_(j))
                         IF (patchclass_(inp_) .eq. patchclass(np)) THEN
@@ -519,6 +597,7 @@ ENDIF
 
 ELSEIF (patchtype(np)==3) THEN !glacier patch
                   ! Used restart value for GLACIERS patches if patchclass exists last year, or remain initialized
+!                   TODO: CALL REST
                   inp_ = np_
                   DO WHILE (inp_ .le. grid_patch_e_(j))
                      IF (patchclass_(inp_) .eq. patchclass(np)) THEN
@@ -544,6 +623,7 @@ ELSEIF (patchtype(np)==3) THEN !glacier patch
 ENDIF
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
+!                   TODO: CALL REST
                   IF (patchtype(np)==0) THEN
                      ! if totally come from other types,ldew set to zero since ldew_p(:)=0
                      ldew(np) = sum( ldew_p(patch_pft_s(np):patch_pft_e(np))*pftfrac(patch_pft_s(np):patch_pft_e(np)) )
@@ -699,11 +779,20 @@ ENDIF
                      snowdp_gper    (u) = snowdp_gper_    (u_)
                      snowdp_lake    (u) = snowdp_lake_    (u_)
 
-                     t_room         (u) = t_room_         (u_)
-                     tafu           (u) = tafu_           (u_)
                      Fhac           (u) = Fhac_           (u_)
                      Fwst           (u) = Fwst_           (u_)
                      Fach           (u) = Fach_           (u_)
+                     Fahe           (u) = Fahe_           (u_)
+                     Fhah           (u) = Fhah_           (u_)
+                     vehc           (u) = vehc_           (u_)
+                     meta           (u) = meta_           (u_)
+                     t_room         (u) = t_room_         (u_)
+                     t_roof         (u) = t_roof_         (u_)
+                     t_wall         (u) = t_wall_         (u_)
+                     tafu           (u) = tafu_           (u_)
+                     urb_green      (u) = urb_green_      (u_)
+                     urb_lai        (u) = urb_lai_        (u_)
+                     urb_sai        (u) = urb_sai_        (u_)
 
                      ! used soil patch value for variable on pervious ground
                      FROM_SOIL = .false.
