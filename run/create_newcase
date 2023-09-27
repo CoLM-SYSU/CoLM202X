@@ -233,7 +233,7 @@ cat>mksrf.submit<<EOF
 #BSUB -q normal
 #BSUB -o %J.out
 #BSUB -e mksrf.err
-#BSUB -R rusage[mem=2700G]
+#BSUB -R rusage[mem=179G]
 #BSUB -n 720
 #BSUB -R span[ptile=48]
 
@@ -248,7 +248,7 @@ cat>init.submit<<EOF
 #BSUB -q normal
 #BSUB -o %J.out
 #BSUB -e mkini.err
-#BSUB -R rusage[mem=180G]
+#BSUB -R rusage[mem=179G]
 #BSUB -n 48
 #BSUB -R span[ptile=48]
 
@@ -263,12 +263,12 @@ cat>'case.submit'<<EOF
 #BSUB -q normal
 #BSUB -o %J.out
 #BSUB -e case.err
-#BSUB -R rusage[mem=900G]
+#BSUB -R rusage[mem=179G]
 #BSUB -n 240
 #BSUB -R span[ptile=48]
 
 cd ${CASEPATH}/${CASENAME}/bld/run/
-mpirun -np 240 ./colm.x ../../input_${CASENAME}.nml > log
+mpirun -np 240 ./colm.x ../../input_${CASENAME}.nml > ../../log
 
 EOF
 

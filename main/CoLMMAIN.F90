@@ -872,10 +872,10 @@ ENDIF
       IF (abs(errorw) > 1.e-3) THEN
          IF (patchtype <= 1) THEN
             write(6,*) 'Warning: water balance violation in CoLMMAIN (soil) ', errorw
+            CALL CoLM_stop ()
          ELSEIF (patchtype == 2) THEN
             write(6,*) 'Warning: water balance violation in CoLMMAIN (wetland) ', errorw
          ENDIF
-         CALL CoLM_stop ()
       ENDIF
       IF(abs(errw_rsub*deltim)>1.e-3) THEN
          write(6,*) 'Subsurface runoff deficit due to PHS', errw_rsub*deltim

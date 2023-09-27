@@ -51,7 +51,7 @@
 #undef CaMa_Flood
 
 ! 8. If defined, BGC model is used.
-#define BGC
+#undef BGC
 !    Conflicts :  only used when LULC_IGBP_PFT is defined.
 #ifndef LULC_IGBP_PFT
 #undef BGC
