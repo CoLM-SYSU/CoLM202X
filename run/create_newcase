@@ -49,16 +49,16 @@ cat>input_${CASENAME}.nml<<EOF
    DEF_domain%edgew = -180.0
    DEF_domain%edgee = 180.0
 
-   DEF_nx_blocks = 3
-   DEF_ny_blocks = 3
-   DEF_PIO_groupsize = 6
+   DEF_nx_blocks = 18
+   DEF_ny_blocks = 9
+   DEF_PIO_groupsize = 12
 
    DEF_simulation_time%greenwich    = .TRUE.
-   DEF_simulation_time%start_year   = `expr $iyr_s - 1`
+   DEF_simulation_time%start_year   = 1999
    DEF_simulation_time%start_month  = 12
    DEF_simulation_time%start_day    = 31
    DEF_simulation_time%start_sec    = 86400
-   DEF_simulation_time%end_year     = $iyr_e
+   DEF_simulation_time%end_year     = 2014
    DEF_simulation_time%end_month    = 12
    DEF_simulation_time%end_day      = 31
    DEF_simulation_time%end_sec      = 86400
@@ -75,10 +75,12 @@ cat>input_${CASENAME}.nml<<EOF
 
    ! ----- land units and land sets -----
    ! for GRIDBASED
-   DEF_file_mesh = '$RAWDATA/landmask_igbp_144x96.nc'
+   DEF_GRIDBASED_lon_res = 1.0
+   DEF_GRIDBASED_lat_res = 1.0
 
    ! LAI setting
    DEF_LAI_MONTHLY = .true.
+   DEF_LAI_CHANGE_YEARLY = .false.
 
    ! Canopy DEF Interception scheme selection
    DEF_Interception_scheme=1 !1:CoLM2014；2:CLM4.5; 3:CLM5; 4:Noah-MP; 5:MATSIRO; 6:VIC
@@ -91,8 +93,8 @@ cat>input_${CASENAME}.nml<<EOF
    DEF_forcing_namelist = '$FORCINGNML'
 
    ! ----- history -----
-   DEF_hist_lon_res = 2.5
-   DEF_hist_lat_res = 1.875
+   DEF_hist_lon_res = 1.0
+   DEF_hist_lat_res = 1.0
    DEF_WRST_FREQ = 'YEARLY' ! write restart file frequency: HOURLY/DAILY/MONTHLY/YEARLY
    DEF_HIST_FREQ = 'MONTHLY' ! write history file frequency: HOURLY/DAILY/MONTHLY/YEARLY
    DEF_HIST_groupby = 'MONTH' ! history in one file: DAY/MONTH/YEAR
