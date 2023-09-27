@@ -7,12 +7,8 @@
 ROOT=/public/home/sysu_daiyj_01/data/luxj/CoLM202X-GPAM/
 RAWDATA=/data/sysu_daiyj_01/data_mpi/CLMrawdata_igbp/
 RUNTIME=/data/sysu_daiyj_01/data_mpi/CoLMruntime/
-MAKEOPTION=/data/sysu_daiyj_01/CoLM202X-master/include/Makeoptions.intel
-FORCINGNML=/data/sysu_daiyj_01/CoLM202X-master/run/forcing/GSWP3.nml
-
-iyr_s=1981
-iyr_e=1981
-nloop=100
+MAKEOPTION=$ROOT/include/Makeoptions
+FORCINGNML=$ROOT/run/forcing/GSWP3.nml
 
 #--------------------------------------------------------------------------------------
 
@@ -53,16 +49,16 @@ cat>input_${CASENAME}.nml<<EOF
    DEF_domain%edgew = -180.0
    DEF_domain%edgee = 180.0
 
-   DEF_nx_blocks = 3
-   DEF_ny_blocks = 3
-   DEF_PIO_groupsize = 6
+   DEF_nx_blocks = 18
+   DEF_ny_blocks = 9
+   DEF_PIO_groupsize = 12
 
    DEF_simulation_time%greenwich    = .TRUE.
-   DEF_simulation_time%start_year   = `expr $iyr_s - 1`
+   DEF_simulation_time%start_year   = 1999
    DEF_simulation_time%start_month  = 12
    DEF_simulation_time%start_day    = 31
    DEF_simulation_time%start_sec    = 86400
-   DEF_simulation_time%end_year     = $iyr_e
+   DEF_simulation_time%end_year     = 2014
    DEF_simulation_time%end_month    = 12
    DEF_simulation_time%end_day      = 31
    DEF_simulation_time%end_sec      = 86400
@@ -79,10 +75,12 @@ cat>input_${CASENAME}.nml<<EOF
 
    ! ----- land units and land sets -----
    ! for GRIDBASED
-   DEF_file_mesh = '$RAWDATA/landmask_igbp_144x96.nc'
+   DEF_GRIDBASED_lon_res = 1.0
+   DEF_GRIDBASED_lat_res = 1.0
 
    ! LAI setting
    DEF_LAI_MONTHLY = .true.
+   DEF_LAI_CHANGE_YEARLY = .false.
 
    ! Canopy DEF Interception scheme selection
    DEF_Interception_scheme=1 !1:CoLM2014；2:CLM4.5; 3:CLM5; 4:Noah-MP; 5:MATSIRO; 6:VIC
@@ -95,144 +93,8 @@ cat>input_${CASENAME}.nml<<EOF
    DEF_forcing_namelist = '$FORCINGNML'
 
    ! ----- history -----
-   DEF_hist_lon_res = 2.5
-   DEF_hist_lat_res = 1.875
-   DEF_WRST_FREQ = 'YEARLY' ! write restart file frequency: HOURLY/DAILY/MONTHLY/YEARLY
-   DEF_HIST_FREQ = 'MONTHLY' ! write history file frequency: HOURLY/DAILY/MONTHLY/YEARLY
-   DEF_HIST_groupby = 'MONTH' ! history in one file: DAY/MONTH/YEAR
-   DEF_HIST_mode = 'one' ! history in one or block
-   DEF_REST_COMPRESS_LEVEL = 1
-   DEF_HIST_COMPRESS_LEVEL = 1
-
-   DEF_hist_vars_namelist = '$CASEPATH/$CASENAME/history.nml'
-   DEF_hist_vars_out_default = .true.
-
-/
-EOF
-
-cat>input_${CASENAME}-PN.nml<<EOF
-&nl_colm
-
-   DEF_CASE_NAME = '$CASENAME'
-
-   DEF_domain%edges = -90.0
-   DEF_domain%edgen = 90.0
-   DEF_domain%edgew = -180.0
-   DEF_domain%edgee = 180.0
-
-   DEF_nx_blocks = 3
-   DEF_ny_blocks = 3
-   DEF_PIO_groupsize = 6
-
-   DEF_simulation_time%greenwich    = .TRUE.
-   DEF_simulation_time%start_year   = `expr $iyr_s - 1`
-   DEF_simulation_time%start_month  = 12
-   DEF_simulation_time%start_day    = 31
-   DEF_simulation_time%start_sec    = 86400
-   DEF_simulation_time%end_year     = $iyr_e
-   DEF_simulation_time%end_month    = 12
-   DEF_simulation_time%end_day      = 31
-   DEF_simulation_time%end_sec      = 86400
-   DEF_simulation_time%spinup_year  = 1980
-   DEF_simulation_time%spinup_month = 1
-   DEF_simulation_time%spinup_day   = 365
-   DEF_simulation_time%spinup_sec   = 86400
-
-   DEF_simulation_time%timestep     = 1800.
-
-   DEF_dir_rawdata  = '$RAWDATA/'
-   DEF_dir_runtime  = '$RUNTIME/'
-   DEF_dir_output   = '$CASEPATH/'
-
-   ! ----- land units and land sets -----
-   ! for GRIDBASED
-   DEF_file_mesh = '$RAWDATA/landmask_igbp_144x96.nc'
-
-   ! LAI setting
-   DEF_LAI_MONTHLY = .true.
-
-   ! Canopy DEF Interception scheme selection
-   DEF_Interception_scheme=1 !1:CoLM2014；2:CLM4.5; 3:CLM5; 4:Noah-MP; 5:MATSIRO; 6:VIC
-   DEF_USE_PN = .true.
-   DEF_USE_IRRIGATION = .true.
-
-   ! ----- forcing -----
-   ! Options :
-   ! PRINCETON | GSWP3   | QIAN  | CRUNCEPV4 | CRUNCEPV7 | ERA5LAND | ERA5 |  MSWX
-   ! WFDE5     | CRUJRA  | WFDEI | JRA55     | GDAS      | CMFD     | POINT
-   DEF_forcing_namelist = '$FORCINGNML'
-
-   ! ----- history -----
-   DEF_hist_lon_res = 2.5
-   DEF_hist_lat_res = 1.875
-   DEF_WRST_FREQ = 'YEARLY' ! write restart file frequency: HOURLY/DAILY/MONTHLY/YEARLY
-   DEF_HIST_FREQ = 'MONTHLY' ! write history file frequency: HOURLY/DAILY/MONTHLY/YEARLY
-   DEF_HIST_groupby = 'MONTH' ! history in one file: DAY/MONTH/YEAR
-   DEF_HIST_mode = 'one' ! history in one or block
-   DEF_REST_COMPRESS_LEVEL = 1
-   DEF_HIST_COMPRESS_LEVEL = 1
-
-   DEF_hist_vars_namelist = '$CASEPATH/$CASENAME/history.nml'
-   DEF_hist_vars_out_default = .true.
-
-/
-EOF
-
-cat>input_${CASENAME}-SASU.nml<<EOF
-&nl_colm
-
-   DEF_CASE_NAME = '$CASENAME'
-
-   DEF_domain%edges = -90.0
-   DEF_domain%edgen = 90.0
-   DEF_domain%edgew = -180.0
-   DEF_domain%edgee = 180.0
-
-   DEF_nx_blocks = 3
-   DEF_ny_blocks = 3
-   DEF_PIO_groupsize = 6
-
-   DEF_simulation_time%greenwich    = .TRUE.
-   DEF_simulation_time%start_year   = `expr $iyr_s - 1`
-   DEF_simulation_time%start_month  = 12
-   DEF_simulation_time%start_day    = 31
-   DEF_simulation_time%start_sec    = 86400
-   DEF_simulation_time%end_year     = $iyr_e
-   DEF_simulation_time%end_month    = 12
-   DEF_simulation_time%end_day      = 31
-   DEF_simulation_time%end_sec      = 86400
-   DEF_simulation_time%spinup_year  = 1980
-   DEF_simulation_time%spinup_month = 1
-   DEF_simulation_time%spinup_day   = 365
-   DEF_simulation_time%spinup_sec   = 86400
-
-   DEF_simulation_time%timestep     = 1800.
-
-   DEF_dir_rawdata  = '$RAWDATA/'
-   DEF_dir_runtime  = '$RUNTIME/'
-   DEF_dir_output   = '$CASEPATH/'
-
-   ! ----- land units and land sets -----
-   ! for GRIDBASED
-   DEF_file_mesh = '$RAWDATA/landmask_igbp_144x96.nc'
-
-   ! LAI setting
-   DEF_LAI_MONTHLY = .true.
-
-   ! Canopy DEF Interception scheme selection
-   DEF_Interception_scheme=1 !1:CoLM2014；2:CLM4.5; 3:CLM5; 4:Noah-MP; 5:MATSIRO; 6:VIC
-   DEF_USE_SASU = .true.
-   DEF_USE_IRRIGATION = .true.
-
-   ! ----- forcing -----
-   ! Options :
-   ! PRINCETON | GSWP3   | QIAN  | CRUNCEPV4 | CRUNCEPV7 | ERA5LAND | ERA5 |  MSWX
-   ! WFDE5     | CRUJRA  | WFDEI | JRA55     | GDAS      | CMFD     | POINT
-   DEF_forcing_namelist = '$FORCINGNML'
-
-   ! ----- history -----
-   DEF_hist_lon_res = 2.5
-   DEF_hist_lat_res = 1.875
+   DEF_hist_lon_res = 1.0
+   DEF_hist_lat_res = 1.0
    DEF_WRST_FREQ = 'YEARLY' ! write restart file frequency: HOURLY/DAILY/MONTHLY/YEARLY
    DEF_HIST_FREQ = 'MONTHLY' ! write history file frequency: HOURLY/DAILY/MONTHLY/YEARLY
    DEF_HIST_groupby = 'MONTH' ! history in one file: DAY/MONTH/YEAR
@@ -367,92 +229,28 @@ YEARMON='${iyr}-${i}'
 cat>mksrf.submit<<EOF
 #!/bin/bash
 
-#SBATCH -J colm_${CASENAME}-mksrf
-#SBATCH -p cpu_parallel
-#SBATCH -o mksrf-%j.out
-#SBATCH -e mksrf-%j.err
-#SBATCH -N 20
-#SBATCH -n 1200
-#SBATCH --ntasks-per-node=60
-#SBATCH --mem=220G
-#SBATCH --exclusive
-#SBATCH -t 24:00:00
-
-module purge
-module load compiler/intel/2021.3.1
-module load mpi/intelmpi/2018.4.274
-module load mathlib/netcdf/intel/4.4.1
-module load mathlib/hdf5/intel/1.8.20
-source /public/software/compiler/intel-compiler/2021.3.0/mkl/env/vars.sh
-
-export I_MPI_FABRICS=shm:dapl
-export I_MPI_DAPL_UD=1
-export I_MPI_DAPL_UD_RDMA_MIXED=1
-export I_MPI_LARGE_SCALE_THRESHOLD=8192
-export I_MPI_DAPL_UD_ACK_SEND_POOL_SIZE=8704
-export I_MPI_DAPL_UD_ACK_RECV_POOL_SIZE=8704
-export I_MPI_DAPL_UD_RNDV_EP_NUM=2
-
-export DAPL_UCM_REP_TIME=8000 #  REQUEST timer, waiting for REPLY in millisecs
-export DAPL_UCM_RTU_TIME=8000 #  REPLY timer, waiting for RTU in millisecs
-export DAPL_UCM_RETRY=10 #  REQUEST and REPLY retries
-export DAPL_UCM_CQ_SIZE=2000
-export DAPL_UCM_QP_SIZE=2000
-
-export DAPL_UCM_DREQ_RETRY=4 #default == 1
-export DAPL_UCM_DREP_TIME=200 #default == 200ms
-export DAPL_UCM_WAIT_TIME=10000 #default == 60000ms
-
-ulimit -s unlimited
-scontrol show hostname > bld/run/nd
-NP=$SLURM_NPROCS
+#BSUB -J colm_${CASENAME}-mksrf
+#BSUB -q normal
+#BSUB -o %J.out
+#BSUB -e mksrf.err
+#BSUB -R rusage[mem=179G]
+#BSUB -n 720
+#BSUB -R span[ptile=48]
 
 cd ${CASEPATH}/${CASENAME}/bld/run/
-mpirun -np $NP -machinefile nd ./mksrfdata.x ../../input_${CASENAME}.nml > ../../logmksrfdata
+mpirun -np 720 ./mksrfdata.x ../../input_${CASENAME}.nml > ../../logmksrfdata
 EOF
 
 cat>init.submit<<EOF
 #!/bin/bash
 
-#SBATCH -J colm_${CASENAME}-init
-#SBATCH -p cpu_parallel
-#SBATCH -o mkini-%j.out
-#SBATCH -e mkini-%j.err
-#SBATCH -N 2
-#SBATCH -n 120
-#SBATCH --ntasks-per-node=60
-#SBATCH --mem=220G
-#SBATCH --exclusive
-#SBATCH -t 7-24:00
-
-module purge
-module load compiler/intel/2021.3.1
-module load mpi/intelmpi/2018.4.274
-module load mathlib/netcdf/intel/4.4.1
-module load mathlib/hdf5/intel/1.8.20
-source /public/software/compiler/intel-compiler/2021.3.0/mkl/env/vars.sh
-
-export I_MPI_FABRICS=shm:dapl
-export I_MPI_DAPL_UD=1
-export I_MPI_DAPL_UD_RDMA_MIXED=1
-export I_MPI_LARGE_SCALE_THRESHOLD=8192
-export I_MPI_DAPL_UD_ACK_SEND_POOL_SIZE=8704
-export I_MPI_DAPL_UD_ACK_RECV_POOL_SIZE=8704
-export I_MPI_DAPL_UD_RNDV_EP_NUM=2
-
-export DAPL_UCM_REP_TIME=8000 #  REQUEST timer, waiting for REPLY in millisecs
-export DAPL_UCM_RTU_TIME=8000 #  REPLY timer, waiting for RTU in millisecs
-export DAPL_UCM_RETRY=10 #  REQUEST and REPLY retries
-export DAPL_UCM_CQ_SIZE=2000
-export DAPL_UCM_QP_SIZE=2000
-
-export DAPL_UCM_DREQ_RETRY=4 #default == 1
-export DAPL_UCM_DREP_TIME=200 #default == 200ms
-export DAPL_UCM_WAIT_TIME=10000 #default == 60000ms
-
-ulimit -s unlimited
-scontrol show hostname > bld/run/nd
-NP=$SLURM_NPROCS
+#BSUB -J colm_${CASENAME}-mkini
+#BSUB -q normal
+#BSUB -o %J.out
+#BSUB -e mkini.err
+#BSUB -R rusage[mem=179G]
+#BSUB -n 48
+#BSUB -R span[ptile=48]
 
 cd ${CASEPATH}/${CASENAME}/bld/run/
 mpirun -np 48 ./mkinidata.x ../../input_${CASENAME}.nml > ../../logini
@@ -461,78 +259,16 @@ EOF
 cat>'case.submit'<<EOF
 #!/bin/bash
 
-#SBATCH -J colm_$CASENAME
-#SBATCH -p cpu_parallel
-#SBATCH -o colm-%j.out
-#SBATCH -e colm-%j.err
-#SBATCH -N 10
-#SBATCH -n 600
-#SBATCH --ntasks-per-node=60
-#SBATCH --mem=220G
-#SBATCH --exclusive
-#SBATCH -t 7-24:00
+#BSUB -J colm_${CASENAME}-run
+#BSUB -q normal
+#BSUB -o %J.out
+#BSUB -e case.err
+#BSUB -R rusage[mem=179G]
+#BSUB -n 240
+#BSUB -R span[ptile=48]
 
-module purge
-module load compiler/intel/2021.3.1
-module load mpi/intelmpi/2018.4.274
-module load mathlib/netcdf/intel/4.4.1
-module load mathlib/hdf5/intel/1.8.20
-source /public/software/compiler/intel-compiler/2021.3.0/mkl/env/vars.sh
-
-export I_MPI_FABRICS=shm:dapl
-export I_MPI_DAPL_UD=1
-export I_MPI_DAPL_UD_RDMA_MIXED=1
-export I_MPI_LARGE_SCALE_THRESHOLD=8192
-export I_MPI_DAPL_UD_ACK_SEND_POOL_SIZE=8704
-export I_MPI_DAPL_UD_ACK_RECV_POOL_SIZE=8704
-export I_MPI_DAPL_UD_RNDV_EP_NUM=2
-
-export DAPL_UCM_REP_TIME=8000 #  REQUEST timer, waiting for REPLY in millisecs
-export DAPL_UCM_RTU_TIME=8000 #  REPLY timer, waiting for RTU in millisecs
-export DAPL_UCM_RETRY=10 #  REQUEST and REPLY retries
-export DAPL_UCM_CQ_SIZE=2000
-export DAPL_UCM_QP_SIZE=2000
-
-export DAPL_UCM_DREQ_RETRY=4 #default == 1
-export DAPL_UCM_DREP_TIME=200 #default == 200ms
-export DAPL_UCM_WAIT_TIME=10000 #default == 60000ms
-
-ulimit -s unlimited
-scontrol show hostname > bld/run/nd
-NP=$SLURM_NPROCS
-
-iloop=1
-
-while [ $iloop -le $nloop ]
-do
-   cd ${CASEPATH}/${CASENAME}
-   echo start running clm.x
-   mpirun -np $NP bld/run/colm.x ./input_${CASENAME}.nml > log-${iloop}
-   echo clm completed
-   echo archive history and rename restart
-   if [ ! -d ${CASEPATH}/${CASENAME}/restart/loop-${iloop} ];then
-      mkdir ${CASEPATH}/${CASENAME}/restart/loop-${iloop}
-   fi
-   if [ ! -d ${CASEPATH}/${CASENAME}/history/loop-${iloop} ];then
-      mkdir ${CASEPATH}/${CASENAME}/history/loop-${iloop}
-   fi
-   cd ${CASEPATH}/${CASENAME}/restart
-   cp -p ${CASENAME}*_${endyr}*nc ${CASENAME}*_const_*nc loop-${iloop}
-   for files in *${endyr}-001-00000*nc
-   do
-      cp -p $RESETTIME
-   done
-   echo finish restart copy
-   cd ${CASEPATH}/${CASENAME}/history
-   for iyr in $SEQYR
-   do
-      for i in $SEQMO
-      do
-         mv ${CASENAME}_hist_$YEARMON.nc loop-${iloop}/
-      done
-   done
-   iloop=$SELFPLUS   
-done
+cd ${CASEPATH}/${CASENAME}/bld/run/
+mpirun -np 240 ./colm.x ../../input_${CASENAME}.nml > ../../log
 
 EOF
 
