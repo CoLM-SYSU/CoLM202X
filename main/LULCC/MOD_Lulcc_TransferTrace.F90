@@ -1,11 +1,10 @@
 #include <define.h>
 
-MODULE MOD_Lulcc_PatchTrace
+MODULE MOD_Lulcc_TransferTrace
 ! -------------------------------
 ! Created by Wanyi Lin, Shupeng Zhang and Hua Yuan, 07/2023
 !
 ! !DESCRIPTION:
-! TODO@Wanyi: add description -DONE
 ! The transfer matrix and patch tracing vector were created using the land
 ! cover type data of the adjacent two years. Based on next year's patch,
 ! the pixels within the patch and last years' land cover type of these
@@ -19,13 +18,13 @@ MODULE MOD_Lulcc_PatchTrace
    SAVE
 ! -----------------------------------------------------------------
 
-   real(r8), allocatable, dimension(:,:) :: lccpct_patches(:,:) ! Percent area of source patches in patch
-   real(r8), allocatable, dimension(:,:) :: lccpct_matrix(:,:)  ! Percent area of source patches in grid
+   real(r8), allocatable, dimension(:,:) :: lccpct_patches(:,:) !Percent area of source patches in patch
+   real(r8), allocatable, dimension(:,:) :: lccpct_matrix(:,:)  !Percent area of source patches in grid
 
    ! PUBLIC MEMBER FUNCTIONS:
-   PUBLIC :: allocate_LulccPatchTrace
-   PUBLIC :: deallocate_LulccPatchTrace
-   PUBLIC :: READ_LulccPatchTrace
+   PUBLIC :: allocate_LulccTransferTrace
+   PUBLIC :: deallocate_LulccTransferTrace
+   PUBLIC :: MAKE_LulccTransferTrace
 
    ! PRIVATE MEMBER FUNCTIONS:
 
@@ -35,7 +34,8 @@ MODULE MOD_Lulcc_PatchTrace
 
 !-----------------------------------------------------------------------
 
-   SUBROUTINE allocate_LulccPatchTrace
+
+   SUBROUTINE allocate_LulccTransferTrace
    ! --------------------------------------------------------------------
    ! Allocates memory for Lulcc time invariant variables
    ! --------------------------------------------------------------------
@@ -56,9 +56,10 @@ MODULE MOD_Lulcc_PatchTrace
          lccpct_matrix  (:,:) = 0
       ENDIF
 
-   END SUBROUTINE allocate_LulccPatchTrace
+   END SUBROUTINE allocate_LulccTransferTrace
 
-   SUBROUTINE READ_LulccPatchTrace (lc_year)
+
+   SUBROUTINE MAKE_LulccTransferTrace (lc_year)
 
       USE MOD_Precision
       USE MOD_Namelist
@@ -96,11 +97,11 @@ MODULE MOD_Lulcc_PatchTrace
       character(len=256) :: dir_5x5, suffix, lastyr, thisyr, dir_landdata, lndname
       integer :: i,ipatch,ipxl,ipxstt,ipxend,numpxl,ilc
       integer, allocatable, dimension(:) :: locpxl
-      type (block_data_int32_2d) :: lcdatafr ! land cover data of last year
+      type (block_data_int32_2d)         :: lcdatafr !land cover data of last year
       integer, allocatable, dimension(:) :: lcdatafr_one(:), lcfrbuff(:)
       real(r8),allocatable, dimension(:) :: area_one(:)    , areabuff(:)
       real(r8) :: sum_areabuff, gridarea
-      integer, allocatable, dimension(:) :: grid_patch_s , grid_patch_e
+      integer, allocatable, dimension(:) :: grid_patch_s, grid_patch_e
 ! for surface data diag
 #ifdef SrfdataDiag
       INTEGER  :: ityp
@@ -124,6 +125,7 @@ MODULE MOD_Lulcc_PatchTrace
          CALL allocate_block_data (gpatch, lcdatafr)
          dir_5x5 = trim(DEF_dir_rawdata) // '/plant_15s'
          suffix  = 'MOD'//trim(lastyr)
+         ! read the previous year land cover data
          CALL read_5x5_data (dir_5x5, suffix, gpatch, 'LC', lcdatafr)
 
 #ifdef USEMPI
@@ -168,8 +170,9 @@ MODULE MOD_Lulcc_PatchTrace
                   CYCLE
                ENDIF
 
+               ! using this year patch mapping to aggregate the previous year land cover data
                CALL aggregation_request_data (landpatch, ipatch, gpatch, zip = .true., area = area_one, &
-                     data_i4_2d_in1 = lcdatafr, data_i4_2d_out1 = lcdatafr_one)
+                                              data_i4_2d_in1 = lcdatafr, data_i4_2d_out1 = lcdatafr_one)
 
                ipxstt = landpatch%ipxstt(ipatch)
                ipxend = landpatch%ipxend(ipatch)
@@ -184,6 +187,7 @@ MODULE MOD_Lulcc_PatchTrace
 
                sum_areabuff = sum(areabuff)
                DO ipxl = ipxstt, ipxend
+                  ! Transfer trace - the key codes to count for the source land cover types of LULCC
                   lccpct_patches(ipatch, lcfrbuff(ipxl)) = lccpct_patches(ipatch, lcfrbuff(ipxl)) + areabuff(ipxl) / sum_areabuff
                   lccpct_matrix (ipatch, lcfrbuff(ipxl)) = lccpct_matrix (ipatch, lcfrbuff(ipxl)) + areabuff(ipxl)
                ENDDO
@@ -224,9 +228,10 @@ MODULE MOD_Lulcc_PatchTrace
          IF (allocated(area_one))    deallocate (area_one)
       ENDIF
 
-   END SUBROUTINE READ_LulccPatchTrace
+   END SUBROUTINE MAKE_LulccTransferTrace
 
-   SUBROUTINE deallocate_LulccPatchTrace
+
+   SUBROUTINE deallocate_LulccTransferTrace
       ! --------------------------------------------------
       ! Deallocates memory for Lulcc time invariant variables
       ! --------------------------------------------------
@@ -237,7 +242,7 @@ MODULE MOD_Lulcc_PatchTrace
          IF (allocated(lccpct_matrix )) deallocate (lccpct_matrix )
       ENDIF
 
-   END SUBROUTINE deallocate_LulccPatchTrace
+   END SUBROUTINE deallocate_LulccTransferTrace
 
-END MODULE MOD_Lulcc_PatchTrace
+END MODULE MOD_Lulcc_TransferTrace
 ! ---------- EOP ------------

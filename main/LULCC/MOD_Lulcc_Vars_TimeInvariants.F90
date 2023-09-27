@@ -6,7 +6,6 @@ MODULE MOD_Lulcc_Vars_TimeInvariants
 !
 ! !REVISIONS:
 !
-! !TODO: add authors -DONE
 ! 07/2023, Wenzong Dong: porting to MPI version
 ! 08/2023, Hua Yuan: unified PFT and PC process
 ! -------------------------------
