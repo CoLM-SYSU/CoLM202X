@@ -244,7 +244,7 @@ MODULE MOD_GroundTemperature
 ! net ground heat flux into the surface and its temperature derivative
 
    ! 08/19/2021, yuan: NOTE! removed sigf, LAI->100% cover
-   IF (DEF_USE_SNICAR.and. lb < 1) THEN
+   IF (DEF_USE_SNICAR .and. lb < 1) THEN
       hs = sabg_snow_lyr(lb) + sabg_soil + dlrad*emg &
          - (fseng+fevpg*htvp) &
          + cpliq*pg_rain*(t_precip-t_grnd) &

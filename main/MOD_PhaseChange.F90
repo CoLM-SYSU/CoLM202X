@@ -493,7 +493,7 @@ MODULE MOD_PhaseChange
                ! 03/08/2020, yuan: seperate soil/snow heat flux, exclude glacier(3)
                hm(j) = hs_soil + (1.-fsno)*dhsdT*tinc + brr(j) - tinc/fact(j)
             ELSE                    ! -> internal layers other than the interface soil layer
-               IF (j <= 1) THEN
+               IF (j < 1) THEN
                   hm(j) = brr(j) - tinc/fact(j) + sabg_snow_lyr(j)
                ELSE
                   hm(j) = brr(j) - tinc/fact(j)
