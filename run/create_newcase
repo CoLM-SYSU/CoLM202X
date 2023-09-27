@@ -268,7 +268,7 @@ cat>'case.submit'<<EOF
 #BSUB -R span[ptile=48]
 
 cd ${CASEPATH}/${CASENAME}/bld/run/
-mpirun -np 240 ./colm.x ../../input_${CASENAME}.nml > log-${iloop}
+mpirun -np 240 ./colm.x ../../input_${CASENAME}.nml > log
 
 EOF
 
