@@ -12,7 +12,6 @@ MODULE MOD_DA_GRACE
    PUBLIC :: final_DA_GRACE 
    
    REAL(r8), allocatable, PUBLIC :: fslp_patch (:) ! slope factor of subsurface runoff
-   TYPE(block_data_real8_2d), PUBLIC :: f_xy_slp   ! for output to history
 
    PRIVATE
       
@@ -137,10 +136,6 @@ CONTAINS
 
          fslp_patch     (:) = 1.0
       ENDIF
-
-      IF (p_is_io) THEN
-         CALL allocate_block_data (grid_grace, f_xy_slp)  
-      ENDIF 
 
       deallocate (time_real8)
 

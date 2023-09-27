@@ -121,7 +121,7 @@ contains
 #endif
       USE MOD_Forcing, only: forcmask
 #ifdef DataAssimilation
-      USE MOD_DA_GRACE, only : fslp_patch, f_xy_slp
+      USE MOD_DA_GRACE, only : fslp_patch
 #endif
 
       IMPLICIT NONE
