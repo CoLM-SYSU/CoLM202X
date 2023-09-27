@@ -4,7 +4,9 @@ include include/Makeoptions
 HEADER = include/define.h
 
 INCLUDE_DIR = -Iinclude -I.bld -I${NETCDF_INC}
-VPATH = include : share : mksrfdata : mkinidata : main : main/HYDRO : main/BGC : main/URBAN : main/LULCC : CaMa/src : postprocess : .bld
+VPATH = include : share : mksrfdata : mkinidata \
+	: main : main/HYDRO : main/BGC : main/URBAN : main/LULCC : main/DA \
+	: CaMa/src : postprocess : .bld
 
 # ********** Targets ALL **********
 .PHONY: all
@@ -212,6 +214,8 @@ OBJS_CAMA_T = $(addprefix .bld/,${OBJECTS_CAMA})
 endif
 
 OBJS_MAIN = \
+				MOD_DA_GRACE.o                            \
+				MOD_DataAssimilation.o                    \
 				MOD_Hydro_BasinNeighbour.o                \
 				MOD_Hydro_HillslopeFlow.o                 \
 				MOD_Hydro_SubsurfaceFlow.o                \
@@ -304,7 +308,7 @@ OBJS_MAIN = \
 				MOD_Lulcc_Vars_TimeVariables.o            \
 				MOD_Lulcc_Initialize.o                    \
 				MOD_Lulcc_TMatrix.o                       \
-				MOD_Lulcc_EnergyMassConserve.o                \
+				MOD_Lulcc_EnergyMassConserve.o            \
 				MOD_Lulcc_Driver.o                        \
 				CoLMDRIVER.o                              \
 				CoLMMAIN.o                                \
