@@ -30,7 +30,6 @@ MODULE MOD_Lulcc_Driver
 ! Created by Hua Yuan, 04/08/2022
 !
 ! !REVISONS:
-! TODO@wenzong, wanyi: check below -DONE
 ! 07/2023, Wenzong Dong: porting to MPI version.
 ! 08/2023, Wanyi Lin: add interface for conserved scheme.
 !
@@ -42,7 +41,7 @@ MODULE MOD_Lulcc_Driver
    USE MOD_Lulcc_Vars_TimeVariables
    USE MOD_Lulcc_Initialize
    USE MOD_Vars_TimeVariables
-   USE MOD_Lulcc_PatchTrace
+   USE MOD_Lulcc_TransferTrace
    USE MOD_Lulcc_MassEnergyConserve
    USE MOD_Namelist
 
@@ -84,8 +83,8 @@ MODULE MOD_Lulcc_Driver
       IF (p_is_master) THEN
          print *, ">>> LULCC: Mass&Energy conserve for variable recovery..."
       ENDIF
-      CALL allocate_LulccPatchTrace()
-      CALL READ_LulccPatchTrace(idate(1))
+      CALL allocate_LulccTransferTrace()
+      CALL MAKE_LulccTransferTrace(idate(1))
       CALL LulccMassEnergyConserve()
    ENDIF
 
@@ -93,7 +92,7 @@ MODULE MOD_Lulcc_Driver
    CALL deallocate_LulccTimeInvariants()
    CALL deallocate_LulccTimeVariables()
    IF (DEF_LULCC_SCHEME == 2) THEN
-      CALL deallocate_LulccPatchTrace()
+      CALL deallocate_LulccTransferTrace()
    ENDIF
 
  END SUBROUTINE LulccDriver

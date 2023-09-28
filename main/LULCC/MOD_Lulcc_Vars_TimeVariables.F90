@@ -4,7 +4,8 @@ MODULE MOD_Lulcc_Vars_TimeVariables
 ! -------------------------------
 ! Created by Hua Yuan, 04/2022
 !
-! !TODO: add authors -DONE
+! !REVISIONS:
+!
 ! 07/2023, Wenzong Dong: porting to MPI version
 ! 08/2023, Hua Yuan: unified PFT and PC process
 ! -------------------------------
@@ -16,7 +17,7 @@ MODULE MOD_Lulcc_Vars_TimeVariables
 ! -----------------------------------------------------------------
 ! Time-varying state variables which reaquired by restart run
   !TODO: need to check with MOD_Vars_TimeVariables.F90 whether
-  !      there is any variables missing.
+  !      there are any variables missing.
   real(r8), allocatable :: z_sno_       (:,:)  !node depth [m]
   real(r8), allocatable :: dz_sno_      (:,:)  !interface depth [m]
   real(r8), allocatable :: t_soisno_    (:,:)  !soil temperature [K]
@@ -81,13 +82,14 @@ MODULE MOD_Lulcc_Vars_TimeVariables
   real(r8), allocatable :: mss_dst4_   (:,:)   !mass of dust species 4 in snow  (col,lyr) [kg]
   real(r8), allocatable :: ssno_   (:,:,:,:)   !snow layer absorption [-]
 
-   ! Additional variables required by reginal model (such as WRF ) RSM)
+  ! Additional variables required by reginal model (such as WRF ) RSM)
   real(r8), allocatable :: trad_         (:)   !radiative temperature of surface [K]
   real(r8), allocatable :: tref_         (:)   !2 m height air temperature [kelvin]
   real(r8), allocatable :: qref_         (:)   !2 m height air specific humidity
   real(r8), allocatable :: rst_          (:)   !canopy stomatal resistance (s/m)
   real(r8), allocatable :: emis_         (:)   !averaged bulk surface emissivity
   real(r8), allocatable :: z0m_          (:)   !effective roughness [m]
+  real(r8), allocatable :: displa_       (:)   !zero displacement height [m]
   real(r8), allocatable :: zol_          (:)   !dimensionless height (z/L) used in Monin-Obukhov theory
   real(r8), allocatable :: rib_          (:)   !bulk Richardson number in surface layer
   real(r8), allocatable :: ustar_        (:)   !u* in similarity theory [m/s]
@@ -97,34 +99,14 @@ MODULE MOD_Lulcc_Vars_TimeVariables
   real(r8), allocatable :: fh_           (:)   !integral of profile function for heat
   real(r8), allocatable :: fq_           (:)   !integral of profile function for moisture
 
-  real(r8), allocatable :: irrig_rate_                   (:) !irrigation rate [mm s-1]
-  real(r8), allocatable :: deficit_irrig_                (:) !irrigation amount [kg/m2]
-  real(r8), allocatable :: sum_irrig_                    (:) !total irrigation amount [kg/m2]
-  real(r8), allocatable :: sum_irrig_count_              (:) !total irrigation counts [-]
-  integer , allocatable :: n_irrig_steps_left_           (:) !left steps for once irrigation [-]
-  real(r8), allocatable :: tairday_                      (:) !daily mean temperature [degree C]
-  real(r8), allocatable :: usday_                        (:) !daily mean wind component in eastward direction [m/s]
-  real(r8), allocatable :: vsday_                        (:) !daily mean wind component in northward direction [m/s]
-  real(r8), allocatable :: pairday_                      (:) !daily mean pressure [kPa]
-  real(r8), allocatable :: rnetday_                      (:) !daily net radiation flux [MJ/m2/day]
-  real(r8), allocatable :: fgrndday_                     (:) !daily ground heat flux [MJ/m2/day]
-  real(r8), allocatable :: potential_evapotranspiration  (:) !daily potential evapotranspiration [mm/day]
-
-  integer , allocatable :: irrig_method_corn_            (:) !irrigation method for corn (0-3)
-  integer , allocatable :: irrig_method_swheat_          (:) !irrigation method for spring wheat (0-3)
-  integer , allocatable :: irrig_method_wwheat_          (:) !irrigation method for winter wheat (0-3)
-  integer , allocatable :: irrig_method_soybean_         (:) !irrigation method for soybean (0-3)
-  integer , allocatable :: irrig_method_cotton_          (:) !irrigation method for cotton (0-3)
-  integer , allocatable :: irrig_method_rice1_           (:) !irrigation method for rice1 (0-3)
-  integer , allocatable :: irrig_method_rice2_           (:) !irrigation method for rice2 (0-3)
-  integer , allocatable :: irrig_method_sugarcane_       (:) !irrigation method for sugarcane (0-3)
-
   ! for LULC_IGBP_PFT and LULC_IGBP_PC
   real(r8), allocatable :: tleaf_p_       (:)  !shaded leaf temperature [K]
   real(r8), allocatable :: ldew_rain_p_   (:)  !depth of rain on foliage [mm]
   real(r8), allocatable :: ldew_snow_p_   (:)  !depth of snow on foliage [mm]
   real(r8), allocatable :: ldew_p_        (:)  !depth of water on foliage [mm]
   real(r8), allocatable :: sigf_p_        (:)  !fraction of veg cover, excluding snow-covered veg [-]
+
+  !TODO: to check IF the below is necessary
   real(r8), allocatable :: lai_p_         (:)  !leaf area index
   real(r8), allocatable :: tlai_p_        (:)  !leaf area index
   real(r8), allocatable :: sai_p_         (:)  !stem area index
@@ -227,7 +209,7 @@ MODULE MOD_Lulcc_Vars_TimeVariables
   real(r8), allocatable :: snowdp_gper_   (:)  !pervious ground snow depth [m]
   real(r8), allocatable :: snowdp_lake_   (:)  !urban lake snow depth [m]
 
-   !TODO: rename the below variables
+  !TODO: rename the below variables
   real(r8), allocatable :: Fhac_          (:)  !sensible flux from heat or cool AC [W/m2]
   real(r8), allocatable :: Fwst_          (:)  !waste heat flux from heat or cool AC [W/m2]
   real(r8), allocatable :: Fach_          (:)  !flux from inner and outter air exchange [W/m2]
@@ -358,27 +340,6 @@ MODULE MOD_Lulcc_Vars_TimeVariables
            allocate (fm_                          (numpatch))
            allocate (fh_                          (numpatch))
            allocate (fq_                          (numpatch))
-
-           allocate (irrig_rate_                  (numpatch))
-           allocate (deficit_irrig_               (numpatch))
-           allocate (sum_irrig_                   (numpatch))
-           allocate (sum_irrig_count_             (numpatch))
-           allocate (n_irrig_steps_left_          (numpatch))
-           allocate (tairday_                     (numpatch))
-           allocate (usday_                       (numpatch))
-           allocate (vsday_                       (numpatch))
-           allocate (pairday_                     (numpatch))
-           allocate (rnetday_                     (numpatch))
-           allocate (fgrndday_                    (numpatch))
-           allocate (potential_evapotranspiration_ (numpatch)
-           allocate (irrig_method_corn_           (numpatch))
-           allocate (irrig_method_swheat_         (numpatch))
-           allocate (irrig_method_wwheat_         (numpatch))
-           allocate (irrig_method_soybean_        (numpatch))
-           allocate (irrig_method_cotton_         (numpatch))
-           allocate (irrig_method_rice1_          (numpatch))
-           allocate (irrig_method_rice2_          (numpatch))
-           allocate (irrig_method_sugarcane_      (numpatch))
         ENDIF
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
@@ -595,33 +556,14 @@ MODULE MOD_Lulcc_Vars_TimeVariables
          fh_           = fh
          fq_           = fq
 
-         irrig_rate_                   = irrig_rate
-         deficit_irrig_                = deficit_irrig
-         sum_irrig_                    = sum_irrig
-         sum_irrig_count_              = sum_irrig_count
-         n_irrig_steps_left_           = n_irrig_steps_left
-         tairday_                      = tairday
-         usday_                        = usday
-         vsday_                        = vsday
-         pairday_                      = pairday
-         rnetday_                      = rnetday
-         fgrndday_                     = fgrndday
-         potential_evapotranspiration_ = potential_evapotranspiration
-         irrig_method_corn_            = irrig_method_corn
-         irrig_method_swheat_          = irrig_method_swheat
-         irrig_method_wwheat_          = irrig_method_wwheat
-         irrig_method_soybean_         = irrig_method_soybean
-         irrig_method_cotton_          = irrig_method_cotton
-         irrig_method_rice1_           = irrig_method_rice1
-         irrig_method_rice2_           = irrig_method_rice2
-         irrig_method_sugarcane_       = irrig_method_sugarcane
-
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
          tleaf_p_      = tleaf_p
          ldew_p_       = ldew_p
          ldew_rain_p_  = ldew_rain_p
          ldew_snow_p_  = ldew_snow_p
          sigf_p_       = sigf_p
+
+         !TODO: to check IF the below is necessary
          lai_p_        = lai_p
          tlai_p_       = tlai_p
          sai_p_        = sai_p
@@ -632,6 +574,7 @@ MODULE MOD_Lulcc_Vars_TimeVariables
          fshade_p_     = fshade_p
          extkb_p_      = extkb_p
          extkd_p_      = extkd_p
+
          tref_p_       = tref_p
          qref_p_       = qref_p
          rst_p_        = rst_p
@@ -924,26 +867,6 @@ MODULE MOD_Lulcc_Vars_TimeVariables
                     fh            (np) = fh_            (np_)
                     fq            (np) = fq_            (np_)
 
-                    irrig_rate                   (np) = irrig_rate_                   (np_)
-                    deficit_irrig                (np) = deficit_irrig_                (np_)
-                    sum_irrig                    (np) = sum_irrig_                    (np_)
-                    sum_irrig_count              (np) = sum_irrig_count_              (np_)
-                    n_irrig_steps_left           (np) = n_irrig_steps_left_           (np_)
-                    tairday                      (np) = tairday_                      (np_)
-                    usday                        (np) = usday_                        (np_)
-                    vsday                        (np) = vsday_                        (np_)
-                    pairday                      (np) = pairday_                      (np_)
-                    rnetday                      (np) = rnetday_                      (np_)
-                    fgrndday                     (np) = fgrndday_                     (np_)
-                    potential_evapotranspiration (np) = potential_evapotranspiration_ (np_)
-                    irrig_method_corn            (np) = irrig_method_corn_            (np_)
-                    irrig_method_swheat          (np) = irrig_method_swheat_          (np_)
-                    irrig_method_wwheat          (np) = irrig_method_wwheat_          (np_)
-                    irrig_method_soybean         (np) = irrig_method_soybean_         (np_)
-                    irrig_method_cotton          (np) = irrig_method_cotton_          (np_)
-                    irrig_method_rice1           (np) = irrig_method_rice1_           (np_)
-                    irrig_method_rice2           (np) = irrig_method_rice2_           (np_)
-                    irrig_method_sugarcane       (np) = irrig_method_sugarcane_       (np_)
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
 IF (patchtype(np)==0 .and. patchtype_(np_)==0) THEN
@@ -975,6 +898,8 @@ IF (patchtype(np)==0 .and. patchtype_(np_)==0) THEN
                        ldew_rain_p(ip) = ldew_rain_p_(ip_)
                        ldew_snow_p(ip) = ldew_snow_p_(ip_)
                        sigf_p     (ip) = sigf_p_     (ip_)
+
+                       !TODO: to check IF the below is necessary
                        lai_p      (ip) = lai_p_      (ip_)
                        tlai_p     (ip) = tlai_p_     (ip_)
                        sai_p      (ip) = sai_p_      (ip_)
@@ -1218,27 +1143,6 @@ ENDIF
            deallocate (fm_           )
            deallocate (fh_           )
            deallocate (fq_           )
-
-           deallocate (irrig_rate_                  )
-           deallocate (deficit_irrig_               )
-           deallocate (sum_irrig_                   )
-           deallocate (sum_irrig_count_             )
-           deallocate (n_irrig_steps_left_          )
-           deallocate (tairday_                     )
-           deallocate (usday_                       )
-           deallocate (vsday_                       )
-           deallocate (pairday_                     )
-           deallocate (rnetday_                     )
-           deallocate (fgrndday_                    )
-           deallocate (potential_evapotranspiration_)
-           deallocate (irrig_method_corn_           )
-           deallocate (irrig_method_swheat_         )
-           deallocate (irrig_method_wwheat_         )
-           deallocate (irrig_method_soybean_        )
-           deallocate (irrig_method_cotton_         )
-           deallocate (irrig_method_rice1_          )
-           deallocate (irrig_method_rice2_          )
-           deallocate (irrig_method_sugarcane_      )
         ENDIF
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
