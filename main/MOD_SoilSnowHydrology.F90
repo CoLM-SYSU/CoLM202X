@@ -873,7 +873,7 @@ MODULE MOD_SoilSnowHydrology
       
 #ifndef LATERAL_FLOW
          IF (wdsrf > pondmx) THEN
-            rsur = rsur + (wdsrf - pondmx) / deltim
+            rsur = (wdsrf - pondmx) / deltim
             wdsrf = pondmx
          ELSE
             rsur = 0.
