@@ -120,6 +120,9 @@ contains
       use MOD_CaMa_Vars !defination of CaMa variables
 #endif
       USE MOD_Forcing, only: forcmask
+#ifdef DataAssimilation
+      USE MOD_DA_GRACE, only : fslp_patch
+#endif
 
       IMPLICIT NONE
 
@@ -464,6 +467,17 @@ contains
          call write_history_variable_2d ( DEF_hist_vars%rnof, &
             a_rnof, file_hist, 'f_rnof', itime_in_file, sumarea, filter, &
             'total runoff','mm/s')
+
+#ifdef DataAssimilation
+         ! slope factor for subsurface runoff [-]
+         IF (p_is_worker) THEN
+            vecacc = fslp_patch 
+            WHERE(vecacc /= spval) vecacc = vecacc * nac
+         ENDIF
+         call write_history_variable_2d ( .true., &
+            vecacc, file_hist, 'f_slope_factor', itime_in_file, sumarea, filter, &
+            'slope factor for subsurface runoff', '-')
+#endif
 
 #ifdef LATERAL_FLOW
          ! rate of surface water depth change [mm/s]

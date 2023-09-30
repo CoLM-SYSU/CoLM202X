@@ -132,10 +132,10 @@ CONTAINS
       ENDIF
 
       cropfilter = (/ CROPLAND /)
-
+      
       CALL pixelsetshared_build (landpatch, gcrop, cropdata, N_CFT, cropfilter, &
          pctshrpch, cropclass, fracin = pctshared)
-
+      
       numpatch = landpatch%nset
 
       IF (allocated(pctshared  )) deallocate(pctshared  )
@@ -145,7 +145,7 @@ CONTAINS
       IF (p_is_worker) THEN
          CALL mpi_reduce (numpatch, npatch_glb, 1, MPI_INTEGER, MPI_SUM, p_root, p_comm_worker, p_err)
          IF (p_iam_worker == 0) THEN
-            write(*,'(A,I12,A)') 'Total: ', npatch_glb, ' patches.'
+            write(*,'(A,I12,A)') 'Total: ', npatch_glb, ' patches (with crop).'
          ENDIF
       ENDIF
 

@@ -424,7 +424,7 @@ contains
 
       IF (abs(wblc) > tolerance) THEN
          write(*,*) 'soil_water_vertical_movement balance error: ', wblc
-         write(*,*) w_sum_after, w_sum_before, qgtop, etr, rsubst
+         write(*,*) w_sum_after, w_sum_before, qgtop, etr, rsubst, is_permeable(1), ss_dp
       ENDIF
 #endif
 
