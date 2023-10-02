@@ -152,7 +152,7 @@ MODULE MOD_RainSnowTemp
       if (t_precip < tfrz) t_precip = tfrz
    else
       t_precip = min(tfrz,t_precip)
-      if(flfall > 0.0)then
+      if(flfall > 1.e-6)then
          t_precip = tfrz - sqrt((1.0/flfall)-1.0)/100.0
       endif
    endif
