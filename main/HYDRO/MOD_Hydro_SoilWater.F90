@@ -17,6 +17,7 @@ module MOD_Hydro_SoilWater
 
    use MOD_Precision
    use MOD_Hydro_SoilFunction
+   use MOD_Namelist, only: DEF_USE_PLANTHYDRAULICS
 
    implicit none
 
@@ -159,7 +160,7 @@ contains
          nlev,  dt,   sp_zc, sp_zi,   is_permeable,  &
          porsl, vl_r, psi_s, hksat,   nprm,   prms,  &
          porsl_wa,                                   &
-         qgtop, etr,  rootr, rsubst,  qinfl,         &
+         qgtop, etr,  rootr, rootflux, rsubst,  qinfl,         &
          ss_dp, zwt,  wa,    ss_vliq, smp,    hk  ,  &
          tolerance )
 
@@ -195,6 +196,7 @@ contains
       
       REAL(r8), intent(in) :: etr           ! transpiration rate (mm/s)
       REAL(r8), intent(in) :: rootr(1:nlev) ! root fractions (percentage)
+      REAL(r8), intent(in) :: rootflux(1:nlev) ! root water uptake from different layers (mm/s)
 
       REAL(r8), intent(in)  :: rsubst ! subsurface runoff (mm/s)
       REAL(r8), intent(out) :: qinfl  ! infiltration into soil (mm/s)
@@ -263,16 +265,21 @@ contains
 #endif
 
       ! transpiration
-      sumroot   = sum(rootr, mask = is_permeable .and. (rootr > 0.))
-      etroot(:) = 0.
-      IF (sumroot > 0.) THEN
-         where (is_permeable)
-            etroot = etr * max(rootr, 0.) / sumroot
-         END where
+      if(.not. DEF_USE_PLANTHYDRAULICS)then
+         sumroot   = sum(rootr, mask = is_permeable .and. (rootr > 0.))
+         etroot(:) = 0.
+         IF (sumroot > 0.) THEN
+            where (is_permeable)
+               etroot = etr * max(rootr, 0.) / sumroot
+            END where
+            deficit = 0.
+         ELSE
+            deficit = etr*dt
+         ENDIF
+      else
          deficit = 0.
-      ELSE
-         deficit = etr*dt
-      ENDIF
+         etroot(:) = rootflux
+      end if
 
       do ilev = 1, izwt-1
          IF (is_permeable(ilev)) THEN
@@ -424,7 +431,7 @@ contains
 
       IF (abs(wblc) > tolerance) THEN
          write(*,*) 'soil_water_vertical_movement balance error: ', wblc
-         write(*,*) w_sum_after, w_sum_before, qgtop, etr, rsubst
+         write(*,*) w_sum_after, w_sum_before, qgtop, etr, rsubst, is_permeable(1), ss_dp
       ENDIF
 #endif
 

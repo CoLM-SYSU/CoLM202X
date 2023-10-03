@@ -60,7 +60,7 @@ MODULE MOD_Thermal
                       taux        ,tauy        ,fsena       ,fevpa      ,&
                       lfevpa      ,fsenl       ,fevpl       ,etr        ,&
                       fseng       ,fevpg       ,olrg        ,fgrnd      ,&
-                      rootr       ,qseva       ,qsdew       ,qsubl      ,&
+                      rootr       ,rootflux    ,qseva       ,qsdew       ,qsubl      ,&
                       qfros       ,sm          ,tref        ,qref       ,&
                       trad        ,rst         ,assim       ,respc      ,&
 
@@ -133,6 +133,8 @@ MODULE MOD_Thermal
         patchtype     ! land patch type (0=soil, 1=urban or built-up, 2=wetland,
                       !                  3=glacier/ice sheet, 4=land water bodies)
 
+  real(r8), intent(inout) :: &
+        sai           ! stem area index  [-]
   real(r8), intent(in) :: &
         deltim,      &! model time step [second]
         trsmx0,      &! max transpiration for moist soil+100% veg.  [mm/s]
@@ -174,7 +176,6 @@ MODULE MOD_Thermal
 
         ! vegetation parameters
         lai,         &! adjusted leaf area index for seasonal variation [-]
-        sai,         &! stem area index  [-]
         htop,        &! canopy crown top height [m]
         hbot,        &! canopy crown bottom height [m]
         sqrtdi,      &! inverse sqrt of leaf dimension [m**-0.5]
@@ -300,7 +301,8 @@ MODULE MOD_Thermal
         fevpg,       &! evaporation heat flux from ground [mm/s]
         olrg,        &! outgoing long-wave radiation from ground+canopy
         fgrnd,       &! ground heat flux [W/m2]
-        rootr(1:nl_soil),&! root resistance of a layer, all layers add to 1
+        rootr(1:nl_soil),&! water uptake farction from different layers, all layers add to 1.0
+        rootflux(1:nl_soil),&! root uptake from different layer, all layers add to transpiration
 
         qseva,       &! ground surface evaporation rate (mm h2o/s)
         qsdew,       &! ground surface dew formation (mm h2o /s) [+]
@@ -383,6 +385,7 @@ MODULE MOD_Thermal
   integer p, ps, pe, pc
 
   real(r8), allocatable :: rootr_p     (:,:)
+  real(r8), allocatable :: rootflux_p     (:,:)
   real(r8), allocatable :: etrc_p        (:)
   real(r8), allocatable :: rstfac_p      (:)
   real(r8), allocatable :: rstfacsun_p   (:)
@@ -439,6 +442,7 @@ MODULE MOD_Thermal
       zol    = 0.;  rib    = 0.
       ustar  = 0.;  qstar  = 0.
       tstar  = 0.;  rootr  = 0.
+      rootflux = 0.;
 
       ! temperature and water mass from previous time step
       t_grnd = t_soisno(lb)
@@ -593,7 +597,7 @@ IF ( patchtype==0.and.DEF_USE_LCT .or. patchtype>0 ) THEN
 !end ozone stress variables
                  forc_hpbl                                                 ,&
                  qintr_rain  ,qintr_snow,t_precip  ,hprl       ,smp        ,&
-                 hk(1:)      ,hksati(1:),rootr(1:)                         )
+                 hk(1:)      ,hksati(1:),rootflux(1:)                         )
       ELSE
          tleaf         = forc_t
          laisun        = 0.
@@ -618,6 +622,7 @@ IF (patchtype == 0) THEN
       pe = patch_pft_e(ipatch)
 
       allocate ( rootr_p (nl_soil, ps:pe) )
+      allocate ( rootflux_p (nl_soil, ps:pe) )
       allocate ( etrc_p           (ps:pe) )
       allocate ( rstfac_p         (ps:pe) )
       allocate ( rstfacsun_p      (ps:pe) )
@@ -682,6 +687,7 @@ ENDIF
             ldew_snow_p(i) = 0.
             ldew_p(i)      = 0.
             rootr_p(:,i)   = 0.
+            rootflux_p(:,i)   = 0.
             rstfacsun_p(i) = 0.
             rstfacsha_p(i) = 0.
          ENDIF
@@ -723,7 +729,7 @@ IF (DEF_USE_PFT .or. patchclass(ipatch)==CROPLAND) THEN
 !end ozone stress variables
                  forc_hpbl                                                  ,&
                  qintr_rain_p(i),qintr_snow_p(i),t_precip,hprl_p(i),smp     ,&
-                 hk(1:)      ,hksati(1:),rootr_p(1:,i)                      )
+                 hk(1:)      ,hksati(1:),rootflux_p(1:,i)                      )
 
          ELSE
 
@@ -806,7 +812,7 @@ IF (DEF_USE_PC .and. patchclass(ipatch)/=CROPLAND) THEN
 !End ozone stress variables
             forc_hpbl                                                                  ,&
             qintr_rain_p(ps:pe) ,qintr_snow_p(ps:pe) ,t_precip  ,hprl_p(:)   ,smp      ,&
-            hk(1:)              ,hksati(1:)          ,rootr_p(:,:)                                  )
+            hk(1:)              ,hksati(1:)          ,rootflux_p(:,:)                                  )
       ENDIF
 ENDIF
 
@@ -863,7 +869,7 @@ ENDIF
 
          IF (abs(etr) > 0.) THEN
             DO j = 1, nl_soil
-               rootr(j) = sum(rootr_p(j,ps:pe)*pftfrac(ps:pe))
+               rootflux(j) = sum(rootflux_p(j,ps:pe)*pftfrac(ps:pe))
             ENDDO
          ENDIF
       ELSE
@@ -874,7 +880,7 @@ ENDIF
          ENDIF
       ENDIF
 
-      deallocate ( rootr_p     )
+      deallocate ( rootflux_p     )
       deallocate ( etrc_p      )
       deallocate ( rstfac_p    )
       deallocate ( rstfacsun_p )
