@@ -558,6 +558,7 @@ SUBROUTINE UrbanCoLMMAIN ( &
         totwb_gper ,&! water mass at the begining of time step
         wt         ,&! fraction of vegetation buried (covered) by snow [-]
         rootr(1:nl_soil),&! root resistance of a layer, all layers add to 1.0
+        rootflux(1:nl_soil),&! root resistance of a layer, all layers add to 1.0
 
         zi_wall   (       0:nl_wall) ,&! interface level below a "z" level [m]
         z_roofsno (maxsnl+1:nl_roof) ,&! layer depth [m]
@@ -973,7 +974,7 @@ SUBROUTINE UrbanCoLMMAIN ( &
         froof                ,fgper                ,flake                ,bsw                  ,&
         porsl                ,psi0                 ,hksati               ,wtfact               ,&
         pondmx               ,ssi                  ,wimp                 ,smpmin               ,&
-        rootr                ,etrgper              ,fseng                ,fgrnd                ,&
+        rootr                ,rootflux             ,etrgper              ,fseng                ,fgrnd                ,&
         t_gpersno(lbp:)      ,t_lakesno(:)         ,t_lake               ,dz_lake              ,&
         z_gpersno(lbp:)      ,z_lakesno(:)         ,zi_gpersno(lbp-1:)   ,zi_lakesno(:)        ,&
         dz_roofsno(lbr:)     ,dz_gimpsno(lbi:)     ,dz_gpersno(lbp:)     ,dz_lakesno(:)        ,&
