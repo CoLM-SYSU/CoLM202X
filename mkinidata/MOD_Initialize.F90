@@ -219,7 +219,7 @@ MODULE MOD_Initialize
             wdsrf(:) = 0._r8
 
             wetwat(:) = 0._r8
-            WHERE (patchtype == 2) wetwat = 1000._r8 ! for wetland
+            WHERE (patchtype == 2) wetwat = 200._r8 ! for wetland
          ENDIF
       ENDIF
       ! ------------------------------------------
@@ -276,7 +276,7 @@ MODULE MOD_Initialize
       smpmin = -1.e8   !Restriction for min of soil poten. (mm)
       trsmx0 = 2.e-4   !Max transpiration for moist soil+100% veg. [mm/s]
       tcrit  = 2.5     !critical temp. to determine rain or snow
-      wetwatmax = 2000.0 !maximum wetland water (mm)
+      wetwatmax = 200.0 !maximum wetland water (mm)
 
 #ifdef BGC
    ! bgc constant

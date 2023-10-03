@@ -231,6 +231,9 @@ MODULE MOD_Namelist
    CHARACTER(len=256) :: DEF_hist_vars_namelist = 'null'
    LOGICAL :: DEF_hist_vars_out_default = .true.
 
+   ! ----- Data Assimilation -----
+   character(len=256) :: DEF_DA_obsdir = 'null'
+
    ! ----- forcing -----
    CHARACTER(len=256) :: DEF_forcing_namelist = 'null'
 

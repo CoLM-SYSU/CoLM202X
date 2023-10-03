@@ -422,6 +422,9 @@ MODULE MOD_SoilSnowHydrology
   USE MOD_Hydro_SoilWater
   USE MOD_Vars_TimeInvariants, only : wetwatmax
   use MOD_Const_Physical, only : denice, denh2o, tfrz
+#ifdef DataAssimilation
+  USE MOD_DA_GRACE, only : fslp_patch
+#endif
 
   implicit none
 
@@ -710,6 +713,10 @@ MODULE MOD_SoilSnowHydrology
       ENDIF
 
       rsubst = imped * 5.5e-3 * exp(-2.5*zwt)  ! drainage (positive = out of soil column)
+#ifdef DataAssimilation
+      rsubst = rsubst * fslp_patch(ipatch)
+#endif
+
 #else
       ! for lateral flow:
       ! "rsub" is calculated and removed from soil water in HYDRO/MOD_Hydro_SubsurfaceFlow.F90
@@ -868,7 +875,7 @@ MODULE MOD_SoilSnowHydrology
       
 #ifndef LATERAL_FLOW
          IF (wdsrf > pondmx) THEN
-            rsur = rsur + (wdsrf - pondmx) / deltim
+            rsur = (wdsrf - pondmx) / deltim
             wdsrf = pondmx
          ELSE
             rsur = 0.
