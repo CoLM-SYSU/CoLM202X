@@ -49,7 +49,7 @@ CONTAINS
 !End ozone stress variables
               hpbl, &
               qintr_rain,qintr_snow,t_precip,hprl,smp     ,hk      ,&
-              hksati  ,rootflux                                    )
+              hksati  ,rootr                                       )
 
 !=======================================================================
 ! !DESCRIPTION:
@@ -97,7 +97,7 @@ CONTAINS
   USE MOD_AssimStomataConductance
   USE MOD_Vars_TimeInvariants, only: patchclass
   USE MOD_Const_LC, only: z0mr, displar
-  USE MOD_PlantHydraulic, only : PlantHydraulicStress_twoleaf, getvegwp_twoleaf
+  USE MOD_PlantHydraulic, only : PlantHydraulicStress_twoleaf
   use MOD_Ozone, only: CalcOzoneStress
   USE MOD_Qsadv
 
@@ -113,9 +113,8 @@ CONTAINS
         htvp         ! latent heat of evaporation (/sublimation) [J/kg]
 
 ! vegetation parameters
-  REAL(r8), intent(inout) :: &
-        sai          ! stem area index  [-]
   REAL(r8), intent(in) :: &
+        sai,        &! stem area index  [-]
         sqrtdi,     &! inverse sqrt of leaf dimension [m**-0.5]
         htop,       &! PFT crown top height [m]
         hbot,       &! PFT crown bot height [m]
@@ -227,7 +226,7 @@ CONTAINS
         rstfacsha,  &! factor of soil water stress to transpiration on shaded leaf
         gssun,      &
         gssha,      &
-        rootflux(1:nl_soil)      ! root water uptake from different layers
+        rootr(1:nl_soil)      ! fraction of root water uptake from different layers
 
   REAL(r8), intent(inout) :: &
         assimsun,   &! sunlit leaf assimilation rate [umol co2 /m**2/ s] [+]
@@ -304,8 +303,9 @@ CONTAINS
         fwet,       &! fraction of foliage covered by water [-]
         cf,         &! heat transfer coefficient from leaves [-]
         rb,         &! leaf boundary layer resistance [s/m]
-        rbsun,      &! Sunlit leaf boundary layer resistance [s/m]
-        rbsha,      &! Shaded leaf boundary layer resistance [s/m]
+        rbone,      &! canopy bulk boundary layer resistance
+        rbsun,      &! canopy bulk boundary layer resistance
+        rbsha,      &! canopy bulk boundary layer resistance
         rd,         &! aerodynamical resistance between ground and canopy air
         ram,        &! aerodynamical resistance [s/m]
         rah,        &! thermal resistance [s/m]
@@ -372,7 +372,7 @@ CONTAINS
    REAL(r8) :: utop, ueff, ktop
    REAL(r8) :: phih, z0qg, z0hg
    REAL(r8) :: hsink, displasink
-   real(r8) gb_mol
+   real(r8) gb_mol_sun,gb_mol_sha
    real(r8),dimension(nl_soil) :: k_soil_root    ! radial root and soil conductance
    real(r8),dimension(nl_soil) :: k_ax_root      ! axial root conductance
 
@@ -575,26 +575,24 @@ CONTAINS
 
           IF(lai .gt. 0.001) THEN
 
+             rbsun = rb / laisun
+             rbsha = rb / laisha
 
              eah = qaf * psrf / ( 0.622 + 0.378 * qaf )    !pa
 
              if(DEF_USE_PLANTHYDRAULICS) then
-                sai = amax1(sai,0.1)
                 call PlantHydraulicStress_twoleaf (nl_soil   ,nvegwcs   ,z_soi    ,&
-                      dz_soi    ,rootfr    ,psrf       ,qsatl      ,&
-                      qaf       ,tl        ,rb         ,rss        ,&
+                      dz_soi    ,rootfr    ,psrf       ,qsatl      ,qsatl      ,&
+                      qaf       ,tl        ,tl         ,rbsun      ,rbsha      ,&
                       raw       ,rd        ,rstfacsun  ,rstfacsha  ,cintsun    ,&
                       cintsha   ,laisun    ,laisha     ,rhoair     ,fwet       ,&
                       sai       ,kmax_sun  ,kmax_sha   ,kmax_xyl   ,kmax_root  ,&
                       psi50_sun ,psi50_sha ,psi50_xyl  ,psi50_root ,htop       ,&
                       ck        ,smp       ,hk         ,hksati     ,vegwp      ,&
-                      etrsun    ,etrsha    ,rootflux   ,qg         ,&
+                      etrsun    ,etrsha    ,rootr      ,sigf       ,qg         ,&
                       qm        ,gs0sun    ,gs0sha     ,k_soil_root,k_ax_root  )
                 etr = etrsun + etrsha
              end if
-             ! leaf to canopy level
-             rbsun = rb / laisun
-             rbsha = rb / laisha
 
 ! Sunlit leaves
              CALL stomata  (vmax25   ,effcon ,slti   ,hlti    ,&
@@ -620,19 +618,14 @@ CONTAINS
                   assimsha ,respcsha ,rssha  &
                   )
 
-!             gssun = min( 1.e6, 1./(rssun*tl/tprcor) ) / cintsun(3) * 1.e6
-!             gssha = min( 1.e6, 1./(rssha*tl/tprcor) ) / cintsha(3) * 1.e6
-             gssun = min( 1.e6, 1./(rssun*tl/tprcor) )/ laisun * 1.e6
-             gssha = min( 1.e6, 1./(rssha*tl/tprcor) )/ laisha * 1.e6
+             gssun = min( 1.e6, 1./(rssun*tl/tprcor) ) / cintsun(3) * 1.e6
+             gssha = min( 1.e6, 1./(rssha*tl/tprcor) ) / cintsha(3) * 1.e6
              if(DEF_USE_PLANTHYDRAULICS) then
                 gs0sun  = gssun/amax1(rstfacsun,1.e-2)
                 gs0sha  = gssha/amax1(rstfacsha,1.e-2)
 
-                gb_mol = 1./rb * tprcor/ tl * 1.e6  ! leaf to canopy
-                call getvegwp_twoleaf(vegwp, nvegwcs, nl_soil, z_soi, gb_mol, gssun, gssha, &
-                                      qsatl, qaf, qg, qm , rhoair, psrf, fwet, laisun, laisha, htop, sai, tl, rss, &
-                                      raw, rd, smp, k_soil_root, k_ax_root, kmax_xyl, kmax_root, rstfacsun, rstfacsha, &
-                                      psi50_sun, psi50_sha, psi50_xyl, psi50_root, ck, rootflux, etrsun, etrsha)
+                gb_mol_sun = 1./rbsun * tprcor/tl / cintsun(3) * 1.e6  ! leaf to canopy
+                gb_mol_sha = 1./rbsha * tprcor/tl / cintsha(3) * 1.e6  ! leaf to canopy
              end if
           ELSE
              rssun = 2.e4; assimsun = 0.; respcsun = 0.
@@ -640,19 +633,20 @@ CONTAINS
              gssun = 0._r8
              gssha = 0._r8
 
-             ! 07/2023, yuan: a bug for imbalanced water, rootflux only change
+             ! 07/2023, yuan: a bug for imbalanced water, rootr only change
              ! in DEF_USE_PLANTHYDRAULICS case in this routine.
              if(DEF_USE_PLANTHYDRAULICS) then
                 etr    = 0.
                 etrsun = 0._r8
                 etrsha = 0._r8
-                rootflux  = 0.
+                rootr  = 0.
              ENDIF
           ENDIF
+
 ! above stomatal resistances are for the canopy, the stomatal rsistances
 ! and the "rb" in the following calculations are the average for single leaf. thus,
-          rssun = tprcor/tl * 1.e6 / gssun 
-          rssha = tprcor/tl * 1.e6 / gssha
+          rssun = rssun * laisun
+          rssha = rssha * laisha
 
 !-----------------------------------------------------------------------
 ! dimensional and non-dimensional sensible and latent heat conductances
@@ -728,10 +722,6 @@ CONTAINS
                 etr = etrc
                 etr_dtl = 0.
              ENDIF
-          else
-             if(rstfacsun .le. 1.e-2 .or. etrsun .le. 1.e-7)etrsun = 0._r8
-             if(rstfacsha .le. 1.e-2 .or. etrsha .le. 1.e-7)etrsha = 0._r8
-             etr = etrsun + etrsha
           end if
 
           evplwet = rhoair * (1.-delta*(1.-fwet)) * (lai+sai) / rb &
@@ -868,9 +858,9 @@ CONTAINS
 
        IF(DEF_USE_OZONESTRESS)THEN
           call CalcOzoneStress(o3coefv_sun,o3coefg_sun,forc_ozone,psrf,th,ram,&
-                                rssun,rb,lai,lai_old,ivt,o3uptakesun,deltim)
+                                rssun,rbsun,lai,lai_old,ivt,o3uptakesun,deltim)
           call CalcOzoneStress(o3coefv_sha,o3coefg_sha,forc_ozone,psrf,th,ram,&
-                                rssha,rb,lai,lai_old,ivt,o3uptakesha,deltim)
+                                rssha,rbsha,lai,lai_old,ivt,o3uptakesha,deltim)
           lai_old  = lai
           assimsun = assimsun * o3coefv_sun
           assimsha = assimsha * o3coefv_sha
@@ -898,6 +888,7 @@ CONTAINS
        ENDIF
        assim = assimsun + assimsha
        respc = respcsun + respcsha! + rsoil
+
 ! canopy fluxes and total assimilation amd respiration
        fsenl = fsenl + fsenl_dtl*dtl(it-1) &
                ! yuan: add the imbalanced energy below due to T adjustment to sensibel heat
@@ -909,22 +900,22 @@ CONTAINS
        etr   = etr + etr_dtl*dtl(it-1)
 
        IF (DEF_USE_PLANTHYDRAULICS) THEN
-          !TODO@yuan: rootflux may not be consistent with etr,
+          !TODO@yuan: rootr may not be consistent with etr,
           !           water imbalance could happen.
           IF (abs(etr0) .ge. 1.e-15) THEN
-              rootflux = rootflux * etr / etr0
+              rootr = rootr * etr / etr0
           ELSE
-              rootflux = rootflux + dz_soi / sum(dz_soi) * etr_dtl* dtl(it-1)
+              rootr = rootr + dz_soi / sum(dz_soi) * etr_dtl* dtl(it-1)
           ENDIF
 
-!          !NOTE: temporal solution to make etr and rootflux consistent.
-!          !TODO: need double check
-!          sumrootr = sum(rootr(:), rootr(:)>0.)
-!          IF (abs(sumrootr) > 0.) THEN
-!             rootr(:) = max(rootr(:),0.) * (etr/sumrootr)
-!          ELSE
-!             rootr(:) = etr*rootfr(:)
-!          ENDIF
+          !NOTE: temporal solution to make etr and rootr consistent.
+          !TODO: need double check
+          sumrootr = sum(rootr(:), rootr(:)>0.)
+          IF (abs(sumrootr) > 0.) THEN
+             rootr(:) = max(rootr(:),0.) * (etr/sumrootr)
+          ELSE
+             rootr(:) = etr*rootfr(:)
+          ENDIF
        ENDIF
 
        evplwet = evplwet + evplwet_dtl*dtl(it-1)

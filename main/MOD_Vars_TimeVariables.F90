@@ -401,8 +401,7 @@ MODULE MOD_Vars_TimeVariables
      real(r8), allocatable :: h2osoi     (:,:) ! volumetric soil water in layers [m3/m3]
      real(r8), allocatable :: smp        (:,:) ! soil matrix potential [mm]
      real(r8), allocatable :: hk         (:,:) ! hydraulic conductivity [mm h2o/s]
-     real(r8), allocatable :: rootr      (:,:) ! transpiration contribution fraction from different layers
-     real(r8), allocatable :: rootflux   (:,:) ! water exchange between soil and root. Positive: soil->root [?]
+     real(r8), allocatable :: rootr      (:,:) ! water exchange between soil and root. Positive: soil->root [?]
 !Plant Hydraulic variables
      real(r8), allocatable :: vegwp      (:,:) ! vegetation water potential [mm]
      real(r8), allocatable :: gs0sun       (:) ! working copy of sunlit stomata conductance
@@ -552,7 +551,6 @@ MODULE MOD_Vars_TimeVariables
            allocate (hk                (1:nl_soil,numpatch)); hk          (:,:) = spval
            allocate (h2osoi            (1:nl_soil,numpatch)); h2osoi      (:,:) = spval
            allocate (rootr             (1:nl_soil,numpatch)); rootr       (:,:) = spval
-           allocate (rootflux          (1:nl_soil,numpatch)); rootflux    (:,:) = spval
 !Plant Hydraulic variables
            allocate (vegwp             (1:nvegwcs,numpatch)); vegwp       (:,:) = spval
            allocate (gs0sun                      (numpatch)); gs0sun        (:) = spval
@@ -707,7 +705,6 @@ MODULE MOD_Vars_TimeVariables
            deallocate (hk                     )
            deallocate (h2osoi                 )
            deallocate (rootr                  )
-           deallocate (rootflux               )
 !Plant Hydraulic variables
            deallocate (vegwp                  )
            deallocate (gs0sun                 )
