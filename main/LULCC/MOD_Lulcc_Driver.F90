@@ -84,6 +84,7 @@ MODULE MOD_Lulcc_Driver
          print *, ">>> LULCC: Mass&Energy conserve for variable recovery..."
       ENDIF
       CALL allocate_LulccTransferTrace()
+      CALL REST_LulccTimeVariables
       CALL MAKE_LulccTransferTrace(idate(1))
       CALL LulccMassEnergyConserve()
    ENDIF

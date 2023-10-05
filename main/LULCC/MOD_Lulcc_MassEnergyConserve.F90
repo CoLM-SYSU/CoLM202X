@@ -50,7 +50,7 @@ MODULE MOD_Lulcc_MassEnergyConserve
    USE MOD_Vars_TimeVariables
    USE MOD_Lulcc_Vars_TimeInvariants
    USE MOD_Lulcc_Vars_TimeVariables
-   USE MOD_Lulcc_PatchTrace
+   USE MOD_Lulcc_TransferTrace
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
    USE MOD_LandPFT
    USE MOD_Vars_PFTimeInvariants
@@ -63,6 +63,8 @@ MODULE MOD_Lulcc_MassEnergyConserve
 #endif
    USE MOD_Const_Physical, only: cpice, cpliq, denh2o, denice
    USE MOD_GroundTemperature
+   USE MOD_SnowFraction
+   USE MOD_Albedo
    USE MOD_Namelist
 
    IMPLICIT NONE
@@ -82,6 +84,7 @@ MODULE MOD_Lulcc_MassEnergyConserve
    integer :: nsl_max  ! maximum number of snow layer considering all source patches
    integer :: u, u_, iu, selfu_, nurb, duclass
    integer :: nlc = N_land_classification
+   integer :: ps, pe, ps_, pe_   ! start and end index of patch pft
    real(r8), dimension(1:N_land_classification) :: lccpct_np
    real(r8):: sum_lccpct_np, wgt(maxsnl+1:nl_soil)
    real(r8):: zi_sno(maxsnl+1:0) ! local variable for snow node and depth calculation
@@ -92,8 +95,10 @@ MODULE MOD_Lulcc_MassEnergyConserve
    real(r8):: c_ice    ! Specific heat of ice   * density of ice
    real(r8):: denice_np(maxsnl+1:0), denh2o_np(maxsnl+1:0)
    real(r8):: wbef,wpre! water before and water present for water calculation heck
-   real(r8):: fmelt    ! dimensionless metling factor
+   ! real(r8):: fmelt    ! dimensionless metling factor
+   real(r8):: wt       ! fraction of vegetation covered with snow [-]
    real(r8), parameter :: m = 1.0 ! the value of m used in CLM4.5 is 1.0.
+   ! real(r8) :: deltim = 1800.  ! time step (senconds) TODO: be intent in
    logical :: FROM_SOIL
 
    IF (p_is_worker) THEN
@@ -215,7 +220,7 @@ ENDIF
                      sigf          (np)                = 0  !fraction of veg cover, excluding snow-covered veg [-]
                      zwt           (np)                = 0  !the depth to water table [m]
                      wa            (np)                = 0  !water storage in aquifer [mm]
-                     
+                     wdsrf         (np)                = 0  !depth of surface water [mm]
                      smp         (:,np)                = 0  !soil matrix potential [mm]
                      hk          (:,np)                = 0  !hydraulic conductivity [mm h2o/s]
                      
@@ -225,7 +230,9 @@ ENDIF
                         gs0sha     (np)                = 0  !working copy of shalit stomata conductance
                      ENDIF
 
-                     wdsrf         (np)                = 0  !depth of surface water [mm]
+                     IF(DEF_USE_OZONESTRESS)THEN
+                        lai_old    (np)                = 0  !lai in last time step
+                     ENDIF               
 
                      snw_rds     (:,np)                = 0  !effective grain radius (col,lyr) [microns, m-6]
                      mss_bcpho   (:,np)                = 0  !mass of hydrophobic BC in snow  (col,lyr) [kg]
@@ -453,8 +460,8 @@ ENDIF
                         ldew_rain (np) = ldew_rain (np) + ldew_rain_ (frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
                         ldew_snow (np) = ldew_snow (np) + ldew_snow_ (frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
                         sag       (np) = sag       (np) + sag_       (frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
-                        ! TODO: use MOD_SnowFraction.F90 to calculate sigf later
-                        sigf  (np) = sigf  (np) + sigf_   (frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                        ! TODO: use MOD_SnowFraction.F90 to calculate sigf later - DONE
+                        ! sigf  (np) = sigf  (np) + sigf_   (frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
                         wa    (np) = wa    (np) + wa_     (frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
                         wdsrf (np) = wdsrf (np) + wdsrf_  (frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
 
@@ -469,13 +476,17 @@ ENDIF
                         mss_dst4  (:,np) = mss_dst4  (:,np) + mss_dst4_  (:,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
 
                         ! TODO:or use same type assignment
-                        smp   (np) = smp   (np) + smp_    (frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
-                        hk    (np) = hk    (np) + hk_     (frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                        smp       (:,np) = smp    (:,np) + smp_   (:,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                        hk        (:,np) = hk     (:,np) + hk_    (:,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
                         
                         IF(DEF_USE_PLANTHYDRAULICS)THEN
                            vegwp  (:,np) = vegwp  (:,np) + vegwp_ (:,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
                            gs0sun   (np) = gs0sun   (np) + gs0sun_  (frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
                            gs0sha   (np) = gs0sha   (np) + gs0sha_  (frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                        ENDIF
+
+                        IF(DEF_USE_OZONESTRESS)THEN
+                           lai_old  (np) = lai_old  (np) + lai_old_ (frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
                         ENDIF
 
                         trad        (np) = trad     (np) + trad_    (frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
@@ -502,25 +513,29 @@ ENDIF
                         k = k + 1
                      ENDDO
 
-                     ! Use restart value from the same type of source patch or remain initialized
-                     IF (lccpct_np(patchclass(np)) .gt. 0) THEN
-                        tleaf         (np) = tleaf_         (selfnp_)
-                        lake_icefrac(:,np) = lake_icefrac_(:,selfnp_)
-                        t_lake      (:,np) = t_lake_      (:,selfnp_)
-                     ENDIF
+                     ! ! Use restart value from the same type of source patch or remain initialized
+                     ! IF (lccpct_np(patchclass(np)) .gt. 0) THEN
+                     !    tleaf         (np) = tleaf_         (selfnp_)
+                     !    lake_icefrac(:,np) = lake_icefrac_(:,selfnp_)
+                     !    t_lake      (:,np) = t_lake_      (:,selfnp_)
+                     ! ENDIF
 
                      ! Fraction of soil covered by snow
                      zlnd     = 0.01    !Roughness length for soil [m]
-                     fsno(np) = 0.0
-                     IF (snowdp(np) > 0.) THEN
-                        fmelt = (scv(np)/snowdp(np)/100.) ** m
-                        fsno(np)  = tanh(snowdp(np)/(2.5 * zlnd * fmelt))
-                     ENDIF
+                     ! fsno(np) = 0.0
+                     ! IF (snowdp(np) > 0.) THEN
+                     !    fmelt = (scv(np)/snowdp(np)/100.) ** m
+                     !    fsno(np)  = tanh(snowdp(np)/(2.5 * zlnd * fmelt))
+                     ! ENDIF
 
-                     ! In case lai+sai come into existence this year, set sigf to 1
-                     IF ( (lai(np) + sai(np)).gt.0 .and. sigf(np).eq.0 ) THEN
-                        sigf(np) = 1
-                     ENDIF
+                     ! Sigf, fsno
+                     CALL snowfraction (tlai(np),tsai(np),z0m(np),zlnd,scv(np),snowdp(np),wt,sigf(np),fsno(np))
+                     sai(np) = tsai(np) * sigf(np)
+
+                     ! ! In case lai+sai come into existence this year, set sigf to 1; Update: won't happen if CALL snowfraction
+                     ! IF ( (lai(np) + sai(np)).gt.0 .and. sigf(np).eq.0 ) THEN
+                     !    sigf(np) = 1
+                     ! ENDIF
 
                      ! Set Groud temperature
                      IF ( sum( z_sno(:,np) ) .eq. 0 )  THEN
@@ -560,113 +575,127 @@ ENDIF
                         print*,'np=',np,'wice+wliq err=',wpre-wbef
                      ENDIF
 
-                  ELSE
-                  ! Patch area stay unchanged or decrease, use restart value or remain initialized
-!                   TODO: CALL REST
-                     inp_ = np_
-                     DO WHILE (inp_ .le. grid_patch_e_(j))
-                        IF (patchclass_(inp_) .eq. patchclass(np)) THEN
-                           selfnp_            = inp_
-                           frnp_(1)           = inp_
-                           wliq_soisno (:,np) = wliq_soisno_ (:,inp_)
-                           wice_soisno (:,np) = wice_soisno_ (:,inp_)
-                           t_soisno    (:,np) = t_soisno_    (:,inp_)
-                           z_sno       (:,np) = z_sno_       (:,inp_)
-                           dz_sno      (:,np) = dz_sno_      (:,inp_)
-                           t_grnd        (np) = t_grnd_        (inp_)
-                           tleaf         (np) = tleaf_         (inp_)
-                           ldew          (np) = ldew_          (inp_)
-                           sag           (np) = sag_           (inp_)
-                           scv           (np) = scv_           (inp_)
-                           snowdp        (np) = snowdp_        (inp_)
-                           fsno          (np) = fsno_          (inp_)
-                           sigf          (np) = sigf_          (inp_)
-                           ! In case lai+sai come into existence this year, set sigf to 1
-                           IF ( (lai(np) + sai(np)).gt.0 .and. sigf(np).eq.0 ) THEN
-                              sigf(np) = 1
-                           ENDIF
-                           zwt           (np) = zwt_           (inp_)
-                           wa            (np) = wa_            (inp_)
-                           EXIT
-                        ENDIF
+                  ! ELSE
+                  ! ! Patch area stay unchanged or decrease, use restart value or remain initialized
+                  ! ! TODO: CALL REST - DONE
+                  !    inp_ = np_
+                  !    DO WHILE (inp_ .le. grid_patch_e_(j))
+                  !       IF (patchclass_(inp_) .eq. patchclass(np)) THEN
+                  !          selfnp_            = inp_
+                  !          frnp_(1)           = inp_
+                  !          wliq_soisno (:,np) = wliq_soisno_ (:,inp_)
+                  !          wice_soisno (:,np) = wice_soisno_ (:,inp_)
+                  !          t_soisno    (:,np) = t_soisno_    (:,inp_)
+                  !          z_sno       (:,np) = z_sno_       (:,inp_)
+                  !          dz_sno      (:,np) = dz_sno_      (:,inp_)
+                  !          t_grnd        (np) = t_grnd_        (inp_)
+                  !          tleaf         (np) = tleaf_         (inp_)
+                  !          ldew          (np) = ldew_          (inp_)
+                  !          sag           (np) = sag_           (inp_)
+                  !          scv           (np) = scv_           (inp_)
+                  !          snowdp        (np) = snowdp_        (inp_)
+                  !          fsno          (np) = fsno_          (inp_)
+                  !          sigf          (np) = sigf_          (inp_)
+                  !          ! In case lai+sai come into existence this year, set sigf to 1
+                  !          IF ( (lai(np) + sai(np)).gt.0 .and. sigf(np).eq.0 ) THEN
+                  !             sigf(np) = 1
+                  !          ENDIF
+                  !          zwt           (np) = zwt_           (inp_)
+                  !          wa            (np) = wa_            (inp_)
+                  !          EXIT
+                  !       ENDIF
 
-                        inp_ = inp_ + 1
-                     ENDDO
+                  !       inp_ = inp_ + 1
+                  !    ENDDO
 
                   ENDIF
 
-ELSEIF (patchtype(np)==3) THEN !glacier patch
-                  ! Used restart value for GLACIERS patches if patchclass exists last year, or remain initialized
-!                   TODO: CALL REST
-                  inp_ = np_
-                  DO WHILE (inp_ .le. grid_patch_e_(j))
-                     IF (patchclass_(inp_) .eq. patchclass(np)) THEN
-                        wliq_soisno (:,np) = wliq_soisno_ (:,inp_)
-                        wice_soisno (:,np) = wice_soisno_ (:,inp_)
-                        t_soisno    (:,np) = t_soisno_    (:,inp_)
-                        z_sno       (:,np) = z_sno_       (:,inp_)
-                        dz_sno      (:,np) = dz_sno_      (:,inp_)
-                        t_grnd        (np) = t_grnd_        (inp_)
-                        tleaf         (np) = tleaf_         (inp_)
-                        ldew          (np) = ldew_          (inp_)
-                        sag           (np) = sag_           (inp_)
-                        scv           (np) = scv_           (inp_)
-                        snowdp        (np) = snowdp_        (inp_)
-                        fsno          (np) = fsno_          (inp_)
-                        sigf          (np) = sigf_          (inp_)
-                        zwt           (np) = zwt_           (inp_)
-                        wa            (np) = wa_            (inp_)
-                        EXIT
-                     ENDIF
-                     inp_ = inp_ + 1
-                  ENDDO
+! ELSEIF (patchtype(np)==3) THEN !glacier patch
+!                   ! Used restart value for GLACIERS patches if patchclass exists last year, or remain initialized
+! !                   TODO: CALL REST - DONE
+!                   inp_ = np_
+!                   DO WHILE (inp_ .le. grid_patch_e_(j))
+!                      IF (patchclass_(inp_) .eq. patchclass(np)) THEN
+!                         wliq_soisno (:,np) = wliq_soisno_ (:,inp_)
+!                         wice_soisno (:,np) = wice_soisno_ (:,inp_)
+!                         t_soisno    (:,np) = t_soisno_    (:,inp_)
+!                         z_sno       (:,np) = z_sno_       (:,inp_)
+!                         dz_sno      (:,np) = dz_sno_      (:,inp_)
+!                         t_grnd        (np) = t_grnd_        (inp_)
+!                         tleaf         (np) = tleaf_         (inp_)
+!                         ldew          (np) = ldew_          (inp_)
+!                         sag           (np) = sag_           (inp_)
+!                         scv           (np) = scv_           (inp_)
+!                         snowdp        (np) = snowdp_        (inp_)
+!                         fsno          (np) = fsno_          (inp_)
+!                         sigf          (np) = sigf_          (inp_)
+!                         zwt           (np) = zwt_           (inp_)
+!                         wa            (np) = wa_            (inp_)
+!                         EXIT
+!                      ENDIF
+!                      inp_ = inp_ + 1
+!                   ENDDO
 ENDIF
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
-!                   TODO: CALL REST
+
                   IF (patchtype(np)==0) THEN
-                     ! if totally come from other types,ldew set to zero since ldew_p(:)=0
-                     ldew(np) = sum( ldew_p(patch_pft_s(np):patch_pft_e(np))*pftfrac(patch_pft_s(np):patch_pft_e(np)) )
+                     ! ! if totally come from other types,ldew set to zero since ldew_p(:)=0
+                     ! ldew(np) = sum( ldew_p(ps:pe)*pftfrac(ps:pe) )
+
+                     ! z0m_p was same-type assigned, then here we update sigf_p, sigf, fsno
+                     CALL snowfraction_pftwrap (np,zlnd,scv(np),snowdp(np),wt,sigf(np),fsno(np))
+                     
+                     ps  = patch_pft_s(np)
+                     pe  = patch_pft_e(np)
+                     ! ps_ = patch_pft_s_(selfnp_)f
+                     ! pe_ = patch_pft_e_(selfnp_)
+                     sai_p(ps:pe) = tsai_p(ps:pe) * sigf_p(ps:pe)
+                     sai(np) = sum(sai_p(ps:pe)*pftfrac(ps:pe))                     
                   ENDIF
 
-                  IF (patchtype(np)==0 .and. lccpct_np(patchclass(np)) .gt. 0) THEN
-                     ! Used restart value of the same pftclass for pft-specific variables
-                     ! Note: For ip-specific variables, remain initialized value for new soil patch or pftclass
-                     ip = patch_pft_s (np     )
-                     ip_= patch_pft_s_(selfnp_)
+                  ! ! TODO: CALL REST - DONE
+                  ! IF (patchtype(np)==0 .and. lccpct_np(patchclass(np)) .gt. 0) THEN
+                  !    ! Used restart value of the same pftclass for pft-specific variables
+                  !    ! Note: For ip-specific variables, remain initialized value for new soil patch or pftclass
+                  !    ip = ps
+                  !    ip_= ps_
 
-                     IF (ip.le.0 .or. ip_.le.0) THEN
-                        print *, "Error in LuLccMassEnergyConserve LULC_IGBP_PFT|LULC_IGBP_PC!"
-                        STOP
-                     ENDIF
+                  !    IF (ip.le.0 .or. ip_.le.0) THEN
+                  !       print *, "Error in LuLccMassEnergyConserve LULC_IGBP_PFT|LULC_IGBP_PC!"
+                  !       STOP
+                  !    ENDIF
 
-                     DO WHILE (ip.le.patch_pft_e(np) .and. ip_.le.patch_pft_e_(np_))
-                        ! if a PFT is missing, CYCLE
-                        IF (pftclass(ip) > pftclass_(ip_)) THEN
-                          ip_= ip_+ 1
-                          CYCLE
-                        ENDIF
+                  !    DO WHILE (ip.le.pe .and. ip_.le.pe_)
+                  !       ! if a PFT is missing, CYCLE
+                  !       IF (pftclass(ip) > pftclass_(ip_)) THEN
+                  !         ip_= ip_+ 1
+                  !         CYCLE
+                  !       ENDIF
 
-                        ! if a PFT is added, CYCLE
-                        IF (pftclass(ip) < pftclass_(ip_)) THEN
-                          ip = ip + 1
-                          CYCLE
-                        ENDIF
+                  !       ! if a PFT is added, CYCLE
+                  !       IF (pftclass(ip) < pftclass_(ip_)) THEN
+                  !         ip = ip + 1
+                  !         CYCLE
+                  !       ENDIF
 
-                        ! for the same PFT, set PFT value
-                        tleaf_p    (ip) = tleaf_p_    (ip_)
-                        ldew_p     (ip) = ldew_p_     (ip_)
-                        ! use MOD_SnowFraction.F90 later
-                        sigf_p     (ip) = sigf_p_     (ip_)
-                        IF ( (lai_p(ip) + sai_p(ip)).gt.0 .and. sigf_p(ip).eq.0 ) THEN
-                           sigf_p(ip) = 1
-                        ENDIF
+                  !       ! for the same PFT, set PFT value
+                  !       tleaf_p    (ip) = tleaf_p_    (ip_)
+                  !       ldew_p     (ip) = ldew_p_     (ip_)
+                  !       ! use MOD_SnowFraction.F90 later
+                  !       sigf_p     (ip) = sigf_p_     (ip_)
+                  !       IF ( (lai_p(ip) + sai_p(ip)).gt.0 .and. sigf_p(ip).eq.0 ) THEN
+                  !          sigf_p(ip) = 1
+                  !       ENDIF
 
-                        ip = ip + 1
-                        ip_= ip_+ 1
-                     ENDDO
-                     ldew(np) = sum( ldew_p(patch_pft_s(np):patch_pft_e(np))*pftfrac(patch_pft_s(np):patch_pft_e(np)) )
-                  ENDIF
+                  !       ip = ip + 1
+                  !       ip_= ip_+ 1
+                  !    ENDDO
+                  !    ldew(np) = sum( ldew_p(ps:pe)*pftfrac(ps:pe) )
+                  ! ENDIF
+
+                  ldew(np) = sum( ldew_p(ps:pe)*pftfrac(ps:pe) )
+
 #endif
 
 #ifdef URBAN_MODEL
@@ -791,8 +820,6 @@ ENDIF
                      t_wall         (u) = t_wall_         (u_)
                      tafu           (u) = tafu_           (u_)
                      urb_green      (u) = urb_green_      (u_)
-                     urb_lai        (u) = urb_lai_        (u_)
-                     urb_sai        (u) = urb_sai_        (u_)
 
                      ! used soil patch value for variable on pervious ground
                      FROM_SOIL = .false.
@@ -814,6 +841,16 @@ ENDIF
                      ENDIF
                   ENDIF
 #endif
+
+                  ! CALL albland (np, patchtype(np),deltim,&
+                  !      soil_s_v_alb(np),soil_d_v_alb(np),soil_s_n_alb(np),soil_d_n_alb(np),&
+                  !      chil(patchclass(np)),rho(1:,1:,patchclass(np)),tau(1:,1:,patchclass(np)),fveg(np),green(np),lai(np),sai(np),coszen(np),&
+                  !      wt,fsno(np),scv(np),scvold(np),sag(np),ssw,pg_snow(np),forc_t(np),t_grnd(np),t_soisno_(maxsnl+1:,np),&
+                  !      dz_soisno_(maxsnl+1:,np),snl,wliq_soisno(maxsnl+1:,np),wice_soisno(maxsnl+1:,np),snw_rds(maxsnl+1:0,np),snofrz,&
+                  !      mss_bcpho(maxsnl+1:0,np),mss_bcphi(maxsnl+1:0,np),mss_ocpho(maxsnl+1:0,np),mss_ocphi(maxsnl+1:0,np),&
+                  !      mss_dst1(maxsnl+1:0,np),mss_dst2(maxsnl+1:0,np),mss_dst3(maxsnl+1:0,np),mss_dst4(maxsnl+1:0,np),&
+                  !      alb(1:,1:,np),ssun(1:,1:,np),ssha(1:,1:,np),ssno(:,:,:,np),thermk(np),extkb(np),extkd(np))
+
 
                   IF (allocated(frnp_  )) deallocate(frnp_  )
                   IF (allocated(gu_    )) deallocate(gu_    )
