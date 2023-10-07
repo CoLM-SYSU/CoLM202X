@@ -70,6 +70,8 @@ CONTAINS
 
       numbasin = numelm
 
+      hillslope_network => null()
+
       hillslope_network_file = DEF_CatchmentMesh_data 
 
       IF (p_is_master) THEN
@@ -310,6 +312,16 @@ CONTAINS
                   ENDDO
                ENDDO
 
+            ELSE
+               hillslope_network(ibasin)%ihru  => null() 
+               hillslope_network(ibasin)%indx  => null()
+               hillslope_network(ibasin)%area  => null()
+               hillslope_network(ibasin)%agwt  => null()
+               hillslope_network(ibasin)%hand  => null()
+               hillslope_network(ibasin)%elva  => null()
+               hillslope_network(ibasin)%plen  => null()
+               hillslope_network(ibasin)%flen  => null()
+               hillslope_network(ibasin)%inext => null()
             ENDIF
          ENDDO
 

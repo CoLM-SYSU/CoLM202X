@@ -79,6 +79,9 @@ contains
       USE MOD_Mesh
       USE MOD_LandElm
       USE MOD_LandPatch
+#ifdef CROP
+      USE MOD_LandCrop
+#endif
       use MOD_Mapping_Grid2Pset
       use MOD_UserSpecifiedForcing
       USE MOD_NetCDFSerial
@@ -192,7 +195,7 @@ contains
 
          IF (p_is_worker) THEN
 #if (defined CROP)
-            CALL elm_patch%build (landelm, landpatch, use_frac = .true., shadowfrac = pctcrop)
+            CALL elm_patch%build (landelm, landpatch, use_frac = .true., sharedfrac = pctshrpch)
 #else
             CALL elm_patch%build (landelm, landpatch, use_frac = .true.)
 #endif

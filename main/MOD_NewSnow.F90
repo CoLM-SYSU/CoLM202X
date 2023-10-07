@@ -18,7 +18,7 @@ MODULE MOD_NewSnow
 
    subroutine newsnow (patchtype,maxsnl,deltim,t_grnd,pg_rain,pg_snow,bifall,&
                        t_precip,zi_soisno,z_soisno,dz_soisno,t_soisno,&
-                       wliq_soisno,wice_soisno,fiold,snl,sag,scv,snowdp,fsno)
+                       wliq_soisno,wice_soisno,fiold,snl,sag,scv,snowdp,fsno,wetwat)
 
 !=======================================================================
 ! add new snow nodes.
@@ -26,6 +26,7 @@ MODULE MOD_NewSnow
 !=======================================================================
 !
    use MOD_Precision
+   USE MOD_Namelist, only : DEF_USE_VARIABLY_SATURATED_FLOW
    use MOD_Const_Physical, only : tfrz, cpliq, cpice
 
    implicit none
@@ -54,6 +55,8 @@ MODULE MOD_NewSnow
    real(r8), INTENT(inout) :: scv               ! snow mass (kg/m2)
    real(r8), INTENT(inout) :: snowdp            ! snow depth (m)
    real(r8), INTENT(inout) :: fsno              ! fraction of soil covered by snow [-]
+   
+   real(r8), INTENT(inout), optional :: wetwat  ! wetland water [mm]
 
 ! ----------------------- Local  Variables -----------------------------
 
@@ -69,6 +72,9 @@ MODULE MOD_NewSnow
        scv = scv + pg_snow*deltim            ! snow water equivalent (mm)
 
        if(patchtype==2 .AND. t_grnd>tfrz)then  ! snowfall on warmer wetland
+          IF (present(wetwat) .and. DEF_USE_VARIABLY_SATURATED_FLOW) THEN
+             wetwat = wetwat + scv
+          ENDIF
           scv=0.; snowdp=0.; sag=0.; fsno = 0.
        endif
 

@@ -42,6 +42,9 @@ contains
 #ifdef URBAN_MODEL
       USE MOD_LandUrban
 #endif
+#ifdef CROP
+      USE MOD_LandCrop
+#endif
       use MOD_Mapping_Pset2Grid
       use MOD_Vars_1DAccFluxes
       USE MOD_Forcing, only : gforc
@@ -61,7 +64,7 @@ contains
 #ifndef CROP
       call mp2g_hist%build (landpatch, ghist)
 #else
-      call mp2g_hist%build (landpatch, ghist, pctcrop)
+      call mp2g_hist%build (landpatch, ghist, pctshrpch)
 #endif
 
 #ifdef URBAN_MODEL

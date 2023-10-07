@@ -18,6 +18,9 @@ SUBROUTINE Aggregation_PercentagesPFT (gland, dir_rawdata, dir_model_landdata, l
    USE MOD_SPMD_Task
    USE MOD_Grid
    USE MOD_LandPatch
+#ifdef CROP
+   USE MOD_LandCrop
+#endif
    USE MOD_NetCDFBlock
    USE MOD_NetCDFVector
 #ifdef RangeCheck
@@ -122,6 +125,10 @@ SUBROUTINE Aggregation_PercentagesPFT (gland, dir_rawdata, dir_model_landdata, l
             CALL aggregation_request_data (landpatch, ipatch, gland, zip = USE_zip_for_aggregation, area = area_one, &
                data_r8_3d_in1 = pftPCT, data_r8_3d_out1 = pct_pft_one, n1_r8_3d_in1 = N_PFT_modis, lb1_r8_3d_in1 = 0)
 
+#ifdef CROP
+            pct_pft_one(N_PFT_modis-1,:) = 0.
+#endif
+
             pct_one = sum(pct_pft_one, dim=1)
             pct_one = max(pct_one, 1.0e-6)
             sumarea = sum(area_one)
@@ -187,19 +194,19 @@ SUBROUTINE Aggregation_PercentagesPFT (gland, dir_rawdata, dir_model_landdata, l
    lndname = trim(landdir)//'/pct_crops.nc'
    CALL ncio_create_file_vector (lndname, landpatch)
    CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
-   CALL ncio_write_vector (lndname, 'pct_crops', 'patch', landpatch, pctcrop, 1)
+   CALL ncio_write_vector (lndname, 'pct_crops', 'patch', landpatch, pctshrpch, 1)
 
 #ifdef SrfdataDiag
    typcrop = (/(ityp, ityp = 1, N_CFT)/)
-   lndname = trim(dir_model_landdata) // '/diag/pct_crops_patch_' // trim(cyear) // '.nc'
-   CALL srfdata_map_and_write (pctcrop, cropclass, typcrop, m_patch2diag, &
-      -1.0e36_r8, lndname, 'pctcrop', compress = 1, write_mode = 'one')
+   lndname = trim(dir_model_landdata) // '/diag/pct_crop_patch_' // trim(cyear) // '.nc'
+   CALL srfdata_map_and_write (pctshrpch, cropclass, typcrop, m_patch2diag, &
+      -1.0e36_r8, lndname, 'pct_crop_patch', compress = 1, write_mode = 'one')
 #endif
 #else
    allocate (SITE_croptyp(numpatch))
    allocate (SITE_pctcrop(numpatch))
    SITE_croptyp = cropclass
-   SITE_pctcrop = pctcrop
+   SITE_pctcrop = pctshrpch
 #endif
 #endif
 
