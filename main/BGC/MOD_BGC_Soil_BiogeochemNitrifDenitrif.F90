@@ -96,7 +96,7 @@ contains
        ! calculate anoxic fraction of soils
        ! use rijtema and kroess model after Riley et al., 2000
        ! caclulated r_psi as a function of psi
-       r_min(j) = 2 * surface_tension_water / (rho_w * 9.80616_r8 * abs(smp(j,i)))
+       r_min(j) = 2 * surface_tension_water / (rho_w * 9.80616_r8 * abs(smp(j,i)*1.e-5))
        r_max = 2 * surface_tension_water / (rho_w * 9.80616_r8 * 0.1_r8)
        r_psi(j) = sqrt(r_min(j) * r_max)
        ratio_diffusivity_water_gas(j) = (d_con_g21 + d_con_g22*t_soisno(j,i) ) * 1.e-4_r8 / &

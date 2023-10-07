@@ -220,6 +220,7 @@ MODULE MOD_Vars_TimeInvariants
   REAL(r8) :: smpmin                           !restriction for min of soil poten. (mm)
   REAL(r8) :: trsmx0                           !max transpiration for moist soil+100% veg.  [mm/s]
   REAL(r8) :: tcrit                            !critical temp. to determine rain or snow
+  REAL(r8) :: wetwatmax                        !maximum wetland water (mm)
 
 ! PUBLIC MEMBER FUNCTIONS:
   public :: allocate_TimeInvariants
@@ -409,6 +410,7 @@ MODULE MOD_Vars_TimeInvariants
      call ncio_read_bcast_serial (file_restart, 'smpmin', smpmin) ! restriction for min of soil poten. (mm)
      call ncio_read_bcast_serial (file_restart, 'trsmx0', trsmx0) ! max transpiration for moist soil+100% veg.  [mm/s]
      call ncio_read_bcast_serial (file_restart, 'tcrit ', tcrit ) ! critical temp. to determine rain or snow
+     call ncio_read_bcast_serial (file_restart, 'wetwatmax', wetwatmax) ! maximum wetland water (mm)
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
      file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_pft_const' // '_lc' // trim(cyear) // '.nc'
@@ -552,6 +554,7 @@ MODULE MOD_Vars_TimeInvariants
         call ncio_write_serial (file_restart, 'smpmin', smpmin) ! restriction for min of soil poten. (mm)
         call ncio_write_serial (file_restart, 'trsmx0', trsmx0) ! max transpiration for moist soil+100% veg.  [mm/s]
         call ncio_write_serial (file_restart, 'tcrit ', tcrit ) ! critical temp. to determine rain or snow
+        call ncio_write_serial (file_restart, 'wetwatmax', wetwatmax) ! maximum wetland water (mm)
 
      end if
 
@@ -734,6 +737,7 @@ MODULE MOD_Vars_TimeInvariants
         write(*,'(A,E20.10)') 'smpmin [mm]   ', smpmin ! restriction for min of soil poten. (mm)
         write(*,'(A,E20.10)') 'trsmx0 [mm/s] ', trsmx0 ! max transpiration for moist soil+100% veg.  [mm/s]
         write(*,'(A,E20.10)') 'tcrit  [K]    ', tcrit  ! critical temp. to determine rain or snow
+        write(*,'(A,E20.10)') 'wetwatmax [mm]', wetwatmax ! maximum wetland water (mm)
      end if
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)

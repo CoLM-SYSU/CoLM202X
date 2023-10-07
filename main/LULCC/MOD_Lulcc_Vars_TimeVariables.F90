@@ -17,7 +17,7 @@ MODULE MOD_Lulcc_Vars_TimeVariables
 ! -----------------------------------------------------------------
 ! Time-varying state variables which reaquired by restart run
   !TODO: need to check with MOD_Vars_TimeVariables.F90 whether
-  !      there are any variables missing.
+  !      there are any variables missing. - DONE
   real(r8), allocatable :: z_sno_       (:,:)  !node depth [m]
   real(r8), allocatable :: dz_sno_      (:,:)  !interface depth [m]
   real(r8), allocatable :: t_soisno_    (:,:)  !soil temperature [K]
@@ -38,17 +38,6 @@ MODULE MOD_Lulcc_Vars_TimeVariables
   real(r8), allocatable :: fsno_          (:)  !fraction of snow cover on ground
   real(r8), allocatable :: sigf_          (:)  !fraction of veg cover, excluding snow-covered veg [-]
   real(r8), allocatable :: green_         (:)  !leaf greenness
-  real(r8), allocatable :: lai_           (:)  !leaf area index
-  real(r8), allocatable :: tlai_          (:)  !leaf area index
-  real(r8), allocatable :: sai_           (:)  !stem area index
-  real(r8), allocatable :: tsai_          (:)  !stem area index
-  real(r8), allocatable :: coszen_        (:)  !cosine of solar zenith angle
-  real(r8), allocatable :: alb_       (:,:,:)  !averaged albedo [-]
-  real(r8), allocatable :: ssun_      (:,:,:)  !sunlit canopy absorption for solar radiation (0-1)
-  real(r8), allocatable :: ssha_      (:,:,:)  !shaded canopy absorption for solar radiation (0-1)
-  real(r8), allocatable :: thermk_        (:)  !canopy gap fraction for tir radiation
-  real(r8), allocatable :: extkb_         (:)  !(k, g(mu)/mu) direct solar extinction coefficient
-  real(r8), allocatable :: extkd_         (:)  !diffuse and scattered diffuse PAR extinction coefficient
   real(r8), allocatable :: zwt_           (:)  !the depth to water table [m]
   real(r8), allocatable :: wa_            (:)  !water storage in aquifer [mm]
   real(r8), allocatable :: wat_           (:)  !total water storage [mm]
@@ -99,6 +88,9 @@ MODULE MOD_Lulcc_Vars_TimeVariables
   real(r8), allocatable :: fh_           (:)   !integral of profile function for heat
   real(r8), allocatable :: fq_           (:)   !integral of profile function for moisture
 
+  real(r8), allocatable :: sum_irrig_        (:) !total irrigation amount [kg/m2]
+  real(r8), allocatable :: sum_irrig_count_  (:) !total irrigation counts [-]
+
   ! for LULC_IGBP_PFT and LULC_IGBP_PC
   real(r8), allocatable :: tleaf_p_       (:)  !shaded leaf temperature [K]
   real(r8), allocatable :: ldew_rain_p_   (:)  !depth of rain on foliage [mm]
@@ -106,17 +98,7 @@ MODULE MOD_Lulcc_Vars_TimeVariables
   real(r8), allocatable :: ldew_p_        (:)  !depth of water on foliage [mm]
   real(r8), allocatable :: sigf_p_        (:)  !fraction of veg cover, excluding snow-covered veg [-]
 
-  !TODO: to check IF the below is necessary
-  real(r8), allocatable :: lai_p_         (:)  !leaf area index
-  real(r8), allocatable :: tlai_p_        (:)  !leaf area index
-  real(r8), allocatable :: sai_p_         (:)  !stem area index
-  real(r8), allocatable :: tsai_p_        (:)  !stem area index
-  real(r8), allocatable :: ssun_p_    (:,:,:)  !sunlit canopy absorption for solar radiation (0-1)
-  real(r8), allocatable :: ssha_p_    (:,:,:)  !shaded canopy absorption for solar radiation (0-1)
-  real(r8), allocatable :: thermk_p_      (:)  !canopy gap fraction for tir radiation
-  real(r8), allocatable :: fshade_p_      (:)  !canopy shade fraction for tir radiation
-  real(r8), allocatable :: extkb_p_       (:)  !(k, g(mu)/mu) direct solar extinction coefficient
-  real(r8), allocatable :: extkd_p_       (:)  !diffuse and scattered diffuse PAR extinction coefficient
+  !TODO: to check IF the below is necessary - DONE
 
   !TODO@yuan: to check the below for PC whether they are needed
   real(r8), allocatable :: tref_p_        (:)  !2 m height air temperature [kelvin]
@@ -135,10 +117,6 @@ MODULE MOD_Lulcc_Vars_TimeVariables
   real(r8), allocatable :: o3uptakesun_p_ (:)  !Ozone does, sunlit leaf (mmol O3/m^2)
   real(r8), allocatable :: o3uptakesha_p_ (:)  !Ozone does, shaded leaf (mmol O3/m^2)
   ! End Ozone Stress Variables
-
-  ! irrigation variables
-  integer , allocatable :: irrig_method_p_(:)  !irrigation method
-  ! end irrigation variables
 
   ! for URBAN_MODEL
   real(r8), allocatable :: fwsun_         (:)  !sunlit fraction of walls [-]
@@ -224,8 +202,6 @@ MODULE MOD_Lulcc_Vars_TimeVariables
   real(r8), allocatable :: tafu_          (:)  !temperature of outer building [K]
 
   real(r8), allocatable :: urb_green_     (:)  !fractional of green leaf in urban patch [-]
-  real(r8), allocatable :: urb_lai_       (:)  !urban tree LAI [m2/m2]
-  real(r8), allocatable :: urb_sai_       (:)  !urban tree SAI [m2/m2]
 
 ! PUBLIC MEMBER FUNCTIONS:
   PUBLIC :: allocate_LulccTimeVariables
@@ -282,17 +258,6 @@ MODULE MOD_Lulcc_Vars_TimeVariables
            allocate (fsno_                         (numpatch))
            allocate (sigf_                         (numpatch))
            allocate (green_                        (numpatch))
-           allocate (lai_                          (numpatch))
-           allocate (tlai_                         (numpatch))
-           allocate (sai_                          (numpatch))
-           allocate (tsai_                         (numpatch))
-           allocate (coszen_                       (numpatch))
-           allocate (alb_                      (2,2,numpatch))
-           allocate (ssun_                     (2,2,numpatch))
-           allocate (ssha_                     (2,2,numpatch))
-           allocate (thermk_                       (numpatch))
-           allocate (extkb_                        (numpatch))
-           allocate (extkd_                        (numpatch))
            allocate (zwt_                          (numpatch))
            allocate (wa_                           (numpatch))
            allocate (wat_                          (numpatch))
@@ -340,6 +305,9 @@ MODULE MOD_Lulcc_Vars_TimeVariables
            allocate (fm_                          (numpatch))
            allocate (fh_                          (numpatch))
            allocate (fq_                          (numpatch))
+
+           allocate (sum_irrig_                   (numpatch))
+           allocate (sum_irrig_count_             (numpatch))
         ENDIF
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
@@ -349,16 +317,6 @@ MODULE MOD_Lulcc_Vars_TimeVariables
            allocate (ldew_rain_p_                    (numpft))
            allocate (ldew_snow_p_                    (numpft))
            allocate (sigf_p_                         (numpft))
-           allocate (lai_p_                          (numpft))
-           allocate (tlai_p_                         (numpft))
-           allocate (sai_p_                          (numpft))
-           allocate (tsai_p_                         (numpft))
-           allocate (ssun_p_                     (2,2,numpft))
-           allocate (ssha_p_                     (2,2,numpft))
-           allocate (thermk_p_                       (numpft))
-           allocate (fshade_p_                       (numpft))
-           allocate (extkb_p_                        (numpft))
-           allocate (extkd_p_                        (numpft))
            allocate (tref_p_                         (numpft))
            allocate (qref_p_                         (numpft))
            allocate (rst_p_                          (numpft))
@@ -375,8 +333,6 @@ MODULE MOD_Lulcc_Vars_TimeVariables
            allocate (o3uptakesun_p_                  (numpft))
            allocate (o3uptakesha_p_                  (numpft))
            ! End allocate Ozone Stress Variables
-
-           allocate (irrig_method_p_                 (numpft))
         ENDIF
 #endif
 
@@ -457,8 +413,6 @@ MODULE MOD_Lulcc_Vars_TimeVariables
            allocate (t_wall_                       (numurban))
            allocate (tafu_                         (numurban))
            allocate (urb_green_                    (numurban))
-           allocate (urb_lai_                      (numurban))
-           allocate (urb_sai_                      (numurban))
         ENDIF
 #endif
      ENDIF
@@ -500,17 +454,6 @@ MODULE MOD_Lulcc_Vars_TimeVariables
          fsno_         = fsno
          sigf_         = sigf
          green_        = green
-         lai_          = lai
-         tlai_         = tlai
-         sai_          = sai
-         tsai_         = tsai
-         coszen_       = coszen
-         alb_          = alb
-         ssun_         = ssun
-         ssha_         = ssha
-         thermk_       = thermk
-         extkb_        = extkb
-         extkd_        = extkd
          zwt_          = zwt
          wa_           = wa
          wat_          = wat
@@ -521,14 +464,17 @@ MODULE MOD_Lulcc_Vars_TimeVariables
          lake_icefrac_ = lake_icefrac
          savedtke1_    = savedtke1
 
+IF(DEF_USE_PLANTHYDRAULICS)THEN
          vegwp_        = vegwp
          gs0sun_       = gs0sun
          gs0sha_       = gs0sha
+ENDIF
 
+IF(DEF_USE_OZONESTRESS)THEN
          lai_old_      = lai_old
          o3uptakesun_  = o3uptakesun
          o3uptakesha_  = o3uptakesha
-
+ENDIF
          snw_rds_      = snw_rds
          mss_bcpho_    = mss_bcpho
          mss_bcphi_    = mss_bcphi
@@ -556,6 +502,11 @@ MODULE MOD_Lulcc_Vars_TimeVariables
          fh_           = fh
          fq_           = fq
 
+IF (DEF_USE_IRRIGATION) THEN
+         sum_irrig_                    = sum_irrig
+         sum_irrig_count_              = sum_irrig_count
+ENDIF
+
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
          tleaf_p_      = tleaf_p
          ldew_p_       = ldew_p
@@ -563,37 +514,26 @@ MODULE MOD_Lulcc_Vars_TimeVariables
          ldew_snow_p_  = ldew_snow_p
          sigf_p_       = sigf_p
 
-         !TODO: to check IF the below is necessary
-         lai_p_        = lai_p
-         tlai_p_       = tlai_p
-         sai_p_        = sai_p
-         tsai_p_       = tsai_p
-         ssun_p_       = ssun_p
-         ssha_p_       = ssha_p
-         thermk_p_     = thermk_p
-         fshade_p_     = fshade_p
-         extkb_p_      = extkb_p
-         extkd_p_      = extkd_p
+         !TODO: to check IF the below is necessary - DONE
 
          tref_p_       = tref_p
          qref_p_       = qref_p
          rst_p_        = rst_p
          z0m_p_        = z0m_p
-
+IF(DEF_USE_PLANTHYDRAULICS)THEN
          ! Plant Hydraulic variables
          vegwp_p_      = vegwp_p
          gs0sun_p_     = gs0sun_p
          gs0sha_p_     = gs0sha_p
          ! end plant hydraulic variables
-
+ENDIF
+IF(DEF_USE_OZONESTRESS)THEN
          ! Ozone Stress Variables
          lai_old_p_      = lai_old_p
          o3uptakesun_p_  = o3uptakesun_p
          o3uptakesha_p_  = o3uptakesha_p
          ! End allocate Ozone Stress Variables
-
-         irrig_method_p_ = irrig_method_p
-
+ENDIF
 #endif
 
 #ifdef URBAN_MODEL
@@ -672,9 +612,6 @@ MODULE MOD_Lulcc_Vars_TimeVariables
          t_wall_       = t_wall
          tafu_         = tafu
          urb_green_    = urb_green
-         urb_lai_      = urb_lai
-         urb_sai_      = urb_sai
-
 #endif
      ENDIF
 
@@ -803,22 +740,11 @@ MODULE MOD_Lulcc_Vars_TimeVariables
                     fveg          (np) = fveg_          (np_)
                     fsno          (np) = fsno_          (np_)
                     sigf          (np) = sigf_          (np_)
-                    IF (lai(np)+sai(np)>1e-6) THEN
-                       sigf(np) = 1-fsno(np)
+                    ! In case lai+sai come into existence this year, set sigf to 1
+                    IF ( (sigf(np) .eq. 0) .and. ((lai(np) + sai(np)) .gt. 0) ) THEN
+                       sigf(np) = 1
                     ENDIF
                     green         (np) = green_         (np_)
-                    ! Note: may not read lai and sai since LAIReadin was put after LULCC
-                    ! lai           (np) = lai_           (np_)
-                    ! tlai          (np) = tlai_          (np_)
-                    ! sai           (np) = sai_           (np_)
-                    ! tsai          (np) = tsai_          (np_)
-                    coszen        (np) = coszen_        (np_)
-                    alb       (:,:,np) = alb_       (:,:,np_)
-                    ssun      (:,:,np) = ssun_      (:,:,np_)
-                    ssha      (:,:,np) = ssha_      (:,:,np_)
-                    thermk        (np) = thermk_        (np_)
-                    extkb         (np) = extkb_         (np_)
-                    extkd         (np) = extkd_         (np_)
                     zwt           (np) = zwt_           (np_)
                     wa            (np) = wa_            (np_)
                     wat           (np) = wat_           (np_)
@@ -828,19 +754,20 @@ MODULE MOD_Lulcc_Vars_TimeVariables
                     t_lake      (:,np) = t_lake_      (:,np_)
                     lake_icefrac(:,np) = lake_icefrac_(:,np_)
                     savedtke1     (np) = savedtke1_     (np_)
-
+IF(DEF_USE_PLANTHYDRAULICS)THEN
                     !Plant Hydraulic variables
                     vegwp       (:,np) = vegwp_       (:,np_)
                     gs0sun        (np) = gs0sun_        (np_)
                     gs0sha        (np) = gs0sha_        (np_)
                     !END plant hydraulic variables
-
+ENDIF
+IF(DEF_USE_OZONESTRESS)THEN
                     !Ozone Stress variables
                     lai_old       (np) = lai_old_       (np_)
                     o3uptakesun   (np) = o3uptakesun_   (np_)
                     o3uptakesha   (np) = o3uptakesha_   (np_)
                     !End ozone stress variables
-
+ENDIF
                     snw_rds     (:,np) = snw_rds_     (:,np_)
                     mss_bcpho   (:,np) = mss_bcpho_   (:,np_)
                     mss_bcphi   (:,np) = mss_bcphi_   (:,np_)
@@ -867,6 +794,10 @@ MODULE MOD_Lulcc_Vars_TimeVariables
                     fh            (np) = fh_            (np_)
                     fq            (np) = fq_            (np_)
 
+IF(DEF_USE_IRRIGATION)THEN
+                    sum_irrig                    (np) = sum_irrig_                    (np_)
+                    sum_irrig_count              (np) = sum_irrig_count_              (np_)
+ENDIF
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
 IF (patchtype(np)==0 .and. patchtype_(np_)==0) THEN
@@ -899,37 +830,27 @@ IF (patchtype(np)==0 .and. patchtype_(np_)==0) THEN
                        ldew_snow_p(ip) = ldew_snow_p_(ip_)
                        sigf_p     (ip) = sigf_p_     (ip_)
 
-                       !TODO: to check IF the below is necessary
-                       lai_p      (ip) = lai_p_      (ip_)
-                       tlai_p     (ip) = tlai_p_     (ip_)
-                       sai_p      (ip) = sai_p_      (ip_)
-                       tsai_p     (ip) = tsai_p_     (ip_)
-                       ssun_p (:,:,ip) = ssun_p_ (:,:,ip_)
-                       ssha_p (:,:,ip) = ssha_p_ (:,:,ip_)
-                       thermk_p   (ip) = thermk_p_   (ip_)
-                       fshade_p   (ip) = fshade_p_   (ip_)
-                       extkb_p    (ip) = extkb_p_    (ip_)
-                       extkd_p    (ip) = extkd_p_    (ip_)
+                       !TODO: to check IF the below is necessary - DONE
 
                        tref_p     (ip) = tref_p_     (ip_)
                        qref_p     (ip) = qref_p_     (ip_)
                        rst_p      (ip) = rst_p_      (ip_)
                        z0m_p      (ip) = z0m_p_      (ip_)
-
+                       
+IF(DEF_USE_PLANTHYDRAULICS)THEN
                        ! Plant Hydraulic variables
                        vegwp_p  (:,ip) = vegwp_p_  (:,ip_)
                        gs0sun_p   (ip) = gs0sun_p_   (ip_)
                        gs0sha_p   (ip) = gs0sha_p_   (ip_)
                        ! end plant hydraulic variables
-
+ENDIF
+IF(DEF_USE_OZONESTRESS)THEN
                        ! Ozone Stress Variables
                        lai_old_p     (ip) = lai_old_p_     (ip_)
                        o3uptakesun_p (ip) = o3uptakesun_p_ (ip_)
                        o3uptakesha_p (ip) = o3uptakesha_p_ (ip_)
                        ! End allocate Ozone Stress Variables
-
-                       irrig_method_p(ip) = irrig_method_p_(ip_)
-
+ENDIF
                        ip = ip + 1
                        ip_= ip_+ 1
                     ENDDO
@@ -1035,8 +956,6 @@ IF (patchclass(np)==URBAN .and. patchclass_(np_)==URBAN) THEN
                     t_wall         (u) = t_wall_         (u_)
                     tafu           (u) = tafu_           (u_)
                     urb_green      (u) = urb_green_      (u_)
-                    urb_lai        (u) = urb_lai_        (u_)
-                    urb_sai        (u) = urb_sai_        (u_)
 ENDIF
 #endif
                     np = np + 1
@@ -1085,17 +1004,6 @@ ENDIF
            deallocate (fsno_         )
            deallocate (sigf_         )
            deallocate (green_        )
-           deallocate (lai_          )
-           deallocate (tlai_         )
-           deallocate (sai_          )
-           deallocate (tsai_         )
-           deallocate (coszen_       )
-           deallocate (alb_          )
-           deallocate (ssun_         )
-           deallocate (ssha_         )
-           deallocate (thermk_       )
-           deallocate (extkb_        )
-           deallocate (extkd_        )
            deallocate (zwt_          )
            deallocate (wa_           )
            deallocate (wat_          )
@@ -1143,6 +1051,10 @@ ENDIF
            deallocate (fm_           )
            deallocate (fh_           )
            deallocate (fq_           )
+
+           deallocate (sum_irrig_      )
+           deallocate (sum_irrig_count_)
+
         ENDIF
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
@@ -1152,16 +1064,6 @@ ENDIF
            deallocate (ldew_rain_p_  )
            deallocate (ldew_snow_p_  )
            deallocate (sigf_p_       )
-           deallocate (lai_p_        )
-           deallocate (tlai_p_       )
-           deallocate (sai_p_        )
-           deallocate (tsai_p_       )
-           deallocate (ssun_p_       )
-           deallocate (ssha_p_       )
-           deallocate (thermk_p_     )
-           deallocate (fshade_p_     )
-           deallocate (extkb_p_      )
-           deallocate (extkd_p_      )
            deallocate (tref_p_       )
            deallocate (qref_p_       )
            deallocate (rst_p_        )
@@ -1178,8 +1080,6 @@ ENDIF
            deallocate (o3uptakesun_p_)
            deallocate (o3uptakesha_p_)
            ! End allocate Ozone Stress Variables
-
-           deallocate (irrig_method_p_)
         ENDIF
 #endif
 
@@ -1260,8 +1160,6 @@ ENDIF
            deallocate (t_wall_       )
            deallocate (tafu_         )
            deallocate (urb_green_    )
-           deallocate (urb_lai_      )
-           deallocate (urb_sai_      )
         ENDIF
 #endif
      ENDIF

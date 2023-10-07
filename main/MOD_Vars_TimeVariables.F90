@@ -401,7 +401,8 @@ MODULE MOD_Vars_TimeVariables
      real(r8), allocatable :: h2osoi     (:,:) ! volumetric soil water in layers [m3/m3]
      real(r8), allocatable :: smp        (:,:) ! soil matrix potential [mm]
      real(r8), allocatable :: hk         (:,:) ! hydraulic conductivity [mm h2o/s]
-     real(r8), allocatable :: rootr      (:,:) ! water exchange between soil and root. Positive: soil->root [?]
+     real(r8), allocatable :: rootr      (:,:) ! transpiration contribution fraction from different layers
+     real(r8), allocatable :: rootflux   (:,:) ! water exchange between soil and root. Positive: soil->root [?]
 !Plant Hydraulic variables
      real(r8), allocatable :: vegwp      (:,:) ! vegetation water potential [mm]
      real(r8), allocatable :: gs0sun       (:) ! working copy of sunlit stomata conductance
@@ -453,6 +454,7 @@ MODULE MOD_Vars_TimeVariables
      real(r8), allocatable :: extkd        (:) ! diffuse and scattered diffuse PAR extinction coefficient
      real(r8), allocatable :: zwt          (:) ! the depth to water table [m]
      real(r8), allocatable :: wa           (:) ! water storage in aquifer [mm]
+     real(r8), allocatable :: wetwat       (:) ! water storage in wetland [mm]
      real(r8), allocatable :: wat          (:) ! total water storage [mm]
      real(r8), allocatable :: wdsrf        (:) ! depth of surface water [mm]
      real(r8), allocatable :: rss          (:) ! soil surface resistance [s/m]
@@ -550,6 +552,7 @@ MODULE MOD_Vars_TimeVariables
            allocate (hk                (1:nl_soil,numpatch)); hk          (:,:) = spval
            allocate (h2osoi            (1:nl_soil,numpatch)); h2osoi      (:,:) = spval
            allocate (rootr             (1:nl_soil,numpatch)); rootr       (:,:) = spval
+           allocate (rootflux          (1:nl_soil,numpatch)); rootflux    (:,:) = spval
 !Plant Hydraulic variables
            allocate (vegwp             (1:nvegwcs,numpatch)); vegwp       (:,:) = spval
            allocate (gs0sun                      (numpatch)); gs0sun        (:) = spval
@@ -601,6 +604,7 @@ MODULE MOD_Vars_TimeVariables
            allocate (extkd                       (numpatch)); extkd         (:) = spval
            allocate (zwt                         (numpatch)); zwt           (:) = spval
            allocate (wa                          (numpatch)); wa            (:) = spval
+           allocate (wetwat                      (numpatch)); wetwat        (:) = spval
            allocate (wat                         (numpatch)); wat           (:) = spval
            allocate (wdsrf                       (numpatch)); wdsrf         (:) = spval
            allocate (rss                         (numpatch)); rss           (:) = spval
@@ -703,6 +707,7 @@ MODULE MOD_Vars_TimeVariables
            deallocate (hk                     )
            deallocate (h2osoi                 )
            deallocate (rootr                  )
+           deallocate (rootflux               )
 !Plant Hydraulic variables
            deallocate (vegwp                  )
            deallocate (gs0sun                 )
@@ -753,6 +758,7 @@ MODULE MOD_Vars_TimeVariables
            deallocate (extkd                  )
            deallocate (zwt                    )
            deallocate (wa                     )
+           deallocate (wetwat                 )
            deallocate (wat                    )
            deallocate (wdsrf                  )
            deallocate (rss                    )
@@ -959,6 +965,7 @@ ENDIF
      CALL ncio_write_vector (file_restart, 'extkd   '   , 'patch', landpatch, extkd     , compress)                    ! diffuse and scattered diffuse PAR extinction coefficient
      CALL ncio_write_vector (file_restart, 'zwt     '   , 'patch', landpatch, zwt       , compress)                    ! the depth to water table [m]
      CALL ncio_write_vector (file_restart, 'wa      '   , 'patch', landpatch, wa        , compress)                    ! water storage in aquifer [mm]
+     CALL ncio_write_vector (file_restart, 'wetwat  '   , 'patch', landpatch, wetwat    , compress)                    ! water storage in wetland [mm]
      CALL ncio_write_vector (file_restart, 'wdsrf   '   , 'patch', landpatch, wdsrf     , compress)                    ! depth of surface water [mm]
      CALL ncio_write_vector (file_restart, 'rss     '   , 'patch', landpatch, rss       , compress)                    ! soil surface resistance [s/m]
 
@@ -1120,6 +1127,7 @@ ENDIF
      CALL ncio_read_vector (file_restart, 'extkd   '   , landpatch, extkd      ) ! diffuse and scattered diffuse PAR extinction coefficient
      CALL ncio_read_vector (file_restart, 'zwt     '   , landpatch, zwt        ) ! the depth to water table [m]
      CALL ncio_read_vector (file_restart, 'wa      '   , landpatch, wa         ) ! water storage in aquifer [mm]
+     CALL ncio_read_vector (file_restart, 'wetwat  '   , landpatch, wetwat     ) ! water storage in wetland [mm]
      CALL ncio_read_vector (file_restart, 'wdsrf   '   , landpatch, wdsrf      ) ! depth of surface water [mm]
      CALL ncio_read_vector (file_restart, 'rss     '   , landpatch, rss        ) ! soil surface resistance [s/m]
 
@@ -1249,6 +1257,7 @@ ENDIF
      CALL check_vector_data ('extkd       [-]    ', extkd      ) ! diffuse and scattered diffuse PAR extinction coefficient
      CALL check_vector_data ('zwt         [m]    ', zwt        ) ! the depth to water table [m]
      CALL check_vector_data ('wa          [mm]   ', wa         ) ! water storage in aquifer [mm]
+     CALL check_vector_data ('wetwat      [mm]   ', wetwat     ) ! water storage in wetland [mm]
      CALL check_vector_data ('wdsrf       [mm]   ', wdsrf      ) ! depth of surface water [mm]
      CALL check_vector_data ('rss         [s/m]  ', rss        ) ! soil surface resistance [s/m]
      CALL check_vector_data ('t_lake      [K]    ', t_lake      )!

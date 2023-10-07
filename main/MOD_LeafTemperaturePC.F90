@@ -43,7 +43,7 @@ CONTAINS
 !End ozone stress variables
               hpbl, &
               qintr_rain,qintr_snow,t_precip,hprl,smp     ,hk      ,&
-              hksati  ,rootr                                       )
+              hksati  ,rootflux                                    )
 
 !=======================================================================
 !
@@ -209,7 +209,7 @@ CONTAINS
         fevpg,      &! evaporation heat flux from ground [mm/s]
         tref,       &! 2 m height air temperature (kelvin)
         qref,       &! 2 m height air specific humidity
-        rootr(nl_soil,ps:pe)    ! fraction of root water uptake from different layers
+        rootflux(nl_soil,ps:pe)    ! root water uptake from different layers
 
   real(r8), dimension(ps:pe), intent(out) :: &
         z0mpc,      &! z0m for individual PFT
@@ -359,7 +359,7 @@ CONTAINS
 
    integer it, nmozsgn
 
-   real(r8) w, csoilcn, z0mg, z0hg, z0qg, elwmax, elwdif
+   real(r8) w, csoilcn, z0mg, z0hg, z0qg, elwmax, elwdif, sumrootr
    real(r8) cintsun(3, ps:pe), cintsha(3, ps:pe)
    real(r8),dimension(ps:pe)   :: delta, fac, etr0
    real(r8),dimension(ps:pe)   :: irab, dirab_dtl, fsenl_dtl, fevpl_dtl
@@ -1043,14 +1043,14 @@ CONTAINS
                 ENDIF
                 IF(DEF_USE_PLANTHYDRAULICS)THEN
                    CALL PlantHydraulicStress_twoleaf (nl_soil   ,nvegwcs   ,z_soi    ,&
-                         dz_soi    ,rootfr(:,i),psrf      ,qsatl(i)   ,qsatl(i)   ,&
-                         qaf(clev) ,tl(i)     ,tl(i)      ,rbsun      ,rbsha      ,&
+                         dz_soi    ,rootfr(:,i),psrf      ,qsatl(i)   ,&
+                         qaf(clev) ,tl(i)     ,rbsun      ,rss       ,&
                          raw       ,rd(clev)  ,rstfacsun(i),rstfacsha(i),cintsun(:,i),&
                          cintsha(:,i),laisun(i),laisha(i) ,rhoair     ,fwet(i)    ,&
                          sai(i)    ,kmax_sun(i),kmax_sha(i),kmax_xyl(i),kmax_root(i),&
                          psi50_sun(i),psi50_sha(i),psi50_xyl(i),psi50_root(i),htop(i),&
                          ck(i)     ,smp       ,hk         ,hksati     ,vegwp(:,i) ,&
-                         etrsun(i) ,etrsha(i) ,rootr(:,i) ,sigf(i)    ,qg         ,&
+                         etrsun(i) ,etrsha(i) ,rootflux(:,i) ,qg         ,&
                          qm        ,gs0sun(i) ,gs0sha(i)  ,k_soil_root,k_ax_root  )
                    etr(i) = etrsun(i) + etrsha(i)
                 END IF
@@ -1094,7 +1094,7 @@ CONTAINS
                 rssha(i) = 2.e4; assimsha(i) = 0.; respcsha(i) = 0.
                 IF(DEF_USE_PLANTHYDRAULICS)THEN
                    etr(i) = 0.
-                   rootr(:,i) = 0.
+                   rootflux(:,i) = 0.
                 END IF
              ENDIF
           ENDDO
@@ -1625,13 +1625,26 @@ CONTAINS
 
              etr0(i)    = etr(i)
              etr(i)     = etr(i)     +     etr_dtl(i)*dtl(it-1,i)
-             IF(DEF_USE_PLANTHYDRAULICS)THEN
+
+             IF (DEF_USE_PLANTHYDRAULICS) THEN
+                !TODO@yuan: rootflux may not be consistent with etr,
+                !           water imbalance could happen.
                 IF(abs(etr0(i)) .ge. 1.e-15)THEN
-                   rootr(:,i) = rootr(:,i) * etr(i) / etr0(i)
+                   rootflux(:,i) = rootflux(:,i) * etr(i) / etr0(i)
                 ELSE
-                   rootr(:,i) = rootr(:,i) + dz_soi / sum(dz_soi) * etr_dtl(i)* dtl(it-1,i)
-                END IF
-             END IF
+                   rootflux(:,i) = rootflux(:,i) + dz_soi / sum(dz_soi) * etr_dtl(i)* dtl(it-1,i)
+                ENDIF
+
+                !NOTE: temporal solution to make etr and rootr consistent.
+                !TODO: need double check
+!                sumrootr = sum(rootr(:,i), rootr(:,i)>0.)
+!                IF (abs(sumrootr) > 0.) THEN
+!                   rootr(:,i) = max(rootr(:,i),0.) * (etr(i)/sumrootr)
+!                ELSE
+!                   rootr(:,i) = etr(i)*rootfr(:,i)
+!                ENDIF
+             ENDIF
+
              evplwet(i) = evplwet(i) + evplwet_dtl(i)*dtl(it-1,i)
              fevpl(i)   = fevpl_noadj(i)
              fevpl(i)   = fevpl(i)   +   fevpl_dtl(i)*dtl(it-1,i)

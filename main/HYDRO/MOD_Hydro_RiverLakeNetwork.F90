@@ -23,6 +23,7 @@ MODULE MOD_Hydro_RiverLakeNetwork
 
    REAL(r8), allocatable :: basinelv  (:)
    REAL(r8), allocatable :: bedelv    (:)
+   REAL(r8), allocatable :: handmin   (:)
    
    REAL(r8), allocatable :: wtsrfelv  (:)
 
@@ -532,6 +533,7 @@ CONTAINS
             allocate (riverarea   (numbasin))
             allocate (riverwth    (numbasin))
             allocate (bedelv      (numbasin))
+            allocate (handmin     (numbasin))
             allocate (wtsrfelv    (numbasin))
             allocate (riverlen_ds (numbasin))
             allocate (wtsrfelv_ds (numbasin))
@@ -614,6 +616,10 @@ CONTAINS
 
                   deallocate (order)
 
+               ENDIF
+
+               IF (lake_id(ibasin) <= 0) THEN
+                  handmin(ibasin) = minval(hillslope_network(ibasin)%hand)
                ENDIF
             ENDDO
          ENDIF
@@ -976,6 +982,8 @@ CONTAINS
       IF (allocated(riverwth )) deallocate(riverwth )
       IF (allocated(riverdpth)) deallocate(riverdpth)
       IF (allocated(basinelv )) deallocate(basinelv )
+      IF (allocated(bedelv   )) deallocate(bedelv   )
+      IF (allocated(handmin  )) deallocate(handmin  )
       IF (allocated(wtsrfelv )) deallocate(wtsrfelv )
       IF (allocated(riverdown)) deallocate(riverdown)
       IF (allocated(addrdown )) deallocate(addrdown )

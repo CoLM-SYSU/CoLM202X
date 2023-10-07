@@ -7,11 +7,13 @@
  NETCDF_LIB = /opt/netcdf/lib
  NETCDF_INC = /opt/netcdf/include
 
+ MATH_LIB = /share/home/dq013/software//miniconda3/lib/  #MKL LIB_PATH
+
  MOD_CMD = -module 
 
  FOPTS = -qopenmp -O2 -traceback -r8 -free -check uninit -check bounds
 
- LDFLAGS = -L${NETCDF_LIB} -lnetcdff -llapack -lblas
+ LDFLAGS = -L${NETCDF_LIB} -lnetcdff -L${MATH_LIB} -llapack -lblas
 
 #============================================================
 # CaMa-Flood Mkinclude (for Linux, Intel fortran)

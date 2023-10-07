@@ -4,7 +4,9 @@ include include/Makeoptions
 HEADER = include/define.h
 
 INCLUDE_DIR = -Iinclude -I.bld -I${NETCDF_INC}
-VPATH = include : share : mksrfdata : mkinidata : main : main/HYDRO : main/BGC : main/URBAN : main/LULCC : CaMa/src : postprocess : .bld
+VPATH = include : share : mksrfdata : mkinidata \
+	: main : main/HYDRO : main/BGC : main/URBAN : main/LULCC : main/DA \
+	: CaMa/src : postprocess : .bld
 
 # ********** Targets ALL **********
 .PHONY: all
@@ -46,11 +48,12 @@ OBJS_SHARED =    \
 				  MOD_Mapping_Grid2Pset.o      \
 				  MOD_Mapping_Pset2Grid.o      \
 				  MOD_AggregationRequestData.o \
-				  MOD_PixelsetShadow.o         \
+				  MOD_PixelsetShared.o         \
 				  MOD_LandElm.o                \
 				  MOD_LandHRU.o                \
 				  MOD_LandPatch.o              \
 				  MOD_LandUrban.o              \
+				  MOD_LandCrop.o               \
 				  MOD_LandPFT.o                \
 				  MOD_SrfdataDiag.o            \
 				  MOD_SrfdataRestart.o         \
@@ -211,6 +214,8 @@ OBJS_CAMA_T = $(addprefix .bld/,${OBJECTS_CAMA})
 endif
 
 OBJS_MAIN = \
+				MOD_DA_GRACE.o                            \
+				MOD_DataAssimilation.o                    \
 				MOD_Hydro_BasinNeighbour.o                \
 				MOD_Hydro_HillslopeFlow.o                 \
 				MOD_Hydro_SubsurfaceFlow.o                \

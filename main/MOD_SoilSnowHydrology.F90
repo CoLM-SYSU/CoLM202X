@@ -39,7 +39,7 @@ MODULE MOD_SoilSnowHydrology
 
   subroutine WATER (ipatch,patchtype  ,lb          ,nl_soil ,deltim,&
              z_soisno    ,dz_soisno   ,zi_soisno                   ,&
-             bsw         ,porsl       ,psi0        ,hksati  ,rootr ,&
+             bsw         ,porsl       ,psi0        ,hksati  ,rootr ,rootflux, &
              t_soisno    ,wliq_soisno ,wice_soisno ,smp     ,hk    ,pg_rain ,sm    ,&
              etr         ,qseva       ,qsdew       ,qsubl   ,qfros ,&
              rsur        ,rnof        ,qinfl       ,wtfact  ,pondmx,&
@@ -99,7 +99,8 @@ MODULE MOD_SoilSnowHydrology
         porsl(1:nl_soil) , &! saturated volumetric soil water content(porosity)
         psi0(1:nl_soil)  , &! saturated soil suction (mm) (NEGATIVE)
         hksati(1:nl_soil), &! hydraulic conductivity at saturation (mm h2o/s)
-        rootr(1:nl_soil) , &! root resistance of a layer, all layers add to 1.0
+        rootr(1:nl_soil) , &! water uptake farction from different layers, all layers add to 1.0
+        rootflux(1:nl_soil),&! root uptake from different layer, all layers add to transpiration
 
         t_soisno(lb:nl_soil), &! soil/snow skin temperature (K)
         pg_rain          , &! rainfall after removal of interception (mm h2o/s)
@@ -280,7 +281,7 @@ MODULE MOD_SoilSnowHydrology
       call soilwater(patchtype,nl_soil,deltim,wimp,smpmin,&
                      qinfl,etr,z_soisno(1:),dz_soisno(1:),zi_soisno(0:),&
                      t_soisno(1:),vol_liq,vol_ice,smp,hk,icefrac,eff_porosity,&
-                     porsl,hksati,bsw,psi0,rootr,&
+                     porsl,hksati,bsw,psi0,rootr,rootflux,&
                      zwt,dwat,qcharge)
 
       ! update the mass of liquid water
@@ -378,14 +379,14 @@ MODULE MOD_SoilSnowHydrology
              theta_r     ,alpha_vgm   ,n_vgm       ,L_vgm   ,        &
              sc_vgm      ,fc_vgm      ,                              &
 #endif
-             porsl       ,psi0        ,hksati      ,rootr   ,        &
+             porsl       ,psi0        ,hksati      ,rootr   ,rootflux,&
              t_soisno    ,wliq_soisno ,wice_soisno ,smp     ,hk     ,&
              pg_rain     ,sm          ,                              &
              etr         ,qseva       ,qsdew       ,qsubl   ,qfros  ,&
              rsur        ,rnof        ,qinfl       ,wtfact  ,ssi    ,&
              pondmx      ,                                           &
-             wimp        ,zwt         ,wdsrf       ,wa      ,qcharge,&
-             errw_rsub                 &
+             wimp        ,zwt         ,wdsrf       ,wa      ,wetwat ,&
+             qcharge     ,errw_rsub                                  &
 #if(defined CaMa_Flood)
              ,flddepth,fldfrc,qinfl_fld&
 #endif
@@ -419,7 +420,11 @@ MODULE MOD_SoilSnowHydrology
 
   use MOD_Precision
   USE MOD_Hydro_SoilWater
+  USE MOD_Vars_TimeInvariants, only : wetwatmax
   use MOD_Const_Physical, only : denice, denh2o, tfrz
+#ifdef DataAssimilation
+  USE MOD_DA_GRACE, only : fslp_patch
+#endif
 
   implicit none
 
@@ -456,7 +461,8 @@ MODULE MOD_SoilSnowHydrology
         porsl(1:nl_soil) , &! saturated volumetric soil water content(porosity)
         psi0(1:nl_soil)  , &! saturated soil suction (mm) (NEGATIVE)
         hksati(1:nl_soil), &! hydraulic conductivity at saturation (mm h2o/s)
-        rootr(1:nl_soil) , &! root resistance of a layer, all layers add to 1.0
+        rootr(1:nl_soil) , &! water uptake farction from different layers, all layers add to 1.0
+        rootflux(1:nl_soil),&! root uptake from different layer, all layers add to transpiration
 
         t_soisno(lb:nl_soil), &! soil/snow skin temperature (K)
         pg_rain          , &! rainfall after removal of interception (mm h2o/s)
@@ -479,7 +485,8 @@ MODULE MOD_SoilSnowHydrology
         hk (1:nl_soil)   , &! hydraulic conductivity [mm h2o/m]
         zwt              , &! the depth from ground (soil) surface to water table [m]
         wdsrf            , &! depth of surface water [mm]
-        wa                  ! water storage in aquifer [mm]
+        wa               , &! water storage in aquifer [mm]
+        wetwat              ! water storage in wetland [mm]
 
   real(r8), INTENT(out) :: &
         rsur             , &! surface runoff (mm h2o/s)
@@ -706,6 +713,10 @@ MODULE MOD_SoilSnowHydrology
       ENDIF
 
       rsubst = imped * 5.5e-3 * exp(-2.5*zwt)  ! drainage (positive = out of soil column)
+#ifdef DataAssimilation
+      rsubst = rsubst * fslp_patch(ipatch)
+#endif
+
 #else
       ! for lateral flow:
       ! "rsub" is calculated and removed from soil water in HYDRO/MOD_Hydro_SubsurfaceFlow.F90
@@ -759,7 +770,7 @@ MODULE MOD_SoilSnowHydrology
             ENDIF
          ELSE
             wliq_soisno(1) = max(0., wliq_soisno(1) + qgtop * deltim)
-         ENDIF 
+         ENDIF
 
          qgtop = 0.
 
@@ -769,7 +780,7 @@ MODULE MOD_SoilSnowHydrology
          nl_soil, deltim, sp_zc(1:nl_soil), sp_zi(0:nl_soil), is_permeable(1:nl_soil),    &
          eff_porosity(1:nl_soil), theta_r(1:nl_soil), psi0(1:nl_soil), hksati(1:nl_soil), &
          nprms, prms(:,1:nl_soil), porsl(nl_soil),     &
-         qgtop, etr, rootr(1:nl_soil), rsubst, qinfl, &
+         qgtop, etr, rootr(1:nl_soil), rootflux(1:nl_soil), rsubst, qinfl, &
          wdsrf, zwtmm, wa, vol_liq(1:nl_soil), smp(1:nl_soil), hk(1:nl_soil), 1.e-3)
 
       ! update the mass of liquid water
@@ -791,7 +802,7 @@ MODULE MOD_SoilSnowHydrology
       ENDDO
 
       zwt = zwtmm/1000.0
-      
+
       ! Renew the ice and liquid mass due to condensation
       if(lb >= 1)then
          ! make consistent with how evap_grnd removed in infiltration
@@ -826,7 +837,7 @@ MODULE MOD_SoilSnowHydrology
 #endif
 #if(defined CoLMDEBUG)
       if(abs(err_solver) > 1.e-3)then
-         write(6,'(A,E20.5)') 'Warning (WATER_VSF): water balance violation', err_solver,ipatch
+         write(6,'(A,E20.5,2I)') 'Warning (WATER_VSF): water balance violation', err_solver,ipatch
       endif
       IF (any(wliq_soisno < -1.e-3)) THEN
          write(6,'(A,10E20.5)') 'Warning (WATER_VSF): negative soil water', wliq_soisno(1:nl_soil)
@@ -834,27 +845,44 @@ MODULE MOD_SoilSnowHydrology
 #endif
 
 !=======================================================================
-! [6] assumed hydrological scheme for the wetland 
+! [6] assumed hydrological scheme for the wetland
 !=======================================================================
 
   else
       if(patchtype==2)then        ! WETLAND
          qinfl = 0.
+         zwt = 0.
+         qcharge = 0.
+         
+         IF (lb >= 1) THEN
+            wetwat = wdsrf + wa + wetwat + (gwat - etr + qsdew + qfros - qsubl) * deltim
+         ELSE
+            wetwat = wdsrf + wa + wetwat + (gwat - etr) * deltim
+         ENDIF
+
+         IF (wetwat > wetwatmax) THEN
+            wdsrf  = wetwat - wetwatmax
+            wetwat = wetwatmax
+            wa     = 0.
+         ELSEIF (wetwat < 0) THEN
+            wa     = wetwat
+            wdsrf  = 0.
+            wetwat = 0.
+         ELSE
+            wdsrf = 0.
+            wa    = 0.
+         ENDIF
+      
 #ifndef LATERAL_FLOW
-         rsur = max(0.,gwat)
+         IF (wdsrf > pondmx) THEN
+            rsur = (wdsrf - pondmx) / deltim
+            wdsrf = pondmx
+         ELSE
+            rsur = 0.
+         ENDIF
          rnof = rsur
 #endif
-         do j = 1, nl_soil
-            if(t_soisno(j)>tfrz)then
-               wice_soisno(j) = 0.0
-               wliq_soisno(j) = porsl(j)*dz_soisno(j)*1000.
-            endif
-         enddo
       endif
-
-      wa = 0.
-      zwt = 0.
-      qcharge = 0.
 
   endif
 
@@ -1478,7 +1506,7 @@ MODULE MOD_SoilSnowHydrology
   subroutine soilwater(patchtype,nl_soil,deltim,wimp,smpmin,&
                        qinfl,etr,z_soisno,dz_soisno,zi_soisno,&
                        t_soisno,vol_liq,vol_ice,smp,hk,icefrac,eff_porosity,&
-                       porsl,hksati,bsw,psi0,rootr,&
+                       porsl,hksati,bsw,psi0,rootr,rootflux,&
                        zwt,dwat,qcharge)
 
 !-----------------------------------------------------------------------
@@ -1576,6 +1604,7 @@ MODULE MOD_SoilSnowHydrology
     real(r8), INTENT(in) :: bsw    (1:nl_soil) ! Clapp and Hornberger "b"
     real(r8), INTENT(in) :: psi0   (1:nl_soil) ! minimum soil suction (mm) [-]
     real(r8), INTENT(in) :: rootr  (1:nl_soil) ! effective fraction of roots in each soil layer
+    real(r8), INTENT(in) :: rootflux  (1:nl_soil) ! root uptake from different layers, all layers add to transpiration
     real(r8), INTENT(in) :: zwt                ! the depth from ground (soil) surface to water table [m]
 
     real(r8), intent(out) :: dwat(1:nl_soil)   ! change of soil water [m3/m3]
@@ -1758,7 +1787,7 @@ MODULE MOD_SoilSnowHydrology
     bmx(j) = dzmm(j)/deltim + dqodw1(j)
     cmx(j) = dqodw2(j)
     if(DEF_USE_PLANTHYDRAULICS .and. (patchtype/=1 .or. .not.DEF_URBAN_RUN))then
-       rmx(j) =  qin(j) - qout(j) - rootr(j)
+       rmx(j) =  qin(j) - qout(j) - rootflux(j)
     else
        rmx(j) =  qin(j) - qout(j) - etr*rootr(j)
     end if
@@ -1778,7 +1807,7 @@ MODULE MOD_SoilSnowHydrology
        bmx(j) =  dzmm(j)/deltim - dqidw1(j) + dqodw1(j)
        cmx(j) =  dqodw2(j)
        if(DEF_USE_PLANTHYDRAULICS .and. (patchtype/=1 .or. .not.DEF_URBAN_RUN))then
-          rmx(j) =  qin(j) - qout(j) - rootr(j)
+          rmx(j) =  qin(j) - qout(j) - rootflux(j)
        else
           rmx(j) =  qin(j) - qout(j) - etr*rootr(j)
        end if
@@ -1805,7 +1834,7 @@ MODULE MOD_SoilSnowHydrology
     bmx(j) =  dzmm(j)/deltim - dqidw1(j) + dqodw1(j)
     cmx(j) =  dqodw2(j)
     if(DEF_USE_PLANTHYDRAULICS .and. (patchtype/=1 .or. .not.DEF_URBAN_RUN))then
-       rmx(j) =  qin(j) - qout(j) - rootr(j)
+       rmx(j) =  qin(j) - qout(j) - rootflux(j)
     else
        rmx(j) =  qin(j) - qout(j) - etr*rootr(j)
     end if
@@ -1819,7 +1848,7 @@ MODULE MOD_SoilSnowHydrology
     errorw = -deltim*(qin(1)-qout(nl_soil)-dqodw1(nl_soil)*dwat(nl_soil))
     do j = 1, nl_soil
        if(DEF_USE_PLANTHYDRAULICS .and. (patchtype/=1 .or. .not.DEF_URBAN_RUN))then
-          errorw = errorw+dwat(j)*dzmm(j)+rootr(j)*deltim
+          errorw = errorw+dwat(j)*dzmm(j)+rootflux(j)*deltim
        else
           errorw = errorw+dwat(j)*dzmm(j)+etr*rootr(j)*deltim
        end if
