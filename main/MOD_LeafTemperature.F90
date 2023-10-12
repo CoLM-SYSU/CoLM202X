@@ -634,6 +634,10 @@ CONTAINS
                                       raw, rd, smp, k_soil_root, k_ax_root, kmax_xyl, kmax_root, rstfacsun, rstfacsha, &
                                       psi50_sun, psi50_sha, psi50_xyl, psi50_root, ck, rootflux, etrsun, etrsha)
              end if
+             ! above stomatal resistances are for the canopy, the stomatal rsistances
+             ! and the "rb" in the following calculations are the average for single leaf. thus,
+             rssun = tprcor/tl * 1.e6 / gssun 
+             rssha = tprcor/tl * 1.e6 / gssha
           ELSE
              rssun = 2.e4; assimsun = 0.; respcsun = 0.
              rssha = 2.e4; assimsha = 0.; respcsha = 0.
@@ -649,10 +653,7 @@ CONTAINS
                 rootflux  = 0.
              ENDIF
           ENDIF
-! above stomatal resistances are for the canopy, the stomatal rsistances
-! and the "rb" in the following calculations are the average for single leaf. thus,
-          rssun = tprcor/tl * 1.e6 / gssun 
-          rssha = tprcor/tl * 1.e6 / gssha
+
 
 !-----------------------------------------------------------------------
 ! dimensional and non-dimensional sensible and latent heat conductances
