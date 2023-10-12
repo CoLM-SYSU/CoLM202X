@@ -880,6 +880,7 @@ MODULE MOD_Vars_TimeVariables
      ! Original version: Yongjiu Dai, September 15, 1999, 03/2014
      !=======================================================================
 
+     USE MOD_SPMD_Task
      USE MOD_Namelist, only : DEF_REST_COMPRESS_LEVEL, DEF_USE_PLANTHYDRAULICS, DEF_USE_OZONESTRESS, DEF_USE_IRRIGATION
      USE MOD_LandPatch
      USE MOD_NetCDFVector
@@ -901,9 +902,16 @@ MODULE MOD_Vars_TimeVariables
 
      ! land cover type year
      write(cyear,'(i4.4)') lc_year
-
      write(cdate,'(i4.4,"-",i3.3,"-",i5.5)') idate(1), idate(2), idate(3)
-     file_restart = trim(dir_restart)// '/' // trim(site) //'_restart_'//trim(cdate)//'_lc'//trim(cyear)//'.nc'
+     
+     IF (p_is_master) THEN
+        CALL system('mkdir -p ' // trim(dir_restart)//'/'//trim(cdate))
+     ENDIF
+#ifdef USEMPI
+     call mpi_barrier (p_comm_glb, p_err)
+#endif
+
+     file_restart = trim(dir_restart)// '/'//trim(cdate)//'/' // trim(site) //'_restart_'//trim(cdate)//'_lc'//trim(cyear)//'.nc'
 
 
      CALL ncio_create_file_vector (file_restart, landpatch)
@@ -1082,7 +1090,7 @@ ENDIF
      write(cyear,'(i4.4)') lc_year
 
      write(cdate,'(i4.4,"-",i3.3,"-",i5.5)') idate(1), idate(2), idate(3)
-     file_restart = trim(dir_restart) // '/' // trim(site) //'_restart_'//trim(cdate)//'_lc'//trim(cyear)//'.nc'
+     file_restart = trim(dir_restart)// '/'//trim(cdate)//'/' // trim(site) //'_restart_'//trim(cdate)//'_lc'//trim(cyear)//'.nc'
 
      ! Time-varying state variables which reaquired by restart run
      CALL ncio_read_vector (file_restart, 'z_sno   '   , -maxsnl, landpatch, z_sno )             ! node depth [m]
