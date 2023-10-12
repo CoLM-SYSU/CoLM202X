@@ -1031,22 +1031,22 @@ IF (DEF_USE_IRRIGATION) THEN
 ENDIF
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
-     file_restart = trim(dir_restart)// '/' // trim(site) //'_restart_pft_'//trim(cdate)//'_lc'//trim(cyear)//'.nc'
+     file_restart = trim(dir_restart)// '/'//trim(cdate)//'/' // trim(site) //'_restart_pft_'//trim(cdate)//'_lc'//trim(cyear)//'.nc'
      CALL WRITE_PFTimeVariables (file_restart)
 #endif
 
 #if (defined BGC)
-     file_restart = trim(dir_restart)// '/' // trim(site) //'_restart_bgc_'//trim(cdate)//'_lc'//trim(cyear)//'.nc'
+     file_restart = trim(dir_restart)// '/'//trim(cdate)//'/' // trim(site) //'_restart_bgc_'//trim(cdate)//'_lc'//trim(cyear)//'.nc'
      CALL WRITE_BGCTimeVariables (file_restart)
 #endif
 
 #if (defined LATERAL_FLOW)
-     file_restart = trim(dir_restart)// '/' // trim(site) //'_restart_basin_'//trim(cdate)//'_lc'//trim(cyear)//'.nc'
+     file_restart = trim(dir_restart)// '/'//trim(cdate)//'/' // trim(site) //'_restart_basin_'//trim(cdate)//'_lc'//trim(cyear)//'.nc'
      CALL WRITE_HydroTimeVariables (file_restart)
 #endif
 
 #if (defined URBAN_MODEL)
-     file_restart = trim(dir_restart)// '/' // trim(site) //'_restart_urban_'//trim(cdate)//'_lc'//trim(cyear)//'.nc'
+     file_restart = trim(dir_restart)// '/'//trim(cdate)//'/' // trim(site) //'_restart_urban_'//trim(cdate)//'_lc'//trim(cyear)//'.nc'
      CALL WRITE_UrbanTimeVariables (file_restart)
 #endif
   END SUBROUTINE WRITE_TimeVariables
@@ -1194,22 +1194,22 @@ IF (DEF_USE_IRRIGATION) THEN
 ENDIF
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
-     file_restart = trim(dir_restart)// '/' // trim(site) //'_restart_pft_'//trim(cdate)//'_lc'//trim(cyear)//'.nc'
+     file_restart = trim(dir_restart)// '/'//trim(cdate)//'/' // trim(site) //'_restart_pft_'//trim(cdate)//'_lc'//trim(cyear)//'.nc'
      CALL READ_PFTimeVariables (file_restart)
 #endif
 
 #if (defined BGC)
-     file_restart = trim(dir_restart)// '/' // trim(site) //'_restart_bgc_'//trim(cdate)//'_lc'//trim(cyear)//'.nc'
+     file_restart = trim(dir_restart)// '/'//trim(cdate)//'/' // trim(site) //'_restart_bgc_'//trim(cdate)//'_lc'//trim(cyear)//'.nc'
      CALL READ_BGCTimeVariables (file_restart)
 #endif
 
 #if (defined LATERAL_FLOW)
-     file_restart = trim(dir_restart)// '/' // trim(site) //'_restart_basin_'//trim(cdate)//'_lc'//trim(cyear)//'.nc'
+     file_restart = trim(dir_restart)// '/'//trim(cdate)//'/' // trim(site) //'_restart_basin_'//trim(cdate)//'_lc'//trim(cyear)//'.nc'
      CALL READ_HydroTimeVariables (file_restart)
 #endif
 
 #if (defined URBAN_MODEL)
-     file_restart = trim(dir_restart)// '/' // trim(site) //'_restart_urban_'//trim(cdate)//'_lc'//trim(cyear)//'.nc'
+     file_restart = trim(dir_restart)// '/'//trim(cdate)//'/' // trim(site) //'_restart_urban_'//trim(cdate)//'_lc'//trim(cyear)//'.nc'
      CALL READ_UrbanTimeVariables (file_restart)
 #endif
 

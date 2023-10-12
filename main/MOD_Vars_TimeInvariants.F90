@@ -441,17 +441,17 @@ MODULE MOD_Vars_TimeInvariants
      call ncio_read_bcast_serial (file_restart, 'wetwatmax', wetwatmax) ! maximum wetland water (mm)
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
-     file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_pft_const' // '_lc' // trim(cyear) // '.nc'
+     file_restart = trim(dir_restart) // '/const/' // trim(casename) //'_restart_pft_const' // '_lc' // trim(cyear) // '.nc'
      CALL READ_PFTimeInvariants (file_restart)
 #endif
 
 #if (defined BGC)
-     file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_bgc_const' // '_lc' // trim(cyear) // '.nc'
+     file_restart = trim(dir_restart) // '/const/' // trim(casename) //'_restart_bgc_const' // '_lc' // trim(cyear) // '.nc'
      CALL READ_BGCTimeInvariants (file_restart)
 #endif
 
 #if (defined URBAN_MODEL)
-     file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_urb_const' // '_lc' // trim(cyear) // '.nc'
+     file_restart = trim(dir_restart) // '/const/' // trim(casename) //'_restart_urb_const' // '_lc' // trim(cyear) // '.nc'
      CALL READ_UrbanTimeInvariants (file_restart)
 #endif
 
@@ -595,17 +595,17 @@ MODULE MOD_Vars_TimeInvariants
      end if
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
-     file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_pft_const' //'_lc'// trim(cyear) // '.nc'
+     file_restart = trim(dir_restart) // '/const/' // trim(casename) //'_restart_pft_const' //'_lc'// trim(cyear) // '.nc'
      CALL WRITE_PFTimeInvariants (file_restart)
 #endif
 
 #if (defined BGC)
-     file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_bgc_const' //'_lc'// trim(cyear) // '.nc'
+     file_restart = trim(dir_restart) // '/const/' // trim(casename) //'_restart_bgc_const' //'_lc'// trim(cyear) // '.nc'
      CALL WRITE_BGCTimeInvariants (file_restart)
 #endif
 
 #if (defined URBAN_MODEL)
-     file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_urb_const' //'_lc'// trim(cyear) // '.nc'
+     file_restart = trim(dir_restart) // '/const/' // trim(casename) //'_restart_urb_const' //'_lc'// trim(cyear) // '.nc'
      CALL WRITE_UrbanTimeInvariants (file_restart)
 #endif
 
