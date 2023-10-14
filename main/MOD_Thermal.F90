@@ -129,149 +129,149 @@ MODULE MOD_Thermal
 !---------------------Argument------------------------------------------
 
   integer, intent(in) :: &
-        ipatch,      &! patch index
-        lb,          &! lower bound of array
-        patchtype     ! land patch type (0=soil, 1=urban or built-up, 2=wetland,
+       ipatch,      &! patch index
+       lb,          &! lower bound of array
+       patchtype     ! land patch type (0=soil, 1=urban or built-up, 2=wetland,
                       !                  3=glacier/ice sheet, 4=land water bodies)
 
   real(r8), intent(in) :: &
-        deltim,      &! model time step [second]
-        trsmx0,      &! max transpiration for moist soil+100% veg.  [mm/s]
-        zlnd,        &! roughness length for soil [m]
-        zsno,        &! roughness length for snow [m]
-        csoilc,      &! drag coefficient for soil under canopy [-]
-        dewmx,       &! maximum dew
-        capr,        &! tuning factor to turn first layer T into surface T
-        cnfac,       &! Crank Nicholson factor between 0 and 1
+       deltim,      &! model time step [second]
+       trsmx0,      &! max transpiration for moist soil+100% veg.  [mm/s]
+       zlnd,        &! roughness length for soil [m]
+       zsno,        &! roughness length for snow [m]
+       csoilc,      &! drag coefficient for soil under canopy [-]
+       dewmx,       &! maximum dew
+       capr,        &! tuning factor to turn first layer T into surface T
+       cnfac,       &! Crank Nicholson factor between 0 and 1
 
-        ! soil physical parameters
-        vf_quartz (1:nl_soil), &! volumetric fraction of quartz within mineral soil
-        vf_gravels(1:nl_soil), &! volumetric fraction of gravels
-        vf_om     (1:nl_soil), &! volumetric fraction of organic matter
-        vf_sand   (1:nl_soil), &! volumetric fraction of sand
-        wf_gravels(1:nl_soil), &! gravimetric fraction of gravels
-        wf_sand   (1:nl_soil), &! gravimetric fraction of sand
-        csol      (1:nl_soil), &! heat capacity of soil solids [J/(m3 K)]
-        porsl     (1:nl_soil), &! soil porosity [-]
-        psi0      (1:nl_soil), &! soil water suction, negative potential [mm]
+       ! soil physical parameters
+       vf_quartz (1:nl_soil), &! volumetric fraction of quartz within mineral soil
+       vf_gravels(1:nl_soil), &! volumetric fraction of gravels
+       vf_om     (1:nl_soil), &! volumetric fraction of organic matter
+       vf_sand   (1:nl_soil), &! volumetric fraction of sand
+       wf_gravels(1:nl_soil), &! gravimetric fraction of gravels
+       wf_sand   (1:nl_soil), &! gravimetric fraction of sand
+       csol      (1:nl_soil), &! heat capacity of soil solids [J/(m3 K)]
+       porsl     (1:nl_soil), &! soil porosity [-]
+       psi0      (1:nl_soil), &! soil water suction, negative potential [mm]
 #ifdef Campbell_SOIL_MODEL
-        bsw(1:nl_soil),        &! clapp and hornbereger "b" parameter [-]
+       bsw(1:nl_soil),        &! clapp and hornbereger "b" parameter [-]
 #endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
-        theta_r   (1:nl_soil), &! residual moisture content [-]
-        alpha_vgm (1:nl_soil), &! a parameter corresponding approximately to the inverse of the air-entry value
-        n_vgm     (1:nl_soil), &! pore-connectivity parameter [dimensionless]
-        L_vgm     (1:nl_soil), &! a shape parameter [dimensionless]
-        sc_vgm    (1:nl_soil), &! saturation at the air entry value in the classical vanGenuchten model [-]
-        fc_vgm    (1:nl_soil), &! a scaling factor by using air entry value in the Mualem model [-]
+       theta_r   (1:nl_soil), &! residual moisture content [-]
+       alpha_vgm (1:nl_soil), &! a parameter corresponding approximately to the inverse of the air-entry value
+       n_vgm     (1:nl_soil), &! pore-connectivity parameter [dimensionless]
+       L_vgm     (1:nl_soil), &! a shape parameter [dimensionless]
+       sc_vgm    (1:nl_soil), &! saturation at the air entry value in the classical vanGenuchten model [-]
+       fc_vgm    (1:nl_soil), &! a scaling factor by using air entry value in the Mualem model [-]
 #endif
-        k_solids  (1:nl_soil), &! thermal conductivity of minerals soil [W/m-K]
-        dkdry     (1:nl_soil), &! thermal conductivity of dry soil [W/m-K]
-        dksatu    (1:nl_soil), &! thermal conductivity of saturated unfrozen soil [W/m-K]
-        dksatf    (1:nl_soil), &! thermal conductivity of saturated frozen soil [W/m-K]
-        hksati    (1:nl_soil), &! hydraulic conductivity at saturation [mm h2o/s]
-        BA_alpha  (1:nl_soil), &! alpha in Balland and Arp(2005) thermal conductivity scheme
-        BA_beta   (1:nl_soil), &! beta in Balland and Arp(2005) thermal conductivity scheme
+       k_solids  (1:nl_soil), &! thermal conductivity of minerals soil [W/m-K]
+       dkdry     (1:nl_soil), &! thermal conductivity of dry soil [W/m-K]
+       dksatu    (1:nl_soil), &! thermal conductivity of saturated unfrozen soil [W/m-K]
+       dksatf    (1:nl_soil), &! thermal conductivity of saturated frozen soil [W/m-K]
+       hksati    (1:nl_soil), &! hydraulic conductivity at saturation [mm h2o/s]
+       BA_alpha  (1:nl_soil), &! alpha in Balland and Arp(2005) thermal conductivity scheme
+       BA_beta   (1:nl_soil), &! beta in Balland and Arp(2005) thermal conductivity scheme
 
-        ! vegetation parameters
-        lai,         &! adjusted leaf area index for seasonal variation [-]
-        sai,         &! stem area index  [-]
-        htop,        &! canopy crown top height [m]
-        hbot,        &! canopy crown bottom height [m]
-        sqrtdi,      &! inverse sqrt of leaf dimension [m**-0.5]
-        rootfr(1:nl_soil),&! root fraction
+       ! vegetation parameters
+       lai,         &! adjusted leaf area index for seasonal variation [-]
+       sai,         &! stem area index  [-]
+       htop,        &! canopy crown top height [m]
+       hbot,        &! canopy crown bottom height [m]
+       sqrtdi,      &! inverse sqrt of leaf dimension [m**-0.5]
+       rootfr(1:nl_soil),&! root fraction
 
-        effcon,      &! quantum efficiency of RuBP regeneration (mol CO2/mol quanta)
-        vmax25,      &! maximum carboxylation rate at 25 C at canopy top
-        kmax_sun,    &
-        kmax_sha,    &
-        kmax_xyl,    &
-        kmax_root,   &
-        psi50_sun,   &! water potential at 50% loss of sunlit leaf tissue conductance (mmH2O)
-        psi50_sha,   &! water potential at 50% loss of shaded leaf tissue conductance (mmH2O)
-        psi50_xyl,   &! water potential at 50% loss of xylem tissue conductance (mmH2O)
-        psi50_root,  &! water potential at 50% loss of root tissue conductance (mmH2O)
-        ck,          &! shape-fitting parameter for vulnerability curve (-)
-        slti,        &! slope of low temperature inhibition function      [s3]
-        hlti,        &! 1/2 point of low temperature inhibition function  [s4]
-        shti,        &! slope of high temperature inhibition function     [s1]
-        hhti,        &! 1/2 point of high temperature inhibition function [s2]
-        trda,        &! temperature coefficient in gs-a model             [s5]
-        trdm,        &! temperature coefficient in gs-a model             [s6]
-        trop,        &! temperature coefficient in gs-a model
-        gradm,       &! conductance-photosynthesis slope parameter
-        binter,      &! conductance-photosynthesis intercept
-        extkn,       &! coefficient of leaf nitrogen allocation
+       effcon,      &! quantum efficiency of RuBP regeneration (mol CO2/mol quanta)
+       vmax25,      &! maximum carboxylation rate at 25 C at canopy top
+       kmax_sun,    &
+       kmax_sha,    &
+       kmax_xyl,    &
+       kmax_root,   &
+       psi50_sun,   &! water potential at 50% loss of sunlit leaf tissue conductance (mmH2O)
+       psi50_sha,   &! water potential at 50% loss of shaded leaf tissue conductance (mmH2O)
+       psi50_xyl,   &! water potential at 50% loss of xylem tissue conductance (mmH2O)
+       psi50_root,  &! water potential at 50% loss of root tissue conductance (mmH2O)
+       ck,          &! shape-fitting parameter for vulnerability curve (-)
+       slti,        &! slope of low temperature inhibition function      [s3]
+       hlti,        &! 1/2 point of low temperature inhibition function  [s4]
+       shti,        &! slope of high temperature inhibition function     [s1]
+       hhti,        &! 1/2 point of high temperature inhibition function [s2]
+       trda,        &! temperature coefficient in gs-a model             [s5]
+       trdm,        &! temperature coefficient in gs-a model             [s6]
+       trop,        &! temperature coefficient in gs-a model
+       gradm,       &! conductance-photosynthesis slope parameter
+       binter,      &! conductance-photosynthesis intercept
+       extkn,       &! coefficient of leaf nitrogen allocation
 
-        ! atmospherical variables and observational height
-        forc_hgt_u,  &! observational height of wind [m]
-        forc_hgt_t,  &! observational height of temperature [m]
-        forc_hgt_q,  &! observational height of humidity [m]
-        forc_us,     &! wind component in eastward direction [m/s]
-        forc_vs,     &! wind component in northward direction [m/s]
-        forc_t,      &! temperature at agcm reference height [kelvin]
-        forc_q,      &! specific humidity at agcm reference height [kg/kg]
-        forc_rhoair, &! density air [kg/m3]
-        forc_psrf,   &! atmosphere pressure at the surface [pa]
-        forc_pco2m,  &! CO2 concentration in atmos. (pascals)
-        forc_po2m,   &! O2 concentration in atmos. (pascals)
-        forc_hpbl,   &! atmospheric boundary layer height [m]
-        pg_rain,     &! rainfall onto ground including canopy runoff [kg/(m2 s)]
-        pg_snow,     &! snowfall onto ground including canopy runoff [kg/(m2 s)]
-        t_precip,    &! snowfall/rainfall temperature [kelvin]
-        qintr_rain,  &! rainfall interception (mm h2o/s)
-        qintr_snow,  &! snowfall interception (mm h2o/s)
+       ! atmospherical variables and observational height
+       forc_hgt_u,  &! observational height of wind [m]
+       forc_hgt_t,  &! observational height of temperature [m]
+       forc_hgt_q,  &! observational height of humidity [m]
+       forc_us,     &! wind component in eastward direction [m/s]
+       forc_vs,     &! wind component in northward direction [m/s]
+       forc_t,      &! temperature at agcm reference height [kelvin]
+       forc_q,      &! specific humidity at agcm reference height [kg/kg]
+       forc_rhoair, &! density air [kg/m3]
+       forc_psrf,   &! atmosphere pressure at the surface [pa]
+       forc_pco2m,  &! CO2 concentration in atmos. (pascals)
+       forc_po2m,   &! O2 concentration in atmos. (pascals)
+       forc_hpbl,   &! atmospheric boundary layer height [m]
+       pg_rain,     &! rainfall onto ground including canopy runoff [kg/(m2 s)]
+       pg_snow,     &! snowfall onto ground including canopy runoff [kg/(m2 s)]
+       t_precip,    &! snowfall/rainfall temperature [kelvin]
+       qintr_rain,  &! rainfall interception (mm h2o/s)
+       qintr_snow,  &! snowfall interception (mm h2o/s)
 
-        ! radiative fluxes
-        coszen,      &! cosine of the solar zenith angle
-        parsun,      &! photosynthetic active radiation by sunlit leaves (W m-2)
-        parsha,      &! photosynthetic active radiation by shaded leaves (W m-2)
-        sabvsun,     &! solar radiation absorbed by vegetation [W/m2]
-        sabvsha,     &! solar radiation absorbed by vegetation [W/m2]
-        sabg,        &! solar radiation absorbed by ground [W/m2]
-        sabg_soil,   &! solar radiation absorbed by ground soil [W/m2]
-        sabg_snow,   &! solar radiation absorbed by ground snow [W/m2]
-        frl,         &! atmospheric infrared (longwave) radiation [W/m2]
-        extkb,       &! (k, g(mu)/mu) direct solar extinction coefficient
-        extkd,       &! diffuse and scattered diffuse PAR extinction coefficient
-        thermk,      &! canopy gap fraction for tir radiation
+       ! radiative fluxes
+       coszen,      &! cosine of the solar zenith angle
+       parsun,      &! photosynthetic active radiation by sunlit leaves (W m-2)
+       parsha,      &! photosynthetic active radiation by shaded leaves (W m-2)
+       sabvsun,     &! solar radiation absorbed by vegetation [W/m2]
+       sabvsha,     &! solar radiation absorbed by vegetation [W/m2]
+       sabg,        &! solar radiation absorbed by ground [W/m2]
+       sabg_soil,   &! solar radiation absorbed by ground soil [W/m2]
+       sabg_snow,   &! solar radiation absorbed by ground snow [W/m2]
+       frl,         &! atmospheric infrared (longwave) radiation [W/m2]
+       extkb,       &! (k, g(mu)/mu) direct solar extinction coefficient
+       extkd,       &! diffuse and scattered diffuse PAR extinction coefficient
+       thermk,      &! canopy gap fraction for tir radiation
 
-        ! state variable (1)
-        fsno,        &! fraction of ground covered by snow
-        sigf,        &! fraction of veg cover, excluding snow-covered veg [-]
-        dz_soisno(lb:nl_soil),  &! layer thickiness [m]
-        z_soisno (lb:nl_soil),  &! node depth [m]
-        zi_soisno(lb-1:nl_soil)  ! interface depth [m]
+       ! state variable (1)
+       fsno,        &! fraction of ground covered by snow
+       sigf,        &! fraction of veg cover, excluding snow-covered veg [-]
+       dz_soisno(lb:nl_soil),  &! layer thickiness [m]
+       z_soisno (lb:nl_soil),  &! node depth [m]
+       zi_soisno(lb-1:nl_soil)  ! interface depth [m]
 
   real(r8), intent(in) :: &
-        sabg_snow_lyr(lb:1)      ! snow layer aborption
+       sabg_snow_lyr(lb:1)      ! snow layer aborption
 
-        ! state variables (2)
+       ! state variables (2)
   real(r8), intent(inout) :: &
-        vegwp(1:nvegwcs),&! vegetation water potential
-        gs0sun,      &! working copy of sunlit stomata conductance
-        gs0sha,      &! working copy of shalit stomata conductance
+       vegwp(1:nvegwcs),&! vegetation water potential
+       gs0sun,      &! working copy of sunlit stomata conductance
+       gs0sha,      &! working copy of shalit stomata conductance
 !Ozone stress variables
-        lai_old    , &! lai in last time step
-        o3uptakesun, &! Ozone does, sunlit leaf (mmol O3/m^2)
-        o3uptakesha, &! Ozone does, shaded leaf (mmol O3/m^2)
-        forc_ozone , &! Ozone
+       lai_old    , &! lai in last time step
+       o3uptakesun, &! Ozone does, sunlit leaf (mmol O3/m^2)
+       o3uptakesha, &! Ozone does, shaded leaf (mmol O3/m^2)
+       forc_ozone , &! Ozone
 !end ozone stress variables
-        tleaf,       &! shaded leaf temperature [K]
-        t_soisno(lb:nl_soil),   &! soil temperature [K]
-        wice_soisno(lb:nl_soil),&! ice lens [kg/m2]
-        wliq_soisno(lb:nl_soil),&! liqui water [kg/m2]
-        smp(1:nl_soil)         ,&! soil matrix potential [mm]
-        hk(1:nl_soil)          ,&! hydraulic conductivity [mm h2o/s]
+       tleaf,       &! shaded leaf temperature [K]
+       t_soisno(lb:nl_soil),   &! soil temperature [K]
+       wice_soisno(lb:nl_soil),&! ice lens [kg/m2]
+       wliq_soisno(lb:nl_soil),&! liqui water [kg/m2]
+       smp(1:nl_soil)         ,&! soil matrix potential [mm]
+       hk(1:nl_soil)          ,&! hydraulic conductivity [mm h2o/s]
 
-        ldew,        &! depth of water on foliage [kg/(m2 s)]
-        ldew_rain,   &! depth of rain on foliage [kg/(m2 s)]
-        ldew_snow,   &! depth of rain on foliage [kg/(m2 s)]
-        scv,         &! snow cover, water equivalent [mm, kg/m2]
-        snowdp        ! snow depth [m]
+       ldew,        &! depth of water on foliage [kg/(m2 s)]
+       ldew_rain,   &! depth of rain on foliage [kg/(m2 s)]
+       ldew_snow,   &! depth of rain on foliage [kg/(m2 s)]
+       scv,         &! snow cover, water equivalent [mm, kg/m2]
+       snowdp        ! snow depth [m]
 
   real(r8), intent(out) :: &
-        snofrz (lb:0) !snow freezing rate (col,lyr) [kg m-2 s-1]
+       snofrz (lb:0) !snow freezing rate (col,lyr) [kg m-2 s-1]
 
   integer,  intent(out) :: &
        imelt(lb:nl_soil) ! flag for melting or freezing [-]
@@ -289,55 +289,55 @@ MODULE MOD_Thermal
        assimsha_out ,&! diagnostic shaded leaf assim for output
        etrsha_out     ! diagnostic shaded leaf etr for output
 
-        ! Output fluxes
+       ! Output fluxes
   real(r8), intent(out) :: &
-        taux,        &! wind stress: E-W [kg/m/s**2]
-        tauy,        &! wind stress: N-S [kg/m/s**2]
-        fsena,       &! sensible heat from canopy height to atmosphere [W/m2]
-        fevpa,       &! evapotranspiration from canopy height to atmosphere [mm/s]
-        lfevpa,      &! latent heat flux from canopy height to atmosphere [W/m2]
-        fsenl,       &! ensible heat from leaves [W/m2]
-        fevpl,       &! evaporation+transpiration from leaves [mm/s]
-        etr,         &! transpiration rate [mm/s]
-        fseng,       &! sensible heat flux from ground [W/m2]
-        fevpg,       &! evaporation heat flux from ground [mm/s]
-        olrg,        &! outgoing long-wave radiation from ground+canopy
-        fgrnd,       &! ground heat flux [W/m2]
-        rootr(1:nl_soil),&! root resistance of a layer, all layers add to 1
+       taux,        &! wind stress: E-W [kg/m/s**2]
+       tauy,        &! wind stress: N-S [kg/m/s**2]
+       fsena,       &! sensible heat from canopy height to atmosphere [W/m2]
+       fevpa,       &! evapotranspiration from canopy height to atmosphere [mm/s]
+       lfevpa,      &! latent heat flux from canopy height to atmosphere [W/m2]
+       fsenl,       &! ensible heat from leaves [W/m2]
+       fevpl,       &! evaporation+transpiration from leaves [mm/s]
+       etr,         &! transpiration rate [mm/s]
+       fseng,       &! sensible heat flux from ground [W/m2]
+       fevpg,       &! evaporation heat flux from ground [mm/s]
+       olrg,        &! outgoing long-wave radiation from ground+canopy
+       fgrnd,       &! ground heat flux [W/m2]
+       rootr(1:nl_soil),&! root resistance of a layer, all layers add to 1
 
-        qseva,       &! ground surface evaporation rate (mm h2o/s)
-        qsdew,       &! ground surface dew formation (mm h2o /s) [+]
-        qsubl,       &! sublimation rate from snow pack (mm h2o /s) [+]
-        qfros,       &! surface dew added to snow pack (mm h2o /s) [+]
-        qseva_soil,  &! ground soil surface evaporation rate (mm h2o/s)
-        qsdew_soil,  &! ground soil surface dew formation (mm h2o /s) [+]
-        qsubl_soil,  &! sublimation rate from soil ice pack (mm h2o /s) [+]
-        qfros_soil,  &! surface dew added to soil ice pack (mm h2o /s) [+]
-        qseva_snow,  &! ground snow surface evaporation rate (mm h2o/s)
-        qsdew_snow,  &! ground snow surface dew formation (mm h2o /s) [+]
-        qsubl_snow,  &! sublimation rate from snow pack (mm h2o /s) [+]
-        qfros_snow,  &! surface dew added to snow pack (mm h2o /s) [+]
+       qseva,       &! ground surface evaporation rate (mm h2o/s)
+       qsdew,       &! ground surface dew formation (mm h2o /s) [+]
+       qsubl,       &! sublimation rate from snow pack (mm h2o /s) [+]
+       qfros,       &! surface dew added to snow pack (mm h2o /s) [+]
+       qseva_soil,  &! ground soil surface evaporation rate (mm h2o/s)
+       qsdew_soil,  &! ground soil surface dew formation (mm h2o /s) [+]
+       qsubl_soil,  &! sublimation rate from soil ice pack (mm h2o /s) [+]
+       qfros_soil,  &! surface dew added to soil ice pack (mm h2o /s) [+]
+       qseva_snow,  &! ground snow surface evaporation rate (mm h2o/s)
+       qsdew_snow,  &! ground snow surface dew formation (mm h2o /s) [+]
+       qsubl_snow,  &! sublimation rate from snow pack (mm h2o /s) [+]
+       qfros_snow,  &! surface dew added to snow pack (mm h2o /s) [+]
 
-        sm,          &! rate of snowmelt [kg/(m2 s)]
-        tref,        &! 2 m height air temperature [kelvin]
-        qref,        &! 2 m height air specific humidity
-        trad,        &! radiative temperature [K]
+       sm,          &! rate of snowmelt [kg/(m2 s)]
+       tref,        &! 2 m height air temperature [kelvin]
+       qref,        &! 2 m height air specific humidity
+       trad,        &! radiative temperature [K]
 
-        rst,         &! stomatal resistance (s m-1)
-        assim,       &! assimilation
-        respc,       &! respiration
+       rst,         &! stomatal resistance (s m-1)
+       assim,       &! assimilation
+       respc,       &! respiration
 
-        ! additional variables required by coupling with WRF or RSM model
-        emis,        &! averaged bulk surface emissivity
-        z0m,         &! effective roughness [m]
-        zol,         &! dimensionless height (z/L) used in Monin-Obukhov theory
-        rib,         &! bulk Richardson number in surface layer
-        ustar,       &! u* in similarity theory [m/s]
-        qstar,       &! q* in similarity theory [kg/kg]
-        tstar,       &! t* in similarity theory [K]
-        fm,          &! integral of profile function for momentum
-        fh,          &! integral of profile function for heat
-        fq            ! integral of profile function for moisture
+       ! additional variables required by coupling with WRF or RSM model
+       emis,        &! averaged bulk surface emissivity
+       z0m,         &! effective roughness [m]
+       zol,         &! dimensionless height (z/L) used in Monin-Obukhov theory
+       rib,         &! bulk Richardson number in surface layer
+       ustar,       &! u* in similarity theory [m/s]
+       qstar,       &! q* in similarity theory [kg/kg]
+       tstar,       &! t* in similarity theory [K]
+       fm,          &! integral of profile function for momentum
+       fh,          &! integral of profile function for heat
+       fq            ! integral of profile function for moisture
 
 !---------------------Local Variables-----------------------------------
 
@@ -475,7 +475,8 @@ IF (.not.DEF_SPLIT_SOILSNOW) THEN
       ulrad  = frl*(1.-emg) + emg*stefnc*t_grnd**4
 ELSE
       t_grnd = fsno*t_snow  + (1.-fsno)*t_soil
-      ulrad  = frl*(1.-emg) + fsno*emg*stefnc*t_snow**4 &
+      ulrad  = frl*(1.-emg) &
+             + fsno*emg*stefnc*t_snow**4 &
              + (1.-fsno)*emg*stefnc*t_soil**4
 ENDIF
 
@@ -528,28 +529,36 @@ ENDIF
 
 IF (.not. DEF_SPLIT_SOILSNOW) THEN
       CALL qsadv(t_grnd,forc_psrf,eg,degdT,qsatg,qsatgdT)
-      qg = qred*qsatg
-      dqgdT = qred*qsatgdT
 
       IF (qsatg > forc_q .and. forc_q > qred*qsatg) THEN
-        qg = forc_q; dqgdT = 0.
+        !qg = forc_q; dqgdT = 0.
+        qsatg = forc_q; qsatgdT = 0.
       ENDIF
+
+      qg     = qred*qsatg
+      dqgdT  = qred*qsatgdT
 
       q_soil = qg
       q_snow = qg
 
 ELSE
       call qsadv(t_soil,forc_psrf,eg,degdT,qsatg,qsatgdT)
+
       if(qsatg > forc_q .and. forc_q > hr*qsatg)then
         qsatg = forc_q; qsatgdT = 0.
       ENDIF
 
-      q_soil  = hr*qsatg
-      dqgdT   = (1.-fsno)*hr*qsatgdT
+      q_soil = hr*qsatg
+      dqgdT  = (1.-fsno)*hr*qsatgdT
 
       call qsadv(t_snow,forc_psrf,eg,degdT,qsatg,qsatgdT)
-      q_snow  = qsatg
-      dqgdT   = dqgdT + fsno*qsatgdT
+
+      if(qsatg > forc_q .and. forc_q > hr*qsatg)then
+        qsatg = forc_q; qsatgdT = 0.
+      ENDIF
+
+      q_snow = qsatg
+      dqgdT  = dqgdT + fsno*qsatgdT
 
       ! weighted average qg
       qg = (1.-fsno)*q_soil + fsno*q_snow
@@ -808,7 +817,8 @@ IF (DEF_USE_PFT .or. patchclass(ipatch)==CROPLAND) THEN
 IF (.not.DEF_SPLIT_SOILSNOW) THEN
             ulrad_p      (i) = frl*(1.-emg) + emg*stefnc*t_grnd**4
 ELSE
-            ulrad_p      (i) = frl*(1.-emg) + fsno*emg*stefnc*t_snow**4 &
+            ulrad_p      (i) = frl*(1.-emg) &
+                             + fsno*emg*stefnc*t_snow**4 &
                              + (1.-fsno)*emg*stefnc*t_soil**4
 ENDIF
             hprl_p       (i) = 0.
@@ -1085,7 +1095,8 @@ ELSE
          qseva_snow = qseva_snow*fsno
          qsubl_snow = qsubl_snow*fsno
       else
-         if(t_snow < tfrz)then
+         ! snow temperature < tfrz
+         if(t_soisno(lb) < tfrz)then
             qfros_snow = abs(fevpg_snow*fsno)
          else
             qsdew_snow = abs(fevpg_snow*fsno)
@@ -1097,7 +1108,8 @@ ELSE
          qseva_soil = min(wliq_soisno(1)/deltim, fevpg_soil)
          qsubl_soil = fevpg_soil - qseva_soil
       else
-         if(t_soil < tfrz)then
+         ! soil temperature < tfrz
+         if(t_soisno(1) < tfrz)then
             qfros_soil = abs(fevpg_soil)
          else
             qsdew_soil = abs(fevpg_soil)
