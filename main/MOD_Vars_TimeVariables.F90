@@ -394,7 +394,7 @@ MODULE MOD_Vars_TimeVariables
 ! -----------------------------------------------------------------
 ! Time-varying state variables which reaquired by restart run
      real(r8), allocatable :: z_sno      (:,:) ! node depth [m]
-     real(r8), allocatable :: dz_sno     (:,:) ! interface depth [m]
+     real(r8), allocatable :: dz_sno     (:,:) ! snow layer depth [m]
      real(r8), allocatable :: t_soisno   (:,:) ! soil temperature [K]
      real(r8), allocatable :: wliq_soisno(:,:) ! liquid water in layers [kg/m2]
      real(r8), allocatable :: wice_soisno(:,:) ! ice lens in layers [kg/m2]

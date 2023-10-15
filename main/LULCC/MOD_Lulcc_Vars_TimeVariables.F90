@@ -4,10 +4,13 @@ MODULE MOD_Lulcc_Vars_TimeVariables
 ! -------------------------------
 ! Created by Hua Yuan, 04/2022
 !
+!
 ! !REVISIONS:
 !
 ! 07/2023, Wenzong Dong: porting to MPI version
 ! 08/2023, Hua Yuan: unified PFT and PC process
+! 10/2023, Wanyi Lin: check with MOD_Vars_TimeVariables.F90, add variables,
+!          and remove unnecessary variables
 ! -------------------------------
 
   USE MOD_Precision
@@ -40,7 +43,6 @@ MODULE MOD_Lulcc_Vars_TimeVariables
   real(r8), allocatable :: green_         (:)  !leaf greenness
   real(r8), allocatable :: zwt_           (:)  !the depth to water table [m]
   real(r8), allocatable :: wa_            (:)  !water storage in aquifer [mm]
-  real(r8), allocatable :: wat_           (:)  !total water storage [mm]
   real(r8), allocatable :: wdsrf_         (:)  !depth of surface water [mm]
   real(r8), allocatable :: rss_           (:)  !soil surface resistance [s/m]
 
@@ -97,8 +99,6 @@ MODULE MOD_Lulcc_Vars_TimeVariables
   real(r8), allocatable :: ldew_snow_p_   (:)  !depth of snow on foliage [mm]
   real(r8), allocatable :: ldew_p_        (:)  !depth of water on foliage [mm]
   real(r8), allocatable :: sigf_p_        (:)  !fraction of veg cover, excluding snow-covered veg [-]
-
-  !TODO: to check IF the below is necessary - DONE
 
   !TODO@yuan: to check the below for PC whether they are needed
   real(r8), allocatable :: tref_p_        (:)  !2 m height air temperature [kelvin]
@@ -187,7 +187,7 @@ MODULE MOD_Lulcc_Vars_TimeVariables
   real(r8), allocatable :: snowdp_gper_   (:)  !pervious ground snow depth [m]
   real(r8), allocatable :: snowdp_lake_   (:)  !urban lake snow depth [m]
 
-  !TODO: rename the below variables
+  !TODO: condsider renaming the below variables
   real(r8), allocatable :: Fhac_          (:)  !sensible flux from heat or cool AC [W/m2]
   real(r8), allocatable :: Fwst_          (:)  !waste heat flux from heat or cool AC [W/m2]
   real(r8), allocatable :: Fach_          (:)  !flux from inner and outter air exchange [W/m2]
@@ -260,7 +260,6 @@ MODULE MOD_Lulcc_Vars_TimeVariables
            allocate (green_                        (numpatch))
            allocate (zwt_                          (numpatch))
            allocate (wa_                           (numpatch))
-           allocate (wat_                          (numpatch))
            allocate (wdsrf_                        (numpatch))
            allocate (rss_                          (numpatch))
 
@@ -456,7 +455,6 @@ MODULE MOD_Lulcc_Vars_TimeVariables
          green_        = green
          zwt_          = zwt
          wa_           = wa
-         wat_          = wat
          wdsrf_        = wdsrf
          rss_          = rss
 
@@ -513,8 +511,6 @@ ENDIF
          ldew_rain_p_  = ldew_rain_p
          ldew_snow_p_  = ldew_snow_p
          sigf_p_       = sigf_p
-
-         !TODO: to check IF the below is necessary - DONE
 
          tref_p_       = tref_p
          qref_p_       = qref_p
@@ -747,7 +743,6 @@ ENDIF
                     green         (np) = green_         (np_)
                     zwt           (np) = zwt_           (np_)
                     wa            (np) = wa_            (np_)
-                    wat           (np) = wat_           (np_)
                     wdsrf         (np) = wdsrf_         (np_)
                     rss           (np) = rss_           (np_)
 
@@ -795,8 +790,8 @@ ENDIF
                     fq            (np) = fq_            (np_)
 
 IF(DEF_USE_IRRIGATION)THEN
-                    sum_irrig                    (np) = sum_irrig_                    (np_)
-                    sum_irrig_count              (np) = sum_irrig_count_              (np_)
+                    sum_irrig       (np) = sum_irrig_       (np_)
+                    sum_irrig_count (np) = sum_irrig_count_ (np_)
 ENDIF
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
@@ -830,13 +825,11 @@ IF (patchtype(np)==0 .and. patchtype_(np_)==0) THEN
                        ldew_snow_p(ip) = ldew_snow_p_(ip_)
                        sigf_p     (ip) = sigf_p_     (ip_)
 
-                       !TODO: to check IF the below is necessary - DONE
-
                        tref_p     (ip) = tref_p_     (ip_)
                        qref_p     (ip) = qref_p_     (ip_)
                        rst_p      (ip) = rst_p_      (ip_)
                        z0m_p      (ip) = z0m_p_      (ip_)
-                       
+
 IF(DEF_USE_PLANTHYDRAULICS)THEN
                        ! Plant Hydraulic variables
                        vegwp_p  (:,ip) = vegwp_p_  (:,ip_)
@@ -1006,7 +999,6 @@ ENDIF
            deallocate (green_        )
            deallocate (zwt_          )
            deallocate (wa_           )
-           deallocate (wat_          )
            deallocate (wdsrf_        )
            deallocate (rss_          )
 
