@@ -37,6 +37,9 @@ MODULE MOD_Lulcc_MassEnergyConserve
 !
 ! !REVISONS:
 !
+! 10/2023, Wanyi Lin: share the codes with REST_LulccTimeVariables(), and
+!                     simply the codes in this subroutine.
+!
 ! -------------------------------
 
 
@@ -80,25 +83,25 @@ MODULE MOD_Lulcc_MassEnergyConserve
 
    integer :: k, ilc, num, inp_
    integer :: i, j, np, np_, selfnp_, l, ipft, ip, ip_, pc, pc_
-   integer :: nsl      ! number of snow layer of the source patch with maximum area
-   integer :: nsl_max  ! maximum number of snow layer considering all source patches
+   integer :: nsl                       !number of snow layer of the source patch with maximum area
+   integer :: nsl_max                   !maximum number of snow layer considering all source patches
    integer :: u, u_, iu, selfu_, nurb, duclass
    integer :: nlc = N_land_classification
-   integer :: ps, pe, ps_, pe_   ! start and end index of patch pft
+   integer :: ps, pe, ps_, pe_          !start and end index of patch pft
    real(r8), dimension(1:N_land_classification) :: lccpct_np
    real(r8):: sum_lccpct_np, wgt(maxsnl+1:nl_soil)
-   real(r8):: zi_sno(maxsnl+1:0) ! local variable for snow node and depth calculation
-   real(r8):: vf_water ! volumetric fraction liquid water within soil
-   real(r8):: vf_ice   ! volumetric fraction ice len within soil
-   real(r8):: hcap     ! J/(m3 K)
-   real(r8):: c_water  ! Specific heat of water * density of liquid water
-   real(r8):: c_ice    ! Specific heat of ice   * density of ice
+   real(r8):: zi_sno(maxsnl+1:0)        !local variable for snow node and depth calculation
+   real(r8):: vf_water                  !volumetric fraction liquid water within soil
+   real(r8):: vf_ice                    !volumetric fraction ice len within soil
+   real(r8):: hcap                      !J/(m3 K)
+   real(r8):: c_water                   !Specific heat of water * density of liquid water
+   real(r8):: c_ice                     !Specific heat of ice   * density of ice
    real(r8):: denice_np(maxsnl+1:0), denh2o_np(maxsnl+1:0)
-   real(r8):: wbef,wpre! water before and water present for water calculation heck
-   ! real(r8):: fmelt    ! dimensionless metling factor
-   real(r8):: wt       ! fraction of vegetation covered with snow [-]
-   real(r8), parameter :: m = 1.0 ! the value of m used in CLM4.5 is 1.0.
-   ! real(r8) :: deltim = 1800.  ! time step (senconds) TODO: be intent in
+   real(r8):: wbef,wpre                 !water before and water present for water calculation heck
+   ! real(r8):: fmelt                   !dimensionless metling factor
+   real(r8):: wt                        !fraction of vegetation covered with snow [-]
+   real(r8), parameter :: m = 1.0       !the value of m used in CLM4.5 is 1.0.
+   ! real(r8) :: deltim = 1800.         !time step (senconds) TODO: be intent in
    logical :: FROM_SOIL
 
    IF (p_is_worker) THEN
@@ -221,9 +224,10 @@ ENDIF
                      zwt           (np)                = 0  !the depth to water table [m]
                      wa            (np)                = 0  !water storage in aquifer [mm]
                      wdsrf         (np)                = 0  !depth of surface water [mm]
+                     !TODO@Wanyi: check whether they are state variables?
                      smp         (:,np)                = 0  !soil matrix potential [mm]
                      hk          (:,np)                = 0  !hydraulic conductivity [mm h2o/s]
-                     
+
                      IF(DEF_USE_PLANTHYDRAULICS)THEN
                         vegwp    (:,np)                = 0  !vegetation water potential [mm]
                         gs0sun     (np)                = 0  !working copy of sunlit stomata conductance
@@ -232,7 +236,7 @@ ENDIF
 
                      IF(DEF_USE_OZONESTRESS)THEN
                         lai_old    (np)                = 0  !lai in last time step
-                     ENDIF               
+                     ENDIF
 
                      snw_rds     (:,np)                = 0  !effective grain radius (col,lyr) [microns, m-6]
                      mss_bcpho   (:,np)                = 0  !mass of hydrophobic BC in snow  (col,lyr) [kg]
@@ -465,7 +469,7 @@ ENDIF
                         wa    (np) = wa    (np) + wa_     (frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
                         wdsrf (np) = wdsrf (np) + wdsrf_  (frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
 
-                        snw_rds   (:,np) = snw_rds   (:,np) + snw_rds_   (:,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np 
+                        snw_rds   (:,np) = snw_rds   (:,np) + snw_rds_   (:,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
                         mss_bcpho (:,np) = mss_bcpho (:,np) + mss_bcpho_ (:,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
                         mss_bcphi (:,np) = mss_bcphi (:,np) + mss_bcphi_ (:,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
                         mss_ocpho (:,np) = mss_ocpho (:,np) + mss_ocpho_ (:,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
@@ -478,13 +482,15 @@ ENDIF
                         ! TODO:or use same type assignment
                         smp       (:,np) = smp    (:,np) + smp_   (:,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
                         hk        (:,np) = hk     (:,np) + hk_    (:,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
-                        
+
+                        !TODO@Wanyi: check the the below vars whether they are needed
                         IF(DEF_USE_PLANTHYDRAULICS)THEN
                            vegwp  (:,np) = vegwp  (:,np) + vegwp_ (:,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
                            gs0sun   (np) = gs0sun   (np) + gs0sun_  (frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
                            gs0sha   (np) = gs0sha   (np) + gs0sha_  (frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
                         ENDIF
 
+                        !TODO@Wanyi: check the related namelist, DEF_USE_OZONESTRESS or some other?
                         IF(DEF_USE_OZONESTRESS)THEN
                            lai_old  (np) = lai_old  (np) + lai_old_ (frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
                         ENDIF
@@ -645,13 +651,13 @@ ENDIF
 
                      ! z0m_p was same-type assigned, then here we update sigf_p, sigf, fsno
                      CALL snowfraction_pftwrap (np,zlnd,scv(np),snowdp(np),wt,sigf(np),fsno(np))
-                     
+
                      ps  = patch_pft_s(np)
                      pe  = patch_pft_e(np)
                      ! ps_ = patch_pft_s_(selfnp_)f
                      ! pe_ = patch_pft_e_(selfnp_)
                      sai_p(ps:pe) = tsai_p(ps:pe) * sigf_p(ps:pe)
-                     sai(np) = sum(sai_p(ps:pe)*pftfrac(ps:pe))                     
+                     sai(np) = sum(sai_p(ps:pe)*pftfrac(ps:pe))
                   ENDIF
 
                   ! ! TODO: CALL REST - DONE
