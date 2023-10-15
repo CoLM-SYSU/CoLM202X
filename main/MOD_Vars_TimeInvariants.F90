@@ -66,6 +66,10 @@ MODULE MOD_Vars_PFTimeInvariants
 
      use MOD_NetCDFVector
      USE MOD_LandPFT
+#ifdef CROP
+     USE MOD_LandCrop,  only : pctshrpch
+     USE MOD_LandPatch, only : landpatch
+#endif
      IMPLICIT NONE
 
      character(LEN=*), intent(in) :: file_restart
@@ -74,6 +78,9 @@ MODULE MOD_Vars_PFTimeInvariants
      call ncio_read_vector (file_restart, 'pftfrac ', landpft, pftfrac ) !
      call ncio_read_vector (file_restart, 'htop_p  ', landpft, htop_p  ) !
      call ncio_read_vector (file_restart, 'hbot_p  ', landpft, hbot_p  ) !
+#ifdef CROP
+     call ncio_read_vector (file_restart, 'pct_crops', landpatch, pctshrpch) !
+#endif
 
   end subroutine READ_PFTimeInvariants
 
@@ -83,6 +90,10 @@ MODULE MOD_Vars_PFTimeInvariants
      use MOD_LandPFT
      USE MOD_Namelist
      USE MOD_Vars_Global
+#ifdef CROP
+     USE MOD_LandCrop,  only : pctshrpch
+     USE MOD_LandPatch, only : landpatch
+#endif
      IMPLICIT NONE
 
      ! Local variables
@@ -99,6 +110,11 @@ MODULE MOD_Vars_PFTimeInvariants
      call ncio_write_vector (file_restart, 'htop_p  ', 'pft', landpft, htop_p  , compress) !
      call ncio_write_vector (file_restart, 'hbot_p  ', 'pft', landpft, hbot_p  , compress) !
 
+#ifdef CROP
+     CALL ncio_define_dimension_vector (file_restart, landpatch, 'patch')
+     call ncio_write_vector (file_restart, 'pct_crops', 'patch', landpatch, pctshrpch, compress) !
+#endif
+
   end subroutine WRITE_PFTimeInvariants
 
   SUBROUTINE deallocate_PFTimeInvariants
@@ -107,6 +123,9 @@ MODULE MOD_Vars_PFTimeInvariants
 ! --------------------------------------------------
      USE MOD_SPMD_Task
      USE MOD_LandPFT
+#ifdef CROP
+     USE MOD_LandCrop, only : pctshrpch
+#endif
 
      IF (p_is_worker) THEN
         IF (numpft > 0) THEN
@@ -115,6 +134,9 @@ MODULE MOD_Vars_PFTimeInvariants
            deallocate (htop_p  )
            deallocate (hbot_p  )
         ENDIF
+#ifdef CROP
+        IF (allocated(pctshrpch)) deallocate(pctshrpch)
+#endif
      ENDIF
 
   END SUBROUTINE deallocate_PFTimeInvariants
@@ -123,11 +145,17 @@ MODULE MOD_Vars_PFTimeInvariants
   SUBROUTINE check_PFTimeInvariants ()
 
      use MOD_RangeCheck
+#ifdef CROP
+     USE MOD_LandCrop, only : pctshrpch
+#endif
      IMPLICIT NONE
 
      call check_vector_data ('pftfrac', pftfrac) !
      call check_vector_data ('htop_p ', htop_p ) !
      call check_vector_data ('hbot_p ', hbot_p ) !
+#ifdef CROP
+     call check_vector_data ('pct crop', pctshrpch) !
+#endif
 
   end subroutine check_PFTimeInvariants
 #endif
@@ -343,7 +371,7 @@ MODULE MOD_Vars_TimeInvariants
      character(LEN=256) :: file_restart, cyear
 
      write(cyear,'(i4.4)') lc_year
-     file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_const' // '_lc' // trim(cyear) // '.nc'
+     file_restart = trim(dir_restart) // '/const/' // trim(casename) //'_restart_const' // '_lc' // trim(cyear) // '.nc'
 
      call ncio_read_vector (file_restart, 'patchclass',   landpatch, patchclass)          !
      call ncio_read_vector (file_restart, 'patchtype' ,   landpatch, patchtype )          !
@@ -413,17 +441,17 @@ MODULE MOD_Vars_TimeInvariants
      call ncio_read_bcast_serial (file_restart, 'wetwatmax', wetwatmax) ! maximum wetland water (mm)
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
-     file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_pft_const' // '_lc' // trim(cyear) // '.nc'
+     file_restart = trim(dir_restart) // '/const/' // trim(casename) //'_restart_pft_const' // '_lc' // trim(cyear) // '.nc'
      CALL READ_PFTimeInvariants (file_restart)
 #endif
 
 #if (defined BGC)
-     file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_bgc_const' // '_lc' // trim(cyear) // '.nc'
+     file_restart = trim(dir_restart) // '/const/' // trim(casename) //'_restart_bgc_const' // '_lc' // trim(cyear) // '.nc'
      CALL READ_BGCTimeInvariants (file_restart)
 #endif
 
 #if (defined URBAN_MODEL)
-     file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_urb_const' // '_lc' // trim(cyear) // '.nc'
+     file_restart = trim(dir_restart) // '/const/' // trim(casename) //'_restart_urb_const' // '_lc' // trim(cyear) // '.nc'
      CALL READ_UrbanTimeInvariants (file_restart)
 #endif
 
@@ -468,7 +496,15 @@ MODULE MOD_Vars_TimeInvariants
      compress = DEF_REST_COMPRESS_LEVEL
 
      write(cyear,'(i4.4)') lc_year
-     file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_const' //'_lc'// trim(cyear) // '.nc'
+
+     IF (p_is_master) THEN
+        CALL system('mkdir -p ' // trim(dir_restart)//'/const')
+     ENDIF
+#ifdef USEMPI
+     call mpi_barrier (p_comm_glb, p_err)
+#endif
+
+     file_restart = trim(dir_restart) // '/const/' // trim(casename) //'_restart_const' //'_lc'// trim(cyear) // '.nc'
 
      call ncio_create_file_vector (file_restart, landpatch)
 
@@ -559,17 +595,17 @@ MODULE MOD_Vars_TimeInvariants
      end if
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
-     file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_pft_const' //'_lc'// trim(cyear) // '.nc'
+     file_restart = trim(dir_restart) // '/const/' // trim(casename) //'_restart_pft_const' //'_lc'// trim(cyear) // '.nc'
      CALL WRITE_PFTimeInvariants (file_restart)
 #endif
 
 #if (defined BGC)
-     file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_bgc_const' //'_lc'// trim(cyear) // '.nc'
+     file_restart = trim(dir_restart) // '/const/' // trim(casename) //'_restart_bgc_const' //'_lc'// trim(cyear) // '.nc'
      CALL WRITE_BGCTimeInvariants (file_restart)
 #endif
 
 #if (defined URBAN_MODEL)
-     file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_urb_const' //'_lc'// trim(cyear) // '.nc'
+     file_restart = trim(dir_restart) // '/const/' // trim(casename) //'_restart_urb_const' //'_lc'// trim(cyear) // '.nc'
      CALL WRITE_UrbanTimeInvariants (file_restart)
 #endif
 

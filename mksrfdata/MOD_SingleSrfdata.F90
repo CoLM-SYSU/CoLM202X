@@ -157,7 +157,7 @@ CONTAINS
          LocalLongitude = SITE_lon_location
       ENDIF
 
-#if (defined LULC_IGBP_PFT)
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
       IF ((.not. mksrfdata) .or. USE_SITE_pctpfts) THEN
          CALL ncio_read_serial (fsrfdata, 'pfttyp', SITE_pfttyp )
          ! otherwise, retrieve from database by MOD_LandPFT.F90
@@ -441,7 +441,7 @@ CONTAINS
       CALL ncio_write_serial (fsrfdata, 'IGBP_classification', SITE_landtype)
 #endif
 
-#if (defined LULC_IGBP_PFT)
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
       CALL ncio_write_serial (fsrfdata, 'pfttyp',  SITE_pfttyp,  'pft')
       CALL ncio_put_attr     (fsrfdata, 'pfttyp', 'source', datasource(USE_SITE_pctpfts))
 #endif

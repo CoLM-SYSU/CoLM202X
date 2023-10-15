@@ -13,6 +13,7 @@ MODULE MOD_SoilSnowHydrology
    use MOD_LandPFT, only: patch_pft_s, patch_pft_e
    use MOD_Irrigation, only: CalIrrigationApplicationFluxes
 #endif
+  use MOD_LandPatch, only: landpatch
   IMPLICIT NONE
   SAVE
 
@@ -837,7 +838,7 @@ MODULE MOD_SoilSnowHydrology
 #endif
 #if(defined CoLMDEBUG)
       if(abs(err_solver) > 1.e-3)then
-         write(6,'(A,E20.5,I0)') 'Warning (WATER_VSF): water balance violation', err_solver,ipatch
+         write(6,'(A,E20.5,I0)') 'Warning (WATER_VSF): water balance violation', err_solver,landpatch%eindex(ipatch)
       endif
       IF (any(wliq_soisno < -1.e-3)) THEN
          write(6,'(A,10E20.5)') 'Warning (WATER_VSF): negative soil water', wliq_soisno(1:nl_soil)
