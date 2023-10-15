@@ -17,6 +17,7 @@ module MOD_Hydro_SoilWater
 
    use MOD_Precision
    use MOD_Hydro_SoilFunction
+   use MOD_Namelist, only: DEF_USE_PLANTHYDRAULICS
 
    implicit none
 
@@ -40,7 +41,7 @@ module MOD_Hydro_SoilWater
    integer, parameter :: type_weighted_geometric_mean = 2
 
    integer,  parameter :: effective_hk_type  = type_weighted_geometric_mean
-   integer,  parameter :: max_iters_richards = 6
+   integer,  parameter :: max_iters_richards = 10
    real(r8), parameter :: tol_richards = 1.e-7
 
 #ifdef CoLMDEBUG
@@ -159,7 +160,7 @@ contains
          nlev,  dt,   sp_zc, sp_zi,   is_permeable,  &
          porsl, vl_r, psi_s, hksat,   nprm,   prms,  &
          porsl_wa,                                   &
-         qgtop, etr,  rootr, rsubst,  qinfl,         &
+         qgtop, etr,  rootr, rootflux, rsubst,  qinfl,         &
          ss_dp, zwt,  wa,    ss_vliq, smp,    hk  ,  &
          tolerance )
 
@@ -195,6 +196,7 @@ contains
       
       REAL(r8), intent(in) :: etr           ! transpiration rate (mm/s)
       REAL(r8), intent(in) :: rootr(1:nlev) ! root fractions (percentage)
+      REAL(r8), intent(in) :: rootflux(1:nlev) ! root water uptake from different layers (mm/s)
 
       REAL(r8), intent(in)  :: rsubst ! subsurface runoff (mm/s)
       REAL(r8), intent(out) :: qinfl  ! infiltration into soil (mm/s)
@@ -263,16 +265,21 @@ contains
 #endif
 
       ! transpiration
-      sumroot   = sum(rootr, mask = is_permeable .and. (rootr > 0.))
-      etroot(:) = 0.
-      IF (sumroot > 0.) THEN
-         where (is_permeable)
-            etroot = etr * max(rootr, 0.) / sumroot
-         END where
+      if(.not. DEF_USE_PLANTHYDRAULICS)then
+         sumroot   = sum(rootr, mask = is_permeable .and. (rootr > 0.))
+         etroot(:) = 0.
+         IF (sumroot > 0.) THEN
+            where (is_permeable)
+               etroot = etr * max(rootr, 0.) / sumroot
+            END where
+            deficit = 0.
+         ELSE
+            deficit = etr*dt
+         ENDIF
+      else
          deficit = 0.
-      ELSE
-         deficit = etr*dt
-      ENDIF
+         etroot(:) = rootflux
+      end if
 
       do ilev = 1, izwt-1
          IF (is_permeable(ilev)) THEN
@@ -280,9 +287,9 @@ contains
             ss_vliq(ilev) = (ss_vliq(ilev) * sp_dz(ilev) &
                - etroot(ilev)*dt - deficit) / sp_dz(ilev)
 
-            IF (ss_vliq(ilev) < vl_r(ilev)) THEN
-               deficit = (vl_r(ilev) - ss_vliq(ilev)) * sp_dz(ilev)
-               ss_vliq(ilev) = vl_r(ilev)
+            IF (ss_vliq(ilev) < 0) THEN
+               deficit = ( - ss_vliq(ilev)) * sp_dz(ilev)
+               ss_vliq(ilev) = 0 
             ELSEIF (ss_vliq(ilev) > porsl(ilev)) THEN
                deficit = - (ss_vliq(ilev) - porsl(ilev)) * sp_dz(ilev)
                ss_vliq(ilev) = porsl(ilev)
@@ -759,7 +766,7 @@ contains
                ubc_typ, ubc_val, lbc_typ, lbc_val, &
                ss_wf, ss_vl, ss_wt, ss_dp, waquifer, &
                wf_m1, vl_m1, wt_m1, dp_m1, waquifer_m1, &
-               blc, is_solvable)
+               blc, is_solvable, tol_richards * dt_this)
 
             if (iter == 1) then
                q_0 = q_this
@@ -1050,7 +1057,7 @@ contains
          ubc_typ, ubc_val, lbc_typ, lbc_val, &
          wf, vl, wt, dp, waquifer, &
          wf_m1, vl_m1, wt_m1, dp_m1, waquifer_m1, &
-         blc, is_solvable)
+         blc, is_solvable, tol)
 
       integer, intent(in) :: lb, ub
 
@@ -1081,6 +1088,7 @@ contains
 
       real(r8), intent(out) :: blc(lb-1:ub+1)
       logical,  intent(out), optional :: is_solvable
+      real(r8), intent(in ), optional :: tol
 
       ! Local variables
       integer  :: ilev, jlev
@@ -1131,7 +1139,11 @@ contains
       end if
 
       if (present(is_solvable)) then
-         is_solvable = (ubc_typ == bc_rainfall) .or. (blc(lb-1) == 0)
+         IF (present(tol)) THEN
+            is_solvable = (ubc_typ == bc_rainfall) .or. (blc(lb-1) < tol)
+         ELSE
+            is_solvable = (ubc_typ == bc_rainfall) .or. (blc(lb-1) == 0)
+         ENDIF
       end if
 
    end subroutine water_balance
@@ -1363,8 +1375,8 @@ contains
          dwat = (q(ilev-1) - q(ilev)) * dt
          wa_m1 = (wt_m1(ilev)+wf_m1(ilev)) * vl_s(ilev) &
             + (dz(ilev)-wt_m1(ilev)-wf_m1(ilev)) * vl_m1(ilev)
-         if (dwat <= - wa_m1/2) then
-            q(ilev) = q(ilev-1) + wa_m1/2/dt
+         if (dwat <= - wa_m1) then
+            q(ilev) = q(ilev-1) + wa_m1/dt
          end if
 
       end do
@@ -1376,8 +1388,8 @@ contains
             dwat = (q(ilev-1) - q(ilev)) * dt
             wa_m1 = (wt_m1(ilev)+wf_m1(ilev)) * vl_s(ilev) &
                + (dz(ilev)-wt_m1(ilev)-wf_m1(ilev)) * vl_m1(ilev)
-            if (dwat <= - wa_m1/2) then
-               q(ilev-1) = q(ilev) - wa_m1/2/dt
+            if (dwat <= - wa_m1) then
+               q(ilev-1) = q(ilev) - wa_m1/dt
             end if
          ENDDO
 
@@ -3530,10 +3542,13 @@ contains
       x_k2 = x_k1
       x_k1 = x_i
 
-      x_i = (fval_k1 * x_k2 - fval_k2 * x_k1) / (fval_k1 - fval_k2)
-
-      x_i = max(x_i, x_l * alp + x_r * (1.0_r8 - alp))
-      x_i = min(x_i, x_l * (1.0_r8 - alp) + x_r * alp)
+      IF (fval_k1 == fval_k2) THEN
+         x_i = (x_l + x_r) * 0.5_r8
+      ELSE
+         x_i = (fval_k1 * x_k2 - fval_k2 * x_k1) / (fval_k1 - fval_k2)
+         x_i = max(x_i, x_l * alp + x_r * (1.0_r8 - alp))
+         x_i = min(x_i, x_l * (1.0_r8 - alp) + x_r * alp)
+      ENDIF
 
    end subroutine secant_method_iteration
 

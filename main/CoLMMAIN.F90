@@ -70,7 +70,7 @@ SUBROUTINE CoLMMAIN ( &
            mss_dst1,     mss_dst2,     mss_dst3,      mss_dst4,     &
 
          ! additional diagnostic variables for output
-           laisun,       laisha,       rootr,        rss,           &
+           laisun,       laisha,       rootr,        rootflux,      rss,           &
            rstfacsun_out,rstfacsha_out,gssun_out,    gssha_out,     &
            assimsun_out, etrsun_out,   assimsha_out, etrsha_out,    &
            h2osoi,       wat,           &
@@ -378,6 +378,7 @@ SUBROUTINE CoLMMAIN ( &
         wat           ,&! total water storage
         rss           ,&! soil surface resistance [s/m]
         rootr(nl_soil),&! water exchange between soil and root. Positive: soil->root [?]
+        rootflux(nl_soil),&! water exchange between soil and root in different layers. Posiitive: soil->root [?]
         h2osoi(nl_soil) ! volumetric soil water in layers [m3/m3]
 
   real(r8), intent(out) :: &
@@ -705,7 +706,7 @@ ENDIF
            taux              ,tauy              ,fsena             ,fevpa             ,&
            lfevpa            ,fsenl             ,fevpl             ,etr               ,&
            fseng             ,fevpg             ,olrg              ,fgrnd             ,&
-           rootr             ,qseva             ,qsdew             ,qsubl             ,&
+           rootr             ,rootflux          ,qseva             ,qsdew             ,qsubl             ,&
            qfros             ,sm                ,tref              ,qref              ,&
            trad              ,rst               ,assim             ,respc             ,&
 
@@ -721,7 +722,7 @@ ENDIF
          CALL WATER (ipatch     ,patchtype         ,lb                ,nl_soil           ,&
               deltim            ,z_soisno(lb:)     ,dz_soisno(lb:)    ,zi_soisno(lb-1:)  ,&
               bsw               ,porsl             ,psi0              ,hksati            ,&
-              rootr             ,t_soisno(lb:)     ,wliq_soisno(lb:)  ,wice_soisno(lb:)  ,smp,hk,&
+              rootr             ,rootflux          ,t_soisno(lb:)     ,wliq_soisno(lb:)  ,wice_soisno(lb:)  ,smp,hk,&
               pg_rain           ,sm                ,etr               ,qseva             ,&
               qsdew             ,qsubl             ,qfros             ,rsur              ,&
               rnof              ,qinfl             ,wtfact            ,pondmx            ,&
@@ -750,7 +751,7 @@ ENDIF
               sc_vgm            ,fc_vgm            ,&
 #endif
               porsl             ,psi0              ,hksati            ,&
-              rootr             ,t_soisno(lb:)     ,wliq_soisno(lb:)  ,wice_soisno(lb:)  ,smp,hk,&
+              rootr             ,rootflux          ,t_soisno(lb:)     ,wliq_soisno(lb:)  ,wice_soisno(lb:)  ,smp,hk,&
               pg_rain           ,sm                ,etr               ,qseva             ,&
               qsdew             ,qsubl             ,qfros             ,rsur              ,&
               rnof              ,qinfl             ,wtfact            ,ssi               ,&
@@ -871,11 +872,11 @@ ENDIF
 #if(defined CoLMDEBUG)
       IF (abs(errorw) > 1.e-3) THEN
          IF (patchtype <= 1) THEN
-            write(6,*) 'Warning: water balance violation in CoLMMAIN (soil) ', errorw
-            CALL CoLM_stop ()
+            write(6,*) 'Warning: water balance violation in CoLMMAIN (soil) ', errorw,ipatch, p_iam_glb
          ELSEIF (patchtype == 2) THEN
             write(6,*) 'Warning: water balance violation in CoLMMAIN (wetland) ', errorw
          ENDIF
+         CALL CoLM_stop ()
       ENDIF
       IF(abs(errw_rsub*deltim)>1.e-3) THEN
          write(6,*) 'Subsurface runoff deficit due to PHS', errw_rsub*deltim
@@ -1410,6 +1411,7 @@ ENDIF
        assimsha_out  = 0.
        etrsha_out    = 0.
        rootr         = 0.
+       rootflux      = 0.
        zwt           = 0.
 
        IF (.not. DEF_USE_VARIABLY_SATURATED_FLOW) THEN
