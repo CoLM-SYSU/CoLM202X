@@ -213,6 +213,7 @@ ENDIF
                      z_sno       (:,np)                = 0  !node depth [m]
                      dz_sno      (:,np)                = 0  !interface depth [m]
                      t_grnd        (np)                = 0  !ground surface temperature [K]
+                     tleaf         (np)                = 0  !leaf temperature [K]
                      ldew          (np)                = 0  !depth of water on foliage [mm]
                      ldew_rain     (np)                = 0  !depth of rain on foliage [mm]
                      ldew_snow     (np)                = 0  !depth of snow on foliage [mm]
@@ -224,7 +225,7 @@ ENDIF
                      zwt           (np)                = 0  !the depth to water table [m]
                      wa            (np)                = 0  !water storage in aquifer [mm]
                      wdsrf         (np)                = 0  !depth of surface water [mm]
-                     !TODO@Wanyi: check whether they are state variables?
+                     !TODO@Wanyi: check whether they are state variables? -- both are diagnostic variable, calculated in MOD_SoilSnowHydrology.F90
                      smp         (:,np)                = 0  !soil matrix potential [mm]
                      hk          (:,np)                = 0  !hydraulic conductivity [mm h2o/s]
 
@@ -247,6 +248,7 @@ ENDIF
                      mss_dst2    (:,np)                = 0  !mass of dust species 2 in snow  (col,lyr) [kg]
                      mss_dst3    (:,np)                = 0  !mass of dust species 3 in snow  (col,lyr) [kg]
                      mss_dst4    (:,np)                = 0  !mass of dust species 4 in snow  (col,lyr) [kg]
+                     ssno    (:,:,:,np)                = 0  !snow layer absorption [-]
 
                      trad          (np)                = 0  !radiative temperature of surface [K]
                      tref          (np)                = 0  !2 m height air temperature [kelvin]
@@ -264,6 +266,7 @@ ENDIF
                      fq            (np)                = 0  !integral of profile function for moisture
 
 
+                     ! 1) Energy and mass conserve adjustment (except for dz_sno).
                      ! Calculate the weight of temperature adjustment
                      c_water = cpliq * denh2o ! J/(m3 K) = 4188   [J/(kg K)]*1000(kg/m3)
                      c_ice   = cpice * denice ! J/(m3 K) = 2117.27[J/(kg K)]*917 (kg/m3)
@@ -445,12 +448,6 @@ ENDIF
 
                      ENDIF
 
-                     DO l = maxsnl+1, 0
-                        IF ( z_sno(l,np) .lt. 0 ) THEN
-                           scv(np) = scv(np) + wice_soisno(l,np) + wliq_soisno(l,np)
-                           snowdp(np) = snowdp(np) + dz_sno(l,np)
-                        ENDIF
-                     ENDDO
 
                      ! Variable adjustment
                      DO k = 1, num
@@ -460,6 +457,7 @@ ENDIF
                            + wice_soisno_(1:nl_soil,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
                         t_soisno (1:nl_soil,np) = t_soisno (1:nl_soil,np) &
                            + t_soisno_(1:nl_soil,frnp_(k))*cvsoil_(1:nl_soil,k)*lccpct_np(patchclass_(frnp_(k)))/wgt(1:nl_soil)
+                        tleaf     (np) = tleaf     (np) + tleaf_     (frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
                         ldew      (np) = ldew      (np) + ldew_      (frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
                         ldew_rain (np) = ldew_rain (np) + ldew_rain_ (frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
                         ldew_snow (np) = ldew_snow (np) + ldew_snow_ (frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
@@ -478,19 +476,21 @@ ENDIF
                         mss_dst2  (:,np) = mss_dst2  (:,np) + mss_dst2_  (:,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
                         mss_dst3  (:,np) = mss_dst3  (:,np) + mss_dst3_  (:,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
                         mss_dst4  (:,np) = mss_dst4  (:,np) + mss_dst4_  (:,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                        ssno  (:,:,:,np) = ssno  (:,:,:,np) + ssno_  (:,:,:,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
 
                         ! TODO:or use same type assignment
                         smp       (:,np) = smp    (:,np) + smp_   (:,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
                         hk        (:,np) = hk     (:,np) + hk_    (:,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
 
-                        !TODO@Wanyi: check the the below vars whether they are needed
+                        !TODO@Wanyi: check the the below vars whether they are needed - all occur in MOD_Vars_TimeVariables.F90
                         IF(DEF_USE_PLANTHYDRAULICS)THEN
                            vegwp  (:,np) = vegwp  (:,np) + vegwp_ (:,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
                            gs0sun   (np) = gs0sun   (np) + gs0sun_  (frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
                            gs0sha   (np) = gs0sha   (np) + gs0sha_  (frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
                         ENDIF
 
-                        !TODO@Wanyi: check the related namelist, DEF_USE_OZONESTRESS or some other?
+                        !TODO@Wanyi: check the related namelist, DEF_USE_OZONESTRESS or some other? 
+                        ! - checked. Line 1109 of MOD_Vars_TimeVariables.F90
                         IF(DEF_USE_OZONESTRESS)THEN
                            lai_old  (np) = lai_old  (np) + lai_old_ (frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
                         ENDIF
@@ -511,12 +511,12 @@ ENDIF
                         fq          (np) = fq       (np) + fq_      (frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
                      ENDDO
 
-                     ! Get the lowest zwt from source patches and assign to np suggested by Shupeng Zhang
-                     zwt(np) = zwt_(frnp_(1))
-                     k = 2
-                     DO WHILE (k .le. num)
-                        IF ( zwt_(frnp_(k)) .lt. zwt(np) ) zwt(np) = zwt_(frnp_(k))
-                        k = k + 1
+                     ! 2) adjusted based on code of physical process.
+                     DO l = maxsnl+1, 0
+                        IF ( z_sno(l,np) .lt. 0 ) THEN
+                           scv(np) = scv(np) + wice_soisno(l,np) + wliq_soisno(l,np)
+                           snowdp(np) = snowdp(np) + dz_sno(l,np)
+                        ENDIF
                      ENDDO
 
                      ! ! Use restart value from the same type of source patch or remain initialized
@@ -554,6 +554,14 @@ ENDIF
                            ENDIF
                         ENDDO
                      ENDIF
+
+                     ! Get the lowest zwt from source patches and assign to np suggested by Shupeng Zhang
+                     zwt(np) = zwt_(frnp_(1))
+                     k = 2
+                     DO WHILE (k .le. num)
+                        IF ( zwt_(frnp_(k)) .lt. zwt(np) ) zwt(np) = zwt_(frnp_(k))
+                        k = k + 1
+                     ENDDO
 
                      ! check water balance
                      wbef = 0
@@ -646,15 +654,17 @@ ENDIF
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
 
                   IF (patchtype(np)==0) THEN
-                     ! ! if totally come from other types,ldew set to zero since ldew_p(:)=0
-                     ! ldew(np) = sum( ldew_p(ps:pe)*pftfrac(ps:pe) )
+                     ps  = patch_pft_s(np)
+                     pe  = patch_pft_e(np)                     
+                     ! if totally come from other types,ldew set to zero since ldew_p(:)=0
+                     ldew(np) = sum( ldew_p(ps:pe)*pftfrac(ps:pe) )
 
                      ! z0m_p was same-type assigned, then here we update sigf_p, sigf, fsno
                      CALL snowfraction_pftwrap (np,zlnd,scv(np),snowdp(np),wt,sigf(np),fsno(np))
 
                      ps  = patch_pft_s(np)
                      pe  = patch_pft_e(np)
-                     ! ps_ = patch_pft_s_(selfnp_)f
+                     ! ps_ = patch_pft_s_(selfnp_)
                      ! pe_ = patch_pft_e_(selfnp_)
                      sai_p(ps:pe) = tsai_p(ps:pe) * sigf_p(ps:pe)
                      sai(np) = sum(sai_p(ps:pe)*pftfrac(ps:pe))
@@ -699,8 +709,6 @@ ENDIF
                   !    ENDDO
                   !    ldew(np) = sum( ldew_p(ps:pe)*pftfrac(ps:pe) )
                   ! ENDIF
-
-                  ldew(np) = sum( ldew_p(ps:pe)*pftfrac(ps:pe) )
 
 #endif
 

@@ -37,10 +37,8 @@ MODULE MOD_Lulcc_Vars_TimeVariables
   real(r8), allocatable :: sag_           (:)  !non dimensional snow age [-]
   real(r8), allocatable :: scv_           (:)  !snow cover, water equivalent [mm]
   real(r8), allocatable :: snowdp_        (:)  !snow depth [meter]
-  real(r8), allocatable :: fveg_          (:)  !fraction of vegetation cover
   real(r8), allocatable :: fsno_          (:)  !fraction of snow cover on ground
   real(r8), allocatable :: sigf_          (:)  !fraction of veg cover, excluding snow-covered veg [-]
-  real(r8), allocatable :: green_         (:)  !leaf greenness
   real(r8), allocatable :: zwt_           (:)  !the depth to water table [m]
   real(r8), allocatable :: wa_            (:)  !water storage in aquifer [mm]
   real(r8), allocatable :: wdsrf_         (:)  !depth of surface water [mm]
@@ -254,10 +252,8 @@ MODULE MOD_Lulcc_Vars_TimeVariables
            allocate (sag_                          (numpatch))
            allocate (scv_                          (numpatch))
            allocate (snowdp_                       (numpatch))
-           allocate (fveg_                         (numpatch))
            allocate (fsno_                         (numpatch))
            allocate (sigf_                         (numpatch))
-           allocate (green_                        (numpatch))
            allocate (zwt_                          (numpatch))
            allocate (wa_                           (numpatch))
            allocate (wdsrf_                        (numpatch))
@@ -449,10 +445,8 @@ MODULE MOD_Lulcc_Vars_TimeVariables
          sag_          = sag
          scv_          = scv
          snowdp_       = snowdp
-         fveg_         = fveg
          fsno_         = fsno
          sigf_         = sigf
-         green_        = green
          zwt_          = zwt
          wa_           = wa
          wdsrf_        = wdsrf
@@ -733,14 +727,12 @@ ENDIF
                     sag           (np) = sag_           (np_)
                     scv           (np) = scv_           (np_)
                     snowdp        (np) = snowdp_        (np_)
-                    fveg          (np) = fveg_          (np_)
                     fsno          (np) = fsno_          (np_)
                     sigf          (np) = sigf_          (np_)
                     ! In case lai+sai come into existence this year, set sigf to 1
                     IF ( (sigf(np) .eq. 0) .and. ((lai(np) + sai(np)) .gt. 0) ) THEN
                        sigf(np) = 1
                     ENDIF
-                    green         (np) = green_         (np_)
                     zwt           (np) = zwt_           (np_)
                     wa            (np) = wa_            (np_)
                     wdsrf         (np) = wdsrf_         (np_)
@@ -993,10 +985,8 @@ ENDIF
            deallocate (sag_          )
            deallocate (scv_          )
            deallocate (snowdp_       )
-           deallocate (fveg_         )
            deallocate (fsno_         )
            deallocate (sigf_         )
-           deallocate (green_        )
            deallocate (zwt_          )
            deallocate (wa_           )
            deallocate (wdsrf_        )
