@@ -656,16 +656,14 @@ ENDIF
                   IF (patchtype(np)==0) THEN
                      ps  = patch_pft_s(np)
                      pe  = patch_pft_e(np)                     
+                     ! ps_ = patch_pft_s_(selfnp_)
+                     ! pe_ = patch_pft_e_(selfnp_)
                      ! if totally come from other types,ldew set to zero since ldew_p(:)=0
                      ldew(np) = sum( ldew_p(ps:pe)*pftfrac(ps:pe) )
 
                      ! z0m_p was same-type assigned, then here we update sigf_p, sigf, fsno
                      CALL snowfraction_pftwrap (np,zlnd,scv(np),snowdp(np),wt,sigf(np),fsno(np))
 
-                     ps  = patch_pft_s(np)
-                     pe  = patch_pft_e(np)
-                     ! ps_ = patch_pft_s_(selfnp_)
-                     ! pe_ = patch_pft_e_(selfnp_)
                      sai_p(ps:pe) = tsai_p(ps:pe) * sigf_p(ps:pe)
                      sai(np) = sum(sai_p(ps:pe)*pftfrac(ps:pe))
                   ENDIF
