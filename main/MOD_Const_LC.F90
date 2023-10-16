@@ -8,7 +8,7 @@ MODULE MOD_Const_LC
 !
 ! Created by Hua Yuan, 08/2019
 !
-! REVISIONS:
+! !REVISIONS:
 ! Hua Yuan, 08/2019: initial version adapted from IniTimeConst.F90 of CoLM2014
 ! Hua Yuan, 08/2019: added constants values for IGBP land cover types
 ! TODO...
@@ -519,22 +519,22 @@ MODULE MOD_Const_LC
    real(r8), parameter, dimension(N_land_classification) :: kmax_sun0_igbp &
       = (/2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008, &
           2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008, &
-          0.     , 2.e-008, 0.     , 0.     , 0.     /)
+          2.e-008, 2.e-008, 0.     , 0.     , 0.     /)
 
    real(r8), parameter, dimension(N_land_classification) :: kmax_sha0_igbp &
       = (/2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008, &
           2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008, &
-          0.     , 2.e-008, 0.     , 0.     , 0.     /)
+          2.e-008, 2.e-008, 0.     , 0.     , 0.     /)
 
    real(r8), parameter, dimension(N_land_classification) :: kmax_xyl0_igbp &
       = (/2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008, &
           2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008, &
-          0.     , 2.e-008, 0.     , 0.     , 0.     /)
+          2.e-008, 2.e-008, 0.     , 0.     , 0.     /)
 
    real(r8), parameter, dimension(N_land_classification) :: kmax_root0_igbp &
       = (/2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008, &
           2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008, &
-          0.     , 2.e-008, 0.     , 0.     , 0.     /)
+          2.e-008, 2.e-008, 0.     , 0.     , 0.     /)
 
    ! water potential at 50% loss of sunlit leaf tissue conductance (mmH2O)
    real(r8), parameter, dimension(N_land_classification) :: psi50_sun0_igbp &
@@ -564,7 +564,7 @@ MODULE MOD_Const_LC
    real(r8), parameter, dimension(N_land_classification) :: ck0_igbp &
       = (/3.95, 3.95, 3.95, 3.95, 3.95, 3.95, &
           3.95, 3.95, 3.95, 3.95, 3.95, 3.95, &
-          0.  , 3.95, 0.  , 0.  , 0.  /)
+          3.95, 3.95, 0.  , 0.  , 0.  /)
 !end plant hydraulic parameters
 #endif
 

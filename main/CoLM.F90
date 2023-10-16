@@ -88,6 +88,10 @@ PROGRAM CoLM
    USE MOD_SnowSnicar, only: SnowAge_init, SnowOptics_init
    USE MOD_Aerosol, only: AerosolDepInit, AerosolDepReadin
 
+#ifdef DataAssimilation
+   USE MOD_DataAssimilation
+#endif
+
    IMPLICIT NONE
 
    character(LEN=256) :: nlfile
@@ -299,6 +303,10 @@ PROGRAM CoLM
    CALL lateral_flow_init ()
 #endif
 
+#ifdef DataAssimilation
+   CALL init_DataAssimilation ()
+#endif
+
    ! ======================================================================
    ! begin time stepping loop
    ! ======================================================================
@@ -393,6 +401,10 @@ PROGRAM CoLM
 
 #if(defined CaMa_Flood)
       call colm_CaMa_drv(idate(3)) ! run CaMa-Flood
+#endif
+
+#ifdef DataAssimilation
+      CALL do_DataAssimilation (idate, deltim)
 #endif
 
       ! Write out the model variables for restart run and the histroy file
@@ -525,6 +537,10 @@ PROGRAM CoLM
 
 #if(defined CaMa_Flood)
    CALL colm_cama_exit ! finalize CaMa-Flood
+#endif
+
+#ifdef DataAssimilation
+   CALL final_DataAssimilation ()
 #endif
 
    IF (p_is_master) THEN

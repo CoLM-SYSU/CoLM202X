@@ -19,7 +19,7 @@ MODULE MOD_GroundFluxes
    subroutine GroundFluxes (zlnd, zsno, hu, ht, hq,&
                             hpbl, &
                             us, vs, tm, qm, rhoair, psrf,&
-                            ur, thm, th, thv, t_grnd, qg, dqgdT, htvp,&
+                            ur, thm, th, thv, t_grnd, qg, rss, dqgdT, htvp,&
                             fsno, cgrnd, cgrndl, cgrnds,&
                             t_soil, t_snow, q_soil, q_snow, &
                             taux, tauy, fseng, fseng_soil, fseng_snow, &
@@ -43,7 +43,7 @@ MODULE MOD_GroundFluxes
     use MOD_Precision
     use MOD_Const_Physical, only: cpair,vonkar,grav
     use MOD_FrictionVelocity
-    USE mod_namelist, only: DEF_USE_CBL_HEIGHT
+    USE mod_namelist, only: DEF_USE_CBL_HEIGHT,DEF_RSS_SCHEME
     USE MOD_TurbulenceLEddy
     implicit none
 
@@ -78,6 +78,7 @@ MODULE MOD_GroundFluxes
           q_soil,    &! ground soil specific humidity [kg/kg]
           q_snow,    &! ground snow specific humidity [kg/kg]
           dqgdT,     &! d(qg)/dT
+          rss,      &! soil surface resistance for evaporation [s/m]
           htvp        ! latent heat of vapor of water (or sublimation) [j/kg]
 
     real(r8), INTENT(out) :: &
@@ -223,7 +224,16 @@ MODULE MOD_GroundFluxes
 
   ! 08/23/2019, yuan:
         raih   = rhoair*cpair/rah
-        raiw   = rhoair/raw
+
+        IF (dqh < 0.) THEN
+           raiw   = rhoair/raw !dew case. no soil resistance
+        ELSE
+           IF (DEF_RSS_SCHEME .eq. 4) THEN
+              raiw   = rss*rhoair/raw
+           ELSE
+              raiw   = rhoair/(raw+rss)
+           END IF
+        END IF
         cgrnds = raih
         cgrndl = raiw*dqgdT
         cgrnd  = cgrnds + htvp*cgrndl

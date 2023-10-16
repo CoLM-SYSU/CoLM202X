@@ -34,7 +34,7 @@ MODULE MOD_Thermal
                       BA_alpha    ,BA_beta                              ,&
                       lai         ,laisun      ,laisha                  ,&
                       sai         ,htop        ,hbot        ,sqrtdi     ,&
-                      rootfr      ,rstfacsun_out   ,rstfacsha_out       ,&
+                      rootfr      ,rstfacsun_out,rstfacsha_out,rss      ,&
                       gssun_out   ,gssha_out   ,&
                       assimsun_out,etrsun_out  ,assimsha_out,etrsha_out ,&
 !photosynthesis and plant hydraulic variables
@@ -60,7 +60,7 @@ MODULE MOD_Thermal
                       taux        ,tauy        ,fsena       ,fevpa      ,&
                       lfevpa      ,fsenl       ,fevpl       ,etr        ,&
                       fseng       ,fevpg       ,olrg        ,fgrnd      ,&
-                      rootr       ,&
+                      rootr       ,rootflux    ,&
                       qseva       ,qsdew       ,qsubl       ,qfros      ,&
                       qseva_soil  ,qsdew_soil  ,qsubl_soil  ,qfros_soil ,&
                       qseva_snow  ,qsdew_snow  ,qsubl_snow  ,qfros_snow ,&
@@ -110,6 +110,7 @@ MODULE MOD_Thermal
   USE MOD_LeafTemperaturePC
   USE MOD_GroundTemperature
   USE MOD_Qsadv
+  USE MOD_SoilSurfaceResistance
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
   USE MOD_LandPFT, only: patch_pft_s, patch_pft_e
   USE MOD_Vars_TimeInvariants, only: patchclass
@@ -121,7 +122,7 @@ MODULE MOD_Thermal
   USE MOD_Hydro_SoilFunction, only: soil_psi_from_vliq
 #endif
   USE MOD_SPMD_Task
-  USE MOD_Namelist, only: DEF_USE_PLANTHYDRAULICS, DEF_SPLIT_SOILSNOW, &
+  USE MOD_Namelist, only: DEF_USE_PLANTHYDRAULICS, DEF_RSS_SCHEME, DEF_SPLIT_SOILSNOW, &
                           DEF_USE_LCT,DEF_USE_PFT,DEF_USE_PC
 
   IMPLICIT NONE
@@ -134,6 +135,8 @@ MODULE MOD_Thermal
        patchtype     ! land patch type (0=soil, 1=urban or built-up, 2=wetland,
                       !                  3=glacier/ice sheet, 4=land water bodies)
 
+  real(r8), intent(inout) :: &
+        sai           ! stem area index  [-]
   real(r8), intent(in) :: &
        deltim,      &! model time step [second]
        trsmx0,      &! max transpiration for moist soil+100% veg.  [mm/s]
@@ -175,7 +178,6 @@ MODULE MOD_Thermal
 
        ! vegetation parameters
        lai,         &! adjusted leaf area index for seasonal variation [-]
-       sai,         &! stem area index  [-]
        htop,        &! canopy crown top height [m]
        hbot,        &! canopy crown bottom height [m]
        sqrtdi,      &! inverse sqrt of leaf dimension [m**-0.5]
@@ -303,7 +305,8 @@ MODULE MOD_Thermal
        fevpg,       &! evaporation heat flux from ground [mm/s]
        olrg,        &! outgoing long-wave radiation from ground+canopy
        fgrnd,       &! ground heat flux [W/m2]
-       rootr(1:nl_soil),&! root resistance of a layer, all layers add to 1
+       rootr(1:nl_soil),&! water uptake farction from different layers, all layers add to 1.0
+       rootflux(1:nl_soil),&! root uptake from different layer, all layers add to transpiration
 
        qseva,       &! ground surface evaporation rate (mm h2o/s)
        qsdew,       &! ground surface dew formation (mm h2o /s) [+]
@@ -322,7 +325,7 @@ MODULE MOD_Thermal
        tref,        &! 2 m height air temperature [kelvin]
        qref,        &! 2 m height air specific humidity
        trad,        &! radiative temperature [K]
-
+        rss,         &! bare soil resistance for evaporation [s/m]
        rst,         &! stomatal resistance (s m-1)
        assim,       &! assimilation
        respc,       &! respiration
@@ -405,6 +408,7 @@ MODULE MOD_Thermal
   integer p, ps, pe, pc
 
   real(r8), allocatable :: rootr_p     (:,:)
+  real(r8), allocatable :: rootflux_p  (:,:)
   real(r8), allocatable :: etrc_p        (:)
   real(r8), allocatable :: rstfac_p      (:)
   real(r8), allocatable :: rstfacsun_p   (:)
@@ -564,6 +568,26 @@ ELSE
       qg = (1.-fsno)*q_soil + fsno*q_snow
 ENDIF
 
+      ! calculate soil surface resistance (rss)
+      ! ------------------------------------------------
+      !NOTE: (1) DEF_RSS_SCHEME=0 means no rss considered
+      !      (2) Do NOT calculate rss for the first timestep
+      IF (DEF_RSS_SCHEME>0 .and. rss/=spval) THEN
+
+         !NOTE: If the beta scheme is used, the rss is not soil resistance,
+         !but soil beta factor (soil wetness relative to field capacity [0-1]).
+         CALL SoilSurfaceResistance (nl_soil,forc_rhoair,hksati,porsl,psi0, &
+#ifdef Campbell_SOIL_MODEL
+                            bsw, &
+#endif
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
+                            theta_r, alpha_vgm, n_vgm, L_vgm, sc_vgm, fc_vgm, &
+#endif
+                            dz_soisno,t_soisno,wliq_soisno,wice_soisno,fsno,qg,rss)
+      ELSE
+         rss = 0.
+      ENDIF
+
 !=======================================================================
 ! [3] Compute sensible and latent fluxes and their derivatives with respect
 !     to ground temperature using ground temperatures from previous time step.
@@ -573,7 +597,7 @@ ENDIF
       ! Always CALL GroundFluxes for bare ground CASE
       CALL GroundFluxes (zlnd,zsno,forc_hgt_u,forc_hgt_t,forc_hgt_q,forc_hpbl, &
                          forc_us,forc_vs,forc_t,forc_q,forc_rhoair,forc_psrf, &
-                         ur,thm,th,thv,t_grnd,qg,dqgdT,htvp, &
+                         ur,thm,th,thv,t_grnd,qg,rss,dqgdT,htvp, &
                          fsno,cgrnd,cgrndl,cgrnds, &
                          t_soil,t_snow,q_soil,q_snow, &
                          !taux,tauy,fseng,fevpg,tref,qref, &
@@ -625,7 +649,7 @@ IF ( patchtype==0.and.DEF_USE_LCT .or. patchtype>0 ) THEN
                  thermk     ,rstfacsun_out         ,rstfacsha_out          ,&
                  gssun_out  ,gssha_out  ,forc_po2m ,forc_pco2m ,z0h_g      ,&
                  obu_g      ,ustar_g    ,zlnd      ,zsno       ,fsno       ,&
-                 sigf       ,etrc       ,t_grnd    ,qg         ,&
+                 sigf       ,etrc       ,t_grnd    ,qg,rss     ,&
                  t_soil     ,t_snow     ,q_soil    ,q_snow     ,&
                  dqgdT      ,&
                  emg        ,tleaf      ,ldew      ,ldew_rain  ,ldew_snow  ,&
@@ -647,7 +671,7 @@ IF ( patchtype==0.and.DEF_USE_LCT .or. patchtype>0 ) THEN
 !end ozone stress variables
                  forc_hpbl                                                 ,&
                  qintr_rain  ,qintr_snow,t_precip  ,hprl       ,smp        ,&
-                 hk(1:)      ,hksati(1:),rootr(1:)                         )
+                 hk(1:)      ,hksati(1:),rootflux(1:)                       )
       ELSE
          tleaf         = forc_t
          laisun        = 0.
@@ -672,6 +696,7 @@ IF (patchtype == 0) THEN
       pe = patch_pft_e(ipatch)
 
       allocate ( rootr_p (nl_soil, ps:pe) )
+      allocate ( rootflux_p(nl_soil,ps:pe))
       allocate ( etrc_p           (ps:pe) )
       allocate ( rstfac_p         (ps:pe) )
       allocate ( rstfacsun_p      (ps:pe) )
@@ -740,6 +765,7 @@ ENDIF
             ldew_snow_p(i) = 0.
             ldew_p(i)      = 0.
             rootr_p(:,i)   = 0.
+            rootflux_p(:,i)= 0.
             rstfacsun_p(i) = 0.
             rstfacsha_p(i) = 0.
          ENDIF
@@ -763,7 +789,7 @@ IF (DEF_USE_PFT .or. patchclass(ipatch)==CROPLAND) THEN
                  thermk_p(i),rstfacsun_p(i)         ,rstfacsha_p(i)         ,&
                  gssun_p(i) ,gssha_p(i) ,forc_po2m  ,forc_pco2m ,z0h_g      ,&
                  obu_g      ,ustar_g    ,zlnd       ,zsno       ,fsno       ,&
-                 sigf_p(i)  ,etrc_p(i)  ,t_grnd     ,qg         ,&
+                 sigf_p(i)  ,etrc_p(i)  ,t_grnd     ,qg,rss     ,&
                  t_soil     ,t_snow     ,q_soil     ,q_snow     ,&
                  dqgdT      ,&
                  emg        ,tleaf_p(i) ,ldew_p(i)  ,ldew_rain_p(i),ldew_snow_p(i),&
@@ -785,13 +811,13 @@ IF (DEF_USE_PFT .or. patchclass(ipatch)==CROPLAND) THEN
 !end ozone stress variables
                  forc_hpbl                                                  ,&
                  qintr_rain_p(i),qintr_snow_p(i),t_precip,hprl_p(i),smp     ,&
-                 hk(1:)      ,hksati(1:),rootr_p(1:,i)                      )
+                 hk(1:)      ,hksati(1:),rootflux_p(1:,i)                    )
 
          ELSE
 
             CALL GroundFluxes (zlnd,zsno,forc_hgt_u,forc_hgt_t,forc_hgt_q,forc_hpbl, &
                                forc_us,forc_vs,forc_t,forc_q,forc_rhoair,forc_psrf, &
-                               ur,thm,th,thv,t_grnd,qg,dqgdT,htvp, &
+                               ur,thm,th,thv,t_grnd,qg,rss,dqgdT,htvp, &
                                fsno,cgrnd_p(i),cgrndl_p(i),cgrnds_p(i), &
                                t_soil,t_snow,q_soil,q_snow, &
                                taux_p(i),tauy_p(i),fseng_p(i),fseng_soil_p(i),fseng_snow_p(i), &
@@ -859,7 +885,7 @@ IF (DEF_USE_PC .and. patchclass(ipatch)/=CROPLAND) THEN
          rstfacsun_p(:)  ,rstfacsha_p(:)    ,&
          gssun_p(:)      ,gssha_p(:)        ,forc_po2m     ,forc_pco2m         ,z0h_g       ,obu_g ,&
          ustar_g         ,zlnd              ,zsno          ,fsno               ,sigf_p(ps:pe)      ,&
-         etrc_p(:)       ,t_grnd            ,qg            ,dqgdT              ,emg                ,&
+         etrc_p(:)       ,t_grnd            ,qg,rss        ,dqgdT              ,emg                ,&
          t_soil          ,t_snow            ,q_soil        ,q_snow             ,&
          z0m_p(ps:pe)    ,tleaf_p(ps:pe)    ,ldew_p(ps:pe) ,ldew_rain_p(ps:pe) ,ldew_snow_p(ps:pe) ,&
          taux            ,tauy              ,&
@@ -878,7 +904,7 @@ IF (DEF_USE_PC .and. patchclass(ipatch)/=CROPLAND) THEN
 !End ozone stress variables
          forc_hpbl                                                                  ,&
          qintr_rain_p(ps:pe) ,qintr_snow_p(ps:pe) ,t_precip  ,hprl_p(:)   ,smp      ,&
-         hk(1:)              ,hksati(1:)          ,rootr_p(:,:)                                  )
+         hk(1:)              ,hksati(1:)          ,rootflux_p(:,:)                   )
 ENDIF
 
 
@@ -939,7 +965,7 @@ ENDIF
 
          IF (abs(etr) > 0.) THEN
             DO j = 1, nl_soil
-               rootr(j) = sum(rootr_p(j,ps:pe)*pftfrac(ps:pe))
+               rootflux(j) = sum(rootflux_p(j,ps:pe)*pftfrac(ps:pe))
             ENDDO
          ENDIF
       ELSE
@@ -950,7 +976,7 @@ ENDIF
          ENDIF
       ENDIF
 
-      deallocate ( rootr_p     )
+      deallocate ( rootflux_p  )
       deallocate ( etrc_p      )
       deallocate ( rstfac_p    )
       deallocate ( rstfacsun_p )

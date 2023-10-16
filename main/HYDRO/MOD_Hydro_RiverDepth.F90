@@ -29,6 +29,7 @@ CONTAINS
       USE MOD_ElmVector
       USE MOD_Hydro_RiverLakeNetwork
       USE MOD_Hydro_HillslopeNetwork
+      USE MOD_Hydro_IO
       IMPLICIT NONE
 
       ! Local Variables
@@ -189,6 +190,8 @@ CONTAINS
          call ncio_write_serial     (file_rivdpt, 'riverdepth', riverdpth, 'basin')
 
       ENDIF
+
+      CALL vector_read_basin (file_rivdpt, riverdpth, numelm, 'riverdepth', elm_data_address)
 
       IF (allocated (bsnrnof  )) deallocate(bsnrnof  )
       IF (allocated (bsndis   )) deallocate(bsndis   )

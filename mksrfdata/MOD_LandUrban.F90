@@ -55,9 +55,6 @@ CONTAINS
 #ifdef CATCHMENT
       USE MOD_LandHRU
 #endif
-#if (defined CROP)
-      USE MOD_PixelsetShadow
-#endif
       USE MOD_AggregationRequestData
       USE MOD_Utils
 
@@ -68,11 +65,6 @@ CONTAINS
       CHARACTER(len=256) :: dir_urban
       TYPE (block_data_int32_2d) :: data_urb_class ! urban type index
 
-#if (defined CROP)
-      TYPE(block_data_real8_3d) :: cropdata
-      INTEGER            :: cropfilter(1)
-      CHARACTER(len=256) :: file_patch
-#endif
       ! local vars
       INTEGER, allocatable :: ibuff(:), types(:), order(:)
 
@@ -345,23 +337,7 @@ ENDIF
       SITE_urbtyp(:) = landurban%settyp
 #endif
 
-#if (defined CROP)
-      !TODO: need to be consistent with MOD_LandPatch.F90
-      !NOTE: how to change automatically.
-      IF (p_is_io) THEN
-         file_patch = trim(DEF_dir_rawdata) // '/global_CFT_surface_data.nc'
-         CALL allocate_block_data (gcrop, cropdata, N_CFT)
-         CALL ncio_read_block (file_patch, 'PCT_CFT', gcrop, N_CFT, cropdata)
-      ENDIF
-
-      cropfilter = (/ CROPLAND /)
-
-      CALL pixelsetshadow_build (landpatch, gcrop, cropdata, N_CFT, cropfilter, &
-         pctcrop, cropclass)
-
-      numpatch = landpatch%nset
-#endif
-
+#ifndef CROP
 #ifdef USEMPI
       IF (p_is_worker) THEN
          CALL mpi_reduce (numpatch, npatch_glb, 1, MPI_INTEGER, MPI_SUM, p_root, p_comm_worker, p_err)
@@ -375,21 +351,12 @@ ENDIF
       write(*,'(A,I12,A)') 'Total: ', numpatch, ' patches.'
 #endif
 
-#if (defined CROP)
-      CALL elm_patch%build (landelm, landpatch, use_frac = .true., shadowfrac = pctcrop)
-#else
       CALL elm_patch%build (landelm, landpatch, use_frac = .true.)
-#endif
-
 #ifdef CATCHMENT
-#if (defined CROP)
-      CALL hru_patch%build (landhru, landpatch, use_frac = .true., shadowfrac = pctcrop)
-#else
       CALL hru_patch%build (landhru, landpatch, use_frac = .true.)
 #endif
-#endif
-
       CALL write_patchfrac (DEF_dir_landdata, lc_year)
+#endif
 
       IF (allocated(ibuff)) deallocate (ibuff)
       IF (allocated(types)) deallocate (types)

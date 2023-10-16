@@ -1230,7 +1230,7 @@ ENDIF
 
       !NOTE: fordebug only below
       IF (ssun(1,1)<0 .or. ssun(1,2)<0 .or. ssun(2,1)<0 .or. ssun(2,2)<0) THEN
-         print *, ipatch
+         print *, 'Warning:negative albedo',ipatch
          print *, ssun
       ENDIF
 

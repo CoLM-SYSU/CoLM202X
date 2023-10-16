@@ -41,64 +41,25 @@
 #undef LATERAL_FLOW
 #endif
 
-! 6. Soil reflectance can be predefined values or load from files.
-! Soil reflectance is now a namelist DEF_SOIL_REFL_SCHEME
-! The below will be removed later
-!#undef SOIL_REFL_GUESSED
-!#define SOIL_REFL_READ
-
-! 7. If defined, CaMa-Flood model will be used.
+! 6. If defined, CaMa-Flood model will be used.
 #undef CaMa_Flood
 
-! 8. If defined, BGC model is used.
-#define BGC
+! 7. If defined, BGC model is used.
+#undef BGC
+
 !    Conflicts :  only used when LULC_IGBP_PFT is defined.
 #ifndef LULC_IGBP_PFT
 #undef BGC
 #endif
-! 8.1 If defined, CROP model is used
+! 7.1 If defined, CROP model is used
 #define CROP
 !    Conflicts : only used when BGC is defined
 #ifndef BGC
 #undef CROP
 #endif
-! 8.2 If defined, Semi-Analytic-Spin-Up (SASU) is used
-!#undef SASU
-!    Conflicts : only used when BGC is defined
-!#ifndef BGC
-!#undef SASU
-!#endif
-!SASU switch has been moved to namelist: DEF_USE_SASU
-! 8.3 If defined, Fertlization on crop is used
-!@#define FERT
-!    Conflicts : only used when CROP is defined
-!#ifndef CROP
-!#undef FERT
-!#endif
-!FERT has been moved to namelist: DEF_USE_FERT
-! 8.4 If defined, Nitrification-Denitrification is used
-!#define NITRIF
-!    Conflicts : only used when BGC is defined
-!#ifndef BGC
-!#undef NITRIF
-!#endif
-!NITRIF switch has been moved to namelist: DEF_USE_NITRIF
 
-!! 9 If defined, Fire is on
-!#undef Fire
-!    Conflicts : only used when BGC is defined
-!#ifndef BGC
-!#undef Fire
-!#endif
-!FIRE switch has been moved to namelist: DEF_USE_FIRE
-
-! 10 If defined, SNICAR is on
-! NOTE: SNICAR is now a namelist DEF_USE_SNICAR
-! This macro will be removed later
-!#undef SNICAR
-
-! 11. If defined, diagnostics in wue model will be output
-!#undef WUEdiag
-
-! 12. If defined, open Land use and land cover change mode.
+! 8. If defined, open Land use and land cover change mode.
 #undef LULCC
+
+! 9. If defined, data assimilation is used.
+#undef DataAssimilation

@@ -26,6 +26,8 @@ SUBROUTINE Aggregation_Topography ( &
    USE MOD_Utils
 
 #ifdef SrfdataDiag
+   USE MOD_Mesh, only : numelm
+   USE MOD_LandElm
    USE MOD_SrfdataDiag
 #endif
 
@@ -39,10 +41,10 @@ SUBROUTINE Aggregation_Topography ( &
    ! local variables:
    ! ---------------------------------------------------------------
    CHARACTER(len=256) :: landdir, lndname, cyear
-   INTEGER :: ipatch
+   INTEGER :: ipatch, i, ps, pe
 
    TYPE (block_data_real8_2d) :: topography
-   REAL(r8), allocatable :: topography_patches(:)
+   REAL(r8), allocatable :: topography_patches(:), topo_elm(:)
    REAL(r8), allocatable :: topography_one(:), area_one(:)
 #ifdef SrfdataDiag
    INTEGER :: typpatch(N_land_classification+1), ityp
@@ -121,7 +123,22 @@ SUBROUTINE Aggregation_Topography ( &
    typpatch = (/(ityp, ityp = 0, N_land_classification)/)
    lndname  = trim(dir_model_landdata) // '/diag/topo_' // trim(cyear) // '.nc'
    CALL srfdata_map_and_write (topography_patches, landpatch%settyp, typpatch, m_patch2diag, &
-      -1.0e36_r8, lndname, 'topography', compress = 0, write_mode = 'one')
+      -1.0e36_r8, lndname, 'topography', compress = 1, write_mode = 'one')
+
+   IF (p_is_worker) THEN
+      allocate(topo_elm(numelm))
+      DO i = 1, numelm
+         ps = elm_patch%substt(i)
+         pe = elm_patch%subend(i)
+         topo_elm(i) = sum(topography_patches(ps:pe) * elm_patch%subfrc(ps:pe))
+      ENDDO
+   ENDIF
+
+   lndname = trim(dir_model_landdata) // '/diag/topo_elm_' // trim(cyear) // '.nc'
+   CALL srfdata_map_and_write (topo_elm, landelm%settyp, (/0/), m_elm2diag, &
+      -1.0e36_r8, lndname, 'topo_elm', compress = 1, write_mode = 'one')
+
+   IF (allocated(topo_elm)) deallocate(topo_elm)
 #endif
 #else
    SITE_topography = topography_patches(1)
