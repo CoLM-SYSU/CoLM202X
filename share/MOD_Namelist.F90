@@ -67,7 +67,7 @@ MODULE MOD_Namelist
       INTEGER  :: spinup_day  = 1
       INTEGER  :: spinup_sec  = 0
       INTEGER  :: spinup_repeat = 1
-      REAL(r8) :: timestep    = 3600.
+      REAL(r8) :: timestep    = 1800.
    END TYPE nl_simulation_time_type
 
    TYPE (nl_simulation_time_type) :: DEF_simulation_time
@@ -784,6 +784,8 @@ CONTAINS
          DEF_file_snowoptics,             &
          DEF_file_snowaging ,             &
 
+         DEF_DA_obsdir,                   &
+
          DEF_forcing_namelist,            &
 
          DEF_USE_Forcing_Downscaling,        &
@@ -1186,6 +1188,8 @@ CONTAINS
       call mpi_bcast (DEF_USE_SNICAR,        1, mpi_logical,   p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_file_snowoptics, 256, mpi_character, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_file_snowaging , 256, mpi_character, p_root, p_comm_glb, p_err)
+      
+      CALL mpi_bcast (DEF_DA_obsdir      , 256, mpi_character, p_root, p_comm_glb, p_err)
 
       call mpi_bcast (DEF_Aerosol_Readin,    1, mpi_logical,   p_root, p_comm_glb, p_err)
       call mpi_bcast (DEF_Aerosol_Clim,      1, mpi_logical,   p_root, p_comm_glb, p_err)
