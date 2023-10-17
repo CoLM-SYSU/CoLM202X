@@ -979,8 +979,8 @@
       endif
 
       if(lb >= 1)then
-         wliq_icesno(1) = max(1.e-4, wliq_icesno(1) + qsdew * deltim)
-         wice_icesno(1) = max(1.e-4, wice_icesno(1) + (qfros-qsubl) * deltim)
+         wliq_icesno(1) = max(1.e-8, wliq_icesno(1) + qsdew * deltim)
+         wice_icesno(1) = max(1.e-8, wice_icesno(1) + (qfros-qsubl) * deltim)
       end if
 
  end subroutine GLACIER_WATER
@@ -1122,8 +1122,8 @@
       endif
 
       if(lb >= 1)then
-         wliq_icesno(1) = max(1.e-4, wliq_icesno(1) + qsdew * deltim)
-         wice_icesno(1) = max(1.e-4, wice_icesno(1) + (qfros-qsubl) * deltim)
+         wliq_icesno(1) = max(1.e-8, wliq_icesno(1) + qsdew * deltim)
+         wice_icesno(1) = max(1.e-8, wice_icesno(1) + (qfros-qsubl) * deltim)
       end if
 
  end subroutine GLACIER_WATER_snicar
