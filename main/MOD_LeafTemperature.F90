@@ -33,8 +33,10 @@ CONTAINS
               rstfacsun  , rstfacsha    ,gssun   ,gssha   ,&
               po2m    ,pco2m   ,z0h_g   ,obug    ,ustarg  ,zlnd    ,&
               zsno    ,fsno    ,sigf    ,etrc    ,tg      ,qg,rss  ,&
-              dqgdT   ,emg     ,tl      ,ldew, ldew_rain,ldew_snow ,taux    ,tauy    ,&
-              fseng   ,fevpg   ,cgrnd   ,cgrndl  ,cgrnds  ,tref    ,&
+              t_soil  ,t_snow  ,q_soil  ,q_snow  ,dqgdT   ,emg     ,&
+              tl      ,ldew,ldew_rain,ldew_snow  ,taux    ,tauy    ,&
+              fseng,fseng_soil,fseng_snow,fevpg,fevpg_soil,fevpg_snow,&
+              cgrnd   ,cgrndl  ,cgrnds  ,tref    ,&
               qref    ,rst     ,assim   ,respc   ,fsenl   ,fevpl   ,&
               etr     ,dlrad   ,ulrad   ,z0m     ,zol     ,rib     ,&
               ustar   ,qstar   ,tstar   ,fm      ,fh      ,fq      ,&
@@ -186,7 +188,11 @@ CONTAINS
         sigf,       &! fraction of veg cover, excluding snow-covered veg [-]
         etrc,       &! maximum possible transpiration rate (mm/s)
         tg,         &! ground surface temperature [K]
+        t_soil,     &! ground surface soil temperature [K]
+        t_snow,     &! ground surface snow temperature [K]
         qg,         &! specific humidity at ground surface [kg/kg]
+        q_soil,     &! specific humidity at ground soil surface [kg/kg]
+        q_snow,     &! specific humidity at ground snow surface [kg/kg]
         dqgdT,      &! temperature derivative of "qg"
         rss,        &! soil surface resistance [s/m]
         emg          ! vegetation emissivity
@@ -217,7 +223,11 @@ CONTAINS
         taux,       &! wind stress: E-W [kg/m/s**2]
         tauy,       &! wind stress: N-S [kg/m/s**2]
         fseng,      &! sensible heat flux from ground [W/m2]
+        fseng_soil, &! sensible heat flux from ground soil [W/m2]
+        fseng_snow, &! sensible heat flux from ground snow [W/m2]
         fevpg,      &! evaporation heat flux from ground [mm/s]
+        fevpg_soil, &! evaporation heat flux from ground soil [mm/s]
+        fevpg_snow, &! evaporation heat flux from ground snow [mm/s]
         cgrnd,      &! deriv. of soil energy flux wrt to soil temp [w/m2/k]
         cgrndl,     &! deriv, of soil sensible heat flux wrt soil temp [w/m2/k]
         cgrnds,     &! deriv of soil latent heat flux wrt soil temp [w/m**2/k]
@@ -575,7 +585,6 @@ CONTAINS
 
           IF(lai .gt. 0.001) THEN
 
-
              eah = qaf * psrf / ( 0.622 + 0.378 * qaf )    !pa
 
              if(DEF_USE_PLANTHYDRAULICS) then
@@ -592,6 +601,7 @@ CONTAINS
                       qm        ,gs0sun    ,gs0sha     ,k_soil_root,k_ax_root  )
                 etr = etrsun + etrsha
              end if
+
              ! leaf to canopy level
              rbsun = rb / laisun
              rbsha = rb / laisha
@@ -636,7 +646,7 @@ CONTAINS
              end if
              ! above stomatal resistances are for the canopy, the stomatal rsistances
              ! and the "rb" in the following calculations are the average for single leaf. thus,
-             rssun = tprcor/tl * 1.e6 / gssun 
+             rssun = tprcor/tl * 1.e6 / gssun
              rssha = tprcor/tl * 1.e6 / gssha
           ELSE
              rssun = 2.e4; assimsun = 0.; respcsun = 0.
@@ -699,11 +709,19 @@ CONTAINS
           fac = 1. - thermk
 
 ! longwave absorption and their derivatives
-         ! 10/16/2017, yuan: added reflected longwave by the ground
+          ! 10/16/2017, yuan: added reflected longwave by the ground
+
+IF (.not.DEF_SPLIT_SOILSNOW) THEN
           irab = (frl - 2. * stefnc * tl**4 + emg*stefnc*tg**4 ) * fac &
-             + (1-emg)*thermk*fac*frl + (1-emg)*(1-thermk)*fac*stefnc*tl**4
+               + (1-emg)*thermk*fac*frl + (1-emg)*(1-thermk)*fac*stefnc*tl**4
+ELSE
+          irab = (frl - 2. * stefnc * tl**4 &
+               + (1.-fsno)*emg*stefnc*t_soil**4 &
+               + fsno*emg*stefnc*t_snow**4 )                     * fac &
+               + (1-emg)*thermk*fac*frl + (1-emg)*(1-thermk)*fac*stefnc*tl**4
+ENDIF
           dirab_dtl = - 8. * stefnc * tl**3                      * fac &
-             + 4.*(1-emg)*(1-thermk)*fac*stefnc*tl**3
+                    + 4.*(1-emg)*(1-thermk)*fac*stefnc*tl**3
 
 ! sensible heat fluxes and their derivatives
           fsenl = rhoair * cpair * cfh * ( (wta0 + wtg0)*tl - wta0*thm - wtg0*tg )
@@ -807,14 +825,14 @@ CONTAINS
           qaf = wtaq0*qm + wtgq0*qg + wtlq0*qsatl
 
 ! update co2 partial pressure within canopy air
-         gah2o = 1.0/raw * tprcor/thm                     !mol m-2 s-1
-         IF (DEF_RSS_SCHEME .eq. 4) THEN
-             gdh2o = rss/rd  * tprcor/thm                 !mol m-2 s-1
-         ELSE
-             gdh2o = 1.0/(rd+rss)  * tprcor/thm               !mol m-2 s-1
-         END IF
-         pco2a = pco2m - 1.37*psrf/max(0.446,gah2o) * &
-            (assimsun + assimsha  - respcsun -respcsha - rsoil)
+          gah2o = 1.0/raw * tprcor/thm                     !mol m-2 s-1
+          IF (DEF_RSS_SCHEME .eq. 4) THEN
+              gdh2o = rss/rd  * tprcor/thm                 !mol m-2 s-1
+          ELSE
+              gdh2o = 1.0/(rd+rss)  * tprcor/thm           !mol m-2 s-1
+          END IF
+          pco2a = pco2m - 1.37*psrf/max(0.446,gah2o) * &
+             (assimsun + assimsha  - respcsun -respcsha - rsoil)
 
 !-----------------------------------------------------------------------
 ! Update monin-obukhov length and wind speed including the stability effect
@@ -869,9 +887,9 @@ CONTAINS
 
        IF(DEF_USE_OZONESTRESS)THEN
           call CalcOzoneStress(o3coefv_sun,o3coefg_sun,forc_ozone,psrf,th,ram,&
-                                rssun,rb,lai,lai_old,ivt,o3uptakesun,deltim)
+                               rssun,rb,lai,lai_old,ivt,o3uptakesun,deltim)
           call CalcOzoneStress(o3coefv_sha,o3coefg_sha,forc_ozone,psrf,th,ram,&
-                                rssha,rb,lai,lai_old,ivt,o3uptakesha,deltim)
+                               rssha,rb,lai,lai_old,ivt,o3uptakesha,deltim)
           lai_old  = lai
           assimsun = assimsun * o3coefv_sun
           assimsha = assimsha * o3coefv_sha
@@ -899,6 +917,7 @@ CONTAINS
        ENDIF
        assim = assimsun + assimsha
        respc = respcsun + respcsha! + rsoil
+
 ! canopy fluxes and total assimilation amd respiration
        fsenl = fsenl + fsenl_dtl*dtl(it-1) &
                ! yuan: add the imbalanced energy below due to T adjustment to sensibel heat
@@ -907,7 +926,7 @@ CONTAINS
                ! yuan: add the imbalanced energy below due to q adjustment to sensibel heat
                + hvap*erre
        etr0  = etr
-       etr   = etr + etr_dtl*dtl(it-1)
+       etr   = etr     +     etr_dtl*dtl(it-1)
 
        IF (DEF_USE_PLANTHYDRAULICS) THEN
           !TODO@yuan: rootflux may not be consistent with etr,
@@ -947,7 +966,17 @@ CONTAINS
 !-----------------------------------------------------------------------
 
        fseng = cpair*rhoair*cgh*(tg-taf)
+! 03/07/2020, yuan: calculate fseng_soil/snow
+! taf = wta0*thm + wtg0*tg + wtl0*tl
+       fseng_soil = cpair*rhoair*cgh*((1.-wtg0)*t_soil - wta0*thm - wtl0*tl)
+       fseng_snow = cpair*rhoair*cgh*((1.-wtg0)*t_snow - wta0*thm - wtl0*tl)
+
+       !print *, fseng, tg, taf !fordebug
+! 03/07/2020, yuan: calculate fevpg_soil/snow
+! qaf = wtaq0*qm + wtgq0*qg + wtlq0*qsatl
        fevpg = rhoair*cgw*(qg-qaf)
+       fevpg_soil = rhoair*cgw*((1.-wtgq0)*q_soil - wtaq0*qm - wtlq0*qsatl)
+       fevpg_snow = rhoair*cgw*((1.-wtgq0)*q_snow - wtaq0*qm - wtlq0*qsatl)
 
 !-----------------------------------------------------------------------
 ! downward (upward) longwave radiation below (above) the canopy and prec. sensible heat
@@ -956,11 +985,20 @@ CONTAINS
        ! 10/16/2017, yuan: added reflected longwave by the ground
        dlrad = thermk * frl &
              + stefnc * fac * tlbef**3 * (tlbef + 4.*dtl(it-1))
+IF (.not.DEF_SPLIT_SOILSNOW) THEN
        ulrad = stefnc * ( fac * tlbef**3 * (tlbef + 4.*dtl(it-1)) &
              + thermk*emg*tg**4 ) &
              + (1-emg)*thermk*thermk*frl &
              + (1-emg)*thermk*fac*stefnc*tlbef**4 &
              + 4.*(1-emg)*thermk*fac*stefnc*tlbef**3*dtl(it-1)
+ELSE
+       ulrad = stefnc * ( fac * tlbef**3 * (tlbef + 4.*dtl(it-1)) &
+             + (1.-fsno)*thermk*emg*t_soil**4 &
+             + fsno*thermk*emg*t_snow**4 ) &
+             + (1-emg)*thermk*thermk*frl &
+             + (1-emg)*thermk*fac*stefnc*tlbef**4 &
+             + 4.*(1-emg)*thermk*fac*stefnc*tlbef**3*dtl(it-1)
+ENDIF
        hprl = cpliq * qintr_rain*(t_precip-tl) + cpice * qintr_snow*(t_precip-tl)
 
 !-----------------------------------------------------------------------
@@ -986,79 +1024,79 @@ CONTAINS
 !-----------------------------------------------------------------------
 ! Update dew accumulation (kg/m2)
 !-----------------------------------------------------------------------
-      IF (DEF_Interception_scheme .eq. 1) then
-         ldew = max(0., ldew-evplwet*deltim)
+       IF (DEF_Interception_scheme .eq. 1) then
+          ldew = max(0., ldew-evplwet*deltim)
 
-      ELSEIF (DEF_Interception_scheme .eq. 2) then!CLM4.5
-         ldew = max(0., ldew-evplwet*deltim)
+       ELSEIF (DEF_Interception_scheme .eq. 2) then!CLM4.5
+          ldew = max(0., ldew-evplwet*deltim)
 
-      ELSEIF (DEF_Interception_scheme .eq. 3) then !CLM5
-         if (ldew_rain .gt. evplwet*deltim) then
-            ldew_rain = ldew_rain-evplwet*deltim
-            ldew_snow = ldew_snow
-            ldew=ldew_rain+ldew_snow
-         else
-            ldew_rain = 0.0
-            ldew_snow = max(0., ldew-evplwet*deltim)
-            ldew      = ldew_snow
-         endif
+       ELSEIF (DEF_Interception_scheme .eq. 3) then !CLM5
+          if (ldew_rain .gt. evplwet*deltim) then
+             ldew_rain = ldew_rain-evplwet*deltim
+             ldew_snow = ldew_snow
+             ldew=ldew_rain+ldew_snow
+          else
+             ldew_rain = 0.0
+             ldew_snow = max(0., ldew-evplwet*deltim)
+             ldew      = ldew_snow
+          endif
 
-      ELSEIF (DEF_Interception_scheme .eq. 4) then !Noah-MP
-         if (ldew_rain .gt. evplwet*deltim) then
-            ldew_rain = ldew_rain-evplwet*deltim
-            ldew_snow = ldew_snow
-            ldew=ldew_rain+ldew_snow
-         else
-            ldew_rain = 0.0
-            ldew_snow = max(0., ldew-evplwet*deltim)
-            ldew      = ldew_snow
-         endif
+       ELSEIF (DEF_Interception_scheme .eq. 4) then !Noah-MP
+          if (ldew_rain .gt. evplwet*deltim) then
+             ldew_rain = ldew_rain-evplwet*deltim
+             ldew_snow = ldew_snow
+             ldew=ldew_rain+ldew_snow
+          else
+             ldew_rain = 0.0
+             ldew_snow = max(0., ldew-evplwet*deltim)
+             ldew      = ldew_snow
+          endif
 
-      ELSEIF (DEF_Interception_scheme .eq. 5) then !MATSIRO
-         if (ldew_rain .gt. evplwet*deltim) then
-            ldew_rain = ldew_rain-evplwet*deltim
-            ldew_snow = ldew_snow
-            ldew=ldew_rain+ldew_snow
-      else
-         ldew_rain = 0.0
-         ldew_snow = max(0., ldew-evplwet*deltim)
-         ldew      = ldew_snow
-      endif
+       ELSEIF (DEF_Interception_scheme .eq. 5) then !MATSIRO
+          if (ldew_rain .gt. evplwet*deltim) then
+             ldew_rain = ldew_rain-evplwet*deltim
+             ldew_snow = ldew_snow
+             ldew=ldew_rain+ldew_snow
+       else
+          ldew_rain = 0.0
+          ldew_snow = max(0., ldew-evplwet*deltim)
+          ldew      = ldew_snow
+       endif
 
-      ELSEIF (DEF_Interception_scheme .eq. 6) then !VIC
-         if (ldew_rain .gt. evplwet*deltim) then
-            ldew_rain = ldew_rain-evplwet*deltim
-            ldew_snow = ldew_snow
-            ldew=ldew_rain+ldew_snow
-         else
-            ldew_rain = 0.0
-            ldew_snow = max(0., ldew-evplwet*deltim)
-            ldew      = ldew_snow
-         endif
-      ELSEIF (DEF_Interception_scheme .eq. 7) then !JULES
-            if (ldew_rain .gt. evplwet*deltim) then
-               ldew_rain = ldew_rain-evplwet*deltim
-               ldew_snow = ldew_snow
-               ldew=ldew_rain+ldew_snow
-            else
-               ldew_rain = 0.0
-               ldew_snow = max(0., ldew-evplwet*deltim)
-               ldew      = ldew_snow
-            endif
-      ELSEIF (DEF_Interception_scheme .eq. 8) then !JULES
-            if (ldew_rain .gt. evplwet*deltim) then
-               ldew_rain = ldew_rain-evplwet*deltim
-               ldew_snow = ldew_snow
-               ldew=ldew_rain+ldew_snow
-            else
-               ldew_rain = 0.0
-               ldew_snow = max(0., ldew-evplwet*deltim)
-               ldew      = ldew_snow
-            endif
-      ELSE
-         call abort
+       ELSEIF (DEF_Interception_scheme .eq. 6) then !VIC
+          if (ldew_rain .gt. evplwet*deltim) then
+             ldew_rain = ldew_rain-evplwet*deltim
+             ldew_snow = ldew_snow
+             ldew=ldew_rain+ldew_snow
+          else
+             ldew_rain = 0.0
+             ldew_snow = max(0., ldew-evplwet*deltim)
+             ldew      = ldew_snow
+          endif
+       ELSEIF (DEF_Interception_scheme .eq. 7) then !JULES
+             if (ldew_rain .gt. evplwet*deltim) then
+                ldew_rain = ldew_rain-evplwet*deltim
+                ldew_snow = ldew_snow
+                ldew=ldew_rain+ldew_snow
+             else
+                ldew_rain = 0.0
+                ldew_snow = max(0., ldew-evplwet*deltim)
+                ldew      = ldew_snow
+             endif
+       ELSEIF (DEF_Interception_scheme .eq. 8) then !JULES
+             if (ldew_rain .gt. evplwet*deltim) then
+                ldew_rain = ldew_rain-evplwet*deltim
+                ldew_snow = ldew_snow
+                ldew=ldew_rain+ldew_snow
+             else
+                ldew_rain = 0.0
+                ldew_snow = max(0., ldew-evplwet*deltim)
+                ldew      = ldew_snow
+             endif
+       ELSE
+          call abort
 
-      ENDIF
+       ENDIF
 
 
 !-----------------------------------------------------------------------
