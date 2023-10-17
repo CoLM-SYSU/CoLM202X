@@ -449,7 +449,7 @@ CONTAINS
    integer toplay, botlay, upplay, numlay
    integer d_opt, rb_opt, rd_opt
 
-   REAL(r8) :: displa, ttaf, tqaf
+   real(r8) :: displa, ttaf, tqaf
 
    ! variables for longwave transfer calculation
    ! .................................................................

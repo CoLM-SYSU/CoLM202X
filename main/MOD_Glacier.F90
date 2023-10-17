@@ -327,7 +327,7 @@
         write(6,100) errore,sabg,forc_frl,olrg,fsena,lfevpa,xmf,t_precip,t_icesno(lb)
         STOP
      endif
-100  format(10(f10.3))
+100  format(10(f7.3))
 #endif
 
  end subroutine GLACIER_TEMP
@@ -977,7 +977,7 @@
          z_icesno   (maxsnl+1:snl) = 0.
          dz_icesno  (maxsnl+1:snl) = 0.
       endif
-      
+
       if(lb >= 1)then
          wliq_icesno(1) = max(1.e-4, wliq_icesno(1) + qsdew * deltim)
          wice_icesno(1) = max(1.e-4, wice_icesno(1) + (qfros-qsubl) * deltim)

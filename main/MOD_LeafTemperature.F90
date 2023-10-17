@@ -23,7 +23,7 @@ CONTAINS
 
 !-----------------------------------------------------------------------
 
-   SUBROUTINE  LeafTemperature(ipatch,ivt,deltim,csoilc,dewmx,htvp,lai,&
+   SUBROUTINE LeafTemperature(ipatch,ivt,deltim,csoilc,dewmx,htvp,lai,&
               sai     ,htop    ,hbot    ,sqrtdi  ,effcon  ,vmax25  ,&
               slti    ,hlti    ,shti    ,hhti    ,trda    ,trdm    ,&
               trop    ,gradm   ,binter  ,extkn   ,extkb   ,extkd   ,&
@@ -597,7 +597,7 @@ CONTAINS
                       sai       ,kmax_sun  ,kmax_sha   ,kmax_xyl   ,kmax_root  ,&
                       psi50_sun ,psi50_sha ,psi50_xyl  ,psi50_root ,htop       ,&
                       ck        ,smp       ,hk         ,hksati     ,vegwp      ,&
-                       etrsun    ,etrsha    ,rootflux   ,qg         ,&
+                      etrsun    ,etrsha    ,rootflux   ,qg         ,&
                       qm        ,gs0sun    ,gs0sha     ,k_soil_root,k_ax_root  )
                 etr = etrsun + etrsha
              end if
@@ -638,11 +638,11 @@ CONTAINS
                 gs0sun  = gssun/amax1(rstfacsun,1.e-2)
                 gs0sha  = gssha/amax1(rstfacsha,1.e-2)
 
-                 gb_mol = 1./rb * tprcor/ tl * 1.e6  ! leaf to canopy
-                 call getvegwp_twoleaf(vegwp, nvegwcs, nl_soil, z_soi, gb_mol, gssun, gssha, &
-                                       qsatl, qaf, qg, qm , rhoair, psrf, fwet, laisun, laisha, htop, sai, tl, rss, &
-                                       raw, rd, smp, k_soil_root, k_ax_root, kmax_xyl, kmax_root, rstfacsun, rstfacsha, &
-                                       psi50_sun, psi50_sha, psi50_xyl, psi50_root, ck, rootflux, etrsun, etrsha)
+                gb_mol = 1./rb * tprcor/ tl * 1.e6  ! leaf to canopy
+                call getvegwp_twoleaf(vegwp, nvegwcs, nl_soil, z_soi, gb_mol, gssun, gssha, &
+                                      qsatl, qaf, qg, qm , rhoair, psrf, fwet, laisun, laisha, htop, sai, tl, rss, &
+                                      raw, rd, smp, k_soil_root, k_ax_root, kmax_xyl, kmax_root, rstfacsun, rstfacsha, &
+                                      psi50_sun, psi50_sha, psi50_xyl, psi50_root, ck, rootflux, etrsun, etrsha)
              end if
              ! above stomatal resistances are for the canopy, the stomatal rsistances
              ! and the "rb" in the following calculations are the average for single leaf. thus,
@@ -747,10 +747,10 @@ ENDIF
                 etr = etrc
                 etr_dtl = 0.
              ENDIF
-           else
-              if(rstfacsun .le. 1.e-2 .or. etrsun .le. 1.e-7)etrsun = 0._r8
-              if(rstfacsha .le. 1.e-2 .or. etrsha .le. 1.e-7)etrsha = 0._r8
-              etr = etrsun + etrsha
+          else
+             if(rstfacsun .le. 1.e-2 .or. etrsun .le. 1.e-7)etrsun = 0._r8
+             if(rstfacsha .le. 1.e-2 .or. etrsha .le. 1.e-7)etrsha = 0._r8
+             etr = etrsun + etrsha
           end if
 
           evplwet = rhoair * (1.-delta*(1.-fwet)) * (lai+sai) / rb &
