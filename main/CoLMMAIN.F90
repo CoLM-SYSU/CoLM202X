@@ -860,7 +860,7 @@ ENDIF
 #endif
 
 #ifdef CROP
-   if (DEF_USE_IRRIGATION) errorw = errorw - irrig_rate(ipatch)*deltim
+      if (DEF_USE_IRRIGATION) errorw = errorw - irrig_rate(ipatch)*deltim
 #endif
 
       IF (.not. DEF_USE_VARIABLY_SATURATED_FLOW) THEN
@@ -872,7 +872,7 @@ ENDIF
 #if(defined CoLMDEBUG)
       IF (abs(errorw) > 1.e-3) THEN
          IF (patchtype <= 1) THEN
-            write(6,*) 'Warning: water balance violation in CoLMMAIN (soil) ', errorw,ipatch, p_iam_glb
+            write(6,*) 'Warning: water balance violation in CoLMMAIN (soil) ', errorw
          ELSEIF (patchtype == 2) THEN
             write(6,*) 'Warning: water balance violation in CoLMMAIN (wetland) ', errorw
          ENDIF
@@ -907,9 +907,10 @@ ELSE IF(patchtype == 3)THEN   ! <=== is LAND ICE (glacier/ice sheet) (patchtype 
       ENDDO
 
       totwb = scv + sum(wice_soisno(1:)+wliq_soisno(1:))
-#ifdef LATERAL_FLOW
-      totwb = wdsrf + totwb
-#endif
+      IF (DEF_USE_VARIABLY_SATURATED_FLOW) THEN
+         totwb = wdsrf + totwb
+      ENDIF
+
       fiold(:) = 0.0
       IF (snl <0 ) THEN
          fiold(snl+1:0)=wice_soisno(snl+1:0)/(wliq_soisno(snl+1:0)+wice_soisno(snl+1:0))
@@ -983,19 +984,28 @@ ELSE IF(patchtype == 3)THEN   ! <=== is LAND ICE (glacier/ice sheet) (patchtype 
                    ssi         ,wimp        ,forc_us    ,forc_vs     )
       ENDIF
 
-#ifndef LATERAL_FLOW
-      rsur = max(0.0,gwat)
-      rnof = rsur
-#else
-      a = wdsrf + wliq_soisno(1) + gwat * deltim
-      IF (a > dz_soisno(1)*denh2o) THEN
-         wliq_soisno(1) = dz_soisno(1)*denh2o
-         wdsrf = a - wliq_soisno(1)
+      IF (.not. DEF_USE_VARIABLY_SATURATED_FLOW) THEN
+         rsur = max(0.0,gwat)
+         rnof = rsur
       ELSE
-         wdsrf = 0.
-         wliq_soisno(1) = max(a, 1.e-4)
-      ENDIF
+         a = wdsrf + wliq_soisno(1) + gwat * deltim
+         IF (a > dz_soisno(1)*denh2o) THEN
+            wliq_soisno(1) = dz_soisno(1)*denh2o
+            wdsrf = a - wliq_soisno(1)
+         ELSE
+            wdsrf = 0.
+            wliq_soisno(1) = max(a, 1.e-8)
+         ENDIF
+#ifndef LATERAL_FLOW
+         IF (wdsrf > pondmx) THEN
+            rsur  = (wdsrf - pondmx) / deltim
+            wdsrf = pondmx
+         ELSE
+            rsur = 0.
+         ENDIF
+         rnof = rsur
 #endif
+      ENDIF
 
       lb = snl + 1
       t_grnd = t_soisno(lb)
@@ -1006,9 +1016,9 @@ ELSE IF(patchtype == 3)THEN   ! <=== is LAND ICE (glacier/ice sheet) (patchtype 
       zerr=errore
 
       endwb = scv + sum(wice_soisno(1:)+wliq_soisno(1:))
-#ifdef LATERAL_FLOW
-      endwb = wdsrf + endwb 
-#endif
+      IF (DEF_USE_VARIABLY_SATURATED_FLOW) THEN
+         endwb = wdsrf + endwb 
+      ENDIF
 
 #ifndef LATERAL_FLOW
       errorw=(endwb-totwb)-(pg_rain+pg_snow-fevpa-rnof)*deltim
@@ -1017,15 +1027,19 @@ ELSE IF(patchtype == 3)THEN   ! <=== is LAND ICE (glacier/ice sheet) (patchtype 
 #endif
 
 #if(defined CoLMDEBUG)
-#ifdef LATERAL_FLOW
-      IF (abs(errorw) > 1.e-3) THEN
-         write(6,*) 'Warning: water balance violation in CoLMMAIN (land ice) ', errorw
-         ! CALL CoLM_stop ()
+      IF (DEF_USE_VARIABLY_SATURATED_FLOW) THEN
+         IF (abs(errorw) > 1.e-3) THEN
+            write(6,*) 'Warning: water balance violation in CoLMMAIN (land ice) ', errorw
+            ! CALL CoLM_stop ()
+         ENDIF
       ENDIF
 #endif
-#endif
 
-      xerr=errorw/deltim
+      IF (DEF_USE_VARIABLY_SATURATED_FLOW) THEN
+         xerr=errorw/deltim
+      ELSE
+         xerr = 0.
+      ENDIF
 
 !======================================================================
 
@@ -1033,9 +1047,10 @@ ELSE IF(patchtype == 4) THEN   ! <=== is LAND WATER BODIES (lake, reservior and 
 
 !======================================================================
 
-#ifdef LATERAL_FLOW
-      totwb = scv + sum(wice_soisno(1:)+wliq_soisno(1:)) + wa + wdsrf
-#endif
+      totwb = scv + sum(wice_soisno(1:)+wliq_soisno(1:)) + wa
+      IF (DEF_USE_VARIABLY_SATURATED_FLOW) THEN
+         totwb = totwb + wdsrf
+      ENDIF
 
       snl = 0
       DO j = maxsnl+1, 0
@@ -1142,31 +1157,56 @@ ELSE IF(patchtype == 4) THEN   ! <=== is LAND WATER BODIES (lake, reservior and 
       ! this unreasonable assumption should be updated in the future version
       a = (sum(wliq_soisno(1:))+sum(wice_soisno(1:))+scv-w_old-scvold)/deltim
       aa = qseva+qsubl-qsdew-qfros
-#ifndef LATERAL_FLOW
-      rsur = max(0., pg_rain + pg_snow - aa - a)
-      rnof = rsur
-      xerr = 0.
-#else
-      ! for lateral flow, only water change vertically is calculated here.
-      ! TODO : snow should be considered.
-      wdsrf = wdsrf + (pg_rain + pg_snow - aa - a) * deltim
 
-      IF (wdsrf + wa < 0) THEN
-         wa = wa + wdsrf
-         wdsrf = 0
-      else
-         wdsrf = wa + wdsrf
-         wa = 0
+      IF (.not. DEF_USE_VARIABLY_SATURATED_FLOW) THEN
+         rsur = max(0., pg_rain + pg_snow - aa - a)
+         rnof = rsur
+      ELSE
+         ! for lateral flow, only water change vertically is calculated here.
+         ! TODO : snow should be considered.
+         wdsrf = wdsrf + (pg_rain + pg_snow - aa - a) * deltim
+
+         IF (wdsrf + wa < 0) THEN
+            wa = wa + wdsrf
+            wdsrf = 0
+         else
+            wdsrf = wa + wdsrf
+            wa = 0
+         ENDIF
+#ifndef LATERAL_FLOW
+         IF (wdsrf > pondmx) THEN
+            rsur  = (wdsrf - pondmx) / deltim
+            wdsrf = pondmx
+         ELSE
+            rsur = 0.
+         ENDIF
+         rnof = rsur
+#endif
       ENDIF
       
-      endwb  = scv + sum(wice_soisno(1:)+wliq_soisno(1:)) + wa + wdsrf
-      errorw = (endwb-totwb)/deltim -(forc_prc+forc_prl-fevpa)
-      xerr   = errorw / deltim
-      
-      IF (abs(errorw) > 1.e-3) THEN
-         write(*,*) 'Warning: water balance violation in CoLMMAIN (lake) ', errorw
+      endwb  = scv + sum(wice_soisno(1:)+wliq_soisno(1:)) + wa
+      IF (DEF_USE_VARIABLY_SATURATED_FLOW) THEN
+         endwb  = endwb  + wdsrf
+      ENDIF
+
+      errorw = (endwb-totwb) - (forc_prc+forc_prl-fevpa) * deltim
+#ifndef LATERAL_FLOW
+      errorw = errorw + rnof * deltim
+#endif
+
+#if(defined CoLMDEBUG)
+      IF (DEF_USE_VARIABLY_SATURATED_FLOW) THEN
+         IF (abs(errorw) > 1.e-3) THEN
+            write(*,*) 'Warning: water balance violation in CoLMMAIN (lake) ', errorw
+         ENDIF
       ENDIF
 #endif
+
+      IF (DEF_USE_VARIABLY_SATURATED_FLOW) THEN
+         xerr = errorw / deltim
+      ELSE
+         xerr = 0.
+      ENDIF
       
       ! Set zero to the empty node
       IF (snl > maxsnl) THEN
@@ -1206,6 +1246,7 @@ ELSE                     ! <=== is OCEAN (patchtype >= 99)
                  fgrnd   = 0.0
                  rsur    = 0.0
                  rnof    = 0.0
+                 xerr    = 0.0
 
 !======================================================================
 
@@ -1396,7 +1437,6 @@ ENDIF
        respc         = 0.0
 
        zerr          = 0.
-       ! xerr          = 0.
 
        qinfl         = 0.
        qdrip         = forc_rain + forc_snow
