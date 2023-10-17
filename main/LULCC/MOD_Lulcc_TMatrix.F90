@@ -12,7 +12,7 @@ MODULE MOD_Lulcc_TMatrix
    SAVE
 ! -----------------------------------------------------------------
    ! TODO: need coding below...
-   real(r8), allocatable :: lccpct_patches(:,:) ! Percent area of source patches 
+   real(r8), allocatable :: lccpct_patches(:,:) ! Percent area of source patches
 
    ! PUBLIC MEMBER FUNCTIONS:
    PUBLIC :: allocate_LulccTMatrix
@@ -45,7 +45,7 @@ MODULE MOD_Lulcc_TMatrix
          allocate (lccpct_patches (numpatch, nlc))
          lccpct_patches (:,:) = 0
       ENDIF
-      
+
    END SUBROUTINE allocate_LulccTMatrix
 
    SUBROUTINE READ_LulccTMatrix (lc_year)
@@ -100,7 +100,7 @@ MODULE MOD_Lulcc_TMatrix
       IF (p_is_io) THEN
          CALL allocate_block_data (gpatch, lcdatafr)
          dir_5x5 = trim(DEF_dir_rawdata) // '/plant_15s'
-         suffix  = 'MOD'//trim(cyear) 
+         suffix  = 'MOD'//trim(cyear)
          CALL read_5x5_data (dir_5x5, suffix, gpatch, 'LC', lcdatafr)
 
 #ifdef USEMPI
@@ -113,19 +113,19 @@ MODULE MOD_Lulcc_TMatrix
       !   -----------------------------------------------------------------
 
       IF (p_is_worker) THEN
-   
+
          DO ipatch = 1, numpatch
 
             CALL aggregation_request_data (landpatch, ipatch, gpatch, zip = .true., area = area_one, &
                   data_i4_2d_in1 = lcdatafr, data_i4_2d_out1 = lcdatafr_one)
-            
+
             ipxstt = landpatch%ipxstt(ipatch)
             ipxend = landpatch%ipxend(ipatch)
-            
+
             if (allocated(ibuff)) deallocate(ibuff)
             allocate(ibuff(ipxstt:ipxend))
             ibuff(:) = lcdatafr_one(:)
-            
+
             if (allocated(areabuff)) deallocate(areabuff)
             allocate(areabuff(ipxstt:ipxend))
             areabuff(:) = area_one(:)

@@ -285,7 +285,7 @@ PROGRAM CoLM
    ENDIF
 
    IF (DEF_NDEP_FREQUENCY==1)THEN ! Initial annual ndep data readin
-      CALL init_ndep_data_annually (sdate(1)) 
+      CALL init_ndep_data_annually (sdate(1))
    ELSEIF(DEF_NDEP_FREQUENCY==2)THEN ! Initial monthly ndep data readin
       CALL init_ndep_data_monthly (sdate(1),s_month) ! sf_add
    ELSE
@@ -371,7 +371,7 @@ PROGRAM CoLM
          IF (jdate(1) /= year_p) THEN
             CALL update_ndep_data_annually (idate(1), iswrite = .true.)
          ENDIF
-      ELSEIF(DEF_NDEP_FREQUENCY==2)THEN! Read Monthly Ndep data 
+      ELSEIF(DEF_NDEP_FREQUENCY==2)THEN! Read Monthly Ndep data
          IF (jdate(1) /= year_p .or. month /= month_p) THEN  !sf_add
             CALL update_ndep_data_monthly (jdate(1), month, iswrite = .true.) !sf_add
          ENDIF
