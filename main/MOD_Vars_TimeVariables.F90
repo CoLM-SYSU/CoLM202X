@@ -457,10 +457,10 @@ MODULE MOD_Vars_TimeVariables
      real(r8), allocatable :: extkd         (:) ! diffuse and scattered diffuse PAR extinction coefficient
      real(r8), allocatable :: zwt           (:) ! the depth to water table [m]
      real(r8), allocatable :: wa            (:) ! water storage in aquifer [mm]
-     real(r8), allocatable :: wetwat       (:) ! water storage in wetland [mm]
+     real(r8), allocatable :: wetwat        (:) ! water storage in wetland [mm]
      real(r8), allocatable :: wat           (:) ! total water storage [mm]
      real(r8), allocatable :: wdsrf         (:) ! depth of surface water [mm]
-     real(r8), allocatable :: rss          (:) ! soil surface resistance [s/m]
+     real(r8), allocatable :: rss           (:) ! soil surface resistance [s/m]
 
      real(r8), allocatable :: t_lake      (:,:) ! lake layer teperature [K]
      real(r8), allocatable :: lake_icefrac(:,:) ! lake mass fraction of lake layer that is frozen
@@ -1253,7 +1253,7 @@ ENDIF
         write(*,'(/,A27)') 'Checking Time Variables ...'
      ENDIF
 
-    CALL check_vector_data ('t_grnd      [K]    ', t_grnd     ) ! ground surface temperature [K]
+     CALL check_vector_data ('t_grnd      [K]    ', t_grnd     ) ! ground surface temperature [K]
      CALL check_vector_data ('tleaf       [K]    ', tleaf      ) ! leaf temperature [K]
      CALL check_vector_data ('ldew        [mm]   ', ldew       ) ! depth of water on foliage [mm]
      CALL check_vector_data ('ldew_rain   [mm]   ', ldew_rain  ) ! depth of rain on foliage [mm]

@@ -438,7 +438,7 @@ CONTAINS
 
        nmozsgn = 0    !number of times moz changes sign
        obuold = 0.    !monin-obukhov length from previous iteration
-       zii = 1000.    !m (pbl height)
+       zii  = 1000.   !m (pbl height)
        beta = 1.      !- (in computing W_*)
        z0mg = (1.-fsno)*zlnd + fsno*zsno
        z0hg = z0mg
@@ -588,6 +588,7 @@ CONTAINS
              eah = qaf * psrf / ( 0.622 + 0.378 * qaf )    !pa
 
              if(DEF_USE_PLANTHYDRAULICS) then
+                sai = amax1(sai,0.1)
                 call PlantHydraulicStress_twoleaf (nl_soil   ,nvegwcs   ,z_soi    ,&
                       dz_soi    ,rootfr    ,psrf       ,qsatl      ,&
                       qaf       ,tl        ,rb         ,rss        ,&
@@ -924,8 +925,8 @@ ENDIF
                + cpliq * qintr_rain + cpice * qintr_snow) &
                ! yuan: add the imbalanced energy below due to q adjustment to sensibel heat
                + hvap*erre
-       etr0    = etr
-       etr     = etr     +     etr_dtl*dtl(it-1)
+       etr0  = etr
+       etr   = etr     +     etr_dtl*dtl(it-1)
 
        IF (DEF_USE_PLANTHYDRAULICS) THEN
           !TODO@yuan: rootflux may not be consistent with etr,

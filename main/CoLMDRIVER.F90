@@ -76,7 +76,7 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
         DO k = 1, steps_in_one_deltim
            !                ***** Call CoLM main program *****
            !
-              CALL CoLMMAIN (i,idate,           coszen(i),       deltim_phy,      &
+           CALL CoLMMAIN (i,idate,           coszen(i),       deltim_phy,      &
            patchlonr(i),    patchlatr(i),    patchclass(i),   patchtype(i),    &
            doalb,           dolai,           dosst,           oro(i),          &
 

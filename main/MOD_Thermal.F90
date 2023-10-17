@@ -650,8 +650,7 @@ IF ( patchtype==0.and.DEF_USE_LCT .or. patchtype>0 ) THEN
                  gssun_out  ,gssha_out  ,forc_po2m ,forc_pco2m ,z0h_g      ,&
                  obu_g      ,ustar_g    ,zlnd      ,zsno       ,fsno       ,&
                  sigf       ,etrc       ,t_grnd    ,qg,rss     ,&
-                 t_soil     ,t_snow     ,q_soil    ,q_snow     ,&
-                 dqgdT      ,&
+                 t_soil     ,t_snow     ,q_soil    ,q_snow     ,dqgdT      ,&
                  emg        ,tleaf      ,ldew      ,ldew_rain  ,ldew_snow  ,&
                  taux       ,tauy       ,&
                  fseng      ,fseng_soil ,fseng_snow,&
