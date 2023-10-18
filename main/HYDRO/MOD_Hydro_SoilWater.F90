@@ -3626,11 +3626,11 @@ contains
             count_wet2dry_accum, ' (wet2dry)'
       ENDIF
 #endif
-
+#ifdef CoLMDEBUG
       count_implicit = 0
       count_explicit = 0
       count_wet2dry  = 0
-
+#endif
    END SUBROUTINE print_VSF_iteration_stat_info
 
 end module MOD_Hydro_SoilWater
