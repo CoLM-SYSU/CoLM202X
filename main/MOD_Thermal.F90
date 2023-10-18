@@ -468,6 +468,7 @@ MODULE MOD_Thermal
       zol    = 0.;  rib    = 0.
       ustar  = 0.;  qstar  = 0.
       tstar  = 0.;  rootr  = 0.
+      rootflux = 0.
 
       dlrad  = frl
 
