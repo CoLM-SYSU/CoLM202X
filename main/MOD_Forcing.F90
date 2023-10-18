@@ -419,8 +419,10 @@ contains
             call block_data_copy (forcn(6), forc_xy_us , sca = 1/sqrt(2.0_r8))
             call block_data_copy (forcn(6), forc_xy_vs , sca = 1/sqrt(2.0_r8))
          ELSE
-            write(6, *) "At least one of the wind components must be provided! stop!";
-            CALL CoLM_stop()
+	    if (.not.trim(DEF_forcing%dataset) == 'CPL7') then
+                write(6, *) "At least one of the wind components must be provided! stop!";
+                CALL CoLM_stop()
+	    ENDIF
          ENDIF
 
          call flush_block_data (forc_xy_hgt_u, real(HEIGHT_V,r8))
@@ -804,7 +806,7 @@ contains
       real(r8), allocatable :: lon_in(:)
       real(r8), allocatable :: lat_in(:)
 
-      IF (trim(DEF_forcing%dataset) == 'POINT') THEN
+      IF (trim(DEF_forcing%dataset) == 'POINT' .or. trim(DEF_forcing%dataset) == 'CPL7' ) THEN
          CALL gforc%define_by_ndims (360, 180)
       ELSE
 
