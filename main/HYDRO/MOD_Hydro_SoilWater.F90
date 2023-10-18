@@ -3625,8 +3625,7 @@ contains
             count_implicit_accum, ' (implicit)', count_explicit_accum, ' (explicit)', &
             count_wet2dry_accum, ' (wet2dry)'
       ENDIF
-#endif
-#ifdef CoLMDEBUG
+
       count_implicit = 0
       count_explicit = 0
       count_wet2dry  = 0
