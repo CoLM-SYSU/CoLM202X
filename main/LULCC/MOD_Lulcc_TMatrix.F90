@@ -59,7 +59,7 @@ MODULE MOD_Lulcc_TMatrix
       USE MOD_NetCDFBlock
       USE MOD_5x5DataReadin
       USE MOD_Namelist, only : DEF_dir_rawdata
-#ifdef CoLMDEBUG
+#ifdef RangeCheck
       USE MOD_RangeCheck
 #endif
       USE MOD_AggregationRequestData
