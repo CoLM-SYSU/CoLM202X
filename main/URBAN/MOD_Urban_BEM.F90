@@ -208,6 +208,6 @@ CONTAINS
      Fwst = Fwst*fcover(0)
      Fhac = Fhac*fcover(0)
 
-  END SUBROUTINE
+  END SUBROUTINE SimpleBEM
 
 END MODULE MOD_Urban_BEM
