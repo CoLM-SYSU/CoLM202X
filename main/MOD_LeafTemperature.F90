@@ -587,9 +587,50 @@ CONTAINS
 
              eah = qaf * psrf / ( 0.622 + 0.378 * qaf )    !pa
 
+             ! If use PHS, calculate maximum stomata conductance (minimum stomata resistance) by setting rstfac = 1. (no water
+             ! stress). When use PHS, stomata only calculate non-stress stomata conductance, assimilation rate and leaf respiration
              if(DEF_USE_PLANTHYDRAULICS) then
+                  rstfacsun = 1. 
+                  rstfacsha = 1.
+             end if
+
+             ! leaf to canopy level
+             rbsun = rb / laisun
+             rbsha = rb / laisha
+
+             ! Sunlit leaves
+             CALL stomata  (vmax25   ,effcon ,slti   ,hlti    ,&
+                  shti     ,hhti     ,trda   ,trdm   ,trop    ,&
+                  gradm    ,binter   ,thm    ,psrf   ,po2m    ,&
+                  pco2m    ,pco2a    ,eah    ,ei     ,tl      , parsun   ,&
+             !Ozone stress variables
+                  o3coefv_sun ,o3coefg_sun, &
+             !End ozone stress variables
+                  rbsun   ,raw  ,rstfacsun ,cintsun ,&
+                  assimsun ,respcsun ,rssun  &
+                  )
+
+             ! Shaded leaves
+             CALL stomata  (vmax25   ,effcon ,slti   ,hlti    ,&
+                  shti     ,hhti     ,trda   ,trdm   ,trop    ,&
+                  gradm    ,binter   ,thm    ,psrf   ,po2m    ,&
+                  pco2m    ,pco2a    ,eah    ,ei     ,tl      ,  parsha  ,&
+             ! Ozone stress variables
+                  o3coefv_sha ,o3coefg_sha, &
+             ! End ozone stress variables
+                  rbsha    ,raw  ,rstfacsha ,cintsha ,&
+                  assimsha ,respcsha ,rssha  &
+                  )
+
+             if(DEF_USE_PLANTHYDRAULICS) then
+                gs0sun = min( 1.e6, 1./(rssun*tl/tprcor) )/ laisun * 1.e6
+                gs0sha = min( 1.e6, 1./(rssha*tl/tprcor) )/ laisha * 1.e6
+
                 sai = amax1(sai,0.1)
-                call PlantHydraulicStress_twoleaf (nl_soil   ,nvegwcs   ,z_soi    ,&
+                ! PHS update actual stomata conductance (resistance), assimilation rate and leaf respiration.
+                ! above stomatal resistances are for the canopy, the stomatal rsistances
+                ! and the "rb" in the following calculations are the average for single leaf. thus,
+                call PlantHydraulicStress_twoleaf (nl_soil         ,nvegwcs    ,z_soi    ,&
                       dz_soi    ,rootfr    ,psrf       ,qsatl      ,&
                       qaf       ,tl        ,rb         ,rss        ,&
                       raw       ,rd        ,rstfacsun  ,rstfacsha  ,cintsun    ,&
@@ -598,56 +639,21 @@ CONTAINS
                       psi50_sun ,psi50_sha ,psi50_xyl  ,psi50_root ,htop       ,&
                       ck        ,smp       ,hk         ,hksati     ,vegwp      ,&
                       etrsun    ,etrsha    ,rootflux   ,qg         ,&
-                      qm        ,gs0sun    ,gs0sha     ,k_soil_root,k_ax_root  )
+                      qm        ,gs0sun    ,gs0sha     ,k_soil_root,k_ax_root  ,&
+                      gssun      ,gssha)
                 etr = etrsun + etrsha
+
+                call update_photosyn(tl, po2m, pco2m, pco2a, parsun, psrf, rstfacsun, rb, gssun, &
+                                     effcon, vmax25, gradm, trop, slti, hlti, shti, hhti, trda, trdm, cintsun, &
+                                     assimsun, respcsun)
+         
+                call update_photosyn(tl, po2m, pco2m, pco2a, parsha, psrf, rstfacsha, rb, gssha, &
+                                     effcon, vmax25, gradm, trop, slti, hlti, shti, hhti, trda, trdm, cintsha, &
+                                     assimsha, respcsha)
+
+                rssun = tprcor/tl * 1.e6 / gssun
+                rssha = tprcor/tl * 1.e6 / gssha
              end if
-
-             ! leaf to canopy level
-             rbsun = rb / laisun
-             rbsha = rb / laisha
-
-! Sunlit leaves
-             CALL stomata  (vmax25   ,effcon ,slti   ,hlti    ,&
-                  shti     ,hhti     ,trda   ,trdm   ,trop    ,&
-                  gradm    ,binter   ,thm    ,psrf   ,po2m    ,&
-                  pco2m    ,pco2a    ,eah    ,ei     ,tl      , parsun   ,&
-!Ozone stress variables
-                  o3coefv_sun ,o3coefg_sun, &
-!End ozone stress variables
-                  rbsun   ,raw  ,rstfacsun ,cintsun ,&
-                  assimsun ,respcsun ,rssun  &
-                  )
-
-! Shaded leaves
-             CALL stomata  (vmax25   ,effcon ,slti   ,hlti    ,&
-                  shti     ,hhti     ,trda   ,trdm   ,trop    ,&
-                  gradm    ,binter   ,thm    ,psrf   ,po2m    ,&
-                  pco2m    ,pco2a    ,eah    ,ei     ,tl      ,  parsha  ,&
-!Ozone stress variables
-                  o3coefv_sha ,o3coefg_sha, &
-!End ozone stress variables
-                  rbsha    ,raw  ,rstfacsha ,cintsha ,&
-                  assimsha ,respcsha ,rssha  &
-                  )
-
-!             gssun = min( 1.e6, 1./(rssun*tl/tprcor) ) / cintsun(3) * 1.e6
-!             gssha = min( 1.e6, 1./(rssha*tl/tprcor) ) / cintsha(3) * 1.e6
-             gssun = min( 1.e6, 1./(rssun*tl/tprcor) )/ laisun * 1.e6
-             gssha = min( 1.e6, 1./(rssha*tl/tprcor) )/ laisha * 1.e6
-             if(DEF_USE_PLANTHYDRAULICS) then
-                gs0sun  = gssun/amax1(rstfacsun,1.e-2)
-                gs0sha  = gssha/amax1(rstfacsha,1.e-2)
-
-                gb_mol = 1./rb * tprcor/ tl * 1.e6  ! leaf to canopy
-                call getvegwp_twoleaf(vegwp, nvegwcs, nl_soil, z_soi, gb_mol, gssun, gssha, &
-                                      qsatl, qaf, qg, qm , rhoair, psrf, fwet, laisun, laisha, htop, sai, tl, rss, &
-                                      raw, rd, smp, k_soil_root, k_ax_root, kmax_xyl, kmax_root, rstfacsun, rstfacsha, &
-                                      psi50_sun, psi50_sha, psi50_xyl, psi50_root, ck, rootflux, etrsun, etrsha)
-             end if
-             ! above stomatal resistances are for the canopy, the stomatal rsistances
-             ! and the "rb" in the following calculations are the average for single leaf. thus,
-             rssun = tprcor/tl * 1.e6 / gssun
-             rssha = tprcor/tl * 1.e6 / gssha
           ELSE
              rssun = 2.e4; assimsun = 0.; respcsun = 0.
              rssha = 2.e4; assimsha = 0.; respcsha = 0.
@@ -748,9 +754,13 @@ ENDIF
                 etr_dtl = 0.
              ENDIF
           else
-             if(rstfacsun .le. 1.e-2 .or. etrsun .le. 1.e-7)etrsun = 0._r8
-             if(rstfacsha .le. 1.e-2 .or. etrsha .le. 1.e-7)etrsha = 0._r8
+             if(rstfacsun .lt. 1.e-2 .or. etrsun .le. 0.)etrsun = 0._r8
+             if(rstfacsha .lt. 1.e-2 .or. etrsha .le. 0.)etrsha = 0._r8
              etr = etrsun + etrsha
+             if(abs(etr - sum(rootflux)) .gt. 1.e-7)then 
+                write(6,*) 'Warning: water balance violation in vegetation PHS',ipatch,p_iam_glb, etr, sum(rootflux), abs(etr-sum(rootflux))
+                call CoLM_stop()
+             end if
           end if
 
           evplwet = rhoair * (1.-delta*(1.-fwet)) * (lai+sai) / rb &
@@ -971,7 +981,6 @@ ENDIF
        fseng_soil = cpair*rhoair*cgh*((1.-wtg0)*t_soil - wta0*thm - wtl0*tl)
        fseng_snow = cpair*rhoair*cgh*((1.-wtg0)*t_snow - wta0*thm - wtl0*tl)
 
-       !print *, fseng, tg, taf !fordebug
 ! 03/07/2020, yuan: calculate fevpg_soil/snow
 ! qaf = wtaq0*qm + wtgq0*qg + wtlq0*qsatl
        fevpg = rhoair*cgw*(qg-qaf)
