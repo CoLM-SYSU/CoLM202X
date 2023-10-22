@@ -122,9 +122,10 @@ CONTAINS
         w_old              ! liquid water mass of the column at the previous time step (mm)
 
   REAL(r8), intent(inout) :: rootflux(1:nl_soil)
+
 #if(defined CaMa_Flood)
   real(r8), INTENT(inout) :: flddepth  ! inundation water depth [mm]
-  real(r8), INTENT(in)    :: fldfrc    ! inundation water depth   [0-1]
+  real(r8), INTENT(in)    :: fldfrc    ! inundation water depth [0-1]
   real(r8), INTENT(out)   :: qinfl_fld ! grid averaged inundation water input from top (mm/s)
 #endif
 

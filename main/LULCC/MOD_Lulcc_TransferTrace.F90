@@ -1,7 +1,7 @@
 #include <define.h>
 
 MODULE MOD_Lulcc_TransferTrace
-! -------------------------------
+! =======================================================================
 ! Created by Wanyi Lin, Shupeng Zhang and Hua Yuan, 07/2023
 !
 ! !DESCRIPTION:
@@ -10,16 +10,17 @@ MODULE MOD_Lulcc_TransferTrace
 ! the pixels within the patch and last years' land cover type of these
 ! pixels were obtained. Then the percent of source land cover type of each
 ! patch was derived.
-! -------------------------------
+!
+! =======================================================================
 
    USE MOD_Precision
    USE MOD_Vars_Global
    IMPLICIT NONE
    SAVE
-! -----------------------------------------------------------------
+!------------------------------------------------------------------------
 
-   real(r8), allocatable, dimension(:,:) :: lccpct_patches(:,:) !Percent area of source patches in patch
-   real(r8), allocatable, dimension(:,:) :: lccpct_matrix(:,:)  !Percent area of source patches in grid
+   real(r8), allocatable, dimension(:,:) :: lccpct_patches(:,:) !Percent area of source patches in a patch
+   real(r8), allocatable, dimension(:,:) :: lccpct_matrix (:,:) !Percent area of source patches in a grid
 
    ! PUBLIC MEMBER FUNCTIONS:
    PUBLIC :: allocate_LulccTransferTrace
@@ -28,11 +29,11 @@ MODULE MOD_Lulcc_TransferTrace
 
    ! PRIVATE MEMBER FUNCTIONS:
 
-!-----------------------------------------------------------------------
+!------------------------------------------------------------------------
 
-   CONTAINS
+CONTAINS
 
-!-----------------------------------------------------------------------
+!------------------------------------------------------------------------
 
 
    SUBROUTINE allocate_LulccTransferTrace
@@ -68,13 +69,7 @@ MODULE MOD_Lulcc_TransferTrace
       USE MOD_LandPatch
       USE MOD_NetCDFVector
       USE MOD_NetCDFBlock
-      USE MOD_5x5DataReadin
-      USE MOD_Namelist, only: DEF_dir_rawdata, DEF_dir_landdata
-#ifdef CoLMDEBUG
-      USE MOD_RangeCheck
-#endif
       USE MOD_AggregationRequestData
-      USE MOD_Utils
       USE MOD_Mesh
       USE MOD_MeshFilter
       USE MOD_LandElm
@@ -86,6 +81,9 @@ MODULE MOD_Lulcc_TransferTrace
       USE MOD_Utils
 #ifdef SrfdataDiag
       USE MOD_SrfdataDiag
+#endif
+#ifdef CoLMDEBUG
+      USE MOD_RangeCheck
 #endif
 
       IMPLICIT NONE
@@ -137,6 +135,7 @@ MODULE MOD_Lulcc_TransferTrace
       ! extract the land cover type of pixels of last year for each patch
       ! -----------------------------------------------------------------
       IF (p_is_worker) THEN
+
          ! allocate with numelm
          allocate(grid_patch_s (numelm ))
          allocate(grid_patch_e (numelm ))
@@ -152,8 +151,7 @@ MODULE MOD_Lulcc_TransferTrace
             allocate(locpxl(numpxl))
 
             ! get all patches' index that eindex is equal the i element
-            locpxl = pack([(ipxl, ipxl=1, numpatch)], &
-                         landpatch%eindex==landelm%eindex(i))
+            locpxl = pack([(ipxl, ipxl=1, numpatch)], landpatch%eindex==landelm%eindex(i))
             ! the min index is the start of patch's index
             grid_patch_s(i) = minval(locpxl)
             ! the max index is the end of patch's index
@@ -165,7 +163,9 @@ MODULE MOD_Lulcc_TransferTrace
 
             IF (ipatch.le.0) CYCLE
             gridarea = 0
+
             DO WHILE (ipatch.le.grid_patch_e(i))
+
                IF (ipatch.le.0) THEN
                   CYCLE
                ENDIF

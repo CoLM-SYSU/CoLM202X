@@ -1,7 +1,8 @@
 #include <define.h>
 
 MODULE MOD_Lulcc_Vars_TimeVariables
-! -------------------------------
+
+! ======================================================================
 ! Created by Hua Yuan, 04/2022
 !
 !
@@ -11,13 +12,14 @@ MODULE MOD_Lulcc_Vars_TimeVariables
 ! 08/2023, Hua Yuan: unified PFT and PC process
 ! 10/2023, Wanyi Lin: check with MOD_Vars_TimeVariables.F90, add variables,
 !          and remove unnecessary variables
-! -------------------------------
+!
+! ======================================================================
 
   USE MOD_Precision
   USE MOD_Vars_Global
   IMPLICIT NONE
   SAVE
-! -----------------------------------------------------------------
+! ----------------------------------------------------------------------
 ! Time-varying state variables which reaquired by restart run
   !TODO: need to check with MOD_Vars_TimeVariables.F90 whether
   !      there are any variables missing. - DONE
