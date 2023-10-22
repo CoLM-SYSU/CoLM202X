@@ -23,7 +23,7 @@ MODULE MOD_Lulcc_Driver
  SUBROUTINE LulccDriver (casename,dir_landdata,dir_restart,&
                          idate,greenwich)
 
-!=======================================================================
+! ======================================================================
 ! !PURPOSE:
 !   the main subroutine for Land use and land cover change simulation
 !
@@ -31,9 +31,9 @@ MODULE MOD_Lulcc_Driver
 !
 ! !REVISONS:
 ! 07/2023, Wenzong Dong: porting to MPI version.
-! 08/2023, Wanyi Lin: add interface for conserved scheme.
+! 08/2023, Wanyi Lin: add interface for Mass&Energy conserved scheme.
 !
-!=======================================================================
+! ======================================================================
 
    USE MOD_Precision
    USE MOD_SPMD_Task
@@ -62,7 +62,10 @@ MODULE MOD_Lulcc_Driver
    CALL SAVE_LulccTimeInvariants
    CALL SAVE_LulccTimeVariables
 
+   ! =============================================================
    ! cold start for Lulcc
+   ! =============================================================
+
    IF (p_is_master) THEN
       print *, ">>> LULCC: initializing..."
    ENDIF
@@ -70,7 +73,11 @@ MODULE MOD_Lulcc_Driver
    CALL LulccInitialize (casename,dir_landdata,dir_restart,&
                          idate,greenwich)
 
+
+   ! =============================================================
    ! simple method for variable recovery
+   ! =============================================================
+
    IF (DEF_LULCC_SCHEME == 1) THEN
       IF (p_is_master) THEN
          print *, ">>> LULCC: simple method for variable recovery..."
@@ -78,7 +85,11 @@ MODULE MOD_Lulcc_Driver
       CALL REST_LulccTimeVariables
    ENDIF
 
+
+   ! =============================================================
    ! conserved method for variable revocery
+   ! =============================================================
+
    IF (DEF_LULCC_SCHEME == 2) THEN
       IF (p_is_master) THEN
          print *, ">>> LULCC: Mass&Energy conserve for variable recovery..."
@@ -88,6 +99,7 @@ MODULE MOD_Lulcc_Driver
       CALL MAKE_LulccTransferTrace(idate(1))
       CALL LulccMassEnergyConserve()
    ENDIF
+
 
    ! deallocate Lulcc memory
    CALL deallocate_LulccTimeInvariants()
@@ -100,3 +112,4 @@ MODULE MOD_Lulcc_Driver
 
 END MODULE MOD_Lulcc_Driver
 #endif
+! ---------- EOP ------------
