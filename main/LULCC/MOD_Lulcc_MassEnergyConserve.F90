@@ -745,14 +745,13 @@ ENDIF
                      ! Though the first source soil patch would be used for pervious ground related variables.
                      u = patch2urban (np)
                      nurb = count( patchclass_(grid_patch_s_(j):grid_patch_e_(j)) == URBAN )
-                     ! print*, 'URB patchclass_: ',patchclass_(grid_patch_s_(j):grid_patch_e_(j))
 
                      ! Get the index of urban patches in last year's grid, and index of urban patch with the same urbclass
                      IF (nurb > 0) THEN
 
                         allocate(gu_(nurb)) ! index of urban patches in last year's grid
                         selfu_   = -1       ! index of urban patch with the same urbclass in last year's grid
-                        inp_     = np_
+                        inp_     = np_      ! for loop to record the index of urban patch
                         iu       = 0
 
                         DO WHILE (inp_ .le. grid_patch_e_(j))
@@ -778,7 +777,9 @@ ENDIF
                         DO WHILE (iu .le. nurb)
                            IF (duclass .gt. abs( landurban%settyp(u) - urbclass_(gu_(iu)) )) THEN
                               u_ = gu_(iu)
+                              duclass = abs( landurban%settyp(u) - urbclass_(u_) )
                            ENDIF
+                           iu = iu + 1
                         ENDDO
                      ENDIF
 
@@ -882,7 +883,18 @@ ENDIF
                         snowdp_gper    (u) = snowdp_     (frnp_(1))
                      ENDIF
 
-                     !TODO: need to recalculate wliq_soisno, wice_soisno and scv value
+                     !TODO: need to recalculate wliq_soisno, wice_soisno and scv value - DONE
+                     wliq_soisno(: ,np) = 0.
+                     wliq_soisno(:1,np) = wliq_roofsno_(:1,u_)*froof(u)
+                     wliq_soisno(: ,np) = wliq_soisno  (: ,np)+wliq_gpersno_(: ,u_)*(1-froof(u))*fgper(u)
+                     wliq_soisno(:1,np) = wliq_soisno  (:1,np)+wliq_gimpsno_(:1,u_)*(1-froof(u))*(1-fgper(u))
+
+                     wice_soisno(: ,np) = 0.
+                     wice_soisno(:1,np) = wice_roofsno_(:1,u_)*froof(u)
+                     wice_soisno(: ,np) = wice_soisno  (: ,np)+wice_gpersno_(: ,u_)*(1-froof(u))*fgper(u)
+                     wice_soisno(:1,np) = wice_soisno  (:1,np)+wice_gimpsno_(:1,u_)*(1-froof(u))*(1-fgper(u))
+
+                     scv(np) = scv_roof(u)*froof(u) + scv_gper(u)*(1-froof(u))*fgper(u) + scv_gimp(u)*(1-froof(u))*(1-fgper(u))
 
                   ENDIF
 #endif
