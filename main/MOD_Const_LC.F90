@@ -250,25 +250,25 @@ MODULE MOD_Const_LC
       = (/0., 2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008,&
           2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008,&
           2.e-008, 2.e-008, 2.e-008, 0., 2.e-008, 2.e-008,&
-          0., 2.e-008, 2.e-008, 2.e-008, 0., 0./)
+          0., 2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008/)
 
    real(r8), parameter, dimension(N_land_classification) :: kmax_sha0_usgs &
       = (/0., 2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008,&
           2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008,&
           2.e-008, 2.e-008, 2.e-008, 0., 2.e-008, 2.e-008,&
-          0., 2.e-008, 2.e-008, 2.e-008, 0., 0./)
+          0., 2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008/)
 
    real(r8), parameter, dimension(N_land_classification) :: kmax_xyl0_usgs &
       = (/0., 2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008,&
           2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008,&
           2.e-008, 2.e-008, 2.e-008, 0., 2.e-008, 2.e-008,&
-          0., 2.e-008, 2.e-008, 2.e-008, 0., 0./)
+          0., 2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008/)
 
    real(r8), parameter, dimension(N_land_classification) :: kmax_root0_usgs &
       = (/0., 2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008,&
           2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008,&
           2.e-008, 2.e-008, 2.e-008, 0., 2.e-008, 2.e-008,&
-          0., 2.e-008, 2.e-008, 2.e-008, 0., 0./)
+          0., 2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008/)
 
    ! water potential at 50% loss of sunlit leaf tissue conductance (mmH2O)
    real(r8), parameter, dimension(N_land_classification) :: psi50_sun0_usgs &
@@ -519,22 +519,22 @@ MODULE MOD_Const_LC
    real(r8), parameter, dimension(N_land_classification) :: kmax_sun0_igbp &
       = (/2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008, &
           2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008, &
-          2.e-008, 2.e-008, 0.     , 0.     , 0.     /)
+          2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008     /)
 
    real(r8), parameter, dimension(N_land_classification) :: kmax_sha0_igbp &
       = (/2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008, &
           2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008, &
-          2.e-008, 2.e-008, 0.     , 0.     , 0.     /)
+          2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008     /)
 
    real(r8), parameter, dimension(N_land_classification) :: kmax_xyl0_igbp &
       = (/2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008, &
           2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008, &
-          2.e-008, 2.e-008, 0.     , 0.     , 0.     /)
+          2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008     /)
 
    real(r8), parameter, dimension(N_land_classification) :: kmax_root0_igbp &
       = (/2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008, &
           2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008, &
-          2.e-008, 2.e-008, 0.     , 0.     , 0.     /)
+          2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008     /)
 
    ! water potential at 50% loss of sunlit leaf tissue conductance (mmH2O)
    real(r8), parameter, dimension(N_land_classification) :: psi50_sun0_igbp &

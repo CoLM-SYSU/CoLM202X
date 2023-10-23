@@ -29,9 +29,10 @@ CONTAINS
               gssun   ,gssha   ,po2m    ,pco2m   ,&
               z0h_g   ,obug    ,ustarg  ,zlnd    ,zsno    ,fsno    ,&
               sigf    ,etrc    ,tg      ,qg,rss  ,dqgdT   ,emg     ,&
-              z0mpc   ,tl      ,ldew    ,ldew_rain       ,ldew_snow,&
-              taux    ,tauy    ,fseng   ,&
-              fevpg   ,cgrnd   ,cgrndl  ,cgrnds  ,tref    ,qref    ,&
+              t_soil  ,t_snow  ,q_soil  ,q_snow  ,z0mpc   ,tl      ,&
+              ldew,ldew_rain,ldew_snow  ,taux    ,tauy    ,&
+              fseng,fseng_soil,fseng_snow,fevpg,fevpg_soil,fevpg_snow,&
+              cgrnd   ,cgrndl  ,cgrnds  ,tref    ,qref    ,&
               rst     ,assim   ,respc   ,fsenl   ,fevpl   ,etr     ,&
               dlrad   ,ulrad   ,z0m     ,zol     ,rib     ,ustar   ,&
               qstar   ,tstar   ,fm      ,fh      ,fq               ,&
@@ -80,7 +81,7 @@ CONTAINS
   USE MOD_FrictionVelocity
   USE MOD_CanopyLayerProfile
   USE MOD_Namelist, only: DEF_USE_CBL_HEIGHT, DEF_USE_PLANTHYDRAULICS, DEF_USE_OZONESTRESS, &
-                          DEF_RSS_SCHEME, DEF_Interception_scheme
+                          DEF_RSS_SCHEME, DEF_Interception_scheme, DEF_SPLIT_SOILSNOW
   USE MOD_TurbulenceLEddy
   USE MOD_Qsadv
   USE MOD_AssimStomataConductance
@@ -155,7 +156,11 @@ CONTAINS
         sigf  (ps:pe), &! fraction of veg cover, excluding snow-covered veg [-]
         etrc  (ps:pe), &! maximum possible transpiration rate (mm/s)
         tg,            &! ground surface temperature [K]
+        t_soil,        &! ground surface soil temperature [K]
+        t_snow,        &! ground surface snow temperature [K]
         qg,            &! specific humidity at ground surface [kg/kg]
+        q_soil,        &! specific humidity at ground surface soil [kg/kg]
+        q_snow,        &! specific humidity at ground surface snow [kg/kg]
         dqgdT,         &! temperature derivative of "qg"
         rss,           &! soil surface resistance [s/m]
         emg             ! vegetation emissivity
@@ -206,7 +211,11 @@ CONTAINS
         taux,       &! wind stress: E-W [kg/m/s**2]
         tauy,       &! wind stress: N-S [kg/m/s**2]
         fseng,      &! sensible heat flux from ground [W/m2]
+        fseng_soil, &! sensible heat flux from ground soil [W/m2]
+        fseng_snow, &! sensible heat flux from ground snow [W/m2]
         fevpg,      &! evaporation heat flux from ground [mm/s]
+        fevpg_soil, &! evaporation heat flux from ground soil [mm/s]
+        fevpg_snow, &! evaporation heat flux from ground snow [mm/s]
         tref,       &! 2 m height air temperature (kelvin)
         qref,       &! 2 m height air specific humidity
         rootflux(nl_soil,ps:pe)    ! root water uptake from different layers
@@ -435,11 +444,12 @@ CONTAINS
 
    real(r8) :: ktop, utop, fmtop, bee, tmpw1, tmpw2, fact, facq
 
+   logical is_vegetated_patch
    integer i, p, clev
    integer toplay, botlay, upplay, numlay
    integer d_opt, rb_opt, rd_opt
 
-   real(r8) :: displa
+   real(r8) :: displa, ttaf, tqaf
 
    ! variables for longwave transfer calculation
    ! .................................................................
@@ -460,6 +470,22 @@ CONTAINS
 
 !-----------------------End Variable List-------------------------------
 
+! only process with vegetated patches
+
+       lsai(:) = lai(:) + sai(:)
+       is_vegetated_patch = .false.
+
+       DO i = ps, pe
+          IF (fcover(i)>0 .and. lsai(i)>1.e-6) THEN
+             is_vegetated_patch = .true.
+          ENDIF
+       ENDDO
+
+       IF (.not. is_vegetated_patch) THEN
+          print *, "NOTE: There is no vegetation in this Plant Community Patch, RETURN."
+          RETURN
+       ENDIF
+
 ! initialization of errors and  iteration parameters
        it       = 1    !counter for leaf temperature iteration
        del(:)   = 0.0  !change in leaf temperature from previous iteration
@@ -477,6 +503,8 @@ CONTAINS
        z0hg = z0mg
        z0qg = z0mg
 
+       !clai = 4.2 * 1000. * 0.2
+       clai = 0.0
 
 ! initialization of PFT constants
        DO i = ps, pe
@@ -536,10 +564,6 @@ CONTAINS
 ! get fraction of wet and dry canopy surface (fwet & fdry)
 ! initial saturated vapor pressure and humidity and their derivation
 !-----------------------------------------------------------------------
-
-       !clai = 4.2 * 1000. * 0.2
-       clai = 0.0
-       lsai(:) = lai(:) + sai(:)
 
        DO i = ps, pe
           IF (fcover(i)>0 .and. lsai(i)>1.e-6) THEN
@@ -1034,26 +1058,10 @@ CONTAINS
                 clev = canlay(i)
                 eah = qaf(clev) * psrf / ( 0.622 + 0.378 * qaf(clev) )    !pa
 
-                IF(DEF_USE_OZONESTRESS)THEN
-                   CALL CalcOzoneStress(o3coefv_sun(i),o3coefg_sun(i),forc_ozone,psrf,th,ram,&
-                                        rssun(i),rbsun,lai(i),lai_old(i),p,o3uptakesun(i),deltim)
-                   CALL CalcOzoneStress(o3coefv_sha(i),o3coefg_sha(i),forc_ozone,psrf,th,ram,&
-                                        rssha(i),rbsha,lai(i),lai_old(i),p,o3uptakesha(i),deltim)
-                   lai_old(i) = lai(i)
-                ENDIF
-                IF(DEF_USE_PLANTHYDRAULICS)THEN
-                   CALL PlantHydraulicStress_twoleaf (nl_soil   ,nvegwcs   ,z_soi    ,&
-                         dz_soi    ,rootfr(:,i),psrf      ,qsatl(i)   ,&
-                         qaf(clev) ,tl(i)     ,rbsun      ,rss       ,&
-                         raw       ,rd(clev)  ,rstfacsun(i),rstfacsha(i),cintsun(:,i),&
-                         cintsha(:,i),laisun(i),laisha(i) ,rhoair     ,fwet(i)    ,&
-                         sai(i)    ,kmax_sun(i),kmax_sha(i),kmax_xyl(i),kmax_root(i),&
-                         psi50_sun(i),psi50_sha(i),psi50_xyl(i),psi50_root(i),htop(i),&
-                         ck(i)     ,smp       ,hk         ,hksati     ,vegwp(:,i) ,&
-                         etrsun(i) ,etrsha(i) ,rootflux(:,i) ,qg         ,&
-                         qm        ,gs0sun(i) ,gs0sha(i)  ,k_soil_root,k_ax_root  )
-                   etr(i) = etrsun(i) + etrsha(i)
-                END IF
+                if(DEF_USE_PLANTHYDRAULICS) then
+                   rstfacsun(i) = 1.
+                   rstfacsha(i) = 1.
+                end if
 
 ! note: calculate resistance for sunlit/shaded leaves
 !-----------------------------------------------------------------------
@@ -1079,14 +1087,36 @@ CONTAINS
                     assimsha(i),respcsha(i),rssha(i) &
                     )
 
-                IF(DEF_USE_PLANTHYDRAULICS)THEN
-                   gssun(i) = min( 1.e6, 1./(rssun(i)*tl(i)/tprcor) ) / cintsun(3,i) * 1.e6
-                   gssha(i) = min( 1.e6, 1./(rssha(i)*tl(i)/tprcor) ) / cintsha(3,i) * 1.e6
-                   gs0sun(i)  = gssun(i)/amax1(rstfacsun(i),1.e-2)
-                   gs0sha(i)  = gssha(i)/amax1(rstfacsha(i),1.e-2)
 
-                   gb_mol_sun(i) = 1./rbsun * tprcor/tl(i) / cintsun(3,i) * 1.e6  ! leaf to canopy
-                   gb_mol_sha(i) = 1./rbsha * tprcor/tl(i) / cintsha(3,i) * 1.e6  ! leaf to canopy
+                IF(DEF_USE_PLANTHYDRAULICS)THEN
+                   gs0sun(i) = min( 1.e6, 1./(rssun(i)*tl(i)/tprcor) )/ laisun(i) * 1.e6
+                   gs0sha(i) = min( 1.e6, 1./(rssha(i)*tl(i)/tprcor) )/ laisha(i) * 1.e6
+
+                   CALL PlantHydraulicStress_twoleaf (nl_soil   ,nvegwcs      ,z_soi       ,&
+                         dz_soi    ,rootfr(:,i)   ,psrf         ,qsatl(i)     ,&
+                         qaf(clev) ,tl(i)         ,rbsun        ,rss          ,&
+                         raw       ,rd(clev)      ,rstfacsun(i) ,rstfacsha(i) ,cintsun(:,i),&
+                         cintsha(:,i),laisun(i)   ,laisha(i)    ,rhoair       ,fwet(i)     ,&
+                         sai(i)    ,kmax_sun(i)   ,kmax_sha(i)  ,kmax_xyl(i)  ,kmax_root(i),&
+                         psi50_sun(i),psi50_sha(i),psi50_xyl(i) ,psi50_root(i),htop(i)     ,&
+                         ck(i)     ,smp           ,hk           ,hksati       ,vegwp(:,i)  ,&
+                         etrsun(i) ,etrsha(i)     ,rootflux(:,i),qg           ,&
+                         qm        ,gs0sun(i)     ,gs0sha(i)    ,k_soil_root  ,k_ax_root   ,&
+                         gssun(i)  ,gssha(i))
+                   etr(i) = etrsun(i) + etrsha(i)
+
+                   call update_photosyn(tl(i), po2m, pco2m, pco2a, parsun(i), psrf, rstfacsun(i), rb(i), gssun(i), &
+                                     effcon(i), vmax25(i), gradm(i), trop(i), slti(i), hlti(i), shti(i), hhti(i), &
+                                     trda(i), trdm(i), cintsun(:,i), assimsun(i), respcsun(i))
+
+                   call update_photosyn(tl(i), po2m, pco2m, pco2a, parsha(i), psrf, rstfacsha(i), rb(i), gssha(i), &
+                                     effcon(i), vmax25(i), gradm(i), trop(i), slti(i), hlti(i), shti(i), hhti(i), &
+                                     trda(i), trdm(i), cintsha(:,i), assimsha(i), respcsha(i))
+
+                   ! leaf scale stomata resisitence
+                   rssun(i) = tprcor / tl(i) * 1.e6 /gssun(i)
+                   rssha(i) = tprcor / tl(i) * 1.e6 /gssha(i)
+
                 END IF
 
              ELSE
@@ -1101,8 +1131,8 @@ CONTAINS
 
 ! above stomatal resistances are for the canopy, the stomatal rsistances
 ! and the "rb" in the following calculations are the average for single leaf. thus,
-          rssun = rssun * laisun
-          rssha = rssha * laisha
+!          rssun = rssun * laisun
+!          rssha = rssha * laisha
 
 !-----------------------------------------------------------------------
 ! dimensional and non-dimensional sensible and latent heat conductances
@@ -1157,7 +1187,7 @@ CONTAINS
                       ENDIF
                    ENDIF
                 ELSE
-                cgw(i) = 1. / rd(i)
+                   cgw(i) = 1. / rd(i)
                 ENDIF
              ENDIF
           ENDDO
@@ -1281,7 +1311,13 @@ CONTAINS
 
 ! calcilate Lg = (1-emg)*dlrad + emg*stefnc*tg**4
 ! dlrad = Lin(0)
+IF (.not.DEF_SPLIT_SOILSNOW) THEN
           Lg = (1 - emg)*Lin(0) + emg*stefnc*tg**4
+ELSE
+          Lg = (1 - emg)*Lin(0) &
+             + (1.-fsno)*emg*stefnc*t_soil**4 &
+             + fsno*emg*stefnc*t_snow**4
+ENDIF
 
 ! calculate Ltu
           Ltu(1) = thermk_lay(1) * tup(0,1) * Lg
@@ -1533,11 +1569,11 @@ CONTAINS
           gah2o = 1.0/raw * tprcor/thm                     !mol m-2 s-1
 
           IF (DEF_RSS_SCHEME .eq. 4) THEN
-             gdh2o = rss/rd(botlay) * tprcor/thm              !mol m-2 s-1
+             gdh2o = rss/rd(botlay) * tprcor/thm           !mol m-2 s-1
           ELSE
-             gdh2o = 1.0/(rd(botlay)+rss) * tprcor/thm              !mol m-2 s-1
+             gdh2o = 1.0/(rd(botlay)+rss) * tprcor/thm     !mol m-2 s-1
           END IF
-             pco2a = pco2m - 1.37*psrf/max(0.446,gah2o) * &
+          pco2a = pco2m - 1.37*psrf/max(0.446,gah2o) * &
                   sum(fcover*(assimsun + assimsha - respcsun - respcsha - rsoil))
 
 !-----------------------------------------------------------------------
@@ -1595,6 +1631,13 @@ CONTAINS
 !     END stability iteration
 ! ======================================================================
 
+       IF(DEF_USE_OZONESTRESS)THEN
+          CALL CalcOzoneStress(o3coefv_sun(i),o3coefg_sun(i),forc_ozone,psrf,th,ram,&
+                               rssun(i),rbsun,lai(i),lai_old(i),p,o3uptakesun(i),deltim)
+          CALL CalcOzoneStress(o3coefv_sha(i),o3coefg_sha(i),forc_ozone,psrf,th,ram,&
+                               rssha(i),rbsha,lai(i),lai_old(i),p,o3uptakesha(i),deltim)
+          lai_old(i) = lai(i)
+       ENDIF
        z0m  = z0mv
        zol  = zeta
        rib  = min(5.,zol*ustar**2/(vonkar**2/fh*um**2))
@@ -1751,8 +1794,39 @@ CONTAINS
 ! fluxes from ground to canopy space
 !-----------------------------------------------------------------------
 
+! 03/07/2020, yuan: TODO-done, calculate fseng_soil/snow, fevpg_soil/snow
+       IF (numlay .EQ. 1) THEN
+          ttaf = thm
+          tqaf = qm
+       ENDIF
+
+       IF (numlay .EQ. 2) THEN
+          ttaf = taf(toplay)
+          tqaf = qaf(toplay)
+       ENDIF
+
+       IF (numlay .EQ. 3) THEN
+          ttaf = taf(2)
+          tqaf = qaf(2)
+       ENDIF
+
+! for check purpose ONLY
+! taf = wta0*thm + wtg0*tg + wtl0*tl
+! taf(1) = wta0(1)*taf(2) + wtg0(1)*tg + wtll(1)
+! qaf(1) = wtaq0(1)*qaf(2) + wtgq0(1)*qg + wtlql(1)
+! taf(botlay) = wta0(botlay)*taf(toplay) + wtg0(botlay)*tg + wtll(botlay)
+! qaf(botlay) = wtaq0(botlay)*qaf(toplay) + wtgq0(botlay)*qg + wtlql(botlay)
+! taf(toplay) = wta0(toplay)*thm +  wtg0(toplay)*tg + wtll(toplay)
+! qaf(toplay) = wtaq0(toplay)*qm + wtgq0(toplay)*qg + wtlql(toplay)
+
        fseng = cpair*rhoair*cgh(botlay)*(tg-taf(botlay))
+       !print *, "fseng, tg, taf:", fseng, tg, taf !fordebug
+       fseng_soil = cpair*rhoair*cgh(botlay)*((1.-wtg0(botlay))*t_soil-wta0(botlay)*ttaf-wtll(botlay))
+       fseng_snow = cpair*rhoair*cgh(botlay)*((1.-wtg0(botlay))*t_snow-wta0(botlay)*ttaf-wtll(botlay))
+
        fevpg = rhoair*cgw(botlay)*(qg-qaf(botlay))
+       fevpg_soil = rhoair*cgw(botlay)*((1.-wtgq0(botlay))*q_soil-wtaq0(botlay)*tqaf-wtlql(botlay))
+       fevpg_snow = rhoair*cgw(botlay)*((1.-wtgq0(botlay))*q_snow-wtaq0(botlay)*tqaf-wtlql(botlay))
 
 !-----------------------------------------------------------------------
 ! Derivative of soil energy flux with respect to soil temperature (cgrnd)
