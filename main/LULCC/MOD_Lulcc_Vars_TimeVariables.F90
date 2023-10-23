@@ -717,17 +717,9 @@ ENDIF
                     z_sno       (:,np) = z_sno_       (:,np_)
                     dz_sno      (:,np) = dz_sno_      (:,np_)
                     t_soisno    (:,np) = t_soisno_    (:,np_)
-#ifdef URBAN_MODEL
-                    IF (.not.(patchclass(np) == URBAN)) THEN
-                        wliq_soisno (:,np) = wliq_soisno_ (:,np_)
-                        wice_soisno (:,np) = wice_soisno_ (:,np_)
-                        scv           (np) = scv_           (np_)
-                    ENDIF
-#else
                     wliq_soisno (:,np) = wliq_soisno_ (:,np_)
                     wice_soisno (:,np) = wice_soisno_ (:,np_)
                     scv           (np) = scv_           (np_)
-#endif
                     smp         (:,np) = smp_         (:,np_)
                     hk          (:,np) = hk_          (:,np_)
                     t_grnd        (np) = t_grnd_        (np_)
@@ -851,7 +843,7 @@ ENDIF
                     ENDDO
                     ps       = patch_pft_s(np)
                     pe       = patch_pft_e(np)
-                    ldew(np) = sum( ldew_p(ps:pe)*pftfrac(ps:pe) )  
+                    ldew(np) = sum( ldew_p(ps:pe)*pftfrac(ps:pe) )
 ENDIF
 #endif
 
@@ -956,16 +948,16 @@ IF (patchclass(np)==URBAN .and. patchclass_(np_)==URBAN) THEN
                     urb_green      (u) = urb_green_      (u_)
 
                     wliq_soisno(: ,np) = 0.
-                    wliq_soisno(:1,np) = wliq_roofsno_(:1,u_)*froof(u)
-                    wliq_soisno(: ,np) = wliq_soisno  (: ,np)+wliq_gpersno_(: ,u_)*(1-froof(u))*fgper(u)
-                    wliq_soisno(:1,np) = wliq_soisno  (:1,np)+wliq_gimpsno_(:1,u_)*(1-froof(u))*(1-fgper(u))
+                    wliq_soisno(:1,np) = wliq_roofsno_(:1,u )*froof(u)
+                    wliq_soisno(: ,np) = wliq_soisno  (: ,np)+wliq_gpersno_(: ,u)*(1-froof(u))*fgper(u)
+                    wliq_soisno(:1,np) = wliq_soisno  (:1,np)+wliq_gimpsno_(:1,u)*(1-froof(u))*(1-fgper(u))
 
                     wice_soisno(: ,np) = 0.
-                    wice_soisno(:1,np) = wice_roofsno_(:1,u_)*froof(u)
-                    wice_soisno(: ,np) = wice_soisno  (: ,np)+wice_gpersno_(: ,u_)*(1-froof(u))*fgper(u)
-                    wice_soisno(:1,np) = wice_soisno  (:1,np)+wice_gimpsno_(:1,u_)*(1-froof(u))*(1-fgper(u))
-                    
-                    scv(np) = scv_roof(u)*froof(u) + scv_gper(u)*(1-froof(u))*fgper(u) + scv_gimp(u)*(1-froof(u))*(1-fgper(u))                 
+                    wice_soisno(:1,np) = wice_roofsno_(:1,u )*froof(u)
+                    wice_soisno(: ,np) = wice_soisno  (: ,np)+wice_gpersno_(: ,u)*(1-froof(u))*fgper(u)
+                    wice_soisno(:1,np) = wice_soisno  (:1,np)+wice_gimpsno_(:1,u)*(1-froof(u))*(1-fgper(u))
+
+                    scv(np) = scv_roof(u)*froof(u) + scv_gper(u)*(1-froof(u))*fgper(u) + scv_gimp(u)*(1-froof(u))*(1-fgper(u))
 ENDIF
 #endif
                     np = np + 1

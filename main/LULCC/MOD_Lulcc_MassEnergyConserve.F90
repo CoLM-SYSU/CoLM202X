@@ -885,14 +885,14 @@ ENDIF
 
                      !TODO: need to recalculate wliq_soisno, wice_soisno and scv value - DONE
                      wliq_soisno(: ,np) = 0.
-                     wliq_soisno(:1,np) = wliq_roofsno_(:1,u_)*froof(u)
-                     wliq_soisno(: ,np) = wliq_soisno  (: ,np)+wliq_gpersno_(: ,u_)*(1-froof(u))*fgper(u)
-                     wliq_soisno(:1,np) = wliq_soisno  (:1,np)+wliq_gimpsno_(:1,u_)*(1-froof(u))*(1-fgper(u))
+                     wliq_soisno(:1,np) = wliq_roofsno_(:1,u )*froof(u)
+                     wliq_soisno(: ,np) = wliq_soisno  (: ,np)+wliq_gpersno_(: ,u)*(1-froof(u))*fgper(u)
+                     wliq_soisno(:1,np) = wliq_soisno  (:1,np)+wliq_gimpsno_(:1,u)*(1-froof(u))*(1-fgper(u))
 
                      wice_soisno(: ,np) = 0.
-                     wice_soisno(:1,np) = wice_roofsno_(:1,u_)*froof(u)
-                     wice_soisno(: ,np) = wice_soisno  (: ,np)+wice_gpersno_(: ,u_)*(1-froof(u))*fgper(u)
-                     wice_soisno(:1,np) = wice_soisno  (:1,np)+wice_gimpsno_(:1,u_)*(1-froof(u))*(1-fgper(u))
+                     wice_soisno(:1,np) = wice_roofsno_(:1,u )*froof(u)
+                     wice_soisno(: ,np) = wice_soisno  (: ,np)+wice_gpersno_(: ,u)*(1-froof(u))*fgper(u)
+                     wice_soisno(:1,np) = wice_soisno  (:1,np)+wice_gimpsno_(:1,u)*(1-froof(u))*(1-fgper(u))
 
                      scv(np) = scv_roof(u)*froof(u) + scv_gper(u)*(1-froof(u))*fgper(u) + scv_gimp(u)*(1-froof(u))*(1-fgper(u))
 
