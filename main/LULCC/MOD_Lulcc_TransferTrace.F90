@@ -102,8 +102,8 @@ CONTAINS
       integer, allocatable, dimension(:) :: grid_patch_s, grid_patch_e
 ! for surface data diag
 #ifdef SrfdataDiag
-      INTEGER  :: ityp
-      INTEGER, allocatable, dimension(:) :: typindex
+      integer  :: ityp
+      integer, allocatable, dimension(:) :: typindex
 
       allocate( typindex(N_land_classification+1) )
 #endif
