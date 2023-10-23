@@ -57,38 +57,38 @@ MODULE MOD_Lulcc_Vars_TimeVariables
   !END plant hydraulic variables
 
   !Ozone stress variables
-  real(r8), allocatable :: lai_old_      (:)   !lai in last time step
-  real(r8), allocatable :: o3uptakesun_  (:)   !Ozone does, sunlit leaf (mmol O3/m^2)
-  real(r8), allocatable :: o3uptakesha_  (:)   !Ozone does, shaded leaf (mmol O3/m^2)
+  real(r8), allocatable :: lai_old_       (:)  !lai in last time step
+  real(r8), allocatable :: o3uptakesun_   (:)  !Ozone does, sunlit leaf (mmol O3/m^2)
+  real(r8), allocatable :: o3uptakesha_   (:)  !Ozone does, shaded leaf (mmol O3/m^2)
   !End ozone stress variables
 
-  real(r8), allocatable :: snw_rds_    (:,:)   !effective grain radius (col,lyr) [microns, m-6]
-  real(r8), allocatable :: mss_bcpho_  (:,:)   !mass of hydrophobic BC in snow  (col,lyr) [kg]
-  real(r8), allocatable :: mss_bcphi_  (:,:)   !mass of hydrophillic BC in snow (col,lyr) [kg]
-  real(r8), allocatable :: mss_ocpho_  (:,:)   !mass of hydrophobic OC in snow  (col,lyr) [kg]
-  real(r8), allocatable :: mss_ocphi_  (:,:)   !mass of hydrophillic OC in snow (col,lyr) [kg]
-  real(r8), allocatable :: mss_dst1_   (:,:)   !mass of dust species 1 in snow  (col,lyr) [kg]
-  real(r8), allocatable :: mss_dst2_   (:,:)   !mass of dust species 2 in snow  (col,lyr) [kg]
-  real(r8), allocatable :: mss_dst3_   (:,:)   !mass of dust species 3 in snow  (col,lyr) [kg]
-  real(r8), allocatable :: mss_dst4_   (:,:)   !mass of dust species 4 in snow  (col,lyr) [kg]
-  real(r8), allocatable :: ssno_   (:,:,:,:)   !snow layer absorption [-]
+  real(r8), allocatable :: snw_rds_     (:,:)  !effective grain radius (col,lyr) [microns, m-6]
+  real(r8), allocatable :: mss_bcpho_   (:,:)  !mass of hydrophobic BC in snow  (col,lyr) [kg]
+  real(r8), allocatable :: mss_bcphi_   (:,:)  !mass of hydrophillic BC in snow (col,lyr) [kg]
+  real(r8), allocatable :: mss_ocpho_   (:,:)  !mass of hydrophobic OC in snow  (col,lyr) [kg]
+  real(r8), allocatable :: mss_ocphi_   (:,:)  !mass of hydrophillic OC in snow (col,lyr) [kg]
+  real(r8), allocatable :: mss_dst1_    (:,:)  !mass of dust species 1 in snow  (col,lyr) [kg]
+  real(r8), allocatable :: mss_dst2_    (:,:)  !mass of dust species 2 in snow  (col,lyr) [kg]
+  real(r8), allocatable :: mss_dst3_    (:,:)  !mass of dust species 3 in snow  (col,lyr) [kg]
+  real(r8), allocatable :: mss_dst4_    (:,:)  !mass of dust species 4 in snow  (col,lyr) [kg]
+  real(r8), allocatable :: ssno_lyr_(:,:,:,:)  !snow layer absorption [-]
 
   ! Additional variables required by reginal model (such as WRF ) RSM)
-  real(r8), allocatable :: trad_         (:)   !radiative temperature of surface [K]
-  real(r8), allocatable :: tref_         (:)   !2 m height air temperature [kelvin]
-  real(r8), allocatable :: qref_         (:)   !2 m height air specific humidity
-  real(r8), allocatable :: rst_          (:)   !canopy stomatal resistance (s/m)
-  real(r8), allocatable :: emis_         (:)   !averaged bulk surface emissivity
-  real(r8), allocatable :: z0m_          (:)   !effective roughness [m]
-  real(r8), allocatable :: displa_       (:)   !zero displacement height [m]
-  real(r8), allocatable :: zol_          (:)   !dimensionless height (z/L) used in Monin-Obukhov theory
-  real(r8), allocatable :: rib_          (:)   !bulk Richardson number in surface layer
-  real(r8), allocatable :: ustar_        (:)   !u* in similarity theory [m/s]
-  real(r8), allocatable :: qstar_        (:)   !q* in similarity theory [kg/kg]
-  real(r8), allocatable :: tstar_        (:)   !t* in similarity theory [K]
-  real(r8), allocatable :: fm_           (:)   !integral of profile function for momentum
-  real(r8), allocatable :: fh_           (:)   !integral of profile function for heat
-  real(r8), allocatable :: fq_           (:)   !integral of profile function for moisture
+  real(r8), allocatable :: trad_          (:)  !radiative temperature of surface [K]
+  real(r8), allocatable :: tref_          (:)  !2 m height air temperature [kelvin]
+  real(r8), allocatable :: qref_          (:)  !2 m height air specific humidity
+  real(r8), allocatable :: rst_           (:)  !canopy stomatal resistance (s/m)
+  real(r8), allocatable :: emis_          (:)  !averaged bulk surface emissivity
+  real(r8), allocatable :: z0m_           (:)  !effective roughness [m]
+  real(r8), allocatable :: displa_        (:)  !zero displacement height [m]
+  real(r8), allocatable :: zol_           (:)  !dimensionless height (z/L) used in Monin-Obukhov theory
+  real(r8), allocatable :: rib_           (:)  !bulk Richardson number in surface layer
+  real(r8), allocatable :: ustar_         (:)  !u* in similarity theory [m/s]
+  real(r8), allocatable :: qstar_         (:)  !q* in similarity theory [kg/kg]
+  real(r8), allocatable :: tstar_         (:)  !t* in similarity theory [K]
+  real(r8), allocatable :: fm_            (:)  !integral of profile function for momentum
+  real(r8), allocatable :: fh_            (:)  !integral of profile function for heat
+  real(r8), allocatable :: fq_            (:)  !integral of profile function for moisture
 
   real(r8), allocatable :: sum_irrig_        (:) !total irrigation amount [kg/m2]
   real(r8), allocatable :: sum_irrig_count_  (:) !total irrigation counts [-]
@@ -286,7 +286,7 @@ MODULE MOD_Lulcc_Vars_TimeVariables
            allocate (mss_dst2_         (maxsnl+1:0,numpatch))
            allocate (mss_dst3_         (maxsnl+1:0,numpatch))
            allocate (mss_dst4_         (maxsnl+1:0,numpatch))
-           allocate (ssno_         (2,2,maxsnl+1:1,numpatch))
+           allocate (ssno_lyr_     (2,2,maxsnl+1:1,numpatch))
 
            allocate (trad_                        (numpatch))
            allocate (tref_                        (numpatch))
@@ -478,7 +478,7 @@ ENDIF
          mss_dst2_     = mss_dst2
          mss_dst3_     = mss_dst3
          mss_dst4_     = mss_dst4
-         ssno_         = ssno
+         ssno_lyr_     = ssno_lyr
 
          trad_         = trad
          tref_         = tref
@@ -766,7 +766,7 @@ ENDIF
                     mss_dst2    (:,np) = mss_dst2_    (:,np_)
                     mss_dst3    (:,np) = mss_dst3_    (:,np_)
                     mss_dst4    (:,np) = mss_dst4_    (:,np_)
-                    ssno    (2,2,:,np) = ssno_    (2,2,:,np_)
+                    ssno_lyr(2,2,:,np) = ssno_lyr_(2,2,:,np_)
 
                     trad          (np) = trad_          (np_)
                     tref          (np) = tref_          (np_)
@@ -1034,7 +1034,7 @@ ENDIF
            deallocate (mss_dst2_     )
            deallocate (mss_dst3_     )
            deallocate (mss_dst4_     )
-           deallocate (ssno_         )
+           deallocate (ssno_lyr_     )
 
            deallocate (trad_         )
            deallocate (tref_         )
