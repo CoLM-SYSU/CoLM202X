@@ -67,7 +67,7 @@ MODULE MOD_Namelist
       INTEGER  :: spinup_day  = 1
       INTEGER  :: spinup_sec  = 0
       INTEGER  :: spinup_repeat = 1
-      REAL(r8) :: timestep    = 3600.
+      REAL(r8) :: timestep    = 1800.
    END TYPE nl_simulation_time_type
 
    TYPE (nl_simulation_time_type) :: DEF_simulation_time
@@ -183,6 +183,13 @@ MODULE MOD_Namelist
    ! 4: LP92, Lee and Pielke (1992)
    ! 5: S92,  Sellers et al (1992)
    INTEGER :: DEF_RSS_SCHEME = 1
+
+
+   ! Treat exposed soil and snow surface separatly, including
+   ! solar absorption, sensible/latent heat, ground temperature,
+   ! ground heat flux and groud evp/dew/subl/fros.
+   ! Corresponding vars are named as ***_soil, ***_snow.
+   logical :: DEF_SPLIT_SOILSNOW = .false.
 
    ! ----- Model settings -----
    LOGICAL :: DEF_LANDONLY                    = .true.
@@ -751,6 +758,7 @@ CONTAINS
          DEF_USE_SUPERCOOL_WATER,         &
          DEF_SOIL_REFL_SCHEME,            &
          DEF_RSS_SCHEME,                  &
+         DEF_SPLIT_SOILSNOW,              &
 
          DEF_dir_existing_srfdata,        &
          USE_srfdata_from_larger_region,  &
@@ -783,6 +791,8 @@ CONTAINS
 
          DEF_file_snowoptics,             &
          DEF_file_snowaging ,             &
+
+         DEF_DA_obsdir,                   &
 
          DEF_forcing_namelist,            &
 
@@ -1156,6 +1166,8 @@ CONTAINS
       CALL mpi_bcast (DEF_SOIL_REFL_SCHEME,             1, mpi_integer, p_root, p_comm_glb, p_err)
       ! 07/2023, added by zhuo liu
       CALL mpi_bcast (DEF_RSS_SCHEME,                   1, mpi_integer, p_root, p_comm_glb, p_err)
+      ! 08/2023, added by hua yuan
+      CALL mpi_bcast (DEF_SPLIT_SOILSNOW,      1, mpi_logical, p_root, p_comm_glb, p_err)
 
       call mpi_bcast (DEF_LAI_MONTHLY,         1, mpi_logical, p_root, p_comm_glb, p_err)
       call mpi_bcast (DEF_NDEP_FREQUENCY,      1, mpi_integer, p_root, p_comm_glb, p_err)
@@ -1186,6 +1198,8 @@ CONTAINS
       call mpi_bcast (DEF_USE_SNICAR,        1, mpi_logical,   p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_file_snowoptics, 256, mpi_character, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_file_snowaging , 256, mpi_character, p_root, p_comm_glb, p_err)
+      
+      CALL mpi_bcast (DEF_DA_obsdir      , 256, mpi_character, p_root, p_comm_glb, p_err)
 
       call mpi_bcast (DEF_Aerosol_Readin,    1, mpi_logical,   p_root, p_comm_glb, p_err)
       call mpi_bcast (DEF_Aerosol_Clim,      1, mpi_logical,   p_root, p_comm_glb, p_err)

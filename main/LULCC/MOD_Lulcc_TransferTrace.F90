@@ -82,7 +82,7 @@ CONTAINS
 #ifdef SrfdataDiag
       USE MOD_SrfdataDiag
 #endif
-#ifdef CoLMDEBUG
+#ifdef RangeCheck
       USE MOD_RangeCheck
 #endif
 

@@ -341,6 +341,7 @@ CONTAINS
 
                DO WHILE (ipft <= numpft)
                   IF ((landpft%eindex(ipft) == landpatch%eindex(ipatch))  &
+                     .and. (landpft%ipxstt(ipft) == landpatch%ipxstt(ipatch))  &
                      .and. (landpft%settyp(ipft) < N_PFT)) THEN
                      pft2patch  (ipft  ) = ipatch
                      patch_pft_e(ipatch) = ipft

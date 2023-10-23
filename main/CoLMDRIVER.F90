@@ -85,6 +85,7 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
            vf_quartz(1:,i), vf_gravels(1:,i),vf_om(1:,i),     vf_sand(1:,i),   &
            wf_gravels(1:,i),wf_sand(1:,i),   porsl(1:,i),     psi0(1:,i),      &
            bsw(1:,i),                                                          &
+
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
            theta_r(1:,i),   alpha_vgm(1:,i), n_vgm(1:,i),     L_vgm(1:,i),     &
            sc_vgm (1:,i),   fc_vgm   (1:,i),                                   &
@@ -129,8 +130,8 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
            sag(i),          scv(i),          snowdp(i),       fveg(i),         &
            fsno(i),         sigf(i),         green(i),        lai(i),          &
            sai(i),          alb(1:,1:,i),    ssun(1:,1:,i),   ssha(1:,1:,i),   &
-           thermk(i),       extkb(i),        extkd(i),                         &
-           vegwp(1:,i),     gs0sun(i),       gs0sha(i),                        &
+           ssoi(:,:,i),     ssno(:,:,i),     thermk(i),       extkb(i),        &
+           extkd(i),        vegwp(1:,i),     gs0sun(i),       gs0sha(i),       &
          ! Ozone Stress Variables
            lai_old(i),      o3uptakesun(i),  o3uptakesha(i)  ,forc_ozone(i),   &
          ! End ozone stress variables
@@ -138,12 +139,12 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
            t_lake(1:,i),    lake_icefrac(1:,i),               savedtke1(i),    &
 
          ! SNICAR snow model related
-           snw_rds(:,i),    ssno(:,:,:,i),                                     &
+           snw_rds(:,i),    ssno_lyr(:,:,:,i),                                 &
            mss_bcpho(:,i),  mss_bcphi(:,i),  mss_ocpho(:,i),  mss_ocphi(:,i),  &
            mss_dst1(:,i),   mss_dst2(:,i),   mss_dst3(:,i),   mss_dst4(:,i),   &
 
          ! additional diagnostic variables for output
-           laisun(i),       laisha(i),       rootr(1:,i),     rootflux(1:,i),  rss(i),         &
+           laisun(i),       laisha(i),       rootr(1:,i),rootflux(1:,i),rss(i),&
            rstfacsun_out(i),rstfacsha_out(i),gssun_out(i),    gssha_out(i),    &
            assimsun_out(i), etrsun_out(i),   assimsha_out(i), etrsha_out(i),   &
            h2osoi(1:,i),    wat(i),          &
@@ -279,7 +280,7 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
         t_lake(1:,i)    ,lake_icefrac(1:,i),               savedtke1(i)    ,&
 
       ! SNICAR snow model related
-        snw_rds(:,i)    ,ssno(:,:,:,i)   ,&
+        snw_rds(:,i)    ,ssno_lyr(:,:,:,i),&
         mss_bcpho(:,i)  ,mss_bcphi(:,i)  ,mss_ocpho(:,i)  ,mss_ocphi(:,i)  ,&
         mss_dst1(:,i)   ,mss_dst2(:,i)   ,mss_dst3(:,i)   ,mss_dst4(:,i)   ,&
 

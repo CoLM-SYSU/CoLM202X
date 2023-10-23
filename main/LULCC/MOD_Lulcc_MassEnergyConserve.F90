@@ -250,7 +250,7 @@ ENDIF
                      mss_dst2    (:,np)                = 0  !mass of dust species 2 in snow  (col,lyr) [kg]
                      mss_dst3    (:,np)                = 0  !mass of dust species 3 in snow  (col,lyr) [kg]
                      mss_dst4    (:,np)                = 0  !mass of dust species 4 in snow  (col,lyr) [kg]
-                     ssno    (:,:,:,np)                = 0  !snow layer absorption [-]
+                     ssno_lyr(:,:,:,np)                = 0  !snow layer absorption [-]
 
                      trad          (np)                = 0  !radiative temperature of surface [K]
                      tref          (np)                = 0  !2 m height air temperature [kelvin]
@@ -499,7 +499,7 @@ ENDIF
                         mss_dst2  (:,np) = mss_dst2  (:,np) + mss_dst2_  (:,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
                         mss_dst3  (:,np) = mss_dst3  (:,np) + mss_dst3_  (:,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
                         mss_dst4  (:,np) = mss_dst4  (:,np) + mss_dst4_  (:,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
-                        ssno  (:,:,:,np) = ssno  (:,:,:,np) + ssno_  (:,:,:,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                        ssno_lyr  (:,:,:,np) = ssno_lyr (:,:,:,np) + ssno_lyr_ (:,:,:,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
 
                         ! TODO:or use same type assignment
                         smp       (:,np) = smp    (:,np) + smp_   (:,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
@@ -885,14 +885,14 @@ ENDIF
 
                      !TODO: need to recalculate wliq_soisno, wice_soisno and scv value - DONE
                      wliq_soisno(: ,np) = 0.
-                     wliq_soisno(:1,np) = wliq_roofsno_(:1,u_)*froof(u)
-                     wliq_soisno(: ,np) = wliq_soisno  (: ,np)+wliq_gpersno_(: ,u_)*(1-froof(u))*fgper(u)
-                     wliq_soisno(:1,np) = wliq_soisno  (:1,np)+wliq_gimpsno_(:1,u_)*(1-froof(u))*(1-fgper(u))
+                     wliq_soisno(:1,np) = wliq_roofsno_(:1,u )*froof(u)
+                     wliq_soisno(: ,np) = wliq_soisno  (: ,np)+wliq_gpersno_(: ,u)*(1-froof(u))*fgper(u)
+                     wliq_soisno(:1,np) = wliq_soisno  (:1,np)+wliq_gimpsno_(:1,u)*(1-froof(u))*(1-fgper(u))
 
                      wice_soisno(: ,np) = 0.
-                     wice_soisno(:1,np) = wice_roofsno_(:1,u_)*froof(u)
-                     wice_soisno(: ,np) = wice_soisno  (: ,np)+wice_gpersno_(: ,u_)*(1-froof(u))*fgper(u)
-                     wice_soisno(:1,np) = wice_soisno  (:1,np)+wice_gimpsno_(:1,u_)*(1-froof(u))*(1-fgper(u))
+                     wice_soisno(:1,np) = wice_roofsno_(:1,u )*froof(u)
+                     wice_soisno(: ,np) = wice_soisno  (: ,np)+wice_gpersno_(: ,u)*(1-froof(u))*fgper(u)
+                     wice_soisno(:1,np) = wice_soisno  (:1,np)+wice_gimpsno_(:1,u)*(1-froof(u))*(1-fgper(u))
 
                      scv(np) = scv_roof(u)*froof(u) + scv_gper(u)*(1-froof(u))*fgper(u) + scv_gimp(u)*(1-froof(u))*(1-fgper(u))
 

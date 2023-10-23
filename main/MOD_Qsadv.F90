@@ -73,9 +73,9 @@ MODULE MOD_Qsadv
 
        td = T-273.16
 
-       IF (td < -75.0 .or. td > 75.0) THEN
+!       IF (td < -75.0 .or. td > 75.0) THEN
        !* print *, "qsadv: abnormal temperature", T
-       ENDIF
+!       ENDIF
 
        IF (td < -75.0) td = -75.0
        IF (td > 75.0) td = 75.0
