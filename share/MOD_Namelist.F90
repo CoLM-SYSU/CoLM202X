@@ -1046,6 +1046,7 @@ CONTAINS
          !write(*,*) '                  *****                  '
          !write(*,*) 'Fatal ERROR: LULCC is not supported for LULC_IGBP_PC/URBAN at present. STOP! '
          !write(*,*) 'It is coming soon. '
+         ![update] 24/10/2023: right now IGBP/PFT/PC and Urban are all supported.
          !CALL CoLM_stop ()
 #endif
 
