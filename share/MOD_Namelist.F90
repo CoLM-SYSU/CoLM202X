@@ -1050,6 +1050,13 @@ CONTAINS
          !CALL CoLM_stop ()
 #endif
 
+#if (defined SinglePoint)
+         write(*,*) '                  *****                  '
+         write(*,*) 'Fatal ERROR: LULCC is not supported for Single Point run at present. STOP! '
+         write(*,*) 'It will come later. '
+         CALL CoLM_stop ()
+#endif
+
 #endif
 
 
