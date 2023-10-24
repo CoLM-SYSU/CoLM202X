@@ -66,10 +66,10 @@ MODULE MOD_Urban_Vars_TimeVariables
    REAL(r8), allocatable :: sag_gper       (:) !pervious ground snow age [-]
    REAL(r8), allocatable :: sag_lake       (:) !urban lake snow age [-]
 
-   REAL(r8), allocatable :: scv_roof       (:) !roof snow cover [-]
-   REAL(r8), allocatable :: scv_gimp       (:) !impervious ground snow cover [-]
-   REAL(r8), allocatable :: scv_gper       (:) !pervious ground snow cover [-]
-   REAL(r8), allocatable :: scv_lake       (:) !urban lake snow cover [-]
+   REAL(r8), allocatable :: scv_roof       (:) !roof snow mass [kg/m2]
+   REAL(r8), allocatable :: scv_gimp       (:) !impervious ground snow mass [kg/m2]
+   REAL(r8), allocatable :: scv_gper       (:) !pervious ground snow mass [kg/m2]
+   REAL(r8), allocatable :: scv_lake       (:) !urban lake snow mass [kg/m2]
 
    REAL(r8), allocatable :: fsno_roof      (:) !roof snow fraction [-]
    REAL(r8), allocatable :: fsno_gimp      (:) !impervious ground snow fraction [-]
