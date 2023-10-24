@@ -259,7 +259,7 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
         wliq_soisno (maxsnl+1:,i)        ,wice_soisno (maxsnl+1:,i)        ,&
         t_soisno    (maxsnl+1:,i)        ,&
         smp         (1:,i)               ,hk          (1:,i)               ,&
-        t_wallsha   (1:,u)               ,t_wallsun   (1:,u)               ,&
+        t_wallsun   (1:,u)               ,t_wallsha   (1:,u)               ,&
 
         lai(i)          ,sai(i)          ,fveg(i)         ,sigf(i)         ,&
         green(i)        ,tleaf(i)        ,ldew(i)         ,t_grnd(i)       ,&

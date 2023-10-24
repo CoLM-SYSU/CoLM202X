@@ -1707,7 +1707,7 @@ ENDIF
     real(r8), INTENT(in) :: bsw    (1:nl_soil) ! Clapp and Hornberger "b"
     real(r8), INTENT(in) :: psi0   (1:nl_soil) ! minimum soil suction (mm) [-]
     real(r8), INTENT(in) :: rootr  (1:nl_soil) ! effective fraction of roots in each soil layer
-    real(r8), INTENT(in) :: rootflux  (1:nl_soil) ! root uptake from different layers, all layers add to transpiration
+    real(r8), INTENT(in) :: rootflux(1:nl_soil)! root uptake from different layers, all layers add to transpiration
     real(r8), INTENT(in) :: zwt                ! the depth from ground (soil) surface to water table [m]
 
     real(r8), intent(out) :: dwat(1:nl_soil)   ! change of soil water [m3/m3]

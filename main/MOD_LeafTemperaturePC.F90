@@ -81,7 +81,7 @@ CONTAINS
   USE MOD_FrictionVelocity
   USE MOD_CanopyLayerProfile
   USE MOD_Namelist, only: DEF_USE_CBL_HEIGHT, DEF_USE_PLANTHYDRAULICS, DEF_USE_OZONESTRESS, &
-                          DEF_RSS_SCHEME, DEF_Interception_scheme
+                          DEF_RSS_SCHEME, DEF_Interception_scheme, DEF_SPLIT_SOILSNOW
   USE MOD_TurbulenceLEddy
   USE MOD_Qsadv
   USE MOD_AssimStomataConductance
@@ -1059,7 +1059,7 @@ CONTAINS
                 eah = qaf(clev) * psrf / ( 0.622 + 0.378 * qaf(clev) )    !pa
 
                 if(DEF_USE_PLANTHYDRAULICS) then
-                   rstfacsun(i) = 1. 
+                   rstfacsun(i) = 1.
                    rstfacsha(i) = 1.
                 end if
 
@@ -1108,7 +1108,7 @@ CONTAINS
                    call update_photosyn(tl(i), po2m, pco2m, pco2a, parsun(i), psrf, rstfacsun(i), rb(i), gssun(i), &
                                      effcon(i), vmax25(i), gradm(i), trop(i), slti(i), hlti(i), shti(i), hhti(i), &
                                      trda(i), trdm(i), cintsun(:,i), assimsun(i), respcsun(i))
-         
+
                    call update_photosyn(tl(i), po2m, pco2m, pco2a, parsha(i), psrf, rstfacsha(i), rb(i), gssha(i), &
                                      effcon(i), vmax25(i), gradm(i), trop(i), slti(i), hlti(i), shti(i), hhti(i), &
                                      trda(i), trdm(i), cintsha(:,i), assimsha(i), respcsha(i))
@@ -1116,7 +1116,7 @@ CONTAINS
                    ! leaf scale stomata resisitence
                    rssun(i) = tprcor / tl(i) * 1.e6 /gssun(i)
                    rssha(i) = tprcor / tl(i) * 1.e6 /gssha(i)
-         
+
                 END IF
 
              ELSE

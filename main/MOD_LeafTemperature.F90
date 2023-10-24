@@ -5,7 +5,7 @@ MODULE MOD_LeafTemperature
 !-----------------------------------------------------------------------
    USE MOD_Precision
    USE MOD_Namelist, ONLY: DEF_Interception_scheme, DEF_USE_PLANTHYDRAULICS, &
-                           DEF_USE_OZONESTRESS, DEF_RSS_SCHEME
+                           DEF_USE_OZONESTRESS, DEF_RSS_SCHEME, DEF_SPLIT_SOILSNOW
    USE MOD_SPMD_Task
 
    IMPLICIT NONE
@@ -590,7 +590,7 @@ CONTAINS
              ! If use PHS, calculate maximum stomata conductance (minimum stomata resistance) by setting rstfac = 1. (no water
              ! stress). When use PHS, stomata only calculate non-stress stomata conductance, assimilation rate and leaf respiration
              if(DEF_USE_PLANTHYDRAULICS) then
-                  rstfacsun = 1. 
+                  rstfacsun = 1.
                   rstfacsha = 1.
              end if
 
@@ -646,7 +646,7 @@ CONTAINS
                 call update_photosyn(tl, po2m, pco2m, pco2a, parsun, psrf, rstfacsun, rb, gssun, &
                                      effcon, vmax25, gradm, trop, slti, hlti, shti, hhti, trda, trdm, cintsun, &
                                      assimsun, respcsun)
-         
+
                 call update_photosyn(tl, po2m, pco2m, pco2a, parsha, psrf, rstfacsha, rb, gssha, &
                                      effcon, vmax25, gradm, trop, slti, hlti, shti, hhti, trda, trdm, cintsha, &
                                      assimsha, respcsha)
@@ -757,7 +757,7 @@ ENDIF
              if(rstfacsun .lt. 1.e-2 .or. etrsun .le. 0.)etrsun = 0._r8
              if(rstfacsha .lt. 1.e-2 .or. etrsha .le. 0.)etrsha = 0._r8
              etr = etrsun + etrsha
-             if(abs(etr - sum(rootflux)) .gt. 1.e-7)then 
+             if(abs(etr - sum(rootflux)) .gt. 1.e-7)then
                 write(6,*) 'Warning: water balance violation in vegetation PHS',ipatch,p_iam_glb, etr, sum(rootflux), abs(etr-sum(rootflux))
                 call CoLM_stop()
              end if

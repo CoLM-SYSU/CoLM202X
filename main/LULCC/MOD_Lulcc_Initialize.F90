@@ -21,6 +21,11 @@ MODULE MOD_Lulcc_Initialize
 !
 ! Initialization routine for Land-use-Land-cover-change (Lulcc) case
 !
+! Created by Hua Yuan, 04/08/2022
+!
+! !REVISONS:
+! 08/2023, Wenzong Dong: porting to MPI version and share the same code with
+!                        MOD_Initialize:initialize
 ! ======================================================================
 
    USE MOD_Precision
@@ -35,13 +40,16 @@ MODULE MOD_Lulcc_Initialize
    USE MOD_LandUrban
    USE MOD_Const_LC
    USE MOD_Const_PFT
-   use MOD_TimeManager
+   USE MOD_TimeManager
    USE MOD_Lulcc_Vars_TimeInvariants
    USE MOD_Lulcc_Vars_TimeVariables
    USE MOD_SrfdataRestart
    USE MOD_Vars_TimeInvariants
    USE MOD_Vars_TimeVariables
    USE MOD_Initialize
+#ifdef SrfdataDiag
+   USE MOD_SrfdataDiag, only : gdiag, srfdata_diag_init
+#endif
 
    IMPLICIT NONE
 
@@ -54,7 +62,7 @@ MODULE MOD_Lulcc_Initialize
    logical, intent(in)    :: greenwich  ! true: greenwich time, false: local time
 
    ! local vars
-   INTEGER :: year, jday
+   integer :: year, jday
    ! ----------------------------------------------------------------------
 
    ! initial time of model run
@@ -80,19 +88,19 @@ MODULE MOD_Lulcc_Initialize
 #endif
 
    ! load pixelset and mesh data of next year
-   ! call pixel%load_from_file  (dir_landdata)
-   ! call gblock%load_from_file (dir_landdata)
-   call mesh_load_from_file     (dir_landdata, year)
+   ! CALL pixel%load_from_file  (dir_landdata)
+   ! CALL gblock%load_from_file (dir_landdata)
+   CALL mesh_load_from_file     (dir_landdata, year)
    CALL pixelset_load_from_file (dir_landdata, 'landelm'  , landelm  , numelm  , year)
 
 #ifdef CATCHMENT
    CALL pixelset_load_from_file (dir_landdata, 'landhru'  , landhru  , numhru  , year)
 #endif
 
-   call pixelset_load_from_file (dir_landdata, 'landpatch', landpatch, numpatch, year)
+   CALL pixelset_load_from_file (dir_landdata, 'landpatch', landpatch, numpatch, year)
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
-   call pixelset_load_from_file (dir_landdata, 'landpft'  , landpft  , numpft  , year)
+   CALL pixelset_load_from_file (dir_landdata, 'landpft'  , landpft  , numpft  , year)
    CALL map_patch_to_pft
 #endif
 
@@ -108,6 +116,20 @@ MODULE MOD_Lulcc_Initialize
 #endif
 #endif
 
+   IF (p_is_worker) THEN
+      CALL elm_patch%build (landelm, landpatch, use_frac = .true.)
+   ENDIF
+
+#ifdef SrfdataDiag
+#ifdef GRIDBASED
+   CALL init_gridbased_mesh_grid ()
+   CALL gdiag%define_by_copy (gridmesh)
+#else
+   CALL gdiag%define_by_ndims(3600,1800)
+#endif
+   CALL srfdata_diag_init (dir_landdata)
+#endif
+
    ! --------------------------------------------------------------------
    ! Deallocates memory for CoLM 1d [numpatch] variables
    ! --------------------------------------------------------------------
@@ -121,3 +143,4 @@ MODULE MOD_Lulcc_Initialize
 
 END MODULE MOD_Lulcc_Initialize
 #endif
+! ---------- EOP ------------

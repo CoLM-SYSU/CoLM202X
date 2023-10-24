@@ -1043,16 +1043,24 @@ CONTAINS
          ENDIF
 
 #if (defined LULC_IGBP_PC || defined URBAN)
+         !write(*,*) '                  *****                  '
+         !write(*,*) 'Fatal ERROR: LULCC is not supported for LULC_IGBP_PC/URBAN at present. STOP! '
+         !write(*,*) 'It is coming soon. '
+         ![update] 24/10/2023: right now IGBP/PFT/PC and Urban are all supported.
+         !CALL CoLM_stop ()
+#endif
+
+#if (defined SinglePoint)
          write(*,*) '                  *****                  '
-         write(*,*) 'Fatal ERROR: LULCC is not supported for LULC_IGBP_PC/URBAN at present. STOP! '
-         write(*,*) 'It is coming soon. '
+         write(*,*) 'Fatal ERROR: LULCC is not supported for Single Point run at present. STOP! '
+         write(*,*) 'It will come later. '
          CALL CoLM_stop ()
 #endif
 
 #endif
 
 
-! ----- [Complement IF needed] ----- Macros&Namelist conflicts and dependency management
+! ----- single point run ----- Macros&Namelist conflicts and dependency management
 
 #if (defined SinglePoint)
 #ifdef SrfdataDiag
@@ -1061,6 +1069,9 @@ CONTAINS
 #undef SrfdataDiag
 #endif
 #endif
+
+
+! ----- [Complement IF needed] ----- Macros&Namelist conflicts and dependency management
 
 
 ! -----END Macros&Namelist conflicts and dependency management -----
@@ -1112,8 +1123,8 @@ CONTAINS
 
 #if (defined GRIDBASED || defined UNSTRUCTURED)
       CALL mpi_bcast (DEF_file_mesh,    256, mpi_character, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_GRIDBASED_lon_res, 1, mpi_real8, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_GRIDBASED_lat_res, 1, mpi_real8, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_GRIDBASED_lon_res,  1, mpi_real8, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_GRIDBASED_lat_res,  1, mpi_real8, p_root, p_comm_glb, p_err)
 #endif
 
 #ifdef CATCHMENT
@@ -1198,7 +1209,7 @@ CONTAINS
       call mpi_bcast (DEF_USE_SNICAR,        1, mpi_logical,   p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_file_snowoptics, 256, mpi_character, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_file_snowaging , 256, mpi_character, p_root, p_comm_glb, p_err)
-      
+
       CALL mpi_bcast (DEF_DA_obsdir      , 256, mpi_character, p_root, p_comm_glb, p_err)
 
       call mpi_bcast (DEF_Aerosol_Readin,    1, mpi_logical,   p_root, p_comm_glb, p_err)
