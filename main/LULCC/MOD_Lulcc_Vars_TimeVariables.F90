@@ -712,22 +712,40 @@ ENDIF
                        CYCLE
                     ENDIF
 
+#ifdef URBAN_MODEL                    
+                    u = patch2urban (np )
+                    u_= patch2urban_(np_)
+                    ! vars assignment needs same urb class for urban patch
+                    IF (patchclass(np) == URBAN) THEN
+                        ! if a Urban type is missing, CYCLE
+                        IF (landurban%settyp(u) > urbclass_(u_)) THEN
+                           np_= np_+ 1
+                           CYCLE
+                        ENDIF
+
+                        ! if a urban type is added, CYCLE
+                        IF (landurban%settyp(u) < urbclass_(u_)) THEN
+                           np = np + 1
+                           CYCLE
+                        ENDIF
+                    ENDIF                       
+#endif
                     ! otherwise, set patch value
                     ! only for the same patch type
                     z_sno       (:,np) = z_sno_       (:,np_)
                     dz_sno      (:,np) = dz_sno_      (:,np_)
                     t_soisno    (:,np) = t_soisno_    (:,np_)
-#ifdef URBAN_MODEL
-                    IF (.not.(patchclass(np) == URBAN)) THEN
-                        wliq_soisno (:,np) = wliq_soisno_ (:,np_)
-                        wice_soisno (:,np) = wice_soisno_ (:,np_)
-                        scv           (np) = scv_           (np_)
-                    ENDIF
-#else
+! #ifdef URBAN_MODEL
+!                     IF (.not.(patchclass(np) == URBAN)) THEN
+!                         wliq_soisno (:,np) = wliq_soisno_ (:,np_)
+!                         wice_soisno (:,np) = wice_soisno_ (:,np_)
+!                         scv           (np) = scv_           (np_)
+!                     ENDIF
+! #else
                     wliq_soisno (:,np) = wliq_soisno_ (:,np_)
                     wice_soisno (:,np) = wice_soisno_ (:,np_)
                     scv           (np) = scv_           (np_)
-#endif
+! #endif
                     smp         (:,np) = smp_         (:,np_)
                     hk          (:,np) = hk_          (:,np_)
                     t_grnd        (np) = t_grnd_        (np_)
@@ -857,25 +875,25 @@ ENDIF
 
 #ifdef URBAN_MODEL
 IF (patchclass(np)==URBAN .and. patchclass_(np_)==URBAN) THEN
-                    u = patch2urban (np )
-                    u_= patch2urban_(np_)
+                    ! u = patch2urban (np )
+                    ! u_= patch2urban_(np_)
 
                     IF (u.le.0 .or. u_.le.0) THEN
                        print *, "Error in REST_LulccTimeVariables URBAN_MODEL!"
                        CALL CoLM_stop ()
                     ENDIF
 
-                    ! if a Urban type is missing, CYCLE
-                    IF (landurban%settyp(u) > urbclass_(u_)) THEN
-                       np_= np_+ 1
-                       CYCLE
-                    ENDIF
+                    ! ! if a Urban type is missing, CYCLE
+                    ! IF (landurban%settyp(u) > urbclass_(u_)) THEN
+                    !    np_= np_+ 1
+                    !    CYCLE
+                    ! ENDIF
 
-                    ! if a urban type is added, CYCLE
-                    IF (landurban%settyp(u) < urbclass_(u_)) THEN
-                       np = np + 1
-                       CYCLE
-                    ENDIF
+                    ! ! if a urban type is added, CYCLE
+                    ! IF (landurban%settyp(u) < urbclass_(u_)) THEN
+                    !    np = np + 1
+                    !    CYCLE
+                    ! ENDIF
 
                     ! otherwise, set urban value
                     ! include added urban and the same urban type
