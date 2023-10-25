@@ -140,7 +140,7 @@ MODULE MOD_Namelist
 
    ! Options for LULCC year-to-year transfer schemes
    ! 1: Same Type Assignment scheme (STA), state variables assignment for the same TYPE (LC, PFT or PC)
-   ! 2: Energy and Mass Conservation scheme (EMC), DO energy and mass conservation calculation
+   ! 2: Mass and Energy Conservation scheme (MEC), DO mass and energy conservation calculation
    INTEGER :: DEF_LULCC_SCHEME = 1
 
    ! ------ Urban model related -------
