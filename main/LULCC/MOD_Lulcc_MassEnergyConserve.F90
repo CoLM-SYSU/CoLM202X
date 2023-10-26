@@ -269,7 +269,7 @@ ENDIF
 
 
                      ! =============================================================
-                     ! 1) Energy and mass conserve adjustment (except for dz_sno).
+                     ! 1) Mass and Energy conserve adjustment (except for dz_sno).
                      ! =============================================================
 
                      ! Calculate the weight of temperature adjustment

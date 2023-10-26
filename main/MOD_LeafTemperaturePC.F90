@@ -85,7 +85,7 @@ CONTAINS
   USE MOD_TurbulenceLEddy
   USE MOD_Qsadv
   USE MOD_AssimStomataConductance
-  USE MOD_PlantHydraulic, only : PlantHydraulicStress_twoleaf
+  USE MOD_PlantHydraulic, only: PlantHydraulicStress_twoleaf
   USE MOD_Ozone, only: CalcOzoneStress
   IMPLICIT NONE
 
@@ -94,7 +94,7 @@ CONTAINS
   integer,  intent(in) :: ipatch
   integer,  intent(in) :: &
         ps,            &! start PFT index in a patch
-        pe              ! END PFT index in a patch
+        pe              ! end PFT index in a patch
 
   real(r8), intent(in) :: &
         deltim,        &! seconds in a time step [second]
@@ -1865,19 +1865,19 @@ ENDIF
  USE MOD_Precision
  IMPLICIT NONE
 
-  real(r8), intent(in) :: sigf   !fraction of veg cover, excluding snow-covered veg [-]
-  real(r8), intent(in) :: lai    !leaf area index  [-]
-  real(r8), intent(in) :: sai    !stem area index  [-]
-  real(r8), intent(in) :: dewmx  !maximum allowed dew [0.1 mm]
-  real(r8), intent(in) :: ldew   !depth of water on foliage [kg/m2/s]
-  real(r8), intent(in) :: ldew_rain   !depth of rain on foliage [kg/m2/s]
-  real(r8), intent(in) :: ldew_snow   !depth of snow on foliage [kg/m2/s]
-  real(r8), intent(out) :: fwet  !fraction of foliage covered by water [-]
-  real(r8), intent(out) :: fdry  !fraction of foliage that is green and dry [-]
+  real(r8), intent(in)  :: sigf   !fraction of veg cover, excluding snow-covered veg [-]
+  real(r8), intent(in)  :: lai    !leaf area index  [-]
+  real(r8), intent(in)  :: sai    !stem area index  [-]
+  real(r8), intent(in)  :: dewmx  !maximum allowed dew [0.1 mm]
+  real(r8), intent(in)  :: ldew   !depth of water on foliage [kg/m2/s]
+  real(r8), intent(in)  :: ldew_rain   !depth of rain on foliage [kg/m2/s]
+  real(r8), intent(in)  :: ldew_snow   !depth of snow on foliage [kg/m2/s]
+  real(r8), intent(out) :: fwet   !fraction of foliage covered by water [-]
+  real(r8), intent(out) :: fdry   !fraction of foliage that is green and dry [-]
 
-  real(r8) lsai                  !lai + sai
-  real(r8) dewmxi                !inverse of maximum allowed dew [1/mm]
-  real(r8) vegt                  !sigf*lsai, NOTE: remove sigf
+  real(r8) lsai                   !lai + sai
+  real(r8) dewmxi                 !inverse of maximum allowed dew [1/mm]
+  real(r8) vegt                   !sigf*lsai, NOTE: remove sigf
 !
 !-----------------------------------------------------------------------
 ! Fwet is the fraction of all vegetation surfaces which are wet
