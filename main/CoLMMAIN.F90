@@ -960,7 +960,7 @@ ELSE IF(patchtype == 3)THEN   ! <=== is LAND ICE (glacier/ice sheet) (patchtype 
       ENDIF
 
       IF (pg_rain+pg_snow > 0) THEN
-         t_precip = (pg_rain*cpliq + pg_snow*cpice)/(pg_rain+pg_snow)
+         t_precip = (pg_rain*cpliq*t_rain + pg_snow*cpice*t_snow)/(pg_rain*cpliq+pg_snow*cpice)
       ENDIF
 
       !----------------------------------------------------------------
