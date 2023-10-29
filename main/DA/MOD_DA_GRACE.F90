@@ -11,7 +11,8 @@ MODULE MOD_DA_GRACE
    PUBLIC :: do_DA_GRACE
    PUBLIC :: final_DA_GRACE 
    
-   REAL(r8), allocatable, PUBLIC :: fslp_patch (:) ! slope factor of subsurface runoff
+   REAL(r8), allocatable, PUBLIC :: fslp_k_mon (:,:) ! slope factor of runoff
+   REAL(r8), allocatable, PUBLIC :: fslp_k (:) ! slope factor of runoff
 
    PRIVATE
       
@@ -36,15 +37,21 @@ MODULE MOD_DA_GRACE
    REAL(r8), allocatable :: wat_prev_m (:)
    REAL(r8), allocatable :: wat_this_m (:)
 
-   REAL(r8), allocatable :: rsub_acc_prev_m (:)
-   REAL(r8), allocatable :: rsub_acc_this_m (:)
+   REAL(r8), allocatable :: rnof_acc_prev_m (:)
+   REAL(r8), allocatable :: rnof_acc_this_m (:)
+   REAL(r8), allocatable :: zwt_acc_prev_m  (:)
+   REAL(r8), allocatable :: zwt_acc_this_m  (:)
    
-   REAL(r8), allocatable :: rsub_prev_m0 (:)
-   REAL(r8), allocatable :: rsub_prev_m1 (:)
-   REAL(r8), allocatable :: rsub_this_m  (:)
+   REAL(r8), allocatable :: rnof_prev_m0 (:)
+   REAL(r8), allocatable :: rnof_prev_m1 (:)
+   REAL(r8), allocatable :: rnof_this_m  (:)
+
+   logical,  allocatable :: rnofmask (:)
 
    LOGICAL :: has_prev_grace_obs
-   INTEGER :: nac_grace
+   INTEGER :: nac_grace_this, nac_grace_prev
+
+   integer :: year_prev, month_prev
 
 CONTAINS
 
@@ -63,6 +70,8 @@ CONTAINS
 #endif
       USE MOD_Pixelset
       USE MOD_Mapping_Grid2pset
+      USE MOD_Vars_TimeInvariants, only : patchtype
+      USE MOD_Forcing, only : forcmask
       USE MOD_RangeCheck
       IMPLICIT NONE
       
@@ -109,13 +118,17 @@ CONTAINS
          IF (numpatch > 0) THEN
             allocate (wat_prev_m      (numpatch))
             allocate (wat_this_m      (numpatch))
-            allocate (rsub_acc_prev_m (numpatch))
-            allocate (rsub_acc_this_m (numpatch))
-            allocate (rsub_prev_m0    (numpatch))
-            allocate (rsub_prev_m1    (numpatch))
-            allocate (rsub_this_m     (numpatch))
+            allocate (rnof_acc_prev_m (numpatch))
+            allocate (rnof_acc_this_m (numpatch))
+            allocate (zwt_acc_prev_m  (numpatch))
+            allocate (zwt_acc_this_m  (numpatch))
+            allocate (rnof_prev_m0    (numpatch))
+            allocate (rnof_prev_m1    (numpatch))
+            allocate (rnof_this_m     (numpatch))
+            allocate (rnofmask        (numpatch))
             
-            allocate (fslp_patch      (numpatch))
+            allocate (fslp_k_mon (12,numpatch))
+            allocate (fslp_k (numpatch))
          ENDIF
       ENDIF
       
@@ -126,15 +139,29 @@ CONTAINS
          CALL elm_patch%build (landelm, landpatch, use_frac = .true.)
 #endif
       ENDIF
+
+      IF (p_is_worker) THEN
+         IF (numpatch > 0) THEN
+            rnofmask = patchtype == 0
+            IF (DEF_forcing%has_missing_value) THEN
+               rnofmask = rnofmask .and. forcmask
+            ENDIF
+         ENDIF
+      ENDIF
+
       
       has_prev_grace_obs = .false.
+
+      nac_grace_this = 0
+      nac_grace_prev = 0
       
       IF (p_is_worker) THEN
          wat_this_m     (:) = 0.
-         rsub_acc_this_m(:) = 0.
-         rsub_this_m    (:) = 0.
-
-         fslp_patch     (:) = 1.0
+         rnof_acc_this_m(:) = 0.
+         rnof_this_m    (:) = 0.
+         zwt_acc_this_m (:) = 0.
+         fslp_k_mon (:,:) = 1.0
+         fslp_k (:) = 1.0
       ENDIF
 
       deallocate (time_real8)
@@ -148,9 +175,10 @@ CONTAINS
       USE MOD_TimeManager
       USE MOD_NetCDFBlock
       USE MOD_Mesh
+      USE MOD_LandElm
       USE MOD_LandPatch
-      USE MOD_Vars_1DFluxes,      only : rnof, rsur
-      USE MOD_Vars_TimeVariables, only : wat, wa
+      USE MOD_Vars_1DFluxes,       only : rnof, rsur
+      USE MOD_Vars_TimeVariables,  only : wat, wa, wdsrf, zwt
       USE MOD_RangeCheck 
       IMPLICIT NONE
       
@@ -159,13 +187,16 @@ CONTAINS
 
       ! Local Variables
       LOGICAL :: is_obs_time
-      INTEGER :: month, mday, itime, ielm, istt, iend
+      INTEGER :: month, mday, itime, ielm, istt, iend, nextmonth
 
-      REAL(r8) :: w1, w0, r1, r0, var_o, var_m, var_c, dw_f, dw_o, dw_a, rr
-      REAL(r8) :: fslp_rsub, fprev
+      real(r8) :: sumpct
+      REAL(r8) :: w1, w0, r1, r0, var_o, var_m, dw_f, dw_o, dw_a, rr, zwt_ave
+      REAL(r8) :: fscal, fprev, fthis
    
       TYPE(block_data_real8_2d) :: f_grace_lwe ! unit: cm
       TYPE(block_data_real8_2d) :: f_grace_err ! unit: cm
+
+      character(len=256) :: sid, logfile
       
       CALL julian2monthday (idate(1), idate(2), month, mday)
    
@@ -180,22 +211,27 @@ CONTAINS
       IF (p_is_worker) THEN
 
          IF (has_prev_grace_obs) THEN
-            rsub_acc_prev_m = rsub_acc_prev_m + (rnof - rsur) * deltim
+            
+            nac_grace_prev = nac_grace_prev + 1
+            
+            rnof_acc_prev_m = rnof_acc_prev_m + rnof * deltim
+            IF (is_obs_time) THEN
+               rnof_prev_m1 = rnof_prev_m1 + rnof_acc_prev_m
+            ENDIF
+
+            zwt_acc_prev_m = zwt_acc_prev_m + zwt
          ENDIF
 
          IF (is_obs_time) THEN
 
-            nac_grace = nac_grace + 1
+            nac_grace_this = nac_grace_this + 1
 
-            wat_this_m = wat_this_m + wat + wa
+            wat_this_m = wat_this_m + wat + wa + wdsrf
 
-            rsub_acc_this_m = rsub_acc_this_m + (rnof - rsur) * deltim
+            rnof_acc_this_m = rnof_acc_this_m + rnof * deltim
+            rnof_this_m = rnof_this_m + rnof_acc_this_m
 
-            IF (has_prev_grace_obs) THEN
-               rsub_prev_m1 = rsub_prev_m1 + rsub_acc_prev_m
-            ENDIF
-
-            rsub_this_m = rsub_this_m + rsub_acc_this_m
+            zwt_acc_this_m = zwt_acc_this_m + zwt
          ENDIF
 
       ENDIF
@@ -219,20 +255,45 @@ CONTAINS
             lwe_obs_this = lwe_obs_this * 10.0 ! from cm to mm
             err_obs_this = err_obs_this * 10.0 ! from cm to mm
 
-            wat_this_m  = wat_this_m  / nac_grace
+            wat_this_m  = wat_this_m  / nac_grace_this
 
-            IF (has_prev_grace_obs) THEN
+            zwt_acc_prev_m = zwt_acc_prev_m / nac_grace_prev
 
-               rsub_prev_m1 = rsub_prev_m1 / nac_grace
+            IF (has_prev_grace_obs) then
+               rnof_prev_m1 = rnof_prev_m1 / nac_grace_this
+            endif
+
+            IF (has_prev_grace_obs .and. &
+               (((idate(1) == year_prev)  .and. (month_prev == month-1)) &
+               .or. ((idate(1) == year_prev+1) .and. (month_prev == 12) .and. (month == 1)))) &
+               THEN
+
+               write(sid,'(I0)') p_iam_worker
+               logfile = 'log/grace_log_' // trim(sid) // '.txt'
+               open(12, file = trim(logfile), position = 'append')
 
                DO ielm = 1, numelm
                   istt = elm_patch%substt(ielm)
                   iend = elm_patch%subend(ielm)
 
-                  w1 = sum(wat_this_m  (istt:iend) * elm_patch%subfrc(istt:iend)) 
-                  w0 = sum(wat_prev_m  (istt:iend) * elm_patch%subfrc(istt:iend)) 
-                  r1 = sum(rsub_prev_m1(istt:iend) * elm_patch%subfrc(istt:iend)) 
-                  r0 = sum(rsub_prev_m0(istt:iend) * elm_patch%subfrc(istt:iend)) 
+                  sumpct = sum(elm_patch%subfrc(istt:iend), mask = rnofmask(istt:iend))
+
+                  IF (sumpct <= 0) THEN
+                     CYCLE
+                  ENDIF
+
+                  w1 = sum(wat_this_m  (istt:iend) * elm_patch%subfrc(istt:iend), &
+                     mask = rnofmask(istt:iend)) / sumpct
+                  w0 = sum(wat_prev_m  (istt:iend) * elm_patch%subfrc(istt:iend), &
+                     mask = rnofmask(istt:iend)) / sumpct
+                  r1 = sum(rnof_prev_m1(istt:iend) * elm_patch%subfrc(istt:iend), &
+                     mask = rnofmask(istt:iend)) / sumpct
+                  r0 = sum(rnof_prev_m0(istt:iend) * elm_patch%subfrc(istt:iend), &
+                     mask = rnofmask(istt:iend)) / sumpct
+
+                  zwt_ave = sum(zwt_acc_prev_m(istt:iend) * elm_patch%subfrc(istt:iend), &
+                     mask = rnofmask(istt:iend)) / sumpct
+
 
                   var_o = err_obs_this(ielm)**2 + err_obs_prev(ielm)**2
                      
@@ -240,37 +301,38 @@ CONTAINS
                   dw_o = lwe_obs_this(ielm) - lwe_obs_prev(ielm)
                   var_m = (dw_f-dw_o)**2 - var_o
 
-                  fslp_rsub = -1.
-
                   IF (var_m > 0) THEN
                  
                      dw_a = (var_o * dw_f + var_m * dw_o) / (var_m+var_o)
 
-                     ! var_a = var_o * var_m /(var_o+var_m)
-                     var_c = 1.0**2
-
                      rr = r1 - r0
+
                      IF (rr > 0) THEN
 
-                        fprev = fslp_patch(istt)
-                        fslp_rsub = fprev + (dw_f - dw_a)/rr &
-                           * (rr**2 * var_c) / (rr**2 * var_c + var_m) 
-                        fslp_rsub = min(max(fslp_rsub, fprev*0.5), fprev*2.0)
+                        fscal = (1-(dw_a-dw_f)/rr)
 
-                        fslp_patch(istt:iend) = fslp_rsub
+                        ! (2) method 2: one parameters adjusted
+                        fprev = fslp_k_mon(month,istt)
+                        fthis = fprev * fscal
+                        fthis = min(max(fthis, fprev*0.5), fprev*2.0)
+                        fslp_k_mon(month,istt:iend) = fthis
+                        
+                        fprev = fslp_k_mon(month_prev,istt)
+                        fthis = fprev * fscal
+                        fthis = min(max(fthis, fprev*0.5), fprev*2.0)
+                        fslp_k_mon(month_prev,istt:iend) = fthis
+
+                        ! write(12,'(I4,I3,I8,8ES11.2)') idate(1), month, landelm%eindex(ielm), &
+                        !    dw_o, sqrt(var_o), dw_f, sqrt(var_m), dw_a, &
+                        !    rr, zwt_ave, fscal
+
                      ENDIF
 
                   ENDIF
                         
-                  IF (fslp_rsub > 0) THEN
-                     ! write(*,'(A,2I3,7ES11.2)') 'Check DA: ', p_iam_worker, ielm, &
-                     !    dw_o, sqrt(var_o), dw_f, sign(sqrt(abs(var_m)),var_m), dw_a, r1-r0, fslp_rsub 
-                  ELSE
-                     ! write(*,'(A,2I3,6ES11.2)') 'Check DA: ', p_iam_worker, ielm, &
-                     !    dw_o, sqrt(var_o), dw_f, sign(sqrt(abs(var_m)),var_m), r1-r0, fslp_rsub 
-                  ENDIF
-
                ENDDO
+
+               close(12)
             ENDIF
 
             lwe_obs_prev = lwe_obs_this
@@ -279,20 +341,34 @@ CONTAINS
             wat_prev_m = wat_this_m
             wat_this_m = 0.
 
-            rsub_acc_prev_m = rsub_acc_this_m
-            rsub_acc_this_m = 0.
+            rnof_acc_prev_m = rnof_acc_this_m
+            rnof_acc_this_m = 0.
+            
+            zwt_acc_prev_m = zwt_acc_this_m
+            zwt_acc_this_m = 0.
 
-            rsub_prev_m0 = rsub_this_m / nac_grace
-            rsub_prev_m1 = 0.
-            rsub_this_m  = 0.
+            rnof_prev_m0 = rnof_this_m / nac_grace_this
+            rnof_prev_m1 = 0.
+            rnof_this_m  = 0.
 
-            nac_grace = 0
+            nac_grace_prev = nac_grace_this
+            nac_grace_this = 0
 
          ENDIF
 
          has_prev_grace_obs = .true.
+         year_prev  = idate(1)
+         month_prev = month
 
       ENDIF
+         
+      IF (isendofmonth(idate, deltim)) then
+         IF (p_is_worker .and. (numpatch > 0)) THEN
+            nextmonth = mod(month+1,12)+1
+            fslp_k = fslp_k_mon(nextmonth,:)
+         ENDIF
+      ENDIF
+
 
    END SUBROUTINE do_DA_GRACE
 
@@ -307,13 +383,15 @@ CONTAINS
       IF (allocated(err_obs_prev))    deallocate(err_obs_prev)
       IF (allocated(wat_prev_m     )) deallocate(wat_prev_m     )
       IF (allocated(wat_this_m     )) deallocate(wat_this_m     )
-      IF (allocated(rsub_acc_prev_m)) deallocate(rsub_acc_prev_m)
-      IF (allocated(rsub_acc_this_m)) deallocate(rsub_acc_this_m)
-      IF (allocated(rsub_prev_m0   )) deallocate(rsub_prev_m0   )
-      IF (allocated(rsub_prev_m1   )) deallocate(rsub_prev_m1   )
-      IF (allocated(rsub_this_m    )) deallocate(rsub_this_m    )
+      IF (allocated(rnof_acc_prev_m)) deallocate(rnof_acc_prev_m)
+      IF (allocated(rnof_acc_this_m)) deallocate(rnof_acc_this_m)
+      IF (allocated(rnof_prev_m0   )) deallocate(rnof_prev_m0   )
+      IF (allocated(rnof_prev_m1   )) deallocate(rnof_prev_m1   )
+      IF (allocated(rnof_this_m    )) deallocate(rnof_this_m    )
+      IF (allocated(rnofmask       )) deallocate(rnofmask       )
 
-      IF (allocated(fslp_patch)) deallocate(fslp_patch)
+      IF (allocated(fslp_k_mon)) deallocate(fslp_k_mon)
+      IF (allocated(fslp_k)) deallocate(fslp_k)
 
       IF (allocated(longrace)) deallocate(longrace)
       IF (allocated(latgrace)) deallocate(latgrace)

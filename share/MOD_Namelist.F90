@@ -259,6 +259,7 @@ MODULE MOD_Namelist
       LOGICAL            :: regional           = .false.
       REAL(r8)           :: regbnd(4)          = (/-90.0, 90.0, -180.0, 180.0/)
       LOGICAL            :: has_missing_value  = .false.
+      character(len=256) :: missing_value_name = 'missing_value'
 
       INTEGER            :: NVAR               = 8              ! variable number of forcing data
       INTEGER            :: startyr            = 2000           ! start year of forcing data        <MARK #1>
@@ -1241,6 +1242,7 @@ CONTAINS
       CALL mpi_bcast (DEF_forcing%regional,           1, mpi_logical,   p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_forcing%regbnd,             4, mpi_real8,     p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_forcing%has_missing_value,  1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_forcing%missing_value_name,256,mpi_character, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_forcing%NVAR,               1, mpi_integer,   p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_forcing%startyr,            1, mpi_integer,   p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_forcing%startmo,            1, mpi_integer,   p_root, p_comm_glb, p_err)

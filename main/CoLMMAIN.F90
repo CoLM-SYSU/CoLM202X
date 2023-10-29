@@ -136,7 +136,7 @@ SUBROUTINE CoLMMAIN ( &
 
   USE MOD_Precision
   USE MOD_Vars_Global
-  USE MOD_Const_Physical, only: tfrz, denh2o, denice
+  USE MOD_Const_Physical, only: tfrz, denh2o, denice, cpliq, cpice
   USE MOD_Vars_TimeVariables, only: tlai, tsai, irrig_rate
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
   USE MOD_LandPFT, only : patch_pft_s, patch_pft_e
@@ -521,6 +521,7 @@ SUBROUTINE CoLMMAIN ( &
       !----------------------------------------------------------------------
 
       real(r8) :: a, aa, gwat
+      real(r8) :: wextra, t_rain, t_snow
       integer ps, pe, pc
 
 !======================================================================
@@ -940,6 +941,28 @@ ELSE IF(patchtype == 3)THEN   ! <=== is LAND ICE (glacier/ice sheet) (patchtype 
       pg_rain = prc_rain + prl_rain
       pg_snow = prc_snow + prl_snow
 
+      t_rain = t_precip
+      IF (wliq_soisno(1) > dz_soisno(1)*denh2o) THEN
+         wextra  = (wliq_soisno(1) - dz_soisno(1)*denh2o) / deltim
+         t_rain  = (pg_rain*t_precip + wextra*t_soisno(1)) / (pg_rain + wextra)
+         pg_rain = pg_rain + wextra
+         wliq_soisno(1) = dz_soisno(1)*denh2o
+         totwb = totwb - wextra*deltim
+      ENDIF
+      
+      t_snow = t_precip
+      IF (wice_soisno(1) > dz_soisno(1)*denice) THEN
+         wextra  = (wice_soisno(1) - dz_soisno(1)*denice) / deltim
+         t_snow  = (pg_snow*t_precip + wextra*t_soisno(1)) / (pg_snow + wextra)
+         pg_snow = pg_snow + wextra
+         wice_soisno(1) = dz_soisno(1)*denice
+         totwb = totwb - wextra*deltim
+      ENDIF
+
+      IF (pg_rain+pg_snow > 0) THEN
+         t_precip = (pg_rain*cpliq + pg_snow*cpice)/(pg_rain+pg_snow)
+      ENDIF
+
       !----------------------------------------------------------------
       ! Initilize new snow nodes for snowfall / sleet
       !----------------------------------------------------------------
@@ -1051,7 +1074,7 @@ ELSE IF(patchtype == 3)THEN   ! <=== is LAND ICE (glacier/ice sheet) (patchtype 
       IF (DEF_USE_VARIABLY_SATURATED_FLOW) THEN
          IF (abs(errorw) > 1.e-3) THEN
             write(6,*) 'Warning: water balance violation in CoLMMAIN (land ice) ', errorw
-            ! CALL CoLM_stop ()
+            CALL CoLM_stop ()
          ENDIF
       ENDIF
 #endif
@@ -1219,6 +1242,7 @@ ELSE IF(patchtype == 4) THEN   ! <=== is LAND WATER BODIES (lake, reservior and 
       IF (DEF_USE_VARIABLY_SATURATED_FLOW) THEN
          IF (abs(errorw) > 1.e-3) THEN
             write(*,*) 'Warning: water balance violation in CoLMMAIN (lake) ', errorw
+            CALL CoLM_stop ()
          ENDIF
       ENDIF
 #endif
