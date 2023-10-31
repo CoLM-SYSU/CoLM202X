@@ -1,0 +1,117 @@
+&nl_colm
+
+!Author: Wenzong Dong
+
+   DEF_CASE_NAME = 'GlobalURBANIGBPHist2000-2020-all'
+
+   DEF_domain%edges =  -90.0
+   DEF_domain%edgen =   90.0
+   DEF_domain%edgew = -180.0
+   DEF_domain%edgee =  180.0
+
+   DEF_nx_blocks = 30
+   DEF_ny_blocks = 30
+   DEF_PIO_groupsize = 6
+
+   DEF_simulation_time%greenwich    = .TRUE.
+   DEF_simulation_time%start_year   = 1995
+   DEF_simulation_time%start_month  = 1
+   DEF_simulation_time%start_day    = 1
+   DEF_simulation_time%start_sec    = 0
+   DEF_simulation_time%end_year     = 2021
+   DEF_simulation_time%end_month    = 1
+   DEF_simulation_time%end_day      = 1
+   DEF_simulation_time%end_sec      = 0
+   DEF_simulation_time%spinup_year  = 2000
+   DEF_simulation_time%spinup_month = 1
+   DEF_simulation_time%spinup_day   = 1
+   DEF_simulation_time%spinup_sec   = 0
+   DEF_simulation_time%spinup_repeat= 0
+
+   DEF_simulation_time%timestep     = 1800.
+
+   DEF_dir_rawdata  = '/stu01/dongwz/data/CoLMrawdata/'
+   DEF_dir_runtime  = '/stu01/dongwz/data/CoLMruntime/'
+   DEF_dir_output   = '/stu01/dongwz/cases'
+
+   ! ----- land units and land sets -----
+   ! for GRIDBASED
+   DEF_GRIDBASED_lon_res = 0.5
+   DEF_GRIDBASED_lat_res = 0.5
+
+   ! LAI setting
+   DEF_LAI_MONTHLY = .true.
+   DEF_LAI_CHANGE_YEARLY = .false.
+
+   ! LandCover setting
+   DEF_LC_YEAR = 2005
+
+   !---- Urban options ----
+   ! urban type options
+   ! Options :
+   ! 1: NCAR Urban Classification, 3 urban type with Tall Building, High Density and Medium Density
+   ! 2: LCZ Classification, 10 urban type with LCZ 1-10
+   DEF_URBAN_type_scheme = 1
+
+   ! urban module options
+   DEF_URBAN_ONLY = .false.
+   DEF_URBAN_TREE = .true.
+   DEF_URBAN_WATER= .true.
+   DEF_URBAN_BEM  = .true.
+   DEF_URBAN_LUCY = .true.
+   ! -----------------------
+
+   ! Canopy DEF Interception scheme selection
+   DEF_Interception_scheme=1 !1:CoLM2014；2:CLM4.5; 3:CLM5; 4:Noah-MP; 5:MATSIRO; 6:VIC
+
+   ! ---- Hydrology module ----
+   DEF_USE_SUPERCOOL_WATER         = .false.
+   DEF_USE_VARIABLY_SATURATED_FLOW = .false.
+   DEF_USE_PLANTHYDRAULICS         = .false.
+   ! --------------------------
+
+   ! ---- SNICAR ----
+   DEF_USE_SNICAR     = .false.
+   DEF_Aerosol_Readin = .true.
+   DEF_Aerosol_Clim   = .false.
+   ! ----------------
+
+   ! ---- Ozone MODULE ----
+   DEF_USE_OZONESTRESS = .false.
+   DEF_USE_OZONEDATA   = .false.
+   ! ----------------------
+
+   ! ---- Bedrock ----
+   DEF_USE_BEDROCK = .false.
+   ! -----------------
+
+   ! ---- Split Soil Snow ----
+   DEF_SPLIT_SOILSNOW = .false.
+   ! -------------------------
+
+   ! ---- Forcing Downscalling ----
+   DEF_USE_Forcing_Downscaling        = .false.
+   DEF_DS_precipitation_adjust_scheme = 'II'
+   DEF_DS_longwave_adjust_scheme      = 'II'
+   ! ------------------------------
+
+   ! ----- forcing -----
+   ! Options :
+   ! PRINCETON | GSWP3   | QIAN  | CRUNCEPV4 | CRUNCEPV7 | ERA5LAND | ERA5 |  MSWX
+   ! WFDE5     | CRUJRA  | WFDEI | JRA55     | GDAS      | CMFD     | POINT
+   DEF_forcing_namelist = '/home/dongwz/github/CoLM-master/CoLM202X/run/forcing/CRUNCEPV7.nml'
+
+   ! ----- history -----
+   DEF_hist_lon_res = 0.5
+   DEF_hist_lat_res = 0.5
+   DEF_WRST_FREQ = 'MONTHLY' ! write restart file frequency: HOURLY/DAILY/MONTHLY/YEARLY
+   DEF_HIST_FREQ = 'MONTHLY' ! write history file frequency: HOURLY/DAILY/MONTHLY/YEARLY
+   DEF_HIST_groupby = 'MONTH' ! history in one file: DAY/MONTH/YEAR
+   DEF_HIST_mode = 'one' ! history in one or block
+   DEF_REST_COMPRESS_LEVEL = 1
+   DEF_HIST_COMPRESS_LEVEL = 1
+
+   DEF_hist_vars_namelist = '/tera04/zhangsp/CoLM202X/github/CoLM202X/run/history.nml'
+   DEF_hist_vars_out_default = .true.
+
+/

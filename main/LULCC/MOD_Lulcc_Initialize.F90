@@ -76,7 +76,7 @@ MODULE MOD_Lulcc_Initialize
    CAll Init_LC_Const
    CAll Init_PFT_Const
 
-   ! deallocate pixelset and mesh data of previous
+   ! deallocate pixelset and mesh data of previous year
    CALL mesh_free_mem
    CALL landelm%forc_free_mem
    CALL landpatch%forc_free_mem
@@ -93,22 +93,27 @@ MODULE MOD_Lulcc_Initialize
    CALL mesh_load_from_file     (dir_landdata, year)
    CALL pixelset_load_from_file (dir_landdata, 'landelm'  , landelm  , numelm  , year)
 
+   ! load CATCHMENT of next year
 #ifdef CATCHMENT
    CALL pixelset_load_from_file (dir_landdata, 'landhru'  , landhru  , numhru  , year)
 #endif
 
+   ! load landpatch data of next year
    CALL pixelset_load_from_file (dir_landdata, 'landpatch', landpatch, numpatch, year)
 
+   ! load pft data of PFT/PC of next year
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
    CALL pixelset_load_from_file (dir_landdata, 'landpft'  , landpft  , numpft  , year)
    CALL map_patch_to_pft
 #endif
 
+   ! load urban data of next year
 #ifdef URBAN_MODEL
    CALL pixelset_load_from_file (dir_landdata, 'landurban', landurban, numurban, year)
    CALL map_patch_to_urban
 #endif
 
+   ! initialize for data associated with land element
 #if (defined UNSTRUCTURED || defined CATCHMENT)
    CALL elm_vector_init ()
 #ifdef CATCHMENT
@@ -116,10 +121,12 @@ MODULE MOD_Lulcc_Initialize
 #endif
 #endif
 
+   ! build element subfraction of next year which it's needed in the MOD_Lulcc_TransferTrace
    IF (p_is_worker) THEN
       CALL elm_patch%build (landelm, landpatch, use_frac = .true.)
    ENDIF
 
+   ! initialize for SrfdataDiag, it is needed in the MOD_Lulcc_TransferTrace for outputing transfer_matrix
 #ifdef SrfdataDiag
 #ifdef GRIDBASED
    CALL init_gridbased_mesh_grid ()
@@ -136,6 +143,7 @@ MODULE MOD_Lulcc_Initialize
    CALL deallocate_TimeInvariants
    CALL deallocate_TimeVariables
 
+   ! initialize all state variables of next year
    CALL initialize (casename,dir_landdata,dir_restart,&
                     idate,year,greenwich,lulcc_call=.true.)
 
