@@ -2,7 +2,7 @@
 
 !Author: Wenzong Dong
 
-   DEF_CASE_NAME = 'GlobalURBANIGBPHist2000-2020-all'
+   DEF_CASE_NAME = 'GlobalURBANIGBPHist2000-2020'
 
    DEF_domain%edges =  -90.0
    DEF_domain%edgen =   90.0
