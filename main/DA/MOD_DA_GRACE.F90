@@ -268,9 +268,9 @@ CONTAINS
                .or. ((idate(1) == year_prev+1) .and. (month_prev == 12) .and. (month == 1)))) &
                THEN
 
-               ！ write(sid,'(I0)') p_iam_worker
-               ！ logfile = 'log/grace_log_' // trim(sid) // '.txt'
-               ！ open(12, file = trim(logfile), position = 'append')
+               ! write(sid,'(I0)') p_iam_worker
+               ! logfile = 'log/grace_log_' // trim(sid) // '.txt'
+               ! open(12, file = trim(logfile), position = 'append')
 
                DO ielm = 1, numelm
                   istt = elm_patch%substt(ielm)
@@ -332,7 +332,7 @@ CONTAINS
                         
                ENDDO
 
-               ！ close(12)
+               ! close(12)
             ENDIF
 
             lwe_obs_prev = lwe_obs_this
