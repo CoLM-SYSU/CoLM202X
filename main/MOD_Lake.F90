@@ -277,10 +277,10 @@ MODULE MOD_Lake
            ! -------------------
            t_grnd       , scv         , snowdp       , t_soisno  ,&
            wliq_soisno  , wice_soisno , imelt_soisno , t_lake    ,&
-           lake_icefrac , savedtke1, &
+           lake_icefrac , savedtke1   , &
 
 ! SNICAR model variables
-           snofrz       ,sabg_lyr     ,&
+           snofrz       ,sabg_snow_lyr, &
 ! END SNICAR model variables
 
            ! "out" arguments
@@ -339,7 +339,7 @@ MODULE MOD_Lake
 ! [ts] n   = old temperature (kelvin)
 ! [ts] n+1 = new temperature (kelvin)
 ! fin      = heat flux into lake (w/m**2)
-!          = beta*sabg_lyr(1)+forc_frl-olrg-fsena-lfevpa-hm + phi(1) + ... + phi(nl_lake)
+!          = beta*sabg_snow_lyr(1)+forc_frl-olrg-fsena-lfevpa-hm + phi(1) + ... + phi(nl_lake)
 !
 ! REVISIONS:
 ! Yongjiu Dai and Hua Yuan, 01/2023: added SNICAR for layer solar absorption, ground heat
@@ -422,8 +422,8 @@ MODULE MOD_Lake
   real(r8), INTENT(inout) :: savedtke1             ! top level eddy conductivity (W/m K)
 
 ! SNICAR model variables
-  REAL(r8), intent(out) :: snofrz   (maxsnl+1:0)   ! snow freezing rate (col,lyr) [kg m-2 s-1]
-  REAL(r8), intent(in)  :: sabg_lyr (maxsnl+1:1)   ! solar radiation absorbed by ground [W/m2]
+  REAL(r8), intent(out) :: snofrz       (maxsnl+1:0) ! snow freezing rate (col,lyr) [kg m-2 s-1]
+  REAL(r8), intent(in)  :: sabg_snow_lyr(maxsnl+1:1) ! solar radiation absorbed by ground [W/m2]
 ! END SNICAR model variables
 
   real(r8), INTENT(out) :: taux   ! wind stress: E-W [kg/m/s**2]
@@ -915,7 +915,7 @@ MODULE MOD_Lake
 
       ! January 12, 2023 by Yongjiu Dai
       IF (DEF_USE_SNICAR .and. .not. present(urban_call)) THEN
-         hs = sabg_lyr(lb) + forc_frl - olrg - fseng - htvp*fevpg
+         hs = sabg_snow_lyr(lb) + forc_frl - olrg - fseng - htvp*fevpg
          dhsdT = 0.0
       ENDIF
 
@@ -1067,8 +1067,8 @@ MODULE MOD_Lake
             ! This looks like it should be robust even for pathological cases,
             ! like lakes thinner than za(idlak).
 
-            phi(j) = (rsfin-rsfout) * sabg_lyr(1) * (1.-betaprime)
-            if (j == nl_lake) phi_soil = rsfout * sabg_lyr(1) * (1.-betaprime)
+            phi(j) = (rsfin-rsfout) * sabg_snow_lyr(1) * (1.-betaprime)
+            if (j == nl_lake) phi_soil = rsfout * sabg_snow_lyr(1) * (1.-betaprime)
          end do
       ENDIF
 
@@ -1160,14 +1160,14 @@ MODULE MOD_Lake
                   a(j) =   - (1.-cnfac)*factx(j)* tkix(j-1)/dzm
                   b(j) = 1.+ (1.-cnfac)*factx(j)*(tkix(j)/dzp + tkix(j-1)/dzm)
                   c(j) =   - (1.-cnfac)*factx(j)* tkix(j)/dzp
-                  r(j) = tx_bef(j) + cnfac*factx(j)*(fnx(j) - fnx(j-1)) + factx(j)*sabg_lyr(j)
+                  r(j) = tx_bef(j) + cnfac*factx(j)*(fnx(j) - fnx(j-1)) + factx(j)*sabg_snow_lyr(j)
                else                               ! snow covered top lake layer
                   dzm  = (zx(j)-zx(j-1))
                   dzp  = (zx(j+1)-zx(j))
                   a(j) =   - (1.-cnfac)*factx(j)* tkix(j-1)/dzm
                   b(j) = 1.+ (1.-cnfac)*factx(j)*(tkix(j)/dzp + tkix(j-1)/dzm)
                   c(j) =   - (1.-cnfac)*factx(j)* tkix(j)/dzp
-                  r(j) = tx_bef(j) + cnfac*factx(j)*(fnx(j) - fnx(j-1)) + factx(j)*(phix(j) + betaprime*sabg_lyr(j))
+                  r(j) = tx_bef(j) + cnfac*factx(j)*(fnx(j) - fnx(j-1)) + factx(j)*(phix(j) + betaprime*sabg_snow_lyr(j))
                endif
             enddo
          else

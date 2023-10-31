@@ -24,7 +24,7 @@ CONTAINS
 #ifdef LULC_IGBP_PC
 
 !-----------------------------------------------------------------------
-  SUBROUTINE ThreeDCanopy_wrap (ipatch, czen, albg, albv, ssun, ssha)
+  SUBROUTINE ThreeDCanopy_wrap (ipatch, czen, albg, albv, tran, ssun, ssha)
 
 !
 ! !DESCRIPTION:
@@ -52,11 +52,12 @@ CONTAINS
    IMPLICIT NONE
 
    integer,  intent(in)  :: ipatch
-   real(r8), Intent(in)  :: czen
-   real(r8), Intent(in)  :: albg(2,2)
-   real(r8), Intent(out) :: albv(2,2)
-   real(r8), Intent(out) :: ssun(2,2)
-   real(r8), Intent(out) :: ssha(2,2)
+   real(r8), intent(in)  :: czen
+   real(r8), intent(in)  :: albg(2,2)
+   real(r8), intent(out) :: albv(2,2)
+   real(r8), intent(out) :: tran(2,3)
+   real(r8), intent(out) :: ssun(2,2)
+   real(r8), intent(out) :: ssha(2,2)
 
    ! local variables
    integer :: i, p, ps, pe;
@@ -183,6 +184,13 @@ CONTAINS
    ssha(2,1) = sum( ssha_p(2,1,ps:pe) * pftfrac(ps:pe) )
    ssha(1,2) = sum( ssha_p(1,2,ps:pe) * pftfrac(ps:pe) )
    ssha(2,2) = sum( ssha_p(2,2,ps:pe) * pftfrac(ps:pe) )
+
+   tran(1,1) = ftid(ps,1)
+   tran(2,1) = ftid(ps,2)
+   tran(1,3) = ftdd(ps,1)
+   tran(2,3) = ftdd(ps,2)
+   tran(1,2) = ftii(ps,1)
+   tran(2,2) = ftii(ps,2)
 
    ! deallocate memory for defined variables
    deallocate (albd    )

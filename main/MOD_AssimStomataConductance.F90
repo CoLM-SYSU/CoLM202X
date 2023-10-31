@@ -9,9 +9,11 @@ MODULE MOD_AssimStomataConductance
 
 ! PUBLIC MEMBER FUNCTIONS:
   public :: stomata
+  public :: update_photosyn
 
 ! PRIVATE MEMBER FUNCTIONS:
   private :: sortin
+  private :: calc_photo_params
 
 
 !-----------------------------------------------------------------------
@@ -76,15 +78,14 @@ MODULE MOD_AssimStomataConductance
  real(r8),intent(in) :: &
       effcon,       &! quantum efficiency of RuBP regeneration (mol CO2 / mol quanta)
       vmax25,       &! maximum carboxylation rate at 25 C at canopy top
-                     ! the range : 30.e-6 <-> 100.e-6 (mol co2 m-2 s-1)
 
+      trop,         &! temperature coefficient in gs-a model             (298.16)
       slti,         &! slope of low temperature inhibition function      (0.2)
       hlti,         &! 1/2 point of low temperature inhibition function  (288.16)
       shti,         &! slope of high temperature inhibition function     (0.3)
       hhti,         &! 1/2 point of high temperature inhibition function (313.16)
       trda,         &! temperature coefficient in gs-a model             (1.3)
       trdm,         &! temperature coefficient in gs-a model             (328.16)
-      trop,         &! temperature coefficient in gs-a model             (298.16)
       gradm,        &! conductance-photosynthesis slope parameter
       binter         ! conductance-photosynthesis intercept
 
@@ -121,27 +122,17 @@ MODULE MOD_AssimStomataConductance
 
  integer, parameter :: iterationtotal = 6   ! total iteration number in pco2i calculation
 
- real(r8) c3,       &! c3 vegetation : 1; 0 for c4
+      real(r8) &
+      c3,           &! c3 vegetation : 1; 0 for c4
       c4,           &! c4 vegetation : 1; 0 for c3
-      qt,           &! (tleaf - 298.16) / 10
-      kc,           &! Michaelis-Menten constant for co2
-      ko,           &! Michaelis-Menten constant for o2
       rrkk,         &! kc (1+o2/ko)
 
-      templ,        &! intermediate value
-      temph,        &! intermediate value
-
       vm,           &! maximum catalytic activity of Rubison (mol co2 m-2 s-1)
-      jmax25,       &! potential rate of whole-chain electron transport at 25 C
-      jmax,         &! potential rate of whole-chain electron transport (mol electron m-2 s-1)
       epar,         &! electron transport rate (mol electron m-2 s-1)
-      respcp,       &! respiration fraction of vmax (mol co2 m-2 s-1)
       bintc,        &! residual stomatal conductance for co2 (mol co2 m-2 s-1)
 
-      rgas,         &! universal gas contant (8.314 J mol-1 K-1)
       tprcor,       &! coefficient for unit transfer
       gbh2o,        &! one side leaf boundary layer conductance (mol m-2 s-1)
-      gah2o,        &! aerodynamic conductance between cas and reference height (mol m-2 s-1)
       gsh2o,        &! canopy conductance (mol m-2 s-1)
 
       atheta,       &! wc, we coupling parameter
@@ -176,95 +167,18 @@ MODULE MOD_AssimStomataConductance
 
  integer ic
 
-!=======================================================================
-
-      c3 = 0.
-      if( effcon .gt. 0.07 ) c3 = 1.
-      c4 = 1. - c3
-
-!-----------------------------------------------------------------------
-! dependence on leaf temperature
-!     gammas - CO2 compensation point in the absence of day respiration
-!     ko     - Michaelis-Menton constant for carboxylation by Rubisco
-!     kc     - Michaelis-Menton constant for oxygenation by Rubisco
-!-----------------------------------------------------------------------
-
-      qt = 0.1*( tlef - trop )
-
-      kc = 30.     * 2.1**qt
-      ko = 30000.  * 1.2**qt
-      gammas = 0.5 * po2m / (2600. * 0.57**qt) * c3        ! = 0. for c4 plant ???
-
-      rrkk = kc * ( 1. + po2m/ko ) * c3
-
-!----------------------------------------------------------------------
-! maximun capacity
-! vm     - maximum catalytic activity of Rubisco in the presence of
-!          saturating level of RuP2 and CO2 (mol m-2s-1)
-! jmax   - potential rate of whole-chain electron transport (mol m-2s-1)
-! epar   - electron transport rate for a given absorbed photon radiation
-! respc  - dark resipration (mol m-2s-1)
-! omss   - capacity of the leaf to export or utilize the products of photosynthesis.
-! binter - coefficient from observation, 0.01 for c3 plant, 0.04 for c4 plant
-!-----------------------------------------------------------------------
-
-      vm = vmax25 * 2.1**qt        ! (mol m-2 s-1)
-      templ = 1. + exp(slti*(hlti-tlef))
-      temph = 1. + exp(shti*(tlef-hhti))
-      vm = vm / temph * rstfac * c3 + vm / (templ*temph) * rstfac * c4
-      vm = vm * cint(1)
-
-      rgas = 8.314467591                 ! universal gas constant (J mol-1 K-1)
-!---> jmax25 = 2.39 * vmax25 - 14.2e-6        ! (mol m-2 s-1)
-!--->      jmax25 = 2.1 * vmax25        ! (mol m-2 s-1)
-!/05/2014/
-      jmax25 = 1.97 * vmax25       ! (mol m-2 s-1)
-      jmax = jmax25 * exp( 37.e3 * (tlef - trop) / (rgas*trop*tlef) ) * &
-             ( 1. + exp( (710.*trop-220.e3)/(rgas*trop) ) ) / &
-             ( 1. + exp( (710.*tlef-220.e3)/(rgas*tlef) ) )
-                                   ! 37000  (J mol-1)
-                                   ! 220000 (J mol-1)
-                                   ! 710    (J K-1)
-
-      jmax = jmax * rstfac
-      jmax = jmax * cint(2)
-
-!--->      epar = min(4.6e-6 * par * effcon, 0.25*jmax)
-! /05/2014/
-      epar = min(4.6e-6 * par * effcon, jmax)
-
-      respcp = 0.015 * c3 + 0.025 * c4
-      respc = respcp * vmax25 * 2.0**qt / ( 1. + exp( trda*(tlef-trdm )) ) * rstfac
-!     respc = 0.7e-6 * 2.0**qt / ( 1. + exp( trda*(tlef-trdm )) ) * rstfac
-      respc = respc * cint(1)
-
-      omss = ( vmax25/2. ) * (1.8**qt) / templ * rstfac * c3 &
-           + ( vmax25/5. ) * (1.8**qt) * rstfac * c4
-      omss = omss * cint(1)
+      call calc_photo_params(tlef, po2m, par , psrf, rstfac, rb, effcon, vmax25, &
+                             trop, slti, hlti, shti, hhti, trda, trdm, cint, &
+                             vm, epar, respc, omss, gbh2o, gammas, rrkk, c3, c4)
 
       bintc = binter * max( 0.1, rstfac )
       bintc = bintc * cint(3)
 
 !-----------------------------------------------------------------------
-      tprcor = 44.6*273.16*psrf/1.013e5
-
-! one side leaf boundary layer conductance for water vapor [=1/(2*rb)]
-! ATTENTION: rb in CLM is for one side leaf, but for SiB2 rb for
-! 2-side leaf, so the gbh2o shold be " 0.5/rb * tprcor/tlef "
-!     gbh2o  = 0.5/rb * tprcor/tlef                   ! mol m-2 s-1
-      gbh2o  = 1./rb * tprcor/tlef                    ! mol m-2 s-1
-
-! rb is for single leaf, but here the flux is for canopy, thus
-       ! Xingjie Lu: rb has already been converted to canopy scale,
-       ! thus, there is no need for gbh2o *cint(3) (sunlit/shaded LAI)
-!      gbh2o  = gbh2o * cint(3)
-
-!  aerodynamic condutance between canopy and reference height atmosphere
-      gah2o  = 1.0/ra * tprcor/tm                     ! mol m-2 s-1
-
-!-----------------------------------------------------------------------
 !     first guess is midway between compensation point and maximum
 !     assimilation rate. ! pay attention on this iteration
+
+      tprcor = 44.6*273.16*psrf/1.013e5
 
       co2m = pco2m/psrf                               ! mol mol-1
       co2a = pco2a/psrf
@@ -351,7 +265,6 @@ MODULE MOD_AssimStomataConductance
 !
 !-----------------------------------------------------------------------
 
-!-->  co2a = co2m - 1.37/max(0.446,gah2o) * (assimn - 0.)     ! mol mol-1
       co2s = co2a - 1.37*assimn/gbh2o                  ! mol mol-1
 
       co2st = min( co2s, co2a )
@@ -484,7 +397,317 @@ MODULE MOD_AssimStomataConductance
 
   end subroutine sortin
 
+  subroutine calc_photo_params(tlef, po2m, par , psrf, rstfac, rb, effcon, vmax25, &
+                               trop, slti, hlti, shti, hhti, trda, trdm, cint, &
+                               vm, epar, respc, omss, gbh2o, gammas, rrkk, c3, c4)
 
+      use MOD_Precision
+      IMPLICIT NONE
+
+      real(r8),intent(in) :: &
+               tlef,     &! leaf temperature (K)
+               po2m,     &! O2 concentration in atmos. (pascals)
+               par,      &! photosynthetic active radiation (W m-2)
+               rstfac,   &! canopy resistance stress factors to soil moisture
+               rb,       &! boundary resistance from canopy to cas (s m-1)
+         
+               effcon,   &! quantum efficiency of RuBP regeneration (mol CO2 / mol quanta)
+               vmax25,   &! maximum carboxylation rate at 25 C at canopy top
+                          ! the range : 30.e-6 <-> 100.e-6 (mol co2 m-2 s-1)
+               trop,     &! temperature coefficient in gs-a model             (298.16)
+               slti,     &! slope of low temperature inhibition function      (0.2)
+               hlti,     &! 1/2 point of low temperature inhibition function  (288.16)
+               shti,     &! slope of high temperature inhibition function     (0.3)
+               hhti,     &! 1/2 point of high temperature inhibition function (313.16)
+               trda,     &! temperature coefficient in gs-a model             (1.3)
+               trdm,     &! temperature coefficient in gs-a model             (328.16)
+               psrf       ! surface atmospheric pressure (pa)
+
+      real(r8),intent(in), dimension(3) :: &
+               cint       ! scaling up from leaf to canopy
+
+      real(r8),intent(out) :: &
+               vm,       &! maximum catalytic activity of Rubison (mol co2 m-2 s-1)
+               epar,     &! electron transport rate (mol electron m-2 s-1)
+               respc,    &! canopy respiration (mol m-2 s-1)
+               omss,     &! intermediate calcuation for oms
+               gbh2o,    &! one side leaf boundary layer conductance (mol m-2 s-1)
+               gammas,   &! CO2 compensation point
+               rrkk,     &! kc (1+o2/ko)
+               c3,       &! c3 vegetation : 1; 0 for c4
+               c4         ! c4 vegetation : 1; 0 for c3
+
+       real(r8) :: &
+               qt,       &! (tleaf - 298.16) / 10
+               kc,       &! Michaelis-Menten constant for co2
+               ko,       &! Michaelis-Menten constant for o2
+               templ,    &! intermediate value
+               temph,    &! intermediate value
+               rgas,     &! universal gas contant (8.314 J mol-1 K-1)
+               jmax25,   &! potential rate of whole-chain electron transport at 25 C
+               jmax,     &! potential rate of whole-chain electron transport (mol electron m-2 s-1)
+               respcp,   &! respiration fraction of vmax (mol co2 m-2 s-1)
+               tprcor     ! coefficient for unit transfer
+
+!=======================================================================
+
+      c3 = 0.
+      if( effcon .gt. 0.07 ) c3 = 1.
+      c4 = 1. - c3
+
+!-----------------------------------------------------------------------
+! dependence on leaf temperature
+!     gammas - CO2 compensation point in the absence of day respiration
+!     ko     - Michaelis-Menton constant for carboxylation by Rubisco
+!     kc     - Michaelis-Menton constant for oxygenation by Rubisco
+!-----------------------------------------------------------------------
+
+      qt = 0.1*( tlef - trop )
+
+      kc = 30.     * 2.1**qt
+      ko = 30000.  * 1.2**qt
+      gammas = 0.5 * po2m / (2600. * 0.57**qt) * c3        ! = 0. for c4 plant ???
+
+      rrkk = kc * ( 1. + po2m/ko ) * c3
+
+!----------------------------------------------------------------------
+! maximun capacity
+! vm     - maximum catalytic activity of Rubisco in the presence of
+!          saturating level of RuP2 and CO2 (mol m-2s-1)
+! jmax   - potential rate of whole-chain electron transport (mol m-2s-1)
+! epar   - electron transport rate for a given absorbed photon radiation
+! respc  - dark resipration (mol m-2s-1)
+! omss   - capacity of the leaf to export or utilize the products of photosynthesis.
+! binter - coefficient from observation, 0.01 for c3 plant, 0.04 for c4 plant
+!-----------------------------------------------------------------------
+
+      vm = vmax25 * 2.1**qt        ! (mol m-2 s-1)
+      templ = 1. + exp(slti*(hlti-tlef))
+      temph = 1. + exp(shti*(tlef-hhti))
+      vm = vm / temph * rstfac * c3 + vm / (templ*temph) * rstfac * c4
+      vm = vm * cint(1)
+
+      rgas = 8.314467591                 ! universal gas constant (J mol-1 K-1)
+!---> jmax25 = 2.39 * vmax25 - 14.2e-6        ! (mol m-2 s-1)
+!--->      jmax25 = 2.1 * vmax25        ! (mol m-2 s-1)
+!/05/2014/
+      jmax25 = 1.97 * vmax25       ! (mol m-2 s-1)
+      jmax = jmax25 * exp( 37.e3 * (tlef - trop) / (rgas*trop*tlef) ) * &
+             ( 1. + exp( (710.*trop-220.e3)/(rgas*trop) ) ) / &
+             ( 1. + exp( (710.*tlef-220.e3)/(rgas*tlef) ) )
+                                   ! 37000  (J mol-1)
+                                   ! 220000 (J mol-1)
+                                   ! 710    (J K-1)
+
+      jmax = jmax * rstfac
+      jmax = jmax * cint(2)
+
+!--->      epar = min(4.6e-6 * par * effcon, 0.25*jmax)
+! /05/2014/
+      epar = min(4.6e-6 * par * effcon, jmax)
+
+      respcp = 0.015 * c3 + 0.025 * c4
+      respc = respcp * vmax25 * 2.0**qt / ( 1. + exp( trda*(tlef-trdm )) ) * rstfac
+!     respc = 0.7e-6 * 2.0**qt / ( 1. + exp( trda*(tlef-trdm )) ) * rstfac
+      respc = respc * cint(1)
+
+      omss = ( vmax25/2. ) * (1.8**qt) / templ * rstfac * c3 &
+           + ( vmax25/5. ) * (1.8**qt) * rstfac * c4
+      omss = omss * cint(1)
+
+!-----------------------------------------------------------------------
+      tprcor = 44.6*273.16*psrf/1.013e5
+
+! one side leaf boundary layer conductance for water vapor [=1/(2*rb)]
+! ATTENTION: rb in CLM is for one side leaf, but for SiB2 rb for
+! 2-side leaf, so the gbh2o shold be " 0.5/rb * tprcor/tlef "
+!     gbh2o  = 0.5/rb * tprcor/tlef                   ! mol m-2 s-1
+      gbh2o  = 1./rb * tprcor/tlef                    ! mol m-2 s-1
+
+! rb is for single leaf, but here the flux is for canopy, thus
+       ! Xingjie Lu: rb has already been converted to canopy scale,
+       ! thus, there is no need for gbh2o *cint(3) (sunlit/shaded LAI)
+!      gbh2o  = gbh2o * cint(3)
+
+  end subroutine calc_photo_params
+
+  subroutine update_photosyn(tlef, po2m, pco2m, pco2a, par, psrf, rstfac, rb, gsh2o, &
+                             effcon, vmax25, gradm, trop, slti, hlti, shti, hhti, trda, trdm, cint, &
+                             assim, respc)
+
+      use MOD_Precision
+      IMPLICIT NONE
+
+      real(r8),intent(in) :: &
+               tlef,     &! leaf temperature (K)
+               po2m,     &! O2 concentration in atmos. (pascals)
+               pco2m,    &! CO2 concentration in atmos. (pascals)
+               pco2a,    &! CO2 concentration in canopy air space (pa)
+               par,      &! photosynthetic active radiation (W m-2)
+               psrf,     &! surface atmospheric pressure (pa)
+               rstfac,   &! canopy resistance stress factors to soil moisture
+               rb,       &! boundary resistance from canopy to cas (s m-1)
+               gsh2o,    &! canopy conductance (mol m-2 s-1)
+         
+               effcon,   &! quantum efficiency of RuBP regeneration (mol CO2 / mol quanta)
+               vmax25,   &! maximum carboxylation rate at 25 C at canopy top
+                          ! the range : 30.e-6 <-> 100.e-6 (mol co2 m-2 s-1)
+               gradm,    &! conductance-photosynthesis slope parameter
+               trop,     &! temperature coefficient in gs-a model             (298.16)
+               slti,     &! slope of low temperature inhibition function      (0.2)
+               hlti,     &! 1/2 point of low temperature inhibition function  (288.16)
+               shti,     &! slope of high temperature inhibition function     (0.3)
+               hhti,     &! 1/2 point of high temperature inhibition function (313.16)
+               trda,     &! temperature coefficient in gs-a model             (1.3)
+               trdm       ! temperature coefficient in gs-a model             (328.16)
+
+      real(r8),intent(in), dimension(3) :: &
+               cint       ! scaling up from leaf to canopy
+
+      real(r8),intent(out) :: &
+               assim,    &! canopy assimilation rate (mol m-2 s-1)
+               respc      ! canopy respiration (mol m-2 s-1)
+                
+      real(r8) ::        &
+               vm,       &! maximum catalytic activity of Rubison (mol co2 m-2 s-1)
+               epar,     &! electron transport rate (mol electron m-2 s-1)
+               gbh2o,    &! one side leaf boundary layer conductance (mol m-2 s-1)
+               gammas,   &! CO2 compensation point
+               rrkk,     &! kc (1+o2/ko)
+               c3,       &! c3 vegetation : 1; 0 for c4
+               c4         ! c4 vegetation : 1; 0 for c3
+
+      real(r8) ::        &
+               atheta,   &! wc, we coupling parameter
+               btheta,   &! wc & we, ws coupling parameter
+               omss,     &! intermediate calcuation for oms
+               omc,      &! rubisco limited assimilation (omega-c: mol m-2 s-1)
+               ome,      &! light limited assimilation (omega-e: mol m-2 s-1)
+               oms,      &! sink limited assimilation (omega-s: mol m-2 s-1)
+               omp,      &! intermediate calcuation for omc, ome
+         
+               co2a,     &! co2 concentration at cas (mol mol-1)
+               co2s,     &! co2 concentration at canopy surface (mol mol-1)
+               co2st,    &! co2 concentration at canopy surface (mol mol-1)
+               co2i,     &! internal co2 concentration (mol mol-1)
+               pco2in,   &! internal co2 concentration at the new iteration (pa)
+               pco2i,    &! internal co2 concentration (pa)
+               es,       &! canopy surface h2o vapor pressure (pa)
+         
+               sqrtin,   &! intermediate calculation for quadratic
+               assmt,    &! net assimilation with a positive limitation (mol co2 m-2 s-1)
+               assimn     ! net assimilation (mol co2 m-2 s-1)
+
+      integer, parameter :: iterationtotal = 6   ! total iteration number in pco2i calculation
+
+      real(r8) :: &
+               eyy(iterationtotal),    &! differnce of pco2i at two iteration step
+               pco2y(iterationtotal),  &! adjusted to total iteration number
+               range                    !
+
+      integer ic
+
+      call calc_photo_params(tlef, po2m, par , psrf, rstfac, rb, effcon, vmax25, &
+                             trop, slti, hlti, shti, hhti, trda, trdm, cint, &
+                             vm, epar, respc, omss, gbh2o, gammas, rrkk, c3, c4)
+
+      co2a = pco2a/psrf
+
+      range = pco2m * ( 1. - 1.6/gradm ) - gammas
+
+      do ic = 1, iterationtotal    ! loop for total iteration number
+         pco2y(ic) = 0.
+         eyy(ic) = 0.
+      enddo
+
+      ITERATION_LOOP_UPDATE: do ic = 1, iterationtotal
+
+      call sortin(eyy, pco2y, range, gammas, ic, iterationtotal)
+      pco2i =  pco2y(ic)
+
+!-----------------------------------------------------------------------
+!                      NET ASSIMILATION
+!     the leaf assimilation (or gross photosynthesis) rate is described
+!     as the minimum of three limiting rates:
+!     omc: the efficiency of the photosynthetic enzyme system (Rubisco-limited);
+!     ome: the amount of PAR captured by leaf chlorophyll;
+!     oms: the capacity of the leaf to export or utilize the products of photosynthesis.
+!     to aviod the abrupt transitions, two quadratic equations are used:
+!             atheta*omp^2 - omp*(omc+ome) + omc*ome = 0
+!         btheta*assim^2 - assim*(omp+oms) + omp*oms = 0
+!-----------------------------------------------------------------------
+
+      atheta = 0.877
+      btheta = 0.95
+
+      omc = vm   * ( pco2i-gammas ) / ( pco2i + rrkk ) * c3 + vm * c4
+      ome = epar * ( pco2i-gammas ) / ( pco2i+2.*gammas ) * c3 + epar * c4
+      oms = omss * c3 + omss*pco2i * c4
+
+      sqrtin= max( 0., ( (ome+omc)**2 - 4.*atheta*ome*omc ) )
+      omp   = ( ( ome+omc ) - sqrt( sqrtin ) ) / ( 2.*atheta )
+      sqrtin= max( 0., ( (omp+oms)**2 - 4.*btheta*omp*oms ) )
+      assim = max( 0., ( ( oms+omp ) - sqrt( sqrtin ) ) / ( 2.*btheta ))
+
+      assimn= ( assim - respc)                         ! mol m-2 s-1
+
+!-----------------------------------------------------------------------
+!                      STOMATAL CONDUCTANCE
+!
+!  (1)   pathway for co2 flux
+!                                                  co2m
+!                                                   o
+!                                                   |
+!                                                   |
+!                                                   <  |
+!                                        1.37/gsh2o >  |  Ac-Rd-Rsoil
+!                                                   <  v
+!                                                   |
+!                                     <--- Ac-Rd    |
+!     o------/\/\/\/\/\------o------/\/\/\/\/\------o
+!    co2i     1.6/gsh2o     co2s    1.37/gbh2o     co2a
+!                                                   | ^
+!                                                   | | Rsoil
+!                                                   | |
+!
+!  (2)   pathway for water vapor flux
+!
+!                                                  em
+!                                                   o
+!                                                   |
+!                                                   |
+!                                                   <  ^
+!                                           1/gsh2o >  | Ea
+!                                                   <  |
+!                                                   |
+!                                     ---> Ec       !
+!     o------/\/\/\/\/\------o------/\/\/\/\/\------o
+!     ei       1/gsh2o      es       1/gbh2o       ea
+!                                                   | ^
+!                                                   | | Eg
+!                                                   | |
+!
+!  (3)   the relationship between net assimilation and tomatal conductance :
+!        gsh2o = m * An * [es/ei] / [pco2s/p] + b
+!        es = [gsh2o *ei + gbh2o * ea] / [gsh2o + gbh2o]
+!        ===>
+!        a*gsh2o^2 + b*gsh2o + c = 0
+!
+!-----------------------------------------------------------------------
+
+      co2s = co2a - 1.37*assimn/gbh2o                   ! mol mol-1
+
+      pco2in = ( co2s - 1.6 * assimn / gsh2o )*psrf    ! pa
+
+      eyy(ic) = pco2i - pco2in                          ! pa
+
+!-----------------------------------------------------------------------
+
+      if( abs(eyy(ic)) .lt. 0.1 ) exit
+
+      enddo ITERATION_LOOP_UPDATE
+
+  end subroutine update_photosyn
 
 END MODULE MOD_AssimStomataConductance
 ! -------------- EOP ---------------

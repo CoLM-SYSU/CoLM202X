@@ -29,7 +29,7 @@ CONTAINS
                      ,snowdp,fveg,fsno,sigf,green,lai,sai,coszen&
                      ,snw_rds,mss_bcpho,mss_bcphi,mss_ocpho,mss_ocphi&
                      ,mss_dst1,mss_dst2,mss_dst3,mss_dst4&
-                     ,alb,ssun,ssha,ssno,thermk,extkb,extkd&
+                     ,alb,ssun,ssha,ssoi,ssno,ssno_lyr,thermk,extkb,extkd&
                      ,trad,tref,qref,rst,emis,zol,rib&
                      ,ustar,qstar,tstar,fm,fh,fq&
 #if(defined BGC)
@@ -163,6 +163,8 @@ CONTAINS
          alb (2,2),              &! averaged albedo [-]
          ssun(2,2),              &! sunlit canopy absorption for solar radiation
          ssha(2,2),              &! shaded canopy absorption for solar radiation
+         ssoi(2,2),              &! ground soil absorption [-]
+         ssno(2,2),              &! ground snow absorption [-]
          thermk,                 &! canopy gap fraction for tir radiation
          extkb,                  &! (k, g(mu)/mu) direct solar extinction coefficient
          extkd,                  &! diffuse and scattered diffuse PAR extinction coefficient
@@ -178,7 +180,7 @@ CONTAINS
          mss_dst2 ( maxsnl+1:0 ), &! mass concentration of dust aerosol species 2 (col,lyr) [kg/kg]
          mss_dst3 ( maxsnl+1:0 ), &! mass concentration of dust aerosol species 3 (col,lyr) [kg/kg]
          mss_dst4 ( maxsnl+1:0 ), &! mass concentration of dust aerosol species 4 (col,lyr) [kg/kg]
-         ssno     (2,2,maxsnl+1:1 ), &! snow absorption [-]
+         ssno_lyr (2,2,maxsnl+1:1 ), &! snow layer absorption [-]
 
                      ! Additional variables required by reginal model (WRF & RSM)
                      ! ---------------------------------------------------------
@@ -1013,7 +1015,7 @@ CONTAINS
                     snl,wliq_soisno,wice_soisno,snw_rds,snofrz,&
                     mss_bcpho,mss_bcphi,mss_ocpho,mss_ocphi,&
                     mss_dst1,mss_dst2,mss_dst3,mss_dst4,&
-                    alb,ssun,ssha,ssno,thermk,extkb,extkd)
+                    alb,ssun,ssha,ssoi,ssno,ssno_lyr,thermk,extkb,extkd)
    ELSE                 !ocean grid
       t_soisno(:) = 300.
       wice_soisno(:) = 0.
@@ -1040,7 +1042,9 @@ CONTAINS
       CALL albocean (oro,scv,coszen,alb)
       ssun(:,:) = 0.0
       ssha(:,:) = 0.0
-      ssno(:,:,:) = 0.0
+      ssoi(:,:) = 0.0
+      ssno(:,:) = 0.0
+      ssno_lyr(:,:,:) = 0.0
       thermk = 0.0
       extkb = 0.0
       extkd = 0.0

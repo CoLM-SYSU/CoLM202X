@@ -66,10 +66,10 @@ MODULE MOD_Urban_Vars_TimeVariables
    REAL(r8), allocatable :: sag_gper       (:) !pervious ground snow age [-]
    REAL(r8), allocatable :: sag_lake       (:) !urban lake snow age [-]
 
-   REAL(r8), allocatable :: scv_roof       (:) !roof snow cover [-]
-   REAL(r8), allocatable :: scv_gimp       (:) !impervious ground snow cover [-]
-   REAL(r8), allocatable :: scv_gper       (:) !pervious ground snow cover [-]
-   REAL(r8), allocatable :: scv_lake       (:) !urban lake snow cover [-]
+   REAL(r8), allocatable :: scv_roof       (:) !roof snow mass [kg/m2]
+   REAL(r8), allocatable :: scv_gimp       (:) !impervious ground snow mass [kg/m2]
+   REAL(r8), allocatable :: scv_gper       (:) !pervious ground snow mass [kg/m2]
+   REAL(r8), allocatable :: scv_lake       (:) !urban lake snow mass [kg/m2]
 
    REAL(r8), allocatable :: fsno_roof      (:) !roof snow fraction [-]
    REAL(r8), allocatable :: fsno_gimp      (:) !impervious ground snow fraction [-]
@@ -233,6 +233,7 @@ CONTAINS
       call ncio_read_vector (file_restart, 'lwsha', landurban, lwsha) !
       call ncio_read_vector (file_restart, 'lgimp', landurban, lgimp) !
       call ncio_read_vector (file_restart, 'lgper', landurban, lgper) !
+      call ncio_read_vector (file_restart, 'lveg' , landurban, lveg ) !
 
       call ncio_read_vector (file_restart, 'z_sno_roof' , -maxsnl, landurban, z_sno_roof ) !
       call ncio_read_vector (file_restart, 'z_sno_gimp' , -maxsnl, landurban, z_sno_gimp ) !
@@ -267,6 +268,7 @@ CONTAINS
       call ncio_read_vector (file_restart, 'sag_roof'   , landurban, sag_roof   ) !
       call ncio_read_vector (file_restart, 'sag_gimp'   , landurban, sag_gimp   ) !
       call ncio_read_vector (file_restart, 'sag_gper'   , landurban, sag_gper   ) !
+      call ncio_read_vector (file_restart, 'sag_lake'   , landurban, sag_lake   ) !
       call ncio_read_vector (file_restart, 'scv_roof'   , landurban, scv_roof   ) !
       call ncio_read_vector (file_restart, 'scv_gimp'   , landurban, scv_gimp   ) !
       call ncio_read_vector (file_restart, 'scv_gper'   , landurban, scv_gper   ) !
@@ -339,6 +341,7 @@ CONTAINS
       call ncio_write_vector (file_restart, 'lwsha', 'urban', landurban, lwsha, compress) !
       call ncio_write_vector (file_restart, 'lgimp', 'urban', landurban, lgimp, compress) !
       call ncio_write_vector (file_restart, 'lgper', 'urban', landurban, lgper, compress) !
+      call ncio_write_vector (file_restart, 'lveg' , 'urban', landurban, lveg , compress) !
 
       call ncio_write_vector (file_restart, 'z_sno_roof' , 'snow', -maxsnl, 'urban', landurban, z_sno_roof , compress) !
       call ncio_write_vector (file_restart, 'z_sno_gimp' , 'snow', -maxsnl, 'urban', landurban, z_sno_gimp , compress) !
@@ -373,6 +376,7 @@ CONTAINS
       call ncio_write_vector (file_restart, 'sag_roof'   , 'urban', landurban, sag_roof   , compress) !
       call ncio_write_vector (file_restart, 'sag_gimp'   , 'urban', landurban, sag_gimp   , compress) !
       call ncio_write_vector (file_restart, 'sag_gper'   , 'urban', landurban, sag_gper   , compress) !
+      call ncio_write_vector (file_restart, 'sag_lake'   , 'urban', landurban, sag_lake   , compress) !
       call ncio_write_vector (file_restart, 'scv_roof'   , 'urban', landurban, scv_roof   , compress) !
       call ncio_write_vector (file_restart, 'scv_gimp'   , 'urban', landurban, scv_gimp   , compress) !
       call ncio_write_vector (file_restart, 'scv_gper'   , 'urban', landurban, scv_gper   , compress) !
