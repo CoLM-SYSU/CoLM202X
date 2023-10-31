@@ -1,0 +1,128 @@
+###########################################################################################
+				Rules to Name your nml file
+
+		Your nml file should be named in following format:
+
+		REGION{_STRUCTURE}{_RES}_LANDTYPE_SOILMODEL[_BGC][_URBAN][_LULCC].nml
+
+		eg. Global_Grid_2x2_PFT_VG_BGC.nml
+		    SiteCNDin_IGBP_CB.nml
+
+		Please leave your name at begining of the namelist file, 
+		eg. Author: Xingjie Lu
+###########################################################################################
+
+   Detailed description of each tag in the namelist format:
+
+   Region (mandatory): 
+      The abbrevation of the model simulation region. 
+      Existing definitions of the model simulation regions includes:
+
+      --------------------------------------------------------------------------------------
+      	Abbreviation   	Description		Edges
+      --------------------------------------------------------------------------------------
+      	Global		Global region: 		edges = -90.0;  edgen = 90.0; 
+						edgew = -180.0; edgee = 180.0
+      	RegChina	China region:  		edges = 18.0;   edgen = 54.0; 
+						edgew = 73.0;   edgee = 135.0
+      	RegPearl        Pearl catchment region: edges = 21.0;   edgen = 27.0; 
+						edgew = 100.0;  edgee = 115.0
+      	RegTibet        Tibet Plateau region:   edges = 25.0;   edgen = 40.0; 
+						edgew = 75.0;   edgee = 105.0	
+ 	...
+      	SiteCNDin       Dinghushan site:        latitude = 23.17329979; 
+						longitude = 112.5361023
+        ...
+      --------------------------------------------------------------------------------------
+
+   STRUCTURE (conditional, only applicable for global and regional simulation, not for site)
+      The abbreviation of the model spatial structure. 
+      Existing definitions of the model spatail structure includes:
+
+      --------------------------------------------------------------------------------------
+	Abbreviation	Description
+      --------------------------------------------------------------------------------------
+	Grid		Latitude-longitude grid: grid cells are partitioned by latitudes 
+			and longitudes with a constant interval.
+	Unstr		Unstructure grid: grid cells are formed by polygons according to the 
+			heteorogeneity of soil properties, vegetation types and ...
+	Catch		Catchment grid: grid cells represent catchment units, 
+			which is generated from the DEM data.
+      --------------------------------------------------------------------------------------
+
+   RES (conditional: only applicable when "STRUCTURE=Grid"):
+      The abbreviation of the grid resolution. 
+      Existing definitions of grid resolution includes:
+
+      ---------------------------------------------------------------------------------------
+	Abbreviation	Description (longitude resolution x latitude resolution (in degree))
+      ---------------------------------------------------------------------------------------
+	2x2		2.5x1.875
+	1x1		1x1
+	50km		0.5x0.5
+	25km		0.25x0.25
+	10km		0.1x0.1
+      ---------------------------------------------------------------------------------------
+
+   LANDTYPE (mandatory):
+      The abbreviation of the land cover type classification, including the subgrid structure.
+      Existing definition of the land cover type classification includes:
+
+      ---------------------------------------------------------------------------------------
+	Abbreviation	Description 		Patch subgrid
+      ---------------------------------------------------------------------------------------
+	USGS		USGS land cover patch	No patch subgrid
+	IGBP		IGBP land cover patch	No patch subgrid
+	PFT  		IGBP land cover patch 	All soil patches within a grid cell has been 
+			with plant functional	aggregated and divided into multiple PFT
+			type subgrid		subgrids
+	PC		IGBP land cover patch	Each IGBP patch has been divided into  
+			with plant community	multiple PFT subgrids
+			subgrid.
+      ---------------------------------------------------------------------------------------
+
+   SOILMODEL (mandatory):
+      The abbreviation of soil hydraulics models.
+      Existing definition of the soil hydraulics models include:
+
+      ---------------------------------------------------------------------------------------
+	Abbreviation	Long name
+      ---------------------------------------------------------------------------------------
+	CB		Campbell model
+	VG		vanGenuchten Mualem model
+      ---------------------------------------------------------------------------------------
+
+   BGC (optional, if not present, the namelist must indicate a bgc off simulation):
+      The abbreviation of biogeochemical model switches.
+      Existing definition of the biogeochemical model switches include:
+
+      ---------------------------------------------------------------------------------------
+	Abbreviation	Description
+      ---------------------------------------------------------------------------------------
+	(not present)	BGC is turned off
+	BGC		BGC is defined, but CROP is undef in define.h
+	BGCCROP		Both BGC and CROP are defined in define.h
+      ---------------------------------------------------------------------------------------
+
+   URBAN (optional, if not present, the namelist must correspond to a no urban simulation):
+      The abbreviation of urban model switches.
+      Existing definition of the urban model switches include:
+
+      ---------------------------------------------------------------------------------------
+	Abbreviation	Description
+      ---------------------------------------------------------------------------------------
+	(not present)	The urban model is turned off
+	URBAN		URBAN is defined, and the urban model is on
+      ---------------------------------------------------------------------------------------
+
+   LULCC (optional, if not present, the namelist must correspond to a no land use change simulation):
+      The abbreviation of land use change model switches.
+      Existing definition of the land use change model switches include:
+
+      ---------------------------------------------------------------------------------------
+	Abbreviation	Description
+      ---------------------------------------------------------------------------------------
+	(not present)	The land use change model is turned off
+	LULCC		LULCC is defined, and the land use change model is on
+      ---------------------------------------------------------------------------------------
+

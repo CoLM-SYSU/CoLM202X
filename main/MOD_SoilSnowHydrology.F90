@@ -479,7 +479,7 @@ ENDIF
   USE MOD_Vars_TimeInvariants, only : wetwatmax
   use MOD_Const_Physical, only : denice, denh2o, tfrz
 #ifdef DataAssimilation
-  USE MOD_DA_GRACE, only : fslp_patch
+  USE MOD_DA_GRACE, only : fslp_k
 #endif
 
   implicit none
@@ -729,6 +729,10 @@ ENDIF
          rsur = 0.
       endif
 
+#ifdef DataAssimilation
+      rsur = max(min(rsur * fslp_k(ipatch), gwat), 0.)
+#endif
+
       ! infiltration into surface soil layer
       qgtop = gwat - rsur
 #else
@@ -805,7 +809,7 @@ ENDIF
 
       rsubst = imped * 5.5e-3 * exp(-2.5*zwt)  ! drainage (positive = out of soil column)
 #ifdef DataAssimilation
-      rsubst = rsubst * fslp_patch(ipatch)
+      rsubst = rsubst * fslp_k(ipatch)
 #endif
 
 #else
@@ -956,12 +960,23 @@ ENDIF
          qinfl = 0.
          zwt = 0.
          qcharge = 0.
+         
 
          IF (lb >= 1) THEN
             wetwat = wdsrf + wa + wetwat + (gwat - etr + qsdew + qfros - qsubl) * deltim
          ELSE
             wetwat = wdsrf + wa + wetwat + (gwat - etr) * deltim
          ENDIF
+
+         wresi(:) = 0.
+         DO j = 1, nl_soil
+            if(t_soisno(j)>tfrz)then
+               wresi(j) = max(wliq_soisno(j) - porsl(j)*dz_soisno(j)*1000., 0.)
+               wliq_soisno(j) = wliq_soisno(j) - wresi(j)
+            endif
+         ENDDO
+
+         wetwat = wetwat + sum(wresi)
 
          IF (wetwat > wetwatmax) THEN
             wdsrf  = wetwat - wetwatmax

@@ -174,7 +174,7 @@ contains
          ENDIF
 
          IF (p_is_master) THEN
-            CALL ncio_get_attr (filename, vname(1), 'missing_value', missing_value)
+            CALL ncio_get_attr (filename, vname(1), trim(DEF_forcing%missing_value_name), missing_value)
          ENDIF
 #ifdef USEMPI
          CALL mpi_bcast (missing_value, 1, MPI_REAL8, p_root, p_comm_glb, p_err)

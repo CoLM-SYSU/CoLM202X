@@ -121,7 +121,7 @@ contains
 #endif
       USE MOD_Forcing, only: forcmask
 #ifdef DataAssimilation
-      USE MOD_DA_GRACE, only : fslp_patch
+      USE MOD_DA_GRACE, only : fslp_k_mon
 #endif
 
       IMPLICIT NONE
@@ -469,14 +469,14 @@ contains
             'total runoff','mm/s')
 
 #ifdef DataAssimilation
-         ! slope factor for subsurface runoff [-]
+         ! slope factors for runoff [-]
          IF (p_is_worker) THEN
-            vecacc = fslp_patch 
+            vecacc = fslp_k_mon(month,:)
             WHERE(vecacc /= spval) vecacc = vecacc * nac
          ENDIF
          call write_history_variable_2d ( .true., &
-            vecacc, file_hist, 'f_slope_factor', itime_in_file, sumarea, filter, &
-            'slope factor for subsurface runoff', '-')
+            vecacc, file_hist, 'f_slope_factor_k', itime_in_file, sumarea, filter, &
+            'slope factor [k] for runoff', '-')
 #endif
 
 #ifdef LATERAL_FLOW
