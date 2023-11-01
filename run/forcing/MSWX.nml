@@ -6,8 +6,8 @@
    DEF_forcing%dataset           = 'MSWX' 
    DEF_forcing%solarin_all_band  = .true.  
    DEF_forcing%HEIGHT_V          = 50.0    
-   DEF_forcing%HEIGHT_T          = 30.
-   DEF_forcing%HEIGHT_Q          = 30.
+   DEF_forcing%HEIGHT_T          = 40.
+   DEF_forcing%HEIGHT_Q          = 40.
    
    DEF_forcing%NVAR              = 8        ! variable number of forcing data
    DEF_forcing%startyr           = 1979     ! start year of forcing data  

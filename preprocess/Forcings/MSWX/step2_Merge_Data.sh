@@ -4,7 +4,6 @@
 # code for remove the dimension of z to reduce the size of data and make it easy to read in colm
 # prepared by: zhongwang Wei @ SYSU 2021-10-20, Zhongwang007@gmail.com
 
-#!/bin/bash
 SYear=2002
 EYear=2022
 INPath=MSWX
@@ -36,7 +35,8 @@ cd ${INPath}/${Var}
 while [ ${SYear} -le ${EYear} ] ; do
     Year=${SYear}
         for Month in ${Months};do
-           cdo -b F32 -f nc mergetime 3hourly/${Year}${Month}*.nc4 ${Var}_${Year}${Month}.nc
+           cdo -b F32 -f nc mergetime 3hourly/${Year}${Month}*.nc4 var_temp.nc
+           cdo  invertlat var_temp.nc ${Var}_${Year}${Month}.nc
         done 
     SYear=`expr $SYear + 1`
 done
