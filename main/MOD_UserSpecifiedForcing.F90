@@ -713,6 +713,7 @@ CONTAINS
                      if (qsat_tmp < forcn(2)%blk(ib,jb)%val(i,j)) then
                         forcn(2)%blk(ib,jb)%val(i,j) = qsat_tmp
                      endif
+                     if (forcn(2)%blk(ib,jb)%val(i,j)<0.5E-05) forcn(2)%blk(ib,jb)%val(i,j) = 0.5E-05
 
                   case ('WFDE5')
 
