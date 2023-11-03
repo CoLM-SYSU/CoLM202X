@@ -86,7 +86,7 @@ SUBROUTINE UrbanCoLMMAIN ( &
            flddepth,     fldfrc,      fevpg_fld,     qinfl_fld,    &
 #endif
          ! additional diagnostic variables for output
-           laisun       ,laisha                                   ,&
+           laisun       ,laisha       ,rss                        ,&
            rstfac       ,h2osoi       ,wat                        ,&
 
          ! FLUXES
