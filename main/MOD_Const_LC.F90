@@ -11,7 +11,7 @@ MODULE MOD_Const_LC
 ! !REVISIONS:
 ! Hua Yuan, 08/2019: initial version adapted from IniTimeConst.F90 of CoLM2014
 ! Hua Yuan, 08/2019: added constants values for IGBP land cover types
-! TODO...
+! Xingjie Lu, 05/2023: added Plant Hydraulics Paramters
 !
 ! !USES:
    USE MOD_Precision
@@ -63,19 +63,19 @@ MODULE MOD_Const_LC
    !NOTE: woody wetland 35m?
    ! shrub land 0.5m? grass like land 1m? all set to 0.5
    real(r8), parameter, dimension(N_land_classification) :: htop0_usgs &
-      !=(/ 1.0,   1.0,   1.0,   1.0,   1.0,   1.0,   1.0,   0.5,&
-      !    0.5,   1.0,  20.0,  17.0,  35.0,  17.0,  20.0,   1.0,&
-      !    1.0,  35.0,   0.5,   1.0,   1.0,   1.0,   1.0,   1.0/)
+     !=(/ 1.0,   1.0,   1.0,   1.0,   1.0,   1.0,   1.0,   0.5,&
+     !    0.5,   1.0,  20.0,  17.0,  35.0,  17.0,  20.0,   1.0,&
+     !    1.0,  35.0,   0.5,   1.0,   1.0,   1.0,   1.0,   1.0/)
       =(/ 1.0,   0.5,   0.5,   0.5,   0.5,   0.5,   0.5,   0.5,&
           0.5,   0.5,  20.0,  17.0,  35.0,  17.0,  20.0,   0.5,&
           0.5,  17.0,   0.5,   0.5,   0.5,   0.5,   0.5,   0.5/)
 
    ! Look-up table canopy bottom height
+   ! 01/06/2020, yuan: adjust hbop: grass/shrub -> 0, tree->1
    real(r8), parameter, dimension(N_land_classification) :: hbot0_usgs &
-! 01/06/2020, yuan: adjust hbop: grass/shrub -> 0, tree->1
-      !=(/0.01,  0.01,  0.01,  0.01,  0.01,  0.01,  0.01,   0.1,&
-      !    0.1,   0.1,  11.5,   8.5,   1.0,   8.5,  10.0,   0.1,&
-      !    0.1,   1.0,   0.1,  0.01,  0.01,  0.01,  0.01,   0.01/)
+     !=(/0.01,  0.01,  0.01,  0.01,  0.01,  0.01,  0.01,   0.1,&
+     !    0.1,   0.1,  11.5,   8.5,   1.0,   8.5,  10.0,   0.1,&
+     !    0.1,   1.0,   0.1,  0.01,  0.01,  0.01,  0.01,   0.01/)
       =(/ 0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,&
           0.0,   0.0,   1.0,   1.0,   1.0,   1.0,   1.0,   0.0,&
           0.0,   1.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0/)
@@ -87,9 +87,9 @@ MODULE MOD_Const_LC
    ! Look-up table stem area index
    !NOTE: now read from input NetCDF file
    real(r8), parameter, dimension(N_land_classification) :: sai0_usgs &
-      !=(/0.2, 0.2, 0.3, 0.3, 0.5, 0.5, 1.0, 0.5,&
-      !   1.0, 0.5, 2.0, 2.0, 2.0, 2.0, 2.0, 0.0,&
-      !   2.0, 2.0, 0.0, 0.1, 0.1, 0.1, 0.0, 0.0/)
+     !=(/0.2, 0.2, 0.3, 0.3, 0.5, 0.5, 1.0, 0.5,&
+     !   1.0, 0.5, 2.0, 2.0, 2.0, 2.0, 2.0, 0.0,&
+     !   2.0, 2.0, 0.0, 0.1, 0.1, 0.1, 0.0, 0.0/)
       =(/0.2, 0.2, 0.3, 0.3, 0.5, 0.5, 1.0, 0.5,&
          1.0, 0.5, 2.0, 2.0, 2.0, 2.0, 2.0, 0.0,&
          0.2, 2.0, 0.2, 0.2, 0.2, 0.2, 0.0, 0.0/)
@@ -237,7 +237,7 @@ MODULE MOD_Const_LC
    ! water/glacier ==> grass
    real(r8), parameter, dimension(N_land_classification) :: roota_usgs &
       =(/ 5.558,  5.558,  5.558,  5.558,  8.149,  5.558, 10.740,  7.022,&
-          8.881,  7.920,  5.990,  7.066,  7.344,  7.706,  4.453, 10.740,&
+          8.881,  7.920,  5.990,  7.066,  7.344,  6.706,  4.453, 10.740,&
          10.740,  4.453,  8.992,  8.992,  8.992,  8.992,  4.372, 10.740/)
 
    real(r8), parameter, dimension(N_land_classification) :: rootb_usgs &
@@ -247,28 +247,28 @@ MODULE MOD_Const_LC
 
 ! Plant Hydraulics Paramters
    real(r8), parameter, dimension(N_land_classification) :: kmax_sun0_usgs &
-      = (/0., 2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008,&
+      = (/     0., 2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008,&
           2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008,&
-          2.e-008, 2.e-008, 2.e-008, 0., 2.e-008, 2.e-008,&
-          0., 2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008/)
+          2.e-008, 2.e-008, 2.e-008,      0., 2.e-008, 2.e-008,&
+               0., 2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008/)
 
    real(r8), parameter, dimension(N_land_classification) :: kmax_sha0_usgs &
-      = (/0., 2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008,&
+      = (/     0., 2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008,&
           2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008,&
-          2.e-008, 2.e-008, 2.e-008, 0., 2.e-008, 2.e-008,&
-          0., 2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008/)
+          2.e-008, 2.e-008, 2.e-008,      0., 2.e-008, 2.e-008,&
+               0., 2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008/)
 
    real(r8), parameter, dimension(N_land_classification) :: kmax_xyl0_usgs &
-      = (/0., 2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008,&
+      = (/     0., 2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008,&
           2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008,&
-          2.e-008, 2.e-008, 2.e-008, 0., 2.e-008, 2.e-008,&
-          0., 2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008/)
+          2.e-008, 2.e-008, 2.e-008,      0., 2.e-008, 2.e-008,&
+               0., 2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008/)
 
    real(r8), parameter, dimension(N_land_classification) :: kmax_root0_usgs &
-      = (/0., 2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008,&
+      = (/     0., 2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008,&
           2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008,&
-          2.e-008, 2.e-008, 2.e-008, 0., 2.e-008, 2.e-008,&
-          0., 2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008/)
+          2.e-008, 2.e-008, 2.e-008,      0., 2.e-008, 2.e-008,&
+               0., 2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008/)
 
    ! water potential at 50% loss of sunlit leaf tissue conductance (mmH2O)
    real(r8), parameter, dimension(N_land_classification) :: psi50_sun0_usgs &
@@ -300,10 +300,10 @@ MODULE MOD_Const_LC
 
    ! shape-fitting parameter for vulnerability curve (-)
    real(r8), parameter, dimension(N_land_classification) :: ck0_usgs &
-      = (/0., 3.95, 3.95, 3.95, 3.95, 3.95, &
+      = (/  0., 3.95, 3.95, 3.95, 3.95, 3.95, &
           3.95, 3.95, 3.95, 3.95, 3.95, 3.95, &
-          3.95, 3.95, 3.95, 0., 3.95, 3.95, &
-          0., 3.95, 3.95, 3.95, 0., 0./)
+          3.95, 3.95, 3.95,   0., 3.95, 3.95, &
+            0., 3.95, 3.95, 3.95,   0.,   0./)
 !end plant hydraulic parameters
 #else
 
@@ -341,19 +341,19 @@ MODULE MOD_Const_LC
       =(/17.0,  35.0,  17.0,  20.0,  20.0,   0.5,   0.5,   1.0,&
           1.0,   1.0,   1.0,   1.0,   1.0,   1.0,   1.0,   1.0,&
           1.0 /)
-      !=(/17.0,  35.0,  17.0,  20.0,  20.0,   0.5,   0.5,   0.5,&
-      !    0.5,   0.5,   0.5,   0.5,   1.0,   0.5,   0.5,   0.5,&
-      !    0.5 /)
+     !=(/17.0,  35.0,  17.0,  20.0,  20.0,   0.5,   0.5,   0.5,&
+     !    0.5,   0.5,   0.5,   0.5,   1.0,   0.5,   0.5,   0.5,&
+     !    0.5 /)
 
    ! Look-up table canopy bottom height
+   ! 01/06/2020, yuan: adjust hbop: grass/shrub -> 0, tree->1
    real(r8), parameter, dimension(N_land_classification) :: hbot0_igbp &
-! 01/06/2020, yuan: adjust hbop: grass/shrub -> 0, tree->1
       =(/ 8.5,   1.0,   8.5,  11.5,  10.0,   0.1,   0.1,   0.1,&
           0.1,  0.01,  0.01,  0.01,   0.3,  0.01,  0.01,  0.01,&
           0.01 /)
-      !=(/ 1.0,   1.0,   1.0,   1.0,   1.0,   0.0,   0.0,   0.0,&
-      !    0.1,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,&
-      !    0.0 /)
+     !=(/ 1.0,   1.0,   1.0,   1.0,   1.0,   0.0,   0.0,   0.0,&
+     !    0.1,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,&
+     !    0.0 /)
 
    ! Look-up table vegetation fractional cover
    real(r8), parameter, dimension(N_land_classification) :: fveg0_igbp &
@@ -524,17 +524,17 @@ MODULE MOD_Const_LC
    real(r8), parameter, dimension(N_land_classification) :: kmax_sha0_igbp &
       = (/2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008, &
           2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008, &
-          2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008     /)
+          2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008  /)
 
    real(r8), parameter, dimension(N_land_classification) :: kmax_xyl0_igbp &
       = (/2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008, &
           2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008, &
-          2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008     /)
+          2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008  /)
 
    real(r8), parameter, dimension(N_land_classification) :: kmax_root0_igbp &
       = (/2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008, &
           2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008, &
-          2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008     /)
+          2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008  /)
 
    ! water potential at 50% loss of sunlit leaf tissue conductance (mmH2O)
    real(r8), parameter, dimension(N_land_classification) :: psi50_sun0_igbp &
@@ -564,7 +564,7 @@ MODULE MOD_Const_LC
    real(r8), parameter, dimension(N_land_classification) :: ck0_igbp &
       = (/3.95, 3.95, 3.95, 3.95, 3.95, 3.95, &
           3.95, 3.95, 3.95, 3.95, 3.95, 3.95, &
-          3.95, 3.95, 0.  , 0.  , 0.  /)
+          3.95, 3.95,   0.,   0.,   0.  /)
 !end plant hydraulic parameters
 #endif
 
@@ -598,10 +598,10 @@ MODULE MOD_Const_LC
 
 ! Plant Hydraulic Parameters
    real(r8), dimension(N_land_classification) :: &
-      kmax_sun,   &
-      kmax_sha,   &
-      kmax_xyl,   &
-      kmax_root,  &
+      kmax_sun,   &! Plant Hydraulics Paramters (TODO@Xingjie Lu, please give more details and below)
+      kmax_sha,   &! Plant Hydraulics Paramters
+      kmax_xyl,   &! Plant Hydraulics Paramters
+      kmax_root,  &! Plant Hydraulics Paramters
       psi50_sun,  &! water potential at 50% loss of sunlit leaf tissue conductance (mmH2O)
       psi50_sha,  &! water potential at 50% loss of shaded leaf tissue conductance (mmH2O)
       psi50_xyl,  &! water potential at 50% loss of xylem tissue conductance (mmH2O)
