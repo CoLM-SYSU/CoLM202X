@@ -20,6 +20,9 @@ module MOD_HistGridded
    use MOD_Mapping_Pset2Grid
    USE MOD_Namelist
    USE MOD_NetCDFSerial
+#ifdef USEMPI
+   USE MOD_HistWriteBack
+#endif
 
    type(grid_type), target :: ghist
    type(mapping_pset2grid_type) :: mp2g_hist
@@ -632,8 +635,18 @@ contains
             end do
 #endif
 
-            call ncio_write_serial_time (filename, dataname, itime, vdata, &
-               'lon', 'lat', 'time', compress)
+#ifdef USEMPI
+            IF (DEF_HIST_WriteBack) THEN
+               CALL hist_writeback ( hist_data_id, filename, dataname, itime, &
+                  (/character(len=256) :: 'lon','lat','time','',''/), &
+                  compress, wdata2d = vdata)
+            ELSE
+#endif
+               call ncio_write_serial_time (filename, dataname, itime, vdata, &
+                  'lon', 'lat', 'time', compress)
+#ifdef USEMPI
+            ENDIF
+#endif
 
             deallocate (vdata)
          ENDIF
@@ -783,8 +796,18 @@ contains
 
             call ncio_define_dimension (filename, dim1name, ndim1)
 
-            call ncio_write_serial_time (filename, dataname, itime, &
-               vdata, dim1name, 'lon', 'lat', 'time', compress)
+#ifdef USEMPI
+            IF (DEF_HIST_WriteBack) THEN
+               CALL hist_writeback ( hist_data_id, filename, dataname, itime, &
+                  (/character(len=256) :: dim1name,'lon','lat','time','',''/), &
+                  compress, wdata3d = vdata)
+            ELSE
+#endif
+               call ncio_write_serial_time (filename, dataname, itime, &
+                  vdata, dim1name, 'lon', 'lat', 'time', compress)
+#ifdef USEMPI
+            ENDIF
+#endif
 
             deallocate (vdata)
          ENDIF
@@ -941,8 +964,18 @@ contains
             call ncio_define_dimension (filename, dim1name, ndim1)
             call ncio_define_dimension (filename, dim2name, ndim2)
 
-            call ncio_write_serial_time (filename, dataname, itime, vdata, dim1name, dim2name, &
-                  'lon', 'lat', 'time', compress)
+#ifdef USEMPI
+            IF (DEF_HIST_WriteBack) THEN
+               CALL hist_writeback ( hist_data_id, filename, dataname, itime, &
+                  (/character(len=256) :: dim1name,dim2name,'lon','lat','time','',''/), &
+                  compress, wdata4d = vdata)
+            ELSE
+#endif
+               call ncio_write_serial_time (filename, dataname, itime, vdata, &
+                  dim1name, dim2name, 'lon', 'lat', 'time', compress)
+#ifdef USEMPI
+            ENDIF
+#endif
 
             deallocate (vdata)
          ENDIF

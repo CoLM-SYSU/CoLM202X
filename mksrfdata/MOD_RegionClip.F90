@@ -32,8 +32,9 @@ CONTAINS
       CHARACTER(len=256) :: file_in, file_out, fileblock
       INTEGER :: iproc, iblk, jblk, ie, ipxl, ilon, ilat, i1
       INTEGER :: nelm_in, nelm_out
-      INTEGER, allocatable :: nelm_blk(:,:), IOproc(:,:)
-      INTEGER, allocatable :: elmindex(:), elmnpxl(:), elmpixels(:,:,:)
+      INTEGER,   allocatable :: nelm_blk(:,:), IOproc(:,:)
+      INTEGER*8, allocatable :: elmindex(:)
+      INTEGER,   allocatable :: elmnpxl(:), elmpixels(:,:,:)
 
       LOGICAL, allocatable :: elmmask  (:)
       LOGICAL, allocatable :: patchmask(:)
@@ -551,7 +552,8 @@ CONTAINS
       CHARACTER(len=*), intent(in) :: psetname
       INTEGER, intent(in) :: iblk, jblk
       LOGICAL, intent(in) :: elmmask (:)
-      INTEGER, intent(in) :: elmindex(:)
+
+      INTEGER*8, intent(in) :: elmindex(:)
 
       LOGICAL, allocatable, intent(out) :: psetmask (:)
 
@@ -559,7 +561,7 @@ CONTAINS
       CHARACTER(len=256) :: filename, fileblock
       LOGICAL :: fexists
       INTEGER :: nset, ie, iset
-      INTEGER, allocatable :: eindex_p(:)
+      INTEGER*8, allocatable :: eindex_p(:)
 
       filename = trim(dir_landdata_in) // '/' // trim(psetname) // '/' // trim(psetname) // '.nc'
       CALL get_filename_block (filename, iblk, jblk, fileblock)
@@ -618,6 +620,9 @@ CONTAINS
       INTEGER, allocatable :: data_i4_out1 (:)
       INTEGER, allocatable :: data_i4_out2 (:,:)
       INTEGER, allocatable :: data_i4_out3 (:,:,:)
+      
+      INTEGER*8, allocatable :: data_i8_in1  (:)
+      INTEGER*8, allocatable :: data_i8_out1 (:)
 
       REAL(r8), allocatable :: data_r8_in1 (:)
       REAL(r8), allocatable :: data_r8_in2 (:,:)
@@ -705,6 +710,16 @@ CONTAINS
 
             deallocate (data_i4_in1 )
             deallocate (data_i4_out1)
+         elseif (xtype == NF90_INT64) THEN
+            allocate (data_i8_in1 (vlen_in))
+            CALL nccheck( nf90_get_var (ncidin,  varidin , data_i8_in1) )
+
+            allocate (data_i8_out1 (vlen_out))
+            data_i8_out1 = pack(data_i8_in1, vecmask)
+            CALL nccheck( nf90_put_var (ncidout, varidout, data_i8_out1) )
+
+            deallocate (data_i8_in1 )
+            deallocate (data_i8_out1)
          elseif (xtype == NF90_DOUBLE) THEN
             allocate (data_r8_in1 (vlen_in))
             CALL nccheck( nf90_get_var (ncidin,  varidin , data_r8_in1) )

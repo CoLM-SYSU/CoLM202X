@@ -238,6 +238,8 @@ CONTAINS
          this%lon_e(ilon) = -180.0 + del_lon * ilon
       ENDDO
 
+      this%lon_e(this%nlon) = -180.0
+
       CALL this%normalize  ()
       CALL this%set_blocks ()
 
