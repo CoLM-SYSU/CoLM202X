@@ -1586,10 +1586,10 @@ CONTAINS
 
          CALL nccheck (nf90_redef(ncid))
          IF (present(compress)) THEN
-            CALL nccheck (nf90_def_var(ncid, trim(dataname), NF90_INT, dimid, varid, &
+            CALL nccheck (nf90_def_var(ncid, trim(dataname), NF90_INT64, dimid, varid, &
                deflate_level = compress))
          ELSE
-            CALL nccheck (nf90_def_var(ncid, trim(dataname), NF90_INT, dimid, varid))
+            CALL nccheck (nf90_def_var(ncid, trim(dataname), NF90_INT64, dimid, varid))
          ENDIF
 
          CALL nccheck (nf90_enddef(ncid))
