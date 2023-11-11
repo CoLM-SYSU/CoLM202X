@@ -228,7 +228,7 @@ contains
       IF (trim(DEF_forcing%dataset) == 'POINT') then
 
          filename = trim(dir_forcing)//trim(fprefix(1))
-#if undef URBAN_MODEL
+#ifndef URBAN_MODEL
          IF (ncio_var_exist(filename,'reference_height_v')) THEN
             CALL ncio_read_serial (filename, 'reference_height_v', Height_V)
          ENDIF
