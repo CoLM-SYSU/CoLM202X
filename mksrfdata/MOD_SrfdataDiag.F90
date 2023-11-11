@@ -71,7 +71,7 @@ CONTAINS
       CHARACTER(len=256) :: landdir, landname
       INTEGER :: ityp
       INTEGER :: typindex(N_land_classification+1)
-      real(r8), allocatable :: elmid(:)
+      real(r8), allocatable :: elmid_r8(:)
 
       landdir = trim(dir_landdata) // '/diag/'
       IF (p_is_master) THEN
@@ -99,14 +99,14 @@ CONTAINS
       srf_data_id = 666
 
       IF (p_is_worker) THEN
-         allocate (elmid (landelm%nset)); elmid = real(landelm%eindex, r8)
+         allocate (elmid_r8 (landelm%nset)); elmid_r8 = real(landelm%eindex, r8)
       ENDIF
 
       landname = trim(dir_landdata)//'/diag/element.nc'
-      CALL srfdata_map_and_write (elmid, landelm%settyp, (/0/), m_elm2diag, &
+      CALL srfdata_map_and_write (elmid_r8, landelm%settyp, (/0/), m_elm2diag, &
          -1.0e36_r8, landname, 'element', compress = 1, write_mode = 'one')
       
-      IF (p_is_worker) deallocate (elmid)
+      IF (p_is_worker) deallocate (elmid_r8)
 
       typindex = (/(ityp, ityp = 0, N_land_classification)/)
       landname = trim(dir_landdata)//'/diag/patchfrac_elm.nc'

@@ -65,8 +65,8 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
      m = patchclass(i)
 
      steps_in_one_deltim = 1
-     ! deltim need to be within 1800s for waterbody with snow in order to avoid large temperature fluctuations
-     ! due to rapid snow heat conductance
+     ! deltim need to be within 1800s for waterbody with snow in order to avoid large
+     ! temperature fluctuations due to rapid snow heat conductance
      IF(m == WATERBODY .and. snowdp(i) > 0.0) steps_in_one_deltim = ceiling(deltim/1800.)
      deltim_phy = deltim/steps_in_one_deltim
 
@@ -175,7 +175,6 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
            fm(i),           fh(i),           fq(i)                             )
 
         END DO
-
      ENDIF
 
 
@@ -327,7 +326,6 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
 #ifdef OPENMP
 !$OMP END PARALLEL DO
 #endif
-
 
 END SUBROUTINE CoLMDRIVER
 ! ---------- EOP ------------

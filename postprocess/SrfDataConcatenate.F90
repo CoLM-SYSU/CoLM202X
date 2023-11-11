@@ -10,8 +10,9 @@ program srfdata_concatenate
    character(len=256) :: tmpfile, file_list_cmd
    INTEGER :: timevals (8)
 
-   LOGICAL :: dim1to2
-   INTEGER :: filter, nfile, ifile, nthis, dsp, ntotal, bsnmax
+   LOGICAL   :: dim1to2
+   INTEGER   :: filter, nfile, ifile, nthis, dsp, ntotal
+   INTEGER*8 :: bsnmax
    character(len=256) :: line, blockinfo, varfile, levfile, landfile
 
    REAL(r8), allocatable :: longitude(:), latitude(:)
@@ -21,17 +22,18 @@ program srfdata_concatenate
       REAL(r8), allocatable :: val(:)
    END TYPE
    TYPE :: varint
-      INTEGER, allocatable :: val(:)
+      INTEGER*8, allocatable :: val(:)
    END TYPE
 
    TYPE(varreal), allocatable :: varvec(:)
    TYPE(varint ), allocatable :: bsnvec(:)
 
-   REAL(r8), allocatable :: varcache1(:), varcache2(:,:)
-   INTEGER , allocatable :: bsncache1(:), bsncache2(:,:)
-   REAL(r8), allocatable :: vardata(:)
-   INTEGER , allocatable :: eindex (:), settyp(:)
-   INTEGER , allocatable :: order  (:)
+   REAL(r8),  allocatable :: varcache1(:), varcache2(:,:)
+   INTEGER*8, allocatable :: bsncache1(:), bsncache2(:,:)
+   REAL(r8),  allocatable :: vardata(:)
+   INTEGER*8, allocatable :: eindex (:)
+   INTEGER  , allocatable :: settyp (:)
+   INTEGER  , allocatable :: order  (:)
 
    INTEGER :: stat, i, j, ibasin
    REAL(r8), parameter :: spval = -1.e36_r8  !missing value

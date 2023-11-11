@@ -22,8 +22,8 @@ MODULE MOD_HRUVector
    INTEGER :: totalnumhru
    TYPE(pointer_int32_1d), allocatable :: hru_data_address (:)
 
-   INTEGER, allocatable :: eindx_hru (:)
-   INTEGER, allocatable :: htype_hru (:)
+   INTEGER*8, allocatable :: eindx_hru (:)
+   INTEGER,   allocatable :: htype_hru (:)
    
 CONTAINS
    

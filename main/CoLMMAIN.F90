@@ -70,10 +70,10 @@ SUBROUTINE CoLMMAIN ( &
            mss_dst1,     mss_dst2,     mss_dst3,      mss_dst4,     &
 
          ! additional diagnostic variables for output
-           laisun,       laisha,       rootr,        rootflux,      rss,           &
+           laisun,       laisha,       rootr,rootflux,rss,          &
            rstfacsun_out,rstfacsha_out,gssun_out,    gssha_out,     &
            assimsun_out, etrsun_out,   assimsha_out, etrsha_out,    &
-           h2osoi,       wat,           &
+           h2osoi,       wat,          &
 
          ! FLUXES
            taux,         tauy,         fsena,        fevpa,         &
@@ -157,7 +157,8 @@ SUBROUTINE CoLMMAIN ( &
   USE MOD_Albedo
   USE MOD_LAIEmpirical
   USE MOD_TimeManager
-  USE MOD_Namelist, only : DEF_Interception_scheme, DEF_USE_VARIABLY_SATURATED_FLOW, DEF_USE_PLANTHYDRAULICS, DEF_USE_IRRIGATION
+  USE MOD_Namelist, only: DEF_Interception_scheme, DEF_USE_VARIABLY_SATURATED_FLOW, &
+                          DEF_USE_PLANTHYDRAULICS, DEF_USE_IRRIGATION
   USE MOD_LeafInterception
 #if(defined CaMa_Flood)
    ! get flood depth [mm], flood fraction[0-1], flood evaporation [mm/s], flood inflow [mm/s]
@@ -230,10 +231,10 @@ SUBROUTINE CoLMMAIN ( &
         sqrtdi      ,&! inverse sqrt of leaf dimension [m**-0.5]
         effcon      ,&! quantum efficiency of RuBP regeneration (mol CO2/mol quanta)
         vmax25      ,&! maximum carboxylation rate at 25 C at canopy top
-        kmax_sun    ,&
-        kmax_sha    ,&
-        kmax_xyl    ,&
-        kmax_root   ,&
+        kmax_sun    ,&! Plant Hydraulics Paramters
+        kmax_sha    ,&! Plant Hydraulics Paramters
+        kmax_xyl    ,&! Plant Hydraulics Paramters
+        kmax_root   ,&! Plant Hydraulics Paramters
         psi50_sun   ,&! water potential at 50% loss of sunlit leaf tissue conductance (mmH2O)
         psi50_sha   ,&! water potential at 50% loss of shaded leaf tissue conductance (mmH2O)
         psi50_xyl   ,&! water potential at 50% loss of xylem tissue conductance (mmH2O)
@@ -565,8 +566,8 @@ SUBROUTINE CoLMMAIN ( &
       IF (DEF_Aerosol_Readin) THEN
          forc_aer(:) = forc_aerdep   ! read from outside forcing file
       ELSE
-         forc_aer(:) = 4.2E-7        ! manual setting
-         !forc_aer(:) = 0.
+         forc_aer(:) = 0.            ! manual setting
+        !forc_aer(:) = 4.2E-7        ! manual setting
       ENDIF
 
 
@@ -951,7 +952,7 @@ ELSE IF(patchtype == 3)THEN   ! <=== is LAND ICE (glacier/ice sheet) (patchtype 
          wliq_soisno(1) = dz_soisno(1)*denh2o
          totwb = totwb - wextra*deltim
       ENDIF
-      
+
       t_snow = t_precip
       IF (wice_soisno(1) > dz_soisno(1)*denice) THEN
          wextra  = (wice_soisno(1) - dz_soisno(1)*denice) / deltim
@@ -1063,7 +1064,7 @@ ELSE IF(patchtype == 3)THEN   ! <=== is LAND ICE (glacier/ice sheet) (patchtype 
 
       endwb = scv + sum(wice_soisno(1:)+wliq_soisno(1:))
       IF (DEF_USE_VARIABLY_SATURATED_FLOW) THEN
-         endwb = wdsrf + endwb 
+         endwb = wdsrf + endwb
       ENDIF
 
 #ifndef LATERAL_FLOW
@@ -1229,7 +1230,7 @@ ELSE IF(patchtype == 4) THEN   ! <=== is LAND WATER BODIES (lake, reservior and 
          rnof = rsur
 #endif
       ENDIF
-      
+
       endwb  = scv + sum(wice_soisno(1:)+wliq_soisno(1:)) + wa
       IF (DEF_USE_VARIABLY_SATURATED_FLOW) THEN
          endwb  = endwb  + wdsrf
@@ -1254,7 +1255,7 @@ ELSE IF(patchtype == 4) THEN   ! <=== is LAND WATER BODIES (lake, reservior and 
       ELSE
          xerr = 0.
       ENDIF
-      
+
       ! Set zero to the empty node
       IF (snl > maxsnl) THEN
          wice_soisno(maxsnl+1:snl) = 0.
@@ -1523,6 +1524,5 @@ ENDIF
     z_sno (maxsnl+1:0) = z_soisno (maxsnl+1:0)
     dz_sno(maxsnl+1:0) = dz_soisno(maxsnl+1:0)
 
-!----------------------------------------------------------------------
-
 END SUBROUTINE CoLMMAIN
+! ---------- EOP ------------

@@ -57,6 +57,10 @@ MODULE MOD_SPMD_Task
    LOGICAL :: p_is_master    
    LOGICAL :: p_is_io
    LOGICAL :: p_is_worker
+   LOGICAL :: p_is_writeback
+   
+   INTEGER :: p_comm_glb_plus
+   INTEGER :: p_iam_glb_plus
 
    ! Global communicator
    INTEGER :: p_comm_glb
@@ -97,6 +101,8 @@ MODULE MOD_SPMD_Task
    INTEGER  :: MPI_INULL_P(1)
    REAL(r8) :: MPI_RNULL_P(1)
 
+   INTEGER, PARAMETER :: MesgMaxSize = 4194304 ! 4MB 
+
    ! subroutines
    PUBLIC :: spmd_init
    PUBLIC :: spmd_exit
@@ -111,18 +117,19 @@ CONTAINS
    SUBROUTINE spmd_init (MyComm_r)
 
       IMPLICIT NONE
-	   integer, intent(in), optional :: MyComm_r
+      integer, intent(in), optional :: MyComm_r
       LOGICAL mpi_inited
-      CALL MPI_INITIALIZED( mpi_inited, p_err )
+
+      CALL MPI_INITIALIZED (mpi_inited, p_err)
 
       IF ( .NOT. mpi_inited ) THEN
          CALL mpi_init (p_err) 
       ENDIF
-	
+
       if (present(MyComm_r)) then
-         p_comm_glb = MyComm_r
+         CALL MPI_Comm_dup (MyComm_r, p_comm_glb, p_err)
       else
-         p_comm_glb = MPI_COMM_WORLD
+         CALL MPI_Comm_dup (MPI_COMM_WORLD, p_comm_glb, p_err)
       endif
 
       ! 1. Constructing global communicator.
@@ -130,8 +137,35 @@ CONTAINS
       CALL mpi_comm_size (p_comm_glb, p_np_glb,  p_err) 
 
       p_is_master = (p_iam_glb == p_root)
+      p_is_writeback = .false.
 
    END SUBROUTINE spmd_init
+
+   ! ----- -----
+   SUBROUTINE spmd_assign_writeback ()
+
+      CALL MPI_Comm_dup  (p_comm_glb, p_comm_glb_plus, p_err)
+
+      CALL MPI_Comm_free (p_comm_glb, p_err)
+      
+      CALL mpi_comm_rank (p_comm_glb_plus, p_iam_glb_plus,  p_err)  
+
+      p_is_writeback = (p_iam_glb_plus == 0)
+
+      IF (.not. p_is_writeback) THEN
+
+         ! Reconstruct global communicator.
+         CALL mpi_comm_split (p_comm_glb_plus, 0, p_iam_glb_plus, p_comm_glb, p_err)
+         CALL mpi_comm_rank (p_comm_glb, p_iam_glb, p_err)  
+         CALL mpi_comm_size (p_comm_glb, p_np_glb,  p_err) 
+         p_is_master = (p_iam_glb == p_root)
+
+      ELSE
+         CALL mpi_comm_split (p_comm_glb_plus, MPI_UNDEFINED, p_iam_glb_plus, p_comm_glb, p_err)
+         p_is_master = .false.
+      ENDIF 
+
+   END SUBROUTINE spmd_assign_writeback
 
    !-----------------------------------------
    SUBROUTINE divide_processes_into_groups (numblocks, groupsize)
@@ -268,7 +302,9 @@ CONTAINS
       IF (allocated(p_itis_worker   )) deallocate (p_itis_worker   )
       IF (allocated(p_address_worker)) deallocate (p_address_worker)
 
-      CALL mpi_barrier (p_comm_glb, p_err)
+      IF (.not. p_is_writeback) THEN
+         CALL mpi_barrier (p_comm_glb, p_err)
+      ENDIF
 
       CALL mpi_finalize(p_err)
 
