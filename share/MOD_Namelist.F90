@@ -310,6 +310,8 @@ MODULE MOD_Namelist
    LOGICAL            :: DEF_USE_CBL_HEIGHT = .false.
    !Plant Hydraulics
    LOGICAL            :: DEF_USE_PLANTHYDRAULICS = .true.
+   !Medlyn stomata model
+   LOGICAL            :: DEF_USE_MEDLYNST = .false.
    !Semi-Analytic-Spin-Up
    LOGICAL            :: DEF_USE_SASU = .false.
    !Punctuated nitrogen addition Spin up
@@ -769,6 +771,7 @@ CONTAINS
 
          DEF_USE_CBL_HEIGHT,              &   !add by zhongwang wei @ sysu 2022/12/31
          DEF_USE_PLANTHYDRAULICS,         &   !add by xingjie lu @ sysu 2023/05/28
+         DEF_USE_MEDLYNST,                &   !add by xingjie lu @ sysu 2023/05/28
          DEF_USE_SASU,                    &   !add by Xingjie Lu @ sysu 2023/06/27
          DEF_USE_PN,                      &   !add by Xingjie Lu @ sysu 2023/06/27
          DEF_USE_FERT,                    &   !add by Xingjie Lu @ sysu 2023/06/27
@@ -1190,6 +1193,7 @@ CONTAINS
 
       call mpi_bcast (DEF_USE_CBL_HEIGHT     , 1, mpi_logical, p_root, p_comm_glb, p_err)
       call mpi_bcast (DEF_USE_PLANTHYDRAULICS, 1, mpi_logical, p_root, p_comm_glb, p_err)
+      call mpi_bcast (DEF_USE_MEDLYNST       , 1, mpi_logical, p_root, p_comm_glb, p_err)
       call mpi_bcast (DEF_USE_SASU           , 1, mpi_logical, p_root, p_comm_glb, p_err)
       call mpi_bcast (DEF_USE_PN             , 1, mpi_logical, p_root, p_comm_glb, p_err)
       call mpi_bcast (DEF_USE_FERT           , 1, mpi_logical, p_root, p_comm_glb, p_err)

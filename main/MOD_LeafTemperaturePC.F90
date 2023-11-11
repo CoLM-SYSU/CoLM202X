@@ -274,6 +274,8 @@ CONTAINS
         trda,       &! temperature coefficient in gs-a model             (s5)
         trdm,       &! temperature coefficient in gs-a model             (s6)
         trop,       &! temperature coefficient in gs-a model         (273+25)
+        g1,         &! conductance-photosynthesis slope parameter for medlyn model
+        g0,         &! conductance-photosynthesis intercept for medlyn model
         gradm,      &! conductance-photosynthesis slope parameter
         binter,     &! conductance-photosynthesis intercept
         extkn        ! coefficient of leaf nitrogen allocation
@@ -522,6 +524,8 @@ CONTAINS
           trda       (i) = trda_p       (p)
           trdm       (i) = trdm_p       (p)
           trop       (i) = trop_p       (p)
+          g1         (i) = g1_p         (p)
+          g0         (i) = g0_p         (p)
           gradm      (i) = gradm_p      (p)
           binter     (i) = binter_p     (p)
           extkn      (i) = extkn_p      (p)
@@ -1067,8 +1071,9 @@ CONTAINS
 !-----------------------------------------------------------------------
                 CALL stomata ( vmax25(i)   ,effcon(i) ,slti(i)   ,hlti(i)   ,&
                     shti(i)    ,hhti(i)    ,trda(i)   ,trdm(i)   ,trop(i)   ,&
-                    gradm(i)   ,binter(i)  ,thm       ,psrf      ,po2m      ,&
-                    pco2m      ,pco2a      ,eah       ,ei(i)     ,tl(i)     ,parsun(i) ,&
+                    g1(i)      ,g0(i)      ,gradm(i)  ,binter(i) ,thm       ,&
+                    psrf       ,po2m       ,pco2m     ,pco2a     ,eah       ,&
+                    ei(i)      ,tl(i)      ,parsun(i) ,&
 !Ozone stress variables
                     o3coefv_sun(i), o3coefg_sun(i), &
 !End ozone stress variables
@@ -1078,8 +1083,9 @@ CONTAINS
 
                 CALL stomata ( vmax25(i)   ,effcon(i) ,slti(i)   ,hlti(i)   ,&
                     shti(i)    ,hhti(i)    ,trda(i)   ,trdm(i)   ,trop(i)   ,&
-                    gradm(i)   ,binter(i)  ,thm       ,psrf      ,po2m      ,&
-                    pco2m      ,pco2a      ,eah       ,ei(i)     ,tl(i)     ,parsha(i) ,&
+                    g1(i)      ,g0(i)      ,gradm(i)  ,binter(i) ,thm       ,&
+                    psrf       ,po2m       ,pco2m     ,pco2a     ,eah       ,&
+                    ei(i)      ,tl(i)      ,parsha(i) ,&
 !Ozone stress variables
                     o3coefv_sun(i), o3coefg_sun(i), &
 !End ozone stress variables

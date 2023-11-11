@@ -878,8 +878,9 @@ MODULE MOD_Urban_Flux
         htop        ,hbot        ,lai         ,sai         ,&
         sqrtdi      ,effcon      ,vmax25      ,slti        ,&
         hlti        ,shti        ,hhti        ,trda        ,&
-        trdm        ,trop        ,gradm       ,binter      ,&
-        extkn       ,extkd       ,dewmx       ,etrc        ,&
+        trdm        ,trop        ,g1          ,g0          ,&
+        gradm       ,binter      ,extkn       ,extkd       ,&
+        dewmx       ,etrc        ,&
         ! Status of surface
         z0h_g       ,obug        ,ustarg      ,zlnd        ,&
         zsno        ,fsno_roof   ,fsno_gimp   ,fsno_gper   ,&
@@ -983,6 +984,8 @@ MODULE MOD_Urban_Flux
         trda,     &! temperature coefficient in gs-a model             (s5)
         trdm,     &! temperature coefficient in gs-a model             (s6)
         trop,     &! temperature coefficient in gs-a model         (273+25)
+        g1,       &! conductance-photosynthesis slope parameter for medlyn model
+        g0,       &! conductance-photosynthesis intercept for medlyn model
         gradm,    &! conductance-photosynthesis slope parameter
         binter,   &! conductance-photosynthesis intercept
 
@@ -1693,9 +1696,9 @@ MODULE MOD_Urban_Flux
 !-----------------------------------------------------------------------
            CALL stomata (vmax25,effcon ,slti   ,hlti   ,&
               shti    ,hhti    ,trda   ,trdm   ,trop   ,&
-              gradm   ,binter  ,thm    ,psrf   ,po2m   ,&
-              pco2m   ,pco2a   ,eah    ,ei(3)  ,tu(3)  ,&
-              par     ,&
+              g1      ,g0      ,gradm  ,binter ,thm    ,&
+              psrf    ,po2m    ,pco2m  ,pco2a  ,eah    ,&
+              ei(3)   ,tu(3)   ,par    ,&
               o3coefv ,o3coefg ,&
               rb(3)/lai,raw    ,rstfac ,cint(:),&
               assim   ,respc   ,rs     &

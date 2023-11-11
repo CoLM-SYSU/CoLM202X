@@ -46,11 +46,11 @@ MODULE MOD_Thermal
                       lai_old     ,o3uptakesun ,o3uptakesha ,forc_ozone, &
 !end ozone stress variables
                       slti        ,hlti        ,shti        ,hhti       ,&
-                      trda        ,trdm        ,trop        ,gradm      ,&
-                      binter      ,extkn       ,forc_hgt_u  ,forc_hgt_t ,&
-                      forc_hgt_q  ,forc_us     ,forc_vs     ,forc_t     ,&
-                      forc_q      ,forc_rhoair ,forc_psrf   ,forc_pco2m ,&
-                      forc_hpbl                                         ,&
+                      trda        ,trdm        ,trop        ,g1         ,&
+                      g0          ,gradm       ,binter      ,extkn      ,&
+                      forc_hgt_u  ,forc_hgt_t  ,forc_hgt_q  ,forc_us    ,&
+                      forc_vs     ,forc_t      ,forc_q      ,forc_rhoair,&
+                      forc_psrf   ,forc_pco2m  ,forc_hpbl   ,&
                       forc_po2m   ,coszen      ,parsun      ,parsha     ,&
                       sabvsun     ,sabvsha     ,sabg,sabg_soil,sabg_snow,frl,&
                       extkb       ,extkd       ,thermk      ,fsno       ,&
@@ -201,6 +201,8 @@ MODULE MOD_Thermal
        trda,        &! temperature coefficient in gs-a model             [s5]
        trdm,        &! temperature coefficient in gs-a model             [s6]
        trop,        &! temperature coefficient in gs-a model
+       g1,          &! conductance-photosynthesis slope parameter for medlyn model
+       g0,          &! conductance-photosynthesis intercept for medlyn model
        gradm,       &! conductance-photosynthesis slope parameter
        binter,      &! conductance-photosynthesis intercept
        extkn,       &! coefficient of leaf nitrogen allocation
@@ -642,12 +644,12 @@ IF ( patchtype==0.and.DEF_USE_LCT .or. patchtype>0 ) THEN
          CALL LeafTemperature(ipatch,1,deltim,csoilc,dewmx     ,htvp       ,&
                  lai        ,sai        ,htop      ,hbot       ,sqrtdi     ,&
                  effcon     ,vmax25     ,slti      ,hlti       ,shti       ,&
-                 hhti       ,trda       ,trdm      ,trop       ,gradm      ,&
-                 binter     ,extkn      ,extkb     ,extkd      ,forc_hgt_u ,&
-                 forc_hgt_t ,forc_hgt_q ,forc_us   ,forc_vs    ,thm        ,&
-                 th         ,thv        ,forc_q    ,forc_psrf  ,forc_rhoair,&
-                 parsun     ,parsha     ,sabv      ,frl        ,fsun       ,&
-                 thermk     ,rstfacsun_out         ,rstfacsha_out          ,&
+                 hhti       ,trda       ,trdm      ,trop       ,g1         ,&
+                 g0         ,gradm      ,binter    ,extkn      ,extkb      ,&
+                 extkd      ,forc_hgt_u ,forc_hgt_t,forc_hgt_q ,forc_us    ,&
+                 forc_vs    ,thm        ,th        ,thv        ,forc_q     ,&
+                 forc_psrf  ,forc_rhoair,parsun    ,parsha     ,sabv       ,&
+                 frl        ,fsun       ,thermk    ,rstfacsun_out,rstfacsha_out,&
                  gssun_out  ,gssha_out  ,forc_po2m ,forc_pco2m ,z0h_g      ,&
                  obu_g      ,ustar_g    ,zlnd      ,zsno       ,fsno       ,&
                  sigf       ,etrc       ,t_grnd    ,qg,rss     ,&
@@ -781,12 +783,12 @@ IF (DEF_USE_PFT .or. patchclass(ipatch)==CROPLAND) THEN
             CALL LeafTemperature(ipatch,p,deltim,csoilc,dewmx   ,htvp       ,&
                  lai_p(i)   ,sai_p(i)   ,htop_p(i)  ,hbot_p(i)  ,sqrtdi_p(p),&
                  effcon_p(p),vmax25_p(p),slti_p(p)  ,hlti_p(p)  ,shti_p(p)  ,&
-                 hhti_p(p)  ,trda_p(p)  ,trdm_p(p)  ,trop_p(p)  ,gradm_p(p) ,&
-                 binter_p(p),extkn_p(p) ,extkb_p(i) ,extkd_p(i) ,forc_hgt_u ,&
-                 forc_hgt_t ,forc_hgt_q ,forc_us    ,forc_vs    ,thm        ,&
-                 th         ,thv        ,forc_q     ,forc_psrf  ,forc_rhoair,&
-                 parsun_p(i),parsha_p(i),sabv_p(i)  ,frl        ,fsun_p(i)  ,&
-                 thermk_p(i),rstfacsun_p(i)         ,rstfacsha_p(i)         ,&
+                 hhti_p(p)  ,trda_p(p)  ,trdm_p(p)  ,trop_p(p)  ,g1_p(p)    ,&
+                 g0_p(p)    ,gradm_p(p) ,binter_p(p),extkn_p(p) ,extkb_p(i) ,&
+                 extkd_p(i) ,forc_hgt_u ,forc_hgt_t ,forc_hgt_q ,forc_us    ,&
+                 forc_vs    ,thm        ,th         ,thv        ,forc_q     ,&
+                 forc_psrf  ,forc_rhoair,parsun_p(i),parsha_p(i),sabv_p(i)  ,&
+                 frl        ,fsun_p(i)  ,thermk_p(i),rstfacsun_p(i),rstfacsha_p(i),&
                  gssun_p(i) ,gssha_p(i) ,forc_po2m  ,forc_pco2m ,z0h_g      ,&
                  obu_g      ,ustar_g    ,zlnd       ,zsno       ,fsno       ,&
                  sigf_p(i)  ,etrc_p(i)  ,t_grnd     ,qg,rss     ,&
