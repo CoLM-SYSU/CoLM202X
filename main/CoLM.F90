@@ -265,7 +265,7 @@ PROGRAM CoLM
    CALL SnowOptics_init( DEF_file_snowoptics ) ! SNICAR optical parameters
    CALL SnowAge_init( DEF_file_snowaging )     ! SNICAR aging   parameters
 
-   !-----------------------
+   ! ----------------------------------------------------------------------
    doalb = .true.
    dolai = .true.
    dosst = .false.
@@ -425,8 +425,9 @@ PROGRAM CoLM
       ! ----------------------------------------------------------------------
       CALL hist_out (idate, deltim, itstamp, etstamp, ptstamp, dir_hist, casename)
 
-#ifdef LULCC
       ! DO land USE and land cover change simulation
+      ! ----------------------------------------------------------------------
+#ifdef LULCC
       IF ( isendofyear(idate, deltim) ) THEN
          CALL deallocate_1D_Forcing
          CALL deallocate_1D_Fluxes
@@ -442,7 +443,7 @@ PROGRAM CoLM
       ENDIF
 #endif
 
-! Get leaf area index
+      ! Get leaf area index
       ! ----------------------------------------------------------------------
 #if(defined DYN_PHENOLOGY)
       ! Update once a day
@@ -578,5 +579,4 @@ PROGRAM CoLM
 #endif
 
 END PROGRAM CoLM
-! ----------------------------------------------------------------------
-! EOP
+! ---------- EOP ------------
