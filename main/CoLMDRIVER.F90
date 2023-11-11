@@ -107,8 +107,8 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
            ck(m),                                                              &
            slti(m),         hlti(m),                                           &
            shti(m),         hhti(m),         trda(m),         trdm(m),         &
-           trop(m),         gradm(m),        binter(m),       extkn(m),        &
-           chil(m),         rho(1:,1:,m),    tau(1:,1:,m),                     &
+           trop(m),         g1(m),           g0(m),gradm(m),  binter(m),       &
+           extkn(m),        chil(m),         rho(1:,1:,m),    tau(1:,1:,m),    &
 
          ! ATMOSPHERIC FORCING
            forc_pco2m(i),   forc_po2m(i),    forc_us(i),      forc_vs(i),      &
@@ -232,8 +232,8 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
         htop(i)         ,hbot(i)         ,sqrtdi(m)       ,chil(m)         ,&
         effcon(m)       ,vmax25(m)       ,slti(m)         ,hlti(m)         ,&
         shti(m)         ,hhti(m)         ,trda(m)         ,trdm(m)         ,&
-        trop(m)         ,gradm(m)        ,binter(m)       ,extkn(m)        ,&
-        rho(1:,1:,m)    ,tau(1:,1:,m)    ,rootfr(1:,m)                     ,&
+        trop(m)         ,g1(m)           ,g0(m),gradm(m)  ,binter(m)       ,&
+        extkn(m)        ,rho(1:,1:,m)    ,tau(1:,1:,m)    ,rootfr(1:,m)    ,&
 
       ! ATMOSPHERIC FORCING
         forc_pco2m(i)   ,forc_po2m(i)    ,forc_us(i)      ,forc_vs(i)      ,&

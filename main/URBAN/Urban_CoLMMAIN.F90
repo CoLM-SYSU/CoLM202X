@@ -35,8 +35,9 @@ SUBROUTINE UrbanCoLMMAIN ( &
            htop         ,hbot         ,sqrtdi       ,chil         ,&
            effcon       ,vmax25       ,slti         ,hlti         ,&
            shti         ,hhti         ,trda         ,trdm         ,&
-           trop         ,gradm        ,binter       ,extkn        ,&
-           rho          ,tau          ,rootfr                     ,&
+           trop         ,g1           ,g0           ,gradm        ,&
+           binter       ,extkn        ,rho          ,tau          ,&
+           rootfr                     ,&
 
          ! atmospheric forcing
            forc_pco2m   ,forc_po2m    ,forc_us      ,forc_vs      ,&
@@ -233,6 +234,8 @@ SUBROUTINE UrbanCoLMMAIN ( &
         trda       ,&! temperature coefficient in gs-a model             [s5]
         trdm       ,&! temperature coefficient in gs-a model             [s6]
         trop       ,&! temperature coefficient in gs-a model
+        g1         ,&! conductance-photosynthesis slope parameter for medlyn model
+        g0         ,&! conductance-photosynthesis intercept for medlyn model
         gradm      ,&! conductance-photosynthesis slope parameter
         binter     ,&! conductance-photosynthesis intercep
         extkn      ,&! coefficient of leaf nitrogen allocation
@@ -417,6 +420,7 @@ SUBROUTINE UrbanCoLMMAIN ( &
   REAL(r8), intent(out) :: &
         laisun     ,&! sunlit leaf area index
         laisha     ,&! shaded leaf area index
+        rss        ,&
         rstfac     ,&! factor of soil water stress
         wat        ,&! total water storage
         h2osoi(nl_soil)! volumetric soil water in layers [m3/m3]
@@ -914,7 +918,8 @@ SUBROUTINE UrbanCoLMMAIN ( &
          dewmx                ,sqrtdi               ,rootfr(:)            ,effcon               ,&
          vmax25               ,slti                 ,hlti                 ,shti                 ,&
          hhti                 ,trda                 ,trdm                 ,trop                 ,&
-         gradm                ,binter               ,extkn                                      ,&
+         g1                   ,g0                   ,gradm                ,binter               ,&
+         extkn                                      ,&
          ! surface status
          fsno_roof            ,fsno_gimp            ,fsno_gper            ,scv_roof             ,&
          scv_gimp             ,scv_gper             ,scv_lake             ,snowdp_roof          ,&

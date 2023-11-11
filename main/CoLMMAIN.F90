@@ -34,8 +34,8 @@ SUBROUTINE CoLMMAIN ( &
            ck,                                                      &
            slti,         hlti,                                      &
            shti,         hhti,         trda,         trdm,          &
-           trop,         gradm,        binter,       extkn,         &
-           chil,         rho,          tau,                         &
+           trop,         g1,           g0,           gradm,         &
+           binter,       extkn,        chil,         rho,          tau,&
 
          ! atmospheric forcing
            forc_pco2m,   forc_po2m,    forc_us,      forc_vs,       &
@@ -246,6 +246,8 @@ SUBROUTINE CoLMMAIN ( &
         trda        ,&! temperature coefficient in gs-a model             [s5]
         trdm        ,&! temperature coefficient in gs-a model             [s6]
         trop        ,&! temperature coefficient in gs-a model
+        g1          ,&! conductance-photosynthesis slope parameter for medlyn model
+        g0          ,&! conductance-photosynthesis intercept for medlyn model
         gradm       ,&! conductance-photosynthesis slope parameter
         binter      ,&! conductance-photosynthesis intercep
         extkn       ,&! coefficient of leaf nitrogen allocation
@@ -706,11 +708,11 @@ ENDIF
            lai_old           ,o3uptakesun       ,o3uptakesha       ,forc_ozone        ,&
            !End ozone stress variables
            slti              ,hlti              ,shti              ,hhti              ,&
-           trda              ,trdm              ,trop              ,gradm             ,&
-           binter            ,extkn             ,forc_hgt_u        ,forc_hgt_t        ,&
-           forc_hgt_q        ,forc_us           ,forc_vs           ,forc_t            ,&
-           forc_q            ,forc_rhoair       ,forc_psrf         ,forc_pco2m        ,&
-           forc_hpbl                                                                  ,&
+           trda              ,trdm              ,trop              ,g1                ,&
+           g0                ,gradm             ,binter            ,extkn             ,&
+           forc_hgt_u        ,forc_hgt_t        ,forc_hgt_q        ,forc_us           ,&
+           forc_vs           ,forc_t            ,forc_q            ,forc_rhoair       ,&
+           forc_psrf         ,forc_pco2m        ,forc_hpbl                            ,&
            forc_po2m         ,coszen            ,parsun            ,parsha            ,&
            sabvsun           ,sabvsha           ,sabg,sabg_soil,sabg_snow,forc_frl    ,&
            extkb             ,extkd             ,thermk            ,fsno              ,&
