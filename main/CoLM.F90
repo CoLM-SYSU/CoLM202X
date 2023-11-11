@@ -92,6 +92,10 @@ PROGRAM CoLM
    USE MOD_DataAssimilation
 #endif
 
+#ifdef USEMPI
+   USE MOD_HistWriteBack
+#endif
+
    IMPLICIT NONE
 
    character(LEN=256) :: nlfile
@@ -131,13 +135,23 @@ PROGRAM CoLM
    CALL spmd_init ()
 #endif
 
-   IF (p_is_master) THEN
-      CALL system_clock (start_time)
-   ENDIF
-
    CALL getarg (1, nlfile)
 
    CALL read_namelist (nlfile)
+
+#ifdef USEMPI
+   IF (DEF_HIST_WriteBack) THEN
+      CALL spmd_assign_writeback ()
+   ENDIF
+   
+   IF (p_is_writeback) THEN
+      CALL hist_writeback_daemon ()
+   ELSE
+#endif
+
+   IF (p_is_master) THEN
+      CALL system_clock (start_time)
+   ENDIF
 
    casename     = DEF_CASE_NAME
    dir_landdata = DEF_dir_landdata
@@ -555,6 +569,12 @@ PROGRAM CoLM
    103 format(/, 'Time elapsed : ', I3, ' seconds.')
 
 #ifdef USEMPI
+   ENDIF
+   
+   IF (DEF_HIST_WriteBack) THEN
+      CALL hist_writeback_exit ()
+   ENDIF
+
    CALL spmd_exit
 #endif
 

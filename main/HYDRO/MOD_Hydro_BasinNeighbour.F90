@@ -19,7 +19,9 @@ MODULE MOD_Hydro_BasinNeighbour
       integer  :: nnb     ! number of neighbours
       real(r8) :: myarea  ! area of this basin [m^2]
       real(r8) :: myelva  ! elevation of this basin [m]
-      integer , allocatable :: bindex  (:)   ! neighbour global index
+
+      integer*8, allocatable :: bindex  (:)   ! neighbour global index
+      
       integer , allocatable :: addr    (:,:) ! data address: (1,:) refers to process, (2,:) refers to location
       real(r8), allocatable :: dist    (:)   ! distance between basin centers [m]
       real(r8), allocatable :: lenbdr  (:)   ! length of boundary line [m]
