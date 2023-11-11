@@ -75,11 +75,11 @@ CONTAINS
 
       ! local vars for landpath and landurban
       INTEGER :: numpatch_
-      INTEGER, allocatable :: eindex_(:)
-      INTEGER, allocatable :: ipxstt_(:)
-      INTEGER, allocatable :: ipxend_(:)
-      INTEGER, allocatable :: settyp_(:)
-      INTEGER, allocatable :: ielm_  (:)
+      INTEGER*8, allocatable :: eindex_(:)
+      INTEGER,   allocatable :: ipxstt_(:)
+      INTEGER,   allocatable :: ipxend_(:)
+      INTEGER,   allocatable :: settyp_(:)
+      INTEGER,   allocatable :: ielm_  (:)
 
       INTEGER :: numurban_
       INTEGER, allocatable :: urbclass (:)

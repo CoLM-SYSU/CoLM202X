@@ -17,12 +17,17 @@ MODULE MOD_Utils
 
    interface expand_list
       MODULE procedure expand_list_int32
+      MODULE procedure expand_list_int64
       MODULE procedure expand_list_real8
    END interface expand_list
 
    PUBLIC :: append_to_list
 
-   PUBLIC :: insert_into_sorted_list1
+   interface insert_into_sorted_list1
+      MODULE procedure insert_into_sorted_list1_int32
+      MODULE procedure insert_into_sorted_list1_int64
+   END interface insert_into_sorted_list1
+
    PUBLIC :: insert_into_sorted_list2
 
    PUBLIC :: find_in_sorted_list1
@@ -114,6 +119,34 @@ CONTAINS
    END SUBROUTINE expand_list_int32
 
    !--------------------------------------------------
+   SUBROUTINE expand_list_int64 (list, percent)
+
+      USE MOD_Precision
+      IMPLICIT NONE
+
+      INTEGER*8, allocatable, intent(inout) :: list (:)
+      REAL(r8), intent(in) :: percent
+
+      ! Local variables
+      INTEGER :: n0, n1
+      INTEGER*8, allocatable :: temp (:)
+
+      n0 = size(list)
+
+      allocate (temp(n0))
+      temp = list
+
+      n1 = ceiling(n0 * (1+percent))
+
+      deallocate(list)
+      allocate (list(n1))
+      list(1:n0) = temp
+
+      deallocate (temp)
+
+   END SUBROUTINE expand_list_int64
+
+   !--------------------------------------------------
    SUBROUTINE expand_list_real8 (list, percent)
 
       USE MOD_Precision
@@ -181,7 +214,7 @@ CONTAINS
    END SUBROUTINE append_to_list
 
    !--------------------------------------------------
-   SUBROUTINE insert_into_sorted_list1 (x, n, list, iloc, is_new_out)
+   SUBROUTINE insert_into_sorted_list1_int32 (x, n, list, iloc, is_new_out)
 
       IMPLICIT NONE
 
@@ -243,7 +276,72 @@ CONTAINS
          is_new_out = is_new
       ENDIF
 
-   END SUBROUTINE insert_into_sorted_list1
+   END SUBROUTINE insert_into_sorted_list1_int32
+
+   !--------------------------------------------------
+   SUBROUTINE insert_into_sorted_list1_int64 (x, n, list, iloc, is_new_out)
+
+      IMPLICIT NONE
+
+      INTEGER*8, intent(in) :: x
+      INTEGER,   intent(inout) :: n
+      INTEGER*8, intent(inout) :: list(:)
+      INTEGER,   intent(out)   :: iloc
+      LOGICAL,   intent(out), optional :: is_new_out
+
+      ! Local variables
+      LOGICAL :: is_new
+      INTEGER :: ileft, iright
+
+      IF (n == 0) THEN
+         iloc = 1
+         is_new = .true.
+      ELSEIF (x <= list(1)) THEN
+         iloc = 1
+         is_new = (x /= list(1))
+      ELSEIF (x > list(n)) THEN
+         iloc = n + 1
+         is_new = .true.
+      ELSEIF (x == list(n)) THEN
+         iloc = n
+         is_new = .false.
+      ELSE
+         ileft  = 1
+         iright = n
+
+         DO WHILE (.true.)
+            IF (iright - ileft > 1) THEN
+               iloc = (ileft + iright) / 2
+               IF (x > list(iloc)) THEN
+                  ileft = iloc
+               ELSEIF (x < list(iloc)) THEN
+                  iright = iloc
+               ELSE
+                  is_new = .false.
+                  exit
+               ENDIF
+            ELSE
+               iloc = iright
+               is_new = .true.
+               exit
+            ENDIF
+         ENDDO
+      ENDIF
+
+      IF (is_new) THEN
+         IF (iloc <= n) THEN
+            list(iloc+1:n+1) = list(iloc:n)
+         ENDIF
+
+         list(iloc) = x
+         n = n + 1
+      ENDIF
+
+      IF (present(is_new_out)) THEN
+         is_new_out = is_new
+      ENDIF
+
+   END SUBROUTINE insert_into_sorted_list1_int64
 
    !--------------------------------------------------
    SUBROUTINE insert_into_sorted_list2 (x, y, n, xlist, ylist, iloc, is_new_out)
@@ -687,15 +785,13 @@ CONTAINS
       USE MOD_Precision
       IMPLICIT NONE
 
-      INTEGER*8, intent(in) :: nA
+      INTEGER,   intent(in) :: nA
       INTEGER*8, intent(inout) :: A     (nA)
-      INTEGER*8, intent(inout) :: order (nA)
+      INTEGER,   intent(inout) :: order (nA)
 
       ! Local variables
-      INTEGER*8 :: left, right
-      INTEGER*8 :: pivot
-      INTEGER*8 :: marker
-      INTEGER*8 :: itemp
+      INTEGER*8 :: left, right, pivot, itemp
+      INTEGER   :: marker
 
       IF (nA > 1) THEN
 

@@ -57,8 +57,9 @@ CONTAINS
       ! Local Variables
       TYPE (block_data_int32_2d) :: hrudata
       INTEGER :: iwork, ncat, nhru, ie, typsgn, npxl, ipxl
-      integer, allocatable :: numhru_all_g(:), catnum(:), lakeid(:)
-      INTEGER, allocatable :: types(:), order(:), ibuff(:)
+      integer*8, allocatable :: catnum(:)
+      integer,   allocatable :: numhru_all_g(:), lakeid(:)
+      INTEGER,   allocatable :: types(:), order(:), ibuff(:)
       INTEGER :: nhru_glb
 
 #ifdef USEMPI
@@ -85,7 +86,7 @@ CONTAINS
                allocate (catnum(ncat))
                allocate (ibuff (ncat))
 
-               call mpi_recv (catnum, ncat, MPI_INTEGER4, p_address_worker(iwork), mpi_tag_data, &
+               call mpi_recv (catnum, ncat, MPI_INTEGER8, p_address_worker(iwork), mpi_tag_data, &
                   p_comm_glb, p_stat, p_err)
 
                nhru = sum(numhru_all_g(catnum))
@@ -106,7 +107,7 @@ CONTAINS
          call mpi_send (numelm, 1, MPI_INTEGER4, p_root, mpi_tag_size, p_comm_glb, p_err) 
          IF (numelm > 0) THEN
             allocate (lakeid (numelm))
-            call mpi_send (landelm%eindex, numelm, MPI_INTEGER4, p_root, mpi_tag_data, p_comm_glb, p_err) 
+            call mpi_send (landelm%eindex, numelm, MPI_INTEGER8, p_root, mpi_tag_data, p_comm_glb, p_err) 
             call mpi_recv (numhru, 1,      MPI_INTEGER4, p_root, mpi_tag_size, p_comm_glb, p_stat, p_err)
             call mpi_recv (lakeid, numelm, MPI_INTEGER4, p_root, mpi_tag_data, p_comm_glb, p_stat, p_err)
          ENDIF
