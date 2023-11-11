@@ -393,7 +393,7 @@ MODULE MOD_Initialize
       bt_min                   = 0.3_r8
       bt_max                   = 0.7_r8
       pot_hmn_ign_counts_alpha = 0.0035_r8
-      g0                       = 0.05_r8
+      g0_fire                  = 0.05_r8
 
       sf     = 0.1_r8
       sf_no3 = 1._r8
