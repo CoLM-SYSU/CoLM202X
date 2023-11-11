@@ -1098,7 +1098,7 @@ CONTAINS
                    CALL PlantHydraulicStress_twoleaf (nl_soil   ,nvegwcs      ,z_soi       ,&
                          dz_soi    ,rootfr(:,i)   ,psrf         ,qsatl(i)     ,&
                          qaf(clev) ,tl(i)         ,rbsun        ,rss          ,&
-                         raw       ,sum(rd(clev:1)),rstfacsun(i),rstfacsha(i) ,cintsun(:,i),&
+                         raw       ,sum(rd(1:clev)),rstfacsun(i),rstfacsha(i) ,cintsun(:,i),&
                          cintsha(:,i),laisun(i)   ,laisha(i)    ,rhoair       ,fwet(i)     ,&
                          sai(i)    ,kmax_sun(i)   ,kmax_sha(i)  ,kmax_xyl(i)  ,kmax_root(i),&
                          psi50_sun(i),psi50_sha(i),psi50_xyl(i) ,psi50_root(i),htop(i)     ,&
