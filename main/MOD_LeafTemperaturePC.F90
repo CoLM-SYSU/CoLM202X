@@ -370,7 +370,7 @@ CONTAINS
 
    integer it, nmozsgn
 
-   real(r8) w, csoilcn, z0mg, z0hg, z0qg, elwmax, elwdif, sumrootr
+   real(r8) w, csoilcn, z0mg, z0hg, z0qg, elwmax, elwdif, sumrootflux
    real(r8) cintsun(3, ps:pe), cintsha(3, ps:pe)
    real(r8),dimension(ps:pe)   :: delta, fac, etr0
    real(r8),dimension(ps:pe)   :: irab, dirab_dtl, fsenl_dtl, fevpl_dtl
@@ -1062,10 +1062,10 @@ CONTAINS
                 clev = canlay(i)
                 eah = qaf(clev) * psrf / ( 0.622 + 0.378 * qaf(clev) )    !pa
 
-                if(DEF_USE_PLANTHYDRAULICS) then
+                IF (DEF_USE_PLANTHYDRAULICS) THEN
                    rstfacsun(i) = 1.
                    rstfacsha(i) = 1.
-                end if
+                END IF
 
 ! note: calculate resistance for sunlit/shaded leaves
 !-----------------------------------------------------------------------
@@ -1077,8 +1077,8 @@ CONTAINS
 !Ozone stress variables
                     o3coefv_sun(i), o3coefg_sun(i), &
 !End ozone stress variables
-                    rbsun      ,raw       ,rstfacsun(i),cintsun(:,i),&
-                    assimsun(i),respcsun(i),rssun(i)  &
+                    rbsun      ,raw        ,rstfacsun(i),cintsun(:,i),&
+                    assimsun(i),respcsun(i),rssun(i) &
                     )
 
                 CALL stomata ( vmax25(i)   ,effcon(i) ,slti(i)   ,hlti(i)   ,&
@@ -1089,19 +1089,20 @@ CONTAINS
 !Ozone stress variables
                     o3coefv_sun(i), o3coefg_sun(i), &
 !End ozone stress variables
-                    rbsha      ,raw       ,rstfacsha(i) ,cintsha(:,i),&
+                    rbsha      ,raw        ,rstfacsha(i),cintsha(:,i),&
                     assimsha(i),respcsha(i),rssha(i) &
                     )
 
 
-                IF(DEF_USE_PLANTHYDRAULICS)THEN
+                IF (DEF_USE_PLANTHYDRAULICS) THEN
+
                    gs0sun(i) = min( 1.e6, 1./(rssun(i)*tl(i)/tprcor) )/ laisun(i) * 1.e6
                    gs0sha(i) = min( 1.e6, 1./(rssha(i)*tl(i)/tprcor) )/ laisha(i) * 1.e6
 
                    CALL PlantHydraulicStress_twoleaf (nl_soil   ,nvegwcs      ,z_soi       ,&
                          dz_soi    ,rootfr(:,i)   ,psrf         ,qsatl(i)     ,&
                          qaf(clev) ,tl(i)         ,rbsun        ,rss          ,&
-                         raw       ,rd(clev)      ,rstfacsun(i) ,rstfacsha(i) ,cintsun(:,i),&
+                         raw       ,sum(rd(1:clev)),rstfacsun(i),rstfacsha(i) ,cintsun(:,i),&
                          cintsha(:,i),laisun(i)   ,laisha(i)    ,rhoair       ,fwet(i)     ,&
                          sai(i)    ,kmax_sun(i)   ,kmax_sha(i)  ,kmax_xyl(i)  ,kmax_root(i),&
                          psi50_sun(i),psi50_sha(i),psi50_xyl(i) ,psi50_root(i),htop(i)     ,&
@@ -1109,36 +1110,39 @@ CONTAINS
                          etrsun(i) ,etrsha(i)     ,rootflux(:,i),qg           ,&
                          qm        ,gs0sun(i)     ,gs0sha(i)    ,k_soil_root  ,k_ax_root   ,&
                          gssun(i)  ,gssha(i))
+
                    etr(i) = etrsun(i) + etrsha(i)
+                   gssun(i) = gssun(i) * laisun(i)
+                   gssha(i) = gssha(i) * laisha(i)
 
-                   call update_photosyn(tl(i), po2m, pco2m, pco2a, parsun(i), psrf, rstfacsun(i), rb(i), gssun(i), &
-                                     effcon(i), vmax25(i), gradm(i), trop(i), slti(i), hlti(i), shti(i), hhti(i), &
-                                     trda(i), trdm(i), cintsun(:,i), assimsun(i), respcsun(i))
+                   CALL update_photosyn(tl(i), po2m, pco2m, pco2a, parsun(i), psrf, rstfacsun(i), rb(i), gssun(i), &
+                                      effcon(i), vmax25(i), gradm(i), trop(i), slti(i), hlti(i), shti(i), hhti(i), &
+                                      trda(i), trdm(i), cintsun(:,i), assimsun(i), respcsun(i))
 
-                   call update_photosyn(tl(i), po2m, pco2m, pco2a, parsha(i), psrf, rstfacsha(i), rb(i), gssha(i), &
-                                     effcon(i), vmax25(i), gradm(i), trop(i), slti(i), hlti(i), shti(i), hhti(i), &
-                                     trda(i), trdm(i), cintsha(:,i), assimsha(i), respcsha(i))
+                   CALL update_photosyn(tl(i), po2m, pco2m, pco2a, parsha(i), psrf, rstfacsha(i), rb(i), gssha(i), &
+                                      effcon(i), vmax25(i), gradm(i), trop(i), slti(i), hlti(i), shti(i), hhti(i), &
+                                      trda(i), trdm(i), cintsha(:,i), assimsha(i), respcsha(i))
 
                    ! leaf scale stomata resisitence
                    rssun(i) = tprcor / tl(i) * 1.e6 /gssun(i)
                    rssha(i) = tprcor / tl(i) * 1.e6 /gssha(i)
 
-                END IF
+                ENDIF
 
              ELSE
                 rssun(i) = 2.e4; assimsun(i) = 0.; respcsun(i) = 0.
                 rssha(i) = 2.e4; assimsha(i) = 0.; respcsha(i) = 0.
-                IF(DEF_USE_PLANTHYDRAULICS)THEN
+                IF (DEF_USE_PLANTHYDRAULICS) THEN
                    etr(i) = 0.
                    rootflux(:,i) = 0.
-                END IF
+                ENDIF
              ENDIF
           ENDDO
 
 ! above stomatal resistances are for the canopy, the stomatal rsistances
 ! and the "rb" in the following calculations are the average for single leaf. thus,
-!          rssun = rssun * laisun
-!          rssha = rssha * laisha
+          rssun = rssun * laisun
+          rssha = rssha * laisha
 
 !-----------------------------------------------------------------------
 ! dimensional and non-dimensional sensible and latent heat conductances
@@ -1416,12 +1420,12 @@ ENDIF
                    ENDIF
                 ENDIF
 
-                IF(.not. DEF_USE_PLANTHYDRAULICS)THEN
+                IF (.not. DEF_USE_PLANTHYDRAULICS) THEN
                    IF(etr(i).ge.etrc(i))THEN
                       etr(i) = etrc(i)
                       etr_dtl(i) = 0.
                    ENDIF
-                END IF
+                ENDIF
 
                 evplwet(i) = rhoair * (1.-delta(i)*(1.-fwet(i))) * lsai(i)/rb(i) &
                            * ( qsatl(i) - qaf(clev) )
@@ -1480,7 +1484,7 @@ ENDIF
                       dtl(it,i) = delmax*dtl(it,i)/abs(dtl(it,i))
                    ENDIF
 
-                 ! NOTE: could be a bug IF dtl*dtl==0, changed from lt->le
+                 ! NOTE: could be a bug if dtl*dtl==0, changed from lt->le
                    IF((it.ge.2) .and. (dtl(it-1,i)*dtl(it,i).le.0.))THEN
                       dtl(it,i) = 0.5*(dtl(it-1,i) + dtl(it,i))
                    ENDIF
@@ -1578,7 +1582,7 @@ ENDIF
              gdh2o = rss/rd(botlay) * tprcor/thm           !mol m-2 s-1
           ELSE
              gdh2o = 1.0/(rd(botlay)+rss) * tprcor/thm     !mol m-2 s-1
-          END IF
+          ENDIF
           pco2a = pco2m - 1.37*psrf/max(0.446,gah2o) * &
                   sum(fcover*(assimsun + assimsha - respcsun - respcsha - rsoil))
 
@@ -1684,14 +1688,14 @@ ENDIF
                    rootflux(:,i) = rootflux(:,i) + dz_soi / sum(dz_soi) * etr_dtl(i)* dtl(it-1,i)
                 ENDIF
 
-                !NOTE: temporal solution to make etr and rootr consistent.
+                !NOTE: temporal solution to make etr and rootflux consistent.
                 !TODO: need double check
-!                sumrootr = sum(rootr(:,i), rootr(:,i)>0.)
-!                IF (abs(sumrootr) > 0.) THEN
-!                   rootr(:,i) = max(rootr(:,i),0.) * (etr(i)/sumrootr)
-!                ELSE
-!                   rootr(:,i) = etr(i)*rootfr(:,i)
-!                ENDIF
+                sumrootflux = sum(rootflux(:,i), rootflux(:,i)>0.)
+                IF (abs(sumrootflux) > 0.) THEN
+                   rootflux(:,i) = max(rootflux(:,i),0.) * (etr(i)/sumrootflux)
+                ELSE
+                   rootflux(:,i) = etr(i)*rootfr(:,i)
+                ENDIF
              ENDIF
 
              evplwet(i) = evplwet(i) + evplwet_dtl(i)*dtl(it-1,i)
@@ -1714,52 +1718,52 @@ ENDIF
 !-----------------------------------------------------------------------
 ! Update dew accumulation (kg/m2)
 !-----------------------------------------------------------------------
-            IF (DEF_Interception_scheme .eq. 1) then !colm2014
+            IF (DEF_Interception_scheme .eq. 1) THEN !colm2014
                ldew(i) = max(0., ldew(i)-evplwet(i)*deltim)
-            ELSEIF (DEF_Interception_scheme .eq. 2) then!CLM4.5
+            ELSEIF (DEF_Interception_scheme .eq. 2) THEN!CLM4.5
                ldew(i) = max(0., ldew(i)-evplwet(i)*deltim)
-            ELSEIF (DEF_Interception_scheme .eq. 3) then !CLM5
-               if (ldew_rain(i) .gt. evplwet(i)*deltim) then
+            ELSEIF (DEF_Interception_scheme .eq. 3) THEN !CLM5
+               IF (ldew_rain(i) .gt. evplwet(i)*deltim) THEN
                   ldew_rain(i) = ldew_rain(i)-evplwet(i)*deltim
                   ldew_snow(i) = ldew_snow(i)
                   ldew(i)=ldew_rain(i)+ldew_snow(i)
-               else
+               ELSE
                   ldew_rain(i) = 0.0
                   ldew_snow(i) = max(0., ldew(i)-evplwet(i)*deltim)
                   ldew (i)     = ldew_snow(i)
-               endif
-            ELSEIF (DEF_Interception_scheme .eq. 4) then !Noah-MP
-               if (ldew_rain(i) .gt. evplwet(i)*deltim) then
+               ENDIF
+            ELSEIF (DEF_Interception_scheme .eq. 4) THEN !Noah-MP
+               IF (ldew_rain(i) .gt. evplwet(i)*deltim) THEN
                   ldew_rain(i) = ldew_rain(i)-evplwet(i)*deltim
                   ldew_snow(i) = ldew_snow(i)
                   ldew(i)=ldew_rain(i)+ldew_snow(i)
-               else
+               ELSE
                   ldew_rain(i) = 0.0
                   ldew_snow(i) = max(0., ldew(i)-evplwet(i)*deltim)
                   ldew (i)     = ldew_snow(i)
-               endif
-            ELSEIF (DEF_Interception_scheme .eq. 5) then !MATSIRO
-               if (ldew_rain(i) .gt. evplwet(i)*deltim) then
+               ENDIF
+            ELSEIF (DEF_Interception_scheme .eq. 5) THEN !MATSIRO
+               IF (ldew_rain(i) .gt. evplwet(i)*deltim) THEN
                   ldew_rain(i) = ldew_rain(i)-evplwet(i)*deltim
                   ldew_snow(i) = ldew_snow(i)
                   ldew(i)=ldew_rain(i)+ldew_snow(i)
-               else
+               ELSE
                   ldew_rain(i) = 0.0
                   ldew_snow(i) = max(0., ldew(i)-evplwet(i)*deltim)
                   ldew (i)     = ldew_snow(i)
-               endif
-            ELSEIF (DEF_Interception_scheme .eq. 6) then !VIC
-               if (ldew_rain(i) .gt. evplwet(i)*deltim) then
+               ENDIF
+            ELSEIF (DEF_Interception_scheme .eq. 6) THEN !VIC
+               IF (ldew_rain(i) .gt. evplwet(i)*deltim) THEN
                   ldew_rain(i) = ldew_rain(i)-evplwet(i)*deltim
                   ldew_snow(i) = ldew_snow(i)
                   ldew(i)=ldew_rain(i)+ldew_snow(i)
-               else
+               ELSE
                   ldew_rain(i) = 0.0
                   ldew_snow(i) = max(0., ldew(i)-evplwet(i)*deltim)
                   ldew (i)     = ldew_snow(i)
-               endif
+               ENDIF
             ELSE
-               call abort
+               CALL abort
             ENDIF
 
 
@@ -1801,22 +1805,22 @@ ENDIF
 !-----------------------------------------------------------------------
 
 ! 03/07/2020, yuan: TODO-done, calculate fseng_soil/snow, fevpg_soil/snow
-       IF (numlay .EQ. 1) THEN
+       IF (numlay .eq. 1) THEN
           ttaf = thm
           tqaf = qm
        ENDIF
 
-       IF (numlay .EQ. 2) THEN
+       IF (numlay .eq. 2) THEN
           ttaf = taf(toplay)
           tqaf = qaf(toplay)
        ENDIF
 
-       IF (numlay .EQ. 3) THEN
+       IF (numlay .eq. 3) THEN
           ttaf = taf(2)
           tqaf = qaf(2)
        ENDIF
 
-! for check purpose ONLY
+! for check purpose only
 ! taf = wta0*thm + wtg0*tg + wtl0*tl
 ! taf(1) = wta0(1)*taf(2) + wtg0(1)*tg + wtll(1)
 ! qaf(1) = wtaq0(1)*qaf(2) + wtgq0(1)*qg + wtlql(1)

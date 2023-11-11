@@ -420,7 +420,6 @@ SUBROUTINE UrbanCoLMMAIN ( &
   REAL(r8), intent(out) :: &
         laisun     ,&! sunlit leaf area index
         laisha     ,&! shaded leaf area index
-        rss        ,&
         rstfac     ,&! factor of soil water stress
         rss        ,&! soil surface resistance
         wat        ,&! total water storage
