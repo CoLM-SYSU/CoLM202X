@@ -417,6 +417,7 @@ SUBROUTINE UrbanCoLMMAIN ( &
   REAL(r8), intent(out) :: &
         laisun     ,&! sunlit leaf area index
         laisha     ,&! shaded leaf area index
+        rss        ,&
         rstfac     ,&! factor of soil water stress
         wat        ,&! total water storage
         h2osoi(nl_soil)! volumetric soil water in layers [m3/m3]
