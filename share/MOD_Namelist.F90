@@ -232,6 +232,7 @@ MODULE MOD_Namelist
    CHARACTER(len=256) :: DEF_HIST_FREQ    = 'none'  ! write history file frequency: TIMESTEP/HOURLY/DAILY/MONTHLY/YEARLY
    CHARACTER(len=256) :: DEF_HIST_groupby = 'MONTH' ! history file in one file: DAY/MONTH/YEAR
    CHARACTER(len=256) :: DEF_HIST_mode    = 'one'
+   LOGICAL :: DEF_HIST_WriteBack      = .false.
    INTEGER :: DEF_REST_COMPRESS_LEVEL = 1
    INTEGER :: DEF_HIST_COMPRESS_LEVEL = 1
 
@@ -309,6 +310,8 @@ MODULE MOD_Namelist
    LOGICAL            :: DEF_USE_CBL_HEIGHT = .false.
    !Plant Hydraulics
    LOGICAL            :: DEF_USE_PLANTHYDRAULICS = .true.
+   !Medlyn stomata model
+   LOGICAL            :: DEF_USE_MEDLYNST = .false.
    !Semi-Analytic-Spin-Up
    LOGICAL            :: DEF_USE_SASU = .false.
    !Punctuated nitrogen addition Spin up
@@ -768,6 +771,7 @@ CONTAINS
 
          DEF_USE_CBL_HEIGHT,              &   !add by zhongwang wei @ sysu 2022/12/31
          DEF_USE_PLANTHYDRAULICS,         &   !add by xingjie lu @ sysu 2023/05/28
+         DEF_USE_MEDLYNST,                &   !add by xingjie lu @ sysu 2023/05/28
          DEF_USE_SASU,                    &   !add by Xingjie Lu @ sysu 2023/06/27
          DEF_USE_PN,                      &   !add by Xingjie Lu @ sysu 2023/06/27
          DEF_USE_FERT,                    &   !add by Xingjie Lu @ sysu 2023/06/27
@@ -809,6 +813,7 @@ CONTAINS
          DEF_HIST_FREQ,                   &
          DEF_HIST_groupby,                &
          DEF_HIST_mode,                   &
+         DEF_HIST_WriteBack,              &
          DEF_REST_COMPRESS_LEVEL,         &
          DEF_HIST_COMPRESS_LEVEL,         &
          DEF_hist_vars_namelist,          &
@@ -1188,6 +1193,7 @@ CONTAINS
 
       call mpi_bcast (DEF_USE_CBL_HEIGHT     , 1, mpi_logical, p_root, p_comm_glb, p_err)
       call mpi_bcast (DEF_USE_PLANTHYDRAULICS, 1, mpi_logical, p_root, p_comm_glb, p_err)
+      call mpi_bcast (DEF_USE_MEDLYNST       , 1, mpi_logical, p_root, p_comm_glb, p_err)
       call mpi_bcast (DEF_USE_SASU           , 1, mpi_logical, p_root, p_comm_glb, p_err)
       call mpi_bcast (DEF_USE_PN             , 1, mpi_logical, p_root, p_comm_glb, p_err)
       call mpi_bcast (DEF_USE_FERT           , 1, mpi_logical, p_root, p_comm_glb, p_err)
@@ -1227,6 +1233,7 @@ CONTAINS
       CALL mpi_bcast (DEF_HIST_FREQ,         256, mpi_character, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_HIST_groupby,      256, mpi_character, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_HIST_mode,         256, mpi_character, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_HIST_WriteBack,      1, mpi_logical,   p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_REST_COMPRESS_LEVEL, 1, mpi_integer,   p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_HIST_COMPRESS_LEVEL, 1, mpi_integer,   p_root, p_comm_glb, p_err)
 

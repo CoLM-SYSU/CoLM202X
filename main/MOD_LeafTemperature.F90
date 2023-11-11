@@ -26,11 +26,11 @@ CONTAINS
    SUBROUTINE LeafTemperature(ipatch,ivt,deltim,csoilc,dewmx,htvp,lai,&
               sai     ,htop    ,hbot    ,sqrtdi  ,effcon  ,vmax25  ,&
               slti    ,hlti    ,shti    ,hhti    ,trda    ,trdm    ,&
-              trop    ,gradm   ,binter  ,extkn   ,extkb   ,extkd   ,&
-              hu      ,ht      ,hq      ,us      ,vs      ,thm     ,&
-              th      ,thv     ,qm      ,psrf    ,rhoair  ,parsun  ,&
-              parsha  ,sabv    ,frl     ,fsun    ,thermk  ,&
-              rstfacsun  , rstfacsha    ,gssun   ,gssha   ,&
+              trop    ,g1      ,g0      ,gradm   ,binter  ,extkn   ,&
+              extkb   ,extkd   ,hu      ,ht      ,hq      ,us      ,&
+              vs      ,thm     ,th      ,thv     ,qm      ,psrf    ,&
+              rhoair  ,parsun  ,parsha  ,sabv    ,frl     ,fsun    ,&
+              thermk  ,rstfacsun  , rstfacsha    ,gssun   ,gssha   ,&
               po2m    ,pco2m   ,z0h_g   ,obug    ,ustarg  ,zlnd    ,&
               zsno    ,fsno    ,sigf    ,etrc    ,tg      ,qg,rss  ,&
               t_soil  ,t_snow  ,q_soil  ,q_snow  ,dqgdT   ,emg     ,&
@@ -132,6 +132,8 @@ CONTAINS
         trda,       &! temperature coefficient in gs-a model             (s5)
         trdm,       &! temperature coefficient in gs-a model             (s6)
         trop,       &! temperature coefficient in gs-a model         (273+25)
+        g1,         &! conductance-photosynthesis slope parameter for medlyn model
+        g0,         &! conductance-photosynthesis intercept for medlyn model
         gradm,      &! conductance-photosynthesis slope parameter
         binter,     &! conductance-photosynthesis intercept
         extkn        ! coefficient of leaf nitrogen allocation
@@ -601,9 +603,9 @@ CONTAINS
              ! Sunlit leaves
              CALL stomata  (vmax25   ,effcon ,slti   ,hlti    ,&
                   shti     ,hhti     ,trda   ,trdm   ,trop    ,&
-                  gradm    ,binter   ,thm    ,psrf   ,po2m    ,&
-                  pco2m    ,pco2a    ,eah    ,ei     ,tl      ,&
-                  parsun   ,&
+                  g1       ,g0       ,gradm  ,binter ,thm     ,&
+                  psrf     ,po2m     ,pco2m  ,pco2a  ,eah     ,&
+                  ei       ,tl       ,parsun ,&
              !Ozone stress variables
                   o3coefv_sun ,o3coefg_sun, &
              !End ozone stress variables
@@ -614,9 +616,9 @@ CONTAINS
              ! Shaded leaves
              CALL stomata  (vmax25   ,effcon ,slti   ,hlti    ,&
                   shti     ,hhti     ,trda   ,trdm   ,trop    ,&
-                  gradm    ,binter   ,thm    ,psrf   ,po2m    ,&
-                  pco2m    ,pco2a    ,eah    ,ei     ,tl      ,&
-                  parsha   ,&
+                  g1       ,g0       ,gradm  ,binter ,thm     ,&
+                  psrf     ,po2m     ,pco2m  ,pco2a  ,eah     ,&
+                  ei       ,tl       ,parsha ,&
              ! Ozone stress variables
                   o3coefv_sha ,o3coefg_sha, &
              ! End ozone stress variables
@@ -646,7 +648,10 @@ CONTAINS
                       gssun      ,gssha)
                 etr = etrsun + etrsha
 
-                CALL update_photosyn(tl, po2m, pco2m, pco2a, parsun, psrf, rstfacsun, rb, gssun, &
+                gssun = gssun * laisun
+                gssha = gssha * laisha
+
+                call update_photosyn(tl, po2m, pco2m, pco2a, parsun, psrf, rstfacsun, rb, gssun, &
                                      effcon, vmax25, gradm, trop, slti, hlti, shti, hhti, trda, trdm, cintsun, &
                                      assimsun, respcsun)
 
@@ -674,6 +679,10 @@ CONTAINS
              ENDIF
           ENDIF
 
+! above stomatal resistances are for the canopy, the stomatal rsistances
+! and the "rb" in the following calculations are the average for single leaf. thus,
+          rssun = rssun * laisun
+          rssha = rssha * laisha
 
 !-----------------------------------------------------------------------
 ! dimensional and non-dimensional sensible and latent heat conductances

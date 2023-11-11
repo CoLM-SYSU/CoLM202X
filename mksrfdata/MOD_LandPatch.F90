@@ -73,9 +73,10 @@ CONTAINS
       TYPE (block_data_int32_2d) :: patchdata
       INTEGER :: iloc, npxl, ipxl, numset
       INTEGER :: ie, iset, ipxstt, ipxend
-      INTEGER, allocatable :: types(:), order(:), ibuff(:)
-      INTEGER, allocatable :: eindex_tmp(:), settyp_tmp(:), ipxstt_tmp(:), ipxend_tmp(:), ielm_tmp(:)
-      LOGICAL, allocatable :: msk(:)
+      INTEGER,   allocatable :: types(:), order(:), ibuff(:)
+      INTEGER*8, allocatable :: eindex_tmp(:)
+      INTEGER,   allocatable :: settyp_tmp(:), ipxstt_tmp(:), ipxend_tmp(:), ielm_tmp(:)
+      LOGICAL,   allocatable :: msk(:)
       INTEGER :: npatch_glb
       INTEGER :: dominant_type
       INTEGER, allocatable :: npxl_types (:)

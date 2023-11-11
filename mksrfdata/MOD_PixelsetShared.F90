@@ -54,7 +54,8 @@ CONTAINS
       REAL(r8), allocatable :: datashared1d(:,:), areapixel(:), rbuff(:,:)
       INTEGER  :: nsetshared, ipset, jpset
       INTEGER  :: ipxl, ie, ipxstt, ipxend, ishared
-      INTEGER,  allocatable :: eindex1(:), ielm1(:), ipxstt1(:), ipxend1(:), settyp1(:)
+      INTEGER*8,allocatable :: eindex1(:)
+      INTEGER,  allocatable :: ielm1(:), ipxstt1(:), ipxend1(:), settyp1(:)
 
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)

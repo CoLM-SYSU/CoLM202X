@@ -55,7 +55,8 @@ CONTAINS
         dewmx          ,sqrtdi         ,rootfr         ,effcon         ,&
         vmax25         ,slti           ,hlti           ,shti           ,&
         hhti           ,trda           ,trdm           ,trop           ,&
-        gradm          ,binter         ,extkn                          ,&
+        g1             ,g0             ,gradm          ,binter         ,&
+        extkn          ,&
 
         ! surface status
         fsno_roof      ,fsno_gimp      ,fsno_gper      ,scv_roof       ,&
@@ -263,6 +264,8 @@ CONTAINS
         trda       ,&! temperature coefficient in gs-a model             [s5]
         trdm       ,&! temperature coefficient in gs-a model             [s6]
         trop       ,&! temperature coefficient in gs-a model
+        g1         ,&! conductance-photosynthesis slope parameter for medlyn model
+        g0         ,&! conductance-photosynthesis intercept for medlyn model
         gradm      ,&! conductance-photosynthesis slope parameter
         binter     ,&! conductance-photosynthesis intercept
         extkn        ! coefficient of leaf nitrogen allocation
@@ -842,8 +845,9 @@ CONTAINS
             htop        ,hbot        ,lai         ,sai         ,&
             sqrtdi      ,effcon      ,vmax25      ,slti        ,&
             hlti        ,shti        ,hhti        ,trda        ,&
-            trdm        ,trop        ,gradm       ,binter      ,&
-            extkn       ,extkd       ,dewmx       ,etrc        ,&
+            trdm        ,trop        ,g1          ,g0          ,&
+            gradm       ,binter      ,extkn       ,extkd       ,&
+            dewmx       ,etrc        ,&
             ! surface status
             z0h_g       ,obu_g       ,ustar_g     ,zlnd        ,&
             zsno        ,fsno_roof   ,fsno_gimp   ,fsno_gper   ,&
