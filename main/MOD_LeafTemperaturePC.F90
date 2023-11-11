@@ -1110,7 +1110,10 @@ CONTAINS
                          etrsun(i) ,etrsha(i)     ,rootflux(:,i),qg           ,&
                          qm        ,gs0sun(i)     ,gs0sha(i)    ,k_soil_root  ,k_ax_root   ,&
                          gssun(i)  ,gssha(i))
+
                    etr(i) = etrsun(i) + etrsha(i)
+                   gssun(i) = gssun(i) * laisun(i)
+                   gssha(i) = gssha(i) * laisha(i)
 
                    CALL update_photosyn(tl(i), po2m, pco2m, pco2a, parsun(i), psrf, rstfacsun(i), rb(i), gssun(i), &
                                       effcon(i), vmax25(i), gradm(i), trop(i), slti(i), hlti(i), shti(i), hhti(i), &
