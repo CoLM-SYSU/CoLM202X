@@ -230,7 +230,7 @@ MODULE MOD_Albedo
       ! for nighttime longwave calculations.
       !thermk    = 1.e-3
       IF (lai+sai <= 1.e-6) THEN
-         thermk = 1.e-3
+         thermk = 1.
       ENDIF
       extkb     = 1.
       extkd     = 0.718
@@ -254,7 +254,7 @@ IF (patchtype == 0) THEN
       ssha_p(:,:,ps:pe) = 0.
       ! 07/06/2023, yuan: use the values of previous timestep.
       !thermk_p(ps:pe)   = 1.e-3
-      WHERE (lai_p(ps:pe)+sai_p(ps:pe) <= 1.e-6) thermk_p(ps:pe) = 1.e-3
+      WHERE (lai_p(ps:pe)+sai_p(ps:pe) <= 1.e-6) thermk_p(ps:pe) = 1.
       extkb_p(ps:pe)    = 1.
       extkd_p(ps:pe)    = 0.718
 #endif
