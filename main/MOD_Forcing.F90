@@ -427,10 +427,10 @@ contains
             call block_data_copy (forcn(6), forc_xy_us , sca = 1/sqrt(2.0_r8))
             call block_data_copy (forcn(6), forc_xy_vs , sca = 1/sqrt(2.0_r8))
          ELSE
-	    if (.not.trim(DEF_forcing%dataset) == 'CPL7') then
-                write(6, *) "At least one of the wind components must be provided! stop!";
-                CALL CoLM_stop()
-	    ENDIF
+            if (.not.trim(DEF_forcing%dataset) == 'CPL7') then
+               write(6, *) "At least one of the wind components must be provided! stop!";
+               CALL CoLM_stop()
+            ENDIF
          ENDIF
 
          call flush_block_data (forc_xy_hgt_u, real(HEIGHT_V,r8))
@@ -736,7 +736,7 @@ contains
          end if
 
          ! set upper boundary time stamp and get data
-         if (tstamp_UB(ivar) == 'NULL' .OR. tstamp_UB(ivar) < mtstamp) then
+         if (tstamp_UB(ivar) == 'NULL' .OR. tstamp_UB(ivar) <= mtstamp) then
             if ( .NOT. (tstamp_UB(ivar) == 'NULL') ) then
                call block_data_copy (forcn_UB(ivar), forcn_LB(ivar))
             end if
