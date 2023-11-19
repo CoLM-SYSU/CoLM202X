@@ -681,7 +681,7 @@ contains
 
          ! lower and upper boundary data already exist, cycle
          if ( .NOT.(tstamp_LB(ivar)=='NULL') .AND. .NOT.(tstamp_UB(ivar)=='NULL') .AND. &
-            tstamp_LB(ivar)<=mtstamp .AND. mtstamp<=tstamp_UB(ivar) ) then
+            tstamp_LB(ivar)<=mtstamp .AND. mtstamp<tstamp_UB(ivar) ) then
             cycle
          end if
 
@@ -1370,14 +1370,14 @@ contains
          real(r8) :: calday, cosz
          type(timestamp) :: tstamp
 
-         tstamp = tstamp_LB(7)
+         tstamp = idate !tstamp_LB(7)
          ntime = 0
          do while (tstamp < tstamp_UB(7))
             ntime  = ntime + 1
             tstamp = tstamp + deltim_int
          ENDDO
 
-         tstamp = tstamp_LB(7)
+         tstamp = idate !tstamp_LB(7)
          call flush_block_data (avgcos, 0._r8)
 
          do while (tstamp < tstamp_UB(7))
