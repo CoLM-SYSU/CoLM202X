@@ -537,13 +537,12 @@ ENDIF
 IF (.not. DEF_SPLIT_SOILSNOW) THEN
       CALL qsadv(t_grnd,forc_psrf,eg,degdT,qsatg,qsatgdT)
 
-      IF (qsatg > forc_q .and. forc_q > qred*qsatg) THEN
-        !qg = forc_q; dqgdT = 0.
-        qsatg = forc_q; qsatgdT = 0.
-      ENDIF
-
       qg     = qred*qsatg
       dqgdT  = qred*qsatgdT
+
+      IF (qsatg > forc_q .and. forc_q > qred*qsatg) THEN
+        qg = forc_q; dqgdT = 0.
+      ENDIF
 
       q_soil = qg
       q_snow = qg
@@ -551,18 +550,14 @@ IF (.not. DEF_SPLIT_SOILSNOW) THEN
 ELSE
       call qsadv(t_soil,forc_psrf,eg,degdT,qsatg,qsatgdT)
 
-      if(qsatg > forc_q .and. forc_q > hr*qsatg)then
-        qsatg = forc_q; qsatgdT = 0.
-      ENDIF
-
       q_soil = hr*qsatg
       dqgdT  = (1.-fsno)*hr*qsatgdT
 
-      call qsadv(t_snow,forc_psrf,eg,degdT,qsatg,qsatgdT)
-
       if(qsatg > forc_q .and. forc_q > hr*qsatg)then
-        qsatg = forc_q; qsatgdT = 0.
+        q_soil = forc_q; dqgdT = 0.
       ENDIF
+
+      call qsadv(t_snow,forc_psrf,eg,degdT,qsatg,qsatgdT)
 
       q_snow = qsatg
       dqgdT  = dqgdT + fsno*qsatgdT
