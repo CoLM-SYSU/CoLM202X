@@ -224,9 +224,9 @@ contains
          ENDIF
          allocate (iforctime(NVAR))
       ENDIF
-      
+
       IF (trim(DEF_forcing%dataset) == 'POINT') then
-      
+
          filename = trim(dir_forcing)//trim(fprefix(1))
 
          IF (ncio_var_exist(filename,'reference_height_v')) THEN
@@ -1370,17 +1370,17 @@ contains
          real(r8) :: calday, cosz
          type(timestamp) :: tstamp
 
-         tstamp = idate ! tstamp_LB(7)
+         tstamp = tstamp_LB(7)
          ntime = 0
-         do while (tstamp <= tstamp_UB(7))
+         do while (tstamp < tstamp_UB(7))
             ntime  = ntime + 1
             tstamp = tstamp + deltim_int
          ENDDO
 
-         tstamp = idate ! tstamp_LB(7)
+         tstamp = tstamp_LB(7)
          call flush_block_data (avgcos, 0._r8)
 
-         do while (tstamp <= tstamp_UB(7))
+         do while (tstamp < tstamp_UB(7))
 
             DO iblkme = 1, gblock%nblkme
                ib = gblock%xblkme(iblkme)
