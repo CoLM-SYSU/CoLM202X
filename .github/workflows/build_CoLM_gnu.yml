@@ -29,10 +29,6 @@ jobs:
           - {compiler: gcc, version: 11}
           - {compiler: gcc, version: 10}
           - {compiler: gcc, version:  9}
-          - {compiler: intel, version: '2023.2'}
-          - {compiler: intel, version: '2022.2.1'}
-          - {compiler: intel, version: '2022.1'}
-          - {compiler: intel-classic, version: '2021.10'}
        # include:
        #   - os: ubuntu-latest
        #     toolchain: {compiler: gcc, version: 12}
