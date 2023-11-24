@@ -1,0 +1,62 @@
+name: Build_CoLM202X_gnu
+on:
+  pull_request:
+    branches:    
+      - main
+    paths-ignore:
+      - 'postprocess/**'
+      - 'preprocess/**'
+      - 'run/**'
+      - 'README.md'
+      - '.gitignore'
+  push:
+    branches:
+      - main
+  
+  workflow_dispatch:
+
+jobs:
+  setup-environment:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, ubuntu-20.04]
+        mpi: ['mpich', 'openmpi', 'intelmpi']
+        toolchain:
+          - {compiler: gcc, version: 13}
+          - {compiler: gcc, version: 12}
+          - {compiler: gcc, version: 11}
+          - {compiler: gcc, version: 10}
+          - {compiler: gcc, version:  9}
+       #   - {compiler: intel, version: '2023.2'}
+       #   - {compiler: intel, version: '2022.2.1'}
+       #   - {compiler: intel, version: '2022.1'}
+       #   - {compiler: intel-classic, version: '2021.10'}
+       # include:
+       #   - os: ubuntu-latest
+       #     toolchain: {compiler: gcc, version: 12}
+        exclude:
+          - os: ubuntu-20.04
+            toolchain: {compiler: gcc, version: 12}
+
+    steps:
+     - uses: actions/checkout@v4
+     - uses: mpi4py/setup-mpi@v1
+       with:
+          mpi: ${{ matrix.mpi }}
+     - uses: fortran-lang/setup-fortran@v1
+       id: setup-fortran
+       with:
+          compiler: ${{ matrix.toolchain.compiler }}
+          version: ${{ matrix.toolchain.version }} 
+     - name: Install netcdf-fortran library
+       shell: bash -l {0}   
+       run: sudo apt update && sudo apt install -y netcdf-bin libnetcdf-dev libnetcdff-dev
+     - name: Test mpi
+       run: mpif90 -v
+     - name: Test netcdf
+       run: nc-config --all
+     - name: Build CoLM202X
+       #run: make clean && make all
+       run: echo $FOPTS
