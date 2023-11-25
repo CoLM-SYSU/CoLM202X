@@ -34,7 +34,7 @@ USE CMF_CTRL_TIME_MOD
 USE MOD_Vars_Global,                ONLY : spval
 USE MOD_Vars_1DFluxes
 USE MOD_Qsadv
-
+USE CMF_CTRL_RESTART_MOD
 IMPLICIT NONE
 !----------------------- Dummy argument --------------------------------
 INTEGER I,J
@@ -81,6 +81,9 @@ SUBROUTINE colm_CaMa_init
       EDAY     = DEF_simulation_time%end_day                                ! end day
       EHOUR    = DEF_simulation_time%end_sec/3600                           ! end hour
       LLEAPYR  = DEF_forcing%leapyear                                       ! leap year flag
+      
+      CALL system('mkdir -p ' // trim(DEF_dir_restart)//'/CaMa')
+
 
       !----------------------- Dummy argument --------------------------------
       YYYY0    = SYEAR
@@ -88,7 +91,6 @@ SUBROUTINE colm_CaMa_init
       DMIS     = spval
 
       CALL CMF_DRV_INIT       !INITIALIZATION
-
       !Initialize varialbes to be outputed from variable list
       DO JF=1,NVARSOUT
          SELECT CASE (VAROUT(JF)%CVNAME)
@@ -335,6 +337,27 @@ SUBROUTINE colm_cama_exit
       DEALLOCATE (finfg_fld)
    end IF
 END SUBROUTINE colm_cama_exit
+
+SUBROUTINE colm_cama_write_restart(idate, lc_year, site, dir_restart)
+
+   IMPLICIT NONE
+   integer, intent(in) :: idate(3)
+   integer, intent(in) :: lc_year      !year of land cover type data
+   character(LEN=*), intent(in) :: site
+   character(LEN=*), intent(in) :: dir_restart
+     ! Local variables
+   character(LEN=256) :: file_restart
+   character(len=14)  :: cdate
+   character(len=256) :: cyear         !character for lc_year
+
+   ! land cover type year
+   write(cyear,'(i4.4)') lc_year
+   write(cdate,'(i4.4,"-",i3.3,"-",i5.5)') idate(1), idate(2), idate(3)
+   CRESTDIR =    trim(DEF_dir_restart)// '/CaMa'//'/'//trim(cdate)//'/'
+   CALL system('mkdir -p ' // trim(CRESTDIR))
+   call CMF_RESTART_WRITE()
+
+END SUBROUTINE colm_cama_write_restart
 
 !####################################################################
 SUBROUTINE get_fldinfo()
