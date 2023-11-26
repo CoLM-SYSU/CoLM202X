@@ -34,6 +34,7 @@ MODULE MOD_NetCDFBlock
    interface ncio_read_block_time
       MODULE procedure ncio_read_block_int32_2d_time
       MODULE procedure ncio_read_block_real8_2d_time
+      MODULE procedure ncio_read_block_real8_3d_time
    END interface ncio_read_block_time
 
    PUBLIC :: ncio_read_site_time
@@ -323,11 +324,6 @@ CONTAINS
             count3(1) = min(grid%xcnt(iblk), grid%nlon-grid%xdsp(iblk))
             count3(2) = grid%ycnt(jblk)
             count3(3) = 1
-!            if(trim(dataname) == "irrigation_method")then
-!               print*,'irrig_method',p_iam_glb,gblock%nblkme,iblk,jblk
-!               print*,'start',p_iam_glb,start3
-!               print*,'count',p_iam_glb,count3
-!            end if
             IF (count3(1) == grid%xcnt(iblk)) THEN
                CALL nccheck (nf90_get_var(ncid, varid, rdata%blk(iblk,jblk)%val, &
                   start3, count3) ,trace=trim(filename))
@@ -349,6 +345,68 @@ CONTAINS
       ENDIF
 
    END SUBROUTINE ncio_read_block_real8_2d_time
+
+   ! ----
+   SUBROUTINE ncio_read_block_real8_3d_time (filename, dataname, grid, ndim1, itime, rdata)
+
+      USE netcdf
+      USE MOD_Block
+      USE MOD_Grid
+      USE MOD_DataType
+      USE MOD_SPMD_Task
+      IMPLICIT NONE
+
+      CHARACTER (len=*), intent(in) :: filename
+      CHARACTER (len=*), intent(in) :: dataname
+      TYPE (grid_type),  intent(in) :: grid
+      INTEGER, intent(in) :: ndim1, itime
+
+      TYPE (block_data_real8_3d), intent(inout) :: rdata
+
+      ! Local variables
+      INTEGER :: iblk, jblk, ndims(3), start4(4), count4(4), start_mem
+      INTEGER :: ncid, varid
+      INTEGER :: iblkme
+
+      IF (p_is_io) THEN
+
+         CALL check_ncfile_exist (filename)
+         CALL nccheck (nf90_open(trim(filename), NF90_NOWRITE, ncid) ,trace=trim(filename)//' cannot open')
+         CALL nccheck (nf90_inq_varid(ncid, trim(dataname), varid) ,trace=trim(dataname)//' in file '//trim(filename))
+
+         DO iblkme = 1, gblock%nblkme
+            iblk = gblock%xblkme(iblkme)
+            jblk = gblock%yblkme(iblkme)
+
+            ndims = (/ndim1, grid%xcnt(iblk), grid%ycnt(jblk)/)
+            IF (any(ndims == 0)) cycle
+
+            start4 = (/1, grid%xdsp(iblk)+1, grid%ydsp(jblk)+1, itime/)
+            count4(1) = ndim1
+            count4(2) = min(grid%xcnt(iblk), grid%nlon-grid%xdsp(iblk))
+            count4(3) = grid%ycnt(jblk)
+            count4(4) = 1
+            IF (count4(2) == grid%xcnt(iblk)) THEN
+               CALL nccheck (nf90_get_var(ncid, varid, rdata%blk(iblk,jblk)%val, &
+                  start4, count4) ,trace=trim(filename))
+            ELSE
+               CALL nccheck (nf90_get_var(ncid, varid, &
+                  rdata%blk(iblk,jblk)%val(:,1:count4(2),:), start4, count4) )
+
+               start4(2) = 1
+               start_mem = count4(2) + 1
+               count4(2) = grid%xdsp(iblk) + grid%xcnt(iblk) - grid%nlon
+               CALL nccheck (nf90_get_var(ncid, varid, &
+                  rdata%blk(iblk,jblk)%val(:,start_mem:ndims(2),:), start4, count4) )
+            ENDIF
+
+         ENDDO
+
+         CALL nccheck( nf90_close(ncid) )
+
+      ENDIF
+
+   END SUBROUTINE ncio_read_block_real8_3d_time
 
    ! ----
    SUBROUTINE ncio_read_site_time (filename, dataname, itime, rdata)
