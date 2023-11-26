@@ -121,7 +121,7 @@ MODULE MOD_Initialize
       real(r8), allocatable :: snow_d(:)
       real(r8), allocatable :: soil_t(:,:)
       real(r8), allocatable :: soil_w(:,:)
-      logical , allocatable :: mvalmask(:)
+      logical , allocatable :: validval(:)
 
       ! for SOIL Water INIT by using water table depth
       LOGICAL  :: use_wtd
@@ -501,18 +501,18 @@ MODULE MOD_Initialize
                IF (numpatch > 0) THEN
                   allocate (soil_t (nl_soil_ini,numpatch))
                   allocate (soil_w (nl_soil_ini,numpatch))
-                  allocate (mvalmask (numpatch))
+                  allocate (validval (numpatch))
                ENDIF
             end if
 
-            call msoil2p%build (gsoil, landpatch, zwt_grid, missing_value, mvalmask)
+            call msoil2p%build (gsoil, landpatch, zwt_grid, missing_value, validval)
             call msoil2p%map_aweighted (soil_t_grid, nl_soil_ini, soil_t)
             call msoil2p%map_aweighted (soil_w_grid, nl_soil_ini, soil_w)
             call msoil2p%map_aweighted (zwt_grid, zwt)
 
             IF (p_is_worker) THEN
                DO i = 1, numpatch
-                  IF (.not. mvalmask(i)) THEN
+                  IF (.not. validval(i)) THEN
                      IF (patchtype(i) == 3) THEN
                         soil_t(:,i) = 250.
                      ELSE
@@ -526,7 +526,7 @@ MODULE MOD_Initialize
                ENDDO
             ENDIF
 
-            IF (allocated(mvalmask)) deallocate(mvalmask)
+            IF (allocated(validval)) deallocate(validval)
 
          ENDIF
 
@@ -580,20 +580,20 @@ MODULE MOD_Initialize
             
             if (p_is_worker) then
                IF (numpatch > 0) THEN
-                  allocate (mvalmask (numpatch))
+                  allocate (validval (numpatch))
                ENDIF
             end if
 
-            call msnow2p%build (gsnow, landpatch, snow_d_grid, missing_value, mvalmask)
+            call msnow2p%build (gsnow, landpatch, snow_d_grid, missing_value, validval)
             call msnow2p%map_aweighted (snow_d_grid, snow_d)
             
             IF (p_is_worker) THEN
-               WHERE (mvalmask)
+               WHERE (.not. validval)
                   snow_d = 0.
                END WHERE 
             ENDIF
 
-            IF (allocated(mvalmask)) deallocate(mvalmask)
+            IF (allocated(validval)) deallocate(validval)
 
          ENDIF
 
@@ -640,7 +640,7 @@ MODULE MOD_Initialize
       if (p_is_worker) then
 
          do i = 1, numpatch
-            IF (DEF_USE_SoilInit) THEN
+            IF (use_soilini) THEN
                DO nsl = 1, nl_soil
                   CALL polint(soil_z,soil_t(:,i),nl_soil_ini,z_soi(nsl),t_soisno(nsl,i))
                ENDDO

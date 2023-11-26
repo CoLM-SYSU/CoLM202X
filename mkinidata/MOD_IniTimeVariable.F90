@@ -121,7 +121,7 @@ CONTAINS
          soil_t(nl_soil_ini),    &! soil temperature from initial file (K)
          soil_w(nl_soil_ini)      ! soil wetness from initial file (-)
    
-   LOGICAL, intent(in)  :: use_snowini
+   LOGICAL,  intent(in) :: use_snowini
    REAL(r8), intent(in) :: snow_d ! snow depth (m)
 
    LOGICAL,  intent(in) :: use_wtd
