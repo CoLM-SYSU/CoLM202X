@@ -1,7 +1,7 @@
 &nl_colm_forcing
    
    ! ----- forcing -----
-   DEF_dir_forcing  ='/tera06/zhwei/CoLM_Forcing/JRA55/' 
+   DEF_dir_forcing  ='/share/home/dq013/zhwei/colm/data/CoLM_Forcing/JRA55/'
 
    DEF_forcing%dataset           = 'JRA55' 
    DEF_forcing%solarin_all_band  = .true.  
@@ -38,7 +38,18 @@
    DEF_forcing%fprefix(8) = 'dlwrf/dlwrf'
 
    
-   DEF_forcing%vname    = 'var11' 'var51' 'var1' 'var61' 'var33' 'var34' 'var204' 'var205' 
+   DEF_forcing%fprefix(1) = 't2m_r/tmp'
+   DEF_forcing%fprefix(2) = 'spfh/spfh'
+   DEF_forcing%fprefix(3) = 'pres/pres'
+   DEF_forcing%fprefix(4) = 'tprat/tprat'
+   DEF_forcing%fprefix(5) = 'ugrd/ugrd'
+   DEF_forcing%fprefix(6) = 'vgrd/vgrd'
+   DEF_forcing%fprefix(7) = 'dswrf/dswrf'
+   DEF_forcing%fprefix(8) = 'dlwrf/dlwrf'
+
+
+   DEF_forcing%vname    = 'var11' 'SPFH_GDS4_HTGL' 'PRES_GDS4_SFC_ave3h' 'TPRAT_GDS4_SFC_ave3h' 'UGRD_GDS4_HTGL' 'VGRD_GDS4_HTGL' 'DSWRF_GDS4_SFC_ave3h' 'DLWRF_GDS4_SFC_ave3h'
    DEF_forcing%tintalgo = 'linear' 'linear' 'linear' 'nearest' 'NULL' 'linear' 'coszen' 'linear'
+
 
 /

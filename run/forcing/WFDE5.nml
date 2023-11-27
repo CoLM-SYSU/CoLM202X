@@ -10,7 +10,7 @@
    DEF_forcing%HEIGHT_Q          = 40.
 
    DEF_forcing%has_missing_value = .true.
-   missing_value_name            = '_FillValue'
+   DEF_forcing%missing_value_name            = '_FillValue'
 
    DEF_forcing%NVAR              = 8        ! variable number of forcing data
    DEF_forcing%startyr           = 1979     ! start year of forcing data

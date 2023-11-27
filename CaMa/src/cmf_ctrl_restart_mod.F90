@@ -70,13 +70,13 @@ IFRQ_RST=0           ! 0: only end of simulation, [1,2,3,6,12,24] at selected ho
 REWIND(NSETFILE)
 READ(NSETFILE,NML=NRESTART)
 
-WRITE(LOGNAM,*) "=== NAMELIST, NRESTART ==="
-WRITE(LOGNAM,*) "CRESTSTO:  ", TRIM(CRESTSTO)
-WRITE(LOGNAM,*) "CRESTDIR:  ", TRIM(CRESTDIR)
-WRITE(LOGNAM,*) "CVNREST:   ", TRIM(CVNREST)
-WRITE(LOGNAM,*) "LRESTCDF:  ", LRESTCDF
-WRITE(LOGNAM,*) "LRESTDBL:  ", LRESTDBL
-WRITE(LOGNAM,*) "IFRQ_RST:  ", IFRQ_RST
+!WRITE(LOGNAM,*) "=== NAMELIST, NRESTART ==="
+!WRITE(LOGNAM,*) "CRESTSTO:  ", TRIM(CRESTSTO)
+!WRITE(LOGNAM,*) "CRESTDIR:  ", TRIM(CRESTDIR)
+!WRITE(LOGNAM,*) "CVNREST:   ", TRIM(CVNREST)
+!WRITE(LOGNAM,*) "LRESTCDF:  ", LRESTCDF
+!WRITE(LOGNAM,*) "LRESTDBL:  ", LRESTDBL
+!WRITE(LOGNAM,*) "IFRQ_RST:  ", IFRQ_RST
 
 CLOSE(NSETFILE)
 
@@ -347,39 +347,39 @@ USE YOS_CMF_PROG,       ONLY: P2RIVSTO,    P2FLDSTO,    D2RIVOUT_PRE,D2FLDOUT_PR
 USE CMF_UTILS_MOD,      ONLY: INQUIRE_FID
 IMPLICIT NONE
 !* local variable
-INTEGER(KIND=JPIM)         :: IREST
+!INTEGER(KIND=JPIM)         :: IREST
 !================================================
-IREST=0
+!IREST=0
 
-IF ( IFRQ_RST>=0 .and. KSTEP==NSTEPS )THEN         !! end of run
-  IREST=1
+!IF ( IFRQ_RST>=0 .and. KSTEP==NSTEPS )THEN         !! end of run
+!  IREST=1
+!ENDIF
+
+!IF ( IFRQ_RST>=1 .and. IFRQ_RST<=24 )THEN
+!  IF ( MOD(JHOUR,IFRQ_RST)==0 .and. JMIN==0 )THEN  !! at selected hour
+!    IREST=1
+!  ENDIF
+!ENDIF
+
+!IF ( IFRQ_RST==30 )THEN
+!  IF ( JDD==1 .and. JHOUR==0 .and. JMIN==0 )THEN  !! at start of month
+!    IREST=1
+!  ENDIF
+!ENDIF
+
+
+!IF( IREST==1 )THEN
+WRITE(LOGNAM,*) ""
+WRITE(LOGNAM,*) "!---------------------!"
+WRITE(LOGNAM,*) 'CMF::RESTART_WRITE: write time: ' , JYYYYMMDD, JHHMM
+
+
+IF( LRESTCDF )THEN
+  CALL WRTE_REST_CDF  !! netCDF restart write
+ELSE
+  CALL WRTE_REST_BIN
 ENDIF
-
-IF ( IFRQ_RST>=1 .and. IFRQ_RST<=24 )THEN
-  IF ( MOD(JHOUR,IFRQ_RST)==0 .and. JMIN==0 )THEN  !! at selected hour
-    IREST=1
-  ENDIF
-ENDIF
-
-IF ( IFRQ_RST==30 )THEN
-  IF ( JDD==1 .and. JHOUR==0 .and. JMIN==0 )THEN  !! at start of month
-    IREST=1
-  ENDIF
-ENDIF
-
-
-IF( IREST==1 )THEN
-  WRITE(LOGNAM,*) ""
-  WRITE(LOGNAM,*) "!---------------------!"
-  WRITE(LOGNAM,*) 'CMF::RESTART_WRITE: write time: ' , JYYYYMMDD, JHHMM
-
-
-  IF( LRESTCDF )THEN
-    CALL WRTE_REST_CDF  !! netCDF restart write
-  ELSE
-    CALL WRTE_REST_BIN
-  ENDIF
-END IF 
+!END IF 
 
 CONTAINS
 !==========================================================
