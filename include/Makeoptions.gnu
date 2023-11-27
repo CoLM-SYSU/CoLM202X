@@ -2,18 +2,28 @@
 # mpif90 - gfortran 
 # 
 
-  FF = /usr/bin/mpif90 -fopenmp
+  FF = mpif90 -fopenmp
    
   NETCDF_LIB = /usr/lib/x86_64-linux-gnu
   NETCDF_INC = /usr/include
    
   MOD_CMD = -J
- 
-  FOPTS = -fdefault-real-8 -ffree-form -C -g -u -xcheck=stkovf \
+
+# determine the gfortran version
+  GCC_VERSION := "`gcc -dumpversion`"
+  IS_GCC_ABOVE_10 := $(shell expr "$(GCC_VERSION)" ">=" "10")
+  ifeq "$(IS_GCC_ABOVE_10)" "1" 
+     FOPTS = -fdefault-real-8 -ffree-form -C -g -u -xcheck=stkovf \
            -ffpe-trap=invalid,zero,overflow -fbounds-check \
            -mcmodel=medium -fbacktrace -fdump-core -cpp \
-           -ffree-line-length-0  
-  
+           -ffree-line-length-0 -fallow-argument-mismatch 
+  else
+     FOPTS = -fdefault-real-8 -ffree-form -C -g -u -xcheck=stkovf \
+           -ffpe-trap=invalid,zero,overflow -fbounds-check \
+           -mcmodel=medium -fbacktrace -fdump-core -cpp \
+           -ffree-line-length-0
+  endif
+
   INCLUDE_DIR = -I../include -I../share -I../mksrfdata -I../mkinidata -I../main -I$(NETCDF_INC)
   LDFLAGS = -L$(NETCDF_LIB) -lnetcdff -lnetcdf -llapack -lblas 
 
