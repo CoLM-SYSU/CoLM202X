@@ -47,6 +47,8 @@ PROGRAM CoLMINI
    USE MOD_HRUVector
 #endif
    USE MOD_Initialize
+   ! SNICAR
+   USE MOD_SnowSnicar, only: SnowAge_init, SnowOptics_init
    implicit none
 
    ! ----------------local variables ---------------------------------
@@ -137,6 +139,10 @@ PROGRAM CoLMINI
    CALL hru_vector_init ()
 #endif
 #endif
+
+   ! Read in SNICAR optical and aging parameters
+   CALL SnowOptics_init( DEF_file_snowoptics ) ! SNICAR optical parameters
+   CALL SnowAge_init( DEF_file_snowaging )     ! SNICAR aging   parameters
 
    CALL initialize (casename, dir_landdata, dir_restart, idate, lc_year, greenwich)
 

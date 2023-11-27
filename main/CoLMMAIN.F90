@@ -157,7 +157,7 @@ SUBROUTINE CoLMMAIN ( &
   USE MOD_Albedo
   USE MOD_LAIEmpirical
   USE MOD_TimeManager
-  USE MOD_Namelist, only: DEF_Interception_scheme, DEF_USE_VARIABLY_SATURATED_FLOW, &
+  USE MOD_Namelist, only: DEF_Interception_scheme, DEF_USE_VariablySaturatedFlow, &
                           DEF_USE_PLANTHYDRAULICS, DEF_USE_IRRIGATION
   USE MOD_LeafInterception
 #if(defined CaMa_Flood)
@@ -618,7 +618,7 @@ IF (patchtype <= 2) THEN ! <=== is - URBAN and BUILT-UP   (patchtype = 1)
 
       totwb = ldew + scv + sum(wice_soisno(1:)+wliq_soisno(1:)) + wa
 
-      IF (DEF_USE_VARIABLY_SATURATED_FLOW) THEN
+      IF (DEF_USE_VariablySaturatedFlow) THEN
          totwb = totwb + wdsrf
          IF (patchtype == 2) THEN
             totwb = totwb + wetwat
@@ -736,9 +736,9 @@ ENDIF
            pg_snow           ,t_precip          ,qintr_rain        ,qintr_snow        ,&
            snofrz(lbsn:0)    ,sabg_snow_lyr(lb:1)                                      )
 
-      IF (.not. DEF_USE_VARIABLY_SATURATED_FLOW) THEN
+      IF (.not. DEF_USE_VariablySaturatedFlow) THEN
 
-         CALL WATER (ipatch     ,patchtype         ,lb                ,nl_soil           ,&
+         CALL WATER_2014 (ipatch,patchtype         ,lb                ,nl_soil           ,&
               deltim            ,z_soisno(lb:)     ,dz_soisno(lb:)    ,zi_soisno(lb-1:)  ,&
               bsw               ,porsl             ,psi0              ,hksati            ,&
               rootr,rootflux    ,t_soisno(lb:)     ,wliq_soisno(lb:)  ,wice_soisno(lb:)  ,smp,hk,&
@@ -863,7 +863,7 @@ ENDIF
       ! ----------------------------------------
       endwb=sum(wice_soisno(1:)+wliq_soisno(1:))+ldew+scv + wa
 
-      IF (DEF_USE_VARIABLY_SATURATED_FLOW) THEN
+      IF (DEF_USE_VariablySaturatedFlow) THEN
          endwb = endwb + wdsrf
          IF (patchtype == 2) THEN
             endwb = endwb + wetwat
@@ -888,7 +888,7 @@ ENDIF
       if (DEF_USE_IRRIGATION) errorw = errorw - irrig_rate(ipatch)*deltim
 #endif
 
-      IF (.not. DEF_USE_VARIABLY_SATURATED_FLOW) THEN
+      IF (.not. DEF_USE_VariablySaturatedFlow) THEN
          IF (patchtype==2) errorw=0.    !wetland
       ENDIF
 
@@ -932,7 +932,7 @@ ELSE IF(patchtype == 3)THEN   ! <=== is LAND ICE (glacier/ice sheet) (patchtype 
       ENDDO
 
       totwb = scv + sum(wice_soisno(1:)+wliq_soisno(1:))
-      IF (DEF_USE_VARIABLY_SATURATED_FLOW) THEN
+      IF (DEF_USE_VariablySaturatedFlow) THEN
          totwb = wdsrf + totwb
       ENDIF
 
@@ -1031,7 +1031,7 @@ ELSE IF(patchtype == 3)THEN   ! <=== is LAND ICE (glacier/ice sheet) (patchtype 
                    ssi         ,wimp        ,forc_us    ,forc_vs     )
       ENDIF
 
-      IF (.not. DEF_USE_VARIABLY_SATURATED_FLOW) THEN
+      IF (.not. DEF_USE_VariablySaturatedFlow) THEN
          rsur = max(0.0,gwat)
          rnof = rsur
       ELSE
@@ -1063,7 +1063,7 @@ ELSE IF(patchtype == 3)THEN   ! <=== is LAND ICE (glacier/ice sheet) (patchtype 
       zerr=errore
 
       endwb = scv + sum(wice_soisno(1:)+wliq_soisno(1:))
-      IF (DEF_USE_VARIABLY_SATURATED_FLOW) THEN
+      IF (DEF_USE_VariablySaturatedFlow) THEN
          endwb = wdsrf + endwb
       ENDIF
 
@@ -1074,7 +1074,7 @@ ELSE IF(patchtype == 3)THEN   ! <=== is LAND ICE (glacier/ice sheet) (patchtype 
 #endif
 
 #if(defined CoLMDEBUG)
-      IF (DEF_USE_VARIABLY_SATURATED_FLOW) THEN
+      IF (DEF_USE_VariablySaturatedFlow) THEN
          IF (abs(errorw) > 1.e-3) THEN
             write(6,*) 'Warning: water balance violation in CoLMMAIN (land ice) ', errorw
             CALL CoLM_stop ()
@@ -1082,7 +1082,7 @@ ELSE IF(patchtype == 3)THEN   ! <=== is LAND ICE (glacier/ice sheet) (patchtype 
       ENDIF
 #endif
 
-      IF (DEF_USE_VARIABLY_SATURATED_FLOW) THEN
+      IF (DEF_USE_VariablySaturatedFlow) THEN
          xerr=errorw/deltim
       ELSE
          xerr = 0.
@@ -1095,7 +1095,7 @@ ELSE IF(patchtype == 4) THEN   ! <=== is LAND WATER BODIES (lake, reservior and 
 !======================================================================
 
       totwb = scv + sum(wice_soisno(1:)+wliq_soisno(1:)) + wa
-      IF (DEF_USE_VARIABLY_SATURATED_FLOW) THEN
+      IF (DEF_USE_VariablySaturatedFlow) THEN
          totwb = totwb + wdsrf
       ENDIF
 
@@ -1205,7 +1205,7 @@ ELSE IF(patchtype == 4) THEN   ! <=== is LAND WATER BODIES (lake, reservior and 
       a = (sum(wliq_soisno(1:))+sum(wice_soisno(1:))+scv-w_old-scvold)/deltim
       aa = qseva+qsubl-qsdew-qfros
 
-      IF (.not. DEF_USE_VARIABLY_SATURATED_FLOW) THEN
+      IF (.not. DEF_USE_VariablySaturatedFlow) THEN
          rsur = max(0., pg_rain + pg_snow - aa - a)
          rnof = rsur
       ELSE
@@ -1232,7 +1232,7 @@ ELSE IF(patchtype == 4) THEN   ! <=== is LAND WATER BODIES (lake, reservior and 
       ENDIF
 
       endwb  = scv + sum(wice_soisno(1:)+wliq_soisno(1:)) + wa
-      IF (DEF_USE_VARIABLY_SATURATED_FLOW) THEN
+      IF (DEF_USE_VariablySaturatedFlow) THEN
          endwb  = endwb  + wdsrf
       ENDIF
 
@@ -1242,7 +1242,7 @@ ELSE IF(patchtype == 4) THEN   ! <=== is LAND WATER BODIES (lake, reservior and 
 #endif
 
 #if(defined CoLMDEBUG)
-      IF (DEF_USE_VARIABLY_SATURATED_FLOW) THEN
+      IF (DEF_USE_VariablySaturatedFlow) THEN
          IF (abs(errorw) > 1.e-3) THEN
             write(*,*) 'Warning: water balance violation in CoLMMAIN (lake) ', errorw
             CALL CoLM_stop ()
@@ -1250,7 +1250,7 @@ ELSE IF(patchtype == 4) THEN   ! <=== is LAND WATER BODIES (lake, reservior and 
       ENDIF
 #endif
 
-      IF (DEF_USE_VARIABLY_SATURATED_FLOW) THEN
+      IF (DEF_USE_VariablySaturatedFlow) THEN
          xerr = errorw / deltim
       ELSE
          xerr = 0.
@@ -1502,7 +1502,7 @@ ENDIF
        rootflux      = 0.
        zwt           = 0.
 
-       IF (.not. DEF_USE_VARIABLY_SATURATED_FLOW) THEN
+       IF (.not. DEF_USE_VariablySaturatedFlow) THEN
           wa = 4800.
        ENDIF
 
@@ -1514,7 +1514,7 @@ ENDIF
 
     h2osoi = wliq_soisno(1:)/(dz_soisno(1:)*denh2o) + wice_soisno(1:)/(dz_soisno(1:)*denice)
 
-    IF (DEF_USE_VARIABLY_SATURATED_FLOW) THEN
+    IF (DEF_USE_VariablySaturatedFlow) THEN
        wat = sum(wice_soisno(1:)+wliq_soisno(1:))+ldew+scv+wetwat
     ELSE
        wat = sum(wice_soisno(1:)+wliq_soisno(1:))+ldew+scv + wa
