@@ -229,6 +229,7 @@ contains
 
          filename = trim(dir_forcing)//trim(fprefix(1))
 
+#ifndef URBAN_MODEL
          IF (ncio_var_exist(filename,'reference_height_v')) THEN
             CALL ncio_read_serial (filename, 'reference_height_v', Height_V)
          ENDIF
@@ -240,6 +241,13 @@ contains
          IF (ncio_var_exist(filename,'reference_height_q')) THEN
             CALL ncio_read_serial (filename, 'reference_height_q', Height_Q)
          ENDIF
+#else
+         IF (ncio_var_exist(filename,'measurement_height_above_ground')) THEN
+            CALL ncio_read_serial (filename, 'measurement_height_above_ground', Height_V)
+            CALL ncio_read_serial (filename, 'measurement_height_above_ground', Height_T)
+            CALL ncio_read_serial (filename, 'measurement_height_above_ground', Height_Q)
+         ENDIF
+#endif
 
       ENDIF
 
