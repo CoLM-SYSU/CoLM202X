@@ -1017,7 +1017,7 @@ contains
 
          ! calculate the intitial second
          sec    = 86400*(day-1) + sec
-         time_i = floor( (sec-offset(var_i)-0.01) *1. / dtime(var_i) ) + 1
+         time_i = floor( (sec-offset(var_i)) *1. / dtime(var_i) ) + 1
          sec    = (time_i-1)*dtime(var_i) + offset(var_i) - 86400*(day-1)
          tstamp_LB(var_i)%sec = sec
 
@@ -1083,7 +1083,7 @@ contains
 
          ! calculate initial second value
          sec    = 86400*(mday-1) + sec
-         time_i = floor( (sec-offset(var_i)-0.01) *1. / dtime(var_i) ) + 1
+         time_i = floor( (sec-offset(var_i)) *1. / dtime(var_i) ) + 1
          sec    = (time_i-1)*dtime(var_i) + offset(var_i) - 86400*(mday-1)
          tstamp_LB(var_i)%sec  = sec
 
@@ -1146,7 +1146,7 @@ contains
          call julian2monthday(year, day, month, mday)
 
          ! calculate initial second value
-         time_i = floor( (sec-offset(var_i)-0.01) *1. / dtime(var_i) ) + 1
+         time_i = floor( (sec-offset(var_i)) *1. / dtime(var_i) ) + 1
          sec    = (time_i-1)*dtime(var_i) + offset(var_i)
          tstamp_LB(var_i)%sec  = sec
 
