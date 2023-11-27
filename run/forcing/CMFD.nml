@@ -12,7 +12,7 @@
    DEF_forcing%regional          = .true.
    DEF_forcing%regbnd            = 15.0 55.0 70.0 140.0
    DEF_forcing%has_missing_value = .true.
-   missing_value_name            = 'missing_value'
+   DEF_forcing%missing_value_name= 'missing_value'
 
   
    DEF_forcing%NVAR              = 8        ! variable number of forcing data

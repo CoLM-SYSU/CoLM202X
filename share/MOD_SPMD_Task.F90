@@ -30,7 +30,7 @@ MODULE MOD_SPMD_Task
 
    USE MOD_Precision
    IMPLICIT NONE
-
+ 
    include 'mpif.h'
 
 #ifndef USEMPI
