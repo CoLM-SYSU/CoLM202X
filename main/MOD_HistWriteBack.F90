@@ -58,9 +58,9 @@ module MOD_HistWriteBack
    real(r8), allocatable :: lon_c(:), lon_w(:), lon_e(:)
 
    ! 2: catchment based; 3: unstructured 
-   integer :: SDimLength 
-   integer*8, allocatable :: vindex1(:)
-   integer,   allocatable :: vindex2(:)
+   ! integer :: SDimLength 
+   ! integer*8, allocatable :: vindex1(:)
+   ! integer,   allocatable :: vindex2(:)
 
    ! Memory limits
    integer*8, parameter :: MaxHistMemSize  = 8589934592_8 ! 8*1024^3 
@@ -807,8 +807,9 @@ contains
       IF (allocated(lon_c   )) deallocate(lon_c   )
       IF (allocated(lon_w   )) deallocate(lon_w   )
       IF (allocated(lon_e   )) deallocate(lon_e   )
-      IF (allocated(vindex1 )) deallocate(vindex1 )
-      IF (allocated(vindex2 )) deallocate(vindex2 )
+      
+      ! IF (allocated(vindex1 )) deallocate(vindex1 )
+      ! IF (allocated(vindex2 )) deallocate(vindex2 )
       
       IF (.not. p_is_writeback) THEN
          CALL mpi_barrier (p_comm_glb, p_err)

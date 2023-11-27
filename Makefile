@@ -214,8 +214,6 @@ OBJS_CAMA_T = $(addprefix .bld/,${OBJECTS_CAMA})
 endif
 
 OBJS_MAIN = \
-				MOD_DA_GRACE.o                            \
-				MOD_DataAssimilation.o                    \
 				MOD_Hydro_BasinNeighbour.o                \
 				MOD_Hydro_HillslopeFlow.o                 \
 				MOD_Hydro_SubsurfaceFlow.o                \
@@ -258,6 +256,8 @@ OBJS_MAIN = \
 				MOD_UserSpecifiedForcing.o                \
 				MOD_ForcingDownscaling.o                  \
 				MOD_Forcing.o                             \
+				MOD_DA_GRACE.o                            \
+				MOD_DataAssimilation.o                    \
 				MOD_AssimStomataConductance.o             \
 				MOD_PlantHydraulic.o                      \
 				MOD_FrictionVelocity.o                    \
