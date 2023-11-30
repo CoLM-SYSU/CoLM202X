@@ -192,12 +192,12 @@ MODULE MOD_Namelist
    logical :: DEF_SPLIT_SOILSNOW = .false.
 
    ! ----- Model settings -----
-   LOGICAL :: DEF_LANDONLY                    = .true.
-   LOGICAL :: DEF_USE_DOMINANT_PATCHTYPE      = .false.
-   LOGICAL :: DEF_USE_VARIABLY_SATURATED_FLOW = .true.
-   LOGICAL :: DEF_USE_BEDROCK                 = .false.
-   LOGICAL :: DEF_USE_OZONESTRESS             = .false.
-   LOGICAL :: DEF_USE_OZONEDATA               = .false.
+   LOGICAL :: DEF_LANDONLY                  = .true.
+   LOGICAL :: DEF_USE_DOMINANT_PATCHTYPE    = .false.
+   LOGICAL :: DEF_USE_VariablySaturatedFlow = .true.
+   LOGICAL :: DEF_USE_BEDROCK               = .false.
+   LOGICAL :: DEF_USE_OZONESTRESS           = .false.
+   LOGICAL :: DEF_USE_OZONEDATA             = .false.
 
    ! .true. for running SNICAR model
    logical :: DEF_USE_SNICAR                  = .false.
@@ -215,8 +215,11 @@ MODULE MOD_Namelist
    INTEGER :: DEF_IRRIGATION_METHOD = 1
 
    ! ----- Initialization -----
-   LOGICAL            :: DEF_USE_SOIL_INIT  = .false.
-   CHARACTER(len=256) :: DEF_file_soil_init = 'null'
+   LOGICAL            :: DEF_USE_SoilInit  = .false.
+   CHARACTER(len=256) :: DEF_file_SoilInit = 'null'
+
+   LOGICAL            :: DEF_USE_SnowInit  = .false.
+   CHARACTER(len=256) :: DEF_file_SnowInit = 'null'
 
    LOGICAL            :: DEF_USE_CN_INIT  = .false.
    CHARACTER(len=256) :: DEF_file_cn_init = 'null'
@@ -227,7 +230,7 @@ MODULE MOD_Namelist
    ! ----- history -----
    LOGICAL  :: DEF_HISTORY_IN_VECTOR = .false.
 
-   LOGICAL  :: DEF_hist_grid_as_forcing   = .false.
+   LOGICAL  :: DEF_hist_grid_as_forcing = .false.
    REAL(r8) :: DEF_hist_lon_res = 0.5
    REAL(r8) :: DEF_hist_lat_res = 0.5
 
@@ -784,7 +787,7 @@ CONTAINS
 
          DEF_LANDONLY,                    &
          DEF_USE_DOMINANT_PATCHTYPE,      &
-         DEF_USE_VARIABLY_SATURATED_FLOW, &
+         DEF_USE_VariablySaturatedFlow,   &
          DEF_USE_BEDROCK,                 &
          DEF_USE_OZONESTRESS,             &
          DEF_USE_OZONEDATA,               &
@@ -794,8 +797,11 @@ CONTAINS
 
          DEF_precip_phase_discrimination_scheme, &
 
-         DEF_USE_SOIL_INIT,               &
-         DEF_file_soil_init,              &
+         DEF_USE_SoilInit,                &
+         DEF_file_SoilInit,               &
+
+         DEF_USE_SnowInit,                &
+         DEF_file_SnowInit,               &
 
          DEF_USE_CN_INIT,               &
          DEF_file_cn_init,              &
@@ -877,15 +883,15 @@ CONTAINS
 ! ----- SOIL model related ------ Macros&Namelist conflicts and dependency management
 #if (defined vanGenuchten_Mualem_SOIL_MODEL)
          write(*,*) '                  *****                  '
-         write(*,*) 'Note: DEF_USE_VARIABLY_SATURATED_FLOW is automaticlly set to .true.  '
+         write(*,*) 'Note: DEF_USE_VariablySaturatedFlow is automaticlly set to .true.  '
          write(*,*) 'when using vanGenuchten_Mualem_SOIL_MODEL. '
-         DEF_USE_VARIABLY_SATURATED_FLOW = .true.
+         DEF_USE_VariablySaturatedFlow = .true.
 #endif
 #if (defined LATERAL_FLOW)
          write(*,*) '                  *****                  '
-         write(*,*) 'Note: DEF_USE_VARIABLY_SATURATED_FLOW is automaticlly set to .true.  '
+         write(*,*) 'Note: DEF_USE_VariablySaturatedFlow is automaticlly set to .true.  '
          write(*,*) 'when defined LATERAL_FLOW. '
-         DEF_USE_VARIABLY_SATURATED_FLOW = .true.
+         DEF_USE_VariablySaturatedFlow = .true.
 #endif
 
 
@@ -1207,17 +1213,20 @@ CONTAINS
       call mpi_bcast (DEF_USE_CNSOYFIXN      , 1, mpi_logical, p_root, p_comm_glb, p_err)
       call mpi_bcast (DEF_USE_FIRE           , 1, mpi_logical, p_root, p_comm_glb, p_err)
 
-      call mpi_bcast (DEF_LANDONLY,                   1, mpi_logical, p_root, p_comm_glb, p_err)
-      call mpi_bcast (DEF_USE_DOMINANT_PATCHTYPE,     1, mpi_logical, p_root, p_comm_glb, p_err)
-      call mpi_bcast (DEF_USE_VARIABLY_SATURATED_FLOW,1, mpi_logical, p_root, p_comm_glb, p_err)
-      call mpi_bcast (DEF_USE_BEDROCK                ,1, mpi_logical, p_root, p_comm_glb, p_err)
-      call mpi_bcast (DEF_USE_OZONESTRESS            ,1, mpi_logical, p_root, p_comm_glb, p_err)
-      call mpi_bcast (DEF_USE_OZONEDATA              ,1, mpi_logical, p_root, p_comm_glb, p_err)
+      call mpi_bcast (DEF_LANDONLY                 , 1, mpi_logical, p_root, p_comm_glb, p_err)
+      call mpi_bcast (DEF_USE_DOMINANT_PATCHTYPE   , 1, mpi_logical, p_root, p_comm_glb, p_err)
+      call mpi_bcast (DEF_USE_VariablySaturatedFlow, 1, mpi_logical, p_root, p_comm_glb, p_err)
+      call mpi_bcast (DEF_USE_BEDROCK              , 1, mpi_logical, p_root, p_comm_glb, p_err)
+      call mpi_bcast (DEF_USE_OZONESTRESS          , 1, mpi_logical, p_root, p_comm_glb, p_err)
+      call mpi_bcast (DEF_USE_OZONEDATA            , 1, mpi_logical, p_root, p_comm_glb, p_err)
 
       CALL mpi_bcast (DEF_precip_phase_discrimination_scheme, 5, mpi_character, p_root, p_comm_glb, p_err)
 
-      call mpi_bcast (DEF_USE_SOIL_INIT,    1, mpi_logical,   p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_file_soil_init, 256, mpi_character, p_root, p_comm_glb, p_err)
+      call mpi_bcast (DEF_USE_SoilInit,    1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_file_SoilInit, 256, mpi_character, p_root, p_comm_glb, p_err)
+
+      call mpi_bcast (DEF_USE_SnowInit,    1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_file_SnowInit, 256, mpi_character, p_root, p_comm_glb, p_err)
 
       call mpi_bcast (DEF_USE_CN_INIT,    1, mpi_logical,   p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_file_cn_init, 256, mpi_character, p_root, p_comm_glb, p_err)

@@ -26,7 +26,7 @@ MODULE MOD_NewSnow
 !=======================================================================
 !
    use MOD_Precision
-   USE MOD_Namelist, only : DEF_USE_VARIABLY_SATURATED_FLOW
+   USE MOD_Namelist, only : DEF_USE_VariablySaturatedFlow
    use MOD_Const_Physical, only : tfrz, cpliq, cpice
 
    implicit none
@@ -72,7 +72,7 @@ MODULE MOD_NewSnow
        scv = scv + pg_snow*deltim            ! snow water equivalent (mm)
 
        if(patchtype==2 .AND. t_grnd>tfrz)then  ! snowfall on warmer wetland
-          IF (present(wetwat) .and. DEF_USE_VARIABLY_SATURATED_FLOW) THEN
+          IF (present(wetwat) .and. DEF_USE_VariablySaturatedFlow) THEN
              wetwat = wetwat + scv
           ENDIF
           scv=0.; snowdp=0.; sag=0.; fsno = 0.

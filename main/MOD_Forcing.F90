@@ -224,11 +224,12 @@ contains
          ENDIF
          allocate (iforctime(NVAR))
       ENDIF
-      
+
       IF (trim(DEF_forcing%dataset) == 'POINT') then
-      
+
          filename = trim(dir_forcing)//trim(fprefix(1))
 
+#ifndef URBAN_MODEL
          IF (ncio_var_exist(filename,'reference_height_v')) THEN
             CALL ncio_read_serial (filename, 'reference_height_v', Height_V)
          ENDIF
@@ -240,6 +241,13 @@ contains
          IF (ncio_var_exist(filename,'reference_height_q')) THEN
             CALL ncio_read_serial (filename, 'reference_height_q', Height_Q)
          ENDIF
+#else
+         IF (ncio_var_exist(filename,'measurement_height_above_ground')) THEN
+            CALL ncio_read_serial (filename, 'measurement_height_above_ground', Height_V)
+            CALL ncio_read_serial (filename, 'measurement_height_above_ground', Height_T)
+            CALL ncio_read_serial (filename, 'measurement_height_above_ground', Height_Q)
+         ENDIF
+#endif
 
       ENDIF
 
@@ -419,10 +427,10 @@ contains
             call block_data_copy (forcn(6), forc_xy_us , sca = 1/sqrt(2.0_r8))
             call block_data_copy (forcn(6), forc_xy_vs , sca = 1/sqrt(2.0_r8))
          ELSE
-	    if (.not.trim(DEF_forcing%dataset) == 'CPL7') then
-                write(6, *) "At least one of the wind components must be provided! stop!";
-                CALL CoLM_stop()
-	    ENDIF
+            if (.not.trim(DEF_forcing%dataset) == 'CPL7') then
+               write(6, *) "At least one of the wind components must be provided! stop!";
+               CALL CoLM_stop()
+            ENDIF
          ENDIF
 
          call flush_block_data (forc_xy_hgt_u, real(HEIGHT_V,r8))
@@ -681,7 +689,7 @@ contains
 
          ! lower and upper boundary data already exist, cycle
          if ( .NOT.(tstamp_LB(ivar)=='NULL') .AND. .NOT.(tstamp_UB(ivar)=='NULL') .AND. &
-            tstamp_LB(ivar)<=mtstamp .AND. mtstamp<=tstamp_UB(ivar) ) then
+            tstamp_LB(ivar)<=mtstamp .AND. mtstamp<tstamp_UB(ivar) ) then
             cycle
          end if
 
@@ -728,7 +736,7 @@ contains
          end if
 
          ! set upper boundary time stamp and get data
-         if (tstamp_UB(ivar) == 'NULL' .OR. tstamp_UB(ivar) < mtstamp) then
+         if (tstamp_UB(ivar) == 'NULL' .OR. tstamp_UB(ivar) <= mtstamp) then
             if ( .NOT. (tstamp_UB(ivar) == 'NULL') ) then
                call block_data_copy (forcn_UB(ivar), forcn_LB(ivar))
             end if
@@ -1017,7 +1025,7 @@ contains
 
          ! calculate the intitial second
          sec    = 86400*(day-1) + sec
-         time_i = floor( (sec-offset(var_i)-0.01) *1. / dtime(var_i) ) + 1
+         time_i = floor( (sec-offset(var_i)) *1. / dtime(var_i) ) + 1
          sec    = (time_i-1)*dtime(var_i) + offset(var_i) - 86400*(day-1)
          tstamp_LB(var_i)%sec = sec
 
@@ -1083,7 +1091,7 @@ contains
 
          ! calculate initial second value
          sec    = 86400*(mday-1) + sec
-         time_i = floor( (sec-offset(var_i)-0.01) *1. / dtime(var_i) ) + 1
+         time_i = floor( (sec-offset(var_i)) *1. / dtime(var_i) ) + 1
          sec    = (time_i-1)*dtime(var_i) + offset(var_i) - 86400*(mday-1)
          tstamp_LB(var_i)%sec  = sec
 
@@ -1146,7 +1154,7 @@ contains
          call julian2monthday(year, day, month, mday)
 
          ! calculate initial second value
-         time_i = floor( (sec-offset(var_i)-0.01) *1. / dtime(var_i) ) + 1
+         time_i = floor( (sec-offset(var_i)) *1. / dtime(var_i) ) + 1
          sec    = (time_i-1)*dtime(var_i) + offset(var_i)
          tstamp_LB(var_i)%sec  = sec
 
@@ -1370,17 +1378,17 @@ contains
          real(r8) :: calday, cosz
          type(timestamp) :: tstamp
 
-         tstamp = idate ! tstamp_LB(7)
+         tstamp = idate !tstamp_LB(7)
          ntime = 0
-         do while (tstamp <= tstamp_UB(7))
+         do while (tstamp < tstamp_UB(7))
             ntime  = ntime + 1
             tstamp = tstamp + deltim_int
          ENDDO
 
-         tstamp = idate ! tstamp_LB(7)
+         tstamp = idate !tstamp_LB(7)
          call flush_block_data (avgcos, 0._r8)
 
-         do while (tstamp <= tstamp_UB(7))
+         do while (tstamp < tstamp_UB(7))
 
             DO iblkme = 1, gblock%nblkme
                ib = gblock%xblkme(iblkme)

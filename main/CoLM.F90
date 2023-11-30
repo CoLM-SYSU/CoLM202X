@@ -494,8 +494,12 @@ PROGRAM CoLM
 #else
          CALL WRITE_TimeVariables (jdate, lc_year,  casename, dir_restart)
 #endif
+#if(defined CaMa_Flood)
+      IF (p_is_master) THEN
+            call colm_cama_write_restart (jdate, lc_year,  casename, dir_restart)
+         ENDIF
+#endif
       ENDIF
-
 #ifdef RangeCheck
       CALL check_TimeVariables ()
 #endif

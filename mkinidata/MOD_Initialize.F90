@@ -104,22 +104,28 @@ MODULE MOD_Initialize
       ! for SOIL INIT of water, temperature, snow depth
       LOGICAL :: use_soilini
       LOGICAL :: use_cnini
+      LOGICAL :: use_snowini
 
       character(len=256) :: fsoildat
+      character(len=256) :: fsnowdat
       character(len=256) :: fcndat
       type(grid_type) :: gsoil
+      type(grid_type) :: gsnow
       type(grid_type) :: gcn
       type(mapping_grid2pset_type) :: ms2p
       type(mapping_grid2pset_type) :: mc2p
       type(mapping_grid2pset_type) :: mc2f
+      type(mapping_grid2pset_type) :: msoil2p, msnow2p
 
-      integer :: nl_soil_ini
+      integer  :: nl_soil_ini
+      real(r8) :: missing_value
 
       real(r8), allocatable :: soil_z(:)
 
       type(block_data_real8_2d) :: snow_d_grid
       type(block_data_real8_3d) :: soil_t_grid
       type(block_data_real8_3d) :: soil_w_grid
+      type(block_data_real8_2d) :: zwt_grid
 
       type(block_data_real8_3d) :: litr1c_grid
       type(block_data_real8_3d) :: litr2c_grid
@@ -150,6 +156,7 @@ MODULE MOD_Initialize
       real(r8), allocatable :: snow_d(:)
       real(r8), allocatable :: soil_t(:,:)
       real(r8), allocatable :: soil_w(:,:)
+      logical , allocatable :: validval(:)
 
       real(r8), allocatable :: litr1c_vr(:,:)
       real(r8), allocatable :: litr2c_vr(:,:)
@@ -506,10 +513,10 @@ MODULE MOD_Initialize
       !2.3 READ in or GUSSES land state information
       ! ...........................................
 
-      ! for SOIL INIT of water, temperature, snow depth
-      IF (DEF_USE_SOIL_INIT) THEN
+      ! for SOIL INIT of water, temperature
+      IF (DEF_USE_SoilInit) THEN
 
-         fsoildat = DEF_file_soil_init
+         fsoildat = DEF_file_SoilInit
          IF (p_is_master) THEN
             inquire (file=trim(fsoildat), exist=use_soilini)
          ENDIF
@@ -519,34 +526,66 @@ MODULE MOD_Initialize
 
          IF (use_soilini) THEN
 
-            call ncio_read_bcast_serial (fsoildat, 'soil_z', soil_z)
+            ! soil layer depth (m)
+            call ncio_read_bcast_serial (fsoildat, 'soildepth', soil_z)
+           
             nl_soil_ini = size(soil_z)
+            
+            call gsoil%define_from_file (fsoildat, latname = 'lat', lonname = 'lon')
+         
+            CALL julian2monthday (idate(1), idate(2), month, mday)
+         
+            IF (p_is_master) THEN
+               CALL ncio_get_attr (fsoildat, 'zwt', 'missing_value', missing_value)
+            ENDIF
+#ifdef USEMPI
+            CALL mpi_bcast (missing_value, 1, MPI_REAL8, p_root, p_comm_glb, p_err)
+#endif
+
             if (p_is_io) then
                ! soil layer temperature (K)
-               call allocate_block_data (gsoil, soil_t_grid, nl_soil_ini)
-               call ncio_read_block (fsoildat, 'soil_t', gsoil, nl_soil_ini, soil_t_grid)
+               call allocate_block_data  (gsoil, soil_t_grid, nl_soil_ini)
+               call ncio_read_block_time (fsoildat, 'soiltemp', &
+                  gsoil, nl_soil_ini, month, soil_t_grid)
                ! soil layer wetness (-)
-               call allocate_block_data (gsoil, soil_w_grid, nl_soil_ini)
-               call ncio_read_block (fsoildat, 'soil_w', gsoil, nl_soil_ini, soil_w_grid)
-               ! snow depth (m)
-               call allocate_block_data (gsoil, snow_d_grid)
-               call ncio_read_block (fsoildat, 'snow_d', gsoil, snow_d_grid)
+               call allocate_block_data  (gsoil, soil_w_grid, nl_soil_ini)
+               call ncio_read_block_time (fsoildat, 'soilwat', &
+                  gsoil, nl_soil_ini, month, soil_w_grid)
+               ! water table depth (m)
+               call allocate_block_data (gsoil, zwt_grid)
+               call ncio_read_block_time (fsoildat, 'zwt', gsoil, month, zwt_grid)
             end if
-
-            call gsoil%define_from_file (fsoildat)
-            call ms2p%build (gsoil, landpatch)
 
             if (p_is_worker) then
-               nl_soil_ini = nl_soil
-               allocate (soil_z (nl_soil_ini))
-               allocate (snow_d (numpatch))
-               allocate (soil_t (nl_soil_ini,numpatch))
-               allocate (soil_w (nl_soil_ini,numpatch))
+               IF (numpatch > 0) THEN
+                  allocate (soil_t (nl_soil_ini,numpatch))
+                  allocate (soil_w (nl_soil_ini,numpatch))
+                  allocate (validval (numpatch))
+               ENDIF
             end if
 
-            call ms2p%map_aweighted (soil_t_grid, nl_soil_ini, soil_t)
-            call ms2p%map_aweighted (soil_w_grid, nl_soil_ini, soil_w)
-            call ms2p%map_aweighted (snow_d_grid, snow_d)
+            call msoil2p%build (gsoil, landpatch, zwt_grid, missing_value, validval)
+            call msoil2p%map_aweighted (soil_t_grid, nl_soil_ini, soil_t)
+            call msoil2p%map_aweighted (soil_w_grid, nl_soil_ini, soil_w)
+            call msoil2p%map_aweighted (zwt_grid, zwt)
+
+            IF (p_is_worker) THEN
+               DO i = 1, numpatch
+                  IF (.not. validval(i)) THEN
+                     IF (patchtype(i) == 3) THEN
+                        soil_t(:,i) = 250.
+                     ELSE
+                        soil_t(:,i) = 280.
+                     ENDIF
+
+                     soil_w(:,i) = 1.
+                     zwt(i) = 0.
+
+                  ENDIF
+               ENDDO
+            ENDIF
+
+            IF (allocated(validval)) deallocate(validval)
 
          ENDIF
 
@@ -558,7 +597,6 @@ MODULE MOD_Initialize
          !! not used, just for filling arguments
          if (p_is_worker) then
             allocate (soil_z (nl_soil))
-            allocate (snow_d (numpatch))
             allocate (soil_t (nl_soil,numpatch))
             allocate (soil_w (nl_soil,numpatch))
          end if
@@ -771,10 +809,70 @@ MODULE MOD_Initialize
       ENDIF
 #endif
 
+      if (p_is_worker) then
+         IF (numpatch > 0) THEN
+            allocate (snow_d (numpatch))
+         ENDIF
+      end if
+
+      IF (DEF_USE_SnowInit) THEN
+
+         fsnowdat = DEF_file_SnowInit
+         IF (p_is_master) THEN
+            inquire (file=trim(fsnowdat), exist=use_snowini)
+         ENDIF
+#ifdef USEMPI
+         call mpi_bcast (use_snowini, 1, MPI_LOGICAL, p_root, p_comm_glb, p_err)
+#endif
+
+         IF (use_snowini) THEN
+
+            call gsnow%define_from_file (fsnowdat, latname = 'lat', lonname = 'lon')
+         
+            CALL julian2monthday (idate(1), idate(2), month, mday)
+
+            IF (p_is_master) THEN
+               CALL ncio_get_attr (fsnowdat, 'snowdepth', 'missing_value', missing_value)
+            ENDIF
+#ifdef USEMPI
+            CALL mpi_bcast (missing_value, 1, MPI_REAL8, p_root, p_comm_glb, p_err)
+#endif
+
+            if (p_is_io) then
+               ! snow depth (m)
+               call allocate_block_data (gsnow, snow_d_grid)
+               call ncio_read_block_time (fsnowdat, 'snowdepth', gsnow, month, snow_d_grid)
+            end if
+            
+            if (p_is_worker) then
+               IF (numpatch > 0) THEN
+                  allocate (validval (numpatch))
+               ENDIF
+            end if
+
+            call msnow2p%build (gsnow, landpatch, snow_d_grid, missing_value, validval)
+            call msnow2p%map_aweighted (snow_d_grid, snow_d)
+            
+            IF (p_is_worker) THEN
+               WHERE (.not. validval)
+                  snow_d = 0.
+               END WHERE 
+            ENDIF
+
+            IF (allocated(validval)) deallocate(validval)
+
+         ENDIF
+
+      ELSE
+         use_snowini = .false.
+      ENDIF
+
+
       ! for SOIL Water INIT by using water table depth
       fwtd = trim(DEF_dir_runtime) // '/wtd.nc'
       IF (p_is_master) THEN
          inquire (file=trim(fwtd), exist=use_wtd)
+         IF (use_soilini) use_wtd = .false.
          IF (use_wtd) THEN
             write(*,'(/, 2A)') 'Use water table depth and derived equilibrium state ' &
                // ' to initialize soil water content: ', trim(fwtd)
@@ -808,10 +906,10 @@ MODULE MOD_Initialize
       if (p_is_worker) then
 
          do i = 1, numpatch
-            IF (DEF_USE_SOILINI) THEN
-               do nsl = 1, nl_soil
-                  t_soisno(nsl,i) = soil_t(min(nl_soil_ini,nsl),i)
-               enddo
+            IF (use_soilini) THEN
+               DO nsl = 1, nl_soil
+                  CALL polint(soil_z,soil_t(:,i),nl_soil_ini,z_soi(nsl),t_soisno(nsl,i))
+               ENDDO
             ELSE
                t_soisno(1:,i) = 283.
             ENDIF
@@ -987,7 +1085,7 @@ MODULE MOD_Initialize
    !------------------------------------------------------------
 #endif
                ! for SOIL INIT of water, temperature, snow depth
-               ,use_soilini, nl_soil_ini, soil_z, soil_t(1:,i), soil_w(1:,i), snow_d(i) &
+               ,use_soilini, nl_soil_ini, soil_z, soil_t(1:,i), soil_w(1:,i), use_snowini, snow_d(i) &
                ! for SOIL Water INIT by using water table depth
                ,use_wtd, zwtmm, zc_soimm, zi_soimm, vliq_r, nprms, prms)
 

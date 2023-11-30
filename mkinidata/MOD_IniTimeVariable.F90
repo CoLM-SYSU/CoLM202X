@@ -63,7 +63,7 @@ CONTAINS
                      ,diagVX_n_vr_acc            , upperVX_n_vr_acc           , lowerVX_n_vr_acc           &
 !------------------------------------------------------------
 #endif
-                     ,use_soilini, nl_soil_ini, soil_z,   soil_t,   soil_w, snow_d     &
+                     ,use_soilini, nl_soil_ini, soil_z,   soil_t,   soil_w, use_snowini, snow_d &
                      ,use_wtd,     zwtmm,       zc_soimm, zi_soimm, vliq_r, nprms, prms)
 
 !=======================================================================
@@ -74,7 +74,7 @@ CONTAINS
 
    USE MOD_Precision
    USE MOD_Utils
-   USE MOD_Const_Physical, only: tfrz
+   USE MOD_Const_Physical, only: tfrz, denh2o, denice
    USE MOD_Vars_TimeVariables, only: tlai, tsai, wdsrf
    USE MOD_Const_PFT, only: isevg, woody, leafcn, frootcn, livewdcn, deadwdcn, slatop
    USE MOD_Vars_TimeInvariants, only : ibedrock, dbedrock
@@ -125,8 +125,10 @@ CONTAINS
    REAL(r8), intent(in) ::       &!
          soil_z(nl_soil_ini),    &! soil layer depth for initial (m)
          soil_t(nl_soil_ini),    &! soil temperature from initial file (K)
-         soil_w(nl_soil_ini),    &! soil wetness from initial file (-)
-         snow_d                   ! snow depth (m)
+         soil_w(nl_soil_ini)      ! soil wetness from initial file (-)
+   
+   LOGICAL,  intent(in) :: use_snowini
+   REAL(r8), intent(in) :: snow_d ! snow depth (m)
 
    LOGICAL,  intent(in) :: use_wtd
    REAL(r8), intent(in) :: zwtmm
@@ -174,9 +176,11 @@ CONTAINS
          thermk,                 &! canopy gap fraction for tir radiation
          extkb,                  &! (k, g(mu)/mu) direct solar extinction coefficient
          extkd,                  &! diffuse and scattered diffuse PAR extinction coefficient
-         wa,                     &! water storage in aquifer [mm]
-         zwt,                    &! the depth to water table [m]
+         wa                       ! water storage in aquifer [mm]
+   REAL(r8), intent(inout) ::    &!
+         zwt                      ! the depth to water table [m]
 
+   REAL(r8), intent(out) ::      &!
          snw_rds  ( maxsnl+1:0 ), &! effective grain radius (col,lyr) [microns, m-6]
          mss_bcphi( maxsnl+1:0 ), &! mass concentration of hydrophilic BC (col,lyr) [kg/kg]
          mss_bcpho( maxsnl+1:0 ), &! mass concentration of hydrophobic BC (col,lyr) [kg/kg]
@@ -321,7 +325,7 @@ CONTAINS
 #endif
 
         INTEGER j, snl, m, ivt
-        REAL(r8) wet(nl_soil), vliq, wt, ssw, oro, rhosno_ini, a
+        REAL(r8) wet(nl_soil), zi_soi_a(0:nl_soil), psi, vliq, wt, ssw, oro, rhosno_ini, a
 
         ! SNICAR
         REAL(r8) pg_snow                 ! snowfall onto ground including canopy runoff [kg/(m2 s)]
@@ -331,51 +335,116 @@ CONTAINS
 
    !-----------------------------------------------------------------------
    IF(patchtype <= 5)THEN ! land grid
-
+      
       ! (1) SOIL temperature, water and SNOW
       ! Variables: t_soisno, wliq_soisno, wice_soisno
       !            snowdp, sag, scv, fsno, snl, z_soisno, dz_soisno
       IF (use_soilini) THEN
 
+         zi_soi_a(:) = (/0., zi_soi/)
+               
          DO j = 1, nl_soil
             CALL polint(soil_z,soil_t,nl_soil_ini,z_soisno(j),t_soisno(j))
-            CALL polint(soil_z,soil_w,nl_soil_ini,z_soisno(j),wet(j))
-            a = min(soil_t(1),soil_t(2),soil_t(3))-5.
-            t_soisno(j) = max(t_soisno(j), a)
-            a = max(soil_t(1),soil_t(2),soil_t(3))+5.
-            t_soisno(j) = min(t_soisno(j), a)
+         ENDDO
 
-            a = min(soil_w(1),soil_w(2),soil_w(3))
-            wet(j) = max(wet(j), a, 0.1)
-            a = max(soil_w(1),soil_w(2),soil_w(3))
-            wet(j) = min(wet(j), a, 0.5)
+         IF (patchtype <= 1) THEN ! soil or urban
 
-            wet(j) = min(wet(j), porsl(j))
+            DO j = 1, nl_soil
 
-            IF(t_soisno(j).ge.tfrz)THEN
-               wliq_soisno(j) = wet(j)*dz_soisno(j)*1000.
-               wice_soisno(j) = 0.
+               CALL polint(soil_z,soil_w,nl_soil_ini,z_soisno(j),wet(j))
+
+               wet(j) = min(max(wet(j),0.), porsl(j))
+
+               IF (zwt <= zi_soi_a(j-1))  THEN
+                  wet(j) = porsl(j)
+               ELSEIF (zwt < zi_soi_a(j)) THEN
+                  wet(j) = ((zi_soi_a(j)-zwt)*porsl(j) + (zwt-zi_soi_a(j-1))*wet(j)) &
+                     / (zi_soi_a(j)-zi_soi_a(j-1))
+               ENDIF
+
+               IF(t_soisno(j).ge.tfrz)THEN
+                  wliq_soisno(j) = wet(j)*dz_soisno(j)*denh2o
+                  wice_soisno(j) = 0.
+               ELSE
+                  wliq_soisno(j) = 0.
+                  wice_soisno(j) = wet(j)*dz_soisno(j)*denice
+               ENDIF
+            ENDDO
+
+            ! get wa from zwt
+            IF (zwt > zi_soi_a(nl_soil)) THEN
+               psi  = psi0(nl_soil) - (zwt*1000. - zi_soi_a(nl_soil)*1000.) * 0.5
+               vliq = soil_vliq_from_psi (psi, porsl(nl_soil), vliq_r(nl_soil), psi0(nl_soil), &
+                  nprms, prms(:,nl_soil))
+               wa   = -(zwt*1000. - zi_soi_a(nl_soil)*1000.)*(porsl(nl_soil)-vliq)
             ELSE
+               wa = 0.
+            ENDIF
+
+         ELSEIF ((patchtype == 2) .or. (patchtype == 4)) THEN ! (2) wetland or (4) lake
+
+            DO j = 1, nl_soil
+               IF(t_soisno(j).ge.tfrz)THEN
+                  wliq_soisno(j) = porsl(j)*dz_soisno(j)*denh2o
+                  wice_soisno(j) = 0.
+               ELSE
+                  wliq_soisno(j) = 0.
+                  wice_soisno(j) = porsl(j)*dz_soisno(j)*denice
+               ENDIF
+            ENDDO
+
+            wa = 0.
+
+         ELSEIF (patchtype == 3) THEN ! land ice
+            
+            DO j = 1, nl_soil
                wliq_soisno(j) = 0.
-               wice_soisno(j) = wet(j)*dz_soisno(j)*1000.
+               wice_soisno(j) = dz_soisno(j)*denice
+            ENDDO
+            
+            wa = 0.
+
+         ENDIF
+
+         IF (.not. DEF_USE_VariablySaturatedFlow) THEN
+            wa = wa + 5000.
+         ENDIF
+
+      ELSE
+
+         ! soil temperature, water content
+         DO j = 1, nl_soil
+            IF(patchtype==3)THEN !land ice
+               t_soisno(j) = 253.
+               wliq_soisno(j) = 0.
+               wice_soisno(j) = dz_soisno(j)*denice
+            ELSE
+               t_soisno(j) = 283.
+               wliq_soisno(j) = dz_soisno(j)*porsl(j)*denh2o
+               wice_soisno(j) = 0.
             ENDIF
          ENDDO
 
+      ENDIF
+
+      z0m = htop * z0mr
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
+      IF(patchtype==0)THEN
+         ps = patch_pft_s(ipatch)
+         pe = patch_pft_e(ipatch)
+         IF (ps>0 .and. pe>0) THEN
+            z0m_p(ps:pe) = htop_p(ps:pe) * z0mr
+         ENDIF
+      ENDIF
+#endif
+
+      IF (use_snowini) THEN
+         
          rhosno_ini = 250.
          snowdp = snow_d
          sag    = 0.
          scv    = snowdp*rhosno_ini
-         z0m    = htop * z0mr
-#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
-         IF(patchtype==0)THEN
-            ps = patch_pft_s(ipatch)
-            pe = patch_pft_e(ipatch)
-            IF (ps>0 .and. pe>0) THEN
-               z0m_p(ps:pe) = htop_p(ps:pe) * z0mr
-            ENDIF
-         ENDIF
-#endif
-
+         
          ! 08/02/2019, yuan: NOTE! need to be changed in future
          ! for LULC_IGBP_PFT or LULC_IGBP_PC
          ! have done but not for SOILINI right now
@@ -400,34 +469,11 @@ CONTAINS
 
       ELSE
 
-         ! soil temperature, water content
-         DO j = 1, nl_soil
-            IF(patchtype==3)THEN !land ice
-               t_soisno(j) = 253.
-               wliq_soisno(j) = 0.
-               wice_soisno(j) = dz_soisno(j)*1000.
-            ELSE
-               t_soisno(j) = 283.
-               wliq_soisno(j) = dz_soisno(j)*porsl(j)*1000.
-               wice_soisno(j) = 0.
-            ENDIF
-         ENDDO
-
          snowdp = 0.
          sag    = 0.
          scv    = 0.
          fsno   = 0.
          snl    = 0
-         z0m    = htop * z0mr
-#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
-         IF(patchtype==0)THEN
-            ps = patch_pft_s(ipatch)
-            pe = patch_pft_e(ipatch)
-            IF (ps>0 .and. pe>0) THEN
-               z0m_p(ps:pe) = htop_p(ps:pe) * z0mr
-            ENDIF
-         ENDIF
-#endif
 
          ! snow temperature and water content
          t_soisno   (maxsnl+1:0) = -999.
@@ -442,14 +488,16 @@ CONTAINS
       ! Variables: wa, zwt
       IF (.not. use_wtd) THEN
 
-         IF (DEF_USE_VARIABLY_SATURATED_FLOW) THEN
-            wa  = 0.
-            zwt = zi_soimm(nl_soil)/1000.
-         ELSE
-            ! water table depth (initially at 1.0 m below the model bottom; wa when zwt
-            !                    is below the model bottom zi(nl_soil)
-            wa  = 4800.                             !assuming aquifer capacity is 5000 mm
-            zwt = (25. + z_soisno(nl_soil))+dz_soisno(nl_soil)/2. - wa/1000./0.2 !to result in zwt = zi(nl_soil) + 1.0 m
+         IF (.not. use_soilini) THEN
+            IF (DEF_USE_VariablySaturatedFlow) THEN
+               wa  = 0.
+               zwt = zi_soimm(nl_soil)/1000.
+            ELSE
+               ! water table depth (initially at 1.0 m below the model bottom; wa when zwt
+               !                    is below the model bottom zi(nl_soil)
+               wa  = 4800.                             !assuming aquifer capacity is 5000 mm
+               zwt = (25. + z_soisno(nl_soil))+dz_soisno(nl_soil)/2. - wa/1000./0.2 !to result in zwt = zi(nl_soil) + 1.0 m
+            ENDIF
          ENDIF
       ELSE
          IF (patchtype <= 1) THEN
@@ -458,6 +506,10 @@ CONTAINS
          ELSE
             wa  = 0.
             zwt = 0.
+         ENDIF
+
+         IF (.not. DEF_USE_VariablySaturatedFlow) THEN
+            wa = wa + 5000.
          ENDIF
       ENDIF
 
