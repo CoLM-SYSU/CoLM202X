@@ -127,7 +127,7 @@ MODULE MOD_Namelist
    ! 06/2023, add by wenzong dong and hua yuan: use for updating LAI with simulation year
    LOGICAL :: DEF_LAI_CHANGE_YEARLY = .true.
    ! 05/2023, add by Xingjie Lu: use for updating LAI with leaf carbon
-   LOGICAL :: DEF_USE_LAIFEEDBACK = .true.
+   LOGICAL :: DEF_USE_LAIFEEDBACK = .false.
 
    ! use irrigation
    LOGICAL :: DEF_USE_IRRIGATION = .false.
@@ -217,6 +217,9 @@ MODULE MOD_Namelist
    ! ----- Initialization -----
    LOGICAL            :: DEF_USE_SOIL_INIT  = .false.
    CHARACTER(len=256) :: DEF_file_soil_init = 'null'
+
+   LOGICAL            :: DEF_USE_CN_INIT  = .false.
+   CHARACTER(len=256) :: DEF_file_cn_init = 'null'
 
    CHARACTER(len=256) :: DEF_file_snowoptics = 'null'
    CHARACTER(len=256) :: DEF_file_snowaging  = 'null'
@@ -794,6 +797,9 @@ CONTAINS
          DEF_USE_SOIL_INIT,               &
          DEF_file_soil_init,              &
 
+         DEF_USE_CN_INIT,               &
+         DEF_file_cn_init,              &
+
          DEF_file_snowoptics,             &
          DEF_file_snowaging ,             &
 
@@ -1212,6 +1218,9 @@ CONTAINS
 
       call mpi_bcast (DEF_USE_SOIL_INIT,    1, mpi_logical,   p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_file_soil_init, 256, mpi_character, p_root, p_comm_glb, p_err)
+
+      call mpi_bcast (DEF_USE_CN_INIT,    1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_file_cn_init, 256, mpi_character, p_root, p_comm_glb, p_err)
 
       call mpi_bcast (DEF_USE_SNICAR,        1, mpi_logical,   p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_file_snowoptics, 256, mpi_character, p_root, p_comm_glb, p_err)

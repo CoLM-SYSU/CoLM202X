@@ -4,6 +4,9 @@ MODULE MOD_IniTimeVariable
 
 !-----------------------------------------------------------------------
    USE MOD_Precision
+#ifdef BGC
+   use MOD_BGC_CNSummary, only: CNDriverSummarizeStates, CNDriverSummarizeFluxes
+#endif
    IMPLICIT NONE
    SAVE
 
@@ -33,7 +36,7 @@ CONTAINS
                      ,trad,tref,qref,rst,emis,zol,rib&
                      ,ustar,qstar,tstar,fm,fh,fq&
 #if(defined BGC)
-                     ,totlitc, totsomc, totcwdc, decomp_cpools, decomp_cpools_vr, ctrunc_veg, ctrunc_soil, ctrunc_vr &
+                     ,use_cnini, totlitc, totsomc, totcwdc, decomp_cpools, decomp_cpools_vr, ctrunc_veg, ctrunc_soil, ctrunc_vr &
                      ,totlitn, totsomn, totcwdn, decomp_npools, decomp_npools_vr, ntrunc_veg, ntrunc_soil, ntrunc_vr &
                      ,totvegc, totvegn, totcolc, totcoln, col_endcb, col_begcb, col_endnb, col_begnb &
                      ,col_vegendcb, col_vegbegcb, col_soilendcb, col_soilbegcb &
@@ -73,7 +76,7 @@ CONTAINS
    USE MOD_Utils
    USE MOD_Const_Physical, only: tfrz
    USE MOD_Vars_TimeVariables, only: tlai, tsai, wdsrf
-   USE MOD_Const_PFT, only: isevg, woody, leafcn, deadwdcn, slatop
+   USE MOD_Const_PFT, only: isevg, woody, leafcn, frootcn, livewdcn, deadwdcn, slatop
    USE MOD_Vars_TimeInvariants, only : ibedrock, dbedrock
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
    USE MOD_LandPFT, only : patch_pft_s, patch_pft_e
@@ -115,6 +118,9 @@ CONTAINS
          z0m                      ! aerodynamic roughness length [m]
 
    LOGICAL, intent(in)  :: use_soilini
+#ifdef BGC
+   LOGICAL, intent(in)  :: use_cnini
+#endif
    INTEGER, intent(in)  :: nl_soil_ini
    REAL(r8), intent(in) ::       &!
          soil_z(nl_soil_ini),    &! soil layer depth for initial (m)
@@ -564,7 +570,9 @@ CONTAINS
       col_vegbegnb                    = 0.0
       col_soilendnb                   = 0.0
       col_soilbegnb                   = 0.0
-      decomp_cpools_vr          (:,:) = 0.0
+      if(.not. use_cnini)then
+         decomp_cpools_vr          (:,:) = 0.0
+      end if
       decomp_cpools             (:)   = 0.0
       ctrunc_vr                 (:)   = 0.0
       ctrunc_veg                      = 0.0
@@ -573,14 +581,18 @@ CONTAINS
       altmax_lastyear                 = 10.0
       altmax_lastyear_indx            = 10
       lag_npp                         = 0.0
-      decomp_npools_vr          (:,:) = 0.0
+      if(.not. use_cnini)then
+         decomp_npools_vr          (:,:) = 0.0
+      end if
       decomp_npools             (:)   = 0.0
       ntrunc_vr                 (:)   = 0.0
       ntrunc_veg                      = 0.0
       ntrunc_soil                     = 0.0
-      smin_no3_vr               (:)   = 5.0
-      smin_nh4_vr               (:)   = 5.0
-      sminn_vr                  (:)   = 10.0
+      if(.not. use_cnini)then
+         smin_no3_vr               (:)   = 5.0
+         smin_nh4_vr               (:)   = 5.0
+         sminn_vr                  (:)   = 10.0
+      end if
       sminn                           = 0.0
       do j = 1, nl_soil
          sminn                        = sminn + sminn_vr(j) * dz_soisno(j)
@@ -596,6 +608,7 @@ CONTAINS
       tsoi17                          = 273.15_r8
       rh30                            = 0._r8
       accumnstep                      = 0._r8
+
     !---------------SASU variables-----------------------
       decomp0_cpools_vr         (:,:) = 0.0
       I_met_c_vr_acc              (:) = 0.0
@@ -662,49 +675,74 @@ CONTAINS
                leafc_storage_p          (m) = 0.0
                leafn_p                  (m) = 0.0
                leafn_storage_p          (m) = 0.0
+               frootc_p                 (m) = 0.0
+               frootc_storage_p         (m) = 0.0
+               frootn_p                 (m) = 0.0
+               frootn_storage_p         (m) = 0.0
             else
                if(isevg(ivt))then
-                  leafc_p               (m) = 100.0
+                  if(.not. use_cnini)then
+                     leafc_p            (m) = 100.0
+                     frootc_p           (m) = 0.0
+                  end if
                   leafc_storage_p       (m) = 0.0
+                  frootc_storage_p      (m) = 0.0
                else if(ivt >= npcropmin) then
                   leafc_p               (m) = 0.0
                   leafc_storage_p       (m) = 0.0
+                  frootc_p              (m) = 0.0
+                  frootc_storage_p      (m) = 0.0
                else
-                  leafc_p               (m) = 0.0
-                  leafc_storage_p       (m) = 100.0
+                  if(.not. use_cnini)then
+                     leafc_p            (m) = 0.0
+                     leafc_storage_p    (m) = 100.0
+                     frootc_p           (m) = 0.0
+                     frootc_storage_p   (m) = 0.0
+                  end if
                end if
-               leafn_p                  (m) = leafc_p        (m) / leafcn  (ivt)
-               leafn_storage_p          (m) = leafc_storage_p(m) / leafcn  (ivt)
+               leafn_p                     (m) = leafc_p        (m) / leafcn  (ivt)
+               leafn_storage_p             (m) = leafc_storage_p(m) / leafcn  (ivt)
+               frootn_p                    (m) = frootc_p        (m) / frootcn  (ivt)
+               frootn_storage_p            (m) = frootc_storage_p(m) / frootcn  (ivt)
             end if
             if(woody(ivt) .eq. 1)then
-               deadstemc_p              (m) = 0.1
-               deadstemn_p              (m) = deadstemc_p    (m) / deadwdcn(ivt)
+               if(.not. use_cnini)then
+                  deadstemc_p              (m) = 0.1
+                  livestemc_p              (m) = 0.0
+                  deadcrootc_p             (m) = 0.0
+                  livecrootc_p             (m) = 0.0
+               end if
+               livestemn_p                 (m) = livestemc_p    (m) / livewdcn(ivt)
+               deadstemn_p                 (m) = deadstemc_p    (m) / deadwdcn(ivt)
+               livecrootn_p                (m) = livecrootc_p   (m) / livewdcn(ivt)
+               deadcrootn_p                (m) = deadcrootc_p   (m) / deadwdcn(ivt)
             else
-               deadstemc_p              (m) = 0.0
-               deadstemn_p              (m) = 0.0
+               livestemc_p                 (m) = 0.0
+               deadstemc_p                 (m) = 0.0
+               livestemn_p                 (m) = 0.0
+               deadstemn_p                 (m) = 0.0
+               livecrootc_p                (m) = 0.0
+               deadcrootc_p                (m) = 0.0
+               livecrootn_p                (m) = 0.0
+               deadcrootn_p                (m) = 0.0
             end if
-            totcolc = totcolc + (leafc_p(m) + leafc_storage_p(m) + deadstemc_p(m))* pftfrac(m)
-            totvegc = totvegc + (leafc_p(m) + leafc_storage_p(m) + deadstemc_p(m))* pftfrac(m)
-            totcoln = totcoln + (leafn_p(m) + leafn_storage_p(m) + deadstemn_p(m))* pftfrac(m)
-            totvegn = totvegn + (leafn_p(m) + leafn_storage_p(m) + deadstemn_p(m))* pftfrac(m)
+!            totcolc = totcolc + (leafc_p(m) + leafc_storage_p(m) + deadstemc_p(m))* pftfrac(m)
+!            totvegc = totvegc + (leafc_p(m) + leafc_storage_p(m) + deadstemc_p(m))* pftfrac(m)
+!            totcoln = totcoln + (leafn_p(m) + leafn_storage_p(m) + deadstemn_p(m))* pftfrac(m)
+!            totvegn = totvegn + (leafn_p(m) + leafn_storage_p(m) + deadstemn_p(m))* pftfrac(m)
          end do
          IF(DEF_USE_OZONESTRESS)THEN
             o3uptakesun_p            (ps:pe) = 0._r8
             o3uptakesha_p            (ps:pe) = 0._r8
          ENDIF
          leafc_xfer_p             (ps:pe) = 0.0
-         frootc_p                 (ps:pe) = 0.0
-         frootc_storage_p         (ps:pe) = 0.0
          frootc_xfer_p            (ps:pe) = 0.0
-         livestemc_p              (ps:pe) = 0.0
          livestemc_storage_p      (ps:pe) = 0.0
          livestemc_xfer_p         (ps:pe) = 0.0
          deadstemc_storage_p      (ps:pe) = 0.0
          deadstemc_xfer_p         (ps:pe) = 0.0
-         livecrootc_p             (ps:pe) = 0.0
          livecrootc_storage_p     (ps:pe) = 0.0
          livecrootc_xfer_p        (ps:pe) = 0.0
-         deadcrootc_p             (ps:pe) = 0.0
          deadcrootc_storage_p     (ps:pe) = 0.0
          deadcrootc_xfer_p        (ps:pe) = 0.0
          grainc_p                 (ps:pe) = 0.0
@@ -719,18 +757,14 @@ CONTAINS
          cropprod1c_p             (ps:pe) = 0.0
 
          leafn_xfer_p             (ps:pe) = 0.0
-         frootn_p                 (ps:pe) = 0.0
          frootn_storage_p         (ps:pe) = 0.0
          frootn_xfer_p            (ps:pe) = 0.0
-         livestemn_p              (ps:pe) = 0.0
          livestemn_storage_p      (ps:pe) = 0.0
          livestemn_xfer_p         (ps:pe) = 0.0
          deadstemn_storage_p      (ps:pe) = 0.0
          deadstemn_xfer_p         (ps:pe) = 0.0
-         livecrootn_p             (ps:pe) = 0.0
          livecrootn_storage_p     (ps:pe) = 0.0
          livecrootn_xfer_p        (ps:pe) = 0.0
-         deadcrootn_p             (ps:pe) = 0.0
          deadcrootn_storage_p     (ps:pe) = 0.0
          deadcrootn_xfer_p        (ps:pe) = 0.0
          grainn_p                 (ps:pe) = 0.0
@@ -817,6 +851,10 @@ CONTAINS
             lai_p                 (ps:pe) = tlai_p(ps:pe)
             lai                           = sum(lai_p(ps:pe) * pftfrac(ps:pe))
          end if
+
+#ifdef BGC
+         call CNDriverSummarizeStates(ipatch,ps,pe,nl_soil,dz_soi,ndecomp_pools,.true.)
+#endif
 
    ! SASU varaibles
          leafc0_p                 (ps:pe) = 0.0
