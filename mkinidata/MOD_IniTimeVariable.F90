@@ -120,7 +120,7 @@ CONTAINS
          soil_z(nl_soil_ini),    &! soil layer depth for initial (m)
          soil_t(nl_soil_ini),    &! soil temperature from initial file (K)
          soil_w(nl_soil_ini)      ! soil wetness from initial file (-)
-   
+
    LOGICAL,  intent(in) :: use_snowini
    REAL(r8), intent(in) :: snow_d ! snow depth (m)
 
@@ -329,14 +329,14 @@ CONTAINS
 
    !-----------------------------------------------------------------------
    IF(patchtype <= 5)THEN ! land grid
-      
+
       ! (1) SOIL temperature, water and SNOW
       ! Variables: t_soisno, wliq_soisno, wice_soisno
       !            snowdp, sag, scv, fsno, snl, z_soisno, dz_soisno
       IF (use_soilini) THEN
 
          zi_soi_a(:) = (/0., zi_soi/)
-               
+
          DO j = 1, nl_soil
             CALL polint(soil_z,soil_t,nl_soil_ini,z_soisno(j),t_soisno(j))
          ENDDO
@@ -390,12 +390,12 @@ CONTAINS
             wa = 0.
 
          ELSEIF (patchtype == 3) THEN ! land ice
-            
+
             DO j = 1, nl_soil
                wliq_soisno(j) = 0.
                wice_soisno(j) = dz_soisno(j)*denice
             ENDDO
-            
+
             wa = 0.
 
          ENDIF
@@ -433,12 +433,12 @@ CONTAINS
 #endif
 
       IF (use_snowini) THEN
-         
+
          rhosno_ini = 250.
          snowdp = snow_d
          sag    = 0.
          scv    = snowdp*rhosno_ini
-         
+
          ! 08/02/2019, yuan: NOTE! need to be changed in future
          ! for LULC_IGBP_PFT or LULC_IGBP_PC
          ! have done but not for SOILINI right now
