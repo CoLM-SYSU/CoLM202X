@@ -330,7 +330,7 @@ contains
 
          ! set model time stamp
          id(:) = idate(:)
-         call adj2end(id)
+         !call adj2end(id)
          mtstamp = id
 
          has_u = .true.
