@@ -148,7 +148,7 @@
        call CNSASU(i,ps,pe,deltim,idate(1:3),nl_soil,ndecomp_transitions,ndecomp_pools,ndecomp_pools_vr)! only for spin up
     end if
 
-    call CNDriverSummarizeStates(i,ps,pe,nl_soil,dz_soi,ndecomp_pools)
+    call CNDriverSummarizeStates(i,ps,pe,nl_soil,dz_soi,ndecomp_pools, .false.)
     call CNDriverSummarizeFluxes(i,ps,pe,nl_soil,dz_soi,ndecomp_transitions,ndecomp_pools,deltim)
 
     if( .not. skip_balance_check(i) )then
