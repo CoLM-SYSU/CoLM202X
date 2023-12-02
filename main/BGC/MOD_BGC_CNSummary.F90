@@ -118,7 +118,7 @@ module MOD_BGC_CNSummary
 
 contains
 
-  subroutine CNDriverSummarizeStates(i,ps,pe,nl_soil,dz_soi,ndecomp_pools)
+  subroutine CNDriverSummarizeStates(i,ps,pe,nl_soil,dz_soi,ndecomp_pools,init)
 
     ! !DESCRIPTION:
     ! summarizes CN state varaibles for veg and soil.
@@ -135,11 +135,12 @@ contains
     integer, intent(in) :: nl_soil           ! number of total soil
     real(r8),intent(in) :: dz_soi(1:nl_soil) ! thicknesses of each soil layer (m)
     integer, intent(in) :: ndecomp_pools     ! number of total soil & litter pools
+    logical, intent(in) :: init
 
     call soilbiogeochem_carbonstate_summary(i,nl_soil,dz_soi,ndecomp_pools)
     call soilbiogeochem_nitrogenstate_summary(i,nl_soil,dz_soi,ndecomp_pools)
 
-    call cnveg_carbonstate_summary(i,ps,pe)
+    call cnveg_carbonstate_summary(i,ps,pe,init)
     call cnveg_nitrogenstate_summary(i,ps,pe)
 
   end subroutine CNDriverSummarizeStates
@@ -275,7 +276,7 @@ contains
 
   end subroutine soilbiogeochem_nitrogenstate_summary
 
-  subroutine cnveg_carbonstate_summary(i,ps,pe)
+  subroutine cnveg_carbonstate_summary(i,ps,pe,init)
 
     ! !DESCRIPTION
     ! summarizes vegetation C state varaibles.
@@ -289,6 +290,7 @@ contains
     integer, intent(in) :: i  ! patch index
     integer, intent(in) :: ps ! start pft index
     integer, intent(in) :: pe ! end pft index
+    logical, intent(in) :: init
 
     integer m
 
@@ -373,51 +375,53 @@ contains
 #endif
     end do
 
-    leafc_enftemp              (i) = 0._r8
-    leafc_enfboreal            (i) = 0._r8
-    leafc_dnfboreal            (i) = 0._r8
-    leafc_ebftrop              (i) = 0._r8
-    leafc_ebftemp              (i) = 0._r8
-    leafc_dbftrop              (i) = 0._r8
-    leafc_dbftemp              (i) = 0._r8
-    leafc_dbfboreal            (i) = 0._r8
-    leafc_ebstemp              (i) = 0._r8
-    leafc_dbstemp              (i) = 0._r8
-    leafc_dbsboreal            (i) = 0._r8
-    leafc_c3arcgrass           (i) = 0._r8
-    leafc_c3grass              (i) = 0._r8
-    leafc_c4grass              (i) = 0._r8
-    do m = ps, pe
-       if(pftclass      (m) .eq. 1)then
-          leafc_enftemp   (i) = leafc_p(m)
-       else if(pftclass (m) .eq. 2)then
-          leafc_enfboreal (i) = leafc_p(m)
-       else if(pftclass (m) .eq. 3)then
-          leafc_dnfboreal (i) = leafc_p(m)
-       else if(pftclass (m) .eq. 4)then
-          leafc_ebftrop   (i) = leafc_p(m)
-       else if(pftclass (m) .eq. 5)then
-          leafc_ebftemp   (i) = leafc_p(m)
-       else if(pftclass (m) .eq. 6)then
-          leafc_dbftrop   (i) = leafc_p(m)
-       else if(pftclass (m) .eq. 7)then
-          leafc_dbftemp   (i) = leafc_p(m)
-       else if(pftclass (m) .eq. 8)then
-          leafc_dbfboreal (i) = leafc_p(m)
-       else if(pftclass (m) .eq. 9)then
-          leafc_ebstemp   (i) = leafc_p(m)
-       else if(pftclass (m) .eq. 10)then
-          leafc_dbstemp   (i) = leafc_p(m)
-       else if(pftclass (m) .eq. 11)then
-          leafc_dbsboreal (i) = leafc_p(m)
-       else if(pftclass (m) .eq. 12)then
-          leafc_c3arcgrass(i)= leafc_p(m)
-       else if(pftclass (m) .eq. 13)then
-          leafc_c3grass   (i) = leafc_p(m)
-       else if(pftclass (m) .eq. 14)then
-          leafc_c4grass   (i) = leafc_p(m)
-       end if
-    end do
+    if(.not. init)then
+       leafc_enftemp              (i) = 0._r8
+       leafc_enfboreal            (i) = 0._r8
+       leafc_dnfboreal            (i) = 0._r8
+       leafc_ebftrop              (i) = 0._r8
+       leafc_ebftemp              (i) = 0._r8
+       leafc_dbftrop              (i) = 0._r8
+       leafc_dbftemp              (i) = 0._r8
+       leafc_dbfboreal            (i) = 0._r8
+       leafc_ebstemp              (i) = 0._r8
+       leafc_dbstemp              (i) = 0._r8
+       leafc_dbsboreal            (i) = 0._r8
+       leafc_c3arcgrass           (i) = 0._r8
+       leafc_c3grass              (i) = 0._r8
+       leafc_c4grass              (i) = 0._r8
+       do m = ps, pe
+          if(pftclass      (m) .eq. 1)then
+             leafc_enftemp   (i) = leafc_p(m)
+          else if(pftclass (m) .eq. 2)then
+             leafc_enfboreal (i) = leafc_p(m)
+          else if(pftclass (m) .eq. 3)then
+             leafc_dnfboreal (i) = leafc_p(m)
+          else if(pftclass (m) .eq. 4)then
+             leafc_ebftrop   (i) = leafc_p(m)
+          else if(pftclass (m) .eq. 5)then
+             leafc_ebftemp   (i) = leafc_p(m)
+          else if(pftclass (m) .eq. 6)then
+             leafc_dbftrop   (i) = leafc_p(m)
+          else if(pftclass (m) .eq. 7)then
+             leafc_dbftemp   (i) = leafc_p(m)
+          else if(pftclass (m) .eq. 8)then
+             leafc_dbfboreal (i) = leafc_p(m)
+          else if(pftclass (m) .eq. 9)then
+             leafc_ebstemp   (i) = leafc_p(m)
+          else if(pftclass (m) .eq. 10)then
+             leafc_dbstemp   (i) = leafc_p(m)
+          else if(pftclass (m) .eq. 11)then
+             leafc_dbsboreal (i) = leafc_p(m)
+          else if(pftclass (m) .eq. 12)then
+             leafc_c3arcgrass(i)= leafc_p(m)
+          else if(pftclass (m) .eq. 13)then
+             leafc_c3grass   (i) = leafc_p(m)
+          else if(pftclass (m) .eq. 14)then
+             leafc_c4grass   (i) = leafc_p(m)
+          end if
+       end do
+    end if
     totvegc(i) = sum(totvegc_p(ps:pe)*pftfrac(ps:pe))
     ctrunc_veg(i) = sum(ctrunc_p(ps:pe) *pftfrac(ps:pe))
     totcolc(i) = totvegc(i) + totcwdc(i) + totlitc(i) + totsomc(i) + ctrunc_veg(i) +ctrunc_soil(i)
