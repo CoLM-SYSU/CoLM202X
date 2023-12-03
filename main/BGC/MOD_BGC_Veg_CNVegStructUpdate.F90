@@ -15,7 +15,7 @@ module MOD_BGC_Veg_CNVegStructUpdate
   !
 
   use MOD_Precision
-  use MOD_Namelist, only: DEF_USE_LAIFEEDBACK
+  use MOD_Namelist, only: DEF_USE_LAIFEEDBACK, DEF_USE_Fire
   use MOD_Vars_Global, only: nc3crop, nc3irrig, nbrdlf_evr_shrub, nbrdlf_dcd_brl_shrub, &
                                 npcropmin, ntmp_corn, nirrig_tmp_corn, ntrp_corn, nirrig_trp_corn, &
                                 nsugarcane, nirrig_sugarcane, nmiscanthus, nirrig_miscanthus, &
@@ -127,9 +127,11 @@ contains
              end if
 
              ! "stubble" after harvest
-             if (harvdate_p(m) < 999 .and. tlai_p(m) == 0._r8) then
-                tsai_p(m) = 0.25_r8*(1._r8-farea_burned(i)*0.90_r8)    !changed by F. Li and S. Levis
-                peaklai_p(m) = 0
+             if(DEF_USE_Fire)then
+                if (harvdate_p(m) < 999 .and. tlai_p(m) == 0._r8) then
+                   tsai_p(m) = 0.25_r8*(1._r8-farea_burned(i)*0.90_r8)    !changed by F. Li and S. Levis
+                   peaklai_p(m) = 0
+                end if
              end if
 #endif
           end if

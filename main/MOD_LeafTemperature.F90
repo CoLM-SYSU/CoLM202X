@@ -663,8 +663,8 @@ CONTAINS
              ENDIF
 
           ELSE
-             rssun = 2.e4; assimsun = 0.; respcsun = 0.
-             rssha = 2.e4; assimsha = 0.; respcsha = 0.
+             rssun = 2.e20; assimsun = 0.; respcsun = 0.
+             rssha = 2.e20; assimsha = 0.; respcsha = 0.
              gssun = 0._r8
              gssha = 0._r8
 

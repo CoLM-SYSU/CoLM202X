@@ -3,7 +3,7 @@
 include include/Makeoptions
 HEADER = include/define.h
 
-INCLUDE_DIR = -Iinclude -I.bld -I${NETCDF_INC}
+INCLUDE_DIR = -Iinclude -I.bld/ -I${NETCDF_INC}
 VPATH = include : share : mksrfdata : mkinidata \
 	: main : main/HYDRO : main/BGC : main/URBAN : main/LULCC : main/DA \
 	: CaMa/src : postprocess : .bld
@@ -141,6 +141,7 @@ OBJS_BASIC =    \
 				 MOD_SoilParametersReadin.o     \
 				 MOD_HtopReadin.o               \
 				 MOD_UrbanReadin.o              \
+                     		 MOD_BGC_CNSummary.o            \
 				 MOD_IniTimeVariable.o          \
 				 MOD_UrbanIniTimeVariable.o     \
 				 MOD_Hydro_HillslopeNetwork.o   \
@@ -242,7 +243,6 @@ OBJS_MAIN = \
 				MOD_BGC_Veg_CNPhenology.o                 \
 				MOD_BGC_Veg_NutrientCompetition.o         \
 				MOD_BGC_Veg_CNVegStructUpdate.o           \
-				MOD_BGC_CNSummary.o                       \
 				MOD_BGC_CNAnnualUpdate.o                  \
 				MOD_BGC_CNZeroFluxes.o                    \
 				MOD_BGC_CNBalanceCheck.o                  \
