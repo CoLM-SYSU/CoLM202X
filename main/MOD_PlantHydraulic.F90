@@ -46,7 +46,7 @@ MODULE MOD_PlantHydraulic
 
   use MOD_Precision
   IMPLICIT NONE
- 
+
   integer ,intent(in) :: nl_soil ! upper bound of array
   integer ,intent(in) :: nvegwcs ! upper bound of array
   real(r8),intent(in), dimension(nl_soil) :: &
@@ -57,25 +57,26 @@ MODULE MOD_PlantHydraulic
   real(r8),intent(inout):: &
        gs0sun,    & ! maximum stomata conductance of sunlit leaf
        gs0sha       ! maximum stomata conductance of shaded leaf
- 
+
   real(r8),intent(in) :: &
        rss,          &! soil surface resistance [s/m]
        psrf,      & ! surface atmospheric pressure (pa)
        qg,           &! specific humidity at ground surface [kg/kg]
        qm             ! specific humidity at reference height [kg/kg]
- 
-  real(r8),intent(inout) :: &
+
+  real(r8),intent(in) :: &
        qsatl,        &! leaf specific humidity [kg/kg]
        qaf,          &! humidity of canopy air [kg/kg]
        tl,           &! leaf temperature (K)
- 
+
        rb,           &! boundary resistance from canopy to cas (s m-1)
        rd,           &! aerodynamical resistance between ground and canopy air
        ra             ! aerodynamic resistance from cas to refence height (s m-1)
+
   real(r8),intent(inout) :: &
        rstfacsun,    &! canopy resistance stress factors to soil moisture for sunlit leaf
        rstfacsha      ! canopy resistance stress factors to soil moisture for shaded leaf
- 
+
   real(r8),intent(in) :: &
        laisun,       &! sunlit leaf area index, one-sided
        laisha,       &! shaded leaf area index, one-sided
@@ -92,46 +93,46 @@ MODULE MOD_PlantHydraulic
        ck,           &! shape-fitting parameter for vulnerability curve (-)
        rhoair,       &! density [kg/m**3]
        fwet           ! fraction of foliage that is wet [-]
- 
+
   real(r8),intent(in), dimension(3) :: &
        cintsun,      &! scaling up from sunlit leaf to canopy
        cintsha        ! scaling up from shaded leaf to canopy
- 
+
   real(r8),intent(in), dimension(nl_soil) :: &
        smp,      &    ! precipitation sensible heat from canopy
        rootfr,   &    ! root fraction
        hksati,   &    ! hydraulic conductivity at saturation [mm h2o/s]
        hk             ! soil hydraulic conducatance [mm h2o/s]
- 
- 
+
+
   real(r8),intent(out) :: &! ATTENTION : all for canopy not leaf
        etrsun,       &! transpiration from sunlit leaf (mm/s)
        etrsha         ! transpiration from shaded leaf (mm/s)
- 
+
   real(r8),intent(out),dimension(nl_soil) :: &
        rootflux       ! root water uptake from different layers
- 
+
   real(r8),intent(inout),dimension(nl_soil) :: k_soil_root    ! radial root and soil conductance
   real(r8),intent(inout),dimension(nl_soil) :: k_ax_root      ! axial root conductance
-  real(r8),intent(inout) :: gssun                               ! sunlit leaf conductance        
-  real(r8),intent(inout) :: gssha                               ! shaded leaf conductance         
+  real(r8),intent(inout) :: gssun                             ! sunlit leaf conductance
+  real(r8),intent(inout) :: gssha                             ! shaded leaf conductance
 
- 
- 
+
+
 !-------------------- local --------------------------------------------
- 
+
   integer, parameter :: iterationtotal = 6
- 
+
   real(r8) c3,       &! c3 vegetation : 1; 0 for c4
- 
+
        tprcor,       &! coefficient for unit transfer
        gb_mol         ! one side leaf boundary layer conductance of sunlit leaf (leaf scale:umol H2O m-2 s-1)
- 
+
   real(r8), dimension(nl_soil) :: &
        fs     !root conductance scale factor (reduction in conductance due to decreasing (more negative) root water potential)
   real(r8), dimension(nl_soil) :: &
        rai    ! soil-root interface conductance [mm/s]
- 
+
   real(r8)                :: soilflux     ! soil-root interface conductance [mm/s]
   real(r8)                :: soil_conductance ! soil conductance
   real(r8)                :: root_conductance ! root conductance
@@ -142,60 +143,60 @@ MODULE MOD_PlantHydraulic
   real(r8)                :: croot_average_length    ! average coarse root length [m]
   real(r8)                :: rs_resis                ! combined soil-root resistance [s]
   real(r8)                :: cf                      ! s m**2/umol -> s/m
- 
+
   real(r8), parameter :: croot_lateral_length = 0.25_r8   ! specified lateral coarse root length [m]
   real(r8), parameter :: c_to_b               = 2.0_r8 !(g biomass /g C)
   real(r8), parameter :: rpi                  = 3.14159265358979_r8
   integer , parameter :: root                 = 4
   real(r8), parameter :: toldb                = 1.e-2_r8  ! tolerance for satisfactory bsun/bsha solution
   real(r8), parameter :: K_axs                = 2.0e-1
- 
+
  ! temporary input
   real(r8), parameter :: froot_carbon = 288.392056287006_r8
   real(r8), parameter :: root_radius  = 2.9e-4_r8
   real(r8), parameter :: root_density = 310000._r8
   real(r8), parameter :: froot_leaf   = 1.5_r8
   real(r8), parameter :: krmax        = 3.981071705534969e-009_r8
- 
+
   real(r8),dimension(nvegwcs) :: x      ! vegetation water potential
- 
+
   integer j
- 
+
 !----------------calculate root-soil interface conductance-----------------
       do j = 1,nl_soil
-   
+
          ! calculate conversion from conductivity to conductance
          root_biomass_density = c_to_b * froot_carbon * rootfr(j) / dz_soi(j)
          ! ensure minimum root biomass (using 1gC/m2)
          root_biomass_density = max(c_to_b*1._r8,root_biomass_density)
-      
+
          ! Root length density: m root per m3 soil
          root_cross_sec_area = rpi*root_radius**2
          root_length_density = root_biomass_density / (root_density * root_cross_sec_area)
-      
+
          ! Root-area index (RAI)
          rai(j) = (sai+laisun+laisha) * froot_leaf * rootfr(j)
-      
+
          ! fix coarse root_average_length to specified length
          croot_average_length = croot_lateral_length
-      
+
          ! calculate r_soil using Gardner/spa equation (Bonan, GMD, 2014)
          r_soil = sqrt(1./(rpi*root_length_density))
-      
+
          ! length scale approach
          soil_conductance = min(hksati(j),hk(j))/(1.e3*r_soil)
-      
+
          ! use vegetation plc function to adjust root conductance
          fs(j)=  plc(amax1(smp(j),-1._r8),psi50_root,ck)
-      
+
          ! krmax is root conductance per area per length
          root_conductance = (fs(j)*rai(j)*krmax)/(croot_average_length + z_soi(j))
          soil_conductance = max(soil_conductance, 1.e-16_r8)
          root_conductance = max(root_conductance, 1.e-16_r8)
-      
+
          ! sum resistances in soil and root
          rs_resis = 1._r8/soil_conductance + 1._r8/root_conductance
-      
+
          ! conductance is inverse resistance
          ! explicitly set conductance to zero for top soil layer
          if(rai(j)*rootfr(j) > 0._r8) then
@@ -206,23 +207,23 @@ MODULE MOD_PlantHydraulic
          k_ax_root(j) = (rootfr(j)/(dz_soi(j)*1000))*K_axs*0.6
       end do
 !=======================================================================
-   
+
       tprcor = 44.6*273.16*psrf/1.013e5
       cf     = tprcor/tl * 1.e6_r8  ! gb->gbmol conversion factor
-   
+
       ! one side leaf boundary layer conductance for water vapor [=1/(2*rb)]
       ! ATTENTION: rb in CLM is for one side leaf, but for SiB2 rb for
       ! 2-side leaf, so the gbh2o shold be " 0.5/rb * tprcor/tl "
       gb_mol = 1./rb * cf  ! resistence to conductance (s/m -> umol/m**2/s)
-   
+
       x = vegwp(1:nvegwcs)
-   
+
       call calcstress_twoleaf(x, nvegwcs, rstfacsun, rstfacsha, etrsun, etrsha, rootflux,&
               gb_mol, gs0sun, gs0sha, qsatl, qaf, qg, qm, rhoair, &
               psrf, fwet, laisun, laisha, sai, htop, tl, kmax_sun, &
               kmax_sha, kmax_xyl, kmax_root, psi50_sun, psi50_sha, psi50_xyl, psi50_root, ck, &
               nl_soil, z_soi, rss, ra, rd, smp, k_soil_root, k_ax_root, gssun, gssha)
-   
+
       vegwp(1:nvegwcs) = x
 
   end subroutine PlantHydraulicStress_twoleaf
@@ -770,10 +771,10 @@ MODULE MOD_PlantHydraulic
     if(qflx_sun .gt. 0 .or. qflx_sha .gt. 0)then
        tprcor   = 44.6*273.16*psrf/1.013e5
        cf       = tprcor/tl * 1.e6_r8  ! gb->gbmol conversion factor
-   
+
        delta = 0.0
        if(qsatl-qaf .gt. 0.) delta = 1.0
-   
+
        caw = 1. / raw
        IF (qg < qaf)THEN
           cgw = 1. / rd
@@ -787,21 +788,21 @@ MODULE MOD_PlantHydraulic
        cwet     = (1.-delta*(1.-fwet)) * (laisun + laisha + sai) * gb_mol / cf
        cqi_wet  = caw + cgw + cwet
        cqi_leaf = caw * (qsatl - qm) + cgw * (qsatl - qg)
-   
+
    ! Solve equations:
    ! A1 * csunw_dry + B1 * cfshaw_dry = C1
    ! A2 * csunw_dry + B2 * cfshaw_dry = C2
-   
+
        A1 = cqi_leaf - qflx_sun / rhoair
        B1 = - qflx_sun / rhoair
        C1 = qflx_sun * cqi_wet / rhoair
        A2 = - qflx_sha / rhoair
        B2 = cqi_leaf - qflx_sha / rhoair
        C2 = qflx_sha * cqi_wet / rhoair
-   
+
        csunw_dry = (B1*C2 - B2*C1)/(B1*A2 - B2*A1)
        cshaw_dry = (A1*C2 - A2*C1)/(A1*B2 - B1*A2)
-       
+
        if (qflx_sun > 0._r8) then
           gs_mol_sun = 1._r8 / ((1. - fwet) * delta * laisun / csunw_dry / cf - 1._r8 / gb_mol)
        endif

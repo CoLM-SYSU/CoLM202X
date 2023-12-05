@@ -101,21 +101,18 @@ CONTAINS
 
       ! Local Variables
       INTEGER  :: iblk, jblk
-      INTEGER, parameter :: iset(24) = &
-         (/1,  2,  3,  4,  5,  6,  8,  9, 10,  12,  15,  18, &
-          20, 24, 30, 36, 40, 45, 60, 72, 90, 120, 180, 360/)
 
-      IF ((findloc(iset,nyblk_in,dim=1) <= 0) .or. &
-         (findloc(iset,nxblk_in,dim=1) <= 0) ) THEN
+      IF ((mod(360,nxblk_in) /= 0) .or. (mod(180,nyblk_in) /= 0)) THEN
 
          IF (p_is_master) THEN
-            write(*,*) 'Number of blocks should be in the set (', iset, ')'
+            write(*,*) 'Number of blocks in longitude should be a factor of 360 ' 
+            write(*,*) ' and Number of blocks in latitude should be a factor of 180.' 
          ENDIF
 
 #ifdef USEMPI
          CALL mpi_barrier (p_comm_glb, p_err)
-         CALL mpi_abort   (p_comm_glb, p_err)
 #endif
+         CALL CoLM_stop ()
 
       ENDIF
 
@@ -142,8 +139,8 @@ CONTAINS
       ENDDO
 
       IF (p_is_master) THEN
-         write (*,*) 'Block information:'
-         write (*,'(I3,A,I3,A)') this%nxblk, ' blocks in longitude,', &
+         write (*,'(A)') 'Block information:'
+         write (*,'(I4,A,I4,A)') this%nxblk, ' blocks in longitude,', &
             this%nyblk, ' blocks in latitude.'
          write (*,*)
       ENDIF

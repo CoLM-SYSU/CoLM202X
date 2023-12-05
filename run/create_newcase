@@ -4,10 +4,18 @@
 #--------------------------------------------------------------------------------------
 # Assign following path before running the scripts
 
-ROOT=/public/home/sysu_daiyj_01/data/luxj/CoLM202X-GPAM/
-RAWDATA=/data/sysu_daiyj_01/data_mpi/CLMrawdata_igbp/
-RUNTIME=/data/sysu_daiyj_01/data_mpi/CoLMruntime/
-MAKEOPTION=$ROOT/include/Makeoptions
+#machine = earthlab
+#ROOT=/public/home/sysu_daiyj_01/data/luxj/CoLM202X-GPAM/
+#RAWDATA=/data/sysu_daiyj_01/data_mpi/CLMrawdata_igbp/
+#RUNTIME=/data/sysu_daiyj_01/data_mpi/CoLMruntime/
+#MAKEOPTION=$ROOT/include/Makeoptions
+#FORCINGNML=$ROOT/run/forcing/GSWP3.nml
+
+#machine = land
+ROOT=/home/luxj/CoLM202X/
+RAWDATA=/tera07/CoLMrawdata/
+RUNTIME=/tera07/CoLMruntime/
+MAKEOPTION=$ROOT/include/Makeoption
 FORCINGNML=$ROOT/run/forcing/GSWP3.nml
 
 #--------------------------------------------------------------------------------------

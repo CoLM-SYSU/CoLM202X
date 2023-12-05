@@ -92,6 +92,10 @@ PROGRAM CoLM
    USE MOD_DataAssimilation
 #endif
 
+#ifdef USEMPI
+   USE MOD_HistWriteBack
+#endif
+
    IMPLICIT NONE
 
    character(LEN=256) :: nlfile
@@ -131,13 +135,23 @@ PROGRAM CoLM
    CALL spmd_init ()
 #endif
 
-   IF (p_is_master) THEN
-      CALL system_clock (start_time)
-   ENDIF
-
    CALL getarg (1, nlfile)
 
    CALL read_namelist (nlfile)
+
+#ifdef USEMPI
+   IF (DEF_HIST_WriteBack) THEN
+      CALL spmd_assign_writeback ()
+   ENDIF
+   
+   IF (p_is_writeback) THEN
+      CALL hist_writeback_daemon ()
+   ELSE
+#endif
+
+   IF (p_is_master) THEN
+      CALL system_clock (start_time)
+   ENDIF
 
    casename     = DEF_CASE_NAME
    dir_landdata = DEF_dir_landdata
@@ -251,7 +265,7 @@ PROGRAM CoLM
    CALL SnowOptics_init( DEF_file_snowoptics ) ! SNICAR optical parameters
    CALL SnowAge_init( DEF_file_snowaging )     ! SNICAR aging   parameters
 
-   !-----------------------
+   ! ----------------------------------------------------------------------
    doalb = .true.
    dolai = .true.
    dosst = .false.
@@ -411,8 +425,9 @@ PROGRAM CoLM
       ! ----------------------------------------------------------------------
       CALL hist_out (idate, deltim, itstamp, etstamp, ptstamp, dir_hist, casename)
 
-#ifdef LULCC
       ! DO land USE and land cover change simulation
+      ! ----------------------------------------------------------------------
+#ifdef LULCC
       IF ( isendofyear(idate, deltim) ) THEN
          CALL deallocate_1D_Forcing
          CALL deallocate_1D_Fluxes
@@ -428,7 +443,7 @@ PROGRAM CoLM
       ENDIF
 #endif
 
-! Get leaf area index
+      ! Get leaf area index
       ! ----------------------------------------------------------------------
 #if(defined DYN_PHENOLOGY)
       ! Update once a day
@@ -479,8 +494,12 @@ PROGRAM CoLM
 #else
          CALL WRITE_TimeVariables (jdate, lc_year,  casename, dir_restart)
 #endif
+#if(defined CaMa_Flood)
+      IF (p_is_master) THEN
+            call colm_cama_write_restart (jdate, lc_year,  casename, dir_restart)
+         ENDIF
+#endif
       ENDIF
-
 #ifdef RangeCheck
       CALL check_TimeVariables ()
 #endif
@@ -554,9 +573,14 @@ PROGRAM CoLM
    103 format(/, 'Time elapsed : ', I3, ' seconds.')
 
 #ifdef USEMPI
+   ENDIF
+   
+   IF (DEF_HIST_WriteBack) THEN
+      CALL hist_writeback_exit ()
+   ENDIF
+
    CALL spmd_exit
 #endif
 
 END PROGRAM CoLM
-! ----------------------------------------------------------------------
-! EOP
+! ---------- EOP ------------

@@ -173,6 +173,19 @@ MODULE MOD_Const_LC
 
    ! conductance-photosynthesis slope parameter
    !TODO: no C4, 4.0 may have problem
+   real(r8), parameter, dimension(N_land_classification) :: g1_usgs &
+      = (/4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0,&
+          4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0,&
+          4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0/)
+
+   ! conductance-photosynthesis intercept
+   real(r8), parameter, dimension(N_land_classification) :: g0_usgs &
+      = (/100, 100, 100, 100, 100, 100, 100, 100,&
+          100, 100, 100, 100, 100, 100, 100, 100,&
+          100, 100, 100, 100, 100, 100, 100, 100/)
+
+   ! conductance-photosynthesis slope parameter
+   !TODO: no C4, 4.0 may have problem
    real(r8), parameter, dimension(N_land_classification) :: gradm_usgs &
       = (/9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0,&
           9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0,&
@@ -444,6 +457,18 @@ MODULE MOD_Const_LC
           0.08 /)
 
    ! conductance-photosynthesis slope parameter
+   real(r8), parameter, dimension(N_land_classification) :: g1_igbp &
+      = (/9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0,&
+          9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0,&
+          9.0 /)
+
+   ! conductance-photosynthesis intercept
+   real(r8), parameter, dimension(N_land_classification) :: g0_igbp &
+      = (/100, 100, 100, 100, 100, 100, 100, 100,&
+          100, 100, 100, 100, 100, 100, 100, 100,&
+          100 /)
+
+   ! conductance-photosynthesis slope parameter
    real(r8), parameter, dimension(N_land_classification) :: gradm_igbp &
       = (/9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0,&
           9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0,&
@@ -581,6 +606,8 @@ MODULE MOD_Const_LC
 
       vmax25,     &! maximum carboxylation rate at 25 C at canopy top
       effcon,     &! quantum efficiency
+      g1,         &! conductance-photosynthesis slope parameter
+      g0,         &! conductance-photosynthesis intercept
       gradm,      &! conductance-photosynthesis slope parameter
       binter,     &! conductance-photosynthesis intercept
       respcp,     &! respiration fraction
@@ -646,6 +673,8 @@ CONTAINS
       chil       (:) = chil_usgs       (:)
       vmax25     (:) = vmax25_usgs     (:) * 1.e-6
       effcon     (:) = effcon_usgs     (:)
+      g1         (:) = g1_usgs         (:)
+      g0         (:) = g0_usgs         (:)
       gradm      (:) = gradm_usgs      (:)
       binter     (:) = binter_usgs     (:)
       respcp     (:) = respcp_usgs     (:)
@@ -692,6 +721,8 @@ ENDIF
       chil       (:) = chil_igbp       (:)
       vmax25     (:) = vmax25_igbp     (:) * 1.e-6
       effcon     (:) = effcon_igbp     (:)
+      g1         (:) = g1_igbp         (:)
+      g0         (:) = g0_igbp         (:)
       gradm      (:) = gradm_igbp      (:)
       binter     (:) = binter_igbp     (:)
       respcp     (:) = respcp_igbp     (:)

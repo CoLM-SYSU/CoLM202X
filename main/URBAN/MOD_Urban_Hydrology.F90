@@ -221,7 +221,7 @@ CONTAINS
 ! [1] for pervious road, the same as soil
 !=======================================================================
       rootflux(:) = rootr(:)*etr
-      CALL WATER ( ipatch,patchtype   ,lbp         ,nl_soil   ,deltim    ,&
+      CALL WATER_2014 (ipatch,patchtype, lbp       ,nl_soil   ,deltim    ,&
              z_gpersno   ,dz_gpersno  ,zi_gpersno  ,&
              bsw         ,porsl       ,psi0        ,hksati,rootr,rootflux,&
              t_gpersno   ,wliq_gpersno,wice_gpersno,smp,hk,pgper_rain,sm_gper,&

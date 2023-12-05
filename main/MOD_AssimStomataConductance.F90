@@ -4,6 +4,7 @@ MODULE MOD_AssimStomataConductance
 
 !-----------------------------------------------------------------------
   use MOD_Precision
+  use MOD_Namelist
   IMPLICIT NONE
   SAVE
 
@@ -25,7 +26,7 @@ MODULE MOD_AssimStomataConductance
 
 
   subroutine stomata (vmax25,effcon,slti,hlti,shti, &
-                      hhti,trda,trdm,trop,gradm,binter,tm, &
+                      hhti,trda,trdm,trop,g1,g0,gradm,binter,tm, &
                       psrf,po2m,pco2m,pco2a,ea,ei,tlef,par &
 !Ozone stress variables
                       ,o3coefv,o3coefg &
@@ -86,6 +87,8 @@ MODULE MOD_AssimStomataConductance
       hhti,         &! 1/2 point of high temperature inhibition function (313.16)
       trda,         &! temperature coefficient in gs-a model             (1.3)
       trdm,         &! temperature coefficient in gs-a model             (328.16)
+      g1,           &! conductance-photosynthesis slope parameter for medlyn model
+      g0,           &! conductance-photosynthesis intercept for medlyn model
       gradm,        &! conductance-photosynthesis slope parameter
       binter         ! conductance-photosynthesis intercept
 
@@ -130,6 +133,8 @@ MODULE MOD_AssimStomataConductance
       vm,           &! maximum catalytic activity of Rubison (mol co2 m-2 s-1)
       epar,         &! electron transport rate (mol electron m-2 s-1)
       bintc,        &! residual stomatal conductance for co2 (mol co2 m-2 s-1)
+      acp,          &! temporary variable for stomata model  (mol co2 m-2 s-1)
+      vpd,          &! vapor pressure deficit                (kpa)
 
       tprcor,       &! coefficient for unit transfer
       gbh2o,        &! one side leaf boundary layer conductance (mol m-2 s-1)
@@ -271,20 +276,32 @@ MODULE MOD_AssimStomataConductance
       co2st = max( co2st,1.e-5 )
 
       assmt = max( 1.e-12, assimn )
-      hcdma = ei*co2st / ( gradm*assmt )
+      if(DEF_USE_MEDLYNST)then
+         vpd   = amax1((ei - ea),50._r8) * 1.e-3 ! in kpa
+         acp   = 1.6*assmt/co2st             ! in mol m-2 s-1
+         aquad = 1._r8
+         bquad = -2*(g0*1.e-6 + acp) - (g1*acp)**2/(gbh2o*vpd)   ! in mol m-2 s-1
+         cquad = (g0*1.e-6)**2 + (2*g0*1.e-6+acp*(1-g1**2)/vpd)*acp  ! in (mol m-2 s-1)**2
+    
+         sqrtin= max( 0., ( bquad**2 - 4.*aquad*cquad ) )
+         gsh2o = ( -bquad + sqrt ( sqrtin ) ) / (2.*aquad) 
 
-      aquad = hcdma
-      bquad = gbh2o*hcdma - ei - bintc*hcdma
-      cquad = -gbh2o*( ea + hcdma*bintc )
+      else
+         hcdma = ei*co2st / ( gradm*assmt )
 
-      sqrtin= max( 0., ( bquad**2 - 4.*aquad*cquad ) )
-      gsh2o = ( -bquad + sqrt ( sqrtin ) ) / (2.*aquad)
+         aquad = hcdma
+         bquad = gbh2o*hcdma - ei - bintc*hcdma
+         cquad = -gbh2o*( ea + hcdma*bintc )
 
-      es  = ( gsh2o-bintc ) * hcdma                   ! pa
-      es  = min( es, ei )
-      es  = max( es, 1.e-2)
-
-      gsh2o = es/hcdma + bintc                        ! mol m-2 s-1
+         sqrtin= max( 0., ( bquad**2 - 4.*aquad*cquad ) )
+         gsh2o = ( -bquad + sqrt ( sqrtin ) ) / (2.*aquad)
+   
+         es  = ( gsh2o-bintc ) * hcdma                   ! pa
+         es  = min( es, ei )
+         es  = max( es, 1.e-2)
+   
+         gsh2o = es/hcdma + bintc                        ! mol m-2 s-1
+      end if
 
       pco2in = ( co2s - 1.6 * assimn / gsh2o )*psrf   ! pa
       eyy(ic) = pco2i - pco2in                        ! pa
