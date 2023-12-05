@@ -445,11 +445,29 @@ CONTAINS
          sag    = 0.
          scv    = snowdp*rhosno_ini
 
-         ! 08/02/2019, yuan: NOTE! need to be changed in future
-         ! for LULC_IGBP_PFT or LULC_IGBP_PC
-         ! have done but not for SOILINI right now
+         ! 08/02/2019, yuan: NOTE! need to be changed in future.
+         ! 12/05/2023, yuan: DONE for snowini, change sai.
          CALL snowfraction (tlai(ipatch),tsai(ipatch),z0m,zlnd,scv,snowdp,wt,sigf,fsno)
          CALL snow_ini (patchtype,maxsnl,snowdp,snl,z_soisno,dz_soisno)
+
+         lai = tlai(ipatch)
+         sai = tsai(ipatch) * sigf
+
+         IF (patchtype == 0) THEN
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
+            ps = patch_pft_s(ipatch)
+            pe = patch_pft_e(ipatch)
+            CALL snowfraction_pftwrap (ipatch,zlnd,scv,snowdp,wt,sigf,fsno)
+            if(DEF_USE_LAIFEEDBACK)then
+               lai = sum(lai_p(ps:pe)*pftfrac(ps:pe))
+            else
+               lai_p(ps:pe) = tlai_p(ps:pe)
+               lai = tlai(ipatch)
+            endif
+            sai_p(ps:pe) = tsai_p(ps:pe) * sigf_p(ps:pe)
+            sai = sum(sai_p(ps:pe)*pftfrac(ps:pe))
+#endif
+         ENDIF
 
          IF(snl.lt.0)THEN
             DO j = snl+1, 0
@@ -563,28 +581,31 @@ CONTAINS
 
       ! (6) Leaf area
       ! Variables: sigf, lai, sai
-      IF (patchtype == 0) THEN
+
+      IF (.not. use_snowini) THEN
+         IF (patchtype == 0) THEN
 #if (defined LULC_USGS || defined LULC_IGBP)
-         sigf = fveg
-         lai  = tlai(ipatch)
-         sai  = tsai(ipatch) * sigf
+            sigf = fveg
+            lai  = tlai(ipatch)
+            sai  = tsai(ipatch) * sigf
 #endif
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
-         ps = patch_pft_s(ipatch)
-         pe = patch_pft_e(ipatch)
-         sigf_p (ps:pe)  = 1.
-         lai_p(ps:pe)    = tlai_p(ps:pe)
-         sai_p(ps:pe)    = tsai_p(ps:pe) * sigf_p(ps:pe)
+            ps = patch_pft_s(ipatch)
+            pe = patch_pft_e(ipatch)
+            sigf_p (ps:pe)  = 1.
+            lai_p(ps:pe)    = tlai_p(ps:pe)
+            sai_p(ps:pe)    = tsai_p(ps:pe) * sigf_p(ps:pe)
 
-         sigf  = 1.
-         lai   = tlai(ipatch)
-         sai   = sum(sai_p(ps:pe) * pftfrac(ps:pe))
+            sigf  = 1.
+            lai   = tlai(ipatch)
+            sai   = sum(sai_p(ps:pe) * pftfrac(ps:pe))
 #endif
-      ELSE
-         sigf  = fveg
-         lai   = tlai(ipatch)
-         sai   = tsai(ipatch) * sigf
+         ELSE
+            sigf  = fveg
+            lai   = tlai(ipatch)
+            sai   = tsai(ipatch) * sigf
+         ENDIF
       ENDIF
 
       ! (7) SNICAR

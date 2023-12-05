@@ -92,22 +92,21 @@ MODULE MOD_Vars_Global
    integer, parameter :: ntrp_soybean         = 77 ! tropical soybean
    integer, parameter :: nirrig_trp_soybean   = 78 ! irrigated tropical soybean
 
-   real(r8) :: z_soi (1:nl_soil)       !node depth [m]
-   real(r8) :: z_soih(1:nl_soil)       !interface level below a zsoi level [m]
-   real(r8) :: zi_soi(1:nl_soil)       !interface level below a zsoi level [m]
-   real(r8) :: dz_soi(1:nl_soil)       !soil node thickness [m]
+   real(r8) :: z_soi (1:nl_soil)                   ! node depth [m]
+   real(r8) :: dz_soi(1:nl_soil)                   ! soil node thickness [m]
+   real(r8) :: zi_soi(1:nl_soil)                   ! interface level below a zsoi level [m]
 
-   real(r8), parameter :: spval   = -1.e36_r8  !missing value
-   integer , parameter :: spval_i4= -9999      !missing value
-   real(r8), parameter :: PI      = 4*atan(1.) !pi value
-   real(r8), parameter :: deg2rad = 1.745329251994330e-2_r8
+   real(r8), parameter :: spval    = -1.e36_r8     ! missing value
+   integer , parameter :: spval_i4 = -9999         ! missing value
+   real(r8), parameter :: PI       = 4*atan(1.)    ! pi value
+   real(r8), parameter :: deg2rad  = 1.745329251994330e-2_r8 ! degree to radius
 
    integer , parameter :: irrig_start_time = 21600           ! local time of irrigation start
    real(r8), parameter :: irrig_max_depth  = 1._r8           ! max irrigation depth
-   real(r8), parameter :: irrig_threshold_fraction  = 1._r8  ! irrigation thershold
+   real(r8), parameter :: irrig_threshold_fraction = 1._r8   ! irrigation thershold
    real(r8), parameter :: irrig_min_cphase = 1._r8           ! crop phenology when begin irrigation
    real(r8), parameter :: irrig_max_cphase = 4._r8           ! crop phenology when end irrigation
-   integer , parameter :: irrig_time_per_day = 14400         ! irrigation last time 
+   integer , parameter :: irrig_time_per_day = 14400         ! irrigation last time
 
    ! PUBLIC MEMBER FUNCTIONS:
    PUBLIC :: Init_GlobalVars
@@ -120,32 +119,30 @@ CONTAINS
 
       integer :: nsl
 
-IF (DEF_URBAN_type_scheme == 1) THEN
-      N_URB = 3
-ELSE IF(DEF_URBAN_type_scheme == 2) THEN
-      N_URB = 10
-ENDIF
-
+      ! node depths of each soil layer
       DO nsl = 1, nl_soil
-         z_soi(nsl) = 0.025*(exp(0.5*(nsl-0.5))-1.)  !node depths
+         z_soi(nsl) = 0.025*(exp(0.5*(nsl-0.5))-1.)
       ENDDO
 
-      dz_soi(1) = 0.5*(z_soi(1)+z_soi(2))            !=zsoih(1)
+      ! thickness between two soil layer interfaces
+      dz_soi(1) = 0.5*(z_soi(1)+z_soi(2))            !=zi_soi(1)
       dz_soi(nl_soil) = z_soi(nl_soil)-z_soi(nl_soil-1)
       DO nsl = 2, nl_soil-1
-         ! thickness between two interfaces
          dz_soi(nsl) = 0.5*(z_soi(nsl+1)-z_soi(nsl-1))
       ENDDO
 
-      z_soih(nl_soil) = z_soi(nl_soil) + 0.5*dz_soi(nl_soil)
-      DO nsl = 1, nl_soil-1
-         z_soih(nsl) = 0.5*(z_soi(nsl)+z_soi(nsl+1)) !interface depths
-      ENDDO
-
+      ! interface depths of soil layers
       zi_soi(1) = dz_soi(1)
       DO nsl = 2, nl_soil
          zi_soi(nsl) = zi_soi(nsl-1) + dz_soi(nsl)
       ENDDO
+
+      ! set urban class number
+      IF (DEF_URBAN_type_scheme == 1) THEN
+         N_URB = 3
+      ELSE IF(DEF_URBAN_type_scheme == 2) THEN
+         N_URB = 10
+      ENDIF
 
 !     ndecomp_pools_vr = ndecomp_pools * nl_soil
 
