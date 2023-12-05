@@ -114,7 +114,7 @@ SAVE
   REAL(r8) :: bt_min                         ! minimum water stress factor
   REAL(r8) :: bt_max                         ! maximum water stress factor
   REAL(r8) :: pot_hmn_ign_counts_alpha       ! Potential human ignition counts (alpha in Li et. al. 2012) (1/person/month)
-  REAL(r8) :: g0                             ! constant for fire spread estimates
+  REAL(r8) :: g0_fire                             ! constant for fire spread estimates
 
   REAL(r8) :: sf                             ! soluble fraction of mineral N (unitless)
   REAL(r8) :: sf_no3                         ! soluble fraction of NO3 (unitless)
@@ -289,7 +289,7 @@ SAVE
      call ncio_read_bcast_serial (file_restart, 'bt_min              ', bt_min              )
      call ncio_read_bcast_serial (file_restart, 'bt_max              ', bt_max              )
      call ncio_read_bcast_serial (file_restart, 'pot_hmn_ign_counts_alpha', pot_hmn_ign_counts_alpha)
-     call ncio_read_bcast_serial (file_restart, 'g0', g0)
+     call ncio_read_bcast_serial (file_restart, 'g0_fire', g0_fire)
 
      call ncio_read_bcast_serial (file_restart, 'sf', sf)
      call ncio_read_bcast_serial (file_restart, 'sf_no3', sf_no3)
@@ -439,7 +439,7 @@ SAVE
         call ncio_write_serial (file_restart, 'bt_min              ', bt_min              )
         call ncio_write_serial (file_restart, 'bt_max              ', bt_max              )
         call ncio_write_serial (file_restart, 'pot_hmn_ign_counts_alpha', pot_hmn_ign_counts_alpha)
-        call ncio_write_serial (file_restart, 'g0', g0)
+        call ncio_write_serial (file_restart, 'g0_fire', g0_fire)
 
         call ncio_write_serial (file_restart, 'sf', sf)
         call ncio_write_serial (file_restart, 'sf_no3', sf_no3)

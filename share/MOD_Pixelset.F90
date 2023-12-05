@@ -69,7 +69,8 @@ MODULE MOD_Pixelset
 
       INTEGER :: nset
 
-      INTEGER, allocatable :: eindex(:)
+      INTEGER*8, allocatable :: eindex(:)
+
       INTEGER, allocatable :: ipxstt(:)
       INTEGER, allocatable :: ipxend(:)
       INTEGER, allocatable :: settyp(:)
@@ -431,11 +432,11 @@ CONTAINS
       LOGICAL, intent(in)  :: mask(:)
       INTEGER, intent(out) :: nset_packed
 
-      INTEGER, allocatable :: eindex1(:)
-      INTEGER, allocatable :: ipxstt1(:)
-      INTEGER, allocatable :: ipxend1(:)
-      INTEGER, allocatable :: settyp1(:)
-      INTEGER, allocatable :: ielm1  (:)
+      INTEGER*8, allocatable :: eindex1(:)
+      INTEGER,   allocatable :: ipxstt1(:)
+      INTEGER,   allocatable :: ipxend1(:)
+      INTEGER,   allocatable :: settyp1(:)
+      INTEGER,   allocatable :: ielm1  (:)
 
       IF (p_is_worker) THEN
 

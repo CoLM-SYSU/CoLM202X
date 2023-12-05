@@ -1,0 +1,87 @@
+name: Build_CoLM202X_gnu
+on:
+  pull_request:
+    branches: 
+      - master
+    paths-ignore:
+      - 'postprocess/**'
+      - 'preprocess/**'
+      - 'run/**'
+      - 'README.md'
+      - '.gitignore'
+      - '**/**.sh'
+  push:
+    branches:
+      - master
+
+  workflow_dispatch:
+
+jobs:
+  Build-CoLM-gnu:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, ubuntu-20.04]
+        mpi: ['mpich', 'openmpi', 'intelmpi']
+        toolchain:
+          - {compiler: gcc, version: 13}
+          - {compiler: gcc, version: 12}
+          - {compiler: gcc, version: 11}
+          - {compiler: gcc, version: 10}
+          - {compiler: gcc, version:  9}
+       # include:
+       #   - os: ubuntu-latest
+       #     toolchain: {compiler: gcc, version: 12}
+        exclude:
+          - os: ubuntu-20.04
+            toolchain: {compiler: gcc, version: 12}
+          - os: ubuntu-latest
+            toolchain: {compiler: gcc, version: 9}
+
+    steps:
+     - uses: actions/checkout@v4
+     - uses: mpi4py/setup-mpi@v1
+       with:
+          mpi: ${{ matrix.mpi }}
+     - uses: fortran-lang/setup-fortran@v1
+       id: setup-fortran
+       with:
+          compiler: ${{ matrix.toolchain.compiler }}
+          version: ${{ matrix.toolchain.version }} 
+     - name: Install netcdf-fortran library
+       shell: bash -l {0}
+       run: sudo apt update && sudo apt install -y netcdf-bin libnetcdf-dev libnetcdff-dev
+     - name: Test mpi
+       #run: mpif90 -v
+       run: which mpif90
+     #- name: Test netcdf
+     #  run: nc-config --all
+     - name: Build CoLM202X
+     #  run: make clean && make all
+       run: |
+            cd ${{ github.workspace }}
+            TestList=./.github/workflows/TestCaseLists
+            for CaseName in `awk '{print $1}' $TestList`
+            do
+              echo "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
+              echo "Create test cases"
+              echo $CaseName
+              echo "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
+ 
+              echo defineh `cat $TestList |grep $CaseName |awk '{print $2,$3,$4,$5,$6,$7,$8}'`
+              ./.github/workflows/create_defineh.bash `cat $TestList |grep $CaseName |awk '{print $2,$3,$4,$5,$6,$7,$8}'`
+
+              echo "Create test case $CaseName Complete!"
+              cat ./include/define.h
+
+              echo "...................................................................."
+              echo "Start Compilation $CaseName"
+              echo "...................................................................."
+ 
+              make clean && make all
+            done
+
+            echo "----------------------------------------------------------------------"
+            echo "All test cases are compiled successfully! "
+            echo "----------------------------------------------------------------------"

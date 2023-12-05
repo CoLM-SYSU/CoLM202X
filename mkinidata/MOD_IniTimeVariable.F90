@@ -4,6 +4,9 @@ MODULE MOD_IniTimeVariable
 
 !-----------------------------------------------------------------------
    USE MOD_Precision
+#ifdef BGC
+   use MOD_BGC_CNSummary, only: CNDriverSummarizeStates, CNDriverSummarizeFluxes
+#endif
    IMPLICIT NONE
    SAVE
 
@@ -33,7 +36,7 @@ CONTAINS
                      ,trad,tref,qref,rst,emis,zol,rib&
                      ,ustar,qstar,tstar,fm,fh,fq&
 #if(defined BGC)
-                     ,totlitc, totsomc, totcwdc, decomp_cpools, decomp_cpools_vr, ctrunc_veg, ctrunc_soil, ctrunc_vr &
+                     ,use_cnini, totlitc, totsomc, totcwdc, decomp_cpools, decomp_cpools_vr, ctrunc_veg, ctrunc_soil, ctrunc_vr &
                      ,totlitn, totsomn, totcwdn, decomp_npools, decomp_npools_vr, ntrunc_veg, ntrunc_soil, ntrunc_vr &
                      ,totvegc, totvegn, totcolc, totcoln, col_endcb, col_begcb, col_endnb, col_begnb &
                      ,col_vegendcb, col_vegbegcb, col_soilendcb, col_soilbegcb &
@@ -60,7 +63,7 @@ CONTAINS
                      ,diagVX_n_vr_acc            , upperVX_n_vr_acc           , lowerVX_n_vr_acc           &
 !------------------------------------------------------------
 #endif
-                     ,use_soilini, nl_soil_ini, soil_z,   soil_t,   soil_w, snow_d     &
+                     ,use_soilini, nl_soil_ini, soil_z,   soil_t,   soil_w, use_snowini, snow_d &
                      ,use_wtd,     zwtmm,       zc_soimm, zi_soimm, vliq_r, nprms, prms)
 
 !=======================================================================
@@ -71,9 +74,9 @@ CONTAINS
 
    USE MOD_Precision
    USE MOD_Utils
-   USE MOD_Const_Physical, only: tfrz
+   USE MOD_Const_Physical, only: tfrz, denh2o, denice
    USE MOD_Vars_TimeVariables, only: tlai, tsai, wdsrf
-   USE MOD_Const_PFT, only: isevg, woody, leafcn, deadwdcn, slatop
+   USE MOD_Const_PFT, only: isevg, woody, leafcn, frootcn, livewdcn, deadwdcn, slatop
    USE MOD_Vars_TimeInvariants, only : ibedrock, dbedrock
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
    USE MOD_LandPFT, only : patch_pft_s, patch_pft_e
@@ -115,12 +118,17 @@ CONTAINS
          z0m                      ! aerodynamic roughness length [m]
 
    LOGICAL, intent(in)  :: use_soilini
+#ifdef BGC
+   LOGICAL, intent(in)  :: use_cnini
+#endif
    INTEGER, intent(in)  :: nl_soil_ini
    REAL(r8), intent(in) ::       &!
          soil_z(nl_soil_ini),    &! soil layer depth for initial (m)
          soil_t(nl_soil_ini),    &! soil temperature from initial file (K)
-         soil_w(nl_soil_ini),    &! soil wetness from initial file (-)
-         snow_d                   ! snow depth (m)
+         soil_w(nl_soil_ini)      ! soil wetness from initial file (-)
+   
+   LOGICAL,  intent(in) :: use_snowini
+   REAL(r8), intent(in) :: snow_d ! snow depth (m)
 
    LOGICAL,  intent(in) :: use_wtd
    REAL(r8), intent(in) :: zwtmm
@@ -168,9 +176,11 @@ CONTAINS
          thermk,                 &! canopy gap fraction for tir radiation
          extkb,                  &! (k, g(mu)/mu) direct solar extinction coefficient
          extkd,                  &! diffuse and scattered diffuse PAR extinction coefficient
-         wa,                     &! water storage in aquifer [mm]
-         zwt,                    &! the depth to water table [m]
+         wa                       ! water storage in aquifer [mm]
+   REAL(r8), intent(inout) ::    &!
+         zwt                      ! the depth to water table [m]
 
+   REAL(r8), intent(out) ::      &!
          snw_rds  ( maxsnl+1:0 ), &! effective grain radius (col,lyr) [microns, m-6]
          mss_bcphi( maxsnl+1:0 ), &! mass concentration of hydrophilic BC (col,lyr) [kg/kg]
          mss_bcpho( maxsnl+1:0 ), &! mass concentration of hydrophobic BC (col,lyr) [kg/kg]
@@ -315,7 +325,7 @@ CONTAINS
 #endif
 
         INTEGER j, snl, m, ivt
-        REAL(r8) wet(nl_soil), vliq, wt, ssw, oro, rhosno_ini, a
+        REAL(r8) wet(nl_soil), zi_soi_a(0:nl_soil), psi, vliq, wt, ssw, oro, rhosno_ini, a
 
         ! SNICAR
         REAL(r8) pg_snow                 ! snowfall onto ground including canopy runoff [kg/(m2 s)]
@@ -325,51 +335,116 @@ CONTAINS
 
    !-----------------------------------------------------------------------
    IF(patchtype <= 5)THEN ! land grid
-
+      
       ! (1) SOIL temperature, water and SNOW
       ! Variables: t_soisno, wliq_soisno, wice_soisno
       !            snowdp, sag, scv, fsno, snl, z_soisno, dz_soisno
       IF (use_soilini) THEN
 
+         zi_soi_a(:) = (/0., zi_soi/)
+               
          DO j = 1, nl_soil
             CALL polint(soil_z,soil_t,nl_soil_ini,z_soisno(j),t_soisno(j))
-            CALL polint(soil_z,soil_w,nl_soil_ini,z_soisno(j),wet(j))
-            a = min(soil_t(1),soil_t(2),soil_t(3))-5.
-            t_soisno(j) = max(t_soisno(j), a)
-            a = max(soil_t(1),soil_t(2),soil_t(3))+5.
-            t_soisno(j) = min(t_soisno(j), a)
+         ENDDO
 
-            a = min(soil_w(1),soil_w(2),soil_w(3))
-            wet(j) = max(wet(j), a, 0.1)
-            a = max(soil_w(1),soil_w(2),soil_w(3))
-            wet(j) = min(wet(j), a, 0.5)
+         IF (patchtype <= 1) THEN ! soil or urban
 
-            wet(j) = min(wet(j), porsl(j))
+            DO j = 1, nl_soil
 
-            IF(t_soisno(j).ge.tfrz)THEN
-               wliq_soisno(j) = wet(j)*dz_soisno(j)*1000.
-               wice_soisno(j) = 0.
+               CALL polint(soil_z,soil_w,nl_soil_ini,z_soisno(j),wet(j))
+
+               wet(j) = min(max(wet(j),0.), porsl(j))
+
+               IF (zwt <= zi_soi_a(j-1))  THEN
+                  wet(j) = porsl(j)
+               ELSEIF (zwt < zi_soi_a(j)) THEN
+                  wet(j) = ((zi_soi_a(j)-zwt)*porsl(j) + (zwt-zi_soi_a(j-1))*wet(j)) &
+                     / (zi_soi_a(j)-zi_soi_a(j-1))
+               ENDIF
+
+               IF(t_soisno(j).ge.tfrz)THEN
+                  wliq_soisno(j) = wet(j)*dz_soisno(j)*denh2o
+                  wice_soisno(j) = 0.
+               ELSE
+                  wliq_soisno(j) = 0.
+                  wice_soisno(j) = wet(j)*dz_soisno(j)*denice
+               ENDIF
+            ENDDO
+
+            ! get wa from zwt
+            IF (zwt > zi_soi_a(nl_soil)) THEN
+               psi  = psi0(nl_soil) - (zwt*1000. - zi_soi_a(nl_soil)*1000.) * 0.5
+               vliq = soil_vliq_from_psi (psi, porsl(nl_soil), vliq_r(nl_soil), psi0(nl_soil), &
+                  nprms, prms(:,nl_soil))
+               wa   = -(zwt*1000. - zi_soi_a(nl_soil)*1000.)*(porsl(nl_soil)-vliq)
             ELSE
+               wa = 0.
+            ENDIF
+
+         ELSEIF ((patchtype == 2) .or. (patchtype == 4)) THEN ! (2) wetland or (4) lake
+
+            DO j = 1, nl_soil
+               IF(t_soisno(j).ge.tfrz)THEN
+                  wliq_soisno(j) = porsl(j)*dz_soisno(j)*denh2o
+                  wice_soisno(j) = 0.
+               ELSE
+                  wliq_soisno(j) = 0.
+                  wice_soisno(j) = porsl(j)*dz_soisno(j)*denice
+               ENDIF
+            ENDDO
+
+            wa = 0.
+
+         ELSEIF (patchtype == 3) THEN ! land ice
+            
+            DO j = 1, nl_soil
                wliq_soisno(j) = 0.
-               wice_soisno(j) = wet(j)*dz_soisno(j)*1000.
+               wice_soisno(j) = dz_soisno(j)*denice
+            ENDDO
+            
+            wa = 0.
+
+         ENDIF
+
+         IF (.not. DEF_USE_VariablySaturatedFlow) THEN
+            wa = wa + 5000.
+         ENDIF
+
+      ELSE
+
+         ! soil temperature, water content
+         DO j = 1, nl_soil
+            IF(patchtype==3)THEN !land ice
+               t_soisno(j) = 253.
+               wliq_soisno(j) = 0.
+               wice_soisno(j) = dz_soisno(j)*denice
+            ELSE
+               t_soisno(j) = 283.
+               wliq_soisno(j) = dz_soisno(j)*porsl(j)*denh2o
+               wice_soisno(j) = 0.
             ENDIF
          ENDDO
 
+      ENDIF
+
+      z0m = htop * z0mr
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
+      IF(patchtype==0)THEN
+         ps = patch_pft_s(ipatch)
+         pe = patch_pft_e(ipatch)
+         IF (ps>0 .and. pe>0) THEN
+            z0m_p(ps:pe) = htop_p(ps:pe) * z0mr
+         ENDIF
+      ENDIF
+#endif
+
+      IF (use_snowini) THEN
+         
          rhosno_ini = 250.
          snowdp = snow_d
          sag    = 0.
          scv    = snowdp*rhosno_ini
-         z0m    = htop * z0mr
-#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
-         IF(patchtype==0)THEN
-            ps = patch_pft_s(ipatch)
-            pe = patch_pft_e(ipatch)
-            IF (ps>0 .and. pe>0) THEN
-               z0m_p(ps:pe) = htop_p(ps:pe) * z0mr
-            ENDIF
-         ENDIF
-#endif
-
+         
          ! 08/02/2019, yuan: NOTE! need to be changed in future
          ! for LULC_IGBP_PFT or LULC_IGBP_PC
          ! have done but not for SOILINI right now
@@ -394,34 +469,11 @@ CONTAINS
 
       ELSE
 
-         ! soil temperature, water content
-         DO j = 1, nl_soil
-            IF(patchtype==3)THEN !land ice
-               t_soisno(j) = 253.
-               wliq_soisno(j) = 0.
-               wice_soisno(j) = dz_soisno(j)*1000.
-            ELSE
-               t_soisno(j) = 283.
-               wliq_soisno(j) = dz_soisno(j)*porsl(j)*1000.
-               wice_soisno(j) = 0.
-            ENDIF
-         ENDDO
-
          snowdp = 0.
          sag    = 0.
          scv    = 0.
          fsno   = 0.
          snl    = 0
-         z0m    = htop * z0mr
-#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
-         IF(patchtype==0)THEN
-            ps = patch_pft_s(ipatch)
-            pe = patch_pft_e(ipatch)
-            IF (ps>0 .and. pe>0) THEN
-               z0m_p(ps:pe) = htop_p(ps:pe) * z0mr
-            ENDIF
-         ENDIF
-#endif
 
          ! snow temperature and water content
          t_soisno   (maxsnl+1:0) = -999.
@@ -436,14 +488,16 @@ CONTAINS
       ! Variables: wa, zwt
       IF (.not. use_wtd) THEN
 
-         IF (DEF_USE_VARIABLY_SATURATED_FLOW) THEN
-            wa  = 0.
-            zwt = zi_soimm(nl_soil)/1000.
-         ELSE
-            ! water table depth (initially at 1.0 m below the model bottom; wa when zwt
-            !                    is below the model bottom zi(nl_soil)
-            wa  = 4800.                             !assuming aquifer capacity is 5000 mm
-            zwt = (25. + z_soisno(nl_soil))+dz_soisno(nl_soil)/2. - wa/1000./0.2 !to result in zwt = zi(nl_soil) + 1.0 m
+         IF (.not. use_soilini) THEN
+            IF (DEF_USE_VariablySaturatedFlow) THEN
+               wa  = 0.
+               zwt = zi_soimm(nl_soil)/1000.
+            ELSE
+               ! water table depth (initially at 1.0 m below the model bottom; wa when zwt
+               !                    is below the model bottom zi(nl_soil)
+               wa  = 4800.                             !assuming aquifer capacity is 5000 mm
+               zwt = (25. + z_soisno(nl_soil))+dz_soisno(nl_soil)/2. - wa/1000./0.2 !to result in zwt = zi(nl_soil) + 1.0 m
+            ENDIF
          ENDIF
       ELSE
          IF (patchtype <= 1) THEN
@@ -452,6 +506,10 @@ CONTAINS
          ELSE
             wa  = 0.
             zwt = 0.
+         ENDIF
+
+         IF (.not. DEF_USE_VariablySaturatedFlow) THEN
+            wa = wa + 5000.
          ENDIF
       ENDIF
 
@@ -564,7 +622,9 @@ CONTAINS
       col_vegbegnb                    = 0.0
       col_soilendnb                   = 0.0
       col_soilbegnb                   = 0.0
-      decomp_cpools_vr          (:,:) = 0.0
+      if(.not. use_cnini)then
+         decomp_cpools_vr          (:,:) = 0.0
+      end if
       decomp_cpools             (:)   = 0.0
       ctrunc_vr                 (:)   = 0.0
       ctrunc_veg                      = 0.0
@@ -573,14 +633,18 @@ CONTAINS
       altmax_lastyear                 = 10.0
       altmax_lastyear_indx            = 10
       lag_npp                         = 0.0
-      decomp_npools_vr          (:,:) = 0.0
+      if(.not. use_cnini)then
+         decomp_npools_vr          (:,:) = 0.0
+      end if
       decomp_npools             (:)   = 0.0
       ntrunc_vr                 (:)   = 0.0
       ntrunc_veg                      = 0.0
       ntrunc_soil                     = 0.0
-      smin_no3_vr               (:)   = 5.0
-      smin_nh4_vr               (:)   = 5.0
-      sminn_vr                  (:)   = 10.0
+      if(.not. use_cnini)then
+         smin_no3_vr               (:)   = 5.0
+         smin_nh4_vr               (:)   = 5.0
+         sminn_vr                  (:)   = 10.0
+      end if
       sminn                           = 0.0
       do j = 1, nl_soil
          sminn                        = sminn + sminn_vr(j) * dz_soisno(j)
@@ -596,6 +660,7 @@ CONTAINS
       tsoi17                          = 273.15_r8
       rh30                            = 0._r8
       accumnstep                      = 0._r8
+
     !---------------SASU variables-----------------------
       decomp0_cpools_vr         (:,:) = 0.0
       I_met_c_vr_acc              (:) = 0.0
@@ -662,49 +727,74 @@ CONTAINS
                leafc_storage_p          (m) = 0.0
                leafn_p                  (m) = 0.0
                leafn_storage_p          (m) = 0.0
+               frootc_p                 (m) = 0.0
+               frootc_storage_p         (m) = 0.0
+               frootn_p                 (m) = 0.0
+               frootn_storage_p         (m) = 0.0
             else
                if(isevg(ivt))then
-                  leafc_p               (m) = 100.0
+                  if(.not. use_cnini)then
+                     leafc_p            (m) = 100.0
+                     frootc_p           (m) = 0.0
+                  end if
                   leafc_storage_p       (m) = 0.0
+                  frootc_storage_p      (m) = 0.0
                else if(ivt >= npcropmin) then
                   leafc_p               (m) = 0.0
                   leafc_storage_p       (m) = 0.0
+                  frootc_p              (m) = 0.0
+                  frootc_storage_p      (m) = 0.0
                else
-                  leafc_p               (m) = 0.0
-                  leafc_storage_p       (m) = 100.0
+                  if(.not. use_cnini)then
+                     leafc_p            (m) = 0.0
+                     leafc_storage_p    (m) = 100.0
+                     frootc_p           (m) = 0.0
+                     frootc_storage_p   (m) = 0.0
+                  end if
                end if
-               leafn_p                  (m) = leafc_p        (m) / leafcn  (ivt)
-               leafn_storage_p          (m) = leafc_storage_p(m) / leafcn  (ivt)
+               leafn_p                     (m) = leafc_p        (m) / leafcn  (ivt)
+               leafn_storage_p             (m) = leafc_storage_p(m) / leafcn  (ivt)
+               frootn_p                    (m) = frootc_p        (m) / frootcn  (ivt)
+               frootn_storage_p            (m) = frootc_storage_p(m) / frootcn  (ivt)
             end if
             if(woody(ivt) .eq. 1)then
-               deadstemc_p              (m) = 0.1
-               deadstemn_p              (m) = deadstemc_p    (m) / deadwdcn(ivt)
+               if(.not. use_cnini)then
+                  deadstemc_p              (m) = 0.1
+                  livestemc_p              (m) = 0.0
+                  deadcrootc_p             (m) = 0.0
+                  livecrootc_p             (m) = 0.0
+               end if
+               livestemn_p                 (m) = livestemc_p    (m) / livewdcn(ivt)
+               deadstemn_p                 (m) = deadstemc_p    (m) / deadwdcn(ivt)
+               livecrootn_p                (m) = livecrootc_p   (m) / livewdcn(ivt)
+               deadcrootn_p                (m) = deadcrootc_p   (m) / deadwdcn(ivt)
             else
-               deadstemc_p              (m) = 0.0
-               deadstemn_p              (m) = 0.0
+               livestemc_p                 (m) = 0.0
+               deadstemc_p                 (m) = 0.0
+               livestemn_p                 (m) = 0.0
+               deadstemn_p                 (m) = 0.0
+               livecrootc_p                (m) = 0.0
+               deadcrootc_p                (m) = 0.0
+               livecrootn_p                (m) = 0.0
+               deadcrootn_p                (m) = 0.0
             end if
-            totcolc = totcolc + (leafc_p(m) + leafc_storage_p(m) + deadstemc_p(m))* pftfrac(m)
-            totvegc = totvegc + (leafc_p(m) + leafc_storage_p(m) + deadstemc_p(m))* pftfrac(m)
-            totcoln = totcoln + (leafn_p(m) + leafn_storage_p(m) + deadstemn_p(m))* pftfrac(m)
-            totvegn = totvegn + (leafn_p(m) + leafn_storage_p(m) + deadstemn_p(m))* pftfrac(m)
+!            totcolc = totcolc + (leafc_p(m) + leafc_storage_p(m) + deadstemc_p(m))* pftfrac(m)
+!            totvegc = totvegc + (leafc_p(m) + leafc_storage_p(m) + deadstemc_p(m))* pftfrac(m)
+!            totcoln = totcoln + (leafn_p(m) + leafn_storage_p(m) + deadstemn_p(m))* pftfrac(m)
+!            totvegn = totvegn + (leafn_p(m) + leafn_storage_p(m) + deadstemn_p(m))* pftfrac(m)
          end do
          IF(DEF_USE_OZONESTRESS)THEN
             o3uptakesun_p            (ps:pe) = 0._r8
             o3uptakesha_p            (ps:pe) = 0._r8
          ENDIF
          leafc_xfer_p             (ps:pe) = 0.0
-         frootc_p                 (ps:pe) = 0.0
-         frootc_storage_p         (ps:pe) = 0.0
          frootc_xfer_p            (ps:pe) = 0.0
-         livestemc_p              (ps:pe) = 0.0
          livestemc_storage_p      (ps:pe) = 0.0
          livestemc_xfer_p         (ps:pe) = 0.0
          deadstemc_storage_p      (ps:pe) = 0.0
          deadstemc_xfer_p         (ps:pe) = 0.0
-         livecrootc_p             (ps:pe) = 0.0
          livecrootc_storage_p     (ps:pe) = 0.0
          livecrootc_xfer_p        (ps:pe) = 0.0
-         deadcrootc_p             (ps:pe) = 0.0
          deadcrootc_storage_p     (ps:pe) = 0.0
          deadcrootc_xfer_p        (ps:pe) = 0.0
          grainc_p                 (ps:pe) = 0.0
@@ -719,18 +809,14 @@ CONTAINS
          cropprod1c_p             (ps:pe) = 0.0
 
          leafn_xfer_p             (ps:pe) = 0.0
-         frootn_p                 (ps:pe) = 0.0
          frootn_storage_p         (ps:pe) = 0.0
          frootn_xfer_p            (ps:pe) = 0.0
-         livestemn_p              (ps:pe) = 0.0
          livestemn_storage_p      (ps:pe) = 0.0
          livestemn_xfer_p         (ps:pe) = 0.0
          deadstemn_storage_p      (ps:pe) = 0.0
          deadstemn_xfer_p         (ps:pe) = 0.0
-         livecrootn_p             (ps:pe) = 0.0
          livecrootn_storage_p     (ps:pe) = 0.0
          livecrootn_xfer_p        (ps:pe) = 0.0
-         deadcrootn_p             (ps:pe) = 0.0
          deadcrootn_storage_p     (ps:pe) = 0.0
          deadcrootn_xfer_p        (ps:pe) = 0.0
          grainn_p                 (ps:pe) = 0.0
@@ -817,6 +903,10 @@ CONTAINS
             lai_p                 (ps:pe) = tlai_p(ps:pe)
             lai                           = sum(lai_p(ps:pe) * pftfrac(ps:pe))
          end if
+
+#ifdef BGC
+         call CNDriverSummarizeStates(ipatch,ps,pe,nl_soil,dz_soi,ndecomp_pools,.true.)
+#endif
 
    ! SASU varaibles
          leafc0_p                 (ps:pe) = 0.0

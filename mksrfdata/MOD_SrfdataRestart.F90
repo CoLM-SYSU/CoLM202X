@@ -37,12 +37,14 @@ CONTAINS
 
       ! Local variables
       CHARACTER(len=256) :: filename, fileblock, cyear
-      INTEGER :: ie, je, nelm, elen, iblk, jblk, iworker, i
-      INTEGER, allocatable :: nelm_worker(:), ndsp_worker(:)
-      INTEGER, allocatable :: elmindx(:)
-      INTEGER, allocatable :: npxlall(:)
-      INTEGER, allocatable :: elmpixels(:,:,:)
-      REAL(r8),allocatable :: lon(:), lat(:)
+      INTEGER :: ie, je, nelm, totlen, tothis, iblk, jblk, iworker, i
+      INTEGER,   allocatable :: nelm_worker(:), ndsp_worker(:)
+      INTEGER*8, allocatable :: elmindx(:)
+      INTEGER,   allocatable :: npxlall(:)
+      INTEGER,   allocatable :: elmpixels(:,:)
+      REAL(r8),  allocatable :: lon(:), lat(:)
+      
+      INTEGER :: nsend, nrecv, ndone, ndsp
 
       ! add parameter input for time year
       write(cyear,'(i4.4)') lc_year
@@ -67,33 +69,32 @@ CONTAINS
                IF (gblock%pio(iblk,jblk) == p_address_io(p_my_group)) THEN
 #endif
                   nelm = 0
-                  elen = 0
+                  totlen = 0
                   DO ie = 1, numelm
                      IF ((mesh(ie)%xblk == iblk) .and. (mesh(ie)%yblk == jblk)) THEN
                         nelm = nelm + 1
-                        elen = max(elen, mesh(ie)%npxl)
+                        totlen = totlen + mesh(ie)%npxl
                      ENDIF
                   ENDDO
-
-#ifdef USEMPI
-                  CALL mpi_allreduce (MPI_IN_PLACE, elen, 1, MPI_INTEGER, MPI_MAX, p_comm_group, p_err)
-#endif
 
                   IF (nelm > 0) THEN
 
                      allocate (elmindx (nelm))
                      allocate (npxlall (nelm))
-                     allocate (elmpixels (2,elen,nelm))
+                     allocate (elmpixels (2,totlen))
 
                      je = 0
+                     ndsp = 0
                      DO ie = 1, numelm
                         IF ((mesh(ie)%xblk == iblk) .and. (mesh(ie)%yblk == jblk)) THEN
                            je = je + 1
                            elmindx(je) = mesh(ie)%indx
                            npxlall(je) = mesh(ie)%npxl
 
-                           elmpixels(1,1:npxlall(je),je) = mesh(ie)%ilon
-                           elmpixels(2,1:npxlall(je),je) = mesh(ie)%ilat
+                           elmpixels(1,ndsp+1:ndsp+npxlall(je)) = mesh(ie)%ilon
+                           elmpixels(2,ndsp+1:ndsp+npxlall(je)) = mesh(ie)%ilat
+
+                           ndsp = ndsp + npxlall(je)
                         ENDIF
                      ENDDO
                   ENDIF
@@ -102,18 +103,23 @@ CONTAINS
                   CALL mpi_gather (nelm, 1, MPI_INTEGER, &
                      MPI_INULL_P, 1, MPI_INTEGER, p_root, p_comm_group, p_err)
 
-                  CALL mpi_gatherv (elmindx, nelm, MPI_INTEGER, &
-                     MPI_INULL_P, MPI_INULL_P, MPI_INULL_P, MPI_INTEGER, & ! insignificant on workers
+                  CALL mpi_gatherv (elmindx, nelm, MPI_INTEGER8, &
+                     MPI_INULL_P, MPI_INULL_P, MPI_INULL_P, MPI_INTEGER8, & ! insignificant on workers
                      p_root, p_comm_group, p_err)
 
                   CALL mpi_gatherv (npxlall, nelm, MPI_INTEGER, &
                      MPI_INULL_P, MPI_INULL_P, MPI_INULL_P, MPI_INTEGER, & ! insignificant on workers
                      p_root, p_comm_group, p_err)
 
-                  DO ie = 1, nelm
-                     CALL mpi_send (elmpixels(:,:,ie), 2*elen, MPI_INTEGER, &
-                        p_root, mpi_tag_data, p_comm_group, p_err)
-                  ENDDO
+                  ndone = 0
+                  DO WHILE (ndone < totlen)
+                     nsend = max(min(totlen-ndone, MesgMaxSize/8), 1)
+                     CALL mpi_send (nsend, 1, &
+                        MPI_INTEGER, p_root, mpi_tag_size, p_comm_group, p_err)
+                     CALL mpi_send (elmpixels(:,ndone+1:ndone+nsend), 2*nsend, &
+                        MPI_INTEGER, p_root, mpi_tag_data, p_comm_group, p_err)
+                     ndone = ndone + nsend
+                  ENDDO 
                ENDIF
             ENDIF
 #endif
@@ -121,9 +127,6 @@ CONTAINS
 #ifdef USEMPI
             IF (p_is_io) THEN
                IF (gblock%pio(iblk,jblk) == p_iam_glb) THEN
-
-                  elen = 0
-                  CALL mpi_allreduce (MPI_IN_PLACE, elen, 1, MPI_INTEGER, MPI_MAX, p_comm_group, p_err)
 
                   allocate (nelm_worker (0:p_np_group-1))
                   nelm_worker(0) = 0
@@ -139,8 +142,8 @@ CONTAINS
                   ENDDO
 
                   allocate (elmindx (nelm))
-                  CALL mpi_gatherv (MPI_IN_PLACE, 0, MPI_INTEGER, &
-                     elmindx, nelm_worker(0:), ndsp_worker(0:), MPI_INTEGER, &
+                  CALL mpi_gatherv (MPI_IN_PLACE, 0, MPI_INTEGER8, &
+                     elmindx, nelm_worker(0:), ndsp_worker(0:), MPI_INTEGER8, &
                      p_root, p_comm_group, p_err)
 
                   allocate (npxlall (nelm))
@@ -148,11 +151,23 @@ CONTAINS
                      npxlall, nelm_worker(0:), ndsp_worker(0:), MPI_INTEGER, &
                      p_root, p_comm_group, p_err)
 
-                  allocate (elmpixels (2, elen, nelm))
+                  totlen = sum(npxlall)
+                  allocate (elmpixels (2, totlen))
+
+                  ndone = 0
                   DO iworker = 1, p_np_group-1
-                     DO ie = ndsp_worker(iworker)+1, ndsp_worker(iworker)+nelm_worker(iworker)
-                        CALL mpi_recv (elmpixels(:,:,ie), 2*elen, MPI_INTEGER, &
-                           iworker, mpi_tag_data, p_comm_group, p_stat, p_err)
+
+                     ndsp   = ndsp_worker(iworker)
+                     tothis = ndone + sum(npxlall(ndsp+1:ndsp+nelm_worker(iworker)))
+
+                     DO WHILE (ndone < tothis)
+                     
+                        CALL mpi_recv (nrecv, 1, &
+                           MPI_INTEGER, iworker, mpi_tag_size, p_comm_group, p_stat, p_err)
+                        CALL mpi_recv (elmpixels(:,ndone+1:ndone+nrecv), 2*nrecv, &
+                           MPI_INTEGER, iworker, mpi_tag_data, p_comm_group, p_stat, p_err)
+
+                        ndone = ndone + nrecv
                      ENDDO
                   ENDDO
                ENDIF
@@ -166,13 +181,13 @@ CONTAINS
                      CALL ncio_create_file (fileblock)
 
                      CALL ncio_define_dimension (fileblock, 'element',nelm)
-                     CALL ncio_define_dimension (fileblock, 'np_max', elen)
                      CALL ncio_define_dimension (fileblock, 'ncoor',  2   )
+                     CALL ncio_define_dimension (fileblock, 'pixel',  totlen)
 
                      CALL ncio_write_serial (fileblock, 'elmindex',  elmindx, 'element')
                      CALL ncio_write_serial (fileblock, 'elmnpxl',   npxlall, 'element')
                      CALL ncio_write_serial (fileblock, 'elmpixels', elmpixels, &
-                        'ncoor', 'np_max', 'element', compress = 1)
+                        'ncoor', 'pixel', compress = 1)
                   ENDIF
                ENDIF
             ENDIF
@@ -246,8 +261,10 @@ CONTAINS
 
       ! Local variables
       CHARACTER(len=256) :: filename, fileblock, cyear
-      INTEGER :: iblkme, iblk, jblk, ie, nelm, ndsp
-      INTEGER, allocatable :: elmindx(:), npxl(:), pixels(:,:,:)
+      INTEGER :: iblkme, iblk, jblk, ie, nelm, ndsp, pdsp
+      INTEGER*8, allocatable :: elmindx(:)
+      INTEGER,   allocatable :: datasize(:)
+      INTEGER,   allocatable :: npxl(:), pixels(:,:), pixels2d(:,:,:)
 
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
@@ -282,8 +299,15 @@ CONTAINS
                   CALL get_filename_block (filename, iblk, jblk, fileblock)
                   CALL ncio_read_serial (fileblock, 'elmindex',  elmindx)
                   CALL ncio_read_serial (fileblock, 'elmnpxl',   npxl   )
-                  CALL ncio_read_serial (fileblock, 'elmpixels', pixels )
 
+                  CALL ncio_inquire_varsize (fileblock, 'elmpixels', datasize)
+                  IF (size(datasize) == 3) THEN
+                     CALL ncio_read_serial (fileblock, 'elmpixels', pixels2d)
+                  ELSE
+                     CALL ncio_read_serial (fileblock, 'elmpixels', pixels)
+                  ENDIF
+
+                  pdsp = 0
                   DO ie = 1, nelm
                      mesh(ie+ndsp)%indx = elmindx(ie)
                      mesh(ie+ndsp)%npxl = npxl(ie)
@@ -293,8 +317,14 @@ CONTAINS
                      allocate (mesh(ie+ndsp)%ilon (npxl(ie)))
                      allocate (mesh(ie+ndsp)%ilat (npxl(ie)))
 
-                     mesh(ie+ndsp)%ilon = pixels(1,1:npxl(ie),ie)
-                     mesh(ie+ndsp)%ilat = pixels(2,1:npxl(ie),ie)
+                     IF (size(datasize) == 3) THEN
+                        mesh(ie+ndsp)%ilon = pixels2d(1,1:npxl(ie),ie)
+                        mesh(ie+ndsp)%ilat = pixels2d(2,1:npxl(ie),ie)
+                     ELSE
+                        mesh(ie+ndsp)%ilon = pixels(1,pdsp+1:pdsp+npxl(ie))
+                        mesh(ie+ndsp)%ilat = pixels(2,pdsp+1:pdsp+npxl(ie))
+                        pdsp = pdsp + npxl(ie)
+                     ENDIF
                   ENDDO
 
                   ndsp = ndsp + nelm
@@ -302,9 +332,11 @@ CONTAINS
             ENDDO
          ENDIF
 
-         IF (allocated(elmindx)) deallocate(elmindx)
-         IF (allocated(npxl  ))  deallocate(npxl   )
-         IF (allocated(pixels))  deallocate(pixels )
+         IF (allocated(elmindx ))  deallocate(elmindx )
+         IF (allocated(npxl    ))  deallocate(npxl    )
+         IF (allocated(datasize))  deallocate(datasize)
+         IF (allocated(pixels  ))  deallocate(pixels  )
+         IF (allocated(pixels2d))  deallocate(pixels2d)
 
       ENDIF
 
@@ -392,8 +424,9 @@ CONTAINS
       CHARACTER(len=256) :: filename, fileblock, cyear
       INTEGER :: iset, nset, ndsp, iblkme, iblk, jblk, ie, je, nave, nres, left, iproc
       INTEGER :: nsend, nrecv
-      INTEGER, allocatable :: rbuff(:), iworker(:), sbuff(:)
-      LOGICAL, allocatable :: msk(:)
+      INTEGER*8, allocatable :: rbuff(:), sbuff(:)
+      INTEGER,   allocatable :: iworker(:)
+      LOGICAL,   allocatable :: msk(:)
       LOGICAL :: fexists, fexists_any
 
       write(cyear,'(i4.4)') lc_year
@@ -502,7 +535,7 @@ CONTAINS
                IF (nsend > 0) THEN
                   allocate (sbuff(nsend))
                   sbuff = pack(pixelset%eindex, msk)
-                  CALL mpi_send (sbuff, nsend, MPI_INTEGER, iproc, mpi_tag_data, p_comm_group, p_err)
+                  CALL mpi_send (sbuff, nsend, MPI_INTEGER8, iproc, mpi_tag_data, p_comm_group, p_err)
                   deallocate (sbuff)
                ENDIF
             ENDDO
@@ -522,7 +555,7 @@ CONTAINS
          pixelset%nset = nrecv
          IF (nrecv > 0) THEN
             allocate (pixelset%eindex (nrecv))
-            CALL mpi_recv (pixelset%eindex, nrecv, MPI_INTEGER, &
+            CALL mpi_recv (pixelset%eindex, nrecv, MPI_INTEGER8, &
                p_root, mpi_tag_data, p_comm_group, p_stat, p_err)
          ENDIF
       ENDIF

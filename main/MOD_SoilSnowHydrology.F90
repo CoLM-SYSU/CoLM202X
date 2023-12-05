@@ -19,7 +19,7 @@ MODULE MOD_SoilSnowHydrology
   SAVE
 
 ! PUBLIC MEMBER FUNCTIONS:
-  public :: WATER
+  public :: WATER_2014
   PUBLIC :: WATER_VSF
   public :: snowwater
   public :: soilwater
@@ -39,7 +39,7 @@ MODULE MOD_SoilSnowHydrology
 
 
 
-  subroutine WATER (ipatch,patchtype  ,lb          ,nl_soil ,deltim,&
+  subroutine WATER_2014 (ipatch,patchtype,lb       ,nl_soil ,deltim,&
              z_soisno    ,dz_soisno   ,zi_soisno                   ,&
              bsw         ,porsl       ,psi0        ,hksati  ,rootr ,rootflux, &
              t_soisno    ,wliq_soisno ,wice_soisno ,smp     ,hk    ,pg_rain ,sm    ,&
@@ -65,12 +65,12 @@ MODULE MOD_SoilSnowHydrology
 !
 ! Original author : Yongjiu Dai, /09/1999/, /08/2002/, /04/2014/
 !
-! FLOW DIAGRAM FOR WATER.F90
+! FLOW DIAGRAM FOR WATER_2014.F90
 !
-! WATER ===> snowwater
-!            surfacerunoff
-!            soilwater
-!            subsurfacerunoff
+! WATER_2014 ===> snowwater
+!                 surfacerunoff
+!                 soilwater
+!                 subsurfacerunoff
 !
 !=======================================================================
 
@@ -420,7 +420,7 @@ ENDIF
 
   endif
 
-  end subroutine WATER
+  end subroutine WATER_2014
 
 !-----------------------------------------------------------------------
   subroutine WATER_VSF (ipatch,  patchtype,lb      ,nl_soil ,deltim ,&
@@ -464,13 +464,6 @@ ENDIF
 !    Modeling Variably Saturated Flow in Stratified Soils
 !      With Explicit Tracking of Wetting Front and Water Table Locations.
 !    Water Resources Research. doi:10.1029/2019wr025368
-!
-! FLOW DIAGRAM FOR WATER_VSF.F90
-!
-! WATER ===> snowwater
-!            surfacerunoff     [caculated by lateral flow when defined Lateral_Flow]
-!            subsurfacerunoff  [caculated by lateral flow when defined Lateral_Flow]
-!            soilwater         [Variably Saturated Flow algorithm]
 !
 !===================================================================================
 

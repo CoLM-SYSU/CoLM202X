@@ -272,12 +272,8 @@ contains
 
          IF (HistForm == 'Gridded') THEN
             IF (itime_in_file == 1) then
-               call hist_write_var_real8_2d (file_hist, 'landarea', ghist, 1, sumarea, compress = 1)
-               IF (p_is_master .and. (trim(DEF_HIST_mode) == 'one')) then
-                  CALL ncio_put_attr (file_hist, 'landarea', 'long_name', 'land area')
-                  CALL ncio_put_attr (file_hist, 'landarea', 'units', 'km2')
-                  CALL ncio_put_attr (file_hist, 'landarea', 'missing_value', spval)
-               ENDIF
+               call hist_write_var_real8_2d (file_hist, 'landarea', ghist, 1, sumarea, &
+                  compress = 1, longname = 'land area', units = 'km2')
             ENDIF
          ENDIF
 

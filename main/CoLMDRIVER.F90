@@ -65,8 +65,8 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
      m = patchclass(i)
 
      steps_in_one_deltim = 1
-     ! deltim need to be within 1800s for waterbody with snow in order to avoid large temperature fluctuations
-     ! due to rapid snow heat conductance
+     ! deltim need to be within 1800s for waterbody with snow in order to avoid large
+     ! temperature fluctuations due to rapid snow heat conductance
      IF(m == WATERBODY .and. snowdp(i) > 0.0) steps_in_one_deltim = ceiling(deltim/1800.)
      deltim_phy = deltim/steps_in_one_deltim
 
@@ -107,8 +107,8 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
            ck(m),                                                              &
            slti(m),         hlti(m),                                           &
            shti(m),         hhti(m),         trda(m),         trdm(m),         &
-           trop(m),         gradm(m),        binter(m),       extkn(m),        &
-           chil(m),         rho(1:,1:,m),    tau(1:,1:,m),                     &
+           trop(m),         g1(m),           g0(m),gradm(m),  binter(m),       &
+           extkn(m),        chil(m),         rho(1:,1:,m),    tau(1:,1:,m),    &
 
          ! ATMOSPHERIC FORCING
            forc_pco2m(i),   forc_po2m(i),    forc_us(i),      forc_vs(i),      &
@@ -175,7 +175,6 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
            fm(i),           fh(i),           fq(i)                             )
 
         END DO
-
      ENDIF
 
 
@@ -232,8 +231,8 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
         htop(i)         ,hbot(i)         ,sqrtdi(m)       ,chil(m)         ,&
         effcon(m)       ,vmax25(m)       ,slti(m)         ,hlti(m)         ,&
         shti(m)         ,hhti(m)         ,trda(m)         ,trdm(m)         ,&
-        trop(m)         ,gradm(m)        ,binter(m)       ,extkn(m)        ,&
-        rho(1:,1:,m)    ,tau(1:,1:,m)    ,rootfr(1:,m)                     ,&
+        trop(m)         ,g1(m)           ,g0(m),gradm(m)  ,binter(m)       ,&
+        extkn(m)        ,rho(1:,1:,m)    ,tau(1:,1:,m)    ,rootfr(1:,m)    ,&
 
       ! ATMOSPHERIC FORCING
         forc_pco2m(i)   ,forc_po2m(i)    ,forc_us(i)      ,forc_vs(i)      ,&
@@ -327,7 +326,6 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
 #ifdef OPENMP
 !$OMP END PARALLEL DO
 #endif
-
 
 END SUBROUTINE CoLMDRIVER
 ! ---------- EOP ------------

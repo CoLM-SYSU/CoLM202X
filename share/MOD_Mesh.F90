@@ -39,8 +39,8 @@ MODULE MOD_Mesh
    ! ---- data types ----
    TYPE :: irregular_elm_type
 
-      INTEGER :: indx
-      INTEGER :: xblk, yblk
+      INTEGER*8 :: indx
+      INTEGER   :: xblk, yblk
 
       INTEGER :: npxl
       INTEGER, allocatable :: ilon(:)
@@ -143,12 +143,15 @@ CONTAINS
       INTEGER  :: smesg(5), rmesg(5)
 
       INTEGER, allocatable :: nelm_worker(:)
-      TYPE(pointer_int32_1d), allocatable :: elist_worker(:)
+      TYPE(pointer_int64_1d), allocatable :: elist_worker(:)
 
-      INTEGER, allocatable :: elist(:), iaddr(:)
-      INTEGER, allocatable :: elist2(:,:), xlist2(:,:), ylist2(:,:)
+      INTEGER*8 :: elmid
+      INTEGER*8, allocatable :: elist(:), elist2(:,:), sbuf64(:), elist_recv(:)
+
+      INTEGER, allocatable :: iaddr(:)
+      INTEGER, allocatable :: xlist2(:,:), ylist2(:,:)
       INTEGER, allocatable :: sbuf(:), ipt2(:,:)
-      INTEGER, allocatable :: elist_recv(:), xlist_recv(:), ylist_recv(:)
+      INTEGER, allocatable :: xlist_recv(:), ylist_recv(:)
       INTEGER, allocatable :: npxl_blk(:,:)
       LOGICAL, allocatable :: msk2(:,:), msk(:)
       INTEGER, allocatable :: xlist(:), ylist(:)
@@ -232,23 +235,23 @@ CONTAINS
 
                      yg = gridmesh%ydsp(jblk) + yloc
 
-                     ie = gridmesh%nlon * (yg-1) + xg
+                     elmid = int(gridmesh%nlon,8) * (yg-1) + xg
                   ELSE
-                     ie = 0
+                     elmid = 0
                   ENDIF
 #endif
 #ifdef CATCHMENT
-                  ie = datamesh%blk(iblk,jblk)%val(xloc,yloc)
+                  elmid = datamesh%blk(iblk,jblk)%val(xloc,yloc)
 #endif
 #ifdef UNSTRUCTURED
-                  ie = datamesh%blk(iblk,jblk)%val(xloc,yloc)
+                  elmid = datamesh%blk(iblk,jblk)%val(xloc,yloc)
 #endif
 
-                  IF (ie > 0) THEN
+                  IF (elmid > 0) THEN
 
-                     iworker = mod(ie, p_np_worker)
+                     iworker = mod(elmid, p_np_worker)
                      CALL insert_into_sorted_list1 ( &
-                        ie, nelm_worker(iworker), elist_worker(iworker)%val, iloc)
+                        elmid, nelm_worker(iworker), elist_worker(iworker)%val, iloc)
 
                      IF (nelm_worker(iworker) == size(elist_worker(iworker)%val)) THEN
                         CALL expand_list (elist_worker(iworker)%val, 0.2_r8)
@@ -395,21 +398,21 @@ CONTAINS
 
 #ifdef GRIDBASED
                   IF (datamesh%blk(iblk,jblk)%val(xloc,yloc) > 0) THEN
-                     ie = gridmesh%nlon * (yg-1) + xg
+                     elmid = int(gridmesh%nlon,8) * (yg-1) + xg
                   ELSE
-                     ie = 0
+                     elmid = 0
                   ENDIF
 #endif
 #ifdef CATCHMENT
-                  ie = datamesh%blk(iblk,jblk)%val(xloc,yloc)
+                  elmid = datamesh%blk(iblk,jblk)%val(xloc,yloc)
 #endif
 #ifdef UNSTRUCTURED
-                  ie = datamesh%blk(iblk,jblk)%val(xloc,yloc)
+                  elmid = datamesh%blk(iblk,jblk)%val(xloc,yloc)
 #endif
 
                   xlist2(ixloc,iyloc) = ix
                   ylist2(ixloc,iyloc) = iy
-                  elist2(ixloc,iyloc) = ie
+                  elist2(ixloc,iyloc) = elmid 
 
                   IF (dlonp < 1.0e-6_r8) THEN
                      elist2(ixloc,iyloc) = 0
@@ -424,6 +427,8 @@ CONTAINS
             allocate (sbuf (nxp*nyp))
             allocate (ipt2 (nxp,nyp))
 
+            allocate (sbuf64 (nxp*nyp))
+
             ipt2 = mod(elist2, p_np_worker)
             DO iproc = 0, p_np_worker-1
                msk2  = (ipt2 == iproc) .and. (elist2 > 0)
@@ -437,9 +442,9 @@ CONTAINS
                   CALL mpi_send (smesg(1:2), 2, MPI_INTEGER, &
                      idest, mpi_tag_mesg, p_comm_glb, p_err)
 
-                  sbuf(1:nsend) = pack(elist2, msk2)
+                  sbuf64(1:nsend) = pack(elist2, msk2)
                   ! send(04)
-                  CALL mpi_send (sbuf(1:nsend), nsend, MPI_INTEGER, &
+                  CALL mpi_send (sbuf64(1:nsend), nsend, MPI_INTEGER8, &
                      idest, mpi_tag_data, p_comm_glb, p_err)
 
                   sbuf(1:nsend) = pack(xlist2, msk2)
@@ -457,17 +462,18 @@ CONTAINS
 
             deallocate (sbuf  )
             deallocate (ipt2  )
+            deallocate (sbuf64)
 #else
 
             DO iy = 1, nyp
                DO ix = 1, nxp
 
-                  ie = elist2(ix,iy)
-                  IF (ie > 0) THEN
+                  elmid = elist2(ix,iy)
+                  IF (elmid > 0) THEN
 
-                     CALL insert_into_sorted_list1 (ie, nelm, elist, iloc, is_new)
+                     CALL insert_into_sorted_list1 (elmid, nelm, elist, iloc, is_new)
 
-                     msk2 = (elist2 == ie)
+                     msk2 = (elist2 == elmid)
                      npxl = count(msk2)
 
                      IF (is_new) THEN
@@ -476,7 +482,7 @@ CONTAINS
                         ENDIF
                         iaddr(iloc) = nelm
 
-                        meshtmp(iaddr(iloc))%indx = ie
+                        meshtmp(iaddr(iloc))%indx = elmid
                         meshtmp(iaddr(iloc))%npxl = npxl
                      ELSE
                         meshtmp(iaddr(iloc))%npxl = meshtmp(iaddr(iloc))%npxl + npxl
@@ -535,7 +541,7 @@ CONTAINS
 
                allocate (elist_recv (nrecv))
                ! recv(04)
-               CALL mpi_recv (elist_recv, nrecv, MPI_INTEGER, &
+               CALL mpi_recv (elist_recv, nrecv, MPI_INTEGER8, &
                   isrc, mpi_tag_data, p_comm_glb, p_stat, p_err)
 
                allocate (xlist_recv (nrecv))
@@ -552,13 +558,13 @@ CONTAINS
 
                DO irecv = 1, nrecv
 
-                  ie = elist_recv(irecv)
+                  elmid = elist_recv(irecv)
 
-                  IF (ie > 0) THEN
+                  IF (elmid > 0) THEN
 
-                     CALL insert_into_sorted_list1 (ie, nelm, elist, iloc, is_new)
+                     CALL insert_into_sorted_list1 (elmid, nelm, elist, iloc, is_new)
 
-                     msk  = (elist_recv == ie)
+                     msk  = (elist_recv == elmid)
                      npxl = count(msk)
 
                      IF (is_new) THEN
@@ -567,7 +573,7 @@ CONTAINS
                         ENDIF
                         iaddr(iloc) = nelm
 
-                        meshtmp(iaddr(iloc))%indx = ie
+                        meshtmp(iaddr(iloc))%indx = elmid 
                         meshtmp(iaddr(iloc))%npxl = npxl
                      ELSE
                         meshtmp(iaddr(iloc))%npxl = meshtmp(iaddr(iloc))%npxl + npxl
@@ -686,12 +692,17 @@ CONTAINS
 
             idest = gblock%pio (meshtmp(ie)%xblk, meshtmp(ie)%yblk)
 
-            smesg(1) = p_iam_glb
-            smesg(2:3) = (/meshtmp(ie)%indx, meshtmp(ie)%npxl/)
-            smesg(4:5) = (/meshtmp(ie)%xblk, meshtmp(ie)%yblk/)
-            ! send(09)
-            CALL mpi_send (smesg(1:5), 5, MPI_INTEGER, &
+            ! send(09-1)
+            CALL mpi_send (p_iam_glb, 1, MPI_INTEGER, &
                idest, mpi_tag_mesg, p_comm_glb, p_err)
+            ! send(09-2)
+            CALL mpi_send (meshtmp(ie)%indx, 1, MPI_INTEGER8, &
+               idest, mpi_tag_mesg, p_comm_glb, p_err)
+            ! send(09-3)
+            smesg(1:3) = (/meshtmp(ie)%xblk, meshtmp(ie)%yblk, meshtmp(ie)%npxl/)
+            CALL mpi_send (smesg(1:3), 3, MPI_INTEGER, &
+               idest, mpi_tag_mesg, p_comm_glb, p_err)
+
             ! send(10)
             CALL mpi_send (meshtmp(ie)%ilon, meshtmp(ie)%npxl, MPI_INTEGER, &
                idest, mpi_tag_data, p_comm_glb, p_err)
@@ -713,21 +724,26 @@ CONTAINS
             blkcnt(:,:) = 0
             DO ie = 1, numelm
 
-               ! recv(09)
-               CALL mpi_recv (rmesg, 5, MPI_INTEGER, &
+               ! recv(09-1)
+               CALL mpi_recv (isrc, 1, MPI_INTEGER, &
                   MPI_ANY_SOURCE, mpi_tag_mesg, p_comm_glb, p_stat, p_err)
+               ! recv(09-2)
+               CALL mpi_recv (elmid, 1, MPI_INTEGER8, &
+                  isrc, mpi_tag_mesg, p_comm_glb, p_stat, p_err)
+               ! recv(09-3)
+               CALL mpi_recv (rmesg(1:3), 3, MPI_INTEGER, &
+                  isrc, mpi_tag_mesg, p_comm_glb, p_stat, p_err)
 
-               isrc = rmesg(1)
-               xblk = rmesg(4)
-               yblk = rmesg(5)
+               xblk = rmesg(1)
+               yblk = rmesg(2)
 
                blkcnt(xblk,yblk) = blkcnt(xblk,yblk) + 1
                je = blkdsp(xblk,yblk) + blkcnt(xblk,yblk)
 
-               mesh(je)%indx = rmesg(2)
+               mesh(je)%indx = elmid
+               mesh(je)%xblk = rmesg(1)
+               mesh(je)%yblk = rmesg(2)
                mesh(je)%npxl = rmesg(3)
-               mesh(je)%xblk = rmesg(4)
-               mesh(je)%yblk = rmesg(5)
 
                allocate (mesh(je)%ilon (mesh(je)%npxl))
                allocate (mesh(je)%ilat (mesh(je)%npxl))
@@ -803,6 +819,9 @@ CONTAINS
                   DO ie = 1, blkcnt(iblk,jblk)
                      CALL copy_elm (meshtmp(blkdsp(iblk,jblk)+order(ie)), &
                         mesh(blkdsp(iblk,jblk)+ie))
+#ifdef GRIDBASED
+                     ! mesh(blkdsp(iblk,jblk)+ie)%indx = ie
+#endif
                   ENDDO
 
                   deallocate (elmindx)
@@ -905,9 +924,10 @@ CONTAINS
 
                DO ie = ndsp+1, ndsp+nsend
                   idest = iproc
-                  smesg(1:2) = (/mesh(ie)%indx, mesh(ie)%npxl/)
-                  smesg(3:4) = (/mesh(ie)%xblk, mesh(ie)%yblk/)
-                  CALL mpi_send (smesg(1:4), 4, MPI_INTEGER, &
+                  CALL mpi_send (mesh(ie)%indx, 1, MPI_INTEGER8, &
+                     idest, mpi_tag_mesg, p_comm_group, p_err)
+                  smesg(1:3) = (/mesh(ie)%xblk, mesh(ie)%yblk, mesh(ie)%npxl/)
+                  CALL mpi_send (smesg(1:3), 3, MPI_INTEGER, &
                      idest, mpi_tag_mesg, p_comm_group, p_err)
                   CALL mpi_send (mesh(ie)%ilon, mesh(ie)%npxl, &
                      MPI_INTEGER, idest, mpi_tag_data, p_comm_group, p_err)
@@ -929,13 +949,14 @@ CONTAINS
             allocate (mesh (numelm))
 
             DO ie = 1, numelm
-               CALL mpi_recv (rmesg, 4, MPI_INTEGER, &
+               CALL mpi_recv (mesh(ie)%indx, 1, MPI_INTEGER8, &
+                  p_root, mpi_tag_mesg, p_comm_group, p_stat, p_err)
+               CALL mpi_recv (rmesg, 3, MPI_INTEGER, &
                   p_root, mpi_tag_mesg, p_comm_group, p_stat, p_err)
 
-               mesh(ie)%indx = rmesg(1)
-               mesh(ie)%npxl = rmesg(2)
-               mesh(ie)%xblk = rmesg(3)
-               mesh(ie)%yblk = rmesg(4)
+               mesh(ie)%xblk = rmesg(1)
+               mesh(ie)%yblk = rmesg(2)
+               mesh(ie)%npxl = rmesg(3)
 
                allocate (mesh(ie)%ilon (mesh(ie)%npxl))
                allocate (mesh(ie)%ilat (mesh(ie)%npxl))

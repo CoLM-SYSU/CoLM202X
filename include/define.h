@@ -5,16 +5,15 @@
 #undef UNSTRUCTURED
 #undef SinglePoint
 
-! 2. Land TYPE classification :
+! 2. Land subgrid type classification:
 !    Select one of the following options.
 #undef LULC_USGS
 #undef LULC_IGBP
 #define LULC_IGBP_PFT
 #undef LULC_IGBP_PC
 
-! 2.1 Urban model setting (put it temporarily here):
+! 2.1 3D Urban model (put it temporarily here):
 #undef URBAN_MODEL
-#undef URBAN_LCZ
 
 ! 3. If defined, debug information is output.
 #define CoLMDEBUG

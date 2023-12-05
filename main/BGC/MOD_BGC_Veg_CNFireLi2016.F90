@@ -28,7 +28,7 @@ module MOD_BGC_Veg_CNFireLi2016
   use MOD_Vars_TimeInvariants, only: &
       i_cwd, occur_hi_gdp_tree, gdp_lf, abm_lf, peatf_lf, &
       lfuel, ufuel, cropfire_a1, borealat, troplat, non_boreal_peatfire_c, boreal_peatfire_c, rh_low, rh_hgh, &
-      bt_min, bt_max, pot_hmn_ign_counts_alpha, g0, psi0, porsl, bsw
+      bt_min, bt_max, pot_hmn_ign_counts_alpha, g0_fire, psi0, porsl, bsw
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
   use MOD_Vars_TimeInvariants, only: theta_r, alpha_vgm, n_vgm, L_vgm, sc_vgm, fc_vgm
 #endif
@@ -304,7 +304,7 @@ contains
           nfire(i) = ig/secsphr*fb*fire_m*lgdp(i) !fire counts/km2/sec
           Lb_lf    = 1._r8+10._r8*(1._r8-EXP(-0.06_r8*sqrt(forc_us(i)*forc_us(i)+forc_vs(i)*forc_vs(i))))
           spread_m = fire_m**0.5_r8
-          farea_burned(i) = min(1._r8,(g0*spread_m*fsr(i)* &
+          farea_burned(i) = min(1._r8,(g0_fire*spread_m*fsr(i)* &
                   fd(i)/1000._r8)**2*lgdp1(i)* &
                   lpop(i)*nfire(i)*PI*Lb_lf+ &
                   baf_crop(i)+baf_peatf(i))  ! fraction (0-1) per sec
