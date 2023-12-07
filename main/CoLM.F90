@@ -143,7 +143,7 @@ PROGRAM CoLM
    IF (DEF_HIST_WriteBack) THEN
       CALL spmd_assign_writeback ()
    ENDIF
-   
+
    IF (p_is_writeback) THEN
       CALL hist_writeback_daemon ()
    ELSE
@@ -349,7 +349,7 @@ PROGRAM CoLM
 
       ! Read in the meteorological forcing
       ! ----------------------------------------------------------------------
-      CALL read_forcing (idate, dir_forcing)
+      CALL read_forcing (jdate, dir_forcing)
 
       IF(DEF_USE_OZONEDATA)THEN
          CALL update_Ozone_data(itstamp, deltim)
@@ -574,7 +574,7 @@ PROGRAM CoLM
 
 #ifdef USEMPI
    ENDIF
-   
+
    IF (DEF_HIST_WriteBack) THEN
       CALL hist_writeback_exit ()
    ENDIF

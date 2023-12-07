@@ -330,7 +330,7 @@ contains
 
          ! set model time stamp
          id(:) = idate(:)
-         call adj2end(id)
+         !call adj2end(id)
          mtstamp = id
 
          has_u = .true.
@@ -1030,7 +1030,7 @@ contains
          tstamp_LB(var_i)%sec = sec
 
          ! set time stamp (ststamp_LB)
-         if (sec <= 0) then
+         if (sec < 0) then
             tstamp_LB(var_i)%sec = 86400 + sec
             tstamp_LB(var_i)%day = day - 1
             if (tstamp_LB(var_i)%day == 0) then
@@ -1096,7 +1096,7 @@ contains
          tstamp_LB(var_i)%sec  = sec
 
          ! set time stamp (ststamp_LB)
-         if (sec <= 0) then
+         if (sec < 0) then
             tstamp_LB(var_i)%sec = 86400 + sec
             tstamp_LB(var_i)%day = day - 1
             if (tstamp_LB(var_i)%day == 0) then
@@ -1159,7 +1159,7 @@ contains
          tstamp_LB(var_i)%sec  = sec
 
          ! set time stamp (ststamp_LB)
-         if (sec <= 0) then
+         if (sec < 0) then
             tstamp_LB(var_i)%sec = 86400 + sec
             tstamp_LB(var_i)%day = day - 1
             if (tstamp_LB(var_i)%day == 0) then

@@ -766,30 +766,30 @@ ENDIF
       ! ----------------------------------------------------------
       IF (ROOTFR_SCHEME == 1) THEN
          DO i = 1, N_land_classification
-            rootfr(1,i)=1./(1.+(z_soih(1)*100./d50(i))**beta(i))
-            rootfr(nl_soil,i)=1.-1./(1.+(z_soih(nl_soil-1)*100./d50(i))**beta(i))
+            rootfr(1,i)=1./(1.+(zi_soi(1)*100./d50(i))**beta(i))
+            rootfr(nl_soil,i)=1.-1./(1.+(zi_soi(nl_soil-1)*100./d50(i))**beta(i))
 
             DO nsl=2,nl_soil-1
-               rootfr(nsl,i)=1./(1.+(z_soih(nsl)*100./d50(i))**beta(i)) &
-                  -1./(1.+(z_soih(nsl-1)*100./d50(i))**beta(i))
+               rootfr(nsl,i)=1./(1.+(zi_soi(nsl)*100./d50(i))**beta(i)) &
+                  -1./(1.+(zi_soi(nsl-1)*100./d50(i))**beta(i))
             ENDDO
          ENDDO
       ELSE
          DO i = 1, N_land_classification
             rootfr(1,i) = 1. - 0.5*( &
-                 exp(-roota(i) * z_soih(1)) &
-               + exp(-rootb(i) * z_soih(1)) )
+                 exp(-roota(i) * zi_soi(1)) &
+               + exp(-rootb(i) * zi_soi(1)) )
 
             rootfr(nl_soil,i) = 0.5*( &
-                 exp(-roota(i) * z_soih(nl_soil)) &
-               + exp(-rootb(i) * z_soih(nl_soil)) )
+                 exp(-roota(i) * zi_soi(nl_soil)) &
+               + exp(-rootb(i) * zi_soi(nl_soil)) )
 
             DO nsl = 2, nl_soil-1
                rootfr(nsl,i) = 0.5*( &
-                    exp(-roota(i) * z_soih(nsl-1)) &
-                  + exp(-rootb(i) * z_soih(nsl-1)) &
-                  - exp(-roota(i) * z_soih(nsl)) &
-                  - exp(-rootb(i) * z_soih(nsl)) )
+                    exp(-roota(i) * zi_soi(nsl-1)) &
+                  + exp(-rootb(i) * zi_soi(nsl-1)) &
+                  - exp(-roota(i) * zi_soi(nsl)) &
+                  - exp(-rootb(i) * zi_soi(nsl)) )
             ENDDO
          ENDDO
       ENDIF

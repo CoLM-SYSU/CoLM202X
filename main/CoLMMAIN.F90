@@ -1373,12 +1373,12 @@ IF (patchtype == 0) THEN
        ps = patch_pft_s(ipatch)
        pe = patch_pft_e(ipatch)
        CALL snowfraction_pftwrap (ipatch,zlnd,scv,snowdp,wt,sigf,fsno)
-      if(DEF_USE_LAIFEEDBACK)then
-         lai = sum(lai_p(ps:pe)*pftfrac(ps:pe))
-      else
-         lai_p(ps:pe) = tlai_p(ps:pe)
-         lai = tlai(ipatch)
-      endif
+       if(DEF_USE_LAIFEEDBACK)then
+          lai = sum(lai_p(ps:pe)*pftfrac(ps:pe))
+       else
+          lai_p(ps:pe) = tlai_p(ps:pe)
+          lai = tlai(ipatch)
+       endif
        sai_p(ps:pe) = tsai_p(ps:pe) * sigf_p(ps:pe)
        sai = sum(sai_p(ps:pe)*pftfrac(ps:pe))
 #endif

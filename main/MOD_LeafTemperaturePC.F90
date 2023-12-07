@@ -20,31 +20,31 @@ CONTAINS
 
 !-----------------------------------------------------------------------
 
-  SUBROUTINE  LeafTemperaturePC (ipatch,ps,pe,deltim,csoilc,dewmx,htvp,&
-              pftclass,fcover  ,htop    ,hbot    ,lai     ,sai     ,&
-              extkb   ,extkd   ,hu      ,ht      ,hq      ,&
-              us      ,vs      ,thm     ,th      ,thv     ,qm      ,&
-              psrf    ,rhoair  ,parsun  ,parsha  ,fsun    ,sabv    ,&
-              frl     ,thermk  ,fshade  ,rstfacsun,       rstfacsha,&
-              gssun   ,gssha   ,po2m    ,pco2m   ,&
-              z0h_g   ,obug    ,ustarg  ,zlnd    ,zsno    ,fsno    ,&
-              sigf    ,etrc    ,tg      ,qg,rss  ,dqgdT   ,emg     ,&
-              t_soil  ,t_snow  ,q_soil  ,q_snow  ,z0mpc   ,tl      ,&
-              ldew,ldew_rain,ldew_snow  ,taux    ,tauy    ,&
-              fseng,fseng_soil,fseng_snow,fevpg,fevpg_soil,fevpg_snow,&
-              cgrnd   ,cgrndl  ,cgrnds  ,tref    ,qref    ,&
-              rst     ,assim   ,respc   ,fsenl   ,fevpl   ,etr     ,&
-              dlrad   ,ulrad   ,z0m     ,zol     ,rib     ,ustar   ,&
-              qstar   ,tstar   ,fm      ,fh      ,fq               ,&
-              vegwp   ,gs0sun  ,gs0sha  ,&
-              assimsun,etrsun  ,assimsha,etrsha  ,&
+  SUBROUTINE  LeafTemperaturePC ( &
+              ipatch    ,ps        ,pe        ,deltim    ,csoilc    ,dewmx     ,&
+              htvp      ,pftclass  ,fcover    ,htop      ,hbot      ,lai       ,&
+              sai       ,extkb     ,extkd     ,hu        ,ht        ,hq        ,&
+              us        ,vs        ,thm       ,th        ,thv       ,qm        ,&
+              psrf      ,rhoair    ,parsun    ,parsha    ,fsun      ,sabv      ,&
+              frl       ,thermk    ,fshade    ,rstfacsun ,rstfacsha ,gssun     ,&
+              gssha     ,po2m      ,pco2m     ,z0h_g     ,obug      ,ustarg    ,&
+              zlnd      ,zsno      ,fsno      ,sigf      ,etrc      ,tg        ,&
+              qg        ,rss       ,dqgdT     ,emg       ,t_soil    ,t_snow    ,&
+              q_soil    ,q_snow    ,z0mpc     ,tl        ,ldew      ,ldew_rain ,&
+              ldew_snow ,taux      ,tauy      ,fseng     ,fseng_soil,fseng_snow,&
+              fevpg     ,fevpg_soil,fevpg_snow,cgrnd     ,cgrndl    ,cgrnds    ,&
+              tref      ,qref      ,rst       ,assim     ,respc     ,fsenl     ,&
+              fevpl     ,etr       ,dlrad     ,ulrad     ,z0m       ,zol       ,&
+              rib       ,ustar     ,qstar     ,tstar     ,fm        ,fh        ,&
+              fq        ,vegwp     ,gs0sun    ,gs0sha    ,assimsun  ,etrsun    ,&
+              assimsha  ,etrsha    ,&
 !Ozone stress variables
-              o3coefv_sun ,o3coefv_sha ,o3coefg_sun ,o3coefg_sha, &
-              lai_old, o3uptakesun, o3uptakesha, forc_ozone,&
+              o3coefv_sun ,o3coefv_sha ,o3coefg_sun ,o3coefg_sha,&
+              lai_old     ,o3uptakesun ,o3uptakesha ,forc_ozone ,&
 !End ozone stress variables
               hpbl, &
-              qintr_rain,qintr_snow,t_precip,hprl,smp     ,hk      ,&
-              hksati  ,rootflux                                    )
+              qintr_rain,qintr_snow,t_precip  ,hprl      ,smp       ,hk        ,&
+              hksati    ,rootflux                                               )
 
 !=======================================================================
 !
@@ -115,8 +115,8 @@ CONTAINS
 
   real(r8), intent(inout) :: &
         vegwp(1:nvegwcs,ps:pe),  &! vegetation water potential
-        gs0sun(ps:pe),           &!
-        gs0sha(ps:pe)
+        gs0sun(ps:pe),           &! maximum stomata conductance of sunlit leaf
+        gs0sha(ps:pe)             ! maximum stomata conductance of shaded leaf
 
 ! input variables
   real(r8), intent(in) :: &
@@ -174,77 +174,77 @@ CONTAINS
         hk      (1:nl_soil)   ! soil hydraulic conducatance
 
   real(r8), intent(in) :: &
-        hpbl        ! atmospheric boundary layer height [m]
+        hpbl            ! atmospheric boundary layer height [m]
 
   real(r8), dimension(ps:pe), intent(inout) :: &
-        tl,         &! leaf temperature [K]
-        ldew,       &! depth of water on foliage [mm]
-        ldew_rain,  &! depth of rain on foliage [mm]
-        ldew_snow,  &! depth of snow on foliage [mm]
+        tl,            &! leaf temperature [K]
+        ldew,          &! depth of water on foliage [mm]
+        ldew_rain,     &! depth of rain on foliage [mm]
+        ldew_snow,     &! depth of snow on foliage [mm]
 !Ozone stress variables
-        lai_old    ,&! lai in last time step
-        o3uptakesun,&! Ozone does, sunlit leaf (mmol O3/m^2)
-        o3uptakesha,&! Ozone does, shaded leaf (mmol O3/m^2)
-        o3coefv_sun,&! Ozone stress factor for photosynthesis on sunlit leaf
-        o3coefv_sha,&! Ozone stress factor for photosynthesis on sunlit leaf
-        o3coefg_sun,&! Ozone stress factor for stomata on shaded leaf
-        o3coefg_sha,&! Ozone stress factor for stomata on shaded leaf
+        lai_old    ,   &! lai in last time step
+        o3uptakesun,   &! Ozone does, sunlit leaf (mmol O3/m^2)
+        o3uptakesha,   &! Ozone does, shaded leaf (mmol O3/m^2)
+        o3coefv_sun,   &! Ozone stress factor for photosynthesis on sunlit leaf
+        o3coefv_sha,   &! Ozone stress factor for photosynthesis on sunlit leaf
+        o3coefg_sun,   &! Ozone stress factor for stomata on shaded leaf
+        o3coefg_sha,   &! Ozone stress factor for stomata on shaded leaf
 !End ozone stress variables
-        rstfacsun,  &! factor of soil water stress to transpiration on sunlit leaf
-        rstfacsha,  &! factor of soil water stress to transpiration on shaded leaf
-        gssun,      &
-        gssha
+        rstfacsun,     &! factor of soil water stress to transpiration on sunlit leaf
+        rstfacsha,     &! factor of soil water stress to transpiration on shaded leaf
+        gssun,         &! stomata conductance of sunlit leaf
+        gssha           ! stomata conductance of shaded leaf
 
   real(r8), dimension(ps:pe), intent(inout) :: &
-        assimsun,   &! sunlit leaf assimilation rate [umol co2 /m**2/ s] [+]
-        etrsun,     &
-        assimsha,   &! shaded leaf assimilation rate [umol co2 /m**2/ s] [+]
-        etrsha
+        assimsun,      &! sunlit leaf assimilation rate [umol co2 /m**2/ s] [+]
+        etrsun,        &! transpiration rate of sunlit leaf [mm/s]
+        assimsha,      &! shaded leaf assimilation rate [umol co2 /m**2/ s] [+]
+        etrsha          ! transpiration rate of shaded leaf [mm/s]
 
 !Ozone stress variables
   real(r8), intent(inout) :: forc_ozone
 !End ozone stress variables
 
   real(r8), intent(inout) :: &
-        dlrad,      &! downward longwave radiation blow the canopy [W/m2]
-        ulrad,      &! upward longwave radiation above the canopy [W/m2]
-        taux,       &! wind stress: E-W [kg/m/s**2]
-        tauy,       &! wind stress: N-S [kg/m/s**2]
-        fseng,      &! sensible heat flux from ground [W/m2]
-        fseng_soil, &! sensible heat flux from ground soil [W/m2]
-        fseng_snow, &! sensible heat flux from ground snow [W/m2]
-        fevpg,      &! evaporation heat flux from ground [mm/s]
-        fevpg_soil, &! evaporation heat flux from ground soil [mm/s]
-        fevpg_snow, &! evaporation heat flux from ground snow [mm/s]
-        tref,       &! 2 m height air temperature (kelvin)
-        qref,       &! 2 m height air specific humidity
+        dlrad,         &! downward longwave radiation blow the canopy [W/m2]
+        ulrad,         &! upward longwave radiation above the canopy [W/m2]
+        taux,          &! wind stress: E-W [kg/m/s**2]
+        tauy,          &! wind stress: N-S [kg/m/s**2]
+        fseng,         &! sensible heat flux from ground [W/m2]
+        fseng_soil,    &! sensible heat flux from ground soil [W/m2]
+        fseng_snow,    &! sensible heat flux from ground snow [W/m2]
+        fevpg,         &! evaporation heat flux from ground [mm/s]
+        fevpg_soil,    &! evaporation heat flux from ground soil [mm/s]
+        fevpg_snow,    &! evaporation heat flux from ground snow [mm/s]
+        tref,          &! 2 m height air temperature (kelvin)
+        qref,          &! 2 m height air specific humidity
         rootflux(nl_soil,ps:pe)    ! root water uptake from different layers
 
   real(r8), dimension(ps:pe), intent(out) :: &
-        z0mpc,      &! z0m for individual PFT
-        rst,        &! stomatal resistance
-        assim,      &! rate of assimilation
-        respc,      &! rate of respiration
-        fsenl,      &! sensible heat from leaves [W/m2]
-        fevpl,      &! evaporation+transpiration from leaves [mm/s]
-        etr,        &! transpiration rate [mm/s]
-        hprl         ! precipitation sensible heat from canopy
+        z0mpc,         &! z0m for individual PFT
+        rst,           &! stomatal resistance
+        assim,         &! rate of assimilation
+        respc,         &! rate of respiration
+        fsenl,         &! sensible heat from leaves [W/m2]
+        fevpl,         &! evaporation+transpiration from leaves [mm/s]
+        etr,           &! transpiration rate [mm/s]
+        hprl            ! precipitation sensible heat from canopy
 
   real(r8), intent(inout) :: &
-        z0m,        &! effective roughness [m]
-        zol,        &! dimensionless height (z/L) used in Monin-Obukhov theory
-        rib,        &! bulk Richardson number in surface layer
-        ustar,      &! friction velocity [m/s]
-        tstar,      &! temperature scaling parameter
-        qstar,      &! moisture scaling parameter
-        fm,         &! integral of profile function for momentum
-        fh,         &! integral of profile function for heat
-        fq           ! integral of profile function for moisture
+        z0m,           &! effective roughness [m]
+        zol,           &! dimensionless height (z/L) used in Monin-Obukhov theory
+        rib,           &! bulk Richardson number in surface layer
+        ustar,         &! friction velocity [m/s]
+        tstar,         &! temperature scaling parameter
+        qstar,         &! moisture scaling parameter
+        fm,            &! integral of profile function for momentum
+        fh,            &! integral of profile function for heat
+        fq              ! integral of profile function for moisture
 
   real(r8), intent(inout) :: &
-        cgrnd,      &! deriv. of soil energy flux wrt to soil temp [w/m2/k]
-        cgrndl,     &! deriv, of soil latent heat flux wrt soil temp [w/m2/k]
-        cgrnds       ! deriv of soil sensible heat flux wrt soil temp [w/m**2/k]
+        cgrnd,         &! deriv. of soil energy flux wrt to soil temp [w/m2/k]
+        cgrndl,        &! deriv, of soil latent heat flux wrt soil temp [w/m2/k]
+        cgrnds          ! deriv of soil sensible heat flux wrt soil temp [w/m**2/k]
 
 !-----------------------Local Variables---------------------------------
 ! assign iteration parameters
@@ -254,119 +254,118 @@ CONTAINS
    real(r8),parameter :: dtmin  = 0.01 !max limit for temperature convergence [K]
    real(r8),parameter :: dlemin = 0.1  !max limit for energy flux convergence [w/m2]
 
-   real(r8) dtl(0:itmax+1,ps:pe)     !difference of tl between two iterative step
-
+   real(r8) dtl(0:itmax+1,ps:pe)       !difference of tl between two iterative step
 
    !TODO: read from mod_const_pft.F90
    real(r8), dimension(ps:pe) :: &
-        canlay,     &! PFT canopy layer number
-        sqrtdi       ! inverse sqrt of leaf dimension [m**-0.5]
+        canlay,        &! PFT canopy layer number
+        sqrtdi          ! inverse sqrt of leaf dimension [m**-0.5]
 
    !TODO: read from mod_const_pft.F90 file
    real(r8), dimension(ps:pe) :: &
-        effcon,     &! quantum efficiency of RuBP regeneration (mol CO2 / mol quanta)
-        vmax25,     &! maximum carboxylation rate at 25 C at canopy top
-                     ! the range : 30.e-6 <-> 100.e-6 (mol co2 m-2 s-1)
-        shti,       &! slope of high temperature inhibition function     (s1)
-        hhti,       &! 1/2 point of high temperature inhibition function (s2)
-        slti,       &! slope of low temperature inhibition function      (s3)
-        hlti,       &! 1/2 point of low temperature inhibition function  (s4)
-        trda,       &! temperature coefficient in gs-a model             (s5)
-        trdm,       &! temperature coefficient in gs-a model             (s6)
-        trop,       &! temperature coefficient in gs-a model         (273+25)
-        g1,         &! conductance-photosynthesis slope parameter for medlyn model
-        g0,         &! conductance-photosynthesis intercept for medlyn model
-        gradm,      &! conductance-photosynthesis slope parameter
-        binter,     &! conductance-photosynthesis intercept
-        extkn        ! coefficient of leaf nitrogen allocation
+        effcon,        &! quantum efficiency of RuBP regeneration (mol CO2 / mol quanta)
+        vmax25,        &! maximum carboxylation rate at 25 C at canopy top
+                        ! the range : 30.e-6 <-> 100.e-6 (mol co2 m-2 s-1)
+        shti,          &! slope of high temperature inhibition function     (s1)
+        hhti,          &! 1/2 point of high temperature inhibition function (s2)
+        slti,          &! slope of low temperature inhibition function      (s3)
+        hlti,          &! 1/2 point of low temperature inhibition function  (s4)
+        trda,          &! temperature coefficient in gs-a model             (s5)
+        trdm,          &! temperature coefficient in gs-a model             (s6)
+        trop,          &! temperature coefficient in gs-a model         (273+25)
+        g1,            &! conductance-photosynthesis slope parameter for medlyn model
+        g0,            &! conductance-photosynthesis intercept for medlyn model
+        gradm,         &! conductance-photosynthesis slope parameter
+        binter,        &! conductance-photosynthesis intercept
+        extkn           ! coefficient of leaf nitrogen allocation
 
   real(r8), dimension(ps:pe) :: &
-        kmax_sun,   &
-        kmax_sha,   &
-        kmax_xyl,   &
-        kmax_root,  &
-        psi50_sun,  &! water potential at 50% loss of sunlit leaf tissue conductance (mmH2O)
-        psi50_sha,  &! water potential at 50% loss of shaded leaf tissue conductance (mmH2O)
-        psi50_xyl,  &! water potential at 50% loss of xylem tissue conductance (mmH2O)
-        psi50_root, &! water potential at 50% loss of root tissue conductance (mmH2O)
-        ck           ! shape-fitting parameter for vulnerability curve (-)
+        kmax_sun,      &! Plant Hydraulics Paramters
+        kmax_sha,      &! Plant Hydraulics Paramters
+        kmax_xyl,      &! Plant Hydraulics Paramters
+        kmax_root,     &! Plant Hydraulics Paramters
+        psi50_sun,     &! water potential at 50% loss of sunlit leaf tissue conductance (mmH2O)
+        psi50_sha,     &! water potential at 50% loss of shaded leaf tissue conductance (mmH2O)
+        psi50_xyl,     &! water potential at 50% loss of xylem tissue conductance (mmH2O)
+        psi50_root,    &! water potential at 50% loss of root tissue conductance (mmH2O)
+        ck              ! shape-fitting parameter for vulnerability curve (-)
 
    real(r8) :: &
         rootfr(nl_soil,ps:pe) ! root fraction
 
    real(r8) :: &
-        zldis,           &! reference height "minus" zero displacement heght [m]
-        zii,             &! convective boundary layer height [m]
-        z0mv,            &! roughness length, momentum [m]
-        z0hv,            &! roughness length, sensible heat [m]
-        z0qv,            &! roughness length, latent heat [m]
-        zeta,            &! dimensionless height used in Monin-Obukhov theory
-        beta,            &! coefficient of conective velocity [-]
-        wc,              &! convective velocity [m/s]
-        wc2,             &! wc**2
-        dth,             &! diff of virtual temp. between ref. height and surface
-        dthv,            &! diff of vir. poten. temp. between ref. height and surface
-        dqh,             &! diff of humidity between ref. height and surface
-        obu,             &! monin-obukhov length (m)
-        um,              &! wind speed including the stablity effect [m/s]
-        ur,              &! wind speed at reference height [m/s]
-        uaf,             &! velocity of air within foliage [m/s]
-        fh2m,            &! relation for temperature at 2m
-        fq2m,            &! relation for specific humidity at 2m
-        fm10m,           &! integral of profile function for momentum at 10m
-        thvstar,         &! virtual potential temperature scaling parameter
-        eah,             &! canopy air vapor pressure (pa)
-        pco2g,           &! co2 pressure (pa) at ground surface (pa)
-        pco2a,           &! canopy air co2 pressure (pa)
+        zldis,         &! reference height "minus" zero displacement heght [m]
+        zii,           &! convective boundary layer height [m]
+        z0mv,          &! roughness length, momentum [m]
+        z0hv,          &! roughness length, sensible heat [m]
+        z0qv,          &! roughness length, latent heat [m]
+        zeta,          &! dimensionless height used in Monin-Obukhov theory
+        beta,          &! coefficient of conective velocity [-]
+        wc,            &! convective velocity [m/s]
+        wc2,           &! wc**2
+        dth,           &! diff of virtual temp. between ref. height and surface
+        dthv,          &! diff of vir. poten. temp. between ref. height and surface
+        dqh,           &! diff of humidity between ref. height and surface
+        obu,           &! monin-obukhov length (m)
+        um,            &! wind speed including the stablity effect [m/s]
+        ur,            &! wind speed at reference height [m/s]
+        uaf,           &! velocity of air within foliage [m/s]
+        fh2m,          &! relation for temperature at 2m
+        fq2m,          &! relation for specific humidity at 2m
+        fm10m,         &! integral of profile function for momentum at 10m
+        thvstar,       &! virtual potential temperature scaling parameter
+        eah,           &! canopy air vapor pressure (pa)
+        pco2g,         &! co2 pressure (pa) at ground surface (pa)
+        pco2a,         &! canopy air co2 pressure (pa)
 
-        cf,              &! heat transfer coefficient from leaves [-]
-        rbsun,           &! bulk boundary layer resistance of sunlit fraction of canopy
-        rbsha,           &! bulk boundary layer resistance of shaded fraction of canopy
-        ram,             &! aerodynamical resistance [s/m]
-        rah,             &! thermal resistance [s/m]
-        raw,             &! moisture resistance [s/m]
-        clai,            &! canopy heat capacity [Jm-2K-1]
-        fdry    (ps:pe), &! fraction of foliage that is green and dry [-]
-        fwet    (ps:pe), &! fraction of foliage covered by water [-]
-        rb      (ps:pe), &! leaf boundary layer resistance [s/m]
-        cfh     (ps:pe), &! heat conductance for leaf [m/s]
-        cfw     (ps:pe), &! latent heat conductance for leaf [m/s]
-        wtl0    (ps:pe), &! normalized heat conductance for air and leaf [-]
-        wtlq0   (ps:pe), &! normalized latent heat cond. for air and leaf [-]
+        cf,            &! heat transfer coefficient from leaves [-]
+        rbsun,         &! bulk boundary layer resistance of sunlit fraction of canopy
+        rbsha,         &! bulk boundary layer resistance of shaded fraction of canopy
+        ram,           &! aerodynamical resistance [s/m]
+        rah,           &! thermal resistance [s/m]
+        raw,           &! moisture resistance [s/m]
+        clai,          &! canopy heat capacity [Jm-2K-1]
 
-        ei      (ps:pe), &! vapor pressure on leaf surface [pa]
-        deidT   (ps:pe), &! derivative of "ei" on "tl" [pa/K]
-        qsatl   (ps:pe), &! leaf specific humidity [kg/kg]
-        qsatldT (ps:pe), &! derivative of "qsatl" on "tlef"
+        det,           &! maximum leaf temp. change in two consecutive iter [K]
+        dee,           &! maximum leaf heat fluxes change in two consecutive iter [W/m2]
+        obuold,        &! monin-obukhov length from previous iteration
+        err,           &! balance error
 
-        del     (ps:pe), &! absolute change in leaf temp in current iteration [K]
-        del2    (ps:pe), &! change in leaf temperature in previous iteration [K]
-        dele    (ps:pe), &! change in heat fluxes from leaf [W/m2]
-        dele2   (ps:pe), &! change in heat fluxes from leaf in previous iteration [W/m2]
-        det,             &! maximum leaf temp. change in two consecutive iter [K]
-        dee,             &! maximum leaf heat fluxes change in two consecutive iter [W/m2]
+        rsoil,         &! soil respiration
+        gah2o,         &! conductance between canopy and atmosphere
+        gdh2o,         &! conductance between canopy and ground
+        tprcor,        &! tf*psur*100./1.013e5
 
-        obuold,          &! monin-obukhov length from previous iteration
-        tlbef   (ps:pe), &! leaf temperature from previous iteration [K]
-        err,             &! balance error
+        fht,           &! integral of profile function for heat at the top layer
+        fqt,           &! integral of profile function for moisture at the top layer
+        phih,          &! phi(h), similarity function for sensible heat
 
-        fsha    (ps:pe), &! shaded fraction of canopy
-        laisun  (ps:pe), &! sunlit leaf area index, one-sided
-        laisha  (ps:pe), &! shaded leaf area index, one-sided
-        rssun   (ps:pe), &! sunlit leaf stomatal resistance [s/m]
-        rssha   (ps:pe), &! shaded leaf stomatal resistance [s/m]
-        respcsun(ps:pe), &! sunlit leaf respiration rate [umol co2 /m**2/ s] [+]
-        respcsha(ps:pe), &! shaded leaf respiration rate [umol co2 /m**2/ s] [+]
+        fdry     (ps:pe), &! fraction of foliage that is green and dry [-]
+        fwet     (ps:pe), &! fraction of foliage covered by water [-]
+        rb       (ps:pe), &! leaf boundary layer resistance [s/m]
+        cfh      (ps:pe), &! heat conductance for leaf [m/s]
+        cfw      (ps:pe), &! latent heat conductance for leaf [m/s]
+        wtl0     (ps:pe), &! normalized heat conductance for air and leaf [-]
+        wtlq0    (ps:pe), &! normalized latent heat cond. for air and leaf [-]
 
-        rsoil,           &! soil respiration
-        gah2o,           &! conductance between canopy and atmosphere
-        gdh2o,           &! conductance between canopy and ground
-        tprcor,          &! tf*psur*100./1.013e5
+        ei       (ps:pe), &! vapor pressure on leaf surface [pa]
+        deidT    (ps:pe), &! derivative of "ei" on "tl" [pa/K]
+        qsatl    (ps:pe), &! leaf specific humidity [kg/kg]
+        qsatldT  (ps:pe), &! derivative of "qsatl" on "tlef"
 
-        fht,             &! integral of profile function for heat at the top layer
-        fqt,             &! integral of profile function for moisture at the top layer
-        phih              ! phi(h), similarity function for sensible heat
+        del      (ps:pe), &! absolute change in leaf temp in current iteration [K]
+        del2     (ps:pe), &! change in leaf temperature in previous iteration [K]
+        dele     (ps:pe), &! change in heat fluxes from leaf [W/m2]
+        dele2    (ps:pe), &! change in heat fluxes from leaf in previous iteration [W/m2]
 
+        tlbef    (ps:pe), &! leaf temperature from previous iteration [K]
+        fsha     (ps:pe), &! shaded fraction of canopy
+        laisun   (ps:pe), &! sunlit leaf area index, one-sided
+        laisha   (ps:pe), &! shaded leaf area index, one-sided
+        rssun    (ps:pe), &! sunlit leaf stomatal resistance [s/m]
+        rssha    (ps:pe), &! shaded leaf stomatal resistance [s/m]
+        respcsun (ps:pe), &! sunlit leaf respiration rate [umol co2 /m**2/ s] [+]
+        respcsha (ps:pe)   ! shaded leaf respiration rate [umol co2 /m**2/ s] [+]
 
    integer it, nmozsgn
 
@@ -655,12 +654,12 @@ CONTAINS
        ENDDO
 
        ! ground
-       z0m_lays(0)    = z0mg
+       z0m_lays   (0) = z0mg
        displa_lays(0) = 0.
 
        ! 10/05/2017: robust check
        WHERE (z0m_lays(:) < z0mg) z0m_lays(:) = z0mg
-       WHERE (z0m_lay(:)  < z0mg) z0m_lay(:)  = z0mg
+       WHERE (z0m_lay (:) < z0mg) z0m_lay (:) = z0mg
 
        ! maximum assumption
        z0m_lays(1) = maxval(z0m_lays(0:1))
@@ -680,7 +679,7 @@ CONTAINS
 ! calculate layer a_lay
 !-----------------------------------------------------------------------
        ! initialization
-       a_lay(:)     = 0.
+       a_lay    (:) = 0.
        a_lay_i63(:) = 0.
        a_lay_k71(:) = 0.
        a_lay_g77(:) = 0.
@@ -693,12 +692,12 @@ CONTAINS
              lm = vonkar*(htop_lay(i) - displa_lay(i))
 
              ! Raupach, 1992
-             fai   = 1. - exp(-0.5*lsai_lay(i))
+             fai = 1. - exp(-0.5*lsai_lay(i))
              sqrtdragc = min( (0.003+0.3*fai)**0.5, 0.3 )
 
              ! Inoue, 1963
              a_lay_i63(i) = htop_lay(i) * &
-                           (Cd*lsai_lay(i)/(2.*htop_lay(i)*lm**2))**(1./3.)
+                            (Cd*lsai_lay(i)/(2.*htop_lay(i)*lm**2))**(1./3.)
 
              ! Kondo, 1971
              a_lay_k71(i) = htop_lay(i)/(htop_lay(i)-displa_lay(i))/ &
@@ -858,10 +857,10 @@ CONTAINS
 ! initialization and input values for Monin-Obukhov
        ! have been set before
        z0mv = z0m_lays(3); z0hv = z0m_lays(3); z0qv = z0m_lays(3)
-       ur = max(0.1, sqrt(us*us+vs*vs))    !limit set to 0.1
-       dth = thm - taf(toplay)
-       dqh = qm - qaf(toplay)
-       dthv = dth*(1.+0.61*qm) + 0.61*th*dqh
+       ur    = max(0.1, sqrt(us*us+vs*vs))    !limit set to 0.1
+       dth   = thm - taf(toplay)
+       dqh   = qm  - qaf(toplay)
+       dthv  = dth*(1.+0.61*qm) + 0.61*th*dqh
        zldis = hu - displa_lays(3)
 
        IF(zldis <= 0.0) THEN
@@ -889,7 +888,7 @@ CONTAINS
 
           IF (DEF_USE_CBL_HEIGHT) THEN
              CALL moninobukm_leddy(hu,ht,hq,displa_lays(toplay),z0mv,z0hv,z0qv,obu,um, &
-                                   displa_lay(toplay),z0m_lay(toplay), hpbl, ustar,fh2m,fq2m, &
+                                   displa_lay(toplay),z0m_lay(toplay),hpbl,ustar,fh2m,fq2m, &
                                    htop_lay(toplay),fmtop,fm,fh,fq,fht,fqt,phih)
           ELSE
              CALL moninobukm(hu,ht,hq,displa_lays(toplay),z0mv,z0hv,z0qv,obu,um, &
@@ -950,18 +949,18 @@ CONTAINS
                 ELSE
                    ! calculate utop of this layer
                    utop_lay(i) = uprofile(ubot_lay(upplay), fcover_lays(upplay), bee, 0., &
-                      z0mg, hbot_lay(upplay), htop_lay(i), htop_lay(i))
+                                 z0mg, hbot_lay(upplay), htop_lay(i), htop_lay(i))
 
                    ! calculate ktop of this layer
                    ktop_lay(i) = kprofile(kbot_lay(upplay), fcover_lays(upplay), bee, 0., &
-                      displa_lays(toplay)/htop_lay(toplay), &
-                      hbot_lay(upplay), htop_lay(i), obug, ustarg, htop_lay(i))
+                                 displa_lays(toplay)/htop_lay(toplay), &
+                                 hbot_lay(upplay), htop_lay(i), obug, ustarg, htop_lay(i))
 
                    ! areodynamic resistance between this layer top and above layer bottom
-                   ! 03/15/2020, yuan: TODO, vertical gaps between layers, fc = fcover_lays(upplay) or just 0?
+                   ! 03/15/2020, yuan: vertical gaps between layers, fc = fcover_lays(upplay) or just 0?
                    rd(upplay) = rd(upplay) + frd(kbot_lay(upplay), hbot_lay(upplay), htop_lay(i), &
-                      hbot_lay(upplay), htop_lay(i), displa_lays(toplay)/htop_lay(toplay), &
-                      z0h_g, obug, ustarg, z0mg, 0., bee, fcover_lays(upplay))
+                                hbot_lay(upplay), htop_lay(i), displa_lays(toplay)/htop_lay(toplay), &
+                                z0h_g, obug, ustarg, z0mg, 0., bee, fcover_lays(upplay))
 
                 ENDIF
 
@@ -970,31 +969,31 @@ CONTAINS
 
                 ! wind speed at layer bottom
                 ubot_lay(i) = uprofile(utop_lay(i), fcover_lay(i), bee, a_lay(i), &
-                   z0mg, htop_lay(i), hbot_lay(i), hbot_lay(i))
+                              z0mg, htop_lay(i), hbot_lay(i), hbot_lay(i))
 
                 IF (it == 1) THEN
                    ueff_lay_norm(i) = ueffect(1., htop_lay(i), hbot_lay(i), &
-                      z0mg, a_lay(i), bee, fcover_lay(i))
+                                      z0mg, a_lay(i), bee, fcover_lay(i))
                 ENDIF
                 ueff_lay(i) = utop_lay(i)*ueff_lay_norm(i)
 
                 ! normalized eddy coefficient (K) at layer bottom
                 kbot_lay(i) = kprofile(ktop_lay(i), fcover_lay(i), bee, a_lay(i), &
-                   displa_lays(toplay)/htop_lay(toplay), &
-                   htop_lay(i), hbot_lay(i), obug, ustarg, hbot_lay(i))
+                              displa_lays(toplay)/htop_lay(toplay), &
+                              htop_lay(i), hbot_lay(i), obug, ustarg, hbot_lay(i))
 
                 ! areodynamic resistance from effective fluxes exchange height of
                 ! of this layer to the top of this layer
                 IF (upplay > 0) THEN
                    rd(upplay) = rd(upplay) + frd(ktop_lay(i), htop_lay(i), hbot_lay(i), &
-                      htop_lay(i), displa_lay(i)+z0m_lay(i), displa_lays(toplay)/htop_lay(toplay), &
-                      z0h_g, obug, ustarg, z0mg, a_lay(i), bee, fcover_lay(i))
+                                htop_lay(i), displa_lay(i)+z0m_lay(i), displa_lays(toplay)/htop_lay(toplay), &
+                                z0h_g, obug, ustarg, z0mg, a_lay(i), bee, fcover_lay(i))
                 ENDIF
 
                 rd(i) = rd(i) + frd(ktop_lay(i), htop_lay(i), hbot_lay(i), &
-                   displa_lay(i)+z0m_lay(i), max(z0qg,hbot_lay(i)), &
-                   displa_lays(toplay)/htop_lay(toplay), z0h_g, obug, ustarg, &
-                   z0mg, a_lay(i), bee, fcover_lay(i))
+                        displa_lay(i)+z0m_lay(i), max(z0qg,hbot_lay(i)), &
+                        displa_lays(toplay)/htop_lay(toplay), z0h_g, obug, ustarg, &
+                        z0mg, a_lay(i), bee, fcover_lay(i))
 
                 upplay = i
 
@@ -1007,12 +1006,12 @@ CONTAINS
 
           ! uncomment the below when the upper codes change to hbot_lay
           !rd(botlay) = rd(botlay) + kintegral(kbot_lay(botlay), fcover_lays(botlay), bee, 0., &
-          !   z0mg, displa_lays(toplay)/htop_lay(toplay), &
-          !   hbot_lay(botlay), z0qg, obug, ustarg, hbot_lay(botlay), z0qg )
+          !             z0mg, displa_lays(toplay)/htop_lay(toplay), &
+          !             hbot_lay(botlay), z0qg, obug, ustarg, hbot_lay(botlay), z0qg )
 
           rd(botlay) = rd(botlay) + frd(kbot_lay(botlay), hbot_lay(botlay), z0qg, &
-             hbot_lay(botlay), z0qg, displa_lays(toplay)/htop_lay(toplay), &
-             z0h_g, obug, ustarg, z0mg, 0., bee, fcover_lays(botlay))
+                       hbot_lay(botlay), z0qg, displa_lays(toplay)/htop_lay(toplay), &
+                       z0h_g, obug, ustarg, z0mg, 0., bee, fcover_lays(botlay))
 
 ! ......................................................................
 ! Bulk boundary layer resistance of leaves
@@ -1069,49 +1068,45 @@ CONTAINS
 
 ! note: calculate resistance for sunlit/shaded leaves
 !-----------------------------------------------------------------------
-                CALL stomata ( vmax25(i)   ,effcon(i) ,slti(i)   ,hlti(i)   ,&
-                    shti(i)    ,hhti(i)    ,trda(i)   ,trdm(i)   ,trop(i)   ,&
-                    g1(i)      ,g0(i)      ,gradm(i)  ,binter(i) ,thm       ,&
-                    psrf       ,po2m       ,pco2m     ,pco2a     ,eah       ,&
-                    ei(i)      ,tl(i)      ,parsun(i) ,&
+                CALL stomata ( vmax25(i)    ,effcon(i) ,slti(i)   ,hlti(i)   ,&
+                     shti(i)    ,hhti(i)    ,trda(i)   ,trdm(i)   ,trop(i)   ,&
+                     g1(i)      ,g0(i)      ,gradm(i)  ,binter(i) ,thm       ,&
+                     psrf       ,po2m       ,pco2m     ,pco2a     ,eah       ,&
+                     ei(i)      ,tl(i)      ,parsun(i) ,&
 !Ozone stress variables
-                    o3coefv_sun(i), o3coefg_sun(i), &
+                     o3coefv_sun(i),     o3coefg_sun(i),&
 !End ozone stress variables
-                    rbsun      ,raw        ,rstfacsun(i),cintsun(:,i),&
-                    assimsun(i),respcsun(i),rssun(i) &
-                    )
+                     rbsun      ,raw        ,rstfacsun(i),cintsun(:,i),&
+                     assimsun(i),respcsun(i),rssun(i)   )
 
-                CALL stomata ( vmax25(i)   ,effcon(i) ,slti(i)   ,hlti(i)   ,&
-                    shti(i)    ,hhti(i)    ,trda(i)   ,trdm(i)   ,trop(i)   ,&
-                    g1(i)      ,g0(i)      ,gradm(i)  ,binter(i) ,thm       ,&
-                    psrf       ,po2m       ,pco2m     ,pco2a     ,eah       ,&
-                    ei(i)      ,tl(i)      ,parsha(i) ,&
+                CALL stomata ( vmax25(i)    ,effcon(i) ,slti(i)   ,hlti(i)   ,&
+                     shti(i)    ,hhti(i)    ,trda(i)   ,trdm(i)   ,trop(i)   ,&
+                     g1(i)      ,g0(i)      ,gradm(i)  ,binter(i) ,thm       ,&
+                     psrf       ,po2m       ,pco2m     ,pco2a     ,eah       ,&
+                     ei(i)      ,tl(i)      ,parsha(i) ,&
 !Ozone stress variables
-                    o3coefv_sun(i), o3coefg_sun(i), &
+                     o3coefv_sun(i),     o3coefg_sun(i),&
 !End ozone stress variables
-                    rbsha      ,raw        ,rstfacsha(i),cintsha(:,i),&
-                    assimsha(i),respcsha(i),rssha(i) &
-                    )
-
+                     rbsha      ,raw        ,rstfacsha(i),cintsha(:,i),&
+                     assimsha(i),respcsha(i),rssha(i)   )
 
                 IF (DEF_USE_PLANTHYDRAULICS) THEN
 
                    gs0sun(i) = min( 1.e6, 1./(rssun(i)*tl(i)/tprcor) )/ laisun(i) * 1.e6
                    gs0sha(i) = min( 1.e6, 1./(rssha(i)*tl(i)/tprcor) )/ laisha(i) * 1.e6
 
-                   CALL PlantHydraulicStress_twoleaf (nl_soil   ,nvegwcs      ,z_soi       ,&
-                         dz_soi    ,rootfr(:,i)   ,psrf         ,qsatl(i)     ,&
-                         qaf(clev) ,tl(i)         ,rbsun        ,rss          ,&
-                         raw       ,sum(rd(1:clev)),rstfacsun(i),rstfacsha(i) ,cintsun(:,i),&
-                         cintsha(:,i),laisun(i)   ,laisha(i)    ,rhoair       ,fwet(i)     ,&
-                         sai(i)    ,kmax_sun(i)   ,kmax_sha(i)  ,kmax_xyl(i)  ,kmax_root(i),&
-                         psi50_sun(i),psi50_sha(i),psi50_xyl(i) ,psi50_root(i),htop(i)     ,&
-                         ck(i)     ,smp           ,hk           ,hksati       ,vegwp(:,i)  ,&
-                         etrsun(i) ,etrsha(i)     ,rootflux(:,i),qg           ,&
-                         qm        ,gs0sun(i)     ,gs0sha(i)    ,k_soil_root  ,k_ax_root   ,&
-                         gssun(i)  ,gssha(i))
+                   CALL PlantHydraulicStress_twoleaf (nl_soil     ,nvegwcs      ,z_soi        ,&
+                         dz_soi       ,rootfr(:,i)  ,psrf         ,qsatl(i)     ,qaf(clev)    ,&
+                         tl(i)        ,rbsun        ,rss          ,raw        ,sum(rd(1:clev)),&
+                         rstfacsun(i) ,rstfacsha(i) ,cintsun(:,i) ,cintsha(:,i) ,laisun(i)    ,&
+                         laisha(i)    ,rhoair       ,fwet(i)      ,sai(i)       ,kmax_sun(i)  ,&
+                         kmax_sha(i)  ,kmax_xyl(i)  ,kmax_root(i) ,psi50_sun(i) ,psi50_sha(i) ,&
+                         psi50_xyl(i) ,psi50_root(i),htop(i)      ,ck(i)        ,smp          ,&
+                         hk           ,hksati       ,vegwp(:,i)   ,etrsun(i)    ,etrsha(i)    ,&
+                         rootflux(:,i),qg           ,qm           ,gs0sun(i)    ,gs0sha(i)    ,&
+                         k_soil_root  ,k_ax_root    ,gssun(i)     ,gssha(i)                    )
 
-                   etr(i) = etrsun(i) + etrsha(i)
+                   etr(i)  = etrsun(i) + etrsha(i)
                    gssun(i) = gssun(i) * laisun(i)
                    gssha(i) = gssha(i) * laisha(i)
 
@@ -1309,7 +1304,7 @@ CONTAINS
           Ltd(3) = thermk_lay(3) * tdn(4,3) * frl
           Ltd(2) = thermk_lay(2) * ( tdn(4,2)*frl + tdn(3,2)*(Ltd(3) + L(3)) )
           Ltd(1) = thermk_lay(1) * ( tdn(4,1)*frl + tdn(3,1)*(Ltd(3) + L(3)) + &
-                              tdn(2,1)*(Ltd(2) + L(2)) )
+                                     tdn(2,1)*(Ltd(2) + L(2)) )
 
 ! calculate Ld = Ltd + L
           Ld(0) = 0.
@@ -1470,14 +1465,15 @@ ENDIF
 !-----------------------------------------------------------------------
 
                 dtl(it,i) = (sabv(i) + irab(i) - fsenl(i) - hvap*fevpl(i) &
-                   + cpliq*qintr_rain(i)*(t_precip-tl(i)) + cpice*qintr_snow(i)*(t_precip-tl(i))) &
-                   / (lsai(i)*clai/deltim - dirab_dtl(i) + fsenl_dtl(i) + hvap*fevpl_dtl(i) &
-                   + cpliq*qintr_rain(i) + cpice*qintr_snow(i))
+                          + cpliq*qintr_rain(i)*(t_precip-tl(i)) + cpice*qintr_snow(i)*(t_precip-tl(i))) &
+                          / (lsai(i)*clai/deltim - dirab_dtl(i) + fsenl_dtl(i) + hvap*fevpl_dtl(i) &
+                          + cpliq*qintr_rain(i) + cpice*qintr_snow(i))
+
                 dtl_noadj(i) = dtl(it,i)
 
                 ! check magnitude of change in leaf temperature limit to maximum allowed value
 
-                IF(it .le. itmax) THEN
+                IF (it .le. itmax) THEN
 
                  ! put brakes on large temperature excursions
                    IF(abs(dtl(it,i)).gt.delmax)THEN
@@ -1499,7 +1495,7 @@ ENDIF
 
                 del(i)  = sqrt( dtl(it,i)*dtl(it,i) )
                 dele(i) = dtl(it,i) * dtl(it,i) * &
-                   ( dirab_dtl(i)**2 + fsenl_dtl(i)**2 + hvap*fevpl_dtl(i)**2 )
+                        ( dirab_dtl(i)**2 + fsenl_dtl(i)**2 + hvap*fevpl_dtl(i)**2 )
                 dele(i) = sqrt(dele(i))
 
 !-----------------------------------------------------------------------
@@ -1516,7 +1512,7 @@ ENDIF
 ! canopy air humidity
 
           ! calculate wtll, wtlql
-          wtll(:)  = 0.
+          wtll (:) = 0.
           wtlql(:) = 0.
 
           DO i = ps, pe
@@ -1648,6 +1644,7 @@ ENDIF
                                rssha(i),rbsha,lai(i),lai_old(i),p,o3uptakesha(i),deltim)
           lai_old(i) = lai(i)
        ENDIF
+
        z0m  = z0mv
        zol  = zeta
        rib  = min(5.,zol*ustar**2/(vonkar**2/fh*um**2))
@@ -1670,14 +1667,14 @@ ENDIF
 
 ! canopy fluxes and total assimilation amd respiration
              fsenl(i) = fsenl(i) + fsenl_dtl(i)*dtl(it-1,i) &
-               ! add the imbalanced energy below due to T adjustment to sensibel heat
-               + (dtl_noadj(i)-dtl(it-1,i)) * (lsai(i)*clai/deltim - dirab_dtl(i) &
-               + fsenl_dtl(i) + hvap*fevpl_dtl(i) + cpliq*qintr_rain(i) + cpice*qintr_snow(i)) &
-               ! add the imbalanced energy below due to q adjustment to sensibel heat
-               + hvap*erre(i)
+                      ! add the imbalanced energy below due to T adjustment to sensibel heat
+                      + (dtl_noadj(i)-dtl(it-1,i)) * (lsai(i)*clai/deltim - dirab_dtl(i) &
+                      + fsenl_dtl(i) + hvap*fevpl_dtl(i) + cpliq*qintr_rain(i) + cpice*qintr_snow(i)) &
+                      ! add the imbalanced energy below due to q adjustment to sensibel heat
+                      + hvap*erre(i)
 
-             etr0(i)    = etr(i)
-             etr(i)     = etr(i)     +     etr_dtl(i)*dtl(it-1,i)
+             etr0(i) = etr(i)
+             etr (i) = etr(i) + etr_dtl(i)*dtl(it-1,i)
 
              IF (DEF_USE_PLANTHYDRAULICS) THEN
                 !TODO@yuan: rootflux may not be consistent with etr,
@@ -1699,74 +1696,72 @@ ENDIF
              ENDIF
 
              evplwet(i) = evplwet(i) + evplwet_dtl(i)*dtl(it-1,i)
-             fevpl(i)   = fevpl_noadj(i)
-             fevpl(i)   = fevpl(i)   +   fevpl_dtl(i)*dtl(it-1,i)
+             fevpl  (i) = fevpl_noadj(i)
+             fevpl  (i) = fevpl(i)   +   fevpl_dtl(i)*dtl(it-1,i)
 
-             elwmax  = ldew(i)/deltim
+             elwmax = ldew(i)/deltim
 
              ! 03/02/2018, yuan: convert fc to whole area
              ! because ldew now is for the whole area
              ! may need to change to canopy covered area
              ! 09/14/2019, yuan: change back to canopy area
-             elwdif  = max(0., evplwet(i)-elwmax)
+             elwdif = max(0., evplwet(i)-elwmax)
              evplwet(i) = min(evplwet(i), elwmax)
 
              fevpl(i) = fevpl(i) - elwdif
              fsenl(i) = fsenl(i) + hvap*elwdif
-             hprl(i)  = cpliq*qintr_rain(i)*(t_precip-tl(i)) + cpice*qintr_snow(i)*(t_precip-tl(i))
+             hprl (i) = cpliq*qintr_rain(i)*(t_precip-tl(i)) + cpice*qintr_snow(i)*(t_precip-tl(i))
 
 !-----------------------------------------------------------------------
 ! Update dew accumulation (kg/m2)
 !-----------------------------------------------------------------------
-            IF (DEF_Interception_scheme .eq. 1) THEN !colm2014
-               ldew(i) = max(0., ldew(i)-evplwet(i)*deltim)
-            ELSEIF (DEF_Interception_scheme .eq. 2) THEN!CLM4.5
-               ldew(i) = max(0., ldew(i)-evplwet(i)*deltim)
-            ELSEIF (DEF_Interception_scheme .eq. 3) THEN !CLM5
-               IF (ldew_rain(i) .gt. evplwet(i)*deltim) THEN
-                  ldew_rain(i) = ldew_rain(i)-evplwet(i)*deltim
-                  ldew_snow(i) = ldew_snow(i)
-                  ldew(i)=ldew_rain(i)+ldew_snow(i)
-               ELSE
-                  ldew_rain(i) = 0.0
-                  ldew_snow(i) = max(0., ldew(i)-evplwet(i)*deltim)
-                  ldew (i)     = ldew_snow(i)
-               ENDIF
-            ELSEIF (DEF_Interception_scheme .eq. 4) THEN !Noah-MP
-               IF (ldew_rain(i) .gt. evplwet(i)*deltim) THEN
-                  ldew_rain(i) = ldew_rain(i)-evplwet(i)*deltim
-                  ldew_snow(i) = ldew_snow(i)
-                  ldew(i)=ldew_rain(i)+ldew_snow(i)
-               ELSE
-                  ldew_rain(i) = 0.0
-                  ldew_snow(i) = max(0., ldew(i)-evplwet(i)*deltim)
-                  ldew (i)     = ldew_snow(i)
-               ENDIF
-            ELSEIF (DEF_Interception_scheme .eq. 5) THEN !MATSIRO
-               IF (ldew_rain(i) .gt. evplwet(i)*deltim) THEN
-                  ldew_rain(i) = ldew_rain(i)-evplwet(i)*deltim
-                  ldew_snow(i) = ldew_snow(i)
-                  ldew(i)=ldew_rain(i)+ldew_snow(i)
-               ELSE
-                  ldew_rain(i) = 0.0
-                  ldew_snow(i) = max(0., ldew(i)-evplwet(i)*deltim)
-                  ldew (i)     = ldew_snow(i)
-               ENDIF
-            ELSEIF (DEF_Interception_scheme .eq. 6) THEN !VIC
-               IF (ldew_rain(i) .gt. evplwet(i)*deltim) THEN
-                  ldew_rain(i) = ldew_rain(i)-evplwet(i)*deltim
-                  ldew_snow(i) = ldew_snow(i)
-                  ldew(i)=ldew_rain(i)+ldew_snow(i)
-               ELSE
-                  ldew_rain(i) = 0.0
-                  ldew_snow(i) = max(0., ldew(i)-evplwet(i)*deltim)
-                  ldew (i)     = ldew_snow(i)
-               ENDIF
-            ELSE
-               CALL abort
-            ENDIF
-
-
+             IF (DEF_Interception_scheme .eq. 1) THEN !colm2014
+                ldew(i) = max(0., ldew(i)-evplwet(i)*deltim)
+             ELSEIF (DEF_Interception_scheme .eq. 2) THEN!CLM4.5
+                ldew(i) = max(0., ldew(i)-evplwet(i)*deltim)
+             ELSEIF (DEF_Interception_scheme .eq. 3) THEN !CLM5
+                IF (ldew_rain(i) .gt. evplwet(i)*deltim) THEN
+                   ldew_rain(i) = ldew_rain(i)-evplwet(i)*deltim
+                   ldew_snow(i) = ldew_snow(i)
+                   ldew(i)=ldew_rain(i)+ldew_snow(i)
+                ELSE
+                   ldew_rain(i) = 0.0
+                   ldew_snow(i) = max(0., ldew(i)-evplwet(i)*deltim)
+                   ldew (i)     = ldew_snow(i)
+                ENDIF
+             ELSEIF (DEF_Interception_scheme .eq. 4) THEN !Noah-MP
+                IF (ldew_rain(i) .gt. evplwet(i)*deltim) THEN
+                   ldew_rain(i) = ldew_rain(i)-evplwet(i)*deltim
+                   ldew_snow(i) = ldew_snow(i)
+                   ldew(i)=ldew_rain(i)+ldew_snow(i)
+                ELSE
+                   ldew_rain(i) = 0.0
+                   ldew_snow(i) = max(0., ldew(i)-evplwet(i)*deltim)
+                   ldew (i)     = ldew_snow(i)
+                ENDIF
+             ELSEIF (DEF_Interception_scheme .eq. 5) THEN !MATSIRO
+                IF (ldew_rain(i) .gt. evplwet(i)*deltim) THEN
+                   ldew_rain(i) = ldew_rain(i)-evplwet(i)*deltim
+                   ldew_snow(i) = ldew_snow(i)
+                   ldew(i)=ldew_rain(i)+ldew_snow(i)
+                ELSE
+                   ldew_rain(i) = 0.0
+                   ldew_snow(i) = max(0., ldew(i)-evplwet(i)*deltim)
+                   ldew (i)     = ldew_snow(i)
+                ENDIF
+             ELSEIF (DEF_Interception_scheme .eq. 6) THEN !VIC
+                IF (ldew_rain(i) .gt. evplwet(i)*deltim) THEN
+                   ldew_rain(i) = ldew_rain(i)-evplwet(i)*deltim
+                   ldew_snow(i) = ldew_snow(i)
+                   ldew(i)=ldew_rain(i)+ldew_snow(i)
+                ELSE
+                   ldew_rain(i) = 0.0
+                   ldew_snow(i) = max(0., ldew(i)-evplwet(i)*deltim)
+                   ldew (i)     = ldew_snow(i)
+                ENDIF
+             ELSE
+                CALL abort
+             ENDIF
 
 !-----------------------------------------------------------------------
 ! balance check
@@ -1781,7 +1776,6 @@ ENDIF
                 write(6,*) 'energy imbalance in LeafTemperaturePC.F90', &
                            i,it-1,err,sabv(i),irab(i),fsenl(i),hvap*fevpl(i),hprl(i)
 #endif
-
           ENDIF
        ENDDO
 
@@ -1790,6 +1784,7 @@ ENDIF
 !-----------------------------------------------------------------------
        dlrad = Lin(0) &
              + sum( 4.* fshade * (1-thermk) * stefnc * tlbef**3 * dtl(it-1,:) )
+
        ulrad = Lin(4) - sum( fcover * dLv * dtl(it-1,:) ) &
              - emg * sum( 4.* fshade * (1-thermk) * stefnc * tlbef**3 * dtl(it-1,:) )
 
@@ -1820,17 +1815,16 @@ ENDIF
           tqaf = qaf(2)
        ENDIF
 
-! for check purpose only
-! taf = wta0*thm + wtg0*tg + wtl0*tl
-! taf(1) = wta0(1)*taf(2) + wtg0(1)*tg + wtll(1)
-! qaf(1) = wtaq0(1)*qaf(2) + wtgq0(1)*qg + wtlql(1)
-! taf(botlay) = wta0(botlay)*taf(toplay) + wtg0(botlay)*tg + wtll(botlay)
-! qaf(botlay) = wtaq0(botlay)*qaf(toplay) + wtgq0(botlay)*qg + wtlql(botlay)
-! taf(toplay) = wta0(toplay)*thm +  wtg0(toplay)*tg + wtll(toplay)
-! qaf(toplay) = wtaq0(toplay)*qm + wtgq0(toplay)*qg + wtlql(toplay)
+       !NOTE: the below EQs for check purpose only
+       ! taf = wta0*thm + wtg0*tg + wtl0*tl
+       ! taf(1) = wta0(1)*taf(2) + wtg0(1)*tg + wtll(1)
+       ! qaf(1) = wtaq0(1)*qaf(2) + wtgq0(1)*qg + wtlql(1)
+       ! taf(botlay) = wta0(botlay)*taf(toplay) + wtg0(botlay)*tg + wtll(botlay)
+       ! qaf(botlay) = wtaq0(botlay)*qaf(toplay) + wtgq0(botlay)*qg + wtlql(botlay)
+       ! taf(toplay) = wta0(toplay)*thm +  wtg0(toplay)*tg + wtll(toplay)
+       ! qaf(toplay) = wtaq0(toplay)*qm + wtgq0(toplay)*qg + wtlql(toplay)
 
        fseng = cpair*rhoair*cgh(botlay)*(tg-taf(botlay))
-       !print *, "fseng, tg, taf:", fseng, tg, taf !fordebug
        fseng_soil = cpair*rhoair*cgh(botlay)*((1.-wtg0(botlay))*t_soil-wta0(botlay)*ttaf-wtll(botlay))
        fseng_snow = cpair*rhoair*cgh(botlay)*((1.-wtg0(botlay))*t_snow-wta0(botlay)*ttaf-wtll(botlay))
 
