@@ -16,11 +16,10 @@ MODULE MOD_GroundFluxes
 !-----------------------------------------------------------------------
 
 
-   subroutine GroundFluxes (zlnd, zsno, hu, ht, hq,&
-                            hpbl, &
-                            us, vs, tm, qm, rhoair, psrf,&
-                            ur, thm, th, thv, t_grnd, qg, rss, dqgdT, htvp,&
-                            fsno, cgrnd, cgrndl, cgrnds,&
+   subroutine GroundFluxes (zlnd, zsno, hu, ht, hq, hpbl, &
+                            us, vs, tm, qm, rhoair, psrf, &
+                            ur, thm, th, thv, t_grnd, qg, rss, dqgdT, htvp, &
+                            fsno, cgrnd, cgrndl, cgrnds, &
                             t_soil, t_snow, q_soil, q_snow, &
                             taux, tauy, fseng, fseng_soil, fseng_snow, &
                             fevpg, fevpg_soil, fevpg_snow, tref, qref, &
@@ -78,7 +77,7 @@ MODULE MOD_GroundFluxes
           q_soil,    &! ground soil specific humidity [kg/kg]
           q_snow,    &! ground snow specific humidity [kg/kg]
           dqgdT,     &! d(qg)/dT
-          rss,      &! soil surface resistance for evaporation [s/m]
+          rss,       &! soil surface resistance for evaporation [s/m]
           htvp        ! latent heat of vapor of water (or sublimation) [j/kg]
 
     real(r8), INTENT(out) :: &
@@ -147,8 +146,8 @@ MODULE MOD_GroundFluxes
 
   ! potential temperatur at the reference height
         beta = 1.      ! -  (in computing W_*)
-        zii = 1000.    ! m  (pbl height)
-        z0m = z0mg
+        zii  = 1000.   ! m  (pbl height)
+        z0m  = z0mg
 
   !-----------------------------------------------------------------------
   !     Compute sensible and latent fluxes and their derivatives with respect
@@ -187,8 +186,8 @@ MODULE MOD_GroundFluxes
            z0qg = z0hg
 
   ! 2023.04.06, weinan
+           !thvstar=tstar+0.61*th*qstar
            thvstar=tstar*(1.+0.61*qm)+0.61*th*qstar
-  !        thvstar=tstar+0.61*th*qstar
            zeta=zldis*vonkar*grav*thvstar/(ustar**2*thv)
            if(zeta >= 0.) then     !stable
              zeta = min(2.,max(zeta,1.e-6))
@@ -222,11 +221,11 @@ MODULE MOD_GroundFluxes
         rah    = 1./(vonkar/fh*ustar)
         raw    = 1./(vonkar/fq*ustar)
 
-  ! 08/23/2019, yuan:
         raih   = rhoair*cpair/rah
 
+  ! 08/23/2019, yuan: add soil surface resistance (rss)
         IF (dqh > 0.) THEN
-           raiw   = rhoair/raw !dew case. no soil resistance
+           raiw   = rhoair/raw !dew case. assume no soil resistance
         ELSE
            IF (DEF_RSS_SCHEME .eq. 4) THEN
               raiw   = rss*rhoair/raw
@@ -234,6 +233,7 @@ MODULE MOD_GroundFluxes
               raiw   = rhoair/(raw+rss)
            END IF
         END IF
+
         cgrnds = raih
         cgrndl = raiw*dqgdT
         cgrnd  = cgrnds + htvp*cgrndl

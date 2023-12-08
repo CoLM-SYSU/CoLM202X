@@ -1657,12 +1657,12 @@ IF (ROOTFR_SCHEME == 1) THEN
 #else
       DO i = 0, N_PFT-1
 #endif
-         rootfr_p(1,i)=1./(1.+(z_soih(1)*100./d50_p(i))**beta_p(i))
-         rootfr_p(nl_soil,i)=1.-1./(1.+(z_soih(nl_soil-1)*100./d50_p(i))**beta_p(i))
+         rootfr_p(1,i)=1./(1.+(zi_soi(1)*100./d50_p(i))**beta_p(i))
+         rootfr_p(nl_soil,i)=1.-1./(1.+(zi_soi(nl_soil-1)*100./d50_p(i))**beta_p(i))
 
          DO nsl=2,nl_soil-1
-            rootfr_p(nsl,i)=1./(1.+(z_soih(nsl)*100./d50_p(i))**beta_p(i)) &
-               -1./(1.+(z_soih(nsl-1)*100./d50_p(i))**beta_p(i))
+            rootfr_p(nsl,i)=1./(1.+(zi_soi(nsl)*100./d50_p(i))**beta_p(i)) &
+               -1./(1.+(zi_soi(nsl-1)*100./d50_p(i))**beta_p(i))
          ENDDO
       ENDDO
 ELSE
@@ -1673,19 +1673,19 @@ ELSE
       DO i = 0, N_PFT-1
 #endif
          rootfr_p(1,i) = 1. - 0.5*( &
-              exp(-roota(i) * z_soih(1)) &
-            + exp(-rootb(i) * z_soih(1)) )
+              exp(-roota(i) * zi_soi(1)) &
+            + exp(-rootb(i) * zi_soi(1)) )
 
          rootfr_p(nl_soil,i) = 0.5*( &
-              exp(-roota(i) * z_soih(nl_soil)) &
-            + exp(-rootb(i) * z_soih(nl_soil)) )
+              exp(-roota(i) * zi_soi(nl_soil)) &
+            + exp(-rootb(i) * zi_soi(nl_soil)) )
 
          DO nsl = 2, nl_soil-1
             rootfr_p(nsl,i) = 0.5*( &
-                 exp(-roota(i) * z_soih(nsl-1)) &
-               + exp(-rootb(i) * z_soih(nsl-1)) &
-               - exp(-roota(i) * z_soih(nsl)) &
-               - exp(-rootb(i) * z_soih(nsl)) )
+                 exp(-roota(i) * zi_soi(nsl-1)) &
+               + exp(-rootb(i) * zi_soi(nsl-1)) &
+               - exp(-roota(i) * zi_soi(nsl)) &
+               - exp(-rootb(i) * zi_soi(nsl)) )
          ENDDO
       ENDDO
 ENDIF
