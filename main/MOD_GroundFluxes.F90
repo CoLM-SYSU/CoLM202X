@@ -224,7 +224,7 @@ MODULE MOD_GroundFluxes
         raih   = rhoair*cpair/rah
 
   ! 08/23/2019, yuan: add soil surface resistance (rss)
-        IF (dqh < 0.) THEN
+        IF (dqh > 0.) THEN
            raiw   = rhoair/raw !dew case. assume no soil resistance
         ELSE
            IF (DEF_RSS_SCHEME .eq. 4) THEN

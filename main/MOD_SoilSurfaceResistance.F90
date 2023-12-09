@@ -210,11 +210,11 @@ CONTAINS
 #endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
    ! TR13, Eqs. (A2), (A7), (A8) and (A10):
-   ! dw = hk*(m-1)/(k*m*(theta_s-theta_r))*S**(-1/m)*(1-S**(1/m))**(-m)
-   ! where k=alpha_vgm, S=(1+(-k*psi0(1))**(n))**(-m), m=m_vgm=1-1/n_vgm
+   ! dw = -hk*(m-1)/(k*m*(theta_s-theta_r))*S**(-1/m)*(1-S**(1/m))**(-m)
+   ! where k=alpha_vgm, S=(1+(-k*smp_node)**(n))**(-m), m=m_vgm=1-1/n_vgm
    m_vgm = 1. - 1./n_vgm(1)
-   S     = (1. + (- alpha_vgm(1)*psi0(1))**(n_vgm(1)))**(-m_vgm)
-   dw    = hk*(m_vgm-1.)/(alpha_vgm(1)*m_vgm*(porsl(1)-theta_r(1))) &
+   S     = (1. + (- alpha_vgm(1)*smp_node)**(n_vgm(1)))**(-m_vgm)
+   dw    = -hk*(m_vgm-1.)/(alpha_vgm(1)*m_vgm*(porsl(1)-theta_r(1))) &
          * S**(-1./m_vgm)*(1.-S**(1./m_vgm))**(-m_vgm)
 #endif
 
@@ -242,7 +242,9 @@ CONTAINS
 
    ! calculate rss by TR13
    CASE (3)
+      ! TR13, Eq. (11) and Eq. (12):
       B     = denh2o/(qg*forc_rhoair)
+      ! TR13, Eq. (13):
       rg_1  = 2.0_r8*dg*eps/dz_soisno(1)
       rw_1  = 2.0_r8*dw*B*vol_liq/dz_soisno(1)
       rss_1 = rg_1 + rw_1
