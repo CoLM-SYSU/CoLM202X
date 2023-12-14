@@ -526,7 +526,9 @@ PROGRAM CoLM
       IF ((spinup_repeat > 1) .and. (ptstamp <= itstamp)) THEN
          spinup_repeat = spinup_repeat - 1
          idate   = sdate
+         jdate   = sdate
          itstamp = ststamp
+         CALL adj2begin(jdate)
          CALL forcing_reset ()
       ENDIF
 
