@@ -16,7 +16,7 @@ MODULE MOD_Urban_BEM
 
 CONTAINS
 
-  !-------------------------------------------------
+  !-----------------------------------------------------------------------------------
   SUBROUTINE SimpleBEM ( deltim, rhoair, fcover, H, troom_max, troom_min, &
                          troof_nl_bef, twsun_nl_bef, twsha_nl_bef, &
                          troof_nl, twsun_nl, twsha_nl, &
@@ -27,55 +27,55 @@ CONTAINS
      IMPLICIT NONE
 
      REAL(r8), intent(in) :: &
-        deltim,     &! seconds in a time step [second]
-        rhoair,     &! density air [kg/m3]
-        fcover(0:2),&! fractional cover of roof, wall
-        H,          &! average building height [m]
-        troom_max,  &! maximum temperature of inner building
-        troom_min,  &! minimum temperature of inner building
-        troof_nl_bef,&!roof temperature at layer nl_roof
-        twsun_nl_bef,&!sunlit wall temperature at layer nl_wall
-        twsha_nl_bef,&!shaded wall temperature at layer nl_wall
-        troof_nl,   &! roof temperature at layer nl_roof
-        twsun_nl,   &! sunlit wall temperature at layer nl_wall
-        twsha_nl,   &! shaded wall temperature at layer nl_wall
-        tkdz_roof,  &! temporal var for heat transfer of roof
-        tkdz_wsun,  &! temporal var for heat transfer of sunlit wall
-        tkdz_wsha,  &! temporal var for heat transfer of shaded wall
-        taf          ! temperature of urban air
+        deltim,          &! seconds in a time step [second]
+        rhoair,          &! density air [kg/m3]
+        fcover(0:2),     &! fractional cover of roof, wall
+        H,               &! average building height [m]
+        troom_max,       &! maximum temperature of inner building
+        troom_min,       &! minimum temperature of inner building
+        troof_nl_bef,    &!roof temperature at layer nl_roof
+        twsun_nl_bef,    &!sunlit wall temperature at layer nl_wall
+        twsha_nl_bef,    &!shaded wall temperature at layer nl_wall
+        troof_nl,        &! roof temperature at layer nl_roof
+        twsun_nl,        &! sunlit wall temperature at layer nl_wall
+        twsha_nl,        &! shaded wall temperature at layer nl_wall
+        tkdz_roof,       &! temporal var for heat transfer of roof
+        tkdz_wsun,       &! temporal var for heat transfer of sunlit wall
+        tkdz_wsha,       &! temporal var for heat transfer of shaded wall
+        taf               ! temperature of urban air
 
      REAL(r8), intent(inout) :: &
-        troom,      &! temperature of inner building
-        troof_inner,&! temperature of inner roof
-        twsun_inner,&! temperature of inner sunlit wall
-        twsha_inner  ! temperature of inner shaded wall
+        troom,           &! temperature of inner building
+        troof_inner,     &! temperature of inner roof
+        twsun_inner,     &! temperature of inner sunlit wall
+        twsha_inner       ! temperature of inner shaded wall
 
      REAL(r8), intent(out) :: &
-        Fhah,       &! flux from heating
-        Fhac,       &! flux from heat or cool AC
-        Fwst,       &! waste heat from cool or heat
-        Fach         ! flux from air exchange
+        Fhah,            &! flux from heating
+        Fhac,            &! flux from heat or cool AC
+        Fwst,            &! waste heat from cool or heat
+        Fach              ! flux from air exchange
 
      ! local variables
-     REAL(r8) ::    &
-        ACH,        &! air exchange coefficience
-        hcv_roof,   &! convective exchange ceofficience for roof<->room
-        hcv_wall,   &! convective exchange ceofficience for wall<->room
-        waste_coef, &! waste coefficient
-        waste_cool, &! waste heat for AC cooling
-        waste_heat   ! waste heat for AC heating
+     REAL(r8) :: &
+        ACH,             &! air exchange coefficience
+        hcv_roof,        &! convective exchange ceofficience for roof<->room
+        hcv_wall,        &! convective exchange ceofficience for wall<->room
+        waste_coef,      &! waste coefficient
+        waste_cool,      &! waste heat for AC cooling
+        waste_heat        ! waste heat for AC heating
 
-     REAL(r8) ::    &
-        f_wsun,     &! weight factor for sunlit wall
-        f_wsha       ! weight factor for shaded wall
+     REAL(r8) :: &
+        f_wsun,          &! weight factor for sunlit wall
+        f_wsha            ! weight factor for shaded wall
 
-     REAL(r8) ::    &
-        A(4,4),     &! Heat transfer matrix
-        Ainv(4,4),  &! Inverse of Heat transfer matrix
-        B(4),       &! B for Ax=B
-        X(4)         ! x for Ax=B
+     REAL(r8) :: &
+        A(4,4),          &! Heat transfer matrix
+        Ainv(4,4),       &! Inverse of Heat transfer matrix
+        B(4),            &! B for Ax=B
+        X(4)              ! x for Ax=B
 
-     REAL(r8) ::    &
+     REAL(r8) :: &
         troom_pro,       &! projected room temperature
         troom_bef,       &! temperature of inner building
         troof_inner_bef, &! temperature of inner roof
@@ -84,9 +84,10 @@ CONTAINS
 
      LOGICAL :: cooling, heating
 
+     ! Option for continuous AC
      LOGICAL, parameter :: Constant_AC = .true.
 
-  !=================================================================
+  !===================================================================================
   !
   ! o Solve the following equations
   ! o variables: troom, troof_inner, twsun_inner, twsha_innter
@@ -102,7 +103,7 @@ CONTAINS
   !    ------*H*rhoair*cpair*(Taf-Troom') + Hc_roof + Hc_wsun + Hc_wsha
   !     3600
   !                             .................................(4)
-  !=================================================================
+  !===================================================================================
 
      ACH = 0.3          !air exchange coefficience
      hcv_roof   = 4.040 !convective exchange ceofficience for roof<->room (W m-2 K-1)
@@ -193,7 +194,7 @@ CONTAINS
         twsun_inner = (B(2)-A(2,4)*troom)/A(2,2)
         twsha_inner = (B(3)-A(3,4)*troom)/A(3,3)
 
-        Fhac = 0.5*hcv_roof*(troof_inner_bef-troom_bef) + 0.5*hcv_roof*(troof_inner-troom)
+        Fhac = 0.5*hcv_roof*(troof_inner_bef-troom_bef)        + 0.5*hcv_roof*(troof_inner-troom)
         Fhac = 0.5*hcv_wall*(twsun_inner_bef-troom_bef)*f_wsun + 0.5*hcv_wall*(twsun_inner-troom)*f_wsun + Fhac
         Fhac = 0.5*hcv_wall*(twsha_inner_bef-troom_bef)*f_wsha + 0.5*hcv_wall*(twsha_inner-troom)*f_wsha + Fhac
         Fhah = Fhac
