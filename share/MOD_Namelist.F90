@@ -227,6 +227,8 @@ MODULE MOD_Namelist
    CHARACTER(len=256) :: DEF_file_snowoptics = 'null'
    CHARACTER(len=256) :: DEF_file_snowaging  = 'null'
 
+   CHARACTER(len=256) :: DEF_ElementNeighbour_file = 'null'
+
    ! ----- history -----
    LOGICAL  :: DEF_HISTORY_IN_VECTOR = .false.
 
@@ -809,6 +811,8 @@ CONTAINS
          DEF_file_snowoptics,             &
          DEF_file_snowaging ,             &
 
+         DEF_ElementNeighbour_file,       &
+
          DEF_DA_obsdir,                   &
 
          DEF_forcing_namelist,            &
@@ -840,19 +844,14 @@ CONTAINS
          open(10, status='OLD', file=nlfile, form="FORMATTED")
          read(10, nml=nl_colm, iostat=ierr)
          IF (ierr /= 0) THEN
-            write(*,*) ' ***** ERROR: Problem reading namelist.'
-            write(*,*) trim(nlfile), ierr
-#ifdef USEMPI
-            CALL mpi_abort (p_comm_glb, p_err)
-#endif
+            CALL CoLM_Stop (' ***** ERROR: Problem reading namelist: '// trim(nlfile))
          ENDIF
          close(10)
 
          open(10, status='OLD', file=trim(DEF_forcing_namelist), form="FORMATTED")
          read(10, nml=nl_colm_forcing, iostat=ierr)
          IF (ierr /= 0) THEN
-            write(*,*) ' ***** ERROR: Problem reading forcing namelist.'
-            write(*,*) trim(DEF_forcing_namelist), ierr
+            CALL CoLM_Stop (' ***** ERROR: Problem reading namelist: '// trim(DEF_forcing_namelist))
          ENDIF
          close(10)
 #ifdef SinglePoint
@@ -1234,6 +1233,8 @@ CONTAINS
       call mpi_bcast (DEF_USE_SNICAR,        1, mpi_logical,   p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_file_snowoptics, 256, mpi_character, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_file_snowaging , 256, mpi_character, p_root, p_comm_glb, p_err)
+      
+      CALL mpi_bcast (DEF_ElementNeighbour_file, 256, mpi_character, p_root, p_comm_glb, p_err)
 
       CALL mpi_bcast (DEF_DA_obsdir      , 256, mpi_character, p_root, p_comm_glb, p_err)
 
@@ -1293,9 +1294,6 @@ CONTAINS
       call mpi_bcast (DEF_forcing%CBL_tintalgo,     256, mpi_character, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_forcing%CBL_dtime,          1, mpi_integer,   p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_forcing%CBL_offset,         1, mpi_integer,   p_root, p_comm_glb, p_err)
-
-      CALL mpi_bcast (DEF_file_snowoptics,  256, mpi_character, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_file_snowaging,   256, mpi_character, p_root, p_comm_glb, p_err)
 #endif
 
       CALL sync_hist_vars (set_defaults = .true.)
@@ -1308,6 +1306,10 @@ CONTAINS
          ELSE
             open(10, status='OLD', file=trim(DEF_hist_vars_namelist), form="FORMATTED")
             read(10, nml=nl_colm_history, iostat=ierr)
+            IF (ierr /= 0) THEN
+               CALL CoLM_Stop (' ***** ERROR: Problem reading namelist: ' &
+                  // trim(DEF_hist_vars_namelist))
+            ENDIF
             close(10)
          ENDIF
 
