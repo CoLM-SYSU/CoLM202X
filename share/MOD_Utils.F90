@@ -30,7 +30,11 @@ MODULE MOD_Utils
 
    PUBLIC :: insert_into_sorted_list2
 
-   PUBLIC :: find_in_sorted_list1
+   interface find_in_sorted_list1
+      MODULE procedure find_in_sorted_list1_int32
+      MODULE procedure find_in_sorted_list1_int64
+   END interface find_in_sorted_list1
+
    PUBLIC :: find_in_sorted_list2
 
    PUBLIC :: find_nearest_south
@@ -411,7 +415,7 @@ CONTAINS
    END SUBROUTINE insert_into_sorted_list2
 
    !--------------------------------------------------
-   FUNCTION find_in_sorted_list1 (x, n, list) result(iloc)
+   FUNCTION find_in_sorted_list1_int32 (x, n, list) result(iloc)
 
       IMPLICIT NONE
 
@@ -450,7 +454,49 @@ CONTAINS
          ENDIF
       ENDIF
 
-   END FUNCTION find_in_sorted_list1
+   END FUNCTION find_in_sorted_list1_int32
+
+   !--------------------------------------------------
+   FUNCTION find_in_sorted_list1_int64 (x, n, list) result(iloc)
+
+      IMPLICIT NONE
+
+      INTEGER :: iloc
+
+      INTEGER*8, intent(in) :: x
+      INTEGER,   intent(in) :: n
+      INTEGER*8, intent(in) :: list (n)
+
+      ! Local variables
+      INTEGER :: i, ileft, iright
+
+      iloc = 0
+      IF (n > 0) THEN
+         IF ((x >= list(1)) .and. (x <= list(n))) THEN
+            IF (x == list(1)) THEN
+               iloc = 1
+            ELSEIF (x == list(n)) THEN
+               iloc = n
+            ELSE
+               ileft  = 1
+               iright = n
+
+               DO WHILE (iright - ileft > 1)
+                  i = (ileft + iright) / 2
+                  IF (x == list(i)) THEN
+                     iloc = i
+                     exit
+                  ELSEIF (x > list(i)) THEN
+                     ileft = i
+                  ELSEIF (x < list(i)) THEN
+                     iright = i
+                  ENDIF
+               ENDDO
+            ENDIF
+         ENDIF
+      ENDIF
+
+   END FUNCTION find_in_sorted_list1_int64
 
    !--------------------------------------------------
    FUNCTION find_in_sorted_list2 (x, y, n, xlist, ylist) result(iloc)
