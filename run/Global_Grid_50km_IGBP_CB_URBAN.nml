@@ -65,9 +65,9 @@
    DEF_Interception_scheme=1 !1:CoLM2014；2:CLM4.5; 3:CLM5; 4:Noah-MP; 5:MATSIRO; 6:VIC
 
    ! ---- Hydrology module ----
-   DEF_USE_SUPERCOOL_WATER         = .false.
-   DEF_USE_VARIABLY_SATURATED_FLOW = .false.
-   DEF_USE_PLANTHYDRAULICS         = .false.
+   DEF_USE_SUPERCOOL_WATER       = .false.
+   DEF_USE_VariablySaturatedFlow = .false.
+   DEF_USE_PLANTHYDRAULICS       = .false.
    ! --------------------------
 
    ! ---- SNICAR ----

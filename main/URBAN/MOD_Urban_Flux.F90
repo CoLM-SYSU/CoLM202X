@@ -2452,11 +2452,11 @@ MODULE MOD_Urban_Flux
         ! cgperl = rhoair*cgw(2)*(1.-wtgq0(2)/facq)*dqgperdT
         ! cgimpl = rhoair*cgw(2)*(1.-wtgq0(2)/facq)*dqgimpdT
         cgperl = rhoair*cgw_per*(dqgperdT &
-                 - (dqgperdT*cgw_per*fgper*fg+dqgimpdT*cgw_imp*fgimp*fg) &
+                 - (dqgperdT*cgw_per*fgper*fg) &
                  /(caw(2) + cgw_per*fgper*fg + cgw_imp*fgimp*fg + cfw(3)*fc(3)) &
                  /facq)
         cgimpl = rhoair*cgw_imp*(dqgimpdT &
-                 - (dqgperdT*cgw_per*fgper*fg+dqgimpdT*cgw_imp*fgimp*fg) &
+                 - (dqgimpdT*cgw_imp*fgimp*fg) &
                  /(caw(2) + cgw_per*fgper*fg + cgw_imp*fgimp*fg + cfw(3)*fc(3)) &
                  /facq)
         cgimpl = cgimpl*fwet_gimp
