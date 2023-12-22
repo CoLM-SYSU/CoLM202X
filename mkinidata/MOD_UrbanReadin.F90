@@ -293,9 +293,9 @@ ELSE IF (DEF_URBAN_type_scheme == 2) THEN
 
             DO ulev = 1, nl_soil
                cv_gimp(:,u) = cvimproad_lcz (landurban%settyp(u)) &
-                            *(dz_soi(ulev)/sum(dz_soi(:))            !heat capacity of impervious [J/(m2 K)]
+                            *(dz_soi(ulev)/sum(dz_soi(:)))            !heat capacity of impervious [J/(m2 K)]
                tk_gimp(:,u) = tkimproad_lcz (landurban%settyp(u)) &
-                            *(dz_soi(ulev)/sum(dz_soi(:))            !thermal conductivity of impervious [W/m-K]
+                            *(dz_soi(ulev)/sum(dz_soi(:)))            !thermal conductivity of impervious [W/m-K]
             ENDDO
 
             thick_roof = thickroof_lcz (landurban%settyp(u)) !thickness of roof [m]
