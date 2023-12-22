@@ -264,7 +264,7 @@ ELSE IF (DEF_URBAN_type_scheme == 2) THEN
             hwr  (u) = canyonhwr_lcz (landurban%settyp(u)) !average building height to their distance
             fgper(u) = wtperroad_lcz (landurban%settyp(u)) &
                      / (1-wtroof_lcz(landurban%settyp(u))) !pervious fraction to ground area
-            fgper(u) = min(fgper(u), 1)
+            fgper(u) = min(fgper(u), 1.)
 #endif
 
             DO ns = 1,2
