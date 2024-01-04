@@ -803,7 +803,7 @@ MODULE MOD_Urban_Flux
      cwalls = rhoair*cpair*cfh(1)*(1.-wtl0(1)/fact)
      ! deduce: croofl = rhoair*cfw(0)*(1.-wtgq0(3)*wtaq0(2)*wtlq0(0)/facq-wtlq0(0))*qsatldT(0)
      ! croofl = rhoair*cfw(0)*(1.-wtlq0(0)/facq)*qsatldT(0)
-     croofl = rhoair*cfw(0)*(1.-cfw(0)*fc(0)/(caw(3)*cgw(3)+cfw(0)*fc(0))-cgw(3) &
+     croofl = rhoair*cfw(0)*(1.-cfw(0)*fc(0)/(caw(3)+cgw(3)+cfw(0)*fc(0))-cgw(3) &
               /(caw(3)+cgw(3)+cfw(0)*fc(0)) &
               /(cgw(3)+cgw_per*fgper*fg+cgw_imp*fgimp*fg)* &
               cfw(0)*fc(0)*cgw(3)/(caw(3)+cgw(3)+cfw(0)*fc(0))/facq)*qsatldT(0)
@@ -2422,10 +2422,10 @@ MODULE MOD_Urban_Flux
 
      croofs = rhoair*cpair*cfh(0)*(1.-wtg0(3)*wta0(2)*wtl0(0)/fact-wtl0(0))
      cwalls = rhoair*cpair*cfh(1)*(1.-wtl0(1)/fact)
-     !croofl = rhoair*cfw(0)*(1.-wtgq0(3)*wtaq0(2)*wtlq0(0)/facq-wtlq0(0))*qsatldT(0)
-     croofl = rhoair*cfw(0)*(1.-cfw(0)*fc(0)/(caw(3)*cgw(3)+cfw(0)*fc(0))-cgw(3) &
-              /(caw(3)+cgw(3)+cfw(0)*fc(0)) &
-              /(cgw(3)+cgw_per*fgper*fg+cgw_imp*fgimp*fg+cfw(3)*fc(3))* &
+     ! croofl = rhoair*cfw(0)*(1.-wtgq0(3)*wtaq0(2)*wtlq0(0)/facq-wtlq0(0))*qsatldT(0)
+     croofl = rhoair*cfw(0)*(1.-cfw(0)*fc(0)/(caw(3)+cgw(3)+cfw(0)*fc(0))-cgw(3) &
+             /(caw(3)+cgw(3)+cfw(0)*fc(0)) &
+             /(cgw(3)+cgw_per*fgper*fg+cgw_imp*fgimp*fg+cfw(3)*fc(3))* &
               cfw(0)*fc(0)*cgw(3)/(caw(3)+cgw(3)+cfw(0)*fc(0))/facq)*qsatldT(0)
      croofl = croofl*fwet_roof
 
