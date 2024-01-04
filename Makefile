@@ -147,7 +147,6 @@ OBJS_BASIC =    \
 				 MOD_ElementNeighbour.o         \
 				 MOD_Catch_HillslopeNetwork.o   \
 				 MOD_Catch_RiverLakeNetwork.o   \
-				 MOD_Catch_RiverDepth.o         \
 				 MOD_Initialize.o
 
 

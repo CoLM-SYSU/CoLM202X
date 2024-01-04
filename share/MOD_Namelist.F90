@@ -208,6 +208,9 @@ MODULE MOD_Namelist
    ! .true. Read aerosol deposition climatology data or .false. yearly changed
    logical :: DEF_Aerosol_Clim                = .false.
 
+   ! ----- lateral flow related -----
+   logical :: DEF_USE_EstimatedRiverDepth     = .true.
+
    CHARACTER(len=5)   :: DEF_precip_phase_discrimination_scheme = 'II'
    CHARACTER(len=256) :: DEF_SSP='585' ! Co2 path for CMIP6 future scenario.
 
@@ -796,6 +799,7 @@ CONTAINS
          DEF_USE_SNICAR,                  &
          DEF_Aerosol_Readin,              &
          DEF_Aerosol_Clim,                &
+         DEF_USE_EstimatedRiverDepth,     &
 
          DEF_precip_phase_discrimination_scheme, &
 
@@ -1240,6 +1244,8 @@ CONTAINS
 
       call mpi_bcast (DEF_Aerosol_Readin,    1, mpi_logical,   p_root, p_comm_glb, p_err)
       call mpi_bcast (DEF_Aerosol_Clim,      1, mpi_logical,   p_root, p_comm_glb, p_err)
+
+      call mpi_bcast (DEF_USE_EstimatedRiverDepth, 1, mpi_logical, p_root, p_comm_glb, p_err)
 
       CALL mpi_bcast (DEF_HISTORY_IN_VECTOR, 1, mpi_logical,  p_root, p_comm_glb, p_err)
 

@@ -64,7 +64,7 @@ CONTAINS
       CALL element_neighbour_init (lc_year)
 
       CALL hillslope_network_init  ()
-      CALL river_lake_network_init (use_calc_rivdpt = .true.)
+      CALL river_lake_network_init ()
       CALL basin_neighbour_init    ()
 
 #ifdef CoLMDEBUG
