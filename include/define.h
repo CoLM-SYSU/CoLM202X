@@ -34,17 +34,17 @@
 #undef   Campbell_SOIL_MODEL
 #define  vanGenuchten_Mualem_SOIL_MODEL
 ! 5.2 If defined, lateral flow is modeled.
-#define LATERAL_FLOW
+#define CatchLateralFlow
 !    Conflicts :
 #ifndef CATCHMENT
-#undef LATERAL_FLOW
+#undef CatchLateralFlow
 #endif
 
 ! 6. If defined, CaMa-Flood model will be used.
 #undef CaMa_Flood
 
 ! 7. If defined, BGC model is used.
-#undef BGC
+#define BGC
 
 !    Conflicts :  only used when LULC_IGBP_PFT is defined.
 #ifndef LULC_IGBP_PFT

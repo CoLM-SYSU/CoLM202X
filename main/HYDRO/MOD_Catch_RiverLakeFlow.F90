@@ -1,7 +1,7 @@
 #include <define.h>
 
-#ifdef LATERAL_FLOW
-MODULE MOD_Hydro_RiverLakeFlow
+#ifdef CatchLateralFlow
+MODULE MOD_Catch_RiverLakeFlow
    !-------------------------------------------------------------------------------------
    ! DESCRIPTION:
    !   
@@ -41,8 +41,8 @@ CONTAINS
       USE MOD_LandPatch
       USE MOD_Vars_TimeVariables
       USE MOD_Hydro_Vars_1DFluxes
-      USE MOD_Hydro_HillslopeNetwork
-      USE MOD_Hydro_RiverLakeNetwork
+      USE MOD_Catch_HillslopeNetwork
+      USE MOD_Catch_RiverLakeNetwork
       USE MOD_Const_Physical, only : grav
       IMPLICIT NONE
 
@@ -480,5 +480,5 @@ CONTAINS
 
    END SUBROUTINE river_lake_flow
 
-END MODULE MOD_Hydro_RiverLakeFlow
+END MODULE MOD_Catch_RiverLakeFlow
 #endif

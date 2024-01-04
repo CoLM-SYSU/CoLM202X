@@ -45,6 +45,11 @@ MODULE MOD_ElementNeighbour
    TYPE(neighbour_sendrecv_type), allocatable :: recvaddr(:)
    TYPE(neighbour_sendrecv_type), allocatable :: sendaddr(:)
 
+   interface allocate_neighbour_data
+      MODULE procedure allocate_neighbour_data_real8
+      MODULE procedure allocate_neighbour_data_logic
+   END interface allocate_neighbour_data
+
 CONTAINS
    
    ! ----------
@@ -630,7 +635,7 @@ CONTAINS
    END SUBROUTINE retrieve_neighbour_data
 
    ! ---
-   SUBROUTINE allocate_neighbour_data (nbdata)
+   SUBROUTINE allocate_neighbour_data_real8 (nbdata)
       
       USE MOD_Mesh, only : numelm
       IMPLICIT NONE
@@ -647,7 +652,27 @@ CONTAINS
          ENDDO
       ENDIF 
 
-   END SUBROUTINE allocate_neighbour_data 
+   END SUBROUTINE allocate_neighbour_data_real8
+
+   ! ---
+   SUBROUTINE allocate_neighbour_data_logic (nbdata)
+      
+      USE MOD_Mesh, only : numelm
+      IMPLICIT NONE
+
+      TYPE(pointer_logic_1d), allocatable :: nbdata(:)
+      INTEGER :: ielm
+            
+      IF (numelm > 0) THEN
+         allocate (nbdata(numelm))
+         DO ielm = 1, numelm
+            IF (elementneighbour(ielm)%nnb > 0) THEN
+               allocate (nbdata(ielm)%val (elementneighbour(ielm)%nnb))
+            ENDIF
+         ENDDO
+      ENDIF 
+
+   END SUBROUTINE allocate_neighbour_data_logic
 
    ! ----------
    SUBROUTINE element_neighbour_final ()

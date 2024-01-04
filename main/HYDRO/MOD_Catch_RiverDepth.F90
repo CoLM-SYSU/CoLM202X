@@ -1,8 +1,8 @@
 #include <define.h>
 
-#ifdef LATERAL_FLOW
+#ifdef CatchLateralFlow
 
-MODULE MOD_Hydro_RiverDepth
+MODULE MOD_Catch_RiverDepth
 
    USE MOD_Precision
    IMPLICIT NONE
@@ -27,8 +27,8 @@ CONTAINS
       USE MOD_Mapping_Grid2Pset
       USE MOD_LandElm
       USE MOD_ElmVector
-      USE MOD_Hydro_RiverLakeNetwork
-      USE MOD_Hydro_HillslopeNetwork
+      USE MOD_Catch_RiverLakeNetwork
+      USE MOD_Catch_HillslopeNetwork
       USE MOD_Hydro_IO
       IMPLICIT NONE
 
@@ -201,5 +201,5 @@ CONTAINS
 
    END SUBROUTINE calc_riverdepth_from_runoff
 
-END MODULE MOD_Hydro_RiverDepth
+END MODULE MOD_Catch_RiverDepth
 #endif

@@ -2,6 +2,8 @@
 
 MODULE MOD_RangeCheck
 
+   USE, intrinsic :: IEEE_ARITHMETIC
+
    !-----------------------------------------------------------------------
    ! DESCRIPTION:
    !
@@ -90,7 +92,7 @@ CONTAINS
 
             DO iy = 1, size(gdata%blk(ib,jb)%val,2)
                DO ix = 1, size(gdata%blk(ib,jb)%val,1)
-                  has_nan = has_nan .or. isnan(gdata%blk(ib,jb)%val(ix,iy))
+                  has_nan = has_nan .or. ieee_is_nan(gdata%blk(ib,jb)%val(ix,iy))
                ENDDO
             ENDDO
 
@@ -196,7 +198,7 @@ CONTAINS
 
          has_nan = .false.
          DO i = 1, size(vdata)
-            has_nan = has_nan .or. isnan(vdata(i))
+            has_nan = has_nan .or. ieee_is_nan(vdata(i))
          ENDDO
 
 #ifdef USEMPI
@@ -298,7 +300,7 @@ CONTAINS
          has_nan = .false.
          DO j = 1, size(vdata,2)
             DO i = 1, size(vdata,1)
-               has_nan = has_nan .or. isnan(vdata(i,j))
+               has_nan = has_nan .or. ieee_is_nan(vdata(i,j))
             ENDDO
          ENDDO
 
@@ -402,7 +404,7 @@ CONTAINS
          DO k = 1, size(vdata,3)
             DO j = 1, size(vdata,2)
                DO i = 1, size(vdata,1)
-                  has_nan = has_nan .or. isnan(vdata(i,j,k))
+                  has_nan = has_nan .or. ieee_is_nan(vdata(i,j,k))
                ENDDO
             ENDDO
          ENDDO
@@ -509,7 +511,7 @@ CONTAINS
             DO k = 1, size(vdata,3)
                DO j = 1, size(vdata,2)
                   DO i = 1, size(vdata,1)
-                     has_nan = has_nan .or. isnan(vdata(i,j,k,l))
+                     has_nan = has_nan .or. ieee_is_nan(vdata(i,j,k,l))
                   ENDDO
                ENDDO
             ENDDO

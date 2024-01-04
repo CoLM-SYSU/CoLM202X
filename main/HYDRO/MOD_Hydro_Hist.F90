@@ -1,6 +1,6 @@
 #include <define.h>
 
-#ifdef LATERAL_FLOW
+#ifdef CatchLateralFlow
 module MOD_Hydro_Hist
    !--------------------------------------------------------------------------------
    ! DESCRIPTION:

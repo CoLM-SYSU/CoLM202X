@@ -64,15 +64,15 @@ MODULE MOD_Initialize
       USE MOD_Hydro_SoilFunction
 #endif
       USE MOD_Mapping_Grid2Pset
-#ifdef LATERAL_FLOW
+#ifdef CatchLateralFlow
       USE MOD_Mesh
       USE MOD_LandHRU
       USE MOD_LandPatch
       USE MOD_ElmVector
       USE MOD_HRUVector
-      USE MOD_Hydro_HillslopeNetwork
-      USE MOD_Hydro_RiverLakeNetwork
-      USE MOD_Hydro_RiverDepth
+      USE MOD_Catch_HillslopeNetwork
+      USE MOD_Catch_RiverLakeNetwork
+      USE MOD_Catch_RiverDepth
 #endif
 #ifdef CROP
       USE MOD_CropReadin
@@ -1165,7 +1165,7 @@ MODULE MOD_Initialize
       ! ------------------------------------------
 
       ! -----
-#ifdef LATERAL_FLOW
+#ifdef CatchLateralFlow
 
       CALL hillslope_network_init  ()
       CALL river_lake_network_init (use_calc_rivdpt = .false.)

@@ -1,7 +1,7 @@
 #include <define.h>
 
-#ifdef LATERAL_FLOW
-MODULE MOD_Hydro_RiverLakeNetwork
+#ifdef CatchLateralFlow
+MODULE MOD_Catch_RiverLakeNetwork
    !--------------------------------------------------------------------------------
    ! DESCRIPTION:
    ! 
@@ -94,7 +94,8 @@ CONTAINS
       USE MOD_Pixel
       USE MOD_LandElm
       USE MOD_LandPatch
-      USE MOD_Hydro_HillslopeNetwork
+      USE MOD_Catch_HillslopeNetwork
+      USE MOD_ElementNeighbour
       USE MOD_DataType
       USE MOD_Utils
       USE MOD_Vars_TimeInvariants, only : lakedepth
@@ -105,7 +106,7 @@ CONTAINS
       ! Local Variables
       CHARACTER(len=256) :: river_file, rivdpt_file
 
-      INTEGER :: numbasin, ibasin, nbasin
+      INTEGER :: numbasin, ibasin, nbasin, inb
       INTEGER :: iworker, mesg(4), isrc, idest, iproc
       INTEGER :: irecv, ifrom, ito, iup, idn, idata
       INTEGER :: nrecv, ndata, nup, ndn
@@ -652,6 +653,41 @@ CONTAINS
             ENDIF
          ENDDO
 
+         DO ibasin = 1, numbasin
+            IF (lake_id(ibasin) == 0) THEN
+               IF ((to_lake(ibasin)) .or. (riverdown(ibasin) <= 0)) THEN
+                  ! river to lake, ocean, inland depression or out of region
+                  outletwth(ibasin) = riverwth(ibasin)
+               ELSE
+                  ! river to river
+                  outletwth(ibasin) = (riverwth(ibasin) + riverwth_ds(ibasin)) * 0.5
+               ENDIF
+            ELSEIF (lake_id(ibasin) /= 0) THEN
+               IF ((.not. to_lake(ibasin)) .and. (riverdown(ibasin) /= 0)) THEN
+                  IF (riverdown(ibasin) > 0) THEN
+                     ! lake to river
+                     outletwth(ibasin) = riverwth_ds(ibasin)
+                  ELSEIF (riverdown(ibasin) == -1) THEN
+                     ! lake is inland depression
+                     outletwth(ibasin) = 0
+                  ENDIF
+               ELSEIF (to_lake(ibasin) .or. (riverdown(ibasin) == 0)) THEN
+                  ! lake to lake .or. lake catchment to lake .or. lake to ocean
+                  IF (riverdown(ibasin) > 0) THEN
+                     inb = findloc(elementneighbour(ibasin)%glbindex, riverdown(ibasin), dim=1)
+                  ELSE
+                     inb = findloc(elementneighbour(ibasin)%glbindex, -9, dim=1) ! -9 is ocean
+                  ENDIF
+
+                  IF (inb <= 0) THEN
+                     outletwth(ibasin) = 0
+                  ELSE
+                     outletwth(ibasin) = elementneighbour(ibasin)%lenbdr(inb)
+                  ENDIF
+               ENDIF
+            ENDIF
+         ENDDO
+
       ENDIF
 
 #ifdef USEMPI
@@ -1024,5 +1060,5 @@ CONTAINS
 
    END SUBROUTINE river_sendrecv_free_mem
 
-END MODULE MOD_Hydro_RiverLakeNetwork
+END MODULE MOD_Catch_RiverLakeNetwork
 #endif
