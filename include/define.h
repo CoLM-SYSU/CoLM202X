@@ -62,3 +62,5 @@
 
 ! 9. If defined, data assimilation is used.
 #undef DataAssimilation
+
+#define VectorInOneFile
