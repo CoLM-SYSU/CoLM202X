@@ -208,7 +208,7 @@ MODULE MOD_GroundFluxes
            endif
 
            if (obuold*obu < 0.) nmozsgn = nmozsgn+1
-           if(nmozsgn >= 4) EXIT
+           if (nmozsgn >= 4) EXIT
 
            obuold = obu
 
@@ -217,22 +217,22 @@ MODULE MOD_GroundFluxes
         !----------------------------------------------------------------
 
   ! Get derivative of fluxes with repect to ground temperature
-        ram    = 1./(ustar*ustar/um)
-        rah    = 1./(vonkar/fh*ustar)
-        raw    = 1./(vonkar/fq*ustar)
+        ram  = 1./(ustar*ustar/um)
+        rah  = 1./(vonkar/fh*ustar)
+        raw  = 1./(vonkar/fq*ustar)
 
-        raih   = rhoair*cpair/rah
+        raih = rhoair*cpair/rah
 
   ! 08/23/2019, yuan: add soil surface resistance (rss)
-        IF (dqh < 0.) THEN
-           raiw   = rhoair/raw !dew case. assume no soil resistance
+        IF (dqh > 0.) THEN
+           raiw = rhoair/raw !dew case. assume no soil resistance
         ELSE
            IF (DEF_RSS_SCHEME .eq. 4) THEN
-              raiw   = rss*rhoair/raw
+              raiw = rss*rhoair/raw
            ELSE
-              raiw   = rhoair/(raw+rss)
-           END IF
-        END IF
+              raiw = rhoair/(raw+rss)
+           ENDIF
+        ENDIF
 
         cgrnds = raih
         cgrndl = raiw*dqgdT
@@ -243,10 +243,10 @@ MODULE MOD_GroundFluxes
 
   ! surface fluxes of momentum, sensible and latent
   ! using ground temperatures from previous time step
-        taux   = -rhoair*us/ram
-        tauy   = -rhoair*vs/ram
-        fseng  = -raih*dth
-        fevpg  = -raiw*dqh
+        taux  = -rhoair*us/ram
+        tauy  = -rhoair*vs/ram
+        fseng = -raih*dth
+        fevpg = -raiw*dqh
 
         fseng_soil = -raih * (thm - t_soil)
         fseng_snow = -raih * (thm - t_snow)
@@ -254,8 +254,8 @@ MODULE MOD_GroundFluxes
         fevpg_snow = -raiw * ( qm - q_snow)
 
   ! 2 m height air temperature
-        tref   = thm + vonkar/fh*dth * (fh2m/vonkar - fh/vonkar)
-        qref   =  qm + vonkar/fq*dqh * (fq2m/vonkar - fq/vonkar)
+        tref = thm + vonkar/fh*dth * (fh2m/vonkar - fh/vonkar)
+        qref =  qm + vonkar/fq*dqh * (fq2m/vonkar - fq/vonkar)
 
    end subroutine GroundFluxes
 

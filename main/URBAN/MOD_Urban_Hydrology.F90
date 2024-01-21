@@ -124,9 +124,9 @@ CONTAINS
   REAL(r8), intent(inout) :: rootflux(1:nl_soil)
 
 #if(defined CaMa_Flood)
-  real(r8), INTENT(inout) :: flddepth  ! inundation water depth [mm]
-  real(r8), INTENT(in)    :: fldfrc    ! inundation water depth [0-1]
-  real(r8), INTENT(out)   :: qinfl_fld ! grid averaged inundation water input from top (mm/s)
+  real(r8), INTENT(inout) :: flddepth   ! inundation water depth [mm]
+  real(r8), INTENT(in)    :: fldfrc     ! inundation water depth [0-1]
+  real(r8), INTENT(out)   :: qinfl_fld  ! grid averaged inundation water input from top (mm/s)
 #endif
 
   real(r8), intent(in) :: forc_us
@@ -134,47 +134,47 @@ CONTAINS
 
 ! SNICAR model variables
 ! Aerosol Fluxes (Jan. 07, 2023)
-  real(r8), intent(in) :: forc_aer ( 14 )  ! aerosol deposition from atmosphere model (grd,aer) [kg m-1 s-1]
+  real(r8), intent(in) :: forc_aer (14) ! aerosol deposition from atmosphere model (grd,aer) [kg m-1 s-1]
 
   real(r8), INTENT(inout) :: &
-        mss_bcpho (lbp:0), &! mass of hydrophobic BC in snow  (col,lyr) [kg]
-        mss_bcphi (lbp:0), &! mass of hydrophillic BC in snow (col,lyr) [kg]
-        mss_ocpho (lbp:0), &! mass of hydrophobic OC in snow  (col,lyr) [kg]
-        mss_ocphi (lbp:0), &! mass of hydrophillic OC in snow (col,lyr) [kg]
-        mss_dst1  (lbp:0), &! mass of dust species 1 in snow  (col,lyr) [kg]
-        mss_dst2  (lbp:0), &! mass of dust species 2 in snow  (col,lyr) [kg]
-        mss_dst3  (lbp:0), &! mass of dust species 3 in snow  (col,lyr) [kg]
-        mss_dst4  (lbp:0)   ! mass of dust species 4 in snow  (col,lyr) [kg]
+        mss_bcpho (lbp:0)             ,&! mass of hydrophobic BC in snow  (col,lyr) [kg]
+        mss_bcphi (lbp:0)             ,&! mass of hydrophillic BC in snow (col,lyr) [kg]
+        mss_ocpho (lbp:0)             ,&! mass of hydrophobic OC in snow  (col,lyr) [kg]
+        mss_ocphi (lbp:0)             ,&! mass of hydrophillic OC in snow (col,lyr) [kg]
+        mss_dst1  (lbp:0)             ,&! mass of dust species 1 in snow  (col,lyr) [kg]
+        mss_dst2  (lbp:0)             ,&! mass of dust species 2 in snow  (col,lyr) [kg]
+        mss_dst3  (lbp:0)             ,&! mass of dust species 3 in snow  (col,lyr) [kg]
+        mss_dst4  (lbp:0)               ! mass of dust species 4 in snow  (col,lyr) [kg]
 ! Aerosol Fluxes (Jan. 07, 2023)
 ! END SNICAR model variables
 
   INTEGER, intent(in) :: &
-        imelt_lake(maxsnl+1:nl_soil)! lake flag for melting or freezing snow and soil layer [-]
+        imelt_lake(maxsnl+1:nl_soil)    ! lake flag for melting or freezing snow and soil layer [-]
 
   REAL(r8), intent(inout) :: &
-        lake_icefrac(  1:nl_lake) ,&! lake ice fraction
-        fioldl (maxsnl+1:nl_soil) ,&! fraction of ice relative to the total water content [-]
-        dz_lake     (  1:nl_lake) ,&! lake layer depth [m]
-        z_gpersno   (lbp:nl_soil) ,&! layer depth (m)
-        dz_roofsno  (lbr:nl_roof) ,&! layer thickness (m)
-        dz_gimpsno  (lbi:nl_soil) ,&! layer thickness (m)
-        dz_gpersno  (lbp:nl_soil) ,&! layer thickness (m)
-        zi_gpersno(lbp-1:nl_soil) ,&! interface level below a "z" level (m)
-        t_lake      (  1:nl_lake) ,&! lake temperature [K]
-        t_gpersno   (lbp:nl_soil) ,&! soil/snow skin temperature (K)
-        wliq_roofsno(lbr:nl_roof) ,&! liquid water (kg/m2)
-        wliq_gimpsno(lbi:nl_soil) ,&! liquid water (kg/m2)
-        wliq_gpersno(lbp:nl_soil) ,&! liquid water (kg/m2)
-        wice_roofsno(lbr:nl_roof) ,&! ice lens (kg/m2)
-        wice_gimpsno(lbi:nl_soil) ,&! ice lens (kg/m2)
-        wice_gpersno(lbp:nl_soil) ,&! ice lens (kg/m2)
+        lake_icefrac(  1:nl_lake)     ,&! lake ice fraction
+        fioldl (maxsnl+1:nl_soil)     ,&! fraction of ice relative to the total water content [-]
+        dz_lake     (  1:nl_lake)     ,&! lake layer depth [m]
+        z_gpersno   (lbp:nl_soil)     ,&! layer depth (m)
+        dz_roofsno  (lbr:nl_roof)     ,&! layer thickness (m)
+        dz_gimpsno  (lbi:nl_soil)     ,&! layer thickness (m)
+        dz_gpersno  (lbp:nl_soil)     ,&! layer thickness (m)
+        zi_gpersno(lbp-1:nl_soil)     ,&! interface level below a "z" level (m)
+        t_lake      (  1:nl_lake)     ,&! lake temperature [K]
+        t_gpersno   (lbp:nl_soil)     ,&! soil/snow skin temperature (K)
+        wliq_roofsno(lbr:nl_roof)     ,&! liquid water (kg/m2)
+        wliq_gimpsno(lbi:nl_soil)     ,&! liquid water (kg/m2)
+        wliq_gpersno(lbp:nl_soil)     ,&! liquid water (kg/m2)
+        wice_roofsno(lbr:nl_roof)     ,&! ice lens (kg/m2)
+        wice_gimpsno(lbi:nl_soil)     ,&! ice lens (kg/m2)
+        wice_gpersno(lbp:nl_soil)     ,&! ice lens (kg/m2)
 
-        zi_lakesno  (maxsnl  :nl_soil) ,&! interface level below a "z" level (m)
-        t_lakesno   (maxsnl+1:nl_soil) ,&! soil/snow skin temperature (K)
-        z_lakesno   (maxsnl+1:nl_soil) ,&! layer depth (m)
-        dz_lakesno  (maxsnl+1:nl_soil) ,&! layer thickness (m)
-        wliq_lakesno(maxsnl+1:nl_soil) ,&! liquid water (kg/m2)
-        wice_lakesno(maxsnl+1:nl_soil) ,&! ice lens (kg/m2)
+        zi_lakesno  (maxsnl  :nl_soil),&! interface level below a "z" level (m)
+        t_lakesno   (maxsnl+1:nl_soil),&! soil/snow skin temperature (K)
+        z_lakesno   (maxsnl+1:nl_soil),&! layer depth (m)
+        dz_lakesno  (maxsnl+1:nl_soil),&! layer thickness (m)
+        wliq_lakesno(maxsnl+1:nl_soil),&! liquid water (kg/m2)
+        wice_lakesno(maxsnl+1:nl_soil),&! ice lens (kg/m2)
 
         sm_lake          ,&! snow melt (mm h2o/s)
         scv_lake         ,&! lake snow mass (kg/m2)
@@ -221,23 +221,23 @@ CONTAINS
 ! [1] for pervious road, the same as soil
 !=======================================================================
       rootflux(:) = rootr(:)*etr
-      CALL WATER_2014 (ipatch,patchtype, lbp       ,nl_soil   ,deltim    ,&
-             z_gpersno   ,dz_gpersno  ,zi_gpersno  ,&
-             bsw         ,porsl       ,psi0        ,hksati,rootr,rootflux,&
-             t_gpersno   ,wliq_gpersno,wice_gpersno,smp,hk,pgper_rain,sm_gper,&
-             etr         ,qseva_gper  ,qsdew_gper  ,qsubl_gper,qfros_gper,&
+      CALL WATER_2014 (ipatch,patchtype,lbp        ,nl_soil     ,deltim     ,&
+             z_gpersno   ,dz_gpersno  ,zi_gpersno  ,bsw         ,porsl      ,&
+             psi0        ,hksati      ,rootr       ,rootflux    ,t_gpersno  ,&
+             wliq_gpersno,wice_gpersno,smp         ,hk          ,pgper_rain ,&
+             sm_gper     ,etr         ,qseva_gper  ,qsdew_gper  ,qsubl_gper ,&
+             qfros_gper  ,&
              !NOTE: temporal input, as urban mode doesn't support split soil&snow
              ! set all the same for soil and snow surface,
              ! and fsno=0. (no physical meaning here)
-             qseva_gper  ,qsdew_gper  ,qsubl_gper,qfros_gper,&
-             qseva_gper  ,qsdew_gper  ,qsubl_gper,qfros_gper,&
+             qseva_gper  ,qsdew_gper  ,qsubl_gper  ,qfros_gper  ,&
+             qseva_gper  ,qsdew_gper  ,qsubl_gper  ,qfros_gper  ,&
              0.          ,& ! fsno, not active
-             rsur_gper   ,&
-             rnof_gper   ,qinfl       ,wtfact    ,pondmx    ,&
-             ssi         ,wimp        ,smpmin      ,zwt       ,wa        ,&
-             qcharge     ,errw_rsub                                       &
+             rsur_gper   ,rnof_gper   ,qinfl       ,wtfact      ,&
+             pondmx      ,ssi         ,wimp        ,smpmin      ,&
+             zwt         ,wa          ,qcharge     ,errw_rsub    &
 #if(defined CaMa_Flood)
-            ,flddepth    ,fldfrc      ,qinfl_fld                 &
+            ,flddepth    ,fldfrc      ,qinfl_fld   ,&
 #endif
 ! SNICAR model variables
              ,forc_aer   ,&
@@ -326,13 +326,13 @@ CONTAINS
            ! ---------------------------
            z_lakesno    ,dz_lakesno   ,zi_lakesno      ,t_lakesno       ,&
            wice_lakesno ,wliq_lakesno ,t_lake          ,lake_icefrac    ,&
-           gwat         ,                                                &
+           gwat         ,&
            dfseng       ,dfgrnd       ,snll            ,scv_lake        ,&
            snowdp_lake  ,sm_lake      ,forc_us         ,forc_vs          &
 ! SNICAR model variables
            ,forc_aer    ,&
            mss_bcpho    ,mss_bcphi    ,mss_ocpho       ,mss_ocphi       ,&
-           mss_dst1     , mss_dst2    ,mss_dst3        ,mss_dst4        ,&
+           mss_dst1     ,mss_dst2     ,mss_dst3        ,mss_dst4        ,&
 ! END SNICAR model variables
            urban_call=.true.)
 

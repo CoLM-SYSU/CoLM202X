@@ -24,27 +24,27 @@ CONTAINS
               ipatch    ,ps        ,pe        ,deltim    ,csoilc    ,dewmx     ,&
               htvp      ,pftclass  ,fcover    ,htop      ,hbot      ,lai       ,&
               sai       ,extkb     ,extkd     ,hu        ,ht        ,hq        ,&
-              us        ,vs        ,thm       ,th        ,thv       ,qm        ,&
-              psrf      ,rhoair    ,parsun    ,parsha    ,fsun      ,sabv      ,&
-              frl       ,thermk    ,fshade    ,rstfacsun ,rstfacsha ,gssun     ,&
-              gssha     ,po2m      ,pco2m     ,z0h_g     ,obug      ,ustarg    ,&
-              zlnd      ,zsno      ,fsno      ,sigf      ,etrc      ,tg        ,&
-              qg        ,rss       ,dqgdT     ,emg       ,t_soil    ,t_snow    ,&
-              q_soil    ,q_snow    ,z0mpc     ,tl        ,ldew      ,ldew_rain ,&
-              ldew_snow ,taux      ,tauy      ,fseng     ,fseng_soil,fseng_snow,&
-              fevpg     ,fevpg_soil,fevpg_snow,cgrnd     ,cgrndl    ,cgrnds    ,&
-              tref      ,qref      ,rst       ,assim     ,respc     ,fsenl     ,&
-              fevpl     ,etr       ,dlrad     ,ulrad     ,z0m       ,zol       ,&
-              rib       ,ustar     ,qstar     ,tstar     ,fm        ,fh        ,&
-              fq        ,vegwp     ,gs0sun    ,gs0sha    ,assimsun  ,etrsun    ,&
-              assimsha  ,etrsha    ,&
+              us        ,vs        ,forc_t    ,thm       ,th        ,thv       ,&
+              qm        ,psrf      ,rhoair    ,parsun    ,parsha    ,fsun      ,&
+              sabv      ,frl       ,thermk    ,fshade    ,rstfacsun ,rstfacsha ,&
+              gssun     ,gssha     ,po2m      ,pco2m     ,z0h_g     ,obug      ,&
+              ustarg    ,zlnd      ,zsno      ,fsno      ,sigf      ,etrc      ,&
+              tg        ,qg        ,rss       ,dqgdT     ,emg       ,t_soil    ,&
+              t_snow    ,q_soil    ,q_snow    ,z0mpc     ,tl        ,ldew      ,&
+              ldew_rain ,ldew_snow ,taux      ,tauy      ,fseng     ,fseng_soil,&
+              fseng_snow,fevpg     ,fevpg_soil,fevpg_snow,cgrnd     ,cgrndl    ,&
+              cgrnds    ,tref      ,qref      ,rst       ,assim     ,respc     ,&
+              fsenl     ,fevpl     ,etr       ,dlrad     ,ulrad     ,z0m       ,&
+              zol       ,rib       ,ustar     ,qstar     ,tstar     ,fm        ,&
+              fh        ,fq        ,vegwp     ,gs0sun    ,gs0sha    ,assimsun  ,&
+              etrsun    ,assimsha  ,etrsha    ,&
 !Ozone stress variables
               o3coefv_sun ,o3coefv_sha ,o3coefg_sun ,o3coefg_sha,&
               lai_old     ,o3uptakesun ,o3uptakesha ,forc_ozone ,&
 !End ozone stress variables
               hpbl, &
-              qintr_rain,qintr_snow,t_precip  ,hprl      ,smp       ,hk        ,&
-              hksati    ,rootflux                                               )
+              qintr_rain  ,qintr_snow  ,t_precip    ,hprl       ,&
+              smp         ,hk          ,hksati      ,rootflux    )
 
 !=======================================================================
 !
@@ -125,6 +125,7 @@ CONTAINS
         hq,            &! observational height of humidity [m]
         us,            &! wind component in eastward direction [m/s]
         vs,            &! wind component in northward direction [m/s]
+        forc_t,        &! temperature at agcm reference height [kelvin]
         thm,           &! intermediate variable (tm+0.0098*ht)
         th,            &! potential temperature (kelvin)
         thv,           &! virtual potential temperature (kelvin)
@@ -479,6 +480,8 @@ CONTAINS
        DO i = ps, pe
           IF (fcover(i)>0 .and. lsai(i)>1.e-6) THEN
              is_vegetated_patch = .true.
+          ELSE
+             tl(i) = forc_t
           ENDIF
        ENDDO
 
