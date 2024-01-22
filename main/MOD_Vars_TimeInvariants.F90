@@ -572,9 +572,15 @@ MODULE MOD_Vars_TimeInvariants
         call ncio_write_vector (file_restart, 'ibedrock' , 'patch', landpatch, ibedrock)                            !
      ENDIF
 
+#ifdef USEMPI
+     CALL mpi_barrier (p_comm_glb, p_err)
+#endif
+
      if (p_is_master) then
 
+#ifndef VectorInOneFile
         call ncio_create_file (file_restart)
+#endif
 
         call ncio_write_serial (file_restart, 'zlnd  ', zlnd  ) ! roughness length for soil [m]
         call ncio_write_serial (file_restart, 'zsno  ', zsno  ) ! roughness length for snow [m]
@@ -593,6 +599,10 @@ MODULE MOD_Vars_TimeInvariants
         call ncio_write_serial (file_restart, 'wetwatmax', wetwatmax) ! maximum wetland water (mm)
 
      end if
+
+#ifdef USEMPI
+     CALL mpi_barrier (p_comm_glb, p_err)
+#endif
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
      file_restart = trim(dir_restart) // '/const/' // trim(casename) //'_restart_pft_const' //'_lc'// trim(cyear) // '.nc'

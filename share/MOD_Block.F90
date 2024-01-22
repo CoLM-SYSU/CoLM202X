@@ -543,15 +543,14 @@ CONTAINS
       
    END SUBROUTINE block_free_mem
    
-   ! --------------------------------
-   SUBROUTINE get_filename_block (filename, iblk, jblk, fileblock)
+   ! -----
+   SUBROUTINE get_blockname (iblk, jblk, blockname)
       
       IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in) :: filename
       INTEGER, intent(in) :: iblk, jblk
 
-      CHARACTER(len=*), intent(out) :: fileblock
+      CHARACTER(len=*), intent(out) :: blockname
 
       ! Local variables
       CHARACTER(len=4) :: cx
@@ -570,6 +569,26 @@ CONTAINS
          write (cx, '(A1,I3.3)') 'e',   floor(gblock%lon_w(iblk))
       ENDIF
 
+      blockname = trim(cx) // '_' // trim(cy)
+
+   END SUBROUTINE get_blockname 
+
+   ! --------------------------------
+   SUBROUTINE get_filename_block (filename, iblk, jblk, fileblock)
+      
+      IMPLICIT NONE
+
+      CHARACTER(len=*), intent(in) :: filename
+      INTEGER, intent(in) :: iblk, jblk
+
+      CHARACTER(len=*), intent(out) :: fileblock
+
+      ! Local variables
+      CHARACTER(len=8) :: blockname
+      INTEGER :: i
+
+      CALL get_blockname (iblk, jblk, blockname)
+
       i = len_trim (filename) 
       DO while (i > 0)
          IF (filename(i:i) == '.') exit
@@ -577,9 +596,9 @@ CONTAINS
       ENDDO
 
       IF (i > 0) THEN
-         fileblock = filename(1:i-1) // '_' // trim(cx) // '_' // trim(cy) // '.nc'
+         fileblock = filename(1:i-1) // '_' // blockname // '.nc'
       ELSE
-         fileblock = filename // '_' // trim(cx) // '_' // trim(cy) // '.nc'
+         fileblock = filename // '_' // blockname // '.nc'
       ENDIF
 
    END SUBROUTINE get_filename_block 
