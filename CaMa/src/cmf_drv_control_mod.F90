@@ -272,10 +272,10 @@ CONTAINS
    USE CMF_CTRL_OUTPUT_MOD,     only: CMF_OUTPUT_END
    USE CMF_CTRL_FORCING_MOD,    only: CMF_FORCING_END
    USE CMF_CTRL_BOUNDARY_MOD,   only: CMF_BOUNDARY_END
-   #ifdef sediment
+#ifdef sediment
    USE YOS_CMF_INPUT,           only: LSEDOUT
    USE cmf_ctrl_sedout_mod,     only: sediment_output_end
-   #endif
+#endif
    !$ USE OMP_LIB    
    IMPLICIT NONE 
       !==========================================================
