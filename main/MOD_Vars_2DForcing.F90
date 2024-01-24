@@ -7,7 +7,7 @@ MODULE MOD_Vars_2DForcing
    ! Created by Yongjiu Dai, 03/2014
    ! -------------------------------
 
-   use MOD_DataType
+   USE MOD_DataType
    IMPLICIT NONE
    SAVE
 
@@ -34,46 +34,46 @@ MODULE MOD_Vars_2DForcing
    type(block_data_real8_2d) :: forc_xy_hpbl   ! atmospheric boundary layer height [m]
 
    ! PUBLIC MEMBER FUNCTIONS:
-   public :: allocate_2D_Forcing
+   PUBLIC :: allocate_2D_Forcing
 
 CONTAINS
 
    !-----------------------------------------------------------------------
 
    SUBROUTINE allocate_2D_Forcing (grid)
-      ! ------------------------------------------------
-      ! Allocates memory for CoLM 2d [lon_points,lat_points] variables
-      ! ------------------------------------------------
-      use MOD_SPMD_Task
-      use MOD_Grid
-      use MOD_DataType
-      IMPLICIT NONE
+   ! ------------------------------------------------
+   ! Allocates memory for CoLM 2d [lon_points,lat_points] variables
+   ! ------------------------------------------------
+   USE MOD_SPMD_Task
+   USE MOD_Grid
+   USE MOD_DataType
+   IMPLICIT NONE
 
-      type(grid_type), intent(in) :: grid
+   type(grid_type), intent(in) :: grid
 
-      if (p_is_io) then
+      IF (p_is_io) THEN
 
-         call allocate_block_data (grid, forc_xy_pco2m ) ! CO2 concentration in atmos. (pascals)
-         call allocate_block_data (grid, forc_xy_po2m  ) ! O2 concentration in atmos. (pascals)
-         call allocate_block_data (grid, forc_xy_us    ) ! wind in eastward direction [m/s]
-         call allocate_block_data (grid, forc_xy_vs    ) ! wind in northward direction [m/s]
-         call allocate_block_data (grid, forc_xy_t     ) ! temperature at reference height [kelvin]
-         call allocate_block_data (grid, forc_xy_q     ) ! specific humidity at reference height [kg/kg]
-         call allocate_block_data (grid, forc_xy_prc   ) ! convective precipitation [mm/s]
-         call allocate_block_data (grid, forc_xy_prl   ) ! large scale precipitation [mm/s]
-         call allocate_block_data (grid, forc_xy_psrf  ) ! atmospheric pressure at the surface [pa]
-         call allocate_block_data (grid, forc_xy_pbot  ) ! atm bottom level pressure (or reference height) (pa)
-         call allocate_block_data (grid, forc_xy_sols  ) ! atm vis direct beam solar rad onto srf [W/m2]
-         call allocate_block_data (grid, forc_xy_soll  ) ! atm nir direct beam solar rad onto srf [W/m2]
-         call allocate_block_data (grid, forc_xy_solsd ) ! atm vis diffuse solar rad onto srf [W/m2]
-         call allocate_block_data (grid, forc_xy_solld ) ! atm nir diffuse solar rad onto srf [W/m2]
-         call allocate_block_data (grid, forc_xy_frl   ) ! atmospheric infrared (longwave) radiation [W/m2]
-         call allocate_block_data (grid, forc_xy_hgt_u ) ! observational height of wind [m]
-         call allocate_block_data (grid, forc_xy_hgt_t ) ! observational height of temperature [m]
-         call allocate_block_data (grid, forc_xy_hgt_q ) ! observational height of humidity [m]
-         call allocate_block_data (grid, forc_xy_rhoair) ! air density [kg/m3]
-         call allocate_block_data (grid, forc_xy_hpbl  ) ! atmospheric boundary layer height [m]
-      end if
+         CALL allocate_block_data (grid, forc_xy_pco2m ) ! CO2 concentration in atmos. (pascals)
+         CALL allocate_block_data (grid, forc_xy_po2m  ) ! O2 concentration in atmos. (pascals)
+         CALL allocate_block_data (grid, forc_xy_us    ) ! wind in eastward direction [m/s]
+         CALL allocate_block_data (grid, forc_xy_vs    ) ! wind in northward direction [m/s]
+         CALL allocate_block_data (grid, forc_xy_t     ) ! temperature at reference height [kelvin]
+         CALL allocate_block_data (grid, forc_xy_q     ) ! specific humidity at reference height [kg/kg]
+         CALL allocate_block_data (grid, forc_xy_prc   ) ! convective precipitation [mm/s]
+         CALL allocate_block_data (grid, forc_xy_prl   ) ! large scale precipitation [mm/s]
+         CALL allocate_block_data (grid, forc_xy_psrf  ) ! atmospheric pressure at the surface [pa]
+         CALL allocate_block_data (grid, forc_xy_pbot  ) ! atm bottom level pressure (or reference height) (pa)
+         CALL allocate_block_data (grid, forc_xy_sols  ) ! atm vis direct beam solar rad onto srf [W/m2]
+         CALL allocate_block_data (grid, forc_xy_soll  ) ! atm nir direct beam solar rad onto srf [W/m2]
+         CALL allocate_block_data (grid, forc_xy_solsd ) ! atm vis diffuse solar rad onto srf [W/m2]
+         CALL allocate_block_data (grid, forc_xy_solld ) ! atm nir diffuse solar rad onto srf [W/m2]
+         CALL allocate_block_data (grid, forc_xy_frl   ) ! atmospheric infrared (longwave) radiation [W/m2]
+         CALL allocate_block_data (grid, forc_xy_hgt_u ) ! observational height of wind [m]
+         CALL allocate_block_data (grid, forc_xy_hgt_t ) ! observational height of temperature [m]
+         CALL allocate_block_data (grid, forc_xy_hgt_q ) ! observational height of humidity [m]
+         CALL allocate_block_data (grid, forc_xy_rhoair) ! air density [kg/m3]
+         CALL allocate_block_data (grid, forc_xy_hpbl  ) ! atmospheric boundary layer height [m]
+      ENDIF
 
    END SUBROUTINE allocate_2D_Forcing
 

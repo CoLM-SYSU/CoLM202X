@@ -1,18 +1,6 @@
 #include <define.h>
 
 PROGRAM CoLM
-   ! ======================================================================
-   ! Reference:
-   !     [1] Dai et al., 2003: The Common Land Model (CoLM).
-   !         Bull. of Amer. Meter. Soc., 84: 1013-1023
-   !     [2] Dai et al., 2004: A two-big-leaf model for canopy temperature,
-   !         photosynthesis and stomatal conductance. J. Climate, 17: 2281-2299.
-   !     [3] Dai et al., 2014: The Terrestrial Modeling System (TMS).
-   !     [4] Dai Yamazaki, 2014: The global river model CaMa-Flood (version 3.6.2)
-   !
-   !     Created by Yongjiu Dai, Februay 2004
-   !     Revised by Yongjiu Dai and Hua Yuan, April 2014
-   ! ======================================================================
 
    USE MOD_Precision
    USE MOD_SPMD_Task
@@ -414,7 +402,7 @@ PROGRAM CoLM
 #endif
 
 #if(defined CaMa_Flood)
-      call colm_CaMa_drv(idate(3)) ! run CaMa-Flood
+      CALL colm_CaMa_drv(idate(3)) ! run CaMa-Flood
 #endif
 
 #ifdef DataAssimilation
@@ -480,7 +468,7 @@ PROGRAM CoLM
       ELSE
          ! Update every 8 days (time interval of the MODIS LAI data)
          Julian_8day = int(calendarday(jdate)-1)/8*8 + 1
-         if ((itstamp < etstamp) .and. (Julian_8day /= Julian_8day_p)) then
+         IF ((itstamp < etstamp) .and. (Julian_8day /= Julian_8day_p)) THEN
             CALL LAI_readin (jdate(1), Julian_8day, dir_landdata)
             ! 06/2023, yuan: or depend on DEF_LAI_CHANGE_YEARLY nanemlist
             !CALL LAI_readin (lai_year, Julian_8day, dir_landdata)
@@ -496,7 +484,7 @@ PROGRAM CoLM
 #endif
 #if(defined CaMa_Flood)
       IF (p_is_master) THEN
-            call colm_cama_write_restart (jdate, lc_year,  casename, dir_restart)
+            CALL colm_cama_write_restart (jdate, lc_year,  casename, dir_restart)
          ENDIF
 #endif
       ENDIF
