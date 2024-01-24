@@ -139,9 +139,9 @@ SUBROUTINE CMF_PHYSICS_ADVANCE
    USE YOS_CMF_MAP,        only: D2NXTDST
    USE YOS_CMF_MAP,        only: NSEQALL,NSEQRIV,I2MASK
    USE YOS_CMF_DIAG,       only: D2RIVDPH
-   #ifdef UseMPI_CMF
+#ifdef UseMPI_CMF
    USE CMF_CTRL_MPI_MOD,   only: CMF_MPI_ADPSTP
-   #endif
+#endif
    IMPLICIT NONE
    ! MPI setting
    ! SAVE for OpenMP
