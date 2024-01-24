@@ -483,7 +483,7 @@ PROGRAM CoLM
          CALL WRITE_TimeVariables (jdate, lc_year,  casename, dir_restart)
 #endif
 #if(defined CaMa_Flood)
-      IF (p_is_master) THEN
+         IF (p_is_master) THEN
             CALL colm_cama_write_restart (jdate, lc_year,  casename, dir_restart)
          ENDIF
 #endif

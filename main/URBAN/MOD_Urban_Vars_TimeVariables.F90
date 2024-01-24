@@ -13,91 +13,91 @@ MODULE MOD_Urban_Vars_TimeVariables
 ! -----------------------------------------------------------------
 ! Time-varying state variables which reaquired by restart run
 
-   REAL(r8), allocatable :: fwsun          (:) !sunlit fraction of walls [-]
-   REAL(r8), allocatable :: dfwsun         (:) !change of sunlit fraction of walls [-]
+   real(r8), allocatable :: fwsun          (:) !sunlit fraction of walls [-]
+   real(r8), allocatable :: dfwsun         (:) !change of sunlit fraction of walls [-]
 
    ! shortwave absorption
-   REAL(r8), allocatable :: sroof      (:,:,:) !roof aborption [-]
-   REAL(r8), allocatable :: swsun      (:,:,:) !sunlit wall absorption [-]
-   REAL(r8), allocatable :: swsha      (:,:,:) !shaded wall absorption [-]
-   REAL(r8), allocatable :: sgimp      (:,:,:) !impervious absorptioin [-]
-   REAL(r8), allocatable :: sgper      (:,:,:) !pervious absorptioin [-]
-   REAL(r8), allocatable :: slake      (:,:,:) !urban lake absorptioin [-]
+   real(r8), allocatable :: sroof      (:,:,:) !roof aborption [-]
+   real(r8), allocatable :: swsun      (:,:,:) !sunlit wall absorption [-]
+   real(r8), allocatable :: swsha      (:,:,:) !shaded wall absorption [-]
+   real(r8), allocatable :: sgimp      (:,:,:) !impervious absorptioin [-]
+   real(r8), allocatable :: sgper      (:,:,:) !pervious absorptioin [-]
+   real(r8), allocatable :: slake      (:,:,:) !urban lake absorptioin [-]
 
    ! net longwave radiation for last time temperature change
-   REAL(r8), allocatable :: lwsun          (:) !net longwave of sunlit wall [W/m2]
-   REAL(r8), allocatable :: lwsha          (:) !net longwave of shaded wall [W/m2]
-   REAL(r8), allocatable :: lgimp          (:) !net longwave of impervious  [W/m2]
-   REAL(r8), allocatable :: lgper          (:) !net longwave of pervious [W/m2]
-   REAL(r8), allocatable :: lveg           (:) !net longwave of vegetation [W/m2]
+   real(r8), allocatable :: lwsun          (:) !net longwave of sunlit wall [W/m2]
+   real(r8), allocatable :: lwsha          (:) !net longwave of shaded wall [W/m2]
+   real(r8), allocatable :: lgimp          (:) !net longwave of impervious  [W/m2]
+   real(r8), allocatable :: lgper          (:) !net longwave of pervious [W/m2]
+   real(r8), allocatable :: lveg           (:) !net longwave of vegetation [W/m2]
 
-   REAL(r8), allocatable :: z_sno_roof   (:,:) !node depth of roof [m]
-   REAL(r8), allocatable :: z_sno_gimp   (:,:) !node depth of impervious [m]
-   REAL(r8), allocatable :: z_sno_gper   (:,:) !node depth pervious [m]
-   REAL(r8), allocatable :: z_sno_lake   (:,:) !node depth lake [m]
+   real(r8), allocatable :: z_sno_roof   (:,:) !node depth of roof [m]
+   real(r8), allocatable :: z_sno_gimp   (:,:) !node depth of impervious [m]
+   real(r8), allocatable :: z_sno_gper   (:,:) !node depth pervious [m]
+   real(r8), allocatable :: z_sno_lake   (:,:) !node depth lake [m]
 
-   REAL(r8), allocatable :: dz_sno_roof  (:,:) !interface depth of roof [m]
-   REAL(r8), allocatable :: dz_sno_gimp  (:,:) !interface depth of impervious [m]
-   REAL(r8), allocatable :: dz_sno_gper  (:,:) !interface depth pervious [m]
-   REAL(r8), allocatable :: dz_sno_lake  (:,:) !interface depth lake [m]
+   real(r8), allocatable :: dz_sno_roof  (:,:) !interface depth of roof [m]
+   real(r8), allocatable :: dz_sno_gimp  (:,:) !interface depth of impervious [m]
+   real(r8), allocatable :: dz_sno_gper  (:,:) !interface depth pervious [m]
+   real(r8), allocatable :: dz_sno_lake  (:,:) !interface depth lake [m]
 
-   REAL(r8), allocatable :: troof_inner    (:) !temperature of roof [K]
-   REAL(r8), allocatable :: twsun_inner    (:) !temperature of sunlit wall [K]
-   REAL(r8), allocatable :: twsha_inner    (:) !temperature of shaded wall [K]
+   real(r8), allocatable :: troof_inner    (:) !temperature of roof [K]
+   real(r8), allocatable :: twsun_inner    (:) !temperature of sunlit wall [K]
+   real(r8), allocatable :: twsha_inner    (:) !temperature of shaded wall [K]
 
-   REAL(r8), allocatable :: t_roofsno    (:,:) !temperature of roof [K]
-   REAL(r8), allocatable :: t_wallsun    (:,:) !temperature of sunlit wall [K]
-   REAL(r8), allocatable :: t_wallsha    (:,:) !temperature of shaded wall [K]
-   REAL(r8), allocatable :: t_gimpsno    (:,:) !temperature of impervious [K]
-   REAL(r8), allocatable :: t_gpersno    (:,:) !temperature of pervious [K]
-   REAL(r8), allocatable :: t_lakesno    (:,:) !temperature of pervious [K]
+   real(r8), allocatable :: t_roofsno    (:,:) !temperature of roof [K]
+   real(r8), allocatable :: t_wallsun    (:,:) !temperature of sunlit wall [K]
+   real(r8), allocatable :: t_wallsha    (:,:) !temperature of shaded wall [K]
+   real(r8), allocatable :: t_gimpsno    (:,:) !temperature of impervious [K]
+   real(r8), allocatable :: t_gpersno    (:,:) !temperature of pervious [K]
+   real(r8), allocatable :: t_lakesno    (:,:) !temperature of pervious [K]
 
-   REAL(r8), allocatable :: wliq_roofsno (:,:) !liquid water in layers [kg/m2]
-   REAL(r8), allocatable :: wliq_gimpsno (:,:) !liquid water in layers [kg/m2]
-   REAL(r8), allocatable :: wliq_gpersno (:,:) !liquid water in layers [kg/m2]
-   REAL(r8), allocatable :: wliq_lakesno (:,:) !liquid water in layers [kg/m2]
-   REAL(r8), allocatable :: wice_roofsno (:,:) !ice lens in layers [kg/m2]
-   REAL(r8), allocatable :: wice_gimpsno (:,:) !ice lens in layers [kg/m2]
-   REAL(r8), allocatable :: wice_gpersno (:,:) !ice lens in layers [kg/m2]
-   REAL(r8), allocatable :: wice_lakesno (:,:) !ice lens in layers [kg/m2]
+   real(r8), allocatable :: wliq_roofsno (:,:) !liquid water in layers [kg/m2]
+   real(r8), allocatable :: wliq_gimpsno (:,:) !liquid water in layers [kg/m2]
+   real(r8), allocatable :: wliq_gpersno (:,:) !liquid water in layers [kg/m2]
+   real(r8), allocatable :: wliq_lakesno (:,:) !liquid water in layers [kg/m2]
+   real(r8), allocatable :: wice_roofsno (:,:) !ice lens in layers [kg/m2]
+   real(r8), allocatable :: wice_gimpsno (:,:) !ice lens in layers [kg/m2]
+   real(r8), allocatable :: wice_gpersno (:,:) !ice lens in layers [kg/m2]
+   real(r8), allocatable :: wice_lakesno (:,:) !ice lens in layers [kg/m2]
 
-   REAL(r8), allocatable :: sag_roof       (:) !roof snow age [-]
-   REAL(r8), allocatable :: sag_gimp       (:) !impervious ground snow age [-]
-   REAL(r8), allocatable :: sag_gper       (:) !pervious ground snow age [-]
-   REAL(r8), allocatable :: sag_lake       (:) !urban lake snow age [-]
+   real(r8), allocatable :: sag_roof       (:) !roof snow age [-]
+   real(r8), allocatable :: sag_gimp       (:) !impervious ground snow age [-]
+   real(r8), allocatable :: sag_gper       (:) !pervious ground snow age [-]
+   real(r8), allocatable :: sag_lake       (:) !urban lake snow age [-]
 
-   REAL(r8), allocatable :: scv_roof       (:) !roof snow mass [kg/m2]
-   REAL(r8), allocatable :: scv_gimp       (:) !impervious ground snow mass [kg/m2]
-   REAL(r8), allocatable :: scv_gper       (:) !pervious ground snow mass [kg/m2]
-   REAL(r8), allocatable :: scv_lake       (:) !urban lake snow mass [kg/m2]
+   real(r8), allocatable :: scv_roof       (:) !roof snow mass [kg/m2]
+   real(r8), allocatable :: scv_gimp       (:) !impervious ground snow mass [kg/m2]
+   real(r8), allocatable :: scv_gper       (:) !pervious ground snow mass [kg/m2]
+   real(r8), allocatable :: scv_lake       (:) !urban lake snow mass [kg/m2]
 
-   REAL(r8), allocatable :: fsno_roof      (:) !roof snow fraction [-]
-   REAL(r8), allocatable :: fsno_gimp      (:) !impervious ground snow fraction [-]
-   REAL(r8), allocatable :: fsno_gper      (:) !pervious ground snow fraction [-]
-   REAL(r8), allocatable :: fsno_lake      (:) !urban lake snow fraction [-]
+   real(r8), allocatable :: fsno_roof      (:) !roof snow fraction [-]
+   real(r8), allocatable :: fsno_gimp      (:) !impervious ground snow fraction [-]
+   real(r8), allocatable :: fsno_gper      (:) !pervious ground snow fraction [-]
+   real(r8), allocatable :: fsno_lake      (:) !urban lake snow fraction [-]
 
-   REAL(r8), allocatable :: snowdp_roof    (:) !roof snow depth [m]
-   REAL(r8), allocatable :: snowdp_gimp    (:) !impervious ground snow depth [m]
-   REAL(r8), allocatable :: snowdp_gper    (:) !pervious ground snow depth [m]
-   REAL(r8), allocatable :: snowdp_lake    (:) !urban lake snow depth [m]
+   real(r8), allocatable :: snowdp_roof    (:) !roof snow depth [m]
+   real(r8), allocatable :: snowdp_gimp    (:) !impervious ground snow depth [m]
+   real(r8), allocatable :: snowdp_gper    (:) !pervious ground snow depth [m]
+   real(r8), allocatable :: snowdp_lake    (:) !urban lake snow depth [m]
 
    !TODO: rename the below variables
-   REAL(r8), allocatable :: Fhac           (:) !sensible flux from heat or cool AC [W/m2]
-   REAL(r8), allocatable :: Fwst           (:) !waste heat flux from heat or cool AC [W/m2]
-   REAL(r8), allocatable :: Fach           (:) !flux from inner and outter air exchange [W/m2]
-   REAL(r8), allocatable :: Fahe           (:) !flux from metabolism and vehicle [W/m2]
-   REAL(r8), allocatable :: Fhah           (:) !sensible heat flux from heating [W/m2]
-   REAL(r8), allocatable :: vehc           (:) !flux from vehicle [W/m2]
-   REAL(r8), allocatable :: meta           (:) !flux from metabolism [W/m2]
+   real(r8), allocatable :: Fhac           (:) !sensible flux from heat or cool AC [W/m2]
+   real(r8), allocatable :: Fwst           (:) !waste heat flux from heat or cool AC [W/m2]
+   real(r8), allocatable :: Fach           (:) !flux from inner and outter air exchange [W/m2]
+   real(r8), allocatable :: Fahe           (:) !flux from metabolism and vehicle [W/m2]
+   real(r8), allocatable :: Fhah           (:) !sensible heat flux from heating [W/m2]
+   real(r8), allocatable :: vehc           (:) !flux from vehicle [W/m2]
+   real(r8), allocatable :: meta           (:) !flux from metabolism [W/m2]
 
-   REAL(r8), allocatable :: t_room         (:) !temperature of inner building [K]
-   REAL(r8), allocatable :: t_roof         (:) !temperature of roof [K]
-   REAL(r8), allocatable :: t_wall         (:) !temperature of wall [K]
-   REAL(r8), allocatable :: tafu           (:) !temperature of outer building [K]
+   real(r8), allocatable :: t_room         (:) !temperature of inner building [K]
+   real(r8), allocatable :: t_roof         (:) !temperature of roof [K]
+   real(r8), allocatable :: t_wall         (:) !temperature of wall [K]
+   real(r8), allocatable :: tafu           (:) !temperature of outer building [K]
 
-   REAL(r8), allocatable :: urb_green      (:) !fractional of green leaf in urban patch [-]
-   REAL(r8), allocatable :: urb_lai        (:) !urban tree LAI [m2/m2]
-   REAL(r8), allocatable :: urb_sai        (:) !urban tree SAI [m2/m2]
+   real(r8), allocatable :: urb_green      (:) !fractional of green leaf in urban patch [-]
+   real(r8), allocatable :: urb_lai        (:) !urban tree LAI [m2/m2]
+   real(r8), allocatable :: urb_sai        (:) !urban tree SAI [m2/m2]
 
 
 ! PUBLIC MEMBER FUNCTIONS:
@@ -118,11 +118,11 @@ CONTAINS
 ! ------------------------------------------------------
 ! Allocates memory for CLM 1d [numurban] variables
 ! ------------------------------------------------------
-      USE MOD_Precision
-      USE MOD_SPMD_Task
-      USE MOD_LandUrban
-      USE MOD_Vars_Global
-      IMPLICIT NONE
+   USE MOD_Precision
+   USE MOD_SPMD_Task
+   USE MOD_LandUrban
+   USE MOD_Vars_Global
+   IMPLICIT NONE
 
       IF (p_is_worker) THEN
          IF (numurban > 0) THEN
@@ -211,13 +211,13 @@ CONTAINS
 
    SUBROUTINE READ_UrbanTimeVariables (file_restart)
 
-      USE MOD_NetCDFVector
-      USE MOD_LandUrban
-      USE MOD_Vars_Global
+   USE MOD_NetCDFVector
+   USE MOD_LandUrban
+   USE MOD_Vars_Global
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      character(LEN=*), intent(in) :: file_restart
+   character(LEN=*), intent(in) :: file_restart
 
       call ncio_read_vector (file_restart, 'fwsun' , landurban, fwsun ) !
       call ncio_read_vector (file_restart, 'dfwsun', landurban, dfwsun) !
@@ -300,16 +300,16 @@ CONTAINS
 
    SUBROUTINE WRITE_UrbanTimeVariables (file_restart)
 
-      USE MOD_Namelist, only : DEF_REST_COMPRESS_LEVEL
-      USE MOD_LandUrban
-      USE MOD_NetCDFVector
-      USE MOD_Vars_Global
-      IMPLICIT NONE
+   USE MOD_Namelist, only : DEF_REST_COMPRESS_LEVEL
+   USE MOD_LandUrban
+   USE MOD_NetCDFVector
+   USE MOD_Vars_Global
+   IMPLICIT NONE
 
-      character(LEN=*), intent(in) :: file_restart
+   character(LEN=*), intent(in) :: file_restart
 
-      ! Local variables
-      integer :: compress
+   ! Local variables
+   integer :: compress
 
       compress = DEF_REST_COMPRESS_LEVEL
 
@@ -408,8 +408,8 @@ CONTAINS
 
    SUBROUTINE deallocate_UrbanTimeVariables
 
-      USE MOD_SPMD_Task
-      USE MOD_LandUrban
+   USE MOD_SPMD_Task
+   USE MOD_LandUrban
 
       IF (p_is_worker) THEN
          IF (numurban > 0) THEN
