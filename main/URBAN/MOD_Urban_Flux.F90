@@ -130,7 +130,7 @@ CONTAINS
         dqgimpdT, &! d(qgimp)/dT
         dqgperdT   ! d(qgper)/dT
 
-     ! Output
+   ! Output
    real(r8), intent(out) :: &
         taux,     &! wind stress: E-W [kg/m/s**2]
         tauy,     &! wind stress: N-S [kg/m/s**2]
@@ -1148,16 +1148,16 @@ CONTAINS
         gdh2o,    &! conductance between canopy and ground
         tprcor     ! tf*psur*100./1.013e5
 
-     integer it, nmozsgn
+   integer it, nmozsgn
 
-     real(r8) evplwet, evplwet_dtl, etr_dtl, elwmax, elwdif
-     real(r8) irab, dirab_dtl, fsenl_dtl, fevpl_dtl
-     real(r8) z0mg, z0hg, z0qg, cint(3)
-     real(r8) fevpl_bef, fevpl_noadj, dtl_noadj, erre
+   real(r8) evplwet, evplwet_dtl, etr_dtl, elwmax, elwdif
+   real(r8) irab, dirab_dtl, fsenl_dtl, fevpl_dtl
+   real(r8) z0mg, z0hg, z0qg, cint(3)
+   real(r8) fevpl_bef, fevpl_noadj, dtl_noadj, erre
 
 !----------------------- defination for 3d run ------------------------ !
-     integer, parameter :: nlay = 3
-     integer, parameter :: uvec(5) = (/0,0,0,0,1/) !unit vector
+   integer, parameter :: nlay = 3
+   integer, parameter :: uvec(5) = (/0,0,0,0,1/) !unit vector
 
    integer :: &
         clev,     &! current layer index
@@ -1244,7 +1244,7 @@ CONTAINS
         wtll,     &! sum of normalized heat conductance for air and leaf
         wtlql      ! sum of normalized heat conductance for air and leaf
 
-   real(r8) ::  &
+   real(r8) :: &
         ra2m,     &! aerodynamic resistance between 2m and bottom layer [s/m]
         rd2m       ! aerodynamic resistance between bottom layer and ground [s/m]
 
@@ -1663,7 +1663,7 @@ CONTAINS
             IF (i == 3) THEN
                cf = 0.01*sqrtdi*sqrt(ueff_veg)
                rb(i) = 1./cf
-               cycle
+               CYCLE
             ENDIF
 
             clev = canlev(i)

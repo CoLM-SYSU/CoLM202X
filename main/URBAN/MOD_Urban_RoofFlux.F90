@@ -200,7 +200,7 @@ CONTAINS
          ENDIF
 
          IF (obuold*obu < 0.) nmozsgn = nmozsgn+1
-         IF (nmozsgn >= 4) exit
+         IF (nmozsgn >= 4) EXIT
 
          obuold = obu
 

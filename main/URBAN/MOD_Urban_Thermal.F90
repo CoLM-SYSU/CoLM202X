@@ -1045,7 +1045,7 @@ CONTAINS
       fevpgper = fevpgper + dT(4)*cgperl
 
 ! calculation of evaporative potential; flux in kg m-2 s-1.
-! egidif holds the excess energy if all water is evaporated
+! egidif holds the excess energy IF all water is evaporated
 ! during the timestep.  this energy is later added to the sensible heat flux.
 
       ! --- for pervious ground ---

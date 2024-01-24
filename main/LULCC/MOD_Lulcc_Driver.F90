@@ -20,8 +20,8 @@ MODULE MOD_Lulcc_Driver
 
 
 
- SUBROUTINE LulccDriver (casename,dir_landdata,dir_restart,&
-                         idate,greenwich)
+   SUBROUTINE LulccDriver (casename,dir_landdata,dir_restart,&
+                           idate,greenwich)
 
 ! ======================================================================
 ! !PURPOSE:
@@ -54,61 +54,61 @@ MODULE MOD_Lulcc_Driver
    logical, intent(in)    :: greenwich   !true: greenwich time, false: local time
    integer, intent(inout) :: idate(3)    !year, julian day, seconds of the starting time
 
-   ! allocate Lulcc memory
-   CALL allocate_LulccTimeInvariants
-   CALL allocate_LulccTimeVariables
+      ! allocate Lulcc memory
+      CALL allocate_LulccTimeInvariants
+      CALL allocate_LulccTimeVariables
 
-   ! SAVE variables
-   CALL SAVE_LulccTimeInvariants
-   CALL SAVE_LulccTimeVariables
+      ! SAVE variables
+      CALL SAVE_LulccTimeInvariants
+      CALL SAVE_LulccTimeVariables
 
-   ! =============================================================
-   ! cold start for Lulcc
-   ! =============================================================
+      ! =============================================================
+      ! cold start for Lulcc
+      ! =============================================================
 
-   IF (p_is_master) THEN
-      print *, ">>> LULCC: initializing..."
-   ENDIF
-
-   CALL LulccInitialize (casename,dir_landdata,dir_restart,&
-                         idate,greenwich)
-
-
-   ! =============================================================
-   ! simple method for variable recovery
-   ! =============================================================
-
-   IF (DEF_LULCC_SCHEME == 1) THEN
       IF (p_is_master) THEN
-         print *, ">>> LULCC: simple method for variable recovery..."
+         print *, ">>> LULCC: initializing..."
       ENDIF
-      CALL REST_LulccTimeVariables
-   ENDIF
+
+      CALL LulccInitialize (casename,dir_landdata,dir_restart,&
+                            idate,greenwich)
 
 
-   ! =============================================================
-   ! conserved method for variable revocery
-   ! =============================================================
+      ! =============================================================
+      ! simple method for variable recovery
+      ! =============================================================
 
-   IF (DEF_LULCC_SCHEME == 2) THEN
-      IF (p_is_master) THEN
-         print *, ">>> LULCC: Mass&Energy conserve for variable recovery..."
+      IF (DEF_LULCC_SCHEME == 1) THEN
+         IF (p_is_master) THEN
+            print *, ">>> LULCC: simple method for variable recovery..."
+         ENDIF
+         CALL REST_LulccTimeVariables
       ENDIF
-      CALL allocate_LulccTransferTrace()
-      CALL REST_LulccTimeVariables
-      CALL MAKE_LulccTransferTrace(idate(1))
-      CALL LulccMassEnergyConserve()
-   ENDIF
 
 
-   ! deallocate Lulcc memory
-   CALL deallocate_LulccTimeInvariants()
-   CALL deallocate_LulccTimeVariables()
-   IF (DEF_LULCC_SCHEME == 2) THEN
-      CALL deallocate_LulccTransferTrace()
-   ENDIF
+      ! =============================================================
+      ! conserved method for variable revocery
+      ! =============================================================
 
- END SUBROUTINE LulccDriver
+      IF (DEF_LULCC_SCHEME == 2) THEN
+         IF (p_is_master) THEN
+            print *, ">>> LULCC: Mass&Energy conserve for variable recovery..."
+         ENDIF
+         CALL allocate_LulccTransferTrace()
+         CALL REST_LulccTimeVariables
+         CALL MAKE_LulccTransferTrace(idate(1))
+         CALL LulccMassEnergyConserve()
+      ENDIF
+
+
+      ! deallocate Lulcc memory
+      CALL deallocate_LulccTimeInvariants()
+      CALL deallocate_LulccTimeVariables()
+      IF (DEF_LULCC_SCHEME == 2) THEN
+         CALL deallocate_LulccTransferTrace()
+      ENDIF
+
+   END SUBROUTINE LulccDriver
 
 END MODULE MOD_Lulcc_Driver
 #endif

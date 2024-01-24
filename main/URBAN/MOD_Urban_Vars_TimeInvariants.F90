@@ -198,8 +198,8 @@ CONTAINS
 
    SUBROUTINE WRITE_UrbanTimeInvariants (file_restart)
 
-   use MOD_NetCDFVector
-   use MOD_LandUrban
+   USE MOD_NetCDFVector
+   USE MOD_LandUrban
    USE MOD_Namelist
    USE MOD_Vars_Global
 
@@ -218,7 +218,7 @@ CONTAINS
 
       compress = DEF_REST_COMPRESS_LEVEL
 
-      call ncio_create_file_vector (file_restart, landurban)
+      CALL ncio_create_file_vector (file_restart, landurban)
       CALL ncio_define_dimension_vector (file_restart, landurban, 'urban')
 
       CALL ncio_define_dimension_vector (file_restart, landurban, 'urban')
@@ -280,7 +280,8 @@ CONTAINS
 
    USE MOD_SPMD_Task
    USE MOD_LandUrban
-   ! deallocate (urbclass  )
+
+      ! deallocate (urbclass  )
 
       IF (p_is_worker) THEN
          IF (numurban > 0) THEN
