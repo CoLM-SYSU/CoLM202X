@@ -245,7 +245,7 @@
       !+
       !==========================================================
    SUBROUTINE READ_REST_CDF
-   #ifdef UseCDF_CMF
+#ifdef UseCDF_CMF
    USE NETCDF
    USE YOS_CMF_INPUT,    only: NX, NY
    USE YOS_CMF_MAP,      only: NPTHOUT, NPTHLEV, PTH_UPST, PTH_DOWN
@@ -323,7 +323,7 @@
 
    CALL NCERROR( NF90_CLOSE(NCID) )
 
-   #endif
+#endif
    END SUBROUTINE READ_REST_CDF
    !==========================================================
 
@@ -389,9 +389,9 @@
    SUBROUTINE WRTE_REST_BIN
    USE YOS_CMF_TIME,       only: JYYYYMMDD, JHOUR
    USE YOS_CMF_MAP,        only: REGIONTHIS, NSEQMAX
-   #ifdef UseMPI_CMF
+#ifdef UseMPI_CMF
    USE CMF_CTRL_MPI_MOD,   only: CMF_MPI_AllReduce_R1PTH, CMF_MPI_AllReduce_P1PTH
-   #endif
+#endif
    IMPLICIT NONE
    ! local variable 
    integer(KIND=JPIM)         :: RIREC
@@ -468,9 +468,9 @@
          !! Single Precision Restart
          ELSE
             R1PTH(:,:)=real(D1PTHFLW_PRE(:,:),4)
-   #ifdef UseMPI_CMF
+#ifdef UseMPI_CMF
             CALL CMF_MPI_AllReduce_R1PTH(R1PTH)
-   #endif
+#endif
             IF ( REGIONTHIS==1 )THEN
                open(TMPNAM,FILE=CFILE,FORM='UNFORMATTED',ACCESS='DIRECT',RECL=4*NPTHOUT*NPTHLEV)
                write(TMPNAM,REC=1) R1PTH
@@ -484,9 +484,9 @@
    SUBROUTINE WRTE_BIN_MAP(P2VAR,TNAM,IREC)
    USE CMF_UTILS_MOD,      only: vecP2mapP,  vecP2mapR
    USE YOS_CMF_MAP,        only: REGIONTHIS, NSEQMAX
-   #ifdef UseMPI_CMF
+#ifdef UseMPI_CMF
    USE CMF_CTRL_MPI_MOD,   only: CMF_MPI_AllReduce_R2MAP, CMF_MPI_AllReduce_P2MAP
-   #endif
+#endif
    IMPLICIT NONE
    real(KIND=JPRD)            :: P2VAR(NSEQMAX,1)  !! use Real*8 for code simplicity
    integer(KIND=JPIM)         :: TNAM,IREC
@@ -759,7 +759,7 @@
 
       write(LOGNAM,*) 'WRTE_REST: write RESTART NETCDF:',CFILE
 
-   #endif
+#endif
    END SUBROUTINE WRTE_REST_CDF
    !==========================================================
 
