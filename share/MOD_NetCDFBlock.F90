@@ -2,23 +2,23 @@
 
 MODULE MOD_NetCDFBlock
 
-   !----------------------------------------------------------------------------------
-   ! DESCRIPTION:
-   !
-   !    High-level Subroutines to read and write variables in files with netCDF format.
-   !
-   !    CoLM read and write netCDF files mainly in three ways:
-   !    1. Serial: read and write data by a single process;
-   !    2. Vector: 1) read vector data by IO and scatter from IO to workers
-   !               2) gather from workers to IO and write vectors by IO
-   !               Notice: each file contains vector data in one block.
-   !    3. Block : read blocked data by IO
-   !               Notice: input file is a single file.
-   !
-   !    This module contains subroutines of "3. Block".
-   !
-   ! Created by Shupeng Zhang, May 2023
-   !----------------------------------------------------------------------------------
+!----------------------------------------------------------------------------------
+! DESCRIPTION:
+!
+!    High-level Subroutines to read and write variables in files with netCDF format.
+!
+!    CoLM read and write netCDF files mainly in three ways:
+!    1. Serial: read and write data by a single process;
+!    2. Vector: 1) read vector data by IO and scatter from IO to workers
+!               2) gather from workers to IO and write vectors by IO
+!               Notice: each file contains vector data in one block.
+!    3. Block : read blocked data by IO
+!               Notice: input file is a single file.
+!
+!    This MODULE contains subroutines of "3. Block".
+!
+! Created by Shupeng Zhang, May 2023
+!----------------------------------------------------------------------------------
 
    USE netcdf
    USE MOD_NetCDFSerial
@@ -44,23 +44,23 @@ CONTAINS
    ! ----
    SUBROUTINE ncio_read_block_int32_2d (filename, dataname, grid, rdata)
 
-      USE netcdf
-      USE MOD_Block
-      USE MOD_Grid
-      USE MOD_DataType
-      USE MOD_SPMD_Task
-      IMPLICIT NONE
+   USE netcdf
+   USE MOD_Block
+   USE MOD_Grid
+   USE MOD_DataType
+   USE MOD_SPMD_Task
+   IMPLICIT NONE
 
-      CHARACTER (len=*), intent(in) :: filename
-      CHARACTER (len=*), intent(in) :: dataname
-      TYPE (grid_type),  intent(in) :: grid
+   character (len=*), intent(in) :: filename
+   character (len=*), intent(in) :: dataname
+   type (grid_type),  intent(in) :: grid
 
-      TYPE (block_data_int32_2d), intent(inout) :: rdata
+   type (block_data_int32_2d), intent(inout) :: rdata
 
-      ! Local variables
-      INTEGER :: iblk, jblk, ndims(2), start2(2), count2(2), start_mem
-      INTEGER :: ncid, varid
-      INTEGER :: iblkme
+   ! Local variables
+   integer :: iblk, jblk, ndims(2), start2(2), count2(2), start_mem
+   integer :: ncid, varid
+   integer :: iblkme
 
       IF (p_is_io) THEN
 
@@ -73,7 +73,7 @@ CONTAINS
             jblk = gblock%yblkme(iblkme)
 
             ndims = (/grid%xcnt(iblk), grid%ycnt(jblk)/)
-            IF (any(ndims == 0)) cycle
+            IF (any(ndims == 0)) CYCLE
 
             start2 = (/grid%xdsp(iblk)+1, grid%ydsp(jblk)+1/)
             count2(1) = min(grid%xcnt(iblk), grid%nlon-grid%xdsp(iblk))
@@ -104,23 +104,23 @@ CONTAINS
    ! ----
    SUBROUTINE ncio_read_block_real8_2d (filename, dataname, grid, rdata)
 
-      USE netcdf
-      USE MOD_Block
-      USE MOD_Grid
-      USE MOD_DataType
-      USE MOD_SPMD_Task
-      IMPLICIT NONE
+   USE netcdf
+   USE MOD_Block
+   USE MOD_Grid
+   USE MOD_DataType
+   USE MOD_SPMD_Task
+   IMPLICIT NONE
 
-      CHARACTER (len=*), intent(in) :: filename
-      CHARACTER (len=*), intent(in) :: dataname
-      TYPE (grid_type),  intent(in) :: grid
+   character (len=*), intent(in) :: filename
+   character (len=*), intent(in) :: dataname
+   type (grid_type),  intent(in) :: grid
 
-      TYPE (block_data_real8_2d), intent(inout) :: rdata
+   type (block_data_real8_2d), intent(inout) :: rdata
 
-      ! Local variables
-      INTEGER :: iblk, jblk, ndims(2), start2(2), count2(2), start_mem
-      INTEGER :: ncid, varid
-      INTEGER :: iblkme
+   ! Local variables
+   integer :: iblk, jblk, ndims(2), start2(2), count2(2), start_mem
+   integer :: ncid, varid
+   integer :: iblkme
 
       IF (p_is_io) THEN
 
@@ -133,7 +133,7 @@ CONTAINS
             jblk = gblock%yblkme(iblkme)
 
             ndims = (/grid%xcnt(iblk), grid%ycnt(jblk)/)
-            IF (any(ndims == 0)) cycle
+            IF (any(ndims == 0)) CYCLE
 
             start2 = (/grid%xdsp(iblk)+1, grid%ydsp(jblk)+1/)
             count2(1) = min(grid%xcnt(iblk), grid%nlon-grid%xdsp(iblk))
@@ -164,24 +164,24 @@ CONTAINS
    ! ----
    SUBROUTINE ncio_read_block_real8_3d (filename, dataname, grid, ndim1, rdata)
 
-      USE netcdf
-      USE MOD_Block
-      USE MOD_Grid
-      USE MOD_DataType
-      USE MOD_SPMD_Task
-      IMPLICIT NONE
+   USE netcdf
+   USE MOD_Block
+   USE MOD_Grid
+   USE MOD_DataType
+   USE MOD_SPMD_Task
+   IMPLICIT NONE
 
-      CHARACTER (len=*), intent(in) :: filename
-      CHARACTER (len=*), intent(in) :: dataname
-      TYPE (grid_type),  intent(in) :: grid
-      INTEGER, intent(in) :: ndim1
+   character (len=*), intent(in) :: filename
+   character (len=*), intent(in) :: dataname
+   type (grid_type),  intent(in) :: grid
+   integer, intent(in) :: ndim1
 
-      TYPE (block_data_real8_3d), intent(inout) :: rdata
-      INTEGER :: ncid, varid
+   type (block_data_real8_3d), intent(inout) :: rdata
+   integer :: ncid, varid
 
-      ! Local variables
-      INTEGER :: iblk, jblk, ndims(3), start3(3), count3(3), start_mem
-      INTEGER :: iblkme
+   ! Local variables
+   integer :: iblk, jblk, ndims(3), start3(3), count3(3), start_mem
+   integer :: iblkme
 
       IF (p_is_io) THEN
 
@@ -194,7 +194,7 @@ CONTAINS
             jblk = gblock%yblkme(iblkme)
 
             ndims = (/ndim1, grid%xcnt(iblk), grid%ycnt(jblk)/)
-            IF (any(ndims == 0)) cycle
+            IF (any(ndims == 0)) CYCLE
 
             start3 = (/1, grid%xdsp(iblk)+1, grid%ydsp(jblk)+1/)
             count3(1) = ndim1
@@ -226,24 +226,24 @@ CONTAINS
    ! ----
    SUBROUTINE ncio_read_block_int32_2d_time (filename, dataname, grid, itime, rdata)
 
-      USE netcdf
-      USE MOD_Block
-      USE MOD_Grid
-      USE MOD_DataType
-      USE MOD_SPMD_Task
-      IMPLICIT NONE
+   USE netcdf
+   USE MOD_Block
+   USE MOD_Grid
+   USE MOD_DataType
+   USE MOD_SPMD_Task
+   IMPLICIT NONE
 
-      CHARACTER (len=*), intent(in) :: filename
-      CHARACTER (len=*), intent(in) :: dataname
-      TYPE (grid_type),  intent(in) :: grid
-      INTEGER, intent(in) :: itime
+   character (len=*), intent(in) :: filename
+   character (len=*), intent(in) :: dataname
+   type (grid_type),  intent(in) :: grid
+   integer, intent(in) :: itime
 
-      TYPE (block_data_int32_2d), intent(inout) :: rdata
+   type (block_data_int32_2d), intent(inout) :: rdata
 
-      ! Local variables
-      INTEGER :: iblk, jblk, ndims(2), start3(3), count3(3), start_mem
-      INTEGER :: ncid, varid
-      INTEGER :: iblkme
+   ! Local variables
+   integer :: iblk, jblk, ndims(2), start3(3), count3(3), start_mem
+   integer :: ncid, varid
+   integer :: iblkme
 
       IF (p_is_io) THEN
 
@@ -256,7 +256,7 @@ CONTAINS
             jblk = gblock%yblkme(iblkme)
 
             ndims = (/grid%xcnt(iblk), grid%ycnt(jblk)/)
-            IF (any(ndims == 0)) cycle
+            IF (any(ndims == 0)) CYCLE
 
             start3 = (/grid%xdsp(iblk)+1, grid%ydsp(jblk)+1, itime/)
             count3(1) = min(grid%xcnt(iblk), grid%nlon-grid%xdsp(iblk))
@@ -288,24 +288,24 @@ CONTAINS
    ! ----
    SUBROUTINE ncio_read_block_real8_2d_time (filename, dataname, grid, itime, rdata)
 
-      USE netcdf
-      USE MOD_Block
-      USE MOD_Grid
-      USE MOD_DataType
-      USE MOD_SPMD_Task
-      IMPLICIT NONE
+   USE netcdf
+   USE MOD_Block
+   USE MOD_Grid
+   USE MOD_DataType
+   USE MOD_SPMD_Task
+   IMPLICIT NONE
 
-      CHARACTER (len=*), intent(in) :: filename
-      CHARACTER (len=*), intent(in) :: dataname
-      TYPE (grid_type),  intent(in) :: grid
-      INTEGER, intent(in) :: itime
+   character (len=*), intent(in) :: filename
+   character (len=*), intent(in) :: dataname
+   type (grid_type),  intent(in) :: grid
+   integer, intent(in) :: itime
 
-      TYPE (block_data_real8_2d), intent(inout) :: rdata
+   type (block_data_real8_2d), intent(inout) :: rdata
 
-      ! Local variables
-      INTEGER :: iblk, jblk, ndims(2), start3(3), count3(3), start_mem
-      INTEGER :: ncid, varid
-      INTEGER :: iblkme
+   ! Local variables
+   integer :: iblk, jblk, ndims(2), start3(3), count3(3), start_mem
+   integer :: ncid, varid
+   integer :: iblkme
 
       IF (p_is_io) THEN
 
@@ -318,7 +318,7 @@ CONTAINS
             jblk = gblock%yblkme(iblkme)
 
             ndims = (/grid%xcnt(iblk), grid%ycnt(jblk)/)
-            IF (any(ndims == 0)) cycle
+            IF (any(ndims == 0)) CYCLE
 
             start3 = (/grid%xdsp(iblk)+1, grid%ydsp(jblk)+1, itime/)
             count3(1) = min(grid%xcnt(iblk), grid%nlon-grid%xdsp(iblk))
@@ -349,24 +349,24 @@ CONTAINS
    ! ----
    SUBROUTINE ncio_read_block_real8_3d_time (filename, dataname, grid, ndim1, itime, rdata)
 
-      USE netcdf
-      USE MOD_Block
-      USE MOD_Grid
-      USE MOD_DataType
-      USE MOD_SPMD_Task
-      IMPLICIT NONE
+   USE netcdf
+   USE MOD_Block
+   USE MOD_Grid
+   USE MOD_DataType
+   USE MOD_SPMD_Task
+   IMPLICIT NONE
 
-      CHARACTER (len=*), intent(in) :: filename
-      CHARACTER (len=*), intent(in) :: dataname
-      TYPE (grid_type),  intent(in) :: grid
-      INTEGER, intent(in) :: ndim1, itime
+   character (len=*), intent(in) :: filename
+   character (len=*), intent(in) :: dataname
+   type (grid_type),  intent(in) :: grid
+   integer, intent(in) :: ndim1, itime
 
-      TYPE (block_data_real8_3d), intent(inout) :: rdata
+   type (block_data_real8_3d), intent(inout) :: rdata
 
-      ! Local variables
-      INTEGER :: iblk, jblk, ndims(3), start4(4), count4(4), start_mem
-      INTEGER :: ncid, varid
-      INTEGER :: iblkme
+   ! Local variables
+   integer :: iblk, jblk, ndims(3), start4(4), count4(4), start_mem
+   integer :: ncid, varid
+   integer :: iblkme
 
       IF (p_is_io) THEN
 
@@ -379,7 +379,7 @@ CONTAINS
             jblk = gblock%yblkme(iblkme)
 
             ndims = (/ndim1, grid%xcnt(iblk), grid%ycnt(jblk)/)
-            IF (any(ndims == 0)) cycle
+            IF (any(ndims == 0)) CYCLE
 
             start4 = (/1, grid%xdsp(iblk)+1, grid%ydsp(jblk)+1, itime/)
             count4(1) = ndim1
@@ -411,24 +411,24 @@ CONTAINS
    ! ----
    SUBROUTINE ncio_read_site_time (filename, dataname, itime, rdata)
 
-      USE netcdf
-      USE MOD_Block
-      USE MOD_DataType
-      USE MOD_SPMD_Task
-      USE MOD_Namelist
-      IMPLICIT NONE
+   USE netcdf
+   USE MOD_Block
+   USE MOD_DataType
+   USE MOD_SPMD_Task
+   USE MOD_Namelist
+   IMPLICIT NONE
 
-      CHARACTER (len=*), intent(in) :: filename
-      CHARACTER (len=*), intent(in) :: dataname
-      INTEGER, intent(in) :: itime
+   character (len=*), intent(in) :: filename
+   character (len=*), intent(in) :: dataname
+   integer, intent(in) :: itime
 
-      TYPE (block_data_real8_2d), intent(inout) :: rdata
+   type (block_data_real8_2d), intent(inout) :: rdata
 
-      ! Local variables
-      INTEGER :: start3(3), count3(3)
-      INTEGER :: varid, dimid
-      INTEGER, SAVE :: ncid, time_dim
-      LOGICAL, SAVE :: fid = .false.
+   ! Local variables
+   integer :: start3(3), count3(3)
+   integer :: varid, dimid
+   integer, SAVE :: ncid, time_dim
+   logical, SAVE :: fid = .false.
 
       IF (p_is_io) THEN
          CALL check_ncfile_exist (filename)

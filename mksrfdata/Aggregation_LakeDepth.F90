@@ -3,30 +3,31 @@
 SUBROUTINE Aggregation_LakeDepth ( &
       gland, dir_rawdata, dir_model_landdata, lc_year)
 
-   ! ----------------------------------------------------------------------
-   ! DESCRIPTION:
-   ! Aggregate lake depth of multiple pixels within a lake patch based on Global land cover types
-   ! (updated with the specific dataset)
-   !
-   ! Global Lake Coverage and Lake Depth (1km resolution)
-   !   (http://nwpi.krc.karelia.run/flake/)
-   !    Lake depth data legend
-   !    Value   Description
-   ! 0       no lake indicated in this pixel
-   ! 1       no any information about this lake and set the default value of 10 m
-   ! 2       no information about depth for this lake and set the default value of 10 m
-   ! 3       have the information about lake depth in this pixel
-   ! 4       this is the river pixel according to our map, set the default value of 3 m
-   !
-   ! REFERENCE:
-   ! Kourzeneva, E., H. Asensio, E. Martin, and S. Faroux, 2012: Global gridded dataset of lake coverage and lake depth
-   ! for USE in numerical weather prediction and climate modelling. Tellus A, 64, 15640.
-   !
-   ! Created by Yongjiu Dai, 02/2014
-   !
-   ! REVISIONS:
-   ! Shupeng Zhang, 01/2022: porting codes to MPI parallel version
-   ! ----------------------------------------------------------------------
+! ----------------------------------------------------------------------
+! DESCRIPTION:
+! Aggregate lake depth of multiple pixels within a lake patch based on Global land cover types
+! (updated with the specific dataset)
+!
+! Global Lake Coverage and Lake Depth (1km resolution)
+!   (http://nwpi.krc.karelia.run/flake/)
+!    Lake depth data legend
+!    Value   Description
+! 0       no lake indicated in this pixel
+! 1       no any information about this lake and set the default value of 10 m
+! 2       no information about depth for this lake and set the default value of 10 m
+! 3       have the information about lake depth in this pixel
+! 4       this is the river pixel according to our map, set the default value of 3 m
+!
+! REFERENCE:
+! Kourzeneva, E., H. Asensio, E. Martin, and S. Faroux, 2012: Global gridded dataset of lake coverage and lake depth
+! for USE in numerical weather prediction and climate modelling. Tellus A, 64, 15640.
+!
+! Created by Yongjiu Dai, 02/2014
+!
+! REVISIONS:
+! Shupeng Zhang, 01/2022: porting codes to MPI parallel version
+! ----------------------------------------------------------------------
+
    USE MOD_Precision
    USE MOD_Namelist
    USE MOD_SPMD_Task
@@ -52,20 +53,20 @@ SUBROUTINE Aggregation_LakeDepth ( &
    IMPLICIT NONE
    ! arguments:
 
-   INTEGER, intent(in) :: lc_year
-   TYPE(grid_type),  intent(in) :: gland
-   CHARACTER(LEN=*), intent(in) :: dir_rawdata
-   CHARACTER(LEN=*), intent(in) :: dir_model_landdata
+   integer, intent(in) :: lc_year
+   type(grid_type),  intent(in) :: gland
+   character(LEN=*), intent(in) :: dir_rawdata
+   character(LEN=*), intent(in) :: dir_model_landdata
 
    ! local variables:
    ! ---------------------------------------------------------------
-   CHARACTER(len=256) :: landdir, lndname, cyear
-   INTEGER :: L, ipatch
+   character(len=256) :: landdir, lndname, cyear
+   integer :: L, ipatch
 
-   TYPE (block_data_real8_2d) :: lakedepth
-   REAL(r8), allocatable :: lakedepth_patches(:), lakedepth_one(:)
+   type (block_data_real8_2d) :: lakedepth
+   real(r8), allocatable :: lakedepth_patches(:), lakedepth_one(:)
 #ifdef SrfdataDiag
-   INTEGER :: typlake(1) = (/17/)
+   integer :: typlake(1) = (/17/)
 #endif
 
    write(cyear,'(i4.4)') lc_year
@@ -88,9 +89,9 @@ SUBROUTINE Aggregation_LakeDepth ( &
    ENDIF
 #endif
 
-   ! ................................................
-   ! global lake coverage and lake depth
-   ! ................................................
+! ................................................
+! global lake coverage and lake depth
+! ................................................
    lndname = trim(dir_rawdata)//'/lake_depth.nc'
 
    IF (p_is_io) THEN
@@ -103,9 +104,9 @@ SUBROUTINE Aggregation_LakeDepth ( &
 #endif
    ENDIF
 
-   !   ---------------------------------------------------------------
-   !   aggregate the lake depth from the resolution of raw data to modelling resolution
-   !   ---------------------------------------------------------------
+! ----------------------------------------------------------------------------------
+!   aggregate the lake depth from the resolution of raw data to modelling resolution
+! ----------------------------------------------------------------------------------
 
    IF (p_is_worker) THEN
 

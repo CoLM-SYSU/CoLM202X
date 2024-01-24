@@ -2,13 +2,13 @@
 
 #ifdef SinglePoint
 MODULE MOD_SingleSrfdata
-   !-----------------------------------------------------------------------------------------
-   ! DESCRIPTION:
-   !
-   !    This module includes subroutines to read or write surface data for "SinglePoint".
-   !
-   ! Created by Shupeng Zhang, May 2023
-   !-----------------------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
+! DESCRIPTION:
+!
+!    This module includes subroutines to read or write surface data for "SinglePoint".
+!
+! Created by Shupeng Zhang, May 2023
+!-----------------------------------------------------------------------------------------
 
    USE MOD_Precision, only: r8
    USE MOD_Vars_Global
@@ -17,125 +17,125 @@ MODULE MOD_SingleSrfdata
    IMPLICIT NONE
    SAVE
 
-   REAL(r8) :: SITE_lon_location = 0.
-   REAL(r8) :: SITE_lat_location = 0.
+   real(r8) :: SITE_lon_location = 0.
+   real(r8) :: SITE_lat_location = 0.
 
-   INTEGER  :: SITE_landtype = 1
+   integer  :: SITE_landtype = 1
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
-   INTEGER,  allocatable :: SITE_pfttyp  (:)
-   REAL(r8), allocatable :: SITE_pctpfts (:)
+   integer,  allocatable :: SITE_pfttyp  (:)
+   real(r8), allocatable :: SITE_pctpfts (:)
 #endif
 
 #ifdef CROP
-   REAL(r8), allocatable :: SITE_croptyp (:)
-   REAL(r8), allocatable :: SITE_pctcrop (:)
+   real(r8), allocatable :: SITE_croptyp (:)
+   real(r8), allocatable :: SITE_pctcrop (:)
 #endif
 
-   REAL(r8) :: SITE_htop
+   real(r8) :: SITE_htop
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
-   REAL(r8), allocatable :: SITE_htop_pfts (:)
+   real(r8), allocatable :: SITE_htop_pfts (:)
 #endif
 
-   REAL(r8), allocatable :: SITE_LAI_monthly (:,:)
-   REAL(r8), allocatable :: SITE_SAI_monthly (:,:)
+   real(r8), allocatable :: SITE_LAI_monthly (:,:)
+   real(r8), allocatable :: SITE_SAI_monthly (:,:)
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
-   REAL(r8), allocatable :: SITE_LAI_pfts_monthly (:,:,:)
-   REAL(r8), allocatable :: SITE_SAI_pfts_monthly (:,:,:)
+   real(r8), allocatable :: SITE_LAI_pfts_monthly (:,:,:)
+   real(r8), allocatable :: SITE_SAI_pfts_monthly (:,:,:)
 #endif
 
-   INTEGER,  allocatable :: SITE_LAI_year (:)
-   REAL(r8), allocatable :: SITE_LAI_8day (:,:)
+   integer,  allocatable :: SITE_LAI_year (:)
+   real(r8), allocatable :: SITE_LAI_8day (:,:)
 
-   REAL(r8) :: SITE_lakedepth = 1.
+   real(r8) :: SITE_lakedepth = 1.
 
-   REAL(r8) :: SITE_soil_s_v_alb
-   REAL(r8) :: SITE_soil_d_v_alb
-   REAL(r8) :: SITE_soil_s_n_alb
-   REAL(r8) :: SITE_soil_d_n_alb
+   real(r8) :: SITE_soil_s_v_alb
+   real(r8) :: SITE_soil_d_v_alb
+   real(r8) :: SITE_soil_s_n_alb
+   real(r8) :: SITE_soil_d_n_alb
 
-   REAL(r8), allocatable :: SITE_soil_vf_quartz_mineral (:)
-   REAL(r8), allocatable :: SITE_soil_vf_gravels        (:)
-   REAL(r8), allocatable :: SITE_soil_vf_sand           (:)
-   REAL(r8), allocatable :: SITE_soil_vf_om             (:)
-   REAL(r8), allocatable :: SITE_soil_wf_gravels        (:)
-   REAL(r8), allocatable :: SITE_soil_wf_sand           (:)
-   REAL(r8), allocatable :: SITE_soil_OM_density        (:)
-   REAL(r8), allocatable :: SITE_soil_BD_all            (:)
-   REAL(r8), allocatable :: SITE_soil_theta_s           (:)
-   REAL(r8), allocatable :: SITE_soil_k_s               (:)
-   REAL(r8), allocatable :: SITE_soil_csol              (:)
-   REAL(r8), allocatable :: SITE_soil_tksatu            (:)
-   REAL(r8), allocatable :: SITE_soil_tksatf            (:)
-   REAL(r8), allocatable :: SITE_soil_tkdry             (:)
-   REAL(r8), allocatable :: SITE_soil_k_solids          (:)
-   REAL(r8), allocatable :: SITE_soil_psi_s             (:)
-   REAL(r8), allocatable :: SITE_soil_lambda            (:)
+   real(r8), allocatable :: SITE_soil_vf_quartz_mineral (:)
+   real(r8), allocatable :: SITE_soil_vf_gravels        (:)
+   real(r8), allocatable :: SITE_soil_vf_sand           (:)
+   real(r8), allocatable :: SITE_soil_vf_om             (:)
+   real(r8), allocatable :: SITE_soil_wf_gravels        (:)
+   real(r8), allocatable :: SITE_soil_wf_sand           (:)
+   real(r8), allocatable :: SITE_soil_OM_density        (:)
+   real(r8), allocatable :: SITE_soil_BD_all            (:)
+   real(r8), allocatable :: SITE_soil_theta_s           (:)
+   real(r8), allocatable :: SITE_soil_k_s               (:)
+   real(r8), allocatable :: SITE_soil_csol              (:)
+   real(r8), allocatable :: SITE_soil_tksatu            (:)
+   real(r8), allocatable :: SITE_soil_tksatf            (:)
+   real(r8), allocatable :: SITE_soil_tkdry             (:)
+   real(r8), allocatable :: SITE_soil_k_solids          (:)
+   real(r8), allocatable :: SITE_soil_psi_s             (:)
+   real(r8), allocatable :: SITE_soil_lambda            (:)
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
-   REAL(r8), allocatable :: SITE_soil_theta_r           (:)
-   REAL(r8), allocatable :: SITE_soil_alpha_vgm         (:)
-   REAL(r8), allocatable :: SITE_soil_L_vgm             (:)
-   REAL(r8), allocatable :: SITE_soil_n_vgm             (:)
+   real(r8), allocatable :: SITE_soil_theta_r           (:)
+   real(r8), allocatable :: SITE_soil_alpha_vgm         (:)
+   real(r8), allocatable :: SITE_soil_L_vgm             (:)
+   real(r8), allocatable :: SITE_soil_n_vgm             (:)
 #endif
-   REAL(r8), allocatable :: SITE_soil_BA_alpha          (:)
-   REAL(r8), allocatable :: SITE_soil_BA_beta           (:)
+   real(r8), allocatable :: SITE_soil_BA_alpha          (:)
+   real(r8), allocatable :: SITE_soil_BA_beta           (:)
 
-   REAL(r8) :: SITE_dbedrock = 0.
+   real(r8) :: SITE_dbedrock = 0.
 
-   REAL(r8) :: SITE_topography = 0.
+   real(r8) :: SITE_topography = 0.
 
-   INTEGER , allocatable :: SITE_urbtyp   (:)
+   integer , allocatable :: SITE_urbtyp   (:)
 
-   REAL(r8), allocatable :: SITE_lucyid   (:)
+   real(r8), allocatable :: SITE_lucyid   (:)
 
-   REAL(r8), allocatable :: SITE_fveg_urb (:)
-   REAL(r8), allocatable :: SITE_htop_urb (:)
-   REAL(r8), allocatable :: SITE_flake_urb(:)
-   REAL(r8), allocatable :: SITE_froof    (:)
-   REAL(r8), allocatable :: SITE_hroof    (:)
-   REAL(r8), allocatable :: SITE_fgimp    (:)
-   REAL(r8), allocatable :: SITE_fgper    (:)
-   REAL(r8), allocatable :: SITE_hwr      (:)
-   REAL(r8), allocatable :: SITE_popden   (:)
+   real(r8), allocatable :: SITE_fveg_urb (:)
+   real(r8), allocatable :: SITE_htop_urb (:)
+   real(r8), allocatable :: SITE_flake_urb(:)
+   real(r8), allocatable :: SITE_froof    (:)
+   real(r8), allocatable :: SITE_hroof    (:)
+   real(r8), allocatable :: SITE_fgimp    (:)
+   real(r8), allocatable :: SITE_fgper    (:)
+   real(r8), allocatable :: SITE_hwr      (:)
+   real(r8), allocatable :: SITE_popden   (:)
 
-   REAL(r8), allocatable :: SITE_em_roof  (:)
-   REAL(r8), allocatable :: SITE_em_wall  (:)
-   REAL(r8), allocatable :: SITE_em_gimp  (:)
-   REAL(r8), allocatable :: SITE_em_gper  (:)
-   REAL(r8), allocatable :: SITE_t_roommax(:)
-   REAL(r8), allocatable :: SITE_t_roommin(:)
-   REAL(r8), allocatable :: SITE_thickroof(:)
-   REAL(r8), allocatable :: SITE_thickwall(:)
+   real(r8), allocatable :: SITE_em_roof  (:)
+   real(r8), allocatable :: SITE_em_wall  (:)
+   real(r8), allocatable :: SITE_em_gimp  (:)
+   real(r8), allocatable :: SITE_em_gper  (:)
+   real(r8), allocatable :: SITE_t_roommax(:)
+   real(r8), allocatable :: SITE_t_roommin(:)
+   real(r8), allocatable :: SITE_thickroof(:)
+   real(r8), allocatable :: SITE_thickwall(:)
 
-   REAL(r8), allocatable :: SITE_cv_roof  (:)
-   REAL(r8), allocatable :: SITE_cv_wall  (:)
-   REAL(r8), allocatable :: SITE_cv_gimp  (:)
-   REAL(r8), allocatable :: SITE_tk_roof  (:)
-   REAL(r8), allocatable :: SITE_tk_wall  (:)
-   REAL(r8), allocatable :: SITE_tk_gimp  (:)
+   real(r8), allocatable :: SITE_cv_roof  (:)
+   real(r8), allocatable :: SITE_cv_wall  (:)
+   real(r8), allocatable :: SITE_cv_gimp  (:)
+   real(r8), allocatable :: SITE_tk_roof  (:)
+   real(r8), allocatable :: SITE_tk_wall  (:)
+   real(r8), allocatable :: SITE_tk_gimp  (:)
 
-   REAL(r8), allocatable :: SITE_alb_roof (:,:)
-   REAL(r8), allocatable :: SITE_alb_wall (:,:)
-   REAL(r8), allocatable :: SITE_alb_gimp (:,:)
-   REAL(r8), allocatable :: SITE_alb_gper (:,:)
+   real(r8), allocatable :: SITE_alb_roof (:,:)
+   real(r8), allocatable :: SITE_alb_wall (:,:)
+   real(r8), allocatable :: SITE_alb_gimp (:,:)
+   real(r8), allocatable :: SITE_alb_gper (:,:)
 
 CONTAINS
 
    ! -----
    SUBROUTINE read_surface_data_single (fsrfdata, mksrfdata)
 
-      USE MOD_TimeManager
-      USE MOD_NetCDFSerial
-      USE MOD_Namelist
-      USE MOD_Utils
-      USE MOD_Vars_Global, only : PI
-      IMPLICIT NONE
+   USE MOD_TimeManager
+   USE MOD_NetCDFSerial
+   USE MOD_Namelist
+   USE MOD_Utils
+   USE MOD_Vars_Global, only : PI
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in) :: fsrfdata
-      LOGICAL, intent(in) :: mksrfdata
+   character(len=*), intent(in) :: fsrfdata
+   logical, intent(in) :: mksrfdata
 
-      ! Local Variables
-      INTEGER :: iyear, itime
+   ! Local Variables
+   integer :: iyear, itime
 
       CALL ncio_read_serial (fsrfdata, 'latitude',  SITE_lat_location)
       CALL ncio_read_serial (fsrfdata, 'longitude', SITE_lon_location)
@@ -265,16 +265,18 @@ CONTAINS
 
    ! -----
    SUBROUTINE read_urban_surface_data_single (fsrfdata, mksrfdata, mkrun)
-      USE MOD_TimeManager
-      USE MOD_NetCDFSerial
-      USE MOD_Namelist
-      USE MOD_Utils
-      USE MOD_Vars_Global, only : PI, URBAN
-      IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in) :: fsrfdata
-      LOGICAL, intent(in) :: mksrfdata
-      LOGICAL, intent(in), optional :: mkrun
+   USE MOD_TimeManager
+   USE MOD_NetCDFSerial
+   USE MOD_Namelist
+   USE MOD_Utils
+   USE MOD_Vars_Global, only : PI, URBAN
+   IMPLICIT NONE
+
+   ! Local Variables
+   character(len=*), intent(in) :: fsrfdata
+   logical, intent(in) :: mksrfdata
+   logical, intent(in), optional :: mkrun
 
       SITE_landtype = URBAN
       CALL ncio_read_serial (fsrfdata, 'latitude',  SITE_lat_location)
@@ -402,18 +404,18 @@ CONTAINS
    ! -----
    SUBROUTINE write_surface_data_single (numpatch, numpft)
 
-      USE MOD_NetCDFSerial
-      USE MOD_Namelist
-      USE MOD_Const_LC
-      IMPLICIT NONE
+   USE MOD_NetCDFSerial
+   USE MOD_Namelist
+   USE MOD_Const_LC
+   IMPLICIT NONE
 
-      INTEGER, intent(in) :: numpatch
-      INTEGER, intent(in), optional :: numpft
+   integer, intent(in) :: numpatch
+   integer, intent(in), optional :: numpft
 
-      ! Local Variables
-      CHARACTER(len=256) :: fsrfdata
-      INTEGER :: ipft, iyear, itime
-      CHARACTER(len=8)   :: source
+   ! Local Variables
+   character(len=256) :: fsrfdata
+   integer :: ipft, iyear, itime
+   character(len=8)   :: source
 
       fsrfdata = trim(DEF_dir_landdata) // '/srfdata.nc'
 
@@ -563,17 +565,17 @@ CONTAINS
    ! -----
    SUBROUTINE write_urban_surface_data_single (numurban)
 
-      USE MOD_NetCDFSerial
-      USE MOD_Namelist
-      USE MOD_Const_LC
-      IMPLICIT NONE
+   USE MOD_NetCDFSerial
+   USE MOD_Namelist
+   USE MOD_Const_LC
+   IMPLICIT NONE
 
-      INTEGER, intent(in) :: numurban
+   integer, intent(in) :: numurban
 
-      ! Local Variables
-      CHARACTER(len=256) :: fsrfdata
-      INTEGER :: iyear, itime
-      CHARACTER(len=8)   :: source
+   ! Local Variables
+   character(len=256) :: fsrfdata
+   integer :: iyear, itime
+   character(len=8)   :: source
 
       fsrfdata = trim(DEF_dir_landdata) // '/srfdata.nc'
 
@@ -736,11 +738,12 @@ CONTAINS
       CALL ncio_put_attr     (fsrfdata, 'elevation', 'source', datasource(USE_SITE_topography))
 
    END SUBROUTINE write_urban_surface_data_single
-   ! ---------
-   CHARACTER(len=8) FUNCTION datasource (is_site)
 
-      IMPLICIT NONE
-      LOGICAL, intent(in) :: is_site
+   ! ---------
+   character(len=8) FUNCTION datasource (is_site)
+
+   IMPLICIT NONE
+   logical, intent(in) :: is_site
 
       IF (is_site) THEN
          datasource = 'SITE'
@@ -753,7 +756,7 @@ CONTAINS
    ! ------
    SUBROUTINE single_srfdata_final ()
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
       IF (allocated(SITE_pfttyp )) deallocate(SITE_pfttyp )

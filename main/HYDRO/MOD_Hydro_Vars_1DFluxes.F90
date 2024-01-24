@@ -2,34 +2,34 @@
 
 #ifdef CatchLateralFlow
 MODULE MOD_Hydro_Vars_1DFluxes
-   !-------------------------------------------------------------------------------------
-   ! DESCRIPTION:
-   !   
-   !   1D fluxes in lateral hydrological processes.
-   !
-   ! Created by Shupeng Zhang, May 2023
-   !-------------------------------------------------------------------------------------
+!-------------------------------------------------------------------------------------
+! DESCRIPTION:
+!   
+!   1D fluxes in lateral hydrological processes.
+!
+! Created by Shupeng Zhang, May 2023
+!-------------------------------------------------------------------------------------
    
    USE MOD_Precision
    IMPLICIT NONE
 
    ! -- fluxes --
-   REAL(r8), allocatable :: xsubs_bsn (:)  ! subsurface lateral flow between basins                      [m/s]
-   REAL(r8), allocatable :: xsubs_hru (:)  ! subsurface lateral flow between hydrological response units [m/s]
-   REAL(r8), allocatable :: xsubs_pch (:)  ! subsurface lateral flow between patches inside one HRU      [m/s]
+   real(r8), allocatable :: xsubs_bsn (:)  ! subsurface lateral flow between basins                      [m/s]
+   real(r8), allocatable :: xsubs_hru (:)  ! subsurface lateral flow between hydrological response units [m/s]
+   real(r8), allocatable :: xsubs_pch (:)  ! subsurface lateral flow between patches inside one HRU      [m/s]
 
-   REAL(r8), allocatable :: wdsrf_bsn_ta (:) ! time step average of river height   [m]
-   REAL(r8), allocatable :: momen_riv_ta (:) ! time step average of river momentum [m^2/s]
-   REAL(r8), allocatable :: veloc_riv_ta (:) ! time step average of river velocity [m/s]
+   real(r8), allocatable :: wdsrf_bsn_ta (:) ! time step average of river height   [m]
+   real(r8), allocatable :: momen_riv_ta (:) ! time step average of river momentum [m^2/s]
+   real(r8), allocatable :: veloc_riv_ta (:) ! time step average of river velocity [m/s]
 
-   REAL(r8), allocatable :: wdsrf_hru_ta (:) ! time step average of surface water depth    [m]
-   REAL(r8), allocatable :: momen_hru_ta (:) ! time step average of surface water momentum [m^2/s]
-   REAL(r8), allocatable :: veloc_hru_ta (:) ! time step average of surface water veloctiy [m/s]
+   real(r8), allocatable :: wdsrf_hru_ta (:) ! time step average of surface water depth    [m]
+   real(r8), allocatable :: momen_hru_ta (:) ! time step average of surface water momentum [m^2/s]
+   real(r8), allocatable :: veloc_hru_ta (:) ! time step average of surface water veloctiy [m/s]
   
-   REAL(r8), allocatable :: xwsur (:) ! surface water exchange [mm h2o/s]
-   REAL(r8), allocatable :: xwsub (:) ! subsurface water exchange [mm h2o/s]
+   real(r8), allocatable :: xwsur (:) ! surface water exchange [mm h2o/s]
+   real(r8), allocatable :: xwsub (:) ! subsurface water exchange [mm h2o/s]
    
-   REAL(r8), allocatable :: discharge (:) ! river discharge [m^3/s]
+   real(r8), allocatable :: discharge (:) ! river discharge [m^3/s]
 
    ! PUBLIC MEMBER FUNCTIONS:
    PUBLIC :: allocate_1D_HydroFluxes
@@ -39,14 +39,14 @@ CONTAINS
 
   SUBROUTINE allocate_1D_HydroFluxes
 
-     USE MOD_SPMD_Task
-     USE MOD_Vars_Global, only : spval
-     USE MOD_Mesh,      only : numelm
-     USE MOD_LandHRU,   only : numhru
-     USE MOD_LandPatch, only : numpatch
-     IMPLICIT NONE
+  USE MOD_SPMD_Task
+  USE MOD_Vars_Global, only : spval
+  USE MOD_Mesh,      only : numelm
+  USE MOD_LandHRU,   only : numhru
+  USE MOD_LandPatch, only : numpatch
+  IMPLICIT NONE
 
-     INTEGER :: numbasin
+  integer :: numbasin
 
      numbasin = numelm
 
@@ -75,7 +75,7 @@ CONTAINS
 
   SUBROUTINE deallocate_1D_HydroFluxes
 
-     IMPLICIT NONE
+   IMPLICIT NONE
 
      IF (allocated(xsubs_pch)) deallocate(xsubs_pch)
      IF (allocated(xsubs_hru)) deallocate(xsubs_hru)

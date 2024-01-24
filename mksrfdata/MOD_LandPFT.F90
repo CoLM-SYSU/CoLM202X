@@ -4,24 +4,24 @@
 
 MODULE MOD_LandPFT
 
-   !------------------------------------------------------------------------------------
-   ! DESCRIPTION:
-   !
-   !    Build pixelset "landpft" (Plant Function Type).
-   !
-   !    In CoLM, the global/regional area is divided into a hierarchical structure:
-   !    1. If GRIDBASED or UNSTRUCTURED is defined, it is
-   !       ELEMENT >>> PATCH
-   !    2. If CATCHMENT is defined, it is
-   !       ELEMENT >>> HRU >>> PATCH
-   !    If Plant Function Type classification is used, PATCH is further divided into PFT.
-   !    If Plant Community classification is used,     PATCH is further divided into PC.
-   !
-   !    "landpft" refers to pixelset PFT.
-   !
-   ! Created by Shupeng Zhang, May 2023
-   !    porting codes from Hua Yuan's OpenMP version to MPI parallel version.
-   !------------------------------------------------------------------------------------
+!------------------------------------------------------------------------------------
+! DESCRIPTION:
+!
+!    Build pixelset "landpft" (Plant Function Type).
+!
+!    In CoLM, the global/regional area is divided into a hierarchical structure:
+!    1. If GRIDBASED or UNSTRUCTURED is defined, it is
+!       ELEMENT >>> PATCH
+!    2. If CATCHMENT is defined, it is
+!       ELEMENT >>> HRU >>> PATCH
+!    If Plant Function Type classification is used, PATCH is further divided into PFT.
+!    If Plant Community classification is used,     PATCH is further divided into PC.
+!
+!    "landpft" refers to pixelset PFT.
+!
+! Created by Shupeng Zhang, May 2023
+!    porting codes from Hua Yuan's OpenMP version to MPI parallel version.
+!------------------------------------------------------------------------------------
 
    USE MOD_Namelist
    USE MOD_Pixelset
@@ -30,12 +30,12 @@ MODULE MOD_LandPFT
    IMPLICIT NONE
 
    ! ---- Instance ----
-   INTEGER :: numpft
-   TYPE(pixelset_type) :: landpft
+   integer :: numpft
+   type(pixelset_type) :: landpft
 
-   INTEGER , allocatable :: pft2patch   (:)  !patch index of a PFT
-   INTEGER , allocatable :: patch_pft_s (:)  !start PFT index of a patch
-   INTEGER , allocatable :: patch_pft_e (:)  !end PFT index of a patch
+   integer , allocatable :: pft2patch   (:)  !patch index of a PFT
+   integer , allocatable :: patch_pft_s (:)  !start PFT index of a patch
+   integer , allocatable :: patch_pft_e (:)  !end PFT index of a patch
 
    ! ---- PUBLIC routines ----
    PUBLIC :: landpft_build
@@ -45,31 +45,31 @@ CONTAINS
    ! -------------------------------
    SUBROUTINE landpft_build (lc_year)
 
-      USE MOD_Precision
-      USE MOD_SPMD_Task
-      USE MOD_Grid
-      USE MOD_DataType
-      USE MOD_Namelist
-      USE MOD_5x5DataReadin
-      USE MOD_LandPatch
-      USE MOD_AggregationRequestData
-      USE MOD_Const_LC
+   USE MOD_Precision
+   USE MOD_SPMD_Task
+   USE MOD_Grid
+   USE MOD_DataType
+   USE MOD_Namelist
+   USE MOD_5x5DataReadin
+   USE MOD_LandPatch
+   USE MOD_AggregationRequestData
+   USE MOD_Const_LC
 #ifdef CROP
-      USE MOD_LandCrop
+   USE MOD_LandCrop
 #endif
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      INTEGER, intent(in) :: lc_year
-      ! Local Variables
-      CHARACTER(len=256) :: dir_5x5, suffix, cyear
-      TYPE (block_data_real8_3d) :: pctpft
-      REAL(r8), allocatable :: pctpft_patch(:,:), pctpft_one(:,:)
-      REAL(r8), allocatable :: area_one(:)
-      INTEGER  :: ipatch, ipft, npatch, npft
-      REAL(r8) :: sumarea
-      LOGICAL, allocatable :: patchmask (:)
-      INTEGER  :: npft_glb
+   integer, intent(in) :: lc_year
+   ! Local Variables
+   character(len=256) :: dir_5x5, suffix, cyear
+   type (block_data_real8_3d) :: pctpft
+   real(r8), allocatable :: pctpft_patch(:,:), pctpft_one(:,:)
+   real(r8), allocatable :: area_one(:)
+   integer  :: ipatch, ipft, npatch, npft
+   real(r8) :: sumarea
+   logical, allocatable :: patchmask (:)
+   integer  :: npft_glb
 
       IF (p_is_master) THEN
          write(*,'(A)') 'Making land plant function type tiles :'
@@ -145,9 +145,9 @@ CONTAINS
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-      if (p_is_io) then
+      IF (p_is_io) THEN
 
-         call allocate_block_data (gpatch, pctpft, N_PFT_modis, lb1 = 0)
+         CALL allocate_block_data (gpatch, pctpft, N_PFT_modis, lb1 = 0)
          CALL flush_block_data (pctpft, 1.0)
 
          dir_5x5 = trim(DEF_dir_rawdata) // '/plant_15s'
@@ -159,10 +159,10 @@ CONTAINS
 #ifdef USEMPI
          CALL aggregation_data_daemon (gpatch, data_r8_3d_in1 = pctpft, n1_r8_3d_in1 = N_PFT_modis)
 #endif
-      end if
+      ENDIF
 
 
-      if (p_is_worker) then
+      IF (p_is_worker) THEN
 
          IF (numpatch > 0) THEN
             allocate (pctpft_patch (0:N_PFT-1,numpatch))
@@ -173,7 +173,6 @@ CONTAINS
          ENDIF
 
          DO ipatch = 1, numpatch
-            !IF (landpatch%settyp(ipatch) == 1) THEN
 #ifndef CROP
             IF (patchtypes(landpatch%settyp(ipatch)) == 0) THEN
 #else
@@ -229,7 +228,6 @@ CONTAINS
                IF (patchmask(ipatch)) THEN
                   npatch = npatch + 1
 
-                  !IF (landpatch%settyp(ipatch) == 1) THEN
 #ifndef CROP
                   IF (patchtypes(landpatch%settyp(ipatch)) == 0) THEN
 #else
@@ -309,16 +307,16 @@ CONTAINS
    ! ----------------------
    SUBROUTINE map_patch_to_pft
 
-      USE MOD_SPMD_Task
-      USE MOD_LandPatch
-      USE MOD_Const_LC
-      IMPLICIT NONE
+   USE MOD_SPMD_Task
+   USE MOD_LandPatch
+   USE MOD_Const_LC
+   IMPLICIT NONE
 
-      INTEGER :: ipatch, ipft
+   integer :: ipatch, ipft
 
       IF (p_is_worker) THEN
 
-         IF ((numpatch <= 0) .or. (numpft <= 0)) return
+         IF ((numpatch <= 0) .or. (numpft <= 0)) RETURN
 
          IF (allocated(patch_pft_s)) deallocate(patch_pft_s)
          IF (allocated(patch_pft_e)) deallocate(patch_pft_e)
@@ -330,7 +328,6 @@ CONTAINS
 
          ipft = 1
          DO ipatch = 1, numpatch
-            !IF (landpatch%settyp(ipatch) == 1) THEN
 #ifndef CROP
             IF (patchtypes(landpatch%settyp(ipatch)) == 0) THEN
 #else
@@ -347,7 +344,7 @@ CONTAINS
                      patch_pft_e(ipatch) = ipft
                      ipft = ipft + 1
                   ELSE
-                     exit
+                     EXIT
                   ENDIF
                ENDDO
 #ifdef CROP

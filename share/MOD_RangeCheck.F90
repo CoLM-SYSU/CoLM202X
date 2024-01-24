@@ -2,17 +2,17 @@
 
 MODULE MOD_RangeCheck
 
-   !-----------------------------------------------------------------------
-   ! DESCRIPTION:
-   !
-   !    Subroutines show the range of values in block data or vector data.
-   !
-   !    Notice that:
-   !    1. "check_block_data"  can only be called by IO     processes.
-   !    2. "check_vector_data" can only be called by worker processes.
-   !
-   ! Created by Shupeng Zhang, May 2023
-   !-----------------------------------------------------------------------
+!-----------------------------------------------------------------------
+! DESCRIPTION:
+!
+!    Subroutines show the range of values in block data or vector data.
+!
+!    Notice that:
+!    1. "check_block_data"  can only be called by IO     processes.
+!    2. "check_vector_data" can only be called by worker processes.
+!
+! Created by Shupeng Zhang, May 2023
+!-----------------------------------------------------------------------
 
 #ifdef RangeCheck
    IMPLICIT NONE
@@ -34,24 +34,24 @@ CONTAINS
    ! ----------
    SUBROUTINE check_block_data_real8_2d (varname, gdata, spv_in, largevalue)
 
-      USE MOD_Precision
-      USE MOD_SPMD_Task
-      USE MOD_Block
-      USE MOD_DataType
-      IMPLICIT NONE
+   USE MOD_Precision
+   USE MOD_SPMD_Task
+   USE MOD_Block
+   USE MOD_DataType
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in)   :: varname
-      TYPE(block_data_real8_2d), intent(in) :: gdata
-      REAL(r8), intent(in), optional :: spv_in
-      REAL(r8), intent(in), optional :: largevalue
+   character(len=*), intent(in)   :: varname
+   type(block_data_real8_2d), intent(in) :: gdata
+   real(r8), intent(in), optional :: spv_in
+   real(r8), intent(in), optional :: largevalue
 
-      ! Local variables
-      REAL(r8) :: gmin, gmax, spv
-      REAL(r8), allocatable :: gmin_all(:), gmax_all(:)
-      LOGICAL,  allocatable :: msk2(:,:)
-      INTEGER :: iblkme, ib, jb, ix, iy
-      LOGICAL :: has_nan
-      character(len=256) :: wfmt, ss, info
+   ! Local variables
+   real(r8) :: gmin, gmax, spv
+   real(r8), allocatable :: gmin_all(:), gmax_all(:)
+   logical,  allocatable :: msk2(:,:)
+   integer :: iblkme, ib, jb, ix, iy
+   logical :: has_nan
+   character(len=256) :: wfmt, ss, info
 
       IF (p_is_io) THEN
 
@@ -69,7 +69,7 @@ CONTAINS
             ib = gblock%xblkme(iblkme)
             jb = gblock%yblkme(iblkme)
 
-            IF (.not. allocated(gdata%blk(ib,jb)%val)) cycle
+            IF (.not. allocated(gdata%blk(ib,jb)%val)) CYCLE
 
             allocate(msk2 (size(gdata%blk(ib,jb)%val,1), size(gdata%blk(ib,jb)%val,2)))
             msk2 = gdata%blk(ib,jb)%val /= spv
@@ -162,21 +162,21 @@ CONTAINS
    ! ----------
    SUBROUTINE check_vector_data_real8_1d (varname, vdata, spv_in, largevalue)
 
-      USE MOD_Precision
-      USE MOD_SPMD_Task
-      IMPLICIT NONE
+   USE MOD_Precision
+   USE MOD_SPMD_Task
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in)   :: varname
-      REAL(r8), intent(in)           :: vdata(:)
-      REAL(r8), intent(in), optional :: spv_in
-      REAL(r8), intent(in), optional :: largevalue
+   character(len=*), intent(in)   :: varname
+   real(r8), intent(in)           :: vdata(:)
+   real(r8), intent(in), optional :: spv_in
+   real(r8), intent(in), optional :: largevalue
 
-      ! Local variables
-      REAL(r8) :: vmin, vmax, spv
-      REAL(r8), allocatable :: vmin_all(:), vmax_all(:)
-      INTEGER  :: i
-      LOGICAL  :: has_nan
-      character(len=256) :: wfmt, ss, info
+   ! Local variables
+   real(r8) :: vmin, vmax, spv
+   real(r8), allocatable :: vmin_all(:), vmax_all(:)
+   integer  :: i
+   logical  :: has_nan
+   character(len=256) :: wfmt, ss, info
 
       IF (p_is_worker) THEN
 
@@ -263,21 +263,21 @@ CONTAINS
    ! ----------
    SUBROUTINE check_vector_data_real8_2d (varname, vdata, spv_in, largevalue)
 
-      USE MOD_Precision
-      USE MOD_SPMD_Task
-      IMPLICIT NONE
+   USE MOD_Precision
+   USE MOD_SPMD_Task
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in)   :: varname
-      REAL(r8), intent(in)           :: vdata(:,:)
-      REAL(r8), intent(in), optional :: spv_in
-      REAL(r8), intent(in), optional :: largevalue
+   character(len=*), intent(in)   :: varname
+   real(r8), intent(in)           :: vdata(:,:)
+   real(r8), intent(in), optional :: spv_in
+   real(r8), intent(in), optional :: largevalue
 
-      ! Local variables
-      REAL(r8) :: vmin, vmax, spv
-      REAL(r8), allocatable :: vmin_all(:), vmax_all(:)
-      INTEGER  :: i, j
-      LOGICAL  :: has_nan
-      character(len=256) :: wfmt, ss, info
+   ! Local variables
+   real(r8) :: vmin, vmax, spv
+   real(r8), allocatable :: vmin_all(:), vmax_all(:)
+   integer  :: i, j
+   logical  :: has_nan
+   character(len=256) :: wfmt, ss, info
 
       IF (p_is_worker) THEN
 
@@ -366,21 +366,21 @@ CONTAINS
    ! ----------
    SUBROUTINE check_vector_data_real8_3d (varname, vdata, spv_in, largevalue)
 
-      USE MOD_Precision
-      USE MOD_SPMD_Task
-      IMPLICIT NONE
+   USE MOD_Precision
+   USE MOD_SPMD_Task
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in)   :: varname
-      REAL(r8), intent(in)           :: vdata(:,:,:)
-      REAL(r8), intent(in), optional :: spv_in
-      REAL(r8), intent(in), optional :: largevalue
+   character(len=*), intent(in)   :: varname
+   real(r8), intent(in)           :: vdata(:,:,:)
+   real(r8), intent(in), optional :: spv_in
+   real(r8), intent(in), optional :: largevalue
 
-      ! Local variables
-      REAL(r8) :: vmin, vmax, spv
-      REAL(r8), allocatable :: vmin_all(:), vmax_all(:)
-      INTEGER  :: i, j, k
-      LOGICAL  :: has_nan
-      character(len=256) :: wfmt, ss, info
+   ! Local variables
+   real(r8) :: vmin, vmax, spv
+   real(r8), allocatable :: vmin_all(:), vmax_all(:)
+   integer  :: i, j, k
+   logical  :: has_nan
+   character(len=256) :: wfmt, ss, info
 
       IF (p_is_worker) THEN
 
@@ -472,21 +472,21 @@ CONTAINS
    ! ----------
    SUBROUTINE check_vector_data_real8_4d (varname, vdata, spv_in, largevalue)
 
-      USE MOD_Precision
-      USE MOD_SPMD_Task
-      IMPLICIT NONE
+   USE MOD_Precision
+   USE MOD_SPMD_Task
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in)   :: varname
-      REAL(r8), intent(in)           :: vdata(:,:,:,:)
-      REAL(r8), intent(in), optional :: spv_in
-      REAL(r8), intent(in), optional :: largevalue
+   character(len=*), intent(in)   :: varname
+   real(r8), intent(in)           :: vdata(:,:,:,:)
+   real(r8), intent(in), optional :: spv_in
+   real(r8), intent(in), optional :: largevalue
 
-      ! Local variables
-      REAL(r8) :: vmin, vmax, spv
-      REAL(r8), allocatable :: vmin_all(:), vmax_all(:)
-      INTEGER  :: i, j, k, l
-      LOGICAL  :: has_nan
-      character(len=256) :: wfmt, ss, info
+   ! Local variables
+   real(r8) :: vmin, vmax, spv
+   real(r8), allocatable :: vmin_all(:), vmax_all(:)
+   integer  :: i, j, k, l
+   logical  :: has_nan
+   character(len=256) :: wfmt, ss, info
 
       IF (p_is_worker) THEN
 
@@ -580,18 +580,18 @@ CONTAINS
    ! ----------
    SUBROUTINE check_vector_data_int32_1d (varname, vdata, spv_in)
 
-      USE MOD_Precision
-      USE MOD_SPMD_Task
-      IMPLICIT NONE
+   USE MOD_Precision
+   USE MOD_SPMD_Task
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in)  :: varname
-      INTEGER, intent(in)           :: vdata(:)
-      INTEGER, intent(in), optional :: spv_in
+   character(len=*), intent(in)  :: varname
+   integer, intent(in)           :: vdata(:)
+   integer, intent(in), optional :: spv_in
 
-      ! Local variables
-      INTEGER :: vmin, vmax
-      INTEGER, allocatable :: vmin_all(:), vmax_all(:)
-      character(len=256) :: wfmt
+   ! Local variables
+   integer :: vmin, vmax
+   integer, allocatable :: vmin_all(:), vmax_all(:)
+   character(len=256) :: wfmt
 
       IF (p_is_worker) THEN
 

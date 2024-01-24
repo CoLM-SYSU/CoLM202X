@@ -1,42 +1,42 @@
-program srfdata_concatenate
+PROGRAM srfdata_concatenate
 
    USE MOD_NetCDFSerial
    USE MOD_Utils
-   implicit none
+   IMPLICIT NONE
 
    ! Local variables 
    character(len=256) :: dirlanddata, dirvar, prefix, varname    
    character(len=256) :: level, typefilter, output, rshp
    character(len=256) :: tmpfile, file_list_cmd
-   INTEGER :: timevals (8)
+   integer :: timevals (8)
 
-   LOGICAL   :: dim1to2
-   INTEGER   :: filter, nfile, ifile, nthis, dsp, ntotal
-   INTEGER*8 :: bsnmax
+   logical   :: dim1to2
+   integer   :: filter, nfile, ifile, nthis, dsp, ntotal
+   integer*8 :: bsnmax
    character(len=256) :: line, blockinfo, varfile, levfile, landfile
 
-   REAL(r8), allocatable :: longitude(:), latitude(:)
-   INTEGER  :: nlon, nlat
+   real(r8), allocatable :: longitude(:), latitude(:)
+   integer  :: nlon, nlat
 
-   TYPE :: varreal
-      REAL(r8), allocatable :: val(:)
-   END TYPE
-   TYPE :: varint
-      INTEGER*8, allocatable :: val(:)
-   END TYPE
+   type :: varreal
+      real(r8), allocatable :: val(:)
+   END type
+   type :: varint
+      integer*8, allocatable :: val(:)
+   END type
 
-   TYPE(varreal), allocatable :: varvec(:)
-   TYPE(varint ), allocatable :: bsnvec(:)
+   type(varreal), allocatable :: varvec(:)
+   type(varint ), allocatable :: bsnvec(:)
 
-   REAL(r8),  allocatable :: varcache1(:), varcache2(:,:)
-   INTEGER*8, allocatable :: bsncache1(:), bsncache2(:,:)
-   REAL(r8),  allocatable :: vardata(:)
-   INTEGER*8, allocatable :: eindex (:)
-   INTEGER  , allocatable :: settyp (:)
-   INTEGER  , allocatable :: order  (:)
+   real(r8),  allocatable :: varcache1(:), varcache2(:,:)
+   integer*8, allocatable :: bsncache1(:), bsncache2(:,:)
+   real(r8),  allocatable :: vardata(:)
+   integer*8, allocatable :: eindex (:)
+   integer  , allocatable :: settyp (:)
+   integer  , allocatable :: order  (:)
 
-   INTEGER :: stat, i, j, ibasin
-   REAL(r8), parameter :: spval = -1.e36_r8  !missing value
+   integer :: stat, i, j, ibasin
+   real(r8), parameter :: spval = -1.e36_r8  !missing value
 
    IF (COMMAND_ARGUMENT_COUNT() == 0) THEN
       write(*,*)  'Usage    : PATH/srfdata_contenate' 
@@ -49,20 +49,20 @@ program srfdata_concatenate
       write(*,*)  ' <Arg 7> : output'
       write(*,*)  ' <Arg 8> : reshape or not (optional, value T/F, reshape from 1D to 2D)'
 
-      stop
+      STOP
    ENDIF
 
-   call get_command_argument (1, dirlanddata)
-   call get_command_argument (2, dirvar     )
-   call get_command_argument (3, prefix     )
-   call get_command_argument (4, varname    )
-   call get_command_argument (5, level      )
-   call get_command_argument (6, typefilter )
-   call get_command_argument (7, output     )
+   CALL get_command_argument (1, dirlanddata)
+   CALL get_command_argument (2, dirvar     )
+   CALL get_command_argument (3, prefix     )
+   CALL get_command_argument (4, varname    )
+   CALL get_command_argument (5, level      )
+   CALL get_command_argument (6, typefilter )
+   CALL get_command_argument (7, output     )
 
    dim1to2 = .false.
    IF (COMMAND_ARGUMENT_COUNT() > 7) THEN
-      call get_command_argument (8, rshp)
+      CALL get_command_argument (8, rshp)
       IF (trim(rshp) == 'T') THEN
          dim1to2 = .true.
       ENDIF
@@ -81,7 +81,7 @@ program srfdata_concatenate
    open(unit=10, file=trim(tmpfile))
    DO WHILE (.true.)
       READ(10, '(A)', IOSTAT=stat) line
-      IF(IS_IOSTAT_END(stat)) exit
+      IF(IS_IOSTAT_END(stat)) EXIT
 
       nfile = nfile + 1
    ENDDO
@@ -94,7 +94,7 @@ program srfdata_concatenate
    DO ifile = 1, nfile
 
       READ(10, '(A)', IOSTAT=stat) line
-      IF(IS_IOSTAT_END(stat)) exit
+      IF(IS_IOSTAT_END(stat)) EXIT
 
       blockinfo = line(len_trim(line)-10:len_trim(line)-3)
 
@@ -198,20 +198,20 @@ program srfdata_concatenate
       IF (dim1to2) THEN
          CALL ncio_define_dimension (output, 'longitude', nlon)
          CALL ncio_define_dimension (output, 'latitude' , nlat)
-         call ncio_write_serial (output, varname,    varcache2, 'longitude', 'latitude')
-         call ncio_write_serial (output, 'elmindex', bsncache2, 'longitude', 'latitude')
+         CALL ncio_write_serial (output, varname,    varcache2, 'longitude', 'latitude')
+         CALL ncio_write_serial (output, 'elmindex', bsncache2, 'longitude', 'latitude')
                
-         call ncio_write_serial (output, 'latitude', latitude, 'latitude')
+         CALL ncio_write_serial (output, 'latitude', latitude, 'latitude')
          CALL ncio_put_attr (output, 'latitude' , 'long_name', 'latitude')
          CALL ncio_put_attr (output, 'latitude' , 'units', 'degrees_north')
          
-         call ncio_write_serial (output, 'longitude', longitude, 'longitude')
+         CALL ncio_write_serial (output, 'longitude', longitude, 'longitude')
          CALL ncio_put_attr (output, 'longitude', 'long_name', 'longitude')
          CALL ncio_put_attr (output, 'longitude', 'units', 'degrees_east')
       ELSE
          CALL ncio_define_dimension (output, 'vec', ntotal)
-         call ncio_write_serial (output, 'elmindex', bsncache1, 'vec')
-         call ncio_write_serial (output, varname,    varcache1, 'vec')
+         CALL ncio_write_serial (output, 'elmindex', bsncache1, 'vec')
+         CALL ncio_write_serial (output, varname,    varcache1, 'vec')
       ENDIF
          
       CALL ncio_put_attr (output, varname, 'missing_value', spval)
@@ -246,4 +246,4 @@ program srfdata_concatenate
    file_list_cmd = 'rm ' // tmpfile
    CALL system(file_list_cmd)
 
-end program srfdata_concatenate
+END PROGRAM srfdata_concatenate

@@ -2,23 +2,23 @@
 
 MODULE MOD_NetCDFSerial
 
-   !----------------------------------------------------------------------------------
-   ! DESCRIPTION:
-   !
-   !    High-level Subroutines to read and write variables in files with netCDF format.
-   !
-   !    CoLM read and write netCDF files mainly in three ways:
-   !    1. Serial: read and write data by a single process;
-   !    2. Vector: 1) read vector data by IO and scatter from IO to workers
-   !               2) gather from workers to IO and write vectors by IO
-   !               Notice: each file contains vector data in one block.
-   !    3. Block : read blocked data by IO
-   !               Notice: input file is a single file.
-   !    
-   !    This module contains subroutines of "1. Serial".
-   !
-   ! Created by Shupeng Zhang, May 2023
-   !----------------------------------------------------------------------------------
+!----------------------------------------------------------------------------------
+! DESCRIPTION:
+!
+!    High-level Subroutines to read and write variables in files with netCDF format.
+!
+!    CoLM read and write netCDF files mainly in three ways:
+!    1. Serial: read and write data by a single process;
+!    2. Vector: 1) read vector data by IO and scatter from IO to workers
+!               2) gather from workers to IO and write vectors by IO
+!               Notice: each file CONTAINS vector data in one block.
+!    3. Block : read blocked data by IO
+!               Notice: input file is a single file.
+!    
+!    This MODULE CONTAINS subroutines of "1. Serial".
+!
+! Created by Shupeng Zhang, May 2023
+!----------------------------------------------------------------------------------
 
    USE netcdf
    USE MOD_Precision
@@ -124,14 +124,14 @@ CONTAINS
    ! ----
    SUBROUTINE nccheck (status, trace)
       
-      USE MOD_SPMD_Task
-      IMPLICIT NONE 
+   USE MOD_SPMD_Task
+   IMPLICIT NONE 
 
-      INTEGER, INTENT(IN) :: status
-      CHARACTER(len=*), INTENT(IN), optional :: trace
+   integer, intent(in) :: status
+   character(len=*), intent(in), optional :: trace
 
       IF (status /= NF90_NOERR) THEN
-         IF (present(trace)) then
+         IF (present(trace)) THEN
             write(*,'(A)') 'Netcdf error: ' //trim(nf90_strerror(status))// ' ' //trim(trace)
          ELSE
             write(*,'(A)') 'Netcdf error: ' //trim(nf90_strerror(status))
@@ -145,12 +145,12 @@ CONTAINS
    ! ----
    SUBROUTINE check_ncfile_exist (filename)
 
-      USE MOD_SPMD_Task
-      IMPLICIT NONE
+   USE MOD_SPMD_Task
+   IMPLICIT NONE
 
-      CHARACTER(len=*), INTENT(IN) :: filename
-      ! Local Variables
-      LOGICAL :: fexists
+   character(len=*), intent(in) :: filename
+   ! Local Variables
+   logical :: fexists
 
       inquire (file=trim(filename), exist=fexists)
       IF (.not. fexists) THEN
@@ -163,13 +163,13 @@ CONTAINS
    ! ----
    SUBROUTINE ncio_create_file (filename)
 
-      USE netcdf
-      IMPLICIT NONE
+   USE netcdf
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in)  :: filename
+   character(len=*), intent(in)  :: filename
 
-      ! Local Variables
-      INTEGER :: ncid
+   ! Local Variables
+   integer :: ncid
 
       CALL nccheck( nf90_create(trim(filename), ior(NF90_CLOBBER,NF90_NETCDF4), ncid) )
       CALL nccheck( nf90_close(ncid) )
@@ -179,13 +179,13 @@ CONTAINS
    ! ----
    SUBROUTINE ncio_put_attr_str (filename, varname, attrname, attrval)
 
-      USE netcdf
-      IMPLICIT NONE
+   USE netcdf
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in)  :: filename, varname, attrname, attrval
+   character(len=*), intent(in)  :: filename, varname, attrname, attrval
 
-      ! Local Variables
-      INTEGER :: ncid, varid
+   ! Local Variables
+   integer :: ncid, varid
 
       CALL nccheck( nf90_open (trim(filename), NF90_WRITE, ncid) )
       CALL nccheck (nf90_inq_varid (ncid, trim(varname), varid))
@@ -199,14 +199,14 @@ CONTAINS
    ! ----
    SUBROUTINE ncio_get_attr_str (filename, varname, attrname, attrval)
 
-      USE netcdf
-      IMPLICIT NONE
+   USE netcdf
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in)  :: filename, varname, attrname
-      CHARACTER(len=*), intent(out) :: attrval
+   character(len=*), intent(in)  :: filename, varname, attrname
+   character(len=*), intent(out) :: attrval
 
-      ! Local Variables
-      INTEGER :: ncid, varid
+   ! Local Variables
+   integer :: ncid, varid
 
       CALL nccheck( nf90_open (trim(filename), NF90_NOWRITE, ncid) )
       CALL nccheck (nf90_inq_varid (ncid, trim(varname), varid))
@@ -218,14 +218,14 @@ CONTAINS
    ! ----
    SUBROUTINE ncio_get_attr_real8 (filename, varname, attrname, attrval)
 
-      USE netcdf
-      IMPLICIT NONE
+   USE netcdf
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in)  :: filename, varname, attrname
-      REAL(r8), intent(out) :: attrval
+   character(len=*), intent(in)  :: filename, varname, attrname
+   real(r8), intent(out) :: attrval
 
-      ! Local Variables
-      INTEGER :: ncid, varid
+   ! Local Variables
+   integer :: ncid, varid
 
       CALL nccheck( nf90_open (trim(filename), NF90_NOWRITE, ncid) )
       CALL nccheck (nf90_inq_varid (ncid, trim(varname), varid))
@@ -237,14 +237,14 @@ CONTAINS
    ! ----
    SUBROUTINE ncio_put_attr_real8 (filename, varname, attrname, attrval)
 
-      USE netcdf
-      IMPLICIT NONE
+   USE netcdf
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in)  :: filename, varname, attrname
-      REAL(r8),         intent(in)  :: attrval
+   character(len=*), intent(in)  :: filename, varname, attrname
+   real(r8),         intent(in)  :: attrval
 
-      ! Local Variables
-      INTEGER :: ncid, varid
+   ! Local Variables
+   integer :: ncid, varid
 
       CALL nccheck( nf90_open (trim(filename), NF90_WRITE, ncid) )
       CALL nccheck (nf90_inq_varid (ncid, trim(varname), varid))
@@ -259,16 +259,16 @@ CONTAINS
    !---------------------------------------------------------
    SUBROUTINE ncio_inquire_varsize (filename, dataname, varsize)
 
-      USE netcdf
-      IMPLICIT NONE
+   USE netcdf
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in) :: filename
-      CHARACTER(len=*), intent(in) :: dataname
-      INTEGER, allocatable, intent(out) :: varsize(:)
+   character(len=*), intent(in) :: filename
+   character(len=*), intent(in) :: dataname
+   integer, allocatable, intent(out) :: varsize(:)
 
-      ! Local variables
-      INTEGER :: ncid, varid, ndims, idm
-      INTEGER, allocatable :: dimids(:)
+   ! Local variables
+   integer :: ncid, varid, ndims, idm
+   integer, allocatable :: dimids(:)
 
       CALL nccheck( nf90_open(trim(filename), NF90_NOWRITE, ncid) )
       CALL nccheck( nf90_inq_varid(ncid, trim(dataname), varid) )
@@ -288,16 +288,16 @@ CONTAINS
    END SUBROUTINE ncio_inquire_varsize
 
    !---------------------------------------------------------
-   LOGICAL function ncio_var_exist (filename, dataname)
+   logical FUNCTION ncio_var_exist (filename, dataname)
 
-      USE netcdf
-      IMPLICIT NONE
+   USE netcdf
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in) :: filename
-      CHARACTER(len=*), intent(in) :: dataname
+   character(len=*), intent(in) :: filename
+   character(len=*), intent(in) :: dataname
 
-      ! Local variables
-      INTEGER :: ncid, varid, status
+   ! Local variables
+   integer :: ncid, varid, status
 
       status = nf90_open(trim(filename), NF90_NOWRITE, ncid)
       IF (status == nf90_noerr) THEN
@@ -317,16 +317,16 @@ CONTAINS
    !---------------------------------------------------------
    SUBROUTINE ncio_inquire_length (filename, dataname, length)
 
-      USE netcdf
-      IMPLICIT NONE
+   USE netcdf
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in) :: filename
-      CHARACTER(len=*), intent(in) :: dataname
-      INTEGER, intent(out) :: length
+   character(len=*), intent(in) :: filename
+   character(len=*), intent(in) :: dataname
+   integer, intent(out) :: length
 
-      ! Local variables
-      INTEGER :: ncid, varid, ndims
-      INTEGER, allocatable :: dimids(:)
+   ! Local variables
+   integer :: ncid, varid, ndims
+   integer, allocatable :: dimids(:)
 
       CALL nccheck( nf90_open(trim(filename), NF90_NOWRITE, ncid) )
       CALL nccheck( nf90_inq_varid(ncid, trim(dataname), varid) )
@@ -343,15 +343,15 @@ CONTAINS
    !---------------------------------------------------------
    SUBROUTINE ncio_read_serial_int32_0d (filename, dataname, rdata)
 
-      USE netcdf
-      IMPLICIT NONE
+   USE netcdf
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in) :: filename
-      CHARACTER(len=*), intent(in) :: dataname
-      INTEGER, intent(out) :: rdata
+   character(len=*), intent(in) :: filename
+   character(len=*), intent(in) :: dataname
+   integer, intent(out) :: rdata
 
-      ! Local variables
-      INTEGER :: ncid, varid
+   ! Local variables
+   integer :: ncid, varid
 
       CALL check_ncfile_exist (filename)
 
@@ -365,16 +365,16 @@ CONTAINS
    !---------------------------------------------------------
    SUBROUTINE ncio_read_serial_real8_0d (filename, dataname, rdata)
 
-      USE netcdf
-      USE MOD_Precision
-      IMPLICIT NONE
+   USE netcdf
+   USE MOD_Precision
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in) :: filename
-      CHARACTER(len=*), intent(in) :: dataname
-      REAL(r8), intent(out) :: rdata
+   character(len=*), intent(in) :: filename
+   character(len=*), intent(in) :: dataname
+   real(r8), intent(out) :: rdata
 
-      ! Local variables
-      INTEGER :: ncid, varid
+   ! Local variables
+   integer :: ncid, varid
 
       CALL check_ncfile_exist (filename)
 
@@ -388,16 +388,16 @@ CONTAINS
    !---------------------------------------------------------
    SUBROUTINE ncio_read_serial_int8_1d (filename, dataname, rdata)
 
-      USE netcdf
-      IMPLICIT NONE
+   USE netcdf
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in) :: filename
-      CHARACTER(len=*), intent(in) :: dataname
-      INTEGER(1), allocatable, intent(out) :: rdata (:)
+   character(len=*), intent(in) :: filename
+   character(len=*), intent(in) :: dataname
+   integer(1), allocatable, intent(out) :: rdata (:)
 
-      ! Local variables
-      INTEGER :: ncid, varid
-      INTEGER, allocatable :: varsize(:)
+   ! Local variables
+   integer :: ncid, varid
+   integer, allocatable :: varsize(:)
 
       CALL check_ncfile_exist (filename)
 
@@ -416,16 +416,16 @@ CONTAINS
    !---------------------------------------------------------
    SUBROUTINE ncio_read_serial_int32_1d (filename, dataname, rdata)
 
-      USE netcdf
-      IMPLICIT NONE
+   USE netcdf
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in) :: filename
-      CHARACTER(len=*), intent(in) :: dataname
-      INTEGER, allocatable, intent(out) :: rdata (:)
+   character(len=*), intent(in) :: filename
+   character(len=*), intent(in) :: dataname
+   integer, allocatable, intent(out) :: rdata (:)
 
-      ! Local variables
-      INTEGER :: ncid, varid
-      INTEGER, allocatable :: varsize(:)
+   ! Local variables
+   integer :: ncid, varid
+   integer, allocatable :: varsize(:)
 
       CALL check_ncfile_exist (filename)
 
@@ -444,16 +444,16 @@ CONTAINS
    !---------------------------------------------------------
    SUBROUTINE ncio_read_serial_int64_1d (filename, dataname, rdata)
 
-      USE netcdf
-      IMPLICIT NONE
+   USE netcdf
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in) :: filename
-      CHARACTER(len=*), intent(in) :: dataname
-      INTEGER*8, allocatable, intent(out) :: rdata (:)
+   character(len=*), intent(in) :: filename
+   character(len=*), intent(in) :: dataname
+   integer*8, allocatable, intent(out) :: rdata (:)
 
-      ! Local variables
-      INTEGER :: ncid, varid
-      INTEGER, allocatable :: varsize(:)
+   ! Local variables
+   integer :: ncid, varid
+   integer, allocatable :: varsize(:)
 
       CALL check_ncfile_exist (filename)
 
@@ -473,17 +473,17 @@ CONTAINS
    !---------------------------------------------------------
    SUBROUTINE ncio_read_serial_real8_1d (filename, dataname, rdata)
 
-      USE netcdf
-      USE MOD_Precision
-      IMPLICIT NONE
+   USE netcdf
+   USE MOD_Precision
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in) :: filename
-      CHARACTER(len=*), intent(in) :: dataname
-      REAL(r8), allocatable, intent(out) :: rdata (:)
+   character(len=*), intent(in) :: filename
+   character(len=*), intent(in) :: dataname
+   real(r8), allocatable, intent(out) :: rdata (:)
 
-      ! Local variables
-      INTEGER :: ncid, varid
-      INTEGER, allocatable :: varsize(:)
+   ! Local variables
+   integer :: ncid, varid
+   integer, allocatable :: varsize(:)
 
       CALL check_ncfile_exist (filename)
 
@@ -502,16 +502,16 @@ CONTAINS
    !---------------------------------------------------------
    SUBROUTINE ncio_read_serial_int8_2d (filename, dataname, rdata)
 
-      USE netcdf
-      IMPLICIT NONE
+   USE netcdf
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in) :: filename
-      CHARACTER(len=*), intent(in) :: dataname
-      INTEGER(1), allocatable, intent(out) :: rdata (:,:)
+   character(len=*), intent(in) :: filename
+   character(len=*), intent(in) :: dataname
+   integer(1), allocatable, intent(out) :: rdata (:,:)
 
-      ! Local variables
-      INTEGER :: ncid, varid
-      INTEGER, allocatable :: varsize(:)
+   ! Local variables
+   integer :: ncid, varid
+   integer, allocatable :: varsize(:)
 
       CALL check_ncfile_exist (filename)
 
@@ -530,16 +530,16 @@ CONTAINS
    !---------------------------------------------------------
    SUBROUTINE ncio_read_serial_int16_2d (filename, dataname, rdata)
 
-      USE netcdf
-      IMPLICIT NONE
+   USE netcdf
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in) :: filename
-      CHARACTER(len=*), intent(in) :: dataname
-      INTEGER(2), allocatable, intent(out) :: rdata (:,:)
+   character(len=*), intent(in) :: filename
+   character(len=*), intent(in) :: dataname
+   integer(2), allocatable, intent(out) :: rdata (:,:)
 
-      ! Local variables
-      INTEGER :: ncid, varid
-      INTEGER, allocatable :: varsize(:)
+   ! Local variables
+   integer :: ncid, varid
+   integer, allocatable :: varsize(:)
 
       CALL check_ncfile_exist (filename)
 
@@ -558,16 +558,16 @@ CONTAINS
    !---------------------------------------------------------
    SUBROUTINE ncio_read_serial_int32_2d (filename, dataname, rdata)
 
-      USE netcdf
-      IMPLICIT NONE
+   USE netcdf
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in) :: filename
-      CHARACTER(len=*), intent(in) :: dataname
-      INTEGER, allocatable, intent(out) :: rdata (:,:)
+   character(len=*), intent(in) :: filename
+   character(len=*), intent(in) :: dataname
+   integer, allocatable, intent(out) :: rdata (:,:)
 
-      ! Local variables
-      INTEGER :: ncid, varid
-      INTEGER, allocatable :: varsize(:)
+   ! Local variables
+   integer :: ncid, varid
+   integer, allocatable :: varsize(:)
 
       CALL check_ncfile_exist (filename)
 
@@ -586,17 +586,17 @@ CONTAINS
    !---------------------------------------------------------
    SUBROUTINE ncio_read_serial_real4_2d (filename, dataname, rdata)
 
-      USE netcdf
-      USE MOD_Precision
-      IMPLICIT NONE
+   USE netcdf
+   USE MOD_Precision
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in) :: filename
-      CHARACTER(len=*), intent(in) :: dataname
-      REAL(4), allocatable, intent(out) :: rdata (:,:)
+   character(len=*), intent(in) :: filename
+   character(len=*), intent(in) :: dataname
+   real(4), allocatable, intent(out) :: rdata (:,:)
 
-      ! Local variables
-      INTEGER :: ncid, varid
-      INTEGER, allocatable :: varsize(:)
+   ! Local variables
+   integer :: ncid, varid
+   integer, allocatable :: varsize(:)
 
       CALL check_ncfile_exist (filename)
 
@@ -615,17 +615,17 @@ CONTAINS
    !---------------------------------------------------------
    SUBROUTINE ncio_read_serial_real8_2d (filename, dataname, rdata)
 
-      USE netcdf
-      USE MOD_Precision
-      IMPLICIT NONE
+   USE netcdf
+   USE MOD_Precision
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in) :: filename
-      CHARACTER(len=*), intent(in) :: dataname
-      REAL(r8), allocatable, intent(out) :: rdata (:,:)
+   character(len=*), intent(in) :: filename
+   character(len=*), intent(in) :: dataname
+   real(r8), allocatable, intent(out) :: rdata (:,:)
 
-      ! Local variables
-      INTEGER :: ncid, varid
-      INTEGER, allocatable :: varsize(:)
+   ! Local variables
+   integer :: ncid, varid
+   integer, allocatable :: varsize(:)
 
       CALL check_ncfile_exist (filename)
 
@@ -644,16 +644,16 @@ CONTAINS
    !---------------------------------------------------------
    SUBROUTINE ncio_read_serial_int32_3d (filename, dataname, rdata)
 
-      USE netcdf
-      IMPLICIT NONE
+   USE netcdf
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in) :: filename
-      CHARACTER(len=*), intent(in) :: dataname
-      INTEGER, allocatable, intent(out) :: rdata (:,:,:)
+   character(len=*), intent(in) :: filename
+   character(len=*), intent(in) :: dataname
+   integer, allocatable, intent(out) :: rdata (:,:,:)
 
-      ! Local variables
-      INTEGER :: ncid, varid
-      INTEGER, allocatable :: varsize(:)
+   ! Local variables
+   integer :: ncid, varid
+   integer, allocatable :: varsize(:)
 
       CALL check_ncfile_exist (filename)
 
@@ -672,17 +672,17 @@ CONTAINS
    !---------------------------------------------------------
    SUBROUTINE ncio_read_serial_real8_3d (filename, dataname, rdata)
 
-      USE netcdf
-      USE MOD_Precision
-      IMPLICIT NONE
+   USE netcdf
+   USE MOD_Precision
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in) :: filename
-      CHARACTER(len=*), intent(in) :: dataname
-      REAL(r8), allocatable, intent(out) :: rdata (:,:,:)
+   character(len=*), intent(in) :: filename
+   character(len=*), intent(in) :: dataname
+   real(r8), allocatable, intent(out) :: rdata (:,:,:)
 
-      ! Local variables
-      INTEGER :: ncid, varid
-      INTEGER, allocatable :: varsize(:)
+   ! Local variables
+   integer :: ncid, varid
+   integer, allocatable :: varsize(:)
 
       CALL check_ncfile_exist (filename)
 
@@ -701,17 +701,17 @@ CONTAINS
    !---------------------------------------------------------
    SUBROUTINE ncio_read_serial_real8_4d (filename, dataname, rdata)
 
-      USE netcdf
-      USE MOD_Precision
-      IMPLICIT NONE
+   USE netcdf
+   USE MOD_Precision
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in) :: filename
-      CHARACTER(len=*), intent(in) :: dataname
-      REAL(r8), allocatable, intent(out) :: rdata (:,:,:,:)
+   character(len=*), intent(in) :: filename
+   character(len=*), intent(in) :: dataname
+   real(r8), allocatable, intent(out) :: rdata (:,:,:,:)
 
-      ! Local variables
-      INTEGER :: ncid, varid
-      INTEGER, allocatable :: varsize(:)
+   ! Local variables
+   integer :: ncid, varid
+   integer, allocatable :: varsize(:)
 
       CALL check_ncfile_exist (filename)
 
@@ -730,17 +730,17 @@ CONTAINS
    !---------------------------------------------------------
    SUBROUTINE ncio_read_serial_real8_5d (filename, dataname, rdata)
 
-      USE netcdf
-      USE MOD_Precision
-      IMPLICIT NONE
+   USE netcdf
+   USE MOD_Precision
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in) :: filename
-      CHARACTER(len=*), intent(in) :: dataname
-      REAL(r8), allocatable, intent(out) :: rdata (:,:,:,:,:)
+   character(len=*), intent(in) :: filename
+   character(len=*), intent(in) :: dataname
+   real(r8), allocatable, intent(out) :: rdata (:,:,:,:,:)
 
-      ! Local variables
-      INTEGER :: ncid, varid
-      INTEGER, allocatable :: varsize(:)
+   ! Local variables
+   integer :: ncid, varid
+   integer, allocatable :: varsize(:)
 
       CALL check_ncfile_exist (filename)
 
@@ -759,13 +759,13 @@ CONTAINS
    !---------------------------------------------------------
    SUBROUTINE ncio_read_bcast_serial_int32_0d (filename, dataname, rdata)
 
-      USE netcdf
-      USE MOD_SPMD_Task
-      IMPLICIT NONE
+   USE netcdf
+   USE MOD_SPMD_Task
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in) :: filename
-      CHARACTER(len=*), intent(in) :: dataname
-      INTEGER, intent(out) :: rdata
+   character(len=*), intent(in) :: filename
+   character(len=*), intent(in) :: dataname
+   integer, intent(out) :: rdata
 
       IF (p_is_master) THEN
          CALL ncio_read_serial_int32_0d (filename, dataname, rdata)
@@ -780,13 +780,13 @@ CONTAINS
    !---------------------------------------------------------
    SUBROUTINE ncio_read_bcast_serial_real8_0d (filename, dataname, rdata)
 
-      USE MOD_SPMD_Task
-      USE MOD_Precision
-      IMPLICIT NONE
+   USE MOD_SPMD_Task
+   USE MOD_Precision
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in) :: filename
-      CHARACTER(len=*), intent(in) :: dataname
-      REAL(r8), intent(out) :: rdata
+   character(len=*), intent(in) :: filename
+   character(len=*), intent(in) :: dataname
+   real(r8), intent(out) :: rdata
 
       IF (p_is_master) THEN
          CALL ncio_read_serial_real8_0d (filename, dataname, rdata)
@@ -801,13 +801,13 @@ CONTAINS
    !---------------------------------------------------------
    SUBROUTINE ncio_read_bcast_serial_int32_1d (filename, dataname, rdata)
 
-      USE MOD_SPMD_Task
-      IMPLICIT NONE
+   USE MOD_SPMD_Task
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in) :: filename
-      CHARACTER(len=*), intent(in) :: dataname
-      INTEGER, allocatable, intent(out) :: rdata (:)
-      INTEGER :: vlen
+   character(len=*), intent(in) :: filename
+   character(len=*), intent(in) :: dataname
+   integer, allocatable, intent(out) :: rdata (:)
+   integer :: vlen
 
       IF (p_is_master) THEN
          CALL ncio_read_serial_int32_1d(filename, dataname, rdata)
@@ -825,13 +825,13 @@ CONTAINS
    !---------------------------------------------------------
    SUBROUTINE ncio_read_bcast_serial_int32_2d (filename, dataname, rdata)
 
-      USE MOD_SPMD_Task
-      IMPLICIT NONE
+   USE MOD_SPMD_Task
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in) :: filename
-      CHARACTER(len=*), intent(in) :: dataname
-      INTEGER, allocatable, intent(out) :: rdata (:,:)
-      INTEGER :: vsize(2)
+   character(len=*), intent(in) :: filename
+   character(len=*), intent(in) :: dataname
+   integer, allocatable, intent(out) :: rdata (:,:)
+   integer :: vsize(2)
 
       IF (p_is_master) THEN
          CALL ncio_read_serial_int32_2d(filename, dataname, rdata)
@@ -849,15 +849,15 @@ CONTAINS
    !---------------------------------------------------------
    SUBROUTINE ncio_read_bcast_serial_real8_1d (filename, dataname, rdata)
 
-      USE netcdf
-      USE MOD_SPMD_Task
-      USE MOD_Precision
-      IMPLICIT NONE
+   USE netcdf
+   USE MOD_SPMD_Task
+   USE MOD_Precision
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in) :: filename
-      CHARACTER(len=*), intent(in) :: dataname
-      REAL(r8), allocatable, intent(out) :: rdata (:)
-      INTEGER :: vlen
+   character(len=*), intent(in) :: filename
+   character(len=*), intent(in) :: dataname
+   real(r8), allocatable, intent(out) :: rdata (:)
+   integer :: vlen
 
       IF (p_is_master) THEN
          CALL ncio_read_serial_real8_1d(filename, dataname, rdata)
@@ -875,15 +875,15 @@ CONTAINS
    !---------------------------------------------------------
    SUBROUTINE ncio_read_bcast_serial_real8_2d (filename, dataname, rdata)
 
-      USE netcdf
-      USE MOD_SPMD_Task
-      USE MOD_Precision
-      IMPLICIT NONE
+   USE netcdf
+   USE MOD_SPMD_Task
+   USE MOD_Precision
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in) :: filename
-      CHARACTER(len=*), intent(in) :: dataname
-      REAL(r8), allocatable, intent(out) :: rdata (:,:)
-      INTEGER :: vsize(2)
+   character(len=*), intent(in) :: filename
+   character(len=*), intent(in) :: dataname
+   real(r8), allocatable, intent(out) :: rdata (:,:)
+   integer :: vsize(2)
 
       IF (p_is_master) THEN
          CALL ncio_read_serial_real8_2d(filename, dataname, rdata)
@@ -901,15 +901,15 @@ CONTAINS
    !---------------------------------------------------------
    SUBROUTINE ncio_read_bcast_serial_real8_3d (filename, dataname, rdata)
 
-      USE netcdf
-      USE MOD_SPMD_Task
-      USE MOD_Precision
-      IMPLICIT NONE
+   USE netcdf
+   USE MOD_SPMD_Task
+   USE MOD_Precision
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in) :: filename
-      CHARACTER(len=*), intent(in) :: dataname
-      REAL(r8), allocatable, intent(out) :: rdata (:,:,:)
-      INTEGER :: vsize(3)
+   character(len=*), intent(in) :: filename
+   character(len=*), intent(in) :: dataname
+   real(r8), allocatable, intent(out) :: rdata (:,:,:)
+   integer :: vsize(3)
 
       IF (p_is_master) THEN
          CALL ncio_read_serial_real8_3d(filename, dataname, rdata)
@@ -927,15 +927,15 @@ CONTAINS
    !---------------------------------------------------------
    SUBROUTINE ncio_read_bcast_serial_real8_4d (filename, dataname, rdata)
 
-      USE netcdf
-      USE MOD_SPMD_Task
-      USE MOD_Precision
-      IMPLICIT NONE
+   USE netcdf
+   USE MOD_SPMD_Task
+   USE MOD_Precision
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in) :: filename
-      CHARACTER(len=*), intent(in) :: dataname
-      REAL(r8), allocatable, intent(out) :: rdata (:,:,:,:)
-      INTEGER :: vsize(4)
+   character(len=*), intent(in) :: filename
+   character(len=*), intent(in) :: dataname
+   real(r8), allocatable, intent(out) :: rdata (:,:,:,:)
+   integer :: vsize(4)
 
       IF (p_is_master) THEN
          CALL ncio_read_serial_real8_4d(filename, dataname, rdata)
@@ -953,15 +953,15 @@ CONTAINS
       !---------------------------------------------------------
    SUBROUTINE ncio_read_bcast_serial_real8_5d (filename, dataname, rdata)
 
-      USE netcdf
-      USE MOD_SPMD_Task
-      USE MOD_Precision
-      IMPLICIT NONE
+   USE netcdf
+   USE MOD_SPMD_Task
+   USE MOD_Precision
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in) :: filename
-      CHARACTER(len=*), intent(in) :: dataname
-      REAL(r8), allocatable, intent(out) :: rdata (:,:,:,:,:)
-      INTEGER :: vsize(5)
+   character(len=*), intent(in) :: filename
+   character(len=*), intent(in) :: dataname
+   real(r8), allocatable, intent(out) :: rdata (:,:,:,:,:)
+   integer :: vsize(5)
 
       IF (p_is_master) THEN
          CALL ncio_read_serial_real8_5d(filename, dataname, rdata)
@@ -979,14 +979,14 @@ CONTAINS
    ! -------------------------------
    SUBROUTINE ncio_read_bcast_serial_logical_1d (filename, dataname, rdata)
 
-      USE MOD_SPMD_Task
-      IMPLICIT NONE
+   USE MOD_SPMD_Task
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in) :: filename
-      CHARACTER(len=*), intent(in) :: dataname
-      LOGICAL, allocatable, intent(out) :: rdata (:)
-      INTEGER :: vlen
-      INTEGER(1), allocatable :: rdata_byte(:)
+   character(len=*), intent(in) :: filename
+   character(len=*), intent(in) :: dataname
+   logical, allocatable, intent(out) :: rdata (:)
+   integer :: vlen
+   integer(1), allocatable :: rdata_byte(:)
 
       IF (p_is_master) THEN
          CALL ncio_read_serial_int8_1d(filename, dataname, rdata_byte)
@@ -1009,16 +1009,16 @@ CONTAINS
    !---------------------------------------------------------
    SUBROUTINE ncio_read_part_serial_int32_2d (filename, dataname, datastt, dataend, rdata)
 
-      USE netcdf
-      IMPLICIT NONE
+   USE netcdf
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in) :: filename
-      CHARACTER(len=*), intent(in) :: dataname
-      INTEGER, intent(in) :: datastt(2), dataend(2)
-      INTEGER, allocatable, intent(out) :: rdata (:,:)
+   character(len=*), intent(in) :: filename
+   character(len=*), intent(in) :: dataname
+   integer, intent(in) :: datastt(2), dataend(2)
+   integer, allocatable, intent(out) :: rdata (:,:)
 
-      ! Local variables
-      INTEGER :: ncid, varid
+   ! Local variables
+   integer :: ncid, varid
 
       CALL check_ncfile_exist (filename)
 
@@ -1035,18 +1035,18 @@ CONTAINS
    !---------------------------------------------------------
    SUBROUTINE ncio_read_period_serial_real8_2d (filename, dataname, timestt, timeend, rdata)
 
-      USE netcdf
-      IMPLICIT NONE
+   USE netcdf
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in) :: filename
-      CHARACTER(len=*), intent(in) :: dataname
-      INTEGER, intent(in) :: timestt, timeend
+   character(len=*), intent(in) :: filename
+   character(len=*), intent(in) :: dataname
+   integer, intent(in) :: timestt, timeend
 
-      real(r8), allocatable, intent(out) :: rdata (:,:,:)
+   real(r8), allocatable, intent(out) :: rdata (:,:,:)
 
-      ! Local variables
-      INTEGER :: ncid, varid
-      INTEGER, allocatable :: varsize(:)
+   ! Local variables
+   integer :: ncid, varid
+   integer, allocatable :: varsize(:)
 
       CALL check_ncfile_exist (filename)
    
@@ -1067,17 +1067,17 @@ CONTAINS
    ! -------------------------------
    SUBROUTINE ncio_define_dimension_int32 (filename, dimname, dimlen)
 
-      USE netcdf
-      USE MOD_Precision
-      IMPLICIT NONE
+   USE netcdf
+   USE MOD_Precision
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in) :: filename
-      CHARACTER(len=*), intent(in) :: dimname
-      INTEGER, intent(in) :: dimlen
+   character(len=*), intent(in) :: filename
+   character(len=*), intent(in) :: dimname
+   integer, intent(in) :: dimlen
 
-      ! Local variables
-      INTEGER :: ncid, dimid, status
-      INTEGER :: varid
+   ! Local variables
+   integer :: ncid, dimid, status
+   integer :: varid
 
       CALL nccheck( nf90_open(trim(filename), NF90_WRITE, ncid) )
 
@@ -1089,26 +1089,26 @@ CONTAINS
          ELSE
             CALL nccheck( nf90_def_dim(ncid, trim(dimname), dimlen, dimid) )
          ENDIF
-         if (trim(dimname) .eq. 'lon') then
+         IF (trim(dimname) .eq. 'lon') THEN
             !print *, 'lon-def'
-            call nccheck( nf90_def_var(ncid, 'lon', nf90_float, (/dimid/), varid) )
-            call nccheck( nf90_put_att(ncid, varid, 'long_name','longitude') )
-            call nccheck( nf90_put_att(ncid, varid, 'units','degrees_east') )
-         elseif (trim(dimname) .eq.'lat') then
+            CALL nccheck( nf90_def_var(ncid, 'lon', nf90_float, (/dimid/), varid) )
+            CALL nccheck( nf90_put_att(ncid, varid, 'long_name','longitude') )
+            CALL nccheck( nf90_put_att(ncid, varid, 'units','degrees_east') )
+         elseif (trim(dimname) .eq.'lat') THEN
             !print *, 'lat-def'
-            call nccheck( nf90_def_var(ncid, 'lat', nf90_float, (/dimid/), varid) )
-            call nccheck( nf90_put_att(ncid, varid, 'long_name','latitude') )
-            call nccheck( nf90_put_att(ncid, varid, 'units','degrees_north') )
-         elseif (trim(dimname) .eq.'lat_cama') then
+            CALL nccheck( nf90_def_var(ncid, 'lat', nf90_float, (/dimid/), varid) )
+            CALL nccheck( nf90_put_att(ncid, varid, 'long_name','latitude') )
+            CALL nccheck( nf90_put_att(ncid, varid, 'units','degrees_north') )
+         elseif (trim(dimname) .eq.'lat_cama') THEN
                !print *, 'lat-def'
-               call nccheck( nf90_def_var(ncid, 'lat_cama', nf90_float, (/dimid/), varid) )
-               call nccheck( nf90_put_att(ncid, varid, 'long_name','latitude') )
-               call nccheck( nf90_put_att(ncid, varid, 'units','degrees_north') )
-         elseif (trim(dimname) .eq.'lon_cama') then
-            call nccheck( nf90_def_var(ncid, 'lon_cama', nf90_float, (/dimid/), varid) )
-            call nccheck( nf90_put_att(ncid, varid, 'long_name','longitude') )
-            call nccheck( nf90_put_att(ncid, varid, 'units','degrees_east') )
-         endif
+               CALL nccheck( nf90_def_var(ncid, 'lat_cama', nf90_float, (/dimid/), varid) )
+               CALL nccheck( nf90_put_att(ncid, varid, 'long_name','latitude') )
+               CALL nccheck( nf90_put_att(ncid, varid, 'units','degrees_north') )
+         elseif (trim(dimname) .eq.'lon_cama') THEN
+            CALL nccheck( nf90_def_var(ncid, 'lon_cama', nf90_float, (/dimid/), varid) )
+            CALL nccheck( nf90_put_att(ncid, varid, 'long_name','longitude') )
+            CALL nccheck( nf90_put_att(ncid, varid, 'units','degrees_east') )
+         ENDIF
          CALL nccheck (nf90_enddef(ncid))
       ENDIF
 
@@ -1119,17 +1119,17 @@ CONTAINS
    ! -------------------------------
    SUBROUTINE ncio_define_dimension_int64 (filename, dimname, dimlen)
 
-      USE netcdf
-      USE MOD_Precision
-      IMPLICIT NONE
+   USE netcdf
+   USE MOD_Precision
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in) :: filename
-      CHARACTER(len=*), intent(in) :: dimname
-      INTEGER*8, intent(in) :: dimlen
+   character(len=*), intent(in) :: filename
+   character(len=*), intent(in) :: dimname
+   integer*8, intent(in) :: dimlen
 
-      ! Local variables
-      INTEGER :: ncid, dimid, status
-      INTEGER :: varid
+   ! Local variables
+   integer :: ncid, dimid, status
+   integer :: varid
 
       CALL nccheck( nf90_open(trim(filename), NF90_WRITE, ncid) )
 
@@ -1141,27 +1141,27 @@ CONTAINS
          ELSE
             CALL nccheck( nf90_def_dim(ncid, trim(dimname), int(dimlen), dimid) )
          ENDIF
-         if (trim(dimname) .eq. 'lon') then
+         IF (trim(dimname) .eq. 'lon') THEN
             !print *, 'lon-def'
-            call nccheck( nf90_def_var(ncid, 'lon', nf90_float, (/dimid/), varid) )
-            call nccheck( nf90_put_att(ncid, varid, 'long_name','longitude') )
-            call nccheck( nf90_put_att(ncid, varid, 'units','degrees_east') )
-         elseif (trim(dimname) .eq.'lat') then
+            CALL nccheck( nf90_def_var(ncid, 'lon', nf90_float, (/dimid/), varid) )
+            CALL nccheck( nf90_put_att(ncid, varid, 'long_name','longitude') )
+            CALL nccheck( nf90_put_att(ncid, varid, 'units','degrees_east') )
+         elseif (trim(dimname) .eq.'lat') THEN
             !print *, 'lat-def'
-            call nccheck( nf90_def_var(ncid, 'lat', nf90_float, (/dimid/), varid) )
-            call nccheck( nf90_put_att(ncid, varid, 'long_name','latitude') )
-            call nccheck( nf90_put_att(ncid, varid, 'units','degrees_north') )
-         elseif (trim(dimname) .eq.'lat_cama') then
+            CALL nccheck( nf90_def_var(ncid, 'lat', nf90_float, (/dimid/), varid) )
+            CALL nccheck( nf90_put_att(ncid, varid, 'long_name','latitude') )
+            CALL nccheck( nf90_put_att(ncid, varid, 'units','degrees_north') )
+         elseif (trim(dimname) .eq.'lat_cama') THEN
                !print *, 'lat-def'
-               call nccheck( nf90_def_var(ncid, 'lat_cama', nf90_float, (/dimid/), varid) )
-               call nccheck( nf90_put_att(ncid, varid, 'long_name','latitude') )
-               call nccheck( nf90_put_att(ncid, varid, 'units','degrees_north') )
-         elseif (trim(dimname) .eq.'lon_cama') then
-            call nccheck( nf90_def_var(ncid, 'lon_cama', nf90_float, (/dimid/), varid) )
-            call nccheck( nf90_put_att(ncid, varid, 'long_name','longitude') )
-            call nccheck( nf90_put_att(ncid, varid, 'units','degrees_east') )
+               CALL nccheck( nf90_def_var(ncid, 'lat_cama', nf90_float, (/dimid/), varid) )
+               CALL nccheck( nf90_put_att(ncid, varid, 'long_name','latitude') )
+               CALL nccheck( nf90_put_att(ncid, varid, 'units','degrees_north') )
+         elseif (trim(dimname) .eq.'lon_cama') THEN
+            CALL nccheck( nf90_def_var(ncid, 'lon_cama', nf90_float, (/dimid/), varid) )
+            CALL nccheck( nf90_put_att(ncid, varid, 'long_name','longitude') )
+            CALL nccheck( nf90_put_att(ncid, varid, 'units','degrees_east') )
 
-         endif
+         ENDIF
          CALL nccheck (nf90_enddef(ncid))
       ENDIF
 
@@ -1172,15 +1172,15 @@ CONTAINS
    !---------------------------------------------------------
    SUBROUTINE ncio_write_serial_int32_0d (filename, dataname, wdata)
 
-      USE netcdf
-      IMPLICIT NONE
+   USE netcdf
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in) :: filename
-      CHARACTER(len=*), intent(in) :: dataname
-      INTEGER, intent(in) :: wdata
+   character(len=*), intent(in) :: filename
+   character(len=*), intent(in) :: dataname
+   integer, intent(in) :: wdata
 
-      ! Local variables
-      INTEGER :: ncid, varid, status
+   ! Local variables
+   integer :: ncid, varid, status
 
       CALL nccheck( nf90_open(trim(filename), NF90_WRITE, ncid) )
       status = nf90_inq_varid(ncid, trim(dataname), varid)
@@ -1198,16 +1198,16 @@ CONTAINS
    !---------------------------------------------------------
    SUBROUTINE ncio_write_serial_real8_0d (filename, dataname, wdata)
 
-      USE netcdf
-      USE MOD_Precision
-      IMPLICIT NONE
+   USE netcdf
+   USE MOD_Precision
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in) :: filename
-      CHARACTER(len=*), intent(in) :: dataname
-      REAL(r8), intent(in) :: wdata
+   character(len=*), intent(in) :: filename
+   character(len=*), intent(in) :: dataname
+   real(r8), intent(in) :: wdata
 
-      ! Local variables
-      INTEGER :: ncid, varid, status
+   ! Local variables
+   integer :: ncid, varid, status
 
       CALL nccheck( nf90_open(trim(filename), NF90_WRITE, ncid) )
       status = nf90_inq_varid(ncid, trim(dataname), varid)
@@ -1225,18 +1225,18 @@ CONTAINS
    !---------------------------------------------------------
    SUBROUTINE ncio_write_serial_int8_1d (filename, dataname, wdata, dimname, compress)
 
-      USE netcdf
-      IMPLICIT NONE
+   USE netcdf
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in) :: filename
-      CHARACTER(len=*), intent(in) :: dataname
-      INTEGER(1), intent(in) :: wdata (:)
+   character(len=*), intent(in) :: filename
+   character(len=*), intent(in) :: dataname
+   integer(1), intent(in) :: wdata (:)
 
-      CHARACTER(len=*), intent(in), optional :: dimname
-      INTEGER, intent(in), optional :: compress
+   character(len=*), intent(in), optional :: dimname
+   integer, intent(in), optional :: compress
 
-      ! Local variables
-      INTEGER :: ncid, varid, dimid, status
+   ! Local variables
+   integer :: ncid, varid, dimid, status
 
       CALL nccheck( nf90_open(trim(filename), NF90_WRITE, ncid) )
       status = nf90_inq_varid(ncid, trim(dataname), varid)
@@ -1267,18 +1267,18 @@ CONTAINS
    !---------------------------------------------------------
    SUBROUTINE ncio_write_serial_int32_1d (filename, dataname, wdata, dimname, compress)
 
-      USE netcdf
-      IMPLICIT NONE
+   USE netcdf
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in) :: filename
-      CHARACTER(len=*), intent(in) :: dataname
-      INTEGER, intent(in) :: wdata (:)
+   character(len=*), intent(in) :: filename
+   character(len=*), intent(in) :: dataname
+   integer, intent(in) :: wdata (:)
 
-      CHARACTER(len=*), intent(in), optional :: dimname
-      INTEGER, intent(in), optional :: compress
+   character(len=*), intent(in), optional :: dimname
+   integer, intent(in), optional :: compress
 
-      ! Local variables
-      INTEGER :: ncid, varid, dimid, status
+   ! Local variables
+   integer :: ncid, varid, dimid, status
 
       CALL nccheck( nf90_open(trim(filename), NF90_WRITE, ncid) )
       status = nf90_inq_varid(ncid, trim(dataname), varid)
@@ -1309,18 +1309,18 @@ CONTAINS
    !---------------------------------------------------------
    SUBROUTINE ncio_write_serial_int64_1d (filename, dataname, wdata, dimname, compress)
 
-      USE netcdf
-      IMPLICIT NONE
+   USE netcdf
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in) :: filename
-      CHARACTER(len=*), intent(in) :: dataname
-      INTEGER*8, intent(in) :: wdata (:)
+   character(len=*), intent(in) :: filename
+   character(len=*), intent(in) :: dataname
+   integer*8, intent(in) :: wdata (:)
 
-      CHARACTER(len=*), intent(in), optional :: dimname
-      INTEGER, intent(in), optional :: compress
+   character(len=*), intent(in), optional :: dimname
+   integer, intent(in), optional :: compress
 
-      ! Local variables
-      INTEGER :: ncid, varid, dimid, status
+   ! Local variables
+   integer :: ncid, varid, dimid, status
 
       CALL nccheck( nf90_open(trim(filename), NF90_WRITE, ncid) )
       status = nf90_inq_varid(ncid, trim(dataname), varid)
@@ -1351,19 +1351,19 @@ CONTAINS
    !---------------------------------------------------------
    SUBROUTINE ncio_write_serial_real8_1d (filename, dataname, wdata, dimname, compress)
 
-      USE netcdf
-      USE MOD_Precision
-      IMPLICIT NONE
+   USE netcdf
+   USE MOD_Precision
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in) :: filename
-      CHARACTER(len=*), intent(in) :: dataname
-      REAL(r8), intent(in) :: wdata (:)
+   character(len=*), intent(in) :: filename
+   character(len=*), intent(in) :: dataname
+   real(r8), intent(in) :: wdata (:)
 
-      CHARACTER(len=*), intent(in), optional :: dimname
-      INTEGER, intent(in), optional :: compress
+   character(len=*), intent(in), optional :: dimname
+   integer, intent(in), optional :: compress
 
-      ! Local variables
-      INTEGER :: ncid, varid, dimid, status
+   ! Local variables
+   integer :: ncid, varid, dimid, status
 
       CALL nccheck( nf90_open(trim(filename), NF90_WRITE, ncid) )
       status = nf90_inq_varid(ncid, trim(dataname), varid)
@@ -1394,21 +1394,21 @@ CONTAINS
    !---------------------------------------------------------
    SUBROUTINE ncio_write_serial_logical_1d (filename, dataname, wdata, dimname, compress)
 
-      USE netcdf
-      IMPLICIT NONE
+   USE netcdf
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in) :: filename
-      CHARACTER(len=*), intent(in) :: dataname
-      LOGICAL, intent(in) :: wdata (:)
+   character(len=*), intent(in) :: filename
+   character(len=*), intent(in) :: dataname
+   logical, intent(in) :: wdata (:)
 
-      CHARACTER(len=*), intent(in)  :: dimname
-      INTEGER, intent(in), optional :: compress
+   character(len=*), intent(in)  :: dimname
+   integer, intent(in), optional :: compress
 
-      ! Local variables
-      INTEGER(1), allocatable :: wdata_byte(:)
+   ! Local variables
+   integer(1), allocatable :: wdata_byte(:)
 
       allocate(wdata_byte(size(wdata)))
-      where(wdata)
+      WHERE(wdata)
          wdata_byte = 1
       elsewhere
          wdata_byte = 0
@@ -1428,18 +1428,18 @@ CONTAINS
    SUBROUTINE ncio_write_serial_int8_2d (filename, dataname, wdata, &
          dim1name, dim2name, compress)
 
-      USE netcdf
-      IMPLICIT NONE
+   USE netcdf
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in) :: filename
-      CHARACTER(len=*), intent(in) :: dataname
-      INTEGER(1), intent(in) :: wdata (:,:)
+   character(len=*), intent(in) :: filename
+   character(len=*), intent(in) :: dataname
+   integer(1), intent(in) :: wdata (:,:)
 
-      CHARACTER(len=*), intent(in), optional :: dim1name, dim2name
-      INTEGER, intent(in), optional :: compress
+   character(len=*), intent(in), optional :: dim1name, dim2name
+   integer, intent(in), optional :: compress
 
-      ! Local variables
-      INTEGER :: ncid, varid, dimid(2), status
+   ! Local variables
+   integer :: ncid, varid, dimid(2), status
 
       CALL nccheck( nf90_open(trim(filename), NF90_WRITE, ncid) )
       status = nf90_inq_varid(ncid, trim(dataname), varid)
@@ -1472,18 +1472,18 @@ CONTAINS
    SUBROUTINE ncio_write_serial_int16_2d (filename, dataname, wdata, &
          dim1name, dim2name, compress)
 
-      USE netcdf
-      IMPLICIT NONE
+   USE netcdf
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in) :: filename
-      CHARACTER(len=*), intent(in) :: dataname
-      INTEGER(2), intent(in) :: wdata (:,:)
+   character(len=*), intent(in) :: filename
+   character(len=*), intent(in) :: dataname
+   integer(2), intent(in) :: wdata (:,:)
 
-      CHARACTER(len=*), intent(in), optional :: dim1name, dim2name
-      INTEGER, intent(in), optional :: compress
+   character(len=*), intent(in), optional :: dim1name, dim2name
+   integer, intent(in), optional :: compress
 
-      ! Local variables
-      INTEGER :: ncid, varid, dimid(2), status
+   ! Local variables
+   integer :: ncid, varid, dimid(2), status
 
       CALL nccheck( nf90_open(trim(filename), NF90_WRITE, ncid) )
       status = nf90_inq_varid(ncid, trim(dataname), varid)
@@ -1516,18 +1516,18 @@ CONTAINS
    SUBROUTINE ncio_write_serial_int32_2d (filename, dataname, wdata, &
          dim1name, dim2name, compress)
 
-      USE netcdf
-      IMPLICIT NONE
+   USE netcdf
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in) :: filename
-      CHARACTER(len=*), intent(in) :: dataname
-      INTEGER, intent(in) :: wdata (:,:)
+   character(len=*), intent(in) :: filename
+   character(len=*), intent(in) :: dataname
+   integer, intent(in) :: wdata (:,:)
 
-      CHARACTER(len=*), intent(in), optional :: dim1name, dim2name
-      INTEGER, intent(in), optional :: compress
+   character(len=*), intent(in), optional :: dim1name, dim2name
+   integer, intent(in), optional :: compress
 
-      ! Local variables
-      INTEGER :: ncid, varid, dimid(2), status
+   ! Local variables
+   integer :: ncid, varid, dimid(2), status
 
       CALL nccheck( nf90_open(trim(filename), NF90_WRITE, ncid) )
       status = nf90_inq_varid(ncid, trim(dataname), varid)
@@ -1560,18 +1560,18 @@ CONTAINS
    SUBROUTINE ncio_write_serial_int64_2d (filename, dataname, wdata, &
          dim1name, dim2name, compress)
 
-      USE netcdf
-      IMPLICIT NONE
+   USE netcdf
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in) :: filename
-      CHARACTER(len=*), intent(in) :: dataname
-      INTEGER*8, intent(in) :: wdata (:,:)
+   character(len=*), intent(in) :: filename
+   character(len=*), intent(in) :: dataname
+   integer*8, intent(in) :: wdata (:,:)
 
-      CHARACTER(len=*), intent(in), optional :: dim1name, dim2name
-      INTEGER, intent(in), optional :: compress
+   character(len=*), intent(in), optional :: dim1name, dim2name
+   integer, intent(in), optional :: compress
 
-      ! Local variables
-      INTEGER :: ncid, varid, dimid(2), status
+   ! Local variables
+   integer :: ncid, varid, dimid(2), status
 
       CALL nccheck( nf90_open(trim(filename), NF90_WRITE, ncid) )
       status = nf90_inq_varid(ncid, trim(dataname), varid)
@@ -1604,19 +1604,19 @@ CONTAINS
    SUBROUTINE ncio_write_serial_real4_2d (filename, dataname, wdata, &
          dim1name, dim2name, compress)
 
-      USE netcdf
-      USE MOD_Precision
-      IMPLICIT NONE
+   USE netcdf
+   USE MOD_Precision
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in) :: filename
-      CHARACTER(len=*), intent(in) :: dataname
-      REAL(4), intent(in) :: wdata (:,:)
+   character(len=*), intent(in) :: filename
+   character(len=*), intent(in) :: dataname
+   real(4), intent(in) :: wdata (:,:)
 
-      CHARACTER(len=*), intent(in), optional :: dim1name, dim2name
-      INTEGER, intent(in), optional :: compress
+   character(len=*), intent(in), optional :: dim1name, dim2name
+   integer, intent(in), optional :: compress
 
-      ! Local variables
-      INTEGER :: ncid, varid, dimid(2), status
+   ! Local variables
+   integer :: ncid, varid, dimid(2), status
 
       CALL nccheck( nf90_open(trim(filename), NF90_WRITE, ncid) )
       status = nf90_inq_varid(ncid, trim(dataname), varid)
@@ -1649,19 +1649,19 @@ CONTAINS
    SUBROUTINE ncio_write_serial_real8_2d (filename, dataname, wdata, &
          dim1name, dim2name, compress)
 
-      USE netcdf
-      USE MOD_Precision
-      IMPLICIT NONE
+   USE netcdf
+   USE MOD_Precision
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in) :: filename
-      CHARACTER(len=*), intent(in) :: dataname
-      REAL(r8), intent(in) :: wdata (:,:)
+   character(len=*), intent(in) :: filename
+   character(len=*), intent(in) :: dataname
+   real(r8), intent(in) :: wdata (:,:)
 
-      CHARACTER(len=*), intent(in), optional :: dim1name, dim2name
-      INTEGER, intent(in), optional :: compress
+   character(len=*), intent(in), optional :: dim1name, dim2name
+   integer, intent(in), optional :: compress
 
-      ! Local variables
-      INTEGER :: ncid, varid, dimid(2), status
+   ! Local variables
+   integer :: ncid, varid, dimid(2), status
 
       CALL nccheck( nf90_open(trim(filename), NF90_WRITE, ncid) )
       status = nf90_inq_varid(ncid, trim(dataname), varid)
@@ -1694,18 +1694,18 @@ CONTAINS
    SUBROUTINE ncio_write_serial_int32_3d (filename, dataname, wdata, &
          dim1name, dim2name, dim3name, compress)
 
-      USE netcdf
-      IMPLICIT NONE
+   USE netcdf
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in) :: filename
-      CHARACTER(len=*), intent(in) :: dataname
-      INTEGER, intent(in) :: wdata (:,:,:)
+   character(len=*), intent(in) :: filename
+   character(len=*), intent(in) :: dataname
+   integer, intent(in) :: wdata (:,:,:)
 
-      CHARACTER(len=*), intent(in), optional :: dim1name, dim2name, dim3name
-      INTEGER, intent(in), optional          :: compress
+   character(len=*), intent(in), optional :: dim1name, dim2name, dim3name
+   integer, intent(in), optional          :: compress
 
-      ! Local variables
-      INTEGER :: ncid, varid, dimid(3), status
+   ! Local variables
+   integer :: ncid, varid, dimid(3), status
 
       CALL nccheck( nf90_open(trim(filename), NF90_WRITE, ncid) )
       status = nf90_inq_varid(ncid, trim(dataname), varid)
@@ -1739,19 +1739,19 @@ CONTAINS
    SUBROUTINE ncio_write_serial_real8_3d (filename, dataname, wdata, &
          dim1name, dim2name, dim3name, compress)
 
-      USE netcdf
-      USE MOD_Precision
-      IMPLICIT NONE
+   USE netcdf
+   USE MOD_Precision
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in) :: filename
-      CHARACTER(len=*), intent(in) :: dataname
-      REAL(r8), intent(in) :: wdata (:,:,:)
+   character(len=*), intent(in) :: filename
+   character(len=*), intent(in) :: dataname
+   real(r8), intent(in) :: wdata (:,:,:)
 
-      CHARACTER(len=*), intent(in), optional :: dim1name, dim2name, dim3name
-      INTEGER, intent(in), optional :: compress
+   character(len=*), intent(in), optional :: dim1name, dim2name, dim3name
+   integer, intent(in), optional :: compress
 
-      ! Local variables
-      INTEGER :: ncid, varid, dimid(3), status
+   ! Local variables
+   integer :: ncid, varid, dimid(3), status
 
       CALL nccheck( nf90_open(trim(filename), NF90_WRITE, ncid) )
       status = nf90_inq_varid(ncid, trim(dataname), varid)
@@ -1785,19 +1785,19 @@ CONTAINS
    SUBROUTINE ncio_write_serial_real8_4d (filename, dataname, wdata, &
          dim1name, dim2name, dim3name, dim4name, compress)
 
-      USE netcdf
-      USE MOD_Precision
-      IMPLICIT NONE
+   USE netcdf
+   USE MOD_Precision
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in) :: filename
-      CHARACTER(len=*), intent(in) :: dataname
-      REAL(r8), intent(in) :: wdata (:,:,:,:)
+   character(len=*), intent(in) :: filename
+   character(len=*), intent(in) :: dataname
+   real(r8), intent(in) :: wdata (:,:,:,:)
 
-      CHARACTER(len=*), intent(in), optional :: dim1name, dim2name, dim3name, dim4name
-      INTEGER, intent(in), optional :: compress
+   character(len=*), intent(in), optional :: dim1name, dim2name, dim3name, dim4name
+   integer, intent(in), optional :: compress
 
-      ! Local variables
-      INTEGER :: ncid, varid, dimid(4), status
+   ! Local variables
+   integer :: ncid, varid, dimid(4), status
 
       CALL nccheck( nf90_open(trim(filename), NF90_WRITE, ncid) )
       status = nf90_inq_varid(ncid, trim(dataname), varid)
@@ -1833,20 +1833,20 @@ CONTAINS
    SUBROUTINE ncio_write_serial_real8_5d (filename, dataname, wdata, &
          dim1name, dim2name, dim3name, dim4name, dim5name, compress)
 
-      USE netcdf
-      USE MOD_Precision
-      IMPLICIT NONE
+   USE netcdf
+   USE MOD_Precision
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in) :: filename
-      CHARACTER(len=*), intent(in) :: dataname
-      REAL(r8), intent(in) :: wdata (:,:,:,:,:)
+   character(len=*), intent(in) :: filename
+   character(len=*), intent(in) :: dataname
+   real(r8), intent(in) :: wdata (:,:,:,:,:)
 
-      CHARACTER(len=*), intent(in), optional :: dim1name, dim2name, dim3name
-      CHARACTER(len=*), intent(in), optional :: dim4name, dim5name
-      INTEGER, intent(in), optional :: compress
+   character(len=*), intent(in), optional :: dim1name, dim2name, dim3name
+   character(len=*), intent(in), optional :: dim4name, dim5name
+   integer, intent(in), optional :: compress
 
-      ! Local variables
-      INTEGER :: ncid, varid, dimid(5), status
+   ! Local variables
+   integer :: ncid, varid, dimid(5), status
 
       CALL nccheck( nf90_open(trim(filename), NF90_WRITE, ncid) )
       status = nf90_inq_varid(ncid, trim(dataname), varid)
@@ -1882,32 +1882,32 @@ CONTAINS
    !------------------------------
    SUBROUTINE ncio_write_time (filename, dataname, time_component, itime, adjust)
 
-      USE MOD_TimeManager
-      IMPLICIT NONE
+   USE MOD_TimeManager
+   IMPLICIT NONE
 
-      CHARACTER (len=*), intent(in) :: filename
-      CHARACTER (len=*), intent(in) :: dataname
-      INTEGER, intent(in)  :: time_component(3)
-      INTEGER, intent(out) :: itime
+   character (len=*), intent(in) :: filename
+   character (len=*), intent(in) :: dataname
+   integer, intent(in)  :: time_component(3)
+   integer, intent(out) :: itime
 
-      character(len=*), intent(in), optional :: adjust
+   character(len=*), intent(in), optional :: adjust
 
-      ! Local variables
-      INTEGER, allocatable :: time_file(:)
-      INTEGER :: ncid, varid, time_id, status
-      INTEGER :: timelen, minutes
+   ! Local variables
+   integer, allocatable :: time_file(:)
+   integer :: ncid, varid, time_id, status
+   integer :: timelen, minutes
 
       minutes = minutes_since_1900 (time_component(1), time_component(2), time_component(3))
       
       IF (present(adjust)) THEN
-         select case (trim(adjustl(adjust)))
-         case ('HOURLY')
+         select CASE (trim(adjustl(adjust)))
+         CASE ('HOURLY')
             minutes = minutes - 30
-         case ('DAILY')
+         CASE ('DAILY')
             minutes = minutes - 720
-         case ('MONTHLY')
+         CASE ('MONTHLY')
             minutes = minutes - 21600
-         case ('YEARLY')
+         CASE ('YEARLY')
             minutes = minutes - 262800
          END select 
       ENDIF
@@ -1923,8 +1923,8 @@ CONTAINS
             allocate (time_file (timelen))
             CALL nccheck( nf90_get_var(ncid, varid, time_file) )
 
-            DO while (itime <= timelen)
-               IF (minutes == time_file(itime)) exit
+            DO WHILE (itime <= timelen)
+               IF (minutes == time_file(itime)) EXIT
                itime = itime + 1
             ENDDO
 
@@ -1942,8 +1942,8 @@ CONTAINS
          CALL nccheck( nf90_redef(ncid) )
          CALL nccheck( nf90_def_var(ncid, trim(dataname), NF90_INT, (/time_id/), varid) )
 
-         call nccheck( nf90_put_att(ncid, varid, 'long_name', 'time') )
-         call nccheck( nf90_put_att(ncid, varid, 'units', 'minutes since 1900-1-1 0:0:0') )
+         CALL nccheck( nf90_put_att(ncid, varid, 'long_name', 'time') )
+         CALL nccheck( nf90_put_att(ncid, varid, 'units', 'minutes since 1900-1-1 0:0:0') )
          CALL nccheck( nf90_enddef(ncid) )
 
          itime = 1
@@ -1957,16 +1957,16 @@ CONTAINS
    !------------------------------
    SUBROUTINE ncio_write_lastdim (filename, lastname, lastvalue, ilast)
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      CHARACTER (len=*), intent(in) :: filename
-      CHARACTER (len=*), intent(in) :: lastname 
-      INTEGER, intent(in)  :: lastvalue
-      INTEGER, intent(out) :: ilast
+   character (len=*), intent(in) :: filename
+   character (len=*), intent(in) :: lastname 
+   integer, intent(in)  :: lastvalue
+   integer, intent(out) :: ilast
 
-      ! Local variables
-      INTEGER :: ncid, varid, dimid, dimlen, status
-      INTEGER, allocatable :: lastvalue_f(:)
+   ! Local variables
+   integer :: ncid, varid, dimid, dimlen, status
+   integer, allocatable :: lastvalue_f(:)
 
       CALL nccheck( nf90_open(trim(filename), NF90_WRITE, ncid) )
       
@@ -1981,8 +1981,8 @@ CONTAINS
             allocate (lastvalue_f (dimlen))
             CALL nccheck( nf90_get_var(ncid, varid, lastvalue_f) )
 
-            DO while (ilast <= dimlen)
-               IF (lastvalue == lastvalue_f(ilast)) exit
+            DO WHILE (ilast <= dimlen)
+               IF (lastvalue == lastvalue_f(ilast)) EXIT
                ilast = ilast + 1
             ENDDO
 
@@ -2013,19 +2013,19 @@ CONTAINS
    SUBROUTINE ncio_write_serial_real8_0d_time ( &
          filename, dataname, itime, wdata, dim1name)
 
-      USE netcdf
-      USE MOD_Precision
-      IMPLICIT NONE
+   USE netcdf
+   USE MOD_Precision
+   IMPLICIT NONE
 
-      CHARACTER (len=*), intent(in) :: filename
-      CHARACTER (len=*), intent(in) :: dataname
-      INTEGER,  intent(in) :: itime
-      REAL(r8), intent(in) :: wdata
+   character (len=*), intent(in) :: filename
+   character (len=*), intent(in) :: dataname
+   integer,  intent(in) :: itime
+   real(r8), intent(in) :: wdata
 
-      CHARACTER(len=*), intent(in), optional :: dim1name
+   character(len=*), intent(in), optional :: dim1name
 
-      ! Local variables
-      INTEGER :: ncid, varid, dimid, status
+   ! Local variables
+   integer :: ncid, varid, dimid, status
 
       CALL nccheck( nf90_open(trim(filename), NF90_WRITE, ncid) )
       status = nf90_inq_varid(ncid, trim(dataname), varid)
@@ -2054,20 +2054,20 @@ CONTAINS
          filename, dataname, itime, wdata, &
          dim1name, dim2name, compress)
 
-      USE netcdf
-      USE MOD_Precision
-      IMPLICIT NONE
+   USE netcdf
+   USE MOD_Precision
+   IMPLICIT NONE
 
-      CHARACTER (len=*), intent(in) :: filename
-      CHARACTER (len=*), intent(in) :: dataname
-      INTEGER,  intent(in) :: itime
-      REAL(r8), intent(in) :: wdata(:)
+   character (len=*), intent(in) :: filename
+   character (len=*), intent(in) :: dataname
+   integer,  intent(in) :: itime
+   real(r8), intent(in) :: wdata(:)
 
-      CHARACTER(len=*), intent(in), optional :: dim1name, dim2name
-      INTEGER, intent(in), optional :: compress
+   character(len=*), intent(in), optional :: dim1name, dim2name
+   integer, intent(in), optional :: compress
 
-      ! Local variables
-      INTEGER :: ncid, varid, dimid(2), status
+   ! Local variables
+   integer :: ncid, varid, dimid(2), status
 
       CALL nccheck( nf90_open(trim(filename), NF90_WRITE, ncid) )
       status = nf90_inq_varid(ncid, trim(dataname), varid)
@@ -2103,20 +2103,20 @@ CONTAINS
          filename, dataname, itime, wdata, &
          dim1name, dim2name, dim3name, compress)
 
-      USE netcdf
-      USE MOD_Precision
-      IMPLICIT NONE
+   USE netcdf
+   USE MOD_Precision
+   IMPLICIT NONE
 
-      CHARACTER (len=*), intent(in) :: filename
-      CHARACTER (len=*), intent(in) :: dataname
-      INTEGER,  intent(in) :: itime
-      REAL(r8), intent(in) :: wdata(:,:)
+   character (len=*), intent(in) :: filename
+   character (len=*), intent(in) :: dataname
+   integer,  intent(in) :: itime
+   real(r8), intent(in) :: wdata(:,:)
 
-      CHARACTER(len=*), intent(in), optional :: dim1name, dim2name, dim3name
-      INTEGER, intent(in), optional :: compress
+   character(len=*), intent(in), optional :: dim1name, dim2name, dim3name
+   integer, intent(in), optional :: compress
 
-      ! Local variables
-      INTEGER :: ncid, varid, dimid(3), status
+   ! Local variables
+   integer :: ncid, varid, dimid(3), status
 
       CALL nccheck( nf90_open(trim(filename), NF90_WRITE, ncid) )
       status = nf90_inq_varid(ncid, trim(dataname), varid)
@@ -2153,19 +2153,19 @@ CONTAINS
          filename, dataname, itime, wdata, &
          dim1name, dim2name, dim3name, dim4name, compress)
 
-      USE netcdf
-      USE MOD_Precision
-      IMPLICIT NONE
+   USE netcdf
+   USE MOD_Precision
+   IMPLICIT NONE
 
-      CHARACTER (len=*), intent(in) :: filename
-      CHARACTER (len=*), intent(in) :: dataname
-      INTEGER,  intent(in) :: itime
-      REAL(r8), intent(in) :: wdata(:,:,:)
+   character (len=*), intent(in) :: filename
+   character (len=*), intent(in) :: dataname
+   integer,  intent(in) :: itime
+   real(r8), intent(in) :: wdata(:,:,:)
 
-      CHARACTER(len=*), intent(in), optional :: dim1name, dim2name, dim3name, dim4name
-      INTEGER, intent(in), optional :: compress
-      ! Local variables
-      INTEGER :: ncid, varid, dimid(4), status
+   character(len=*), intent(in), optional :: dim1name, dim2name, dim3name, dim4name
+   integer, intent(in), optional :: compress
+   ! Local variables
+   integer :: ncid, varid, dimid(4), status
 
       CALL nccheck( nf90_open(trim(filename), NF90_WRITE, ncid) )
       status = nf90_inq_varid(ncid, trim(dataname), varid)
@@ -2204,21 +2204,21 @@ CONTAINS
          filename, dataname, itime, wdata, &
          dim1name, dim2name, dim3name, dim4name, dim5name, compress)
 
-      USE netcdf
-      USE MOD_Precision
-      IMPLICIT NONE
+   USE netcdf
+   USE MOD_Precision
+   IMPLICIT NONE
 
-      CHARACTER (len=*), intent(in) :: filename
-      CHARACTER (len=*), intent(in) :: dataname
-      INTEGER,  intent(in) :: itime
-      REAL(r8), intent(in) :: wdata(:,:,:,:)
+   character (len=*), intent(in) :: filename
+   character (len=*), intent(in) :: dataname
+   integer,  intent(in) :: itime
+   real(r8), intent(in) :: wdata(:,:,:,:)
 
-      CHARACTER(len=*), intent(in), optional :: dim1name, dim2name, dim3name
-      CHARACTER(len=*), intent(in), optional :: dim4name, dim5name
-      INTEGER, intent(in), optional :: compress
+   character(len=*), intent(in), optional :: dim1name, dim2name, dim3name
+   character(len=*), intent(in), optional :: dim4name, dim5name
+   integer, intent(in), optional :: compress
 
-      ! Local variables
-      INTEGER :: ncid, varid, dimid(5), status
+   ! Local variables
+   integer :: ncid, varid, dimid(5), status
 
       CALL nccheck( nf90_open(trim(filename), NF90_WRITE, ncid) )
       status = nf90_inq_varid(ncid, trim(dataname), varid)

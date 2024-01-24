@@ -3,31 +3,31 @@
 SUBROUTINE Aggregation_ForestHeight ( &
       gland, dir_rawdata, dir_model_landdata, lc_year)
 
-   ! ----------------------------------------------------------------------
-   ! Global Forest Height
-   !    (http://lidarradar.jpl.nasa.gov/)
-   !     Simard, M., N. Pinto, J. B. Fisher, and A. Baccini, 2011: Mapping
-   !     forest canopy height globally with spaceborne lidar.
-   !     J. Geophys. Res., 116, G04021.
-   !
-   ! Created by Yongjiu Dai, 02/2014
-   !
-   ! REVISIONS:
-   ! Hua Yuan,      ?/2020 : for land cover land use classifications
-   ! Shupeng Zhang, 01/2022: porting codes to MPI parallel version
-   ! ----------------------------------------------------------------------
+! ----------------------------------------------------------------------
+! Global Forest Height
+!    (http://lidarradar.jpl.nasa.gov/)
+!     Simard, M., N. Pinto, J. B. Fisher, and A. Baccini, 2011: Mapping
+!     forest canopy height globally with spaceborne lidar.
+!     J. Geophys. Res., 116, G04021.
+!
+! Created by Yongjiu Dai, 02/2014
+!
+! REVISIONS:
+! Hua Yuan,      ?/2020 : for land cover land use classifications
+! Shupeng Zhang, 01/2022: porting codes to MPI parallel version
+! ----------------------------------------------------------------------
 
-   use MOD_Precision
-   use MOD_Namelist
-   use MOD_SPMD_Task
-   use MOD_Grid
-   use MOD_LandPatch
-   use MOD_NetCDFVector
-   use MOD_NetCDFBlock
+   USE MOD_Precision
+   USE MOD_Namelist
+   USE MOD_SPMD_Task
+   USE MOD_Grid
+   USE MOD_LandPatch
+   USE MOD_NetCDFVector
+   USE MOD_NetCDFBlock
 #ifdef RangeCheck
-   use MOD_RangeCheck
+   USE MOD_RangeCheck
 #endif
-   use MOD_AggregationRequestData
+   USE MOD_AggregationRequestData
    USE MOD_Utils
 
    USE MOD_Const_LC
@@ -46,7 +46,7 @@ SUBROUTINE Aggregation_ForestHeight ( &
    IMPLICIT NONE
 
    ! arguments:
-   INTEGER, intent(in) :: lc_year
+   integer, intent(in) :: lc_year
    type(grid_type),  intent(in) :: gland
    character(LEN=*), intent(in) :: dir_rawdata
    character(LEN=*), intent(in) :: dir_model_landdata
@@ -65,17 +65,17 @@ SUBROUTINE Aggregation_ForestHeight ( &
    type (block_data_real8_3d) :: pftPCT
    real(r8), allocatable :: htop_patches(:), htop_pfts(:), htop_pcs(:,:)
    real(r8), allocatable :: htop_one(:), area_one(:), pct_one(:,:)
-   INTEGER  :: ip, ipft
-   REAL(r8) :: sumarea
+   integer  :: ip, ipft
+   real(r8) :: sumarea
 
 #ifdef SrfdataDiag
-   INTEGER :: typpatch(N_land_classification+1), ityp
+   integer :: typpatch(N_land_classification+1), ityp
 #ifndef CROP
-   INTEGER :: typpft  (N_PFT)
+   integer :: typpft  (N_PFT)
 #else
-   INTEGER :: typpft  (N_PFT+N_CFT)
+   integer :: typpft  (N_PFT+N_CFT)
 #endif
-   INTEGER :: typpc   (N_land_classification+1)
+   integer :: typpc   (N_land_classification+1)
 #endif
 
    write(cyear,'(i4.4)') lc_year
@@ -84,10 +84,10 @@ SUBROUTINE Aggregation_ForestHeight ( &
 #ifdef USEMPI
    CALL mpi_barrier (p_comm_glb, p_err)
 #endif
-   if (p_is_master) then
+   IF (p_is_master) THEN
       write(*,'(/, A)') 'Aggregate forest height ...'
       CALL system('mkdir -p ' // trim(adjustl(landdir)))
-   end if
+   ENDIF
 #ifdef USEMPI
    CALL mpi_barrier (p_comm_glb, p_err)
 #endif
@@ -101,22 +101,22 @@ SUBROUTINE Aggregation_ForestHeight ( &
 #ifdef LULC_USGS
    lndname = trim(dir_rawdata)//'/Forest_Height.nc'
 
-   if (p_is_io) then
-      call allocate_block_data (gland, tree_height)
-      call ncio_read_block (lndname, 'forest_height', gland, tree_height)
+   IF (p_is_io) THEN
+      CALL allocate_block_data (gland, tree_height)
+      CALL ncio_read_block (lndname, 'forest_height', gland, tree_height)
 
 #ifdef USEMPI
       CALL aggregation_data_daemon (gland, data_r8_2d_in1 = tree_height)
 #endif
-   end if
+   ENDIF
 
-   if (p_is_worker) then
+   IF (p_is_worker) THEN
 
       allocate (tree_height_patches (numpatch))
 
-      do ipatch = 1, numpatch
+      DO ipatch = 1, numpatch
          L = landpatch%settyp(ipatch)
-         if(L/=0 .and. L/=1 .and. L/=16 .and. L/=24)then
+         IF(L/=0 .and. L/=1 .and. L/=16 .and. L/=24)THEN
             ! NOT OCEAN(0)/URBAN and BUILT-UP(1)/WATER BODIES(16)/ICE(24)
             CALL aggregation_request_data (landpatch, ipatch, gland, zip = USE_zip_for_aggregation, &
                data_r8_2d_in1 = tree_height, data_r8_2d_out1 = tree_height_one)
@@ -124,19 +124,19 @@ SUBROUTINE Aggregation_ForestHeight ( &
          ELSE
             tree_height_patches (ipatch) = -1.0e36_r8
          ENDIF
-      end do
+      ENDDO
 
 #ifdef USEMPI
       CALL aggregation_worker_done ()
 #endif
-   end if
+   ENDIF
 
 #ifdef USEMPI
    CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
 #ifdef RangeCheck
-   call check_vector_data ('htop_patches ', tree_height_patches)
+   CALL check_vector_data ('htop_patches ', tree_height_patches)
 #endif
 
 #ifndef SinglePoint
@@ -156,9 +156,9 @@ SUBROUTINE Aggregation_ForestHeight ( &
    SITE_htop = tree_height_patches(1)
 #endif
 
-   if (p_is_worker) then
+   IF (p_is_worker) THEN
       deallocate ( tree_height_patches )
-   end if
+   ENDIF
 #endif
 
 
@@ -258,7 +258,6 @@ SUBROUTINE Aggregation_ForestHeight ( &
 
          htop_patches(ipatch) = sum(htop_one * area_one) / sum(area_one)
 
-         !IF (landpatch%settyp(ipatch) == 1) THEN
 #ifndef CROP
          IF (patchtypes(landpatch%settyp(ipatch)) == 0) THEN
 #else

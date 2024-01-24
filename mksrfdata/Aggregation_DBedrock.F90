@@ -3,15 +3,15 @@
 SUBROUTINE Aggregation_DBedrock ( &
       gland, dir_rawdata, dir_model_landdata)
 
-   ! ---------------------------------------------------------------------------
-   ! Depth to bedrock
-   !
-   !    Shangguan, W., Hengl, T., Mendes de Jesus, J., Yuan, H., Dai, Y. (2017). 
-   !    Mapping the global depth to bedrock for land surface modeling. 
-   !    Journal of Advances in Modeling Earth Systems, 9(1), 65–88. 
-   !
-   ! Created by Shupeng Zhang, 05/2023
-   ! ----------------------------------------------------------------------
+! ---------------------------------------------------------------------------
+! Depth to bedrock
+!
+!    Shangguan, W., Hengl, T., Mendes de Jesus, J., Yuan, H., Dai, Y. (2017). 
+!    Mapping the global depth to bedrock for land surface modeling. 
+!    Journal of Advances in Modeling Earth Systems, 9(1), 65–88. 
+!
+! Created by Shupeng Zhang, 05/2023
+! ----------------------------------------------------------------------
 
    USE MOD_Precision
    USE MOD_Namelist
@@ -33,20 +33,20 @@ SUBROUTINE Aggregation_DBedrock ( &
    IMPLICIT NONE
 
    ! arguments:
-   TYPE(grid_type),  intent(in) :: gland
-   CHARACTER(LEN=*), intent(in) :: dir_rawdata
-   CHARACTER(LEN=*), intent(in) :: dir_model_landdata
+   type(grid_type),  intent(in) :: gland
+   character(LEN=*), intent(in) :: dir_rawdata
+   character(LEN=*), intent(in) :: dir_model_landdata
 
    ! local variables:
-   CHARACTER(len=256) :: landdir, lndname
+   character(len=256) :: landdir, lndname
 
-   TYPE (block_data_real8_2d) :: dbedrock
-   REAL(r8), allocatable :: dbedrock_patches(:)
-   REAL(r8), allocatable :: dbedrock_one(:), area_one(:)
-   INTEGER :: ipatch
+   type (block_data_real8_2d) :: dbedrock
+   real(r8), allocatable :: dbedrock_patches(:)
+   real(r8), allocatable :: dbedrock_one(:), area_one(:)
+   integer :: ipatch
 
 #ifdef SrfdataDiag
-   INTEGER :: typpatch(N_land_classification+1), ityp
+   integer :: typpatch(N_land_classification+1), ityp
 #endif
 
    landdir = trim(dir_model_landdata) // '/dbedrock/'

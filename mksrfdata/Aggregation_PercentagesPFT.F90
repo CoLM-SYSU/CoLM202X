@@ -2,15 +2,15 @@
 
 SUBROUTINE Aggregation_PercentagesPFT (gland, dir_rawdata, dir_model_landdata, lc_year)
 
-   ! ----------------------------------------------------------------------
-   ! Percentage of Plant Function Types
-   !
-   ! Original from Hua Yuan's OpenMP version.
-   !
-   ! REVISIONS:
-   ! Hua Yuan,      ?/2020 : for land cover land use classifications
-   ! Shupeng Zhang, 01/2022: porting codes to MPI parallel version
-   ! ----------------------------------------------------------------------
+! ----------------------------------------------------------------------
+! Percentage of Plant Function Types
+!
+! Original from Hua Yuan's OpenMP version.
+!
+! REVISIONS:
+! Hua Yuan,      ?/2020 : for land cover land use classifications
+! Shupeng Zhang, 01/2022: porting codes to MPI parallel version
+! ----------------------------------------------------------------------
 
    USE MOD_Precision
    USE MOD_Vars_Global
@@ -46,32 +46,32 @@ SUBROUTINE Aggregation_PercentagesPFT (gland, dir_rawdata, dir_model_landdata, l
 
    ! arguments:
 
-   INTEGER, intent(in) :: lc_year
-   TYPE(grid_type),  intent(in) :: gland
-   CHARACTER(LEN=*), intent(in) :: dir_rawdata
-   CHARACTER(LEN=*), intent(in) :: dir_model_landdata
+   integer, intent(in) :: lc_year
+   type(grid_type),  intent(in) :: gland
+   character(LEN=*), intent(in) :: dir_rawdata
+   character(LEN=*), intent(in) :: dir_model_landdata
 
    ! local variables:
    ! ----------------------------------------------------------------------
-   CHARACTER(len=256) :: landdir, lndname
+   character(len=256) :: landdir, lndname
 
    ! for IGBP data
-   CHARACTER(len=256) :: dir_5x5, suffix, cyear
+   character(len=256) :: dir_5x5, suffix, cyear
    ! for PFT
-   TYPE (block_data_real8_3d) :: pftPCT
-   REAL(r8), allocatable :: pct_one(:), area_one(:)
+   type (block_data_real8_3d) :: pftPCT
+   real(r8), allocatable :: pct_one(:), area_one(:)
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
-   REAL(r8), allocatable :: pct_pft_one(:,:)
-   REAL(r8), allocatable :: pct_pfts(:)
+   real(r8), allocatable :: pct_pft_one(:,:)
+   real(r8), allocatable :: pct_pfts(:)
 #endif
-   INTEGER  :: ipatch, ipc, ipft, p
-   REAL(r8) :: sumarea
+   integer  :: ipatch, ipc, ipft, p
+   real(r8) :: sumarea
 #ifdef SrfdataDiag
 #ifdef CROP
-   INTEGER :: typcrop(N_CFT), ityp
-   INTEGER :: typpft(0:N_PFT+N_CFT-1)
+   integer :: typcrop(N_CFT), ityp
+   integer :: typpft(0:N_PFT+N_CFT-1)
 #else
-   INTEGER :: typpft(0:N_PFT-1)
+   integer :: typpft(0:N_PFT-1)
 #endif
 #endif
 
@@ -116,7 +116,7 @@ SUBROUTINE Aggregation_PercentagesPFT (gland, dir_rawdata, dir_model_landdata, l
       allocate(pct_pfts (numpft))
 
       DO ipatch = 1, numpatch
-         !IF (landpatch%settyp(ipatch) == 1) THEN
+
 #ifndef CROP
          IF (patchtypes(landpatch%settyp(ipatch)) == 0) THEN
 #else

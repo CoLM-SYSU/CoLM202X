@@ -38,114 +38,114 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
 
    IMPLICIT NONE
 
-   CHARACTER(len=256), intent(in) :: dir_rawdata
-   CHARACTER(len=256), intent(in) :: dir_srfdata
+   character(len=256), intent(in) :: dir_rawdata
+   character(len=256), intent(in) :: dir_srfdata
 
-   INTEGER , intent(in) :: lc_year
+   integer , intent(in) :: lc_year
 
-   TYPE(grid_type), intent(in) :: grid_urban_5km
-   ! TYPE(grid_type), intent(in) :: grid_urban_100m
-   TYPE(grid_type), intent(in) :: grid_urban_500m
+   type(grid_type), intent(in) :: grid_urban_5km
+   ! type(grid_type), intent(in) :: grid_urban_100m
+   type(grid_type), intent(in) :: grid_urban_500m
 
    ! dimensions
-   INTEGER, parameter :: rid  = 33
-   INTEGER, parameter :: ns   = 2
-   INTEGER, parameter :: nr   = 2
-   INTEGER, parameter :: ulev = 10
+   integer, parameter :: rid  = 33
+   integer, parameter :: ns   = 2
+   integer, parameter :: nr   = 2
+   integer, parameter :: ulev = 10
 
    ! input variables
-   TYPE(block_data_int32_2d) :: LUCY_reg
-   TYPE(block_data_real8_2d) :: pop
-   TYPE(block_data_real8_2d) :: gfcc_tc
-   TYPE(block_data_real8_2d) :: gedi_th
-   TYPE(block_data_real8_2d) :: gl30_wt
-   TYPE(block_data_real8_2d) :: wtrf
-   TYPE(block_data_real8_2d) :: htrf
-   TYPE(block_data_real8_2d) :: ulai
-   TYPE(block_data_real8_2d) :: usai
-   TYPE(block_data_int32_2d) :: reg_typid
+   type(block_data_int32_2d) :: LUCY_reg
+   type(block_data_real8_2d) :: pop
+   type(block_data_real8_2d) :: gfcc_tc
+   type(block_data_real8_2d) :: gedi_th
+   type(block_data_real8_2d) :: gl30_wt
+   type(block_data_real8_2d) :: wtrf
+   type(block_data_real8_2d) :: htrf
+   type(block_data_real8_2d) :: ulai
+   type(block_data_real8_2d) :: usai
+   type(block_data_int32_2d) :: reg_typid
 
    ! output variables
-   INTEGER , ALLOCATABLE, DIMENSION(:) :: LUCY_coun
-   REAL(r8), ALLOCATABLE, DIMENSION(:) :: pop_den
-   REAL(r8), ALLOCATABLE, DIMENSION(:) :: pct_tree
-   REAL(r8), ALLOCATABLE, DIMENSION(:) :: htop_urb
-   REAL(r8), ALLOCATABLE, DIMENSION(:) :: pct_urbwt
-   REAL(r8), ALLOCATABLE, DIMENSION(:) :: wt_roof
-   REAL(r8), ALLOCATABLE, DIMENSION(:) :: ht_roof
-   REAL(r8), ALLOCATABLE, DIMENSION(:) :: lai_urb
-   REAL(r8), ALLOCATABLE, DIMENSION(:) :: sai_urb
+   integer , ALLOCATABLE, dimension(:) :: LUCY_coun
+   real(r8), ALLOCATABLE, dimension(:) :: pop_den
+   real(r8), ALLOCATABLE, dimension(:) :: pct_tree
+   real(r8), ALLOCATABLE, dimension(:) :: htop_urb
+   real(r8), ALLOCATABLE, dimension(:) :: pct_urbwt
+   real(r8), ALLOCATABLE, dimension(:) :: wt_roof
+   real(r8), ALLOCATABLE, dimension(:) :: ht_roof
+   real(r8), ALLOCATABLE, dimension(:) :: lai_urb
+   real(r8), ALLOCATABLE, dimension(:) :: sai_urb
 
    ! delete variables not used
-   INTEGER , allocatable, dimension(:) :: reg_typid_one
-   INTEGER , allocatable, dimension(:) :: LUCY_reg_one
-   REAL(r8), allocatable, dimension(:) :: area_one
-   REAL(r8), allocatable, dimension(:) :: pop_one
-   REAL(r8), allocatable, dimension(:) :: gfcc_tc_one
-   REAL(r8), allocatable, dimension(:) :: gedi_th_one
-   REAL(r8), allocatable, dimension(:) :: gl30_wt_one
-   REAL(r8), allocatable, dimension(:) :: wt_roof_one
-   REAL(r8), allocatable, dimension(:) :: ht_roof_one
-   REAL(r8), allocatable, dimension(:) :: ulai_one
-   REAL(r8), allocatable, dimension(:) :: slai_one
+   integer , allocatable, dimension(:) :: reg_typid_one
+   integer , allocatable, dimension(:) :: LUCY_reg_one
+   real(r8), allocatable, dimension(:) :: area_one
+   real(r8), allocatable, dimension(:) :: pop_one
+   real(r8), allocatable, dimension(:) :: gfcc_tc_one
+   real(r8), allocatable, dimension(:) :: gedi_th_one
+   real(r8), allocatable, dimension(:) :: gl30_wt_one
+   real(r8), allocatable, dimension(:) :: wt_roof_one
+   real(r8), allocatable, dimension(:) :: ht_roof_one
+   real(r8), allocatable, dimension(:) :: ulai_one
+   real(r8), allocatable, dimension(:) :: slai_one
 
    ! urban morphological and thermal paras of NCAR data
    ! input variables, look-up-table data
-   REAL(r8), allocatable, DIMENSION(:,:)  :: hwrcan, wtrd, emroof, emwall, ncar_wt
-   REAL(r8), allocatable, DIMENSION(:,:)  :: emimrd, emperd, ncar_ht
-   REAL(r8), allocatable, DIMENSION(:,:)  :: throof, thwall, tbmin, tbmax
+   real(r8), allocatable, dimension(:,:)  :: hwrcan, wtrd, emroof, emwall, ncar_wt
+   real(r8), allocatable, dimension(:,:)  :: emimrd, emperd, ncar_ht
+   real(r8), allocatable, dimension(:,:)  :: throof, thwall, tbmin, tbmax
 
-   REAL(r8), allocatable, DIMENSION(:,:,:)  :: cvroof, cvwall, cvimrd, &
+   real(r8), allocatable, dimension(:,:,:)  :: cvroof, cvwall, cvimrd, &
                                                tkroof, tkwall, tkimrd
-   REAL(r8), allocatable, DIMENSION(:,:,:,:):: albroof, albwall, albimrd, albperd
+   real(r8), allocatable, dimension(:,:,:,:):: albroof, albwall, albimrd, albperd
 
    ! output variables, vector data
-   REAL(r8), ALLOCATABLE, DIMENSION(:,:) :: area_urb
+   real(r8), ALLOCATABLE, dimension(:,:) :: area_urb
 
-   REAL(r8), ALLOCATABLE, DIMENSION(:) :: area_tb
-   REAL(r8), ALLOCATABLE, DIMENSION(:) :: area_hd
-   REAL(r8), ALLOCATABLE, DIMENSION(:) :: area_md
-   REAL(r8), ALLOCATABLE, DIMENSION(:) :: hwr_can
-   REAL(r8), ALLOCATABLE, DIMENSION(:) :: wt_rd
-   REAL(r8), ALLOCATABLE, DIMENSION(:) :: em_roof
-   REAL(r8), ALLOCATABLE, DIMENSION(:) :: em_wall
-   REAL(r8), ALLOCATABLE, DIMENSION(:) :: em_imrd
-   REAL(r8), ALLOCATABLE, DIMENSION(:) :: em_perd
-   REAL(r8), ALLOCATABLE, DIMENSION(:) :: th_roof
-   REAL(r8), ALLOCATABLE, DIMENSION(:) :: th_wall
-   REAL(r8), ALLOCATABLE, DIMENSION(:) :: tb_min
-   REAL(r8), ALLOCATABLE, DIMENSION(:) :: tb_max
+   real(r8), ALLOCATABLE, dimension(:) :: area_tb
+   real(r8), ALLOCATABLE, dimension(:) :: area_hd
+   real(r8), ALLOCATABLE, dimension(:) :: area_md
+   real(r8), ALLOCATABLE, dimension(:) :: hwr_can
+   real(r8), ALLOCATABLE, dimension(:) :: wt_rd
+   real(r8), ALLOCATABLE, dimension(:) :: em_roof
+   real(r8), ALLOCATABLE, dimension(:) :: em_wall
+   real(r8), ALLOCATABLE, dimension(:) :: em_imrd
+   real(r8), ALLOCATABLE, dimension(:) :: em_perd
+   real(r8), ALLOCATABLE, dimension(:) :: th_roof
+   real(r8), ALLOCATABLE, dimension(:) :: th_wall
+   real(r8), ALLOCATABLE, dimension(:) :: tb_min
+   real(r8), ALLOCATABLE, dimension(:) :: tb_max
 
-   REAL(r8), ALLOCATABLE, DIMENSION(:,:) :: cv_wgt
-   REAL(r8), ALLOCATABLE, DIMENSION(:,:) :: tk_wgt
-   REAL(r8), ALLOCATABLE, DIMENSION(:,:) :: cv_roof
-   REAL(r8), ALLOCATABLE, DIMENSION(:,:) :: cv_wall
-   REAL(r8), ALLOCATABLE, DIMENSION(:,:) :: cv_imrd
-   REAL(r8), ALLOCATABLE, DIMENSION(:,:) :: tk_roof
-   REAL(r8), ALLOCATABLE, DIMENSION(:,:) :: tk_wall
-   REAL(r8), ALLOCATABLE, DIMENSION(:,:) :: tk_imrd
+   real(r8), ALLOCATABLE, dimension(:,:) :: cv_wgt
+   real(r8), ALLOCATABLE, dimension(:,:) :: tk_wgt
+   real(r8), ALLOCATABLE, dimension(:,:) :: cv_roof
+   real(r8), ALLOCATABLE, dimension(:,:) :: cv_wall
+   real(r8), ALLOCATABLE, dimension(:,:) :: cv_imrd
+   real(r8), ALLOCATABLE, dimension(:,:) :: tk_roof
+   real(r8), ALLOCATABLE, dimension(:,:) :: tk_wall
+   real(r8), ALLOCATABLE, dimension(:,:) :: tk_imrd
 
-   REAL(r8), ALLOCATABLE, DIMENSION(:,:,:) :: alb_roof
-   REAL(r8), ALLOCATABLE, DIMENSION(:,:,:) :: alb_wall
-   REAL(r8), ALLOCATABLE, DIMENSION(:,:,:) :: alb_imrd
-   REAL(r8), ALLOCATABLE, DIMENSION(:,:,:) :: alb_perd
+   real(r8), ALLOCATABLE, dimension(:,:,:) :: alb_roof
+   real(r8), ALLOCATABLE, dimension(:,:,:) :: alb_wall
+   real(r8), ALLOCATABLE, dimension(:,:,:) :: alb_imrd
+   real(r8), ALLOCATABLE, dimension(:,:,:) :: alb_perd
 
    ! landfile variables
-   CHARACTER(len=256) landsrfdir, landdir, landname, suffix
-   CHARACTER(len=4)   cyear, c5year, cmonth, clay, c1, iyear
+   character(len=256) landsrfdir, landdir, landname, suffix
+   character(len=4)   cyear, c5year, cmonth, clay, c1, iyear
 
    ! local vars
-   REAL(r8) :: sumarea
+   real(r8) :: sumarea
 
    ! index
-   INTEGER :: iurban, urb_typidx, urb_regidx
-   INTEGER :: pop_i, imonth, start_year, end_year
-   INTEGER :: ipxstt, ipxend, ipxl, il, iy
+   integer :: iurban, urb_typidx, urb_regidx
+   integer :: pop_i, imonth, start_year, end_year
+   integer :: ipxstt, ipxend, ipxl, il, iy
 
    ! for surface data diag
 #ifdef SrfdataDiag
-   INTEGER  :: ityp
-   INTEGER, allocatable, dimension(:) :: typindex
+   integer  :: ityp
+   integer, allocatable, dimension(:) :: typindex
 
    allocate( typindex(N_URB) )
 #endif
@@ -264,9 +264,9 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
          CALL aggregation_request_data (landurban, iurban, grid_urban_500m, zip = USE_zip_for_aggregation, &
             area = area_one, data_r8_2d_in1 = pop, data_r8_2d_out1 = pop_one)
 
-         where (pop_one < 0)
+         WHERE (pop_one < 0)
             area_one = 0
-         END where
+         END WHERE
          ! area-weighted average
          IF (sum(area_one) > 0._r8) THEN
             pop_den(iurban) = sum(pop_one * area_one) / sum(area_one)
@@ -342,13 +342,13 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
             data_r8_2d_in2 = gedi_th, data_r8_2d_out2 = gedi_th_one)
 
          ! missing tree cover and tree height data (-999) were filtered
-         where (gfcc_tc_one < 0)
+         WHERE (gfcc_tc_one < 0)
             area_one = 0
-         END where
+         END WHERE
 
-         where (gedi_th_one < 0)
+         WHERE (gedi_th_one < 0)
             area_one = 0
-         END where
+         END WHERE
 
          ! area-weighted average
          IF (sum(area_one) > 0._r8) THEN
@@ -427,9 +427,9 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
          CALL aggregation_request_data (landurban, iurban, grid_urban_500m, zip = USE_zip_for_aggregation, area = area_one, &
             data_r8_2d_in1 = gl30_wt, data_r8_2d_out1 = gl30_wt_one)
 
-         where (gl30_wt_one < 0)
+         WHERE (gl30_wt_one < 0)
             area_one = 0
-         END where
+         END WHERE
          ! only caculate when urban patch have water cover
          IF (sum(area_one) > 0) THEN
             pct_urbwt(iurban) = sum(gl30_wt_one * area_one) / sum(area_one)
@@ -529,25 +529,25 @@ IF (DEF_URBAN_type_scheme == 1) THEN
             WHERE(reg_typid_one==0) reg_typid_one =  num_max_frequency(reg_typid_one)
          ENDIF
 
-         where (wt_roof_one <= 0)
+         WHERE (wt_roof_one <= 0)
             wt_roof_one = ncar_wt(urb_typidx,reg_typid_one)
-         END where
+         END WHERE
 
-         where (ht_roof_one <= 0)
+         WHERE (ht_roof_one <= 0)
             ht_roof_one = ncar_ht(urb_typidx,reg_typid_one)
-         END where
+         END WHERE
 ELSE IF (DEF_URBAN_type_scheme == 2) THEN
          ! same for above, but for LCZ case
          ! LCZ type for look-up-table
          urb_typidx     = landurban%settyp(iurban)
 
-         where (wt_roof_one <= 0)
+         WHERE (wt_roof_one <= 0)
             wt_roof_one = wtroof_lcz(urb_typidx)
-         END where
+         END WHERE
 
-         where (ht_roof_one <= 0)
+         WHERE (ht_roof_one <= 0)
             ht_roof_one = htroof_lcz(urb_typidx)
-         END where
+         END WHERE
 ENDIF
 
          ! area-weight average

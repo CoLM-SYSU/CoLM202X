@@ -2,51 +2,51 @@
 
 #ifdef CatchLateralFlow
 MODULE MOD_Catch_SubsurfaceFlow
-   !-------------------------------------------------------------------------------------
-   ! DESCRIPTION:
-   !   
-   !   Ground water lateral flow.
-   !
-   !   Ground water fluxes are calculated
-   !   1. between basins
-   !   2. between hydrological response units
-   !   3. between patches inside one HRU  
-   !
-   ! Created by Shupeng Zhang, May 2023
-   !-------------------------------------------------------------------------------------
+!-------------------------------------------------------------------------------------
+! DESCRIPTION:
+!   
+!   Ground water lateral flow.
+!
+!   Ground water fluxes are calculated
+!   1. between basins
+!   2. between hydrological response units
+!   3. between patches inside one HRU  
+!
+! Created by Shupeng Zhang, May 2023
+!-------------------------------------------------------------------------------------
 
    USE MOD_Precision
    USE MOD_DataType
    IMPLICIT NONE
     
-   REAL(r8), parameter :: e_ice  = 6.0   ! soil ice impedance factor
-   REAL(r8), parameter :: raniso = 1.    ! anisotropy ratio, unitless
+   real(r8), parameter :: e_ice  = 6.0   ! soil ice impedance factor
+   real(r8), parameter :: raniso = 1.    ! anisotropy ratio, unitless
    
    ! -- neighbour variables --
-   TYPE(pointer_real8_1d), allocatable :: agwt_nb    (:)  ! ground water area (for patchtype <= 2) of neighbours [m^2]
-   TYPE(pointer_real8_1d), allocatable :: theta_a_nb (:)  ! saturated volume content [-]
-   TYPE(pointer_real8_1d), allocatable :: zwt_nb     (:)  ! water table depth [m]
-   TYPE(pointer_real8_1d), allocatable :: Ks_nb      (:)  ! saturated hydraulic conductivity [m/s]
-   TYPE(pointer_real8_1d), allocatable :: wdsrf_nb   (:)  ! depth of surface water [m]
-   TYPE(pointer_logic_1d), allocatable :: islake_nb  (:)  ! whether a neighbour is water body
+   type(pointer_real8_1d), allocatable :: agwt_nb    (:)  ! ground water area (for patchtype <= 2) of neighbours [m^2]
+   type(pointer_real8_1d), allocatable :: theta_a_nb (:)  ! saturated volume content [-]
+   type(pointer_real8_1d), allocatable :: zwt_nb     (:)  ! water table depth [m]
+   type(pointer_real8_1d), allocatable :: Ks_nb      (:)  ! saturated hydraulic conductivity [m/s]
+   type(pointer_real8_1d), allocatable :: wdsrf_nb   (:)  ! depth of surface water [m]
+   type(pointer_logic_1d), allocatable :: islake_nb  (:)  ! whether a neighbour is water body
 
 CONTAINS
    
    ! ----------
    SUBROUTINE basin_neighbour_init ()
 
-      USE MOD_SPMD_Task
-      USE MOD_Mesh
-      USE MOD_ElementNeighbour
-      USE MOD_Catch_HillslopeNetwork, only : hillslope_network
-      USE MOD_Catch_RiverLakeNetwork, only : lake_id
-      IMPLICIT NONE
-      
-      INTEGER :: numbasin, ibasin, inb
+   USE MOD_SPMD_Task
+   USE MOD_Mesh
+   USE MOD_ElementNeighbour
+   USE MOD_Catch_HillslopeNetwork, only : hillslope_network
+   USE MOD_Catch_RiverLakeNetwork, only : lake_id
+   IMPLICIT NONE
    
-      REAL(r8), allocatable :: agwt_b(:)
-      real(r8), allocatable :: islake(:)
-      TYPE(pointer_real8_1d), allocatable :: iswat_nb (:)  
+   integer :: numbasin, ibasin, inb
+   
+   real(r8), allocatable :: agwt_b(:)
+   real(r8), allocatable :: islake(:)
+   type(pointer_real8_1d), allocatable :: iswat_nb (:)  
 
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
@@ -101,71 +101,71 @@ CONTAINS
    ! ---------
    SUBROUTINE subsurface_flow (deltime)
       
-      USE MOD_SPMD_Task
-      USE MOD_Mesh
-      USE MOD_LandElm
-      USE MOD_LandPatch
-      USE MOD_Vars_TimeVariables
-      USE MOD_Vars_TimeInvariants
-      USE MOD_Vars_1DFluxes
-      USE MOD_Catch_HillslopeNetwork
-      USE MOD_Catch_RiverLakeNetwork
-      USE MOD_ElementNeighbour
-      USE MOD_Const_Physical,  only : denice, denh2o
-      USE MOD_Vars_Global,     only : pi, nl_soil, zi_soi
-      USE MOD_Hydro_SoilWater, only : soilwater_aquifer_exchange
+   USE MOD_SPMD_Task
+   USE MOD_Mesh
+   USE MOD_LandElm
+   USE MOD_LandPatch
+   USE MOD_Vars_TimeVariables
+   USE MOD_Vars_TimeInvariants
+   USE MOD_Vars_1DFluxes
+   USE MOD_Catch_HillslopeNetwork
+   USE MOD_Catch_RiverLakeNetwork
+   USE MOD_ElementNeighbour
+   USE MOD_Const_Physical,  only : denice, denh2o
+   USE MOD_Vars_Global,     only : pi, nl_soil, zi_soi
+   USE MOD_Hydro_SoilWater, only : soilwater_aquifer_exchange
 
-      IMPLICIT NONE
-      
-      REAL(r8), intent(in) :: deltime
+   IMPLICIT NONE
+   
+   real(r8), intent(in) :: deltime
 
-      ! Local Variables
-      INTEGER :: numbasin, nhru, ibasin, i, i0, j, ihru, ipatch, ps, pe, ilev
+   ! Local Variables
+   integer :: numbasin, nhru, ibasin, i, i0, j, ihru, ipatch, ps, pe, ilev
 
-      TYPE(hillslope_network_info_type), pointer :: hrus
+   type(hillslope_network_info_type), pointer :: hrus
 
-      REAL(r8), allocatable :: theta_a_h (:) 
-      REAL(r8), allocatable :: zwt_h     (:) 
-      REAL(r8), allocatable :: Ks_h      (:) ! [m/s]
-      REAL(r8), allocatable :: xsubs_h   (:) ! [m/s]
-      REAL(r8), allocatable :: xsubs_fc  (:) ! [m/s]
+   real(r8), allocatable :: theta_a_h (:) 
+   real(r8), allocatable :: zwt_h     (:) 
+   real(r8), allocatable :: Ks_h      (:) ! [m/s]
+   real(r8), allocatable :: xsubs_h   (:) ! [m/s]
+   real(r8), allocatable :: xsubs_fc  (:) ! [m/s]
 
-      logical  :: j_is_river
-      REAL(r8) :: theta_s_h, air_h, icefrac, imped, delp
-      real(r8) :: sumwt, sumarea, zwt_mean
-      REAL(r8) :: zsubs_h_up, zsubs_h_dn
-      REAL(r8) :: slope, bdamp, Ks_fc, Ks_in
-      REAL(r8) :: ca, cb
-      REAL(r8) :: alp
-      
-      REAL(r8), allocatable :: theta_a_bsn (:) 
-      REAL(r8), allocatable :: zwt_bsn     (:) 
-      REAL(r8), allocatable :: Ks_bsn      (:) ! [m/s]
+   logical  :: j_is_river
+   real(r8) :: theta_s_h, air_h, icefrac, imped, delp
+   real(r8) :: sumwt, sumarea, zwt_mean
+   real(r8) :: zsubs_h_up, zsubs_h_dn
+   real(r8) :: slope, bdamp, Ks_fc, Ks_in
+   real(r8) :: ca, cb
+   real(r8) :: alp
 
-      INTEGER  :: jnb
-      REAL(r8) :: zsubs_up, zwt_up, Ks_up, theta_a_up, area_up
-      REAL(r8) :: zsubs_dn, zwt_dn, Ks_dn, theta_a_dn, area_dn
-      REAL(r8) :: lenbdr, xsubs_nb
-      logical  :: iam_lake, nb_is_lake, has_river
+   real(r8), allocatable :: theta_a_bsn (:) 
+   real(r8), allocatable :: zwt_bsn     (:) 
+   real(r8), allocatable :: Ks_bsn      (:) ! [m/s]
 
-      ! for water exchange
-      integer  :: izwt
-      real(r8) :: exwater
-      REAL(r8) :: sp_zi(0:nl_soil), sp_dz(1:nl_soil), zwtmm ! [mm]
-      real(r8) :: vl_r (1:nl_soil)
+   integer  :: jnb
+   real(r8) :: zsubs_up, zwt_up, Ks_up, theta_a_up, area_up
+   real(r8) :: zsubs_dn, zwt_dn, Ks_dn, theta_a_dn, area_dn
+   real(r8) :: lenbdr, xsubs_nb
+   logical  :: iam_lake, nb_is_lake, has_river
+
+   ! for water exchange
+   integer  :: izwt
+   real(r8) :: exwater
+   real(r8) :: sp_zi(0:nl_soil), sp_dz(1:nl_soil), zwtmm ! [mm]
+   real(r8) :: vl_r (1:nl_soil)
 #ifdef Campbell_SOIL_MODEL
-      INTEGER, parameter :: nprms = 1
+   integer, parameter :: nprms = 1
 #endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
-      INTEGER, parameter :: nprms = 5
+   integer, parameter :: nprms = 5
 #endif
-      REAL(r8) :: prms  (nprms,1:nl_soil)
-      real(r8) :: vol_ice     (1:nl_soil)
-      real(r8) :: vol_liq     (1:nl_soil)
-      real(r8) :: eff_porosity(1:nl_soil)
-      logical  :: is_permeable(1:nl_soil)
-      real(r8) :: wresi       (1:nl_soil)
-      real(r8) :: w_sum_before, w_sum_after, errblc
+   real(r8) :: prms  (nprms,1:nl_soil)
+   real(r8) :: vol_ice     (1:nl_soil)
+   real(r8) :: vol_liq     (1:nl_soil)
+   real(r8) :: eff_porosity(1:nl_soil)
+   logical  :: is_permeable(1:nl_soil)
+   real(r8) :: wresi       (1:nl_soil)
+   real(r8) :: w_sum_before, w_sum_after, errblc
 
 
       IF (p_is_worker) THEN
@@ -442,11 +442,11 @@ CONTAINS
 
                nb_is_lake = islake_nb(ibasin)%val(jnb)
 
-               IF (iam_lake .and. nb_is_lake) then
+               IF (iam_lake .and. nb_is_lake) THEN
                   CYCLE
                ENDIF
                
-               IF (.not. iam_lake) then
+               IF (.not. iam_lake) THEN
                   Ks_up      = Ks_bsn     (ibasin)
                   zwt_up     = zwt_bsn    (ibasin)
                   theta_a_up = theta_a_bsn(ibasin)
@@ -485,7 +485,7 @@ CONTAINS
                lenbdr = elementneighbour(ibasin)%lenbdr(jnb)
 
                delp = elementneighbour(ibasin)%dist(jnb)
-               IF (iam_lake) then
+               IF (iam_lake) THEN
                   delp = elementneighbour(ibasin)%area(jnb) / lenbdr * 0.5
                ENDIF
                IF (nb_is_lake) THEN
@@ -684,12 +684,12 @@ CONTAINS
                + wa(ipatch) + wdsrf(ipatch) + wetwat(ipatch)
             errblc = w_sum_after - w_sum_before + xwsub(ipatch)*deltime
 
-            if(abs(errblc) > 1.e-3)then
+            IF(abs(errblc) > 1.e-3)THEN
                write(6,'(A,I0,4E20.5)') 'Warning (Subsurface Runoff): water balance violation ', &
                   ipatch, errblc, xwsub(ipatch), zwtmm
                write(*,*) patchtype(ipatch)
                CALL CoLM_stop ()
-            endif
+            ENDIF
 #endif
          ENDDO
       ENDIF
@@ -699,7 +699,7 @@ CONTAINS
    ! ----------
    SUBROUTINE basin_neighbour_final ()
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
       IF (allocated(theta_a_nb)) deallocate(theta_a_nb)
       IF (allocated(zwt_nb    )) deallocate(zwt_nb    )

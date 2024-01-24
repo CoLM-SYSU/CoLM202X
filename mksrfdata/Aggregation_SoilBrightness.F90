@@ -2,15 +2,16 @@
 
 SUBROUTINE Aggregation_SoilBrightness ( &
       gland, dir_rawdata, dir_model_landdata, lc_year)
-   ! ----------------------------------------------------------------------
-   ! Creates land model surface dataset from original "raw" data files -
-   !     data with 30 arc seconds resolution
-   !
-   ! Created by Yongjiu Dai, 03/2014
-   !
-   ! REVISIONS:
-   ! Shupeng Zhang, 01/2022: porting codes to MPI parallel version.
-   ! ----------------------------------------------------------------------
+! ----------------------------------------------------------------------
+! Creates land model surface dataset from original "raw" data files -
+!     data with 30 arc seconds resolution
+!
+! Created by Yongjiu Dai, 03/2014
+!
+! REVISIONS:
+! Shupeng Zhang, 01/2022: porting codes to MPI parallel version.
+! ----------------------------------------------------------------------
+
    USE MOD_Precision
    USE MOD_Namelist
    USE MOD_SPMD_Task
@@ -36,32 +37,32 @@ SUBROUTINE Aggregation_SoilBrightness ( &
 
    ! arguments:
 
-   INTEGER, intent(in) :: lc_year
-   TYPE(grid_type),  intent(in) :: gland
-   CHARACTER(LEN=*), intent(in) :: dir_rawdata
-   CHARACTER(LEN=*), intent(in) :: dir_model_landdata
+   integer, intent(in) :: lc_year
+   type(grid_type),  intent(in) :: gland
+   character(LEN=*), intent(in) :: dir_rawdata
+   character(LEN=*), intent(in) :: dir_model_landdata
 
    ! local variables:
    ! ---------------------------------------------------------------
-   CHARACTER(len=256) :: landdir, lndname, cyear
+   character(len=256) :: landdir, lndname, cyear
 
-   TYPE (block_data_int32_2d) :: isc
-   TYPE (block_data_real8_2d) :: a_s_v_refl
-   TYPE (block_data_real8_2d) :: a_d_v_refl
-   TYPE (block_data_real8_2d) :: a_s_n_refl
-   TYPE (block_data_real8_2d) :: a_d_n_refl
+   type (block_data_int32_2d) :: isc
+   type (block_data_real8_2d) :: a_s_v_refl
+   type (block_data_real8_2d) :: a_d_v_refl
+   type (block_data_real8_2d) :: a_s_n_refl
+   type (block_data_real8_2d) :: a_d_n_refl
 
-   REAL(r8), allocatable :: soil_s_v_alb (:)
-   REAL(r8), allocatable :: soil_d_v_alb (:)
-   REAL(r8), allocatable :: soil_s_n_alb (:)
-   REAL(r8), allocatable :: soil_d_n_alb (:)
+   real(r8), allocatable :: soil_s_v_alb (:)
+   real(r8), allocatable :: soil_d_v_alb (:)
+   real(r8), allocatable :: soil_s_n_alb (:)
+   real(r8), allocatable :: soil_d_n_alb (:)
 
-   INTEGER :: ii, L
-   INTEGER :: ipatch, iblkme, iblk, jblk, ix, iy
-   REAL(r8), allocatable :: soil_one(:)
+   integer :: ii, L
+   integer :: ipatch, iblkme, iblk, jblk, ix, iy
+   real(r8), allocatable :: soil_one(:)
 
 #ifdef SrfdataDiag
-   INTEGER :: typpatch(N_land_classification+1), ityp
+   integer :: typpatch(N_land_classification+1), ityp
 #endif
 
    ! ----------------------------------------------------------------------
@@ -69,10 +70,10 @@ SUBROUTINE Aggregation_SoilBrightness ( &
    ! Peter J. Lawrence and Thomas N. Chase, 2007:
    ! Representing a MODIS consistent land surface in the Community Land Model (CLM 3.0):
    ! Part 1 generating MODIS consistent land surface parameters
-   REAL(r8) soil_s_v_refl(20) ! Saturated visible soil reflectance
-   REAL(r8) soil_d_v_refl(20) ! Dry visible soil reflectance
-   REAL(r8) soil_s_n_refl(20) ! Saturated near infrared soil reflectance
-   REAL(r8) soil_d_n_refl(20) ! Dry near infrared soil reflectance
+   real(r8) soil_s_v_refl(20) ! Saturated visible soil reflectance
+   real(r8) soil_d_v_refl(20) ! Dry visible soil reflectance
+   real(r8) soil_s_n_refl(20) ! Saturated near infrared soil reflectance
+   real(r8) soil_d_n_refl(20) ! Dry near infrared soil reflectance
 
    soil_s_v_refl = (/ 0.26, 0.24, 0.22, 0.20, 0.19, 0.18, 0.17, 0.16, 0.15, 0.14, &
       0.13, 0.12, 0.11, 0.10, 0.09, 0.08, 0.07, 0.06, 0.05, 0.04 /)
@@ -106,9 +107,9 @@ SUBROUTINE Aggregation_SoilBrightness ( &
    ENDIF
 #endif
 
-   ! ........................................
-   ! ...  aggregate the soil parameters from the resolution of raw data to modelling resolution
-   ! ........................................
+! -------------------------------------------------------------------------------------
+! aggregate the soil parameters from the resolution of raw data to modelling resolution
+! -------------------------------------------------------------------------------------
 
    lndname = trim(dir_rawdata)//'/soil_brightness.nc'
 

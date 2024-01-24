@@ -1,56 +1,57 @@
 #include <define.h>
 
 MODULE MOD_RegionClip
-   !-----------------------------------------------------------------------------------------
-   ! DESCRIPTION:
-   !
-   !    This module includes subroutines to clip surface data from an existing data
-   !    in a larger region.
-   !
-   !    Please use namelist variable "USE_srfdata_from_larger_region" to call these subroutines.
-   !
-   ! Created by Shupeng Zhang, May 2023
-   !-----------------------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
+! DESCRIPTION:
+!
+!    This module includes subroutines to clip surface data from an existing data
+!    in a larger region.
+!
+!    Please use namelist variable "USE_srfdata_from_larger_region" to call these subroutines.
+!
+! Created by Shupeng Zhang, May 2023
+!-----------------------------------------------------------------------------------------
+
 CONTAINS
 
    ! ----- region clip -----
    SUBROUTINE srfdata_region_clip (dir_landdata_in, dir_landdata_out)
 
-      USE MOD_SPMD_Task
-      USE MOD_Namelist
-      USE MOD_Utils
-      USE MOD_Pixel
-      USE MOD_Block
-      USE MOD_NetCDFSerial
+   USE MOD_SPMD_Task
+   USE MOD_Namelist
+   USE MOD_Utils
+   USE MOD_Pixel
+   USE MOD_Block
+   USE MOD_NetCDFSerial
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in) :: dir_landdata_in, dir_landdata_out
+   character(len=*), intent(in) :: dir_landdata_in, dir_landdata_out
 
-      ! Local Variables
-      REAL(r8) :: edges, edgen, edgew, edgee
-      CHARACTER(len=256) :: file_in, file_out, fileblock
-      INTEGER :: iproc, iblk, jblk, ie, ipxl, ilon, ilat, i1
-      INTEGER :: nelm_in, nelm_out
-      INTEGER,   allocatable :: nelm_blk(:,:), IOproc(:,:)
-      INTEGER*8, allocatable :: elmindex(:)
-      INTEGER,   allocatable :: elmnpxl(:), elmpixels(:,:,:)
+   ! Local Variables
+   real(r8) :: edges, edgen, edgew, edgee
+   character(len=256) :: file_in, file_out, fileblock
+   integer :: iproc, iblk, jblk, ie, ipxl, ilon, ilat, i1
+   integer :: nelm_in, nelm_out
+   integer,   allocatable :: nelm_blk(:,:), IOproc(:,:)
+   integer*8, allocatable :: elmindex(:)
+   integer,   allocatable :: elmnpxl(:), elmpixels(:,:,:)
 
-      LOGICAL, allocatable :: elmmask  (:)
-      LOGICAL, allocatable :: patchmask(:)
+   logical, allocatable :: elmmask  (:)
+   logical, allocatable :: patchmask(:)
 #ifdef CATCHMENT
-      LOGICAL, allocatable :: hrumask  (:)
+   logical, allocatable :: hrumask  (:)
 #endif
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
-      LOGICAL, allocatable :: pftmask  (:)
+   logical, allocatable :: pftmask  (:)
 #endif
 
-      INTEGER :: month, YY, itime, Julian_day, nsl
-      integer :: start_year, end_year
-      CHARACTER(len=1) :: c1
-      CHARACTER(len=2) :: c2, cx
-      CHARACTER(len=3) :: c3
-      CHARACTER(len=4) :: cyear
+   integer :: month, YY, itime, Julian_day, nsl
+   integer :: start_year, end_year
+   character(len=1) :: c1
+   character(len=2) :: c2, cx
+   character(len=3) :: c3
+   character(len=4) :: cyear
 
 
       IF (p_is_master) THEN
@@ -78,7 +79,7 @@ CONTAINS
       CALL normalize_longitude (edgew)
       CALL normalize_longitude (edgee)
 
-      call pixel%load_from_file  (dir_landdata_in)
+      CALL pixel%load_from_file  (dir_landdata_in)
 
       file_in = trim(dir_landdata_in) // '/block.nc'
       CALL ncio_read_bcast_serial (file_in, 'lat_s', gblock%lat_s)
@@ -114,7 +115,7 @@ CONTAINS
       iproc = -1
       DO jblk = 1, gblock%nyblk
          IF ((gblock%lat_s(jblk) >= edgen) .or. (gblock%lat_n(jblk) <= edges)) THEN
-            cycle
+            CYCLE
          ENDIF
 
          DO iblk = 1, gblock%nxblk
@@ -137,9 +138,9 @@ CONTAINS
          ENDDO
       ENDDO
 
-      where (IOproc /= p_iam_glb)
+      WHERE (IOproc /= p_iam_glb)
          nelm_blk = 0
-      END where
+      END WHERE
 
       DO jblk = 1, gblock%nyblk
          DO iblk = 1, gblock%nxblk
@@ -168,9 +169,9 @@ CONTAINS
 
                         elmmask(ie) = .true.
 
-                        exit
+                        EXIT
                      ELSE
-                        cycle
+                        CYCLE
                      ENDIF
                   ENDDO
                ENDDO
@@ -543,25 +544,25 @@ CONTAINS
    ! ----- pixelset clip -----
    SUBROUTINE clip_pixelset (dir_landdata_in, psetname, iblk, jblk, elmmask, elmindex, psetmask)
 
-      USE MOD_NetCDFSerial
-      USE MOD_Block
+   USE MOD_NetCDFSerial
+   USE MOD_Block
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in) :: dir_landdata_in
-      CHARACTER(len=*), intent(in) :: psetname
-      INTEGER, intent(in) :: iblk, jblk
-      LOGICAL, intent(in) :: elmmask (:)
+   character(len=*), intent(in) :: dir_landdata_in
+   character(len=*), intent(in) :: psetname
+   integer, intent(in) :: iblk, jblk
+   logical, intent(in) :: elmmask (:)
 
-      INTEGER*8, intent(in) :: elmindex(:)
+   integer*8, intent(in) :: elmindex(:)
 
-      LOGICAL, allocatable, intent(out) :: psetmask (:)
+   logical, allocatable, intent(out) :: psetmask (:)
 
-      ! Local Variables
-      CHARACTER(len=256) :: filename, fileblock
-      LOGICAL :: fexists
-      INTEGER :: nset, ie, iset
-      INTEGER*8, allocatable :: eindex_p(:)
+   ! Local Variables
+   character(len=256) :: filename, fileblock
+   logical :: fexists
+   integer :: nset, ie, iset
+   integer*8, allocatable :: eindex_p(:)
 
       filename = trim(dir_landdata_in) // '/' // trim(psetname) // '/' // trim(psetname) // '.nc'
       CALL get_filename_block (filename, iblk, jblk, fileblock)
@@ -594,43 +595,43 @@ CONTAINS
    ! ----- vector clip -----
    SUBROUTINE clip_vector (file_in, file_out, iblk, jblk, varname, vecmask)
 
-      USE netcdf
-      USE MOD_NetCDFSerial
-      USE MOD_Block
-      IMPLICIT NONE
+   USE netcdf
+   USE MOD_NetCDFSerial
+   USE MOD_Block
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in) :: file_in, file_out
-      CHARACTER(len=*), intent(in) :: varname
-      INTEGER, intent(in) :: iblk, jblk
-      LOGICAL, intent(in) :: vecmask(:)
+   character(len=*), intent(in) :: file_in, file_out
+   character(len=*), intent(in) :: varname
+   integer, intent(in) :: iblk, jblk
+   logical, intent(in) :: vecmask(:)
 
-      ! Local Variables
-      CHARACTER(len=256) :: input, output
-      INTEGER :: ncidin,  ncidout
-      INTEGER :: varidin, varidout
-      INTEGER :: vlen_in, vlen_out, xtype, ndims, id, i1, i2
-      LOGICAL :: fexists, dim_exist
-      INTEGER, allocatable :: dimids (:), dimlens (:)
-      CHARACTER(len=256), allocatable :: dimnames (:)
+   ! Local Variables
+   character(len=256) :: input, output
+   integer :: ncidin,  ncidout
+   integer :: varidin, varidout
+   integer :: vlen_in, vlen_out, xtype, ndims, id, i1, i2
+   logical :: fexists, dim_exist
+   integer, allocatable :: dimids (:), dimlens (:)
+   character(len=256), allocatable :: dimnames (:)
 
-      INTEGER, allocatable :: data_i4_in1 (:)
-      INTEGER, allocatable :: data_i4_in2 (:,:)
-      INTEGER, allocatable :: data_i4_in3 (:,:,:)
+   integer, allocatable :: data_i4_in1 (:)
+   integer, allocatable :: data_i4_in2 (:,:)
+   integer, allocatable :: data_i4_in3 (:,:,:)
 
-      INTEGER, allocatable :: data_i4_out1 (:)
-      INTEGER, allocatable :: data_i4_out2 (:,:)
-      INTEGER, allocatable :: data_i4_out3 (:,:,:)
-      
-      INTEGER*8, allocatable :: data_i8_in1  (:)
-      INTEGER*8, allocatable :: data_i8_out1 (:)
+   integer, allocatable :: data_i4_out1 (:)
+   integer, allocatable :: data_i4_out2 (:,:)
+   integer, allocatable :: data_i4_out3 (:,:,:)
+   
+   integer*8, allocatable :: data_i8_in1  (:)
+   integer*8, allocatable :: data_i8_out1 (:)
 
-      REAL(r8), allocatable :: data_r8_in1 (:)
-      REAL(r8), allocatable :: data_r8_in2 (:,:)
-      REAL(r8), allocatable :: data_r8_in3 (:,:,:)
+   real(r8), allocatable :: data_r8_in1 (:)
+   real(r8), allocatable :: data_r8_in2 (:,:)
+   real(r8), allocatable :: data_r8_in3 (:,:,:)
 
-      REAL(r8), allocatable :: data_r8_out1 (:)
-      REAL(r8), allocatable :: data_r8_out2 (:,:)
-      REAL(r8), allocatable :: data_r8_out3 (:,:,:)
+   real(r8), allocatable :: data_r8_out1 (:)
+   real(r8), allocatable :: data_r8_out2 (:,:)
+   real(r8), allocatable :: data_r8_out3 (:,:,:)
 
       CALL get_filename_block (file_in,  iblk, jblk, input )
       CALL get_filename_block (file_out, iblk, jblk, output)
@@ -698,8 +699,8 @@ CONTAINS
       CALL nccheck( nf90_open (trim(input),  NF90_NOWRITE, ncidin)  )
       CALL nccheck( nf90_inq_varid (ncidin,  trim(varname), varidin ) )
 
-      select case (ndims)
-      case (1)
+      select CASE (ndims)
+      CASE (1)
          IF (xtype == NF90_INT) THEN
             allocate (data_i4_in1 (vlen_in))
             CALL nccheck( nf90_get_var (ncidin,  varidin , data_i4_in1) )
@@ -732,7 +733,7 @@ CONTAINS
             deallocate (data_r8_out1)
          ENDIF
 
-      case (2)
+      CASE (2)
          IF (xtype == NF90_INT) THEN
             allocate (data_i4_in2 (dimlens(1),vlen_in))
             CALL nccheck( nf90_get_var (ncidin,  varidin , data_i4_in2) )
@@ -759,7 +760,7 @@ CONTAINS
             deallocate (data_r8_out2)
          ENDIF
 
-      case (3)
+      CASE (3)
          IF (xtype == NF90_INT) THEN
             allocate (data_i4_in3 (dimlens(1),dimlens(2),vlen_in))
             CALL nccheck( nf90_get_var (ncidin,  varidin , data_i4_in3) )
@@ -790,13 +791,13 @@ CONTAINS
             deallocate (data_r8_out3)
          ENDIF
 
-      case default
+      CASE default
          write(*,*) 'Warning: there is no case for variable: ', trim(varname)
       END select
 
       CALL nccheck( nf90_close (ncidin)  )
       CALL nccheck( nf90_close (ncidout) )
 
-   END subroutine clip_vector
+   END SUBROUTINE clip_vector
 
 END MODULE MOD_RegionClip

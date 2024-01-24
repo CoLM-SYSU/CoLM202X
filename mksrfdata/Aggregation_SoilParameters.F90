@@ -3,24 +3,24 @@
 SUBROUTINE Aggregation_SoilParameters ( &
       gland, dir_rawdata, dir_model_landdata, lc_year)
 
-   !--------------------------------------------------------------------------------------------------------------------------------------
-   ! DESCRIPTION:
-   ! Create soil hydraulic and thermal parameters for the modeling reolustion
-   !
-   ! REFERENCES:
-   ! 1)Dai, Y., Q. Xin, N. Wei, Y. Zhang, W. Shangguan, H. Yuan, S. Zhang, S. Liu, X. Lu, 2019. A global high-resolution dataset of
-   !          soil hydraulic and thermal properties for land surface modeling. Journal of Advances in Modeling Earth Systems,11, 2996-3023.
-   ! 2)Dai, Y., N. Wei, H. Yuan, S. Zhang, W. Shangguan, S. Liu, and X. Lu, 2019. Evaluation of soil thermal conductivity schemes
-   !          for use in land surface modelling, Journal of Advances in Modeling Earth Systems, 11, 3454-3473.
-   ! 3)Dai, Y., W. Shangguan, Q. Duan, B. Liu, S. Fu, and G. Niu, 2013. Development of a China dataset of soil hydraulic parameters
-   !         using pedotransfer functions for land surface modeling. Journal of Hydrometeorology 14, 869–887
-   !
-   ! Original author: Yongjiu Dai and Wei Shangguan, 02/2014
-   !
-   ! REVISIONS:
-   ! Nan Wei, 06/2019: add algorithms of fitting soil water retention curves to aggregate soil hydraulic parameters from pixels to a patch.
-   ! Shupeng Zhang and Nan Wei, 01/2022: porting codes to MPI parallel version
-   ! -------------------------------------------------------------------------------------------------------------------------------------
+!--------------------------------------------------------------------------------------------------------------------------------------
+! DESCRIPTION:
+! Create soil hydraulic and thermal parameters for the modeling reolustion
+!
+! REFERENCES:
+! 1)Dai, Y., Q. Xin, N. Wei, Y. Zhang, W. Shangguan, H. Yuan, S. Zhang, S. Liu, X. Lu, 2019. A global high-resolution dataset of
+!          soil hydraulic and thermal properties for land surface modeling. Journal of Advances in Modeling Earth Systems,11, 2996-3023.
+! 2)Dai, Y., N. Wei, H. Yuan, S. Zhang, W. Shangguan, S. Liu, and X. Lu, 2019. Evaluation of soil thermal conductivity schemes
+!          for use in land surface modelling, Journal of Advances in Modeling Earth Systems, 11, 3454-3473.
+! 3)Dai, Y., W. Shangguan, Q. Duan, B. Liu, S. Fu, and G. Niu, 2013. Development of a China dataset of soil hydraulic parameters
+!         using pedotransfer functions for land surface modeling. Journal of Hydrometeorology 14, 869–887
+!
+! Original author: Yongjiu Dai and Wei Shangguan, 02/2014
+!
+! REVISIONS:
+! Nan Wei, 06/2019: add algorithms of fitting soil water retention curves to aggregate soil hydraulic parameters from pixels to a patch.
+! Shupeng Zhang and Nan Wei, 01/2022: porting codes to MPI parallel version
+! -------------------------------------------------------------------------------------------------------------------------------------
 
    USE MOD_Precision
    USE MOD_Vars_Global
@@ -45,93 +45,93 @@ SUBROUTINE Aggregation_SoilParameters ( &
    IMPLICIT NONE
 
    ! arguments:
-   INTEGER, intent(in) :: lc_year
-   TYPE(grid_type),  intent(in) :: gland
-   CHARACTER(LEN=*), intent(in) :: dir_rawdata
-   CHARACTER(LEN=*), intent(in) :: dir_model_landdata
+   integer, intent(in) :: lc_year
+   type(grid_type),  intent(in) :: gland
+   character(LEN=*), intent(in) :: dir_rawdata
+   character(LEN=*), intent(in) :: dir_model_landdata
 
    ! local variables:
    ! ---------------------------------------------------------------
-   CHARACTER(len=256) :: landdir, lndname, cyear
-   CHARACTER(len=256) :: c
-   INTEGER :: nsl, ipatch, L, np, LL, ipxstt, ipxend
+   character(len=256) :: landdir, lndname, cyear
+   character(len=256) :: c
+   integer :: nsl, ipatch, L, np, LL, ipxstt, ipxend
 
-   TYPE (block_data_real8_2d) :: vf_quartz_mineral_s_grid
-   TYPE (block_data_real8_2d) :: vf_gravels_s_grid
-   TYPE (block_data_real8_2d) :: vf_om_s_grid
-   TYPE (block_data_real8_2d) :: vf_sand_s_grid
-   TYPE (block_data_real8_2d) :: wf_gravels_s_grid
-   TYPE (block_data_real8_2d) :: wf_sand_s_grid
-   TYPE (block_data_real8_2d) :: OM_density_s_grid
-   TYPE (block_data_real8_2d) :: BD_all_s_grid
-   TYPE (block_data_real8_2d) :: theta_s_grid
-   TYPE (block_data_real8_2d) :: psi_s_grid
-   TYPE (block_data_real8_2d) :: lambda_grid
+   type (block_data_real8_2d) :: vf_quartz_mineral_s_grid
+   type (block_data_real8_2d) :: vf_gravels_s_grid
+   type (block_data_real8_2d) :: vf_om_s_grid
+   type (block_data_real8_2d) :: vf_sand_s_grid
+   type (block_data_real8_2d) :: wf_gravels_s_grid
+   type (block_data_real8_2d) :: wf_sand_s_grid
+   type (block_data_real8_2d) :: OM_density_s_grid
+   type (block_data_real8_2d) :: BD_all_s_grid
+   type (block_data_real8_2d) :: theta_s_grid
+   type (block_data_real8_2d) :: psi_s_grid
+   type (block_data_real8_2d) :: lambda_grid
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
-   TYPE (block_data_real8_2d) :: theta_r_grid
-   TYPE (block_data_real8_2d) :: alpha_vgm_grid
-   TYPE (block_data_real8_2d) :: L_vgm_grid
-   TYPE (block_data_real8_2d) :: n_vgm_grid
+   type (block_data_real8_2d) :: theta_r_grid
+   type (block_data_real8_2d) :: alpha_vgm_grid
+   type (block_data_real8_2d) :: L_vgm_grid
+   type (block_data_real8_2d) :: n_vgm_grid
 #endif
-   TYPE (block_data_real8_2d) :: k_s_grid
-   TYPE (block_data_real8_2d) :: csol_grid
-   TYPE (block_data_real8_2d) :: tksatu_grid
-   TYPE (block_data_real8_2d) :: tksatf_grid
-   TYPE (block_data_real8_2d) :: tkdry_grid
-   TYPE (block_data_real8_2d) :: k_solids_grid
+   type (block_data_real8_2d) :: k_s_grid
+   type (block_data_real8_2d) :: csol_grid
+   type (block_data_real8_2d) :: tksatu_grid
+   type (block_data_real8_2d) :: tksatf_grid
+   type (block_data_real8_2d) :: tkdry_grid
+   type (block_data_real8_2d) :: k_solids_grid
 
-   REAL(r8), allocatable :: vf_quartz_mineral_s_patches (:)
-   REAL(r8), allocatable :: vf_gravels_s_patches (:)
-   REAL(r8), allocatable :: vf_om_s_patches (:)
-   REAL(r8), allocatable :: vf_sand_s_patches (:)
-   REAL(r8), allocatable :: wf_gravels_s_patches (:)
-   REAL(r8), allocatable :: wf_sand_s_patches (:)
-   REAL(r8), allocatable :: OM_density_s_patches (:)
-   REAL(r8), allocatable :: BD_all_s_patches (:)
-   REAL(r8), allocatable :: theta_s_patches (:)
-   REAL(r8), allocatable :: psi_s_patches   (:)
-   REAL(r8), allocatable :: lambda_patches  (:)
+   real(r8), allocatable :: vf_quartz_mineral_s_patches (:)
+   real(r8), allocatable :: vf_gravels_s_patches (:)
+   real(r8), allocatable :: vf_om_s_patches (:)
+   real(r8), allocatable :: vf_sand_s_patches (:)
+   real(r8), allocatable :: wf_gravels_s_patches (:)
+   real(r8), allocatable :: wf_sand_s_patches (:)
+   real(r8), allocatable :: OM_density_s_patches (:)
+   real(r8), allocatable :: BD_all_s_patches (:)
+   real(r8), allocatable :: theta_s_patches (:)
+   real(r8), allocatable :: psi_s_patches   (:)
+   real(r8), allocatable :: lambda_patches  (:)
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
-   REAL(r8), allocatable :: theta_r_patches (:)
-   REAL(r8), allocatable :: alpha_vgm_patches  (:)
-   REAL(r8), allocatable :: L_vgm_patches  (:)
-   REAL(r8), allocatable :: n_vgm_patches  (:)
+   real(r8), allocatable :: theta_r_patches (:)
+   real(r8), allocatable :: alpha_vgm_patches  (:)
+   real(r8), allocatable :: L_vgm_patches  (:)
+   real(r8), allocatable :: n_vgm_patches  (:)
 #endif
-   REAL(r8), allocatable :: k_s_patches     (:)
-   REAL(r8), allocatable :: csol_patches    (:)
-   REAL(r8), allocatable :: tksatu_patches  (:)
-   REAL(r8), allocatable :: tksatf_patches  (:)
-   REAL(r8), allocatable :: tkdry_patches   (:)
-   REAL(r8), allocatable :: k_solids_patches  (:)
-   REAL(r8), allocatable :: BA_alpha_patches  (:)
-   REAL(r8), allocatable :: BA_beta_patches  (:)
+   real(r8), allocatable :: k_s_patches     (:)
+   real(r8), allocatable :: csol_patches    (:)
+   real(r8), allocatable :: tksatu_patches  (:)
+   real(r8), allocatable :: tksatf_patches  (:)
+   real(r8), allocatable :: tkdry_patches   (:)
+   real(r8), allocatable :: k_solids_patches  (:)
+   real(r8), allocatable :: BA_alpha_patches  (:)
+   real(r8), allocatable :: BA_beta_patches  (:)
 
-   REAL(r8), allocatable :: vf_quartz_mineral_s_one (:)
-   REAL(r8), allocatable :: vf_gravels_s_one (:)
-   REAL(r8), allocatable :: vf_om_s_one (:)
-   REAL(r8), allocatable :: vf_sand_s_one (:)
-   REAL(r8), allocatable :: wf_gravels_s_one (:)
-   REAL(r8), allocatable :: wf_sand_s_one (:)
-   REAL(r8), allocatable :: OM_density_s_one (:)
-   REAL(r8), allocatable :: BD_all_s_one (:)
-   REAL(r8), allocatable :: theta_s_one (:)
-   REAL(r8), allocatable :: psi_s_one   (:)
-   REAL(r8), allocatable :: lambda_one  (:)
+   real(r8), allocatable :: vf_quartz_mineral_s_one (:)
+   real(r8), allocatable :: vf_gravels_s_one (:)
+   real(r8), allocatable :: vf_om_s_one (:)
+   real(r8), allocatable :: vf_sand_s_one (:)
+   real(r8), allocatable :: wf_gravels_s_one (:)
+   real(r8), allocatable :: wf_sand_s_one (:)
+   real(r8), allocatable :: OM_density_s_one (:)
+   real(r8), allocatable :: BD_all_s_one (:)
+   real(r8), allocatable :: theta_s_one (:)
+   real(r8), allocatable :: psi_s_one   (:)
+   real(r8), allocatable :: lambda_one  (:)
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
-   REAL(r8), allocatable :: theta_r_one  (:)
-   REAL(r8), allocatable :: alpha_vgm_one  (:)
-   REAL(r8), allocatable :: L_vgm_one  (:)
-   REAL(r8), allocatable :: n_vgm_one  (:)
+   real(r8), allocatable :: theta_r_one  (:)
+   real(r8), allocatable :: alpha_vgm_one  (:)
+   real(r8), allocatable :: L_vgm_one  (:)
+   real(r8), allocatable :: n_vgm_one  (:)
 #endif
-   REAL(r8), allocatable :: k_s_one     (:)
-   REAL(r8), allocatable :: csol_one    (:)
-   REAL(r8), allocatable :: tksatu_one  (:)
-   REAL(r8), allocatable :: tksatf_one  (:)
-   REAL(r8), allocatable :: tkdry_one   (:)
-   REAL(r8), allocatable :: k_solids_one  (:)
-   REAL(r8), allocatable :: area_one   (:)
-   REAL(r8), allocatable :: BA_alpha_one  (:)
-   REAL(r8), allocatable :: BA_beta_one  (:)
+   real(r8), allocatable :: k_s_one     (:)
+   real(r8), allocatable :: csol_one    (:)
+   real(r8), allocatable :: tksatu_one  (:)
+   real(r8), allocatable :: tksatf_one  (:)
+   real(r8), allocatable :: tkdry_one   (:)
+   real(r8), allocatable :: k_solids_one  (:)
+   real(r8), allocatable :: area_one   (:)
+   real(r8), allocatable :: BA_alpha_one  (:)
+   real(r8), allocatable :: BA_beta_one  (:)
 
 ! local variables for estimating the upscaled soil parameters using the Levenberg–Marquardt fitting method
 ! ---------------------------------------------------------------
@@ -167,7 +167,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
    integer isiter                         ! flags to tell whether the iteration is completed, 1=Yes, 0=No
 
 #ifdef SrfdataDiag
-   INTEGER :: typpatch(N_land_classification+1), ityp
+   integer :: typpatch(N_land_classification+1), ityp
 #endif
 
    external SW_CB_dist                    ! the objective function to be fitted for Campbell SW retention curve
@@ -177,9 +177,9 @@ SUBROUTINE Aggregation_SoilParameters ( &
    write(cyear,'(i4.4)') lc_year
    landdir = trim(dir_model_landdata) // '/soil/' // trim(cyear)
 
-   ! ........................................
-   ! ... [2] aggregate the soil parameters from the resolution of raw data to modelling resolution
-   ! ........................................
+! ---------------------------------------------------------------------------------------------
+! ... [2] aggregate the soil parameters from the resolution of raw data to modelling resolution
+! ---------------------------------------------------------------------------------------------
 #ifdef USEMPI
    CALL mpi_barrier (p_comm_glb, p_err)
 #endif
@@ -362,7 +362,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
 
                allocate(BA_alpha_one  (size(area_one)))
                allocate(BA_beta_one   (size(area_one)))
-               where ((vf_gravels_s_one + vf_sand_s_one) > 0.4)
+               WHERE ((vf_gravels_s_one + vf_sand_s_one) > 0.4)
                        BA_alpha_one = 0.38
                        BA_beta_one = 35.0
                elsewhere ((vf_gravels_s_one + vf_sand_s_one) > 0.25)
@@ -371,7 +371,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
                elsewhere
                        BA_alpha_one = 0.2
                        BA_beta_one = 10.0
-               end where
+               END WHERE
 
                BA_alpha_patches (ipatch) = median (BA_alpha_one, size(BA_alpha_one), spval)
                BA_beta_patches (ipatch) = median (BA_beta_one, size(BA_beta_one), spval)
@@ -411,7 +411,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
 !                  if ( all(ydatb(ipxstt,:) >= 0.) .and. all(ydatb(ipxstt,:) <= 1.) .and. isiter == 1 ) then
 !                       BA_alpha_patches(ipatch) = xb(1)
 !                       BA_beta_patches (ipatch) = xb(2)
-!                  end if
+!                  ENDIF
 
 !                  deallocate(ydatb)
 !                  deallocate(fjacb)
@@ -784,7 +784,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
                IF (DEF_USE_SOILPAR_UPS_FIT) THEN
                   np = size(theta_r_one)
 
-                  IF( np > 1 ) then
+                  IF( np > 1 ) THEN
                      allocate ( ydatv  (1:np,npointw) )
 ! the jacobian matrix required in Levenberg–Marquardt fitting method
                      allocate ( fjacv  (npointw,nv) )           ! calculated in SW_VG_dist
@@ -792,10 +792,10 @@ SUBROUTINE Aggregation_SoilParameters ( &
                      allocate ( fvecv  (npointw)    )           ! calculated in SW_VG_dist
 
 ! SW VG retentions at fine grids for each patch
-                     do LL = 1,np
+                     DO LL = 1,np
                         ydatv(LL,:) = theta_r_one(LL)+(theta_s_one(LL) - theta_r_one(LL)) &
                                     * (1+(alpha_vgm_one(LL)*xdat)**n_vgm_one(LL))**(1.0/n_vgm_one(LL)-1)
-                     end do
+                     ENDDO
 
 ! Fitting the van Genuchten SW retention parameters
                      ldfjac = npointw
@@ -805,16 +805,16 @@ SUBROUTINE Aggregation_SoilParameters ( &
                      maxfev = 100 * ( nv + 1 )
                      isiter = 1
 
-                     call lmder ( SW_VG_dist, npointw, nv, xv, fvecv, fjacv, ldfjac, ftol, xtol, gtol, maxfev, &
+                     CALL lmder ( SW_VG_dist, npointw, nv, xv, fvecv, fjacv, ldfjac, ftol, xtol, gtol, maxfev, &
                            diagv, mode, factor, nprint, info, nfev, njev, ipvtv, qtfv,&
                            xdat, npointw, ydatv, np, theta_s_patches(ipatch), isiter)
 
-                     if ( xv(1) >= 0.0 .and. xv(1) <= theta_s_patches(ipatch) .and. xv(2) >= 1.0e-5 .and. xv(2) <= 1.0 .and. &
-                          xv(3) >= 1.1 .and. xv(3) <= 10.0 .and. isiter == 1) then
+                     IF ( xv(1) >= 0.0 .and. xv(1) <= theta_s_patches(ipatch) .and. xv(2) >= 1.0e-5 .and. xv(2) <= 1.0 .and. &
+                          xv(3) >= 1.1 .and. xv(3) <= 10.0 .and. isiter == 1) THEN
                           theta_r_patches(ipatch)   = xv(1)
                           alpha_vgm_patches(ipatch) = xv(2)
                           n_vgm_patches(ipatch)     = xv(3)
-                     end if
+                     ENDIF
 
                      deallocate(ydatv)
                      deallocate(fjacv)
@@ -975,7 +975,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
                IF (DEF_USE_SOILPAR_UPS_FIT) THEN
                   np = size(psi_s_one)
 
-                  IF( np > 1 ) then
+                  IF( np > 1 ) THEN
                      allocate ( ydatc  (1:np,npointw) )
 ! the jacobian matrix required in Levenberg–Marquardt fitting method
                      allocate ( fjacc  (npointw,nc) )           ! calculated in SW_CB_dist
@@ -983,9 +983,9 @@ SUBROUTINE Aggregation_SoilParameters ( &
                      allocate ( fvecc  (npointw)    )           ! calculated in SW_CB_dist
 
 ! SW CB retentions at fine grids for each patch
-                     do LL = 1,np
+                     DO LL = 1,np
                         ydatc(LL,:) = (-1.0*xdat/psi_s_one(LL))**(-1.0*lambda_one(LL)) * theta_s_one(LL)
-                     end do
+                     ENDDO
 
 ! Fitting the Campbell SW retention parameters
                      ldfjac = npointw
@@ -994,14 +994,14 @@ SUBROUTINE Aggregation_SoilParameters ( &
                      maxfev = 100 * ( nc + 1 )
                      isiter = 1
 
-                     call lmder ( SW_CB_dist, npointw, nc, xc, fvecc, fjacc, ldfjac, ftol, xtol, gtol, maxfev, &
+                     CALL lmder ( SW_CB_dist, npointw, nc, xc, fvecc, fjacc, ldfjac, ftol, xtol, gtol, maxfev, &
                            diagc, mode, factor, nprint, info, nfev, njev, ipvtc, qtfc,&
                            xdat, npointw, ydatc, np, theta_s_patches(ipatch), isiter)
 
-                     if( xc(1) >= -300. .and. xc(1) < 0.0 .and. xc(2) > 0.0 .and. xc(2) <= 1.0 .and. isiter == 1)then
+                     IF( xc(1) >= -300. .and. xc(1) < 0.0 .and. xc(2) > 0.0 .and. xc(2) <= 1.0 .and. isiter == 1)THEN
                            psi_s_patches (ipatch) = xc(1)
                            lambda_patches(ipatch) = xc(2)
-                     end if
+                     ENDIF
 
                      deallocate(ydatc)
                      deallocate(fjacc)
@@ -1700,7 +1700,7 @@ END SUBROUTINE Aggregation_SoilParameters
 
 !end subroutine Ke_Sr_dist
 
-subroutine SW_CB_dist ( m, n, x, fvec, fjac, ldfjac, iflag, xdat, npoint, ydatc, nptf, phi, isiter)
+SUBROUTINE SW_CB_dist ( m, n, x, fvec, fjac, ldfjac, iflag, xdat, npoint, ydatc, nptf, phi, isiter)
 
 !=================================================================
 ! DESCRIPTION:
@@ -1711,46 +1711,46 @@ subroutine SW_CB_dist ( m, n, x, fvec, fjac, ldfjac, iflag, xdat, npoint, ydatc,
 ! Created by Nan Wei, 01/2019
 ! ----------------------------------------------------------------
 
-      use MOD_Precision
-      implicit none
+   USE MOD_Precision
+   IMPLICIT NONE
 
-      integer m,n,ldfjac,iflag,i,nptf,isiter,npoint
-      real(r8) x(n),fjac(ldfjac,n),fvec(m),xdat(npoint),ydatc(nptf,npoint),phi
+   integer m,n,ldfjac,iflag,i,nptf,isiter,npoint
+   real(r8) x(n),fjac(ldfjac,n),fvec(m),xdat(npoint),ydatc(nptf,npoint),phi
 
-      if ( iflag == 0 ) then
+   IF ( iflag == 0 ) THEN
 
-         print*,x
+      print*,x
 
-      else if ( iflag == 1 ) then
+   ELSE IF ( iflag == 1 ) THEN
 
-         if (x(1) >= 0.0) then
-             isiter = 0
-             return
-         end if
+      IF (x(1) >= 0.0) THEN
+          isiter = 0
+          RETURN
+      ENDIF
 
-         do i = 1, m
-            fvec(i) = sum(((-1.0*xdat(i)/x(1))**(-1.0*x(2)) * phi - ydatc(:,i))**2)
-         end do
+      DO i = 1, m
+         fvec(i) = sum(((-1.0*xdat(i)/x(1))**(-1.0*x(2)) * phi - ydatc(:,i))**2)
+      ENDDO
 
-      else if ( iflag == 2 ) then
+   ELSE IF ( iflag == 2 ) THEN
 
-         if (x(1) >= 0.0) then
-             isiter = 0
-             return
-         end if
+      IF (x(1) >= 0.0) THEN
+          isiter = 0
+          RETURN
+      ENDIF
 
-         do i = 1, m
-            fjac(i,1) = sum(2.0*((-1.0*xdat(i)/x(1))**(-1.0*x(2)) * phi - ydatc(:,i))*&
-                        phi * x(2) * (-1.0*xdat(i)/x(1))**(-1.0*x(2)) / x(1))
-            fjac(i,2) = sum(-2.0*((-1.0*xdat(i)/x(1))**(-1.0*x(2)) * phi - ydatc(:,i))*&
-                        phi * (-1.0*xdat(i)/x(1))**(-1.0*x(2)) * log(-1.0*xdat(i)/x(1)))
-         end do
+      DO i = 1, m
+         fjac(i,1) = sum(2.0*((-1.0*xdat(i)/x(1))**(-1.0*x(2)) * phi - ydatc(:,i))*&
+                     phi * x(2) * (-1.0*xdat(i)/x(1))**(-1.0*x(2)) / x(1))
+         fjac(i,2) = sum(-2.0*((-1.0*xdat(i)/x(1))**(-1.0*x(2)) * phi - ydatc(:,i))*&
+                     phi * (-1.0*xdat(i)/x(1))**(-1.0*x(2)) * log(-1.0*xdat(i)/x(1)))
+      ENDDO
 
-      end if
+   ENDIF
 
-end subroutine SW_CB_dist
+END SUBROUTINE SW_CB_dist
 
-subroutine SW_VG_dist ( m, n, x, fvec, fjac, ldfjac, iflag, xdat, npoint, ydatv, nptf, phi, isiter)
+SUBROUTINE SW_VG_dist ( m, n, x, fvec, fjac, ldfjac, iflag, xdat, npoint, ydatv, nptf, phi, isiter)
 
 !=================================================================
 ! DESCRIPTION:
@@ -1761,48 +1761,48 @@ subroutine SW_VG_dist ( m, n, x, fvec, fjac, ldfjac, iflag, xdat, npoint, ydatv,
 ! Created by Nan Wei, 01/2019
 ! ----------------------------------------------------------------
 
-      use MOD_Precision
-      implicit none
+   USE MOD_Precision
+   IMPLICIT NONE
 
-      integer m,n,ldfjac,iflag,i,nptf,isiter,npoint
-      real(r8) x(n),fjac(ldfjac,n),fvec(m),xdat(npoint),ydatv(nptf,npoint),phi
+   integer m,n,ldfjac,iflag,i,nptf,isiter,npoint
+   real(r8) x(n),fjac(ldfjac,n),fvec(m),xdat(npoint),ydatv(nptf,npoint),phi
 
-      if ( iflag == 0 ) then
+   IF ( iflag == 0 ) THEN
 
-         print*,x
+      print*,x
 
-      else if ( iflag == 1 ) then
+   ELSE IF ( iflag == 1 ) THEN
 
-         if (x(2) <= 0.0 .or. x(3) <= 0.1) then
-             isiter = 0
-             return
-         end if
+      IF (x(2) <= 0.0 .or. x(3) <= 0.1) THEN
+          isiter = 0
+          RETURN
+      ENDIF
 
-         do i = 1, m
-            fvec(i) = sum((x(1) + (phi - x(1))*(1+(x(2)*xdat(i))**x(3))**(1.0/x(3)-1) - ydatv(:,i))**2)
-         end do
+      DO i = 1, m
+         fvec(i) = sum((x(1) + (phi - x(1))*(1+(x(2)*xdat(i))**x(3))**(1.0/x(3)-1) - ydatv(:,i))**2)
+      ENDDO
 
-      else if ( iflag == 2 ) then
+   ELSE IF ( iflag == 2 ) THEN
 
-         if (x(2) <= 0.0 .or. x(3) <= 0.1) then
-             isiter = 0
-             return
-         end if
+      IF (x(2) <= 0.0 .or. x(3) <= 0.1) THEN
+          isiter = 0
+          RETURN
+      ENDIF
 
-         do i = 1, m
-            fjac(i,1) = sum(2*(x(1) + (phi - x(1))*(1+(x(2)*xdat(i))**x(3))**(1.0/x(3)-1) - ydatv(:,i))*&
-                        (1 - (1+(x(2)*xdat(i))**x(3))**(1.0/x(3)-1)))
-            fjac(i,2) = sum(2*(x(1) + (phi - x(1))*(1+(x(2)*xdat(i))**x(3))**(1.0/x(3)-1) - ydatv(:,i))*&
-                        (phi - x(1)) * (1 - x(3)) * (1+(x(2)*xdat(i))**x(3))**(1.0/x(3)-2) * x(2)**(x(3)-1) * xdat(i)**x(3))
-            fjac(i,3) = sum(2*(x(1) + (phi - x(1))*(1+(x(2)*xdat(i))**x(3))**(1.0/x(3)-1) - ydatv(:,i))*&
-                        (phi - x(1)) * (1+(x(2)*xdat(i))**x(3))**(1.0/x(3)-1) *&
-                        ((1.0-x(3))*(x(2)*xdat(i))**x(3)*log(x(2)*xdat(i))/(x(3)*(1+(x(2)*xdat(i))**x(3))) &
-                        - log(1+(x(2)*xdat(i))**x(3))/x(3)**2))
-         end do
+      DO i = 1, m
+         fjac(i,1) = sum(2*(x(1) + (phi - x(1))*(1+(x(2)*xdat(i))**x(3))**(1.0/x(3)-1) - ydatv(:,i))*&
+                     (1 - (1+(x(2)*xdat(i))**x(3))**(1.0/x(3)-1)))
+         fjac(i,2) = sum(2*(x(1) + (phi - x(1))*(1+(x(2)*xdat(i))**x(3))**(1.0/x(3)-1) - ydatv(:,i))*&
+                     (phi - x(1)) * (1 - x(3)) * (1+(x(2)*xdat(i))**x(3))**(1.0/x(3)-2) * x(2)**(x(3)-1) * xdat(i)**x(3))
+         fjac(i,3) = sum(2*(x(1) + (phi - x(1))*(1+(x(2)*xdat(i))**x(3))**(1.0/x(3)-1) - ydatv(:,i))*&
+                     (phi - x(1)) * (1+(x(2)*xdat(i))**x(3))**(1.0/x(3)-1) *&
+                     ((1.0-x(3))*(x(2)*xdat(i))**x(3)*log(x(2)*xdat(i))/(x(3)*(1+(x(2)*xdat(i))**x(3))) &
+                     - log(1+(x(2)*xdat(i))**x(3))/x(3)**2))
+      ENDDO
 
-      end if
+   ENDIF
 
-end subroutine SW_VG_dist
+END SUBROUTINE SW_VG_dist
 
 !-----------------------------------------------------------------------
 !EOP

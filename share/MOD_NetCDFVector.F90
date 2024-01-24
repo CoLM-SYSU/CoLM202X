@@ -1,32 +1,32 @@
 #include <define.h>
 
-   !----------------------------------------------------------------------------------
-   ! DESCRIPTION:
-   !
-   !    High-level Subroutines to read and write variables in files with netCDF format.
-   !
-   !    CoLM read and write netCDF files mainly in three ways:
-   !    1. Serial: read and write data by a single process;
-   !    2. Vector: 1) read vector data by IO and scatter from IO to workers
-   !               2) gather from workers to IO and write vectors by IO
-   !               Notice: each file contains vector data in one block.
-   !    3. Block : read blocked data by IO
-   !               Notice: input file is a single file.
-   !    
-   !    This module contains subroutines of "2. Vector".
-   !    
-   !    Two implementations can be used,
-   !    1) A vector is saved in multiple files, each associated with a block. 
-   !       READ/WRITE are fast in this way and compression can be used.
-   !       However, there may be too many files, especially when blocks are small. 
-   !       CHOOSE this implementation by "#undef VectorInOneFile" in include/define.h
-   !    2) A vector is saved in a single file. 
-   !       READ/WRITE may be slow in this way and compression is not used.
-   !       CHOOSE this implementation by "#define VectorInOneFile" in include/define.h
-   !
-   !
-   ! Created by Shupeng Zhang, May 2023
-   !----------------------------------------------------------------------------------
+!----------------------------------------------------------------------------------
+! DESCRIPTION:
+!
+!    High-level Subroutines to read and write variables in files with netCDF format.
+!
+!    CoLM read and write netCDF files mainly in three ways:
+!    1. Serial: read and write data by a single process;
+!    2. Vector: 1) read vector data by IO and scatter from IO to workers
+!               2) gather from workers to IO and write vectors by IO
+!               Notice: each file CONTAINS vector data in one block.
+!    3. Block : read blocked data by IO
+!               Notice: input file is a single file.
+!    
+!    This MODULE CONTAINS subroutines of "2. Vector".
+!    
+!    Two implementations can be used,
+!    1) A vector is saved in multiple files, each associated with a block. 
+!       READ/WRITE are fast in this way and compression can be used.
+!       However, there may be too many files, especially when blocks are small. 
+!       CHOOSE this implementation by "#undef VectorInOneFile" in include/define.h
+!    2) A vector is saved in a single file. 
+!       READ/WRITE may be slow in this way and compression is not used.
+!       CHOOSE this implementation by "#define VectorInOneFile" in include/define.h
+!
+!
+! Created by Shupeng Zhang, May 2023
+!----------------------------------------------------------------------------------
 
 #ifndef VectorInOneFile
 
@@ -68,24 +68,24 @@ CONTAINS
    SUBROUTINE ncio_read_vector_int32_1d ( &
          filename, dataname, pixelset, rdata, defval)
 
-      USE MOD_NetCDFSerial
-      USE MOD_SPMD_Task
-      USE MOD_Block
-      USE MOD_Pixelset
-      IMPLICIT NONE
+   USE MOD_NetCDFSerial
+   USE MOD_SPMD_Task
+   USE MOD_Block
+   USE MOD_Pixelset
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in) :: filename
-      CHARACTER(len=*), intent(in) :: dataname
-      TYPE(pixelset_type), intent(in) :: pixelset
+   character(len=*), intent(in) :: filename
+   character(len=*), intent(in) :: dataname
+   type(pixelset_type), intent(in) :: pixelset
 
-      INTEGER, allocatable, intent(inout) :: rdata (:)
-      INTEGER, intent(in), optional :: defval
+   integer, allocatable, intent(inout) :: rdata (:)
+   integer, intent(in), optional :: defval
 
-      ! Local variables
-      INTEGER :: iblkgrp, iblk, jblk, istt, iend
-      CHARACTER(len=256) :: fileblock
-      INTEGER, allocatable :: sbuff(:), rbuff(:)
-      logical :: any_file_exists, this_file_exists
+   ! Local variables
+   integer :: iblkgrp, iblk, jblk, istt, iend
+   character(len=256) :: fileblock
+   integer, allocatable :: sbuff(:), rbuff(:)
+   logical :: any_file_exists, this_file_exists
 
       IF (p_is_worker) THEN
          IF ((pixelset%nset > 0) .and. (.not. allocated(rdata))) THEN
@@ -175,24 +175,24 @@ CONTAINS
    SUBROUTINE ncio_read_vector_int64_1d ( &
          filename, dataname, pixelset, rdata, defval)
 
-      USE MOD_NetCDFSerial
-      USE MOD_SPMD_Task
-      USE MOD_Block
-      USE MOD_Pixelset
-      IMPLICIT NONE
+   USE MOD_NetCDFSerial
+   USE MOD_SPMD_Task
+   USE MOD_Block
+   USE MOD_Pixelset
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in) :: filename
-      CHARACTER(len=*), intent(in) :: dataname
-      TYPE(pixelset_type), intent(in) :: pixelset
+   character(len=*), intent(in) :: filename
+   character(len=*), intent(in) :: dataname
+   type(pixelset_type), intent(in) :: pixelset
 
-      INTEGER*8, allocatable, intent(inout) :: rdata (:)
-      INTEGER, intent(in), optional :: defval
+   integer*8, allocatable, intent(inout) :: rdata (:)
+   integer, intent(in), optional :: defval
 
-      ! Local variables
-      INTEGER :: iblkgrp, iblk, jblk, istt, iend
-      CHARACTER(len=256) :: fileblock
-      INTEGER*8, allocatable :: sbuff(:), rbuff(:)
-      logical :: any_file_exists, this_file_exists
+   ! Local variables
+   integer :: iblkgrp, iblk, jblk, istt, iend
+   character(len=256) :: fileblock
+   integer*8, allocatable :: sbuff(:), rbuff(:)
+   logical :: any_file_exists, this_file_exists
 
       IF (p_is_worker) THEN
          IF ((pixelset%nset > 0) .and. (.not. allocated(rdata))) THEN
@@ -282,24 +282,24 @@ CONTAINS
    SUBROUTINE ncio_read_vector_logical_1d (filename, dataname, pixelset, rdata, &
          defval)
 
-      USE MOD_NetCDFSerial
-      USE MOD_SPMD_Task
-      USE MOD_Block
-      USE MOD_Pixelset
-      IMPLICIT NONE
+   USE MOD_NetCDFSerial
+   USE MOD_SPMD_Task
+   USE MOD_Block
+   USE MOD_Pixelset
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in) :: filename
-      CHARACTER(len=*), intent(in) :: dataname
-      TYPE(pixelset_type), intent(in) :: pixelset
+   character(len=*), intent(in) :: filename
+   character(len=*), intent(in) :: dataname
+   type(pixelset_type), intent(in) :: pixelset
 
-      LOGICAL, allocatable, intent(inout) :: rdata (:)
-      LOGICAL, intent(in), optional :: defval
+   logical, allocatable, intent(inout) :: rdata (:)
+   logical, intent(in), optional :: defval
 
-      ! Local variables
-      INTEGER :: iblkgrp, iblk, jblk, istt, iend
-      CHARACTER(len=256) :: fileblock
-      INTEGER(1), allocatable :: sbuff(:), rbuff(:)
-      logical :: any_file_exists, this_file_exists
+   ! Local variables
+   integer :: iblkgrp, iblk, jblk, istt, iend
+   character(len=256) :: fileblock
+   integer(1), allocatable :: sbuff(:), rbuff(:)
+   logical :: any_file_exists, this_file_exists
 
       IF (p_is_worker) THEN
          IF ((pixelset%nset > 0) .and. (.not. allocated(rdata))) THEN
@@ -393,25 +393,25 @@ CONTAINS
    SUBROUTINE ncio_read_vector_real8_1d (filename, dataname, pixelset, rdata, &
          defval)
 
-      USE MOD_Precision
-      USE MOD_NetCDFSerial
-      USE MOD_SPMD_Task
-      USE MOD_Block
-      USE MOD_Pixelset
-      IMPLICIT NONE
+   USE MOD_Precision
+   USE MOD_NetCDFSerial
+   USE MOD_SPMD_Task
+   USE MOD_Block
+   USE MOD_Pixelset
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in) :: filename
-      CHARACTER(len=*), intent(in) :: dataname
-      TYPE(pixelset_type), intent(in) :: pixelset
+   character(len=*), intent(in) :: filename
+   character(len=*), intent(in) :: dataname
+   type(pixelset_type), intent(in) :: pixelset
 
-      REAL(r8), allocatable, intent(inout) :: rdata (:)
-      REAL(r8), intent(in), optional :: defval
+   real(r8), allocatable, intent(inout) :: rdata (:)
+   real(r8), intent(in), optional :: defval
 
-      ! Local variables
-      INTEGER :: iblkgrp, iblk, jblk, istt, iend
-      CHARACTER(len=256) :: fileblock
-      REAL(r8), allocatable :: sbuff(:), rbuff(:)
-      logical :: any_file_exists, this_file_exists
+   ! Local variables
+   integer :: iblkgrp, iblk, jblk, istt, iend
+   character(len=256) :: fileblock
+   real(r8), allocatable :: sbuff(:), rbuff(:)
+   logical :: any_file_exists, this_file_exists
          
       IF (p_is_worker) THEN
          IF ((pixelset%nset > 0) .and. (.not. allocated(rdata))) THEN
@@ -501,26 +501,26 @@ CONTAINS
    SUBROUTINE ncio_read_vector_real8_2d ( &
          filename, dataname, ndim1, pixelset, rdata, defval)
 
-      USE MOD_Precision
-      USE MOD_NetCDFSerial
-      USE MOD_SPMD_Task
-      USE MOD_Block
-      USE MOD_Pixelset
-      IMPLICIT NONE
+   USE MOD_Precision
+   USE MOD_NetCDFSerial
+   USE MOD_SPMD_Task
+   USE MOD_Block
+   USE MOD_Pixelset
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in) :: filename
-      CHARACTER(len=*), intent(in) :: dataname
-      INTEGER, intent(in) :: ndim1
-      TYPE(pixelset_type), intent(in) :: pixelset
+   character(len=*), intent(in) :: filename
+   character(len=*), intent(in) :: dataname
+   integer, intent(in) :: ndim1
+   type(pixelset_type), intent(in) :: pixelset
 
-      REAL(r8), allocatable, intent(inout) :: rdata (:,:)
-      REAL(r8), intent(in), optional :: defval
+   real(r8), allocatable, intent(inout) :: rdata (:,:)
+   real(r8), intent(in), optional :: defval
 
-      ! Local variables
-      INTEGER :: iblkgrp, iblk, jblk, istt, iend
-      CHARACTER(len=256) :: fileblock
-      REAL(r8), allocatable :: sbuff(:,:), rbuff(:,:)
-      logical :: any_file_exists, this_file_exists
+   ! Local variables
+   integer :: iblkgrp, iblk, jblk, istt, iend
+   character(len=256) :: fileblock
+   real(r8), allocatable :: sbuff(:,:), rbuff(:,:)
+   logical :: any_file_exists, this_file_exists
 
       IF (p_is_worker) THEN
          IF ((pixelset%nset > 0) .and. (.not. allocated(rdata))) THEN
@@ -610,26 +610,26 @@ CONTAINS
    SUBROUTINE ncio_read_vector_real8_3d ( &
          filename, dataname, ndim1, ndim2, pixelset, rdata, defval)
 
-      USE MOD_Precision
-      USE MOD_NetCDFSerial
-      USE MOD_SPMD_Task
-      USE MOD_Block
-      USE MOD_Pixelset
-      IMPLICIT NONE
+   USE MOD_Precision
+   USE MOD_NetCDFSerial
+   USE MOD_SPMD_Task
+   USE MOD_Block
+   USE MOD_Pixelset
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in) :: filename
-      CHARACTER(len=*), intent(in) :: dataname
-      INTEGER, intent(in) :: ndim1, ndim2
-      TYPE(pixelset_type), intent(in) :: pixelset
+   character(len=*), intent(in) :: filename
+   character(len=*), intent(in) :: dataname
+   integer, intent(in) :: ndim1, ndim2
+   type(pixelset_type), intent(in) :: pixelset
 
-      REAL(r8), allocatable, intent(inout) :: rdata (:,:,:)
-      REAL(r8), intent(in), optional :: defval
+   real(r8), allocatable, intent(inout) :: rdata (:,:,:)
+   real(r8), intent(in), optional :: defval
 
-      ! Local variables
-      INTEGER :: iblkgrp, iblk, jblk, istt, iend
-      CHARACTER(len=256) :: fileblock
-      REAL(r8), allocatable :: sbuff(:,:,:), rbuff(:,:,:)
-      logical :: any_file_exists, this_file_exists
+   ! Local variables
+   integer :: iblkgrp, iblk, jblk, istt, iend
+   character(len=256) :: fileblock
+   real(r8), allocatable :: sbuff(:,:,:), rbuff(:,:,:)
+   logical :: any_file_exists, this_file_exists
 
       IF (p_is_worker) THEN
          IF ((pixelset%nset > 0) .and. (.not. allocated(rdata))) THEN
@@ -719,26 +719,26 @@ CONTAINS
    SUBROUTINE ncio_read_vector_real8_4d ( &
          filename, dataname, ndim1, ndim2, ndim3, pixelset, rdata, defval)
 
-      USE MOD_Precision
-      USE MOD_NetCDFSerial
-      USE MOD_SPMD_Task
-      USE MOD_Block
-      USE MOD_Pixelset
-      IMPLICIT NONE
+   USE MOD_Precision
+   USE MOD_NetCDFSerial
+   USE MOD_SPMD_Task
+   USE MOD_Block
+   USE MOD_Pixelset
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in) :: filename
-      CHARACTER(len=*), intent(in) :: dataname
-      INTEGER, intent(in) :: ndim1, ndim2, ndim3
-      TYPE(pixelset_type), intent(in) :: pixelset
+   character(len=*), intent(in) :: filename
+   character(len=*), intent(in) :: dataname
+   integer, intent(in) :: ndim1, ndim2, ndim3
+   type(pixelset_type), intent(in) :: pixelset
 
-      REAL(r8), allocatable, intent(inout) :: rdata (:,:,:,:)
-      REAL(r8), intent(in), optional :: defval
+   real(r8), allocatable, intent(inout) :: rdata (:,:,:,:)
+   real(r8), intent(in), optional :: defval
 
-      ! Local variables
-      INTEGER :: iblkgrp, iblk, jblk, istt, iend
-      CHARACTER(len=256) :: fileblock
-      REAL(r8), allocatable :: sbuff(:,:,:,:), rbuff(:,:,:,:)
-      logical :: any_file_exists, this_file_exists
+   ! Local variables
+   integer :: iblkgrp, iblk, jblk, istt, iend
+   character(len=256) :: fileblock
+   real(r8), allocatable :: sbuff(:,:,:,:), rbuff(:,:,:,:)
+   logical :: any_file_exists, this_file_exists
 
       IF (p_is_worker) THEN
          IF ((pixelset%nset > 0) .and. (.not. allocated(rdata))) THEN
@@ -827,18 +827,18 @@ CONTAINS
    !---------------------------------------------------------
    SUBROUTINE ncio_create_file_vector (filename, pixelset)
 
-      USE MOD_NetCDFSerial
-      USE MOD_SPMD_Task
-      USE MOD_Block
-      USE MOD_Pixelset
-      IMPLICIT NONE
+   USE MOD_NetCDFSerial
+   USE MOD_SPMD_Task
+   USE MOD_Block
+   USE MOD_Pixelset
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in) :: filename
-      TYPE(pixelset_type), intent(in) :: pixelset
+   character(len=*), intent(in) :: filename
+   type(pixelset_type), intent(in) :: pixelset
 
-      ! Local variables
-      INTEGER :: iblkgrp, iblk, jblk
-      CHARACTER(len=256) :: fileblock
+   ! Local variables
+   integer :: iblkgrp, iblk, jblk
+   character(len=256) :: fileblock
 
       IF (p_is_io) THEN
          DO iblkgrp = 1, pixelset%nblkgrp
@@ -856,21 +856,21 @@ CONTAINS
    !---------------------------------------------------------
    SUBROUTINE ncio_define_dimension_vector (filename, pixelset, dimname, dimlen)
 
-      USE MOD_NetCDFSerial
-      USE MOD_SPMD_Task
-      USE MOD_Block
-      USE MOD_Pixelset
-      IMPLICIT NONE
+   USE MOD_NetCDFSerial
+   USE MOD_SPMD_Task
+   USE MOD_Block
+   USE MOD_Pixelset
+   IMPLICIT NONE
 
-      CHARACTER(len=*),    intent(in) :: filename
-      TYPE(pixelset_type), intent(in) :: pixelset
-      CHARACTER(len=*), intent(in)  :: dimname
-      INTEGER, intent(in), optional :: dimlen
+   character(len=*),    intent(in) :: filename
+   type(pixelset_type), intent(in) :: pixelset
+   character(len=*), intent(in)  :: dimname
+   integer, intent(in), optional :: dimlen
 
-      ! Local variables
-      INTEGER :: iblkgrp, iblk, jblk
-      CHARACTER(len=256) :: fileblock
-      LOGICAL :: fexists
+   ! Local variables
+   integer :: iblkgrp, iblk, jblk
+   character(len=256) :: fileblock
+   logical :: fexists
 
       IF (p_is_io) THEN
          DO iblkgrp = 1, pixelset%nblkgrp
@@ -897,24 +897,24 @@ CONTAINS
    SUBROUTINE ncio_write_vector_int32_1d ( &
          filename, dataname, dimname, pixelset, wdata, compress_level)
 
-      USE MOD_NetCDFSerial
-      USE MOD_SPMD_Task
-      USE MOD_Block
-      USE MOD_Pixelset
-      IMPLICIT NONE
+   USE MOD_NetCDFSerial
+   USE MOD_SPMD_Task
+   USE MOD_Block
+   USE MOD_Pixelset
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in) :: filename
-      CHARACTER(len=*), intent(in) :: dataname
-      CHARACTER(len=*), intent(in) :: dimname
-      TYPE(pixelset_type), intent(in) :: pixelset
-      INTEGER, intent(in) :: wdata (:)
+   character(len=*), intent(in) :: filename
+   character(len=*), intent(in) :: dataname
+   character(len=*), intent(in) :: dimname
+   type(pixelset_type), intent(in) :: pixelset
+   integer, intent(in) :: wdata (:)
 
-      INTEGER, intent(in), optional :: compress_level
+   integer, intent(in), optional :: compress_level
 
-      ! Local variables
-      INTEGER :: iblkgrp, iblk, jblk, istt, iend
-      CHARACTER(len=256) :: fileblock
-      INTEGER, allocatable :: sbuff(:), rbuff(:)
+   ! Local variables
+   integer :: iblkgrp, iblk, jblk, istt, iend
+   character(len=256) :: fileblock
+   integer, allocatable :: sbuff(:), rbuff(:)
 
       IF (p_is_io) THEN
 
@@ -983,24 +983,24 @@ CONTAINS
    SUBROUTINE ncio_write_vector_logical_1d ( &
          filename, dataname, dimname, pixelset, wdata, compress_level)
 
-      USE MOD_NetCDFSerial
-      USE MOD_SPMD_Task
-      USE MOD_Block
-      USE MOD_Pixelset
-      IMPLICIT NONE
+   USE MOD_NetCDFSerial
+   USE MOD_SPMD_Task
+   USE MOD_Block
+   USE MOD_Pixelset
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in) :: filename
-      CHARACTER(len=*), intent(in) :: dataname
-      CHARACTER(len=*), intent(in) :: dimname
-      TYPE(pixelset_type), intent(in) :: pixelset
-      LOGICAL, intent(in) :: wdata (:)
+   character(len=*), intent(in) :: filename
+   character(len=*), intent(in) :: dataname
+   character(len=*), intent(in) :: dimname
+   type(pixelset_type), intent(in) :: pixelset
+   logical, intent(in) :: wdata (:)
 
-      INTEGER, intent(in), optional :: compress_level
+   integer, intent(in), optional :: compress_level
 
-      ! Local variables
-      INTEGER :: iblkgrp, iblk, jblk, istt, iend, i
-      CHARACTER(len=256) :: fileblock
-      INTEGER(1), allocatable :: sbuff(:), rbuff(:)
+   ! Local variables
+   integer :: iblkgrp, iblk, jblk, istt, iend, i
+   character(len=256) :: fileblock
+   integer(1), allocatable :: sbuff(:), rbuff(:)
 
       IF (p_is_io) THEN
 
@@ -1017,13 +1017,13 @@ CONTAINS
 #else
             istt = pixelset%vecgs%vstt(iblk,jblk)
             iend = pixelset%vecgs%vend(iblk,jblk)
-            do i = istt, iend
-               if(wdata(i))then
+            DO i = istt, iend
+               IF(wdata(i))THEN
                   rbuff(i-istt+1) = 1
-               else
+               ELSE
                   rbuff(i-istt+1) = 0
-               end if
-            end do
+               ENDIF
+            ENDDO
 #endif
 
             CALL get_filename_block (filename, iblk, jblk, fileblock)
@@ -1052,13 +1052,13 @@ CONTAINS
                allocate (sbuff (pixelset%vecgs%vlen(iblk,jblk)))
                istt = pixelset%vecgs%vstt(iblk,jblk)
                iend = pixelset%vecgs%vend(iblk,jblk)
-               do i = istt, iend
-                  if(wdata(i))then
+               DO i = istt, iend
+                  IF(wdata(i))THEN
                      sbuff(i-istt+1) = 1
-                  else
+                  ELSE
                      sbuff(i-istt+1) = 0
-                  end if
-               end do
+                  ENDIF
+               ENDDO
             ELSE
                allocate (sbuff (1))
             ENDIF
@@ -1082,25 +1082,25 @@ CONTAINS
          filename, dataname, dim1name, ndim1, dim2name, ndim2, &
          dim3name, pixelset, wdata, compress_level)
 
-      USE MOD_NetCDFSerial
-      USE MOD_SPMD_Task
-      USE MOD_Block
-      USE MOD_Pixelset
-      IMPLICIT NONE
+   USE MOD_NetCDFSerial
+   USE MOD_SPMD_Task
+   USE MOD_Block
+   USE MOD_Pixelset
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in) :: filename
-      CHARACTER(len=*), intent(in) :: dataname
-      CHARACTER(len=*), intent(in) :: dim1name, dim2name, dim3name
-      TYPE(pixelset_type), intent(in) :: pixelset
-      INTEGER, intent(in) :: ndim1, ndim2
-      INTEGER, intent(in) :: wdata (:,:,:)
+   character(len=*), intent(in) :: filename
+   character(len=*), intent(in) :: dataname
+   character(len=*), intent(in) :: dim1name, dim2name, dim3name
+   type(pixelset_type), intent(in) :: pixelset
+   integer, intent(in) :: ndim1, ndim2
+   integer, intent(in) :: wdata (:,:,:)
 
-      INTEGER, intent(in), optional :: compress_level
+   integer, intent(in), optional :: compress_level
 
-      ! Local variables
-      INTEGER :: iblkgrp, iblk, jblk, istt, iend
-      CHARACTER(len=256) :: fileblock
-      INTEGER, allocatable :: sbuff(:,:,:), rbuff(:,:,:)
+   ! Local variables
+   integer :: iblkgrp, iblk, jblk, istt, iend
+   character(len=256) :: fileblock
+   integer, allocatable :: sbuff(:,:,:), rbuff(:,:,:)
 
       IF (p_is_io) THEN
 
@@ -1170,24 +1170,24 @@ CONTAINS
    SUBROUTINE ncio_write_vector_int64_1d ( &
          filename, dataname, dimname, pixelset, wdata, compress_level)
 
-      USE MOD_NetCDFSerial
-      USE MOD_SPMD_Task
-      USE MOD_Block
-      USE MOD_Pixelset
-      IMPLICIT NONE
+   USE MOD_NetCDFSerial
+   USE MOD_SPMD_Task
+   USE MOD_Block
+   USE MOD_Pixelset
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in) :: filename
-      CHARACTER(len=*), intent(in) :: dataname
-      CHARACTER(len=*), intent(in) :: dimname
-      TYPE(pixelset_type), intent(in) :: pixelset
-      INTEGER*8, intent(in) :: wdata (:)
+   character(len=*), intent(in) :: filename
+   character(len=*), intent(in) :: dataname
+   character(len=*), intent(in) :: dimname
+   type(pixelset_type), intent(in) :: pixelset
+   integer*8, intent(in) :: wdata (:)
 
-      INTEGER, intent(in), optional :: compress_level
+   integer, intent(in), optional :: compress_level
 
-      ! Local variables
-      INTEGER :: iblkgrp, iblk, jblk, istt, iend
-      CHARACTER(len=256) :: fileblock
-      INTEGER*8, allocatable :: sbuff(:), rbuff(:)
+   ! Local variables
+   integer :: iblkgrp, iblk, jblk, istt, iend
+   character(len=256) :: fileblock
+   integer*8, allocatable :: sbuff(:), rbuff(:)
 
       IF (p_is_io) THEN
 
@@ -1256,25 +1256,25 @@ CONTAINS
    SUBROUTINE ncio_write_vector_real8_1d ( &
          filename, dataname, dimname, pixelset, wdata, compress_level)
 
-      USE MOD_Precision
-      USE MOD_NetCDFSerial
-      USE MOD_SPMD_Task
-      USE MOD_Block
-      USE MOD_Pixelset
-      IMPLICIT NONE
+   USE MOD_Precision
+   USE MOD_NetCDFSerial
+   USE MOD_SPMD_Task
+   USE MOD_Block
+   USE MOD_Pixelset
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in) :: filename
-      CHARACTER(len=*), intent(in) :: dataname
-      CHARACTER(len=*), intent(in) :: dimname
-      TYPE(pixelset_type), intent(in) :: pixelset
-      REAL(r8), intent(in) :: wdata (:)
-      
-      INTEGER, intent(in), optional :: compress_level
+   character(len=*), intent(in) :: filename
+   character(len=*), intent(in) :: dataname
+   character(len=*), intent(in) :: dimname
+   type(pixelset_type), intent(in) :: pixelset
+   real(r8), intent(in) :: wdata (:)
+   
+   integer, intent(in), optional :: compress_level
 
-      ! Local variables
-      INTEGER :: iblkgrp, iblk, jblk, istt, iend
-      CHARACTER(len=256) :: fileblock
-      REAL(r8), allocatable :: sbuff(:), rbuff(:)
+   ! Local variables
+   integer :: iblkgrp, iblk, jblk, istt, iend
+   character(len=256) :: fileblock
+   real(r8), allocatable :: sbuff(:), rbuff(:)
 
       IF (p_is_io) THEN
 
@@ -1343,26 +1343,26 @@ CONTAINS
          filename, dataname, dim1name, ndim1, &
          dim2name, pixelset, wdata, compress_level)
 
-      USE MOD_Precision
-      USE MOD_NetCDFSerial
-      USE MOD_SPMD_Task
-      USE MOD_Block
-      USE MOD_Pixelset
-      IMPLICIT NONE
+   USE MOD_Precision
+   USE MOD_NetCDFSerial
+   USE MOD_SPMD_Task
+   USE MOD_Block
+   USE MOD_Pixelset
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in) :: filename
-      CHARACTER(len=*), intent(in) :: dataname
-      CHARACTER(len=*), intent(in) :: dim1name, dim2name
-      INTEGER,  intent(in) :: ndim1
-      TYPE(pixelset_type), intent(in) :: pixelset
-      REAL(r8), intent(in) :: wdata (:,:)
+   character(len=*), intent(in) :: filename
+   character(len=*), intent(in) :: dataname
+   character(len=*), intent(in) :: dim1name, dim2name
+   integer,  intent(in) :: ndim1
+   type(pixelset_type), intent(in) :: pixelset
+   real(r8), intent(in) :: wdata (:,:)
 
-      INTEGER,  intent(in), optional :: compress_level
+   integer,  intent(in), optional :: compress_level
 
-      ! Local variables
-      INTEGER :: iblkgrp, iblk, jblk, istt, iend
-      CHARACTER(len=256) :: fileblock
-      REAL(r8), allocatable :: sbuff(:,:), rbuff(:,:)
+   ! Local variables
+   integer :: iblkgrp, iblk, jblk, istt, iend
+   character(len=256) :: fileblock
+   real(r8), allocatable :: sbuff(:,:), rbuff(:,:)
 
       IF (p_is_io) THEN
 
@@ -1433,26 +1433,26 @@ CONTAINS
          filename, dataname, dim1name, ndim1, dim2name, ndim2, &
          dim3name, pixelset, wdata, compress_level)
 
-      USE MOD_Precision
-      USE MOD_NetCDFSerial
-      USE MOD_SPMD_Task
-      USE MOD_Block
-      USE MOD_Pixelset
-      IMPLICIT NONE
+   USE MOD_Precision
+   USE MOD_NetCDFSerial
+   USE MOD_SPMD_Task
+   USE MOD_Block
+   USE MOD_Pixelset
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in) :: filename
-      CHARACTER(len=*), intent(in) :: dataname
-      CHARACTER(len=*), intent(in) :: dim1name, dim2name, dim3name
-      TYPE(pixelset_type), intent(in) :: pixelset
-      INTEGER,  intent(in) :: ndim1, ndim2
-      REAL(r8), intent(in) :: wdata (:,:,:)
-      
-      INTEGER,  intent(in), optional :: compress_level
+   character(len=*), intent(in) :: filename
+   character(len=*), intent(in) :: dataname
+   character(len=*), intent(in) :: dim1name, dim2name, dim3name
+   type(pixelset_type), intent(in) :: pixelset
+   integer,  intent(in) :: ndim1, ndim2
+   real(r8), intent(in) :: wdata (:,:,:)
+   
+   integer,  intent(in), optional :: compress_level
 
-      ! Local variables
-      INTEGER :: iblkgrp, iblk, jblk, istt, iend
-      CHARACTER(len=256) :: fileblock
-      REAL(r8), allocatable :: sbuff(:,:,:), rbuff(:,:,:)
+   ! Local variables
+   integer :: iblkgrp, iblk, jblk, istt, iend
+   character(len=256) :: fileblock
+   real(r8), allocatable :: sbuff(:,:,:), rbuff(:,:,:)
 
       IF (p_is_io) THEN
 
@@ -1522,26 +1522,26 @@ CONTAINS
          filename, dataname, dim1name, ndim1, dim2name, ndim2, dim3name, ndim3, &
          dim4name, pixelset, wdata, compress_level)
 
-      USE MOD_Precision
-      USE MOD_NetCDFSerial
-      USE MOD_SPMD_Task
-      USE MOD_Block
-      USE MOD_Pixelset
-      IMPLICIT NONE
+   USE MOD_Precision
+   USE MOD_NetCDFSerial
+   USE MOD_SPMD_Task
+   USE MOD_Block
+   USE MOD_Pixelset
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in) :: filename
-      CHARACTER(len=*), intent(in) :: dataname
-      CHARACTER(len=*), intent(in) :: dim1name, dim2name, dim3name, dim4name
-      INTEGER,  intent(in) :: ndim1, ndim2, ndim3
-      TYPE(pixelset_type), intent(in) :: pixelset
-      REAL(r8), intent(in) :: wdata (:,:,:,:)
-      
-      INTEGER,  intent(in), optional :: compress_level
+   character(len=*), intent(in) :: filename
+   character(len=*), intent(in) :: dataname
+   character(len=*), intent(in) :: dim1name, dim2name, dim3name, dim4name
+   integer,  intent(in) :: ndim1, ndim2, ndim3
+   type(pixelset_type), intent(in) :: pixelset
+   real(r8), intent(in) :: wdata (:,:,:,:)
+   
+   integer,  intent(in), optional :: compress_level
 
-      ! Local variables
-      INTEGER :: iblkgrp, iblk, jblk, istt, iend
-      CHARACTER(len=256) :: fileblock
-      REAL(r8), allocatable :: sbuff(:,:,:,:), rbuff(:,:,:,:)
+   ! Local variables
+   integer :: iblkgrp, iblk, jblk, istt, iend
+   character(len=256) :: fileblock
+   real(r8), allocatable :: sbuff(:,:,:,:), rbuff(:,:,:,:)
 
       IF (p_is_io) THEN
 
@@ -1651,15 +1651,15 @@ CONTAINS
    ! -----
    SUBROUTINE ncio_open_vector (filename, dataname, exit_on_err, ncid, grpid, vecname, noerr)
       
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in) :: filename
-      CHARACTER(len=*), intent(in) :: dataname
-      logical, intent(in) :: exit_on_err
+   character(len=*), intent(in) :: filename
+   character(len=*), intent(in) :: dataname
+   logical, intent(in) :: exit_on_err
 
-      integer, intent(out) :: ncid, grpid
-      logical, intent(out) :: noerr
-      CHARACTER(len=*), intent(out) :: vecname
+   integer, intent(out) :: ncid, grpid
+   logical, intent(out) :: noerr
+   character(len=*), intent(out) :: vecname
       
       noerr = (nf90_open(trim(filename), NF90_NOWRITE, ncid) == NF90_NOERR)
       IF (.not. noerr) write(*,*) 'Warning: '//trim(filename)//' not found.'
@@ -1680,17 +1680,17 @@ CONTAINS
    !---------------------------------------------------------
    SUBROUTINE ncio_inquire_length_grp (filename, dataname, blkname, length)
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in) :: filename
-      CHARACTER(len=*), intent(in) :: dataname
-      CHARACTER(len=*), intent(in) :: blkname
-      INTEGER, intent(out) :: length
+   character(len=*), intent(in) :: filename
+   character(len=*), intent(in) :: dataname
+   character(len=*), intent(in) :: blkname
+   integer, intent(out) :: length
 
-      ! Local variables
-      INTEGER :: ncid, varid, grpid, ndims
-      INTEGER, allocatable :: dimids(:)
-      logical :: noerr
+   ! Local variables
+   integer :: ncid, varid, grpid, ndims
+   integer, allocatable :: dimids(:)
+   logical :: noerr
 
       CALL nccheck( nf90_open(trim(filename), NF90_NOWRITE, ncid) )
       CALL nccheck( nf90_inq_ncid(ncid, trim(dataname), grpid) )
@@ -1714,16 +1714,16 @@ CONTAINS
    !---------------------------------------------------------
    SUBROUTINE ncio_read_serial_grp_int64_1d (filename, dataname, blkname, rdata)
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in) :: filename
-      CHARACTER(len=*), intent(in) :: dataname
-      CHARACTER(len=*), intent(in) :: blkname
-      INTEGER*8, allocatable, intent(out) :: rdata (:)
+   character(len=*), intent(in) :: filename
+   character(len=*), intent(in) :: dataname
+   character(len=*), intent(in) :: blkname
+   integer*8, allocatable, intent(out) :: rdata (:)
 
-      ! Local variables
-      INTEGER :: ncid, grpid, varid, varlen
-      INTEGER, allocatable :: varsize(:)
+   ! Local variables
+   integer :: ncid, grpid, varid, varlen
+   integer, allocatable :: varsize(:)
 
       CALL ncio_inquire_length_grp (filename, dataname, blkname, varlen)
 
@@ -1742,20 +1742,20 @@ CONTAINS
    SUBROUTINE ncio_read_vector_int32_1d ( &
          filename, dataname, pixelset, rdata, defval)
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in) :: filename
-      CHARACTER(len=*), intent(in) :: dataname
-      TYPE(pixelset_type), intent(in) :: pixelset
+   character(len=*), intent(in) :: filename
+   character(len=*), intent(in) :: dataname
+   type(pixelset_type), intent(in) :: pixelset
 
-      INTEGER, allocatable, intent(inout) :: rdata (:)
-      INTEGER, intent(in), optional :: defval
+   integer, allocatable, intent(inout) :: rdata (:)
+   integer, intent(in), optional :: defval
 
-      ! Local variables
-      INTEGER :: ncid, grpid, varid, iblkgrp, iblk, jblk, istt, iend
-      CHARACTER(len=256) :: blockname, vecname, varname
-      INTEGER, allocatable :: sbuff(:), rbuff(:)
-      LOGICAL :: noerr, ok
+   ! Local variables
+   integer :: ncid, grpid, varid, iblkgrp, iblk, jblk, istt, iend
+   character(len=256) :: blockname, vecname, varname
+   integer, allocatable :: sbuff(:), rbuff(:)
+   logical :: noerr, ok
 
       IF (p_is_worker) THEN
          IF ((pixelset%nset > 0) .and. (.not. allocated(rdata))) THEN
@@ -1783,7 +1783,7 @@ CONTAINS
                ok = .false.
             ENDIF
 
-            IF (.not. ok) then
+            IF (.not. ok) THEN
                IF (.not. present(defval)) THEN 
                   write(*,'(A)') 'Netcdf error in reading ' &
                      // trim(varname) // ' from ' // trim(filename) 
@@ -1850,20 +1850,20 @@ CONTAINS
    SUBROUTINE ncio_read_vector_int64_1d ( &
          filename, dataname, pixelset, rdata, defval)
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in) :: filename
-      CHARACTER(len=*), intent(in) :: dataname
-      TYPE(pixelset_type), intent(in) :: pixelset
+   character(len=*), intent(in) :: filename
+   character(len=*), intent(in) :: dataname
+   type(pixelset_type), intent(in) :: pixelset
 
-      INTEGER*8, allocatable, intent(inout) :: rdata (:)
-      INTEGER, intent(in), optional :: defval
+   integer*8, allocatable, intent(inout) :: rdata (:)
+   integer, intent(in), optional :: defval
 
-      ! Local variables
-      INTEGER :: ncid, grpid, varid, iblkgrp, iblk, jblk, istt, iend
-      CHARACTER(len=256) :: blockname, varname, vecname
-      INTEGER*8, allocatable :: sbuff(:), rbuff(:)
-      LOGICAL :: noerr, ok
+   ! Local variables
+   integer :: ncid, grpid, varid, iblkgrp, iblk, jblk, istt, iend
+   character(len=256) :: blockname, varname, vecname
+   integer*8, allocatable :: sbuff(:), rbuff(:)
+   logical :: noerr, ok
 
       IF (p_is_worker) THEN
          IF ((pixelset%nset > 0) .and. (.not. allocated(rdata))) THEN
@@ -1891,7 +1891,7 @@ CONTAINS
                ok = .false.
             ENDIF
 
-            IF (.not. ok) then
+            IF (.not. ok) THEN
                IF (.not. present(defval)) THEN 
                   write(*,'(A)') 'Netcdf error in reading ' &
                      // trim(varname) // ' from ' // trim(filename) 
@@ -1958,20 +1958,20 @@ CONTAINS
    SUBROUTINE ncio_read_vector_logical_1d (filename, dataname, pixelset, rdata, &
          defval)
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in) :: filename
-      CHARACTER(len=*), intent(in) :: dataname
-      TYPE(pixelset_type), intent(in) :: pixelset
+   character(len=*), intent(in) :: filename
+   character(len=*), intent(in) :: dataname
+   type(pixelset_type), intent(in) :: pixelset
 
-      LOGICAL, allocatable, intent(inout) :: rdata (:)
-      LOGICAL, intent(in), optional :: defval
+   logical, allocatable, intent(inout) :: rdata (:)
+   logical, intent(in), optional :: defval
 
-      ! Local variables
-      INTEGER :: ncid, grpid, varid, iblkgrp, iblk, jblk, istt, iend
-      CHARACTER(len=256) :: blockname, varname, vecname
-      INTEGER(1), allocatable :: sbuff(:), rbuff(:)
-      LOGICAL :: noerr, ok
+   ! Local variables
+   integer :: ncid, grpid, varid, iblkgrp, iblk, jblk, istt, iend
+   character(len=256) :: blockname, varname, vecname
+   integer(1), allocatable :: sbuff(:), rbuff(:)
+   logical :: noerr, ok
 
       IF (p_is_worker) THEN
          IF ((pixelset%nset > 0) .and. (.not. allocated(rdata))) THEN
@@ -1999,7 +1999,7 @@ CONTAINS
                ok = .false.
             ENDIF
 
-            IF (.not. ok) then
+            IF (.not. ok) THEN
                IF (.not. present(defval)) THEN 
                   write(*,'(A)') 'Netcdf error in reading ' &
                      // trim(varname) // ' from ' // trim(filename) 
@@ -2070,20 +2070,20 @@ CONTAINS
    SUBROUTINE ncio_read_vector_real8_1d (filename, dataname, pixelset, rdata, &
          defval)
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in) :: filename
-      CHARACTER(len=*), intent(in) :: dataname
-      TYPE(pixelset_type), intent(in) :: pixelset
+   character(len=*), intent(in) :: filename
+   character(len=*), intent(in) :: dataname
+   type(pixelset_type), intent(in) :: pixelset
 
-      REAL(r8), allocatable, intent(inout) :: rdata (:)
-      REAL(r8), intent(in), optional :: defval
+   real(r8), allocatable, intent(inout) :: rdata (:)
+   real(r8), intent(in), optional :: defval
 
-      ! Local variables
-      INTEGER :: ncid, grpid, varid, iblkgrp, iblk, jblk, istt, iend
-      CHARACTER(len=256) :: blockname, varname, vecname
-      REAL(r8), allocatable :: sbuff(:), rbuff(:)
-      LOGICAL :: noerr, ok
+   ! Local variables
+   integer :: ncid, grpid, varid, iblkgrp, iblk, jblk, istt, iend
+   character(len=256) :: blockname, varname, vecname
+   real(r8), allocatable :: sbuff(:), rbuff(:)
+   logical :: noerr, ok
          
       IF (p_is_worker) THEN
          IF ((pixelset%nset > 0) .and. (.not. allocated(rdata))) THEN
@@ -2111,7 +2111,7 @@ CONTAINS
                ok = .false.
             ENDIF
 
-            IF (.not. ok) then
+            IF (.not. ok) THEN
                IF (.not. present(defval)) THEN 
                   write(*,'(A)') 'Netcdf error in reading ' &
                      // trim(varname) // ' from ' // trim(filename) 
@@ -2178,21 +2178,21 @@ CONTAINS
    SUBROUTINE ncio_read_vector_real8_2d ( &
          filename, dataname, ndim1, pixelset, rdata, defval)
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in) :: filename
-      CHARACTER(len=*), intent(in) :: dataname
-      INTEGER, intent(in) :: ndim1
-      TYPE(pixelset_type), intent(in) :: pixelset
+   character(len=*), intent(in) :: filename
+   character(len=*), intent(in) :: dataname
+   integer, intent(in) :: ndim1
+   type(pixelset_type), intent(in) :: pixelset
 
-      REAL(r8), allocatable, intent(inout) :: rdata (:,:)
-      REAL(r8), intent(in), optional :: defval
+   real(r8), allocatable, intent(inout) :: rdata (:,:)
+   real(r8), intent(in), optional :: defval
 
-      ! Local variables
-      INTEGER :: ncid, grpid, varid, iblkgrp, iblk, jblk, istt, iend
-      CHARACTER(len=256) :: blockname, varname, vecname
-      REAL(r8), allocatable :: sbuff(:,:), rbuff(:,:)
-      LOGICAL :: noerr, ok
+   ! Local variables
+   integer :: ncid, grpid, varid, iblkgrp, iblk, jblk, istt, iend
+   character(len=256) :: blockname, varname, vecname
+   real(r8), allocatable :: sbuff(:,:), rbuff(:,:)
+   logical :: noerr, ok
 
       IF (p_is_worker) THEN
          IF ((pixelset%nset > 0) .and. (.not. allocated(rdata))) THEN
@@ -2220,7 +2220,7 @@ CONTAINS
                ok = .false.
             ENDIF
 
-            IF (.not. ok) then
+            IF (.not. ok) THEN
                IF (.not. present(defval)) THEN 
                   write(*,'(A)') 'Netcdf error in reading ' &
                      // trim(varname) // ' from ' // trim(filename) 
@@ -2287,21 +2287,21 @@ CONTAINS
    SUBROUTINE ncio_read_vector_real8_3d ( &
          filename, dataname, ndim1, ndim2, pixelset, rdata, defval)
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in) :: filename
-      CHARACTER(len=*), intent(in) :: dataname
-      INTEGER, intent(in) :: ndim1, ndim2
-      TYPE(pixelset_type), intent(in) :: pixelset
+   character(len=*), intent(in) :: filename
+   character(len=*), intent(in) :: dataname
+   integer, intent(in) :: ndim1, ndim2
+   type(pixelset_type), intent(in) :: pixelset
 
-      REAL(r8), allocatable, intent(inout) :: rdata (:,:,:)
-      REAL(r8), intent(in), optional :: defval
+   real(r8), allocatable, intent(inout) :: rdata (:,:,:)
+   real(r8), intent(in), optional :: defval
 
-      ! Local variables
-      INTEGER :: ncid, grpid, varid, iblkgrp, iblk, jblk, istt, iend
-      CHARACTER(len=256) :: blockname, varname, vecname
-      REAL(r8), allocatable :: sbuff(:,:,:), rbuff(:,:,:)
-      LOGICAL :: noerr, ok
+   ! Local variables
+   integer :: ncid, grpid, varid, iblkgrp, iblk, jblk, istt, iend
+   character(len=256) :: blockname, varname, vecname
+   real(r8), allocatable :: sbuff(:,:,:), rbuff(:,:,:)
+   logical :: noerr, ok
 
       IF (p_is_worker) THEN
          IF ((pixelset%nset > 0) .and. (.not. allocated(rdata))) THEN
@@ -2329,7 +2329,7 @@ CONTAINS
                ok = .false.
             ENDIF
 
-            IF (.not. ok) then
+            IF (.not. ok) THEN
                IF (.not. present(defval)) THEN 
                   write(*,'(A)') 'Netcdf error in reading ' &
                      // trim(varname) // ' from ' // trim(filename) 
@@ -2396,21 +2396,21 @@ CONTAINS
    SUBROUTINE ncio_read_vector_real8_4d ( &
          filename, dataname, ndim1, ndim2, ndim3, pixelset, rdata, defval)
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in) :: filename
-      CHARACTER(len=*), intent(in) :: dataname
-      INTEGER, intent(in) :: ndim1, ndim2, ndim3
-      TYPE(pixelset_type), intent(in) :: pixelset
+   character(len=*), intent(in) :: filename
+   character(len=*), intent(in) :: dataname
+   integer, intent(in) :: ndim1, ndim2, ndim3
+   type(pixelset_type), intent(in) :: pixelset
 
-      REAL(r8), allocatable, intent(inout) :: rdata (:,:,:,:)
-      REAL(r8), intent(in), optional :: defval
+   real(r8), allocatable, intent(inout) :: rdata (:,:,:,:)
+   real(r8), intent(in), optional :: defval
 
-      ! Local variables
-      INTEGER :: ncid, grpid, varid, iblkgrp, iblk, jblk, istt, iend
-      CHARACTER(len=256) :: blockname, varname, vecname
-      REAL(r8), allocatable :: sbuff(:,:,:,:), rbuff(:,:,:,:)
-      LOGICAL :: noerr, ok
+   ! Local variables
+   integer :: ncid, grpid, varid, iblkgrp, iblk, jblk, istt, iend
+   character(len=256) :: blockname, varname, vecname
+   real(r8), allocatable :: sbuff(:,:,:,:), rbuff(:,:,:,:)
+   logical :: noerr, ok
 
       IF (p_is_worker) THEN
          IF ((pixelset%nset > 0) .and. (.not. allocated(rdata))) THEN
@@ -2438,7 +2438,7 @@ CONTAINS
                ok = .false.
             ENDIF
 
-            IF (.not. ok) then
+            IF (.not. ok) THEN
                IF (.not. present(defval)) THEN 
                   write(*,'(A)') 'Netcdf error in reading ' &
                      // trim(varname) // ' from ' // trim(filename) 
@@ -2504,13 +2504,13 @@ CONTAINS
    !---------------------------------------------------------
    SUBROUTINE ncio_create_file_vector (filename, pixelset)
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      CHARACTER(len=*),    intent(in) :: filename
-      TYPE(pixelset_type), intent(in) :: pixelset
+   character(len=*),    intent(in) :: filename
+   type(pixelset_type), intent(in) :: pixelset
 
-      ! Local Variables
-      INTEGER :: ncid, mode
+   ! Local Variables
+   integer :: ncid, mode
 
       IF (p_is_io) THEN
          mode = ior(NF90_NETCDF4,NF90_CLOBBER)
@@ -2534,14 +2534,14 @@ CONTAINS
 
       IMPLICIT NONE
 
-      CHARACTER(len=*),    intent(in) :: filename
-      TYPE(pixelset_type), intent(in) :: pixelset
-      CHARACTER(len=*),    intent(in) :: dimname
-      INTEGER, optional,   intent(in) :: dimlen
+      character(len=*),    intent(in) :: filename
+      type(pixelset_type), intent(in) :: pixelset
+      character(len=*),    intent(in) :: dimname
+      integer, optional,   intent(in) :: dimlen
 
       ! Local variables
-      INTEGER :: ncid, dimid, iblkall, iblk, jblk, err
-      CHARACTER(len=8) :: blockname
+      integer :: ncid, dimid, iblkall, iblk, jblk, err
+      character(len=8) :: blockname
 
       IF (p_is_io) THEN
          
@@ -2590,24 +2590,24 @@ CONTAINS
          ncid, pixelset, vecname, dataname, datatype, grpid, &
          dim1name, dim2name, dim3name, compress)
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      INTEGER, intent(in) :: ncid
-      INTEGER, intent(in) :: datatype
-      TYPE(pixelset_type), intent(in) :: pixelset
-      CHARACTER(len=*),    intent(in) :: vecname
-      CHARACTER(len=*),    intent(in) :: dataname
+   integer, intent(in) :: ncid
+   integer, intent(in) :: datatype
+   type(pixelset_type), intent(in) :: pixelset
+   character(len=*),    intent(in) :: vecname
+   character(len=*),    intent(in) :: dataname
 
-      CHARACTER(len=*), optional, intent(in) :: dim1name, dim2name, dim3name
-      INTEGER, optional, intent(in) :: compress
+   character(len=*), optional, intent(in) :: dim1name, dim2name, dim3name
+   integer, optional, intent(in) :: compress
 
-      INTEGER, intent(out) :: grpid
+   integer, intent(out) :: grpid
 
-      ! Local variables
-      INTEGER :: ndims, idim, iblkall, varid
-      CHARACTER(len=256) :: varname, blockname
-      INTEGER, allocatable :: dimids(:), dimlen(:)
-      integer :: filterid = 307
+   ! Local variables
+   integer :: ndims, idim, iblkall, varid
+   character(len=256) :: varname, blockname
+   integer, allocatable :: dimids(:), dimlen(:)
+   integer :: filterid = 307
 
       ndims = 1
       IF (present(dim1name)) ndims = ndims + 1
@@ -2644,7 +2644,7 @@ CONTAINS
          varname = trim(vecname)//'_'//trim(blockname)
          CALL nccheck (nf90_inq_dimid(ncid, trim(varname), dimids(ndims)))
          CALL nccheck (nf90_inquire_dimension(ncid, dimids(ndims), len=dimlen(ndims)))
-         call nccheck (nf90_def_var(grpid, trim(varname), datatype, dimids, varid, &
+         CALL nccheck (nf90_def_var(grpid, trim(varname), datatype, dimids, varid, &
             chunksizes = dimlen) )
          IF (present(compress)) THEN
             ! CALL nccheck( nf90_def_var_filter(grpid, varid, filterid, 1, (/compress/)) )
@@ -2662,20 +2662,20 @@ CONTAINS
    SUBROUTINE ncio_write_vector_int32_1d ( &
          filename, dataname, vecname, pixelset, wdata, compress_level)
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in) :: filename
-      CHARACTER(len=*), intent(in) :: dataname
-      CHARACTER(len=*), intent(in) :: vecname
-      TYPE(pixelset_type), intent(in) :: pixelset
-      INTEGER, intent(in) :: wdata (:)
+   character(len=*), intent(in) :: filename
+   character(len=*), intent(in) :: dataname
+   character(len=*), intent(in) :: vecname
+   type(pixelset_type), intent(in) :: pixelset
+   integer, intent(in) :: wdata (:)
 
-      INTEGER, intent(in), optional :: compress_level
+   integer, intent(in), optional :: compress_level
 
-      ! Local variables
-      INTEGER :: ncid, grpid, varid, iblkall, iblkgrp, iblk, jblk, istt, iend
-      CHARACTER(len=8) :: blockname
-      INTEGER, allocatable :: sbuff(:), rbuff(:)
+   ! Local variables
+   integer :: ncid, grpid, varid, iblkall, iblkgrp, iblk, jblk, istt, iend
+   character(len=8) :: blockname
+   integer, allocatable :: sbuff(:), rbuff(:)
 
       IF (p_is_io) THEN
 
@@ -2759,20 +2759,20 @@ CONTAINS
    SUBROUTINE ncio_write_vector_logical_1d ( &
          filename, dataname, vecname, pixelset, wdata, compress_level)
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in) :: filename
-      CHARACTER(len=*), intent(in) :: dataname
-      CHARACTER(len=*), intent(in) :: vecname
-      TYPE(pixelset_type), intent(in) :: pixelset
-      LOGICAL, intent(in) :: wdata (:)
+   character(len=*), intent(in) :: filename
+   character(len=*), intent(in) :: dataname
+   character(len=*), intent(in) :: vecname
+   type(pixelset_type), intent(in) :: pixelset
+   logical, intent(in) :: wdata (:)
 
-      INTEGER, intent(in), optional :: compress_level
+   integer, intent(in), optional :: compress_level
 
-      ! Local variables
-      INTEGER :: ncid, grpid, varid, iblkall, iblkgrp, iblk, jblk, istt, iend, i
-      CHARACTER(len=8) :: blockname
-      INTEGER(1), allocatable :: sbuff(:), rbuff(:)
+   ! Local variables
+   integer :: ncid, grpid, varid, iblkall, iblkgrp, iblk, jblk, istt, iend, i
+   character(len=8) :: blockname
+   integer(1), allocatable :: sbuff(:), rbuff(:)
 
       IF (p_is_io) THEN
 
@@ -2804,13 +2804,13 @@ CONTAINS
 #else
             istt = pixelset%vecgs%vstt(iblk,jblk)
             iend = pixelset%vecgs%vend(iblk,jblk)
-            do i = istt, iend
-               if(wdata(i))then
+            DO i = istt, iend
+               IF(wdata(i))THEN
                   rbuff(i-istt+1) = 1
-               else
+               ELSE
                   rbuff(i-istt+1) = 0
-               end if
-            end do
+               ENDIF
+            ENDDO
 #endif
 
             CALL get_blockname (iblk, jblk, blockname)
@@ -2839,13 +2839,13 @@ CONTAINS
                allocate (sbuff (pixelset%vecgs%vlen(iblk,jblk)))
                istt = pixelset%vecgs%vstt(iblk,jblk)
                iend = pixelset%vecgs%vend(iblk,jblk)
-               do i = istt, iend
-                  if(wdata(i))then
+               DO i = istt, iend
+                  IF(wdata(i))THEN
                      sbuff(i-istt+1) = 1
-                  else
+                  ELSE
                      sbuff(i-istt+1) = 0
-                  end if
-               end do
+                  ENDIF
+               ENDDO
             ELSE
                allocate (sbuff (1))
             ENDIF
@@ -2868,20 +2868,20 @@ CONTAINS
    SUBROUTINE ncio_write_vector_int64_1d ( &
          filename, dataname, vecname, pixelset, wdata, compress_level)
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in) :: filename
-      CHARACTER(len=*), intent(in) :: dataname
-      CHARACTER(len=*), intent(in) :: vecname
-      TYPE(pixelset_type), intent(in) :: pixelset
-      INTEGER*8, intent(in) :: wdata (:)
+   character(len=*), intent(in) :: filename
+   character(len=*), intent(in) :: dataname
+   character(len=*), intent(in) :: vecname
+   type(pixelset_type), intent(in) :: pixelset
+   integer*8, intent(in) :: wdata (:)
 
-      INTEGER, intent(in), optional :: compress_level
+   integer, intent(in), optional :: compress_level
 
-      ! Local variables
-      INTEGER :: ncid, grpid, varid, iblkall, iblkgrp, iblk, jblk, istt, iend
-      CHARACTER(len=8) :: blockname
-      INTEGER*8, allocatable :: sbuff(:), rbuff(:)
+   ! Local variables
+   integer :: ncid, grpid, varid, iblkall, iblkgrp, iblk, jblk, istt, iend
+   character(len=8) :: blockname
+   integer*8, allocatable :: sbuff(:), rbuff(:)
 
       IF (p_is_io) THEN
 
@@ -2965,20 +2965,20 @@ CONTAINS
    SUBROUTINE ncio_write_vector_real8_1d ( &
          filename, dataname, vecname, pixelset, wdata, compress_level)
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in) :: filename
-      CHARACTER(len=*), intent(in) :: dataname
-      CHARACTER(len=*), intent(in) :: vecname
-      TYPE(pixelset_type), intent(in) :: pixelset
-      REAL(r8), intent(in) :: wdata (:)
-      
-      INTEGER, intent(in), optional :: compress_level
+   character(len=*), intent(in) :: filename
+   character(len=*), intent(in) :: dataname
+   character(len=*), intent(in) :: vecname
+   type(pixelset_type), intent(in) :: pixelset
+   real(r8), intent(in) :: wdata (:)
+   
+   integer, intent(in), optional :: compress_level
 
-      ! Local variables
-      INTEGER :: ncid, grpid, varid, iblkall, iblkgrp, iblk, jblk, istt, iend
-      CHARACTER(len=8) :: blockname
-      REAL(r8), allocatable :: sbuff(:), rbuff(:)
+   ! Local variables
+   integer :: ncid, grpid, varid, iblkall, iblkgrp, iblk, jblk, istt, iend
+   character(len=8) :: blockname
+   real(r8), allocatable :: sbuff(:), rbuff(:)
 
       IF (p_is_io) THEN
 
@@ -3062,21 +3062,21 @@ CONTAINS
          filename, dataname, dim1name, ndim1, &
          vecname, pixelset, wdata, compress_level)
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in) :: filename
-      CHARACTER(len=*), intent(in) :: dataname
-      CHARACTER(len=*), intent(in) :: dim1name, vecname
-      INTEGER,  intent(in) :: ndim1
-      TYPE(pixelset_type), intent(in) :: pixelset
-      REAL(r8), intent(in) :: wdata (:,:)
+   character(len=*), intent(in) :: filename
+   character(len=*), intent(in) :: dataname
+   character(len=*), intent(in) :: dim1name, vecname
+   integer,  intent(in) :: ndim1
+   type(pixelset_type), intent(in) :: pixelset
+   real(r8), intent(in) :: wdata (:,:)
 
-      INTEGER,  intent(in), optional :: compress_level
+   integer,  intent(in), optional :: compress_level
 
-      ! Local variables
-      INTEGER :: ncid, grpid, varid, iblkall, iblkgrp, iblk, jblk, istt, iend
-      CHARACTER(len=8) :: blockname
-      REAL(r8), allocatable :: sbuff(:,:), rbuff(:,:)
+   ! Local variables
+   integer :: ncid, grpid, varid, iblkall, iblkgrp, iblk, jblk, istt, iend
+   character(len=8) :: blockname
+   real(r8), allocatable :: sbuff(:,:), rbuff(:,:)
 
       IF (p_is_io) THEN
 
@@ -3160,21 +3160,21 @@ CONTAINS
          filename, dataname, dim1name, ndim1, dim2name, ndim2, &
          vecname, pixelset, wdata, compress_level)
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in) :: filename
-      CHARACTER(len=*), intent(in) :: dataname
-      CHARACTER(len=*), intent(in) :: dim1name, dim2name, vecname
-      TYPE(pixelset_type), intent(in) :: pixelset
-      INTEGER,  intent(in) :: ndim1, ndim2
-      REAL(r8), intent(in) :: wdata (:,:,:)
-      
-      INTEGER,  intent(in), optional :: compress_level
+   character(len=*), intent(in) :: filename
+   character(len=*), intent(in) :: dataname
+   character(len=*), intent(in) :: dim1name, dim2name, vecname
+   type(pixelset_type), intent(in) :: pixelset
+   integer,  intent(in) :: ndim1, ndim2
+   real(r8), intent(in) :: wdata (:,:,:)
+   
+   integer,  intent(in), optional :: compress_level
 
-      ! Local variables
-      INTEGER :: ncid, grpid, varid, iblkall, iblkgrp, iblk, jblk, istt, iend
-      CHARACTER(len=8) :: blockname
-      REAL(r8), allocatable :: sbuff(:,:,:), rbuff(:,:,:)
+   ! Local variables
+   integer :: ncid, grpid, varid, iblkall, iblkgrp, iblk, jblk, istt, iend
+   character(len=8) :: blockname
+   real(r8), allocatable :: sbuff(:,:,:), rbuff(:,:,:)
 
       IF (p_is_io) THEN
 
@@ -3258,21 +3258,21 @@ CONTAINS
          filename, dataname, dim1name, ndim1, dim2name, ndim2, dim3name, ndim3, &
          vecname, pixelset, wdata, compress_level)
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in) :: filename
-      CHARACTER(len=*), intent(in) :: dataname
-      CHARACTER(len=*), intent(in) :: dim1name, dim2name, dim3name, vecname
-      INTEGER,  intent(in) :: ndim1, ndim2, ndim3
-      TYPE(pixelset_type), intent(in) :: pixelset
-      REAL(r8), intent(in) :: wdata (:,:,:,:)
-      
-      INTEGER,  intent(in), optional :: compress_level
+   character(len=*), intent(in) :: filename
+   character(len=*), intent(in) :: dataname
+   character(len=*), intent(in) :: dim1name, dim2name, dim3name, vecname
+   integer,  intent(in) :: ndim1, ndim2, ndim3
+   type(pixelset_type), intent(in) :: pixelset
+   real(r8), intent(in) :: wdata (:,:,:,:)
+   
+   integer,  intent(in), optional :: compress_level
 
-      ! Local variables
-      INTEGER :: ncid, grpid, varid, iblkall, iblkgrp, iblk, jblk, istt, iend
-      CHARACTER(len=8) :: blockname
-      REAL(r8), allocatable :: sbuff(:,:,:,:), rbuff(:,:,:,:)
+   ! Local variables
+   integer :: ncid, grpid, varid, iblkall, iblkgrp, iblk, jblk, istt, iend
+   character(len=8) :: blockname
+   real(r8), allocatable :: sbuff(:,:,:,:), rbuff(:,:,:,:)
 
       IF (p_is_io) THEN
 

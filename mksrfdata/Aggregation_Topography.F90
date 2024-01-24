@@ -2,16 +2,17 @@
 
 SUBROUTINE Aggregation_Topography ( &
       gtopo, dir_rawdata, dir_model_landdata, lc_year)
-   ! ----------------------------------------------------------------------
-   ! Global Topography data
-   !   
-   !   Yamazaki, D., Ikeshima, D., Sosa, J.,Bates, P. D., Allen, G. H., 
-   !   Pavelsky, T. M. (2019). 
-   !   MERIT Hydro: ahigh‐resolution global hydrographymap based on 
-   !   latest topography dataset.Water Resources Research, 55, 5053–5073. 
-   ! 
-   ! Created by Shupeng Zhang, 05/2023
-   ! ----------------------------------------------------------------------
+! ----------------------------------------------------------------------
+! Global Topography data
+!   
+!   Yamazaki, D., Ikeshima, D., Sosa, J.,Bates, P. D., Allen, G. H., 
+!   Pavelsky, T. M. (2019). 
+!   MERIT Hydro: ahigh‐resolution global hydrographymap based on 
+!   latest topography dataset.Water Resources Research, 55, 5053–5073. 
+! 
+! Created by Shupeng Zhang, 05/2023
+! ----------------------------------------------------------------------
+
    USE MOD_Precision
    USE MOD_Namelist
    USE MOD_SPMD_Task
@@ -33,21 +34,21 @@ SUBROUTINE Aggregation_Topography ( &
 
    IMPLICIT NONE
    ! arguments:
-   INTEGER, intent(in) :: lc_year
-   TYPE(grid_type),  intent(in) :: gtopo
-   CHARACTER(LEN=*), intent(in) :: dir_rawdata
-   CHARACTER(LEN=*), intent(in) :: dir_model_landdata
+   integer, intent(in) :: lc_year
+   type(grid_type),  intent(in) :: gtopo
+   character(LEN=*), intent(in) :: dir_rawdata
+   character(LEN=*), intent(in) :: dir_model_landdata
 
    ! local variables:
    ! ---------------------------------------------------------------
-   CHARACTER(len=256) :: landdir, lndname, cyear
-   INTEGER :: ipatch, i, ps, pe
+   character(len=256) :: landdir, lndname, cyear
+   integer :: ipatch, i, ps, pe
 
-   TYPE (block_data_real8_2d) :: topography
-   REAL(r8), allocatable :: topography_patches(:), topo_elm(:)
-   REAL(r8), allocatable :: topography_one(:), area_one(:)
+   type (block_data_real8_2d) :: topography
+   real(r8), allocatable :: topography_patches(:), topo_elm(:)
+   real(r8), allocatable :: topography_one(:), area_one(:)
 #ifdef SrfdataDiag
-   INTEGER :: typpatch(N_land_classification+1), ityp
+   integer :: typpatch(N_land_classification+1), ityp
 #endif
    write(cyear,'(i4.4)') lc_year
    landdir = trim(dir_model_landdata) // '/topography/' // trim(cyear)
@@ -80,9 +81,9 @@ SUBROUTINE Aggregation_Topography ( &
 #endif
    ENDIF
 
-   !   ---------------------------------------------------------------
-   !   aggregate the elevation from the resolution of raw data to modelling resolution
-   !   ---------------------------------------------------------------
+! ---------------------------------------------------------------------------------
+!   aggregate the elevation from the resolution of raw data to modelling resolution
+! ---------------------------------------------------------------------------------
 
    IF (p_is_worker) THEN
 
