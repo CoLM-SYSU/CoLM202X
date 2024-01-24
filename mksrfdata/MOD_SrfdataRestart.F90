@@ -421,7 +421,7 @@ CONTAINS
       INTEGER, intent(out) :: numset
 
       ! Local variables
-      CHARACTER(len=256) :: filename, fileblock, cyear
+      CHARACTER(len=256) :: filename, fileblock, blockname, cyear
       INTEGER :: iset, nset, ndsp, iblkme, iblk, jblk, ie, je, nave, nres, left, iproc
       INTEGER :: nsend, nrecv
       INTEGER*8, allocatable :: rbuff(:), sbuff(:)
@@ -450,6 +450,12 @@ CONTAINS
             iblk = gblock%xblkme(iblkme)
             jblk = gblock%yblkme(iblkme)
 
+#ifdef VectorInOneFile
+            CALL get_blockname (iblk, jblk, blockname)
+            CALL ncio_inquire_length_grp (filename, 'eindex', &
+               trim(psetname)//'_'//trim(blockname), nset)
+            pixelset%nset = pixelset%nset + nset
+#else
             CALL get_filename_block (filename, iblk, jblk, fileblock)
 
             inquire (file=trim(fileblock), exist=fexists)
@@ -459,8 +465,12 @@ CONTAINS
             ENDIF
 
             fexists_any = fexists_any .or. fexists
-
+#endif
          ENDDO
+
+#ifdef VectorInOneFile
+         fexists_any = pixelset%nset > 0
+#endif
 
 #ifdef USEMPI
          CALL mpi_allreduce (MPI_IN_PLACE, fexists_any, 1, MPI_LOGICAL, MPI_LOR, p_comm_io, p_err)
@@ -479,6 +489,21 @@ CONTAINS
                iblk = gblock%xblkme(iblkme)
                jblk = gblock%yblkme(iblkme)
 
+#ifdef VectorInOneFile
+               CALL get_blockname (iblk, jblk, blockname)
+               CALL ncio_inquire_length_grp (filename, 'eindex', &
+                  trim(psetname)//'_'//trim(blockname), nset)
+
+               IF (nset > 0) THEN
+
+                  CALL ncio_read_serial_grp_int64_1d (filename, 'eindex', &
+                     trim(psetname)//'_'//trim(blockname), rbuff)
+
+                  pixelset%eindex(ndsp+1:ndsp+nset) = rbuff
+
+                  ndsp = ndsp + nset
+               ENDIF
+#else
                CALL get_filename_block (filename, iblk, jblk, fileblock)
                inquire (file=trim(fileblock), exist=fexists)
                IF (fexists) THEN
@@ -490,6 +515,7 @@ CONTAINS
 
                   ndsp = ndsp + nset
                ENDIF
+#endif
 
             ENDDO
          ENDIF

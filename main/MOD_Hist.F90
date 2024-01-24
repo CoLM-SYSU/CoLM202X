@@ -26,7 +26,7 @@ MODULE MOD_Hist
 #ifdef SinglePoint
    USE MOD_HistSingle
 #endif
-#ifdef LATERAL_FLOW
+#ifdef CatchLateralFlow
    USE MOD_Hydro_Hist
 #endif
 
@@ -67,7 +67,7 @@ CONTAINS
 #endif
       ENDIF
 
-#ifdef LATERAL_FLOW
+#ifdef CatchLateralFlow
       CALL hist_basin_init ()
 #endif
 
@@ -84,7 +84,7 @@ CONTAINS
       CALL hist_single_final ()
 #endif
 
-#ifdef LATERAL_FLOW
+#ifdef CatchLateralFlow
       CALL hist_basin_final ()
 #endif
 
@@ -475,7 +475,7 @@ CONTAINS
             'slope factor [k] for runoff', '-')
 #endif
 
-#ifdef LATERAL_FLOW
+#ifdef CatchLateralFlow
          ! rate of surface water depth change [mm/s]
          CALL write_history_variable_2d ( DEF_hist_vars%xwsur, &
             a_xwsur, file_hist, 'f_xwsur', itime_in_file, sumarea, filter, &
@@ -3579,7 +3579,7 @@ CONTAINS
          ENDIF
 #endif
 
-#ifdef LATERAL_FLOW
+#ifdef CatchLateralFlow
          CALL hist_basin_out (file_hist, idate)
 #endif
 

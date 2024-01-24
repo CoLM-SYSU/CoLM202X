@@ -383,7 +383,7 @@ MODULE MOD_Vars_TimeVariables
 #ifdef BGC
    USE MOD_BGC_Vars_TimeVariables
 #endif
-#ifdef LATERAL_FLOW
+#ifdef CatchLateralFlow
    USE MOD_Hydro_Vars_TimeVariables
 #endif
 #ifdef URBAN_MODEL
@@ -677,7 +677,7 @@ CONTAINS
       CALL allocate_BGCTimeVariables
 #endif
 
-#ifdef LATERAL_FLOW
+#ifdef CatchLateralFlow
       CALL allocate_HydroTimeVariables
 #endif
 
@@ -834,7 +834,7 @@ CONTAINS
       CALL deallocate_BGCTimeVariables
 #endif
 
-#ifdef LATERAL_FLOW
+#ifdef CatchLateralFlow
       CALL deallocate_HydroTimeVariables
 #endif
 
@@ -1050,7 +1050,7 @@ ENDIF
       CALL WRITE_BGCTimeVariables (file_restart)
 #endif
 
-#if (defined LATERAL_FLOW)
+#if (defined CatchLateralFlow)
       file_restart = trim(dir_restart)// '/'//trim(cdate)//'/' // trim(site) //'_restart_basin_'//trim(cdate)//'_lc'//trim(cyear)//'.nc'
       CALL WRITE_HydroTimeVariables (file_restart)
 #endif
@@ -1215,7 +1215,7 @@ ENDIF
       CALL READ_BGCTimeVariables (file_restart)
 #endif
 
-#if (defined LATERAL_FLOW)
+#if (defined CatchLateralFlow)
       file_restart = trim(dir_restart)// '/'//trim(cdate)//'/' // trim(site) //'_restart_basin_'//trim(cdate)//'_lc'//trim(cyear)//'.nc'
       CALL READ_HydroTimeVariables (file_restart)
 #endif

@@ -572,27 +572,37 @@ CONTAINS
          CALL ncio_write_vector (file_restart, 'ibedrock' , 'patch', landpatch, ibedrock)                            !
       ENDIF
 
-      IF (p_is_master) THEN
+#ifdef USEMPI
+     CALL mpi_barrier (p_comm_glb, p_err)
+#endif
 
-         CALL ncio_create_file (file_restart)
+     if (p_is_master) then
 
-         CALL ncio_write_serial (file_restart, 'zlnd  ', zlnd  ) ! roughness length for soil [m]
-         CALL ncio_write_serial (file_restart, 'zsno  ', zsno  ) ! roughness length for snow [m]
-         CALL ncio_write_serial (file_restart, 'csoilc', csoilc) ! drag coefficient for soil under canopy [-]
-         CALL ncio_write_serial (file_restart, 'dewmx ', dewmx ) ! maximum dew
-         CALL ncio_write_serial (file_restart, 'wtfact', wtfact) ! fraction of model area with high water table
-         CALL ncio_write_serial (file_restart, 'capr  ', capr  ) ! tuning factor to turn first layer T into surface T
-         CALL ncio_write_serial (file_restart, 'cnfac ', cnfac ) ! Crank Nicholson factor between 0 and 1
-         CALL ncio_write_serial (file_restart, 'ssi   ', ssi   ) ! irreducible water saturation of snow
-         CALL ncio_write_serial (file_restart, 'wimp  ', wimp  ) ! water impremeable IF porosity less than wimp
-         CALL ncio_write_serial (file_restart, 'pondmx', pondmx) ! ponding depth (mm)
-         CALL ncio_write_serial (file_restart, 'smpmax', smpmax) ! wilting point potential in mm
-         CALL ncio_write_serial (file_restart, 'smpmin', smpmin) ! restriction for min of soil poten. (mm)
-         CALL ncio_write_serial (file_restart, 'trsmx0', trsmx0) ! max transpiration for moist soil+100% veg.  [mm/s]
-         CALL ncio_write_serial (file_restart, 'tcrit ', tcrit ) ! critical temp. to determine rain or snow
-         CALL ncio_write_serial (file_restart, 'wetwatmax', wetwatmax) ! maximum wetland water (mm)
+#ifndef VectorInOneFile
+        CALL ncio_create_file (file_restart)
+#endif
 
-      ENDIF
+        CALL ncio_write_serial (file_restart, 'zlnd  ', zlnd  ) ! roughness length for soil [m]
+        CALL ncio_write_serial (file_restart, 'zsno  ', zsno  ) ! roughness length for snow [m]
+        CALL ncio_write_serial (file_restart, 'csoilc', csoilc) ! drag coefficient for soil under canopy [-]
+        CALL ncio_write_serial (file_restart, 'dewmx ', dewmx ) ! maximum dew
+        CALL ncio_write_serial (file_restart, 'wtfact', wtfact) ! fraction of model area with high water table
+        CALL ncio_write_serial (file_restart, 'capr  ', capr  ) ! tuning factor to turn first layer T into surface T
+        CALL ncio_write_serial (file_restart, 'cnfac ', cnfac ) ! Crank Nicholson factor between 0 and 1
+        CALL ncio_write_serial (file_restart, 'ssi   ', ssi   ) ! irreducible water saturation of snow
+        CALL ncio_write_serial (file_restart, 'wimp  ', wimp  ) ! water impremeable if porosity less than wimp
+        CALL ncio_write_serial (file_restart, 'pondmx', pondmx) ! ponding depth (mm)
+        CALL ncio_write_serial (file_restart, 'smpmax', smpmax) ! wilting point potential in mm
+        CALL ncio_write_serial (file_restart, 'smpmin', smpmin) ! restriction for min of soil poten. (mm)
+        CALL ncio_write_serial (file_restart, 'trsmx0', trsmx0) ! max transpiration for moist soil+100% veg.  [mm/s]
+        CALL ncio_write_serial (file_restart, 'tcrit ', tcrit ) ! critical temp. to determine rain or snow
+        CALL ncio_write_serial (file_restart, 'wetwatmax', wetwatmax) ! maximum wetland water (mm)
+
+     END if
+
+#ifdef USEMPI
+     CALL mpi_barrier (p_comm_glb, p_err)
+#endif
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
       file_restart = trim(dir_restart) // '/const/' // trim(casename) //'_restart_pft_const' //'_lc'// trim(cyear) // '.nc'

@@ -876,7 +876,7 @@ ENDIF
       ENDIF
 #endif
 
-#ifndef LATERAL_FLOW
+#ifndef CatchLateralFlow
       errorw=(endwb-totwb)-(forc_prc+forc_prl-fevpa-rnof-errw_rsub)*deltim
 #else
       ! for lateral flow, "rsur" is considered in HYDRO/MOD_Hydro_SurfaceFlow.F90
@@ -1042,7 +1042,7 @@ ELSE IF(patchtype == 3)THEN   ! <=== is LAND ICE (glacier/ice sheet) (patchtype 
             wdsrf = 0.
             wliq_soisno(1) = max(a, 1.e-8)
          ENDIF
-#ifndef LATERAL_FLOW
+#ifndef CatchLateralFlow
          IF (wdsrf > pondmx) THEN
             rsur  = (wdsrf - pondmx) / deltim
             wdsrf = pondmx
@@ -1066,7 +1066,7 @@ ELSE IF(patchtype == 3)THEN   ! <=== is LAND ICE (glacier/ice sheet) (patchtype 
          endwb = wdsrf + endwb
       ENDIF
 
-#ifndef LATERAL_FLOW
+#ifndef CatchLateralFlow
       errorw=(endwb-totwb)-(pg_rain+pg_snow-fevpa-rnof)*deltim
 #else
       errorw=(endwb-totwb)-(pg_rain+pg_snow-fevpa)*deltim
@@ -1219,7 +1219,7 @@ ELSE IF(patchtype == 4) THEN   ! <=== is LAND WATER BODIES (lake, reservior and 
             wdsrf = wa + wdsrf
             wa = 0
          ENDIF
-#ifndef LATERAL_FLOW
+#ifndef CatchLateralFlow
          IF (wdsrf > pondmx) THEN
             rsur  = (wdsrf - pondmx) / deltim
             wdsrf = pondmx
@@ -1236,7 +1236,7 @@ ELSE IF(patchtype == 4) THEN   ! <=== is LAND WATER BODIES (lake, reservior and 
       ENDIF
 
       errorw = (endwb-totwb) - (forc_prc+forc_prl-fevpa) * deltim
-#ifndef LATERAL_FLOW
+#ifndef CatchLateralFlow
       errorw = errorw + rnof * deltim
 #endif
 

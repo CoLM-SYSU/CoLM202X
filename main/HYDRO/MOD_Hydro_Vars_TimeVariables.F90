@@ -1,6 +1,6 @@
 #include <define.h>
 
-#ifdef LATERAL_FLOW
+#ifdef CatchLateralFlow
 MODULE MOD_Hydro_Vars_TimeVariables
    !-------------------------------------------------------------------------------------
    ! DESCRIPTION:

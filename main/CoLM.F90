@@ -48,8 +48,8 @@ PROGRAM CoLM
    USE MOD_SingleSrfdata
 #endif
 
-#if (defined LATERAL_FLOW)
-   USE MOD_Hydro_LateralFlow
+#if (defined CatchLateralFlow)
+   USE MOD_Catch_LateralFlow
 #endif
 
    USE MOD_Ozone, only: init_ozone_data, update_ozone_data
@@ -301,8 +301,8 @@ PROGRAM CoLM
    ENDIF
 #endif
 
-#if (defined LATERAL_FLOW)
-   CALL lateral_flow_init ()
+#if (defined CatchLateralFlow)
+   CALL lateral_flow_init (lc_year)
 #endif
 
 #ifdef DataAssimilation
@@ -397,7 +397,7 @@ PROGRAM CoLM
       ENDIF
 
 
-#if (defined LATERAL_FLOW)
+#if (defined CatchLateralFlow)
       CALL lateral_flow (deltim)
 #endif
 
@@ -529,7 +529,7 @@ PROGRAM CoLM
    CALL deallocate_1D_Forcing     ()
    CALL deallocate_1D_Fluxes      ()
 
-#if (defined LATERAL_FLOW)
+#if (defined CatchLateralFlow)
    CALL lateral_flow_final ()
 #endif
 
