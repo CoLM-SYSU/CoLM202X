@@ -39,7 +39,7 @@ module MOD_Vars_1DAccFluxes
    real(r8), allocatable :: a_rsur   (:)
    real(r8), allocatable :: a_rsub   (:)
    real(r8), allocatable :: a_rnof   (:)
-#ifdef LATERAL_FLOW
+#ifdef CatchLateralFlow
    real(r8), allocatable :: a_xwsur  (:)
    real(r8), allocatable :: a_xwsub  (:)
 #endif
@@ -373,7 +373,7 @@ contains
             allocate (a_rsur      (numpatch))
             allocate (a_rsub      (numpatch))
             allocate (a_rnof      (numpatch))
-#ifdef LATERAL_FLOW
+#ifdef CatchLateralFlow
             allocate (a_xwsur     (numpatch))
             allocate (a_xwsub     (numpatch))
 #endif
@@ -714,7 +714,7 @@ contains
             deallocate (a_rsur      )
             deallocate (a_rsub      )
             deallocate (a_rnof      )
-#ifdef LATERAL_FLOW
+#ifdef CatchLateralFlow
             deallocate (a_xwsur     )
             deallocate (a_xwsub     )
 #endif
@@ -1054,7 +1054,7 @@ contains
             a_rsur    (:) = spval
             a_rsub    (:) = spval
             a_rnof    (:) = spval
-#ifdef LATERAL_FLOW
+#ifdef CatchLateralFlow
             a_xwsur   (:) = spval
             a_xwsub   (:) = spval
 #endif
@@ -1365,7 +1365,7 @@ contains
       USE MOD_Namelist, only: DEF_USE_CBL_HEIGHT, DEF_USE_OZONESTRESS, DEF_USE_PLANTHYDRAULICS, DEF_USE_NITRIF
       USE MOD_TurbulenceLEddy
       use MOD_Vars_Global
-#ifdef LATERAL_FLOW
+#ifdef CatchLateralFlow
       USE MOD_Hydro_Vars_1DFluxes
       USE MOD_Hydro_Hist, only: accumulate_fluxes_basin
 #endif
@@ -1454,7 +1454,7 @@ contains
             call acc1d (xerr    , a_xerr   )
             call acc1d (zerr    , a_zerr   )
             call acc1d (rsur    , a_rsur   )
-#ifndef LATERAL_FLOW
+#ifndef CatchLateralFlow
             WHERE ((rsur /= spval) .and. (rnof /= spval))
                rsub = rnof - rsur
             ELSEWHERE
@@ -1463,7 +1463,7 @@ contains
 #endif
             call acc1d (rsub    , a_rsub   )
             call acc1d (rnof    , a_rnof   )
-#ifdef LATERAL_FLOW
+#ifdef CatchLateralFlow
             CALL acc1d (xwsur   , a_xwsur  )
             CALL acc1d (xwsub   , a_xwsub  )
 #endif
@@ -1994,7 +1994,7 @@ contains
          end if
       end if
 
-#ifdef LATERAL_FLOW
+#ifdef CatchLateralFlow
       CALL accumulate_fluxes_basin ()
 #endif
 

@@ -1,7 +1,7 @@
 #include <define.h>
 
-#ifdef LATERAL_FLOW
-MODULE MOD_Hydro_HillslopeNetwork
+#ifdef CatchLateralFlow
+MODULE MOD_Catch_HillslopeNetwork
    !--------------------------------------------------------------------------------
    ! DESCRIPTION:
    ! 
@@ -369,5 +369,5 @@ CONTAINS
 
    END SUBROUTINE hillslope_network_final
 
-END MODULE MOD_Hydro_HillslopeNetwork
+END MODULE MOD_Catch_HillslopeNetwork
 #endif

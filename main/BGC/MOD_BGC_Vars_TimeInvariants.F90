@@ -342,9 +342,15 @@ SAVE
 !     call ncio_write_vector       (file_restart, 'peatf_lf       ',  'patch', landpatch, peatf_lf       , compress)
      call ncio_write_vector       (file_restart, 'rice2pdt       ',  'patch', landpatch, rice2pdt       , compress)
 
+#ifdef USEMPI
+      CALL mpi_barrier (p_comm_glb, p_err)
+#endif
+
      if (p_is_master) then
 
+#ifndef VectorInOneFile
         call ncio_create_file (file_restart)
+#endif
         call ncio_define_dimension(file_restart, 'ndecomp_transitions',ndecomp_transitions)
         call ncio_define_dimension(file_restart, 'ndecomp_pools'      ,ndecomp_pools)
         call ncio_define_dimension(file_restart, 'nlitter_fire'       ,2            )

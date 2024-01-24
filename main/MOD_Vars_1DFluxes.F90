@@ -12,7 +12,7 @@ MODULE MOD_Vars_1DFluxes
 #ifdef BGC
   USE MOD_BGC_Vars_1DFluxes
 #endif
-#ifdef LATERAL_FLOW
+#ifdef CatchLateralFlow
   USE MOD_Hydro_Vars_1DFluxes
 #endif
 #ifdef URBAN_MODEL
@@ -158,7 +158,7 @@ MODULE MOD_Vars_1DFluxes
       CALL allocate_1D_BGCFluxes
 #endif
 
-#ifdef LATERAL_FLOW
+#ifdef CatchLateralFlow
       CALL allocate_1D_HydroFluxes
 #endif
 
@@ -238,7 +238,7 @@ MODULE MOD_Vars_1DFluxes
      CALL deallocate_1D_BGCFluxes
 #endif
 
-#ifdef LATERAL_FLOW
+#ifdef CatchLateralFlow
      CALL deallocate_1D_HydroFluxes
 #endif
 
