@@ -26,13 +26,13 @@ MODULE MOD_BGC_CNSummary
        leafc, frootc, livestemc, deadstemc, livecrootc, deadcrootc, leafc_storage, frootc_storage, livestemc_storage, &
        deadstemc_storage, livecrootc_storage, deadcrootc_storage, leafc_xfer, frootc_xfer, livestemc_xfer, &
        deadstemc_xfer, livecrootc_xfer, deadcrootc_xfer, xsmrpool, &
- #ifdef CROP
+#ifdef CROP
        grainc, grainc_storage, grainc_xfer, &
        cropseedc_deficit, cropprod1c, cphase, hui, vf, gddplant, gddmaturity, & 
        fertnitro_corn, fertnitro_swheat, fertnitro_wwheat, fertnitro_soybean, &
        fertnitro_cotton, fertnitro_rice1, fertnitro_rice2, fertnitro_sugarcane, &
        grainn, grainn_storage, grainn_xfer, plantdate, &
- #endif
+#endif
        leafn, frootn, livestemn, deadstemn, livecrootn, deadcrootn, leafn_storage, frootn_storage, livestemn_storage, &
        deadstemn_storage, livecrootn_storage, deadcrootn_storage, leafn_xfer, frootn_xfer, livestemn_xfer, &
        deadstemn_xfer, livecrootn_xfer, deadcrootn_xfer, retransn, downreg, lag_npp
@@ -44,15 +44,15 @@ MODULE MOD_BGC_CNSummary
        deadstemc_storage_p, livecrootc_storage_p, deadcrootc_storage_p, gresp_storage_p, &
        leafc_xfer_p, frootc_xfer_p, livestemc_xfer_p, &
        deadstemc_xfer_p, livecrootc_xfer_p, deadcrootc_xfer_p, gresp_xfer_p, xsmrpool_p, &
- #ifdef CROP
+#ifdef CROP
        grainc_p, grainc_storage_p, grainc_xfer_p, &
- #endif
+#endif
        ctrunc_p, totvegc_p, &
        cropseedc_deficit_p, cropprod1c_p, cpool_p, &
- #ifdef CROP
+#ifdef CROP
        plantdate_p, cphase_p, fertnitro_p, hui_p, gddmaturity_p, gddplant_p, vf_p, &
        grainn_p, grainn_storage_p, grainn_xfer_p, cropseedn_deficit_p, & 
- #endif
+#endif
        leafn_p, frootn_p, livestemn_p, deadstemn_p, livecrootn_p, deadcrootn_p, &
        leafn_storage_p, frootn_storage_p, livestemn_storage_p, &
        deadstemn_storage_p, livecrootn_storage_p, deadcrootn_storage_p, &
@@ -66,9 +66,9 @@ MODULE MOD_BGC_CNSummary
        leafc_enftemp, leafc_enfboreal, leafc_dnfboreal, leafc_ebftrop, leafc_ebftemp, leafc_dbftrop, leafc_dbftemp, &
        leafc_dbfboreal, leafc_ebstemp, leafc_dbstemp, leafc_dbsboreal, leafc_c3arcgrass, leafc_c3grass, leafc_c4grass, &
        decomp_hr, decomp_hr_vr, gpp, ar, er, supplement_to_sminn, supplement_to_sminn_vr, &
- #ifdef CROP
+#ifdef CROP
        cropprod1c_loss, grainc_to_cropprodc, grainc_to_seed, grainn_to_cropprodn, &
- #endif
+#endif
        sminn_leached, sminn_leached_vr, smin_no3_leached, smin_no3_leached_vr, smin_no3_runoff, smin_no3_runoff_vr, &
        f_n2o_nit, f_n2o_nit_vr, decomp_cpools_transport_tendency, decomp_npools_transport_tendency, &
        denit, f_denit_vr, fire_closs, hrv_xsmrpool_to_atm, som_c_leached, som_n_leached, sminn_to_denit_excess_vr, &
@@ -85,9 +85,9 @@ MODULE MOD_BGC_CNSummary
        grain_mr_p, xsmrpool_to_atm_p, cpool_grain_gr_p, &
        transfer_grain_gr_p, cpool_grain_storage_gr_p, soil_change_p, &
        fire_closs_p, hrv_xsmrpool_to_atm_p, &
- #ifdef CROP
+#ifdef CROP
        cropprod1c_loss_p, grainc_to_seed_p, grainc_to_food_p, grainn_to_food_p, &
- #endif
+#endif
        m_leafc_to_fire_p, m_leafc_storage_to_fire_p, m_leafc_xfer_to_fire_p, &
        m_frootc_to_fire_p, m_frootc_storage_to_fire_p, m_frootc_xfer_to_fire_p, &
        m_livestemc_to_fire_p, m_livestemc_storage_to_fire_p, m_livestemc_xfer_to_fire_p, &

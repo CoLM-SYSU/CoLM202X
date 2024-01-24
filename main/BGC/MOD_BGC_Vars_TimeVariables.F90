@@ -28,11 +28,11 @@ MODULE MOD_BGC_Vars_TimeVariables
    real(r8), allocatable :: o_scalar          (:,:)           ! vertical resolved: soil decomposition oxygen scalars
    real(r8), allocatable :: depth_scalar      (:,:)           ! vertical resolved: soil decomposition depth scalars
 
-oil CN diffusion and advection
+!Soil CN diffusion and advection
    real(r8), allocatable :: som_adv_coef             (:,:)    ! vertical resolved: soil organic matter advective flux (m2 s-1)
    real(r8), allocatable :: som_diffus_coef          (:,:)    ! vertical resolved: soil organic matter diffusion flux (m2 s-1)
 
-ctive Layer
+!Active Layer
    real(r8), allocatable :: altmax                   (:)      ! maximum annual depth of thaw (m)
    real(r8), allocatable :: altmax_lastyear          (:)      ! previous year maximum annual depth of thaw (m)
    integer , allocatable :: altmax_lastyear_indx     (:)      ! previous year maximum annual soil layer of thaw
@@ -168,7 +168,7 @@ ctive Layer
    real(r8), allocatable :: dayl                     (:)      ! day length (s)
    real(r8), allocatable :: prev_dayl                (:)      ! day length from previous day (s)
 
-------------BGC/SASU variables---------------------------
+!-------------BGC/SASU variables---------------------------
    real(r8), allocatable :: decomp0_cpools_vr           (:,:,:)    ! SASU spinup diagnostics vertical-resolved: soil decomposition (litter, cwd, soil organic matter) carbon pools (gC m-3)
    real(r8), allocatable :: I_met_c_vr_acc              (:,:)      ! SASU spinup diagnostics vertical-resolved: accumulated input to metabolic litter C (gC m-3)
    real(r8), allocatable :: I_cel_c_vr_acc              (:,:)      ! SASU spinup diagnostics vertical-resolved: accumulated input to cellulosic litter C (gC m-3)
