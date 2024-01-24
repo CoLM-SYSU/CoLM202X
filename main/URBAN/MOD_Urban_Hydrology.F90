@@ -235,12 +235,12 @@ CONTAINS
              0.          ,& ! fsno, not active
              rsur_gper   ,rnof_gper   ,qinfl       ,wtfact      ,&
              pondmx      ,ssi         ,wimp        ,smpmin      ,&
-             zwt         ,wa          ,qcharge     ,errw_rsub    &
+             zwt         ,wa          ,qcharge     ,errw_rsub   ,&
 #if(defined CaMa_Flood)
-            ,flddepth    ,fldfrc      ,qinfl_fld   ,&
+             flddepth    ,fldfrc      ,qinfl_fld   ,&
 #endif
 ! SNICAR model variables
-             ,forc_aer   ,&
+             forc_aer    ,&
              mss_bcpho   ,mss_bcphi   ,mss_ocpho   ,mss_ocphi   ,&
              mss_dst1    ,mss_dst2    ,mss_dst3    ,mss_dst4     &
 ! END SNICAR model variables
