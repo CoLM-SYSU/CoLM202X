@@ -18,49 +18,49 @@ MODULE CMF_CTRL_BOUNDARY_MOD
 !  distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
 ! See the License for the specific language governing permissions and limitations under the License.
 !==========================================================
-USE PARKIND1,                ONLY: JPIM, JPRB, JPRM
-USE YOS_CMF_INPUT,           ONLY: LOGNAM, IFRQ_SL, DTSL
-!============================
-IMPLICIT NONE
-SAVE
-!*** NAMELIST/NBOUND/
-! configulation
-LOGICAL                         :: LSEALEVCDF          !! true : netCDF sea level boundary
-! plain binary data
-CHARACTER(LEN=256)              :: CSEALEVDIR          !! Sea level boundary DIRECTORY
-CHARACTER(LEN=256)              :: CSEALEVPRE          !! Sea level boundary PREFIX
-CHARACTER(LEN=256)              :: CSEALEVSUF          !! Sea level boundary SUFFIX
-! netCDF data
-CHARACTER(LEN=256)              :: CSEALEVCDF          !! Sea level netCDF file name
-CHARACTER(LEN=256)              :: CVNSEALEV           !! Sea Level netCDF variable name
-!
-INTEGER(KIND=JPIM)              :: SYEARSL             !! Start YEAR  of netCDF sea level
-INTEGER(KIND=JPIM)              :: SMONSL              !! Start MONTH of netCDF sea level
-INTEGER(KIND=JPIM)              :: SDAYSL              !! Start DAY   of netCDF sea level
-INTEGER(KIND=JPIM)              :: SHOURSL             !! Start DAY   of netCDF sea level
-! for interporlation (netCDF only)
-INTEGER(KIND=JPIM)              :: NLINKS, NCDFSTAT  !! Number of ser level station
-CHARACTER(LEN=256)              :: CSLMAP              !! Conversion table (Sta -> XY)
+   USE PARKIND1,                ONLY: JPIM, JPRB, JPRM
+   USE YOS_CMF_INPUT,           ONLY: LOGNAM, IFRQ_SL, DTSL
+   !============================
+   IMPLICIT NONE
+   SAVE
+   !*** NAMELIST/NBOUND/
+   ! configulation
+   LOGICAL                         :: LSEALEVCDF          !! true : netCDF sea level boundary
+   ! plain binary data
+   CHARACTER(LEN=256)              :: CSEALEVDIR          !! Sea level boundary DIRECTORY
+   CHARACTER(LEN=256)              :: CSEALEVPRE          !! Sea level boundary PREFIX
+   CHARACTER(LEN=256)              :: CSEALEVSUF          !! Sea level boundary SUFFIX
+   ! netCDF data
+   CHARACTER(LEN=256)              :: CSEALEVCDF          !! Sea level netCDF file name
+   CHARACTER(LEN=256)              :: CVNSEALEV           !! Sea Level netCDF variable name
+   !
+   INTEGER(KIND=JPIM)              :: SYEARSL             !! Start YEAR  of netCDF sea level
+   INTEGER(KIND=JPIM)              :: SMONSL              !! Start MONTH of netCDF sea level
+   INTEGER(KIND=JPIM)              :: SDAYSL              !! Start DAY   of netCDF sea level
+   INTEGER(KIND=JPIM)              :: SHOURSL             !! Start DAY   of netCDF sea level
+   ! for interporlation (netCDF only)
+   INTEGER(KIND=JPIM)              :: NLINKS, NCDFSTAT  !! Number of ser level station
+   CHARACTER(LEN=256)              :: CSLMAP              !! Conversion table (Sta -> XY)
 
-NAMELIST/NBOUND/   LSEALEVCDF, CSEALEVDIR, CSEALEVPRE, CSEALEVSUF,&
-                     CSEALEVCDF, CVNSEALEV, SYEARSL, SMONSL, SDAYSL, SHOURSL, &
-                     CSLMAP, IFRQ_SL       
+   NAMELIST/NBOUND/   LSEALEVCDF, CSEALEVDIR, CSEALEVPRE, CSEALEVSUF,&
+                        CSEALEVCDF, CVNSEALEV, SYEARSL, SMONSL, SDAYSL, SHOURSL, &
+                        CSLMAP, IFRQ_SL       
 
 !*** local variables
 #ifdef UseCDF_CMF
-TYPE TYPESL
-CHARACTER(LEN=256)              :: CNAME       !! Netcdf file name
-CHARACTER(LEN=256)              :: CVAR        !! Netcdf variable name 
-INTEGER(KIND=JPIM)              :: NCID        !! Netcdf file     ID
-INTEGER(KIND=JPIM)              :: NVARID      !! Netcdf variable ID
-INTEGER(KIND=JPIM)              :: NSTAID      !! Netcdf station  ID
-INTEGER(KIND=JPIM)              :: NSTART      !! start date of netcdf (KMIN)
-INTEGER(KIND=JPIM)              :: NSTEP       !! steps in netCDF
-END TYPE TYPESL
-TYPE(TYPESL)                    :: SLCDF  !!  Derived type for Sea Level boundary 
+   TYPE TYPESL
+   CHARACTER(LEN=256)              :: CNAME       !! Netcdf file name
+   CHARACTER(LEN=256)              :: CVAR        !! Netcdf variable name 
+   INTEGER(KIND=JPIM)              :: NCID        !! Netcdf file     ID
+   INTEGER(KIND=JPIM)              :: NVARID      !! Netcdf variable ID
+   INTEGER(KIND=JPIM)              :: NSTAID      !! Netcdf station  ID
+   INTEGER(KIND=JPIM)              :: NSTART      !! start date of netcdf (KMIN)
+   INTEGER(KIND=JPIM)              :: NSTEP       !! steps in netCDF
+   END TYPE TYPESL
+   TYPE(TYPESL)                    :: SLCDF  !!  Derived type for Sea Level boundary 
 
-REAL(KIND=JPRM),ALLOCATABLE     :: R1SLIN(:)  ! 1D input boundary condition (m)
-INTEGER(KIND=JPIM),ALLOCATABLE  :: I2SLMAP(:,:)
+   REAL(KIND=JPRM),ALLOCATABLE     :: R1SLIN(:)  ! 1D input boundary condition (m)
+   INTEGER(KIND=JPIM),ALLOCATABLE  :: I2SLMAP(:,:)
 #endif
 
 CONTAINS
@@ -70,76 +70,76 @@ CONTAINS
 ! -- CMF_BOUNDARY_UPDATE : Update sea level boundary from file
 ! -- CMF_BOUNDARY_END    : Finalize   boundary data file
 !####################################################################
-SUBROUTINE CMF_BOUNDARY_NMLIST
-! reed setting from namelist
-! -- Called from CMF_DRV_NMLIST
-USE YOS_CMF_INPUT,      ONLY: CSETFILE,NSETFILE,LSEALEV
-USE YOS_CMF_TIME,       ONLY: YYYY0
-USE CMF_UTILS_MOD,      ONLY: INQUIRE_FID
-IMPLICIT NONE
-!================================================
-WRITE(LOGNAM,*) ""
-WRITE(LOGNAM,*) "!---------------------!"
+   SUBROUTINE CMF_BOUNDARY_NMLIST
+      ! reed setting from namelist
+      ! -- Called from CMF_DRV_NMLIST
+   USE YOS_CMF_INPUT,      ONLY: CSETFILE,NSETFILE,LSEALEV
+   USE YOS_CMF_TIME,       ONLY: YYYY0
+   USE CMF_UTILS_MOD,      ONLY: INQUIRE_FID
+   IMPLICIT NONE
+      !================================================
+      WRITE(LOGNAM,*) ""
+      WRITE(LOGNAM,*) "!---------------------!"
 
-!*** 1. open namelist
-NSETFILE=INQUIRE_FID()
-OPEN(NSETFILE,FILE=CSETFILE,STATUS="OLD")
-WRITE(LOGNAM,*) "CMF::BOUNDARY_NMLIST: namelist OPEN in unit: ", TRIM(CSETFILE), NSETFILE 
+      !*** 1. open namelist
+      NSETFILE=INQUIRE_FID()
+      OPEN(NSETFILE,FILE=CSETFILE,STATUS="OLD")
+      WRITE(LOGNAM,*) "CMF::BOUNDARY_NMLIST: namelist OPEN in unit: ", TRIM(CSETFILE), NSETFILE 
 
-!*** 2. default value
-LSEALEVCDF=.FALSE.            !! true for netcdf sea level data
+      !*** 2. default value
+      LSEALEVCDF=.FALSE.            !! true for netcdf sea level data
 
-CSEALEVDIR="./sealev/"
-CSEALEVPRE="sealev"
-CSEALEVSUF=".bin"
+      CSEALEVDIR="./sealev/"
+      CSEALEVPRE="sealev"
+      CSEALEVSUF=".bin"
 
-CSEALEVCDF="./sealev/"
-CVNSEALEV="variable"
-CSLMAP="./sealev/"
+      CSEALEVCDF="./sealev/"
+      CVNSEALEV="variable"
+      CSLMAP="./sealev/"
 
-SYEARSL=0
-SMONSL =0 
-SDAYSL =0 
-SHOURSL=0
+      SYEARSL=0
+      SMONSL =0 
+      SDAYSL =0 
+      SHOURSL=0
 
-IFRQ_SL= 9999              !! default: dynamic sea level not used
+      IFRQ_SL= 9999              !! default: dynamic sea level not used
 
-!*** 3. read namelist
-REWIND(NSETFILE)
-READ(NSETFILE,NML=NBOUND)
+      !*** 3. read namelist
+      REWIND(NSETFILE)
+      READ(NSETFILE,NML=NBOUND)
 
-IF( LSEALEV )THEN
-  WRITE(LOGNAM,*)   "=== NAMELIST, NBOUNDARY ==="
-  WRITE(LOGNAM,*)   "LSEALEVCDF: ", LSEALEVCDF
-  IF( LSEALEVCDF )THEN
-    WRITE(LOGNAM,*) "CSEALEVCDF: ", TRIM(CSEALEVCDF)
-    WRITE(LOGNAM,*) "CVNSEALEV:  ", TRIM(CVNSEALEV)
-    WRITE(LOGNAM,*) "SYEARSL:    ", SYEARSL
-    WRITE(LOGNAM,*) "SMONSL:     ", SMONSL
-    WRITE(LOGNAM,*) "SDAYSL:     ", SDAYSL
-    WRITE(LOGNAM,*) "SHOURSL:    ", SHOURSL
-    WRITE(LOGNAM,*) "CSLMAP:     ", TRIM(CSLMAP)
-  ELSE
-    WRITE(LOGNAM,*) "CSEALEVDIR: ", TRIM(CSEALEVDIR)
-    WRITE(LOGNAM,*) "CSEALEVPRE: ", TRIM(CSEALEVPRE)
-    WRITE(LOGNAM,*) "CSEALEVSUF: ", TRIM(CSEALEVSUF)
-  ENDIF
-  WRITE(LOGNAM,*) "IFRQ_SL   ", IFRQ_SL
-ENDIF
+      IF( LSEALEV )THEN
+         WRITE(LOGNAM,*)   "=== NAMELIST, NBOUNDARY ==="
+         WRITE(LOGNAM,*)   "LSEALEVCDF: ", LSEALEVCDF
+            IF( LSEALEVCDF )THEN
+               WRITE(LOGNAM,*) "CSEALEVCDF: ", TRIM(CSEALEVCDF)
+               WRITE(LOGNAM,*) "CVNSEALEV:  ", TRIM(CVNSEALEV)
+               WRITE(LOGNAM,*) "SYEARSL:    ", SYEARSL
+               WRITE(LOGNAM,*) "SMONSL:     ", SMONSL
+               WRITE(LOGNAM,*) "SDAYSL:     ", SDAYSL
+               WRITE(LOGNAM,*) "SHOURSL:    ", SHOURSL
+               WRITE(LOGNAM,*) "CSLMAP:     ", TRIM(CSLMAP)
+            ELSE
+               WRITE(LOGNAM,*) "CSEALEVDIR: ", TRIM(CSEALEVDIR)
+               WRITE(LOGNAM,*) "CSEALEVPRE: ", TRIM(CSEALEVPRE)
+               WRITE(LOGNAM,*) "CSEALEVSUF: ", TRIM(CSEALEVSUF)
+            ENDIF
+         WRITE(LOGNAM,*) "IFRQ_SL   ", IFRQ_SL
+      ENDIF
 
-CLOSE(NSETFILE)
+      CLOSE(NSETFILE)
 
-!*** 4. modify base date (shared for KMIN)
-IF( LSEALEV .and. LSEALEVCDF )THEN
-  YYYY0=MIN(YYYY0,SYEARSL)
-  YYYY0=MAX(YYYY0,0)
-ENDIF
+      !*** 4. modify base date (shared for KMIN)
+      IF( LSEALEV .and. LSEALEVCDF )THEN
+         YYYY0=MIN(YYYY0,SYEARSL)
+         YYYY0=MAX(YYYY0,0)
+      ENDIF
 
-DTSL  = IFRQ_SL *60          !! min  -> second
+      DTSL  = IFRQ_SL *60          !! min  -> second
 
-WRITE(LOGNAM,*) "CMF::BOUNDARY_NMLIST: end" 
+      WRITE(LOGNAM,*) "CMF::BOUNDARY_NMLIST: end" 
 
-END SUBROUTINE CMF_BOUNDARY_NMLIST
+   END SUBROUTINE CMF_BOUNDARY_NMLIST
 !####################################################################
 
 
@@ -248,7 +248,7 @@ DO ILNK=1, NLINKS
   I2SLMAP(1,ILNK) = IX
   I2SLMAP(2,ILNK) = IY
   I2SLMAP(3,ILNK) = IS
-END DO
+ENDDO
 CLOSE(TMPNAM)
 
 
@@ -361,7 +361,7 @@ DO ILNK = 1, NLINKS
     IY = I2SLMAP(2,ILNK)
     IS = I2SLMAP(3,ILNK)
     R2TMP(IX,IY) = R1SLIN(IS)
-END DO
+ENDDO
 CALL mapR2vecD(R2TMP,D2SEALEV)
 
 END SUBROUTINE CMF_BOUNDARY_GET_CDF
