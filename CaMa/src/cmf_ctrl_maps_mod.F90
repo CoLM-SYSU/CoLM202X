@@ -303,10 +303,10 @@ CONTAINS
 !==========================================================
    SUBROUTINE CALC_REGION    !! evenly allocate pixels to mpi nodes (updated in v4.03. MPI region given from file)
    USE YOS_CMF_INPUT,           only: IMIS
-   #ifdef UseCDF_CMF
+#ifdef UseCDF_CMF
    USE CMF_UTILS_MOD,           only: NCERROR
    USE NETCDF
-   #endif
+#endif
    IMPLICIT NONE
    !* local variables
    integer(KIND=JPIM),ALLOCATABLE  :: REGIONGRID(:)
@@ -336,12 +336,12 @@ CONTAINS
    !! Use MPI: read MPI region map, allocate regions to MPI nodes
 #ifdef UseMPI_CMF
    IF ( LMAPCDF ) THEN
-   #ifdef UseCDF_CMF
+#ifdef UseCDF_CMF
       CALL NCERROR (NF90_OPEN(CMPIREGNC,NF90_NOWRITE,NCID),'opening '//TRIM(CMPIREGNC) )
       CALL NCERROR (NF90_INQ_VARID(NCID, 'mpireg',VARID),'getting id' )
       CALL NCERROR (NF90_GET_VAR(NCID,VARID,I2REGION),'reading data' )
       CALL NCERROR (NF90_CLOSE(NCID))
-   #endif
+#endif
    ELSE
       write(LOGNAM,*)'RIVMAP_INIT: read MPI region: ',TRIM(CNEXTXY)
       TMPNAM=INQUIRE_FID()
