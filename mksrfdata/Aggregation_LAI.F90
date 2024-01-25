@@ -457,7 +457,7 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
                   CALL aggregation_request_data (landpatch, ipatch, gridlai, zip = USE_zip_for_aggregation, area = area_one, &
                      data_r8_3d_in1 = pftPCT,  data_r8_3d_out1 = pct_pft_one, n1_r8_3d_in1 = 16, lb1_r8_3d_in1 = 0, &
                      data_r8_3d_in2 = pftLSAI, data_r8_3d_out2 = lai_pft_one, n1_r8_3d_in2 = 16, lb1_r8_3d_in2 = 0)
-   
+
                   IF (allocated(lai_one)) deallocate(lai_one)
                   allocate(lai_one(size(area_one)))
 

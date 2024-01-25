@@ -20,14 +20,14 @@ CONTAINS
                                 imelt,sm,xmf,fact)
 
 !=======================================================================
-! Snow and road temperatures
+! Snow and impervious road temperatures
 ! o The volumetric heat capacity is calculated as a linear combination
 !   in terms of the volumetric fraction of the constituent phases.
 ! o The thermal conductivity of road soil is computed from
 !   the algorithm of Johansen (as reported by Farouki 1981), impervious and perivious from
 !   LOOK-UP table and of snow is from the formulation used in SNTHERM (Jordan 1991).
 ! o Boundary conditions:
-!   F = Rnet - Hg - LEg (top),  F= 0 (base of the soil column).
+!   F = Rnet - Hg - LEg (top),  F = 0 (base of the soil column).
 ! o Soil / snow temperature is predicted from heat conduction
 !   in 10 soil layers and up to 5 snow layers.
 !   The thermal conductivities at the interfaces between two neighbor layers
@@ -36,7 +36,7 @@ CONTAINS
 !   interface to the node j+1. The equation is solved using the Crank-Nicholson
 !   method and resulted in a tridiagonal system equation.
 !
-! Phase change (see meltf.F90)
+! Phase change (see MOD_PhaseChange.F90)
 !
 ! Original author : Yongjiu Dai, 09/15/1999; 08/30/2002; 05/2020
 !=======================================================================
@@ -137,7 +137,7 @@ CONTAINS
 ! soil ground and wetland heat capacity
       DO i = 1, nl_soil
          vf_water(i) = wliq_gimpsno(i)/(dz_gimpsno(i)*denh2o)
-         vf_ice(i) = wice_gimpsno(i)/(dz_gimpsno(i)*denice)
+         vf_ice(i)   = wice_gimpsno(i)/(dz_gimpsno(i)*denice)
          CALL soil_hcap_cond(vf_gravels(i),vf_om(i),vf_sand(i),porsl(i),&
                              wf_gravels(i),wf_sand(i),k_solids(i),&
                              csol(i),dkdry(i),dksatu(i),dksatf(i),&
@@ -197,7 +197,7 @@ CONTAINS
       WHERE (tk_gimp > 0.) tk(1:) = tk_gimp(1:)
       WHERE (cv_gimp > 0.) cv(1:) = cv_gimp(1:)*dz_gimpsno(1:)
 
-      ! snow exist for the first soil layer
+      ! snow exist when there is no snow layer
       IF (lb == 1 .and. scv_gimp > 0.0) THEN
          cv(1) = cv(1) + cpice*scv_gimp
       ENDIF
