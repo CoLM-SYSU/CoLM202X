@@ -114,7 +114,7 @@
       CALL CNGResp(i, ps, pe, npcropmin)
 #ifdef CROP
       IF(DEF_USE_IRRIGATION)THEN
-        CALL CalIrrigationNeeded(i,ps,pe,idate,nl_soil,nbedrock,z_soi,dz_soi,deltim,dlon,npcropmin)
+         CALL CalIrrigationNeeded(i,ps,pe,idate,nl_soil,nbedrock,z_soi,dz_soi,deltim,dlon,npcropmin)
       ENDIF
 #endif
       ! update vegetation pools from phenology, allocation and nitrogen uptake
@@ -151,12 +151,12 @@
       CALL CNDriverSummarizeFluxes(i,ps,pe,nl_soil,dz_soi,ndecomp_transitions,ndecomp_pools,deltim)
   
       IF( .not. skip_balance_check(i) )THEN
-        CALL CBalanceCheck(i,ps,pe,deltim,dlat,dlon)
-        CALL NBalanceCheck(i,deltim,dlat,dlon)
+         CALL CBalanceCheck(i,ps,pe,deltim,dlat,dlon)
+         CALL NBalanceCheck(i,deltim,dlat,dlon)
   
   
       ELSE
-        skip_balance_check(i) = .false.
+         skip_balance_check(i) = .false.
       ENDIF
   
       CALL CNVegStructUpdate(i,ps,pe,deltim,npcropmin)
