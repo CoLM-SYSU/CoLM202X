@@ -16,7 +16,7 @@ MODULE MOD_WetBulb
 !-----------------------------------------------------------------------
 
 
-   subroutine wetbulb(t,p,q,twc)
+   SUBROUTINE wetbulb(t,p,q,twc)
 
 !=======================================================================
 ! Wet-bulb temperature
@@ -24,18 +24,18 @@ MODULE MOD_WetBulb
 ! Yongjiu Dai, 07/2013
 !=======================================================================
 
-      use MOD_Precision
-      use MOD_Const_Physical, only : tfrz, hvap, cpair
-      USE MOD_Qsadv
+   USE MOD_Precision
+   USE MOD_Const_Physical, only : tfrz, hvap, cpair
+   USE MOD_Qsadv
 
-      implicit none
-      real(r8), intent(in) :: t     ! air temperature [K]
-      real(r8), intent(in) :: p     ! atmos pressure [pa]
-      real(r8), intent(in) :: q     ! air specific humidity [kg/kg]
-      real(r8), intent(out) :: twc  ! wet bulb temperature [K]
+   IMPLICIT NONE
+   real(r8), intent(in) :: t     ! air temperature [K]
+   real(r8), intent(in) :: p     ! atmos pressure [pa]
+   real(r8), intent(in) :: q     ! air specific humidity [kg/kg]
+   real(r8), intent(out) :: twc  ! wet bulb temperature [K]
 
-      integer i
-      real(r8) es, esdT, qs, qsdT, r, rws
+   integer i
+   real(r8) es, esdT, qs, qsdT, r, rws
 
 ! ----------------------------------------------------------
 !     real(r8) tcair ! dry-bulb temperature in celsius
@@ -50,7 +50,7 @@ MODULE MOD_WetBulb
 !  WETBULB computes wet-bulb temperatures from dry-bulb (tkair) and
 !  vapor pressure of air(ea). routine adapted from e. anderson, p. 188.
 ! ----------------------------------------------------------
-!     call qsadv(t,p,es,esdT,qs,qsdT)
+!     CALL qsadv(t,p,es,esdT,qs,qsdT)
 !     rh  = min(1.0,q/qs)
 !     bp  = p/100.0             ! mb
 !     eas = es/100.0            ! mb
@@ -62,26 +62,26 @@ MODULE MOD_WetBulb
 !*    eas = 2.7489e8*exp(-4278.63/(tcair+242.792))
 !*    delt = eas*4278.63/((tcair+242.792)*(tcair+242.792))
 !
-!     do i = 1, 3
+!     DO i = 1, 3
 !        twc  = delt*tcair+6.6e-4 *bp*tcair+7.59e-7*bp*tcair*tcair+ea-eas
 !        twc  = twc/(delt+6.6e-4*bp+7.59e-7*bp*tcair)    ! in celsius
 !
 !        tav  = 0.5*(tcair+twc)+tfrz
-!        call qsadv(tav,p,es,esdT,qs,qsdT)
+!        CALL qsadv(tav,p,es,esdT,qs,qsdT)
 !        eav  = es/100.
 !        delt = esdT/100.
 !
 !*       tav  = 0.5*(tcair+twc)
 !*       eav  = 2.7489e8*exp(-4278.63/(tav+242.792))
 !*       delt = eav*4278.63/((tav+242.792)*(tav+242.792))
-!     enddo
+!     ENDDO
 !     twc = twc + tfrz
 ! ----------------------------------------------------------
 
 ! ----------------------------------------------------------
 ! the defining equation for the wetbulb temp Twb is
 !     f(Twb) = Twb-T - Lv/Cp [r-rs(Twb)] = 0,
-! where
+! WHERE
 !     T = the dry-bulb temp (K),
 !     Lv = the latent heat of vaporization (J/kg/K),
 !     Cp = the specific heat of air at constant pressure,
@@ -89,15 +89,15 @@ MODULE MOD_WetBulb
 !     rs(Twb) = the saturation mixing ratio at wetbulb temp.
 ! http://www.asp.ucar.edu/colloquium/1992/notes/paet1/node81.html
 ! ----------------------------------------------------------
-      call qsadv(t,p,es,esdT,qs,qsdT)
+      CALL qsadv(t,p,es,esdT,qs,qsdT)
       r = q/(1.0-q)
-      if (q >= qs) r = qs/(1.0-qs)
+      IF (q >= qs) r = qs/(1.0-qs)
       twc = t
-      do i = 1, 6
-         call qsadv(twc,p,es,esdT,qs,qsdT)
+      DO i = 1, 6
+         CALL qsadv(twc,p,es,esdT,qs,qsdT)
          rws= qs/(1.0-qs)
          twc = (twc + t + hvap/cpair*(r-rws))/2.0
-      enddo
+      ENDDO
 
 !*----------------------------------------------------------
 !*wetbulb temp as air temp and relative humidity at standard sea level pressure.
@@ -105,7 +105,7 @@ MODULE MOD_WetBulb
 !*relative humidity and air temperature. J. Appl. Meteor. and Climatol., vol 50, 2267-2269.
 !*----------------------------------------------------------
 !*    tcair = t - tfrz
-!*    call qsadv(t,p,es,esdT,qs,qsdT)
+!*    CALL qsadv(t,p,es,esdT,qs,qsdT)
 !*    rh  = min(1.0,q/qs)
 !*    twc = tcair*atan(0.151977*(rh*100.+8.313659)**0.5) &
 !*        + atan(tcair+rh*100.)-atan(rh*100.-1.676331) &
@@ -113,6 +113,6 @@ MODULE MOD_WetBulb
 !*    twc = twc + tfrz
 !*----------------------------------------------------------
 
-   end subroutine wetbulb
+   END SUBROUTINE wetbulb
 
 END MODULE MOD_WetBulb
