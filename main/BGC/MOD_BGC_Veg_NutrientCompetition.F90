@@ -147,7 +147,7 @@ CONTAINS
          excess_cflux_p(m) = availc_p(m) - plant_calloc_p(m)
 	    ! reduce gpp fluxes due to N limitation
          IF (gpp_p(m) > 0.0_r8) THEN
-	    downreg_p(m) = excess_cflux_p(m)/gpp_p(m)
+            downreg_p(m) = excess_cflux_p(m)/gpp_p(m)
             psn_to_cpool_p(m) = psn_to_cpool_p(m) * (1._r8 - downreg_p(m))
 
 	 ENDIF
