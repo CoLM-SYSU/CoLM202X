@@ -21,51 +21,51 @@ MODULE YOS_CMF_PROG
    !*** prognostics / state variables initial conditions
 
    ! Dammy variable for input/output
-   real(KIND=JPRB),ALLOCATABLE,TARGET     :: D2DAMMY(:,:)       !! Dammy Array for unused variables
-   real(KIND=JPRB),ALLOCATABLE,TARGET     :: D2COPY(:,:)        !! Dammy Array for Float64/32 switch
+   real(KIND=JPRB),allocatable,target     :: D2DAMMY(:,:)       !! Dammy Array for unused variables
+   real(KIND=JPRB),allocatable,target     :: D2COPY(:,:)        !! Dammy Array for Float64/32 switch
 
    !================================================
    !*** input runoff (interporlated)
-   real(KIND=JPRB),ALLOCATABLE,TARGET     :: D2RUNOFF(:,:)         !! input runoff             [m3/s]
-   real(KIND=JPRB),ALLOCATABLE,TARGET     :: D2ROFSUB(:,:)         !! input sub-surface runoff [m3/s]
+   real(KIND=JPRB),allocatable,target     :: D2RUNOFF(:,:)         !! input runoff             [m3/s]
+   real(KIND=JPRB),allocatable,target     :: D2ROFSUB(:,:)         !! input sub-surface runoff [m3/s]
 
    !TODO: check d2wevap and d2winfilt units!
-   real(KIND=JPRB),ALLOCATABLE,TARGET     :: D2WEVAP(:,:)          !! input Evaporation [m3/s]
-   real(KIND=JPRB),ALLOCATABLE,TARGET     :: D2WINFILT(:,:)        !! input Infiltration [m3/s]
+   real(KIND=JPRB),allocatable,target     :: D2WEVAP(:,:)          !! input Evaporation [m3/s]
+   real(KIND=JPRB),allocatable,target     :: D2WINFILT(:,:)        !! input Infiltration [m3/s]
 
    !================================================
    !*** river & floodpain
    ! storage variables are always in double precision
-   real(KIND=JPRD),ALLOCATABLE,TARGET     :: P2RIVSTO(:,:)         !! river      storage [m3]
-   real(KIND=JPRD),ALLOCATABLE,TARGET     :: P2FLDSTO(:,:)         !! floodplain storage [m3]
+   real(KIND=JPRD),allocatable,target     :: P2RIVSTO(:,:)         !! river      storage [m3]
+   real(KIND=JPRD),allocatable,target     :: P2FLDSTO(:,:)         !! floodplain storage [m3]
 
-   real(KIND=JPRB),ALLOCATABLE,TARGET     :: D2RIVOUT(:,:)         !! river      outflow [m3/s]
-   real(KIND=JPRB),ALLOCATABLE,TARGET     :: D2FLDOUT(:,:)         !! floodplain outflow [m3/s]
+   real(KIND=JPRB),allocatable,target     :: D2RIVOUT(:,:)         !! river      outflow [m3/s]
+   real(KIND=JPRB),allocatable,target     :: D2FLDOUT(:,:)         !! floodplain outflow [m3/s]
 
    !================================================
    !*** for implicit schemes of the local inertial equation
-   real(KIND=JPRB),ALLOCATABLE,TARGET     :: D2RIVOUT_PRE(:,:)     !! river      outflow [m3/s] (prev t-step)
-   real(KIND=JPRB),ALLOCATABLE,TARGET     :: D2RIVDPH_PRE(:,:)     !! river      depth   [m]    (prev t-step)
-   real(KIND=JPRB),ALLOCATABLE,TARGET     :: D2FLDOUT_PRE(:,:)     !! floodplain outflow [m3/s] (prev t-step)
-   real(KIND=JPRB),ALLOCATABLE,TARGET     :: D2FLDSTO_PRE(:,:)     !! floodplain storage [m3]   (prev t-step)
+   real(KIND=JPRB),allocatable,target     :: D2RIVOUT_PRE(:,:)     !! river      outflow [m3/s] (prev t-step)
+   real(KIND=JPRB),allocatable,target     :: D2RIVDPH_PRE(:,:)     !! river      depth   [m]    (prev t-step)
+   real(KIND=JPRB),allocatable,target     :: D2FLDOUT_PRE(:,:)     !! floodplain outflow [m3/s] (prev t-step)
+   real(KIND=JPRB),allocatable,target     :: D2FLDSTO_PRE(:,:)     !! floodplain storage [m3]   (prev t-step)
 
    !================================================
    !*** Groundwater Delay
-   real(KIND=JPRD),ALLOCATABLE,TARGET     :: P2GDWSTO(:,:)         !! ground water storage  [m3]
-   real(KIND=JPRB),ALLOCATABLE,TARGET     :: D2GDWRTN(:,:)         !! Ground water return flow [m3/s]
+   real(KIND=JPRD),allocatable,target     :: P2GDWSTO(:,:)         !! ground water storage  [m3]
+   real(KIND=JPRB),allocatable,target     :: D2GDWRTN(:,:)         !! Ground water return flow [m3/s]
 
    !================================================
    !*** These have a different share, not part of the D2PROG array
-   real(KIND=JPRB),ALLOCATABLE,TARGET     :: D1PTHFLW(:,:)         !! flood path outflow [m3/s]
-   real(KIND=JPRB),ALLOCATABLE,TARGET     :: D1PTHFLW_PRE(:,:)     !! flood path outflow [m3/s] (prev t-step)
+   real(KIND=JPRB),allocatable,target     :: D1PTHFLW(:,:)         !! flood path outflow [m3/s]
+   real(KIND=JPRB),allocatable,target     :: D1PTHFLW_PRE(:,:)     !! flood path outflow [m3/s] (prev t-step)
 
    !================================================
    !!!*** dam variables
-   real(KIND=JPRD),ALLOCATABLE,TARGET     :: P2DAMSTO(:,:)         !! reservoir storage [m3]
-   real(KIND=JPRD),ALLOCATABLE,TARGET     :: P2DAMINF(:,:)         !! reservoir inflow [m3/s]; discharge before operation
+   real(KIND=JPRD),allocatable,target     :: P2DAMSTO(:,:)         !! reservoir storage [m3]
+   real(KIND=JPRD),allocatable,target     :: P2DAMINF(:,:)         !! reservoir inflow [m3/s]; discharge before operation
 
    !================================================
    !!!*** levee variables
-   real(KIND=JPRD),ALLOCATABLE,TARGET     :: P2LEVSTO(:,:)         !! flood storage in protected side (storage betwen river & levee)
+   real(KIND=JPRD),allocatable,target     :: P2LEVSTO(:,:)         !! flood storage in protected side (storage betwen river & levee)
 
 END MODULE YOS_CMF_PROG

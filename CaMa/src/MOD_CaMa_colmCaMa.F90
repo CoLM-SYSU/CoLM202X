@@ -173,7 +173,7 @@ CONTAINS
             CASE DEFAULT
                STOP
             END SELECT
-         END DO
+         ENDDO
       ENDIF
 
       !Broadcast the variables to all the processors
@@ -183,27 +183,27 @@ CONTAINS
       CALL mpi_bcast (LWEVAP ,   1, MPI_LOGICAL,  p_root, p_comm_glb, p_err)   ! switch for inundation evaporation
       CALL mpi_bcast (LWINFILT ,   1, MPI_LOGICAL,  p_root, p_comm_glb, p_err) ! switch for inundation re-infiltration
 
-      !Allocate the data structure for cama
+      !allocate the data structure for cama
       CALL gcama%define_by_ndims (NX, NY)  !define the data structure for cama
       CALL mp2g_cama%build (landpatch, gcama) !build the mapping between cama and mpi
       CALL mg2p_cama%build (gcama, landpatch)
 
       CALL cama_gather%set (gcama)
 
-      !Allocate the cama-flood related variable for accumulation
+      !allocate the cama-flood related variable for accumulation
       CALL allocate_2D_cama_Fluxes  (gcama) !allocate the 2D variables
       CALL allocate_acc_cama_Fluxes () !allocate the accumulation variables
       CALL FLUSH_acc_cama_fluxes    () !initialize the accumulation variables
 
       !Only master processor allocate the 2D variables
       IF (p_is_master) THEN
-         ALLOCATE (runoff_2d (NX,NY))
-         ALLOCATE (fevpg_2d  (NX,NY))
-         ALLOCATE (finfg_2d  (NX,NY))
-         !Allocate data buffer for input forcing, flood fraction and flood depth
-         ALLOCATE (ZBUFF(NX,NY,4))
-         ALLOCATE (fldfrc_tmp(NX,NY))
-         ALLOCATE (flddepth_tmp(NX,NY))
+         allocate (runoff_2d (NX,NY))
+         allocate (fevpg_2d  (NX,NY))
+         allocate (finfg_2d  (NX,NY))
+         !allocate data buffer for input forcing, flood fraction and flood depth
+         allocate (ZBUFF(NX,NY,4))
+         allocate (fldfrc_tmp(NX,NY))
+         allocate (flddepth_tmp(NX,NY))
          !Initialize the data buffer for input forcing, flood fraction and flood depth
          runoff_2d(:,:)    = 0.0D0 !runoff in master processor
          fevpg_2d(:,:)     = 0.0D0 !evaporation in master processor
@@ -212,17 +212,17 @@ CONTAINS
          fldfrc_tmp(:,:)   = 0.0D0 !flood fraction in master processor
          flddepth_tmp(:,:) = 0.0D0 !flood depth in master processor
       ENDIF
-      !Allocate the cama-flood related variable in worker processors
+      !allocate the cama-flood related variable in worker processors
       IF (p_is_worker) THEN
-         ALLOCATE (flddepth_cama(numpatch)) !flood depth in worker processors
-         ALLOCATE (fldfrc_cama(numpatch))   !flood fraction in worker processors
-         ALLOCATE (fevpg_fld(numpatch))     !evaporation in worker processors
-         ALLOCATE (finfg_fld(numpatch))     !re-infiltration in worker processors
+         allocate (flddepth_cama(numpatch)) !flood depth in worker processors
+         allocate (fldfrc_cama(numpatch))   !flood fraction in worker processors
+         allocate (fevpg_fld(numpatch))     !evaporation in worker processors
+         allocate (finfg_fld(numpatch))     !re-infiltration in worker processors
          flddepth_cama(:)     =  0.0D0
          fldfrc_cama(:)       =  0.0D0
          fevpg_fld(:)         =  0.0D0
          finfg_fld(:)         =  0.0D0
-      END IF
+      ENDIF
    END SUBROUTINE colm_CaMa_init
 
 !####################################################################
@@ -325,17 +325,17 @@ CONTAINS
       CALL deallocate_acc_cama_Fluxes ()
       IF(p_is_master)THEN
          ! finalize CaMa-Flood
-         DEALLOCATE(ZBUFF)
-         DEALLOCATE (runoff_2d)
-         DEALLOCATE (fevpg_2d)
-         DEALLOCATE (finfg_2d)
+         deallocate(ZBUFF)
+         deallocate (runoff_2d)
+         deallocate (fevpg_2d)
+         deallocate (finfg_2d)
       ENDIF
       IF (p_is_worker) THEN
-         DEALLOCATE (flddepth_cama)
-         DEALLOCATE (fldfrc_cama)
-         DEALLOCATE (fevpg_fld)
-         DEALLOCATE (finfg_fld)
-      END IF
+         deallocate (flddepth_cama)
+         deallocate (fldfrc_cama)
+         deallocate (fevpg_fld)
+         deallocate (finfg_fld)
+      ENDIF
    END SUBROUTINE colm_cama_exit
 
 

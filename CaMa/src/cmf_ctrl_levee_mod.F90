@@ -113,8 +113,8 @@ CONTAINS
       ! [1] Read Levee Parameter Map
       write(LOGNAM,*) "CMF::LEVEE_INIT: read levee parameter files"
 
-      ALLOCATE( D2LEVHGT(NSEQMAX,1) )
-      ALLOCATE( D2LEVFRC(NSEQMAX,1) )
+      allocate( D2LEVHGT(NSEQMAX,1) )
+      allocate( D2LEVFRC(NSEQMAX,1) )
       D2LEVHGT(:,:)   =0._JPRB
       D2LEVFRC(:,:)   =0._JPRB
 
@@ -122,13 +122,13 @@ CONTAINS
 
       write(LOGNAM,*)'INIT_LEVEE: levee crown height : ',TRIM(CLEVHGT)
       open(TMPNAM,FILE=CLEVHGT,FORM='UNFORMATTED',ACCESS='DIRECT',RECL=4*NX*NY)
-      READ(TMPNAM,REC=1) R2TEMP(:,:)
+      read(TMPNAM,REC=1) R2TEMP(:,:)
       CALL mapR2vecD(R2TEMP,D2LEVHGT)
       close(TMPNAM)
 
       write(LOGNAM,*)'INIT_LEVEE: distance from levee to river : ',TRIM(CLEVFRC)
       open(TMPNAM,FILE=CLEVFRC,FORM='UNFORMATTED',ACCESS='DIRECT',RECL=4*NX*NY)
-      READ(TMPNAM,REC=1) R2TEMP(:,:)
+      read(TMPNAM,REC=1) R2TEMP(:,:)
       CALL mapR2vecD(R2TEMP,D2LEVFRC)
       close(TMPNAM)
 
@@ -136,12 +136,12 @@ CONTAINS
       ! [2] Calculate Levee Stage Parameter
       write(LOGNAM,*) "CMF::LEVEE_INIT: flood stage parameters considering levee"
 
-      ALLOCATE( D2BASHGT(NSEQMAX,1) )
-      ALLOCATE( D2LEVDST(NSEQMAX,1) )
+      allocate( D2BASHGT(NSEQMAX,1) )
+      allocate( D2LEVDST(NSEQMAX,1) )
 
-      ALLOCATE( D2LEVBASSTO(NSEQMAX,1) )
-      ALLOCATE( D2LEVTOPSTO(NSEQMAX,1) )
-      ALLOCATE( D2LEVFILSTO(NSEQMAX,1) )
+      allocate( D2LEVBASSTO(NSEQMAX,1) )
+      allocate( D2LEVTOPSTO(NSEQMAX,1) )
+      allocate( D2LEVFILSTO(NSEQMAX,1) )
 
       D2FLDSTOMAX(:,:,:) = 0._JPRB   !! max floodplain  storage  at each layer
       D2FLDGRD(:,:,:)    = 0._JPRB   !! floodplain topo gradient of each layer
@@ -167,13 +167,13 @@ CONTAINS
          DSTOPRE = D2RIVSTOMAX(ISEQ,1)
          DHGTPRE = 0._JPRB
          DWTHINC = D2GRAREA(ISEQ,1) * D2RIVLEN(ISEQ,1)**(-1.) * DFRCINC  !! width increlment for each layer
-            DO I=1, NLFP
-               DSTONOW = D2RIVLEN(ISEQ,1) * ( D2RIVWTH(ISEQ,1) + DWTHINC*(DBLE(I)-0.5) ) * (D2FLDHGT(ISEQ,1,I)-DHGTPRE)  !! storage increment
-               D2FLDSTOMAX(ISEQ,1,I) = DSTOPRE + DSTONOW
-               D2FLDGRD(ISEQ,1,I) = (D2FLDHGT(ISEQ,1,I)-DHGTPRE) * DWTHINC**(-1.)
-               DSTOPRE = D2FLDSTOMAX(ISEQ,1,I)
-               DHGTPRE = D2FLDHGT(ISEQ,1,I)
-            ENDDO
+         DO I=1, NLFP
+            DSTONOW = D2RIVLEN(ISEQ,1) * ( D2RIVWTH(ISEQ,1) + DWTHINC*(DBLE(I)-0.5) ) * (D2FLDHGT(ISEQ,1,I)-DHGTPRE)  !! storage increment
+            D2FLDSTOMAX(ISEQ,1,I) = DSTOPRE + DSTONOW
+            D2FLDGRD(ISEQ,1,I) = (D2FLDHGT(ISEQ,1,I)-DHGTPRE) * DWTHINC**(-1.)
+            DSTOPRE = D2FLDSTOMAX(ISEQ,1,I)
+            DHGTPRE = D2FLDHGT(ISEQ,1,I)
+         ENDDO
 
          ! Levee parameters calculation
          IF( D2LEVHGT(ISEQ,1) == 0._JPRB )THEN ! Grid without levee, treat everything as unprotected
@@ -514,10 +514,10 @@ END SUBROUTINE CMF_LEVEE_FLDSTG
             D2SFCELV_LEV(ISEQ,1) = D2SFCELV(ISEQ,1)
          ENDIF
 
-      D2SFCELV_PRE(ISEQ,1) = D2RIVELV(ISEQ,1)+D2RIVDPH_PRE(ISEQ,1)
-      P2PTHOUT(ISEQ,1) = 0._JPRD
-      P2PTHINF(ISEQ,1) = 0._JPRD
-      D2RATE(ISEQ,1)   =-999._JPRB
+         D2SFCELV_PRE(ISEQ,1) = D2RIVELV(ISEQ,1)+D2RIVDPH_PRE(ISEQ,1)
+         P2PTHOUT(ISEQ,1) = 0._JPRD
+         P2PTHINF(ISEQ,1) = 0._JPRD
+         D2RATE(ISEQ,1)   =-999._JPRB
       ENDDO
 !$OMP END PARALLEL DO
 
@@ -555,22 +555,22 @@ END SUBROUTINE CMF_LEVEE_FLDSTG
          !! [1] for overland bifurcation, use levee protected surface elevation
          IF( NPTHLEV<=1 ) CYCLE
 
-         DSLOPE  = (D2SFCELV_LEV(ISEQP,1)-D2SFCELV_LEV(JSEQP,1)) * PTH_DST(IPTH)**(-1.)
-         DSLOPE = max(-0.005_JPRB,min(0.005_JPRB,DSLOPE))      
+            DSLOPE  = (D2SFCELV_LEV(ISEQP,1)-D2SFCELV_LEV(JSEQP,1)) * PTH_DST(IPTH)**(-1.)
+            DSLOPE = max(-0.005_JPRB,min(0.005_JPRB,DSLOPE))      
 
-            DO ILEV=2, NPTHLEV
-               DFLW = MAX(D2SFCELV_LEV(ISEQP,1),D2SFCELV_LEV(JSEQP,1)) - PTH_ELV(IPTH,ILEV) 
-               DFLW = MAX(DFLW,0._JPRB)
+         DO ILEV=2, NPTHLEV
+            DFLW = MAX(D2SFCELV_LEV(ISEQP,1),D2SFCELV_LEV(JSEQP,1)) - PTH_ELV(IPTH,ILEV) 
+            DFLW = MAX(DFLW,0._JPRB)
 
-               DFLW_IMP=DFLW  !! do not consider implicit flow depth for overland bifurcation
-               IF( DFLW_IMP>1.E-5 )THEN                         !! local inertial equation, see [Bates et al., 2010, J.Hydrol.]
-                  DOUT_PRE = D1PTHFLW_PRE(IPTH,ILEV) * PTH_WTH(IPTH,ILEV)**(-1.)            !! outflow (t-1) [m2/s] (unit width)
-                  D1PTHFLW(IPTH,ILEV) = PTH_WTH(IPTH,ILEV) * ( DOUT_PRE + PGRV*DT*DFLW_IMP*DSLOPE ) &
+            DFLW_IMP=DFLW  !! do not consider implicit flow depth for overland bifurcation
+            IF( DFLW_IMP>1.E-5 )THEN                         !! local inertial equation, see [Bates et al., 2010, J.Hydrol.]
+               DOUT_PRE = D1PTHFLW_PRE(IPTH,ILEV) * PTH_WTH(IPTH,ILEV)**(-1.)            !! outflow (t-1) [m2/s] (unit width)
+               D1PTHFLW(IPTH,ILEV) = PTH_WTH(IPTH,ILEV) * ( DOUT_PRE + PGRV*DT*DFLW_IMP*DSLOPE ) &
                                     * ( 1. + PGRV*DT*PTH_MAN(ILEV)**2. * abs(DOUT_PRE)*DFLW_IMP**(-7./3.) )**(-1.)
-               ELSE
-                  D1PTHFLW(IPTH,ILEV) = 0._JPRB
-               ENDIF
-            ENDDO
+            ELSE
+               D1PTHFLW(IPTH,ILEV) = 0._JPRB
+            ENDIF
+         ENDDO
       ENDDO
 !$OMP END PARALLEL DO
 

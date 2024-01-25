@@ -50,62 +50,62 @@ CONTAINS
       CALL read_sedinp_nmlist
 
       CALL read_slope
-CONTAINS
-   !================================
-   SUBROUTINE read_sedinp_nmlist
+   CONTAINS
+      !================================
+      SUBROUTINE read_sedinp_nmlist
+         IMPLICIT NONE
+         integer(kind=JPIM)            :: nsetfile
+      
+         namelist/sediment_input/ sedinput_dir, sedinput_pre, sedinput_suf, &
+                                 cslope, dsylunit, pyld, pyldc, pyldpc,    &
+                                 cinpmat_sed
+
+            nsetfile = INQUIRE_FID()
+            open(nsetfile,file='input_sed.nam',status='OLD')
+
+            sedinput_dir='./'
+            sedinput_pre='./'
+            sedinput_suf='./'
+            cslope='./slope.bin'
+            dsylunit = 1.d-6
+            pyld = 0.01d0
+            pyldc = 2.d0
+            pyldpc = 2.d0
+            cinpmat_sed = './inpmat.bin'
+
+            rewind(nsetfile)
+            read(nsetfile,nml=sediment_input)
+            !defaults
+            write(LOGNAM,*) 'nml sediment_input'
+            write(LOGNAM,*) 'cslope    :', trim(cslope)
+            write(LOGNAM,*) 'dsylunit  :', dsylunit
+            write(LOGNAM,*) 'pyld      :', pyld
+            write(LOGNAM,*) 'pyldc     :', pyldc
+            write(LOGNAM,*) 'pyldpc    :', pyldpc
+            write(LOGNAM,*) 'cinpmat_sed:', trim(cinpmat_sed)
+      END SUBROUTINE
+
+      SUBROUTINE read_slope
+      USE YOS_CMF_INPUT,         only: NX,NY, NLFP
+      USE YOS_CMF_MAP,           only: REGIONTHIS
+
       IMPLICIT NONE
-      integer(kind=JPIM)            :: nsetfile
-    
-      namelist/sediment_input/ sedinput_dir, sedinput_pre, sedinput_suf, &
-                              cslope, dsylunit, pyld, pyldc, pyldpc,    &
-                              cinpmat_sed
-
-         nsetfile = INQUIRE_FID()
-         open(nsetfile,file='input_sed.nam',status='OLD')
-
-         sedinput_dir='./'
-         sedinput_pre='./'
-         sedinput_suf='./'
-         cslope='./slope.bin'
-         dsylunit = 1.d-6
-         pyld = 0.01d0
-         pyldc = 2.d0
-         pyldpc = 2.d0
-         cinpmat_sed = './inpmat.bin'
-
-         rewind(nsetfile)
-         read(nsetfile,nml=sediment_input)
-         !defaults
-         write(LOGNAM,*) 'nml sediment_input'
-         write(LOGNAM,*) 'cslope    :', trim(cslope)
-         write(LOGNAM,*) 'dsylunit  :', dsylunit
-         write(LOGNAM,*) 'pyld      :', pyld
-         write(LOGNAM,*) 'pyldc     :', pyldc
-         write(LOGNAM,*) 'pyldpc    :', pyldpc
-         write(LOGNAM,*) 'cinpmat_sed:', trim(cinpmat_sed)
-   END SUBROUTINE
-
-   SUBROUTINE read_slope
-   USE YOS_CMF_INPUT,         only: NX,NY, NLFP
-   USE YOS_CMF_MAP,           only: REGIONTHIS
-
-   IMPLICIT NONE
-   integer                       :: ierr, tmpnam, i
-   real(kind=jprm)               :: r2temp(nx,ny)
-      allocate(d2slope(NSEQMAX,NLFP))
-      IF ( REGIONTHIS == 1 ) THEN
-         tmpnam = INQUIRE_FID()
-         open(tmpnam,file=cslope,form='unformatted',access='direct',recl=4*NX*NY)
-      ENDIF
-      DO i = 1, NLFP
-         IF ( REGIONTHIS == 1 ) read(tmpnam,rec=i) r2temp
+      integer                       :: ierr, tmpnam, i
+      real(kind=jprm)               :: r2temp(nx,ny)
+         allocate(d2slope(NSEQMAX,NLFP))
+         IF ( REGIONTHIS == 1 ) THEN
+            tmpnam = INQUIRE_FID()
+            open(tmpnam,file=cslope,form='unformatted',access='direct',recl=4*NX*NY)
+         ENDIF
+         DO i = 1, NLFP
+            IF ( REGIONTHIS == 1 ) read(tmpnam,rec=i) r2temp
 #ifdef UseMPI_CMF
-         CALL MPI_Bcast(r2temp(1,1),NX*NY,mpi_real4,0,MPI_COMM_CAMA,ierr)
+            CALL MPI_Bcast(r2temp(1,1),NX*NY,mpi_real4,0,MPI_COMM_CAMA,ierr)
 #endif
-         CALL mapR2vecD(r2temp,d2slope(:,i))
-      ENDDO
-      IF ( REGIONTHIS == 1 ) close(tmpnam)
-   END SUBROUTINE read_slope
+            CALL mapR2vecD(r2temp,d2slope(:,i))
+         ENDDO
+         IF ( REGIONTHIS == 1 ) close(tmpnam)
+      END SUBROUTINE read_slope
   
    END SUBROUTINE sediment_input_init
    !==========================================================
@@ -171,32 +171,32 @@ CONTAINS
   !$omp end parallel DO
 
    CONTAINS
-   !=============================
-   !+ prcp_convert_sed
-   !=============================
-   SUBROUTINE prcp_convert_sed(pbuffin,pbuffout)
-   USE YOS_CMF_DIAG,          only: D2FLDFRC
-   USE YOS_CMF_INPUT,         only: NLFP
+      !=============================
+      !+ prcp_convert_sed
+      !=============================
+      SUBROUTINE prcp_convert_sed(pbuffin,pbuffout)
+      USE YOS_CMF_DIAG,          only: D2FLDFRC
+      USE YOS_CMF_INPUT,         only: NLFP
 
-   IMPLICIT NONE
-   SAVE
-   real(kind=JPRB), intent(in)   :: pbuffin(:)     !! kg/m2/s
-   real(kind=JPRB), intent(out)  :: pbuffout(:)  !! m3/s
-   integer(kind=JPIM)            :: i, iseq
+      IMPLICIT NONE
+      SAVE
+      real(kind=JPRB), intent(in)   :: pbuffin(:)     !! kg/m2/s
+      real(kind=JPRB), intent(out)  :: pbuffout(:)  !! m3/s
+      integer(kind=JPIM)            :: i, iseq
 
 !$omp parallel DO
-      DO iseq = 1, NSEQALL
-         pbuffout(iseq) = 0.d0
-         IF ( pbuffin(iseq) * 86400.d0 <= 10.d0 ) CYCLE
+         DO iseq = 1, NSEQALL
+            pbuffout(iseq) = 0.d0
+            IF ( pbuffin(iseq) * 86400.d0 <= 10.d0 ) CYCLE
 
-         DO i = 1, NLFP
-            IF ( D2FLDFRC(iseq,1) * NLFP > dble(i) ) CYCLE  ! no erosion if submerged
-            pbuffout(iseq) = pbuffout(iseq) + pyld * (pbuffin(iseq)*3600.d0)**pyldpc * d2slope(iseq,i)**pyldc / 3600.d0 & 
-               & * D2GRAREA(iseq,1) * min(dble(i)/dble(NLFP)-D2FLDFRC(iseq,1), 1.d0/dble(NLFP)) * dsylunit
+            DO i = 1, NLFP
+               IF ( D2FLDFRC(iseq,1) * NLFP > dble(i) ) CYCLE  ! no erosion if submerged
+               pbuffout(iseq) = pbuffout(iseq) + pyld * (pbuffin(iseq)*3600.d0)**pyldpc * d2slope(iseq,i)**pyldc / 3600.d0 & 
+                  & * D2GRAREA(iseq,1) * min(dble(i)/dble(NLFP)-D2FLDFRC(iseq,1), 1.d0/dble(NLFP)) * dsylunit
+            ENDDO
          ENDDO
-      ENDDO
 !$omp end parallel do
-   END SUBROUTINE prcp_convert_sed
+      END SUBROUTINE prcp_convert_sed
     
    END SUBROUTINE calc_sedyld
    !==========================================================
@@ -229,9 +229,9 @@ CONTAINS
                   pbuffout(iseq) = pbuffout(iseq) + pbuffin(ixin,iyin) * INPA(iseq,inpi) / D2GRAREA(iseq,1)
                ENDIF
             ENDIF
-         END DO
+         ENDDO
          pbuffout(iseq)=max(pbuffout(iseq), 0._JPRB)
-      END DO
+      ENDDO
 !$omp END parallel do
    END SUBROUTINE sedinp_interp
 !####################################################################

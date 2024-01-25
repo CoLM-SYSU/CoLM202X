@@ -48,53 +48,53 @@ CONTAINS
    integer(kind=JPIM)             :: ilyr, irec, ised, iseq, tmpnam, nsetfile
    real(kind=JPRM)                :: r2temp(NX,NY)
 
-   nsetfile = inquire_fid()
-   open(nsetfile, file='input_sed.nam', status='old')
-   rewind(nsetfile)
-   read(nsetfile,nml=sediment_restart)
-   close(nsetfile)
+      nsetfile = inquire_fid()
+      open(nsetfile, file='input_sed.nam', status='old')
+      rewind(nsetfile)
+      read(nsetfile,nml=sediment_restart)
+      close(nsetfile)
 
-   IF ( sedrest_infile == "" ) THEN  ! set layer/bedload if no restart file
+      IF ( sedrest_infile == "" ) THEN  ! set layer/bedload if no restart file
 !$omp parallel DO
-      DO iseq = 1, NSEQALL
-         d2layer(iseq,:) = lyrdph * D2RIVWTH(iseq,1) * D2RIVLEN(iseq,1) * d2sedfrc(iseq,:)
-         DO ilyr = 1, totlyrnum-1
-            d2seddep(iseq,ilyr,:) = d2layer(iseq,:)
+         DO iseq = 1, NSEQALL
+            d2layer(iseq,:) = lyrdph * D2RIVWTH(iseq,1) * D2RIVLEN(iseq,1) * d2sedfrc(iseq,:)
+            DO ilyr = 1, totlyrnum-1
+               d2seddep(iseq,ilyr,:) = d2layer(iseq,:)
+            ENDDO
+            d2seddep(iseq,totlyrnum,:) = ( max(10.d0-lyrdph*totlyrnum,0.d0) ) * D2RIVWTH(iseq,1) * D2RIVLEN(iseq,1) * d2sedfrc(iseq,:)
          ENDDO
-         d2seddep(iseq,totlyrnum,:) = ( max(10.d0-lyrdph*totlyrnum,0.d0) ) * D2RIVWTH(iseq,1) * D2RIVLEN(iseq,1) * d2sedfrc(iseq,:)
-      ENDDO
 !$omp END parallel DO
 
-   ELSE
-      IF ( REGIONTHIS == 1 ) THEN
-         tmpnam = INQUIRE_FID()
-         open(tmpnam,file=sedrest_infile,form='unformatted',access='direct',recl=4*NX*NY)
-      ENDIF
-      DO irec = 1, 2
-         DO ised = 1, nsed
-            IF ( REGIONTHIS == 1 ) read(tmpnam,rec=(irec-1)*nsed+ised) r2temp
+      ELSE
+         IF ( REGIONTHIS == 1 ) THEN
+            tmpnam = INQUIRE_FID()
+            open(tmpnam,file=sedrest_infile,form='unformatted',access='direct',recl=4*NX*NY)
+         ENDIF
+         DO irec = 1, 2
+            DO ised = 1, nsed
+               IF ( REGIONTHIS == 1 ) read(tmpnam,rec=(irec-1)*nsed+ised) r2temp
 #ifdef UseMPI_CMF
-            CALL MPI_Bcast(r2temp(1,1),NX*NY,mpi_real4,0,MPI_COMM_CAMA,ierr)
+               CALL MPI_Bcast(r2temp(1,1),NX*NY,mpi_real4,0,MPI_COMM_CAMA,ierr)
 #endif
-            select CASE(irec)
-               CASE (1)
-                  CALL mapR2vecD(r2temp,d2layer(:,ised))
-               CASE (2)
-                  CALL mapR2vecD(r2temp,d2sedcon(:,ised))
-            END select
+               select CASE(irec)
+                  CASE (1)
+                     CALL mapR2vecD(r2temp,d2layer(:,ised))
+                  CASE (2)
+                     CALL mapR2vecD(r2temp,d2sedcon(:,ised))
+               END select
+            ENDDO
          ENDDO
-      ENDDO
 
-      DO irec = 1, totlyrnum
-         DO ised = 1, nsed
-            IF ( REGIONTHIS == 1 ) read(tmpnam,rec=(irec+1)*nsed+ised) r2temp
+         DO irec = 1, totlyrnum
+            DO ised = 1, nsed
+               IF ( REGIONTHIS == 1 ) read(tmpnam,rec=(irec+1)*nsed+ised) r2temp
 #ifdef UseMPI_CMF
-            CALL MPI_Bcast(r2temp(1,1),NX*NY,mpi_real4,0,MPI_COMM_CAMA,ierr)
+               CALL MPI_Bcast(r2temp(1,1),NX*NY,mpi_real4,0,MPI_COMM_CAMA,ierr)
 #endif
-            CALL mapR2vecD(r2temp,d2seddep(:,irec,ised))
+               CALL mapR2vecD(r2temp,d2seddep(:,irec,ised))
+            ENDDO
          ENDDO
-      ENDDO
-      IF ( REGIONTHIS == 1 ) close(tmpnam)
+         IF ( REGIONTHIS == 1 ) close(tmpnam)
          write(LOGNAM,*) 'read restart sediment',maxval(d2seddep(:,totlyrnum,:))
       ENDIF
 

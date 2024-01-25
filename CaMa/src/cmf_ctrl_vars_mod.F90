@@ -42,22 +42,22 @@ CONTAINS
 
       write(LOGNAM,*) "CMF::PROG_INIT: prognostic variable initialization"
 
-      !*** 1. ALLOCATE 
+      !*** 1. allocate 
       ! runoff input
-      ALLOCATE( D2RUNOFF(NSEQMAX,1)     )
-      ALLOCATE( D2ROFSUB(NSEQMAX,1)     )
+      allocate( D2RUNOFF(NSEQMAX,1)     )
+      allocate( D2ROFSUB(NSEQMAX,1)     )
 
       ! river+floodplain storage
-      ALLOCATE( P2RIVSTO(NSEQMAX,1)     )
-      ALLOCATE( P2FLDSTO(NSEQMAX,1)     )
+      allocate( P2RIVSTO(NSEQMAX,1)     )
+      allocate( P2FLDSTO(NSEQMAX,1)     )
 
       ! discharge calculation
-      ALLOCATE( D2RIVOUT(NSEQMAX,1)     )
-      ALLOCATE( D2FLDOUT(NSEQMAX,1)     )
-      ALLOCATE( D2RIVOUT_PRE(NSEQMAX,1)     )
-      ALLOCATE( D2FLDOUT_PRE(NSEQMAX,1)     )
-      ALLOCATE( D2RIVDPH_PRE(NSEQMAX,1)     )
-      ALLOCATE( D2FLDSTO_PRE(NSEQMAX,1)     )
+      allocate( D2RIVOUT(NSEQMAX,1)     )
+      allocate( D2FLDOUT(NSEQMAX,1)     )
+      allocate( D2RIVOUT_PRE(NSEQMAX,1)     )
+      allocate( D2FLDOUT_PRE(NSEQMAX,1)     )
+      allocate( D2RIVDPH_PRE(NSEQMAX,1)     )
+      allocate( D2FLDSTO_PRE(NSEQMAX,1)     )
 
       D2RUNOFF(:,:)=0._JPRB
       D2ROFSUB(:,:)=0._JPRB
@@ -73,42 +73,42 @@ CONTAINS
       D2FLDSTO_PRE(:,:)=0._JPRB
 
       IF( LPTHOUT ) THEN  !! additional prognostics for bifurcation scheme
-         ALLOCATE( D1PTHFLW(NPTHOUT,NPTHLEV)     )
-         ALLOCATE( D1PTHFLW_PRE(NPTHOUT,NPTHLEV) )
+         allocate( D1PTHFLW(NPTHOUT,NPTHLEV)     )
+         allocate( D1PTHFLW_PRE(NPTHOUT,NPTHLEV) )
          D1PTHFLW(:,:)=0._JPRB
          D1PTHFLW_PRE(:,:)=0._JPRB
       ENDIF
       IF( LDAMOUT ) THEN  !! additional prognostics for reservoir operation
-         ALLOCATE( P2DAMSTO(NSEQMAX,1)     )
-         ALLOCATE( P2DAMINF(NSEQMAX,1)     )
+         allocate( P2DAMSTO(NSEQMAX,1)     )
+         allocate( P2DAMINF(NSEQMAX,1)     )
          P2DAMSTO(:,:)=0._JPRD
          P2DAMINF(:,:)=0._JPRD
       ENDIF
       IF( LLEVEE ) THEN  !! additional prognostics for LLEVEE
-         ALLOCATE( P2LEVSTO(NSEQMAX,1)     )
+         allocate( P2LEVSTO(NSEQMAX,1)     )
          P2LEVSTO(:,:)=0._JPRD
       ENDIF
 
       IF( LWEVAP ) THEN  !! additional prognostics for LWEVAP
-         ALLOCATE( D2WEVAP(NSEQMAX,1)     )
+         allocate( D2WEVAP(NSEQMAX,1)     )
          D2WEVAP(:,:)=0._JPRB
       ENDIF
 
       !! Used in CoLM
       IF( LWINFILT ) THEN  !! additional prognostics for LWINFILT
-         ALLOCATE( D2WINFILT(NSEQMAX,1)     )
+         allocate( D2WINFILT(NSEQMAX,1)     )
          D2WEVAP(:,:)=0._JPRB
       ENDIF
 
       !! keep these variables even when LGDWDLY is not used.
-      ALLOCATE( P2GDWSTO(NSEQMAX,1)     )
-      ALLOCATE( D2GDWRTN(NSEQMAX,1)     )
+      allocate( P2GDWSTO(NSEQMAX,1)     )
+      allocate( D2GDWRTN(NSEQMAX,1)     )
       P2GDWSTO(:,:)=0._JPRD
       D2GDWRTN(:,:)=0._JPRB
 
       !! dammy variable for data handling
-      ALLOCATE( D2DAMMY(NSEQMAX,1)) !! Float64/32 switch (Dammy for unused var)
-      ALLOCATE( D2COPY(NSEQMAX,1))  !! Float64/32 switch (Dammy for output)
+      allocate( D2DAMMY(NSEQMAX,1)) !! Float64/32 switch (Dammy for unused var)
+      allocate( D2COPY(NSEQMAX,1))  !! Float64/32 switch (Dammy for output)
       D2DAMMY(:,:)=0._JPRB
       D2COPY(:,:) =0._JPRB
 
@@ -222,7 +222,7 @@ CONTAINS
       IF ( LWINFILT  ) N2DIAG=N2DIAG+1 !! Infiltration added            (D2WEVAPEX) 
       IF ( LOUTINS ) N2DIAG=N2DIAG+1 !! instantaneous discharge added (D2OUTINS )
 
-      ALLOCATE(D2DIAG(NSEQMAX,1,N2DIAG))
+      allocate(D2DIAG(NSEQMAX,1,N2DIAG))
       D2DIAG(:,:,:) = 0._JPRB
       D2RIVINF => D2DIAG(:,:,1)
       D2RIVDPH => D2DIAG(:,:,2)
@@ -268,7 +268,7 @@ CONTAINS
       N2DIAG_AVG=8
       IF ( LDAMOUT ) N2DIAG_AVG=N2DIAG_AVG+1    !!! D2DAMINF_AVG is added
 
-      ALLOCATE(D2DIAG_AVG(NSEQMAX,1,N2DIAG_AVG))
+      allocate(D2DIAG_AVG(NSEQMAX,1,N2DIAG_AVG))
       D2DIAG_AVG(:,:,:) = 0._JPRB 
       D2RIVOUT_AVG => D2DIAG_AVG(:,:,1)
       D2FLDOUT_AVG => D2DIAG_AVG(:,:,2)
@@ -304,14 +304,14 @@ CONTAINS
       NADD=0
 
       !*** 2b time-average 1D Diagnostics (bifurcation channel)
-      ALLOCATE(D1PTHFLW_AVG(NPTHOUT,NPTHLEV))
+      allocate(D1PTHFLW_AVG(NPTHOUT,NPTHLEV))
       D1PTHFLW_AVG(:,:) = 0._JPRB 
 
       !============================
       !*** 3. Maximum 2D Diagnostics 
       N2DIAG_MAX=3
 
-      ALLOCATE(D2DIAG_MAX(NSEQMAX,1,N2DIAG_MAX))
+      allocate(D2DIAG_MAX(NSEQMAX,1,N2DIAG_MAX))
       D2DIAG_MAX(:,:,:) = 0._JPRB 
       D2STORGE_MAX => D2DIAG_MAX(:,:,1)
       D2OUTFLW_MAX => D2DIAG_MAX(:,:,2)

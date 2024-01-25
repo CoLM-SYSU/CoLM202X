@@ -111,8 +111,8 @@ CONTAINS
       LSTG_ES  = .FALSE.           !! true: for Vector Processor optimization (CMF_OPT_FLDSTG_ES) 
 
       !* change
-      REWIND(NSETFILE)
-      READ(NSETFILE,NML=NRUNVER)
+      rewind(NSETFILE)
+      read(NSETFILE,NML=NRUNVER)
 
       write(LOGNAM,*) ""
       write(LOGNAM,*) "=== NAMELIST, NRUNVER ==="
@@ -159,8 +159,8 @@ CONTAINS
       IFRQ_INP = 24                !! daily (24h) input
 
       !* change
-      REWIND(NSETFILE)
-      READ(NSETFILE,NML=NDIMTIME)
+      rewind(NSETFILE)
+      read(NSETFILE,NML=NDIMTIME)
 
       DTIN  = IFRQ_INP*60*60       !! hour -> second
 
@@ -190,18 +190,18 @@ CONTAINS
 
          TMPNAM=INQUIRE_FID()
          open(TMPNAM,FILE=CDIMINFO,FORM='FORMATTED')
-         READ(TMPNAM,*) NX
-         READ(TMPNAM,*) NY
-         READ(TMPNAM,*) NLFP
-         READ(TMPNAM,*) NXIN
-         READ(TMPNAM,*) NYIN
-         READ(TMPNAM,*) INPN
-         READ(TMPNAM,*) 
+         read(TMPNAM,*) NX
+         read(TMPNAM,*) NY
+         read(TMPNAM,*) NLFP
+         read(TMPNAM,*) NXIN
+         read(TMPNAM,*) NYIN
+         read(TMPNAM,*) INPN
+         read(TMPNAM,*) 
          IF( LGRIDMAP )THEN
-            READ(TMPNAM,*) WEST
-            READ(TMPNAM,*) EAST
-            READ(TMPNAM,*) NORTH
-            READ(TMPNAM,*) SOUTH
+            read(TMPNAM,*) WEST
+            read(TMPNAM,*) EAST
+            read(TMPNAM,*) NORTH
+            read(TMPNAM,*) SOUTH
          ENDIF
          close(TMPNAM)
       ENDIF
@@ -235,8 +235,8 @@ CONTAINS
       CSUFCDF='.nc'
 
       ! * change
-      REWIND(NSETFILE)
-      READ(NSETFILE,NML=NPARAM)
+      rewind(NSETFILE)
+      read(NSETFILE,NML=NPARAM)
 
       write(LOGNAM,*) ""
       write(LOGNAM,*) "=== NAMELIST, NPARAM ==="

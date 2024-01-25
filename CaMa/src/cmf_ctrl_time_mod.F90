@@ -73,8 +73,8 @@ CONTAINS
       EHOUR=0
 
       !*** 2. read namelist
-      REWIND(NSETFILE)
-      READ(NSETFILE,NML=NSIMTIME)
+      rewind(NSETFILE)
+      read(NSETFILE,NML=NSIMTIME)
 
       write(LOGNAM,*) "=== NAMELIST, NSIMTIME ==="
       write(LOGNAM,*) "SYEAR,SMON,SDAY,SHOUR:", SYEAR,SMON,SDAY,SHOUR

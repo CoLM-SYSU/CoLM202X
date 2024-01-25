@@ -53,11 +53,11 @@ CONTAINS
 !================================================
       R2MAP(:,:) = RMIS
 !$OMP PARALLEL DO
-         DO ISEQ=1,NSEQALL
-            IX=I1SEQX(ISEQ)
-            IY=I1SEQY(ISEQ)
-            R2MAP(IX,IY) = real(D2VEC(ISEQ,1),KIND=JPRM)
-         ENDDO
+      DO ISEQ=1,NSEQALL
+         IX=I1SEQX(ISEQ)
+         IY=I1SEQY(ISEQ)
+         R2MAP(IX,IY) = real(D2VEC(ISEQ,1),KIND=JPRM)
+      ENDDO
 !$OMP END PARALLEL DO
 
    END SUBROUTINE vecD2mapR

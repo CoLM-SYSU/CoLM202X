@@ -130,8 +130,8 @@ CONTAINS
       CVNROF ="runoff"
       CVNSUB ="NONE"
       IF( LROSPLIT )THEN
-      CVNROF="Qs"
-      CVNSUB="Qsb"
+         CVNROF="Qs"
+         CVNSUB="Qsb"
       ENDIF
 
       SYEARIN=0                       !! netCDF input file start date (set to 0 when not used)
@@ -150,31 +150,31 @@ CONTAINS
       write(LOGNAM,*)     "CINPMAT:   ", TRIM(CINPMAT)
       write(LOGNAM,*)     "LROSPLIT:  ", LROSPLIT
       IF( .not. LINPCDF )THEN
-      write(LOGNAM,*)   "CROFDIR:   ", TRIM(CROFDIR)
-      write(LOGNAM,*)   "CROFPRE:   ", TRIM(CROFPRE)
-      write(LOGNAM,*)   "CROFSUF:   ", TRIM(CROFSUF)
-      IF( LROSPLIT )THEN
-         write(LOGNAM,*) "CSUBDIR:   ", TRIM(CSUBDIR)
-         write(LOGNAM,*) "CSUBPRE:   ", TRIM(CSUBPRE)
-         write(LOGNAM,*) "CSUBSUF:   ", TRIM(CSUBSUF)
-      ENDIF
+         write(LOGNAM,*)   "CROFDIR:   ", TRIM(CROFDIR)
+         write(LOGNAM,*)   "CROFPRE:   ", TRIM(CROFPRE)
+         write(LOGNAM,*)   "CROFSUF:   ", TRIM(CROFSUF)
+         IF( LROSPLIT )THEN
+            write(LOGNAM,*) "CSUBDIR:   ", TRIM(CSUBDIR)
+            write(LOGNAM,*) "CSUBPRE:   ", TRIM(CSUBPRE)
+            write(LOGNAM,*) "CSUBSUF:   ", TRIM(CSUBSUF)
+         ENDIF
       ELSE
-      write(LOGNAM,*)   "CROFCDF:   ", TRIM(CROFCDF)
-      write(LOGNAM,*)   "CVNROF:    ", TRIM(CVNROF)
-      IF( LROSPLIT )THEN
-         write(LOGNAM,*) "CVNSUB:    ", TRIM(CVNSUB)
-      ENDIF
-      write(LOGNAM,*)   "SYEARIN,SMONIN,SDAYIN,SHOURIN ", SYEARIN,SMONIN,SDAYIN,SHOURIN
+         write(LOGNAM,*)   "CROFCDF:   ", TRIM(CROFCDF)
+         write(LOGNAM,*)   "CVNROF:    ", TRIM(CVNROF)
+         IF( LROSPLIT )THEN
+            write(LOGNAM,*) "CVNSUB:    ", TRIM(CVNSUB)
+         ENDIF
+         write(LOGNAM,*)   "SYEARIN,SMONIN,SDAYIN,SHOURIN ", SYEARIN,SMONIN,SDAYIN,SHOURIN
       ENDIF
       IF( LINPEND )THEN
-      write(LOGNAM,*)   "LINPEND:   ", LINPEND
+         write(LOGNAM,*)   "LINPEND:   ", LINPEND
       ENDIF
 
       close(NSETFILE)
 
       !*** 4. modify base date (shared for KMIN)
       IF( LINPCDF )THEN
-      YYYY0=MIN(YYYY0,SYEARIN)
+         YYYY0=MIN(YYYY0,SYEARIN)
       ENDIF
 
       write(LOGNAM,*) "CMF::FORCING_NMLIST: end" 
@@ -275,7 +275,7 @@ CONTAINS
       !*** 4. check runoff forcing time 
       IF ( KMINSTART .lt. KMINSTAIN ) THEN 
          write(LOGNAM,*) "Run start earlier than forcing data", TRIM(ROFCDF%CNAME), KMINSTART, KMINSTAIN
-      STOP 9
+         STOP 9
       ENDIF
 
       KMINENDIN=KMINSTAIN + NCDFSTP*INT(DTIN/60,JPIM)
@@ -312,7 +312,7 @@ CONTAINS
 !================================================
       !*** 1. allocate input matrix variables
       write(LOGNAM,*) 'NX, NY, INPN =', NX, NY, INPN
-      ALLOCATE( INPX(NSEQMAX,INPN),INPY(NSEQMAX,INPN),INPA(NSEQMAX,INPN) )
+      allocate( INPX(NSEQMAX,INPN),INPY(NSEQMAX,INPN),INPA(NSEQMAX,INPN) )
 
       !*** 2. Read Input Matrix
       write(LOGNAM,*) 'INPUT MATRIX netCDF', CINPMAT
@@ -320,17 +320,17 @@ CONTAINS
       CALL NCERROR (NF90_OPEN(CINPMAT,NF90_NOWRITE,NCID),'opening '//TRIM(CINPMAT) )
 
       !** input matrix area
-      ALLOCATE( D2TMP(NX,NY,INPN) )
+      allocate( D2TMP(NX,NY,INPN) )
       write(LOGNAM,*)'INIT_MAP: inpa:',TRIM(CINPMAT)
       CALL NCERROR ( NF90_INQ_VARID(NCID,'inpa',VARID),'getting id' )
       CALL NCERROR ( NF90_GET_VAR(NCID,VARID,D2TMP,(/1,1,1/),(/NX,NY,INPN/)),'reading data' ) 
       DO INPI=1, INPN
          CALL mapD2vecD(D2TMP(:,:,INPI:INPI),INPA(:,INPI:INPI))
       ENDDO
-      DEALLOCATE( D2TMP )
+      deallocate( D2TMP )
 
       !** input matrix IXIN
-      ALLOCATE( I2TMP(NX,NY,INPN) )
+      allocate( I2TMP(NX,NY,INPN) )
 
       write(LOGNAM,*)'INIT_MAP: inpx:',TRIM(CINPMAT)
       CALL NCERROR ( NF90_INQ_VARID(NCID,'inpx',VARID),'getting id' )
@@ -347,7 +347,7 @@ CONTAINS
          CALL mapI2vecI(I2TMP(:,:,INPI:INPI),INPY(:,INPI:INPI))
       ENDDO
 
-      DEALLOCATE( I2TMP )
+      deallocate( I2TMP )
 
       !================================================
       !*** Check if inverse information is available  (only used in ECMWF/IFS v4.07)
@@ -360,7 +360,7 @@ CONTAINS
          CALL NCERROR( NF90_INQUIRE_VARIABLE(NCID,VARID,dimids=VDIMIDS),'getting levI dimensions ')
          CALL NCERROR( NF90_INQUIRE_DIMENSION(NCID,VDIMIDS(1),len=INPNI),'getting time len ')
          write(LOGNAM,*) 'Alocating INP*I: NXIN, NYIN, INPNI =', NXIN, NYIN, INPNI
-         ALLOCATE( INPXI(NXIN,NYIN,INPNI),INPYI(NXIN,NYIN,INPNI),INPAI(NXIN,NYIN,INPNI) )
+         allocate( INPXI(NXIN,NYIN,INPNI),INPYI(NXIN,NYIN,INPNI),INPAI(NXIN,NYIN,INPNI) )
          
          write(LOGNAM,*)'INIT_MAP: inpaI:',TRIM(CINPMAT)
          CALL NCERROR ( NF90_INQ_VARID(NCID,'inpaI',VARID),'getting id' )
@@ -384,9 +384,9 @@ CONTAINS
                   ZTMP=ZTMP+INPAI(IX,IY,ILEV)
                ENDDO
                IF (ZTMP > 0._JPRB) THEN
-               DO ILEV=1,INPNI
-                  INPAI(IX,IY,ILEV) = INPAI(IX,IY,ILEV) / ZTMP
-               ENDDO
+                  DO ILEV=1,INPNI
+                     INPAI(IX,IY,ILEV) = INPAI(IX,IY,ILEV) / ZTMP
+                  ENDDO
                ENDIF
             ENDDO
          ENDDO
@@ -412,13 +412,13 @@ CONTAINS
    !================================================
       !*** 1. allocate input matrix variables
       write(LOGNAM,*) 'NX, NY, INPN =', NX, NY, INPN
-      ALLOCATE( INPX(NSEQMAX,INPN),INPY(NSEQMAX,INPN),INPA(NSEQMAX,INPN) )
+      allocate( INPX(NSEQMAX,INPN),INPY(NSEQMAX,INPN),INPA(NSEQMAX,INPN) )
 
       !*** 2. Read Input Matrix
       write(LOGNAM,*) 'INPUT MATRIX binary', CINPMAT
 
-      ALLOCATE( I2TMP(NX,NY) )
-      ALLOCATE( R2TMP(NX,NY) )
+      allocate( I2TMP(NX,NY) )
+      allocate( R2TMP(NX,NY) )
 
       TMPNAM=INQUIRE_FID()
       !open(TMPNAM,FILE=CINPMAT,FORM='UNFORMATTED',ACCESS='DIRECT',RECL=4*NX*NY*INPN)
@@ -428,16 +428,16 @@ CONTAINS
 
       open(TMPNAM,FILE=CINPMAT,FORM='UNFORMATTED',ACCESS='DIRECT',RECL=4*NX*NY)
       DO INPI=1, INPN
-         READ(TMPNAM,REC=       INPI) I2TMP
-            CALL mapI2vecI(I2TMP,INPX(:,INPI:INPI))
-         READ(TMPNAM,REC=  INPN+INPI) I2TMP
-            CALL mapI2vecI(I2TMP,INPY(:,INPI:INPI))
-         READ(TMPNAM,REC=2*INPN+INPI) R2TMP
-            CALL mapR2vecD( R2TMP,INPA(:,INPI:INPI))
+         read(TMPNAM,REC=       INPI) I2TMP
+         CALL mapI2vecI(I2TMP,INPX(:,INPI:INPI))
+         read(TMPNAM,REC=  INPN+INPI) I2TMP
+         CALL mapI2vecI(I2TMP,INPY(:,INPI:INPI))
+         read(TMPNAM,REC=2*INPN+INPI) R2TMP
+         CALL mapR2vecD( R2TMP,INPA(:,INPI:INPI))
       ENDDO
 
       close(TMPNAM)
-      DEALLOCATE(I2TMP,R2TMP)
+      deallocate(I2TMP,R2TMP)
 
    END SUBROUTINE CMF_INPMAT_INIT_BIN
    !==========================================================
@@ -493,7 +493,7 @@ CONTAINS
       !*** 3. open & read runoff
       TMPNAM=INQUIRE_FID()
       open(TMPNAM,FILE=CIFNAME,FORM='UNFORMATTED',ACCESS='DIRECT',RECL=4*NXIN*NYIN)
-      READ(TMPNAM,REC=IRECINP) R2TMP
+      read(TMPNAM,REC=IRECINP) R2TMP
       close(TMPNAM)
       write(LOGNAM,*) "IRECINP:", IRECINP
 
@@ -509,7 +509,7 @@ CONTAINS
 
          TMPNAM=INQUIRE_FID()
          open(TMPNAM,FILE=CIFNAME,FORM='UNFORMATTED',ACCESS='DIRECT',RECL=4*NXIN*NYIN)
-         READ(TMPNAM,REC=IRECINP) R2TMP
+         read(TMPNAM,REC=IRECINP) R2TMP
          close(TMPNAM)
          write(LOGNAM,*) "IRECINP:", IRECINP
 
@@ -716,7 +716,7 @@ CONTAINS
 
    integer(KIND=JPIM),SAVE         ::  ISEQ
    ! ================================================
-      ALLOCATE(D2TEMP(NSEQMAX,1))
+      allocate(D2TEMP(NSEQMAX,1))
       CALL mapD2vecD(PBUFFIN,D2TEMP)
 !$OMP PARALLEL DO
       DO ISEQ=1, NSEQALL

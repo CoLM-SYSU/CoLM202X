@@ -208,8 +208,8 @@ CONTAINS
          open(varout(jf)%binid,file=varout(jf)%cfile,form='unformatted',access='direct',recl=4*NSEQMAX*nsed)
       ELSE
          IF ( REGIONTHIS==1 ) THEN
-         varout(jf)%cfile=trim(coutdir)//trim(fName)//trim(CSUFBIN)
-         open(varout(jf)%binid,file=varout(jf)%cfile,form='unformatted',access='direct',recl=4*NX*NY*nsed)
+            varout(jf)%cfile=trim(coutdir)//trim(fName)//trim(CSUFBIN)
+            open(varout(jf)%binid,file=varout(jf)%cfile,form='unformatted',access='direct',recl=4*NX*NY*nsed)
          ENDIF
       ENDIF
       write(LOGNAM,*) "output file opened in unit: ", TRIM(VAROUT(JF)%CFILE), VAROUT(JF)%BINID
@@ -295,7 +295,7 @@ CONTAINS
             ELSE 
                CALL wrte_outvec(varout(jf)%binid,IRECOUT,d2vec)
              ENDIF
-         END DO
+         ENDDO
 
          write(LOGNAM,*) 'cmf::sediment_output_write: END'
       ENDIF

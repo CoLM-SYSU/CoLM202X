@@ -124,7 +124,7 @@ SUBROUTINE CMF_PHYSICS_ADVANCE
 
    ! --- Optional: calculate instantaneous discharge (only at the end of outer time step)
    IF ( LOUTINS ) THEN
-   CALL CMF_CALC_OUTINS            !! reservoir operation
+      CALL CMF_CALC_OUTINS            !! reservoir operation
    ENDIF
 
 

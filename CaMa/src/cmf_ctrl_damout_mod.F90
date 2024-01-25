@@ -118,14 +118,14 @@ CONTAINS
       ! SDAM_H22=.TRUE.
 
       !*** 3. read namelist
-      REWIND(NSETFILE)
-      READ(NSETFILE,NML=NDAMOUT)
+      rewind(NSETFILE)
+      read(NSETFILE,NML=NDAMOUT)
 
       IF( LDAMOUT )THEN
-      write(LOGNAM,*)   "=== NAMELIST, NDAMOUT ==="
-      write(LOGNAM,*)   "CDAMFILE: ", CDAMFILE
-      write(LOGNAM,*)   "LDAMTXT: " , LDAMTXT
-      write(LOGNAM,*)   "LDAMOPT: " , LDAMOPT
+         write(LOGNAM,*)   "=== NAMELIST, NDAMOUT ==="
+         write(LOGNAM,*)   "CDAMFILE: ", CDAMFILE
+         write(LOGNAM,*)   "LDAMTXT: " , LDAMTXT
+         write(LOGNAM,*)   "LDAMOPT: " , LDAMOPT
       ENDIF
 
       close(NSETFILE)
@@ -160,20 +160,20 @@ CONTAINS
 
       NDAMFILE=INQUIRE_FID()
       open(NDAMFILE,FILE=CDAMFILE_tmp,STATUS="OLD")
-      READ(NDAMFILE,*) NDAM
-      READ(NDAMFILE,*)        
+      read(NDAMFILE,*) NDAM
+      read(NDAMFILE,*)        
 
       write(LOGNAM,*) "CMF::DAMOUT_INIT: number of dams", NDAM
 
-      !! --- ALLOCATE ---
+      !! --- allocate ---
       !! calculate from CDAMFILE
-      ALLOCATE(DamSeq(NDAM))
+      allocate(DamSeq(NDAM))
       !! dam map, dam variable
-      ALLOCATE(I1DAM(NSEQMAX))
+      allocate(I1DAM(NSEQMAX))
       !! from CDAMFILE
-      ALLOCATE(GRanD_ID(NDAM))
-      ALLOCATE(MainUse(NDAM))
-      ALLOCATE(upreal(NDAM))
+      allocate(GRanD_ID(NDAM))
+      allocate(MainUse(NDAM))
+      allocate(upreal(NDAM))
 
       !! --------------
       DamSeq(:)= IMIS
@@ -207,13 +207,13 @@ CONTAINS
 
       NDAMFILE=INQUIRE_FID()
       open(NDAMFILE,FILE=CDAMFILE_tmp,STATUS="OLD")
-      READ(NDAMFILE,*) 
+      read(NDAMFILE,*) 
 
-      !! --- ALLOCATE ---
-      ALLOCATE(Qn(NDAM), Qf(NDAM))
+      !! --- allocate ---
+      allocate(Qn(NDAM), Qf(NDAM))
 
       DO IDAM = 1, NDAM
-         READ(NDAMFILE,*) GRanD_ID(IDAM), Qn(IDAM), Qf(IDAM)
+         read(NDAMFILE,*) GRanD_ID(IDAM), Qn(IDAM), Qf(IDAM)
       ENDDO
       close(NDAMFILE)
 
@@ -224,13 +224,13 @@ CONTAINS
 
       NDAMFILE=INQUIRE_FID()
       open(NDAMFILE,FILE=CDAMFILE_tmp,STATUS="OLD")
-      READ(NDAMFILE,*) 
+      read(NDAMFILE,*) 
 
-      !! --- ALLOCATE ---
-      ALLOCATE(TotVol(NDAM), FldVol(NDAM), NorVol(NDAM), ConVol(NDAM))
+      !! --- allocate ---
+      allocate(TotVol(NDAM), FldVol(NDAM), NorVol(NDAM), ConVol(NDAM))
 
       DO IDAM = 1, NDAM
-         READ(NDAMFILE,*) GRanD_ID(IDAM), TotVol(IDAM), FldVol(IDAM), NorVol(IDAM), ConVol(IDAM)
+         read(NDAMFILE,*) GRanD_ID(IDAM), TotVol(IDAM), FldVol(IDAM), NorVol(IDAM), ConVol(IDAM)
          TotVol(IDAM) = TotVol(IDAM) * 1.E6    !! from Million Cubic Meter to m3
          FldVol(IDAM) = FldVol(IDAM) * 1.E6
          NorVol(IDAM) = NorVol(IDAM) * 1.E6
@@ -240,22 +240,22 @@ CONTAINS
 
       !! ================ READ water use data ================
       IF(LDAMOPT == "H06" .or. LDAMOPT == "V13")THEN  
-      write(LOGNAM,*) "CMF:: READ_WATER_USE "
-      CALL READ_WATER_USE 
+         write(LOGNAM,*) "CMF:: READ_WATER_USE "
+         CALL READ_WATER_USE 
       ENDIF
 
       !! ================ parameters for different schemes ================
       IF(LDAMOPT == "H06" .or. LDAMOPT == "V13")THEN  
-         !! --- ALLOCATE ---
-         ALLOCATE(H06_DPI(NDAM), H06_c(NDAM))
+         !! --- allocate ---
+         allocate(H06_DPI(NDAM), H06_c(NDAM))
 
          H06_DPI = WUSE_AD / Qn    
          H06_c = TotVol / (Qn * 86400. * 365.) !! Qn m3/s to m3
       ENDIF
 
       IF(LDAMOPT == "H22")THEN 
-         !! --- ALLOCATE ---
-         ALLOCATE(H22_EmeVol(NDAM), H22_k(NDAM))
+         !! --- allocate ---
+         allocate(H22_EmeVol(NDAM), H22_k(NDAM))
 
          H22_EmeVol = FldVol + (TotVol - FldVol)*0.2  
          H22_k =  max((1. - (TotVol - FldVol) / upreal /0.2),0._JPRB)
@@ -268,13 +268,13 @@ CONTAINS
 
          NDAMFILE=INQUIRE_FID()
          open(NDAMFILE,FILE=CDAMFILE_tmp,STATUS="OLD")
-         READ(NDAMFILE,*) 
+         read(NDAMFILE,*) 
 
-         !! --- ALLOCATE ---
-         ALLOCATE(StFC_Mth(NDAM), NdFC_Mth(NDAM),StOP_Mth(NDAM))
+         !! --- allocate ---
+         allocate(StFC_Mth(NDAM), NdFC_Mth(NDAM),StOP_Mth(NDAM))
 
          DO IDAM = 1, NDAM
-            READ(NDAMFILE,*) GRanD_ID(IDAM), StFC_Mth(IDAM), NdFC_Mth(IDAM),StOP_Mth(IDAM)
+            read(NDAMFILE,*) GRanD_ID(IDAM), StFC_Mth(IDAM), NdFC_Mth(IDAM),StOP_Mth(IDAM)
          ENDDO
          close(NDAMFILE)
       ENDIF
@@ -350,17 +350,17 @@ CONTAINS
       CDAMFILE_WUSE_YEAR = trim(CDAMFILE)//'water_use/'//trim(adjustl(CYYYY))//'.txt'
       write(LOGNAM,*) "CMF::DAMOUT_INIT: dam water use file:", trim(CDAMFILE_WUSE_YEAR)
 
-      !! --- ALLOCATE ---
+      !! --- allocate ---
       !! from dam water use data
-      ALLOCATE(WUSE_DD(NDAM, NSTEPS))    
-      ALLOCATE(WUSE_AD(NDAM))          
+      allocate(WUSE_DD(NDAM, NSTEPS))    
+      allocate(WUSE_AD(NDAM))          
 
       !! read dam water use
       NDAMFILE=INQUIRE_FID()
       open(NDAMFILE,FILE=trim(CDAMFILE_WUSE_YEAR),STATUS="OLD")
 
       DO IDAM = 1, NDAM
-         READ(NDAMFILE,*) tmp_i, tmp_name, WUSE_DD(IDAM,:)  
+         read(NDAMFILE,*) tmp_i, tmp_name, WUSE_DD(IDAM,:)  
          WUSE_AD(IDAM) = sum(WUSE_DD(IDAM,:))/NSTEPS     
       ENDDO
       close(NDAMFILE)

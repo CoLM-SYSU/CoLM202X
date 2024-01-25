@@ -106,113 +106,113 @@ CONTAINS
       CALL sediment_restart_init
 
    CONTAINS
-   !==================================
-   SUBROUTINE sediment_map_init
-   USE YOS_CMF_INPUT,           only: NLFP, PGRV
-   USE CMF_UTILS_MOD,           only: mapR2vecD
-   USE yos_cmf_sed,             only: d2sedfrc, psedD, pset, pwatD, setVel, visKin
-   USE cmf_calc_sedpar_mod,     only: calc_settingVelocity
-   USE sed_utils_mod,           only: splitchar
+      !==================================
+      SUBROUTINE sediment_map_init
+      USE YOS_CMF_INPUT,           only: NLFP, PGRV
+      USE CMF_UTILS_MOD,           only: mapR2vecD
+      USE yos_cmf_sed,             only: d2sedfrc, psedD, pset, pwatD, setVel, visKin
+      USE cmf_calc_sedpar_mod,     only: calc_settingVelocity
+      USE sed_utils_mod,           only: splitchar
 
-   IMPLICIT NONE
-   integer(kind=JPIM)              :: i, ierr, ised, iseq, tmpnam
-   real(kind=JPRM)                 :: r2temp(NX,NY), sTmp1(nsed)
-   character(len=256)              :: ctmp(20)
+      IMPLICIT NONE
+      integer(kind=JPIM)              :: i, ierr, ised, iseq, tmpnam
+      real(kind=JPRM)                 :: r2temp(NX,NY), sTmp1(nsed)
+      character(len=256)              :: ctmp(20)
 
-      !------------------------!
-      ! get sediment diameters !
-      !------------------------!
-      ctmp(:) = '-999'
-      CALL splitchar(sedD,ctmp)
-      ised = 0
-      allocate(sDiam(nsed))
-      DO i = 1, nsed
-         IF ( ctmp(i) /= '-999' ) THEN
-            ised = ised + 1
-            read(ctmp(i),*) sDiam(ised)
-         ENDIF
-      ENDDO
-      IF ( ised /= nsed ) THEN
-         write(LOGNAM,*) 'nsed and sedD DO not match',ised,nsed
-         STOP
-      ENDIF
-      write(LOGNAM,*) ised,' grain sizes: ',sDiam(:)
-
-      !----------------------------!
-      ! calculate setting velocity !
-      !----------------------------!
-      allocate(setVel(nsed))
-      setVel(:) = calc_settingVelocity()
-
-      !-----------------------------!
-      ! read sediment fraction file !
-      !-----------------------------!
-      allocate(d2sedfrc(NSEQMAX,nsed))
-      IF ( REGIONTHIS == 1 ) THEN
-         tmpnam = INQUIRE_FID()
-         open(tmpnam,file=csedfrc,form='unformatted',access='direct',recl=4*NX*NY)
-      ENDIF
-      DO ised = 1, nsed
-         IF ( REGIONTHIS == 1 ) read(tmpnam,rec=ised) r2temp
-#ifdef UseMPI_CMF
-         CALL MPI_Bcast(r2temp(1,1),NX*NY,mpi_real4,0,MPI_COMM_CAMA,ierr)
-#endif
-         CALL mapR2vecD(r2temp,d2sedfrc(:,ised))
-      ENDDO
-      IF ( REGIONTHIS == 1 ) close(tmpnam)
-   
-      ! adjust if any fractions are negative or if sum is not equal to 1
-      IF ( nsed == 1 ) THEN
-         d2sedfrc(:,:) = 1.d0
-      ELSE
-!$omp parallel DO
-         DO iseq = 1, NSEQALL
-            IF ( minval(d2sedfrc(iseq,:)) < 0.d0 .or. sum(d2sedfrc(iseq,:)) == 0.d0 ) THEN
-               d2sedfrc(iseq,:) = 1.d0 / dble(nsed)
-            ELSE IF ( sum(d2sedfrc(iseq,:)) /= 1.d0 ) THEN
-               d2sedfrc(iseq,:) = d2sedfrc(iseq,:) / sum(d2sedfrc(iseq,:))
+         !------------------------!
+         ! get sediment diameters !
+         !------------------------!
+         ctmp(:) = '-999'
+         CALL splitchar(sedD,ctmp)
+         ised = 0
+         allocate(sDiam(nsed))
+         DO i = 1, nsed
+            IF ( ctmp(i) /= '-999' ) THEN
+               ised = ised + 1
+               read(ctmp(i),*) sDiam(ised)
             ENDIF
          ENDDO
+         IF ( ised /= nsed ) THEN
+            write(LOGNAM,*) 'nsed and sedD DO not match',ised,nsed
+            STOP
+         ENDIF
+         write(LOGNAM,*) ised,' grain sizes: ',sDiam(:)
+
+         !----------------------------!
+         ! calculate setting velocity !
+         !----------------------------!
+         allocate(setVel(nsed))
+         setVel(:) = calc_settingVelocity()
+
+         !-----------------------------!
+         ! read sediment fraction file !
+         !-----------------------------!
+         allocate(d2sedfrc(NSEQMAX,nsed))
+         IF ( REGIONTHIS == 1 ) THEN
+            tmpnam = INQUIRE_FID()
+            open(tmpnam,file=csedfrc,form='unformatted',access='direct',recl=4*NX*NY)
+         ENDIF
+         DO ised = 1, nsed
+            IF ( REGIONTHIS == 1 ) read(tmpnam,rec=ised) r2temp
+#ifdef UseMPI_CMF
+            CALL MPI_Bcast(r2temp(1,1),NX*NY,mpi_real4,0,MPI_COMM_CAMA,ierr)
+#endif
+            CALL mapR2vecD(r2temp,d2sedfrc(:,ised))
+         ENDDO
+         IF ( REGIONTHIS == 1 ) close(tmpnam)
+      
+         ! adjust if any fractions are negative or if sum is not equal to 1
+         IF ( nsed == 1 ) THEN
+            d2sedfrc(:,:) = 1.d0
+         ELSE
+!$omp parallel DO
+            DO iseq = 1, NSEQALL
+               IF ( minval(d2sedfrc(iseq,:)) < 0.d0 .or. sum(d2sedfrc(iseq,:)) == 0.d0 ) THEN
+                  d2sedfrc(iseq,:) = 1.d0 / dble(nsed)
+               ELSE IF ( sum(d2sedfrc(iseq,:)) /= 1.d0 ) THEN
+                  d2sedfrc(iseq,:) = d2sedfrc(iseq,:) / sum(d2sedfrc(iseq,:))
+               ENDIF
+            ENDDO
 !$omp END parallel do
-      ENDIF
-   END SUBROUTINE sediment_map_init
-!==================================
-   SUBROUTINE sediment_vars_init
-   USE yos_cmf_sed,             only: d2bedout, d2netflw, d2seddep, &
-                                       d2bedout_avg, d2netflw_avg,   &
-                                       d2sedout, d2sedcon, d2sedinp, &
-                                       d2sedout_avg, d2sedinp_avg, d2layer, &
-                                       d2sedv, d2sedv_avg, d2depv,   &
-                                       sedDT, step_sed
-   USE YOS_CMF_INPUT,           only: DT
-   IMPLICIT NONE
+         ENDIF
+      END SUBROUTINE sediment_map_init
+   !==================================
+      SUBROUTINE sediment_vars_init
+      USE yos_cmf_sed,             only: d2bedout, d2netflw, d2seddep, &
+                                          d2bedout_avg, d2netflw_avg,   &
+                                          d2sedout, d2sedcon, d2sedinp, &
+                                          d2sedout_avg, d2sedinp_avg, d2layer, &
+                                          d2sedv, d2sedv_avg, d2depv,   &
+                                          sedDT, step_sed
+      USE YOS_CMF_INPUT,           only: DT
+      IMPLICIT NONE
 
-      IF ( mod(sedDT,DT) /= 0 ) THEN
-         write(lognam,*) 'sedDT ',sedDT,'is not a multiple of DT',DT
-         STOP
-      ENDIF
-      step_sed = int(sedDT/DT)
+         IF ( mod(sedDT,DT) /= 0 ) THEN
+            write(lognam,*) 'sedDT ',sedDT,'is not a multiple of DT',DT
+            STOP
+         ENDIF
+         step_sed = int(sedDT/DT)
 
-      allocate(d2sedv(NSEQMAX,nsed,6))
-      d2sedv(:,:,:) = 0._JPRB
-      d2sedout => d2sedv(:,:,1)
-      d2sedcon => d2sedv(:,:,2)
-      d2sedinp => d2sedv(:,:,3)
-      d2bedout => d2sedv(:,:,4)
-      d2netflw => d2sedv(:,:,5)
-      d2layer => d2sedv(:,:,6)
+         allocate(d2sedv(NSEQMAX,nsed,6))
+         d2sedv(:,:,:) = 0._JPRB
+         d2sedout => d2sedv(:,:,1)
+         d2sedcon => d2sedv(:,:,2)
+         d2sedinp => d2sedv(:,:,3)
+         d2bedout => d2sedv(:,:,4)
+         d2netflw => d2sedv(:,:,5)
+         d2layer => d2sedv(:,:,6)
 
-      allocate(d2depv(NSEQMAX,totlyrnum,nsed))
-      d2depv(:,:,:) = 0._JPRB
-      d2seddep => d2depv
+         allocate(d2depv(NSEQMAX,totlyrnum,nsed))
+         d2depv(:,:,:) = 0._JPRB
+         d2seddep => d2depv
 
-      allocate(d2sedv_avg(NSEQMAX,nsed,4))
-      d2sedv_avg(:,:,:) = 0._JPRB
-      d2sedout_avg => d2sedv_avg(:,:,1)
-      d2sedinp_avg => d2sedv_avg(:,:,2)
-      d2bedout_avg => d2sedv_avg(:,:,3)
-      d2netflw_avg => d2sedv_avg(:,:,4)
-   END SUBROUTINE sediment_vars_init
+         allocate(d2sedv_avg(NSEQMAX,nsed,4))
+         d2sedv_avg(:,:,:) = 0._JPRB
+         d2sedout_avg => d2sedv_avg(:,:,1)
+         d2sedinp_avg => d2sedv_avg(:,:,2)
+         d2bedout_avg => d2sedv_avg(:,:,3)
+         d2netflw_avg => d2sedv_avg(:,:,4)
+      END SUBROUTINE sediment_vars_init
    END SUBROUTINE cmf_sed_init
 !####################################################################
 END MODULE CMF_CTRL_SED_MOD

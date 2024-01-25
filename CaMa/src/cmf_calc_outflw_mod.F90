@@ -47,7 +47,7 @@ CONTAINS
          D2SFCELV(ISEQ,1)     = D2RIVELV(ISEQ,1) + D2RIVDPH(ISEQ,1)
          D2SFCELV_PRE(ISEQ,1) = D2RIVELV(ISEQ,1) + D2RIVDPH_PRE(ISEQ,1)
          D2FLDDPH_PRE(ISEQ,1) = MAX( D2RIVDPH_PRE(ISEQ,1)-D2RIVHGT(ISEQ,1), 0._JPRB )
-      END DO
+      ENDDO
 !$OMP END PARALLEL DO
 
 !$OMP PARALLEL DO
@@ -57,7 +57,7 @@ CONTAINS
          DSFCMAX    =MAX( D2SFCELV(ISEQ,1),    D2SFCELV(JSEQ,1) )
          DSFCMAX_PRE=MAX( D2SFCELV_PRE(ISEQ,1),D2SFCELV_PRE(JSEQ,1) )
          DSLOPE = ( D2SFCELV(ISEQ,1)-D2SFCELV(JSEQ,1) ) * D2NXTDST(ISEQ,1)**(-1.)
-         DSLOPE_F = MAX( -0.005_JPRB, min( 0.005_JPRB,DSLOPE ))    !! set max&min [instead of using weir equation for efficiency]
+         DSLOPE_F = MAX( -0.005_JPRB, MIN( 0.005_JPRB,DSLOPE ))    !! set MAX&MIN [instead of using weir equation for efficiency]
 
          !=== River Flow ===
          DFLW   = DSFCMAX - D2RIVELV(ISEQ,1)        !!  flow cross-section depth
@@ -87,7 +87,7 @@ CONTAINS
          
             DARE_PRE_F = D2FLDSTO_PRE(ISEQ,1) * D2RIVLEN(ISEQ,1)**(-1.)
             DARE_PRE_F = MAX( DARE_PRE_F - D2FLDDPH_PRE(ISEQ,1)*D2RIVWTH(ISEQ,1), 1.E-6_JPRB )   !! remove above river channel area
-            DARE_IMP_F = max( (DARE_F*DARE_PRE_F)**0.5, 1.E-6_JPRB )
+            DARE_IMP_F = MAX( (DARE_F*DARE_PRE_F)**0.5, 1.E-6_JPRB )
          
             IF( DFLW_IMP_F>1.E-5 .and. DARE_IMP_F>1.E-5 )THEN 
                DOUT_PRE_F = D2FLDOUT_PRE(ISEQ,1)
@@ -99,7 +99,7 @@ CONTAINS
          
             IF( D2FLDOUT(ISEQ,1)*D2RIVOUT(ISEQ,1)<0._JPRB ) D2FLDOUT(ISEQ,1)=0._JPRB  !! stabilization
          ENDIF
-      END DO
+      ENDDO
 !$OMP END PARALLEL DO
 
 !$OMP PARALLEL DO                                                     !! for river mouth grids
@@ -110,7 +110,7 @@ CONTAINS
          ELSE
             DSLOPE = ( D2SFCELV(ISEQ,1) - D2DWNELV(ISEQ,1) ) * PDSTMTH ** (-1.)
          ENDIF
-         DSLOPE_F = max( -0.005_JPRB, min( 0.005_JPRB,DSLOPE ))    !! set max&min [instead of using weir equation for efficiency]
+         DSLOPE_F = MAX( -0.005_JPRB, MIN( 0.005_JPRB,DSLOPE ))    !! set MAX&MIN [instead of using weir equation for efficiency]
          !=== river mouth flow ===
 
          DFLW   = D2RIVDPH(ISEQ,1)
@@ -141,7 +141,7 @@ CONTAINS
          
             DARE_PRE_F = D2FLDSTO_PRE(ISEQ,1) * D2RIVLEN(ISEQ,1)**(-1.)
             DARE_PRE_F = MAX( DARE_PRE_F - D2FLDDPH_PRE(ISEQ,1)*D2RIVWTH(ISEQ,1), 1.E-6_JPRB )   !! remove above river channel area
-            DARE_IMP_F = max( (DARE_F*DARE_PRE_F)**0.5, 1.E-6_JPRB )
+            DARE_IMP_F = MAX( (DARE_F*DARE_PRE_F)**0.5, 1.E-6_JPRB )
          
             IF( DFLW_IMP_F>1.E-5 .and. DARE_IMP_F>1.E-5 )THEN 
                DOUT_PRE_F = D2FLDOUT_PRE(ISEQ,1)
@@ -153,7 +153,7 @@ CONTAINS
          
             IF( D2FLDOUT(ISEQ,1)*D2RIVOUT(ISEQ,1)<0._JPRB ) D2FLDOUT(ISEQ,1)=0._JPRB  !! stabilization
          ENDIF
-      END DO
+      ENDDO
 !$OMP END PARALLEL DO
 
    END SUBROUTINE CMF_CALC_OUTFLW
@@ -185,7 +185,7 @@ CONTAINS
          P2FLDINF(ISEQ,1) = 0._JPRD
          P2STOOUT(ISEQ,1) = 0._JPRD
          D2RATE(ISEQ,1) = 1._JPRB
-      END DO
+      ENDDO
 !$OMP END PARALLEL DO
 
 !! for normal cells ---------
@@ -194,10 +194,10 @@ CONTAINS
 #endif
       DO ISEQ=1, NSEQRIV                                                    !! for normalcells
          JSEQ=I1NEXT(ISEQ) ! next cell's pixel
-         OUT_R1 = max(  D2RIVOUT(ISEQ,1),0._JPRB )
-         OUT_R2 = max( -D2RIVOUT(ISEQ,1),0._JPRB )
-         OUT_F1 = max(  D2FLDOUT(ISEQ,1),0._JPRB )
-         OUT_F2 = max( -D2FLDOUT(ISEQ,1),0._JPRB )
+         OUT_R1 = MAX(  D2RIVOUT(ISEQ,1),0._JPRB )
+         OUT_R2 = MAX( -D2RIVOUT(ISEQ,1),0._JPRB )
+         OUT_F1 = MAX(  D2FLDOUT(ISEQ,1),0._JPRB )
+         OUT_F2 = MAX( -D2FLDOUT(ISEQ,1),0._JPRB )
          DIUP=(OUT_R1+OUT_F1)*DT
          DIDW=(OUT_R2+OUT_F2)*DT
 #ifndef NoAtom_CMF
@@ -208,7 +208,7 @@ CONTAINS
 !$OMP ATOMIC
 #endif
          P2STOOUT(JSEQ,1) = P2STOOUT(JSEQ,1) + DIDW 
-      END DO
+      ENDDO
 #ifndef NoAtom_CMF
 !$OMP END PARALLEL DO
 #endif
@@ -216,10 +216,10 @@ CONTAINS
 !! for river mouth grids ------------
 !$OMP PARALLEL DO
       DO ISEQ=NSEQRIV+1, NSEQALL
-         OUT_R1 = max( D2RIVOUT(ISEQ,1), 0._JPRB )
-         OUT_F1 = max( D2FLDOUT(ISEQ,1), 0._JPRB )
+         OUT_R1 = MAX( D2RIVOUT(ISEQ,1), 0._JPRB )
+         OUT_F1 = MAX( D2FLDOUT(ISEQ,1), 0._JPRB )
          P2STOOUT(ISEQ,1) = P2STOOUT(ISEQ,1) + OUT_R1*DT + OUT_F1*DT
-      END DO
+      ENDDO
 !$OMP END PARALLEL DO
 
 !============================
@@ -228,9 +228,9 @@ CONTAINS
 !$OMP PARALLEL DO
       DO ISEQ=1, NSEQALL
          IF ( P2STOOUT(ISEQ,1) > 1.E-8 ) THEN
-            D2RATE(ISEQ,1) = min( (P2RIVSTO(ISEQ,1)+P2FLDSTO(ISEQ,1)) * P2STOOUT(ISEQ,1)**(-1.), 1._JPRD )
+            D2RATE(ISEQ,1) = MIN( (P2RIVSTO(ISEQ,1)+P2FLDSTO(ISEQ,1)) * P2STOOUT(ISEQ,1)**(-1.), 1._JPRD )
          ENDIF
-      END DO
+      ENDDO
 !$OMP END PARALLEL DO
 
 !! normal pixels------
@@ -254,7 +254,7 @@ CONTAINS
 !$OMP ATOMIC
 #endif
          P2FLDINF(JSEQ,1) = P2FLDINF(JSEQ,1) + D2FLDOUT(ISEQ,1)
-      END DO
+      ENDDO
 #ifndef NoAtom_CMF
 !$OMP END PARALLEL DO
 #endif
@@ -264,7 +264,7 @@ CONTAINS
       DO ISEQ=NSEQRIV+1, NSEQALL
          D2RIVOUT(ISEQ,1) = D2RIVOUT(ISEQ,1)*D2RATE(ISEQ,1)
          D2FLDOUT(ISEQ,1) = D2FLDOUT(ISEQ,1)*D2RATE(ISEQ,1)
-      END DO
+      ENDDO
 !$OMP END PARALLEL DO
 
       D2RIVINF(:,:)=P2RIVINF(:,:)  !! needed for SinglePrecisionMode

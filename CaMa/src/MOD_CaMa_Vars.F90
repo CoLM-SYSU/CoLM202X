@@ -8,7 +8,7 @@ MODULE MOD_CaMa_Vars
 !ANCILLARY FUNCTIONS AND SUBROUTINES
 !-------------------
    !* :SUBROUTINE:"allocate_acc_cama_fluxes"   :  Initilization Accumulation of cama-flood variables
-   !* :SUBROUTINE:"deallocate_acc_cama_fluxes" :  Deallocate Accumulation of cama-flood variables
+   !* :SUBROUTINE:"deallocate_acc_cama_fluxes" :  deallocate Accumulation of cama-flood variables
    !* :SUBROUTINE:"FLUSH_acc_cama_fluxes"      :  Reset Accumulation of cama-flood variables
    !* :SUBROUTINE:"accumulate_cama_fluxes"     :  Get accumulated cama-flood variables
    !* :SUBROUTINE:"allocate_2D_cama_Fluxes"    :  Get floodplain evaporation
@@ -140,8 +140,8 @@ CONTAINS
             allocate (a_rnof_cama(numpatch))
             allocate (a_fevpg_fld(numpatch))
             allocate (a_finfg_fld(numpatch))
-         END IF
-      END IF
+         ENDIF
+      ENDIF
 
    END SUBROUTINE allocate_acc_cama_fluxes
 
@@ -167,8 +167,8 @@ CONTAINS
             deallocate (a_rnof_cama)
             deallocate (a_fevpg_fld)
             deallocate (a_finfg_fld)
-         END IF
-      END IF
+         ENDIF
+      ENDIF
 
    END SUBROUTINE deallocate_acc_cama_fluxes
 
@@ -198,8 +198,8 @@ CONTAINS
             a_rnof_cama (:) = spval
             a_fevpg_fld (:) = spval
             a_finfg_fld (:) = spval
-         END IF
-      END IF
+         ENDIF
+      ENDIF
 
    END SUBROUTINE FLUSH_acc_cama_fluxes
 
@@ -229,8 +229,8 @@ CONTAINS
             CALL acc1d_cama (rnof, a_rnof_cama)
             CALL acc1d_cama (fevpg_fld, a_fevpg_fld)
             CALL acc1d_cama (finfg_fld, a_finfg_fld)
-         END IF
-      END IF
+         ENDIF
+      ENDIF
 
    END SUBROUTINE accumulate_cama_fluxes
 
@@ -262,9 +262,9 @@ CONTAINS
                s(i) = s(i) + var(i)
             ELSE
                s(i) = var(i)
-            END IF
-         END IF
-      END DO
+            ENDIF
+         ENDIF
+      ENDDO
 
    END SUBROUTINE acc1d_cama
 
@@ -296,7 +296,7 @@ CONTAINS
          !TODO: check the following variables
          CALL allocate_block_data (grid, f_fevpg_fld)      ! inundation evaporation [m/s]
          CALL allocate_block_data (grid, f_finfg_fld)      ! inundation re-infiltration [m/s]
-      END IF
+      ENDIF
 
    END SUBROUTINE allocate_2D_cama_Fluxes
 
@@ -588,14 +588,14 @@ CONTAINS
                filter = filter .and. forcmask
             ENDIF
             vectmp (:) = 1.
-         END IF
+         ENDIF
       ENDIF
 
       CALL mp2g_cama%map (WorkerVar, IOVar, spv = spval, msk = filter)
 
       IF (p_is_io) THEN
          CALL allocate_block_data (gcama, sumwt)
-      END IF
+      ENDIF
 
       CALL mp2g_cama%map (vectmp, sumwt, spv = spval, msk = filter)
 
@@ -614,15 +614,15 @@ CONTAINS
                            ENDIF
                         ELSE
                            IOVar%blk(xblk,yblk)%val(xloc,yloc) = spval
-                        END IF
+                        ENDIF
 
-                     END DO
-                  END DO
+                     ENDDO
+                  ENDDO
 
-               END IF
-            END DO
-         END DO
-      END IF
+               ENDIF
+            ENDDO
+         ENDDO
+      ENDIF
 
       IF (p_is_master) THEN
          DO idata = 1, cama_gather%ndatablk
@@ -641,7 +641,7 @@ CONTAINS
                isrc, 10011, p_comm_glb, p_stat, p_err)
             MasterVar (xdsp+1:xdsp+xcnt,ydsp+1:ydsp+ycnt) = rbuf
             deallocate (rbuf)
-         END DO
+         ENDDO
 
       ELSEIF (p_is_io) THEN
          DO iyseg = 1, cama_gather%nyseg
@@ -667,10 +667,10 @@ CONTAINS
 
                   deallocate (sbuf)
 
-               END IF
-            END DO
-         END DO
-      END IF
+               ENDIF
+            ENDDO
+         ENDDO
+      ENDIF
 
       IF (allocated(filter)) deallocate(filter)
       IF (allocated(vectmp)) deallocate(vectmp)
@@ -737,8 +737,8 @@ CONTAINS
                      gblock%pio(iblk,jblk), 10000, p_comm_glb, p_err)
                   deallocate (sbuf)
                ENDIF
-            END DO
-         END DO
+            ENDDO
+         ENDDO
 
          DO iproc = 0, p_np_io-1
             smesg = (/0, 0/)
@@ -766,7 +766,7 @@ CONTAINS
             ELSE
                EXIT
             ENDIF
-         END DO
+         ENDDO
       ENDIF
 
       CALL mg2p_cama%map_aweighted (IOVar, WorkerVar) !mapping grid to pset_type

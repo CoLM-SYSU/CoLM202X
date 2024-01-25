@@ -379,7 +379,7 @@
       ELSE
          CALL WRTE_REST_BIN
       ENDIF
-      !END IF 
+      !ENDIF 
 
    CONTAINS
    !==========================================================

@@ -60,11 +60,11 @@ CONTAINS
 !
 !####################################################################
    SUBROUTINE CMF_MAPS_NMLIST
-      ! reed setting from namelist
-      ! -- Called from CMF_DRV_NMLIST
-      USE YOS_CMF_INPUT,      only: CSETFILE,NSETFILE,LMEANSL,LGDWDLY
-      USE CMF_UTILS_MOD,      only: INQUIRE_FID
-      IMPLICIT NONE
+   ! reed setting from namelist
+   ! -- Called from CMF_DRV_NMLIST
+   USE YOS_CMF_INPUT,      only: CSETFILE,NSETFILE,LMEANSL,LGDWDLY
+   USE CMF_UTILS_MOD,      only: INQUIRE_FID
+   IMPLICIT NONE
       !================================================
       !*** 1. open namelist
       write(LOGNAM,*) ""
@@ -99,39 +99,39 @@ CONTAINS
       CMPIREGNC="NONE"
 
       !*** 3. read namelist
-      REWIND(NSETFILE)
-      READ(NSETFILE,NML=NMAP)
+      rewind(NSETFILE)
+      read(NSETFILE,NML=NMAP)
 
       write(LOGNAM,*)     "=== NAMELIST, NMAP ==="
       write(LOGNAM,*)     "LMAPCDF:   ", LMAPCDF
       IF( LMAPCDF )THEN
-      write(LOGNAM,*)   "CRIVCLINC: ", TRIM(CRIVCLINC)
-      write(LOGNAM,*)   "CRIVPARNC: ", TRIM(CRIVPARNC)
-      IF( LMEANSL ) THEN
-         write(LOGNAM,*) "CMEANSLNC: ", TRIM(CMEANSLNC)
-      ENDIF
+         write(LOGNAM,*)   "CRIVCLINC: ", TRIM(CRIVCLINC)
+         write(LOGNAM,*)   "CRIVPARNC: ", TRIM(CRIVPARNC)
+         IF( LMEANSL ) THEN
+            write(LOGNAM,*) "CMEANSLNC: ", TRIM(CMEANSLNC)
+         ENDIF
 #ifdef UseMPI_CMF
          write(LOGNAM,*) "CMPIREGNC:   ", TRIM(CMPIREGNC)
 #endif
       ELSE
-      write(LOGNAM,*)   "CNEXTXY:   ", TRIM(CNEXTXY)
-      write(LOGNAM,*)   "CGRAREA:   ", TRIM(CGRAREA)
-      write(LOGNAM,*)   "CELEVTN:   ", TRIM(CELEVTN)
-      write(LOGNAM,*)   "CNXTDST:   ", TRIM(CNXTDST)
-      write(LOGNAM,*)   "CRIVLEN:   ", TRIM(CRIVLEN)
-      write(LOGNAM,*)   "CFLDHGT:   ", TRIM(CFLDHGT)
+         write(LOGNAM,*)   "CNEXTXY:   ", TRIM(CNEXTXY)
+         write(LOGNAM,*)   "CGRAREA:   ", TRIM(CGRAREA)
+         write(LOGNAM,*)   "CELEVTN:   ", TRIM(CELEVTN)
+         write(LOGNAM,*)   "CNXTDST:   ", TRIM(CNXTDST)
+         write(LOGNAM,*)   "CRIVLEN:   ", TRIM(CRIVLEN)
+         write(LOGNAM,*)   "CFLDHGT:   ", TRIM(CFLDHGT)
 
-      write(LOGNAM,*)   "CRIVWTH:   ", TRIM(CRIVWTH)
-      write(LOGNAM,*)   "CRIVHGT:   ", TRIM(CRIVHGT)
-      write(LOGNAM,*)   "CRIVMAN:   ", TRIM(CRIVMAN)
+         write(LOGNAM,*)   "CRIVWTH:   ", TRIM(CRIVWTH)
+         write(LOGNAM,*)   "CRIVHGT:   ", TRIM(CRIVHGT)
+         write(LOGNAM,*)   "CRIVMAN:   ", TRIM(CRIVMAN)
 
-      write(LOGNAM,*)   "CPTHOUT:   ", TRIM(CPTHOUT)
-      IF( LGDWDLY )THEN
-         write(LOGNAM,*) "CGDWDLY:    ",TRIM(CGDWDLY)
-      ENDIF
-      IF( LMEANSL )THEN
-         write(LOGNAM,*) "CMEANSL:   ", TRIM(CMEANSL)
-      ENDIF
+         write(LOGNAM,*)   "CPTHOUT:   ", TRIM(CPTHOUT)
+         IF( LGDWDLY )THEN
+            write(LOGNAM,*) "CGDWDLY:    ",TRIM(CGDWDLY)
+         ENDIF
+         IF( LMEANSL )THEN
+            write(LOGNAM,*) "CMEANSL:   ", TRIM(CMEANSL)
+         ENDIF
 #ifdef UseMPI_CMF
          write(LOGNAM,*) "CMPIREG:   ", TRIM(CMPIREG)
 #endif
@@ -163,12 +163,12 @@ CONTAINS
       write(LOGNAM,*) "!---------------------!"
       write(LOGNAM,*) 'CMF::RIVMAP_INIT: river network initialization'
 
-      ! *** 1. ALLOCATE ARRAYS
-      ALLOCATE( I2NEXTX(NX,NY) )
-      ALLOCATE( I2NEXTY(NX,NY) )
-      ALLOCATE( I2REGION(NX,NY) )
-      ALLOCATE( D1LON(NX) )
-      ALLOCATE( D1LAT(NY) )
+      ! *** 1. allocate ARRAYS
+      allocate( I2NEXTX(NX,NY) )
+      allocate( I2NEXTY(NX,NY) )
+      allocate( I2REGION(NX,NY) )
+      allocate( D1LON(NX) )
+      allocate( D1LAT(NY) )
 
       !============================
       !*** 2a. read river network map
@@ -213,7 +213,7 @@ CONTAINS
          CALL READ_BIFPARAM
       ENDIF
 
-      DEALLOCATE( I2NEXTX,I2NEXTY,I2REGION )
+      deallocate( I2NEXTX,I2NEXTY,I2REGION )
 
       write(LOGNAM,*) 'CMF::RIVMAP_INIT: end'
 
@@ -237,8 +237,8 @@ CONTAINS
       write(LOGNAM,*)'RIVMAP_INIT: nextxy binary: ',TRIM(CNEXTXY)
       TMPNAM=INQUIRE_FID()
       open(TMPNAM,FILE=CNEXTXY,FORM='UNFORMATTED',ACCESS='DIRECT',RECL=4*NX*NY)
-      READ(TMPNAM,REC=1) I2NEXTX
-      READ(TMPNAM,REC=2) I2NEXTY
+      read(TMPNAM,REC=1) I2NEXTX
+      read(TMPNAM,REC=2) I2NEXTY
       close(TMPNAM)
 
       IF ( LMAPEND )THEN
@@ -335,22 +335,22 @@ CONTAINS
 
    !! Use MPI: read MPI region map, allocate regions to MPI nodes
 #ifdef UseMPI_CMF
-   IF ( LMAPCDF ) THEN
+      IF ( LMAPCDF ) THEN
 #ifdef UseCDF_CMF
-      CALL NCERROR (NF90_OPEN(CMPIREGNC,NF90_NOWRITE,NCID),'opening '//TRIM(CMPIREGNC) )
-      CALL NCERROR (NF90_INQ_VARID(NCID, 'mpireg',VARID),'getting id' )
-      CALL NCERROR (NF90_GET_VAR(NCID,VARID,I2REGION),'reading data' )
-      CALL NCERROR (NF90_CLOSE(NCID))
+         CALL NCERROR (NF90_OPEN(CMPIREGNC,NF90_NOWRITE,NCID),'opening '//TRIM(CMPIREGNC) )
+         CALL NCERROR (NF90_INQ_VARID(NCID, 'mpireg',VARID),'getting id' )
+         CALL NCERROR (NF90_GET_VAR(NCID,VARID,I2REGION),'reading data' )
+         CALL NCERROR (NF90_CLOSE(NCID))
 #endif
-   ELSE
-      write(LOGNAM,*)'RIVMAP_INIT: read MPI region: ',TRIM(CNEXTXY)
-      TMPNAM=INQUIRE_FID()
-      open(TMPNAM,FILE=CMPIREG,FORM='UNFORMATTED',ACCESS='DIRECT',RECL=4*NX*NY)
-      READ(TMPNAM,REC=1) I2REGION
-      close(TMPNAM)
-   ENDIF
+      ELSE
+         write(LOGNAM,*)'RIVMAP_INIT: read MPI region: ',TRIM(CNEXTXY)
+         TMPNAM=INQUIRE_FID()
+         open(TMPNAM,FILE=CMPIREG,FORM='UNFORMATTED',ACCESS='DIRECT',RECL=4*NX*NY)
+         read(TMPNAM,REC=1) I2REGION
+         close(TMPNAM)
+      ENDIF
 
-   REGIONALL=1
+      REGIONALL=1
 !$OMP PARALLEL DO REDUCTION(max:REGIONALL)
       DO IY=1, NY
          DO IX=1, NX
@@ -362,21 +362,21 @@ CONTAINS
 
 
       write(LOGNAM,*)'RIVMAP_INIT: count number of grid in each region: '
-      ALLOCATE(REGIONGRID(REGIONALL))
+      allocate(REGIONGRID(REGIONALL))
       REGIONGRID(:)=0
       !! OMP reduction operation for array might not be available in some environment
       DO IY=1, NY
-      DO IX=1, NX
-         IF( I2REGION(IX,IY)>0 ) THEN
-            IREGION=I2REGION(IX,IY)
-            REGIONGRID(IREGION)=REGIONGRID(IREGION)+1
-         ENDIF
-      ENDDO
+         DO IX=1, NX
+            IF( I2REGION(IX,IY)>0 ) THEN
+               IREGION=I2REGION(IX,IY)
+               REGIONGRID(IREGION)=REGIONGRID(IREGION)+1
+            ENDIF
+         ENDDO
       ENDDO
 
       NSEQMAX=0
       DO IREGION=1, REGIONALL
-      NSEQMAX=MAX(NSEQMAX,REGIONGRID(IREGION))  !! maximum nseqall among all MPI region
+         NSEQMAX=MAX(NSEQMAX,REGIONGRID(IREGION))  !! maximum nseqall among all MPI region
       ENDDO
 
       write(LOGNAM,*) 'CALC_REGION: REGIONALL= ', REGIONALL
@@ -400,13 +400,13 @@ CONTAINS
       !================================================
       write(LOGNAM,*) 'RIVMAP_INIT: convert 2D map to 1D sequence'
 
-      ALLOCATE( NUPST(NX,NY) )
-      ALLOCATE( UPNOW(NX,NY) )
+      allocate( NUPST(NX,NY) )
+      allocate( UPNOW(NX,NY) )
 
-      ALLOCATE( I1SEQX(NSEQMAX) )
-      ALLOCATE( I1SEQY(NSEQMAX) )
-      ALLOCATE( I1NEXT(NSEQMAX) )
-      ALLOCATE( I2VECTOR(NX,NY) )
+      allocate( I1SEQX(NSEQMAX) )
+      allocate( I1SEQY(NSEQMAX) )
+      allocate( I1NEXT(NSEQMAX) )
+      allocate( I2VECTOR(NX,NY) )
       I1SEQX(:)=0
       I1SEQY(:)=0
       I1NEXT(:)=0
@@ -416,81 +416,81 @@ CONTAINS
       NUPST(:,:)=0
       UPNOW(:,:)=0
       DO IY=1, NY
-      DO IX=1, NX
-         IF( I2NEXTX(IX,IY).gt.0 .and. I2REGION(IX,IY)==REGIONTHIS )THEN
-            JX=I2NEXTX(IX,IY)
-            JY=I2NEXTY(IX,IY)
-            NUPST(JX,JY)=NUPST(JX,JY)+1
-         ENDIF
-      ENDDO
+         DO IX=1, NX
+            IF( I2NEXTX(IX,IY).gt.0 .and. I2REGION(IX,IY)==REGIONTHIS )THEN
+               JX=I2NEXTX(IX,IY)
+               JY=I2NEXTY(IX,IY)
+               NUPST(JX,JY)=NUPST(JX,JY)+1
+            ENDIF
+         ENDDO
       ENDDO
 
       ! register upmost grid in 1d sequence
       ISEQ=0
       DO IY=1, NY
-      DO IX=1, NX
-         IF( I2NEXTX(IX,IY).gt.0 .and. I2REGION(IX,IY)==REGIONTHIS )THEN
-            IF( NUPST(IX,IY)==UPNOW(IX,IY) )THEN
-            ISEQ=ISEQ+1
-            I1SEQX(ISEQ)=IX
-            I1SEQY(ISEQ)=IY
-            I2VECTOR(IX,IY)=ISEQ
+         DO IX=1, NX
+            IF( I2NEXTX(IX,IY).gt.0 .and. I2REGION(IX,IY)==REGIONTHIS )THEN
+               IF( NUPST(IX,IY)==UPNOW(IX,IY) )THEN
+               ISEQ=ISEQ+1
+               I1SEQX(ISEQ)=IX
+               I1SEQY(ISEQ)=IY
+               I2VECTOR(IX,IY)=ISEQ
+               ENDIF
             ENDIF
-         ENDIF
-      ENDDO
+         ENDDO
       ENDDO
       ISEQ1=1
       ISEQ2=ISEQ
 
       AGAIN=1
       DO WHILE( AGAIN==1 )
-      AGAIN=0
-      JSEQ=ISEQ2
-      DO ISEQ=ISEQ1, ISEQ2
-         IX=I1SEQX(ISEQ)
-         IY=I1SEQY(ISEQ)
-         JX=I2NEXTX(IX,IY)
-         JY=I2NEXTY(IX,IY)
-         UPNOW(JX,JY)=UPNOW(JX,JY)+1
-         IF( UPNOW(JX,JY)==NUPST(JX,JY) .and. I2NEXTX(JX,JY)>0 )THEN !! if all upstream calculated, register to 1D sequence
-            JSEQ=JSEQ+1
-            I1SEQX(JSEQ)=JX
-            I1SEQY(JSEQ)=JY
-            I2VECTOR(JX,JY)=JSEQ
-            AGAIN=1
-         ENDIF
-      ENDDO
-      ISEQ1=ISEQ2+1
-      ISEQ2=JSEQ
+         AGAIN=0
+         JSEQ=ISEQ2
+         DO ISEQ=ISEQ1, ISEQ2
+            IX=I1SEQX(ISEQ)
+            IY=I1SEQY(ISEQ)
+            JX=I2NEXTX(IX,IY)
+            JY=I2NEXTY(IX,IY)
+            UPNOW(JX,JY)=UPNOW(JX,JY)+1
+            IF( UPNOW(JX,JY)==NUPST(JX,JY) .and. I2NEXTX(JX,JY)>0 )THEN !! if all upstream calculated, register to 1D sequence
+               JSEQ=JSEQ+1
+               I1SEQX(JSEQ)=JX
+               I1SEQY(JSEQ)=JY
+               I2VECTOR(JX,JY)=JSEQ
+               AGAIN=1
+            ENDIF
+         ENDDO
+         ISEQ1=ISEQ2+1
+         ISEQ2=JSEQ
       ENDDO
       NSEQRIV=JSEQ
 
       ISEQ=NSEQRIV
       DO IY=1, NY
-      DO IX=1, NX
-         IF( I2NEXTX(IX,IY).lt.0 .and. I2NEXTX(IX,IY).NE.IMIS .and. I2REGION(IX,IY)==REGIONTHIS )THEN
-            ISEQ=ISEQ+1
-            I1SEQX(ISEQ)=IX
-            I1SEQY(ISEQ)=IY
-            I2VECTOR(IX,IY)=ISEQ
-         ENDIF
-      ENDDO
+         DO IX=1, NX
+            IF( I2NEXTX(IX,IY).lt.0 .and. I2NEXTX(IX,IY).NE.IMIS .and. I2REGION(IX,IY)==REGIONTHIS )THEN
+               ISEQ=ISEQ+1
+               I1SEQX(ISEQ)=IX
+               I1SEQY(ISEQ)=IY
+               I2VECTOR(IX,IY)=ISEQ
+            ENDIF
+         ENDDO
       ENDDO
       NSEQALL=ISEQ
 
       DO ISEQ=1, NSEQALL
-      IX=I1SEQX(ISEQ)
-      IY=I1SEQY(ISEQ)
-      IF( I2NEXTX(IX,IY)>0 )THEN
-         JX=I2NEXTX(IX,IY)
-         JY=I2NEXTY(IX,IY)
-         I1NEXT(ISEQ)=I2VECTOR(JX,JY)
-      ELSE
-         I1NEXT(ISEQ)=I2NEXTX(IX,IY)
-      ENDIF
+         IX=I1SEQX(ISEQ)
+         IY=I1SEQY(ISEQ)
+         IF( I2NEXTX(IX,IY)>0 )THEN
+            JX=I2NEXTX(IX,IY)
+            JY=I2NEXTY(IX,IY)
+            I1NEXT(ISEQ)=I2VECTOR(JX,JY)
+         ELSE
+            I1NEXT(ISEQ)=I2NEXTX(IX,IY)
+         ENDIF
       ENDDO
 
-      DEALLOCATE(NUPST,UPNOW)
+      deallocate(NUPST,UPNOW)
          
    END SUBROUTINE CALC_1D_SEQ
    !==========================================================
@@ -513,16 +513,16 @@ CONTAINS
 
       TMPNAM=INQUIRE_FID()
       open(TMPNAM,FILE=CPTHOUT,FORM='FORMATTED')
-      READ(TMPNAM,*) NPTHOUT,NPTHLEV
+      read(TMPNAM,*) NPTHOUT,NPTHLEV
 
       write(LOGNAM,*) "Bifurcation channel dimantion", NPTHOUT, NPTHLEV
 
-      ALLOCATE( PTH_UPST(NPTHOUT) )
-      ALLOCATE( PTH_DOWN(NPTHOUT) )
-      ALLOCATE( PTH_DST(NPTHOUT)  )
-      ALLOCATE( PTH_ELV(NPTHOUT,NPTHLEV) )
-      ALLOCATE( PTH_WTH(NPTHOUT,NPTHLEV) )
-      ALLOCATE( PTH_MAN(NPTHLEV)  )
+      allocate( PTH_UPST(NPTHOUT) )
+      allocate( PTH_DOWN(NPTHOUT) )
+      allocate( PTH_DST(NPTHOUT)  )
+      allocate( PTH_ELV(NPTHOUT,NPTHLEV) )
+      allocate( PTH_WTH(NPTHOUT,NPTHLEV) )
+      allocate( PTH_MAN(NPTHLEV)  )
 
       NPTHOUT1=0
       DO IPTH=1, NPTHOUT
@@ -536,16 +536,16 @@ CONTAINS
             IF( ILEV==1 )THEN            !!ILEV=1: water channel bifurcation. consider bifurcation channel depth
                PWTH=PTH_WTH(IPTH,ILEV)
                IF( PWTH>0 )THEN
-               PTH_ELV(IPTH,ILEV)=PELV - PDPH
+                  PTH_ELV(IPTH,ILEV)=PELV - PDPH
                ELSE
-               PTH_ELV(IPTH,ILEV)=1.E20
+                  PTH_ELV(IPTH,ILEV)=1.E20
                ENDIF
             ELSE
                PWTH=PTH_WTH(IPTH,ILEV)
                IF( PWTH>0 )THEN
-               PTH_ELV(IPTH,ILEV)=PELV + ILEV - 2.0    !! ILEV=2: bank top level 
+                  PTH_ELV(IPTH,ILEV)=PELV + ILEV - 2.0    !! ILEV=2: bank top level 
                ELSE
-               PTH_ELV(IPTH,ILEV)=1.E20
+                  PTH_ELV(IPTH,ILEV)=1.E20
                ENDIF
             ENDIF
          ENDDO
@@ -592,19 +592,19 @@ CONTAINS
 
       write(LOGNAM,*) 'CMF::TOPO_INIT: topography map initialization'
 
-      ! *** 1. ALLOCATE ARRAYS
-      ALLOCATE( D2GRAREA(NSEQMAX,1) )
-      ALLOCATE( D2ELEVTN(NSEQMAX,1) )
-      ALLOCATE( D2NXTDST(NSEQMAX,1) )
-      ALLOCATE( D2RIVLEN(NSEQMAX,1) )
-      ALLOCATE( D2RIVWTH(NSEQMAX,1) )
-      ALLOCATE( D2RIVHGT(NSEQMAX,1) )
-      ALLOCATE( D2FLDHGT(NSEQMAX,1,NLFP) )
-      ALLOCATE( D2RIVMAN(NSEQMAX,1) )
-      ALLOCATE( D2MEANSL(NSEQMAX,1) )
-      ALLOCATE( D2DWNELV(NSEQMAX,1) )
-      ALLOCATE( D2GDWDLY(NSEQMAX,1) )
-      ALLOCATE( I2MASK(NSEQMAX,1) )
+      ! *** 1. allocate ARRAYS
+      allocate( D2GRAREA(NSEQMAX,1) )
+      allocate( D2ELEVTN(NSEQMAX,1) )
+      allocate( D2NXTDST(NSEQMAX,1) )
+      allocate( D2RIVLEN(NSEQMAX,1) )
+      allocate( D2RIVWTH(NSEQMAX,1) )
+      allocate( D2RIVHGT(NSEQMAX,1) )
+      allocate( D2FLDHGT(NSEQMAX,1,NLFP) )
+      allocate( D2RIVMAN(NSEQMAX,1) )
+      allocate( D2MEANSL(NSEQMAX,1) )
+      allocate( D2DWNELV(NSEQMAX,1) )
+      allocate( D2GDWDLY(NSEQMAX,1) )
+      allocate( I2MASK(NSEQMAX,1) )
 
       D2GRAREA(:,:)  =0._JPRB
       D2ELEVTN(:,:)  =0._JPRB
@@ -632,8 +632,8 @@ CONTAINS
       ! *** 3a. Calc Channel Parameters
       write(LOGNAM,*) 'TOPO_INIT: calc river channel parameters'
 
-      ALLOCATE(D2RIVSTOMAX(NSEQMAX,1))
-      ALLOCATE(D2RIVELV(NSEQMAX,1))
+      allocate(D2RIVSTOMAX(NSEQMAX,1))
+      allocate(D2RIVELV(NSEQMAX,1))
 
       IF ( LFPLAIN ) THEN
          D2RIVSTOMAX(:,:) = D2RIVLEN(:,:) * D2RIVWTH(:,:) * D2RIVHGT(:,:)
@@ -646,8 +646,8 @@ CONTAINS
       !*** 3b. Calc Channel Parameters
       write(LOGNAM,*) 'TOPO_INIT: calc floodplain parameters'
 
-      ALLOCATE(D2FLDSTOMAX(NSEQMAX,1,NLFP))
-      ALLOCATE(D2FLDGRD(NSEQMAX,1,NLFP))
+      allocate(D2FLDSTOMAX(NSEQMAX,1,NLFP))
+      allocate(D2FLDGRD(NSEQMAX,1,NLFP))
       CALL SET_FLDSTG
 
       !*** 3c. Calc downstream boundary
@@ -672,35 +672,35 @@ CONTAINS
    real(KIND=JPRM),ALLOCATABLE :: R2TEMP(:,:)
    real(KIND=JPRB),ALLOCATABLE :: D2TEMP(:,:)
       !================================================
-      ALLOCATE(R2TEMP(NX,NY))
-      ALLOCATE(D2TEMP(NSEQMAX,1))
+      allocate(R2TEMP(NX,NY))
+      allocate(D2TEMP(NSEQMAX,1))
 
       TMPNAM=INQUIRE_FID()
 
       write(LOGNAM,*)'TOPO_INIT: unit-catchment area : ',TRIM(CGRAREA) 
       open(TMPNAM,FILE=CGRAREA,FORM='UNFORMATTED',ACCESS='DIRECT',RECL=4*NX*NY)
-      READ(TMPNAM,REC=1) R2TEMP(:,:)
+      read(TMPNAM,REC=1) R2TEMP(:,:)
       IF( LMAPEND ) CALL CONV_END(R2TEMP,NX,NY)
-         CALL mapR2vecD(R2TEMP,D2GRAREA)
+      CALL mapR2vecD(R2TEMP,D2GRAREA)
       close(TMPNAM)
 
       write(LOGNAM,*)'TOPO_INIT: ground elevation : ',TRIM(CELEVTN)
       open(TMPNAM,FILE=CELEVTN,FORM='UNFORMATTED',ACCESS='DIRECT',RECL=4*NX*NY)
-      READ(TMPNAM,REC=1) R2TEMP(:,:)
+      read(TMPNAM,REC=1) R2TEMP(:,:)
       IF( LMAPEND ) CALL CONV_END(R2TEMP,NX,NY)
-         CALL mapR2vecD(R2TEMP,D2ELEVTN)
+      CALL mapR2vecD(R2TEMP,D2ELEVTN)
       close(TMPNAM)
 
       write(LOGNAM,*)'TOPO_INIT: downstream distance : ',TRIM(CNXTDST)
       open(TMPNAM,FILE=CNXTDST,FORM='UNFORMATTED',ACCESS='DIRECT',RECL=4*NX*NY)
-      READ(TMPNAM,REC=1) R2TEMP(:,:)
+      read(TMPNAM,REC=1) R2TEMP(:,:)
       IF( LMAPEND ) CALL CONV_END(R2TEMP,NX,NY)
       CALL mapR2vecD(R2TEMP,D2NXTDST)
       close(TMPNAM)
 
       write(LOGNAM,*)'TOPO_INIT: river channel length : ',TRIM(CRIVLEN)
       open(TMPNAM,FILE=CRIVLEN,FORM='UNFORMATTED',ACCESS='DIRECT',RECL=4*NX*NY)
-      READ(TMPNAM,REC=1) R2TEMP(:,:)
+      read(TMPNAM,REC=1) R2TEMP(:,:)
       IF( LMAPEND ) CALL CONV_END(R2TEMP,NX,NY)
       CALL mapR2vecD(R2TEMP,D2RIVLEN)
       close(TMPNAM)
@@ -719,21 +719,21 @@ CONTAINS
 
       write(LOGNAM,*)'TOPO_INIT: river channel depth : ',TRIM(CRIVHGT)
       open(TMPNAM,FILE=CRIVHGT,FORM='UNFORMATTED',ACCESS='DIRECT',RECL=4*NX*NY)
-      READ(TMPNAM,REC=1) R2TEMP(:,:)
+      read(TMPNAM,REC=1) R2TEMP(:,:)
       IF( LMAPEND ) CALL CONV_END(R2TEMP,NX,NY)
       CALL mapR2vecD(R2TEMP,D2RIVHGT)
       close(TMPNAM)
 
       write(LOGNAM,*)'TOPO_INIT: river channel width : ',TRIM(CRIVWTH)
       open(TMPNAM,FILE=CRIVWTH,FORM='UNFORMATTED',ACCESS='DIRECT',RECL=4*NX*NY)
-      READ(TMPNAM,REC=1) R2TEMP(:,:)
+      read(TMPNAM,REC=1) R2TEMP(:,:)
       IF( LMAPEND ) CALL CONV_END(R2TEMP,NX,NY)
       CALL mapR2vecD(R2TEMP,D2RIVWTH)
       close(TMPNAM)
 
       write(LOGNAM,*)'TOPO_INIT: manning coefficient river: ',TRIM(CRIVMAN)
       open(TMPNAM,FILE=TRIM(CRIVMAN),FORM='UNFORMATTED',ACCESS='DIRECT',RECL=4*NX*NY)
-      READ(TMPNAM,REC=1) R2TEMP(:,:)
+      read(TMPNAM,REC=1) R2TEMP(:,:)
       IF( LMAPEND ) CALL CONV_END(R2TEMP,NX,NY)
       CALL mapR2vecD(R2TEMP,D2RIVMAN)
       close(TMPNAM)
@@ -741,8 +741,8 @@ CONTAINS
       IF( LGDWDLY )THEN
          write(LOGNAM,*)'TOPO_INIT: groundwater delay parameter: ',TRIM(CGDWDLY)
          open(TMPNAM,FILE=TRIM(CGDWDLY),FORM='UNFORMATTED',ACCESS='DIRECT',RECL=4*NX*NY)
-         READ(TMPNAM,REC=1) R2TEMP(:,:)
-            IF( LMAPEND ) CALL CONV_END(R2TEMP,NX,NY)
+         read(TMPNAM,REC=1) R2TEMP(:,:)
+         IF( LMAPEND ) CALL CONV_END(R2TEMP,NX,NY)
          CALL mapR2vecD(R2TEMP,D2GDWDLY)
          close(TMPNAM)
       ENDIF
@@ -759,14 +759,14 @@ CONTAINS
       IF( LMEANSL ) THEN
          write(LOGNAM, *)'TOPO_INIT: mean sea level: ', TRIM(CMEANSL)
          open(TMPNAM, FILE=CMEANSL, FORM='UNFORMATTED', ACCESS='DIRECT', RECL=4*NX*NY)
-         READ(TMPNAM, REC=1) R2TEMP(:,:)
+         read(TMPNAM, REC=1) R2TEMP(:,:)
          IF( LMAPEND ) CALL CONV_END(R2TEMP,NX,NY)
          CALL mapR2vecD(R2TEMP, D2MEANSL)
          close(TMPNAM)
       ENDIF
 
-      DEALLOCATE(R2TEMP)
-      DEALLOCATE(D2TEMP)
+      deallocate(R2TEMP)
+      deallocate(D2TEMP)
 
    END SUBROUTINE READ_TOPO_BIN
    !==========================================================
@@ -786,8 +786,8 @@ CONTAINS
    real(KIND=JPRM),ALLOCATABLE      :: R2TEMP(:,:)
    real(KIND=JPRB),ALLOCATABLE      :: D2TEMP(:,:)
       !================================================
-      ALLOCATE(R2TEMP(NX,NY))
-      ALLOCATE(D2TEMP(NSEQMAX,1))
+      allocate(R2TEMP(NX,NY))
+      allocate(D2TEMP(NSEQMAX,1))
 
       !! CLIM FILE
       CALL NCERROR (NF90_OPEN(CRIVCLINC,NF90_NOWRITE,NCID),'opening '//TRIM(CRIVCLINC) )
@@ -823,7 +823,7 @@ CONTAINS
       CALL NCERROR( NF90_CLOSE(NCID))
 
       IF ( LSLOPEMOUTH ) THEN
-         ALLOCATE( D2ELEVSLOPE(NSEQMAX,1) )
+         allocate( D2ELEVSLOPE(NSEQMAX,1) )
          write(LOGNAM,*)'TOPO_INIT: elevslope:',TRIM(CRIVPARNC)
          STATUS = NF90_INQ_VARID(NCID,'elevslope',VARID)
          IF (STATUS /= 0 ) THEN
@@ -884,8 +884,8 @@ CONTAINS
          CALL NCERROR ( NF90_CLOSE(NCID) )
       ENDIF 
 
-      DEALLOCATE(R2TEMP)
-      DEALLOCATE(D2TEMP)
+      deallocate(R2TEMP)
+      deallocate(D2TEMP)
 #endif
    END SUBROUTINE READ_TOPO_CDF
    !==========================================================
@@ -939,7 +939,7 @@ CONTAINS
    integer(KIND=JPIM)              :: ISEQ, I0, I1
    integer(KIND=JPIM)              :: NCID,VARID,STATUS
 
-      ALLOCATE(I2TEMP(NX,NY))
+      allocate(I2TEMP(NX,NY))
       write(LOGNAM,*)'TOPO_INIT: mask_slope:',TRIM(CRIVPARNC)
       STATUS =  NF90_INQ_VARID(NCID,'mask_slope',VARID)
       IF (STATUS /= 0 ) THEN
@@ -964,7 +964,7 @@ CONTAINS
          STOP 9
       ENDIF 
 
-      DEALLOCATE(I2TEMP)
+      deallocate(I2TEMP)
 #endif
    END SUBROUTINE SET_SLOPEMIX
 

@@ -96,8 +96,8 @@ CONTAINS
       CGAUTXT="None"
 
       !*** 3. read namelist
-      REWIND(NSETFILE)
-      READ(NSETFILE,NML=NOUTPUT)
+      rewind(NSETFILE)
+      read(NSETFILE,NML=NOUTPUT)
 
       write(LOGNAM,*)   "=== NAMELIST, NOUTPUT ==="
       write(LOGNAM,*)   "COUTDIR:  ", TRIM(COUTDIR)
@@ -106,10 +106,10 @@ CONTAINS
 
       write(LOGNAM,*)   "LOUTCDF:  ", LOUTCDF
       IF( LOUTCDF )THEN
-      write(LOGNAM,*) "NDLEVEL:  ", NDLEVEL
+         write(LOGNAM,*) "NDLEVEL:  ", NDLEVEL
       ENDIF
       IF( LOUTVEC )THEN
-      write(LOGNAM,*) "LOUTVEC:  ", LOUTVEC
+         write(LOGNAM,*) "LOUTVEC:  ", LOUTVEC
       ENDIF
       write(LOGNAM,*)   "IFRQ_OUT  ", IFRQ_OUT
 
@@ -149,23 +149,23 @@ CONTAINS
       NVARSOUT=0
       J0=1
       DO J=1,LEN(TRIM(CVARSOUT))
-      IF( (J>J0) .and. (CVARSOUT(J:J) .eq. ',') ) THEN
-         CTMP=TRIM(ADJUSTL(CVARSOUT(J0:J-1)))
-         IF (LEN(CTMP) > 0 ) THEN
-            NVARSOUT=NVARSOUT+1
-            CVNAMES(NVARSOUT)=CTMP
+         IF( (J>J0) .and. (CVARSOUT(J:J) .eq. ',') ) THEN
+            CTMP=TRIM(ADJUSTL(CVARSOUT(J0:J-1)))
+            IF (LEN(CTMP) > 0 ) THEN
+               NVARSOUT=NVARSOUT+1
+               CVNAMES(NVARSOUT)=CTMP
+            ENDIF
+            J0=J+1
          ENDIF
-         J0=J+1
-      ENDIF
       ENDDO
       ! Last one 
       IF ( J0 < LEN(TRIM(CVARSOUT)) ) THEN
-      J=LEN(TRIM(CVARSOUT))
-      CTMP=TRIM(ADJUSTL(CVARSOUT(J0:J)))
-      IF (LEN(CTMP) > 0 ) THEN
-         NVARSOUT=NVARSOUT+1
-         CVNAMES(NVARSOUT)=CTMP
-      ENDIF
+         J=LEN(TRIM(CVARSOUT))
+         CTMP=TRIM(ADJUSTL(CVARSOUT(J0:J)))
+            IF (LEN(CTMP) > 0 ) THEN
+               NVARSOUT=NVARSOUT+1
+               CVNAMES(NVARSOUT)=CTMP
+            ENDIF
       ENDIF 
 
       IF ( NVARSOUT == 0 ) THEN
@@ -173,7 +173,7 @@ CONTAINS
          RETURN
       ENDIF 
 
-      ALLOCATE(VAROUT(NVARSOUT))
+      allocate(VAROUT(NVARSOUT))
       write(CTIME,'(A14,I4.4,A1,I2.2,A1,I2.2,A1,I2.2,A1,I2.2)') 'seconds since ',ISYYYY,'-',ISMM,'-',ISDD,' ',ISHOUR,":",ISMIN
 
       !* Loop on variables and create files 
@@ -259,7 +259,6 @@ CONTAINS
                VAROUT(JF)%CVNAME=CVNAMES(JF)
                VAROUT(JF)%CVLNAME='daily maximum river depth'
                VAROUT(JF)%CVUNITS='m' 
-
             CASE ('runoff')
                VAROUT(JF)%CVNAME=CVNAMES(JF)
                VAROUT(JF)%CVLNAME='Surface runoff'
@@ -318,101 +317,98 @@ CONTAINS
       IRECOUT=0  ! Initialize Output record to 1 (shared in netcdf & binary)
 
    CONTAINS
-   !==========================================================
-   !+ CREATE_OUTBIN
-   !+ CREATE_OUTCDF
-   !==========================================================
-   SUBROUTINE CREATE_OUTBIN
-   IMPLICIT NONE
-      !================================================
-      IF( TRIM(VAROUT(JF)%CVNAME)=='pthflw' ) THEN   !! bifurcation channel
-         IF( REGIONTHIS==1 )THEN
-            VAROUT(JF)%CFILE=TRIM(COUTDIR)//TRIM(VAROUT(JF)%CVNAME)//TRIM(COUTTAG)//TRIM(CSUFPTH)
-            open(VAROUT(JF)%BINID,FILE=VAROUT(JF)%CFILE,FORM='UNFORMATTED',ACCESS='DIRECT',RECL=4*NPTHOUT*NPTHLEV)
+      !==========================================================
+      !+ CREATE_OUTBIN
+      !+ CREATE_OUTCDF
+      !==========================================================
+      SUBROUTINE CREATE_OUTBIN
+      IMPLICIT NONE
+         !================================================
+         IF( TRIM(VAROUT(JF)%CVNAME)=='pthflw' ) THEN   !! bifurcation channel
+            IF( REGIONTHIS==1 )THEN
+               VAROUT(JF)%CFILE=TRIM(COUTDIR)//TRIM(VAROUT(JF)%CVNAME)//TRIM(COUTTAG)//TRIM(CSUFPTH)
+               open(VAROUT(JF)%BINID,FILE=VAROUT(JF)%CFILE,FORM='UNFORMATTED',ACCESS='DIRECT',RECL=4*NPTHOUT*NPTHLEV)
+               write(LOGNAM,*) "output file opened in unit: ", TRIM(VAROUT(JF)%CFILE), VAROUT(JF)%BINID
+            ENDIF
+         ELSEIF( LOUTVEC )THEN   !!  1D land only output
+            VAROUT(JF)%CFILE=TRIM(COUTDIR)//TRIM(VAROUT(JF)%CVNAME)//TRIM(COUTTAG)//TRIM(CSUFVEC)
+            open(VAROUT(JF)%BINID,FILE=VAROUT(JF)%CFILE,FORM='UNFORMATTED',ACCESS='DIRECT',RECL=4*NSEQMAX)
             write(LOGNAM,*) "output file opened in unit: ", TRIM(VAROUT(JF)%CFILE), VAROUT(JF)%BINID
+         ELSE                   !!  2D default map output
+            IF( REGIONTHIS==1 )THEN
+               VAROUT(JF)%CFILE=TRIM(COUTDIR)//TRIM(VAROUT(JF)%CVNAME)//TRIM(COUTTAG)//TRIM(CSUFBIN)
+               write(LOGNAM,*) "  -- ", TRIM(VAROUT(JF)%CFILE)
+               open(VAROUT(JF)%BINID,FILE=VAROUT(JF)%CFILE,FORM='UNFORMATTED',ACCESS='DIRECT',RECL=4*NX*NY)
+               write(LOGNAM,*) "output file opened in unit: ", TRIM(VAROUT(JF)%CFILE), VAROUT(JF)%BINID
+            ENDIF
          ENDIF
-      ELSEIF( LOUTVEC )THEN   !!  1D land only output
-         VAROUT(JF)%CFILE=TRIM(COUTDIR)//TRIM(VAROUT(JF)%CVNAME)//TRIM(COUTTAG)//TRIM(CSUFVEC)
-         open(VAROUT(JF)%BINID,FILE=VAROUT(JF)%CFILE,FORM='UNFORMATTED',ACCESS='DIRECT',RECL=4*NSEQMAX)
-         write(LOGNAM,*) "output file opened in unit: ", TRIM(VAROUT(JF)%CFILE), VAROUT(JF)%BINID
-      ELSE                   !!  2D default map output
-         IF( REGIONTHIS==1 )THEN
-            VAROUT(JF)%CFILE=TRIM(COUTDIR)//TRIM(VAROUT(JF)%CVNAME)//TRIM(COUTTAG)//TRIM(CSUFBIN)
-            write(LOGNAM,*) "  -- ", TRIM(VAROUT(JF)%CFILE)
-            open(VAROUT(JF)%BINID,FILE=VAROUT(JF)%CFILE,FORM='UNFORMATTED',ACCESS='DIRECT',RECL=4*NX*NY)
-            write(LOGNAM,*) "output file opened in unit: ", TRIM(VAROUT(JF)%CFILE), VAROUT(JF)%BINID
-         ENDIF
-      ENDIF
-   END SUBROUTINE CREATE_OUTBIN
-   !==========================================================
-   !+
-   !+
-   !+
-   !==========================================================
-   SUBROUTINE CREATE_OUTCDF
+      END SUBROUTINE CREATE_OUTBIN
+      !==========================================================
+      !+
+      !+
+      !+
+      !==========================================================
+      SUBROUTINE CREATE_OUTCDF
 #ifdef UseCDF_CMF
-   USE YOS_CMF_INPUT,           only: RMIS
-   USE YOS_CMF_MAP,             only: D1LON, D1LAT
-   USE CMF_UTILS_MOD,           only: NCERROR
-   USE NETCDF
-   IMPLICIT NONE
-   integer(KIND=JPIM)  :: TIMEID,VARID,LATID,LONID
-      !============
-      VAROUT(JF)%IRECNC=1 ! initialize record current writting record to 1 
+      USE YOS_CMF_INPUT,           only: RMIS
+      USE YOS_CMF_MAP,             only: D1LON, D1LAT
+      USE CMF_UTILS_MOD,           only: NCERROR
+      USE NETCDF
+      IMPLICIT NONE
+      integer(KIND=JPIM)  :: TIMEID,VARID,LATID,LONID
+         !============
+         VAROUT(JF)%IRECNC=1 ! initialize record current writting record to 1 
 
-      !============
-      VAROUT(JF)%CFILE=TRIM(COUTDIR)//'o_'//TRIM(VAROUT(JF)%CVNAME)//TRIM(COUTTAG)//TRIM(CSUFCDF)
-      ! Create file 
-      CALL NCERROR( NF90_CREATE(VAROUT(JF)%CFILE,NF90_NETCDF4,VAROUT(JF)%NCID),&
-                  'CREATING FILE:'//TRIM(VAROUT(JF)%CFILE) )
-      !=== set dimension ===
-      CALL NCERROR( NF90_DEF_DIM(VAROUT(JF)%NCID, 'time', NF90_UNLIMITED, TIMEID) )
-      CALL NCERROR( NF90_DEF_DIM(VAROUT(JF)%NCID, 'lat', NY, LATID) )
-      CALL NCERROR( NF90_DEF_DIM(VAROUT(JF)%NCID, 'lon', NX, LONID) )
+         !============
+         VAROUT(JF)%CFILE=TRIM(COUTDIR)//'o_'//TRIM(VAROUT(JF)%CVNAME)//TRIM(COUTTAG)//TRIM(CSUFCDF)
+         ! Create file 
+         CALL NCERROR( NF90_CREATE(VAROUT(JF)%CFILE,NF90_NETCDF4,VAROUT(JF)%NCID),&
+                     'CREATING FILE:'//TRIM(VAROUT(JF)%CFILE) )
+         !=== set dimension ===
+         CALL NCERROR( NF90_DEF_DIM(VAROUT(JF)%NCID, 'time', NF90_UNLIMITED, TIMEID) )
+         CALL NCERROR( NF90_DEF_DIM(VAROUT(JF)%NCID, 'lat', NY, LATID) )
+         CALL NCERROR( NF90_DEF_DIM(VAROUT(JF)%NCID, 'lon', NX, LONID) )
 
-      !=== define variables ===
-      CALL NCERROR( NF90_DEF_VAR(VAROUT(JF)%NCID, 'lat', NF90_FLOAT, (/LATID/), VARID) )
-      CALL NCERROR( NF90_PUT_ATT(VAROUT(JF)%NCID, VARID, 'long_name','latitude') )
-      CALL NCERROR( NF90_PUT_ATT(VAROUT(JF)%NCID, VARID, 'units','degrees_north') )
+         !=== define variables ===
+         CALL NCERROR( NF90_DEF_VAR(VAROUT(JF)%NCID, 'lat', NF90_FLOAT, (/LATID/), VARID) )
+         CALL NCERROR( NF90_PUT_ATT(VAROUT(JF)%NCID, VARID, 'long_name','latitude') )
+         CALL NCERROR( NF90_PUT_ATT(VAROUT(JF)%NCID, VARID, 'units','degrees_north') )
 
-      CALL NCERROR( NF90_DEF_VAR(VAROUT(JF)%NCID, 'lon', NF90_FLOAT, (/LONID/), VARID) )
-      CALL NCERROR( NF90_PUT_ATT(VAROUT(JF)%NCID, VARID, 'long_name','longitude') )
-      CALL NCERROR( NF90_PUT_ATT(VAROUT(JF)%NCID, VARID, 'units','degrees_east') )
+         CALL NCERROR( NF90_DEF_VAR(VAROUT(JF)%NCID, 'lon', NF90_FLOAT, (/LONID/), VARID) )
+         CALL NCERROR( NF90_PUT_ATT(VAROUT(JF)%NCID, VARID, 'long_name','longitude') )
+         CALL NCERROR( NF90_PUT_ATT(VAROUT(JF)%NCID, VARID, 'units','degrees_east') )
 
-      CALL NCERROR( NF90_DEF_VAR(VAROUT(JF)%NCID, 'time', NF90_DOUBLE, (/TIMEID/), VAROUT(JF)%TIMID) ) 
-      CALL NCERROR( NF90_PUT_ATT(VAROUT(JF)%NCID, VAROUT(JF)%TIMID, 'long_name','time') )
-      CALL NCERROR( NF90_PUT_ATT(VAROUT(JF)%NCID, VAROUT(JF)%TIMID, 'units',CTIME) )
+         CALL NCERROR( NF90_DEF_VAR(VAROUT(JF)%NCID, 'time', NF90_DOUBLE, (/TIMEID/), VAROUT(JF)%TIMID) ) 
+         CALL NCERROR( NF90_PUT_ATT(VAROUT(JF)%NCID, VAROUT(JF)%TIMID, 'long_name','time') )
+         CALL NCERROR( NF90_PUT_ATT(VAROUT(JF)%NCID, VAROUT(JF)%TIMID, 'units',CTIME) )
 
-      !===
-      CALL NCERROR( NF90_DEF_VAR(VAROUT(JF)%NCID, VAROUT(JF)%CVNAME, NF90_FLOAT, &
-                  (/LONID,LATID,TIMEID/), VAROUT(JF)%VARID,DEFLATE_LEVEL=NDLEVEL),     &
-                  'Creating Variable')
+         !===
+         CALL NCERROR( NF90_DEF_VAR(VAROUT(JF)%NCID, VAROUT(JF)%CVNAME, NF90_FLOAT, &
+                     (/LONID,LATID,TIMEID/), VAROUT(JF)%VARID,DEFLATE_LEVEL=NDLEVEL),     &
+                     'Creating Variable')
 
-      CALL NCERROR( NF90_PUT_ATT(VAROUT(JF)%NCID, VAROUT(JF)%VARID, 'long_name', TRIM(VAROUT(JF)%CVLNAME)) )
-      CALL NCERROR( NF90_PUT_ATT(VAROUT(JF)%NCID, VAROUT(JF)%VARID, 'units',     TRIM(VAROUT(JF)%CVUNITS)) )
-      CALL NCERROR( NF90_PUT_ATT(VAROUT(JF)%NCID, VAROUT(JF)%VARID, '_FillValue',RMIS) )
+         CALL NCERROR( NF90_PUT_ATT(VAROUT(JF)%NCID, VAROUT(JF)%VARID, 'long_name', TRIM(VAROUT(JF)%CVLNAME)) )
+         CALL NCERROR( NF90_PUT_ATT(VAROUT(JF)%NCID, VAROUT(JF)%VARID, 'units',     TRIM(VAROUT(JF)%CVUNITS)) )
+         CALL NCERROR( NF90_PUT_ATT(VAROUT(JF)%NCID, VAROUT(JF)%VARID, '_FillValue',RMIS) )
 
-      CALL NCERROR( NF90_ENDDEF(VAROUT(JF)%NCID) )
+         CALL NCERROR( NF90_ENDDEF(VAROUT(JF)%NCID) )
 
-      !=== put lon lat info ===
-      CALL NCERROR ( NF90_INQ_VARID(VAROUT(JF)%NCID,'lon',VARID),'getting id' )
-      CALL NCERROR( NF90_PUT_VAR(VAROUT(JF)%NCID,VARID,D1LON))
+         !=== put lon lat info ===
+         CALL NCERROR ( NF90_INQ_VARID(VAROUT(JF)%NCID,'lon',VARID),'getting id' )
+         CALL NCERROR( NF90_PUT_VAR(VAROUT(JF)%NCID,VARID,D1LON))
 
-      CALL NCERROR ( NF90_INQ_VARID(VAROUT(JF)%NCID,'lat',VARID),'getting id' )
-      CALL NCERROR( NF90_PUT_VAR(VAROUT(JF)%NCID,VARID,D1LAT))
+         CALL NCERROR ( NF90_INQ_VARID(VAROUT(JF)%NCID,'lat',VARID),'getting id' )
+         CALL NCERROR( NF90_PUT_VAR(VAROUT(JF)%NCID,VARID,D1LAT))
 
-      write(LOGNAM,*) 'CFILE: ',TRIM(VAROUT(JF)%CFILE),' CVAR:',TRIM(VAROUT(JF)%CVNAME),&
-                     ' CLNAME: ',TRIM(VAROUT(JF)%CVLNAME),' CUNITS: ',TRIM(VAROUT(JF)%CVUNITS)
-      write(LOGNAM,*) 'open in UNIT: ',VAROUT(JF)%NCID
+         write(LOGNAM,*) 'CFILE: ',TRIM(VAROUT(JF)%CFILE),' CVAR:',TRIM(VAROUT(JF)%CVNAME),&
+                        ' CLNAME: ',TRIM(VAROUT(JF)%CVLNAME),' CUNITS: ',TRIM(VAROUT(JF)%CVUNITS)
+         write(LOGNAM,*) 'open in UNIT: ',VAROUT(JF)%NCID
 #endif
-   END SUBROUTINE CREATE_OUTCDF
+      END SUBROUTINE CREATE_OUTCDF
    !==========================================================
 
    END SUBROUTINE CMF_OUTPUT_INIT
    !####################################################################
-
-
-
 
 
    !####################################################################
@@ -779,22 +775,22 @@ CONTAINS
             NGAUGEX=0
             LOGOUTTXT=INQUIRE_FID()
             open(LOGOUTTXT,FILE=CGAUTXT,FORM='formatted',STATUS='old')
-            READ(LOGOUTTXT,*) NGAUGE
+            read(LOGOUTTXT,*) NGAUGE
             DO IGAUGE=1, NGAUGE
-               READ(LOGOUTTXT,*) GID, GNAME, GIX, GIY
+               read(LOGOUTTXT,*) GID, GNAME, GIX, GIY
                IF( I2VECTOR(GIX,GIY)>0 )THEN
                NGAUGEX=NGAUGEX+1
                ENDIF
             ENDDO
             close(LOGOUTTXT)
 
-            ALLOCATE( WriteID(NGAUGEX),WriteISEQ(NGAUGEX),WriteOut(NGAUGEX),WriteName(NGAUGEX))
+            allocate( WriteID(NGAUGEX),WriteISEQ(NGAUGEX),WriteOut(NGAUGEX),WriteName(NGAUGEX))
 
             NGAUGEX=0
             open(LOGOUTTXT,FILE=CGAUTXT,FORM='formatted',STATUS='old')
-            READ(LOGOUTTXT,*) NGAUGE
+            read(LOGOUTTXT,*) NGAUGE
             DO IGAUGE=1, NGAUGE
-               READ(LOGOUTTXT,*) GID, GNAME, GIX, GIY
+               read(LOGOUTTXT,*) GID, GNAME, GIX, GIY
                IF( I2VECTOR(GIX,GIY)>0 )THEN
                   NGAUGEX=NGAUGEX+1
                   WriteID(NGAUGEX)  =GID

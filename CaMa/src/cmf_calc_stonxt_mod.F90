@@ -39,10 +39,10 @@ CONTAINS
       ELSE
   ! No ground water delay 
 !$OMP PARALLEL DO
-      DO ISEQ=1,NSEQALL
-         D2GDWRTN(ISEQ,1) = D2ROFSUB(ISEQ,1)
-         P2GDWSTO(ISEQ,1) = 0._JPRD
-      ENDDO
+         DO ISEQ=1,NSEQALL
+            D2GDWRTN(ISEQ,1) = D2ROFSUB(ISEQ,1)
+            P2GDWSTO(ISEQ,1) = 0._JPRD
+         ENDDO
 !$OMP END PARALLEL DO
       ENDIF
 !!==============================

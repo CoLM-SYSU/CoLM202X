@@ -71,7 +71,7 @@ CONTAINS
          IF( LWINFILT )THEN
             D2WINFILTEX_AVG(ISEQ,1)= (D2WINFILTEX_AVG(ISEQ,1) +D2WINFILTEX(ISEQ,1)*DT)/D2GRAREA(ISEQ,1)
          ENDIF
-      END DO
+      ENDDO
 !$OMP END PARALLEL DO
 
 !! loop for optional variable (separated for computational efficiency)

@@ -202,7 +202,7 @@ CONTAINS
          CALL CMF_BOUNDARY_INIT
       ENDIF
       !================================================
-      write(LOGNAM,*) "CMF::DRV_INIT: (4) Allocate prog&diag vars & initialize"
+      write(LOGNAM,*) "CMF::DRV_INIT: (4) allocate prog&diag vars & initialize"
 
       !*** 4a. Set initial prognostic variables 
       CALL CMF_PROG_INIT
@@ -226,7 +226,7 @@ CONTAINS
 #ifdef sediment
       !*** 4e. Optional sediment initialization
       IF( LSEDOUT )THEN
-      CALL cmf_sed_init
+         CALL cmf_sed_init
       ENDIF
 #endif
 

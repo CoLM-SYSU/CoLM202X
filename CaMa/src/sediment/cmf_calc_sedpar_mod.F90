@@ -83,7 +83,6 @@ CONTAINS
    integer(kind=JPIM)              ::  ised
    real(kind=JPRB)                 ::  alpha, a, cB, sTmp
    !========
-  
       !--------------!
       ! set constant !
       !--------------!

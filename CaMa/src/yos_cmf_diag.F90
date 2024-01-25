@@ -13,12 +13,12 @@ MODULE YOS_CMF_DIAG
 !  distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
 ! See the License for the specific language governing permissions and limitations under the License.
 !==========================================================
-USE PARKIND1, only: JPIM, JPRB, JPRM, JPRD
-IMPLICIT NONE
-SAVE
+   USE PARKIND1, only: JPIM, JPRB, JPRM, JPRD
+   IMPLICIT NONE
+   SAVE
    !================================================
    !*** Inst. diagnostics 
-   real(KIND=JPRB),ALLOCATABLE,TARGET :: D2DIAG(:,:,:)        !! Storage array for average diagnostics
+   real(KIND=JPRB),allocatable,target :: D2DIAG(:,:,:)        !! Storage array for average diagnostics
 
    real(KIND=JPRB),POINTER         :: D2RIVINF(:,:)           !! river      inflow   [m3/s] (from upstream)
    real(KIND=JPRB),POINTER         :: D2RIVDPH(:,:)           !! river      depth    [m]
@@ -44,7 +44,7 @@ SAVE
 
    !================================================
    !*** Average diagnostics 
-   real(KIND=JPRB),ALLOCATABLE,TARGET :: D2DIAG_AVG(:,:,:)    !! Storage array for average diagnostics (nseqmax,1,variable)
+   real(KIND=JPRB),allocatable,target :: D2DIAG_AVG(:,:,:)    !! Storage array for average diagnostics (nseqmax,1,variable)
 
    real(KIND=JPRB),POINTER         :: D2RIVOUT_AVG(:,:)       !! average river       discharge
    real(KIND=JPRB),POINTER         :: D2OUTFLW_AVG(:,:)       !! average total outflow       [m3/s] (rivout + fldout)  !! bugfix v362
@@ -61,11 +61,11 @@ SAVE
    integer(KIND=JPIM)              :: N2DIAG_AVG              !! Number of 2D diagnostics averages
    real(KIND=JPRB)                 :: NADD                    !! sum DT to calculate average
    !*** Average diagnostics (1D)
-   real(KIND=JPRB),ALLOCATABLE  :: D1PTHFLW_AVG(:,:)          !! bifurcation channel flow (1D, not 2D variable)
+   real(KIND=JPRB),allocatable  :: D1PTHFLW_AVG(:,:)          !! bifurcation channel flow (1D, not 2D variable)
 
    !================================================
    !*** Daily max diagnostics 
-   real(KIND=JPRB),ALLOCATABLE,TARGET :: D2DIAG_MAX(:,:,:)    !! Storage array for maximum diagnostics (nseqmax,1,variable)
+   real(KIND=JPRB),allocatable,target :: D2DIAG_MAX(:,:,:)    !! Storage array for maximum diagnostics (nseqmax,1,variable)
 
    real(KIND=JPRB),POINTER         :: D2OUTFLW_MAX(:,:)       !! max total outflow       [m3/s] (rivout + fldout)
    real(KIND=JPRB),POINTER         :: D2STORGE_MAX(:,:)       !! max total outflow       [m3/s] (rivout + fldout)
