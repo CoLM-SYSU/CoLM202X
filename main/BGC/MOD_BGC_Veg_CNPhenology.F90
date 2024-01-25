@@ -1602,7 +1602,7 @@ CONTAINS
    
       tc = tref_p(m)-tfrz
       IF(tc >=vtmin .and. tc <= vtmax) THEN
-       cumvd_p(m)=cumvd_p(m) + (2._r8*((tc-vtmin)**alpha)*(vtopt-vtmin)**alpha &
+         cumvd_p(m)=cumvd_p(m) + (2._r8*((tc-vtmin)**alpha)*(vtopt-vtmin)**alpha &
                - (tc-vtmin)**(2._r8*alpha))/(vtopt-vtmin)**(2._r8*alpha)*(dt/24._r8)
       ENDIF
    
