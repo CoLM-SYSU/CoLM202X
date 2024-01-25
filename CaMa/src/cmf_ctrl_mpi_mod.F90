@@ -58,7 +58,7 @@ CONTAINS
       !!!!!!$OMP PARALLEL DO
       !!!!!DO iOMP=1, nOMP
       !!!!!  print *, 'MPI: ', REGIONTHIS, REGIONALL, ' OMP: ', omp_get_thread_num(), nOMP
-      !!!!!END DO
+      !!!!!ENDDO
       !!!!!!$OMP END PARALLEL DO
       !!!!!#endif
 
@@ -158,13 +158,13 @@ CONTAINS
 
    !####################################################################
    SUBROUTINE CMF_MPI_AllReduce_D1PTH(D1PTH)
-      USE YOS_CMF_MAP,             only: NPTHOUT, NPTHLEV, PTH_UPST, PTH_DOWN
-      IMPLICIT NONE
-      !* input/output
-      real(KIND=JPRB),intent(inout)   :: D1PTH(NPTHOUT,NPTHLEV)
-      !* local variable
-      real(KIND=JPRB)                 :: D1PTMP(NPTHOUT,NPTHLEV)
-      integer(KIND=JPIM)              :: IPTH
+   USE YOS_CMF_MAP,             only: NPTHOUT, NPTHLEV, PTH_UPST, PTH_DOWN
+   IMPLICIT NONE
+   !* input/output
+   real(KIND=JPRB),intent(inout)   :: D1PTH(NPTHOUT,NPTHLEV)
+   !* local variable
+   real(KIND=JPRB)                 :: D1PTMP(NPTHOUT,NPTHLEV)
+   integer(KIND=JPIM)              :: IPTH
       !================================================
       ! gather to master node
       DO IPTH=1,NPTHOUT

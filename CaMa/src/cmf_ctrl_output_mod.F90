@@ -308,7 +308,7 @@ CONTAINS
                VAROUT(JF)%CVLNAME='instantaneous discharge'
                VAROUT(JF)%CVUNITS='m3/s' 
             CASE DEFAULT
-            write(LOGNAM,*) trim(CVNAMES(JF)), ' Not defined in CMF_CREATE_OUTCDF_MOD'
+         write(LOGNAM,*) trim(CVNAMES(JF)), ' Not defined in CMF_CREATE_OUTCDF_MOD'
 
          END SELECT
          VAROUT(JF)%BINID=INQUIRE_FID()
@@ -584,80 +584,80 @@ CONTAINS
 
    !==========================================================
    CONTAINS
-   !+ WRTE_OUTBIN
-   !+ WRTE_OUTPTH
-   !+ WRTE_OUTVEC
-   !+ WRTE_OUTCDF
-   !==========================================================
-   SUBROUTINE WRTE_OUTBIN(IFN,IREC,R2OUTDAT)
-   IMPLICIT NONE
-   !*** INPUT
-   integer(KIND=JPIM),intent(in)   :: IFN                 !! FILE NUMBER
-   integer(KIND=JPIM),intent(in)   :: IREC                !! RECORD
-   real(KIND=JPRM)                 :: R2OUTDAT(NX,NY)
+      !+ WRTE_OUTBIN
+      !+ WRTE_OUTPTH
+      !+ WRTE_OUTVEC
+      !+ WRTE_OUTCDF
+      !==========================================================
+      SUBROUTINE WRTE_OUTBIN(IFN,IREC,R2OUTDAT)
+      IMPLICIT NONE
+      !*** INPUT
+      integer(KIND=JPIM),intent(in)   :: IFN                 !! FILE NUMBER
+      integer(KIND=JPIM),intent(in)   :: IREC                !! RECORD
+      real(KIND=JPRM)                 :: R2OUTDAT(NX,NY)
+         !================================================
+         write(IFN,REC=IREC) R2OUTDAT
+
+      END SUBROUTINE WRTE_OUTBIN
+      !==========================================================
+      !+
+      !+
+      !+
+      !==========================================================
+      SUBROUTINE WRTE_OUTPTH(IFN,IREC,R2OUTDAT)
+      IMPLICIT NONE
+      !*** INPUT
+      integer(KIND=JPIM),intent(in)   :: IFN                 !! FILE NUMBER
+      integer(KIND=JPIM),intent(in)   :: IREC                !! RECORD
+      real(KIND=JPRM)                 :: R2OUTDAT(NPTHOUT,NPTHLEV)
       !================================================
-      write(IFN,REC=IREC) R2OUTDAT
+         write(IFN,REC=IREC) R2OUTDAT
 
-   END SUBROUTINE WRTE_OUTBIN
-   !==========================================================
-   !+
-   !+
-   !+
-   !==========================================================
-   SUBROUTINE WRTE_OUTPTH(IFN,IREC,R2OUTDAT)
-   IMPLICIT NONE
-   !*** INPUT
-   integer(KIND=JPIM),intent(in)   :: IFN                 !! FILE NUMBER
-   integer(KIND=JPIM),intent(in)   :: IREC                !! RECORD
-   real(KIND=JPRM)                 :: R2OUTDAT(NPTHOUT,NPTHLEV)
-   !================================================
-      write(IFN,REC=IREC) R2OUTDAT
+      END SUBROUTINE WRTE_OUTPTH
+      !==========================================================
+      !+
+      !+
+      !+
+      !==========================================================
+      SUBROUTINE WRTE_OUTVEC(IFN,IREC,D2OUTDAT)
+      IMPLICIT NONE
+      !*** INPUT
+      integer(KIND=JPIM),intent(in)   :: IFN                 !! FILE NUMBER
+      integer(KIND=JPIM),intent(in)   :: IREC                !! RECORD
+      real(KIND=JPRB),intent(in)      :: D2OUTDAT(NSEQMAX,1) !! OUTPUT DATA
+      !*** LOCAL
+      real(KIND=JPRM)                 :: R2OUTDAT(NSEQMAX,1)
+         !================================================
+         R2OUTDAT(:,:)=real(D2OUTDAT(:,:))
+         write(IFN,REC=IREC) R2OUTDAT
 
-   END SUBROUTINE WRTE_OUTPTH
-   !==========================================================
-   !+
-   !+
-   !+
-   !==========================================================
-   SUBROUTINE WRTE_OUTVEC(IFN,IREC,D2OUTDAT)
-   IMPLICIT NONE
-   !*** INPUT
-   integer(KIND=JPIM),intent(in)   :: IFN                 !! FILE NUMBER
-   integer(KIND=JPIM),intent(in)   :: IREC                !! RECORD
-   real(KIND=JPRB),intent(in)      :: D2OUTDAT(NSEQMAX,1) !! OUTPUT DATA
-   !*** LOCAL
-   real(KIND=JPRM)                 :: R2OUTDAT(NSEQMAX,1)
-      !================================================
-      R2OUTDAT(:,:)=real(D2OUTDAT(:,:))
-      write(IFN,REC=IREC) R2OUTDAT
-
-   END SUBROUTINE WRTE_OUTVEC
-   !==========================================================
-   !+
-   !+
-   !+
-   !==========================================================
-   SUBROUTINE WRTE_OUTCDF
+      END SUBROUTINE WRTE_OUTVEC
+      !==========================================================
+      !+
+      !+
+      !+
+      !==========================================================
+      SUBROUTINE WRTE_OUTCDF
 #ifdef UseCDF_CMF
-   USE NETCDF 
-   USE YOS_CMF_TIME,            only: KMINSTART,KMINNEXT
-   USE CMF_UTILS_MOD,           only: NCERROR
-   IMPLICIT NONE
-   real(KIND=JPRB)                 :: XTIME ! seconds since start of the run !
+      USE NETCDF 
+      USE YOS_CMF_TIME,            only: KMINSTART,KMINNEXT
+      USE CMF_UTILS_MOD,           only: NCERROR
+      IMPLICIT NONE
+      real(KIND=JPRB)                 :: XTIME ! seconds since start of the run !
 
-      !================================================
-      XTIME=real( (KMINNEXT-KMINSTART),JPRB) *60._JPRB      !! for netCDF
-      CALL NCERROR( NF90_PUT_VAR(VAROUT(JF)%NCID,VAROUT(JF)%TIMID,XTIME,(/VAROUT(JF)%IRECNC/)) )
+         !================================================
+         XTIME=real( (KMINNEXT-KMINSTART),JPRB) *60._JPRB      !! for netCDF
+         CALL NCERROR( NF90_PUT_VAR(VAROUT(JF)%NCID,VAROUT(JF)%TIMID,XTIME,(/VAROUT(JF)%IRECNC/)) )
 
-      CALL NCERROR( NF90_PUT_VAR(VAROUT(JF)%NCID,VAROUT(JF)%VARID,R2OUT(1:NX,1:NY),(/1,1,VAROUT(JF)%IRECNC/),(/NX,NY,1/)) )
+         CALL NCERROR( NF90_PUT_VAR(VAROUT(JF)%NCID,VAROUT(JF)%VARID,R2OUT(1:NX,1:NY),(/1,1,VAROUT(JF)%IRECNC/),(/NX,NY,1/)) )
 
-      ! update IREC
-      VAROUT(JF)%IRECNC=VAROUT(JF)%IRECNC+1
+         ! update IREC
+         VAROUT(JF)%IRECNC=VAROUT(JF)%IRECNC+1
 
-      ! Comment out this as it slows down significantly the writting in the cray  
-      !CALL NCERROR( NF90_SYNC(VAROUT(JF)%NCID) )  
+         ! Comment out this as it slows down significantly the writting in the cray  
+         !CALL NCERROR( NF90_SYNC(VAROUT(JF)%NCID) )  
 #endif
-   END SUBROUTINE WRTE_OUTCDF 
+      END SUBROUTINE WRTE_OUTCDF 
    !==========================================================
 
    END SUBROUTINE CMF_OUTPUT_WRITE
@@ -741,32 +741,30 @@ CONTAINS
 
 
 
-      !####################################################################
-      SUBROUTINE CMF_OUTTXT_WRTE
-      USE YOS_CMF_DIAG,       only: D2OUTFLW
-      USE YOS_CMF_TIME,       only: IYYYYMMDD,ISYYYY
-      USE YOS_CMF_MAP,        only: I2VECTOR
-      USE CMF_UTILS_MOD,      only: INQUIRE_FID
+   !####################################################################
+   SUBROUTINE CMF_OUTTXT_WRTE
+   USE YOS_CMF_DIAG,       only: D2OUTFLW
+   USE YOS_CMF_TIME,       only: IYYYYMMDD,ISYYYY
+   USE YOS_CMF_MAP,        only: I2VECTOR
+   USE CMF_UTILS_MOD,      only: INQUIRE_FID
 
-      ! local
-      integer(KIND=JPIM)                  :: GID, GIX, GIY, GISEQ
-      character(len=256),SAVE             :: GNAME
+   ! local
+   integer(KIND=JPIM)                  :: GID, GIX, GIY, GISEQ
+   character(len=256),SAVE             :: GNAME
 
-      integer(KIND=JPIM),SAVE             :: IGAUGE, NGAUGE, NGAUGEX
-      integer(KIND=JPIM),ALLOCATABLE,SAVE :: WriteID(:), WriteISEQ(:)
-      character(len=9),ALLOCATABLE,SAVE   :: WriteName(:)
-      real(KIND=JPRB),ALLOCATABLE,SAVE    :: WriteOut(:)
+   integer(KIND=JPIM),SAVE             :: IGAUGE, NGAUGE, NGAUGEX
+   integer(KIND=JPIM),ALLOCATABLE,SAVE :: WriteID(:), WriteISEQ(:)
+   character(len=9),ALLOCATABLE,SAVE   :: WriteName(:)
+   real(KIND=JPRB),ALLOCATABLE,SAVE    :: WriteOut(:)
 
-      ! File IO
-      integer(KIND=JPIM),SAVE             :: LOGOUTTXT
-      character(len=4),SAVE               :: cYYYY
-      character(len=256),SAVE             :: CLEN, CFMT
-      character(len=256),SAVE             :: COUTTXT
-      logical,SAVE                        :: IsOpen
-      DATA IsOpen       /.FALSE./
-
+   ! File IO
+   integer(KIND=JPIM),SAVE             :: LOGOUTTXT
+   character(len=4),SAVE               :: cYYYY
+   character(len=256),SAVE             :: CLEN, CFMT
+   character(len=256),SAVE             :: COUTTXT
+   logical,SAVE                        :: IsOpen
+   DATA IsOpen       /.FALSE./
       ! ======
-
       IF( LOUTTXT )THEN
 
          IF( .not. IsOpen)THEN
@@ -779,7 +777,7 @@ CONTAINS
             DO IGAUGE=1, NGAUGE
                read(LOGOUTTXT,*) GID, GNAME, GIX, GIY
                IF( I2VECTOR(GIX,GIY)>0 )THEN
-               NGAUGEX=NGAUGEX+1
+                  NGAUGEX=NGAUGEX+1
                ENDIF
             ENDDO
             close(LOGOUTTXT)
@@ -822,7 +820,7 @@ CONTAINS
             GISEQ=WriteISEQ(IGAUGE)
             WriteOut(IGAUGE) = D2OUTFLW(GISEQ,1)
          ENDDO
-         
+            
          write(LOGOUTTXT,CFMT) IYYYYMMDD, ( WriteOUT(IGAUGE),IGAUGE=1,NGAUGEX )
 
       ENDIF
