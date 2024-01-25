@@ -27,14 +27,14 @@ CONTAINS
                               imelt,sm,xmf,fact)
 
 !=======================================================================
-! Snow and road temperatures
+! Snow and pervious road temperatures
 ! o The volumetric heat capacity is calculated as a linear combination
 !   in terms of the volumetric fraction of the constituent phases.
 ! o The thermal conductivity of road soil is computed from
 !   the algorithm of Johansen (as reported by Farouki 1981), impervious and perivious from
 !   LOOK-UP table and of snow is from the formulation used in SNTHERM (Jordan 1991).
 ! o Boundary conditions:
-!   F = Rnet - Hg - LEg (top),  F= 0 (base of the soil column).
+!   F = Rnet - Hg - LEg (top),  F = 0 (base of the soil column).
 ! o Soil / snow temperature is predicted from heat conduction
 !   in 10 soil layers and up to 5 snow layers.
 !   The thermal conductivities at the interfaces between two neighbor layers
@@ -43,7 +43,7 @@ CONTAINS
 !   interface to the node j+1. The equation is solved using the Crank-Nicholson
 !   method and resulted in a tridiagonal system equation.
 !
-! Phase change (see meltf.F90)
+! Phase change (see MOD_PhaseChange.F90)
 !
 ! Original author : Yongjiu Dai, 09/15/1999; 08/30/2002; 05/2020
 !=======================================================================
@@ -87,12 +87,12 @@ CONTAINS
   real(r8), intent(in) :: bsw       (1:nl_soil)       !clapp and hornbereger "b" parameter [-]
 #endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
-  real(r8), intent(in) :: theta_r   (1:nl_soil), &
-                          alpha_vgm (1:nl_soil), &
-                          n_vgm     (1:nl_soil), &
-                          L_vgm     (1:nl_soil), &
-                          sc_vgm    (1:nl_soil), &
-                          fc_vgm    (1:nl_soil)
+  real(r8), intent(in) :: theta_r   (1:nl_soil),&     !soil parameter for vanGenuchten scheme
+                          alpha_vgm (1:nl_soil),&     !soil parameter for vanGenuchten scheme
+                          n_vgm     (1:nl_soil),&     !soil parameter for vanGenuchten scheme
+                          L_vgm     (1:nl_soil),&     !soil parameter for vanGenuchten scheme
+                          sc_vgm    (1:nl_soil),&     !soil parameter for vanGenuchten scheme
+                          fc_vgm    (1:nl_soil)       !soil parameter for vanGenuchten scheme
 #endif
 
   real(r8), intent(in) :: dz_gpersno(lb  :nl_soil)    !layer thickiness [m]
@@ -150,7 +150,7 @@ CONTAINS
 ! soil ground and wetland heat capacity
       DO i = 1, nl_soil
          vf_water(i) = wliq_gpersno(i)/(dz_gpersno(i)*denh2o)
-         vf_ice(i) = wice_gpersno(i)/(dz_gpersno(i)*denice)
+         vf_ice(i)   = wice_gpersno(i)/(dz_gpersno(i)*denice)
          CALL soil_hcap_cond(vf_gravels(i),vf_om(i),vf_sand(i),porsl(i),&
                              wf_gravels(i),wf_sand(i),k_solids(i),&
                              csol(i),dkdry(i),dksatu(i),dksatf(i),&
