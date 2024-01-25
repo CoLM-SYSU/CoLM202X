@@ -13,13 +13,13 @@ MODULE MOD_LightningData
    USE MOD_Grid
    USE MOD_DataType
    USE MOD_Mapping_Grid2Pset
-   use MOD_BGC_Vars_TimeVariables, only: lnfm
+   USE MOD_BGC_Vars_TimeVariables, only: lnfm
    IMPLICIT NONE
 
-   CHARACTER(len=256) :: file_lightning
-   TYPE(grid_type) :: grid_lightning
+   character(len=256) :: file_lightning
+   type(grid_type) :: grid_lightning
 
-   TYPE(block_data_real8_2d) :: f_lnfm
+   type(block_data_real8_2d) :: f_lnfm
 
    type (mapping_grid2pset_type) :: mg2p_lnfm
 
@@ -33,21 +33,21 @@ CONTAINS
    ! open lightning netcdf file from DEF_dir_rawdata, read latitude and longitude info.
    ! Initialize lightning data read in.
 
-      USE MOD_SPMD_Task
-      USE MOD_Namelist
-      USE MOD_TimeManager
-      USE MOD_Grid
-      USE MOD_NetCDFSerial
-      USE MOD_NetCDFBlock
-      USE MOD_LandPatch
-      USE MOD_RangeCheck
-      IMPLICIT NONE
+   USE MOD_SPMD_Task
+   USE MOD_Namelist
+   USE MOD_TimeManager
+   USE MOD_Grid
+   USE MOD_NetCDFSerial
+   USE MOD_NetCDFBlock
+   USE MOD_LandPatch
+   USE MOD_RangeCheck
+   IMPLICIT NONE
 
-      integer, intent(in) :: idate(3)
+   integer, intent(in) :: idate(3)
 
-      ! Local Variables
-      REAL(r8), allocatable :: lat(:), lon(:)
-      INTEGER :: itime
+   ! Local Variables
+   real(r8), allocatable :: lat(:), lon(:)
+   integer :: itime
 
       file_lightning = trim(DEF_dir_runtime) // '/fire/clmforc.Li_2012_climo1995-2011.T62.lnfm_Total_c140423.nc'
 
@@ -58,10 +58,10 @@ CONTAINS
 
       CALL allocate_block_data (grid_lightning, f_lnfm)
 
-      call mg2p_lnfm%build (grid_lightning, landpatch)
+      CALL mg2p_lnfm%build (grid_lightning, landpatch)
 
       itime = (idate(2)-1)*8 + min(idate(3)/10800+1,8)
-      if (itime .gt. 2920)itime = itime - 8 ! for the leap year
+      IF (itime .gt. 2920)itime = itime - 8 ! for the leap year
 
       CALL ncio_read_block_time (file_lightning, 'lnfm', grid_lightning, itime, f_lnfm)
 #ifdef RangeCheck
@@ -77,17 +77,17 @@ CONTAINS
    ! DESCTIPTION:
    ! read lightning data during simulation
 
-      USE MOD_TimeManager
-      USE MOD_NetCDFBlock
-      USE MOD_RangeCheck
-      IMPLICIT NONE
+   USE MOD_TimeManager
+   USE MOD_NetCDFBlock
+   USE MOD_RangeCheck
+   IMPLICIT NONE
 
-      type(timestamp), intent(in) :: time
-      REAL(r8), intent(in) :: deltim
+   type(timestamp), intent(in) :: time
+   real(r8), intent(in) :: deltim
 
-      ! Local Variables
-      type(timestamp) :: time_next
-      INTEGER :: itime, itime_next
+   ! Local Variables
+   type(timestamp) :: time_next
+   integer :: itime, itime_next
 
       itime = (time%day-1)*8 + min(time%sec/10800+1,8)
       IF (mod(time%sec,10800) == 0) itime = itime - 1
@@ -102,9 +102,9 @@ CONTAINS
          CALL check_block_data ('lightning', f_lnfm)
 #endif
 
-         call mg2p_lnfm%map_aweighted (f_lnfm, lnfm)
+         CALL mg2p_lnfm%map_aweighted (f_lnfm, lnfm)
 #ifdef RangeCheck
-         call check_vector_data ('lightning', lnfm)
+         CALL check_vector_data ('lightning', lnfm)
 #endif
       ENDIF
 
