@@ -113,7 +113,7 @@ CONTAINS
       write(LOGNAM,*) "CMF::DAMOUT_NMLIST: namelist open in unit: ", TRIM(CSETFILE), NSETFILE 
 
       !*** 2. read namelist
-      REWIND(NSETFILE)
+      rewind(NSETFILE)
       read(NSETFILE,NML=NDAMOUT)
 
       IF( LDAMOUT )THEN
