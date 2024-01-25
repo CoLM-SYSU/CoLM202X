@@ -20,7 +20,6 @@ MODULE MOD_ForcingDownscaling
    USE MOD_Namelist
    USE MOD_Const_Physical
    IMPLICIT NONE
-   SAVE
 
    real(r8), parameter :: SHR_CONST_MWDAIR = 28.966_r8       ! molecular weight dry air [kg/kmole]
    real(r8), parameter :: SHR_CONST_MWWV   = 18.016_r8       ! molecular weight water vapor
@@ -96,11 +95,11 @@ CONTAINS
    real(r8), intent(in) :: wt_column(1:num_columns) ! weight of the column relative to the grid cell
 
    ! topography factor
-   !real(r8), intent(in) :: slp_c(1:num_columns) ! slope factor
-   !real(r8), intent(in) :: asp_c(1:num_columns) ! aspect factor
-   !real(r8), intent(in) :: cur_c(1:num_columns) ! curvature factor
-   !real(r8), intent(in) :: svf_c(1:num_columns) ! sky view factor
-   !real(r8), intent(in) :: sf_c(1:num_columns)  ! shadow factor 
+   !real(r8), intent(in) :: forc_slp_c(1:num_columns) ! slope factor
+   !real(r8), intent(in) :: forc_asp_c(1:num_columns) ! aspect factor
+   !real(r8), intent(in) :: forc_cur_c(1:num_columns) ! curvature factor
+   !real(r8), intent(in) :: forc_svf_c(1:num_columns) ! sky view factor
+   !real(r8), intent(in) :: forc_sf_c(1:num_columns)  ! shadow factor 
 
    ! Gridcell-level non-downscaled fields:
    real(r8), intent(in) :: forc_topo_g  (1:num_gridcells) ! atmospheric surface height [m]
@@ -172,10 +171,24 @@ CONTAINS
          zbot    = forc_hgt_grc(g)            ! atm ref height
 
          max_elev_c = maxval(forc_topo_c(begc(g):endc(g))) ! maximum column level elevation value within the grid
+         
+         !real(r8) :: wd(1:num_columns)            ! wind direction (rad)
+         !real(r8) :: slp_wd(1:num_columns)        ! the slope in the direction of wind
+         !real(r8) :: norm_slp_wd   ! normalize the slope in the direction of wind
+         !real(r8) :: norm_cur_c    ! normalize curvature factor
+         
+         ! wind adjust factor
+         !wd = atan(forc_vs_g(g)/forc_us_g(g)) ! cal wind direction (rad)         
+         !slp_wd = forc_slp_c(begc(g):endc(g))*cos(wd-forc_asp_c(begc(g):endc(g))) ! the slope in the direction of wind
+         !norm_slp_wd = slp_wd/(2*maxval(slp_wd)) ! normalize the slope in the direction of wind
+         !norm_cur_c = forc_cur_c(begc(g):endc(g))/(2*maxval(forc_cur_c(begc(g):endc(g)))) ! normalize curvature factor
 
          DO c = begc(g), endc(g)
             ! This is a simple downscaling procedure
             ! Note that forc_hgt, forc_u, forc_v and solar radiation are not downscaled.
+
+            !asp_c = forc_asp_c(c)
+            !cur_c = forc_cur_c(c)
 
             hsurf_c = forc_topo_c(c)                        ! column sfc elevation
             tbot_c  = tbot_g-lapse_rate*(hsurf_c-hsurf_g)   ! adjust temp for column
@@ -239,7 +252,7 @@ CONTAINS
                   /(1.0 - 0.27e-3*(forc_topo_c(c) - forc_topo_g(g)))
                forc_prl_c(c) = forc_prl_g(g) + delta_prl_c   ! large scale precipitation [mm/s]
              
-            ELSEIF (trim(DEF_DS_precipitation_adjust_scheme == 'III')) THEN 
+            ELSEIF (trim(DEF_DS_precipitation_adjust_scheme) == 'III') THEN 
                ! Mei, Y., Maggioni, V., Houser, P., Xue, Y., & Rouf, T. (2020). A nonparametric statistical 
                ! technique for spatial downscaling of precipitation over High Mountain Asia. Water Resources Research, 
                ! 56, e2020WR027472. https://doi.org/ 10.1029/2020WR027472
@@ -248,11 +261,11 @@ CONTAINS
             END IF
 
             IF (forc_prl_c(c) < 0) THEN
-               WRITE(*,*) 'negative prl', forc_prl_g(g), max_elev_c, forc_topo_c(c), forc_topo_g(g)
+               write(*,*) 'negative prl', forc_prl_g(g), max_elev_c, forc_topo_c(c), forc_topo_g(g)
             END IF
 
             IF (forc_prc_c(c) < 0) THEN
-               WRITE(*,*) 'negative prc', forc_prc_g(g), max_elev_c, forc_topo_c(c), forc_topo_g(g)
+               write(*,*) 'negative prc', forc_prc_g(g), max_elev_c, forc_topo_c(c), forc_topo_g(g)
             END IF
 
             forc_prc_c(c) = max(forc_prc_c(c), 0.)
@@ -456,7 +469,7 @@ CONTAINS
       DO g = 1, num_gridcells
          IF (sum_wts_g(g) > 0._r8) THEN
             IF (abs((newsum_lwrad_g(g) / sum_wts_g(g)) - forc_lwrad_g(g)) > 1.e-8_r8) THEN
-               WRITE(6,*) 'g, newsum_lwrad_g, sum_wts_g, forc_lwrad_g: ', &
+               write(6,*) 'g, newsum_lwrad_g, sum_wts_g, forc_lwrad_g: ', &
                      g, newsum_lwrad_g(g), sum_wts_g(g), forc_lwrad_g(g)
                CALL abort
             END IF
