@@ -386,10 +386,10 @@ IMPLICIT NONE
    write(LOGNAM,*) "CMF::BOUNDARY_END: Finalize boundary module"
 
    IF( LSEALEVCDF )THEN
-   #ifdef UseCDF_CMF
+#ifdef UseCDF_CMF
       CALL NCERROR( NF90_CLOSE(SLCDF%NCID))
       write(LOGNAM,*) "Input netcdf sealev closed:",SLCDF%NCID
-   #endif
+#endif
    ENDIF 
 
   write(LOGNAM,*) "CMF::BOUNDARY_END: end"
