@@ -53,23 +53,23 @@ MODULE MOD_MonthlyinSituCO2MaunaLoa
 ! -------------------------------
 
    USE MOD_Precision
-   use MOD_Namelist, only: DEF_SSP
+   USE MOD_Namelist, only: DEF_SSP
    IMPLICIT NONE
    SAVE
 
    ! define the CO2 data time range
-   INTEGER, parameter :: syear  = 1849 
-   INTEGER, parameter :: eyear  = 2100 
-   INTEGER, parameter :: smonth = 1
-   INTEGER, parameter :: emonth = 12
+   integer, parameter :: syear  = 1849
+   integer, parameter :: eyear  = 2100
+   integer, parameter :: smonth = 1
+   integer, parameter :: emonth = 12
 
-   REAL(r8), dimension(syear:eyear, 12) :: co2mlo
+   real(r8), dimension(syear:eyear, 12) :: co2mlo
 
    ! PUBLIC MEMBER FUNCTIONS:
    PUBLIC :: init_monthly_co2_mlo
    PUBLIC :: get_monthly_co2_mlo
 
-   CONTAINS
+CONTAINS
 
    SUBROUTINE init_monthly_co2_mlo
    !DESCRIPTION
@@ -103,7 +103,7 @@ MODULE MOD_MonthlyinSituCO2MaunaLoa
       !---2022.12.12  Zhongwang Wei @ SYSU
       !---2021.05.05  Hua Yuan @ SYSU
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
       ! fillvalue
       co2mlo(:,:) = -99.99 !monthly mean CO2 concentration in ppm
@@ -353,8 +353,8 @@ MODULE MOD_MonthlyinSituCO2MaunaLoa
       !Matthias Büchner, Christopher Reyer (2022): ISIMIP3b atmospheric composition input data (v1.1). ISIMIP Repository.
       !https://doi.org/10.48364/ISIMIP.482153.1
       !added by Zhongwang Wei @ SYSU 2022.12.12
-      select case (trim(DEF_SSP))
-      case ('126')
+      select CASE (trim(DEF_SSP))
+      CASE ('126')
             !co2mlo(2015,:) =  (/ 399.95, 399.95, 399.95, 399.95, 399.95, 399.95, 399.95, 399.95, 399.95, 399.95, 399.95, 399.95 /)
             !co2mlo(2016,:) =  (/ 403.12, 403.12, 403.12, 403.12, 403.12, 403.12, 403.12, 403.12, 403.12, 403.12, 403.12, 403.12 /)
             !co2mlo(2017,:) =  (/ 405.75, 405.75, 405.75, 405.75, 405.75, 405.75, 405.75, 405.75, 405.75, 405.75, 405.75, 405.75 /)
@@ -442,7 +442,7 @@ MODULE MOD_MonthlyinSituCO2MaunaLoa
             co2mlo(2099,:) =  (/ 446.67, 446.67, 446.67, 446.67, 446.67, 446.67, 446.67, 446.67, 446.67, 446.67, 446.67, 446.67 /)
             co2mlo(2100,:) =  (/ 445.62, 445.62, 445.62, 445.62, 445.62, 445.62, 445.62, 445.62, 445.62, 445.62, 445.62, 445.62 /)
       !added by Zhongwang Wei @ SYSU 2022.12.12
-      case ('245')
+      CASE ('245')
             print *,'245'
             !co2mlo(2015,:) =  (/ 399.95, 399.95, 399.95, 399.95, 399.95, 399.95, 399.95, 399.95, 399.95, 399.95, 399.95, 399.95 /)
             !co2mlo(2016,:) =  (/ 403.12, 403.12, 403.12, 403.12, 403.12, 403.12, 403.12, 403.12, 403.12, 403.12, 403.12, 403.12 /)
@@ -531,7 +531,7 @@ MODULE MOD_MonthlyinSituCO2MaunaLoa
             co2mlo(2099,:) =  (/ 602.51, 602.51, 602.51, 602.51, 602.51, 602.51, 602.51, 602.51, 602.51, 602.51, 858.83, 858.83 /)
             co2mlo(2100,:) =  (/ 602.78, 602.78, 602.78, 602.78, 602.78, 602.78, 602.78, 602.78, 602.78, 602.78, 867.19, 867.19 /)
       !added by Zhongwang Wei @ SYSU 2022.12.12
-      case ('370')
+      CASE ('370')
             !co2mlo(2015,:) =  (/ 399.95, 399.95, 399.95, 399.95, 399.95, 399.95, 399.95, 399.95, 399.95, 399.95, 399.95, 399.95 /)
             !co2mlo(2016,:) =  (/ 403.12, 403.12, 403.12, 403.12, 403.12, 403.12, 403.12, 403.12, 403.12, 403.12, 403.12, 403.12 /)
             !co2mlo(2017,:) =  (/ 405.81, 405.81, 405.81, 405.81, 405.81, 405.81, 405.81, 405.81, 405.81, 405.81, 405.81, 405.81 /)
@@ -619,7 +619,7 @@ MODULE MOD_MonthlyinSituCO2MaunaLoa
             co2mlo(2099,:) =  (/ 858.83, 858.83, 858.83, 858.83, 858.83, 858.83, 858.83, 858.83, 858.83, 858.83, 858.83, 858.83 /)
             co2mlo(2100,:) =  (/ 867.19, 867.19, 867.19, 867.19, 867.19, 867.19, 867.19, 867.19, 867.19, 867.19, 867.19, 867.19 /)
       !added by Zhongwang Wei @ SYSU 2022.12.12
-      case ('585')
+      CASE ('585')
             !co2mlo(2015,:) = (/ 399.95, 399.95, 399.95, 399.95, 399.95, 399.95, 399.95, 399.95, 399.95, 399.95, 399.95, 399.95 /)
             !co2mlo(2016,:) = (/ 403.12, 403.12, 403.12, 403.12, 403.12, 403.12, 403.12, 403.12, 403.12, 403.12, 403.12, 403.12 /)
             !co2mlo(2017,:) = (/ 405.79, 405.79, 405.79, 405.79, 405.79, 405.79, 405.79, 405.79, 405.79, 405.79, 405.79, 405.79 /)
@@ -706,16 +706,16 @@ MODULE MOD_MonthlyinSituCO2MaunaLoa
             co2mlo(2098,:) = (/ 1107.89, 1107.89, 1107.89, 1107.89, 1107.89, 1107.89, 1107.89, 1107.89, 1107.89, 1107.89, 1107.89, 1107.89 /)
             co2mlo(2099,:) = (/ 1121.55, 1121.55, 1121.55, 1121.55, 1121.55, 1121.55, 1121.55, 1121.55, 1121.55, 1121.55, 1121.55, 1121.55 /)
             co2mlo(2100,:) = (/ 1135.21, 1135.21, 1135.21, 1135.21, 1135.21, 1135.21, 1135.21, 1135.21, 1135.21, 1135.21, 1135.21, 1135.21 /)
-   end select
+      END select
 
    END SUBROUTINE init_monthly_co2_mlo
 
-   REAL(r8) FUNCTION get_monthly_co2_mlo (year, month)
+   real(r8) FUNCTION get_monthly_co2_mlo (year, month)
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      INTEGER, intent(in) :: year
-      INTEGER, intent(in) :: month
+   integer, intent(in) :: year
+   integer, intent(in) :: month
 
       IF (year<syear .or. year==syear.and.month<3) THEN
          print *, "Warning: Requested CO2 data beyond the earliest record!"

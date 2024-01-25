@@ -1,8 +1,8 @@
 #include <define.h>
 
-module MOD_Vars_1DAccFluxes
+MODULE MOD_Vars_1DAccFluxes
 
-   use MOD_Precision
+   USE MOD_Precision
 
    real(r8) :: nac              ! number of accumulation
    real(r8), allocatable :: nac_ln   (:)
@@ -91,30 +91,30 @@ module MOD_Vars_1DAccFluxes
    real(r8), allocatable :: a_snow (:)
 
 #ifdef URBAN_MODEL
-   REAL(r8), allocatable :: a_t_room (:)    !temperature of inner building [K]
-   REAL(r8), allocatable :: a_tafu   (:)    !temperature of outer building [K]
-   REAL(r8), allocatable :: a_fhac   (:)    !sensible flux from heat or cool AC [W/m2]
-   REAL(r8), allocatable :: a_fwst   (:)    !waste heat flux from heat or cool AC [W/m2]
-   REAL(r8), allocatable :: a_fach   (:)    !flux from inner and outter air exchange [W/m2]
-   REAL(r8), allocatable :: a_fahe   (:)    !flux from metabolic and vehicle [W/m2]
-   REAL(r8), allocatable :: a_fhah   (:)    !sensible flux from heating [W/m2]
-   REAL(r8), allocatable :: a_vehc   (:)    !flux from vehicle [W/m2]
-   REAL(r8), allocatable :: a_meta   (:)    !flux from metabolic [W/m2]
+   real(r8), allocatable :: a_t_room (:)    !temperature of inner building [K]
+   real(r8), allocatable :: a_tafu   (:)    !temperature of outer building [K]
+   real(r8), allocatable :: a_fhac   (:)    !sensible flux from heat or cool AC [W/m2]
+   real(r8), allocatable :: a_fwst   (:)    !waste heat flux from heat or cool AC [W/m2]
+   real(r8), allocatable :: a_fach   (:)    !flux from inner and outter air exchange [W/m2]
+   real(r8), allocatable :: a_fahe   (:)    !flux from metabolic and vehicle [W/m2]
+   real(r8), allocatable :: a_fhah   (:)    !sensible flux from heating [W/m2]
+   real(r8), allocatable :: a_vehc   (:)    !flux from vehicle [W/m2]
+   real(r8), allocatable :: a_meta   (:)    !flux from metabolic [W/m2]
 
-   REAL(r8), allocatable :: a_senroof(:)    !sensible heat flux from roof [W/m2]
-   REAL(r8), allocatable :: a_senwsun(:)    !sensible heat flux from sunlit wall [W/m2]
-   REAL(r8), allocatable :: a_senwsha(:)    !sensible heat flux from shaded wall [W/m2]
-   REAL(r8), allocatable :: a_sengimp(:)    !sensible heat flux from impervious road [W/m2]
-   REAL(r8), allocatable :: a_sengper(:)    !sensible heat flux from pervious road [W/m2]
-   REAL(r8), allocatable :: a_senurbl(:)    !sensible heat flux from urban vegetation [W/m2]
+   real(r8), allocatable :: a_senroof(:)    !sensible heat flux from roof [W/m2]
+   real(r8), allocatable :: a_senwsun(:)    !sensible heat flux from sunlit wall [W/m2]
+   real(r8), allocatable :: a_senwsha(:)    !sensible heat flux from shaded wall [W/m2]
+   real(r8), allocatable :: a_sengimp(:)    !sensible heat flux from impervious road [W/m2]
+   real(r8), allocatable :: a_sengper(:)    !sensible heat flux from pervious road [W/m2]
+   real(r8), allocatable :: a_senurbl(:)    !sensible heat flux from urban vegetation [W/m2]
 
-   REAL(r8), allocatable :: a_lfevproof(:)  !latent heat flux from roof [W/m2]
-   REAL(r8), allocatable :: a_lfevpgimp(:)  !latent heat flux from impervious road [W/m2]
-   REAL(r8), allocatable :: a_lfevpgper(:)  !latent heat flux from pervious road [W/m2]
-   REAL(r8), allocatable :: a_lfevpurbl(:)  !latent heat flux from urban vegetation [W/m2]
+   real(r8), allocatable :: a_lfevproof(:)  !latent heat flux from roof [W/m2]
+   real(r8), allocatable :: a_lfevpgimp(:)  !latent heat flux from impervious road [W/m2]
+   real(r8), allocatable :: a_lfevpgper(:)  !latent heat flux from pervious road [W/m2]
+   real(r8), allocatable :: a_lfevpurbl(:)  !latent heat flux from urban vegetation [W/m2]
 
-   REAL(r8), allocatable :: a_troof    (:)  !temperature of roof [K]
-   REAL(r8), allocatable :: a_twall    (:)  !temperature of wall [K]
+   real(r8), allocatable :: a_troof    (:)  !temperature of roof [K]
+   real(r8), allocatable :: a_twall    (:)  !temperature of wall [K]
 #endif
 
 
@@ -264,7 +264,7 @@ module MOD_Vars_1DAccFluxes
    real(r8), allocatable :: a_OM_density  (:,:)
 !Plant Hydraulic parameters
    real(r8), allocatable :: a_vegwp       (:,:)
-!end plant hydraulic parameters
+!END plant hydraulic parameters
    real(r8), allocatable :: a_t_lake      (:,:)
    real(r8), allocatable :: a_lake_icefrac(:,:)
 
@@ -319,27 +319,27 @@ module MOD_Vars_1DAccFluxes
    real(r8), allocatable :: a_srndln (:)
    real(r8), allocatable :: a_srniln (:)
 
-   public :: allocate_acc_fluxes
-   public :: deallocate_acc_fluxes
-   public :: flush_acc_fluxes
-   public :: accumulate_fluxes
+   PUBLIC :: allocate_acc_fluxes
+   PUBLIC :: deallocate_acc_fluxes
+   PUBLIC :: flush_acc_fluxes
+   PUBLIC :: accumulate_fluxes
 
-contains
+CONTAINS
 
-   subroutine allocate_acc_fluxes
+   SUBROUTINE allocate_acc_fluxes
 
-      use MOD_SPMD_Task
-      USE MOD_LandElm
-      use MOD_LandPatch
-      USE MOD_LandUrban, only: numurban
+   USE MOD_SPMD_Task
+   USE MOD_LandElm
+   USE MOD_LandPatch
+   USE MOD_LandUrban, only: numurban
 #ifdef CROP
-      USE MOD_LandCrop
+   USE MOD_LandCrop
 #endif
-      USE MOD_Vars_Global
-      implicit none
+   USE MOD_Vars_Global
+   IMPLICIT NONE
 
-      if (p_is_worker) then
-         if (numpatch > 0) then
+      IF (p_is_worker) THEN
+         IF (numpatch > 0) THEN
 
             allocate (a_us     (numpatch))
             allocate (a_vs     (numpatch))
@@ -659,8 +659,8 @@ contains
 
             allocate (nac_ln      (numpatch))
 
-         end if
-      end if
+         ENDIF
+      ENDIF
 
       IF (p_is_worker) THEN
 #if (defined CROP)
@@ -670,17 +670,17 @@ contains
 #endif
       ENDIF
 
-   end subroutine allocate_acc_fluxes
+   END SUBROUTINE allocate_acc_fluxes
 
-   subroutine deallocate_acc_fluxes ()
+   SUBROUTINE deallocate_acc_fluxes ()
 
-      use MOD_SPMD_Task
-      use MOD_LandPatch, only : numpatch
-      USE MOD_LandUrban, only : numurban
-      implicit none
+   USE MOD_SPMD_Task
+   USE MOD_LandPatch, only : numpatch
+   USE MOD_LandUrban, only : numurban
+   IMPLICIT NONE
 
-      if (p_is_worker) then
-         if (numpatch > 0) then
+      IF (p_is_worker) THEN
+         IF (numpatch > 0) THEN
 
             deallocate (a_us     )
             deallocate (a_vs     )
@@ -933,7 +933,7 @@ contains
 #endif
 ! Ozone stress variables
             deallocate (a_ozone              )
-! end ozone stress variables
+! END ozone stress variables
 
             deallocate (a_t_soisno    )
             deallocate (a_wliq_soisno )
@@ -945,7 +945,7 @@ contains
             deallocate (a_OM_density  )
 !Plant Hydraulic parameters
             deallocate (a_vegwp       )
-!end plant hydraulic parameters
+!END plant hydraulic parameters
             deallocate (a_t_lake      )
             deallocate (a_lake_icefrac)
 #ifdef BGC
@@ -1001,25 +1001,25 @@ contains
 
             deallocate (nac_ln      )
 
-         end if
-      end if
+         ENDIF
+      ENDIF
 
-   end subroutine deallocate_acc_fluxes
+   END SUBROUTINE deallocate_acc_fluxes
 
    !-----------------------
    SUBROUTINE FLUSH_acc_fluxes ()
 
-      use MOD_SPMD_Task
-      use MOD_LandPatch, only : numpatch
+      USE MOD_SPMD_Task
+      USE MOD_LandPatch, only : numpatch
       USE MOD_LandUrban, only : numurban
-      use MOD_Vars_Global, only : spval
-      implicit none
+      USE MOD_Vars_Global, only : spval
+      IMPLICIT NONE
 
-      if (p_is_worker) then
+      IF (p_is_worker) THEN
 
          nac = 0
 
-         if (numpatch > 0) then
+         IF (numpatch > 0) THEN
 
             ! flush the Fluxes for accumulation
             a_us     (:) = spval
@@ -1281,7 +1281,7 @@ contains
             a_OM_density   (:,:) = spval
 !Plant Hydraulic parameters
             a_vegwp        (:,:) = spval
-!end plant hydraulic parameters
+!END plant hydraulic parameters
             a_t_lake       (:,:) = spval
             a_lake_icefrac (:,:) = spval
 #ifdef BGC
@@ -1336,109 +1336,109 @@ contains
 
             nac_ln  (:) = 0
 
-         end if
-      end if
+         ENDIF
+      ENDIF
 
    END SUBROUTINE FLUSH_acc_fluxes
 
    SUBROUTINE accumulate_fluxes
-      ! ----------------------------------------------------------------------
-      ! perfrom the grid average mapping: average a subgrid input 1d vector
-      ! of length numpatch to a output 2d array of length [ghist%xcnt,ghist%ycnt]
-      !
-      ! Created by Yongjiu Dai, 03/2014
-      !---------------------------------------------------------------------
+   ! ----------------------------------------------------------------------
+   ! perfrom the grid average mapping: average a subgrid input 1d vector
+   ! of length numpatch to a output 2d array of length [ghist%xcnt,ghist%ycnt]
+   !
+   ! Created by Yongjiu Dai, 03/2014
+   !---------------------------------------------------------------------
 
-      use MOD_Precision
-      use MOD_SPMD_Task
-      USE mod_forcing, only: forcmask
-      USE MOD_Mesh,    only: numelm
-      USE MOD_LandElm
-      use MOD_LandPatch,      only: numpatch, elm_patch
-      USE MOD_LandUrban,      only: numurban
-      use MOD_Const_Physical, only: vonkar, stefnc, cpair, rgas, grav
-      use MOD_Vars_TimeInvariants
-      use MOD_Vars_TimeVariables
-      use MOD_Vars_1DForcing
-      use MOD_Vars_1DFluxes
-      use MOD_FrictionVelocity
-      USE MOD_Namelist, only: DEF_USE_CBL_HEIGHT, DEF_USE_OZONESTRESS, DEF_USE_PLANTHYDRAULICS, DEF_USE_NITRIF
-      USE MOD_TurbulenceLEddy
-      use MOD_Vars_Global
+   USE MOD_Precision
+   USE MOD_SPMD_Task
+   USE mod_forcing, only: forcmask
+   USE MOD_Mesh,    only: numelm
+   USE MOD_LandElm
+   USE MOD_LandPatch,      only: numpatch, elm_patch
+   USE MOD_LandUrban,      only: numurban
+   USE MOD_Const_Physical, only: vonkar, stefnc, cpair, rgas, grav
+   USE MOD_Vars_TimeInvariants
+   USE MOD_Vars_TimeVariables
+   USE MOD_Vars_1DForcing
+   USE MOD_Vars_1DFluxes
+   USE MOD_FrictionVelocity
+   USE MOD_Namelist, only: DEF_USE_CBL_HEIGHT, DEF_USE_OZONESTRESS, DEF_USE_PLANTHYDRAULICS, DEF_USE_NITRIF
+   USE MOD_TurbulenceLEddy
+   USE MOD_Vars_Global
 #ifdef CatchLateralFlow
-      USE MOD_Hydro_Vars_1DFluxes
-      USE MOD_Hydro_Hist, only: accumulate_fluxes_basin
+   USE MOD_Hydro_Vars_1DFluxes
+   USE MOD_Hydro_Hist, only: accumulate_fluxes_basin
 #endif
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      ! Local Variables
+   ! Local Variables
 
-      real(r8), allocatable :: r_trad  (:)
-      real(r8), allocatable :: r_ustar (:)
-      real(r8), allocatable :: r_ustar2(:) !define a temporary for estimating us10m only, output should be r_ustar. Shaofeng, 2023.05.20
-      real(r8), allocatable :: r_tstar (:)
-      real(r8), allocatable :: r_qstar (:)
-      real(r8), allocatable :: r_zol   (:)
-      real(r8), allocatable :: r_rib   (:)
-      real(r8), allocatable :: r_fm    (:)
-      real(r8), allocatable :: r_fh    (:)
-      real(r8), allocatable :: r_fq    (:)
+   real(r8), allocatable :: r_trad  (:)
+   real(r8), allocatable :: r_ustar (:)
+   real(r8), allocatable :: r_ustar2(:) !define a temporary for estimating us10m only, output should be r_ustar. Shaofeng, 2023.05.20
+   real(r8), allocatable :: r_tstar (:)
+   real(r8), allocatable :: r_qstar (:)
+   real(r8), allocatable :: r_zol   (:)
+   real(r8), allocatable :: r_rib   (:)
+   real(r8), allocatable :: r_fm    (:)
+   real(r8), allocatable :: r_fh    (:)
+   real(r8), allocatable :: r_fq    (:)
 
-      real(r8), allocatable :: r_us10m (:)
-      real(r8), allocatable :: r_vs10m (:)
-      real(r8), allocatable :: r_fm10m (:)
+   real(r8), allocatable :: r_us10m (:)
+   real(r8), allocatable :: r_vs10m (:)
+   real(r8), allocatable :: r_fm10m (:)
 
-      logical,  allocatable :: filter  (:)
+   logical,  allocatable :: filter  (:)
 
-      !---------------------------------------------------------------------
-      integer  ib, jb, i, j, ielm, istt, iend
-      real(r8) sumwt
-      real(r8) rhoair,thm,th,thv,ur,displa_av,zldis,hgt_u,hgt_t,hgt_q
-      real(r8) hpbl ! atmospheric boundary layer height [m]
-      real(r8) z0m_av,z0h_av,z0q_av,us,vs,tm,qm,psrf,taux_e,tauy_e,fsena_e,fevpa_e
-      real(r8) r_ustar_e, r_tstar_e, r_qstar_e, r_zol_e, r_ustar2_e, r_fm10m_e
-      real(r8) r_fm_e, r_fh_e, r_fq_e, r_rib_e, r_us10m_e, r_vs10m_e
-      real(r8) obu,fh2m,fq2m
-      real(r8) um,thvstar,beta,zii,wc,wc2
+   !---------------------------------------------------------------------
+   integer  ib, jb, i, j, ielm, istt, iend
+   real(r8) sumwt
+   real(r8) rhoair,thm,th,thv,ur,displa_av,zldis,hgt_u,hgt_t,hgt_q
+   real(r8) hpbl ! atmospheric boundary layer height [m]
+   real(r8) z0m_av,z0h_av,z0q_av,us,vs,tm,qm,psrf,taux_e,tauy_e,fsena_e,fevpa_e
+   real(r8) r_ustar_e, r_tstar_e, r_qstar_e, r_zol_e, r_ustar2_e, r_fm10m_e
+   real(r8) r_fm_e, r_fh_e, r_fq_e, r_rib_e, r_us10m_e, r_vs10m_e
+   real(r8) obu,fh2m,fq2m
+   real(r8) um,thvstar,beta,zii,wc,wc2
 
-      if (p_is_worker) then
-         if (numpatch > 0) then
+      IF (p_is_worker) THEN
+         IF (numpatch > 0) THEN
 
             nac = nac + 1
 
-            call acc1d (forc_us  , a_us  )
-            call acc1d (forc_vs  , a_vs  )
-            call acc1d (forc_t   , a_t   )
-            call acc1d (forc_q   , a_q   )
-            call acc1d (forc_prc , a_prc )
-            call acc1d (forc_prl , a_prl )
-            call acc1d (forc_pbot, a_pbot)
-            call acc1d (forc_frl , a_frl )
+            CALL acc1d (forc_us  , a_us  )
+            CALL acc1d (forc_vs  , a_vs  )
+            CALL acc1d (forc_t   , a_t   )
+            CALL acc1d (forc_q   , a_q   )
+            CALL acc1d (forc_prc , a_prc )
+            CALL acc1d (forc_prl , a_prl )
+            CALL acc1d (forc_pbot, a_pbot)
+            CALL acc1d (forc_frl , a_frl )
 
-            call acc1d (forc_sols,  a_solarin)
-            call acc1d (forc_soll,  a_solarin)
-            call acc1d (forc_solsd, a_solarin)
-            call acc1d (forc_solld, a_solarin)
-            if (DEF_USE_CBL_HEIGHT) then
-               call acc1d (forc_hpbl , a_hpbl)
-            endif
+            CALL acc1d (forc_sols,  a_solarin)
+            CALL acc1d (forc_soll,  a_solarin)
+            CALL acc1d (forc_solsd, a_solarin)
+            CALL acc1d (forc_solld, a_solarin)
+            IF (DEF_USE_CBL_HEIGHT) THEN
+               CALL acc1d (forc_hpbl , a_hpbl)
+            ENDIF
 
-            call acc1d (taux    , a_taux   )
-            call acc1d (tauy    , a_tauy   )
-            call acc1d (fsena   , a_fsena  )
-            call acc1d (lfevpa  , a_lfevpa )
-            call acc1d (fevpa   , a_fevpa  )
-            call acc1d (fsenl   , a_fsenl  )
-            call acc1d (fevpl   , a_fevpl  )
-            call acc1d (etr     , a_etr    )
-            call acc1d (fseng   , a_fseng  )
-            call acc1d (fevpg   , a_fevpg  )
-            call acc1d (fgrnd   , a_fgrnd  )
-            call acc1d (sabvsun , a_sabvsun)
-            call acc1d (sabvsha , a_sabvsha)
-            call acc1d (sabg    , a_sabg   )
-            call acc1d (olrg    , a_olrg   )
+            CALL acc1d (taux    , a_taux   )
+            CALL acc1d (tauy    , a_tauy   )
+            CALL acc1d (fsena   , a_fsena  )
+            CALL acc1d (lfevpa  , a_lfevpa )
+            CALL acc1d (fevpa   , a_fevpa  )
+            CALL acc1d (fsenl   , a_fsenl  )
+            CALL acc1d (fevpl   , a_fevpl  )
+            CALL acc1d (etr     , a_etr    )
+            CALL acc1d (fseng   , a_fseng  )
+            CALL acc1d (fevpg   , a_fevpg  )
+            CALL acc1d (fgrnd   , a_fgrnd  )
+            CALL acc1d (sabvsun , a_sabvsun)
+            CALL acc1d (sabvsha , a_sabvsha)
+            CALL acc1d (sabg    , a_sabg   )
+            CALL acc1d (olrg    , a_olrg   )
 
             IF (DEF_forcing%has_missing_value) THEN
                WHERE (forcmask)
@@ -1449,86 +1449,86 @@ contains
                  rnet = sabg + sabvsun + sabvsha - olrg + forc_frl
                END WHERE
             ENDIF
-            call acc1d (rnet    , a_rnet   )
+            CALL acc1d (rnet    , a_rnet   )
 
-            call acc1d (xerr    , a_xerr   )
-            call acc1d (zerr    , a_zerr   )
-            call acc1d (rsur    , a_rsur   )
+            CALL acc1d (xerr    , a_xerr   )
+            CALL acc1d (zerr    , a_zerr   )
+            CALL acc1d (rsur    , a_rsur   )
 #ifndef CatchLateralFlow
             WHERE ((rsur /= spval) .and. (rnof /= spval))
                rsub = rnof - rsur
             ELSEWHERE
                rsub = spval
-            END WHERE 
+            END WHERE
 #endif
-            call acc1d (rsub    , a_rsub   )
-            call acc1d (rnof    , a_rnof   )
+            CALL acc1d (rsub    , a_rsub   )
+            CALL acc1d (rnof    , a_rnof   )
 #ifdef CatchLateralFlow
             CALL acc1d (xwsur   , a_xwsur  )
             CALL acc1d (xwsub   , a_xwsub  )
 #endif
-            call acc1d (qintr   , a_qintr  )
-            call acc1d (qinfl   , a_qinfl  )
-            call acc1d (qdrip   , a_qdrip  )
+            CALL acc1d (qintr   , a_qintr  )
+            CALL acc1d (qinfl   , a_qinfl  )
+            CALL acc1d (qdrip   , a_qdrip  )
 
-            call acc1d (rstfacsun_out , a_rstfacsun )
-            call acc1d (rstfacsha_out , a_rstfacsha )
+            CALL acc1d (rstfacsun_out , a_rstfacsun )
+            CALL acc1d (rstfacsha_out , a_rstfacsha )
 
-            call acc1d (gssun_out     , a_gssun )
-            call acc1d (gssha_out     , a_gssha )
+            CALL acc1d (gssun_out     , a_gssun )
+            CALL acc1d (gssha_out     , a_gssha )
 
-            call acc1d (rss    , a_rss    )
-            call acc1d (wdsrf  , a_wdsrf  )
-            call acc1d (zwt    , a_zwt    )
-            call acc1d (wa     , a_wa     )
-            call acc1d (wat    , a_wat    )
-            call acc1d (wetwat , a_wetwat )
-            call acc1d (assim  , a_assim  )
-            call acc1d (respc  , a_respc  )
-            call acc1d (assimsun_out  , a_assimsun      )
-            call acc1d (assimsha_out  , a_assimsha      )
-            call acc1d (etrsun_out    , a_etrsun        )
-            call acc1d (etrsha_out    , a_etrsha        )
+            CALL acc1d (rss    , a_rss    )
+            CALL acc1d (wdsrf  , a_wdsrf  )
+            CALL acc1d (zwt    , a_zwt    )
+            CALL acc1d (wa     , a_wa     )
+            CALL acc1d (wat    , a_wat    )
+            CALL acc1d (wetwat , a_wetwat )
+            CALL acc1d (assim  , a_assim  )
+            CALL acc1d (respc  , a_respc  )
+            CALL acc1d (assimsun_out  , a_assimsun      )
+            CALL acc1d (assimsha_out  , a_assimsha      )
+            CALL acc1d (etrsun_out    , a_etrsun        )
+            CALL acc1d (etrsha_out    , a_etrsha        )
 
-            call acc1d (qcharge, a_qcharge)
+            CALL acc1d (qcharge, a_qcharge)
 
-            call acc1d (t_grnd , a_t_grnd )
-            call acc1d (tleaf  , a_tleaf  )
-            call acc1d (ldew_rain, a_ldew_rain)
-            call acc1d (ldew_snow, a_ldew_snow)
-            call acc1d (ldew   , a_ldew   )
-            call acc1d (scv    , a_scv    )
-            call acc1d (snowdp , a_snowdp )
-            call acc1d (fsno   , a_fsno   )
-            call acc1d (sigf   , a_sigf   )
-            call acc1d (green  , a_green  )
-            call acc1d (lai    , a_lai    )
-            call acc1d (laisun , a_laisun )
-            call acc1d (laisha , a_laisha )
-            call acc1d (sai    , a_sai    )
+            CALL acc1d (t_grnd , a_t_grnd )
+            CALL acc1d (tleaf  , a_tleaf  )
+            CALL acc1d (ldew_rain, a_ldew_rain)
+            CALL acc1d (ldew_snow, a_ldew_snow)
+            CALL acc1d (ldew   , a_ldew   )
+            CALL acc1d (scv    , a_scv    )
+            CALL acc1d (snowdp , a_snowdp )
+            CALL acc1d (fsno   , a_fsno   )
+            CALL acc1d (sigf   , a_sigf   )
+            CALL acc1d (green  , a_green  )
+            CALL acc1d (lai    , a_lai    )
+            CALL acc1d (laisun , a_laisun )
+            CALL acc1d (laisha , a_laisha )
+            CALL acc1d (sai    , a_sai    )
 
-            call acc3d (alb    , a_alb    )
+            CALL acc3d (alb    , a_alb    )
 
-            call acc1d (emis   , a_emis   )
-            call acc1d (z0m    , a_z0m    )
+            CALL acc1d (emis   , a_emis   )
+            CALL acc1d (z0m    , a_z0m    )
 
             allocate (r_trad (numpatch)) ; r_trad(:) = spval
-            do i = 1, numpatch
+            DO i = 1, numpatch
                IF (DEF_forcing%has_missing_value) THEN
-                  IF (.not. forcmask(i)) cycle
+                  IF (.not. forcmask(i)) CYCLE
                ENDIF
 
                IF (.not. patchmask(i)) CYCLE
                r_trad(i) = (olrg(i)/stefnc)**0.25
-            end do
-            call acc1d (r_trad , a_trad   )
+            ENDDO
+            CALL acc1d (r_trad , a_trad   )
             deallocate (r_trad            )
 
-            call acc1d (tref   , a_tref   )
-            call acc1d (qref   , a_qref   )
+            CALL acc1d (tref   , a_tref   )
+            CALL acc1d (qref   , a_qref   )
 
-            call acc1d (forc_rain, a_rain )
-            call acc1d (forc_snow, a_snow )
+            CALL acc1d (forc_rain, a_rain )
+            CALL acc1d (forc_snow, a_snow )
 
 #ifdef URBAN_MODEL
             IF (numurban > 0) THEN
@@ -1560,250 +1560,250 @@ contains
 #endif
 
 #ifdef BGC
-            call acc1d (leafc              , a_leafc               )
-            call acc1d (leafc_storage      , a_leafc_storage       )
-            call acc1d (leafc_xfer         , a_leafc_xfer          )
-            call acc1d (frootc             , a_frootc              )
-            call acc1d (frootc_storage     , a_frootc_storage      )
-            call acc1d (frootc_xfer        , a_frootc_xfer         )
-            call acc1d (livestemc          , a_livestemc           )
-            call acc1d (livestemc_storage  , a_livestemc_storage   )
-            call acc1d (livestemc_xfer     , a_livestemc_xfer      )
-            call acc1d (deadstemc          , a_deadstemc           )
-            call acc1d (deadstemc_storage  , a_deadstemc_storage   )
-            call acc1d (deadstemc_xfer     , a_deadstemc_xfer      )
-            call acc1d (livecrootc         , a_livecrootc          )
-            call acc1d (livecrootc_storage , a_livecrootc_storage  )
-            call acc1d (livecrootc_xfer    , a_livecrootc_xfer     )
-            call acc1d (deadcrootc         , a_deadcrootc          )
-            call acc1d (deadcrootc_storage , a_deadcrootc_storage  )
-            call acc1d (deadcrootc_xfer    , a_deadcrootc_xfer     )
-            call acc1d (grainc             , a_grainc              )
-            call acc1d (grainc_storage     , a_grainc_storage      )
-            call acc1d (grainc_xfer        , a_grainc_xfer         )
-            call acc1d (leafn              , a_leafn               )
-            call acc1d (leafn_storage      , a_leafn_storage       )
-            call acc1d (leafn_xfer         , a_leafn_xfer          )
-            call acc1d (frootn             , a_frootn              )
-            call acc1d (frootn_storage     , a_frootn_storage      )
-            call acc1d (frootn_xfer        , a_frootn_xfer         )
-            call acc1d (livestemn          , a_livestemn           )
-            call acc1d (livestemn_storage  , a_livestemn_storage   )
-            call acc1d (livestemn_xfer     , a_livestemn_xfer      )
-            call acc1d (deadstemn          , a_deadstemn           )
-            call acc1d (deadstemn_storage  , a_deadstemn_storage   )
-            call acc1d (deadstemn_xfer     , a_deadstemn_xfer      )
-            call acc1d (livecrootn         , a_livecrootn          )
-            call acc1d (livecrootn_storage , a_livecrootn_storage  )
-            call acc1d (livecrootn_xfer    , a_livecrootn_xfer     )
-            call acc1d (deadcrootn         , a_deadcrootn          )
-            call acc1d (deadcrootn_storage , a_deadcrootn_storage  )
-            call acc1d (deadcrootn_xfer    , a_deadcrootn_xfer     )
-            call acc1d (grainn             , a_grainn              )
-            call acc1d (grainn_storage     , a_grainn_storage      )
-            call acc1d (grainn_xfer        , a_grainn_xfer         )
-            call acc1d (retransn           , a_retransn            )
-            call acc1d (gpp                , a_gpp                 )
-            call acc1d (downreg            , a_downreg             )
-            call acc1d (ar                 , a_ar                  )
-            call acc1d (cwdprod            , a_cwdprod             )
-            call acc1d (cwddecomp          , a_cwddecomp           )
-            call acc1d (decomp_hr          , a_hr                  )
-            call acc1d (fpg                , a_fpg                 )
-            call acc1d (fpi                , a_fpi                 )
-            call acc1d (gpp_enftemp        , a_gpp_enftemp         )
-            call acc1d (gpp_enfboreal      , a_gpp_enfboreal       )
-            call acc1d (gpp_dnfboreal      , a_gpp_dnfboreal       )
-            call acc1d (gpp_ebftrop        , a_gpp_ebftrop         )
-            call acc1d (gpp_ebftemp        , a_gpp_ebftemp         )
-            call acc1d (gpp_dbftrop        , a_gpp_dbftrop         )
-            call acc1d (gpp_dbftemp        , a_gpp_dbftemp         )
-            call acc1d (gpp_dbfboreal      , a_gpp_dbfboreal       )
-            call acc1d (gpp_ebstemp        , a_gpp_ebstemp         )
-            call acc1d (gpp_dbstemp        , a_gpp_dbstemp         )
-            call acc1d (gpp_dbsboreal      , a_gpp_dbsboreal       )
-            call acc1d (gpp_c3arcgrass     , a_gpp_c3arcgrass      )
-            call acc1d (gpp_c3grass        , a_gpp_c3grass         )
-            call acc1d (gpp_c4grass        , a_gpp_c4grass         )
-            call acc1d (leafc_enftemp      , a_leafc_enftemp       )
-            call acc1d (leafc_enfboreal    , a_leafc_enfboreal     )
-            call acc1d (leafc_dnfboreal    , a_leafc_dnfboreal     )
-            call acc1d (leafc_ebftrop      , a_leafc_ebftrop       )
-            call acc1d (leafc_ebftemp      , a_leafc_ebftemp       )
-            call acc1d (leafc_dbftrop      , a_leafc_dbftrop       )
-            call acc1d (leafc_dbftemp      , a_leafc_dbftemp       )
-            call acc1d (leafc_dbfboreal    , a_leafc_dbfboreal     )
-            call acc1d (leafc_ebstemp      , a_leafc_ebstemp       )
-            call acc1d (leafc_dbstemp      , a_leafc_dbstemp       )
-            call acc1d (leafc_dbsboreal    , a_leafc_dbsboreal     )
-            call acc1d (leafc_c3arcgrass   , a_leafc_c3arcgrass    )
-            call acc1d (leafc_c3grass      , a_leafc_c3grass       )
-            call acc1d (leafc_c4grass      , a_leafc_c4grass       )
-            if(DEF_USE_NITRIF)then
-               call acc2d (to2_decomp_depth_unsat, a_O2_DECOMP_DEPTH_UNSAT)
-               call acc2d (tconc_o2_unsat        , a_CONC_O2_UNSAT        )
-            end if
+            CALL acc1d (leafc              , a_leafc               )
+            CALL acc1d (leafc_storage      , a_leafc_storage       )
+            CALL acc1d (leafc_xfer         , a_leafc_xfer          )
+            CALL acc1d (frootc             , a_frootc              )
+            CALL acc1d (frootc_storage     , a_frootc_storage      )
+            CALL acc1d (frootc_xfer        , a_frootc_xfer         )
+            CALL acc1d (livestemc          , a_livestemc           )
+            CALL acc1d (livestemc_storage  , a_livestemc_storage   )
+            CALL acc1d (livestemc_xfer     , a_livestemc_xfer      )
+            CALL acc1d (deadstemc          , a_deadstemc           )
+            CALL acc1d (deadstemc_storage  , a_deadstemc_storage   )
+            CALL acc1d (deadstemc_xfer     , a_deadstemc_xfer      )
+            CALL acc1d (livecrootc         , a_livecrootc          )
+            CALL acc1d (livecrootc_storage , a_livecrootc_storage  )
+            CALL acc1d (livecrootc_xfer    , a_livecrootc_xfer     )
+            CALL acc1d (deadcrootc         , a_deadcrootc          )
+            CALL acc1d (deadcrootc_storage , a_deadcrootc_storage  )
+            CALL acc1d (deadcrootc_xfer    , a_deadcrootc_xfer     )
+            CALL acc1d (grainc             , a_grainc              )
+            CALL acc1d (grainc_storage     , a_grainc_storage      )
+            CALL acc1d (grainc_xfer        , a_grainc_xfer         )
+            CALL acc1d (leafn              , a_leafn               )
+            CALL acc1d (leafn_storage      , a_leafn_storage       )
+            CALL acc1d (leafn_xfer         , a_leafn_xfer          )
+            CALL acc1d (frootn             , a_frootn              )
+            CALL acc1d (frootn_storage     , a_frootn_storage      )
+            CALL acc1d (frootn_xfer        , a_frootn_xfer         )
+            CALL acc1d (livestemn          , a_livestemn           )
+            CALL acc1d (livestemn_storage  , a_livestemn_storage   )
+            CALL acc1d (livestemn_xfer     , a_livestemn_xfer      )
+            CALL acc1d (deadstemn          , a_deadstemn           )
+            CALL acc1d (deadstemn_storage  , a_deadstemn_storage   )
+            CALL acc1d (deadstemn_xfer     , a_deadstemn_xfer      )
+            CALL acc1d (livecrootn         , a_livecrootn          )
+            CALL acc1d (livecrootn_storage , a_livecrootn_storage  )
+            CALL acc1d (livecrootn_xfer    , a_livecrootn_xfer     )
+            CALL acc1d (deadcrootn         , a_deadcrootn          )
+            CALL acc1d (deadcrootn_storage , a_deadcrootn_storage  )
+            CALL acc1d (deadcrootn_xfer    , a_deadcrootn_xfer     )
+            CALL acc1d (grainn             , a_grainn              )
+            CALL acc1d (grainn_storage     , a_grainn_storage      )
+            CALL acc1d (grainn_xfer        , a_grainn_xfer         )
+            CALL acc1d (retransn           , a_retransn            )
+            CALL acc1d (gpp                , a_gpp                 )
+            CALL acc1d (downreg            , a_downreg             )
+            CALL acc1d (ar                 , a_ar                  )
+            CALL acc1d (cwdprod            , a_cwdprod             )
+            CALL acc1d (cwddecomp          , a_cwddecomp           )
+            CALL acc1d (decomp_hr          , a_hr                  )
+            CALL acc1d (fpg                , a_fpg                 )
+            CALL acc1d (fpi                , a_fpi                 )
+            CALL acc1d (gpp_enftemp        , a_gpp_enftemp         )
+            CALL acc1d (gpp_enfboreal      , a_gpp_enfboreal       )
+            CALL acc1d (gpp_dnfboreal      , a_gpp_dnfboreal       )
+            CALL acc1d (gpp_ebftrop        , a_gpp_ebftrop         )
+            CALL acc1d (gpp_ebftemp        , a_gpp_ebftemp         )
+            CALL acc1d (gpp_dbftrop        , a_gpp_dbftrop         )
+            CALL acc1d (gpp_dbftemp        , a_gpp_dbftemp         )
+            CALL acc1d (gpp_dbfboreal      , a_gpp_dbfboreal       )
+            CALL acc1d (gpp_ebstemp        , a_gpp_ebstemp         )
+            CALL acc1d (gpp_dbstemp        , a_gpp_dbstemp         )
+            CALL acc1d (gpp_dbsboreal      , a_gpp_dbsboreal       )
+            CALL acc1d (gpp_c3arcgrass     , a_gpp_c3arcgrass      )
+            CALL acc1d (gpp_c3grass        , a_gpp_c3grass         )
+            CALL acc1d (gpp_c4grass        , a_gpp_c4grass         )
+            CALL acc1d (leafc_enftemp      , a_leafc_enftemp       )
+            CALL acc1d (leafc_enfboreal    , a_leafc_enfboreal     )
+            CALL acc1d (leafc_dnfboreal    , a_leafc_dnfboreal     )
+            CALL acc1d (leafc_ebftrop      , a_leafc_ebftrop       )
+            CALL acc1d (leafc_ebftemp      , a_leafc_ebftemp       )
+            CALL acc1d (leafc_dbftrop      , a_leafc_dbftrop       )
+            CALL acc1d (leafc_dbftemp      , a_leafc_dbftemp       )
+            CALL acc1d (leafc_dbfboreal    , a_leafc_dbfboreal     )
+            CALL acc1d (leafc_ebstemp      , a_leafc_ebstemp       )
+            CALL acc1d (leafc_dbstemp      , a_leafc_dbstemp       )
+            CALL acc1d (leafc_dbsboreal    , a_leafc_dbsboreal     )
+            CALL acc1d (leafc_c3arcgrass   , a_leafc_c3arcgrass    )
+            CALL acc1d (leafc_c3grass      , a_leafc_c3grass       )
+            CALL acc1d (leafc_c4grass      , a_leafc_c4grass       )
+            IF(DEF_USE_NITRIF)THEN
+               CALL acc2d (to2_decomp_depth_unsat, a_O2_DECOMP_DEPTH_UNSAT)
+               CALL acc2d (tconc_o2_unsat        , a_CONC_O2_UNSAT        )
+            ENDIF
 #ifdef CROP
-            call acc1d (pdcorn             ,   a_pdcorn             )
-            call acc1d (pdswheat           ,   a_pdswheat           )
-            call acc1d (pdwwheat           ,   a_pdwwheat           )
-            call acc1d (pdsoybean          ,   a_pdsoybean          )
-            call acc1d (pdcotton           ,   a_pdcotton           )
-            call acc1d (pdrice1            ,   a_pdrice1            )
-            call acc1d (pdrice2            ,   a_pdrice2            )
-            call acc1d (pdsugarcane        ,   a_pdsugarcane        )
-            call acc1d (plantdate          ,   a_plantdate          )
-            call acc1d (fertnitro_corn     ,   a_fertnitro_corn     )
-            call acc1d (fertnitro_swheat   ,   a_fertnitro_swheat   )
-            call acc1d (fertnitro_wwheat   ,   a_fertnitro_wwheat   )
-            call acc1d (fertnitro_soybean  ,   a_fertnitro_soybean  )
-            call acc1d (fertnitro_cotton   ,   a_fertnitro_cotton   )
-            call acc1d (fertnitro_rice1    ,   a_fertnitro_rice1    )
-            call acc1d (fertnitro_rice2    ,   a_fertnitro_rice2    )
-            call acc1d (fertnitro_sugarcane,   a_fertnitro_sugarcane)
-            call acc1d (real(irrig_method_corn     ,r8),   a_irrig_method_corn     )
-            call acc1d (real(irrig_method_swheat   ,r8),   a_irrig_method_swheat   )
-            call acc1d (real(irrig_method_wwheat   ,r8),   a_irrig_method_wwheat   )
-            call acc1d (real(irrig_method_soybean  ,r8),   a_irrig_method_soybean  )
-            call acc1d (real(irrig_method_cotton   ,r8),   a_irrig_method_cotton   )
-            call acc1d (real(irrig_method_rice1    ,r8),   a_irrig_method_rice1    )
-            call acc1d (real(irrig_method_rice2    ,r8),   a_irrig_method_rice2    )
-            call acc1d (real(irrig_method_sugarcane,r8),   a_irrig_method_sugarcane)
-            call acc1d (cphase             ,   a_cphase             )
-            call acc1d (hui                ,   a_hui                )
-            call acc1d (vf                 ,   a_vf                 )
-            call acc1d (gddmaturity        ,   a_gddmaturity        )
-            call acc1d (gddplant           ,   a_gddplant           )
-            call acc1d (cropprod1c         ,   a_cropprod1c         )
-            call acc1d (cropprod1c_loss    ,   a_cropprod1c_loss    )
-            call acc1d (cropseedc_deficit  ,   a_cropseedc_deficit  )
-            call acc1d (grainc_to_cropprodc,   a_grainc_to_cropprodc)
-            call acc1d (grainc_to_seed     ,   a_grainc_to_seed     )
-            call acc1d (fert_to_sminn      ,   a_fert_to_sminn      )
+            CALL acc1d (pdcorn             ,   a_pdcorn             )
+            CALL acc1d (pdswheat           ,   a_pdswheat           )
+            CALL acc1d (pdwwheat           ,   a_pdwwheat           )
+            CALL acc1d (pdsoybean          ,   a_pdsoybean          )
+            CALL acc1d (pdcotton           ,   a_pdcotton           )
+            CALL acc1d (pdrice1            ,   a_pdrice1            )
+            CALL acc1d (pdrice2            ,   a_pdrice2            )
+            CALL acc1d (pdsugarcane        ,   a_pdsugarcane        )
+            CALL acc1d (plantdate          ,   a_plantdate          )
+            CALL acc1d (fertnitro_corn     ,   a_fertnitro_corn     )
+            CALL acc1d (fertnitro_swheat   ,   a_fertnitro_swheat   )
+            CALL acc1d (fertnitro_wwheat   ,   a_fertnitro_wwheat   )
+            CALL acc1d (fertnitro_soybean  ,   a_fertnitro_soybean  )
+            CALL acc1d (fertnitro_cotton   ,   a_fertnitro_cotton   )
+            CALL acc1d (fertnitro_rice1    ,   a_fertnitro_rice1    )
+            CALL acc1d (fertnitro_rice2    ,   a_fertnitro_rice2    )
+            CALL acc1d (fertnitro_sugarcane,   a_fertnitro_sugarcane)
+            CALL acc1d (real(irrig_method_corn     ,r8),   a_irrig_method_corn     )
+            CALL acc1d (real(irrig_method_swheat   ,r8),   a_irrig_method_swheat   )
+            CALL acc1d (real(irrig_method_wwheat   ,r8),   a_irrig_method_wwheat   )
+            CALL acc1d (real(irrig_method_soybean  ,r8),   a_irrig_method_soybean  )
+            CALL acc1d (real(irrig_method_cotton   ,r8),   a_irrig_method_cotton   )
+            CALL acc1d (real(irrig_method_rice1    ,r8),   a_irrig_method_rice1    )
+            CALL acc1d (real(irrig_method_rice2    ,r8),   a_irrig_method_rice2    )
+            CALL acc1d (real(irrig_method_sugarcane,r8),   a_irrig_method_sugarcane)
+            CALL acc1d (cphase             ,   a_cphase             )
+            CALL acc1d (hui                ,   a_hui                )
+            CALL acc1d (vf                 ,   a_vf                 )
+            CALL acc1d (gddmaturity        ,   a_gddmaturity        )
+            CALL acc1d (gddplant           ,   a_gddplant           )
+            CALL acc1d (cropprod1c         ,   a_cropprod1c         )
+            CALL acc1d (cropprod1c_loss    ,   a_cropprod1c_loss    )
+            CALL acc1d (cropseedc_deficit  ,   a_cropseedc_deficit  )
+            CALL acc1d (grainc_to_cropprodc,   a_grainc_to_cropprodc)
+            CALL acc1d (grainc_to_seed     ,   a_grainc_to_seed     )
+            CALL acc1d (fert_to_sminn      ,   a_fert_to_sminn      )
 
-            ! call acc1d (irrig_rate         ,   a_irrig_rate         )
-            ! call acc1d (deficit_irrig      ,   a_deficit_irrig      )
-            ! call acc1d (sum_irrig          ,   a_sum_irrig          )
-            ! call acc1d (sum_irrig_count    ,   a_sum_irrig_count    )
-            call acc1d (irrig_rate         ,   a_irrig_rate         )
-            call acc1d (deficit_irrig      ,   a_deficit_irrig      )
+            ! CALL acc1d (irrig_rate         ,   a_irrig_rate         )
+            ! CALL acc1d (deficit_irrig      ,   a_deficit_irrig      )
+            ! CALL acc1d (sum_irrig          ,   a_sum_irrig          )
+            ! CALL acc1d (sum_irrig_count    ,   a_sum_irrig_count    )
+            CALL acc1d (irrig_rate         ,   a_irrig_rate         )
+            CALL acc1d (deficit_irrig      ,   a_deficit_irrig      )
             a_sum_irrig = sum_irrig
             a_sum_irrig_count = sum_irrig_count
 
 #endif
-            call acc1d (ndep_to_sminn      ,   a_ndep_to_sminn      )
-            if(DEF_USE_FIRE)then
-               call acc1d (abm_lf          ,   a_abm                )
-               call acc1d (gdp_lf          ,   a_gdp                )
-               call acc1d (peatf_lf        ,   a_peatf              )
-               call acc1d (hdm_lf          ,   a_hdm                )
-               call acc1d (lnfm            ,   a_lnfm               )
-            end if
+            CALL acc1d (ndep_to_sminn      ,   a_ndep_to_sminn      )
+            IF(DEF_USE_FIRE)THEN
+               CALL acc1d (abm_lf          ,   a_abm                )
+               CALL acc1d (gdp_lf          ,   a_gdp                )
+               CALL acc1d (peatf_lf        ,   a_peatf              )
+               CALL acc1d (hdm_lf          ,   a_hdm                )
+               CALL acc1d (lnfm            ,   a_lnfm               )
+            ENDIF
 #endif
             IF(DEF_USE_OZONESTRESS)THEN
-               call acc1d (forc_ozone      ,   a_ozone              )
+               CALL acc1d (forc_ozone      ,   a_ozone              )
             ENDIF
 
-            call acc2d (t_soisno   , a_t_soisno      )
-            call acc2d (wliq_soisno, a_wliq_soisno   )
-            call acc2d (wice_soisno, a_wice_soisno   )
+            CALL acc2d (t_soisno   , a_t_soisno      )
+            CALL acc2d (wliq_soisno, a_wliq_soisno   )
+            CALL acc2d (wice_soisno, a_wice_soisno   )
 
-            call acc2d (h2osoi     , a_h2osoi        )
-            call acc2d (rootr      , a_rootr         )
-            call acc2d (BD_all     , a_BD_all        )
-            call acc2d (wfc        , a_wfc           )
-            call acc2d (OM_density , a_OM_density    )
-            if(DEF_USE_PLANTHYDRAULICS)then
-               call acc2d (vegwp    , a_vegwp        )
-            end if
-            call acc2d (t_lake      , a_t_lake       )
-            call acc2d (lake_icefrac, a_lake_icefrac )
+            CALL acc2d (h2osoi     , a_h2osoi        )
+            CALL acc2d (rootr      , a_rootr         )
+            CALL acc2d (BD_all     , a_BD_all        )
+            CALL acc2d (wfc        , a_wfc           )
+            CALL acc2d (OM_density , a_OM_density    )
+            IF(DEF_USE_PLANTHYDRAULICS)THEN
+               CALL acc2d (vegwp    , a_vegwp        )
+            ENDIF
+            CALL acc2d (t_lake      , a_t_lake       )
+            CALL acc2d (lake_icefrac, a_lake_icefrac )
 #ifdef BGC
-            do i = 1, numpatch
-               do j = 1, nl_soil
+            DO i = 1, numpatch
+               DO j = 1, nl_soil
                   decomp_vr_tmp(j,i)  = decomp_cpools_vr(j,i_met_lit,i)
-               end do
-            end do
-            call acc2d (decomp_vr_tmp, a_litr1c_vr   )
-            do i = 1, numpatch
-               do j = 1, nl_soil
+               ENDDO
+            ENDDO
+            CALL acc2d (decomp_vr_tmp, a_litr1c_vr   )
+            DO i = 1, numpatch
+               DO j = 1, nl_soil
                   decomp_vr_tmp(j,i)  = decomp_cpools_vr(j,i_cel_lit,i)
-               end do
-            end do
-            call acc2d (decomp_vr_tmp, a_litr2c_vr   )
-            do i = 1, numpatch
-               do j = 1, nl_soil
+               ENDDO
+            ENDDO
+            CALL acc2d (decomp_vr_tmp, a_litr2c_vr   )
+            DO i = 1, numpatch
+               DO j = 1, nl_soil
                   decomp_vr_tmp(j,i)  = decomp_cpools_vr(j,i_lig_lit,i)
-               end do
-            end do
-            call acc2d (decomp_vr_tmp, a_litr3c_vr   )
-            do i = 1, numpatch
-               do j = 1, nl_soil
+               ENDDO
+            ENDDO
+            CALL acc2d (decomp_vr_tmp, a_litr3c_vr   )
+            DO i = 1, numpatch
+               DO j = 1, nl_soil
                   decomp_vr_tmp(j,i)  = decomp_cpools_vr(j,i_soil1,i)
-               end do
-            end do
-            call acc2d (decomp_vr_tmp, a_soil1c_vr   )
-            do i = 1, numpatch
-               do j = 1, nl_soil
+               ENDDO
+            ENDDO
+            CALL acc2d (decomp_vr_tmp, a_soil1c_vr   )
+            DO i = 1, numpatch
+               DO j = 1, nl_soil
                   decomp_vr_tmp(j,i)  = decomp_cpools_vr(j,i_soil2,i)
-               end do
-            end do
-            call acc2d (decomp_vr_tmp, a_soil2c_vr   )
-            do i = 1, numpatch
-               do j = 1, nl_soil
+               ENDDO
+            ENDDO
+            CALL acc2d (decomp_vr_tmp, a_soil2c_vr   )
+            DO i = 1, numpatch
+               DO j = 1, nl_soil
                   decomp_vr_tmp(j,i)  = decomp_cpools_vr(j,i_soil3,i)
-               end do
-            end do
-            call acc2d (decomp_vr_tmp, a_soil3c_vr   )
-            do i = 1, numpatch
-               do j = 1, nl_soil
+               ENDDO
+            ENDDO
+            CALL acc2d (decomp_vr_tmp, a_soil3c_vr   )
+            DO i = 1, numpatch
+               DO j = 1, nl_soil
                   decomp_vr_tmp(j,i)  = decomp_cpools_vr(j,i_cwd,i)
-               end do
-            end do
-            call acc2d (decomp_vr_tmp, a_cwdc_vr     )
-            do i = 1, numpatch
-               do j = 1, nl_soil
+               ENDDO
+            ENDDO
+            CALL acc2d (decomp_vr_tmp, a_cwdc_vr     )
+            DO i = 1, numpatch
+               DO j = 1, nl_soil
                   decomp_vr_tmp(j,i)  = decomp_npools_vr(j,i_met_lit,i)
-               end do
-            end do
-            call acc2d (decomp_vr_tmp, a_litr1n_vr   )
-            do i = 1, numpatch
-               do j = 1, nl_soil
+               ENDDO
+            ENDDO
+            CALL acc2d (decomp_vr_tmp, a_litr1n_vr   )
+            DO i = 1, numpatch
+               DO j = 1, nl_soil
                   decomp_vr_tmp(j,i)  = decomp_npools_vr(j,i_cel_lit,i)
-               end do
-            end do
-            call acc2d (decomp_vr_tmp, a_litr2n_vr   )
-            do i = 1, numpatch
-               do j = 1, nl_soil
+               ENDDO
+            ENDDO
+            CALL acc2d (decomp_vr_tmp, a_litr2n_vr   )
+            DO i = 1, numpatch
+               DO j = 1, nl_soil
                   decomp_vr_tmp(j,i)  = decomp_npools_vr(j,i_lig_lit,i)
-               end do
-            end do
-            call acc2d (decomp_vr_tmp, a_litr3n_vr   )
-            do i = 1, numpatch
-               do j = 1, nl_soil
+               ENDDO
+            ENDDO
+            CALL acc2d (decomp_vr_tmp, a_litr3n_vr   )
+            DO i = 1, numpatch
+               DO j = 1, nl_soil
                   decomp_vr_tmp(j,i)  = decomp_npools_vr(j,i_soil1,i)
-               end do
-            end do
-            call acc2d (decomp_vr_tmp, a_soil1n_vr   )
-            do i = 1, numpatch
-               do j = 1, nl_soil
+               ENDDO
+            ENDDO
+            CALL acc2d (decomp_vr_tmp, a_soil1n_vr   )
+            DO i = 1, numpatch
+               DO j = 1, nl_soil
                   decomp_vr_tmp(j,i)  = decomp_npools_vr(j,i_soil2,i)
-               end do
-            end do
-            call acc2d (decomp_vr_tmp, a_soil2n_vr   )
-            do i = 1, numpatch
-               do j = 1, nl_soil
+               ENDDO
+            ENDDO
+            CALL acc2d (decomp_vr_tmp, a_soil2n_vr   )
+            DO i = 1, numpatch
+               DO j = 1, nl_soil
                   decomp_vr_tmp(j,i)  = decomp_npools_vr(j,i_soil3,i)
-               end do
-            end do
-            call acc2d (decomp_vr_tmp, a_soil3n_vr   )
-            do i = 1, numpatch
-               do j = 1, nl_soil
+               ENDDO
+            ENDDO
+            CALL acc2d (decomp_vr_tmp, a_soil3n_vr   )
+            DO i = 1, numpatch
+               DO j = 1, nl_soil
                   decomp_vr_tmp(j,i)  = decomp_npools_vr(j,i_cwd,i)
-               end do
-            end do
-            call acc2d (decomp_vr_tmp, a_cwdn_vr     )
-            call acc2d (sminn_vr     , a_sminn_vr    )
+               ENDDO
+            ENDDO
+            CALL acc2d (decomp_vr_tmp, a_cwdn_vr     )
+            CALL acc2d (sminn_vr     , a_sminn_vr    )
 #endif
             allocate (r_ustar  (numpatch));  r_ustar (:) = spval
             allocate (r_ustar2 (numpatch));  r_ustar2(:) = spval !Shaofeng, 2023.05.20
@@ -1854,7 +1854,7 @@ contains
                tauy_e  = sum(tauy       (istt:iend) * elm_patch%subfrc(istt:iend), mask = filter) / sumwt
                fsena_e = sum(fsena      (istt:iend) * elm_patch%subfrc(istt:iend), mask = filter) / sumwt
                fevpa_e = sum(fevpa      (istt:iend) * elm_patch%subfrc(istt:iend), mask = filter) / sumwt
-               if (DEF_USE_CBL_HEIGHT) then !//TODO: Shaofeng, 2023.05.18
+               IF (DEF_USE_CBL_HEIGHT) THEN !//TODO: Shaofeng, 2023.05.18
                   hpbl = sum(forc_hpbl(istt:iend) * elm_patch%subfrc(istt:iend), mask = filter) / sumwt
                ENDIF
 
@@ -1882,36 +1882,36 @@ contains
                r_zol_e = zldis*vonkar*grav * (r_tstar_e*(1.+0.61*qm)+0.61*th*r_qstar_e) &
                   / (r_ustar_e**2*thv)
 
-               if(r_zol_e >= 0.)then   !stable
+               IF(r_zol_e >= 0.)THEN   !stable
                   r_zol_e = min(2.,max(r_zol_e,1.e-6))
-               else                       !unstable
+               ELSE                       !unstable
                   r_zol_e = max(-100.,min(r_zol_e,-1.e-6))
-               endif
+               ENDIF
 
                beta = 1.
                zii = 1000.
 
                thvstar=r_tstar_e*(1.+0.61*qm)+0.61*th*r_qstar_e
                ur = sqrt(us*us+vs*vs)
-               if(r_zol_e >= 0.)then
+               IF(r_zol_e >= 0.)THEN
                   um = max(ur,0.1)
-               else
-                  if (DEF_USE_CBL_HEIGHT) then !//TODO: Shaofeng, 2023.05.18
+               ELSE
+                  IF (DEF_USE_CBL_HEIGHT) THEN !//TODO: Shaofeng, 2023.05.18
                      zii = max(5.*hgt_u,hpbl)
-                  endif !//TODO: Shaofeng, 2023.05.18
+                  ENDIF !//TODO: Shaofeng, 2023.05.18
                   wc = (-grav*r_ustar_e*thvstar*zii/thv)**(1./3.)
                   wc2 = beta*beta*(wc*wc)
                   um = max(0.1,sqrt(ur*ur+wc2))
-               endif
+               ENDIF
 
                obu = zldis/r_zol_e
-               if (DEF_USE_CBL_HEIGHT) then
-                  call moninobuk_leddy(hgt_u,hgt_t,hgt_q,displa_av,z0m_av,z0h_av,z0q_av,&
+               IF (DEF_USE_CBL_HEIGHT) THEN
+                  CALL moninobuk_leddy(hgt_u,hgt_t,hgt_q,displa_av,z0m_av,z0h_av,z0q_av,&
                      obu,um, hpbl, r_ustar2_e,fh2m,fq2m,r_fm10m_e,r_fm_e,r_fh_e,r_fq_e) !Shaofeng, 2023.05.20
-               else
-                  call moninobuk(hgt_u,hgt_t,hgt_q,displa_av,z0m_av,z0h_av,z0q_av,&
+               ELSE
+                  CALL moninobuk(hgt_u,hgt_t,hgt_q,displa_av,z0m_av,z0h_av,z0q_av,&
                     obu,um,r_ustar2_e,fh2m,fq2m,r_fm10m_e,r_fm_e,r_fh_e,r_fq_e) !Shaofeng, 2023.05.20
-               endif
+               ENDIF
 
                ! bug found by chen qiying 2013/07/01
                r_rib_e = r_zol_e /vonkar * r_ustar2_e**2 / (vonkar/r_fh_e*um**2)
@@ -1937,21 +1937,21 @@ contains
 
                deallocate(filter)
 
-            end do
+            ENDDO
 
-            call acc1d (r_ustar , a_ustar )
-            call acc1d (r_ustar2, a_ustar2)
-            call acc1d (r_tstar , a_tstar )
-            call acc1d (r_qstar , a_qstar )
-            call acc1d (r_zol   , a_zol   )
-            call acc1d (r_rib   , a_rib   )
-            call acc1d (r_fm    , a_fm    )
-            call acc1d (r_fh    , a_fh    )
-            call acc1d (r_fq    , a_fq    )
+            CALL acc1d (r_ustar , a_ustar )
+            CALL acc1d (r_ustar2, a_ustar2)
+            CALL acc1d (r_tstar , a_tstar )
+            CALL acc1d (r_qstar , a_qstar )
+            CALL acc1d (r_zol   , a_zol   )
+            CALL acc1d (r_rib   , a_rib   )
+            CALL acc1d (r_fm    , a_fm    )
+            CALL acc1d (r_fh    , a_fh    )
+            CALL acc1d (r_fq    , a_fq    )
 
-            call acc1d (r_us10m, a_us10m)
-            call acc1d (r_vs10m, a_vs10m)
-            call acc1d (r_fm10m, a_fm10m)
+            CALL acc1d (r_us10m, a_us10m)
+            CALL acc1d (r_vs10m, a_vs10m)
+            CALL acc1d (r_fm10m, a_fm10m)
 
             deallocate (r_ustar )
             deallocate (r_ustar2) !Shaofeng, 2023.05.20
@@ -1967,32 +1967,32 @@ contains
             deallocate (r_vs10m )
             deallocate (r_fm10m )
 
-            call acc1d (sr     , a_sr     )
-            call acc1d (solvd  , a_solvd  )
-            call acc1d (solvi  , a_solvi  )
-            call acc1d (solnd  , a_solnd  )
-            call acc1d (solni  , a_solni  )
-            call acc1d (srvd   , a_srvd   )
-            call acc1d (srvi   , a_srvi   )
-            call acc1d (srnd   , a_srnd   )
-            call acc1d (srni   , a_srni   )
-            call acc1d (solvdln, a_solvdln)
-            call acc1d (solviln, a_solviln)
-            call acc1d (solndln, a_solndln)
-            call acc1d (solniln, a_solniln)
-            call acc1d (srvdln , a_srvdln )
-            call acc1d (srviln , a_srviln )
-            call acc1d (srndln , a_srndln )
-            call acc1d (srniln , a_srniln )
+            CALL acc1d (sr     , a_sr     )
+            CALL acc1d (solvd  , a_solvd  )
+            CALL acc1d (solvi  , a_solvi  )
+            CALL acc1d (solnd  , a_solnd  )
+            CALL acc1d (solni  , a_solni  )
+            CALL acc1d (srvd   , a_srvd   )
+            CALL acc1d (srvi   , a_srvi   )
+            CALL acc1d (srnd   , a_srnd   )
+            CALL acc1d (srni   , a_srni   )
+            CALL acc1d (solvdln, a_solvdln)
+            CALL acc1d (solviln, a_solviln)
+            CALL acc1d (solndln, a_solndln)
+            CALL acc1d (solniln, a_solniln)
+            CALL acc1d (srvdln , a_srvdln )
+            CALL acc1d (srviln , a_srviln )
+            CALL acc1d (srndln , a_srndln )
+            CALL acc1d (srniln , a_srniln )
 
-            do i = 1, numpatch
-               if (solvdln(i) /= spval) then
+            DO i = 1, numpatch
+               IF (solvdln(i) /= spval) THEN
                   nac_ln(i) = nac_ln(i) + 1
-               end if
-            end do
+               ENDIF
+            ENDDO
 
-         end if
-      end if
+         ENDIF
+      ENDIF
 
 #ifdef CatchLateralFlow
       CALL accumulate_fluxes_basin ()
@@ -2004,83 +2004,83 @@ contains
    !------
    SUBROUTINE acc1d (var, s)
 
-      use MOD_Precision
-      use MOD_Vars_Global, only: spval
+   USE MOD_Precision
+   USE MOD_Vars_Global, only: spval
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      real(r8), intent(in)    :: var(:)
-      real(r8), intent(inout) :: s  (:)
-      ! Local variables
-      integer :: i
+   real(r8), intent(in)    :: var(:)
+   real(r8), intent(inout) :: s  (:)
+   ! Local variables
+   integer :: i
 
-      do i = lbound(var,1), ubound(var,1)
-         if (var(i) /= spval) then
-            if (s(i) /= spval) then
+      DO i = lbound(var,1), ubound(var,1)
+         IF (var(i) /= spval) THEN
+            IF (s(i) /= spval) THEN
                s(i) = s(i) + var(i)
-            else
+            ELSE
                s(i) = var(i)
-            end if
-         end if
-      end do
+            ENDIF
+         ENDIF
+      ENDDO
 
    END SUBROUTINE acc1d
 
    !------
    SUBROUTINE acc2d (var, s)
 
-      use MOD_Precision
-      use MOD_Vars_Global, only: spval
+   USE MOD_Precision
+   USE MOD_Vars_Global, only: spval
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      real(r8), intent(in)    :: var(:,:)
-      real(r8), intent(inout) :: s  (:,:)
-      ! Local variables
-      integer :: i1, i2
+   real(r8), intent(in)    :: var(:,:)
+   real(r8), intent(inout) :: s  (:,:)
+   ! Local variables
+   integer :: i1, i2
 
-      do i2 = lbound(var,2), ubound(var,2)
-         do i1 = lbound(var,1), ubound(var,1)
-            if (var(i1,i2) /= spval) then
-               if (s(i1,i2) /= spval) then
+      DO i2 = lbound(var,2), ubound(var,2)
+         DO i1 = lbound(var,1), ubound(var,1)
+            IF (var(i1,i2) /= spval) THEN
+               IF (s(i1,i2) /= spval) THEN
                   s(i1,i2) = s(i1,i2) + var(i1,i2)
-               else
+               ELSE
                   s(i1,i2) = var(i1,i2)
-               end if
-            end if
-         end do
-      end do
+               ENDIF
+            ENDIF
+         ENDDO
+      ENDDO
 
    END SUBROUTINE acc2d
 
    !------
    SUBROUTINE acc3d (var, s)
 
-      use MOD_Precision
-      use MOD_Vars_Global, only: spval
+   USE MOD_Precision
+   USE MOD_Vars_Global, only: spval
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      real(r8), intent(in)    :: var(:,:,:)
-      real(r8), intent(inout) :: s  (:,:,:)
-      ! Local variables
-      integer :: i1, i2, i3
+   real(r8), intent(in)    :: var(:,:,:)
+   real(r8), intent(inout) :: s  (:,:,:)
+   ! Local variables
+   integer :: i1, i2, i3
 
-      do i3 = lbound(var,3), ubound(var,3)
-         do i2 = lbound(var,2), ubound(var,2)
-            do i1 = lbound(var,1), ubound(var,1)
-               if (var(i1,i2,i3) /= spval) then
-                  if (s(i1,i2,i3) /= spval) then
+      DO i3 = lbound(var,3), ubound(var,3)
+         DO i2 = lbound(var,2), ubound(var,2)
+            DO i1 = lbound(var,1), ubound(var,1)
+               IF (var(i1,i2,i3) /= spval) THEN
+                  IF (s(i1,i2,i3) /= spval) THEN
                      s(i1,i2,i3) = s(i1,i2,i3) + var(i1,i2,i3)
-                  else
+                  ELSE
                      s(i1,i2,i3) = var(i1,i2,i3)
-                  end if
-               end if
-            end do
-         end do
-      end do
+                  ENDIF
+               ENDIF
+            ENDDO
+         ENDDO
+      ENDDO
 
    END SUBROUTINE acc3d
 
-end module MOD_Vars_1DAccFluxes
+END MODULE MOD_Vars_1DAccFluxes
 ! ----- EOP ---------
