@@ -114,7 +114,7 @@ CONTAINS
 
       !*** 2. read namelist
       REWIND(NSETFILE)
-      READ(NSETFILE,NML=NDAMOUT)
+      read(NSETFILE,NML=NDAMOUT)
 
       IF( LDAMOUT )THEN
          write(LOGNAM,*)   "=== NAMELIST, NDAMOUT ==="
@@ -148,24 +148,24 @@ CONTAINS
    character(LEN=256)         :: CDAMFILE_tmp
 
       !####################################################################
-      !! ================ READ dam basic information ================
+      !! ================ read dam basic information ================
       write(LOGNAM,*) "!---------------------!"
       CDAMFILE_tmp = trim(CDAMFILE)//'damloc.csv'
       write(LOGNAM,*) "CMF::DAMOUT_INIT: initialize dam", trim(CDAMFILE_tmp) 
 
       NDAMFILE=INQUIRE_FID()
       open(NDAMFILE,FILE=CDAMFILE_tmp,STATUS="OLD")
-      READ(NDAMFILE,*) NDAM
-      READ(NDAMFILE,*)        
+      read(NDAMFILE,*) NDAM
+      read(NDAMFILE,*)        
 
       write(LOGNAM,*) "CMF::DAMOUT_INIT: number of dams", NDAM
 
-      !! --- ALLOCATE ---
-      ALLOCATE(DamSeq(NDAM))
-      ALLOCATE(I1DAM(NSEQMAX))
-      ALLOCATE(GRanD_ID(NDAM))
-      ALLOCATE(MainUse(NDAM))
-      ALLOCATE(upreal(NDAM))
+      !! --- allocate ---
+      allocate(DamSeq(NDAM))
+      allocate(I1DAM(NSEQMAX))
+      allocate(GRanD_ID(NDAM))
+      allocate(MainUse(NDAM))
+      allocate(upreal(NDAM))
 
       !! --------------
       DamSeq(:)= IMIS
@@ -173,7 +173,7 @@ CONTAINS
       NDAMX    = 0
 
       DO IDAM = 1, NDAM
-         READ(NDAMFILE,*) GRanD_ID(IDAM), DamName, DamLon, DamLat, totalsto, upreal(IDAM), MainUse(IDAM), CYear, IX, IY
+         read(NDAMFILE,*) GRanD_ID(IDAM), DamName, DamLon, DamLat, totalsto, upreal(IDAM), MainUse(IDAM), CYear, IX, IY
 
          !! --------------
          IF (CYear > ISYYYY) CYCLE        !! check construction year
@@ -192,37 +192,37 @@ CONTAINS
 
       write(LOGNAM,*) "CMF::DAMOUT_INIT: allocated dams:", NDAMX 
 
-      !! ================ READ dam flow parameters ================
+      !! ================ read dam flow parameters ================
       write(LOGNAM,*) "!---------------------!"
       CDAMFILE_tmp = trim(CDAMFILE)//'damflow.csv'
       write(LOGNAM,*) "CMF::DAMOUT_INIT: dam flow parameters:", trim(CDAMFILE_tmp) 
 
       NDAMFILE=INQUIRE_FID()
       open(NDAMFILE,FILE=CDAMFILE_tmp,STATUS="OLD")
-      READ(NDAMFILE,*) 
+      read(NDAMFILE,*) 
 
-      !! --- ALLOCATE ---
-      ALLOCATE(Qn(NDAM), Qf(NDAM))
+      !! --- allocate ---
+      allocate(Qn(NDAM), Qf(NDAM))
 
       DO IDAM = 1, NDAM
-         READ(NDAMFILE,*) GRanD_ID(IDAM), Qn(IDAM), Qf(IDAM)
+         read(NDAMFILE,*) GRanD_ID(IDAM), Qn(IDAM), Qf(IDAM)
       ENDDO
       close(NDAMFILE)
 
-      !! ================ READ dam storage parameters ================
+      !! ================ read dam storage parameters ================
       write(LOGNAM,*) "!---------------------!"
       CDAMFILE_tmp = trim(CDAMFILE)//'damsto.csv'
       write(LOGNAM,*) "CMF::DAMOUT_INIT: dam storage parameters:", trim(CDAMFILE_tmp) 
 
       NDAMFILE=INQUIRE_FID()
       open(NDAMFILE,FILE=CDAMFILE_tmp,STATUS="OLD")
-      READ(NDAMFILE,*) 
+      read(NDAMFILE,*) 
 
-      !! --- ALLOCATE ---
-      ALLOCATE(TotVol(NDAM), FldVol(NDAM), NorVol(NDAM), ConVol(NDAM))
+      !! --- allocate ---
+      allocate(TotVol(NDAM), FldVol(NDAM), NorVol(NDAM), ConVol(NDAM))
 
       DO IDAM = 1, NDAM
-         READ(NDAMFILE,*) GRanD_ID(IDAM), TotVol(IDAM), FldVol(IDAM), NorVol(IDAM), ConVol(IDAM)
+         read(NDAMFILE,*) GRanD_ID(IDAM), TotVol(IDAM), FldVol(IDAM), NorVol(IDAM), ConVol(IDAM)
          TotVol(IDAM) = TotVol(IDAM) * 1.E6    !! from Million Cubic Meter to m3
          FldVol(IDAM) = FldVol(IDAM) * 1.E6
          NorVol(IDAM) = NorVol(IDAM) * 1.E6
@@ -232,8 +232,8 @@ CONTAINS
 
       !! ================ Read parameters for different schemes ================
       IF(LDAMOPT == "H06")THEN  
-         !! --- ALLOCATE ---
-         ALLOCATE(H06_DPI(NDAM), H06_c(NDAM))
+         !! --- allocate ---
+         allocate(H06_DPI(NDAM), H06_c(NDAM))
 
          H06_DPI = WUSE_AD / Qn    
          H06_c = TotVol / (Qn * 86400. * 365.) !! from m3/s to m3
@@ -244,34 +244,34 @@ CONTAINS
       ENDIF
 
       IF(LDAMOPT == "H22")THEN 
-         !! --- ALLOCATE ---
-         ALLOCATE(H22_EmeVol(NDAM), H22_k(NDAM))
+         !! --- allocate ---
+         allocate(H22_EmeVol(NDAM), H22_k(NDAM))
 
          H22_EmeVol = FldVol + (TotVol - FldVol)*0.2  
-         H22_k =  max((1. - (TotVol - FldVol) / upreal /0.2),0._JPRB)
+         H22_k =  MAX((1. - (TotVol - FldVol) / upreal /0.2),0._JPRB)
       ENDIF
 
       IF(LDAMOPT == "V13")THEN  
-         !! --- ALLOCATE ---
-         ALLOCATE(H06_DPI(NDAM), H06_c(NDAM))
+         !! --- allocate ---
+         allocate(H06_DPI(NDAM), H06_c(NDAM))
 
          H06_DPI = WUSE_AD / Qn    
          H06_c = TotVol / (Qn * 86400. * 365.) !! from m3/s to m3
 
-         !! --- READ fcperiod.csv data ---
+         !! --- read fcperiod.csv data ---
          write(LOGNAM,*) "!---------------------!"
          CDAMFILE_tmp = trim(CDAMFILE)//'damfcperiod.csv'
          write(LOGNAM,*) "CMF::DAMOUT_INIT: dam flow parameters:", trim(CDAMFILE_tmp) 
 
          NDAMFILE=INQUIRE_FID()
          open(NDAMFILE,FILE=CDAMFILE_tmp,STATUS="OLD")
-         READ(NDAMFILE,*) 
+         read(NDAMFILE,*) 
 
-         !! --- ALLOCATE ---
-         ALLOCATE(StFC_Mth(NDAM), NdFC_Mth(NDAM),StOP_Mth(NDAM))
+         !! --- allocate ---
+         allocate(StFC_Mth(NDAM), NdFC_Mth(NDAM),StOP_Mth(NDAM))
 
          DO IDAM = 1, NDAM
-            READ(NDAMFILE,*) GRanD_ID(IDAM), StFC_Mth(IDAM), NdFC_Mth(IDAM),StOP_Mth(IDAM)
+            read(NDAMFILE,*) GRanD_ID(IDAM), StFC_Mth(IDAM), NdFC_Mth(IDAM),StOP_Mth(IDAM)
          ENDDO
          close(NDAMFILE)
 
@@ -307,7 +307,7 @@ CONTAINS
                IF( DamSeq(IDAM)>0 )THEN
                   ISEQ=DamSeq(IDAM)
                   P2DAMSTO(ISEQ,1)=NorVol(IDAM)*0.5  !! set initial storage to Normal Storage Volume
-                  P2RIVSTO(ISEQ,1)=max(P2RIVSTO(ISEQ,1),NorVol(IDAM)*0.5_JPRD) !! also set initial river storage, in order to keep consistency
+                  P2RIVSTO(ISEQ,1)=MAX(P2RIVSTO(ISEQ,1),NorVol(IDAM)*0.5_JPRD) !! also set initial river storage, in order to keep consistency
                ENDIF
          ENDDO
       ENDIF
@@ -349,17 +349,17 @@ CONTAINS
       CDAMFILE_WUSE_YEAR = trim(CDAMFILE)//'water_use_data/'//trim(adjustl(CYYYY))//'.txt'
       write(LOGNAM,*) "CMF::DAMOUT_INIT: dam water use file:", trim(CDAMFILE_WUSE_YEAR)
 
-      !! --- ALLOCATE ---
+      !! --- allocate ---
       !! from dam water use data
-      ALLOCATE(WUSE_DD(NDAM, NSTEPS))    
-      ALLOCATE(WUSE_AD(NDAM))          
+      allocate(WUSE_DD(NDAM, NSTEPS))    
+      allocate(WUSE_AD(NDAM))          
 
       !! read dam water use
       NDAMFILE=INQUIRE_FID()
       open(NDAMFILE,FILE=trim(CDAMFILE_WUSE_YEAR),STATUS="OLD")
 
       DO IDAM = 1, NDAM         
-         READ(NDAMFILE,*) tmp_i, tmp_name, WUSE_DD(IDAM,:)  
+         read(NDAMFILE,*) tmp_i, tmp_name, WUSE_DD(IDAM,:)  
          WUSE_AD(IDAM) = sum(WUSE_DD(IDAM,:))/NSTEPS
       ENDDO
       close(NDAMFILE)
@@ -489,8 +489,8 @@ CONTAINS
          ENDIF
 
          !! *** 2c flow limitter
-         DamOutflw = min( DamOutflw, DamVol/DT, real(P2RIVSTO(ISEQD,1)+P2FLDSTO(ISEQD,1),JPRB)/DT )
-         DamOutflw = max( DamOutflw, 0._JPRB ) 
+         DamOutflw = MIN( DamOutflw, DamVol/DT, real(P2RIVSTO(ISEQD,1)+P2FLDSTO(ISEQD,1),JPRB)/DT )
+         DamOutflw = MAX( DamOutflw, 0._JPRB ) 
 
          !! update CaMa variables  (treat all outflow as RIVOUT in dam grid, no fldout)
          D2RIVOUT(ISEQD,1) = DamOutflw
@@ -565,7 +565,7 @@ CONTAINS
    !*** local
    real(KIND=JPRB)                         :: a=0.85        ! adjustment factor for Krls
    real(KIND=JPRB)                         :: M=0.5         ! the ratio between minimum release and long‐term annual mean inflow
-   real(KIND=JPRB)                         :: R             ! demand‐controlled release ratio = min(1, a*c)
+   real(KIND=JPRB)                         :: R             ! demand‐controlled release ratio = MIN(1, a*c)
    real(KIND=JPRB)                         :: Krls          ! the ratio between initial storage and the long‐term target storage = S/(a*C)
    real(KIND=JPRB)                         :: OutTmp        ! temporary outflow
    !=====================================================
@@ -574,7 +574,7 @@ CONTAINS
       ! a = 0.85 
       !! parameter calculation
       Krls =  Vol_dam / (Vol_tot * a)
-      R    =  min(1., a * c)
+      R    =  MIN(1., a * c)
 
       !! calculate DamOutTmp
       IF( dam_purpose == "Irrigation" )THEN
@@ -626,14 +626,14 @@ CONTAINS
    !*** local
    real(KIND=JPRB)                         :: a=0.85        ! adjustment factor for Krls
    real(KIND=JPRB)                         :: M=0.5         ! the ratio between minimum release and long‐term annual mean inflow
-   real(KIND=JPRB)                         :: R             ! demand‐controlled release ratio = min(1, a*c)
+   real(KIND=JPRB)                         :: R             ! demand‐controlled release ratio = MIN(1, a*c)
    real(KIND=JPRB)                         :: Krls          ! the ratio between initial storage and the long‐term target storage = S/(a*C)
    real(KIND=JPRB)                         :: OutTmp        ! temporary outflow
    real(KIND=JPRB)                         :: drop          ! temporary drop flow
    !=====================================================
       !! parameter calculation
       Krls =  Vol_dam / (Vol_tot * a)
-      R    =  min(1., a * c)
+      R    =  MIN(1., a * c)
 
       IF( dam_purpose == "Irrigation" .or. dam_purpose == "Flood-control") THEN
          !! irrigation reservoir
@@ -653,7 +653,7 @@ CONTAINS
                   OutTmp = OutTmp + drop
                ENDIF
             ENDIF
-         elseif ( MthStFC > MthNdFC ) THEN
+         ELSEIF ( MthStFC > MthNdFC ) THEN
             IF ( ISMM >= MthStFC .or. ISMM < MthNdFC) THEN
                IF ( inflw < Q_n ) THEN
                   drop = abs(inflw - Q_n)
@@ -672,7 +672,7 @@ CONTAINS
                   OutTmp = Q_n
                ENDIF
             ENDIF
-         elseif ( MthNdFC > MthStOP ) THEN
+         ELSEIF ( MthNdFC > MthStOP ) THEN
             IF ( ISMM >= MthNdFC .or. ISMM < MthStOP ) THEN
                ! IF ( inflw > Q_n ) THEN
                !   fill = abs(inflw - Q_n)
@@ -744,11 +744,11 @@ CONTAINS
       Ladj_f  = L_n + AdjLn * (L_f - L_n)
 
       Q_min = Q_n * 0.1
-      Qadj_nor = max(Q_min, min(AdjQnor * Q_n, Q_f)) 
+      Qadj_nor = MAX(Q_min, MIN(AdjQnor * Q_n, Q_f)) 
       
       !*** operation scheme
       IF (F <= 2* L_c) THEN
-         outflw = min(Q_min, Vol_dam/86400.)
+         outflw = MIN(Q_min, Vol_dam/86400.)
       
       ELSEIF (F > 2* L_c .and. F <= L_n) THEN
          outflw = Q_min + (Qadj_nor - Q_min) * ((F - 2*L_c)/(L_n - 2*L_c))
@@ -760,14 +760,14 @@ CONTAINS
          outflw = Qadj_nor + (Q_f - Qadj_nor) * ((F - Ladj_f)/(L_f - Ladj_f))
       
       ELSEIF (F > L_f) THEN
-         Q_max = min(Q_f, max(1.2 * inflw, Qadj_nor))   
-         outflw = max(Q_max, (F - L_f - 0.01) * (Vol_tot/86400.))
+         Q_max = MIN(Q_f, MAX(1.2 * inflw, Qadj_nor))   
+         outflw = MAX(Q_max, (F - L_f - 0.01) * (Vol_tot/86400.))
       ENDIF
       
       ! the condition described below is applied in order to prevent outflow values that are too large compared to the inflow value.
       ! reference: https://github.com/ec-jrc/lisflood-code
-      IF (F < L_f .and. outflw > min(1.2 * inflw, Qadj_nor)) THEN
-         outflw = min(outflw, max(inflw, Qadj_nor))
+      IF (F < L_f .and. outflw > MIN(1.2 * inflw, Qadj_nor)) THEN
+         outflw = MIN(outflw, MAX(inflw, Qadj_nor))
       ENDIF
       
    END SUBROUTINE DAM_OPERATION_LISFLOOD
@@ -814,7 +814,7 @@ CONTAINS
 
       !! case4: emergency operation
       ELSE
-         outflw = max(inflw, Q_f)
+         outflw = MAX(inflw, Q_f)
       ENDIF
 
    END SUBROUTINE DAM_OPERATION_H22
@@ -867,7 +867,7 @@ CONTAINS
             JSEQ   = I1NEXT(ISEQ)
             ! === river flow
             DSLOPE = (D2ELEVTN(ISEQ,1)-D2ELEVTN(JSEQ,1)) * D2NXTDST(ISEQ,1)**(-1.)
-            DSLOPE = max(DSLOPE,PMINSLP)
+            DSLOPE = MAX(DSLOPE,PMINSLP)
 
             DVEL   = D2RIVMAN(ISEQ,1)**(-1.) * DSLOPE**0.5 * D2RIVDPH(ISEQ,1)**(2./3.)
             DAREA  = D2RIVWTH(ISEQ,1) * D2RIVDPH(ISEQ,1)
@@ -876,7 +876,7 @@ CONTAINS
             D2RIVOUT(ISEQ,1) = DAREA * DVEL
             D2RIVOUT(ISEQ,1) = MIN( D2RIVOUT(ISEQ,1), real(P2RIVSTO(ISEQ,1),JPRB)/DT )
             !=== floodplain flow
-            DSLOPE_F = min( 0.005_JPRB,DSLOPE )    !! set min [instead of using weirequation for efficiency]
+            DSLOPE_F = MIN( 0.005_JPRB,DSLOPE )    !! set MIN [instead of using weirequation for efficiency]
             DVEL_F   = PMANFLD**(-1.) * DSLOPE_F**0.5 * D2FLDDPH(ISEQ,1)**(2./3.)
             DARE_F   = P2FLDSTO(ISEQ,1) * D2RIVLEN(ISEQ,1)**(-1.)
             DARE_F   = MAX( DARE_F - D2FLDDPH(ISEQ,1)*D2RIVWTH(ISEQ,1), 0._JPRB )   !!remove above river channel     area
@@ -926,10 +926,10 @@ CONTAINS
 #endif
       DO ISEQ=1, NSEQRIV                                                    !! for normalcells
          JSEQ=I1NEXT(ISEQ) ! next cell's pixel
-         OUT_R1 = max(  D2RIVOUT(ISEQ,1),0._JPRB )
-         OUT_R2 = max( -D2RIVOUT(ISEQ,1),0._JPRB )
-         OUT_F1 = max(  D2FLDOUT(ISEQ,1),0._JPRB )
-         OUT_F2 = max( -D2FLDOUT(ISEQ,1),0._JPRB )
+         OUT_R1 = MAX(  D2RIVOUT(ISEQ,1),0._JPRB )
+         OUT_R2 = MAX( -D2RIVOUT(ISEQ,1),0._JPRB )
+         OUT_F1 = MAX(  D2FLDOUT(ISEQ,1),0._JPRB )
+         OUT_F2 = MAX( -D2FLDOUT(ISEQ,1),0._JPRB )
          DIUP=(OUT_R1+OUT_F1)*DT
          DIDW=(OUT_R2+OUT_F2)*DT
 #ifndef NoAtom_CMF
@@ -948,8 +948,8 @@ CONTAINS
 !! for river mouth grids ------------
 !$OMP PARALLEL DO
       DO ISEQ=NSEQRIV+1, NSEQALL
-         OUT_R1 = max( D2RIVOUT(ISEQ,1), 0._JPRB )
-         OUT_F1 = max( D2FLDOUT(ISEQ,1), 0._JPRB )
+         OUT_R1 = MAX( D2RIVOUT(ISEQ,1), 0._JPRB )
+         OUT_F1 = MAX( D2FLDOUT(ISEQ,1), 0._JPRB )
          P2STOOUT(ISEQ,1) = P2STOOUT(ISEQ,1) + OUT_R1*DT + OUT_F1*DT
       ENDDO
 !$OMP END PARALLEL DO
@@ -960,7 +960,7 @@ CONTAINS
 !$OMP PARALLEL DO
       DO ISEQ=1, NSEQALL
          IF ( P2STOOUT(ISEQ,1) > 1.E-8 ) THEN
-            D2RATE(ISEQ,1) = min( (P2RIVSTO(ISEQ,1)+P2FLDSTO(ISEQ,1)) * P2STOOUT(ISEQ,1)**(-1.), 1._JPRD )
+            D2RATE(ISEQ,1) = MIN( (P2RIVSTO(ISEQ,1)+P2FLDSTO(ISEQ,1)) * P2STOOUT(ISEQ,1)**(-1.), 1._JPRD )
          ENDIF
       ENDDO
 !$OMP END PARALLEL DO
