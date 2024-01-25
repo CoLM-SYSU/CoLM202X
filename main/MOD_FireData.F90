@@ -2,22 +2,22 @@
 
 #ifdef BGC
 MODULE MOD_FireData
- !-----------------------------------------------------------------------
- ! !DESCRIPTION:
- ! This module read in fire data.
- !
- ! !ORIGINAL:
- ! Lu Xingjie and Zhang Shupeng, 2023, prepare the original version of the fire data module.
+!-----------------------------------------------------------------------
+! !DESCRIPTION:
+! This module read in fire data.
+!
+! !ORIGINAL:
+! Lu Xingjie and Zhang Shupeng, 2023, prepare the original version of the fire data module.
 
    USE MOD_Grid
    USE MOD_Mapping_Grid2Pset
-   use MOD_Vars_TimeInvariants, only: abm_lf, gdp_lf, peatf_lf
-   use MOD_Vars_TimeVariables,  only: hdm_lf
+   USE MOD_Vars_TimeInvariants, only: abm_lf, gdp_lf, peatf_lf
+   USE MOD_Vars_TimeVariables,  only: hdm_lf
    IMPLICIT NONE
-      
-   CHARACTER(len=256) :: file_fire
 
-   TYPE(grid_type) :: grid_fire
+   character(len=256) :: file_fire
+
+   type(grid_type) :: grid_fire
    type(mapping_grid2pset_type) :: mg2p_fire
 
 CONTAINS
@@ -30,20 +30,20 @@ CONTAINS
    ! open fire netcdf file from DEF_dir_runtime, read latitude and longitude info.
    ! Initialize fire data read in.
 
-      use MOD_SPMD_Task
-      USE MOD_Namelist
-      USE MOD_Grid
-      USE MOD_NetCDFSerial
-      USE MOD_NetCDFBlock
-      USE MOD_LandPatch
-      USE MOD_RangeCheck
-      IMPLICIT NONE
+   USE MOD_SPMD_Task
+   USE MOD_Namelist
+   USE MOD_Grid
+   USE MOD_NetCDFSerial
+   USE MOD_NetCDFBlock
+   USE MOD_LandPatch
+   USE MOD_RangeCheck
+   IMPLICIT NONE
 
       integer, intent(in) :: YY
 
       ! Local Variables
-      REAL(r8), allocatable :: lat(:), lon(:)
-      TYPE(block_data_real8_2d) :: f_xy_fire
+      real(r8), allocatable :: lat(:), lon(:)
+      type(block_data_real8_2d) :: f_xy_fire
 
       file_fire = trim(DEF_dir_runtime) // '/fire/abm_colm_double_fillcoast.nc'
 
@@ -52,40 +52,40 @@ CONTAINS
 
       CALL grid_fire%define_by_center (lat, lon)
 
-      call mg2p_fire%build (grid_fire, landpatch)
+      CALL mg2p_fire%build (grid_fire, landpatch)
 
       IF (allocated(lon)) deallocate(lon)
       IF (allocated(lat)) deallocate(lat)
-      
+
       IF (p_is_io) THEN
          CALL allocate_block_data (grid_fire, f_xy_fire)
       ENDIF
-      
+
       file_fire = trim(DEF_dir_runtime) // '/fire/abm_colm_double_fillcoast.nc'
       IF (p_is_io) THEN
          CALL ncio_read_block (file_fire, 'abm', grid_fire, f_xy_fire)
       ENDIF
-      call mg2p_fire%map_aweighted (f_xy_fire, abm_lf)
+      CALL mg2p_fire%map_aweighted (f_xy_fire, abm_lf)
 #ifdef RangeCheck
-      call check_vector_data ('abm', abm_lf)
+      CALL check_vector_data ('abm', abm_lf)
 #endif
 
       file_fire = trim(DEF_dir_runtime) // '/fire/peatf_colm_360x720_c100428.nc'
       IF (p_is_io) THEN
          CALL ncio_read_block (file_fire, 'peatf', grid_fire, f_xy_fire)
       ENDIF
-      call mg2p_fire%map_aweighted (f_xy_fire, peatf_lf)
+      CALL mg2p_fire%map_aweighted (f_xy_fire, peatf_lf)
 #ifdef RangeCheck
-      call check_vector_data ('peatf', peatf_lf)
+      CALL check_vector_data ('peatf', peatf_lf)
 #endif
 
       file_fire = trim(DEF_dir_runtime) // '/fire/gdp_colm_360x720_c100428.nc'
       IF (p_is_io) THEN
          CALL ncio_read_block (file_fire, 'gdp', grid_fire, f_xy_fire)
       ENDIF
-      call mg2p_fire%map_aweighted (f_xy_fire, gdp_lf)
+      CALL mg2p_fire%map_aweighted (f_xy_fire, gdp_lf)
 #ifdef RangeCheck
-      call check_vector_data ('gdp', gdp_lf)
+      CALL check_vector_data ('gdp', gdp_lf)
 #endif
 
       CALL update_hdm_data (YY)
@@ -94,27 +94,27 @@ CONTAINS
 
    ! ----------
    SUBROUTINE update_hdm_data (YY)
-      ! ======================================================================================================
-      !
-      ! !DESCRIPTION:
-      ! Read in the Fire data from CLM5 dataset (month when crop fire peak (abm), GDP, peatland fraction (peatf),
-      ! and population density
-      !
-      ! !ORIGINAL: Xingjie Lu and Shupeng Zhang, 2022
-      ! ======================================================================================================
+   ! ======================================================================================================
+   !
+   ! !DESCRIPTION:
+   ! Read in the Fire data from CLM5 dataset (month when crop fire peak (abm), GDP, peatland fraction (peatf),
+   ! and population density
+   !
+   ! !ORIGINAL: Xingjie Lu and Shupeng Zhang, 2022
+   ! ======================================================================================================
 
-      use MOD_SPMD_Task
-      USE MOD_DataType
-      USE MOD_Namelist
-      USE MOD_NetCDFBlock
-      USE MOD_RangeCheck
-      IMPLICIT NONE
+   USE MOD_SPMD_Task
+   USE MOD_DataType
+   USE MOD_Namelist
+   USE MOD_NetCDFBlock
+   USE MOD_RangeCheck
+   IMPLICIT NONE
 
-      integer, intent(in) :: YY
+   integer, intent(in) :: YY
 
-      ! Local Variables
-      TYPE(block_data_real8_2d) :: f_xy_fire
-      integer :: itime
+   ! Local Variables
+   type(block_data_real8_2d) :: f_xy_fire
+   integer :: itime
 
       itime = max(1850,min(YY,2016)) - 1849
 
@@ -126,10 +126,10 @@ CONTAINS
          CALL ncio_read_block_time (file_fire, 'hdm', grid_fire, itime, f_xy_fire)
       ENDIF
 
-      call mg2p_fire%map_aweighted (f_xy_fire, hdm_lf)
+      CALL mg2p_fire%map_aweighted (f_xy_fire, hdm_lf)
 
 #ifdef RangeCheck
-      call check_vector_data ('hdm', hdm_lf)
+      CALL check_vector_data ('hdm', hdm_lf)
 #endif
 
    END SUBROUTINE update_hdm_data
