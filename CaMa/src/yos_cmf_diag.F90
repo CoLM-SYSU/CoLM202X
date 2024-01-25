@@ -92,11 +92,11 @@ MODULE YOS_CMF_DIAG
 
    !================================================
    !*** dam variable
-   real(KIND=JPRB),POINTER         :: D2DAMINF_AVG(:,:)       !! average reservoir inflow [m3/s]  !!!added
+   real(KIND=JPRB),pointer         :: D2DAMINF_AVG(:,:)       !! average reservoir inflow [m3/s]  !!!added
 
    !================================================
    !!!*** levee variables
-   real(KIND=JPRB),POINTER         :: D2LEVDPH(:,:)           !! flood depth in protected side (water depth betwen river & levee)
+   real(KIND=JPRB),pointer         :: D2LEVDPH(:,:)           !! flood depth in protected side (water depth betwen river & levee)
 
 
 

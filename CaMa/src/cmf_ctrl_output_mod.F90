@@ -451,92 +451,92 @@ CONTAINS
          DO JF=1,NVARSOUT
             SELECT CASE (VAROUT(JF)%CVNAME)
                CASE ('rivsto')
-               D2COPY=P2RIVSTO  !! convert Double to Single precision when using SinglePrecisionMode 
-               D2VEC => D2COPY  !!   (Storage variables are kept as Float64 in SinglePrecisionMode)
+                  D2COPY=P2RIVSTO  !! convert Double to Single precision when using SinglePrecisionMode 
+                  D2VEC => D2COPY  !!   (Storage variables are kept as Float64 in SinglePrecisionMode)
                CASE ('fldsto')
-               D2COPY=P2FLDSTO
-               D2VEC => D2COPY
+                  D2COPY=P2FLDSTO
+                  D2VEC => D2COPY
                CASE ('rivout')
-               D2VEC => D2RIVOUT_AVG
+                  D2VEC => D2RIVOUT_AVG
                CASE ('rivdph')
-               D2VEC => D2RIVDPH
+                  D2VEC => D2RIVDPH
                CASE ('rivvel')
-               D2VEC => D2RIVVEL_AVG
+                  D2VEC => D2RIVVEL_AVG
                CASE ('fldout')
-               D2VEC => D2FLDOUT_AVG
+                  D2VEC => D2FLDOUT_AVG
                CASE ('flddph')
-               D2VEC => D2FLDDPH
+                  D2VEC => D2FLDDPH
                CASE ('fldfrc')
-               D2VEC => D2FLDFRC
+                  D2VEC => D2FLDFRC
                CASE ('fldare')
-               D2VEC => D2FLDARE
+                  D2VEC => D2FLDARE
                CASE ('sfcelv')
-               D2VEC => D2SFCELV
+                  D2VEC => D2SFCELV
                CASE ('totout')
-               D2VEC => D2OUTFLW_AVG
+                  D2VEC => D2OUTFLW_AVG
                CASE ('outflw')            !!  compatibility for previous file name
-               D2VEC => D2OUTFLW_AVG
+                  D2VEC => D2OUTFLW_AVG
                CASE ('totsto')
-               D2VEC => D2STORGE
+                  D2VEC => D2STORGE
                CASE ('storge')            !!  compatibility for previous file name
-               D2VEC => D2STORGE
+                  D2VEC => D2STORGE
                CASE ('pthout')
-               IF( .not. LPTHOUT ) CYCLE
-               D2VEC => D2PTHOUT_AVG
+                  IF( .not. LPTHOUT ) CYCLE
+                  D2VEC => D2PTHOUT_AVG
                CASE ('pthflw')
-               IF( .not. LPTHOUT ) CYCLE
+                  IF( .not. LPTHOUT ) CYCLE
                CASE ('maxflw')
-               D2VEC =>  D2OUTFLW_MAX
+                  D2VEC =>  D2OUTFLW_MAX
                CASE ('maxdph')
-               D2VEC =>  D2RIVDPH_MAX
+                  D2VEC =>  D2RIVDPH_MAX
                CASE ('maxsto')
-               D2VEC =>  D2STORGE_MAX
+                  D2VEC =>  D2STORGE_MAX
                CASE ('outins')
-               IF( .not. LOUTINS ) CYCLE
-               D2VEC =>  D2OUTINS
+                  IF( .not. LOUTINS ) CYCLE
+                  D2VEC =>  D2OUTINS
                CASE ('gwsto')
-               IF( .not. LGDWDLY ) CYCLE
-               D2COPY=P2GDWSTO
-               D2VEC =>  D2COPY
+                  IF( .not. LGDWDLY ) CYCLE
+                  D2COPY=P2GDWSTO
+                  D2VEC =>  D2COPY
                CASE ('gdwsto')
-               IF( .not. LGDWDLY ) CYCLE
-               D2COPY=P2GDWSTO
-               D2VEC =>  D2COPY
+                  IF( .not. LGDWDLY ) CYCLE
+                  D2COPY=P2GDWSTO
+                  D2VEC =>  D2COPY
                CASE ('gwout')
-               IF( .not. LGDWDLY ) CYCLE
-               D2VEC =>  D2GDWRTN_AVG
+                  IF( .not. LGDWDLY ) CYCLE
+                  D2VEC =>  D2GDWRTN_AVG
                CASE ('gdwrtn')
                IF( .not. LGDWDLY ) CYCLE
-               D2VEC =>  D2GDWRTN_AVG
-               CASE ('runoff')             !!  compatibility for previous file name
-               D2VEC =>  D2RUNOFF_AVG  
+                  D2VEC =>  D2GDWRTN_AVG
+                  CASE ('runoff')             !!  compatibility for previous file name
+                  D2VEC =>  D2RUNOFF_AVG  
                CASE ('runoffsub')           !!  compatibility for previous file name
-               IF( .not. LROSPLIT ) CYCLE
-               D2VEC =>  D2ROFSUB_AVG  
+                  IF( .not. LROSPLIT ) CYCLE
+                  D2VEC =>  D2ROFSUB_AVG  
                CASE ('rofsfc')
-               D2VEC =>  D2RUNOFF_AVG
+                  D2VEC =>  D2RUNOFF_AVG
                CASE ('rofsub')
-               D2VEC =>  D2ROFSUB_AVG
+                  D2VEC =>  D2ROFSUB_AVG
                CASE ('wevap')
-               IF( .not. LWEVAP ) CYCLE
-               D2VEC => D2WEVAPEX_AVG
+                  IF( .not. LWEVAP ) CYCLE
+                  D2VEC => D2WEVAPEX_AVG
                CASE ('winfilt')
-               IF( .not. LWINFILT ) CYCLE
-               D2VEC => D2WINFILTEX_AVG
+                  IF( .not. LWINFILT ) CYCLE
+                  D2VEC => D2WINFILTEX_AVG
                CASE ('damsto')   !!! added
                IF( .not. LDAMOUT ) CYCLE
-               D2COPY=P2DAMSTO
-               D2VEC => D2COPY
+                  D2COPY=P2DAMSTO
+                  D2VEC => D2COPY
                CASE ('daminf')   !!! added
-               IF( .not. LDAMOUT ) CYCLE
-               D2VEC =>  d2daminf_avg
+                  IF( .not. LDAMOUT ) CYCLE
+                  2VEC =>  d2daminf_avg
                CASE ('levsto')   !!! added
-               IF( .not. LLEVEE ) CYCLE
-               D2COPY=P2LEVSTO
-               D2VEC => D2COPY
+                  IF( .not. LLEVEE ) CYCLE
+                  D2COPY=P2LEVSTO
+                  D2VEC => D2COPY
                CASE ('levdph')   !!! added
-               IF( .not. LLEVEE ) CYCLE
-               D2VEC =>  D2LEVDPH
+                  IF( .not. LLEVEE ) CYCLE
+                  D2VEC =>  D2LEVDPH
                CASE DEFAULT
             END SELECT   !! variable name select
 
@@ -736,7 +736,7 @@ CONTAINS
       !================================================
 
 
-      END SUBROUTINE CMF_OUTPUT_END
+   END SUBROUTINE CMF_OUTPUT_END
       !####################################################################
 
 
