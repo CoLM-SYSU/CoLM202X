@@ -708,13 +708,13 @@ CONTAINS
 
    SUBROUTINE READ_BGCPFTimeVariables (file_restart)
 
-      USE MOD_NetCDFVector
-      USE MOD_LandPFT
-      USE MOD_Vars_Global
+   USE MOD_NetCDFVector
+   USE MOD_LandPFT
+   USE MOD_Vars_Global
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      character(LEN=*), intent(in) :: file_restart
+   character(LEN=*), intent(in) :: file_restart
 
 ! bgc variables
       CALL ncio_read_vector (file_restart, 'leafc_p                ', landpft, leafc_p               )
@@ -2086,9 +2086,9 @@ CONTAINS
 #ifdef RangeCheck
    SUBROUTINE check_BGCPFTimeVariables
 
-      USE MOD_RangeCheck
-      USE MOD_SPMD_Task
-      IMPLICIT NONE
+   USE MOD_RangeCheck
+   USE MOD_SPMD_Task
+   IMPLICIT NONE
 
 ! bgc variables
       CALL check_vector_data ('leafc_p                ', leafc_p                )
