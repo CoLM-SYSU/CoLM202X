@@ -3,30 +3,30 @@
 MODULE MOD_SimpleOcean
 
 !-----------------------------------------------------------------------
- use MOD_Precision
- IMPLICIT NONE
- SAVE
+   USE MOD_Precision
+   IMPLICIT NONE
+   SAVE
 
 ! PUBLIC MEMBER FUNCTIONS:
-  public :: socean
+   PUBLIC :: socean
 
 
 ! PRIVATE MEMBER FUNCTIONS:
-  private :: seafluxes
-  private :: srftsb
+   PRIVATE :: seafluxes
+   PRIVATE :: srftsb
 
 
 !-----------------------------------------------------------------------
 
-  CONTAINS
+CONTAINS
 
 !-----------------------------------------------------------------------
 
 
- subroutine socean (dosst,deltim,oro,hu,ht,hq,&
-            us,vs,tm,qm,rhoair,psrf,sabg,frl,tssea,tssub,scv,&
-            taux,tauy,fsena,fevpa,lfevpa,fseng,fevpg,tref,qref,&
-            z0m,zol,rib,ustar,qstar,tstar,fm,fh,fq,emis,olrg)
+   SUBROUTINE socean (dosst,deltim,oro,hu,ht,hq,&
+              us,vs,tm,qm,rhoair,psrf,sabg,frl,tssea,tssub,scv,&
+              taux,tauy,fsena,fevpa,lfevpa,fseng,fevpg,tref,qref,&
+              z0m,zol,rib,ustar,qstar,tstar,fm,fh,fq,emis,olrg)
 !-----------------------------------------------------------------------
 !           Simple Ocean Model
 ! 1. calculate sea surface fluxes, based on CLM
@@ -35,173 +35,173 @@ MODULE MOD_SimpleOcean
 ! Original authors : yongjiu dai and xin-zhong liang (08/30/2001)
 !-----------------------------------------------------------------------
 
-  use MOD_Precision
-  use MOD_Const_Physical, only : tfrz, hvap, hsub, stefnc, vonkar
-  implicit none
+   USE MOD_Precision
+   USE MOD_Const_Physical, only : tfrz, hvap, hsub, stefnc, vonkar
+   IMPLICIT NONE
 
 !------------------------------Arguments--------------------------------
 
-  integer, parameter :: psrfty=7  ! Number of surface types
-  integer, parameter :: plsice=4  ! number of seaice levels
+   integer, parameter :: psrfty=7  ! Number of surface types
+   integer, parameter :: plsice=4  ! number of seaice levels
 
-  logical,  INTENT(IN) :: dosst   ! true to update sst/ice/snow before calculation
-  real(r8), INTENT(in) :: deltim  ! seconds in a time-step (s)
-  real(r8), INTENT(in) :: hu      ! agcm reference height of wind [m]
-  real(r8), INTENT(in) :: ht      ! agcm reference height of temperature [m]
-  real(r8), INTENT(in) :: hq      ! agcm reference height of humidity [m]
-  real(r8), INTENT(in) :: us      ! wind component in eastward direction [m/s]
-  real(r8), INTENT(in) :: vs      ! wind component in northward direction [m/s]
-  real(r8), INTENT(in) :: tm      ! temperature at agcm reference height [kelvin]
-  real(r8), INTENT(in) :: qm      ! specific humidity at agcm reference height [kg/kg]
-  real(r8), INTENT(in) :: rhoair  ! density air [kg/m3]
-  real(r8), INTENT(in) :: psrf    ! atmosphere pressure at the surface [pa] [not used]
-  real(r8), INTENT(in) :: sabg    ! surface solar absorbed flux [W/m2]
-  real(r8), INTENT(in) :: frl     ! downward longwave radiation [W/m2]
+   logical,  intent(in) :: dosst   ! true to update sst/ice/snow before calculation
+   real(r8), intent(in) :: deltim  ! seconds in a time-step (s)
+   real(r8), intent(in) :: hu      ! agcm reference height of wind [m]
+   real(r8), intent(in) :: ht      ! agcm reference height of temperature [m]
+   real(r8), intent(in) :: hq      ! agcm reference height of humidity [m]
+   real(r8), intent(in) :: us      ! wind component in eastward direction [m/s]
+   real(r8), intent(in) :: vs      ! wind component in northward direction [m/s]
+   real(r8), intent(in) :: tm      ! temperature at agcm reference height [kelvin]
+   real(r8), intent(in) :: qm      ! specific humidity at agcm reference height [kg/kg]
+   real(r8), intent(in) :: rhoair  ! density air [kg/m3]
+   real(r8), intent(in) :: psrf    ! atmosphere pressure at the surface [pa] [not used]
+   real(r8), intent(in) :: sabg    ! surface solar absorbed flux [W/m2]
+   real(r8), intent(in) :: frl     ! downward longwave radiation [W/m2]
 
-  real(r8), INTENT(inout) :: oro  ! ocean(0)/seaice(2)/ flag
-  real(r8), INTENT(inout) :: scv  ! snow water equivalent depth (mm)
-  real(r8), INTENT(inout) :: tssub(plsice) ! surface/sub-surface temperatures [K]
-  real(r8), INTENT(out) :: tssea  ! sea surface temperature [K]
+   real(r8), intent(inout) :: oro  ! ocean(0)/seaice(2)/ flag
+   real(r8), intent(inout) :: scv  ! snow water equivalent depth (mm)
+   real(r8), intent(inout) :: tssub(plsice) ! surface/sub-surface temperatures [K]
+   real(r8), intent(out) :: tssea  ! sea surface temperature [K]
 
-  real(r8), INTENT(out) :: taux   ! wind stress: E-W [kg/m/s**2]
-  real(r8), INTENT(out) :: tauy   ! wind stress: N-S [kg/m/s**2]
-  real(r8), INTENT(out) :: fsena  ! sensible heat from reference height to atmosphere [W/m2]
-  real(r8), INTENT(out) :: fevpa  ! evaporation from refence height to atmosphere [mm/s]
-  real(r8), INTENT(out) :: lfevpa ! laten heat from reference height to atmosphere [W/m2]
-  real(r8), INTENT(out) :: fseng  ! sensible heat flux from ground [W/m2]
-  real(r8), INTENT(out) :: fevpg  ! evaporation heat flux from ground [mm/s]
+   real(r8), intent(out) :: taux   ! wind stress: E-W [kg/m/s**2]
+   real(r8), intent(out) :: tauy   ! wind stress: N-S [kg/m/s**2]
+   real(r8), intent(out) :: fsena  ! sensible heat from reference height to atmosphere [W/m2]
+   real(r8), intent(out) :: fevpa  ! evaporation from refence height to atmosphere [mm/s]
+   real(r8), intent(out) :: lfevpa ! laten heat from reference height to atmosphere [W/m2]
+   real(r8), intent(out) :: fseng  ! sensible heat flux from ground [W/m2]
+   real(r8), intent(out) :: fevpg  ! evaporation heat flux from ground [mm/s]
 
-  real(r8), INTENT(out) :: tref   ! 2 m height air temperature [kelvin]
-  real(r8), INTENT(out) :: qref   ! 2 m height air humidity
-  real(r8), INTENT(out) :: z0m    ! effective roughness [m]
-  real(r8), INTENT(out) :: zol    ! dimensionless height (z/L) used in Monin-Obukhov theory
-  real(r8), INTENT(out) :: rib    ! bulk Richardson number in surface layer
-  real(r8), INTENT(out) :: ustar  ! friction velocity [m/s]
-  real(r8), INTENT(out) :: tstar  ! temperature scaling parameter
-  real(r8), INTENT(out) :: qstar  ! moisture scaling parameter
-  real(r8), INTENT(out) :: fm     ! integral of profile function for momentum
-  real(r8), INTENT(out) :: fh     ! integral of profile function for heat
-  real(r8), INTENT(out) :: fq     ! integral of profile function for moisture
-  real(r8), INTENT(out) :: emis   ! averaged bulk surface emissivity
-  real(r8), INTENT(out) :: olrg   ! longwave up flux at surface [W/m2]
-
-!-----------------------------------------------------------------------
-  integer isrfty   ! surface type index (1-7)
-  real(r8) cgrndl  ! deriv, of soil sensible heat flux wrt soil temp [w/m2/k]
-  real(r8) cgrnds  ! deriv of soil latent heat flux wrt soil temp [w/m**2/k]
-  real(r8) dshf    ! Ts partial derivative for sensible heat flux
-  real(r8) dlhf    ! Ts partial derivative for latent heat flux
-  real(r8) fnt     ! net surface flux for input conditions [W/m2]
-  real(r8) dfntdt  ! net surface flux ts partial derivative [W/m2]
-  real(r8) tsbsf(plsice)   ! Non-adjusted srfc/sub-srfc temperatures
-  real(r8) snowh   ! snow depth (liquid water equivalent) [m]
-  real(r8) sicthk  ! sea-ice thickness [m]
-
-  real(r8), parameter :: emisi  = 1.0    ! (0.97) surface emissivity for ice or snow [-]
-  real(r8), parameter :: emisw  = 1.0    ! (0.97) surface emissivity for water [-]
-  real(r8), parameter :: tsice  = 271.36 ! freezing point of sea ice [K]
-  real(r8), parameter :: thsice = 2.0    ! initial thickness of sea ice [m]
-  real(r8), parameter :: snsice = 0.005  ! initial snow water equivalent over sea ice [m]
-
-  integer j
+   real(r8), intent(out) :: tref   ! 2 m height air temperature [kelvin]
+   real(r8), intent(out) :: qref   ! 2 m height air humidity
+   real(r8), intent(out) :: z0m    ! effective roughness [m]
+   real(r8), intent(out) :: zol    ! dimensionless height (z/L) used in Monin-Obukhov theory
+   real(r8), intent(out) :: rib    ! bulk Richardson number in surface layer
+   real(r8), intent(out) :: ustar  ! friction velocity [m/s]
+   real(r8), intent(out) :: tstar  ! temperature scaling parameter
+   real(r8), intent(out) :: qstar  ! moisture scaling parameter
+   real(r8), intent(out) :: fm     ! integral of profile FUNCTION for momentum
+   real(r8), intent(out) :: fh     ! integral of profile FUNCTION for heat
+   real(r8), intent(out) :: fq     ! integral of profile FUNCTION for moisture
+   real(r8), intent(out) :: emis   ! averaged bulk surface emissivity
+   real(r8), intent(out) :: olrg   ! longwave up flux at surface [W/m2]
 
 !-----------------------------------------------------------------------
+   integer isrfty   ! surface type index (1-7)
+   real(r8) cgrndl  ! deriv, of soil sensible heat flux wrt soil temp [w/m2/k]
+   real(r8) cgrnds  ! deriv of soil latent heat flux wrt soil temp [w/m**2/k]
+   real(r8) dshf    ! Ts partial derivative for sensible heat flux
+   real(r8) dlhf    ! Ts partial derivative for latent heat flux
+   real(r8) fnt     ! net surface flux for input conditions [W/m2]
+   real(r8) dfntdt  ! net surface flux ts partial derivative [W/m2]
+   real(r8) tsbsf(plsice)   ! Non-adjusted srfc/sub-srfc temperatures
+   real(r8) snowh   ! snow depth (liquid water equivalent) [m]
+   real(r8) sicthk  ! sea-ice thickness [m]
 
-  snowh = scv/1000.
+   real(r8), parameter :: emisi  = 1.0    ! (0.97) surface emissivity for ice or snow [-]
+   real(r8), parameter :: emisw  = 1.0    ! (0.97) surface emissivity for water [-]
+   real(r8), parameter :: tsice  = 271.36 ! freezing point of sea ice [K]
+   real(r8), parameter :: thsice = 2.0    ! initial thickness of sea ice [m]
+   real(r8), parameter :: snsice = 0.005  ! initial snow water equivalent over sea ice [m]
 
-  if(dosst)then
+   integer j
+
+!-----------------------------------------------------------------------
+
+      snowh = scv/1000.
+
+      IF(dosst)THEN
 ! update sea temperatures and sea ice distribution
 ! as well as snow cover over sea ice
-     if(nint(oro).eq.2 .and. tssea.gt.tsice) then
-        oro = 0.0         ! old sea ice melt out
-        snowh = 0.
-        scv = 0.
-        sicthk = 0.
-        do j = 1,plsice
-           tssub(j) = tssea
-        enddo
-     else if(nint(oro).eq.0 .and. tssea.le.tsice) then
-        oro = 2.0         ! new sea ice formed
-        snowh = snsice
-        scv = snowh*1000.
-        sicthk = thsice
-        do j = 1,plsice
-           tssub(j) = tssea
-        enddo
-     endif
-  endif
+         IF(nint(oro).eq.2 .and. tssea.gt.tsice) THEN
+            oro = 0.0         ! old sea ice melt out
+            snowh = 0.
+            scv = 0.
+            sicthk = 0.
+            DO j = 1,plsice
+               tssub(j) = tssea
+            ENDDO
+         ELSE IF(nint(oro).eq.0 .and. tssea.le.tsice) THEN
+            oro = 2.0         ! new sea ice formed
+            snowh = snsice
+            scv = snowh*1000.
+            sicthk = thsice
+            DO j = 1,plsice
+               tssub(j) = tssea
+            ENDDO
+         ENDIF
+      ENDIF
 
-  tssea = tssub(1)
+      tssea = tssub(1)
 
 ! compute surface fluxes, derviatives, and exchange coefficiants
-  call seafluxes (oro,hu,ht,hq,&
-                  us,vs,tm,qm,rhoair,psrf,tssea,&
-                  taux,tauy,fsena,fevpa,fseng,fevpg,tref,qref,&
-                  z0m,zol,rib,ustar,qstar,tstar,fm,fh,fq,cgrndl,cgrnds)
+      CALL seafluxes (oro,hu,ht,hq,&
+                      us,vs,tm,qm,rhoair,psrf,tssea,&
+                      taux,tauy,fsena,fevpa,fseng,fevpg,tref,qref,&
+                      z0m,zol,rib,ustar,qstar,tstar,fm,fh,fq,cgrndl,cgrnds)
 
-  if(nint(oro).eq.0)then             ! ocean
-     lfevpa = fevpa*hvap
-     olrg = stefnc*emisw*tssea**4 + (1.-emisw)*frl
-     emis = emisw
+      IF(nint(oro).eq.0)THEN             ! ocean
+         lfevpa = fevpa*hvap
+         olrg = stefnc*emisw*tssea**4 + (1.-emisw)*frl
+         emis = emisw
 
-  else if(nint(oro).eq.2)then        ! sea ice
-     lfevpa = fevpa*hsub
+      ELSE IF(nint(oro).eq.2)THEN        ! sea ice
+         lfevpa = fevpa*hsub
 
-   ! net surface flux and derivate at current surface temperature
-     dshf = cgrnds
-     dlhf = hsub*cgrndl
-     olrg = stefnc*emisi*tssea**4 + (1.-emisi)*frl
+       ! net surface flux and derivate at current surface temperature
+         dshf = cgrnds
+         dlhf = hsub*cgrndl
+         olrg = stefnc*emisi*tssea**4 + (1.-emisi)*frl
 
-     fnt = sabg + frl - olrg - fsena - lfevpa
-     dfntdt = -(dshf + dlhf) - stefnc*emisi*4.*tssea**3
+         fnt = sabg + frl - olrg - fsena - lfevpa
+         dfntdt = -(dshf + dlhf) - stefnc*emisi*4.*tssea**3
 
-   ! initialize surface/subsurface temperatures for srftsb
-     do j=1,plsice
-       tsbsf(j) = tssub(j)
-     end do
+       ! initialize surface/subsurface temperatures for srftsb
+         DO j=1,plsice
+           tsbsf(j) = tssub(j)
+         ENDDO
 
-! set sea ice surface type
-     isrfty = 2
+       ! set sea ice surface type
+         isrfty = 2
 
-   ! diffusion calculation for temperature
-     call srftsb(isrfty,deltim,fnt,dfntdt,snowh,tsbsf)
+       ! diffusion calculation for temperature
+         CALL srftsb(isrfty,deltim,fnt,dfntdt,snowh,tsbsf)
 
-     do j=1,plsice
-        tsbsf(j) = min(tsbsf(j),tfrz)
-        tssub(j) = tsbsf(j)
-     end do
-     tssea = tssub(1)
+         DO j=1,plsice
+            tsbsf(j) = min(tsbsf(j),tfrz)
+            tssub(j) = tsbsf(j)
+         ENDDO
+         tssea = tssub(1)
 
-     olrg = stefnc*emisi*tssea**4 + (1.-emisi)*frl
-     emis = emisi
+         olrg = stefnc*emisi*tssea**4 + (1.-emisi)*frl
+         emis = emisi
 
-  endif
+      ENDIF
 
- end subroutine socean
+   END SUBROUTINE socean
 
 
 
- subroutine seafluxes (oro,hu,ht,hq,&
-                       us,vs,tm,qm,rhoair,psrf,tssea,&
-                       taux,tauy,fsena,fevpa,fseng,fevpg,tref,qref,&
-                       z0m,zol,rib,ustar,qstar,tstar,fm,fh,fq,cgrndl,cgrnds)
+   SUBROUTINE seafluxes (oro,hu,ht,hq,&
+                         us,vs,tm,qm,rhoair,psrf,tssea,&
+                         taux,tauy,fsena,fevpa,fseng,fevpg,tref,qref,&
+                         z0m,zol,rib,ustar,qstar,tstar,fm,fh,fq,cgrndl,cgrnds)
 
 !=======================================================================
-! this is the main subroutine to execute the calculation of thermal processes
+! this is the main SUBROUTINE to execute the calculation of thermal processes
 ! and surface fluxes
 !
 ! Original author : Yongjiu Dai, 09/15/1999; 08/30/2002
 !=======================================================================
 
-  use MOD_Precision
-  use MOD_Const_Physical, only : cpair,rgas,vonkar,grav
-  use MOD_FrictionVelocity
-  USE MOD_Qsadv
-  implicit none
+   USE MOD_Precision
+   USE MOD_Const_Physical, only : cpair,rgas,vonkar,grav
+   USE MOD_FrictionVelocity
+   USE MOD_Qsadv
+   IMPLICIT NONE
 
 !----------------------- Dummy argument --------------------------------
 
-  real(r8), INTENT(in) :: &
+   real(r8), intent(in) :: &
         oro,      &! ocean(0)/seaice(2)/ flag
 
         ! atmospherical variables and agcm reference height
@@ -217,7 +217,7 @@ MODULE MOD_SimpleOcean
 
         tssea      ! sea surface temperature [K]
 
-  real(r8), INTENT(out) :: &
+   real(r8), intent(out) :: &
         taux,     &! wind stress: E-W [kg/m/s**2]
         tauy,     &! wind stress: N-S [kg/m/s**2]
         fsena,    &! sensible heat from agcm reference height to atmosphere [W/m2]
@@ -233,19 +233,19 @@ MODULE MOD_SimpleOcean
         ustar,    &! friction velocity [m/s]
         tstar,    &! temperature scaling parameter
         qstar,    &! moisture scaling parameter
-        fm,       &! integral of profile function for momentum
-        fh,       &! integral of profile function for heat
-        fq,       &! integral of profile function for moisture
+        fm,       &! integral of profile FUNCTION for momentum
+        fh,       &! integral of profile FUNCTION for heat
+        fq,       &! integral of profile FUNCTION for moisture
         cgrndl,   &! deriv, of soil sensible heat flux wrt soil temp [w/m2/k]
         cgrnds     ! deriv of soil latent heat flux wrt soil temp [w/m**2/k]
 
 !------------------------ LOCAL VARIABLES ------------------------------
-  integer i
-  integer niters, &! maximum number of iterations for surface temperature
+   integer i
+   integer niters,&! maximum number of iterations for surface temperature
        iter,      &! iteration index
        nmozsgn     ! number of times moz changes sign
 
-  real(r8) :: &
+   real(r8) :: &
        beta,      &! coefficient of conective velocity [-]
        displax,   &! zero-displacement height [m]
        dth,       &! diff of virtual temp. between ref. height and surface
@@ -264,7 +264,7 @@ MODULE MOD_SimpleOcean
        raiw,      &! temporary variable [kg/m2/s]
        fh2m,      &! relation for temperature at 2m
        fq2m,      &! relation for specific humidity at 2m
-       fm10m,     &! integral of profile function for momentum at 10m
+       fm10m,     &! integral of profile FUNCTION for momentum at 10m
        thm,       &! intermediate variable (tm+0.0098*ht)
        th,        &! potential temperature (kelvin)
        thv,       &! virtual potential temperature (kelvin)
@@ -282,7 +282,7 @@ MODULE MOD_SimpleOcean
        z0hg,      &! roughness length over ground, sensible heat [m]
        z0qg        ! roughness length over ground, latent heat [m]
 
-       real, parameter :: zsice = 0.04  ! sea ice aerodynamic roughness length [m]
+   real, parameter :: zsice = 0.04  ! sea ice aerodynamic roughness length [m]
 
 !-----------------------------------------------------------------------
 ! potential temperatur at the reference height
@@ -297,7 +297,7 @@ MODULE MOD_SimpleOcean
       nmozsgn = 0
       obuold = 0.
 
-      call qsadv(tssea,psrf,eg,degdT,qsatg,qsatgdT)
+      CALL qsadv(tssea,psrf,eg,degdT,qsatg,qsatgdT)
 
 ! potential temperatur at the reference height
       thm = tm + 0.0098*ht              ! intermediate variable equivalent to
@@ -311,49 +311,49 @@ MODULE MOD_SimpleOcean
       dthv  = dth*(1.+0.61*qm)+0.61*th*dqh
       zldis = hu-0.
 
-      if(nint(oro).eq.0)then          ! ocean
+      IF(nint(oro).eq.0)THEN          ! ocean
        ! Kinematic viscosity of dry air (m2/s)- Andreas (1989) CRREL Rep. 89-11
          visa=1.326e-5*(1.+6.542e-3*tm + 8.301e-6*tm**2 - 4.84e-9*tm**3)
 
        ! loop to obtain initial and good ustar and zo
          ustar=0.06
          wc=0.5
-         if(dthv.ge.0.) then
+         IF(dthv.ge.0.) THEN
             um=max(ur,0.1)
-         else
+         ELSE
             um=sqrt(ur*ur+wc*wc)
-         endif
+         ENDIF
 
-         do i=1,5
+         DO i=1,5
             z0mg=0.013*ustar*ustar/grav+0.11*visa/ustar
             ustar=vonkar*um/log(zldis/z0mg)
-         enddo
+         ENDDO
 
-      else if(nint(oro).eq.2)then     ! sea ice
+      ELSE IF(nint(oro).eq.2)THEN     ! sea ice
          z0mg = zsice
          z0qg = z0mg
          z0hg = z0mg
-      endif
+      ENDIF
 
-      call moninobukini(ur,th,thm,thv,dth,dqh,dthv,zldis,z0mg,um,obu)
+      CALL moninobukini(ur,th,thm,thv,dth,dqh,dthv,zldis,z0mg,um,obu)
 
 ! Evaluated stability-dependent variables using moz from prior iteration
       niters=10
       displax = 0.
 
       !----------------------------------------------------------------
-      ITERATION : do iter = 1, niters         ! begin stability iteration
+      ITERATION : DO iter = 1, niters         ! begin stability iteration
       !----------------------------------------------------------------
 
-         if(nint(oro).eq.0)then   ! ocean
+         IF(nint(oro).eq.0)THEN   ! ocean
             z0mg=0.013*ustar*ustar/grav + 0.11*visa/ustar
             xq=2.67*(ustar*z0mg/visa)**0.25 - 2.57
             xt= xq
             z0qg=z0mg/exp(xq)
             z0hg=z0mg/exp(xt)
-         endif
+         ENDIF
 
-         call moninobuk(hu,ht,hq,displax,z0mg,z0hg,z0qg,obu,um,&
+         CALL moninobuk(hu,ht,hq,displax,z0mg,z0hg,z0qg,obu,um,&
                         ustar,fh2m,fq2m,fm10m,fm,fh,fq)
 
          tstar = vonkar/fh*dth
@@ -361,28 +361,28 @@ MODULE MOD_SimpleOcean
 
          thvstar=tstar*(1.+0.61*qm)+0.61*th*qstar
          zol=zldis*vonkar*grav*thvstar/(ustar**2*thv)
-         if(zol >= 0.) then       ! stable
+         IF(zol >= 0.) THEN       ! stable
            zol = min(2.,max(zol,1.e-6))
-         else                     ! unstable
+         ELSE                     ! unstable
            zol = max(-100.,min(zol,-1.e-6))
-         endif
+         ENDIF
          obu = zldis/zol
 
-         if(zol >= 0.)then
+         IF(zol >= 0.)THEN
            um = max(ur,0.1)
-         else
+         ELSE
            wc = (-grav*ustar*thvstar*zii/thv)**(1./3.)
           wc2 = beta*beta*(wc*wc)
            um = sqrt(ur*ur+wc2)
-         endif
+         ENDIF
 
-         if (obuold*obu < 0.) nmozsgn = nmozsgn+1
-         if(nmozsgn >= 4) EXIT
+         IF (obuold*obu < 0.) nmozsgn = nmozsgn+1
+         IF(nmozsgn >= 4) EXIT
 
          obuold = obu
 
       !----------------------------------------------------------------
-      enddo ITERATION                         ! end stability iteration
+      ENDDO ITERATION                         ! END stability iteration
       !----------------------------------------------------------------
 
 ! Get derivative of fluxes with repect to ground temperature
@@ -412,46 +412,46 @@ MODULE MOD_SimpleOcean
       qref   = qm + vonkar/fq*dqh * (fq2m/vonkar - fq/vonkar)
       z0m   = z0mg
 
- end subroutine seafluxes
+   END SUBROUTINE seafluxes
 
 
 
- subroutine srftsb(isrfty,deltim,fnt,dfntdt,snowh,tsbsf)
+   SUBROUTINE srftsb(isrfty,deltim,fnt,dfntdt,snowh,tsbsf)
 
 !-----------------------------------------------------------------------
 ! Compute surface and subsurface temperatures over sea-ice surfaces.
 !
 ! Sea ice temperatures are specified in 'plsice' layers of fixed
 ! thickness and thermal properties.  The forecast temperatures are
-! determined from a backward/implicit diffusion calculation using
+! determined from a backward/IMPLICIT diffusion calculation using
 ! linearized sensible/latent heat fluxes. The bottom ocean temperature
 ! is fixed at -2C, allowing heat flux exchange with underlying ocean.
 !
 ! Sub-surface layers are indexed 1 at the surface, increasing downwards
 ! to plsice.  Layers have mid-points and interfaces between layers.
 !
-! Temperatures are defined at mid-points, while fluxes between layers
+! Temperatures are defined at mid-points, WHILE fluxes between layers
 ! and the top/bottom media are defined at layer interfaces.
 !
 !-----------------------------------------------------------------------
 
-   use MOD_Precision
-   use MOD_Const_Physical, only: tkice, tkair
+   USE MOD_Precision
+   USE MOD_Const_Physical, only: tkice, tkair
    USE MOD_Utils
-   implicit none
+   IMPLICIT NONE
 
 !------------------------------Arguments--------------------------------
 
    integer, parameter :: psrfty = 7  ! Number of surface types
    integer, parameter :: plsice = 4  ! number of seaice levels
 
-   integer, INTENT(in) :: isrfty  ! surface type index (1 - 7)
-   real(r8), INTENT(in) :: deltim ! seconds i a time step (s)
-   real(r8), INTENT(in) :: fnt    ! top surface/atmosphere net energy flux
-   real(r8), INTENT(in) :: dfntdt ! ts partial derivative of net sfc flux
-   real(r8), INTENT(in) :: snowh  ! snow depth (liquid water equivalent) [m]
+   integer, intent(in) :: isrfty  ! surface type index (1 - 7)
+   real(r8), intent(in) :: deltim ! seconds i a time step (s)
+   real(r8), intent(in) :: fnt    ! top surface/atmosphere net energy flux
+   real(r8), intent(in) :: dfntdt ! ts partial derivative of net sfc flux
+   real(r8), intent(in) :: snowh  ! snow depth (liquid water equivalent) [m]
 
-   real(r8), INTENT(inout) :: tsbsf(1:plsice) ! surface/sub-surface tmps
+   real(r8), intent(inout) :: tsbsf(1:plsice) ! surface/sub-surface tmps
 
 !---------------------------Local variables-----------------------------
 
@@ -498,7 +498,7 @@ MODULE MOD_SimpleOcean
    real(r8) zmpl   ! layer below mid-point depth
    real(r8) zsnow  ! snow geometric depth
    real(r8) ztop   ! top layer thickness
-   logical scvr    ! true if surface snow covered
+   logical scvr    ! true IF surface snow covered
 
 !--------------------------Data Statements------------------------------
 ! specified (and invariant) thermal properties for surface types
@@ -512,28 +512,28 @@ MODULE MOD_SimpleOcean
 
    real(r8),parameter,dimension(psrfty,plsice) :: &!mass specific heat (J/kg/K)
    cmtype = reshape(&
-	  (/4.20e3,2.07e3,2.07e3,1.04e3,7.20e2,5.60e2,4.16e2,&
+          (/4.20e3,2.07e3,2.07e3,1.04e3,7.20e2,5.60e2,4.16e2,&
             4.20e3,2.07e3,2.07e3,1.04e3,7.20e2,5.60e2,4.16e2,&
             4.20e3,2.07e3,2.07e3,1.04e3,7.20e2,5.60e2,4.16e2,&
             4.20e3,2.07e3,2.07e3,1.04e3,7.20e2,5.60e2,4.16e2/), (/7,4/))
 
    real(r8),parameter,dimension(psrfty,plsice) :: &! mass density (kg/m3)
    rhtype = reshape(&
-	  (/1.00e3,9.20e2,9.20e2,2.50e3,2.50e3,2.50e3,2.50e3,&
+          (/1.00e3,9.20e2,9.20e2,2.50e3,2.50e3,2.50e3,2.50e3,&
             1.00e3,9.20e2,9.20e2,2.50e3,2.50e3,2.50e3,2.50e3,&
             1.00e3,9.20e2,9.20e2,2.50e3,2.50e3,2.50e3,2.50e3,&
             1.00e3,9.20e2,9.20e2,2.50e3,2.50e3,2.50e3,2.50e3/),(/7,4/))
 
    real(r8),parameter,dimension(psrfty,plsice) :: &!layer thicknesses (m)
    thckly = reshape(&
-	  (/ 2., .500, .250, .050, .090, .080, .120, &
+          (/ 2., .500, .250, .050, .090, .080, .120, &
              5., .500, .500, .366, .390, .435, .492, &
             10., .500, .500,1.369,1.459,1.628,1.841, &
             33., .500,8.500,6.990,7.450,8.310,9.400/), (/7,4/))
 
    real(r8),parameter,dimension(psrfty,plsice) :: &!thermal conductivity (W/m/K)
    tktype = reshape(&
-	  (/15.0 ,2.200 ,2.200 ,1.408 ,1.104 ,1.071 ,1.019 , &
+          (/15.0 ,2.200 ,2.200 ,1.408 ,1.104 ,1.071 ,1.019 , &
             15.0 ,2.200 ,2.200 ,1.408 ,1.104 ,1.071 ,1.019 , &
             15.0 ,2.200 ,2.200 ,1.408 ,1.104 ,1.071 ,1.019 , &
             15.0 ,2.200 ,2.200 ,1.408 ,1.104 ,1.071 ,1.019 /), (/7,4/))
@@ -548,9 +548,9 @@ MODULE MOD_SimpleOcean
       tksnow = (1.-frcair)*tkice + frcair*tkair
 
 ! no external heat source
-      do j=1,plsice
+      DO j=1,plsice
          htsrc(j) = 0.0
-      end do
+      ENDDO
 
 ! define logical for snow covered surfaces:
       scvr = snowh.gt.0.
@@ -570,11 +570,11 @@ MODULE MOD_SimpleOcean
       rho(1)   = rhty
       tk(1)    = tkty
 
-! modify layer 1 fields for snow cover if present
+! modify layer 1 fields for snow cover IF present
 ! snow equivlnt depth times snow liquid water depth gives the physical
 ! depth of snow for thermal conduction computation; snow is mixed
 ! uniformly by mass with the top surface layer
-      if(scvr) then
+      IF(scvr) THEN
         zsnow    = snowh*snwedp
         msnow    = rhsnow*zsnow
         mlice    = rhty*thck
@@ -582,44 +582,44 @@ MODULE MOD_SimpleOcean
         cmass(1) = (msnow*cmsnow + mlice*cmty)/(msnow+mlice)
         tk(1)    = (msnow*tksnow + mlice*tkty)/(msnow+mlice)
         z(1)     = (msnow+mlice) / rho(1)
-      end if
+      ENDIF
 
 ! set surface thermal properties for the lower sub/surface layers:
-      do j=2,plsice
+      DO j=2,plsice
          jndx     = isrfty
          thck     = thckly(jndx,j)
          cmass(j) = cmtype(jndx,j)
          rho(j)   = rhtype(jndx,j)
          tk(j)    = tktype(jndx,j)
          z(j)     = z(j-1) + thck
-      end do
+      ENDDO
 
 ! define set of linear equations for temperature
-      do j=1,plsice
+      DO j=1,plsice
          tin(j) = tsbsf(j)
-      end do
+      ENDDO
 
-! if sea ice, compute heat flux from underlying ocean, assumed to be at
+! IF sea ice, compute heat flux from underlying ocean, assumed to be at
 ! the temperature of -2C
       fbt = 0.0
-      if(isrfty.eq.2) then
+      IF(isrfty.eq.2) THEN
          zbot = 0.5*(z(plsice) - z(plsice-1))
          fbt = -tk(plsice)*(271.16 - tin(plsice))/zbot
-      end if
+      ENDIF
 
 ! set up linear equations
       sbdiag(1)      = 0.
       spdiag(plsice) = 0.
 
 ! single layer
-      if (plsice.eq.1) then
+      IF (plsice.eq.1) THEN
          rztop = 1./(z(1) - z(0))
          crt = (cmass(1)*rho(1)*rdtime)
          diag(1) = crt - dfntdt*rztop
          rhs(1) = diag(1)*tin(1) + fnt*rztop - fbt*rztop + htsrc(1)
 
 ! more than one layer: top layer first
-      else if (plsice.gt.1) then
+      ELSE IF (plsice.gt.1) THEN
 
          crt       = cmass(1)*rho(1)*rdtime
          ztop      = z(1) - z(0)
@@ -636,7 +636,7 @@ MODULE MOD_SimpleOcean
          rhs(1)    = tmp*tin(1) + fnt*rztop + htsrc(1)
 
 ! intermediate layers
-         do j=2,plsice-1
+         DO j=2,plsice-1
             crt       = cmass(j)*rho(j)*rdtime
             delz      = z(j) - z(j-1)
             zmpl      = 0.5*(z(j+1) + z(j))
@@ -653,7 +653,7 @@ MODULE MOD_SimpleOcean
             diag(j)   = crt + (tkpls*fpls + tkmns*fmns)
             spdiag(j) = -tkpls*fpls
             rhs(j)    = crt*tin(j) + htsrc(j)
-         end do
+         ENDDO
 
 ! bottom layer
             crt       = cmass(plsice)*rho(plsice)*rdtime
@@ -666,15 +666,14 @@ MODULE MOD_SimpleOcean
             sbdiag(plsice) = -tkbot*fmns
             diag(plsice) = crt + (tkbot*fmns)
             rhs(plsice) = crt*tin(plsice) - fbt/zbot + htsrc(plsice)
-      end if
+      ENDIF
 
-      if(plsice.eq.1) then
+      IF(plsice.eq.1) THEN
          tsbsf(1) = rhs(1)/diag(1)
-      else
-         call tridia (plsice,sbdiag,diag,spdiag,rhs,tsbsf)
-      end if
+      ELSE
+         CALL tridia (plsice,sbdiag,diag,spdiag,rhs,tsbsf)
+      ENDIF
 
- end subroutine srftsb
-
+   END SUBROUTINE srftsb
 
 END MODULE MOD_SimpleOcean
