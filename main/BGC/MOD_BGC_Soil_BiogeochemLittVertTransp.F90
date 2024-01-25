@@ -58,10 +58,10 @@ CONTAINS
    ! !LOCAL VARIABLES:
    real(r8) :: diffus (1:nl_soil+1)                    ! diffusivity (m2/s)  (includes spinup correction, if any)
    real(r8) :: adv_flux(1:nl_soil+1)                   ! advective flux (m/s)  (includes spinup correction, if any)
-   real(r8) :: aaa                                                                ! "A" function in Patankar
-   real(r8) :: pe                                                                 ! Pe for "A" function in Patankar
-   real(r8) :: w_m1, w_p1                                                         ! Weights for calculating harmonic mean of diffusivity
-   real(r8) :: d_m1, d_p1                                                         ! Harmonic mean of diffusivity
+   real(r8) :: aaa                                     ! "A" function in Patankar
+   real(r8) :: pe                                      ! Pe for "A" function in Patankar
+   real(r8) :: w_m1, w_p1                              ! Weights for calculating harmonic mean of diffusivity
+   real(r8) :: d_m1, d_p1                              ! Harmonic mean of diffusivity
    real(r8) :: a_tri(0:nl_soil+1)                      ! "a" vector for tridiagonal matrix
    real(r8) :: b_tri(0:nl_soil+1)                      ! "b" vector for tridiagonal matrix
    real(r8) :: c_tri(0:nl_soil+1)                      ! "c" vector for tridiagonal matrix
@@ -73,14 +73,14 @@ CONTAINS
    real(r8) :: f_m1(1:nl_soil+1)                       ! water flux for previous j
    real(r8) :: pe_p1(1:nl_soil+1)                      ! Peclet # for next j
    real(r8) :: pe_m1(1:nl_soil+1)                      ! Peclet # for previous j
-   real(r8) :: dz_node(1:nl_soil+1)                                            ! difference between nodes
-   real(r8) :: conc_trcr_c(0:nl_soil+1)                  ! dummy term
-   real(r8) :: conc_trcr_n(0:nl_soil+1)                  ! dummy term
+   real(r8) :: dz_node(1:nl_soil+1)                    ! difference between nodes
+   real(r8) :: conc_trcr_c(0:nl_soil+1)                ! dummy term
+   real(r8) :: conc_trcr_n(0:nl_soil+1)                ! dummy term
    real(r8) :: a_p_0
-   integer  :: s,j,l                                                  ! indices
-   integer  :: jtop                                      ! top level at each column
-   real(r8) :: spinup_term                                                        ! spinup accelerated decomposition factor, used to accelerate transport as well
-   real(r8) :: epsilon                                                            ! small number
+   integer  :: s,j,l                                   ! indices
+   integer  :: jtop                                    ! top level at each column
+   real(r8) :: spinup_term                             ! spinup accelerated decomposition factor, used to accelerate transport as well
+   real(r8) :: epsilon                                 ! small number
 
       aaa (pe) = max (0._r8, (1._r8 - 0.1_r8 * abs(pe))**5)  ! A function from Patankar, Table 5.2, pg 95
   
@@ -106,7 +106,7 @@ CONTAINS
                som_diffus_coef(j,i) = 0._r8
             ENDIF
          ENDDO
-      elseif (  max(altmax(i), altmax_lastyear(i)) > 0._r8 ) THEN
+      ELSEIF (  max(altmax(i), altmax_lastyear(i)) > 0._r8 ) THEN
          ! constant advection, constant diffusion
          DO j = 1,nl_soil+1
             IF ( j <= nbedrock+1 ) THEN
@@ -175,7 +175,7 @@ CONTAINS
                   f_p1(j) = adv_flux(j+1)
                   pe_m1(j) = 0._r8
                   pe_p1(j) = f_p1(j) / d_p1_zp1(j) ! Peclet #
-               elseif (j >= nbedrock+1) THEN
+               ELSEIF (j >= nbedrock+1) THEN
                   ! At the bottom, assume no gradient in d_z (i.e., they're the same)
                   w_m1 = (zi_soi(j-1) - z_soi(j-1)) / dz_node(j)
                   IF ( diffus(j) > 0._r8 .and. diffus(j-1) > 0._r8) THEN
@@ -225,7 +225,7 @@ CONTAINS
                   c_tri(j)   = -1._r8
                   r_tri_c(j) = 0._r8
                   r_tri_n(j) = 0._r8
-               elseif (j == 1) THEN
+               ELSEIF (j == 1) THEN
                   a_tri(j) = -(d_m1_zm1(j) * aaa(pe_m1(j)) + max( f_m1(j), 0._r8)) ! Eqn 5.47 Patankar
                   c_tri(j) = -(d_p1_zp1(j) * aaa(pe_p1(j)) + max(-f_p1(j), 0._r8))
                   b_tri(j) = - a_tri(j) - c_tri(j) + a_p_0
@@ -237,7 +237,7 @@ CONTAINS
                      upperVX_n_vr_acc(j,s,i) = upperVX_n_vr_acc(j,s,i) -  c_tri(j)          / dz_soi(j) * deltim * conc_trcr_n(j+1)! upwards transfer
                      diagVX_n_vr_acc (j,s,i) = diagVX_n_vr_acc (j,s,i) + (b_tri(j) - a_p_0) / dz_soi(j) * deltim * conc_trcr_n(j)! EXIT flux
                   ENDIF
-               elseif (j < nl_soil+1) THEN
+               ELSEIF (j < nl_soil+1) THEN
   
                   a_tri(j) = -(d_m1_zm1(j) * aaa(pe_m1(j)) + max( f_m1(j), 0._r8)) ! Eqn 5.47 Patankar
                   c_tri(j) = -(d_p1_zp1(j) * aaa(pe_p1(j)) + max(-f_p1(j), 0._r8))
