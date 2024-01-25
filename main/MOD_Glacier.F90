@@ -19,13 +19,13 @@ MODULE MOD_Glacier
    IMPLICIT NONE
    SAVE
 
-   ! PUBLIC MEMBER FUNCTIONS:
+! PUBLIC MEMBER FUNCTIONS:
    PUBLIC :: GLACIER_TEMP
    PUBLIC :: GLACIER_WATER
    PUBLIC :: GLACIER_WATER_snicar
 
 
-   ! PRIVATE MEMBER FUNCTIONS:
+! PRIVATE MEMBER FUNCTIONS:
    PRIVATE :: groundfluxes_glacier
    PRIVATE :: groundtem_glacier
 
@@ -37,23 +37,23 @@ CONTAINS
 !-----------------------------------------------------------------------
 
 
-   SUBROUTINE GLACIER_TEMP (patchtype,   lb   ,   nl_ice      , deltim      ,&
-                           zlnd      ,   zsno,    capr        , cnfac       ,&
-                           forc_hgt_u,   forc_hgt_t,  forc_hgt_q  ,&
-                           forc_us     ,forc_vs    ,forc_t      ,forc_q      ,&
-                           forc_hpbl                                              ,&
-                           forc_rhoair ,forc_psrf  ,coszen      ,sabg        ,&
-                           forc_frl    ,fsno       ,dz_icesno   ,z_icesno    ,&
-                           zi_icesno   ,t_icesno   ,wice_icesno ,wliq_icesno ,&
-                           scv         ,snowdp     ,imelt       ,taux        ,&
-                           tauy        ,fsena      ,fevpa       ,lfevpa      ,&
-                           fseng       ,fevpg      ,olrg        ,fgrnd       ,&
-                           qseva       ,qsdew      ,qsubl       ,qfros       ,&
-                           sm          ,tref       ,qref        ,trad        ,&
-                           errore      ,emis       ,z0m         ,zol         ,&
-                           rib         ,ustar      ,qstar       ,tstar       ,&
-                           fm          ,fh         ,fq          ,pg_rain     ,&
-                           pg_snow     ,t_precip   ,snofrz      ,sabg_snow_lyr)
+   SUBROUTINE GLACIER_TEMP (patchtype,   lb   ,nl_ice      ,deltim      ,&
+                      zlnd        ,zsno       ,capr        ,cnfac       ,&
+                      forc_hgt_u ,forc_hgt_t  ,forc_hgt_q  ,&
+                      forc_us     ,forc_vs    ,forc_t      ,forc_q      ,&
+                      forc_hpbl                                         ,&
+                      forc_rhoair ,forc_psrf  ,coszen      ,sabg        ,&
+                      forc_frl    ,fsno       ,dz_icesno   ,z_icesno    ,&
+                      zi_icesno   ,t_icesno   ,wice_icesno ,wliq_icesno ,&
+                      scv         ,snowdp     ,imelt       ,taux        ,&
+                      tauy        ,fsena      ,fevpa       ,lfevpa      ,&
+                      fseng       ,fevpg      ,olrg        ,fgrnd       ,&
+                      qseva       ,qsdew      ,qsubl       ,qfros       ,&
+                      sm          ,tref       ,qref        ,trad        ,&
+                      errore      ,emis       ,z0m         ,zol         ,&
+                      rib         ,ustar      ,qstar       ,tstar       ,&
+                      fm          ,fh         ,fq          ,pg_rain     ,&
+                      pg_snow     ,t_precip   ,snofrz      ,sabg_snow_lyr)
 
 !=======================================================================
 ! this is the main SUBROUTINE to execute the calculation
@@ -72,7 +72,7 @@ CONTAINS
 !=======================================================================
 
    USE MOD_Precision
-   USE MOD_Const_Physical, only : hvap,hsub,rgas,cpair,stefnc,tfrz,cpliq,cpice
+   USE MOD_Const_Physical, only: hvap,hsub,rgas,cpair,stefnc,tfrz,cpliq,cpice
    USE MOD_FrictionVelocity
    USE MOD_Qsadv
 
@@ -81,121 +81,121 @@ CONTAINS
 !---------------------Argument------------------------------------------
 
    integer, intent(in) :: &
-         patchtype,&   ! land patch type (0=soil, 1=urban and built-up,  2=wetland, 3=land ice, 4=land water bodies, 99 = ocean)
-         lb,          &! lower bound of array
-         nl_ice        ! upper bound of array
+        patchtype,&   ! land patch type (0=soil, 1=urban and built-up,  2=wetland, 3=land ice, 4=land water bodies, 99 = ocean)
+        lb,          &! lower bound of array
+        nl_ice        ! upper bound of array
 
    real(r8), intent(in) :: &
-         deltim,      &! model time step [second]
-         zlnd,        &! roughness length for ice surface [m]
-         zsno,        &! roughness length for snow [m]
-         capr,        &! tuning factor to turn first layer T into surface T
-         cnfac,       &! Crank Nicholson factor between 0 and 1
+        deltim,      &! model time step [second]
+        zlnd,        &! roughness length for ice surface [m]
+        zsno,        &! roughness length for snow [m]
+        capr,        &! tuning factor to turn first layer T into surface T
+        cnfac,       &! Crank Nicholson factor between 0 and 1
 
-         ! Atmospherical variables and observational height
-         forc_hgt_u,  &! observational height of wind [m]
-         forc_hgt_t,  &! observational height of temperature [m]
-         forc_hgt_q,  &! observational height of humidity [m]
-         forc_us,     &! wind component in eastward direction [m/s]
-         forc_vs,     &! wind component in northward direction [m/s]
-         forc_t,      &! temperature at agcm reference height [kelvin]
-         forc_q,      &! specific humidity at agcm reference height [kg/kg]
-         forc_rhoair, &! density air [kg/m3]
-         forc_psrf,   &! atmosphere pressure at the surface [pa]
-         t_precip,    &! snowfall/rainfall temperature [kelvin]
-         pg_rain,     &! rainfall  [kg/(m2 s)]
-         pg_snow,     &! snowfall  [kg/(m2 s)]
-         forc_hpbl,   &! atmospheric boundary layer height [m]
+        ! Atmospherical variables and observational height
+        forc_hgt_u,  &! observational height of wind [m]
+        forc_hgt_t,  &! observational height of temperature [m]
+        forc_hgt_q,  &! observational height of humidity [m]
+        forc_us,     &! wind component in eastward direction [m/s]
+        forc_vs,     &! wind component in northward direction [m/s]
+        forc_t,      &! temperature at agcm reference height [kelvin]
+        forc_q,      &! specific humidity at agcm reference height [kg/kg]
+        forc_rhoair, &! density air [kg/m3]
+        forc_psrf,   &! atmosphere pressure at the surface [pa]
+        t_precip,    &! snowfall/rainfall temperature [kelvin]
+        pg_rain,     &! rainfall  [kg/(m2 s)]
+        pg_snow,     &! snowfall  [kg/(m2 s)]
+        forc_hpbl,   &! atmospheric boundary layer height [m]
 
-         ! Radiative fluxes
-         coszen,      &! cosine of the solar zenith angle
-         sabg,        &! solar radiation absorbed by ground [W/m2]
-         forc_frl,    &! atmospheric infrared (longwave) radiation [W/m2]
+        ! Radiative fluxes
+        coszen,      &! cosine of the solar zenith angle
+        sabg,        &! solar radiation absorbed by ground [W/m2]
+        forc_frl,    &! atmospheric infrared (longwave) radiation [W/m2]
 
-         ! State variable (1)
-         fsno,        &! fraction of ground covered by snow
-         dz_icesno(lb:nl_ice),  &! layer thickiness [m]
-         z_icesno (lb:nl_ice),  &! node depth [m]
-         zi_icesno(lb-1:nl_ice)  ! interface depth [m]
+        ! State variable (1)
+        fsno,        &! fraction of ground covered by snow
+        dz_icesno(lb:nl_ice),  &! layer thickiness [m]
+        z_icesno (lb:nl_ice),  &! node depth [m]
+        zi_icesno(lb-1:nl_ice)  ! interface depth [m]
 
    real(r8), intent(in) :: &
-         sabg_snow_lyr (lb:1)    ! snow layer absorption [W/m-2]
+        sabg_snow_lyr (lb:1)    ! snow layer absorption [W/m-2]
 
         ! State variables (2)
    real(r8), intent(inout) :: &
-         t_icesno(lb:nl_ice),   &! snow/ice temperature [K]
-         wice_icesno(lb:nl_ice),&! ice lens [kg/m2]
-         wliq_icesno(lb:nl_ice),&! liqui water [kg/m2]
-         scv,                   &! snow cover, water equivalent [mm, kg/m2]
-         snowdp                  ! snow depth [m]
+        t_icesno(lb:nl_ice),   &! snow/ice temperature [K]
+        wice_icesno(lb:nl_ice),&! ice lens [kg/m2]
+        wliq_icesno(lb:nl_ice),&! liqui water [kg/m2]
+        scv,                   &! snow cover, water equivalent [mm, kg/m2]
+        snowdp                  ! snow depth [m]
 
    real(r8), intent(inout) :: &
-         snofrz (lb:0)    ! snow freezing rate (lyr) [kg m-2 s-1]
+        snofrz (lb:0)    ! snow freezing rate (lyr) [kg m-2 s-1]
 
    integer, intent(out) :: &
-         imelt(lb:nl_ice)  ! flag for melting or freezing [-]
+        imelt(lb:nl_ice)  ! flag for melting or freezing [-]
 
         ! Output fluxes
    real(r8), intent(out) :: &
-         taux,        &! wind stress: E-W [kg/m/s**2]
-         tauy,        &! wind stress: N-S [kg/m/s**2]
-         fsena,       &! sensible heat to atmosphere [W/m2]
-         lfevpa,      &! latent heat flux to atmosphere [W/m2]
-         fseng,       &! sensible heat flux from ground [W/m2]
-         fevpg,       &! evaporation heat flux from ground [mm/s]
-         olrg,        &! outgoing long-wave radiation to atmosphere
-         fgrnd,       &! ground heat flux [W/m2]
+        taux,        &! wind stress: E-W [kg/m/s**2]
+        tauy,        &! wind stress: N-S [kg/m/s**2]
+        fsena,       &! sensible heat to atmosphere [W/m2]
+        lfevpa,      &! latent heat flux to atmosphere [W/m2]
+        fseng,       &! sensible heat flux from ground [W/m2]
+        fevpg,       &! evaporation heat flux from ground [mm/s]
+        olrg,        &! outgoing long-wave radiation to atmosphere
+        fgrnd,       &! ground heat flux [W/m2]
 
-         fevpa,       &! evapotranspiration to atmosphere (mm h2o/s)
-         qseva,       &! ground surface evaporation rate (mm h2o/s)
-         qsdew,       &! ground surface dew formation (mm h2o /s) [+]
-         qsubl,       &! sublimation rate from snow pack (mm h2o /s) [+]
-         qfros,       &! surface dew added to snow pack (mm h2o /s) [+]
+        fevpa,       &! evapotranspiration to atmosphere (mm h2o/s)
+        qseva,       &! ground surface evaporation rate (mm h2o/s)
+        qsdew,       &! ground surface dew formation (mm h2o /s) [+]
+        qsubl,       &! sublimation rate from snow pack (mm h2o /s) [+]
+        qfros,       &! surface dew added to snow pack (mm h2o /s) [+]
 
-         sm,          &! rate of snowmelt [kg/(m2 s)]
-         tref,        &! 2 m height air temperature [kelvin]
-         qref,        &! 2 m height air specific humidity
-         trad,        &! radiative temperature [K]
+        sm,          &! rate of snowmelt [kg/(m2 s)]
+        tref,        &! 2 m height air temperature [kelvin]
+        qref,        &! 2 m height air specific humidity
+        trad,        &! radiative temperature [K]
 
-         emis,        &! averaged bulk surface emissivity
-         z0m,         &! effective roughness [m]
-         zol,         &! dimensionless height (z/L) used in Monin-Obukhov theory
-         rib,         &! bulk Richardson number in surface layer
-         ustar,       &! u* in similarity theory [m/s]
-         qstar,       &! q* in similarity theory [kg/kg]
-         tstar,       &! t* in similarity theory [K]
-         fm,          &! integral of profile function for momentum
-         fh,          &! integral of profile function for heat
-         fq            ! integral of profile function for moisture
+        emis,        &! averaged bulk surface emissivity
+        z0m,         &! effective roughness [m]
+        zol,         &! dimensionless height (z/L) used in Monin-Obukhov theory
+        rib,         &! bulk Richardson number in surface layer
+        ustar,       &! u* in similarity theory [m/s]
+        qstar,       &! q* in similarity theory [kg/kg]
+        tstar,       &! t* in similarity theory [K]
+        fm,          &! integral of profile FUNCTION for momentum
+        fh,          &! integral of profile FUNCTION for heat
+        fq            ! integral of profile FUNCTION for moisture
 
 !---------------------Local Variables-----------------------------------
    integer i,j
 
    real(r8) :: &
-         cgrnd,        &! deriv. of ice energy flux wrt to ice temp [w/m2/k]
-         cgrndl,       &! deriv, of ice sensible heat flux wrt ice temp [w/m2/k]
-         cgrnds,       &! deriv of ice latent heat flux wrt ice temp [w/m**2/k]
-         degdT,        &! d(eg)/dT
-         dqgdT,        &! d(qg)/dT
-         eg,           &! water vapor pressure at temperature T [pa]
-         egsmax,       &! max. evaporation which ice can provide at one time step
-         egidif,       &! the excess of evaporation over "egsmax"
-         emg,          &! ground emissivity (0.96)
-         errore,       &! energy balnce error [w/m2]
-         fact(lb:nl_ice), &! used in computing tridiagonal matrix
-         htvp,         &! latent heat of vapor of water (or sublimation) [j/kg]
-         qg,           &! ground specific humidity [kg/kg]
-         qsatg,        &! saturated humidity [kg/kg]
-         qsatgdT,      &! d(qsatg)/dT
-         qred,         &! ice surface relative humidity
-         thm,          &! intermediate variable (forc_t+0.0098*forc_hgt_t)
-         th,           &! potential temperature (kelvin)
-         thv,          &! virtual potential temperature (kelvin)
-         t_grnd,       &! ground surface temperature [K]
-         t_icesno_bef(lb:nl_ice), &! ice/snow temperature before update
-         tinc,         &! temperature difference of two time step
-         ur,           &! wind speed at reference height [m/s]
-         xmf            ! total latent heat of phase change of ground water
+        cgrnd,        &! deriv. of ice energy flux wrt to ice temp [w/m2/k]
+        cgrndl,       &! deriv, of ice sensible heat flux wrt ice temp [w/m2/k]
+        cgrnds,       &! deriv of ice latent heat flux wrt ice temp [w/m**2/k]
+        degdT,        &! d(eg)/dT
+        dqgdT,        &! d(qg)/dT
+        eg,           &! water vapor pressure at temperature T [pa]
+        egsmax,       &! max. evaporation which ice can provide at one time step
+        egidif,       &! the excess of evaporation over "egsmax"
+        emg,          &! ground emissivity (0.96)
+        errore,       &! energy balnce error [w/m2]
+        fact(lb:nl_ice), &! used in computing tridiagonal matrix
+        htvp,         &! latent heat of vapor of water (or sublimation) [j/kg]
+        qg,           &! ground specific humidity [kg/kg]
+        qsatg,        &! saturated humidity [kg/kg]
+        qsatgdT,      &! d(qsatg)/dT
+        qred,         &! ice surface relative humidity
+        thm,          &! intermediate variable (forc_t+0.0098*forc_hgt_t)
+        th,           &! potential temperature (kelvin)
+        thv,          &! virtual potential temperature (kelvin)
+        t_grnd,       &! ground surface temperature [K]
+        t_icesno_bef(lb:nl_ice), &! ice/snow temperature before update
+        tinc,         &! temperature difference of two time step
+        ur,           &! wind speed at reference height [m/s]
+        xmf            ! total latent heat of phase change of ground water
 
 !=======================================================================
 ! [1] Initial set and propositional variables
@@ -262,7 +262,7 @@ CONTAINS
       fevpg = fevpg + tinc*cgrndl
 
 ! calculation of evaporative potential; flux in kg m-2 s-1.
-! egidif holds the excess energy if all water is evaporated
+! egidif holds the excess energy IF all water is evaporated
 ! during the timestep. this energy is later added to the sensible heat flux.
 
       egsmax = (wice_icesno(lb)+wliq_icesno(lb)) / deltim
@@ -290,7 +290,7 @@ CONTAINS
         ELSE
            qsdew = abs(fevpg)
         ENDIF
-      END IF
+      ENDIF
 
 ! ground heat flux
       fgrnd = sabg + emg*forc_frl &
@@ -322,11 +322,11 @@ CONTAINS
       ENDDO
 
 #if (defined CoLMDEBUG)
-      IF(abs(errore)>.2)THEN
-         write(6,*) 'GLACIER_TEMP.F90 : energy balance violation'
-         write(6,100) errore,sabg,forc_frl,olrg,fsena,lfevpa,xmf,t_precip,t_icesno(lb)
-         STOP
-      ENDIF
+     IF(abs(errore)>.2)THEN
+        write(6,*) 'GLACIER_TEMP.F90 : energy balance violation'
+        write(6,100) errore,sabg,forc_frl,olrg,fsena,lfevpa,xmf,t_precip,t_icesno(lb)
+        STOP
+     ENDIF
 100  format(10(f7.3))
 #endif
 
@@ -343,13 +343,13 @@ CONTAINS
                                     z0m,zol,rib,ustar,qstar,tstar,fm,fh,fq)
 
 !=======================================================================
-! this is the main subroutine to execute the calculation of thermal processes
+! this is the main SUBROUTINE to execute the calculation of thermal processes
 ! and surface fluxes of land ice (glacier and ice sheet)
 !
 ! Original author : Yongjiu Dai and Nan Wei, /05/2014/
 !
 ! REVISIONS:
-! Shaofeng Liu, 05/2023: add option to call moninobuk_leddy, the LargeEddy
+! Shaofeng Liu, 05/2023: add option to CALL moninobuk_leddy, the LargeEddy
 !                        surface turbulence scheme (LZD2022);
 !                        make a proper update of um.
 !=======================================================================
@@ -363,89 +363,89 @@ CONTAINS
 
 !----------------------- Dummy argument --------------------------------
    real(r8), intent(in) :: &
-         zlnd,     &! roughness length for ice [m]
-         zsno,     &! roughness length for snow [m]
+        zlnd,     &! roughness length for ice [m]
+        zsno,     &! roughness length for snow [m]
 
-         ! atmospherical variables and observational height
-         hu,       &! observational height of wind [m]
-         ht,       &! observational height of temperature [m]
-         hq,       &! observational height of humidity [m]
-         us,       &! wind component in eastward direction [m/s]
-         vs,       &! wind component in northward direction [m/s]
-         tm,       &! temperature at agcm reference height [kelvin] [not used]
-         qm,       &! specific humidity at agcm reference height [kg/kg]
-         rhoair,   &! density air [kg/m3]
-         psrf,     &! atmosphere pressure at the surface [pa] [not used]
+        ! atmospherical variables and observational height
+        hu,       &! observational height of wind [m]
+        ht,       &! observational height of temperature [m]
+        hq,       &! observational height of humidity [m]
+        us,       &! wind component in eastward direction [m/s]
+        vs,       &! wind component in northward direction [m/s]
+        tm,       &! temperature at agcm reference height [kelvin] [not used]
+        qm,       &! specific humidity at agcm reference height [kg/kg]
+        rhoair,   &! density air [kg/m3]
+        psrf,     &! atmosphere pressure at the surface [pa] [not used]
 
-         fsno,     &! fraction of ground covered by snow
+        fsno,     &! fraction of ground covered by snow
 
-         ur,       &! wind speed at reference height [m/s]
-         thm,      &! intermediate variable (tm+0.0098*ht)
-         th,       &! potential temperature (kelvin)
-         thv,      &! virtual potential temperature (kelvin)
+        ur,       &! wind speed at reference height [m/s]
+        thm,      &! intermediate variable (tm+0.0098*ht)
+        th,       &! potential temperature (kelvin)
+        thv,      &! virtual potential temperature (kelvin)
 
-         t_grnd,   &! ground surface temperature [K]
-         qg,       &! ground specific humidity [kg/kg]
-         dqgdT,    &! d(qg)/dT
-         htvp       ! latent heat of vapor of water (or sublimation) [j/kg]
+        t_grnd,   &! ground surface temperature [K]
+        qg,       &! ground specific humidity [kg/kg]
+        dqgdT,    &! d(qg)/dT
+        htvp       ! latent heat of vapor of water (or sublimation) [j/kg]
    real(r8), intent(in) :: &
-         hpbl       ! atmospheric boundary layer height [m]
+        hpbl       ! atmospheric boundary layer height [m]
 
 
    real(r8), intent(out) :: &
-         taux,     &! wind stress: E-W [kg/m/s**2]
-         tauy,     &! wind stress: N-S [kg/m/s**2]
-         fsena,    &! sensible heat to atmosphere [W/m2]
-         fevpa,    &! evapotranspiration to atmosphere [mm/s]
-         fseng,    &! sensible heat flux from ground [W/m2]
-         fevpg,    &! evaporation heat flux from ground [mm/s]
-         cgrnd,    &! deriv. of ice energy flux wrt to ice temp [w/m2/k]
-         cgrndl,   &! deriv, of ice sensible heat flux wrt ice temp [w/m2/k]
-         cgrnds,   &! deriv of ice latent heat flux wrt ice temp [w/m**2/k]
-         tref,     &! 2 m height air temperature [kelvin]
-         qref,     &! 2 m height air humidity
+        taux,     &! wind stress: E-W [kg/m/s**2]
+        tauy,     &! wind stress: N-S [kg/m/s**2]
+        fsena,    &! sensible heat to atmosphere [W/m2]
+        fevpa,    &! evapotranspiration to atmosphere [mm/s]
+        fseng,    &! sensible heat flux from ground [W/m2]
+        fevpg,    &! evaporation heat flux from ground [mm/s]
+        cgrnd,    &! deriv. of ice energy flux wrt to ice temp [w/m2/k]
+        cgrndl,   &! deriv, of ice sensible heat flux wrt ice temp [w/m2/k]
+        cgrnds,   &! deriv of ice latent heat flux wrt ice temp [w/m**2/k]
+        tref,     &! 2 m height air temperature [kelvin]
+        qref,     &! 2 m height air humidity
 
-         z0m,      &! effective roughness [m]
-         zol,      &! dimensionless height (z/L) used in Monin-Obukhov theory
-         rib,      &! bulk Richardson number in surface layer
-         ustar,    &! friction velocity [m/s]
-         tstar,    &! temperature scaling parameter
-         qstar,    &! moisture scaling parameter
-         fm,       &! integral of profile function for momentum
-         fh,       &! integral of profile function for heat
-         fq         ! integral of profile function for moisture
+        z0m,      &! effective roughness [m]
+        zol,      &! dimensionless height (z/L) used in Monin-Obukhov theory
+        rib,      &! bulk Richardson number in surface layer
+        ustar,    &! friction velocity [m/s]
+        tstar,    &! temperature scaling parameter
+        qstar,    &! moisture scaling parameter
+        fm,       &! integral of profile FUNCTION for momentum
+        fh,       &! integral of profile FUNCTION for heat
+        fq         ! integral of profile FUNCTION for moisture
 
-   !------------------------ LOCAL VARIABLES ------------------------------
+!------------------------ LOCAL VARIABLES ------------------------------
    integer niters, &! maximum number of iterations for surface temperature
-         iter,      &! iteration index
-         nmozsgn     ! number of times moz changes sign
+       iter,      &! iteration index
+       nmozsgn     ! number of times moz changes sign
 
    real(r8) :: &
-         beta,      &! coefficient of conective velocity [-]
-         displax,   &! zero-displacement height [m]
-         dth,       &! diff of virtual temp. between ref. height and surface
-         dqh,       &! diff of humidity between ref. height and surface
-         dthv,      &! diff of vir. poten. temp. between ref. height and surface
-         obu,       &! monin-obukhov length (m)
-         obuold,    &! monin-obukhov length from previous iteration
-         ram,       &! aerodynamical resistance [s/m]
-         rah,       &! thermal resistance [s/m]
-         raw,       &! moisture resistance [s/m]
-         raih,      &! temporary variable [kg/m2/s]
-         raiw,      &! temporary variable [kg/m2/s]
-         fh2m,      &! relation for temperature at 2m
-         fq2m,      &! relation for specific humidity at 2m
-         fm10m,     &! integral of profile function for momentum at 10m
-         thvstar,   &! virtual potential temperature scaling parameter
-         um,        &! wind speed including the stablity effect [m/s]
-         wc,        &! convective velocity [m/s]
-         wc2,       &! wc**2
-         zeta,      &! dimensionless height used in Monin-Obukhov theory
-         zii,       &! convective boundary height [m]
-         zldis,     &! reference height "minus" zero displacement heght [m]
-         z0mg,      &! roughness length over ground, momentum [m]
-         z0hg,      &! roughness length over ground, sensible heat [m]
-         z0qg        ! roughness length over ground, latent heat [m]
+       beta,      &! coefficient of conective velocity [-]
+       displax,   &! zero-displacement height [m]
+       dth,       &! diff of virtual temp. between ref. height and surface
+       dqh,       &! diff of humidity between ref. height and surface
+       dthv,      &! diff of vir. poten. temp. between ref. height and surface
+       obu,       &! monin-obukhov length (m)
+       obuold,    &! monin-obukhov length from previous iteration
+       ram,       &! aerodynamical resistance [s/m]
+       rah,       &! thermal resistance [s/m]
+       raw,       &! moisture resistance [s/m]
+       raih,      &! temporary variable [kg/m2/s]
+       raiw,      &! temporary variable [kg/m2/s]
+       fh2m,      &! relation for temperature at 2m
+       fq2m,      &! relation for specific humidity at 2m
+       fm10m,     &! integral of profile FUNCTION for momentum at 10m
+       thvstar,   &! virtual potential temperature scaling parameter
+       um,        &! wind speed including the stablity effect [m/s]
+       wc,        &! convective velocity [m/s]
+       wc2,       &! wc**2
+       zeta,      &! dimensionless height used in Monin-Obukhov theory
+       zii,       &! convective boundary height [m]
+       zldis,     &! reference height "minus" zero displacement heght [m]
+       z0mg,      &! roughness length over ground, momentum [m]
+       z0hg,      &! roughness length over ground, sensible heat [m]
+       z0qg        ! roughness length over ground, latent heat [m]
 
 !----------------------- Dummy argument --------------------------------
 ! initial roughness length
@@ -528,7 +528,7 @@ CONTAINS
          obuold = obu
 
       !----------------------------------------------------------------
-      ENDDO ITERATION                         ! end stability iteration
+      ENDDO ITERATION                         ! END stability iteration
       !----------------------------------------------------------------
 
 ! Get derivative of fluxes with repect to ground temperature
@@ -603,7 +603,7 @@ CONTAINS
    IMPLICIT NONE
 
    integer, intent(in) :: patchtype     ! land patch type (0=soil, 1=urban and built-up,
-                                       ! 2=wetland, 3=land ice, 4=land water bodies, 99 = ocean)
+                                        ! 2=wetland, 3=land ice, 4=land water bodies, 99 = ocean)
    integer, intent(in) :: lb         !lower bound of array
    integer, intent(in) :: nl_ice     !upper bound of array
    real(r8), intent(in) :: deltim    !seconds in a time step [second]
@@ -640,7 +640,7 @@ CONTAINS
 
    real(r8), intent(out) :: snofrz(lb:0)        !snow freezing rate (lyr) [kg m-2 s-1]
 
-   !------------------------ local variables ------------------------------
+!------------------------ local variables ------------------------------
    real(r8) rhosnow         ! partitial density of water (ice + liquid)
    real(r8) cv(lb:nl_ice)   ! heat capacity [J/(m2 K)]
    real(r8) thk(lb:nl_ice)  ! thermal conductivity of layer
@@ -714,15 +714,15 @@ CONTAINS
         ENDDO
       ENDIF
 
-      ! Thermal conductivity at the layer interface
+! Thermal conductivity at the layer interface
       DO j = lb, nl_ice-1
 
-      ! the following consideration is try to avoid the snow conductivity
-      ! to be dominant in the thermal conductivity of the interface.
-      ! Because when the distance of bottom snow node to the interfacee
-      ! is larger than that of interface to top ice node,
-      ! the snow thermal conductivity will be dominant, and the result is that
-      ! lees heat tranfer between snow and ice
+! the following consideration is try to avoid the snow conductivity
+! to be dominant in the thermal conductivity of the interface.
+! Because when the distance of bottom snow node to the interfacee
+! is larger than that of interface to top ice node,
+! the snow thermal conductivity will be dominant, and the result is that
+! lees heat tranfer between snow and ice
          IF((j==0) .and. (z_icesno(j+1)-zi_icesno(j)<zi_icesno(j)-z_icesno(j)))THEN
             tk(j) = 2.*thk(j)*thk(j+1)/(thk(j)+thk(j+1))
             tk(j) = max(0.5*thk(j+1),tk(j))
@@ -734,7 +734,7 @@ CONTAINS
       tk(nl_ice) = 0.
 
 
-      ! net ground heat flux into the surface and its temperature derivative
+! net ground heat flux into the surface and its temperature derivative
       IF (DEF_USE_SNICAR) THEN
          hs = sabg_snow_lyr(lb) + emg*forc_frl - emg*stefnc*t_icesno(lb)**4 - (fseng+fevpg*htvp) +&
               cpliq * pg_rain * (t_precip - t_icesno(lb)) + cpice * pg_snow * (t_precip - t_icesno(lb))
@@ -759,7 +759,7 @@ CONTAINS
       ENDDO
       fn(nl_ice) = 0.
 
-      ! set up vector r and vectors a, b, c that define tridiagonal matrix
+! set up vector r and vectors a, b, c that define tridiagonal matrix
       j     = lb
       dzp   = z_icesno(j+1)-z_icesno(j)
       at(j) = 0.
@@ -767,7 +767,7 @@ CONTAINS
       ct(j) =  -(1.-cnfac)*fact(j)*tk(j)/dzp
       rt(j) = t_icesno(j) + fact(j)*( hs - dhsdT*t_icesno(j) + cnfac*fn(j) )
 
-      ! Hua Yuan, January 12, 2023
+! Hua Yuan, January 12, 2023
       IF (lb <= 0) THEN
           DO j = lb + 1, 1
              dzm   = (z_icesno(j)-z_icesno(j-1))
@@ -776,12 +776,12 @@ CONTAINS
              bt(j) = 1.+ (1.-cnfac)*fact(j)*(tk(j)/dzp + tk(j-1)/dzm)
              ct(j) =   - (1.-cnfac)*fact(j)* tk(j)/dzp
              rt(j) = t_icesno(j) + fact(j)*sabg_snow_lyr(j) + cnfac*fact(j)*( fn(j) - fn(j-1) )
-          END DO
+          ENDDO
       ENDIF
 
 
       DO j = 2, nl_ice - 1
-      ! January 12, 2023
+! January 12, 2023
          dzm   = (z_icesno(j)-z_icesno(j-1))
          dzp   = (z_icesno(j+1)-z_icesno(j))
          at(j) =   - (1.-cnfac)*fact(j)* tk(j-1)/dzm
@@ -797,7 +797,7 @@ CONTAINS
       ct(j) = 0.
       rt(j) = t_icesno(j) - cnfac*fact(j)*fn(j-1)
 
-      ! solve for t_icesno
+! solve for t_icesno
       i = size(at)
       CALL tridia (i ,at ,bt ,ct ,rt ,t_icesno)
 
@@ -869,12 +869,12 @@ CONTAINS
 
 
    SUBROUTINE GLACIER_WATER ( nl_ice,maxsnl,deltim,&
-                    z_icesno    ,dz_icesno   ,zi_icesno ,t_icesno,&
-                    wliq_icesno ,wice_icesno ,pg_rain   ,pg_snow ,&
-                    sm          ,scv         ,snowdp    ,imelt   ,&
-                    fiold       ,snl         ,qseva     ,qsdew   ,&
-                    qsubl       ,qfros       ,gwat      ,         &
-                    ssi         ,wimp        ,forc_us   ,forc_vs )
+                      z_icesno    ,dz_icesno   ,zi_icesno ,t_icesno,&
+                      wliq_icesno ,wice_icesno ,pg_rain   ,pg_snow ,&
+                      sm          ,scv         ,snowdp    ,imelt   ,&
+                      fiold       ,snl         ,qseva     ,qsdew   ,&
+                      qsubl       ,qfros       ,gwat      ,         &
+                      ssi         ,wimp        ,forc_us   ,forc_vs )
 
 !=======================================================================
    USE MOD_Precision
@@ -889,37 +889,37 @@ CONTAINS
    integer, intent(in) :: maxsnl  ! maximum number of snow layers
 
    real(r8), intent(in) :: &
-         deltim    , &! time step (s)
-         ssi       , &! irreducible water saturation of snow
-         wimp      , &! water impremeable if porosity less than wimp
-         pg_rain   , &! rainfall (mm h2o/s)
-         pg_snow   , &! snowfall (mm h2o/s)
-         sm        , &! snow melt (mm h2o/s)
-         qseva     , &! ground surface evaporation rate (mm h2o/s)
-         qsdew     , &! ground surface dew formation (mm h2o /s) [+]
-         qsubl     , &! sublimation rate from snow pack (mm h2o /s) [+]
-         qfros     , &! surface dew added to snow pack (mm h2o /s) [+]
-         fiold(maxsnl+1:nl_ice)  ! fraction of ice relative to the total water
+       deltim    , &! time step (s)
+       ssi       , &! irreducible water saturation of snow
+       wimp      , &! water impremeable IF porosity less than wimp
+       pg_rain   , &! rainfall (mm h2o/s)
+       pg_snow   , &! snowfall (mm h2o/s)
+       sm        , &! snow melt (mm h2o/s)
+       qseva     , &! ground surface evaporation rate (mm h2o/s)
+       qsdew     , &! ground surface dew formation (mm h2o /s) [+]
+       qsubl     , &! sublimation rate from snow pack (mm h2o /s) [+]
+       qfros     , &! surface dew added to snow pack (mm h2o /s) [+]
+       fiold(maxsnl+1:nl_ice)  ! fraction of ice relative to the total water
 
    real(r8), intent(in) :: &
-         forc_us,  &
-         forc_vs
+       forc_us,  &
+       forc_vs
 
    integer, intent(in) :: imelt(maxsnl+1:nl_ice)  ! flag for: melting=1, freezing=2, nothing happended=0
    integer, intent(inout) :: snl ! lower bound of array
 
    real(r8), intent(inout) :: &
-         z_icesno   (maxsnl+1:nl_ice) , &! layer depth (m)
-         dz_icesno  (maxsnl+1:nl_ice) , &! layer thickness (m)
-         zi_icesno  (maxsnl  :nl_ice) , &! interface level below a "z" level (m)
-         t_icesno   (maxsnl+1:nl_ice) , &! snow/ice skin temperature (K)
-         wice_icesno(maxsnl+1:nl_ice) , &! ice lens (kg/m2)
-         wliq_icesno(maxsnl+1:nl_ice) , &! liquid water (kg/m2)
-         scv       , &! snow mass (kg/m2)
-         snowdp       ! snow depth (m)
+       z_icesno   (maxsnl+1:nl_ice) , &! layer depth (m)
+       dz_icesno  (maxsnl+1:nl_ice) , &! layer thickness (m)
+       zi_icesno  (maxsnl  :nl_ice) , &! interface level below a "z" level (m)
+       t_icesno   (maxsnl+1:nl_ice) , &! snow/ice skin temperature (K)
+       wice_icesno(maxsnl+1:nl_ice) , &! ice lens (kg/m2)
+       wliq_icesno(maxsnl+1:nl_ice) , &! liquid water (kg/m2)
+       scv       , &! snow mass (kg/m2)
+       snowdp       ! snow depth (m)
 
    real(r8), intent(out) :: &
-         gwat   ! net water input from top (mm/s)
+       gwat   ! net water input from top (mm/s)
 !
 !-----------------------Local Variables------------------------------
 !
@@ -981,22 +981,22 @@ CONTAINS
       IF(lb >= 1)THEN
          wliq_icesno(1) = max(1.e-8, wliq_icesno(1) + qsdew * deltim)
          wice_icesno(1) = max(1.e-8, wice_icesno(1) + (qfros-qsubl) * deltim)
-      END IF
+      ENDIF
 
    END SUBROUTINE GLACIER_WATER
 
 
    SUBROUTINE GLACIER_WATER_snicar ( nl_ice,maxsnl,deltim,&
-                     z_icesno    ,dz_icesno   ,zi_icesno ,t_icesno,&
-                     wliq_icesno ,wice_icesno ,pg_rain   ,pg_snow ,&
-                     sm          ,scv         ,snowdp    ,imelt   ,&
-                     fiold       ,snl         ,qseva     ,qsdew   ,&
-                     qsubl       ,qfros       ,gwat      ,         &
-                     ssi         ,wimp        ,forc_us   ,forc_vs ,&
-                     ! SNICAR
-                     forc_aer    ,&
-                     mss_bcpho   ,mss_bcphi   ,mss_ocpho,mss_ocphi,&
-                     mss_dst1    ,mss_dst2    ,mss_dst3  ,mss_dst4 )
+                      z_icesno    ,dz_icesno   ,zi_icesno ,t_icesno,&
+                      wliq_icesno ,wice_icesno ,pg_rain   ,pg_snow ,&
+                      sm          ,scv         ,snowdp    ,imelt   ,&
+                      fiold       ,snl         ,qseva     ,qsdew   ,&
+                      qsubl       ,qfros       ,gwat      ,         &
+                      ssi         ,wimp        ,forc_us   ,forc_vs ,&
+                      ! SNICAR
+                      forc_aer    ,&
+                      mss_bcpho   ,mss_bcphi   ,mss_ocpho,mss_ocphi,&
+                      mss_dst1    ,mss_dst2    ,mss_dst3  ,mss_dst4 )
 
 !=======================================================================
    USE MOD_Precision
@@ -1011,49 +1011,49 @@ CONTAINS
    integer, intent(in) :: maxsnl  ! maximum number of snow layers
 
    real(r8), intent(in) :: &
-         deltim    , &! time step (s)
-         ssi       , &! irreducible water saturation of snow
-         wimp      , &! water impremeable if porosity less than wimp
-         pg_rain   , &! rainfall (mm h2o/s)
-         pg_snow   , &! snowfall (mm h2o/s)
-         sm        , &! snow melt (mm h2o/s)
-         qseva     , &! ground surface evaporation rate (mm h2o/s)
-         qsdew     , &! ground surface dew formation (mm h2o /s) [+]
-         qsubl     , &! sublimation rate from snow pack (mm h2o /s) [+]
-         qfros     , &! surface dew added to snow pack (mm h2o /s) [+]
-         fiold(maxsnl+1:nl_ice)  ! fraction of ice relative to the total water
+       deltim    , &! time step (s)
+       ssi       , &! irreducible water saturation of snow
+       wimp      , &! water impremeable IF porosity less than wimp
+       pg_rain   , &! rainfall (mm h2o/s)
+       pg_snow   , &! snowfall (mm h2o/s)
+       sm        , &! snow melt (mm h2o/s)
+       qseva     , &! ground surface evaporation rate (mm h2o/s)
+       qsdew     , &! ground surface dew formation (mm h2o /s) [+]
+       qsubl     , &! sublimation rate from snow pack (mm h2o /s) [+]
+       qfros     , &! surface dew added to snow pack (mm h2o /s) [+]
+       fiold(maxsnl+1:nl_ice)  ! fraction of ice relative to the total water
 
    integer, intent(in) :: imelt(maxsnl+1:nl_ice)  ! flag for: melting=1, freezing=2, nothing happended=0
    integer, intent(inout) :: snl ! lower bound of array
 
    real(r8), intent(inout) :: &
-         z_icesno   (maxsnl+1:nl_ice) , &! layer depth (m)
-         dz_icesno  (maxsnl+1:nl_ice) , &! layer thickness (m)
-         zi_icesno  (maxsnl  :nl_ice) , &! interface level below a "z" level (m)
-         t_icesno   (maxsnl+1:nl_ice) , &! snow/ice skin temperature (K)
-         wice_icesno(maxsnl+1:nl_ice) , &! ice lens (kg/m2)
-         wliq_icesno(maxsnl+1:nl_ice) , &! liquid water (kg/m2)
-         scv       , &! snow mass (kg/m2)
-         snowdp       ! snow depth (m)
+       z_icesno   (maxsnl+1:nl_ice) , &! layer depth (m)
+       dz_icesno  (maxsnl+1:nl_ice) , &! layer thickness (m)
+       zi_icesno  (maxsnl  :nl_ice) , &! interface level below a "z" level (m)
+       t_icesno   (maxsnl+1:nl_ice) , &! snow/ice skin temperature (K)
+       wice_icesno(maxsnl+1:nl_ice) , &! ice lens (kg/m2)
+       wliq_icesno(maxsnl+1:nl_ice) , &! liquid water (kg/m2)
+       scv       , &! snow mass (kg/m2)
+       snowdp       ! snow depth (m)
 
    real(r8), intent(out) :: &
-         gwat   ! net water input from top (mm/s)
+       gwat   ! net water input from top (mm/s)
 
    real(r8), intent(in) :: forc_us
    real(r8), intent(in) :: forc_vs
 
-   ! Aerosol Fluxes (Jan. 07, 2023)
+! Aerosol Fluxes (Jan. 07, 2023)
    real(r8), intent(in) :: forc_aer ( 14 )  ! aerosol deposition from atmosphere model (grd,aer) [kg m-1 s-1]
 
    real(r8), intent(inout) :: &
-         mss_bcpho (maxsnl+1:0), &! mass of hydrophobic BC in snow  (col,lyr) [kg]
-         mss_bcphi (maxsnl+1:0), &! mass of hydrophillic BC in snow (col,lyr) [kg]
-         mss_ocpho (maxsnl+1:0), &! mass of hydrophobic OC in snow  (col,lyr) [kg]
-         mss_ocphi (maxsnl+1:0), &! mass of hydrophillic OC in snow (col,lyr) [kg]
-         mss_dst1  (maxsnl+1:0), &! mass of dust species 1 in snow  (col,lyr) [kg]
-         mss_dst2  (maxsnl+1:0), &! mass of dust species 2 in snow  (col,lyr) [kg]
-         mss_dst3  (maxsnl+1:0), &! mass of dust species 3 in snow  (col,lyr) [kg]
-         mss_dst4  (maxsnl+1:0)   ! mass of dust species 4 in snow  (col,lyr) [kg]
+        mss_bcpho (maxsnl+1:0), &! mass of hydrophobic BC in snow  (col,lyr) [kg]
+        mss_bcphi (maxsnl+1:0), &! mass of hydrophillic BC in snow (col,lyr) [kg]
+        mss_ocpho (maxsnl+1:0), &! mass of hydrophobic OC in snow  (col,lyr) [kg]
+        mss_ocphi (maxsnl+1:0), &! mass of hydrophillic OC in snow (col,lyr) [kg]
+        mss_dst1  (maxsnl+1:0), &! mass of dust species 1 in snow  (col,lyr) [kg]
+        mss_dst2  (maxsnl+1:0), &! mass of dust species 2 in snow  (col,lyr) [kg]
+        mss_dst3  (maxsnl+1:0), &! mass of dust species 3 in snow  (col,lyr) [kg]
+        mss_dst4  (maxsnl+1:0)   ! mass of dust species 4 in snow  (col,lyr) [kg]
 ! Aerosol Fluxes (Jan. 07, 2023)
 
 !
@@ -1124,10 +1124,8 @@ CONTAINS
       IF(lb >= 1)THEN
          wliq_icesno(1) = max(1.e-8, wliq_icesno(1) + qsdew * deltim)
          wice_icesno(1) = max(1.e-8, wice_icesno(1) + (qfros-qsubl) * deltim)
-      END IF
+      ENDIF
 
    END SUBROUTINE GLACIER_WATER_snicar
-
-
 
 END MODULE MOD_Glacier

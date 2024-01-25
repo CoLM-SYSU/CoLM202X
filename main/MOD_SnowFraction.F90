@@ -1,19 +1,7 @@
 #include <define.h>
 
 MODULE MOD_SnowFraction
-!DESCRIPTION
-!===========
-   ! This MODULE is the coupler for Providing snow cover fraction.
 
-!ANCILLARY FUNCTIONS AND SUBROUTINES
-!-------------------
-   !* :SUBROUTINE:"snowfraction"          :  Provide snow cover fraction
-   !* :SUBROUTINE:"snowfraction_pftwrap"  :  A wrap SUBROUTINE to calculate snow cover fraction for PFT|PC run
-
-!REVISION HISTORY
-!----------------
-   ! 2023.02.21  Zhongwang Wei @ SYSU convert to module
-   ! Original author : Yongjiu Dai, /09/1999/, /04/2014/
 !-----------------------------------------------------------------------
    USE MOD_Precision
    IMPLICIT NONE
@@ -28,7 +16,7 @@ MODULE MOD_SnowFraction
 
 !-----------------------------------------------------------------------
 
-   CONTAINS
+CONTAINS
 
 !-----------------------------------------------------------------------
 
@@ -49,7 +37,7 @@ MODULE MOD_SnowFraction
    USE MOD_Precision
    IMPLICIT NONE
 
-   ! dummy arguments
+! dummy arguments
    real(r8), intent(in) :: scv    ! snow water equivalent [mm or kg/m3]
    real(r8), intent(in) :: snowdp ! snow depth [m]
    real(r8), intent(in) :: z0m    ! aerodynamic roughness length [m]
@@ -63,31 +51,31 @@ MODULE MOD_SnowFraction
 
    real(r8) :: fmelt              ! dimensionless metling factor
    real(r8), parameter :: m = 1.0 ! the value of m used in CLM4.5 is 1.0.
-                                  ! while the value of m given by Niu et al (2007) is 1.6
-                                  ! while Niu (2012) suggested 3.0
-   !-----------------------------------------------------------------------
-   IF(lai+sai > 1e-6) THEN
-      ! Fraction of vegetation buried (covered) by snow
-      wt = 0.1*snowdp/z0m
-      wt = wt/(1.+wt)
+                                  ! WHILE the value of m given by Niu et al (2007) is 1.6
+                                  ! WHILE Niu (2012) suggested 3.0
+!-----------------------------------------------------------------------
+      IF(lai+sai > 1e-6) THEN
+         ! Fraction of vegetation buried (covered) by snow
+         wt = 0.1*snowdp/z0m
+         wt = wt/(1.+wt)
 
-      ! Fraction of vegetation cover free of snow
-      sigf = 1. - wt
-   ELSE
-      wt = 0.
-      sigf = 0.
-   ENDIF
+         ! Fraction of vegetation cover free of snow
+         sigf = 1. - wt
+      ELSE
+         wt = 0.
+         sigf = 0.
+      ENDIF
 
-   ! 10/16/2019, yuan:
-   !IF(sigf < 0.001) sigf = 0.
-   !IF(sigf > 0.999) sigf = 1.
+! 10/16/2019, yuan:
+      !IF(sigf < 0.001) sigf = 0.
+      !IF(sigf > 0.999) sigf = 1.
 
-   ! Fraction of soil covered by snow
-   fsno = 0.0
-   IF(snowdp > 0.) THEN
-      fmelt = (scv/snowdp/100.) ** m
-      fsno  = tanh(snowdp/(2.5 * zlnd * fmelt))
-   ENDIF
+! Fraction of soil covered by snow
+      fsno = 0.0
+      IF(snowdp > 0.) THEN
+         fmelt = (scv/snowdp/100.) ** m
+         fsno  = tanh(snowdp/(2.5 * zlnd * fmelt))
+      ENDIF
 
    END SUBROUTINE snowfraction
 
@@ -124,48 +112,48 @@ MODULE MOD_SnowFraction
 
    real(r8) :: fmelt              ! dimensionless metling factor
    real(r8), parameter :: m = 1.0 ! the value of m used in CLM4.5 is 1.0.
-                                  ! while the value of m given by Niu et al (2007) is 1.6
-                                  ! while Niu (2012) suggested 3.0
+                                  ! WHILE the value of m given by Niu et al (2007) is 1.6
+                                  ! WHILE Niu (2012) suggested 3.0
 !-----------------------------------------------------------------------
 
    ! local variables
    integer i, p, ps, pe
    real(r8) wt_tmp
 
-   wt_tmp = 0.
-   ps = patch_pft_s(ipatch)
-   pe = patch_pft_e(ipatch)
+      wt_tmp = 0.
+      ps = patch_pft_s(ipatch)
+      pe = patch_pft_e(ipatch)
 
-   DO i = ps, pe
-      p = pftclass(i)
+      DO i = ps, pe
+         p = pftclass(i)
 
-      IF(tlai_p(i)+tsai_p(i) > 1.e-6) THEN
-         ! Fraction of vegetation buried (covered) by snow
-         wt = 0.1*snowdp/z0m_p(i)
-         wt = wt/(1.+wt)
+         IF(tlai_p(i)+tsai_p(i) > 1.e-6) THEN
+            ! Fraction of vegetation buried (covered) by snow
+            wt = 0.1*snowdp/z0m_p(i)
+            wt = wt/(1.+wt)
 
-         ! Fraction of vegetation cover free of snow
-         sigf_p(i) = 1. - wt
-      ELSE
-         wt = 0.
-         sigf_p(i) = 0.
+            ! Fraction of vegetation cover free of snow
+            sigf_p(i) = 1. - wt
+         ELSE
+            wt = 0.
+            sigf_p(i) = 0.
+         ENDIF
+
+         !IF(sigf_p(i) < 0.001) sigf_p(i) = 0.
+         !IF(sigf_p(i) > 0.999) sigf_p(i) = 1.
+
+         wt_tmp = wt_tmp + wt*pftfrac(i)
+      ENDDO
+
+      wt   = wt_tmp
+      sigf = sum(sigf_p(ps:pe) * pftfrac(ps:pe))
+
+      ! Fraction of soil covered by snow
+      fsno = 0.0
+      IF(snowdp > 0.) THEN
+         fmelt = (scv/snowdp/100.) ** m
+         fsno  = tanh(snowdp/(2.5 * zlnd * fmelt))
       ENDIF
-
-      !IF(sigf_p(i) < 0.001) sigf_p(i) = 0.
-      !IF(sigf_p(i) > 0.999) sigf_p(i) = 1.
-
-      wt_tmp = wt_tmp + wt*pftfrac(i)
-   ENDDO
-
-   wt   = wt_tmp
-   sigf = sum(sigf_p(ps:pe) * pftfrac(ps:pe))
-
-   ! Fraction of soil covered by snow
-   fsno = 0.0
-   IF(snowdp > 0.) THEN
-      fmelt = (scv/snowdp/100.) ** m
-      fsno  = tanh(snowdp/(2.5 * zlnd * fmelt))
-   ENDIF
 
    END SUBROUTINE snowfraction_pftwrap
 #endif
