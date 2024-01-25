@@ -991,7 +991,7 @@ CONTAINS
          IF (direction == SEND_DATA_DOWN_TO_UP) THEN
             send_pointer => river_up
             recv_pointer => river_dn
-         elseif (direction == SEND_DATA_UP_TO_DOWN) THEN
+         ELSEIF (direction == SEND_DATA_UP_TO_DOWN) THEN
             send_pointer => river_dn
             recv_pointer => river_up
          ENDIF

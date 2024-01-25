@@ -105,9 +105,9 @@ PROGRAM srfdata_concatenate
 
       IF (trim(level) == 'patch') THEN
          levfile = trim(dirlanddata) // '/landpatch/landpatch_' //  trim(blockinfo) // '.nc'
-      elseif (trim(level) == 'pft') THEN
+      ELSEIF (trim(level) == 'pft') THEN
          levfile = trim(dirlanddata) // '/landpft/landpft_' //  trim(blockinfo) // '.nc'
-      elseif (trim(level) == 'urban') THEN
+      ELSEIF (trim(level) == 'urban') THEN
          levfile = trim(dirlanddata) // '/landurban/landurban_' //  trim(blockinfo) // '.nc'
       ENDIF
          

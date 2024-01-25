@@ -337,7 +337,7 @@ CONTAINS
 
          srf_data_id = srf_data_id + 1
 
-      elseif (trim(wmode) == 'block') THEN
+      ELSEIF (trim(wmode) == 'block') THEN
 
          IF (p_is_io) THEN
 

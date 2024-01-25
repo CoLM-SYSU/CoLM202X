@@ -1094,17 +1094,17 @@ CONTAINS
             CALL nccheck( nf90_def_var(ncid, 'lon', nf90_float, (/dimid/), varid) )
             CALL nccheck( nf90_put_att(ncid, varid, 'long_name','longitude') )
             CALL nccheck( nf90_put_att(ncid, varid, 'units','degrees_east') )
-         elseif (trim(dimname) .eq.'lat') THEN
+         ELSEIF (trim(dimname) .eq.'lat') THEN
             !print *, 'lat-def'
             CALL nccheck( nf90_def_var(ncid, 'lat', nf90_float, (/dimid/), varid) )
             CALL nccheck( nf90_put_att(ncid, varid, 'long_name','latitude') )
             CALL nccheck( nf90_put_att(ncid, varid, 'units','degrees_north') )
-         elseif (trim(dimname) .eq.'lat_cama') THEN
+         ELSEIF (trim(dimname) .eq.'lat_cama') THEN
                !print *, 'lat-def'
                CALL nccheck( nf90_def_var(ncid, 'lat_cama', nf90_float, (/dimid/), varid) )
                CALL nccheck( nf90_put_att(ncid, varid, 'long_name','latitude') )
                CALL nccheck( nf90_put_att(ncid, varid, 'units','degrees_north') )
-         elseif (trim(dimname) .eq.'lon_cama') THEN
+         ELSEIF (trim(dimname) .eq.'lon_cama') THEN
             CALL nccheck( nf90_def_var(ncid, 'lon_cama', nf90_float, (/dimid/), varid) )
             CALL nccheck( nf90_put_att(ncid, varid, 'long_name','longitude') )
             CALL nccheck( nf90_put_att(ncid, varid, 'units','degrees_east') )
@@ -1146,17 +1146,17 @@ CONTAINS
             CALL nccheck( nf90_def_var(ncid, 'lon', nf90_float, (/dimid/), varid) )
             CALL nccheck( nf90_put_att(ncid, varid, 'long_name','longitude') )
             CALL nccheck( nf90_put_att(ncid, varid, 'units','degrees_east') )
-         elseif (trim(dimname) .eq.'lat') THEN
+         ELSEIF (trim(dimname) .eq.'lat') THEN
             !print *, 'lat-def'
             CALL nccheck( nf90_def_var(ncid, 'lat', nf90_float, (/dimid/), varid) )
             CALL nccheck( nf90_put_att(ncid, varid, 'long_name','latitude') )
             CALL nccheck( nf90_put_att(ncid, varid, 'units','degrees_north') )
-         elseif (trim(dimname) .eq.'lat_cama') THEN
+         ELSEIF (trim(dimname) .eq.'lat_cama') THEN
                !print *, 'lat-def'
                CALL nccheck( nf90_def_var(ncid, 'lat_cama', nf90_float, (/dimid/), varid) )
                CALL nccheck( nf90_put_att(ncid, varid, 'long_name','latitude') )
                CALL nccheck( nf90_put_att(ncid, varid, 'units','degrees_north') )
-         elseif (trim(dimname) .eq.'lon_cama') THEN
+         ELSEIF (trim(dimname) .eq.'lon_cama') THEN
             CALL nccheck( nf90_def_var(ncid, 'lon_cama', nf90_float, (/dimid/), varid) )
             CALL nccheck( nf90_put_att(ncid, varid, 'long_name','longitude') )
             CALL nccheck( nf90_put_att(ncid, varid, 'units','degrees_east') )

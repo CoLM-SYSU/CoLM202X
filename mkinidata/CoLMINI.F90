@@ -161,7 +161,7 @@ PROGRAM CoLMINI
       IF (time_used >= 3600) THEN
          write(*,101) time_used/3600, mod(time_used,3600)/60, mod(time_used,60)
          101 format (/,'Overall system time used:', I4, ' hours', I3, ' minutes', I3, ' seconds.')
-      elseif (time_used >= 60) THEN
+      ELSEIF (time_used >= 60) THEN
          write(*,102) time_used/60, mod(time_used,60)
          102 format (/,'Overall system time used:', I3, ' minutes', I3, ' seconds.')
       ELSE

@@ -711,7 +711,7 @@ CONTAINS
 
             deallocate (data_i4_in1 )
             deallocate (data_i4_out1)
-         elseif (xtype == NF90_INT64) THEN
+         ELSEIF (xtype == NF90_INT64) THEN
             allocate (data_i8_in1 (vlen_in))
             CALL nccheck( nf90_get_var (ncidin,  varidin , data_i8_in1) )
 
@@ -721,7 +721,7 @@ CONTAINS
 
             deallocate (data_i8_in1 )
             deallocate (data_i8_out1)
-         elseif (xtype == NF90_DOUBLE) THEN
+         ELSEIF (xtype == NF90_DOUBLE) THEN
             allocate (data_r8_in1 (vlen_in))
             CALL nccheck( nf90_get_var (ncidin,  varidin , data_r8_in1) )
 
@@ -746,7 +746,7 @@ CONTAINS
 
             deallocate (data_i4_in2 )
             deallocate (data_i4_out2)
-         elseif (xtype == NF90_DOUBLE) THEN
+         ELSEIF (xtype == NF90_DOUBLE) THEN
             allocate (data_r8_in2 (dimlens(1),vlen_in))
             CALL nccheck( nf90_get_var (ncidin,  varidin , data_r8_in2) )
 
@@ -775,7 +775,7 @@ CONTAINS
 
             deallocate (data_i4_in3 )
             deallocate (data_i4_out3)
-         elseif (xtype == NF90_DOUBLE) THEN
+         ELSEIF (xtype == NF90_DOUBLE) THEN
             allocate (data_r8_in3 (dimlens(1),dimlens(2),vlen_in))
             CALL nccheck( nf90_get_var (ncidin,  varidin , data_r8_in3) )
 
