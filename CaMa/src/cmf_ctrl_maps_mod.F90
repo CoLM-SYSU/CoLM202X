@@ -218,354 +218,354 @@ CONTAINS
       write(LOGNAM,*) 'CMF::RIVMAP_INIT: end'
 
    CONTAINS
-   !==========================================================
-   !+ READ_MAP_BIN
-   !+ READ_MAP_CDF
-   !+ CALC_REGION
-   !+ CALC_1D_SEQ
-   !+ READ_BIFPRM
-   !==========================================================
-   SUBROUTINE READ_MAP_BIN
-   USE YOS_CMF_INPUT,      only: TMPNAM, LMAPEND
-   USE YOS_CMF_INPUT,      only: WEST,EAST,NORTH,SOUTH
-   USE CMF_UTILS_MOD,      only: INQUIRE_FID, CONV_ENDI
-   IMPLICIT NONE
-   !* local variables
-   integer(KIND=JPIM),SAVE    :: IX,IY
       !==========================================================
-      !*** read river map
-      write(LOGNAM,*)'RIVMAP_INIT: nextxy binary: ',TRIM(CNEXTXY)
-      TMPNAM=INQUIRE_FID()
-      open(TMPNAM,FILE=CNEXTXY,FORM='UNFORMATTED',ACCESS='DIRECT',RECL=4*NX*NY)
-      read(TMPNAM,REC=1) I2NEXTX
-      read(TMPNAM,REC=2) I2NEXTY
-      close(TMPNAM)
+      !+ READ_MAP_BIN
+      !+ READ_MAP_CDF
+      !+ CALC_REGION
+      !+ CALC_1D_SEQ
+      !+ READ_BIFPRM
+      !==========================================================
+      SUBROUTINE READ_MAP_BIN
+      USE YOS_CMF_INPUT,      only: TMPNAM, LMAPEND
+      USE YOS_CMF_INPUT,      only: WEST,EAST,NORTH,SOUTH
+      USE CMF_UTILS_MOD,      only: INQUIRE_FID, CONV_ENDI
+      IMPLICIT NONE
+      !* local variables
+      integer(KIND=JPIM),SAVE    :: IX,IY
+         !==========================================================
+         !*** read river map
+         write(LOGNAM,*)'RIVMAP_INIT: nextxy binary: ',TRIM(CNEXTXY)
+         TMPNAM=INQUIRE_FID()
+         open(TMPNAM,FILE=CNEXTXY,FORM='UNFORMATTED',ACCESS='DIRECT',RECL=4*NX*NY)
+         read(TMPNAM,REC=1) I2NEXTX
+         read(TMPNAM,REC=2) I2NEXTY
+         close(TMPNAM)
 
-      IF ( LMAPEND )THEN
-         CALL CONV_ENDI(I2NEXTX,NX,NY)
-         CALL CONV_ENDI(I2NEXTY,NX,NY)
-      ENDIF
+         IF ( LMAPEND )THEN
+            CALL CONV_ENDI(I2NEXTX,NX,NY)
+            CALL CONV_ENDI(I2NEXTY,NX,NY)
+         ENDIF
 
-      !*** calculate lat, lon
-      IF( WEST>=-180._JPRB .and. EAST<=360._JPRB .and. SOUTH>=-180._JPRB .and. NORTH<=180._JPRB )THEN  !! bugfix_v396a
-!$OMP PARALLEL DO
-         DO IX=1,NX
-            D1LON(IX)=WEST +(DBLE(IX)-0.5D0)*(EAST-WEST)  /DBLE(NX)
-         ENDDO
-!$OMP END PARALLEL DO
-!$OMP PARALLEL DO
-         DO IY=1,NY
-            D1LAT(IY)=NORTH-(DBLE(IY)-0.5D0)*(NORTH-SOUTH)/DBLE(NY)
-         ENDDO
-!$OMP END PARALLEL DO
-      ENDIF
+         !*** calculate lat, lon
+         IF( WEST>=-180._JPRB .and. EAST<=360._JPRB .and. SOUTH>=-180._JPRB .and. NORTH<=180._JPRB )THEN  !! bugfix_v396a
+   !$OMP PARALLEL DO
+            DO IX=1,NX
+               D1LON(IX)=WEST +(DBLE(IX)-0.5D0)*(EAST-WEST)  /DBLE(NX)
+            ENDDO
+   !$OMP END PARALLEL DO
+   !$OMP PARALLEL DO
+            DO IY=1,NY
+               D1LAT(IY)=NORTH-(DBLE(IY)-0.5D0)*(NORTH-SOUTH)/DBLE(NY)
+            ENDDO
+   !$OMP END PARALLEL DO
+         ENDIF
 
-   END SUBROUTINE READ_MAP_BIN
-!==========================================================
-!+
-!+
-!+
-!==========================================================
+      END SUBROUTINE READ_MAP_BIN
+      !==========================================================
+      !+
+      !+
+      !+
+      !==========================================================
 #ifdef UseCDF_CMF
-   SUBROUTINE READ_MAP_CDF
-   USE CMF_UTILS_MOD  ,only: NCERROR
-   USE NETCDF
-   IMPLICIT NONE
-   !* local variables
-   integer(KIND=JPIM)              :: NCID,VARID
-      !================================================
-      write(LOGNAM,*)'RIVMAP_INIT: nextxy netCDF: ', TRIM(CRIVCLINC)
+      SUBROUTINE READ_MAP_CDF
+      USE CMF_UTILS_MOD  ,only: NCERROR
+      USE NETCDF
+      IMPLICIT NONE
+      !* local variables
+      integer(KIND=JPIM)              :: NCID,VARID
+         !================================================
+         write(LOGNAM,*)'RIVMAP_INIT: nextxy netCDF: ', TRIM(CRIVCLINC)
 
-      CALL NCERROR (NF90_OPEN(CRIVCLINC,NF90_NOWRITE,NCID),'opening '//TRIM(CRIVCLINC) )
+         CALL NCERROR (NF90_OPEN(CRIVCLINC,NF90_NOWRITE,NCID),'opening '//TRIM(CRIVCLINC) )
 
-      !*** next xy
-      CALL NCERROR ( NF90_INQ_VARID(NCID,'nextx',VARID),'getting id' )
-      CALL NCERROR ( NF90_GET_VAR(NCID,VARID,I2NEXTX),'reading data' ) 
+         !*** next xy
+         CALL NCERROR ( NF90_INQ_VARID(NCID,'nextx',VARID),'getting id' )
+         CALL NCERROR ( NF90_GET_VAR(NCID,VARID,I2NEXTX),'reading data' ) 
 
-      CALL NCERROR ( NF90_INQ_VARID(NCID,'nexty',VARID),'getting id' )
-      CALL NCERROR ( NF90_GET_VAR(NCID,VARID,I2NEXTY),'reading data' )
+         CALL NCERROR ( NF90_INQ_VARID(NCID,'nexty',VARID),'getting id' )
+         CALL NCERROR ( NF90_GET_VAR(NCID,VARID,I2NEXTY),'reading data' )
 
-      !*** lat, lon
-      CALL NCERROR ( NF90_INQ_VARID(NCID,'lat',VARID),'getting id' )
-      CALL NCERROR ( NF90_GET_VAR(NCID,VARID,D1LAT),'reading data' )
+         !*** lat, lon
+         CALL NCERROR ( NF90_INQ_VARID(NCID,'lat',VARID),'getting id' )
+         CALL NCERROR ( NF90_GET_VAR(NCID,VARID,D1LAT),'reading data' )
 
-      CALL NCERROR ( NF90_INQ_VARID(NCID,'lon',VARID),'getting id' )
-      CALL NCERROR ( NF90_GET_VAR(NCID,VARID,D1LON),'reading data' )
+         CALL NCERROR ( NF90_INQ_VARID(NCID,'lon',VARID),'getting id' )
+         CALL NCERROR ( NF90_GET_VAR(NCID,VARID,D1LON),'reading data' )
 
-      CALL NCERROR( NF90_CLOSE(NCID))
+         CALL NCERROR( NF90_CLOSE(NCID))
 
-   END SUBROUTINE READ_MAP_CDF
+      END SUBROUTINE READ_MAP_CDF
 #endif
-!==========================================================
-!+
-!+
-!+
-!==========================================================
-   SUBROUTINE CALC_REGION    !! evenly allocate pixels to mpi nodes (updated in v4.03. MPI region given from file)
-   USE YOS_CMF_INPUT,           only: IMIS
+   !==========================================================
+   !+
+   !+
+   !+
+   !==========================================================
+      SUBROUTINE CALC_REGION    !! evenly allocate pixels to mpi nodes (updated in v4.03. MPI region given from file)
+      USE YOS_CMF_INPUT,           only: IMIS
 #ifdef UseCDF_CMF
-   USE CMF_UTILS_MOD,           only: NCERROR
-   USE NETCDF
+      USE CMF_UTILS_MOD,           only: NCERROR
+      USE NETCDF
 #endif
-   IMPLICIT NONE
-   !* local variables
-   integer(KIND=JPIM),ALLOCATABLE  :: REGIONGRID(:)
-   !
-   integer(KIND=JPIM),SAVE         :: IX,IY
-   integer(KIND=JPIM),SAVE         :: IREGION
+      IMPLICIT NONE
+      !* local variables
+      integer(KIND=JPIM),ALLOCATABLE  :: REGIONGRID(:)
+      !
+      integer(KIND=JPIM),SAVE         :: IX,IY
+      integer(KIND=JPIM),SAVE         :: IREGION
 #ifdef UseCDF_CMF
-   integer(KIND=JPIM)              :: NCID,VARID
+      integer(KIND=JPIM)              :: NCID,VARID
 #endif
 !$OMP THREADPRIVATE               (IX)
-   !================================================
-      write(LOGNAM,*) 'RIVMAP_INIT: region code'
+      !================================================
+         write(LOGNAM,*) 'RIVMAP_INIT: region code'
 
-      !*** read MPI region map
-      REGIONALL=1
-      I2REGION(:,:)=IMIS
+         !*** read MPI region map
+         REGIONALL=1
+         I2REGION(:,:)=IMIS
 !$OMP PARALLEL DO
-      DO IY=1, NY
-         DO IX=1, NX
-            IF( I2NEXTX(IX,IY)/=IMIS ) THEN
-               I2REGION(IX,IY)=1
-            ENDIF
+         DO IY=1, NY
+            DO IX=1, NX
+               IF( I2NEXTX(IX,IY)/=IMIS ) THEN
+                  I2REGION(IX,IY)=1
+               ENDIF
+            ENDDO
          ENDDO
-      ENDDO
 !$OMP END PARALLEL DO
 
    !! Use MPI: read MPI region map, allocate regions to MPI nodes
 #ifdef UseMPI_CMF
-      IF ( LMAPCDF ) THEN
+         IF ( LMAPCDF ) THEN
 #ifdef UseCDF_CMF
-         CALL NCERROR (NF90_OPEN(CMPIREGNC,NF90_NOWRITE,NCID),'opening '//TRIM(CMPIREGNC) )
-         CALL NCERROR (NF90_INQ_VARID(NCID, 'mpireg',VARID),'getting id' )
-         CALL NCERROR (NF90_GET_VAR(NCID,VARID,I2REGION),'reading data' )
-         CALL NCERROR (NF90_CLOSE(NCID))
+            CALL NCERROR (NF90_OPEN(CMPIREGNC,NF90_NOWRITE,NCID),'opening '//TRIM(CMPIREGNC) )
+            CALL NCERROR (NF90_INQ_VARID(NCID, 'mpireg',VARID),'getting id' )
+            CALL NCERROR (NF90_GET_VAR(NCID,VARID,I2REGION),'reading data' )
+            CALL NCERROR (NF90_CLOSE(NCID))
 #endif
-      ELSE
-         write(LOGNAM,*)'RIVMAP_INIT: read MPI region: ',TRIM(CNEXTXY)
-         TMPNAM=INQUIRE_FID()
-         open(TMPNAM,FILE=CMPIREG,FORM='UNFORMATTED',ACCESS='DIRECT',RECL=4*NX*NY)
-         read(TMPNAM,REC=1) I2REGION
-         close(TMPNAM)
-      ENDIF
+         ELSE
+            write(LOGNAM,*)'RIVMAP_INIT: read MPI region: ',TRIM(CNEXTXY)
+            TMPNAM=INQUIRE_FID()
+            open(TMPNAM,FILE=CMPIREG,FORM='UNFORMATTED',ACCESS='DIRECT',RECL=4*NX*NY)
+            read(TMPNAM,REC=1) I2REGION
+            close(TMPNAM)
+         ENDIF
 
-      REGIONALL=1
+         REGIONALL=1
 !$OMP PARALLEL DO REDUCTION(max:REGIONALL)
-      DO IY=1, NY
-         DO IX=1, NX
-            REGIONALL=MAX( REGIONALL, I2REGION(IX,IY) )
+         DO IY=1, NY
+            DO IX=1, NX
+               REGIONALL=MAX( REGIONALL, I2REGION(IX,IY) )
+            ENDDO
          ENDDO
-      ENDDO
 !$OMP END PARALLEL DO
 #endif
 
 
-      write(LOGNAM,*)'RIVMAP_INIT: count number of grid in each region: '
-      allocate(REGIONGRID(REGIONALL))
-      REGIONGRID(:)=0
-      !! OMP reduction operation for array might not be available in some environment
-      DO IY=1, NY
-         DO IX=1, NX
-            IF( I2REGION(IX,IY)>0 ) THEN
-               IREGION=I2REGION(IX,IY)
-               REGIONGRID(IREGION)=REGIONGRID(IREGION)+1
-            ENDIF
+         write(LOGNAM,*)'RIVMAP_INIT: count number of grid in each region: '
+         allocate(REGIONGRID(REGIONALL))
+         REGIONGRID(:)=0
+         !! OMP reduction operation for array might not be available in some environment
+         DO IY=1, NY
+            DO IX=1, NX
+               IF( I2REGION(IX,IY)>0 ) THEN
+                  IREGION=I2REGION(IX,IY)
+                  REGIONGRID(IREGION)=REGIONGRID(IREGION)+1
+               ENDIF
+            ENDDO
          ENDDO
-      ENDDO
 
-      NSEQMAX=0
-      DO IREGION=1, REGIONALL
-         NSEQMAX=MAX(NSEQMAX,REGIONGRID(IREGION))  !! maximum nseqall among all MPI region
-      ENDDO
+         NSEQMAX=0
+         DO IREGION=1, REGIONALL
+            NSEQMAX=MAX(NSEQMAX,REGIONGRID(IREGION))  !! maximum nseqall among all MPI region
+         ENDDO
 
-      write(LOGNAM,*) 'CALC_REGION: REGIONALL= ', REGIONALL
-      write(LOGNAM,*) 'CALC_REGION: NSEQMAX='   , NSEQMAX
-      write(LOGNAM,*) 'CALC_REGION: NSEQALL='   , NSEQALL
+         write(LOGNAM,*) 'CALC_REGION: REGIONALL= ', REGIONALL
+         write(LOGNAM,*) 'CALC_REGION: NSEQMAX='   , NSEQMAX
+         write(LOGNAM,*) 'CALC_REGION: NSEQALL='   , NSEQALL
 
-   END SUBROUTINE CALC_REGION
-   !==========================================================
-   !+
-   !+
-   !+
-   !==========================================================
-   SUBROUTINE CALC_1D_SEQ
-   ! OpenMP is not used, because results of this subroutine highly depents on calculation order
-   USE YOS_CMF_INPUT,           only: IMIS
-   IMPLICIT NONE
-   !* local variables
-   integer(KIND=JPIM)              :: IX,IY,JX,JY,ISEQ,JSEQ,ISEQ1,ISEQ2,AGAIN
+      END SUBROUTINE CALC_REGION
+      !==========================================================
+      !+
+      !+
+      !+
+      !==========================================================
+      SUBROUTINE CALC_1D_SEQ
+      ! OpenMP is not used, because results of this subroutine highly depents on calculation order
+      USE YOS_CMF_INPUT,           only: IMIS
+      IMPLICIT NONE
+      !* local variables
+      integer(KIND=JPIM)              :: IX,IY,JX,JY,ISEQ,JSEQ,ISEQ1,ISEQ2,AGAIN
 
-   integer(KIND=JPIM),ALLOCATABLE  :: NUPST(:,:), UPNOW(:,:)
-      !================================================
-      write(LOGNAM,*) 'RIVMAP_INIT: convert 2D map to 1D sequence'
+      integer(KIND=JPIM),ALLOCATABLE  :: NUPST(:,:), UPNOW(:,:)
+         !================================================
+         write(LOGNAM,*) 'RIVMAP_INIT: convert 2D map to 1D sequence'
 
-      allocate( NUPST(NX,NY) )
-      allocate( UPNOW(NX,NY) )
+         allocate( NUPST(NX,NY) )
+         allocate( UPNOW(NX,NY) )
 
-      allocate( I1SEQX(NSEQMAX) )
-      allocate( I1SEQY(NSEQMAX) )
-      allocate( I1NEXT(NSEQMAX) )
-      allocate( I2VECTOR(NX,NY) )
-      I1SEQX(:)=0
-      I1SEQY(:)=0
-      I1NEXT(:)=0
-      I2VECTOR(:,:)=0
+         allocate( I1SEQX(NSEQMAX) )
+         allocate( I1SEQY(NSEQMAX) )
+         allocate( I1NEXT(NSEQMAX) )
+         allocate( I2VECTOR(NX,NY) )
+         I1SEQX(:)=0
+         I1SEQY(:)=0
+         I1NEXT(:)=0
+         I2VECTOR(:,:)=0
 
-      ! count number of upstream 
-      NUPST(:,:)=0
-      UPNOW(:,:)=0
-      DO IY=1, NY
-         DO IX=1, NX
-            IF( I2NEXTX(IX,IY).gt.0 .and. I2REGION(IX,IY)==REGIONTHIS )THEN
+         ! count number of upstream 
+         NUPST(:,:)=0
+         UPNOW(:,:)=0
+         DO IY=1, NY
+            DO IX=1, NX
+               IF( I2NEXTX(IX,IY).gt.0 .and. I2REGION(IX,IY)==REGIONTHIS )THEN
+                  JX=I2NEXTX(IX,IY)
+                  JY=I2NEXTY(IX,IY)
+                  NUPST(JX,JY)=NUPST(JX,JY)+1
+               ENDIF
+            ENDDO
+         ENDDO
+
+         ! register upmost grid in 1d sequence
+         ISEQ=0
+         DO IY=1, NY
+            DO IX=1, NX
+               IF( I2NEXTX(IX,IY).gt.0 .and. I2REGION(IX,IY)==REGIONTHIS )THEN
+                  IF( NUPST(IX,IY)==UPNOW(IX,IY) )THEN
+                  ISEQ=ISEQ+1
+                  I1SEQX(ISEQ)=IX
+                  I1SEQY(ISEQ)=IY
+                  I2VECTOR(IX,IY)=ISEQ
+                  ENDIF
+               ENDIF
+            ENDDO
+         ENDDO
+         ISEQ1=1
+         ISEQ2=ISEQ
+
+         AGAIN=1
+         DO WHILE( AGAIN==1 )
+            AGAIN=0
+            JSEQ=ISEQ2
+            DO ISEQ=ISEQ1, ISEQ2
+               IX=I1SEQX(ISEQ)
+               IY=I1SEQY(ISEQ)
                JX=I2NEXTX(IX,IY)
                JY=I2NEXTY(IX,IY)
-               NUPST(JX,JY)=NUPST(JX,JY)+1
-            ENDIF
-         ENDDO
-      ENDDO
-
-      ! register upmost grid in 1d sequence
-      ISEQ=0
-      DO IY=1, NY
-         DO IX=1, NX
-            IF( I2NEXTX(IX,IY).gt.0 .and. I2REGION(IX,IY)==REGIONTHIS )THEN
-               IF( NUPST(IX,IY)==UPNOW(IX,IY) )THEN
-               ISEQ=ISEQ+1
-               I1SEQX(ISEQ)=IX
-               I1SEQY(ISEQ)=IY
-               I2VECTOR(IX,IY)=ISEQ
+               UPNOW(JX,JY)=UPNOW(JX,JY)+1
+               IF( UPNOW(JX,JY)==NUPST(JX,JY) .and. I2NEXTX(JX,JY)>0 )THEN !! if all upstream calculated, register to 1D sequence
+                  JSEQ=JSEQ+1
+                  I1SEQX(JSEQ)=JX
+                  I1SEQY(JSEQ)=JY
+                  I2VECTOR(JX,JY)=JSEQ
+                  AGAIN=1
                ENDIF
-            ENDIF
+            ENDDO
+            ISEQ1=ISEQ2+1
+            ISEQ2=JSEQ
          ENDDO
-      ENDDO
-      ISEQ1=1
-      ISEQ2=ISEQ
+         NSEQRIV=JSEQ
 
-      AGAIN=1
-      DO WHILE( AGAIN==1 )
-         AGAIN=0
-         JSEQ=ISEQ2
-         DO ISEQ=ISEQ1, ISEQ2
+         ISEQ=NSEQRIV
+         DO IY=1, NY
+            DO IX=1, NX
+               IF( I2NEXTX(IX,IY).lt.0 .and. I2NEXTX(IX,IY).NE.IMIS .and. I2REGION(IX,IY)==REGIONTHIS )THEN
+                  ISEQ=ISEQ+1
+                  I1SEQX(ISEQ)=IX
+                  I1SEQY(ISEQ)=IY
+                  I2VECTOR(IX,IY)=ISEQ
+               ENDIF
+            ENDDO
+         ENDDO
+         NSEQALL=ISEQ
+
+         DO ISEQ=1, NSEQALL
             IX=I1SEQX(ISEQ)
             IY=I1SEQY(ISEQ)
-            JX=I2NEXTX(IX,IY)
-            JY=I2NEXTY(IX,IY)
-            UPNOW(JX,JY)=UPNOW(JX,JY)+1
-            IF( UPNOW(JX,JY)==NUPST(JX,JY) .and. I2NEXTX(JX,JY)>0 )THEN !! if all upstream calculated, register to 1D sequence
-               JSEQ=JSEQ+1
-               I1SEQX(JSEQ)=JX
-               I1SEQY(JSEQ)=JY
-               I2VECTOR(JX,JY)=JSEQ
-               AGAIN=1
-            ENDIF
-         ENDDO
-         ISEQ1=ISEQ2+1
-         ISEQ2=JSEQ
-      ENDDO
-      NSEQRIV=JSEQ
-
-      ISEQ=NSEQRIV
-      DO IY=1, NY
-         DO IX=1, NX
-            IF( I2NEXTX(IX,IY).lt.0 .and. I2NEXTX(IX,IY).NE.IMIS .and. I2REGION(IX,IY)==REGIONTHIS )THEN
-               ISEQ=ISEQ+1
-               I1SEQX(ISEQ)=IX
-               I1SEQY(ISEQ)=IY
-               I2VECTOR(IX,IY)=ISEQ
-            ENDIF
-         ENDDO
-      ENDDO
-      NSEQALL=ISEQ
-
-      DO ISEQ=1, NSEQALL
-         IX=I1SEQX(ISEQ)
-         IY=I1SEQY(ISEQ)
-         IF( I2NEXTX(IX,IY)>0 )THEN
-            JX=I2NEXTX(IX,IY)
-            JY=I2NEXTY(IX,IY)
-            I1NEXT(ISEQ)=I2VECTOR(JX,JY)
-         ELSE
-            I1NEXT(ISEQ)=I2NEXTX(IX,IY)
-         ENDIF
-      ENDDO
-
-      deallocate(NUPST,UPNOW)
-         
-   END SUBROUTINE CALC_1D_SEQ
-   !==========================================================
-   !+
-   !+
-   !+
-   !==========================================================
-   SUBROUTINE READ_BIFPARAM    !! evenly allocate pixels to mpi nodes (not used in vcurrent version)
-   USE YOS_CMF_INPUT,      only: PMANRIV, PMANFLD
-   USE YOS_CMF_MAP,        only: NPTHOUT, NPTHLEV, PTH_UPST, PTH_DOWN,&
-                              & PTH_DST, PTH_ELV, PTH_WTH,  PTH_MAN
-   USE CMF_UTILS_MOD,      only: INQUIRE_FID
-   IMPLICIT NONE
-   !* local variables
-   integer(KIND=JPIM)         :: IX,IY, JX,JY
-   integer(KIND=JPIM)         :: IPTH,  ILEV,  NPTHOUT1
-   real(KIND=JPRB)            :: PELV,  PWTH,  PDPH
-      !================================================
-      write(LOGNAM,*)"RIVMAP_INIT: Bifuraction channel:", TRIM(CPTHOUT)
-
-      TMPNAM=INQUIRE_FID()
-      open(TMPNAM,FILE=CPTHOUT,FORM='FORMATTED')
-      read(TMPNAM,*) NPTHOUT,NPTHLEV
-
-      write(LOGNAM,*) "Bifurcation channel dimantion", NPTHOUT, NPTHLEV
-
-      allocate( PTH_UPST(NPTHOUT) )
-      allocate( PTH_DOWN(NPTHOUT) )
-      allocate( PTH_DST(NPTHOUT)  )
-      allocate( PTH_ELV(NPTHOUT,NPTHLEV) )
-      allocate( PTH_WTH(NPTHOUT,NPTHLEV) )
-      allocate( PTH_MAN(NPTHLEV)  )
-
-      NPTHOUT1=0
-      DO IPTH=1, NPTHOUT
-         READ(TMPNAM,*) IX, IY, JX, JY, PTH_DST(IPTH), PELV, PDPH, (PTH_WTH(IPTH,ILEV),ILEV=1,NPTHLEV)
-         PTH_UPST(IPTH)=I2VECTOR(IX,IY)
-         PTH_DOWN(IPTH)=I2VECTOR(JX,JY)
-         IF (PTH_UPST(IPTH) > 0 .and. PTH_DOWN(IPTH) > 0) THEN
-            NPTHOUT1=NPTHOUT1+1
-         ENDIF
-         DO ILEV=1, NPTHLEV
-            IF( ILEV==1 )THEN            !!ILEV=1: water channel bifurcation. consider bifurcation channel depth
-               PWTH=PTH_WTH(IPTH,ILEV)
-               IF( PWTH>0 )THEN
-                  PTH_ELV(IPTH,ILEV)=PELV - PDPH
-               ELSE
-                  PTH_ELV(IPTH,ILEV)=1.E20
-               ENDIF
+            IF( I2NEXTX(IX,IY)>0 )THEN
+               JX=I2NEXTX(IX,IY)
+               JY=I2NEXTY(IX,IY)
+               I1NEXT(ISEQ)=I2VECTOR(JX,JY)
             ELSE
-               PWTH=PTH_WTH(IPTH,ILEV)
-               IF( PWTH>0 )THEN
-                  PTH_ELV(IPTH,ILEV)=PELV + ILEV - 2.0    !! ILEV=2: bank top level 
-               ELSE
-                  PTH_ELV(IPTH,ILEV)=1.E20
-               ENDIF
+               I1NEXT(ISEQ)=I2NEXTX(IX,IY)
             ENDIF
          ENDDO
-      ENDDO
-      close(TMPNAM)
 
-      DO ILEV=1, NPTHLEV
-         IF( ILEV==1 )THEN
-            PTH_MAN(ILEV)=PMANRIV
-         ELSE
-            PTH_MAN(ILEV)=PMANFLD
+         deallocate(NUPST,UPNOW)
+            
+      END SUBROUTINE CALC_1D_SEQ
+      !==========================================================
+      !+
+      !+
+      !+
+      !==========================================================
+      SUBROUTINE READ_BIFPARAM    !! evenly allocate pixels to mpi nodes (not used in vcurrent version)
+      USE YOS_CMF_INPUT,      only: PMANRIV, PMANFLD
+      USE YOS_CMF_MAP,        only: NPTHOUT, NPTHLEV, PTH_UPST, PTH_DOWN,&
+                                 & PTH_DST, PTH_ELV, PTH_WTH,  PTH_MAN
+      USE CMF_UTILS_MOD,      only: INQUIRE_FID
+      IMPLICIT NONE
+      !* local variables
+      integer(KIND=JPIM)         :: IX,IY, JX,JY
+      integer(KIND=JPIM)         :: IPTH,  ILEV,  NPTHOUT1
+      real(KIND=JPRB)            :: PELV,  PWTH,  PDPH
+         !================================================
+         write(LOGNAM,*)"RIVMAP_INIT: Bifuraction channel:", TRIM(CPTHOUT)
+
+         TMPNAM=INQUIRE_FID()
+         open(TMPNAM,FILE=CPTHOUT,FORM='FORMATTED')
+         read(TMPNAM,*) NPTHOUT,NPTHLEV
+
+         write(LOGNAM,*) "Bifurcation channel dimantion", NPTHOUT, NPTHLEV
+
+         allocate( PTH_UPST(NPTHOUT) )
+         allocate( PTH_DOWN(NPTHOUT) )
+         allocate( PTH_DST(NPTHOUT)  )
+         allocate( PTH_ELV(NPTHOUT,NPTHLEV) )
+         allocate( PTH_WTH(NPTHOUT,NPTHLEV) )
+         allocate( PTH_MAN(NPTHLEV)  )
+
+         NPTHOUT1=0
+         DO IPTH=1, NPTHOUT
+            READ(TMPNAM,*) IX, IY, JX, JY, PTH_DST(IPTH), PELV, PDPH, (PTH_WTH(IPTH,ILEV),ILEV=1,NPTHLEV)
+            PTH_UPST(IPTH)=I2VECTOR(IX,IY)
+            PTH_DOWN(IPTH)=I2VECTOR(JX,JY)
+            IF (PTH_UPST(IPTH) > 0 .and. PTH_DOWN(IPTH) > 0) THEN
+               NPTHOUT1=NPTHOUT1+1
+            ENDIF
+            DO ILEV=1, NPTHLEV
+               IF( ILEV==1 )THEN            !!ILEV=1: water channel bifurcation. consider bifurcation channel depth
+                  PWTH=PTH_WTH(IPTH,ILEV)
+                  IF( PWTH>0 )THEN
+                     PTH_ELV(IPTH,ILEV)=PELV - PDPH
+                  ELSE
+                     PTH_ELV(IPTH,ILEV)=1.E20
+                  ENDIF
+               ELSE
+                  PWTH=PTH_WTH(IPTH,ILEV)
+                  IF( PWTH>0 )THEN
+                     PTH_ELV(IPTH,ILEV)=PELV + ILEV - 2.0    !! ILEV=2: bank top level 
+                  ELSE
+                     PTH_ELV(IPTH,ILEV)=1.E20
+                  ENDIF
+               ENDIF
+            ENDDO
+         ENDDO
+         close(TMPNAM)
+
+         DO ILEV=1, NPTHLEV
+            IF( ILEV==1 )THEN
+               PTH_MAN(ILEV)=PMANRIV
+            ELSE
+               PTH_MAN(ILEV)=PMANFLD
+            ENDIF
+         ENDDO
+
+         IF (NPTHOUT /= NPTHOUT1) THEN
+            write(LOGNAM,*)"Bifuraction channel outside of domain. Only valid:", NPTHOUT1
          ENDIF
-      ENDDO
 
-      IF (NPTHOUT /= NPTHOUT1) THEN
-         write(LOGNAM,*)"Bifuraction channel outside of domain. Only valid:", NPTHOUT1
-      ENDIF
-
-   END SUBROUTINE READ_BIFPARAM
-   !==========================================================
+      END SUBROUTINE READ_BIFPARAM
+      !==========================================================
 
    END SUBROUTINE CMF_RIVMAP_INIT
 !####################################################################

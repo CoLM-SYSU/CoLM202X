@@ -37,7 +37,7 @@ CONTAINS
    integer(KIND=JPIM),SAVE   ::  ISEQ, JSEQ
    real(KIND=JPRB),SAVE      ::  DSLOPE,   DAREA , DVEL,   DSLOPE_F, DARE_F, DVEL_F
 !$OMP THREADPRIVATE    (JSEQ, DSLOPE,   DAREA , DVEL,   DSLOPE_F, DARE_F, DVEL_F)
-!================================================
+   !================================================
 
 !*** 0. calculate surface water elevation, reset inflow
 
@@ -107,7 +107,7 @@ CONTAINS
       ENDDO
 !$OMP END PARALLEL DO
    END SUBROUTINE CMF_CALC_OUTFLW_KINE
-!####################################################################
+   !####################################################################
 
 
 
@@ -218,7 +218,7 @@ CONTAINS
                D2FLDOUT(ISEQ,1) = DARE_F * DVEL_F
                D2FLDOUT(ISEQ,1) = MIN(  D2FLDOUT(ISEQ,1)*1._JPRD, P2FLDSTO(ISEQ,1)/DT )
             ENDIF
-       ENDIF 
+         ENDIF 
     
       ENDDO
 !$OMP END PARALLEL DO

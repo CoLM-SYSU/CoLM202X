@@ -590,7 +590,7 @@ END SUBROUTINE CMF_LEVEE_FLDSTG
 !$OMP ATOMIC
 #endif
                P2PTHOUT(ISEQP,1) = P2PTHOUT(ISEQP,1) + D1PTHFLW(IPTH,ILEV)
-    ELSE
+            ELSE
 #ifndef NoAtom_CMF
 !$OMP ATOMIC
 #endif

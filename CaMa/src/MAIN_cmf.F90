@@ -21,14 +21,14 @@ PROGRAM MAIN_cmf
    USE CMF_CTRL_FORCING_MOD,    only: CMF_FORCING_GET, CMF_FORCING_PUT
    !** parallelization options**
    !$ USE OMP_LIB
-   #ifdef UseMPI_CMF
+#ifdef UseMPI_CMF
    USE CMF_CTRL_MPI_MOD,        only: CMF_MPI_INIT, CMF_MPI_END
-   #endif
+#endif
    !** sediment options**
-   #ifdef sediment
+#ifdef sediment
    USE YOS_CMF_INPUT,           only: LSEDOUT
    USE cmf_ctrl_sedinp_mod,     only: cmf_sed_forcing
-   #endif
+#endif
    !****************************
    IMPLICIT NONE
 

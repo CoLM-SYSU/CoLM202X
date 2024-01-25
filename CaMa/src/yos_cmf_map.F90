@@ -73,8 +73,8 @@ MODULE YOS_CMF_MAP
    integer(KIND=JPIM),allocatable           ::  PTH_UPST(:)        !! FLOOD PATHWAY UPSTREAM   ISEQ
    integer(KIND=JPIM),allocatable           ::  PTH_DOWN(:)        !! FLOOD PATHWAY DOWNSTREAM JSEQ
    real(KIND=JPRB),allocatable              ::  PTH_DST(:)         !! FLOOD PATHWAY DISTANCE [m]
-   real(KIND=JPRB),allocatable              ::  PTH_ELV(:,:)         !! FLOOD PATHWAY ELEVATION [m]
-   real(KIND=JPRB),allocatable              ::  PTH_WTH(:,:)         !! FLOOD PATHWAY WIDTH [m]
+   real(KIND=JPRB),allocatable              ::  PTH_ELV(:,:)       !! FLOOD PATHWAY ELEVATION [m]
+   real(KIND=JPRB),allocatable              ::  PTH_WTH(:,:)       !! FLOOD PATHWAY WIDTH [m]
    real(KIND=JPRB),allocatable              ::  PTH_MAN(:)         !! FLOOD PATHWAY Manning
 
    DATA REGIONALL  /1/

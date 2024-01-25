@@ -102,40 +102,40 @@ CONTAINS
          P0GLBSTONEW=P0GLBSTONEW+D2STORGE(ISEQ,1)
       ENDDO
 !$OMP END PARALLEL DO
-CONTAINS
-!==========================================================
-!+ CALC_GDWDLY
-!+ 
-!+ 
-!==========================================================
-   SUBROUTINE CALC_GDWDLY
-   USE YOS_CMF_MAP,        only: NSEQALL,D2GDWDLY
-   IMPLICIT NONE
-   !*** LOCAL
-   real(KIND=JPRB)            ::  ZDTI
-   ! SAVE for OpenMP
-   integer(KIND=JPIM),SAVE    ::  ISEQ
-   real(KIND=JPRB),SAVE       ::  ZMULGW
+   CONTAINS
+   !==========================================================
+   !+ CALC_GDWDLY
+   !+ 
+   !+ 
+   !==========================================================
+      SUBROUTINE CALC_GDWDLY
+      USE YOS_CMF_MAP,        only: NSEQALL,D2GDWDLY
+      IMPLICIT NONE
+      !*** LOCAL
+      real(KIND=JPRB)            ::  ZDTI
+      ! SAVE for OpenMP
+      integer(KIND=JPIM),SAVE    ::  ISEQ
+      real(KIND=JPRB),SAVE       ::  ZMULGW
 !$OMP THREADPRIVATE           (ZMULGW)
 !=====================================================
-      ZDTI = 1._JPRB / DT ! Inverse time-step 
+         ZDTI = 1._JPRB / DT ! Inverse time-step 
 !$OMP PARALLEL DO
-      DO ISEQ=1,NSEQALL
-         IF (D2GDWDLY(ISEQ,1)>0._JPRB) THEN 
-            ! Only if GW delay > 0 
-            ZMULGW = 1._JPRB / ( ZDTI + 1._JPRB/D2GDWDLY(ISEQ,1) ) 
-            P2GDWSTO(ISEQ,1) = ( D2ROFSUB(ISEQ,1) + P2GDWSTO(ISEQ,1)*ZDTI ) *ZMULGW
-            D2GDWRTN(ISEQ,1) = P2GDWSTO(ISEQ,1) / D2GDWDLY(ISEQ,1)
-         ELSE
-            ! Zero GW delay 
-            P2GDWSTO(ISEQ,1) = 0._JPRD
-            D2GDWRTN(ISEQ,1) = D2ROFSUB(ISEQ,1)
-         ENDIF
-      ENDDO
+         DO ISEQ=1,NSEQALL
+            IF (D2GDWDLY(ISEQ,1)>0._JPRB) THEN 
+               ! Only if GW delay > 0 
+               ZMULGW = 1._JPRB / ( ZDTI + 1._JPRB/D2GDWDLY(ISEQ,1) ) 
+               P2GDWSTO(ISEQ,1) = ( D2ROFSUB(ISEQ,1) + P2GDWSTO(ISEQ,1)*ZDTI ) *ZMULGW
+               D2GDWRTN(ISEQ,1) = P2GDWSTO(ISEQ,1) / D2GDWDLY(ISEQ,1)
+            ELSE
+               ! Zero GW delay 
+               P2GDWSTO(ISEQ,1) = 0._JPRD
+               D2GDWRTN(ISEQ,1) = D2ROFSUB(ISEQ,1)
+            ENDIF
+         ENDDO
 !$OMP END PARALLEL DO
 
-   END SUBROUTINE CALC_GDWDLY
-!==========================================================
+      END SUBROUTINE CALC_GDWDLY
+   !==========================================================
 
    END SUBROUTINE CMF_CALC_STONXT
 !####################################################################

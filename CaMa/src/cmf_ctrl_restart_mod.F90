@@ -670,59 +670,59 @@ CONTAINS
             IOUT=0
             SELECT CASE(JF)
                CASE (1)
-               CVAR='rivsto'
-               CALL vecP2mapP(P2RIVSTO,P2TEMP)
-               IOUT=1
+                  CVAR='rivsto'
+                  CALL vecP2mapP(P2RIVSTO,P2TEMP)
+                  IOUT=1
                CASE (2)
-               CVAR='fldsto'
-               CALL vecP2mapP(P2FLDSTO,P2TEMP)
-               IOUT=1
+                  CVAR='fldsto'
+                  CALL vecP2mapP(P2FLDSTO,P2TEMP)
+                  IOUT=1
                CASE (3)
-               CVAR='rivout_pre'
-               IF( .not. LSTOONLY ) THEN
-                  P2VEC(:,:)=D2RIVOUT_PRE(:,:)
-                  CALL vecP2mapP(P2VEC,P2TEMP)
-                  IOUT=1
-               ENDIF
+                  CVAR='rivout_pre'
+                  IF( .not. LSTOONLY ) THEN
+                     P2VEC(:,:)=D2RIVOUT_PRE(:,:)
+                     CALL vecP2mapP(P2VEC,P2TEMP)
+                     IOUT=1
+                  ENDIF
                CASE (4)
-               CVAR='fldout_pre'
-               IF( .not. LSTOONLY ) THEN
-                  P2VEC(:,:)=D2FLDOUT_PRE(:,:)
-                  CALL vecP2mapP(P2VEC,P2TEMP)
-                  IOUT=1
-               ENDIF
+                  CVAR='fldout_pre'
+                  IF( .not. LSTOONLY ) THEN
+                     P2VEC(:,:)=D2FLDOUT_PRE(:,:)
+                     CALL vecP2mapP(P2VEC,P2TEMP)
+                     IOUT=1
+                  ENDIF
                CASE (5)
-               CVAR='rivdph_pre'
-               IF( .not. LSTOONLY ) THEN
-                  P2VEC(:,:)=D2RIVDPH_PRE(:,:)
-                  CALL vecP2mapP(P2VEC,P2TEMP)
-                  IOUT=1
-               ENDIF
+                  CVAR='rivdph_pre'
+                  IF( .not. LSTOONLY ) THEN
+                     P2VEC(:,:)=D2RIVDPH_PRE(:,:)
+                     CALL vecP2mapP(P2VEC,P2TEMP)
+                     IOUT=1
+                  ENDIF
                CASE (6)
-               CVAR='fldsto_pre'
-               IF( .not. LSTOONLY ) THEN
-                  P2VEC(:,:)=D2FLDSTO_PRE(:,:)
-                  CALL vecP2mapP(P2VEC,P2TEMP)
-                  IOUT=1
-               ENDIF
+                  CVAR='fldsto_pre'
+                  IF( .not. LSTOONLY ) THEN
+                     P2VEC(:,:)=D2FLDSTO_PRE(:,:)
+                     CALL vecP2mapP(P2VEC,P2TEMP)
+                     IOUT=1
+                  ENDIF
                CASE (7)
-               CVAR='gdwsto'
-               IF( LGDWDLY ) THEN
-                  CALL vecP2mapP(P2GDWSTO,P2TEMP)
-                  IOUT=1
-               ENDIF
+                  CVAR='gdwsto'
+                  IF( LGDWDLY ) THEN
+                     CALL vecP2mapP(P2GDWSTO,P2TEMP)
+                     IOUT=1
+                  ENDIF
                CASE (8)  !!! LDAMOUT
                CVAR='damsto'
-               IF( LDAMOUT ) THEN
-                  CALL vecP2mapP(P2DAMSTO,P2TEMP)  !! P2DAMSTO only allocated for LDAMOUT
-                  IOUT=1
-               ENDIF
+                  IF( LDAMOUT ) THEN
+                     CALL vecP2mapP(P2DAMSTO,P2TEMP)  !! P2DAMSTO only allocated for LDAMOUT
+                     IOUT=1
+                  ENDIF
                CASE (9)  !!! LLEVEE
-               CVAR='levsto'
-               IF( LLEVEE ) THEN
-                  CALL vecP2mapP(P2LEVSTO,P2TEMP)  !! P2DAMSTO only allocated for LDAMOUT
-                  IOUT=1
-               ENDIF
+                  CVAR='levsto'
+                  IF( LLEVEE ) THEN
+                     CALL vecP2mapP(P2LEVSTO,P2TEMP)  !! P2DAMSTO only allocated for LDAMOUT
+                     IOUT=1
+                  ENDIF
             END SELECT
 
 #ifdef UseMPI_CMF

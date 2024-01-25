@@ -125,61 +125,61 @@ CONTAINS
       !+
       !+
       ! ==================================================
-   SUBROUTINE STORAGE_SEA_SURFACE
-   ! set initial storage, assuming water surface not lower than downstream sea surface elevation
-   USE YOS_CMF_MAP,  only: NSEQRIV,  NSEQALL,  I1NEXT
-   USE YOS_CMF_MAP,  only: D2DWNELV, D2RIVELV,D2RIVHGT,D2RIVWTH,D2RIVLEN
-   IMPLICIT NONE
-   ! local variables
-   integer(KIND=JPIM)   :: ISEQ, JSEQ
-   !
-   real(KIND=JPRB),SAVE :: DSEAELV, DDPH
+      SUBROUTINE STORAGE_SEA_SURFACE
+      ! set initial storage, assuming water surface not lower than downstream sea surface elevation
+      USE YOS_CMF_MAP,  only: NSEQRIV,  NSEQALL,  I1NEXT
+      USE YOS_CMF_MAP,  only: D2DWNELV, D2RIVELV,D2RIVHGT,D2RIVWTH,D2RIVLEN
+      IMPLICIT NONE
+      ! local variables
+      integer(KIND=JPIM)   :: ISEQ, JSEQ
+      !
+      real(KIND=JPRB),SAVE :: DSEAELV, DDPH
 !$OMP THREADPRIVATE    (DSEAELV, DDPH)
    !!=================
    ! For River Mouth Grid
 !$OMP PARALLEL DO
-      DO ISEQ=NSEQRIV+1,NSEQALL
-         DSEAELV=D2DWNELV(ISEQ,1) !! downstream boundary elevation
+         DO ISEQ=NSEQRIV+1,NSEQALL
+            DSEAELV=D2DWNELV(ISEQ,1) !! downstream boundary elevation
 
-         !! set initial water level to sea level if river bed is lower than sea level
-         DDPH=MAX( DSEAELV-D2RIVELV(ISEQ,1),0._JPRB )
-         DDPH=MIN( DDPH,D2RIVHGT(ISEQ,1) )
-         P2RIVSTO(ISEQ,1)=DDPH*D2RIVLEN(ISEQ,1)*D2RIVWTH(ISEQ,1)
-         D2RIVDPH_PRE(ISEQ,1)=DDPH
-      ENDDO
+            !! set initial water level to sea level if river bed is lower than sea level
+            DDPH=MAX( DSEAELV-D2RIVELV(ISEQ,1),0._JPRB )
+            DDPH=MIN( DDPH,D2RIVHGT(ISEQ,1) )
+            P2RIVSTO(ISEQ,1)=DDPH*D2RIVLEN(ISEQ,1)*D2RIVWTH(ISEQ,1)
+            D2RIVDPH_PRE(ISEQ,1)=DDPH
+         ENDDO
 !$OMP END PARALLEL DO
 
-      !! For Usual River Grid (from downstream to upstream). OMP cannot be applied
-      DO ISEQ=NSEQRIV,1, -1
-         JSEQ=I1NEXT(ISEQ)
-         DSEAELV=D2RIVELV(JSEQ,1)+D2RIVDPH_PRE(JSEQ,1)
+         !! For Usual River Grid (from downstream to upstream). OMP cannot be applied
+         DO ISEQ=NSEQRIV,1, -1
+            JSEQ=I1NEXT(ISEQ)
+            DSEAELV=D2RIVELV(JSEQ,1)+D2RIVDPH_PRE(JSEQ,1)
 
-         !! set initial water level to sea level if river bed is lower than sea level
-         DDPH=MAX( DSEAELV-D2RIVELV(ISEQ,1),0._JPRB )
-         DDPH=MIN( DDPH,D2RIVHGT(ISEQ,1) )
+            !! set initial water level to sea level if river bed is lower than sea level
+            DDPH=MAX( DSEAELV-D2RIVELV(ISEQ,1),0._JPRB )
+            DDPH=MIN( DDPH,D2RIVHGT(ISEQ,1) )
 
-         P2RIVSTO(ISEQ,1)=DDPH*D2RIVLEN(ISEQ,1)*D2RIVWTH(ISEQ,1)
-         D2RIVDPH_PRE(ISEQ,1)=DDPH
-      ENDDO
+            P2RIVSTO(ISEQ,1)=DDPH*D2RIVLEN(ISEQ,1)*D2RIVWTH(ISEQ,1)
+            D2RIVDPH_PRE(ISEQ,1)=DDPH
+         ENDDO
 
    
-      ! old version before v4.02 (too slow)
-      !DO ISEQ=1, NSEQALL
-      !  JSEQ=ISEQ
-      !  DO WHILE( I1NEXT(JSEQ)>0 )
-      !    KSEQ=JSEQ
-      !    JSEQ=I1NEXT(KSEQ)
-      !  ENDDO
-      !
-      !  DSEAELV=D2DWNELV(JSEQ,1) !! downstream boundary elevation
-      !  !! set initial water level to sea level if river bed is lower than sea level
-      !  DDPH=MAX( DSEAELV-D2RIVELV(ISEQ,1),0._JPRB )
-      !  DDPH=MIN( DDPH,D2RIVHGT(ISEQ,1) )
-      !  P2RIVSTO(ISEQ,1)=DDPH*D2RIVLEN(ISEQ,1)*D2RIVWTH(ISEQ,1)
-      !ENDDO
+         ! old version before v4.02 (too slow)
+         !DO ISEQ=1, NSEQALL
+         !  JSEQ=ISEQ
+         !  DO WHILE( I1NEXT(JSEQ)>0 )
+         !    KSEQ=JSEQ
+         !    JSEQ=I1NEXT(KSEQ)
+         !  ENDDO
+         !
+         !  DSEAELV=D2DWNELV(JSEQ,1) !! downstream boundary elevation
+         !  !! set initial water level to sea level if river bed is lower than sea level
+         !  DDPH=MAX( DSEAELV-D2RIVELV(ISEQ,1),0._JPRB )
+         !  DDPH=MIN( DDPH,D2RIVHGT(ISEQ,1) )
+         !  P2RIVSTO(ISEQ,1)=DDPH*D2RIVLEN(ISEQ,1)*D2RIVWTH(ISEQ,1)
+         !ENDDO
       
-   END SUBROUTINE STORAGE_SEA_SURFACE
-   ! ==================================================
+      END SUBROUTINE STORAGE_SEA_SURFACE
+      ! ==================================================
 
    END SUBROUTINE CMF_PROG_INIT
    !####################################################################

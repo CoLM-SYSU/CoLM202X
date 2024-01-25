@@ -67,7 +67,7 @@ CONTAINS
             ELSE
                DSTONOW =  DSTOALL - DSTOPRE
                DWTHNOW = -DWTHPRE + &
-         &      ( DWTHPRE**2. + 2._JPRB * DSTONOW * D2RIVLEN(ISEQ,1)**(-1.) * D2FLDGRD(ISEQ,1,I)**(-1.) )**0.5
+           &      ( DWTHPRE**2. + 2._JPRB * DSTONOW * D2RIVLEN(ISEQ,1)**(-1.) * D2FLDGRD(ISEQ,1,I)**(-1.) )**0.5
                D2FLDDPH(ISEQ,1) = DDPHPRE + D2FLDGRD(ISEQ,1,I) * DWTHNOW
             ENDIF
             P2RIVSTO(ISEQ,1) = D2RIVSTOMAX(ISEQ,1) + D2RIVLEN(ISEQ,1) * D2RIVWTH(ISEQ,1) * D2FLDDPH(ISEQ,1)
@@ -163,23 +163,23 @@ CONTAINS
       DO I=1, NLFP
 
 !$OMP PARALLEL DO
-            DO ISEQ=1, NSEQALL
-               DSTOALL = P2RIVSTO(ISEQ,1) + P2FLDSTO(ISEQ,1)
+         DO ISEQ=1, NSEQALL
+            DSTOALL = P2RIVSTO(ISEQ,1) + P2FLDSTO(ISEQ,1)
 
-               DSTONOW = DSTOALL - D2STODWN(ISEQ,1)
-               DSTONOW = MAX( DSTONOW, 0._JPRD )
-               DWTHNOW = -D2WTHPRE(ISEQ,1) + &
+            DSTONOW = DSTOALL - D2STODWN(ISEQ,1)
+            DSTONOW = MAX( DSTONOW, 0._JPRD )
+            DWTHNOW = -D2WTHPRE(ISEQ,1) + &
             &    ( D2WTHPRE(ISEQ,1)**2._JPRB + 2._JPRB * DSTONOW * D2RIVLEN(ISEQ,1)**(-1.) * D2FLDGRD(ISEQ,1,I)**(-1.) )**0.5
-               DWTHNOW = MIN( DWTHNOW, D2WTHINC(ISEQ,1) )
-               DWTHNOW = MAX( DWTHNOW, 0.D0 )              !! modify v4.04
+            DWTHNOW = MIN( DWTHNOW, D2WTHINC(ISEQ,1) )
+            DWTHNOW = MAX( DWTHNOW, 0.D0 )              !! modify v4.04
 
-               D2FLDDPH(ISEQ,1) = D2FLDDPH(ISEQ,1) + D2FLDGRD(ISEQ,1,I) * DWTHNOW
-               D2FLDFRC(ISEQ,1) = D2FLDFRC(ISEQ,1) + DWTHNOW/D2WTHINC(ISEQ,1) * NLFP**(-1.)
+            D2FLDDPH(ISEQ,1) = D2FLDDPH(ISEQ,1) + D2FLDGRD(ISEQ,1,I) * DWTHNOW
+            D2FLDFRC(ISEQ,1) = D2FLDFRC(ISEQ,1) + DWTHNOW/D2WTHINC(ISEQ,1) * NLFP**(-1.)
 
-               !! Update downside floodplain step storage/depth/width 
-               D2STODWN(ISEQ,1) = D2FLDSTOMAX(ISEQ,1,I)
-               D2WTHPRE(ISEQ,1) = D2WTHPRE(ISEQ,1) + D2WTHINC(ISEQ,1)
-            ENDDO
+            !! Update downside floodplain step storage/depth/width 
+            D2STODWN(ISEQ,1) = D2FLDSTOMAX(ISEQ,1,I)
+            D2WTHPRE(ISEQ,1) = D2WTHPRE(ISEQ,1) + D2WTHINC(ISEQ,1)
+         ENDDO
 !$OMP END PARALLEL DO
       ENDDO
 

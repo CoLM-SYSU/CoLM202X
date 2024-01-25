@@ -48,15 +48,15 @@ MODULE CMF_CTRL_OUTPUT_MOD
 
    !*** type for output file    
    type TVAROUT
-   character(LEN=256)              :: CVNAME             ! output variable name
-   character(LEN=256)              :: CVLNAME            ! output variable long name
-   character(LEN=256)              :: CVUNITS            ! output units
-   character(LEN=256)              :: CFILE              ! output full path file name 
-   integer(KIND=JPIM)              :: BINID              ! output binary output file ID
-   integer(KIND=JPIM)              :: NCID               ! output netCDF output file ID
-   integer(KIND=JPIM)              :: VARID              ! output netCDF output variable ID
-   integer(KIND=JPIM)              :: TIMID              ! output netCDF time   variable ID 
-   integer(KIND=JPIM)              :: IRECNC               ! Current time record for writting 
+      character(LEN=256)              :: CVNAME             ! output variable name
+      character(LEN=256)              :: CVLNAME            ! output variable long name
+      character(LEN=256)              :: CVUNITS            ! output units
+      character(LEN=256)              :: CFILE              ! output full path file name 
+      integer(KIND=JPIM)              :: BINID              ! output binary output file ID
+      integer(KIND=JPIM)              :: NCID               ! output netCDF output file ID
+      integer(KIND=JPIM)              :: VARID              ! output netCDF output variable ID
+      integer(KIND=JPIM)              :: TIMID              ! output netCDF time   variable ID 
+      integer(KIND=JPIM)              :: IRECNC               ! Current time record for writting 
    END type TVAROUT 
    type(TVAROUT),ALLOCATABLE       :: VAROUT(:)          ! output variable type set
 

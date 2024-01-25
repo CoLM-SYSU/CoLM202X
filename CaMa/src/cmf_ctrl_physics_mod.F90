@@ -19,28 +19,28 @@ CONTAINS
 ! --
 !####################################################################
    SUBROUTINE CMF_PHYSICS_ADVANCE
-      USE PARKIND1,              only: JPIM,   JPRB,    JPRD,      JPRM
-      USE YOS_CMF_INPUT,         only: LOGNAM, DT,      LADPSTP
-      USE YOS_CMF_INPUT,         only: LKINE,  LSLPMIX, LFLDOUT,   LPTHOUT,   LDAMOUT, LLEVEE, LOUTINS
-      USE YOS_CMF_PROG,          only: D2FLDOUT, D2FLDOUT_PRE
+   USE PARKIND1,              only: JPIM,   JPRB,    JPRD,      JPRM
+   USE YOS_CMF_INPUT,         only: LOGNAM, DT,      LADPSTP
+   USE YOS_CMF_INPUT,         only: LKINE,  LSLPMIX, LFLDOUT,   LPTHOUT,   LDAMOUT, LLEVEE, LOUTINS
+   USE YOS_CMF_PROG,          only: D2FLDOUT, D2FLDOUT_PRE
    !
-      USE CMF_CALC_OUTFLW_MOD,   only: CMF_CALC_OUTFLW, CMF_CALC_INFLOW
-      USE CMF_CALC_PTHOUT_MOD,   only: CMF_CALC_PTHOUT
-      USE CMF_CALC_STONXT_MOD,   only: CMF_CALC_STONXT
-      USE CMF_CALC_DIAG_MOD,     only: CMF_DIAG_AVEMAX
+   USE CMF_CALC_OUTFLW_MOD,   only: CMF_CALC_OUTFLW, CMF_CALC_INFLOW
+   USE CMF_CALC_PTHOUT_MOD,   only: CMF_CALC_PTHOUT
+   USE CMF_CALC_STONXT_MOD,   only: CMF_CALC_STONXT
+   USE CMF_CALC_DIAG_MOD,     only: CMF_DIAG_AVEMAX
    ! optional
-      USE CMF_OPT_OUTFLW_MOD,    only: CMF_CALC_OUTFLW_KINEMIX, CMF_CALC_OUTFLW_KINE,CMF_CALC_OUTINS
-      USE CMF_CTRL_DAMOUT_MOD,   only: CMF_DAMOUT_CALC, CMF_DAMOUT_WATBAL, CMF_DAMOUT_WRTE
-      USE CMF_CTRL_LEVEE_MOD,    only: CMF_LEVEE_OPT_PTHOUT
+   USE CMF_OPT_OUTFLW_MOD,    only: CMF_CALC_OUTFLW_KINEMIX, CMF_CALC_OUTFLW_KINE,CMF_CALC_OUTINS
+   USE CMF_CTRL_DAMOUT_MOD,   only: CMF_DAMOUT_CALC, CMF_DAMOUT_WATBAL, CMF_DAMOUT_WRTE
+   USE CMF_CTRL_LEVEE_MOD,    only: CMF_LEVEE_OPT_PTHOUT
 #ifdef ILS
-      USE YOS_CMF_ICI,           only: LLAKEIN
-      USE CMF_CALC_LAKEIN_MOD,   only: CMF_CALC_LAKEIN, CMF_LAKEIN_AVE
+   USE YOS_CMF_ICI,           only: LLAKEIN
+   USE CMF_CALC_LAKEIN_MOD,   only: CMF_CALC_LAKEIN, CMF_LAKEIN_AVE
 #endif
 
-      IMPLICIT NONE
-      !! LOCAL
-      integer(KIND=JPIM)            ::  IT, NT
-      real(KIND=JPRB)               ::  DT_DEF
+   IMPLICIT NONE
+   !! LOCAL
+   integer(KIND=JPIM)            ::  IT, NT
+   real(KIND=JPRB)               ::  DT_DEF
       !================================================
       DT_DEF=DT
 
@@ -128,7 +128,7 @@ CONTAINS
       ENDIF
 
 
-      CONTAINS
+   CONTAINS
       !==========================================================
       !+ CALC_ADPSTP
       !+ CALC_WATBAL(IT)
@@ -150,7 +150,6 @@ CONTAINS
       real(KIND=JPRB),SAVE            :: DDPH, DDST
 !$OMP THREADPRIVATE               (DDPH,DDST)
          !================================================
-
          DT_MIN=DT_DEF
 !$OMP PARALLEL DO REDUCTION(MIN:DT_MIN)
          DO ISEQ=1, NSEQRIV
