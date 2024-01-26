@@ -524,7 +524,7 @@ CONTAINS
                   IF( .not. LWINFILT ) CYCLE
                   D2VEC => D2WINFILTEX_AVG
                CASE ('damsto')   !!! added
-               IF( .not. LDAMOUT ) CYCLE
+                  IF( .not. LDAMOUT ) CYCLE
                   D2COPY=P2DAMSTO
                   D2VEC => D2COPY
                CASE ('daminf')   !!! added
