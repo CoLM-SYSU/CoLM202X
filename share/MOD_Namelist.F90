@@ -792,7 +792,6 @@ CONTAINS
       DEF_LAI_CHANGE_YEARLY,           &
       DEF_USE_LAIFEEDBACK,             &   !add by Xingjie Lu, use for updating LAI with leaf carbon
       DEF_USE_IRRIGATION,              &   ! use irrigation
-      DEF_IRRIGATION_METHOD,           &   ! use irrigation temporary
 
       DEF_LC_YEAR,                     &
       DEF_LULCC_SCHEME,                &
@@ -1209,9 +1208,6 @@ CONTAINS
       ! 05/2023, added by Xingjie lu
       CALL mpi_bcast (DEF_USE_LAIFEEDBACK,   1, mpi_logical, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_USE_IRRIGATION ,   1, mpi_logical, p_root, p_comm_glb, p_err)
-
-      !  use irrigation temporary
-      ! CALL mpi_bcast (DEF_IRRIGATION_METHOD,   1, mpi_logical, p_root, p_comm_glb, p_err)
 
       ! LULC related
       CALL mpi_bcast (DEF_LC_YEAR,           1, mpi_integer, p_root, p_comm_glb, p_err)
