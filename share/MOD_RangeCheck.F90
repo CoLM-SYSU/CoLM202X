@@ -17,17 +17,17 @@ MODULE MOD_RangeCheck
 #ifdef RangeCheck
    IMPLICIT NONE
 
-   interface check_block_data
+   INTERFACE check_block_data
       MODULE procedure check_block_data_real8_2d
-   END interface check_block_data
+   END INTERFACE check_block_data
 
-   interface check_vector_data
+   INTERFACE check_vector_data
       MODULE procedure check_vector_data_real8_1d
       MODULE procedure check_vector_data_real8_2d
       MODULE procedure check_vector_data_real8_3d
       MODULE procedure check_vector_data_real8_4d
       MODULE procedure check_vector_data_int32_1d
-   END interface check_vector_data
+   END INTERFACE check_vector_data
 
 CONTAINS
 

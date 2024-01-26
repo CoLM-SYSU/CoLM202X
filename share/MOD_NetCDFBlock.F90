@@ -25,17 +25,17 @@ MODULE MOD_NetCDFBlock
    IMPLICIT NONE
 
    ! PUBLIC subroutines
-   interface ncio_read_block
+   INTERFACE ncio_read_block
       MODULE procedure ncio_read_block_int32_2d
       MODULE procedure ncio_read_block_real8_2d
       MODULE procedure ncio_read_block_real8_3d
-   END interface ncio_read_block
+   END INTERFACE ncio_read_block
 
-   interface ncio_read_block_time
+   INTERFACE ncio_read_block_time
       MODULE procedure ncio_read_block_int32_2d_time
       MODULE procedure ncio_read_block_real8_2d_time
       MODULE procedure ncio_read_block_real8_3d_time
-   END interface ncio_read_block_time
+   END INTERFACE ncio_read_block_time
 
    PUBLIC :: ncio_read_site_time
 

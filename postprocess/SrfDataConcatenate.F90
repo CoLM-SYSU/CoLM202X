@@ -80,7 +80,7 @@ PROGRAM srfdata_concatenate
    nfile = 0
    open(unit=10, file=trim(tmpfile))
    DO WHILE (.true.)
-      READ(10, '(A)', IOSTAT=stat) line
+      read(10, '(A)', IOSTAT=stat) line
       IF(IS_IOSTAT_END(stat)) EXIT
 
       nfile = nfile + 1
@@ -93,7 +93,7 @@ PROGRAM srfdata_concatenate
    open(unit=10, file=trim(tmpfile))
    DO ifile = 1, nfile
 
-      READ(10, '(A)', IOSTAT=stat) line
+      read(10, '(A)', IOSTAT=stat) line
       IF(IS_IOSTAT_END(stat)) EXIT
 
       blockinfo = line(len_trim(line)-10:len_trim(line)-3)

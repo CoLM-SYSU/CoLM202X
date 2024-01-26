@@ -12,10 +12,10 @@ MODULE MOD_Hydro_IO
 
    PUBLIC :: vector_write_basin
 
-   interface vector_read_basin
+   INTERFACE vector_read_basin
       MODULE procedure vector_read_basin_real8
       MODULE procedure vector_read_basin_int32
-   END interface vector_read_basin
+   END INTERFACE vector_read_basin
 
 CONTAINS
 

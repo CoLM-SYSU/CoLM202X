@@ -699,7 +699,7 @@ CONTAINS
       CALL nccheck( nf90_open (trim(input),  NF90_NOWRITE, ncidin)  )
       CALL nccheck( nf90_inq_varid (ncidin,  trim(varname), varidin ) )
 
-      select CASE (ndims)
+      SELECTCASE (ndims)
       CASE (1)
          IF (xtype == NF90_INT) THEN
             allocate (data_i4_in1 (vlen_in))
@@ -793,7 +793,7 @@ CONTAINS
 
       CASE default
          write(*,*) 'Warning: there is no case for variable: ', trim(varname)
-      END select
+      ENDSELECT
 
       CALL nccheck( nf90_close (ncidin)  )
       CALL nccheck( nf90_close (ncidout) )

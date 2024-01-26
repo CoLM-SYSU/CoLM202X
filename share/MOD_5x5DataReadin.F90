@@ -30,10 +30,10 @@ MODULE MOD_5x5DataReadin
 
    integer, parameter :: N_PFT_modis = 16
 
-   interface read_5x5_data
+   INTERFACE read_5x5_data
       MODULE procedure read_5x5_data_int32
       MODULE procedure read_5x5_data_real8
-   END interface read_5x5_data
+   END INTERFACE read_5x5_data
 
    PUBLIC :: read_5x5_data_pft
    PUBLIC :: read_5x5_data_time

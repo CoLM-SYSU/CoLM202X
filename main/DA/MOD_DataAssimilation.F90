@@ -23,8 +23,8 @@ CONTAINS
       
    IMPLICIT NONE
       
-      integer,  intent(in) :: idate(3)
-      real(r8), intent(in) :: deltim
+   integer,  intent(in) :: idate(3)
+   real(r8), intent(in) :: deltim
       
       CALL do_DA_GRACE (idate, deltim)
 

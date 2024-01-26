@@ -45,10 +45,10 @@ MODULE MOD_ElementNeighbour
    type(neighbour_sendrecv_type), allocatable :: recvaddr(:)
    type(neighbour_sendrecv_type), allocatable :: sendaddr(:)
 
-   interface allocate_neighbour_data
+   INTERFACE allocate_neighbour_data
       MODULE procedure allocate_neighbour_data_real8
       MODULE procedure allocate_neighbour_data_logic
-   END interface allocate_neighbour_data
+   END INTERFACE allocate_neighbour_data
 
 CONTAINS
    

@@ -74,19 +74,19 @@ MODULE MOD_NetCDFSerial
       MODULE procedure ncio_read_bcast_serial_logical_1d
    END INTERFACE ncio_read_bcast_serial
 
-   interface ncio_read_part_serial
+   INTERFACE ncio_read_part_serial
       MODULE procedure ncio_read_part_serial_int32_2d
-   END interface ncio_read_part_serial
+   END INTERFACE ncio_read_part_serial
 
-   interface ncio_read_period_serial
+   INTERFACE ncio_read_period_serial
       MODULE procedure ncio_read_period_serial_real8_2d
-   END interface ncio_read_period_serial
+   END INTERFACE ncio_read_period_serial
 
 
-   interface ncio_define_dimension
+   INTERFACE ncio_define_dimension
       MODULE procedure ncio_define_dimension_int32
       MODULE procedure ncio_define_dimension_int64
-   END interface ncio_define_dimension
+   END INTERFACE ncio_define_dimension
 
    INTERFACE ncio_write_serial
       MODULE procedure ncio_write_serial_int32_0d
@@ -1410,9 +1410,9 @@ CONTAINS
       allocate(wdata_byte(size(wdata)))
       WHERE(wdata)
          wdata_byte = 1
-      elsewhere
+      ELSEWHERE
          wdata_byte = 0
-      endwhere
+      ENDWHERE
 
       IF (present(compress)) THEN
          CALL ncio_write_serial_int8_1d (filename, dataname, wdata_byte, dimname, compress)
@@ -1900,7 +1900,7 @@ CONTAINS
       minutes = minutes_since_1900 (time_component(1), time_component(2), time_component(3))
       
       IF (present(adjust)) THEN
-         select CASE (trim(adjustl(adjust)))
+         SELECTCASE (trim(adjustl(adjust)))
          CASE ('HOURLY')
             minutes = minutes - 30
          CASE ('DAILY')
@@ -1909,7 +1909,7 @@ CONTAINS
             minutes = minutes - 21600
          CASE ('YEARLY')
             minutes = minutes - 262800
-         END select 
+         ENDSELECT 
       ENDIF
 
       CALL nccheck( nf90_open(trim(filename), NF90_WRITE, ncid) )

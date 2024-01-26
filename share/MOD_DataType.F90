@@ -110,20 +110,20 @@ MODULE MOD_DataType
 
    ! ---- PUBLIC subroutines ----
    !------
-   interface allocate_block_data
+   INTERFACE allocate_block_data
       MODULE procedure allocate_block_data_int32_2d
       MODULE procedure allocate_block_data_real8_2d
       MODULE procedure allocate_block_data_real8_3d
       MODULE procedure allocate_block_data_real8_4d
-   END interface allocate_block_data
+   END INTERFACE allocate_block_data
 
    !------
-   interface flush_block_data
+   INTERFACE flush_block_data
       MODULE procedure flush_block_data_int32_2d
       MODULE procedure flush_block_data_real8_2d
       MODULE procedure flush_block_data_real8_3d
       MODULE procedure flush_block_data_real8_4d
-   END interface flush_block_data
+   END INTERFACE flush_block_data
 
    !-----
    PUBLIC :: block_data_linear_transform

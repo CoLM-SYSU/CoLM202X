@@ -15,25 +15,25 @@ MODULE MOD_Utils
 
    PUBLIC :: normalize_longitude
 
-   interface expand_list
+   INTERFACE expand_list
       MODULE procedure expand_list_int32
       MODULE procedure expand_list_int64
       MODULE procedure expand_list_real8
-   END interface expand_list
+   END INTERFACE expand_list
 
    PUBLIC :: append_to_list
 
-   interface insert_into_sorted_list1
+   INTERFACE insert_into_sorted_list1
       MODULE procedure insert_into_sorted_list1_int32
       MODULE procedure insert_into_sorted_list1_int64
-   END interface insert_into_sorted_list1
+   END INTERFACE insert_into_sorted_list1
 
    PUBLIC :: insert_into_sorted_list2
 
-   interface find_in_sorted_list1
+   INTERFACE find_in_sorted_list1
       MODULE procedure find_in_sorted_list1_int32
       MODULE procedure find_in_sorted_list1_int64
-   END interface find_in_sorted_list1
+   END INTERFACE find_in_sorted_list1
 
    PUBLIC :: find_in_sorted_list2
 
@@ -45,11 +45,11 @@ MODULE MOD_Utils
    PUBLIC :: lon_between_floor
    PUBLIC :: lon_between_ceil
 
-   interface quicksort
+   INTERFACE quicksort
       MODULE procedure quicksort_int32
       MODULE procedure quicksort_int64
       MODULE procedure quicksort_real8
-   END interface quicksort
+   END INTERFACE quicksort
 
    PUBLIC :: quickselect
    PUBLIC :: median
@@ -57,11 +57,11 @@ MODULE MOD_Utils
    PUBLIC :: areaquad
    PUBLIC :: arclen
 
-   interface unpack_inplace
+   INTERFACE unpack_inplace
       MODULE procedure unpack_inplace_int32
       MODULE procedure unpack_inplace_real8
       MODULE procedure unpack_inplace_lastdim_real8
-   END interface unpack_inplace
+   END INTERFACE unpack_inplace
 
    PUBLIC :: num_max_frequency
 

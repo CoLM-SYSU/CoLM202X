@@ -189,7 +189,7 @@ ENDIF
                      IF (types(ipxl) /= types(ipxl-1)) THEN
                         ipxend_(jpatch) = ipxl - 1
                      ELSE
-                        cycle
+                        CYCLE
                      ENDIF
                   ENDIF
 

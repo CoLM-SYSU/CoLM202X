@@ -1245,7 +1245,7 @@ CONTAINS
                   ENDIF
                ENDIF
             ELSE
-               select CASE (ubc_typ)
+               SELECTCASE (ubc_typ)
                CASE (bc_rainfall)
                   has_wf(lb) = (dp >= tol_z) .or. (wf(lb) >= tol_z)
 
@@ -1260,7 +1260,7 @@ CONTAINS
                   ENDIF
                CASE (bc_fix_flux)
                   has_wf(lb) = wf(lb) >= tol_z
-               END select
+               ENDSELECT
             ENDIF
 
             IF (ilev < ub) THEN
@@ -1276,7 +1276,7 @@ CONTAINS
                   ENDIF
                ENDIF
             ELSE
-               select CASE (lbc_typ)
+               SELECTCASE (lbc_typ)
                CASE (bc_drainage)
                   has_wt(ub) = (wt(ub) >= tol_z)
                CASE (bc_fix_head)
@@ -1287,7 +1287,7 @@ CONTAINS
                   ENDIF
                CASE (bc_fix_flux)
                   has_wt(ub) = (wt(ub) >= tol_z)
-               END select
+               ENDSELECT
             ENDIF
          ENDIF
 
@@ -1760,7 +1760,7 @@ CONTAINS
 
                dz_this = (dz(lb)-wt(lb)-wf(lb)) * (sp_zc(lb)-sp_zi(lb-1))/dz(lb)
 
-               select CASE (ubc_typ)
+               SELECTCASE (ubc_typ)
                CASE (bc_fix_head)
 
                   IF (has_wf(lb)) THEN
@@ -1816,7 +1816,7 @@ CONTAINS
                      ENDIF
                   ENDIF
 
-               END select
+               ENDSELECT
 
                IF ((has_wf(lb)) .and. (dz_this >= tol_z)) THEN
                   qq_wf(lb) = flux_inside_hm_soil ( &
@@ -1835,7 +1835,7 @@ CONTAINS
 
                dz_this = (dz(ub) - wf(ub) - wt(ub)) * (sp_zi(ub) - sp_zc(ub))/ dz(ub)
 
-               select CASE (lbc_typ)
+               SELECTCASE (lbc_typ)
                CASE (bc_fix_head)
 
                   IF (has_wt(ub)) THEN
@@ -1896,7 +1896,7 @@ CONTAINS
                      ENDIF
                   ENDIF
 
-               END select
+               ENDSELECT
 
                IF ((has_wt(ub)) .and. (dz_this >= tol_z))  THEN
                   qq_wt(ub) = flux_inside_hm_soil ( &
@@ -2258,7 +2258,7 @@ CONTAINS
       ! Case 2
       IF (top_at_ground .and. btm_at_interface) THEN
 
-         select CASE (ubc_typ)
+         SELECTCASE (ubc_typ)
          CASE (bc_fix_head)
 
             CALL flux_btm_transitive_interface ( &
@@ -2294,14 +2294,14 @@ CONTAINS
                   flux_top = infl_max)
             ENDIF
 
-         END select
+         ENDSELECT
 
       ENDIF
 
       ! Case 3
       IF (top_at_ground .and. btm_inside_level) THEN
 
-         select CASE (ubc_typ)
+         SELECTCASE (ubc_typ)
          CASE (bc_fix_head)
 
             CALL flux_sat_zone_fixed_bc (nlev_sat, dz_sat, psi_sat, &
@@ -2325,14 +2325,14 @@ CONTAINS
                   flux_top = infl_max)
             ENDIF
 
-         END select
+         ENDSELECT
 
       ENDIF
 
       ! Case 4
       IF (top_at_interface .and. btm_at_bottom) THEN
 
-         select CASE (lbc_typ)
+         SELECTCASE (lbc_typ)
          CASE (bc_fix_head)
 
             CALL flux_top_transitive_interface ( &
@@ -2367,7 +2367,7 @@ CONTAINS
                   flux_btm = 0.0)
             ENDIF
 
-         END select
+         ENDSELECT
 
       ENDIF
 
@@ -2398,7 +2398,7 @@ CONTAINS
       ! Case 7
       IF (top_inside_level .and. btm_at_bottom) THEN
 
-         select CASE (lbc_typ)
+         SELECTCASE (lbc_typ)
          CASE (bc_fix_head)
 
             CALL flux_sat_zone_fixed_bc (nlev_sat, dz_sat, psi_sat, &
@@ -2421,7 +2421,7 @@ CONTAINS
                   qlc, flux_btm = 0.0)
             ENDIF
 
-         END select
+         ENDSELECT
 
       ENDIF
 
@@ -2463,7 +2463,7 @@ CONTAINS
 
       IF (top_at_ground) THEN
 
-         select CASE (ubc_typ)
+         SELECTCASE (ubc_typ)
          CASE (bc_fix_head)
             qq(lb-1) = qlc(lb)
             is_trans = .false.
@@ -2478,7 +2478,7 @@ CONTAINS
                qq(lb-1) = qlc(lb)
                is_trans = .false.
             ENDIF
-         END select
+         ENDSELECT
 
          IF (is_update_sublevel) THEN
             IF (is_trans .and. is_sat(lb)) THEN
@@ -2720,7 +2720,7 @@ CONTAINS
 
       grad_psi = (1.0_r8 - (psi_l - psi_u)/dz)
 
-      select CASE (effective_hk_type)
+      SELECTCASE (effective_hk_type)
 
       CASE (type_upstream_mean)
 
@@ -2757,7 +2757,7 @@ CONTAINS
             flux_inside_hm_soil = hk_u + (psi_u - psi_l)/dz * hk_u**(1.0_r8-rr) * hk_l**rr
          ENDIF
 
-      END select
+      ENDSELECT
 
    END FUNCTION flux_inside_hm_soil
 

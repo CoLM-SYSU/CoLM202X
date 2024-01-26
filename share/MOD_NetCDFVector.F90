@@ -38,7 +38,7 @@ MODULE MOD_NetCDFVector
 
    ! PUBLIC subroutines
 
-   interface ncio_read_vector
+   INTERFACE ncio_read_vector
       MODULE procedure ncio_read_vector_logical_1d 
       MODULE procedure ncio_read_vector_int32_1d 
       MODULE procedure ncio_read_vector_int64_1d 
@@ -46,12 +46,12 @@ MODULE MOD_NetCDFVector
       MODULE procedure ncio_read_vector_real8_2d 
       MODULE procedure ncio_read_vector_real8_3d 
       MODULE procedure ncio_read_vector_real8_4d 
-   END interface ncio_read_vector
+   END INTERFACE ncio_read_vector
 
    PUBLIC :: ncio_create_file_vector 
    PUBLIC :: ncio_define_dimension_vector 
 
-   interface ncio_write_vector
+   INTERFACE ncio_write_vector
       MODULE procedure ncio_write_vector_logical_1d
       MODULE procedure ncio_write_vector_int32_1d 
       MODULE procedure ncio_write_vector_int32_3d 
@@ -60,7 +60,7 @@ MODULE MOD_NetCDFVector
       MODULE procedure ncio_write_vector_real8_2d 
       MODULE procedure ncio_write_vector_real8_3d 
       MODULE procedure ncio_write_vector_real8_4d 
-   END interface ncio_write_vector
+   END INTERFACE ncio_write_vector
 
 CONTAINS
    
@@ -1626,7 +1626,7 @@ MODULE MOD_NetCDFVector
    PUBLIC :: ncio_create_file_vector 
    PUBLIC :: ncio_define_dimension_vector 
 
-   interface ncio_read_vector
+   INTERFACE ncio_read_vector
       MODULE procedure ncio_read_vector_logical_1d 
       MODULE procedure ncio_read_vector_int32_1d 
       MODULE procedure ncio_read_vector_int64_1d 
@@ -1634,9 +1634,9 @@ MODULE MOD_NetCDFVector
       MODULE procedure ncio_read_vector_real8_2d 
       MODULE procedure ncio_read_vector_real8_3d 
       MODULE procedure ncio_read_vector_real8_4d 
-   END interface ncio_read_vector
+   END INTERFACE ncio_read_vector
 
-   interface ncio_write_vector
+   INTERFACE ncio_write_vector
       MODULE procedure ncio_write_vector_logical_1d
       MODULE procedure ncio_write_vector_int32_1d 
       MODULE procedure ncio_write_vector_int64_1d 
@@ -1644,7 +1644,7 @@ MODULE MOD_NetCDFVector
       MODULE procedure ncio_write_vector_real8_2d 
       MODULE procedure ncio_write_vector_real8_3d 
       MODULE procedure ncio_write_vector_real8_4d 
-   END interface ncio_write_vector
+   END INTERFACE ncio_write_vector
 
 CONTAINS
 

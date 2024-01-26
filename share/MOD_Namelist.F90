@@ -35,12 +35,16 @@ MODULE MOD_Namelist
 
    type (nl_domain_type) :: DEF_domain
 
+! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+! ----- Part 2: blocks and MPI  -----
+! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
    integer :: DEF_nx_blocks = 72
    integer :: DEF_ny_blocks = 36
    integer :: DEF_PIO_groupsize = 12
 
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-! ----- Part 2: For Single Point -----
+! ----- Part 3: For Single Point -----
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
    character(len=256) :: SITE_fsrfdata   = 'null'
@@ -61,7 +65,7 @@ MODULE MOD_Namelist
    logical  :: USE_SITE_urban_LAI        = .false.
 
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-! ----- Part 3: simulation time type -----
+! ----- Part 4: simulation time type -----
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
    type nl_simulation_time_type
@@ -85,48 +89,41 @@ MODULE MOD_Namelist
    type (nl_simulation_time_type) :: DEF_simulation_time
 
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-! ----- Part 4: directories and files -----
+! ----- Part 5: directories and files -----
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
    character(len=256) :: DEF_dir_rawdata  = 'path/to/rawdata/'
    character(len=256) :: DEF_dir_runtime  = 'path/to/runtime/'
    character(len=256) :: DEF_dir_output   = 'path/to/output/data'
-   character(len=256) :: DEF_dir_forcing  = 'path/to/forcing/data'
 
    character(len=256) :: DEF_dir_landdata = 'path/to/landdata'
    character(len=256) :: DEF_dir_restart  = 'path/to/restart'
    character(len=256) :: DEF_dir_history  = 'path/to/history'
    
-   character(len=256) :: DEF_file_mesh          = 'path/to/mesh/file'
-   character(len=256) :: DEF_CatchmentMesh_data = 'path/to/catchment/data'
-   character(len=256) :: DEF_file_mesh_filter   = 'path/to/mesh/filter'
-   
-   character(len=256) :: DEF_dir_existing_srfdata = 'path/to/landdata'
-   
-   character(len=256) :: DEF_file_SoilInit = 'null'
-   character(len=256) :: DEF_file_SnowInit = 'null'
-   character(len=256) :: DEF_file_cn_init  = 'null'
-
-   character(len=256) :: DEF_file_snowoptics = 'null'
-   character(len=256) :: DEF_file_snowaging  = 'null'
-
-   character(len=256) :: DEF_ElementNeighbour_file = 'null'
-   
    character(len=256) :: DEF_DA_obsdir = 'null'
 
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-! ----- Part 5: make surface data -----
+! ----- Part 6: make surface data -----
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+   character(len=256) :: DEF_file_mesh          = 'path/to/mesh/file'
    real(r8) :: DEF_GRIDBASED_lon_res = 0.5
    real(r8) :: DEF_GRIDBASED_lat_res = 0.5
 
+   character(len=256) :: DEF_CatchmentMesh_data = 'path/to/catchment/data'
+
+   character(len=256) :: DEF_file_mesh_filter   = 'path/to/mesh/filter'
+   
    ! ----- Use surface data from existing dataset -----
    ! case 1: from a larger region
    logical :: USE_srfdata_from_larger_region   = .false.
+   character(len=256) :: DEF_dir_existing_srfdata = 'path/to/landdata'
    ! case 2: from gridded data with dimensions [patch,lon,lat] or [pft,lon,lat]
    !         only available for USGS/IGBP/PFT CLASSIFICATION
    logical :: USE_srfdata_from_3D_gridded_data = .false.
+
+   ! USE a static year land cover type
+   integer :: DEF_LC_YEAR      = 2005
 
    ! ----- Subgrid scheme -----
    logical :: DEF_USE_USGS = .false.
@@ -153,7 +150,7 @@ MODULE MOD_Namelist
    logical :: USE_zip_for_aggregation = .true.
 
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-! ----- Part 6: Leaf Area Index -----
+! ----- Part 7: Leaf Area Index -----
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
    !add by zhongwang wei @ sysu 2021/12/23
@@ -163,21 +160,24 @@ MODULE MOD_Namelist
    ! ------LAI change and Land cover year setting ----------
    ! 06/2023, add by wenzong dong and hua yuan: use for updating LAI with simulation year
    logical :: DEF_LAI_CHANGE_YEARLY = .true.
-   ! USE a static year land cover type
-   integer :: DEF_LC_YEAR      = 2005
    ! 05/2023, add by Xingjie Lu: use for updating LAI with leaf carbon
    logical :: DEF_USE_LAIFEEDBACK = .false.
 
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-! ----- Part 7: Initialization -----
+! ----- Part 8: Initialization -----
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
    logical :: DEF_USE_SoilInit  = .false.
+   character(len=256) :: DEF_file_SoilInit = 'null'
+
    logical :: DEF_USE_SnowInit  = .false.
+   character(len=256) :: DEF_file_SnowInit = 'null'
+
    logical :: DEF_USE_CN_INIT   = .false.
+   character(len=256) :: DEF_file_cn_init  = 'null'
 
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-! ----- Part 8: LULCC related ------
+! ----- Part 9: LULCC related ------
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
    ! 06/2023, add by hua yuan and wenzong dong
@@ -189,7 +189,7 @@ MODULE MOD_Namelist
    integer :: DEF_LULCC_SCHEME = 1
 
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-! ----- Part 9: Urban model related ------
+! ----- Part 10: Urban model related ------
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
    ! ------ Urban model related -------
@@ -205,7 +205,7 @@ MODULE MOD_Namelist
    logical :: DEF_URBAN_LUCY   = .true.
 
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-! ----- Part 10: parameteration schemes -----
+! ----- Part 11: parameteration schemes -----
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
    ! ----- Atmospheric Nitrogen Deposition -----
@@ -250,6 +250,8 @@ MODULE MOD_Namelist
 
    ! .true. for running SNICAR model
    logical :: DEF_USE_SNICAR                  = .false.
+   character(len=256) :: DEF_file_snowoptics = 'null'
+   character(len=256) :: DEF_file_snowaging  = 'null'
 
    ! .true. read aerosol deposition data from file or .false. set in the code
    logical :: DEF_Aerosol_Readin              = .true.
@@ -259,14 +261,17 @@ MODULE MOD_Namelist
 
    ! ----- lateral flow related -----
    logical :: DEF_USE_EstimatedRiverDepth     = .true.
+   character(len=256) :: DEF_ElementNeighbour_file = 'null'
 
    character(len=5)   :: DEF_precip_phase_discrimination_scheme = 'II'
    character(len=256) :: DEF_SSP='585' ! Co2 path for CMIP6 future scenario.
+   
+   logical          :: DEF_USE_Forcing_Downscaling = .false.
+   character(len=5) :: DEF_DS_precipitation_adjust_scheme = 'II'
+   character(len=5) :: DEF_DS_longwave_adjust_scheme      = 'II'
 
    ! use irrigation
    logical :: DEF_USE_IRRIGATION = .false.
-   ! !  irrigation method temporary
-   integer :: DEF_IRRIGATION_METHOD = 1
    
    !Plant Hydraulics
    logical            :: DEF_USE_PLANTHYDRAULICS = .true.
@@ -286,14 +291,12 @@ MODULE MOD_Namelist
    logical            :: DEF_USE_FIRE = .false.
 
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-! ----- Part 11: forcing -----
+! ----- Part 12: forcing -----
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-   character(len=256) :: DEF_forcing_namelist = 'null'
+   character(len=256) :: DEF_dir_forcing  = 'path/to/forcing/data'
 
-   logical          :: DEF_USE_Forcing_Downscaling = .false.
-   character(len=5) :: DEF_DS_precipitation_adjust_scheme = 'II'
-   character(len=5) :: DEF_DS_longwave_adjust_scheme      = 'II'
+   character(len=256) :: DEF_forcing_namelist = 'null'
 
    type nl_forcing_type
 
@@ -356,7 +359,7 @@ MODULE MOD_Namelist
    logical            :: DEF_USE_CBL_HEIGHT = .false.
 
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-! ----- Part 12: history and restart -----
+! ----- Part 13: history and restart -----
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
    logical  :: DEF_HISTORY_IN_VECTOR = .false.

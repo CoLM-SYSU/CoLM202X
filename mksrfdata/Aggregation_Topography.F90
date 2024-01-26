@@ -50,103 +50,104 @@ SUBROUTINE Aggregation_Topography ( &
 #ifdef SrfdataDiag
    integer :: typpatch(N_land_classification+1), ityp
 #endif
-   write(cyear,'(i4.4)') lc_year
-   landdir = trim(dir_model_landdata) // '/topography/' // trim(cyear)
 
+      write(cyear,'(i4.4)') lc_year
+      landdir = trim(dir_model_landdata) // '/topography/' // trim(cyear)
+   
 #ifdef USEMPI
-   CALL mpi_barrier (p_comm_glb, p_err)
+      CALL mpi_barrier (p_comm_glb, p_err)
 #endif
-   IF (p_is_master) THEN
-      write(*,'(/, A)') 'Aggregate topography ...'
-      CALL system('mkdir -p ' // trim(adjustl(landdir)))
-   ENDIF
+      IF (p_is_master) THEN
+         write(*,'(/, A)') 'Aggregate topography ...'
+         CALL system('mkdir -p ' // trim(adjustl(landdir)))
+      ENDIF
 #ifdef USEMPI
-   CALL mpi_barrier (p_comm_glb, p_err)
+      CALL mpi_barrier (p_comm_glb, p_err)
 #endif
-
+   
 #ifdef SinglePoint
-   IF (USE_SITE_topography) THEN
-      RETURN
-   ENDIF
+      IF (USE_SITE_topography) THEN
+         RETURN
+      ENDIF
 #endif
-
-   lndname = trim(dir_rawdata)//'/elevation.nc'
-
-   IF (p_is_io) THEN
-      CALL allocate_block_data (gtopo, topography)
-      CALL ncio_read_block (lndname, 'elevation', gtopo, topography)
-
+   
+      lndname = trim(dir_rawdata)//'/elevation.nc'
+   
+      IF (p_is_io) THEN
+         CALL allocate_block_data (gtopo, topography)
+         CALL ncio_read_block (lndname, 'elevation', gtopo, topography)
+   
 #ifdef USEMPI
-      CALL aggregation_data_daemon (gtopo, data_r8_2d_in1 = topography)
+         CALL aggregation_data_daemon (gtopo, data_r8_2d_in1 = topography)
 #endif
-   ENDIF
-
+      ENDIF
+   
 ! ---------------------------------------------------------------------------------
 !   aggregate the elevation from the resolution of raw data to modelling resolution
 ! ---------------------------------------------------------------------------------
-
-   IF (p_is_worker) THEN
-
-      allocate (topography_patches (numpatch))
-
-      DO ipatch = 1, numpatch
-         CALL aggregation_request_data (landpatch, ipatch, gtopo, zip = USE_zip_for_aggregation, area = area_one, &
-            data_r8_2d_in1 = topography, data_r8_2d_out1 = topography_one)
-         IF (any(topography_one /= -9999.0)) THEN
-            topography_patches (ipatch) = &
-               sum(topography_one * area_one, mask = topography_one /= -9999.0) &
-               / sum(area_one, mask = topography_one /= -9999.0)
-         ELSE
-            topography_patches (ipatch) = -1.0e36
-         ENDIF
-      ENDDO
-
+   
+      IF (p_is_worker) THEN
+   
+         allocate (topography_patches (numpatch))
+   
+         DO ipatch = 1, numpatch
+            CALL aggregation_request_data (landpatch, ipatch, gtopo, zip = USE_zip_for_aggregation, area = area_one, &
+               data_r8_2d_in1 = topography, data_r8_2d_out1 = topography_one)
+            IF (any(topography_one /= -9999.0)) THEN
+               topography_patches (ipatch) = &
+                  sum(topography_one * area_one, mask = topography_one /= -9999.0) &
+                  / sum(area_one, mask = topography_one /= -9999.0)
+            ELSE
+               topography_patches (ipatch) = -1.0e36
+            ENDIF
+         ENDDO
+   
 #ifdef USEMPI
-      CALL aggregation_worker_done ()
+         CALL aggregation_worker_done ()
 #endif
-   ENDIF
-
+      ENDIF
+   
 #ifdef USEMPI
-   CALL mpi_barrier (p_comm_glb, p_err)
+      CALL mpi_barrier (p_comm_glb, p_err)
 #endif
-
+   
 #ifdef RangeCheck
-   CALL check_vector_data ('topography_patches ', topography_patches)
+      CALL check_vector_data ('topography_patches ', topography_patches)
 #endif
-
+   
 #ifndef SinglePoint
-   lndname = trim(landdir)//'/topography_patches.nc'
-   CALL ncio_create_file_vector (lndname, landpatch)
-   CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
-   CALL ncio_write_vector (lndname, 'topography_patches', 'patch', landpatch, topography_patches, 1)
-
+      lndname = trim(landdir)//'/topography_patches.nc'
+      CALL ncio_create_file_vector (lndname, landpatch)
+      CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
+      CALL ncio_write_vector (lndname, 'topography_patches', 'patch', landpatch, topography_patches, 1)
+   
 #ifdef SrfdataDiag
-   typpatch = (/(ityp, ityp = 0, N_land_classification)/)
-   lndname  = trim(dir_model_landdata) // '/diag/topo_' // trim(cyear) // '.nc'
-   CALL srfdata_map_and_write (topography_patches, landpatch%settyp, typpatch, m_patch2diag, &
-      -1.0e36_r8, lndname, 'topography', compress = 1, write_mode = 'one')
-
-   IF (p_is_worker) THEN
-      allocate(topo_elm(numelm))
-      DO i = 1, numelm
-         ps = elm_patch%substt(i)
-         pe = elm_patch%subend(i)
-         topo_elm(i) = sum(topography_patches(ps:pe) * elm_patch%subfrc(ps:pe))
-      ENDDO
-   ENDIF
-
-   lndname = trim(dir_model_landdata) // '/diag/topo_elm_' // trim(cyear) // '.nc'
-   CALL srfdata_map_and_write (topo_elm, landelm%settyp, (/0/), m_elm2diag, &
-      -1.0e36_r8, lndname, 'topo_elm', compress = 1, write_mode = 'one')
-
-   IF (allocated(topo_elm)) deallocate(topo_elm)
+      typpatch = (/(ityp, ityp = 0, N_land_classification)/)
+      lndname  = trim(dir_model_landdata) // '/diag/topo_' // trim(cyear) // '.nc'
+      CALL srfdata_map_and_write (topography_patches, landpatch%settyp, typpatch, m_patch2diag, &
+         -1.0e36_r8, lndname, 'topography', compress = 1, write_mode = 'one')
+   
+      IF (p_is_worker) THEN
+         allocate(topo_elm(numelm))
+         DO i = 1, numelm
+            ps = elm_patch%substt(i)
+            pe = elm_patch%subend(i)
+            topo_elm(i) = sum(topography_patches(ps:pe) * elm_patch%subfrc(ps:pe))
+         ENDDO
+      ENDIF
+   
+      lndname = trim(dir_model_landdata) // '/diag/topo_elm_' // trim(cyear) // '.nc'
+      CALL srfdata_map_and_write (topo_elm, landelm%settyp, (/0/), m_elm2diag, &
+         -1.0e36_r8, lndname, 'topo_elm', compress = 1, write_mode = 'one')
+   
+      IF (allocated(topo_elm)) deallocate(topo_elm)
 #endif
 #else
-   SITE_topography = topography_patches(1)
+      SITE_topography = topography_patches(1)
 #endif
-
-   IF (p_is_worker) THEN
-      deallocate ( topography_patches )
-   ENDIF
+   
+      IF (p_is_worker) THEN
+         deallocate ( topography_patches )
+      ENDIF
 
 END SUBROUTINE Aggregation_Topography
