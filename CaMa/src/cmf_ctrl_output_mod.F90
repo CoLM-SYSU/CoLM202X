@@ -529,7 +529,7 @@ CONTAINS
                   D2VEC => D2COPY
                CASE ('daminf')   !!! added
                   IF( .not. LDAMOUT ) CYCLE
-                  2VEC =>  d2daminf_avg
+                  D2VEC =>  d2daminf_avg
                CASE ('levsto')   !!! added
                   IF( .not. LLEVEE ) CYCLE
                   D2COPY=P2LEVSTO
