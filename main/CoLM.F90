@@ -504,7 +504,7 @@ PROGRAM CoLM
          time_used = (end_time - start_time) / c_per_sec
          IF (time_used >= 3600) THEN
             write(*,101) time_used/3600, mod(time_used,3600)/60, mod(time_used,60)
-         elseif (time_used >= 60) THEN
+         ELSEIF (time_used >= 60) THEN
             write(*,102) time_used/60, mod(time_used,60)
          ELSE
             write(*,103) time_used

@@ -2,15 +2,15 @@
 
 MODULE MOD_Urban_Hydrology
 
-  USE MOD_Precision
-  IMPLICIT NONE
-  SAVE
+   USE MOD_Precision
+   IMPLICIT NONE
+   SAVE
 
-  PUBLIC :: UrbanHydrology
+   PUBLIC :: UrbanHydrology
 
 CONTAINS
 
- SUBROUTINE UrbanHydrology ( &
+   SUBROUTINE UrbanHydrology ( &
         ! model running information
         ipatch         ,patchtype      ,lbr            ,lbi            ,&
         lbp            ,lbl            ,snll           ,deltim         ,&
@@ -55,16 +55,16 @@ CONTAINS
 !
 !=======================================================================
 
-  USE MOD_Precision
-  USE MOD_Vars_Global
-  USE MOD_Const_Physical, only: denice, denh2o, tfrz
-  USE MOD_SoilSnowHydrology
-  USE MOD_Lake
+   USE MOD_Precision
+   USE MOD_Vars_Global
+   USE MOD_Const_Physical, only: denice, denh2o, tfrz
+   USE MOD_SoilSnowHydrology
+   USE MOD_Lake
 
-  IMPLICIT NONE
+   IMPLICIT NONE
 
 !-----------------------Argument----------------------------------------
-  INTEGER, intent(in) :: &
+   integer, intent(in) :: &
         ipatch           ,&! patch index
         patchtype        ,&! land patch type (0=soil, 1=urban or built-up, 2=wetland,
                            ! 3=land ice, 4=land water bodies, 99=ocean
@@ -73,10 +73,10 @@ CONTAINS
         lbp              ,&! lower bound of array
         lbl                ! lower bound of array
 
-  INTEGER, intent(inout) :: &
+   integer, intent(inout) :: &
         snll               ! number of snow layers
 
-  REAL(r8), intent(in) :: &
+   real(r8), intent(in) :: &
         deltim           ,&! time step (s)
         pg_rain          ,&! rainfall after removal of interception (mm h2o/s)
         pg_snow          ,&! snowfall after removal of interception (mm h2o/s)
@@ -90,7 +90,7 @@ CONTAINS
         wtfact           ,&! fraction of model area with high water table
         pondmx           ,&! ponding depth (mm)
         ssi              ,&! irreducible water saturation of snow
-        wimp             ,&! water impremeable if porosity less than wimp
+        wimp             ,&! water impremeable IF porosity less than wimp
         smpmin           ,&! restriction for min of soil poten. (mm)
 
         bsw   (1:nl_soil),&! Clapp-Hornberger "B"
@@ -121,22 +121,22 @@ CONTAINS
         sm_gper          ,&! snow melt (mm h2o/s)
         w_old              ! liquid water mass of the column at the previous time step (mm)
 
-  REAL(r8), intent(inout) :: rootflux(1:nl_soil)
+   real(r8), intent(inout) :: rootflux(1:nl_soil)
 
 #if(defined CaMa_Flood)
-  real(r8), INTENT(inout) :: flddepth   ! inundation water depth [mm]
-  real(r8), INTENT(in)    :: fldfrc     ! inundation water depth [0-1]
-  real(r8), INTENT(out)   :: qinfl_fld  ! grid averaged inundation water input from top (mm/s)
+   real(r8), intent(inout) :: flddepth   ! inundation water depth [mm]
+   real(r8), intent(in)    :: fldfrc     ! inundation water depth [0-1]
+   real(r8), intent(out)   :: qinfl_fld  ! grid averaged inundation water input from top (mm/s)
 #endif
 
-  real(r8), intent(in) :: forc_us
-  real(r8), intent(in) :: forc_vs
+   real(r8), intent(in) :: forc_us
+   real(r8), intent(in) :: forc_vs
 
 ! SNICAR model variables
 ! Aerosol Fluxes (Jan. 07, 2023)
-  real(r8), intent(in) :: forc_aer (14) ! aerosol deposition from atmosphere model (grd,aer) [kg m-1 s-1]
+   real(r8), intent(in) :: forc_aer (14) ! aerosol deposition from atmosphere model (grd,aer) [kg m-1 s-1]
 
-  real(r8), INTENT(inout) :: &
+   real(r8), intent(inout) :: &
         mss_bcpho (lbp:0)             ,&! mass of hydrophobic BC in snow  (col,lyr) [kg]
         mss_bcphi (lbp:0)             ,&! mass of hydrophillic BC in snow (col,lyr) [kg]
         mss_ocpho (lbp:0)             ,&! mass of hydrophobic OC in snow  (col,lyr) [kg]
@@ -148,10 +148,10 @@ CONTAINS
 ! Aerosol Fluxes (Jan. 07, 2023)
 ! END SNICAR model variables
 
-  INTEGER, intent(in) :: &
+   integer, intent(in) :: &
         imelt_lake(maxsnl+1:nl_soil)    ! lake flag for melting or freezing snow and soil layer [-]
 
-  REAL(r8), intent(inout) :: &
+   real(r8), intent(inout) :: &
         lake_icefrac(  1:nl_lake)     ,&! lake ice fraction
         fioldl (maxsnl+1:nl_soil)     ,&! fraction of ice relative to the total water content [-]
         dz_lake     (  1:nl_lake)     ,&! lake layer depth [m]
@@ -184,20 +184,20 @@ CONTAINS
         zwt              ,&! the depth from ground (soil) surface to water table [m]
         wa                 ! water storage in aquifer [mm]
 
-  REAL(r8), intent(out) :: &
+   real(r8), intent(out) :: &
         rsur             ,&! surface runoff (mm h2o/s)
         rnof             ,&! total runoff (mm h2o/s)
         qinfl            ,&! infiltration rate (mm h2o/s)
         qcharge            ! groundwater recharge (positive to aquifer) [mm/s]
 
-  REAL(r8), intent(out) :: &
+   real(r8), intent(out) :: &
         smp(1:nl_soil)   ,&! soil matrix potential [mm]
         hk (1:nl_soil)   ,&! hydraulic conductivity [mm h2o/m]
         errw_rsub          ! the possible subsurface runoff deficit after PHS is included
 !
 !-----------------------Local Variables------------------------------
 !
-  REAL(r8) :: &
+   real(r8) :: &
         fg               ,&! ground fractional cover [-]
         gwat             ,&! net water input from top (mm/s)
         rnof_roof        ,&! total runoff (mm h2o/s)
@@ -211,7 +211,7 @@ CONTAINS
         dfseng           ,&! change of lake sensible heat [W/m2]
         dfgrnd             ! change of lake ground heat flux [W/m2]
 
-  REAL(r8) :: a, aa, xs1
+   real(r8) :: a, aa, xs1
 
       fg = 1 - froof
       dfseng = 0.
@@ -366,7 +366,7 @@ CONTAINS
       rnof = rnof_roof*froof + rnof_gimp*fg*(1-fgper) + rnof_gper*fg*fgper
       !rnof = rnof*(1.-flake) + rnof_lake*flake
 
- END SUBROUTINE UrbanHydrology
+   END SUBROUTINE UrbanHydrology
 
 END MODULE MOD_Urban_Hydrology
 ! ---------- EOP ------------
