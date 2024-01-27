@@ -159,9 +159,9 @@ CONTAINS
       allocate( D2SEALEV(NSEQMAX,1) )
 
       IF( LSEALEVCDF )THEN
-      #ifdef UseCDF_CMF
+#ifdef UseCDF_CMF
       CALL CMF_BOUNDARY_INIT_CDF    !! initialize sea level boundary (netCDF only)
-      #endif
+#endif
       ENDIF
 
       write(LOGNAM,*) "CMF::BOUNDARY_INIT: end" 
@@ -284,9 +284,9 @@ CONTAINS
 
 
       IF( LSEALEVCDF )THEN
-      #ifdef UseCDF_CMF
+#ifdef UseCDF_CMF
          CALL CMF_BOUNDARY_GET_CDF
-      #endif
+#endif
       ELSE
          CALL CMF_BOUNDARY_GET_BIN
       ENDIF
