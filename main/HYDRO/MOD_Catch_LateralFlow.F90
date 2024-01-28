@@ -1,7 +1,7 @@
 #include <define.h>
 
-#ifdef LATERAL_FLOW
-MODULE MOD_Hydro_LateralFlow
+#ifdef CatchLateralFlow
+MODULE MOD_Catch_LateralFlow
    !-------------------------------------------------------------------------------------
    ! DESCRIPTION:
    !   
@@ -22,12 +22,12 @@ MODULE MOD_Hydro_LateralFlow
    USE MOD_Precision
    USE MOD_SPMD_Task
    USE MOD_Hydro_Vars_TimeVariables
-   USE MOD_Hydro_RiverLakeNetwork
-   USE MOD_Hydro_BasinNeighbour
-   USE MOD_Hydro_HillslopeNetwork
-   USE MOD_Hydro_HillslopeFlow
-   USE MOD_Hydro_SubsurfaceFlow
-   USE MOD_Hydro_RiverLakeFlow
+   USE MOD_ElementNeighbour
+   USE MOD_Catch_RiverLakeNetwork
+   USE MOD_Catch_HillslopeNetwork
+   USE MOD_Catch_HillslopeFlow
+   USE MOD_Catch_SubsurfaceFlow
+   USE MOD_Catch_RiverLakeFlow
    USE MOD_Vars_TimeVariables
    USE MOD_Vars_Global,    only : dz_soi
    USE MOD_Const_Physical, only : denice, denh2o
@@ -44,7 +44,7 @@ MODULE MOD_Hydro_LateralFlow
 CONTAINS
 
    ! ----------
-   SUBROUTINE lateral_flow_init ()
+   SUBROUTINE lateral_flow_init (lc_year)
 
 #ifdef CoLMDEBUG
       USE MOD_SPMD_Task
@@ -54,13 +54,17 @@ CONTAINS
       USE MOD_Utils
 #endif
       IMPLICIT NONE
+      
+      INTEGER, intent(in) :: lc_year    ! which year of land cover data used
 
 #ifdef CoLMDEBUG
       integer :: ip ,ie, ipxl
 #endif
 
+      CALL element_neighbour_init (lc_year)
+
       CALL hillslope_network_init  ()
-      CALL river_lake_network_init (use_calc_rivdpt = .true.)
+      CALL river_lake_network_init ()
       CALL basin_neighbour_init    ()
 
 #ifdef CoLMDEBUG
@@ -274,5 +278,5 @@ CONTAINS
 
    END SUBROUTINE lateral_flow_final
 
-END MODULE MOD_Hydro_LateralFlow
+END MODULE MOD_Catch_LateralFlow
 #endif

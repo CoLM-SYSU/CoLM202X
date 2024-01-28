@@ -11,12 +11,12 @@ MODULE MOD_GroundFluxes
 
 !-----------------------------------------------------------------------
 
-   CONTAINS
+CONTAINS
 
 !-----------------------------------------------------------------------
 
 
-   subroutine GroundFluxes (zlnd, zsno, hu, ht, hq, hpbl, &
+   SUBROUTINE GroundFluxes (zlnd, zsno, hu, ht, hq, hpbl, &
                             us, vs, tm, qm, rhoair, psrf, &
                             ur, thm, th, thv, t_grnd, qg, rss, dqgdT, htvp, &
                             fsno, cgrnd, cgrndl, cgrnds, &
@@ -26,7 +26,7 @@ MODULE MOD_GroundFluxes
                             z0m, z0hg, zol, rib, ustar, qstar, tstar, fm, fh, fq)
 
 !=======================================================================
-! this is the main subroutine to execute the calculation of thermal processes
+! this is the main SUBROUTINE to execute the calculation of thermal processes
 ! and surface fluxes
 !
 ! Original author : Yongjiu Dai, 09/15/1999; 08/30/2002
@@ -39,15 +39,15 @@ MODULE MOD_GroundFluxes
 !                        make a proper update of um.
 !=======================================================================
 
-    use MOD_Precision
-    use MOD_Const_Physical, only: cpair,vonkar,grav
-    use MOD_FrictionVelocity
-    USE mod_namelist, only: DEF_USE_CBL_HEIGHT,DEF_RSS_SCHEME
-    USE MOD_TurbulenceLEddy
-    implicit none
+   USE MOD_Precision
+   USE MOD_Const_Physical, only: cpair,vonkar,grav
+   USE MOD_FrictionVelocity
+   USE mod_namelist, only: DEF_USE_CBL_HEIGHT,DEF_RSS_SCHEME
+   USE MOD_TurbulenceLEddy
+   IMPLICIT NONE
 
 !----------------------- Dummy argument --------------------------------
-    real(r8), INTENT(in) :: &
+   real(r8), intent(in) :: &
           zlnd,      &! roughness length for soil [m]
           zsno,      &! roughness length for snow [m]
 
@@ -80,7 +80,7 @@ MODULE MOD_GroundFluxes
           rss,       &! soil surface resistance for evaporation [s/m]
           htvp        ! latent heat of vapor of water (or sublimation) [j/kg]
 
-    real(r8), INTENT(out) :: &
+   real(r8), intent(out) :: &
           taux,      &! wind stress: E-W [kg/m/s**2]
           tauy,      &! wind stress: N-S [kg/m/s**2]
           fseng,     &! sensible heat flux from ground [W/m2]
@@ -102,16 +102,16 @@ MODULE MOD_GroundFluxes
           ustar,     &! friction velocity [m/s]
           tstar,     &! temperature scaling parameter
           qstar,     &! moisture scaling parameter
-          fm,        &! integral of profile function for momentum
-          fh,        &! integral of profile function for heat
-          fq          ! integral of profile function for moisture
+          fm,        &! integral of profile FUNCTION for momentum
+          fh,        &! integral of profile FUNCTION for heat
+          fq          ! integral of profile FUNCTION for moisture
 
   !------------------------ LOCAL VARIABLES ------------------------------
-    integer niters,  &! maximum number of iterations for surface temperature
+   integer niters,   &! maximum number of iterations for surface temperature
          iter,       &! iteration index
          nmozsgn      ! number of times moz changes sign
 
-    real(r8) :: &
+   real(r8) :: &
          beta,       &! coefficient of conective velocity [-]
          displax,    &! zero-displacement height [m]
          dth,        &! diff of virtual temp. between ref. height and surface
@@ -126,7 +126,7 @@ MODULE MOD_GroundFluxes
          raiw,       &! temporary variable [kg/m2/s]
          fh2m,       &! relation for temperature at 2m
          fq2m,       &! relation for specific humidity at 2m
-         fm10m,      &! integral of profile function for momentum at 10m
+         fm10m,      &! integral of profile FUNCTION for momentum at 10m
          thvstar,    &! virtual potential temperature scaling parameter
          um,         &! wind speed including the stablity effect [m/s]
          wc,         &! convective velocity [m/s]
@@ -139,124 +139,124 @@ MODULE MOD_GroundFluxes
 
   !----------------------- Dummy argument --------------------------------
   ! initial roughness length
-        ! 09/2019, yuan: change to a combination of zlnd and zsno
-        z0mg = (1.-fsno)*zlnd + fsno*zsno
-        z0hg = z0mg
-        z0qg = z0mg
+      ! 09/2019, yuan: change to a combination of zlnd and zsno
+      z0mg = (1.-fsno)*zlnd + fsno*zsno
+      z0hg = z0mg
+      z0qg = z0mg
 
   ! potential temperatur at the reference height
-        beta = 1.      ! -  (in computing W_*)
-        zii  = 1000.   ! m  (pbl height)
-        z0m  = z0mg
+      beta = 1.      ! -  (in computing W_*)
+      zii  = 1000.   ! m  (pbl height)
+      z0m  = z0mg
 
   !-----------------------------------------------------------------------
-  !     Compute sensible and latent fluxes and their derivatives with respect
-  !     to ground temperature using ground temperatures from previous time step.
+  !   Compute sensible and latent fluxes and their derivatives with respect
+  !   to ground temperature using ground temperatures from previous time step.
   !-----------------------------------------------------------------------
   ! Initialization variables
-        nmozsgn = 0
-        obuold = 0.
+      nmozsgn = 0
+      obuold = 0.
 
-        dth   = thm-t_grnd
-        dqh   = qm-qg
-        dthv  = dth*(1.+0.61*qm)+0.61*th*dqh
-        zldis = hu-0.
+      dth   = thm-t_grnd
+      dqh   = qm-qg
+      dthv  = dth*(1.+0.61*qm)+0.61*th*dqh
+      zldis = hu-0.
 
-        call moninobukini(ur,th,thm,thv,dth,dqh,dthv,zldis,z0mg,um,obu)
+      CALL moninobukini(ur,th,thm,thv,dth,dqh,dthv,zldis,z0mg,um,obu)
 
   ! Evaluated stability-dependent variables using moz from prior iteration
-        niters=6
+      niters=6
 
-        !----------------------------------------------------------------
-        ITERATION : do iter = 1, niters         ! begin stability iteration
-        !----------------------------------------------------------------
-           displax = 0.
-           if (DEF_USE_CBL_HEIGHT) then
-             call moninobuk_leddy(hu,ht,hq,displax,z0mg,z0hg,z0qg,obu,um, hpbl, &
-                                  ustar,fh2m,fq2m,fm10m,fm,fh,fq)
-           else
-             call moninobuk(hu,ht,hq,displax,z0mg,z0hg,z0qg,obu,um,&
-                            ustar,fh2m,fq2m,fm10m,fm,fh,fq)
-           endif
+      !----------------------------------------------------------------
+      ITERATION : DO iter = 1, niters         ! begin stability iteration
+      !----------------------------------------------------------------
+         displax = 0.
+         IF (DEF_USE_CBL_HEIGHT) THEN
+           CALL moninobuk_leddy(hu,ht,hq,displax,z0mg,z0hg,z0qg,obu,um, hpbl, &
+                                ustar,fh2m,fq2m,fm10m,fm,fh,fq)
+         ELSE
+           CALL moninobuk(hu,ht,hq,displax,z0mg,z0hg,z0qg,obu,um,&
+                          ustar,fh2m,fq2m,fm10m,fm,fh,fq)
+         ENDIF
 
-           tstar = vonkar/fh*dth
-           qstar = vonkar/fq*dqh
+         tstar = vonkar/fh*dth
+         qstar = vonkar/fq*dqh
 
-           z0hg = z0mg/exp(0.13 * (ustar*z0mg/1.5e-5)**0.45)
-           z0qg = z0hg
+         z0hg = z0mg/exp(0.13 * (ustar*z0mg/1.5e-5)**0.45)
+         z0qg = z0hg
 
   ! 2023.04.06, weinan
-           !thvstar=tstar+0.61*th*qstar
-           thvstar=tstar*(1.+0.61*qm)+0.61*th*qstar
-           zeta=zldis*vonkar*grav*thvstar/(ustar**2*thv)
-           if(zeta >= 0.) then     !stable
-             zeta = min(2.,max(zeta,1.e-6))
-           else                    !unstable
-             zeta = max(-100.,min(zeta,-1.e-6))
-           endif
-           obu = zldis/zeta
+         !thvstar=tstar+0.61*th*qstar
+         thvstar=tstar*(1.+0.61*qm)+0.61*th*qstar
+         zeta=zldis*vonkar*grav*thvstar/(ustar**2*thv)
+         IF(zeta >= 0.) THEN     !stable
+           zeta = min(2.,max(zeta,1.e-6))
+         ELSE                    !unstable
+           zeta = max(-100.,min(zeta,-1.e-6))
+         ENDIF
+         obu = zldis/zeta
 
-           if(zeta >= 0.)then
-             um = max(ur,0.1)
-           else
-             if (DEF_USE_CBL_HEIGHT) then !//TODO: Shaofeng, 2023.05.18
-               zii = max(5.*hu,hpbl)
-             endif !//TODO: Shaofeng, 2023.05.18
-             wc = (-grav*ustar*thvstar*zii/thv)**(1./3.)
-            wc2 = beta*beta*(wc*wc)
-             um = sqrt(ur*ur+wc2)
-           endif
+         IF(zeta >= 0.)THEN
+           um = max(ur,0.1)
+         ELSE
+           IF (DEF_USE_CBL_HEIGHT) THEN !//TODO: Shaofeng, 2023.05.18
+             zii = max(5.*hu,hpbl)
+           ENDIF !//TODO: Shaofeng, 2023.05.18
+           wc = (-grav*ustar*thvstar*zii/thv)**(1./3.)
+          wc2 = beta*beta*(wc*wc)
+           um = sqrt(ur*ur+wc2)
+         ENDIF
 
-           if (obuold*obu < 0.) nmozsgn = nmozsgn+1
-           if (nmozsgn >= 4) EXIT
+         IF (obuold*obu < 0.) nmozsgn = nmozsgn+1
+         IF (nmozsgn >= 4) EXIT
 
-           obuold = obu
+         obuold = obu
 
-        !----------------------------------------------------------------
-        enddo ITERATION                         ! end stability iteration
-        !----------------------------------------------------------------
+      !----------------------------------------------------------------
+      ENDDO ITERATION                         ! END stability iteration
+      !----------------------------------------------------------------
 
   ! Get derivative of fluxes with repect to ground temperature
-        ram  = 1./(ustar*ustar/um)
-        rah  = 1./(vonkar/fh*ustar)
-        raw  = 1./(vonkar/fq*ustar)
+      ram  = 1./(ustar*ustar/um)
+      rah  = 1./(vonkar/fh*ustar)
+      raw  = 1./(vonkar/fq*ustar)
 
-        raih = rhoair*cpair/rah
+      raih = rhoair*cpair/rah
 
   ! 08/23/2019, yuan: add soil surface resistance (rss)
-        IF (dqh > 0.) THEN
-           raiw = rhoair/raw !dew case. assume no soil resistance
-        ELSE
-           IF (DEF_RSS_SCHEME .eq. 4) THEN
-              raiw = rss*rhoair/raw
-           ELSE
-              raiw = rhoair/(raw+rss)
-           ENDIF
-        ENDIF
+      IF (dqh > 0.) THEN
+         raiw = rhoair/raw !dew case. assume no soil resistance
+      ELSE
+         IF (DEF_RSS_SCHEME .eq. 4) THEN
+            raiw = rss*rhoair/raw
+         ELSE
+            raiw = rhoair/(raw+rss)
+         ENDIF
+      ENDIF
 
-        cgrnds = raih
-        cgrndl = raiw*dqgdT
-        cgrnd  = cgrnds + htvp*cgrndl
+      cgrnds = raih
+      cgrndl = raiw*dqgdT
+      cgrnd  = cgrnds + htvp*cgrndl
 
-        zol = zeta
-        rib = min(5.,zol*ustar**2/(vonkar**2/fh*um**2))
+      zol = zeta
+      rib = min(5.,zol*ustar**2/(vonkar**2/fh*um**2))
 
   ! surface fluxes of momentum, sensible and latent
   ! using ground temperatures from previous time step
-        taux  = -rhoair*us/ram
-        tauy  = -rhoair*vs/ram
-        fseng = -raih*dth
-        fevpg = -raiw*dqh
+      taux  = -rhoair*us/ram
+      tauy  = -rhoair*vs/ram
+      fseng = -raih*dth
+      fevpg = -raiw*dqh
 
-        fseng_soil = -raih * (thm - t_soil)
-        fseng_snow = -raih * (thm - t_snow)
-        fevpg_soil = -raiw * ( qm - q_soil)
-        fevpg_snow = -raiw * ( qm - q_snow)
+      fseng_soil = -raih * (thm - t_soil)
+      fseng_snow = -raih * (thm - t_snow)
+      fevpg_soil = -raiw * ( qm - q_soil)
+      fevpg_snow = -raiw * ( qm - q_snow)
 
   ! 2 m height air temperature
-        tref = thm + vonkar/fh*dth * (fh2m/vonkar - fh/vonkar)
-        qref =  qm + vonkar/fq*dqh * (fq2m/vonkar - fq/vonkar)
+      tref = thm + vonkar/fh*dth * (fh2m/vonkar - fh/vonkar)
+      qref =  qm + vonkar/fq*dqh * (fq2m/vonkar - fq/vonkar)
 
-   end subroutine GroundFluxes
+   END SUBROUTINE GroundFluxes
 
 END MODULE MOD_GroundFluxes

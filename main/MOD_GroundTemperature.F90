@@ -13,7 +13,7 @@ MODULE MOD_GroundTemperature
 
 !-----------------------------------------------------------------------
 
-   CONTAINS
+CONTAINS
 
 !-----------------------------------------------------------------------
 
@@ -143,7 +143,7 @@ MODULE MOD_GroundTemperature
    real(r8), intent(inout) :: wliq_soisno(lb:nl_soil) !liqui water [kg/m2]
    real(r8), intent(inout) :: scv                     !snow cover, water equivalent [mm, kg/m2]
    real(r8), intent(inout) :: snowdp                  !snow depth [m]
-   real(r8), INTENT(in)    :: fsno                    !snow fractional cover [-]
+   real(r8), intent(in)    :: fsno                    !snow fractional cover [-]
 
    real(r8), intent(out) :: sm                        !rate of snowmelt [kg/(m2 s)]
    real(r8), intent(out) :: xmf                       !total latent heat of phase change of ground water
@@ -182,48 +182,48 @@ MODULE MOD_GroundTemperature
 
 !=======================================================================
 ! soil ground and wetland heat capacity
-   DO i = 1, nl_soil
-      vf_water(i) = wliq_soisno(i)/(dz_soisno(i)*denh2o)
-      vf_ice(i) = wice_soisno(i)/(dz_soisno(i)*denice)
-      CALL soil_hcap_cond(vf_gravels(i),vf_om(i),vf_sand(i),porsl(i),&
-                          wf_gravels(i),wf_sand(i),k_solids(i),&
-                          csol(i),dkdry(i),dksatu(i),dksatf(i),&
-                          BA_alpha(i),BA_beta(i),&
-                          t_soisno(i),vf_water(i),vf_ice(i),hcap(i),thk(i))
-      cv(i) = hcap(i)*dz_soisno(i)
-   ENDDO
-   IF(lb==1 .and. scv>0.) cv(1) = cv(1) + cpice*scv
+      DO i = 1, nl_soil
+         vf_water(i) = wliq_soisno(i)/(dz_soisno(i)*denh2o)
+         vf_ice(i) = wice_soisno(i)/(dz_soisno(i)*denice)
+         CALL soil_hcap_cond(vf_gravels(i),vf_om(i),vf_sand(i),porsl(i),&
+                             wf_gravels(i),wf_sand(i),k_solids(i),&
+                             csol(i),dkdry(i),dksatu(i),dksatf(i),&
+                             BA_alpha(i),BA_beta(i),&
+                             t_soisno(i),vf_water(i),vf_ice(i),hcap(i),thk(i))
+         cv(i) = hcap(i)*dz_soisno(i)
+      ENDDO
+      IF(lb==1 .and. scv>0.) cv(1) = cv(1) + cpice*scv
 
 ! Snow heat capacity
-   IF(lb <= 0)THEN
-      cv(:0) = cpliq*wliq_soisno(:0) + cpice*wice_soisno(:0)
-   ENDIF
+      IF(lb <= 0)THEN
+         cv(:0) = cpliq*wliq_soisno(:0) + cpice*wice_soisno(:0)
+      ENDIF
 
 ! Snow thermal conductivity
-   IF(lb <= 0)THEN
-      DO i = lb, 0
-      rhosnow = (wice_soisno(i)+wliq_soisno(i))/dz_soisno(i)
+      IF(lb <= 0)THEN
+         DO i = lb, 0
+         rhosnow = (wice_soisno(i)+wliq_soisno(i))/dz_soisno(i)
 
-      ! presently option [1] is the default option
-      ! [1] Jordan (1991) pp. 18
-      thk(i) = tkair+(7.75e-5*rhosnow+1.105e-6*rhosnow*rhosnow)*(tkice-tkair)
+         ! presently option [1] is the default option
+         ! [1] Jordan (1991) pp. 18
+         thk(i) = tkair+(7.75e-5*rhosnow+1.105e-6*rhosnow*rhosnow)*(tkice-tkair)
 
-      ! [2] Sturm et al (1997)
-      ! thk(i) = 0.0138 + 1.01e-3*rhosnow + 3.233e-6*rhosnow**2
-      ! [3] Ostin and Andersson presented in Sturm et al., (1997)
-      ! thk(i) = -0.871e-2 + 0.439e-3*rhosnow + 1.05e-6*rhosnow**2
-      ! [4] Jansson(1901) presented in Sturm et al. (1997)
-      ! thk(i) = 0.0293 + 0.7953e-3*rhosnow + 1.512e-12*rhosnow**2
-      ! [5] Douville et al., (1995)
-      ! thk(i) = 2.2*(rhosnow/denice)**1.88
-      ! [6] van Dusen (1992) presented in Sturm et al. (1997)
-      ! thk(i) = 0.021 + 0.42e-3*rhosnow + 0.22e-6*rhosnow**2
+         ! [2] Sturm et al (1997)
+         ! thk(i) = 0.0138 + 1.01e-3*rhosnow + 3.233e-6*rhosnow**2
+         ! [3] Ostin and Andersson presented in Sturm et al., (1997)
+         ! thk(i) = -0.871e-2 + 0.439e-3*rhosnow + 1.05e-6*rhosnow**2
+         ! [4] Jansson(1901) presented in Sturm et al. (1997)
+         ! thk(i) = 0.0293 + 0.7953e-3*rhosnow + 1.512e-12*rhosnow**2
+         ! [5] Douville et al., (1995)
+         ! thk(i) = 2.2*(rhosnow/denice)**1.88
+         ! [6] van Dusen (1992) presented in Sturm et al. (1997)
+         ! thk(i) = 0.021 + 0.42e-3*rhosnow + 0.22e-6*rhosnow**2
 
-      ENDDO
-   ENDIF
+         ENDDO
+      ENDIF
 
 ! Thermal conductivity at the layer interface
-   DO i = lb, nl_soil-1
+      DO i = lb, nl_soil-1
 
 ! the following consideration is try to avoid the snow conductivity
 ! to be dominant in the thermal conductivity of the interface.
@@ -231,207 +231,207 @@ MODULE MOD_GroundTemperature
 ! is larger than that of interface to top soil node,
 ! the snow thermal conductivity will be dominant, and the result is that
 ! lees heat tranfer between snow and soil
-      IF((i==0) .and. (z_soisno(i+1)-zi_soisno(i)<zi_soisno(i)-z_soisno(i)))THEN
-         tk(i) = 2.*thk(i)*thk(i+1)/(thk(i)+thk(i+1))
-         tk(i) = max(0.5*thk(i+1),tk(i))
-      ELSE
-         tk(i) = thk(i)*thk(i+1)*(z_soisno(i+1)-z_soisno(i)) &
-               /(thk(i)*(z_soisno(i+1)-zi_soisno(i))+thk(i+1)*(zi_soisno(i)-z_soisno(i)))
-      ENDIF
-   ENDDO
-   tk(nl_soil) = 0.
+         IF((i==0) .and. (z_soisno(i+1)-zi_soisno(i)<zi_soisno(i)-z_soisno(i)))THEN
+            tk(i) = 2.*thk(i)*thk(i+1)/(thk(i)+thk(i+1))
+            tk(i) = max(0.5*thk(i+1),tk(i))
+         ELSE
+            tk(i) = thk(i)*thk(i+1)*(z_soisno(i+1)-z_soisno(i)) &
+                  /(thk(i)*(z_soisno(i+1)-zi_soisno(i))+thk(i+1)*(zi_soisno(i)-z_soisno(i)))
+         ENDIF
+      ENDDO
+      tk(nl_soil) = 0.
 
 ! net ground heat flux into the surface and its temperature derivative
 
-   ! 08/19/2021, yuan: NOTE! removed sigf, LAI->100% cover
-   IF (DEF_USE_SNICAR .and. lb < 1) THEN
-      hs = sabg_snow_lyr(lb) + sabg_soil + dlrad*emg &
-         - (fseng+fevpg*htvp) &
-         + cpliq*pg_rain*(t_precip-t_grnd) &
-         + cpice*pg_snow*(t_precip-t_grnd)
-   ELSE
-      hs = sabg + dlrad*emg &
-         - (fseng+fevpg*htvp) &
-         + cpliq*pg_rain*(t_precip-t_grnd) &
-         + cpice*pg_snow*(t_precip-t_grnd)
-   ENDIF
-
-   IF (.not.DEF_SPLIT_SOILSNOW) THEN
-      hs = hs - emg*stefnc*t_grnd**4
-   ELSE
-      ! 03/08/2020, yuan: separate soil and snow
-      hs = hs - fsno*emg*stefnc*t_snow**4 &
-         - (1.-fsno)*emg*stefnc*t_soil**4
-
-      ! 03/08/2020, yuan: calculate hs_soil, hs_snow for
-      ! soil/snow fractional cover separately.
-      hs_soil = dlrad*emg &
-              - emg*stefnc*t_soil**4 &
-              - (fseng_soil+fevpg_soil*htvp) &
-              + cpliq*pg_rain*(t_precip-t_soil) &
-              + cpice*pg_snow*(t_precip-t_soil)
-
-      hs_soil = hs_soil*(1.-fsno) + sabg_soil
-
-      hs_snow = dlrad*emg &
-              - emg*stefnc*t_snow**4 &
-              - (fseng_snow+fevpg_snow*htvp) &
-              + cpliq*pg_rain*(t_precip-t_snow) &
-              + cpice*pg_snow*(t_precip-t_snow)
-
+      ! 08/19/2021, yuan: NOTE! removed sigf, LAI->100% cover
       IF (DEF_USE_SNICAR .and. lb < 1) THEN
-         hs_snow = hs_snow*fsno + sabg_snow_lyr(lb)
+         hs = sabg_snow_lyr(lb) + sabg_soil + dlrad*emg &
+            - (fseng+fevpg*htvp) &
+            + cpliq*pg_rain*(t_precip-t_grnd) &
+            + cpice*pg_snow*(t_precip-t_grnd)
       ELSE
-         hs_snow = hs_snow*fsno + sabg_snow
+         hs = sabg + dlrad*emg &
+            - (fseng+fevpg*htvp) &
+            + cpliq*pg_rain*(t_precip-t_grnd) &
+            + cpice*pg_snow*(t_precip-t_grnd)
+      ENDIF
+
+      IF (.not.DEF_SPLIT_SOILSNOW) THEN
+         hs = hs - emg*stefnc*t_grnd**4
+      ELSE
+         ! 03/08/2020, yuan: separate soil and snow
+         hs = hs - fsno*emg*stefnc*t_snow**4 &
+            - (1.-fsno)*emg*stefnc*t_soil**4
+
+         ! 03/08/2020, yuan: calculate hs_soil, hs_snow for
+         ! soil/snow fractional cover separately.
+         hs_soil = dlrad*emg &
+                 - emg*stefnc*t_soil**4 &
+                 - (fseng_soil+fevpg_soil*htvp) &
+                 + cpliq*pg_rain*(t_precip-t_soil) &
+                 + cpice*pg_snow*(t_precip-t_soil)
+
+         hs_soil = hs_soil*(1.-fsno) + sabg_soil
+
+         hs_snow = dlrad*emg &
+                 - emg*stefnc*t_snow**4 &
+                 - (fseng_snow+fevpg_snow*htvp) &
+                 + cpliq*pg_rain*(t_precip-t_snow) &
+                 + cpice*pg_snow*(t_precip-t_snow)
+
+         IF (DEF_USE_SNICAR .and. lb < 1) THEN
+            hs_snow = hs_snow*fsno + sabg_snow_lyr(lb)
+         ELSE
+            hs_snow = hs_snow*fsno + sabg_snow
+         ENDIF
+
+         dhsdT = -cgrnd - 4.*emg*stefnc*t_grnd**3 - cpliq*pg_rain - cpice*pg_snow
+
+         IF (sabg_soil+sabg_snow-sabg>1.e-6 .or. hs_soil+hs_snow-hs>1.e-6) THEN
+            print *, "MOD_GroundTemperature.F90: Error in spliting soil and snow surface!"
+            print *, "sabg:", sabg, "sabg_soil:", sabg_soil, "sabg_snow", sabg_snow
+            print *, "hs", hs, "hs_soil", hs_soil, "hs_snow:", hs_snow, "fsno:", fsno
+            print *, "hs_soil+hs_snow", hs_soil+hs_snow, "sabg_soil+sabg_snow:", sabg_soil+sabg_snow
+            print *, "lb:", lb, "sabg_snow_lyr:", sabg_snow_lyr
+            CALL CoLM_stop()
+         ENDIF
       ENDIF
 
       dhsdT = -cgrnd - 4.*emg*stefnc*t_grnd**3 - cpliq*pg_rain - cpice*pg_snow
+      t_soisno_bef(lb:) = t_soisno(lb:)
 
-      IF (sabg_soil+sabg_snow-sabg>1.e-6 .or. hs_soil+hs_snow-hs>1.e-6) THEN
-         print *, "MOD_GroundTemperature.F90: Error in spliting soil and snow surface!"
-         print *, "sabg:", sabg, "sabg_soil:", sabg_soil, "sabg_snow", sabg_snow
-         print *, "hs", hs, "hs_soil", hs_soil, "hs_snow:", hs_snow, "fsno:", fsno
-         print *, "hs_soil+hs_snow", hs_soil+hs_snow, "sabg_soil+sabg_snow:", sabg_soil+sabg_snow
-         print *, "lb:", lb, "sabg_snow_lyr:", sabg_snow_lyr
-         CALL CoLM_stop()
-      ENDIF
-   ENDIF
+      j       = lb
+      fact(j) = deltim / cv(j) &
+              * dz_soisno(j) / (0.5*(z_soisno(j)-zi_soisno(j-1)+capr*(z_soisno(j+1)-zi_soisno(j-1))))
 
-   dhsdT = -cgrnd - 4.*emg*stefnc*t_grnd**3 - cpliq*pg_rain - cpice*pg_snow
-   t_soisno_bef(lb:) = t_soisno(lb:)
+      DO j = lb + 1, nl_soil
+         fact(j) = deltim/cv(j)
+      ENDDO
 
-   j       = lb
-   fact(j) = deltim / cv(j) &
-           * dz_soisno(j) / (0.5*(z_soisno(j)-zi_soisno(j-1)+capr*(z_soisno(j+1)-zi_soisno(j-1))))
-
-   DO j = lb + 1, nl_soil
-      fact(j) = deltim/cv(j)
-   ENDDO
-
-   DO j = lb, nl_soil - 1
-      fn(j) = tk(j)*(t_soisno(j+1)-t_soisno(j))/(z_soisno(j+1)-z_soisno(j))
-   ENDDO
-   fn(nl_soil) = 0.
+      DO j = lb, nl_soil - 1
+         fn(j) = tk(j)*(t_soisno(j+1)-t_soisno(j))/(z_soisno(j+1)-z_soisno(j))
+      ENDDO
+      fn(nl_soil) = 0.
 
 ! set up vector r and vectors a, b, c that define tridiagonal matrix
-   j     = lb
-   dzp   = z_soisno(j+1)-z_soisno(j)
-   at(j) = 0.
-   ct(j) =  -(1.-cnfac)*fact(j)*tk(j)/dzp
+      j     = lb
+      dzp   = z_soisno(j+1)-z_soisno(j)
+      at(j) = 0.
+      ct(j) =  -(1.-cnfac)*fact(j)*tk(j)/dzp
 
-   ! the first layer
-   IF (j<1 .and. DEF_SPLIT_SOILSNOW) THEN ! snow covered and split soil and snow
-      bt(j) = 1+(1.-cnfac)*fact(j)*tk(j)/dzp-fact(j)*fsno*dhsdT
-      rt(j) = t_soisno(j) +fact(j)*( hs_snow - fsno*dhsdT*t_soisno(j) + cnfac*fn(j) )
-   ELSE            ! not a snow layer or don't split soil and snow
-      bt(j) = 1+(1.-cnfac)*fact(j)*tk(j)/dzp-fact(j)*dhsdT
-      rt(j) = t_soisno(j) +fact(j)*( hs - dhsdT*t_soisno(j) + cnfac*fn(j) )
-   ENDIF
-
-   DO j = lb + 1, nl_soil - 1
-
-      dzm = (z_soisno(j)-z_soisno(j-1))
-      dzp = (z_soisno(j+1)-z_soisno(j))
-
-      IF (j < 1) THEN   ! snow layer
-         at(j) =   - (1.-cnfac)*fact(j)* tk(j-1)/dzm
-         bt(j) = 1.+ (1.-cnfac)*fact(j)*(tk(j)/dzp + tk(j-1)/dzm)
-         ct(j) =   - (1.-cnfac)*fact(j)* tk(j)/dzp
-         IF (DEF_USE_SNICAR) THEN
-            rt(j) = t_soisno(j) + fact(j)*sabg_snow_lyr(j) + cnfac*fact(j)*( fn(j) - fn(j-1) )
-         ELSE
-            rt(j) = t_soisno(j) + cnfac*fact(j)*( fn(j) - fn(j-1) )
-         ENDIF
+      ! the first layer
+      IF (j<1 .and. DEF_SPLIT_SOILSNOW) THEN ! snow covered and split soil and snow
+         bt(j) = 1+(1.-cnfac)*fact(j)*tk(j)/dzp-fact(j)*fsno*dhsdT
+         rt(j) = t_soisno(j) +fact(j)*( hs_snow - fsno*dhsdT*t_soisno(j) + cnfac*fn(j) )
+      ELSE            ! not a snow layer or don't split soil and snow
+         bt(j) = 1+(1.-cnfac)*fact(j)*tk(j)/dzp-fact(j)*dhsdT
+         rt(j) = t_soisno(j) +fact(j)*( hs - dhsdT*t_soisno(j) + cnfac*fn(j) )
       ENDIF
 
-      IF (j == 1) THEN  ! the first soil layer
-         at(j) =   - (1.-cnfac)*fact(j)* tk(j-1)/dzm
-         ct(j) =   - (1.-cnfac)*fact(j)* tk(j)/dzp
-         IF (.not.DEF_SPLIT_SOILSNOW) THEN
+      DO j = lb + 1, nl_soil - 1
+
+         dzm = (z_soisno(j)-z_soisno(j-1))
+         dzp = (z_soisno(j+1)-z_soisno(j))
+
+         IF (j < 1) THEN   ! snow layer
+            at(j) =   - (1.-cnfac)*fact(j)* tk(j-1)/dzm
             bt(j) = 1.+ (1.-cnfac)*fact(j)*(tk(j)/dzp + tk(j-1)/dzm)
-            rt(j) = t_soisno(j) + cnfac*fact(j)*( fn(j) - fn(j-1) )
-         ELSE
-            bt(j) = 1.+ (1.-cnfac)*fact(j)*(tk(j)/dzp + tk(j-1)/dzm) &
-                  - (1.-fsno)*dhsdT*fact(j)
-            rt(j) = t_soisno(j) + cnfac*fact(j)*( fn(j) - fn(j-1) ) &
-                  + fact(j)*( hs_soil - (1.-fsno)*dhsdT*t_soisno(j) )
+            ct(j) =   - (1.-cnfac)*fact(j)* tk(j)/dzp
+            IF (DEF_USE_SNICAR) THEN
+               rt(j) = t_soisno(j) + fact(j)*sabg_snow_lyr(j) + cnfac*fact(j)*( fn(j) - fn(j-1) )
+            ELSE
+               rt(j) = t_soisno(j) + cnfac*fact(j)*( fn(j) - fn(j-1) )
+            ENDIF
          ENDIF
-      ENDIF
 
-      IF (j > 1) THEN   ! inner soil layer
-         at(j) =   - (1.-cnfac)*fact(j)* tk(j-1)/dzm
-         bt(j) = 1.+ (1.-cnfac)*fact(j)*(tk(j)/dzp + tk(j-1)/dzm)
-         ct(j) =   - (1.-cnfac)*fact(j)* tk(j)/dzp
-         rt(j) = t_soisno(j) + cnfac*fact(j)*( fn(j) - fn(j-1) )
-      ENDIF
+         IF (j == 1) THEN  ! the first soil layer
+            at(j) =   - (1.-cnfac)*fact(j)* tk(j-1)/dzm
+            ct(j) =   - (1.-cnfac)*fact(j)* tk(j)/dzp
+            IF (.not.DEF_SPLIT_SOILSNOW) THEN
+               bt(j) = 1.+ (1.-cnfac)*fact(j)*(tk(j)/dzp + tk(j-1)/dzm)
+               rt(j) = t_soisno(j) + cnfac*fact(j)*( fn(j) - fn(j-1) )
+            ELSE
+               bt(j) = 1.+ (1.-cnfac)*fact(j)*(tk(j)/dzp + tk(j-1)/dzm) &
+                     - (1.-fsno)*dhsdT*fact(j)
+               rt(j) = t_soisno(j) + cnfac*fact(j)*( fn(j) - fn(j-1) ) &
+                     + fact(j)*( hs_soil - (1.-fsno)*dhsdT*t_soisno(j) )
+            ENDIF
+         ENDIF
 
-   ENDDO
+         IF (j > 1) THEN   ! inner soil layer
+            at(j) =   - (1.-cnfac)*fact(j)* tk(j-1)/dzm
+            bt(j) = 1.+ (1.-cnfac)*fact(j)*(tk(j)/dzp + tk(j-1)/dzm)
+            ct(j) =   - (1.-cnfac)*fact(j)* tk(j)/dzp
+            rt(j) = t_soisno(j) + cnfac*fact(j)*( fn(j) - fn(j-1) )
+         ENDIF
 
-   j     =  nl_soil
-   dzm   = (z_soisno(j)-z_soisno(j-1))
-   at(j) =   - (1.-cnfac)*fact(j)*tk(j-1)/dzm
-   bt(j) = 1.+ (1.-cnfac)*fact(j)*tk(j-1)/dzm
-   ct(j) = 0.
-   rt(j) = t_soisno(j) - cnfac*fact(j)*fn(j-1)
+      ENDDO
+
+      j     =  nl_soil
+      dzm   = (z_soisno(j)-z_soisno(j-1))
+      at(j) =   - (1.-cnfac)*fact(j)*tk(j-1)/dzm
+      bt(j) = 1.+ (1.-cnfac)*fact(j)*tk(j-1)/dzm
+      ct(j) = 0.
+      rt(j) = t_soisno(j) - cnfac*fact(j)*fn(j-1)
 
 ! solve for t_soisno
-   i = size(at)
-   CALL tridia (i ,at ,bt ,ct ,rt ,t_soisno)
+      i = size(at)
+      CALL tridia (i ,at ,bt ,ct ,rt ,t_soisno)
 !=======================================================================
 ! melting or freezing
 !=======================================================================
 
-   DO j = lb, nl_soil - 1
-      fn1(j) = tk(j)*(t_soisno(j+1)-t_soisno(j))/(z_soisno(j+1)-z_soisno(j))
-   ENDDO
-   fn1(nl_soil) = 0.
+      DO j = lb, nl_soil - 1
+         fn1(j) = tk(j)*(t_soisno(j+1)-t_soisno(j))/(z_soisno(j+1)-z_soisno(j))
+      ENDDO
+      fn1(nl_soil) = 0.
 
-   j = lb
-   brr(j) = cnfac*fn(j) + (1.-cnfac)*fn1(j)
+      j = lb
+      brr(j) = cnfac*fn(j) + (1.-cnfac)*fn1(j)
 
-   DO j = lb + 1, nl_soil
-      brr(j) = cnfac*(fn(j)-fn(j-1)) + (1.-cnfac)*(fn1(j)-fn1(j-1))
-   ENDDO
-
-
-   IF (DEF_USE_SNICAR) THEN
-
-      wice_soisno_bef(lb:0) = wice_soisno(lb:0)
-
-      CALL meltf_snicar (patchtype,lb,nl_soil,deltim, &
-               fact(lb:),brr(lb:),hs,hs_soil,hs_snow,fsno,sabg_snow_lyr(lb:),dhsdT, &
-               t_soisno_bef(lb:),t_soisno(lb:),wliq_soisno(lb:),wice_soisno(lb:),imelt(lb:), &
-               scv,snowdp,sm,xmf,porsl,psi0,&
-#ifdef Campbell_SOIL_MODEL
-               bsw,&
-#endif
-#ifdef vanGenuchten_Mualem_SOIL_MODEL
-               theta_r,alpha_vgm,n_vgm,L_vgm,&
-               sc_vgm,fc_vgm,&
-#endif
-               dz_soisno(1:nl_soil))
-
-      ! layer freezing mass flux (positive):
-      DO j = lb, 0
-         IF (imelt(j)==2 .and. j<1) THEN
-             snofrz(j) = max(0._r8,(wice_soisno(j)-wice_soisno_bef(j)))/deltim
-         ENDIF
+      DO j = lb + 1, nl_soil
+         brr(j) = cnfac*(fn(j)-fn(j-1)) + (1.-cnfac)*(fn1(j)-fn1(j-1))
       ENDDO
 
-   ELSE
-      CALL meltf (patchtype,lb,nl_soil,deltim, &
-               fact(lb:),brr(lb:),hs,hs_soil,hs_snow,fsno,dhsdT, &
-               t_soisno_bef(lb:),t_soisno(lb:),wliq_soisno(lb:),wice_soisno(lb:),imelt(lb:), &
-               scv,snowdp,sm,xmf,porsl,psi0,&
+
+      IF (DEF_USE_SNICAR) THEN
+
+         wice_soisno_bef(lb:0) = wice_soisno(lb:0)
+
+         CALL meltf_snicar (patchtype,lb,nl_soil,deltim, &
+                  fact(lb:),brr(lb:),hs,hs_soil,hs_snow,fsno,sabg_snow_lyr(lb:),dhsdT, &
+                  t_soisno_bef(lb:),t_soisno(lb:),wliq_soisno(lb:),wice_soisno(lb:),imelt(lb:), &
+                  scv,snowdp,sm,xmf,porsl,psi0,&
 #ifdef Campbell_SOIL_MODEL
-               bsw,&
+                  bsw,&
 #endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
-               theta_r,alpha_vgm,n_vgm,L_vgm,&
-               sc_vgm,fc_vgm,&
+                  theta_r,alpha_vgm,n_vgm,L_vgm,&
+                  sc_vgm,fc_vgm,&
 #endif
-               dz_soisno(1:nl_soil))
-   ENDIF
+                  dz_soisno(1:nl_soil))
+
+         ! layer freezing mass flux (positive):
+         DO j = lb, 0
+            IF (imelt(j)==2 .and. j<1) THEN
+                snofrz(j) = max(0._r8,(wice_soisno(j)-wice_soisno_bef(j)))/deltim
+            ENDIF
+         ENDDO
+
+      ELSE
+         CALL meltf (patchtype,lb,nl_soil,deltim, &
+                  fact(lb:),brr(lb:),hs,hs_soil,hs_snow,fsno,dhsdT, &
+                  t_soisno_bef(lb:),t_soisno(lb:),wliq_soisno(lb:),wice_soisno(lb:),imelt(lb:), &
+                  scv,snowdp,sm,xmf,porsl,psi0,&
+#ifdef Campbell_SOIL_MODEL
+                  bsw,&
+#endif
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
+                  theta_r,alpha_vgm,n_vgm,L_vgm,&
+                  sc_vgm,fc_vgm,&
+#endif
+                  dz_soisno(1:nl_soil))
+      ENDIF
 
 !-----------------------------------------------------------------------
 

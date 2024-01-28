@@ -2,32 +2,32 @@
 
 MODULE MOD_Urban_ImperviousTemperature
 
-  USE MOD_Precision
-  IMPLICIT NONE
-  SAVE
+   USE MOD_Precision
+   IMPLICIT NONE
+   SAVE
 
-  PUBLIC :: UrbanImperviousTem
+   PUBLIC :: UrbanImperviousTem
 
 CONTAINS
 
- SUBROUTINE UrbanImperviousTem (patchtype,lb,deltim, &
-                                capr,cnfac,csol,k_solids,porsl,psi0,dkdry,dksatu,dksatf,&
-                                vf_quartz,vf_gravels,vf_om,vf_sand,wf_gravels,wf_sand,&
-                                BA_alpha, BA_beta,&
-                                cv_gimp,tk_gimp,dz_gimpsno,z_gimpsno,zi_gimpsno,&
-                                t_gimpsno,wice_gimpsno,wliq_gimpsno,scv_gimp,snowdp_gimp,&
-                                lgimp,clgimp,sabgimp,fsengimp,fevpgimp,cgimp,htvp,&
-                                imelt,sm,xmf,fact)
+   SUBROUTINE UrbanImperviousTem (patchtype,lb,deltim, &
+                                  capr,cnfac,csol,k_solids,porsl,psi0,dkdry,dksatu,dksatf,&
+                                  vf_quartz,vf_gravels,vf_om,vf_sand,wf_gravels,wf_sand,&
+                                  BA_alpha, BA_beta,&
+                                  cv_gimp,tk_gimp,dz_gimpsno,z_gimpsno,zi_gimpsno,&
+                                  t_gimpsno,wice_gimpsno,wliq_gimpsno,scv_gimp,snowdp_gimp,&
+                                  lgimp,clgimp,sabgimp,fsengimp,fevpgimp,cgimp,htvp,&
+                                  imelt,sm,xmf,fact)
 
 !=======================================================================
-! Snow and road temperatures
+! Snow and impervious road temperatures
 ! o The volumetric heat capacity is calculated as a linear combination
 !   in terms of the volumetric fraction of the constituent phases.
 ! o The thermal conductivity of road soil is computed from
 !   the algorithm of Johansen (as reported by Farouki 1981), impervious and perivious from
 !   LOOK-UP table and of snow is from the formulation used in SNTHERM (Jordan 1991).
 ! o Boundary conditions:
-!   F = Rnet - Hg - LEg (top),  F= 0 (base of the soil column).
+!   F = Rnet - Hg - LEg (top),  F = 0 (base of the soil column).
 ! o Soil / snow temperature is predicted from heat conduction
 !   in 10 soil layers and up to 5 snow layers.
 !   The thermal conductivities at the interfaces between two neighbor layers
@@ -36,99 +36,99 @@ CONTAINS
 !   interface to the node j+1. The equation is solved using the Crank-Nicholson
 !   method and resulted in a tridiagonal system equation.
 !
-! Phase change (see meltf.F90)
+! Phase change (see MOD_PhaseChange.F90)
 !
 ! Original author : Yongjiu Dai, 09/15/1999; 08/30/2002; 05/2020
 !=======================================================================
 
-  USE MOD_Precision
-  USE MOD_Vars_Global
-  USE MOD_Const_Physical
-  USE MOD_SoilThermalParameters
-  USE MOD_PhaseChange, only: meltf_urban
-  USE MOD_Utils, only: tridia
+   USE MOD_Precision
+   USE MOD_Vars_Global
+   USE MOD_Const_Physical
+   USE MOD_SoilThermalParameters
+   USE MOD_PhaseChange, only: meltf_urban
+   USE MOD_Utils, only: tridia
 
-  IMPLICIT NONE
+   IMPLICIT NONE
 
-  integer, intent(in)  :: lb                          !lower bound of array
-  integer, intent(in)  :: patchtype                   !land patch type (0=soil,1=urban or built-up,2=wetland,
-                                                      !3=land ice, 4=deep lake, 5=shallow lake)
-  real(r8), intent(in) :: deltim                      !seconds in a time step [second]
-  real(r8), intent(in) :: capr                        !tuning factor to turn first layer T into surface T
-  real(r8), intent(in) :: cnfac                       !Crank Nicholson factor between 0 and 1
+   integer, intent(in)  :: lb                          !lower bound of array
+   integer, intent(in)  :: patchtype                   !land patch type (0=soil,1=urban or built-up,2=wetland,
+                                                       !3=land ice, 4=deep lake, 5=shallow lake)
+   real(r8), intent(in) :: deltim                      !seconds in a time step [second]
+   real(r8), intent(in) :: capr                        !tuning factor to turn first layer T into surface T
+   real(r8), intent(in) :: cnfac                       !Crank Nicholson factor between 0 and 1
 
-  real(r8), intent(in) :: csol      (1:nl_soil)       !heat capacity of soil solids [J/(m3 K)]
-  real(r8), intent(in) :: k_solids  (1:nl_soil)       !thermal conductivity of minerals soil [W/m-K]
-  real(r8), intent(in) :: porsl     (1:nl_soil)       !soil porosity [-]
-  real(r8), intent(in) :: psi0      (1:nl_soil)       !soil water suction, negative potential [mm]
+   real(r8), intent(in) :: csol      (1:nl_soil)       !heat capacity of soil solids [J/(m3 K)]
+   real(r8), intent(in) :: k_solids  (1:nl_soil)       !thermal conductivity of minerals soil [W/m-K]
+   real(r8), intent(in) :: porsl     (1:nl_soil)       !soil porosity [-]
+   real(r8), intent(in) :: psi0      (1:nl_soil)       !soil water suction, negative potential [mm]
 
-  real(r8), intent(in) :: dkdry     (1:nl_soil)       !thermal conductivity of dry soil [W/m-K]
-  real(r8), intent(in) :: dksatu    (1:nl_soil)       !thermal conductivity of saturated soil [W/m-K]
-  real(r8), intent(in) :: dksatf    (1:nl_soil)       !thermal conductivity of saturated frozen soil [W/m-K]
+   real(r8), intent(in) :: dkdry     (1:nl_soil)       !thermal conductivity of dry soil [W/m-K]
+   real(r8), intent(in) :: dksatu    (1:nl_soil)       !thermal conductivity of saturated soil [W/m-K]
+   real(r8), intent(in) :: dksatf    (1:nl_soil)       !thermal conductivity of saturated frozen soil [W/m-K]
 
-  real(r8), intent(in) :: vf_quartz (1:nl_soil)       !volumetric fraction of quartz within mineral soil
-  real(r8), intent(in) :: vf_gravels(1:nl_soil)       !volumetric fraction of gravels
-  real(r8), intent(in) :: vf_om     (1:nl_soil)       !volumetric fraction of organic matter
-  real(r8), intent(in) :: vf_sand   (1:nl_soil)       !volumetric fraction of sand
-  real(r8), intent(in) :: wf_gravels(1:nl_soil)       !gravimetric fraction of gravels
-  real(r8), intent(in) :: wf_sand   (1:nl_soil)       !gravimetric fraction of sand
+   real(r8), intent(in) :: vf_quartz (1:nl_soil)       !volumetric fraction of quartz within mineral soil
+   real(r8), intent(in) :: vf_gravels(1:nl_soil)       !volumetric fraction of gravels
+   real(r8), intent(in) :: vf_om     (1:nl_soil)       !volumetric fraction of organic matter
+   real(r8), intent(in) :: vf_sand   (1:nl_soil)       !volumetric fraction of sand
+   real(r8), intent(in) :: wf_gravels(1:nl_soil)       !gravimetric fraction of gravels
+   real(r8), intent(in) :: wf_sand   (1:nl_soil)       !gravimetric fraction of sand
 
-  real(r8), intent(in) :: BA_alpha  (1:nl_soil)       !alpha in Balland and Arp(2005) thermal conductivity scheme
-  real(r8), intent(in) :: BA_beta   (1:nl_soil)       !beta in Balland and Arp(2005) thermal conductivity scheme
+   real(r8), intent(in) :: BA_alpha  (1:nl_soil)       !alpha in Balland and Arp(2005) thermal conductivity scheme
+   real(r8), intent(in) :: BA_beta   (1:nl_soil)       !beta in Balland and Arp(2005) thermal conductivity scheme
 
-  real(r8), intent(in) :: cv_gimp   (1:nl_soil)       !heat capacity of urban impervious [J/m3/K]
-  real(r8), intent(in) :: tk_gimp   (1:nl_soil)       !thermal conductivity of urban impervious [W/m/K]
+   real(r8), intent(in) :: cv_gimp   (1:nl_soil)       !heat capacity of urban impervious [J/m3/K]
+   real(r8), intent(in) :: tk_gimp   (1:nl_soil)       !thermal conductivity of urban impervious [W/m/K]
 
-  real(r8), intent(in) :: dz_gimpsno(lb  :nl_soil)    !layer thickiness [m]
-  real(r8), intent(in) :: z_gimpsno (lb  :nl_soil)    !node depth [m]
-  real(r8), intent(in) :: zi_gimpsno(lb-1:nl_soil)    !interface depth [m]
+   real(r8), intent(in) :: dz_gimpsno(lb  :nl_soil)    !layer thickiness [m]
+   real(r8), intent(in) :: z_gimpsno (lb  :nl_soil)    !node depth [m]
+   real(r8), intent(in) :: zi_gimpsno(lb-1:nl_soil)    !interface depth [m]
 
-  real(r8), intent(in) :: sabgimp                     !solar radiation absorbed by ground [W/m2]
-  real(r8), intent(in) :: lgimp                       !atmospheric infrared (longwave) radiation [W/m2]
-  real(r8), intent(in) :: clgimp                      !deriv. of longwave wrt to soil temp [w/m2/k]
-  real(r8), intent(in) :: fsengimp                    !sensible heat flux from ground [W/m2]
-  real(r8), intent(in) :: fevpgimp                    !evaporation heat flux from ground [mm/s]
-  real(r8), intent(in) :: cgimp                       !deriv. of soil energy flux wrt to soil temp [w/m2/k]
-  real(r8), intent(in) :: htvp                        !latent heat of vapor of water (or sublimation) [j/kg]
+   real(r8), intent(in) :: sabgimp                     !solar radiation absorbed by ground [W/m2]
+   real(r8), intent(in) :: lgimp                       !atmospheric infrared (longwave) radiation [W/m2]
+   real(r8), intent(in) :: clgimp                      !deriv. of longwave wrt to soil temp [w/m2/k]
+   real(r8), intent(in) :: fsengimp                    !sensible heat flux from ground [W/m2]
+   real(r8), intent(in) :: fevpgimp                    !evaporation heat flux from ground [mm/s]
+   real(r8), intent(in) :: cgimp                       !deriv. of soil energy flux wrt to soil temp [w/m2/k]
+   real(r8), intent(in) :: htvp                        !latent heat of vapor of water (or sublimation) [j/kg]
 
-  real(r8), intent(inout) :: t_gimpsno   (lb:nl_soil) !soil temperature [K]
-  real(r8), intent(inout) :: wice_gimpsno(lb:nl_soil) !ice lens [kg/m2]
-  real(r8), intent(inout) :: wliq_gimpsno(lb:nl_soil) !liqui water [kg/m2]
-  real(r8), intent(inout) :: scv_gimp                 !snow cover, water equivalent [mm, kg/m2]
-  real(r8), intent(inout) :: snowdp_gimp              !snow depth [m]
+   real(r8), intent(inout) :: t_gimpsno   (lb:nl_soil) !soil temperature [K]
+   real(r8), intent(inout) :: wice_gimpsno(lb:nl_soil) !ice lens [kg/m2]
+   real(r8), intent(inout) :: wliq_gimpsno(lb:nl_soil) !liqui water [kg/m2]
+   real(r8), intent(inout) :: scv_gimp                 !snow cover, water equivalent [mm, kg/m2]
+   real(r8), intent(inout) :: snowdp_gimp              !snow depth [m]
 
-  real(r8), intent(out) :: sm                         !rate of snowmelt [kg/(m2 s)]
-  real(r8), intent(out) :: xmf                        !total latent heat of phase change of ground water
-  real(r8), intent(out) :: fact (lb:nl_soil)          !used in computing tridiagonal matrix
-  integer,  intent(out) :: imelt(lb:nl_soil)          !flag for melting or freezing [-]
+   real(r8), intent(out) :: sm                         !rate of snowmelt [kg/(m2 s)]
+   real(r8), intent(out) :: xmf                        !total latent heat of phase change of ground water
+   real(r8), intent(out) :: fact (lb:nl_soil)          !used in computing tridiagonal matrix
+   integer,  intent(out) :: imelt(lb:nl_soil)          !flag for melting or freezing [-]
 
 !------------------------ local variables ------------------------------
-  real(r8) cv (lb:nl_soil)           !heat capacity [J/(m2 K)]
-  real(r8) tk (lb:nl_soil)           !thermal conductivity [W/(m K)]
+   real(r8) cv (lb:nl_soil)           !heat capacity [J/(m2 K)]
+   real(r8) tk (lb:nl_soil)           !thermal conductivity [W/(m K)]
 
-  real(r8) hcap(1:nl_soil)           !J/(m3 K)
-  real(r8) thk(lb:nl_soil)           !W/(m K)
-  real(r8) rhosnow                   !partitial density of water (ice + liquid)
+   real(r8) hcap(1:nl_soil)           !J/(m3 K)
+   real(r8) thk(lb:nl_soil)           !W/(m K)
+   real(r8) rhosnow                   !partitial density of water (ice + liquid)
 
-  real(r8) at (lb:nl_soil)           !"a" vector for tridiagonal matrix
-  real(r8) bt (lb:nl_soil)           !"b" vector for tridiagonal matrix
-  real(r8) ct (lb:nl_soil)           !"c" vector for tridiagonal matrix
-  real(r8) rt (lb:nl_soil)           !"r" vector for tridiagonal solution
+   real(r8) at (lb:nl_soil)           !"a" vector for tridiagonal matrix
+   real(r8) bt (lb:nl_soil)           !"b" vector for tridiagonal matrix
+   real(r8) ct (lb:nl_soil)           !"c" vector for tridiagonal matrix
+   real(r8) rt (lb:nl_soil)           !"r" vector for tridiagonal solution
 
-  real(r8) fn (lb:nl_soil)           !heat diffusion through the layer interface [W/m2]
-  real(r8) fn1(lb:nl_soil)           !heat diffusion through the layer interface [W/m2]
-  real(r8) dzm                       !used in computing tridiagonal matrix
-  real(r8) dzp                       !used in computing tridiagonal matrix
+   real(r8) fn (lb:nl_soil)           !heat diffusion through the layer interface [W/m2]
+   real(r8) fn1(lb:nl_soil)           !heat diffusion through the layer interface [W/m2]
+   real(r8) dzm                       !used in computing tridiagonal matrix
+   real(r8) dzp                       !used in computing tridiagonal matrix
 
-  real(r8) t_gimpsno_bef(lb:nl_soil) !soil/snow temperature before update
-  real(r8) hs                        !net energy flux into the surface (w/m2)
-  real(r8) dhsdt                     !d(hs)/dT
-  real(r8) brr(lb:nl_soil)           !temporay set
+   real(r8) t_gimpsno_bef(lb:nl_soil) !soil/snow temperature before update
+   real(r8) hs                        !net energy flux into the surface (w/m2)
+   real(r8) dhsdt                     !d(hs)/dT
+   real(r8) brr(lb:nl_soil)           !temporay set
 
-  real(r8) vf_water(1:nl_soil)       !volumetric fraction liquid water within soil
-  real(r8) vf_ice  (1:nl_soil)       !volumetric fraction ice len within soil
+   real(r8) vf_water(1:nl_soil)       !volumetric fraction liquid water within soil
+   real(r8) vf_ice  (1:nl_soil)       !volumetric fraction ice len within soil
 
-  integer i,j
+   integer i,j
 
       wice_gimpsno(2:) = 0.0         !ice lens [kg/m2]
       wliq_gimpsno(2:) = 0.0         !liquid water [kg/m2]
@@ -137,7 +137,7 @@ CONTAINS
 ! soil ground and wetland heat capacity
       DO i = 1, nl_soil
          vf_water(i) = wliq_gimpsno(i)/(dz_gimpsno(i)*denh2o)
-         vf_ice(i) = wice_gimpsno(i)/(dz_gimpsno(i)*denice)
+         vf_ice(i)   = wice_gimpsno(i)/(dz_gimpsno(i)*denice)
          CALL soil_hcap_cond(vf_gravels(i),vf_om(i),vf_sand(i),porsl(i),&
                              wf_gravels(i),wf_sand(i),k_solids(i),&
                              csol(i),dkdry(i),dksatu(i),dksatf(i),&
@@ -197,7 +197,7 @@ CONTAINS
       WHERE (tk_gimp > 0.) tk(1:) = tk_gimp(1:)
       WHERE (cv_gimp > 0.) cv(1:) = cv_gimp(1:)*dz_gimpsno(1:)
 
-      ! snow exist for the first soil layer
+      ! snow exist when there is no snow layer
       IF (lb == 1 .and. scv_gimp > 0.0) THEN
          cv(1) = cv(1) + cpice*scv_gimp
       ENDIF
@@ -274,7 +274,7 @@ CONTAINS
                   t_gimpsno_bef(lb:1),t_gimpsno(lb:1),wliq_gimpsno(lb:1),wice_gimpsno(lb:1),imelt(lb:1), &
                   scv_gimp,snowdp_gimp,sm,xmf)
 
- END SUBROUTINE UrbanImperviousTem
+   END SUBROUTINE UrbanImperviousTem
 
 END MODULE MOD_Urban_ImperviousTemperature
 ! ---------- EOP ------------

@@ -89,35 +89,35 @@ CONTAINS
 !                        make a proper update of um.
 !=======================================================================
 
-  USE MOD_Precision
-  USE MOD_Vars_Global
-  USE MOD_Const_Physical, only: vonkar, grav, hvap, cpair, stefnc, cpliq, cpice, tfrz
-  USE MOD_FrictionVelocity
-  USE MOD_CanopyLayerProfile
-  USE mod_namelist, only: DEF_USE_CBL_HEIGHT
-  USE MOD_TurbulenceLEddy
-  USE MOD_AssimStomataConductance
-  USE MOD_Vars_TimeInvariants, only: patchclass
-  USE MOD_Const_LC, only: z0mr, displar
-  USE MOD_PlantHydraulic, only :PlantHydraulicStress_twoleaf, getvegwp_twoleaf
-  USE MOD_Ozone, only: CalcOzoneStress
-  USE MOD_Qsadv
+   USE MOD_Precision
+   USE MOD_Vars_Global
+   USE MOD_Const_Physical, only: vonkar, grav, hvap, cpair, stefnc, cpliq, cpice, tfrz
+   USE MOD_FrictionVelocity
+   USE MOD_CanopyLayerProfile
+   USE mod_namelist, only: DEF_USE_CBL_HEIGHT
+   USE MOD_TurbulenceLEddy
+   USE MOD_AssimStomataConductance
+   USE MOD_Vars_TimeInvariants, only: patchclass
+   USE MOD_Const_LC, only: z0mr, displar
+   USE MOD_PlantHydraulic, only :PlantHydraulicStress_twoleaf, getvegwp_twoleaf
+   USE MOD_Ozone, only: CalcOzoneStress
+   USE MOD_Qsadv
 
-  IMPLICIT NONE
+   IMPLICIT NONE
 
 !-----------------------Arguments---------------------------------------
 
-  integer,  intent(in) :: ipatch,ivt
-  real(r8), intent(in) :: &
+   integer,  intent(in) :: ipatch,ivt
+   real(r8), intent(in) :: &
         deltim,     &! seconds in a time step [second]
         csoilc,     &! drag coefficient for soil under canopy [-]
         dewmx,      &! maximum dew
         htvp         ! latent heat of evaporation (/sublimation) [J/kg]
 
 ! vegetation parameters
-  real(r8), intent(inout) :: &
+   real(r8), intent(inout) :: &
         sai          ! stem area index  [-]
-  real(r8), intent(in) :: &
+   real(r8), intent(in) :: &
         sqrtdi,     &! inverse sqrt of leaf dimension [m**-0.5]
         htop,       &! PFT crown top height [m]
         hbot,       &! PFT crown bot height [m]
@@ -137,7 +137,7 @@ CONTAINS
         gradm,      &! conductance-photosynthesis slope parameter
         binter,     &! conductance-photosynthesis intercept
         extkn        ! coefficient of leaf nitrogen allocation
-  real(r8), intent(in) :: & ! for plant hydraulic scheme
+   real(r8), intent(in) :: & ! for plant hydraulic scheme
         kmax_sun,   &! Plant Hydraulics Paramters
         kmax_sha,   &! Plant Hydraulics Paramters
         kmax_xyl,   &! Plant Hydraulics Paramters
@@ -147,13 +147,13 @@ CONTAINS
         psi50_xyl,  &! water potential at 50% loss of xylem tissue conductance (mmH2O)
         psi50_root, &! water potential at 50% loss of root tissue conductance (mmH2O)
         ck           ! shape-fitting parameter for vulnerability curve (-)
-  real(r8), intent(inout) :: &
+   real(r8), intent(inout) :: &
         vegwp(1:nvegwcs),&! vegetation water potential
         gs0sun,     &! maximum stomata conductance of sunlit leaf
         gs0sha       ! maximum stomata conductance of shaded leaf
 
 ! input variables
-  real(r8), intent(in) :: &
+   real(r8), intent(in) :: &
         hu,         &! observational height of wind [m]
         ht,         &! observational height of temperature [m]
         hq,         &! observational height of humidity [m]
@@ -199,7 +199,7 @@ CONTAINS
         rss,        &! soil surface resistance [s/m]
         emg          ! vegetation emissivity
 
-  real(r8), intent(in) :: &
+   real(r8), intent(in) :: &
         t_precip,   &! snowfall/rainfall temperature [kelvin]
         qintr_rain, &! rainfall interception (mm h2o/s)
         qintr_snow, &! snowfall interception (mm h2o/s)
@@ -207,10 +207,10 @@ CONTAINS
         rootfr  (1:nl_soil), &! root fraction
         hksati  (1:nl_soil), &! hydraulic conductivity at saturation [mm h2o/s]
         hk      (1:nl_soil)   ! soil hydraulic conducatance
-  real(r8), intent(in) :: &
+   real(r8), intent(in) :: &
         hpbl         ! atmospheric boundary layer height [m]
 
-  real(r8), intent(inout) :: &
+   real(r8), intent(inout) :: &
         tl,         &! leaf temperature [K]
         ldew,       &! depth of water on foliage [mm]
         ldew_rain,  &! depth of rain on foliage [mm]
@@ -241,13 +241,13 @@ CONTAINS
         gssha,      &! stomata conductance of shaded leaf
         rootflux(1:nl_soil)  ! root water uptake from different layers
 
-  real(r8), intent(inout) :: &
+   real(r8), intent(inout) :: &
         assimsun,   &! sunlit leaf assimilation rate [umol co2 /m**2/ s] [+]
         etrsun,     &! transpiration rate of sunlit leaf [mm/s]
         assimsha,   &! shaded leaf assimilation rate [umol co2 /m**2/ s] [+]
         etrsha       ! transpiration rate of shaded leaf [mm/s]
 
-  real(r8), intent(out) :: &
+   real(r8), intent(out) :: &
         rst,        &! stomatal resistance
         assim,      &! rate of assimilation
         respc,      &! rate of respiration
@@ -395,159 +395,159 @@ CONTAINS
 !-----------------------End Variable List-------------------------------
 
 ! initialization of errors and  iteration parameters
-       it     = 1    !counter for leaf temperature iteration
-       del    = 0.0  !change in leaf temperature from previous iteration
-       dele   = 0.0  !latent head flux from leaf for previous iteration
+      it     = 1    !counter for leaf temperature iteration
+      del    = 0.0  !change in leaf temperature from previous iteration
+      dele   = 0.0  !latent head flux from leaf for previous iteration
 
-       dtl(0) = 0.
-       fevpl_bef = 0.
+      dtl(0) = 0.
+      fevpl_bef = 0.
 
-       fht  = 0.     !integral of profile function for heat
-       fqt  = 0.     !integral of profile function for moisture
+      fht  = 0.     !integral of profile function for heat
+      fqt  = 0.     !integral of profile function for moisture
 
 !-----------------------------------------------------------------------
 ! scaling-up coefficients from leaf to canopy
 !-----------------------------------------------------------------------
 
-       fsha   = 1. -fsun
-       laisun = lai*fsun
-       laisha = lai*fsha
+      fsha   = 1. -fsun
+      laisun = lai*fsun
+      laisha = lai*fsha
 
 ! scaling-up coefficients from leaf to canopy
-       cintsun(1) = (1.-exp(-(0.110+extkb)*lai))/(0.110+extkb)
-       cintsun(2) = (1.-exp(-(extkb+extkd)*lai))/(extkb+extkd)
-       cintsun(3) = (1.-exp(-extkb*lai))/extkb
+      cintsun(1) = (1.-exp(-(0.110+extkb)*lai))/(0.110+extkb)
+      cintsun(2) = (1.-exp(-(extkb+extkd)*lai))/(extkb+extkd)
+      cintsun(3) = (1.-exp(-extkb*lai))/extkb
 
-       cintsha(1) = (1.-exp(-0.110*lai))/0.110 - cintsun(1)
-       cintsha(2) = (1.-exp(-extkd*lai))/extkd - cintsun(2)
-       cintsha(3) = lai - cintsun(3)
+      cintsha(1) = (1.-exp(-0.110*lai))/0.110 - cintsun(1)
+      cintsha(2) = (1.-exp(-extkd*lai))/extkd - cintsun(2)
+      cintsha(3) = lai - cintsun(3)
 
 !-----------------------------------------------------------------------
 ! get fraction of wet and dry canopy surface (fwet & fdry)
 ! initial saturated vapor pressure and humidity and their derivation
 !-----------------------------------------------------------------------
 
-       !clai = 4.2 * 1000. * 0.2
-       clai = 0.0
+      !clai = 4.2 * 1000. * 0.2
+      clai = 0.0
 
-       CALL dewfraction (sigf,lai,sai,dewmx,ldew,ldew_rain,ldew_snow,fwet,fdry)
+      CALL dewfraction (sigf,lai,sai,dewmx,ldew,ldew_rain,ldew_snow,fwet,fdry)
 
-       CALL qsadv(tl,psrf,ei,deiDT,qsatl,qsatlDT)
+      CALL qsadv(tl,psrf,ei,deiDT,qsatl,qsatlDT)
 
 !-----------------------------------------------------------------------
 ! initial for fluxes profile
 !-----------------------------------------------------------------------
 
-       nmozsgn = 0    !number of times moz changes sign
-       obuold = 0.    !monin-obukhov length from previous iteration
-       zii  = 1000.   !m (pbl height)
-       beta = 1.      !- (in computing W_*)
-       z0mg = (1.-fsno)*zlnd + fsno*zsno
-       z0hg = z0mg
-       z0qg = z0mg
+      nmozsgn = 0    !number of times moz changes sign
+      obuold = 0.    !monin-obukhov length from previous iteration
+      zii  = 1000.   !m (pbl height)
+      beta = 1.      !- (in computing W_*)
+      z0mg = (1.-fsno)*zlnd + fsno*zsno
+      z0hg = z0mg
+      z0qg = z0mg
 
-       z0m    = htop * z0mr(patchclass(ipatch))
-       displa = htop * displar(patchclass(ipatch))
+      z0m    = htop * z0mr(patchclass(ipatch))
+      displa = htop * displar(patchclass(ipatch))
 
-       z0mv = z0m; z0hv = z0m; z0qv = z0m
+      z0mv = z0m; z0hv = z0m; z0qv = z0m
 
-       ! Modify aerodynamic parameters for sparse/dense canopy (X. Zeng)
-       lt     = min(lai+sai, 2.)
-       egvf   = (1._r8 - exp(-lt)) / (1._r8 - exp(-2.))
-       displa = egvf * displa
-       z0mv   = exp(egvf * log(z0mv) + (1._r8 - egvf) * log(z0mg))
+      ! Modify aerodynamic parameters for sparse/dense canopy (X. Zeng)
+      lt     = min(lai+sai, 2.)
+      egvf   = (1._r8 - exp(-lt)) / (1._r8 - exp(-2.))
+      displa = egvf * displa
+      z0mv   = exp(egvf * log(z0mv) + (1._r8 - egvf) * log(z0mg))
 
-       z0hv   = z0mv
-       z0qv   = z0mv
+      z0hv   = z0mv
+      z0qv   = z0mv
 
 ! 10/17/2017, yuan: z0m and displa with vertical profile solution
-       IF (zd_opt == 3) THEN
+      IF (zd_opt == 3) THEN
 
-          CALL cal_z0_displa(lai+sai, htop, 1., z0mv, displa)
+         CALL cal_z0_displa(lai+sai, htop, 1., z0mv, displa)
 
-          ! NOTE: adjusted for samll displa
-          displasink = max(htop/2., displa)
-          hsink = z0mv + displasink
+         ! NOTE: adjusted for samll displa
+         displasink = max(htop/2., displa)
+         hsink = z0mv + displasink
 
-          z0hv   = z0mv
-          z0qv   = z0mv
+         z0hv   = z0mv
+         z0qv   = z0mv
 
-       ENDIF
+      ENDIF
 
-       fai    = 1. - exp(-0.5*(lai+sai))
-       sqrtdragc = min( (0.003+0.3*fai)**0.5, 0.3 )
+      fai    = 1. - exp(-0.5*(lai+sai))
+      sqrtdragc = min( (0.003+0.3*fai)**0.5, 0.3 )
 
-       a_k71 = htop/(htop-displa)/(vonkar/sqrtdragc)
+      a_k71 = htop/(htop-displa)/(vonkar/sqrtdragc)
 
-       taf = 0.5 * (tg + thm)
-       qaf = 0.5 * (qm + qg)
+      taf = 0.5 * (tg + thm)
+      qaf = 0.5 * (qm + qg)
 
-       pco2a = pco2m
-       tprcor = 44.6*273.16*psrf/1.013e5
-       rsoil = 0.  !respiration (mol m-2 s-1)
-!      rsoil = 1.22e-6*exp(308.56*(1./56.02-1./(tg-227.13)))
-!      rsoil = rstfac * 0.23 * 15. * 2.**((tg-273.16-10.)/10.) * 1.e-6
-!      rsoil = 5.22 * 1.e-6
-       rsoil = 0.22 * 1.e-6
+      pco2a = pco2m
+      tprcor = 44.6*273.16*psrf/1.013e5
+      rsoil = 0.  !respiration (mol m-2 s-1)
+!     rsoil = 1.22e-6*exp(308.56*(1./56.02-1./(tg-227.13)))
+!     rsoil = rstfac * 0.23 * 15. * 2.**((tg-273.16-10.)/10.) * 1.e-6
+!     rsoil = 5.22 * 1.e-6
+      rsoil = 0.22 * 1.e-6
 
-       ur  = max(0.1, sqrt(us*us+vs*vs))    !limit set to 0.1
-       dth = thm - taf
-       dqh = qm  - qaf
-       dthv  = dth*(1.+0.61*qm) + 0.61*th*dqh
-       zldis = hu - displa
+      ur  = max(0.1, sqrt(us*us+vs*vs))    !limit set to 0.1
+      dth = thm - taf
+      dqh = qm  - qaf
+      dthv  = dth*(1.+0.61*qm) + 0.61*th*dqh
+      zldis = hu - displa
 
-       IF(zldis <= 0.0) THEN
-          write(6,*) 'the obs height of u less than the zero displacement heght'
-          CALL abort
-       ENDIF
+      IF(zldis <= 0.0) THEN
+         write(6,*) 'the obs height of u less than the zero displacement heght'
+         CALL abort
+      ENDIF
 
-       CALL moninobukini(ur,th,thm,thv,dth,dqh,dthv,zldis,z0mv,um,obu)
+      CALL moninobukini(ur,th,thm,thv,dth,dqh,dthv,zldis,z0mv,um,obu)
 
 ! ======================================================================
-!      BEGIN stability iteration
+!     BEGIN stability iteration
 ! ======================================================================
 
-       DO WHILE (it .le. itmax)
+      DO WHILE (it .le. itmax)
 
-          tlbef = tl
+         tlbef = tl
 
-          del2  = del
-          dele2 = dele
+         del2  = del
+         dele2 = dele
 
 !-----------------------------------------------------------------------
 ! Aerodynamical resistances
 !-----------------------------------------------------------------------
 ! Evaluate stability-dependent variables using moz from prior iteration
-          IF (rd_opt == 3) THEN
-             IF (DEF_USE_CBL_HEIGHT) THEN
-               CALL moninobukm_leddy(hu,ht,hq,displa,z0mv,z0hv,z0qv,obu,um, &
-                                     displasink,z0mv,hpbl,ustar,fh2m,fq2m, &
-                                     htop,fmtop,fm,fh,fq,fht,fqt,phih)
-             ELSE
-               CALL moninobukm(hu,ht,hq,displa,z0mv,z0hv,z0qv,obu,um, &
-                               displasink,z0mv,ustar,fh2m,fq2m, &
-                               htop,fmtop,fm,fh,fq,fht,fqt,phih)
-             ENDIF
-             ! Aerodynamic resistance
-             ram = 1./(ustar*ustar/um)
-             rah = 1./(vonkar/(fh-fht)*ustar)
-             raw = 1./(vonkar/(fq-fqt)*ustar)
-          ELSE
-             IF (DEF_USE_CBL_HEIGHT) THEN
-                CALL moninobuk_leddy(hu,ht,hq,displa,z0mv,z0hv,z0qv,obu,um,hpbl, &
-                                     ustar,fh2m,fq2m,fm10m,fm,fh,fq)
-             ELSE
-                CALL moninobuk(hu,ht,hq,displa,z0mv,z0hv,z0qv,obu,um,&
-                               ustar,fh2m,fq2m,fm10m,fm,fh,fq)
-             ENDIF
-             ! Aerodynamic resistance
-             ram = 1./(ustar*ustar/um)
-             rah = 1./(vonkar/fh*ustar)
-             raw = 1./(vonkar/fq*ustar)
-          ENDIF
+         IF (rd_opt == 3) THEN
+            IF (DEF_USE_CBL_HEIGHT) THEN
+              CALL moninobukm_leddy(hu,ht,hq,displa,z0mv,z0hv,z0qv,obu,um, &
+                                    displasink,z0mv,hpbl,ustar,fh2m,fq2m, &
+                                    htop,fmtop,fm,fh,fq,fht,fqt,phih)
+            ELSE
+              CALL moninobukm(hu,ht,hq,displa,z0mv,z0hv,z0qv,obu,um, &
+                              displasink,z0mv,ustar,fh2m,fq2m, &
+                              htop,fmtop,fm,fh,fq,fht,fqt,phih)
+            ENDIF
+            ! Aerodynamic resistance
+            ram = 1./(ustar*ustar/um)
+            rah = 1./(vonkar/(fh-fht)*ustar)
+            raw = 1./(vonkar/(fq-fqt)*ustar)
+         ELSE
+            IF (DEF_USE_CBL_HEIGHT) THEN
+               CALL moninobuk_leddy(hu,ht,hq,displa,z0mv,z0hv,z0qv,obu,um,hpbl, &
+                                    ustar,fh2m,fq2m,fm10m,fm,fh,fq)
+            ELSE
+               CALL moninobuk(hu,ht,hq,displa,z0mv,z0hv,z0qv,obu,um,&
+                              ustar,fh2m,fq2m,fm10m,fm,fh,fq)
+            ENDIF
+            ! Aerodynamic resistance
+            ram = 1./(ustar*ustar/um)
+            rah = 1./(vonkar/fh*ustar)
+            raw = 1./(vonkar/fq*ustar)
+         ENDIF
 
-          z0hg = z0mg/exp(0.13 * (ustar*z0mg/1.5e-5)**0.45)
-          z0qg = z0hg
+         z0hg = z0mg/exp(0.13 * (ustar*z0mg/1.5e-5)**0.45)
+         z0qg = z0hg
 
 ! Bulk boundary layer resistance of leaves
           uaf = ustar
@@ -556,579 +556,579 @@ CONTAINS
 
 ! 11/17/2017, yuan: 3D rb calculation (with vertical profile consideration)
 ! 03/13/2020, yuan: added analytical solution
-          IF (rb_opt == 3) THEN
-             utop = ustar/vonkar * fmtop
-             ueff = ueffect(utop, htop, z0mg, z0mg, a_k71, 1._r8, 1._r8)
-             cf = 0.01*sqrtdi*sqrt(ueff)
-             rb = 1./cf
-          ENDIF
+         IF (rb_opt == 3) THEN
+            utop = ustar/vonkar * fmtop
+            ueff = ueffect(utop, htop, z0mg, z0mg, a_k71, 1._r8, 1._r8)
+            cf = 0.01*sqrtdi*sqrt(ueff)
+            rb = 1./cf
+         ENDIF
 
-!         rd = 1./(csoilc*uaf)                 ! BATS legacy
-!         w = exp(-0.5*(lai+sai))              ! Dickinson's modification :
-!         csoilc = ( 1.-w + w*um/uaf)/rah      ! "rah" here is the resistance over
-!         rd = 1./(csoilc*uaf)                 ! bare ground fraction
+!        rd = 1./(csoilc*uaf)                 ! BATS legacy
+!        w = exp(-0.5*(lai+sai))              ! Dickinson's modification :
+!        csoilc = ( 1.-w + w*um/uaf)/rah      ! "rah" here is the resistance over
+!        rd = 1./(csoilc*uaf)                 ! bare ground fraction
 
 ! modified by Xubin Zeng's suggestion at 08-07-2002
-          w = exp(-(lai+sai))
-          csoilcn = (vonkar/(0.13*(z0mg*uaf/1.5e-5)**0.45))*w + csoilc*(1.-w)
-          rd = 1./(csoilcn*uaf)
+         w = exp(-(lai+sai))
+         csoilcn = (vonkar/(0.13*(z0mg*uaf/1.5e-5)**0.45))*w + csoilc*(1.-w)
+         rd = 1./(csoilcn*uaf)
 
 ! 11/17/2017, yuan: 3D rd calculation with vertical profile solution
 ! 03/13/2020, yuan: added analytical solution
-          IF (rd_opt == 3) THEN
-             ktop = vonkar * (htop-displa) * ustar / phih
-             rd = frd(ktop, htop, z0qg, hsink, z0qg, displa/htop, &
-                z0qg, obug, ustar, z0mg, a_k71, 1._r8, 1._r8)
-          ENDIF
+         IF (rd_opt == 3) THEN
+            ktop = vonkar * (htop-displa) * ustar / phih
+            rd = frd(ktop, htop, z0qg, hsink, z0qg, displa/htop, &
+               z0qg, obug, ustar, z0mg, a_k71, 1._r8, 1._r8)
+         ENDIF
 
 !-----------------------------------------------------------------------
 ! stomatal resistances
 !-----------------------------------------------------------------------
 
-          IF(lai .gt. 0.001) THEN
+         IF(lai .gt. 0.001) THEN
 
-             eah = qaf * psrf / ( 0.622 + 0.378 * qaf )    !pa
+            eah = qaf * psrf / ( 0.622 + 0.378 * qaf )    !pa
 
-             ! If use PHS, calculate maximum stomata conductance (minimum stomata resistance)
-             ! by setting rstfac = 1. (no water stress). When use PHS, stomata only calculate
-             ! non-stress stomata conductance, assimilation rate and leaf respiration
-             IF (DEF_USE_PLANTHYDRAULICS) THEN
-                  rstfacsun = 1.
-                  rstfacsha = 1.
-             ENDIF
+            ! If use PHS, calculate maximum stomata conductance (minimum stomata resistance)
+            ! by setting rstfac = 1. (no water stress). When use PHS, stomata only calculate
+            ! non-stress stomata conductance, assimilation rate and leaf respiration
+            IF (DEF_USE_PLANTHYDRAULICS) THEN
+                 rstfacsun = 1.
+                 rstfacsha = 1.
+            ENDIF
 
-             ! leaf to canopy level
-             rbsun = rb / laisun
-             rbsha = rb / laisha
+            ! leaf to canopy level
+            rbsun = rb / laisun
+            rbsha = rb / laisha
 
-             ! Sunlit leaves
-             CALL stomata  (vmax25   ,effcon   ,slti     ,hlti     ,&
-                  shti     ,hhti     ,trda     ,trdm     ,trop     ,&
-                  g1       ,g0       ,gradm    ,binter   ,thm      ,&
-                  psrf     ,po2m     ,pco2m    ,pco2a    ,eah      ,&
-                  ei       ,tl       ,parsun   ,&
-             !Ozone stress variables
-                  o3coefv_sun   ,o3coefg_sun   ,&
-             !End ozone stress variables
-                  rbsun    ,raw      ,rstfacsun,cintsun  ,&
-                  assimsun ,respcsun ,rssun    )
+            ! Sunlit leaves
+            CALL stomata  (vmax25   ,effcon   ,slti     ,hlti     ,&
+                 shti     ,hhti     ,trda     ,trdm     ,trop     ,&
+                 g1       ,g0       ,gradm    ,binter   ,thm      ,&
+                 psrf     ,po2m     ,pco2m    ,pco2a    ,eah      ,&
+                 ei       ,tl       ,parsun   ,&
+            !Ozone stress variables
+                 o3coefv_sun   ,o3coefg_sun   ,&
+            !End ozone stress variables
+                 rbsun    ,raw      ,rstfacsun,cintsun  ,&
+                 assimsun ,respcsun ,rssun    )
 
-             ! Shaded leaves
-             CALL stomata  (vmax25   ,effcon   ,slti     ,hlti     ,&
-                  shti     ,hhti     ,trda     ,trdm     ,trop     ,&
-                  g1       ,g0       ,gradm    ,binter   ,thm      ,&
-                  psrf     ,po2m     ,pco2m    ,pco2a    ,eah      ,&
-                  ei       ,tl       ,parsha   ,&
-             ! Ozone stress variables
-                  o3coefv_sha    ,o3coefg_sha  ,&
-             ! End ozone stress variables
-                  rbsha    ,raw      ,rstfacsha,cintsha  ,&
-                  assimsha ,respcsha ,rssha    )
+            ! Shaded leaves
+            CALL stomata  (vmax25   ,effcon   ,slti     ,hlti     ,&
+                 shti     ,hhti     ,trda     ,trdm     ,trop     ,&
+                 g1       ,g0       ,gradm    ,binter   ,thm      ,&
+                 psrf     ,po2m     ,pco2m    ,pco2a    ,eah      ,&
+                 ei       ,tl       ,parsha   ,&
+            ! Ozone stress variables
+                 o3coefv_sha    ,o3coefg_sha  ,&
+            ! End ozone stress variables
+                 rbsha    ,raw      ,rstfacsha,cintsha  ,&
+                 assimsha ,respcsha ,rssha    )
 
-             IF (DEF_USE_PLANTHYDRAULICS) THEN
+            IF (DEF_USE_PLANTHYDRAULICS) THEN
 
-                gs0sun = min( 1.e6, 1./(rssun*tl/tprcor) )/ laisun * 1.e6
-                gs0sha = min( 1.e6, 1./(rssha*tl/tprcor) )/ laisha * 1.e6
+               gs0sun = min( 1.e6, 1./(rssun*tl/tprcor) )/ laisun * 1.e6
+               gs0sha = min( 1.e6, 1./(rssha*tl/tprcor) )/ laisha * 1.e6
 
-                sai = amax1(sai,0.1)
-                ! PHS update actual stomata conductance (resistance), assimilation rate
-                ! and leaf respiration. above stomatal resistances are for the canopy,
-                ! the stomatal rsistances and the "rb" in the following calculations are
-                ! the average for single leaf. thus,
-                CALL PlantHydraulicStress_twoleaf (       nl_soil    ,nvegwcs    ,&
-                      z_soi      ,dz_soi     ,rootfr     ,psrf       ,qsatl      ,&
-                      qaf        ,tl         ,rb         ,rss        ,raw        ,&
-                      rd         ,rstfacsun  ,rstfacsha  ,cintsun    ,cintsha    ,&
-                      laisun     ,laisha     ,rhoair     ,fwet       ,sai        ,&
-                      kmax_sun   ,kmax_sha   ,kmax_xyl   ,kmax_root  ,psi50_sun  ,&
-                      psi50_sha  ,psi50_xyl  ,psi50_root ,htop       ,ck         ,&
-                      smp        ,hk         ,hksati     ,vegwp      ,etrsun     ,&
-                      etrsha     ,rootflux   ,qg         ,qm         ,gs0sun     ,&
-                      gs0sha     ,k_soil_root,k_ax_root  ,gssun      ,gssha       )
+               sai = amax1(sai,0.1)
+               ! PHS update actual stomata conductance (resistance), assimilation rate
+               ! and leaf respiration. above stomatal resistances are for the canopy,
+               ! the stomatal rsistances and the "rb" in the following calculations are
+               ! the average for single leaf. thus,
+               CALL PlantHydraulicStress_twoleaf (       nl_soil    ,nvegwcs    ,&
+                     z_soi      ,dz_soi     ,rootfr     ,psrf       ,qsatl      ,&
+                     qaf        ,tl         ,rb         ,rss        ,raw        ,&
+                     rd         ,rstfacsun  ,rstfacsha  ,cintsun    ,cintsha    ,&
+                     laisun     ,laisha     ,rhoair     ,fwet       ,sai        ,&
+                     kmax_sun   ,kmax_sha   ,kmax_xyl   ,kmax_root  ,psi50_sun  ,&
+                     psi50_sha  ,psi50_xyl  ,psi50_root ,htop       ,ck         ,&
+                     smp        ,hk         ,hksati     ,vegwp      ,etrsun     ,&
+                     etrsha     ,rootflux   ,qg         ,qm         ,gs0sun     ,&
+                     gs0sha     ,k_soil_root,k_ax_root  ,gssun      ,gssha       )
 
-                etr  = etrsun + etrsha
-                gssun = gssun * laisun
-                gssha = gssha * laisha
+               etr  = etrsun + etrsha
+               gssun = gssun * laisun
+               gssha = gssha * laisha
 
-                call update_photosyn(tl, po2m, pco2m, pco2a, parsun, psrf, rstfacsun, rb, gssun, &
-                                     effcon, vmax25, gradm, trop, slti, hlti, shti, hhti, trda, trdm, cintsun, &
-                                     assimsun, respcsun)
+               CALL update_photosyn(tl, po2m, pco2m, pco2a, parsun, psrf, rstfacsun, rb, gssun, &
+                                    effcon, vmax25, gradm, trop, slti, hlti, shti, hhti, trda, trdm, cintsun, &
+                                    assimsun, respcsun)
 
-                CALL update_photosyn(tl, po2m, pco2m, pco2a, parsha, psrf, rstfacsha, rb, gssha, &
-                                     effcon, vmax25, gradm, trop, slti, hlti, shti, hhti, trda, trdm, cintsha, &
-                                     assimsha, respcsha)
+               CALL update_photosyn(tl, po2m, pco2m, pco2a, parsha, psrf, rstfacsha, rb, gssha, &
+                                    effcon, vmax25, gradm, trop, slti, hlti, shti, hhti, trda, trdm, cintsha, &
+                                    assimsha, respcsha)
 
-                rssun = tprcor/tl * 1.e6 / gssun
-                rssha = tprcor/tl * 1.e6 / gssha
-             ENDIF
+               rssun = tprcor/tl * 1.e6 / gssun
+               rssha = tprcor/tl * 1.e6 / gssha
+            ENDIF
 
-          ELSE
-             rssun = 2.e20; assimsun = 0.; respcsun = 0.
-             rssha = 2.e20; assimsha = 0.; respcsha = 0.
-             gssun = 0._r8
-             gssha = 0._r8
+         ELSE
+            rssun = 2.e20; assimsun = 0.; respcsun = 0.
+            rssha = 2.e20; assimsha = 0.; respcsha = 0.
+            gssun = 0._r8
+            gssha = 0._r8
 
-             ! 07/2023, yuan: a bug for imbalanced water, rootflux only change
-             ! in DEF_USE_PLANTHYDRAULICS case in this routine.
-             IF (DEF_USE_PLANTHYDRAULICS) THEN
-                etr    = 0.
-                etrsun = 0._r8
-                etrsha = 0._r8
-                rootflux = 0.
-             ENDIF
-          ENDIF
+            ! 07/2023, yuan: a bug for imbalanced water, rootflux only change
+            ! in DEF_USE_PLANTHYDRAULICS case in this routine.
+            IF (DEF_USE_PLANTHYDRAULICS) THEN
+               etr    = 0.
+               etrsun = 0._r8
+               etrsha = 0._r8
+               rootflux = 0.
+            ENDIF
+         ENDIF
 
 ! above stomatal resistances are for the canopy, the stomatal rsistances
 ! and the "rb" in the following calculations are the average for single leaf. thus,
-          rssun = rssun * laisun
-          rssha = rssha * laisha
+         rssun = rssun * laisun
+         rssha = rssha * laisha
 
 !-----------------------------------------------------------------------
 ! dimensional and non-dimensional sensible and latent heat conductances
 ! for canopy and soil flux calculations.
 !-----------------------------------------------------------------------
 
-          delta = 0.0
-          IF(qsatl-qaf .gt. 0.) delta = 1.0
+         delta = 0.0
+         IF(qsatl-qaf .gt. 0.) delta = 1.0
 
-          cah = 1. / rah
-          cgh = 1. / rd
-          cfh = (lai + sai) / rb
+         cah = 1. / rah
+         cgh = 1. / rd
+         cfh = (lai + sai) / rb
 
-          caw = 1. / raw
-          IF (qg < qaf) THEN
-             cgw = 1. / rd !dew case. no soil resistance
-          ELSE
-             IF (DEF_RSS_SCHEME .eq. 4) THEN
-                cgw = rss / rd
-             ELSE
-                cgw = 1. / (rd + rss)
-             ENDIF
-          ENDIF
-          cfw = (1.-delta*(1.-fwet))*(lai+sai)/rb + (1.-fwet)*delta* &
-                ( laisun/(rb+rssun) + laisha/(rb+rssha) )
+         caw = 1. / raw
+         IF (qg < qaf) THEN
+            cgw = 1. / rd !dew case. no soil resistance
+         ELSE
+            IF (DEF_RSS_SCHEME .eq. 4) THEN
+               cgw = rss / rd
+            ELSE
+               cgw = 1. / (rd + rss)
+            ENDIF
+         ENDIF
+         cfw = (1.-delta*(1.-fwet))*(lai+sai)/rb + (1.-fwet)*delta* &
+               ( laisun/(rb+rssun) + laisha/(rb+rssha) )
 
-          wtshi = 1. / ( cah + cgh + cfh )
-          wtsqi = 1. / ( caw + cgw + cfw )
+         wtshi = 1. / ( cah + cgh + cfh )
+         wtsqi = 1. / ( caw + cgw + cfw )
 
-          wta0 = cah * wtshi
-          wtg0 = cgh * wtshi
-          wtl0 = cfh * wtshi
+         wta0 = cah * wtshi
+         wtg0 = cgh * wtshi
+         wtl0 = cfh * wtshi
 
-          wtaq0 = caw * wtsqi
-          wtgq0 = cgw * wtsqi
-          wtlq0 = cfw * wtsqi
+         wtaq0 = caw * wtsqi
+         wtgq0 = cgw * wtsqi
+         wtlq0 = cfw * wtsqi
 
 !-----------------------------------------------------------------------
 ! IR radiation, sensible and latent heat fluxes and their derivatives
 !-----------------------------------------------------------------------
 ! the partial derivatives of areodynamical resistance are ignored
 ! which cannot be determined analtically
-          fac = 1. - thermk
+         fac = 1. - thermk
 
 ! longwave absorption and their derivatives
-          ! 10/16/2017, yuan: added reflected longwave by the ground
+         ! 10/16/2017, yuan: added reflected longwave by the ground
 
 IF (.not.DEF_SPLIT_SOILSNOW) THEN
-          irab = (frl - 2. * stefnc * tl**4 + emg*stefnc*tg**4 ) * fac &
-               + (1-emg)*thermk*fac*frl + (1-emg)*(1-thermk)*fac*stefnc*tl**4
+         irab = (frl - 2. * stefnc * tl**4 + emg*stefnc*tg**4 ) * fac &
+              + (1-emg)*thermk*fac*frl + (1-emg)*(1-thermk)*fac*stefnc*tl**4
 ELSE
-          irab = (frl - 2. * stefnc * tl**4 &
-               + (1.-fsno)*emg*stefnc*t_soil**4 &
-               + fsno*emg*stefnc*t_snow**4 ) * fac &
-               + (1-emg)*thermk*fac*frl + (1-emg)*(1-thermk)*fac*stefnc*tl**4
+         irab = (frl - 2. * stefnc * tl**4 &
+              + (1.-fsno)*emg*stefnc*t_soil**4 &
+              + fsno*emg*stefnc*t_snow**4 ) * fac &
+              + (1-emg)*thermk*fac*frl + (1-emg)*(1-thermk)*fac*stefnc*tl**4
 ENDIF
-          dirab_dtl = - 8. * stefnc * tl**3 * fac &
-                    + 4.*(1-emg)*(1-thermk)*fac*stefnc*tl**3
+         dirab_dtl = - 8. * stefnc * tl**3 * fac &
+                   + 4.*(1-emg)*(1-thermk)*fac*stefnc*tl**3
 
 ! sensible heat fluxes and their derivatives
-          fsenl = rhoair * cpair * cfh * ( (wta0 + wtg0)*tl - wta0*thm - wtg0*tg )
-          fsenl_dtl = rhoair * cpair * cfh * (wta0 + wtg0)
+         fsenl = rhoair * cpair * cfh * ( (wta0 + wtg0)*tl - wta0*thm - wtg0*tg )
+         fsenl_dtl = rhoair * cpair * cfh * (wta0 + wtg0)
 
 ! latent heat fluxes and their derivatives
 
-          etr = rhoair * (1.-fwet) * delta &
-              * ( laisun/(rb+rssun) + laisha/(rb+rssha) ) &
-              * ( (wtaq0 + wtgq0)*qsatl - wtaq0*qm - wtgq0*qg )
+         etr = rhoair * (1.-fwet) * delta &
+             * ( laisun/(rb+rssun) + laisha/(rb+rssha) ) &
+             * ( (wtaq0 + wtgq0)*qsatl - wtaq0*qm - wtgq0*qg )
 
-          etrsun = rhoair * (1.-fwet) * delta &
-              * ( laisun/(rb+rssun) ) * ( (wtaq0 + wtgq0)*qsatl - wtaq0*qm - wtgq0*qg )
-          etrsha = rhoair * (1.-fwet) * delta &
-              * ( laisha/(rb+rssha) ) * ( (wtaq0 + wtgq0)*qsatl - wtaq0*qm - wtgq0*qg )
+         etrsun = rhoair * (1.-fwet) * delta &
+             * ( laisun/(rb+rssun) ) * ( (wtaq0 + wtgq0)*qsatl - wtaq0*qm - wtgq0*qg )
+         etrsha = rhoair * (1.-fwet) * delta &
+             * ( laisha/(rb+rssha) ) * ( (wtaq0 + wtgq0)*qsatl - wtaq0*qm - wtgq0*qg )
 
-          etr_dtl = rhoair * (1.-fwet) * delta &
-                  * ( laisun/(rb+rssun) + laisha/(rb+rssha) ) &
-                  * (wtaq0 + wtgq0)*qsatlDT
+         etr_dtl = rhoair * (1.-fwet) * delta &
+                 * ( laisun/(rb+rssun) + laisha/(rb+rssha) ) &
+                 * (wtaq0 + wtgq0)*qsatlDT
 
-          IF (.not. DEF_USE_PLANTHYDRAULICS) THEN
-             IF(etr.ge.etrc)THEN
-                etr = etrc
-                etr_dtl = 0.
-             ENDIF
-          ELSE
-             IF(rstfacsun .lt. 1.e-2 .or. etrsun .le. 0.)etrsun = 0._r8
-             IF(rstfacsha .lt. 1.e-2 .or. etrsha .le. 0.)etrsha = 0._r8
-             etr = etrsun + etrsha
-             IF(abs(etr - sum(rootflux)) .gt. 1.e-7)THEN
-                write(6,*) 'Warning: water balance violation in vegetation PHS', &
-                   ipatch,p_iam_glb, etr, sum(rootflux), abs(etr-sum(rootflux))
-                CALL CoLM_stop()
-             ENDIF
-          ENDIF
+         IF (.not. DEF_USE_PLANTHYDRAULICS) THEN
+            IF(etr.ge.etrc)THEN
+               etr = etrc
+               etr_dtl = 0.
+            ENDIF
+         ELSE
+            IF(rstfacsun .lt. 1.e-2 .or. etrsun .le. 0.)etrsun = 0._r8
+            IF(rstfacsha .lt. 1.e-2 .or. etrsha .le. 0.)etrsha = 0._r8
+            etr = etrsun + etrsha
+            IF(abs(etr - sum(rootflux)) .gt. 1.e-7)THEN
+               write(6,*) 'Warning: water balance violation in vegetation PHS', &
+                  ipatch,p_iam_glb, etr, sum(rootflux), abs(etr-sum(rootflux))
+               CALL CoLM_stop()
+            ENDIF
+         ENDIF
 
-          evplwet = rhoair * (1.-delta*(1.-fwet)) * (lai+sai) / rb &
-                  * ( (wtaq0 + wtgq0)*qsatl - wtaq0*qm - wtgq0*qg )
-          evplwet_dtl = rhoair * (1.-delta*(1.-fwet)) * (lai+sai) / rb &
-                      * (wtaq0 + wtgq0)*qsatlDT
+         evplwet = rhoair * (1.-delta*(1.-fwet)) * (lai+sai) / rb &
+                 * ( (wtaq0 + wtgq0)*qsatl - wtaq0*qm - wtgq0*qg )
+         evplwet_dtl = rhoair * (1.-delta*(1.-fwet)) * (lai+sai) / rb &
+                     * (wtaq0 + wtgq0)*qsatlDT
 
-          IF(evplwet.ge.ldew/deltim)THEN
-             evplwet = ldew/deltim
-             evplwet_dtl = 0.
-          ENDIF
+         IF(evplwet.ge.ldew/deltim)THEN
+            evplwet = ldew/deltim
+            evplwet_dtl = 0.
+         ENDIF
 
-          fevpl = etr + evplwet
-          fevpl_dtl = etr_dtl + evplwet_dtl
+         fevpl = etr + evplwet
+         fevpl_dtl = etr_dtl + evplwet_dtl
 
-          ! 07/09/2014, yuan: added for energy balance
-          erre = 0.
-          fevpl_noadj = fevpl
-          IF ( fevpl*fevpl_bef < 0. ) THEN
-             erre  = -0.9*fevpl
-             fevpl =  0.1*fevpl
-          ENDIF
+         ! 07/09/2014, yuan: added for energy balance
+         erre = 0.
+         fevpl_noadj = fevpl
+         IF ( fevpl*fevpl_bef < 0. ) THEN
+            erre  = -0.9*fevpl
+            fevpl =  0.1*fevpl
+         ENDIF
 
 !-----------------------------------------------------------------------
 ! difference of temperatures by quasi-newton-raphson method for the non-linear system equations
 !-----------------------------------------------------------------------
 
-          dtl(it) = (sabv + irab - fsenl - hvap*fevpl &
-                  + cpliq*qintr_rain*(t_precip-tl) + cpice*qintr_snow*(t_precip-tl)) &
-                  / ((lai+sai)*clai/deltim - dirab_dtl + fsenl_dtl + hvap*fevpl_dtl  &
-                  + cpliq*qintr_rain + cpice*qintr_snow)
+         dtl(it) = (sabv + irab - fsenl - hvap*fevpl &
+                 + cpliq*qintr_rain*(t_precip-tl) + cpice*qintr_snow*(t_precip-tl)) &
+                 / ((lai+sai)*clai/deltim - dirab_dtl + fsenl_dtl + hvap*fevpl_dtl  &
+                 + cpliq*qintr_rain + cpice*qintr_snow)
 
-          dtl_noadj = dtl(it)
+         dtl_noadj = dtl(it)
 
-          ! check magnitude of change in leaf temperature limit to maximum allowed value
+         ! check magnitude of change in leaf temperature limit to maximum allowed value
 
-          ! 06/12/2014, yuan: .lt. -> .le.
-          IF(it .le. itmax) THEN
+         ! 06/12/2014, yuan: .lt. -> .le.
+         IF(it .le. itmax) THEN
 
-          ! put brakes on large temperature excursions
-            IF(abs(dtl(it)).gt.delmax)THEN
-                dtl(it) = delmax*dtl(it)/abs(dtl(it))
-            ENDIF
+         ! put brakes on large temperature excursions
+           IF(abs(dtl(it)).gt.delmax)THEN
+               dtl(it) = delmax*dtl(it)/abs(dtl(it))
+           ENDIF
 
-          ! 06/12/2014, yuan: .lt. -> .le.
-          ! NOTE: could be a bug IF dtl*dtl==0, changed from lt->le
-            IF((it.ge.2) .and. (dtl(it-1)*dtl(it).le.0.))THEN
-                dtl(it) = 0.5*(dtl(it-1) + dtl(it))
-            ENDIF
+         ! 06/12/2014, yuan: .lt. -> .le.
+         ! NOTE: could be a bug IF dtl*dtl==0, changed from lt->le
+           IF((it.ge.2) .and. (dtl(it-1)*dtl(it).le.0.))THEN
+               dtl(it) = 0.5*(dtl(it-1) + dtl(it))
+           ENDIF
 
-          ENDIF
+         ENDIF
 
-          tl = tlbef + dtl(it)
+         tl = tlbef + dtl(it)
 
 !-----------------------------------------------------------------------
 ! square roots differences of temperatures and fluxes for use as the condition of convergences
 !-----------------------------------------------------------------------
 
-          del  = sqrt( dtl(it)*dtl(it) )
-          dele = dtl(it) * dtl(it) * ( dirab_dtl**2 + fsenl_dtl**2 + hvap*fevpl_dtl**2 )
-          dele = sqrt(dele)
+         del  = sqrt( dtl(it)*dtl(it) )
+         dele = dtl(it) * dtl(it) * ( dirab_dtl**2 + fsenl_dtl**2 + hvap*fevpl_dtl**2 )
+         dele = sqrt(dele)
 
 !-----------------------------------------------------------------------
 !  saturated vapor pressures and canopy air temperature, canopy air humidity
 !-----------------------------------------------------------------------
 ! Recalculate leaf saturated vapor pressure (ei_)for updated leaf temperature
 ! and adjust specific humidity (qsatl_) proportionately
-          CALL qsadv(tl,psrf,ei,deiDT,qsatl,qsatlDT)
+         CALL qsadv(tl,psrf,ei,deiDT,qsatl,qsatlDT)
 
 ! update vegetation/ground surface temperature, canopy air temperature,
 ! canopy air humidity
-          taf = wta0*thm + wtg0*tg + wtl0*tl
-          qaf = wtaq0*qm + wtgq0*qg + wtlq0*qsatl
+         taf = wta0*thm + wtg0*tg + wtl0*tl
+         qaf = wtaq0*qm + wtgq0*qg + wtlq0*qsatl
 
 ! update co2 partial pressure within canopy air
-          gah2o = 1.0/raw * tprcor/thm                     !mol m-2 s-1
-          IF (DEF_RSS_SCHEME .eq. 4) THEN
-              gdh2o = rss/rd  * tprcor/thm                 !mol m-2 s-1
-          ELSE
-              gdh2o = 1.0/(rd+rss)  * tprcor/thm           !mol m-2 s-1
-          ENDIF
-          pco2a = pco2m - 1.37*psrf/max(0.446,gah2o) * &
-                 (assimsun + assimsha  - respcsun -respcsha - rsoil)
+         gah2o = 1.0/raw * tprcor/thm                     !mol m-2 s-1
+         IF (DEF_RSS_SCHEME .eq. 4) THEN
+             gdh2o = rss/rd  * tprcor/thm                 !mol m-2 s-1
+         ELSE
+             gdh2o = 1.0/(rd+rss)  * tprcor/thm           !mol m-2 s-1
+         ENDIF
+         pco2a = pco2m - 1.37*psrf/max(0.446,gah2o) * &
+                (assimsun + assimsha  - respcsun -respcsha - rsoil)
 
 !-----------------------------------------------------------------------
 ! Update monin-obukhov length and wind speed including the stability effect
 !-----------------------------------------------------------------------
 
-          dth = thm - taf
-          dqh = qm  - qaf
+         dth = thm - taf
+         dqh = qm  - qaf
 
-          tstar = vonkar/(fh-fht)*dth
-          qstar = vonkar/(fq-fqt)*dqh
+         tstar = vonkar/(fh-fht)*dth
+         qstar = vonkar/(fq-fqt)*dqh
 
-          thvstar = tstar*(1.+0.61*qm)+0.61*th*qstar
-          zeta = zldis*vonkar*grav*thvstar / (ustar**2*thv)
-          IF(zeta .ge. 0.)THEN                             !stable
-             zeta = min(2.,max(zeta,1.e-6))
-          ELSE                                             !unstable
-             zeta = max(-100.,min(zeta,-1.e-6))
-          ENDIF
-          obu = zldis/zeta
+         thvstar = tstar*(1.+0.61*qm)+0.61*th*qstar
+         zeta = zldis*vonkar*grav*thvstar / (ustar**2*thv)
+         IF(zeta .ge. 0.)THEN                             !stable
+            zeta = min(2.,max(zeta,1.e-6))
+         ELSE                                             !unstable
+            zeta = max(-100.,min(zeta,-1.e-6))
+         ENDIF
+         obu = zldis/zeta
 
-          IF(zeta .ge. 0.)THEN
-            um = max(ur,.1)
-          ELSE
-            IF (DEF_USE_CBL_HEIGHT) THEN !//TODO: Shaofeng, 2023.05.18
-              zii = max(5.*hu,hpbl)
-            ENDIF !//TODO: Shaofeng, 2023.05.18
-            wc = (-grav*ustar*thvstar*zii/thv)**(1./3.)
-           wc2 = beta*beta*(wc*wc)
-            um = sqrt(ur*ur+wc2)
-          ENDIF
+         IF(zeta .ge. 0.)THEN
+           um = max(ur,.1)
+         ELSE
+           IF (DEF_USE_CBL_HEIGHT) THEN !//TODO: Shaofeng, 2023.05.18
+             zii = max(5.*hu,hpbl)
+           ENDIF !//TODO: Shaofeng, 2023.05.18
+           wc = (-grav*ustar*thvstar*zii/thv)**(1./3.)
+          wc2 = beta*beta*(wc*wc)
+           um = sqrt(ur*ur+wc2)
+         ENDIF
 
-          IF(obuold*obu .lt. 0.) nmozsgn = nmozsgn+1
-          IF(nmozsgn .ge. 4) obu = zldis/(-0.01)
-          obuold = obu
+         IF(obuold*obu .lt. 0.) nmozsgn = nmozsgn+1
+         IF(nmozsgn .ge. 4) obu = zldis/(-0.01)
+         obuold = obu
 
 !-----------------------------------------------------------------------
 ! Test for convergence
 !-----------------------------------------------------------------------
 
-          it = it+1
+         it = it+1
 
-          IF(it .gt. itmin) THEN
-             fevpl_bef = fevpl
-             det = max(del,del2)
-             ! 10/03/2017, yuan: possible bugs here, solution:
-             ! define dee, change del => dee
-             dee = max(dele,dele2)
-             IF(det .lt. dtmin .and. dee .lt. dlemin) EXIT
-          ENDIF
+         IF(it .gt. itmin) THEN
+            fevpl_bef = fevpl
+            det = max(del,del2)
+            ! 10/03/2017, yuan: possible bugs here, solution:
+            ! define dee, change del => dee
+            dee = max(dele,dele2)
+            IF(det .lt. dtmin .and. dee .lt. dlemin) EXIT
+         ENDIF
 
-       ENDDO
+      ENDDO
 
-       IF(DEF_USE_OZONESTRESS)THEN
-          CALL CalcOzoneStress(o3coefv_sun,o3coefg_sun,forc_ozone,psrf,th,ram,&
-                               rssun,rb,lai,lai_old,ivt,o3uptakesun,deltim)
-          CALL CalcOzoneStress(o3coefv_sha,o3coefg_sha,forc_ozone,psrf,th,ram,&
-                               rssha,rb,lai,lai_old,ivt,o3uptakesha,deltim)
-          lai_old  = lai
-          assimsun = assimsun * o3coefv_sun
-          assimsha = assimsha * o3coefv_sha
-          rssun    = rssun / o3coefg_sun
-          rssha    = rssha / o3coefg_sha
-       ENDIF
+      IF(DEF_USE_OZONESTRESS)THEN
+         CALL CalcOzoneStress(o3coefv_sun,o3coefg_sun,forc_ozone,psrf,th,ram,&
+                              rssun,rb,lai,lai_old,ivt,o3uptakesun,deltim)
+         CALL CalcOzoneStress(o3coefv_sha,o3coefg_sha,forc_ozone,psrf,th,ram,&
+                              rssha,rb,lai,lai_old,ivt,o3uptakesha,deltim)
+         lai_old  = lai
+         assimsun = assimsun * o3coefv_sun
+         assimsha = assimsha * o3coefv_sha
+         rssun    = rssun / o3coefg_sun
+         rssha    = rssha / o3coefg_sha
+      ENDIF
 
 ! ======================================================================
-!      END stability iteration
+!     END stability iteration
 ! ======================================================================
 
-       z0m = z0mv
-       zol = zeta
-       rib = min(5.,zol*ustar**2/(vonkar**2/fh*um**2))
+      z0m = z0mv
+      zol = zeta
+      rib = min(5.,zol*ustar**2/(vonkar**2/fh*um**2))
 
 ! canopy fluxes and total assimilation amd respiration
 
-       IF(lai .gt. 0.001) THEN
-          rst = 1./(laisun/rssun + laisha/rssha)
-       ELSE
-          rssun = 2.0e4 ; rssha = 2.0e4
-          assimsun = 0. ; assimsha = 0.
-          respcsun = 0. ; respcsha = 0.
-          rst = 2.0e4
-       ENDIF
-       assim = assimsun + assimsha
-       respc = respcsun + respcsha! + rsoil
+      IF(lai .gt. 0.001) THEN
+         rst = 1./(laisun/rssun + laisha/rssha)
+      ELSE
+         rssun = 2.0e4 ; rssha = 2.0e4
+         assimsun = 0. ; assimsha = 0.
+         respcsun = 0. ; respcsha = 0.
+         rst = 2.0e4
+      ENDIF
+      assim = assimsun + assimsha
+      respc = respcsun + respcsha! + rsoil
 
 ! canopy fluxes and total assimilation amd respiration
-       fsenl = fsenl + fsenl_dtl*dtl(it-1) &
-             ! yuan: add the imbalanced energy below due to T adjustment to sensibel heat
-             + (dtl_noadj-dtl(it-1)) * ((lai+sai)*clai/deltim - dirab_dtl + fsenl_dtl + hvap*fevpl_dtl &
-             + cpliq * qintr_rain + cpice * qintr_snow) &
-             ! yuan: add the imbalanced energy below due to q adjustment to sensibel heat
-             + hvap*erre
+      fsenl = fsenl + fsenl_dtl*dtl(it-1) &
+            ! yuan: add the imbalanced energy below due to T adjustment to sensibel heat
+            + (dtl_noadj-dtl(it-1)) * ((lai+sai)*clai/deltim - dirab_dtl + fsenl_dtl + hvap*fevpl_dtl &
+            + cpliq * qintr_rain + cpice * qintr_snow) &
+            ! yuan: add the imbalanced energy below due to q adjustment to sensibel heat
+            + hvap*erre
 
-       etr0  = etr
-       etr   = etr + etr_dtl*dtl(it-1)
+      etr0  = etr
+      etr   = etr + etr_dtl*dtl(it-1)
 
-       IF (DEF_USE_PLANTHYDRAULICS) THEN
-          !TODO@yuan: rootflux may not be consistent with etr,
-          !           water imbalance could happen.
-          IF (abs(etr0) .ge. 1.e-15) THEN
-              rootflux = rootflux * etr / etr0
-          ELSE
-              rootflux = rootflux + dz_soi / sum(dz_soi) * etr_dtl* dtl(it-1)
-          ENDIF
+      IF (DEF_USE_PLANTHYDRAULICS) THEN
+         !TODO@yuan: rootflux may not be consistent with etr,
+         !           water imbalance could happen.
+         IF (abs(etr0) .ge. 1.e-15) THEN
+             rootflux = rootflux * etr / etr0
+         ELSE
+             rootflux = rootflux + dz_soi / sum(dz_soi) * etr_dtl* dtl(it-1)
+         ENDIF
 
-!         !NOTE: temporal solution to make etr and rootflux consistent.
-!         !TODO: need double check
-!         sumrootr = sum(rootr(:), rootr(:)>0.)
-!         IF (abs(sumrootr) > 0.) THEN
-!            rootr(:) = max(rootr(:),0.) * (etr/sumrootr)
-!         ELSE
-!            rootr(:) = etr*rootfr(:)
-!         ENDIF
-       ENDIF
+!        !NOTE: temporal solution to make etr and rootflux consistent.
+!        !TODO: need double check
+!        sumrootr = sum(rootr(:), rootr(:)>0.)
+!        IF (abs(sumrootr) > 0.) THEN
+!           rootr(:) = max(rootr(:),0.) * (etr/sumrootr)
+!        ELSE
+!           rootr(:) = etr*rootfr(:)
+!        ENDIF
+      ENDIF
 
-       evplwet = evplwet + evplwet_dtl*dtl(it-1)
-       fevpl   = fevpl_noadj
-       fevpl   = fevpl   +   fevpl_dtl*dtl(it-1)
+      evplwet = evplwet + evplwet_dtl*dtl(it-1)
+      fevpl   = fevpl_noadj
+      fevpl   = fevpl   +   fevpl_dtl*dtl(it-1)
 
-       elwmax  = ldew/deltim
-       elwdif  = max(0., evplwet-elwmax)
-       evplwet = min(evplwet, elwmax)
+      elwmax  = ldew/deltim
+      elwdif  = max(0., evplwet-elwmax)
+      evplwet = min(evplwet, elwmax)
 
-       fevpl = fevpl - elwdif
-       fsenl = fsenl + hvap*elwdif
+      fevpl = fevpl - elwdif
+      fsenl = fsenl + hvap*elwdif
 
-       taux = - rhoair*us/ram
-       tauy = - rhoair*vs/ram
+      taux = - rhoair*us/ram
+      tauy = - rhoair*vs/ram
 
 !-----------------------------------------------------------------------
 ! fluxes from ground to canopy space
 !-----------------------------------------------------------------------
 
-       fseng = cpair*rhoair*cgh*(tg-taf)
+      fseng = cpair*rhoair*cgh*(tg-taf)
 ! 03/07/2020, yuan: calculate fseng_soil/snow
-       !NOTE: taf = wta0*thm + wtg0*tg + wtl0*tl
-       fseng_soil = cpair*rhoair*cgh*((1.-wtg0)*t_soil - wta0*thm - wtl0*tl)
-       fseng_snow = cpair*rhoair*cgh*((1.-wtg0)*t_snow - wta0*thm - wtl0*tl)
+      !NOTE: taf = wta0*thm + wtg0*tg + wtl0*tl
+      fseng_soil = cpair*rhoair*cgh*((1.-wtg0)*t_soil - wta0*thm - wtl0*tl)
+      fseng_snow = cpair*rhoair*cgh*((1.-wtg0)*t_snow - wta0*thm - wtl0*tl)
 
 ! 03/07/2020, yuan: calculate fevpg_soil/snow
-       !NOTE: qaf = wtaq0*qm + wtgq0*qg + wtlq0*qsatl
-       fevpg = rhoair*cgw*(qg-qaf)
-       fevpg_soil = rhoair*cgw*((1.-wtgq0)*q_soil - wtaq0*qm - wtlq0*qsatl)
-       fevpg_snow = rhoair*cgw*((1.-wtgq0)*q_snow - wtaq0*qm - wtlq0*qsatl)
+      !NOTE: qaf = wtaq0*qm + wtgq0*qg + wtlq0*qsatl
+      fevpg = rhoair*cgw*(qg-qaf)
+      fevpg_soil = rhoair*cgw*((1.-wtgq0)*q_soil - wtaq0*qm - wtlq0*qsatl)
+      fevpg_snow = rhoair*cgw*((1.-wtgq0)*q_snow - wtaq0*qm - wtlq0*qsatl)
 
 !-----------------------------------------------------------------------
 ! downward (upward) longwave radiation below (above) the canopy and prec. sensible heat
 !-----------------------------------------------------------------------
 
-       ! 10/16/2017, yuan: added reflected longwave by the ground
-       dlrad = thermk * frl &
-             + stefnc * fac * tlbef**3 * (tlbef + 4.*dtl(it-1))
+      ! 10/16/2017, yuan: added reflected longwave by the ground
+      dlrad = thermk * frl &
+            + stefnc * fac * tlbef**3 * (tlbef + 4.*dtl(it-1))
 
 IF (.not.DEF_SPLIT_SOILSNOW) THEN
-       ulrad = stefnc * ( fac * tlbef**3 * (tlbef + 4.*dtl(it-1)) &
-             + thermk*emg*tg**4 ) &
-             + (1-emg)*thermk*thermk*frl &
-             + (1-emg)*thermk*fac*stefnc*tlbef**4 &
-             + 4.*(1-emg)*thermk*fac*stefnc*tlbef**3*dtl(it-1)
+      ulrad = stefnc * ( fac * tlbef**3 * (tlbef + 4.*dtl(it-1)) &
+            + thermk*emg*tg**4 ) &
+            + (1-emg)*thermk*thermk*frl &
+            + (1-emg)*thermk*fac*stefnc*tlbef**4 &
+            + 4.*(1-emg)*thermk*fac*stefnc*tlbef**3*dtl(it-1)
 ELSE
-       ulrad = stefnc * ( fac * tlbef**3 * (tlbef + 4.*dtl(it-1)) &
-             + (1.-fsno)*thermk*emg*t_soil**4 &
-             + fsno*thermk*emg*t_snow**4 ) &
-             + (1-emg)*thermk*thermk*frl &
-             + (1-emg)*thermk*fac*stefnc*tlbef**4 &
-             + 4.*(1-emg)*thermk*fac*stefnc*tlbef**3*dtl(it-1)
+      ulrad = stefnc * ( fac * tlbef**3 * (tlbef + 4.*dtl(it-1)) &
+            + (1.-fsno)*thermk*emg*t_soil**4 &
+            + fsno*thermk*emg*t_snow**4 ) &
+            + (1-emg)*thermk*thermk*frl &
+            + (1-emg)*thermk*fac*stefnc*tlbef**4 &
+            + 4.*(1-emg)*thermk*fac*stefnc*tlbef**3*dtl(it-1)
 ENDIF
-       hprl = cpliq * qintr_rain*(t_precip-tl) + cpice * qintr_snow*(t_precip-tl)
+      hprl = cpliq * qintr_rain*(t_precip-tl) + cpice * qintr_snow*(t_precip-tl)
 
 !-----------------------------------------------------------------------
 ! Derivative of soil energy flux with respect to soil temperature (cgrnd)
 !-----------------------------------------------------------------------
 
-       cgrnds = cpair*rhoair*cgh*(1.-wtg0)
-       cgrndl = rhoair*cgw*(1.-wtgq0)*dqgdT
-       cgrnd  = cgrnds + cgrndl*htvp
+      cgrnds = cpair*rhoair*cgh*(1.-wtg0)
+      cgrndl = rhoair*cgw*(1.-wtgq0)*dqgdT
+      cgrnd  = cgrnds + cgrndl*htvp
 
 !-----------------------------------------------------------------------
 ! balance check
 ! (the computational error was created by the assumed 'dtl' in line 406-408)
 !-----------------------------------------------------------------------
 
-       err = sabv + irab + dirab_dtl*dtl(it-1) - fsenl - hvap*fevpl + hprl
+      err = sabv + irab + dirab_dtl*dtl(it-1) - fsenl - hvap*fevpl + hprl
 
 #if(defined CoLMDEBUG)
-       IF(abs(err) .gt. .2) &
-       write(6,*) 'energy imbalance in LeafTemperature.F90',it-1,err,sabv,irab,fsenl,hvap*fevpl,hprl
+      IF(abs(err) .gt. .2) &
+      write(6,*) 'energy imbalance in LeafTemperature.F90',it-1,err,sabv,irab,fsenl,hvap*fevpl,hprl
 #endif
 
 !-----------------------------------------------------------------------
 ! Update dew accumulation (kg/m2)
 !-----------------------------------------------------------------------
-       IF (DEF_Interception_scheme .eq. 1) THEN
-          ldew = max(0., ldew-evplwet*deltim)
+      IF (DEF_Interception_scheme .eq. 1) THEN
+         ldew = max(0., ldew-evplwet*deltim)
 
-       ELSEIF (DEF_Interception_scheme .eq. 2) THEN!CLM4.5
-          ldew = max(0., ldew-evplwet*deltim)
+      ELSEIF (DEF_Interception_scheme .eq. 2) THEN!CLM4.5
+         ldew = max(0., ldew-evplwet*deltim)
 
-       ELSEIF (DEF_Interception_scheme .eq. 3) THEN !CLM5
-          IF (ldew_rain .gt. evplwet*deltim) THEN
-             ldew_rain = ldew_rain-evplwet*deltim
-             ldew_snow = ldew_snow
-             ldew=ldew_rain+ldew_snow
-          ELSE
-             ldew_rain = 0.0
-             ldew_snow = max(0., ldew-evplwet*deltim)
-             ldew      = ldew_snow
-          ENDIF
+      ELSEIF (DEF_Interception_scheme .eq. 3) THEN !CLM5
+         IF (ldew_rain .gt. evplwet*deltim) THEN
+            ldew_rain = ldew_rain-evplwet*deltim
+            ldew_snow = ldew_snow
+            ldew=ldew_rain+ldew_snow
+         ELSE
+            ldew_rain = 0.0
+            ldew_snow = max(0., ldew-evplwet*deltim)
+            ldew      = ldew_snow
+         ENDIF
 
-       ELSEIF (DEF_Interception_scheme .eq. 4) THEN !Noah-MP
-          IF (ldew_rain .gt. evplwet*deltim) THEN
-             ldew_rain = ldew_rain-evplwet*deltim
-             ldew_snow = ldew_snow
-             ldew=ldew_rain+ldew_snow
-          ELSE
-             ldew_rain = 0.0
-             ldew_snow = max(0., ldew-evplwet*deltim)
-             ldew      = ldew_snow
-          ENDIF
+      ELSEIF (DEF_Interception_scheme .eq. 4) THEN !Noah-MP
+         IF (ldew_rain .gt. evplwet*deltim) THEN
+            ldew_rain = ldew_rain-evplwet*deltim
+            ldew_snow = ldew_snow
+            ldew=ldew_rain+ldew_snow
+         ELSE
+            ldew_rain = 0.0
+            ldew_snow = max(0., ldew-evplwet*deltim)
+            ldew      = ldew_snow
+         ENDIF
 
-       ELSEIF (DEF_Interception_scheme .eq. 5) THEN !MATSIRO
-          IF (ldew_rain .gt. evplwet*deltim) THEN
-             ldew_rain = ldew_rain-evplwet*deltim
-             ldew_snow = ldew_snow
-             ldew=ldew_rain+ldew_snow
-       ELSE
-          ldew_rain = 0.0
-          ldew_snow = max(0., ldew-evplwet*deltim)
-          ldew      = ldew_snow
-       ENDIF
+      ELSEIF (DEF_Interception_scheme .eq. 5) THEN !MATSIRO
+         IF (ldew_rain .gt. evplwet*deltim) THEN
+            ldew_rain = ldew_rain-evplwet*deltim
+            ldew_snow = ldew_snow
+            ldew=ldew_rain+ldew_snow
+         ELSE
+            ldew_rain = 0.0
+            ldew_snow = max(0., ldew-evplwet*deltim)
+            ldew      = ldew_snow
+         ENDIF
 
-       ELSEIF (DEF_Interception_scheme .eq. 6) THEN !VIC
-          IF (ldew_rain .gt. evplwet*deltim) THEN
-             ldew_rain = ldew_rain-evplwet*deltim
-             ldew_snow = ldew_snow
-             ldew=ldew_rain+ldew_snow
-          ELSE
-             ldew_rain = 0.0
-             ldew_snow = max(0., ldew-evplwet*deltim)
-             ldew      = ldew_snow
-          ENDIF
-       ELSEIF (DEF_Interception_scheme .eq. 7) THEN !JULES
-             IF (ldew_rain .gt. evplwet*deltim) THEN
-                ldew_rain = ldew_rain-evplwet*deltim
-                ldew_snow = ldew_snow
-                ldew=ldew_rain+ldew_snow
-             ELSE
-                ldew_rain = 0.0
-                ldew_snow = max(0., ldew-evplwet*deltim)
-                ldew      = ldew_snow
-             ENDIF
-       ELSEIF (DEF_Interception_scheme .eq. 8) THEN !JULES
-             IF (ldew_rain .gt. evplwet*deltim) THEN
-                ldew_rain = ldew_rain-evplwet*deltim
-                ldew_snow = ldew_snow
-                ldew=ldew_rain+ldew_snow
-             ELSE
-                ldew_rain = 0.0
-                ldew_snow = max(0., ldew-evplwet*deltim)
-                ldew      = ldew_snow
-             ENDIF
-       ELSE
-          CALL abort
-       ENDIF
+      ELSEIF (DEF_Interception_scheme .eq. 6) THEN !VIC
+         IF (ldew_rain .gt. evplwet*deltim) THEN
+            ldew_rain = ldew_rain-evplwet*deltim
+            ldew_snow = ldew_snow
+            ldew=ldew_rain+ldew_snow
+         ELSE
+            ldew_rain = 0.0
+            ldew_snow = max(0., ldew-evplwet*deltim)
+            ldew      = ldew_snow
+         ENDIF
+      ELSEIF (DEF_Interception_scheme .eq. 7) THEN !JULES
+            IF (ldew_rain .gt. evplwet*deltim) THEN
+               ldew_rain = ldew_rain-evplwet*deltim
+               ldew_snow = ldew_snow
+               ldew=ldew_rain+ldew_snow
+            ELSE
+               ldew_rain = 0.0
+               ldew_snow = max(0., ldew-evplwet*deltim)
+               ldew      = ldew_snow
+            ENDIF
+      ELSEIF (DEF_Interception_scheme .eq. 8) THEN !JULES
+            IF (ldew_rain .gt. evplwet*deltim) THEN
+               ldew_rain = ldew_rain-evplwet*deltim
+               ldew_snow = ldew_snow
+               ldew=ldew_rain+ldew_snow
+            ELSE
+               ldew_rain = 0.0
+               ldew_snow = max(0., ldew-evplwet*deltim)
+               ldew      = ldew_snow
+            ENDIF
+      ELSE
+         CALL abort
+      ENDIF
 
 !-----------------------------------------------------------------------
 ! 2 m height air temperature
 !-----------------------------------------------------------------------
-       tref = thm + vonkar/(fh-fht)*dth * (fh2m/vonkar - fh/vonkar)
-       qref =  qm + vonkar/(fq-fqt)*dqh * (fq2m/vonkar - fq/vonkar)
+      tref = thm + vonkar/(fh-fht)*dth * (fh2m/vonkar - fh/vonkar)
+      qref =  qm + vonkar/(fq-fqt)*dqh * (fq2m/vonkar - fq/vonkar)
 
-  END SUBROUTINE LeafTemperature
+   END SUBROUTINE LeafTemperature
 !----------------------------------------------------------------------
 
    SUBROUTINE dewfraction (sigf,lai,sai,dewmx,ldew,ldew_rain,ldew_snow,fwet,fdry)
@@ -1156,25 +1156,25 @@ ENDIF
       !---1999.09.15  Yongjiu Dai
    !=======================================================================
 
-      USE MOD_Precision
+   USE MOD_Precision
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      real(r8), intent(in)  :: sigf        ! fraction of veg cover, excluding snow-covered veg [-]
-      real(r8), intent(in)  :: lai         ! leaf area index  [-]
-      real(r8), intent(in)  :: sai         ! stem area index  [-]
-      real(r8), intent(in)  :: dewmx       ! maximum allowed dew [0.1 mm]
-      real(r8), intent(in)  :: ldew        ! depth of water on foliage [kg/m2/s]
-      real(r8), intent(in)  :: ldew_rain   ! depth of rain on foliage [kg/m2/s]
-      real(r8), intent(in)  :: ldew_snow   ! depth of snow on foliage [kg/m2/s]
-      real(r8), intent(out) :: fwet        ! fraction of foliage covered by water [-]
-      real(r8), intent(out) :: fdry        ! fraction of foliage that is green and dry [-]
+   real(r8), intent(in)  :: sigf        ! fraction of veg cover, excluding snow-covered veg [-]
+   real(r8), intent(in)  :: lai         ! leaf area index  [-]
+   real(r8), intent(in)  :: sai         ! stem area index  [-]
+   real(r8), intent(in)  :: dewmx       ! maximum allowed dew [0.1 mm]
+   real(r8), intent(in)  :: ldew        ! depth of water on foliage [kg/m2/s]
+   real(r8), intent(in)  :: ldew_rain   ! depth of rain on foliage [kg/m2/s]
+   real(r8), intent(in)  :: ldew_snow   ! depth of snow on foliage [kg/m2/s]
+   real(r8), intent(out) :: fwet        ! fraction of foliage covered by water [-]
+   real(r8), intent(out) :: fdry        ! fraction of foliage that is green and dry [-]
 
-      real(r8) :: lsai                     ! lai + sai
-      real(r8) :: dewmxi                   ! inverse of maximum allowed dew [1/mm]
-      real(r8) :: vegt                     ! sigf*lsai, NOTE: remove sigf
-      real(r8) :: satcap_rain              ! saturation capacity of foliage for rain [kg/m2]
-      real(r8) :: satcap_snow              ! saturation capacity of foliage for snow [kg/m2]
+   real(r8) :: lsai                     ! lai + sai
+   real(r8) :: dewmxi                   ! inverse of maximum allowed dew [1/mm]
+   real(r8) :: vegt                     ! sigf*lsai, NOTE: remove sigf
+   real(r8) :: satcap_rain              ! saturation capacity of foliage for rain [kg/m2]
+   real(r8) :: satcap_snow              ! saturation capacity of foliage for snow [kg/m2]
 
       !-----------------------------------------------------------------------
       ! Fwet is the fraction of all vegetation surfaces which are wet
@@ -1195,6 +1195,6 @@ ENDIF
       ! transpire. Adjusted for stem area which does not transpire
       fdry = (1.-fwet)*lai/lsai
 
-  END SUBROUTINE dewfraction
+   END SUBROUTINE dewfraction
 
 END MODULE MOD_LeafTemperature

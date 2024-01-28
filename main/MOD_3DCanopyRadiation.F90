@@ -24,7 +24,7 @@ CONTAINS
 #ifdef LULC_IGBP_PC
 
 !-----------------------------------------------------------------------
-  SUBROUTINE ThreeDCanopy_wrap (ipatch, czen, albg, albv, tran, ssun, ssha)
+   SUBROUTINE ThreeDCanopy_wrap (ipatch, czen, albg, albv, tran, ssun, ssha)
 
 !
 ! !DESCRIPTION:
@@ -72,154 +72,154 @@ CONTAINS
    real(r8), allocatable :: fsun_id(:), fsun_ii(:), psun(:)
    real(r8), allocatable :: phi1(:), phi2(:), gdir(:)
 
-   ! get patch PFT index
-   ps = patch_pft_s(ipatch)
-   pe = patch_pft_e(ipatch)
+      ! get patch PFT index
+      ps = patch_pft_s(ipatch)
+      pe = patch_pft_e(ipatch)
 
-   ! allocate memory for defined variables
-   allocate (albd   (ps:pe, 2) )
-   allocate (albi   (ps:pe, 2) )
-   allocate (fabd   (ps:pe, 2) )
-   allocate (fabi   (ps:pe, 2) )
-   allocate (fadd   (ps:pe, 2) )
-   allocate (ftdd   (ps:pe, 2) )
-   allocate (ftid   (ps:pe, 2) )
-   allocate (ftii   (ps:pe, 2) )
-   allocate (rho    (ps:pe, 2) )
-   allocate (tau    (ps:pe, 2) )
-   allocate (csiz   (ps:pe)    )
-   allocate (chgt   (ps:pe)    )
-   allocate (chil   (ps:pe)    )
-   allocate (lsai   (ps:pe)    )
-   allocate (canlay (ps:pe)    )
-   allocate (fsun_id(ps:pe)    )
-   allocate (fsun_ii(ps:pe)    )
-   allocate (psun   (ps:pe)    )
-   allocate (phi1   (ps:pe)    )
-   allocate (phi2   (ps:pe)    )
-   allocate (gdir   (ps:pe)    )
+      ! allocate memory for defined variables
+      allocate (albd   (ps:pe, 2) )
+      allocate (albi   (ps:pe, 2) )
+      allocate (fabd   (ps:pe, 2) )
+      allocate (fabi   (ps:pe, 2) )
+      allocate (fadd   (ps:pe, 2) )
+      allocate (ftdd   (ps:pe, 2) )
+      allocate (ftid   (ps:pe, 2) )
+      allocate (ftii   (ps:pe, 2) )
+      allocate (rho    (ps:pe, 2) )
+      allocate (tau    (ps:pe, 2) )
+      allocate (csiz   (ps:pe)    )
+      allocate (chgt   (ps:pe)    )
+      allocate (chil   (ps:pe)    )
+      allocate (lsai   (ps:pe)    )
+      allocate (canlay (ps:pe)    )
+      allocate (fsun_id(ps:pe)    )
+      allocate (fsun_ii(ps:pe)    )
+      allocate (psun   (ps:pe)    )
+      allocate (phi1   (ps:pe)    )
+      allocate (phi2   (ps:pe)    )
+      allocate (gdir   (ps:pe)    )
 
-   ! initialization
-   albd=1.; albi=1.; fabd=0.; fabi=0.;
-   ftdd=1.; ftid=0.; ftii=1.; fadd=0.;
-   csiz(:) = (htop_p(ps:pe) - hbot_p(ps:pe)) / 2
-   chgt(:) = (htop_p(ps:pe) + hbot_p(ps:pe)) / 2
-   lsai(:) = lai_p(ps:pe) + sai_p(ps:pe)
+      ! initialization
+      albd=1.; albi=1.; fabd=0.; fabi=0.;
+      ftdd=1.; ftid=0.; ftii=1.; fadd=0.;
+      csiz(:) = (htop_p(ps:pe) - hbot_p(ps:pe)) / 2
+      chgt(:) = (htop_p(ps:pe) + hbot_p(ps:pe)) / 2
+      lsai(:) = lai_p(ps:pe) + sai_p(ps:pe)
 
-   ! calculate weighted plant optical properties
-   ! loop for each PFT
-   rho = 0.
-   tau = 0.
-   DO i = ps, pe
+      ! calculate weighted plant optical properties
+      ! loop for each PFT
+      rho = 0.
+      tau = 0.
+      DO i = ps, pe
 
-      p = pftclass(i)
-      canlay(i) = canlay_p(p)
-      chil(i)   = chil_p(p)
+         p = pftclass(i)
+         canlay(i) = canlay_p(p)
+         chil(i)   = chil_p(p)
 
-      IF (lsai(i) > 0.) THEN
-         rho(i,:) = rho_p(:,1,p)*lai_p(i)/lsai(i) &
-                  + rho_p(:,2,p)*sai_p(i)/lsai(i)
-         tau(i,:) = tau_p(:,1,p)*lai_p(i)/lsai(i) &
-                  + tau_p(:,2,p)*sai_p(i)/lsai(i)
-      ENDIF
-   ENDDO
+         IF (lsai(i) > 0.) THEN
+            rho(i,:) = rho_p(:,1,p)*lai_p(i)/lsai(i) &
+                     + rho_p(:,2,p)*sai_p(i)/lsai(i)
+            tau(i,:) = tau_p(:,1,p)*lai_p(i)/lsai(i) &
+                     + tau_p(:,2,p)*sai_p(i)/lsai(i)
+         ENDIF
+      ENDDO
 
-   ! CALL 3D canopy radiation transfer model
-   CALL ThreeDCanopy(ps, pe, canlay, pftfrac(ps:pe), csiz, chgt, chil, czen, &
-                     lsai, rho, tau, albg(:,1), albg(:,2), albd, albi, &
-                     fabd, fabi, ftdd, ftid, ftii, fadd, psun, &
-                     thermk_p(ps:pe), fshade_p(ps:pe) )
+      ! CALL 3D canopy radiation transfer model
+      CALL ThreeDCanopy(ps, pe, canlay, pftfrac(ps:pe), csiz, chgt, chil, czen, &
+                        lsai, rho, tau, albg(:,1), albg(:,2), albd, albi, &
+                        fabd, fabi, ftdd, ftid, ftii, fadd, psun, &
+                        thermk_p(ps:pe), fshade_p(ps:pe) )
 
-   ! calculate extkb_p, extkd_p
-   ! applied for 1D case
-   extkd_p(ps:pe) = 0.719 !used for scaling-up coefficients from leaf to canopy
+      ! calculate extkb_p, extkd_p
+      ! applied for 1D case
+      extkd_p(ps:pe) = 0.719 !used for scaling-up coefficients from leaf to canopy
 
-   ! 11/07/2018: calculate gee FUNCTION consider LAD
-   DO i = ps, pe
-      p = pftclass(i)
-      phi1(i) = 0.5 - 0.633 * chil_p(p) - 0.33 * chil_p(p) * chil_p(p)
-      phi2(i) = 0.877 * ( 1. - 2. * phi1(i) )
-   ENDDO
+      ! 11/07/2018: calculate gee FUNCTION consider LAD
+      DO i = ps, pe
+         p = pftclass(i)
+         phi1(i) = 0.5 - 0.633 * chil_p(p) - 0.33 * chil_p(p) * chil_p(p)
+         phi2(i) = 0.877 * ( 1. - 2. * phi1(i) )
+      ENDDO
 
-   ! 11/07/2018: calculate gee FUNCTION consider LAD
-   gdir = phi1 + phi2*czen
-   extkb_p(ps:pe) = gdir/czen
+      ! 11/07/2018: calculate gee FUNCTION consider LAD
+      gdir = phi1 + phi2*czen
+      extkb_p(ps:pe) = gdir/czen
 
-   fsun_id(:) = 0.
-   fsun_ii(:) = 0.
+      fsun_id(:) = 0.
+      fsun_ii(:) = 0.
 
-   DO p = ps, pe
-      IF (lsai(p) > 0.) THEN
-         fsun_id(p) = (1._r8 - exp(-2._r8*extkb_p(p)*lsai(p))) / &
-            (1._r8 - exp(-extkb_p(p)*lsai(p))) / 2.0_r8 * psun(p)
+      DO p = ps, pe
+         IF (lsai(p) > 0.) THEN
+            fsun_id(p) = (1._r8 - exp(-2._r8*extkb_p(p)*lsai(p))) / &
+               (1._r8 - exp(-extkb_p(p)*lsai(p))) / 2.0_r8 * psun(p)
 
-         fsun_ii(p) = (1._r8 - exp(-extkb_p(p)*lsai(p)-0.5/0.5_r8*lsai(p))) / &
-            (extkb_p(p)+0.5/0.5_r8) / &
-            (1._r8 - exp(-0.5/0.5_r8*lsai(p))) *  &
-            (0.5/0.5_r8) * psun(p)
-      ENDIF
-   ENDDO
+            fsun_ii(p) = (1._r8 - exp(-extkb_p(p)*lsai(p)-0.5/0.5_r8*lsai(p))) / &
+               (extkb_p(p)+0.5/0.5_r8) / &
+               (1._r8 - exp(-0.5/0.5_r8*lsai(p))) *  &
+               (0.5/0.5_r8) * psun(p)
+         ENDIF
+      ENDDO
 
-   ! calculate albv, ssun, ssha
-   ! NOTE: CoLM (1/2,): vis/nir; (,1/2): dir/dif
-   albv(1,1) = albd(ps,1); albv(1,2) = albi(ps,1)
-   albv(2,1) = albd(ps,2); albv(2,2) = albi(ps,2)
+      ! calculate albv, ssun, ssha
+      ! NOTE: CoLM (1/2,): vis/nir; (,1/2): dir/dif
+      albv(1,1) = albd(ps,1); albv(1,2) = albi(ps,1)
+      albv(2,1) = albd(ps,2); albv(2,2) = albi(ps,2)
 
-   ! ssun(band, dir/dif, pft), fabd/fadd(pft, band)
-   ssun_p(1,1,ps:pe) = fadd(:,1) + (fabd(:,1)-fadd(:,1))*fsun_id
-   ssun_p(2,1,ps:pe) = fadd(:,2) + (fabd(:,2)-fadd(:,2))*fsun_id
-   ssha_p(1,1,ps:pe) = (fabd(:,1)-fadd(:,1)) * (1.-fsun_id)
-   ssha_p(2,1,ps:pe) = (fabd(:,2)-fadd(:,2)) * (1.-fsun_id)
-   ssun_p(1,2,ps:pe) = fabi(:,1) * fsun_ii
-   ssun_p(2,2,ps:pe) = fabi(:,2) * fsun_ii
-   ssha_p(1,2,ps:pe) = fabi(:,1) * (1.-fsun_ii)
-   ssha_p(2,2,ps:pe) = fabi(:,2) * (1.-fsun_ii)
+      ! ssun(band, dir/dif, pft), fabd/fadd(pft, band)
+      ssun_p(1,1,ps:pe) = fadd(:,1) + (fabd(:,1)-fadd(:,1))*fsun_id
+      ssun_p(2,1,ps:pe) = fadd(:,2) + (fabd(:,2)-fadd(:,2))*fsun_id
+      ssha_p(1,1,ps:pe) = (fabd(:,1)-fadd(:,1)) * (1.-fsun_id)
+      ssha_p(2,1,ps:pe) = (fabd(:,2)-fadd(:,2)) * (1.-fsun_id)
+      ssun_p(1,2,ps:pe) = fabi(:,1) * fsun_ii
+      ssun_p(2,2,ps:pe) = fabi(:,2) * fsun_ii
+      ssha_p(1,2,ps:pe) = fabi(:,1) * (1.-fsun_ii)
+      ssha_p(2,2,ps:pe) = fabi(:,2) * (1.-fsun_ii)
 
-   ssun(1,1) = sum( ssun_p(1,1,ps:pe) * pftfrac(ps:pe) )
-   ssun(2,1) = sum( ssun_p(2,1,ps:pe) * pftfrac(ps:pe) )
-   ssun(1,2) = sum( ssun_p(1,2,ps:pe) * pftfrac(ps:pe) )
-   ssun(2,2) = sum( ssun_p(2,2,ps:pe) * pftfrac(ps:pe) )
+      ssun(1,1) = sum( ssun_p(1,1,ps:pe) * pftfrac(ps:pe) )
+      ssun(2,1) = sum( ssun_p(2,1,ps:pe) * pftfrac(ps:pe) )
+      ssun(1,2) = sum( ssun_p(1,2,ps:pe) * pftfrac(ps:pe) )
+      ssun(2,2) = sum( ssun_p(2,2,ps:pe) * pftfrac(ps:pe) )
 
-   ssha(1,1) = sum( ssha_p(1,1,ps:pe) * pftfrac(ps:pe) )
-   ssha(2,1) = sum( ssha_p(2,1,ps:pe) * pftfrac(ps:pe) )
-   ssha(1,2) = sum( ssha_p(1,2,ps:pe) * pftfrac(ps:pe) )
-   ssha(2,2) = sum( ssha_p(2,2,ps:pe) * pftfrac(ps:pe) )
+      ssha(1,1) = sum( ssha_p(1,1,ps:pe) * pftfrac(ps:pe) )
+      ssha(2,1) = sum( ssha_p(2,1,ps:pe) * pftfrac(ps:pe) )
+      ssha(1,2) = sum( ssha_p(1,2,ps:pe) * pftfrac(ps:pe) )
+      ssha(2,2) = sum( ssha_p(2,2,ps:pe) * pftfrac(ps:pe) )
 
-   tran(1,1) = ftid(ps,1)
-   tran(2,1) = ftid(ps,2)
-   tran(1,3) = ftdd(ps,1)
-   tran(2,3) = ftdd(ps,2)
-   tran(1,2) = ftii(ps,1)
-   tran(2,2) = ftii(ps,2)
+      tran(1,1) = ftid(ps,1)
+      tran(2,1) = ftid(ps,2)
+      tran(1,3) = ftdd(ps,1)
+      tran(2,3) = ftdd(ps,2)
+      tran(1,2) = ftii(ps,1)
+      tran(2,2) = ftii(ps,2)
 
-   ! deallocate memory for defined variables
-   deallocate (albd    )
-   deallocate (albi    )
-   deallocate (fabd    )
-   deallocate (fabi    )
-   deallocate (fadd    )
-   deallocate (ftdd    )
-   deallocate (ftid    )
-   deallocate (ftii    )
-   deallocate (rho     )
-   deallocate (tau     )
-   deallocate (csiz    )
-   deallocate (chgt    )
-   deallocate (chil    )
-   deallocate (lsai    )
-   deallocate (canlay  )
-   deallocate (fsun_id )
-   deallocate (fsun_ii )
-   deallocate (psun    )
-   deallocate (phi1    )
-   deallocate (phi2    )
-   deallocate (gdir    )
+      ! deallocate memory for defined variables
+      deallocate (albd    )
+      deallocate (albi    )
+      deallocate (fabd    )
+      deallocate (fabi    )
+      deallocate (fadd    )
+      deallocate (ftdd    )
+      deallocate (ftid    )
+      deallocate (ftii    )
+      deallocate (rho     )
+      deallocate (tau     )
+      deallocate (csiz    )
+      deallocate (chgt    )
+      deallocate (chil    )
+      deallocate (lsai    )
+      deallocate (canlay  )
+      deallocate (fsun_id )
+      deallocate (fsun_ii )
+      deallocate (psun    )
+      deallocate (phi1    )
+      deallocate (phi2    )
+      deallocate (gdir    )
 
-  END SUBROUTINE ThreeDCanopy_wrap
+   END SUBROUTINE ThreeDCanopy_wrap
 #endif
 
 
-  SUBROUTINE ThreeDCanopy(ps, pe, canlay, fcover, csiz, chgt, chil, coszen, &
+   SUBROUTINE ThreeDCanopy(ps, pe, canlay, fcover, csiz, chgt, chil, coszen, &
                           lsai, rho, tau, albgrd, albgri, albd, albi, &
                           fabd, fabi, ftdd, ftid, ftii, fadd, psun, &
                           thermk, fshade)
@@ -389,238 +389,238 @@ CONTAINS
 
    real(r8) :: phi1(ps:pe), phi2(ps:pe)
 
-   ! 11/07/2018: calculate gee FUNCTION consider LAD
-   phi1 = 0.5 - 0.633 * chil - 0.33 * chil * chil
-   phi2 = 0.877 * ( 1. - 2. * phi1 )
+      ! 11/07/2018: calculate gee FUNCTION consider LAD
+      phi1 = 0.5 - 0.633 * chil - 0.33 * chil * chil
+      phi2 = 0.877 * ( 1. - 2. * phi1 )
 
-   cosz = coszen
-   cosd = cos(60._r8/180._r8*pi)
+      cosz = coszen
+      cosd = cos(60._r8/180._r8*pi)
 
-   ! 11/07/2018: calculate gee FUNCTION consider LAD
-   gdir = phi1 + phi2*cosz
-   gdif = phi1 + phi2*cosd
+      ! 11/07/2018: calculate gee FUNCTION consider LAD
+      gdir = phi1 + phi2*cosz
+      gdif = phi1 + phi2*cosd
 
-   nsoilveg = 0
+      nsoilveg = 0
 
-   fc0 = D0
-   omg_lay  = D0
-   rho_lay  = D0
-   tau_lay  = D0
-   hgt_lay  = D0
-   bot_lay  = D0
-   siz_lay  = D0
-   lsai_lay = D0
-   gdir_lay = D0
-   gdif_lay = D0
+      fc0 = D0
+      omg_lay  = D0
+      rho_lay  = D0
+      tau_lay  = D0
+      hgt_lay  = D0
+      bot_lay  = D0
+      siz_lay  = D0
+      lsai_lay = D0
+      gdir_lay = D0
+      gdif_lay = D0
 
-   DO ip = ps, pe
-      shadow_sky(ip) = D1
+      DO ip = ps, pe
+         shadow_sky(ip) = D1
 
-      ! check elai and pft weight are non-zero
-      IF ( lsai(ip)>1.e-6_r8 .and. fcover(ip)>D0 ) THEN
+         ! check elai and pft weight are non-zero
+         IF ( lsai(ip)>1.e-6_r8 .and. fcover(ip)>D0 ) THEN
 
-         soilveg(ip) = .true.
-         nsoilveg = nsoilveg + 1
+            soilveg(ip) = .true.
+            nsoilveg = nsoilveg + 1
 
-         clev      = canlay(ip)
-         fc0(clev) = fc0(clev) + fcover(ip)
+            clev      = canlay(ip)
+            fc0(clev) = fc0(clev) + fcover(ip)
 
-         siz_lay (clev) = siz_lay (clev) + fcover(ip)*csiz(ip)
-         hgt_lay (clev) = hgt_lay (clev) + fcover(ip)*chgt(ip)
-         lsai_lay(clev) = lsai_lay(clev) + fcover(ip)*lsai(ip)
-         gdir_lay(clev) = gdir_lay(clev) + fcover(ip)*gdir(ip)
-         gdif_lay(clev) = gdif_lay(clev) + fcover(ip)*gdif(ip)
+            siz_lay (clev) = siz_lay (clev) + fcover(ip)*csiz(ip)
+            hgt_lay (clev) = hgt_lay (clev) + fcover(ip)*chgt(ip)
+            lsai_lay(clev) = lsai_lay(clev) + fcover(ip)*lsai(ip)
+            gdir_lay(clev) = gdir_lay(clev) + fcover(ip)*gdir(ip)
+            gdif_lay(clev) = gdif_lay(clev) + fcover(ip)*gdif(ip)
 
-         ! set optical properties
-         DO ib = 1, numrad
-            omega(ip,ib) = rho(ip,ib) + tau(ip,ib)
+            ! set optical properties
+            DO ib = 1, numrad
+               omega(ip,ib) = rho(ip,ib) + tau(ip,ib)
 
-            ! sum of tau,rho and omega for pfts in a layer
-            tau_lay(clev,ib) = tau_lay(clev,ib) + fcover(ip)*(tau(ip,ib))
-            rho_lay(clev,ib) = rho_lay(clev,ib) + fcover(ip)*(rho(ip,ib))
-            omg_lay(clev,ib) = omg_lay(clev,ib) + fcover(ip)*(omega(ip,ib))
+               ! sum of tau,rho and omega for pfts in a layer
+               tau_lay(clev,ib) = tau_lay(clev,ib) + fcover(ip)*(tau(ip,ib))
+               rho_lay(clev,ib) = rho_lay(clev,ib) + fcover(ip)*(rho(ip,ib))
+               omg_lay(clev,ib) = omg_lay(clev,ib) + fcover(ip)*(omega(ip,ib))
 
-         ENDDO ! ENDDO ib=1, numrad
-      ELSE
-         soilveg(ip) = .false.
-      ENDIF
-   ENDDO ! ENDDO ip
+            ENDDO ! ENDDO ib=1, numrad
+         ELSE
+            soilveg(ip) = .false.
+         ENDIF
+      ENDDO ! ENDDO ip
 
 !=============================================================
 ! layer average of lsai,tau,rho,omega...
 !=============================================================
 
-   DO lev = 1, 3
-      IF (fc0(lev) > D0) THEN
-         siz_lay(lev)  = max(siz_lay(lev)/fc0(lev),D0)
-         hgt_lay(lev)  = max(hgt_lay(lev)/fc0(lev),D0)
-         bot_lay(lev)  = hgt_lay(lev)-siz_lay(lev)
-         lsai_lay(lev) = max(lsai_lay(lev)/fc0(lev),D0)
-         DO ib = 1, numrad
-            tau_lay(lev,ib) = max(tau_lay(lev,ib)/fc0(lev),D0)
-            rho_lay(lev,ib) = max(rho_lay(lev,ib)/fc0(lev),D0)
-            omg_lay(lev,ib) = max(omg_lay(lev,ib)/fc0(lev),D0)
-         ENDDO
-         gdir_lay(lev) = max(gdir_lay(lev)/fc0(lev),D0)
-         gdif_lay(lev) = max(gdif_lay(lev)/fc0(lev),D0)
-      ENDIF
-   ENDDO ! ENDDO ib
+      DO lev = 1, 3
+         IF (fc0(lev) > D0) THEN
+            siz_lay(lev)  = max(siz_lay(lev)/fc0(lev),D0)
+            hgt_lay(lev)  = max(hgt_lay(lev)/fc0(lev),D0)
+            bot_lay(lev)  = hgt_lay(lev)-siz_lay(lev)
+            lsai_lay(lev) = max(lsai_lay(lev)/fc0(lev),D0)
+            DO ib = 1, numrad
+               tau_lay(lev,ib) = max(tau_lay(lev,ib)/fc0(lev),D0)
+               rho_lay(lev,ib) = max(rho_lay(lev,ib)/fc0(lev),D0)
+               omg_lay(lev,ib) = max(omg_lay(lev,ib)/fc0(lev),D0)
+            ENDDO
+            gdir_lay(lev) = max(gdir_lay(lev)/fc0(lev),D0)
+            gdif_lay(lev) = max(gdif_lay(lev)/fc0(lev),D0)
+         ENDIF
+      ENDDO ! ENDDO ib
 
 !=============================================================
 ! layer shadows
 !=============================================================
 
-   shadow_d = D0
-   shadow_i = D0
-   DO lev =1, 3
-      IF ( fc0(lev)>D0 .and. cosz>D0 ) THEN
-         shadow_d(lev) = (D1 - exp(-D1*fc0(lev)/cosz))/&
-            (D1 - fc0(lev)*exp(-D1/cosz))
-         shadow_d(lev) = max(fc0(lev), shadow_d(lev))
-         shadow_i(lev) = (D1 - exp(-D1*fc0(lev)/cosd))/&
-            (D1 - fc0(lev)*exp(-D1/cosd))
-         shadow_i(lev) = max(fc0(lev), shadow_i(lev))
-      ENDIF
-   ENDDO
+      shadow_d = D0
+      shadow_i = D0
+      DO lev =1, 3
+         IF ( fc0(lev)>D0 .and. cosz>D0 ) THEN
+            shadow_d(lev) = (D1 - exp(-D1*fc0(lev)/cosz))/&
+               (D1 - fc0(lev)*exp(-D1/cosz))
+            shadow_d(lev) = max(fc0(lev), shadow_d(lev))
+            shadow_i(lev) = (D1 - exp(-D1*fc0(lev)/cosd))/&
+               (D1 - fc0(lev)*exp(-D1/cosd))
+            shadow_i(lev) = max(fc0(lev), shadow_i(lev))
+         ENDIF
+      ENDDO
 
 !=============================================================
 ! taud and ftdd for layers
 !=============================================================
 
-   taud_lay = D0
-   taui_lay = D0
-   ftdd_lay = D0
-   ftdi_lay = D0
-   fcad_lay = D1
-   fcai_lay = D1
-   ftdd_lay_orig = D0
-   ftdi_lay_orig = D0
+      taud_lay = D0
+      taui_lay = D0
+      ftdd_lay = D0
+      ftdi_lay = D0
+      fcad_lay = D1
+      fcai_lay = D1
+      ftdd_lay_orig = D0
+      ftdi_lay_orig = D0
 
-   DO lev = 1, 3
-      IF ( fc0(lev)>D0 .and. lsai_lay(lev)>D0 ) THEN
+      DO lev = 1, 3
+         IF ( fc0(lev)>D0 .and. lsai_lay(lev)>D0 ) THEN
 
-         taud_lay(lev) = D3/D4*gee*fc0(lev)*lsai_lay(lev)/&
-            (cosz*shadow_d(lev))
-         taui_lay(lev) = D3/D4*gee*fc0(lev)*lsai_lay(lev)/&
-            (cosd*shadow_i(lev))
+            taud_lay(lev) = D3/D4*gee*fc0(lev)*lsai_lay(lev)/&
+               (cosz*shadow_d(lev))
+            taui_lay(lev) = D3/D4*gee*fc0(lev)*lsai_lay(lev)/&
+               (cosd*shadow_i(lev))
 
-         ! 11/07/2018: LAD calibration
-         ftdd_lay_orig(lev) = tee(DD1*taud_lay(lev))
-         ftdi_lay_orig(lev) = tee(DD1*taui_lay(lev))
+            ! 11/07/2018: LAD calibration
+            ftdd_lay_orig(lev) = tee(DD1*taud_lay(lev))
+            ftdi_lay_orig(lev) = tee(DD1*taui_lay(lev))
 
-         ! 11/07/2018: gdir/gdif = FUNCTION(xl, cos)
-         ftdd_lay(lev) = tee(DD1*taud_lay(lev)/gee*gdir_lay(lev))
-         ftdi_lay(lev) = tee(DD1*taui_lay(lev)/gee*gdif_lay(lev))
+            ! 11/07/2018: gdir/gdif = FUNCTION(xl, cos)
+            ftdd_lay(lev) = tee(DD1*taud_lay(lev)/gee*gdir_lay(lev))
+            ftdi_lay(lev) = tee(DD1*taui_lay(lev)/gee*gdif_lay(lev))
 
-         ! calibration for chil
-         fcad_lay(lev) = (D1-ftdd_lay(lev)) / (D1-ftdd_lay_orig(lev))
-         fcai_lay(lev) = (D1-ftdi_lay(lev)) / (D1-ftdi_lay_orig(lev))
+            ! calibration for chil
+            fcad_lay(lev) = (D1-ftdd_lay(lev)) / (D1-ftdd_lay_orig(lev))
+            fcai_lay(lev) = (D1-ftdi_lay(lev)) / (D1-ftdi_lay_orig(lev))
 
-      ENDIF
-   ENDDO
+         ENDIF
+      ENDDO
 
 !=============================================================
 ! initialize local variables for layers
 !=============================================================
 
-   albd_col = D0
-   albi_col = D0
-   fabd_col = D0
-   fabd_lay = D0
-   fabi_col = D0
-   fabi_lay = D0
-   frid_lay = D0
-   frii_lay = D0
-   tt       = D0
+      albd_col = D0
+      albi_col = D0
+      fabd_col = D0
+      fabd_lay = D0
+      fabi_col = D0
+      fabi_lay = D0
+      frid_lay = D0
+      frii_lay = D0
+      tt       = D0
 
 !=============================================================
 ! projection shadow overlapping fractions
 !=============================================================
 
-   zenith = acos(coszen)
-   shad_oa(3,2) = fc0(3)*OverlapArea(siz_lay(3),hgt_lay(3)-bot_lay(2),&
-      zenith)
-   shad_oa(3,1) = fc0(3)*OverlapArea(siz_lay(3),hgt_lay(3)-bot_lay(1),&
-      zenith)
-   shad_oa(2,1) = fc0(2)*OverlapArea(siz_lay(2),hgt_lay(2)-bot_lay(1),&
-      zenith)
+      zenith = acos(coszen)
+      shad_oa(3,2) = fc0(3)*OverlapArea(siz_lay(3),hgt_lay(3)-bot_lay(2),&
+         zenith)
+      shad_oa(3,1) = fc0(3)*OverlapArea(siz_lay(3),hgt_lay(3)-bot_lay(1),&
+         zenith)
+      shad_oa(2,1) = fc0(2)*OverlapArea(siz_lay(2),hgt_lay(2)-bot_lay(1),&
+         zenith)
 
-   ! for test
-   !shad_oa(3,2) = D0
-   !shad_oa(3,1) = D0
-   !shad_oa(2,1) = D0
+      ! for test
+      !shad_oa(3,2) = D0
+      !shad_oa(3,1) = D0
+      !shad_oa(2,1) = D0
 
 !=============================================================
 ! unscattered direct sunlight available at  each layer
 ! 4:sky, 3:top 2:middle 1:bottom and 0:ground layer
 !=============================================================
 
-   ftdd_col = D0
-   tt = D0
-   tt(4,3) = shadow_d(3)
-   tt(4,3) = min(D1, max(D0, tt(4,3)))
-   tt(4,2) = shadow_d(2)*(D1-shadow_d(3)+shad_oa(3,2))
-   tt(4,2) = min(1-tt(4,3), max(D0, tt(4,2)))
-   tt(4,1) = shadow_d(1)*(D1-(shadow_d(2)-shad_oa(2,1)) &
-           - (shadow_d(3)-shad_oa(3,1)) &
-           + (shadow_d(2)-shad_oa(2,1))*(shadow_d(3)-shad_oa(3,2)))
-   tt(4,1) = min(1-tt(4,3)-tt(4,2), max(D0, tt(4,1)))
+      ftdd_col = D0
+      tt = D0
+      tt(4,3) = shadow_d(3)
+      tt(4,3) = min(D1, max(D0, tt(4,3)))
+      tt(4,2) = shadow_d(2)*(D1-shadow_d(3)+shad_oa(3,2))
+      tt(4,2) = min(1-tt(4,3), max(D0, tt(4,2)))
+      tt(4,1) = shadow_d(1)*(D1-(shadow_d(2)-shad_oa(2,1)) &
+              - (shadow_d(3)-shad_oa(3,1)) &
+              + (shadow_d(2)-shad_oa(2,1))*(shadow_d(3)-shad_oa(3,2)))
+      tt(4,1) = min(1-tt(4,3)-tt(4,2), max(D0, tt(4,1)))
 
-   tt(4,0) = D1-(shadow_d(1)+shadow_d(2)+shadow_d(3) &
-           - (shadow_d(2)-shad_oa(2,1))*shadow_d(1) &
-           - (shadow_d(3)-shad_oa(3,2))*shadow_d(2) &
-           - (shadow_d(3)-shad_oa(3,1))*shadow_d(1) &
-           + (shadow_d(2)-shad_oa(2,1))*(shadow_d(3)-shad_oa(3,2))*shadow_d(1))
-   tt(4,0) = min(1-tt(4,3)-tt(4,2)-tt(4,1), max(D0, tt(4,0)))
+      tt(4,0) = D1-(shadow_d(1)+shadow_d(2)+shadow_d(3) &
+              - (shadow_d(2)-shad_oa(2,1))*shadow_d(1) &
+              - (shadow_d(3)-shad_oa(3,2))*shadow_d(2) &
+              - (shadow_d(3)-shad_oa(3,1))*shadow_d(1) &
+              + (shadow_d(2)-shad_oa(2,1))*(shadow_d(3)-shad_oa(3,2))*shadow_d(1))
+      tt(4,0) = min(1-tt(4,3)-tt(4,2)-tt(4,1), max(D0, tt(4,0)))
 
-   IF (tt(4,0) < 0) THEN
-      print *, abs(tt(4,0))
-   ENDIF
+      IF (tt(4,0) < 0) THEN
+         print *, abs(tt(4,0))
+      ENDIF
 
-   ! direct sunlight passing through top canopy layer
-   IF (shadow_d(3) > 0) THEN
-      tt(3,2) = shadow_d(2)*(shadow_d(3)-shad_oa(3,2))
-      tt(3,2) = min(shadow_d(3), max(D0, tt(3,2)))
-      tt(3,1) = shadow_d(1)*(shadow_d(3)-shad_oa(3,1)- &
-         (shadow_d(3)-shad_oa(3,2))*(shadow_d(2)-shad_oa(2,1)))
-      tt(3,1) = min(shadow_d(3)-tt(3,2), max(D0, tt(3,1)))
-      tt(3,0) = shadow_d(3)-tt(3,2)-tt(3,1)
+      ! direct sunlight passing through top canopy layer
+      IF (shadow_d(3) > 0) THEN
+         tt(3,2) = shadow_d(2)*(shadow_d(3)-shad_oa(3,2))
+         tt(3,2) = min(shadow_d(3), max(D0, tt(3,2)))
+         tt(3,1) = shadow_d(1)*(shadow_d(3)-shad_oa(3,1)- &
+            (shadow_d(3)-shad_oa(3,2))*(shadow_d(2)-shad_oa(2,1)))
+         tt(3,1) = min(shadow_d(3)-tt(3,2), max(D0, tt(3,1)))
+         tt(3,0) = shadow_d(3)-tt(3,2)-tt(3,1)
 
-      tt(3,2) = tt(3,2)*ftdd_lay(3)
-      tt(3,1) = tt(3,1)*ftdd_lay(3)
-      tt(3,0) = tt(3,0)*ftdd_lay(3)
-   ENDIF
+         tt(3,2) = tt(3,2)*ftdd_lay(3)
+         tt(3,1) = tt(3,1)*ftdd_lay(3)
+         tt(3,0) = tt(3,0)*ftdd_lay(3)
+      ENDIF
 
-   ! direct sunlight passing through middle canopy layer
-   IF (shadow_d(2) > 0) THEN
-      tt(2,1) = shadow_d(1)*(shadow_d(2)-shad_oa(2,1))
-      tt(2,1) = min(shadow_d(2), max(D0, tt(2,1)))
-      tt(2,0) = shadow_d(2)-tt(2,1)
+      ! direct sunlight passing through middle canopy layer
+      IF (shadow_d(2) > 0) THEN
+         tt(2,1) = shadow_d(1)*(shadow_d(2)-shad_oa(2,1))
+         tt(2,1) = min(shadow_d(2), max(D0, tt(2,1)))
+         tt(2,0) = shadow_d(2)-tt(2,1)
 
-      tt(2,1) = tt(2,1)*ftdd_lay(2)*(tt(4,2) + tt(3,2))/shadow_d(2)
-      tt(2,0) = tt(2,0)*ftdd_lay(2)*(tt(4,2) + tt(3,2))/shadow_d(2)
-   ENDIF
+         tt(2,1) = tt(2,1)*ftdd_lay(2)*(tt(4,2) + tt(3,2))/shadow_d(2)
+         tt(2,0) = tt(2,0)*ftdd_lay(2)*(tt(4,2) + tt(3,2))/shadow_d(2)
+      ENDIF
 
-   ! direct sunlight passing through third canopy layer
-   IF (shadow_d(1) > 0)  THEN
-      tt(1,0) = ftdd_lay(1)*(tt(4,1) + tt(3,1) + tt(2,1))!*shadow_d(1)/shadow_d(1)
-   ENDIF
+      ! direct sunlight passing through third canopy layer
+      IF (shadow_d(1) > 0)  THEN
+         tt(1,0) = ftdd_lay(1)*(tt(4,1) + tt(3,1) + tt(2,1))!*shadow_d(1)/shadow_d(1)
+      ENDIF
 
 !=============================================
 ! Aggregate direct radiation to layers
 !=============================================
 
-   tt(4,3) = tt(4,3)
-   tt(3,2) = tt(4,2) + tt(3,2)
-   tt(2,1) = tt(4,1) + tt(3,1) + tt(2,1)
-   tt(1,0) = tt(4,0) + tt(3,0) + tt(2,0) + tt(1,0)
-   ftdd_col= tt(1,0)
+      tt(4,3) = tt(4,3)
+      tt(3,2) = tt(4,2) + tt(3,2)
+      tt(2,1) = tt(4,1) + tt(3,1) + tt(2,1)
+      tt(1,0) = tt(4,0) + tt(3,0) + tt(2,0) + tt(1,0)
+      ftdd_col= tt(1,0)
 
-   tt(0:4,4) = D0
-   tt(0:3,3) = D0
-   tt(4:4,2) = D0; tt(0:2,2) = D0
-   tt(3:4,1) = D0; tt(0:1,1) = D0
-   tt(2:4,0) = D0; tt(0:0,0) = D0
+      tt(0:4,4) = D0
+      tt(0:3,3) = D0
+      tt(4:4,2) = D0; tt(0:2,2) = D0
+      tt(3:4,1) = D0; tt(0:1,1) = D0
+      tt(2:4,0) = D0; tt(0:0,0) = D0
 
 
 !=======================================
@@ -628,304 +628,304 @@ CONTAINS
 ! ib=1:visible band 2:nir band
 !=======================================
 
-   DO ib = 1, numrad
+      DO ib = 1, numrad
 
-   !===============================
-   ! get pft level tau and ftdd
-   !===============================
+      !===============================
+      ! get pft level tau and ftdd
+      !===============================
 
-      ! 10/12/2017
-      ftdi(:,ib) = D1
+         ! 10/12/2017
+         ftdi(:,ib) = D1
 
-      DO ip = ps, pe
+         DO ip = ps, pe
 
-         taud(ip)=D0
-         taui(ip)=D0
-         shadow_pd(ip)=D0
-         shadow_pi(ip)=D0
+            taud(ip)=D0
+            taui(ip)=D0
+            shadow_pd(ip)=D0
+            shadow_pi(ip)=D0
 
-         IF (soilveg(ip)) THEN
+            IF (soilveg(ip)) THEN
+               clev = canlay(ip)
+
+            !================================================
+            ! fractional contribution of current pft in layer
+            !================================================
+
+               pfc = min( fcover(ip)/fc0(clev), D1)
+               shadow_pd(ip)=pfc*shadow_d(clev)
+               shadow_pi(ip)=pfc*shadow_i(clev)
+
+            !=====================================
+            ! get taud,taui at pft level
+            !=====================================
+
+               taud(ip)=D3/D4*gee*fcover(ip)*(lsai(ip))/&
+                  (cosz*shadow_pd(ip))
+
+               taui(ip)=D3/D4*gee*fcover(ip)*(lsai(ip))/&
+                  (cosd*shadow_pi(ip))
+
+            !====================================
+            ! transmission at pft level
+            !====================================
+
+               ftdd_orig(ip,ib) = tee(DD1*taud(ip))
+               ftdi_orig(ip,ib) = tee(DD1*taui(ip))
+
+               ! 11/07/2018: gdir/gdif = FUNCTION(xl, cos)
+               ftdd(ip,ib) = tee(DD1*taud(ip)/gee*gdir(ip))
+               ftdi(ip,ib) = tee(DD1*taui(ip)/gee*gdif(ip))
+
+               ! calibration for chil
+               fcad(ip) = (D1-ftdd(ip,ib)) / (D1-ftdd_orig(ip,ib))
+               fcai(ip) = (D1-ftdi(ip,ib)) / (D1-ftdi_orig(ip,ib))
+
+            ENDIF ! ENDIF soilveg
+         ENDDO ! ENDDO ip
+
+      !===============================================================
+      ! absorption, reflection and transmittance for three canopy layer
+      ! using average optical properties of layers
+      ! subroutine CanopyRad calculates fluxes for unit input radiation
+      !===============================================================
+
+         ftid_lay=D0; ftii_lay=D1
+         frid_lay=D0; frii_lay=D0
+         faid_lay=D0; faii_lay=D0
+
+         DO lev = 1, 3
+            IF (shadow_d(lev) > D0) THEN
+               CALL CanopyRad(taud_lay(lev), taui_lay(lev), ftdd_lay_orig(lev),&
+                  ftdi_lay_orig(lev), cosz, cosd, shadow_d(lev), shadow_i(lev), &
+                  fc0(lev), omg_lay(lev,ib), lsai_lay(lev), &
+                  tau_lay(lev,ib), rho_lay(lev,ib), ftid_lay(lev), &
+                  ftii_lay(lev), frid_lay(lev), frii_lay(lev),&
+                  faid_lay(lev), faii_lay(lev))
+            ENDIF
+         ENDDO ! ENDDO lev
+
+         ! 11/07/2018: calibration for LAD
+         ftid_lay(:) = fcad_lay(:)*ftid_lay(:)
+         ftii_lay(:) = fcai_lay(:)*(ftii_lay(:)-ftdi_lay_orig(:)) + ftdi_lay(:)
+         frid_lay(:) = fcad_lay(:)*frid_lay(:)
+         frii_lay(:) = fcai_lay(:)*frii_lay(:)
+         faid_lay(:) = fcad_lay(:)*faid_lay(:)
+         faii_lay(:) = fcai_lay(:)*faii_lay(:)
+
+      !=============================================
+      ! Calculate layer direct beam radiation absorbed
+      ! in the sunlit canopy as direct
+      !=============================================
+
+         fadd_lay(:,ib) = D0
+
+         DO lev = 1, nlay
+            IF ( fc0(lev)>D0 .and. lsai_lay(lev)>D0 ) THEN
+               fadd_lay(lev,ib) = tt(lev+1,lev) * &
+                  (D1-ftdd_lay(lev)) * (D1-omg_lay(lev,ib))
+            ENDIF
+         ENDDO
+
+         A = D0; B = D0;
+         fabs_leq = D0
+
+         ! Calculate the coefficients matrix A
+         A(1,1) = 1.0; A(1,3) = -shadow_i(3)*ftii_lay(3) + shadow_i(3) - 1.0;
+         A(2,2) = 1.0; A(2,3) = -shadow_i(3)*frii_lay(3);
+         A(3,3) = 1.0; A(3,2) = -shadow_i(2)*frii_lay(2);   A(3,5) = -shadow_i(2)*ftii_lay(2) + shadow_i(2) - 1.0;
+         A(4,4) = 1.0; A(4,5) = -shadow_i(2)*frii_lay(2);   A(4,2) = -shadow_i(2)*ftii_lay(2) + shadow_i(2) - 1.0;
+         A(5,5) = 1.0; A(5,4) = -shadow_i(1)*frii_lay(1);   A(5,6) =(-shadow_i(1)*ftii_lay(1) + shadow_i(1) - 1.0) * albgri(ib);
+         A(6,6) = 1.0 - albgri(ib)*shadow_i(1)*frii_lay(1); A(6,4) = -shadow_i(1)*ftii_lay(1) + shadow_i(1) - 1.0;
+
+         ! The constant vector B at right side
+         B(1,1) = tt(4,3)*frid_lay(3); B(1,2) = shadow_i(3)*frii_lay(3);
+         B(2,1) = tt(4,3)*ftid_lay(3); B(2,2) = shadow_i(3)*ftii_lay(3) - shadow_i(3) + 1.0;
+         B(3,1) = tt(3,2)*frid_lay(2); B(3,2) = 0.0;
+         B(4,1) = tt(3,2)*ftid_lay(2); B(4,2) = 0.0;
+         B(5,1) = tt(2,1)*frid_lay(1) + tt(1,0)*albgrd(ib)*(shadow_i(1)*ftii_lay(1) - shadow_i(1) + 1.0); B(5,2) = 0.0;
+         B(6,1) = tt(2,1)*ftid_lay(1) + tt(1,0)*albgrd(ib)*shadow_i(1)*frii_lay(1);                       B(6,2) = 0.0;
+
+         ! Get the resolution
+         CALL mGauss(A, B, X)
+
+         ! ====================================================
+         ! Set back to the absorption for each layer and albedo
+         ! ====================================================
+
+         ! Albedo
+         fabs_leq(4,:) = X(1,:)
+
+         ! Three layers' absorption
+         fabs_leq(3,1) = tt(4,3)*faid_lay(3) + X(3,1)*shadow_i(3)*faii_lay(3)
+         fabs_leq(3,2) = shadow_i(3)*faii_lay(3) + X(3,2)*shadow_i(3)*faii_lay(3)
+         fabs_leq(2,1) = tt(3,2)*faid_lay(2) + (X(2,1) + X(5,1))*shadow_i(2)*faii_lay(2)
+         fabs_leq(2,2) = (X(2,2) + X(5,2)) * shadow_i(2) * faii_lay(2)
+         fabs_leq(1,1) = tt(2,1)*faid_lay(1) + (X(4,1) + X(6,1)*albgri(ib) + tt(1,0)*albgrd(ib))*shadow_i(1)*faii_lay(1)
+         fabs_leq(1,2) = (X(4,2) + X(6,2)*albgri(ib)) * shadow_i(1) * faii_lay(1)
+
+         ! Ground absorption
+         fabs_leq(0,1) = X(6,1) * (1.0 - albgri(ib)) + tt(1,0) * (1.0 - albgrd(ib))
+         fabs_leq(0,2) = X(6,2) * (1.0 - albgri(ib))
+
+         ! IF everything is ok, substitute fabs_lay for fabs_leq
+         ! and delete the following line and the variables defined
+         ! but not used anymore
+         fabs_lay = fabs_leq
+
+         ! set column absorption and reflection
+         fabd_lay(1:3,ib) = fabs_lay(1:3,1)
+         fabi_lay(1:3,ib) = fabs_lay(1:3,2)
+         fabd_col(ib) = fabs_lay(1,1)+fabs_lay(2,1)+fabs_lay(3,1)
+         fabi_col(ib) = fabs_lay(1,2)+fabs_lay(2,2)+fabs_lay(3,2)
+         albd_col(ib) = fabs_lay(4,1)
+         albi_col(ib) = fabs_lay(4,2)
+
+         ! balance check
+         IF (abs(fabd_col(ib)+albd_col(ib)+fabs_lay(0,1)-1) > 1e-6) THEN
+            print *, "Imbalance kband=1"
+            print *, fabd_col(ib)+albd_col(ib)+fabs_lay(0,1)-1
+         ENDIF
+         IF (abs(fabi_col(ib)+albi_col(ib)+fabs_lay(0,2)-1) > 1e-6) THEN
+            print *, "Imbalance kband=2"
+            print *, fabi_col(ib)+albi_col(ib)+fabs_lay(0,2)-1
+         ENDIF
+
+      !====================================================
+      ! Calculate individule PFT absorption
+      !====================================================
+
+         sum_fabd=D0
+         sum_fabi=D0
+         sum_fadd=D0
+
+         DO ip = ps, pe
+            clev = canlay(ip)
+            IF (clev == D0) CYCLE
+            IF ( shadow_d(clev)>D0 .and. soilveg(ip) ) THEN
+
+            !=================================================
+            ! fractional contribution of current pft in layer
+            !=================================================
+
+               pfc = min( fcover(ip)/fc0(clev), D1)
+
+            !=========================================
+            ! shadow contribution from ground to sky
+            !=========================================
+
+               shadow_sky(ip) = shadow_pi(ip)
+
+            !=======================================================
+            ! absorption, reflection and transmittance fluxes for
+            ! unit incident radiation over pft.
+            !=======================================================
+
+               CALL CanopyRad(taud(ip), taui(ip), ftdd_orig(ip,ib), ftdi_orig(ip,ib), &
+                  cosz,cosd, shadow_pd(ip), shadow_pi(ip), fcover(ip),&
+                  omega(ip,ib), lsai(ip), tau(ip,ib),&
+                  rho(ip,ib), ftid(ip,ib), ftii(ip,ib), albd(ip,ib),&
+                  albi(ip,ib), faid_p, faii_p)
+
+               ! calibration for LAD
+               ! 11/07/2018: calibration for LAD
+               ftid(ip,ib) = fcad(ip)*ftid(ip,ib)
+               ftii(ip,ib) = fcai(ip)*(ftii(ip,ib)-ftdi_orig(ip,ib)) + ftdi(ip,ib)
+               albd(ip,ib) = fcad(ip)*albd(ip,ib)
+               albi(ip,ib) = fcai(ip)*albi(ip,ib)
+               faid_p = fcad(ip)*faid_p
+               faii_p = fcai(ip)*faii_p
+
+               ! absorptions after multiple reflections for each pft
+               probm = albi(ip,ib)*shadow_sky(ip)*albgri(ib)
+               ftran = (D1-shadow_pd(ip)+shadow_pd(ip)*ftdd(ip,ib))*albgrd(ib) &
+                     + shadow_pd(ip)*ftid(ip,ib)*albgri(ib)
+               fabsm = ftran*faii_p*shadow_sky(ip)/(D1-probm)
+               fabd(ip,ib) = shadow_pd(ip)*faid_p + fabsm
+
+               probm = albi(ip,ib)*shadow_sky(ip)*albgri(ib)
+               ftran = D1-shadow_pi(ip)*(D1 -ftii(ip,ib))
+               fabsm = ftran*albgri(ib)*faii_p*shadow_sky(ip)/(D1-probm)
+               fabi(ip,ib) = shadow_pi(ip)*faii_p + fabsm
+
+               ! sum of pft absorptions in column
+               sum_fabd(clev) = sum_fabd(clev) + fabd(ip,ib)
+               sum_fabi(clev) = sum_fabi(clev) + fabi(ip,ib)
+
+               ! pft absorption in sunlit as direct beam
+               fadd(ip,ib) = shadow_pd(ip) * (D1-ftdd(ip,ib)) * (D1-omega(ip,ib))
+
+               ! sum of pft absorption in sunlit as direct beam
+               sum_fadd(clev) = sum_fadd(clev) + fadd(ip,ib)
+
+            ENDIF ! ENDIF shadow & soilveg
+         ENDDO ! ENDDO ip
+
+         DO ip = ps, pe
             clev = canlay(ip)
 
-         !================================================
-         ! fractional contribution of current pft in layer
-         !================================================
+         !===========================================================
+         ! adjust pft absorption for total column absorption per
+         ! unit column area
+         !===========================================================
 
-            pfc = min( fcover(ip)/fc0(clev), D1)
-            shadow_pd(ip)=pfc*shadow_d(clev)
-            shadow_pi(ip)=pfc*shadow_i(clev)
+            IF (soilveg(ip)) THEN
+               fabd(ip,ib)=fabd(ip,ib)*fabd_lay(clev,ib)/&
+                  sum_fabd(clev)/fcover(ip)
+               fabi(ip,ib)=fabi(ip,ib)*fabi_lay(clev,ib)/&
+                  sum_fabi(clev)/fcover(ip)
 
-         !=====================================
-         ! get taud,taui at pft level
-         !=====================================
+               fadd(ip,ib) = fadd(ip,ib)*fadd_lay(clev,ib)/&
+                  sum_fadd(clev)/fcover(ip)
 
-            taud(ip)=D3/D4*gee*fcover(ip)*(lsai(ip))/&
-               (cosz*shadow_pd(ip))
+               fadd(ip,ib) = min(fabd(ip,ib), fadd(ip,ib))
+               psun(ip) = tt(clev+1,clev)/shadow_d(clev)
+            ELSE
+               fabd(ip,ib) = D0
+               fabi(ip,ib) = D0
+               fadd(ip,ib) = D0
+               psun(ip) = D0
+            ENDIF
 
-            taui(ip)=D3/D4*gee*fcover(ip)*(lsai(ip))/&
-               (cosd*shadow_pi(ip))
+            ! column albedo is assigned to each pft in column
+            ! Added by Yuan, 06/03/2012
+            albd(ip,ib) =albd_col(ib)
+            albi(ip,ib) =albi_col(ib)
 
-         !====================================
-         ! transmission at pft level
-         !====================================
-
-            ftdd_orig(ip,ib) = tee(DD1*taud(ip))
-            ftdi_orig(ip,ib) = tee(DD1*taui(ip))
-
-            ! 11/07/2018: gdir/gdif = FUNCTION(xl, cos)
-            ftdd(ip,ib) = tee(DD1*taud(ip)/gee*gdir(ip))
-            ftdi(ip,ib) = tee(DD1*taui(ip)/gee*gdif(ip))
-
-            ! calibration for chil
-            fcad(ip) = (D1-ftdd(ip,ib)) / (D1-ftdd_orig(ip,ib))
-            fcai(ip) = (D1-ftdi(ip,ib)) / (D1-ftdi_orig(ip,ib))
-
-         ENDIF ! ENDIF soilveg
-      ENDDO ! ENDDO ip
-
-   !===============================================================
-   ! absorption, reflection and transmittance for three canopy layer
-   ! using average optical properties of layers
-   ! subroutine CanopyRad calculates fluxes for unit input radiation
-   !===============================================================
-
-      ftid_lay=D0; ftii_lay=D1
-      frid_lay=D0; frii_lay=D0
-      faid_lay=D0; faii_lay=D0
-
-      DO lev = 1, 3
-         IF (shadow_d(lev) > D0) THEN
-            CALL CanopyRad(taud_lay(lev), taui_lay(lev), ftdd_lay_orig(lev),&
-               ftdi_lay_orig(lev), cosz, cosd, shadow_d(lev), shadow_i(lev), &
-               fc0(lev), omg_lay(lev,ib), lsai_lay(lev), &
-               tau_lay(lev,ib), rho_lay(lev,ib), ftid_lay(lev), &
-               ftii_lay(lev), frid_lay(lev), frii_lay(lev),&
-               faid_lay(lev), faii_lay(lev))
-         ENDIF
-      ENDDO ! ENDDO lev
-
-      ! 11/07/2018: calibration for LAD
-      ftid_lay(:) = fcad_lay(:)*ftid_lay(:)
-      ftii_lay(:) = fcai_lay(:)*(ftii_lay(:)-ftdi_lay_orig(:)) + ftdi_lay(:)
-      frid_lay(:) = fcad_lay(:)*frid_lay(:)
-      frii_lay(:) = fcai_lay(:)*frii_lay(:)
-      faid_lay(:) = fcad_lay(:)*faid_lay(:)
-      faii_lay(:) = fcai_lay(:)*faii_lay(:)
-
-   !=============================================
-   ! Calculate layer direct beam radiation absorbed
-   ! in the sunlit canopy as direct
-   !=============================================
-
-      fadd_lay(:,ib) = D0
-
-      DO lev = 1, nlay
-         IF ( fc0(lev)>D0 .and. lsai_lay(lev)>D0 ) THEN
-            fadd_lay(lev,ib) = tt(lev+1,lev) * &
-               (D1-ftdd_lay(lev)) * (D1-omg_lay(lev,ib))
-         ENDIF
-      ENDDO
-
-      A = D0; B = D0;
-      fabs_leq = D0
-
-      ! Calculate the coefficients matrix A
-      A(1,1) = 1.0; A(1,3) = -shadow_i(3)*ftii_lay(3) + shadow_i(3) - 1.0;
-      A(2,2) = 1.0; A(2,3) = -shadow_i(3)*frii_lay(3);
-      A(3,3) = 1.0; A(3,2) = -shadow_i(2)*frii_lay(2);   A(3,5) = -shadow_i(2)*ftii_lay(2) + shadow_i(2) - 1.0;
-      A(4,4) = 1.0; A(4,5) = -shadow_i(2)*frii_lay(2);   A(4,2) = -shadow_i(2)*ftii_lay(2) + shadow_i(2) - 1.0;
-      A(5,5) = 1.0; A(5,4) = -shadow_i(1)*frii_lay(1);   A(5,6) =(-shadow_i(1)*ftii_lay(1) + shadow_i(1) - 1.0) * albgri(ib);
-      A(6,6) = 1.0 - albgri(ib)*shadow_i(1)*frii_lay(1); A(6,4) = -shadow_i(1)*ftii_lay(1) + shadow_i(1) - 1.0;
-
-      ! The constant vector B at right side
-      B(1,1) = tt(4,3)*frid_lay(3); B(1,2) = shadow_i(3)*frii_lay(3);
-      B(2,1) = tt(4,3)*ftid_lay(3); B(2,2) = shadow_i(3)*ftii_lay(3) - shadow_i(3) + 1.0;
-      B(3,1) = tt(3,2)*frid_lay(2); B(3,2) = 0.0;
-      B(4,1) = tt(3,2)*ftid_lay(2); B(4,2) = 0.0;
-      B(5,1) = tt(2,1)*frid_lay(1) + tt(1,0)*albgrd(ib)*(shadow_i(1)*ftii_lay(1) - shadow_i(1) + 1.0); B(5,2) = 0.0;
-      B(6,1) = tt(2,1)*ftid_lay(1) + tt(1,0)*albgrd(ib)*shadow_i(1)*frii_lay(1);                       B(6,2) = 0.0;
-
-      ! Get the resolution
-      CALL mGauss(A, B, X)
-
-      ! ====================================================
-      ! Set back to the absorption for each layer and albedo
-      ! ====================================================
-
-      ! Albedo
-      fabs_leq(4,:) = X(1,:)
-
-      ! Three layers' absorption
-      fabs_leq(3,1) = tt(4,3)*faid_lay(3) + X(3,1)*shadow_i(3)*faii_lay(3)
-      fabs_leq(3,2) = shadow_i(3)*faii_lay(3) + X(3,2)*shadow_i(3)*faii_lay(3)
-      fabs_leq(2,1) = tt(3,2)*faid_lay(2) + (X(2,1) + X(5,1))*shadow_i(2)*faii_lay(2)
-      fabs_leq(2,2) = (X(2,2) + X(5,2)) * shadow_i(2) * faii_lay(2)
-      fabs_leq(1,1) = tt(2,1)*faid_lay(1) + (X(4,1) + X(6,1)*albgri(ib) + tt(1,0)*albgrd(ib))*shadow_i(1)*faii_lay(1)
-      fabs_leq(1,2) = (X(4,2) + X(6,2)*albgri(ib)) * shadow_i(1) * faii_lay(1)
-
-      ! Ground absorption
-      fabs_leq(0,1) = X(6,1) * (1.0 - albgri(ib)) + tt(1,0) * (1.0 - albgrd(ib))
-      fabs_leq(0,2) = X(6,2) * (1.0 - albgri(ib))
-
-      ! IF everything is ok, substitute fabs_lay for fabs_leq
-      ! and delete the following line and the variables defined
-      ! but not used anymore
-      fabs_lay = fabs_leq
-
-      ! set column absorption and reflection
-      fabd_lay(1:3,ib) = fabs_lay(1:3,1)
-      fabi_lay(1:3,ib) = fabs_lay(1:3,2)
-      fabd_col(ib) = fabs_lay(1,1)+fabs_lay(2,1)+fabs_lay(3,1)
-      fabi_col(ib) = fabs_lay(1,2)+fabs_lay(2,2)+fabs_lay(3,2)
-      albd_col(ib) = fabs_lay(4,1)
-      albi_col(ib) = fabs_lay(4,2)
-
-      ! balance check
-      IF (abs(fabd_col(ib)+albd_col(ib)+fabs_lay(0,1)-1) > 1e-6) THEN
-         print *, "Imbalance kband=1"
-         print *, fabd_col(ib)+albd_col(ib)+fabs_lay(0,1)-1
-      ENDIF
-      IF (abs(fabi_col(ib)+albi_col(ib)+fabs_lay(0,2)-1) > 1e-6) THEN
-         print *, "Imbalance kband=2"
-         print *, fabi_col(ib)+albi_col(ib)+fabs_lay(0,2)-1
-      ENDIF
-
-   !====================================================
-   ! Calculate individule PFT absorption
-   !====================================================
-
-      sum_fabd=D0
-      sum_fabi=D0
-      sum_fadd=D0
-
-      DO ip = ps, pe
-         clev = canlay(ip)
-         IF (clev == D0) CYCLE
-         IF ( shadow_d(clev)>D0 .and. soilveg(ip) ) THEN
-
-         !=================================================
-         ! fractional contribution of current pft in layer
-         !=================================================
-
-            pfc = min( fcover(ip)/fc0(clev), D1)
-
-         !=========================================
-         ! shadow contribution from ground to sky
-         !=========================================
-
-            shadow_sky(ip) = shadow_pi(ip)
-
-         !=======================================================
-         ! absorption, reflection and transmittance fluxes for
-         ! unit incident radiation over pft.
-         !=======================================================
-
-            CALL CanopyRad(taud(ip), taui(ip), ftdd_orig(ip,ib), ftdi_orig(ip,ib), &
-               cosz,cosd, shadow_pd(ip), shadow_pi(ip), fcover(ip),&
-               omega(ip,ib), lsai(ip), tau(ip,ib),&
-               rho(ip,ib), ftid(ip,ib), ftii(ip,ib), albd(ip,ib),&
-               albi(ip,ib), faid_p, faii_p)
-
-            ! calibration for LAD
-            ! 11/07/2018: calibration for LAD
-            ftid(ip,ib) = fcad(ip)*ftid(ip,ib)
-            ftii(ip,ib) = fcai(ip)*(ftii(ip,ib)-ftdi_orig(ip,ib)) + ftdi(ip,ib)
-            albd(ip,ib) = fcad(ip)*albd(ip,ib)
-            albi(ip,ib) = fcai(ip)*albi(ip,ib)
-            faid_p = fcad(ip)*faid_p
-            faii_p = fcai(ip)*faii_p
-
-            ! absorptions after multiple reflections for each pft
-            probm = albi(ip,ib)*shadow_sky(ip)*albgri(ib)
-            ftran = (D1-shadow_pd(ip)+shadow_pd(ip)*ftdd(ip,ib))*albgrd(ib) &
-                  + shadow_pd(ip)*ftid(ip,ib)*albgri(ib)
-            fabsm = ftran*faii_p*shadow_sky(ip)/(D1-probm)
-            fabd(ip,ib) = shadow_pd(ip)*faid_p + fabsm
-
-            probm = albi(ip,ib)*shadow_sky(ip)*albgri(ib)
-            ftran = D1-shadow_pi(ip)*(D1 -ftii(ip,ib))
-            fabsm = ftran*albgri(ib)*faii_p*shadow_sky(ip)/(D1-probm)
-            fabi(ip,ib) = shadow_pi(ip)*faii_p + fabsm
-
-            ! sum of pft absorptions in column
-            sum_fabd(clev) = sum_fabd(clev) + fabd(ip,ib)
-            sum_fabi(clev) = sum_fabi(clev) + fabi(ip,ib)
-
-            ! pft absorption in sunlit as direct beam
-            fadd(ip,ib) = shadow_pd(ip) * (D1-ftdd(ip,ib)) * (D1-omega(ip,ib))
-
-            ! sum of pft absorption in sunlit as direct beam
-            sum_fadd(clev) = sum_fadd(clev) + fadd(ip,ib)
-
-         ENDIF ! ENDIF shadow & soilveg
-      ENDDO ! ENDDO ip
-
-      DO ip = ps, pe
-         clev = canlay(ip)
-
-      !===========================================================
-      ! adjust pft absorption for total column absorption per
-      ! unit column area
-      !===========================================================
-
-         IF (soilveg(ip)) THEN
-            fabd(ip,ib)=fabd(ip,ib)*fabd_lay(clev,ib)/&
-               sum_fabd(clev)/fcover(ip)
-            fabi(ip,ib)=fabi(ip,ib)*fabi_lay(clev,ib)/&
-               sum_fabi(clev)/fcover(ip)
-
-            fadd(ip,ib) = fadd(ip,ib)*fadd_lay(clev,ib)/&
-               sum_fadd(clev)/fcover(ip)
-
-            fadd(ip,ib) = min(fabd(ip,ib), fadd(ip,ib))
-            psun(ip) = tt(clev+1,clev)/shadow_d(clev)
-         ELSE
-            fabd(ip,ib) = D0
-            fabi(ip,ib) = D0
-            fadd(ip,ib) = D0
-            psun(ip) = D0
-         ENDIF
-
-         ! column albedo is assigned to each pft in column
-         ! Added by Yuan, 06/03/2012
-         albd(ip,ib) =albd_col(ib)
-         albi(ip,ib) =albi_col(ib)
-
-         ! adjust ftdd and ftii for multi reflections between layers
+            ! adjust ftdd and ftii for multi reflections between layers
 
 ! 03/06/2020, yuan: NOTE! there is no physical mean of ftdd,
 ! ftid, ftii anymore. they are the same for each PFT can only
 ! be used to calculate the ground absorption.
-         ftdd(ip,ib) = ftdd_col
-         ftid(ip,ib)=(D1-albd(ip,ib)-fabd_col(ib)-&
-            ftdd(ip,ib)*(D1-albgrd(ib)))/(D1-albgri(ib))
-         ftii(ip,ib)=(D1-albi(ip,ib)-fabi_col(ib))/(D1-albgri(ib))
+            ftdd(ip,ib) = ftdd_col
+            ftid(ip,ib)=(D1-albd(ip,ib)-fabd_col(ib)-&
+               ftdd(ip,ib)*(D1-albgrd(ib)))/(D1-albgri(ib))
+            ftii(ip,ib)=(D1-albi(ip,ib)-fabi_col(ib))/(D1-albgri(ib))
 
-         !ftdd(ip,ib) = min(max(ftdd(ip,ib),D0),D1)
-         !ftii(ip,ib) = min(max(ftii(ip,ib),D0),D1)
-         !ftid(ip,ib) = min(max(ftid(ip,ib),D0),D1)
+            !ftdd(ip,ib) = min(max(ftdd(ip,ib),D0),D1)
+            !ftii(ip,ib) = min(max(ftii(ip,ib),D0),D1)
+            !ftid(ip,ib) = min(max(ftid(ip,ib),D0),D1)
 
-         ! check energy balance
-         !fabd(ip,ib) = D1 - albd(ip,ib) - &
-         !    ftdd(ip,ib)*(D1-albgrd(ib)) - &
-         !    ftid(ip,ib)*(D1-albgri(ib))
-         !fabi(ip,ib) = D1 - albi(ip,ib) - &
-         !    ftii(ip,ib)*(D1-albgri(ib))
+            ! check energy balance
+            !fabd(ip,ib) = D1 - albd(ip,ib) - &
+            !    ftdd(ip,ib)*(D1-albgrd(ib)) - &
+            !    ftid(ip,ib)*(D1-albgri(ib))
+            !fabi(ip,ib) = D1 - albi(ip,ib) - &
+            !    ftii(ip,ib)*(D1-albgri(ib))
 
-      ENDDO ! ENDDO ip
-   ENDDO !ENDDO ib
+         ENDDO ! ENDDO ip
+      ENDDO !ENDDO ib
 
-   ! set parameters for longwave calculation
-   fshade(:) = shadow_pi(:)
-   thermk(:) = ftdi(:,1)
+      ! set parameters for longwave calculation
+      fshade(:) = shadow_pi(:)
+      thermk(:) = ftdi(:,1)
 
-  END SUBROUTINE ThreeDCanopy
+   END SUBROUTINE ThreeDCanopy
 
 !=====================
 ! FUNCTION tee
 !=====================
 
-  real(selected_real_kind(12)) FUNCTION tee(tau)
+   real(selected_real_kind(12)) FUNCTION tee(tau)
 
    IMPLICIT NONE
 
@@ -934,15 +934,15 @@ CONTAINS
    real(r16),parameter :: DD2 = 2.0_r16  !128-bit accuracy real
    real(r16) :: tau ! transmittance
 
-   tee = DDH*(DD1/tau/tau-(DD1/tau/tau+DD2/tau)*exp(-DD2*tau))
+      tee = DDH*(DD1/tau/tau-(DD1/tau/tau+DD2/tau)*exp(-DD2*tau))
 
-  END FUNCTION tee
+   END FUNCTION tee
 
 !===========================================
 ! FUNCTION overlapArea
 !===========================================
 
-  real(selected_real_kind(12)) FUNCTION OverlapArea(radius, hgt, zenith)
+   real(selected_real_kind(12)) FUNCTION OverlapArea(radius, hgt, zenith)
 
    IMPLICIT NONE
 
@@ -956,28 +956,28 @@ CONTAINS
    real(r8) :: cost   !cosine of angle
    real(r8) :: theta  !angle
 
-   IF (radius == D0) THEN
-      OverlapArea= D0
+      IF (radius == D0) THEN
+         OverlapArea= D0
+         RETURN
+      ENDIF
+      cost = hgt*tan(zenith)/radius/(D1+D1/cos(zenith))
+      IF (cost >= 1) THEN
+         OverlapArea= D0
+         RETURN
+      ENDIF
+      theta = acos(cost)
+      OverlapArea = (theta-cost*sin(theta))*(D1+D1/cos(zenith))/rpi
       RETURN
-   ENDIF
-   cost = hgt*tan(zenith)/radius/(D1+D1/cos(zenith))
-   IF (cost >= 1) THEN
-      OverlapArea= D0
-      RETURN
-   ENDIF
-   theta = acos(cost)
-   OverlapArea = (theta-cost*sin(theta))*(D1+D1/cos(zenith))/rpi
-   RETURN
-  END FUNCTION OverlapArea
+   END FUNCTION OverlapArea
 
 !=========================================================
 ! FUNCTION to calculate scattering, absorption, reflection and
 ! transmittance for unit input radiation
 !=========================================================
 
-  SUBROUTINE CanopyRad(tau_d, tau_i, ftdd, ftdi, cosz,cosd, &
-      shadow_d, shadow_i, fc, omg, lsai, tau_p,  rho_p, &
-      ftid, ftii, frid, frii, faid, faii)
+   SUBROUTINE CanopyRad(tau_d, tau_i, ftdd, ftdi, cosz,cosd, &
+       shadow_d, shadow_i, fc, omg, lsai, tau_p,  rho_p, &
+       ftid, ftii, frid, frii, faid, faii)
    IMPLICIT NONE
 
    ! input variables
@@ -1036,88 +1036,88 @@ CONTAINS
 
    real(r8),parameter :: pi = 3.14159265358979323846_R8  !pi
 
-   tau = D3/D4*gee*lsai
+      tau = D3/D4*gee*lsai
 
-   CALL phi(runmode, tau_d, omg, tau_p, rho_p, phi_tot_d, phi_dif_d, pa2)
-   CALL phi(runmode, tau_i, omg, tau_p, rho_p, phi_tot_i, phi_dif_i, pa2)
-   CALL phi(runmode, tau  , omg, tau_p, rho_p, phi_tot_o, phi_dif_o, pa2)
+      CALL phi(runmode, tau_d, omg, tau_p, rho_p, phi_tot_d, phi_dif_d, pa2)
+      CALL phi(runmode, tau_i, omg, tau_p, rho_p, phi_tot_i, phi_dif_i, pa2)
+      CALL phi(runmode, tau  , omg, tau_p, rho_p, phi_tot_o, phi_dif_o, pa2)
 
-   IF (runmode) THEN
-      ! NOTE: modified
-      frio = DH*(phi_tot_o - DH*phi_dif_o)
-      frio = max(min(frio,D1),D0)
+      IF (runmode) THEN
+         ! NOTE: modified
+         frio = DH*(phi_tot_o - DH*phi_dif_o)
+         frio = max(min(frio,D1),D0)
 
-      muv = D3*( D1 - sqrt(D1-sqrt(D3)*fc/(D2*pi)) ) + &
-         D3*( D1 - sqrt(D1-sqrt(D3)*fc/(D6*pi)) )
+         muv = D3*( D1 - sqrt(D1-sqrt(D3)*fc/(D2*pi)) ) + &
+            D3*( D1 - sqrt(D1-sqrt(D3)*fc/(D6*pi)) )
 
-      wb = D2/D3*rho_p + D1/D3*tau_p
-      alpha = sqrt(D1-omg) * sqrt(D1-omg+D2*wb)
-      nd = (D1 + D2*alpha) / (D1 + D2*alpha*cosz)
-      ni = (D1 + D2*alpha) / (D1 + D2*alpha*cosd)
+         wb = D2/D3*rho_p + D1/D3*tau_p
+         alpha = sqrt(D1-omg) * sqrt(D1-omg+D2*wb)
+         nd = (D1 + D2*alpha) / (D1 + D2*alpha*cosz)
+         ni = (D1 + D2*alpha) / (D1 + D2*alpha*cosd)
 
-      ac  = phi_tot_o * muv * (D1-tee(DD1*tau)) * (D1-omg) / (D1-omg*pa2)
-      ald = (nd-D1) * frio * fc * (D1/shadow_d - cosz/fc)
-      ali = (ni-D1) * frio * fc * (D1/shadow_i - cosd/fc)
-   ENDIF
+         ac  = phi_tot_o * muv * (D1-tee(DD1*tau)) * (D1-omg) / (D1-omg*pa2)
+         ald = (nd-D1) * frio * fc * (D1/shadow_d - cosz/fc)
+         ali = (ni-D1) * frio * fc * (D1/shadow_i - cosd/fc)
+      ENDIF
 
 !-----------------------------------------------------------------------
 !frac indirect downward rad through canopy for black soil & direct solar
 !-----------------------------------------------------------------------
-   frid = DH*(phi_tot_d - DH*cosz*phi_dif_d)
-   frii = DH*(phi_tot_i - DH*cosd*phi_dif_i)
+      frid = DH*(phi_tot_d - DH*cosz*phi_dif_d)
+      frii = DH*(phi_tot_i - DH*cosd*phi_dif_i)
 
-   IF (runmode) THEN
-      frid = frid + ald - DH*ac
-      frii = frii + ali - DH*ac
-   ENDIF
+      IF (runmode) THEN
+         frid = frid + ald - DH*ac
+         frii = frii + ali - DH*ac
+      ENDIF
 
-   frid = max(min(frid,D1),D0)
-   frii = max(min(frii,D1),D0)
+      frid = max(min(frid,D1),D0)
+      frii = max(min(frii,D1),D0)
 
 !---------------------------------------------------------------------
 !downward diffuse fraction from direct and diffuse sun
 !---------------------------------------------------------------------
-   ftid = DH*(phi_tot_d + DH*cosz*phi_dif_d)
-   ftii = DH*(phi_tot_i + DH*cosd*phi_dif_i)+ftdi
+      ftid = DH*(phi_tot_d + DH*cosz*phi_dif_d)
+      ftii = DH*(phi_tot_i + DH*cosd*phi_dif_i)+ftdi
 
-   IF (runmode) THEN
-      ftid = ftid - DH*ald - DH*ac
-      ftii = ftii - DH*ali - DH*ac
-   ENDIF
+      IF (runmode) THEN
+         ftid = ftid - DH*ald - DH*ac
+         ftii = ftii - DH*ali - DH*ac
+      ENDIF
 
-   ftid = max(min(ftid,D1),D0)
-   ftii = max(min(ftii,D1),D0)
+      ftid = max(min(ftid,D1),D0)
+      ftii = max(min(ftii,D1),D0)
 
 !---------------------------------------------------------------------
 ! canopy absorption for direct or diffuse beams
 !---------------------------------------------------------------------
-   IF (.not. runmode) THEN
-      faid =  D1 - ftdd - phi_tot_d
-      faii =  D1 - ftdi - phi_tot_i
-   ELSE
-      faid =  D1 - ftdd - frid - ftid
-      faii =  D1 - frii - ftii
-   ENDIF
+      IF (.not. runmode) THEN
+         faid =  D1 - ftdd - phi_tot_d
+         faii =  D1 - ftdi - phi_tot_i
+      ELSE
+         faid =  D1 - ftdd - frid - ftid
+         faii =  D1 - frii - ftii
+      ENDIF
 
-   faid = max(min(faid,D1),D0)
-   faii = max(min(faii,D1),D0)
+      faid = max(min(faid,D1),D0)
+      faii = max(min(faii,D1),D0)
 
-   IF (shadow_d == D0) THEN
-      ! NOTE: corrected from D1 -> D0
-      ftid = D0
-      frid = D0
-      faid = D0
-   ENDIF
-   IF (shadow_i == D0) THEN
-      ftii = D1
-      frii = D0
-      faii = D0
-   ENDIF
+      IF (shadow_d == D0) THEN
+         ! NOTE: corrected from D1 -> D0
+         ftid = D0
+         frid = D0
+         faid = D0
+      ENDIF
+      IF (shadow_i == D0) THEN
+         ftii = D1
+         frii = D0
+         faii = D0
+      ENDIF
 
-  END SUBROUTINE CanopyRad
+   END SUBROUTINE CanopyRad
 
 
-  SUBROUTINE phi(runmode, tau, omg, tau_p, rho_p, phi_tot, phi_dif, pa2)
+   SUBROUTINE phi(runmode, tau, omg, tau_p, rho_p, phi_tot, phi_dif, pa2)
 
    IMPLICIT NONE
 
@@ -1162,75 +1162,75 @@ CONTAINS
 ! for direct and diffuse beams
 !----------------------------------------------------------------------
 
-   ! forward first order normalized scattering
-   phi_1f = (DD1/tau/tau - (DD1/tau/tau + DD2/tau + DD2)*exp(-DD2*tau))
+      ! forward first order normalized scattering
+      phi_1f = (DD1/tau/tau - (DD1/tau/tau + DD2/tau + DD2)*exp(-DD2*tau))
 
-   ! backward first order normalized scattering
-   phi_1b = DDH*(DD1 - tee(DD2*tau))
+      ! backward first order normalized scattering
+      phi_1b = DDH*(DD1 - tee(DD2*tau))
 
 !----------------------------------------------------------------------
 ! sphere double scattering terms (RED 2008 Eq 19,20)
 !----------------------------------------------------------------------
 
-   IF (.not. runmode) THEN
+      IF (.not. runmode) THEN
 
-      ! forward double scattering
-      phi_2f = DDH*(DD4*phi_1f/DD3 + tee(DD2*tau) + tee(DD4*tau)/DD9 - &
-               DD10*tee(DD1*tau)/DD9)
+         ! forward double scattering
+         phi_2f = DDH*(DD4*phi_1f/DD3 + tee(DD2*tau) + tee(DD4*tau)/DD9 - &
+                  DD10*tee(DD1*tau)/DD9)
 
-      ! backward double scattering
-      phi_2b = DDH*(DD1/DD3 - tee(DD2*tau) + DD2*tee(DD3*tau)/DD3)
+         ! backward double scattering
+         phi_2b = DDH*(DD1/DD3 - tee(DD2*tau) + DD2*tee(DD3*tau)/DD3)
 
-   ELSE
-      ! fitting FUNCTION for second order scattering
-      aa = 0.70_r8
-      bb = 1.74_r8
+      ELSE
+         ! fitting FUNCTION for second order scattering
+         aa = 0.70_r8
+         bb = 1.74_r8
 
-      phi_2b = aa*( DD1/(bb+DD1) -DD1/(bb-D1)*tee(DD2*tau) + &
-               DD2/(bb+DD1)/(bb-DD1)*tee((DD1+bb)*tau) )
+         phi_2b = aa*( DD1/(bb+DD1) -DD1/(bb-D1)*tee(DD2*tau) + &
+                  DD2/(bb+DD1)/(bb-DD1)*tee((DD1+bb)*tau) )
 
-      phi_2f = aa*( DD2*bb/(bb*bb-DD1)*phi_1f - &
-               (DD1/(bb+DD1)/(bb+DD1) + DD1/(bb-DD1)/(bb-DD1))*tee(DD1*tau) + &
-               DD1/(bb-DD1)/(bb-DD1)*tee(DD1*tau*bb) + &
-               DD1/(bb+DD1)/(bb+DD1)*tee(DD1*(bb+DD2)*tau) )
-   ENDIF
+         phi_2f = aa*( DD2*bb/(bb*bb-DD1)*phi_1f - &
+                  (DD1/(bb+DD1)/(bb+DD1) + DD1/(bb-DD1)/(bb-DD1))*tee(DD1*tau) + &
+                  DD1/(bb-DD1)/(bb-DD1)*tee(DD1*tau*bb) + &
+                  DD1/(bb+DD1)/(bb+DD1)*tee(DD1*(bb+DD2)*tau) )
+      ENDIF
 
-   ! second order avaerage scattering
-   phi_2a = DDH*(phi_2b + phi_2f)
+      ! second order avaerage scattering
+      phi_2a = DDH*(phi_2b + phi_2f)
 
 !----------------------------------------------------------------------
 ! probabilty of absorption after two scattering
 !----------------------------------------------------------------------
 
-   ! probabilty of absorption for diffuse beam
-   ! corrected probabilty of absorption for direct beam
-   pac = DD1-phi_2a / &
-         (DD1 - tee(DD1*tau) - (rho_p*phi_1b + tau_p*phi_1f)/(tau_p+rho_p))
+      ! probabilty of absorption for diffuse beam
+      ! corrected probabilty of absorption for direct beam
+      pac = DD1-phi_2a / &
+            (DD1 - tee(DD1*tau) - (rho_p*phi_1b + tau_p*phi_1f)/(tau_p+rho_p))
 
-   ! NOTE: for test only
-   pac = max(min(pac,D1),D0)
-   pa2 = pac
+      ! NOTE: for test only
+      pac = max(min(pac,D1),D0)
+      pa2 = pac
 
 !----------------------------------------------------------------------
 !third order and higher order scatterings
 !----------------------------------------------------------------------
 
-   phi_mf = phi_2f + omg*pac*phi_2a/(DD1-omg*pac)
-   phi_mb = phi_2b + omg*pac*phi_2a/(DD1-omg*pac)
+      phi_mf = phi_2f + omg*pac*phi_2a/(DD1-omg*pac)
+      phi_mb = phi_2b + omg*pac*phi_2a/(DD1-omg*pac)
 
 !----------------------------------------------------------------------
 ! total sphere scattering,forward,backward, avg & diff for direct beam
 !----------------------------------------------------------------------
 
-   phi_tf  = tau_p*phi_1f + DDH*omg*omg*phi_mf
-   phi_tb  = rho_p*phi_1b + DDH*omg*omg*phi_mb
+      phi_tf  = tau_p*phi_1f + DDH*omg*omg*phi_mf
+      phi_tb  = rho_p*phi_1b + DDH*omg*omg*phi_mb
 
-   phi_tot = phi_tf + phi_tb
-   phi_dif = phi_tf - phi_tb
+      phi_tot = phi_tf + phi_tb
+      phi_dif = phi_tf - phi_tb
 
-  END SUBROUTINE phi
+   END SUBROUTINE phi
 
-  SUBROUTINE mGauss(A, B, X)
+   SUBROUTINE mGauss(A, B, X)
 
    IMPLICIT NONE
 
@@ -1243,26 +1243,27 @@ CONTAINS
 
    real(r8) :: f
 
-   ! Elimination
-   DO i = 1, 5
-      DO j = i+1, i+nstep(i)
-         IF (abs(A(i,i)) < 1.e-10) THEN
-            print *, "Error in Gauss's solution"
-            RETURN
-         ENDIF
-         f = - A(j,i)/A(i,i)
-         A(j,:) = A(j,:) + f*A(i,:)
-         B(j,:) = B(j,:) + f*B(i,:)
+      ! Elimination
+      DO i = 1, 5
+         DO j = i+1, i+nstep(i)
+            IF (abs(A(i,i)) < 1.e-10) THEN
+               print *, "Error in Gauss's solution"
+               RETURN
+            ENDIF
+            f = - A(j,i)/A(i,i)
+            A(j,:) = A(j,:) + f*A(i,:)
+            B(j,:) = B(j,:) + f*B(i,:)
+         ENDDO
       ENDDO
-   ENDDO
 
-   ! Back substitution
-   X(6,:) = B(6,:)/A(6,6)
-   DO i = 5, 1, -1
-      X(i,1) = (B(i,1) - sum(A(i,i+1:6)*X(i+1:6,1))) / A(i,i)
-      X(i,2) = (B(i,2) - sum(A(i,i+1:6)*X(i+1:6,2))) / A(i,i)
-   ENDDO
+      ! Back substitution
+      X(6,:) = B(6,:)/A(6,6)
+      DO i = 5, 1, -1
+         X(i,1) = (B(i,1) - sum(A(i,i+1:6)*X(i+1:6,1))) / A(i,i)
+         X(i,2) = (B(i,2) - sum(A(i,i+1:6)*X(i+1:6,2))) / A(i,i)
+      ENDDO
 
-  END SUBROUTINE mGauss
+   END SUBROUTINE mGauss
 
 END MODULE MOD_3DCanopyRadiation
+! --------- EOP ----------

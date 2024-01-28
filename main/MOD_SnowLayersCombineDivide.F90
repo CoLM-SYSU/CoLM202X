@@ -3,240 +3,240 @@
 MODULE MOD_SnowLayersCombineDivide
 
 !-----------------------------------------------------------------------
- use MOD_Precision
- IMPLICIT NONE
- SAVE
+   USE MOD_Precision
+   IMPLICIT NONE
+   SAVE
 
 ! PUBLIC MEMBER FUNCTIONS:
-  public :: snowcompaction
-  public :: snowlayerscombine
-  public :: SnowLayersCombine_snicar
-  public :: snowlayersdivide
-  public :: SnowLayersDivide_snicar
+   PUBLIC :: snowcompaction
+   PUBLIC :: snowlayerscombine
+   PUBLIC :: SnowLayersCombine_snicar
+   PUBLIC :: snowlayersdivide
+   PUBLIC :: SnowLayersDivide_snicar
 
 
 ! PRIVATE MEMBER FUNCTIONS:
-  private :: combo
-  private :: winddriftcompaction
+   PRIVATE :: combo
+   PRIVATE :: winddriftcompaction
 
 
 !-----------------------------------------------------------------------
 
-  CONTAINS
+CONTAINS
 
 !-----------------------------------------------------------------------
 
 
 
- subroutine snowcompaction (lb,deltim,imelt,fiold,&
-            t_soisno,wliq_soisno,wice_soisno,forc_us,forc_vs,dz_soisno)
+   SUBROUTINE snowcompaction (lb,deltim,imelt,fiold,&
+              t_soisno,wliq_soisno,wice_soisno,forc_us,forc_vs,dz_soisno)
 
 !=======================================================================
 ! Original author: Yongjiu Dai, September 15, 1999
 ! Revision: Yongjiu Dai, /07/31/2023
-! 
+!
 ! Four of metamorphisms of changing snow characteristics are implemented,
-! i.e., destructive, overburden, melt and wind drift. The treatments of the destructive compaction 
+! i.e., destructive, overburden, melt and wind drift. The treatments of the destructive compaction
 ! was from SNTHERM.89 and SNTHERM.99 (1991, 1999). The contribution due to
 ! melt metamorphism is simply taken as a ratio of snow ice fraction after
-! the melting versus before the melting. The treatments of the overburden comaction and the drifing compaction 
+! the melting versus before the melting. The treatments of the overburden comaction and the drifing compaction
 ! were borrowed from CLM5.0 which based on Vionnet et al. (2012) and van Kampenhout et al (2017).
 !
 !=======================================================================
 
-  use MOD_Precision
-  use MOD_Const_Physical, only : denice, denh2o, tfrz
-  implicit none
+   USE MOD_Precision
+   USE MOD_Const_Physical, only : denice, denh2o, tfrz
+   IMPLICIT NONE
 
 !-------------------------- Dummy argument -----------------------------
 
-  integer, INTENT(in) :: lb           ! lower bound of array
-  real(r8), INTENT(in) :: deltim      ! seconds i a time step [second]
-  integer, INTENT(in) :: imelt(lb:0)  ! signifies if node in melting (imelt = 1)
-  real(r8), INTENT(in) :: fiold(lb:0) ! fraction of ice relative to the total water content at the previous time step
-  real(r8), INTENT(in) :: t_soisno(lb:0)    ! nodal temperature [K]
-  real(r8), INTENT(in) :: wice_soisno(lb:0) ! ice lens [kg/m2]
-  real(r8), INTENT(in) :: wliq_soisno(lb:0) ! liquid water [kg/m2]
-  real(r8), INTENT(in) :: forc_us ! wind speed in eastward direction [m/s]
-  real(r8), INTENT(in) :: forc_vs ! wind speed in northward direction [m/s]
+   integer, intent(in) :: lb           ! lower bound of array
+   real(r8), intent(in) :: deltim      ! seconds i a time step [second]
+   integer, intent(in) :: imelt(lb:0)  ! signifies IF node in melting (imelt = 1)
+   real(r8), intent(in) :: fiold(lb:0) ! fraction of ice relative to the total water content at the previous time step
+   real(r8), intent(in) :: t_soisno(lb:0)    ! nodal temperature [K]
+   real(r8), intent(in) :: wice_soisno(lb:0) ! ice lens [kg/m2]
+   real(r8), intent(in) :: wliq_soisno(lb:0) ! liquid water [kg/m2]
+   real(r8), intent(in) :: forc_us ! wind speed in eastward direction [m/s]
+   real(r8), intent(in) :: forc_vs ! wind speed in northward direction [m/s]
 
-  real(r8), INTENT(inout) :: dz_soisno(lb:0) ! layer thickness [m]
+   real(r8), intent(inout) :: dz_soisno(lb:0) ! layer thickness [m]
 
 !----------------------- local variables ------------------------------
-  integer j  ! Numeber of doing loop
+   integer j  ! Numeber of doing loop
 
-  real(r8), parameter ::  c1 = 2.777e-7  ! [m2/(kg s)]
-  real(r8), parameter ::  c2 = 23.0e-3   ! [m3/kg]
-  real(r8), parameter ::  c3 = 2.777e-6  ! [1/s]
-  real(r8), parameter ::  c4 = 0.04      ! [1/K]
-  real(r8), parameter ::  c5 = 2.0       !
-  real(r8), parameter ::  c6 = 5.15e-7   !
-  real(r8), parameter ::  c7 = 4.0       !
-  real(r8), parameter ::  dm = 100.0     ! Upper Limit on Destructive Metamorphism Compaction [kg/m3]
-  real(r8), parameter ::  eta0 = 9.e5    ! The Viscosity Coefficient Eta0 [kg-s/m2]
+   real(r8), parameter ::  c1 = 2.777e-7  ! [m2/(kg s)]
+   real(r8), parameter ::  c2 = 23.0e-3   ! [m3/kg]
+   real(r8), parameter ::  c3 = 2.777e-6  ! [1/s]
+   real(r8), parameter ::  c4 = 0.04      ! [1/K]
+   real(r8), parameter ::  c5 = 2.0       !
+   real(r8), parameter ::  c6 = 5.15e-7   !
+   real(r8), parameter ::  c7 = 4.0       !
+   real(r8), parameter ::  dm = 100.0     ! Upper Limit on Destructive Metamorphism Compaction [kg/m3]
+   real(r8), parameter ::  eta0 = 9.e5    ! The Viscosity Coefficient Eta0 [kg-s/m2]
 
-    real(r8) :: burden  ! pressure of overlying snow [kg/m2]
-    real(r8) :: ddz1    ! rate of settling of snowpack due to destructive metamorphism.
-    real(r8) :: ddz2    ! rate of compaction of snowpack due to overburden.
-    real(r8) :: ddz3    ! rate of compaction of snowpack due to melt [1/s]
-    real(r8) :: ddz4    ! rate of compaction of snowpack due to wind drift.
+   real(r8) :: burden  ! pressure of overlying snow [kg/m2]
+   real(r8) :: ddz1    ! rate of settling of snowpack due to destructive metamorphism.
+   real(r8) :: ddz2    ! rate of compaction of snowpack due to overburden.
+   real(r8) :: ddz3    ! rate of compaction of snowpack due to melt [1/s]
+   real(r8) :: ddz4    ! rate of compaction of snowpack due to wind drift.
 
-    real(r8) :: dexpf   ! expf=exp(-c4*(273.15-t_soisno)).
-    real(r8) :: fi      ! fraction of ice relative to the total water content at current time step
-    real(r8) :: td      ! t_soisno - tfrz [K]
-    real(r8) :: pdzdtc  ! nodal rate of change in fractional-thickness due to compaction [fraction/s]
-    real(r8) :: void    ! void (1 - vol_ice - vol_liq)
-    real(r8) :: wx      ! water mass (ice+liquid) [kg/m2]
-    real(r8) :: bi      ! partial density of ice [kg/m3]
+   real(r8) :: dexpf   ! expf=exp(-c4*(273.15-t_soisno)).
+   real(r8) :: fi      ! fraction of ice relative to the total water content at current time step
+   real(r8) :: td      ! t_soisno - tfrz [K]
+   real(r8) :: pdzdtc  ! nodal rate of change in fractional-thickness due to compaction [fraction/s]
+   real(r8) :: void    ! void (1 - vol_ice - vol_liq)
+   real(r8) :: wx      ! water mass (ice+liquid) [kg/m2]
+   real(r8) :: bi      ! partial density of ice [kg/m3]
 
-    real(r8) :: zpseudo ! wind drift compaction / pseudo depth 
-                        ! (only valid if wind_dependent_snow_density is .true.)
-    logical  :: mobile  ! current snow layer is mobile, i.e. susceptible to wind drift 
-                        ! (only valid if wind_dependent_snow_density is .true.)
-    real(r8) :: f1, f2, eta, forc_wind
+   real(r8) :: zpseudo ! wind drift compaction / pseudo depth
+                       ! (only valid IF wind_dependent_snow_density is .true.)
+   logical  :: mobile  ! current snow layer is mobile, i.e. susceptible to wind drift
+                       ! (only valid IF wind_dependent_snow_density is .true.)
+   real(r8) :: f1, f2, eta, forc_wind
 
 !=======================================================================
-    ! Begin calculation - note that the following column loops are only invoked if lb < 0
+      ! Begin calculation - note that the following column loops are only invoked IF lb < 0
 
-    burden = 0.0
-    zpseudo = 0.0
-    mobile  = .true.
+      burden = 0.0
+      zpseudo = 0.0
+      mobile  = .true.
 
-    do j = lb, 0
-       wx = wice_soisno(j) + wliq_soisno(j)
-       void = 1.0-(wice_soisno(j)/denice + wliq_soisno(j)/denh2o)/dz_soisno(j)
+      DO j = lb, 0
+         wx = wice_soisno(j) + wliq_soisno(j)
+         void = 1.0-(wice_soisno(j)/denice + wliq_soisno(j)/denh2o)/dz_soisno(j)
 
 ! Disallow compaction for water saturated node and lower ice lens node.
-       if(void <= 0.001 .or. wice_soisno(j) <= .1)then
-          burden = burden+wx
+         IF(void <= 0.001 .or. wice_soisno(j) <= .1)THEN
+            burden = burden+wx
 
-          ! saturated node is immobile
-          ! This is only needed if wind_dependent_snow_density is true, but it's
-          ! simplest just to update mobile always
-          mobile = .false.
+            ! saturated node is immobile
+            ! This is only needed IF wind_dependent_snow_density is true, but it's
+            ! simplest just to update mobile always
+            mobile = .false.
 
-          CYCLE
-       endif
+            CYCLE
+         ENDIF
 
-       bi = wice_soisno(j) / dz_soisno(j)
-       fi = wice_soisno(j) / wx
-       td = tfrz-t_soisno(j)
+         bi = wice_soisno(j) / dz_soisno(j)
+         fi = wice_soisno(j) / wx
+         td = tfrz-t_soisno(j)
 
-       dexpf = exp(-c4*td)
+         dexpf = exp(-c4*td)
 
 ! Compaction due to destructive metamorphism
-       ddz1 = -c3*dexpf
-       if(bi > dm) ddz1 = ddz1*exp(-46.0e-3*(bi-dm))
+         ddz1 = -c3*dexpf
+         IF(bi > dm) ddz1 = ddz1*exp(-46.0e-3*(bi-dm))
 
 ! Liquid water term
-       if(wliq_soisno(j) > 0.01*dz_soisno(j)) ddz1=ddz1*c5
+         IF(wliq_soisno(j) > 0.01*dz_soisno(j)) ddz1=ddz1*c5
 
 ! Compaction due to overburden
-!*     ddz2 = -burden*exp(-0.08*td-c2*bi)/eta0
-       f1 = 1.0/(1.0+60.0*wliq_soisno(j)/(denh2o*dz_soisno(j)))
-       f2 = 4.0 ! currently fixed to maximum value, holds in absence of angular grains
-       eta = f1*f2*(bi/450.0)*exp(0.1*td + c2*bi)*7.62237e6
-       ddz2 = -(burden+wx/2.0) / eta
+!*       ddz2 = -burden*exp(-0.08*td-c2*bi)/eta0
+         f1 = 1.0/(1.0+60.0*wliq_soisno(j)/(denh2o*dz_soisno(j)))
+         f2 = 4.0 ! currently fixed to maximum value, holds in absence of angular grains
+         eta = f1*f2*(bi/450.0)*exp(0.1*td + c2*bi)*7.62237e6
+         ddz2 = -(burden+wx/2.0) / eta
 
 ! Compaction occurring during melt
-       if(imelt(j) == 1)then
-          ddz3 = - 1.0/deltim * max(0.0,(fiold(j) - fi)/fiold(j))
-       else
-          ddz3 = 0.0
-       endif
+         IF(imelt(j) == 1)THEN
+            ddz3 = - 1.0/deltim * max(0.0,(fiold(j) - fi)/fiold(j))
+         ELSE
+            ddz3 = 0.0
+         ENDIF
 
 ! Compaction occurring due to wind drift
-      forc_wind = sqrt(forc_us**2+forc_vs**2)
-      call winddriftcompaction( bi,forc_wind,dz_soisno(j),zpseudo,mobile,ddz4 )
+         forc_wind = sqrt(forc_us**2+forc_vs**2)
+         CALL winddriftcompaction( bi,forc_wind,dz_soisno(j),zpseudo,mobile,ddz4 )
 
 ! Time rate of fractional change in dz (units of s-1)
-      pdzdtc = ddz1 + ddz2 + ddz3 + ddz4
+         pdzdtc = ddz1 + ddz2 + ddz3 + ddz4
 
 ! The change in dz_soisno due to compaction
 ! Limit compaction to be no greater than fully saturated layer thickness
-      dz_soisno(j) = dz_soisno(j)*(1.0+pdzdtc*deltim)
-      dz_soisno(j) = max(dz_soisno(j),(wice_soisno(j)/denice+ wliq_soisno(j)/denh2o))
+         dz_soisno(j) = dz_soisno(j)*(1.0+pdzdtc*deltim)
+         dz_soisno(j) = max(dz_soisno(j),(wice_soisno(j)/denice+ wliq_soisno(j)/denh2o))
 
 ! Pressure of overlying snow
-      burden = burden+wx
+         burden = burden+wx
 
-    end do
+      ENDDO
 
- end subroutine snowcompaction
+   END SUBROUTINE snowcompaction
 
 
 
- !-----------------------------------------------------------------------
- subroutine winddriftcompaction(bi,forc_wind,dz,zpseudo,mobile,compaction_rate)
- 
+   !-----------------------------------------------------------------------
+   SUBROUTINE winddriftcompaction(bi,forc_wind,dz,zpseudo,mobile,compaction_rate)
+
 ! Compute wind drift compaction for a single column and level.
 ! Also updates zpseudo and mobile for this column. However, zpseudo remains unchanged
-! if mobile is already false or becomes false within this subroutine.
+! IF mobile is already false or becomes false within this SUBROUTINE.
 !
 ! The structure of the updates done here for zpseudo and mobile requires that this
-! subroutine be called first for the top layer of snow, then for the 2nd layer down,
+! SUBROUTINE be called first for the top layer of snow, THEN for the 2nd layer down,
 ! etc. - and finally for the bottom layer. Before beginning the loops over layers,
 ! mobile should be initialized to .true. and zpseudo should be initialized to 0.
 !
 ! !USES:
-    use MOD_Precision
-    !
-    ! !ARGUMENTS:
-    real(r8) , intent(in)    :: bi              ! partial density of ice [kg/m3]
-    real(r8) , intent(in)    :: forc_wind       ! atmospheric wind speed [m/s]
-    real(r8) , intent(in)    :: dz              ! layer depth for this column and level [m]
-    real(r8) , intent(inout) :: zpseudo         ! wind drift compaction / pseudo depth for this column at this layer
-    logical  , intent(inout) :: mobile          ! whether this snow column is still mobile at this layer (i.e., susceptible to wind drift)
-    real(r8) , intent(out)   :: compaction_rate ! rate of compaction of snowpack due to wind drift, for the current column and layer
-    !
-    ! !LOCAL VARIABLES:
-    real(r8) :: Frho        ! Mobility density factor [-]
-    real(r8) :: MO          ! Mobility index [-]
-    real(r8) :: SI          ! Driftability index [-]
-    real(r8) :: gamma_drift ! Scaling factor for wind drift time scale [-]
-    real(r8) :: tau_inverse ! Inverse of the effective time scale [1/s]
+   USE MOD_Precision
+   !
+   ! !ARGUMENTS:
+   real(r8) , intent(in)    :: bi              ! partial density of ice [kg/m3]
+   real(r8) , intent(in)    :: forc_wind       ! atmospheric wind speed [m/s]
+   real(r8) , intent(in)    :: dz              ! layer depth for this column and level [m]
+   real(r8) , intent(inout) :: zpseudo         ! wind drift compaction / pseudo depth for this column at this layer
+   logical  , intent(inout) :: mobile          ! whether this snow column is still mobile at this layer (i.e., susceptible to wind drift)
+   real(r8) , intent(out)   :: compaction_rate ! rate of compaction of snowpack due to wind drift, for the current column and layer
+   !
+   ! !LOCAL VARIABLES:
+   real(r8) :: Frho        ! Mobility density factor [-]
+   real(r8) :: MO          ! Mobility index [-]
+   real(r8) :: SI          ! Driftability index [-]
+   real(r8) :: gamma_drift ! Scaling factor for wind drift time scale [-]
+   real(r8) :: tau_inverse ! Inverse of the effective time scale [1/s]
 
-    real(r8), parameter :: rho_min = 50._r8      ! wind drift compaction / minimum density [kg/m3]
-    real(r8), parameter :: rho_max = 350._r8     ! wind drift compaction / maximum density [kg/m3]
-    real(r8), parameter :: drift_gs = 0.35e-3_r8 ! wind drift compaction / grain size (fixed value for now)
-    real(r8), parameter :: drift_sph = 1.0_r8    ! wind drift compaction / sphericity
-    real(r8), parameter :: tau_ref = 48._r8 * 3600._r8  ! wind drift compaction / reference time [s]
+   real(r8), parameter :: rho_min = 50._r8      ! wind drift compaction / minimum density [kg/m3]
+   real(r8), parameter :: rho_max = 350._r8     ! wind drift compaction / maximum density [kg/m3]
+   real(r8), parameter :: drift_gs = 0.35e-3_r8 ! wind drift compaction / grain size (fixed value for now)
+   real(r8), parameter :: drift_sph = 1.0_r8    ! wind drift compaction / sphericity
+   real(r8), parameter :: tau_ref = 48._r8 * 3600._r8  ! wind drift compaction / reference time [s]
 
-    !-----------------------------------------------------------------------
+   !-----------------------------------------------------------------------
 
-    if (mobile) then
-       Frho = 1.25_r8 - 0.0042_r8*(max(rho_min, bi)-rho_min)
-       ! assuming dendricity = 0, sphericity = 1, grain size = 0.35 mm Non-dendritic snow
-       MO = 0.34_r8 * (-0.583_r8*drift_gs - 0.833_r8*drift_sph + 0.833_r8) + 0.66_r8*Frho
-       SI = -2.868_r8 * exp(-0.085_r8*forc_wind) + 1._r8 + MO
+      IF (mobile) THEN
+         Frho = 1.25_r8 - 0.0042_r8*(max(rho_min, bi)-rho_min)
+         ! assuming dendricity = 0, sphericity = 1, grain size = 0.35 mm Non-dendritic snow
+         MO = 0.34_r8 * (-0.583_r8*drift_gs - 0.833_r8*drift_sph + 0.833_r8) + 0.66_r8*Frho
+         SI = -2.868_r8 * exp(-0.085_r8*forc_wind) + 1._r8 + MO
 
-       if (SI > 0.0_r8) then
-          SI = min(SI, 3.25_r8)
-          ! Increase zpseudo (wind drift / pseudo depth) to the middle of
-          ! the pseudo-node for the sake of the following calculation
-          zpseudo = zpseudo + 0.5_r8 * dz * (3.25_r8 - SI)
-          gamma_drift = SI*exp(-zpseudo/0.1_r8)
-          tau_inverse = gamma_drift / tau_ref
-          compaction_rate = -max(0.0_r8, rho_max-bi) * tau_inverse
-          ! Further increase zpseudo to the bottom of the pseudo-node for
-          ! the sake of calculations done on the underlying layer (i.e.,
-          ! the next time through the j loop).
-          zpseudo = zpseudo + 0.5_r8 * dz * (3.25_r8 - SI)
-       else  ! SI <= 0
-          mobile = .false.
-          compaction_rate = 0._r8
-       end if
-    else  ! .not. mobile
-       compaction_rate = 0._r8
-    end if
+         IF (SI > 0.0_r8) THEN
+            SI = min(SI, 3.25_r8)
+            ! Increase zpseudo (wind drift / pseudo depth) to the middle of
+            ! the pseudo-node for the sake of the following calculation
+            zpseudo = zpseudo + 0.5_r8 * dz * (3.25_r8 - SI)
+            gamma_drift = SI*exp(-zpseudo/0.1_r8)
+            tau_inverse = gamma_drift / tau_ref
+            compaction_rate = -max(0.0_r8, rho_max-bi) * tau_inverse
+            ! Further increase zpseudo to the bottom of the pseudo-node for
+            ! the sake of calculations done on the underlying layer (i.e.,
+            ! the next time through the j loop).
+            zpseudo = zpseudo + 0.5_r8 * dz * (3.25_r8 - SI)
+         ELSE  ! SI <= 0
+            mobile = .false.
+            compaction_rate = 0._r8
+         ENDIF
+      ELSE  ! .not. mobile
+         compaction_rate = 0._r8
+      ENDIF
 
- end subroutine winddriftcompaction
+   END SUBROUTINE winddriftcompaction
 
 
 
- !-----------------------------------------------------------------------
- subroutine snowlayerscombine (lb,snl, &
-            z_soisno,dz_soisno,zi_soisno,wliq_soisno,wice_soisno,t_soisno,scv,snowdp)
+   !-----------------------------------------------------------------------
+   SUBROUTINE snowlayerscombine (lb,snl, &
+              z_soisno,dz_soisno,zi_soisno,wliq_soisno,wice_soisno,t_soisno,scv,snowdp)
 
 !=======================================================================
 ! Original author : Yongjiu Dai, September 15, 1999
@@ -248,173 +248,173 @@ MODULE MOD_SnowLayersCombineDivide
 !
 !=======================================================================
 
-  use MOD_Precision
-  implicit none
+   USE MOD_Precision
+   IMPLICIT NONE
 
 !-------------------------- Dummy argument -----------------------------
-  integer, INTENT(in) :: lb               ! lower bound of array
+   integer, intent(in) :: lb               ! lower bound of array
 
 ! numbering from 1 (bottom) mss (surface)
-  real(r8), INTENT(inout) :: wice_soisno(lb:1)   ! ice lens [kg/m2]
-  real(r8), INTENT(inout) :: wliq_soisno(lb:1)   ! liquid water {kg/m2]
-  real(r8), INTENT(inout) :: t_soisno (lb:1)     ! nodel temperature [K]
-  real(r8), INTENT(inout) :: dz_soisno  (lb:1)   ! layer thickness [m]
-  real(r8), INTENT(inout) :: z_soisno   (lb:1)   ! node depth [m]
-  real(r8), INTENT(inout) :: zi_soisno  (lb-1:1) ! depth of layer interface [m]
-  real(r8), INTENT(inout) :: snowdp       ! snow depth [m]
-  real(r8), INTENT(inout) :: scv          ! snow mass - water equivalent [kg/m2]
-  integer, INTENT(inout) :: snl           ! Number of snow
+   real(r8), intent(inout) :: wice_soisno(lb:1)   ! ice lens [kg/m2]
+   real(r8), intent(inout) :: wliq_soisno(lb:1)   ! liquid water {kg/m2]
+   real(r8), intent(inout) :: t_soisno (lb:1)     ! nodel temperature [K]
+   real(r8), intent(inout) :: dz_soisno  (lb:1)   ! layer thickness [m]
+   real(r8), intent(inout) :: z_soisno   (lb:1)   ! node depth [m]
+   real(r8), intent(inout) :: zi_soisno  (lb-1:1) ! depth of layer interface [m]
+   real(r8), intent(inout) :: snowdp       ! snow depth [m]
+   real(r8), intent(inout) :: scv          ! snow mass - water equivalent [kg/m2]
+   integer, intent(inout) :: snl           ! Number of snow
 
 !----------------------- Local variables ------------------------------
-  real(r8) :: drr           ! thickness of the combined [m]
-  real(r8) :: dzmin(5)      ! minimum of snow layer 1 (top) to msn0 (bottom)
-  real(r8) :: zwice         ! total ice mass in snow
-  real(r8) :: zwliq         ! total liquid water in snow
+   real(r8) :: drr           ! thickness of the combined [m]
+   real(r8) :: dzmin(5)      ! minimum of snow layer 1 (top) to msn0 (bottom)
+   real(r8) :: zwice         ! total ice mass in snow
+   real(r8) :: zwliq         ! total liquid water in snow
 
-  integer :: i              ! number of do looping
-  integer :: j              ! node index
-  integer :: k              ! number of do looping
-  integer :: l              ! node index
-  integer :: msn_old        ! number of snow layer 1 (top) to msn0 (bottom)
-  integer :: mssi           ! node index
-  integer :: neibor         ! adjacent node selected for combination
+   integer :: i              ! number of DO looping
+   integer :: j              ! node index
+   integer :: k              ! number of DO looping
+   integer :: l              ! node index
+   integer :: msn_old        ! number of snow layer 1 (top) to msn0 (bottom)
+   integer :: mssi           ! node index
+   integer :: neibor         ! adjacent node selected for combination
 
-  data dzmin /0.010, 0.015, 0.025, 0.055, 0.115/
+   data dzmin /0.010, 0.015, 0.025, 0.055, 0.115/
 
 !-----------------------------------------------------------------------
 ! check the mass of ice lens of snow, when the total less than a small value,
 ! combine it with the underlying neighbor
       msn_old = snl
-      do j = msn_old+1, 0
-         if(wice_soisno(j) <= .1)then
+      DO j = msn_old+1, 0
+         IF(wice_soisno(j) <= .1)THEN
             wliq_soisno(j+1) = wliq_soisno(j+1) + wliq_soisno(j)
             wice_soisno(j+1) = wice_soisno(j+1) + wice_soisno(j)
 
 ! shift all elements above this down one.
-            if(j > snl+1 .AND. snl < -1)then
-               do i =  j, snl+2, -1
+            IF(j > snl+1 .and. snl < -1)THEN
+               DO i =  j, snl+2, -1
                   t_soisno(i) = t_soisno(i-1)
                   wliq_soisno(i) = wliq_soisno(i-1)
                   wice_soisno(i) = wice_soisno(i-1)
                   dz_soisno(i) = dz_soisno(i-1)
-               enddo
-            endif
+               ENDDO
+            ENDIF
 
             snl = snl + 1
 !*          write(6,*) 'one snow layer is gone'
 
-         endif
+         ENDIF
 
-      enddo
+      ENDDO
 
-      if(snl == 0)then
+      IF(snl == 0)THEN
          scv = 0.
          snowdp = 0.
 !*       write(6,*) 'all snow has gone'
-         return
-      else
+         RETURN
+      ELSE
          scv = 0.
          snowdp = 0.
          zwice = 0.
          zwliq = 0.
-         do j = snl + 1, 0
+         DO j = snl + 1, 0
             scv = scv + wice_soisno(j) + wliq_soisno(j)
             snowdp = snowdp + dz_soisno(j)
             zwice = zwice + wice_soisno(j)
             zwliq = zwliq + wliq_soisno(j)
-         enddo
-      endif
+         ENDDO
+      ENDIF
 !-----------------------------------------------------------------------
 ! check the snow depth
 
-      if(snowdp < 0.01)then       !!! all snow gone
+      IF(snowdp < 0.01)THEN       !!! all snow gone
 
          snl = 0
          scv = zwice
-         if(scv <= 0.) snowdp = 0.
+         IF(scv <= 0.) snowdp = 0.
 
 ! the liquid water assumed ponding on soil surface
          wliq_soisno(1) = wliq_soisno(1) + zwliq
 !*       write(6,'(17h all snow is gone)')
-         return
+         RETURN
 
-      else                        !!! snow layers combined
+      ELSE                        !!! snow layers combined
 
 ! two or more layers
 
-        if(snl < -1)then
-           msn_old = snl
-           mssi = 1
-           do i = msn_old+1, 0
+         IF(snl < -1)THEN
+            msn_old = snl
+            mssi = 1
+            DO i = msn_old+1, 0
 
 ! If top node is removed, combine with bottom neighbor
-              if(dz_soisno(i) < dzmin(mssi))then
-                 if(i == snl+1)then
-                    neibor = i + 1
+               IF(dz_soisno(i) < dzmin(mssi))THEN
+                  IF(i == snl+1)THEN
+                     neibor = i + 1
 
 ! If the bottom neighbor is not snow, combine with the top neighbor
-                 else if(i == 0)then
-                    neibor = i - 1
+                  ELSE IF(i == 0)THEN
+                     neibor = i - 1
 
-! If none of the above special cases apply, combine with the thinnest neighbor
-                 else
-                   neibor = i + 1
-                   if((dz_soisno(i-1)+dz_soisno(i)) < (dz_soisno(i+1)+dz_soisno(i))) neibor = i-1
-                 endif
+! If NONE of the above special cases apply, combine with the thinnest neighbor
+                  ELSE
+                     neibor = i + 1
+                     IF((dz_soisno(i-1)+dz_soisno(i)) < (dz_soisno(i+1)+dz_soisno(i))) neibor = i-1
+                  ENDIF
 
 ! Node l and j are combined and stored as node j.
 
-                 if(neibor > i)then
-                    j = neibor
-                    l = i
-                 else
-                    j = i
-                    l = neibor
-                 endif
-                 call combo ( dz_soisno(j), wliq_soisno(j), wice_soisno(j), t_soisno(j),&
-                              dz_soisno(l), wliq_soisno(l), wice_soisno(l), t_soisno(l) )
+                  IF(neibor > i)THEN
+                     j = neibor
+                     l = i
+                  ELSE
+                     j = i
+                     l = neibor
+                  ENDIF
+                  CALL combo ( dz_soisno(j), wliq_soisno(j), wice_soisno(j), t_soisno(j),&
+                               dz_soisno(l), wliq_soisno(l), wice_soisno(l), t_soisno(l) )
 
 ! Now shift all elements above this down one.
 
-                 if(j-1 > snl+1) then
-                    do k = j-1, snl+2, -1
-                       t_soisno(k) = t_soisno(k-1)
-                       wice_soisno(k) = wice_soisno(k-1)
-                       wliq_soisno(k) = wliq_soisno(k-1)
-                       dz_soisno(k) = dz_soisno(k-1)
-                    enddo
-                 endif
+                  IF(j-1 > snl+1) THEN
+                     DO k = j-1, snl+2, -1
+                        t_soisno(k) = t_soisno(k-1)
+                        wice_soisno(k) = wice_soisno(k-1)
+                        wliq_soisno(k) = wliq_soisno(k-1)
+                        dz_soisno(k) = dz_soisno(k-1)
+                     ENDDO
+                  ENDIF
 
-                 snl = snl + 1
+                  snl = snl + 1
 
 !*    write(6,'(7h Nodes ,i4,4h and,i4,14h combined into,i4)') l,j,j
 
-                 if(snl >= -1) EXIT
+                  IF(snl >= -1) EXIT
 
 ! The layer thickness great than the prescibed minimum value
 
-              else
-                 mssi = mssi + 1
-              endif
-           enddo
+               ELSE
+                  mssi = mssi + 1
+               ENDIF
+            ENDDO
 
-        end if
+         ENDIF
 
 ! Reset the node depth and the depth of layer interface
 
-        zi_soisno(0) = 0.
-        do k = 0, snl+1, -1
-           z_soisno(k) = zi_soisno(k) - 0.5*dz_soisno(k)
-           zi_soisno(k-1) = zi_soisno(k) - dz_soisno(k)
-        enddo
+         zi_soisno(0) = 0.
+         DO k = 0, snl+1, -1
+            z_soisno(k) = zi_soisno(k) - 0.5*dz_soisno(k)
+            zi_soisno(k-1) = zi_soisno(k) - dz_soisno(k)
+         ENDDO
 
-      endif                       !!! snow layers combined
+      ENDIF                       !!! snow layers combined
 
- end subroutine snowlayerscombine
+   END SUBROUTINE snowlayerscombine
 
 
 
- subroutine snowlayersdivide (lb,snl,z_soisno,dz_soisno,zi_soisno,wliq_soisno,wice_soisno,t_soisno)
+   SUBROUTINE snowlayersdivide (lb,snl,z_soisno,dz_soisno,zi_soisno,wliq_soisno,wice_soisno,t_soisno)
 
 !=======================================================================
 ! Original author : Yongjiu Dai, September 15, 1999
@@ -422,46 +422,46 @@ MODULE MOD_SnowLayersCombineDivide
 ! subdivides snow layer when its thickness exceed the prescribed maximum
 !=======================================================================
 
-  use MOD_Precision
-  implicit none
+   USE MOD_Precision
+   IMPLICIT NONE
 
 !-------------------------- Dummy argument -----------------------------
 
-   integer, INTENT(in) :: lb              ! lower bound of array
-   integer, INTENT(inout) :: snl          ! Number of snow
-  real(r8), INTENT(inout) :: wice_soisno(lb:0)   ! ice lens [kg/m2]
-  real(r8), INTENT(inout) :: wliq_soisno(lb:0)   ! liquid water [kg/m2]
-  real(r8), INTENT(inout) :: t_soisno   (lb:0)   ! Nodel temperature [K]
-  real(r8), INTENT(inout) :: dz_soisno  (lb:0)   ! Layer thickness [m]
-  real(r8), INTENT(inout) :: z_soisno   (lb:0)   ! Node depth [m]
-  real(r8), INTENT(inout) :: zi_soisno  (lb-1:0) ! Depth of layer interface [m]
+    integer, intent(in) :: lb              ! lower bound of array
+    integer, intent(inout) :: snl          ! Number of snow
+   real(r8), intent(inout) :: wice_soisno(lb:0)   ! ice lens [kg/m2]
+   real(r8), intent(inout) :: wliq_soisno(lb:0)   ! liquid water [kg/m2]
+   real(r8), intent(inout) :: t_soisno   (lb:0)   ! Nodel temperature [K]
+   real(r8), intent(inout) :: dz_soisno  (lb:0)   ! Layer thickness [m]
+   real(r8), intent(inout) :: z_soisno   (lb:0)   ! Node depth [m]
+   real(r8), intent(inout) :: zi_soisno  (lb-1:0) ! Depth of layer interface [m]
 
 !----------------------- Local variables ------------------------------
 
 ! numbering from 1 (surface) msno (bottom)
-  real(r8) :: drr      ! thickness of the combined [m]
-  real(r8) :: dzsno(5) ! Snow layer thickness [m]
-  real(r8) :: swice(5) ! Partial volume of ice [m3/m3]
-  real(r8) :: swliq(5) ! Partial volume of liquid water [m3/m3]
-  real(r8) :: tsno(5)  ! Nodel temperature [K]
+   real(r8) :: drr      ! thickness of the combined [m]
+   real(r8) :: dzsno(5) ! Snow layer thickness [m]
+   real(r8) :: swice(5) ! Partial volume of ice [m3/m3]
+   real(r8) :: swliq(5) ! Partial volume of liquid water [m3/m3]
+   real(r8) :: tsno(5)  ! Nodel temperature [K]
 
-  integer k            ! number of do looping
-  integer msno         ! number of snow layer 1 (top) to msno (bottom)
+   integer k            ! number of DO looping
+   integer msno         ! number of snow layer 1 (top) to msno (bottom)
 
-  real(r8) zwice,zwliq,propor
+   real(r8) zwice,zwliq,propor
 
 !-----------------------------------------------------------------------
 
       msno = abs(snl)
-      do k = 1, msno
+      DO k = 1, msno
          dzsno(k) = dz_soisno  (k + snl)
          swice(k) = wice_soisno(k + snl)
          swliq(k) = wliq_soisno(k + snl)
          tsno(k)  = t_soisno (k + snl)
-      enddo
+      ENDDO
 
-      if(msno == 1)then
-         if(dzsno(1) > 0.03)then
+      IF(msno == 1)THEN
+         IF(dzsno(1) > 0.03)THEN
          msno = 2
 ! Specified a new snow layer
          dzsno(1) = dzsno(1)/2.
@@ -473,11 +473,11 @@ MODULE MOD_SnowLayersCombineDivide
          swliq(2) = swliq(1)
          tsno(2)  = tsno(1)
 !        write(6,*)'Subdivided Top Node into two layer (1/2)'
-         endif
-      endif
+         ENDIF
+      ENDIF
 
-      if(msno > 1)then
-         if(dzsno(1) > 0.02)then
+      IF(msno > 1)THEN
+         IF(dzsno(1) > 0.02)THEN
          drr = dzsno(1) - 0.02
          propor = drr/dzsno(1)
          zwice = propor*swice(1)
@@ -488,13 +488,13 @@ MODULE MOD_SnowLayersCombineDivide
          swliq(1) = propor*swliq(1)
          dzsno(1) = 0.02
 
-         call combo(dzsno(2),swliq(2),swice(2),tsno(2), &
+         CALL combo(dzsno(2),swliq(2),swice(2),tsno(2), &
                     drr,zwliq,zwice,tsno(1))
 
 !        write(6,*) 'Subdivided Top Node &
 !                    20 mm combined into underlying neighbor'
 
-         if(msno <= 2 .AND. dzsno(2) > 0.07)then
+         IF(msno <= 2 .and. dzsno(2) > 0.07)THEN
 ! subdivided a new layer
             msno = 3
             dzsno(2) = dzsno(2)/2.
@@ -505,12 +505,12 @@ MODULE MOD_SnowLayersCombineDivide
             swice(3) = swice(2)
             swliq(3) = swliq(2)
             tsno(3)  = tsno(2)
-         endif
-         endif
-      endif
+         ENDIF
+         ENDIF
+      ENDIF
 
-      if(msno > 2)then
-         if(dzsno(2) > 0.05)then
+      IF(msno > 2)THEN
+         IF(dzsno(2) > 0.05)THEN
          drr = dzsno(2) - 0.05
          propor = drr/dzsno(2)
          zwice = propor*swice(2)
@@ -521,13 +521,13 @@ MODULE MOD_SnowLayersCombineDivide
          swliq(2) = propor*swliq(2)
          dzsno(2) = 0.05
 
-         call combo(dzsno(3),swliq(3),swice(3),tsno(3), &
+         CALL combo(dzsno(3),swliq(3),swice(3),tsno(3), &
                     drr,     zwliq,   zwice,   tsno(2))
 
 !        write(6,*)'Subdivided 50 mm from the subsface layer &
 !                   &and combined into underlying neighbor'
 
-         if(msno <= 3 .AND. dzsno(3) > 0.18)then
+         IF(msno <= 3 .and. dzsno(3) > 0.18)THEN
 ! subdivided a new layer
             msno =  4
             dzsno(3) = dzsno(3)/2.
@@ -538,12 +538,12 @@ MODULE MOD_SnowLayersCombineDivide
             swice(4) = swice(3)
             swliq(4) = swliq(3)
             tsno(4)  = tsno(3)
-         endif
-         endif
-      endif
+         ENDIF
+         ENDIF
+      ENDIF
 
-      if(msno > 3)then
-         if(dzsno(3) > 0.11)then
+      IF(msno > 3)THEN
+         IF(dzsno(3) > 0.11)THEN
          drr = dzsno(3) - 0.11
          propor = drr/dzsno(3)
          zwice = propor*swice(3)
@@ -554,13 +554,13 @@ MODULE MOD_SnowLayersCombineDivide
          swliq(3) = propor*swliq(3)
          dzsno(3) = 0.11
 
-         call combo(dzsno(4),swliq(4),swice(4),tsno(4), &
+         CALL combo(dzsno(4),swliq(4),swice(4),tsno(4), &
                     drr,     zwliq,   zwice,   tsno(3))
 
 !        write(6,*)'Subdivided 110 mm from the third Node &
 !                   &and combined into underlying neighbor'
 
-         if(msno <= 4 .AND. dzsno(4) > 0.41)then
+         IF(msno <= 4 .and. dzsno(4) > 0.41)THEN
 ! subdivided a new layer
             msno = 5
             dzsno(4) = dzsno(4)/2.
@@ -571,12 +571,12 @@ MODULE MOD_SnowLayersCombineDivide
             swice(5) = swice(4)
             swliq(5) = swliq(4)
             tsno(5)  = tsno(4)
-         endif
-         endif
-      endif
+         ENDIF
+         ENDIF
+      ENDIF
 
-      if(msno > 4)then
-         if(dzsno(4) > 0.23)then
+      IF(msno > 4)THEN
+         IF(dzsno(4) > 0.23)THEN
          drr = dzsno(4) - 0.23
          propor = drr/dzsno(4)
          zwice = propor*swice(4)
@@ -587,35 +587,35 @@ MODULE MOD_SnowLayersCombineDivide
          swliq(4) = propor*swliq(4)
          dzsno(4) = 0.23
 
-         call combo(dzsno(5),swliq(5),swice(5),tsno(5), &
+         CALL combo(dzsno(5),swliq(5),swice(5),tsno(5), &
                     drr,     zwliq,   zwice,   tsno(4))
 
 !        write(6,*)'Subdivided 230 mm from the fourth Node &
 !                   'and combined into underlying neighbor'
-         endif
-      endif
+         ENDIF
+      ENDIF
 
       snl = - msno
 
-      do k = snl+1, 0
+      DO k = snl+1, 0
          dz_soisno(k)   = dzsno(k - snl)
          wice_soisno(k) = swice(k - snl)
          wliq_soisno(k) = swliq(k - snl)
          t_soisno(k)  = tsno (k - snl)
-      enddo
+      ENDDO
 
       zi_soisno(0) = 0.
-      do k = 0, snl+1, -1
+      DO k = 0, snl+1, -1
          z_soisno(k)    = zi_soisno(k) - 0.5*dz_soisno(k)
          zi_soisno(k-1) = zi_soisno(k) - dz_soisno(k)
-      enddo
+      ENDDO
 
- end subroutine snowlayersdivide
+   END SUBROUTINE snowlayersdivide
 
 
 
- subroutine combo ( dz_soisno, wliq_soisno, wice_soisno, t, &
-                   dz2, wliq2, wice2, t2 )
+   SUBROUTINE combo ( dz_soisno, wliq_soisno, wice_soisno, t, &
+                     dz2, wliq2, wice2, t2 )
 
 !=======================================================================
 ! Original author: Yongjiu Dai, September 15, 1999
@@ -627,31 +627,31 @@ MODULE MOD_SnowLayersCombineDivide
 !
 !=======================================================================
 
-  use MOD_Precision
-  use MOD_Const_Physical, only : cpice, cpliq, hfus, tfrz
-  implicit none
+   USE MOD_Precision
+   USE MOD_Const_Physical, only : cpice, cpliq, hfus, tfrz
+   IMPLICIT NONE
 
 !-------------------------- Dummy argument -----------------------------
 
-  real(r8), INTENT(in) :: dz2     ! nodal thickness of 2 elements being combined [m]
-  real(r8), INTENT(in) :: wliq2   ! liquid water of element 2 [kg/m2]
-  real(r8), INTENT(in) :: wice2   ! ice of element 2 [kg/m2]
-  real(r8), INTENT(in) :: t2      ! nodal temperature of element 2 [K]
+   real(r8), intent(in) :: dz2     ! nodal thickness of 2 elements being combined [m]
+   real(r8), intent(in) :: wliq2   ! liquid water of element 2 [kg/m2]
+   real(r8), intent(in) :: wice2   ! ice of element 2 [kg/m2]
+   real(r8), intent(in) :: t2      ! nodal temperature of element 2 [K]
 
-  real(r8), INTENT(inout) :: dz_soisno   ! nodal thickness of 1 elements being combined [m]
-  real(r8), INTENT(inout) :: wliq_soisno ! liquid water of element 1
-  real(r8), INTENT(inout) :: wice_soisno ! ice of element 1 [kg/m2]
-  real(r8), INTENT(inout) :: t    ! nodel temperature of elment 1 [K]
+   real(r8), intent(inout) :: dz_soisno   ! nodal thickness of 1 elements being combined [m]
+   real(r8), intent(inout) :: wliq_soisno ! liquid water of element 1
+   real(r8), intent(inout) :: wice_soisno ! ice of element 1 [kg/m2]
+   real(r8), intent(inout) :: t    ! nodel temperature of elment 1 [K]
 
 !----------------------- Local variables ------------------------------
 
-  real(r8) dzc    ! Total thickness of nodes 1 and 2 (dzc=dz_soisno+dz2).
-  real(r8) wliqc  ! Combined liquid water [kg/m2]
-  real(r8) wicec  ! Combined ice [kg/m2]
-  real(r8) tc     ! Combined node temperature [K]
-  real(r8) h      ! enthalpy of element 1 [J/m2]
-  real(r8) h2     ! enthalpy of element 2 [J/m2]
-  real(r8) hc     ! temporary
+   real(r8) dzc    ! Total thickness of nodes 1 and 2 (dzc=dz_soisno+dz2).
+   real(r8) wliqc  ! Combined liquid water [kg/m2]
+   real(r8) wicec  ! Combined ice [kg/m2]
+   real(r8) tc     ! Combined node temperature [K]
+   real(r8) h      ! enthalpy of element 1 [J/m2]
+   real(r8) h2     ! enthalpy of element 2 [J/m2]
+   real(r8) hc     ! temporary
 
 !-----------------------------------------------------------------------
 
@@ -662,28 +662,28 @@ MODULE MOD_SnowLayersCombineDivide
       h2  = (cpice*wice2+cpliq*wliq2)*(t2-tfrz)+hfus*wliq2
 
       hc = h + h2
-      if(hc < 0.)then
+      IF(hc < 0.)THEN
          tc = tfrz + hc/(cpice*wicec+cpliq*wliqc)
-      else if(hc.le.hfus*wliqc)then
+      ELSE IF(hc.le.hfus*wliqc)THEN
          tc = tfrz
-      else
+      ELSE
          tc = tfrz + (hc - hfus*wliqc)/(cpice*wicec+cpliq*wliqc)
-      endif
+      ENDIF
 
       dz_soisno = dzc
       wice_soisno = wicec
       wliq_soisno = wliqc
       t = tc
 
- end subroutine combo
+   END SUBROUTINE combo
 
 
- SUBROUTINE SnowLayersCombine_snicar (lb,snl, &
-            z_soisno,dz_soisno,zi_soisno,wliq_soisno,wice_soisno,t_soisno,scv,snowdp,&
+   SUBROUTINE SnowLayersCombine_snicar (lb,snl, &
+              z_soisno,dz_soisno,zi_soisno,wliq_soisno,wice_soisno,t_soisno,scv,snowdp,&
 
 ! Aerosol Fluxes (Jan. 07, 2023)
-            mss_bcpho, mss_bcphi, mss_ocpho, mss_ocphi,&
-            mss_dst1 , mss_dst2 , mss_dst3 , mss_dst4 )
+              mss_bcpho, mss_bcphi, mss_ocpho, mss_ocphi,&
+              mss_dst1 , mss_dst2 , mss_dst3 , mss_dst4 )
 ! Aerosol Fluxes (Jan. 07, 2023)
 
 
@@ -699,24 +699,24 @@ MODULE MOD_SnowLayersCombineDivide
 ! Yongjiu Dai, 01/2023: added Aerosol fluxes from SNICAR model
 !=======================================================================
 
-  IMPLICIT NONE
+   IMPLICIT NONE
 
 !-------------------------- Dummy argument -----------------------------
-  integer, INTENT(in) :: lb               ! lower bound of array
+   integer, intent(in) :: lb               ! lower bound of array
 
 ! numbering from 1 (bottom) mss (surface)
-  real(r8), INTENT(inout) :: wice_soisno(lb:1)   ! ice lens [kg/m2]
-  real(r8), INTENT(inout) :: wliq_soisno(lb:1)   ! liquid water {kg/m2]
-  real(r8), INTENT(inout) :: t_soisno   (lb:1)   ! nodel temperature [K]
-  real(r8), INTENT(inout) :: dz_soisno  (lb:1)   ! layer thickness [m]
-  real(r8), INTENT(inout) :: z_soisno   (lb:1)   ! node depth [m]
-  real(r8), INTENT(inout) :: zi_soisno  (lb-1:1) ! depth of layer interface [m]
-  real(r8), INTENT(inout) :: snowdp  ! snow depth [m]
-  real(r8), INTENT(inout) :: scv     ! snow mass - water equivalent [kg/m2]
-  integer,  INTENT(inout) :: snl     ! Number of snow
+   real(r8), intent(inout) :: wice_soisno(lb:1)   ! ice lens [kg/m2]
+   real(r8), intent(inout) :: wliq_soisno(lb:1)   ! liquid water {kg/m2]
+   real(r8), intent(inout) :: t_soisno   (lb:1)   ! nodel temperature [K]
+   real(r8), intent(inout) :: dz_soisno  (lb:1)   ! layer thickness [m]
+   real(r8), intent(inout) :: z_soisno   (lb:1)   ! node depth [m]
+   real(r8), intent(inout) :: zi_soisno  (lb-1:1) ! depth of layer interface [m]
+   real(r8), intent(inout) :: snowdp  ! snow depth [m]
+   real(r8), intent(inout) :: scv     ! snow mass - water equivalent [kg/m2]
+   integer,  intent(inout) :: snl     ! Number of snow
 
 ! Aerosol Fluxes (Jan. 07, 2023)
-  real(r8), INTENT(inout) :: &
+   real(r8), intent(inout) :: &
         mss_bcpho (lb:0), &! mass of hydrophobic BC in snow  (col,lyr) [kg]
         mss_bcphi (lb:0), &! mass of hydrophillic BC in snow (col,lyr) [kg]
         mss_ocpho (lb:0), &! mass of hydrophobic OC in snow  (col,lyr) [kg]
@@ -728,27 +728,27 @@ MODULE MOD_SnowLayersCombineDivide
 ! Aerosol Fluxes (Jan. 07, 2023)
 
 !----------------------- Local variables ------------------------------
-  real(r8) :: drr          ! thickness of the combined [m]
-  real(r8) :: dzmin(5)     ! minimum of snow layer 1 (top) to msn0 (bottom)
-  real(r8) :: zwice        ! total ice mass in snow
-  real(r8) :: zwliq        ! total liquid water in snow
+   real(r8) :: drr          ! thickness of the combined [m]
+   real(r8) :: dzmin(5)     ! minimum of snow layer 1 (top) to msn0 (bottom)
+   real(r8) :: zwice        ! total ice mass in snow
+   real(r8) :: zwliq        ! total liquid water in snow
 
-  integer :: i             ! number of do looping
-  integer :: j             ! node index
-  integer :: k             ! number of do looping
-  integer :: l             ! node index
-  integer :: msn_old       ! number of snow layer 1 (top) to msn0 (bottom)
-  integer :: mssi          ! node index
-  integer :: neibor        ! adjacent node selected for combination
+   integer :: i             ! number of DO looping
+   integer :: j             ! node index
+   integer :: k             ! number of DO looping
+   integer :: l             ! node index
+   integer :: msn_old       ! number of snow layer 1 (top) to msn0 (bottom)
+   integer :: mssi          ! node index
+   integer :: neibor        ! adjacent node selected for combination
 
-  data dzmin /0.010, 0.015, 0.025, 0.055, 0.115/
+   data dzmin /0.010, 0.015, 0.025, 0.055, 0.115/
 
 !-----------------------------------------------------------------------
 ! check the mass of ice lens of snow, when the total less than a small value,
 ! combine it with the underlying neighbor
       msn_old = snl
-      do j = msn_old+1, 0
-         if(wice_soisno(j) <= .1)then
+      DO j = msn_old+1, 0
+         IF(wice_soisno(j) <= .1)THEN
             wliq_soisno(j+1) = wliq_soisno(j+1) + wliq_soisno(j)
             wice_soisno(j+1) = wice_soisno(j+1) + wice_soisno(j)
 
@@ -767,8 +767,8 @@ MODULE MOD_SnowLayersCombineDivide
 
 
 ! shift all elements above this down one.
-            if(j > snl+1 .AND. snl < -1)then
-               do i =  j, snl+2, -1
+            IF(j > snl+1 .and. snl < -1)THEN
+               DO i =  j, snl+2, -1
                   t_soisno(i) = t_soisno(i-1)
                   wliq_soisno(i) = wliq_soisno(i-1)
                   wice_soisno(i) = wice_soisno(i-1)
@@ -784,17 +784,17 @@ MODULE MOD_SnowLayersCombineDivide
                   mss_dst3 (i) = mss_dst3 (i-1)
                   mss_dst4 (i) = mss_dst4 (i-1)
 !Aerosol Fluxes (January 07, 2023)
-               enddo
-            endif
+               ENDDO
+            ENDIF
 
             snl = snl + 1
 !*          write(6,*) 'one snow layer is gone'
 
-         endif
+         ENDIF
 
-      enddo
+      ENDDO
 
-      if(snl == 0)then
+      IF(snl == 0)THEN
          scv = 0._r8
          snowdp = 0._r8
 
@@ -810,27 +810,27 @@ MODULE MOD_SnowLayersCombineDivide
 !Aerosol Fluxes (January 07, 2023)
 
 !*       write(6,*) 'all snow has gone'
-         return
-      else
+         RETURN
+      ELSE
          scv = 0._r8
          snowdp = 0._r8
          zwice = 0._r8
          zwliq = 0._r8
-         do j = snl + 1, 0
+         DO j = snl + 1, 0
             scv = scv + wice_soisno(j) + wliq_soisno(j)
             snowdp = snowdp + dz_soisno(j)
             zwice = zwice + wice_soisno(j)
             zwliq = zwliq + wliq_soisno(j)
-         enddo
-      endif
+         ENDDO
+      ENDIF
 !-----------------------------------------------------------------------
 ! check the snow depth
 
-      if(snowdp < 0.01_r8)then       !!! all snow gone
+      IF(snowdp < 0.01_r8)THEN       !!! all snow gone
 
          snl = 0
          scv = zwice
-         if(scv <= 0._r8) snowdp = 0._r8
+         IF(scv <= 0._r8) snowdp = 0._r8
 
 !Aerosol Fluxes (January 07, 2023)
          mss_bcphi(:) = 0._r8
@@ -846,113 +846,113 @@ MODULE MOD_SnowLayersCombineDivide
 ! the liquid water assumed ponding on soil surface
          wliq_soisno(1) = wliq_soisno(1) + zwliq
 !*       write(6,'(17h all snow is gone)')
-         return
+         RETURN
 
-      else                        !!! snow layers combined
+      ELSE                        !!! snow layers combined
 
 ! two or more layers
 
-        if(snl < -1)then
-           msn_old = snl
-           mssi = 1
-           do i = msn_old+1, 0
+         IF(snl < -1)THEN
+            msn_old = snl
+            mssi = 1
+            DO i = msn_old+1, 0
 
 ! If top node is removed, combine with bottom neighbor
-              if(dz_soisno(i) < dzmin(mssi))then
-                 if(i == snl+1)then
-                    neibor = i + 1
+               IF(dz_soisno(i) < dzmin(mssi))THEN
+                  IF(i == snl+1)THEN
+                     neibor = i + 1
 
 ! If the bottom neighbor is not snow, combine with the top neighbor
-                 else if(i == 0)then
-                    neibor = i - 1
+                  ELSE IF(i == 0)THEN
+                     neibor = i - 1
 
-! If none of the above special cases apply, combine with the thinnest neighbor
-                 else
-                   neibor = i + 1
-                   if((dz_soisno(i-1)+dz_soisno(i)) < (dz_soisno(i+1)+dz_soisno(i))) neibor = i-1
-                 endif
+! If NONE of the above special cases apply, combine with the thinnest neighbor
+                  ELSE
+                     neibor = i + 1
+                     IF((dz_soisno(i-1)+dz_soisno(i)) < (dz_soisno(i+1)+dz_soisno(i))) neibor = i-1
+                  ENDIF
 
 ! Node l and j are combined and stored as node j.
 
-                 if(neibor > i)then
-                    j = neibor
-                    l = i
-                 else
-                    j = i
-                    l = neibor
-                 endif
-                 call combo ( dz_soisno(j), wliq_soisno(j), wice_soisno(j), t_soisno(j),&
-                              dz_soisno(l), wliq_soisno(l), wice_soisno(l), t_soisno(l) )
+                  IF(neibor > i)THEN
+                     j = neibor
+                     l = i
+                  ELSE
+                     j = i
+                     l = neibor
+                  ENDIF
+                  CALL combo ( dz_soisno(j), wliq_soisno(j), wice_soisno(j), t_soisno(j),&
+                               dz_soisno(l), wliq_soisno(l), wice_soisno(l), t_soisno(l) )
 
 !Aerosol Fluxes (January 07, 2023)
-                 mss_bcphi(j) = mss_bcphi(j)  + mss_bcphi(l)
-                 mss_bcpho(j) = mss_bcpho(j)  + mss_bcpho(l)
-                 mss_ocphi(j) = mss_ocphi(j)  + mss_ocphi(l)
-                 mss_ocpho(j) = mss_ocpho(j)  + mss_ocpho(l)
-                 mss_dst1 (j) = mss_dst1 (j)  + mss_dst1 (l)
-                 mss_dst2 (j) = mss_dst2 (j)  + mss_dst2 (l)
-                 mss_dst3 (j) = mss_dst3 (j)  + mss_dst3 (l)
-                 mss_dst4 (j) = mss_dst4 (j)  + mss_dst4 (l)
+                  mss_bcphi(j) = mss_bcphi(j)  + mss_bcphi(l)
+                  mss_bcpho(j) = mss_bcpho(j)  + mss_bcpho(l)
+                  mss_ocphi(j) = mss_ocphi(j)  + mss_ocphi(l)
+                  mss_ocpho(j) = mss_ocpho(j)  + mss_ocpho(l)
+                  mss_dst1 (j) = mss_dst1 (j)  + mss_dst1 (l)
+                  mss_dst2 (j) = mss_dst2 (j)  + mss_dst2 (l)
+                  mss_dst3 (j) = mss_dst3 (j)  + mss_dst3 (l)
+                  mss_dst4 (j) = mss_dst4 (j)  + mss_dst4 (l)
 !Aerosol Fluxes (January 07, 2023)
 
 
 ! Now shift all elements above this down one.
 
-                 if(j-1 > snl+1) then
-                    do k = j-1, snl+2, -1
-                       t_soisno(k) = t_soisno(k-1)
-                       wice_soisno(k) = wice_soisno(k-1)
-                       wliq_soisno(k) = wliq_soisno(k-1)
-                       dz_soisno(k) = dz_soisno(k-1)
+                  IF(j-1 > snl+1) THEN
+                     DO k = j-1, snl+2, -1
+                        t_soisno(k) = t_soisno(k-1)
+                        wice_soisno(k) = wice_soisno(k-1)
+                        wliq_soisno(k) = wliq_soisno(k-1)
+                        dz_soisno(k) = dz_soisno(k-1)
 
 !Aerosol Fluxes (January 07, 2023)
-                       mss_bcphi(k) = mss_bcphi(k-1)
-                       mss_bcpho(k) = mss_bcpho(k-1)
-                       mss_ocphi(k) = mss_ocphi(k-1)
-                       mss_ocpho(k) = mss_ocpho(k-1)
-                       mss_dst1 (k) = mss_dst1 (k-1)
-                       mss_dst2 (k) = mss_dst2 (k-1)
-                       mss_dst3 (k) = mss_dst3 (k-1)
-                       mss_dst4 (k) = mss_dst4 (k-1)
+                        mss_bcphi(k) = mss_bcphi(k-1)
+                        mss_bcpho(k) = mss_bcpho(k-1)
+                        mss_ocphi(k) = mss_ocphi(k-1)
+                        mss_ocpho(k) = mss_ocpho(k-1)
+                        mss_dst1 (k) = mss_dst1 (k-1)
+                        mss_dst2 (k) = mss_dst2 (k-1)
+                        mss_dst3 (k) = mss_dst3 (k-1)
+                        mss_dst4 (k) = mss_dst4 (k-1)
 !Aerosol Fluxes (January 07, 2023)
-                    enddo
-                 endif
+                     ENDDO
+                  ENDIF
 
-                 snl = snl + 1
+                  snl = snl + 1
 
 !*    write(6,'(7h Nodes ,i4,4h and,i4,14h combined into,i4)') l,j,j
 
-                 if(snl >= -1) EXIT
+                  IF(snl >= -1) EXIT
 
 ! The layer thickness great than the prescibed minimum value
 
-              else
-                 mssi = mssi + 1
-              endif
-           enddo
+               ELSE
+                  mssi = mssi + 1
+               ENDIF
+            ENDDO
 
-        end if
+         ENDIF
 
 ! Reset the node depth and the depth of layer interface
 
-        zi_soisno(0) = 0._r8
-        do k = 0, snl+1, -1
-           z_soisno(k) = zi_soisno(k) - 0.5_r8*dz_soisno(k)
-           zi_soisno(k-1) = zi_soisno(k) - dz_soisno(k)
-        enddo
+         zi_soisno(0) = 0._r8
+         DO k = 0, snl+1, -1
+            z_soisno(k) = zi_soisno(k) - 0.5_r8*dz_soisno(k)
+            zi_soisno(k-1) = zi_soisno(k) - dz_soisno(k)
+         ENDDO
 
-      endif                       !!! snow layers combined
+      ENDIF                       !!! snow layers combined
 
- END SUBROUTINE SnowLayersCombine_snicar
+   END SUBROUTINE SnowLayersCombine_snicar
 !-----------------------------------------------------------------------
 
 
- SUBROUTINE SnowLayersDivide_snicar (lb,snl,z_soisno,dz_soisno,zi_soisno,&
-                                     wliq_soisno,wice_soisno,t_soisno,&
+   SUBROUTINE SnowLayersDivide_snicar (lb,snl,z_soisno,dz_soisno,zi_soisno,&
+                                       wliq_soisno,wice_soisno,t_soisno,&
 
 ! Aerosol Fluxes (Jan. 07, 2023)
-                                     mss_bcpho, mss_bcphi, mss_ocpho, mss_ocphi,&
-                                     mss_dst1 , mss_dst2 , mss_dst3 , mss_dst4 )
+                                       mss_bcpho, mss_bcphi, mss_ocpho, mss_ocphi,&
+                                       mss_dst1 , mss_dst2 , mss_dst3 , mss_dst4 )
 ! Aerosol Fluxes (Jan. 07, 2023)
 
 
@@ -965,21 +965,21 @@ MODULE MOD_SnowLayersCombineDivide
 ! Yongjiu Dai, 01/2023: added Aerosol fluxes from SNICAR model
 !=======================================================================
 
-  IMPLICIT NONE
+   IMPLICIT NONE
 
 !-------------------------- Dummy argument -----------------------------
 
-   integer, INTENT(in) :: lb       ! lower bound of array
-   integer, INTENT(inout) :: snl   ! Number of snow
-  real(r8), INTENT(inout) :: wice_soisno(lb:0)   ! ice lens [kg/m2]
-  real(r8), INTENT(inout) :: wliq_soisno(lb:0)   ! liquid water [kg/m2]
-  real(r8), INTENT(inout) :: t_soisno   (lb:0)   ! Nodel temperature [K]
-  real(r8), INTENT(inout) :: dz_soisno  (lb:0)   ! Layer thickness [m]
-  real(r8), INTENT(inout) :: z_soisno   (lb:0)   ! Node depth [m]
-  real(r8), INTENT(inout) :: zi_soisno  (lb-1:0) ! Depth of layer interface [m]
+    integer, intent(in) :: lb       ! lower bound of array
+    integer, intent(inout) :: snl   ! Number of snow
+   real(r8), intent(inout) :: wice_soisno(lb:0)   ! ice lens [kg/m2]
+   real(r8), intent(inout) :: wliq_soisno(lb:0)   ! liquid water [kg/m2]
+   real(r8), intent(inout) :: t_soisno   (lb:0)   ! Nodel temperature [K]
+   real(r8), intent(inout) :: dz_soisno  (lb:0)   ! Layer thickness [m]
+   real(r8), intent(inout) :: z_soisno   (lb:0)   ! Node depth [m]
+   real(r8), intent(inout) :: zi_soisno  (lb-1:0) ! Depth of layer interface [m]
 
 ! Aerosol Fluxes (Jan. 07, 2023)
-  real(r8), INTENT(inout) :: &
+   real(r8), intent(inout) :: &
         mss_bcpho (lb:0), &! mass of hydrophobic BC in snow  (col,lyr) [kg]
         mss_bcphi (lb:0), &! mass of hydrophillic BC in snow (col,lyr) [kg]
         mss_ocpho (lb:0), &! mass of hydrophobic OC in snow  (col,lyr) [kg]
@@ -993,26 +993,26 @@ MODULE MOD_SnowLayersCombineDivide
 !----------------------- Local variables ------------------------------
 
 ! numbering from 1 (surface) msno (bottom)
-  real(r8) :: drr      ! thickness of the combined [m]
-  real(r8) :: dzsno(5) ! Snow layer thickness [m]
-  real(r8) :: swice(5) ! Partial volume of ice [m3/m3]
-  real(r8) :: swliq(5) ! Partial volume of liquid water [m3/m3]
-  real(r8) :: tsno(5)  ! Nodel temperature [K]
+   real(r8) :: drr      ! thickness of the combined [m]
+   real(r8) :: dzsno(5) ! Snow layer thickness [m]
+   real(r8) :: swice(5) ! Partial volume of ice [m3/m3]
+   real(r8) :: swliq(5) ! Partial volume of liquid water [m3/m3]
+   real(r8) :: tsno(5)  ! Nodel temperature [K]
 
-  integer k            ! number of do looping
-  integer msno         ! number of snow layer 1 (top) to msno (bottom)
+   integer k            ! number of DO looping
+   integer msno         ! number of snow layer 1 (top) to msno (bottom)
 
-  real(r8) zwice,zwliq,propor
+   real(r8) zwice,zwliq,propor
 
 !Aerosol Fluxes (January 07, 2023)
-  real(r8) mss_aerosol(5,8)
-  real(r8) z_mss_aerosol(8)
+   real(r8) mss_aerosol(5,8)
+   real(r8) z_mss_aerosol(8)
 !Aerosol Fluxes (January 07, 2023)
 
 !-----------------------------------------------------------------------
 
       msno = abs(snl)
-      do k = 1, msno
+      DO k = 1, msno
          dzsno(k) = dz_soisno  (k + snl)
          swice(k) = wice_soisno(k + snl)
          swliq(k) = wliq_soisno(k + snl)
@@ -1029,221 +1029,221 @@ MODULE MOD_SnowLayersCombineDivide
          mss_aerosol(k, 8) = mss_dst4 (k+snl)
 !Aerosol Fluxes (January 07, 2023)
 
-      enddo
+      ENDDO
 
-      if(msno == 1)then
-         if(dzsno(1) > 0.03)then
-         msno = 2
+      IF(msno == 1)THEN
+         IF(dzsno(1) > 0.03)THEN
+            msno = 2
 ! Specified a new snow layer
-         dzsno(1) = dzsno(1)/2.
-         swice(1) = swice(1)/2.
-         swliq(1) = swliq(1)/2.
+            dzsno(1) = dzsno(1)/2.
+            swice(1) = swice(1)/2.
+            swliq(1) = swliq(1)/2.
 !Aerosol Fluxes (January 07, 2023)
-         mss_aerosol(1,:) = mss_aerosol(1,:)/2.
-!Aerosol Fluxes (January 07, 2023)
-
-         dzsno(2) = dzsno(1)
-         swice(2) = swice(1)
-         swliq(2) = swliq(1)
-!Aerosol Fluxes (January 07, 2023)
-         mss_aerosol(2,:) = mss_aerosol(1,:)
+            mss_aerosol(1,:) = mss_aerosol(1,:)/2.
 !Aerosol Fluxes (January 07, 2023)
 
-         tsno(2)  = tsno(1)
-
-!        write(6,*)'Subdivided Top Node into two layer (1/2)'
-         endif
-      endif
-
-      if(msno > 1)then
-         if(dzsno(1) > 0.02)then
-         drr = dzsno(1) - 0.02
-         propor = drr/dzsno(1)
-         zwice = propor*swice(1)
-         zwliq = propor*swliq(1)
+            dzsno(2) = dzsno(1)
+            swice(2) = swice(1)
+            swliq(2) = swliq(1)
 !Aerosol Fluxes (January 07, 2023)
-         z_mss_aerosol(:) = propor*mss_aerosol(1,:)
+            mss_aerosol(2,:) = mss_aerosol(1,:)
 !Aerosol Fluxes (January 07, 2023)
 
-         propor = 0.02/dzsno(1)
-         swice(1) = propor*swice(1)
-         swliq(1) = propor*swliq(1)
+            tsno(2)  = tsno(1)
+
+!           write(6,*)'Subdivided Top Node into two layer (1/2)'
+         ENDIF
+      ENDIF
+
+      IF(msno > 1)THEN
+         IF(dzsno(1) > 0.02)THEN
+            drr = dzsno(1) - 0.02
+            propor = drr/dzsno(1)
+            zwice = propor*swice(1)
+            zwliq = propor*swliq(1)
 !Aerosol Fluxes (January 07, 2023)
-         mss_aerosol(1,:) = propor*mss_aerosol(1,:)
+            z_mss_aerosol(:) = propor*mss_aerosol(1,:)
 !Aerosol Fluxes (January 07, 2023)
 
-         dzsno(1) = 0.02
-
-         call combo(dzsno(2),swliq(2),swice(2),tsno(2), &
-                    drr,zwliq,zwice,tsno(1))
-
+            propor = 0.02/dzsno(1)
+            swice(1) = propor*swice(1)
+            swliq(1) = propor*swliq(1)
 !Aerosol Fluxes (January 07, 2023)
-         mss_aerosol(2,:) = z_mss_aerosol(:) + mss_aerosol(2,:)
+            mss_aerosol(1,:) = propor*mss_aerosol(1,:)
 !Aerosol Fluxes (January 07, 2023)
 
-!        write(6,*) 'Subdivided Top Node &
-!                    20 mm combined into underlying neighbor'
+            dzsno(1) = 0.02
 
-         if(msno <= 2 .AND. dzsno(2) > 0.07)then
+            CALL combo(dzsno(2),swliq(2),swice(2),tsno(2), &
+                       drr,zwliq,zwice,tsno(1))
+
+!Aerosol Fluxes (January 07, 2023)
+            mss_aerosol(2,:) = z_mss_aerosol(:) + mss_aerosol(2,:)
+!Aerosol Fluxes (January 07, 2023)
+
+!           write(6,*) 'Subdivided Top Node &
+!                       20 mm combined into underlying neighbor'
+
+            IF(msno <= 2 .and. dzsno(2) > 0.07)THEN
 ! subdivided a new layer
-            msno = 3
-            dzsno(2) = dzsno(2)/2.
-            swice(2) = swice(2)/2.
-            swliq(2) = swliq(2)/2.
+               msno = 3
+               dzsno(2) = dzsno(2)/2.
+               swice(2) = swice(2)/2.
+               swliq(2) = swliq(2)/2.
 !Aerosol Fluxes (January 07, 2023)
-            mss_aerosol(2,:) = mss_aerosol(2,:)/2.
-!Aerosol Fluxes (January 07, 2023)
-
-            dzsno(3) = dzsno(2)
-            swice(3) = swice(2)
-            swliq(3) = swliq(2)
-!Aerosol Fluxes (January 07, 2023)
-            mss_aerosol(3,:) = mss_aerosol(2,:)
+               mss_aerosol(2,:) = mss_aerosol(2,:)/2.
 !Aerosol Fluxes (January 07, 2023)
 
-            tsno(3)  = tsno(2)
-         endif
-         endif
-      endif
-
-      if(msno > 2)then
-         if(dzsno(2) > 0.05)then
-         drr = dzsno(2) - 0.05
-         propor = drr/dzsno(2)
-         zwice = propor*swice(2)
-         zwliq = propor*swliq(2)
+               dzsno(3) = dzsno(2)
+               swice(3) = swice(2)
+               swliq(3) = swliq(2)
 !Aerosol Fluxes (January 07, 2023)
-         z_mss_aerosol(:) = propor*mss_aerosol(2,:)
+               mss_aerosol(3,:) = mss_aerosol(2,:)
 !Aerosol Fluxes (January 07, 2023)
 
-         propor = 0.05/dzsno(2)
-         swice(2) = propor*swice(2)
-         swliq(2) = propor*swliq(2)
+               tsno(3)  = tsno(2)
+            ENDIF
+         ENDIF
+      ENDIF
+
+      IF(msno > 2)THEN
+         IF(dzsno(2) > 0.05)THEN
+            drr = dzsno(2) - 0.05
+            propor = drr/dzsno(2)
+            zwice = propor*swice(2)
+            zwliq = propor*swliq(2)
 !Aerosol Fluxes (January 07, 2023)
-         mss_aerosol(2,:) = propor*mss_aerosol(2,:)
+            z_mss_aerosol(:) = propor*mss_aerosol(2,:)
 !Aerosol Fluxes (January 07, 2023)
 
-         dzsno(2) = 0.05
-
-         call combo(dzsno(3),swliq(3),swice(3),tsno(3), &
-                    drr,     zwliq,   zwice,   tsno(2))
-
+            propor = 0.05/dzsno(2)
+            swice(2) = propor*swice(2)
+            swliq(2) = propor*swliq(2)
 !Aerosol Fluxes (January 07, 2023)
-         mss_aerosol(3,:) = z_mss_aerosol(:) + mss_aerosol(3,:)
+            mss_aerosol(2,:) = propor*mss_aerosol(2,:)
 !Aerosol Fluxes (January 07, 2023)
 
-!        write(6,*)'Subdivided 50 mm from the subsface layer &
-!                   &and combined into underlying neighbor'
+            dzsno(2) = 0.05
 
-         if(msno <= 3 .AND. dzsno(3) > 0.18)then
+            CALL combo(dzsno(3),swliq(3),swice(3),tsno(3), &
+                       drr,     zwliq,   zwice,   tsno(2))
+
+!Aerosol Fluxes (January 07, 2023)
+            mss_aerosol(3,:) = z_mss_aerosol(:) + mss_aerosol(3,:)
+!Aerosol Fluxes (January 07, 2023)
+
+!           write(6,*)'Subdivided 50 mm from the subsface layer &
+!                      &and combined into underlying neighbor'
+
+            IF(msno <= 3 .and. dzsno(3) > 0.18)THEN
 ! subdivided a new layer
-            msno =  4
-            dzsno(3) = dzsno(3)/2.
-            swice(3) = swice(3)/2.
-            swliq(3) = swliq(3)/2.
+               msno =  4
+               dzsno(3) = dzsno(3)/2.
+               swice(3) = swice(3)/2.
+               swliq(3) = swliq(3)/2.
 !Aerosol Fluxes (January 07, 2023)
-            mss_aerosol(3,:) = mss_aerosol(3,:)/2.
-!Aerosol Fluxes (January 07, 2023)
-
-            dzsno(4) = dzsno(3)
-            swice(4) = swice(3)
-            swliq(4) = swliq(3)
-!Aerosol Fluxes (January 07, 2023)
-            mss_aerosol(4,:) = mss_aerosol(3,:)
+               mss_aerosol(3,:) = mss_aerosol(3,:)/2.
 !Aerosol Fluxes (January 07, 2023)
 
-            tsno(4)  = tsno(3)
-
-         endif
-         endif
-      endif
-
-      if(msno > 3)then
-         if(dzsno(3) > 0.11)then
-         drr = dzsno(3) - 0.11
-         propor = drr/dzsno(3)
-         zwice = propor*swice(3)
-         zwliq = propor*swliq(3)
+               dzsno(4) = dzsno(3)
+               swice(4) = swice(3)
+               swliq(4) = swliq(3)
 !Aerosol Fluxes (January 07, 2023)
-         z_mss_aerosol(:) = propor*mss_aerosol(3,:)
+               mss_aerosol(4,:) = mss_aerosol(3,:)
 !Aerosol Fluxes (January 07, 2023)
 
-         propor = 0.11/dzsno(3)
-         swice(3) = propor*swice(3)
-         swliq(3) = propor*swliq(3)
+               tsno(4)  = tsno(3)
+
+            ENDIF
+         ENDIF
+      ENDIF
+
+      IF(msno > 3)THEN
+         IF(dzsno(3) > 0.11)THEN
+            drr = dzsno(3) - 0.11
+            propor = drr/dzsno(3)
+            zwice = propor*swice(3)
+            zwliq = propor*swliq(3)
 !Aerosol Fluxes (January 07, 2023)
-         mss_aerosol(3,:) = propor*mss_aerosol(3,:)
+            z_mss_aerosol(:) = propor*mss_aerosol(3,:)
 !Aerosol Fluxes (January 07, 2023)
 
-         dzsno(3) = 0.11
-
-         call combo(dzsno(4),swliq(4),swice(4),tsno(4), &
-                    drr,     zwliq,   zwice,   tsno(3))
-
+            propor = 0.11/dzsno(3)
+            swice(3) = propor*swice(3)
+            swliq(3) = propor*swliq(3)
 !Aerosol Fluxes (January 07, 2023)
-         mss_aerosol(4,:) = z_mss_aerosol(:) + mss_aerosol(4,:)
+            mss_aerosol(3,:) = propor*mss_aerosol(3,:)
 !Aerosol Fluxes (January 07, 2023)
 
-!        write(6,*)'Subdivided 110 mm from the third Node &
-!                   &and combined into underlying neighbor'
+            dzsno(3) = 0.11
 
-         if(msno <= 4 .AND. dzsno(4) > 0.41)then
+            CALL combo(dzsno(4),swliq(4),swice(4),tsno(4), &
+                       drr,     zwliq,   zwice,   tsno(3))
+
+!Aerosol Fluxes (January 07, 2023)
+            mss_aerosol(4,:) = z_mss_aerosol(:) + mss_aerosol(4,:)
+!Aerosol Fluxes (January 07, 2023)
+
+!           write(6,*)'Subdivided 110 mm from the third Node &
+!                      &and combined into underlying neighbor'
+
+            IF(msno <= 4 .and. dzsno(4) > 0.41)THEN
 ! subdivided a new layer
-            msno = 5
-            dzsno(4) = dzsno(4)/2.
-            swice(4) = swice(4)/2.
-            swliq(4) = swliq(4)/2.
+               msno = 5
+               dzsno(4) = dzsno(4)/2.
+               swice(4) = swice(4)/2.
+               swliq(4) = swliq(4)/2.
 !Aerosol Fluxes (January 07, 2023)
-            mss_aerosol(4,:) = mss_aerosol(4,:)/2.
-!Aerosol Fluxes (January 07, 2023)
-
-            dzsno(5) = dzsno(4)
-            swice(5) = swice(4)
-            swliq(5) = swliq(4)
-!Aerosol Fluxes (January 07, 2023)
-            mss_aerosol(5,:) = mss_aerosol(4,:)
+               mss_aerosol(4,:) = mss_aerosol(4,:)/2.
 !Aerosol Fluxes (January 07, 2023)
 
-            tsno(5)  = tsno(4)
-
-         endif
-         endif
-      endif
-
-      if(msno > 4)then
-         if(dzsno(4) > 0.23)then
-         drr = dzsno(4) - 0.23
-         propor = drr/dzsno(4)
-         zwice = propor*swice(4)
-         zwliq = propor*swliq(4)
+               dzsno(5) = dzsno(4)
+               swice(5) = swice(4)
+               swliq(5) = swliq(4)
 !Aerosol Fluxes (January 07, 2023)
-         z_mss_aerosol(:) = propor*mss_aerosol(4,:)
+               mss_aerosol(5,:) = mss_aerosol(4,:)
 !Aerosol Fluxes (January 07, 2023)
 
-         propor = 0.23/dzsno(4)
-         swice(4) = propor*swice(4)
-         swliq(4) = propor*swliq(4)
+               tsno(5)  = tsno(4)
+
+            ENDIF
+         ENDIF
+      ENDIF
+
+      IF(msno > 4)THEN
+         IF(dzsno(4) > 0.23)THEN
+            drr = dzsno(4) - 0.23
+            propor = drr/dzsno(4)
+            zwice = propor*swice(4)
+            zwliq = propor*swliq(4)
 !Aerosol Fluxes (January 07, 2023)
-         mss_aerosol(4,:) = propor*mss_aerosol(4,:)
+            z_mss_aerosol(:) = propor*mss_aerosol(4,:)
 !Aerosol Fluxes (January 07, 2023)
 
-         dzsno(4) = 0.23
-
-         call combo(dzsno(5),swliq(5),swice(5),tsno(5), &
-                    drr,     zwliq,   zwice,   tsno(4))
-
+            propor = 0.23/dzsno(4)
+            swice(4) = propor*swice(4)
+            swliq(4) = propor*swliq(4)
 !Aerosol Fluxes (January 07, 2023)
-         mss_aerosol(5,:) = z_mss_aerosol(:) + mss_aerosol(5,:)
+            mss_aerosol(4,:) = propor*mss_aerosol(4,:)
 !Aerosol Fluxes (January 07, 2023)
 
-!        write(6,*)'Subdivided 230 mm from the fourth Node &
-!                   'and combined into underlying neighbor'
-         endif
-      endif
+            dzsno(4) = 0.23
+
+            CALL combo(dzsno(5),swliq(5),swice(5),tsno(5), &
+                       drr,     zwliq,   zwice,   tsno(4))
+
+!Aerosol Fluxes (January 07, 2023)
+            mss_aerosol(5,:) = z_mss_aerosol(:) + mss_aerosol(5,:)
+!Aerosol Fluxes (January 07, 2023)
+
+!           write(6,*)'Subdivided 230 mm from the fourth Node &
+!                     'and combined into underlying neighbor'
+         ENDIF
+      ENDIF
 
       snl = - msno
 
-      do k = snl+1, 0
+      DO k = snl+1, 0
          dz_soisno(k)   = dzsno(k - snl)
          wice_soisno(k) = swice(k - snl)
          wliq_soisno(k) = swliq(k - snl)
@@ -1261,17 +1261,16 @@ MODULE MOD_SnowLayersCombineDivide
 
          t_soisno(k)  = tsno (k - snl)
 
-      enddo
+      ENDDO
 
       zi_soisno(0) = 0.
-      do k = 0, snl+1, -1
+      DO k = 0, snl+1, -1
          z_soisno(k)    = zi_soisno(k) - 0.5*dz_soisno(k)
          zi_soisno(k-1) = zi_soisno(k) - dz_soisno(k)
-      enddo
+      ENDDO
 
- END SUBROUTINE SnowLayersDivide_snicar
+   END SUBROUTINE SnowLayersDivide_snicar
 !-----------------------------------------------------------------------
-
 
 
 END MODULE MOD_SnowLayersCombineDivide

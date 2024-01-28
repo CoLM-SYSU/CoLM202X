@@ -115,9 +115,9 @@ CONTAINS
 
    SUBROUTINE Init_GlobalVars
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      integer :: nsl
+   integer :: nsl
 
       ! node depths of each soil layer
       DO nsl = 1, nl_soil
@@ -144,7 +144,7 @@ CONTAINS
          N_URB = 10
       ENDIF
 
-!     ndecomp_pools_vr = ndecomp_pools * nl_soil
+      !ndecomp_pools_vr = ndecomp_pools * nl_soil
 
    END SUBROUTINE Init_GlobalVars
 

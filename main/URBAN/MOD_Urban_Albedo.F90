@@ -12,26 +12,26 @@ MODULE MOD_Urban_Albedo
 !
 !
 !-----------------------------------------------------------------------
- USE MOD_Precision
- IMPLICIT NONE
- SAVE
+   USE MOD_Precision
+   IMPLICIT NONE
+   SAVE
 
 ! PUBLIC MEMBER FUNCTIONS:
-  PUBLIC :: alburban
+   PUBLIC :: alburban
 
 !-----------------------------------------------------------------------
 
-  CONTAINS
+CONTAINS
 
 !-----------------------------------------------------------------------
 
-  SUBROUTINE alburban (ipatch,froof,fgper,flake,hwr,hroof,&
-                       alb_roof,alb_wall,alb_gimp,alb_gper,&
-                       rho,tau,fveg,hveg,lai,sai,coszen,fwsun,tlake,&
-                       fsno_roof,fsno_gimp,fsno_gper,fsno_lake,&
-                       scv_roof,scv_gimp,scv_gper,scv_lake,&
-                       sag_roof,sag_gimp,sag_gper,sag_lake,&
-                       dfwsun,extkd,alb,ssun,ssha,sroof,swsun,swsha,sgimp,sgper,slake)
+   SUBROUTINE alburban (ipatch,froof,fgper,flake,hwr,hroof,&
+                        alb_roof,alb_wall,alb_gimp,alb_gper,&
+                        rho,tau,fveg,hveg,lai,sai,coszen,fwsun,tlake,&
+                        fsno_roof,fsno_gimp,fsno_gper,fsno_lake,&
+                        scv_roof,scv_gimp,scv_gper,scv_lake,&
+                        sag_roof,sag_gimp,sag_gper,sag_lake,&
+                        dfwsun,extkd,alb,ssun,ssha,sroof,swsun,swsha,sgimp,sgper,slake)
 
 !=======================================================================
 ! Calculates fragmented albedos (direct and diffuse) in
@@ -49,31 +49,31 @@ MODULE MOD_Urban_Albedo
 !
 !=======================================================================
 
-  USE MOD_Precision
-  USE MOD_Const_Physical, only: tfrz
-  USE MOD_Urban_Shortwave
+   USE MOD_Precision
+   USE MOD_Const_Physical, only: tfrz
+   USE MOD_Urban_Shortwave
 
-  IMPLICIT NONE
+   IMPLICIT NONE
 
 !------------------------- Dummy Arguments -----------------------------
 ! ground cover index
- INTEGER, intent(in) :: &
+   integer, intent(in) :: &
       ipatch          ! patch index
 
- REAL(r8), intent(in) :: &
+   real(r8), intent(in) :: &
       froof,         &! roof fraction
       fgper,         &! impervious ground weight fraction
       flake,         &! lake fraction
       hwr,           &! average building height to their distance
       hroof           ! average building height
 
- REAL(r8), intent(in) :: &
+   real(r8), intent(in) :: &
       alb_roof(2,2), &! roof albedo (iband,direct/diffuse)
       alb_wall(2,2), &! wall albedo (iband,direct/diffuse)
       alb_gimp(2,2), &! impervious albedo (iband,direct/diffuse)
       alb_gper(2,2)   ! pervious albedo (iband,direct/diffuse)
 
- REAL(r8), intent(in) :: &
+   real(r8), intent(in) :: &
       rho(2,2),  &! leaf reflectance (iw=iband, il=life and dead)
       tau(2,2),  &! leaf transmittance (iw=iband, il=life and dead)
       fveg,      &! fractional vegetation cover [-]
@@ -98,7 +98,7 @@ MODULE MOD_Urban_Albedo
       sag_gper,  &! non dimensional snow age [-]
       sag_lake    ! non dimensional snow age [-]
 
- REAL(r8), intent(out) :: &
+   real(r8), intent(out) :: &
       dfwsun,    &! change of fwsun
       extkd,     &! diffuse and scattered diffuse PAR extinction coefficient
       alb(2,2),  &! averaged albedo [-]
@@ -112,7 +112,7 @@ MODULE MOD_Urban_Albedo
       slake(2,2)  ! lake absorption for solar radiation,
 
 !-------------------------- Local variables ----------------------------
- REAL(r8) :: &!
+   real(r8) :: &!
       age,       &! factor to reduce visible snow alb due to snow age [-]
       albg0,     &! temporary varaiable [-]
       alb_s_inc, &! decrease in soil albedo due to wetness [-]
@@ -132,7 +132,7 @@ MODULE MOD_Urban_Albedo
       snal0,     &! alb for visible,incident on new snow (zen ang<60) [-]
       snal1       ! alb for NIR, incident on new snow (zen angle<60) [-]
 
- REAL(r8) :: &!
+   real(r8) :: &!
       erho(2),      &! effective reflection of leaf+stem
       etau(2),      &! effective transmittance of leaf+stem
       albsno(2,2),  &! snow albedo [-]
@@ -338,7 +338,7 @@ MODULE MOD_Urban_Albedo
 
       alb(:,:) = (1.-flake)*alb(:,:) + flake*alblake(:,:)
 
-  END SUBROUTINE alburban
+   END SUBROUTINE alburban
 
 END MODULE MOD_Urban_Albedo
 ! --------- EOP ----------

@@ -41,14 +41,14 @@ CONTAINS
    ! Allocates memory for Lulcc time invariant variables
    ! --------------------------------------------------------------------
 
-      USE MOD_Precision
-      USE MOD_Vars_Global
-      USE MOD_LandPatch
-      USE MOD_SPMD_Task
+   USE MOD_Precision
+   USE MOD_Vars_Global
+   USE MOD_LandPatch
+   USE MOD_SPMD_Task
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      integer :: nlc = N_land_classification
+   integer :: nlc = N_land_classification
 
       IF (p_is_worker) THEN
          allocate (lccpct_patches (numpatch, 0:nlc))
@@ -62,48 +62,48 @@ CONTAINS
 
    SUBROUTINE MAKE_LulccTransferTrace (lc_year)
 
-      USE MOD_Precision
-      USE MOD_Namelist
-      USE MOD_SPMD_Task
-      USE MOD_Grid
-      USE MOD_LandPatch
-      USE MOD_NetCDFVector
-      USE MOD_NetCDFBlock
-      USE MOD_AggregationRequestData
-      USE MOD_Mesh
-      USE MOD_MeshFilter
-      USE MOD_LandElm
-      USE MOD_DataType
-      USE MOD_Block
-      USE MOD_Pixel
-      USE MOD_5x5DataReadin
-      USE MOD_RegionClip
-      USE MOD_Utils
+   USE MOD_Precision
+   USE MOD_Namelist
+   USE MOD_SPMD_Task
+   USE MOD_Grid
+   USE MOD_LandPatch
+   USE MOD_NetCDFVector
+   USE MOD_NetCDFBlock
+   USE MOD_AggregationRequestData
+   USE MOD_Mesh
+   USE MOD_MeshFilter
+   USE MOD_LandElm
+   USE MOD_DataType
+   USE MOD_Block
+   USE MOD_Pixel
+   USE MOD_5x5DataReadin
+   USE MOD_RegionClip
+   USE MOD_Utils
 #ifdef SrfdataDiag
-      USE MOD_SrfdataDiag
+   USE MOD_SrfdataDiag
 #endif
 #ifdef RangeCheck
-      USE MOD_RangeCheck
+   USE MOD_RangeCheck
 #endif
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      integer, intent(in) :: lc_year
+   integer, intent(in) :: lc_year
 
-      ! local variables:
-      ! ---------------------------------------------------------------
-      character(len=256) :: dir_5x5, suffix, lastyr, thisyr, dir_landdata, lndname
-      integer :: i,ipatch,ipxl,ipxstt,ipxend,numpxl,ilc
-      integer, allocatable, dimension(:) :: locpxl
-      type (block_data_int32_2d)         :: lcdatafr !land cover data of last year
-      integer, allocatable, dimension(:) :: lcdatafr_one(:), lcfrbuff(:)
-      real(r8),allocatable, dimension(:) :: area_one(:)    , areabuff(:)
-      real(r8) :: sum_areabuff, gridarea
-      integer, allocatable, dimension(:) :: grid_patch_s, grid_patch_e
+   ! local variables:
+   ! ---------------------------------------------------------------
+   character(len=256) :: dir_5x5, suffix, lastyr, thisyr, dir_landdata, lndname
+   integer :: i,ipatch,ipxl,ipxstt,ipxend,numpxl,ilc
+   integer, allocatable, dimension(:) :: locpxl
+   type (block_data_int32_2d)         :: lcdatafr !land cover data of last year
+   integer, allocatable, dimension(:) :: lcdatafr_one(:), lcfrbuff(:)
+   real(r8),allocatable, dimension(:) :: area_one(:)    , areabuff(:)
+   real(r8) :: sum_areabuff, gridarea
+   integer, allocatable, dimension(:) :: grid_patch_s, grid_patch_e
 ! for surface data diag
 #ifdef SrfdataDiag
-      integer  :: ityp
-      integer, allocatable, dimension(:) :: typindex
+   integer  :: ityp
+   integer, allocatable, dimension(:) :: typindex
 
       allocate( typindex(N_land_classification+1) )
 #endif
@@ -232,10 +232,10 @@ CONTAINS
 
 
    SUBROUTINE deallocate_LulccTransferTrace
-      ! --------------------------------------------------
-      ! Deallocates memory for Lulcc time invariant variables
-      ! --------------------------------------------------
-      USE MOD_SPMD_Task
+   ! --------------------------------------------------
+   ! Deallocates memory for Lulcc time invariant variables
+   ! --------------------------------------------------
+   USE MOD_SPMD_Task
 
       IF (p_is_worker) THEN
          IF (allocated(lccpct_patches)) deallocate (lccpct_patches)

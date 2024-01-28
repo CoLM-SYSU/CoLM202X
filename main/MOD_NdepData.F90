@@ -11,13 +11,13 @@ MODULE MOD_NdepData
 
    USE MOD_Grid
    USE MOD_Mapping_Grid2Pset
-   use MOD_BGC_Vars_TimeVariables, only : ndep
-   use MOD_BGC_Vars_1DFluxes, only: ndep_to_sminn
+   USE MOD_BGC_Vars_TimeVariables, only : ndep
+   USE MOD_BGC_Vars_1DFluxes, only: ndep_to_sminn
    IMPLICIT NONE
-      
-   CHARACTER(len=256) :: file_ndep
 
-   TYPE(grid_type) :: grid_ndep
+   character(len=256) :: file_ndep
+
+   type(grid_type) :: grid_ndep
    type(mapping_grid2pset_type) :: mg2p_ndep
 
 CONTAINS
@@ -30,17 +30,17 @@ CONTAINS
    ! open ndep netcdf file from DEF_dir_runtime, read latitude and longitude info.
    ! Initialize ndep data read in.
 
-      use MOD_TimeManager
-      USE MOD_Namelist
-      USE MOD_Grid
-      USE MOD_NetCDFSerial
-      USE MOD_LandPatch
-      IMPLICIT NONE
+   USE MOD_TimeManager
+   USE MOD_Namelist
+   USE MOD_Grid
+   USE MOD_NetCDFSerial
+   USE MOD_LandPatch
+   IMPLICIT NONE
 
-      integer, intent(in) :: YY
+   integer, intent(in) :: YY
 
-      ! Local Variables
-      REAL(r8), allocatable :: lat(:), lon(:)
+   ! Local Variables
+   real(r8), allocatable :: lat(:), lon(:)
 
       file_ndep = trim(DEF_dir_runtime) // '/ndep/fndep_colm_hist_simyr1849-2006_1.9x2.5_c100428.nc'
 
@@ -49,7 +49,7 @@ CONTAINS
 
       CALL grid_ndep%define_by_center (lat, lon)
 
-      call mg2p_ndep%build (grid_ndep, landpatch)
+      CALL mg2p_ndep%build (grid_ndep, landpatch)
 
       IF (allocated(lon)) deallocate(lon)
       IF (allocated(lat)) deallocate(lat)
@@ -66,17 +66,17 @@ CONTAINS
    ! open ndep netcdf file from DEF_dir_runtime, read latitude and longitude info.
    ! Initialize ndep data read in.
 
-      use MOD_TimeManager
-      USE MOD_Namelist
-      USE MOD_Grid
-      USE MOD_NetCDFSerial
-      USE MOD_LandPatch
-      IMPLICIT NONE
+   USE MOD_TimeManager
+   USE MOD_Namelist
+   USE MOD_Grid
+   USE MOD_NetCDFSerial
+   USE MOD_LandPatch
+   IMPLICIT NONE
 
-      integer, intent(in) :: YY,MM  !sf_add
+   integer, intent(in) :: YY,MM  !sf_add
 
-      ! Local Variables
-      REAL(r8), allocatable :: lat(:), lon(:)
+   ! Local Variables
+   real(r8), allocatable :: lat(:), lon(:)
 
       file_ndep = trim(DEF_dir_runtime) // '/ndep/fndep_colm_monthly.nc' !sf_add
 
@@ -85,7 +85,7 @@ CONTAINS
 
       CALL grid_ndep%define_by_center (lat, lon)
 
-      call mg2p_ndep%build (grid_ndep, landpatch)
+      CALL mg2p_ndep%build (grid_ndep, landpatch)
 
       IF (allocated(lon)) deallocate(lon)
       IF (allocated(lat)) deallocate(lat)
@@ -108,21 +108,21 @@ CONTAINS
 ! Created by Xingjie Lu and Shupeng Zhang, 2022
 ! ===========================================================
 
-      use MOD_SPMD_Task
-      USE MOD_Namelist, only : DEF_USE_PN
-      USE MOD_DataType
-      USE MOD_NetCDFBlock
-      use MOD_LandPatch
-      use MOD_Vars_TimeInvariants
-      USE MOD_RangeCheck
-      IMPLICIT NONE
+   USE MOD_SPMD_Task
+   USE MOD_Namelist, only : DEF_USE_PN
+   USE MOD_DataType
+   USE MOD_NetCDFBlock
+   USE MOD_LandPatch
+   USE MOD_Vars_TimeInvariants
+   USE MOD_RangeCheck
+   IMPLICIT NONE
 
-      integer, intent(in) :: YY
-      logical, INTENT(in) :: iswrite
+   integer, intent(in) :: YY
+   logical, intent(in) :: iswrite
 
-      ! Local Variables
-      TYPE(block_data_real8_2d) :: f_xy_ndep
-      integer :: itime, npatch, m
+   ! Local Variables
+   type(block_data_real8_2d) :: f_xy_ndep
+   integer :: itime, npatch, m
 
       itime = max(min(YY,2006),1849) - 1848
 
@@ -131,33 +131,33 @@ CONTAINS
          CALL ncio_read_block_time (file_ndep, 'NDEP_year', grid_ndep, itime, f_xy_ndep)
       ENDIF
 
-      call mg2p_ndep%map_aweighted (f_xy_ndep, ndep)
+      CALL mg2p_ndep%map_aweighted (f_xy_ndep, ndep)
 
-      if (p_is_worker .and. iswrite) then
-         if (numpatch > 0) then
-            do npatch = 1, numpatch
+      IF (p_is_worker .and. iswrite) THEN
+         IF (numpatch > 0) THEN
+            DO npatch = 1, numpatch
                m = patchclass(npatch)
-               if(m == 0)then
+               IF(m == 0)THEN
                   ndep_to_sminn(npatch) = 0.
-               else
-                  if(DEF_USE_PN)then
+               ELSE
+                  IF(DEF_USE_PN)THEN
                      ndep_to_sminn(npatch)  = ndep(npatch) / 3600. / 365. / 24. * 5
-                  else
+                  ELSE
                      ndep_to_sminn(npatch)  = ndep(npatch) / 3600. / 365. / 24.
-                  end if
-               end if
-            end do
+                  ENDIF
+               ENDIF
+            ENDDO
 
          ENDIF
       ENDIF
 
 #ifdef RangeCheck
-      call check_vector_data ('ndep', ndep)
+      CALL check_vector_data ('ndep', ndep)
 #endif
 
    END SUBROUTINE update_ndep_data_annually
 
-      ! ----------
+   ! ----------
    SUBROUTINE update_ndep_data_monthly (YY, MM, iswrite) !sf_add
 ! ===========================================================
 !
@@ -171,21 +171,21 @@ CONTAINS
 ! Created by Xingjie Lu and Shupeng Zhang, 2022
 ! ===========================================================
 
-      use MOD_SPMD_Task
-      USE MOD_Namelist, only : DEF_USE_PN
-      USE MOD_DataType
-      USE MOD_NetCDFBlock
-      use MOD_LandPatch
-      use MOD_Vars_TimeInvariants
-      USE MOD_RangeCheck
-      IMPLICIT NONE
+   USE MOD_SPMD_Task
+   USE MOD_Namelist, only : DEF_USE_PN
+   USE MOD_DataType
+   USE MOD_NetCDFBlock
+   USE MOD_LandPatch
+   USE MOD_Vars_TimeInvariants
+   USE MOD_RangeCheck
+   IMPLICIT NONE
 
-      integer, intent(in) :: YY,MM  ! sf_add
-      logical, INTENT(in) :: iswrite
+   integer, intent(in) :: YY,MM  ! sf_add
+   logical, intent(in) :: iswrite
 
-      ! Local Variables
-      TYPE(block_data_real8_2d) :: f_xy_ndep
-      integer :: itime, npatch, m
+   ! Local Variables
+   type(block_data_real8_2d) :: f_xy_ndep
+   integer :: itime, npatch, m
 
       itime = (max(min(YY,2006),1849) - 1849)*12 + MM ! sf_add
 !      print*,"YY=",YY        ! sf_add
@@ -197,28 +197,28 @@ CONTAINS
          CALL ncio_read_block_time (file_ndep, 'NDEP_month', grid_ndep, itime, f_xy_ndep) ! sf_add
       ENDIF
 
-      call mg2p_ndep%map_aweighted (f_xy_ndep, ndep)
+      CALL mg2p_ndep%map_aweighted (f_xy_ndep, ndep)
 
-      if (p_is_worker .and. iswrite) then
-         if (numpatch > 0) then
-            do npatch = 1, numpatch
+      IF (p_is_worker .and. iswrite) THEN
+         IF (numpatch > 0) THEN
+            DO npatch = 1, numpatch
                m = patchclass(npatch)
-               if(m == 0)then
+               IF(m == 0)THEN
                   ndep_to_sminn(npatch) = 0.
-               else
-                  if(DEF_USE_PN)then
+               ELSE
+                  IF(DEF_USE_PN)THEN
                      ndep_to_sminn(npatch)  = ndep(npatch) / 3600. / 365. / 24. * 5
-                  else
+                  ELSE
                      ndep_to_sminn(npatch)  = ndep(npatch) / 3600. / 365. / 24.
-                  end if
-               end if
-            end do
+                  ENDIF
+               ENDIF
+            ENDDO
 
          ENDIF
       ENDIF
 
 #ifdef RangeCheck
-      call check_vector_data ('ndep', ndep)
+      CALL check_vector_data ('ndep', ndep)
 #endif
 
    END SUBROUTINE update_ndep_data_monthly
