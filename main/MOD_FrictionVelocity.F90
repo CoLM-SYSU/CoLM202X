@@ -73,18 +73,18 @@ CONTAINS
       zeta=zldis/obu
       zetam=1.574
       IF(zeta < -zetam)THEN           ! zeta < -1
-        fm    = log(-zetam*obu/z0m) - psi(1,-zetam) &
-              + psi(1,z0m/obu) + 1.14*((-zeta)**0.333-(zetam)**0.333)
-        ustar = vonkar*um / fm
+         fm    = log(-zetam*obu/z0m) - psi(1,-zetam) &
+               + psi(1,z0m/obu) + 1.14*((-zeta)**0.333-(zetam)**0.333)
+         ustar = vonkar*um / fm
       ELSE IF(zeta < 0.)THEN          ! -1 <= zeta < 0
-        fm    = log(zldis/z0m) - psi(1,zeta) + psi(1,z0m/obu)
-        ustar = vonkar*um / fm
+         fm    = log(zldis/z0m) - psi(1,zeta) + psi(1,z0m/obu)
+         ustar = vonkar*um / fm
       ELSE IF(zeta <= 1.)THEN         !  0 <= ztea <= 1
-        fm    = log(zldis/z0m) + 5.*zeta - 5.*z0m/obu
-        ustar = vonkar*um / fm
+         fm    = log(zldis/z0m) + 5.*zeta - 5.*z0m/obu
+         ustar = vonkar*um / fm
       ELSE                            !  1 < zeta, phi=5+zeta
-        fm    = log(obu/z0m) + 5. - 5.*z0m/obu + (5.*log(zeta)+zeta-1.)
-        ustar = vonkar*um / fm
+         fm    = log(obu/z0m) + 5. - 5.*z0m/obu + (5.*log(zeta)+zeta-1.)
+         ustar = vonkar*um / fm
       ENDIF
 
       ! for 10 meter wind-velocity
@@ -92,14 +92,14 @@ CONTAINS
       zeta=zldis/obu
       zetam=1.574
       IF(zeta < -zetam)THEN           ! zeta < -1
-        fm10m  = log(-zetam*obu/z0m) - psi(1,-zetam) &
-              + psi(1,z0m/obu) + 1.14*((-zeta)**0.333-(zetam)**0.333)
+         fm10m  = log(-zetam*obu/z0m) - psi(1,-zetam) &
+                + psi(1,z0m/obu) + 1.14*((-zeta)**0.333-(zetam)**0.333)
       ELSE IF(zeta < 0.)THEN          ! -1 <= zeta < 0
-        fm10m  = log(zldis/z0m) - psi(1,zeta) + psi(1,z0m/obu)
+         fm10m  = log(zldis/z0m) - psi(1,zeta) + psi(1,z0m/obu)
       ELSE IF(zeta <= 1.)THEN         !  0 <= ztea <= 1
-        fm10m  = log(zldis/z0m) + 5.*zeta - 5.*z0m/obu
+         fm10m  = log(zldis/z0m) + 5.*zeta - 5.*z0m/obu
       ELSE                            !  1 < zeta, phi=5+zeta
-        fm10m  = log(obu/z0m) + 5. - 5.*z0m/obu + (5.*log(zeta)+zeta-1.)
+         fm10m  = log(obu/z0m) + 5. - 5.*z0m/obu + (5.*log(zeta)+zeta-1.)
       ENDIF
 
 ! temperature profile
@@ -107,14 +107,14 @@ CONTAINS
       zeta=zldis/obu
       zetat=0.465
       IF(zeta < -zetat)THEN           ! zeta < -1
-        fh    = log(-zetat*obu/z0h)-psi(2,-zetat) &
-              + psi(2,z0h/obu) + 0.8*((zetat)**(-0.333)-(-zeta)**(-0.333))
+         fh    = log(-zetat*obu/z0h)-psi(2,-zetat) &
+               + psi(2,z0h/obu) + 0.8*((zetat)**(-0.333)-(-zeta)**(-0.333))
       ELSE IF(zeta < 0.)THEN          ! -1 <= zeta < 0
-        fh    = log(zldis/z0h) - psi(2,zeta) + psi(2,z0h/obu)
+         fh    = log(zldis/z0h) - psi(2,zeta) + psi(2,z0h/obu)
       ELSE IF(zeta <= 1.)THEN         !  0 <= ztea <= 1
-        fh    = log(zldis/z0h) + 5.*zeta - 5.*z0h/obu
+         fh    = log(zldis/z0h) + 5.*zeta - 5.*z0h/obu
       ELSE                            !  1 < zeta, phi=5+zeta
-        fh    = log(obu/z0h) + 5. - 5.*z0h/obu + (5.*log(zeta)+zeta-1.)
+         fh    = log(obu/z0h) + 5. - 5.*z0h/obu + (5.*log(zeta)+zeta-1.)
       ENDIF
 
       ! for 2 meter screen temperature
@@ -122,14 +122,14 @@ CONTAINS
       zeta=zldis/obu
       zetat=0.465
       IF(zeta < -zetat)THEN           ! zeta < -1
-        fh2m = log(-zetat*obu/z0h)-psi(2,-zetat) &
+         fh2m = log(-zetat*obu/z0h)-psi(2,-zetat) &
               + psi(2,z0h/obu) + 0.8*((zetat)**(-0.333)-(-zeta)**(-0.333))
       ELSE IF(zeta < 0.)THEN          ! -1 <= zeta < 0
-        fh2m = log(zldis/z0h) - psi(2,zeta) + psi(2,z0h/obu)
+         fh2m = log(zldis/z0h) - psi(2,zeta) + psi(2,z0h/obu)
       ELSE IF(zeta <= 1.)THEN         !  0 <= ztea <= 1
-        fh2m = log(zldis/z0h) + 5.*zeta - 5.*z0h/obu
+         fh2m = log(zldis/z0h) + 5.*zeta - 5.*z0h/obu
       ELSE                            !  1 < zeta, phi=5+zeta
-        fh2m = log(obu/z0h) + 5. - 5.*z0h/obu + (5.*log(zeta)+zeta-1.)
+         fh2m = log(obu/z0h) + 5. - 5.*z0h/obu + (5.*log(zeta)+zeta-1.)
       ENDIF
 
 ! humidity profile
@@ -137,14 +137,14 @@ CONTAINS
       zeta=zldis/obu
       zetat=0.465
       IF(zeta < -zetat)THEN           ! zeta < -1
-        fq    = log(-zetat*obu/z0q) - psi(2,-zetat) &
-              + psi(2,z0q/obu) + 0.8*((zetat)**(-0.333)-(-zeta)**(-0.333))
+         fq    = log(-zetat*obu/z0q) - psi(2,-zetat) &
+               + psi(2,z0q/obu) + 0.8*((zetat)**(-0.333)-(-zeta)**(-0.333))
       ELSE IF(zeta < 0.)THEN          ! -1 <= zeta < 0
-        fq    = log(zldis/z0q) - psi(2,zeta) + psi(2,z0q/obu)
+         fq    = log(zldis/z0q) - psi(2,zeta) + psi(2,z0q/obu)
       ELSE IF(zeta <= 1.)THEN         !  0 <= ztea <= 1
-        fq    = log(zldis/z0q) + 5.*zeta - 5.*z0q/obu
+         fq    = log(zldis/z0q) + 5.*zeta - 5.*z0q/obu
       ELSE                            !  1 < zeta, phi=5+zeta
-        fq    = log(obu/z0q) + 5. - 5.*z0q/obu + (5.*log(zeta)+zeta-1.)
+         fq    = log(obu/z0q) + 5. - 5.*z0q/obu + (5.*log(zeta)+zeta-1.)
       ENDIF
 
       ! for 2 meter screen humidity
@@ -154,7 +154,7 @@ CONTAINS
       IF(zeta < -zetat)THEN           ! zeta < -1
          fq2m = log(-zetat*obu/z0q)-psi(2,-zetat) &
                + psi(2,z0q/obu) + 0.8*((zetat)**(-0.333)-(-zeta)**(-0.333))
-      elseif (zeta < 0.) THEN         ! -1 <= zeta < 0
+      ELSEIF (zeta < 0.) THEN         ! -1 <= zeta < 0
          fq2m = log(zldis/z0q)-psi(2,zeta)+psi(2,z0q/obu)
       ELSE IF (zeta <= 1.) THEN       !  0 <= zeta <= 1
          fq2m = log(zldis/z0q)+5.*zeta-5.*z0q/obu
@@ -232,18 +232,18 @@ CONTAINS
       zeta=zldis/obu
       zetam=1.574
       IF(zeta < -zetam)THEN           ! zeta < -1
-        fm    = log(-zetam*obu/z0m) - psi(1,-zetam) &
-              + psi(1,z0m/obu) + 1.14*((-zeta)**0.333-(zetam)**0.333)
-        ustar = vonkar*um / fm
+         fm    = log(-zetam*obu/z0m) - psi(1,-zetam) &
+               + psi(1,z0m/obu) + 1.14*((-zeta)**0.333-(zetam)**0.333)
+         ustar = vonkar*um / fm
       ELSE IF(zeta < 0.)THEN          ! -1 <= zeta < 0
-        fm    = log(zldis/z0m) - psi(1,zeta) + psi(1,z0m/obu)
-        ustar = vonkar*um / fm
+         fm    = log(zldis/z0m) - psi(1,zeta) + psi(1,z0m/obu)
+         ustar = vonkar*um / fm
       ELSE IF(zeta <= 1.)THEN         !  0 <= ztea <= 1
-        fm    = log(zldis/z0m) + 5.*zeta - 5.*z0m/obu
-        ustar = vonkar*um / fm
+         fm    = log(zldis/z0m) + 5.*zeta - 5.*z0m/obu
+         ustar = vonkar*um / fm
       ELSE                            !  1 < zeta, phi=5+zeta
-        fm    = log(obu/z0m) + 5. - 5.*z0m/obu + (5.*log(zeta)+zeta-1.)
-        ustar = vonkar*um / fm
+         fm    = log(obu/z0m) + 5. - 5.*z0m/obu + (5.*log(zeta)+zeta-1.)
+         ustar = vonkar*um / fm
       ENDIF
 
       ! for canopy top wind-velocity
@@ -252,14 +252,14 @@ CONTAINS
       zeta=zldis/obu
       zetam=1.574
       IF(zeta < -zetam)THEN           ! zeta < -1
-        fmtop  = log(-zetam*obu/z0m) - psi(1,-zetam) &
-              + psi(1,z0m/obu) + 1.14*((-zeta)**0.333-(zetam)**0.333)
+         fmtop  = log(-zetam*obu/z0m) - psi(1,-zetam) &
+                + psi(1,z0m/obu) + 1.14*((-zeta)**0.333-(zetam)**0.333)
       ELSE IF(zeta < 0.)THEN          ! -1 <= zeta < 0
-        fmtop  = log(zldis/z0m) - psi(1,zeta) + psi(1,z0m/obu)
+         fmtop  = log(zldis/z0m) - psi(1,zeta) + psi(1,z0m/obu)
       ELSE IF(zeta <= 1.)THEN         !  0 <= ztea <= 1
-        fmtop  = log(zldis/z0m) + 5.*zeta - 5.*z0m/obu
+         fmtop  = log(zldis/z0m) + 5.*zeta - 5.*z0m/obu
       ELSE                            !  1 < zeta, phi=5+zeta
-        fmtop  = log(obu/z0m) + 5. - 5.*z0m/obu + (5.*log(zeta)+zeta-1.)
+         fmtop  = log(obu/z0m) + 5. - 5.*z0m/obu + (5.*log(zeta)+zeta-1.)
       ENDIF
 
 ! temperature profile
@@ -267,14 +267,14 @@ CONTAINS
       zeta=zldis/obu
       zetat=0.465
       IF(zeta < -zetat)THEN           ! zeta < -1
-        fh    = log(-zetat*obu/z0h)-psi(2,-zetat) &
-              + psi(2,z0h/obu) + 0.8*((zetat)**(-0.333)-(-zeta)**(-0.333))
+         fh    = log(-zetat*obu/z0h)-psi(2,-zetat) &
+               + psi(2,z0h/obu) + 0.8*((zetat)**(-0.333)-(-zeta)**(-0.333))
       ELSE IF(zeta < 0.)THEN          ! -1 <= zeta < 0
-        fh    = log(zldis/z0h) - psi(2,zeta) + psi(2,z0h/obu)
+         fh    = log(zldis/z0h) - psi(2,zeta) + psi(2,z0h/obu)
       ELSE IF(zeta <= 1.)THEN         !  0 <= ztea <= 1
-        fh    = log(zldis/z0h) + 5.*zeta - 5.*z0h/obu
+         fh    = log(zldis/z0h) + 5.*zeta - 5.*z0h/obu
       ELSE                            !  1 < zeta, phi=5+zeta
-        fh    = log(obu/z0h) + 5. - 5.*z0h/obu + (5.*log(zeta)+zeta-1.)
+         fh    = log(obu/z0h) + 5. - 5.*z0h/obu + (5.*log(zeta)+zeta-1.)
       ENDIF
 
       ! for 2 meter screen temperature
@@ -282,14 +282,14 @@ CONTAINS
       zeta=zldis/obu
       zetat=0.465
       IF(zeta < -zetat)THEN           ! zeta < -1
-        fh2m = log(-zetat*obu/z0h)-psi(2,-zetat) &
+         fh2m = log(-zetat*obu/z0h)-psi(2,-zetat) &
               + psi(2,z0h/obu) + 0.8*((zetat)**(-0.333)-(-zeta)**(-0.333))
       ELSE IF(zeta < 0.)THEN          ! -1 <= zeta < 0
-        fh2m = log(zldis/z0h) - psi(2,zeta) + psi(2,z0h/obu)
+         fh2m = log(zldis/z0h) - psi(2,zeta) + psi(2,z0h/obu)
       ELSE IF(zeta <= 1.)THEN         !  0 <= ztea <= 1
-        fh2m = log(zldis/z0h) + 5.*zeta - 5.*z0h/obu
+         fh2m = log(zldis/z0h) + 5.*zeta - 5.*z0h/obu
       ELSE                            !  1 < zeta, phi=5+zeta
-        fh2m = log(obu/z0h) + 5. - 5.*z0h/obu + (5.*log(zeta)+zeta-1.)
+         fh2m = log(obu/z0h) + 5. - 5.*z0h/obu + (5.*log(zeta)+zeta-1.)
       ENDIF
 
       ! for top layer temperature
@@ -297,14 +297,14 @@ CONTAINS
       zeta=zldis/obu
       zetat=0.465
       IF(zeta < -zetat)THEN           ! zeta < -1
-        fht = log(-zetat*obu/z0h)-psi(2,-zetat) &
-              + psi(2,z0h/obu) + 0.8*((zetat)**(-0.333)-(-zeta)**(-0.333))
+         fht = log(-zetat*obu/z0h)-psi(2,-zetat) &
+             + psi(2,z0h/obu) + 0.8*((zetat)**(-0.333)-(-zeta)**(-0.333))
       ELSE IF(zeta < 0.)THEN          ! -1 <= zeta < 0
-        fht = log(zldis/z0h) - psi(2,zeta) + psi(2,z0h/obu)
+         fht = log(zldis/z0h) - psi(2,zeta) + psi(2,z0h/obu)
       ELSE IF(zeta <= 1.)THEN         !  0 <= ztea <= 1
-        fht = log(zldis/z0h) + 5.*zeta - 5.*z0h/obu
+         fht = log(zldis/z0h) + 5.*zeta - 5.*z0h/obu
       ELSE                            !  1 < zeta, phi=5+zeta
-        fht = log(obu/z0h) + 5. - 5.*z0h/obu + (5.*log(zeta)+zeta-1.)
+         fht = log(obu/z0h) + 5. - 5.*z0h/obu + (5.*log(zeta)+zeta-1.)
       ENDIF
 
       ! for canopy top phi(h)
@@ -327,14 +327,14 @@ CONTAINS
       zeta=zldis/obu
       zetat=0.465
       IF(zeta < -zetat)THEN           ! zeta < -1
-        fq    = log(-zetat*obu/z0q) - psi(2,-zetat) &
-              + psi(2,z0q/obu) + 0.8*((zetat)**(-0.333)-(-zeta)**(-0.333))
+         fq    = log(-zetat*obu/z0q) - psi(2,-zetat) &
+               + psi(2,z0q/obu) + 0.8*((zetat)**(-0.333)-(-zeta)**(-0.333))
       ELSE IF(zeta < 0.)THEN          ! -1 <= zeta < 0
-        fq    = log(zldis/z0q) - psi(2,zeta) + psi(2,z0q/obu)
+         fq    = log(zldis/z0q) - psi(2,zeta) + psi(2,z0q/obu)
       ELSE IF(zeta <= 1.)THEN         !  0 <= ztea <= 1
-        fq    = log(zldis/z0q) + 5.*zeta - 5.*z0q/obu
+         fq    = log(zldis/z0q) + 5.*zeta - 5.*z0q/obu
       ELSE                            !  1 < zeta, phi=5+zeta
-        fq    = log(obu/z0q) + 5. - 5.*z0q/obu + (5.*log(zeta)+zeta-1.)
+         fq    = log(obu/z0q) + 5. - 5.*z0q/obu + (5.*log(zeta)+zeta-1.)
       ENDIF
 
       ! for 2 meter screen humidity
@@ -344,7 +344,7 @@ CONTAINS
       IF(zeta < -zetat)THEN           ! zeta < -1
          fq2m = log(-zetat*obu/z0q)-psi(2,-zetat) &
                + psi(2,z0q/obu) + 0.8*((zetat)**(-0.333)-(-zeta)**(-0.333))
-      elseif (zeta < 0.) THEN         ! -1 <= zeta < 0
+      ELSEIF (zeta < 0.) THEN         ! -1 <= zeta < 0
          fq2m = log(zldis/z0q)-psi(2,zeta)+psi(2,z0q/obu)
       ELSE IF (zeta <= 1.) THEN       !  0 <= zeta <= 1
          fq2m = log(zldis/z0q)+5.*zeta-5.*z0q/obu
@@ -359,7 +359,7 @@ CONTAINS
       IF(zeta < -zetat)THEN           ! zeta < -1
          fqt = log(-zetat*obu/z0q)-psi(2,-zetat) &
                + psi(2,z0q/obu) + 0.8*((zetat)**(-0.333)-(-zeta)**(-0.333))
-      elseif (zeta < 0.) THEN         ! -1 <= zeta < 0
+      ELSEIF (zeta < 0.) THEN         ! -1 <= zeta < 0
          fqt = log(zldis/z0q)-psi(2,zeta)+psi(2,z0q/obu)
       ELSE IF (zeta <= 1.) THEN       !  0 <= zeta <= 1
          fqt = log(zldis/z0q)+5.*zeta-5.*z0q/obu
@@ -454,28 +454,28 @@ CONTAINS
       zeta=zldis/obu
       zetat=0.465
       IF(zeta < -zetat)THEN           ! zeta < -1
-        fh_top = log(-zetat*obu/z0h)-psi(2,-zetat) &
-              + psi(2,z0h/obu) + 0.8*((zetat)**(-0.333)-(-zeta)**(-0.333))
+         fh_top = log(-zetat*obu/z0h)-psi(2,-zetat) &
+                + psi(2,z0h/obu) + 0.8*((zetat)**(-0.333)-(-zeta)**(-0.333))
       ELSE IF(zeta < 0.)THEN          ! -1 <= zeta < 0
-        fh_top = log(zldis/z0h) - psi(2,zeta) + psi(2,z0h/obu)
+         fh_top = log(zldis/z0h) - psi(2,zeta) + psi(2,z0h/obu)
       ELSE IF(zeta <= 1.)THEN         !  0 <= ztea <= 1
-        fh_top = log(zldis/z0h) + 5.*zeta - 5.*z0h/obu
+         fh_top = log(zldis/z0h) + 5.*zeta - 5.*z0h/obu
       ELSE                            !  1 < zeta, phi=5+zeta
-        fh_top = log(obu/z0h) + 5. - 5.*z0h/obu + (5.*log(zeta)+zeta-1.)
+         fh_top = log(obu/z0h) + 5. - 5.*z0h/obu + (5.*log(zeta)+zeta-1.)
       ENDIF
 
       zldis=zbot-displa
       zeta=zldis/obu
       zetat=0.465
       IF(zeta < -zetat)THEN           ! zeta < -1
-        fh_bot = log(-zetat*obu/z0h)-psi(2,-zetat) &
-              + psi(2,z0h/obu) + 0.8*((zetat)**(-0.333)-(-zeta)**(-0.333))
+         fh_bot = log(-zetat*obu/z0h)-psi(2,-zetat) &
+                + psi(2,z0h/obu) + 0.8*((zetat)**(-0.333)-(-zeta)**(-0.333))
       ELSE IF(zeta < 0.)THEN          ! -1 <= zeta < 0
-        fh_bot = log(zldis/z0h) - psi(2,zeta) + psi(2,z0h/obu)
+         fh_bot = log(zldis/z0h) - psi(2,zeta) + psi(2,z0h/obu)
       ELSE IF(zeta <= 1.)THEN         !  0 <= ztea <= 1
-        fh_bot = log(zldis/z0h) + 5.*zeta - 5.*z0h/obu
+         fh_bot = log(zldis/z0h) + 5.*zeta - 5.*z0h/obu
       ELSE                            !  1 < zeta, phi=5+zeta
-        fh_bot = log(obu/z0h) + 5. - 5.*z0h/obu + (5.*log(zeta)+zeta-1.)
+         fh_bot = log(obu/z0h) + 5. - 5.*z0h/obu + (5.*log(zeta)+zeta-1.)
       ENDIF
 
       kintmoninobuk = 1./(vonkar/(fh_top-fh_bot)*ustar)

@@ -1082,11 +1082,11 @@ ENDIF
             ldew_rain = ldew_rain-evplwet*deltim
             ldew_snow = ldew_snow
             ldew=ldew_rain+ldew_snow
-      ELSE
-         ldew_rain = 0.0
-         ldew_snow = max(0., ldew-evplwet*deltim)
-         ldew      = ldew_snow
-      ENDIF
+         ELSE
+            ldew_rain = 0.0
+            ldew_snow = max(0., ldew-evplwet*deltim)
+            ldew      = ldew_snow
+         ENDIF
 
       ELSEIF (DEF_Interception_scheme .eq. 6) THEN !VIC
          IF (ldew_rain .gt. evplwet*deltim) THEN

@@ -432,178 +432,178 @@ CONTAINS
    IMPLICIT NONE
 
       IF (p_is_worker) THEN
-          z_sno_        = z_sno
-          dz_sno_       = dz_sno
-          t_soisno_     = t_soisno
-          wliq_soisno_  = wliq_soisno
-          wice_soisno_  = wice_soisno
-          smp_          = smp
-          hk_           = hk
-          t_grnd_       = t_grnd
-          tleaf_        = tleaf
-          ldew_         = ldew
-          ldew_rain_    = ldew_rain
-          ldew_snow_    = ldew_snow
-          sag_          = sag
-          scv_          = scv
-          snowdp_       = snowdp
-          fsno_         = fsno
-          sigf_         = sigf
-          zwt_          = zwt
-          wa_           = wa
-          wdsrf_        = wdsrf
-          rss_          = rss
+         z_sno_        = z_sno
+         dz_sno_       = dz_sno
+         t_soisno_     = t_soisno
+         wliq_soisno_  = wliq_soisno
+         wice_soisno_  = wice_soisno
+         smp_          = smp
+         hk_           = hk
+         t_grnd_       = t_grnd
+         tleaf_        = tleaf
+         ldew_         = ldew
+         ldew_rain_    = ldew_rain
+         ldew_snow_    = ldew_snow
+         sag_          = sag
+         scv_          = scv
+         snowdp_       = snowdp
+         fsno_         = fsno
+         sigf_         = sigf
+         zwt_          = zwt
+         wa_           = wa
+         wdsrf_        = wdsrf
+         rss_          = rss
 
-          t_lake_       = t_lake
-          lake_icefrac_ = lake_icefrac
-          savedtke1_    = savedtke1
+         t_lake_       = t_lake
+         lake_icefrac_ = lake_icefrac
+         savedtke1_    = savedtke1
 
 IF(DEF_USE_PLANTHYDRAULICS)THEN
-          vegwp_        = vegwp
-          gs0sun_       = gs0sun
-          gs0sha_       = gs0sha
+         vegwp_        = vegwp
+         gs0sun_       = gs0sun
+         gs0sha_       = gs0sha
 ENDIF
 
 IF(DEF_USE_OZONESTRESS)THEN
-          lai_old_      = lai_old
-          o3uptakesun_  = o3uptakesun
-          o3uptakesha_  = o3uptakesha
+         lai_old_      = lai_old
+         o3uptakesun_  = o3uptakesun
+         o3uptakesha_  = o3uptakesha
 ENDIF
-          snw_rds_      = snw_rds
-          mss_bcpho_    = mss_bcpho
-          mss_bcphi_    = mss_bcphi
-          mss_ocpho_    = mss_ocpho
-          mss_ocphi_    = mss_ocphi
-          mss_dst1_     = mss_dst1
-          mss_dst2_     = mss_dst2
-          mss_dst3_     = mss_dst3
-          mss_dst4_     = mss_dst4
-          ssno_lyr_     = ssno_lyr
+         snw_rds_      = snw_rds
+         mss_bcpho_    = mss_bcpho
+         mss_bcphi_    = mss_bcphi
+         mss_ocpho_    = mss_ocpho
+         mss_ocphi_    = mss_ocphi
+         mss_dst1_     = mss_dst1
+         mss_dst2_     = mss_dst2
+         mss_dst3_     = mss_dst3
+         mss_dst4_     = mss_dst4
+         ssno_lyr_     = ssno_lyr
 
-          trad_         = trad
-          tref_         = tref
-          qref_         = qref
-          rst_          = rst
-          emis_         = emis
-          z0m_          = z0m
-          displa_       = displa
-          zol_          = zol
-          rib_          = rib
-          ustar_        = ustar
-          qstar_        = qstar
-          tstar_        = tstar
-          fm_           = fm
-          fh_           = fh
-          fq_           = fq
+         trad_         = trad
+         tref_         = tref
+         qref_         = qref
+         rst_          = rst
+         emis_         = emis
+         z0m_          = z0m
+         displa_       = displa
+         zol_          = zol
+         rib_          = rib
+         ustar_        = ustar
+         qstar_        = qstar
+         tstar_        = tstar
+         fm_           = fm
+         fh_           = fh
+         fq_           = fq
 
 IF (DEF_USE_IRRIGATION) THEN
-          sum_irrig_                    = sum_irrig
-          sum_irrig_count_              = sum_irrig_count
+         sum_irrig_                    = sum_irrig
+         sum_irrig_count_              = sum_irrig_count
 ENDIF
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
-          tleaf_p_      = tleaf_p
-          ldew_p_       = ldew_p
-          ldew_rain_p_  = ldew_rain_p
-          ldew_snow_p_  = ldew_snow_p
-          sigf_p_       = sigf_p
+         tleaf_p_      = tleaf_p
+         ldew_p_       = ldew_p
+         ldew_rain_p_  = ldew_rain_p
+         ldew_snow_p_  = ldew_snow_p
+         sigf_p_       = sigf_p
 
-          tref_p_       = tref_p
-          qref_p_       = qref_p
-          rst_p_        = rst_p
-          z0m_p_        = z0m_p
+         tref_p_       = tref_p
+         qref_p_       = qref_p
+         rst_p_        = rst_p
+         z0m_p_        = z0m_p
 IF(DEF_USE_PLANTHYDRAULICS)THEN
-          ! Plant Hydraulic variables
-          vegwp_p_      = vegwp_p
-          gs0sun_p_     = gs0sun_p
-          gs0sha_p_     = gs0sha_p
-          ! end plant hydraulic variables
+         ! Plant Hydraulic variables
+         vegwp_p_      = vegwp_p
+         gs0sun_p_     = gs0sun_p
+         gs0sha_p_     = gs0sha_p
+         ! end plant hydraulic variables
 ENDIF
 IF(DEF_USE_OZONESTRESS)THEN
-          ! Ozone Stress Variables
-          lai_old_p_      = lai_old_p
-          o3uptakesun_p_  = o3uptakesun_p
-          o3uptakesha_p_  = o3uptakesha_p
-          ! End allocate Ozone Stress Variables
+         ! Ozone Stress Variables
+         lai_old_p_      = lai_old_p
+         o3uptakesun_p_  = o3uptakesun_p
+         o3uptakesha_p_  = o3uptakesha_p
+         ! End allocate Ozone Stress Variables
 ENDIF
 #endif
 
 #ifdef URBAN_MODEL
-          fwsun_        = fwsun
-          dfwsun_       = dfwsun
+         fwsun_        = fwsun
+         dfwsun_       = dfwsun
 
-          sroof_        = sroof
-          swsun_        = swsun
-          swsha_        = swsha
-          sgimp_        = sgimp
-          sgper_        = sgper
-          slake_        = slake
+         sroof_        = sroof
+         swsun_        = swsun
+         swsha_        = swsha
+         sgimp_        = sgimp
+         sgper_        = sgper
+         slake_        = slake
 
-          lwsun_        = lwsun
-          lwsha_        = lwsha
-          lgimp_        = lgimp
-          lgper_        = lgper
-          lveg_         = lveg
+         lwsun_        = lwsun
+         lwsha_        = lwsha
+         lgimp_        = lgimp
+         lgper_        = lgper
+         lveg_         = lveg
 
-          z_sno_roof_   = z_sno_roof
-          z_sno_gimp_   = z_sno_gimp
-          z_sno_gper_   = z_sno_gper
-          z_sno_lake_   = z_sno_lake
+         z_sno_roof_   = z_sno_roof
+         z_sno_gimp_   = z_sno_gimp
+         z_sno_gper_   = z_sno_gper
+         z_sno_lake_   = z_sno_lake
 
-          dz_sno_roof_  = dz_sno_roof
-          dz_sno_gimp_  = dz_sno_gimp
-          dz_sno_gper_  = dz_sno_gper
-          dz_sno_lake_  = dz_sno_lake
+         dz_sno_roof_  = dz_sno_roof
+         dz_sno_gimp_  = dz_sno_gimp
+         dz_sno_gper_  = dz_sno_gper
+         dz_sno_lake_  = dz_sno_lake
 
-          t_roofsno_    = t_roofsno
-          t_wallsun_    = t_wallsun
-          t_wallsha_    = t_wallsha
-          t_gimpsno_    = t_gimpsno
-          t_gpersno_    = t_gpersno
-          t_lakesno_    = t_lakesno
+         t_roofsno_    = t_roofsno
+         t_wallsun_    = t_wallsun
+         t_wallsha_    = t_wallsha
+         t_gimpsno_    = t_gimpsno
+         t_gpersno_    = t_gpersno
+         t_lakesno_    = t_lakesno
 
-          troof_inner_  = troof_inner
-          twsun_inner_  = twsun_inner
-          twsha_inner_  = twsha_inner
+         troof_inner_  = troof_inner
+         twsun_inner_  = twsun_inner
+         twsha_inner_  = twsha_inner
 
-          wliq_roofsno_ = wliq_roofsno
-          wice_roofsno_ = wice_roofsno
-          wliq_gimpsno_ = wliq_gimpsno
-          wice_gimpsno_ = wice_gimpsno
-          wliq_gpersno_ = wliq_gpersno
-          wice_gpersno_ = wice_gpersno
-          wliq_lakesno_ = wliq_lakesno
-          wice_lakesno_ = wice_lakesno
+         wliq_roofsno_ = wliq_roofsno
+         wice_roofsno_ = wice_roofsno
+         wliq_gimpsno_ = wliq_gimpsno
+         wice_gimpsno_ = wice_gimpsno
+         wliq_gpersno_ = wliq_gpersno
+         wice_gpersno_ = wice_gpersno
+         wliq_lakesno_ = wliq_lakesno
+         wice_lakesno_ = wice_lakesno
 
-          sag_roof_     = sag_roof
-          sag_gimp_     = sag_gimp
-          sag_gper_     = sag_gper
-          sag_lake_     = sag_lake
-          scv_roof_     = scv_roof
-          scv_gimp_     = scv_gimp
-          scv_gper_     = scv_gper
-          scv_lake_     = scv_lake
-          fsno_roof_    = fsno_roof
-          fsno_gimp_    = fsno_gimp
-          fsno_gper_    = fsno_gper
-          fsno_lake_    = fsno_lake
-          snowdp_roof_  = snowdp_roof
-          snowdp_gimp_  = snowdp_gimp
-          snowdp_gper_  = snowdp_gper
-          snowdp_lake_  = snowdp_lake
+         sag_roof_     = sag_roof
+         sag_gimp_     = sag_gimp
+         sag_gper_     = sag_gper
+         sag_lake_     = sag_lake
+         scv_roof_     = scv_roof
+         scv_gimp_     = scv_gimp
+         scv_gper_     = scv_gper
+         scv_lake_     = scv_lake
+         fsno_roof_    = fsno_roof
+         fsno_gimp_    = fsno_gimp
+         fsno_gper_    = fsno_gper
+         fsno_lake_    = fsno_lake
+         snowdp_roof_  = snowdp_roof
+         snowdp_gimp_  = snowdp_gimp
+         snowdp_gper_  = snowdp_gper
+         snowdp_lake_  = snowdp_lake
 
-          Fhac_         = Fhac
-          Fwst_         = Fwst
-          Fach_         = Fach
-          Fahe_         = Fahe
-          Fhah_         = Fhah
-          vehc_         = vehc
-          meta_         = meta
-          t_room_       = t_room
-          t_roof_       = t_roof
-          t_wall_       = t_wall
-          tafu_         = tafu
-          urb_green_    = urb_green
+         Fhac_         = Fhac
+         Fwst_         = Fwst
+         Fach_         = Fach
+         Fahe_         = Fahe
+         Fhah_         = Fhah
+         vehc_         = vehc
+         meta_         = meta
+         t_room_       = t_room
+         t_roof_       = t_roof
+         t_wall_       = t_wall
+         tafu_         = tafu
+         urb_green_    = urb_green
 #endif
       ENDIF
 

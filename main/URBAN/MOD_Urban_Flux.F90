@@ -2352,9 +2352,11 @@ CONTAINS
           - fsenl - hvap*fevpl
 
 #if(defined CLMDEBUG)
-      IF (abs(err) .gt. .2) &
+      IF (abs(err) .gt. .2) THEN
          write(6,*) 'energy imbalance in UrbanVegFlux.F90', &
          i,it-1,err,sabv,irab,fsenl,hvap*fevpl
+         CALL CoLM_stop()
+      ENDIF
 #endif
 
 

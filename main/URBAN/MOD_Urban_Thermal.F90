@@ -104,9 +104,10 @@ CONTAINS
 !=======================================================================
 
    USE MOD_Precision
+   USE MOD_SPMD_Task
    USE MOD_Vars_Global
    USE MOD_Const_Physical, only: denh2o,roverg,hvap,hsub,rgas,cpair,&
-                                stefnc,denice,tfrz,vonkar,grav
+                                 stefnc,denice,tfrz,vonkar,grav
    USE MOD_Urban_Shortwave
    USE MOD_Urban_Longwave
    USE MOD_Urban_GroundFlux
@@ -1286,6 +1287,7 @@ CONTAINS
       IF (olrg < 0) THEN !fordebug
          print*, ipatch, olrg
          write(6,*) ipatch,sabv,sabg,forc_frl,olrg,fsenl,fseng,hvap*fevpl,lfevpa
+         CALL CoLM_stop()
       ENDIF
 
       ! radiative temperature

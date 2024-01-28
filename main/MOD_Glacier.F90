@@ -285,11 +285,11 @@ CONTAINS
          qseva = min(wliq_icesno(lb)/deltim, fevpg)
          qsubl = fevpg - qseva
       ELSE
-        IF(t_grnd < tfrz)THEN
-           qfros = abs(fevpg)
-        ELSE
-           qsdew = abs(fevpg)
-        ENDIF
+         IF(t_grnd < tfrz)THEN
+            qfros = abs(fevpg)
+         ELSE
+            qsdew = abs(fevpg)
+         ENDIF
       ENDIF
 
 ! ground heat flux
@@ -322,12 +322,12 @@ CONTAINS
       ENDDO
 
 #if (defined CoLMDEBUG)
-     IF(abs(errore)>.2)THEN
-        write(6,*) 'GLACIER_TEMP.F90 : energy balance violation'
-        write(6,100) errore,sabg,forc_frl,olrg,fsena,lfevpa,xmf,t_precip,t_icesno(lb)
-        STOP
-     ENDIF
-100  format(10(f7.3))
+      IF(abs(errore)>.2)THEN
+         write(6,*) 'GLACIER_TEMP.F90 : energy balance violation'
+         write(6,100) errore,sabg,forc_frl,olrg,fsena,lfevpa,xmf,t_precip,t_icesno(lb)
+         STOP
+      ENDIF
+100   format(10(f7.3))
 #endif
 
    END SUBROUTINE GLACIER_TEMP
@@ -684,7 +684,7 @@ CONTAINS
       IF(lb==1 .and. scv>0.) cv(1) = cv(1) + cpice*scv
 
       IF(lb<=0)THEN
-        cv(:0) = cpliq*wliq_icesno(:0) + cpice*wice_icesno(:0)
+         cv(:0) = cpliq*wliq_icesno(:0) + cpice*wice_icesno(:0)
       ENDIF
 
 ! SNOW and LAND ICE thermal conductivity [W/(m K)]
@@ -694,24 +694,24 @@ CONTAINS
       ENDDO
 
       IF(lb < 1)THEN
-        DO j = lb, 0
-          rhosnow = (wice_icesno(j)+wliq_icesno(j))/dz_icesno(j)
+         DO j = lb, 0
+            rhosnow = (wice_icesno(j)+wliq_icesno(j))/dz_icesno(j)
 
-        ! presently option [1] is the default option
-        ! [1] Jordan (1991) pp. 18
-          thk(j) = tkair+(7.75e-5*rhosnow+1.105e-6*rhosnow*rhosnow)*(tkice-tkair)
+          ! presently option [1] is the default option
+          ! [1] Jordan (1991) pp. 18
+            thk(j) = tkair+(7.75e-5*rhosnow+1.105e-6*rhosnow*rhosnow)*(tkice-tkair)
 
-        ! [2] Sturm et al (1997)
-        ! thk(j) = 0.0138 + 1.01e-3*rhosnow + 3.233e-6*rhosnow**2
-        ! [3] Ostin and Andersson presented in Sturm et al., (1997)
-        ! thk(j) = -0.871e-2 + 0.439e-3*rhosnow + 1.05e-6*rhosnow**2
-        ! [4] Jansson(1901) presented in Sturm et al. (1997)
-        ! thk(j) = 0.0293 + 0.7953e-3*rhosnow + 1.512e-12*rhosnow**2
-        ! [5] Douville et al., (1995)
-        ! thk(j) = 2.2*(rhosnow/denice)**1.88
-        ! [6] van Dusen (1992) presented in Sturm et al. (1997)
-        ! thk(j) = 0.021 + 0.42e-3*rhosnow + 0.22e-6*rhosnow**2
-        ENDDO
+          ! [2] Sturm et al (1997)
+          ! thk(j) = 0.0138 + 1.01e-3*rhosnow + 3.233e-6*rhosnow**2
+          ! [3] Ostin and Andersson presented in Sturm et al., (1997)
+          ! thk(j) = -0.871e-2 + 0.439e-3*rhosnow + 1.05e-6*rhosnow**2
+          ! [4] Jansson(1901) presented in Sturm et al. (1997)
+          ! thk(j) = 0.0293 + 0.7953e-3*rhosnow + 1.512e-12*rhosnow**2
+          ! [5] Douville et al., (1995)
+          ! thk(j) = 2.2*(rhosnow/denice)**1.88
+          ! [6] van Dusen (1992) presented in Sturm et al. (1997)
+          ! thk(j) = 0.021 + 0.42e-3*rhosnow + 0.22e-6*rhosnow**2
+         ENDDO
       ENDIF
 
 ! Thermal conductivity at the layer interface
@@ -755,7 +755,7 @@ CONTAINS
       ENDDO
 
       DO j = lb, nl_ice - 1
-        fn(j) = tk(j)*(t_icesno(j+1)-t_icesno(j))/(z_icesno(j+1)-z_icesno(j))
+         fn(j) = tk(j)*(t_icesno(j+1)-t_icesno(j))/(z_icesno(j+1)-z_icesno(j))
       ENDDO
       fn(nl_ice) = 0.
 
@@ -769,14 +769,14 @@ CONTAINS
 
 ! Hua Yuan, January 12, 2023
       IF (lb <= 0) THEN
-          DO j = lb + 1, 1
-             dzm   = (z_icesno(j)-z_icesno(j-1))
-             dzp   = (z_icesno(j+1)-z_icesno(j))
-             at(j) =   - (1.-cnfac)*fact(j)* tk(j-1)/dzm
-             bt(j) = 1.+ (1.-cnfac)*fact(j)*(tk(j)/dzp + tk(j-1)/dzm)
-             ct(j) =   - (1.-cnfac)*fact(j)* tk(j)/dzp
-             rt(j) = t_icesno(j) + fact(j)*sabg_snow_lyr(j) + cnfac*fact(j)*( fn(j) - fn(j-1) )
-          ENDDO
+         DO j = lb + 1, 1
+            dzm   = (z_icesno(j)-z_icesno(j-1))
+            dzp   = (z_icesno(j+1)-z_icesno(j))
+            at(j) =   - (1.-cnfac)*fact(j)* tk(j-1)/dzm
+            bt(j) = 1.+ (1.-cnfac)*fact(j)*(tk(j)/dzp + tk(j-1)/dzm)
+            ct(j) =   - (1.-cnfac)*fact(j)* tk(j)/dzp
+            rt(j) = t_icesno(j) + fact(j)*sabg_snow_lyr(j) + cnfac*fact(j)*( fn(j) - fn(j-1) )
+         ENDDO
       ENDIF
 
 

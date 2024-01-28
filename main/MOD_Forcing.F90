@@ -641,7 +641,7 @@ CONTAINS
       CALL check_vector_data ('Forcing solld [W/m2]  ', forc_solld)
       CALL check_vector_data ('Forcing frl   [W/m2]  ', forc_frl  )
       IF (DEF_USE_CBL_HEIGHT) THEN
-        CALL check_vector_data ('Forcing hpbl  ', forc_hpbl )
+         CALL check_vector_data ('Forcing hpbl  ', forc_hpbl )
       ENDIF
 
 #ifdef USEMPI
@@ -964,22 +964,22 @@ CONTAINS
 
    END SUBROUTINE metread_time
 
-   ! ------------------------------------------------------------
-   !
-   ! !DESCRIPTION:
-   !    set the lower boundary time stamp and record information,
-   !    a KEY FUNCTION of this MODULE
-   !
-   ! - for time stamp, set it regularly as the model time step.
-   ! - for record information, account for:
-   !    o year alternation
-   !    o month alternation
-   !    o leap year
-   !    o required dada just beyond the first record
-   !
-   ! REVISIONS:
-   ! Hua Yuan, 04/2014: initial code
-   ! ------------------------------------------------------------
+! ------------------------------------------------------------
+!
+! !DESCRIPTION:
+!    set the lower boundary time stamp and record information,
+!    a KEY FUNCTION of this MODULE
+!
+! - for time stamp, set it regularly as the model time step.
+! - for record information, account for:
+!    o year alternation
+!    o month alternation
+!    o leap year
+!    o required dada just beyond the first record
+!
+! REVISIONS:
+! Hua Yuan, 04/2014: initial code
+! ------------------------------------------------------------
    SUBROUTINE setstampLB(mtstamp, var_i, year, month, mday, time_i)
 
    IMPLICIT NONE
@@ -1199,15 +1199,15 @@ CONTAINS
 
    END SUBROUTINE setstampLB
 
-   ! ------------------------------------------------------------
-   !
-   ! !DESCRIPTION:
-   !    set the upper boundary time stamp and record information,
-   !    a KEY FUNCTION of this MODULE
-   !
-   ! REVISIONS:
-   ! Hua Yuan, 04/2014: initial code
-   ! ------------------------------------------------------------
+! ------------------------------------------------------------
+!
+! !DESCRIPTION:
+!    set the upper boundary time stamp and record information,
+!    a KEY FUNCTION of this MODULE
+!
+! REVISIONS:
+! Hua Yuan, 04/2014: initial code
+! ------------------------------------------------------------
    SUBROUTINE setstampUB(var_i, year, month, mday, time_i)
 
    IMPLICIT NONE
@@ -1359,13 +1359,13 @@ CONTAINS
 
    END SUBROUTINE setstampUB
 
-   ! ------------------------------------------------------------
-   ! !DESCRIPTION:
-   ! calculate time average coszen value bwteeen [LB, UB]
-   !
-   ! REVISIONS:
-   ! 04/2014, yuan: this method is adapted from CLM
-   ! ------------------------------------------------------------
+! ------------------------------------------------------------
+! !DESCRIPTION:
+! calculate time average coszen value bwteeen [LB, UB]
+!
+! REVISIONS:
+! 04/2014, yuan: this method is adapted from CLM
+! ------------------------------------------------------------
    SUBROUTINE calavgcos(idate)
 
    USE MOD_Block

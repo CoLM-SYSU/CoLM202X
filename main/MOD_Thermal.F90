@@ -645,7 +645,7 @@ IF ( patchtype==0.and.DEF_USE_LCT .or. patchtype>0 ) THEN
                  extkd      ,forc_hgt_u ,forc_hgt_t,forc_hgt_q ,forc_us    ,&
                  forc_vs    ,thm        ,th        ,thv        ,forc_q     ,&
                  forc_psrf  ,forc_rhoair,parsun    ,parsha     ,sabv       ,&
-                 frl        ,fsun       ,thermk    ,rstfacsun_out,rstfacsha_out,&
+                 frl        ,fsun       ,thermk,rstfacsun_out,rstfacsha_out,&
                  gssun_out  ,gssha_out  ,forc_po2m ,forc_pco2m ,z0h_g      ,&
                  obu_g      ,ustar_g    ,zlnd      ,zsno       ,fsno       ,&
                  sigf       ,etrc       ,t_grnd    ,qg,rss     ,&
@@ -784,12 +784,14 @@ IF (DEF_USE_PFT .or. patchclass(ipatch)==CROPLAND) THEN
                  extkd_p(i) ,forc_hgt_u ,forc_hgt_t ,forc_hgt_q ,forc_us    ,&
                  forc_vs    ,thm        ,th         ,thv        ,forc_q     ,&
                  forc_psrf  ,forc_rhoair,parsun_p(i),parsha_p(i),sabv_p(i)  ,&
-                 frl        ,fsun_p(i)  ,thermk_p(i),rstfacsun_p(i),rstfacsha_p(i),&
+                 !TODO
+                 frl,  fsun_p(i)  ,thermk_p(i),rstfacsun_p(i),rstfacsha_p(i),&
                  gssun_p(i) ,gssha_p(i) ,forc_po2m  ,forc_pco2m ,z0h_g      ,&
                  obu_g      ,ustar_g    ,zlnd       ,zsno       ,fsno       ,&
                  sigf_p(i)  ,etrc_p(i)  ,t_grnd     ,qg,rss     ,&
                  t_soil     ,t_snow     ,q_soil     ,q_snow     ,&
                  dqgdT      ,&
+                 !TODO
                  emg        ,tleaf_p(i) ,ldew_p(i)  ,ldew_rain_p(i),ldew_snow_p(i),&
                  taux_p(i)  ,tauy_p(i)  ,&
                  fseng_p(i),fseng_soil_p(i),fseng_snow_p(i), &

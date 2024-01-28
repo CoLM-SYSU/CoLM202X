@@ -607,9 +607,9 @@ IF (patchtype <= 2) THEN ! <=== is - URBAN and BUILT-UP   (patchtype = 1)
 
       zi_soisno(0)=0.
       IF (snl < 0) THEN
-      DO j = -1, snl, -1
-         zi_soisno(j)=zi_soisno(j+1)-dz_soisno(j+1)
-      ENDDO
+         DO j = -1, snl, -1
+            zi_soisno(j)=zi_soisno(j+1)-dz_soisno(j+1)
+         ENDDO
       ENDIF
       DO j = 1,nl_soil
          zi_soisno(j)=zi_soisno(j-1)+dz_soisno(j)
@@ -870,9 +870,9 @@ ENDIF
       ENDIF
 #if(defined CaMa_Flood)
       IF (LWINFILT) THEN
-          IF (patchtype == 0) THEN
-               endwb=endwb - qinfl_fld*deltim
-          ENDIF
+         IF (patchtype == 0) THEN
+            endwb=endwb - qinfl_fld*deltim
+         ENDIF
       ENDIF
 #endif
 
@@ -922,9 +922,9 @@ ELSE IF(patchtype == 3)THEN   ! <=== is LAND ICE (glacier/ice sheet) (patchtype 
 
       zi_soisno(0)=0.
       IF (snl < 0) THEN
-      DO j = -1, snl, -1
-         zi_soisno(j)=zi_soisno(j+1)-dz_soisno(j+1)
-      ENDDO
+         DO j = -1, snl, -1
+            zi_soisno(j)=zi_soisno(j+1)-dz_soisno(j+1)
+         ENDDO
       ENDIF
       DO j = 1,nl_soil
          zi_soisno(j)=zi_soisno(j-1)+dz_soisno(j)
@@ -1301,11 +1301,11 @@ ENDIF
 #if(defined CaMa_Flood)
       IF (LWEVAP) THEN
          IF ((flddepth .gt. 1.e-6).and.(fldfrc .gt. 0.05).and.patchtype == 0)THEN
-               CALL get_fldevp (forc_hgt_u,forc_hgt_t,forc_hgt_q,&
-                  forc_us,forc_vs,forc_t,forc_q,forc_rhoair,forc_psrf,t_grnd,&
-                  forc_hpbl, &
-                  taux_fld,tauy_fld,fseng_fld,fevpg_fld,tref_fld,qref_fld,&
-                  z0m_fld,zol_fld,rib_fld,ustar_fld,qstar_fld,tstar_fld,fm_fld,fh_fld,fq_fld)
+            CALL get_fldevp (forc_hgt_u,forc_hgt_t,forc_hgt_q,&
+               forc_us,forc_vs,forc_t,forc_q,forc_rhoair,forc_psrf,t_grnd,&
+               forc_hpbl, &
+               taux_fld,tauy_fld,fseng_fld,fevpg_fld,tref_fld,qref_fld,&
+               z0m_fld,zol_fld,rib_fld,ustar_fld,qstar_fld,tstar_fld,fm_fld,fh_fld,fq_fld)
             IF (fevpg_fld<0.0) fevpg_fld=0.0d0
             IF ((flddepth-deltim*fevpg_fld .gt. 0.0) .and. (fevpg_fld.gt.0.0)) THEN
                flddepth=flddepth-deltim*fevpg_fld
@@ -1440,14 +1440,14 @@ ENDIF
       ! we supposed CALL it every time-step, because
       ! other vegeation related parameters are needed to create
       IF (doalb) THEN
-           CALL albland (ipatch, patchtype,deltim,&
-                soil_s_v_alb,soil_d_v_alb,soil_s_n_alb,soil_d_n_alb,&
-                chil,rho,tau,fveg,green,lai,sai,coszen,&
-                wt,fsno,scv,scvold,sag,ssw,pg_snow,forc_t,t_grnd,t_soisno_,dz_soisno_,&
-                snl,wliq_soisno,wice_soisno,snw_rds,snofrz,&
-                mss_bcpho,mss_bcphi,mss_ocpho,mss_ocphi,&
-                mss_dst1,mss_dst2,mss_dst3,mss_dst4,&
-                alb,ssun,ssha,ssoi,ssno,ssno_lyr,thermk,extkb,extkd)
+         CALL albland (ipatch, patchtype,deltim,&
+              soil_s_v_alb,soil_d_v_alb,soil_s_n_alb,soil_d_n_alb,&
+              chil,rho,tau,fveg,green,lai,sai,coszen,&
+              wt,fsno,scv,scvold,sag,ssw,pg_snow,forc_t,t_grnd,t_soisno_,dz_soisno_,&
+              snl,wliq_soisno,wice_soisno,snw_rds,snofrz,&
+              mss_bcpho,mss_bcphi,mss_ocpho,mss_ocphi,&
+              mss_dst1,mss_dst2,mss_dst3,mss_dst4,&
+              alb,ssun,ssha,ssoi,ssno,ssno_lyr,thermk,extkb,extkd)
       ENDIF
 ELSE                   !OCEAN
       sag = 0.0
