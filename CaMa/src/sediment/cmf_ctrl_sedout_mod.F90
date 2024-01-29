@@ -125,95 +125,94 @@ CONTAINS
       ENDDO
 
    CONTAINS
-
-   SUBROUTINE create_outcdf
+      SUBROUTINE create_outcdf
 #ifdef UseCDF_CMF
-    USE YOS_CMF_INPUT,           only: RMIS, CSUFCDF
-    USE YOS_CMF_TIME,            only: ISYYYY, ISMM,   ISDD,   ISHOUR, ISMIN
-    USE YOS_CMF_MAP,             only: D1LON, D1LAT
-    USE CMF_UTILS_MOD,           only: NCERROR
-    USE CMF_CTRL_OUTPUT_MOD,     only: NDLEVEL
-    USE yos_cmf_sed,             only: sDiam
-    USE NETCDF
+      USE YOS_CMF_INPUT,           only: RMIS, CSUFCDF
+      USE YOS_CMF_TIME,            only: ISYYYY, ISMM,   ISDD,   ISHOUR, ISMIN
+      USE YOS_CMF_MAP,             only: D1LON, D1LAT
+      USE CMF_UTILS_MOD,           only: NCERROR
+      USE CMF_CTRL_OUTPUT_MOD,     only: NDLEVEL
+      USE yos_cmf_sed,             only: sDiam
+      USE NETCDF
     
-    IMPLICIT NONE
-    SAVE
-    integer(kind=JPIM)              :: timeid, varid, latid, lonid, sedid
-    character(len=256)              :: ctime
+      IMPLICIT NONE
+      SAVE
+      integer(kind=JPIM)              :: timeid, varid, latid, lonid, sedid
+      character(len=256)              :: ctime
  
-      varout(jf)%irecnc = 1
+         varout(jf)%irecnc = 1
 
-      varout(jf)%cfile = trim(COUTDIR)//trim(fName)//trim(CSUFCDF)
-      CALL NCERROR( nf90_create(varout(jf)%cfile,nf90_netcdf4,varout(jf)%ncid),&
+         varout(jf)%cfile = trim(COUTDIR)//trim(fName)//trim(CSUFCDF)
+         CALL NCERROR( nf90_create(varout(jf)%cfile,nf90_netcdf4,varout(jf)%ncid),&
                      'creating file:'//trim(varout(jf)%cfile) )
-      !=== set dimension ===
-      CALL NCERROR( nf90_def_dim(varout(jf)%ncid, 'time', nf90_unlimited, timeid) )
-      CALL NCERROR( nf90_def_dim(varout(jf)%ncid, 'lat', NY, latid) )
-      CALL NCERROR( nf90_def_dim(varout(jf)%ncid, 'lon', NX, lonid) )
-      CALL NCERROR( nf90_def_dim(varout(jf)%ncid, 'sedD', nsed, sedid) )   
+         !=== set dimension ===
+         CALL NCERROR( nf90_def_dim(varout(jf)%ncid, 'time', nf90_unlimited, timeid) )
+         CALL NCERROR( nf90_def_dim(varout(jf)%ncid, 'lat', NY, latid) )
+         CALL NCERROR( nf90_def_dim(varout(jf)%ncid, 'lon', NX, lonid) )
+         CALL NCERROR( nf90_def_dim(varout(jf)%ncid, 'sedD', nsed, sedid) )   
    
-      !=== define variables ===
-      CALL NCERROR( nf90_def_var(varout(jf)%ncid, 'sedD', nf90_double, (/sedid/), varid) )
-      CALL NCERROR( nf90_put_att(varout(jf)%ncid, varid, 'long_name','sediment grain size') )
-      CALL NCERROR( nf90_put_att(varout(jf)%ncid, varid, 'units','meters') )
+         !=== define variables ===
+         CALL NCERROR( nf90_def_var(varout(jf)%ncid, 'sedD', nf90_double, (/sedid/), varid) )
+         CALL NCERROR( nf90_put_att(varout(jf)%ncid, varid, 'long_name','sediment grain size') )
+         CALL NCERROR( nf90_put_att(varout(jf)%ncid, varid, 'units','meters') )
 
-      CALL NCERROR( nf90_def_var(varout(jf)%ncid, 'lat', nf90_float, (/latid/), varid) )
-      CALL NCERROR( nf90_put_att(varout(jf)%ncid, varid, 'long_name','latitude') )
-      CALL NCERROR( nf90_put_att(varout(jf)%ncid, varid, 'units','degrees_north') )
+         CALL NCERROR( nf90_def_var(varout(jf)%ncid, 'lat', nf90_float, (/latid/), varid) )
+         CALL NCERROR( nf90_put_att(varout(jf)%ncid, varid, 'long_name','latitude') )
+         CALL NCERROR( nf90_put_att(varout(jf)%ncid, varid, 'units','degrees_north') )
       
-      CALL NCERROR( nf90_def_var(varout(jf)%ncid, 'lon', nf90_float, (/lonid/), varid) )
-      CALL NCERROR( nf90_put_att(varout(jf)%ncid, varid, 'long_name','longitude') )
-      CALL NCERROR( nf90_put_att(varout(jf)%ncid, varid, 'units','degrees_east') )
+         CALL NCERROR( nf90_def_var(varout(jf)%ncid, 'lon', nf90_float, (/lonid/), varid) )
+         CALL NCERROR( nf90_put_att(varout(jf)%ncid, varid, 'long_name','longitude') )
+         CALL NCERROR( nf90_put_att(varout(jf)%ncid, varid, 'units','degrees_east') )
       
-      write(ctime,'(a14,i4.4,a1,i2.2,a1,i2.2,a1,i2.2,a1,i2.2)') 'seconds since ',ISYYYY,'-',ISMM,'-',ISDD,' ',ISHOUR,":",ISMIN
-      CALL NCERROR( nf90_def_var(varout(jf)%ncid, 'time', nf90_double, (/timeid/), varout(jf)%timid) )
-      CALL NCERROR( nf90_put_att(varout(jf)%ncid, varout(jf)%timid, 'long_name','time') )
-      CALL NCERROR( nf90_put_att(varout(jf)%ncid, varout(jf)%timid, 'units',ctime) )
+         write(ctime,'(a14,i4.4,a1,i2.2,a1,i2.2,a1,i2.2,a1,i2.2)') 'seconds since ',ISYYYY,'-',ISMM,'-',ISDD,' ',ISHOUR,":",ISMIN
+         CALL NCERROR( nf90_def_var(varout(jf)%ncid, 'time', nf90_double, (/timeid/), varout(jf)%timid) )
+         CALL NCERROR( nf90_put_att(varout(jf)%ncid, varout(jf)%timid, 'long_name','time') )
+         CALL NCERROR( nf90_put_att(varout(jf)%ncid, varout(jf)%timid, 'units',ctime) )
       
-      !===
-      CALL NCERROR( nf90_def_var(varout(jf)%ncid, varout(jf)%cvname, nf90_float, &
+         !===
+         CALL NCERROR( nf90_def_var(varout(jf)%ncid, varout(jf)%cvname, nf90_float, &
                      (/lonid,latid,sedid,timeid/), varout(jf)%varid,deflate_level=ndlevel),     &
                      'creating variable')
       
-      CALL NCERROR( nf90_put_att(varout(jf)%ncid, varout(jf)%varid, 'long_name', trim(varout(jf)%cvlname)) )
-      CALL NCERROR( nf90_put_att(varout(jf)%ncid, varout(jf)%varid, 'units',     trim(varout(jf)%cvunits)) )
-      CALL NCERROR( nf90_put_att(varout(jf)%ncid, varout(jf)%varid, '_fillvalue',rmis) )
+         CALL NCERROR( nf90_put_att(varout(jf)%ncid, varout(jf)%varid, 'long_name', trim(varout(jf)%cvlname)) )
+         CALL NCERROR( nf90_put_att(varout(jf)%ncid, varout(jf)%varid, 'units',     trim(varout(jf)%cvunits)) )
+         CALL NCERROR( nf90_put_att(varout(jf)%ncid, varout(jf)%varid, '_fillvalue',rmis) )
       
-      CALL NCERROR( nf90_enddef(varout(jf)%ncid) )
+         CALL NCERROR( nf90_enddef(varout(jf)%ncid) )
       
-      !=== put nsed lon lat info ===
-      CALL NCERROR ( nf90_inq_varid(varout(jf)%ncid,'sedD',varid),'getting id' )
-      CALL NCERROR( nf90_put_var(varout(jf)%ncid,varid,sDiam))
+         !=== put nsed lon lat info ===
+         CALL NCERROR ( nf90_inq_varid(varout(jf)%ncid,'sedD',varid),'getting id' )
+         CALL NCERROR( nf90_put_var(varout(jf)%ncid,varid,sDiam))
 
-      CALL NCERROR ( nf90_inq_varid(varout(jf)%ncid,'lon',varid),'getting id' )
-      CALL NCERROR( nf90_put_var(varout(jf)%ncid,varid,D1LON))
+         CALL NCERROR ( nf90_inq_varid(varout(jf)%ncid,'lon',varid),'getting id' )
+         CALL NCERROR( nf90_put_var(varout(jf)%ncid,varid,D1LON))
       
-      CALL NCERROR ( nf90_inq_varid(varout(jf)%ncid,'lat',varid),'getting id' )
-      CALL NCERROR( nf90_put_var(varout(jf)%ncid,varid,D1LAT))
+         CALL NCERROR ( nf90_inq_varid(varout(jf)%ncid,'lat',varid),'getting id' )
+         CALL NCERROR( nf90_put_var(varout(jf)%ncid,varid,D1LAT))
       
-      write(LOGNAM,*) 'cfile: ',trim(varout(jf)%cfile),' cvar:',trim(varout(jf)%cvname),&
+         write(LOGNAM,*) 'cfile: ',trim(varout(jf)%cfile),' cvar:',trim(varout(jf)%cvname),&
                      ' clname: ',trim(varout(jf)%cvlname),' cunits: ',trim(varout(jf)%cvunits)
-      write(LOGNAM,*) 'open in unit: ',varout(jf)%ncid
+         write(LOGNAM,*) 'open in unit: ',varout(jf)%ncid
 #endif
-   END SUBROUTINE create_outcdf
+      END SUBROUTINE create_outcdf
 
-   SUBROUTINE create_outbin
+      SUBROUTINE create_outbin
       USE YOS_CMF_INPUT,           only: CSUFBIN, CSUFVEC
       USE YOS_CMF_MAP,             only: NSEQMAX, REGIONALL
       
       IMPLICIT NONE
       
-      IF ( LOUTVEC ) THEN
-         varout(jf)%cfile=trim(coutdir)//trim(fName)//trim(CSUFVEC)
-         open(varout(jf)%binid,file=varout(jf)%cfile,form='unformatted',access='direct',recl=4*NSEQMAX*nsed)
-      ELSE
-         IF ( REGIONTHIS==1 ) THEN
-            varout(jf)%cfile=trim(coutdir)//trim(fName)//trim(CSUFBIN)
-            open(varout(jf)%binid,file=varout(jf)%cfile,form='unformatted',access='direct',recl=4*NX*NY*nsed)
+         IF ( LOUTVEC ) THEN
+            varout(jf)%cfile=trim(coutdir)//trim(fName)//trim(CSUFVEC)
+            open(varout(jf)%binid,file=varout(jf)%cfile,form='unformatted',access='direct',recl=4*NSEQMAX*nsed)
+         ELSE
+            IF ( REGIONTHIS==1 ) THEN
+               varout(jf)%cfile=trim(coutdir)//trim(fName)//trim(CSUFBIN)
+               open(varout(jf)%binid,file=varout(jf)%cfile,form='unformatted',access='direct',recl=4*NX*NY*nsed)
+            ENDIF
          ENDIF
-      ENDIF
-      write(LOGNAM,*) "output file opened in unit: ", TRIM(VAROUT(JF)%CFILE), VAROUT(JF)%BINID
-   END SUBROUTINE create_outbin
+         write(LOGNAM,*) "output file opened in unit: ", TRIM(VAROUT(JF)%CFILE), VAROUT(JF)%BINID
+      END SUBROUTINE create_outbin
 
    END SUBROUTINE sediment_output_init
    !==========================================================
@@ -304,39 +303,39 @@ CONTAINS
       sadd_out = 0._JPRB
 
    CONTAINS
-   SUBROUTINE wrte_outcdf
+      SUBROUTINE wrte_outcdf
 #ifdef UseCDF_CMF
-   USE NETCDF
-   USE YOS_CMF_TIME,            only: KMINSTART, KMINNEXT
-   USE CMF_UTILS_MOD,           only: NCERROR
+      USE NETCDF
+      USE YOS_CMF_TIME,            only: KMINSTART, KMINNEXT
+      USE CMF_UTILS_MOD,           only: NCERROR
     
-   IMPLICIT NONE
-   SAVE
-   real(kind=JPRB)                 :: xtime
-      xtime = real( (KMINNEXT-KMINSTART), JPRB) *60._JPRB
-      CALL NCERROR( nf90_put_var(varout(jf)%ncid,varout(jf)%timid,xtime,(/varout(jf)%irecnc/)) )
+      IMPLICIT NONE
+      SAVE
+      real(kind=JPRB)                 :: xtime
+         xtime = real( (KMINNEXT-KMINSTART), JPRB) *60._JPRB
+         CALL NCERROR( nf90_put_var(varout(jf)%ncid,varout(jf)%timid,xtime,(/varout(jf)%irecnc/)) )
 
-      CALL NCERROR( nf90_put_var(varout(jf)%ncid,varout(jf)%varid,r3out(1:NX,1:NY,1:nsed),&
+         CALL NCERROR( nf90_put_var(varout(jf)%ncid,varout(jf)%varid,r3out(1:NX,1:NY,1:nsed),&
                      (/1,1,1,varout(jf)%irecnc/),(/NX,NY,nsed,1/)) )
       
-      ! update irec
-      varout(jf)%irecnc=varout(jf)%irecnc+1
+         ! update irec
+         varout(jf)%irecnc=varout(jf)%irecnc+1
 #endif
-   END SUBROUTINE wrte_outcdf
-  !==========================================================
-   SUBROUTINE wrte_outbin(ifn,irec,r2outdat)
+      END SUBROUTINE wrte_outcdf
+      !==========================================================
+      SUBROUTINE wrte_outbin(ifn,irec,r2outdat)
 
-   IMPLICIT NONE
-   !*** input
-   SAVE
-   integer(kind=JPIM),intent(in)   :: ifn                 !! file number
-   integer(kind=JPIM),intent(in)   :: irec                !! record
-   real(kind=JPRM)                 :: r2outdat(NX,NY,nsed)
-   !================================================
-      write(ifn,rec=irec) r2outdat
-   END SUBROUTINE wrte_outbin
-   !==========================================================
-   SUBROUTINE wrte_outvec(ifn,irec,d2outdat)
+      IMPLICIT NONE
+      !*** input
+      SAVE
+      integer(kind=JPIM),intent(in)   :: ifn                 !! file number
+      integer(kind=JPIM),intent(in)   :: irec                !! record
+      real(kind=JPRM)                 :: r2outdat(NX,NY,nsed)
+      !================================================
+         write(ifn,rec=irec) r2outdat
+      END SUBROUTINE wrte_outbin
+      !==========================================================
+      SUBROUTINE wrte_outvec(ifn,irec,d2outdat)
     
       IMPLICIT NONE
       !*** input
@@ -347,9 +346,9 @@ CONTAINS
       !*** local
       real(kind=JPRM)                 :: r2outdat(NSEQMAX,nsed)
       !================================================
-      r2outdat(:,:)=real(d2outdat(:,:))
-      write(ifn,rec=irec) r2outdat
-   END SUBROUTINE wrte_outvec
+         r2outdat(:,:)=real(d2outdat(:,:))
+         write(ifn,rec=irec) r2outdat
+      END SUBROUTINE wrte_outvec
    !==========================================================
    END SUBROUTINE cmf_sed_output
    !==========================================================
