@@ -11,14 +11,14 @@ MODULE YOS_CMF_ICI
 !  distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 ! See the License for the specific language governing permissions and limitations under the License.
 !==========================================================
-USE PARKIND1, ONLY: JPRB
-IMPLICIT NONE
-SAVE
-!================================================
-LOGICAL                     :: LLAKEIN
-REAL(KIND=JPRB),ALLOCATABLE :: D2LAKEFRC(:,:)
-REAL(KIND=JPRB),ALLOCATABLE :: D2RUNIN(:,:)
-REAL(KIND=JPRB),ALLOCATABLE :: D2RUNIN_AVG(:,:)
+   USE PARKIND1, only: JPRB
+   IMPLICIT NONE
+   SAVE
+   !================================================
+   logical                     :: LLAKEIN
+   real(KIND=JPRB),ALLOCATABLE :: D2LAKEFRC(:,:)
+   real(KIND=JPRB),ALLOCATABLE :: D2RUNIN(:,:)
+   real(KIND=JPRB),ALLOCATABLE :: D2RUNIN_AVG(:,:)
 
 !================================================
 END MODULE YOS_CMF_ICI

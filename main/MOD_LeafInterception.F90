@@ -38,133 +38,133 @@ MODULE MOD_LeafInterception
 
    IMPLICIT NONE
 
-   REAL(r8), parameter ::  CICE        = 2.094E06  !specific heat capacity of ice (j/m3/k)
-   REAL(r8), parameter ::  bp          = 20.
-   REAL(r8), parameter ::  HFUS        = 0.3336E06 !latent heat of fusion (j/kg)
-   REAL(r8), parameter ::  CWAT        = 4.188E06  !specific heat capacity of water (j/m3/k)
-   REAL(r8), parameter ::  pcoefs(2,2) = reshape((/20.0_r8, 0.206e-8_r8, 0.0001_r8, 0.9999_r8/), (/2,2/))
+   real(r8), parameter ::  CICE        = 2.094E06  !specific heat capacity of ice (j/m3/k)
+   real(r8), parameter ::  bp          = 20.
+   real(r8), parameter ::  HFUS        = 0.3336E06 !latent heat of fusion (j/kg)
+   real(r8), parameter ::  CWAT        = 4.188E06  !specific heat capacity of water (j/m3/k)
+   real(r8), parameter ::  pcoefs(2,2) = reshape((/20.0_r8, 0.206e-8_r8, 0.0001_r8, 0.9999_r8/), (/2,2/))
 
    !----------------------- Dummy argument --------------------------------
-   REAL(r8) :: satcap                     ! maximum allowed water on canopy [mm]
-   REAL(r8) :: satcap_rain                ! maximum allowed rain on canopy [mm]
-   REAL(r8) :: satcap_snow                ! maximum allowed snow on canopy [mm]
-   REAL(r8) :: lsai                       ! sum of leaf area index and stem area index [-]
-   REAL(r8) :: chiv                       ! leaf angle distribution factor
-   REAL(r8) :: ppc                        ! convective precipitation in time-step [mm]
-   REAL(r8) :: ppl                        ! large-scale precipitation in time-step [mm]
-   REAL(r8) :: p0                         ! precipitation in time-step [mm]
-   REAL(r8) :: fpi                        ! coefficient of interception
-   REAL(r8) :: fpi_rain                   ! coefficient of interception of rain
-   REAL(r8) :: fpi_snow                   ! coefficient of interception of snow
-   REAL(r8) :: alpha_rain                 ! coefficient of interception of rain
-   REAL(r8) :: alpha_snow                 ! coefficient of interception of snow
-   REAL(r8) :: pinf                       ! interception of precipitation in time step [mm]
-   REAL(r8) :: tti_rain                   ! direct rain throughfall in time step [mm]
-   REAL(r8) :: tti_snow                   ! direct snow throughfall in time step [mm]
-   REAL(r8) :: tex_rain                   ! canopy rain drainage in time step [mm]
-   REAL(r8) :: tex_snow                   ! canopy snow drainage in time step [mm]
-   REAL(r8) :: vegt                       ! sigf*lsai
-   REAL(r8) :: xs                         ! proportion of the grid area where the intercepted rainfall
+   real(r8) :: satcap                     ! maximum allowed water on canopy [mm]
+   real(r8) :: satcap_rain                ! maximum allowed rain on canopy [mm]
+   real(r8) :: satcap_snow                ! maximum allowed snow on canopy [mm]
+   real(r8) :: lsai                       ! sum of leaf area index and stem area index [-]
+   real(r8) :: chiv                       ! leaf angle distribution factor
+   real(r8) :: ppc                        ! convective precipitation in time-step [mm]
+   real(r8) :: ppl                        ! large-scale precipitation in time-step [mm]
+   real(r8) :: p0                         ! precipitation in time-step [mm]
+   real(r8) :: fpi                        ! coefficient of interception
+   real(r8) :: fpi_rain                   ! coefficient of interception of rain
+   real(r8) :: fpi_snow                   ! coefficient of interception of snow
+   real(r8) :: alpha_rain                 ! coefficient of interception of rain
+   real(r8) :: alpha_snow                 ! coefficient of interception of snow
+   real(r8) :: pinf                       ! interception of precipitation in time step [mm]
+   real(r8) :: tti_rain                   ! direct rain throughfall in time step [mm]
+   real(r8) :: tti_snow                   ! direct snow throughfall in time step [mm]
+   real(r8) :: tex_rain                   ! canopy rain drainage in time step [mm]
+   real(r8) :: tex_snow                   ! canopy snow drainage in time step [mm]
+   real(r8) :: vegt                       ! sigf*lsai
+   real(r8) :: xs                         ! proportion of the grid area where the intercepted rainfall
                                           ! plus the preexisting canopy water storage
-   REAL(r8)  :: unl_snow_temp,U10,unl_snow_wind,unl_snow
-   REAL(r8)  :: ap, cp, aa1, bb1, exrain, arg, w
-   REAL(r8)  :: thru_rain, thru_snow
-   REAL(r8)  :: xsc_rain, xsc_snow
+   real(r8)  :: unl_snow_temp,U10,unl_snow_wind,unl_snow
+   real(r8)  :: ap, cp, aa1, bb1, exrain, arg, w
+   real(r8)  :: thru_rain, thru_snow
+   real(r8)  :: xsc_rain, xsc_snow
 
-   REAL(r8)  :: fvegc          !vegetation fraction
-   REAL(r8)  :: FT             !The temperature factor for snow unloading
-   REAL(r8)  :: FV             !The wind factor for snow unloading
-   REAL(r8)  :: ICEDRIP        ! snow unloading
+   real(r8)  :: fvegc          ! vegetation fraction
+   real(r8)  :: FT             ! the temperature factor for snow unloading
+   real(r8)  :: FV             ! the wind factor for snow unloading
+   real(r8)  :: ICEDRIP        ! snow unloading
 
-   REAL(r8)  :: ldew_smelt
-   REAL(r8)  :: ldew_frzc
-   REAL(r8)  :: FP
-   REAL(r8)  :: int_rain
-   REAL(r8)  :: int_snow
+   real(r8)  :: ldew_smelt
+   real(r8)  :: ldew_frzc
+   real(r8)  :: FP
+   real(r8)  :: int_rain
+   real(r8)  :: int_snow
 
-   REAL(r8) :: qflx_irrig_drip
-   REAL(r8) :: qflx_irrig_sprinkler
-   REAL(r8) :: qflx_irrig_flood
-   REAL(r8) :: qflx_irrig_paddy
+   real(r8) :: qflx_irrig_drip
+   real(r8) :: qflx_irrig_sprinkler
+   real(r8) :: qflx_irrig_flood
+   real(r8) :: qflx_irrig_paddy
 
-contains
+CONTAINS
 
    SUBROUTINE LEAF_interception_CoLM2014 (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tair,tleaf,&
                                           prc_rain,prc_snow,prl_rain,prl_snow,&
                                           ldew,ldew_rain,ldew_snow,z0m,hu,pg_rain,pg_snow,qintr,qintr_rain,qintr_snow)
-   !DESCRIPTION
-   !===========
-      ! Calculation of  interception and drainage of precipitation
-      ! the treatment are based on Sellers et al. (1996)
+!DESCRIPTION
+!===========
+   ! Calculation of  interception and drainage of precipitation
+   ! the treatment are based on Sellers et al. (1996)
 
-   !Original Author:
-   !-------------------
-      !canopy interception scheme modified by Yongjiu Dai based on Sellers et al. (1996)
+!Original Author:
+!-------------------
+   !canopy interception scheme modified by Yongjiu Dai based on Sellers et al. (1996)
 
-   !References:
-   !-------------------
-      !---Dai, Y., Zeng, X., Dickinson, R.E., Baker, I., Bonan, G.B., BosiloVICh, M.G., Denning, A.S.,
-      !   Dirmeyer, P.A., Houser, P.R., Niu, G. and Oleson, K.W., 2003.
-      !   The common land model. Bulletin of the American Meteorological Society, 84(8), pp.1013-1024.
+!References:
+!-------------------
+   !---Dai, Y., Zeng, X., Dickinson, R.E., Baker, I., Bonan, G.B., BosiloVICh, M.G., Denning, A.S.,
+   !   Dirmeyer, P.A., Houser, P.R., Niu, G. and Oleson, K.W., 2003.
+   !   The common land model. Bulletin of the American Meteorological Society, 84(8), pp.1013-1024.
 
-      !---Lawrence, D.M., Thornton, P.E., Oleson, K.W. and Bonan, G.B., 2007.
-      !   The partitioning of evapotranspiration into transpiration, soil evaporation,
-      !   and canopy evaporation in a GCM: Impacts on land–atmosphere interaction. Journal of Hydrometeorology, 8(4), pp.862-880.
+   !---Lawrence, D.M., Thornton, P.E., Oleson, K.W. and Bonan, G.B., 2007.
+   !   The partitioning of evapotranspiration into transpiration, soil evaporation,
+   !   and canopy evaporation in a GCM: Impacts on land–atmosphere interaction. Journal of Hydrometeorology, 8(4), pp.862-880.
 
-      !---Oleson, K., Dai, Y., Bonan, B., BosiloVIChm, M., Dickinson, R., Dirmeyer, P., Hoffman,
-      !   F., Houser, P., Levis, S., Niu, G.Y. and Thornton, P., 2004.
-      !   Technical description of the community land model (CLM).
+   !---Oleson, K., Dai, Y., Bonan, B., BosiloVIChm, M., Dickinson, R., Dirmeyer, P., Hoffman,
+   !   F., Houser, P., Levis, S., Niu, G.Y. and Thornton, P., 2004.
+   !   Technical description of the community land model (CLM).
 
-      !---Sellers, P.J., Randall, D.A., Collatz, G.J., Berry, J.A., Field, C.B., Dazlich, D.A., Zhang, C.,
-      !   Collelo, G.D. and Bounoua, L., 1996. A revised land surface parameterization (SiB2) for atmospheric GCMs.
-      !   Part I: Model formulation. Journal of climate, 9(4), pp.676-705.
+   !---Sellers, P.J., Randall, D.A., Collatz, G.J., Berry, J.A., Field, C.B., Dazlich, D.A., Zhang, C.,
+   !   Collelo, G.D. and Bounoua, L., 1996. A revised land surface parameterization (SiB2) for atmospheric GCMs.
+   !   Part I: Model formulation. Journal of climate, 9(4), pp.676-705.
 
-      !---Sellers, P.J., Tucker, C.J., Collatz, G.J., Los, S.O., Justice, C.O., Dazlich, D.A. and Randall, D.A., 1996.
-      !   A revised land surface parameterization (SiB2) for atmospheric GCMs. Part II:
-      !   The generation of global fields of terrestrial biophysical parameters from satellite data.
-      !   Journal of climate, 9(4), pp.706-737.
+   !---Sellers, P.J., Tucker, C.J., Collatz, G.J., Los, S.O., Justice, C.O., Dazlich, D.A. and Randall, D.A., 1996.
+   !   A revised land surface parameterization (SiB2) for atmospheric GCMs. Part II:
+   !   The generation of global fields of terrestrial biophysical parameters from satellite data.
+   !   Journal of climate, 9(4), pp.706-737.
 
 
-   !ANCILLARY FUNCTIONS AND SUBROUTINES
-   !-------------------
+!ANCILLARY FUNCTIONS AND SUBROUTINES
+!-------------------
 
-   !REVISION HISTORY
-   !----------------
-      !---2023.02.21  Zhongwang Wei @ SYSU : Snow and rain interception
-      !---2021.12.08  Zhongwang Wei @ SYSU
-      !---2019.06     Hua Yuan: remove sigf and USE lai+sai for judgement.
-      !---2014.04     Yongjiu Dai
-      !---2002.08.31  Yongjiu Dai
-   !=======================================================================
+!REVISION HISTORY
+!----------------
+   !---2023.02.21  Zhongwang Wei @ SYSU : Snow and rain interception
+   !---2021.12.08  Zhongwang Wei @ SYSU
+   !---2019.06     Hua Yuan: remove sigf and USE lai+sai for judgement.
+   !---2014.04     Yongjiu Dai
+   !---2002.08.31  Yongjiu Dai
+!=======================================================================
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      REAL(r8), INTENT(in) :: deltim         ! seconds in a time step [second]
-      REAL(r8), INTENT(in) :: dewmx          ! maximum dew [mm]
-      REAL(r8), INTENT(in) :: forc_us        ! wind speed
-      REAL(r8), INTENT(in) :: forc_vs        ! wind speed
-      REAL(r8), INTENT(in) :: chil           ! leaf angle distribution factor
-      REAL(r8), INTENT(in) :: prc_rain       ! convective ranfall [mm/s]
-      REAL(r8), INTENT(in) :: prc_snow       ! convective snowfall [mm/s]
-      REAL(r8), INTENT(in) :: prl_rain       ! large-scale rainfall [mm/s]
-      REAL(r8), INTENT(in) :: prl_snow       ! large-scale snowfall [mm/s]
-      REAL(r8), INTENT(in) :: sigf           ! fraction of veg cover, excluding snow-covered veg [-]
-      REAL(r8), INTENT(in) :: lai            ! leaf area index [-]
-      REAL(r8), INTENT(in) :: sai            ! stem area index [-]
-      REAL(r8), INTENT(in) :: tair           ! air temperature [K]
-      REAL(r8), INTENT(in) :: tleaf          ! sunlit canopy leaf temperature [K]
+   real(r8), intent(in) :: deltim         ! seconds in a time step [second]
+   real(r8), intent(in) :: dewmx          ! maximum dew [mm]
+   real(r8), intent(in) :: forc_us        ! wind speed
+   real(r8), intent(in) :: forc_vs        ! wind speed
+   real(r8), intent(in) :: chil           ! leaf angle distribution factor
+   real(r8), intent(in) :: prc_rain       ! convective ranfall [mm/s]
+   real(r8), intent(in) :: prc_snow       ! convective snowfall [mm/s]
+   real(r8), intent(in) :: prl_rain       ! large-scale rainfall [mm/s]
+   real(r8), intent(in) :: prl_snow       ! large-scale snowfall [mm/s]
+   real(r8), intent(in) :: sigf           ! fraction of veg cover, excluding snow-covered veg [-]
+   real(r8), intent(in) :: lai            ! leaf area index [-]
+   real(r8), intent(in) :: sai            ! stem area index [-]
+   real(r8), intent(in) :: tair           ! air temperature [K]
+   real(r8), intent(in) :: tleaf          ! sunlit canopy leaf temperature [K]
 
-      REAL(r8), INTENT(inout) :: ldew        ! depth of water on foliage [mm]
-      REAL(r8), INTENT(inout) :: ldew_rain   ! depth of water on foliage [mm]
-      REAL(r8), INTENT(inout) :: ldew_snow   ! depth of water on foliage [mm]
-      REAL(r8), INTENT(in)    :: z0m         ! roughness length
-      REAL(r8), INTENT(in)    :: hu          ! forcing height of U
+   real(r8), intent(inout) :: ldew        ! depth of water on foliage [mm]
+   real(r8), intent(inout) :: ldew_rain   ! depth of water on foliage [mm]
+   real(r8), intent(inout) :: ldew_snow   ! depth of water on foliage [mm]
+   real(r8), intent(in)    :: z0m         ! roughness length
+   real(r8), intent(in)    :: hu          ! forcing height of U
 
-      REAL(r8), INTENT(out) :: pg_rain       ! rainfall onto ground including canopy runoff [kg/(m2 s)]
-      REAL(r8), INTENT(out) :: pg_snow       ! snowfall onto ground including canopy runoff [kg/(m2 s)]
-      REAL(r8), INTENT(out) :: qintr         ! interception [kg/(m2 s)]
-      REAL(r8), INTENT(out) :: qintr_rain    ! rainfall interception (mm h2o/s)
-      REAL(r8), INTENT(out) :: qintr_snow    ! snowfall interception (mm h2o/s)
+   real(r8), intent(out) :: pg_rain       ! rainfall onto ground including canopy runoff [kg/(m2 s)]
+   real(r8), intent(out) :: pg_snow       ! snowfall onto ground including canopy runoff [kg/(m2 s)]
+   real(r8), intent(out) :: qintr         ! interception [kg/(m2 s)]
+   real(r8), intent(out) :: qintr_rain    ! rainfall interception (mm h2o/s)
+   real(r8), intent(out) :: qintr_snow    ! snowfall interception (mm h2o/s)
 
       IF (lai+sai > 1e-6) THEN
          lsai   = lai + sai
@@ -294,58 +294,58 @@ contains
                                           prc_rain,prc_snow,prl_rain,prl_snow,&
                                           ldew,ldew_rain,ldew_snow,z0m,hu,pg_rain,pg_snow,&
                                           qintr,qintr_rain,qintr_snow)
-   !DESCRIPTION
-   !===========
-      ! Calculation of interception and drainage of precipitation (under development)
-      ! the scheme developed by Zhongwang wei @ SYSU (not finished yet)
+!DESCRIPTION
+!===========
+   ! Calculation of interception and drainage of precipitation (under development)
+   ! the scheme developed by Zhongwang wei @ SYSU (not finished yet)
 
-   !Original Author:
-   !-------------------
-      !---Zhongwang Wei @ SYSU
+!Original Author:
+!-------------------
+   !---Zhongwang Wei @ SYSU
 
-   !References:
-   !-------------------
-      !---Zhong, F., Jiang, S., van Dijk, A.I., Ren, L., Schellekens, J. and Miralles, D.G., 2022.
-      !   Revisiting large-scale interception patterns constrained by a synthesis of global experimental
-      !   data. Hydrology and Earth System Sciences, 26(21), pp.5647-5667.
-      !---
+!References:
+!-------------------
+   !---Zhong, F., Jiang, S., van Dijk, A.I., Ren, L., Schellekens, J. and Miralles, D.G., 2022.
+   !   Revisiting large-scale interception patterns constrained by a synthesis of global experimental
+   !   data. Hydrology and Earth System Sciences, 26(21), pp.5647-5667.
+   !---
 
-   !ANCILLARY FUNCTIONS AND SUBROUTINES
-   !-------------------
+!ANCILLARY FUNCTIONS AND SUBROUTINES
+!-------------------
 
-   !REVISION HISTORY
-   !----------------
-      !---2023.04.30  Zhongwang Wei @ SYSU : Snow and rain interception
-   !=======================================================================
+!REVISION HISTORY
+!----------------
+   !---2023.04.30  Zhongwang Wei @ SYSU : Snow and rain interception
+!=======================================================================
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      REAL(r8), INTENT(in) :: deltim         ! seconds in a time step [second]
-      REAL(r8), INTENT(in) :: dewmx          ! maximum dew [mm]
-      REAL(r8), INTENT(in) :: forc_us        ! wind speed
-      REAL(r8), INTENT(in) :: forc_vs        ! wind speed
-      REAL(r8), INTENT(in) :: chil           ! leaf angle distribution factor
-      REAL(r8), INTENT(in) :: prc_rain       ! convective ranfall [mm/s]
-      REAL(r8), INTENT(in) :: prc_snow       ! convective snowfall [mm/s]
-      REAL(r8), INTENT(in) :: prl_rain       ! large-scale rainfall [mm/s]
-      REAL(r8), INTENT(in) :: prl_snow       ! large-scale snowfall [mm/s]
-      REAL(r8), INTENT(in) :: sigf           ! fraction of veg cover, excluding snow-covered veg [-]
-      REAL(r8), INTENT(in) :: lai            ! leaf area index [-]
-      REAL(r8), INTENT(in) :: sai            ! stem area index [-]
-      REAL(r8), INTENT(in) :: tair           ! air temperature [K]
-      REAL(r8), INTENT(in) :: tleaf          ! sunlit canopy leaf temperature [K]
+   real(r8), intent(in) :: deltim         ! seconds in a time step [second]
+   real(r8), intent(in) :: dewmx          ! maximum dew [mm]
+   real(r8), intent(in) :: forc_us        ! wind speed
+   real(r8), intent(in) :: forc_vs        ! wind speed
+   real(r8), intent(in) :: chil           ! leaf angle distribution factor
+   real(r8), intent(in) :: prc_rain       ! convective ranfall [mm/s]
+   real(r8), intent(in) :: prc_snow       ! convective snowfall [mm/s]
+   real(r8), intent(in) :: prl_rain       ! large-scale rainfall [mm/s]
+   real(r8), intent(in) :: prl_snow       ! large-scale snowfall [mm/s]
+   real(r8), intent(in) :: sigf           ! fraction of veg cover, excluding snow-covered veg [-]
+   real(r8), intent(in) :: lai            ! leaf area index [-]
+   real(r8), intent(in) :: sai            ! stem area index [-]
+   real(r8), intent(in) :: tair           ! air temperature [K]
+   real(r8), intent(in) :: tleaf          ! sunlit canopy leaf temperature [K]
 
-      REAL(r8), INTENT(inout) :: ldew        ! depth of water on foliage [mm]
-      REAL(r8), INTENT(inout) :: ldew_rain   ! depth of water on foliage [mm]
-      REAL(r8), INTENT(inout) :: ldew_snow   ! depth of water on foliage [mm]
-      REAL(r8), INTENT(in)    :: z0m         ! roughness length
-      REAL(r8), INTENT(in)    :: hu          ! forcing height of U
+   real(r8), intent(inout) :: ldew        ! depth of water on foliage [mm]
+   real(r8), intent(inout) :: ldew_rain   ! depth of water on foliage [mm]
+   real(r8), intent(inout) :: ldew_snow   ! depth of water on foliage [mm]
+   real(r8), intent(in)    :: z0m         ! roughness length
+   real(r8), intent(in)    :: hu          ! forcing height of U
 
-      REAL(r8), INTENT(out) :: pg_rain       ! rainfall onto ground including canopy runoff [kg/(m2 s)]
-      REAL(r8), INTENT(out) :: pg_snow       ! snowfall onto ground including canopy runoff [kg/(m2 s)]
-      REAL(r8), INTENT(out) :: qintr         ! interception [kg/(m2 s)]
-      REAL(r8), INTENT(out) :: qintr_rain    ! rainfall interception (mm h2o/s)
-      REAL(r8), INTENT(out) :: qintr_snow    ! snowfall interception (mm h2o/s)
+   real(r8), intent(out) :: pg_rain       ! rainfall onto ground including canopy runoff [kg/(m2 s)]
+   real(r8), intent(out) :: pg_snow       ! snowfall onto ground including canopy runoff [kg/(m2 s)]
+   real(r8), intent(out) :: qintr         ! interception [kg/(m2 s)]
+   real(r8), intent(out) :: qintr_rain    ! rainfall interception (mm h2o/s)
+   real(r8), intent(out) :: qintr_snow    ! snowfall interception (mm h2o/s)
 
       IF (lai+sai > 1e-6) THEN
          lsai   = lai + sai
@@ -473,60 +473,60 @@ contains
                                        prc_rain,prc_snow,prl_rain,prl_snow,&
                                        ldew,ldew_rain,ldew_snow,z0m,hu,pg_rain,&
                                        pg_snow,qintr,qintr_rain,qintr_snow)
-   !DESCRIPTION
-   !===========
-      ! Interception and drainage of precipitation
-      ! the treatment are modified from CLM4.5
+!DESCRIPTION
+!===========
+   ! Interception and drainage of precipitation
+   ! the treatment are modified from CLM4.5
 
-   !Original Author:
-   !-------------------
-      !Lawrence, D.M.
+!Original Author:
+!-------------------
+   !Lawrence, D.M.
 
-   !References:
-   !-------------------
-      !---Lawrence, D.M., Thornton, P.E., Oleson, K.W. and Bonan, G.B., 2007.
-      !   The partitioning of evapotranspiration into transpiration, soil evaporation,
-      !   and canopy evaporation in a GCM: Impacts on land–atmosphere interaction. Journal of Hydrometeorology, 8(4), pp.862-880.
+!References:
+!-------------------
+   !---Lawrence, D.M., Thornton, P.E., Oleson, K.W. and Bonan, G.B., 2007.
+   !   The partitioning of evapotranspiration into transpiration, soil evaporation,
+   !   and canopy evaporation in a GCM: Impacts on land–atmosphere interaction. Journal of Hydrometeorology, 8(4), pp.862-880.
 
-   !ANCILLARY FUNCTIONS AND SUBROUTINES
-   !-------------------
+!ANCILLARY FUNCTIONS AND SUBROUTINES
+!-------------------
 
-   !REVISION HISTORY
-   !----------------
-      ! 2023.02.21  Zhongwang Wei @ SYSU : Snow and rain interception
-      ! 2021.12.08  Zhongwang Wei @ SYSU
-      ! 2014.04     Yongjiu Dai
-      ! 2002.08.31  Yongjiu Dai
-   !=======================================================================
+!REVISION HISTORY
+!----------------
+   ! 2023.02.21  Zhongwang Wei @ SYSU : Snow and rain interception
+   ! 2021.12.08  Zhongwang Wei @ SYSU
+   ! 2014.04     Yongjiu Dai
+   ! 2002.08.31  Yongjiu Dai
+!=======================================================================
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      REAL(r8), INTENT(in) :: deltim    !seconds in a time step [second]
-      REAL(r8), INTENT(in) :: dewmx     !maximum dew [mm]
-      REAL(r8), INTENT(in) :: forc_us   !wind speed
-      REAL(r8), INTENT(in) :: forc_vs   !wind speed
-      REAL(r8), INTENT(in) :: chil      !leaf angle distribution factor
-      REAL(r8), INTENT(in) :: prc_rain  !convective ranfall [mm/s]
-      REAL(r8), INTENT(in) :: prc_snow  !convective snowfall [mm/s]
-      REAL(r8), INTENT(in) :: prl_rain  !large-scale rainfall [mm/s]
-      REAL(r8), INTENT(in) :: prl_snow  !large-scale snowfall [mm/s]
-      REAL(r8), INTENT(in) :: sigf      !fraction of veg cover, excluding snow-covered veg [-]
-      REAL(r8), INTENT(in) :: lai       !leaf area index [-]
-      REAL(r8), INTENT(in) :: sai       !stem area index [-]
-      REAL(r8), INTENT(in) :: tair     !air temperature [K]
-      REAL(r8), INTENT(in) :: tleaf     !sunlit canopy leaf temperature [K]
+   real(r8), intent(in) :: deltim    !seconds in a time step [second]
+   real(r8), intent(in) :: dewmx     !maximum dew [mm]
+   real(r8), intent(in) :: forc_us   !wind speed
+   real(r8), intent(in) :: forc_vs   !wind speed
+   real(r8), intent(in) :: chil      !leaf angle distribution factor
+   real(r8), intent(in) :: prc_rain  !convective ranfall [mm/s]
+   real(r8), intent(in) :: prc_snow  !convective snowfall [mm/s]
+   real(r8), intent(in) :: prl_rain  !large-scale rainfall [mm/s]
+   real(r8), intent(in) :: prl_snow  !large-scale snowfall [mm/s]
+   real(r8), intent(in) :: sigf      !fraction of veg cover, excluding snow-covered veg [-]
+   real(r8), intent(in) :: lai       !leaf area index [-]
+   real(r8), intent(in) :: sai       !stem area index [-]
+   real(r8), intent(in) :: tair     !air temperature [K]
+   real(r8), intent(in) :: tleaf     !sunlit canopy leaf temperature [K]
 
-      REAL(r8), INTENT(inout) :: ldew   !depth of water on foliage [mm]
-      REAL(r8), INTENT(inout) :: ldew_rain   !depth of water on foliage [mm]
-      REAL(r8), INTENT(inout) :: ldew_snow   !depth of water on foliage [mm]
-      REAL(r8), INTENT(in)    :: z0m            !roughness length
-      REAL(r8), INTENT(in)    :: hu             !forcing height of U
+   real(r8), intent(inout) :: ldew   !depth of water on foliage [mm]
+   real(r8), intent(inout) :: ldew_rain   !depth of water on foliage [mm]
+   real(r8), intent(inout) :: ldew_snow   !depth of water on foliage [mm]
+   real(r8), intent(in)    :: z0m            !roughness length
+   real(r8), intent(in)    :: hu             !forcing height of U
 
-      REAL(r8), INTENT(out) :: pg_rain  !rainfall onto ground including canopy runoff [kg/(m2 s)]
-      REAL(r8), INTENT(out) :: pg_snow  !snowfall onto ground including canopy runoff [kg/(m2 s)]
-      REAL(r8), INTENT(out) :: qintr    !interception [kg/(m2 s)]
-      REAL(r8), INTENT(out) :: qintr_rain ! rainfall interception (mm h2o/s)
-      REAL(r8), INTENT(out) :: qintr_snow ! snowfall interception (mm h2o/s)
+   real(r8), intent(out) :: pg_rain  !rainfall onto ground including canopy runoff [kg/(m2 s)]
+   real(r8), intent(out) :: pg_snow  !snowfall onto ground including canopy runoff [kg/(m2 s)]
+   real(r8), intent(out) :: qintr    !interception [kg/(m2 s)]
+   real(r8), intent(out) :: qintr_rain ! rainfall interception (mm h2o/s)
+   real(r8), intent(out) :: qintr_snow ! snowfall interception (mm h2o/s)
 
       IF (lai+sai > 1e-6) THEN
          lsai   = lai + sai
@@ -631,67 +631,67 @@ contains
                                     ldew,ldew_rain,ldew_snow,z0m,hu,pg_rain,pg_snow,&
                                     qintr,qintr_rain,qintr_snow)
 
-   !DESCRIPTION
-   !===========
-      ! Interception and drainage of precipitation
-      ! the treatment are modified from CLM5.0
+!DESCRIPTION
+!===========
+   ! Interception and drainage of precipitation
+   ! the treatment are modified from CLM5.0
 
-   !Original Author:
-   !-------------------
-      !---Lawrence, D.M.
+!Original Author:
+!-------------------
+   !---Lawrence, D.M.
 
-   !References:
-   !-------------------
-      !---Lawrence, D.M., Thornton, P.E., Oleson, K.W. and Bonan, G.B., 2007.
-      !   The partitioning of evapotranspiration into transpiration, soil evaporation,
-      !   and canopy evaporation in a GCM: Impacts on land–atmosphere interaction. Journal of Hydrometeorology, 8(4), pp.862-880.
-      !---Lawrence, D.M., Fisher, R.A., Koven, C.D., Oleson, K.W., Swenson, S.C., Bonan, G., Collier, N., Ghimire, B.,
-      !   van Kampenhout, L., Kennedy, D. and Kluzek, E., 2019. The Community Land Model version 5:
-      !   Description of new features, benchmarking, and impact of forcing uncertainty.
-      !   Journal of Advances in Modeling Earth Systems, 11(12), pp.4245-4287.
-      !---Fan, Y., Meijide, A., Lawrence, D.M., Roupsard, O., Carlson, K.M., Chen, H.Y.,
-      !   Röll, A., Niu, F. and Knohl, A., 2019. Reconciling canopy interception parameterization
-      !   and rainfall forcing frequency in the Community Land Model for simulating evapotranspiration
-      !   of rainforests and oil palm plantations in Indonesia. Journal of Advances in Modeling Earth Systems, 11(3), pp.732-751.
+!References:
+!-------------------
+   !---Lawrence, D.M., Thornton, P.E., Oleson, K.W. and Bonan, G.B., 2007.
+   !   The partitioning of evapotranspiration into transpiration, soil evaporation,
+   !   and canopy evaporation in a GCM: Impacts on land–atmosphere interaction. Journal of Hydrometeorology, 8(4), pp.862-880.
+   !---Lawrence, D.M., Fisher, R.A., Koven, C.D., Oleson, K.W., Swenson, S.C., Bonan, G., Collier, N., Ghimire, B.,
+   !   van Kampenhout, L., Kennedy, D. and Kluzek, E., 2019. The Community Land Model version 5:
+   !   Description of new features, benchmarking, and impact of forcing uncertainty.
+   !   Journal of Advances in Modeling Earth Systems, 11(12), pp.4245-4287.
+   !---Fan, Y., Meijide, A., Lawrence, D.M., Roupsard, O., Carlson, K.M., Chen, H.Y.,
+   !   Röll, A., Niu, F. and Knohl, A., 2019. Reconciling canopy interception parameterization
+   !   and rainfall forcing frequency in the Community Land Model for simulating evapotranspiration
+   !   of rainforests and oil palm plantations in Indonesia. Journal of Advances in Modeling Earth Systems, 11(3), pp.732-751.
 
 
-   !ANCILLARY FUNCTIONS AND SUBROUTINES
-   !-------------------
+!ANCILLARY FUNCTIONS AND SUBROUTINES
+!-------------------
 
-   !REVISION HISTORY
-   !----------------
-      ! 2023.02.21  Zhongwang Wei @ SYSU
-      ! 2021.12.08  Zhongwang Wei @ SYSU
-   !=======================================================================
+!REVISION HISTORY
+!----------------
+   ! 2023.02.21  Zhongwang Wei @ SYSU
+   ! 2021.12.08  Zhongwang Wei @ SYSU
+!=======================================================================
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      REAL(r8), INTENT(in) :: deltim    !seconds in a time step [second]
-      REAL(r8), INTENT(in) :: dewmx     !maximum dew [mm]
-      REAL(r8), INTENT(in) :: forc_us   !wind speed
-      REAL(r8), INTENT(in) :: forc_vs   !wind speed
-      REAL(r8), INTENT(in) :: chil      !leaf angle distribution factor
-      REAL(r8), INTENT(in) :: prc_rain  !convective ranfall [mm/s]
-      REAL(r8), INTENT(in) :: prc_snow  !convective snowfall [mm/s]
-      REAL(r8), INTENT(in) :: prl_rain  !large-scale rainfall [mm/s]
-      REAL(r8), INTENT(in) :: prl_snow  !large-scale snowfall [mm/s]
-      REAL(r8), INTENT(in) :: sigf      !fraction of veg cover, excluding snow-covered veg [-]
-      REAL(r8), INTENT(in) :: lai       !leaf area index [-]
-      REAL(r8), INTENT(in) :: sai       !stem area index [-]
-      REAL(r8), INTENT(in) :: tair      !air temperature [K]
-      REAL(r8), INTENT(in) :: tleaf     !sunlit canopy leaf temperature [K]
+   real(r8), intent(in) :: deltim    !seconds in a time step [second]
+   real(r8), intent(in) :: dewmx     !maximum dew [mm]
+   real(r8), intent(in) :: forc_us   !wind speed
+   real(r8), intent(in) :: forc_vs   !wind speed
+   real(r8), intent(in) :: chil      !leaf angle distribution factor
+   real(r8), intent(in) :: prc_rain  !convective ranfall [mm/s]
+   real(r8), intent(in) :: prc_snow  !convective snowfall [mm/s]
+   real(r8), intent(in) :: prl_rain  !large-scale rainfall [mm/s]
+   real(r8), intent(in) :: prl_snow  !large-scale snowfall [mm/s]
+   real(r8), intent(in) :: sigf      !fraction of veg cover, excluding snow-covered veg [-]
+   real(r8), intent(in) :: lai       !leaf area index [-]
+   real(r8), intent(in) :: sai       !stem area index [-]
+   real(r8), intent(in) :: tair      !air temperature [K]
+   real(r8), intent(in) :: tleaf     !sunlit canopy leaf temperature [K]
 
-      REAL(r8), INTENT(inout) :: ldew           !depth of water on foliage [mm]
-      REAL(r8), INTENT(inout) :: ldew_rain      !depth of water on foliage [mm]
-      REAL(r8), INTENT(inout) :: ldew_snow      !depth of water on foliage [mm]
-      REAL(r8), INTENT(in)    :: z0m            !roughness length
-      REAL(r8), INTENT(in)    :: hu             !forcing height of U
+   real(r8), intent(inout) :: ldew           !depth of water on foliage [mm]
+   real(r8), intent(inout) :: ldew_rain      !depth of water on foliage [mm]
+   real(r8), intent(inout) :: ldew_snow      !depth of water on foliage [mm]
+   real(r8), intent(in)    :: z0m            !roughness length
+   real(r8), intent(in)    :: hu             !forcing height of U
 
-      REAL(r8), INTENT(out) :: pg_rain  !rainfall onto ground including canopy runoff [kg/(m2 s)]
-      REAL(r8), INTENT(out) :: pg_snow  !snowfall onto ground including canopy runoff [kg/(m2 s)]
-      REAL(r8), INTENT(out) :: qintr    !interception [kg/(m2 s)]
-      REAL(r8), INTENT(out) :: qintr_rain ! rainfall interception (mm h2o/s)
-      REAL(r8), INTENT(out) :: qintr_snow ! snowfall interception (mm h2o/s)
+   real(r8), intent(out) :: pg_rain  !rainfall onto ground including canopy runoff [kg/(m2 s)]
+   real(r8), intent(out) :: pg_snow  !snowfall onto ground including canopy runoff [kg/(m2 s)]
+   real(r8), intent(out) :: qintr    !interception [kg/(m2 s)]
+   real(r8), intent(out) :: qintr_rain ! rainfall interception (mm h2o/s)
+   real(r8), intent(out) :: qintr_snow ! snowfall interception (mm h2o/s)
 
       IF (lai+sai > 1e-6) THEN
          lsai   = lai + sai
@@ -805,66 +805,66 @@ contains
    SUBROUTINE LEAF_interception_NOAHMP(deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tair,tleaf, &
                                        prc_rain,prc_snow,prl_rain,prl_snow,&
                                        ldew,ldew_rain,ldew_snow,z0m,hu,pg_rain,pg_snow,qintr,qintr_rain,qintr_snow)
-   !DESCRIPTION
-   !===========
-      ! Interception and drainage of precipitation
-      ! the treatment are modified from Noah-MP 5.0
+!DESCRIPTION
+!===========
+   ! Interception and drainage of precipitation
+   ! the treatment are modified from Noah-MP 5.0
 
-   !Original Author:
-   !-------------------
-      !---Guo-Yue Niu
+!Original Author:
+!-------------------
+   !---Guo-Yue Niu
 
-   !References:
-   !-------------------
-      !---Yang, M., Zuo, R., Li, X. and Wang, L., 2019. Improvement test for the canopy interception parameterization scheme
-      !   in the community land model. Sola, 15, pp.166-171.
-      !---Niu, G.Y., Yang, Z.L., Mitchell, K.E., Chen, F., Ek, M.B., Barlage, M., Kumar, A.,
-      !   Manning, K., Niyogi, D., Rosero, E. and Tewari, M., 2011. The community Noah land
-      !   surface model with multiparameterization options (Noah‐MP): 1. Model description and evaluation
-      !   with local‐scale measurements. Journal of Geophysical Research: Atmospheres, 116(D12).
-      !---He, C., Valayamkunnath, P., Barlage, M., Chen, F., Gochis, D., Cabell, R., Schneider, T.,
-      !   Rasmussen, R., Niu, G.Y., Yang, Z.L. and Niyogi, D., 2023. Modernizing the open-source
-      !   community Noah-MP land surface model (version 5.0) with enhanced modularity,
-      !   interoperability, and applicability. EGUsphere, 2023, pp.1-31.
+!References:
+!-------------------
+   !---Yang, M., Zuo, R., Li, X. and Wang, L., 2019. Improvement test for the canopy interception parameterization scheme
+   !   in the community land model. Sola, 15, pp.166-171.
+   !---Niu, G.Y., Yang, Z.L., Mitchell, K.E., Chen, F., Ek, M.B., Barlage, M., Kumar, A.,
+   !   Manning, K., Niyogi, D., Rosero, E. and Tewari, M., 2011. The community Noah land
+   !   surface model with multiparameterization options (Noah‐MP): 1. Model description and evaluation
+   !   with local‐scale measurements. Journal of Geophysical Research: Atmospheres, 116(D12).
+   !---He, C., Valayamkunnath, P., Barlage, M., Chen, F., Gochis, D., Cabell, R., Schneider, T.,
+   !   Rasmussen, R., Niu, G.Y., Yang, Z.L. and Niyogi, D., 2023. Modernizing the open-source
+   !   community Noah-MP land surface model (version 5.0) with enhanced modularity,
+   !   interoperability, and applicability. EGUsphere, 2023, pp.1-31.
 
-   !ANCILLARY FUNCTIONS AND SUBROUTINES
-   !-------------------
+!ANCILLARY FUNCTIONS AND SUBROUTINES
+!-------------------
 
-   !REVISION HISTORY
-   !----------------
-      ! 2023.02.21  Zhongwang Wei @ SYSU
-      ! 2021.12.08  Zhongwang Wei @ SYSU
-   !=======================================================================
+!REVISION HISTORY
+!----------------
+   ! 2023.02.21  Zhongwang Wei @ SYSU
+   ! 2021.12.08  Zhongwang Wei @ SYSU
+!=======================================================================
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      REAL(r8), INTENT(in)    :: deltim    !seconds in a time step [second]
-      REAL(r8), INTENT(in)    :: dewmx     !maximum dew [mm]
-      REAL(r8), INTENT(in)    :: forc_us   !wind speed
-      REAL(r8), INTENT(in)    :: forc_vs   !wind speed
-      REAL(r8), INTENT(in)    :: chil      !leaf angle distribution factor
-      REAL(r8), INTENT(in)    :: prc_rain  !convective ranfall [mm/s]
-      REAL(r8), INTENT(in)    :: prc_snow  !convective snowfall [mm/s]
-      REAL(r8), INTENT(in)    :: prl_rain  !large-scale rainfall [mm/s]
-      REAL(r8), INTENT(in)    :: prl_snow  !large-scale snowfall [mm/s]
-      REAL(r8), INTENT(in)    :: sigf      !fraction of veg cover, excluding snow-covered veg [-]
-      REAL(r8), INTENT(in)    :: lai       !leaf area index [-]
-      REAL(r8), INTENT(in)    :: sai       !stem area index [-]
-      REAL(r8), INTENT(in)    :: tair     !air temperature [K]
-      REAL(r8), INTENT(inout) :: tleaf   !sunlit canopy leaf temperature [K]
+   real(r8), intent(in)    :: deltim    !seconds in a time step [second]
+   real(r8), intent(in)    :: dewmx     !maximum dew [mm]
+   real(r8), intent(in)    :: forc_us   !wind speed
+   real(r8), intent(in)    :: forc_vs   !wind speed
+   real(r8), intent(in)    :: chil      !leaf angle distribution factor
+   real(r8), intent(in)    :: prc_rain  !convective ranfall [mm/s]
+   real(r8), intent(in)    :: prc_snow  !convective snowfall [mm/s]
+   real(r8), intent(in)    :: prl_rain  !large-scale rainfall [mm/s]
+   real(r8), intent(in)    :: prl_snow  !large-scale snowfall [mm/s]
+   real(r8), intent(in)    :: sigf      !fraction of veg cover, excluding snow-covered veg [-]
+   real(r8), intent(in)    :: lai       !leaf area index [-]
+   real(r8), intent(in)    :: sai       !stem area index [-]
+   real(r8), intent(in)    :: tair     !air temperature [K]
+   real(r8), intent(inout) :: tleaf   !sunlit canopy leaf temperature [K]
 
-      REAL(r8), INTENT(inout) :: ldew   !depth of water on foliage [mm]
-      REAL(r8), INTENT(inout) :: ldew_rain   !depth of liquid on foliage [mm]
-      REAL(r8), INTENT(inout) :: ldew_snow   !depth of liquid on foliage [mm]
-      REAL(r8), INTENT(in)    :: z0m            !roughness length
-      REAL(r8), INTENT(in)    :: hu             !forcing height of U
+   real(r8), intent(inout) :: ldew   !depth of water on foliage [mm]
+   real(r8), intent(inout) :: ldew_rain   !depth of liquid on foliage [mm]
+   real(r8), intent(inout) :: ldew_snow   !depth of liquid on foliage [mm]
+   real(r8), intent(in)    :: z0m            !roughness length
+   real(r8), intent(in)    :: hu             !forcing height of U
 
-      REAL(r8), INTENT(out)   :: pg_rain  !rainfall onto ground including canopy runoff [kg/(m2 s)]
-      REAL(r8), INTENT(out)   :: pg_snow  !snowfall onto ground including canopy runoff [kg/(m2 s)]
-      REAL(r8), INTENT(out)   :: qintr    !interception [kg/(m2 s)]
-      REAL(r8), INTENT(out)   :: qintr_rain ! rainfall interception (mm h2o/s)
-      REAL(r8), INTENT(out)   :: qintr_snow ! snowfall interception (mm h2o/s)
-      REAL(r8) :: BDFALL
+   real(r8), intent(out)   :: pg_rain  !rainfall onto ground including canopy runoff [kg/(m2 s)]
+   real(r8), intent(out)   :: pg_snow  !snowfall onto ground including canopy runoff [kg/(m2 s)]
+   real(r8), intent(out)   :: qintr    !interception [kg/(m2 s)]
+   real(r8), intent(out)   :: qintr_rain ! rainfall interception (mm h2o/s)
+   real(r8), intent(out)   :: qintr_snow ! snowfall interception (mm h2o/s)
+   real(r8)                :: BDFALL
       IF (lai+sai > 1e-6) THEN
          lsai   = lai + sai
          vegt   = lsai
@@ -1006,66 +1006,66 @@ contains
                                          prc_rain,prc_snow,prl_rain,prl_snow,&
                                          ldew,ldew_rain,ldew_snow,z0m,hu,pg_rain,pg_snow,qintr,&
                                          qintr_rain,qintr_snow)
-   !DESCRIPTION
-   !===========
-      ! Interception and drainage of precipitation
-      ! the treatment are modified from MATSIRO 6 (under development)
+!DESCRIPTION
+!===========
+   ! Interception and drainage of precipitation
+   ! the treatment are modified from MATSIRO 6 (under development)
 
-   !Original Author:
-   !-------------------
-      !---MATSIRO6 document writing team∗
+!Original Author:
+!-------------------
+   !---MATSIRO6 document writing team∗
 
-   !References:
-   !-------------------
-      !---Tatebe, H., Ogura, T., Nitta, T., Komuro, Y., Ogochi, K., Takemura, T., Sudo, K., Sekiguchi, M.,
-      !   Abe, M., Saito, F. and Chikira, M., 2019. Description and basic evaluation of simulated mean state,
-      !   internal variability, and climate sensitivity in MIROC6. Geoscientific Model Development, 12(7), pp.2727-2765. 116(D12).
-      !---Takata, K., Emori, S. and Watanabe, T., 2003. Development of the minimal advanced treatments of surface interaction and
-      !   runoff. Global and planetary Change, 38(1-2), pp.209-222.
-      !---Guo, Q., Kino, K., Li, S., Nitta, T., Takeshima, A., Suzuki, K.T., Yoshida, N. and Yoshimura, K., 2021.
-      !   Description of MATSIRO6.
+!References:
+!-------------------
+   !---Tatebe, H., Ogura, T., Nitta, T., Komuro, Y., Ogochi, K., Takemura, T., Sudo, K., Sekiguchi, M.,
+   !   Abe, M., Saito, F. and Chikira, M., 2019. Description and basic evaluation of simulated mean state,
+   !   internal variability, and climate sensitivity in MIROC6. Geoscientific Model Development, 12(7), pp.2727-2765. 116(D12).
+   !---Takata, K., Emori, S. and Watanabe, T., 2003. Development of the minimal advanced treatments of surface interaction and
+   !   runoff. Global and planetary Change, 38(1-2), pp.209-222.
+   !---Guo, Q., Kino, K., Li, S., Nitta, T., Takeshima, A., Suzuki, K.T., Yoshida, N. and Yoshimura, K., 2021.
+   !   Description of MATSIRO6.
 
-   !ANCILLARY FUNCTIONS AND SUBROUTINES
-   !-------------------
+!ANCILLARY FUNCTIONS AND SUBROUTINES
+!-------------------
 
-   !REVISION HISTORY
-   !----------------
-      ! 2023.02.21  Zhongwang Wei @ SYSU
-      ! 2021.12.08  Zhongwang Wei @ SYSU
-   !=======================================================================
+!REVISION HISTORY
+!----------------
+   ! 2023.02.21  Zhongwang Wei @ SYSU
+   ! 2021.12.08  Zhongwang Wei @ SYSU
+!=======================================================================
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      REAL(r8), INTENT(in) :: deltim    !seconds in a time step [second]
-      REAL(r8), INTENT(in) :: dewmx     !maximum dew [mm]
-      REAL(r8), INTENT(in) :: forc_us   !wind speed
-      REAL(r8), INTENT(in) :: forc_vs   !wind speed
-      REAL(r8), INTENT(in) :: chil      !leaf angle distribution factor
-      REAL(r8), INTENT(in) :: prc_rain  !convective ranfall [mm/s]
-      REAL(r8), INTENT(in) :: prc_snow  !convective snowfall [mm/s]
-      REAL(r8), INTENT(in) :: prl_rain  !large-scale rainfall [mm/s]
-      REAL(r8), INTENT(in) :: prl_snow  !large-scale snowfall [mm/s]
-      REAL(r8), INTENT(in) :: sigf      !fraction of veg cover, excluding snow-covered veg [-]
-      REAL(r8), INTENT(in) :: lai       !leaf area index [-]
-      REAL(r8), INTENT(in) :: sai       !stem area index [-]
-      REAL(r8), INTENT(in) :: tair     !air temperature [K]
-      REAL(r8), INTENT(inout) :: tleaf   !sunlit canopy leaf temperature [K]
+   real(r8), intent(in) :: deltim    !seconds in a time step [second]
+   real(r8), intent(in) :: dewmx     !maximum dew [mm]
+   real(r8), intent(in) :: forc_us   !wind speed
+   real(r8), intent(in) :: forc_vs   !wind speed
+   real(r8), intent(in) :: chil      !leaf angle distribution factor
+   real(r8), intent(in) :: prc_rain  !convective ranfall [mm/s]
+   real(r8), intent(in) :: prc_snow  !convective snowfall [mm/s]
+   real(r8), intent(in) :: prl_rain  !large-scale rainfall [mm/s]
+   real(r8), intent(in) :: prl_snow  !large-scale snowfall [mm/s]
+   real(r8), intent(in) :: sigf      !fraction of veg cover, excluding snow-covered veg [-]
+   real(r8), intent(in) :: lai       !leaf area index [-]
+   real(r8), intent(in) :: sai       !stem area index [-]
+   real(r8), intent(in) :: tair     !air temperature [K]
+   real(r8), intent(inout) :: tleaf   !sunlit canopy leaf temperature [K]
 
-      REAL(r8), INTENT(inout) :: ldew   !depth of water on foliage [mm]
-      REAL(r8), INTENT(inout) :: ldew_rain   !depth of liquid on foliage [mm]
-      REAL(r8), INTENT(inout) :: ldew_snow   !depth of liquid on foliage [mm]
-      REAL(r8), INTENT(in)    :: z0m            !roughness length
-      REAL(r8), INTENT(in)    :: hu             !forcing height of  U
+   real(r8), intent(inout) :: ldew   !depth of water on foliage [mm]
+   real(r8), intent(inout) :: ldew_rain   !depth of liquid on foliage [mm]
+   real(r8), intent(inout) :: ldew_snow   !depth of liquid on foliage [mm]
+   real(r8), intent(in)    :: z0m            !roughness length
+   real(r8), intent(in)    :: hu             !forcing height of  U
 
 
-      REAL(r8), INTENT(out) :: pg_rain  !rainfall onto ground including canopy runoff [kg/(m2 s)]
-      REAL(r8), INTENT(out) :: pg_snow  !snowfall onto ground including canopy runoff [kg/(m2 s)]
-      REAL(r8), INTENT(out) :: qintr    !interception [kg/(m2 s)]
-      REAL(r8), INTENT(out) :: qintr_rain ! rainfall interception (mm h2o/s)
-      REAL(r8), INTENT(out) :: qintr_snow ! snowfall interception (mm h2o/s)
-      !local
-      REAL(r8) :: fint, Ac, dewmx_MATSIRO,ldew_rain_s, ldew_snow_s,ldew_rain_n, ldew_snow_n
-      REAL(r8) :: tex_rain_n,tex_rain_s,tex_snow_n,tex_snow_s,tti_rain_n,tti_rain_s,tti_snow_n,tti_snow_s
+   real(r8), intent(out) :: pg_rain  !rainfall onto ground including canopy runoff [kg/(m2 s)]
+   real(r8), intent(out) :: pg_snow  !snowfall onto ground including canopy runoff [kg/(m2 s)]
+   real(r8), intent(out) :: qintr    !interception [kg/(m2 s)]
+   real(r8), intent(out) :: qintr_rain ! rainfall interception (mm h2o/s)
+   real(r8), intent(out) :: qintr_snow ! snowfall interception (mm h2o/s)
+   !local
+   real(r8) :: fint, Ac, dewmx_MATSIRO,ldew_rain_s, ldew_snow_s,ldew_rain_n, ldew_snow_n
+   real(r8) :: tex_rain_n,tex_rain_s,tex_snow_n,tex_snow_s,tti_rain_n,tti_rain_s,tti_snow_n,tti_snow_s
 
       !the canopy water capacity per leaf area index is set to 0.2mm
       dewmx_MATSIRO = 0.2
@@ -1136,8 +1136,6 @@ contains
             tex_snow_s  = min(tex_snow_s, ldew_snow_s)
             ldew_snow_s = ldew_snow_s - tex_snow_s
 
-
-
             !-------------------------------------------------------------------------
             ! Non-storm area
             !-------------------------------------------------------------------------
@@ -1158,8 +1156,6 @@ contains
             tex_snow_n  =  min(tex_snow_n, ldew_snow_n)
             ldew_snow_n =  ldew_snow_n - tex_snow_n
             !-------------------------------------------------------------------------
-
-
             !-------------------------------------------------------------------------
             ! Average
             !-------------------------------------------------------------------------
@@ -1249,70 +1245,69 @@ contains
                                        prc_rain,prc_snow,prl_rain,prl_snow,&
                                        ldew,ldew_rain,ldew_snow,z0m,hu,pg_rain,&
                                        pg_snow,qintr,qintr_rain,qintr_snow)
+!DESCRIPTION
+!===========
+   ! Calculation of  interception and drainage of precipitation
+   ! the treatment are based on VIC 5.0 (under development)
 
-   !DESCRIPTION
-   !===========
-      ! Calculation of  interception and drainage of precipitation
-      ! the treatment are based on VIC 5.0 (under development)
+!Original Author:
+!-------------------
+   !---Hamman, J.J. AND Liang X.
 
-   !Original Author:
-   !-------------------
-      !---Hamman, J.J. AND Liang X.
+!References:
+!-------------------
+   !---Hamman, J.J., Nijssen, B., Bohn, T.J., Gergel, D.R. and Mao, Y., 2018.
+   !   The Variable Infiltration Capacity model version 5 (VIC-5): Infrastructure
+   !   improvements for new applications and reproducibility. Geoscientific Model Development,
+   !   11(8), pp.3481-3496.
+   !---Liang, X., Lettenmaier, D.P., Wood, E.F. and Burges, S.J., 1994.
+   !   A simple hydrologically based model of land surface water and energy fluxes
+   !   for general circulation models. Journal of Geophysical Research: Atmospheres, 99(D7),
+   !   pp.14415-14428.
 
-   !References:
-   !-------------------
-      !---Hamman, J.J., Nijssen, B., Bohn, T.J., Gergel, D.R. and Mao, Y., 2018.
-      !   The Variable Infiltration Capacity model version 5 (VIC-5): Infrastructure
-      !   improvements for new applications and reproducibility. Geoscientific Model Development,
-      !   11(8), pp.3481-3496.
-      !---Liang, X., Lettenmaier, D.P., Wood, E.F. and Burges, S.J., 1994.
-      !   A simple hydrologically based model of land surface water and energy fluxes
-      !   for general circulation models. Journal of Geophysical Research: Atmospheres, 99(D7),
-      !   pp.14415-14428.
+!ANCILLARY FUNCTIONS AND SUBROUTINES
+!-------------------
 
-   !ANCILLARY FUNCTIONS AND SUBROUTINES
-   !-------------------
-
-   !REVISION HISTORY
-   !----------------
-      ! 2023.02.21  Zhongwang Wei @ SYSU
-      ! 2021.12.08  Zhongwang Wei @ SYSU
-   !=======================================================================
-
-
-      IMPLICIT NONE
-
-      REAL(r8), INTENT(in) :: deltim    !seconds in a time step [second]
-      REAL(r8), INTENT(in) :: dewmx     !maximum dew [mm]
-      REAL(r8), INTENT(in) :: forc_us   !wind speed
-      REAL(r8), INTENT(in) :: forc_vs   !wind speed
-      REAL(r8), INTENT(in) :: chil      !leaf angle distribution factor
-      REAL(r8), INTENT(in) :: prc_rain  !convective ranfall [mm/s]
-      REAL(r8), INTENT(in) :: prc_snow  !convective snowfall [mm/s]
-      REAL(r8), INTENT(in) :: prl_rain  !large-scale rainfall [mm/s]
-      REAL(r8), INTENT(in) :: prl_snow  !large-scale snowfall [mm/s]
-      REAL(r8), INTENT(in) :: sigf      !fraction of veg cover, excluding snow-covered veg [-]
-      REAL(r8), INTENT(in) :: lai       !leaf area index [-]
-      REAL(r8), INTENT(in) :: sai       !stem area index [-]
-      REAL(r8), INTENT(in) :: tair     !air temperature [K]
-      REAL(r8), INTENT(inout) :: tleaf   !sunlit canopy leaf temperature [K]
-
-      REAL(r8), INTENT(inout) :: ldew   !depth of water on foliage [mm]
-      REAL(r8), INTENT(inout) :: ldew_rain   !depth of liquid on foliage [mm]
-      REAL(r8), INTENT(inout) :: ldew_snow   !depth of liquid on foliage [mm]
-      REAL(r8), INTENT(in) :: z0m            !roughness length
-      REAL(r8), INTENT(in) :: hu             !forcing height of U
+!REVISION HISTORY
+!----------------
+   ! 2023.02.21  Zhongwang Wei @ SYSU
+   ! 2021.12.08  Zhongwang Wei @ SYSU
+!=======================================================================
 
 
-      REAL(r8), INTENT(out) :: pg_rain  !rainfall onto ground including canopy runoff [kg/(m2 s)]
-      REAL(r8), INTENT(out) :: pg_snow  !snowfall onto ground including canopy runoff [kg/(m2 s)]
-      REAL(r8), INTENT(out) :: qintr    !interception [kg/(m2 s)]
-      REAL(r8), INTENT(out) :: qintr_rain ! rainfall interception (mm h2o/s)
-      REAL(r8), INTENT(out) :: qintr_snow ! snowfall interception (mm h2o/s)
+   IMPLICIT NONE
 
-      real(r8) :: Imax1,Lr,ldew_max_snow,Snow,Rain,DeltaSnowInt,Wind,BlownSnow,SnowThroughFall
-      real(r8) :: MaxInt,MaxWaterInt,RainThroughFall,Overload,IntRainFract,IntSnowFract,ldew_smelt
-      real(r8) :: drip
+   real(r8), intent(in) :: deltim    !seconds in a time step [second]
+   real(r8), intent(in) :: dewmx     !maximum dew [mm]
+   real(r8), intent(in) :: forc_us   !wind speed
+   real(r8), intent(in) :: forc_vs   !wind speed
+   real(r8), intent(in) :: chil      !leaf angle distribution factor
+   real(r8), intent(in) :: prc_rain  !convective ranfall [mm/s]
+   real(r8), intent(in) :: prc_snow  !convective snowfall [mm/s]
+   real(r8), intent(in) :: prl_rain  !large-scale rainfall [mm/s]
+   real(r8), intent(in) :: prl_snow  !large-scale snowfall [mm/s]
+   real(r8), intent(in) :: sigf      !fraction of veg cover, excluding snow-covered veg [-]
+   real(r8), intent(in) :: lai       !leaf area index [-]
+   real(r8), intent(in) :: sai       !stem area index [-]
+   real(r8), intent(in) :: tair     !air temperature [K]
+   real(r8), intent(inout) :: tleaf   !sunlit canopy leaf temperature [K]
+
+   real(r8), intent(inout) :: ldew   !depth of water on foliage [mm]
+   real(r8), intent(inout) :: ldew_rain   !depth of liquid on foliage [mm]
+   real(r8), intent(inout) :: ldew_snow   !depth of liquid on foliage [mm]
+   real(r8), intent(in) :: z0m            !roughness length
+   real(r8), intent(in) :: hu             !forcing height of U
+
+
+   real(r8), intent(out) :: pg_rain  !rainfall onto ground including canopy runoff [kg/(m2 s)]
+   real(r8), intent(out) :: pg_snow  !snowfall onto ground including canopy runoff [kg/(m2 s)]
+   real(r8), intent(out) :: qintr    !interception [kg/(m2 s)]
+   real(r8), intent(out) :: qintr_rain ! rainfall interception (mm h2o/s)
+   real(r8), intent(out) :: qintr_snow ! snowfall interception (mm h2o/s)
+
+   real(r8) :: Imax1,Lr,ldew_max_snow,Snow,Rain,DeltaSnowInt,Wind,BlownSnow,SnowThroughFall
+   real(r8) :: MaxInt,MaxWaterInt,RainThroughFall,Overload,IntRainFract,IntSnowFract,ldew_smelt
+   real(r8) :: drip
 
       IF (lai+sai > 1e-6) THEN
          lsai   = lai + sai
@@ -1320,13 +1315,13 @@ contains
          !the maximum bearing  capacity of the tree regardless of air temp (Imax1)
          Imax1=4.0*lsai*0.0005 *1000.0 ! in mm
          MaxInt=0.1*lsai
-         if (tair>-272.15) THEN
+         IF (tair>-272.15) THEN
             Lr=4.0
          ELSE IF (tair<=-272.15 .and. tair>=-270.15) THEN
             Lr=1.5*(tair-273.15)+5.5
-         else
+         ELSE
             Lr=1.0
-         endif
+         ENDIF
 
          satcap_snow=0.0005 *Lr *lsai * 1000.0  ! in mm !!!
          !/* Calculate amount of snow intercepted on branches and stored in  intercepted snow. */
@@ -1396,12 +1391,12 @@ contains
             !cold (< -3 to -5 C).
             !Schmidt and Troendle 1992 western snow conference paper. */
             Wind= SQRT(forc_us*forc_us + forc_vs*forc_vs)
-            if (tleaf-273.15<-3.0 .and. Wind> 1.0) THEN
+            IF (tleaf-273.15<-3.0 .and. Wind> 1.0) THEN
                BlownSnow=(0.2*Wind -0.2)* ldew_snow
                BlownSnow = min(ldew_snow,BlownSnow)
                tex_snow    =  tex_snow  + BlownSnow
                ldew_snow   =  ldew_snow - BlownSnow
-            endif
+            ENDIF
             !/* at this point we have calculated the amount of snowfall intercepted and
             !/* the amount of rainfall intercepted.  These values have been
             !/* appropriately subtracted from SnowFall and RainFall to determine
@@ -1482,7 +1477,6 @@ contains
          qintr = 0.
          qintr_rain = 0.
          qintr_snow = 0.
-
       ENDIF
    END SUBROUTINE LEAF_interception_VIC
 
@@ -1516,33 +1510,33 @@ contains
 
       IMPLICIT NONE
 
-      REAL(r8), INTENT(in)    :: deltim    !seconds in a time step [second]
-      REAL(r8), INTENT(in)    :: dewmx     !maximum dew [mm]
-      REAL(r8), INTENT(in)    :: forc_us   !wind speed
-      REAL(r8), INTENT(in)    :: forc_vs   !wind speed
-      REAL(r8), INTENT(in)    :: chil      !leaf angle distribution factor
-      REAL(r8), INTENT(in)    :: prc_rain  !convective ranfall [mm/s]
-      REAL(r8), INTENT(in)    :: prc_snow  !convective snowfall [mm/s]
-      REAL(r8), INTENT(in)    :: prl_rain  !large-scale rainfall [mm/s]
-      REAL(r8), INTENT(in)    :: prl_snow  !large-scale snowfall [mm/s]
-      REAL(r8), INTENT(in)    :: sigf      !fraction of veg cover, excluding snow-covered veg [-]
-      REAL(r8), INTENT(in)    :: lai       !leaf area index [-]
-      REAL(r8), INTENT(in)    :: sai       !stem area index [-]
-      REAL(r8), INTENT(in)    :: tair     !air temperature [K]
-      REAL(r8), INTENT(inout) :: tleaf   !sunlit canopy leaf temperature [K]
+   real(r8), intent(in)    :: deltim    !seconds in a time step [second]
+   real(r8), intent(in)    :: dewmx     !maximum dew [mm]
+   real(r8), intent(in)    :: forc_us   !wind speed
+   real(r8), intent(in)    :: forc_vs   !wind speed
+   real(r8), intent(in)    :: chil      !leaf angle distribution factor
+   real(r8), intent(in)    :: prc_rain  !convective ranfall [mm/s]
+   real(r8), intent(in)    :: prc_snow  !convective snowfall [mm/s]
+   real(r8), intent(in)    :: prl_rain  !large-scale rainfall [mm/s]
+   real(r8), intent(in)    :: prl_snow  !large-scale snowfall [mm/s]
+   real(r8), intent(in)    :: sigf      !fraction of veg cover, excluding snow-covered veg [-]
+   real(r8), intent(in)    :: lai       !leaf area index [-]
+   real(r8), intent(in)    :: sai       !stem area index [-]
+   real(r8), intent(in)    :: tair     !air temperature [K]
+   real(r8), intent(inout) :: tleaf   !sunlit canopy leaf temperature [K]
 
-      REAL(r8), INTENT(inout) :: ldew   !depth of water on foliage [mm]
-      REAL(r8), INTENT(inout) :: ldew_rain   !depth of liquid on foliage [mm]
-      REAL(r8), INTENT(inout) :: ldew_snow   !depth of liquid on foliage [mm]
-      REAL(r8), INTENT(in)    :: z0m            !roughness length
-      REAL(r8), INTENT(in)    :: hu             !forcing height of U
+   real(r8), intent(inout) :: ldew   !depth of water on foliage [mm]
+   real(r8), intent(inout) :: ldew_rain   !depth of liquid on foliage [mm]
+   real(r8), intent(inout) :: ldew_snow   !depth of liquid on foliage [mm]
+   real(r8), intent(in)    :: z0m            !roughness length
+   real(r8), intent(in)    :: hu             !forcing height of U
 
-      REAL(r8), INTENT(out)   :: pg_rain  !rainfall onto ground including canopy runoff [kg/(m2 s)]
-      REAL(r8), INTENT(out)   :: pg_snow  !snowfall onto ground including canopy runoff [kg/(m2 s)]
-      REAL(r8), INTENT(out)   :: qintr    !interception [kg/(m2 s)]
-      REAL(r8), INTENT(out)   :: qintr_rain ! rainfall interception (mm h2o/s)
-      REAL(r8), INTENT(out)   :: qintr_snow ! snowfall interception (mm h2o/s)
-      REAL(r8) :: snowinterceptfact,unload_rate_cnst,unload_rate_u,Wind
+   real(r8), intent(out)   :: pg_rain  !rainfall onto ground including canopy runoff [kg/(m2 s)]
+   real(r8), intent(out)   :: pg_snow  !snowfall onto ground including canopy runoff [kg/(m2 s)]
+   real(r8), intent(out)   :: qintr    !interception [kg/(m2 s)]
+   real(r8), intent(out)   :: qintr_rain ! rainfall interception (mm h2o/s)
+   real(r8), intent(out)   :: qintr_snow ! snowfall interception (mm h2o/s)
+   real(r8)                :: snowinterceptfact,unload_rate_cnst,unload_rate_u,Wind
       IF (lai+sai > 1e-6) THEN
          lsai   = lai + sai
          vegt   = lsai
@@ -1575,12 +1569,12 @@ contains
          !something wrong with this part in JULES, need to be checked
 !         IF (ldew_snow>1.e-8) THEN
 !            Wind= SQRT(forc_us*forc_us + forc_vs*forc_vs)
-!            if (Wind > 1.0) THEN
+!            IF (Wind > 1.0) THEN
 !               ICEDRIP       =  unload_rate_cnst + unload_rate_u * Wind
 !               ICEDRIP       =  MIN(ICEDRIP,ldew_snow)
 !               xsc_snow      =  xsc_snow+ICEDRIP
 !               ldew_snow     =  ldew_snow - ICEDRIP
-!            endif
+!            ENDIF
 !         ENDIF
 
          ! phase change and excess !
@@ -1654,7 +1648,7 @@ contains
          ENDIF
 #endif
       ELSE
-       ! 07/15/2023, yuan: #bug found for ldew value reset.
+         ! 07/15/2023, yuan: #bug found for ldew value reset.
          !NOTE: this bug should exist in other interception schemes @Zhongwang.
          IF (ldew > 0.) THEN
             IF (tleaf > tfrz) THEN
@@ -1673,7 +1667,6 @@ contains
          qintr = 0.
          qintr_rain = 0.
          qintr_snow = 0.
-
       ENDIF
    END SUBROUTINE LEAF_interception_JULES
 
@@ -1681,100 +1674,97 @@ contains
                                                             prc_rain,prc_snow,prl_rain,prl_snow,&
                                                          ldew,ldew_rain,ldew_snow,z0m,hu,pg_rain,&
                                                 pg_snow,qintr,qintr_rain,qintr_snow)
-   !DESCRIPTION
-   !===========
+!DESCRIPTION
+!===========
    !wrapper for calculation of canopy interception using USGS or IGBP land cover classification
 
-   !ANCILLARY FUNCTIONS AND SUBROUTINES
-   !-------------------
+!ANCILLARY FUNCTIONS AND SUBROUTINES
+!-------------------
 
-   !Original Author:
-   !-------------------
-      !---Shupeng Zhang
+!Original Author:
+!-------------------
+   !---Shupeng Zhang
 
-   !References:
-
-
-   !REVISION HISTORY
-   !----------------
-
-      IMPLICIT NONE
-
-      REAL(r8), INTENT(in)    :: deltim    !seconds in a time step [second]
-      REAL(r8), INTENT(in)    :: dewmx     !maximum dew [mm]
-      REAL(r8), INTENT(in)    :: forc_us   !wind speed
-      REAL(r8), INTENT(in)    :: forc_vs   !wind speed
-      REAL(r8), INTENT(in)    :: chil      !leaf angle distribution factor
-      REAL(r8), INTENT(in)    :: prc_rain  !convective ranfall [mm/s]
-      REAL(r8), INTENT(in)    :: prc_snow  !convective snowfall [mm/s]
-      REAL(r8), INTENT(in)    :: prl_rain  !large-scale rainfall [mm/s]
-      REAL(r8), INTENT(in)    :: prl_snow  !large-scale snowfall [mm/s]
-      REAL(r8), INTENT(in)    :: sigf      !fraction of veg cover, excluding snow-covered veg [-]
-      REAL(r8), INTENT(in)    :: lai       !leaf area index [-]
-      REAL(r8), INTENT(in)    :: sai       !stem area index [-]
-      REAL(r8), INTENT(in)    :: tair     !air temperature [K]
-      REAL(r8), INTENT(inout) :: tleaf   !sunlit canopy leaf temperature [K]
-
-      REAL(r8), INTENT(inout) :: ldew   !depth of water on foliage [mm]
-      REAL(r8), INTENT(inout) :: ldew_rain   !depth of liquid on foliage [mm]
-      REAL(r8), INTENT(inout) :: ldew_snow   !depth of liquid on foliage [mm]
-      REAL(r8), INTENT(in)    :: z0m            !roughness length
-      REAL(r8), INTENT(in)    :: hu             !forcing height of U
+!References:
 
 
-      REAL(r8), INTENT(out)   :: pg_rain  !rainfall onto ground including canopy runoff [kg/(m2 s)]
-      REAL(r8), INTENT(out)   :: pg_snow  !snowfall onto ground including canopy runoff [kg/(m2 s)]
-      REAL(r8), INTENT(out)   :: qintr    !interception [kg/(m2 s)]
-      REAL(r8), INTENT(out)   :: qintr_rain ! rainfall interception (mm h2o/s)
-      REAL(r8), INTENT(out)   :: qintr_snow ! snowfall interception (mm h2o/s)
+!REVISION HISTORY
+!----------------
+
+   IMPLICIT NONE
+
+   real(r8), intent(in)    :: deltim    !seconds in a time step [second]
+   real(r8), intent(in)    :: dewmx     !maximum dew [mm]
+   real(r8), intent(in)    :: forc_us   !wind speed
+   real(r8), intent(in)    :: forc_vs   !wind speed
+   real(r8), intent(in)    :: chil      !leaf angle distribution factor
+   real(r8), intent(in)    :: prc_rain  !convective ranfall [mm/s]
+   real(r8), intent(in)    :: prc_snow  !convective snowfall [mm/s]
+   real(r8), intent(in)    :: prl_rain  !large-scale rainfall [mm/s]
+   real(r8), intent(in)    :: prl_snow  !large-scale snowfall [mm/s]
+   real(r8), intent(in)    :: sigf      !fraction of veg cover, excluding snow-covered veg [-]
+   real(r8), intent(in)    :: lai       !leaf area index [-]
+   real(r8), intent(in)    :: sai       !stem area index [-]
+   real(r8), intent(in)    :: tair     !air temperature [K]
+   real(r8), intent(inout) :: tleaf   !sunlit canopy leaf temperature [K]
+
+   real(r8), intent(inout) :: ldew   !depth of water on foliage [mm]
+   real(r8), intent(inout) :: ldew_rain   !depth of liquid on foliage [mm]
+   real(r8), intent(inout) :: ldew_snow   !depth of liquid on foliage [mm]
+   real(r8), intent(in)    :: z0m            !roughness length
+   real(r8), intent(in)    :: hu             !forcing height of U
 
 
-      IF (DEF_Interception_scheme==1) then
+   real(r8), intent(out)   :: pg_rain  !rainfall onto ground including canopy runoff [kg/(m2 s)]
+   real(r8), intent(out)   :: pg_snow  !snowfall onto ground including canopy runoff [kg/(m2 s)]
+   real(r8), intent(out)   :: qintr    !interception [kg/(m2 s)]
+   real(r8), intent(out)   :: qintr_rain ! rainfall interception (mm h2o/s)
+   real(r8), intent(out)   :: qintr_snow ! snowfall interception (mm h2o/s)
 
+      IF (DEF_Interception_scheme==1) THEN
          CALL LEAF_interception_CoLM2014 (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tair,tleaf, &
                                              prc_rain,prc_snow,prl_rain,prl_snow,&
                                              ldew,ldew_rain,ldew_snow,z0m,hu,pg_rain,&
                                              pg_snow,qintr,qintr_rain,qintr_snow)
-
-      ELSEIF (DEF_Interception_scheme==2) then
+      ELSEIF (DEF_Interception_scheme==2) THEN
          CALL LEAF_interception_CLM4 (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tair,tleaf, &
                                              prc_rain,prc_snow,prl_rain,prl_snow,&
                                              ldew,ldew_rain,ldew_snow,z0m,hu,pg_rain,&
                                              pg_snow,qintr,qintr_rain,qintr_snow)
-      ELSEIF (DEF_Interception_scheme==3) then
+      ELSEIF (DEF_Interception_scheme==3) THEN
          CALL LEAF_interception_CLM5(deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tair,tleaf, &
                                              prc_rain,prc_snow,prl_rain,prl_snow,&
                                              ldew,ldew_rain,ldew_snow,z0m,hu,pg_rain,&
                                              pg_snow,qintr,qintr_rain,qintr_snow)
-      ELSEIF (DEF_Interception_scheme==4) then
+      ELSEIF (DEF_Interception_scheme==4) THEN
          CALL LEAF_interception_NoahMP (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tair,tleaf, &
                                              prc_rain,prc_snow,prl_rain,prl_snow,&
                                              ldew,ldew_rain,ldew_snow,z0m,hu,pg_rain,&
                                              pg_snow,qintr,qintr_rain,qintr_snow)
-      ELSEIF  (DEF_Interception_scheme==5) then
+      ELSEIF  (DEF_Interception_scheme==5) THEN
          CALL LEAF_interception_matsiro (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tair,tleaf, &
                                              prc_rain,prc_snow,prl_rain,prl_snow,&
                                              ldew,ldew_rain,ldew_snow,z0m,hu,pg_rain,&
                                              pg_snow,qintr,qintr_rain,qintr_snow)
 
-      ELSEIF  (DEF_Interception_scheme==6) then
+      ELSEIF  (DEF_Interception_scheme==6) THEN
          CALL LEAF_interception_vic (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tair,tleaf, &
                                              prc_rain,prc_snow,prl_rain,prl_snow,&
                                              ldew,ldew_rain,ldew_snow,z0m,hu,pg_rain,&
                                              pg_snow,qintr,qintr_rain,qintr_snow)
 
-      ELSEIF  (DEF_Interception_scheme==7) then
+      ELSEIF  (DEF_Interception_scheme==7) THEN
          CALL LEAF_interception_JULES (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tair,tleaf, &
                                              prc_rain,prc_snow,prl_rain,prl_snow,&
                                              ldew,ldew_rain,ldew_snow,z0m,hu,pg_rain,&
                                              pg_snow,qintr,qintr_rain,qintr_snow)
 
-      ELSEIF  (DEF_Interception_scheme==8) then
+      ELSEIF  (DEF_Interception_scheme==8) THEN
          CALL LEAF_interception_colm202x (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tair,tleaf, &
                                              prc_rain,prc_snow,prl_rain,prl_snow,&
                                              ldew,ldew_rain,ldew_snow,z0m,hu,pg_rain,&
                                              pg_snow,qintr,qintr_rain,qintr_snow)
-      endif
+      ENDIF
 
    END SUBROUTINE LEAF_interception_wrap
 
@@ -1794,42 +1784,42 @@ contains
 !
 ! -----------------------------------------------------------------
 
-      USE MOD_Precision
-      USE MOD_LandPFT
-      USE MOD_Const_Physical, only: tfrz
-      USE MOD_Vars_PFTimeInvariants
-      USE MOD_Vars_PFTimeVariables
-      USE MOD_Vars_1DPFTFluxes
-      USE MOD_Const_PFT
-      IMPLICIT NONE
+   USE MOD_Precision
+   USE MOD_LandPFT
+   USE MOD_Const_Physical, only: tfrz
+   USE MOD_Vars_PFTimeInvariants
+   USE MOD_Vars_PFTimeVariables
+   USE MOD_Vars_1DPFTFluxes
+   USE MOD_Const_PFT
+   IMPLICIT NONE
 
-      INTEGER,  INTENT(in)    :: ipatch      !patch index
-      REAL(r8), INTENT(in)    :: deltim      !seconds in a time step [second]
-      REAL(r8), INTENT(in)    :: dewmx       !maximum dew [mm]
-      REAL(r8), INTENT(in)    :: forc_us     !wind speed
-      REAL(r8), INTENT(in)    :: forc_vs     !wind speed
-      REAL(r8), INTENT(in)    :: forc_t      !air temperature
-      REAL(r8), INTENT(in)    :: z0m         !roughness length
-      REAL(r8), INTENT(in)    :: hu          !forcing height of U
-      REAL(r8), INTENT(in)    :: ldew_rain   !depth of water on foliage [mm]
-      REAL(r8), INTENT(in)    :: ldew_snow   !depth of water on foliage [mm]
-      REAL(r8), INTENT(in)    :: prc_rain    !convective ranfall [mm/s]
-      REAL(r8), INTENT(in)    :: prc_snow    !convective snowfall [mm/s]
-      REAL(r8), INTENT(in)    :: prl_rain    !large-scale rainfall [mm/s]
-      REAL(r8), INTENT(in)    :: prl_snow    !large-scale snowfall [mm/s]
+   integer,  intent(in)    :: ipatch      !patch index
+   real(r8), intent(in)    :: deltim      !seconds in a time step [second]
+   real(r8), intent(in)    :: dewmx       !maximum dew [mm]
+   real(r8), intent(in)    :: forc_us     !wind speed
+   real(r8), intent(in)    :: forc_vs     !wind speed
+   real(r8), intent(in)    :: forc_t      !air temperature
+   real(r8), intent(in)    :: z0m         !roughness length
+   real(r8), intent(in)    :: hu          !forcing height of U
+   real(r8), intent(in)    :: ldew_rain   !depth of water on foliage [mm]
+   real(r8), intent(in)    :: ldew_snow   !depth of water on foliage [mm]
+   real(r8), intent(in)    :: prc_rain    !convective ranfall [mm/s]
+   real(r8), intent(in)    :: prc_snow    !convective snowfall [mm/s]
+   real(r8), intent(in)    :: prl_rain    !large-scale rainfall [mm/s]
+   real(r8), intent(in)    :: prl_snow    !large-scale snowfall [mm/s]
 
-      REAL(r8), INTENT(inout) :: ldew     !depth of water on foliage [mm]
-      REAL(r8), INTENT(out)   :: pg_rain    !rainfall onto ground including canopy runoff [kg/(m2 s)]
-      REAL(r8), INTENT(out)   :: pg_snow    !snowfall onto ground including canopy runoff [kg/(m2 s)]
-      REAL(r8), INTENT(out)   :: qintr      !interception [kg/(m2 s)]
-      REAL(r8), INTENT(out)   :: qintr_rain !rainfall interception (mm h2o/s)
-      REAL(r8), INTENT(out)   :: qintr_snow !snowfall interception (mm h2o/s)
+   real(r8), intent(inout) :: ldew     !depth of water on foliage [mm]
+   real(r8), intent(out)   :: pg_rain    !rainfall onto ground including canopy runoff [kg/(m2 s)]
+   real(r8), intent(out)   :: pg_snow    !snowfall onto ground including canopy runoff [kg/(m2 s)]
+   real(r8), intent(out)   :: qintr      !interception [kg/(m2 s)]
+   real(r8), intent(out)   :: qintr_rain !rainfall interception (mm h2o/s)
+   real(r8), intent(out)   :: qintr_snow !snowfall interception (mm h2o/s)
 
-      INTEGER i, p, ps, pe
+   integer i, p, ps, pe
 #ifdef CROP
-      INTEGER  :: irrig_flag  ! 1 if sprinker, 2 if others
+   integer  :: irrig_flag  ! 1 if sprinker, 2 if others
 #endif
-      REAL(r8) pg_rain_tmp, pg_snow_tmp
+   real(r8) pg_rain_tmp, pg_snow_tmp
 
       pg_rain_tmp = 0.
       pg_snow_tmp = 0.
@@ -1837,15 +1827,15 @@ contains
       ps = patch_pft_s(ipatch)
       pe = patch_pft_e(ipatch)
 
-      if(.not. DEF_USE_IRRIGATION) qflx_irrig_sprinkler = 0._r8
+      IF(.not. DEF_USE_IRRIGATION) qflx_irrig_sprinkler = 0._r8
 
 #ifdef CROP
-      if(DEF_USE_IRRIGATION)then
-         call CalIrrigationApplicationFluxes(ipatch,ps,pe,deltim,qflx_irrig_drip,qflx_irrig_sprinkler,qflx_irrig_flood,qflx_irrig_paddy,irrig_flag=1)
-      end if
+      IF(DEF_USE_IRRIGATION)THEN
+         CALL CalIrrigationApplicationFluxes(ipatch,ps,pe,deltim,qflx_irrig_drip,qflx_irrig_sprinkler,qflx_irrig_flood,qflx_irrig_paddy,irrig_flag=1)
+      ENDIF
 #endif
 
-      if (DEF_Interception_scheme==1) THEN
+      IF (DEF_Interception_scheme==1) THEN
          DO i = ps, pe
             p = pftclass(i)
             CALL LEAF_interception_CoLM2014 (deltim,dewmx,forc_us,forc_vs,chil_p(p),sigf_p(i),lai_p(i),sai_p(i),forc_t,tleaf_p(i),&
