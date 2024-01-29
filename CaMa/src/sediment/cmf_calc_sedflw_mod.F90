@@ -196,9 +196,9 @@ CONTAINS
             ENDIF
             IF ( minval(bOut(iseq,:)) <= 1e-8 ) THEN
                DO ised = 1, nsed
-                     IF ( bOut(iseq,ised) > 1e-8 ) THEN
-                        brate(iseq,ised) = min( d2layer(iseq,ised) / bOut(iseq,ised), 1.d0 )
-                     ENDIF
+                  IF ( bOut(iseq,ised) > 1e-8 ) THEN
+                     brate(iseq,ised) = min( d2layer(iseq,ised) / bOut(iseq,ised), 1.d0 )
+                  ENDIF
                ENDDO
             ELSE
                brate(iseq,:) = min( d2layer(iseq,:) / bOut(iseq,:), 1.d0 )
