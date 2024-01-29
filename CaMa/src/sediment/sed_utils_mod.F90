@@ -18,37 +18,37 @@ CONTAINS
    !-- sed_diag_reset      :
    !####################################################################
    SUBROUTINE splitchar(allvars,vnames)
-      ! same function as splitting characters in CaMa
-      USE PARKIND1,                only: JPIM
-      IMPLICIT NONE
-      SAVE
-      character(len=256), intent(in)  :: allvars
-      character(len=256), intent(out) :: vnames(:)
-      integer(kind=JPIM)              :: nvarsout, j0, j
-      character(len=256)              :: ctmp
+   ! same function as splitting characters in CaMa
+   USE PARKIND1,                only: JPIM
+   IMPLICIT NONE
+   SAVE
+   character(len=256), intent(in)  :: allvars
+   character(len=256), intent(out) :: vnames(:)
+   integer(kind=JPIM)              :: nvarsout, j0, j
+   character(len=256)              :: ctmp
 
-         nvarsout = 0
-         j0 = 1
-         DO j = 1, len(trim(allvars))
-            IF ( (j>j0) .and. (allvars(j:j).eq.',') ) THEN
-               ctmp = trim(adjustl(allvars(j0:j-1)))
-               IF ( len(ctmp) > 0 ) THEN
-                  nvarsout = nvarsout + 1
-                  vnames(nvarsout) = ctmp
-               ENDIF
-               j0 = j + 1
-            ENDIF
-         ENDDO
-
-         ! last one
-         IF ( j0 < len(trim(allvars)) ) THEN
-            j = len(trim(allvars))
-            ctmp = trim(adjustl(allvars(j0:j)))
+      nvarsout = 0
+      j0 = 1
+      DO j = 1, len(trim(allvars))
+         IF ( (j>j0) .and. (allvars(j:j).eq.',') ) THEN
+            ctmp = trim(adjustl(allvars(j0:j-1)))
             IF ( len(ctmp) > 0 ) THEN
                nvarsout = nvarsout + 1
                vnames(nvarsout) = ctmp
             ENDIF
+            j0 = j + 1
          ENDIF
+      ENDDO
+
+      ! last one
+      IF ( j0 < len(trim(allvars)) ) THEN
+         j = len(trim(allvars))
+         ctmp = trim(adjustl(allvars(j0:j)))
+         IF ( len(ctmp) > 0 ) THEN
+            nvarsout = nvarsout + 1
+            vnames(nvarsout) = ctmp
+         ENDIF
+      ENDIF
    END SUBROUTINE splitchar
    !==========================================================
    !+
