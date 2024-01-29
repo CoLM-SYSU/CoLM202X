@@ -12,7 +12,7 @@ MODULE cmf_ctrl_sedinp_mod
 ! See the License for the specific language governing permissions and limitations under the License.
 !==========================================================
 #ifdef UseMPI_CMF
- USE MPI
+   USE MPI
 #endif
    USE PARKIND1,                only: JPIM, JPRB, JPRM
    USE YOS_CMF_INPUT,           only: LOGNAM
