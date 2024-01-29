@@ -2,22 +2,22 @@
 
 #ifdef CatchLateralFlow
 MODULE MOD_Catch_LateralFlow
-   !-------------------------------------------------------------------------------------
-   ! DESCRIPTION:
-   !   
-   !   Lateral flow.
-   !
-   !   Lateral flows in CoLM include
-   !   1. Surface flow over hillslopes; 
-   !   2. Routing flow in rivers;
-   !   3. Groundwater (subsurface) lateral flow. 
-   !
-   !   Water exchanges between
-   !   1. surface flow and rivers;
-   !   2. subsurface flow and rivers.
-   !
-   ! Created by Shupeng Zhang, May 2023
-   !-------------------------------------------------------------------------------------
+!-------------------------------------------------------------------------------------
+! DESCRIPTION:
+!   
+!   Lateral flow.
+!
+!   Lateral flows in CoLM include
+!   1. Surface flow over hillslopes; 
+!   2. Routing flow in rivers;
+!   3. Groundwater (subsurface) lateral flow. 
+!
+!   Water exchanges between
+!   1. surface flow and rivers;
+!   2. subsurface flow and rivers.
+!
+! Created by Shupeng Zhang, May 2023
+!-------------------------------------------------------------------------------------
    
    USE MOD_Precision
    USE MOD_SPMD_Task
@@ -33,7 +33,7 @@ MODULE MOD_Catch_LateralFlow
    USE MOD_Const_Physical, only : denice, denh2o
    IMPLICIT NONE 
 
-   INTEGER, parameter :: nsubstep = 20
+   integer, parameter :: nsubstep = 20
    real(r8) :: dt_average
 
 #ifdef CoLMDEBUG
@@ -47,18 +47,18 @@ CONTAINS
    SUBROUTINE lateral_flow_init (lc_year)
 
 #ifdef CoLMDEBUG
-      USE MOD_SPMD_Task
-      USE MOD_Mesh
-      USE MOD_Pixel
-      USE MOD_LandPatch
-      USE MOD_Utils
+   USE MOD_SPMD_Task
+   USE MOD_Mesh
+   USE MOD_Pixel
+   USE MOD_LandPatch
+   USE MOD_Utils
 #endif
-      IMPLICIT NONE
+   IMPLICIT NONE
       
-      INTEGER, intent(in) :: lc_year    ! which year of land cover data used
+   integer, intent(in) :: lc_year    ! which year of land cover data used
 
 #ifdef CoLMDEBUG
-      integer :: ip ,ie, ipxl
+   integer :: ip ,ie, ipxl
 #endif
 
       CALL element_neighbour_init (lc_year)
@@ -93,26 +93,26 @@ CONTAINS
    ! ----------
    SUBROUTINE lateral_flow (deltime)
 
-      USE MOD_Mesh,      only : numelm
-      USE MOD_LandHRU,   only : landhru,  numhru,    basin_hru
-      USE MOD_LandPatch, only : numpatch, elm_patch, hru_patch
+   USE MOD_Mesh,      only : numelm
+   USE MOD_LandHRU,   only : landhru,  numhru,    basin_hru
+   USE MOD_LandPatch, only : numpatch, elm_patch, hru_patch
 
-      USE MOD_Vars_1DFluxes,       only : rsur, rsub, rnof
-      USE MOD_Vars_TimeVariables,  only : wdsrf
-      USE MOD_Vars_TimeInvariants, only : lakedepth
-      USE MOD_Hydro_Vars_1DFluxes
-      USE MOD_Hydro_Vars_TimeVariables
+   USE MOD_Vars_1DFluxes,       only : rsur, rsub, rnof
+   USE MOD_Vars_TimeVariables,  only : wdsrf
+   USE MOD_Vars_TimeInvariants, only : lakedepth
+   USE MOD_Hydro_Vars_1DFluxes
+   USE MOD_Hydro_Vars_TimeVariables
 
-      USE MOD_RangeCheck
-      IMPLICIT NONE
+   USE MOD_RangeCheck
+   IMPLICIT NONE
 
-      REAL(r8), intent(in) :: deltime
+   real(r8), intent(in) :: deltime
 
-      ! Local Variables
-      INTEGER  :: numbasin, ibasin, ihru, i, j, ps, pe, istep
-      real(r8), allocatable :: wdsrf_p (:)
+   ! Local Variables
+   integer  :: numbasin, ibasin, ihru, i, j, ps, pe, istep
+   real(r8), allocatable :: wdsrf_p (:)
 #ifdef CoLMDEBUG
-      real(r8) :: dtolw, toldis
+   real(r8) :: dtolw, toldis
 #endif
 
       IF (p_is_worker) THEN
@@ -165,22 +165,22 @@ CONTAINS
             wdsrf_bsn_ta(:) = wdsrf_bsn_ta(:) / deltime
             momen_riv_ta(:) = momen_riv_ta(:) / deltime
 
-            where (wdsrf_bsn_ta > 0)
+            WHERE (wdsrf_bsn_ta > 0)
                veloc_riv_ta = momen_riv_ta / wdsrf_bsn_ta
-            ELSE where
+            ELSE WHERE
                veloc_riv_ta = 0
-            END where
+            END WHERE
          ENDIF
 
          IF (numhru > 0) THEN
             wdsrf_hru_ta(:) = wdsrf_hru_ta(:) / deltime
             momen_hru_ta(:) = momen_hru_ta(:) / deltime
 
-            where (wdsrf_hru_ta > 0)
+            WHERE (wdsrf_hru_ta > 0)
                veloc_hru_ta = momen_hru_ta / wdsrf_hru_ta
-            ELSE where
+            ELSE WHERE
                veloc_hru_ta = 0.
-            END where
+            END WHERE
          ENDIF
 
          ! update surface water depth on patches
@@ -211,11 +211,11 @@ CONTAINS
       ENDIF
 
 #ifdef RangeCheck
-      if (p_is_worker .and. (p_iam_worker == 0)) then
+      IF (p_is_worker .and. (p_iam_worker == 0)) THEN
          write(*,'(/,A)') 'Checking Lateral Flow Variables ...'
          write(*,'(A,F12.5,A)') 'River Lake Flow average timestep: ', &
                dt_average/nsubstep, ' seconds'
-      end if
+      ENDIF
 
       CALL check_vector_data ('Basin Water Depth   [m]  ', wdsrf_bsn)
       CALL check_vector_data ('River Velocity      [m/s]', veloc_riv)
@@ -243,20 +243,20 @@ CONTAINS
          CALL mpi_allreduce (MPI_IN_PLACE, dtolw,  1, MPI_REAL8, MPI_SUM, p_comm_worker, p_err)
          CALL mpi_allreduce (MPI_IN_PLACE, toldis, 1, MPI_REAL8, MPI_SUM, p_comm_worker, p_err)
 #endif
-         if (p_iam_worker == 0) then
+         IF (p_iam_worker == 0) THEN
             write(*,'(A,F10.5,A,ES10.3,A,ES10.3,A)') 'Total surface water error: ', dtolw, &
                '(m^3) in area ', landarea, '(m^2), discharge ', toldis, '(m^3)' 
-         endif
+         ENDIF
 
          dtolw = 0
          IF (numpatch > 0) dtolw = sum(patcharea * xwsub) / 1.e3 * deltime
 #ifdef USEMPI
          CALL mpi_allreduce (MPI_IN_PLACE, dtolw,  1, MPI_REAL8, MPI_SUM, p_comm_worker, p_err)
 #endif
-         if (p_iam_worker == 0) then
+         IF (p_iam_worker == 0) THEN
             write(*,'(A,F10.5,A,ES10.3,A)') 'Total ground  water error: ', dtolw, &
                '(m^3) in area ', landarea, '(m^2)'
-         endif
+         ENDIF
       ENDIF
 #endif
 #endif
@@ -266,7 +266,7 @@ CONTAINS
    ! ----------
    SUBROUTINE lateral_flow_final ()
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
       CALL hillslope_network_final  ()
       CALL river_lake_network_final ()

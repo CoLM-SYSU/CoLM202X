@@ -2,130 +2,129 @@
 
 #ifdef CatchLateralFlow
 MODULE MOD_Catch_RiverLakeNetwork
-   !--------------------------------------------------------------------------------
-   ! DESCRIPTION:
-   ! 
-   !    River networks: data and communication subroutines.
-   !
-   ! Created by Shupeng Zhang, May 2023
-   !--------------------------------------------------------------------------------
+!--------------------------------------------------------------------------------
+! DESCRIPTION:
+! 
+!    River networks: data and communication subroutines.
+!
+! Created by Shupeng Zhang, May 2023
+!--------------------------------------------------------------------------------
 
    USE MOD_Precision
    USE MOD_Vars_Global, only : spval
    IMPLICIT NONE
 
    ! -- river parameters --
-   REAL(r8), allocatable :: riverlen  (:)
-   REAL(r8), allocatable :: riverelv  (:)
-   REAL(r8), allocatable :: riverwth  (:)
-   REAL(r8), allocatable :: riverarea (:)
-   REAL(r8), allocatable :: riverdpth (:)
+   real(r8), allocatable :: riverlen  (:)
+   real(r8), allocatable :: riverelv  (:)
+   real(r8), allocatable :: riverwth  (:)
+   real(r8), allocatable :: riverarea (:)
+   real(r8), allocatable :: riverdpth (:)
 
-   REAL(r8), allocatable :: basinelv  (:)
-   REAL(r8), allocatable :: bedelv    (:)
-   REAL(r8), allocatable :: handmin   (:)
+   real(r8), allocatable :: basinelv  (:)
+   real(r8), allocatable :: bedelv    (:)
+   real(r8), allocatable :: handmin   (:)
    
-   REAL(r8), allocatable :: wtsrfelv  (:)
+   real(r8), allocatable :: wtsrfelv  (:)
 
    ! index of downstream river 
    ! > 0 : other catchment;   0 : river mouth; -1 : inland depression
-   INTEGER, allocatable :: riverdown  (:) 
+   integer, allocatable :: riverdown  (:) 
    logical, allocatable :: to_lake (:)
 
    ! address of downstream river 
    ! > 0 : catchment on this process;   0 : catchment on other processes; 
    ! -1  : not found, including river mouth, out of domain, inland depression.
-   INTEGER, allocatable :: addrdown (:)
+   integer, allocatable :: addrdown (:)
 
-   REAL(r8), allocatable :: riverlen_ds  (:)
-   REAL(r8), allocatable :: wtsrfelv_ds  (:)
-   REAL(r8), allocatable :: riverwth_ds  (:)
-   REAL(r8), allocatable :: bedelv_ds    (:)
+   real(r8), allocatable :: riverlen_ds  (:)
+   real(r8), allocatable :: wtsrfelv_ds  (:)
+   real(r8), allocatable :: riverwth_ds  (:)
+   real(r8), allocatable :: bedelv_ds    (:)
    
-   REAL(r8), allocatable :: outletwth (:)
+   real(r8), allocatable :: outletwth (:)
 
    ! -- lake data type --
-   TYPE :: lake_info_type
-      INTEGER :: nsub
-      REAL(r8), allocatable :: area0  (:) ! area data in HRU order
-      REAL(r8), allocatable :: area   (:) ! area data in the order from deepest to shallowest HRU
-      REAL(r8), allocatable :: depth0 (:) ! depth data in HRU order
-      REAL(r8), allocatable :: depth  (:) ! depth data in the order from deepest to shallowest HRU
+   type :: lake_info_type
+      integer :: nsub
+      real(r8), allocatable :: area0  (:) ! area data in HRU order
+      real(r8), allocatable :: area   (:) ! area data in the order from deepest to shallowest HRU
+      real(r8), allocatable :: depth0 (:) ! depth data in HRU order
+      real(r8), allocatable :: depth  (:) ! depth data in the order from deepest to shallowest HRU
       ! a curve describing the relationship between depth of water from lake bottom and total water volume
       ! the i-th value corresponds to the volume when water depth is at i-th depth
-      REAL(r8), allocatable :: dep_vol_curve (:)
+      real(r8), allocatable :: dep_vol_curve (:)
    CONTAINS 
       procedure, PUBLIC :: surface => retrieve_lake_surface_from_volume
       procedure, PUBLIC :: volume  => retrieve_lake_volume_from_surface
-   END TYPE lake_info_type
+   END type lake_info_type
 
    ! -- lake information --
-   INTEGER, allocatable :: lake_id (:)
-   TYPE(lake_info_type), allocatable :: lakes (:)
+   integer, allocatable :: lake_id (:)
+   type(lake_info_type), allocatable :: lakes (:)
 
    ! -- communications --
-   TYPE :: river_sendrecv_type
-      INTEGER :: nproc
-      INTEGER, allocatable :: iproc (:)
-      INTEGER, allocatable :: wdsp  (:)
-      INTEGER, allocatable :: ndata (:)
-      INTEGER, allocatable :: ups   (:)
-      INTEGER, allocatable :: down  (:)
-      INTEGER, allocatable :: iloc  (:)
+   type :: river_sendrecv_type
+      integer :: nproc
+      integer, allocatable :: iproc (:)
+      integer, allocatable :: wdsp  (:)
+      integer, allocatable :: ndata (:)
+      integer, allocatable :: ups   (:)
+      integer, allocatable :: down  (:)
+      integer, allocatable :: iloc  (:)
    CONTAINS
       final :: river_sendrecv_free_mem
-   END TYPE river_sendrecv_type
+   END type river_sendrecv_type
 
-   TYPE(river_sendrecv_type), target :: river_up
-   TYPE(river_sendrecv_type), target :: river_dn
+   type(river_sendrecv_type), target :: river_up
+   type(river_sendrecv_type), target :: river_dn
 
-   INTEGER, parameter :: SEND_DATA_DOWN_TO_UP = 1
-   INTEGER, parameter :: SEND_DATA_UP_TO_DOWN = 2
+   integer, parameter :: SEND_DATA_DOWN_TO_UP = 1
+   integer, parameter :: SEND_DATA_UP_TO_DOWN = 2
 
 CONTAINS
    
    ! ----------
    SUBROUTINE river_lake_network_init ()
 
-      USE MOD_SPMD_Task
-      USE MOD_Namelist
-      USE MOD_NetCDFSerial
-      USE MOD_Mesh
-      USE MOD_Pixel
-      USE MOD_LandElm
-      USE MOD_LandPatch
-      USE MOD_Catch_HillslopeNetwork
-      USE MOD_ElementNeighbour
-      USE MOD_DataType
-      USE MOD_Utils
-      USE MOD_Vars_TimeInvariants, only : lakedepth
-      IMPLICIT NONE
+   USE MOD_SPMD_Task
+   USE MOD_Namelist
+   USE MOD_NetCDFSerial
+   USE MOD_Mesh
+   USE MOD_Pixel
+   USE MOD_LandElm
+   USE MOD_LandPatch
+   USE MOD_Catch_HillslopeNetwork
+   USE MOD_ElementNeighbour
+   USE MOD_DataType
+   USE MOD_Utils
+   USE MOD_Vars_TimeInvariants, only : lakedepth
+   IMPLICIT NONE
 
+   ! Local Variables
+   character(len=256) :: river_file, rivdpt_file
+   logical :: use_calc_rivdpt
 
-      ! Local Variables
-      CHARACTER(len=256) :: river_file, rivdpt_file
-      logical :: use_calc_rivdpt
-
-      INTEGER :: numbasin, ibasin, nbasin, inb
-      INTEGER :: iworker, mesg(4), isrc, idest, iproc
-      INTEGER :: irecv, ifrom, ito, iup, idn, idata
-      INTEGER :: nrecv, ndata, nup, ndn
-      INTEGER :: iloc, iloc1, iloc2
+   integer :: numbasin, ibasin, nbasin, inb
+   integer :: iworker, mesg(4), isrc, idest, iproc
+   integer :: irecv, ifrom, ito, iup, idn, idata
+   integer :: nrecv, ndata, nup, ndn
+   integer :: iloc, iloc1, iloc2
    
-      INTEGER , allocatable :: bindex (:)
-      INTEGER , allocatable :: icache (:)
-      REAL(r8), allocatable :: rcache (:)
-      logical , allocatable :: lcache (:)
-      
-      INTEGER , allocatable :: addrbasin (:,:)
-      INTEGER , allocatable :: ndata_w (:)
+   integer , allocatable :: bindex (:)
+   integer , allocatable :: icache (:)
+   real(r8), allocatable :: rcache (:)
+   logical , allocatable :: lcache (:)
+   
+   integer , allocatable :: addrbasin (:,:)
+   integer , allocatable :: ndata_w (:)
 
-      TYPE(pointer_int32_2d), allocatable :: exchange_w (:)
-      INTEGER, allocatable :: exchange(:,:)
-      INTEGER, allocatable :: basin_sorted(:), order(:)
+   type(pointer_int32_2d), allocatable :: exchange_w (:)
+   integer, allocatable :: exchange(:,:)
+   integer, allocatable :: basin_sorted(:), order(:)
 
-      ! for lakes
-      integer :: ps, pe, nsublake, i, ipatch, ipxl
+   ! for lakes
+   integer :: ps, pe, nsublake, i, ipatch, ipxl
 
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
@@ -701,45 +700,45 @@ CONTAINS
    ! ----- retrieve river depth from runoff -----
    SUBROUTINE calc_riverdepth_from_runoff ()
       
-      USE MOD_SPMD_Task
-      USE MOD_Namelist
-      USE MOD_DataType
-      USE MOD_NetCDFSerial
-      USE MOD_NetCDFBlock
-      USE MOD_Block
-      USE MOD_Mesh
-      USE MOD_Grid
-      USE MOD_Mapping_Grid2Pset
-      USE MOD_LandElm
-      USE MOD_ElmVector
-      USE MOD_ElementNeighbour
-      USE MOD_Hydro_IO
-      IMPLICIT NONE
+   USE MOD_SPMD_Task
+   USE MOD_Namelist
+   USE MOD_DataType
+   USE MOD_NetCDFSerial
+   USE MOD_NetCDFBlock
+   USE MOD_Block
+   USE MOD_Mesh
+   USE MOD_Grid
+   USE MOD_Mapping_Grid2Pset
+   USE MOD_LandElm
+   USE MOD_ElmVector
+   USE MOD_ElementNeighbour
+   USE MOD_Hydro_IO
+   IMPLICIT NONE
 
-      ! Local Variables
-      character(len=256) :: file_rnof, file_rivdpt
-      type(grid_type)    :: grid_rnof
-      type(block_data_real8_2d)    :: f_rnof
-      type(mapping_grid2pset_type) :: mg2p_rnof
+   ! Local Variables
+   character(len=256) :: file_rnof, file_rivdpt
+   type(grid_type)    :: grid_rnof
+   type(block_data_real8_2d)    :: f_rnof
+   type(mapping_grid2pset_type) :: mg2p_rnof
 
-      real(r8), allocatable :: bsnrnof(:) , bsndis(:)
-      integer,  allocatable :: nups_riv(:), iups_riv(:), b_up2down(:)
+   real(r8), allocatable :: bsnrnof(:) , bsndis(:)
+   integer,  allocatable :: nups_riv(:), iups_riv(:), b_up2down(:)
 
-      integer :: i, j, ithis, ib, jb, iblkme
-      integer :: iwork, mesg(2), isrc, ndata
-      real(r8), allocatable :: rcache(:)
+   integer :: i, j, ithis, ib, jb, iblkme
+   integer :: iwork, mesg(2), isrc, ndata
+   real(r8), allocatable :: rcache(:)
    
-      real(r8), parameter :: cH_rivdpt   = 0.1
-      real(r8), parameter :: pH_rivdpt   = 0.5
-      real(r8), parameter :: B0_rivdpt   = 0.0
-      real(r8), parameter :: Bmin_rivdpt = 1.0
+   real(r8), parameter :: cH_rivdpt   = 0.1
+   real(r8), parameter :: pH_rivdpt   = 0.5
+   real(r8), parameter :: B0_rivdpt   = 0.0
+   real(r8), parameter :: Bmin_rivdpt = 1.0
 
 
       file_rnof = trim(DEF_dir_runtime) // '/runoff_clim.nc'
 
       CALL grid_rnof%define_from_file (file_rnof, 'lat', 'lon')
 
-      call mg2p_rnof%build (grid_rnof, landelm)
+      CALL mg2p_rnof%build (grid_rnof, landelm)
 
       IF (p_is_io) THEN
          CALL allocate_block_data (grid_rnof, f_rnof)
@@ -748,8 +747,8 @@ CONTAINS
          DO iblkme = 1, gblock%nblkme
             ib = gblock%xblkme(iblkme)
             jb = gblock%yblkme(iblkme)
-            do j = 1, grid_rnof%ycnt(jb)
-               do i = 1, grid_rnof%xcnt(ib)
+            DO j = 1, grid_rnof%ycnt(jb)
+               DO i = 1, grid_rnof%xcnt(ib)
                   f_rnof%blk(ib,jb)%val(i,j) = max(f_rnof%blk(ib,jb)%val(i,j), 0.)
                ENDDO
             ENDDO
@@ -760,7 +759,7 @@ CONTAINS
          IF (numelm > 0) allocate (bsnrnof (numelm))
       ENDIF
 
-      call mg2p_rnof%map_aweighted (f_rnof, bsnrnof)
+      CALL mg2p_rnof%map_aweighted (f_rnof, bsnrnof)
 
       IF (p_is_worker) THEN
          IF (numelm > 0) THEN
@@ -775,11 +774,11 @@ CONTAINS
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
 
-      if (p_is_worker) then
+      IF (p_is_worker) THEN
          mesg = (/p_iam_glb, numelm/)
-         call mpi_send (mesg, 2, MPI_INTEGER, p_root, mpi_tag_mesg, p_comm_glb, p_err) 
+         CALL mpi_send (mesg, 2, MPI_INTEGER, p_root, mpi_tag_mesg, p_comm_glb, p_err) 
          IF (numelm > 0) THEN
-            call mpi_send (bsnrnof, numelm, MPI_REAL8, p_root, mpi_tag_data, p_comm_glb, p_err) 
+            CALL mpi_send (bsnrnof, numelm, MPI_REAL8, p_root, mpi_tag_data, p_comm_glb, p_err) 
          ENDIF
       ENDIF
       
@@ -788,7 +787,7 @@ CONTAINS
          allocate (bsnrnof (totalnumelm))
 
          DO iwork = 0, p_np_worker-1
-            call mpi_recv (mesg, 2, MPI_INTEGER, MPI_ANY_SOURCE, &
+            CALL mpi_recv (mesg, 2, MPI_INTEGER, MPI_ANY_SOURCE, &
                mpi_tag_mesg, p_comm_glb, p_stat, p_err)
 
             isrc  = mesg(1)
@@ -796,7 +795,7 @@ CONTAINS
             IF (ndata > 0) THEN
                allocate(rcache (ndata))
 
-               call mpi_recv (rcache, ndata, MPI_REAL8, isrc, &
+               CALL mpi_recv (rcache, ndata, MPI_REAL8, isrc, &
                   mpi_tag_data, p_comm_glb, p_stat, p_err)
                
                bsnrnof(elm_data_address(p_itis_worker(isrc))%val) = rcache
@@ -882,21 +881,21 @@ CONTAINS
    ! 
    FUNCTION retrieve_lake_surface_from_volume (this, volume) result(surface)
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      class(lake_info_type) :: this
-      real(r8), intent(in)  :: volume
-      real(r8) :: surface
-      
-      ! Local Variables
-      integer :: i
+   class(lake_info_type) :: this
+   real(r8), intent(in)  :: volume
+   real(r8) :: surface
+   
+   ! Local Variables
+   integer :: i
 
       IF (volume <= 0) THEN
          surface = 0
          RETURN
       ENDIF
 
-      IF (this%nsub == 1) then
+      IF (this%nsub == 1) THEN
          surface = volume / this%area(1)
       ELSE
          i = 1
@@ -916,21 +915,21 @@ CONTAINS
    ! 
    FUNCTION retrieve_lake_volume_from_surface (this, surface) result(volume)
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      ! Local Variables
-      integer :: i
+   ! Local Variables
+   integer :: i
 
-      class(lake_info_type) :: this
-      real(r8), intent(in)  :: surface 
-      real(r8) :: volume 
+   class(lake_info_type) :: this
+   real(r8), intent(in)  :: surface 
+   real(r8) :: volume 
 
       IF (surface <= 0) THEN
          volume = 0
          RETURN
       ENDIF
       
-      IF (this%nsub == 1) then
+      IF (this%nsub == 1) THEN
          volume = this%area(1) * surface 
       ELSE
          i = 1
@@ -954,37 +953,36 @@ CONTAINS
          vec_send1, vec_recv1, vec_send2, vec_recv2, &
          vec_send3, vec_recv3, vec_send4, vec_recv4 )
 
-      USE MOD_Precision
-      USE MOD_SPMD_Task
-      IMPLICIT NONE
+   USE MOD_Precision
+   USE MOD_SPMD_Task
+   IMPLICIT NONE
 
-      INTEGER, intent(in) :: direction
-      LOGICAL, intent(in) :: accum
+   integer, intent(in) :: direction
+   logical, intent(in) :: accum
 
-      REAL(r8), intent(inout) :: vec_send1(:), vec_recv1(:)
-      REAL(r8), intent(inout), optional :: vec_send2(:), vec_recv2(:)
-      REAL(r8), intent(inout), optional :: vec_send3(:), vec_recv3(:)
-      REAL(r8), intent(inout), optional :: vec_send4(:), vec_recv4(:)
+   real(r8), intent(inout) :: vec_send1(:), vec_recv1(:)
+   real(r8), intent(inout), optional :: vec_send2(:), vec_recv2(:)
+   real(r8), intent(inout), optional :: vec_send3(:), vec_recv3(:)
+   real(r8), intent(inout), optional :: vec_send4(:), vec_recv4(:)
 
-      ! Local Variables
+   ! Local Variables
+   type(river_sendrecv_type), pointer :: send_pointer
+   integer :: nproc_send, ndatasend, idest
+   integer,  allocatable :: req_send(:,:)
+   real(r8), allocatable :: sendcache1(:)
+   real(r8), allocatable :: sendcache2(:)
+   real(r8), allocatable :: sendcache3(:)
+   real(r8), allocatable :: sendcache4(:)
 
-      TYPE(river_sendrecv_type), pointer :: send_pointer
-      INTEGER :: nproc_send, ndatasend, idest
-      INTEGER,  allocatable :: req_send(:,:)
-      REAL(r8), allocatable :: sendcache1(:)
-      REAL(r8), allocatable :: sendcache2(:)
-      REAL(r8), allocatable :: sendcache3(:)
-      REAL(r8), allocatable :: sendcache4(:)
+   type(river_sendrecv_type), pointer :: recv_pointer
+   integer :: nproc_recv, ndatarecv, isrc
+   integer,  allocatable :: req_recv(:,:)
+   real(r8), allocatable :: recvcache1(:)
+   real(r8), allocatable :: recvcache2(:)
+   real(r8), allocatable :: recvcache3(:)
+   real(r8), allocatable :: recvcache4(:)
 
-      TYPE(river_sendrecv_type), pointer :: recv_pointer
-      INTEGER :: nproc_recv, ndatarecv, isrc
-      INTEGER,  allocatable :: req_recv(:,:)
-      REAL(r8), allocatable :: recvcache1(:)
-      REAL(r8), allocatable :: recvcache2(:)
-      REAL(r8), allocatable :: recvcache3(:)
-      REAL(r8), allocatable :: recvcache4(:)
-
-      INTEGER :: nvec, iproc, i, istt, iend, ndata
+   integer :: nvec, iproc, i, istt, iend, ndata
 
       IF (p_is_worker) THEN
 
@@ -993,7 +991,7 @@ CONTAINS
          IF (direction == SEND_DATA_DOWN_TO_UP) THEN
             send_pointer => river_up
             recv_pointer => river_dn
-         elseif (direction == SEND_DATA_UP_TO_DOWN) THEN
+         ELSEIF (direction == SEND_DATA_UP_TO_DOWN) THEN
             send_pointer => river_dn
             recv_pointer => river_up
          ENDIF
@@ -1187,10 +1185,10 @@ CONTAINS
    ! ----------
    SUBROUTINE river_lake_network_final ()
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      ! Local Variables
-      integer :: ilake
+   ! Local Variables
+   integer :: ilake
 
       IF (allocated(lake_id  )) deallocate(lake_id  )
       IF (allocated(riverlen )) deallocate(riverlen )
@@ -1229,8 +1227,8 @@ CONTAINS
    ! ---------
    SUBROUTINE river_sendrecv_free_mem (this)
       
-      IMPLICIT NONE
-      TYPE(river_sendrecv_type) :: this
+   IMPLICIT NONE
+   type(river_sendrecv_type) :: this
 
       IF (allocated(this%iproc)) deallocate(this%iproc)
       IF (allocated(this%wdsp )) deallocate(this%wdsp )

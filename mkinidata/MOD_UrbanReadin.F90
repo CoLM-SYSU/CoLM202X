@@ -4,71 +4,66 @@
 
 MODULE MOD_UrbanReadin
 
-!-----------------------------------------------------------------------
-   USE MOD_Precision
-   IMPLICIT NONE
-   SAVE
-
-! PUBLIC MEMBER FUNCTIONS:
-   PUBLIC :: Urban_readin
-
-
-!-----------------------------------------------------------------------
-
-   CONTAINS
-
-!-----------------------------------------------------------------------
-
-   SUBROUTINE Urban_readin (dir_landdata, lc_year)!(dir_srfdata,dir_atmdata,nam_urbdata,nam_atmdata,lc_year)
-
 ! ===========================================================
 ! Read in the Urban dataset
 ! ===========================================================
 
-      USE MOD_Precision
-      USE MOD_SPMD_Task
-      USE MOD_Vars_Global
-      USE MOD_Namelist
-      USE MOD_Const_LC
-      USE MOD_Vars_TimeVariables
-      USE MOD_Vars_TimeInvariants
-      USE MOD_Urban_Vars_TimeInvariants
-      USE MOD_NetCDFVector
-      USE MOD_NetCDFSerial
-      USE MOD_LandPatch
-      USE MOD_LandUrban
-      USE MOD_Urban_Const_LCZ
+   USE MOD_Precision
+   IMPLICIT NONE
+   SAVE
+
+   ! PUBLIC MEMBER FUNCTIONS:
+   PUBLIC :: Urban_readin
+
+CONTAINS
+
+   SUBROUTINE Urban_readin (dir_landdata, lc_year)!(dir_srfdata,dir_atmdata,nam_urbdata,nam_atmdata,lc_year)
+
+
+   USE MOD_Precision
+   USE MOD_SPMD_Task
+   USE MOD_Vars_Global
+   USE MOD_Namelist
+   USE MOD_Const_LC
+   USE MOD_Vars_TimeVariables
+   USE MOD_Vars_TimeInvariants
+   USE MOD_Urban_Vars_TimeInvariants
+   USE MOD_NetCDFVector
+   USE MOD_NetCDFSerial
+   USE MOD_LandPatch
+   USE MOD_LandUrban
+   USE MOD_Urban_Const_LCZ
 #ifdef SinglePoint
-      USE MOD_SingleSrfdata
+   USE MOD_SingleSrfdata
 #endif
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      INTEGER, intent(in) :: lc_year    ! which year of land cover data used
-      CHARACTER(LEN=256), intent(in) :: dir_landdata
+   integer, intent(in) :: lc_year    ! which year of land cover data used
+   character(LEN=256), intent(in) :: dir_landdata
 
-      CHARACTER(LEN=256) :: dir_rawdata
-      CHARACTER(LEN=256) :: lndname
-      CHARACTER(len=256) :: cyear
+   character(LEN=256) :: dir_rawdata
+   character(LEN=256) :: lndname
+   character(len=256) :: cyear
 
-      INTEGER :: i, u, m, l, lucy_id, ns, nr, ulev
+   integer :: i, u, m, l, lucy_id, ns, nr, ulev
 
-      REAL(r8) :: thick_roof, thick_wall
+   real(r8) :: thick_roof, thick_wall
 
-      ! parameters for LUCY
-      INTEGER , allocatable :: lucyid(:)          ! LUCY region id
-      REAL(r8), allocatable :: popden(:)          ! population density [person/km2]
+   ! parameters for LUCY
+   integer , allocatable :: lucyid(:)          ! LUCY region id
+   real(r8), allocatable :: popden(:)          ! population density [person/km2]
 
-      INTEGER , allocatable :: lweek_holiday(:,:) ! week holidays
-      REAL(r8), allocatable :: lwdh_prof    (:,:) ! Diurnal traffic flow profile [-]
-      REAL(r8), allocatable :: lweh_prof    (:,:) ! Diurnal traffic flow profile [-]
-      REAL(r8), allocatable :: lhum_prof    (:,:) ! Diurnal metabolic heat profile profile [W/person]
-      REAL(r8), allocatable :: lfix_holiday (:,:) ! Fixed public holidays, holiday(0) or workday(1)
-      REAL(r8), allocatable :: lvehicle     (:,:) ! vehicle numbers per thousand people
+   integer , allocatable :: lweek_holiday(:,:) ! week holidays
+   real(r8), allocatable :: lwdh_prof    (:,:) ! Diurnal traffic flow profile [-]
+   real(r8), allocatable :: lweh_prof    (:,:) ! Diurnal traffic flow profile [-]
+   real(r8), allocatable :: lhum_prof    (:,:) ! Diurnal metabolic heat profile profile [W/person]
+   real(r8), allocatable :: lfix_holiday (:,:) ! Fixed public holidays, holiday(0) or workday(1)
+   real(r8), allocatable :: lvehicle     (:,:) ! vehicle numbers per thousand people
 
-      ! thickness of roof and wall
-      REAL(r8), allocatable :: thickroof     (:)  ! thickness of roof [m]
-      REAL(r8), allocatable :: thickwall     (:)  ! thickness of wall [m]
+   ! thickness of roof and wall
+   real(r8), allocatable :: thickroof     (:)  ! thickness of roof [m]
+   real(r8), allocatable :: thickwall     (:)  ! thickness of wall [m]
 
       write(cyear,'(i4.4)') lc_year
 

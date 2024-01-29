@@ -2,24 +2,24 @@
 
 MODULE MOD_LandPatch
 
-   !------------------------------------------------------------------------------------
-   ! DESCRIPTION:
-   !
-   !    Build pixelset "landpatch".
-   !
-   !    In CoLM, the global/regional area is divided into a hierarchical structure:
-   !    1. If GRIDBASED or UNSTRUCTURED is defined, it is
-   !       ELEMENT >>> PATCH
-   !    2. If CATCHMENT is defined, it is
-   !       ELEMENT >>> HRU >>> PATCH
-   !    If Plant Function Type classification is used, PATCH is further divided into PFT.
-   !    If Plant Community classification is used,     PATCH is further divided into PC.
-   !
-   !    "landpatch" refers to pixelset PATCH.
-   !
-   ! Created by Shupeng Zhang, May 2023
-   !    porting codes from Hua Yuan's OpenMP version to MPI parallel version.
-   !------------------------------------------------------------------------------------
+!------------------------------------------------------------------------------------
+! DESCRIPTION:
+!
+!    Build pixelset "landpatch".
+!
+!    In CoLM, the global/regional area is divided into a hierarchical structure:
+!    1. If GRIDBASED or UNSTRUCTURED is defined, it is
+!       ELEMENT >>> PATCH
+!    2. If CATCHMENT is defined, it is
+!       ELEMENT >>> HRU >>> PATCH
+!    If Plant Function Type classification is used, PATCH is further divided into PFT.
+!    If Plant Community classification is used,     PATCH is further divided into PC.
+!
+!    "landpatch" refers to pixelset PATCH.
+!
+! Created by Shupeng Zhang, May 2023
+!    porting codes from Hua Yuan's OpenMP version to MPI parallel version.
+!------------------------------------------------------------------------------------
 
    USE MOD_Precision
    USE MOD_Grid
@@ -32,16 +32,16 @@ MODULE MOD_LandPatch
    IMPLICIT NONE
 
    ! ---- Instance ----
-   INTEGER :: numpatch
-   TYPE(grid_type)     :: gpatch
-   TYPE(pixelset_type) :: landpatch
+   integer :: numpatch
+   type(grid_type)     :: gpatch
+   type(pixelset_type) :: landpatch
 
-   TYPE(subset_type)   :: elm_patch
-   TYPE(superset_type) :: patch2elm
+   type(subset_type)   :: elm_patch
+   type(superset_type) :: patch2elm
 
 #ifdef CATCHMENT
-   TYPE(subset_type)   :: hru_patch
-   TYPE(superset_type) :: patch2hru
+   type(subset_type)   :: hru_patch
+   type(superset_type) :: patch2hru
 #endif
 
 
@@ -50,36 +50,36 @@ CONTAINS
    ! -------------------------------
    SUBROUTINE landpatch_build (lc_year)
 
-      USE MOD_Precision
-      USE MOD_SPMD_Task
-      USE MOD_Utils
-      USE MOD_Grid
-      USE MOD_DataType
-      USE MOD_Mesh
-      USE MOD_LandElm
+   USE MOD_Precision
+   USE MOD_SPMD_Task
+   USE MOD_Utils
+   USE MOD_Grid
+   USE MOD_DataType
+   USE MOD_Mesh
+   USE MOD_LandElm
 #ifdef CATCHMENT
-      USE MOD_LandHRU
+   USE MOD_LandHRU
 #endif
-      USE MOD_Namelist
-      USE MOD_NetCDFBlock
-      USE MOD_AggregationRequestData
+   USE MOD_Namelist
+   USE MOD_NetCDFBlock
+   USE MOD_AggregationRequestData
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      INTEGER, intent(in) :: lc_year
-      ! Local Variables
-      CHARACTER(len=256) :: file_patch
-      CHARACTER(len=255) :: cyear
-      TYPE (block_data_int32_2d) :: patchdata
-      INTEGER :: iloc, npxl, ipxl, numset
-      INTEGER :: ie, iset, ipxstt, ipxend
-      INTEGER,   allocatable :: types(:), order(:), ibuff(:)
-      INTEGER*8, allocatable :: eindex_tmp(:)
-      INTEGER,   allocatable :: settyp_tmp(:), ipxstt_tmp(:), ipxend_tmp(:), ielm_tmp(:)
-      LOGICAL,   allocatable :: msk(:)
-      INTEGER :: npatch_glb
-      INTEGER :: dominant_type
-      INTEGER, allocatable :: npxl_types (:)
+   integer, intent(in) :: lc_year
+   ! Local Variables
+   character(len=256) :: file_patch
+   character(len=255) :: cyear
+   type (block_data_int32_2d) :: patchdata
+   integer :: iloc, npxl, ipxl, numset
+   integer :: ie, iset, ipxstt, ipxend
+   integer,   allocatable :: types(:), order(:), ibuff(:)
+   integer*8, allocatable :: eindex_tmp(:)
+   integer,   allocatable :: settyp_tmp(:), ipxstt_tmp(:), ipxend_tmp(:), ielm_tmp(:)
+   logical,   allocatable :: msk(:)
+   integer :: npatch_glb
+   integer :: dominant_type
+   integer, allocatable :: npxl_types (:)
 
       write(cyear,'(i4.4)') lc_year
       IF (p_is_master) THEN
@@ -125,7 +125,7 @@ CONTAINS
          ! add parameter input for time year
          file_patch = trim(DEF_dir_rawdata)//'landtypes/landtype-igbp-modis-'//trim(cyear)//'.nc'
 #else
-         !TODO: need usgs land cover TYPE data
+         !TODO: need usgs land cover type data
          file_patch = trim(DEF_dir_rawdata) //'/landtypes/landtype_usgs_update.nc'
 #endif
          CALL ncio_read_block (file_patch, 'landtype', gpatch, patchdata)
@@ -327,13 +327,13 @@ CONTAINS
    ! -----
    SUBROUTINE write_patchfrac (dir_landdata, lc_year)
 
-      USE MOD_Namelist
-      USE MOD_NetCDFVector
-      IMPLICIT NONE
+   USE MOD_Namelist
+   USE MOD_NetCDFVector
+   IMPLICIT NONE
 
-      INTEGER, intent(in) :: lc_year
-      CHARACTER(LEN=*), intent(in) :: dir_landdata
-      CHARACTER(len=256) :: lndname, cyear
+   integer, intent(in) :: lc_year
+   character(LEN=*), intent(in) :: dir_landdata
+   character(len=256) :: lndname, cyear
 
       write(cyear,'(i4.4)') lc_year
       CALL system('mkdir -p ' // trim(dir_landdata) // '/landpatch/' // trim(cyear))

@@ -3,31 +3,31 @@
 SUBROUTINE Aggregation_ForestHeight ( &
       gland, dir_rawdata, dir_model_landdata, lc_year)
 
-   ! ----------------------------------------------------------------------
-   ! Global Forest Height
-   !    (http://lidarradar.jpl.nasa.gov/)
-   !     Simard, M., N. Pinto, J. B. Fisher, and A. Baccini, 2011: Mapping
-   !     forest canopy height globally with spaceborne lidar.
-   !     J. Geophys. Res., 116, G04021.
-   !
-   ! Created by Yongjiu Dai, 02/2014
-   !
-   ! REVISIONS:
-   ! Hua Yuan,      ?/2020 : for land cover land use classifications
-   ! Shupeng Zhang, 01/2022: porting codes to MPI parallel version
-   ! ----------------------------------------------------------------------
+! ----------------------------------------------------------------------
+! Global Forest Height
+!    (http://lidarradar.jpl.nasa.gov/)
+!     Simard, M., N. Pinto, J. B. Fisher, and A. Baccini, 2011: Mapping
+!     forest canopy height globally with spaceborne lidar.
+!     J. Geophys. Res., 116, G04021.
+!
+! Created by Yongjiu Dai, 02/2014
+!
+! REVISIONS:
+! Hua Yuan,      ?/2020 : for land cover land use classifications
+! Shupeng Zhang, 01/2022: porting codes to MPI parallel version
+! ----------------------------------------------------------------------
 
-   use MOD_Precision
-   use MOD_Namelist
-   use MOD_SPMD_Task
-   use MOD_Grid
-   use MOD_LandPatch
-   use MOD_NetCDFVector
-   use MOD_NetCDFBlock
+   USE MOD_Precision
+   USE MOD_Namelist
+   USE MOD_SPMD_Task
+   USE MOD_Grid
+   USE MOD_LandPatch
+   USE MOD_NetCDFVector
+   USE MOD_NetCDFBlock
 #ifdef RangeCheck
-   use MOD_RangeCheck
+   USE MOD_RangeCheck
 #endif
-   use MOD_AggregationRequestData
+   USE MOD_AggregationRequestData
    USE MOD_Utils
 
    USE MOD_Const_LC
@@ -46,7 +46,7 @@ SUBROUTINE Aggregation_ForestHeight ( &
    IMPLICIT NONE
 
    ! arguments:
-   INTEGER, intent(in) :: lc_year
+   integer, intent(in) :: lc_year
    type(grid_type),  intent(in) :: gland
    character(LEN=*), intent(in) :: dir_rawdata
    character(LEN=*), intent(in) :: dir_model_landdata
@@ -65,277 +65,276 @@ SUBROUTINE Aggregation_ForestHeight ( &
    type (block_data_real8_3d) :: pftPCT
    real(r8), allocatable :: htop_patches(:), htop_pfts(:), htop_pcs(:,:)
    real(r8), allocatable :: htop_one(:), area_one(:), pct_one(:,:)
-   INTEGER  :: ip, ipft
-   REAL(r8) :: sumarea
+   integer  :: ip, ipft
+   real(r8) :: sumarea
 
 #ifdef SrfdataDiag
-   INTEGER :: typpatch(N_land_classification+1), ityp
+   integer :: typpatch(N_land_classification+1), ityp
 #ifndef CROP
-   INTEGER :: typpft  (N_PFT)
+   integer :: typpft  (N_PFT)
 #else
-   INTEGER :: typpft  (N_PFT+N_CFT)
+   integer :: typpft  (N_PFT+N_CFT)
 #endif
-   INTEGER :: typpc   (N_land_classification+1)
+   integer :: typpc   (N_land_classification+1)
 #endif
 
-   write(cyear,'(i4.4)') lc_year
-   landdir = trim(dir_model_landdata) // '/htop/' //trim(cyear)
+      write(cyear,'(i4.4)') lc_year
+      landdir = trim(dir_model_landdata) // '/htop/' //trim(cyear)
 
 #ifdef USEMPI
-   CALL mpi_barrier (p_comm_glb, p_err)
+      CALL mpi_barrier (p_comm_glb, p_err)
 #endif
-   if (p_is_master) then
-      write(*,'(/, A)') 'Aggregate forest height ...'
-      CALL system('mkdir -p ' // trim(adjustl(landdir)))
-   end if
+      IF (p_is_master) THEN
+         write(*,'(/, A)') 'Aggregate forest height ...'
+         CALL system('mkdir -p ' // trim(adjustl(landdir)))
+      ENDIF
 #ifdef USEMPI
-   CALL mpi_barrier (p_comm_glb, p_err)
+      CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
 #ifdef SinglePoint
-   IF (USE_SITE_htop) THEN
-      RETURN
-   ENDIF
+      IF (USE_SITE_htop) THEN
+         RETURN
+      ENDIF
 #endif
 
 #ifdef LULC_USGS
-   lndname = trim(dir_rawdata)//'/Forest_Height.nc'
+      lndname = trim(dir_rawdata)//'/Forest_Height.nc'
 
-   if (p_is_io) then
-      call allocate_block_data (gland, tree_height)
-      call ncio_read_block (lndname, 'forest_height', gland, tree_height)
+      IF (p_is_io) THEN
+         CALL allocate_block_data (gland, tree_height)
+         CALL ncio_read_block (lndname, 'forest_height', gland, tree_height)
 
 #ifdef USEMPI
-      CALL aggregation_data_daemon (gland, data_r8_2d_in1 = tree_height)
+         CALL aggregation_data_daemon (gland, data_r8_2d_in1 = tree_height)
 #endif
-   end if
+      ENDIF
 
-   if (p_is_worker) then
+      IF (p_is_worker) THEN
 
-      allocate (tree_height_patches (numpatch))
+         allocate (tree_height_patches (numpatch))
 
-      do ipatch = 1, numpatch
-         L = landpatch%settyp(ipatch)
-         if(L/=0 .and. L/=1 .and. L/=16 .and. L/=24)then
-            ! NOT OCEAN(0)/URBAN and BUILT-UP(1)/WATER BODIES(16)/ICE(24)
-            CALL aggregation_request_data (landpatch, ipatch, gland, zip = USE_zip_for_aggregation, &
-               data_r8_2d_in1 = tree_height, data_r8_2d_out1 = tree_height_one)
-            tree_height_patches (ipatch) = median (tree_height_one, size(tree_height_one))
-         ELSE
-            tree_height_patches (ipatch) = -1.0e36_r8
-         ENDIF
-      end do
+         DO ipatch = 1, numpatch
+            L = landpatch%settyp(ipatch)
+            IF(L/=0 .and. L/=1 .and. L/=16 .and. L/=24)THEN
+               ! NOT OCEAN(0)/URBAN and BUILT-UP(1)/WATER BODIES(16)/ICE(24)
+               CALL aggregation_request_data (landpatch, ipatch, gland, zip = USE_zip_for_aggregation, &
+                  data_r8_2d_in1 = tree_height, data_r8_2d_out1 = tree_height_one)
+               tree_height_patches (ipatch) = median (tree_height_one, size(tree_height_one))
+            ELSE
+               tree_height_patches (ipatch) = -1.0e36_r8
+            ENDIF
+         ENDDO
 
 #ifdef USEMPI
-      CALL aggregation_worker_done ()
+         CALL aggregation_worker_done ()
 #endif
-   end if
+      ENDIF
 
 #ifdef USEMPI
-   CALL mpi_barrier (p_comm_glb, p_err)
+      CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
 #ifdef RangeCheck
-   call check_vector_data ('htop_patches ', tree_height_patches)
+      CALL check_vector_data ('htop_patches ', tree_height_patches)
 #endif
 
 #ifndef SinglePoint
-   lndname = trim(landdir)//'/htop_patches.nc'
-   CALL ncio_create_file_vector (lndname, landpatch)
-   CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
-   CALL ncio_write_vector (lndname, 'htop_patches', 'patch', landpatch, tree_height_patches, 1)
+      lndname = trim(landdir)//'/htop_patches.nc'
+      CALL ncio_create_file_vector (lndname, landpatch)
+      CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
+      CALL ncio_write_vector (lndname, 'htop_patches', 'patch', landpatch, tree_height_patches, 1)
 
 #ifdef SrfdataDiag
-   typpatch = (/(ityp, ityp = 0, N_land_classification)/)
-   lndname  = trim(dir_model_landdata) // '/diag/htop_patch_' // trim(cyear) // '.nc'
-   CALL srfdata_map_and_write (tree_height_patches, landpatch%settyp, typpatch, m_patch2diag, &
-      -1.0e36_r8, lndname, 'htop', compress = 1, write_mode = 'one')
+      typpatch = (/(ityp, ityp = 0, N_land_classification)/)
+      lndname  = trim(dir_model_landdata) // '/diag/htop_patch_' // trim(cyear) // '.nc'
+      CALL srfdata_map_and_write (tree_height_patches, landpatch%settyp, typpatch, m_patch2diag, &
+         -1.0e36_r8, lndname, 'htop', compress = 1, write_mode = 'one')
 #endif
 
 #else
-   SITE_htop = tree_height_patches(1)
+      SITE_htop = tree_height_patches(1)
 #endif
-
-   if (p_is_worker) then
-      deallocate ( tree_height_patches )
-   end if
+   
+      IF (p_is_worker) THEN
+         deallocate ( tree_height_patches )
+      ENDIF
 #endif
-
-
+   
+   
 #ifdef LULC_IGBP
-   IF (p_is_io) THEN
-      CALL allocate_block_data (gland, htop)
-   ENDIF
-
-   IF (p_is_io) THEN
+      IF (p_is_io) THEN
+         CALL allocate_block_data (gland, htop)
+      ENDIF
+   
+      IF (p_is_io) THEN
+         dir_5x5 = trim(dir_rawdata) // '/plant_15s'
+         suffix  = 'MOD'//trim(cyear)
+         CALL read_5x5_data (dir_5x5, suffix, gland, 'HTOP', htop)
+#ifdef USEMPI
+         CALL aggregation_data_daemon (gland, data_r8_2d_in1 = htop)
+#endif
+      ENDIF
+   
+      IF (p_is_worker) THEN
+   
+         allocate (htop_patches (numpatch))
+   
+         DO ipatch = 1, numpatch
+   
+            IF (landpatch%settyp(ipatch) /= 0) THEN
+               CALL aggregation_request_data (landpatch, ipatch, gland, zip = USE_zip_for_aggregation, &
+                  area = area_one, data_r8_2d_in1 = htop, data_r8_2d_out1 = htop_one)
+               htop_patches(ipatch) = sum(htop_one * area_one) / sum(area_one)
+            ENDIF
+   
+         ENDDO
+   
+#ifdef USEMPI
+         CALL aggregation_worker_done ()
+#endif
+      ENDIF
+   
+#ifdef USEMPI
+      CALL mpi_barrier (p_comm_glb, p_err)
+#endif
+   
+#ifdef RangeCheck
+      CALL check_vector_data ('HTOP_patches ', htop_patches)
+#endif
+   
+#ifndef SinglePoint
+      lndname = trim(landdir)//'/htop_patches.nc'
+      CALL ncio_create_file_vector (lndname, landpatch)
+      CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
+      CALL ncio_write_vector (lndname, 'htop_patches', 'patch', landpatch, htop_patches, 1)
+   
+#ifdef SrfdataDiag
+      typpatch = (/(ityp, ityp = 0, N_land_classification)/)
+      lndname  = trim(dir_model_landdata) // '/diag/htop_patch_' // trim(cyear) // '.nc'
+      CALL srfdata_map_and_write (htop_patches, landpatch%settyp, typpatch, m_patch2diag, &
+         -1.0e36_r8, lndname, 'htop', compress = 1, write_mode = 'one')
+#endif
+   
+#else
+      SITE_htop = htop_patches(1)
+#endif
+   
+      IF (p_is_worker) THEN
+         IF (allocated(htop_patches)) deallocate (htop_patches)
+         IF (allocated(htop_one))     deallocate (htop_one)
+         IF (allocated(area_one))     deallocate (area_one)
+      ENDIF
+#endif
+   
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
+      IF (p_is_io) THEN
+         CALL allocate_block_data (gland, htop)
+         CALL allocate_block_data (gland, pftPCT, N_PFT_modis, lb1 = 0)
+      ENDIF
+   
       dir_5x5 = trim(dir_rawdata) // '/plant_15s'
       suffix  = 'MOD'//trim(cyear)
-      CALL read_5x5_data (dir_5x5, suffix, gland, 'HTOP', htop)
+   
+      IF (p_is_io) THEN
+         CALL read_5x5_data     (dir_5x5, suffix, gland, 'HTOP',    htop  )
+         CALL read_5x5_data_pft (dir_5x5, suffix, gland, 'PCT_PFT', pftPCT)
 #ifdef USEMPI
-      CALL aggregation_data_daemon (gland, data_r8_2d_in1 = htop)
+         CALL aggregation_data_daemon (gland, &
+            data_r8_2d_in1 = htop, data_r8_3d_in1 = pftPCT, n1_r8_3d_in1 = 16)
 #endif
-   ENDIF
-
-   IF (p_is_worker) THEN
-
-      allocate (htop_patches (numpatch))
-
-      DO ipatch = 1, numpatch
-
-         IF (landpatch%settyp(ipatch) /= 0) THEN
+      ENDIF
+   
+      IF (p_is_worker) THEN
+   
+         allocate (htop_patches (numpatch))
+         allocate (htop_pfts    (numpft  ))
+   
+         DO ipatch = 1, numpatch
+   
             CALL aggregation_request_data (landpatch, ipatch, gland, zip = USE_zip_for_aggregation, &
-               area = area_one, data_r8_2d_in1 = htop, data_r8_2d_out1 = htop_one)
+               area = area_one, data_r8_2d_in1 = htop,   data_r8_2d_out1 = htop_one, &
+               data_r8_3d_in1 = pftPCT, data_r8_3d_out1 = pct_one, n1_r8_3d_in1 = 16, lb1_r8_3d_in1 = 0)
+   
             htop_patches(ipatch) = sum(htop_one * area_one) / sum(area_one)
-         ENDIF
-
-      ENDDO
-
+   
+#ifndef CROP
+            IF (patchtypes(landpatch%settyp(ipatch)) == 0) THEN
+#else
+            IF (patchtypes(landpatch%settyp(ipatch)) == 0 .and. landpatch%settyp(ipatch)/=CROPLAND) THEN
+#endif
+               DO ip = patch_pft_s(ipatch), patch_pft_e(ipatch)
+                  p = landpft%settyp(ip)
+                  sumarea = sum(pct_one(p,:) * area_one)
+                  IF (sumarea > 0) THEN
+                     htop_pfts(ip) = sum(htop_one * pct_one(p,:) * area_one) / sumarea
+                  ELSE
+                     htop_pfts(ip) = htop_patches(ipatch)
+                  ENDIF
+               ENDDO
+#ifdef CROP
+            ELSEIF (landpatch%settyp(ipatch) == CROPLAND) THEN
+               ip = patch_pft_s(ipatch)
+               htop_pfts(ip) = htop_patches(ipatch)
+#endif
+            ENDIF
+         ENDDO
+   
 #ifdef USEMPI
       CALL aggregation_worker_done ()
 #endif
-   ENDIF
-
+      ENDIF
+   
 #ifdef USEMPI
-   CALL mpi_barrier (p_comm_glb, p_err)
+      CALL mpi_barrier (p_comm_glb, p_err)
 #endif
-
+   
 #ifdef RangeCheck
-   CALL check_vector_data ('HTOP_patches ', htop_patches)
+      CALL check_vector_data ('HTOP_patches ', htop_patches)
+      CALL check_vector_data ('HTOP_pfts    ', htop_pfts   )
 #endif
-
+   
 #ifndef SinglePoint
-   lndname = trim(landdir)//'/htop_patches.nc'
-   CALL ncio_create_file_vector (lndname, landpatch)
-   CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
-   CALL ncio_write_vector (lndname, 'htop_patches', 'patch', landpatch, htop_patches, 1)
-
+      lndname = trim(landdir)//'/htop_patches.nc'
+      CALL ncio_create_file_vector (lndname, landpatch)
+      CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
+      CALL ncio_write_vector (lndname, 'htop_patches', 'patch', landpatch, htop_patches, 1)
+   
 #ifdef SrfdataDiag
-   typpatch = (/(ityp, ityp = 0, N_land_classification)/)
-   lndname  = trim(dir_model_landdata) // '/diag/htop_patch_' // trim(cyear) // '.nc'
-   CALL srfdata_map_and_write (htop_patches, landpatch%settyp, typpatch, m_patch2diag, &
-      -1.0e36_r8, lndname, 'htop', compress = 1, write_mode = 'one')
+      typpatch = (/(ityp, ityp = 0, N_land_classification)/)
+      lndname  = trim(dir_model_landdata) // '/diag/htop_patch_' // trim(cyear) // '.nc'
+      CALL srfdata_map_and_write (htop_patches, landpatch%settyp, typpatch, m_patch2diag, &
+         -1.0e36_r8, lndname, 'htop', compress = 1, write_mode = 'one')
 #endif
-
-#else
-   SITE_htop = htop_patches(1)
-#endif
-
-   IF (p_is_worker) THEN
-      IF (allocated(htop_patches)) deallocate (htop_patches)
-      IF (allocated(htop_one))     deallocate (htop_one)
-      IF (allocated(area_one))     deallocate (area_one)
-   ENDIF
-#endif
-
-#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
-   IF (p_is_io) THEN
-      CALL allocate_block_data (gland, htop)
-      CALL allocate_block_data (gland, pftPCT, N_PFT_modis, lb1 = 0)
-   ENDIF
-
-   dir_5x5 = trim(dir_rawdata) // '/plant_15s'
-   suffix  = 'MOD'//trim(cyear)
-
-   IF (p_is_io) THEN
-      CALL read_5x5_data     (dir_5x5, suffix, gland, 'HTOP',    htop  )
-      CALL read_5x5_data_pft (dir_5x5, suffix, gland, 'PCT_PFT', pftPCT)
-#ifdef USEMPI
-      CALL aggregation_data_daemon (gland, &
-         data_r8_2d_in1 = htop, data_r8_3d_in1 = pftPCT, n1_r8_3d_in1 = 16)
-#endif
-   ENDIF
-
-   IF (p_is_worker) THEN
-
-      allocate (htop_patches (numpatch))
-      allocate (htop_pfts    (numpft  ))
-
-      DO ipatch = 1, numpatch
-
-         CALL aggregation_request_data (landpatch, ipatch, gland, zip = USE_zip_for_aggregation, &
-            area = area_one, data_r8_2d_in1 = htop,   data_r8_2d_out1 = htop_one, &
-            data_r8_3d_in1 = pftPCT, data_r8_3d_out1 = pct_one, n1_r8_3d_in1 = 16, lb1_r8_3d_in1 = 0)
-
-         htop_patches(ipatch) = sum(htop_one * area_one) / sum(area_one)
-
-         !IF (landpatch%settyp(ipatch) == 1) THEN
-#ifndef CROP
-         IF (patchtypes(landpatch%settyp(ipatch)) == 0) THEN
-#else
-         IF (patchtypes(landpatch%settyp(ipatch)) == 0 .and. landpatch%settyp(ipatch)/=CROPLAND) THEN
-#endif
-            DO ip = patch_pft_s(ipatch), patch_pft_e(ipatch)
-               p = landpft%settyp(ip)
-               sumarea = sum(pct_one(p,:) * area_one)
-               IF (sumarea > 0) THEN
-                  htop_pfts(ip) = sum(htop_one * pct_one(p,:) * area_one) / sumarea
-               ELSE
-                  htop_pfts(ip) = htop_patches(ipatch)
-               ENDIF
-            ENDDO
-#ifdef CROP
-         ELSEIF (landpatch%settyp(ipatch) == CROPLAND) THEN
-            ip = patch_pft_s(ipatch)
-            htop_pfts(ip) = htop_patches(ipatch)
-#endif
-         ENDIF
-      ENDDO
-
-#ifdef USEMPI
-   CALL aggregation_worker_done ()
-#endif
-   ENDIF
-
-#ifdef USEMPI
-   CALL mpi_barrier (p_comm_glb, p_err)
-#endif
-
-#ifdef RangeCheck
-   CALL check_vector_data ('HTOP_patches ', htop_patches)
-   CALL check_vector_data ('HTOP_pfts    ', htop_pfts   )
-#endif
-
-#ifndef SinglePoint
-   lndname = trim(landdir)//'/htop_patches.nc'
-   CALL ncio_create_file_vector (lndname, landpatch)
-   CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
-   CALL ncio_write_vector (lndname, 'htop_patches', 'patch', landpatch, htop_patches, 1)
-
-#ifdef SrfdataDiag
-   typpatch = (/(ityp, ityp = 0, N_land_classification)/)
-   lndname  = trim(dir_model_landdata) // '/diag/htop_patch_' // trim(cyear) // '.nc'
-   CALL srfdata_map_and_write (htop_patches, landpatch%settyp, typpatch, m_patch2diag, &
-      -1.0e36_r8, lndname, 'htop', compress = 1, write_mode = 'one')
-#endif
-
-   lndname = trim(landdir)//'/htop_pfts.nc'
-   CALL ncio_create_file_vector (lndname, landpft)
-   CALL ncio_define_dimension_vector (lndname, landpft, 'pft')
-   CALL ncio_write_vector (lndname, 'htop_pfts', 'pft', landpft, htop_pfts, 1)
-
+   
+      lndname = trim(landdir)//'/htop_pfts.nc'
+      CALL ncio_create_file_vector (lndname, landpft)
+      CALL ncio_define_dimension_vector (lndname, landpft, 'pft')
+      CALL ncio_write_vector (lndname, 'htop_pfts', 'pft', landpft, htop_pfts, 1)
+   
 #ifdef SrfdataDiag
 #ifndef CROP
-   typpft  = (/(ityp, ityp = 0, N_PFT-1)/)
+      typpft  = (/(ityp, ityp = 0, N_PFT-1)/)
 #else
-   typpft  = (/(ityp, ityp = 0, N_PFT+N_CFT-1)/)
+      typpft  = (/(ityp, ityp = 0, N_PFT+N_CFT-1)/)
 #endif
-   lndname = trim(dir_model_landdata) // '/diag/htop_pft_' // trim(cyear) // '.nc'
-   CALL srfdata_map_and_write (htop_pfts, landpft%settyp, typpft, m_pft2diag, &
-      -1.0e36_r8, lndname, 'htop', compress = 1, write_mode = 'one')
+      lndname = trim(dir_model_landdata) // '/diag/htop_pft_' // trim(cyear) // '.nc'
+      CALL srfdata_map_and_write (htop_pfts, landpft%settyp, typpft, m_pft2diag, &
+         -1.0e36_r8, lndname, 'htop', compress = 1, write_mode = 'one')
 #endif
-
+   
 #else
-   allocate (SITE_htop_pfts(numpft))
-   SITE_htop_pfts(:) = htop_pfts(:)
+      allocate (SITE_htop_pfts(numpft))
+      SITE_htop_pfts(:) = htop_pfts(:)
 #endif
-
-   IF (p_is_worker) THEN
-      IF (allocated(htop_patches)) deallocate (htop_patches)
-      IF (allocated(htop_pfts   )) deallocate (htop_pfts   )
-      IF (allocated(htop_one)) deallocate (htop_one)
-      IF (allocated(pct_one )) deallocate (pct_one )
-      IF (allocated(area_one)) deallocate (area_one)
-   ENDIF
+   
+      IF (p_is_worker) THEN
+         IF (allocated(htop_patches)) deallocate (htop_patches)
+         IF (allocated(htop_pfts   )) deallocate (htop_pfts   )
+         IF (allocated(htop_one)) deallocate (htop_one)
+         IF (allocated(pct_one )) deallocate (pct_one )
+         IF (allocated(area_one)) deallocate (area_one)
+      ENDIF
 #endif
 
 END SUBROUTINE Aggregation_ForestHeight
