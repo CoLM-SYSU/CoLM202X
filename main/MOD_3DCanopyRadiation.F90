@@ -790,9 +790,9 @@ CONTAINS
             print *, fabi_col(ib)+albi_col(ib)+fabs_lay(0,2)-1
          ENDIF
 
-   !====================================================
-   ! Calculate individule PFT absorption
-   !====================================================
+      !====================================================
+      ! Calculate individule PFT absorption
+      !====================================================
 
          sum_fabd=D0
          sum_fabi=D0

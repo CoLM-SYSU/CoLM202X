@@ -74,8 +74,8 @@ CONTAINS
             allocate (lfevp_gimp     (numurban)) ; lfevp_gimp     (:) = spval
             allocate (lfevp_gper     (numurban)) ; lfevp_gper     (:) = spval
             allocate (lfevp_urbl     (numurban)) ; lfevp_urbl     (:) = spval
-          ENDIF
-       ENDIF
+         ENDIF
+      ENDIF
 
    END SUBROUTINE allocate_1D_UrbanFluxes
 
@@ -141,8 +141,8 @@ CONTAINS
             lfevp_gimp     (:) = Values
             lfevp_gper     (:) = Values
             lfevp_urbl     (:) = Values
-          ENDIF
-       ENDIF
+         ENDIF
+      ENDIF
 
    END SUBROUTINE set_1D_UrbanFluxes
 

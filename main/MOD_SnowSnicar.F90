@@ -531,14 +531,14 @@ CONTAINS
                flx_wgt(2) = 0.66628670195247_r8
                flx_wgt(3) = 0.33371329804753_r8
                ! Diffuse:
-            elseif (flg_slr_in == 2) THEN
+            ELSEIF (flg_slr_in == 2) THEN
                flx_wgt(1) = 1._r8
                flx_wgt(2) = 0.77887652162877_r8
                flx_wgt(3) = 0.22112347837123_r8
             ENDIF
 
             ! 5-band weights
-         elseif(numrad_snw==5) THEN
+         ELSEIF(numrad_snw==5) THEN
             ! Direct:
             IF (flg_slr_in == 1) THEN
                flx_wgt(1) = 1._r8
@@ -547,7 +547,7 @@ CONTAINS
                flx_wgt(4) = 0.12094898498813_r8
                flx_wgt(5) = 0.20453448749347_r8
                ! Diffuse:
-            elseif (flg_slr_in == 2) THEN
+            ELSEIF (flg_slr_in == 2) THEN
                flx_wgt(1) = 1._r8
                flx_wgt(2) = 0.58581507618433_r8
                flx_wgt(3) = 0.20156903770812_r8
@@ -586,14 +586,14 @@ CONTAINS
                IF (bnd_idx == 1) THEN
                   IF (flg_dover == 2) THEN
                      APRX_TYP = 3
-                  elseif (flg_dover == 3) THEN
+                  ELSEIF (flg_dover == 3) THEN
                      APRX_TYP = 1
                      IF (coszen > 0.5_r8) THEN
                         mu_not = mu_not - 0.02_r8
                      ELSE
                         mu_not = mu_not + 0.02_r8
                      ENDIF
-                  elseif (flg_dover == 4) THEN
+                  ELSEIF (flg_dover == 4) THEN
                      APRX_TYP = 3
                   ELSE
                      APRX_TYP = 1
@@ -602,14 +602,14 @@ CONTAINS
                ELSE
                   IF (flg_dover == 2) THEN
                      APRX_TYP = 1
-                  elseif (flg_dover == 3) THEN
+                  ELSEIF (flg_dover == 3) THEN
                      APRX_TYP = 3
                      IF (coszen > 0.5_r8) THEN
                         mu_not = mu_not - 0.02_r8
                      ELSE
                         mu_not = mu_not + 0.02_r8
                      ENDIF
-                  elseif (flg_dover == 4) THEN
+                  ELSEIF (flg_dover == 4) THEN
                      APRX_TYP = 1
                   ELSE
                      APRX_TYP = 3
@@ -647,7 +647,7 @@ CONTAINS
                      asm_prm_snw_lcl(i)     = asm_prm_snw_drc(rds_idx,bnd_idx)
                      ext_cff_mss_snw_lcl(i) = ext_cff_mss_snw_drc(rds_idx,bnd_idx)
                   ENDDO
-               elseif (flg_slr_in == 2) THEN
+               ELSEIF (flg_slr_in == 2) THEN
                   DO i=snl_top,snl_btm,1
                      rds_idx = snw_rds_lcl(i) - snw_rds_min_tbl + 1
                      ! snow optical properties (diffuse radiation)
@@ -716,7 +716,7 @@ CONTAINS
                  IF (snw_rds_lcl(i) < 125) THEN
                     tmp1 = snw_rds_lcl(i)/50
                     idx_bcint_icerds = nint(tmp1)
-                 elseif (snw_rds_lcl(i) < 175) THEN
+                 ELSEIF (snw_rds_lcl(i) < 175) THEN
                     idx_bcint_icerds = 2
                  ELSE
                     tmp1 = (snw_rds_lcl(i)/250)+2
@@ -827,7 +827,7 @@ CONTAINS
                   ENDDO
 
                ! Quadrature
-               elseif (APRX_TYP==2) THEN
+               ELSEIF (APRX_TYP==2) THEN
                   DO i=snl_top,snl_btm,1
                      gamma1(i) = (3**0.5)*(2-(omega_star(i)*(1+g_star(i))))/2
                      gamma2(i) = omega_star(i)*(3**0.5)*(1-g_star(i))/2
@@ -837,7 +837,7 @@ CONTAINS
                   ENDDO
 
                ! Hemispheric Mean
-               elseif (APRX_TYP==3) THEN
+               ELSEIF (APRX_TYP==3) THEN
                   DO i=snl_top,snl_btm,1
                      gamma1(i) = 2 - (omega_star(i)*(1+g_star(i)))
                      gamma2(i) = omega_star(i)*(1-g_star(i))
@@ -898,20 +898,20 @@ CONTAINS
                      D(i) = -e2(snl_top)
                      E(i) = flx_slri_lcl(bnd_idx)-C_mns_top(snl_top)
 
-                  elseif(i==0) THEN
+                  ELSEIF(i==0) THEN
                      A(i) = e1(snl_btm)-(albsfc_lcl(bnd_idx)*e3(snl_btm))
                      B(i) = e2(snl_btm)-(albsfc_lcl(bnd_idx)*e4(snl_btm))
                      D(i) = 0
                      E(i) = F_direct_btm-C_pls_btm(snl_btm)+(albsfc_lcl(bnd_idx)*C_mns_btm(snl_btm))
 
-                  elseif(mod(i,2)==-1) THEN   ! If odd and i>=3 (n=1 for i=3)
+                  ELSEIF(mod(i,2)==-1) THEN   ! If odd and i>=3 (n=1 for i=3)
                      n=floor(i/2.0)
                      A(i) = (e2(n)*e3(n))-(e4(n)*e1(n))
                      B(i) = (e1(n)*e1(n+1))-(e3(n)*e3(n+1))
                      D(i) = (e3(n)*e4(n+1))-(e1(n)*e2(n+1))
                      E(i) = (e3(n)*(C_pls_top(n+1)-C_pls_btm(n)))+(e1(n)*(C_mns_btm(n)-C_mns_top(n+1)))
 
-                  elseif(mod(i,2)==0) THEN    ! If even and i<=2*snl_lcl
+                  ELSEIF(mod(i,2)==0) THEN    ! If even and i<=2*snl_lcl
                      n=(i/2)
                      A(i) = (e2(n+1)*e1(n))-(e3(n)*e4(n+1))
                      B(i) = (e2(n)*e2(n+1))-(e4(n)*e4(n+1))
@@ -1014,14 +1014,14 @@ CONTAINS
                ! Set conditions for redoing RT calculation
                IF ((trip == 1).and.(flg_dover == 1)) THEN
                   flg_dover = 2
-               elseif ((trip == 1).and.(flg_dover == 2)) THEN
+               ELSEIF ((trip == 1).and.(flg_dover == 2)) THEN
                   flg_dover = 3
-               elseif ((trip == 1).and.(flg_dover == 3)) THEN
+               ELSEIF ((trip == 1).and.(flg_dover == 3)) THEN
                   flg_dover = 4
-               elseif((trip == 1).and.(flg_dover == 4).and.(err_idx < 20)) THEN
+               ELSEIF((trip == 1).and.(flg_dover == 4).and.(err_idx < 20)) THEN
                   flg_dover = 3
                   err_idx = err_idx + 1
-               elseif((trip == 1).and.(flg_dover == 4).and.(err_idx >= 20)) THEN
+               ELSEIF((trip == 1).and.(flg_dover == 4).and.(err_idx >= 20)) THEN
                  flg_dover = 0
 #ifndef _OPENACC
                  IF (p_is_master) THEN
@@ -1115,7 +1115,7 @@ CONTAINS
          ENDDO
 
       ! If snow < minimum_snow, but > 0, and there is sun, set albedo to underlying surface albedo
-      elseif ( (coszen > 0._r8) .and. (h2osno_lcl < min_snw) .and. (h2osno_lcl > 0._r8) ) THEN
+      ELSEIF ( (coszen > 0._r8) .and. (h2osno_lcl < min_snw) .and. (h2osno_lcl > 0._r8) ) THEN
          albout(1) = albsfc(1)
          albout(2) = albsfc(2)
 
@@ -1500,11 +1500,11 @@ CONTAINS
       ! Define snow grain shape
       IF (trim(snow_shape) == 'sphere') THEN
         snw_shp_lcl(:) = snow_shape_sphere
-      elseif (trim(snow_shape) == 'spheroid') THEN
+      ELSEIF (trim(snow_shape) == 'spheroid') THEN
         snw_shp_lcl(:) = snow_shape_spheroid
-      elseif (trim(snow_shape) == 'hexagonal_plate') THEN
+      ELSEIF (trim(snow_shape) == 'hexagonal_plate') THEN
         snw_shp_lcl(:) = snow_shape_hexagonal_plate
-      elseif (trim(snow_shape) == 'koch_snowflake') THEN
+      ELSEIF (trim(snow_shape) == 'koch_snowflake') THEN
         snw_shp_lcl(:) = snow_shape_koch_snowflake
       ELSE
          IF (p_is_master) THEN
@@ -1516,17 +1516,17 @@ CONTAINS
       ! Define atmospheric type
       IF (trim(snicar_atm_type) == 'default') THEN
         atm_type_index = atm_type_default
-      elseif (trim(snicar_atm_type) == 'mid-latitude_winter') THEN
+      ELSEIF (trim(snicar_atm_type) == 'mid-latitude_winter') THEN
         atm_type_index = atm_type_mid_latitude_winter
-      elseif (trim(snicar_atm_type) == 'mid-latitude_summer') THEN
+      ELSEIF (trim(snicar_atm_type) == 'mid-latitude_summer') THEN
         atm_type_index = atm_type_mid_latitude_summer
-      elseif (trim(snicar_atm_type) == 'sub-Arctic_winter') THEN
+      ELSEIF (trim(snicar_atm_type) == 'sub-Arctic_winter') THEN
         atm_type_index = atm_type_sub_Arctic_winter
-      elseif (trim(snicar_atm_type) == 'sub-Arctic_summer') THEN
+      ELSEIF (trim(snicar_atm_type) == 'sub-Arctic_summer') THEN
         atm_type_index = atm_type_sub_Arctic_summer
-      elseif (trim(snicar_atm_type) == 'summit_Greenland') THEN
+      ELSEIF (trim(snicar_atm_type) == 'summit_Greenland') THEN
         atm_type_index = atm_type_summit_Greenland
-      elseif (trim(snicar_atm_type) == 'high_mountain') THEN
+      ELSEIF (trim(snicar_atm_type) == 'high_mountain') THEN
         atm_type_index = atm_type_high_mountain
       ELSE
          IF (p_is_master) THEN
@@ -1644,14 +1644,14 @@ CONTAINS
                flx_wgt(2) = 0.66628670195247_r8
                flx_wgt(3) = 0.33371329804753_r8
                ! Diffuse:
-            elseif (flg_slr_in == 2) THEN
+            ELSEIF (flg_slr_in == 2) THEN
                flx_wgt(1) = 1._r8
                flx_wgt(2) = 0.77887652162877_r8
                flx_wgt(3) = 0.22112347837123_r8
             ENDIF
 
             ! 5-band weights
-         elseif(numrad_snw==5) THEN
+         ELSEIF(numrad_snw==5) THEN
             ! Direct:
             IF (flg_slr_in == 1) THEN
               IF (atm_type_index == atm_type_default) THEN
@@ -1673,7 +1673,7 @@ CONTAINS
               ENDIF
 
                ! Diffuse:
-            elseif (flg_slr_in == 2) THEN
+            ELSEIF (flg_slr_in == 2) THEN
                IF  (atm_type_index == atm_type_default) THEN
                  flx_wgt(1) = 1._r8
                  flx_wgt(2) = 0.58581507618433_r8
@@ -1735,7 +1735,7 @@ CONTAINS
                   asm_prm_snw_lcl(i)     = asm_prm_snw_drc(rds_idx,bnd_idx)
                   ext_cff_mss_snw_lcl(i) = ext_cff_mss_snw_drc(rds_idx,bnd_idx)
                ENDDO
-            elseif (flg_slr_in == 2) THEN
+            ELSEIF (flg_slr_in == 2) THEN
                DO i=snl_top,snl_btm,1
                   rds_idx = snw_rds_lcl(i) - snw_rds_min_tbl + 1
                   ! snow optical properties (diffuse radiation)
@@ -1762,7 +1762,7 @@ CONTAINS
                   ENDIF
                   g_ice_Cg_tmp = g_b0 * ((fs_sphd/fs_hex)**g_b1) * (diam_ice**g_b2)
                   gg_ice_F07_tmp = g_F07_c0 + g_F07_c1 * AR_tmp + g_F07_c2 * (AR_tmp**2)
-               elseif(snw_shp_lcl(i) == snow_shape_hexagonal_plate) THEN ! hexagonal plate
+               ELSEIF(snw_shp_lcl(i) == snow_shape_hexagonal_plate) THEN ! hexagonal plate
                   diam_ice = 2._r8*snw_rds_lcl(i)
                   IF(snw_fs_lcl(i) == 0._r8) THEN
                      fs_hex0 = 0.788_r8
@@ -1777,7 +1777,7 @@ CONTAINS
                   ENDIF
                   g_ice_Cg_tmp = g_b0 * ((fs_hex0/fs_hex)**g_b1) * (diam_ice**g_b2)
                   gg_ice_F07_tmp = g_F07_p0 + g_F07_p1 * log(AR_tmp) + g_F07_p2 * ((log(AR_tmp))**2)
-               elseif(snw_shp_lcl(i) == snow_shape_koch_snowflake) THEN ! Koch snowflake
+               ELSEIF(snw_shp_lcl(i) == snow_shape_koch_snowflake) THEN ! Koch snowflake
                   diam_ice = 2._r8 * snw_rds_lcl(i) /0.544_r8
                   IF(snw_fs_lcl(i) == 0._r8) THEN
                      fs_koch = 0.712_r8
@@ -1799,20 +1799,20 @@ CONTAINS
                 IF(bnd_idx == 1) THEN
                   g_Cg_intp   = (g_ice_Cg_tmp(2)-g_ice_Cg_tmp(1))/(1.055_r8-0.475_r8)*(0.5_r8-0.475_r8) +g_ice_Cg_tmp(1)
                   gg_F07_intp = (gg_ice_F07_tmp(2)-gg_ice_F07_tmp(1))/(1.055_r8-0.475_r8)*(0.5_r8-0.475_r8)+gg_ice_F07_tmp(1)
-                elseif(bnd_idx == 2) THEN
+                ELSEIF(bnd_idx == 2) THEN
                   g_Cg_intp   = (g_ice_Cg_tmp(2)-g_ice_Cg_tmp(1))/(1.055_r8-0.475_r8)*(0.85_r8-0.475_r8)+g_ice_Cg_tmp(1)
                 gg_F07_intp = (gg_ice_F07_tmp(2)-gg_ice_F07_tmp(1))/(1.055_r8-0.475_r8)*(0.85_r8-0.475_r8)+gg_ice_F07_tmp(1)
-                elseif(bnd_idx == 3) THEN
+                ELSEIF(bnd_idx == 3) THEN
                   g_Cg_intp   = (g_ice_Cg_tmp(3)-g_ice_Cg_tmp(2))/(1.655_r8-1.055_r8)*(1.1_r8-1.055_r8)&
                                 +g_ice_Cg_tmp(2)
                   gg_F07_intp = (gg_ice_F07_tmp(3)-gg_ice_F07_tmp(2))/(1.655_r8-1.055_r8)*(1.1_r8-1.055_r8)&
                                 +gg_ice_F07_tmp(2)
-                elseif(bnd_idx == 4) THEN
+                ELSEIF(bnd_idx == 4) THEN
                   g_Cg_intp   = (g_ice_Cg_tmp(3)-g_ice_Cg_tmp(2))/(1.655_r8-1.055_r8)*(1.35_r8-1.055_r8)&
                                 +g_ice_Cg_tmp(2)
                   gg_F07_intp = (gg_ice_F07_tmp(3)-gg_ice_F07_tmp(2))/(1.655_r8-1.055_r8)*(1.35_r8-1.055_r8)&
                                 +gg_ice_F07_tmp(2)
-                elseif(bnd_idx == 5) THEN
+                ELSEIF(bnd_idx == 5) THEN
                   g_Cg_intp   = (g_ice_Cg_tmp(6)-g_ice_Cg_tmp(5))/(3.75_r8-3.0_r8)*(3.25_r8-3.0_r8)&
                                 +g_ice_Cg_tmp(5)
                   gg_F07_intp = (gg_ice_F07_tmp(6)-gg_ice_F07_tmp(5))/(3.75_r8-3.0_r8)*(3.25_r8-3.0_r8)&
@@ -1889,7 +1889,7 @@ CONTAINS
                IF (snw_rds_lcl(i) < 125) THEN
                   tmp1 = snw_rds_lcl(i)/50
                   idx_bcint_icerds = nint(tmp1)
-               elseif (snw_rds_lcl(i) < 175) THEN
+               ELSEIF (snw_rds_lcl(i) < 175) THEN
                   idx_bcint_icerds = 2
                ELSE
                   tmp1 = (snw_rds_lcl(i)/250)+2
@@ -2379,7 +2379,7 @@ CONTAINS
          ENDIF
 
       ! If snow < minimum_snow, but > 0, and there is sun, set albedo to underlying surface albedo
-      elseif ( (coszen > 0._r8) .and. (h2osno_lcl < min_snw) .and. (h2osno_lcl > 0._r8) ) THEN
+      ELSEIF ( (coszen > 0._r8) .and. (h2osno_lcl < min_snw) .and. (h2osno_lcl > 0._r8) ) THEN
          albout(1) = albsfc(1)
          albout(2) = albsfc(2)
 
@@ -2602,12 +2602,12 @@ CONTAINS
 #ifdef MODAL_AER
             IF ( abs(dr_fresh) < 1.0e-8_r8 ) THEN
                dr_fresh = 0.0_r8
-            ELSE IF ( dr_fresh < 0.0_r8 ) THEN
+            ELSEIF ( dr_fresh < 0.0_r8 ) THEN
                IF (p_is_master) THEN
                   write(iulog,*) "dr_fresh = ", dr_fresh, snw_rds(i), snw_rds_min
                   CALL abort
                ENDIF
-            END IF
+            ENDIF
 
             dr = (bst_drdt0*(bst_tau/(dr_fresh+bst_tau))**(1._r8/bst_kappa)) * (dtime/3600._r8)
 #else
@@ -2687,7 +2687,7 @@ CONTAINS
 
             IF (snw_rds(i) > snw_rds_max) THEN
                snw_rds(i) = snw_rds_max
-            END IF
+            ENDIF
 
             ! set top layer variables for history files
             IF (i == snl_top) THEN
@@ -2705,7 +2705,7 @@ CONTAINS
 
       IF (snl >= 0 .and. h2osno > 0._r8) THEN
           snw_rds(0) = snw_rds_min
-      END IF
+      ENDIF
 
    ! END associate
 
@@ -2731,19 +2731,19 @@ CONTAINS
       atm_type_index = atm_type_default
       ! Define atmospheric type
       IF (trim(snicar_atm_type) == 'default') THEN
-        atm_type_index = atm_type_default
-      elseif (trim(snicar_atm_type) == 'mid-latitude_winter') THEN
-        atm_type_index = atm_type_mid_latitude_winter
-      elseif (trim(snicar_atm_type) == 'mid-latitude_summer') THEN
-        atm_type_index = atm_type_mid_latitude_summer
-      elseif (trim(snicar_atm_type) == 'sub-Arctic_winter') THEN
-        atm_type_index = atm_type_sub_Arctic_winter
-      elseif (trim(snicar_atm_type) == 'sub-Arctic_summer') THEN
-        atm_type_index = atm_type_sub_Arctic_summer
-      elseif (trim(snicar_atm_type) == 'summit_Greenland') THEN
-        atm_type_index = atm_type_summit_Greenland
-      elseif (trim(snicar_atm_type) == 'high_mountain') THEN
-        atm_type_index = atm_type_high_mountain
+         atm_type_index = atm_type_default
+      ELSEIF (trim(snicar_atm_type) == 'mid-latitude_winter') THEN
+         atm_type_index = atm_type_mid_latitude_winter
+      ELSEIF (trim(snicar_atm_type) == 'mid-latitude_summer') THEN
+         atm_type_index = atm_type_mid_latitude_summer
+      ELSEIF (trim(snicar_atm_type) == 'sub-Arctic_winter') THEN
+         atm_type_index = atm_type_sub_Arctic_winter
+      ELSEIF (trim(snicar_atm_type) == 'sub-Arctic_summer') THEN
+         atm_type_index = atm_type_sub_Arctic_summer
+      ELSEIF (trim(snicar_atm_type) == 'summit_Greenland') THEN
+         atm_type_index = atm_type_summit_Greenland
+      ELSEIF (trim(snicar_atm_type) == 'high_mountain') THEN
+         atm_type_index = atm_type_high_mountain
       ELSE
          IF (p_is_master) THEN
             write(iulog,*) "snicar_atm_type = ", snicar_atm_type
@@ -2975,19 +2975,19 @@ CONTAINS
    real(r8)            :: gs_max                     ! maximum value
 
       IF ( fresh_snw_rds_max <= snw_rds_min )THEN
-          FreshSnowRadius = snw_rds_min
+         FreshSnowRadius = snw_rds_min
       ELSE
-          gs_max = fresh_snw_rds_max
+         gs_max = fresh_snw_rds_max
 
-          IF (forc_t < tmin) THEN
-              FreshSnowRadius = gs_min
-          ELSE IF (forc_t > tmax) THEN
-              FreshSnowRadius = gs_max
-          ELSE
-              FreshSnowRadius = (tmax-forc_t)/(tmax-tmin)*gs_min + &
-                                (forc_t-tmin)/(tmax-tmin)*gs_max
-          END IF
-      END IF
+         IF (forc_t < tmin) THEN
+            FreshSnowRadius = gs_min
+         ELSEIF (forc_t > tmax) THEN
+            FreshSnowRadius = gs_max
+         ELSE
+            FreshSnowRadius = (tmax-forc_t)/(tmax-tmin)*gs_min + &
+                              (forc_t-tmin)/(tmax-tmin)*gs_max
+         ENDIF
+      ENDIF
 
    END FUNCTION FreshSnowRadius
 

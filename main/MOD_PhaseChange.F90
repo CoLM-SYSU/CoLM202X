@@ -51,6 +51,7 @@ CONTAINS
 !-----------------------------------------------------------------------
 
    USE MOD_Precision
+   USE MOD_SPMD_Task
    USE MOD_Hydro_SoilFunction
    USE MOD_Const_Physical, only : tfrz, hfus,grav
    USE MOD_Namelist
@@ -308,6 +309,7 @@ CONTAINS
       we = sum(wice_soisno(lb:0)+wliq_soisno(lb:0))-we
          IF(abs(we)>1.e-6) THEN
             print*, 'meltf err : ', we
+            CALL CoLM_stop()
          ENDIF
       ENDIF
 
@@ -347,6 +349,7 @@ CONTAINS
 !-----------------------------------------------------------------------
 
    USE MOD_Precision
+   USE MOD_SPMD_Task
    USE MOD_Hydro_SoilFunction
    USE MOD_Const_Physical, only : tfrz, hfus, grav
    USE MOD_Namelist
@@ -612,6 +615,7 @@ CONTAINS
       we = sum(wice_soisno(lb:0)+wliq_soisno(lb:0))-we
          IF(abs(we)>1.e-6) THEN
             print*, 'meltf err : ', we
+            CALL CoLM_stop()
          ENDIF
       ENDIF
 
@@ -639,6 +643,7 @@ CONTAINS
 !-----------------------------------------------------------------------
 
    USE MOD_Precision
+   USE MOD_SPMD_Task
    USE MOD_Const_Physical, only : tfrz, hfus
    IMPLICIT NONE
 
@@ -797,6 +802,7 @@ CONTAINS
          we = sum(wice_soisno(lb:0)+wliq_soisno(lb:0))-we
          IF(abs(we)>1.e-6) THEN
             print*, 'meltf err : ', we
+            CALL CoLM_stop()
          ENDIF
       ENDIF
 

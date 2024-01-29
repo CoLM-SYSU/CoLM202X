@@ -342,71 +342,71 @@ CONTAINS
 
 ! two or more layers
 
-        IF(snl < -1)THEN
-           msn_old = snl
-           mssi = 1
-           DO i = msn_old+1, 0
+         IF(snl < -1)THEN
+            msn_old = snl
+            mssi = 1
+            DO i = msn_old+1, 0
 
 ! If top node is removed, combine with bottom neighbor
-              IF(dz_soisno(i) < dzmin(mssi))THEN
-                 IF(i == snl+1)THEN
-                    neibor = i + 1
+               IF(dz_soisno(i) < dzmin(mssi))THEN
+                  IF(i == snl+1)THEN
+                     neibor = i + 1
 
 ! If the bottom neighbor is not snow, combine with the top neighbor
-                 ELSE IF(i == 0)THEN
-                    neibor = i - 1
+                  ELSE IF(i == 0)THEN
+                     neibor = i - 1
 
 ! If NONE of the above special cases apply, combine with the thinnest neighbor
-                 ELSE
-                   neibor = i + 1
-                   IF((dz_soisno(i-1)+dz_soisno(i)) < (dz_soisno(i+1)+dz_soisno(i))) neibor = i-1
-                 ENDIF
+                  ELSE
+                     neibor = i + 1
+                     IF((dz_soisno(i-1)+dz_soisno(i)) < (dz_soisno(i+1)+dz_soisno(i))) neibor = i-1
+                  ENDIF
 
 ! Node l and j are combined and stored as node j.
 
-                 IF(neibor > i)THEN
-                    j = neibor
-                    l = i
-                 ELSE
-                    j = i
-                    l = neibor
-                 ENDIF
-                 CALL combo ( dz_soisno(j), wliq_soisno(j), wice_soisno(j), t_soisno(j),&
-                              dz_soisno(l), wliq_soisno(l), wice_soisno(l), t_soisno(l) )
+                  IF(neibor > i)THEN
+                     j = neibor
+                     l = i
+                  ELSE
+                     j = i
+                     l = neibor
+                  ENDIF
+                  CALL combo ( dz_soisno(j), wliq_soisno(j), wice_soisno(j), t_soisno(j),&
+                               dz_soisno(l), wliq_soisno(l), wice_soisno(l), t_soisno(l) )
 
 ! Now shift all elements above this down one.
 
-                 IF(j-1 > snl+1) THEN
-                    DO k = j-1, snl+2, -1
-                       t_soisno(k) = t_soisno(k-1)
-                       wice_soisno(k) = wice_soisno(k-1)
-                       wliq_soisno(k) = wliq_soisno(k-1)
-                       dz_soisno(k) = dz_soisno(k-1)
-                    ENDDO
-                 ENDIF
+                  IF(j-1 > snl+1) THEN
+                     DO k = j-1, snl+2, -1
+                        t_soisno(k) = t_soisno(k-1)
+                        wice_soisno(k) = wice_soisno(k-1)
+                        wliq_soisno(k) = wliq_soisno(k-1)
+                        dz_soisno(k) = dz_soisno(k-1)
+                     ENDDO
+                  ENDIF
 
-                 snl = snl + 1
+                  snl = snl + 1
 
 !*    write(6,'(7h Nodes ,i4,4h and,i4,14h combined into,i4)') l,j,j
 
-                 IF(snl >= -1) EXIT
+                  IF(snl >= -1) EXIT
 
 ! The layer thickness great than the prescibed minimum value
 
-              ELSE
-                 mssi = mssi + 1
-              ENDIF
-           ENDDO
+               ELSE
+                  mssi = mssi + 1
+               ENDIF
+            ENDDO
 
-        ENDIF
+         ENDIF
 
 ! Reset the node depth and the depth of layer interface
 
-        zi_soisno(0) = 0.
-        DO k = 0, snl+1, -1
-           z_soisno(k) = zi_soisno(k) - 0.5*dz_soisno(k)
-           zi_soisno(k-1) = zi_soisno(k) - dz_soisno(k)
-        ENDDO
+         zi_soisno(0) = 0.
+         DO k = 0, snl+1, -1
+            z_soisno(k) = zi_soisno(k) - 0.5*dz_soisno(k)
+            zi_soisno(k-1) = zi_soisno(k) - dz_soisno(k)
+         ENDDO
 
       ENDIF                       !!! snow layers combined
 
@@ -852,94 +852,94 @@ CONTAINS
 
 ! two or more layers
 
-        IF(snl < -1)THEN
-           msn_old = snl
-           mssi = 1
-           DO i = msn_old+1, 0
+         IF(snl < -1)THEN
+            msn_old = snl
+            mssi = 1
+            DO i = msn_old+1, 0
 
 ! If top node is removed, combine with bottom neighbor
-              IF(dz_soisno(i) < dzmin(mssi))THEN
-                 IF(i == snl+1)THEN
-                    neibor = i + 1
+               IF(dz_soisno(i) < dzmin(mssi))THEN
+                  IF(i == snl+1)THEN
+                     neibor = i + 1
 
 ! If the bottom neighbor is not snow, combine with the top neighbor
-                 ELSE IF(i == 0)THEN
-                    neibor = i - 1
+                  ELSE IF(i == 0)THEN
+                     neibor = i - 1
 
 ! If NONE of the above special cases apply, combine with the thinnest neighbor
-                 ELSE
-                   neibor = i + 1
-                   IF((dz_soisno(i-1)+dz_soisno(i)) < (dz_soisno(i+1)+dz_soisno(i))) neibor = i-1
-                 ENDIF
+                  ELSE
+                     neibor = i + 1
+                     IF((dz_soisno(i-1)+dz_soisno(i)) < (dz_soisno(i+1)+dz_soisno(i))) neibor = i-1
+                  ENDIF
 
 ! Node l and j are combined and stored as node j.
 
-                 IF(neibor > i)THEN
-                    j = neibor
-                    l = i
-                 ELSE
-                    j = i
-                    l = neibor
-                 ENDIF
-                 CALL combo ( dz_soisno(j), wliq_soisno(j), wice_soisno(j), t_soisno(j),&
-                              dz_soisno(l), wliq_soisno(l), wice_soisno(l), t_soisno(l) )
+                  IF(neibor > i)THEN
+                     j = neibor
+                     l = i
+                  ELSE
+                     j = i
+                     l = neibor
+                  ENDIF
+                  CALL combo ( dz_soisno(j), wliq_soisno(j), wice_soisno(j), t_soisno(j),&
+                               dz_soisno(l), wliq_soisno(l), wice_soisno(l), t_soisno(l) )
 
 !Aerosol Fluxes (January 07, 2023)
-                 mss_bcphi(j) = mss_bcphi(j)  + mss_bcphi(l)
-                 mss_bcpho(j) = mss_bcpho(j)  + mss_bcpho(l)
-                 mss_ocphi(j) = mss_ocphi(j)  + mss_ocphi(l)
-                 mss_ocpho(j) = mss_ocpho(j)  + mss_ocpho(l)
-                 mss_dst1 (j) = mss_dst1 (j)  + mss_dst1 (l)
-                 mss_dst2 (j) = mss_dst2 (j)  + mss_dst2 (l)
-                 mss_dst3 (j) = mss_dst3 (j)  + mss_dst3 (l)
-                 mss_dst4 (j) = mss_dst4 (j)  + mss_dst4 (l)
+                  mss_bcphi(j) = mss_bcphi(j)  + mss_bcphi(l)
+                  mss_bcpho(j) = mss_bcpho(j)  + mss_bcpho(l)
+                  mss_ocphi(j) = mss_ocphi(j)  + mss_ocphi(l)
+                  mss_ocpho(j) = mss_ocpho(j)  + mss_ocpho(l)
+                  mss_dst1 (j) = mss_dst1 (j)  + mss_dst1 (l)
+                  mss_dst2 (j) = mss_dst2 (j)  + mss_dst2 (l)
+                  mss_dst3 (j) = mss_dst3 (j)  + mss_dst3 (l)
+                  mss_dst4 (j) = mss_dst4 (j)  + mss_dst4 (l)
 !Aerosol Fluxes (January 07, 2023)
 
 
 ! Now shift all elements above this down one.
 
-                 IF(j-1 > snl+1) THEN
-                    DO k = j-1, snl+2, -1
-                       t_soisno(k) = t_soisno(k-1)
-                       wice_soisno(k) = wice_soisno(k-1)
-                       wliq_soisno(k) = wliq_soisno(k-1)
-                       dz_soisno(k) = dz_soisno(k-1)
+                  IF(j-1 > snl+1) THEN
+                     DO k = j-1, snl+2, -1
+                        t_soisno(k) = t_soisno(k-1)
+                        wice_soisno(k) = wice_soisno(k-1)
+                        wliq_soisno(k) = wliq_soisno(k-1)
+                        dz_soisno(k) = dz_soisno(k-1)
 
 !Aerosol Fluxes (January 07, 2023)
-                       mss_bcphi(k) = mss_bcphi(k-1)
-                       mss_bcpho(k) = mss_bcpho(k-1)
-                       mss_ocphi(k) = mss_ocphi(k-1)
-                       mss_ocpho(k) = mss_ocpho(k-1)
-                       mss_dst1 (k) = mss_dst1 (k-1)
-                       mss_dst2 (k) = mss_dst2 (k-1)
-                       mss_dst3 (k) = mss_dst3 (k-1)
-                       mss_dst4 (k) = mss_dst4 (k-1)
+                        mss_bcphi(k) = mss_bcphi(k-1)
+                        mss_bcpho(k) = mss_bcpho(k-1)
+                        mss_ocphi(k) = mss_ocphi(k-1)
+                        mss_ocpho(k) = mss_ocpho(k-1)
+                        mss_dst1 (k) = mss_dst1 (k-1)
+                        mss_dst2 (k) = mss_dst2 (k-1)
+                        mss_dst3 (k) = mss_dst3 (k-1)
+                        mss_dst4 (k) = mss_dst4 (k-1)
 !Aerosol Fluxes (January 07, 2023)
-                    ENDDO
-                 ENDIF
+                     ENDDO
+                  ENDIF
 
-                 snl = snl + 1
+                  snl = snl + 1
 
 !*    write(6,'(7h Nodes ,i4,4h and,i4,14h combined into,i4)') l,j,j
 
-                 IF(snl >= -1) EXIT
+                  IF(snl >= -1) EXIT
 
 ! The layer thickness great than the prescibed minimum value
 
-              ELSE
-                 mssi = mssi + 1
-              ENDIF
-           ENDDO
+               ELSE
+                  mssi = mssi + 1
+               ENDIF
+            ENDDO
 
-        ENDIF
+         ENDIF
 
 ! Reset the node depth and the depth of layer interface
 
-        zi_soisno(0) = 0._r8
-        DO k = 0, snl+1, -1
-           z_soisno(k) = zi_soisno(k) - 0.5_r8*dz_soisno(k)
-           zi_soisno(k-1) = zi_soisno(k) - dz_soisno(k)
-        ENDDO
+         zi_soisno(0) = 0._r8
+         DO k = 0, snl+1, -1
+            z_soisno(k) = zi_soisno(k) - 0.5_r8*dz_soisno(k)
+            zi_soisno(k-1) = zi_soisno(k) - dz_soisno(k)
+         ENDDO
 
       ENDIF                       !!! snow layers combined
 
@@ -1033,211 +1033,211 @@ CONTAINS
 
       IF(msno == 1)THEN
          IF(dzsno(1) > 0.03)THEN
-         msno = 2
+            msno = 2
 ! Specified a new snow layer
-         dzsno(1) = dzsno(1)/2.
-         swice(1) = swice(1)/2.
-         swliq(1) = swliq(1)/2.
+            dzsno(1) = dzsno(1)/2.
+            swice(1) = swice(1)/2.
+            swliq(1) = swliq(1)/2.
 !Aerosol Fluxes (January 07, 2023)
-         mss_aerosol(1,:) = mss_aerosol(1,:)/2.
-!Aerosol Fluxes (January 07, 2023)
-
-         dzsno(2) = dzsno(1)
-         swice(2) = swice(1)
-         swliq(2) = swliq(1)
-!Aerosol Fluxes (January 07, 2023)
-         mss_aerosol(2,:) = mss_aerosol(1,:)
+            mss_aerosol(1,:) = mss_aerosol(1,:)/2.
 !Aerosol Fluxes (January 07, 2023)
 
-         tsno(2)  = tsno(1)
+            dzsno(2) = dzsno(1)
+            swice(2) = swice(1)
+            swliq(2) = swliq(1)
+!Aerosol Fluxes (January 07, 2023)
+            mss_aerosol(2,:) = mss_aerosol(1,:)
+!Aerosol Fluxes (January 07, 2023)
 
-!        write(6,*)'Subdivided Top Node into two layer (1/2)'
+            tsno(2)  = tsno(1)
+
+!           write(6,*)'Subdivided Top Node into two layer (1/2)'
          ENDIF
       ENDIF
 
       IF(msno > 1)THEN
          IF(dzsno(1) > 0.02)THEN
-         drr = dzsno(1) - 0.02
-         propor = drr/dzsno(1)
-         zwice = propor*swice(1)
-         zwliq = propor*swliq(1)
+            drr = dzsno(1) - 0.02
+            propor = drr/dzsno(1)
+            zwice = propor*swice(1)
+            zwliq = propor*swliq(1)
 !Aerosol Fluxes (January 07, 2023)
-         z_mss_aerosol(:) = propor*mss_aerosol(1,:)
-!Aerosol Fluxes (January 07, 2023)
-
-         propor = 0.02/dzsno(1)
-         swice(1) = propor*swice(1)
-         swliq(1) = propor*swliq(1)
-!Aerosol Fluxes (January 07, 2023)
-         mss_aerosol(1,:) = propor*mss_aerosol(1,:)
+            z_mss_aerosol(:) = propor*mss_aerosol(1,:)
 !Aerosol Fluxes (January 07, 2023)
 
-         dzsno(1) = 0.02
-
-         CALL combo(dzsno(2),swliq(2),swice(2),tsno(2), &
-                    drr,zwliq,zwice,tsno(1))
-
+            propor = 0.02/dzsno(1)
+            swice(1) = propor*swice(1)
+            swliq(1) = propor*swliq(1)
 !Aerosol Fluxes (January 07, 2023)
-         mss_aerosol(2,:) = z_mss_aerosol(:) + mss_aerosol(2,:)
+            mss_aerosol(1,:) = propor*mss_aerosol(1,:)
 !Aerosol Fluxes (January 07, 2023)
 
-!        write(6,*) 'Subdivided Top Node &
-!                    20 mm combined into underlying neighbor'
+            dzsno(1) = 0.02
 
-         IF(msno <= 2 .and. dzsno(2) > 0.07)THEN
+            CALL combo(dzsno(2),swliq(2),swice(2),tsno(2), &
+                       drr,zwliq,zwice,tsno(1))
+
+!Aerosol Fluxes (January 07, 2023)
+            mss_aerosol(2,:) = z_mss_aerosol(:) + mss_aerosol(2,:)
+!Aerosol Fluxes (January 07, 2023)
+
+!           write(6,*) 'Subdivided Top Node &
+!                       20 mm combined into underlying neighbor'
+
+            IF(msno <= 2 .and. dzsno(2) > 0.07)THEN
 ! subdivided a new layer
-            msno = 3
-            dzsno(2) = dzsno(2)/2.
-            swice(2) = swice(2)/2.
-            swliq(2) = swliq(2)/2.
+               msno = 3
+               dzsno(2) = dzsno(2)/2.
+               swice(2) = swice(2)/2.
+               swliq(2) = swliq(2)/2.
 !Aerosol Fluxes (January 07, 2023)
-            mss_aerosol(2,:) = mss_aerosol(2,:)/2.
-!Aerosol Fluxes (January 07, 2023)
-
-            dzsno(3) = dzsno(2)
-            swice(3) = swice(2)
-            swliq(3) = swliq(2)
-!Aerosol Fluxes (January 07, 2023)
-            mss_aerosol(3,:) = mss_aerosol(2,:)
+               mss_aerosol(2,:) = mss_aerosol(2,:)/2.
 !Aerosol Fluxes (January 07, 2023)
 
-            tsno(3)  = tsno(2)
-         ENDIF
+               dzsno(3) = dzsno(2)
+               swice(3) = swice(2)
+               swliq(3) = swliq(2)
+!Aerosol Fluxes (January 07, 2023)
+               mss_aerosol(3,:) = mss_aerosol(2,:)
+!Aerosol Fluxes (January 07, 2023)
+
+               tsno(3)  = tsno(2)
+            ENDIF
          ENDIF
       ENDIF
 
       IF(msno > 2)THEN
          IF(dzsno(2) > 0.05)THEN
-         drr = dzsno(2) - 0.05
-         propor = drr/dzsno(2)
-         zwice = propor*swice(2)
-         zwliq = propor*swliq(2)
+            drr = dzsno(2) - 0.05
+            propor = drr/dzsno(2)
+            zwice = propor*swice(2)
+            zwliq = propor*swliq(2)
 !Aerosol Fluxes (January 07, 2023)
-         z_mss_aerosol(:) = propor*mss_aerosol(2,:)
-!Aerosol Fluxes (January 07, 2023)
-
-         propor = 0.05/dzsno(2)
-         swice(2) = propor*swice(2)
-         swliq(2) = propor*swliq(2)
-!Aerosol Fluxes (January 07, 2023)
-         mss_aerosol(2,:) = propor*mss_aerosol(2,:)
+            z_mss_aerosol(:) = propor*mss_aerosol(2,:)
 !Aerosol Fluxes (January 07, 2023)
 
-         dzsno(2) = 0.05
-
-         CALL combo(dzsno(3),swliq(3),swice(3),tsno(3), &
-                    drr,     zwliq,   zwice,   tsno(2))
-
+            propor = 0.05/dzsno(2)
+            swice(2) = propor*swice(2)
+            swliq(2) = propor*swliq(2)
 !Aerosol Fluxes (January 07, 2023)
-         mss_aerosol(3,:) = z_mss_aerosol(:) + mss_aerosol(3,:)
+            mss_aerosol(2,:) = propor*mss_aerosol(2,:)
 !Aerosol Fluxes (January 07, 2023)
 
-!        write(6,*)'Subdivided 50 mm from the subsface layer &
-!                   &and combined into underlying neighbor'
+            dzsno(2) = 0.05
 
-         IF(msno <= 3 .and. dzsno(3) > 0.18)THEN
+            CALL combo(dzsno(3),swliq(3),swice(3),tsno(3), &
+                       drr,     zwliq,   zwice,   tsno(2))
+
+!Aerosol Fluxes (January 07, 2023)
+            mss_aerosol(3,:) = z_mss_aerosol(:) + mss_aerosol(3,:)
+!Aerosol Fluxes (January 07, 2023)
+
+!           write(6,*)'Subdivided 50 mm from the subsface layer &
+!                      &and combined into underlying neighbor'
+
+            IF(msno <= 3 .and. dzsno(3) > 0.18)THEN
 ! subdivided a new layer
-            msno =  4
-            dzsno(3) = dzsno(3)/2.
-            swice(3) = swice(3)/2.
-            swliq(3) = swliq(3)/2.
+               msno =  4
+               dzsno(3) = dzsno(3)/2.
+               swice(3) = swice(3)/2.
+               swliq(3) = swliq(3)/2.
 !Aerosol Fluxes (January 07, 2023)
-            mss_aerosol(3,:) = mss_aerosol(3,:)/2.
-!Aerosol Fluxes (January 07, 2023)
-
-            dzsno(4) = dzsno(3)
-            swice(4) = swice(3)
-            swliq(4) = swliq(3)
-!Aerosol Fluxes (January 07, 2023)
-            mss_aerosol(4,:) = mss_aerosol(3,:)
+               mss_aerosol(3,:) = mss_aerosol(3,:)/2.
 !Aerosol Fluxes (January 07, 2023)
 
-            tsno(4)  = tsno(3)
+               dzsno(4) = dzsno(3)
+               swice(4) = swice(3)
+               swliq(4) = swliq(3)
+!Aerosol Fluxes (January 07, 2023)
+               mss_aerosol(4,:) = mss_aerosol(3,:)
+!Aerosol Fluxes (January 07, 2023)
 
-         ENDIF
+               tsno(4)  = tsno(3)
+
+            ENDIF
          ENDIF
       ENDIF
 
       IF(msno > 3)THEN
          IF(dzsno(3) > 0.11)THEN
-         drr = dzsno(3) - 0.11
-         propor = drr/dzsno(3)
-         zwice = propor*swice(3)
-         zwliq = propor*swliq(3)
+            drr = dzsno(3) - 0.11
+            propor = drr/dzsno(3)
+            zwice = propor*swice(3)
+            zwliq = propor*swliq(3)
 !Aerosol Fluxes (January 07, 2023)
-         z_mss_aerosol(:) = propor*mss_aerosol(3,:)
-!Aerosol Fluxes (January 07, 2023)
-
-         propor = 0.11/dzsno(3)
-         swice(3) = propor*swice(3)
-         swliq(3) = propor*swliq(3)
-!Aerosol Fluxes (January 07, 2023)
-         mss_aerosol(3,:) = propor*mss_aerosol(3,:)
+            z_mss_aerosol(:) = propor*mss_aerosol(3,:)
 !Aerosol Fluxes (January 07, 2023)
 
-         dzsno(3) = 0.11
-
-         CALL combo(dzsno(4),swliq(4),swice(4),tsno(4), &
-                    drr,     zwliq,   zwice,   tsno(3))
-
+            propor = 0.11/dzsno(3)
+            swice(3) = propor*swice(3)
+            swliq(3) = propor*swliq(3)
 !Aerosol Fluxes (January 07, 2023)
-         mss_aerosol(4,:) = z_mss_aerosol(:) + mss_aerosol(4,:)
+            mss_aerosol(3,:) = propor*mss_aerosol(3,:)
 !Aerosol Fluxes (January 07, 2023)
 
-!        write(6,*)'Subdivided 110 mm from the third Node &
-!                   &and combined into underlying neighbor'
+            dzsno(3) = 0.11
 
-         IF(msno <= 4 .and. dzsno(4) > 0.41)THEN
+            CALL combo(dzsno(4),swliq(4),swice(4),tsno(4), &
+                       drr,     zwliq,   zwice,   tsno(3))
+
+!Aerosol Fluxes (January 07, 2023)
+            mss_aerosol(4,:) = z_mss_aerosol(:) + mss_aerosol(4,:)
+!Aerosol Fluxes (January 07, 2023)
+
+!           write(6,*)'Subdivided 110 mm from the third Node &
+!                      &and combined into underlying neighbor'
+
+            IF(msno <= 4 .and. dzsno(4) > 0.41)THEN
 ! subdivided a new layer
-            msno = 5
-            dzsno(4) = dzsno(4)/2.
-            swice(4) = swice(4)/2.
-            swliq(4) = swliq(4)/2.
+               msno = 5
+               dzsno(4) = dzsno(4)/2.
+               swice(4) = swice(4)/2.
+               swliq(4) = swliq(4)/2.
 !Aerosol Fluxes (January 07, 2023)
-            mss_aerosol(4,:) = mss_aerosol(4,:)/2.
-!Aerosol Fluxes (January 07, 2023)
-
-            dzsno(5) = dzsno(4)
-            swice(5) = swice(4)
-            swliq(5) = swliq(4)
-!Aerosol Fluxes (January 07, 2023)
-            mss_aerosol(5,:) = mss_aerosol(4,:)
+               mss_aerosol(4,:) = mss_aerosol(4,:)/2.
 !Aerosol Fluxes (January 07, 2023)
 
-            tsno(5)  = tsno(4)
+               dzsno(5) = dzsno(4)
+               swice(5) = swice(4)
+               swliq(5) = swliq(4)
+!Aerosol Fluxes (January 07, 2023)
+               mss_aerosol(5,:) = mss_aerosol(4,:)
+!Aerosol Fluxes (January 07, 2023)
 
-         ENDIF
+               tsno(5)  = tsno(4)
+
+            ENDIF
          ENDIF
       ENDIF
 
       IF(msno > 4)THEN
          IF(dzsno(4) > 0.23)THEN
-         drr = dzsno(4) - 0.23
-         propor = drr/dzsno(4)
-         zwice = propor*swice(4)
-         zwliq = propor*swliq(4)
+            drr = dzsno(4) - 0.23
+            propor = drr/dzsno(4)
+            zwice = propor*swice(4)
+            zwliq = propor*swliq(4)
 !Aerosol Fluxes (January 07, 2023)
-         z_mss_aerosol(:) = propor*mss_aerosol(4,:)
-!Aerosol Fluxes (January 07, 2023)
-
-         propor = 0.23/dzsno(4)
-         swice(4) = propor*swice(4)
-         swliq(4) = propor*swliq(4)
-!Aerosol Fluxes (January 07, 2023)
-         mss_aerosol(4,:) = propor*mss_aerosol(4,:)
+            z_mss_aerosol(:) = propor*mss_aerosol(4,:)
 !Aerosol Fluxes (January 07, 2023)
 
-         dzsno(4) = 0.23
-
-         CALL combo(dzsno(5),swliq(5),swice(5),tsno(5), &
-                    drr,     zwliq,   zwice,   tsno(4))
-
+            propor = 0.23/dzsno(4)
+            swice(4) = propor*swice(4)
+            swliq(4) = propor*swliq(4)
 !Aerosol Fluxes (January 07, 2023)
-         mss_aerosol(5,:) = z_mss_aerosol(:) + mss_aerosol(5,:)
+            mss_aerosol(4,:) = propor*mss_aerosol(4,:)
 !Aerosol Fluxes (January 07, 2023)
 
-!        write(6,*)'Subdivided 230 mm from the fourth Node &
-!                   'and combined into underlying neighbor'
+            dzsno(4) = 0.23
+
+            CALL combo(dzsno(5),swliq(5),swice(5),tsno(5), &
+                       drr,     zwliq,   zwice,   tsno(4))
+
+!Aerosol Fluxes (January 07, 2023)
+            mss_aerosol(5,:) = z_mss_aerosol(:) + mss_aerosol(5,:)
+!Aerosol Fluxes (January 07, 2023)
+
+!           write(6,*)'Subdivided 230 mm from the fourth Node &
+!                     'and combined into underlying neighbor'
          ENDIF
       ENDIF
 

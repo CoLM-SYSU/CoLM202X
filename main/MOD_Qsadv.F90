@@ -81,15 +81,15 @@ CONTAINS
       IF (td > 75.0) td = 75.0
 
       IF (td >= 0.0)THEN
-        es   = a0 + td*(a1 + td*(a2 + td*(a3 + td*(a4 &
-                  + td*(a5 + td*(a6 + td*(a7 + td*a8)))))))
-        esdT = b0 + td*(b1 + td*(b2 + td*(b3 + td*(b4 &
-                  + td*(b5 + td*(b6 + td*(b7 + td*b8)))))))
+         es   = a0 + td*(a1 + td*(a2 + td*(a3 + td*(a4 &
+                   + td*(a5 + td*(a6 + td*(a7 + td*a8)))))))
+         esdT = b0 + td*(b1 + td*(b2 + td*(b3 + td*(b4 &
+                   + td*(b5 + td*(b6 + td*(b7 + td*b8)))))))
       ELSE
-        es   = c0 + td*(c1 + td*(c2 + td*(c3 + td*(c4 &
-                  + td*(c5 + td*(c6 + td*(c7 + td*c8)))))))
-        esdT = d0 + td*(d1 + td*(d2 + td*(d3 + td*(d4 &
-                  + td*(d5 + td*(d6 + td*(d7 + td*d8)))))))
+         es   = c0 + td*(c1 + td*(c2 + td*(c3 + td*(c4 &
+                   + td*(c5 + td*(c6 + td*(c7 + td*c8)))))))
+         esdT = d0 + td*(d1 + td*(d2 + td*(d3 + td*(d4 &
+                   + td*(d5 + td*(d6 + td*(d7 + td*d8)))))))
       ENDIF
 
       es    = es    * 100.            ! pa

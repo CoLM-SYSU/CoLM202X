@@ -96,69 +96,69 @@ CONTAINS
 
       DO j = maxsnl+1, 0
 
-        ! layer mass of snow:
-        snowmass = h2osno_ice(j) + h2osno_liq(j)
+         ! layer mass of snow:
+         snowmass = h2osno_ice(j) + h2osno_liq(j)
 
-        IF (.not. use_extrasnowlayers) THEN
-           ! Correct the top layer aerosol mass to account for snow capping.
-           ! This approach conserves the aerosol mass concentration
-           ! (but not the aerosol amss) when snow-capping is invoked
+         IF (.not. use_extrasnowlayers) THEN
+            ! Correct the top layer aerosol mass to account for snow capping.
+            ! This approach conserves the aerosol mass concentration
+            ! (but not the aerosol amss) when snow-capping is invoked
 
-           IF (j == snl+1) THEN
-              IF (do_capsnow) THEN
+            IF (j == snl+1) THEN
+               IF (do_capsnow) THEN
 
-                 snowcap_scl_fct = snowmass / (snowmass + (qflx_snwcp_ice*dtime))
+                  snowcap_scl_fct = snowmass / (snowmass + (qflx_snwcp_ice*dtime))
 
-                 mss_bcpho(j) = mss_bcpho(j)*snowcap_scl_fct
-                 mss_bcphi(j) = mss_bcphi(j)*snowcap_scl_fct
-                 mss_ocpho(j) = mss_ocpho(j)*snowcap_scl_fct
-                 mss_ocphi(j) = mss_ocphi(j)*snowcap_scl_fct
+                  mss_bcpho(j) = mss_bcpho(j)*snowcap_scl_fct
+                  mss_bcphi(j) = mss_bcphi(j)*snowcap_scl_fct
+                  mss_ocpho(j) = mss_ocpho(j)*snowcap_scl_fct
+                  mss_ocphi(j) = mss_ocphi(j)*snowcap_scl_fct
 
-                 mss_dst1(j)  = mss_dst1(j)*snowcap_scl_fct
-                 mss_dst2(j)  = mss_dst2(j)*snowcap_scl_fct
-                 mss_dst3(j)  = mss_dst3(j)*snowcap_scl_fct
-                 mss_dst4(j)  = mss_dst4(j)*snowcap_scl_fct
-              ENDIF
-           ENDIF
-        ENDIF
+                  mss_dst1(j)  = mss_dst1(j)*snowcap_scl_fct
+                  mss_dst2(j)  = mss_dst2(j)*snowcap_scl_fct
+                  mss_dst3(j)  = mss_dst3(j)*snowcap_scl_fct
+                  mss_dst4(j)  = mss_dst4(j)*snowcap_scl_fct
+               ENDIF
+            ENDIF
+         ENDIF
 
-        IF (j >= snl+1) THEN
+         IF (j >= snl+1) THEN
 
-           mss_cnc_bcphi(j) = mss_bcphi(j) / snowmass
-           mss_cnc_bcpho(j) = mss_bcpho(j) / snowmass
+            mss_cnc_bcphi(j) = mss_bcphi(j) / snowmass
+            mss_cnc_bcpho(j) = mss_bcpho(j) / snowmass
 
-           mss_cnc_ocphi(j) = mss_ocphi(j) / snowmass
-           mss_cnc_ocpho(j) = mss_ocpho(j) / snowmass
+            mss_cnc_ocphi(j) = mss_ocphi(j) / snowmass
+            mss_cnc_ocpho(j) = mss_ocpho(j) / snowmass
 
-           mss_cnc_dst1(j)  = mss_dst1(j)  / snowmass
-           mss_cnc_dst2(j)  = mss_dst2(j)  / snowmass
-           mss_cnc_dst3(j)  = mss_dst3(j)  / snowmass
-           mss_cnc_dst4(j)  = mss_dst4(j)  / snowmass
+            mss_cnc_dst1(j)  = mss_dst1(j)  / snowmass
+            mss_cnc_dst2(j)  = mss_dst2(j)  / snowmass
+            mss_cnc_dst3(j)  = mss_dst3(j)  / snowmass
+            mss_cnc_dst4(j)  = mss_dst4(j)  / snowmass
 
-        ELSE
-           ! 01/10/2023, yuan: set empty snow layers to snw_rds_min
-           !snw_rds(j)       = 0._r8
-           snw_rds(j)       = snw_rds_min
+         ELSE
+            ! 01/10/2023, yuan: set empty snow layers to snw_rds_min
+            !snw_rds(j)       = 0._r8
+            snw_rds(j)       = snw_rds_min
 
-           mss_bcpho(j)     = 0._r8
-           mss_bcphi(j)     = 0._r8
-           mss_cnc_bcphi(j) = 0._r8
-           mss_cnc_bcpho(j) = 0._r8
+            mss_bcpho(j)     = 0._r8
+            mss_bcphi(j)     = 0._r8
+            mss_cnc_bcphi(j) = 0._r8
+            mss_cnc_bcpho(j) = 0._r8
 
-           mss_ocpho(j)     = 0._r8
-           mss_ocphi(j)     = 0._r8
-           mss_cnc_ocphi(j) = 0._r8
-           mss_cnc_ocpho(j) = 0._r8
+            mss_ocpho(j)     = 0._r8
+            mss_ocphi(j)     = 0._r8
+            mss_cnc_ocphi(j) = 0._r8
+            mss_cnc_ocpho(j) = 0._r8
 
-           mss_dst1(j)      = 0._r8
-           mss_dst2(j)      = 0._r8
-           mss_dst3(j)      = 0._r8
-           mss_dst4(j)      = 0._r8
-           mss_cnc_dst1(j)  = 0._r8
-           mss_cnc_dst2(j)  = 0._r8
-           mss_cnc_dst3(j)  = 0._r8
-           mss_cnc_dst4(j)  = 0._r8
-        ENDIF
+            mss_dst1(j)      = 0._r8
+            mss_dst2(j)      = 0._r8
+            mss_dst3(j)      = 0._r8
+            mss_dst4(j)      = 0._r8
+            mss_cnc_dst1(j)  = 0._r8
+            mss_cnc_dst2(j)  = 0._r8
+            mss_cnc_dst3(j)  = 0._r8
+            mss_cnc_dst4(j)  = 0._r8
+         ENDIF
       ENDDO
 
    END SUBROUTINE AerosolMasses
