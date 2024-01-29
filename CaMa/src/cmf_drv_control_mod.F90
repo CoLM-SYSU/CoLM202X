@@ -286,7 +286,7 @@ CONTAINS
       IF( LOUTPUT )THEN
          CALL CMF_OUTPUT_END
 #ifdef sediment
-      IF( LSEDOUT ) CALL sediment_output_end
+         IF( LSEDOUT ) CALL sediment_output_end
 #endif
       ENDIF
       IF( LSEALEV ) THEN
