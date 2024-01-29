@@ -288,7 +288,7 @@ CONTAINS
                      d2layer(iseq,ised) = 0.d0
                   ENDIF
                   sedsto(iseq,ised) = sedsto(iseq,ised) + d2netflw(iseq,ised) * sedDT
-            ELSE
+               ELSE
                   IF ( abs(d2netflw(iseq,ised))*sedDT < sedsto(iseq,ised) ) THEN
                      sedsto(iseq,ised) = max (sedsto(iseq,ised) - abs(d2netflw(iseq,ised))*sedDT, 0.d0 )
                   ELSE
@@ -347,19 +347,19 @@ CONTAINS
             ELSE IF ( sum(d2seddep(iseq,:,:)) > 0.d0 ) THEN
                layerP(:) = 0.d0
                DO ilyr = 1, totlyrnum
-                     diff = lyrvol - sum(d2layer(iseq,:))
-                     IF ( diff <= 0.d0 ) EXIT
-                     IF ( sum(d2seddep(iseq,ilyr,:)) <= diff ) THEN
-                           d2layer(iseq,:) = d2layer(iseq,:) + d2seddep(iseq,ilyr,:)
-                           d2seddep(iseq,ilyr,:) = 0.d0
-                           slyr = ilyr + 1
-                     ELSE
-                           tmp(:) = diff * d2seddep(iseq,ilyr,:) / sum(d2seddep(iseq,ilyr,:))
-                           d2layer(iseq,:) = d2layer(iseq,:) + tmp(:)
-                           d2seddep(iseq,ilyr,:) = max( d2seddep(iseq,ilyr,:) - tmp(:), 0.d0 )
-                           slyr = ilyr
-                           EXIT
-                        ENDIF
+                  diff = lyrvol - sum(d2layer(iseq,:))
+                  IF ( diff <= 0.d0 ) EXIT
+                  IF ( sum(d2seddep(iseq,ilyr,:)) <= diff ) THEN
+                     d2layer(iseq,:) = d2layer(iseq,:) + d2seddep(iseq,ilyr,:)
+                     d2seddep(iseq,ilyr,:) = 0.d0
+                     slyr = ilyr + 1
+                  ELSE
+                     tmp(:) = diff * d2seddep(iseq,ilyr,:) / sum(d2seddep(iseq,ilyr,:))
+                     d2layer(iseq,:) = d2layer(iseq,:) + tmp(:)
+                     d2seddep(iseq,ilyr,:) = max( d2seddep(iseq,ilyr,:) - tmp(:), 0.d0 )
+                     slyr = ilyr
+                     EXIT
+                  ENDIF
                ENDDO
             ELSE
                d2seddep(iseq,:,:) = 0.d0
@@ -389,7 +389,7 @@ CONTAINS
                      EXIT
                   ENDIF
                ENDDO
-               ENDDO
+            ENDDO
                
                IF ( sum(seddepP) > 0.d0 ) THEN
                   d2seddep(iseq,totlyrnum,:) = sum(seddepP, dim=1)
