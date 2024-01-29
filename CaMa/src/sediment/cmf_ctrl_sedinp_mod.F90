@@ -53,36 +53,36 @@ CONTAINS
    CONTAINS
       !================================
       SUBROUTINE read_sedinp_nmlist
-         IMPLICIT NONE
-         integer(kind=JPIM)            :: nsetfile
+      IMPLICIT NONE
+      integer(kind=JPIM)            :: nsetfile
       
-         namelist/sediment_input/ sedinput_dir, sedinput_pre, sedinput_suf, &
+      namelist/sediment_input/ sedinput_dir, sedinput_pre, sedinput_suf, &
                                  cslope, dsylunit, pyld, pyldc, pyldpc,    &
                                  cinpmat_sed
 
-            nsetfile = INQUIRE_FID()
-            open(nsetfile,file='input_sed.nam',status='OLD')
+         nsetfile = INQUIRE_FID()
+         open(nsetfile,file='input_sed.nam',status='OLD')
 
-            sedinput_dir='./'
-            sedinput_pre='./'
-            sedinput_suf='./'
-            cslope='./slope.bin'
-            dsylunit = 1.d-6
-            pyld = 0.01d0
-            pyldc = 2.d0
-            pyldpc = 2.d0
-            cinpmat_sed = './inpmat.bin'
+         sedinput_dir='./'
+         sedinput_pre='./'
+         sedinput_suf='./'
+         cslope='./slope.bin'
+         dsylunit = 1.d-6
+         pyld = 0.01d0
+         pyldc = 2.d0
+         pyldpc = 2.d0
+         cinpmat_sed = './inpmat.bin'
 
-            rewind(nsetfile)
-            read(nsetfile,nml=sediment_input)
-            !defaults
-            write(LOGNAM,*) 'nml sediment_input'
-            write(LOGNAM,*) 'cslope    :', trim(cslope)
-            write(LOGNAM,*) 'dsylunit  :', dsylunit
-            write(LOGNAM,*) 'pyld      :', pyld
-            write(LOGNAM,*) 'pyldc     :', pyldc
-            write(LOGNAM,*) 'pyldpc    :', pyldpc
-            write(LOGNAM,*) 'cinpmat_sed:', trim(cinpmat_sed)
+         rewind(nsetfile)
+         read(nsetfile,nml=sediment_input)
+         !defaults
+         write(LOGNAM,*) 'nml sediment_input'
+         write(LOGNAM,*) 'cslope    :', trim(cslope)
+         write(LOGNAM,*) 'dsylunit  :', dsylunit
+         write(LOGNAM,*) 'pyld      :', pyld
+         write(LOGNAM,*) 'pyldc     :', pyldc
+         write(LOGNAM,*) 'pyldpc    :', pyldpc
+         write(LOGNAM,*) 'cinpmat_sed:', trim(cinpmat_sed)
       END SUBROUTINE
 
       SUBROUTINE read_slope
