@@ -300,7 +300,7 @@ CONTAINS
                   xcnt = xGridCnt(ixseg)
                   ycnt = yGridCnt(iyseg)
 
-                  select CASE (ndims)
+                  SELECTCASE (ndims)
                   CASE (2)
 
                      dimlens = (/nlon, nlat, 0, 0/)
@@ -346,7 +346,7 @@ CONTAINS
                      wdata4d(:,:,xdsp+1:xdsp+xcnt, ydsp+1:ydsp+ycnt) = &
                         reshape(datathis,(/ndim1,ndim2,xcnt,ycnt/))
 
-                  END select
+                  ENDSELECT
 
                   deallocate (datathis)
 
@@ -360,7 +360,7 @@ CONTAINS
             IF (ndims >= 3) CALL ncio_define_dimension (filename, dim3name, dimlens(3))
             IF (ndims >= 4) CALL ncio_define_dimension (filename, dim4name, dimlens(4))
 
-            select CASE (ndims)
+            SELECTCASE (ndims)
             CASE (1)
 
                CALL ncio_write_serial_time (filename, dataname, itime_in_file, wdata1d, &
@@ -385,7 +385,7 @@ CONTAINS
                   dim1name, dim2name, dim3name, dim4name, dim5name, compress)
 
                deallocate(wdata4d)
-            END select
+            ENDSELECT
 
             IF (itime_in_file == 1) THEN
                CALL ncio_put_attr (filename, dataname, 'long_name', longname)
