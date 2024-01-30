@@ -148,8 +148,7 @@ PROGRAM MKSRFDATA
    lc_year = DEF_LC_YEAR
 
    ! define blocks
-   CALL gblock%set_by_size (DEF_nx_blocks, DEF_ny_blocks)
-   ! CALL gblock%set_by_file (DEF_file_block)
+   CALL gblock%set ()
 
    CALL Init_GlobalVars
    CAll Init_LC_Const

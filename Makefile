@@ -43,7 +43,8 @@ OBJS_SHARED =    \
 				  MOD_5x5DataReadin.o          \
 				  MOD_Mesh.o                   \
 				  MOD_Pixelset.o               \
-				  MOD_NetCDFVector.o           \
+				  MOD_NetCDFVectorBlk.o        \
+				  MOD_NetCDFVectorOne.o        \
 				  MOD_RangeCheck.o             \
 				  MOD_Mapping_Grid2Pset.o      \
 				  MOD_Mapping_Pset2Grid.o      \
