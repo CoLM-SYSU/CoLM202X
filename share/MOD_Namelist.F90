@@ -39,9 +39,11 @@ MODULE MOD_Namelist
 ! ----- Part 2: blocks and MPI  -----
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-   integer :: DEF_nx_blocks = 72
-   integer :: DEF_ny_blocks = 36
-   integer :: DEF_PIO_groupsize = 12
+   character(len=256) :: DEF_BlockInfoFile = 'null'
+   real(r8) :: DEF_AverageElementSize = -1.
+   integer  :: DEF_nx_blocks = 72
+   integer  :: DEF_ny_blocks = 36
+   integer  :: DEF_PIO_groupsize = 12
 
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ! ----- Part 3: For Single Point -----
@@ -764,6 +766,8 @@ CONTAINS
       USE_SITE_thermal_paras,   &
       USE_SITE_urban_LAI,       &
 
+      DEF_BlockInfoFile,               &
+      DEF_AverageElementSize,          & 
       DEF_nx_blocks,                   &
       DEF_ny_blocks,                   &
       DEF_PIO_groupsize,               &
@@ -1144,7 +1148,9 @@ CONTAINS
       CALL mpi_bcast (DEF_domain%edgen,   1, mpi_real8,     p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_domain%edgew,   1, mpi_real8,     p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_domain%edgee,   1, mpi_real8,     p_root, p_comm_glb, p_err)
-
+      
+      CALL mpi_bcast (DEF_BlockInfoFile, 256, mpi_character, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_AverageElementSize,  1, mpi_real8, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_nx_blocks,     1, mpi_integer, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_ny_blocks,     1, mpi_integer, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_PIO_groupsize, 1, mpi_integer, p_root, p_comm_glb, p_err)
