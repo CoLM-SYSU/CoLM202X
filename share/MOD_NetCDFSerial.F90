@@ -119,6 +119,8 @@ MODULE MOD_NetCDFSerial
       MODULE procedure ncio_write_serial_real8_4d_time
    END INTERFACE ncio_write_serial_time
 
+   PUBLIC :: get_time_now   
+
 CONTAINS
 
    ! ----
@@ -161,6 +163,20 @@ CONTAINS
    END SUBROUTINE check_ncfile_exist
 
    ! ----
+   character(len=27) FUNCTION get_time_now ()
+      
+   IMPLICIT NONE
+   character(len=8)  :: date
+   character(len=10) :: time
+   character(len=5)  :: zone
+
+      CALL date_and_time(date, time, zone)
+      get_time_now = date(1:8)//'-'//time(1:2)//':'//time(3:4)//':'//time(5:6) & 
+                     //' UTC'//zone(1:3)//':'//zone(4:5) 
+
+   END FUNCTION get_time_now
+
+   ! ----
    SUBROUTINE ncio_create_file (filename)
 
    USE netcdf
@@ -172,6 +188,11 @@ CONTAINS
    integer :: ncid
 
       CALL nccheck( nf90_create(trim(filename), ior(NF90_CLOBBER,NF90_NETCDF4), ncid) )
+
+      CALL nccheck (nf90_redef  (ncid))
+      CALL nccheck( nf90_put_att(ncid, NF90_GLOBAL, 'create_time', get_time_now()))
+      CALL nccheck (nf90_enddef (ncid))
+
       CALL nccheck( nf90_close(ncid) )
 
    END SUBROUTINE ncio_create_file

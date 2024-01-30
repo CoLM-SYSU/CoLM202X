@@ -606,6 +606,8 @@ CONTAINS
                pixelset%ielm(iset) = ie
             ENDDO
 
+         ELSE
+            write(*,*) 'Warning: 0 ',trim(psetname), ' on worker :', p_iam_glb
          ENDIF
       ENDIF
 

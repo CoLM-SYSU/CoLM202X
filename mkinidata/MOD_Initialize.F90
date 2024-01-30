@@ -231,8 +231,10 @@ CONTAINS
 
       IF (p_is_worker) THEN
 
-         patchclass = landpatch%settyp
-         patchmask  = .true.
+         IF (numpatch > 0) THEN
+            patchclass = landpatch%settyp
+            patchmask  = .true.
+         ENDIF
 
          DO ipatch = 1, numpatch
 
@@ -252,7 +254,7 @@ CONTAINS
          CALL landpatch%get_lonlat_radian (patchlonr, patchlatr)
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
-         pftclass = landpft%settyp
+         IF (numpft > 0) pftclass = landpft%settyp
 #endif
 
       ENDIF

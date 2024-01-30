@@ -41,7 +41,7 @@ MODULE MOD_Mapping_Grid2Pset
       procedure, PRIVATE :: map_aweighted_3d => map_g2p_aweighted_3d
       generic, PUBLIC :: map_aweighted => map_aweighted_2d, map_aweighted_3d
 
-      procedure, PUBLIC :: map_max_frenquency_2d => map_g2p_max_frequency_2d 
+      procedure, PUBLIC :: map_max_frequency_2d => map_g2p_max_frequency_2d 
 
       final :: mapping_grid2pset_free_mem
 

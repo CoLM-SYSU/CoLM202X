@@ -355,64 +355,66 @@ CONTAINS
 
       IF (p_is_worker) THEN
 
-         DO nsl = 9, 2, -1
-            vf_quartz  (nsl,:) = vf_quartz (nsl-1,:)
-            vf_gravels (nsl,:) = vf_gravels(nsl-1,:)
-            vf_om      (nsl,:) = vf_om     (nsl-1,:)
-            vf_sand    (nsl,:) = vf_sand   (nsl-1,:)
-            wf_gravels (nsl,:) = wf_gravels(nsl-1,:)
-            wf_sand    (nsl,:) = wf_sand   (nsl-1,:)
-            OM_density (nsl,:) = OM_density(nsl-1,:)
-            BD_all     (nsl,:) = BD_all    (nsl-1,:)
-            wfc        (nsl,:) = wfc       (nsl-1,:)
-            porsl      (nsl,:) = porsl     (nsl-1,:)
-            psi0       (nsl,:) = psi0      (nsl-1,:)
-            bsw        (nsl,:) = bsw       (nsl-1,:)
+         IF (numpatch > 0) THEN
+            DO nsl = 9, 2, -1
+               vf_quartz  (nsl,:) = vf_quartz (nsl-1,:)
+               vf_gravels (nsl,:) = vf_gravels(nsl-1,:)
+               vf_om      (nsl,:) = vf_om     (nsl-1,:)
+               vf_sand    (nsl,:) = vf_sand   (nsl-1,:)
+               wf_gravels (nsl,:) = wf_gravels(nsl-1,:)
+               wf_sand    (nsl,:) = wf_sand   (nsl-1,:)
+               OM_density (nsl,:) = OM_density(nsl-1,:)
+               BD_all     (nsl,:) = BD_all    (nsl-1,:)
+               wfc        (nsl,:) = wfc       (nsl-1,:)
+               porsl      (nsl,:) = porsl     (nsl-1,:)
+               psi0       (nsl,:) = psi0      (nsl-1,:)
+               bsw        (nsl,:) = bsw       (nsl-1,:)
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
-            theta_r    (nsl,:) = theta_r   (nsl-1,:)
-            alpha_vgm  (nsl,:) = alpha_vgm (nsl-1,:)
-            L_vgm      (nsl,:) = L_vgm     (nsl-1,:)
-            n_vgm      (nsl,:) = n_vgm     (nsl-1,:)
+               theta_r    (nsl,:) = theta_r   (nsl-1,:)
+               alpha_vgm  (nsl,:) = alpha_vgm (nsl-1,:)
+               L_vgm      (nsl,:) = L_vgm     (nsl-1,:)
+               n_vgm      (nsl,:) = n_vgm     (nsl-1,:)
 #endif
-            hksati     (nsl,:) = hksati    (nsl-1,:)
-            csol       (nsl,:) = csol      (nsl-1,:)
-            k_solids   (nsl,:) = k_solids  (nsl-1,:)
-            dksatu     (nsl,:) = dksatu    (nsl-1,:)
-            dksatf     (nsl,:) = dksatf    (nsl-1,:)
-            dkdry      (nsl,:) = dkdry     (nsl-1,:)
-            BA_alpha   (nsl,:) = BA_alpha  (nsl-1,:)
-            BA_beta    (nsl,:) = BA_beta   (nsl-1,:)
-         ENDDO
+               hksati     (nsl,:) = hksati    (nsl-1,:)
+               csol       (nsl,:) = csol      (nsl-1,:)
+               k_solids   (nsl,:) = k_solids  (nsl-1,:)
+               dksatu     (nsl,:) = dksatu    (nsl-1,:)
+               dksatf     (nsl,:) = dksatf    (nsl-1,:)
+               dkdry      (nsl,:) = dkdry     (nsl-1,:)
+               BA_alpha   (nsl,:) = BA_alpha  (nsl-1,:)
+               BA_beta    (nsl,:) = BA_beta   (nsl-1,:)
+            ENDDO
 
-         DO nsl = nl_soil, 10, -1
-            vf_quartz  (nsl,:) = vf_quartz (9,:)
-            vf_gravels (nsl,:) = vf_gravels(9,:)
-            vf_om      (nsl,:) = vf_om     (9,:)
-            vf_sand    (nsl,:) = vf_sand   (9,:)
-            wf_gravels (nsl,:) = wf_gravels(9,:)
-            wf_sand    (nsl,:) = wf_sand   (9,:)
-            OM_density (nsl,:) = OM_density(9,:)
-            BD_all     (nsl,:) = BD_all    (9,:)
-            wfc        (nsl,:) = wfc       (9,:)
-            porsl      (nsl,:) = porsl     (9,:)
-            psi0       (nsl,:) = psi0      (9,:)
-            bsw        (nsl,:) = bsw       (9,:)
+            DO nsl = nl_soil, 10, -1
+               vf_quartz  (nsl,:) = vf_quartz (9,:)
+               vf_gravels (nsl,:) = vf_gravels(9,:)
+               vf_om      (nsl,:) = vf_om     (9,:)
+               vf_sand    (nsl,:) = vf_sand   (9,:)
+               wf_gravels (nsl,:) = wf_gravels(9,:)
+               wf_sand    (nsl,:) = wf_sand   (9,:)
+               OM_density (nsl,:) = OM_density(9,:)
+               BD_all     (nsl,:) = BD_all    (9,:)
+               wfc        (nsl,:) = wfc       (9,:)
+               porsl      (nsl,:) = porsl     (9,:)
+               psi0       (nsl,:) = psi0      (9,:)
+               bsw        (nsl,:) = bsw       (9,:)
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
-            theta_r    (nsl,:) = theta_r   (9,:)
-            alpha_vgm  (nsl,:) = alpha_vgm (9,:)
-            L_vgm      (nsl,:) = L_vgm     (9,:)
-            n_vgm      (nsl,:) = n_vgm     (9,:)
+               theta_r    (nsl,:) = theta_r   (9,:)
+               alpha_vgm  (nsl,:) = alpha_vgm (9,:)
+               L_vgm      (nsl,:) = L_vgm     (9,:)
+               n_vgm      (nsl,:) = n_vgm     (9,:)
 #endif
-            hksati     (nsl,:) = hksati    (9,:)
-            csol       (nsl,:) = csol      (9,:)
-            k_solids   (nsl,:) = k_solids  (9,:)
-            dksatu     (nsl,:) = dksatu    (9,:)
-            dksatf     (nsl,:) = dksatf    (9,:)
-            dkdry      (nsl,:) = dkdry     (9,:)
-            BA_alpha   (nsl,:) = BA_alpha  (9,:)
-            BA_beta    (nsl,:) = BA_beta   (9,:)
-         ENDDO
+               hksati     (nsl,:) = hksati    (9,:)
+               csol       (nsl,:) = csol      (9,:)
+               k_solids   (nsl,:) = k_solids  (9,:)
+               dksatu     (nsl,:) = dksatu    (9,:)
+               dksatf     (nsl,:) = dksatf    (9,:)
+               dkdry      (nsl,:) = dkdry     (9,:)
+               BA_alpha   (nsl,:) = BA_alpha  (9,:)
+               BA_beta    (nsl,:) = BA_beta   (9,:)
+            ENDDO
 
+         ENDIF
       ENDIF
 
       ! Soil reflectance of broadband of visible(_v) and near-infrared(_n) of the sarurated(_s) and dry(_d) soil

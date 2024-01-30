@@ -1,16 +1,16 @@
 #include <define.h>
 
 #ifdef USEMPI
-module MOD_HistWriteBack
-   !----------------------------------------------------------------------------
-   ! DESCRIPTION:
-   !
-   !     Write out data to history files by a dedicated process.
-   !
-   ! Author: Shupeng Zhang, 11/2023
-   !----------------------------------------------------------------------------
+MODULE MOD_HistWriteBack
+!----------------------------------------------------------------------------
+! DESCRIPTION:
+!
+!     Write out data to history files by a dedicated process.
+!
+! Author: Shupeng Zhang, 11/2023
+!----------------------------------------------------------------------------
 
-   use MOD_Precision
+   USE MOD_Precision
    USE MOD_SPMD_Task
    USE MOD_NetCDFSerial
 
@@ -75,29 +75,29 @@ module MOD_HistWriteBack
    integer, parameter :: tag_time = 101
    integer, parameter :: tag_dims = 102
 
-contains
+CONTAINS
 
    ! -----
-   subroutine hist_writeback_daemon ()
+   SUBROUTINE hist_writeback_daemon ()
 
-      USE MOD_Namelist, only : DEF_HIST_FREQ
-      use MOD_Vars_Global, only: spval
-      IMPLICIT NONE
+   USE MOD_Namelist, only : DEF_HIST_FREQ
+   USE MOD_Vars_Global, only: spval
+   IMPLICIT NONE
 
-      ! Local Variables
-      integer :: dataid, tag
-      integer :: time(3), ndims, ndim1, ndim2, dimlens(4), compress
-      integer :: i, idata, isrc, ixseg, iyseg, xdsp, ydsp, xcnt, ycnt
+   ! Local Variables
+   integer :: dataid, tag
+   integer :: time(3), ndims, ndim1, ndim2, dimlens(4), compress
+   integer :: i, idata, isrc, ixseg, iyseg, xdsp, ydsp, xcnt, ycnt
 
-      integer               :: recvint4 (5)
-      character(len=256)    :: recvchar (9)
-      real(r8), allocatable :: datathis (:)
-      
-      character(len=256)    :: filename, dataname, longname, units
-      character(len=256)    :: dim1name, dim2name, dim3name, dim4name, dim5name
-      logical               :: fexists
+   integer               :: recvint4 (5)
+   character(len=256)    :: recvchar (9)
+   real(r8), allocatable :: datathis (:)
+   
+   character(len=256)    :: filename, dataname, longname, units
+   character(len=256)    :: dim1name, dim2name, dim3name, dim4name, dim5name
+   logical               :: fexists
 
-      real(r8), allocatable :: wdata1d(:),  wdata2d(:,:), wdata3d(:,:,:), wdata4d(:,:,:,:)
+   real(r8), allocatable :: wdata1d(:),  wdata2d(:,:), wdata3d(:,:,:), wdata4d(:,:,:,:)
 
 
       DO WHILE (.true.)
@@ -176,7 +176,7 @@ contains
                   CALL mpi_recv (lon_e, nlon, MPI_REAL8, &
                      MPI_ANY_SOURCE, tag_dims, p_comm_glb_plus, p_stat, p_err)
 
-               ! elseif (SDimType == 2) THEN
+               ! ELSEIF (SDimType == 2) THEN
                !    
                !    CALL mpi_recv (SDimLength, 1, MPI_INTEGER, &
                !       MPI_ANY_SOURCE, tag_dims, p_comm_glb_plus, p_stat, p_err)
@@ -189,7 +189,7 @@ contains
                !    CALL mpi_recv (vindex2, SDimLength, MPI_INTEGER, &
                !       MPI_ANY_SOURCE, tag_dims, p_comm_glb_plus, p_stat, p_err)
 
-               ! elseif (SDimType == 3) THEN
+               ! ELSEIF (SDimType == 3) THEN
             
                !    CALL mpi_recv (SDimLength, 1, MPI_INTEGER, &
                !       MPI_ANY_SOURCE, tag_dims, p_comm_glb_plus, p_stat, p_err)
@@ -205,23 +205,23 @@ contains
             ENDIF
            
             inquire (file=filename, exist=fexists)
-            if (.not. fexists) then
+            IF (.not. fexists) THEN
                
-               call ncio_create_file (trim(filename))
+               CALL ncio_create_file (trim(filename))
                
                CALL ncio_define_dimension(filename, 'time', 0)
                
                IF (SDimType == 1) THEN
                   
-                  call ncio_define_dimension(filename, 'lat', nlat)
-                  call ncio_define_dimension(filename, 'lon', nlon)
+                  CALL ncio_define_dimension(filename, 'lat', nlat)
+                  CALL ncio_define_dimension(filename, 'lon', nlon)
 
-                  call ncio_write_serial (filename, 'lat',   lat_c, 'lat')
-                  call ncio_write_serial (filename, 'lon',   lon_c, 'lon')
-                  call ncio_write_serial (filename, 'lat_s', lat_s, 'lat')
-                  call ncio_write_serial (filename, 'lat_n', lat_n, 'lat')
-                  call ncio_write_serial (filename, 'lon_w', lon_w, 'lon')
-                  call ncio_write_serial (filename, 'lon_e', lon_e, 'lon')
+                  CALL ncio_write_serial (filename, 'lat',   lat_c, 'lat')
+                  CALL ncio_write_serial (filename, 'lon',   lon_c, 'lon')
+                  CALL ncio_write_serial (filename, 'lat_s', lat_s, 'lat')
+                  CALL ncio_write_serial (filename, 'lat_n', lat_n, 'lat')
+                  CALL ncio_write_serial (filename, 'lon_w', lon_w, 'lon')
+                  CALL ncio_write_serial (filename, 'lon_e', lon_e, 'lon')
 
                   CALL ncio_put_attr (filename, 'lat', 'long_name', 'latitude')
                   CALL ncio_put_attr (filename, 'lat', 'units', 'degrees_north')
@@ -230,20 +230,20 @@ contains
 
                ! ELSEIF (SDimType == 2) THEN
                !    
-               !    call ncio_define_dimension(filename, 'hydrounit', SDimLength)
+               !    CALL ncio_define_dimension(filename, 'hydrounit', SDimLength)
 
-               !    call ncio_write_serial (filename, 'typ_hru' , vindex1, 'hydrounit')
+               !    CALL ncio_write_serial (filename, 'typ_hru' , vindex1, 'hydrounit')
                !    CALL ncio_put_attr     (filename, 'typ_hru' , 'long_name', &
                !       'index of hydrological units inside basin')
 
-               !    call ncio_write_serial (filename, 'bsn_hru', vindex2, 'hydrounit')
+               !    CALL ncio_write_serial (filename, 'bsn_hru', vindex2, 'hydrounit')
                !    CALL ncio_put_attr     (filename, 'bsn_hru', 'long_name', &
                !       'basin index of hydrological units in mesh')
 
                ! ELSEIF (SDimType == 3) THEN
                !    
-               !    call ncio_define_dimension(filename, 'element', SDimLength)
-               !    call ncio_write_serial (filename, 'elmindex', vindex1, 'element')
+               !    CALL ncio_define_dimension(filename, 'element', SDimLength)
+               !    CALL ncio_write_serial (filename, 'elmindex', vindex1, 'element')
                !    CALL ncio_put_attr     (filename, 'elmindex', 'long_name', &
                !       'element index in mesh')
 
@@ -251,7 +251,7 @@ contains
 
             ENDIF
                
-            call ncio_write_time (filename, dataname, time, itime_in_file, DEF_HIST_FREQ)
+            CALL ncio_write_time (filename, dataname, time, itime_in_file, DEF_HIST_FREQ)
 
          ELSE
 
@@ -286,7 +286,7 @@ contains
             IF (SDimType == 1) THEN
                DO idata = 1, nGridData
 
-                  call mpi_recv (recvint4(1:5), 5, MPI_INTEGER, MPI_ANY_SOURCE, &
+                  CALL mpi_recv (recvint4(1:5), 5, MPI_INTEGER, MPI_ANY_SOURCE, &
                      tag, p_comm_glb_plus, p_stat, p_err)
 
                   isrc  = recvint4(1)
@@ -300,8 +300,8 @@ contains
                   xcnt = xGridCnt(ixseg)
                   ycnt = yGridCnt(iyseg)
 
-                  select case (ndims)
-                  case (2)
+                  select CASE (ndims)
+                  CASE (2)
 
                      dimlens = (/nlon, nlat, 0, 0/)
 
@@ -310,13 +310,13 @@ contains
                      ENDIF
 
                      allocate (datathis(xcnt*ycnt))
-                     call mpi_recv (datathis, xcnt*ycnt, MPI_REAL8, &
+                     CALL mpi_recv (datathis, xcnt*ycnt, MPI_REAL8, &
                         isrc, tag, p_comm_glb_plus, p_stat, p_err)
 
                      wdata2d(xdsp+1:xdsp+xcnt, ydsp+1:ydsp+ycnt) = &
                         reshape(datathis,(/xcnt,ycnt/))
 
-                  case (3)
+                  CASE (3)
 
                      dimlens = (/ndim1, nlon, nlat, 0/)
 
@@ -325,13 +325,13 @@ contains
                      ENDIF
 
                      allocate (datathis(ndim1*xcnt*ycnt))
-                     call mpi_recv (datathis, ndim1*xcnt*ycnt, MPI_REAL8, &
+                     CALL mpi_recv (datathis, ndim1*xcnt*ycnt, MPI_REAL8, &
                         isrc, tag, p_comm_glb_plus, p_stat, p_err)
 
                      wdata3d(:,xdsp+1:xdsp+xcnt, ydsp+1:ydsp+ycnt) = &
                         reshape(datathis,(/ndim1,xcnt,ycnt/))
 
-                  case (4)
+                  CASE (4)
 
                      dimlens = (/ndim1, ndim2, nlon, nlat/)
 
@@ -340,7 +340,7 @@ contains
                      ENDIF
 
                      allocate (datathis(ndim1*ndim2*xcnt*ycnt))
-                     call mpi_recv (datathis, ndim1*ndim2*xcnt*ycnt, MPI_REAL8, &
+                     CALL mpi_recv (datathis, ndim1*ndim2*xcnt*ycnt, MPI_REAL8, &
                         isrc, tag, p_comm_glb_plus, p_stat, p_err)
 
                      wdata4d(:,:,xdsp+1:xdsp+xcnt, ydsp+1:ydsp+ycnt) = &
@@ -360,28 +360,28 @@ contains
             IF (ndims >= 3) CALL ncio_define_dimension (filename, dim3name, dimlens(3))
             IF (ndims >= 4) CALL ncio_define_dimension (filename, dim4name, dimlens(4))
 
-            select case (ndims)
-            case (1)
+            select CASE (ndims)
+            CASE (1)
 
-               call ncio_write_serial_time (filename, dataname, itime_in_file, wdata1d, &
+               CALL ncio_write_serial_time (filename, dataname, itime_in_file, wdata1d, &
                   dim1name, dim2name, compress)
 
                deallocate(wdata1d)
-            case (2)
+            CASE (2)
 
-               call ncio_write_serial_time (filename, dataname, itime_in_file, wdata2d, &
+               CALL ncio_write_serial_time (filename, dataname, itime_in_file, wdata2d, &
                   dim1name, dim2name, dim3name, compress)
 
                deallocate(wdata2d)
-            case (3)
+            CASE (3)
 
-               call ncio_write_serial_time (filename, dataname, itime_in_file, wdata3d, &
+               CALL ncio_write_serial_time (filename, dataname, itime_in_file, wdata3d, &
                   dim1name, dim2name, dim3name, dim4name, compress)
 
                deallocate(wdata3d)
-            case (4)
+            CASE (4)
 
-               call ncio_write_serial_time (filename, dataname, itime_in_file, wdata4d, &
+               CALL ncio_write_serial_time (filename, dataname, itime_in_file, wdata4d, &
                   dim1name, dim2name, dim3name, dim4name, dim5name, compress)
 
                deallocate(wdata4d)
@@ -400,22 +400,22 @@ contains
       
       ENDDO
 
-   END subroutine hist_writeback_daemon
+   END SUBROUTINE hist_writeback_daemon
 
    ! -----
    SUBROUTINE hist_writeback_latlon_time (filename, timename, time, HistConcat)
 
-      USE MOD_Namelist
-      USE MOD_Grid
-      IMPLICIT NONE
-      
-      character (len=*), intent(in) :: filename
-      character (len=*), intent(in) :: timename
-      integer, intent(in)  :: time(3)
-      TYPE(grid_concat_type), intent(in) :: HistConcat
+   USE MOD_Namelist
+   USE MOD_Grid
+   IMPLICIT NONE
+   
+   character (len=*), intent(in) :: filename
+   character (len=*), intent(in) :: timename
+   integer, intent(in)  :: time(3)
+   type(grid_concat_type), intent(in) :: HistConcat
 
-      ! Local Variables
-      integer :: i
+   ! Local Variables
+   integer :: i
 
       CALL hist_writeback_append_timenodes (filename, timename, time)
 
@@ -550,11 +550,11 @@ contains
    ! -----
    SUBROUTINE hist_writeback_append_timenodes (filename, timename, time)
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      character (len=*), intent(in) :: filename
-      character (len=*), intent(in) :: timename
-      integer, intent(in)  :: time(3)
+   character (len=*), intent(in) :: filename
+   character (len=*), intent(in) :: timename
+   integer, intent(in)  :: time(3)
 
       IF (.not. associated(timenodes)) THEN
          allocate (timenodes)
@@ -574,12 +574,12 @@ contains
    ! -----
    SUBROUTINE hist_writeback_clean_timenodes
 
-      IMPLICIT NONE
-      
-      ! Local Variables
-      logical :: senddone
-      integer :: stat(MPI_STATUS_SIZE,3)
-      type(timenodetype), pointer :: tempnode
+   IMPLICIT NONE
+   
+   ! Local Variables
+   logical :: senddone
+   integer :: stat(MPI_STATUS_SIZE,3)
+   type(timenodetype), pointer :: tempnode
 
       
       DO WHILE (associated(timenodes%next))
@@ -602,19 +602,19 @@ contains
          ndims,    dim1name, dim2name, dim3name, dim4name, dim5name, &
          compress, longname, units)
       
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      integer,          intent(in) :: dataid
-      character(len=*), intent(in) :: filename, dataname
-      integer,          intent(in) :: ndims
-      character(len=*), intent(in) :: dim1name, dim2name, dim3name, dim4name, dim5name
-      integer,          intent(in) :: compress
-      character(len=*), intent(in) :: longname, units
+   integer,          intent(in) :: dataid
+   character(len=*), intent(in) :: filename, dataname
+   integer,          intent(in) :: ndims
+   character(len=*), intent(in) :: dim1name, dim2name, dim3name, dim4name, dim5name
+   integer,          intent(in) :: compress
+   character(len=*), intent(in) :: longname, units
 
-      ! Local Variables
-      logical :: senddone
-      integer :: sendstat(MPI_STATUS_SIZE,3)
-      type(HistSendBufferType), pointer :: TempSendBuffer
+   ! Local Variables
+   logical :: senddone
+   integer :: sendstat(MPI_STATUS_SIZE,3)
+   type(HistSendBufferType), pointer :: TempSendBuffer
 
       ! append sending buffer
       IF (.not. associated(HistSendBuffer)) THEN
@@ -676,18 +676,18 @@ contains
    SUBROUTINE hist_writeback_var ( dataid, ixseg, iyseg, &
          wdata1d, wdata2d, wdata3d, wdata4d)
       
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      integer,  intent(in) :: dataid, ixseg, iyseg
+   integer,  intent(in) :: dataid, ixseg, iyseg
 
-      real(r8), intent(in), optional :: wdata1d(:)
-      real(r8), intent(in), optional :: wdata2d(:,:)
-      real(r8), intent(in), optional :: wdata3d(:,:,:)
-      real(r8), intent(in), optional :: wdata4d(:,:,:,:)
+   real(r8), intent(in), optional :: wdata1d(:)
+   real(r8), intent(in), optional :: wdata2d(:,:)
+   real(r8), intent(in), optional :: wdata3d(:,:,:)
+   real(r8), intent(in), optional :: wdata4d(:,:,:,:)
 
-      ! Local Variables
-      integer :: totalsize, ndim1, ndim2
-      type(HistSendBufferType), pointer :: TempSendBuffer
+   ! Local Variables
+   integer :: totalsize, ndim1, ndim2
+   type(HistSendBufferType), pointer :: TempSendBuffer
 
       ! append sending buffer
       IF (.not. associated(HistSendBuffer)) THEN
@@ -762,14 +762,14 @@ contains
    END SUBROUTINE hist_writeback_var
 
    ! -----
-   subroutine hist_writeback_exit ()
+   SUBROUTINE hist_writeback_exit ()
 
-      IMPLICIT NONE
+   IMPLICIT NONE
    
-      ! Local Variables
-      integer :: dataid, nreq
-      type(timenodetype),       pointer :: tempnode
-      type(HistSendBufferType), pointer :: TempSendBuffer
+   ! Local Variables
+   integer :: dataid, nreq
+   type(timenodetype),       pointer :: tempnode
+   type(HistSendBufferType), pointer :: TempSendBuffer
 
       lasttime => null()
       DO WHILE (associated(timenodes))
@@ -822,20 +822,20 @@ contains
       
       CALL mpi_barrier (p_comm_glb_plus, p_err)
 
-   END subroutine hist_writeback_exit
+   END SUBROUTINE hist_writeback_exit
 
    ! ----
    character(len=256) FUNCTION basename (fullname)
       
-      IMPLICIT NONE
-      character(len=*), intent(in) :: fullname
+   IMPLICIT NONE
+   character(len=*), intent(in) :: fullname
 
-      ! Local variables
-      INTEGER :: i, n
+   ! Local variables
+   integer :: i, n
 
       i = len_trim (fullname) 
-      DO while (i > 0)
-         IF (fullname(i:i) == '/') exit
+      DO WHILE (i > 0)
+         IF (fullname(i:i) == '/') EXIT
          i = i - 1
       ENDDO
 
@@ -847,5 +847,5 @@ contains
 
    END FUNCTION basename
 
-end module MOD_HistWriteBack
+END MODULE MOD_HistWriteBack
 #endif
