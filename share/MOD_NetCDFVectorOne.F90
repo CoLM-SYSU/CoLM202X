@@ -938,8 +938,7 @@ CONTAINS
          mode = ior(NF90_NETCDF4,NF90_CLOBBER)
          CALL nccheck( nf90_create(trim(filename), mode, ncid) )
 
-         CALL nccheck (nf90_redef  (ncid))
-         CALL nccheck( nf90_put_att(ncid, NF90_GLOBAL, 'create_time', get_time_now()))
+         CALL nccheck (nf90_put_att(ncid, NF90_GLOBAL, 'create_time', get_time_now()))
          CALL nccheck (nf90_enddef (ncid))
 
          CALL nccheck( nf90_close(ncid) )

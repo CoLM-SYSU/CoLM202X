@@ -61,7 +61,7 @@ CONTAINS
    integer :: ip ,ie, ipxl
 #endif
 
-      CALL element_neighbour_init (lc_year)
+      CALL element_neighbour_init  (lc_year)
 
       CALL hillslope_network_init  ()
       CALL river_lake_network_init ()

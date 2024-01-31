@@ -189,7 +189,6 @@ CONTAINS
 
       CALL nccheck( nf90_create(trim(filename), ior(NF90_CLOBBER,NF90_NETCDF4), ncid) )
 
-      CALL nccheck (nf90_redef  (ncid))
       CALL nccheck( nf90_put_att(ncid, NF90_GLOBAL, 'create_time', get_time_now()))
       CALL nccheck (nf90_enddef (ncid))
 

@@ -63,6 +63,7 @@ CONTAINS
    USE MOD_LandPatch
    USE MOD_ElmVector
    USE MOD_HRUVector
+   USE MOD_ElementNeighbour
    USE MOD_Catch_HillslopeNetwork
    USE MOD_Catch_RiverLakeNetwork
 #endif
@@ -1163,6 +1164,7 @@ CONTAINS
       ! -----
 #ifdef CatchLateralFlow
 
+      CALL element_neighbour_init  (lc_year)
       CALL hillslope_network_init  ()
       CALL river_lake_network_init ()
 
