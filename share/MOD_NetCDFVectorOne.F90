@@ -1025,8 +1025,7 @@ CONTAINS
    ! Local variables
    integer :: ncid, ndims, idim, iblkall, grpid, varid
    character(len=256) :: varname, blockname
-   integer, allocatable :: dimids(:), dimlen(:)
-   integer :: filterid = 307
+   integer, allocatable :: dimids(:)
 
       IF (p_iam_io == 0) THEN
 
@@ -1038,27 +1037,24 @@ CONTAINS
          IF (present(dim3name)) ndims = ndims + 1
 
          allocate (dimids(ndims))
-         allocate (dimlen(ndims))
 
          idim = 1
          IF (present(dim1name)) THEN
             CALL nccheck (nf90_inq_dimid(ncid, trim(dim1name), dimids(idim)))
-            CALL nccheck (nf90_inquire_dimension(ncid, dimids(idim), len=dimlen(idim)))
             idim = idim + 1
          ENDIF
          IF (present(dim2name)) THEN
             CALL nccheck (nf90_inq_dimid(ncid, trim(dim2name), dimids(idim)))
-            CALL nccheck (nf90_inquire_dimension(ncid, dimids(idim), len=dimlen(idim)))
             idim = idim + 1
          ENDIF
          IF (present(dim3name)) THEN
             CALL nccheck (nf90_inq_dimid(ncid, trim(dim3name), dimids(idim)))
-            CALL nccheck (nf90_inquire_dimension(ncid, dimids(idim), len=dimlen(idim)))
             idim = idim + 1
          ENDIF
 
+         CALL nccheck( nf90_redef(ncid))
+
          CALL nccheck( nf90_def_grp(ncid, trim(dataname), grpid) )
-         CALL nccheck( nf90_redef(grpid))
 
          CALL nccheck( nf90_put_att(grpid, NF90_GLOBAL, 'vector_name', trim(vecname)))
 
@@ -1066,7 +1062,6 @@ CONTAINS
             CALL get_blockname (pixelset%xblkall(iblkall), pixelset%yblkall(iblkall), blockname)
             varname = trim(vecname)//'_'//trim(blockname)
             CALL nccheck (nf90_inq_dimid(ncid, trim(varname), dimids(ndims)))
-            CALL nccheck (nf90_inquire_dimension(ncid, dimids(ndims), len=dimlen(ndims)))
             IF (present(compress)) THEN
                CALL nccheck (nf90_def_var(grpid, trim(varname), datatype, dimids, varid, &
                   deflate_level = compress) )
@@ -1079,7 +1074,6 @@ CONTAINS
          CALL nccheck (nf90_close (ncid))
 
          deallocate (dimids)
-         deallocate (dimlen)
 
       ENDIF 
 
