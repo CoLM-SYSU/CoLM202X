@@ -864,6 +864,7 @@ CONTAINS
             ENDIF
          ENDDO
 
+         allocate (riverdpth (totalnumelm))
          DO i = 1, totalnumelm
             riverdpth(i) = max(cH_rivdpt * (bsndis(i)**pH_rivdpt) + B0_rivdpt, Bmin_rivdpt)
          ENDDO

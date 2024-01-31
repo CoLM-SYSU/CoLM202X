@@ -7,8 +7,10 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
 !
 ! CoLM MODEL DRIVER
 !
-! Original author : Yongjiu Dai, 09/30/1999; 08/30/2002, 03/2014
-!
+! Initial : Yongjiu Dai, 1999-2014
+! Revised : Hua Yuan, Shupeng Zhang, Nan Wei, Xingjie Lu, Zhongwang Wei, Yongjiu Dai
+!           2014-2024
+!           
 !=======================================================================
 
    USE MOD_Precision
@@ -181,7 +183,7 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
 
 #if(defined BGC)
          IF(patchtype(i) .eq. 0)THEN
-
+            !
             !                ***** Call CoLM BGC model *****
             !
             CALL bgc_driver (i,idate(1:3),deltim, patchlatr(i)*180/PI,patchlonr(i)*180/PI)
@@ -300,7 +302,7 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
             fsen_roof(u)    ,fsen_wsun(u)    ,fsen_wsha(u)    ,fsen_gimp(u)    ,&
             fsen_gper(u)    ,fsen_urbl(u)    ,t_roof(u)       ,t_wall(u)       ,&
             lfevp_roof(u)   ,lfevp_gimp(u)   ,lfevp_gper(u)   ,lfevp_urbl(u)   ,&
-            trad(i)         ,tref(i)         ,&!tmax(i)       ,tmin(i)         ,&
+            trad(i)         ,tref(i)         ,&
             qref(i)         ,rsur(i)         ,rnof(i)         ,qintr(i)        ,&
             qinfl(i)        ,qdrip(i)        ,rst(i)          ,assim(i)        ,&
             respc(i)        ,sabvsun(i)      ,sabvsha(i)      ,sabg(i)         ,&

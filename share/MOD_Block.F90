@@ -64,8 +64,7 @@ MODULE MOD_Block
 
    CONTAINS
 
-      procedure, PUBLIC :: set_by_size => block_set_by_size
-      procedure, PUBLIC :: set_by_file => block_set_by_file
+      procedure, PUBLIC :: set => block_set
 
       procedure, PUBLIC :: save_to_file   => block_save_to_file
       procedure, PUBLIC :: load_from_file => block_load_from_file
@@ -88,55 +87,90 @@ MODULE MOD_Block
 CONTAINS
 
    ! --------------------------------
-   SUBROUTINE block_set_by_size (this, nxblk_in, nyblk_in)
+   SUBROUTINE block_set (this)
       
    USE MOD_Precision
    USE MOD_Namelist
    USE MOD_Utils
    USE MOD_SPMD_Task
+   USE MOD_NetCDFSerial
    IMPLICIT NONE
 
    class (block_type) :: this
-   integer,  intent(in) :: nxblk_in, nyblk_in
 
    ! Local Variables
-   integer  :: iblk, jblk
+   logical :: fexists
+   integer :: iblk, jblk
 
-      IF ((mod(360,nxblk_in) /= 0) .or. (mod(180,nyblk_in) /= 0)) THEN
+      inquire(file=trim(DEF_BlockInfoFile), exist=fexists) 
 
-         IF (p_is_master) THEN
-            write(*,*) 'Number of blocks in longitude should be a factor of 360 ' 
-            write(*,*) ' and Number of blocks in latitude should be a factor of 180.' 
+      IF (fexists) THEN
+         
+         CALL ncio_read_bcast_serial (DEF_BlockInfoFile, 'lat_s', this%lat_s)
+         CALL ncio_read_bcast_serial (DEF_BlockInfoFile, 'lat_n', this%lat_n)
+         CALL ncio_read_bcast_serial (DEF_BlockInfoFile, 'lon_w', this%lon_w)
+         CALL ncio_read_bcast_serial (DEF_BlockInfoFile, 'lon_e', this%lon_e)
+
+         this%nyblk = size(this%lat_s)
+         this%nxblk = size(this%lon_w)
+
+         ! blocks should be from south to north
+         IF (this%lat_s(1) > this%lat_s(this%nyblk)) THEN
+            this%lat_s = this%lat_s(this%nyblk:1:-1)
+            this%lat_n = this%lat_n(this%nyblk:1:-1)
          ENDIF
 
-#ifdef USEMPI
-         CALL mpi_barrier (p_comm_glb, p_err)
-#endif
-         CALL CoLM_stop ()
+      ELSE
+
+         IF (DEF_AverageElementSize > 0) THEN
+
+            this%nxblk = floor(360./(DEF_AverageElementSize/120.*50))
+            this%nxblk = min(this%nxblk,360)
+            DO WHILE ((this%nxblk < 360) .and. (mod(360,this%nxblk) /= 0))
+               this%nxblk = this%nxblk + 1
+            ENDDO
+
+            this%nyblk = floor(180./(DEF_AverageElementSize/120.*50))
+            this%nyblk = min(this%nxblk,180)
+            DO WHILE ((this%nyblk < 180) .and. (mod(180,this%nyblk) /= 0))
+               this%nyblk = this%nyblk + 1
+            ENDDO
+
+         ELSE
+
+            this%nxblk = DEF_nx_blocks
+            this%nyblk = DEf_ny_blocks
+
+         ENDIF
+
+         IF ((mod(360,DEF_nx_blocks) /= 0) .or. (mod(180,DEF_ny_blocks) /= 0)) THEN
+            IF (p_is_master) THEN
+               write(*,*) 'Number of blocks in longitude should be a factor of 360 ' 
+               write(*,*) ' and Number of blocks in latitude should be a factor of 180.' 
+               CALL CoLM_stop ()
+            ENDIF
+         ENDIF
+
+         allocate (this%lon_w (this%nxblk))
+         allocate (this%lon_e (this%nxblk))
+
+         DO iblk = 1, this%nxblk
+            this%lon_w(iblk) = -180.0 + 360.0/this%nxblk * (iblk-1) 
+            this%lon_e(iblk) = -180.0 + 360.0/this%nxblk * iblk
+
+            CALL normalize_longitude (this%lon_w(iblk))
+            CALL normalize_longitude (this%lon_e(iblk))
+         ENDDO
+
+         allocate (this%lat_s (this%nyblk))
+         allocate (this%lat_n (this%nyblk))
+
+         DO jblk = 1, this%nyblk
+            this%lat_s(jblk) = -90.0 + 180.0/this%nyblk * (jblk-1) 
+            this%lat_n(jblk) = -90.0 + 180.0/this%nyblk * jblk
+         ENDDO
 
       ENDIF
-
-      this%nxblk = nxblk_in
-      this%nyblk = nyblk_in
-
-      allocate (this%lon_w (this%nxblk))
-      allocate (this%lon_e (this%nxblk))
-      
-      DO iblk = 1, this%nxblk
-         this%lon_w(iblk) = -180.0 + 360.0/this%nxblk * (iblk-1) 
-         this%lon_e(iblk) = -180.0 + 360.0/this%nxblk * iblk
-
-         CALL normalize_longitude (this%lon_w(iblk))
-         CALL normalize_longitude (this%lon_e(iblk))
-      ENDDO
-
-      allocate (this%lat_s (this%nyblk))
-      allocate (this%lat_n (this%nyblk))
-
-      DO jblk = 1, this%nyblk
-         this%lat_s(jblk) = -90.0 + 180.0/this%nyblk * (jblk-1) 
-         this%lat_n(jblk) = -90.0 + 180.0/this%nyblk * jblk
-      ENDDO
 
       IF (p_is_master) THEN
          write (*,'(A)') 'Block information:'
@@ -147,47 +181,7 @@ CONTAINS
 
       CALL this%init_pio ()
 
-   END SUBROUTINE block_set_by_size
-
-   ! --------------------------------
-   SUBROUTINE block_set_by_file (this, block_file)
-
-   USE MOD_NetCDFSerial
-   USE MOD_SPMD_Task
-   IMPLICIT NONE
-
-   class (block_type) :: this
-   character(len=*),  intent(in) :: block_file
-
-   ! Local variables
-   character(len=256) :: filename
-         
-      filename = trim(block_file)
-         
-      CALL ncio_read_bcast_serial (filename, 'lat_s', this%lat_s)
-      CALL ncio_read_bcast_serial (filename, 'lat_n', this%lat_n)
-      CALL ncio_read_bcast_serial (filename, 'lon_w', this%lon_w)
-      CALL ncio_read_bcast_serial (filename, 'lon_e', this%lon_e)
-         
-      this%nyblk = size(this%lat_s)
-      this%nxblk = size(this%lon_w)
-
-      ! blocks should be from south to north
-      IF (this%lat_s(1) > this%lat_s(this%nyblk)) THEN
-         this%lat_s = this%lat_s(this%nyblk:1:-1)
-         this%lat_n = this%lat_n(this%nyblk:1:-1)
-      ENDIF
-      
-      IF (p_is_master) THEN
-         write (*,*) 'Block information:'
-         write (*,'(I3,A,I3,A)') this%nxblk, ' blocks in longitude,', &
-            this%nyblk, ' blocks in latitude.'
-         write (*,*)
-      ENDIF
-
-      CALL this%init_pio ()
-
-   END SUBROUTINE block_set_by_file
+   END SUBROUTINE block_set
 
    ! --------------------------------
    SUBROUTINE block_save_to_file (this, dir_landdata)

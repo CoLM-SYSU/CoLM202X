@@ -63,6 +63,7 @@ CONTAINS
    USE MOD_LandPatch
    USE MOD_ElmVector
    USE MOD_HRUVector
+   USE MOD_ElementNeighbour
    USE MOD_Catch_HillslopeNetwork
    USE MOD_Catch_RiverLakeNetwork
 #endif
@@ -231,8 +232,10 @@ CONTAINS
 
       IF (p_is_worker) THEN
 
-         patchclass = landpatch%settyp
-         patchmask  = .true.
+         IF (numpatch > 0) THEN
+            patchclass = landpatch%settyp
+            patchmask  = .true.
+         ENDIF
 
          DO ipatch = 1, numpatch
 
@@ -252,7 +255,7 @@ CONTAINS
          CALL landpatch%get_lonlat_radian (patchlonr, patchlatr)
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
-         pftclass = landpft%settyp
+         IF (numpft > 0) pftclass = landpft%settyp
 #endif
 
       ENDIF
@@ -1161,6 +1164,7 @@ CONTAINS
       ! -----
 #ifdef CatchLateralFlow
 
+      CALL element_neighbour_init  (lc_year)
       CALL hillslope_network_init  ()
       CALL river_lake_network_init ()
 

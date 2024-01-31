@@ -208,7 +208,7 @@ CONTAINS
             CALL ncio_read_block_time (file_irrig, 'irrigation_method', grid_irrig, cft, f_xy_irrig)
          ENDIF
 
-         CALL mg2pft_irrig%map_max_frenquency_2d (f_xy_irrig, irrig_method_tmp)
+         CALL mg2pft_irrig%map_max_frequency_2d (f_xy_irrig, irrig_method_tmp)
 
          IF (p_is_worker) THEN
             DO ipft = 1, numpft

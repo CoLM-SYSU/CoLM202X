@@ -34,6 +34,13 @@ MODULE MOD_DataType
    END type pointer_real8_1d
 
    !-------
+   type :: pointer_int8_1d
+      integer(1), allocatable :: val(:)
+   CONTAINS 
+      final :: pointer_int8_1d_free_mem
+   END type pointer_int8_1d
+
+   !-------
    type :: pointer_int32_1d
       integer, allocatable :: val(:)
    CONTAINS 
@@ -144,6 +151,19 @@ CONTAINS
       ENDIF
 
    END SUBROUTINE pointer_real8_1d_free_mem 
+
+   !------------------
+   SUBROUTINE pointer_int8_1d_free_mem (this)
+
+   IMPLICIT NONE
+
+   type(pointer_int8_1d) :: this
+
+      IF (allocated(this%val)) THEN
+         deallocate(this%val)
+      ENDIF
+
+   END SUBROUTINE pointer_int8_1d_free_mem 
 
    !------------------
    SUBROUTINE pointer_int32_1d_free_mem (this)

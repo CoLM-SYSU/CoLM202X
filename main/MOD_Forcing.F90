@@ -614,10 +614,10 @@ CONTAINS
             CALL downscale_forcings ( &
                numelm, numpatch, elm_patch%substt, elm_patch%subend, glacierss, elm_patch%subfrc,   &
                ! forcing in gridcells
-            forc_topo_elm, forc_t_elm,   forc_th_elm,  forc_q_elm,     forc_pbot_elm, &
+               forc_topo_elm, forc_t_elm,   forc_th_elm,  forc_q_elm,     forc_pbot_elm, &
                forc_rho_elm,  forc_prc_elm, forc_prl_elm, forc_lwrad_elm, forc_hgt_elm,  &
                ! forcing in patches
-            forc_topo,     forc_t,       forc_th,      forc_q,         forc_pbot,     &
+               forc_topo,     forc_t,       forc_th,      forc_q,         forc_pbot,     &
                forc_rhoair,   forc_prc,     forc_prl,     forc_frl)
 
          ENDIF

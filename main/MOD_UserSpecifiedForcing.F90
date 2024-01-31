@@ -25,8 +25,7 @@ MODULE MOD_UserSpecifiedForcing
 !-------------------
    !---In preparation
 
-
-!ANCILLARY FUNCTIONS and SUBROUTINES
+!ANCILLARY FUNCTIONS AND SUBROUTINES
 !-------------------
    !* :SUBROUTINE:"init_user_specified_forcing" : initialization of the selected forcing dataset
    !* :SUBROUTINE:"metfilename"  :  identify the forcing file name
@@ -53,8 +52,8 @@ MODULE MOD_UserSpecifiedForcing
    integer  :: NVAR      ! variable number of forcing data
    integer  :: startyr   ! start year of forcing data        <MARK #1>
    integer  :: startmo   ! start month of forcing data
-   integer  :: endyr     ! end year of forcing data
-   integer  :: endmo     ! end month of forcing data
+   integer  :: endyr     ! END year of forcing data
+   integer  :: endmo     ! END month of forcing data
 
    integer, allocatable :: dtime(:)          ! time interval of forcing data
    integer, allocatable :: offset(:)         ! offset of forcing data
@@ -574,19 +573,19 @@ CONTAINS
  ! ------------------------------------------------------------
    SUBROUTINE metpreprocess(grid, forcn)
 
-      USE MOD_Const_Physical
-      USE MOD_Namelist
-      USE MOD_SPMD_Task
-      USE MOD_Block
-      USE MOD_Grid
-      USE MOD_DataType
-      USE MOD_Qsadv
-      IMPLICIT NONE
-      type(grid_type), intent(in) :: grid
-      type(block_data_real8_2d), intent(inout) :: forcn(:)
+   USE MOD_Const_Physical
+   USE MOD_Namelist
+   USE MOD_SPMD_Task
+   USE MOD_Block
+   USE MOD_Grid
+   USE MOD_DataType
+   USE MOD_Qsadv
+   IMPLICIT NONE
+   type(grid_type), intent(in) :: grid
+   type(block_data_real8_2d), intent(inout) :: forcn(:)
 
-      integer  :: iblkme, ib, jb, i, j
-      real(r8) :: es, esdT, qsat_tmp, dqsat_tmpdT, e, ea
+   integer  :: iblkme, ib, jb, i, j
+   real(r8) :: es, esdT, qsat_tmp, dqsat_tmpdT, e, ea
 
       !----------------------------------------------------------------------------
       ! use polynomials to calculate saturation vapor pressure and derivative with
@@ -672,7 +671,7 @@ CONTAINS
                      IF (forcn(4)%blk(ib,jb)%val(i,j) < 0.0)   forcn(4)%blk(ib,jb)%val(i,j) = 0.0
                      IF (forcn(7)%blk(ib,jb)%val(i,j) < 0.0)   forcn(7)%blk(ib,jb)%val(i,j) = 0.0
                      ! 12th grade of Typhoon 32.7-36.9 m/s
-                     ! NOTE by Wenzong: This is a problem when running a GNU-compiled program, because there is
+                     ! NOTE by Wenzong: This is a problem when running a GNU-compiled PROGRAM, because there is
                      ! no data of forcn(5), temporarily comment the code below
                      ! IF (abs(forcn(5)%blk(ib,jb)%val(i,j)) > 40.0) forcn(5)%blk(ib,jb)%val(i,j) = &
                      !    40.0*forcn(5)%blk(ib,jb)%val(i,j)/abs(forcn(5)%blk(ib,jb)%val(i,j))
