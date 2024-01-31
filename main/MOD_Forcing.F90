@@ -630,6 +630,8 @@ CONTAINS
 #endif
       IF (p_is_master) write(*,'(/, A20)') 'Checking forcing ...'
 
+      CALL check_vector_data ('Forcing us    [m/s]   ', forc_us   )
+      CALL check_vector_data ('Forcing vs    [m/s]   ', forc_vs   )
       CALL check_vector_data ('Forcing t     [kelvin]', forc_t    )
       CALL check_vector_data ('Forcing q     [kg/kg] ', forc_q    )
       CALL check_vector_data ('Forcing prc   [mm/s]  ', forc_prc  )
