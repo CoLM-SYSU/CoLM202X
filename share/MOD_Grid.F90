@@ -2,61 +2,61 @@
 
 MODULE MOD_Grid
 
-   !-------------------------------------------------------------------------------
-   ! DESCRIPTION:
-   !
-   !    Definition of latitude-longitude grids and data types related to grids. 
-   !
-   !    Latitude-longitude grid can be defined by
-   !    1. "name"   : frequently used grids is predefined in this module;
-   !    2. "ndims"  : how many longitude and latitude grids are used globally;
-   !    3. "res"    : longitude and latitude resolutions in radian
-   !    4. "center" : longitude and latitude grid centers, and the border lines 
-   !                  are defined by center lines of grid centers; the region
-   !                  boundaries is optional.
-   !    5. "file"   : read grid informations from a file, the variables are
-   !                  'lat_s', 'lat_n', 'lon_w', 'lon_e'
-   !    6. "copy"   : copy grid informations from an existing grid
-   ! 
-   !    Grid centers in radian can be calculated by using "set_rlon" and "set_rlat"
-   ! 
-   !    Two additional data types are defined:
-   !    1. "grid_list_type"   : list of grid boxes;
-   !    2. "grid_concat_type" : used to concatenate grids distributed in blocks.
-   ! 
-   ! Created by Shupeng Zhang, May 2023
-   !-------------------------------------------------------------------------------
+!-------------------------------------------------------------------------------
+! DESCRIPTION:
+!
+!    Definition of latitude-longitude grids and data types related to grids. 
+!
+!    Latitude-longitude grid can be defined by
+!    1. "name"   : frequently used grids is predefined in this MODULE;
+!    2. "ndims"  : how many longitude and latitude grids are used globally;
+!    3. "res"    : longitude and latitude resolutions in radian
+!    4. "center" : longitude and latitude grid centers, and the border lines 
+!                  are defined by center lines of grid centers; the region
+!                  boundaries is optional.
+!    5. "file"   : read grid informations from a file, the variables are
+!                  'lat_s', 'lat_n', 'lon_w', 'lon_e'
+!    6. "copy"   : copy grid informations from an existing grid
+! 
+!    Grid centers in radian can be calculated by using "set_rlon" and "set_rlat"
+! 
+!    Two additional data types are defined:
+!    1. "grid_list_type"   : list of grid boxes;
+!    2. "grid_concat_type" : used to concatenate grids distributed in blocks.
+! 
+! Created by Shupeng Zhang, May 2023
+!-------------------------------------------------------------------------------
 
    USE MOD_Precision
    IMPLICIT NONE
 
    ! ---- data types ----
-   TYPE :: grid_type
+   type :: grid_type
 
-      INTEGER :: nlat
-      INTEGER :: nlon
+      integer :: nlat
+      integer :: nlon
 
       ! Latitude direction. (yinc = 1) means south to north.
-      INTEGER :: yinc
+      integer :: yinc
 
       ! Coordinates.
-      REAL(r8), allocatable :: lat_s (:)
-      REAL(r8), allocatable :: lat_n (:)
-      REAL(r8), allocatable :: lon_w (:)
-      REAL(r8), allocatable :: lon_e (:)
+      real(r8), allocatable :: lat_s (:)
+      real(r8), allocatable :: lat_n (:)
+      real(r8), allocatable :: lon_w (:)
+      real(r8), allocatable :: lon_e (:)
 
       ! Blocks.
-      INTEGER, allocatable :: xdsp(:), ydsp(:)
-      INTEGER, allocatable :: xcnt(:), ycnt(:)
-      INTEGER, allocatable :: xblk(:), yblk(:)
-      INTEGER, allocatable :: xloc(:), yloc(:)
+      integer, allocatable :: xdsp(:), ydsp(:)
+      integer, allocatable :: xcnt(:), ycnt(:)
+      integer, allocatable :: xblk(:), yblk(:)
+      integer, allocatable :: xloc(:), yloc(:)
 
       ! Mapping to pixels.
-      INTEGER, allocatable :: xgrd(:), ygrd(:)
+      integer, allocatable :: xgrd(:), ygrd(:)
 
       ! Grid info.
-      REAL(r8), allocatable :: rlon(:)
-      REAL(r8), allocatable :: rlat(:)
+      real(r8), allocatable :: rlon(:)
+      real(r8), allocatable :: rlat(:)
 
    CONTAINS
       procedure, PUBLIC :: define_by_name   => grid_define_by_name
@@ -75,21 +75,21 @@ MODULE MOD_Grid
 
       final :: grid_free_mem
 
-   END TYPE grid_type
+   END type grid_type
 
    ! ---- data types ----
-   TYPE :: grid_list_type
-      INTEGER :: ng
-      INTEGER, allocatable :: ilat(:)
-      INTEGER, allocatable :: ilon(:)
-   END TYPE grid_list_type
+   type :: grid_list_type
+      integer :: ng
+      integer, allocatable :: ilat(:)
+      integer, allocatable :: ilon(:)
+   END type grid_list_type
 
    type :: segment_type
       integer :: blk
       integer :: cnt
       integer :: bdsp
       integer :: gdsp
-   end type segment_type
+   END type segment_type
 
    type :: grid_info_type
       integer :: nlat, nlon
@@ -99,9 +99,9 @@ MODULE MOD_Grid
       real(r8), allocatable :: lon_e(:)
       real(r8), allocatable :: lon_c(:) !grid center
       real(r8), allocatable :: lat_c(:) !grid center
-   end type grid_info_type
+   END type grid_info_type
 
-   TYPE :: grid_concat_type
+   type :: grid_concat_type
       integer :: ndatablk
       integer :: nxseg, nyseg
       type(segment_type), allocatable :: xsegs(:), ysegs(:)
@@ -109,18 +109,18 @@ MODULE MOD_Grid
    CONTAINS
       procedure, PUBLIC :: set => set_grid_concat
       final :: grid_concat_free_mem
-   END TYPE grid_concat_type
+   END type grid_concat_type
 
 CONTAINS
 
    ! --------------------------------
    SUBROUTINE grid_init (this, nlon, nlat)
 
-      IMPLICIT NONE
-      class (grid_type) :: this
+   IMPLICIT NONE
+   class (grid_type) :: this
 
-      INTEGER, intent(in) :: nlon
-      INTEGER, intent(in) :: nlat
+   integer, intent(in) :: nlon
+   integer, intent(in) :: nlat
 
       this%nlat = nlat
       this%nlon = nlon
@@ -139,14 +139,14 @@ CONTAINS
    ! --------------------------------
    SUBROUTINE grid_define_by_name (this, gridname)
 
-      IMPLICIT NONE
-      class (grid_type) :: this
+   IMPLICIT NONE
+   class (grid_type) :: this
 
-      CHARACTER(len=*), intent(in) :: gridname
+   character(len=*), intent(in) :: gridname
 
-      ! Local variables
-      INTEGER  :: nlat, nlon, ilat, ilon
-      REAL(r8) :: del_lat, del_lon
+   ! Local variables
+   integer  :: nlat, nlon, ilat, ilon
+   real(r8) :: del_lat, del_lon
 
       IF (trim(gridname) == 'merit_90m') THEN
 
@@ -211,15 +211,15 @@ CONTAINS
    !-----------------------------------------------------
    SUBROUTINE grid_define_by_ndims (this, lon_points, lat_points)
 
-      IMPLICIT NONE
-      class (grid_type) :: this
+   IMPLICIT NONE
+   class (grid_type) :: this
 
-      INTEGER, intent(in) :: lon_points
-      INTEGER, intent(in) :: lat_points
+   integer, intent(in) :: lon_points
+   integer, intent(in) :: lat_points
 
-      ! Local variables
-      INTEGER  :: ilat, ilon
-      REAL(r8) :: del_lat, del_lon
+   ! Local variables
+   integer  :: ilat, ilon
+   real(r8) :: del_lat, del_lon
 
       this%nlat = lat_points
       this%nlon = lon_points
@@ -248,13 +248,13 @@ CONTAINS
    !-----------------------------------------------------
    SUBROUTINE grid_define_by_res (this, lon_res, lat_res)
 
-      IMPLICIT NONE
-      class (grid_type) :: this
+   IMPLICIT NONE
+   class (grid_type) :: this
 
-      REAL(r8), intent(in) :: lon_res, lat_res
+   real(r8), intent(in) :: lon_res, lat_res
 
-      ! Local variables
-      INTEGER  :: lon_points, lat_points
+   ! Local variables
+   integer  :: lon_points, lat_points
 
       lon_points = nint(360.0/lon_res)
       lat_points = nint(180.0/lat_res)
@@ -267,17 +267,17 @@ CONTAINS
    SUBROUTINE grid_define_by_center (this, lat_in, lon_in, &
          south, north, west, east)
 
-      USE MOD_Precision
-      USE MOD_Utils
-      IMPLICIT NONE
-      class (grid_type) :: this
+   USE MOD_Precision
+   USE MOD_Utils
+   IMPLICIT NONE
+   class (grid_type) :: this
 
-      REAL(r8), intent(in) :: lat_in(:), lon_in(:)
-      REAL(r8), intent(in), optional :: south, north, west, east
+   real(r8), intent(in) :: lat_in(:), lon_in(:)
+   real(r8), intent(in), optional :: south, north, west, east
 
-      ! Local variables
-      INTEGER :: ilat, ilon, ilone, ilonw
-      REAL(r8), allocatable :: lon_in_n(:)
+   ! Local variables
+   integer :: ilat, ilon, ilone, ilonw
+   real(r8), allocatable :: lon_in_n(:)
 
       this%nlat = size(lat_in)
       this%nlon = size(lon_in)
@@ -376,16 +376,16 @@ CONTAINS
    !-----------------------------------------------------
    SUBROUTINE grid_define_from_file (this, filename, latname, lonname)
 
-      USE MOD_NetCDFSerial
-      IMPLICIT NONE
-      class (grid_type) :: this
+   USE MOD_NetCDFSerial
+   IMPLICIT NONE
+   class (grid_type) :: this
 
-      CHARACTER(len=*), intent(in) :: filename
-      CHARACTER(len=*), intent(in), optional :: latname, lonname
+   character(len=*), intent(in) :: filename
+   character(len=*), intent(in), optional :: latname, lonname
 
-      ! Local Variables
-      real(r8), allocatable :: lon_in(:)
-      real(r8), allocatable :: lat_in(:)
+   ! Local Variables
+   real(r8), allocatable :: lon_in(:)
+   real(r8), allocatable :: lat_in(:)
 
       IF (.not. (present(latname) .and. present(lonname))) THEN
 
@@ -402,9 +402,9 @@ CONTAINS
 
       ELSE
 
-         call ncio_read_bcast_serial (filename, latname, lat_in)
-         call ncio_read_bcast_serial (filename, lonname, lon_in)
-         call this%define_by_center (lat_in, lon_in)
+         CALL ncio_read_bcast_serial (filename, latname, lat_in)
+         CALL ncio_read_bcast_serial (filename, lonname, lon_in)
+         CALL this%define_by_center (lat_in, lon_in)
          
          deallocate (lat_in, lon_in)
       ENDIF
@@ -414,11 +414,11 @@ CONTAINS
    !-----------------------------------------------------
    SUBROUTINE grid_define_by_copy (this, grid_in)
 
-      USE MOD_NetCDFSerial
-      IMPLICIT NONE
-      class (grid_type) :: this
+   USE MOD_NetCDFSerial
+   IMPLICIT NONE
+   class (grid_type) :: this
 
-      TYPE(grid_type) :: grid_in
+   type(grid_type) :: grid_in
 
       CALL this%init (grid_in%nlon, grid_in%nlat)
 
@@ -435,12 +435,12 @@ CONTAINS
    !-----------------------------------------------------
    SUBROUTINE grid_normalize (this)
 
-      USE MOD_Utils
-      IMPLICIT NONE
-      class(grid_type) :: this
+   USE MOD_Utils
+   IMPLICIT NONE
+   class(grid_type) :: this
 
-      ! Local variable
-      INTEGER :: ilon, ilat
+   ! Local variable
+   integer :: ilon, ilat
 
       DO ilon = 1, this%nlon
          CALL normalize_longitude (this%lon_w(ilon))
@@ -463,16 +463,16 @@ CONTAINS
    !-----------------------------------------------------
    SUBROUTINE grid_set_blocks (this)
 
-      USE MOD_Namelist
-      USE MOD_Block
-      USE MOD_Utils
-      IMPLICIT NONE
+   USE MOD_Namelist
+   USE MOD_Block
+   USE MOD_Utils
+   IMPLICIT NONE
 
-      class (grid_type) :: this
+   class (grid_type) :: this
 
-      ! Local variables
-      INTEGER  :: ilat, ilon, iblk, jblk, ilon_e
-      REAL(r8) :: edges, edgen, edgew, edgee
+   ! Local variables
+   integer  :: ilat, ilon, iblk, jblk, ilon_e
+   real(r8) :: edges, edgen, edgew, edgee
 
       IF (allocated(this%xcnt)) deallocate(this%xcnt)
       IF (allocated(this%xdsp)) deallocate(this%xdsp)
@@ -516,7 +516,7 @@ CONTAINS
 
          this%ydsp(jblk) = ilat - 1
 
-         DO while (ilat <= this%nlat)
+         DO WHILE (ilat <= this%nlat)
             IF (this%lat_s(ilat) < edgen) THEN
                IF (this%lat_s(ilat) < gblock%lat_n(jblk)) THEN
 
@@ -531,11 +531,11 @@ CONTAINS
                   IF (jblk <= gblock%nyblk) THEN
                      this%ydsp(jblk) = ilat - 1
                   ELSE
-                     exit
+                     EXIT
                   ENDIF
                ENDIF
             ELSE
-               exit
+               EXIT
             ENDIF
          ENDDO
 
@@ -554,7 +554,7 @@ CONTAINS
 
          this%ydsp(jblk) = ilat - 1
 
-         DO while (ilat <= this%nlat)
+         DO WHILE (ilat <= this%nlat)
             IF (this%lat_n(ilat) > edges) THEN
                IF (this%lat_n(ilat) > gblock%lat_s(jblk)) THEN
 
@@ -569,11 +569,11 @@ CONTAINS
                   IF (jblk >= 1) THEN
                      this%ydsp(jblk) = ilat - 1
                   ELSE
-                     exit
+                     EXIT
                   ENDIF
                ENDIF
             ELSE
-               exit
+               EXIT
             ENDIF
          ENDDO
 
@@ -600,7 +600,7 @@ CONTAINS
       ilon_e = ilon - 1
       IF (ilon_e == 0) ilon_e = this%nlon
       ilon = mod(ilon,this%nlon) + 1
-      DO while (.true.)
+      DO WHILE (.true.)
          IF (lon_between_floor(this%lon_w(ilon), edgew, edgee)) THEN
             IF (lon_between_floor(this%lon_w(ilon), gblock%lon_w(iblk), gblock%lon_e(iblk))) THEN
 
@@ -612,7 +612,7 @@ CONTAINS
                IF (ilon /= ilon_e) THEN
                   ilon = mod(ilon,this%nlon) + 1
                ELSE
-                  exit
+                  EXIT
                ENDIF
             ELSE
                iblk = mod(iblk,gblock%nxblk) + 1
@@ -624,7 +624,7 @@ CONTAINS
 
                   this%xdsp(iblk) = ilon - 1
                   this%xcnt(iblk) = 0
-                  DO while (.true.)
+                  DO WHILE (.true.)
                      this%xcnt(iblk) = this%xcnt(iblk) + 1
                      this%xblk(ilon) = iblk
                      this%xloc(ilon) = this%xcnt(iblk)
@@ -632,15 +632,15 @@ CONTAINS
                      IF (ilon /= ilon_e) THEN
                         ilon = mod(ilon,this%nlon) + 1
                      ELSE
-                        exit
+                        EXIT
                      ENDIF
                   ENDDO
 
-                  exit
+                  EXIT
                ENDIF
             ENDIF
          ELSE
-            exit
+            EXIT
          ENDIF
       ENDDO
 
@@ -649,16 +649,16 @@ CONTAINS
    !-----------
    SUBROUTINE grid_set_rlon (this)
 
-      USE MOD_Precision
-      USE MOD_Utils
-      USE MOD_Vars_Global, only : pi
-      IMPLICIT NONE
+   USE MOD_Precision
+   USE MOD_Utils
+   USE MOD_Vars_Global, only : pi
+   IMPLICIT NONE
 
-      class (grid_type) :: this
+   class (grid_type) :: this
 
-      ! Local variables
-      INTEGER  :: ix
-      REAL(r8) :: lon
+   ! Local variables
+   integer  :: ix
+   real(r8) :: lon
 
       IF (.not. allocated(this%rlon)) THEN
          allocate (this%rlon(this%nlon))
@@ -681,15 +681,15 @@ CONTAINS
    !-----------
    SUBROUTINE grid_set_rlat (this)
 
-      USE MOD_Precision
-      USE MOD_Utils
-      USE MOD_Vars_Global, only : pi
-      IMPLICIT NONE
+   USE MOD_Precision
+   USE MOD_Utils
+   USE MOD_Vars_Global, only : pi
+   IMPLICIT NONE
 
-      class (grid_type) :: this
+   class (grid_type) :: this
 
-      ! Local variables
-      INTEGER :: iy
+   ! Local variables
+   integer :: iy
 
       IF (.not. allocated(this%rlat)) THEN
          allocate (this%rlat(this%nlat))
@@ -705,8 +705,8 @@ CONTAINS
    !---------
    SUBROUTINE grid_free_mem (this)
 
-      IMPLICIT NONE
-      TYPE (grid_type) :: this
+   IMPLICIT NONE
+   type (grid_type) :: this
 
       IF (allocated (this%lat_s))  deallocate (this%lat_s)
       IF (allocated (this%lat_n))  deallocate (this%lat_n)
@@ -734,18 +734,18 @@ CONTAINS
    END SUBROUTINE grid_free_mem
 
    !----------
-   subroutine set_grid_concat (this, grid)
+   SUBROUTINE set_grid_concat (this, grid)
 
-      use MOD_Block
-      USE MOD_Utils
-      implicit none
+   USE MOD_Block
+   USE MOD_Utils
+   IMPLICIT NONE
 
-      class(grid_concat_type) :: this
-      type(grid_type), intent(in) :: grid
+   class(grid_concat_type) :: this
+   type(grid_type), intent(in) :: grid
 
-      ! Local variables
-      integer :: ilat_l, ilat_u, ilat, ilatloc, jblk, iyseg
-      integer :: ilon_w, ilon_e, ilon, ilonloc, iblk, ixseg
+   ! Local variables
+   integer :: ilat_l, ilat_u, ilat, ilatloc, jblk, iyseg
+   integer :: ilon_w, ilon_e, ilon, ilonloc, iblk, ixseg
 
       ilat_l = findloc(grid%yblk /= 0, .true., dim=1)
       ilat_u = findloc(grid%yblk /= 0, .true., dim=1, back=.true.)
@@ -761,66 +761,66 @@ CONTAINS
       this%nyseg = 0
       jblk  = 0
       ilatloc = 0
-      do ilat = ilat_l, ilat_u
-         if (grid%yblk(ilat) /= jblk) then
+      DO ilat = ilat_l, ilat_u
+         IF (grid%yblk(ilat) /= jblk) THEN
             this%nyseg = this%nyseg + 1
             jblk  = grid%yblk(ilat)
-         end if
+         ENDIF
 
          ilatloc = ilatloc + 1
          this%ginfo%lat_s(ilatloc) = grid%lat_s(ilat)
          this%ginfo%lat_n(ilatloc) = grid%lat_n(ilat)
          this%ginfo%lat_c(ilatloc) = (grid%lat_s(ilat)+grid%lat_n(ilat)) * 0.5
-      end do
+      ENDDO
 
       IF (allocated(this%ysegs)) deallocate(this%ysegs)
       allocate (this%ysegs (this%nyseg))
 
       iyseg = 0
       jblk  = 0
-      do ilat = ilat_l, ilat_u
-         if (grid%yblk(ilat) /= jblk) then
+      DO ilat = ilat_l, ilat_u
+         IF (grid%yblk(ilat) /= jblk) THEN
             iyseg = iyseg + 1
             jblk  = grid%yblk(ilat)
             this%ysegs(iyseg)%blk  = jblk
             this%ysegs(iyseg)%bdsp = grid%yloc(ilat) - 1
             this%ysegs(iyseg)%gdsp = ilat - ilat_l
             this%ysegs(iyseg)%cnt  = 1
-         else
+         ELSE
             this%ysegs(iyseg)%cnt  = this%ysegs(iyseg)%cnt + 1
-         end if
-      end do
+         ENDIF
+      ENDDO
 
-      if (all(grid%xblk > 0)) then
+      IF (all(grid%xblk > 0)) THEN
          ilon_w = 1
          ilon_e = grid%nlon
-      else
+      ELSE
          ilon_w = findloc(grid%xblk /= 0, .true., dim=1)
-         do while (.true.)
+         DO WHILE (.true.)
             ilon = ilon_w - 1
-            if (ilon == 0) ilon = grid%nlon
+            IF (ilon == 0) ilon = grid%nlon
 
-            if (grid%xblk(ilon) /= 0) then
+            IF (grid%xblk(ilon) /= 0) THEN
                ilon_w = ilon
-            else
-               exit
-            end if
-         end do
+            ELSE
+               EXIT
+            ENDIF
+         ENDDO
 
          ilon_e = ilon_w
-         do while (.true.)
+         DO WHILE (.true.)
             ilon = mod(ilon_e,grid%nlon) + 1
 
-            if (grid%xblk(ilon) /= 0) then
+            IF (grid%xblk(ilon) /= 0) THEN
                ilon_e = ilon
-            else
-               exit
-            end if
-         end do
-      end if
+            ELSE
+               EXIT
+            ENDIF
+         ENDDO
+      ENDIF
 
       this%ginfo%nlon = ilon_e - ilon_w + 1
-      if (this%ginfo%nlon <= 0) THEN
+      IF (this%ginfo%nlon <= 0) THEN
          this%ginfo%nlon = this%ginfo%nlon + grid%nlon
       ENDIF
 
@@ -835,12 +835,12 @@ CONTAINS
       ilon = ilon_w - 1
       iblk = 0
       ilonloc = 0
-      do while (.true.)
+      DO WHILE (.true.)
          ilon = mod(ilon,grid%nlon) + 1
-         if (grid%xblk(ilon) /= iblk) then
+         IF (grid%xblk(ilon) /= iblk) THEN
             this%nxseg = this%nxseg + 1
             iblk = grid%xblk(ilon)
-         end if
+         ENDIF
 
          ilonloc = ilonloc + 1
          this%ginfo%lon_w(ilonloc) = grid%lon_w(ilon)
@@ -852,8 +852,8 @@ CONTAINS
             CALL normalize_longitude (this%ginfo%lon_c(ilonloc))
          ENDIF
 
-         if (ilon == ilon_e) exit
-      end do
+         IF (ilon == ilon_e) EXIT
+      ENDDO
 
       DO ilon = 2, this%ginfo%nlon
          IF ((this%ginfo%lon_c(ilon) < this%ginfo%lon_c(ilon-1)) &
@@ -869,43 +869,43 @@ CONTAINS
       iblk = 0
       ilon = ilon_w - 1
       ilonloc = 0
-      do while (.true.)
+      DO WHILE (.true.)
          ilon = mod(ilon,grid%nlon) + 1
          ilonloc = ilonloc + 1
-         if (grid%xblk(ilon) /= iblk) then
+         IF (grid%xblk(ilon) /= iblk) THEN
             ixseg = ixseg + 1
             iblk = grid%xblk(ilon)
             this%xsegs(ixseg)%blk  = iblk
             this%xsegs(ixseg)%bdsp = grid%xloc(ilon) - 1
             this%xsegs(ixseg)%gdsp = ilonloc - 1
             this%xsegs(ixseg)%cnt = 1
-         else
+         ELSE
             this%xsegs(ixseg)%cnt = this%xsegs(ixseg)%cnt + 1
-         end if
+         ENDIF
 
-         if (ilon == ilon_e) exit
-      end do
+         IF (ilon == ilon_e) EXIT
+      ENDDO
 
       this%ndatablk = 0
 
-      do iyseg = 1, this%nyseg
-         do ixseg = 1, this%nxseg
+      DO iyseg = 1, this%nyseg
+         DO ixseg = 1, this%nxseg
             iblk = this%xsegs(ixseg)%blk
             jblk = this%ysegs(iyseg)%blk
-            if (gblock%pio(iblk,jblk) >= 0) then
+            IF (gblock%pio(iblk,jblk) >= 0) THEN
                this%ndatablk = this%ndatablk + 1
-            end if
-         end do
-      end do
+            ENDIF
+         ENDDO
+      ENDDO
 
-   end subroutine set_grid_concat
+   END SUBROUTINE set_grid_concat
 
    !-------
    SUBROUTINE grid_concat_free_mem (this)
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      TYPE(grid_concat_type) :: this
+   type(grid_concat_type) :: this
 
       IF (allocated(this%xsegs)) deallocate(this%xsegs)
       IF (allocated(this%ysegs)) deallocate(this%ysegs)

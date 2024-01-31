@@ -713,7 +713,7 @@ ENDIF
 
       ! surface runoff including water table and surface staturated area
 
-#ifndef LATERAL_FLOW
+#ifndef CatchLateralFlow
       if (gwat > 0.) then
          call surfacerunoff (nl_soil,wtfact,wimp,porsl,psi0,hksati,&
                              z_soisno(1:),dz_soisno(1:),zi_soisno(0:),&
@@ -779,7 +779,7 @@ ENDIF
          ENDIF
       ENDDO
 
-#ifndef LATERAL_FLOW
+#ifndef CatchLateralFlow
       !-- Topographic runoff  ----------------------------------------------------------
       imped = 1.0
       IF (zwtmm < sp_zi(nl_soil)) THEN
@@ -903,7 +903,7 @@ ELSE
       wice_soisno(1) = max(0., wice_soisno(1) + (qfros_soil-qsubl_soil) * deltim)
 ENDIF
 
-#ifndef LATERAL_FLOW
+#ifndef CatchLateralFlow
      IF (wdsrf > pondmx) THEN
         rsur = rsur + (wdsrf - pondmx) / deltim
         wdsrf = pondmx
@@ -913,7 +913,7 @@ ENDIF
      rnof = rsubst + rsur
 #endif
 
-#ifndef LATERAL_FLOW
+#ifndef CatchLateralFlow
       err_solver = (sum(wliq_soisno(1:))+sum(wice_soisno(1:))+wa+wdsrf) - w_sum &
          - (gwat-etr-rsur-rsubst)*deltim
 #else
@@ -984,7 +984,7 @@ ENDIF
             wa    = 0.
          ENDIF
 
-#ifndef LATERAL_FLOW
+#ifndef CatchLateralFlow
          IF (wdsrf > pondmx) THEN
             rsur = (wdsrf - pondmx) / deltim
             wdsrf = pondmx

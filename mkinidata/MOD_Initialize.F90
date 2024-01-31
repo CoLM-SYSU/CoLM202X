@@ -2,245 +2,240 @@
 
 MODULE MOD_Initialize
 
-!-----------------------------------------------------------------------
    IMPLICIT NONE
    SAVE
 
-! PUBLIC MEMBER FUNCTIONS:
+   ! PUBLIC MEMBER FUNCTIONS:
    PUBLIC :: initialize
 
-
-!-----------------------------------------------------------------------
-
-   CONTAINS
-
-!-----------------------------------------------------------------------
-
+CONTAINS
 
    SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
          idate, lc_year, greenwich, lulcc_call)
 
-      ! ======================================================================
-      ! initialization routine for land surface model.
-      !
-      ! Created by Yongjiu Dai, 09/15/1999
-      ! Revised by Yongjiu Dai, 08/30/2002
-      ! Revised by Yongjiu Dai, 03/2014
-      !
-      ! ======================================================================
-      use MOD_Precision
-      USE MOD_Vars_Global
-      use MOD_Namelist
-      use MOD_SPMD_Task
-      use MOD_Pixel
-      use MOD_LandPatch
+! ======================================================================
+! initialization routine for land surface model.
+!
+! Created by Yongjiu Dai, 09/15/1999
+! Revised by Yongjiu Dai, 08/30/2002
+! Revised by Yongjiu Dai, 03/2014
+!
+! ======================================================================
+   USE MOD_Precision
+   USE MOD_Vars_Global
+   USE MOD_Namelist
+   USE MOD_SPMD_Task
+   USE MOD_Pixel
+   USE MOD_LandPatch
 #ifdef URBAN_MODEL
-      use MOD_LandUrban
-      USE MOD_UrbanIniTimeVariable
-      USE MOD_UrbanReadin
-      USE MOD_Urban_LAIReadin
-      USE MOD_Urban_Albedo
+   USE MOD_LandUrban
+   USE MOD_UrbanIniTimeVariable
+   USE MOD_UrbanReadin
+   USE MOD_Urban_LAIReadin
+   USE MOD_Urban_Albedo
 #endif
-      use MOD_Const_Physical
-      use MOD_Vars_TimeInvariants
-      use MOD_Vars_TimeVariables
+   USE MOD_Const_Physical
+   USE MOD_Vars_TimeInvariants
+   USE MOD_Vars_TimeVariables
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
-      USE MOD_LandPFT
-      USE MOD_Vars_PFTimeInvariants
-      USE MOD_Vars_PFTimeVariables
+   USE MOD_LandPFT
+   USE MOD_Vars_PFTimeInvariants
+   USE MOD_Vars_PFTimeVariables
 #endif
-      USE MOD_Const_LC
-      USE MOD_Const_PFT
-      use MOD_TimeManager
+   USE MOD_Const_LC
+   USE MOD_Const_PFT
+   USE MOD_TimeManager
 
-      use MOD_Grid
-      use MOD_DataType
-      use MOD_NetCDFSerial
-      use MOD_NetCDFBlock
+   USE MOD_Grid
+   USE MOD_DataType
+   USE MOD_NetCDFSerial
+   USE MOD_NetCDFBlock
 #ifdef RangeCheck
-      use MOD_RangeCheck
+   USE MOD_RangeCheck
 #endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
-      USE MOD_Hydro_SoilFunction
+   USE MOD_Hydro_SoilFunction
 #endif
-      USE MOD_Mapping_Grid2Pset
-#ifdef LATERAL_FLOW
-      USE MOD_Mesh
-      USE MOD_LandHRU
-      USE MOD_LandPatch
-      USE MOD_ElmVector
-      USE MOD_HRUVector
-      USE MOD_Hydro_HillslopeNetwork
-      USE MOD_Hydro_RiverLakeNetwork
-      USE MOD_Hydro_RiverDepth
+   USE MOD_Mapping_Grid2Pset
+#ifdef CatchLateralFlow
+   USE MOD_Mesh
+   USE MOD_LandHRU
+   USE MOD_LandPatch
+   USE MOD_ElmVector
+   USE MOD_HRUVector
+   USE MOD_ElementNeighbour
+   USE MOD_Catch_HillslopeNetwork
+   USE MOD_Catch_RiverLakeNetwork
 #endif
 #ifdef CROP
-      USE MOD_CropReadin
+   USE MOD_CropReadin
 #endif
-      USE MOD_LAIEmpirical
-      USE MOD_LAIReadin
-      USE MOD_OrbCoszen
-      use MOD_DBedrockReadin
-      USE MOD_HtopReadin
-      USE MOD_IniTimeVariable
-      USE MOD_LakeDepthReadin
-      USE MOD_PercentagesPFTReadin
-      USE MOD_SoilParametersReadin
+   USE MOD_LAIEmpirical
+   USE MOD_LAIReadin
+   USE MOD_OrbCoszen
+   USE MOD_DBedrockReadin
+   USE MOD_HtopReadin
+   USE MOD_IniTimeVariable
+   USE MOD_LakeDepthReadin
+   USE MOD_PercentagesPFTReadin
+   USE MOD_SoilParametersReadin
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      ! ----------------------------------------------------------------------
-      character(len=*), intent(in) :: casename      ! case name
-      character(len=*), intent(in) :: dir_landdata
-      character(len=*), intent(in) :: dir_restart
-      integer, intent(inout) :: idate(3)   ! year, julian day, seconds of the starting time
-      integer, intent(in)    :: lc_year    ! year, land cover year
-      logical, intent(in)    :: greenwich  ! true: greenwich time, false: local time
-      logical, optional, intent(in) :: lulcc_call   ! whether it is a lulcc CALL
+   ! ----------------------------------------------------------------------
+   character(len=*), intent(in) :: casename      ! case name
+   character(len=*), intent(in) :: dir_landdata
+   character(len=*), intent(in) :: dir_restart
+   integer, intent(inout) :: idate(3)   ! year, julian day, seconds of the starting time
+   integer, intent(in)    :: lc_year    ! year, land cover year
+   logical, intent(in)    :: greenwich  ! true: greenwich time, false: local time
+   logical, optional, intent(in) :: lulcc_call   ! whether it is a lulcc CALL
 
-      ! ------------------------ local variables -----------------------------
-      real(r8) :: rlon, rlat
+   ! ------------------------ local variables -----------------------------
+   real(r8) :: rlon, rlat
 
-      ! for SOIL INIT of water, temperature, snow depth
-      LOGICAL :: use_soilini
-      LOGICAL :: use_cnini
-      LOGICAL :: use_snowini
+   ! for SOIL INIT of water, temperature, snow depth
+   logical :: use_soilini
+   logical :: use_cnini
+   logical :: use_snowini
 
-      character(len=256) :: fsoildat
-      character(len=256) :: fsnowdat
-      character(len=256) :: fcndat
-      type(grid_type) :: gsoil
-      type(grid_type) :: gsnow
-      type(grid_type) :: gcn
-      type(mapping_grid2pset_type) :: ms2p
-      type(mapping_grid2pset_type) :: mc2p
-      type(mapping_grid2pset_type) :: mc2f
-      type(mapping_grid2pset_type) :: msoil2p, msnow2p
+   character(len=256) :: fsoildat
+   character(len=256) :: fsnowdat
+   character(len=256) :: fcndat
+   type(grid_type) :: gsoil
+   type(grid_type) :: gsnow
+   type(grid_type) :: gcn
+   type(mapping_grid2pset_type) :: ms2p
+   type(mapping_grid2pset_type) :: mc2p
+   type(mapping_grid2pset_type) :: mc2f
+   type(mapping_grid2pset_type) :: msoil2p, msnow2p
 
-      integer  :: nl_soil_ini
-      real(r8) :: missing_value
+   integer  :: nl_soil_ini
+   real(r8) :: missing_value
 
-      real(r8), allocatable :: soil_z(:)
+   real(r8), allocatable :: soil_z(:)
 
-      type(block_data_real8_2d) :: snow_d_grid
-      type(block_data_real8_3d) :: soil_t_grid
-      type(block_data_real8_3d) :: soil_w_grid
-      type(block_data_real8_2d) :: zwt_grid
+   type(block_data_real8_2d) :: snow_d_grid
+   type(block_data_real8_3d) :: soil_t_grid
+   type(block_data_real8_3d) :: soil_w_grid
+   type(block_data_real8_2d) :: zwt_grid
 
-      type(block_data_real8_3d) :: litr1c_grid
-      type(block_data_real8_3d) :: litr2c_grid
-      type(block_data_real8_3d) :: litr3c_grid
-      type(block_data_real8_3d) :: cwdc_grid
-      type(block_data_real8_3d) :: soil1c_grid
-      type(block_data_real8_3d) :: soil2c_grid
-      type(block_data_real8_3d) :: soil3c_grid
-      type(block_data_real8_3d) :: litr1n_grid
-      type(block_data_real8_3d) :: litr2n_grid
-      type(block_data_real8_3d) :: litr3n_grid
-      type(block_data_real8_3d) :: cwdn_grid
-      type(block_data_real8_3d) :: soil1n_grid
-      type(block_data_real8_3d) :: soil2n_grid
-      type(block_data_real8_3d) :: soil3n_grid
-      type(block_data_real8_3d) :: sminn_grid
-      type(block_data_real8_3d) :: smin_nh4_grid
-      type(block_data_real8_3d) :: smin_no3_grid
-      type(block_data_real8_2d) :: leafc_grid
-      type(block_data_real8_2d) :: leafc_storage_grid
-      type(block_data_real8_2d) :: frootc_grid
-      type(block_data_real8_2d) :: frootc_storage_grid
-      type(block_data_real8_2d) :: livestemc_grid
-      type(block_data_real8_2d) :: deadstemc_grid
-      type(block_data_real8_2d) :: livecrootc_grid
-      type(block_data_real8_2d) :: deadcrootc_grid
+   type(block_data_real8_3d) :: litr1c_grid
+   type(block_data_real8_3d) :: litr2c_grid
+   type(block_data_real8_3d) :: litr3c_grid
+   type(block_data_real8_3d) :: cwdc_grid
+   type(block_data_real8_3d) :: soil1c_grid
+   type(block_data_real8_3d) :: soil2c_grid
+   type(block_data_real8_3d) :: soil3c_grid
+   type(block_data_real8_3d) :: litr1n_grid
+   type(block_data_real8_3d) :: litr2n_grid
+   type(block_data_real8_3d) :: litr3n_grid
+   type(block_data_real8_3d) :: cwdn_grid
+   type(block_data_real8_3d) :: soil1n_grid
+   type(block_data_real8_3d) :: soil2n_grid
+   type(block_data_real8_3d) :: soil3n_grid
+   type(block_data_real8_3d) :: sminn_grid
+   type(block_data_real8_3d) :: smin_nh4_grid
+   type(block_data_real8_3d) :: smin_no3_grid
+   type(block_data_real8_2d) :: leafc_grid
+   type(block_data_real8_2d) :: leafc_storage_grid
+   type(block_data_real8_2d) :: frootc_grid
+   type(block_data_real8_2d) :: frootc_storage_grid
+   type(block_data_real8_2d) :: livestemc_grid
+   type(block_data_real8_2d) :: deadstemc_grid
+   type(block_data_real8_2d) :: livecrootc_grid
+   type(block_data_real8_2d) :: deadcrootc_grid
 
-      real(r8), allocatable :: snow_d(:)
-      real(r8), allocatable :: soil_t(:,:)
-      real(r8), allocatable :: soil_w(:,:)
-      logical , allocatable :: validval(:)
+   real(r8), allocatable :: snow_d(:)
+   real(r8), allocatable :: soil_t(:,:)
+   real(r8), allocatable :: soil_w(:,:)
+   logical , allocatable :: validval(:)
 
-      real(r8), allocatable :: litr1c_vr(:,:)
-      real(r8), allocatable :: litr2c_vr(:,:)
-      real(r8), allocatable :: litr3c_vr(:,:)
-      real(r8), allocatable :: cwdc_vr  (:,:)
-      real(r8), allocatable :: soil1c_vr(:,:)
-      real(r8), allocatable :: soil2c_vr(:,:)
-      real(r8), allocatable :: soil3c_vr(:,:)
-      real(r8), allocatable :: litr1n_vr(:,:)
-      real(r8), allocatable :: litr2n_vr(:,:)
-      real(r8), allocatable :: litr3n_vr(:,:)
-      real(r8), allocatable :: cwdn_vr  (:,:)
-      real(r8), allocatable :: soil1n_vr(:,:)
-      real(r8), allocatable :: soil2n_vr(:,:)
-      real(r8), allocatable :: soil3n_vr(:,:)
-      real(r8), allocatable :: min_nh4_vr(:,:)
-      real(r8), allocatable :: min_no3_vr(:,:)
-      real(r8), allocatable :: leafcin_p(:)
-      real(r8), allocatable :: leafc_storagein_p(:)
-      real(r8), allocatable :: frootcin_p(:)
-      real(r8), allocatable :: frootc_storagein_p(:)
-      real(r8), allocatable :: livestemcin_p(:)
-      real(r8), allocatable :: deadstemcin_p(:)
-      real(r8), allocatable :: livecrootcin_p(:)
-      real(r8), allocatable :: deadcrootcin_p(:)
-      ! for SOIL Water INIT by using water table depth
-      LOGICAL  :: use_wtd
+   real(r8), allocatable :: litr1c_vr(:,:)
+   real(r8), allocatable :: litr2c_vr(:,:)
+   real(r8), allocatable :: litr3c_vr(:,:)
+   real(r8), allocatable :: cwdc_vr  (:,:)
+   real(r8), allocatable :: soil1c_vr(:,:)
+   real(r8), allocatable :: soil2c_vr(:,:)
+   real(r8), allocatable :: soil3c_vr(:,:)
+   real(r8), allocatable :: litr1n_vr(:,:)
+   real(r8), allocatable :: litr2n_vr(:,:)
+   real(r8), allocatable :: litr3n_vr(:,:)
+   real(r8), allocatable :: cwdn_vr  (:,:)
+   real(r8), allocatable :: soil1n_vr(:,:)
+   real(r8), allocatable :: soil2n_vr(:,:)
+   real(r8), allocatable :: soil3n_vr(:,:)
+   real(r8), allocatable :: min_nh4_vr(:,:)
+   real(r8), allocatable :: min_no3_vr(:,:)
+   real(r8), allocatable :: leafcin_p(:)
+   real(r8), allocatable :: leafc_storagein_p(:)
+   real(r8), allocatable :: frootcin_p(:)
+   real(r8), allocatable :: frootc_storagein_p(:)
+   real(r8), allocatable :: livestemcin_p(:)
+   real(r8), allocatable :: deadstemcin_p(:)
+   real(r8), allocatable :: livecrootcin_p(:)
+   real(r8), allocatable :: deadcrootcin_p(:)
+   ! for SOIL Water INIT by using water table depth
+   logical  :: use_wtd
 
-      CHARACTER(len=256) :: fwtd
-      type(grid_type)    :: gwtd
-      type(block_data_real8_2d)    :: wtd_xy  ! [m]
-      type(mapping_grid2pset_type) :: m_wtd2p
+   character(len=256) :: fwtd
+   type(grid_type)    :: gwtd
+   type(block_data_real8_2d)    :: wtd_xy  ! [m]
+   type(mapping_grid2pset_type) :: m_wtd2p
 
-      REAL(r8) :: zwtmm
-      real(r8) :: zc_soimm(1:nl_soil)
-      real(r8) :: zi_soimm(0:nl_soil)
-      real(r8) :: vliq_r  (1:nl_soil)
+   real(r8) :: zwtmm
+   real(r8) :: zc_soimm(1:nl_soil)
+   real(r8) :: zi_soimm(0:nl_soil)
+   real(r8) :: vliq_r  (1:nl_soil)
 #ifdef Campbell_SOIL_MODEL
-      INTEGER, parameter :: nprms = 1
+   integer, parameter :: nprms = 1
 #endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
-      INTEGER, parameter :: nprms = 5
+   integer, parameter :: nprms = 5
 #endif
-      REAL(r8) :: prms(nprms, 1:nl_soil)
+   real(r8) :: prms(nprms, 1:nl_soil)
 
-      ! CoLM soil layer thickiness and depths
-      real(r8), allocatable :: z_soisno (:,:)
-      real(r8), allocatable :: dz_soisno(:,:)
+   ! CoLM soil layer thickiness and depths
+   real(r8), allocatable :: z_soisno (:,:)
+   real(r8), allocatable :: dz_soisno(:,:)
 
-      real(r8) :: calday                    ! Julian cal day (1.xx to 365.xx)
-      integer  :: year, jday                ! Julian day and seconds
-      INTEGER  :: month, mday
+   real(r8) :: calday                    ! Julian cal day (1.xx to 365.xx)
+   integer  :: year, jday                ! Julian day and seconds
+   integer  :: month, mday
 
-      integer  :: i,j,ipatch,nsl,hs,he,ps,pe,ivt,m, u  ! indices
-      real(r8) :: totalvolume
+   integer  :: i,j,ipatch,nsl,hs,he,ps,pe,ivt,m, u  ! indices
+   real(r8) :: totalvolume
 
-      integer :: Julian_8day
-      integer :: ltyp
+   integer :: Julian_8day
+   integer :: ltyp
 
 #ifdef BGC
-      real(r8) f_s1s2 (1:nl_soil)
-      real(r8) f_s1s3 (1:nl_soil)
-      real(r8) rf_s1s2(1:nl_soil)
-      real(r8) rf_s1s3(1:nl_soil)
-      real(r8) f_s2s1
-      real(r8) f_s2s3
-      real(r8) t
+   real(r8) f_s1s2 (1:nl_soil)
+   real(r8) f_s1s3 (1:nl_soil)
+   real(r8) rf_s1s2(1:nl_soil)
+   real(r8) rf_s1s3(1:nl_soil)
+   real(r8) f_s2s1
+   real(r8) f_s2s3
+   real(r8) t
 #endif
 
-      ! --------------------------------------------------------------------
-      ! Allocates memory for CoLM 1d [numpatch] variables
-      ! --------------------------------------------------------------------
+! --------------------------------------------------------------------
+! Allocates memory for CoLM 1d [numpatch] variables
+! --------------------------------------------------------------------
 
       CALL allocate_TimeInvariants
       CALL allocate_TimeVariables
 
-      ! ---------------------------------------------------------------
-      ! 1. INITIALIZE TIME INVARIANT VARIABLES
-      ! ---------------------------------------------------------------
+! ---------------------------------------------------------------
+! 1. INITIALIZE TIME INVARIANT VARIABLES
+! ---------------------------------------------------------------
 
-      if (p_is_worker) then
+      IF (p_is_worker) THEN
 
-         patchclass = landpatch%settyp
-         patchmask  = .true.
+         IF (numpatch > 0) THEN
+            patchclass = landpatch%settyp
+            patchmask  = .true.
+         ENDIF
 
          DO ipatch = 1, numpatch
 
@@ -257,10 +252,10 @@ MODULE MOD_Initialize
 
          ENDDO
 
-         call landpatch%get_lonlat_radian (patchlonr, patchlatr)
+         CALL landpatch%get_lonlat_radian (patchlonr, patchlatr)
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
-         pftclass = landpft%settyp
+         IF (numpft > 0) pftclass = landpft%settyp
 #endif
 
       ENDIF
@@ -269,9 +264,9 @@ MODULE MOD_Initialize
       CALL pct_readin (dir_landdata, lc_year)
 #endif
 
-      ! ------------------------------------------
-      ! 1.1 Ponding water
-      ! ------------------------------------------
+! ------------------------------------------
+! 1.1 Ponding water
+! ------------------------------------------
       IF(DEF_USE_BEDROCK)THEN
          CALL dbedrock_readin (dir_landdata)
       ENDIF
@@ -284,14 +279,14 @@ MODULE MOD_Initialize
             WHERE (patchtype == 2) wetwat = 200._r8 ! for wetland
          ENDIF
       ENDIF
-      ! ------------------------------------------
-      ! 1.2 Lake depth and layers' thickness
-      ! ------------------------------------------
+! ------------------------------------------
+! 1.2 Lake depth and layers' thickness
+! ------------------------------------------
       CALL lakedepth_readin (dir_landdata, lc_year)
 
-      ! ...............................................................
-      ! 1.3 Read in the soil parameters of the patches of the gridcells
-      ! ...............................................................
+! ...............................................................
+! 1.3 Read in the soil parameters of the patches of the gridcells
+! ...............................................................
 
       CALL soil_parameters_readin (dir_landdata, lc_year)
 
@@ -312,18 +307,18 @@ MODULE MOD_Initialize
       ENDIF
 #endif
 
-      ! ...............................................................
-      ! 1.4 Plant time-invariant variables
-      ! ...............................................................
+! ...............................................................
+! 1.4 Plant time-invariant variables
+! ...............................................................
 
       ! read global tree top height from nc file
       CALL HTOP_readin (dir_landdata, lc_year)
 #ifdef URBAN_MODEL
       CALL Urban_readin (dir_landdata, lc_year)
 #endif
-      ! ................................
-      ! 1.5 Initialize TUNABLE constants
-      ! ................................
+! ................................
+! 1.5 Initialize TUNABLE constants
+! ................................
       zlnd   = 0.01    !Roughness length for soil [m]
       zsno   = 0.0024  !Roughness length for snow [m]
       csoilc = 0.004   !Drag coefficient for soil under canopy [-]
@@ -359,10 +354,10 @@ MODULE MOD_Initialize
 
       f_s2s1 = 0.42_r8/(0.45_r8)
       f_s2s3 = 0.03_r8/(0.45_r8)
-      if (p_is_worker) THEN
-         if(numpatch > 0)then
-            do j=1,nl_soil
-               do i = 1, numpatch
+      IF (p_is_worker) THEN
+         IF(numpatch > 0)THEN
+            DO j=1,nl_soil
+               DO i = 1, numpatch
                   t = 0.85_r8 - 0.68_r8 * 0.01_r8 * (100._r8 - 50._r8)
                   f_s1s2 (j) = 1._r8 - .004_r8 / (1._r8 - t)
                   f_s1s3 (j) = .004_r8 / (1._r8 - t)
@@ -370,10 +365,10 @@ MODULE MOD_Initialize
                   rf_s1s3(j) = t
                   rf_decomp(j,:,i)  = (/0.55_r8, 0.5_r8, 0.5_r8, rf_s1s2(j), 0._r8  , 0._r8  , rf_s1s3(j), 0.55_r8, 0.55_r8, 0.55_r8/)
                   pathfrac_decomp(j,:,i) = (/1.0_r8 ,1.0_r8 , 1.0_r8, f_s1s2(j) , 0.76_r8, 0.24_r8, f_s1s3(j) , f_s2s1 , f_s2s3 , 1._r8/)
-               end do
-            end do
-         end if
-      end if
+               ENDDO
+            ENDDO
+         ENDIF
+      ENDIF
 
       is_cwd            = (/.false.,.false.,.false.,.true. ,.false.,.false.,.false./)
       is_litter         = (/.true. ,.true. ,.true. ,.false.,.false.,.false.,.false./)
@@ -395,11 +390,11 @@ MODULE MOD_Initialize
       rij_kro_beta  = 0.6_r8
       rij_kro_gamma = 0.6_r8
       rij_kro_delta = 0.85_r8
-      if(DEF_USE_NITRIF)then
+      IF(DEF_USE_NITRIF)THEN
          nfix_timeconst = 10._r8
-      else
+      ELSE
          nfix_timeconst = 0._r8
-      end if
+      ENDIF
       organic_max        = 130
       d_con_g21          = 0.1759_r8
       d_con_g22          = 0.00117_r8
@@ -441,7 +436,7 @@ MODULE MOD_Initialize
       soilpsi_on      = -0.6
       soilpsi_off     = -0.8
 
-   ! constant for fire module
+      ! constant for fire module
       occur_hi_gdp_tree        = 0.39_r8
       lfuel                    = 75._r8
       ufuel                    = 650._r8
@@ -461,36 +456,36 @@ MODULE MOD_Initialize
       sf_no3 = 1._r8
 #endif
 
-      ! ...............................................
-      ! 1.6 Write out as a restart file [histTimeConst]
-      ! ...............................................
+! ...............................................
+! 1.6 Write out as a restart file [histTimeConst]
+! ...............................................
 
 #ifdef RangeCheck
-      call check_TimeInvariants ()
+      CALL check_TimeInvariants ()
 #endif
 
       CALL WRITE_TimeInvariants (lc_year, casename, dir_restart)
 
 #ifdef USEMPI
-      call mpi_barrier (p_comm_glb, p_err)
+      CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-      if (p_is_master) write (6,*) ('Successfully Initialize the Land Time-Invariants')
+      IF (p_is_master) write (6,*) ('Successfully Initialize the Land Time-Invariants')
 
-      ! ----------------------------------------------------------------------
-      ! [2] INITIALIZE TIME-VARYING VARIABLES
-      ! as subgrid vectors of length [numpatch]
-      ! initial run: create the time-varying variables based on :
-      !              i) observation (NOT CODING CURRENTLY), or
-      !             ii) some already-known information (NO CODING CURRENTLY), or
-      !            iii) arbitrarily
-      ! continuation run: time-varying data read in from restart file
-      ! ----------------------------------------------------------------------
+! ----------------------------------------------------------------------
+! [2] INITIALIZE TIME-VARYING VARIABLES
+! as subgrid vectors of length [numpatch]
+! initial run: create the time-varying variables based on :
+!              i) observation (NOT CODING CURRENTLY), or
+!             ii) some already-known information (NO CODING CURRENTLY), or
+!            iii) arbitrarily
+! continuation run: time-varying data read in from restart file
+! ----------------------------------------------------------------------
 
-      ! 2.1 current time of model run
-      ! ............................
+! 2.1 current time of model run
+! ............................
 
-      call initimetype(greenwich)
+      CALL initimetype(greenwich)
 
       IF (p_is_master) THEN
          IF(.not. greenwich)THEN
@@ -499,19 +494,19 @@ MODULE MOD_Initialize
       ENDIF
 
 
-      ! ................................
-      ! 2.2 cosine of solar zenith angle
-      ! ................................
+! ................................
+! 2.2 cosine of solar zenith angle
+! ................................
       calday = calendarday(idate)
-      if (p_is_worker) then
-         do i = 1, numpatch
+      IF (p_is_worker) THEN
+         DO i = 1, numpatch
             coszen(i) = orb_coszen(calday, patchlonr(i), patchlatr(i))
-         enddo
-      end if
+         ENDDO
+      ENDIF
 
-      ! ...........................................
-      !2.3 READ in or GUSSES land state information
-      ! ...........................................
+! ...........................................
+!2.3 READ in or GUSSES land state information
+! ...........................................
 
       ! for SOIL INIT of water, temperature
       IF (DEF_USE_SoilInit) THEN
@@ -521,17 +516,17 @@ MODULE MOD_Initialize
             inquire (file=trim(fsoildat), exist=use_soilini)
          ENDIF
 #ifdef USEMPI
-         call mpi_bcast (use_soilini, 1, MPI_LOGICAL, p_root, p_comm_glb, p_err)
+         CALL mpi_bcast (use_soilini, 1, MPI_LOGICAL, p_root, p_comm_glb, p_err)
 #endif
 
          IF (use_soilini) THEN
 
             ! soil layer depth (m)
-            call ncio_read_bcast_serial (fsoildat, 'soildepth', soil_z)
+            CALL ncio_read_bcast_serial (fsoildat, 'soildepth', soil_z)
            
             nl_soil_ini = size(soil_z)
             
-            call gsoil%define_from_file (fsoildat, latname = 'lat', lonname = 'lon')
+            CALL gsoil%define_from_file (fsoildat, latname = 'lat', lonname = 'lon')
          
             CALL julian2monthday (idate(1), idate(2), month, mday)
          
@@ -542,32 +537,32 @@ MODULE MOD_Initialize
             CALL mpi_bcast (missing_value, 1, MPI_REAL8, p_root, p_comm_glb, p_err)
 #endif
 
-            if (p_is_io) then
+            IF (p_is_io) THEN
                ! soil layer temperature (K)
-               call allocate_block_data  (gsoil, soil_t_grid, nl_soil_ini)
-               call ncio_read_block_time (fsoildat, 'soiltemp', &
+               CALL allocate_block_data  (gsoil, soil_t_grid, nl_soil_ini)
+               CALL ncio_read_block_time (fsoildat, 'soiltemp', &
                   gsoil, nl_soil_ini, month, soil_t_grid)
                ! soil layer wetness (-)
-               call allocate_block_data  (gsoil, soil_w_grid, nl_soil_ini)
-               call ncio_read_block_time (fsoildat, 'soilwat', &
+               CALL allocate_block_data  (gsoil, soil_w_grid, nl_soil_ini)
+               CALL ncio_read_block_time (fsoildat, 'soilwat', &
                   gsoil, nl_soil_ini, month, soil_w_grid)
                ! water table depth (m)
-               call allocate_block_data (gsoil, zwt_grid)
-               call ncio_read_block_time (fsoildat, 'zwt', gsoil, month, zwt_grid)
-            end if
+               CALL allocate_block_data (gsoil, zwt_grid)
+               CALL ncio_read_block_time (fsoildat, 'zwt', gsoil, month, zwt_grid)
+            ENDIF
 
-            if (p_is_worker) then
+            IF (p_is_worker) THEN
                IF (numpatch > 0) THEN
                   allocate (soil_t (nl_soil_ini,numpatch))
                   allocate (soil_w (nl_soil_ini,numpatch))
                   allocate (validval (numpatch))
                ENDIF
-            end if
+            ENDIF
 
-            call msoil2p%build (gsoil, landpatch, zwt_grid, missing_value, validval)
-            call msoil2p%map_aweighted (soil_t_grid, nl_soil_ini, soil_t)
-            call msoil2p%map_aweighted (soil_w_grid, nl_soil_ini, soil_w)
-            call msoil2p%map_aweighted (zwt_grid, zwt)
+            CALL msoil2p%build (gsoil, landpatch, zwt_grid, missing_value, validval)
+            CALL msoil2p%map_aweighted (soil_t_grid, nl_soil_ini, soil_t)
+            CALL msoil2p%map_aweighted (soil_w_grid, nl_soil_ini, soil_w)
+            CALL msoil2p%map_aweighted (zwt_grid, zwt)
 
             IF (p_is_worker) THEN
                DO i = 1, numpatch
@@ -595,11 +590,11 @@ MODULE MOD_Initialize
 
       IF (.not. use_soilini) THEN
          !! not used, just for filling arguments
-         if (p_is_worker) then
+         IF (p_is_worker) THEN
             allocate (soil_z (nl_soil))
             allocate (soil_t (nl_soil,numpatch))
             allocate (soil_w (nl_soil,numpatch))
-         end if
+         ENDIF
       ENDIF
 
 #ifdef BGC
@@ -615,96 +610,97 @@ MODULE MOD_Initialize
             ENDIF
          ENDIF
 #ifdef USEMPI
-         call mpi_bcast (use_cnini, 1, MPI_LOGICAL, p_root, p_comm_glb, p_err)
+         CALL mpi_bcast (use_cnini, 1, MPI_LOGICAL, p_root, p_comm_glb, p_err)
 #endif
 
          IF (use_cnini) THEN
 
-            call gcn%define_from_file (fcndat,"lat","lon")
-            call mc2p%build (gcn, landpatch)
-            call mc2f%build (gcn, landpft)
+            CALL gcn%define_from_file (fcndat,"lat","lon")
+            CALL mc2p%build (gcn, landpatch)
+            CALL mc2f%build (gcn, landpft)
 
-            if (p_is_io) then
+            IF (p_is_io) THEN
                ! soil layer litter & carbon (gC m-3)
-               call allocate_block_data (gcn, litr1c_grid, nl_soil)
-               call ncio_read_block (fcndat, 'litr1c_vr', gcn, nl_soil, litr1c_grid)
+               CALL allocate_block_data (gcn, litr1c_grid, nl_soil)
+               CALL ncio_read_block (fcndat, 'litr1c_vr', gcn, nl_soil, litr1c_grid)
 
-               call allocate_block_data (gcn, litr2c_grid, nl_soil)
-               call ncio_read_block (fcndat, 'litr2c_vr', gcn, nl_soil, litr2c_grid)
+               CALL allocate_block_data (gcn, litr2c_grid, nl_soil)
+               CALL ncio_read_block (fcndat, 'litr2c_vr', gcn, nl_soil, litr2c_grid)
 
-               call allocate_block_data (gcn, litr3c_grid, nl_soil)
-               call ncio_read_block (fcndat, 'litr3c_vr', gcn, nl_soil, litr3c_grid)
+               CALL allocate_block_data (gcn, litr3c_grid, nl_soil)
+               CALL ncio_read_block (fcndat, 'litr3c_vr', gcn, nl_soil, litr3c_grid)
 
-               call allocate_block_data (gcn, cwdc_grid, nl_soil)
-               call ncio_read_block (fcndat, 'cwdc_vr', gcn, nl_soil  , cwdc_grid)
+               CALL allocate_block_data (gcn, cwdc_grid, nl_soil)
+               CALL ncio_read_block (fcndat, 'cwdc_vr', gcn, nl_soil  , cwdc_grid)
 
-               call allocate_block_data (gcn, soil1c_grid, nl_soil)
-               call ncio_read_block (fcndat, 'soil1c_vr', gcn, nl_soil, soil1c_grid)
+               CALL allocate_block_data (gcn, soil1c_grid, nl_soil)
+               CALL ncio_read_block (fcndat, 'soil1c_vr', gcn, nl_soil, soil1c_grid)
 
-               call allocate_block_data (gcn, soil2c_grid, nl_soil)
-               call ncio_read_block (fcndat, 'soil2c_vr', gcn, nl_soil, soil2c_grid)
+               CALL allocate_block_data (gcn, soil2c_grid, nl_soil)
+               CALL ncio_read_block (fcndat, 'soil2c_vr', gcn, nl_soil, soil2c_grid)
 
-               call allocate_block_data (gcn, soil3c_grid, nl_soil)
-               call ncio_read_block (fcndat, 'soil3c_vr', gcn, nl_soil, soil3c_grid)
+               CALL allocate_block_data (gcn, soil3c_grid, nl_soil)
+               CALL ncio_read_block (fcndat, 'soil3c_vr', gcn, nl_soil, soil3c_grid)
 
                ! soil layer litter & nitrogen (gN m-3)
-               call allocate_block_data (gcn, litr1n_grid, nl_soil)
-               call ncio_read_block (fcndat, 'litr1n_vr', gcn, nl_soil, litr1n_grid)
+               CALL allocate_block_data (gcn, litr1n_grid, nl_soil)
+               CALL ncio_read_block (fcndat, 'litr1n_vr', gcn, nl_soil, litr1n_grid)
 
-               call allocate_block_data (gcn, litr2n_grid, nl_soil)
-               call ncio_read_block (fcndat, 'litr2n_vr', gcn, nl_soil, litr2n_grid)
+               CALL allocate_block_data (gcn, litr2n_grid, nl_soil)
+               CALL ncio_read_block (fcndat, 'litr2n_vr', gcn, nl_soil, litr2n_grid)
 
-               call allocate_block_data (gcn, litr3n_grid, nl_soil)
-               call ncio_read_block (fcndat, 'litr3n_vr', gcn, nl_soil, litr3n_grid)
+               CALL allocate_block_data (gcn, litr3n_grid, nl_soil)
+               CALL ncio_read_block (fcndat, 'litr3n_vr', gcn, nl_soil, litr3n_grid)
 
-               call allocate_block_data (gcn, cwdn_grid, nl_soil)
-               call ncio_read_block (fcndat, 'cwdn_vr', gcn, nl_soil  , cwdn_grid)
+               CALL allocate_block_data (gcn, cwdn_grid, nl_soil)
+               CALL ncio_read_block (fcndat, 'cwdn_vr', gcn, nl_soil  , cwdn_grid)
 
-               call allocate_block_data (gcn, soil1n_grid, nl_soil)
-               call ncio_read_block (fcndat, 'soil1n_vr', gcn, nl_soil, soil1n_grid)
+               CALL allocate_block_data (gcn, soil1n_grid, nl_soil)
+               CALL ncio_read_block (fcndat, 'soil1n_vr', gcn, nl_soil, soil1n_grid)
 
-               call allocate_block_data (gcn, soil2n_grid, nl_soil)
-               call ncio_read_block (fcndat, 'soil2n_vr', gcn, nl_soil, soil2n_grid)
+               CALL allocate_block_data (gcn, soil2n_grid, nl_soil)
+               CALL ncio_read_block (fcndat, 'soil2n_vr', gcn, nl_soil, soil2n_grid)
 
-               call allocate_block_data (gcn, soil3n_grid, nl_soil)
-               call ncio_read_block (fcndat, 'soil3n_vr', gcn, nl_soil, soil3n_grid)
+               CALL allocate_block_data (gcn, soil3n_grid, nl_soil)
+               CALL ncio_read_block (fcndat, 'soil3n_vr', gcn, nl_soil, soil3n_grid)
 
-               call allocate_block_data (gcn, soil3n_grid, nl_soil)
-               call ncio_read_block (fcndat, 'soil3n_vr', gcn, nl_soil, soil3n_grid)
+               CALL allocate_block_data (gcn, soil3n_grid, nl_soil)
+               CALL ncio_read_block (fcndat, 'soil3n_vr', gcn, nl_soil, soil3n_grid)
 
-               call allocate_block_data (gcn, smin_nh4_grid, nl_soil)
-               call ncio_read_block (fcndat, 'smin_nh4_vr', gcn, nl_soil, smin_nh4_grid)
+               CALL allocate_block_data (gcn, smin_nh4_grid, nl_soil)
+               CALL ncio_read_block (fcndat, 'smin_nh4_vr', gcn, nl_soil, smin_nh4_grid)
 
-               call allocate_block_data (gcn, smin_no3_grid, nl_soil)
-               call ncio_read_block (fcndat, 'smin_no3_vr', gcn, nl_soil, smin_no3_grid)
+               CALL allocate_block_data (gcn, smin_no3_grid, nl_soil)
+               CALL ncio_read_block (fcndat, 'smin_no3_vr', gcn, nl_soil, smin_no3_grid)
 
-               call allocate_block_data (gcn, leafc_grid)
-               call ncio_read_block (fcndat, 'leafc', gcn, leafc_grid)
+               CALL allocate_block_data (gcn, leafc_grid)
+               CALL ncio_read_block (fcndat, 'leafc', gcn, leafc_grid)
 
-               call allocate_block_data (gcn, leafc_storage_grid)
-               call ncio_read_block (fcndat, 'leafc_storage', gcn, leafc_storage_grid)
+               CALL allocate_block_data (gcn, leafc_storage_grid)
+               CALL ncio_read_block (fcndat, 'leafc_storage', gcn, leafc_storage_grid)
 
-               call allocate_block_data (gcn, frootc_grid)
-               call ncio_read_block (fcndat, 'frootc', gcn, frootc_grid)
+               CALL allocate_block_data (gcn, frootc_grid)
+               CALL ncio_read_block (fcndat, 'frootc', gcn, frootc_grid)
 
-               call allocate_block_data (gcn, frootc_storage_grid)
-               call ncio_read_block (fcndat, 'frootc_storage', gcn, frootc_storage_grid)
+               CALL allocate_block_data (gcn, frootc_storage_grid)
+               CALL ncio_read_block (fcndat, 'frootc_storage', gcn, frootc_storage_grid)
 
-               call allocate_block_data (gcn, livestemc_grid)
-               call ncio_read_block (fcndat, 'livestemc', gcn, livestemc_grid)
+               CALL allocate_block_data (gcn, livestemc_grid)
+               CALL ncio_read_block (fcndat, 'livestemc', gcn, livestemc_grid)
 
-               call allocate_block_data (gcn, deadstemc_grid)
-               call ncio_read_block (fcndat, 'deadstemc', gcn, deadstemc_grid)
+               CALL allocate_block_data (gcn, deadstemc_grid)
+               CALL ncio_read_block (fcndat, 'deadstemc', gcn, deadstemc_grid)
 
-               call allocate_block_data (gcn, livecrootc_grid)
-               call ncio_read_block (fcndat, 'livecrootc', gcn, livecrootc_grid)
+               CALL allocate_block_data (gcn, livecrootc_grid)
+               CALL ncio_read_block (fcndat, 'livecrootc', gcn, livecrootc_grid)
 
-               call allocate_block_data (gcn, deadcrootc_grid)
-               call ncio_read_block (fcndat, 'deadcrootc', gcn, deadcrootc_grid)
+               CALL allocate_block_data (gcn, deadcrootc_grid)
+               CALL ncio_read_block (fcndat, 'deadcrootc', gcn, deadcrootc_grid)
 
-            end if
+            ENDIF
 
-            if (p_is_worker) then
+            IF (p_is_worker) THEN
+
                allocate (litr1c_vr (nl_soil,numpatch))
                allocate (litr2c_vr (nl_soil,numpatch))
                allocate (litr3c_vr (nl_soil,numpatch))
@@ -729,38 +725,39 @@ MODULE MOD_Initialize
                allocate (deadstemcin_p (numpft))
                allocate (livecrootcin_p (numpft))
                allocate (deadcrootcin_p (numpft))
-            end if
 
-            call mc2p%map_aweighted (litr1c_grid, nl_soil, litr1c_vr)
-            call mc2p%map_aweighted (litr2c_grid, nl_soil, litr2c_vr)
-            call mc2p%map_aweighted (litr3c_grid, nl_soil, litr3c_vr)
-            call mc2p%map_aweighted (cwdc_grid  , nl_soil, cwdc_vr  )
-            call mc2p%map_aweighted (soil1c_grid, nl_soil, soil1c_vr)
-            call mc2p%map_aweighted (soil2c_grid, nl_soil, soil2c_vr)
-            call mc2p%map_aweighted (soil3c_grid, nl_soil, soil3c_vr)
-            call mc2p%map_aweighted (litr1n_grid, nl_soil, litr1n_vr)
-            call mc2p%map_aweighted (litr2n_grid, nl_soil, litr2n_vr)
-            call mc2p%map_aweighted (litr3n_grid, nl_soil, litr3n_vr)
-            call mc2p%map_aweighted (cwdn_grid  , nl_soil, cwdn_vr  )
-            call mc2p%map_aweighted (soil1n_grid, nl_soil, soil1n_vr)
-            call mc2p%map_aweighted (soil2n_grid, nl_soil, soil2n_vr)
-            call mc2p%map_aweighted (soil3n_grid, nl_soil, soil3n_vr)
-            call mc2p%map_aweighted (smin_nh4_grid , nl_soil, min_nh4_vr )
-            call mc2p%map_aweighted (smin_no3_grid , nl_soil, min_no3_vr )
-            call mc2f%map_aweighted (leafc_grid, leafcin_p )
-            call mc2f%map_aweighted (leafc_storage_grid, leafc_storagein_p )
-            call mc2f%map_aweighted (frootc_grid, frootcin_p )
-            call mc2f%map_aweighted (frootc_storage_grid, frootc_storagein_p )
-            call mc2f%map_aweighted (livestemc_grid, livestemcin_p )
-            call mc2f%map_aweighted (deadstemc_grid, deadstemcin_p )
-            call mc2f%map_aweighted (livecrootc_grid, livecrootcin_p )
-            call mc2f%map_aweighted (deadcrootc_grid, deadcrootcin_p )
+            ENDIF
 
-            if (p_is_worker) then
-               do i = 1, numpatch
+            CALL mc2p%map_aweighted (litr1c_grid, nl_soil, litr1c_vr)
+            CALL mc2p%map_aweighted (litr2c_grid, nl_soil, litr2c_vr)
+            CALL mc2p%map_aweighted (litr3c_grid, nl_soil, litr3c_vr)
+            CALL mc2p%map_aweighted (cwdc_grid  , nl_soil, cwdc_vr  )
+            CALL mc2p%map_aweighted (soil1c_grid, nl_soil, soil1c_vr)
+            CALL mc2p%map_aweighted (soil2c_grid, nl_soil, soil2c_vr)
+            CALL mc2p%map_aweighted (soil3c_grid, nl_soil, soil3c_vr)
+            CALL mc2p%map_aweighted (litr1n_grid, nl_soil, litr1n_vr)
+            CALL mc2p%map_aweighted (litr2n_grid, nl_soil, litr2n_vr)
+            CALL mc2p%map_aweighted (litr3n_grid, nl_soil, litr3n_vr)
+            CALL mc2p%map_aweighted (cwdn_grid  , nl_soil, cwdn_vr  )
+            CALL mc2p%map_aweighted (soil1n_grid, nl_soil, soil1n_vr)
+            CALL mc2p%map_aweighted (soil2n_grid, nl_soil, soil2n_vr)
+            CALL mc2p%map_aweighted (soil3n_grid, nl_soil, soil3n_vr)
+            CALL mc2p%map_aweighted (smin_nh4_grid , nl_soil, min_nh4_vr )
+            CALL mc2p%map_aweighted (smin_no3_grid , nl_soil, min_no3_vr )
+            CALL mc2f%map_aweighted (leafc_grid, leafcin_p )
+            CALL mc2f%map_aweighted (leafc_storage_grid, leafc_storagein_p )
+            CALL mc2f%map_aweighted (frootc_grid, frootcin_p )
+            CALL mc2f%map_aweighted (frootc_storage_grid, frootc_storagein_p )
+            CALL mc2f%map_aweighted (livestemc_grid, livestemcin_p )
+            CALL mc2f%map_aweighted (deadstemc_grid, deadstemcin_p )
+            CALL mc2f%map_aweighted (livecrootc_grid, livecrootcin_p )
+            CALL mc2f%map_aweighted (deadcrootc_grid, deadcrootcin_p )
+
+            IF (p_is_worker) THEN
+               DO i = 1, numpatch
                   ps = patch_pft_s(i)
                   pe = patch_pft_e(i)
-                  do nsl = 1, nl_soil
+                  DO nsl = 1, nl_soil
                      decomp_cpools_vr(nsl, i_met_lit, i) = litr1c_vr(nsl, i)
                      decomp_cpools_vr(nsl, i_cel_lit, i) = litr2c_vr(nsl, i)
                      decomp_cpools_vr(nsl, i_lig_lit, i) = litr3c_vr(nsl, i)
@@ -778,29 +775,29 @@ MODULE MOD_Initialize
                      smin_nh4_vr     (nsl, i)            = min_nh4_vr(nsl,i)
                      smin_no3_vr     (nsl, i)            = min_no3_vr(nsl,i)
                      sminn_vr        (nsl, i)            = min_nh4_vr(nsl,i)+min_no3_vr(nsl,i)
-                  end do
-                  if (patchtype(i) == 0)then
-                     do m = ps, pe
+                  ENDDO
+                  IF (patchtype(i) == 0)THEN
+                     DO m = ps, pe
                         ivt = pftclass(m)
-                        if(isevg(ivt))then
+                        IF(isevg(ivt))THEN
                            leafc_p            (m) = leafcin_p(m)
                            frootc_p           (m) = frootcin_p(m)
-                        else
+                        ELSE
                            leafc_p            (m) = leafcin_p(m)
                            leafc_storage_p    (m) = leafc_storagein_p(m)
                            frootc_p           (m) = frootcin_p(m)
                            frootc_storage_p   (m) = frootc_storagein_p(m)
-                        end if
-                        if(woody(ivt).eq. 1)then
+                        ENDIF
+                        IF(woody(ivt).eq. 1)THEN
                            deadstemc_p        (m) = deadstemcin_p(m)
                            livestemc_p        (m) = livestemcin_p(m)
                            deadcrootc_p       (m) = deadcrootcin_p(m)
                            livecrootc_p       (m) = livecrootcin_p(m)
-                        end if
-                     end do
-                  end if
-               end do
-            end if
+                        ENDIF
+                     ENDDO
+                  ENDIF
+               ENDDO
+            ENDIF
 
          ENDIF
 
@@ -809,11 +806,11 @@ MODULE MOD_Initialize
       ENDIF
 #endif
 
-      if (p_is_worker) then
+      IF (p_is_worker) THEN
          IF (numpatch > 0) THEN
             allocate (snow_d (numpatch))
          ENDIF
-      end if
+      ENDIF
 
       IF (DEF_USE_SnowInit) THEN
 
@@ -822,12 +819,12 @@ MODULE MOD_Initialize
             inquire (file=trim(fsnowdat), exist=use_snowini)
          ENDIF
 #ifdef USEMPI
-         call mpi_bcast (use_snowini, 1, MPI_LOGICAL, p_root, p_comm_glb, p_err)
+         CALL mpi_bcast (use_snowini, 1, MPI_LOGICAL, p_root, p_comm_glb, p_err)
 #endif
 
          IF (use_snowini) THEN
 
-            call gsnow%define_from_file (fsnowdat, latname = 'lat', lonname = 'lon')
+            CALL gsnow%define_from_file (fsnowdat, latname = 'lat', lonname = 'lon')
          
             CALL julian2monthday (idate(1), idate(2), month, mday)
 
@@ -838,20 +835,20 @@ MODULE MOD_Initialize
             CALL mpi_bcast (missing_value, 1, MPI_REAL8, p_root, p_comm_glb, p_err)
 #endif
 
-            if (p_is_io) then
+            IF (p_is_io) THEN
                ! snow depth (m)
-               call allocate_block_data (gsnow, snow_d_grid)
-               call ncio_read_block_time (fsnowdat, 'snowdepth', gsnow, month, snow_d_grid)
-            end if
+               CALL allocate_block_data (gsnow, snow_d_grid)
+               CALL ncio_read_block_time (fsnowdat, 'snowdepth', gsnow, month, snow_d_grid)
+            ENDIF
             
-            if (p_is_worker) then
+            IF (p_is_worker) THEN
                IF (numpatch > 0) THEN
                   allocate (validval (numpatch))
                ENDIF
-            end if
+            ENDIF
 
-            call msnow2p%build (gsnow, landpatch, snow_d_grid, missing_value, validval)
-            call msnow2p%map_aweighted (snow_d_grid, snow_d)
+            CALL msnow2p%build (gsnow, landpatch, snow_d_grid, missing_value, validval)
+            CALL msnow2p%map_aweighted (snow_d_grid, snow_d)
             
             IF (p_is_worker) THEN
                WHERE (.not. validval)
@@ -880,32 +877,32 @@ MODULE MOD_Initialize
       ENDIF
 
 #ifdef USEMPI
-      call mpi_bcast (use_wtd, 1, MPI_LOGICAL, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (use_wtd, 1, MPI_LOGICAL, p_root, p_comm_glb, p_err)
 #endif
 
       IF (use_wtd) THEN
 
          CALL julian2monthday (idate(1), idate(2), month, mday)
-         call gwtd%define_from_file (fwtd)
+         CALL gwtd%define_from_file (fwtd)
 
-         if (p_is_io) then
-            call allocate_block_data (gwtd, wtd_xy)
-            call ncio_read_block_time (fwtd, 'wtd', gwtd, month, wtd_xy)
+         IF (p_is_io) THEN
+            CALL allocate_block_data (gwtd, wtd_xy)
+            CALL ncio_read_block_time (fwtd, 'wtd', gwtd, month, wtd_xy)
          ENDIF
 
-         call m_wtd2p%build (gwtd, landpatch)
-         call m_wtd2p%map_aweighted (wtd_xy, zwt)
+         CALL m_wtd2p%build (gwtd, landpatch)
+         CALL m_wtd2p%map_aweighted (wtd_xy, zwt)
 
       ENDIF
 
-      ! ...................
-      ! 2.4 LEAF area index
-      ! ...................
+! ...................
+! 2.4 LEAF area index
+! ...................
 #if(defined DYN_PHENOLOGY)
       ! CREAT fraction of vegetation cover, greenness, leaf area index, stem index
-      if (p_is_worker) then
+      IF (p_is_worker) THEN
 
-         do i = 1, numpatch
+         DO i = 1, numpatch
             IF (use_soilini) THEN
                DO nsl = 1, nl_soil
                   CALL polint(soil_z,soil_t(:,i),nl_soil_ini,z_soi(nsl),t_soisno(nsl,i))
@@ -913,24 +910,24 @@ MODULE MOD_Initialize
             ELSE
                t_soisno(1:,i) = 283.
             ENDIF
-         enddo
+         ENDDO
 
          tlai(:)=0.0; tsai(:)=0.0; green(:)=0.0; fveg(:)=0.0
-         do i = 1, numpatch
+         DO i = 1, numpatch
             ! Call Ecological Model()
             ltyp = patchtype(i)
-            if(ltyp > 0) then
-               call lai_empirical(ltyp, nl_soil,rootfr(1:,i), t_soisno(1:,i),tlai(i),tsai(i),fveg(i),green(i))
-            endif
-         enddo
+            IF(ltyp > 0) THEN
+               CALL lai_empirical(ltyp, nl_soil,rootfr(1:,i), t_soisno(1:,i),tlai(i),tsai(i),fveg(i),green(i))
+            ENDIF
+         ENDDO
 
-      end if
+      ENDIF
 #else
 
       year = idate(1)
       jday = idate(2)
 
-      IF (DEF_LAI_MONTHLY) then
+      IF (DEF_LAI_MONTHLY) THEN
          CALL julian2monthday (year, jday, month, mday)
          IF (DEF_LAI_CHANGE_YEARLY) THEN
             ! 08/03/2019, yuan: read global LAI/SAI data
@@ -955,67 +952,67 @@ MODULE MOD_Initialize
 
 #ifdef CROP
          CALL CROP_readin ()
-         if (p_is_worker) then
-            do i = 1, numpatch
-               if(patchtype(i) .eq. 0)then
+         IF (p_is_worker) THEN
+            DO i = 1, numpatch
+               IF(patchtype(i) .eq. 0)THEN
                   ps = patch_pft_s(i)
                   pe = patch_pft_e(i)
-                  do m = ps, pe
+                  DO m = ps, pe
                      ivt = pftclass(m)
-                     if(ivt >= npcropmin)then
+                     IF(ivt >= npcropmin)THEN
                        leafc_p (m) = 0._r8
                        frootc_p(m) = 0._r8
                        tlai    (i) = 0._r8
                        tsai    (i) = 0._r8
                        tlai_p  (m) = 0._r8
                        tsai_p  (m) = 0._r8
-                     end if
-                  end do
-               end if
-            end do
-         end if
-      if(DEF_USE_IRRIGATION)then
+                     ENDIF
+                  ENDDO
+               ENDIF
+            ENDDO
+         ENDIF
+      IF(DEF_USE_IRRIGATION)THEN
          irrig_rate(:) = 0._r8
          deficit_irrig(:) = 0._r8
          sum_irrig(:) = 0._r8
          sum_irrig_count(:) = 0._r8
          n_irrig_steps_left(:) = 0
-      end if
+      ENDIF
 #endif
 #endif
 
-      ! ..............................................................................
-      ! 2.5 initialize time-varying variables, as subgrid vectors of length [numpatch]
-      ! ..............................................................................
+! ..............................................................................
+! 2.5 initialize time-varying variables, as subgrid vectors of length [numpatch]
+! ..............................................................................
       ! ------------------------------------------
       ! PLEASE
       ! PLEASE UPDATE
       ! PLEASE UPDATE when have the observed lake status
-      if (p_is_worker) then
+      IF (p_is_worker) THEN
 
          t_lake      (:,:) = 285.
          lake_icefrac(:,:) = 0.
          savedtke1   (:)   = tkwat
 
-      end if
+      ENDIF
       ! ------------------------------------------
 
-      if (p_is_worker) then
+      IF (p_is_worker) THEN
 
          !TODO: can be removed as CLMDRIVER.F90 yuan@
          allocate ( z_soisno (maxsnl+1:nl_soil,numpatch) ); z_soisno (:,:) = spval
          allocate ( dz_soisno(maxsnl+1:nl_soil,numpatch) ); dz_soisno(:,:) = spval
 
-         do i = 1, numpatch
+         DO i = 1, numpatch
             z_soisno (1:nl_soil ,i) = z_soi (1:nl_soil)
             dz_soisno(1:nl_soil ,i) = dz_soi(1:nl_soil)
-         enddo
+         ENDDO
 
          zc_soimm = z_soi  * 1000.
          zi_soimm(0) = 0.
          zi_soimm(1:nl_soil) = zi_soi * 1000.
 
-         do i = 1, numpatch
+         DO i = 1, numpatch
             m = patchclass(i)
 
             IF (use_wtd) THEN
@@ -1044,7 +1041,7 @@ MODULE MOD_Initialize
                ,smp(1:,i),hk(1:,i),zwt(i),wa(i)&
 !Plant hydraulic variables
                ,vegwp(1:,i),gs0sun(i),gs0sha(i)&
-!end plant hydraulic variables
+!END plant hydraulic variables
                ,t_grnd(i),tleaf(i),ldew(i),ldew_rain(i),ldew_snow(i),sag(i),scv(i)&
                ,snowdp(i),fveg(i),fsno(i),sigf(i),green(i),lai(i),sai(i),coszen(i)&
                ,snw_rds(:,i),mss_bcpho(:,i),mss_bcphi(:,i),mss_ocpho(:,i),mss_ocphi(:,i)&
@@ -1156,21 +1153,20 @@ MODULE MOD_Initialize
 #endif
          ENDDO
 
-         do i = 1, numpatch
+         DO i = 1, numpatch
             z_sno (maxsnl+1:0,i) = z_soisno (maxsnl+1:0,i)
             dz_sno(maxsnl+1:0,i) = dz_soisno(maxsnl+1:0,i)
-         end do
+         ENDDO
 
-      end if
+      ENDIF
       ! ------------------------------------------
 
       ! -----
-#ifdef LATERAL_FLOW
+#ifdef CatchLateralFlow
 
+      CALL element_neighbour_init  (lc_year)
       CALL hillslope_network_init  ()
-      CALL river_lake_network_init (use_calc_rivdpt = .false.)
-
-      CALL calc_riverdepth_from_runoff ()
+      CALL river_lake_network_init ()
 
       IF (p_is_worker) THEN
 
@@ -1222,12 +1218,13 @@ MODULE MOD_Initialize
 
       ENDIF
 #endif
-      ! ...............................................................
-      ! 2.6 Write out the model variables for restart run [histTimeVar]
-      ! ...............................................................
+
+! ...............................................................
+! 2.6 Write out the model variables for restart run [histTimeVar]
+! ...............................................................
 
 #ifdef RangeCheck
-      call check_TimeVariables ()
+      CALL check_TimeVariables ()
 #endif
 
       IF ( .not. present(lulcc_call) ) THEN
@@ -1236,15 +1233,15 @@ MODULE MOD_Initialize
       ENDIF
 
 #ifdef USEMPI
-      call mpi_barrier (p_comm_glb, p_err)
+      CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-      if (p_is_master) write (6,*) ('Successfully Initialize the Land Time-Vraying Variables')
+      IF (p_is_master) write (6,*) ('Successfully Initialize the Land Time-Vraying Variables')
 
 
-      ! --------------------------------------------------
-      ! Deallocates memory for CoLM 1d [numpatch] variables
-      ! --------------------------------------------------
+! --------------------------------------------------
+! Deallocates memory for CoLM 1d [numpatch] variables
+! --------------------------------------------------
       IF ( .not. present(lulcc_call) ) THEN
          ! only be called in runing MKINI, LULCC will be executed later
          CALL deallocate_TimeInvariants

@@ -2,18 +2,18 @@
 
 MODULE MOD_AggregationRequestData
 
-   !-------------------------------------------------------------
-   ! DESCRIPTION:
-   !
-   !    Aggregation Utilities.
-   !    
-   !    On IO processes, a data daemon is running to provide data 
-   !       at fine resolutions for worker processes.
-   !    On worker processes, request is sent to IO processes and 
-   !       data is returned from IO processes. 
-   !
-   ! Created by Shupeng Zhang, May 2023
-   !-------------------------------------------------------------
+!-------------------------------------------------------------
+! DESCRIPTION:
+!
+!    Aggregation Utilities.
+!    
+!    On IO processes, a data daemon is running to provide data 
+!       at fine resolutions for worker processes.
+!    On worker processes, request is sent to IO processes and 
+!       data is returned from IO processes. 
+!
+! Created by Shupeng Zhang, May 2023
+!-------------------------------------------------------------
 
    IMPLICIT NONE
 
@@ -34,50 +34,50 @@ CONTAINS
          data_r8_3d_in1, n1_r8_3d_in1  , data_r8_3d_in2, n1_r8_3d_in2,   &
          data_i4_2d_in1, data_i4_2d_in2)
 
-      USE MOD_Precision
-      USE MOD_SPMD_Task
-      USE MOD_Grid
-      USE MOD_DataType
+   USE MOD_Precision
+   USE MOD_SPMD_Task
+   USE MOD_Grid
+   USE MOD_DataType
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      TYPE (grid_type), intent(in) :: grid_in
-      
-      ! 2D REAL data
-      TYPE (block_data_real8_2d), intent(in), optional :: data_r8_2d_in1
-      TYPE (block_data_real8_2d), intent(in), optional :: data_r8_2d_in2
-      TYPE (block_data_real8_2d), intent(in), optional :: data_r8_2d_in3
-      TYPE (block_data_real8_2d), intent(in), optional :: data_r8_2d_in4
-      TYPE (block_data_real8_2d), intent(in), optional :: data_r8_2d_in5
-      TYPE (block_data_real8_2d), intent(in), optional :: data_r8_2d_in6
+   type (grid_type), intent(in) :: grid_in
+   
+   ! 2D REAL data
+   type (block_data_real8_2d), intent(in), optional :: data_r8_2d_in1
+   type (block_data_real8_2d), intent(in), optional :: data_r8_2d_in2
+   type (block_data_real8_2d), intent(in), optional :: data_r8_2d_in3
+   type (block_data_real8_2d), intent(in), optional :: data_r8_2d_in4
+   type (block_data_real8_2d), intent(in), optional :: data_r8_2d_in5
+   type (block_data_real8_2d), intent(in), optional :: data_r8_2d_in6
 
-      ! 3D REAL data
-      INTEGER, intent(in), optional :: n1_r8_3d_in1
-      TYPE (block_data_real8_3d), intent(in), optional :: data_r8_3d_in1
-      
-      INTEGER, intent(in), optional :: n1_r8_3d_in2
-      TYPE (block_data_real8_3d), intent(in), optional :: data_r8_3d_in2
-      
-      ! 2D INTEGER data
-      TYPE (block_data_int32_2d), intent(in), optional :: data_i4_2d_in1
-      TYPE (block_data_int32_2d), intent(in), optional :: data_i4_2d_in2
-      
-      ! Local Variables
-      INTEGER :: nreq, ireq, rmesg(2), isrc, idest
-      INTEGER :: xblk, yblk, xloc, yloc
-      INTEGER,  allocatable :: ylist(:), xlist(:)
+   ! 3D REAL data
+   integer, intent(in), optional :: n1_r8_3d_in1
+   type (block_data_real8_3d), intent(in), optional :: data_r8_3d_in1
+   
+   integer, intent(in), optional :: n1_r8_3d_in2
+   type (block_data_real8_3d), intent(in), optional :: data_r8_3d_in2
+   
+   ! 2D INTEGER data
+   type (block_data_int32_2d), intent(in), optional :: data_i4_2d_in1
+   type (block_data_int32_2d), intent(in), optional :: data_i4_2d_in2
+   
+   ! Local Variables
+   integer :: nreq, ireq, rmesg(2), isrc, idest
+   integer :: xblk, yblk, xloc, yloc
+   integer,  allocatable :: ylist(:), xlist(:)
 
-      REAL(r8), allocatable :: sbuf_r8_1d(:), sbuf_r8_2d(:,:)
-      INTEGER , allocatable :: sbuf_i4_1d(:)
+   real(r8), allocatable :: sbuf_r8_1d(:), sbuf_r8_2d(:,:)
+   integer , allocatable :: sbuf_i4_1d(:)
 
-      LOGICAL,  allocatable :: worker_done (:)
+   logical,  allocatable :: worker_done (:)
 
       IF (p_is_io) THEN
          
          allocate (worker_done (0:p_np_worker-1))
 
          worker_done(:) = .false.
-         DO while (any(.not. worker_done))
+         DO WHILE (any(.not. worker_done))
 
             CALL mpi_recv (rmesg, 2, MPI_INTEGER, &
                MPI_ANY_SOURCE, mpi_tag_mesg, p_comm_glb, p_stat, p_err)
@@ -286,68 +286,68 @@ CONTAINS
          data_i4_2d_in2, data_i4_2d_out2, &
          filledvalue_i4)
 
-      USE MOD_Precision
-      USE MOD_SPMD_Task
-      USE MOD_Block
-      USE MOD_Pixel
-      USE MOD_Grid
-      USE MOD_DataType
-      USE MOD_Mesh
-      USE MOD_Pixelset
-      USE MOD_Utils
+   USE MOD_Precision
+   USE MOD_SPMD_Task
+   USE MOD_Block
+   USE MOD_Pixel
+   USE MOD_Grid
+   USE MOD_DataType
+   USE MOD_Mesh
+   USE MOD_Pixelset
+   USE MOD_Utils
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      TYPE (pixelset_type), intent(in) :: pixelset
-      INTEGER, intent(in)  :: iset
+   type (pixelset_type), intent(in) :: pixelset
+   integer, intent(in)  :: iset
 
-      TYPE (grid_type), intent(in) :: grid_in
-      logical, intent(in) :: zip
-      
-      REAL(r8), allocatable, intent(out), optional :: area(:)
+   type (grid_type), intent(in) :: grid_in
+   logical, intent(in) :: zip
+   
+   real(r8), allocatable, intent(out), optional :: area(:)
 
-      TYPE (block_data_real8_2d), intent(in),  optional :: data_r8_2d_in1
-      REAL(r8), allocatable,      intent(out), optional :: data_r8_2d_out1 (:)
+   type (block_data_real8_2d), intent(in),  optional :: data_r8_2d_in1
+   real(r8), allocatable,      intent(out), optional :: data_r8_2d_out1 (:)
 
-      TYPE (block_data_real8_2d), intent(in),  optional :: data_r8_2d_in2
-      REAL(r8), allocatable,      intent(out), optional :: data_r8_2d_out2 (:)
+   type (block_data_real8_2d), intent(in),  optional :: data_r8_2d_in2
+   real(r8), allocatable,      intent(out), optional :: data_r8_2d_out2 (:)
 
-      TYPE (block_data_real8_2d), intent(in),  optional :: data_r8_2d_in3
-      REAL(r8), allocatable,      intent(out), optional :: data_r8_2d_out3 (:)
+   type (block_data_real8_2d), intent(in),  optional :: data_r8_2d_in3
+   real(r8), allocatable,      intent(out), optional :: data_r8_2d_out3 (:)
 
-      TYPE (block_data_real8_2d), intent(in),  optional :: data_r8_2d_in4
-      REAL(r8), allocatable,      intent(out), optional :: data_r8_2d_out4 (:)
+   type (block_data_real8_2d), intent(in),  optional :: data_r8_2d_in4
+   real(r8), allocatable,      intent(out), optional :: data_r8_2d_out4 (:)
 
-      TYPE (block_data_real8_2d), intent(in),  optional :: data_r8_2d_in5
-      REAL(r8), allocatable,      intent(out), optional :: data_r8_2d_out5 (:)
+   type (block_data_real8_2d), intent(in),  optional :: data_r8_2d_in5
+   real(r8), allocatable,      intent(out), optional :: data_r8_2d_out5 (:)
 
-      TYPE (block_data_real8_2d), intent(in),  optional :: data_r8_2d_in6
-      REAL(r8), allocatable,      intent(out), optional :: data_r8_2d_out6 (:)
+   type (block_data_real8_2d), intent(in),  optional :: data_r8_2d_in6
+   real(r8), allocatable,      intent(out), optional :: data_r8_2d_out6 (:)
 
-      INTEGER, intent(in), optional :: n1_r8_3d_in1, lb1_r8_3d_in1
-      TYPE (block_data_real8_3d), intent(in),  optional :: data_r8_3d_in1
-      REAL(r8), allocatable,      intent(out), optional :: data_r8_3d_out1 (:,:)
+   integer, intent(in), optional :: n1_r8_3d_in1, lb1_r8_3d_in1
+   type (block_data_real8_3d), intent(in),  optional :: data_r8_3d_in1
+   real(r8), allocatable,      intent(out), optional :: data_r8_3d_out1 (:,:)
 
-      INTEGER, intent(in), optional :: n1_r8_3d_in2, lb1_r8_3d_in2
-      TYPE (block_data_real8_3d), intent(in),  optional :: data_r8_3d_in2
-      REAL(r8), allocatable,      intent(out), optional :: data_r8_3d_out2 (:,:)
-      
-      TYPE (block_data_int32_2d), intent(in),  optional :: data_i4_2d_in1
-      INTEGER, allocatable,       intent(out), optional :: data_i4_2d_out1 (:)
+   integer, intent(in), optional :: n1_r8_3d_in2, lb1_r8_3d_in2
+   type (block_data_real8_3d), intent(in),  optional :: data_r8_3d_in2
+   real(r8), allocatable,      intent(out), optional :: data_r8_3d_out2 (:,:)
+   
+   type (block_data_int32_2d), intent(in),  optional :: data_i4_2d_in1
+   integer, allocatable,       intent(out), optional :: data_i4_2d_out1 (:)
 
-      TYPE (block_data_int32_2d), intent(in),  optional :: data_i4_2d_in2
-      INTEGER, allocatable,       intent(out), optional :: data_i4_2d_out2 (:)
+   type (block_data_int32_2d), intent(in),  optional :: data_i4_2d_in2
+   integer, allocatable,       intent(out), optional :: data_i4_2d_out2 (:)
 
-      INTEGER, intent(in), optional :: filledvalue_i4
+   integer, intent(in), optional :: filledvalue_i4
 
-      ! Local Variables
-      INTEGER :: totalreq, ireq, nreq, smesg(2), isrc, idest, iproc
-      INTEGER :: ilon, ilat, xblk, yblk, xloc, yloc, iloc, nx, ny, ix, iy, ig
-      INTEGER :: ie, ipxstt, ipxend, npxl, ipxl, lb1, xgrdthis, ygrdthis
-      INTEGER,  allocatable :: ylist(:), xlist(:), ipt(:), ibuf(:), rbuf_i4_1d(:)
-      INTEGER,  allocatable :: xsorted(:), ysorted(:), xy2d(:,:)
-      REAL(r8), allocatable :: area2d(:,:), rbuf_r8_1d(:), rbuf_r8_2d(:,:)
-      LOGICAL,  allocatable :: msk(:)
+   ! Local Variables
+   integer :: totalreq, ireq, nreq, smesg(2), isrc, idest, iproc
+   integer :: ilon, ilat, xblk, yblk, xloc, yloc, iloc, nx, ny, ix, iy, ig
+   integer :: ie, ipxstt, ipxend, npxl, ipxl, lb1, xgrdthis, ygrdthis
+   integer,  allocatable :: ylist(:), xlist(:), ipt(:), ibuf(:), rbuf_i4_1d(:)
+   integer,  allocatable :: xsorted(:), ysorted(:), xy2d(:,:)
+   real(r8), allocatable :: area2d(:,:), rbuf_r8_1d(:), rbuf_r8_2d(:,:)
+   logical,  allocatable :: msk(:)
 
 
       ie     = pixelset%ielm  (iset)
@@ -643,11 +643,11 @@ CONTAINS
 
    SUBROUTINE aggregation_worker_done ()
 
-      USE MOD_SPMD_Task
+   USE MOD_SPMD_Task
 
-      IMPLICIT NONE 
+   IMPLICIT NONE 
 
-      INTEGER :: smesg(2), iproc, idest
+   integer :: smesg(2), iproc, idest
    
       IF (p_is_worker) THEN 
          DO iproc = 0, p_np_io-1

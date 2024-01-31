@@ -2,29 +2,29 @@
 
 MODULE MOD_MeshFilter
 
-   !------------------------------------------------------------------------------------
-   ! DESCRIPTION:
-   !
-   !    Mesh filter. 
-   !    Mesh filter can be used to mask part of region or globe as needed.
-   !
-   ! Created by Shupeng Zhang, May 2023
-   !------------------------------------------------------------------------------------
+!------------------------------------------------------------------------------------
+! DESCRIPTION:
+!
+!    Mesh filter. 
+!    Mesh filter can be used to mask part of region or globe as needed.
+!
+! Created by Shupeng Zhang, May 2023
+!------------------------------------------------------------------------------------
 
    USE MOD_Grid
    IMPLICIT NONE
 
-   LOGICAL :: has_mesh_filter
-   TYPE(grid_type) :: grid_filter
+   logical :: has_mesh_filter
+   type(grid_type) :: grid_filter
 
 CONTAINS
 
-   LOGICAL FUNCTION inquire_mesh_filter ()
+   logical FUNCTION inquire_mesh_filter ()
 
-      USE MOD_SPMD_Task
-      USE MOD_Namelist
-      IMPLICIT NONE
-      LOGICAL :: fexists
+   USE MOD_SPMD_Task
+   USE MOD_Namelist
+   IMPLICIT NONE
+   logical :: fexists
       
       IF (p_is_master) THEN
       
@@ -38,7 +38,7 @@ CONTAINS
       ENDIF
       
 #ifdef USEMPI
-      call mpi_bcast (fexists, 1, MPI_LOGICAL, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (fexists, 1, MPI_LOGICAL, p_root, p_comm_glb, p_err)
 #endif
 
       inquire_mesh_filter = fexists
@@ -48,27 +48,27 @@ CONTAINS
    ! -------------
    SUBROUTINE mesh_filter (gridf, ffilter, fvname)
    
-      USE MOD_Precision
-      USE MOD_Namelist
-      USE MOD_SPMD_Task
-      USE MOD_NetCDFBlock
-      USE MOD_DataType
-      USE MOD_LandElm
-      USE MOD_Mesh
-      USE MOD_AggregationRequestData
-      USE MOD_Block
-      IMPLICIT NONE
+   USE MOD_Precision
+   USE MOD_Namelist
+   USE MOD_SPMD_Task
+   USE MOD_NetCDFBlock
+   USE MOD_DataType
+   USE MOD_LandElm
+   USE MOD_Mesh
+   USE MOD_AggregationRequestData
+   USE MOD_Block
+   IMPLICIT NONE
 
-      TYPE(grid_type),  intent(in) :: gridf
-      CHARACTER(len=*), intent(in) :: ffilter
-      CHARACTER(len=*), intent(in) :: fvname
+   type(grid_type),  intent(in) :: gridf
+   character(len=*), intent(in) :: ffilter
+   character(len=*), intent(in) :: fvname
    
-      ! local variables:
-      ! ---------------------------------------------------------------
-      TYPE (block_data_int32_2d) :: datafilter
-      INTEGER, allocatable :: ifilter(:), xtemp(:), ytemp(:)
-      LOGICAL, allocatable :: filter(:)
-      INTEGER :: ielm, jelm, npxl, nelm_glb
+   ! local variables:
+   ! ---------------------------------------------------------------
+   type (block_data_int32_2d) :: datafilter
+   integer, allocatable :: ifilter(:), xtemp(:), ytemp(:)
+   logical, allocatable :: filter(:)
+   integer :: ielm, jelm, npxl, nelm_glb
 
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)

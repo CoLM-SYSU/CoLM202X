@@ -43,7 +43,8 @@ OBJS_SHARED =    \
 				  MOD_5x5DataReadin.o          \
 				  MOD_Mesh.o                   \
 				  MOD_Pixelset.o               \
-				  MOD_NetCDFVector.o           \
+				  MOD_NetCDFVectorBlk.o        \
+				  MOD_NetCDFVectorOne.o        \
 				  MOD_RangeCheck.o             \
 				  MOD_Mapping_Grid2Pset.o      \
 				  MOD_Mapping_Pset2Grid.o      \
@@ -141,12 +142,12 @@ OBJS_BASIC =    \
 				 MOD_SoilParametersReadin.o     \
 				 MOD_HtopReadin.o               \
 				 MOD_UrbanReadin.o              \
-                     		 MOD_BGC_CNSummary.o            \
+				 MOD_BGC_CNSummary.o            \
 				 MOD_IniTimeVariable.o          \
 				 MOD_UrbanIniTimeVariable.o     \
-				 MOD_Hydro_HillslopeNetwork.o   \
-				 MOD_Hydro_RiverLakeNetwork.o   \
-				 MOD_Hydro_RiverDepth.o         \
+				 MOD_ElementNeighbour.o         \
+				 MOD_Catch_HillslopeNetwork.o   \
+				 MOD_Catch_RiverLakeNetwork.o   \
 				 MOD_Initialize.o
 
 
@@ -215,13 +216,11 @@ OBJS_CAMA_T = $(addprefix .bld/,${OBJECTS_CAMA})
 endif
 
 OBJS_MAIN = \
-				MOD_ElementNeighbour.o                    \
-				MOD_Hydro_BasinNeighbour.o                \
-				MOD_Hydro_HillslopeFlow.o                 \
-				MOD_Hydro_SubsurfaceFlow.o                \
-				MOD_Hydro_RiverLakeFlow.o                 \
+				MOD_Catch_HillslopeFlow.o                 \
+				MOD_Catch_SubsurfaceFlow.o                \
+				MOD_Catch_RiverLakeFlow.o                 \
 				MOD_Hydro_Hist.o                          \
-				MOD_Hydro_LateralFlow.o                   \
+				MOD_Catch_LateralFlow.o                   \
 				MOD_BGC_CNCStateUpdate1.o                 \
 				MOD_BGC_CNCStateUpdate2.o                 \
 				MOD_BGC_CNCStateUpdate3.o                 \

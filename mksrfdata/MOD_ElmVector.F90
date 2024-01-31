@@ -3,53 +3,53 @@
 #if (defined UNSTRUCTURED || defined CATCHMENT) 
 MODULE MOD_ElmVector
 
-   !------------------------------------------------------------------------------------
-   ! DESCRIPTION:
-   !    
-   !    Address of Data associated with land element.
-   !
-   !    To output a vector, Data is gathered from worker processes directly to master.
-   !    "elm_data_address" stores information on how to reorganize data gathered.
-   !    The output data in vector is sorted by global element index.
-   !
-   ! Created by Shupeng Zhang, May 2023
-   !------------------------------------------------------------------------------------
+!------------------------------------------------------------------------------------
+! DESCRIPTION:
+!    
+!    Address of Data associated with land element.
+!
+!    To output a vector, Data is gathered from worker processes directly to master.
+!    "elm_data_address" stores information on how to reorganize data gathered.
+!    The output data in vector is sorted by global element index.
+!
+! Created by Shupeng Zhang, May 2023
+!------------------------------------------------------------------------------------
 
    USE MOD_Precision
    USE MOD_DataType
    IMPLICIT NONE
    
-   INTEGER :: totalnumelm
-   TYPE(pointer_int32_1d), allocatable :: elm_data_address (:)
+   integer :: totalnumelm
+   type(pointer_int32_1d), allocatable :: elm_data_address (:)
 
-   INTEGER*8, allocatable :: eindex_glb (:)
+   integer*8, allocatable :: eindex_glb (:)
    
 CONTAINS
    
    ! --------
    SUBROUTINE elm_vector_init 
 
-      USE MOD_SPMD_Task
-      USE MOD_Utils
-      USE MOD_Pixelset
-      USE MOD_Utils
-      USE MOD_Mesh
-      USE MOD_LandElm
-      USE MOD_LandPatch
+   USE MOD_SPMD_Task
+   USE MOD_Utils
+   USE MOD_Pixelset
+   USE MOD_Utils
+   USE MOD_Mesh
+   USE MOD_LandElm
+   USE MOD_LandPatch
 #ifdef CROP
-      USE MOD_LandCrop
+   USE MOD_LandCrop
 #endif
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      ! Local Variables
-      INTEGER   :: mesg(2), iwork, isrc, ndata
-      INTEGER, allocatable :: numelm_worker (:)
+   ! Local Variables
+   integer   :: mesg(2), iwork, isrc, ndata
+   integer, allocatable :: numelm_worker (:)
 
-      INTEGER :: i, idsp
-      INTEGER, allocatable :: vec_worker_dsp (:)
-      
-      INTEGER*8, allocatable :: indexelm (:)
-      INTEGER,   allocatable :: order    (:)
+   integer :: i, idsp
+   integer, allocatable :: vec_worker_dsp (:)
+   
+   integer*8, allocatable :: indexelm (:)
+   integer,   allocatable :: order    (:)
       
       IF (p_is_worker) THEN
 #if (defined CROP) 
@@ -71,14 +71,14 @@ CONTAINS
             numelm_worker, 1, MPI_INTEGER, p_root, p_comm_worker, p_err)
 
          IF (p_iam_worker == 0) THEN
-            call mpi_send (numelm_worker, p_np_worker, MPI_INTEGER, &
+            CALL mpi_send (numelm_worker, p_np_worker, MPI_INTEGER, &
                p_root, mpi_tag_size, p_comm_glb, p_err) 
          ENDIF
 
          mesg = (/p_iam_glb, numelm/)
-         call mpi_send (mesg, 2, MPI_INTEGER, p_root, mpi_tag_mesg, p_comm_glb, p_err) 
+         CALL mpi_send (mesg, 2, MPI_INTEGER, p_root, mpi_tag_mesg, p_comm_glb, p_err) 
          IF (numelm > 0) THEN
-            call mpi_send (indexelm, numelm, MPI_INTEGER8, p_root, mpi_tag_data, p_comm_glb, p_err) 
+            CALL mpi_send (indexelm, numelm, MPI_INTEGER8, p_root, mpi_tag_data, p_comm_glb, p_err) 
          ENDIF
 #else
          IF (numelm > 0) THEN
@@ -91,7 +91,7 @@ CONTAINS
       IF (p_is_master) THEN
 #ifdef USEMPI
          allocate (numelm_worker (0:p_np_worker-1))
-         call mpi_recv (numelm_worker, p_np_worker, MPI_INTEGER, p_address_worker(0), &
+         CALL mpi_recv (numelm_worker, p_np_worker, MPI_INTEGER, p_address_worker(0), &
             mpi_tag_size, p_comm_glb, p_stat, p_err)
 
          allocate (vec_worker_dsp (0:p_np_worker-1))
@@ -112,14 +112,14 @@ CONTAINS
          ENDDO
          
          DO iwork = 0, p_np_worker-1
-            call mpi_recv (mesg, 2, MPI_INTEGER, MPI_ANY_SOURCE, &
+            CALL mpi_recv (mesg, 2, MPI_INTEGER, MPI_ANY_SOURCE, &
                mpi_tag_mesg, p_comm_glb, p_stat, p_err)
 
             isrc  = mesg(1)
             ndata = mesg(2)
             IF (ndata > 0) THEN
                idsp = vec_worker_dsp(p_itis_worker(isrc))
-               call mpi_recv (eindex_glb(idsp+1:idsp+ndata), ndata, MPI_INTEGER8, isrc, &
+               CALL mpi_recv (eindex_glb(idsp+1:idsp+ndata), ndata, MPI_INTEGER8, isrc, &
                   mpi_tag_data, p_comm_glb, p_stat, p_err)
             ENDIF
          ENDDO
@@ -160,7 +160,7 @@ CONTAINS
    ! ----------
    SUBROUTINE elm_vector_final ()
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
       IF (allocated(elm_data_address)) deallocate (elm_data_address)
       IF (allocated(eindex_glb))       deallocate (eindex_glb)

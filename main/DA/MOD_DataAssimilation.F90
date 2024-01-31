@@ -12,7 +12,7 @@ CONTAINS
    ! ----------
    SUBROUTINE init_DataAssimilation ()
       
-      IMPLICIT NONE
+   IMPLICIT NONE
       
       CALL init_DA_GRACE ()
 
@@ -21,10 +21,10 @@ CONTAINS
    ! ----------
    SUBROUTINE do_DataAssimilation (idate, deltim)
       
-      IMPLICIT NONE
+   IMPLICIT NONE
       
-      INTEGER,  INTENT(in) :: idate(3)
-      REAL(r8), INTENT(in) :: deltim
+   integer,  intent(in) :: idate(3)
+   real(r8), intent(in) :: deltim
       
       CALL do_DA_GRACE (idate, deltim)
 
@@ -33,7 +33,7 @@ CONTAINS
    ! ---------
    SUBROUTINE final_DataAssimilation ()
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
       CALL final_DA_GRACE ()
 

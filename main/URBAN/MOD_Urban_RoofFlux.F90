@@ -2,20 +2,20 @@
 
 MODULE MOD_Urban_RoofFlux
 
-  USE MOD_Precision
-  IMPLICIT NONE
-  SAVE
+   USE MOD_Precision
+   IMPLICIT NONE
+   SAVE
 
-  PUBLIC :: UrbanRoofFlux
+   PUBLIC :: UrbanRoofFlux
 
 CONTAINS
 
 
- SUBROUTINE UrbanRoofFlux (hu, ht, hq, us, vs, tm, qm, rhoair, psrf, &
-                           ur, thm, th, thv, zsno, fsno_roof, hroof, htvp_roof, &
-                           lbr, wliq_roofsno, wice_roofsno, troof, qroof, dqroofdT, &
-                           croofs, croofl, croof, fsenroof, fevproof, &
-                           z0m, z0hg, zol, ustar, qstar, tstar, fm, fh, fq)
+   SUBROUTINE UrbanRoofFlux (hu, ht, hq, us, vs, tm, qm, rhoair, psrf, &
+                             ur, thm, th, thv, zsno, fsno_roof, hroof, htvp_roof, &
+                             lbr, wliq_roofsno, wice_roofsno, troof, qroof, dqroofdT, &
+                             croofs, croofl, croof, fsenroof, fevproof, &
+                             z0m, z0hg, zol, ustar, qstar, tstar, fm, fh, fq)
 
 !=======================================================================
 ! this is the main subroutine to execute the calculation
@@ -23,16 +23,16 @@ CONTAINS
 !
 !=======================================================================
 
-  USE MOD_Precision
-  USE MOD_Const_Physical, only: cpair,vonkar,grav
-  USE MOD_FrictionVelocity
-  IMPLICIT NONE
+   USE MOD_Precision
+   USE MOD_Const_Physical, only: cpair,vonkar,grav
+   USE MOD_FrictionVelocity
+   IMPLICIT NONE
 
 !----------------------- Dummy argument --------------------------------
-  INTEGER, intent(in) :: &
+   integer, intent(in) :: &
         lbr        ! lower bound of array
 
-  REAL(r8), intent(in) :: &
+   real(r8), intent(in) :: &
         ! atmospherical variables and observational height
         hu,       &! observational height of wind [m]
         ht,       &! observational height of temperature [m]
@@ -61,16 +61,16 @@ CONTAINS
         dqroofdT, &! d(qroof)/dT
         htvp_roof  ! latent heat of vapor of water (or sublimation) [j/kg]
 
-  REAL(r8), intent(out) :: &
+   real(r8), intent(out) :: &
         croofs,   &! deriv of roof sensible heat flux wrt soil temp [w/m**2/k]
         croofl,   &! deriv of roof latent heat flux wrt soil temp [w/m**2/k]
         croof      ! deriv of roof total heat flux wrt soil temp [w/m**2/k]
 
-  REAL(r8), intent(out) :: &
+   real(r8), intent(out) :: &
         fsenroof, &! sensible heat flux from roof [W/m2]
         fevproof   ! evaperation heat flux from roof [W/m2]
 
-  REAL(r8), intent(out) :: &
+   real(r8), intent(out) :: &
         z0m,      &! effective roughness [m]
         z0hg,     &! roughness length over ground, sensible heat [m]
         zol,      &! dimensionless height (z/L) used in Monin-Obukhov theory
@@ -82,11 +82,11 @@ CONTAINS
         fq         ! integral of profile function for moisture
 
 !------------------------ LOCAL VARIABLES ------------------------------
-  INTEGER niters, &! maximum number of iterations for surface temperature
+   integer niters,&! maximum number of iterations for surface temperature
         iter,     &! iteration index
         nmozsgn    ! number of times moz changes sign
 
-  REAL(r8) ::     &
+   real(r8) :: &
         beta,     &! coefficient of conective velocity [-]
         displax,  &! zero-displacement height [m]
         tg,       &! ground surface temperature [K]
@@ -116,7 +116,7 @@ CONTAINS
         z0mg,     &! roughness length over ground, momentum [m]
         z0qg       ! roughness length over ground, latent heat [m]
 
-  REAL(r8) fwet_roof
+   real(r8) fwet_roof
 
 !----------------------- Dummy argument --------------------------------
 ! initial roughness length
@@ -200,7 +200,7 @@ CONTAINS
          ENDIF
 
          IF (obuold*obu < 0.) nmozsgn = nmozsgn+1
-         IF (nmozsgn >= 4) exit
+         IF (nmozsgn >= 4) EXIT
 
          obuold = obu
 
@@ -228,6 +228,6 @@ CONTAINS
       fsenroof  = -raih*dth
       fevproof  = -raiw*dqh*fwet_roof
 
- END SUBROUTINE UrbanRoofFlux
+   END SUBROUTINE UrbanRoofFlux
 
 END MODULE MOD_Urban_RoofFlux

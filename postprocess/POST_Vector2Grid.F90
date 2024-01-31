@@ -1,39 +1,39 @@
 #include <define.h>
 
-program post_vector2grid
+PROGRAM post_vector2grid
 
-   use MOD_Namelist
-   use MOD_Vector2Grid
+   USE MOD_Namelist
+   USE MOD_Vector2Grid
    USE netcdf
    USE MOD_NetCDFSerial
 
-   implicit none
+   IMPLICIT NONE
 
    ! Local variables 
-   LOGICAL :: fexists
+   logical :: fexists
    character(len=256) :: meshfile, inputlist, input, output
-   INTEGER :: ifile, ncid, nvars, ivar, timelen
-   INTEGER, allocatable :: varids(:)
-   CHARACTER(len=256), allocatable :: varnames(:)
-   CHARACTER(len=256) :: svarname
-   LOGICAL :: onevar
+   integer :: ifile, ncid, nvars, ivar, timelen
+   integer, allocatable :: varids(:)
+   character(len=256), allocatable :: varnames(:)
+   character(len=256) :: svarname
+   logical :: onevar
 
-   INTEGER :: iost
+   integer :: iost
    
    IF (COMMAND_ARGUMENT_COUNT() == 0) THEN
       write(*,*)  'Usage    : PATH/post_vector2grid.x' 
       write(*,*)  ' <Arg 1> : meshfile'
       write(*,*)  ' <Arg 2> : vector_file_list'
       
-      stop
+      STOP
    ENDIF
 
-   call get_command_argument (1, meshfile )
-   call get_command_argument (2, inputlist)
+   CALL get_command_argument (1, meshfile )
+   CALL get_command_argument (2, inputlist)
 
    onevar = .false.
    IF (COMMAND_ARGUMENT_COUNT() > 2) THEN
-      call get_command_argument (3, svarname)
+      CALL get_command_argument (3, svarname)
       onevar = .true.
    ENDIF
 
@@ -41,7 +41,7 @@ program post_vector2grid
    ifile = 0
    DO WHILE (.true.)
       read(18,*,iostat=iost) input
-      IF (iost /= 0) exit
+      IF (iost /= 0) EXIT
    
       inquire (file=trim(input), exist=fexists)
       IF (fexists) THEN
@@ -99,4 +99,4 @@ program post_vector2grid
 
    IF (allocated(addr2d)) deallocate (addr2d)
 
-end program post_vector2grid
+END PROGRAM post_vector2grid

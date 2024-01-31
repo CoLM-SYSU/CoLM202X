@@ -3,36 +3,34 @@
 MODULE MOD_AssimStomataConductance
 
 !-----------------------------------------------------------------------
-  use MOD_Precision
-  use MOD_Namelist
-  IMPLICIT NONE
-  SAVE
+   USE MOD_Precision
+   USE MOD_Namelist
+   IMPLICIT NONE
+   SAVE
 
 ! PUBLIC MEMBER FUNCTIONS:
-  public :: stomata
-  public :: update_photosyn
+   PUBLIC :: stomata
+   PUBLIC :: update_photosyn
 
 ! PRIVATE MEMBER FUNCTIONS:
-  private :: sortin
-  private :: calc_photo_params
+   PRIVATE :: sortin
+   PRIVATE :: calc_photo_params
 
 
 !-----------------------------------------------------------------------
 
-  CONTAINS
+CONTAINS
 
 !-----------------------------------------------------------------------
 
-
-
-  subroutine stomata (vmax25,effcon,slti,hlti,shti, &
-                      hhti,trda,trdm,trop,g1,g0,gradm,binter,tm, &
-                      psrf,po2m,pco2m,pco2a,ea,ei,tlef,par &
+   SUBROUTINE stomata (vmax25,effcon,slti,hlti,shti, &
+                       hhti,trda,trdm,trop,g1,g0,gradm,binter,tm, &
+                       psrf,po2m,pco2m,pco2a,ea,ei,tlef,par &
 !Ozone stress variables
-                      ,o3coefv,o3coefg &
+                       ,o3coefv,o3coefg &
 !End ozone stress variables
-                      ,rb,ra,rstfac,cint,assim,respc,rst &
-                              )
+                       ,rb,ra,rstfac,cint,assim,respc,rst &
+                               )
 
 !=======================================================================
 !
@@ -73,10 +71,10 @@ MODULE MOD_AssimStomataConductance
 !
 !----------------------------------------------------------------------
 
- use MOD_Precision
- IMPLICIT NONE
+   USE MOD_Precision
+   IMPLICIT NONE
 
- real(r8),intent(in) :: &
+   real(r8),intent(in) :: &
       effcon,       &! quantum efficiency of RuBP regeneration (mol CO2 / mol quanta)
       vmax25,       &! maximum carboxylation rate at 25 C at canopy top
 
@@ -92,7 +90,7 @@ MODULE MOD_AssimStomataConductance
       gradm,        &! conductance-photosynthesis slope parameter
       binter         ! conductance-photosynthesis intercept
 
- real(r8),intent(in) :: &
+   real(r8),intent(in) :: &
       tm,           &! atmospheric air temperature (K)
       psrf,         &! surface atmospheric pressure (pa)
       po2m,         &! O2 concentration in atmos. (pascals)
@@ -111,21 +109,21 @@ MODULE MOD_AssimStomataConductance
       ra,           &! aerodynamic resistance from cas to refence height (s m-1)
       rstfac         ! canopy resistance stress factors to soil moisture
 
- real(r8),intent(in), dimension(3) :: &
+   real(r8),intent(in), dimension(3) :: &
       cint           ! scaling up from leaf to canopy
 
- real(r8),intent(out) :: &! ATTENTION : all for canopy not leaf
+   real(r8),intent(out) :: &! ATTENTION : all for canopy not leaf
       assim,        &! canopy assimilation rate (mol m-2 s-1)
       respc,        &! canopy respiration (mol m-2 s-1)
       rst            ! canopy stomatal resistance (s m-1)
 
- real(r8)  gammas
+   real(r8)  gammas
 
 !-------------------- local --------------------------------------------
 
- integer, parameter :: iterationtotal = 6   ! total iteration number in pco2i calculation
+   integer, parameter :: iterationtotal = 6   ! total iteration number in pco2i calculation
 
-      real(r8) &
+   real(r8) &
       c3,           &! c3 vegetation : 1; 0 for c4
       c4,           &! c4 vegetation : 1; 0 for c3
       rrkk,         &! kc (1+o2/ko)
@@ -165,14 +163,14 @@ MODULE MOD_AssimStomataConductance
       bquad,        &! b: ax^2 + bx + c = 0
       cquad          ! c: ax^2 + bx + c = 0
 
- real(r8) :: &
+   real(r8) :: &
       eyy(iterationtotal),    &! differnce of pco2i at two iteration step
       pco2y(iterationtotal),  &! adjusted to total iteration number
       range                    !
 
- integer ic
+   integer ic
 
-      call calc_photo_params(tlef, po2m, par , psrf, rstfac, rb, effcon, vmax25, &
+      CALL calc_photo_params(tlef, po2m, par , psrf, rstfac, rb, effcon, vmax25, &
                              trop, slti, hlti, shti, hhti, trda, trdm, cint, &
                              vm, epar, respc, omss, gbh2o, gammas, rrkk, c3, c4)
 
@@ -190,15 +188,15 @@ MODULE MOD_AssimStomataConductance
 
       range = pco2m * ( 1. - 1.6/gradm ) - gammas
 
-      do ic = 1, iterationtotal    ! loop for total iteration number
-      pco2y(ic) = 0.
-      eyy(ic) = 0.
-      enddo
+      DO ic = 1, iterationtotal    ! loop for total iteration number
+         pco2y(ic) = 0.
+         eyy(ic) = 0.
+      ENDDO
 
-      ITERATION_LOOP: do ic = 1, iterationtotal
+      ITERATION_LOOP: DO ic = 1, iterationtotal
 
-      call sortin(eyy, pco2y, range, gammas, ic, iterationtotal)
-      pco2i =  pco2y(ic)
+         CALL sortin(eyy, pco2y, range, gammas, ic, iterationtotal)
+         pco2i =  pco2y(ic)
 
 !-----------------------------------------------------------------------
 !                      NET ASSIMILATION
@@ -212,19 +210,19 @@ MODULE MOD_AssimStomataConductance
 !         btheta*assim^2 - assim*(omp+oms) + omp*oms = 0
 !-----------------------------------------------------------------------
 
-      atheta = 0.877
-      btheta = 0.95
+         atheta = 0.877
+         btheta = 0.95
 
-      omc = vm   * ( pco2i-gammas ) / ( pco2i + rrkk ) * c3 + vm * c4
-      ome = epar * ( pco2i-gammas ) / ( pco2i+2.*gammas ) * c3 + epar * c4
-      oms   = omss * c3 + omss*pco2i * c4
+         omc = vm   * ( pco2i-gammas ) / ( pco2i + rrkk ) * c3 + vm * c4
+         ome = epar * ( pco2i-gammas ) / ( pco2i+2.*gammas ) * c3 + epar * c4
+         oms   = omss * c3 + omss*pco2i * c4
 
-      sqrtin= max( 0., ( (ome+omc)**2 - 4.*atheta*ome*omc ) )
-      omp   = ( ( ome+omc ) - sqrt( sqrtin ) ) / ( 2.*atheta )
-      sqrtin= max( 0., ( (omp+oms)**2 - 4.*btheta*omp*oms ) )
-      assim = max( 0., ( ( oms+omp ) - sqrt( sqrtin ) ) / ( 2.*btheta ))
+         sqrtin= max( 0., ( (ome+omc)**2 - 4.*atheta*ome*omc ) )
+         omp   = ( ( ome+omc ) - sqrt( sqrtin ) ) / ( 2.*atheta )
+         sqrtin= max( 0., ( (omp+oms)**2 - 4.*btheta*omp*oms ) )
+         assim = max( 0., ( ( oms+omp ) - sqrt( sqrtin ) ) / ( 2.*btheta ))
 
-      assimn= ( assim - respc)                         ! mol m-2 s-1
+         assimn= ( assim - respc)                         ! mol m-2 s-1
 
 !-----------------------------------------------------------------------
 !                      STOMATAL CONDUCTANCE
@@ -270,57 +268,56 @@ MODULE MOD_AssimStomataConductance
 !
 !-----------------------------------------------------------------------
 
-      co2s = co2a - 1.37*assimn/gbh2o                  ! mol mol-1
+         co2s = co2a - 1.37*assimn/gbh2o                  ! mol mol-1
 
-      co2st = min( co2s, co2a )
-      co2st = max( co2st,1.e-5 )
+         co2st = min( co2s, co2a )
+         co2st = max( co2st,1.e-5 )
 
-      assmt = max( 1.e-12, assimn )
-      if(DEF_USE_MEDLYNST)then
-         vpd   = amax1((ei - ea),50._r8) * 1.e-3 ! in kpa
-         acp   = 1.6*assmt/co2st             ! in mol m-2 s-1
-         aquad = 1._r8
-         bquad = -2*(g0*1.e-6 + acp) - (g1*acp)**2/(gbh2o*vpd)   ! in mol m-2 s-1
-         cquad = (g0*1.e-6)**2 + (2*g0*1.e-6+acp*(1-g1**2)/vpd)*acp  ! in (mol m-2 s-1)**2
-    
-         sqrtin= max( 0., ( bquad**2 - 4.*aquad*cquad ) )
-         gsh2o = ( -bquad + sqrt ( sqrtin ) ) / (2.*aquad) 
+         assmt = max( 1.e-12, assimn )
+         IF(DEF_USE_MEDLYNST)THEN
+            vpd   = amax1((ei - ea),50._r8) * 1.e-3 ! in kpa
+            acp   = 1.6*assmt/co2st             ! in mol m-2 s-1
+            aquad = 1._r8
+            bquad = -2*(g0*1.e-6 + acp) - (g1*acp)**2/(gbh2o*vpd)   ! in mol m-2 s-1
+            cquad = (g0*1.e-6)**2 + (2*g0*1.e-6+acp*(1-g1**2)/vpd)*acp  ! in (mol m-2 s-1)**2
 
-      else
-         hcdma = ei*co2st / ( gradm*assmt )
+            sqrtin= max( 0., ( bquad**2 - 4.*aquad*cquad ) )
+            gsh2o = ( -bquad + sqrt ( sqrtin ) ) / (2.*aquad)
 
-         aquad = hcdma
-         bquad = gbh2o*hcdma - ei - bintc*hcdma
-         cquad = -gbh2o*( ea + hcdma*bintc )
+         ELSE
+            hcdma = ei*co2st / ( gradm*assmt )
 
-         sqrtin= max( 0., ( bquad**2 - 4.*aquad*cquad ) )
-         gsh2o = ( -bquad + sqrt ( sqrtin ) ) / (2.*aquad)
-   
-         es  = ( gsh2o-bintc ) * hcdma                   ! pa
-         es  = min( es, ei )
-         es  = max( es, 1.e-2)
-   
-         gsh2o = es/hcdma + bintc                        ! mol m-2 s-1
-      end if
+            aquad = hcdma
+            bquad = gbh2o*hcdma - ei - bintc*hcdma
+            cquad = -gbh2o*( ea + hcdma*bintc )
 
-      pco2in = ( co2s - 1.6 * assimn / gsh2o )*psrf   ! pa
-      eyy(ic) = pco2i - pco2in                        ! pa
+            sqrtin= max( 0., ( bquad**2 - 4.*aquad*cquad ) )
+            gsh2o = ( -bquad + sqrt ( sqrtin ) ) / (2.*aquad)
+
+            es  = ( gsh2o-bintc ) * hcdma                   ! pa
+            es  = min( es, ei )
+            es  = max( es, 1.e-2)
+
+            gsh2o = es/hcdma + bintc                        ! mol m-2 s-1
+         ENDIF
+
+         pco2in = ( co2s - 1.6 * assimn / gsh2o )*psrf   ! pa
+         eyy(ic) = pco2i - pco2in                        ! pa
 
 !-----------------------------------------------------------------------
 
-      if( abs(eyy(ic)) .lt. 0.1 ) exit
+         IF( abs(eyy(ic)) .lt. 0.1 ) EXIT
 
-      enddo ITERATION_LOOP
+      ENDDO ITERATION_LOOP
 
 ! convert gsh2o (mol m-2 s-1) to resistance rst ( s m-1)
       rst   = min( 1.e6, 1./(gsh2o*tlef/tprcor) )     ! s m-1
 
-
-  end subroutine stomata
-
+   END SUBROUTINE stomata
 
 
-  subroutine sortin( eyy, pco2y, range, gammas, ic, iterationtotal )
+
+   SUBROUTINE sortin( eyy, pco2y, range, gammas, ic, iterationtotal )
 
 !-----------------------------------------------------------------------
 !     arranges successive pco2/error pairs in order of increasing pco2.
@@ -330,42 +327,42 @@ MODULE MOD_AssimStomataConductance
 !     original author: P. J. Sellers (SiB2)
 !-----------------------------------------------------------------------
 
-      use MOD_Precision
-      IMPLICIT NONE
+   USE MOD_Precision
+   IMPLICIT NONE
 
-      integer, intent(in) :: ic,iterationtotal
-      real(r8), INTENT(in) :: range
-      real(r8), INTENT(in) :: gammas
-      real(r8), INTENT(inout), dimension(iterationtotal) :: eyy, pco2y
+   integer, intent(in) :: ic,iterationtotal
+   real(r8), intent(in) :: range
+   real(r8), intent(in) :: gammas
+   real(r8), intent(inout), dimension(iterationtotal) :: eyy, pco2y
 
 !----- Local -----------------------------------------------------------
-      integer i, j, n, i1, i2, i3, is, isp, ix
-      real(r8) a, b, pmin, emin, eyy_a
-      real(r8) pco2b, pco2yl, pco2yq
-      real(r8) ac1, ac2, bc1, bc2, cc1, cc2
-      real(r8) bterm, aterm, cterm
+   integer i, j, n, i1, i2, i3, is, isp, ix
+   real(r8) a, b, pmin, emin, eyy_a
+   real(r8) pco2b, pco2yl, pco2yq
+   real(r8) ac1, ac2, bc1, bc2, cc1, cc2
+   real(r8) bterm, aterm, cterm
 
 !-----------------------------------------------------------------------
 
-      if( ic .ge. 4 ) go to 500
+      IF( ic .ge. 4 ) go to 500
       eyy_a = 1.0
-      if(eyy(1).lt.0.) eyy_a = -1.0
+      IF(eyy(1).lt.0.) eyy_a = -1.0
       pco2y(1) = gammas + 0.5*range
       pco2y(2) = gammas + range*( 0.5 - 0.3*eyy_a )
       pco2y(3) = pco2y(1) - (pco2y(1)-pco2y(2))/(eyy(1)-eyy(2)+1.e-10)*eyy(1)
 
       pmin = min( pco2y(1), pco2y(2) )
       emin = min(   eyy(1),   eyy(2) )
-      if ( emin .gt. 0. .and. pco2y(3) .gt. pmin ) pco2y(3) = gammas
+      IF ( emin .gt. 0. .and. pco2y(3) .gt. pmin ) pco2y(3) = gammas
       go to 200
 500   continue
 
       n = ic - 1
-      do 1000 j = 2, n
+      DO 1000 j = 2, n
       a = eyy(j)
       b = pco2y(j)
-      do 2000 i = j-1,1,-1
-      if(eyy(i) .le. a ) go to 100
+      DO 2000 i = j-1,1,-1
+      IF(eyy(i) .le. a ) go to 100
       eyy(i+1) = eyy(i)
       pco2y(i+1) = pco2y(i)
 2000  continue
@@ -376,9 +373,9 @@ MODULE MOD_AssimStomataConductance
 
       pco2b = 0.
       is    = 1
-      do 3000 ix = 1, n
-      if( eyy(ix) .lt. 0. ) pco2b = pco2y(ix)
-      if( eyy(ix) .lt. 0. ) is = ix
+      DO 3000 ix = 1, n
+      IF( eyy(ix) .lt. 0. ) pco2b = pco2y(ix)
+      IF( eyy(ix) .lt. 0. ) is = ix
 3000  continue
       i1 = is-1
       i1 = max(1, i1)
@@ -412,64 +409,64 @@ MODULE MOD_AssimStomataConductance
 
       pco2y(ic) = max ( pco2y(ic), 0.01 )
 
-  end subroutine sortin
+   END SUBROUTINE sortin
 
-  subroutine calc_photo_params(tlef, po2m, par , psrf, rstfac, rb, effcon, vmax25, &
+   SUBROUTINE calc_photo_params(tlef, po2m, par , psrf, rstfac, rb, effcon, vmax25, &
                                trop, slti, hlti, shti, hhti, trda, trdm, cint, &
                                vm, epar, respc, omss, gbh2o, gammas, rrkk, c3, c4)
 
-      use MOD_Precision
-      IMPLICIT NONE
+   USE MOD_Precision
+   IMPLICIT NONE
 
-      real(r8),intent(in) :: &
-               tlef,     &! leaf temperature (K)
-               po2m,     &! O2 concentration in atmos. (pascals)
-               par,      &! photosynthetic active radiation (W m-2)
-               rstfac,   &! canopy resistance stress factors to soil moisture
-               rb,       &! boundary resistance from canopy to cas (s m-1)
-         
-               effcon,   &! quantum efficiency of RuBP regeneration (mol CO2 / mol quanta)
-               vmax25,   &! maximum carboxylation rate at 25 C at canopy top
-                          ! the range : 30.e-6 <-> 100.e-6 (mol co2 m-2 s-1)
-               trop,     &! temperature coefficient in gs-a model             (298.16)
-               slti,     &! slope of low temperature inhibition function      (0.2)
-               hlti,     &! 1/2 point of low temperature inhibition function  (288.16)
-               shti,     &! slope of high temperature inhibition function     (0.3)
-               hhti,     &! 1/2 point of high temperature inhibition function (313.16)
-               trda,     &! temperature coefficient in gs-a model             (1.3)
-               trdm,     &! temperature coefficient in gs-a model             (328.16)
-               psrf       ! surface atmospheric pressure (pa)
+   real(r8),intent(in) :: &
+            tlef,     &! leaf temperature (K)
+            po2m,     &! O2 concentration in atmos. (pascals)
+            par,      &! photosynthetic active radiation (W m-2)
+            rstfac,   &! canopy resistance stress factors to soil moisture
+            rb,       &! boundary resistance from canopy to cas (s m-1)
 
-      real(r8),intent(in), dimension(3) :: &
-               cint       ! scaling up from leaf to canopy
+            effcon,   &! quantum efficiency of RuBP regeneration (mol CO2 / mol quanta)
+            vmax25,   &! maximum carboxylation rate at 25 C at canopy top
+                       ! the range : 30.e-6 <-> 100.e-6 (mol co2 m-2 s-1)
+            trop,     &! temperature coefficient in gs-a model             (298.16)
+            slti,     &! slope of low temperature inhibition function      (0.2)
+            hlti,     &! 1/2 point of low temperature inhibition function  (288.16)
+            shti,     &! slope of high temperature inhibition function     (0.3)
+            hhti,     &! 1/2 point of high temperature inhibition function (313.16)
+            trda,     &! temperature coefficient in gs-a model             (1.3)
+            trdm,     &! temperature coefficient in gs-a model             (328.16)
+            psrf       ! surface atmospheric pressure (pa)
 
-      real(r8),intent(out) :: &
-               vm,       &! maximum catalytic activity of Rubison (mol co2 m-2 s-1)
-               epar,     &! electron transport rate (mol electron m-2 s-1)
-               respc,    &! canopy respiration (mol m-2 s-1)
-               omss,     &! intermediate calcuation for oms
-               gbh2o,    &! one side leaf boundary layer conductance (mol m-2 s-1)
-               gammas,   &! CO2 compensation point
-               rrkk,     &! kc (1+o2/ko)
-               c3,       &! c3 vegetation : 1; 0 for c4
-               c4         ! c4 vegetation : 1; 0 for c3
+   real(r8),intent(in), dimension(3) :: &
+            cint       ! scaling up from leaf to canopy
 
-       real(r8) :: &
-               qt,       &! (tleaf - 298.16) / 10
-               kc,       &! Michaelis-Menten constant for co2
-               ko,       &! Michaelis-Menten constant for o2
-               templ,    &! intermediate value
-               temph,    &! intermediate value
-               rgas,     &! universal gas contant (8.314 J mol-1 K-1)
-               jmax25,   &! potential rate of whole-chain electron transport at 25 C
-               jmax,     &! potential rate of whole-chain electron transport (mol electron m-2 s-1)
-               respcp,   &! respiration fraction of vmax (mol co2 m-2 s-1)
-               tprcor     ! coefficient for unit transfer
+   real(r8),intent(out) :: &
+            vm,       &! maximum catalytic activity of Rubison (mol co2 m-2 s-1)
+            epar,     &! electron transport rate (mol electron m-2 s-1)
+            respc,    &! canopy respiration (mol m-2 s-1)
+            omss,     &! intermediate calcuation for oms
+            gbh2o,    &! one side leaf boundary layer conductance (mol m-2 s-1)
+            gammas,   &! CO2 compensation point
+            rrkk,     &! kc (1+o2/ko)
+            c3,       &! c3 vegetation : 1; 0 for c4
+            c4         ! c4 vegetation : 1; 0 for c3
+
+    real(r8) :: &
+            qt,       &! (tleaf - 298.16) / 10
+            kc,       &! Michaelis-Menten constant for co2
+            ko,       &! Michaelis-Menten constant for o2
+            templ,    &! intermediate value
+            temph,    &! intermediate value
+            rgas,     &! universal gas contant (8.314 J mol-1 K-1)
+            jmax25,   &! potential rate of whole-chain electron transport at 25 C
+            jmax,     &! potential rate of whole-chain electron transport (mol electron m-2 s-1)
+            respcp,   &! respiration fraction of vmax (mol co2 m-2 s-1)
+            tprcor     ! coefficient for unit transfer
 
 !=======================================================================
 
       c3 = 0.
-      if( effcon .gt. 0.07 ) c3 = 1.
+      IF( effcon .gt. 0.07 ) c3 = 1.
       c4 = 1. - c3
 
 !-----------------------------------------------------------------------
@@ -546,85 +543,85 @@ MODULE MOD_AssimStomataConductance
        ! thus, there is no need for gbh2o *cint(3) (sunlit/shaded LAI)
 !      gbh2o  = gbh2o * cint(3)
 
-  end subroutine calc_photo_params
+   END SUBROUTINE calc_photo_params
 
-  subroutine update_photosyn(tlef, po2m, pco2m, pco2a, par, psrf, rstfac, rb, gsh2o, &
+   SUBROUTINE update_photosyn(tlef, po2m, pco2m, pco2a, par, psrf, rstfac, rb, gsh2o, &
                              effcon, vmax25, gradm, trop, slti, hlti, shti, hhti, trda, trdm, cint, &
                              assim, respc)
 
-      use MOD_Precision
-      IMPLICIT NONE
+   USE MOD_Precision
+   IMPLICIT NONE
 
-      real(r8),intent(in) :: &
-               tlef,     &! leaf temperature (K)
-               po2m,     &! O2 concentration in atmos. (pascals)
-               pco2m,    &! CO2 concentration in atmos. (pascals)
-               pco2a,    &! CO2 concentration in canopy air space (pa)
-               par,      &! photosynthetic active radiation (W m-2)
-               psrf,     &! surface atmospheric pressure (pa)
-               rstfac,   &! canopy resistance stress factors to soil moisture
-               rb,       &! boundary resistance from canopy to cas (s m-1)
-               gsh2o,    &! canopy conductance (mol m-2 s-1)
-         
-               effcon,   &! quantum efficiency of RuBP regeneration (mol CO2 / mol quanta)
-               vmax25,   &! maximum carboxylation rate at 25 C at canopy top
-                          ! the range : 30.e-6 <-> 100.e-6 (mol co2 m-2 s-1)
-               gradm,    &! conductance-photosynthesis slope parameter
-               trop,     &! temperature coefficient in gs-a model             (298.16)
-               slti,     &! slope of low temperature inhibition function      (0.2)
-               hlti,     &! 1/2 point of low temperature inhibition function  (288.16)
-               shti,     &! slope of high temperature inhibition function     (0.3)
-               hhti,     &! 1/2 point of high temperature inhibition function (313.16)
-               trda,     &! temperature coefficient in gs-a model             (1.3)
-               trdm       ! temperature coefficient in gs-a model             (328.16)
+   real(r8),intent(in) :: &
+            tlef,     &! leaf temperature (K)
+            po2m,     &! O2 concentration in atmos. (pascals)
+            pco2m,    &! CO2 concentration in atmos. (pascals)
+            pco2a,    &! CO2 concentration in canopy air space (pa)
+            par,      &! photosynthetic active radiation (W m-2)
+            psrf,     &! surface atmospheric pressure (pa)
+            rstfac,   &! canopy resistance stress factors to soil moisture
+            rb,       &! boundary resistance from canopy to cas (s m-1)
+            gsh2o,    &! canopy conductance (mol m-2 s-1)
 
-      real(r8),intent(in), dimension(3) :: &
-               cint       ! scaling up from leaf to canopy
+            effcon,   &! quantum efficiency of RuBP regeneration (mol CO2 / mol quanta)
+            vmax25,   &! maximum carboxylation rate at 25 C at canopy top
+                       ! the range : 30.e-6 <-> 100.e-6 (mol co2 m-2 s-1)
+            gradm,    &! conductance-photosynthesis slope parameter
+            trop,     &! temperature coefficient in gs-a model             (298.16)
+            slti,     &! slope of low temperature inhibition function      (0.2)
+            hlti,     &! 1/2 point of low temperature inhibition function  (288.16)
+            shti,     &! slope of high temperature inhibition function     (0.3)
+            hhti,     &! 1/2 point of high temperature inhibition function (313.16)
+            trda,     &! temperature coefficient in gs-a model             (1.3)
+            trdm       ! temperature coefficient in gs-a model             (328.16)
 
-      real(r8),intent(out) :: &
-               assim,    &! canopy assimilation rate (mol m-2 s-1)
-               respc      ! canopy respiration (mol m-2 s-1)
-                
-      real(r8) ::        &
-               vm,       &! maximum catalytic activity of Rubison (mol co2 m-2 s-1)
-               epar,     &! electron transport rate (mol electron m-2 s-1)
-               gbh2o,    &! one side leaf boundary layer conductance (mol m-2 s-1)
-               gammas,   &! CO2 compensation point
-               rrkk,     &! kc (1+o2/ko)
-               c3,       &! c3 vegetation : 1; 0 for c4
-               c4         ! c4 vegetation : 1; 0 for c3
+   real(r8),intent(in), dimension(3) :: &
+            cint       ! scaling up from leaf to canopy
 
-      real(r8) ::        &
-               atheta,   &! wc, we coupling parameter
-               btheta,   &! wc & we, ws coupling parameter
-               omss,     &! intermediate calcuation for oms
-               omc,      &! rubisco limited assimilation (omega-c: mol m-2 s-1)
-               ome,      &! light limited assimilation (omega-e: mol m-2 s-1)
-               oms,      &! sink limited assimilation (omega-s: mol m-2 s-1)
-               omp,      &! intermediate calcuation for omc, ome
-         
-               co2a,     &! co2 concentration at cas (mol mol-1)
-               co2s,     &! co2 concentration at canopy surface (mol mol-1)
-               co2st,    &! co2 concentration at canopy surface (mol mol-1)
-               co2i,     &! internal co2 concentration (mol mol-1)
-               pco2in,   &! internal co2 concentration at the new iteration (pa)
-               pco2i,    &! internal co2 concentration (pa)
-               es,       &! canopy surface h2o vapor pressure (pa)
-         
-               sqrtin,   &! intermediate calculation for quadratic
-               assmt,    &! net assimilation with a positive limitation (mol co2 m-2 s-1)
-               assimn     ! net assimilation (mol co2 m-2 s-1)
+   real(r8),intent(out) :: &
+            assim,    &! canopy assimilation rate (mol m-2 s-1)
+            respc      ! canopy respiration (mol m-2 s-1)
 
-      integer, parameter :: iterationtotal = 6   ! total iteration number in pco2i calculation
+   real(r8) ::        &
+            vm,       &! maximum catalytic activity of Rubison (mol co2 m-2 s-1)
+            epar,     &! electron transport rate (mol electron m-2 s-1)
+            gbh2o,    &! one side leaf boundary layer conductance (mol m-2 s-1)
+            gammas,   &! CO2 compensation point
+            rrkk,     &! kc (1+o2/ko)
+            c3,       &! c3 vegetation : 1; 0 for c4
+            c4         ! c4 vegetation : 1; 0 for c3
 
-      real(r8) :: &
-               eyy(iterationtotal),    &! differnce of pco2i at two iteration step
-               pco2y(iterationtotal),  &! adjusted to total iteration number
-               range                    !
+   real(r8) ::        &
+            atheta,   &! wc, we coupling parameter
+            btheta,   &! wc & we, ws coupling parameter
+            omss,     &! intermediate calcuation for oms
+            omc,      &! rubisco limited assimilation (omega-c: mol m-2 s-1)
+            ome,      &! light limited assimilation (omega-e: mol m-2 s-1)
+            oms,      &! sink limited assimilation (omega-s: mol m-2 s-1)
+            omp,      &! intermediate calcuation for omc, ome
 
-      integer ic
+            co2a,     &! co2 concentration at cas (mol mol-1)
+            co2s,     &! co2 concentration at canopy surface (mol mol-1)
+            co2st,    &! co2 concentration at canopy surface (mol mol-1)
+            co2i,     &! internal co2 concentration (mol mol-1)
+            pco2in,   &! internal co2 concentration at the new iteration (pa)
+            pco2i,    &! internal co2 concentration (pa)
+            es,       &! canopy surface h2o vapor pressure (pa)
 
-      call calc_photo_params(tlef, po2m, par , psrf, rstfac, rb, effcon, vmax25, &
+            sqrtin,   &! intermediate calculation for quadratic
+            assmt,    &! net assimilation with a positive limitation (mol co2 m-2 s-1)
+            assimn     ! net assimilation (mol co2 m-2 s-1)
+
+   integer, parameter :: iterationtotal = 6   ! total iteration number in pco2i calculation
+
+   real(r8) :: &
+            eyy(iterationtotal),    &! differnce of pco2i at two iteration step
+            pco2y(iterationtotal),  &! adjusted to total iteration number
+            range                    !
+
+   integer ic
+
+      CALL calc_photo_params(tlef, po2m, par , psrf, rstfac, rb, effcon, vmax25, &
                              trop, slti, hlti, shti, hhti, trda, trdm, cint, &
                              vm, epar, respc, omss, gbh2o, gammas, rrkk, c3, c4)
 
@@ -632,15 +629,15 @@ MODULE MOD_AssimStomataConductance
 
       range = pco2m * ( 1. - 1.6/gradm ) - gammas
 
-      do ic = 1, iterationtotal    ! loop for total iteration number
+      DO ic = 1, iterationtotal    ! loop for total iteration number
          pco2y(ic) = 0.
          eyy(ic) = 0.
-      enddo
+      ENDDO
 
-      ITERATION_LOOP_UPDATE: do ic = 1, iterationtotal
+      ITERATION_LOOP_UPDATE: DO ic = 1, iterationtotal
 
-      call sortin(eyy, pco2y, range, gammas, ic, iterationtotal)
-      pco2i =  pco2y(ic)
+         CALL sortin(eyy, pco2y, range, gammas, ic, iterationtotal)
+         pco2i =  pco2y(ic)
 
 !-----------------------------------------------------------------------
 !                      NET ASSIMILATION
@@ -654,19 +651,19 @@ MODULE MOD_AssimStomataConductance
 !         btheta*assim^2 - assim*(omp+oms) + omp*oms = 0
 !-----------------------------------------------------------------------
 
-      atheta = 0.877
-      btheta = 0.95
+         atheta = 0.877
+         btheta = 0.95
 
-      omc = vm   * ( pco2i-gammas ) / ( pco2i + rrkk ) * c3 + vm * c4
-      ome = epar * ( pco2i-gammas ) / ( pco2i+2.*gammas ) * c3 + epar * c4
-      oms = omss * c3 + omss*pco2i * c4
+         omc = vm   * ( pco2i-gammas ) / ( pco2i + rrkk ) * c3 + vm * c4
+         ome = epar * ( pco2i-gammas ) / ( pco2i+2.*gammas ) * c3 + epar * c4
+         oms = omss * c3 + omss*pco2i * c4
 
-      sqrtin= max( 0., ( (ome+omc)**2 - 4.*atheta*ome*omc ) )
-      omp   = ( ( ome+omc ) - sqrt( sqrtin ) ) / ( 2.*atheta )
-      sqrtin= max( 0., ( (omp+oms)**2 - 4.*btheta*omp*oms ) )
-      assim = max( 0., ( ( oms+omp ) - sqrt( sqrtin ) ) / ( 2.*btheta ))
+         sqrtin= max( 0., ( (ome+omc)**2 - 4.*atheta*ome*omc ) )
+         omp   = ( ( ome+omc ) - sqrt( sqrtin ) ) / ( 2.*atheta )
+         sqrtin= max( 0., ( (omp+oms)**2 - 4.*btheta*omp*oms ) )
+         assim = max( 0., ( ( oms+omp ) - sqrt( sqrtin ) ) / ( 2.*btheta ))
 
-      assimn= ( assim - respc)                         ! mol m-2 s-1
+         assimn= ( assim - respc)                         ! mol m-2 s-1
 
 !-----------------------------------------------------------------------
 !                      STOMATAL CONDUCTANCE
@@ -712,19 +709,19 @@ MODULE MOD_AssimStomataConductance
 !
 !-----------------------------------------------------------------------
 
-      co2s = co2a - 1.37*assimn/gbh2o                   ! mol mol-1
+         co2s = co2a - 1.37*assimn/gbh2o                   ! mol mol-1
 
-      pco2in = ( co2s - 1.6 * assimn / gsh2o )*psrf    ! pa
+         pco2in = ( co2s - 1.6 * assimn / gsh2o )*psrf    ! pa
 
-      eyy(ic) = pco2i - pco2in                          ! pa
+         eyy(ic) = pco2i - pco2in                          ! pa
 
 !-----------------------------------------------------------------------
 
-      if( abs(eyy(ic)) .lt. 0.1 ) exit
+         IF( abs(eyy(ic)) .lt. 0.1 ) EXIT
 
-      enddo ITERATION_LOOP_UPDATE
+      ENDDO ITERATION_LOOP_UPDATE
 
-  end subroutine update_photosyn
+   END SUBROUTINE update_photosyn
 
 END MODULE MOD_AssimStomataConductance
 ! -------------- EOP ---------------

@@ -2,20 +2,20 @@
 
 MODULE MOD_Mapping_Grid2Pset
 
-   !-----------------------------------------------------------------------
-   ! DESCRIPTION:
-   !
-   !    Mapping data types and subroutines from gridded data to vector data
-   !    defined on pixelset.
-   !
-   !    Notice that:
-   !    1. A mapping can be built with method mapping%build.
-   !    2. Area weighted mapping is carried out.     
-   !    3. For 2D gridded data, dimensions are from [lon,lat] to [vector].
-   !    4. For 3D gridded data, dimensions are from [d,lon,lat] to [d,vector].
-   ! 
-   ! Created by Shupeng Zhang, May 2023
-   !-----------------------------------------------------------------------
+!-----------------------------------------------------------------------
+! DESCRIPTION:
+!
+!    Mapping data types and subroutines from gridded data to vector data
+!    defined on pixelset.
+!
+!    Notice that:
+!    1. A mapping can be built with method mapping%build.
+!    2. Area weighted mapping is carried out.     
+!    3. For 2D gridded data, dimensions are from [lon,lat] to [vector].
+!    4. For 3D gridded data, dimensions are from [d,lon,lat] to [d,vector].
+! 
+! Created by Shupeng Zhang, May 2023
+!-----------------------------------------------------------------------
 
    USE MOD_Precision
    USE MOD_Grid
@@ -23,15 +23,15 @@ MODULE MOD_Mapping_Grid2Pset
    IMPLICIT NONE
 
    !------
-   TYPE :: mapping_grid2pset_type
+   type :: mapping_grid2pset_type
 
-      TYPE(grid_type) :: grid
-      INTEGER :: npset
+      type(grid_type) :: grid
+      integer :: npset
 
-      TYPE(grid_list_type), allocatable :: glist (:)
+      type(grid_list_type), allocatable :: glist (:)
 
-      TYPE(pointer_int32_2d), allocatable :: address(:)
-      TYPE(pointer_real8_1d), allocatable :: gweight(:)
+      type(pointer_int32_2d), allocatable :: address(:)
+      type(pointer_real8_1d), allocatable :: gweight(:)
 
    CONTAINS
 
@@ -41,11 +41,11 @@ MODULE MOD_Mapping_Grid2Pset
       procedure, PRIVATE :: map_aweighted_3d => map_g2p_aweighted_3d
       generic, PUBLIC :: map_aweighted => map_aweighted_2d, map_aweighted_3d
 
-      procedure, PUBLIC :: map_max_frenquency_2d => map_g2p_max_frequency_2d 
+      procedure, PUBLIC :: map_max_frequency_2d => map_g2p_max_frequency_2d 
 
       final :: mapping_grid2pset_free_mem
 
-   END TYPE mapping_grid2pset_type
+   END type mapping_grid2pset_type
 
 !-------------------------------------------------------------------
 CONTAINS
@@ -53,46 +53,46 @@ CONTAINS
    !------------------------------------------
    SUBROUTINE mapping_grid2pset_build (this, fgrid, pixelset, gfilter, missing_value, pfilter)
 
-      USE MOD_Precision
-      USE MOD_Namelist
-      USE MOD_Block
-      USE MOD_Pixel
-      USE MOD_Grid
-      USE MOD_DataType
-      USE MOD_Mesh
-      USE MOD_Pixelset
-      USE MOD_Utils
-      USE MOD_SPMD_Task
-      IMPLICIT NONE
+   USE MOD_Precision
+   USE MOD_Namelist
+   USE MOD_Block
+   USE MOD_Pixel
+   USE MOD_Grid
+   USE MOD_DataType
+   USE MOD_Mesh
+   USE MOD_Pixelset
+   USE MOD_Utils
+   USE MOD_SPMD_Task
+   IMPLICIT NONE
 
-      class (mapping_grid2pset_type) :: this
+   class (mapping_grid2pset_type) :: this
 
-      TYPE(grid_type),     intent(in) :: fgrid
-      TYPE(pixelset_type), intent(in) :: pixelset
+   type(grid_type),     intent(in) :: fgrid
+   type(pixelset_type), intent(in) :: pixelset
 
-      TYPE(block_data_real8_2d), intent(in), optional :: gfilter
-      REAL(r8), intent(in),    optional :: missing_value
-      LOGICAL,  intent(inout), optional :: pfilter(:)
+   type(block_data_real8_2d), intent(in), optional :: gfilter
+   real(r8), intent(in),    optional :: missing_value
+   logical,  intent(inout), optional :: pfilter(:)
 
 
-      ! Local variables
-      TYPE(pointer_real8_1d), allocatable :: afrac(:)
-      TYPE(grid_list_type),   allocatable :: gfrom(:)
-      TYPE(pointer_int32_1d), allocatable :: list_lat(:)
-      INTEGER,  allocatable :: ng_lat(:)
-      INTEGER,  allocatable :: ys(:), yn(:), xw(:), xe(:)
-      INTEGER,  allocatable :: xlist(:), ylist(:)
-      INTEGER,  allocatable :: ipt(:)
-      LOGICAL,  allocatable :: msk(:)
+   ! Local variables
+   type(pointer_real8_1d), allocatable :: afrac(:)
+   type(grid_list_type),   allocatable :: gfrom(:)
+   type(pointer_int32_1d), allocatable :: list_lat(:)
+   integer,  allocatable :: ng_lat(:)
+   integer,  allocatable :: ys(:), yn(:), xw(:), xe(:)
+   integer,  allocatable :: xlist(:), ylist(:)
+   integer,  allocatable :: ipt(:)
+   logical,  allocatable :: msk(:)
 
-      INTEGER  :: ie, iset
-      INTEGER  :: ng, ig, ng_all, iloc, ng0
-      INTEGER  :: npxl, ipxl, ilat, ilon
-      INTEGER  :: iworker, iproc, iio, idest, isrc, nrecv
-      INTEGER  :: rmesg(2), smesg(2)
-      INTEGER  :: iy, ix, xblk, yblk, xloc, yloc
-      REAL(r8) :: lat_s, lat_n, lon_w, lon_e, area
-      LOGICAL  :: is_new
+   integer  :: ie, iset
+   integer  :: ng, ig, ng_all, iloc, ng0
+   integer  :: npxl, ipxl, ilat, ilon
+   integer  :: iworker, iproc, iio, idest, isrc, nrecv
+   integer  :: rmesg(2), smesg(2)
+   integer  :: iy, ix, xblk, yblk, xloc, yloc
+   real(r8) :: lat_s, lat_n, lon_w, lon_e, area
+   logical  :: is_new
 
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
@@ -169,11 +169,11 @@ CONTAINS
                   lat_n = min(fgrid%lat_n(iy), pixel%lat_n(ilat))
 
                   IF ((lat_n-lat_s) < 1.0e-6_r8) THEN
-                     cycle
+                     CYCLE
                   ENDIF
 
                   ix = xw(ilon)
-                  DO while (.true.)
+                  DO WHILE (.true.)
 
                      IF (ix == xw(ilon)) THEN
                         lon_w = pixel%lon_w(ilon)
@@ -189,15 +189,15 @@ CONTAINS
 
                      IF (lon_e > lon_w) THEN
                         IF ((lon_e-lon_w) < 1.0e-6_r8) THEN
-                           IF (ix == xe(ilon))  exit
+                           IF (ix == xe(ilon))  EXIT
                            ix = mod(ix,fgrid%nlon) + 1
-                           cycle
+                           CYCLE
                         ENDIF
                      ELSE
                         IF ((lon_e+360.0_r8-lon_w) < 1.0e-6_r8) THEN
-                           IF (ix == xe(ilon))  exit
+                           IF (ix == xe(ilon))  EXIT
                            ix = mod(ix,fgrid%nlon) + 1
-                           cycle
+                           CYCLE
                         ENDIF
                      ENDIF
 
@@ -231,7 +231,7 @@ CONTAINS
                         CALL expand_list (list_lat(iy)%val, 0.2_r8)
                      ENDIF
 
-                     IF (ix == xe(ilon))  exit
+                     IF (ix == xe(ilon))  EXIT
                      ix = mod(ix,fgrid%nlon) + 1
                   ENDDO
                ENDDO
@@ -557,25 +557,25 @@ CONTAINS
    !-----------------------------------------------------
    SUBROUTINE map_g2p_aweighted_2d (this, gdata, pdata)
 
-      USE MOD_Precision
-      USE MOD_Grid
-      USE MOD_Pixelset
-      USE MOD_DataType
-      USE MOD_SPMD_Task
-      USE MOD_Vars_Global, only : spval
-      IMPLICIT NONE
+   USE MOD_Precision
+   USE MOD_Grid
+   USE MOD_Pixelset
+   USE MOD_DataType
+   USE MOD_SPMD_Task
+   USE MOD_Vars_Global, only : spval
+   IMPLICIT NONE
 
-      class (mapping_grid2pset_type) :: this
+   class (mapping_grid2pset_type) :: this
 
-      TYPE(block_data_real8_2d), intent(in) :: gdata
-      REAL(r8), intent(out) :: pdata(:)
+   type(block_data_real8_2d), intent(in) :: gdata
+   real(r8), intent(out) :: pdata(:)
 
-      ! Local variables
-      INTEGER :: iproc, idest, isrc
-      INTEGER :: ig, ilon, ilat, xblk, yblk, xloc, yloc, iloc, iset
+   ! Local variables
+   integer :: iproc, idest, isrc
+   integer :: ig, ilon, ilat, xblk, yblk, xloc, yloc, iloc, iset
 
-      REAL(r8), allocatable :: gbuff(:)
-      TYPE(pointer_real8_1d), allocatable :: pbuff(:)
+   real(r8), allocatable :: gbuff(:)
+   type(pointer_real8_1d), allocatable :: pbuff(:)
 
       IF (p_is_io) THEN
 
@@ -658,26 +658,26 @@ CONTAINS
    !-----------------------------------------------------
    SUBROUTINE map_g2p_aweighted_3d (this, gdata, ndim1, pdata)
 
-      USE MOD_Precision
-      USE MOD_Grid
-      USE MOD_Pixelset
-      USE MOD_DataType
-      USE MOD_SPMD_Task
-      USE MOD_Vars_Global, only : spval
-      IMPLICIT NONE
+   USE MOD_Precision
+   USE MOD_Grid
+   USE MOD_Pixelset
+   USE MOD_DataType
+   USE MOD_SPMD_Task
+   USE MOD_Vars_Global, only : spval
+   IMPLICIT NONE
 
-      class (mapping_grid2pset_type) :: this
+   class (mapping_grid2pset_type) :: this
 
-      TYPE(block_data_real8_3d), intent(in) :: gdata
-      INTEGER, intent(in) :: ndim1
-      REAL(r8), intent(out) :: pdata(:,:)
+   type(block_data_real8_3d), intent(in) :: gdata
+   integer, intent(in) :: ndim1
+   real(r8), intent(out) :: pdata(:,:)
 
-      ! Local variables
-      INTEGER :: iproc, idest, isrc
-      INTEGER :: ig, ilon, ilat, xblk, yblk, xloc, yloc, iloc, iset
+   ! Local variables
+   integer :: iproc, idest, isrc
+   integer :: ig, ilon, ilat, xblk, yblk, xloc, yloc, iloc, iset
 
-      REAL(r8), allocatable :: gbuff(:,:)
-      TYPE(pointer_real8_2d), allocatable :: pbuff(:)
+   real(r8), allocatable :: gbuff(:,:)
+   type(pointer_real8_2d), allocatable :: pbuff(:)
 
 
       IF (p_is_io) THEN
@@ -760,25 +760,25 @@ CONTAINS
    !-----------------------------------------------------
    SUBROUTINE map_g2p_max_frequency_2d (this, gdata, pdata)
 
-      USE MOD_Precision
-      USE MOD_Grid
-      USE MOD_Pixelset
-      USE MOD_DataType
-      USE MOD_SPMD_Task
-      USE MOD_Vars_Global, only : spval
-      IMPLICIT NONE
+   USE MOD_Precision
+   USE MOD_Grid
+   USE MOD_Pixelset
+   USE MOD_DataType
+   USE MOD_SPMD_Task
+   USE MOD_Vars_Global, only : spval
+   IMPLICIT NONE
 
-      class (mapping_grid2pset_type) :: this
+   class (mapping_grid2pset_type) :: this
 
-      TYPE(block_data_int32_2d), intent(in) :: gdata
-      integer, intent(out) :: pdata(:)
+   type(block_data_int32_2d), intent(in) :: gdata
+   integer, intent(out) :: pdata(:)
 
-      ! Local variables
-      INTEGER :: iproc, idest, isrc
-      INTEGER :: ig, ilon, ilat, xblk, yblk, xloc, yloc, iloc, iset
+   ! Local variables
+   integer :: iproc, idest, isrc
+   integer :: ig, ilon, ilat, xblk, yblk, xloc, yloc, iloc, iset
 
-      integer, allocatable :: gbuff(:)
-      TYPE(pointer_int32_1d), allocatable :: pbuff(:)
+   integer, allocatable :: gbuff(:)
+   type(pointer_int32_1d), allocatable :: pbuff(:)
 
       IF (p_is_io) THEN
 
@@ -853,16 +853,17 @@ CONTAINS
       ENDIF
 
    END SUBROUTINE map_g2p_max_frequency_2d
+
    !-----------------------------------------------------
    SUBROUTINE mapping_grid2pset_free_mem (this)
 
-      USE MOD_SPMD_Task
-      IMPLICIT NONE
+   USE MOD_SPMD_Task
+   IMPLICIT NONE
 
-      TYPE(mapping_grid2pset_type) :: this
+   type(mapping_grid2pset_type) :: this
 
-      ! Local variables
-      INTEGER :: iproc, iset
+   ! Local variables
+   integer :: iproc, iset
 
       IF (allocated (this%grid%xblk))   deallocate (this%grid%xblk)
       IF (allocated (this%grid%yblk))   deallocate (this%grid%yblk)

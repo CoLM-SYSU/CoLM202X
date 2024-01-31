@@ -1,7 +1,7 @@
 #include <define.h>
 
 !-----------------------------------------------------------------------
-module MOD_Forcing
+MODULE MOD_Forcing
 
 ! DESCRIPTION:
 ! read in the atmospheric forcing using user defined interpolation method
@@ -17,36 +17,36 @@ module MOD_Forcing
 !
 ! TODO...(need complement)
 
-   use MOD_Precision
+   USE MOD_Precision
    USE MOD_Namelist
-   use MOD_Grid
-   use MOD_Mapping_Grid2Pset
-   use MOD_UserSpecifiedForcing
-   use MOD_TimeManager
-   use MOD_SPMD_Task
+   USE MOD_Grid
+   USE MOD_Mapping_Grid2Pset
+   USE MOD_UserSpecifiedForcing
+   USE MOD_TimeManager
+   USE MOD_SPMD_Task
    USE MOD_MonthlyinSituCO2MaunaLoa
    USE MOD_Vars_Global, only : pi
    USE MOD_OrbCoszen
 
-   implicit none
+   IMPLICIT NONE
 
-   type (grid_type), public :: gforc
+   type (grid_type), PUBLIC :: gforc
    type (mapping_grid2pset_type) :: mg2p_forc
 
-   LOGICAL, allocatable :: forcmask (:)
+   logical, allocatable :: forcmask (:)
 
    ! for Forcing_Downscaling
    type (mapping_grid2pset_type) :: mg2p_forc_elm
-   LOGICAL, allocatable :: forcmask_elm (:)
-   LOGICAL, allocatable :: glacierss    (:)
+   logical, allocatable :: forcmask_elm (:)
+   logical, allocatable :: glacierss    (:)
 
    ! local variables
    integer  :: deltim_int                ! model time step length
    ! real(r8) :: deltim_real               ! model time step length
 
    !  for SinglePoint
-   TYPE(timestamp), allocatable :: forctime (:)
-   INTEGER,  allocatable :: iforctime(:)
+   type(timestamp), allocatable :: forctime (:)
+   integer,  allocatable :: iforctime(:)
 
    logical :: forcing_read_ahead
    real(r8), allocatable :: forc_disk(:,:)
@@ -65,46 +65,46 @@ module MOD_Forcing
    type(block_data_real8_2d), allocatable :: forcn_LB (:)  ! forcing data at lower bondary
    type(block_data_real8_2d), allocatable :: forcn_UB (:)  ! forcing data at upper bondary
 
-   public :: forcing_init
-   public :: read_forcing
+   PUBLIC :: forcing_init
+   PUBLIC :: read_forcing
 
-contains
+CONTAINS
 
    !--------------------------------
-   subroutine forcing_init (dir_forcing, deltatime, ststamp, lc_year, etstamp)
+   SUBROUTINE forcing_init (dir_forcing, deltatime, ststamp, lc_year, etstamp)
 
-      use MOD_SPMD_Task
-      USE MOD_Namelist
-      use MOD_DataType
-      USE MOD_Mesh
-      USE MOD_LandElm
-      USE MOD_LandPatch
+   USE MOD_SPMD_Task
+   USE MOD_Namelist
+   USE MOD_DataType
+   USE MOD_Mesh
+   USE MOD_LandElm
+   USE MOD_LandPatch
 #ifdef CROP
-      USE MOD_LandCrop
+   USE MOD_LandCrop
 #endif
-      use MOD_Mapping_Grid2Pset
-      use MOD_UserSpecifiedForcing
-      USE MOD_NetCDFSerial
-      USE MOD_NetCDFVector
-      USE MOD_NetCDFBlock
-      USE MOD_Vars_TimeInvariants
-      USE MOD_Vars_1DForcing
-      implicit none
+   USE MOD_Mapping_Grid2Pset
+   USE MOD_UserSpecifiedForcing
+   USE MOD_NetCDFSerial
+   USE MOD_NetCDFVector
+   USE MOD_NetCDFBlock
+   USE MOD_Vars_TimeInvariants
+   USE MOD_Vars_1DForcing
+   IMPLICIT NONE
 
-      character(len=*), intent(in) :: dir_forcing
-      real(r8),         intent(in) :: deltatime  ! model time step
-      type(timestamp),  intent(in) :: ststamp
-      INTEGER, intent(in) :: lc_year    ! which year of land cover data used
-      type(timestamp),  intent(in), optional :: etstamp
+   character(len=*), intent(in) :: dir_forcing
+   real(r8),         intent(in) :: deltatime  ! model time step
+   type(timestamp),  intent(in) :: ststamp
+   integer, intent(in) :: lc_year    ! which year of land cover data used
+   type(timestamp),  intent(in), optional :: etstamp
 
-      ! Local variables
-      integer            :: idate(3)
-      CHARACTER(len=256) :: filename, lndname, cyear
-      integer            :: ivar, year, month, day, time_i
-      REAL(r8)           :: missing_value
-      INTEGER            :: ielm, istt, iend
+   ! Local variables
+   integer            :: idate(3)
+   character(len=256) :: filename, lndname, cyear
+   integer            :: ivar, year, month, day, time_i
+   real(r8)           :: missing_value
+   integer            :: ielm, istt, iend
 
-      call init_user_specified_forcing
+      CALL init_user_specified_forcing
 
       ! CO2 data initialization
       CALL init_monthly_co2_mlo
@@ -123,9 +123,9 @@ contains
 
       idate = (/ststamp%year, ststamp%day, ststamp%sec/)
 
-      call metread_latlon (dir_forcing, idate)
+      CALL metread_latlon (dir_forcing, idate)
 
-      if (p_is_io) then
+      IF (p_is_io) THEN
 
          IF (allocated(forcn   )) deallocate(forcn   )
          IF (allocated(forcn_LB)) deallocate(forcn_LB)
@@ -134,29 +134,29 @@ contains
          allocate (forcn_LB (NVAR))
          allocate (forcn_UB (NVAR))
 
-         do ivar = 1, NVAR
-            call allocate_block_data (gforc, forcn   (ivar))
-            call allocate_block_data (gforc, forcn_LB(ivar))
-            call allocate_block_data (gforc, forcn_UB(ivar))
-         end do
+         DO ivar = 1, NVAR
+            CALL allocate_block_data (gforc, forcn   (ivar))
+            CALL allocate_block_data (gforc, forcn_LB(ivar))
+            CALL allocate_block_data (gforc, forcn_UB(ivar))
+         ENDDO
 
          ! allocate memory for forcing data
-         call allocate_block_data (gforc, metdata)  ! forcing data
-         call allocate_block_data (gforc, avgcos )  ! time-average of cos(zenith)
+         CALL allocate_block_data (gforc, metdata)  ! forcing data
+         CALL allocate_block_data (gforc, avgcos )  ! time-average of cos(zenith)
 #if(defined URBAN_MODEL && defined SinglePoint)
-         call allocate_block_data (gforc, rainf)
-         call allocate_block_data (gforc, snowf)
+         CALL allocate_block_data (gforc, rainf)
+         CALL allocate_block_data (gforc, snowf)
 #endif
 
-      end if
+      ENDIF
 
       IF (.not. DEF_forcing%has_missing_value) THEN
-         call mg2p_forc%build (gforc, landpatch)
+         CALL mg2p_forc%build (gforc, landpatch)
          IF (DEF_USE_Forcing_Downscaling) THEN
-            call mg2p_forc_elm%build (gforc, landelm)
+            CALL mg2p_forc_elm%build (gforc, landelm)
          ENDIF
       ELSE
-         call setstampLB(ststamp, 1, year, month, day, time_i)
+         CALL setstampLB(ststamp, 1, year, month, day, time_i)
          filename = trim(dir_forcing)//trim(metfilename(year, month, day, 1))
          tstamp_LB(1) = timestamp(-1, -1, -1)
 
@@ -180,10 +180,10 @@ contains
          CALL mpi_bcast (missing_value, 1, MPI_REAL8, p_root, p_comm_glb, p_err)
 #endif
 
-         call ncio_read_block_time (filename, vname(1), gforc, time_i, metdata)
-         call mg2p_forc%build (gforc, landpatch, metdata, missing_value, forcmask)
+         CALL ncio_read_block_time (filename, vname(1), gforc, time_i, metdata)
+         CALL mg2p_forc%build (gforc, landpatch, metdata, missing_value, forcmask)
          IF (DEF_USE_Forcing_Downscaling) THEN
-            call mg2p_forc_elm%build (gforc, landelm, metdata, missing_value, forcmask_elm)
+            CALL mg2p_forc_elm%build (gforc, landelm, metdata, missing_value, forcmask_elm)
          ENDIF
       ENDIF
 
@@ -191,7 +191,7 @@ contains
 
          write(cyear,'(i4.4)') lc_year
          lndname = trim(DEF_dir_landdata) // '/topography/'//trim(cyear)//'/topography_patches.nc'
-         call ncio_read_vector (lndname, 'topography_patches', landpatch, forc_topo)
+         CALL ncio_read_vector (lndname, 'topography_patches', landpatch, forc_topo)
 
          IF (p_is_worker) THEN
 #if (defined CROP)
@@ -215,7 +215,7 @@ contains
       ENDIF
 
       forcing_read_ahead = .false.
-      IF (trim(DEF_forcing%dataset) == 'POINT') then
+      IF (trim(DEF_forcing%dataset) == 'POINT') THEN
          IF (USE_SITE_ForcingReadAhead .and. present(etstamp)) THEN
             forcing_read_ahead = .true.
             CALL metread_time (dir_forcing, ststamp, etstamp, deltatime)
@@ -225,7 +225,7 @@ contains
          allocate (iforctime(NVAR))
       ENDIF
 
-      IF (trim(DEF_forcing%dataset) == 'POINT') then
+      IF (trim(DEF_forcing%dataset) == 'POINT') THEN
 
          filename = trim(dir_forcing)//trim(fprefix(1))
 
@@ -251,12 +251,12 @@ contains
 
       ENDIF
 
-   end subroutine forcing_init
+   END SUBROUTINE forcing_init
 
    ! ---- forcing finalize ----
    SUBROUTINE forcing_final ()
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
       IF (allocated(forcmask    )) deallocate(forcmask    )
       IF (allocated(forcmask_elm)) deallocate(forcmask_elm)
@@ -272,7 +272,7 @@ contains
    ! ------------
    SUBROUTINE forcing_reset ()
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
       tstamp_LB(:) = timestamp(-1, -1, -1)
       tstamp_UB(:) = timestamp(-1, -1, -1)
@@ -282,110 +282,110 @@ contains
    !--------------------------------
    SUBROUTINE read_forcing (idate, dir_forcing)
 
-      use MOD_Precision
-      use MOD_Namelist
-      use MOD_Const_Physical, only: rgas, grav
-      use MOD_Vars_TimeInvariants
-      use MOD_Vars_1DForcing
-      use MOD_Vars_2DForcing
-      use MOD_Block
-      use MOD_SPMD_Task
-      use MOD_DataType
-      use MOD_Mesh
-      use MOD_LandPatch
-      use MOD_Mapping_Grid2Pset
-      use MOD_RangeCheck
-      use MOD_UserSpecifiedForcing
-      USE MOD_ForcingDownscaling, only : rair, cpair, downscale_forcings
+   USE MOD_Precision
+   USE MOD_Namelist
+   USE MOD_Const_Physical, only: rgas, grav
+   USE MOD_Vars_TimeInvariants
+   USE MOD_Vars_1DForcing
+   USE MOD_Vars_2DForcing
+   USE MOD_Block
+   USE MOD_SPMD_Task
+   USE MOD_DataType
+   USE MOD_Mesh
+   USE MOD_LandPatch
+   USE MOD_Mapping_Grid2Pset
+   USE MOD_RangeCheck
+   USE MOD_UserSpecifiedForcing
+   USE MOD_ForcingDownscaling, only : rair, cpair, downscale_forcings
 
-      IMPLICIT NONE
-      integer, INTENT(in) :: idate(3)
-      character(len=*), intent(in) :: dir_forcing
+   IMPLICIT NONE
+   integer, intent(in) :: idate(3)
+   character(len=*), intent(in) :: dir_forcing
 
-      ! local variables:
-      integer  :: ivar
-      integer  :: iblkme, ib, jb, i, j, ilon, ilat, np, ne
-      real(r8) :: calday  ! Julian cal day (1.xx to 365.xx)
-      real(r8) :: sunang, cloud, difrat, vnrat
-      real(r8) :: a, hsolar, ratio_rvrf
-      type(block_data_real8_2d) :: forc_xy_solarin
+   ! local variables:
+   integer  :: ivar
+   integer  :: iblkme, ib, jb, i, j, ilon, ilat, np, ne
+   real(r8) :: calday  ! Julian cal day (1.xx to 365.xx)
+   real(r8) :: sunang, cloud, difrat, vnrat
+   real(r8) :: a, hsolar, ratio_rvrf
+   type(block_data_real8_2d) :: forc_xy_solarin
 
-      type(timestamp) :: mtstamp
-      integer  :: id(3)
-      integer  :: dtLB, dtUB
-      real(r8) :: cosz
-      INTEGER  :: year, month, mday
-      logical  :: has_u,has_v
+   type(timestamp) :: mtstamp
+   integer  :: id(3)
+   integer  :: dtLB, dtUB
+   real(r8) :: cosz
+   integer  :: year, month, mday
+   logical  :: has_u,has_v
 
-      real solar, frl, prcp, tm, us, vs, pres, qm
-      real(r8) :: pco2m
+   real solar, frl, prcp, tm, us, vs, pres, qm
+   real(r8) :: pco2m
 
-      if (p_is_io) then
+      IF (p_is_io) THEN
 
          !------------------------------------------------------------
-         ! READ IN THE ATMOSPHERIC FORCING
+         ! READ in THE ATMOSPHERIC FORCING
 
          ! read lower and upper boundary forcing data
          CALL metreadLBUB(idate, dir_forcing)
 
          ! set model time stamp
          id(:) = idate(:)
-         !call adj2end(id)
+         !CALL adj2end(id)
          mtstamp = id
 
          has_u = .true.
          has_v = .true.
          ! loop for variables
-         do ivar = 1, NVAR
+         DO ivar = 1, NVAR
 
             IF (ivar == 5 .and. trim(vname(ivar)) == 'NULL') has_u = .false.
             IF (ivar == 6 .and. trim(vname(ivar)) == 'NULL') has_v = .false.
-            if (trim(vname(ivar)) == 'NULL') cycle     ! no data, cycle
-            if (trim(tintalgo(ivar)) == 'NULL') cycle
+            IF (trim(vname(ivar)) == 'NULL') CYCLE     ! no data, CYCLE
+            IF (trim(tintalgo(ivar)) == 'NULL') CYCLE
 
             ! to make sure the forcing data calculated is in the range of time
             ! interval [LB, UB]
-            if ( (mtstamp < tstamp_LB(ivar)) .or. (tstamp_UB(ivar) < mtstamp) ) then
-               write(6, *) "the data required is out of range! stop!"; CALL CoLM_stop()
-            end if
+            IF ( (mtstamp < tstamp_LB(ivar)) .or. (tstamp_UB(ivar) < mtstamp) ) THEN
+               write(6, *) "the data required is out of range! STOP!"; CALL CoLM_stop()
+            ENDIF
 
             ! calcualte distance to lower/upper boundary
             dtLB = mtstamp - tstamp_LB(ivar)
             dtUB = tstamp_UB(ivar) - mtstamp
 
             ! nearest method, for precipitation
-            if (tintalgo(ivar) == 'nearest') then
-               if (dtLB <= dtUB) then
-                  call block_data_copy (forcn_LB(ivar), forcn(ivar))
-               else
-                  call block_data_copy (forcn_UB(ivar), forcn(ivar))
-               end if
-            end if
+            IF (tintalgo(ivar) == 'nearest') THEN
+               IF (dtLB <= dtUB) THEN
+                  CALL block_data_copy (forcn_LB(ivar), forcn(ivar))
+               ELSE
+                  CALL block_data_copy (forcn_UB(ivar), forcn(ivar))
+               ENDIF
+            ENDIF
 
             ! linear method, for T, Pres, Q, W, LW
-            if (tintalgo(ivar) == 'linear') then
-               if ( (dtLB+dtUB) > 0 ) then
-                  call block_data_linear_interp ( &
+            IF (tintalgo(ivar) == 'linear') THEN
+               IF ( (dtLB+dtUB) > 0 ) THEN
+                  CALL block_data_linear_interp ( &
                      forcn_LB(ivar), real(dtUB,r8)/real(dtLB+dtUB,r8), &
                      forcn_UB(ivar), real(dtLB,r8)/real(dtLB+dtUB,r8), &
                      forcn(ivar))
-               else
-                  call block_data_copy (forcn_LB(ivar), forcn(ivar))
-               end if
-            end if
+               ELSE
+                  CALL block_data_copy (forcn_LB(ivar), forcn(ivar))
+               ENDIF
+            ENDIF
 
             ! coszen method, for SW
-            if (tintalgo(ivar) == 'coszen') then
+            IF (tintalgo(ivar) == 'coszen') THEN
                DO iblkme = 1, gblock%nblkme
                   ib = gblock%xblkme(iblkme)
                   jb = gblock%yblkme(iblkme)
 
-                  do j = 1, gforc%ycnt(jb)
-                     do i = 1, gforc%xcnt(ib)
+                  DO j = 1, gforc%ycnt(jb)
+                     DO i = 1, gforc%xcnt(ib)
 
                         ilat = gforc%ydsp(jb) + j
                         ilon = gforc%xdsp(ib) + i
-                        if (ilon > gforc%nlon) ilon = ilon - gforc%nlon
+                        IF (ilon > gforc%nlon) ilon = ilon - gforc%nlon
 
                         calday = calendarday(mtstamp)
                         cosz = orb_coszen(calday, gforc%rlon(ilon), gforc%rlat(ilat))
@@ -393,53 +393,53 @@ contains
                         forcn(ivar)%blk(ib,jb)%val(i,j) = &
                            cosz / avgcos%blk(ib,jb)%val(i,j) * forcn_LB(ivar)%blk(ib,jb)%val(i,j)
 
-                     end do
-                  end do
-               end do
-            end if
+                     ENDDO
+                  ENDDO
+               ENDDO
+            ENDIF
 
-         end do
+         ENDDO
 
          ! preprocess for forcing data, only for QIAN data right now?
          CALL metpreprocess (gforc, forcn)
 
-         call allocate_block_data (gforc, forc_xy_solarin)
+         CALL allocate_block_data (gforc, forc_xy_solarin)
 
-         call block_data_copy (forcn(1), forc_xy_t      )
-         call block_data_copy (forcn(2), forc_xy_q      )
-         call block_data_copy (forcn(3), forc_xy_psrf   )
-         call block_data_copy (forcn(3), forc_xy_pbot   )
-         call block_data_copy (forcn(4), forc_xy_prl, sca = 2/3._r8)
-         call block_data_copy (forcn(4), forc_xy_prc, sca = 1/3._r8)
-         call block_data_copy (forcn(7), forc_xy_solarin)
-         call block_data_copy (forcn(8), forc_xy_frl    )
-         if (DEF_USE_CBL_HEIGHT) then
-            call block_data_copy (forcn(9), forc_xy_hpbl    )
-         endif
+         CALL block_data_copy (forcn(1), forc_xy_t      )
+         CALL block_data_copy (forcn(2), forc_xy_q      )
+         CALL block_data_copy (forcn(3), forc_xy_psrf   )
+         CALL block_data_copy (forcn(3), forc_xy_pbot   )
+         CALL block_data_copy (forcn(4), forc_xy_prl, sca = 2/3._r8)
+         CALL block_data_copy (forcn(4), forc_xy_prc, sca = 1/3._r8)
+         CALL block_data_copy (forcn(7), forc_xy_solarin)
+         CALL block_data_copy (forcn(8), forc_xy_frl    )
+         IF (DEF_USE_CBL_HEIGHT) THEN
+            CALL block_data_copy (forcn(9), forc_xy_hpbl    )
+         ENDIF
 
-         if (has_u .and. has_v) then
-            call block_data_copy (forcn(5), forc_xy_us )
-            call block_data_copy (forcn(6), forc_xy_vs )
-         ELSEif (has_u) then
-            call block_data_copy (forcn(5), forc_xy_us , sca = 1/sqrt(2.0_r8))
-            call block_data_copy (forcn(5), forc_xy_vs , sca = 1/sqrt(2.0_r8))
-         ELSEif (has_v) then
-            call block_data_copy (forcn(6), forc_xy_us , sca = 1/sqrt(2.0_r8))
-            call block_data_copy (forcn(6), forc_xy_vs , sca = 1/sqrt(2.0_r8))
+         IF (has_u .and. has_v) THEN
+            CALL block_data_copy (forcn(5), forc_xy_us )
+            CALL block_data_copy (forcn(6), forc_xy_vs )
+         ELSEif (has_u) THEN
+            CALL block_data_copy (forcn(5), forc_xy_us , sca = 1/sqrt(2.0_r8))
+            CALL block_data_copy (forcn(5), forc_xy_vs , sca = 1/sqrt(2.0_r8))
+         ELSEif (has_v) THEN
+            CALL block_data_copy (forcn(6), forc_xy_us , sca = 1/sqrt(2.0_r8))
+            CALL block_data_copy (forcn(6), forc_xy_vs , sca = 1/sqrt(2.0_r8))
          ELSE
-            if (.not.trim(DEF_forcing%dataset) == 'CPL7') then
-               write(6, *) "At least one of the wind components must be provided! stop!";
+            IF (.not.trim(DEF_forcing%dataset) == 'CPL7') THEN
+               write(6, *) "At least one of the wind components must be provided! STOP!";
                CALL CoLM_stop()
             ENDIF
          ENDIF
 
-         call flush_block_data (forc_xy_hgt_u, real(HEIGHT_V,r8))
-         call flush_block_data (forc_xy_hgt_t, real(HEIGHT_T,r8))
-         call flush_block_data (forc_xy_hgt_q, real(HEIGHT_Q,r8))
+         CALL flush_block_data (forc_xy_hgt_u, real(HEIGHT_V,r8))
+         CALL flush_block_data (forc_xy_hgt_t, real(HEIGHT_T,r8))
+         CALL flush_block_data (forc_xy_hgt_q, real(HEIGHT_Q,r8))
 
-         if (solarin_all_band) then
+         IF (solarin_all_band) THEN
 
-            if (trim(DEF_forcing%dataset) == 'QIAN') then
+            IF (trim(DEF_forcing%dataset) == 'QIAN') THEN
                !---------------------------------------------------------------
                ! 04/2014, yuan: NOTE! codes from CLM4.5-CESM1.2.0
                ! relationship between incoming NIR or VIS radiation and ratio of
@@ -450,8 +450,8 @@ contains
                   ib = gblock%xblkme(iblkme)
                   jb = gblock%yblkme(iblkme)
 
-                  do j = 1, gforc%ycnt(jb)
-                     do i = 1, gforc%xcnt(ib)
+                  DO j = 1, gforc%ycnt(jb)
+                     DO i = 1, gforc%xcnt(ib)
 
                         hsolar = forc_xy_solarin%blk(ib,jb)%val(i,j)*0.5_R8
 
@@ -467,11 +467,11 @@ contains
                         forc_xy_sols %blk(ib,jb)%val(i,j) = ratio_rvrf*hsolar
                         forc_xy_solsd%blk(ib,jb)%val(i,j) = (1._R8 - ratio_rvrf)*hsolar
 
-                     end do
-                  end do
-               end do
+                     ENDDO
+                  ENDDO
+               ENDDO
 
-            else
+            ELSE
                !---------------------------------------------------------------
                ! as the downward solar is in full band, an empirical expression
                ! will be used to divide fractions of band and incident
@@ -482,12 +482,12 @@ contains
                   ib = gblock%xblkme(iblkme)
                   jb = gblock%yblkme(iblkme)
 
-                  do j = 1, gforc%ycnt(jb)
-                     do i = 1, gforc%xcnt(ib)
+                  DO j = 1, gforc%ycnt(jb)
+                     DO i = 1, gforc%xcnt(ib)
 
                         ilat = gforc%ydsp(jb) + j
                         ilon = gforc%xdsp(ib) + i
-                        if (ilon > gforc%nlon) ilon = ilon - gforc%nlon
+                        IF (ilon > gforc%nlon) ilon = ilon - gforc%nlon
 
                         a = forc_xy_solarin%blk(ib,jb)%val(i,j)
                         calday = calendarday(idate)
@@ -499,8 +499,8 @@ contains
                         cloud = max(0.58,cloud)
 
                         difrat = 0.0604/(sunang-0.0223)+0.0683
-                        if(difrat.lt.0.) difrat = 0.
-                        if(difrat.gt.1.) difrat = 1.
+                        IF(difrat.lt.0.) difrat = 0.
+                        IF(difrat.gt.1.) difrat = 1.
 
                         difrat = difrat+(1.0-difrat)*cloud
                         vnrat = (580.-cloud*464.)/((580.-cloud*499.)+(580.-cloud*464.))
@@ -509,99 +509,99 @@ contains
                         forc_xy_soll %blk(ib,jb)%val(i,j) = a*(1.0-difrat)*(1.0-vnrat)
                         forc_xy_solsd%blk(ib,jb)%val(i,j) = a*difrat*vnrat
                         forc_xy_solld%blk(ib,jb)%val(i,j) = a*difrat*(1.0-vnrat)
-                     end do
-                  end do
-               end do
-            end if
+                     ENDDO
+                  ENDDO
+               ENDDO
+            ENDIF
 
-         end if
+         ENDIF
 
          ! [GET ATMOSPHERE CO2 CONCENTRATION DATA]
          year  = idate(1)
          CALL julian2monthday (idate(1), idate(2), month, mday)
          pco2m = get_monthly_co2_mlo(year, month)*1.e-6
-         call block_data_copy (forc_xy_pbot, forc_xy_pco2m, sca = pco2m        )
-         call block_data_copy (forc_xy_pbot, forc_xy_po2m , sca = 0.209_r8     )
+         CALL block_data_copy (forc_xy_pbot, forc_xy_pco2m, sca = pco2m        )
+         CALL block_data_copy (forc_xy_pbot, forc_xy_po2m , sca = 0.209_r8     )
 
-      end if
+      ENDIF
 
       ! Mapping the 2d atmospheric fields [lon_points]x[lat_points]
       !     -> the 1d vector of subgrid points [numpatch]
-      call mg2p_forc%map_aweighted (forc_xy_pco2m,  forc_pco2m)
-      call mg2p_forc%map_aweighted (forc_xy_po2m ,  forc_po2m )
-      call mg2p_forc%map_aweighted (forc_xy_us   ,  forc_us   )
-      call mg2p_forc%map_aweighted (forc_xy_vs   ,  forc_vs   )
+      CALL mg2p_forc%map_aweighted (forc_xy_pco2m,  forc_pco2m)
+      CALL mg2p_forc%map_aweighted (forc_xy_po2m ,  forc_po2m )
+      CALL mg2p_forc%map_aweighted (forc_xy_us   ,  forc_us   )
+      CALL mg2p_forc%map_aweighted (forc_xy_vs   ,  forc_vs   )
 
-      call mg2p_forc%map_aweighted (forc_xy_psrf ,  forc_psrf )
+      CALL mg2p_forc%map_aweighted (forc_xy_psrf ,  forc_psrf )
 
-      call mg2p_forc%map_aweighted (forc_xy_sols ,  forc_sols )
-      call mg2p_forc%map_aweighted (forc_xy_soll ,  forc_soll )
-      call mg2p_forc%map_aweighted (forc_xy_solsd,  forc_solsd)
-      call mg2p_forc%map_aweighted (forc_xy_solld,  forc_solld)
+      CALL mg2p_forc%map_aweighted (forc_xy_sols ,  forc_sols )
+      CALL mg2p_forc%map_aweighted (forc_xy_soll ,  forc_soll )
+      CALL mg2p_forc%map_aweighted (forc_xy_solsd,  forc_solsd)
+      CALL mg2p_forc%map_aweighted (forc_xy_solld,  forc_solld)
 
-      call mg2p_forc%map_aweighted (forc_xy_hgt_t,  forc_hgt_t)
-      call mg2p_forc%map_aweighted (forc_xy_hgt_u,  forc_hgt_u)
-      call mg2p_forc%map_aweighted (forc_xy_hgt_q,  forc_hgt_q)
-      if (DEF_USE_CBL_HEIGHT) then
-	    call mg2p_forc%map_aweighted (forc_xy_hpbl,   forc_hpbl)
-      endif
+      CALL mg2p_forc%map_aweighted (forc_xy_hgt_t,  forc_hgt_t)
+      CALL mg2p_forc%map_aweighted (forc_xy_hgt_u,  forc_hgt_u)
+      CALL mg2p_forc%map_aweighted (forc_xy_hgt_q,  forc_hgt_q)
+      IF (DEF_USE_CBL_HEIGHT) THEN
+         CALL mg2p_forc%map_aweighted (forc_xy_hpbl,   forc_hpbl)
+      ENDIF
 
       IF (.not. DEF_USE_Forcing_Downscaling) THEN
 
-         call mg2p_forc%map_aweighted (forc_xy_t    ,  forc_t    )
-         call mg2p_forc%map_aweighted (forc_xy_q    ,  forc_q    )
-         call mg2p_forc%map_aweighted (forc_xy_prc  ,  forc_prc  )
-         call mg2p_forc%map_aweighted (forc_xy_prl  ,  forc_prl  )
-         call mg2p_forc%map_aweighted (forc_xy_pbot ,  forc_pbot )
-         call mg2p_forc%map_aweighted (forc_xy_frl  ,  forc_frl  )
+         CALL mg2p_forc%map_aweighted (forc_xy_t    ,  forc_t    )
+         CALL mg2p_forc%map_aweighted (forc_xy_q    ,  forc_q    )
+         CALL mg2p_forc%map_aweighted (forc_xy_prc  ,  forc_prc  )
+         CALL mg2p_forc%map_aweighted (forc_xy_prl  ,  forc_prl  )
+         CALL mg2p_forc%map_aweighted (forc_xy_pbot ,  forc_pbot )
+         CALL mg2p_forc%map_aweighted (forc_xy_frl  ,  forc_frl  )
 
-         if (p_is_worker) then
+         IF (p_is_worker) THEN
 
-            do np = 1, numpatch
+            DO np = 1, numpatch
                IF (DEF_forcing%has_missing_value) THEN
-                  IF (.not. forcmask(np)) cycle
+                  IF (.not. forcmask(np)) CYCLE
                ENDIF
 
                ! The standard measuring conditions for temperature are two meters above the ground
                ! Scientists have measured the most frigid temperature ever
                ! recorded on the continent's eastern highlands: about (180K) colder than dry ice.
-               if(forc_t(np) < 180.) forc_t(np) = 180.
+               IF(forc_t(np) < 180.) forc_t(np) = 180.
                ! the highest air temp was found in Kuwait 326 K, Sulaibya 2012-07-31;
                ! Pakistan, Sindh 2010-05-26; Iraq, Nasiriyah 2011-08-03
-               if(forc_t(np) > 326.) forc_t(np) = 326.
+               IF(forc_t(np) > 326.) forc_t(np) = 326.
 
                forc_rhoair(np) = (forc_pbot(np) &
                   - 0.378*forc_q(np)*forc_pbot(np)/(0.622+0.378*forc_q(np)))&
                   / (rgas*forc_t(np))
 
-            end do
+            ENDDO
 
-         end if
+         ENDIF
 
       ELSE
 
-         call mg2p_forc_elm%map_aweighted (forc_xy_t    ,  forc_t_elm    )
-         call mg2p_forc_elm%map_aweighted (forc_xy_q    ,  forc_q_elm    )
-         call mg2p_forc_elm%map_aweighted (forc_xy_prc  ,  forc_prc_elm  )
-         call mg2p_forc_elm%map_aweighted (forc_xy_prl  ,  forc_prl_elm  )
-         call mg2p_forc_elm%map_aweighted (forc_xy_pbot ,  forc_pbot_elm )
-         call mg2p_forc_elm%map_aweighted (forc_xy_frl  ,  forc_lwrad_elm)
-         call mg2p_forc_elm%map_aweighted (forc_xy_hgt_t,  forc_hgt_elm  )
+         CALL mg2p_forc_elm%map_aweighted (forc_xy_t    ,  forc_t_elm    )
+         CALL mg2p_forc_elm%map_aweighted (forc_xy_q    ,  forc_q_elm    )
+         CALL mg2p_forc_elm%map_aweighted (forc_xy_prc  ,  forc_prc_elm  )
+         CALL mg2p_forc_elm%map_aweighted (forc_xy_prl  ,  forc_prl_elm  )
+         CALL mg2p_forc_elm%map_aweighted (forc_xy_pbot ,  forc_pbot_elm )
+         CALL mg2p_forc_elm%map_aweighted (forc_xy_frl  ,  forc_lwrad_elm)
+         CALL mg2p_forc_elm%map_aweighted (forc_xy_hgt_t,  forc_hgt_elm  )
 
-         if (p_is_worker) then
+         IF (p_is_worker) THEN
 
-            do ne = 1, numelm
+            DO ne = 1, numelm
                IF (DEF_forcing%has_missing_value) THEN
-                  IF (.not. forcmask_elm(ne)) cycle
+                  IF (.not. forcmask_elm(ne)) CYCLE
                ENDIF
 
                ! The standard measuring conditions for temperature are two meters above the ground
                ! Scientists have measured the most frigid temperature ever
                ! recorded on the continent's eastern highlands: about (180K) colder than dry ice.
-               if(forc_t_elm(ne) < 180.) forc_t_elm(ne) = 180.
+               IF(forc_t_elm(ne) < 180.) forc_t_elm(ne) = 180.
                ! the highest air temp was found in Kuwait 326 K, Sulaibya 2012-07-31;
                ! Pakistan, Sindh 2010-05-26; Iraq, Nasiriyah 2011-08-03
-               if(forc_t_elm(ne) > 326.) forc_t_elm(ne) = 326.
+               IF(forc_t_elm(ne) > 326.) forc_t_elm(ne) = 326.
 
                forc_rho_elm(ne) = (forc_pbot_elm(ne) &
                   - 0.378*forc_q_elm(ne)*forc_pbot_elm(ne)/(0.622+0.378*forc_q_elm(ne)))&
@@ -609,43 +609,43 @@ contains
 
                forc_th_elm(ne) = forc_t_elm(ne) * (1.e5/forc_pbot_elm(ne)) ** (rair/cpair)
 
-            end do
+            ENDDO
 
             CALL downscale_forcings ( &
                numelm, numpatch, elm_patch%substt, elm_patch%subend, glacierss, elm_patch%subfrc,   &
                ! forcing in gridcells
-            forc_topo_elm, forc_t_elm,   forc_th_elm,  forc_q_elm,     forc_pbot_elm, &
+               forc_topo_elm, forc_t_elm,   forc_th_elm,  forc_q_elm,     forc_pbot_elm, &
                forc_rho_elm,  forc_prc_elm, forc_prl_elm, forc_lwrad_elm, forc_hgt_elm,  &
                ! forcing in patches
-            forc_topo,     forc_t,       forc_th,      forc_q,         forc_pbot,     &
+               forc_topo,     forc_t,       forc_th,      forc_q,         forc_pbot,     &
                forc_rhoair,   forc_prc,     forc_prl,     forc_frl)
 
-         end if
+         ENDIF
 
       ENDIF
 
 #ifdef RangeCheck
 #ifdef USEMPI
-      call mpi_barrier (p_comm_glb, p_err)
+      CALL mpi_barrier (p_comm_glb, p_err)
 #endif
-      if (p_is_master) write(*,'(/, A20)') 'Checking forcing ...'
+      IF (p_is_master) write(*,'(/, A20)') 'Checking forcing ...'
 
-      call check_vector_data ('Forcing t     [kelvin]', forc_t    )
-      call check_vector_data ('Forcing q     [kg/kg] ', forc_q    )
-      call check_vector_data ('Forcing prc   [mm/s]  ', forc_prc  )
-      call check_vector_data ('Forcing psrf  [pa]    ', forc_psrf )
-      call check_vector_data ('Forcing prl   [mm/s]  ', forc_prl  )
-      call check_vector_data ('Forcing sols  [W/m2]  ', forc_sols )
-      call check_vector_data ('Forcing soll  [W/m2]  ', forc_soll )
-      call check_vector_data ('Forcing solsd [W/m2]  ', forc_solsd)
-      call check_vector_data ('Forcing solld [W/m2]  ', forc_solld)
-      call check_vector_data ('Forcing frl   [W/m2]  ', forc_frl  )
-      if (DEF_USE_CBL_HEIGHT) then
-        call check_vector_data ('Forcing hpbl  ', forc_hpbl )
-      endif
+      CALL check_vector_data ('Forcing t     [kelvin]', forc_t    )
+      CALL check_vector_data ('Forcing q     [kg/kg] ', forc_q    )
+      CALL check_vector_data ('Forcing prc   [mm/s]  ', forc_prc  )
+      CALL check_vector_data ('Forcing psrf  [pa]    ', forc_psrf )
+      CALL check_vector_data ('Forcing prl   [mm/s]  ', forc_prl  )
+      CALL check_vector_data ('Forcing sols  [W/m2]  ', forc_sols )
+      CALL check_vector_data ('Forcing soll  [W/m2]  ', forc_soll )
+      CALL check_vector_data ('Forcing solsd [W/m2]  ', forc_solsd)
+      CALL check_vector_data ('Forcing solld [W/m2]  ', forc_solld)
+      CALL check_vector_data ('Forcing frl   [W/m2]  ', forc_frl  )
+      IF (DEF_USE_CBL_HEIGHT) THEN
+         CALL check_vector_data ('Forcing hpbl  ', forc_hpbl )
+      ENDIF
 
 #ifdef USEMPI
-      call mpi_barrier (p_comm_glb, p_err)
+      CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 #endif
 
@@ -656,46 +656,46 @@ contains
    !
    ! !DESCRIPTION:
    !    read lower and upper boundary forcing data, a major interface of this
-   !    module
+   !    MODULE
    !
    ! REVISIONS:
    ! Hua Yuan, 04/2014: initial code
    ! ------------------------------------------------------------
    SUBROUTINE metreadLBUB (idate, dir_forcing)
 
-      use MOD_UserSpecifiedForcing
-      USE MOD_Namelist
-      USE MOD_Block
-      use MOD_DataType
-      use MOD_Block
-      use MOD_NetCDFBlock
-      use MOD_RangeCheck
-      implicit none
+   USE MOD_UserSpecifiedForcing
+   USE MOD_Namelist
+   USE MOD_Block
+   USE MOD_DataType
+   USE MOD_Block
+   USE MOD_NetCDFBlock
+   USE MOD_RangeCheck
+   IMPLICIT NONE
 
-      integer, intent(in) :: idate(3)
-      character(len=*), intent(in) :: dir_forcing
+   integer, intent(in) :: idate(3)
+   character(len=*), intent(in) :: dir_forcing
 
-      ! Local variables
-      integer         :: ivar, year, month, day, time_i
-      INTEGER         :: iblkme, ib, jb, i, j
-      type(timestamp) :: mtstamp
-      character(len=256) :: filename
+   ! Local variables
+   integer         :: ivar, year, month, day, time_i
+   integer         :: iblkme, ib, jb, i, j
+   type(timestamp) :: mtstamp
+   character(len=256) :: filename
 
       mtstamp = idate
 
-      do ivar = 1, NVAR
+      DO ivar = 1, NVAR
 
-         if (trim(vname(ivar)) == 'NULL') cycle     ! no data, cycle
+         IF (trim(vname(ivar)) == 'NULL') CYCLE     ! no data, CYCLE
 
-         ! lower and upper boundary data already exist, cycle
-         if ( .NOT.(tstamp_LB(ivar)=='NULL') .AND. .NOT.(tstamp_UB(ivar)=='NULL') .AND. &
-            tstamp_LB(ivar)<=mtstamp .AND. mtstamp<tstamp_UB(ivar) ) then
-            cycle
-         end if
+         ! lower and upper boundary data already exist, CYCLE
+         IF ( .not.(tstamp_LB(ivar)=='NULL') .and. .not.(tstamp_UB(ivar)=='NULL') .and. &
+            tstamp_LB(ivar)<=mtstamp .and. mtstamp<tstamp_UB(ivar) ) THEN
+            CYCLE
+         ENDIF
 
          ! set lower boundary time stamp and get data
-         if (tstamp_LB(ivar) == 'NULL') then
-            call setstampLB(mtstamp, ivar, year, month, day, time_i)
+         IF (tstamp_LB(ivar) == 'NULL') THEN
+            CALL setstampLB(mtstamp, ivar, year, month, day, time_i)
 
             ! read forcing data
             filename = trim(dir_forcing)//trim(metfilename(year, month, day, ivar))
@@ -729,20 +729,20 @@ contains
                ENDIF
 #endif
             ELSE
-               call ncio_read_block_time (filename, vname(ivar), gforc, time_i, metdata)
+               CALL ncio_read_block_time (filename, vname(ivar), gforc, time_i, metdata)
             ENDIF
 
-            call block_data_copy (metdata, forcn_LB(ivar))
-         end if
+            CALL block_data_copy (metdata, forcn_LB(ivar))
+         ENDIF
 
          ! set upper boundary time stamp and get data
-         if (tstamp_UB(ivar) == 'NULL' .OR. tstamp_UB(ivar) <= mtstamp) then
-            if ( .NOT. (tstamp_UB(ivar) == 'NULL') ) then
-               call block_data_copy (forcn_UB(ivar), forcn_LB(ivar))
-            end if
-            call setstampUB(ivar, year, month, day, time_i)
-            ! when reaching the end of forcing data, always reuse the last time step data
-            if (year <= endyr) then
+         IF (tstamp_UB(ivar) == 'NULL' .or. tstamp_UB(ivar) <= mtstamp) THEN
+            IF ( .not. (tstamp_UB(ivar) == 'NULL') ) THEN
+               CALL block_data_copy (forcn_UB(ivar), forcn_LB(ivar))
+            ENDIF
+            CALL setstampUB(ivar, year, month, day, time_i)
+            ! when reaching the END of forcing data, always reuse the last time step data
+            IF (year <= endyr) THEN
                ! read forcing data
                filename = trim(dir_forcing)//trim(metfilename(year, month, day, ivar))
                IF (trim(DEF_forcing%dataset) == 'POINT') THEN
@@ -775,20 +775,20 @@ contains
                   ENDIF
 #endif
                ELSE
-                  call ncio_read_block_time (filename, vname(ivar), gforc, time_i, metdata)
+                  CALL ncio_read_block_time (filename, vname(ivar), gforc, time_i, metdata)
                ENDIF
 
-               call block_data_copy (metdata, forcn_UB(ivar))
-            else
+               CALL block_data_copy (metdata, forcn_UB(ivar))
+            ELSE
                write(*,*) year, endyr
-               print *, 'NOTE: reaching the end of forcing data, always reuse the last time step data!'
-            end if
-            if (ivar == 7) then  ! calculate time average coszen, for shortwave radiation
-               call calavgcos(idate)
-            end if
-         end if
+               print *, 'NOTE: reaching the END of forcing data, always reuse the last time step data!'
+            ENDIF
+            IF (ivar == 7) THEN  ! calculate time average coszen, for shortwave radiation
+               CALL calavgcos(idate)
+            ENDIF
+         ENDIF
 
-      end do
+      ENDDO
 
    END SUBROUTINE metreadLBUB
 
@@ -796,23 +796,23 @@ contains
    !-------------------------------------------------
    SUBROUTINE metread_latlon (dir_forcing, idate)
 
-      use MOD_SPMD_Task
-      use MOD_NetCDFSerial
-      use MOD_UserSpecifiedForcing
-      USE MOD_Namelist
-      implicit none
+   USE MOD_SPMD_Task
+   USE MOD_NetCDFSerial
+   USE MOD_UserSpecifiedForcing
+   USE MOD_Namelist
+   IMPLICIT NONE
 
-      character(len=*), intent(in) :: dir_forcing
-      integer, intent(in) :: idate(3)
+   character(len=*), intent(in) :: dir_forcing
+   integer, intent(in) :: idate(3)
 
-      ! Local variables
-      character(len=256) :: filename
-      integer         :: year, month, day, time_i
-      type(timestamp) :: mtstamp
-      real(r8), allocatable :: latxy (:,:)    ! latitude values in 2d
-      real(r8), allocatable :: lonxy (:,:)    ! longitude values in 2d
-      real(r8), allocatable :: lon_in(:)
-      real(r8), allocatable :: lat_in(:)
+   ! Local variables
+   character(len=256) :: filename
+   integer         :: year, month, day, time_i
+   type(timestamp) :: mtstamp
+   real(r8), allocatable :: latxy (:,:)    ! latitude values in 2d
+   real(r8), allocatable :: lonxy (:,:)    ! longitude values in 2d
+   real(r8), allocatable :: lon_in(:)
+   real(r8), allocatable :: lat_in(:)
 
       IF (trim(DEF_forcing%dataset) == 'POINT' .or. trim(DEF_forcing%dataset) == 'CPL7' ) THEN
          CALL gforc%define_by_ndims (360, 180)
@@ -820,13 +820,13 @@ contains
 
          mtstamp = idate
 
-         call setstampLB(mtstamp, 1, year, month, day, time_i)
+         CALL setstampLB(mtstamp, 1, year, month, day, time_i)
          filename = trim(dir_forcing)//trim(metfilename(year, month, day, 1))
          tstamp_LB(1) = timestamp(-1, -1, -1)
 
-         if (dim2d) then
-            call ncio_read_bcast_serial (filename, latname, latxy)
-            call ncio_read_bcast_serial (filename, lonname, lonxy)
+         IF (dim2d) THEN
+            CALL ncio_read_bcast_serial (filename, latname, latxy)
+            CALL ncio_read_bcast_serial (filename, lonname, lonxy)
 
             allocate (lat_in (size(latxy,2)))
             allocate (lon_in (size(lonxy,1)))
@@ -835,15 +835,15 @@ contains
 
             deallocate (latxy)
             deallocate (lonxy)
-         else
-            call ncio_read_bcast_serial (filename, latname, lat_in)
-            call ncio_read_bcast_serial (filename, lonname, lon_in)
+         ELSE
+            CALL ncio_read_bcast_serial (filename, latname, lat_in)
+            CALL ncio_read_bcast_serial (filename, lonname, lon_in)
          ENDIF
 
          IF (.not. DEF_forcing%regional) THEN
-            call gforc%define_by_center (lat_in, lon_in)
+            CALL gforc%define_by_center (lat_in, lon_in)
          ELSE
-            call gforc%define_by_center (lat_in, lon_in, &
+            CALL gforc%define_by_center (lat_in, lon_in, &
                south = DEF_forcing%regbnd(1), north = DEF_forcing%regbnd(2), &
                west  = DEF_forcing%regbnd(3), east  = DEF_forcing%regbnd(4))
          ENDIF
@@ -852,35 +852,35 @@ contains
          deallocate (lon_in)
       ENDIF
 
-      call gforc%set_rlon ()
-      call gforc%set_rlat ()
+      CALL gforc%set_rlon ()
+      CALL gforc%set_rlat ()
 
    END SUBROUTINE metread_latlon
 
    !-------------------------------------------------
    SUBROUTINE metread_time (dir_forcing, ststamp, etstamp, deltime)
 
-      use MOD_SPMD_Task
-      use MOD_NetCDFSerial
-      use MOD_UserSpecifiedForcing
-      USE MOD_Namelist
-      implicit none
+   USE MOD_SPMD_Task
+   USE MOD_NetCDFSerial
+   USE MOD_UserSpecifiedForcing
+   USE MOD_Namelist
+   IMPLICIT NONE
 
-      character(len=*), intent(in) :: dir_forcing
-      type(timestamp),  intent(in), optional :: ststamp, etstamp
-      real(r8),         intent(in), optional :: deltime
+   character(len=*), intent(in) :: dir_forcing
+   type(timestamp),  intent(in), optional :: ststamp, etstamp
+   real(r8),         intent(in), optional :: deltime
 
-      ! Local variables
-      character(len=256) :: filename
-      character(len=256) :: timeunit, timestr
-      REAL(r8), allocatable :: forctime_sec(:), metcache(:,:,:)
-      INTEGER :: year, month, day, hour, minute, second
-      INTEGER :: itime, maxday, id(3)
-      INTEGER*8 :: sec_long
-      integer :: ivar, ntime, its, ite, it
+   ! Local variables
+   character(len=256) :: filename
+   character(len=256) :: timeunit, timestr
+   real(r8), allocatable :: forctime_sec(:), metcache(:,:,:)
+   integer :: year, month, day, hour, minute, second
+   integer :: itime, maxday, id(3)
+   integer*8 :: sec_long
+   integer :: ivar, ntime, its, ite, it
 
-      TYPE(timestamp) :: etstamp_f
-      TYPE(timestamp), allocatable :: forctime_ (:)
+   type(timestamp) :: etstamp_f
+   type(timestamp), allocatable :: forctime_ (:)
 
 
       filename = trim(dir_forcing)//trim(fprefix(1))
@@ -917,8 +917,8 @@ contains
 
          IF ((ststamp < forctime(1)) .or. (etstamp_f < etstamp)) THEN
             write(*,*) 'Error: Forcing does not cover simulation period!'
-            write(*,*) 'Model start ', ststamp,     ' -> Model end ', etstamp
-            write(*,*) 'Forc  start ', forctime(1), ' -> Forc end  ', etstamp_f
+            write(*,*) 'Model start ', ststamp,     ' -> Model END ', etstamp
+            write(*,*) 'Forc  start ', forctime(1), ' -> Forc END  ', etstamp_f
             CALL CoLM_stop ()
          ELSE
             its = 1
@@ -953,7 +953,7 @@ contains
 
          filename = trim(dir_forcing)//trim(metfilename(-1,-1,-1,-1))
          DO ivar = 1, NVAR
-            if (trim(vname(ivar)) /= 'NULL') THEN
+            IF (trim(vname(ivar)) /= 'NULL') THEN
                CALL ncio_read_period_serial (filename, vname(ivar), its, ite, metcache)
                forc_disk(:,ivar) = metcache(1,1,:)
             ENDIF
@@ -964,34 +964,34 @@ contains
 
    END SUBROUTINE metread_time
 
-   ! ------------------------------------------------------------
-   !
-   ! !DESCRIPTION:
-   !    set the lower boundary time stamp and record information,
-   !    a KEY function of this module
-   !
-   ! - for time stamp, set it regularly as the model time step.
-   ! - for record information, account for:
-   !    o year alternation
-   !    o month alternation
-   !    o leap year
-   !    o required dada just beyond the first record
-   !
-   ! REVISIONS:
-   ! Hua Yuan, 04/2014: initial code
-   ! ------------------------------------------------------------
+! ------------------------------------------------------------
+!
+! !DESCRIPTION:
+!    set the lower boundary time stamp and record information,
+!    a KEY FUNCTION of this MODULE
+!
+! - for time stamp, set it regularly as the model time step.
+! - for record information, account for:
+!    o year alternation
+!    o month alternation
+!    o leap year
+!    o required dada just beyond the first record
+!
+! REVISIONS:
+! Hua Yuan, 04/2014: initial code
+! ------------------------------------------------------------
    SUBROUTINE setstampLB(mtstamp, var_i, year, month, mday, time_i)
 
-      implicit none
-      type(timestamp), intent(in)  :: mtstamp
-      integer,         intent(in)  :: var_i
-      integer,         intent(out) :: year
-      integer,         intent(out) :: month
-      integer,         intent(out) :: mday
-      integer,         intent(out) :: time_i
+   IMPLICIT NONE
+   type(timestamp), intent(in)  :: mtstamp
+   integer,         intent(in)  :: var_i
+   integer,         intent(out) :: year
+   integer,         intent(out) :: month
+   integer,         intent(out) :: mday
+   integer,         intent(out) :: time_i
 
-      integer :: i, day, sec, ntime
-      integer :: months(0:12)
+   integer :: i, day, sec, ntime
+   integer :: months(0:12)
 
       year = mtstamp%year
       day  = mtstamp%day
@@ -1021,7 +1021,7 @@ contains
       tstamp_LB(var_i)%day  = day
 
       ! in the case of one year one file
-      if ( trim(groupby) == 'year' ) then
+      IF ( trim(groupby) == 'year' ) THEN
 
          ! calculate the intitial second
          sec    = 86400*(day-1) + sec
@@ -1030,64 +1030,64 @@ contains
          tstamp_LB(var_i)%sec = sec
 
          ! set time stamp (ststamp_LB)
-         if (sec < 0) then
+         IF (sec < 0) THEN
             tstamp_LB(var_i)%sec = 86400 + sec
             tstamp_LB(var_i)%day = day - 1
-            if (tstamp_LB(var_i)%day == 0) then
+            IF (tstamp_LB(var_i)%day == 0) THEN
                tstamp_LB(var_i)%year = year - 1
-               if ( isleapyear(tstamp_LB(var_i)%year) ) then
+               IF ( isleapyear(tstamp_LB(var_i)%year) ) THEN
                   tstamp_LB(var_i)%day = 366
-               else
+               ELSE
                   tstamp_LB(var_i)%day = 365
-               end if
-            end if
-         end if
+               ENDIF
+            ENDIF
+         ENDIF
 
          ! set record info (year, time_i)
-         if ( sec<0 .OR. (sec==0 .AND. offset(var_i).NE.0) ) then
+         IF ( sec<0 .or. (sec==0 .and. offset(var_i).NE.0) ) THEN
 
-            ! if the required dada just behind the first record
+            ! IF the required dada just behind the first record
             ! -> set to the first record
-            if ( year==startyr .AND. month==startmo .AND. day==1 ) then
+            IF ( year==startyr .and. month==startmo .and. day==1 ) THEN
                sec = offset(var_i)
 
-               ! else, set to one record backward
-            else
+               ! ELSE, set to one record backward
+            ELSE
                sec = 86400 + sec
                day = day - 1
-               if (day == 0) then
+               IF (day == 0) THEN
                   year = year - 1
-                  if ( isleapyear(year) .AND. leapyear) then
+                  IF ( isleapyear(year) .and. leapyear) THEN
                      day = 366
-                  else
+                  ELSE
                      day = 365
-                  end if
-               end if
-            end if
-         end if ! end if (sec <= 0)
+                  ENDIF
+               ENDIF
+            ENDIF
+         ENDIF ! ENDIF (sec <= 0)
 
          ! in case of leapyear with a non-leayyear calendar
-         ! use the data 1 day before after FEB 28th (Julian day 59).
-         if ( .NOT. leapyear .AND. isleapyear(year) .AND. day>59 ) then
+         ! USE the data 1 day before after FEB 28th (Julian day 59).
+         IF ( .not. leapyear .and. isleapyear(year) .and. day>59 ) THEN
             day = day - 1
-         end if
+         ENDIF
 
          ! get record time index
          sec = 86400*(day-1) + sec
          time_i = floor( (sec-offset(var_i)) *1. / dtime(var_i) ) + 1
-      end if
+      ENDIF
 
       ! in the case of one month one file
-      if ( trim(groupby) == 'month' ) then
+      IF ( trim(groupby) == 'month' ) THEN
 
-         if ( isleapyear(year) ) then
+         IF ( isleapyear(year) ) THEN
             months = (/0,31,60,91,121,152,182,213,244,274,305,335,366/)
-         else
+         ELSE
             months = (/0,31,59,90,120,151,181,212,243,273,304,334,365/)
-         end if
+         ENDIF
 
          ! calculate initial month and day values
-         call julian2monthday(year, day, month, mday)
+         CALL julian2monthday(year, day, month, mday)
 
          ! calculate initial second value
          sec    = 86400*(mday-1) + sec
@@ -1096,62 +1096,62 @@ contains
          tstamp_LB(var_i)%sec  = sec
 
          ! set time stamp (ststamp_LB)
-         if (sec < 0) then
+         IF (sec < 0) THEN
             tstamp_LB(var_i)%sec = 86400 + sec
             tstamp_LB(var_i)%day = day - 1
-            if (tstamp_LB(var_i)%day == 0) then
+            IF (tstamp_LB(var_i)%day == 0) THEN
                tstamp_LB(var_i)%year = year - 1
-               if ( isleapyear(tstamp_LB(var_i)%year) ) then
+               IF ( isleapyear(tstamp_LB(var_i)%year) ) THEN
                   tstamp_LB(var_i)%day = 366
-               else
+               ELSE
                   tstamp_LB(var_i)%day = 365
-               end if
-            end if
-         end if
+               ENDIF
+            ENDIF
+         ENDIF
 
          ! set record info (year, month, time_i)
-         if ( sec<0 .OR. (sec==0 .AND. offset(var_i).NE.0) ) then
+         IF ( sec<0 .or. (sec==0 .and. offset(var_i).NE.0) ) THEN
 
-            ! if just behind the first record -> set to first record
-            if ( year==startyr .AND. month==startmo .AND. mday==1 ) then
+            ! IF just behind the first record -> set to first record
+            IF ( year==startyr .and. month==startmo .and. mday==1 ) THEN
                sec = offset(var_i)
 
                ! set to one record backward
-            else
+            ELSE
                sec = 86400 + sec
                mday = mday - 1
-               if (mday == 0) then
+               IF (mday == 0) THEN
                   month = month - 1
                   ! bug found by Zhu Siguang & Zhang Xiangxiang, 05/19/2014
-                  ! move the below line in the 'else' statement
+                  ! move the below line in the 'ELSE' statement
                   !mday = months(month) - months(month-1)
-                  if (month == 0) then
+                  IF (month == 0) THEN
                      month = 12
                      year = year - 1
                      mday = 31
-                  else
+                  ELSE
                      mday = months(month) - months(month-1)
-                  end if
-               end if
-            end if
-         end if
+                  ENDIF
+               ENDIF
+            ENDIF
+         ENDIF
 
          ! in case of leapyear with a non-leayyear calendar
-         ! use the data 1 day before, i.e., FEB 28th.
-         if ( .NOT. leapyear .AND. isleapyear(year) .AND. month==2 .AND. mday==29 ) then
+         ! USE the data 1 day before, i.e., FEB 28th.
+         IF ( .not. leapyear .and. isleapyear(year) .and. month==2 .and. mday==29 ) THEN
             mday = 28
-         end if
+         ENDIF
 
          ! get record time index
          sec = 86400*(mday-1) + sec
          time_i = floor( (sec-offset(var_i)) *1. / dtime(var_i) ) + 1
-      end if
+      ENDIF
 
       ! in the case of one day one file
-      if ( trim(groupby) == 'day' ) then
+      IF ( trim(groupby) == 'day' ) THEN
 
          ! calculate initial month and day values
-         call julian2monthday(year, day, month, mday)
+         CALL julian2monthday(year, day, month, mday)
 
          ! calculate initial second value
          time_i = floor( (sec-offset(var_i)) *1. / dtime(var_i) ) + 1
@@ -1159,69 +1159,69 @@ contains
          tstamp_LB(var_i)%sec  = sec
 
          ! set time stamp (ststamp_LB)
-         if (sec < 0) then
+         IF (sec < 0) THEN
             tstamp_LB(var_i)%sec = 86400 + sec
             tstamp_LB(var_i)%day = day - 1
-            if (tstamp_LB(var_i)%day == 0) then
+            IF (tstamp_LB(var_i)%day == 0) THEN
                tstamp_LB(var_i)%year = year - 1
-               if ( isleapyear(tstamp_LB(var_i)%year) ) then
+               IF ( isleapyear(tstamp_LB(var_i)%year) ) THEN
                   tstamp_LB(var_i)%day = 366
-               else
+               ELSE
                   tstamp_LB(var_i)%day = 365
-               end if
-            end if
+               ENDIF
+            ENDIF
 
-            if ( year==startyr .AND. month==startmo .AND. mday==1 ) then
-                  sec = offset(var_i)
-                  ! set to one record backward
-               else
-                  sec = 86400 + sec
-                  year = tstamp_LB(var_i)%year
-                  call julian2monthday(tstamp_LB(var_i)%year, tstamp_LB(var_i)%day, month, mday)
-               end if
-            end if
+            IF ( year==startyr .and. month==startmo .and. mday==1 ) THEN
+               sec = offset(var_i)
+            ! set to one record backward
+            ELSE
+               sec = 86400 + sec
+               year = tstamp_LB(var_i)%year
+               CALL julian2monthday(tstamp_LB(var_i)%year, tstamp_LB(var_i)%day, month, mday)
+            ENDIF
+         ENDIF
 
-            ! in case of leapyear with a non-leayyear calendar
-            ! use the data 1 day before, i.e., FEB 28th.
-            if ( .NOT. leapyear .AND. isleapyear(year) .AND. month==2 .AND. mday==29 ) then
-               mday = 28
-            end if
+         ! in case of leapyear with a non-leayyear calendar
+         ! USE the data 1 day before, i.e., FEB 28th.
+         IF ( .not. leapyear .and. isleapyear(year) .and. month==2 .and. mday==29 ) THEN
+            mday = 28
+         ENDIF
 
-            ! get record time index
-            time_i = floor( (sec-offset(var_i)) *1. / dtime(var_i) ) + 1
-         end if
+         ! get record time index
+         time_i = floor( (sec-offset(var_i)) *1. / dtime(var_i) ) + 1
+      ENDIF
 
-         if (time_i <= 0) then
-            write(6, *) "got the wrong time record of forcing! stop!"; CALL CoLM_stop()
-         end if
+      IF (time_i <= 0) THEN
+         write(6, *) "got the wrong time record of forcing! STOP!"; CALL CoLM_stop()
+      ENDIF
 
-         return
+      RETURN
 
-      END SUBROUTINE setstampLB
+   END SUBROUTINE setstampLB
 
-      ! ------------------------------------------------------------
-      !
-      ! !DESCRIPTION:
-      !    set the upper boundary time stamp and record information,
-      !    a KEY function of this module
-      !
-      ! REVISIONS:
-      ! Hua Yuan, 04/2014: initial code
-      ! ------------------------------------------------------------
-      SUBROUTINE setstampUB(var_i, year, month, mday, time_i)
+! ------------------------------------------------------------
+!
+! !DESCRIPTION:
+!    set the upper boundary time stamp and record information,
+!    a KEY FUNCTION of this MODULE
+!
+! REVISIONS:
+! Hua Yuan, 04/2014: initial code
+! ------------------------------------------------------------
+   SUBROUTINE setstampUB(var_i, year, month, mday, time_i)
 
-         implicit none
-         integer,         intent(in)  :: var_i
-         integer,         intent(out) :: year
-         integer,         intent(out) :: month
-         integer,         intent(out) :: mday
-         integer,         intent(out) :: time_i
+   IMPLICIT NONE
+   integer,         intent(in)  :: var_i
+   integer,         intent(out) :: year
+   integer,         intent(out) :: month
+   integer,         intent(out) :: mday
+   integer,         intent(out) :: time_i
 
-         integer :: day, sec
-         integer :: months(0:12)
+   integer :: day, sec
+   integer :: months(0:12)
 
       IF (trim(DEF_forcing%dataset) == 'POINT') THEN
-         if ( tstamp_UB(var_i) == 'NULL' ) then
+         IF ( tstamp_UB(var_i) == 'NULL' ) THEN
             tstamp_UB(var_i) = forctime(iforctime(var_i)+1)
          ELSE
             iforctime(var_i) = iforctime(var_i) + 1
@@ -1235,185 +1235,185 @@ contains
       ENDIF
 
       ! calculate the time stamp
-      if ( tstamp_UB(var_i) == 'NULL' ) then
+      IF ( tstamp_UB(var_i) == 'NULL' ) THEN
          tstamp_UB(var_i) = tstamp_LB(var_i) + dtime(var_i)
-      else
+      ELSE
          tstamp_LB(var_i) = tstamp_UB(var_i)
          tstamp_UB(var_i) = tstamp_UB(var_i) + dtime(var_i)
-      end if
+      ENDIF
 
-         ! calcualte initial year, day, and second values
-         year = tstamp_UB(var_i)%year
-         day  = tstamp_UB(var_i)%day
-         sec  = tstamp_UB(var_i)%sec
+      ! calcualte initial year, day, and second values
+      year = tstamp_UB(var_i)%year
+      day  = tstamp_UB(var_i)%day
+      sec  = tstamp_UB(var_i)%sec
 
-         if ( trim(groupby) == 'year' ) then
+      IF ( trim(groupby) == 'year' ) THEN
 
-            ! adjust year value
-            if ( sec==86400 .AND. offset(var_i).EQ.0 ) then
-               sec = 0
-               day = day + 1
-               if( isleapyear(year) .AND. day==367) then
-                  year = year + 1; day = 1
-               end if
-               if( .NOT. isleapyear(year) .AND. day==366) then
-                  year = year + 1; day = 1
-               end if
-            end if
+         ! adjust year value
+         IF ( sec==86400 .and. offset(var_i).eq.0 ) THEN
+            sec = 0
+            day = day + 1
+            IF( isleapyear(year) .and. day==367) THEN
+               year = year + 1; day = 1
+            ENDIF
+            IF( .not. isleapyear(year) .and. day==366) THEN
+               year = year + 1; day = 1
+            ENDIF
+         ENDIF
 
-            ! in case of leapyear with a non-leayyear calendar
-            ! use the data 1 day before after FEB 28th (Julian day 59).
-            if ( .NOT. leapyear .AND. isleapyear(year) .AND. day>59 ) then
-               day = day - 1
-            end if
+         ! in case of leapyear with a non-leayyear calendar
+         ! USE the data 1 day before after FEB 28th (Julian day 59).
+         IF ( .not. leapyear .and. isleapyear(year) .and. day>59 ) THEN
+            day = day - 1
+         ENDIF
 
-            ! set record index
-            sec = 86400*(day-1) + sec
-            time_i = floor( (sec-offset(var_i)) *1. / dtime(var_i) ) + 1
-         end if
+         ! set record index
+         sec = 86400*(day-1) + sec
+         time_i = floor( (sec-offset(var_i)) *1. / dtime(var_i) ) + 1
+      ENDIF
 
-         if ( trim(groupby) == 'month' ) then
+      IF ( trim(groupby) == 'month' ) THEN
 
-            if ( isleapyear(year) ) then
-               months = (/0,31,60,91,121,152,182,213,244,274,305,335,366/)
-            else
-               months = (/0,31,59,90,120,151,181,212,243,273,304,334,365/)
-            end if
+         IF ( isleapyear(year) ) THEN
+            months = (/0,31,60,91,121,152,182,213,244,274,305,335,366/)
+         ELSE
+            months = (/0,31,59,90,120,151,181,212,243,273,304,334,365/)
+         ENDIF
 
-            ! calculate initial month and day values
-            call julian2monthday(year, day, month, mday)
+         ! calculate initial month and day values
+         CALL julian2monthday(year, day, month, mday)
 
-            ! record in the next day, adjust year, month and second values
-            if ( sec==86400 .AND. offset(var_i).EQ.0 ) then
-               sec  = 0
-               mday = mday + 1
-               if ( mday > (months(month)-months(month-1)) ) then
-                  mday = 1
-                  ! bug found by Zhu Siguang, 05/25/2014
-                  ! move the below line in the 'else' statement
-                  !month = month + 1
-                  if (month == 12) then
-                     month = 1
-                     year = year + 1
-                  else
-                     month = month + 1
-                  end if
-               end if
-            end if
+         ! record in the next day, adjust year, month and second values
+         IF ( sec==86400 .and. offset(var_i).eq.0 ) THEN
+            sec  = 0
+            mday = mday + 1
+            IF ( mday > (months(month)-months(month-1)) ) THEN
+               mday = 1
+               ! bug found by Zhu Siguang, 05/25/2014
+               ! move the below line in the 'ELSE' statement
+               !month = month + 1
+               IF (month == 12) THEN
+                  month = 1
+                  year = year + 1
+               ELSE
+                  month = month + 1
+               ENDIF
+            ENDIF
+         ENDIF
 
-            ! in case of leapyear with a non-leayyear calendar
-            ! for day 29th Feb, use the data 1 day before, i.e., 28th FEB.
-            if ( .NOT. leapyear .AND. isleapyear(year) .AND. month==2 .AND. mday==29 ) then
-               mday = 28
-            end if
+         ! in case of leapyear with a non-leayyear calendar
+         ! for day 29th Feb, USE the data 1 day before, i.e., 28th FEB.
+         IF ( .not. leapyear .and. isleapyear(year) .and. month==2 .and. mday==29 ) THEN
+            mday = 28
+         ENDIF
 
-            ! set record index
-            sec    = 86400*(mday-1) + sec
-            time_i = floor( (sec-offset(var_i)) *1. / dtime(var_i) ) + 1
-         end if
+         ! set record index
+         sec    = 86400*(mday-1) + sec
+         time_i = floor( (sec-offset(var_i)) *1. / dtime(var_i) ) + 1
+      ENDIF
 
-         if ( trim(groupby) == 'day' ) then
-            if ( isleapyear(year) ) then
-               months = (/0,31,60,91,121,152,182,213,244,274,305,335,366/)
-            else
-               months = (/0,31,59,90,120,151,181,212,243,273,304,334,365/)
-            end if
+      IF ( trim(groupby) == 'day' ) THEN
+         IF ( isleapyear(year) ) THEN
+            months = (/0,31,60,91,121,152,182,213,244,274,305,335,366/)
+         ELSE
+            months = (/0,31,59,90,120,151,181,212,243,273,304,334,365/)
+         ENDIF
 
-            ! calculate initial month and day values
-            call julian2monthday(year, day, month, mday)
-            !mday = day
+         ! calculate initial month and day values
+         CALL julian2monthday(year, day, month, mday)
+         !mday = day
 
-            ! record in the next day, adjust year, month and second values
-            if ( sec==86400 .AND. offset(var_i).EQ.0 ) then
-               sec  = 0
-               mday = mday + 1
-               if ( mday > (months(month)-months(month-1)) ) then
-                  mday = 1
-                  ! bug found by Zhu Siguang, 05/25/2014
-                  ! move the below line in the 'else' statement
-                  !month = month + 1
-                  if (month == 12) then
-                     month = 1
-                     year = year + 1
-                  else
-                     month = month + 1
-                  end if
-               end if
-            end if
+         ! record in the next day, adjust year, month and second values
+         IF ( sec==86400 .and. offset(var_i).eq.0 ) THEN
+            sec  = 0
+            mday = mday + 1
+            IF ( mday > (months(month)-months(month-1)) ) THEN
+               mday = 1
+               ! bug found by Zhu Siguang, 05/25/2014
+               ! move the below line in the 'ELSE' statement
+               !month = month + 1
+               IF (month == 12) THEN
+                  month = 1
+                  year = year + 1
+               ELSE
+                  month = month + 1
+               ENDIF
+            ENDIF
+         ENDIF
 
-            ! in case of leapyear with a non-leayyear calendar
-            ! for day 29th Feb, use the data 1 day before, i.e., 28th FEB.
-            if ( .NOT. leapyear .AND. isleapyear(year) .AND. month==2 .AND. mday==29 ) then
-               mday = 28
-            end if
+         ! in case of leapyear with a non-leayyear calendar
+         ! for day 29th Feb, USE the data 1 day before, i.e., 28th FEB.
+         IF ( .not. leapyear .and. isleapyear(year) .and. month==2 .and. mday==29 ) THEN
+            mday = 28
+         ENDIF
 
-            ! set record index
-            time_i = floor( (sec-offset(var_i)) *1. / dtime(var_i) ) + 1
-         end if
+         ! set record index
+         time_i = floor( (sec-offset(var_i)) *1. / dtime(var_i) ) + 1
+      ENDIF
 
-         if (time_i < 0) then
-            write(6, *) "got the wrong time record of forcing! stop!"; CALL CoLM_stop()
-         end if
+      IF (time_i < 0) THEN
+         write(6, *) "got the wrong time record of forcing! STOP!"; CALL CoLM_stop()
+      ENDIF
 
-         return
+      RETURN
 
-      END SUBROUTINE setstampUB
+   END SUBROUTINE setstampUB
 
-      ! ------------------------------------------------------------
-      ! !DESCRIPTION:
-      ! calculate time average coszen value bwteeen [LB, UB]
-      !
-      ! REVISIONS:
-      ! 04/2014, yuan: this method is adapted from CLM
-      ! ------------------------------------------------------------
-      SUBROUTINE calavgcos(idate)
+! ------------------------------------------------------------
+! !DESCRIPTION:
+! calculate time average coszen value bwteeen [LB, UB]
+!
+! REVISIONS:
+! 04/2014, yuan: this method is adapted from CLM
+! ------------------------------------------------------------
+   SUBROUTINE calavgcos(idate)
 
-         use MOD_Block
-         use MOD_DataType
-         implicit none
+   USE MOD_Block
+   USE MOD_DataType
+   IMPLICIT NONE
 
-         integer, intent(in) :: idate(3)
+   integer, intent(in) :: idate(3)
 
-         integer  :: ntime, iblkme, ib, jb, i, j, ilon, ilat
-         real(r8) :: calday, cosz
-         type(timestamp) :: tstamp
+   integer  :: ntime, iblkme, ib, jb, i, j, ilon, ilat
+   real(r8) :: calday, cosz
+   type(timestamp) :: tstamp
 
-         tstamp = idate !tstamp_LB(7)
-         ntime = 0
-         do while (tstamp < tstamp_UB(7))
-            ntime  = ntime + 1
-            tstamp = tstamp + deltim_int
+      tstamp = idate !tstamp_LB(7)
+      ntime = 0
+      DO WHILE (tstamp < tstamp_UB(7))
+         ntime  = ntime + 1
+         tstamp = tstamp + deltim_int
+      ENDDO
+
+      tstamp = idate !tstamp_LB(7)
+      CALL flush_block_data (avgcos, 0._r8)
+
+      DO WHILE (tstamp < tstamp_UB(7))
+
+         DO iblkme = 1, gblock%nblkme
+            ib = gblock%xblkme(iblkme)
+            jb = gblock%yblkme(iblkme)
+            DO j = 1, gforc%ycnt(jb)
+               DO i = 1, gforc%xcnt(ib)
+
+                  ilat = gforc%ydsp(jb) + j
+                  ilon = gforc%xdsp(ib) + i
+                  IF (ilon > gforc%nlon) ilon = ilon - gforc%nlon
+
+                  calday = calendarday(tstamp)
+                  cosz = orb_coszen(calday, gforc%rlon(ilon), gforc%rlat(ilat))
+                  cosz = max(0.001, cosz)
+                  avgcos%blk(ib,jb)%val(i,j) = avgcos%blk(ib,jb)%val(i,j) &
+                     + cosz / real(ntime,r8) !  * deltim_real /real(tstamp_UB(7)-tstamp_LB(7))
+
+               ENDDO
+            ENDDO
          ENDDO
 
-         tstamp = idate !tstamp_LB(7)
-         call flush_block_data (avgcos, 0._r8)
+         tstamp = tstamp + deltim_int
 
-         do while (tstamp < tstamp_UB(7))
+      ENDDO
 
-            DO iblkme = 1, gblock%nblkme
-               ib = gblock%xblkme(iblkme)
-               jb = gblock%yblkme(iblkme)
-               do j = 1, gforc%ycnt(jb)
-                  do i = 1, gforc%xcnt(ib)
+   END SUBROUTINE calavgcos
 
-                     ilat = gforc%ydsp(jb) + j
-                     ilon = gforc%xdsp(ib) + i
-                     if (ilon > gforc%nlon) ilon = ilon - gforc%nlon
-
-                     calday = calendarday(tstamp)
-                     cosz = orb_coszen(calday, gforc%rlon(ilon), gforc%rlat(ilat))
-                     cosz = max(0.001, cosz)
-                     avgcos%blk(ib,jb)%val(i,j) = avgcos%blk(ib,jb)%val(i,j) &
-                        + cosz / real(ntime,r8) !  * deltim_real /real(tstamp_UB(7)-tstamp_LB(7))
-
-                  end do
-               end do
-            end do
-
-            tstamp = tstamp + deltim_int
-
-         end do
-
-      END SUBROUTINE calavgcos
-
-   end module MOD_Forcing
+END MODULE MOD_Forcing

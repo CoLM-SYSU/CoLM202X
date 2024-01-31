@@ -3,43 +3,43 @@
 #ifdef URBAN_MODEL
 MODULE MOD_Urban_LAIReadin
 
-  USE MOD_Precision
-  IMPLICIT NONE
-  SAVE
+   USE MOD_Precision
+   IMPLICIT NONE
+   SAVE
 
-  PUBLIC :: UrbanLAI_readin
+   PUBLIC :: UrbanLAI_readin
 
 CONTAINS
 
- SUBROUTINE UrbanLAI_readin (year, time, dir_landdata)
+   SUBROUTINE UrbanLAI_readin (year, time, dir_landdata)
 
 ! ===========================================================
 ! Read in urban LAI, SAI and urban tree cover data
 ! ===========================================================
 
-      USE MOD_Precision
-      USE MOD_Namelist
-      USE MOD_SPMD_Task
-      USE MOD_LandUrban
-      USE MOD_Vars_Global
-      USE MOD_Const_LC
-      USE MOD_Vars_TimeVariables
-      USE MOD_Vars_TimeInvariants
-      USE MOD_Urban_Vars_TimeInvariants
-      USE MOD_NetCDFVector
+   USE MOD_Precision
+   USE MOD_Namelist
+   USE MOD_SPMD_Task
+   USE MOD_LandUrban
+   USE MOD_Vars_Global
+   USE MOD_Const_LC
+   USE MOD_Vars_TimeVariables
+   USE MOD_Vars_TimeInvariants
+   USE MOD_Urban_Vars_TimeInvariants
+   USE MOD_NetCDFVector
 #ifdef SinglePoint
-      USE MOD_SingleSrfdata
+   USE MOD_SingleSrfdata
 #endif
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      INTEGER, intent(in) :: year
-      INTEGER, intent(in) :: time
-      CHARACTER(LEN=256), intent(in) :: dir_landdata
+   integer, intent(in) :: year
+   integer, intent(in) :: time
+   character(LEN=256), intent(in) :: dir_landdata
 
-      CHARACTER(LEN=256) :: lndname
-      CHARACTER(len=256) :: cyear, ctime
-      INTEGER :: u, npatch, iyear
+   character(LEN=256) :: lndname
+   character(len=256) :: cyear, ctime
+   integer :: u, npatch, iyear
 
       ! READ in Leaf area index and stem area index
       write(ctime,'(i2.2)') time
@@ -51,10 +51,10 @@ CONTAINS
       urb_sai(:) = SITE_SAI_monthly(time,iyear)
 #else
       lndname = trim(dir_landdata)//'/urban/'//trim(cyear)//'/LAI/urban_LAI_'//trim(ctime)//'.nc'
-      call ncio_read_vector (lndname, 'TREE_LAI',  landurban, urb_lai)
+      CALL ncio_read_vector (lndname, 'TREE_LAI',  landurban, urb_lai)
 
       lndname = trim(dir_landdata)//'/urban/'//trim(cyear)//'/LAI/urban_SAI_'//trim(ctime)//'.nc'
-      call ncio_read_vector (lndname, 'TREE_SAI',  landurban, urb_sai)
+      CALL ncio_read_vector (lndname, 'TREE_SAI',  landurban, urb_sai)
 #endif
       ! loop for urban atch to assign fraction of green leaf
       IF (p_is_worker) THEN
@@ -67,7 +67,7 @@ CONTAINS
          ENDDO
       ENDIF
 
- END SUBROUTINE UrbanLAI_readin
+   END SUBROUTINE UrbanLAI_readin
 
 END MODULE MOD_Urban_LAIReadin
 #endif

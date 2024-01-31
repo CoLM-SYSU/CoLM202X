@@ -657,9 +657,9 @@ CONTAINS
 
    SUBROUTINE Init_LC_Const
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      integer :: i, nsl
+   integer :: i, nsl
 
 #ifdef LULC_USGS
       patchtypes (:) = patchtypes_usgs (:)

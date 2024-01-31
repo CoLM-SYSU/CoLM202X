@@ -1,3 +1,5 @@
+#include <define.h>
+
 MODULE MOD_OrbCoszen
 
 !-----------------------------------------------------------------------
@@ -11,14 +13,13 @@ MODULE MOD_OrbCoszen
 
 !-----------------------------------------------------------------------
 
-   CONTAINS
+CONTAINS
 
 !-----------------------------------------------------------------------
 
+   FUNCTION orb_coszen(calday,dlon,dlat)
 
-   function orb_coszen(calday,dlon,dlat)
-
-!-------------------------------------------------------------------------------
+!-----------------------------------------------------------------------
 ! FUNCTION to return the cosine of the solar zenith angle. Assumes 365.0 days/year.
 ! Compute earth/orbit parameters using formula suggested by
 ! Duane Thresher. Use formulas from Berger, Andre 1978: Long-Term Variations of Daily
@@ -27,10 +28,10 @@ MODULE MOD_OrbCoszen
 ! Original version:  Erik Kluzek, Oct/1997, Brian Kauffman, Jan/98
 ! CCSM2.0 standard
 ! yongjiu dai (07/23/2002)
-!-------------------------------------------------------------------------------
+!-----------------------------------------------------------------------
 
-   use MOD_Precision
-   implicit none
+   USE MOD_Precision
+   IMPLICIT NONE
 
    real(r8), intent(in) :: calday        !Julian cal day (1.xx to 365.xx)
    real(r8), intent(in) :: dlat          !Centered latitude (radians)
@@ -54,23 +55,23 @@ MODULE MOD_OrbCoszen
              lambm0=-3.2625366E-2,      &!Mean long of perihelion at the vernal equinox (radians)
              mvelpp=4.92251015           !moving vernal equinox longitude of
                                          !perihelion plus pi (radians)
-  !-------------------------------------------------------------------------------
+  !---------------------------------------------------------------------
 
-     pi = 4.*atan(1.)
-     lambm = lambm0 + (calday - ve)*2.*pi/dayspy
-     lmm = lambm  - mvelpp
+      pi = 4.*atan(1.)
+      lambm = lambm0 + (calday - ve)*2.*pi/dayspy
+      lmm = lambm  - mvelpp
 
-     sinl = sin(lmm)
-     lamb = lambm + eccen*(2.*sinl + eccen*(1.25*sin(2.*lmm) &
+      sinl = sin(lmm)
+      lamb = lambm + eccen*(2.*sinl + eccen*(1.25*sin(2.*lmm) &
            + eccen*((13.0/12.0)*sin(3.*lmm) - 0.25*sinl)))
-     invrho = (1. + eccen*cos(lamb - mvelpp)) / (1. - eccen*eccen)
+      invrho = (1. + eccen*cos(lamb - mvelpp)) / (1. - eccen*eccen)
 
-     declin = asin(sin(obliqr)*sin(lamb))
-     eccf = invrho*invrho
+      declin = asin(sin(obliqr)*sin(lamb))
+      eccf = invrho*invrho
 
-     orb_coszen = sin(dlat)*sin(declin) &
-                - cos(dlat)*cos(declin)*cos(calday*2.0*pi+dlon)
+      orb_coszen = sin(dlat)*sin(declin) &
+                 - cos(dlat)*cos(declin)*cos(calday*2.0*pi+dlon)
 
-   end function orb_coszen
+   END FUNCTION orb_coszen
 
 END MODULE MOD_OrbCoszen

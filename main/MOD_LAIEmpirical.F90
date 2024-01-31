@@ -13,20 +13,20 @@ MODULE MOD_LAIEmpirical
 
 !-----------------------------------------------------------------------
 
-   CONTAINS
+CONTAINS
 
 !-----------------------------------------------------------------------
 
 
-   subroutine LAI_empirical(ivt,nl_soil,rootfr,t,lai,sai,fveg,green)
+   SUBROUTINE LAI_empirical(ivt,nl_soil,rootfr,t,lai,sai,fveg,green)
 
 !-----------------------------------------------------------------------
 ! provides leaf and stem area parameters
 ! Original author : Yongjiu Dai, 08/31/2002
 !-----------------------------------------------------------------------
 
-   use MOD_Precision
-   implicit none
+   USE MOD_Precision
+   IMPLICIT NONE
 
    integer, intent(in)  :: ivt      !land cover type
    integer, intent(in)  :: nl_soil  !number of soil layers
@@ -109,30 +109,30 @@ MODULE MOD_LAIEmpirical
 #endif
 
 !-----------------------------------------------------------------------
-   roota = 0.
-   jrt = 1
-   do j = 1, nl_soil
-      roota = roota + rootfr(j)
-      if(roota>0.9)then
-         jrt = j
-         exit
-      endif
-   enddo
+      roota = 0.
+      jrt = 1
+      DO j = 1, nl_soil
+         roota = roota + rootfr(j)
+         IF(roota>0.9)THEN
+            jrt = j
+            EXIT
+         ENDIF
+      ENDDO
 
 ! Adjust leaf area index for seasonal variation
 
-   f = max(0.0,1.-0.0016*max(298.-t(jrt),0.0)**2)
-   lai = xla(ivt) + (xla0(ivt)-xla(ivt))*(1.-f)
+      f = max(0.0,1.-0.0016*max(298.-t(jrt),0.0)**2)
+      lai = xla(ivt) + (xla0(ivt)-xla(ivt))*(1.-f)
 
 ! Sum leaf area index and stem area index
-   sai = sai0(ivt)
+      sai = sai0(ivt)
 
 ! Fractional vegetation cover
-   fveg = vegc(ivt)
+      fveg = vegc(ivt)
 
-   green = 0.0
-   if(fveg > 0.) green = 1.0
+      green = 0.0
+      IF(fveg > 0.) green = 1.0
 
-   end subroutine LAI_empirical
+   END SUBROUTINE LAI_empirical
 
 END MODULE MOD_LAIEmpirical
