@@ -736,8 +736,6 @@ SUBROUTINE Aggregation_SoilParameters ( &
                            alpha_vgm_patches(ipatch) = xv(2)
                            n_vgm_patches(ipatch)     = xv(3)
                            k_s_patches (ipatch)      = xv(4)
-                        ELSE
-                           write(6,*)"fit failed in VG model",xv,isiter,landpatch%eindex(ipatch), landpatch%settyp(ipatch)
                         ENDIF
 
                         deallocate(ydatv)
@@ -985,8 +983,6 @@ SUBROUTINE Aggregation_SoilParameters ( &
                            psi_s_patches (ipatch) = xc(1)
                            lambda_patches(ipatch) = xc(2)
                            k_s_patches (ipatch)   = xc(3)
-                        ELSE
-                           write(6,*)"fit failed in CB model",xc,isiter,landpatch%eindex(ipatch), landpatch%settyp(ipatch)
                         ENDIF
 
                         deallocate(ydatc)
