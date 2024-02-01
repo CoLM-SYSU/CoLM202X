@@ -44,7 +44,7 @@
 #undef CaMa_Flood
 
 ! 7. If defined, BGC model is used.
-#define BGC
+#undef BGC
 
 !    Conflicts :  only used when LULC_IGBP_PFT is defined.
 #ifndef LULC_IGBP_PFT
@@ -63,4 +63,4 @@
 ! 9. If defined, data assimilation is used.
 #undef DataAssimilation
 
-#define VectorInOneFile
+#define VectorInOneFileP
