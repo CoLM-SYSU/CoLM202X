@@ -17,7 +17,7 @@ CONTAINS
 
 !-----------------------------------------------------------------------
 
-  SUBROUTINE LulccMassEnergyConserve
+   SUBROUTINE LulccMassEnergyConserve
 ! ======================================================================
 !
 ! Created by Wanyi Lin and Hua Yuan, 07/2023
