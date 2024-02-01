@@ -23,7 +23,7 @@
 !    2) "MOD_NetCDFVectorOne.F90": 
 !       A vector is saved in one file. 
 !       READ/WRITE may be slow in this way.
-!       CHOOSE this implementation by "#define VectorInOneFile" in include/define.h
+!       CHOOSE this implementation by "#define VectorInOneFileS" in include/define.h
 !
 ! Created by Shupeng Zhang, May 2023
 !----------------------------------------------------------------------------------

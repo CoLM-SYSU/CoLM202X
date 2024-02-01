@@ -306,7 +306,7 @@ SUBROUTINE Aggregation_SoilBrightness ( &
       lndname = trim(landdir)//'/soil_s_v_alb_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
       CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
-      CALL ncio_write_vector (lndname, 'soil_s_v_alb', 'patch', landpatch, soil_s_v_alb, 1)
+      CALL ncio_write_vector (lndname, 'soil_s_v_alb', 'patch', landpatch, soil_s_v_alb, DEF_Srfdata_CompressLevel)
    
 #ifdef SrfdataDiag
       typpatch = (/(ityp, ityp = 0, N_land_classification)/)
@@ -319,7 +319,7 @@ SUBROUTINE Aggregation_SoilBrightness ( &
       lndname = trim(landdir)//'/soil_d_v_alb_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
       CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
-      CALL ncio_write_vector (lndname, 'soil_d_v_alb', 'patch', landpatch, soil_d_v_alb, 1)
+      CALL ncio_write_vector (lndname, 'soil_d_v_alb', 'patch', landpatch, soil_d_v_alb, DEF_Srfdata_CompressLevel)
    
 #ifdef SrfdataDiag
       typpatch = (/(ityp, ityp = 0, N_land_classification)/)
@@ -332,7 +332,7 @@ SUBROUTINE Aggregation_SoilBrightness ( &
       lndname = trim(landdir)//'/soil_s_n_alb_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
       CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
-      CALL ncio_write_vector (lndname, 'soil_s_n_alb', 'patch', landpatch, soil_s_n_alb, 1)
+      CALL ncio_write_vector (lndname, 'soil_s_n_alb', 'patch', landpatch, soil_s_n_alb, DEF_Srfdata_CompressLevel)
    
 #ifdef SrfdataDiag
       typpatch = (/(ityp, ityp = 0, N_land_classification)/)
@@ -345,7 +345,7 @@ SUBROUTINE Aggregation_SoilBrightness ( &
       lndname = trim(landdir)//'/soil_d_n_alb_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
       CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
-      CALL ncio_write_vector (lndname, 'soil_d_n_alb', 'patch', landpatch, soil_d_n_alb, 1)
+      CALL ncio_write_vector (lndname, 'soil_d_n_alb', 'patch', landpatch, soil_d_n_alb, DEF_Srfdata_CompressLevel)
    
 #ifdef SrfdataDiag
       typpatch = (/(ityp, ityp = 0, N_land_classification)/)

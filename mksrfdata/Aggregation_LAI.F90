@@ -264,7 +264,7 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
    
                CALL ncio_create_file_vector (lndname, landpatch)
                CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
-               CALL ncio_write_vector (lndname, 'LAI_patches', 'patch', landpatch, LAI_patches, 1)
+               CALL ncio_write_vector (lndname, 'LAI_patches', 'patch', landpatch, LAI_patches, DEF_Srfdata_CompressLevel)
    
 #ifdef SrfdataDiag
                typpatch = (/(ityp, ityp = 0, N_land_classification)/)
@@ -359,7 +359,7 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
                lndname = trim(landdir) // trim(cyear) // '/SAI_patches' // trim(c3) // '.nc'
                CALL ncio_create_file_vector (lndname, landpatch)
                CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
-               CALL ncio_write_vector (lndname, 'SAI_patches', 'patch', landpatch, SAI_patches, 1)
+               CALL ncio_write_vector (lndname, 'SAI_patches', 'patch', landpatch, SAI_patches, DEF_Srfdata_CompressLevel)
    
 #ifdef SrfdataDiag
                typpatch = (/(ityp, ityp = 0, N_land_classification)/)
@@ -515,7 +515,7 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
                lndname = trim(landdir)//trim(cyear)//'/LAI_patches'//trim(c2)//'.nc'
                CALL ncio_create_file_vector (lndname, landpatch)
                CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
-               CALL ncio_write_vector (lndname, 'LAI_patches', 'patch', landpatch, LAI_patches, 1)
+               CALL ncio_write_vector (lndname, 'LAI_patches', 'patch', landpatch, LAI_patches, DEF_Srfdata_CompressLevel)
    
 #ifdef SrfdataDiag
                typpatch = (/(ityp, ityp = 0, N_land_classification)/)
@@ -529,7 +529,7 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
                lndname = trim(landdir)//trim(cyear)//'/LAI_pfts'//trim(c2)//'.nc'
                CALL ncio_create_file_vector (lndname, landpft)
                CALL ncio_define_dimension_vector (lndname, landpft, 'pft')
-               CALL ncio_write_vector (lndname, 'LAI_pfts', 'pft', landpft, LAI_pfts, 1)
+               CALL ncio_write_vector (lndname, 'LAI_pfts', 'pft', landpft, LAI_pfts, DEF_Srfdata_CompressLevel)
    
 #ifdef SrfdataDiag
 #ifndef CROP
@@ -630,7 +630,7 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
             lndname = trim(landdir)//trim(cyear)//'/SAI_patches'//trim(c2)//'.nc'
             CALL ncio_create_file_vector (lndname, landpatch)
             CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
-            CALL ncio_write_vector (lndname, 'SAI_patches', 'patch', landpatch, SAI_patches, 1)
+            CALL ncio_write_vector (lndname, 'SAI_patches', 'patch', landpatch, SAI_patches, DEF_Srfdata_CompressLevel)
    
 #ifdef SrfdataDiag
             typpatch = (/(ityp, ityp = 0, N_land_classification)/)
@@ -644,7 +644,7 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
             lndname = trim(landdir)//trim(cyear)//'/SAI_pfts'//trim(c2)//'.nc'
             CALL ncio_create_file_vector (lndname, landpft)
             CALL ncio_define_dimension_vector (lndname, landpft, 'pft')
-            CALL ncio_write_vector (lndname, 'SAI_pfts', 'pft', landpft, SAI_pfts, 1)
+            CALL ncio_write_vector (lndname, 'SAI_pfts', 'pft', landpft, SAI_pfts, DEF_Srfdata_CompressLevel)
    
 #ifdef SrfdataDiag
 #ifndef CROP
