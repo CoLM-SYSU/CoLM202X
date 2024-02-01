@@ -41,6 +41,8 @@ CONTAINS
 ! 10/2023, Wanyi Lin: share the codes with REST_LulccTimeVariables(), and
 !                     simplify the codes in this subroutine.
 !
+! 01/2024, Wanyi Lin: use "enthalpy conservation" for snow layer temperature
+!                     calculation.
 ! ======================================================================
 
 
@@ -324,14 +326,14 @@ ENDIF
                      nsl_max = count(wgt(:0)        .gt. 0)
                      ! denh2o_np(maxsnl+1:0) = 0
                      ! denice_np(maxsnl+1:0) = 0
-                     rhosnow_np(maxsnl+1:0) = 0 ! partitial density of water (ice + liquid)
+                     rhosnow_np(maxsnl+1:0) = 0 ! partitial density of water/snow (ice + liquid)
 
                      IF (nsl > 0) THEN
                         ! move wgt above nsl to nsl
                         IF ( nsl_max > nsl) THEN
                            DO l = nsl+1, nsl_max
                               wgt(-nsl+1) = wgt(-nsl+1) + wgt(-l+1)
-                              hc(-nsl+1) = hc(-nsl+1) + hc(-l+1)
+                              hc (-nsl+1) = hc (-nsl+1) + hc (-l+1)
                            ENDDO
                         ENDIF
 
@@ -421,7 +423,7 @@ ENDIF
                            ! Reference: MOD_SnowLayersCombineDivide.F90's subroutine combo
                            IF (hc(l) < 0.) THEN
                               t_soisno (l,np) = tfrz + hc(l) / (cpice*wice_soisno(l,np) + cpliq*wliq_soisno(l,np))
-                           ELSE IF (hc(l) .le. hfus*wliq_soisno(l,np)) THEN
+                           ELSEIF (hc(l) .le. hfus*wliq_soisno(l,np)) THEN
                               t_soisno (l,np) = tfrz
                            ELSE
                               t_soisno (l,np) = tfrz + (hc(l) - hfus*wliq_soisno(l,np))/(cpice*wice_soisno(l,np)+cpliq*wliq_soisno(l,np))
@@ -501,7 +503,7 @@ ENDIF
                            ! Reference: MOD_SnowLayersCombineDivide.F90's subroutine combo
                            IF (hc(0) < 0.) THEN
                               t_soisno (0,np) = tfrz + hc(0) / (cpice*wice_soisno(0,np) + cpliq*wliq_soisno(0,np))
-                           ELSE IF (hc(0) .le. hfus*wliq_soisno(0,np)) THEN
+                           ELSEIF (hc(0) .le. hfus*wliq_soisno(0,np)) THEN
                               t_soisno (0,np) = tfrz
                            ELSE
                               t_soisno (0,np) = tfrz + (hc(0) - hfus*wliq_soisno(0,np))/(cpice*wice_soisno(0,np)+cpliq*wliq_soisno(0,np))
@@ -817,7 +819,7 @@ ENDIF
                      IF (selfu_ > 0) THEN
                         u_ = selfu_
 
-                     ELSE IF (nurb > 0) THEN
+                     ELSEIF (nurb > 0) THEN
                         duclass = abs ( landurban%settyp(u) - urbclass_(gu_(1)) )
                         u_ = gu_(1)
                         iu = 2
