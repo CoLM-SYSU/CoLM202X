@@ -29,7 +29,7 @@
 !----------------------------------------------------------------------------------
 
 ! Put vector in seperated files.
-#ifndef VectorInOneFile
+#if (!defined(VectorInOneFileS) && !defined(VectorInOneFileP)) 
 
 MODULE MOD_NetCDFVector
 

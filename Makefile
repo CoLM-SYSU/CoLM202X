@@ -44,7 +44,8 @@ OBJS_SHARED =    \
 				  MOD_Mesh.o                   \
 				  MOD_Pixelset.o               \
 				  MOD_NetCDFVectorBlk.o        \
-				  MOD_NetCDFVectorOne.o        \
+				  MOD_NetCDFVectorOneS.o       \
+				  MOD_NetCDFVectorOneP.o       \
 				  MOD_RangeCheck.o             \
 				  MOD_Mapping_Grid2Pset.o      \
 				  MOD_Mapping_Pset2Grid.o      \
