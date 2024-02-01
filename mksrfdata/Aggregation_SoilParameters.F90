@@ -309,7 +309,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
          CALL ncio_create_file_vector (lndname, landpatch)
          CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
          CALL ncio_write_vector (lndname, 'vf_quartz_mineral_s_l'//trim(c)//'_patches', 'patch',&
-                                 landpatch, vf_quartz_mineral_s_patches, 1)
+                                 landpatch, vf_quartz_mineral_s_patches, DEF_Srfdata_CompressLevel)
 
 #ifdef SrfdataDiag
          typpatch = (/(ityp, ityp = 0, N_land_classification)/)
@@ -429,7 +429,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
          CALL ncio_create_file_vector (lndname, landpatch)
          CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
          CALL ncio_write_vector (lndname, 'vf_gravels_s_l'//trim(c)//'_patches', 'patch',&
-                                 landpatch, vf_gravels_s_patches, 1)
+                                 landpatch, vf_gravels_s_patches, DEF_Srfdata_CompressLevel)
 
 #ifdef SrfdataDiag
          typpatch = (/(ityp, ityp = 0, N_land_classification)/)
@@ -446,7 +446,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
          CALL ncio_create_file_vector (lndname, landpatch)
          CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
          CALL ncio_write_vector (lndname, 'vf_sand_s_l'//trim(c)//'_patches', 'patch',&
-                                 landpatch, vf_sand_s_patches, 1)
+                                 landpatch, vf_sand_s_patches, DEF_Srfdata_CompressLevel)
 
 #ifdef SrfdataDiag
          typpatch = (/(ityp, ityp = 0, N_land_classification)/)
@@ -463,7 +463,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
          CALL ncio_create_file_vector (lndname, landpatch)
          CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
          CALL ncio_write_vector (lndname, 'vf_om_s_l'//trim(c)//'_patches', 'patch',&
-                                 landpatch, vf_om_s_patches, 1)
+                                 landpatch, vf_om_s_patches, DEF_Srfdata_CompressLevel)
 
 #ifdef SrfdataDiag
          typpatch = (/(ityp, ityp = 0, N_land_classification)/)
@@ -480,7 +480,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
          CALL ncio_create_file_vector (lndname, landpatch)
          CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
          CALL ncio_write_vector (lndname, 'BA_alpha_l'//trim(c)//'_patches', 'patch',&
-                                 landpatch, BA_alpha_patches, 1)
+                                 landpatch, BA_alpha_patches, DEF_Srfdata_CompressLevel)
 
 #ifdef SrfdataDiag
          typpatch = (/(ityp, ityp = 0, N_land_classification)/)
@@ -497,7 +497,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
          CALL ncio_create_file_vector (lndname, landpatch)
          CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
          CALL ncio_write_vector (lndname, 'BA_beta_l'//trim(c)//'_patches', 'patch',&
-                                 landpatch, BA_beta_patches, 1)
+                                 landpatch, BA_beta_patches, DEF_Srfdata_CompressLevel)
 
 #ifdef SrfdataDiag
          typpatch = (/(ityp, ityp = 0, N_land_classification)/)
@@ -558,7 +558,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
          CALL ncio_create_file_vector (lndname, landpatch)
          CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
          CALL ncio_write_vector (lndname, 'wf_gravels_s_l'//trim(c)//'_patches', 'patch',&
-                                 landpatch, wf_gravels_s_patches, 1)
+                                 landpatch, wf_gravels_s_patches, DEF_Srfdata_CompressLevel)
 
 #ifdef SrfdataDiag
          typpatch = (/(ityp, ityp = 0, N_land_classification)/)
@@ -620,7 +620,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
          CALL ncio_create_file_vector (lndname, landpatch)
          CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
          CALL ncio_write_vector (lndname, 'wf_sand_s_l'//trim(c)//'_patches', 'patch',&
-                                 landpatch, wf_sand_s_patches, 1)
+                                 landpatch, wf_sand_s_patches, DEF_Srfdata_CompressLevel)
 
 #ifdef SrfdataDiag
          typpatch = (/(ityp, ityp = 0, N_land_classification)/)
@@ -810,7 +810,8 @@ SUBROUTINE Aggregation_SoilParameters ( &
          lndname = trim(landdir)//'/theta_r_l'//trim(c)//'_patches.nc'
          CALL ncio_create_file_vector (lndname, landpatch)
          CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
-         CALL ncio_write_vector (lndname, 'theta_r_l'//trim(c)//'_patches', 'patch', landpatch, theta_r_patches, 1)
+         CALL ncio_write_vector (lndname, 'theta_r_l'//trim(c)//'_patches', 'patch', landpatch, &
+                                 theta_r_patches, DEF_Srfdata_CompressLevel)
 
 #ifdef SrfdataDiag
          typpatch = (/(ityp, ityp = 0, N_land_classification)/)
@@ -826,7 +827,8 @@ SUBROUTINE Aggregation_SoilParameters ( &
          lndname = trim(landdir)//'/alpha_vgm_l'//trim(c)//'_patches.nc'
          CALL ncio_create_file_vector (lndname, landpatch)
          CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
-         CALL ncio_write_vector (lndname, 'alpha_vgm_l'//trim(c)//'_patches', 'patch', landpatch, alpha_vgm_patches, 1)
+         CALL ncio_write_vector (lndname, 'alpha_vgm_l'//trim(c)//'_patches', 'patch', landpatch, &
+                                 alpha_vgm_patches, DEF_Srfdata_CompressLevel)
 
 #ifdef SrfdataDiag
          typpatch = (/(ityp, ityp = 0, N_land_classification)/)
@@ -842,7 +844,8 @@ SUBROUTINE Aggregation_SoilParameters ( &
          lndname = trim(landdir)//'/n_vgm_l'//trim(c)//'_patches.nc'
          CALL ncio_create_file_vector (lndname, landpatch)
          CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
-         CALL ncio_write_vector (lndname, 'n_vgm_l'//trim(c)//'_patches', 'patch', landpatch, n_vgm_patches, 1)
+         CALL ncio_write_vector (lndname, 'n_vgm_l'//trim(c)//'_patches', 'patch', landpatch, &
+                                 n_vgm_patches, DEF_Srfdata_CompressLevel)
 
 #ifdef SrfdataDiag
          typpatch = (/(ityp, ityp = 0, N_land_classification)/)
@@ -858,7 +861,8 @@ SUBROUTINE Aggregation_SoilParameters ( &
          lndname = trim(landdir)//'/theta_s_l'//trim(c)//'_patches.nc'
          CALL ncio_create_file_vector (lndname, landpatch)
          CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
-         CALL ncio_write_vector (lndname, 'theta_s_l'//trim(c)//'_patches', 'patch', landpatch, theta_s_patches, 1)
+         CALL ncio_write_vector (lndname, 'theta_s_l'//trim(c)//'_patches', 'patch', landpatch, &
+                                 theta_s_patches, DEF_Srfdata_CompressLevel)
 
 #ifdef SrfdataDiag
          typpatch = (/(ityp, ityp = 0, N_land_classification)/)
@@ -874,7 +878,8 @@ SUBROUTINE Aggregation_SoilParameters ( &
          lndname = trim(landdir)//'/k_s_l'//trim(c)//'_patches.nc'
          CALL ncio_create_file_vector (lndname, landpatch)
          CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
-         CALL ncio_write_vector (lndname, 'k_s_l'//trim(c)//'_patches', 'patch', landpatch, k_s_patches, 1)
+         CALL ncio_write_vector (lndname, 'k_s_l'//trim(c)//'_patches', 'patch', landpatch, &
+                                 k_s_patches, DEF_Srfdata_CompressLevel)
 
 #ifdef SrfdataDiag
          typpatch = (/(ityp, ityp = 0, N_land_classification)/)
@@ -890,7 +895,8 @@ SUBROUTINE Aggregation_SoilParameters ( &
          lndname = trim(landdir)//'/L_vgm_l'//trim(c)//'_patches.nc'
          CALL ncio_create_file_vector (lndname, landpatch)
          CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
-         CALL ncio_write_vector (lndname, 'L_vgm_l'//trim(c)//'_patches', 'patch', landpatch, L_vgm_patches, 1)
+         CALL ncio_write_vector (lndname, 'L_vgm_l'//trim(c)//'_patches', 'patch', landpatch, &
+                                 L_vgm_patches, DEF_Srfdata_CompressLevel)
 
 #ifdef SrfdataDiag
          typpatch = (/(ityp, ityp = 0, N_land_classification)/)
@@ -1043,7 +1049,8 @@ SUBROUTINE Aggregation_SoilParameters ( &
          lndname = trim(landdir)//'/theta_s_l'//trim(c)//'_patches.nc'
          CALL ncio_create_file_vector (lndname, landpatch)
          CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
-         CALL ncio_write_vector (lndname, 'theta_s_l'//trim(c)//'_patches', 'patch', landpatch, theta_s_patches, 1)
+         CALL ncio_write_vector (lndname, 'theta_s_l'//trim(c)//'_patches', 'patch', landpatch, &
+                                 theta_s_patches, DEF_Srfdata_CompressLevel)
 
 #ifdef SrfdataDiag
          typpatch = (/(ityp, ityp = 0, N_land_classification)/)
@@ -1059,7 +1066,8 @@ SUBROUTINE Aggregation_SoilParameters ( &
          lndname = trim(landdir)//'/k_s_l'//trim(c)//'_patches.nc'
          CALL ncio_create_file_vector (lndname, landpatch)
          CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
-         CALL ncio_write_vector (lndname, 'k_s_l'//trim(c)//'_patches', 'patch', landpatch, k_s_patches, 1)
+         CALL ncio_write_vector (lndname, 'k_s_l'//trim(c)//'_patches', 'patch', landpatch, &
+                                 k_s_patches, DEF_Srfdata_CompressLevel)
 
 #ifdef SrfdataDiag
          typpatch = (/(ityp, ityp = 0, N_land_classification)/)
@@ -1076,7 +1084,8 @@ SUBROUTINE Aggregation_SoilParameters ( &
          lndname = trim(landdir)//'/psi_s_l'//trim(c)//'_patches.nc'
          CALL ncio_create_file_vector (lndname, landpatch)
          CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
-         CALL ncio_write_vector (lndname, 'psi_s_l'//trim(c)//'_patches', 'patch', landpatch, psi_s_patches, 1)
+         CALL ncio_write_vector (lndname, 'psi_s_l'//trim(c)//'_patches', 'patch', landpatch, &
+                                 psi_s_patches, DEF_Srfdata_CompressLevel)
 
 #ifdef SrfdataDiag
          typpatch = (/(ityp, ityp = 0, N_land_classification)/)
@@ -1092,7 +1101,8 @@ SUBROUTINE Aggregation_SoilParameters ( &
          lndname = trim(landdir)//'/lambda_l'//trim(c)//'_patches.nc'
          CALL ncio_create_file_vector (lndname, landpatch)
          CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
-         CALL ncio_write_vector (lndname, 'lambda_l'//trim(c)//'_patches', 'patch', landpatch, lambda_patches, 1)
+         CALL ncio_write_vector (lndname, 'lambda_l'//trim(c)//'_patches', 'patch', landpatch, &
+                                 lambda_patches, DEF_Srfdata_CompressLevel)
 
 #ifdef SrfdataDiag
          typpatch = (/(ityp, ityp = 0, N_land_classification)/)
@@ -1151,7 +1161,8 @@ SUBROUTINE Aggregation_SoilParameters ( &
          lndname = trim(landdir)//'/csol_l'//trim(c)//'_patches.nc'
          CALL ncio_create_file_vector (lndname, landpatch)
          CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
-         CALL ncio_write_vector (lndname, 'csol_l'//trim(c)//'_patches', 'patch', landpatch, csol_patches, 1)
+         CALL ncio_write_vector (lndname, 'csol_l'//trim(c)//'_patches', 'patch', landpatch, &
+                                 csol_patches, DEF_Srfdata_CompressLevel)
 
 #ifdef SrfdataDiag
          typpatch = (/(ityp, ityp = 0, N_land_classification)/)
@@ -1210,7 +1221,8 @@ SUBROUTINE Aggregation_SoilParameters ( &
          lndname = trim(landdir)//'/tksatu_l'//trim(c)//'_patches.nc'
          CALL ncio_create_file_vector (lndname, landpatch)
          CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
-         CALL ncio_write_vector (lndname, 'tksatu_l'//trim(c)//'_patches', 'patch', landpatch, tksatu_patches, 1)
+         CALL ncio_write_vector (lndname, 'tksatu_l'//trim(c)//'_patches', 'patch', landpatch, &
+                                 tksatu_patches, DEF_Srfdata_CompressLevel)
 
 #ifdef SrfdataDiag
          typpatch = (/(ityp, ityp = 0, N_land_classification)/)
@@ -1269,7 +1281,8 @@ SUBROUTINE Aggregation_SoilParameters ( &
          lndname = trim(landdir)//'/tksatf_l'//trim(c)//'_patches.nc'
          CALL ncio_create_file_vector (lndname, landpatch)
          CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
-         CALL ncio_write_vector (lndname, 'tksatf_l'//trim(c)//'_patches', 'patch', landpatch, tksatf_patches, 1)
+         CALL ncio_write_vector (lndname, 'tksatf_l'//trim(c)//'_patches', 'patch', landpatch, &
+                                 tksatf_patches, DEF_Srfdata_CompressLevel)
 
 #ifdef SrfdataDiag
          typpatch = (/(ityp, ityp = 0, N_land_classification)/)
@@ -1328,7 +1341,8 @@ SUBROUTINE Aggregation_SoilParameters ( &
          lndname = trim(landdir)//'/tkdry_l'//trim(c)//'_patches.nc'
          CALL ncio_create_file_vector (lndname, landpatch)
          CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
-         CALL ncio_write_vector (lndname, 'tkdry_l'//trim(c)//'_patches', 'patch', landpatch, tkdry_patches, 1)
+         CALL ncio_write_vector (lndname, 'tkdry_l'//trim(c)//'_patches', 'patch', landpatch, &
+                                 tkdry_patches, DEF_Srfdata_CompressLevel)
 
 #ifdef SrfdataDiag
          typpatch = (/(ityp, ityp = 0, N_land_classification)/)
@@ -1387,7 +1401,8 @@ SUBROUTINE Aggregation_SoilParameters ( &
          lndname = trim(landdir)//'/k_solids_l'//trim(c)//'_patches.nc'
          CALL ncio_create_file_vector (lndname, landpatch)
          CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
-         CALL ncio_write_vector (lndname, 'k_solids_l'//trim(c)//'_patches', 'patch', landpatch, k_solids_patches, 1)
+         CALL ncio_write_vector (lndname, 'k_solids_l'//trim(c)//'_patches', 'patch', landpatch, &
+                                 k_solids_patches, DEF_Srfdata_CompressLevel)
 
 #ifdef SrfdataDiag
          typpatch = (/(ityp, ityp = 0, N_land_classification)/)
@@ -1448,7 +1463,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
          CALL ncio_create_file_vector (lndname, landpatch)
          CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
          CALL ncio_write_vector (lndname, 'OM_density_s_l'//trim(c)//'_patches', 'patch',&
-                                 landpatch, OM_density_s_patches, 1)
+                                 landpatch, OM_density_s_patches, DEF_Srfdata_CompressLevel)
 
 #ifdef SrfdataDiag
          typpatch = (/(ityp, ityp = 0, N_land_classification)/)
@@ -1509,7 +1524,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
          CALL ncio_create_file_vector (lndname, landpatch)
          CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
          CALL ncio_write_vector (lndname, 'BD_all_s_l'//trim(c)//'_patches', 'patch',&
-                                 landpatch, BD_all_s_patches, 1)
+                                 landpatch, BD_all_s_patches, DEF_Srfdata_CompressLevel)
 
 #ifdef SrfdataDiag
          typpatch = (/(ityp, ityp = 0, N_land_classification)/)

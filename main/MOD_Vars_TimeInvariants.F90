@@ -578,7 +578,7 @@ CONTAINS
 
       if (p_is_master) then
 
-#ifndef VectorInOneFile
+#if (!defined(VectorInOneFileS) && !defined(VectorInOneFileP))
          CALL ncio_create_file (file_restart)
 #endif
 

@@ -206,7 +206,7 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
       landname = trim(landsrfdir)//'/LUCY_country_id.nc'
       CALL ncio_create_file_vector (landname, landurban)
       CALL ncio_define_dimension_vector (landname, landurban, 'urban')
-      CALL ncio_write_vector (landname, 'LUCY_id', 'urban', landurban, LUCY_coun, 1)
+      CALL ncio_write_vector (landname, 'LUCY_id', 'urban', landurban, LUCY_coun, DEF_Srfdata_CompressLevel)
    
 #ifdef SrfdataDiag
       typindex = (/(ityp, ityp = 1, N_URB)/)
@@ -285,7 +285,7 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
       landname = trim(dir_srfdata) // '/urban/'//trim(cyear)//'/POP.nc'
       CALL ncio_create_file_vector (landname, landurban)
       CALL ncio_define_dimension_vector (landname, landurban, 'urban')
-      CALL ncio_write_vector (landname, 'POP_DEN', 'urban', landurban, pop_den, 1)
+      CALL ncio_write_vector (landname, 'POP_DEN', 'urban', landurban, pop_den, DEF_Srfdata_CompressLevel)
    
 #ifdef SrfdataDiag
       typindex = (/(ityp, ityp = 1, N_URB)/)
@@ -370,12 +370,12 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
       landname = trim(dir_srfdata) // '/urban/'//trim(cyear)//'/PCT_Tree.nc'
       CALL ncio_create_file_vector (landname, landurban)
       CALL ncio_define_dimension_vector (landname, landurban, 'urban')
-      CALL ncio_write_vector (landname, 'PCT_Tree', 'urban', landurban, pct_tree, 1)
+      CALL ncio_write_vector (landname, 'PCT_Tree', 'urban', landurban, pct_tree, DEF_Srfdata_CompressLevel)
    
       landname = trim(dir_srfdata) // '/urban/'//trim(cyear)//'/htop_urb.nc'
       CALL ncio_create_file_vector (landname, landurban)
       CALL ncio_define_dimension_vector (landname, landurban, 'urban')
-      CALL ncio_write_vector (landname, 'URBAN_TREE_TOP', 'urban', landurban, htop_urb, 1)
+      CALL ncio_write_vector (landname, 'URBAN_TREE_TOP', 'urban', landurban, htop_urb, DEF_Srfdata_CompressLevel)
    
 #ifdef SrfdataDiag
       typindex = (/(ityp, ityp = 1, N_URB)/)
@@ -448,7 +448,7 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
       landname = trim(dir_srfdata) // '/urban/'//trim(cyear)//'/PCT_Water.nc'
       CALL ncio_create_file_vector (landname, landurban)
       CALL ncio_define_dimension_vector (landname, landurban, 'urban')
-      CALL ncio_write_vector (landname, 'PCT_Water', 'urban', landurban, pct_urbwt, 1)
+      CALL ncio_write_vector (landname, 'PCT_Water', 'urban', landurban, pct_urbwt, DEF_Srfdata_CompressLevel)
    
 #ifdef SrfdataDiag
       typindex = (/(ityp, ityp = 1, N_URB)/)
@@ -568,12 +568,12 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
       landname = trim(dir_srfdata) // '/urban/'//trim(cyear)//'/WT_ROOF.nc'
       CALL ncio_create_file_vector (landname, landurban)
       CALL ncio_define_dimension_vector (landname, landurban, 'urban')
-      CALL ncio_write_vector (landname, 'WT_ROOF', 'urban', landurban, wt_roof, 1)
+      CALL ncio_write_vector (landname, 'WT_ROOF', 'urban', landurban, wt_roof, DEF_Srfdata_CompressLevel)
    
       landname = trim(dir_srfdata) // '/urban/'//trim(cyear)//'/HT_ROOF.nc'
       CALL ncio_create_file_vector (landname, landurban)
       CALL ncio_define_dimension_vector (landname, landurban, 'urban')
-      CALL ncio_write_vector (landname, 'HT_ROOF', 'urban', landurban, ht_roof, 1)
+      CALL ncio_write_vector (landname, 'HT_ROOF', 'urban', landurban, ht_roof, DEF_Srfdata_CompressLevel)
    
 #ifdef SrfdataDiag
       typindex = (/(ityp, ityp = 1, N_URB)/)
@@ -705,12 +705,12 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
             landname = trim(dir_srfdata) // '/urban/'//trim(iyear)//'/LAI/urban_LAI_'//trim(cmonth)//'.nc'
             CALL ncio_create_file_vector (landname, landurban)
             CALL ncio_define_dimension_vector (landname, landurban, 'urban')
-            CALL ncio_write_vector (landname, 'TREE_LAI', 'urban', landurban, lai_urb, 1)
+            CALL ncio_write_vector (landname, 'TREE_LAI', 'urban', landurban, lai_urb, DEF_Srfdata_CompressLevel)
    
             landname = trim(dir_srfdata) // '/urban/'//trim(iyear)//'/LAI/urban_SAI_'//trim(cmonth)//'.nc'
             CALL ncio_create_file_vector (landname, landurban)
             CALL ncio_define_dimension_vector (landname, landurban, 'urban')
-            CALL ncio_write_vector (landname, 'TREE_SAI', 'urban', landurban, sai_urb, 1)
+            CALL ncio_write_vector (landname, 'TREE_SAI', 'urban', landurban, sai_urb, DEF_Srfdata_CompressLevel)
    
 #ifdef SrfdataDiag
             typindex = (/(ityp, ityp = 1, N_URB)/)
@@ -945,31 +945,31 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
          CALL ncio_define_dimension_vector (landname, landurban, 'numrad'  , nr)
          CALL ncio_define_dimension_vector (landname, landurban, 'ulev'    , ulev)
 
-         CALL ncio_write_vector (landname, 'PCT_TB'        , 'urban', landurban, area_tb, 1)
-         CALL ncio_write_vector (landname, 'PCT_HD'        , 'urban', landurban, area_hd, 1)
-         CALL ncio_write_vector (landname, 'PCT_MD'        , 'urban', landurban, area_md, 1)
-         CALL ncio_write_vector (landname, 'CANYON_HWR'    , 'urban', landurban, hwr_can, 1)
-         CALL ncio_write_vector (landname, 'WTROAD_PERV'   , 'urban', landurban, wt_rd  , 1)
-         CALL ncio_write_vector (landname, 'EM_ROOF'       , 'urban', landurban, em_roof, 1)
-         CALL ncio_write_vector (landname, 'EM_WALL'       , 'urban', landurban, em_wall, 1)
-         CALL ncio_write_vector (landname, 'EM_IMPROAD'    , 'urban', landurban, em_imrd, 1)
-         CALL ncio_write_vector (landname, 'EM_PERROAD'    , 'urban', landurban, em_perd, 1)
-         CALL ncio_write_vector (landname, 'THICK_ROOF'    , 'urban', landurban, th_roof, 1)
-         CALL ncio_write_vector (landname, 'THICK_WALL'    , 'urban', landurban, th_wall, 1)
-         CALL ncio_write_vector (landname, 'T_BUILDING_MIN', 'urban', landurban, tb_min , 1)
-         CALL ncio_write_vector (landname, 'T_BUILDING_MAX', 'urban', landurban, tb_max , 1)
+         CALL ncio_write_vector (landname, 'PCT_TB'        , 'urban', landurban, area_tb, DEF_Srfdata_CompressLevel)
+         CALL ncio_write_vector (landname, 'PCT_HD'        , 'urban', landurban, area_hd, DEF_Srfdata_CompressLevel)
+         CALL ncio_write_vector (landname, 'PCT_MD'        , 'urban', landurban, area_md, DEF_Srfdata_CompressLevel)
+         CALL ncio_write_vector (landname, 'CANYON_HWR'    , 'urban', landurban, hwr_can, DEF_Srfdata_CompressLevel)
+         CALL ncio_write_vector (landname, 'WTROAD_PERV'   , 'urban', landurban, wt_rd  , DEF_Srfdata_CompressLevel)
+         CALL ncio_write_vector (landname, 'EM_ROOF'       , 'urban', landurban, em_roof, DEF_Srfdata_CompressLevel)
+         CALL ncio_write_vector (landname, 'EM_WALL'       , 'urban', landurban, em_wall, DEF_Srfdata_CompressLevel)
+         CALL ncio_write_vector (landname, 'EM_IMPROAD'    , 'urban', landurban, em_imrd, DEF_Srfdata_CompressLevel)
+         CALL ncio_write_vector (landname, 'EM_PERROAD'    , 'urban', landurban, em_perd, DEF_Srfdata_CompressLevel)
+         CALL ncio_write_vector (landname, 'THICK_ROOF'    , 'urban', landurban, th_roof, DEF_Srfdata_CompressLevel)
+         CALL ncio_write_vector (landname, 'THICK_WALL'    , 'urban', landurban, th_wall, DEF_Srfdata_CompressLevel)
+         CALL ncio_write_vector (landname, 'T_BUILDING_MIN', 'urban', landurban, tb_min , DEF_Srfdata_CompressLevel)
+         CALL ncio_write_vector (landname, 'T_BUILDING_MAX', 'urban', landurban, tb_max , DEF_Srfdata_CompressLevel)
 
-         CALL ncio_write_vector (landname, 'CV_ROOF'   , 'ulev', ulev, 'urban', landurban, cv_roof, 1)
-         CALL ncio_write_vector (landname, 'CV_WALL'   , 'ulev', ulev, 'urban', landurban, cv_wall, 1)
-         CALL ncio_write_vector (landname, 'TK_ROOF'   , 'ulev', ulev, 'urban', landurban, tk_roof, 1)
-         CALL ncio_write_vector (landname, 'TK_WALL'   , 'ulev', ulev, 'urban', landurban, tk_wall, 1)
-         CALL ncio_write_vector (landname, 'TK_IMPROAD', 'ulev', ulev, 'urban', landurban, tk_imrd, 1)
-         CALL ncio_write_vector (landname, 'CV_IMPROAD', 'ulev', ulev, 'urban', landurban, cv_imrd, 1)
+         CALL ncio_write_vector (landname, 'CV_ROOF'   , 'ulev', ulev, 'urban', landurban, cv_roof, DEF_Srfdata_CompressLevel)
+         CALL ncio_write_vector (landname, 'CV_WALL'   , 'ulev', ulev, 'urban', landurban, cv_wall, DEF_Srfdata_CompressLevel)
+         CALL ncio_write_vector (landname, 'TK_ROOF'   , 'ulev', ulev, 'urban', landurban, tk_roof, DEF_Srfdata_CompressLevel)
+         CALL ncio_write_vector (landname, 'TK_WALL'   , 'ulev', ulev, 'urban', landurban, tk_wall, DEF_Srfdata_CompressLevel)
+         CALL ncio_write_vector (landname, 'TK_IMPROAD', 'ulev', ulev, 'urban', landurban, tk_imrd, DEF_Srfdata_CompressLevel)
+         CALL ncio_write_vector (landname, 'CV_IMPROAD', 'ulev', ulev, 'urban', landurban, cv_imrd, DEF_Srfdata_CompressLevel)
 
-         CALL ncio_write_vector (landname, 'ALB_ROOF'   , 'numsolar', ns, 'numrad', nr, 'urban', landurban, alb_roof, 1)
-         CALL ncio_write_vector (landname, 'ALB_WALL'   , 'numsolar', ns, 'numrad', nr, 'urban', landurban, alb_wall, 1)
-         CALL ncio_write_vector (landname, 'ALB_IMPROAD', 'numsolar', ns, 'numrad', nr, 'urban', landurban, alb_imrd, 1)
-         CALL ncio_write_vector (landname, 'ALB_PERROAD', 'numsolar', ns, 'numrad', nr, 'urban', landurban, alb_perd, 1)
+         CALL ncio_write_vector (landname, 'ALB_ROOF'   , 'numsolar', ns, 'numrad', nr, 'urban', landurban, alb_roof, DEF_Srfdata_CompressLevel)
+         CALL ncio_write_vector (landname, 'ALB_WALL'   , 'numsolar', ns, 'numrad', nr, 'urban', landurban, alb_wall, DEF_Srfdata_CompressLevel)
+         CALL ncio_write_vector (landname, 'ALB_IMPROAD', 'numsolar', ns, 'numrad', nr, 'urban', landurban, alb_imrd, DEF_Srfdata_CompressLevel)
+         CALL ncio_write_vector (landname, 'ALB_PERROAD', 'numsolar', ns, 'numrad', nr, 'urban', landurban, alb_perd, DEF_Srfdata_CompressLevel)
    
 #ifdef SrfdataDiag
          typindex = (/(ityp, ityp = 1, N_URB)/)
