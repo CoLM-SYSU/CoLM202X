@@ -72,7 +72,7 @@ MODULE MOD_UserSpecifiedForcing
    character(len=256), allocatable :: vname(:)     ! variable name
    character(len=256), allocatable :: tintalgo(:)  ! interpolation algorithm
 
-   ! ----- PUBLIC subroutines -----
+   ! ----- public subroutines -----
    PUBLIC :: init_user_specified_forcing ! initialization of the selected forcing dataset
    PUBLIC :: metfilename                 ! identify the forcing file name
    PUBLIC :: metpreprocess               ! preprocess the forcing data
@@ -563,7 +563,7 @@ CONTAINS
       END select
       IF (DEF_USE_CBL_HEIGHT) THEN
          select CASE (var_i)
-            CASE (9)
+         CASE (9)
             metfilename = '/'//trim(fprefix(9))//'_'//trim(yearstr)//'_'//trim(monthstr)//'_boundary_layer_height.nc4'
          END select
       ENDIF
@@ -800,6 +800,7 @@ CONTAINS
             END DO
          END DO
       END IF
+
    END SUBROUTINE metpreprocess
 
 END MODULE MOD_UserSpecifiedForcing
