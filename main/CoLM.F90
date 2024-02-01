@@ -1,6 +1,18 @@
 #include <define.h>
 
 PROGRAM CoLM
+!-----------------------------------------------------------------------------
+! Description:
+!   This is the main program for the Common Land Model (CoLM)
+!
+!   @Copyright Yongjiu Dai Land Modeling Grop at the School of Atmospheric Sciences 
+!   of the Sun Yat-sen University, Guangdong, CHINA.
+!   All rights reserved.
+!
+! Initial : Yongjiu Dai, 1998-2014
+! Revised : Hua Yuan, Shupeng Zhang, Nan Wei, Xingjie Lu, Zhongwang Wei, Yongjiu Dai
+!           2014-2024
+!-----------------------------------------------------------------------------
 
    USE MOD_Precision
    USE MOD_SPMD_Task
@@ -120,456 +132,458 @@ PROGRAM CoLM
    integer*8 :: start_time, end_time, c_per_sec, time_used
 
 #ifdef USEMPI
-   CALL spmd_init ()
+      CALL spmd_init ()
 #endif
 
-   CALL getarg (1, nlfile)
+      CALL getarg (1, nlfile)
 
-   CALL read_namelist (nlfile)
+      CALL read_namelist (nlfile)
 
 #ifdef USEMPI
-   IF (DEF_HIST_WriteBack) THEN
-      CALL spmd_assign_writeback ()
-   ENDIF
+      IF (DEF_HIST_WriteBack) THEN
+         CALL spmd_assign_writeback ()
+      ENDIF
 
-   IF (p_is_writeback) THEN
-      CALL hist_writeback_daemon ()
-   ELSE
+      IF (p_is_writeback) THEN
+         CALL hist_writeback_daemon ()
+      ELSE
 #endif
 
-   IF (p_is_master) THEN
-      CALL system_clock (start_time)
-   ENDIF
+      IF (p_is_master) THEN
+         CALL system_clock (start_time)
+      ENDIF
 
-   casename     = DEF_CASE_NAME
-   dir_landdata = DEF_dir_landdata
-   dir_forcing  = DEF_dir_forcing
-   dir_hist     = DEF_dir_history
-   dir_restart  = DEF_dir_restart
+      casename     = DEF_CASE_NAME
+      dir_landdata = DEF_dir_landdata
+      dir_forcing  = DEF_dir_forcing
+      dir_hist     = DEF_dir_history
+      dir_restart  = DEF_dir_restart
 
 #ifdef SinglePoint
-   fsrfdata = trim(dir_landdata) // '/srfdata.nc'
+      fsrfdata = trim(dir_landdata) // '/srfdata.nc'
 #ifndef URBAN_MODEL
-   CALL read_surface_data_single (fsrfdata, mksrfdata=.false.)
+      CALL read_surface_data_single (fsrfdata, mksrfdata=.false.)
 #else
-   CALL read_urban_surface_data_single (fsrfdata, mksrfdata=.false., mkrun=.true.)
+      CALL read_urban_surface_data_single (fsrfdata, mksrfdata=.false., mkrun=.true.)
 #endif
 #endif
 
-   deltim    = DEF_simulation_time%timestep
-   greenwich = DEF_simulation_time%greenwich
-   s_year    = DEF_simulation_time%start_year
-   s_month   = DEF_simulation_time%start_month
-   s_day     = DEF_simulation_time%start_day
-   s_seconds = DEF_simulation_time%start_sec
-   e_year    = DEF_simulation_time%end_year
-   e_month   = DEF_simulation_time%end_month
-   e_day     = DEF_simulation_time%end_day
-   e_seconds = DEF_simulation_time%end_sec
-   p_year    = DEF_simulation_time%spinup_year
-   p_month   = DEF_simulation_time%spinup_month
-   p_day     = DEF_simulation_time%spinup_day
-   p_seconds = DEF_simulation_time%spinup_sec
+      deltim    = DEF_simulation_time%timestep
+      greenwich = DEF_simulation_time%greenwich
+      s_year    = DEF_simulation_time%start_year
+      s_month   = DEF_simulation_time%start_month
+      s_day     = DEF_simulation_time%start_day
+      s_seconds = DEF_simulation_time%start_sec
+      e_year    = DEF_simulation_time%end_year
+      e_month   = DEF_simulation_time%end_month
+      e_day     = DEF_simulation_time%end_day
+      e_seconds = DEF_simulation_time%end_sec
+      p_year    = DEF_simulation_time%spinup_year
+      p_month   = DEF_simulation_time%spinup_month
+      p_day     = DEF_simulation_time%spinup_day
+      p_seconds = DEF_simulation_time%spinup_sec
 
-   spinup_repeat = DEF_simulation_time%spinup_repeat
+      spinup_repeat = DEF_simulation_time%spinup_repeat
 
-   CALL initimetype(greenwich)
-   CALL monthday2julian(s_year,s_month,s_day,s_julian)
-   CALL monthday2julian(e_year,e_month,e_day,e_julian)
-   CALL monthday2julian(p_year,p_month,p_day,p_julian)
+      CALL initimetype(greenwich)
+      CALL monthday2julian(s_year,s_month,s_day,s_julian)
+      CALL monthday2julian(e_year,e_month,e_day,e_julian)
+      CALL monthday2julian(p_year,p_month,p_day,p_julian)
 
-   sdate(1) = s_year; sdate(2) = s_julian; sdate(3) = s_seconds
-   edate(1) = e_year; edate(2) = e_julian; edate(3) = e_seconds
-   pdate(1) = p_year; pdate(2) = p_julian; pdate(3) = p_seconds
+      sdate(1) = s_year; sdate(2) = s_julian; sdate(3) = s_seconds
+      edate(1) = e_year; edate(2) = e_julian; edate(3) = e_seconds
+      pdate(1) = p_year; pdate(2) = p_julian; pdate(3) = p_seconds
 
-   CALL Init_GlobalVars
-   CAll Init_LC_Const
-   CAll Init_PFT_Const
+      CALL Init_GlobalVars
+      CAll Init_LC_Const
+      CAll Init_PFT_Const
 
-   CALL pixel%load_from_file    (dir_landdata)
-   CALL gblock%load_from_file   (dir_landdata)
+      CALL pixel%load_from_file    (dir_landdata)
+      CALL gblock%load_from_file   (dir_landdata)
 
 #ifdef LULCC
-   lc_year = s_year
+      lc_year = s_year
 #else
-   lc_year = DEF_LC_YEAR
+      lc_year = DEF_LC_YEAR
 #endif
 
-   CALL mesh_load_from_file (dir_landdata, lc_year)
+      CALL mesh_load_from_file (dir_landdata, lc_year)
 
-   CALL pixelset_load_from_file (dir_landdata, 'landelm'  , landelm  , numelm  , lc_year)
+      CALL pixelset_load_from_file (dir_landdata, 'landelm'  , landelm  , numelm  , lc_year)
 
 #ifdef CATCHMENT
-   CALL pixelset_load_from_file (dir_landdata, 'landhru'  , landhru  , numhru  , lc_year)
+      CALL pixelset_load_from_file (dir_landdata, 'landhru'  , landhru  , numhru  , lc_year)
 #endif
 
-   CALL pixelset_load_from_file (dir_landdata, 'landpatch', landpatch, numpatch, lc_year)
+      CALL pixelset_load_from_file (dir_landdata, 'landpatch', landpatch, numpatch, lc_year)
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
-   CALL pixelset_load_from_file (dir_landdata, 'landpft'  , landpft  , numpft  , lc_year)
-   CALL map_patch_to_pft
+      CALL pixelset_load_from_file (dir_landdata, 'landpft'  , landpft  , numpft  , lc_year)
+      CALL map_patch_to_pft
 #endif
 
 #ifdef URBAN_MODEL
-   CALL pixelset_load_from_file (dir_landdata, 'landurban', landurban, numurban, lc_year)
-   CALL map_patch_to_urban
+      CALL pixelset_load_from_file (dir_landdata, 'landurban', landurban, numurban, lc_year)
+      CALL map_patch_to_urban
 #endif
 
 #if (defined UNSTRUCTURED || defined CATCHMENT)
-   CALL elm_vector_init ()
+      CALL elm_vector_init ()
 #ifdef CATCHMENT
-   CALL hru_vector_init ()
+      CALL hru_vector_init ()
 #endif
 #endif
 
-   CALL adj2end(sdate)
-   CALL adj2end(edate)
-   CALL adj2end(pdate)
+      CALL adj2end(sdate)
+      CALL adj2end(edate)
+      CALL adj2end(pdate)
 
-   ststamp = sdate
-   etstamp = edate
-   ptstamp = pdate
+      ststamp = sdate
+      etstamp = edate
+      ptstamp = pdate
 
-   ! date in beginning style
-   jdate = sdate
-   CALL adj2begin(jdate)
+      ! date in beginning style
+      jdate = sdate
+      CALL adj2begin(jdate)
 
-   IF (ptstamp <= ststamp) THEN
-      spinup_repeat = 0
-   ELSE
-      spinup_repeat = max(0, spinup_repeat)
-   ENDIF
+      IF (ptstamp <= ststamp) THEN
+         spinup_repeat = 0
+      ELSE
+         spinup_repeat = max(0, spinup_repeat)
+      ENDIF
 
-   ! ----------------------------------------------------------------------
-   ! Read in the model time invariant constant data
-   CALL allocate_TimeInvariants ()
-   CALL READ_TimeInvariants (lc_year, casename, dir_restart)
+      ! ----------------------------------------------------------------------
+      ! Read in the model time invariant constant data
+      CALL allocate_TimeInvariants ()
+      CALL READ_TimeInvariants (lc_year, casename, dir_restart)
 
-   ! Read in the model time varying data (model state variables)
-   CALL allocate_TimeVariables  ()
-   CALL READ_TimeVariables (jdate, lc_year, casename, dir_restart)
+      ! Read in the model time varying data (model state variables)
+      CALL allocate_TimeVariables  ()
+      CALL READ_TimeVariables (jdate, lc_year, casename, dir_restart)
 
-   ! Read in SNICAR optical and aging parameters
-   CALL SnowOptics_init( DEF_file_snowoptics ) ! SNICAR optical parameters
-   CALL SnowAge_init( DEF_file_snowaging )     ! SNICAR aging   parameters
+      ! Read in SNICAR optical and aging parameters
+      CALL SnowOptics_init( DEF_file_snowoptics ) ! SNICAR optical parameters
+      CALL SnowAge_init( DEF_file_snowaging )     ! SNICAR aging   parameters
 
-   ! ----------------------------------------------------------------------
-   doalb = .true.
-   dolai = .true.
-   dosst = .false.
+      ! ----------------------------------------------------------------------
+      doalb = .true.
+      dolai = .true.
+      dosst = .false.
 
-   ! Initialize meteorological forcing data module
-   CALL allocate_1D_Forcing ()
-   CALL forcing_init (dir_forcing, deltim, ststamp, lc_year, etstamp)
-   CALL allocate_2D_Forcing (gforc)
+      ! Initialize meteorological forcing data module
+      CALL allocate_1D_Forcing ()
+      CALL forcing_init (dir_forcing, deltim, ststamp, lc_year, etstamp)
+      CALL allocate_2D_Forcing (gforc)
 
-   ! Initialize history data module
-   CALL hist_init (dir_hist)
-   CALL allocate_1D_Fluxes ()
+      ! Initialize history data module
+      CALL hist_init (dir_hist)
+      CALL allocate_1D_Fluxes ()
 
 
 #if(defined CaMa_Flood)
-   CALL colm_CaMa_init !initialize CaMa-Flood
+      CALL colm_CaMa_init !initialize CaMa-Flood
 #endif
-
-   IF(DEF_USE_OZONEDATA)THEN
-      CALL init_Ozone_data (sdate)
-   ENDIF
-
-   ! Initialize aerosol deposition forcing data
-   IF (DEF_Aerosol_Readin) THEN
-      CALL AerosolDepInit ()
-   ENDIF
-
-#ifdef BGC
-   IF (DEF_USE_NITRIF) THEN
-      CALL init_nitrif_data (sdate)
-   ENDIF
-
-   IF (DEF_NDEP_FREQUENCY==1)THEN ! Initial annual ndep data readin
-      CALL init_ndep_data_annually (sdate(1))
-   ELSEIF(DEF_NDEP_FREQUENCY==2)THEN ! Initial monthly ndep data readin
-      CALL init_ndep_data_monthly (sdate(1),s_month) ! sf_add
-   ELSE
-      write(6,*) 'ERROR: DEF_NDEP_FREQUENCY should be only 1-2, Current is:',DEF_NDEP_FREQUENCY
-      CALL CoLM_stop ()
-   ENDIF
-
-   IF (DEF_USE_FIRE) THEN
-      CALL init_fire_data (sdate(1))
-      CALL init_lightning_data (sdate)
-   ENDIF
-#endif
-
-#if (defined CatchLateralFlow)
-   CALL lateral_flow_init (lc_year)
-#endif
-
-#ifdef DataAssimilation
-   CALL init_DataAssimilation ()
-#endif
-
-   ! ======================================================================
-   ! begin time stepping loop
-   ! ======================================================================
-
-   istep   = 1
-   idate   = sdate
-   itstamp = ststamp
-
-   TIMELOOP : DO WHILE (itstamp < etstamp)
-
-      CALL julian2monthday (jdate(1), jdate(2), month_p, mday_p)
-
-      year_p = jdate(1)
-
-      IF (p_is_master) THEN
-         IF (itstamp < ptstamp) THEN
-            write(*, 99) istep, jdate(1), month_p, mday_p, jdate(3), spinup_repeat
-         ELSE
-            write(*,100) istep, jdate(1), month_p, mday_p, jdate(3)
-         ENDIF
-      ENDIF
-
-
-      Julian_1day_p = int(calendarday(jdate)-1)/1*1 + 1
-      Julian_8day_p = int(calendarday(jdate)-1)/8*8 + 1
-
-      ! Read in the meteorological forcing
-      ! ----------------------------------------------------------------------
-      CALL read_forcing (jdate, dir_forcing)
 
       IF(DEF_USE_OZONEDATA)THEN
-         CALL update_Ozone_data(itstamp, deltim)
+         CALL init_Ozone_data (sdate)
       ENDIF
-#ifdef BGC
-      IF(DEF_USE_FIRE)THEN
-         CALL update_lightning_data (itstamp, deltim)
-      ENDIF
-#endif
 
-      ! Read in aerosol deposition forcing data
+      ! Initialize aerosol deposition forcing data
       IF (DEF_Aerosol_Readin) THEN
-         CALL AerosolDepReadin (jdate)
+         CALL AerosolDepInit ()
       ENDIF
-
-      ! Calendar for NEXT time step
-      ! ----------------------------------------------------------------------
-      CALL TICKTIME (deltim,idate)
-      itstamp = itstamp + int(deltim)
-      jdate = idate
-      CALL adj2begin(jdate)
-
-      CALL julian2monthday (jdate(1), jdate(2), month, mday)
 
 #ifdef BGC
-      IF(DEF_USE_NITRIF) THEN
-         IF (month /= month_p) THEN
-            CALL update_nitrif_data (month)
-         ENDIF
+      IF (DEF_USE_NITRIF) THEN
+         CALL init_nitrif_data (sdate)
       ENDIF
 
-      IF (DEF_NDEP_FREQUENCY==1)THEN ! Read Annual Ndep data
-         IF (jdate(1) /= year_p) THEN
-            CALL update_ndep_data_annually (idate(1), iswrite = .true.)
-         ENDIF
-      ELSEIF(DEF_NDEP_FREQUENCY==2)THEN! Read Monthly Ndep data
-         IF (jdate(1) /= year_p .or. month /= month_p) THEN  !sf_add
-            CALL update_ndep_data_monthly (jdate(1), month, iswrite = .true.) !sf_add
-         ENDIF
+      IF (DEF_NDEP_FREQUENCY==1)THEN ! Initial annual ndep data readin
+         CALL init_ndep_data_annually (sdate(1))
+      ELSEIF(DEF_NDEP_FREQUENCY==2)THEN ! Initial monthly ndep data readin
+         CALL init_ndep_data_monthly (sdate(1),s_month) ! sf_add
       ELSE
-         write(6,*) 'ERROR: DEF_NDEP_FREQUENCY should be only 1-2, Current is:',DEF_NDEP_FREQUENCY
+         write(6,*) 'ERROR: DEF_NDEP_FREQUENCY should be only 1-2, Current is:', &
+                     DEF_NDEP_FREQUENCY
          CALL CoLM_stop ()
       ENDIF
 
-      IF(DEF_USE_FIRE)THEN
-         IF (jdate(1) /= year_p) THEN
-            CALL update_hdm_data (idate(1))
-         ENDIF
+      IF (DEF_USE_FIRE) THEN
+         CALL init_fire_data (sdate(1))
+         CALL init_lightning_data (sdate)
       ENDIF
 #endif
-
-
-      ! Call colm driver
-      ! ----------------------------------------------------------------------
-      IF (p_is_worker) THEN
-         CALL CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oroflag)
-      ENDIF
-
 
 #if (defined CatchLateralFlow)
-      CALL lateral_flow (deltim)
-#endif
-
-#if(defined CaMa_Flood)
-      CALL colm_CaMa_drv(idate(3)) ! run CaMa-Flood
+      CALL lateral_flow_init (lc_year)
 #endif
 
 #ifdef DataAssimilation
-      CALL do_DataAssimilation (idate, deltim)
+      CALL init_DataAssimilation ()
 #endif
 
-      ! Write out the model variables for restart run and the histroy file
-      ! ----------------------------------------------------------------------
-      CALL hist_out (idate, deltim, itstamp, etstamp, ptstamp, dir_hist, casename)
+      ! ======================================================================
+      ! begin time stepping loop
+      ! ======================================================================
 
-      ! DO land USE and land cover change simulation
-      ! ----------------------------------------------------------------------
+      istep   = 1
+      idate   = sdate
+      itstamp = ststamp
+
+      TIMELOOP : DO WHILE (itstamp < etstamp)
+
+         CALL julian2monthday (jdate(1), jdate(2), month_p, mday_p)
+
+         year_p = jdate(1)
+
+         IF (p_is_master) THEN
+            IF (itstamp < ptstamp) THEN
+               write(*, 99) istep, jdate(1), month_p, mday_p, jdate(3), spinup_repeat
+            ELSE
+               write(*,100) istep, jdate(1), month_p, mday_p, jdate(3)
+            ENDIF
+         ENDIF
+
+
+         Julian_1day_p = int(calendarday(jdate)-1)/1*1 + 1
+         Julian_8day_p = int(calendarday(jdate)-1)/8*8 + 1
+
+         ! Read in the meteorological forcing
+         ! ----------------------------------------------------------------------
+         CALL read_forcing (jdate, dir_forcing)
+
+         IF(DEF_USE_OZONEDATA)THEN
+            CALL update_Ozone_data(itstamp, deltim)
+         ENDIF
+#ifdef BGC
+         IF(DEF_USE_FIRE)THEN
+            CALL update_lightning_data (itstamp, deltim)
+         ENDIF
+#endif
+
+         ! Read in aerosol deposition forcing data
+         IF (DEF_Aerosol_Readin) THEN
+            CALL AerosolDepReadin (jdate)
+         ENDIF
+
+         ! Calendar for NEXT time step
+         ! ----------------------------------------------------------------------
+         CALL TICKTIME (deltim,idate)
+         itstamp = itstamp + int(deltim)
+         jdate = idate
+         CALL adj2begin(jdate)
+
+         CALL julian2monthday (jdate(1), jdate(2), month, mday)
+
+#ifdef BGC
+         IF(DEF_USE_NITRIF) THEN
+            IF (month /= month_p) THEN
+               CALL update_nitrif_data (month)
+            ENDIF
+         ENDIF
+
+         IF (DEF_NDEP_FREQUENCY==1)THEN ! Read Annual Ndep data
+            IF (jdate(1) /= year_p) THEN
+               CALL update_ndep_data_annually (idate(1), iswrite = .true.)
+            ENDIF
+         ELSEIF(DEF_NDEP_FREQUENCY==2)THEN! Read Monthly Ndep data
+            IF (jdate(1) /= year_p .or. month /= month_p) THEN  !sf_add
+               CALL update_ndep_data_monthly (jdate(1), month, iswrite = .true.) !sf_add
+            ENDIF
+         ELSE
+            write(6,*) 'ERROR: DEF_NDEP_FREQUENCY should be only 1-2, Current is:',&
+                        DEF_NDEP_FREQUENCY
+            CALL CoLM_stop ()
+         ENDIF
+
+         IF(DEF_USE_FIRE)THEN
+            IF (jdate(1) /= year_p) THEN
+               CALL update_hdm_data (idate(1))
+            ENDIF
+         ENDIF
+#endif
+
+
+         ! Call colm driver
+         ! ----------------------------------------------------------------------
+         IF (p_is_worker) THEN
+            CALL CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oroflag)
+         ENDIF
+
+
+#if (defined CatchLateralFlow)
+         CALL lateral_flow (deltim)
+#endif
+
+#if(defined CaMa_Flood)
+         CALL colm_CaMa_drv(idate(3)) ! run CaMa-Flood
+#endif
+
+#ifdef DataAssimilation
+         CALL do_DataAssimilation (idate, deltim)
+#endif
+
+         ! Write out the model variables for restart run and the histroy file
+         ! ----------------------------------------------------------------------
+         CALL hist_out (idate, deltim, itstamp, etstamp, ptstamp, dir_hist, casename)
+
+         ! DO land USE and land cover change simulation
+         ! ----------------------------------------------------------------------
 #ifdef LULCC
-      IF ( isendofyear(idate, deltim) ) THEN
-         CALL deallocate_1D_Forcing
-         CALL deallocate_1D_Fluxes
+         IF ( isendofyear(idate, deltim) ) THEN
+            CALL deallocate_1D_Forcing
+            CALL deallocate_1D_Fluxes
 
-         CALL LulccDriver (casename,dir_landdata,dir_restart,&
-                           idate,greenwich)
+            CALL LulccDriver (casename,dir_landdata,dir_restart,&
+                              idate,greenwich)
 
-         CALL allocate_1D_Forcing
-         CALL forcing_init (dir_forcing, deltim, itstamp, jdate(1))
-         CALL deallocate_acc_fluxes
-         CALL hist_init (dir_hist)
-         CALL allocate_1D_Fluxes
-      ENDIF
+            CALL allocate_1D_Forcing
+            CALL forcing_init (dir_forcing, deltim, itstamp, jdate(1))
+            CALL deallocate_acc_fluxes
+            CALL hist_init (dir_hist)
+            CALL allocate_1D_Fluxes
+         ENDIF
 #endif
 
-      ! Get leaf area index
-      ! ----------------------------------------------------------------------
+         ! Get leaf area index
+         ! ----------------------------------------------------------------------
 #if(defined DYN_PHENOLOGY)
-      ! Update once a day
-      dolai = .false.
-      Julian_1day = int(calendarday(jdate)-1)/1*1 + 1
-      IF(Julian_1day /= Julian_1day_p)THEN
-         dolai = .true.
-      ENDIF
-#else
-      ! READ in Leaf area index and stem area index
-      ! ----------------------------------------------------------------------
-      ! Hua Yuan, 08/03/2019: read global monthly LAI/SAI data
-      ! zhongwang wei, 20210927: add option to read non-climatological mean LAI
-      ! Update every 8 days (time interval of the MODIS LAI data)
-      ! Hua Yuan, 06/2023: change namelist DEF_LAI_CLIM to DEF_LAI_MONTHLY
-      ! and add DEF_LAI_CHANGE_YEARLY for monthly LAI data
-      !
-      ! NOTES: Should be caution for setting DEF_LAI_CHANGE_YEARLY to ture in non-LULCC
-      ! case, that means the LAI changes without condisderation of land cover change.
-
-      IF (DEF_LAI_CHANGE_YEARLY) THEN
-         lai_year = jdate(1)
-      ELSE
-         lai_year = DEF_LC_YEAR
-      ENDIF
-
-      IF (DEF_LAI_MONTHLY) THEN
-         IF ((itstamp < etstamp) .and. (month /= month_p)) THEN
-            CALL LAI_readin (lai_year, month, dir_landdata)
-#ifdef URBAN_MODEL
-            CALL UrbanLAI_readin(lai_year, month, dir_landdata)
-#endif
+         ! Update once a day
+         dolai = .false.
+         Julian_1day = int(calendarday(jdate)-1)/1*1 + 1
+         IF(Julian_1day /= Julian_1day_p)THEN
+            dolai = .true.
          ENDIF
-      ELSE
+#else
+         ! READ in Leaf area index and stem area index
+         ! ----------------------------------------------------------------------
+         ! Hua Yuan, 08/03/2019: read global monthly LAI/SAI data
+         ! zhongwang wei, 20210927: add option to read non-climatological mean LAI
          ! Update every 8 days (time interval of the MODIS LAI data)
-         Julian_8day = int(calendarday(jdate)-1)/8*8 + 1
-         IF ((itstamp < etstamp) .and. (Julian_8day /= Julian_8day_p)) THEN
-            CALL LAI_readin (jdate(1), Julian_8day, dir_landdata)
-            ! 06/2023, yuan: or depend on DEF_LAI_CHANGE_YEARLY nanemlist
-            !CALL LAI_readin (lai_year, Julian_8day, dir_landdata)
+         ! Hua Yuan, 06/2023: change namelist DEF_LAI_CLIM to DEF_LAI_MONTHLY
+         ! and add DEF_LAI_CHANGE_YEARLY for monthly LAI data
+         !
+         ! NOTES: Should be caution for setting DEF_LAI_CHANGE_YEARLY to ture in non-LULCC
+         ! case, that means the LAI changes without condisderation of land cover change.
+
+         IF (DEF_LAI_CHANGE_YEARLY) THEN
+            lai_year = jdate(1)
+         ELSE
+            lai_year = DEF_LC_YEAR
          ENDIF
-      ENDIF
+
+         IF (DEF_LAI_MONTHLY) THEN
+            IF ((itstamp < etstamp) .and. (month /= month_p)) THEN
+               CALL LAI_readin (lai_year, month, dir_landdata)
+#ifdef URBAN_MODEL
+               CALL UrbanLAI_readin(lai_year, month, dir_landdata)
+#endif
+            ENDIF
+         ELSE
+            ! Update every 8 days (time interval of the MODIS LAI data)
+            Julian_8day = int(calendarday(jdate)-1)/8*8 + 1
+            IF ((itstamp < etstamp) .and. (Julian_8day /= Julian_8day_p)) THEN
+               CALL LAI_readin (jdate(1), Julian_8day, dir_landdata)
+               ! 06/2023, yuan: or depend on DEF_LAI_CHANGE_YEARLY nanemlist
+               !CALL LAI_readin (lai_year, Julian_8day, dir_landdata)
+            ENDIF
+         ENDIF
 #endif
 
-      IF (save_to_restart (idate, deltim, itstamp, ptstamp)) THEN
+         IF (save_to_restart (idate, deltim, itstamp, ptstamp)) THEN
 #ifdef LULCC
-         CALL WRITE_TimeVariables (jdate, jdate(1), casename, dir_restart)
+            CALL WRITE_TimeVariables (jdate, jdate(1), casename, dir_restart)
 #else
-         CALL WRITE_TimeVariables (jdate, lc_year,  casename, dir_restart)
+            CALL WRITE_TimeVariables (jdate, lc_year,  casename, dir_restart)
 #endif
 #if(defined CaMa_Flood)
-      IF (p_is_master) THEN
-            CALL colm_cama_write_restart (jdate, lc_year,  casename, dir_restart)
-         ENDIF
+            IF (p_is_master) THEN
+               CALL colm_cama_write_restart (jdate, lc_year,  casename, dir_restart)
+            ENDIF
 #endif
-      ENDIF
+         ENDIF
 #ifdef RangeCheck
-      CALL check_TimeVariables ()
+         CALL check_TimeVariables ()
 #endif
 #ifdef CoLMDEBUG
-      CALL print_VSF_iteration_stat_info ()
+         CALL print_VSF_iteration_stat_info ()
+#endif
+
+#ifdef USEMPI
+         CALL mpi_barrier (p_comm_glb, p_err)
+#endif
+
+         IF (p_is_master) THEN
+            CALL system_clock (end_time, count_rate = c_per_sec)
+            time_used = (end_time - start_time) / c_per_sec
+            IF (time_used >= 3600) THEN
+               write(*,101) time_used/3600, mod(time_used,3600)/60, mod(time_used,60)
+            ELSEIF (time_used >= 60) THEN
+               write(*,102) time_used/60, mod(time_used,60)
+            ELSE
+               write(*,103) time_used
+            ENDIF
+         ENDIF
+
+         IF ((spinup_repeat > 1) .and. (ptstamp <= itstamp)) THEN
+            spinup_repeat = spinup_repeat - 1
+            idate   = sdate
+            jdate   = sdate
+            itstamp = ststamp
+            CALL adj2begin(jdate)
+            CALL forcing_reset ()
+         ENDIF
+
+         istep = istep + 1
+
+      ENDDO TIMELOOP
+
+      CALL deallocate_TimeInvariants ()
+      CALL deallocate_TimeVariables  ()
+      CALL deallocate_1D_Forcing     ()
+      CALL deallocate_1D_Fluxes      ()
+
+#if (defined CatchLateralFlow)
+      CALL lateral_flow_final ()
+#endif
+
+      CALL forcing_final ()
+      CALL hist_final    ()
+
+#ifdef SinglePoint
+      CALL single_srfdata_final ()
 #endif
 
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-      IF (p_is_master) THEN
-         CALL system_clock (end_time, count_rate = c_per_sec)
-         time_used = (end_time - start_time) / c_per_sec
-         IF (time_used >= 3600) THEN
-            write(*,101) time_used/3600, mod(time_used,3600)/60, mod(time_used,60)
-         elseif (time_used >= 60) THEN
-            write(*,102) time_used/60, mod(time_used,60)
-         ELSE
-            write(*,103) time_used
-         ENDIF
-      ENDIF
-
-      IF ((spinup_repeat > 1) .and. (ptstamp <= itstamp)) THEN
-         spinup_repeat = spinup_repeat - 1
-         idate   = sdate
-         jdate   = sdate
-         itstamp = ststamp
-         CALL adj2begin(jdate)
-         CALL forcing_reset ()
-      ENDIF
-
-      istep = istep + 1
-
-   ENDDO TIMELOOP
-
-   CALL deallocate_TimeInvariants ()
-   CALL deallocate_TimeVariables  ()
-   CALL deallocate_1D_Forcing     ()
-   CALL deallocate_1D_Fluxes      ()
-
-#if (defined CatchLateralFlow)
-   CALL lateral_flow_final ()
-#endif
-
-   CALL forcing_final ()
-   CALL hist_final    ()
-
-#ifdef SinglePoint
-   CALL single_srfdata_final ()
-#endif
-
-#ifdef USEMPI
-   CALL mpi_barrier (p_comm_glb, p_err)
-#endif
-
 #if(defined CaMa_Flood)
-   CALL colm_cama_exit ! finalize CaMa-Flood
+      CALL colm_cama_exit ! finalize CaMa-Flood
 #endif
 
 #ifdef DataAssimilation
-   CALL final_DataAssimilation ()
+      CALL final_DataAssimilation ()
 #endif
 
-   IF (p_is_master) THEN
-      write(*,'(/,A25)') 'CoLM Execution Completed.'
-   ENDIF
+      IF (p_is_master) THEN
+         write(*,'(/,A25)') 'CoLM Execution Completed.'
+      ENDIF
 
-   99  format(/, 'TIMESTEP = ', I0, ' | DATE = ', I4.4, '-', I2.2, '-', I2.2, '-', I5.5, ' Spinup (', I0, ' repeat left)')
-   100 format(/, 'TIMESTEP = ', I0, ' | DATE = ', I4.4, '-', I2.2, '-', I2.2, '-', I5.5)
-   101 format(/, 'Time elapsed : ', I4, ' hours', I3, ' minutes', I3, ' seconds.')
-   102 format(/, 'Time elapsed : ', I3, ' minutes', I3, ' seconds.')
-   103 format(/, 'Time elapsed : ', I3, ' seconds.')
+      99  format(/, 'TIMESTEP = ', I0, ' | DATE = ', I4.4, '-', I2.2, '-', I2.2, '-', I5.5, ' Spinup (', I0, ' repeat left)')
+      100 format(/, 'TIMESTEP = ', I0, ' | DATE = ', I4.4, '-', I2.2, '-', I2.2, '-', I5.5)
+      101 format(/, 'Time elapsed : ', I4, ' hours', I3, ' minutes', I3, ' seconds.')
+      102 format(/, 'Time elapsed : ', I3, ' minutes', I3, ' seconds.')
+      103 format(/, 'Time elapsed : ', I3, ' seconds.')
 
 #ifdef USEMPI
-   ENDIF
+      ENDIF
 
-   IF (DEF_HIST_WriteBack) THEN
-      CALL hist_writeback_exit ()
-   ENDIF
+      IF (DEF_HIST_WriteBack) THEN
+         CALL hist_writeback_exit ()
+      ENDIF
 
-   CALL spmd_exit
+      CALL spmd_exit
 #endif
 
 END PROGRAM CoLM

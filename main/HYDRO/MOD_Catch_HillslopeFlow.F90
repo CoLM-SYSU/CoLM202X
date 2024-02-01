@@ -2,77 +2,77 @@
 
 #ifdef CatchLateralFlow
 MODULE MOD_Catch_HillslopeFlow
-   !-------------------------------------------------------------------------------------
-   ! DESCRIPTION:
-   !   
-   !   Shallow water equation solver over hillslopes.
-   !
-   !   References
-   !   [1] Toro EF. Shock-capturing methods for free-surface shallow flows. 
-   !      Chichester: John Wiley & Sons; 2001.
-   !   [2] Liang, Q., Borthwick, A. G. L. (2009). Adaptive quadtree simulation of shallow 
-   !      flows with wet-dry fronts over complex topography. 
-   !      Computers and Fluids, 38(2), 221–234.
-   !   [3] Audusse, E., Bouchut, F., Bristeau, M.-O., Klein, R., Perthame, B. (2004). 
-   !      A Fast and Stable Well-Balanced Scheme with Hydrostatic Reconstruction for 
-   !      Shallow Water Flows. SIAM Journal on Scientific Computing, 25(6), 2050–2065.
-   !
-   ! Created by Shupeng Zhang, May 2023
-   !-------------------------------------------------------------------------------------
+!-------------------------------------------------------------------------------------
+! DESCRIPTION:
+!   
+!   Shallow water equation solver over hillslopes.
+!
+!   References
+!   [1] Toro EF. Shock-capturing methods for free-surface shallow flows. 
+!      Chichester: John Wiley & Sons; 2001.
+!   [2] Liang, Q., Borthwick, A. G. L. (2009). Adaptive quadtree simulation of shallow 
+!      flows with wet-dry fronts over complex topography. 
+!      Computers and Fluids, 38(2), 221–234.
+!   [3] Audusse, E., Bouchut, F., Bristeau, M.-O., Klein, R., Perthame, B. (2004). 
+!      A Fast and Stable Well-Balanced Scheme with Hydrostatic Reconstruction for 
+!      Shallow Water Flows. SIAM Journal on Scientific Computing, 25(6), 2050–2065.
+!
+! Created by Shupeng Zhang, May 2023
+!-------------------------------------------------------------------------------------
 
    USE MOD_Precision
    IMPLICIT NONE
 
    ! -- Parameters --
-   REAL(r8), parameter :: PONDMIN  = 1.e-4 
-   REAL(r8), parameter :: nmanning_hslp = 0.3
+   real(r8), parameter :: PONDMIN  = 1.e-4 
+   real(r8), parameter :: nmanning_hslp = 0.3
    
 CONTAINS
    
    ! ----------
    SUBROUTINE hillslope_flow (dt)
 
-      USE MOD_SPMD_Task
-      USE MOD_Mesh
-      USE MOD_LandElm
-      USE MOD_LandHRU
-      USE MOD_LandPatch
-      USE MOD_Vars_TimeVariables
-      USE MOD_Vars_1DFluxes
-      USE MOD_Hydro_Vars_TimeVariables
-      USE MOD_Hydro_Vars_1DFluxes
-      USE MOD_Catch_HillslopeNetwork
-      USE MOD_Catch_RiverLakeNetwork
-      USE MOD_Const_Physical, only : grav
+   USE MOD_SPMD_Task
+   USE MOD_Mesh
+   USE MOD_LandElm
+   USE MOD_LandHRU
+   USE MOD_LandPatch
+   USE MOD_Vars_TimeVariables
+   USE MOD_Vars_1DFluxes
+   USE MOD_Hydro_Vars_TimeVariables
+   USE MOD_Hydro_Vars_1DFluxes
+   USE MOD_Catch_HillslopeNetwork
+   USE MOD_Catch_RiverLakeNetwork
+   USE MOD_Const_Physical, only : grav
 
-      IMPLICIT NONE
-      
-      REAL(r8), intent(in) :: dt
+   IMPLICIT NONE
+   
+   real(r8), intent(in) :: dt
 
-      ! Local Variables
-      INTEGER :: numbasin, nhru, hs, he, ibasin, i, j, ps, pe
+   ! Local Variables
+   integer :: numbasin, nhru, hs, he, ibasin, i, j, ps, pe
 
-      TYPE(hillslope_network_info_type), pointer :: hillslope
+   type(hillslope_network_info_type), pointer :: hillslope
 
-      REAL(r8), allocatable :: wdsrf_h (:) ! [m]
-      REAL(r8), allocatable :: momen_h (:) ! [m^2/s]
-      REAL(r8), allocatable :: veloc_h (:) ! [m/s]
+   real(r8), allocatable :: wdsrf_h (:) ! [m]
+   real(r8), allocatable :: momen_h (:) ! [m^2/s]
+   real(r8), allocatable :: veloc_h (:) ! [m/s]
 
-      REAL(r8), allocatable :: sum_hflux_h (:) 
-      REAL(r8), allocatable :: sum_mflux_h (:) 
-      REAL(r8), allocatable :: sum_zgrad_h (:) 
-      
-      REAL(r8) :: hand_fc,  wdsrf_fc, veloc_fc, hflux_fc, mflux_fc
-      REAL(r8) :: wdsrf_up, wdsrf_dn, vwave_up, vwave_dn
-      REAL(r8) :: hflux_up, hflux_dn, mflux_up, mflux_dn
-      
-      REAL(r8), allocatable :: xsurf_h (:) ! [m/s]
+   real(r8), allocatable :: sum_hflux_h (:) 
+   real(r8), allocatable :: sum_mflux_h (:) 
+   real(r8), allocatable :: sum_zgrad_h (:) 
+   
+   real(r8) :: hand_fc,  wdsrf_fc, veloc_fc, hflux_fc, mflux_fc
+   real(r8) :: wdsrf_up, wdsrf_dn, vwave_up, vwave_dn
+   real(r8) :: hflux_up, hflux_dn, mflux_up, mflux_dn
+   
+   real(r8), allocatable :: xsurf_h (:) ! [m/s]
 
-      REAL(r8) :: friction
-      REAL(r8) :: dt_res, dt_this
+   real(r8) :: friction
+   real(r8) :: dt_res, dt_this
 
-      logical, allocatable :: mask(:)
-      real(r8) :: srfbsn, dvol, nextl, nexta, nextv, ddep
+   logical, allocatable :: mask(:)
+   real(r8) :: srfbsn, dvol, nextl, nexta, nextv, ddep
 
       IF (p_is_worker) THEN
 
@@ -137,7 +137,7 @@ CONTAINS
 
                   ! dry HRU
                   IF ((wdsrf_h(i) < PONDMIN) .and. (wdsrf_h(j) < PONDMIN)) THEN
-                     cycle
+                     CYCLE
                   ENDIF
 
                   ! reconstruction of height of water near interface
@@ -196,7 +196,7 @@ CONTAINS
 
                DO i = 1, nhru
                   ! constraint 1: CFL condition
-                  IF (hillslope%inext(i) > 0) then
+                  IF (hillslope%inext(i) > 0) THEN
                      IF ((veloc_h(i) /= 0.) .or. (wdsrf_h(i) > 0.)) THEN
                         dt_this = min(dt_this, hillslope%plen(i)/(abs(veloc_h(i)) + sqrt(grav*wdsrf_h(i)))*0.8)
                      ENDIF

@@ -151,31 +151,31 @@ CONTAINS
 
       !   calculate total irrigation needed in all soil layers
       DO m = ps, pe
-          DO j = 1, nl_soil
-              IF (.not. reached_max_depth) THEN
-                  IF (z_soi(j) > irrig_max_depth) THEN
-                      reached_max_depth = .true.
-                  ELSE IF (j > nbedrock) THEN
-                      reached_max_depth = .true.
-                  ELSE IF (t_soisno(j,i) <= tfrz) THEN
-                      reached_max_depth = .true.
+         DO j = 1, nl_soil
+            IF (.not. reached_max_depth) THEN
+               IF (z_soi(j) > irrig_max_depth) THEN
+                  reached_max_depth = .true.
+               ELSEIF (j > nbedrock) THEN
+                  reached_max_depth = .true.
+               ELSEIF (t_soisno(j,i) <= tfrz) THEN
+                  reached_max_depth = .true.
+               ELSE
+                  h2osoi_liq_tot = h2osoi_liq_tot + wliq_soisno(j,i)
+                  h2osoi_liq_wilting_point_tot = h2osoi_liq_wilting_point_tot + h2osoi_liq_wilting_point(j)
+                  IF (irrig_method_p(m) == irrig_method_drip .or. irrig_method_p(m) == irrig_method_sprinkler) THEN
+                      h2osoi_liq_target_tot = h2osoi_liq_target_tot + h2osoi_liq_field_capacity(j)
+                  !   irrigation threshold at field capacity, but irrigation amount at saturation capacity
+                  ELSEIF (irrig_method_p(m) == irrig_method_flood) THEN
+                      h2osoi_liq_target_tot = h2osoi_liq_target_tot + h2osoi_liq_field_capacity(j)
+                      h2osoi_liq_saturation_capacity_tot = h2osoi_liq_saturation_capacity_tot + h2osoi_liq_saturation_capacity(j)
+                  ELSEIF (irrig_method_p(m) == irrig_method_paddy) THEN
+                      h2osoi_liq_target_tot = h2osoi_liq_target_tot + h2osoi_liq_saturation_capacity(j)
                   ELSE
-                      h2osoi_liq_tot = h2osoi_liq_tot + wliq_soisno(j,i)
-                      h2osoi_liq_wilting_point_tot = h2osoi_liq_wilting_point_tot + h2osoi_liq_wilting_point(j)
-                      IF (irrig_method_p(m) == irrig_method_drip .or. irrig_method_p(m) == irrig_method_sprinkler) THEN
-                          h2osoi_liq_target_tot = h2osoi_liq_target_tot + h2osoi_liq_field_capacity(j)
-                      !   irrigation threshold at field capacity, but irrigation amount at saturation capacity
-                      ELSE IF (irrig_method_p(m) == irrig_method_flood) THEN
-                          h2osoi_liq_target_tot = h2osoi_liq_target_tot + h2osoi_liq_field_capacity(j)
-                          h2osoi_liq_saturation_capacity_tot = h2osoi_liq_saturation_capacity_tot + h2osoi_liq_saturation_capacity(j)
-                      ELSE IF (irrig_method_p(m) == irrig_method_paddy) THEN
-                          h2osoi_liq_target_tot = h2osoi_liq_target_tot + h2osoi_liq_saturation_capacity(j)
-                      ELSE
-                          h2osoi_liq_target_tot = h2osoi_liq_target_tot + h2osoi_liq_field_capacity(j)
-                      ENDIF
+                      h2osoi_liq_target_tot = h2osoi_liq_target_tot + h2osoi_liq_field_capacity(j)
                   ENDIF
-              ENDIF
-          ENDDO
+               ENDIF
+            ENDIF
+         ENDDO
       ENDDO
 
       !   calculate irrigation threshold
@@ -184,18 +184,18 @@ CONTAINS
 
       !   calculate total irrigation
       DO m = ps, pe
-          IF (h2osoi_liq_tot < h2osoi_liq_at_threshold) THEN
-              IF (irrig_method_p(m) == irrig_method_sprinkler) THEN
-                  deficit_irrig(i) = h2osoi_liq_target_tot - h2osoi_liq_tot
-                  ! deficit_irrig(i) = h2osoi_liq_target_tot - h2osoi_liq_tot + potential_evapotranspiration(i)
-              ELSE IF (irrig_method_p(m) == irrig_method_flood) THEN
-                  deficit_irrig(i) = h2osoi_liq_saturation_capacity_tot - h2osoi_liq_tot
-              ELSE
-                  deficit_irrig(i) = h2osoi_liq_at_threshold - h2osoi_liq_tot
-              ENDIF
-          ELSE
-              deficit_irrig(i) = 0
-          ENDIF
+         IF (h2osoi_liq_tot < h2osoi_liq_at_threshold) THEN
+            IF (irrig_method_p(m) == irrig_method_sprinkler) THEN
+                deficit_irrig(i) = h2osoi_liq_target_tot - h2osoi_liq_tot
+                ! deficit_irrig(i) = h2osoi_liq_target_tot - h2osoi_liq_tot + potential_evapotranspiration(i)
+            ELSEIF (irrig_method_p(m) == irrig_method_flood) THEN
+                deficit_irrig(i) = h2osoi_liq_saturation_capacity_tot - h2osoi_liq_tot
+            ELSE
+                deficit_irrig(i) = h2osoi_liq_at_threshold - h2osoi_liq_tot
+            ENDIF
+         ELSE
+            deficit_irrig(i) = 0
+         ENDIF
       ENDDO
 
    END SUBROUTINE CalIrrigationPotentialNeeded
@@ -223,31 +223,31 @@ CONTAINS
 
       !   add irrigation fluxes to precipitation or land surface
       DO m = ps, pe
-          IF (n_irrig_steps_left(i) > 0) THEN
-              IF ((irrig_flag == 1) .and. (irrig_method_p(m) == irrig_method_sprinkler)) THEN
-                  qflx_irrig_sprinkler = irrig_rate(i)
-                  n_irrig_steps_left(i) = n_irrig_steps_left(i) -1
-                  deficit_irrig(i) = deficit_irrig(i) - irrig_rate(i)*deltim
-              ELSE IF (irrig_flag == 2) THEN
-                  IF (irrig_method_p(m) == irrig_method_drip) THEN
-                      qflx_irrig_drip = irrig_rate(i)
-                  ELSE IF (irrig_method_p(m) == irrig_method_flood) THEN
-                      qflx_irrig_flood = irrig_rate(i)
-                  ELSE IF (irrig_method_p(m) == irrig_method_paddy) THEN
-                      qflx_irrig_paddy = irrig_rate(i)
-                  ELSE IF ((irrig_method_p(m) /= irrig_method_drip) .and. (irrig_method_p(m) /= irrig_method_sprinkler) &
-                      .and. (irrig_method_p(m) /= irrig_method_flood) .and. (irrig_method_p(m) /= irrig_method_paddy)) THEN
-                      qflx_irrig_drip = irrig_rate(i)
-                  ENDIF
-                  n_irrig_steps_left(i) = n_irrig_steps_left(i) -1
-                  deficit_irrig(i) = deficit_irrig(i) - irrig_rate(i)*deltim
-              ENDIF
-              IF (deficit_irrig(i) < 0._r8) THEN
-                  deficit_irrig(i) = 0._r8
-              ENDIF
-          ELSE
-              irrig_rate(i) = 0._r8
-          ENDIF
+         IF (n_irrig_steps_left(i) > 0) THEN
+            IF ((irrig_flag == 1) .and. (irrig_method_p(m) == irrig_method_sprinkler)) THEN
+               qflx_irrig_sprinkler = irrig_rate(i)
+               n_irrig_steps_left(i) = n_irrig_steps_left(i) -1
+               deficit_irrig(i) = deficit_irrig(i) - irrig_rate(i)*deltim
+            ELSEIF (irrig_flag == 2) THEN
+               IF (irrig_method_p(m) == irrig_method_drip) THEN
+                   qflx_irrig_drip = irrig_rate(i)
+               ELSEIF (irrig_method_p(m) == irrig_method_flood) THEN
+                   qflx_irrig_flood = irrig_rate(i)
+               ELSEIF (irrig_method_p(m) == irrig_method_paddy) THEN
+                   qflx_irrig_paddy = irrig_rate(i)
+               ELSEIF ((irrig_method_p(m) /= irrig_method_drip) .and. (irrig_method_p(m) /= irrig_method_sprinkler) &
+                   .and. (irrig_method_p(m) /= irrig_method_flood) .and. (irrig_method_p(m) /= irrig_method_paddy)) THEN
+                   qflx_irrig_drip = irrig_rate(i)
+               ENDIF
+               n_irrig_steps_left(i) = n_irrig_steps_left(i) -1
+               deficit_irrig(i) = deficit_irrig(i) - irrig_rate(i)*deltim
+            ENDIF
+            IF (deficit_irrig(i) < 0._r8) THEN
+               deficit_irrig(i) = 0._r8
+            ENDIF
+         ELSE
+             irrig_rate(i) = 0._r8
+         ENDIF
       ENDDO
    END SUBROUTINE CalIrrigationApplicationFluxes
 
@@ -268,23 +268,23 @@ CONTAINS
    real(r8):: seconds_since_irrig_start_time
 
       DO m = ps, pe
-          ivt = pftclass(m)
-          IF ((ivt >= npcropmin) .and. (irrig_crop(ivt)) .and. &
-              (cphase_p(m) >= irrig_min_cphase) .and. (cphase_p(m)<irrig_max_cphase)) THEN
-              IF (DEF_simulation_time%greenwich) THEN
-                  CALL gmt2local(idate, dlon, ldate)
-                  seconds_since_irrig_start_time = ldate(3) - irrig_start_time + deltim
-              ELSE
-                  seconds_since_irrig_start_time = idate(3) - irrig_start_time + deltim
-              ENDIF
-              IF ((seconds_since_irrig_start_time >= 0._r8) .and. (seconds_since_irrig_start_time < deltim)) THEN
-                  check_for_irrig = .true.
-              ELSE
-                  check_for_irrig = .false.
-              ENDIF
-          ELSE
-              check_for_irrig = .false.
-          ENDIF
+         ivt = pftclass(m)
+         IF ((ivt >= npcropmin) .and. (irrig_crop(ivt)) .and. &
+            (cphase_p(m) >= irrig_min_cphase) .and. (cphase_p(m)<irrig_max_cphase)) THEN
+            IF (DEF_simulation_time%greenwich) THEN
+                CALL gmt2local(idate, dlon, ldate)
+                seconds_since_irrig_start_time = ldate(3) - irrig_start_time + deltim
+            ELSE
+                seconds_since_irrig_start_time = idate(3) - irrig_start_time + deltim
+            ENDIF
+            IF ((seconds_since_irrig_start_time >= 0._r8) .and. (seconds_since_irrig_start_time < deltim)) THEN
+                check_for_irrig = .true.
+            ELSE
+                check_for_irrig = .false.
+            ENDIF
+         ELSE
+            check_for_irrig = .false.
+         ENDIF
       ENDDO
 
    END SUBROUTINE PointNeedsCheckForIrrig

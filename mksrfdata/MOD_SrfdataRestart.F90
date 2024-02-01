@@ -1,17 +1,17 @@
 #include <define.h>
 
 MODULE MOD_SrfdataRestart
-   !------------------------------------------------------------------------------------
-   ! DESCRIPTION:
-   !
-   !    This module includes subroutines to read/write data of mesh and pixelsets.
-   ! 
-   ! Created by Shupeng Zhang, May 2023
-   !------------------------------------------------------------------------------------
+!------------------------------------------------------------------------------------
+! DESCRIPTION:
+!
+!    This module includes subroutines to read/write data of mesh and pixelsets.
+! 
+! Created by Shupeng Zhang, May 2023
+!------------------------------------------------------------------------------------
 
    IMPLICIT NONE
 
-   INTEGER, parameter, PRIVATE :: rcompress = 1
+   integer, parameter, PRIVATE :: rcompress = 1
 
    ! ----- subroutines -----
    PUBLIC :: mesh_save_to_file
@@ -25,26 +25,26 @@ CONTAINS
    ! -----------------------
    SUBROUTINE mesh_save_to_file (dir_landdata, lc_year)
 
-      USE MOD_SPMD_Task
-      USE MOD_NetCDFSerial
-      USE MOD_Mesh
-      USE MOD_Block
-      USE MOD_Utils
-      IMPLICIT NONE
+   USE MOD_SPMD_Task
+   USE MOD_NetCDFSerial
+   USE MOD_Mesh
+   USE MOD_Block
+   USE MOD_Utils
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in) :: dir_landdata
-      INTEGER         , intent(in) :: lc_year
+   character(len=*), intent(in) :: dir_landdata
+   integer         , intent(in) :: lc_year
 
-      ! Local variables
-      CHARACTER(len=256) :: filename, fileblock, cyear
-      INTEGER :: ie, je, nelm, totlen, tothis, iblk, jblk, iworker, i
-      INTEGER,   allocatable :: nelm_worker(:), ndsp_worker(:)
-      INTEGER*8, allocatable :: elmindx(:)
-      INTEGER,   allocatable :: npxlall(:)
-      INTEGER,   allocatable :: elmpixels(:,:)
-      REAL(r8),  allocatable :: lon(:), lat(:)
-      
-      INTEGER :: nsend, nrecv, ndone, ndsp
+   ! Local variables
+   character(len=256) :: filename, fileblock, cyear
+   integer :: ie, je, nelm, totlen, tothis, iblk, jblk, iworker, i
+   integer,   allocatable :: nelm_worker(:), ndsp_worker(:)
+   integer*8, allocatable :: elmindx(:)
+   integer,   allocatable :: npxlall(:)
+   integer,   allocatable :: elmpixels(:,:)
+   real(r8),  allocatable :: lon(:), lat(:)
+   
+   integer :: nsend, nrecv, ndone, ndsp
 
       ! add parameter input for time year
       write(cyear,'(i4.4)') lc_year
@@ -249,22 +249,22 @@ CONTAINS
    !------------------------------------
    SUBROUTINE mesh_load_from_file (dir_landdata, lc_year)
 
-      USE MOD_SPMD_Task
-      USE MOD_Namelist
-      USE MOD_Block
-      USE MOD_NetCDFSerial
-      USE MOD_Mesh
-      IMPLICIT NONE
+   USE MOD_SPMD_Task
+   USE MOD_Namelist
+   USE MOD_Block
+   USE MOD_NetCDFSerial
+   USE MOD_Mesh
+   IMPLICIT NONE
 
-      INTEGER         , intent(in) :: lc_year
-      CHARACTER(len=*), intent(in) :: dir_landdata
+   integer         , intent(in) :: lc_year
+   character(len=*), intent(in) :: dir_landdata
 
-      ! Local variables
-      CHARACTER(len=256) :: filename, fileblock, cyear
-      INTEGER :: iblkme, iblk, jblk, ie, nelm, ndsp, pdsp
-      INTEGER*8, allocatable :: elmindx(:)
-      INTEGER,   allocatable :: datasize(:)
-      INTEGER,   allocatable :: npxl(:), pixels(:,:), pixels2d(:,:,:)
+   ! Local variables
+   character(len=256) :: filename, fileblock, cyear
+   integer :: iblkme, iblk, jblk, ie, nelm, ndsp, pdsp
+   integer*8, allocatable :: elmindx(:)
+   integer,   allocatable :: datasize(:)
+   integer,   allocatable :: npxl(:), pixels(:,:), pixels2d(:,:,:)
 
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
@@ -358,19 +358,19 @@ CONTAINS
    !------------------------------------------------
    SUBROUTINE pixelset_save_to_file (dir_landdata, psetname, pixelset, lc_year)
 
-      USE MOD_SPMD_Task
-      USE MOD_Block
-      USE MOD_NetCDFVector
-      USE MOD_Pixelset
-      IMPLICIT NONE
+   USE MOD_SPMD_Task
+   USE MOD_Block
+   USE MOD_NetCDFVector
+   USE MOD_Pixelset
+   IMPLICIT NONE
 
-      CHARACTER(len=*),    intent(in) :: dir_landdata
-      CHARACTER(len=*),    intent(in) :: psetname
-      TYPE(pixelset_type), intent(in) :: pixelset
-      INTEGER         ,    intent(in) :: lc_year
+   character(len=*),    intent(in) :: dir_landdata
+   character(len=*),    intent(in) :: psetname
+   type(pixelset_type), intent(in) :: pixelset
+   integer         ,    intent(in) :: lc_year
 
-      ! Local variables
-      CHARACTER(len=256)   :: filename, cyear
+   ! Local variables
+   character(len=256)   :: filename, cyear
 
       write(cyear,'(i4.4)') lc_year
 #ifdef USEMPI
@@ -406,28 +406,28 @@ CONTAINS
    !---------------------------
    SUBROUTINE pixelset_load_from_file (dir_landdata, psetname, pixelset, numset, lc_year)
 
-      USE MOD_SPMD_Task
-      USE MOD_Block
-      USE MOD_NetCDFSerial
-      USE MOD_NetCDFVector
-      USE MOD_Mesh
-      USE MOD_Pixelset
-      IMPLICIT NONE
+   USE MOD_SPMD_Task
+   USE MOD_Block
+   USE MOD_NetCDFSerial
+   USE MOD_NetCDFVector
+   USE MOD_Mesh
+   USE MOD_Pixelset
+   IMPLICIT NONE
 
-      INTEGER         ,    intent(in) :: lc_year
-      CHARACTER(len=*),    intent(in) :: dir_landdata
-      CHARACTER(len=*),    intent(in) :: psetname
-      TYPE(pixelset_type), intent(inout) :: pixelset
-      INTEGER, intent(out) :: numset
+   integer         ,    intent(in) :: lc_year
+   character(len=*),    intent(in) :: dir_landdata
+   character(len=*),    intent(in) :: psetname
+   type(pixelset_type), intent(inout) :: pixelset
+   integer, intent(out) :: numset
 
-      ! Local variables
-      CHARACTER(len=256) :: filename, fileblock, blockname, cyear
-      INTEGER :: iset, nset, ndsp, iblkme, iblk, jblk, ie, je, nave, nres, left, iproc
-      INTEGER :: nsend, nrecv
-      INTEGER*8, allocatable :: rbuff(:), sbuff(:)
-      INTEGER,   allocatable :: iworker(:)
-      LOGICAL,   allocatable :: msk(:)
-      LOGICAL :: fexists, fexists_any
+   ! Local variables
+   character(len=256) :: filename, fileblock, blockname, cyear
+   integer :: iset, nset, ndsp, iblkme, iblk, jblk, ie, je, nave, nres, left, iproc
+   integer :: nsend, nrecv
+   integer*8, allocatable :: rbuff(:), sbuff(:)
+   integer,   allocatable :: iworker(:)
+   logical,   allocatable :: msk(:)
+   logical :: fexists, fexists_any
 
       write(cyear,'(i4.4)') lc_year
 #ifdef USEMPI
@@ -606,6 +606,8 @@ CONTAINS
                pixelset%ielm(iset) = ie
             ENDDO
 
+         ELSE
+            write(*,*) 'Warning: 0 ',trim(psetname), ' on worker :', p_iam_glb
          ENDIF
       ENDIF
 

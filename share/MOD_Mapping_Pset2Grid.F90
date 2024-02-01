@@ -2,22 +2,22 @@
 
 MODULE MOD_Mapping_Pset2Grid
 
-   !----------------------------------------------------------------------------
-   ! DESCRIPTION:
-   !
-   !    Mapping data types and subroutines from vector data defined on pixelsets
-   !    to gridded data.
-   !
-   !    Notice that:
-   !    1. A mapping can be built with method mapping%build.
-   !    2. Overloaded method "map" can map 1D, 2D or 3D vector data to gridded data 
-   !       by using area weighted scheme. 
-   !    3. Method "map_split" can split data in a vector according to pixelset type
-   !       and map data to 3D gridded data. 
-   !       The dimensions are from [vector] to [type,lon,lat].
-   ! 
-   ! Created by Shupeng Zhang, May 2023
-   !----------------------------------------------------------------------------
+!----------------------------------------------------------------------------
+! DESCRIPTION:
+!
+!    Mapping data types and subroutines from vector data defined on pixelsets
+!    to gridded data.
+!
+!    Notice that:
+!    1. A mapping can be built with method mapping%build.
+!    2. Overloaded method "map" can map 1D, 2D or 3D vector data to gridded data 
+!       by using area weighted scheme. 
+!    3. Method "map_split" can split data in a vector according to pixelset type
+!       and map data to 3D gridded data. 
+!       The dimensions are from [vector] to [type,lon,lat].
+! 
+! Created by Shupeng Zhang, May 2023
+!----------------------------------------------------------------------------
 
    USE MOD_Precision
    USE MOD_Grid
@@ -25,15 +25,15 @@ MODULE MOD_Mapping_Pset2Grid
    IMPLICIT NONE
 
    ! ------
-   TYPE :: mapping_pset2grid_type
+   type :: mapping_pset2grid_type
 
-      TYPE(grid_type) :: grid
-      INTEGER :: npset
+      type(grid_type) :: grid
+      integer :: npset
 
-      TYPE(grid_list_type), allocatable :: glist (:)
+      type(grid_list_type), allocatable :: glist (:)
 
-      TYPE(pointer_int32_2d), allocatable :: address(:)
-      TYPE(pointer_real8_1d), allocatable :: olparea(:)
+      type(pointer_int32_2d), allocatable :: address(:)
+      type(pointer_real8_1d), allocatable :: olparea(:)
 
    CONTAINS
 
@@ -48,7 +48,7 @@ MODULE MOD_Mapping_Pset2Grid
 
       final :: mapping_pset2grid_free_mem
 
-   END TYPE mapping_pset2grid_type
+   END type mapping_pset2grid_type
 
 !-----------------------
 CONTAINS
@@ -56,45 +56,42 @@ CONTAINS
    !------------------------------------------
    SUBROUTINE mapping_pset2grid_build (this, pixelset, fgrid, pctpset)
 
-      USE MOD_Precision
-      USE MOD_Namelist
-      USE MOD_Block
-      USE MOD_Pixel
-      USE MOD_Grid
-      USE MOD_Pixelset
-      USE MOD_DataType
-      USE MOD_Mesh
-      USE MOD_Utils
-      USE MOD_SPMD_Task
-      IMPLICIT NONE
+   USE MOD_Precision
+   USE MOD_Namelist
+   USE MOD_Block
+   USE MOD_Pixel
+   USE MOD_Grid
+   USE MOD_Pixelset
+   USE MOD_DataType
+   USE MOD_Mesh
+   USE MOD_Utils
+   USE MOD_SPMD_Task
+   IMPLICIT NONE
 
-      class (mapping_pset2grid_type) :: this
+   class (mapping_pset2grid_type) :: this
 
-      TYPE(pixelset_type), intent(in) :: pixelset
-      TYPE(grid_type),     intent(in) :: fgrid
-      REAL(r8), optional,  intent(in) :: pctpset (:)
+   type(pixelset_type), intent(in) :: pixelset
+   type(grid_type),     intent(in) :: fgrid
+   real(r8), optional,  intent(in) :: pctpset (:)
 
-      ! Local variables
-      TYPE(pointer_real8_1d), allocatable :: afrac(:)
-      TYPE(grid_list_type),   allocatable :: gfrom(:)
-      TYPE(pointer_int32_1d), allocatable :: list_lat(:)
-      INTEGER,  allocatable :: ng_lat(:)
-      INTEGER,  allocatable :: ys(:), yn(:), xw(:), xe(:)
-      INTEGER,  allocatable :: xlist(:), ylist(:)
-      INTEGER,  allocatable :: ipt(:)
-      LOGICAL,  allocatable :: msk(:)
-      ! TYPE(block_data_real8_2d) :: garea
-      ! REAL(r8), allocatable :: gbuff(:)
-      ! TYPE(pointer_real8_1d), allocatable :: parea(:)
+   ! Local variables
+   type(pointer_real8_1d), allocatable :: afrac(:)
+   type(grid_list_type),   allocatable :: gfrom(:)
+   type(pointer_int32_1d), allocatable :: list_lat(:)
+   integer,  allocatable :: ng_lat(:)
+   integer,  allocatable :: ys(:), yn(:), xw(:), xe(:)
+   integer,  allocatable :: xlist(:), ylist(:)
+   integer,  allocatable :: ipt(:)
+   logical,  allocatable :: msk(:)
 
-      INTEGER  :: ie, iset
-      INTEGER  :: ng, ig, ng_all, iloc
-      INTEGER  :: npxl, ipxl, ilat, ilon
-      INTEGER  :: iworker, iproc, idest, isrc, nrecv
-      INTEGER  :: rmesg(2), smesg(2)
-      INTEGER  :: iy, ix, xblk, yblk, xloc, yloc
-      REAL(r8) :: lat_s, lat_n, lon_w, lon_e, area
-      LOGICAL  :: is_new
+   integer  :: ie, iset
+   integer  :: ng, ig, ng_all, iloc
+   integer  :: npxl, ipxl, ilat, ilon
+   integer  :: iworker, iproc, idest, isrc, nrecv
+   integer  :: rmesg(2), smesg(2)
+   integer  :: iy, ix, xblk, yblk, xloc, yloc
+   real(r8) :: lat_s, lat_n, lon_w, lon_e, area
+   logical  :: is_new
 
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
@@ -170,11 +167,11 @@ CONTAINS
                   lat_n = min(fgrid%lat_n(iy), pixel%lat_n(ilat))
 
                   IF ((lat_n-lat_s) < 1.0e-6_r8) THEN
-                     cycle
+                     CYCLE
                   ENDIF
 
                   ix = xw(ilon)
-                  DO while (.true.)
+                  DO WHILE (.true.)
 
                      IF (ix == xw(ilon)) THEN
                         lon_w = pixel%lon_w(ilon)
@@ -190,15 +187,15 @@ CONTAINS
 
                      IF (lon_e > lon_w) THEN
                         IF ((lon_e-lon_w) < 1.0e-6_r8) THEN
-                           IF (ix == xe(ilon))  exit
+                           IF (ix == xe(ilon))  EXIT
                            ix = mod(ix,fgrid%nlon) + 1
-                           cycle
+                           CYCLE
                         ENDIF
                      ELSE
                         IF ((lon_e+360.0_r8-lon_w) < 1.0e-6_r8) THEN
-                           IF (ix == xe(ilon))  exit
+                           IF (ix == xe(ilon))  EXIT
                            ix = mod(ix,fgrid%nlon) + 1
-                           cycle
+                           CYCLE
                         ENDIF
                      ENDIF
 
@@ -232,7 +229,7 @@ CONTAINS
                         CALL expand_list (list_lat(iy)%val, 0.2_r8)
                      ENDIF
 
-                     IF (ix == xe(ilon))  exit
+                     IF (ix == xe(ilon))  EXIT
                      ix = mod(ix,fgrid%nlon) + 1
                   ENDDO
                ENDDO
@@ -357,23 +354,6 @@ CONTAINS
          deallocate (afrac)
          deallocate (gfrom)
 
-!          allocate (parea (0:p_np_io-1))
-! 
-!          DO iproc = 0, p_np_io-1
-!             IF (this%glist(iproc)%ng > 0) THEN
-!                allocate (parea(iproc)%val (this%glist(iproc)%ng))
-!                parea(iproc)%val(:) = 0
-!             ENDIF
-!          ENDDO
-! 
-!          DO iset = 1, pixelset%nset
-!             DO ig = 1, size(this%olparea(iset)%val)
-!                iproc = this%address(iset)%val(1,ig)
-!                iloc  = this%address(iset)%val(2,ig)
-!                parea(iproc)%val(iloc) = parea(iproc)%val(iloc) + this%olparea(iset)%val(ig)
-!             ENDDO
-!          ENDDO
-! 
 #ifdef USEMPI
          DO iproc = 0, p_np_io-1
             idest = p_address_io(iproc)
@@ -387,8 +367,6 @@ CONTAINS
                   idest, mpi_tag_data, p_comm_glb, p_err)
                CALL mpi_send (this%glist(iproc)%ilat, this%glist(iproc)%ng, MPI_INTEGER, &
                   idest, mpi_tag_data, p_comm_glb, p_err)
-!                CALL mpi_send (parea(iproc)%val, this%glist(iproc)%ng, MPI_DOUBLE, &
-!                   idest, mpi_tag_data, p_comm_glb, p_err)
             ENDIF
          ENDDO
 #endif
@@ -398,9 +376,6 @@ CONTAINS
 #ifdef USEMPI
       IF (p_is_io) THEN
 
-!          CALL allocate_block_data (fgrid, garea)
-!          CALL flush_block_data (garea, 0.0_r8)
-! 
          IF (allocated(this%glist)) deallocate(this%glist)
          allocate (this%glist (0:p_np_worker-1))
 
@@ -418,89 +393,15 @@ CONTAINS
             IF (nrecv > 0) THEN
                allocate (this%glist(iproc)%ilon (nrecv))
                allocate (this%glist(iproc)%ilat (nrecv))
-!                allocate (gbuff (nrecv))
 
                CALL mpi_recv (this%glist(iproc)%ilon, nrecv, MPI_INTEGER, &
                   isrc, mpi_tag_data, p_comm_glb, p_stat, p_err)
                CALL mpi_recv (this%glist(iproc)%ilat, nrecv, MPI_INTEGER, &
                   isrc, mpi_tag_data, p_comm_glb, p_stat, p_err)
-!                CALL mpi_recv (gbuff, nrecv, MPI_DOUBLE, &
-!                   isrc, mpi_tag_data, p_comm_glb, p_stat, p_err)
-! 
-!                DO ig = 1, this%glist(iproc)%ng
-!                   ilon = this%glist(iproc)%ilon(ig)
-!                   ilat = this%glist(iproc)%ilat(ig)
-!                   xblk = fgrid%xblk (ilon)
-!                   yblk = fgrid%yblk (ilat)
-!                   xloc = fgrid%xloc (ilon)
-!                   yloc = fgrid%yloc (ilat)
-! 
-!                   garea%blk(xblk,yblk)%val(xloc,yloc) = &
-!                      garea%blk(xblk,yblk)%val(xloc,yloc) + gbuff(ig)
-!                ENDDO
-! 
-!                deallocate (gbuff)
             ENDIF
          ENDDO
-! 
-!          DO iproc = 0, p_np_worker-1
-!             IF (this%glist(iproc)%ng > 0) THEN
-! 
-!                allocate (gbuff (this%glist(iproc)%ng))
-! 
-!                DO ig = 1, this%glist(iproc)%ng
-!                   ilon = this%glist(iproc)%ilon(ig)
-!                   ilat = this%glist(iproc)%ilat(ig)
-!                   xblk = fgrid%xblk (ilon)
-!                   yblk = fgrid%yblk (ilat)
-!                   xloc = fgrid%xloc (ilon)
-!                   yloc = fgrid%yloc (ilat)
-! 
-!                   gbuff(ig) = garea%blk(xblk,yblk)%val(xloc,yloc)
-!                ENDDO
-! 
-!                idest = p_address_worker(iproc)
-!                CALL mpi_send (gbuff, this%glist(iproc)%ng, MPI_DOUBLE, &
-!                   idest, mpi_tag_data, p_comm_glb, p_err)
-! 
-!                deallocate (gbuff)
-!             ENDIF
-!          ENDDO
-! 
       ENDIF
 #endif
-! 
-! 
-!       IF (p_is_worker) THEN
-! 
-! #ifdef USEMPI
-!          DO iproc = 0, p_np_io-1
-!             IF (this%glist(iproc)%ng > 0) THEN
-!                isrc = p_address_io(iproc)
-!                CALL mpi_recv (parea(iproc)%val, this%glist(iproc)%ng, MPI_DOUBLE, &
-!                   isrc, mpi_tag_data, p_comm_glb, p_stat, p_err)
-!             ENDIF
-!          ENDDO
-! #endif
-! 
-!          DO iset = 1, pixelset%nset
-!             DO ig = 1, size(this%olparea(iset)%val)
-!                iproc = this%address(iset)%val(1,ig)
-!                iloc  = this%address(iset)%val(2,ig)
-!                this%olparea(iset)%val(ig) = &
-!                   this%olparea(iset)%val(ig) / parea(iproc)%val(iloc)
-!             ENDDO
-!          ENDDO
-! 
-!          DO iproc = 0, p_np_io-1
-!             IF (this%glist(iproc)%ng > 0) THEN
-!                deallocate (parea(iproc)%val)
-!             ENDIF
-!          ENDDO
-! 
-!          deallocate (parea)
-! 
-!       ENDIF
 
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
@@ -512,26 +413,26 @@ CONTAINS
    !-----------------------------------------------------
    SUBROUTINE map_p2g_2d (this, pdata, gdata, spv, msk)
 
-      USE MOD_Precision
-      USE MOD_Grid
-      USE MOD_DataType
-      USE MOD_SPMD_Task
-      IMPLICIT NONE
+   USE MOD_Precision
+   USE MOD_Grid
+   USE MOD_DataType
+   USE MOD_SPMD_Task
+   IMPLICIT NONE
 
-      class (mapping_pset2grid_type) :: this
+   class (mapping_pset2grid_type) :: this
 
-      REAL(r8), intent(in) :: pdata(:)
-      TYPE(block_data_real8_2d), intent(inout) :: gdata
+   real(r8), intent(in) :: pdata(:)
+   type(block_data_real8_2d), intent(inout) :: gdata
 
-      REAL(r8), intent(in), optional :: spv
-      LOGICAL,  intent(in), optional :: msk(:)
+   real(r8), intent(in), optional :: spv
+   logical,  intent(in), optional :: msk(:)
 
-      ! Local variables
-      INTEGER :: iproc, idest, isrc
-      INTEGER :: ig, ilon, ilat, xblk, yblk, xloc, yloc, iloc, iset
+   ! Local variables
+   integer :: iproc, idest, isrc
+   integer :: ig, ilon, ilat, xblk, yblk, xloc, yloc, iloc, iset
 
-      REAL(r8), allocatable :: gbuff(:)
-      TYPE(pointer_real8_1d), allocatable :: pbuff(:)
+   real(r8), allocatable :: gbuff(:)
+   type(pointer_real8_1d), allocatable :: pbuff(:)
 
       IF (p_is_worker) THEN
 
@@ -552,11 +453,11 @@ CONTAINS
          DO iset = 1, this%npset
 
             IF (present(spv)) THEN
-               IF (pdata(iset) == spv) cycle
+               IF (pdata(iset) == spv) CYCLE
             ENDIF
 
             IF (present(msk)) THEN
-               IF (.not. msk(iset)) cycle
+               IF (.not. msk(iset)) CYCLE
             ENDIF
 
             DO ig = 1, size(this%olparea(iset)%val)
@@ -662,28 +563,28 @@ CONTAINS
    !-----------------------------------------------------
    SUBROUTINE map_p2g_3d (this, pdata, gdata, spv, msk)
 
-      USE MOD_Precision
-      USE MOD_Grid
-      USE MOD_DataType
-      USE MOD_SPMD_Task
-      IMPLICIT NONE
+   USE MOD_Precision
+   USE MOD_Grid
+   USE MOD_DataType
+   USE MOD_SPMD_Task
+   IMPLICIT NONE
 
-      class (mapping_pset2grid_type) :: this
+   class (mapping_pset2grid_type) :: this
 
-      REAL(r8), intent(in) :: pdata(:,:)
-      TYPE(block_data_real8_3d), intent(inout) :: gdata
+   real(r8), intent(in) :: pdata(:,:)
+   type(block_data_real8_3d), intent(inout) :: gdata
 
-      REAL(r8), intent(in), optional :: spv
-      LOGICAL,  intent(in), optional :: msk(:)
+   real(r8), intent(in), optional :: spv
+   logical,  intent(in), optional :: msk(:)
 
-      ! Local variables
-      INTEGER :: iproc, idest, isrc
-      INTEGER :: ig, ilon, ilat, iloc, iset
-      INTEGER :: xblk, yblk, xloc, yloc
-      INTEGER :: lb1, ub1, i1
+   ! Local variables
+   integer :: iproc, idest, isrc
+   integer :: ig, ilon, ilat, iloc, iset
+   integer :: xblk, yblk, xloc, yloc
+   integer :: lb1, ub1, i1
 
-      REAL(r8), allocatable :: gbuff(:,:)
-      TYPE(pointer_real8_2d), allocatable :: pbuff(:)
+   real(r8), allocatable :: gbuff(:,:)
+   type(pointer_real8_2d), allocatable :: pbuff(:)
 
 
       IF (p_is_worker) THEN
@@ -707,7 +608,7 @@ CONTAINS
 
          DO iset = 1, this%npset
             IF (present(msk)) THEN
-               IF (.not. msk(iset)) cycle
+               IF (.not. msk(iset)) CYCLE
             ENDIF
 
             DO ig = 1, size(this%olparea(iset)%val)
@@ -818,28 +719,28 @@ CONTAINS
    !-----------------------------------------------------
    SUBROUTINE map_p2g_4d (this, pdata, gdata, spv, msk)
 
-      USE MOD_Precision
-      USE MOD_Grid
-      USE MOD_DataType
-      USE MOD_SPMD_Task
-      IMPLICIT NONE
+   USE MOD_Precision
+   USE MOD_Grid
+   USE MOD_DataType
+   USE MOD_SPMD_Task
+   IMPLICIT NONE
 
-      class (mapping_pset2grid_type) :: this
+   class (mapping_pset2grid_type) :: this
 
-      REAL(r8), intent(in) :: pdata(:,:,:)
-      TYPE(block_data_real8_4d), intent(inout) :: gdata
+   real(r8), intent(in) :: pdata(:,:,:)
+   type(block_data_real8_4d), intent(inout) :: gdata
 
-      REAL(r8), intent(in), optional :: spv
-      LOGICAL,  intent(in), optional :: msk(:)
+   real(r8), intent(in), optional :: spv
+   logical,  intent(in), optional :: msk(:)
 
-      ! Local variables
-      INTEGER :: iproc, idest, isrc
-      INTEGER :: ig, ilon, ilat, iloc, iset
-      INTEGER :: xblk, yblk, xloc, yloc
-      INTEGER :: lb1, ub1, i1, ndim1, lb2, ub2, i2, ndim2
+   ! Local variables
+   integer :: iproc, idest, isrc
+   integer :: ig, ilon, ilat, iloc, iset
+   integer :: xblk, yblk, xloc, yloc
+   integer :: lb1, ub1, i1, ndim1, lb2, ub2, i2, ndim2
 
-      REAL(r8), allocatable :: gbuff(:,:,:)
-      TYPE(pointer_real8_3d), allocatable :: pbuff(:)
+   real(r8), allocatable :: gbuff(:,:,:)
+   type(pointer_real8_3d), allocatable :: pbuff(:)
 
       IF (p_is_worker) THEN
 
@@ -867,7 +768,7 @@ CONTAINS
 
          DO iset = 1, this%npset
             IF (present(msk)) THEN
-               IF (.not. msk(iset)) cycle
+               IF (.not. msk(iset)) CYCLE
             ENDIF
 
             DO ig = 1, size(this%olparea(iset)%val)
@@ -982,28 +883,28 @@ CONTAINS
    !-----------------------------------------------------
    SUBROUTINE map_p2g_split_to_3d (this, pdata, settyp, typidx, gdata, spv)
 
-      USE MOD_Precision
-      USE MOD_Grid
-      USE MOD_DataType
-      USE MOD_SPMD_Task
-      IMPLICIT NONE
+   USE MOD_Precision
+   USE MOD_Grid
+   USE MOD_DataType
+   USE MOD_SPMD_Task
+   IMPLICIT NONE
 
-      class (mapping_pset2grid_type) :: this
+   class (mapping_pset2grid_type) :: this
 
-      REAL(r8), intent(in) :: pdata (:)
-      INTEGER , intent(in) :: settyp(:)
-      INTEGER , intent(in) :: typidx(:)
-      TYPE(block_data_real8_3d), intent(inout) :: gdata
+   real(r8), intent(in) :: pdata (:)
+   integer , intent(in) :: settyp(:)
+   integer , intent(in) :: typidx(:)
+   type(block_data_real8_3d), intent(inout) :: gdata
 
-      REAL(r8), intent(in) :: spv
+   real(r8), intent(in) :: spv
 
-      ! Local variables
-      INTEGER :: iproc, idest, isrc
-      INTEGER :: ig, ilon, ilat, iloc, iset, ityp, ntyps
-      INTEGER :: xblk, yblk, xloc, yloc
+   ! Local variables
+   integer :: iproc, idest, isrc
+   integer :: ig, ilon, ilat, iloc, iset, ityp, ntyps
+   integer :: xblk, yblk, xloc, yloc
 
-      REAL(r8), allocatable :: gbuff(:)
-      TYPE(pointer_real8_1d), allocatable :: pbuff (:)
+   real(r8), allocatable :: gbuff(:)
+   type(pointer_real8_1d), allocatable :: pbuff (:)
 
       IF (p_is_worker) THEN
          allocate (pbuff (0:p_np_io-1))
@@ -1118,13 +1019,13 @@ CONTAINS
    !-----------------------------------------------------
    SUBROUTINE mapping_pset2grid_free_mem (this)
 
-      USE MOD_SPMD_Task
-      IMPLICIT NONE
+   USE MOD_SPMD_Task
+   IMPLICIT NONE
 
-      TYPE (mapping_pset2grid_type) :: this
+   type (mapping_pset2grid_type) :: this
 
-      ! Local variables
-      INTEGER :: iproc, iset
+   ! Local variables
+   integer :: iproc, iset
 
       IF (allocated (this%grid%xblk))   deallocate (this%grid%xblk)
       IF (allocated (this%grid%yblk))   deallocate (this%grid%yblk)

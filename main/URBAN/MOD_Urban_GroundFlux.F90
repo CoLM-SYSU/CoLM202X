@@ -2,19 +2,19 @@
 
 MODULE MOD_Urban_GroundFlux
 
-  USE MOD_Precision
-  IMPLICIT NONE
-  SAVE
+   USE MOD_Precision
+   IMPLICIT NONE
+   SAVE
 
-  PUBLIC :: UrbanGroundFlux
+   PUBLIC :: UrbanGroundFlux
 
 CONTAINS
 
- SUBROUTINE UrbanGroundFlux (hu, ht, hq, us, vs, tm, qm, rhoair, psrf, &
-                             ur, thm, th, thv, zlnd, zsno, fsno_gimp, &
-                             lbi, wliq_gimpsno,wice_gimpsno, &
-                             fcover, tgimp, tgper, qgimp, qgper, tref, qref, &
-                             z0m, z0hg, zol, ustar, qstar, tstar, fm, fh, fq)
+   SUBROUTINE UrbanGroundFlux (hu, ht, hq, us, vs, tm, qm, rhoair, psrf, &
+                               ur, thm, th, thv, zlnd, zsno, fsno_gimp, &
+                               lbi, wliq_gimpsno,wice_gimpsno, &
+                               fcover, tgimp, tgper, qgimp, qgper, tref, qref, &
+                               z0m, z0hg, zol, ustar, qstar, tstar, fm, fh, fq)
 
 !=======================================================================
 ! this is the main subroutine to execute the calculation
@@ -22,15 +22,15 @@ CONTAINS
 !
 !=======================================================================
 
-  USE MOD_Precision
-  USE MOD_Const_Physical, only: cpair,vonkar,grav
-  USE MOD_FrictionVelocity
-  IMPLICIT NONE
+   USE MOD_Precision
+   USE MOD_Const_Physical, only: cpair,vonkar,grav
+   USE MOD_FrictionVelocity
+   IMPLICIT NONE
 
 !----------------------- Dummy argument --------------------------------
-  INTEGER , intent(in) :: &
+   integer , intent(in) :: &
         lbi
-  REAL(r8), intent(in) :: &
+   real(r8), intent(in) :: &
         ! atmospherical variables and observational height
         hu,       &! observational height of wind [m]
         ht,       &! observational height of temperature [m]
@@ -60,11 +60,11 @@ CONTAINS
         qgimp,    &! ground impervious specific humidity [kg/kg]
         qgper      ! ground pervious specific humidity [kg/kg]
 
-  REAL(r8), intent(out) :: &
+   real(r8), intent(out) :: &
         tref,     &! 2 m height air temperature [kelvin]
         qref       ! 2 m height air humidity
 
-  REAL(r8), intent(out) :: &
+   real(r8), intent(out) :: &
         z0m,      &! effective roughness [m]
         z0hg,     &! roughness length over ground, sensible heat [m]
         zol,      &! dimensionless height (z/L) used in Monin-Obukhov theory
@@ -76,11 +76,11 @@ CONTAINS
         fq         ! integral of profile function for moisture
 
 !------------------------ LOCAL VARIABLES ------------------------------
-  INTEGER niters, &! maximum number of iterations for surface temperature
+   integer niters, &! maximum number of iterations for surface temperature
         iter,     &! iteration index
         nmozsgn    ! number of times moz changes sign
 
-  REAL(r8) ::     &
+   real(r8) ::     &
         beta,     &! coefficient of conective velocity [-]
         displax,  &! zero-displacement height [m]
         tg,       &! ground surface temperature [K]
@@ -106,7 +106,7 @@ CONTAINS
         z0mg,     &! roughness length over ground, momentum [m]
         z0qg       ! roughness length over ground, latent heat [m]
 
-  REAL(r8) fwet_gimp, fwetfac
+   real(r8) fwet_gimp, fwetfac
 
 !----------------------- Dummy argument --------------------------------
 ! initial roughness length
@@ -200,7 +200,7 @@ CONTAINS
          ENDIF
 
          IF (obuold*obu < 0.) nmozsgn = nmozsgn+1
-         IF (nmozsgn >= 4) exit
+         IF (nmozsgn >= 4) EXIT
 
          obuold = obu
 
@@ -215,6 +215,6 @@ CONTAINS
       tref   = thm + vonkar/fh*dth * (fh2m/vonkar - fh/vonkar)
       qref   =  qm + vonkar/fq*dqh * (fq2m/vonkar - fq/vonkar)
 
- END SUBROUTINE UrbanGroundFlux
+   END SUBROUTINE UrbanGroundFlux
 
 END MODULE MOD_Urban_GroundFlux

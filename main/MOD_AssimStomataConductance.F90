@@ -189,14 +189,14 @@ CONTAINS
       range = pco2m * ( 1. - 1.6/gradm ) - gammas
 
       DO ic = 1, iterationtotal    ! loop for total iteration number
-      pco2y(ic) = 0.
-      eyy(ic) = 0.
+         pco2y(ic) = 0.
+         eyy(ic) = 0.
       ENDDO
 
       ITERATION_LOOP: DO ic = 1, iterationtotal
 
-      CALL sortin(eyy, pco2y, range, gammas, ic, iterationtotal)
-      pco2i =  pco2y(ic)
+         CALL sortin(eyy, pco2y, range, gammas, ic, iterationtotal)
+         pco2i =  pco2y(ic)
 
 !-----------------------------------------------------------------------
 !                      NET ASSIMILATION
@@ -210,19 +210,19 @@ CONTAINS
 !         btheta*assim^2 - assim*(omp+oms) + omp*oms = 0
 !-----------------------------------------------------------------------
 
-      atheta = 0.877
-      btheta = 0.95
+         atheta = 0.877
+         btheta = 0.95
 
-      omc = vm   * ( pco2i-gammas ) / ( pco2i + rrkk ) * c3 + vm * c4
-      ome = epar * ( pco2i-gammas ) / ( pco2i+2.*gammas ) * c3 + epar * c4
-      oms   = omss * c3 + omss*pco2i * c4
+         omc = vm   * ( pco2i-gammas ) / ( pco2i + rrkk ) * c3 + vm * c4
+         ome = epar * ( pco2i-gammas ) / ( pco2i+2.*gammas ) * c3 + epar * c4
+         oms   = omss * c3 + omss*pco2i * c4
 
-      sqrtin= max( 0., ( (ome+omc)**2 - 4.*atheta*ome*omc ) )
-      omp   = ( ( ome+omc ) - sqrt( sqrtin ) ) / ( 2.*atheta )
-      sqrtin= max( 0., ( (omp+oms)**2 - 4.*btheta*omp*oms ) )
-      assim = max( 0., ( ( oms+omp ) - sqrt( sqrtin ) ) / ( 2.*btheta ))
+         sqrtin= max( 0., ( (ome+omc)**2 - 4.*atheta*ome*omc ) )
+         omp   = ( ( ome+omc ) - sqrt( sqrtin ) ) / ( 2.*atheta )
+         sqrtin= max( 0., ( (omp+oms)**2 - 4.*btheta*omp*oms ) )
+         assim = max( 0., ( ( oms+omp ) - sqrt( sqrtin ) ) / ( 2.*btheta ))
 
-      assimn= ( assim - respc)                         ! mol m-2 s-1
+         assimn= ( assim - respc)                         ! mol m-2 s-1
 
 !-----------------------------------------------------------------------
 !                      STOMATAL CONDUCTANCE
@@ -268,45 +268,45 @@ CONTAINS
 !
 !-----------------------------------------------------------------------
 
-      co2s = co2a - 1.37*assimn/gbh2o                  ! mol mol-1
+         co2s = co2a - 1.37*assimn/gbh2o                  ! mol mol-1
 
-      co2st = min( co2s, co2a )
-      co2st = max( co2st,1.e-5 )
+         co2st = min( co2s, co2a )
+         co2st = max( co2st,1.e-5 )
 
-      assmt = max( 1.e-12, assimn )
-      IF(DEF_USE_MEDLYNST)THEN
-         vpd   = amax1((ei - ea),50._r8) * 1.e-3 ! in kpa
-         acp   = 1.6*assmt/co2st             ! in mol m-2 s-1
-         aquad = 1._r8
-         bquad = -2*(g0*1.e-6 + acp) - (g1*acp)**2/(gbh2o*vpd)   ! in mol m-2 s-1
-         cquad = (g0*1.e-6)**2 + (2*g0*1.e-6+acp*(1-g1**2)/vpd)*acp  ! in (mol m-2 s-1)**2
+         assmt = max( 1.e-12, assimn )
+         IF(DEF_USE_MEDLYNST)THEN
+            vpd   = amax1((ei - ea),50._r8) * 1.e-3 ! in kpa
+            acp   = 1.6*assmt/co2st             ! in mol m-2 s-1
+            aquad = 1._r8
+            bquad = -2*(g0*1.e-6 + acp) - (g1*acp)**2/(gbh2o*vpd)   ! in mol m-2 s-1
+            cquad = (g0*1.e-6)**2 + (2*g0*1.e-6+acp*(1-g1**2)/vpd)*acp  ! in (mol m-2 s-1)**2
 
-         sqrtin= max( 0., ( bquad**2 - 4.*aquad*cquad ) )
-         gsh2o = ( -bquad + sqrt ( sqrtin ) ) / (2.*aquad)
+            sqrtin= max( 0., ( bquad**2 - 4.*aquad*cquad ) )
+            gsh2o = ( -bquad + sqrt ( sqrtin ) ) / (2.*aquad)
 
-      ELSE
-         hcdma = ei*co2st / ( gradm*assmt )
+         ELSE
+            hcdma = ei*co2st / ( gradm*assmt )
 
-         aquad = hcdma
-         bquad = gbh2o*hcdma - ei - bintc*hcdma
-         cquad = -gbh2o*( ea + hcdma*bintc )
+            aquad = hcdma
+            bquad = gbh2o*hcdma - ei - bintc*hcdma
+            cquad = -gbh2o*( ea + hcdma*bintc )
 
-         sqrtin= max( 0., ( bquad**2 - 4.*aquad*cquad ) )
-         gsh2o = ( -bquad + sqrt ( sqrtin ) ) / (2.*aquad)
+            sqrtin= max( 0., ( bquad**2 - 4.*aquad*cquad ) )
+            gsh2o = ( -bquad + sqrt ( sqrtin ) ) / (2.*aquad)
 
-         es  = ( gsh2o-bintc ) * hcdma                   ! pa
-         es  = min( es, ei )
-         es  = max( es, 1.e-2)
+            es  = ( gsh2o-bintc ) * hcdma                   ! pa
+            es  = min( es, ei )
+            es  = max( es, 1.e-2)
 
-         gsh2o = es/hcdma + bintc                        ! mol m-2 s-1
-      ENDIF
+            gsh2o = es/hcdma + bintc                        ! mol m-2 s-1
+         ENDIF
 
-      pco2in = ( co2s - 1.6 * assimn / gsh2o )*psrf   ! pa
-      eyy(ic) = pco2i - pco2in                        ! pa
+         pco2in = ( co2s - 1.6 * assimn / gsh2o )*psrf   ! pa
+         eyy(ic) = pco2i - pco2in                        ! pa
 
 !-----------------------------------------------------------------------
 
-      IF( abs(eyy(ic)) .lt. 0.1 ) EXIT
+         IF( abs(eyy(ic)) .lt. 0.1 ) EXIT
 
       ENDDO ITERATION_LOOP
 
@@ -636,8 +636,8 @@ CONTAINS
 
       ITERATION_LOOP_UPDATE: DO ic = 1, iterationtotal
 
-      CALL sortin(eyy, pco2y, range, gammas, ic, iterationtotal)
-      pco2i =  pco2y(ic)
+         CALL sortin(eyy, pco2y, range, gammas, ic, iterationtotal)
+         pco2i =  pco2y(ic)
 
 !-----------------------------------------------------------------------
 !                      NET ASSIMILATION
@@ -651,19 +651,19 @@ CONTAINS
 !         btheta*assim^2 - assim*(omp+oms) + omp*oms = 0
 !-----------------------------------------------------------------------
 
-      atheta = 0.877
-      btheta = 0.95
+         atheta = 0.877
+         btheta = 0.95
 
-      omc = vm   * ( pco2i-gammas ) / ( pco2i + rrkk ) * c3 + vm * c4
-      ome = epar * ( pco2i-gammas ) / ( pco2i+2.*gammas ) * c3 + epar * c4
-      oms = omss * c3 + omss*pco2i * c4
+         omc = vm   * ( pco2i-gammas ) / ( pco2i + rrkk ) * c3 + vm * c4
+         ome = epar * ( pco2i-gammas ) / ( pco2i+2.*gammas ) * c3 + epar * c4
+         oms = omss * c3 + omss*pco2i * c4
 
-      sqrtin= max( 0., ( (ome+omc)**2 - 4.*atheta*ome*omc ) )
-      omp   = ( ( ome+omc ) - sqrt( sqrtin ) ) / ( 2.*atheta )
-      sqrtin= max( 0., ( (omp+oms)**2 - 4.*btheta*omp*oms ) )
-      assim = max( 0., ( ( oms+omp ) - sqrt( sqrtin ) ) / ( 2.*btheta ))
+         sqrtin= max( 0., ( (ome+omc)**2 - 4.*atheta*ome*omc ) )
+         omp   = ( ( ome+omc ) - sqrt( sqrtin ) ) / ( 2.*atheta )
+         sqrtin= max( 0., ( (omp+oms)**2 - 4.*btheta*omp*oms ) )
+         assim = max( 0., ( ( oms+omp ) - sqrt( sqrtin ) ) / ( 2.*btheta ))
 
-      assimn= ( assim - respc)                         ! mol m-2 s-1
+         assimn= ( assim - respc)                         ! mol m-2 s-1
 
 !-----------------------------------------------------------------------
 !                      STOMATAL CONDUCTANCE
@@ -709,15 +709,15 @@ CONTAINS
 !
 !-----------------------------------------------------------------------
 
-      co2s = co2a - 1.37*assimn/gbh2o                   ! mol mol-1
+         co2s = co2a - 1.37*assimn/gbh2o                   ! mol mol-1
 
-      pco2in = ( co2s - 1.6 * assimn / gsh2o )*psrf    ! pa
+         pco2in = ( co2s - 1.6 * assimn / gsh2o )*psrf    ! pa
 
-      eyy(ic) = pco2i - pco2in                          ! pa
+         eyy(ic) = pco2i - pco2in                          ! pa
 
 !-----------------------------------------------------------------------
 
-      IF( abs(eyy(ic)) .lt. 0.1 ) EXIT
+         IF( abs(eyy(ic)) .lt. 0.1 ) EXIT
 
       ENDDO ITERATION_LOOP_UPDATE
 

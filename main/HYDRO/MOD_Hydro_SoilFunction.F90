@@ -1,76 +1,76 @@
 #include <define.h>
 
-module MOD_Hydro_SoilFunction
+MODULE MOD_Hydro_SoilFunction
 
-   !----------------------------------------------------------------------------
-   ! Description:
-   !
-   !    Soil function type 1:
-   !    Campbell model
-   !    CAMPBELL, G. S. (1974), Soil Science, 117(6), 311-314.
-   !
-   !    Soil function type 2:
-   !    Modified van Genuchten & Mualem model by introducing an air-entry value 
-   !    Ippisch et al. (2006), Advances in Water Resources, 29(12), 1780-1789. 
-   !
-   ! Created by Shupeng Zhang, 2022.
-   !----------------------------------------------------------------------------
+!----------------------------------------------------------------------------
+! Description:
+!
+!    Soil function type 1:
+!    Campbell model
+!    CAMPBELL, G. S. (1974), Soil Science, 117(6), 311-314.
+!
+!    Soil function type 2:
+!    Modified van Genuchten & Mualem model by introducing an air-entry value 
+!    Ippisch et al. (2006), Advances in Water Resources, 29(12), 1780-1789. 
+!
+! Created by Shupeng Zhang, 2022.
+!----------------------------------------------------------------------------
 
-   use MOD_Precision
+   USE MOD_Precision
 
-   implicit none
+   IMPLICIT NONE
 
-   REAL(r8), parameter :: minsmp = -1.e8
+   real(r8), parameter :: minsmp = -1.e8
 
    PUBLIC :: get_derived_parameters_vGM 
 
-   public :: soil_psi_from_vliq 
-   public :: soil_hk_from_psi 
-   public :: soil_vliq_from_psi 
+   PUBLIC :: soil_psi_from_vliq 
+   PUBLIC :: soil_hk_from_psi 
+   PUBLIC :: soil_vliq_from_psi 
 
-contains
+CONTAINS
 
    !-------------------------------------
-   subroutine get_derived_parameters_vGM ( &
+   SUBROUTINE get_derived_parameters_vGM ( &
          psi_s, alpha_vgm, n_vgm, sc_vgm, fc_vgm)
 
-      real(r8), intent(in) :: psi_s
-      real(r8), intent(in) :: alpha_vgm
-      real(r8), intent(in) :: n_vgm
-      
-      real(r8), intent(out) :: sc_vgm
-      real(r8), intent(out) :: fc_vgm
+   real(r8), intent(in) :: psi_s
+   real(r8), intent(in) :: alpha_vgm
+   real(r8), intent(in) :: n_vgm
+   
+   real(r8), intent(out) :: sc_vgm
+   real(r8), intent(out) :: fc_vgm
 
-      ! Local variables
-      real(r8) :: m_vgm
+   ! Local variables
+   real(r8) :: m_vgm
 
       m_vgm = 1.0_r8 - 1.0_r8 / n_vgm
       sc_vgm = (1.0_r8 + (- alpha_vgm * psi_s)**n_vgm) ** (-m_vgm)
       fc_vgm = 1.0_r8 - (1.0_r8 - sc_vgm ** (1.0_r8/m_vgm)) ** m_vgm
 
-   end subroutine get_derived_parameters_vGM
+   END SUBROUTINE get_derived_parameters_vGM
 
    !------------------------------------------------------------------
-   real(r8) function soil_hk_from_psi (psi, &
+   real(r8) FUNCTION soil_hk_from_psi (psi, &
          psi_s, hksat, nprm, prms)
 
-      implicit none
+   IMPLICIT NONE
 
-      real(r8), intent(in) :: psi
+   real(r8), intent(in) :: psi
 
-      real(r8), intent(in) :: psi_s
-      real(r8), intent(in) :: hksat
-      
-      integer,  intent(in) :: nprm
-      real(r8), intent(in) :: prms(nprm)
-        
-      ! Local variables
-      real(r8) :: m_vgm, esat
+   real(r8), intent(in) :: psi_s
+   real(r8), intent(in) :: hksat
+   
+   integer,  intent(in) :: nprm
+   real(r8), intent(in) :: prms(nprm)
+     
+   ! Local variables
+   real(r8) :: m_vgm, esat
 
-      if (psi >= psi_s) then
+      IF (psi >= psi_s) THEN
          soil_hk_from_psi = hksat
-         return
-      end if
+         RETURN
+      ENDIF
 
 #ifdef Campbell_SOIL_MODEL
       ! bsw => prms(1)
@@ -85,34 +85,34 @@ contains
          * ((1.0_r8 - (1.0_r8 - (esat*prms(4))**(1.0_r8/m_vgm))**m_vgm) / prms(5))**2.0_r8 
 #endif
 
-   end function soil_hk_from_psi
+   END FUNCTION soil_hk_from_psi
 
 
    !-----------------------------------------------------------------
-   real(r8) function soil_psi_from_vliq (vliq, &
+   real(r8) FUNCTION soil_psi_from_vliq (vliq, &
          porsl, vl_r, psi_s, nprm, prms)
     
-      implicit none
-      
-      real(r8), intent(in) :: vliq
+   IMPLICIT NONE
+   
+   real(r8), intent(in) :: vliq
 
-      real(r8), intent(in) :: porsl
-      real(r8), intent(in) :: vl_r
-      real(r8), intent(in) :: psi_s
-      
-      integer,  intent(in) :: nprm
-      real(r8), intent(in) :: prms(nprm)
+   real(r8), intent(in) :: porsl
+   real(r8), intent(in) :: vl_r
+   real(r8), intent(in) :: psi_s
+   
+   integer,  intent(in) :: nprm
+   real(r8), intent(in) :: prms(nprm)
 
-      ! Local variables
-      real(r8) :: esat, m_vgm
+   ! Local variables
+   real(r8) :: esat, m_vgm
 
-      if (vliq >= porsl) then
+      IF (vliq >= porsl) THEN
          soil_psi_from_vliq = psi_s
-         return
+         RETURN
       ELSEIF (vliq <= max(vl_r,1.0e-8)) THEN
          soil_psi_from_vliq = minsmp
          RETURN
-      end if
+      ENDIF
 
 #ifdef Campbell_SOIL_MODEL
       ! bsw => prms(1)
@@ -130,30 +130,30 @@ contains
       soil_psi_from_vliq = max(soil_psi_from_vliq, minsmp) 
       
 
-   end function soil_psi_from_vliq
+   END FUNCTION soil_psi_from_vliq
 
    !------------------------------------------------------------------
-   real(r8) function soil_vliq_from_psi (psi, &
+   real(r8) FUNCTION soil_vliq_from_psi (psi, &
          porsl, vl_r, psi_s, nprm, prms)
 
-      implicit none
-    
-      real(r8), intent(in) :: psi
+   IMPLICIT NONE
+   
+   real(r8), intent(in) :: psi
 
-      real(r8), intent(in) :: porsl
-      real(r8), intent(in) :: vl_r
-      real(r8), intent(in) :: psi_s
-      
-      integer,  intent(in) :: nprm
-      real(r8), intent(in) :: prms(nprm)
-        
-      ! Local variables
-      real(r8) :: esat, m_vgm
+   real(r8), intent(in) :: porsl
+   real(r8), intent(in) :: vl_r
+   real(r8), intent(in) :: psi_s
+   
+   integer,  intent(in) :: nprm
+   real(r8), intent(in) :: prms(nprm)
+     
+   ! Local variables
+   real(r8) :: esat, m_vgm
 
-      if (psi >= psi_s) then
+      IF (psi >= psi_s) THEN
          soil_vliq_from_psi = porsl
-         return
-      end if
+         RETURN
+      ENDIF
 
 #ifdef Campbell_SOIL_MODEL
       ! bsw => prms(1)
@@ -167,7 +167,7 @@ contains
       soil_vliq_from_psi = (porsl - vl_r) * esat + vl_r  
 #endif
 
-   end function soil_vliq_from_psi
+   END FUNCTION soil_vliq_from_psi
 
 
-end module MOD_Hydro_SoilFunction
+END MODULE MOD_Hydro_SoilFunction

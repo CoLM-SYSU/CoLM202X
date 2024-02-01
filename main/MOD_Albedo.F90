@@ -1469,67 +1469,67 @@ ENDIF
       IF (use_snicar_frc) THEN
 
          ! 1. PURE SNOW ALBEDO CALCULATIONS
-            flg_slr = 1  ! direct-beam
-            IF (use_snicar_ad) THEN
-                CALL SNICAR_AD_RT(flg_snw_ice, &
-                               flg_slr, &
-                               coszen_col, &
-                               snl, &
-                               h2osno, &
-                               frac_sno, &
-                               h2osno_liq(:), &
-                               h2osno_ice(:), &
-                               snw_rds_in(:), &
-                               mss_cnc_aer_in_frc_pur(:, :), &
-                               albsfc(:), &
-                               albsnd_pur(:), &
-                               foo_snw(:, :) )
-            ELSE
-                CALL SNICAR_RT(flg_snw_ice, &
-                               flg_slr, &
-                               coszen_col, &
-                               snl, &
-                               h2osno, &
-                               frac_sno, &
-                               h2osno_liq(:), &
-                               h2osno_ice(:), &
-                               snw_rds_in(:), &
-                               mss_cnc_aer_in_frc_pur(:, :), &
-                               albsfc(:), &
-                               albsnd_pur(:), &
-                               foo_snw(:, :) )
-            ENDIF ! END IF use_snicar_ad
+         flg_slr = 1  ! direct-beam
+         IF (use_snicar_ad) THEN
+             CALL SNICAR_AD_RT(flg_snw_ice, &
+                            flg_slr, &
+                            coszen_col, &
+                            snl, &
+                            h2osno, &
+                            frac_sno, &
+                            h2osno_liq(:), &
+                            h2osno_ice(:), &
+                            snw_rds_in(:), &
+                            mss_cnc_aer_in_frc_pur(:, :), &
+                            albsfc(:), &
+                            albsnd_pur(:), &
+                            foo_snw(:, :) )
+         ELSE
+             CALL SNICAR_RT(flg_snw_ice, &
+                            flg_slr, &
+                            coszen_col, &
+                            snl, &
+                            h2osno, &
+                            frac_sno, &
+                            h2osno_liq(:), &
+                            h2osno_ice(:), &
+                            snw_rds_in(:), &
+                            mss_cnc_aer_in_frc_pur(:, :), &
+                            albsfc(:), &
+                            albsnd_pur(:), &
+                            foo_snw(:, :) )
+         ENDIF ! END IF use_snicar_ad
 
-            flg_slr = 2  ! diffuse
-            IF (use_snicar_ad) THEN
-                CALL SNICAR_AD_RT(flg_snw_ice, &
-                               flg_slr, &
-                               coszen_col, &
-                               snl, &
-                               h2osno, &
-                               frac_sno, &
-                               h2osno_liq(:), &
-                               h2osno_ice(:), &
-                               snw_rds_in(:), &
-                               mss_cnc_aer_in_frc_pur(:, :), &
-                               albsfc(:), &
-                               albsni_pur(:), &
-                               foo_snw(:, :) )
-            ELSE
-                CALL SNICAR_RT(flg_snw_ice, &
-                               flg_slr, &
-                               coszen_col, &
-                               snl, &
-                               h2osno, &
-                               frac_sno, &
-                               h2osno_liq(:), &
-                               h2osno_ice(:), &
-                               snw_rds_in(:), &
-                               mss_cnc_aer_in_frc_pur(:, :), &
-                               albsfc(:), &
-                               albsni_pur(:), &
-                               foo_snw(:, :) )
-            ENDIF ! END IF use_snicar_ad
+         flg_slr = 2  ! diffuse
+         IF (use_snicar_ad) THEN
+             CALL SNICAR_AD_RT(flg_snw_ice, &
+                            flg_slr, &
+                            coszen_col, &
+                            snl, &
+                            h2osno, &
+                            frac_sno, &
+                            h2osno_liq(:), &
+                            h2osno_ice(:), &
+                            snw_rds_in(:), &
+                            mss_cnc_aer_in_frc_pur(:, :), &
+                            albsfc(:), &
+                            albsni_pur(:), &
+                            foo_snw(:, :) )
+         ELSE
+             CALL SNICAR_RT(flg_snw_ice, &
+                            flg_slr, &
+                            coszen_col, &
+                            snl, &
+                            h2osno, &
+                            frac_sno, &
+                            h2osno_liq(:), &
+                            h2osno_ice(:), &
+                            snw_rds_in(:), &
+                            mss_cnc_aer_in_frc_pur(:, :), &
+                            albsfc(:), &
+                            albsni_pur(:), &
+                            foo_snw(:, :) )
+         ENDIF ! END IF use_snicar_ad
 
          ! 2. BC input array:
          !  set dust and (optionally) OC concentrations, so BC_FRC=[(BC+OC+dust)-(OC+dust)]
@@ -1681,77 +1681,77 @@ ENDIF
          ENDIF  ! END IF (DO_SNO_OC)
 
          ! 4. DUST FORCING CALCULATIONS
-            ! DUST input array:
-            ! set BC and OC concentrations, so DST_FRC=[(BC+OC+dust)-(BC+OC)]
-            mss_cnc_aer_in_frc_dst(:,1) = mss_cnc_bcphi(:)
-            mss_cnc_aer_in_frc_dst(:,2) = mss_cnc_bcpho(:)
+         ! DUST input array:
+         ! set BC and OC concentrations, so DST_FRC=[(BC+OC+dust)-(BC+OC)]
+         mss_cnc_aer_in_frc_dst(:,1) = mss_cnc_bcphi(:)
+         mss_cnc_aer_in_frc_dst(:,2) = mss_cnc_bcpho(:)
 
-            IF (DO_SNO_OC) THEN
-                mss_cnc_aer_in_frc_dst(:,3) = mss_cnc_ocphi(:)
-                mss_cnc_aer_in_frc_dst(:,4) = mss_cnc_ocpho(:)
-            ENDIF
+         IF (DO_SNO_OC) THEN
+             mss_cnc_aer_in_frc_dst(:,3) = mss_cnc_ocphi(:)
+             mss_cnc_aer_in_frc_dst(:,4) = mss_cnc_ocpho(:)
+         ENDIF
 
-            flg_slr = 1  ! direct-beam
-            IF (use_snicar_ad) THEN
-                CALL SNICAR_AD_RT(flg_snw_ice, &
-                               flg_slr, &
-                               coszen_col, &
-                               snl, &
-                               h2osno, &
-                               frac_sno, &
-                               h2osno_liq(:), &
-                               h2osno_ice(:), &
-                               snw_rds_in(:), &
-                               mss_cnc_aer_in_frc_dst(:, :), &
-                               albsfc(:), &
-                               albsnd_dst(:), &
-                               foo_snw(:, :) )
-            ELSE
-                CALL SNICAR_RT(flg_snw_ice, &
-                               flg_slr, &
-                               coszen_col, &
-                               snl, &
-                               h2osno, &
-                               frac_sno, &
-                               h2osno_liq(:), &
-                               h2osno_ice(:), &
-                               snw_rds_in(:), &
-                               mss_cnc_aer_in_frc_dst(:, :), &
-                               albsfc(:), &
-                               albsnd_dst(:), &
-                               foo_snw(:, :) )
-            ENDIF ! END IF use_snicar_ad
+         flg_slr = 1  ! direct-beam
+         IF (use_snicar_ad) THEN
+             CALL SNICAR_AD_RT(flg_snw_ice, &
+                            flg_slr, &
+                            coszen_col, &
+                            snl, &
+                            h2osno, &
+                            frac_sno, &
+                            h2osno_liq(:), &
+                            h2osno_ice(:), &
+                            snw_rds_in(:), &
+                            mss_cnc_aer_in_frc_dst(:, :), &
+                            albsfc(:), &
+                            albsnd_dst(:), &
+                            foo_snw(:, :) )
+         ELSE
+             CALL SNICAR_RT(flg_snw_ice, &
+                            flg_slr, &
+                            coszen_col, &
+                            snl, &
+                            h2osno, &
+                            frac_sno, &
+                            h2osno_liq(:), &
+                            h2osno_ice(:), &
+                            snw_rds_in(:), &
+                            mss_cnc_aer_in_frc_dst(:, :), &
+                            albsfc(:), &
+                            albsnd_dst(:), &
+                            foo_snw(:, :) )
+         ENDIF ! END IF use_snicar_ad
 
-            flg_slr = 2  ! diffuse
-            IF (use_snicar_ad) THEN
-                CALL SNICAR_AD_RT(flg_snw_ice, &
-                               flg_slr, &
-                               coszen_col, &
-                               snl, &
-                               h2osno, &
-                               frac_sno, &
-                               h2osno_liq(:), &
-                               h2osno_ice(:), &
-                               snw_rds_in(:), &
-                               mss_cnc_aer_in_frc_dst(:, :), &
-                               albsfc(:), &
-                               albsni_dst(:), &
-                               foo_snw(:, :) )
-            ELSE
-                CALL SNICAR_RT(flg_snw_ice, &
-                               flg_slr, &
-                               coszen_col, &
-                               snl, &
-                               h2osno, &
-                               frac_sno, &
-                               h2osno_liq(:), &
-                               h2osno_ice(:), &
-                               snw_rds_in(:), &
-                               mss_cnc_aer_in_frc_dst(:, :), &
-                               albsfc(:), &
-                               albsni_dst(:), &
-                               foo_snw(:, :)  )
-            ENDIF ! END IF use_snicar_ad
+         flg_slr = 2  ! diffuse
+         IF (use_snicar_ad) THEN
+             CALL SNICAR_AD_RT(flg_snw_ice, &
+                            flg_slr, &
+                            coszen_col, &
+                            snl, &
+                            h2osno, &
+                            frac_sno, &
+                            h2osno_liq(:), &
+                            h2osno_ice(:), &
+                            snw_rds_in(:), &
+                            mss_cnc_aer_in_frc_dst(:, :), &
+                            albsfc(:), &
+                            albsni_dst(:), &
+                            foo_snw(:, :) )
+         ELSE
+             CALL SNICAR_RT(flg_snw_ice, &
+                            flg_slr, &
+                            coszen_col, &
+                            snl, &
+                            h2osno, &
+                            frac_sno, &
+                            h2osno_liq(:), &
+                            h2osno_ice(:), &
+                            snw_rds_in(:), &
+                            mss_cnc_aer_in_frc_dst(:, :), &
+                            albsfc(:), &
+                            albsni_dst(:), &
+                            foo_snw(:, :)  )
+         ENDIF ! END IF use_snicar_ad
 
       ENDIF !END IF use_snicar_frc
 
@@ -1763,84 +1763,84 @@ ENDIF
       ! feedback input arrays have been zeroed
       ! set soot and dust aerosol concentrations:
       IF (DO_SNO_AER) THEN
-          mss_cnc_aer_in_fdb(:,1) = mss_cnc_bcphi(:)
-          mss_cnc_aer_in_fdb(:,2) = mss_cnc_bcpho(:)
+         mss_cnc_aer_in_fdb(:,1) = mss_cnc_bcphi(:)
+         mss_cnc_aer_in_fdb(:,2) = mss_cnc_bcpho(:)
 
-          ! DO_SNO_OC is set in SNICAR_varpar. Default case is to ignore OC concentrations because:
-          !  1) Knowledge of their optical properties is primitive
-          !  2) When 'water-soluble' OPAC optical properties are applied to OC in snow,
-          !     it has a negligible darkening effect.
-          IF (DO_SNO_OC) THEN
-             mss_cnc_aer_in_fdb(:,3) = mss_cnc_ocphi(:)
-             mss_cnc_aer_in_fdb(:,4) = mss_cnc_ocpho(:)
-          ENDIF
+         ! DO_SNO_OC is set in SNICAR_varpar. Default case is to ignore OC concentrations because:
+         !  1) Knowledge of their optical properties is primitive
+         !  2) When 'water-soluble' OPAC optical properties are applied to OC in snow,
+         !     it has a negligible darkening effect.
+         IF (DO_SNO_OC) THEN
+            mss_cnc_aer_in_fdb(:,3) = mss_cnc_ocphi(:)
+            mss_cnc_aer_in_fdb(:,4) = mss_cnc_ocpho(:)
+         ENDIF
 
-          mss_cnc_aer_in_fdb(:,5) = mss_cnc_dst1(:)
-          mss_cnc_aer_in_fdb(:,6) = mss_cnc_dst2(:)
-          mss_cnc_aer_in_fdb(:,7) = mss_cnc_dst3(:)
-          mss_cnc_aer_in_fdb(:,8) = mss_cnc_dst4(:)
+         mss_cnc_aer_in_fdb(:,5) = mss_cnc_dst1(:)
+         mss_cnc_aer_in_fdb(:,6) = mss_cnc_dst2(:)
+         mss_cnc_aer_in_fdb(:,7) = mss_cnc_dst3(:)
+         mss_cnc_aer_in_fdb(:,8) = mss_cnc_dst4(:)
       ENDIF
 
       flg_slr = 1  ! direct-beam
       IF (use_snicar_ad) THEN
-          CALL SNICAR_AD_RT(flg_snw_ice, &
-                            flg_slr, &
-                            coszen_col, &
-                            snl, &
-                            h2osno, &
-                            frac_sno, &
-                            h2osno_liq(:), &
-                            h2osno_ice(:), &
-                            snw_rds_in(:), &
-                            mss_cnc_aer_in_fdb(:, :), &
-                            albsfc(:), &
-                            albsnd(:), &
-                            flx_absd_snw(:, :) )
+         CALL SNICAR_AD_RT(flg_snw_ice, &
+                           flg_slr, &
+                           coszen_col, &
+                           snl, &
+                           h2osno, &
+                           frac_sno, &
+                           h2osno_liq(:), &
+                           h2osno_ice(:), &
+                           snw_rds_in(:), &
+                           mss_cnc_aer_in_fdb(:, :), &
+                           albsfc(:), &
+                           albsnd(:), &
+                           flx_absd_snw(:, :) )
       ELSE
-          CALL SNICAR_RT   (flg_snw_ice, &
-                            flg_slr, &
-                            coszen_col, &
-                            snl, &
-                            h2osno, &
-                            frac_sno, &
-                            h2osno_liq(:), &
-                            h2osno_ice(:), &
-                            snw_rds_in(:), &
-                            mss_cnc_aer_in_fdb(:, :), &
-                            albsfc(:), &
-                            albsnd(:), &
-                            flx_absd_snw(:, :) )
+         CALL SNICAR_RT   (flg_snw_ice, &
+                           flg_slr, &
+                           coszen_col, &
+                           snl, &
+                           h2osno, &
+                           frac_sno, &
+                           h2osno_liq(:), &
+                           h2osno_ice(:), &
+                           snw_rds_in(:), &
+                           mss_cnc_aer_in_fdb(:, :), &
+                           albsfc(:), &
+                           albsnd(:), &
+                           flx_absd_snw(:, :) )
       ENDIF ! END IF use_snicar_ad
 
       flg_slr = 2  ! diffuse
       IF (use_snicar_ad) THEN
-          CALL SNICAR_AD_RT(flg_snw_ice, &
-                            flg_slr, &
-                            coszen_col, &
-                            snl, &
-                            h2osno, &
-                            frac_sno, &
-                            h2osno_liq(:), &
-                            h2osno_ice(:), &
-                            snw_rds_in(:), &
-                            mss_cnc_aer_in_fdb(:, :), &
-                            albsfc(:), &
-                            albsni(:), &
-                            flx_absi_snw(:, :) )
+         CALL SNICAR_AD_RT(flg_snw_ice, &
+                           flg_slr, &
+                           coszen_col, &
+                           snl, &
+                           h2osno, &
+                           frac_sno, &
+                           h2osno_liq(:), &
+                           h2osno_ice(:), &
+                           snw_rds_in(:), &
+                           mss_cnc_aer_in_fdb(:, :), &
+                           albsfc(:), &
+                           albsni(:), &
+                           flx_absi_snw(:, :) )
       ELSE
-          CALL SNICAR_RT   (flg_snw_ice, &
-                            flg_slr, &
-                            coszen_col, &
-                            snl, &
-                            h2osno, &
-                            frac_sno, &
-                            h2osno_liq(:), &
-                            h2osno_ice(:), &
-                            snw_rds_in(:), &
-                            mss_cnc_aer_in_fdb(:, :), &
-                            albsfc(:), &
-                            albsni(:), &
-                            flx_absi_snw(:, :) )
+         CALL SNICAR_RT   (flg_snw_ice, &
+                           flg_slr, &
+                           coszen_col, &
+                           snl, &
+                           h2osno, &
+                           frac_sno, &
+                           h2osno_liq(:), &
+                           h2osno_ice(:), &
+                           snw_rds_in(:), &
+                           mss_cnc_aer_in_fdb(:, :), &
+                           albsfc(:), &
+                           albsni(:), &
+                           flx_absi_snw(:, :) )
       ENDIF ! END IF use_snicar_ad
 
 
@@ -1979,45 +1979,45 @@ ENDIF
       IF(coszrs<=0.0) RETURN
 
       IF(nint(oro)==2)THEN
-        alb(1,1) = asices
-        alb(2,1) = asicel
-        alb(1,2) = alb(1,1)
-        alb(2,2) = alb(2,1)
-        sasdif = asnows
-        saldif = asnowl
+         alb(1,1) = asices
+         alb(2,1) = asicel
+         alb(1,2) = alb(1,1)
+         alb(2,2) = alb(2,1)
+         sasdif = asnows
+         saldif = asnowl
 
-        IF(scv>0.)THEN
-          IF (coszrs<0.5) THEN
-          ! zenith angle regime 1 ( coszrs < 0.5 ).
-          ! set direct snow albedos (limit to 0.98 max)
-            sasdir = min(0.98,sasdif+(1.-sasdif)*0.5*(3./(1.+4.*coszrs)-1.))
-            saldir = min(0.98,saldif+(1.-saldif)*0.5*(3./(1.+4.*coszrs)-1.))
-          ELSE
-          ! zenith angle regime 2 ( coszrs >= 0.5 )
-            sasdir = asnows
-            saldir = asnowl
-          ENDIF
+         IF(scv>0.)THEN
+           IF (coszrs<0.5) THEN
+           ! zenith angle regime 1 ( coszrs < 0.5 ).
+           ! set direct snow albedos (limit to 0.98 max)
+             sasdir = min(0.98,sasdif+(1.-sasdif)*0.5*(3./(1.+4.*coszrs)-1.))
+             saldir = min(0.98,saldif+(1.-saldif)*0.5*(3./(1.+4.*coszrs)-1.))
+           ELSE
+           ! zenith angle regime 2 ( coszrs >= 0.5 )
+             sasdir = asnows
+             saldir = asnowl
+           ENDIF
 
-        ! compute both diffuse and direct total albedos
-          snwhgt = 20.*scv / 1000.
-          rghsnw = 0.25
-          frsnow = snwhgt/(rghsnw+snwhgt)
-          alb(1,1) = alb(1,1)*(1.-frsnow) + sasdir*frsnow
-          alb(2,1) = alb(2,1)*(1.-frsnow) + saldir*frsnow
-          alb(1,2) = alb(1,2)*(1.-frsnow) + sasdif*frsnow
-          alb(2,2) = alb(2,2)*(1.-frsnow) + saldif*frsnow
-        ENDIF
+         ! compute both diffuse and direct total albedos
+           snwhgt = 20.*scv / 1000.
+           rghsnw = 0.25
+           frsnow = snwhgt/(rghsnw+snwhgt)
+           alb(1,1) = alb(1,1)*(1.-frsnow) + sasdir*frsnow
+           alb(2,1) = alb(2,1)*(1.-frsnow) + saldir*frsnow
+           alb(1,2) = alb(1,2)*(1.-frsnow) + sasdif*frsnow
+           alb(2,2) = alb(2,2)*(1.-frsnow) + saldif*frsnow
+         ENDIF
       ENDIF
 
 ! ice-free ocean albedos function of solar zenith angle only, and
 ! independent of spectral interval:
 
       IF(nint(oro)==0)THEN
-        alb(2,1) = .026/(coszrs**1.7+.065) &
-                 + .15*(coszrs-0.1)*(coszrs-0.5)*(coszrs-1.)
-        alb(1,1) = alb(2,1)
-        alb(1,2) = 0.06
-        alb(2,2) = 0.06
+         alb(2,1) = .026/(coszrs**1.7+.065) &
+                  + .15*(coszrs-0.1)*(coszrs-0.5)*(coszrs-1.)
+         alb(1,1) = alb(2,1)
+         alb(1,2) = 0.06
+         alb(2,2) = 0.06
       ENDIF
 
    END SUBROUTINE albocean

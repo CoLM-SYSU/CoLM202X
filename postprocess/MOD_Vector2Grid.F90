@@ -1,42 +1,42 @@
 #include <define.h>
 #define OPENMP 24
 
-module mod_vector2grid
+MODULE mod_vector2grid
 
-   use MOD_Precision
+   USE MOD_Precision
    USE MOD_NetCDFSerial
-   use netcdf
+   USE netcdf
    USE MOD_Vars_Global, only : spval
-   implicit none
+   IMPLICIT NONE
 
-   INTEGER :: ndim1out, ndim2out
-   INTEGER, allocatable :: addr2d(:,:)
-   REAL(r8), allocatable :: latitude(:), longitude(:)
-   CHARACTER(len=256) :: coord1name, coord2name
+   integer :: ndim1out, ndim2out
+   integer, allocatable :: addr2d(:,:)
+   real(r8), allocatable :: latitude(:), longitude(:)
+   character(len=256) :: coord1name, coord2name
 
-contains
+CONTAINS
 
    ! -------
    SUBROUTINE hist_vector2grid_init (meshfile, input)
       
-      USE MOD_Utils
-      IMPLICIT NONE
-      CHARACTER(len=*), intent(in) :: meshfile, input
+   USE MOD_Utils
+   IMPLICIT NONE
+   character(len=*), intent(in) :: meshfile, input
 
-      ! Local Variables
-      INTEGER :: ndim1, ndim2, ndim0, i1, i2, i1n, i2n, iloc
-      INTEGER :: i1s, i1e, i2s, i2e
-      LOGICAL :: found
-      INTEGER, allocatable :: elm(:)
+   ! Local Variables
+   integer :: ndim1, ndim2, ndim0, i1, i2, i1n, i2n, iloc
+   integer :: i1s, i1e, i2s, i2e
+   logical :: found
+   integer, allocatable :: elm(:)
 #ifdef CATCHMENT
-      INTEGER, allocatable :: cat(:,:), hru(:,:)
-      INTEGER, allocatable :: htype(:)
+   integer, allocatable :: cat(:,:), hru(:,:)
+   integer, allocatable :: htype(:)
 #endif
 #ifdef UNSTRUCTURED
-      INTEGER, allocatable :: polygon(:,:)
+   integer, allocatable :: polygon(:,:)
 #endif
-      INTEGER, allocatable  :: addr2d_g(:,:)
-      REAL(r8), allocatable :: lon(:), lat(:)
+   integer, allocatable  :: addr2d_g(:,:)
+   real(r8), allocatable :: lon(:), lat(:)
 
 #ifdef CATCHMENT
       CALL ncio_read_serial (meshfile, 'icatchment2d', cat)
@@ -64,10 +64,10 @@ contains
          DO i2 = 1, ndim2
 
 #ifdef CATCHMENT
-            IF (cat(i1,i2) <= 0) cycle
+            IF (cat(i1,i2) <= 0) CYCLE
 #endif
 #ifdef UNSTRUCTURED
-            IF (polygon(i1,i2) <= 0) cycle
+            IF (polygon(i1,i2) <= 0) CYCLE
 #endif
 
             found = .false.
@@ -83,7 +83,7 @@ contains
                      .and. (addr2d_g(i1n,i2n) /= -1)) THEN
                      addr2d_g(i1,i2) = addr2d_g(i1n,i2n)
                      found = .true.
-                     exit
+                     EXIT
                   ENDIF
                ENDDO
             ENDDO
@@ -104,28 +104,28 @@ contains
       DO i1 = 1, ndim1
          IF (any(addr2d_g(i1,:) > 0)) THEN
             i1s = i1
-            exit
+            EXIT
          ENDIF
       ENDDO
       
       DO i1 = ndim1, 1, -1
          IF (any(addr2d_g(i1,:) > 0)) THEN
             i1e = i1
-            exit
+            EXIT
          ENDIF
       ENDDO
 
       DO i2 = 1, ndim2
          IF (any(addr2d_g(:,i2) > 0)) THEN
             i2s = i2
-            exit
+            EXIT
          ENDIF
       ENDDO
       
       DO i2 = ndim2, 1, -1
          IF (any(addr2d_g(:,i2) > 0)) THEN
             i2e = i2
-            exit
+            EXIT
          ENDIF
       ENDDO
 
@@ -179,19 +179,19 @@ contains
    ! -------
    SUBROUTINE hist_vector2grid_one_var_time (input, output, varname, timelen)
       
-      IMPLICIT NONE
-      CHARACTER(len=*), intent(in) :: input, output
-      CHARACTER(len=*), intent(in) :: varname
-      INTEGER, intent(in) :: timelen
+   IMPLICIT NONE
+   character(len=*), intent(in) :: input, output
+   character(len=*), intent(in) :: varname
+   integer, intent(in) :: timelen
 
-      ! Local Variables
-      INTEGER :: ncid, varid, ndims, id
-      INTEGER :: i1, i2
-      INTEGER, allocatable :: dimids(:), dimlens(:)
-      CHARACTER(len=256), allocatable :: dimnames (:)
-      REAL(r8), allocatable :: data2in(:,:),     data2out(:,:,:)
-      REAL(r8), allocatable :: data3in(:,:,:),   data3out(:,:,:,:)
-      REAL(r8), allocatable :: data4in(:,:,:,:), data4out(:,:,:,:,:)
+   ! Local Variables
+   integer :: ncid, varid, ndims, id
+   integer :: i1, i2
+   integer, allocatable :: dimids(:), dimlens(:)
+   character(len=256), allocatable :: dimnames (:)
+   real(r8), allocatable :: data2in(:,:),     data2out(:,:,:)
+   real(r8), allocatable :: data3in(:,:,:),   data3out(:,:,:,:)
+   real(r8), allocatable :: data4in(:,:,:,:), data4out(:,:,:,:,:)
 
       CALL nccheck( nf90_open (trim(input), NF90_NOWRITE, ncid) )
       CALL nccheck( nf90_inq_varid (ncid, trim(varname), varid) )
@@ -298,17 +298,17 @@ contains
    ! -------
    SUBROUTINE hist_vector2grid_one_var (input, output, varname)
       
-      IMPLICIT NONE
-      CHARACTER(len=*), intent(in) :: input, output
-      CHARACTER(len=*), intent(in) :: varname
+   IMPLICIT NONE
+   character(len=*), intent(in) :: input, output
+   character(len=*), intent(in) :: varname
 
-      ! Local Variables
-      INTEGER :: ncid, varid, ndims, id
-      INTEGER :: i1, i2
-      INTEGER, allocatable :: dimids(:), dimlens(:)
-      CHARACTER(len=256), allocatable :: dimnames (:)
-      REAL(r8), allocatable :: data1in(:),   data1out(:,:)
-      REAL(r8), allocatable :: data2in(:,:), data2out(:,:,:)
+   ! Local Variables
+   integer :: ncid, varid, ndims, id
+   integer :: i1, i2
+   integer, allocatable :: dimids(:), dimlens(:)
+   character(len=256), allocatable :: dimnames (:)
+   real(r8), allocatable :: data1in(:),   data1out(:,:)
+   real(r8), allocatable :: data2in(:,:), data2out(:,:,:)
 
       CALL nccheck( nf90_open (trim(input), NF90_NOWRITE, ncid) )
       CALL nccheck( nf90_inq_varid (ncid, trim(varname), varid) )
@@ -380,15 +380,15 @@ contains
    END SUBROUTINE hist_vector2grid_one_var
 
    ! ------
-   subroutine copy_dimension_nc (input, output, dimname)
+   SUBROUTINE copy_dimension_nc (input, output, dimname)
       
-      IMPLICIT NONE
-      CHARACTER(len=*), intent(in) :: input, output
-      CHARACTER(len=*), intent(in) :: dimname
+   IMPLICIT NONE
+   character(len=*), intent(in) :: input, output
+   character(len=*), intent(in) :: dimname
 
-      ! Local Variables
-      INTEGER :: ncid, varid, dimid, dimlen
-      LOGICAL :: dim_exist
+   ! Local Variables
+   integer :: ncid, varid, dimid, dimlen
+   logical :: dim_exist
 
       CALL nccheck( nf90_open (trim(output), NF90_NOWRITE, ncid) )
       dim_exist = (nf90_inq_dimid (ncid, trim(dimname), dimid) == NF90_NOERR)
@@ -410,30 +410,30 @@ contains
          CALL nccheck( nf90_close (ncid) )
       ENDIF
 
-   END subroutine copy_dimension_nc 
+   END SUBROUTINE copy_dimension_nc 
 
    ! ------
-   subroutine copy_variable_nc (input, output, varname)
+   SUBROUTINE copy_variable_nc (input, output, varname)
       
-      IMPLICIT NONE
-      CHARACTER(len=*), intent(in) :: input, output
-      CHARACTER(len=*), intent(in) :: varname
+   IMPLICIT NONE
+   character(len=*), intent(in) :: input, output
+   character(len=*), intent(in) :: varname
 
-      ! Local Variables
-      INTEGER :: ncid, ncidin, ncidout
-      INTEGER :: varid, varidin, varidout
-      INTEGER :: xtype, ndims, dimlen, id, natts, iattr
-      LOGICAL :: var_exist
-      INTEGER, allocatable :: dimids (:), dimlens (:)
-      CHARACTER(len=256), allocatable :: dimnames (:)
-      CHARACTER(len=256) :: attrname
+   ! Local Variables
+   integer :: ncid, ncidin, ncidout
+   integer :: varid, varidin, varidout
+   integer :: xtype, ndims, dimlen, id, natts, iattr
+   logical :: var_exist
+   integer, allocatable :: dimids (:), dimlens (:)
+   character(len=256), allocatable :: dimnames (:)
+   character(len=256) :: attrname
 
-      REAL(r8), allocatable :: data1 (:)
-      REAL(r8), allocatable :: data2 (:,:)
-      REAL(r8), allocatable :: data3 (:,:,:)
-      REAL(r8), allocatable :: data4 (:,:,:,:)
-      REAL(r8), allocatable :: data5 (:,:,:,:,:)
-      REAL(r8), allocatable :: data6 (:,:,:,:,:,:)
+   real(r8), allocatable :: data1 (:)
+   real(r8), allocatable :: data2 (:,:)
+   real(r8), allocatable :: data3 (:,:,:)
+   real(r8), allocatable :: data4 (:,:,:,:)
+   real(r8), allocatable :: data5 (:,:,:,:,:)
+   real(r8), allocatable :: data6 (:,:,:,:,:,:)
 
       CALL nccheck( nf90_open (trim(output), NF90_NOWRITE, ncid) )
       var_exist = (nf90_inq_varid(ncid, trim(varname), varid) == NF90_NOERR)
@@ -467,33 +467,33 @@ contains
 
       CALL nccheck( nf90_open (trim(input),  NF90_NOWRITE, ncidin)  )
       CALL nccheck( nf90_inq_varid (ncidin,  trim(varname), varidin ) )
-      select case (ndims)
-      case (1)
+      select CASE (ndims)
+      CASE (1)
          allocate (data1 (dimlens(1)))
          CALL nccheck( nf90_get_var (ncidin,  varidin , data1) )
          CALL nccheck( nf90_put_var (ncidout, varidout, data1) )
          deallocate (data1)
-      case (2)
+      CASE (2)
          allocate (data2 (dimlens(1),dimlens(2)))
          CALL nccheck( nf90_get_var (ncidin,  varidin , data2) )
          CALL nccheck( nf90_put_var (ncidout, varidout, data2) )
          deallocate (data2)
-      case (3)
+      CASE (3)
          allocate (data3 (dimlens(1),dimlens(2),dimlens(3)))
          CALL nccheck( nf90_get_var (ncidin,  varidin , data3) )
          CALL nccheck( nf90_put_var (ncidout, varidout, data3) )
          deallocate (data3)
-      case (4)
+      CASE (4)
          allocate (data4 (dimlens(1),dimlens(2),dimlens(3),dimlens(4)))
          CALL nccheck( nf90_get_var (ncidin,  varidin , data4) )
          CALL nccheck( nf90_put_var (ncidout, varidout, data4) )
          deallocate (data4)
-      case (5)
+      CASE (5)
          allocate (data5 (dimlens(1),dimlens(2),dimlens(3),dimlens(4),dimlens(5)))
          CALL nccheck( nf90_get_var (ncidin,  varidin , data5) )
          CALL nccheck( nf90_put_var (ncidout, varidout, data5) )
          deallocate (data5)
-      case (6)
+      CASE (6)
          allocate (data6 (dimlens(1),dimlens(2),dimlens(3),dimlens(4),dimlens(5),dimlens(6)))
          CALL nccheck( nf90_get_var (ncidin,  varidin , data6) )
          CALL nccheck( nf90_put_var (ncidout, varidout, data6) )
@@ -505,18 +505,18 @@ contains
 
       CALL copy_variable_attr_nc (input, output, varname)
 
-   END subroutine copy_variable_nc 
+   END SUBROUTINE copy_variable_nc 
 
    ! ------
-   subroutine copy_variable_attr_nc (input, output, varname)
+   SUBROUTINE copy_variable_attr_nc (input, output, varname)
       
-      IMPLICIT NONE
-      CHARACTER(len=*), intent(in) :: input, output
-      CHARACTER(len=*), intent(in) :: varname
+   IMPLICIT NONE
+   character(len=*), intent(in) :: input, output
+   character(len=*), intent(in) :: varname
 
-      ! Local Variables
-      INTEGER :: ncidin, ncidout, varidin, varidout, natts, iattr
-      CHARACTER(len=256) :: attrname
+   ! Local Variables
+   integer :: ncidin, ncidout, varidin, varidout, natts, iattr
+   character(len=256) :: attrname
 
       CALL nccheck( nf90_open (trim(output), NF90_WRITE, ncidout) )
       CALL nccheck( nf90_inq_varid (ncidout,  trim(varname), varidout) )
@@ -536,22 +536,22 @@ contains
       CALL nccheck( nf90_close (ncidin)  )
       CALL nccheck( nf90_close (ncidout) )
 
-   END subroutine copy_variable_attr_nc 
+   END SUBROUTINE copy_variable_attr_nc 
 
    ! ------
    SUBROUTINE get_output_filename (input, output)
       
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      CHARACTER(len=*), intent(in)  :: input
-      CHARACTER(len=*), intent(out) :: output
+      character(len=*), intent(in)  :: input
+      character(len=*), intent(out) :: output
 
       ! Local variables
-      INTEGER :: i
+      integer :: i
 
       i = len_trim (input) 
-      DO while (i > 0)
-         IF (input(i:i) == '.') exit
+      DO WHILE (i > 0)
+         IF (input(i:i) == '.') EXIT
          i = i - 1
       ENDDO
 
@@ -563,4 +563,4 @@ contains
 
    END SUBROUTINE get_output_filename
 
-END module mod_vector2grid
+END MODULE mod_vector2grid

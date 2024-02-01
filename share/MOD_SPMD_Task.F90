@@ -2,31 +2,31 @@
 
 MODULE MOD_SPMD_Task
 
-   !-----------------------------------------------------------------------------------------
-   ! DESCRIPTION:
-   !
-   !    SPMD refers to "Single Program/Multiple Data" parallelization.
-   ! 
-   !    In CoLM, processes do three types of tasks,
-   !    1. master : There is only one master process, usually rank 0 in global communicator. 
-   !                It reads or writes global data, prints informations.
-   !    2. io     : IO processes read data from files and scatter to workers, gather data from 
-   !                workers and write to files.
-   !    3. worker : Worker processes do model calculations.
-   !   
-   !    Notice that,
-   !    1. There are mainly two types of data in CoLM: gridded data and vector data. 
-   !       Gridded data takes longitude and latitude   as its last two dimensions. 
-   !       Vector  data takes ELEMENT/PATCH/HRU/PFT/PC as its last dimension.
-   !       Usually gridded data is allocated on IO processes and vector data is allocated on
-   !       worker processes.
-   !    2. One IO process and multiple worker processes form a group. The Input/Output 
-   !       in CoLM is mainly between IO and workers in the same group. However, all processes
-   !       can communicate with each other.
-   !    3. Number of IO is less or equal than the number of blocks with non-zero elements.
-   !
-   ! Created by Shupeng Zhang, May 2023
-   !-----------------------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
+! DESCRIPTION:
+!
+!    SPMD refers to "Single PROGRAM/Multiple Data" parallelization.
+! 
+!    In CoLM, processes do three types of tasks,
+!    1. master : There is only one master process, usually rank 0 in global communicator. 
+!                It reads or writes global data, prints informations.
+!    2. io     : IO processes read data from files and scatter to workers, gather data from 
+!                workers and write to files.
+!    3. worker : Worker processes do model calculations.
+!   
+!    Notice that,
+!    1. There are mainly two types of data in CoLM: gridded data and vector data. 
+!       Gridded data takes longitude and latitude   as its last two dimensions. 
+!       Vector  data takes ELEMENT/PATCH/HRU/PFT/PC as its last dimension.
+!       Usually gridded data is allocated on IO processes and vector data is allocated on
+!       worker processes.
+!    2. One IO process and multiple worker processes form a group. The Input/Output 
+!       in CoLM is mainly between IO and workers in the same group. However, all processes
+!       can communicate with each other.
+!    3. Number of IO is less or equal than the number of blocks with non-zero elements.
+!
+! Created by Shupeng Zhang, May 2023
+!-----------------------------------------------------------------------------------------
 
    USE MOD_Precision
    IMPLICIT NONE
@@ -35,73 +35,73 @@ MODULE MOD_SPMD_Task
 
 #ifndef USEMPI
    
-   INTEGER, parameter :: p_root       = 0
+   integer, parameter :: p_root       = 0
 
-   LOGICAL, parameter :: p_is_master = .true.
-   LOGICAL, parameter :: p_is_io     = .true.
-   LOGICAL, parameter :: p_is_worker = .true.
+   logical, parameter :: p_is_master = .true.
+   logical, parameter :: p_is_io     = .true.
+   logical, parameter :: p_is_worker = .true.
 
-   INTEGER, parameter :: p_np_glb    = 1    
-   INTEGER, parameter :: p_np_worker = 1
-   INTEGER, parameter :: p_np_io     = 1
+   integer, parameter :: p_np_glb    = 1    
+   integer, parameter :: p_np_worker = 1
+   integer, parameter :: p_np_io     = 1
 
-   INTEGER, parameter :: p_iam_glb    = 0
-   INTEGER, parameter :: p_iam_io     = 0
-   INTEGER, parameter :: p_iam_worker = 0
+   integer, parameter :: p_iam_glb    = 0
+   integer, parameter :: p_iam_io     = 0
+   integer, parameter :: p_iam_worker = 0
    
-   INTEGER, parameter :: p_np_group   = 1
+   integer, parameter :: p_np_group   = 1
 
 #else
-   INTEGER, parameter :: p_root = 0
+   integer, parameter :: p_root = 0
 
-   LOGICAL :: p_is_master    
-   LOGICAL :: p_is_io
-   LOGICAL :: p_is_worker
-   LOGICAL :: p_is_writeback
+   logical :: p_is_master    
+   logical :: p_is_io
+   logical :: p_is_worker
+   logical :: p_is_writeback
    
-   INTEGER :: p_comm_glb_plus
-   INTEGER :: p_iam_glb_plus
+   integer :: p_comm_glb_plus
+   integer :: p_iam_glb_plus
 
    ! Global communicator
-   INTEGER :: p_comm_glb
-   INTEGER :: p_iam_glb    
-   INTEGER :: p_np_glb     
+   integer :: p_comm_glb
+   integer :: p_iam_glb    
+   integer :: p_np_glb     
 
    ! Processes in the same working group
-   INTEGER :: p_comm_group
-   INTEGER :: p_iam_group
-   INTEGER :: p_np_group
+   integer :: p_comm_group
+   integer :: p_iam_group
+   integer :: p_np_group
 
-   INTEGER :: p_my_group
+   integer :: p_my_group
 
    ! Input/output processes 
-   INTEGER :: p_comm_io
-   INTEGER :: p_iam_io
-   INTEGER :: p_np_io     
+   integer :: p_comm_io
+   integer :: p_iam_io
+   integer :: p_np_io     
 
-   INTEGER, allocatable :: p_itis_io (:)
-   INTEGER, allocatable :: p_address_io (:)
+   integer, allocatable :: p_itis_io (:)
+   integer, allocatable :: p_address_io (:)
    
    ! Processes carrying out computing work
-   INTEGER :: p_comm_worker
-   INTEGER :: p_iam_worker
-   INTEGER :: p_np_worker     
+   integer :: p_comm_worker
+   integer :: p_iam_worker
+   integer :: p_np_worker     
    
-   INTEGER, allocatable :: p_itis_worker (:)
-   INTEGER, allocatable :: p_address_worker (:)
+   integer, allocatable :: p_itis_worker (:)
+   integer, allocatable :: p_address_worker (:)
 
-   INTEGER :: p_stat (MPI_STATUS_SIZE)
-   INTEGER :: p_err
+   integer :: p_stat (MPI_STATUS_SIZE)
+   integer :: p_err
 
    ! tags
-   INTEGER, PUBLIC, parameter :: mpi_tag_size = 1
-   INTEGER, PUBLIC, parameter :: mpi_tag_mesg = 2
-   INTEGER, PUBLIC, parameter :: mpi_tag_data = 3 
+   integer, PUBLIC, parameter :: mpi_tag_size = 1
+   integer, PUBLIC, parameter :: mpi_tag_mesg = 2
+   integer, PUBLIC, parameter :: mpi_tag_data = 3 
 
-   INTEGER  :: MPI_INULL_P(1)
-   REAL(r8) :: MPI_RNULL_P(1)
+   integer  :: MPI_INULL_P(1)
+   real(r8) :: MPI_RNULL_P(1)
 
-   INTEGER, PARAMETER :: MesgMaxSize = 4194304 ! 4MB 
+   integer, parameter :: MesgMaxSize = 4194304 ! 4MB 
 
    ! subroutines
    PUBLIC :: spmd_init
@@ -116,21 +116,21 @@ CONTAINS
    !-----------------------------------------
    SUBROUTINE spmd_init (MyComm_r)
 
-      IMPLICIT NONE
-      integer, intent(in), optional :: MyComm_r
-      LOGICAL mpi_inited
+   IMPLICIT NONE
+   integer, intent(in), optional :: MyComm_r
+   logical mpi_inited
 
       CALL MPI_INITIALIZED (mpi_inited, p_err)
 
-      IF ( .NOT. mpi_inited ) THEN
+      IF ( .not. mpi_inited ) THEN
          CALL mpi_init (p_err) 
       ENDIF
 
-      if (present(MyComm_r)) then
+      IF (present(MyComm_r)) THEN
          CALL MPI_Comm_dup (MyComm_r, p_comm_glb, p_err)
-      else
+      ELSE
          CALL MPI_Comm_dup (MPI_COMM_WORLD, p_comm_glb, p_err)
-      endif
+      ENDIF
 
       ! 1. Constructing global communicator.
       CALL mpi_comm_rank (p_comm_glb, p_iam_glb, p_err)  
@@ -170,18 +170,18 @@ CONTAINS
    !-----------------------------------------
    SUBROUTINE divide_processes_into_groups (numblocks, groupsize)
 
-      IMPLICIT NONE
-      
-      INTEGER, intent(in) :: numblocks
-      INTEGER, intent(in) :: groupsize
+   IMPLICIT NONE
+   
+   integer, intent(in) :: numblocks
+   integer, intent(in) :: groupsize
 
-      ! Local variables
-      INTEGER :: iproc
-      INTEGER, allocatable :: p_igroup_all (:)
+   ! Local variables
+   integer :: iproc
+   integer, allocatable :: p_igroup_all (:)
 
-      INTEGER :: nave, nres, ngrp, igrp, key
-      CHARACTER(len=512) :: info
-      CHARACTER(len=5)   :: cnum
+   integer :: nave, nres, ngrp, igrp, key
+   character(len=512) :: info
+   character(len=5)   :: cnum
 
       ! 1. Determine number of groups
       ngrp = max((p_np_glb-1) / groupsize, 1)
@@ -315,8 +315,8 @@ CONTAINS
    ! -- STOP all processes --
    SUBROUTINE CoLM_stop (mesg)
 
-      IMPLICIT NONE
-      character(len=*), optional :: mesg
+   IMPLICIT NONE
+   character(len=*), optional :: mesg
 
       IF (present(mesg)) write(*,*) trim(mesg)
 

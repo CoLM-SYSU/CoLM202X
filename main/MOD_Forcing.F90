@@ -614,10 +614,10 @@ CONTAINS
             CALL downscale_forcings ( &
                numelm, numpatch, elm_patch%substt, elm_patch%subend, glacierss, elm_patch%subfrc,   &
                ! forcing in gridcells
-            forc_topo_elm, forc_t_elm,   forc_th_elm,  forc_q_elm,     forc_pbot_elm, &
+               forc_topo_elm, forc_t_elm,   forc_th_elm,  forc_q_elm,     forc_pbot_elm, &
                forc_rho_elm,  forc_prc_elm, forc_prl_elm, forc_lwrad_elm, forc_hgt_elm,  &
                ! forcing in patches
-            forc_topo,     forc_t,       forc_th,      forc_q,         forc_pbot,     &
+               forc_topo,     forc_t,       forc_th,      forc_q,         forc_pbot,     &
                forc_rhoair,   forc_prc,     forc_prl,     forc_frl)
 
          ENDIF
@@ -630,6 +630,8 @@ CONTAINS
 #endif
       IF (p_is_master) write(*,'(/, A20)') 'Checking forcing ...'
 
+      CALL check_vector_data ('Forcing us    [m/s]   ', forc_us   )
+      CALL check_vector_data ('Forcing vs    [m/s]   ', forc_vs   )
       CALL check_vector_data ('Forcing t     [kelvin]', forc_t    )
       CALL check_vector_data ('Forcing q     [kg/kg] ', forc_q    )
       CALL check_vector_data ('Forcing prc   [mm/s]  ', forc_prc  )
@@ -641,7 +643,7 @@ CONTAINS
       CALL check_vector_data ('Forcing solld [W/m2]  ', forc_solld)
       CALL check_vector_data ('Forcing frl   [W/m2]  ', forc_frl  )
       IF (DEF_USE_CBL_HEIGHT) THEN
-        CALL check_vector_data ('Forcing hpbl  ', forc_hpbl )
+         CALL check_vector_data ('Forcing hpbl  ', forc_hpbl )
       ENDIF
 
 #ifdef USEMPI
@@ -964,22 +966,22 @@ CONTAINS
 
    END SUBROUTINE metread_time
 
-   ! ------------------------------------------------------------
-   !
-   ! !DESCRIPTION:
-   !    set the lower boundary time stamp and record information,
-   !    a KEY FUNCTION of this MODULE
-   !
-   ! - for time stamp, set it regularly as the model time step.
-   ! - for record information, account for:
-   !    o year alternation
-   !    o month alternation
-   !    o leap year
-   !    o required dada just beyond the first record
-   !
-   ! REVISIONS:
-   ! Hua Yuan, 04/2014: initial code
-   ! ------------------------------------------------------------
+! ------------------------------------------------------------
+!
+! !DESCRIPTION:
+!    set the lower boundary time stamp and record information,
+!    a KEY FUNCTION of this MODULE
+!
+! - for time stamp, set it regularly as the model time step.
+! - for record information, account for:
+!    o year alternation
+!    o month alternation
+!    o leap year
+!    o required dada just beyond the first record
+!
+! REVISIONS:
+! Hua Yuan, 04/2014: initial code
+! ------------------------------------------------------------
    SUBROUTINE setstampLB(mtstamp, var_i, year, month, mday, time_i)
 
    IMPLICIT NONE
@@ -1199,15 +1201,15 @@ CONTAINS
 
    END SUBROUTINE setstampLB
 
-   ! ------------------------------------------------------------
-   !
-   ! !DESCRIPTION:
-   !    set the upper boundary time stamp and record information,
-   !    a KEY FUNCTION of this MODULE
-   !
-   ! REVISIONS:
-   ! Hua Yuan, 04/2014: initial code
-   ! ------------------------------------------------------------
+! ------------------------------------------------------------
+!
+! !DESCRIPTION:
+!    set the upper boundary time stamp and record information,
+!    a KEY FUNCTION of this MODULE
+!
+! REVISIONS:
+! Hua Yuan, 04/2014: initial code
+! ------------------------------------------------------------
    SUBROUTINE setstampUB(var_i, year, month, mday, time_i)
 
    IMPLICIT NONE
@@ -1359,13 +1361,13 @@ CONTAINS
 
    END SUBROUTINE setstampUB
 
-   ! ------------------------------------------------------------
-   ! !DESCRIPTION:
-   ! calculate time average coszen value bwteeen [LB, UB]
-   !
-   ! REVISIONS:
-   ! 04/2014, yuan: this method is adapted from CLM
-   ! ------------------------------------------------------------
+! ------------------------------------------------------------
+! !DESCRIPTION:
+! calculate time average coszen value bwteeen [LB, UB]
+!
+! REVISIONS:
+! 04/2014, yuan: this method is adapted from CLM
+! ------------------------------------------------------------
    SUBROUTINE calavgcos(idate)
 
    USE MOD_Block

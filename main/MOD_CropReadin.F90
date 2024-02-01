@@ -136,15 +136,15 @@ CONTAINS
 
          CALL mg2pft_crop%map_aweighted (f_xy_crop, plantdate_tmp)
 
-         if (p_is_worker) THEN
-            do ipft = 1, numpft
+         IF (p_is_worker) THEN
+            DO ipft = 1, numpft
                IF(landpft%settyp(ipft) .eq. cft)THEN
                   plantdate_p(ipft) = plantdate_tmp(ipft)
-                  if(plantdate_p(ipft) <= 0._r8) then
+                  IF(plantdate_p(ipft) <= 0._r8) THEN
                      plantdate_p(ipft) = -99999999._r8
-                  END if
-               endif
-            END do
+                  ENDIF
+               ENDIF
+            ENDDO
          ENDIF
       ENDDO
 
@@ -165,15 +165,15 @@ CONTAINS
 
          CALL mg2pft_crop%map_aweighted (f_xy_crop, fertnitro_tmp)
 
-         if (p_is_worker) then
-            do ipft = 1, numpft
+         IF (p_is_worker) THEN
+            DO ipft = 1, numpft
                IF(landpft%settyp(ipft) .eq. cft)THEN
                   fertnitro_p(ipft) = fertnitro_tmp(ipft)
-                  if(fertnitro_p(ipft) <= 0._r8) then
+                  IF(fertnitro_p(ipft) <= 0._r8) THEN
                      fertnitro_p(ipft) = 0._r8
-                  END if
-               endif
-            END do
+                  ENDIF
+               ENDIF
+            ENDDO
          ENDIF
       ENDDO
 
@@ -208,18 +208,18 @@ CONTAINS
             CALL ncio_read_block_time (file_irrig, 'irrigation_method', grid_irrig, cft, f_xy_irrig)
          ENDIF
 
-         CALL mg2pft_irrig%map_max_frenquency_2d (f_xy_irrig, irrig_method_tmp)
+         CALL mg2pft_irrig%map_max_frequency_2d (f_xy_irrig, irrig_method_tmp)
 
-         if (p_is_worker) then
-            do ipft = 1, numpft
+         IF (p_is_worker) THEN
+            DO ipft = 1, numpft
 
                IF(landpft%settyp(ipft) .eq. cft + 14)THEN
                   irrig_method_p(ipft) = irrig_method_tmp(ipft)
-                  if(irrig_method_p(ipft) < 0) then
+                  IF(irrig_method_p(ipft) < 0) THEN
                      irrig_method_p(ipft) = -99999999
-                  END if
-               endif
-            END do
+                  ENDIF
+               ENDIF
+            ENDDO
          ENDIF
       ENDDO
 
