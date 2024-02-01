@@ -1075,6 +1075,7 @@ CONTAINS
          IF (present(compress)) THEN
             IF (compress > 0) THEN
                CALL nccheck (nf90_def_var_zstandard (grpid, varid, compress))
+               ! CALL nccheck (nf90_def_var_deflate   (grpid, varid, NF90_SHUFFLE, 1, compress))
             ENDIF
          ENDIF
       ENDDO
