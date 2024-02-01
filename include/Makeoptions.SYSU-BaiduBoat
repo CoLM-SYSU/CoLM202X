@@ -1,0 +1,47 @@
+# =======================================================
+# mpif90 - ifort 
+# 
+
+ FF = mpiifort -f90=ifort
+
+# Netcdf with serial IO
+ NETCDF_LIB = /share/home/dq013/software/netcdf-single/lib
+ NETCDF_INC = /share/home/dq013/software/netcdf-single/include
+
+# Netcdf with paralell IO
+# NETCDF_LIB = /share/home/dq013/software/netcdf_parallel/lib
+# NETCDF_INC = /share/home/dq013/software/netcdf_parallel/include
+
+# HDF5_LIB = /share/home/dq013/software/hdf5-1.14.3-Intel_MPI/lib
+# HDF5_INC = /share/home/dq013/software/hdf5-1.14.3-Intel_MPI/include
+
+# szip_LIB = /share/home/dq013/software/szip-2.1.1/lib
+# szip_INC = /share/home/dq013/software/szip-2.1.1/include
+
+ MOD_CMD = -module 
+
+ FOPTS = -qopenmp -O2 -traceback -r8 -free -check uninit -check bounds
+
+ LDFLAGS = -L${NETCDF_LIB} -lnetcdff -L/share/home/dq013/software/miniconda3/lib/ -llapack -lblas #-L${HDF_LIB} -lhdf5_hl -lhdf5 -L${szip_LIB} -lsz -lcurl
+
+#============================================================
+# CaMa-Flood Mkinclude (for Linux, Intel fortran)
+
+RM = /bin/rm -f
+CP = /bin/cp
+#----
+# Pre-Prosessing options
+# DMPI=-DUseMPI: activate when MPI parallelization is used
+# DCDF=-DUseCDF: activate when using netCDF, comment out when not needed
+# DATM=-DNoAtom: activate when OMP ATOMIC calculation should be avoided (bit identical simulation)
+#----
+#DMPI=-DUseMPI
+DCDF=-DUseCDF
+#DATM=-DNoAtom
+CFLAGS=$(DMPI) $(DCDF) $(DATM) 
+#----
+# FCMP: main program (src/), FC: pre/post process (map/ etc/)
+FCMP = ifort -qopenmp
+FC = ifort
+LFLAGS =
+FFLAGS = -O3 -warn all -fpp -free -assume byterecl -heap-arrays -nogen-interface -lpthread -static-intel

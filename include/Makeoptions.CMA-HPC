@@ -1,0 +1,37 @@
+# =======================================================
+# mpif90 - ifort 
+# 
+
+ FF = mpiifort
+
+# Netcdf with Serial IO
+ NETCDF_LIB = /g1/app/mathlib/netcdf_no_pnetcdf/4.8.1/intel/lib
+ NETCDF_INC = /g1/app/mathlib/netcdf_no_pnetcdf/4.8.1/intel/include
+
+ MOD_CMD = -module 
+
+ FOPTS = -qopenmp -O2 -traceback -r8 -free -check uninit -check bounds
+
+ LDFLAGS = -L${NETCDF_LIB} -lnetcdff -mkl    #-llapack -lblas
+
+#============================================================
+# CaMa-Flood Mkinclude (for Linux, Intel fortran)
+
+RM = /bin/rm -f
+CP = /bin/cp
+#----
+# Pre-Prosessing options
+# DMPI=-DUseMPI: activate when MPI parallelization is used
+# DCDF=-DUseCDF: activate when using netCDF, comment out when not needed
+# DATM=-DNoAtom: activate when OMP ATOMIC calculation should be avoided (bit identical simulation)
+#----
+#DMPI=-DUseMPI
+DCDF=-DUseCDF
+#DATM=-DNoAtom
+CFLAGS=$(DMPI) $(DCDF) $(DATM) 
+#----
+# FCMP: main program (src/), FC: pre/post process (map/ etc/)
+FCMP = ifort -qopenmp
+FC = ifort
+LFLAGS =
+FFLAGS = -O3 -warn all -fpp -free -assume byterecl -heap-arrays -nogen-interface -lpthread -static-intel
