@@ -99,10 +99,10 @@ CONTAINS
 
          IF (present(itime_in_file)) THEN
             CALL ncio_write_serial_time (file_basin, varname, itime_in_file, wdata, &
-               dimname, 'time', DEF_HIST_COMPRESS_LEVEL)
+               dimname, 'time', DEF_HIST_CompressLevel)
          ELSE
             CALL ncio_write_serial (file_basin, varname, wdata, &
-               dimname, DEF_REST_COMPRESS_LEVEL)
+               dimname, DEF_REST_CompressLevel)
          ENDIF
 
          IF (present(itime_in_file)) THEN

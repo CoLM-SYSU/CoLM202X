@@ -216,7 +216,7 @@ CONTAINS
    character(len=*), intent(in) :: file_restart
    integer :: compress
 
-      compress = DEF_REST_COMPRESS_LEVEL
+      compress = DEF_REST_CompressLevel
 
       CALL ncio_create_file_vector (file_restart, landurban)
       CALL ncio_define_dimension_vector (file_restart, landurban, 'urban')
@@ -231,48 +231,48 @@ CONTAINS
       CALL ncio_define_dimension_vector (file_restart, landurban, 'iday'    , 365 )
 
       ! vegetation
-      CALL ncio_write_vector (file_restart, 'PCT_Tree'      , 'urban', landurban, fveg_urb, DEF_REST_COMPRESS_LEVEL)
-      CALL ncio_write_vector (file_restart, 'URBAN_TREE_TOP', 'urban', landurban, htop_urb, DEF_REST_COMPRESS_LEVEL)
-      CALL ncio_write_vector (file_restart, 'URBAN_TREE_BOT', 'urban', landurban, hbot_urb, DEF_REST_COMPRESS_LEVEL)
-      CALL ncio_write_vector (file_restart, 'PCT_Water'     , 'urban', landurban, flake   , DEF_REST_COMPRESS_LEVEL)
+      CALL ncio_write_vector (file_restart, 'PCT_Tree'      , 'urban', landurban, fveg_urb, DEF_REST_CompressLevel)
+      CALL ncio_write_vector (file_restart, 'URBAN_TREE_TOP', 'urban', landurban, htop_urb, DEF_REST_CompressLevel)
+      CALL ncio_write_vector (file_restart, 'URBAN_TREE_BOT', 'urban', landurban, hbot_urb, DEF_REST_CompressLevel)
+      CALL ncio_write_vector (file_restart, 'PCT_Water'     , 'urban', landurban, flake   , DEF_REST_CompressLevel)
 
       ! LUCY paras
-      CALL ncio_write_vector (file_restart, 'POP_DEN'     , 'urban',                 landurban, pop_den     , DEF_REST_COMPRESS_LEVEL)
-      CALL ncio_write_vector (file_restart, 'VEHC_NUM'    , 'ityp' , ityp , 'urban', landurban, vehicle     , DEF_REST_COMPRESS_LEVEL)
-      CALL ncio_write_vector (file_restart, 'week_holiday', 'iweek', iweek, 'urban', landurban, week_holiday, DEF_REST_COMPRESS_LEVEL)
-      CALL ncio_write_vector (file_restart, 'weekendhour' , 'ihour', ihour, 'urban', landurban, weh_prof    , DEF_REST_COMPRESS_LEVEL)
-      CALL ncio_write_vector (file_restart, 'weekdayhour' , 'ihour', ihour, 'urban', landurban, wdh_prof    , DEF_REST_COMPRESS_LEVEL)
-      CALL ncio_write_vector (file_restart, 'metabolism'  , 'ihour', ihour, 'urban', landurban, hum_prof    , DEF_REST_COMPRESS_LEVEL)
-      CALL ncio_write_vector (file_restart, 'holiday'     , 'iday' , iday , 'urban', landurban, fix_holiday , DEF_REST_COMPRESS_LEVEL)
+      CALL ncio_write_vector (file_restart, 'POP_DEN'     , 'urban',                 landurban, pop_den     , DEF_REST_CompressLevel)
+      CALL ncio_write_vector (file_restart, 'VEHC_NUM'    , 'ityp' , ityp , 'urban', landurban, vehicle     , DEF_REST_CompressLevel)
+      CALL ncio_write_vector (file_restart, 'week_holiday', 'iweek', iweek, 'urban', landurban, week_holiday, DEF_REST_CompressLevel)
+      CALL ncio_write_vector (file_restart, 'weekendhour' , 'ihour', ihour, 'urban', landurban, weh_prof    , DEF_REST_CompressLevel)
+      CALL ncio_write_vector (file_restart, 'weekdayhour' , 'ihour', ihour, 'urban', landurban, wdh_prof    , DEF_REST_CompressLevel)
+      CALL ncio_write_vector (file_restart, 'metabolism'  , 'ihour', ihour, 'urban', landurban, hum_prof    , DEF_REST_CompressLevel)
+      CALL ncio_write_vector (file_restart, 'holiday'     , 'iday' , iday , 'urban', landurban, fix_holiday , DEF_REST_CompressLevel)
 
       ! morphological paras
-      CALL ncio_write_vector (file_restart, 'WT_ROOF'       , 'urban', landurban, froof    , DEF_REST_COMPRESS_LEVEL)
-      CALL ncio_write_vector (file_restart, 'HT_ROOF'       , 'urban', landurban, hroof    , DEF_REST_COMPRESS_LEVEL)
-      CALL ncio_write_vector (file_restart, 'CANYON_HWR'    , 'urban', landurban, hwr      , DEF_REST_COMPRESS_LEVEL)
-      CALL ncio_write_vector (file_restart, 'WTROAD_PERV'   , 'urban', landurban, fgper    , DEF_REST_COMPRESS_LEVEL)
-      CALL ncio_write_vector (file_restart, 'EM_ROOF'       , 'urban', landurban, em_roof  , DEF_REST_COMPRESS_LEVEL)
-      CALL ncio_write_vector (file_restart, 'EM_WALL'       , 'urban', landurban, em_wall  , DEF_REST_COMPRESS_LEVEL)
-      CALL ncio_write_vector (file_restart, 'EM_IMPROAD'    , 'urban', landurban, em_gimp  , DEF_REST_COMPRESS_LEVEL)
-      CALL ncio_write_vector (file_restart, 'EM_PERROAD'    , 'urban', landurban, em_gper  , DEF_REST_COMPRESS_LEVEL)
-      CALL ncio_write_vector (file_restart, 'T_BUILDING_MIN', 'urban', landurban, t_roommin, DEF_REST_COMPRESS_LEVEL)
-      CALL ncio_write_vector (file_restart, 'T_BUILDING_MAX', 'urban', landurban, t_roommax, DEF_REST_COMPRESS_LEVEL)
+      CALL ncio_write_vector (file_restart, 'WT_ROOF'       , 'urban', landurban, froof    , DEF_REST_CompressLevel)
+      CALL ncio_write_vector (file_restart, 'HT_ROOF'       , 'urban', landurban, hroof    , DEF_REST_CompressLevel)
+      CALL ncio_write_vector (file_restart, 'CANYON_HWR'    , 'urban', landurban, hwr      , DEF_REST_CompressLevel)
+      CALL ncio_write_vector (file_restart, 'WTROAD_PERV'   , 'urban', landurban, fgper    , DEF_REST_CompressLevel)
+      CALL ncio_write_vector (file_restart, 'EM_ROOF'       , 'urban', landurban, em_roof  , DEF_REST_CompressLevel)
+      CALL ncio_write_vector (file_restart, 'EM_WALL'       , 'urban', landurban, em_wall  , DEF_REST_CompressLevel)
+      CALL ncio_write_vector (file_restart, 'EM_IMPROAD'    , 'urban', landurban, em_gimp  , DEF_REST_CompressLevel)
+      CALL ncio_write_vector (file_restart, 'EM_PERROAD'    , 'urban', landurban, em_gper  , DEF_REST_CompressLevel)
+      CALL ncio_write_vector (file_restart, 'T_BUILDING_MIN', 'urban', landurban, t_roommin, DEF_REST_CompressLevel)
+      CALL ncio_write_vector (file_restart, 'T_BUILDING_MAX', 'urban', landurban, t_roommax, DEF_REST_CompressLevel)
 
-      CALL ncio_write_vector (file_restart, 'ROOF_DEPTH_L', 'ulev', ulev, 'urban', landurban, z_roof , DEF_REST_COMPRESS_LEVEL)
-      CALL ncio_write_vector (file_restart, 'ROOF_THICK_L', 'ulev', ulev, 'urban', landurban, dz_roof, DEF_REST_COMPRESS_LEVEL)
-      CALL ncio_write_vector (file_restart, 'WALL_DEPTH_L', 'ulev', ulev, 'urban', landurban, z_wall , DEF_REST_COMPRESS_LEVEL)
-      CALL ncio_write_vector (file_restart, 'WALL_THICK_L', 'ulev', ulev, 'urban', landurban, dz_wall, DEF_REST_COMPRESS_LEVEL)
+      CALL ncio_write_vector (file_restart, 'ROOF_DEPTH_L', 'ulev', ulev, 'urban', landurban, z_roof , DEF_REST_CompressLevel)
+      CALL ncio_write_vector (file_restart, 'ROOF_THICK_L', 'ulev', ulev, 'urban', landurban, dz_roof, DEF_REST_CompressLevel)
+      CALL ncio_write_vector (file_restart, 'WALL_DEPTH_L', 'ulev', ulev, 'urban', landurban, z_wall , DEF_REST_CompressLevel)
+      CALL ncio_write_vector (file_restart, 'WALL_THICK_L', 'ulev', ulev, 'urban', landurban, dz_wall, DEF_REST_CompressLevel)
       ! thermal paras
-      CALL ncio_write_vector (file_restart, 'CV_ROOF'   , 'ulev', ulev, 'urban', landurban, cv_roof, DEF_REST_COMPRESS_LEVEL)
-      CALL ncio_write_vector (file_restart, 'CV_WALL'   , 'ulev', ulev, 'urban', landurban, cv_wall, DEF_REST_COMPRESS_LEVEL)
-      CALL ncio_write_vector (file_restart, 'TK_ROOF'   , 'ulev', ulev, 'urban', landurban, tk_roof, DEF_REST_COMPRESS_LEVEL)
-      CALL ncio_write_vector (file_restart, 'TK_WALL'   , 'ulev', ulev, 'urban', landurban, tk_wall, DEF_REST_COMPRESS_LEVEL)
-      CALL ncio_write_vector (file_restart, 'TK_IMPROAD', 'ulev', ulev, 'urban', landurban, tk_gimp, DEF_REST_COMPRESS_LEVEL)
-      CALL ncio_write_vector (file_restart, 'CV_IMPROAD', 'ulev', ulev, 'urban', landurban, cv_gimp, DEF_REST_COMPRESS_LEVEL)
+      CALL ncio_write_vector (file_restart, 'CV_ROOF'   , 'ulev', ulev, 'urban', landurban, cv_roof, DEF_REST_CompressLevel)
+      CALL ncio_write_vector (file_restart, 'CV_WALL'   , 'ulev', ulev, 'urban', landurban, cv_wall, DEF_REST_CompressLevel)
+      CALL ncio_write_vector (file_restart, 'TK_ROOF'   , 'ulev', ulev, 'urban', landurban, tk_roof, DEF_REST_CompressLevel)
+      CALL ncio_write_vector (file_restart, 'TK_WALL'   , 'ulev', ulev, 'urban', landurban, tk_wall, DEF_REST_CompressLevel)
+      CALL ncio_write_vector (file_restart, 'TK_IMPROAD', 'ulev', ulev, 'urban', landurban, tk_gimp, DEF_REST_CompressLevel)
+      CALL ncio_write_vector (file_restart, 'CV_IMPROAD', 'ulev', ulev, 'urban', landurban, cv_gimp, DEF_REST_CompressLevel)
 
-      CALL ncio_write_vector (file_restart, 'ALB_ROOF'   , 'numsolar', ns, 'numrad', nr, 'urban', landurban, alb_roof, DEF_REST_COMPRESS_LEVEL)
-      CALL ncio_write_vector (file_restart, 'ALB_WALL'   , 'numsolar', ns, 'numrad', nr, 'urban', landurban, alb_wall, DEF_REST_COMPRESS_LEVEL)
-      CALL ncio_write_vector (file_restart, 'ALB_IMPROAD', 'numsolar', ns, 'numrad', nr, 'urban', landurban, alb_gimp, DEF_REST_COMPRESS_LEVEL)
-      CALL ncio_write_vector (file_restart, 'ALB_PERROAD', 'numsolar', ns, 'numrad', nr, 'urban', landurban, alb_gper, DEF_REST_COMPRESS_LEVEL)
+      CALL ncio_write_vector (file_restart, 'ALB_ROOF'   , 'numsolar', ns, 'numrad', nr, 'urban', landurban, alb_roof, DEF_REST_CompressLevel)
+      CALL ncio_write_vector (file_restart, 'ALB_WALL'   , 'numsolar', ns, 'numrad', nr, 'urban', landurban, alb_wall, DEF_REST_CompressLevel)
+      CALL ncio_write_vector (file_restart, 'ALB_IMPROAD', 'numsolar', ns, 'numrad', nr, 'urban', landurban, alb_gimp, DEF_REST_CompressLevel)
+      CALL ncio_write_vector (file_restart, 'ALB_PERROAD', 'numsolar', ns, 'numrad', nr, 'urban', landurban, alb_gper, DEF_REST_CompressLevel)
 
    END SUBROUTINE WRITE_UrbanTimeInvariants
 

@@ -519,7 +519,7 @@ CONTAINS
       IF (.not. is_hist) RETURN
 
       CALL vecP2mapR(var_in,R2OUT)
-      compress = DEF_HIST_COMPRESS_LEVEL
+      compress = DEF_HIST_CompressLevel
       CALL ncio_write_serial_time (file_hist, varname,  &
          itime_in_file, real(R2OUT), 'lon_cama', 'lat_cama', 'time',compress)
       IF (itime_in_file == 1) THEN

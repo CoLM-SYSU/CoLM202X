@@ -58,8 +58,8 @@
    DEF_HIST_FREQ = 'MONTHLY' ! write history file frequency: HOURLY/DAILY/MONTHLY/YEARLY
    DEF_HIST_groupby = 'MONTH' ! history in one file: DAY/MONTH/YEAR
    DEF_HIST_mode = 'one' ! history in one or block
-   DEF_REST_COMPRESS_LEVEL = 1
-   DEF_HIST_COMPRESS_LEVEL = 1
+   DEF_REST_CompressLevel = 1
+   DEF_HIST_CompressLevel = 1
 
    DEF_HIST_WriteBack = .true.
 
