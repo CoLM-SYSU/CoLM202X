@@ -1129,7 +1129,7 @@ CONTAINS
 
    SUBROUTINE WRITE_BGCPFTimeVariables (file_restart)
 
-   USE MOD_Namelist, only : DEF_REST_COMPRESS_LEVEL
+   USE MOD_Namelist, only : DEF_REST_CompressLevel
    USE MOD_LandPFT
    USE MOD_NetCDFVector
    USE MOD_Vars_Global
@@ -1140,7 +1140,7 @@ CONTAINS
    ! Local variables
    integer :: compress
 
-      compress = DEF_REST_COMPRESS_LEVEL
+      compress = DEF_REST_CompressLevel
  
  ! bgc variables
       CALL ncio_write_vector (file_restart, 'leafc_p                ', 'pft', landpft, &

@@ -146,7 +146,7 @@ contains
          end do
       end if
 
-      compress = DEF_HIST_COMPRESS_LEVEL
+      compress = DEF_HIST_CompressLevel
       call hist_write_var_real8_2d (file_hist, varname, ghist, itime_in_file, &
          flux_xy_2d, compress, longname, units)
 
@@ -212,7 +212,7 @@ contains
          end do
       end if
 
-      compress = DEF_HIST_COMPRESS_LEVEL
+      compress = DEF_HIST_CompressLevel
       call hist_write_var_real8_2d (file_hist, varname, ghist, itime_in_file, flux_xy_2d, &
          compress, longname, units)
 
@@ -286,7 +286,7 @@ contains
          end do
       end if
 
-      compress = DEF_HIST_COMPRESS_LEVEL
+      compress = DEF_HIST_CompressLevel
       call hist_write_var_real8_3d (file_hist, varname, dim1name, ghist, &
          itime_in_file, flux_xy_3d, compress, longname, units)
 
@@ -363,7 +363,7 @@ contains
          end do
       end if
 
-      compress = DEF_HIST_COMPRESS_LEVEL
+      compress = DEF_HIST_CompressLevel
       call hist_write_var_real8_4d (file_hist, varname, dim1name, dim2name, &
          ghist, itime_in_file, flux_xy_4d, compress, longname, units)
 
@@ -437,7 +437,7 @@ contains
          end do
       end if
 
-      compress = DEF_HIST_COMPRESS_LEVEL
+      compress = DEF_HIST_CompressLevel
       call hist_write_var_real8_2d (file_hist, varname, ghist, itime_in_file, flux_xy_2d, &
          compress, longname, units)
 

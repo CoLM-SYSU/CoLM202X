@@ -300,7 +300,7 @@ CONTAINS
 
    SUBROUTINE WRITE_UrbanTimeVariables (file_restart)
 
-   USE MOD_Namelist, only : DEF_REST_COMPRESS_LEVEL
+   USE MOD_Namelist, only : DEF_REST_CompressLevel
    USE MOD_LandUrban
    USE MOD_NetCDFVector
    USE MOD_Vars_Global
@@ -311,7 +311,7 @@ CONTAINS
    ! Local variables
    integer :: compress
 
-      compress = DEF_REST_COMPRESS_LEVEL
+      compress = DEF_REST_CompressLevel
 
       CALL ncio_create_file_vector (file_restart, landurban)
       CALL ncio_define_dimension_vector (file_restart, landurban, 'urban')
