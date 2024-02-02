@@ -1,21 +1,21 @@
 #include <define.h>
 
-module mod_concatenate
+MODULE mod_concatenate
 
-   use MOD_Precision
+   USE MOD_Precision
    USE MOD_SPMD_Task
    USE MOD_Block
    USE MOD_NetCDFSerial
-   use netcdf
+   USE netcdf
    USE MOD_Vars_Global, only : spval
-   implicit none
+   IMPLICIT NONE
 
    type :: segment_type
       integer :: blk
       integer :: cnt
       integer :: bdsp
       integer :: gdsp
-   end type segment_type
+   END type segment_type
 
    type :: grid_info_type
       integer :: nlat, nlon
@@ -25,43 +25,43 @@ module mod_concatenate
       real(r8), allocatable :: lon_e(:)
       real(r8), allocatable :: lon_c(:) !grid center
       real(r8), allocatable :: lat_c(:) !grid center
-   end type grid_info_type
+   END type grid_info_type
 
-   TYPE :: block_info_type
+   type :: block_info_type
       integer :: ndatablk
       integer :: nxseg, nyseg
       type(segment_type), allocatable :: xsegs(:), ysegs(:)
       type(grid_info_type) :: ginfo
    CONTAINS
       final :: block_info_free_mem
-   END TYPE block_info_type
+   END type block_info_type
 
-   TYPE(block_info_type) :: hist_block_info
+   type(block_info_type) :: hist_block_info
 
    ! --- subroutines ---
-   public :: hist_concatenate_var_2d
-   public :: hist_concatenate_var_3d
-   public :: hist_concatenate_var_4d
+   PUBLIC :: hist_concatenate_var_2d
+   PUBLIC :: hist_concatenate_var_3d
+   PUBLIC :: hist_concatenate_var_4d
 
-   public :: hist_concatenate_time
-   public :: hist_concatenate_grid_info
+   PUBLIC :: hist_concatenate_time
+   PUBLIC :: hist_concatenate_grid_info
 
-contains
+CONTAINS
 
    ! ------
-   subroutine set_hist_block_info (ghist, block_info)
+   SUBROUTINE set_hist_block_info (ghist, block_info)
 
-      use MOD_Grid
-      use MOD_Block
-      USE MOD_Utils
-      implicit none
+   USE MOD_Grid
+   USE MOD_Block
+   USE MOD_Utils
+   IMPLICIT NONE
 
-      type(grid_type), intent(in) :: ghist
-      TYPE(block_info_type), intent(out) :: block_info
+   type(grid_type), intent(in) :: ghist
+   type(block_info_type), intent(out) :: block_info
 
-      ! Local variables
-      integer :: ilat_l, ilat_u, ilat, ilatloc, jblk, iyseg
-      integer :: ilon_w, ilon_e, ilon, ilonloc, iblk, ixseg
+   ! Local variables
+   integer :: ilat_l, ilat_u, ilat, ilatloc, jblk, iyseg
+   integer :: ilon_w, ilon_e, ilon, ilonloc, iblk, ixseg
 
       ilat_l = findloc(ghist%yblk /= 0, .true., dim=1)
       ilat_u = findloc(ghist%yblk /= 0, .true., dim=1, back=.true.)
@@ -74,65 +74,65 @@ contains
       block_info%nyseg = 0
       jblk  = 0
       ilatloc = 0
-      do ilat = ilat_l, ilat_u
-         if (ghist%yblk(ilat) /= jblk) then
+      DO ilat = ilat_l, ilat_u
+         IF (ghist%yblk(ilat) /= jblk) THEN
             block_info%nyseg = block_info%nyseg + 1
             jblk  = ghist%yblk(ilat)
-         end if
+         ENDIF
 
          ilatloc = ilatloc + 1
          block_info%ginfo%lat_s(ilatloc) = ghist%lat_s(ilat)
          block_info%ginfo%lat_n(ilatloc) = ghist%lat_n(ilat)
          block_info%ginfo%lat_c(ilatloc) = (ghist%lat_s(ilat)+ghist%lat_n(ilat)) * 0.5
-      end do
+      ENDDO
 
       allocate (block_info%ysegs (block_info%nyseg))
 
       iyseg = 0
       jblk  = 0
-      do ilat = ilat_l, ilat_u
-         if (ghist%yblk(ilat) /= jblk) then
+      DO ilat = ilat_l, ilat_u
+         IF (ghist%yblk(ilat) /= jblk) THEN
             iyseg = iyseg + 1
             jblk  = ghist%yblk(ilat)
             block_info%ysegs(iyseg)%blk  = jblk
             block_info%ysegs(iyseg)%bdsp = ghist%yloc(ilat) - 1
             block_info%ysegs(iyseg)%gdsp = ilat - ilat_l
             block_info%ysegs(iyseg)%cnt  = 1
-         else
+         ELSE
             block_info%ysegs(iyseg)%cnt  = block_info%ysegs(iyseg)%cnt + 1
-         end if
-      end do
+         ENDIF
+      ENDDO
 
-      if (all(ghist%xblk > 0)) then
+      IF (all(ghist%xblk > 0)) THEN
          ilon_w = 1
          ilon_e = ghist%nlon
-      else
+      ELSE
          ilon_w = findloc(ghist%xblk /= 0, .true., dim=1)
-         do while (.true.)
+         DO WHILE (.true.)
             ilon = ilon_w - 1
-            if (ilon == 0) ilon = ghist%nlon
+            IF (ilon == 0) ilon = ghist%nlon
 
-            if (ghist%xblk(ilon) /= 0) then
+            IF (ghist%xblk(ilon) /= 0) THEN
                ilon_w = ilon
-            else
-               exit
-            end if
-         end do
+            ELSE
+               EXIT
+            ENDIF
+         ENDDO
 
          ilon_e = ilon_w
-         do while (.true.)
+         DO WHILE (.true.)
             ilon = mod(ilon_e,ghist%nlon) + 1
 
-            if (ghist%xblk(ilon) /= 0) then
+            IF (ghist%xblk(ilon) /= 0) THEN
                ilon_e = ilon
-            else
-               exit
-            end if
-         end do
-      end if
+            ELSE
+               EXIT
+            ENDIF
+         ENDDO
+      ENDIF
 
       block_info%ginfo%nlon = ilon_e - ilon_w + 1
-      if (block_info%ginfo%nlon <= 0) THEN
+      IF (block_info%ginfo%nlon <= 0) THEN
          block_info%ginfo%nlon = block_info%ginfo%nlon + ghist%nlon
       ENDIF
 
@@ -144,12 +144,12 @@ contains
       ilon = ilon_w - 1
       iblk = 0
       ilonloc = 0
-      do while (.true.)
+      DO WHILE (.true.)
          ilon = mod(ilon,ghist%nlon) + 1
-         if (ghist%xblk(ilon) /= iblk) then
+         IF (ghist%xblk(ilon) /= iblk) THEN
             block_info%nxseg = block_info%nxseg + 1
             iblk = ghist%xblk(ilon)
-         end if
+         ENDIF
 
          ilonloc = ilonloc + 1
          block_info%ginfo%lon_w(ilonloc) = ghist%lon_w(ilon)
@@ -161,8 +161,8 @@ contains
             CALL normalize_longitude (block_info%ginfo%lon_c(ilonloc))
          ENDIF
 
-         if (ilon == ilon_e) exit
-      end do
+         IF (ilon == ilon_e) EXIT
+      ENDDO
 
       allocate (block_info%xsegs (block_info%nxseg))
 
@@ -170,31 +170,31 @@ contains
       iblk = 0
       ilon = ilon_w - 1
       ilonloc = 0
-      do while (.true.)
+      DO WHILE (.true.)
          ilon = mod(ilon,ghist%nlon) + 1
          ilonloc = ilonloc + 1
-         if (ghist%xblk(ilon) /= iblk) then
+         IF (ghist%xblk(ilon) /= iblk) THEN
             ixseg = ixseg + 1
             iblk = ghist%xblk(ilon)
             block_info%xsegs(ixseg)%blk  = iblk
             block_info%xsegs(ixseg)%bdsp = ghist%xloc(ilon) - 1
             block_info%xsegs(ixseg)%gdsp = ilonloc - 1
             block_info%xsegs(ixseg)%cnt = 1
-         else
+         ELSE
             block_info%xsegs(ixseg)%cnt = block_info%xsegs(ixseg)%cnt + 1
-         end if
+         ENDIF
 
-         if (ilon == ilon_e) exit
-      end do
+         IF (ilon == ilon_e) EXIT
+      ENDDO
 
-   end subroutine set_hist_block_info
+   END SUBROUTINE set_hist_block_info
 
    ! -----------
    SUBROUTINE block_info_free_mem (this)
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      TYPE(block_info_type) :: this
+   type(block_info_type) :: this
 
       IF (allocated(this%xsegs)) deallocate(this%xsegs)
       IF (allocated(this%ysegs)) deallocate(this%ysegs)
@@ -209,18 +209,18 @@ contains
    END SUBROUTINE block_info_free_mem
 
    !------------------------------
-   subroutine hist_concatenate_time (filename, dataname, timelen)
+   SUBROUTINE hist_concatenate_time (filename, dataname, timelen)
 
-      implicit none
+   IMPLICIT NONE
 
-      character (len=*), intent(in) :: filename
-      character (len=*), intent(in) :: dataname
-      INTEGER, intent(out) :: timelen
+   character (len=*), intent(in) :: filename
+   character (len=*), intent(in) :: dataname
+   integer, intent(out) :: timelen
 
-      ! Local variables
-      CHARACTER(len=256) :: fileblock
-      integer :: ixseg, iyseg
-      INTEGER, allocatable :: minutes (:)
+   ! Local variables
+   character(len=256) :: fileblock
+   integer :: ixseg, iyseg
+   integer, allocatable :: minutes (:)
 
       iyseg = 1
       DO WHILE (hist_block_info%ysegs(iyseg)%cnt <= 0)
@@ -232,37 +232,37 @@ contains
          ixseg = ixseg + 1
       ENDDO
 
-      call get_filename_block ( &
+      CALL get_filename_block ( &
          filename, hist_block_info%xsegs(ixseg)%blk, hist_block_info%ysegs(iyseg)%blk, fileblock)
 
       CALL ncio_read_serial (fileblock, dataname, minutes)
 
       timelen = size(minutes)
       CALL ncio_define_dimension (filename, 'time', timelen)
-      call ncio_write_serial (filename, dataname, minutes, 'time')
+      CALL ncio_write_serial (filename, dataname, minutes, 'time')
 
       CALL ncio_put_attr (filename, dataname, 'long_name', 'time')
       CALL ncio_put_attr (filename, dataname, 'units', 'minutes since 1900-1-1 0:0:0')
 
-   end subroutine hist_concatenate_time
+   END SUBROUTINE hist_concatenate_time
 
    !------------------
-   subroutine hist_concatenate_grid_info (filename)
+   SUBROUTINE hist_concatenate_grid_info (filename)
       
-      use MOD_NetCDFSerial
-      implicit none
+   USE MOD_NetCDFSerial
+   IMPLICIT NONE
 
-      character(len=*), intent(in) :: filename
+   character(len=*), intent(in) :: filename
 
-      call ncio_define_dimension(filename, 'lat' , hist_block_info%ginfo%nlat)
-      call ncio_define_dimension(filename, 'lon' , hist_block_info%ginfo%nlon)
+      CALL ncio_define_dimension(filename, 'lat' , hist_block_info%ginfo%nlat)
+      CALL ncio_define_dimension(filename, 'lon' , hist_block_info%ginfo%nlon)
 
-      call ncio_write_serial (filename, 'lat_s', hist_block_info%ginfo%lat_s, 'lat')
-      call ncio_write_serial (filename, 'lat_n', hist_block_info%ginfo%lat_n, 'lat')
-      call ncio_write_serial (filename, 'lon_w', hist_block_info%ginfo%lon_w, 'lon')
-      call ncio_write_serial (filename, 'lon_e', hist_block_info%ginfo%lon_e, 'lon')
-      call ncio_write_serial (filename, 'lat',   hist_block_info%ginfo%lat_c, 'lat')
-      call ncio_write_serial (filename, 'lon',   hist_block_info%ginfo%lon_c, 'lon')
+      CALL ncio_write_serial (filename, 'lat_s', hist_block_info%ginfo%lat_s, 'lat')
+      CALL ncio_write_serial (filename, 'lat_n', hist_block_info%ginfo%lat_n, 'lat')
+      CALL ncio_write_serial (filename, 'lon_w', hist_block_info%ginfo%lon_w, 'lon')
+      CALL ncio_write_serial (filename, 'lon_e', hist_block_info%ginfo%lon_e, 'lon')
+      CALL ncio_write_serial (filename, 'lat',   hist_block_info%ginfo%lat_c, 'lat')
+      CALL ncio_write_serial (filename, 'lon',   hist_block_info%ginfo%lon_c, 'lon')
 
       CALL ncio_put_attr (filename, 'lat', 'long_name', 'latitude')
       CALL ncio_put_attr (filename, 'lat', 'units', 'degrees_north')
@@ -272,26 +272,26 @@ contains
       CALL ncio_put_attr (filename, 'lon', 'units', 'degrees_east')
       CALL ncio_put_attr (filename, 'lon', 'axis', 'Y')
 
-   end subroutine hist_concatenate_grid_info
+   END SUBROUTINE hist_concatenate_grid_info
 
 #ifndef USEMPI
    ! -----
-   subroutine hist_concatenate_var_2d (filename, varname, timelen, compress, longname, units)
+   SUBROUTINE hist_concatenate_var_2d (filename, varname, timelen, compress, longname, units)
 
-      implicit none
+   IMPLICIT NONE
 
-      character(len=*), intent(in) :: filename
-      character(len=*), intent(in) :: varname
-      integer, intent(in) :: timelen
-      integer, intent(in) :: compress
-      character (len=*), intent(in), optional :: longname
-      character (len=*), intent(in), optional :: units
+   character(len=*), intent(in) :: filename
+   character(len=*), intent(in) :: varname
+   integer, intent(in) :: timelen
+   integer, intent(in) :: compress
+   character (len=*), intent(in), optional :: longname
+   character (len=*), intent(in), optional :: units
 
-      ! Local variables
-      CHARACTER(len=256) :: fileblock
-      integer :: ixseg, iyseg, nlon, nlat, xgdsp, ygdsp, xcnt, ycnt
-      real(r8), allocatable :: vdata(:,:,:), rcache(:,:,:)
-      LOGICAL :: fexists
+   ! Local variables
+   character(len=256) :: fileblock
+   integer :: ixseg, iyseg, nlon, nlat, xgdsp, ygdsp, xcnt, ycnt
+   real(r8), allocatable :: vdata(:,:,:), rcache(:,:,:)
+   logical :: fexists
 
       write(*,*) 'Concatenate <', trim(varname), '> to <<', trim(filename), '>>'
 
@@ -301,10 +301,10 @@ contains
       allocate (vdata (nlon, nlat, timelen))
       vdata(:,:,:) = spval
 
-      do iyseg = 1, hist_block_info%nyseg
-         do ixseg = 1, hist_block_info%nxseg
+      DO iyseg = 1, hist_block_info%nyseg
+         DO ixseg = 1, hist_block_info%nxseg
 
-            call get_filename_block (filename, &
+            CALL get_filename_block (filename, &
                hist_block_info%xsegs(ixseg)%blk, hist_block_info%ysegs(iyseg)%blk, fileblock)
 
             inquire(file=fileblock, exist=fexists)
@@ -318,12 +318,12 @@ contains
                ycnt  = hist_block_info%ysegs(iyseg)%cnt
 
                vdata (xgdsp+1:xgdsp+xcnt, ygdsp+1:ygdsp+ycnt,:) = rcache
-            end if
+            ENDIF
 
-         end do
-      end do
+         ENDDO
+      ENDDO
 
-      call ncio_write_serial (filename, varname, vdata, 'lon', 'lat', 'time', compress)
+      CALL ncio_write_serial (filename, varname, vdata, 'lon', 'lat', 'time', compress)
 
       IF (present(longname)) THEN
          CALL ncio_put_attr (filename, varname, 'long_name', longname)
@@ -337,28 +337,28 @@ contains
       IF (allocated(rcache)) deallocate(rcache)
       IF (allocated(vdata )) deallocate(vdata )
 
-   end subroutine hist_concatenate_var_2d
+   END SUBROUTINE hist_concatenate_var_2d
 
    ! -----
-   subroutine hist_concatenate_var_3d (filename, varname, timelen, dim1name, ndim1, compress, &
+   SUBROUTINE hist_concatenate_var_3d (filename, varname, timelen, dim1name, ndim1, compress, &
          longname, units)
 
-      implicit none
+   IMPLICIT NONE
 
-      character(len=*), intent(in) :: filename
-      character(len=*), intent(in) :: varname
-      INTEGER, intent(in) :: timelen
-      character(len=*), intent(in) :: dim1name
-      INTEGER, intent(in) :: ndim1
-      integer, intent(in) :: compress
-      character (len=*), intent(in), optional :: longname
-      character (len=*), intent(in), optional :: units
+   character(len=*), intent(in) :: filename
+   character(len=*), intent(in) :: varname
+   integer, intent(in) :: timelen
+   character(len=*), intent(in) :: dim1name
+   integer, intent(in) :: ndim1
+   integer, intent(in) :: compress
+   character (len=*), intent(in), optional :: longname
+   character (len=*), intent(in), optional :: units
 
-      ! Local variables
-      CHARACTER(len=256) :: fileblock
-      integer :: ixseg, iyseg, nlon, nlat, xgdsp, ygdsp, xcnt, ycnt
-      real(r8), allocatable :: vdata(:,:,:,:), rcache(:,:,:,:)
-      LOGICAL :: fexists
+   ! Local variables
+   character(len=256) :: fileblock
+   integer :: ixseg, iyseg, nlon, nlat, xgdsp, ygdsp, xcnt, ycnt
+   real(r8), allocatable :: vdata(:,:,:,:), rcache(:,:,:,:)
+   logical :: fexists
 
       nlat = hist_block_info%ginfo%nlat
       nlon = hist_block_info%ginfo%nlon
@@ -368,10 +368,10 @@ contains
 
       write(*,*) 'Concatenate <', trim(varname), '> to <<', trim(filename), '>>'
 
-      do iyseg = 1, hist_block_info%nyseg
-         do ixseg = 1, hist_block_info%nxseg
+      DO iyseg = 1, hist_block_info%nyseg
+         DO ixseg = 1, hist_block_info%nxseg
 
-            call get_filename_block (filename, &
+            CALL get_filename_block (filename, &
                hist_block_info%xsegs(ixseg)%blk, hist_block_info%ysegs(iyseg)%blk, fileblock)
 
             inquire(file=fileblock, exist=fexists)
@@ -385,12 +385,12 @@ contains
                ycnt  = hist_block_info%ysegs(iyseg)%cnt
 
                vdata (:,xgdsp+1:xgdsp+xcnt, ygdsp+1:ygdsp+ycnt,:) = rcache
-            end if
+            ENDIF
 
-         end do
-      end do
+         ENDDO
+      ENDDO
 
-      call ncio_write_serial (filename, varname, vdata, dim1name, 'lon', 'lat', 'time', compress)
+      CALL ncio_write_serial (filename, varname, vdata, dim1name, 'lon', 'lat', 'time', compress)
 
       IF (present(longname)) THEN
          CALL ncio_put_attr (filename, varname, 'long_name', longname)
@@ -404,29 +404,29 @@ contains
       IF (allocated(rcache)) deallocate(rcache)
       IF (allocated(vdata )) deallocate(vdata )
 
-   end subroutine hist_concatenate_var_3d
+   END SUBROUTINE hist_concatenate_var_3d
 
    ! -----
-   subroutine hist_concatenate_var_4d ( &
+   SUBROUTINE hist_concatenate_var_4d ( &
          filename, varname, timelen, dim1name, dim2name, ndim1, ndim2, compress, &
          longname, units)
 
-      implicit none
+   IMPLICIT NONE
 
-      character(len=*), intent(in) :: filename
-      character(len=*), intent(in) :: varname
-      INTEGER, intent(in) :: timelen
-      character(len=*), intent(in) :: dim1name, dim2name
-      INTEGER, intent(in) :: ndim1, ndim2
-      integer, intent(in) :: compress
-      character (len=*), intent(in), optional :: longname
-      character (len=*), intent(in), optional :: units
+   character(len=*), intent(in) :: filename
+   character(len=*), intent(in) :: varname
+   integer, intent(in) :: timelen
+   character(len=*), intent(in) :: dim1name, dim2name
+   integer, intent(in) :: ndim1, ndim2
+   integer, intent(in) :: compress
+   character (len=*), intent(in), optional :: longname
+   character (len=*), intent(in), optional :: units
 
-      ! Local variables
-      CHARACTER(len=256) :: fileblock
-      integer :: ixseg, iyseg, nlon, nlat, xgdsp, ygdsp, xcnt, ycnt
-      real(r8), allocatable :: vdata(:,:,:,:,:), rcache(:,:,:,:,:)
-      LOGICAL :: fexists
+   ! Local variables
+   character(len=256) :: fileblock
+   integer :: ixseg, iyseg, nlon, nlat, xgdsp, ygdsp, xcnt, ycnt
+   real(r8), allocatable :: vdata(:,:,:,:,:), rcache(:,:,:,:,:)
+   logical :: fexists
 
       write(*,*) 'Concatenate <', trim(varname), '> to <<', trim(filename), '>>'
 
@@ -436,10 +436,10 @@ contains
       allocate (vdata (ndim1, ndim2, nlon, nlat, timelen))
       vdata(:,:,:,:,:) = spval
 
-      do iyseg = 1, hist_block_info%nyseg
-         do ixseg = 1, hist_block_info%nxseg
+      DO iyseg = 1, hist_block_info%nyseg
+         DO ixseg = 1, hist_block_info%nxseg
 
-            call get_filename_block (filename, &
+            CALL get_filename_block (filename, &
                hist_block_info%xsegs(ixseg)%blk, hist_block_info%ysegs(iyseg)%blk, fileblock)
 
             inquire(file=fileblock, exist=fexists)
@@ -453,12 +453,12 @@ contains
                ycnt  = hist_block_info%ysegs(iyseg)%cnt
 
                vdata (:,:, xgdsp+1:xgdsp+xcnt, ygdsp+1:ygdsp+ycnt,:) = rcache
-            end if
+            ENDIF
 
-         end do
-      end do
+         ENDDO
+      ENDDO
 
-      call ncio_write_serial (filename, varname, vdata, dim1name, dim2name, 'lon', 'lat', 'time', &
+      CALL ncio_write_serial (filename, varname, vdata, dim1name, dim2name, 'lon', 'lat', 'time', &
             compress)
 
       IF (present(longname)) THEN
@@ -473,29 +473,29 @@ contains
       IF (allocated(rcache)) deallocate(rcache)
       IF (allocated(vdata )) deallocate(vdata )
 
-   end subroutine hist_concatenate_var_4d
+   END SUBROUTINE hist_concatenate_var_4d
 #endif
 
 #ifdef USEMPI
    ! -----
-   subroutine hist_concatenate_var_2d (filename, varname, timelen, compress, longname, units)
+   SUBROUTINE hist_concatenate_var_2d (filename, varname, timelen, compress, longname, units)
 
-      implicit none
+   IMPLICIT NONE
 
-      character(len=*), intent(in) :: filename
-      character(len=*), intent(in) :: varname
-      integer, intent(in) :: timelen
-      integer, intent(in) :: compress
-      character (len=*), intent(in), optional :: longname
-      character (len=*), intent(in), optional :: units
+   character(len=*), intent(in) :: filename
+   character(len=*), intent(in) :: varname
+   integer, intent(in) :: timelen
+   integer, intent(in) :: compress
+   character (len=*), intent(in), optional :: longname
+   character (len=*), intent(in), optional :: units
 
-      ! Local variables
-      CHARACTER(len=256) :: fileblock
-      integer :: ixseg, iyseg, iblock, jblock, nblock
-      integer :: nlon, nlat, xgdsp, ygdsp, xcnt, ycnt
-      real(r8), allocatable :: vdata(:,:,:), rcache(:,:,:)
-      INTEGER :: rmesg(2), smesg(2), idest, isrc
-      INTEGER :: nrecv
+   ! Local variables
+   character(len=256) :: fileblock
+   integer :: ixseg, iyseg, iblock, jblock, nblock
+   integer :: nlon, nlat, xgdsp, ygdsp, xcnt, ycnt
+   real(r8), allocatable :: vdata(:,:,:), rcache(:,:,:)
+   integer :: rmesg(2), smesg(2), idest, isrc
+   integer :: nrecv
 
       CALL mpi_barrier (p_comm_glb, p_err)
 
@@ -547,7 +547,7 @@ contains
                IF (ixseg == 0) ixseg = hist_block_info%nxseg
                iyseg = (iblock-1) / hist_block_info%nxseg + 1
 
-               call get_filename_block (filename, &
+               CALL get_filename_block (filename, &
                   hist_block_info%xsegs(ixseg)%blk, hist_block_info%ysegs(iyseg)%blk, fileblock)
 
                CALL mpi_send (iblock,      1,   MPI_INTEGER, idest, mpi_tag_mesg, p_comm_glb, p_err)
@@ -561,7 +561,7 @@ contains
 
          ENDDO
 
-         call ncio_write_serial (filename, varname, vdata, 'lon', 'lat', 'time', compress)
+         CALL ncio_write_serial (filename, varname, vdata, 'lon', 'lat', 'time', compress)
 
          IF (present(longname)) THEN
             CALL ncio_put_attr (filename, varname, 'long_name', longname)
@@ -595,7 +595,7 @@ contains
                CALL mpi_send (rcache, size(rcache), MPI_DOUBLE, &
                   p_root, mpi_tag_data, p_comm_glb, p_err)
             ELSE
-               exit
+               EXIT
             ENDIF
          ENDDO
       ENDIF
@@ -605,30 +605,30 @@ contains
 
       CALL mpi_barrier (p_comm_glb, p_err)
 
-   end subroutine hist_concatenate_var_2d
+   END SUBROUTINE hist_concatenate_var_2d
 
    ! -----
-   subroutine hist_concatenate_var_3d (filename, varname, timelen, dim1name, ndim1, compress, &
+   SUBROUTINE hist_concatenate_var_3d (filename, varname, timelen, dim1name, ndim1, compress, &
          longname, units)
 
-      implicit none
+   IMPLICIT NONE
 
-      character(len=*), intent(in) :: filename
-      character(len=*), intent(in) :: varname
-      INTEGER, intent(in) :: timelen
-      character(len=*), intent(in) :: dim1name
-      INTEGER, intent(in) :: ndim1
-      integer, intent(in) :: compress
-      character(len=*), intent(in), optional :: longname
-      character(len=*), intent(in), optional :: units
+   character(len=*), intent(in) :: filename
+   character(len=*), intent(in) :: varname
+   integer, intent(in) :: timelen
+   character(len=*), intent(in) :: dim1name
+   integer, intent(in) :: ndim1
+   integer, intent(in) :: compress
+   character(len=*), intent(in), optional :: longname
+   character(len=*), intent(in), optional :: units
 
-      ! Local variables
-      CHARACTER(len=256) :: fileblock
-      integer :: nlon, nlat, xgdsp, ygdsp, xcnt, ycnt
-      integer :: ixseg, iyseg, iblock, jblock, nblock
-      real(r8), allocatable :: vdata(:,:,:,:), rcache(:,:,:,:)
-      INTEGER :: rmesg(2), smesg(2), idest, isrc
-      INTEGER :: nrecv
+   ! Local variables
+   character(len=256) :: fileblock
+   integer :: nlon, nlat, xgdsp, ygdsp, xcnt, ycnt
+   integer :: ixseg, iyseg, iblock, jblock, nblock
+   real(r8), allocatable :: vdata(:,:,:,:), rcache(:,:,:,:)
+   integer :: rmesg(2), smesg(2), idest, isrc
+   integer :: nrecv
 
       CALL mpi_barrier (p_comm_glb, p_err)
 
@@ -679,7 +679,7 @@ contains
                ixseg = mod(iblock, hist_block_info%nxseg)
                IF (ixseg == 0) ixseg = hist_block_info%nxseg
                iyseg = (iblock-1) / hist_block_info%nxseg + 1
-               call get_filename_block (filename, &
+               CALL get_filename_block (filename, &
                   hist_block_info%xsegs(ixseg)%blk, hist_block_info%ysegs(iyseg)%blk, fileblock)
 
                CALL mpi_send (iblock,      1,  MPI_INTEGER, idest, mpi_tag_mesg, p_comm_glb, p_err)
@@ -693,7 +693,7 @@ contains
 
          ENDDO
 
-         call ncio_write_serial (filename, varname, vdata, dim1name, &
+         CALL ncio_write_serial (filename, varname, vdata, dim1name, &
             'lon', 'lat', 'time', compress)
 
          IF (present(longname)) THEN
@@ -730,7 +730,7 @@ contains
                CALL mpi_send (rcache, size(rcache), MPI_DOUBLE, &
                   p_root, mpi_tag_data, p_comm_glb, p_err)
             ELSE
-               exit
+               EXIT
             ENDIF
          ENDDO
       ENDIF
@@ -740,30 +740,30 @@ contains
 
       CALL mpi_barrier (p_comm_glb, p_err)
 
-   end subroutine hist_concatenate_var_3d
+   END SUBROUTINE hist_concatenate_var_3d
 
    ! -----
-   subroutine hist_concatenate_var_4d (filename, varname, timelen, &
+   SUBROUTINE hist_concatenate_var_4d (filename, varname, timelen, &
          dim1name, dim2name, ndim1, ndim2, compress, longname, units)
 
-      implicit none
+   IMPLICIT NONE
 
-      character(len=*), intent(in) :: filename
-      character(len=*), intent(in) :: varname
-      INTEGER, intent(in) :: timelen
-      character(len=*), intent(in) :: dim1name, dim2name
-      INTEGER, intent(in) :: ndim1, ndim2
-      integer, intent(in) :: compress
-      character (len=*), intent(in), optional :: longname
-      character (len=*), intent(in), optional :: units
+   character(len=*), intent(in) :: filename
+   character(len=*), intent(in) :: varname
+   integer, intent(in) :: timelen
+   character(len=*), intent(in) :: dim1name, dim2name
+   integer, intent(in) :: ndim1, ndim2
+   integer, intent(in) :: compress
+   character (len=*), intent(in), optional :: longname
+   character (len=*), intent(in), optional :: units
 
-      ! Local variables
-      CHARACTER(len=256) :: fileblock
-      integer :: ixseg, iyseg, iblock, jblock, nblock
-      integer :: nlon, nlat, xgdsp, ygdsp, xcnt, ycnt
-      real(r8), allocatable :: vdata(:,:,:,:,:), rcache(:,:,:,:,:)
-      INTEGER :: rmesg(2), smesg(2), idest, isrc
-      INTEGER :: nrecv
+   ! Local variables
+   character(len=256) :: fileblock
+   integer :: ixseg, iyseg, iblock, jblock, nblock
+   integer :: nlon, nlat, xgdsp, ygdsp, xcnt, ycnt
+   real(r8), allocatable :: vdata(:,:,:,:,:), rcache(:,:,:,:,:)
+   integer :: rmesg(2), smesg(2), idest, isrc
+   integer :: nrecv
 
       CALL mpi_barrier (p_comm_glb, p_err)
 
@@ -814,7 +814,7 @@ contains
                ixseg = mod(iblock, hist_block_info%nxseg)
                IF (ixseg == 0) ixseg = hist_block_info%nxseg
                iyseg = (iblock-1) / hist_block_info%nxseg + 1
-               call get_filename_block (filename, &
+               CALL get_filename_block (filename, &
                   hist_block_info%xsegs(ixseg)%blk, hist_block_info%ysegs(iyseg)%blk, fileblock)
 
                CALL mpi_send (iblock,      1,   MPI_INTEGER, idest, mpi_tag_mesg, p_comm_glb, p_err)
@@ -828,7 +828,7 @@ contains
 
          ENDDO
 
-         call ncio_write_serial (filename, varname, vdata, dim1name, dim2name, &
+         CALL ncio_write_serial (filename, varname, vdata, dim1name, dim2name, &
             'lon', 'lat', 'time', compress)
 
          IF (present(longname)) THEN
@@ -865,7 +865,7 @@ contains
                CALL mpi_send (rcache, size(rcache), MPI_DOUBLE, &
                   p_root, mpi_tag_data, p_comm_glb, p_err)
             ELSE
-               exit
+               EXIT
             ENDIF
          ENDDO
       ENDIF
@@ -875,7 +875,7 @@ contains
 
       CALL mpi_barrier (p_comm_glb, p_err)
 
-   end subroutine hist_concatenate_var_4d
+   END SUBROUTINE hist_concatenate_var_4d
 #endif
 
-END module mod_concatenate
+END MODULE mod_concatenate

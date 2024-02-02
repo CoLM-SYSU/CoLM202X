@@ -4,23 +4,23 @@
 
 MODULE MOD_LandHRU
 
-   !------------------------------------------------------------------------------------
-   ! DESCRIPTION:
-   !
-   !    Build pixelset "landhru".
-   !
-   !    In CoLM, the global/regional area is divided into a hierarchical structure:
-   !    1. If GRIDBASED or UNSTRUCTURED is defined, it is
-   !       ELEMENT >>> PATCH
-   !    2. If CATCHMENT is defined, it is
-   !       ELEMENT >>> HRU >>> PATCH
-   !    If Plant Function Type classification is used, PATCH is further divided into PFT.
-   !    If Plant Community classification is used,     PATCH is further divided into PC.
-   ! 
-   !    "landhru" refers to pixelset HRU.
-   !
-   ! Created by Shupeng Zhang, May 2023
-   !------------------------------------------------------------------------------------
+!------------------------------------------------------------------------------------
+! DESCRIPTION:
+!
+!    Build pixelset "landhru".
+!
+!    In CoLM, the global/regional area is divided into a hierarchical structure:
+!    1. If GRIDBASED or UNSTRUCTURED is defined, it is
+!       ELEMENT >>> PATCH
+!    2. If CATCHMENT is defined, it is
+!       ELEMENT >>> HRU >>> PATCH
+!    If Plant Function Type classification is used, PATCH is further divided into PFT.
+!    If Plant Community classification is used,     PATCH is further divided into PC.
+! 
+!    "landhru" refers to pixelset HRU.
+!
+! Created by Shupeng Zhang, May 2023
+!------------------------------------------------------------------------------------
 
    USE MOD_Precision
    USE MOD_Pixelset
@@ -28,39 +28,39 @@ MODULE MOD_LandHRU
    IMPLICIT NONE
 
    ! ---- Instance ----
-   INTEGER :: numhru
-   TYPE(grid_type)     :: ghru
-   TYPE(pixelset_type) :: landhru
+   integer :: numhru
+   type(grid_type)     :: ghru
+   type(pixelset_type) :: landhru
    
-   TYPE(subset_type) :: basin_hru
+   type(subset_type) :: basin_hru
 
 CONTAINS
 
    ! -------------------------------
    SUBROUTINE landhru_build ()
 
-      USE MOD_Precision
-      USE MOD_SPMD_Task
-      USE MOD_NetcdfSerial
-      USE MOD_Utils
-      USE MOD_Block
-      USE MOD_Grid
-      USE MOD_DataType
-      USE MOD_Mesh
-      USE MOD_LandElm
-      USE MOD_CatchmentDataReadin
-      USE MOD_Namelist
-      USE MOD_AggregationRequestData
+   USE MOD_Precision
+   USE MOD_SPMD_Task
+   USE MOD_NetcdfSerial
+   USE MOD_Utils
+   USE MOD_Block
+   USE MOD_Grid
+   USE MOD_DataType
+   USE MOD_Mesh
+   USE MOD_LandElm
+   USE MOD_CatchmentDataReadin
+   USE MOD_Namelist
+   USE MOD_AggregationRequestData
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      ! Local Variables
-      TYPE (block_data_int32_2d) :: hrudata
-      INTEGER :: iwork, ncat, nhru, ie, typsgn, npxl, ipxl
-      integer*8, allocatable :: catnum(:)
-      integer,   allocatable :: numhru_all_g(:), lakeid(:)
-      INTEGER,   allocatable :: types(:), order(:), ibuff(:)
-      INTEGER :: nhru_glb
+   ! Local Variables
+   type (block_data_int32_2d) :: hrudata
+   integer :: iwork, ncat, nhru, ie, typsgn, npxl, ipxl
+   integer*8, allocatable :: catnum(:)
+   integer,   allocatable :: numhru_all_g(:), lakeid(:)
+   integer,   allocatable :: types(:), order(:), ibuff(:)
+   integer :: nhru_glb
 
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
@@ -71,30 +71,30 @@ CONTAINS
       ENDIF
       
       IF (p_is_master) THEN
-         call ncio_read_serial (DEF_CatchmentMesh_data, 'basin_numhru', numhru_all_g)
-         call ncio_read_serial (DEF_CatchmentMesh_data, 'lake_id', lakeid)
+         CALL ncio_read_serial (DEF_CatchmentMesh_data, 'basin_numhru', numhru_all_g)
+         CALL ncio_read_serial (DEF_CatchmentMesh_data, 'lake_id', lakeid)
       ENDIF
 
 #ifdef USEMPI
       IF (p_is_master) THEN
          DO iwork = 0, p_np_worker-1
 
-            call mpi_recv (ncat, 1, MPI_INTEGER4, p_address_worker(iwork), mpi_tag_size, &
+            CALL mpi_recv (ncat, 1, MPI_INTEGER4, p_address_worker(iwork), mpi_tag_size, &
                p_comm_glb, p_stat, p_err)
 
             IF (ncat > 0) THEN
                allocate (catnum(ncat))
                allocate (ibuff (ncat))
 
-               call mpi_recv (catnum, ncat, MPI_INTEGER8, p_address_worker(iwork), mpi_tag_data, &
+               CALL mpi_recv (catnum, ncat, MPI_INTEGER8, p_address_worker(iwork), mpi_tag_data, &
                   p_comm_glb, p_stat, p_err)
 
                nhru = sum(numhru_all_g(catnum))
-               call mpi_send (nhru, 1, MPI_INTEGER4, &
+               CALL mpi_send (nhru, 1, MPI_INTEGER4, &
                   p_address_worker(iwork), mpi_tag_size, p_comm_glb, p_err) 
 
                ibuff = lakeid(catnum)
-               call mpi_send (ibuff, ncat, MPI_INTEGER4, &
+               CALL mpi_send (ibuff, ncat, MPI_INTEGER4, &
                   p_address_worker(iwork), mpi_tag_data, p_comm_glb, p_err) 
 
                deallocate(catnum)
@@ -104,12 +104,12 @@ CONTAINS
       ENDIF
 
       IF (p_is_worker) THEN
-         call mpi_send (numelm, 1, MPI_INTEGER4, p_root, mpi_tag_size, p_comm_glb, p_err) 
+         CALL mpi_send (numelm, 1, MPI_INTEGER4, p_root, mpi_tag_size, p_comm_glb, p_err) 
          IF (numelm > 0) THEN
             allocate (lakeid (numelm))
-            call mpi_send (landelm%eindex, numelm, MPI_INTEGER8, p_root, mpi_tag_data, p_comm_glb, p_err) 
-            call mpi_recv (numhru, 1,      MPI_INTEGER4, p_root, mpi_tag_size, p_comm_glb, p_stat, p_err)
-            call mpi_recv (lakeid, numelm, MPI_INTEGER4, p_root, mpi_tag_data, p_comm_glb, p_stat, p_err)
+            CALL mpi_send (landelm%eindex, numelm, MPI_INTEGER8, p_root, mpi_tag_data, p_comm_glb, p_err) 
+            CALL mpi_recv (numhru, 1,      MPI_INTEGER4, p_root, mpi_tag_size, p_comm_glb, p_stat, p_err)
+            CALL mpi_recv (lakeid, numelm, MPI_INTEGER4, p_root, mpi_tag_data, p_comm_glb, p_stat, p_err)
          ENDIF
       ENDIF
 #else

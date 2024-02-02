@@ -2,67 +2,67 @@
 
 #ifdef CatchLateralFlow
 MODULE MOD_Catch_HillslopeNetwork
-   !--------------------------------------------------------------------------------
-   ! DESCRIPTION:
-   ! 
-   !    Surface networks (hillslope bands): data and communication subroutines.
-   !
-   ! Created by Shupeng Zhang, May 2023
-   !--------------------------------------------------------------------------------
+!--------------------------------------------------------------------------------
+! DESCRIPTION:
+! 
+!    Surface networks (hillslope bands): data and communication subroutines.
+!
+! Created by Shupeng Zhang, May 2023
+!--------------------------------------------------------------------------------
 
    USE MOD_Precision
    IMPLICIT NONE
    
    ! -- data type --
-   TYPE :: hillslope_network_info_type
-      INTEGER :: nhru
-      INTEGER , pointer :: ihru (:) ! location of HRU in global vector "landhru"
-      INTEGER , pointer :: indx (:) ! index of HRU
-      REAL(r8), pointer :: area (:) ! area of HRU [m^2]
-      REAL(r8), pointer :: agwt (:) ! water area only including (patchtype <= 2) [m^2]
-      REAL(r8), pointer :: hand (:) ! height above nearest drainage [m]
-      REAL(r8), pointer :: elva (:) ! elevation [m]
-      REAL(r8), pointer :: plen (:) ! average drainage path length to downstream HRU [m]
-      REAL(r8), pointer :: flen (:) ! interface length between this and downstream HRU [m]
-      INTEGER , pointer :: inext(:) ! location of next HRU in this basin
-   END TYPE hillslope_network_info_type
+   type :: hillslope_network_info_type
+      integer :: nhru
+      integer , pointer :: ihru (:) ! location of HRU in global vector "landhru"
+      integer , pointer :: indx (:) ! index of HRU
+      real(r8), pointer :: area (:) ! area of HRU [m^2]
+      real(r8), pointer :: agwt (:) ! water area only including (patchtype <= 2) [m^2]
+      real(r8), pointer :: hand (:) ! height above nearest drainage [m]
+      real(r8), pointer :: elva (:) ! elevation [m]
+      real(r8), pointer :: plen (:) ! average drainage path length to downstream HRU [m]
+      real(r8), pointer :: flen (:) ! interface length between this and downstream HRU [m]
+      integer , pointer :: inext(:) ! location of next HRU in this basin
+   END type hillslope_network_info_type
 
    ! -- Instance --
-   TYPE(hillslope_network_info_type), pointer :: hillslope_network (:)
+   type(hillslope_network_info_type), pointer :: hillslope_network (:)
       
 CONTAINS
    
    ! ----------
    SUBROUTINE hillslope_network_init ()
 
-      USE MOD_SPMD_Task
-      USE MOD_Namelist
-      USE MOD_NetCDFSerial
-      USE MOD_Mesh
-      USE MOD_Pixel
-      USE MOD_LandHRU
-      USE MOD_LandPatch
-      USE MOD_Vars_TimeInvariants, only : patchtype
-      USE MOD_Utils
-      IMPLICIT NONE
+   USE MOD_SPMD_Task
+   USE MOD_Namelist
+   USE MOD_NetCDFSerial
+   USE MOD_Mesh
+   USE MOD_Pixel
+   USE MOD_LandHRU
+   USE MOD_LandPatch
+   USE MOD_Vars_TimeInvariants, only : patchtype
+   USE MOD_Utils
+   IMPLICIT NONE
 
-      ! Local Variables
-      CHARACTER(len=256) :: hillslope_network_file
+   ! Local Variables
+   character(len=256) :: hillslope_network_file
 
-      INTEGER :: numbasin, maxnumhru, ibasin, nhru, hs, he, ihru, ipatch, ps, pe, i, j, ipxl
-      INTEGER :: iworker, mesg(2), nrecv, irecv, isrc, idest
+   integer :: numbasin, maxnumhru, ibasin, nhru, hs, he, ihru, ipatch, ps, pe, i, j, ipxl
+   integer :: iworker, mesg(2), nrecv, irecv, isrc, idest
    
-      INTEGER , allocatable :: indxhru (:,:)
-      REAL(r8), allocatable :: areahru (:,:)
-      REAL(r8), allocatable :: handhru (:,:)
-      REAL(r8), allocatable :: elvahru (:,:)
-      REAL(r8), allocatable :: plenhru (:,:)
-      REAL(r8), allocatable :: lfachru (:,:)
-      INTEGER , allocatable :: nexthru (:,:)
-      
-      INTEGER , allocatable :: basinindex (:)
-      INTEGER , allocatable :: icache (:,:)
-      REAL(r8), allocatable :: rcache (:,:)
+   integer , allocatable :: indxhru (:,:)
+   real(r8), allocatable :: areahru (:,:)
+   real(r8), allocatable :: handhru (:,:)
+   real(r8), allocatable :: elvahru (:,:)
+   real(r8), allocatable :: plenhru (:,:)
+   real(r8), allocatable :: lfachru (:,:)
+   integer , allocatable :: nexthru (:,:)
+   
+   integer , allocatable :: basinindex (:)
+   integer , allocatable :: icache (:,:)
+   real(r8), allocatable :: rcache (:,:)
 
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
@@ -346,10 +346,10 @@ CONTAINS
    ! ----------
    SUBROUTINE hillslope_network_final ()
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      ! Local Variables
-      INTEGER :: ibasin
+   ! Local Variables
+   integer :: ibasin
 
       IF (associated(hillslope_network)) THEN
          DO ibasin = 1, size(hillslope_network)

@@ -3,56 +3,56 @@
 #if (defined CATCHMENT) 
 MODULE MOD_HRUVector
 
-   !------------------------------------------------------------------------------------
-   ! DESCRIPTION:
-   !    
-   !    Address of Data associated with HRU.
-   !
-   !    To output a vector, Data is gathered from worker processes directly to master.
-   !    "hru_data_address" stores information on how to reorganize data gathered.
-   !    The output data in vector is sorted by global element index (i.e. catchment index)
-   !
-   ! Created by Shupeng Zhang, May 2023
-   !------------------------------------------------------------------------------------
+!------------------------------------------------------------------------------------
+! DESCRIPTION:
+!    
+!    Address of Data associated with HRU.
+!
+!    To output a vector, Data is gathered from worker processes directly to master.
+!    "hru_data_address" stores information on how to reorganize data gathered.
+!    The output data in vector is sorted by global element index (i.e. catchment index)
+!
+! Created by Shupeng Zhang, May 2023
+!------------------------------------------------------------------------------------
 
    USE MOD_Precision
    USE MOD_DataType
    IMPLICIT NONE
    
-   INTEGER :: totalnumhru
-   TYPE(pointer_int32_1d), allocatable :: hru_data_address (:)
+   integer :: totalnumhru
+   type(pointer_int32_1d), allocatable :: hru_data_address (:)
 
-   INTEGER*8, allocatable :: eindx_hru (:)
-   INTEGER,   allocatable :: htype_hru (:)
+   integer*8, allocatable :: eindx_hru (:)
+   integer,   allocatable :: htype_hru (:)
    
 CONTAINS
    
    ! --------
    SUBROUTINE hru_vector_init 
 
-      USE MOD_SPMD_Task
-      USE MOD_Utils
-      USE MOD_Mesh
-      USE MOD_LandElm
-      USE MOD_LandHRU
-      USE MOD_LandPatch
-      USE MOD_ElmVector
+   USE MOD_SPMD_Task
+   USE MOD_Utils
+   USE MOD_Mesh
+   USE MOD_LandElm
+   USE MOD_LandHRU
+   USE MOD_LandPatch
+   USE MOD_ElmVector
 #ifdef CROP
-      USE MOD_LandCrop
+   USE MOD_LandCrop
 #endif
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      ! Local Variables
-      INTEGER   :: mesg(2), iwork, isrc, ndata
+   ! Local Variables
+   integer   :: mesg(2), iwork, isrc, ndata
 
-      INTEGER, allocatable :: nhru_bsn (:)
-      INTEGER, allocatable :: nhru_bsn_glb (:)
-      INTEGER, allocatable :: rbuff (:)
+   integer, allocatable :: nhru_bsn (:)
+   integer, allocatable :: nhru_bsn_glb (:)
+   integer, allocatable :: rbuff (:)
 
-      INTEGER, allocatable :: hru_dsp_glb (:)
-      INTEGER :: ielm, i, ielm_glb
+   integer, allocatable :: hru_dsp_glb (:)
+   integer :: ielm, i, ielm_glb
 
-      INTEGER :: nhru, nelm, hru_dsp_loc
+   integer :: nhru, nelm, hru_dsp_loc
       
       IF (p_is_worker) THEN
       
@@ -71,9 +71,9 @@ CONTAINS
 
 #ifdef USEMPI
          mesg = (/p_iam_glb, numelm/)
-         call mpi_send (mesg, 2, MPI_INTEGER, p_root, mpi_tag_mesg, p_comm_glb, p_err) 
+         CALL mpi_send (mesg, 2, MPI_INTEGER, p_root, mpi_tag_mesg, p_comm_glb, p_err) 
          IF (numelm > 0) THEN
-            call mpi_send (nhru_bsn, numelm, MPI_INTEGER, p_root, mpi_tag_data, p_comm_glb, p_err) 
+            CALL mpi_send (nhru_bsn, numelm, MPI_INTEGER, p_root, mpi_tag_data, p_comm_glb, p_err) 
          ENDIF
 #endif
       ENDIF
@@ -86,7 +86,7 @@ CONTAINS
 
 #ifdef USEMPI
          DO iwork = 0, p_np_worker-1
-            call mpi_recv (mesg, 2, MPI_INTEGER, MPI_ANY_SOURCE, &
+            CALL mpi_recv (mesg, 2, MPI_INTEGER, MPI_ANY_SOURCE, &
                mpi_tag_mesg, p_comm_glb, p_stat, p_err)
 
             isrc  = mesg(1)
@@ -94,7 +94,7 @@ CONTAINS
             IF (ndata > 0) THEN
                allocate (rbuff (ndata))
 
-               call mpi_recv (rbuff, ndata, MPI_INTEGER, isrc, &
+               CALL mpi_recv (rbuff, ndata, MPI_INTEGER, isrc, &
                   mpi_tag_data, p_comm_glb, p_stat, p_err)
 
                nhru_bsn_glb(elm_data_address(p_itis_worker(isrc))%val) = rbuff
@@ -151,9 +151,9 @@ CONTAINS
 #ifdef USEMPI
       IF (p_is_worker) THEN
          mesg = (/p_iam_glb, numhru/)
-         call mpi_send (mesg, 2, MPI_INTEGER, p_root, mpi_tag_mesg, p_comm_glb, p_err) 
+         CALL mpi_send (mesg, 2, MPI_INTEGER, p_root, mpi_tag_mesg, p_comm_glb, p_err) 
          IF (numhru > 0) THEN
-            call mpi_send (landhru%settyp, numhru, MPI_INTEGER, p_root, mpi_tag_data, p_comm_glb, p_err) 
+            CALL mpi_send (landhru%settyp, numhru, MPI_INTEGER, p_root, mpi_tag_data, p_comm_glb, p_err) 
          ENDIF
       ENDIF
 #endif
@@ -171,7 +171,7 @@ CONTAINS
 
 #ifdef USEMPI
          DO iwork = 0, p_np_worker-1
-            call mpi_recv (mesg, 2, MPI_INTEGER, MPI_ANY_SOURCE, &
+            CALL mpi_recv (mesg, 2, MPI_INTEGER, MPI_ANY_SOURCE, &
                mpi_tag_mesg, p_comm_glb, p_stat, p_err)
 
             isrc  = mesg(1)
@@ -179,7 +179,7 @@ CONTAINS
             IF (ndata > 0) THEN
                allocate (rbuff (ndata))
 
-               call mpi_recv (rbuff, ndata, MPI_INTEGER, isrc, &
+               CALL mpi_recv (rbuff, ndata, MPI_INTEGER, isrc, &
                   mpi_tag_data, p_comm_glb, p_stat, p_err)
                htype_hru(hru_data_address(p_itis_worker(isrc))%val) = rbuff
                
@@ -206,7 +206,7 @@ CONTAINS
    ! ----------
    SUBROUTINE hru_vector_final ()
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
       IF (allocated(hru_data_address))   deallocate (hru_data_address)
       IF (allocated(eindx_hru)) deallocate (eindx_hru)

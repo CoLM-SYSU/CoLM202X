@@ -1,27 +1,28 @@
 #include <define.h>
 
 MODULE MOD_PixelsetShared
-   !----------------------------------------------------------------------------------------
-   ! DESCRIPTION:
-   !
-   !    Shared pixelset refer to two or more pixelsets sharing the same geographic area.
-   ! 
-   !    For example, for patch of crops, multiple crops can be planted on a piece of land.
-   !    When planting these crops, different irrigation schemes may be used. Thus the water 
-   !    and energy processes have difference in crops and should be modeled independently.
-   !    By using shared pixelset, crop patch is splitted to two or more shared patches.
-   !    Each shared patch is assigned with a percentage of area and has its own states.
-   !
-   !                Example of shared pixelsets
-   !        |<------------------- ELEMENT ------------------>| <-- level 1
-   !        |   subset 1  |       subset 2        | subset 3 | <-- level 2
-   !                      | subset 2 shared 1 50% |            
-   !                      | subset 2 shared 2 20% |            <-- subset 2 shares
-   !                      | subset 2 shared 3 30% |            
-   !
-   !
-   ! Created by Shupeng Zhang, May 2023
-   !----------------------------------------------------------------------------------------
+!----------------------------------------------------------------------------------------
+! DESCRIPTION:
+!
+!    Shared pixelset refer to two or more pixelsets sharing the same geographic area.
+! 
+!    For example, for patch of crops, multiple crops can be planted on a piece of land.
+!    When planting these crops, different irrigation schemes may be used. Thus the water 
+!    and energy processes have difference in crops and should be modeled independently.
+!    By using shared pixelset, crop patch is splitted to two or more shared patches.
+!    Each shared patch is assigned with a percentage of area and has its own states.
+!
+!                Example of shared pixelsets
+!        |<------------------- ELEMENT ------------------>| <-- level 1
+!        |   subset 1  |       subset 2        | subset 3 | <-- level 2
+!                      | subset 2 shared 1 50% |            
+!                      | subset 2 shared 2 20% |            <-- subset 2 shares
+!                      | subset 2 shared 3 30% |            
+!
+!
+! Created by Shupeng Zhang, May 2023
+!----------------------------------------------------------------------------------------
+
    IMPLICIT NONE
 
 CONTAINS
@@ -29,33 +30,33 @@ CONTAINS
    SUBROUTINE pixelsetshared_build (pixelset, gshared, datashared, nmaxshared, typfilter, &
          fracout, sharedclass, fracin)
 
-      USE MOD_SPMD_Task
-      USE MOD_Grid
-      USE MOD_DataType
-      USE MOD_Pixel
-      USE MOD_Pixelset
-      USE MOD_Mesh
-      USE MOD_Utils
-      USE MOD_AggregationRequestData
-      IMPLICIT NONE
+   USE MOD_SPMD_Task
+   USE MOD_Grid
+   USE MOD_DataType
+   USE MOD_Pixel
+   USE MOD_Pixelset
+   USE MOD_Mesh
+   USE MOD_Utils
+   USE MOD_AggregationRequestData
+   IMPLICIT NONE
 
-      TYPE(pixelset_type),       intent(inout) :: pixelset
-      TYPE(grid_type),           intent(in)    :: gshared
-      TYPE(block_data_real8_3d), intent(in)    :: datashared
-      INTEGER, intent(in) :: nmaxshared
-      INTEGER, intent(in) :: typfilter(:)
+   type(pixelset_type),       intent(inout) :: pixelset
+   type(grid_type),           intent(in)    :: gshared
+   type(block_data_real8_3d), intent(in)    :: datashared
+   integer, intent(in) :: nmaxshared
+   integer, intent(in) :: typfilter(:)
 
-      REAL(r8), intent(out), allocatable :: fracout(:)
-      INTEGER,  intent(out), allocatable :: sharedclass(:)
-      REAL(r8), intent(in),  optional    :: fracin (:)
+   real(r8), intent(out), allocatable :: fracout(:)
+   integer,  intent(out), allocatable :: sharedclass(:)
+   real(r8), intent(in),  optional    :: fracin (:)
 
-      ! Local Variables
-      REAL(r8), allocatable :: pctshared(:,:)
-      REAL(r8), allocatable :: datashared1d(:,:), areapixel(:), rbuff(:,:)
-      INTEGER  :: nsetshared, ipset, jpset
-      INTEGER  :: ipxl, ie, ipxstt, ipxend, ishared
-      INTEGER*8,allocatable :: eindex1(:)
-      INTEGER,  allocatable :: ielm1(:), ipxstt1(:), ipxend1(:), settyp1(:)
+   ! Local Variables
+   real(r8), allocatable :: pctshared(:,:)
+   real(r8), allocatable :: datashared1d(:,:), areapixel(:), rbuff(:,:)
+   integer  :: nsetshared, ipset, jpset
+   integer  :: ipxl, ie, ipxstt, ipxend, ishared
+   integer*8,allocatable :: eindex1(:)
+   integer,  allocatable :: ielm1(:), ipxstt1(:), ipxend1(:), settyp1(:)
 
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)

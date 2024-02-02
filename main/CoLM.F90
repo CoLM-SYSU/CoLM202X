@@ -1,6 +1,18 @@
 #include <define.h>
 
 PROGRAM CoLM
+!-----------------------------------------------------------------------------
+! Description:
+!   This is the main program for the Common Land Model (CoLM)
+!
+!   @Copyright Yongjiu Dai Land Modeling Grop at the School of Atmospheric Sciences 
+!   of the Sun Yat-sen University, Guangdong, CHINA.
+!   All rights reserved.
+!
+! Initial : Yongjiu Dai, 1998-2014
+! Revised : Hua Yuan, Shupeng Zhang, Nan Wei, Xingjie Lu, Zhongwang Wei, Yongjiu Dai
+!           2014-2024
+!-----------------------------------------------------------------------------
 
    USE MOD_Precision
    USE MOD_SPMD_Task

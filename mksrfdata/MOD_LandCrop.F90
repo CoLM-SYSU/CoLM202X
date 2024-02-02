@@ -3,59 +3,59 @@
 #ifdef CROP
 MODULE MOD_LandCrop
 
-   !------------------------------------------------------------------------------------
-   ! DESCRIPTION:
-   !
-   !    Build crop patches.
-   !
-   ! Created by Shupeng Zhang, Sep 2023
-   !    porting codes from Hua Yuan's OpenMP version to MPI parallel version.
-   !------------------------------------------------------------------------------------
+!------------------------------------------------------------------------------------
+! DESCRIPTION:
+!
+!    Build crop patches.
+!
+! Created by Shupeng Zhang, Sep 2023
+!    porting codes from Hua Yuan's OpenMP version to MPI parallel version.
+!------------------------------------------------------------------------------------
 
    USE MOD_Precision
    USE MOD_Grid
    IMPLICIT NONE
 
    ! ---- Instance ----
-   TYPE(grid_type) :: gcrop
-   INTEGER,  allocatable :: cropclass (:)
-   REAL(r8), allocatable :: pctshrpch (:)
+   type(grid_type) :: gcrop
+   integer,  allocatable :: cropclass (:)
+   real(r8), allocatable :: pctshrpch (:)
 
 CONTAINS
 
    ! -------------------------------
    SUBROUTINE landcrop_build (lc_year)
 
-      USE MOD_SPMD_Task
-      USE MOD_Namelist
-      USE MOD_Block
-      USE MOD_DataType
-      USE MOD_LandElm
+   USE MOD_SPMD_Task
+   USE MOD_Namelist
+   USE MOD_Block
+   USE MOD_DataType
+   USE MOD_LandElm
 #ifdef CATCHMENT
-      USE MOD_LandHRU
+   USE MOD_LandHRU
 #endif
-      USE MOD_LandPatch
-      USE MOD_NetCDFBlock
-      USE MOD_PixelsetShared
-      USE MOD_5x5DataReadin
+   USE MOD_LandPatch
+   USE MOD_NetCDFBlock
+   USE MOD_PixelsetShared
+   USE MOD_5x5DataReadin
 #ifdef SinglePoint
-      USE MOD_SingleSrfdata
+   USE MOD_SingleSrfdata
 #endif
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      INTEGER, intent(in) :: lc_year
+   integer, intent(in) :: lc_year
 
-      ! Local Variables
-      CHARACTER(len=255) :: cyear, file_patch, dir_5x5, suffix
-      INTEGER :: npatch_glb
-      TYPE(block_data_real8_2d) :: pctcrop_xy
-      TYPE(block_data_real8_3d) :: pctshared_xy
-      TYPE(block_data_real8_3d) :: cropdata
-      INTEGER :: sharedfilter(1), cropfilter(1)
-      integer :: iblkme, ib, jb
-      real(r8), allocatable :: pctshared  (:)
-      integer , allocatable :: classshared(:)
+   ! Local Variables
+   character(len=255) :: cyear, file_patch, dir_5x5, suffix
+   integer :: npatch_glb
+   type(block_data_real8_2d) :: pctcrop_xy
+   type(block_data_real8_3d) :: pctshared_xy
+   type(block_data_real8_3d) :: cropdata
+   integer :: sharedfilter(1), cropfilter(1)
+   integer :: iblkme, ib, jb
+   real(r8), allocatable :: pctshared  (:)
+   integer , allocatable :: classshared(:)
 
       write(cyear,'(i4.4)') lc_year
       IF (p_is_master) THEN

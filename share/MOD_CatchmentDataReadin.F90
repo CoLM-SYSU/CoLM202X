@@ -21,42 +21,42 @@ MODULE MOD_CatchmentDataReadin
 
    IMPLICIT NONE
 
-   INTEGER, parameter :: nxhbox = 6000
-   INTEGER, parameter :: nyhbox = 6000
-   INTEGER, parameter :: nxhglb = 432000
-   INTEGER, parameter :: nyhglb = 216000
+   integer, parameter :: nxhbox = 6000
+   integer, parameter :: nyhbox = 6000
+   integer, parameter :: nxhglb = 432000
+   integer, parameter :: nyhglb = 216000
 
 CONTAINS
 
    ! -----
    SUBROUTINE catchment_data_read (file_meshdata_in, dataname, grid, rdata, spv)
 
-      USE MOD_SPMD_Task
-      USE MOD_Block
-      USE MOD_Grid
-      USE MOD_DataType
-      USE MOD_Utils
-      USE MOD_NetCDFSerial
-      IMPLICIT NONE
+   USE MOD_SPMD_Task
+   USE MOD_Block
+   USE MOD_Grid
+   USE MOD_DataType
+   USE MOD_Utils
+   USE MOD_NetCDFSerial
+   IMPLICIT NONE
 
-      CHARACTER (len=*), intent(in) :: file_meshdata_in
-      CHARACTER (len=*), intent(in) :: dataname
-      TYPE (grid_type),  intent(in) :: grid
-      TYPE (block_data_int32_2d), intent(inout) :: rdata
-      INTEGER, intent(in), optional :: spv
+   character (len=*), intent(in) :: file_meshdata_in
+   character (len=*), intent(in) :: dataname
+   type (grid_type),  intent(in) :: grid
+   type (block_data_int32_2d), intent(inout) :: rdata
+   integer, intent(in), optional :: spv
 
-      ! Local Variables
-      LOGICAL :: in_one_file
-      INTEGER :: nlat, nlon, ilon
-      INTEGER :: iblkme, iblk, jblk, isouth, inorth, iwest, ieast, ibox, jbox
-      INTEGER :: xdsp, ydsp, i0, i1, j0, j1, il0, il1, jl0, jl1
-      INTEGER :: i0min, i1max, if0, if1, jf0, jf1, i0next, i1next
-      CHARACTER(len=256) :: file_mesh, path_mesh
-      CHARACTER(len=3)   :: pre1
-      CHARACTER(len=4)   :: pre2
-      INTEGER,  allocatable :: dcache(:,:)
-      REAL(r8), allocatable :: latitude(:), longitude(:)
-      LOGICAL :: fexists
+   ! Local Variables
+   logical :: in_one_file
+   integer :: nlat, nlon, ilon
+   integer :: iblkme, iblk, jblk, isouth, inorth, iwest, ieast, ibox, jbox
+   integer :: xdsp, ydsp, i0, i1, j0, j1, il0, il1, jl0, jl1
+   integer :: i0min, i1max, if0, if1, jf0, jf1, i0next, i1next
+   character(len=256) :: file_mesh, path_mesh
+   character(len=3)   :: pre1
+   character(len=4)   :: pre2
+   integer,  allocatable :: dcache(:,:)
+   real(r8), allocatable :: latitude(:), longitude(:)
+   logical :: fexists
 
       IF (p_is_master) THEN
          IF (grid%yinc == 1) THEN
@@ -99,7 +99,7 @@ CONTAINS
                ENDIF
 
                IF ((inorth > grid%ydsp(jblk)+nyhbox) .or. (isouth < grid%ydsp(jblk)+1)) THEN
-                  cycle
+                  CYCLE
                ENDIF
 
                j0 = max(inorth, grid%ydsp(jblk)+1)
@@ -192,7 +192,7 @@ CONTAINS
                ibox = grid%xdsp(iblk)/nxhbox + 1
                jbox = grid%ydsp(jblk)/nyhbox + 1
 
-               DO while (.true.)
+               DO WHILE (.true.)
 
                   xdsp = (ibox-1) * nxhbox
                   ydsp = (jbox-1) * nyhbox
@@ -244,7 +244,7 @@ CONTAINS
 
                   IF ((ieast >= xdsp + 1) .and. (ieast <= xdsp + nxhbox)) THEN 
                      IF (isouth <= ydsp + nyhbox) THEN 
-                        exit
+                        EXIT
                      ELSE
                         ibox = grid%xdsp(iblk)/nxhbox + 1
                         jbox = jbox + 1

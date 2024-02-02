@@ -2,42 +2,42 @@
 
 MODULE MOD_LandElm
 
-   !------------------------------------------------------------------------------------
-   ! DESCRIPTION:
-   !
-   !    Build pixelset "landelm".
-   !
-   !    In CoLM, the global/regional area is divided into a hierarchical structure:
-   !    1. If GRIDBASED or UNSTRUCTURED is defined, it is
-   !       ELEMENT >>> PATCH
-   !    2. If CATCHMENT is defined, it is
-   !       ELEMENT >>> HRU >>> PATCH
-   !    If Plant Function Type classification is used, PATCH is further divided into PFT.
-   !    If Plant Community classification is used,     PATCH is further divided into PC.
-   ! 
-   !    "landelm" refers to pixelset ELEMENT.
-   !
-   ! Created by Shupeng Zhang, May 2023
-   !------------------------------------------------------------------------------------
+!------------------------------------------------------------------------------------
+! DESCRIPTION:
+!
+!    Build pixelset "landelm".
+!
+!    In CoLM, the global/regional area is divided into a hierarchical structure:
+!    1. If GRIDBASED or UNSTRUCTURED is defined, it is
+!       ELEMENT >>> PATCH
+!    2. If CATCHMENT is defined, it is
+!       ELEMENT >>> HRU >>> PATCH
+!    If Plant Function Type classification is used, PATCH is further divided into PFT.
+!    If Plant Community classification is used,     PATCH is further divided into PC.
+! 
+!    "landelm" refers to pixelset ELEMENT.
+!
+! Created by Shupeng Zhang, May 2023
+!------------------------------------------------------------------------------------
 
    USE MOD_Pixelset
    IMPLICIT NONE
 
    ! ---- Instance ----
-   TYPE(pixelset_type) :: landelm
+   type(pixelset_type) :: landelm
 
 CONTAINS
 
    ! -------------------------------
    SUBROUTINE landelm_build
 
-      USE MOD_Precision
-      USE MOD_SPMD_Task
-      USE MOD_Mesh
-      IMPLICIT NONE
+   USE MOD_Precision
+   USE MOD_SPMD_Task
+   USE MOD_Mesh
+   IMPLICIT NONE
 
-      ! Local Variables
-      INTEGER :: ielm, nelm_glb
+   ! Local Variables
+   integer :: ielm, nelm_glb
 
       IF (p_is_master) THEN
          write(*,'(A)') 'Making land elements:'
