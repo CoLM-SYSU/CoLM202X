@@ -377,8 +377,8 @@ ENDIF
                                     ! denice_np (-nsl+1) = denice_np(-nsl+1) &
                                     !    + wice_soisno_(-l+1,frnp_(k))/dz_sno_(-l+1,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
                                     rhosnow_np  (-nsl+1) = rhosnow_np(-nsl+1) &
-                                    + (wliq_soisno_(-l+1,frnp_(k)) + wice_soisno_(-l+1,frnp_(k))) / dz_sno_(-l+1,frnp_(k)) &
-                                    * (lccpct_np(patchclass_(frnp_(k))) / sum_lccpct_np)
+                                       + (wliq_soisno_(-l+1,frnp_(k)) + wice_soisno_(-l+1,frnp_(k))) / dz_sno_(-l+1,frnp_(k)) &
+                                       * (lccpct_np(patchclass_(frnp_(k))) / sum_lccpct_np)
                                     l = l + 1
                                     IF (l .gt. -maxsnl) EXIT
                                  ENDDO
