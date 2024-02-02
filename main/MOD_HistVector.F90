@@ -205,7 +205,7 @@ contains
 
       IF (p_is_master) THEN
 
-         compress = DEF_HIST_COMPRESS_LEVEL
+         compress = DEF_HIST_CompressLevel
 #ifdef CATCHMENT
          call ncio_write_serial_time (file_hist, varname, itime_in_file, acc_vec, &
             'hydrounit', 'time', compress)
@@ -374,7 +374,7 @@ contains
 
          call ncio_define_dimension (file_hist, dim1name, ndim1)
 
-         compress = DEF_HIST_COMPRESS_LEVEL
+         compress = DEF_HIST_CompressLevel
 #ifdef CATCHMENT
          call ncio_write_serial_time (file_hist, varname, itime_in_file, acc_vec, &
             dim1name, 'hydrounit', 'time', compress)
@@ -551,7 +551,7 @@ contains
          call ncio_define_dimension (file_hist, dim1name, ndim1)
          call ncio_define_dimension (file_hist, dim2name, ndim2)
 
-         compress = DEF_HIST_COMPRESS_LEVEL
+         compress = DEF_HIST_CompressLevel
 #ifdef CATCHMENT
          call ncio_write_serial_time (file_hist, varname, itime_in_file, acc_vec, &
             dim1name, dim2name, 'hydrounit', 'time', compress)
@@ -705,7 +705,7 @@ contains
 
       IF (p_is_master) THEN
 
-         compress = DEF_HIST_COMPRESS_LEVEL
+         compress = DEF_HIST_CompressLevel
 #ifdef CATCHMENT
          call ncio_write_serial_time (file_hist, varname, itime_in_file, acc_vec, &
             'hydrounit', 'time', compress)

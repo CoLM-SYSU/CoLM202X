@@ -2,7 +2,7 @@
 
 !Author: Wenzong Dong
 
-   DEF_CASE_NAME = 'GlobalURBANIGBPHist2000-2020'
+   DEF_CASE_NAME = 'GlobalURBANIGBPHist2000-2016'
 
    DEF_domain%edges =  -90.0
    DEF_domain%edgen =   90.0
@@ -18,7 +18,7 @@
    DEF_simulation_time%start_month  = 1
    DEF_simulation_time%start_day    = 1
    DEF_simulation_time%start_sec    = 0
-   DEF_simulation_time%end_year     = 2021
+   DEF_simulation_time%end_year     = 2016
    DEF_simulation_time%end_month    = 1
    DEF_simulation_time%end_day      = 1
    DEF_simulation_time%end_sec      = 0
@@ -46,6 +46,15 @@
    ! LandCover setting
    DEF_LC_YEAR = 2005
 
+   ! ----Soil Surface Resistance options----
+   ! 0: NONE soil surface resistance
+   ! 1: SL14, Swenson and Lawrence (2014)
+   ! 2: SZ09, Sakaguchi and Zeng (2009)
+   ! 3: TR13, Tang and Riley (2013)
+   ! 4: LP92, Lee and Pielke (1992)
+   ! 5: S92,  Sellers et al (1992)
+   DEF_RSS_SCHEME = 1
+
    !---- Urban options ----
    ! urban type options
    ! Options :
@@ -65,9 +74,9 @@
    DEF_Interception_scheme=1 !1:CoLM2014；2:CLM4.5; 3:CLM5; 4:Noah-MP; 5:MATSIRO; 6:VIC
 
    ! ---- Hydrology module ----
-   DEF_USE_SUPERCOOL_WATER         = .false.
-   DEF_USE_VARIABLY_SATURATED_FLOW = .false.
-   DEF_USE_PLANTHYDRAULICS         = .false.
+   DEF_USE_SUPERCOOL_WATER       = .false.
+   DEF_USE_VariablySaturatedFlow = .false.
+   DEF_USE_PLANTHYDRAULICS       = .false.
    ! --------------------------
 
    ! ---- SNICAR ----
@@ -108,8 +117,8 @@
    DEF_HIST_FREQ = 'MONTHLY' ! write history file frequency: HOURLY/DAILY/MONTHLY/YEARLY
    DEF_HIST_groupby = 'MONTH' ! history in one file: DAY/MONTH/YEAR
    DEF_HIST_mode = 'one' ! history in one or block
-   DEF_REST_COMPRESS_LEVEL = 1
-   DEF_HIST_COMPRESS_LEVEL = 1
+   DEF_REST_CompressLevel = 1
+   DEF_HIST_CompressLevel = 1
 
    DEF_hist_vars_namelist = '/tera04/zhangsp/CoLM202X/github/CoLM202X/run/history.nml'
    DEF_hist_vars_out_default = .true.
