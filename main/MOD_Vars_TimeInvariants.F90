@@ -100,7 +100,7 @@ CONTAINS
    character(len=*), intent(in) :: file_restart
    integer :: compress
 
-      compress = DEF_REST_COMPRESS_LEVEL
+      compress = DEF_REST_CompressLevel
 
       CALL ncio_create_file_vector (file_restart, landpft)
       CALL ncio_define_dimension_vector (file_restart, landpft, 'pft')
@@ -476,7 +476,7 @@ CONTAINS
    ! Original version: Yongjiu Dai, September 15, 1999, 03/2014
    !=======================================================================
 
-   USE MOD_Namelist, only : DEF_REST_COMPRESS_LEVEL, DEF_USE_BEDROCK
+   USE MOD_Namelist, only : DEF_REST_CompressLevel, DEF_USE_BEDROCK
    USE MOD_SPMD_Task
    USE MOD_NetCDFSerial
    USE MOD_NetCDFVector
@@ -493,7 +493,7 @@ CONTAINS
    character(len=256) :: file_restart, cyear
    integer :: compress
 
-      compress = DEF_REST_COMPRESS_LEVEL
+      compress = DEF_REST_CompressLevel
 
       write(cyear,'(i4.4)') lc_year
 

@@ -12,7 +12,7 @@
 
    DEF_simulation_time%greenwich    = .TRUE.
    DEF_simulation_time%start_year   = 2010
-   DEF_simulation_time%start_month  = 1
+   DEF_simulation_time%start_month  = 3
    DEF_simulation_time%start_day    = 1
    DEF_simulation_time%start_sec    = 0
    DEF_simulation_time%end_year     = 2015
@@ -52,15 +52,16 @@
 
    ! ----- history -----
    DEF_hist_grid_as_forcing = .true.
-   DEF_WRST_FREQ = 'YEARLY' ! write restart file frequency: HOURLY/DAILY/MONTHLY/YEARLY
-   DEF_HIST_FREQ = 'MONTHLY' ! write history file frequency: HOURLY/DAILY/MONTHLY/YEARLY
-   DEF_HIST_groupby = 'MONTH' ! history in one file: DAY/MONTH/YEAR
+   DEF_WRST_FREQ = 'MONTHLY' ! write restart file frequency: HOURLY/DAILY/MONTHLY/YEARLY
+   DEF_HIST_FREQ = 'DAILY' ! write history file frequency: HOURLY/DAILY/MONTHLY/YEARLY
+   DEF_HIST_groupby = 'DAY' ! history in one file: DAY/MONTH/YEAR
    DEF_HIST_mode = 'one' ! history in one or block
-   DEF_REST_COMPRESS_LEVEL = 1
-   DEF_HIST_COMPRESS_LEVEL = 1
+   DEF_REST_CompressLevel = 1
+   DEF_HIST_CompressLevel = 1
 
-   DEF_HIST_WriteBack = .true.
+   DEF_HIST_WriteBack = .false.
 
-   DEF_hist_vars_out_default = .true.
+   DEF_hist_vars_out_default = .false.
+   DEF_hist_vars_namelist    = 'history.nml'
 
 /

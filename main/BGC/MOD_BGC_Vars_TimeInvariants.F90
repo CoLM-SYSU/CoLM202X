@@ -311,7 +311,7 @@ CONTAINS
      ! Original version: Yongjiu Dai, September 15, 1999, 03/2014
      !=======================================================================
 
-   USE MOD_Namelist, only : DEF_REST_COMPRESS_LEVEL
+   USE MOD_Namelist, only : DEF_REST_CompressLevel
    USE MOD_SPMD_Task
    USE MOD_NetCDFSerial
    USE MOD_NetCDFVector
@@ -325,7 +325,7 @@ CONTAINS
    ! Local Variables
    integer :: compress
 
-      compress = DEF_REST_COMPRESS_LEVEL
+      compress = DEF_REST_CompressLevel
  
       CALL ncio_create_file_vector (file_restart, landpatch)
  
