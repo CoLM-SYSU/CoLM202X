@@ -150,6 +150,9 @@ MODULE MOD_Namelist
 
    ! ----- compress data in aggregation when send data from IO to worker -----
    logical :: USE_zip_for_aggregation = .true.
+   
+   ! ----- compress level in writing aggregated surface data -----
+   integer :: DEF_Srfdata_CompressLevel = 1
 
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ! ----- Part 7: Leaf Area Index -----
@@ -819,6 +822,7 @@ CONTAINS
       USE_srfdata_from_larger_region,  &
       USE_srfdata_from_3D_gridded_data,&
       USE_zip_for_aggregation,         &
+      DEF_Srfdata_CompressLevel,       &
 
       DEF_USE_CBL_HEIGHT,              &   !add by zhongwang wei @ sysu 2022/12/31
       DEF_USE_PLANTHYDRAULICS,         &   !add by xingjie lu @ sysu 2023/05/28
@@ -1200,6 +1204,7 @@ CONTAINS
       CALL mpi_bcast (USE_srfdata_from_larger_region,   1, mpi_logical, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (USE_srfdata_from_3D_gridded_data, 1, mpi_logical, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (USE_zip_for_aggregation,          1, mpi_logical, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_Srfdata_CompressLevel,        1, mpi_integer, p_root, p_comm_glb, p_err)
 
       ! 07/2023, added by yuan: subgrid setting related
       CALL mpi_bcast (DEF_USE_LCT,           1, mpi_logical,   p_root, p_comm_glb, p_err)

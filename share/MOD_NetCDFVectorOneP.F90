@@ -23,13 +23,13 @@
 !    2) "MOD_NetCDFVectorOne.F90": 
 !       A vector is saved in one file. 
 !       READ/WRITE may be slow in this way.
-!       CHOOSE this implementation by "#define VectorInOneFile" in include/define.h
+!       CHOOSE this implementation by "#define VectorInOneFileP" in include/define.h
 !
 ! Created by Shupeng Zhang, May 2023
 !----------------------------------------------------------------------------------
 
 ! Put vector in one file.
-#ifdef VectorInOneFile
+#ifdef VectorInOneFileP
 
 MODULE MOD_NetCDFVector
 
@@ -1073,8 +1073,10 @@ CONTAINS
          CALL nccheck (nf90_def_var(grpid, trim(varname), datatype, dimids, varid, &
             chunksizes = dimlen) )
          IF (present(compress)) THEN
-            ! CALL nccheck (nf90_def_var_zstandard (grpid, varid, 1))
-            ! CALL nccheck( nf90_def_var_filter(grpid, varid, filterid, 1, (/compress/)) )
+            IF (compress > 0) THEN
+               CALL nccheck (nf90_def_var_zstandard (grpid, varid, compress))
+               ! CALL nccheck (nf90_def_var_deflate   (grpid, varid, NF90_SHUFFLE, 1, compress))
+            ENDIF
          ENDIF
       ENDDO
 

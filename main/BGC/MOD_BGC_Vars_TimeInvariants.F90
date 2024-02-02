@@ -348,7 +348,7 @@ CONTAINS
 
       IF (p_is_master) THEN
 
-#ifndef VectorInOneFile
+#if (!defined(VectorInOneFileS) && !defined(VectorInOneFileP))
          CALL ncio_create_file (file_restart)
 #endif
          CALL ncio_define_dimension(file_restart, 'ndecomp_transitions',ndecomp_transitions)
