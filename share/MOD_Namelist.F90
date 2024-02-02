@@ -39,10 +39,18 @@ MODULE MOD_Namelist
 ! ----- Part 2: blocks and MPI  -----
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+   ! "blocks" is used to deal with high resolution data.
+   ! It is defined by one of the following (in order of priority):
+   !   1) "DEF_BlockInfoFile" : "lat_s","lat_n","lon_w","lon_e" in file ;
+   !   2) "DEF_AverageElementSize" : diameter of element (in kilometer);
+   !   3) "DEF_nx_blocks" and "DEF_ny_blocks" : number of blocks;
    character(len=256) :: DEF_BlockInfoFile = 'null'
    real(r8) :: DEF_AverageElementSize = -1.
    integer  :: DEF_nx_blocks = 72
    integer  :: DEF_ny_blocks = 36
+
+   ! A group includes one "IO" process and several "worker" processes.
+   ! Its size determines number of IOs in a job.
    integer  :: DEF_PIO_groupsize = 12
 
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
