@@ -92,6 +92,7 @@ MODULE MOD_Namelist
 
    ! ----- Use surface data from existing dataset -----
    CHARACTER(len=256) :: DEF_dir_existing_srfdata = 'path/to/landdata'
+   CHARACTER(len=256) :: DEF_dir_vic_para = 'path/to/vic'
    ! case 1: from a larger region
    LOGICAL :: USE_srfdata_from_larger_region   = .false.
    ! case 2: from gridded data with dimensions [patch,lon,lat] or [pft,lon,lat]
@@ -143,6 +144,8 @@ MODULE MOD_Namelist
    ! 2: Mass and Energy Conservation scheme (MEC), DO mass and energy conservation calculation
    INTEGER :: DEF_LULCC_SCHEME = 1
 
+   LOGICAL :: DEF_USE_VIC = .false.
+   
    ! ------ Urban model related -------
    ! Options for urban type scheme
    ! 1: NCAR Urban Classification, 3 urban type with Tall Building, High Density and Medium Density
@@ -760,6 +763,7 @@ CONTAINS
          DEF_LC_YEAR,                     &
          DEF_LULCC_SCHEME,                &
 
+         DEF_USE_VIC,                     &
          DEF_URBAN_type_scheme,           &
          DEF_URBAN_ONLY,                  &
          DEF_URBAN_RUN,                   &   !add by hua yuan, open urban model or not
@@ -775,6 +779,7 @@ CONTAINS
          DEF_RSS_SCHEME,                  &
          DEF_SPLIT_SOILSNOW,              &
 
+         DEF_dir_vic_para,                &
          DEF_dir_existing_srfdata,        &
          USE_srfdata_from_larger_region,  &
          USE_srfdata_from_3D_gridded_data,&
@@ -1154,6 +1159,7 @@ CONTAINS
 
       CALL mpi_bcast (DEF_file_mesh_filter,   256, mpi_character, p_root, p_comm_glb, p_err)
 
+      CALL mpi_bcast (DEF_dir_vic_para,     256, mpi_character, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_dir_existing_srfdata,     256, mpi_character, p_root, p_comm_glb, p_err)
       call mpi_bcast (USE_srfdata_from_larger_region,   1, mpi_logical, p_root, p_comm_glb, p_err)
       call mpi_bcast (USE_srfdata_from_3D_gridded_data, 1, mpi_logical, p_root, p_comm_glb, p_err)
@@ -1181,6 +1187,8 @@ CONTAINS
       CALL mpi_bcast (DEF_LULCC_SCHEME,      1, mpi_integer, p_root, p_comm_glb, p_err)
 
       CALL mpi_bcast (DEF_URBAN_type_scheme, 1, mpi_integer, p_root, p_comm_glb, p_err)
+
+      CALL mpi_bcast (DEF_USE_VIC,        1, mpi_logical, p_root, p_comm_glb, p_err)
       ! 05/2023, added by yuan
       CALL mpi_bcast (DEF_URBAN_ONLY,        1, mpi_logical, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_URBAN_RUN,         1, mpi_logical, p_root, p_comm_glb, p_err)
