@@ -71,8 +71,8 @@ MODULE MOD_SingleSrfdata
    REAL(r8), allocatable :: SITE_soil_k_solids          (:)
    REAL(r8), allocatable :: SITE_soil_psi_s             (:)
    REAL(r8), allocatable :: SITE_soil_lambda            (:)
-#ifdef vanGenuchten_Mualem_SOIL_MODEL
    REAL(r8), allocatable :: SITE_soil_theta_r           (:)
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
    REAL(r8), allocatable :: SITE_soil_alpha_vgm         (:)
    REAL(r8), allocatable :: SITE_soil_L_vgm             (:)
    REAL(r8), allocatable :: SITE_soil_n_vgm             (:)
@@ -239,8 +239,8 @@ CONTAINS
          CALL ncio_read_serial (fsrfdata, 'soil_k_solids         ', SITE_soil_k_solids         )
          CALL ncio_read_serial (fsrfdata, 'soil_psi_s            ', SITE_soil_psi_s            )
          CALL ncio_read_serial (fsrfdata, 'soil_lambda           ', SITE_soil_lambda           )
-#ifdef vanGenuchten_Mualem_SOIL_MODEL
          CALL ncio_read_serial (fsrfdata, 'soil_theta_r          ', SITE_soil_theta_r          )
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
          CALL ncio_read_serial (fsrfdata, 'soil_alpha_vgm        ', SITE_soil_alpha_vgm        )
          CALL ncio_read_serial (fsrfdata, 'soil_L_vgm            ', SITE_soil_L_vgm            )
          CALL ncio_read_serial (fsrfdata, 'soil_n_vgm            ', SITE_soil_n_vgm            )
@@ -375,8 +375,8 @@ CONTAINS
          CALL ncio_read_serial (fsrfdata, 'soil_k_solids         ', SITE_soil_k_solids         )
          CALL ncio_read_serial (fsrfdata, 'soil_psi_s            ', SITE_soil_psi_s            )
          CALL ncio_read_serial (fsrfdata, 'soil_lambda           ', SITE_soil_lambda           )
-#ifdef vanGenuchten_Mualem_SOIL_MODEL
          CALL ncio_read_serial (fsrfdata, 'soil_theta_r          ', SITE_soil_theta_r          )
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
          CALL ncio_read_serial (fsrfdata, 'soil_alpha_vgm        ', SITE_soil_alpha_vgm        )
          CALL ncio_read_serial (fsrfdata, 'soil_L_vgm            ', SITE_soil_L_vgm            )
          CALL ncio_read_serial (fsrfdata, 'soil_n_vgm            ', SITE_soil_n_vgm            )
@@ -535,8 +535,8 @@ CONTAINS
       CALL ncio_write_serial (fsrfdata, 'soil_lambda', SITE_soil_lambda, 'soil')
       CALL ncio_put_attr     (fsrfdata, 'soil_psi_s ', 'source', source)
       CALL ncio_put_attr     (fsrfdata, 'soil_lambda', 'source', source)
-#ifdef vanGenuchten_Mualem_SOIL_MODEL
       CALL ncio_write_serial (fsrfdata, 'soil_theta_r  ', SITE_soil_theta_r  , 'soil')
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
       CALL ncio_write_serial (fsrfdata, 'soil_alpha_vgm', SITE_soil_alpha_vgm, 'soil')
       CALL ncio_write_serial (fsrfdata, 'soil_L_vgm    ', SITE_soil_L_vgm    , 'soil')
       CALL ncio_write_serial (fsrfdata, 'soil_n_vgm    ', SITE_soil_n_vgm    , 'soil')
@@ -712,8 +712,8 @@ CONTAINS
       CALL ncio_write_serial (fsrfdata, 'soil_lambda', SITE_soil_lambda, 'soil')
       CALL ncio_put_attr     (fsrfdata, 'soil_psi_s ', 'source', source)
       CALL ncio_put_attr     (fsrfdata, 'soil_lambda', 'source', source)
-#ifdef vanGenuchten_Mualem_SOIL_MODEL
       CALL ncio_write_serial (fsrfdata, 'soil_theta_r  ', SITE_soil_theta_r  , 'soil')
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
       CALL ncio_write_serial (fsrfdata, 'soil_alpha_vgm', SITE_soil_alpha_vgm, 'soil')
       CALL ncio_write_serial (fsrfdata, 'soil_L_vgm    ', SITE_soil_L_vgm    , 'soil')
       CALL ncio_write_serial (fsrfdata, 'soil_n_vgm    ', SITE_soil_n_vgm    , 'soil')
@@ -796,8 +796,8 @@ CONTAINS
       IF (allocated(SITE_soil_k_solids         )) deallocate(SITE_soil_k_solids         )
       IF (allocated(SITE_soil_psi_s            )) deallocate(SITE_soil_psi_s            )
       IF (allocated(SITE_soil_lambda           )) deallocate(SITE_soil_lambda           )
-#ifdef vanGenuchten_Mualem_SOIL_MODEL
       IF (allocated(SITE_soil_theta_r          )) deallocate(SITE_soil_theta_r          )
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
       IF (allocated(SITE_soil_alpha_vgm        )) deallocate(SITE_soil_alpha_vgm        )
       IF (allocated(SITE_soil_L_vgm            )) deallocate(SITE_soil_L_vgm            )
       IF (allocated(SITE_soil_n_vgm            )) deallocate(SITE_soil_n_vgm            )
