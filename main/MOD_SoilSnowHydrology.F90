@@ -4,9 +4,11 @@ MODULE MOD_SoilSnowHydrology
 
 !-----------------------------------------------------------------------
   use MOD_Precision
+  USE MOD_Hydro_VIC
+  USE MOD_Hydro_VIC_Variables
   use MOD_Namelist, only: DEF_USE_PLANTHYDRAULICS, DEF_USE_SNICAR, &
                           DEF_URBAN_RUN, DEF_USE_IRRIGATION, &
-                          DEF_SPLIT_SOILSNOW
+                          DEF_SPLIT_SOILSNOW, DEF_USE_VIC
 #if(defined CaMa_Flood)
    USE YOS_CMF_INPUT,      ONLY: LWINFILT
 #endif
@@ -76,6 +78,10 @@ MODULE MOD_SoilSnowHydrology
 
   use MOD_Precision
   use MOD_Const_Physical, only : denice, denh2o, tfrz
+  USE MOD_Vars_TimeInvariants, only : theta_r, vic_b_infilt, vic_Dsmax, vic_Ds, vic_Ws, vic_c
+  USE MOD_Vars_1DFluxes, only : fevpg
+  USE MOD_Hydro_VIC_Variables
+  USE MOD_Hydro_VIC
 
   implicit none
 
@@ -189,6 +195,12 @@ MODULE MOD_SoilSnowHydrology
    real(r8) :: qflx_irrig_flood
    real(r8) :: qflx_irrig_paddy
 #endif
+   
+   ! **  
+   type(soil_con_struct ) :: soil_con
+   type(cell_data_struct) :: cell
+   integer  :: ilay
+   real(r8) :: vic_tmp(Nlayer) 
 
 !=======================================================================
 ! [1] update the liquid water within snow layer and the water onto soil
@@ -269,7 +281,25 @@ ENDIF
 
       ! surface runoff including water table and surface staturated area
 
-      rsur = 0.
+      rsur   = 0.
+      rsubst = 0.
+      
+      ! if (gwat > 0.) then
+IF (DEF_USE_VIC) THEN
+      call vic_para(porsl, theta_r(:,ipatch), hksati, bsw, wice_soisno, wliq_soisno, fevpg(ipatch), rootflux, &
+                    vic_b_infilt(ipatch), vic_Dsmax(ipatch), vic_Ds(ipatch), vic_Ws(ipatch), vic_c(ipatch),& 
+                    soil_con, cell)
+
+      call compute_vic_runoff(soil_con, gwat*deltim, soil_con%frost_fract, cell)
+
+      DO ilay = 1, Nlayer
+         vic_tmp(ilay) = cell%layer(ilay)%moist
+      ENDDO
+      call VIC2CoLM(wliq_soisno, vic_tmp)
+
+      if (gwat > 0.) rsur = cell%runoff/deltim
+      rsubst = cell%baseflow/deltim
+ELSE
       if (gwat > 0.) then
       call surfacerunoff (nl_soil,wtfact,wimp,porsl,psi0,hksati,&
                           z_soisno(1:),dz_soisno(1:),zi_soisno(0:),&
@@ -277,6 +307,7 @@ ENDIF
       else
            rsur = 0.
       endif
+ENDIF                  
 
       ! infiltration into surface soil layer
       qinfl = gwat - rsur
@@ -334,13 +365,13 @@ ENDIF
 !=======================================================================
 ! [4] subsurface runoff and the corrections
 !=======================================================================
-
+IF (.not. DEF_USE_VIC) THEN
       call subsurfacerunoff (nl_soil,deltim,pondmx,&
                              eff_porosity,icefrac,dz_soisno(1:),zi_soisno(0:),&
                              wice_soisno(1:),wliq_soisno(1:),&
                              porsl,psi0,bsw,zwt,wa,&
                              qcharge,rsubst,errw_rsub)
-
+ENDIF
       ! total runoff (mm/s)
       rnof = rsubst + rsur
 
