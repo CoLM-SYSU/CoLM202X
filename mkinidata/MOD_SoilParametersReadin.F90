@@ -63,8 +63,9 @@ MODULE MOD_SoilParametersReadin
       real(r8), allocatable :: soil_theta_s_l             (:) ! saturated water content (cm3/cm3)
       real(r8), allocatable :: soil_psi_s_l               (:) ! matric potential at saturation (cm)
       real(r8), allocatable :: soil_lambda_l              (:) ! pore size distribution index (dimensionless)
-#ifdef vanGenuchten_Mualem_SOIL_MODEL
+!#ifdef vanGenuchten_Mualem_SOIL_MODEL
       real(r8), allocatable :: soil_theta_r_l   (:)  ! residual water content (cm3/cm3)
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
       real(r8), allocatable :: soil_alpha_vgm_l (:)
       real(r8), allocatable :: soil_L_vgm_l     (:)
       real(r8), allocatable :: soil_n_vgm_l     (:)
@@ -104,8 +105,9 @@ MODULE MOD_SoilParametersReadin
             allocate ( soil_theta_s_l             (numpatch) )
             allocate ( soil_psi_s_l               (numpatch) )
             allocate ( soil_lambda_l              (numpatch) )
-#ifdef vanGenuchten_Mualem_SOIL_MODEL
+!#ifdef vanGenuchten_Mualem_SOIL_MODEL
             allocate ( soil_theta_r_l   (numpatch) )
+#ifdef vanGenuchten_Mualem_SOIL_MODEL            
             allocate ( soil_alpha_vgm_l (numpatch) )
             allocate ( soil_L_vgm_l     (numpatch) )
             allocate ( soil_n_vgm_l     (numpatch) )
@@ -140,8 +142,9 @@ MODULE MOD_SoilParametersReadin
          soil_theta_s_l             (:) = SITE_soil_theta_s           (nsl)
          soil_psi_s_l               (:) = SITE_soil_psi_s             (nsl)
          soil_lambda_l              (:) = SITE_soil_lambda            (nsl)
-#ifdef vanGenuchten_Mualem_SOIL_MODEL
+!#ifdef vanGenuchten_Mualem_SOIL_MODEL
          soil_theta_r_l   (:) = SITE_soil_theta_r  (nsl)
+#ifdef vanGenuchten_Mualem_SOIL_MODEL         
          soil_alpha_vgm_l (:) = SITE_soil_alpha_vgm(nsl)
          soil_L_vgm_l     (:) = SITE_soil_L_vgm    (nsl)
          soil_n_vgm_l     (:) = SITE_soil_n_vgm    (nsl)
@@ -194,11 +197,11 @@ MODULE MOD_SoilParametersReadin
          lndname = trim(landdir)//'/lambda_l'//trim(c)//'_patches.nc'
          call ncio_read_vector (lndname, 'lambda_l'//trim(c)//'_patches', landpatch, soil_lambda_l)
 
-#ifdef vanGenuchten_Mualem_SOIL_MODEL
+!#ifdef vanGenuchten_Mualem_SOIL_MODEL
          ! (10) read in residual water content [cm3/cm3]
          lndname = trim(landdir)//'/theta_r_l'//trim(c)//'_patches.nc'
          call ncio_read_vector (lndname, 'theta_r_l'//trim(c)//'_patches', landpatch, soil_theta_r_l)
-
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
          ! (11) read in alpha in VGM model
          lndname = trim(landdir)//'/alpha_vgm_l'//trim(c)//'_patches.nc'
          call ncio_read_vector (lndname, 'alpha_vgm_l'//trim(c)//'_patches', landpatch, soil_alpha_vgm_l)
@@ -271,8 +274,9 @@ MODULE MOD_SoilParametersReadin
                   porsl     (nsl,ipatch) = -1.e36
                   psi0      (nsl,ipatch) = -1.e36
                   bsw       (nsl,ipatch) = -1.e36
-#ifdef vanGenuchten_Mualem_SOIL_MODEL
+!#ifdef vanGenuchten_Mualem_SOIL_MODEL
                   theta_r   (nsl,ipatch) = -1.e36
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
                   alpha_vgm (nsl,ipatch) = -1.e36
                   L_vgm     (nsl,ipatch) = -1.e36
                   n_vgm     (nsl,ipatch) = -1.e36
@@ -299,6 +303,7 @@ MODULE MOD_SoilParametersReadin
                   bsw        (nsl,ipatch) = 1./soil_lambda_l          (ipatch)        ! dimensionless
                   wfc        (nsl,ipatch) = (-339.9/soil_psi_s_l(ipatch))**(-1.0*soil_lambda_l(ipatch))&
                                           * soil_theta_s_l(ipatch)
+                  theta_r    (nsl,ipatch) = soil_theta_r_l  (ipatch)
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
                   psi0       (nsl,ipatch) = -10.      ! mm
                   theta_r    (nsl,ipatch) = soil_theta_r_l  (ipatch)
@@ -337,8 +342,8 @@ MODULE MOD_SoilParametersReadin
             deallocate ( soil_theta_s_l             )
             deallocate ( soil_psi_s_l               )
             deallocate ( soil_lambda_l              )
-#ifdef vanGenuchten_Mualem_SOIL_MODEL
             deallocate ( soil_theta_r_l   )
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
             deallocate ( soil_alpha_vgm_l )
             deallocate ( soil_L_vgm_l     )
             deallocate ( soil_n_vgm_l     )
@@ -375,8 +380,8 @@ MODULE MOD_SoilParametersReadin
             porsl      (nsl,:) = porsl     (nsl-1,:)
             psi0       (nsl,:) = psi0      (nsl-1,:)
             bsw        (nsl,:) = bsw       (nsl-1,:)
-#ifdef vanGenuchten_Mualem_SOIL_MODEL
             theta_r    (nsl,:) = theta_r   (nsl-1,:)
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
             alpha_vgm  (nsl,:) = alpha_vgm (nsl-1,:)
             L_vgm      (nsl,:) = L_vgm     (nsl-1,:)
             n_vgm      (nsl,:) = n_vgm     (nsl-1,:)
@@ -404,6 +409,7 @@ MODULE MOD_SoilParametersReadin
             porsl      (nsl,:) = porsl     (9,:)
             psi0       (nsl,:) = psi0      (9,:)
             bsw        (nsl,:) = bsw       (9,:)
+            theta_r    (nsl,:) = theta_r   (9,:)
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
             theta_r    (nsl,:) = theta_r   (9,:)
             alpha_vgm  (nsl,:) = alpha_vgm (9,:)
