@@ -211,8 +211,14 @@ MODULE MOD_Vars_TimeInvariants
   REAL(r8), allocatable :: porsl        (:,:)  !fraction of soil that is voids [-]
   REAL(r8), allocatable :: psi0         (:,:)  !minimum soil suction [mm] (NOTE: "-" valued)
   REAL(r8), allocatable :: bsw          (:,:)  !clapp and hornbereger "b" parameter [-]
-#ifdef vanGenuchten_Mualem_SOIL_MODEL
+  REAL(r8), allocatable :: vic_b_infilt (:)
+  REAL(r8), allocatable :: vic_Dsmax    (:)
+  REAL(r8), allocatable :: vic_Ds       (:)
+  REAL(r8), allocatable :: vic_Ws       (:)
+  REAL(r8), allocatable :: vic_c        (:)
+!#ifdef vanGenuchten_Mualem_SOIL_MODEL
   REAL(r8), allocatable :: theta_r      (:,:)  !residual moisture content [-]
+#ifdef vanGenuchten_Mualem_SOIL_MODEL  
   REAL(r8), allocatable :: alpha_vgm    (:,:)  !a parameter corresponding approximately to the inverse of the air-entry value
   REAL(r8), allocatable :: L_vgm        (:,:)  !pore-connectivity parameter [dimensionless]
   REAL(r8), allocatable :: n_vgm        (:,:)  !a shape parameter [dimensionless]
@@ -306,8 +312,14 @@ MODULE MOD_Vars_TimeInvariants
            allocate (porsl        (nl_soil,numpatch))
            allocate (psi0         (nl_soil,numpatch))
            allocate (bsw          (nl_soil,numpatch))
-#ifdef vanGenuchten_Mualem_SOIL_MODEL
+           allocate (vic_b_infilt     (numpatch))
+           allocate (vic_Dsmax        (numpatch))
+           allocate (vic_Ds           (numpatch))
+           allocate (vic_Ws           (numpatch)) 
+           allocate (vic_c            (numpatch))
+!#ifdef vanGenuchten_Mualem_SOIL_MODEL
            allocate (theta_r      (nl_soil,numpatch))
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
            allocate (alpha_vgm    (nl_soil,numpatch))
            allocate (L_vgm        (nl_soil,numpatch))
            allocate (n_vgm        (nl_soil,numpatch))
@@ -400,8 +412,8 @@ MODULE MOD_Vars_TimeInvariants
      call ncio_read_vector (file_restart, 'porsl  ' ,     nl_soil, landpatch, porsl     ) ! fraction of soil that is voids [-]
      call ncio_read_vector (file_restart, 'psi0   ' ,     nl_soil, landpatch, psi0      ) ! minimum soil suction [mm] (NOTE: "-" valued)
      call ncio_read_vector (file_restart, 'bsw    ' ,     nl_soil, landpatch, bsw       ) ! clapp and hornbereger "b" parameter [-]
-#ifdef vanGenuchten_Mualem_SOIL_MODEL
      call ncio_read_vector (file_restart, 'theta_r  ' ,   nl_soil, landpatch, theta_r   ) ! residual moisture content [-]
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
      call ncio_read_vector (file_restart, 'alpha_vgm' ,   nl_soil, landpatch, alpha_vgm ) ! a parameter corresponding approximately to the inverse of the air-entry value
      call ncio_read_vector (file_restart, 'L_vgm    ' ,   nl_soil, landpatch, L_vgm     ) ! pore-connectivity parameter [dimensionless]
      call ncio_read_vector (file_restart, 'n_vgm    ' ,   nl_soil, landpatch, n_vgm     ) ! a shape parameter [dimensionless]
@@ -418,6 +430,12 @@ MODULE MOD_Vars_TimeInvariants
      call ncio_read_vector (file_restart, 'BA_beta' ,     nl_soil, landpatch, BA_beta )   ! beta in Balland and Arp(2005) thermal conductivity scheme
      call ncio_read_vector (file_restart, 'htop' ,    landpatch, htop)                    !
      call ncio_read_vector (file_restart, 'hbot' ,    landpatch, hbot)                    !
+     
+     call ncio_read_vector (file_restart, 'vic_b_infilt', landpatch, vic_b_infilt) ! ponding depth (mm)
+     call ncio_read_vector (file_restart, 'vic_Dsmax'   , landpatch, vic_Dsmax   )
+     call ncio_read_vector (file_restart, 'vic_Ds'      , landpatch, vic_Ds      )
+     call ncio_read_vector (file_restart, 'vic_Ws'      , landpatch, vic_Ws      )
+     call ncio_read_vector (file_restart, 'vic_c'       , landpatch, vic_c       )
 
      IF(DEF_USE_BEDROCK)THEN
         call ncio_read_vector (file_restart, 'debdrock' ,    landpatch, dbedrock)         !
@@ -547,8 +565,9 @@ MODULE MOD_Vars_TimeInvariants
      call ncio_write_vector (file_restart, 'psi0      ', 'soil', nl_soil, 'patch', landpatch, psi0      , compress) ! minimum soil suction [mm] (NOTE: "-" valued)
      call ncio_write_vector (file_restart, 'bsw       ', 'soil', nl_soil, 'patch', landpatch, bsw       , compress) ! clapp and hornbereger "b" parameter [-]
 
-#ifdef vanGenuchten_Mualem_SOIL_MODEL
+!#ifdef vanGenuchten_Mualem_SOIL_MODEL
      call ncio_write_vector (file_restart, 'theta_r  ' , 'soil', nl_soil, 'patch', landpatch, theta_r   , compress) ! residual moisture content [-]
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
      call ncio_write_vector (file_restart, 'alpha_vgm' , 'soil', nl_soil, 'patch', landpatch, alpha_vgm , compress) ! a parameter corresponding approximately to the inverse of the air-entry value
      call ncio_write_vector (file_restart, 'L_vgm    ' , 'soil', nl_soil, 'patch', landpatch, L_vgm     , compress) ! pore-connectivity parameter [dimensionless]
      call ncio_write_vector (file_restart, 'n_vgm    ' , 'soil', nl_soil, 'patch', landpatch, n_vgm     , compress) ! a shape parameter [dimensionless]
@@ -566,6 +585,12 @@ MODULE MOD_Vars_TimeInvariants
 
      call ncio_write_vector (file_restart, 'htop' , 'patch', landpatch, htop)                                       !
      call ncio_write_vector (file_restart, 'hbot' , 'patch', landpatch, hbot)                                       !
+
+     call ncio_write_vector (file_restart, 'vic_b_infilt', 'patch', landpatch, vic_b_infilt) ! ponding depth (mm)
+     call ncio_write_vector (file_restart, 'vic_Dsmax'   , 'patch', landpatch, vic_Dsmax   )
+     call ncio_write_vector (file_restart, 'vic_Ds'      , 'patch', landpatch, vic_Ds      )
+     call ncio_write_vector (file_restart, 'vic_Ws'      , 'patch', landpatch, vic_Ws      )
+     call ncio_write_vector (file_restart, 'vic_c'       , 'patch', landpatch, vic_c       )
 
      IF(DEF_USE_BEDROCK)THEN
         call ncio_write_vector (file_restart, 'debdrock' , 'patch', landpatch, dbedrock)                            !
@@ -597,7 +622,7 @@ MODULE MOD_Vars_TimeInvariants
         call ncio_write_serial (file_restart, 'trsmx0', trsmx0) ! max transpiration for moist soil+100% veg.  [mm/s]
         call ncio_write_serial (file_restart, 'tcrit ', tcrit ) ! critical temp. to determine rain or snow
         call ncio_write_serial (file_restart, 'wetwatmax', wetwatmax) ! maximum wetland water (mm)
-
+        
      end if
 
 #ifdef USEMPI
@@ -663,8 +688,8 @@ MODULE MOD_Vars_TimeInvariants
            deallocate (porsl          )
            deallocate (psi0           )
            deallocate (bsw            )
-#ifdef vanGenuchten_Mualem_SOIL_MODEL
            deallocate (theta_r        )
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
            deallocate (alpha_vgm      )
            deallocate (L_vgm          )
            deallocate (n_vgm          )
