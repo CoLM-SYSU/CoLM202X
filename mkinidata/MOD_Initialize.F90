@@ -224,6 +224,9 @@ MODULE MOD_Initialize
       real(r8) f_s2s3
       real(r8) t
 #endif
+      integer  :: txt_id
+      real(r8) :: vic_b_infilt_, vic_Dsmax_, vic_Ds_, vic_Ws_, vic_c_
+      !real(r8) :: vic_b_infilt, vic_Dsmax, vic_Ds, vic_Ws, vic_c
 
       ! --------------------------------------------------------------------
       ! Allocates memory for CoLM 1d [numpatch] variables
@@ -338,6 +341,27 @@ MODULE MOD_Initialize
       trsmx0 = 2.e-4   !Max transpiration for moist soil+100% veg. [mm/s]
       tcrit  = 2.5     !critical temp. to determine rain or snow
       wetwatmax = 200.0 !maximum wetland water (mm)
+
+IF (DEF_USE_VIC) THEN
+      txt_id = 111
+      open(txt_id, file=trim(DEF_dir_vic_para), status='old', form='formatted')
+
+      READ(txt_id, *)
+      READ(txt_id, *) vic_b_infilt_, vic_Dsmax_, vic_Ds_, vic_Ws_, vic_c_
+
+      close(txt_id)
+      vic_b_infilt = vic_b_infilt_
+      vic_Dsmax    = vic_Dsmax_
+      vic_Ds       = vic_Ds_
+      vic_Ws       = vic_Ws_
+      vic_c        = vic_c_
+ELSE
+      vic_b_infilt = 0
+      vic_Dsmax    = 0
+      vic_Ds       = 0
+      vic_Ws       = 0
+      vic_c        = 0
+ENDIF
 
 #ifdef BGC
    ! bgc constant
