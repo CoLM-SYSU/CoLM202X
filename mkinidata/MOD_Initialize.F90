@@ -356,24 +356,41 @@ CONTAINS
       wetwatmax = 200.0 !maximum wetland water (mm)
 
       IF (DEF_Runoff_SCHEME == 1) THEN
-         txt_id = 111
-         open(txt_id, file=trim(DEF_file_VIC_para), status='old', form='formatted')
+         IF (p_is_master) THEN
+            txt_id = 111
+            open(txt_id, file=trim(DEF_file_VIC_para), status='old', form='formatted')
+            READ(txt_id, *)
+            READ(txt_id, *) vic_b_infilt_, vic_Dsmax_, vic_Ds_, vic_Ws_, vic_c_
+            close(txt_id)
+         ENDIF
 
-         READ(txt_id, *)
-         READ(txt_id, *) vic_b_infilt_, vic_Dsmax_, vic_Ds_, vic_Ws_, vic_c_
+#ifdef USEMPI
+         CALL mpi_bcast (vic_b_infilt_, 1, MPI_REAL8, p_root, p_comm_glb, p_err)
+         CALL mpi_bcast (vic_Dsmax_   , 1, MPI_REAL8, p_root, p_comm_glb, p_err)
+         CALL mpi_bcast (vic_Ds_      , 1, MPI_REAL8, p_root, p_comm_glb, p_err)
+         CALL mpi_bcast (vic_Ws_      , 1, MPI_REAL8, p_root, p_comm_glb, p_err)
+         CALL mpi_bcast (vic_c_       , 1, MPI_REAL8, p_root, p_comm_glb, p_err)
+#endif
 
-         close(txt_id)
-         vic_b_infilt = vic_b_infilt_
-         vic_Dsmax    = vic_Dsmax_
-         vic_Ds       = vic_Ds_
-         vic_Ws       = vic_Ws_
-         vic_c        = vic_c_
+         IF (p_is_worker) THEN
+            IF (numpatch > 0) THEN
+               vic_b_infilt = vic_b_infilt_
+               vic_Dsmax    = vic_Dsmax_
+               vic_Ds       = vic_Ds_
+               vic_Ws       = vic_Ws_
+               vic_c        = vic_c_
+            ENDIF
+         ENDIF
       ELSE
-         vic_b_infilt = 0
-         vic_Dsmax    = 0
-         vic_Ds       = 0
-         vic_Ws       = 0
-         vic_c        = 0
+         IF (p_is_worker) THEN
+            IF (numpatch > 0) THEN
+               vic_b_infilt = 0
+               vic_Dsmax    = 0
+               vic_Ds       = 0
+               vic_Ws       = 0
+               vic_c        = 0
+            ENDIF
+         ENDIF
       ENDIF
 
 #ifdef BGC
