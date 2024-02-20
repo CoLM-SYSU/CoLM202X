@@ -21,7 +21,7 @@ CONTAINS
         froof          ,fgper          ,flake          ,bsw            ,&
         porsl          ,psi0           ,hksati         ,wtfact         ,&
         pondmx         ,ssi            ,wimp           ,smpmin         ,&
-        topostd        ,theta_r                                        ,&
+        theta_r        ,topostd                                        ,&
         rootr,rootflux ,etr            ,fseng          ,fgrnd          ,&
         t_gpersno      ,t_lakesno      ,t_lake         ,dz_lake        ,&
         z_gpersno      ,z_lakesno      ,zi_gpersno     ,zi_lakesno     ,&
@@ -227,7 +227,7 @@ CONTAINS
       rootflux(:) = rootr(:)*etr
       CALL WATER_2014 (ipatch,patchtype,lbp        ,nl_soil     ,deltim     ,&
              z_gpersno   ,dz_gpersno  ,zi_gpersno  ,bsw         ,porsl      ,&
-             psi0        ,hksati      ,topostd     ,theta_r     ,&
+             psi0        ,hksati      ,theta_r     ,topostd     ,&
              rootr       ,rootflux    ,t_gpersno   ,&
              wliq_gpersno,wice_gpersno,smp         ,hk          ,pgper_rain ,&
              sm_gper     ,etr         ,qseva_gper  ,qsdew_gper  ,qsubl_gper ,&

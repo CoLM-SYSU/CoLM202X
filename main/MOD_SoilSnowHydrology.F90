@@ -43,7 +43,7 @@ CONTAINS
 
    SUBROUTINE WATER_2014 (ipatch,patchtype,lb       ,nl_soil ,deltim,&
               z_soisno    ,dz_soisno   ,zi_soisno   ,bsw     ,porsl ,&
-              psi0        ,hksati      ,topostd     ,theta_r ,&
+              psi0        ,hksati      ,theta_r     ,topostd ,&
               rootr       ,rootflux    ,t_soisno    ,&
               wliq_soisno ,wice_soisno ,smp         ,hk      ,pg_rain ,&
               sm,   etr   ,qseva       ,qsdew       ,qsubl   ,qfros ,&
