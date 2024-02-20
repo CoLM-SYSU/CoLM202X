@@ -68,7 +68,7 @@
 !     2) "VectorInOneFileS" : write vector data in one file in serial mode;  
 !     3) Neither "VectorInOneFileS" nor "VectorInOneFileP" is defined : 
 !        write vector data in separate files.  
-#define VectorInOneFileP
+#undef VectorInOneFileP
 !     Conflict
 #ifdef VectorInOneFileP
 #undef VectorInOneFileS
