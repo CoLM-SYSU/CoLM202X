@@ -189,7 +189,11 @@ CONTAINS
 
       IF (DEF_USE_Forcing_Downscaling) THEN
 
-         forc_topo = topoelv
+         IF (p_is_worker) THEN
+            IF (numpatch > 0) THEN
+               forc_topo = topoelv
+            ENDIF
+         ENDIF
 
          IF (p_is_worker) THEN
 #if (defined CROP)

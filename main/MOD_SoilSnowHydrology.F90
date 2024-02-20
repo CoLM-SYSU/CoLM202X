@@ -43,7 +43,7 @@ CONTAINS
 
    SUBROUTINE WATER_2014 (ipatch,patchtype,lb       ,nl_soil ,deltim,&
               z_soisno    ,dz_soisno   ,zi_soisno   ,bsw     ,porsl ,&
-              psi0        ,hksati      ,topostd     ,&
+              psi0        ,hksati      ,topostd     ,theta_r ,&
               rootr       ,rootflux    ,t_soisno    ,&
               wliq_soisno ,wice_soisno ,smp         ,hk      ,pg_rain ,&
               sm,   etr   ,qseva       ,qsdew       ,qsubl   ,qfros ,&
@@ -79,7 +79,7 @@ CONTAINS
 
    USE MOD_Precision
    USE MOD_Const_Physical,      only : denice, denh2o, tfrz
-   USE MOD_Vars_TimeInvariants, only : theta_r, vic_b_infilt, vic_Dsmax, vic_Ds, vic_Ws, vic_c
+   USE MOD_Vars_TimeInvariants, only : vic_b_infilt, vic_Dsmax, vic_Ds, vic_Ws, vic_c
    USE MOD_Vars_1DFluxes,       only : fevpg
 
    IMPLICIT NONE
@@ -110,6 +110,7 @@ CONTAINS
         porsl(1:nl_soil) , &! saturated volumetric soil water content(porosity)
         psi0(1:nl_soil)  , &! saturated soil suction (mm) (NEGATIVE)
         hksati(1:nl_soil), &! hydraulic conductivity at saturation (mm h2o/s)
+        theta_r(1:nl_soil),&! residual moisture content [-]
         rootr(1:nl_soil) , &! water uptake farction from different layers, all layers add to 1.0
         rootflux(1:nl_soil),&! root uptake from different layer, all layers add to transpiration
 
@@ -298,7 +299,7 @@ IF(patchtype<=1)THEN   ! soil ground only
       ELSEIF (DEF_Runoff_SCHEME  == 1) THEN 
          ! 1: runoff scheme from VIC model
       
-         call vic_para(porsl, theta_r(:,ipatch), hksati, bsw, wice_soisno, wliq_soisno, fevpg(ipatch), rootflux, &
+         call vic_para(porsl, theta_r, hksati, bsw, wice_soisno, wliq_soisno, fevpg(ipatch), rootflux, &
             vic_b_infilt(ipatch), vic_Dsmax(ipatch), vic_Ds(ipatch), vic_Ws(ipatch), vic_c(ipatch),&
             soil_con, cell)
 

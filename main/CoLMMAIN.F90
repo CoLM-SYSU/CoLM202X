@@ -734,7 +734,7 @@ SUBROUTINE CoLMMAIN ( &
             CALL WATER_2014 (ipatch,patchtype         ,lb                ,nl_soil           ,&
                  deltim            ,z_soisno(lb:)     ,dz_soisno(lb:)    ,zi_soisno(lb-1:)  ,&
                  bsw               ,porsl             ,psi0              ,hksati            ,&
-                 topostd           ,&
+                 topostd           ,theta_r           ,&
                  rootr             ,rootflux          ,t_soisno(lb:)     ,wliq_soisno(lb:)  ,&
                  wice_soisno(lb:)  ,smp               ,hk                ,pg_rain           ,&
                  sm                ,etr               ,qseva             ,qsdew             ,&

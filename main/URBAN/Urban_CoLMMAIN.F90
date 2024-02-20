@@ -199,7 +199,7 @@ SUBROUTINE UrbanCoLMMAIN ( &
         porsl     (nl_soil),&! fraction of soil that is voids [-]
         psi0      (nl_soil),&! minimum soil suction [mm]
         bsw       (nl_soil),&! clapp and hornbereger "b" parameter [-]
-        theta_r (1:nl_soil),&
+        theta_r   (nl_soil),&
 
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
         alpha_vgm(1:nl_soil),&
@@ -981,7 +981,7 @@ SUBROUTINE UrbanCoLMMAIN ( &
         froof                ,fgper                ,flake                ,bsw                  ,&
         porsl                ,psi0                 ,hksati               ,wtfact               ,&
         pondmx               ,ssi                  ,wimp                 ,smpmin               ,&
-        topostd                                                                                ,&
+        topostd              ,theta_r                                                          ,&
         rootr,rootflux       ,etrgper              ,fseng                ,fgrnd                ,&
         t_gpersno(lbp:)      ,t_lakesno(:)         ,t_lake               ,dz_lake              ,&
         z_gpersno(lbp:)      ,z_lakesno(:)         ,zi_gpersno(lbp-1:)   ,zi_lakesno(:)        ,&
