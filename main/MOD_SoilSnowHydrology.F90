@@ -289,7 +289,7 @@ IF(patchtype<=1)THEN   ! soil ground only
          ! 0: runoff scheme from TOPMODEL
          
          IF (gwat > 0.) THEN
-            CALL surfacerunoff_SIMTOP (nl_soil,wtfact,wimp,porsl,psi0,hksati,&
+            CALL SurfaceRunoff_SIMTOP (nl_soil,wtfact,wimp,porsl,psi0,hksati,&
                z_soisno(1:),dz_soisno(1:),zi_soisno(0:),&
                eff_porosity,icefrac,zwt,gwat,rsur)
          ELSE
@@ -335,7 +335,7 @@ IF(patchtype<=1)THEN   ! soil ground only
             ! surface runoff from inundation, this should not be added to the surface runoff from soil
             ! otherwise, the surface runoff will be double counted.
             ! only the re-infiltration is added to water balance calculation.
-            CALL surfacerunoff_SIMTOP (nl_soil,1.0,wimp,porsl,psi0,hksati,&
+            CALL SurfaceRunoff_SIMTOP (nl_soil,1.0,wimp,porsl,psi0,hksati,&
                        z_soisno(1:),dz_soisno(1:),zi_soisno(0:),&
                        eff_porosity,icefrac,zwt,gfld,rsur_fld)
             ! infiltration into surface soil layer
@@ -754,17 +754,15 @@ IF(patchtype<=1)THEN   ! soil ground only
       IF (DEF_Runoff_SCHEME  == 0) THEN
 
          IF (gwat > 0.) THEN
-            CALL surfacerunoff_SIMTOP (nl_soil,wtfact,wimp,porsl,psi0,hksati,&
+            CALL SurfaceRunoff_SIMTOP (nl_soil,wtfact,wimp,porsl,psi0,hksati,&
                                        z_soisno(1:),dz_soisno(1:),zi_soisno(0:),&
                                        eff_porosity,icefrac,zwt,gwat,rsur)
          ELSE
             rsur = 0.
          ENDIF
       
-         IF (DEF_Runoff_SCHEME == 0) THEN 
-            CALL SubsurfaceRunoff_SIMTOP (nl_soil, icefrac, dz_soisno(1:), zi_soisno(0:), &
-               zwt, rsubst)
-         ENDIF
+         CALL SubsurfaceRunoff_SIMTOP (nl_soil, icefrac, dz_soisno(1:), zi_soisno(0:), &
+            zwt, rsubst)
 
       ELSEIF (DEF_Runoff_SCHEME  == 1) THEN 
          ! 1: runoff scheme from VIC model
@@ -818,7 +816,7 @@ IF(patchtype<=1)THEN   ! soil ground only
             ! surface runoff from inundation, this should not be added to the surface runoff from soil
             ! otherwise, the surface runoff will be double counted.
             ! only the re-infiltration is added to water balance calculation.
-            CALL surfacerunoff_SIMTOP (nl_soil,1.0,wimp,porsl,psi0,hksati,&
+            CALL SurfaceRunoff_SIMTOP (nl_soil,1.0,wimp,porsl,psi0,hksati,&
                z_soisno(1:),dz_soisno(1:),zi_soisno(0:),&
                eff_porosity,icefrac,zwt,gfld,rsur_fld)
             ! infiltration into surface soil layer
