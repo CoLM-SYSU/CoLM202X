@@ -11,14 +11,14 @@ SUBROUTINE CoLMMAIN ( &
            soil_s_v_alb, soil_d_v_alb, soil_s_n_alb, soil_d_n_alb,  &
            vf_quartz,    vf_gravels,   vf_om,        vf_sand,       &
            wf_gravels,   wf_sand,      porsl,        psi0,          &
-           bsw,          &
+           bsw,          theta_r,      &
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
-           theta_r,      alpha_vgm,    n_vgm,        L_vgm,         &
+           alpha_vgm,    n_vgm,        L_vgm,         &
            sc_vgm,       fc_vgm,       &
 #endif
            hksati,       csol,         k_solids,     dksatu,        &
            dksatf,       dkdry,        BA_alpha,     BA_beta,       &
-           rootfr,       lakedepth,    dz_lake,      &
+           rootfr,       lakedepth,    dz_lake,      topostd,       &
 #if(defined CaMa_Flood)
            ! add flood depth, flood fraction, flood evaporation and
            ! flood re-infiltration
@@ -191,6 +191,8 @@ SUBROUTINE CoLMMAIN ( &
    real(r8), intent(in) :: &
         lakedepth        ,&! lake depth (m)
         dz_lake(nl_lake) ,&! lake layer thickness (m)
+        
+        topostd          ,&! standard deviation of elevation (m)
 
         ! soil physical parameters and lake info
         soil_s_v_alb     ,&! albedo of visible of the saturated soil
@@ -207,8 +209,8 @@ SUBROUTINE CoLMMAIN ( &
         porsl     (nl_soil)  ,& ! fraction of soil that is voids [-]
         psi0      (nl_soil)  ,& ! minimum soil suction [mm]
         bsw       (nl_soil)  ,& ! clapp and hornbereger "b" parameter [-]
+        theta_r  (1:nl_soil) ,& ! residual water content (cm3/cm3) 
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
-        theta_r  (1:nl_soil) ,& ! residual water content (cm3/cm3) in vanGenuchten_Mualem_SOIL_MODEL
         alpha_vgm(1:nl_soil) ,& ! the parameter corresponding approximately to the inverse of the air-entry value
         n_vgm    (1:nl_soil) ,& ! a shape parameter
         L_vgm    (1:nl_soil) ,& ! pore-connectivity parameter
@@ -732,6 +734,7 @@ SUBROUTINE CoLMMAIN ( &
             CALL WATER_2014 (ipatch,patchtype         ,lb                ,nl_soil           ,&
                  deltim            ,z_soisno(lb:)     ,dz_soisno(lb:)    ,zi_soisno(lb-1:)  ,&
                  bsw               ,porsl             ,psi0              ,hksati            ,&
+                 topostd           ,&
                  rootr             ,rootflux          ,t_soisno(lb:)     ,wliq_soisno(lb:)  ,&
                  wice_soisno(lb:)  ,smp               ,hk                ,pg_rain           ,&
                  sm                ,etr               ,qseva             ,qsdew             ,&
@@ -754,11 +757,9 @@ SUBROUTINE CoLMMAIN ( &
 
             CALL WATER_VSF (ipatch ,patchtype         ,lb                ,nl_soil           ,&
                  deltim            ,z_soisno(lb:)     ,dz_soisno(lb:)    ,zi_soisno(lb-1:)  ,&
-#ifdef Campbell_SOIL_MODEL
-                 bsw               ,&
-#endif
+                 bsw               ,theta_r           ,topostd           ,&
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
-                 theta_r           ,alpha_vgm         ,n_vgm             ,L_vgm             ,&
+                 alpha_vgm         ,n_vgm             ,L_vgm             ,&
                  sc_vgm            ,fc_vgm            ,&
 #endif
                  porsl             ,psi0              ,hksati            ,rootr             ,&

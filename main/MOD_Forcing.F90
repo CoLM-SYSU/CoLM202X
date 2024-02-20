@@ -189,9 +189,7 @@ CONTAINS
 
       IF (DEF_USE_Forcing_Downscaling) THEN
 
-         write(cyear,'(i4.4)') lc_year
-         lndname = trim(DEF_dir_landdata) // '/topography/'//trim(cyear)//'/topography_patches.nc'
-         CALL ncio_read_vector (lndname, 'topography_patches', landpatch, forc_topo)
+         forc_topo = topoelv
 
          IF (p_is_worker) THEN
 #if (defined CROP)

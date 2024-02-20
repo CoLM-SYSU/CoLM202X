@@ -12,7 +12,7 @@ SUBROUTINE UrbanCoLMMAIN ( &
            em_gper      ,cv_roof      ,cv_wall      ,cv_gimp      ,&
            tk_roof      ,tk_wall      ,tk_gimp      ,z_roof       ,&
            z_wall       ,dz_roof      ,dz_wall                    ,&
-           lakedepth    ,dz_lake                                  ,&
+           lakedepth    ,dz_lake      ,topostd      ,&
 
          ! LUCY model input parameters
            fix_holiday  ,week_holiday ,hum_prof     ,pop_den      ,&
@@ -21,9 +21,9 @@ SUBROUTINE UrbanCoLMMAIN ( &
          ! soil ground and wall information
            vf_quartz    ,vf_gravels   ,vf_om        ,vf_sand      ,&
            wf_gravels   ,wf_sand      ,porsl        ,psi0         ,&
-           bsw          ,&
+           bsw          ,theta_r      ,&
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
-           theta_r      ,alpha_vgm    ,n_vgm        ,L_vgm        ,&
+           alpha_vgm    ,n_vgm        ,L_vgm        ,&
            sc_vgm       ,fc_vgm       ,&
 #endif
            hksati       ,csol         ,k_solids     ,dksatu       ,&
@@ -199,9 +199,9 @@ SUBROUTINE UrbanCoLMMAIN ( &
         porsl     (nl_soil),&! fraction of soil that is voids [-]
         psi0      (nl_soil),&! minimum soil suction [mm]
         bsw       (nl_soil),&! clapp and hornbereger "b" parameter [-]
+        theta_r (1:nl_soil),&
 
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
-        theta_r  (1:nl_soil),&
         alpha_vgm(1:nl_soil),&
         n_vgm    (1:nl_soil),&
         L_vgm    (1:nl_soil),&
@@ -335,6 +335,8 @@ SUBROUTINE UrbanCoLMMAIN ( &
         t_lake      (nl_lake) ,&! lake temperature (kelvin)
         lake_icefrac(nl_lake) ,&! lake mass fraction of lake layer that is frozen
         savedtke1             ,&! top level eddy conductivity (W/m K)
+
+        topostd    ,&! standard deviation of elevation [m]
 
         t_grnd     ,&! ground surface temperature [k]
         tleaf      ,&! sunlit leaf temperature [K]
@@ -979,6 +981,7 @@ SUBROUTINE UrbanCoLMMAIN ( &
         froof                ,fgper                ,flake                ,bsw                  ,&
         porsl                ,psi0                 ,hksati               ,wtfact               ,&
         pondmx               ,ssi                  ,wimp                 ,smpmin               ,&
+        topostd                                                                                ,&
         rootr,rootflux       ,etrgper              ,fseng                ,fgrnd                ,&
         t_gpersno(lbp:)      ,t_lakesno(:)         ,t_lake               ,dz_lake              ,&
         z_gpersno(lbp:)      ,z_lakesno(:)         ,zi_gpersno(lbp-1:)   ,zi_lakesno(:)        ,&
