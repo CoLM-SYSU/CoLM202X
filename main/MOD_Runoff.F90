@@ -19,7 +19,8 @@ CONTAINS
 
    SUBROUTINE SurfaceRunoff_SIMTOP (nl_soil,wtfact,wimp,porsl,psi0,hksati,&
                                     z_soisno,dz_soisno,zi_soisno,&
-                                    eff_porosity,icefrac,zwt,gwat,rsur)
+                                    eff_porosity,icefrac,zwt,gwat,&
+                                    rsur,rsur_se,rsur_ie)
 
 !=======================================================================
 ! the original code was provide by Robert E. Dickinson based on following clues:
@@ -51,6 +52,8 @@ CONTAINS
         zwt                        ! the depth from ground (soil) surface to water table [m]
 
    real(r8), intent(out) :: rsur   ! surface runoff (mm h2o/s)
+   real(r8), intent(out), optional :: rsur_se! saturation excess surface runoff (mm h2o/s)
+   real(r8), intent(out), optional :: rsur_ie! infiltration excess surface runoff (mm h2o/s)
 
 !-----------------------Local Variables---------------------------------
 
@@ -71,6 +74,13 @@ CONTAINS
 ! Surface runoff
       rsur = fsat*max(0.0,gwat) + (1.-fsat)*max(0.,gwat-qinmax)
 
+      IF (present(rsur_se)) THEN
+         rsur_se = fsat*max(0.0,gwat)
+      ENDIF
+
+      IF (present(rsur_ie)) THEN
+         rsur_ie = (1.-fsat)*max(0.,gwat-qinmax)
+      ENDIF
 
    END SUBROUTINE SurfaceRunoff_SIMTOP
 

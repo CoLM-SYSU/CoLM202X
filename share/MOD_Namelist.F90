@@ -437,6 +437,8 @@ MODULE MOD_Namelist
       logical :: xerr         = .true.
       logical :: zerr         = .true.
       logical :: rsur         = .true.
+      logical :: rsur_se      = .true.
+      logical :: rsur_ie      = .true.
       logical :: rsub         = .true.
       logical :: rnof         = .true.
       logical :: xwsur        = .true.
@@ -1429,6 +1431,8 @@ CONTAINS
       CALL sync_hist_vars_one (DEF_hist_vars%xerr        ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%zerr        ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%rsur        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%rsur_se     ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%rsur_ie     ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%rsub        ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%rnof        ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%xwsur       ,  set_defaults)

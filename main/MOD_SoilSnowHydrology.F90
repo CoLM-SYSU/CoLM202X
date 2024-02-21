@@ -305,10 +305,10 @@ IF(patchtype<=1)THEN   ! soil ground only
 
          call compute_vic_runoff(soil_con, gwat*deltim, soil_con%frost_fract, cell)
 
-         DO ilay = 1, Nlayer
-            vic_tmp(ilay) = cell%layer(ilay)%moist
-         ENDDO
-         call VIC2CoLM(wliq_soisno, vic_tmp)
+         ! DO ilay = 1, Nlayer
+         !    vic_tmp(ilay) = cell%layer(ilay)%moist
+         ! ENDDO
+         ! call VIC2CoLM(wliq_soisno, vic_tmp)
 
          if (gwat > 0.) rsur = cell%runoff/deltim
          rsubst = cell%baseflow/deltim
@@ -478,10 +478,9 @@ ENDIF
               qseva_soil  ,qsdew_soil  ,qsubl_soil  ,qfros_soil      ,&
               qseva_snow  ,qsdew_snow  ,qsubl_snow  ,qfros_snow      ,&
               fsno                                                   ,&
-              rsur        ,rnof        ,qinfl       ,wtfact  ,ssi    ,&
-              pondmx      ,                                           &
+              rsur        ,rsur_se     ,rsur_ie     ,rnof            ,&
+              qinfl       ,wtfact      ,ssi         ,pondmx          ,&
               wimp        ,zwt         ,wdsrf       ,wa      ,wetwat ,&
-              qcharge     ,errw_rsub   ,                              &
 #if(defined CaMa_Flood)
               flddepth    ,fldfrc      ,qinfl_fld   ,                 &
 #endif
@@ -588,11 +587,11 @@ ENDIF
 
    real(r8), intent(out) :: &
         rsur             , &! surface runoff (mm h2o/s)
+        rsur_se          , &! saturation excess surface runoff (mm h2o/s)
+        rsur_ie          , &! infiltration excess surface runoff (mm h2o/s)
         rnof             , &! total runoff (mm h2o/s)
-        qinfl            , &! infiltration rate (mm h2o/s)
-        qcharge             ! groundwater recharge (positive to aquifer) [mm/s]
+        qinfl               ! infiltration rate (mm h2o/s)
 
-   real(r8), intent(out) :: errw_rsub ! the possible subsurface runoff dificit after PHS is included
 
 ! SNICAR model variables
 ! Aerosol Fluxes (Jan. 07, 2023)
@@ -756,7 +755,7 @@ IF(patchtype<=1)THEN   ! soil ground only
          IF (gwat > 0.) THEN
             CALL SurfaceRunoff_SIMTOP (nl_soil,wtfact,wimp,porsl,psi0,hksati,&
                                        z_soisno(1:),dz_soisno(1:),zi_soisno(0:),&
-                                       eff_porosity,icefrac,zwt,gwat,rsur)
+                                       eff_porosity,icefrac,zwt,gwat,rsur,rsur_se,rsur_ie)
          ELSE
             rsur = 0.
          ENDIF
@@ -773,10 +772,10 @@ IF(patchtype<=1)THEN   ! soil ground only
 
          call compute_vic_runoff(soil_con, gwat*deltim, soil_con%frost_fract, cell)
 
-         DO ilay = 1, Nlayer
-            vic_tmp(ilay) = cell%layer(ilay)%moist
-         ENDDO
-         call VIC2CoLM(wliq_soisno, vic_tmp)
+         ! DO ilay = 1, Nlayer
+         !    vic_tmp(ilay) = cell%layer(ilay)%moist
+         ! ENDDO
+         ! call VIC2CoLM(wliq_soisno, vic_tmp)
 
          if (gwat > 0.) rsur = cell%runoff/deltim
          rsubst = cell%baseflow/deltim
@@ -787,6 +786,9 @@ IF(patchtype<=1)THEN   ! soil ground only
          CALL Runoff_XinAnJiang (&
             nl_soil, dz_soisno(1:nl_soil), eff_porosity(1:nl_soil), vol_liq(1:nl_soil), &
             topostd, gwat, deltim, rsur, rsubst)
+
+         rsur_se = rsur
+         rsur_ie = 0.
 
       ENDIF
 
@@ -943,7 +945,13 @@ ENDIF
 #ifndef CatchLateralFlow
       IF (wdsrf > pondmx) THEN
          rsur = rsur + (wdsrf - pondmx) / deltim
+         rsur_ie = rsur_ie + (wdsrf - pondmx) / deltim
          wdsrf = pondmx
+      ENDIF
+
+      IF (zwt <= 0.) THEN
+         rsur_ie = 0.
+         rsur_se = rsur
       ENDIF
 
       ! total runoff (mm/s)
@@ -989,7 +997,6 @@ ELSE
       IF(patchtype==2)THEN        ! WETLAND
          qinfl = 0.
          zwt = 0.
-         qcharge = 0.
 
 
          IF (lb >= 1) THEN
@@ -1029,12 +1036,12 @@ ELSE
             rsur = 0.
          ENDIF
          rnof = rsur
+         rsur_se = rsur
+         rsur_ie = 0.
 #endif
       ENDIF
 
 ENDIF
-
-      errw_rsub = 0.
 
    END SUBROUTINE WATER_VSF
 

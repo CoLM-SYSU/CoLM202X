@@ -77,8 +77,9 @@ SUBROUTINE CoLMMAIN ( &
            taux,         tauy,         fsena,        fevpa,         &
            lfevpa,       fsenl,        fevpl,        etr,           &
            fseng,        fevpg,        olrg,         fgrnd,         &
-           trad,         tref,         qref,         rsur,          &
-           rnof,         qintr,        qinfl,        qdrip,         &
+           trad,         tref,         qref,                        &
+           rsur,         rsur_se,      rsur_ie,      rnof,          &
+           qintr,        qinfl,        qdrip,                       &
            rst,          assim,        respc,        sabvsun,       &
            sabvsha,      sabg,         sr,           solvd,         &
            solvi,        solnd,        solni,        srvd,          &
@@ -415,6 +416,8 @@ SUBROUTINE CoLMMAIN ( &
         qref        ,&! 2 m height air specific humidity
         trad        ,&! radiative temperature [K]
         rsur        ,&! surface runoff (mm h2o/s)
+        rsur_se     ,&! saturation excess surface runoff (mm h2o/s)
+        rsur_ie     ,&! infiltration excess surface runoff (mm h2o/s)
         rnof        ,&! total runoff (mm h2o/s)
         qintr       ,&! interception (mm h2o/s)
         qinfl       ,&! inflitration (mm h2o/s)
@@ -759,8 +762,8 @@ SUBROUTINE CoLMMAIN ( &
                  deltim            ,z_soisno(lb:)     ,dz_soisno(lb:)    ,zi_soisno(lb-1:)  ,&
                  bsw               ,theta_r           ,topostd           ,&
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
-                 alpha_vgm         ,n_vgm             ,L_vgm             ,&
-                 sc_vgm            ,fc_vgm            ,&
+                 alpha_vgm         ,n_vgm             ,L_vgm             ,sc_vgm            ,&
+                 fc_vgm            ,&
 #endif
                  porsl             ,psi0              ,hksati            ,rootr             ,&
                  rootflux          ,t_soisno(lb:)     ,wliq_soisno(lb:)  ,wice_soisno(lb:)  ,&
@@ -768,10 +771,10 @@ SUBROUTINE CoLMMAIN ( &
                  etr               ,qseva             ,qsdew             ,qsubl             ,&
                  qfros             ,qseva_soil        ,qsdew_soil        ,qsubl_soil        ,&
                  qfros_soil        ,qseva_snow        ,qsdew_snow        ,qsubl_snow        ,&
-                 qfros_snow        ,fsno              ,rsur              ,rnof              ,&
-                 qinfl             ,wtfact            ,ssi               ,pondmx            ,&
-                 wimp              ,zwt               ,wdsrf             ,wa                ,&
-                 wetwat            ,qcharge           ,errw_rsub         ,&
+                 qfros_snow        ,fsno              ,rsur              ,rsur_se           ,&
+                 rsur_ie           ,rnof              ,qinfl             ,wtfact            ,&
+                 ssi               ,pondmx            ,wimp              ,zwt               ,&
+                 wdsrf             ,wa                ,wetwat            ,&
 #if(defined CaMa_Flood)
              !add variables for flood depth [mm], flood fraction [0-1] and re-infiltration [mm/s] calculation.
                  flddepth          ,fldfrc            ,qinfl_fld         ,&
@@ -1031,6 +1034,8 @@ SUBROUTINE CoLMMAIN ( &
                rsur = 0.
             ENDIF
             rnof = rsur
+            rsur_se = rsur
+            rsur_ie = 0.
 #endif
          ENDIF
 
@@ -1206,6 +1211,8 @@ SUBROUTINE CoLMMAIN ( &
                rsur = 0.
             ENDIF
             rnof = rsur
+            rsur_se = rsur
+            rsur_ie = 0.
 #endif
          ENDIF
 
@@ -1271,6 +1278,8 @@ SUBROUTINE CoLMMAIN ( &
                     trad    = tssea
                     fgrnd   = 0.0
                     rsur    = 0.0
+                    rsur_se = 0.0
+                    rsur_ie = 0.0
                     rnof    = 0.0
                     xerr    = 0.0
 
