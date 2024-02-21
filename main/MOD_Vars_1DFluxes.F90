@@ -60,6 +60,8 @@ MODULE MOD_Vars_1DFluxes
    real(r8), allocatable :: xerr   (:) !the error of water banace [mm/s]
    real(r8), allocatable :: zerr   (:) !the error of energy balance [W/m2]
    real(r8), allocatable :: rsur   (:) !surface runoff (mm h2o/s)
+   real(r8), allocatable :: rsur_se(:) !saturation excess surface runoff (mm h2o/s)
+   real(r8), allocatable :: rsur_ie(:) !infiltration excess surface runoff (mm h2o/s)
    real(r8), allocatable :: rsub   (:) !subsurface runoff (mm h2o/s)
    real(r8), allocatable :: rnof   (:) !total runoff (mm h2o/s)
    real(r8), allocatable :: qintr  (:) !interception (mm h2o/s)
@@ -135,6 +137,8 @@ CONTAINS
             allocate ( zerr   (numpatch) )  ; zerr   (:) = spval ! the error of energy balance [W/m2]
 
             allocate ( rsur   (numpatch) )  ; rsur   (:) = spval ! surface runoff (mm h2o/s)
+            allocate ( rsur_se(numpatch) )  ; rsur_se(:) = spval ! saturation excess surface runoff (mm h2o/s)
+            allocate ( rsur_ie(numpatch) )  ; rsur_ie(:) = spval ! infiltration excess surface runoff (mm h2o/s)
             allocate ( rsub   (numpatch) )  ; rsub   (:) = spval ! subsurface runoff (mm h2o/s)
             allocate ( rnof   (numpatch) )  ; rnof   (:) = spval ! total runoff (mm h2o/s)
             allocate ( qintr  (numpatch) )  ; qintr  (:) = spval ! interception (mm h2o/s)
@@ -215,6 +219,8 @@ CONTAINS
             deallocate ( xerr    )  ! the error of water banace [mm/s]
             deallocate ( zerr    )  ! the error of energy balance [W/m2]
             deallocate ( rsur    )  ! surface runoff (mm h2o/s)
+            deallocate ( rsur_se )  ! saturation excess surface runoff (mm h2o/s)
+            deallocate ( rsur_ie )  ! infiltration excess surface runoff (mm h2o/s)
             deallocate ( rsub    )  ! subsurface runoff (mm h2o/s)
             deallocate ( rnof    )  ! total runoff (mm h2o/s)
             deallocate ( qintr   )  ! interception (mm h2o/s)

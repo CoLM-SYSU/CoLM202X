@@ -1,0 +1,2 @@
+vic_b_infilt1, vic_Dsmax, vic_Ds,  vic_Ws, vic_c
+0.2  15  0.5  0.5  2

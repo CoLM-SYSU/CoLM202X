@@ -250,6 +250,13 @@ MODULE MOD_Namelist
    ! 5: S92,  Sellers et al (1992)
    integer :: DEF_RSS_SCHEME = 1
 
+   ! Options for runoff parameterization schemes
+   ! 0: scheme from SIMTOP model, also used in CoLM2014
+   ! 1: scheme from VIC model
+   ! 2: scheme from XinAnJiang model, also used in ECMWF model
+   integer :: DEF_Runoff_SCHEME = 0
+   character(len=256) :: DEF_file_VIC_para = 'null'
+
    ! Treat exposed soil and snow surface separatly, including
    ! solar absorption, sensible/latent heat, ground temperature,
    ! ground heat flux and groud evp/dew/subl/fros.
@@ -430,6 +437,8 @@ MODULE MOD_Namelist
       logical :: xerr         = .true.
       logical :: zerr         = .true.
       logical :: rsur         = .true.
+      logical :: rsur_se      = .true.
+      logical :: rsur_ie      = .true.
       logical :: rsub         = .true.
       logical :: rnof         = .true.
       logical :: xwsur        = .true.
@@ -824,7 +833,9 @@ CONTAINS
       DEF_USE_SUPERCOOL_WATER,         &
       DEF_SOIL_REFL_SCHEME,            &
       DEF_RSS_SCHEME,                  &
+      DEF_Runoff_SCHEME,               & 
       DEF_SPLIT_SOILSNOW,              &
+      DEF_file_VIC_para,               &
 
       DEF_dir_existing_srfdata,        &
       USE_srfdata_from_larger_region,  &
@@ -1250,6 +1261,9 @@ CONTAINS
       CALL mpi_bcast (DEF_SOIL_REFL_SCHEME,             1, mpi_integer, p_root, p_comm_glb, p_err)
       ! 07/2023, added by zhuo liu
       CALL mpi_bcast (DEF_RSS_SCHEME,                   1, mpi_integer, p_root, p_comm_glb, p_err)
+      ! 02/2024, added by Shupeng Zhang 
+      CALL mpi_bcast (DEF_Runoff_SCHEME,   1, mpi_integer,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_file_VIC_para, 256, mpi_character, p_root, p_comm_glb, p_err)
       ! 08/2023, added by hua yuan
       CALL mpi_bcast (DEF_SPLIT_SOILSNOW,      1, mpi_logical, p_root, p_comm_glb, p_err)
 
@@ -1417,6 +1431,8 @@ CONTAINS
       CALL sync_hist_vars_one (DEF_hist_vars%xerr        ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%zerr        ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%rsur        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%rsur_se     ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%rsur_ie     ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%rsub        ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%rnof        ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%xwsur       ,  set_defaults)
