@@ -627,6 +627,8 @@ SUBROUTINE CoLMMAIN ( &
                totwb = totwb + wetwat
             ENDIF
          ENDIF
+
+         errw_rsub = 0._r8
    
          fiold(:) = 0.0
          IF (snl <0 ) THEN

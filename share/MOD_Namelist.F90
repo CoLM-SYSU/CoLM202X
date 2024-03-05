@@ -68,6 +68,7 @@ MODULE MOD_Namelist
    logical  :: USE_SITE_soilparameters   = .true.
    logical  :: USE_SITE_dbedrock         = .true.
    logical  :: USE_SITE_topography       = .true.
+   logical  :: USE_SITE_topostd          = .true.
    logical  :: USE_SITE_HistWriteBack    = .true.
    logical  :: USE_SITE_ForcingReadAhead = .true.
    logical  :: USE_SITE_urban_paras      = .true.
@@ -780,6 +781,7 @@ CONTAINS
       USE_SITE_soilparameters,  &
       USE_SITE_dbedrock,        &
       USE_SITE_topography,      &
+      USE_SITE_topostd   ,      &
       USE_SITE_HistWriteBack,   &
       USE_SITE_ForcingReadAhead,&
       USE_SITE_urban_paras,     &
