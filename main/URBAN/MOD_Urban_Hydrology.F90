@@ -21,7 +21,7 @@ CONTAINS
         froof          ,fgper          ,flake          ,bsw            ,&
         porsl          ,psi0           ,hksati         ,wtfact         ,&
         pondmx         ,ssi            ,wimp           ,smpmin         ,&
-        theta_r        ,topostd                                        ,&
+        theta_r        ,topostd        ,BVIC                           ,&
         rootr,rootflux ,etr            ,fseng          ,fgrnd          ,&
         t_gpersno      ,t_lakesno      ,t_lake         ,dz_lake        ,&
         z_gpersno      ,z_lakesno      ,zi_gpersno     ,zi_lakesno     ,&
@@ -95,6 +95,7 @@ CONTAINS
         smpmin           ,&! restriction for min of soil poten. (mm)
         
         topostd          ,&! standard deviation of elevation [m]
+        BVIC             ,&!  b parameter in Fraction of saturated soil in a grid calculated by VIC
 
         bsw   (1:nl_soil),&! Clapp-Hornberger "B"
         porsl (1:nl_soil),&! saturated volumetric soil water content(porosity)
@@ -227,7 +228,7 @@ CONTAINS
       rootflux(:) = rootr(:)*etr
       CALL WATER_2014 (ipatch,patchtype,lbp        ,nl_soil     ,deltim     ,&
              z_gpersno   ,dz_gpersno  ,zi_gpersno  ,bsw         ,porsl      ,&
-             psi0        ,hksati      ,theta_r     ,topostd     ,&
+             psi0        ,hksati      ,theta_r     ,topostd     ,BVIC       ,&
              rootr       ,rootflux    ,t_gpersno   ,&
              wliq_gpersno,wice_gpersno,smp         ,hk          ,pgper_rain ,&
              sm_gper     ,etr         ,qseva_gper  ,qsdew_gper  ,qsubl_gper ,&

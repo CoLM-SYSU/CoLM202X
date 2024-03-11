@@ -295,6 +295,54 @@ CONTAINS
 ! ...............................................................
 
       CALL soil_parameters_readin (dir_landdata, lc_year)
+      IF (p_is_worker) THEN
+         IF (numpatch > 0) THEN
+
+            BVIC(:,:) = -1.0
+
+            DO ipatch = 1, numpatch
+               DO i = 1, nl_soil
+                  !soil_solids_fractions.F90; 
+                  !BVIC is the b parameter in Fraction of saturated soil in a grid calculated by VIC
+                  !Modified from NoahmpTable.TBL in NoahMP
+                  !SEE: a near-global, high resolution land surface parameter dataset for the variable infiltration capacity model
+                  !soil type (USDA)      1        2       3           4          5         6        7          8        9         10        11        12     |   13        14        15        16        17        18      19
+                  !BVIC          =    0.050,    0.080,    0.090,    0.250,    0.150,    0.180,    0.200,    0.220,    0.230,    0.250,    0.280,    0.300,   | 0.260,    0.000,    1.000,    1.000,    1.000,    0.350,    0.150
+                  ! this should be revised using usda soil type
+                  IF (vf_quartz(i,ipatch) >= 0.95) THEN! sand 
+                     BVIC(i,ipatch)=0.050
+                  ELSEIF (vf_quartz(i,ipatch) >= 0.85 .and. vf_quartz(i,ipatch) < 0.95) THEN ! loamy sand; soil types 1 
+                     BVIC(i,ipatch)=0.080
+                  ELSEIF (vf_quartz(i,ipatch) >= 0.69 .and. vf_quartz(i,ipatch) <  0.85) THEN  !Sandy loam; soil types 3
+                     BVIC(i,ipatch)=0.09
+                  ELSEIF (vf_quartz(i,ipatch) >= 0.61 .and. vf_quartz(i,ipatch) <  0.69) THEN  !Sandy clay loam; soil types 7
+                     BVIC(i,ipatch)=0.20
+                  ELSEIF (vf_quartz(i,ipatch) >= 0.50 .and. vf_quartz(i,ipatch) <  0.61) THEN  !Sandy clay; soil types 10
+                     BVIC(i,ipatch)=0.25
+                  ELSEIF (vf_quartz(i,ipatch) >= 0.41 .and. vf_quartz(i,ipatch) <  0.50) THEN  !Silt; soil types 5
+                     BVIC(i,ipatch)=0.150
+                  ELSEIF (vf_quartz(i,ipatch) >= 0.25 .and. vf_quartz(i,ipatch) <  0.41 .and. wf_sand(i,ipatch)<=0.20) THEN  !Silty clay loam ; soil types 8
+                     BVIC(i,ipatch)=0.220
+                  ELSEIF (vf_quartz(i,ipatch) >= 0.25 .and. vf_quartz(i,ipatch) <  0.41 .and. wf_sand(i,ipatch)>0.20) THEN    !Clay; soil types 12 
+                     BVIC(i,ipatch)=0.30          
+                  ELSEIF (vf_quartz(i,ipatch) >= 0.19 .and. vf_quartz(i,ipatch) <  0.25) THEN  !Loam; soil types 6
+                     BVIC(i,ipatch)=0.180 
+                  ELSEIF (vf_quartz(i,ipatch) >= 0.09 .and. vf_quartz(i,ipatch) <  0.19) THEN  !Clay loam; soil types 9
+                     BVIC(i,ipatch)=0.230
+                  ELSEIF (vf_quartz(i,ipatch) >= 0.08 .and. vf_quartz(i,ipatch) <  0.09) THEN  !Silty clay; soil types 11 
+                     BVIC(i,ipatch)=0.280
+                  ELSEIF (vf_quartz(i,ipatch) >= 0.0 .and. vf_quartz(i,ipatch) <  0.08) THEN  !Silt loam; soil types 4
+                     BVIC(i,ipatch)=0.100
+                  ELSE
+                     BVIC(i,ipatch)=1.0
+                  ENDIF
+               ENDDO
+            ENDDO
+         ENDIF
+      ENDIF
+
+
+
 
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
       IF (p_is_worker) THEN

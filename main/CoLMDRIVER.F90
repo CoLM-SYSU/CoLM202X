@@ -96,6 +96,7 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
                dksatf(1:,i),    dkdry(1:,i),                                       &
                BA_alpha(1:,i),  BA_beta(1:,i),                                     &
                rootfr(1:,m),    lakedepth(i),    dz_lake(1:,i),   topostd(i),      &
+               BVIC(1,i),                                                          &
 #if(defined CaMa_Flood)
              ! flood variables [mm, m2/m2, mm/s, mm/s]
                flddepth_cama(i),fldfrc_cama(i),fevpg_fld(i),  finfg_fld(i),        &
@@ -211,7 +212,7 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
             em_gper(u)      ,cv_roof(:,u)    ,cv_wall(:,u)    ,cv_gimp(:,u)    ,&
             tk_roof(:,u)    ,tk_wall(:,u)    ,tk_gimp(:,u)    ,z_roof(:,u)     ,&
             z_wall(:,u)     ,dz_roof(:,u)    ,dz_wall(:,u)                     ,&
-            lakedepth(i)    ,dz_lake(1:,i)   ,topostd(i)      ,&
+            lakedepth(i)    ,dz_lake(1:,i)   ,topostd(i)      ,BVIC(1,i)       ,&
 
           ! LUCY INPUT PARAMETERS
             fix_holiday(:,u),week_holiday(:,u),hum_prof(:,u)  ,pop_den(u)      ,&

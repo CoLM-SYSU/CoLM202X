@@ -44,6 +44,7 @@ CONTAINS
    SUBROUTINE WATER_2014 (ipatch,patchtype,lb       ,nl_soil ,deltim,&
               z_soisno    ,dz_soisno   ,zi_soisno   ,bsw     ,porsl ,&
               psi0        ,hksati      ,theta_r     ,topostd ,&
+              BVIC,                                                 &
               rootr       ,rootflux    ,t_soisno    ,&
               wliq_soisno ,wice_soisno ,smp         ,hk      ,pg_rain ,&
               sm,   etr   ,qseva       ,qsdew       ,qsubl   ,qfros ,&
@@ -102,6 +103,8 @@ CONTAINS
         wimp             , &! water impremeable if porosity less than wimp
         smpmin           , &! restriction for min of soil poten. (mm)
         topostd          , &! standard deviation of elevation (m)
+        BVIC            , &! 
+
         z_soisno (lb:nl_soil)   , &! layer depth (m)
         dz_soisno(lb:nl_soil)   , &! layer thickness (m)
         zi_soisno(lb-1:nl_soil) , &! interface level below a "z" level (m)
@@ -320,7 +323,14 @@ IF(patchtype<=1)THEN   ! soil ground only
             nl_soil, dz_soisno(1:nl_soil), eff_porosity(1:nl_soil), vol_liq(1:nl_soil), &
             topostd, gwat, deltim, rsur, rsubst)
 
+      ELSEIF (DEF_Runoff_SCHEME  == 3) THEN 
+         ! 3: runoff scheme from Simple VIC model
+         CALL Runoff_SimpleVIC (&
+            nl_soil, dz_soisno(1:nl_soil), eff_porosity(1:nl_soil), vol_liq(1:nl_soil), &
+            BVIC, gwat, deltim, rsur, rsubst)
+
       ENDIF
+
 
       ! infiltration into surface soil layer
       qinfl = gwat - rsur
@@ -468,6 +478,7 @@ ENDIF
    SUBROUTINE WATER_VSF (ipatch,  patchtype,lb      ,nl_soil ,deltim ,&
               z_soisno    ,dz_soisno   ,zi_soisno                    ,&
               bsw         ,theta_r     ,topostd                      ,&
+              BVIC,                                                  &
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
               alpha_vgm   ,n_vgm       ,L_vgm       ,sc_vgm  ,fc_vgm ,&
 #endif
@@ -534,6 +545,7 @@ ENDIF
         pondmx           , &! ponding depth (mm)
         wimp             , &! water impremeable IF porosity less than wimp
         topostd          , &! standard deviation of elevation (m)
+        BVIC            , &!
         z_soisno (lb:nl_soil)   , &! layer depth (m)
         dz_soisno(lb:nl_soil)   , &! layer thickness (m)
         zi_soisno(lb-1:nl_soil) , &! interface level below a "z" level (m)
@@ -786,6 +798,15 @@ IF(patchtype<=1)THEN   ! soil ground only
          CALL Runoff_XinAnJiang (&
             nl_soil, dz_soisno(1:nl_soil), eff_porosity(1:nl_soil), vol_liq(1:nl_soil), &
             topostd, gwat, deltim, rsur, rsubst)
+
+         rsur_se = rsur
+         rsur_ie = 0.
+      ELSEIF (DEF_Runoff_SCHEME  == 3) THEN 
+         ! 3: runoff scheme from XinAnJiang model with lateral flow
+
+         CALL Runoff_SimpleVIC (&
+            nl_soil, dz_soisno(1:nl_soil), eff_porosity(1:nl_soil), vol_liq(1:nl_soil), &
+            BVIC, gwat, deltim, rsur, rsubst)
 
          rsur_se = rsur
          rsur_ie = 0.
