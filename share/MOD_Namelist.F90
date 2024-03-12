@@ -298,6 +298,8 @@ MODULE MOD_Namelist
    logical            :: DEF_USE_PLANTHYDRAULICS = .true.
    !Medlyn stomata model
    logical            :: DEF_USE_MEDLYNST = .false.
+   !WUE stomata model
+   logical            :: DEF_USE_WUEST    = .false.
    !Semi-Analytic-Spin-Up
    logical            :: DEF_USE_SASU = .false.
    !Punctuated nitrogen addition Spin up
@@ -848,6 +850,7 @@ CONTAINS
       DEF_USE_CBL_HEIGHT,              &   !add by zhongwang wei @ sysu 2022/12/31
       DEF_USE_PLANTHYDRAULICS,         &   !add by xingjie lu @ sysu 2023/05/28
       DEF_USE_MEDLYNST,                &   !add by xingjie lu @ sysu 2023/05/28
+      DEF_USE_WUEST,                   &   !add by xingjie lu @ sysu 2023/05/28
       DEF_USE_SASU,                    &   !add by Xingjie Lu @ sysu 2023/06/27
       DEF_USE_PN,                      &   !add by Xingjie Lu @ sysu 2023/06/27
       DEF_USE_FERT,                    &   !add by Xingjie Lu @ sysu 2023/06/27
@@ -1069,6 +1072,15 @@ CONTAINS
             ENDIF
          ENDIF
 
+         IF(DEF_USE_MEDLYNST)THEN
+            IF(DEF_USE_WUEST)THEN
+                DEF_USE_MEDLYNST = .false.
+                DEF_USE_WUEST    = .false.
+                write(*,*) '                  *****                  '
+                write(*,*) 'Warning: configure conflict, both DEF_USE_MEDLYNST and DEF_USE_WUEST were set true.'
+                write(*,*) 'set both DEF_USE_MEDLYNST and DEF_USE_WUEST to false.'
+            ENDIF
+         ENDIF 
 
 ! ----- SNICAR model ------ Macros&Namelist conflicts and dependency management
 
@@ -1277,6 +1289,7 @@ CONTAINS
       CALL mpi_bcast (DEF_USE_CBL_HEIGHT     , 1, mpi_logical, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_USE_PLANTHYDRAULICS, 1, mpi_logical, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_USE_MEDLYNST       , 1, mpi_logical, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_USE_WUEST          , 1, mpi_logical, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_USE_SASU           , 1, mpi_logical, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_USE_PN             , 1, mpi_logical, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_USE_FERT           , 1, mpi_logical, p_root, p_comm_glb, p_err)

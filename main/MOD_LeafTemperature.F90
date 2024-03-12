@@ -49,6 +49,9 @@ CONTAINS
               o3coefv_sun      ,o3coefv_sha      ,o3coefg_sun     ,o3coefg_sha ,&
               lai_old          ,o3uptakesun      ,o3uptakesha     ,forc_ozone  ,&
 !End ozone stress variables
+!WUE stomata model parameter
+              lambda                                                           ,&
+!End WUE stomata model parmaeter
               hpbl      ,&
               qintr_rain,qintr_snow,t_precip  ,hprl      ,smp       ,hk        ,&
               hksati    ,rootflux                                               )
@@ -245,7 +248,10 @@ CONTAINS
         assimsun,   &! sunlit leaf assimilation rate [umol co2 /m**2/ s] [+]
         etrsun,     &! transpiration rate of sunlit leaf [mm/s]
         assimsha,   &! shaded leaf assimilation rate [umol co2 /m**2/ s] [+]
-        etrsha       ! transpiration rate of shaded leaf [mm/s]
+        etrsha,     &! transpiration rate of shaded leaf [mm/s]
+!Ozone WUE stomata model parameter
+        lambda       ! Marginal water cost of carbon gain ((mol h2o) (mol co2)-1)
+!End WUE stomata model parameter
 
    real(r8), intent(out) :: &
         rst,        &! stomatal resistance
@@ -610,6 +616,9 @@ CONTAINS
             !Ozone stress variables
                  o3coefv_sun   ,o3coefg_sun   ,&
             !End ozone stress variables
+            !Ozone WUE stomata model parameter
+                 lambda   ,&
+            !End WUE stomata model parameter
                  rbsun    ,raw      ,rstfacsun,cintsun  ,&
                  assimsun ,respcsun ,rssun    )
 
@@ -622,6 +631,9 @@ CONTAINS
             ! Ozone stress variables
                  o3coefv_sha    ,o3coefg_sha  ,&
             ! End ozone stress variables
+            ! Ozone WUE stomata model parameter
+                 lambda   ,&
+            ! End WUE stomata model parameter
                  rbsha    ,raw      ,rstfacsha,cintsha  ,&
                  assimsha ,respcsha ,rssha    )
 

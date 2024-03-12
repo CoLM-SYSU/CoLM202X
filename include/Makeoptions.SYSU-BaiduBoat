@@ -2,11 +2,11 @@
 # mpif90 - ifort 
 # 
 
- FF = mpiifort -f90=ifort
+ FF = mpiifort #-f90=ifort
 
 # Netcdf with serial IO
- NETCDF_LIB = /share/home/dq013/software/netcdf-single/lib
- NETCDF_INC = /share/home/dq013/software/netcdf-single/include
+ NETCDF_LIB = /share/home/dq013/software/netcdf_parallel/lib
+ NETCDF_INC = /share/home/dq013/software/netcdf_parallel/include
 
 # Netcdf with paralell IO
 # NETCDF_LIB = /share/home/dq013/software/netcdf_parallel/lib

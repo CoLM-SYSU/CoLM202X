@@ -42,6 +42,9 @@ CONTAINS
                o3coefv_sun ,o3coefv_sha ,o3coefg_sun ,o3coefg_sha,&
                lai_old     ,o3uptakesun ,o3uptakesha ,forc_ozone ,&
 !End ozone stress variables
+!WUE stomata model parameter
+               lambda      ,&
+!WUE stomata model parameter
                hpbl, &
                qintr_rain  ,qintr_snow  ,t_precip    ,hprl       ,&
                smp         ,hk          ,hksati      ,rootflux    )
@@ -191,6 +194,9 @@ CONTAINS
         o3coefg_sun,   &! Ozone stress factor for stomata on shaded leaf
         o3coefg_sha,   &! Ozone stress factor for stomata on shaded leaf
 !End ozone stress variables
+!WUE stomata model parameter
+        lambda,        &! Marginal water cost of carbon gain
+!WUE stomata model parameter
         rstfacsun,     &! factor of soil water stress to transpiration on sunlit leaf
         rstfacsha,     &! factor of soil water stress to transpiration on shaded leaf
         gssun,         &! stomata conductance of sunlit leaf
@@ -1079,6 +1085,7 @@ CONTAINS
 !Ozone stress variables
                     o3coefv_sun(i),     o3coefg_sun(i),&
 !End ozone stress variables
+                    lambda(i),                         &
                     rbsun      ,raw        ,rstfacsun(i),cintsun(:,i),&
                     assimsun(i),respcsun(i),rssun(i)   )
 
@@ -1090,6 +1097,9 @@ CONTAINS
 !Ozone stress variables
                     o3coefv_sun(i),     o3coefg_sun(i),&
 !End ozone stress variables
+!WUE stomata model parameter
+                    lambda(i)                                               ,&
+!WUE stomata model parameter
                     rbsha      ,raw        ,rstfacsha(i),cintsha(:,i),&
                     assimsha(i),respcsha(i),rssha(i)   )
 

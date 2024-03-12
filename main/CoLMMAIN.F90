@@ -59,6 +59,9 @@ SUBROUTINE CoLMMAIN ( &
            !Ozone stress variables
            lai_old,      o3uptakesun,  o3uptakesha,  forc_ozone,    &
            !End ozone stress variables
+           !WUE stomata model parameter
+           lambda,                                                  &
+           !End WUE stomata model parameter
            zwt,          wdsrf,        wa,           wetwat,        &
            t_lake,       lake_icefrac, savedtke1,    &
 
@@ -333,6 +336,9 @@ SUBROUTINE CoLMMAIN ( &
         o3uptakesha ,&! Ozone does, shaded leaf (mmol O3/m^2)
         forc_ozone  ,&
         !End ozone stress variables
+        !WUE stomata model parameter
+        lambda      ,&! Marginal water cost of carbon gain ((mol h2o) (mol co2)-1)
+        !WUE stomata model parameter
         t_grnd      ,&! ground surface temperature [k]
         tleaf       ,&! leaf temperature [K]
         ldew        ,&! depth of water on foliage [kg/m2/s]
@@ -706,6 +712,9 @@ SUBROUTINE CoLMMAIN ( &
               !Ozone stress variables
               lai_old           ,o3uptakesun       ,o3uptakesha       ,forc_ozone        ,&
               !End ozone stress variables
+              !WUE stomata model parameter
+              lambda      ,&! Marginal water cost of carbon gain ((mol h2o) (mol co2)-1)
+              !WUE stomata model parameter
               slti              ,hlti              ,shti              ,hhti              ,&
               trda              ,trdm              ,trop              ,g1                ,&
               g0                ,gradm             ,binter            ,extkn             ,&

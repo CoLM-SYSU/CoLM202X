@@ -137,6 +137,9 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
              ! Ozone Stress Variables
                lai_old(i),      o3uptakesun(i),  o3uptakesha(i)  ,forc_ozone(i),   &
              ! End ozone stress variables
+             ! WUE stomata model parameter
+               lambda(i),                                                          &
+             ! End WUE model parameter 
                zwt(i),          wdsrf(i),        wa(i),           wetwat(i),       &
                t_lake(1:,i),    lake_icefrac(1:,i),               savedtke1(i),    &
 
@@ -236,6 +239,9 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
             shti(m)         ,hhti(m)         ,trda(m)         ,trdm(m)         ,&
             trop(m)         ,g1(m)           ,g0(m),gradm(m)  ,binter(m)       ,&
             extkn(m)        ,rho(1:,1:,m)    ,tau(1:,1:,m)    ,rootfr(1:,m)    ,&
+          ! WUE model parameter
+            lambda(m)                                                          ,&
+          ! END WUE model parameter
 
           ! ATMOSPHERIC FORCING
             forc_pco2m(i)   ,forc_po2m(i)    ,forc_us(i)      ,forc_vs(i)      ,&
