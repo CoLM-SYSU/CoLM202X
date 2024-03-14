@@ -212,7 +212,7 @@ MODULE MOD_Vars_TimeInvariants
    real(r8), allocatable :: psi0         (:,:)  !minimum soil suction [mm] (NOTE: "-" valued)
    real(r8), allocatable :: bsw          (:,:)  !clapp and hornbereger "b" parameter [-]
    real(r8), allocatable :: theta_r      (:,:)  !residual moisture content [-]
-
+   real(r8), allocatable :: BVIC         (:,:)  !b parameter in Fraction of saturated soil in a grid calculated by VIC
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
    real(r8), allocatable :: alpha_vgm    (:,:)  !a parameter corresponding approximately to the inverse of the air-entry value
    real(r8), allocatable :: L_vgm        (:,:)  !pore-connectivity parameter [dimensionless]
@@ -317,6 +317,7 @@ CONTAINS
             allocate (psi0         (nl_soil,numpatch))
             allocate (bsw          (nl_soil,numpatch))
             allocate (theta_r      (nl_soil,numpatch))
+            allocate (BVIC         (nl_soil,numpatch))
 
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
             allocate (alpha_vgm    (nl_soil,numpatch))
@@ -421,7 +422,7 @@ CONTAINS
       CALL ncio_read_vector (file_restart, 'psi0   ' ,     nl_soil, landpatch, psi0      ) ! minimum soil suction [mm] (NOTE: "-" valued)
       CALL ncio_read_vector (file_restart, 'bsw    ' ,     nl_soil, landpatch, bsw       ) ! clapp and hornbereger "b" parameter [-]
       CALL ncio_read_vector (file_restart, 'theta_r  ' ,   nl_soil, landpatch, theta_r   ) ! residual moisture content [-]
-
+      CALL ncio_read_vector (file_restart, 'BVIC  ' ,   nl_soil, landpatch, BVIC   )       ! b parameter in Fraction of saturated soil in a grid calculated by VIC
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
       CALL ncio_read_vector (file_restart, 'alpha_vgm' ,   nl_soil, landpatch, alpha_vgm ) ! a parameter corresponding approximately to the inverse of the air-entry value
       CALL ncio_read_vector (file_restart, 'L_vgm    ' ,   nl_soil, landpatch, L_vgm     ) ! pore-connectivity parameter [dimensionless]
@@ -579,6 +580,7 @@ CONTAINS
       CALL ncio_write_vector (file_restart, 'psi0      ', 'soil', nl_soil, 'patch', landpatch, psi0      , compress) ! minimum soil suction [mm] (NOTE: "-" valued)
       CALL ncio_write_vector (file_restart, 'bsw       ', 'soil', nl_soil, 'patch', landpatch, bsw       , compress) ! clapp and hornbereger "b" parameter [-]
       CALL ncio_write_vector (file_restart, 'theta_r  ' , 'soil', nl_soil, 'patch', landpatch, theta_r   , compress) ! residual moisture content [-]
+      CALL ncio_write_vector (file_restart, 'BVIC    '  , 'soil', nl_soil, 'patch', landpatch, BVIC      , compress) ! b parameter in Fraction of saturated soil in a grid calculated by VIC
 
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
       CALL ncio_write_vector (file_restart, 'alpha_vgm' , 'soil', nl_soil, 'patch', landpatch, alpha_vgm , compress) ! a parameter corresponding approximately to the inverse of the air-entry value
@@ -706,6 +708,7 @@ CONTAINS
             deallocate (psi0           )
             deallocate (bsw            )
             deallocate (theta_r        )
+            deallocate (BVIC           )
 
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
             deallocate (alpha_vgm      )
@@ -817,6 +820,7 @@ CONTAINS
          
       CALL check_vector_data ('topoelv      [m]     ', topoelv     ) !
       CALL check_vector_data ('topostd      [m]     ', topostd     ) !
+      CALL check_vector_data ('BVIC        [-]      ', BVIC        ) !
 
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
