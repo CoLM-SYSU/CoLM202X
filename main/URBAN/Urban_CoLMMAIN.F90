@@ -12,7 +12,7 @@ SUBROUTINE UrbanCoLMMAIN ( &
            em_gper      ,cv_roof      ,cv_wall      ,cv_gimp      ,&
            tk_roof      ,tk_wall      ,tk_gimp      ,z_roof       ,&
            z_wall       ,dz_roof      ,dz_wall                    ,&
-           lakedepth    ,dz_lake      ,topostd      ,&
+           lakedepth    ,dz_lake      ,topostd      ,BVIC         ,&
 
          ! LUCY model input parameters
            fix_holiday  ,week_holiday ,hum_prof     ,pop_den      ,&
@@ -337,6 +337,7 @@ SUBROUTINE UrbanCoLMMAIN ( &
         savedtke1             ,&! top level eddy conductivity (W/m K)
 
         topostd    ,&! standard deviation of elevation [m]
+        BVIC      ,& ! b parameter in Fraction of saturated soil in a grid calculated by VIC
 
         t_grnd     ,&! ground surface temperature [k]
         tleaf      ,&! sunlit leaf temperature [K]
@@ -981,7 +982,7 @@ SUBROUTINE UrbanCoLMMAIN ( &
         froof                ,fgper                ,flake                ,bsw                  ,&
         porsl                ,psi0                 ,hksati               ,wtfact               ,&
         pondmx               ,ssi                  ,wimp                 ,smpmin               ,&
-        theta_r              ,topostd                                                          ,&
+        theta_r              ,topostd              ,BVIC                                       ,&
         rootr,rootflux       ,etrgper              ,fseng                ,fgrnd                ,&
         t_gpersno(lbp:)      ,t_lakesno(:)         ,t_lake               ,dz_lake              ,&
         z_gpersno(lbp:)      ,z_lakesno(:)         ,zi_gpersno(lbp-1:)   ,zi_lakesno(:)        ,&

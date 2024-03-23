@@ -68,6 +68,8 @@ MODULE MOD_Namelist
    logical  :: USE_SITE_soilparameters   = .true.
    logical  :: USE_SITE_dbedrock         = .true.
    logical  :: USE_SITE_topography       = .true.
+   logical  :: USE_SITE_topostd          = .true.
+   logical  :: USE_SITE_BVIC             = .true.   
    logical  :: USE_SITE_HistWriteBack    = .true.
    logical  :: USE_SITE_ForcingReadAhead = .true.
    logical  :: USE_SITE_urban_paras      = .true.
@@ -254,6 +256,8 @@ MODULE MOD_Namelist
    ! 0: scheme from SIMTOP model, also used in CoLM2014
    ! 1: scheme from VIC model
    ! 2: scheme from XinAnJiang model, also used in ECMWF model
+   ! 3: scheme from Simple VIC, also used in NoahMP 5.0
+
    integer :: DEF_Runoff_SCHEME = 0
    character(len=256) :: DEF_file_VIC_para = 'null'
 
@@ -780,6 +784,8 @@ CONTAINS
       USE_SITE_soilparameters,  &
       USE_SITE_dbedrock,        &
       USE_SITE_topography,      &
+      USE_SITE_topostd   ,      &
+      USE_SITE_BVIC      ,      &
       USE_SITE_HistWriteBack,   &
       USE_SITE_ForcingReadAhead,&
       USE_SITE_urban_paras,     &

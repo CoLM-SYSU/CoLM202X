@@ -18,7 +18,7 @@ SUBROUTINE CoLMMAIN ( &
 #endif
            hksati,       csol,         k_solids,     dksatu,        &
            dksatf,       dkdry,        BA_alpha,     BA_beta,       &
-           rootfr,       lakedepth,    dz_lake,      topostd,       &
+           rootfr,       lakedepth,    dz_lake,      topostd, BVIC, &
 #if(defined CaMa_Flood)
            ! add flood depth, flood fraction, flood evaporation and
            ! flood re-infiltration
@@ -194,6 +194,7 @@ SUBROUTINE CoLMMAIN ( &
         dz_lake(nl_lake) ,&! lake layer thickness (m)
         
         topostd          ,&! standard deviation of elevation (m)
+        BVIC             ,&! vic model parameter b
 
         ! soil physical parameters and lake info
         soil_s_v_alb     ,&! albedo of visible of the saturated soil
@@ -627,6 +628,8 @@ SUBROUTINE CoLMMAIN ( &
                totwb = totwb + wetwat
             ENDIF
          ENDIF
+
+         errw_rsub = 0._r8
    
          fiold(:) = 0.0
          IF (snl <0 ) THEN
@@ -737,7 +740,7 @@ SUBROUTINE CoLMMAIN ( &
             CALL WATER_2014 (ipatch,patchtype         ,lb                ,nl_soil           ,&
                  deltim            ,z_soisno(lb:)     ,dz_soisno(lb:)    ,zi_soisno(lb-1:)  ,&
                  bsw               ,porsl             ,psi0              ,hksati            ,&
-                 theta_r           ,topostd           ,&
+                 theta_r           ,topostd           ,BVIC                                 ,&
                  rootr             ,rootflux          ,t_soisno(lb:)     ,wliq_soisno(lb:)  ,&
                  wice_soisno(lb:)  ,smp               ,hk                ,pg_rain           ,&
                  sm                ,etr               ,qseva             ,qsdew             ,&
@@ -760,7 +763,7 @@ SUBROUTINE CoLMMAIN ( &
 
             CALL WATER_VSF (ipatch ,patchtype         ,lb                ,nl_soil           ,&
                  deltim            ,z_soisno(lb:)     ,dz_soisno(lb:)    ,zi_soisno(lb-1:)  ,&
-                 bsw               ,theta_r           ,topostd           ,&
+                 bsw               ,theta_r           ,topostd           ,BVIC              ,&
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
                  alpha_vgm         ,n_vgm             ,L_vgm             ,sc_vgm            ,&
                  fc_vgm            ,&

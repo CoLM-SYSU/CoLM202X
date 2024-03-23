@@ -46,8 +46,8 @@
 
    ! ----- forcing -----
    ! Options :
-   ! PRINCETON | GSWP3   | QIAN  | CRUNCEPV4 | CRUNCEPV7 | ERA5LAND | ERA5 |  MSWX
-   ! WFDE5     | CRUJRA  | WFDEI | JRA55     | GDAS      | CMFD     | POINT
+   ! PRINCETON | GSWP3   | QIAN  | CRUNCEPV4 | CRUNCEPV7 | ERA5LAND | ERA5  |  MSWX
+   ! WFDE5     | CRUJRA  | WFDEI | JRA55     | GDAS      | CMFD     | POINT |  JRA3Q
    DEF_forcing_namelist = '/tera04/zhangsp/git/CoLM202X/run/forcing/ERA5LAND.nml'
 
    ! ----- history -----
