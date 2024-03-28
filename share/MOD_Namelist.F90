@@ -39,10 +39,18 @@ MODULE MOD_Namelist
 ! ----- Part 2: blocks and MPI  -----
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+   ! "blocks" is used to deal with high resolution data.
+   ! It is defined by one of the following (in order of priority):
+   !   1) "DEF_BlockInfoFile" : "lat_s","lat_n","lon_w","lon_e" in file ;
+   !   2) "DEF_AverageElementSize" : diameter of element (in kilometer);
+   !   3) "DEF_nx_blocks" and "DEF_ny_blocks" : number of blocks;
    character(len=256) :: DEF_BlockInfoFile = 'null'
    real(r8) :: DEF_AverageElementSize = -1.
    integer  :: DEF_nx_blocks = 72
    integer  :: DEF_ny_blocks = 36
+
+   ! A group includes one "IO" process and several "worker" processes.
+   ! Its size determines number of IOs in a job.
    integer  :: DEF_PIO_groupsize = 12
 
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -60,6 +68,7 @@ MODULE MOD_Namelist
    logical  :: USE_SITE_soilparameters   = .true.
    logical  :: USE_SITE_dbedrock         = .true.
    logical  :: USE_SITE_topography       = .true.
+   logical  :: USE_SITE_topostd          = .true.
    logical  :: USE_SITE_HistWriteBack    = .true.
    logical  :: USE_SITE_ForcingReadAhead = .true.
    logical  :: USE_SITE_urban_paras      = .true.
@@ -148,7 +157,7 @@ MODULE MOD_Namelist
    ! 2: Read a global soil color map from CLM
    integer :: DEF_SOIL_REFL_SCHEME = 2
 
-   ! ----- compress data in aggregation when send data from IO to worker -----
+   ! ----- merge data in aggregation when send data from IO to worker -----
    logical :: USE_zip_for_aggregation = .true.
    
    ! ----- compress level in writing aggregated surface data -----
@@ -241,6 +250,13 @@ MODULE MOD_Namelist
    ! 4: LP92, Lee and Pielke (1992)
    ! 5: S92,  Sellers et al (1992)
    integer :: DEF_RSS_SCHEME = 1
+
+   ! Options for runoff parameterization schemes
+   ! 0: scheme from SIMTOP model, also used in CoLM2014
+   ! 1: scheme from VIC model
+   ! 2: scheme from XinAnJiang model, also used in ECMWF model
+   integer :: DEF_Runoff_SCHEME = 0
+   character(len=256) :: DEF_file_VIC_para = 'null'
 
    ! Treat exposed soil and snow surface separatly, including
    ! solar absorption, sensible/latent heat, ground temperature,
@@ -369,20 +385,20 @@ MODULE MOD_Namelist
 
    logical  :: DEF_HISTORY_IN_VECTOR = .false.
 
-   logical  :: DEF_hist_grid_as_forcing = .false.
-   real(r8) :: DEF_hist_lon_res = 0.5
-   real(r8) :: DEF_hist_lat_res = 0.5
+   logical  :: DEF_HIST_grid_as_forcing = .false.
+   real(r8) :: DEF_HIST_lon_res = 0.5
+   real(r8) :: DEF_HIST_lat_res = 0.5
 
    character(len=256) :: DEF_WRST_FREQ    = 'none'  ! write restart file frequency: TIMESTEP/HOURLY/DAILY/MONTHLY/YEARLY
    character(len=256) :: DEF_HIST_FREQ    = 'none'  ! write history file frequency: TIMESTEP/HOURLY/DAILY/MONTHLY/YEARLY
    character(len=256) :: DEF_HIST_groupby = 'MONTH' ! history file in one file: DAY/MONTH/YEAR
    character(len=256) :: DEF_HIST_mode    = 'one'
    logical :: DEF_HIST_WriteBack      = .false.
-   integer :: DEF_REST_COMPRESS_LEVEL = 1
-   integer :: DEF_HIST_COMPRESS_LEVEL = 1
+   integer :: DEF_REST_CompressLevel = 1
+   integer :: DEF_HIST_CompressLevel = 1
 
-   character(len=256) :: DEF_hist_vars_namelist = 'null'
-   logical :: DEF_hist_vars_out_default = .true.
+   character(len=256) :: DEF_HIST_vars_namelist = 'null'
+   logical :: DEF_HIST_vars_out_default = .true.
 
 
    ! ----- history variables -----
@@ -422,6 +438,8 @@ MODULE MOD_Namelist
       logical :: xerr         = .true.
       logical :: zerr         = .true.
       logical :: rsur         = .true.
+      logical :: rsur_se      = .true.
+      logical :: rsur_ie      = .true.
       logical :: rsub         = .true.
       logical :: rnof         = .true.
       logical :: xwsur        = .true.
@@ -763,6 +781,7 @@ CONTAINS
       USE_SITE_soilparameters,  &
       USE_SITE_dbedrock,        &
       USE_SITE_topography,      &
+      USE_SITE_topostd   ,      &
       USE_SITE_HistWriteBack,   &
       USE_SITE_ForcingReadAhead,&
       USE_SITE_urban_paras,     &
@@ -816,7 +835,9 @@ CONTAINS
       DEF_USE_SUPERCOOL_WATER,         &
       DEF_SOIL_REFL_SCHEME,            &
       DEF_RSS_SCHEME,                  &
+      DEF_Runoff_SCHEME,               & 
       DEF_SPLIT_SOILSNOW,              &
+      DEF_file_VIC_para,               &
 
       DEF_dir_existing_srfdata,        &
       USE_srfdata_from_larger_region,  &
@@ -870,18 +891,18 @@ CONTAINS
       DEF_DS_longwave_adjust_scheme,      &
 
       DEF_HISTORY_IN_VECTOR,           &
-      DEF_hist_lon_res,                &
-      DEF_hist_lat_res,                &
-      DEF_hist_grid_as_forcing,        &
+      DEF_HIST_lon_res,                &
+      DEF_HIST_lat_res,                &
+      DEF_HIST_grid_as_forcing,        &
       DEF_WRST_FREQ,                   &
       DEF_HIST_FREQ,                   &
       DEF_HIST_groupby,                &
       DEF_HIST_mode,                   &
       DEF_HIST_WriteBack,              &
-      DEF_REST_COMPRESS_LEVEL,         &
-      DEF_HIST_COMPRESS_LEVEL,         &
-      DEF_hist_vars_namelist,          &
-      DEF_hist_vars_out_default
+      DEF_REST_CompressLevel,         &
+      DEF_HIST_CompressLevel,         &
+      DEF_HIST_vars_namelist,          &
+      DEF_HIST_vars_out_default
 
    namelist /nl_colm_forcing/ DEF_dir_forcing, DEF_forcing
    namelist /nl_colm_history/ DEF_hist_vars
@@ -1242,6 +1263,9 @@ CONTAINS
       CALL mpi_bcast (DEF_SOIL_REFL_SCHEME,             1, mpi_integer, p_root, p_comm_glb, p_err)
       ! 07/2023, added by zhuo liu
       CALL mpi_bcast (DEF_RSS_SCHEME,                   1, mpi_integer, p_root, p_comm_glb, p_err)
+      ! 02/2024, added by Shupeng Zhang 
+      CALL mpi_bcast (DEF_Runoff_SCHEME,   1, mpi_integer,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_file_VIC_para, 256, mpi_character, p_root, p_comm_glb, p_err)
       ! 08/2023, added by hua yuan
       CALL mpi_bcast (DEF_SPLIT_SOILSNOW,      1, mpi_logical, p_root, p_comm_glb, p_err)
 
@@ -1293,18 +1317,18 @@ CONTAINS
 
       CALL mpi_bcast (DEF_HISTORY_IN_VECTOR, 1, mpi_logical,  p_root, p_comm_glb, p_err)
 
-      CALL mpi_bcast (DEF_hist_lon_res,  1, mpi_real8, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_hist_lat_res,  1, mpi_real8, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_HIST_lon_res,  1, mpi_real8, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_HIST_lat_res,  1, mpi_real8, p_root, p_comm_glb, p_err)
 
-      CALL mpi_bcast (DEF_hist_grid_as_forcing, 1, mpi_logical, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_HIST_grid_as_forcing, 1, mpi_logical, p_root, p_comm_glb, p_err)
 
       CALL mpi_bcast (DEF_WRST_FREQ,         256, mpi_character, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_HIST_FREQ,         256, mpi_character, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_HIST_groupby,      256, mpi_character, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_HIST_mode,         256, mpi_character, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_HIST_WriteBack,      1, mpi_logical,   p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_REST_COMPRESS_LEVEL, 1, mpi_integer,   p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_HIST_COMPRESS_LEVEL, 1, mpi_integer,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_REST_CompressLevel, 1, mpi_integer,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_HIST_CompressLevel, 1, mpi_integer,   p_root, p_comm_glb, p_err)
 
       CALL mpi_bcast (DEF_USE_Forcing_Downscaling,        1, mpi_logical,   p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_DS_precipitation_adjust_scheme, 5, mpi_character, p_root, p_comm_glb, p_err)
@@ -1350,15 +1374,15 @@ CONTAINS
 
       IF (p_is_master) THEN
 
-         inquire (file=trim(DEF_hist_vars_namelist), exist=fexists)
+         inquire (file=trim(DEF_HIST_vars_namelist), exist=fexists)
          IF (.not. fexists) THEN
-            write(*,*) 'History namelist file: ', trim(DEF_hist_vars_namelist), ' does not exist.'
+            write(*,*) 'History namelist file: ', trim(DEF_HIST_vars_namelist), ' does not exist.'
          ELSE
-            open(10, status='OLD', file=trim(DEF_hist_vars_namelist), form="FORMATTED")
+            open(10, status='OLD', file=trim(DEF_HIST_vars_namelist), form="FORMATTED")
             read(10, nml=nl_colm_history, iostat=ierr)
             IF (ierr /= 0) THEN
                CALL CoLM_Stop (' ***** ERROR: Problem reading namelist: ' &
-                  // trim(DEF_hist_vars_namelist))
+                  // trim(DEF_HIST_vars_namelist))
             ENDIF
             close(10)
          ENDIF
@@ -1409,6 +1433,8 @@ CONTAINS
       CALL sync_hist_vars_one (DEF_hist_vars%xerr        ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%zerr        ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%rsur        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%rsur_se     ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%rsur_ie     ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%rsub        ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%rnof        ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%xwsur       ,  set_defaults)
@@ -1707,7 +1733,7 @@ CONTAINS
 
       IF (p_is_master) THEN
          IF (set_defaults) THEN
-            onoff = DEF_hist_vars_out_default
+            onoff = DEF_HIST_vars_out_default
          ENDIF
       ENDIF
 

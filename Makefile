@@ -268,6 +268,9 @@ OBJS_MAIN = \
 				MOD_LeafTemperature.o                     \
 				MOD_LeafTemperaturePC.o                   \
 				MOD_SoilThermalParameters.o               \
+				MOD_Hydro_VIC_Variables.o                 \
+				MOD_Hydro_VIC.o                           \
+				MOD_Runoff.o                              \
 				MOD_SoilSnowHydrology.o                   \
 				MOD_SnowLayersCombineDivide.o             \
 				MOD_PhaseChange.o                         \

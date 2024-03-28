@@ -4,9 +4,9 @@ MODULE MOD_SoilSnowHydrology
 
 !-----------------------------------------------------------------------
    USE MOD_Precision
-   USE MOD_Namelist, only: DEF_USE_PLANTHYDRAULICS, DEF_USE_SNICAR, &
-                          DEF_URBAN_RUN, DEF_USE_IRRIGATION, &
-                          DEF_SPLIT_SOILSNOW
+   USE MOD_Namelist, only: DEF_USE_PLANTHYDRAULICS, DEF_USE_SNICAR,     &
+                           DEF_URBAN_RUN,           DEF_USE_IRRIGATION, &
+                           DEF_SPLIT_SOILSNOW,      DEF_Runoff_SCHEME
 #if(defined CaMa_Flood)
    USE YOS_CMF_INPUT,      only: LWINFILT
 #endif
@@ -15,6 +15,9 @@ MODULE MOD_SoilSnowHydrology
    USE MOD_Irrigation, only: CalIrrigationApplicationFluxes
 #endif
    USE MOD_LandPatch, only: landpatch
+   USE MOD_Runoff
+   USE MOD_Hydro_VIC
+   USE MOD_Hydro_VIC_Variables
    IMPLICIT NONE
    SAVE
 
@@ -27,8 +30,7 @@ MODULE MOD_SoilSnowHydrology
 
 
 !  PRIVATE MEMBER FUNCTIONS:
-   PRIVATE :: surfacerunoff
-   PRIVATE :: subsurfacerunoff
+   PRIVATE :: groundwater
 
 
 !-----------------------------------------------------------------------
@@ -41,7 +43,8 @@ CONTAINS
 
    SUBROUTINE WATER_2014 (ipatch,patchtype,lb       ,nl_soil ,deltim,&
               z_soisno    ,dz_soisno   ,zi_soisno   ,bsw     ,porsl ,&
-              psi0        ,hksati      ,rootr       ,rootflux,t_soisno,&
+              psi0        ,hksati      ,theta_r     ,topostd ,&
+              rootr       ,rootflux    ,t_soisno    ,&
               wliq_soisno ,wice_soisno ,smp         ,hk      ,pg_rain ,&
               sm,   etr   ,qseva       ,qsdew       ,qsubl   ,qfros ,&
               qseva_soil  ,qsdew_soil  ,qsubl_soil  ,qfros_soil     ,&
@@ -68,14 +71,16 @@ CONTAINS
 ! FLOW DIAGRAM FOR WATER_2014.F90
 !
 ! WATER_2014 ===> snowwater
-!                 surfacerunoff
+!                 SurfaceRunoff_SIMTOP
 !                 soilwater
-!                 subsurfacerunoff
+!                 SubsurfaceRunoff_SIMTOP
 !
 !=======================================================================
 
    USE MOD_Precision
-   USE MOD_Const_Physical, only : denice, denh2o, tfrz
+   USE MOD_Const_Physical,      only : denice, denh2o, tfrz
+   USE MOD_Vars_TimeInvariants, only : vic_b_infilt, vic_Dsmax, vic_Ds, vic_Ws, vic_c
+   USE MOD_Vars_1DFluxes,       only : fevpg
 
    IMPLICIT NONE
 
@@ -96,6 +101,7 @@ CONTAINS
         ssi              , &! irreducible water saturation of snow
         wimp             , &! water impremeable if porosity less than wimp
         smpmin           , &! restriction for min of soil poten. (mm)
+        topostd          , &! standard deviation of elevation (m)
         z_soisno (lb:nl_soil)   , &! layer depth (m)
         dz_soisno(lb:nl_soil)   , &! layer thickness (m)
         zi_soisno(lb-1:nl_soil) , &! interface level below a "z" level (m)
@@ -104,6 +110,7 @@ CONTAINS
         porsl(1:nl_soil) , &! saturated volumetric soil water content(porosity)
         psi0(1:nl_soil)  , &! saturated soil suction (mm) (NEGATIVE)
         hksati(1:nl_soil), &! hydraulic conductivity at saturation (mm h2o/s)
+        theta_r(1:nl_soil),&! residual moisture content [-]
         rootr(1:nl_soil) , &! water uptake farction from different layers, all layers add to 1.0
         rootflux(1:nl_soil),&! root uptake from different layer, all layers add to transpiration
 
@@ -190,6 +197,12 @@ CONTAINS
    real(r8) :: qflx_irrig_paddy
 #endif
 
+   ! **
+   type(soil_con_struct ) :: soil_con
+   type(cell_data_struct) :: cell
+   integer  :: ilay
+   real(r8) :: vic_tmp(Nlayer)
+
 !=======================================================================
 ! [1] update the liquid water within snow layer and the water onto soil
 !=======================================================================
@@ -269,13 +282,44 @@ IF(patchtype<=1)THEN   ! soil ground only
 
       ! surface runoff including water table and surface staturated area
 
-      rsur = 0.
-      IF (gwat > 0.) THEN
-         CALL surfacerunoff (nl_soil,wtfact,wimp,porsl,psi0,hksati,&
-                          z_soisno(1:),dz_soisno(1:),zi_soisno(0:),&
-                          eff_porosity,icefrac,zwt,gwat,rsur)
-      ELSE
-         rsur = 0.
+      rsur   = 0.
+      rsubst = 0.
+
+      IF (DEF_Runoff_SCHEME  == 0) THEN
+         ! 0: runoff scheme from TOPMODEL
+         
+         IF (gwat > 0.) THEN
+            CALL SurfaceRunoff_SIMTOP (nl_soil,wtfact,wimp,porsl,psi0,hksati,&
+               z_soisno(1:),dz_soisno(1:),zi_soisno(0:),&
+               eff_porosity,icefrac,zwt,gwat,rsur)
+         ELSE
+            rsur = 0.
+         ENDIF
+
+      ELSEIF (DEF_Runoff_SCHEME  == 1) THEN 
+         ! 1: runoff scheme from VIC model
+      
+         call vic_para(porsl, theta_r, hksati, bsw, wice_soisno, wliq_soisno, fevpg(ipatch), rootflux, &
+            vic_b_infilt(ipatch), vic_Dsmax(ipatch), vic_Ds(ipatch), vic_Ws(ipatch), vic_c(ipatch),&
+            soil_con, cell)
+
+         call compute_vic_runoff(soil_con, gwat*deltim, soil_con%frost_fract, cell)
+
+         ! DO ilay = 1, Nlayer
+         !    vic_tmp(ilay) = cell%layer(ilay)%moist
+         ! ENDDO
+         ! call VIC2CoLM(wliq_soisno, vic_tmp)
+
+         if (gwat > 0.) rsur = cell%runoff/deltim
+         rsubst = cell%baseflow/deltim
+
+      ELSEIF (DEF_Runoff_SCHEME  == 2) THEN 
+         ! 2: runoff scheme from XinAnJiang model
+
+         CALL Runoff_XinAnJiang (&
+            nl_soil, dz_soisno(1:nl_soil), eff_porosity(1:nl_soil), vol_liq(1:nl_soil), &
+            topostd, gwat, deltim, rsur, rsubst)
+
       ENDIF
 
       ! infiltration into surface soil layer
@@ -291,7 +335,7 @@ IF(patchtype<=1)THEN   ! soil ground only
             ! surface runoff from inundation, this should not be added to the surface runoff from soil
             ! otherwise, the surface runoff will be double counted.
             ! only the re-infiltration is added to water balance calculation.
-            CALL surfacerunoff (nl_soil,1.0,wimp,porsl,psi0,hksati,&
+            CALL SurfaceRunoff_SIMTOP (nl_soil,1.0,wimp,porsl,psi0,hksati,&
                        z_soisno(1:),dz_soisno(1:),zi_soisno(0:),&
                        eff_porosity,icefrac,zwt,gfld,rsur_fld)
             ! infiltration into surface soil layer
@@ -333,11 +377,11 @@ IF(patchtype<=1)THEN   ! soil ground only
 ! [4] subsurface runoff and the corrections
 !=======================================================================
 
-      CALL subsurfacerunoff (nl_soil,deltim,pondmx,&
-                             eff_porosity,icefrac,dz_soisno(1:),zi_soisno(0:),&
-                             wice_soisno(1:),wliq_soisno(1:),&
-                             porsl,psi0,bsw,zwt,wa,&
-                             qcharge,rsubst,errw_rsub)
+      CALL groundwater (nl_soil,deltim,pondmx,&
+                        eff_porosity,icefrac,dz_soisno(1:),zi_soisno(0:),&
+                        wice_soisno(1:),wliq_soisno(1:),&
+                        porsl,psi0,bsw,zwt,wa,&
+                        qcharge,rsubst,errw_rsub)
 
       ! total runoff (mm/s)
       rnof = rsubst + rsur
@@ -423,12 +467,9 @@ ENDIF
 !-----------------------------------------------------------------------
    SUBROUTINE WATER_VSF (ipatch,  patchtype,lb      ,nl_soil ,deltim ,&
               z_soisno    ,dz_soisno   ,zi_soisno                    ,&
-#ifdef Campbell_SOIL_MODEL
-              bsw         ,                                           &
-#endif
+              bsw         ,theta_r     ,topostd                      ,&
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
-              theta_r     ,alpha_vgm   ,n_vgm       ,L_vgm   ,        &
-              sc_vgm      ,fc_vgm      ,                              &
+              alpha_vgm   ,n_vgm       ,L_vgm       ,sc_vgm  ,fc_vgm ,&
 #endif
               porsl       ,psi0        ,hksati      ,rootr   ,rootflux,&
               t_soisno    ,wliq_soisno ,wice_soisno ,smp     ,hk     ,&
@@ -437,10 +478,9 @@ ENDIF
               qseva_soil  ,qsdew_soil  ,qsubl_soil  ,qfros_soil      ,&
               qseva_snow  ,qsdew_snow  ,qsubl_snow  ,qfros_snow      ,&
               fsno                                                   ,&
-              rsur        ,rnof        ,qinfl       ,wtfact  ,ssi    ,&
-              pondmx      ,                                           &
+              rsur        ,rsur_se     ,rsur_ie     ,rnof            ,&
+              qinfl       ,wtfact      ,ssi         ,pondmx          ,&
               wimp        ,zwt         ,wdsrf       ,wa      ,wetwat ,&
-              qcharge     ,errw_rsub   ,                              &
 #if(defined CaMa_Flood)
               flddepth    ,fldfrc      ,qinfl_fld   ,                 &
 #endif
@@ -468,7 +508,9 @@ ENDIF
    USE MOD_Precision
    USE MOD_Hydro_SoilWater
    USE MOD_Vars_TimeInvariants, only : wetwatmax
-   USE MOD_Const_Physical, only : denice, denh2o, tfrz
+   USE MOD_Const_Physical,      only : denice, denh2o, tfrz
+   USE MOD_Vars_TimeInvariants, only : vic_b_infilt, vic_Dsmax, vic_Ds, vic_Ws, vic_c
+   USE MOD_Vars_1DFluxes,       only : fevpg
 #ifdef DataAssimilation
    USE MOD_DA_GRACE, only : fslp_k
 #endif
@@ -491,14 +533,13 @@ ENDIF
         ssi              , &! irreducible water saturation of snow
         pondmx           , &! ponding depth (mm)
         wimp             , &! water impremeable IF porosity less than wimp
+        topostd          , &! standard deviation of elevation (m)
         z_soisno (lb:nl_soil)   , &! layer depth (m)
         dz_soisno(lb:nl_soil)   , &! layer thickness (m)
         zi_soisno(lb-1:nl_soil) , &! interface level below a "z" level (m)
-#ifdef Campbell_SOIL_MODEL
         bsw      (1:nl_soil), &! clapp and hornbereger "b" parameter [-]
-#endif
-#ifdef vanGenuchten_Mualem_SOIL_MODEL
         theta_r  (1:nl_soil), & ! residual moisture content [-]
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
         alpha_vgm(1:nl_soil), & ! a parameter corresponding approximately to the inverse of the air-entry value
         n_vgm    (1:nl_soil), & ! a shape parameter [dimensionless]
         L_vgm    (1:nl_soil), & ! pore-connectivity parameter [dimensionless]
@@ -546,11 +587,11 @@ ENDIF
 
    real(r8), intent(out) :: &
         rsur             , &! surface runoff (mm h2o/s)
+        rsur_se          , &! saturation excess surface runoff (mm h2o/s)
+        rsur_ie          , &! infiltration excess surface runoff (mm h2o/s)
         rnof             , &! total runoff (mm h2o/s)
-        qinfl            , &! infiltration rate (mm h2o/s)
-        qcharge             ! groundwater recharge (positive to aquifer) [mm/s]
+        qinfl               ! infiltration rate (mm h2o/s)
 
-   real(r8), intent(out) :: errw_rsub ! the possible subsurface runoff dificit after PHS is included
 
 ! SNICAR model variables
 ! Aerosol Fluxes (Jan. 07, 2023)
@@ -600,10 +641,6 @@ ENDIF
 #endif
 
 #ifdef Campbell_SOIL_MODEL
-   real(r8) :: theta_r(1:nl_soil)
-#endif
-
-#ifdef Campbell_SOIL_MODEL
    integer, parameter :: nprms = 1
 #endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
@@ -614,9 +651,10 @@ ENDIF
    real(r8) :: gfld,qinfl_all,rsur_fld, qinfl_fld_subgrid! inundation water input from top (mm/s)
 #endif
 
-#ifdef Campbell_SOIL_MODEL
-      theta_r(1:nl_soil) = 0._r8
-#endif
+   type(soil_con_struct ) :: soil_con
+   type(cell_data_struct) :: cell
+   integer  :: ilay
+   real(r8) :: vic_tmp(Nlayer)
 
 !=======================================================================
 ! [1] update the liquid water within snow layer and the water onto soil
@@ -712,24 +750,62 @@ IF(patchtype<=1)THEN   ! soil ground only
       ! surface runoff including water table and surface staturated area
 
 #ifndef CatchLateralFlow
-      IF (gwat > 0.) THEN
-         CALL surfacerunoff (nl_soil,wtfact,wimp,porsl,psi0,hksati,&
-                             z_soisno(1:),dz_soisno(1:),zi_soisno(0:),&
-                             eff_porosity,icefrac,zwt,gwat,rsur)
-      ELSE
-         rsur = 0.
+      IF (DEF_Runoff_SCHEME  == 0) THEN
+
+         IF (gwat > 0.) THEN
+            CALL SurfaceRunoff_SIMTOP (nl_soil,wtfact,wimp,porsl,psi0,hksati,&
+                                       z_soisno(1:),dz_soisno(1:),zi_soisno(0:),&
+                                       eff_porosity,icefrac,zwt,gwat,rsur,rsur_se,rsur_ie)
+         ELSE
+            rsur = 0.
+         ENDIF
+      
+         CALL SubsurfaceRunoff_SIMTOP (nl_soil, icefrac, dz_soisno(1:), zi_soisno(0:), &
+            zwt, rsubst)
+
+      ELSEIF (DEF_Runoff_SCHEME  == 1) THEN 
+         ! 1: runoff scheme from VIC model
+      
+         call vic_para(porsl, theta_r, hksati, bsw, wice_soisno, wliq_soisno, fevpg(ipatch), rootflux, &
+            vic_b_infilt(ipatch), vic_Dsmax(ipatch), vic_Ds(ipatch), vic_Ws(ipatch), vic_c(ipatch),&
+            soil_con, cell)
+
+         call compute_vic_runoff(soil_con, gwat*deltim, soil_con%frost_fract, cell)
+
+         ! DO ilay = 1, Nlayer
+         !    vic_tmp(ilay) = cell%layer(ilay)%moist
+         ! ENDDO
+         ! call VIC2CoLM(wliq_soisno, vic_tmp)
+
+         if (gwat > 0.) rsur = cell%runoff/deltim
+         rsubst = cell%baseflow/deltim
+
+      ELSEIF (DEF_Runoff_SCHEME  == 2) THEN 
+         ! 2: runoff scheme from XinAnJiang model
+
+         CALL Runoff_XinAnJiang (&
+            nl_soil, dz_soisno(1:nl_soil), eff_porosity(1:nl_soil), vol_liq(1:nl_soil), &
+            topostd, gwat, deltim, rsur, rsubst)
+
+         rsur_se = rsur
+         rsur_ie = 0.
+
       ENDIF
 
 #ifdef DataAssimilation
       rsur = max(min(rsur * fslp_k(ipatch), gwat), 0.)
+      rsubst = rsubst * fslp_k(ipatch)
 #endif
 
       ! infiltration into surface soil layer
       qgtop = gwat - rsur
 #else
-      ! for lateral flow, "rsur" is calculated in HYDRO/MOD_Hydro_SurfaceFlow.F90
+      ! for lateral flow, 
+      ! "rsur" is calculated in HYDRO/MOD_Hydro_SurfaceFlow.F90
       ! and is removed from surface water there.
       qgtop = gwat
+      ! "rsub" is calculated and removed from soil water in HYDRO/MOD_Hydro_SubsurfaceFlow.F90
+      rsubst = 0
 #endif
 
 #if(defined CaMa_Flood)
@@ -742,7 +818,7 @@ IF(patchtype<=1)THEN   ! soil ground only
             ! surface runoff from inundation, this should not be added to the surface runoff from soil
             ! otherwise, the surface runoff will be double counted.
             ! only the re-infiltration is added to water balance calculation.
-            CALL surfacerunoff (nl_soil,1.0,wimp,porsl,psi0,hksati,&
+            CALL SurfaceRunoff_SIMTOP (nl_soil,1.0,wimp,porsl,psi0,hksati,&
                z_soisno(1:),dz_soisno(1:),zi_soisno(0:),&
                eff_porosity,icefrac,zwt,gfld,rsur_fld)
             ! infiltration into surface soil layer
@@ -774,39 +850,6 @@ IF(patchtype<=1)THEN   ! soil ground only
             zwtmm = sp_zi(j)
          ENDIF
       ENDDO
-
-#ifndef CatchLateralFlow
-      !-- Topographic runoff  ----------------------------------------------------------
-      imped = 1.0
-      IF (zwtmm < sp_zi(nl_soil)) THEN
-         dzsum = 0.
-         icefracsum = 0.
-         DO j = nl_soil, 1, -1
-            sp_dz(j) = sp_zi(j) - sp_zi(j-1)
-            IF (zwtmm < sp_zi(j)) THEN
-               dz = min(sp_dz(j), sp_zi(j)-zwtmm)
-               dzsum = dzsum + dz
-               icefracsum = icefracsum + icefrac(j) * dz
-            ENDIF
-         ENDDO
-         ! add ice impedance factor to baseflow
-         IF (dzsum > 0) THEN
-            fracice_rsub = max(0.,exp(-3.*(1.-(icefracsum/dzsum)))-exp(-3.))/(1.0-exp(-3.))
-            imped = max(0.,1.-fracice_rsub)
-         ENDIF
-      ENDIF
-
-      rsubst = imped * 5.5e-3 * exp(-2.5*zwt)  ! drainage (positive = out of soil column)
-#ifdef DataAssimilation
-      rsubst = rsubst * fslp_k(ipatch)
-#endif
-
-#else
-      ! for lateral flow:
-      ! "rsub" is calculated and removed from soil water in HYDRO/MOD_Hydro_SubsurfaceFlow.F90
-      rsubst = 0
-#endif
-
 
 #ifdef Campbell_SOIL_MODEL
       prms(1,:) = bsw(1:nl_soil)
@@ -902,7 +945,13 @@ ENDIF
 #ifndef CatchLateralFlow
       IF (wdsrf > pondmx) THEN
          rsur = rsur + (wdsrf - pondmx) / deltim
+         rsur_ie = rsur_ie + (wdsrf - pondmx) / deltim
          wdsrf = pondmx
+      ENDIF
+
+      IF (zwt <= 0.) THEN
+         rsur_ie = 0.
+         rsur_se = rsur
       ENDIF
 
       ! total runoff (mm/s)
@@ -948,7 +997,6 @@ ELSE
       IF(patchtype==2)THEN        ! WETLAND
          qinfl = 0.
          zwt = 0.
-         qcharge = 0.
 
 
          IF (lb >= 1) THEN
@@ -988,12 +1036,12 @@ ELSE
             rsur = 0.
          ENDIF
          rnof = rsur
+         rsur_se = rsur
+         rsur_ie = 0.
 #endif
       ENDIF
 
 ENDIF
-
-      errw_rsub = 0.
 
    END SUBROUTINE WATER_VSF
 
@@ -1550,65 +1598,6 @@ ENDIF
 
    END SUBROUTINE SnowWater_snicar
 
-   SUBROUTINE surfacerunoff (nl_soil,wtfact,wimp,porsl,psi0,hksati,&
-                             z_soisno,dz_soisno,zi_soisno,&
-                             eff_porosity,icefrac,zwt,gwat,rsur)
-
-!=======================================================================
-! the original code was provide by Robert E. Dickinson based on following clues:
-! a water table level determination level added including highland and
-! lowland levels and fractional area of wetland (water table above the surface.
-! Runoff is parametrized from the lowlands in terms of precip incident on
-! wet areas and a base flow, where these are estimated using ideas from TOPMODEL.
-!
-! Author : Yongjiu Dai, 07/29/2002, Guoyue Niu, 06/2012
-!=======================================================================
-
-   USE MOD_Precision
-   IMPLICIT NONE
-
-!-----------------------Arguments---------------------------------------
-
-   integer, intent(in) :: nl_soil   ! number of soil layers
-   real(r8), intent(in) :: &
-        wtfact,                   &! fraction of model area with high water table
-        wimp,                     &! water impremeable if porosity less than wimp
-        porsl(1:nl_soil),         &! saturated volumetric soil water content(porosity)
-        psi0(1:nl_soil),          &! saturated soil suction (mm) (NEGATIVE)
-        hksati(1:nl_soil),        &! hydraulic conductivity at saturation (mm h2o/s)
-        z_soisno(1:nl_soil),      &! layer depth (m)
-        dz_soisno(1:nl_soil),     &! layer thickness (m)
-        zi_soisno(0:nl_soil),     &! interface level below a "z" level (m)
-        eff_porosity(1:nl_soil),  &! effective porosity = porosity - vol_ice
-        icefrac(1:nl_soil),       &! ice fraction (-)
-        gwat,                     &! net water input from top
-        zwt                        ! the depth from ground (soil) surface to water table [m]
-
-   real(r8), intent(out) :: rsur   ! surface runoff (mm h2o/s)
-
-!-----------------------Local Variables---------------------------------
-
-   real(r8) qinmax       ! maximum infiltration capability
-   real(r8) fsat         ! fractional area with water table at surface
-
-   real(r8), parameter :: fff = 0.5   ! runoff decay factor (m-1)
-
-!-----------------------END Variable List-------------------------------
-
-!  fraction of saturated area
-      fsat = wtfact*min(1.0,exp(-0.5*fff*zwt))
-
-! Maximum infiltration capacity
-      qinmax = minval(10.**(-6.0*icefrac(1:min(3,nl_soil)))*hksati(1:min(3,nl_soil)))
-      IF(eff_porosity(1)<wimp) qinmax = 0.
-
-! Surface runoff
-      rsur = fsat*max(0.0,gwat) + (1.-fsat)*max(0.,gwat-qinmax)
-
-
-   END SUBROUTINE surfacerunoff
-
-
 
    SUBROUTINE soilwater(patchtype,nl_soil,deltim,wimp,smpmin,&
                         qinfl,etr,z_soisno,dz_soisno,zi_soisno,&
@@ -1973,11 +1962,11 @@ ENDIF
    END SUBROUTINE soilwater
 
 
-   SUBROUTINE subsurfacerunoff(nl_soil,deltim,pondmx,&
-                               eff_porosity,icefrac,&
-                               dz_soisno,zi_soisno,wice_soisno,wliq_soisno,&
-                               porsl,psi0,bsw,zwt,wa,&
-                               qcharge,rsubst,errw_rsub)
+   SUBROUTINE groundwater (nl_soil,deltim,pondmx,&
+                           eff_porosity,icefrac,&
+                           dz_soisno,zi_soisno,wice_soisno,wliq_soisno,&
+                           porsl,psi0,bsw,zwt,wa,&
+                           qcharge,rsubst,errw_rsub)
 
 ! -------------------------------------------------------------------------
 
@@ -2007,7 +1996,7 @@ ENDIF
    real(r8), intent(inout) :: zwt       ! the depth from ground (soil) surface to water table [m]
    real(r8), intent(inout) :: wa        ! water in the unconfined aquifer (mm)
    real(r8), intent(in)    :: qcharge   ! aquifer recharge rate (positive to aquifer) (mm/s)
-   real(r8), intent(out)   :: rsubst    ! drainage drainage (positive = out of soil column) (mm H2O /s)
+   real(r8), intent(inout) :: rsubst    ! subsurface runoff (positive = out of soil column) (mm H2O /s)
    real(r8), intent(out)   :: errw_rsub ! the possible subsurface runoff dificit after PHS is included
 
 !
@@ -2120,16 +2109,22 @@ ENDIF
       ENDIF
 
 !-- Topographic runoff  ----------------------------------------------------------
-      dzsum = 0.
-      icefracsum = 0.
-      DO j = max(jwt,1), nl_soil
-         dzsum = dzsum + dzmm(j)
-         icefracsum = icefracsum + icefrac(j) * dzmm(j)
-      ENDDO
-      ! add ice impedance factor to baseflow
-      fracice_rsub = max(0.,exp(-3.*(1.-(icefracsum/dzsum)))-exp(-3.))/(1.0-exp(-3.))
-      imped = max(0.,1.-fracice_rsub)
-      drainage = imped * 5.5e-3 * exp(-2.5*zwt)  ! drainage (positive = out of soil column)
+      IF (DEF_Runoff_SCHEME == 0) THEN 
+         CALL SubsurfaceRunoff_SIMTOP (nl_soil, icefrac, dz_soisno, zi_soisno, zwt, rsubst)
+      ENDIF
+
+      drainage = rsubst
+
+      ! dzsum = 0.
+      ! icefracsum = 0.
+      ! DO j = max(jwt,1), nl_soil
+      !    dzsum = dzsum + dzmm(j)
+      !    icefracsum = icefracsum + icefrac(j) * dzmm(j)
+      ! ENDDO
+      ! ! add ice impedance factor to baseflow
+      ! fracice_rsub = max(0.,exp(-3.*(1.-(icefracsum/dzsum)))-exp(-3.))/(1.0-exp(-3.))
+      ! imped = max(0.,1.-fracice_rsub)
+      ! drainage = imped * 5.5e-3 * exp(-2.5*zwt)  ! drainage (positive = out of soil column)
 
 !-- Water table is below the soil column  ----------------------------------------
       IF(jwt == nl_soil) THEN
@@ -2268,7 +2263,7 @@ ENDIF
 !     ! Sub-surface runoff and drainage
 !     rsubst = rsubst - xs/deltim
 
-   END SUBROUTINE subsurfacerunoff
+   END SUBROUTINE groundwater
 
 
 END MODULE MOD_SoilSnowHydrology

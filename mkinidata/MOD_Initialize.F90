@@ -49,6 +49,7 @@ CONTAINS
    USE MOD_Grid
    USE MOD_DataType
    USE MOD_NetCDFSerial
+   USE MOD_NetCDFVector
    USE MOD_NetCDFBlock
 #ifdef RangeCheck
    USE MOD_RangeCheck
@@ -102,6 +103,7 @@ CONTAINS
    character(len=256) :: fsoildat
    character(len=256) :: fsnowdat
    character(len=256) :: fcndat
+   character(len=256) :: ftopo
    type(grid_type) :: gsoil
    type(grid_type) :: gsnow
    type(grid_type) :: gcn
@@ -202,6 +204,7 @@ CONTAINS
    real(r8) :: calday                    ! Julian cal day (1.xx to 365.xx)
    integer  :: year, jday                ! Julian day and seconds
    integer  :: month, mday
+   character(len=4) :: cyear
 
    integer  :: i,j,ipatch,nsl,hs,he,ps,pe,ivt,m, u  ! indices
    real(r8) :: totalvolume
@@ -218,6 +221,9 @@ CONTAINS
    real(r8) f_s2s3
    real(r8) t
 #endif
+
+   integer  :: txt_id
+   real(r8) :: vic_b_infilt_, vic_Dsmax_, vic_Ds_, vic_Ws_, vic_c_
 
 ! --------------------------------------------------------------------
 ! Allocates memory for CoLM 1d [numpatch] variables
@@ -317,7 +323,21 @@ CONTAINS
       CALL Urban_readin (dir_landdata, lc_year)
 #endif
 ! ................................
-! 1.5 Initialize TUNABLE constants
+! 1.5 Initialize topography data
+! ................................
+#ifdef SinglePoint
+      topoelv(:) = SITE_topography
+      topostd(:) = SITE_topostd
+#else
+      write(cyear,'(i4.4)') lc_year
+      ftopo = trim(dir_landdata)//'/topography/'//trim(cyear)//'/topography_patches.nc'
+      CALL ncio_read_vector (ftopo, 'topography_patches', landpatch, topoelv)
+      ftopo = trim(dir_landdata)//'/topography/'//trim(cyear)//'/topostd_patches.nc'
+      CALL ncio_read_vector (ftopo, 'topostd_patches', landpatch, topostd)
+#endif
+
+! ................................
+! 1.6 Initialize TUNABLE constants
 ! ................................
       zlnd   = 0.01    !Roughness length for soil [m]
       zsno   = 0.0024  !Roughness length for snow [m]
@@ -334,6 +354,44 @@ CONTAINS
       trsmx0 = 2.e-4   !Max transpiration for moist soil+100% veg. [mm/s]
       tcrit  = 2.5     !critical temp. to determine rain or snow
       wetwatmax = 200.0 !maximum wetland water (mm)
+
+      IF (DEF_Runoff_SCHEME == 1) THEN
+         IF (p_is_master) THEN
+            txt_id = 111
+            open(txt_id, file=trim(DEF_file_VIC_para), status='old', form='formatted')
+            READ(txt_id, *)
+            READ(txt_id, *) vic_b_infilt_, vic_Dsmax_, vic_Ds_, vic_Ws_, vic_c_
+            close(txt_id)
+         ENDIF
+
+#ifdef USEMPI
+         CALL mpi_bcast (vic_b_infilt_, 1, MPI_REAL8, p_root, p_comm_glb, p_err)
+         CALL mpi_bcast (vic_Dsmax_   , 1, MPI_REAL8, p_root, p_comm_glb, p_err)
+         CALL mpi_bcast (vic_Ds_      , 1, MPI_REAL8, p_root, p_comm_glb, p_err)
+         CALL mpi_bcast (vic_Ws_      , 1, MPI_REAL8, p_root, p_comm_glb, p_err)
+         CALL mpi_bcast (vic_c_       , 1, MPI_REAL8, p_root, p_comm_glb, p_err)
+#endif
+
+         IF (p_is_worker) THEN
+            IF (numpatch > 0) THEN
+               vic_b_infilt = vic_b_infilt_
+               vic_Dsmax    = vic_Dsmax_
+               vic_Ds       = vic_Ds_
+               vic_Ws       = vic_Ws_
+               vic_c        = vic_c_
+            ENDIF
+         ENDIF
+      ELSE
+         IF (p_is_worker) THEN
+            IF (numpatch > 0) THEN
+               vic_b_infilt = 0
+               vic_Dsmax    = 0
+               vic_Ds       = 0
+               vic_Ws       = 0
+               vic_c        = 0
+            ENDIF
+         ENDIF
+      ENDIF
 
 #ifdef BGC
    ! bgc constant

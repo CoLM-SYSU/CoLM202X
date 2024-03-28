@@ -454,6 +454,16 @@ CONTAINS
             a_rsur, file_hist, 'f_rsur', itime_in_file, sumarea, filter, &
             'surface runoff','mm/s')
 
+         ! saturation excess surface runoff [mm/s]
+         CALL write_history_variable_2d ( DEF_hist_vars%rsur_se, &
+            a_rsur_se, file_hist, 'f_rsur_se', itime_in_file, sumarea, filter, &
+            'saturation excess surface runoff','mm/s')
+
+         ! infiltration excess surface runoff [mm/s]
+         CALL write_history_variable_2d ( DEF_hist_vars%rsur_ie, &
+            a_rsur_ie, file_hist, 'f_rsur_ie', itime_in_file, sumarea, filter, &
+            'infiltration excess surface runoff','mm/s')
+
          ! subsurface runoff [mm/s]
          CALL write_history_variable_2d ( DEF_hist_vars%rsub, &
             a_rsub, file_hist, 'f_rsub', itime_in_file, sumarea, filter, &

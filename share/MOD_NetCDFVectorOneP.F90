@@ -975,7 +975,7 @@ CONTAINS
          CALL nccheck( nf90_open (trim(filename), ior(NF90_WRITE,NF90_NETCDF4), ncid, &
             comm = p_comm_io, info = MPI_INFO_NULL) )
 #else
-         CALL nccheck( nf90_open (trim(filename), ior(NF90_WRITE,NF90_NETCDF4), ncid)
+         CALL nccheck( nf90_open (trim(filename), ior(NF90_WRITE,NF90_NETCDF4), ncid))
 #endif
 
          CALL nccheck (nf90_redef(ncid))
@@ -1033,7 +1033,7 @@ CONTAINS
    integer :: ndims, idim, iblkall, varid
    character(len=256) :: varname, blockname
    integer, allocatable :: dimids(:), dimlen(:)
-   integer :: filterid = 307
+   integer :: filterid = 32015
 
       ndims = 1
       IF (present(dim1name)) ndims = ndims + 1
@@ -1074,7 +1074,8 @@ CONTAINS
             chunksizes = dimlen) )
          IF (present(compress)) THEN
             IF (compress > 0) THEN
-               CALL nccheck (nf90_def_var_zstandard (grpid, varid, compress))
+               CALL nccheck( nf90_def_var_filter(grpid, varid, filterid, 1,(/compress/)))
+               !CALL nccheck (nf90_def_var_zstandard (grpid, varid, compress))
                ! CALL nccheck (nf90_def_var_deflate   (grpid, varid, NF90_SHUFFLE, 1, compress))
             ENDIF
          ENDIF
@@ -1112,7 +1113,7 @@ CONTAINS
          CALL nccheck( nf90_open(trim(filename), ior(NF90_WRITE,NF90_NETCDF4), ncid, &
             comm = p_comm_io, info = MPI_INFO_NULL) )
 #else
-         CALL nccheck( nf90_open(trim(filename), ior(NF90_WRITE,NF90_NETCDF4), ncid)
+         CALL nccheck( nf90_open(trim(filename), ior(NF90_WRITE,NF90_NETCDF4), ncid))
 #endif
 
          IF (present(compress_level)) THEN
@@ -1209,7 +1210,7 @@ CONTAINS
          CALL nccheck( nf90_open(trim(filename), ior(NF90_WRITE,NF90_NETCDF4), ncid, &
             comm = p_comm_io, info = MPI_INFO_NULL) )
 #else
-         CALL nccheck( nf90_open(trim(filename), ior(NF90_WRITE,NF90_NETCDF4), ncid)
+         CALL nccheck( nf90_open(trim(filename), ior(NF90_WRITE,NF90_NETCDF4), ncid))
 #endif
 
          IF (present(compress_level)) THEN
@@ -1318,7 +1319,7 @@ CONTAINS
          CALL nccheck( nf90_open(trim(filename), ior(NF90_WRITE,NF90_NETCDF4), ncid, &
             comm = p_comm_io, info = MPI_INFO_NULL) )
 #else
-         CALL nccheck( nf90_open(trim(filename), ior(NF90_WRITE,NF90_NETCDF4), ncid)
+         CALL nccheck( nf90_open(trim(filename), ior(NF90_WRITE,NF90_NETCDF4), ncid))
 #endif
 
          IF (present(compress_level)) THEN
@@ -1415,7 +1416,7 @@ CONTAINS
          CALL nccheck( nf90_open(trim(filename), ior(NF90_WRITE,NF90_NETCDF4), ncid, &
             comm = p_comm_io, info = MPI_INFO_NULL) )
 #else
-         CALL nccheck( nf90_open(trim(filename), ior(NF90_WRITE,NF90_NETCDF4), ncid)
+         CALL nccheck( nf90_open(trim(filename), ior(NF90_WRITE,NF90_NETCDF4), ncid))
 #endif
 
          IF (present(compress_level)) THEN
@@ -1513,7 +1514,7 @@ CONTAINS
          CALL nccheck( nf90_open(trim(filename), ior(NF90_WRITE,NF90_NETCDF4), ncid, &
             comm = p_comm_io, info = MPI_INFO_NULL) )
 #else
-         CALL nccheck( nf90_open(trim(filename), ior(NF90_WRITE,NF90_NETCDF4), ncid)
+         CALL nccheck( nf90_open(trim(filename), ior(NF90_WRITE,NF90_NETCDF4), ncid))
 #endif
 
          IF (present(compress_level)) THEN
@@ -1611,7 +1612,7 @@ CONTAINS
          CALL nccheck( nf90_open(trim(filename), ior(NF90_WRITE,NF90_NETCDF4), ncid, &
             comm = p_comm_io, info = MPI_INFO_NULL) )
 #else
-         CALL nccheck( nf90_open(trim(filename), ior(NF90_WRITE,NF90_NETCDF4), ncid)
+         CALL nccheck( nf90_open(trim(filename), ior(NF90_WRITE,NF90_NETCDF4), ncid))
 #endif
 
          IF (present(compress_level)) THEN
@@ -1709,7 +1710,7 @@ CONTAINS
          CALL nccheck( nf90_open(trim(filename), ior(NF90_WRITE,NF90_NETCDF4), ncid, &
             comm = p_comm_io, info = MPI_INFO_NULL) )
 #else
-         CALL nccheck( nf90_open(trim(filename), ior(NF90_WRITE,NF90_NETCDF4), ncid)
+         CALL nccheck( nf90_open(trim(filename), ior(NF90_WRITE,NF90_NETCDF4), ncid))
 #endif
 
          IF (present(compress_level)) THEN

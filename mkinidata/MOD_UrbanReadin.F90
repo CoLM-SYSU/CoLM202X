@@ -252,8 +252,15 @@ IF (DEF_URBAN_type_scheme == 1) THEN
             ENDIF
 ELSE IF (DEF_URBAN_type_scheme == 2) THEN
             ! read in LCZ constants
+#ifdef SinglePoint
+            hwr  (u) = SITE_hwr
+            fgper(u) = SITE_fgper
+#else
             hwr  (u) = canyonhwr_lcz (landurban%settyp(u)) !average building height to their distance
-            fgper(u) = wtperroad_lcz (landurban%settyp(u)) !pervious fraction to ground area
+            fgper(u) = wtperroad_lcz (landurban%settyp(u)) &
+                       /(1-wtroof_lcz(landurban%settyp(u))) !pervious fraction to ground area
+            fgper(u) = min(fgper(u), 1.)
+#endif
 
             DO ns = 1,2
                DO nr = 1,2

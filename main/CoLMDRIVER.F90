@@ -87,16 +87,15 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
                soil_s_v_alb(i), soil_d_v_alb(i), soil_s_n_alb(i), soil_d_n_alb(i), &
                vf_quartz(1:,i), vf_gravels(1:,i),vf_om(1:,i),     vf_sand(1:,i),   &
                wf_gravels(1:,i),wf_sand(1:,i),   porsl(1:,i),     psi0(1:,i),      &
-               bsw(1:,i),                                                          &
-
+               bsw(1:,i),       theta_r(1:,i),                                     &
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
-               theta_r(1:,i),   alpha_vgm(1:,i), n_vgm(1:,i),     L_vgm(1:,i),     &
-               sc_vgm (1:,i),   fc_vgm   (1:,i),                                   &
+               alpha_vgm(1:,i), n_vgm(1:,i),     L_vgm(1:,i),                      &
+               sc_vgm(1:,i),    fc_vgm(1:,i),                                      &
 #endif
                hksati(1:,i),    csol(1:,i),      k_solids(1:,i),  dksatu(1:,i),    &
                dksatf(1:,i),    dkdry(1:,i),                                       &
                BA_alpha(1:,i),  BA_beta(1:,i),                                     &
-               rootfr(1:,m),    lakedepth(i),    dz_lake(1:,i),                    &
+               rootfr(1:,m),    lakedepth(i),    dz_lake(1:,i),   topostd(i),      &
 #if(defined CaMa_Flood)
              ! flood variables [mm, m2/m2, mm/s, mm/s]
                flddepth_cama(i),fldfrc_cama(i),fevpg_fld(i),  finfg_fld(i),        &
@@ -156,8 +155,9 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
                taux(i),         tauy(i),         fsena(i),        fevpa(i),        &
                lfevpa(i),       fsenl(i),        fevpl(i),        etr(i),          &
                fseng(i),        fevpg(i),        olrg(i),         fgrnd(i),        &
-               trad(i),         tref(i),         qref(i),         rsur(i),         &
-               rnof(i),         qintr(i),        qinfl(i),        qdrip(i),        &
+               trad(i),         tref(i),         qref(i),                          & 
+               rsur(i),         rsur_se(i),      rsur_ie(i),      rnof(i),         &
+               qintr(i),        qinfl(i),        qdrip(i),                         &
                rst(i),          assim(i),        respc(i),        sabvsun(i),      &
                sabvsha(i),      sabg(i),         sr(i),           solvd(i),        &
                solvi(i),        solnd(i),        solni(i),        srvd(i),         &
@@ -211,7 +211,7 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
             em_gper(u)      ,cv_roof(:,u)    ,cv_wall(:,u)    ,cv_gimp(:,u)    ,&
             tk_roof(:,u)    ,tk_wall(:,u)    ,tk_gimp(:,u)    ,z_roof(:,u)     ,&
             z_wall(:,u)     ,dz_roof(:,u)    ,dz_wall(:,u)                     ,&
-            lakedepth(i)    ,dz_lake(1:,i)                                     ,&
+            lakedepth(i)    ,dz_lake(1:,i)   ,topostd(i)      ,&
 
           ! LUCY INPUT PARAMETERS
             fix_holiday(:,u),week_holiday(:,u),hum_prof(:,u)  ,pop_den(u)      ,&
@@ -220,9 +220,9 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
           ! SOIL INFORMATION AND LAKE DEPTH
             vf_quartz(1:,i) ,vf_gravels(1:,i),vf_om(1:,i)     ,vf_sand(1:,i)   ,&
             wf_gravels(1:,i),wf_sand(1:,i)   ,porsl(1:,i)     ,psi0(1:,i)      ,&
-            bsw(1:,i)       ,&
+            bsw(1:,i)       ,theta_r(1:,i)   ,&
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
-            theta_r(1:,i)   ,alpha_vgm(1:,i) ,n_vgm(1:,i)     ,L_vgm(1:,i)     ,&
+            alpha_vgm(1:,i) ,n_vgm(1:,i)     ,L_vgm(1:,i)     ,&
             sc_vgm (1:,i)   ,fc_vgm   (1:,i) ,&
 #endif
             hksati(1:,i)    ,csol(1:,i)      ,k_solids(1:,i),  dksatu(1:,i)    ,&

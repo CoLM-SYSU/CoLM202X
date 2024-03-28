@@ -264,8 +264,8 @@ CONTAINS
                   porsl     (nsl,ipatch) = -1.e36
                   psi0      (nsl,ipatch) = -1.e36
                   bsw       (nsl,ipatch) = -1.e36
-#ifdef vanGenuchten_Mualem_SOIL_MODEL
                   theta_r   (nsl,ipatch) = -1.e36
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
                   alpha_vgm (nsl,ipatch) = -1.e36
                   L_vgm     (nsl,ipatch) = -1.e36
                   n_vgm     (nsl,ipatch) = -1.e36
@@ -300,6 +300,8 @@ CONTAINS
                   n_vgm      (nsl,ipatch) = soil_n_vgm_l    (ipatch)
                   wfc        (nsl,ipatch) = soil_theta_r_l  (ipatch)+(soil_theta_s_l(ipatch)-soil_theta_r_l(ipatch))*&
                              (1+(soil_alpha_vgm_l(ipatch)*339.9)**soil_n_vgm_l(ipatch))**(1.0/soil_n_vgm_l(ipatch)-1)
+#else
+                  theta_r    (nsl,ipatch) = 0.
 #endif
                   hksati     (nsl,ipatch) = soil_k_s_l      (ipatch) * 10./86400.  ! cm/day -> mm/s
                   csol       (nsl,ipatch) = soil_csol_l     (ipatch)               ! J/(m2 K)
@@ -369,8 +371,8 @@ CONTAINS
                porsl      (nsl,:) = porsl     (nsl-1,:)
                psi0       (nsl,:) = psi0      (nsl-1,:)
                bsw        (nsl,:) = bsw       (nsl-1,:)
-#ifdef vanGenuchten_Mualem_SOIL_MODEL
                theta_r    (nsl,:) = theta_r   (nsl-1,:)
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
                alpha_vgm  (nsl,:) = alpha_vgm (nsl-1,:)
                L_vgm      (nsl,:) = L_vgm     (nsl-1,:)
                n_vgm      (nsl,:) = n_vgm     (nsl-1,:)
@@ -398,8 +400,8 @@ CONTAINS
                porsl      (nsl,:) = porsl     (9,:)
                psi0       (nsl,:) = psi0      (9,:)
                bsw        (nsl,:) = bsw       (9,:)
-#ifdef vanGenuchten_Mualem_SOIL_MODEL
                theta_r    (nsl,:) = theta_r   (9,:)
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
                alpha_vgm  (nsl,:) = alpha_vgm (9,:)
                L_vgm      (nsl,:) = L_vgm     (9,:)
                n_vgm      (nsl,:) = n_vgm     (9,:)
