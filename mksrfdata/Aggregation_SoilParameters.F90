@@ -47,8 +47,8 @@ SUBROUTINE Aggregation_SoilParameters ( &
    ! arguments:
    integer, intent(in) :: lc_year
    type(grid_type),  intent(in) :: gland
-   character(LEN=*), intent(in) :: dir_rawdata
-   character(LEN=*), intent(in) :: dir_model_landdata
+   character(len=*), intent(in) :: dir_rawdata
+   character(len=*), intent(in) :: dir_model_landdata
 
    ! local variables:
    ! ---------------------------------------------------------------
