@@ -53,6 +53,7 @@ CONTAINS
    USE MOD_Precision
    USE MOD_SPMD_Task
    USE MOD_Utils
+   USE MOD_UserDefFun
    USE MOD_Grid
    USE MOD_DataType
    USE MOD_Mesh
@@ -225,7 +226,7 @@ CONTAINS
                ENDDO
 
                IF (any(types > 0)) THEN
-                  iloc = findloc(types > 0, .true., dim=1) + ipxstt - 1
+                  iloc = findloc_ud(types > 0) + ipxstt - 1
                   dominant_type = maxloc(npxl_types(1:), dim=1)
                   types(iloc:ipxend) = dominant_type
                ENDIF

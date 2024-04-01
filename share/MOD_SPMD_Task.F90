@@ -168,25 +168,21 @@ CONTAINS
    END SUBROUTINE spmd_assign_writeback
 
    !-----------------------------------------
-   SUBROUTINE divide_processes_into_groups (numblocks, groupsize)
+   SUBROUTINE divide_processes_into_groups (ngrp)
 
    IMPLICIT NONE
    
-   integer, intent(in) :: numblocks
-   integer, intent(in) :: groupsize
+   integer, intent(in) :: ngrp
 
    ! Local variables
    integer :: iproc
    integer, allocatable :: p_igroup_all (:)
 
-   integer :: nave, nres, ngrp, igrp, key
+   integer :: nave, nres, igrp, key, nwrt
    character(len=512) :: info
    character(len=5)   :: cnum
 
       ! 1. Determine number of groups
-      ngrp = max((p_np_glb-1) / groupsize, 1)
-      ngrp = min(ngrp, numblocks)
-
       IF (ngrp <= 0) THEN
          CALL mpi_abort (p_comm_glb, p_err)
       ENDIF
@@ -266,25 +262,29 @@ CONTAINS
 
       IF (p_is_master) THEN
 
-         write (*,*) 'MPI information:'
-         write (*,'(A,I5)') ' Master is ', p_root  
+         write (*,'(A)')     '----- MPI information -----'
+         write (*,'(A,I0,A)') ' Master is <', p_root, '>'
 
          DO igrp = 0, p_np_io-1
-            write (cnum,'(I5)') igrp  
-            info = 'Group ' // cnum // ' includes '
-
-            write (cnum,'(I5)') p_address_io(igrp)
-            info = trim(info) // ' IO(' // cnum // '), worker('
-
+            write (*,'(A,I0,A,I0,A)') &
+               ' Group ', igrp, ' includes IO <', p_address_io(igrp), '> and workers:'
+            info = '        '
+            nwrt = 0
             DO iproc = 0, p_np_glb-1
                IF ((p_igroup_all(iproc) == igrp) .and. (iproc /= p_address_io(igrp))) THEN
+                  nwrt = nwrt + 1
                   write (cnum,'(I5)') iproc
                   info = trim(info) // cnum
+                  IF (nwrt == 10) THEN
+                     write(*,'(A)') trim(info)
+                     info = '        '
+                     nwrt = 0
+                  ENDIF
                ENDIF
             ENDDO
-
-            info = trim(info) // ')'
-            write (*,*) trim(info)
+            IF (nwrt /= 0) THEN
+               write(*,'(A)') trim(info)
+            ENDIF
          ENDDO
             
          write (*,*) 
