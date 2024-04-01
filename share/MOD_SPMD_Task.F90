@@ -275,7 +275,7 @@ CONTAINS
                   nwrt = nwrt + 1
                   write (cnum,'(I5)') iproc
                   info = trim(info) // cnum
-                  IF (nwrt == 10) THEN
+                  IF (nwrt == 16) THEN
                      write(*,'(A)') trim(info)
                      info = '        '
                      nwrt = 0
