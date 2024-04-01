@@ -72,7 +72,7 @@ CONTAINS
 #endif
    IMPLICIT NONE
 
-   character(LEN=*), intent(in) :: file_restart
+   character(len=*), intent(in) :: file_restart
 
       CALL ncio_read_vector (file_restart, 'pftclass', landpft, pftclass) !
       CALL ncio_read_vector (file_restart, 'pftfrac ', landpft, pftfrac ) !
@@ -385,11 +385,11 @@ CONTAINS
    IMPLICIT NONE
 
    integer         , intent(in) :: lc_year
-   character(LEN=*), intent(in) :: casename
-   character(LEN=*), intent(in) :: dir_restart
+   character(len=*), intent(in) :: casename
+   character(len=*), intent(in) :: dir_restart
 
    ! Local variables
-   character(LEN=256) :: file_restart, cyear
+   character(len=256) :: file_restart, cyear
 
       write(cyear,'(i4.4)') lc_year
       file_restart = trim(dir_restart) // '/const/' // trim(casename) //'_restart_const' // '_lc' // trim(cyear) // '.nc'
@@ -431,8 +431,8 @@ CONTAINS
       CALL ncio_read_vector (file_restart, 'fc_vgm   ' ,   nl_soil, landpatch, fc_vgm    ) ! a scaling factor by using air entry value in the Mualem model [-]
 #endif
 
-      
-      CALL ncio_read_vector (file_restart, 'vic_b_infilt', landpatch, vic_b_infilt) 
+
+      CALL ncio_read_vector (file_restart, 'vic_b_infilt', landpatch, vic_b_infilt)
       CALL ncio_read_vector (file_restart, 'vic_Dsmax'   , landpatch, vic_Dsmax   )
       CALL ncio_read_vector (file_restart, 'vic_Ds'      , landpatch, vic_Ds      )
       CALL ncio_read_vector (file_restart, 'vic_Ws'      , landpatch, vic_Ws      )
@@ -453,7 +453,7 @@ CONTAINS
          CALL ncio_read_vector (file_restart, 'debdrock' ,    landpatch, dbedrock)         !
          CALL ncio_read_vector (file_restart, 'ibedrock' ,    landpatch, ibedrock)         !
       ENDIF
-         
+
       CALL ncio_read_vector (file_restart, 'topoelv', landpatch, topoelv)         !
       CALL ncio_read_vector (file_restart, 'topostd', landpatch, topostd)         !
 
@@ -612,7 +612,7 @@ CONTAINS
          CALL ncio_write_vector (file_restart, 'debdrock' , 'patch', landpatch, dbedrock)
          CALL ncio_write_vector (file_restart, 'ibedrock' , 'patch', landpatch, ibedrock)
       ENDIF
-         
+
       CALL ncio_write_vector (file_restart, 'topoelv', 'patch', landpatch, topoelv)
       CALL ncio_write_vector (file_restart, 'topostd', 'patch', landpatch, topostd)
 
@@ -817,7 +817,7 @@ CONTAINS
       IF(DEF_USE_BEDROCK)THEN
          CALL check_vector_data ('dbedrock     [m]     ', dbedrock    ) !
       ENDIF
-         
+
       CALL check_vector_data ('topoelv      [m]     ', topoelv     ) !
       CALL check_vector_data ('topostd      [m]     ', topostd     ) !
       CALL check_vector_data ('BVIC        [-]      ', BVIC        ) !

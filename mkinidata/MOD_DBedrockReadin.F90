@@ -27,7 +27,7 @@ CONTAINS
 
    IMPLICIT NONE
 
-   character(LEN=256), intent(in) :: dir_landdata
+   character(len=256), intent(in) :: dir_landdata
 
    ! Local Variables
    character(len=256) :: lndname

@@ -19,7 +19,7 @@ PROGRAM MKSRFDATA
 !
 ! Land characteristics at the 30 arc-seconds grid resolution (RAW DATA):
 !              1. Global Terrain Dataset (elevation height,...)
-!              2. Global Land Cover Characteristics (land cover TYPE, plant leaf area index, Forest Height, ...)
+!              2. Global Land Cover Characteristics (land cover type, plant leaf area index, Forest Height, ...)
 !              3. Global Lakes and Wetlands Characteristics (lake and wetlands types, lake coverage and lake depth)
 !              4. Global Glacier Characteristics
 !              5. Global Urban Characteristics (urban extent, ...)
@@ -82,8 +82,8 @@ PROGRAM MKSRFDATA
 
    character(len=256) :: nlfile
 
-   character(LEN=256) :: dir_rawdata
-   character(LEN=256) :: dir_landdata
+   character(len=256) :: dir_rawdata
+   character(len=256) :: dir_landdata
    real(r8) :: edgen  ! northern edge of grid (degrees)
    real(r8) :: edgee  ! eastern edge of grid (degrees)
    real(r8) :: edges  ! southern edge of grid (degrees)

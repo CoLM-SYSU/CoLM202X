@@ -205,7 +205,7 @@ CONTAINS
    real(r8), allocatable :: lat(:), lon(:)
    integer :: itime
    integer :: iyear, month, mday
-   character(LEN=8) :: syear, smonth
+   character(len=8) :: syear, smonth
 
       CALL julian2monthday(idate(1),idate(2),month,mday)
       iyear = idate(1)
@@ -253,7 +253,7 @@ CONTAINS
    type(timestamp) :: time_next
    integer :: month, mday
    integer :: iyear, imonth, imonth_next, iday, iday_next
-   character(LEN=8) :: syear, smonth
+   character(len=8) :: syear, smonth
 
       CALL julian2monthday(time%year,time%day,month,mday)
       imonth = month

@@ -217,7 +217,7 @@ CONTAINS
 
    IMPLICIT NONE
 
-   character(LEN=*), intent(in) :: file_restart
+   character(len=*), intent(in) :: file_restart
 
       CALL ncio_read_vector (file_restart, 'fwsun' , landurban, fwsun ) !
       CALL ncio_read_vector (file_restart, 'dfwsun', landurban, dfwsun) !
@@ -306,7 +306,7 @@ CONTAINS
    USE MOD_Vars_Global
    IMPLICIT NONE
 
-   character(LEN=*), intent(in) :: file_restart
+   character(len=*), intent(in) :: file_restart
 
    ! Local variables
    integer :: compress

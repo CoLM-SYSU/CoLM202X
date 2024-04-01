@@ -25,7 +25,7 @@ MODULE MOD_BGC_Vars_TimeInvariants
    real(r8), allocatable  :: rf_decomp        (:,:,:)  ! respiratory fraction of the ith transfer hr(i) / (hr(i) + ctransfer(i))
    real(r8), allocatable  :: pathfrac_decomp  (:,:,:)  ! pathway fraction of each transfer from the same donor pool &
                                                        ! (hr(i)+ctransfer(i))/sum(hr(donor_pool(:)==donor_pool(i))+ctransfer(donor_pool(:)==donor_pool(i)))
- 
+
    integer  :: i_met_lit    ! index of metabolic litter pool
    integer  :: i_cel_lit    ! index of cellulose litter pool
    integer  :: i_lig_lit    ! index of lignin litter pool
@@ -34,17 +34,17 @@ MODULE MOD_BGC_Vars_TimeInvariants
    integer  :: i_soil2      ! index of slow soil organic matter pool
    integer  :: i_soil3      ! index of passive soil organic matter pool
    integer  :: i_atm        ! index of atmosphere pool
- 
+
    logical , allocatable :: is_cwd    (:)  ! (1:ndecomp_pools) ! True => is a coarse woody debris pool
    logical , allocatable :: is_litter (:)  ! (1:ndecomp_pools) ! True => is a litter pool
    logical , allocatable :: is_soil   (:)  ! (1:ndecomp_pools) ! True => is a soil pool
- 
+
    real(r8), allocatable :: gdp_lf    (:)     ! gdp data
    real(r8), allocatable :: abm_lf    (:)     ! prescribed crop fire time
    real(r8), allocatable :: peatf_lf  (:)     ! peatland fraction data
    real(r8), allocatable :: cmb_cmplt_fact(:) ! combustion completion factor
    integer , allocatable :: rice2pdt  (:)     ! rice2 planting date
- 
+
    real(r8) :: nitrif_n2o_loss_frac           ! fraction of N lost as N2O in nitrification (unitless)
    real(r8) :: dnp                            ! denitrification proportion (unitless)
    real(r8) :: bdnr                           ! bulk denitrification rate (1/day)
@@ -81,13 +81,13 @@ MODULE MOD_BGC_Vars_TimeInvariants
    real(r8) :: tau_s3                         ! baseline turnover rate of passive soil organic matter from Century (year-1)
    real(r8) :: tau_cwd                        ! baseline turnover rate of CWD (year-1)
    real(r8) :: lwtop                          ! live wood turnover proportion
- 
+
    real(r8) :: som_adv_flux                   ! the advection term in soil organic matter mixing
    real(r8) :: som_diffus                     ! the diffusion term in soil organic matter mixing
    real(r8) :: cryoturb_diffusion_k           ! the cryoturbation diffusive constant cryoturbation to the active layer thickness (m2 s-1)
    real(r8) :: max_altdepth_cryoturbation     ! maximum active layer thickness for cryoturbation to occur (m)
    real(r8) :: max_depth_cryoturb             ! the maximum depth of cryoturbation (m)
- 
+
    real(r8) :: br                             ! basal maintenance respiration rate for aboveground biomass (gC gN-1 s-1)
    real(r8) :: br_root                        ! basal maintenance respiration rate for belowground biomass (gC gN-1 s-1)
    real(r8) :: fstor2tran                     ! fraction of storage to transfer pool at each onset event
@@ -100,7 +100,7 @@ MODULE MOD_BGC_Vars_TimeInvariants
    real(r8) :: crit_offset_swi                ! critical number of days below soil water potential threshold to initiate offset
    real(r8) :: soilpsi_on                     ! critical soil water potential threshold for onset
    real(r8) :: soilpsi_off                    ! critical soil water potential threshold for offset
- 
+
    real(r8) :: occur_hi_gdp_tree              ! fire occurance for high GDP areas that are tree dominated (fraction)
    real(r8) :: lfuel                          ! lower threshold of fuel mass (gC/m2) for ignition, Li et al.(2014)
    real(r8) :: ufuel                          ! upper threshold of fuel mass (gC/m2) for ignition, Li et al.(2014)
@@ -115,7 +115,7 @@ MODULE MOD_BGC_Vars_TimeInvariants
    real(r8) :: bt_max                         ! maximum water stress factor
    real(r8) :: pot_hmn_ign_counts_alpha       ! Potential human ignition counts (alpha in Li et. al. 2012) (1/person/month)
    real(r8) :: g0_fire                             ! constant for fire spread estimates
- 
+
    real(r8) :: sf                             ! soluble fraction of mineral N (unitless)
    real(r8) :: sf_no3                         ! soluble fraction of NO3 (unitless)
 
@@ -148,7 +148,7 @@ CONTAINS
    IMPLICIT NONE
 
       IF (p_is_worker) THEN
-    
+
          IF (numpatch > 0) THEN
     ! bgc varaibles
             allocate (donor_pool        (ndecomp_transitions))                  ; donor_pool         (:) = spval_i4
@@ -165,7 +165,7 @@ CONTAINS
             allocate (peatf_lf          (numpatch))                             ; peatf_lf           (:) = spval
             allocate (cmb_cmplt_fact    (2))                                    ; cmb_cmplt_fact     (:) = spval
             allocate (rice2pdt          (numpatch))                             ; rice2pdt           (:) = spval_i4
-    
+
     ! END bgc variables
          ENDIF
       ENDIF
@@ -188,10 +188,10 @@ CONTAINS
 #endif
    USE MOD_LandPatch
    USE MOD_Vars_Global
- 
+
    IMPLICIT NONE
- 
-   character(LEN=*), intent(in) :: file_restart
+
+   character(len=*), intent(in) :: file_restart
 
 ! bgc constants
       CALL ncio_read_bcast_serial (file_restart, 'donor_pool     ', donor_pool     )
@@ -200,7 +200,7 @@ CONTAINS
       CALL ncio_read_bcast_serial (file_restart, 'initial_cn_ratio' , initial_cn_ratio)
       CALL ncio_read_vector       (file_restart, 'rf_decomp       ', nl_soil,ndecomp_transitions,landpatch, rf_decomp      )
       CALL ncio_read_vector       (file_restart, 'pathfrac_decomp ', nl_soil,ndecomp_transitions,landpatch,pathfrac_decomp )
- 
+
       CALL ncio_read_bcast_serial (file_restart, 'i_met_lit      ', i_met_lit      )
       CALL ncio_read_bcast_serial (file_restart, 'i_cel_lit      ', i_cel_lit      )
       CALL ncio_read_bcast_serial (file_restart, 'i_lig_lit      ', i_lig_lit      )
@@ -212,13 +212,13 @@ CONTAINS
       CALL ncio_read_bcast_serial (file_restart, 'is_cwd         ', is_cwd         )
       CALL ncio_read_bcast_serial (file_restart, 'is_litter      ', is_litter      )
       CALL ncio_read_bcast_serial (file_restart, 'is_soil        ', is_soil        )
- 
+
  !     CALL ncio_read_vector       (file_restart, 'gdp_lf         ', landpatch, gdp_lf        )
  !     CALL ncio_read_vector       (file_restart, 'abm_lf         ', landpatch, abm_lf        )
  !     CALL ncio_read_vector       (file_restart, 'peatf_lf       ', landpatch, peatf_lf      )
       CALL ncio_read_bcast_serial (file_restart, 'cmb_cmplt_fact ', cmb_cmplt_fact )
       CALL ncio_read_vector       (file_restart, 'rice2pdt       ', landpatch, rice2pdt      )
- 
+
       CALL ncio_read_bcast_serial (file_restart, 'nitrif_n2o_loss_frac', nitrif_n2o_loss_frac)
       CALL ncio_read_bcast_serial (file_restart, 'dnp                 ', dnp                 )!
       CALL ncio_read_bcast_serial (file_restart, 'bdnr                ', bdnr                )!
@@ -255,13 +255,13 @@ CONTAINS
       CALL ncio_read_bcast_serial (file_restart, 'tau_s3              ', tau_s3              )!
       CALL ncio_read_bcast_serial (file_restart, 'tau_cwd             ', tau_cwd             )
       CALL ncio_read_bcast_serial (file_restart, 'lwtop               ', lwtop               )
- 
+
       CALL ncio_read_bcast_serial (file_restart, 'som_adv_flux        ', som_adv_flux        )
       CALL ncio_read_bcast_serial (file_restart, 'som_diffus          ', som_diffus          )
       CALL ncio_read_bcast_serial (file_restart, 'cryoturb_diffusion_k', cryoturb_diffusion_k)
       CALL ncio_read_bcast_serial (file_restart, 'max_altdepth_cryoturbation', max_altdepth_cryoturbation)
       CALL ncio_read_bcast_serial (file_restart, 'max_depth_cryoturb  ', max_depth_cryoturb  )
- 
+
       CALL ncio_read_bcast_serial (file_restart, 'am                  ', am                  )
       CALL ncio_read_bcast_serial (file_restart, 'br                  ', br                  )
       CALL ncio_read_bcast_serial (file_restart, 'br_root             ', br_root             )
@@ -275,7 +275,7 @@ CONTAINS
       CALL ncio_read_bcast_serial (file_restart, 'crit_offset_swi     ', crit_offset_swi     )
       CALL ncio_read_bcast_serial (file_restart, 'soilpsi_on          ', soilpsi_on          )
       CALL ncio_read_bcast_serial (file_restart, 'soilpsi_off         ', soilpsi_off         )
- 
+
       CALL ncio_read_bcast_serial (file_restart, 'occur_hi_gdp_tree   ', occur_hi_gdp_tree   )
       CALL ncio_read_bcast_serial (file_restart, 'lfuel               ', lfuel               )
       CALL ncio_read_bcast_serial (file_restart, 'ufuel               ', ufuel               )
@@ -290,7 +290,7 @@ CONTAINS
       CALL ncio_read_bcast_serial (file_restart, 'bt_max              ', bt_max              )
       CALL ncio_read_bcast_serial (file_restart, 'pot_hmn_ign_counts_alpha', pot_hmn_ign_counts_alpha)
       CALL ncio_read_bcast_serial (file_restart, 'g0_fire', g0_fire)
- 
+
       CALL ncio_read_bcast_serial (file_restart, 'sf', sf)
       CALL ncio_read_bcast_serial (file_restart, 'sf_no3', sf_no3)
 
@@ -326,13 +326,13 @@ CONTAINS
    integer :: compress
 
       compress = DEF_REST_CompressLevel
- 
+
       CALL ncio_create_file_vector (file_restart, landpatch)
- 
+
       CALL ncio_define_dimension_vector (file_restart, landpatch, 'patch')
       CALL ncio_define_dimension_vector (file_restart, landpatch, 'soil', nl_soil)
       CALL ncio_define_dimension_vector (file_restart, landpatch, 'ndecomp_transitions',ndecomp_transitions)
- 
+
       CALL ncio_write_vector       (file_restart, 'rf_decomp      ', 'soil'   , nl_soil  , &
                            'ndecomp_transitions', ndecomp_transitions,'patch', landpatch, rf_decomp      , compress)
       CALL ncio_write_vector       (file_restart, 'pathfrac_decomp', 'soil'   , nl_soil  , &
@@ -354,7 +354,7 @@ CONTAINS
          CALL ncio_define_dimension(file_restart, 'ndecomp_transitions',ndecomp_transitions)
          CALL ncio_define_dimension(file_restart, 'ndecomp_pools'      ,ndecomp_pools)
          CALL ncio_define_dimension(file_restart, 'nlitter_fire'       ,2            )
- 
+
  ! bgc constants
          CALL ncio_write_serial (file_restart, 'donor_pool     '  , donor_pool       , 'ndecomp_transitions')
          CALL ncio_write_serial (file_restart, 'receiver_pool  '  , receiver_pool    , 'ndecomp_transitions')
@@ -364,7 +364,7 @@ CONTAINS
          CALL ncio_write_serial (file_restart, 'is_litter      '  , is_litter        , 'ndecomp_pools')
          CALL ncio_write_serial (file_restart, 'is_soil        '  , is_soil          , 'ndecomp_pools')
          CALL ncio_write_serial (file_restart, 'cmb_cmplt_fact '  , cmb_cmplt_fact   , 'nlitter_fire' )
- 
+
          CALL ncio_write_serial (file_restart, 'i_met_lit      ', i_met_lit      )
          CALL ncio_write_serial (file_restart, 'i_cel_lit      ', i_cel_lit      )
          CALL ncio_write_serial (file_restart, 'i_lig_lit      ', i_lig_lit      )
@@ -373,8 +373,8 @@ CONTAINS
          CALL ncio_write_serial (file_restart, 'i_soil2        ', i_soil2        )
          CALL ncio_write_serial (file_restart, 'i_soil3        ', i_soil3        )
          CALL ncio_write_serial (file_restart, 'i_atm          ', i_atm          )
- 
- 
+
+
          CALL ncio_write_serial (file_restart, 'nitrif_n2o_loss_frac', nitrif_n2o_loss_frac)
          CALL ncio_write_serial (file_restart, 'dnp                 ', dnp                 )!
          CALL ncio_write_serial (file_restart, 'bdnr                ', bdnr                )!
@@ -411,13 +411,13 @@ CONTAINS
          CALL ncio_write_serial (file_restart, 'tau_s3              ', tau_s3              )!
          CALL ncio_write_serial (file_restart, 'tau_cwd             ', tau_cwd             )
          CALL ncio_write_serial (file_restart, 'lwtop               ', lwtop               )
- 
+
          CALL ncio_write_serial (file_restart, 'som_adv_flux        ', som_adv_flux        )
          CALL ncio_write_serial (file_restart, 'som_diffus          ', som_diffus          )
          CALL ncio_write_serial (file_restart, 'cryoturb_diffusion_k', cryoturb_diffusion_k)
          CALL ncio_write_serial (file_restart, 'max_altdepth_cryoturbation', max_altdepth_cryoturbation)
          CALL ncio_write_serial (file_restart, 'max_depth_cryoturb  ', max_depth_cryoturb  )
- 
+
          CALL ncio_write_serial (file_restart, 'am                  ', am                  )
          CALL ncio_write_serial (file_restart, 'br                  ', br                  )
          CALL ncio_write_serial (file_restart, 'br_root             ', br_root             )
@@ -431,7 +431,7 @@ CONTAINS
          CALL ncio_write_serial (file_restart, 'crit_offset_swi     ', crit_offset_swi     )
          CALL ncio_write_serial (file_restart, 'soilpsi_on          ', soilpsi_on          )
          CALL ncio_write_serial (file_restart, 'soilpsi_off         ', soilpsi_off         )
- 
+
          CALL ncio_write_serial (file_restart, 'occur_hi_gdp_tree   ', occur_hi_gdp_tree   )
          CALL ncio_write_serial (file_restart, 'lfuel               ', lfuel               )
          CALL ncio_write_serial (file_restart, 'ufuel               ', ufuel               )
@@ -446,7 +446,7 @@ CONTAINS
          CALL ncio_write_serial (file_restart, 'bt_max              ', bt_max              )
          CALL ncio_write_serial (file_restart, 'pot_hmn_ign_counts_alpha', pot_hmn_ign_counts_alpha)
          CALL ncio_write_serial (file_restart, 'g0_fire', g0_fire)
- 
+
          CALL ncio_write_serial (file_restart, 'sf', sf)
          CALL ncio_write_serial (file_restart, 'sf_no3', sf_no3)
 
@@ -465,9 +465,9 @@ CONTAINS
      ! --------------------------------------------------
 
       IF (p_is_worker) THEN
- 
+
          IF (numpatch > 0) THEN
- 
+
  ! bgc variables
             deallocate (donor_pool       )
             deallocate (receiver_pool    )
@@ -482,7 +482,7 @@ CONTAINS
             deallocate (abm_lf         )
             deallocate (peatf_lf       )
             deallocate (rice2pdt       )
- 
+
          ENDIF
       ENDIF
 

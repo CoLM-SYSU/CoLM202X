@@ -36,9 +36,9 @@ CONTAINS
 
    integer, intent(in) :: year
    integer, intent(in) :: time
-   character(LEN=256), intent(in) :: dir_landdata
+   character(len=256), intent(in) :: dir_landdata
 
-   character(LEN=256) :: lndname
+   character(len=256) :: lndname
    character(len=256) :: cyear, ctime
    integer :: u, npatch, iyear
 

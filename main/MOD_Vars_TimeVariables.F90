@@ -149,7 +149,7 @@ CONTAINS
 
    IMPLICIT NONE
 
-      character(LEN=*), intent(in) :: file_restart
+      character(len=*), intent(in) :: file_restart
 
       CALL ncio_read_vector (file_restart, 'tleaf_p  ', landpft, tleaf_p    ) !
       CALL ncio_read_vector (file_restart, 'ldew_p   ', landpft, ldew_p     ) !
@@ -201,7 +201,7 @@ ENDIF
    USE MOD_Vars_Global
    IMPLICIT NONE
 
-   character(LEN=*), intent(in) :: file_restart
+   character(len=*), intent(in) :: file_restart
 
    ! Local variables
    integer :: compress
@@ -897,11 +897,11 @@ CONTAINS
 
    integer, intent(in) :: idate(3)
    integer, intent(in) :: lc_year      !year of land cover type data
-   character(LEN=*), intent(in) :: site
-   character(LEN=*), intent(in) :: dir_restart
+   character(len=*), intent(in) :: site
+   character(len=*), intent(in) :: dir_restart
 
    ! Local variables
-   character(LEN=256) :: file_restart
+   character(len=256) :: file_restart
    character(len=14)  :: cdate
    character(len=256) :: cyear         !character for lc_year
    integer :: compress
@@ -1081,11 +1081,11 @@ ENDIF
 
    integer, intent(in) :: idate(3)
    integer, intent(in) :: lc_year      !year of land cover type data
-   character(LEN=*), intent(in) :: site
-   character(LEN=*), intent(in) :: dir_restart
+   character(len=*), intent(in) :: site
+   character(len=*), intent(in) :: dir_restart
 
    ! Local variables
-   character(LEN=256) :: file_restart
+   character(len=256) :: file_restart
    character(len=14)  :: cdate, cyear
 
 #ifdef USEMPI

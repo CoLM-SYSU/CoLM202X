@@ -41,7 +41,7 @@ CONTAINS
 
    ! ----------------------------------------------------------------------
    integer, intent(in) :: lc_year    ! which year of land cover data used
-   character(LEN=*), intent(in) :: dir_landdata
+   character(len=*), intent(in) :: dir_landdata
 
    ! Local Variables
 

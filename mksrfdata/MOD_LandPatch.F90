@@ -195,7 +195,7 @@ CONTAINS
             END WHERE
             WHERE (types == 11)
                types = 10
-            END WHERE 
+            END WHERE
 #endif
 
             IF ((DEF_USE_PFT .and. (.not. DEF_SOLO_PFT)) .or. DEF_FAST_PC) THEN
@@ -333,7 +333,7 @@ CONTAINS
    IMPLICIT NONE
 
    integer, intent(in) :: lc_year
-   character(LEN=*), intent(in) :: dir_landdata
+   character(len=*), intent(in) :: dir_landdata
    character(len=256) :: lndname, cyear
 
       write(cyear,'(i4.4)') lc_year
