@@ -59,7 +59,7 @@ CONTAINS
    real(r8), allocatable :: lat(:), lon(:)
    real(r8) :: missing_value
    integer  :: cft, npatch, ipft
-   character(LEN=2) :: cx
+   character(len=2) :: cx
    integer  :: iblkme, iblk, jblk
    integer  :: maxvalue, minvalue
 

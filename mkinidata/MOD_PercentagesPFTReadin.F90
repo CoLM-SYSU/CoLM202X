@@ -35,7 +35,7 @@ CONTAINS
    IMPLICIT NONE
 
    integer, intent(in) :: lc_year
-   character(LEN=256), intent(in) :: dir_landdata
+   character(len=256), intent(in) :: dir_landdata
    ! Local Variables
    character(len=256) :: lndname, cyear
    real(r8), allocatable :: sumpct (:)

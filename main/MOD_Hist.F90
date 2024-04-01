@@ -132,15 +132,15 @@ CONTAINS
       type(timestamp), intent(in) :: etstamp
       type(timestamp), intent(in) :: ptstamp
 
-      character(LEN=*), intent(in) :: dir_hist
-      character(LEN=*), intent(in) :: site
+      character(len=*), intent(in) :: dir_hist
+      character(len=*), intent(in) :: site
 
       ! Local variables
       logical :: lwrite
-      character(LEN=256) :: file_hist
+      character(len=256) :: file_hist
       integer :: itime_in_file
 #if(defined CaMa_Flood)
-      character(LEN=256) :: file_hist_cama
+      character(len=256) :: file_hist_cama
       integer :: itime_in_file_cama
 #endif
       integer :: month, day

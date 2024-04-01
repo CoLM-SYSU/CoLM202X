@@ -35,7 +35,7 @@ CONTAINS
    IMPLICIT NONE
 
    integer, intent(in) :: lc_year    ! which year of land cover data used
-   character(LEN=256), intent(in) :: dir_landdata
+   character(len=256), intent(in) :: dir_landdata
 
    ! Local Variables
    character(len=256) :: lndname, cyear
@@ -92,7 +92,7 @@ CONTAINS
                dz_lake(1,ipatch) = dzlak(1)
                dz_lake(2:nl_lake-1,ipatch) = dzlak(2:nl_lake-1)*depthratio
                dz_lake(nl_lake,ipatch) = dzlak(nl_lake)*depthratio - (dz_lake(1,ipatch) - dzlak(1)*depthratio)
-            ELSE IF(lakedepth(ipatch) > 0. .and. lakedepth(ipatch) <= 1.)THEN
+            ELSEIF(lakedepth(ipatch) > 0. .and. lakedepth(ipatch) <= 1.)THEN
                dz_lake(:,ipatch) = lakedepth(ipatch) / nl_lake
             ELSE   ! non land water bodies or missing value of the lake depth
                lakedepth(ipatch) = sum(dzlak(1:nl_lake))

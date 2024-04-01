@@ -47,9 +47,9 @@ MODULE MOD_Lulcc_Driver
 
    IMPLICIT NONE
 
-   character(LEN=256), intent(in) :: casename      !casename name
-   character(LEN=256), intent(in) :: dir_landdata  !surface data directory
-   character(LEN=256), intent(in) :: dir_restart   !case restart data directory
+   character(len=256), intent(in) :: casename      !casename name
+   character(len=256), intent(in) :: dir_landdata  !surface data directory
+   character(len=256), intent(in) :: dir_restart   !case restart data directory
 
    logical, intent(in)    :: greenwich   !true: greenwich time, false: local time
    integer, intent(inout) :: idate(3)    !year, julian day, seconds of the starting time

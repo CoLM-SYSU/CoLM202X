@@ -282,29 +282,29 @@ CONTAINS
 
 
       IF (p_is_worker) THEN
-    
+
          IF (numpatch > 0) THEN
-    
+
     ! bgc variables
-            allocate (decomp_cpools_vr             (nl_soil_full,ndecomp_pools,numpatch)) ; decomp_cpools_vr  (:,:,:) = spval 
+            allocate (decomp_cpools_vr             (nl_soil_full,ndecomp_pools,numpatch)) ; decomp_cpools_vr  (:,:,:) = spval
             allocate (decomp_cpools                (ndecomp_pools,numpatch))              ; decomp_cpools       (:,:) = spval
             allocate (ctrunc_vr                    (nl_soil,numpatch))                    ; ctrunc_vr           (:,:) = spval
             allocate (ctrunc_veg                   (numpatch))                            ; ctrunc_veg            (:) = spval
             allocate (ctrunc_soil                  (numpatch))                            ; ctrunc_soil           (:) = spval
             allocate (decomp_k                     (nl_soil_full,ndecomp_pools,numpatch)) ; decomp_k          (:,:,:) = spval
-    
+
             allocate (t_scalar                     (nl_soil,numpatch))                    ; t_scalar            (:,:) = spval
             allocate (w_scalar                     (nl_soil,numpatch))                    ; w_scalar            (:,:) = spval
             allocate (o_scalar                     (nl_soil,numpatch))                    ; o_scalar            (:,:) = spval
             allocate (depth_scalar                 (nl_soil,numpatch))                    ; depth_scalar        (:,:) = spval
-    
+
             allocate (som_adv_coef                 (nl_soil_full,numpatch))               ; som_adv_coef        (:,:) = spval
             allocate (som_diffus_coef              (nl_soil_full,numpatch))               ; som_diffus_coef     (:,:) = spval
-    
+
             allocate (altmax                       (numpatch))                            ; altmax                (:) = spval
             allocate (altmax_lastyear              (numpatch))                            ; altmax_lastyear       (:) = spval
             allocate (altmax_lastyear_indx         (numpatch))                            ; altmax_lastyear_indx  (:) = spval_i4
-    
+
             allocate (totlitc                      (numpatch))                            ; totlitc               (:) = spval
             allocate (totvegc                      (numpatch))                            ; totvegc               (:) = spval
             allocate (totsomc                      (numpatch))                            ; totsomc               (:) = spval
@@ -316,7 +316,7 @@ CONTAINS
             allocate (col_vegendcb                 (numpatch))                            ; col_vegendcb          (:) = spval
             allocate (col_soilbegcb                (numpatch))                            ; col_soilbegcb         (:) = spval
             allocate (col_soilendcb                (numpatch))                            ; col_soilendcb         (:) = spval
-    
+
             allocate (totlitn                      (numpatch))                            ; totlitn               (:) = spval
             allocate (totvegn                      (numpatch))                            ; totvegn               (:) = spval
             allocate (totsomn                      (numpatch))                            ; totsomn               (:) = spval
@@ -330,7 +330,7 @@ CONTAINS
             allocate (col_soilendnb                (numpatch))                            ; col_soilendnb         (:) = spval
             allocate (col_sminnbegnb               (numpatch))                            ; col_sminnbegnb        (:) = spval
             allocate (col_sminnendnb               (numpatch))                            ; col_sminnendnb        (:) = spval
-    
+
             allocate (leafc                        (numpatch))                            ; leafc                 (:) = spval
             allocate (leafc_storage                (numpatch))                            ; leafc_storage         (:) = spval
             allocate (leafc_xfer                   (numpatch))                            ; leafc_xfer            (:) = spval
@@ -356,7 +356,7 @@ CONTAINS
             allocate (downreg                      (numpatch))                            ; downreg               (:) = spval
             allocate (cropprod1c                   (numpatch))                            ; cropprod1c            (:) = spval
             allocate (cropseedc_deficit            (numpatch))                            ; cropseedc_deficit     (:) = spval
-    
+
             allocate (leafn                        (numpatch))                            ; leafn                 (:) = spval
             allocate (leafn_storage                (numpatch))                            ; leafn_storage         (:) = spval
             allocate (leafn_xfer                   (numpatch))                            ; leafn_xfer            (:) = spval
@@ -379,7 +379,7 @@ CONTAINS
             allocate (grainn_storage               (numpatch))                            ; grainn_storage        (:) = spval
             allocate (grainn_xfer                  (numpatch))                            ; grainn_xfer           (:) = spval
             allocate (retransn                     (numpatch))                            ; retransn              (:) = spval
-    
+
             allocate (decomp_npools_vr             (nl_soil_full,ndecomp_pools,numpatch)) ; decomp_npools_vr  (:,:,:) = spval
             allocate (decomp_npools                (ndecomp_pools,numpatch))              ; decomp_npools       (:,:) = spval
             allocate (ntrunc_vr                    (nl_soil,numpatch))                    ; ntrunc_vr           (:,:) = spval
@@ -390,18 +390,18 @@ CONTAINS
             allocate (smin_nh4_vr                  (nl_soil,numpatch))                    ; smin_nh4_vr         (:,:) = spval
             allocate (sminn                        (numpatch))                            ; sminn                 (:) = spval
             allocate (ndep                         (numpatch))                            ; ndep                  (:) = spval
-    
+
             allocate (to2_decomp_depth_unsat       (nl_soil,numpatch))                    ; to2_decomp_depth_unsat (:,:) = spval
             allocate (tconc_o2_unsat               (nl_soil,numpatch))                    ; tconc_o2_unsat         (:,:) = spval
-    
+
             allocate (ndep_prof                    (nl_soil,numpatch))                    ; ndep_prof           (:,:) = spval
             allocate (nfixation_prof               (nl_soil,numpatch))                    ; nfixation_prof      (:,:) = spval
-    
+
             allocate (cn_decomp_pools              (nl_soil,ndecomp_pools,numpatch))      ; cn_decomp_pools   (:,:,:) = spval
             allocate (fpi_vr                       (nl_soil,numpatch))                    ; fpi_vr              (:,:) = spval
             allocate (fpi                          (numpatch))                            ; fpi                   (:) = spval
             allocate (fpg                          (numpatch))                            ; fpg                   (:) = spval
-    
+
             allocate (cropf                        (numpatch))                            ; cropf                 (:) = spval
             allocate (lfwt                         (numpatch))                            ; lfwt                  (:) = spval
             allocate (fuelc                        (numpatch))                            ; fuelc                 (:) = spval
@@ -431,10 +431,10 @@ CONTAINS
             allocate (tsoi17                       (numpatch))                            ; tsoi17                (:) = spval
             allocate (rh30                         (numpatch))                            ; rh30                  (:) = spval
             allocate (accumnstep                   (numpatch))                            ; accumnstep            (:) = spval
-                                ; 
+                                ;
             allocate (dayl                         (numpatch))                            ; dayl                  (:) = spval
             allocate (prev_dayl                    (numpatch))                            ; prev_dayl             (:) = spval
-    
+
     !---------------------------SASU variables--------------------------------------
             allocate (decomp0_cpools_vr            (nl_soil,ndecomp_pools,numpatch))      ; decomp0_cpools_vr          (:,:,:) = spval
             allocate (I_met_c_vr_acc               (nl_soil,numpatch))                    ; I_met_c_vr_acc               (:,:) = spval
@@ -458,7 +458,7 @@ CONTAINS
             allocate (AKX_soil1_exit_c_vr_acc      (nl_soil,numpatch))                    ; AKX_soil1_exit_c_vr_acc      (:,:) = spval
             allocate (AKX_soil2_exit_c_vr_acc      (nl_soil,numpatch))                    ; AKX_soil2_exit_c_vr_acc      (:,:) = spval
             allocate (AKX_soil3_exit_c_vr_acc      (nl_soil,numpatch))                    ; AKX_soil3_exit_c_vr_acc      (:,:) = spval
-    
+
             allocate (decomp0_npools_vr            (nl_soil,ndecomp_pools,numpatch))      ; decomp0_npools_vr          (:,:,:) = spval
             allocate (I_met_n_vr_acc               (nl_soil,numpatch))                    ; I_met_n_vr_acc               (:,:) = spval
             allocate (I_cel_n_vr_acc               (nl_soil,numpatch))                    ; I_cel_n_vr_acc               (:,:) = spval
@@ -481,14 +481,14 @@ CONTAINS
             allocate (AKX_soil1_exit_n_vr_acc      (nl_soil,numpatch))                    ; AKX_soil1_exit_n_vr_acc      (:,:) = spval
             allocate (AKX_soil2_exit_n_vr_acc      (nl_soil,numpatch))                    ; AKX_soil2_exit_n_vr_acc      (:,:) = spval
             allocate (AKX_soil3_exit_n_vr_acc      (nl_soil,numpatch))                    ; AKX_soil3_exit_n_vr_acc      (:,:) = spval
-    
+
             allocate (diagVX_c_vr_acc              (nl_soil,ndecomp_pools,numpatch))      ; diagVX_c_vr_acc            (:,:,:) = spval
             allocate (upperVX_c_vr_acc             (nl_soil,ndecomp_pools,numpatch))      ; upperVX_c_vr_acc           (:,:,:) = spval
             allocate (lowerVX_c_vr_acc             (nl_soil,ndecomp_pools,numpatch))      ; lowerVX_c_vr_acc           (:,:,:) = spval
             allocate (diagVX_n_vr_acc              (nl_soil,ndecomp_pools,numpatch))      ; diagVX_n_vr_acc            (:,:,:) = spval
             allocate (upperVX_n_vr_acc             (nl_soil,ndecomp_pools,numpatch))      ; upperVX_n_vr_acc           (:,:,:) = spval
             allocate (lowerVX_n_vr_acc             (nl_soil,ndecomp_pools,numpatch))      ; lowerVX_n_vr_acc           (:,:,:) = spval
-    
+
     !---------------------------------------------------------------------------
             allocate (skip_balance_check           (numpatch))                            ; skip_balance_check             (:) = .false.
 
@@ -536,9 +536,9 @@ CONTAINS
 ! --------------------------------------------------
 
       IF (p_is_worker) THEN
- 
+
          IF (numpatch > 0) THEN
- 
+
  ! bgc variables
             deallocate (decomp_cpools_vr             )
             deallocate (decomp_cpools                )
@@ -546,19 +546,19 @@ CONTAINS
             deallocate (ctrunc_veg                   )
             deallocate (ctrunc_soil                  )
             deallocate (decomp_k                     )
- 
+
             deallocate (t_scalar                     )
             deallocate (w_scalar                     )
             deallocate (o_scalar                     )
             deallocate (depth_scalar                 )
- 
+
             deallocate (som_adv_coef                 )
             deallocate (som_diffus_coef              )
- 
+
             deallocate (altmax                       )
             deallocate (altmax_lastyear              )
             deallocate (altmax_lastyear_indx         )
- 
+
             deallocate (totlitc                      )
             deallocate (totvegc                      )
             deallocate (totsomc                      )
@@ -570,7 +570,7 @@ CONTAINS
             deallocate (col_vegendcb                 )
             deallocate (col_soilbegcb                )
             deallocate (col_soilendcb                )
- 
+
             deallocate (totlitn                      )
             deallocate (totvegn                      )
             deallocate (totsomn                      )
@@ -584,7 +584,7 @@ CONTAINS
             deallocate (col_soilendnb                )
             deallocate (col_sminnbegnb               )
             deallocate (col_sminnendnb               )
- 
+
             deallocate (leafc                        )
             deallocate (leafc_storage                )
             deallocate (leafc_xfer                   )
@@ -610,7 +610,7 @@ CONTAINS
             deallocate (downreg                      )
             deallocate (cropprod1c                   )
             deallocate (cropseedc_deficit            )
- 
+
             deallocate (leafn                        )
             deallocate (leafn_storage                )
             deallocate (leafn_xfer                   )
@@ -633,7 +633,7 @@ CONTAINS
             deallocate (grainn_storage               )
             deallocate (grainn_xfer                  )
             deallocate (retransn                     )
- 
+
             deallocate (decomp_npools_vr             )
             deallocate (decomp_npools                )
             deallocate (ntrunc_vr                    )
@@ -644,18 +644,18 @@ CONTAINS
             deallocate (smin_nh4_vr                  )
             deallocate (sminn                        )
             deallocate (ndep                         )
- 
+
             deallocate (to2_decomp_depth_unsat       )
             deallocate (tconc_o2_unsat               )
- 
+
             deallocate (ndep_prof                    )
             deallocate (nfixation_prof               )
- 
+
             deallocate (cn_decomp_pools              )
             deallocate (fpi_vr                       )
             deallocate (fpi                          )
             deallocate (fpg                          )
- 
+
             deallocate (cropf                        )
             deallocate (lfwt                         )
             deallocate (fuelc                        )
@@ -685,10 +685,10 @@ CONTAINS
             deallocate (tsoi17                       )
             deallocate (rh30                         )
             deallocate (accumnstep                   )
- 
+
             deallocate (dayl                         )
             deallocate (prev_dayl                    )
- 
+
  !---------------------------SASU variables--------------------------------------
             deallocate (decomp0_cpools_vr            )
             deallocate (I_met_c_vr_acc               )
@@ -712,7 +712,7 @@ CONTAINS
             deallocate (AKX_soil1_exit_c_vr_acc      )
             deallocate (AKX_soil2_exit_c_vr_acc      )
             deallocate (AKX_soil3_exit_c_vr_acc      )
- 
+
             deallocate (decomp0_npools_vr            )
             deallocate (I_met_n_vr_acc               )
             deallocate (I_cel_n_vr_acc               )
@@ -735,14 +735,14 @@ CONTAINS
             deallocate (AKX_soil1_exit_n_vr_acc      )
             deallocate (AKX_soil2_exit_n_vr_acc      )
             deallocate (AKX_soil3_exit_n_vr_acc      )
- 
+
             deallocate (diagVX_c_vr_acc              )
             deallocate (upperVX_c_vr_acc             )
             deallocate (lowerVX_c_vr_acc             )
             deallocate (diagVX_n_vr_acc              )
             deallocate (upperVX_n_vr_acc             )
             deallocate (lowerVX_n_vr_acc             )
- 
+
  !---------------------------------------------------------------------------
             deallocate (skip_balance_check           )
 #ifdef CROP
@@ -790,21 +790,21 @@ CONTAINS
    USE MOD_Vars_Global
    IMPLICIT NONE
 
-   character(LEN=*), intent(in) :: file_restart
+   character(len=*), intent(in) :: file_restart
 
    ! Local variables
    integer :: compress
 
       compress = DEF_REST_CompressLevel
- 
+
       CALL ncio_create_file_vector (file_restart, landpatch)
       CALL ncio_define_dimension_vector (file_restart, landpatch, 'patch')
- 
+
       CALL ncio_define_dimension_vector (file_restart, landpatch, 'soil',      nl_soil)
       CALL ncio_define_dimension_vector (file_restart, landpatch, 'soil_full', nl_soil_full)
       CALL ncio_define_dimension_vector (file_restart, landpatch, 'ndecomp_pools', ndecomp_pools)
       CALL ncio_define_dimension_vector (file_restart, landpatch, 'doy' , 365)
- 
+
  ! bgc variables
       CALL ncio_write_vector (file_restart, 'totlitc              ', 'patch', landpatch, totlitc              )
       CALL ncio_write_vector (file_restart, 'totvegc              ', 'patch', landpatch, totvegc              )
@@ -816,20 +816,20 @@ CONTAINS
       CALL ncio_write_vector (file_restart, 'totsomn              ', 'patch', landpatch, totsomn              )
       CALL ncio_write_vector (file_restart, 'totcwdn              ', 'patch', landpatch, totcwdn              )
       CALL ncio_write_vector (file_restart, 'totcoln              ', 'patch', landpatch, totcoln              )
- 
+
       CALL ncio_write_vector (file_restart, 'sminn                ', 'patch', landpatch, sminn                )
       CALL ncio_write_vector (file_restart, 'ndep                 ', 'patch', landpatch, ndep                 )
- 
+
       CALL ncio_write_vector (file_restart, 'decomp_cpools_vr     ', 'soil_full', nl_soil_full, 'ndecomp_pools', ndecomp_pools, &
                                                                      'patch', landpatch,     decomp_cpools_vr)
       CALL ncio_write_vector (file_restart, 'ctrunc_vr            ', 'soil' ,   nl_soil, 'patch', landpatch, ctrunc_vr)
       CALL ncio_write_vector (file_restart, 'ctrunc_veg           ', 'patch', landpatch, ctrunc_veg           )
       CALL ncio_write_vector (file_restart, 'ctrunc_soil          ', 'patch', landpatch, ctrunc_soil          )
- 
+
       CALL ncio_write_vector (file_restart, 'altmax               ', 'patch', landpatch, altmax               )
       CALL ncio_write_vector (file_restart, 'altmax_lastyear      ', 'patch', landpatch, altmax_lastyear      )
       CALL ncio_write_vector (file_restart, 'altmax_lastyear_indx ', 'patch', landpatch, altmax_lastyear_indx )
- 
+
       CALL ncio_write_vector (file_restart, 'decomp_npools_vr     ', 'soil_full', nl_soil_full, 'ndecomp_pools', ndecomp_pools, &
                                                                      'patch', landpatch,     decomp_npools_vr)
       CALL ncio_write_vector (file_restart, 'ntrunc_vr            ', 'soil' ,   nl_soil, 'patch', landpatch, ntrunc_vr   )
@@ -838,12 +838,12 @@ CONTAINS
       CALL ncio_write_vector (file_restart, 'sminn_vr             ', 'soil' ,   nl_soil, 'patch', landpatch, sminn_vr    )
       CALL ncio_write_vector (file_restart, 'smin_no3_vr          ', 'soil' ,   nl_soil, 'patch', landpatch, smin_no3_vr )
       CALL ncio_write_vector (file_restart, 'smin_nh4_vr          ', 'soil' ,   nl_soil, 'patch', landpatch, smin_nh4_vr )
- 
+
       IF(DEF_USE_NITRIF)THEN
          CALL ncio_write_vector (file_restart, 'tCONC_O2_UNSAT       ', 'soil'  ,   nl_soil, 'patch', landpatch, tconc_o2_unsat)
          CALL ncio_write_vector (file_restart, 'tO2_DECOMP_DEPTH_UNSAT','soil'  ,   nl_soil, 'patch', landpatch, to2_decomp_depth_unsat)
       ENDIF
- 
+
       CALL ncio_write_vector (file_restart, 'prec10               ', 'patch', landpatch, prec10               )
       CALL ncio_write_vector (file_restart, 'prec60               ', 'patch', landpatch, prec60               )
       CALL ncio_write_vector (file_restart, 'prec365              ', 'patch', landpatch, prec365              )
@@ -852,7 +852,7 @@ CONTAINS
       CALL ncio_write_vector (file_restart, 'tsoi17               ', 'patch', landpatch, tsoi17               )
       CALL ncio_write_vector (file_restart, 'rh30                 ', 'patch', landpatch, rh30                 )
       CALL ncio_write_vector (file_restart, 'accumnstep           ', 'patch', landpatch, accumnstep           )
- 
+
       IF(DEF_USE_SASU)THEN
  !---------------SASU variables-----------------------
          CALL ncio_write_vector (file_restart, 'decomp0_cpools_vr            ', 'soil'  ,   nl_soil, 'ndecomp_pools', ndecomp_pools, &
@@ -878,7 +878,7 @@ CONTAINS
          CALL ncio_write_vector (file_restart, 'AKX_soil1_exit_c_vr_acc      ', 'soil'  ,   nl_soil, 'patch', landpatch, AKX_soil1_exit_c_vr_acc      )
          CALL ncio_write_vector (file_restart, 'AKX_soil2_exit_c_vr_acc      ', 'soil'  ,   nl_soil, 'patch', landpatch, AKX_soil2_exit_c_vr_acc      )
          CALL ncio_write_vector (file_restart, 'AKX_soil3_exit_c_vr_acc      ', 'soil'  ,   nl_soil, 'patch', landpatch, AKX_soil3_exit_c_vr_acc      )
-    
+
          CALL ncio_write_vector (file_restart, 'decomp0_npools_vr            ', 'soil'  ,   nl_soil, 'ndecomp_pools', ndecomp_pools, &
                                                                                 'patch', landpatch, decomp0_npools_vr            )
          CALL ncio_write_vector (file_restart, 'I_met_n_vr_acc               ', 'soil'  ,   nl_soil, 'patch', landpatch, I_met_n_vr_acc               )
@@ -902,7 +902,7 @@ CONTAINS
          CALL ncio_write_vector (file_restart, 'AKX_soil1_exit_n_vr_acc      ', 'soil'  ,   nl_soil, 'patch', landpatch, AKX_soil1_exit_n_vr_acc      )
          CALL ncio_write_vector (file_restart, 'AKX_soil2_exit_n_vr_acc      ', 'soil'  ,   nl_soil, 'patch', landpatch, AKX_soil2_exit_n_vr_acc      )
          CALL ncio_write_vector (file_restart, 'AKX_soil3_exit_n_vr_acc      ', 'soil'  ,   nl_soil, 'patch', landpatch, AKX_soil3_exit_n_vr_acc      )
-    
+
          CALL ncio_write_vector (file_restart, 'diagVX_c_vr_acc              ', 'soil'  ,   nl_soil, 'ndecomp_pools', ndecomp_pools, &
                                                                                 'patch', landpatch, diagVX_c_vr_acc              )
          CALL ncio_write_vector (file_restart, 'upperVX_c_vr_acc             ', 'soil'  ,   nl_soil, 'ndecomp_pools', ndecomp_pools, &
@@ -915,7 +915,7 @@ CONTAINS
                                                                                 'patch', landpatch, upperVX_n_vr_acc             )
          CALL ncio_write_vector (file_restart, 'lowerVX_n_vr_acc             ', 'soil'  ,   nl_soil, 'ndecomp_pools', ndecomp_pools, &
                                                                                 'patch', landpatch, lowerVX_n_vr_acc             )
- 
+
  !----------------------------------------------------
       ENDIF
       CALL ncio_write_vector (file_restart, 'skip_balance_check           ', 'patch', landpatch, skip_balance_check           )
@@ -960,7 +960,7 @@ CONTAINS
 
    IMPLICIT NONE
 
-   character(LEN=*), intent(in) :: file_restart
+   character(len=*), intent(in) :: file_restart
 
 ! bgc variables
       CALL ncio_read_vector (file_restart, 'totlitc              ', landpatch, totlitc              )
@@ -973,19 +973,19 @@ CONTAINS
       CALL ncio_read_vector (file_restart, 'totsomn              ', landpatch, totsomn              )
       CALL ncio_read_vector (file_restart, 'totcwdn              ', landpatch, totcwdn              )
       CALL ncio_read_vector (file_restart, 'totcoln              ', landpatch, totcoln              )
- 
+
       CALL ncio_read_vector (file_restart, 'sminn                ', landpatch, sminn                )
       CALL ncio_read_vector (file_restart, 'ndep                 ', landpatch, ndep                 )
- 
+
       CALL ncio_read_vector (file_restart, 'decomp_cpools_vr     ',   nl_soil_full, ndecomp_pools, landpatch, decomp_cpools_vr)
       CALL ncio_read_vector (file_restart, 'ctrunc_vr            ',   nl_soil, landpatch, ctrunc_vr            )
       CALL ncio_read_vector (file_restart, 'ctrunc_veg           ', landpatch, ctrunc_veg           )
       CALL ncio_read_vector (file_restart, 'ctrunc_soil          ', landpatch, ctrunc_soil          )
- 
+
       CALL ncio_read_vector (file_restart, 'altmax               ', landpatch, altmax               )
       CALL ncio_read_vector (file_restart, 'altmax_lastyear      ', landpatch, altmax_lastyear      )
       CALL ncio_read_vector (file_restart, 'altmax_lastyear_indx ', landpatch, altmax_lastyear_indx )
- 
+
       CALL ncio_read_vector (file_restart, 'decomp_npools_vr     ',   nl_soil_full, ndecomp_pools, landpatch, decomp_npools_vr)
       CALL ncio_read_vector (file_restart, 'ntrunc_vr            ',   nl_soil, landpatch, ntrunc_vr            )
       CALL ncio_read_vector (file_restart, 'ntrunc_veg           ', landpatch, ntrunc_veg           )
@@ -993,12 +993,12 @@ CONTAINS
       CALL ncio_read_vector (file_restart, 'sminn_vr             ',   nl_soil, landpatch, sminn_vr             )
       CALL ncio_read_vector (file_restart, 'smin_no3_vr          ',   nl_soil, landpatch, smin_no3_vr          )
       CALL ncio_read_vector (file_restart, 'smin_nh4_vr          ',   nl_soil, landpatch, smin_nh4_vr          )
- 
+
       IF(DEF_USE_NITRIF)THEN
          CALL ncio_read_vector (file_restart, 'tCONC_O2_UNSAT       ',   nl_soil, landpatch, tconc_o2_unsat         )
          CALL ncio_read_vector (file_restart, 'tO2_DECOMP_DEPTH_UNSAT',  nl_soil, landpatch, to2_decomp_depth_unsat )
       ENDIF
- 
+
       CALL ncio_read_vector (file_restart, 'prec10               ', landpatch, prec10               )
       CALL ncio_read_vector (file_restart, 'prec60               ', landpatch, prec60               )
       CALL ncio_read_vector (file_restart, 'prec365              ', landpatch, prec365              )
@@ -1007,7 +1007,7 @@ CONTAINS
       CALL ncio_read_vector (file_restart, 'tsoi17               ', landpatch, tsoi17               )
       CALL ncio_read_vector (file_restart, 'rh30                 ', landpatch, rh30                 )
       CALL ncio_read_vector (file_restart, 'accumnstep           ', landpatch, accumnstep           )
- 
+
       IF(DEF_USE_SASU)THEN
  !---------------SASU variables-----------------------
          CALL ncio_read_vector (file_restart, 'decomp0_cpools_vr            ',   nl_soil, ndecomp_pools, landpatch, decomp0_cpools_vr, defval = 1._r8)
@@ -1032,7 +1032,7 @@ CONTAINS
          CALL ncio_read_vector (file_restart, 'AKX_soil1_exit_c_vr_acc      ',   nl_soil, landpatch, AKX_soil1_exit_c_vr_acc, defval = 0._r8      )
          CALL ncio_read_vector (file_restart, 'AKX_soil2_exit_c_vr_acc      ',   nl_soil, landpatch, AKX_soil2_exit_c_vr_acc, defval = 0._r8      )
          CALL ncio_read_vector (file_restart, 'AKX_soil3_exit_c_vr_acc      ',   nl_soil, landpatch, AKX_soil3_exit_c_vr_acc, defval = 0._r8      )
- 
+
          CALL ncio_read_vector (file_restart, 'decomp0_npools_vr            ',   nl_soil, ndecomp_pools, landpatch, decomp0_npools_vr, defval = 1._r8)
          CALL ncio_read_vector (file_restart, 'I_met_n_vr_acc               ',   nl_soil, landpatch, I_met_n_vr_acc, defval = 0._r8               )
          CALL ncio_read_vector (file_restart, 'I_cel_n_vr_acc               ',   nl_soil, landpatch, I_cel_n_vr_acc, defval = 0._r8               )
@@ -1055,7 +1055,7 @@ CONTAINS
          CALL ncio_read_vector (file_restart, 'AKX_soil1_exit_n_vr_acc      ',   nl_soil, landpatch, AKX_soil1_exit_n_vr_acc, defval = 0._r8      )
          CALL ncio_read_vector (file_restart, 'AKX_soil2_exit_n_vr_acc      ',   nl_soil, landpatch, AKX_soil2_exit_n_vr_acc, defval = 0._r8      )
          CALL ncio_read_vector (file_restart, 'AKX_soil3_exit_n_vr_acc      ',   nl_soil, landpatch, AKX_soil3_exit_n_vr_acc, defval = 0._r8      )
- 
+
          CALL ncio_read_vector (file_restart, 'diagVX_c_vr_acc              ',   nl_soil, ndecomp_pools, landpatch, diagVX_c_vr_acc, defval = 0._r8              )
          CALL ncio_read_vector (file_restart, 'upperVX_c_vr_acc             ',   nl_soil, ndecomp_pools, landpatch, upperVX_c_vr_acc, defval = 0._r8             )
          CALL ncio_read_vector (file_restart, 'lowerVX_c_vr_acc             ',   nl_soil, ndecomp_pools, landpatch, lowerVX_c_vr_acc, defval = 0._r8             )
@@ -1063,7 +1063,7 @@ CONTAINS
          CALL ncio_read_vector (file_restart, 'upperVX_n_vr_acc             ',   nl_soil, ndecomp_pools, landpatch, upperVX_n_vr_acc, defval = 0._r8             )
          CALL ncio_read_vector (file_restart, 'lowerVX_n_vr_acc             ',   nl_soil, ndecomp_pools, landpatch, lowerVX_n_vr_acc, defval = 0._r8             )
       ENDIF
- 
+
  !----------------------------------------------------
       CALL ncio_read_vector (file_restart, 'skip_balance_check           ', landpatch, skip_balance_check           )
 #ifdef CROP
@@ -1109,21 +1109,21 @@ CONTAINS
       CALL check_vector_data ('ctrunc_vr         ', ctrunc_vr         )
       CALL check_vector_data ('ctrunc_veg        ', ctrunc_veg        )
       CALL check_vector_data ('ctrunc_soil       ', ctrunc_soil       )
- 
+
       CALL check_vector_data ('t_scalar          ', t_scalar          )
       CALL check_vector_data ('w_scalar          ', w_scalar          )
       CALL check_vector_data ('o_scalar          ', o_scalar          )
       CALL check_vector_data ('depth_scalar      ', depth_scalar      )
- 
+
  ! Soil CN diffusion and advection
       CALL check_vector_data ('som_adv_coef             ', som_adv_coef             )
       CALL check_vector_data ('som_diffus_coef          ', som_diffus_coef          )
- 
+
  ! Active Layer
       CALL check_vector_data ('altmax                   ', altmax                   )
       CALL check_vector_data ('altmax_lastyear          ', altmax_lastyear          )
       !CALL check_vector_data ('altmax_lastyear_indx     ', altmax_lastyear_indx     )
- 
+
       CALL check_vector_data ('totlitc                  ', totlitc                  )
       CALL check_vector_data ('totvegc                  ', totvegc                  )
       CALL check_vector_data ('totsomc                  ', totsomc                  )
@@ -1135,7 +1135,7 @@ CONTAINS
       CALL check_vector_data ('col_vegendcb             ', col_vegendcb             )
       CALL check_vector_data ('col_soilbegcb            ', col_soilbegcb            )
       CALL check_vector_data ('col_soilendcb            ', col_soilendcb            )
- 
+
       CALL check_vector_data ('totlitn                  ', totlitn                  )
       CALL check_vector_data ('totvegn                  ', totvegn                  )
       CALL check_vector_data ('totsomn                  ', totsomn                  )
@@ -1149,7 +1149,7 @@ CONTAINS
       CALL check_vector_data ('col_soilendnb            ', col_soilendnb            )
       CALL check_vector_data ('col_sminnbegnb           ', col_sminnbegnb           )
       CALL check_vector_data ('col_sminnendnb           ', col_sminnendnb           )
- 
+
       CALL check_vector_data ('leafc                    ', leafc                    )
       CALL check_vector_data ('leafc_storage            ', leafc_storage            )
       CALL check_vector_data ('leafc_xfer               ', leafc_xfer               )
@@ -1175,7 +1175,7 @@ CONTAINS
       CALL check_vector_data ('downreg                  ', downreg                  )
       CALL check_vector_data ('cropprod1c               ', cropprod1c               )
       CALL check_vector_data ('cropseedc_deficit        ', cropseedc_deficit        )
- 
+
       CALL check_vector_data ('leafn                    ', leafn                    )
       CALL check_vector_data ('leafn_storage            ', leafn_storage            )
       CALL check_vector_data ('leafn_xfer               ', leafn_xfer               )
@@ -1198,33 +1198,33 @@ CONTAINS
       CALL check_vector_data ('grainn_storage           ', grainn_storage           )
       CALL check_vector_data ('grainn_xfer              ', grainn_xfer              )
       CALL check_vector_data ('retransn                 ', retransn                 )
- 
+
       CALL check_vector_data ('decomp_npools_vr         ', decomp_npools_vr         )
       CALL check_vector_data ('decomp_npools            ', decomp_npools            )
       CALL check_vector_data ('ntrunc_vr                ', ntrunc_vr                )
       CALL check_vector_data ('ntrunc_veg               ', ntrunc_veg               )
       CALL check_vector_data ('ntrunc_soil              ', ntrunc_soil              )
- 
+
       CALL check_vector_data ('sminn_vr                 ', sminn_vr                 )
       CALL check_vector_data ('smin_no3_vr              ', smin_no3_vr              )
       CALL check_vector_data ('smin_nh4_vr              ', smin_nh4_vr              )
- 
+
       IF(DEF_USE_NITRIF)THEN
          CALL check_vector_data ('tCONC_O2_UNSAT           ', tconc_o2_unsat )
          CALL check_vector_data ('tO2_DECOMP_DEPTH_UNSAT   ', to2_decomp_depth_unsat   )
       ENDIF
- 
+
       CALL check_vector_data ('sminn                    ', sminn                    )
       CALL check_vector_data ('ndep                     ', ndep                     )
- 
+
       CALL check_vector_data ('ndep_prof                ', ndep_prof                )
       CALL check_vector_data ('nfixation_prof           ', nfixation_prof           )
- 
+
       CALL check_vector_data ('cn_decomp_pools          ', cn_decomp_pools          )
       CALL check_vector_data ('fpi_vr                   ', fpi_vr                   )
       CALL check_vector_data ('fpi                      ', fpi                      )
       CALL check_vector_data ('fpg                      ', fpg                      )
- 
+
       CALL check_vector_data ('cropf                    ', cropf                    )
       CALL check_vector_data ('lfwt                     ', lfwt                     )
       CALL check_vector_data ('fuelc                    ', fuelc                    )
@@ -1254,10 +1254,10 @@ CONTAINS
       CALL check_vector_data ('tsoi17                   ', tsoi17                   )
       CALL check_vector_data ('rh30                     ', rh30                     )
       CALL check_vector_data ('accumnstep               ', accumnstep               )
- 
+
       CALL check_vector_data ('dayl                     ', dayl                     )
       CALL check_vector_data ('prev_dayl                ', prev_dayl                )
- 
+
       IF(DEF_USE_SASU)THEN
  !--------------SASU variables---------------------------
          CALL check_vector_data ('decomp0_cpools_vr           ', decomp0_cpools_vr           )
@@ -1282,7 +1282,7 @@ CONTAINS
          CALL check_vector_data ('AKX_soil1_exit_c_vr_acc     ', AKX_soil1_exit_c_vr_acc     )
          CALL check_vector_data ('AKX_soil2_exit_c_vr_acc     ', AKX_soil2_exit_c_vr_acc     )
          CALL check_vector_data ('AKX_soil3_exit_c_vr_acc     ', AKX_soil3_exit_c_vr_acc     )
- 
+
          CALL check_vector_data ('decomp0_npools_vr           ', decomp0_npools_vr           )
          CALL check_vector_data ('I_met_n_vr_acc              ', I_met_n_vr_acc              )
          CALL check_vector_data ('I_cel_n_vr_acc              ', I_cel_n_vr_acc              )
@@ -1305,7 +1305,7 @@ CONTAINS
          CALL check_vector_data ('AKX_soil1_exit_n_vr_acc     ', AKX_soil1_exit_n_vr_acc     )
          CALL check_vector_data ('AKX_soil2_exit_n_vr_acc     ', AKX_soil2_exit_n_vr_acc     )
          CALL check_vector_data ('AKX_soil3_exit_n_vr_acc     ', AKX_soil3_exit_n_vr_acc     )
- 
+
          CALL check_vector_data ('diagVX_c_vr_acc             ', diagVX_c_vr_acc             )
          CALL check_vector_data ('upperVX_c_vr_acc            ', upperVX_c_vr_acc            )
          CALL check_vector_data ('lowerVX_c_vr_acc            ', lowerVX_c_vr_acc            )
@@ -1341,7 +1341,7 @@ CONTAINS
       CALL check_vector_data ('fertnitro_sugarcane' , fertnitro_sugarcane)
 #endif
       CALL check_vector_data ('lag_npp    ' , lag_npp    )
- 
+
    END SUBROUTINE check_BGCTimeVariables
 #endif
 
