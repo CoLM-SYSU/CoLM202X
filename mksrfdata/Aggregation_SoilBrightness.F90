@@ -295,10 +295,10 @@ SUBROUTINE Aggregation_SoilBrightness ( &
 #endif
 
 #ifdef RangeCheck
-      CALL check_vector_data ('s_v_alb ', soil_s_v_alb, -1.e36_r8)
-      CALL check_vector_data ('d_v_alb ', soil_d_v_alb, -1.e36_r8)
-      CALL check_vector_data ('s_n_alb ', soil_s_n_alb, -1.e36_r8)
-      CALL check_vector_data ('d_n_alb ', soil_d_n_alb, -1.e36_r8)
+      CALL check_vector_data ('s_v_alb ', soil_s_v_alb)
+      CALL check_vector_data ('d_v_alb ', soil_d_v_alb)
+      CALL check_vector_data ('s_n_alb ', soil_s_n_alb)
+      CALL check_vector_data ('d_n_alb ', soil_d_n_alb)
 #endif
 
 #ifndef SinglePoint

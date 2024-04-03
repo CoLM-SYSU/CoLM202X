@@ -27,6 +27,7 @@ CONTAINS
    USE MOD_Vars_TimeInvariants
    USE MOD_Urban_Vars_TimeInvariants
    USE MOD_NetCDFVector
+   USE MOD_UserDefFun
 #ifdef SinglePoint
    USE MOD_SingleSrfdata
 #endif
@@ -46,7 +47,7 @@ CONTAINS
       write(cyear,'(i4.4)') year
 
 #ifdef SinglePoint
-      iyear = findloc(SITE_LAI_year, year, dim=1)
+      iyear = findloc_ud(SITE_LAI_year == year)
       urb_lai(:) = SITE_LAI_monthly(time,iyear)
       urb_sai(:) = SITE_SAI_monthly(time,iyear)
 #else
