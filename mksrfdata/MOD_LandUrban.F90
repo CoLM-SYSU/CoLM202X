@@ -81,8 +81,13 @@ CONTAINS
    integer,   allocatable :: settyp_(:)
    integer,   allocatable :: ielm_  (:)
 
-   integer :: numurban_
-   integer, allocatable :: urbclass (:)
+   integer  :: numurban_
+   integer  :: iurb, ib, imiss
+   integer  :: buff_count(N_URB)
+   real(r8) :: buff_p(N_URB)
+
+   integer , allocatable :: urbclass (:)
+   real(r8), allocatable :: area_one (:)
 
    character(len=256) :: suffix, cyear
 
@@ -102,11 +107,8 @@ CONTAINS
          CALL allocate_block_data (gurban, data_urb_class)
          CALL flush_block_data (data_urb_class, 0)
 
-         !write(cyear,'(i4.4)') int(lc_year/5)*5
          suffix = 'URBTYP'
 IF (DEF_URBAN_type_scheme == 1) THEN
-         ! NOTE!!!
-         ! region id is assigned in aggreagation_urban.F90 now
          CALL read_5x5_data (dir_urban, suffix, gurban, 'URBAN_DENSITY_CLASS', data_urb_class)
 ELSE IF (DEF_URBAN_type_scheme == 2) THEN
          CALL read_5x5_data (dir_urban, suffix, gurban, 'LCZ_DOM', data_urb_class)
@@ -148,21 +150,53 @@ ENDIF
                ipxstt = landpatch%ipxstt(ipatch)
                ipxend = landpatch%ipxend(ipatch)
 
-               CALL aggregation_request_data (landpatch, ipatch, gurban, zip = .false., &
+               CALL aggregation_request_data (landpatch, ipatch, gurban, zip = .false., area = area_one, &
                   data_i4_2d_in1 = data_urb_class, data_i4_2d_out1 = ibuff)
 
-IF (DEF_URBAN_type_scheme == 1) THEN
-               ! Some urban patches and NCAR data are inconsistent (NCAR has no urban ID),
-               ! so the these points are assigned by the 3(medium density), or can define by ueser
-               WHERE (ibuff < 1 .or. ibuff > 3)
-                  ibuff = 3
-               END WHERE
-ELSE IF(DEF_URBAN_type_scheme == 2) THEN
-               ! Same for NCAR, fill the gap LCZ class of urban patch if LCZ data is non-urban
-               WHERE (ibuff > 10 .or. ibuff == 0)
-                  ibuff = 9
-               END WHERE
-ENDIF
+               imiss = count(ibuff<1 .or. ibuff>N_URB)
+               IF (imiss > 0) THEN
+                  WHERE (ibuff<1 .or. ibuff>N_URB)
+                     area_one = 0
+                  END WHERE
+
+                  buff_p = 0
+                  IF (sum(area_one) > 0) THEN
+                     DO ib = 1, size(area_one)
+                        IF (ibuff(ib)>1 .and. ibuff(ib)<N_URB) THEN
+                           iurb        = ibuff(ib)
+                           buff_p(iurb)= buff_p(iurb) + area_one(ib)
+                        ENDIF
+                     ENDDO 
+                     buff_p(:) = buff_p(:)/sum(area_one)
+                  ENDIF
+
+                  DO iurb = 1, N_URB-1
+                     buff_count(iurb) = int(buff_p(iurb)*imiss)
+                  ENDDO
+                  buff_count(N_URB) =  imiss - sum(buff_count(1:N_URB-1)) 
+
+                  ! Some urban patches and NCAR/LCZ data are inconsistent (NCAR/LCZ has no urban ID),
+                  ! so the these points are assigned
+                  IF (all(buff_count==0)) THEN
+                     IF (DEF_URBAN_type_scheme == 1) THEN
+                        ibuff = 3
+                     ELSEIF (DEF_URBAN_type_scheme == 2) THEN
+                        ibuff = 9
+                     ENDIF
+                  ELSE
+                     DO ib = 1, size(ibuff)
+                        IF (ibuff(ib)<1 .or. ibuff(ib)>N_URB) THEN
+                           type_loop: DO iurb = 1, N_URB
+                              IF (buff_count(iurb) > 0) THEN
+                                 ibuff(ib)                = iurb
+                                 buff_count(iurb) = buff_count(iurb) - 1
+                                 EXIT type_loop
+                              ENDIF
+                           ENDDO type_loop
+                        ENDIF
+                     ENDDO
+                  ENDIF
+               ENDIF
 
                npxl = ipxend - ipxstt + 1
 
@@ -369,6 +403,7 @@ ENDIF
       IF (allocated(ielm_  )) deallocate (ielm_  )
 
       IF (allocated(urbclass)) deallocate (urbclass)
+      IF (allocated(area_one)) deallocate (area_one)
 
    END SUBROUTINE landurban_build
 
