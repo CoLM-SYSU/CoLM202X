@@ -28,6 +28,7 @@ MODULE MOD_Grid
 !-------------------------------------------------------------------------------
 
    USE MOD_Precision
+   USE MOD_UserDefFun
    IMPLICIT NONE
 
    ! ---- data types ----
@@ -747,8 +748,8 @@ CONTAINS
    integer :: ilat_l, ilat_u, ilat, ilatloc, jblk, iyseg
    integer :: ilon_w, ilon_e, ilon, ilonloc, iblk, ixseg
 
-      ilat_l = findloc(grid%yblk /= 0, .true., dim=1)
-      ilat_u = findloc(grid%yblk /= 0, .true., dim=1, back=.true.)
+      ilat_l = findloc_ud(grid%yblk /= 0)
+      ilat_u = findloc_ud(grid%yblk /= 0, back=.true.)
 
       this%ginfo%nlat = ilat_u - ilat_l + 1
       IF (allocated(this%ginfo%lat_s)) deallocate(this%ginfo%lat_s)
@@ -795,7 +796,7 @@ CONTAINS
          ilon_w = 1
          ilon_e = grid%nlon
       ELSE
-         ilon_w = findloc(grid%xblk /= 0, .true., dim=1)
+         ilon_w = findloc_ud(grid%xblk /= 0)
          DO WHILE (.true.)
             ilon = ilon_w - 1
             IF (ilon == 0) ilon = grid%nlon

@@ -18,6 +18,7 @@ MODULE MOD_Hydro_SoilWater
    USE MOD_Precision
    USE MOD_Hydro_SoilFunction
    USE MOD_Namelist, only: DEF_USE_PLANTHYDRAULICS
+   USE MOD_UserDefFun, only : findloc_ud
 
    IMPLICIT NONE
 
@@ -113,7 +114,7 @@ CONTAINS
    real(r8) :: psi_zwt, smp_up, vliq_up, vliq(1:nlev), psi, vl
 
       ! water table location
-      izwt = findloc(zwtmm >= sp_zi, .true., dim=1, back=.true.)
+      izwt = findloc_ud(zwtmm >= sp_zi, back=.true.)
 
       IF (izwt <= nlev) THEN
          psi_zwt = psi_s(izwt)
@@ -244,7 +245,7 @@ CONTAINS
       tol_p = 1.0e-14
 
       ! water table location
-      izwt = findloc(zwt >= sp_zi, .true., dim=1, back=.true.)
+      izwt = findloc_ud(zwt >= sp_zi, back=.true.)
 
 #ifdef CoLMDEBUG
       ! total water mass
@@ -400,7 +401,7 @@ CONTAINS
          ENDIF
       ENDIF
 
-      izwt = findloc(zwt >= sp_zi, .true., dim=1, back=.true.)
+      izwt = findloc_ud(zwt >= sp_zi, back=.true.)
       DO ilev = izwt-1, 1, -1
          IF (is_permeable(ilev)) THEN
             ss_vliq(ilev) = (ss_vliq(ilev)*(sp_dz(ilev)-ss_wt(ilev)) &
@@ -497,7 +498,7 @@ CONTAINS
       tol_v = tol_z / maxval(sp_dz)
 
       ! water table location
-      izwt = findloc(zwt >= sp_zi, .true., dim=1, back=.true.)
+      izwt = findloc_ud(zwt >= sp_zi, back=.true.)
 
       reswater = exwater 
 
@@ -2651,7 +2652,7 @@ CONTAINS
       DO WHILE (.true.)
 
          IF (ilev_l < nlev_sat) THEN
-            ilev = findloc(spr, spr(ilev_l+1), dim=1, BACK=.true.)
+            ilev = findloc_ud(spr == spr(ilev_l+1), BACK=.true.)
             DO WHILE (qlc(ilev_u) >= qlc(ilev))
 
                ilev_l = ilev
@@ -2663,7 +2664,7 @@ CONTAINS
 
                IF (ilev_l < nlev_sat) THEN
                   spr(ilev_l+1:nlev_sat) = spr(ilev_l+1:nlev_sat) - 1
-                  ilev = findloc(spr, spr(ilev_l+1), dim=1, BACK=.true.)
+                  ilev = findloc_ud(spr == spr(ilev_l+1), BACK=.true.)
                ELSE
                   EXIT
                ENDIF

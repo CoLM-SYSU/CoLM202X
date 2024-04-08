@@ -29,6 +29,7 @@ CONTAINS
    USE MOD_Precision
    USE MOD_Namelist
    USE MOD_SPMD_Task
+   USE MOD_UserDefFun
    USE MOD_NetCDFVector
    USE MOD_LandPatch
    USE MOD_Vars_TimeInvariants
@@ -68,7 +69,7 @@ CONTAINS
 
 #ifdef SinglePoint
 #ifndef URBAN_MODEL
-      iyear = findloc(SITE_LAI_year, year, dim=1)
+      iyear = findloc_ud(SITE_LAI_year == year)
       IF (.not. DEF_LAI_MONTHLY) THEN
          itime = (time-1)/8 + 1
       ENDIF

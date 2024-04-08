@@ -31,6 +31,7 @@ OBJS_SHARED =    \
 				  MOD_Const_Physical.o         \
 				  MOD_Const_LC.o               \
 				  MOD_Utils.o                  \
+				  MOD_UserDefFun.o             \
 				  MOD_TimeManager.o            \
 				  MOD_NetCDFSerial.o           \
 				  MOD_SingleSrfdata.o          \

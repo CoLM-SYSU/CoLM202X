@@ -98,6 +98,7 @@ CONTAINS
    USE MOD_ElementNeighbour
    USE MOD_DataType
    USE MOD_Utils
+   USE MOD_UserDefFun
    USE MOD_Vars_TimeInvariants, only : lakedepth
    IMPLICIT NONE
 
@@ -673,9 +674,9 @@ CONTAINS
                ELSEIF (to_lake(ibasin) .or. (riverdown(ibasin) == 0)) THEN
                   ! lake to lake .or. lake catchment to lake .or. lake to ocean
                   IF (riverdown(ibasin) > 0) THEN
-                     inb = findloc(elementneighbour(ibasin)%glbindex, riverdown(ibasin), dim=1)
+                     inb = findloc_ud(elementneighbour(ibasin)%glbindex == riverdown(ibasin))
                   ELSE
-                     inb = findloc(elementneighbour(ibasin)%glbindex, -9, dim=1) ! -9 is ocean
+                     inb = findloc_ud(elementneighbour(ibasin)%glbindex == -9) ! -9 is ocean
                   ENDIF
 
                   IF (inb <= 0) THEN

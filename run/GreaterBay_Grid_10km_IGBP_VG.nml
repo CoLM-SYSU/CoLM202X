@@ -35,6 +35,7 @@
    ! for GRIDBASED
    DEF_GRIDBASED_lon_res = 0.1
    DEF_GRIDBASED_lat_res = 0.1
+   DEF_file_mesh_filter  = '/tera05/zhangsp/data/landdata/filter/greaterbay_1km_filter.nc'
 
    ! soil state init
    DEF_USE_SoilInit  = .true.
@@ -48,20 +49,21 @@
    ! Options :
    ! PRINCETON | GSWP3   | QIAN  | CRUNCEPV4 | CRUNCEPV7 | ERA5LAND | ERA5  |  MSWX
    ! WFDE5     | CRUJRA  | WFDEI | JRA55     | GDAS      | CMFD     | POINT |  JRA3Q
-   DEF_forcing_namelist = '/tera04/zhangsp/git/CoLM202X/run/forcing/ERA5LAND.nml'
+   DEF_forcing_namelist = '/tera04/zhangsp/git/CoLM2024/run/forcing/ERA5LAND.nml'
 
    ! ----- history -----
-   DEF_hist_grid_as_forcing = .true.
+   DEF_HIST_lon_res = 0.00833333
+   DEF_HIST_lat_res = 0.00833333
    DEF_WRST_FREQ = 'MONTHLY' ! write restart file frequency: HOURLY/DAILY/MONTHLY/YEARLY
    DEF_HIST_FREQ = 'DAILY' ! write history file frequency: HOURLY/DAILY/MONTHLY/YEARLY
-   DEF_HIST_groupby = 'DAY' ! history in one file: DAY/MONTH/YEAR
+   DEF_HIST_groupby = 'MONTH' ! history in one file: DAY/MONTH/YEAR
    DEF_HIST_mode = 'one' ! history in one or block
    DEF_REST_CompressLevel = 1
    DEF_HIST_CompressLevel = 1
 
-   DEF_HIST_WriteBack = .false.
+   DEF_HIST_WriteBack = .true.
 
    DEF_hist_vars_out_default = .false.
-   DEF_hist_vars_namelist    = 'history.nml'
+   DEF_hist_vars_namelist    = 'run/history.nml'
 
 /

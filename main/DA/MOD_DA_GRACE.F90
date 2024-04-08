@@ -180,6 +180,7 @@ CONTAINS
    USE MOD_Vars_1DFluxes,       only : rnof, rsur
    USE MOD_Vars_TimeVariables,  only : wat, wa, wdsrf, zwt
    USE MOD_RangeCheck 
+   USE MOD_UserDefFun
    IMPLICIT NONE
    
    integer,  intent(in) :: idate(3)
@@ -238,7 +239,7 @@ CONTAINS
 
       IF (is_obs_time .and. (isendofmonth(idate, deltim))) THEN
 
-         itime = findloc((obsyear == idate(1)) .and. (obsmonth == month), .true., dim=1)
+         itime = findloc_ud((obsyear == idate(1)) .and. (obsmonth == month))
       
          IF (p_is_io) THEN
             CALL allocate_block_data (grid_grace, f_grace_lwe)  
