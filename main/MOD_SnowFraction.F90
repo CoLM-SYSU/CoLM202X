@@ -31,7 +31,7 @@ CONTAINS
 ! Original author : Yongjiu Dai, /09/1999/, /04/2014/
 !
 ! REVISIONS:
-! Hua Yuan, 10/2019: removed sigf to be compatible with PFT classification
+! 10/2019, Hua Yuan: removed fveg to be compatible with PFT classification
 !=======================================================================
 
    USE MOD_Precision
@@ -63,7 +63,7 @@ CONTAINS
          sigf = 1. - wt
       ELSE
          wt = 0.
-         sigf = 0.
+         sigf = 1.
       ENDIF
 
 ! 10/16/2019, yuan:
@@ -87,10 +87,11 @@ CONTAINS
 ! !DESCRIPTION:
 ! A wrap SUBROUTINE to calculate snow cover fraction for PFT|PC run
 !
-! REVISIONS:
-! Hua Yuan, 06/2019: initial code adapted from snowfraction() by Yongjiu Dai
+! !REVISIONS:
 !
-! Hua Yuan, 08/2019: removed sigf_p to be compatible with PFT classification
+! 06/2019, Hua Yuan: initial code adapted from snowfraction() by Yongjiu Dai
+!
+! 08/2019, Hua Yuan: removed fveg to be compatible with PFT classification
 !=======================================================================
 
    USE MOD_Precision
@@ -136,7 +137,22 @@ CONTAINS
             sigf_p(i) = 1. - wt
          ELSE
             wt = 0.
-            sigf_p(i) = 0.
+            sigf_p(i) = 1.
+         ENDIF
+
+         ! snow on vegetation, USE snowdp to calculate buried fraction
+         ! distingush tree, shrub and grass
+         IF ( DEF_VEG_SNOW .and. tlai_p(i)+tsai_p(i) > 1.e-6 ) THEN
+            ! for non-grass, use hbot, htop to determine how much lsai being buried.
+            IF (p.gt.0 .and. p.le.11) THEN
+               wt = max(0., (snowdp-hbot)) / (htop-hbot)
+               wt = max(wt, 1.)
+               sigf_p(i) = 1. - wt
+            ELSE
+            ! for grass, 0-0.2m?
+               wt = min(1., snowdp/0.2)
+               sigf_p(i) = 1. - wt
+            ENDIF
          ENDIF
 
          !IF(sigf_p(i) < 0.001) sigf_p(i) = 0.

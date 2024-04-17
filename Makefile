@@ -309,7 +309,7 @@ OBJS_MAIN = \
 				MOD_Urban_BEM.o                           \
 				MOD_Urban_LUCY.o                          \
 				MOD_Urban_Thermal.o                       \
-				Urban_CoLMMAIN.o                          \
+				CoLMMAIN_Urban.o                          \
 				MOD_Lulcc_Vars_TimeInvariants.o           \
 				MOD_Lulcc_Vars_TimeVariables.o            \
 				MOD_Lulcc_Initialize.o                    \

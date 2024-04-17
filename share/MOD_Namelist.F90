@@ -69,7 +69,7 @@ MODULE MOD_Namelist
    logical  :: USE_SITE_dbedrock         = .true.
    logical  :: USE_SITE_topography       = .true.
    logical  :: USE_SITE_topostd          = .true.
-   logical  :: USE_SITE_BVIC             = .true.   
+   logical  :: USE_SITE_BVIC             = .true.
    logical  :: USE_SITE_HistWriteBack    = .true.
    logical  :: USE_SITE_ForcingReadAhead = .true.
    logical  :: USE_SITE_urban_paras      = .true.
@@ -111,7 +111,7 @@ MODULE MOD_Namelist
    character(len=256) :: DEF_dir_landdata = 'path/to/landdata'
    character(len=256) :: DEF_dir_restart  = 'path/to/restart'
    character(len=256) :: DEF_dir_history  = 'path/to/history'
-   
+
    character(len=256) :: DEF_DA_obsdir = 'null'
 
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -125,7 +125,7 @@ MODULE MOD_Namelist
    character(len=256) :: DEF_CatchmentMesh_data = 'path/to/catchment/data'
 
    character(len=256) :: DEF_file_mesh_filter   = 'path/to/mesh/filter'
-   
+
    ! ----- Use surface data from existing dataset -----
    ! case 1: from a larger region
    logical :: USE_srfdata_from_larger_region   = .false.
@@ -160,7 +160,7 @@ MODULE MOD_Namelist
 
    ! ----- merge data in aggregation when send data from IO to worker -----
    logical :: USE_zip_for_aggregation = .true.
-   
+
    ! ----- compress level in writing aggregated surface data -----
    integer :: DEF_Srfdata_CompressLevel = 1
 
@@ -267,6 +267,9 @@ MODULE MOD_Namelist
    ! Corresponding vars are named as ***_soil, ***_snow.
    logical :: DEF_SPLIT_SOILSNOW = .false.
 
+   ! Account for vegetation snow process
+   logical :: DEF_VEG_SNOW = .true.
+
    logical :: DEF_USE_VariablySaturatedFlow = .true.
    logical :: DEF_USE_BEDROCK               = .false.
    logical :: DEF_USE_OZONESTRESS           = .false.
@@ -274,8 +277,8 @@ MODULE MOD_Namelist
 
    ! .true. for running SNICAR model
    logical :: DEF_USE_SNICAR                  = .false.
-   character(len=256) :: DEF_file_snowoptics = 'null'
-   character(len=256) :: DEF_file_snowaging  = 'null'
+   character(len=256) :: DEF_file_snowoptics  = 'null'
+   character(len=256) :: DEF_file_snowaging   = 'null'
 
    ! .true. read aerosol deposition data from file or .false. set in the code
    logical :: DEF_Aerosol_Readin              = .true.
@@ -289,14 +292,14 @@ MODULE MOD_Namelist
 
    character(len=5)   :: DEF_precip_phase_discrimination_scheme = 'II'
    character(len=256) :: DEF_SSP='585' ! Co2 path for CMIP6 future scenario.
-   
+
    logical          :: DEF_USE_Forcing_Downscaling = .false.
    character(len=5) :: DEF_DS_precipitation_adjust_scheme = 'II'
    character(len=5) :: DEF_DS_longwave_adjust_scheme      = 'II'
 
    ! use irrigation
    logical :: DEF_USE_IRRIGATION = .false.
-   
+
    !Plant Hydraulics
    logical            :: DEF_USE_PLANTHYDRAULICS = .true.
    !Medlyn stomata model
@@ -793,7 +796,7 @@ CONTAINS
       USE_SITE_urban_LAI,       &
 
       DEF_BlockInfoFile,               &
-      DEF_AverageElementSize,          & 
+      DEF_AverageElementSize,          &
       DEF_nx_blocks,                   &
       DEF_ny_blocks,                   &
       DEF_PIO_groupsize,               &
@@ -839,8 +842,9 @@ CONTAINS
       DEF_USE_SUPERCOOL_WATER,         &
       DEF_SOIL_REFL_SCHEME,            &
       DEF_RSS_SCHEME,                  &
-      DEF_Runoff_SCHEME,               & 
+      DEF_Runoff_SCHEME,               &
       DEF_SPLIT_SOILSNOW,              &
+      DEF_VEG_SNOW,                    &
       DEF_file_VIC_para,               &
 
       DEF_dir_existing_srfdata,        &
@@ -1177,7 +1181,7 @@ CONTAINS
       CALL mpi_bcast (DEF_domain%edgen,   1, mpi_real8,     p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_domain%edgew,   1, mpi_real8,     p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_domain%edgee,   1, mpi_real8,     p_root, p_comm_glb, p_err)
-      
+
       CALL mpi_bcast (DEF_BlockInfoFile, 256, mpi_character, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_AverageElementSize,  1, mpi_real8, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_nx_blocks,     1, mpi_integer, p_root, p_comm_glb, p_err)
@@ -1267,11 +1271,12 @@ CONTAINS
       CALL mpi_bcast (DEF_SOIL_REFL_SCHEME,             1, mpi_integer, p_root, p_comm_glb, p_err)
       ! 07/2023, added by zhuo liu
       CALL mpi_bcast (DEF_RSS_SCHEME,                   1, mpi_integer, p_root, p_comm_glb, p_err)
-      ! 02/2024, added by Shupeng Zhang 
+      ! 02/2024, added by Shupeng Zhang
       CALL mpi_bcast (DEF_Runoff_SCHEME,   1, mpi_integer,   p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_file_VIC_para, 256, mpi_character, p_root, p_comm_glb, p_err)
       ! 08/2023, added by hua yuan
       CALL mpi_bcast (DEF_SPLIT_SOILSNOW,      1, mpi_logical, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_VEG_SNOW,            1, mpi_logical, p_root, p_comm_glb, p_err)
 
       CALL mpi_bcast (DEF_LAI_MONTHLY,         1, mpi_logical, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_NDEP_FREQUENCY,      1, mpi_integer, p_root, p_comm_glb, p_err)
@@ -1309,7 +1314,7 @@ CONTAINS
       CALL mpi_bcast (DEF_USE_SNICAR,        1, mpi_logical,   p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_file_snowoptics, 256, mpi_character, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_file_snowaging , 256, mpi_character, p_root, p_comm_glb, p_err)
-      
+
       CALL mpi_bcast (DEF_ElementNeighbour_file, 256, mpi_character, p_root, p_comm_glb, p_err)
 
       CALL mpi_bcast (DEF_DA_obsdir      , 256, mpi_character, p_root, p_comm_glb, p_err)

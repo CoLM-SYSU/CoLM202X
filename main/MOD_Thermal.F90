@@ -18,59 +18,60 @@ CONTAINS
 !-----------------------------------------------------------------------
 
 
-   SUBROUTINE THERMAL (ipatch      ,patchtype   ,lb          ,deltim     ,&
-                       trsmx0      ,zlnd        ,zsno        ,csoilc     ,&
-                       dewmx       ,capr        ,cnfac       ,vf_quartz  ,&
-                       vf_gravels  ,vf_om       ,vf_sand     ,wf_gravels ,&
-                       wf_sand     ,csol        ,porsl       ,psi0       ,&
+   SUBROUTINE THERMAL (ipatch        ,patchtype     ,lb            ,deltim        ,&
+                       trsmx0        ,zlnd          ,zsno          ,csoilc        ,&
+                       dewmx         ,capr          ,cnfac         ,vf_quartz     ,&
+                       vf_gravels    ,vf_om         ,vf_sand       ,wf_gravels    ,&
+                       wf_sand       ,csol          ,porsl         ,psi0          ,&
 #ifdef Campbell_SOIL_MODEL
-                       bsw         ,                                      &
+                       bsw           ,                                             &
 #endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
-                       theta_r     ,alpha_vgm   ,n_vgm       ,L_vgm      ,&
-                       sc_vgm      ,fc_vgm      ,                         &
+                       theta_r       ,alpha_vgm     ,n_vgm         ,L_vgm         ,&
+                       sc_vgm        ,fc_vgm        ,                              &
 #endif
-                       k_solids    ,dksatu      ,dksatf      ,dkdry      ,&
-                       BA_alpha    ,BA_beta                              ,&
-                       lai         ,laisun      ,laisha                  ,&
-                       sai         ,htop        ,hbot        ,sqrtdi     ,&
-                       rootfr      ,rstfacsun_out,rstfacsha_out,rss      ,&
-                       gssun_out   ,gssha_out   ,&
-                       assimsun_out,etrsun_out  ,assimsha_out,etrsha_out ,&
+                       k_solids      ,dksatu        ,dksatf        ,dkdry         ,&
+                       BA_alpha      ,BA_beta                                     ,&
+                       lai           ,laisun        ,laisha        ,sai           ,&
+                       htop          ,hbot          ,sqrtdi        ,rootfr        ,&
+                       rstfacsun_out ,rstfacsha_out ,rss           ,gssun_out     ,&
+                       gssha_out     ,assimsun_out  ,etrsun_out    ,assimsha_out  ,&
+                       etrsha_out    ,&
 !photosynthesis and plant hydraulic variables
-                       effcon      ,vmax25      ,hksati      ,smp     ,hk,&
-                       kmax_sun    ,kmax_sha    ,kmax_xyl    ,kmax_root  ,&
-                       psi50_sun   ,psi50_sha   ,psi50_xyl   ,psi50_root ,&
-                       ck          ,vegwp       ,gs0sun      ,gs0sha     ,&
+                       effcon        ,vmax25        ,hksati        ,smp     ,hk   ,&
+                       kmax_sun      ,kmax_sha      ,kmax_xyl      ,kmax_root     ,&
+                       psi50_sun     ,psi50_sha     ,psi50_xyl     ,psi50_root    ,&
+                       ck            ,vegwp         ,gs0sun        ,gs0sha        ,&
 !Ozone stress variables
-                       lai_old     ,o3uptakesun ,o3uptakesha ,forc_ozone, &
+                       lai_old       ,o3uptakesun   ,o3uptakesha   ,forc_ozone    ,&
 !end ozone stress variables
-                       slti        ,hlti        ,shti        ,hhti       ,&
-                       trda        ,trdm        ,trop        ,g1         ,&
-                       g0          ,gradm       ,binter      ,extkn      ,&
-                       forc_hgt_u  ,forc_hgt_t  ,forc_hgt_q  ,forc_us    ,&
-                       forc_vs     ,forc_t      ,forc_q      ,forc_rhoair,&
-                       forc_psrf   ,forc_pco2m  ,forc_hpbl   ,forc_po2m  ,&
-                       coszen      ,parsun      ,parsha      ,sabvsun    ,&
-                       sabvsha     ,sabg,sabg_soil,sabg_snow ,frl        ,&
-                       extkb       ,extkd       ,thermk      ,fsno       ,&
-                       sigf        ,dz_soisno   ,z_soisno    ,zi_soisno  ,&
-                       tleaf       ,t_soisno    ,wice_soisno ,wliq_soisno,&
-                       ldew,ldew_rain,ldew_snow ,scv,snowdp  ,imelt      ,&
-                       taux        ,tauy        ,fsena       ,fevpa      ,&
-                       lfevpa      ,fsenl       ,fevpl       ,etr        ,&
-                       fseng       ,fevpg       ,olrg        ,fgrnd      ,&
-                       rootr       ,rootflux    ,&
-                       qseva       ,qsdew       ,qsubl       ,qfros      ,&
-                       qseva_soil  ,qsdew_soil  ,qsubl_soil  ,qfros_soil ,&
-                       qseva_snow  ,qsdew_snow  ,qsubl_snow  ,qfros_snow ,&
-                       sm          ,tref        ,qref        ,&
-                       trad        ,rst         ,assim       ,respc      ,&
-                       errore      ,emis        ,z0m         ,zol        ,&
-                       rib         ,ustar       ,qstar       ,tstar      ,&
-                       fm          ,fh          ,fq          ,pg_rain    ,&
-                       pg_snow     ,t_precip    ,qintr_rain  ,qintr_snow ,&
-                       snofrz      ,sabg_snow_lyr                         )
+                       slti          ,hlti          ,shti          ,hhti          ,&
+                       trda          ,trdm          ,trop          ,g1            ,&
+                       g0            ,gradm         ,binter        ,extkn         ,&
+                       forc_hgt_u    ,forc_hgt_t    ,forc_hgt_q    ,forc_us       ,&
+                       forc_vs       ,forc_t        ,forc_q        ,forc_rhoair   ,&
+                       forc_psrf     ,forc_pco2m    ,forc_hpbl     ,forc_po2m     ,&
+                       coszen        ,parsun        ,parsha        ,sabvsun       ,&
+                       sabvsha       ,sabg          ,sabg_soil     ,sabg_snow     ,&
+                       frl           ,extkb         ,extkd         ,thermk        ,&
+                       fsno          ,sigf          ,dz_soisno     ,z_soisno      ,&
+                       zi_soisno     ,tleaf         ,t_soisno      ,wice_soisno   ,&
+                       wliq_soisno   ,ldew          ,ldew_rain     ,ldew_snow     ,&
+                       fwet_snow     ,scv           ,snowdp        ,imelt         ,&
+                       taux          ,tauy          ,fsena         ,fevpa         ,&
+                       lfevpa        ,fsenl         ,fevpl         ,etr           ,&
+                       fseng         ,fevpg         ,olrg          ,fgrnd         ,&
+                       rootr         ,rootflux      ,&
+                       qseva         ,qsdew         ,qsubl         ,qfros         ,&
+                       qseva_soil    ,qsdew_soil    ,qsubl_soil    ,qfros_soil    ,&
+                       qseva_snow    ,qsdew_snow    ,qsubl_snow    ,qfros_snow    ,&
+                       sm            ,tref          ,qref          ,&
+                       trad          ,rst           ,assim         ,respc         ,&
+                       errore        ,emis          ,z0m           ,zol           ,&
+                       rib           ,ustar         ,qstar         ,tstar         ,&
+                       fm            ,fh            ,fq            ,pg_rain       ,&
+                       pg_snow       ,t_precip      ,qintr_rain    ,qintr_snow    ,&
+                       snofrz        ,sabg_snow_lyr                                )
 
 !=======================================================================
 ! this is the main subroutine to execute the calculation
@@ -272,6 +273,7 @@ CONTAINS
        ldew,         &! depth of water on foliage [kg/(m2 s)]
        ldew_rain,    &! depth of rain on foliage [kg/(m2 s)]
        ldew_snow,    &! depth of rain on foliage [kg/(m2 s)]
+       fwet_snow,    &! vegetation canopy snow fractional cover [-]
        scv,          &! snow cover, water equivalent [mm, kg/m2]
        snowdp         ! snow depth [m]
 
@@ -637,39 +639,39 @@ IF ( patchtype==0.and.DEF_USE_LCT .or. patchtype>0 ) THEN
          rstfacsun_out = rstfac
          rstfacsha_out = rstfac
 
-         CALL LeafTemperature(ipatch,1,deltim,csoilc,dewmx     ,htvp       ,&
-                 lai        ,sai        ,htop      ,hbot       ,sqrtdi     ,&
-                 effcon     ,vmax25     ,slti      ,hlti       ,shti       ,&
-                 hhti       ,trda       ,trdm      ,trop       ,g1         ,&
-                 g0         ,gradm      ,binter    ,extkn      ,extkb      ,&
-                 extkd      ,forc_hgt_u ,forc_hgt_t,forc_hgt_q ,forc_us    ,&
-                 forc_vs    ,thm        ,th        ,thv        ,forc_q     ,&
-                 forc_psrf  ,forc_rhoair,parsun    ,parsha     ,sabv       ,&
-                 frl        ,fsun       ,thermk,rstfacsun_out,rstfacsha_out,&
-                 gssun_out  ,gssha_out  ,forc_po2m ,forc_pco2m ,z0h_g      ,&
-                 obu_g      ,ustar_g    ,zlnd      ,zsno       ,fsno       ,&
-                 sigf       ,etrc       ,t_grnd    ,qg,rss     ,&
-                 t_soil     ,t_snow     ,q_soil    ,q_snow     ,dqgdT      ,&
-                 emg        ,tleaf      ,ldew      ,ldew_rain  ,ldew_snow  ,&
-                 taux       ,tauy       ,&
-                 fseng      ,fseng_soil ,fseng_snow,&
-                 fevpg      ,fevpg_soil ,fevpg_snow,&
-                 cgrnd      ,cgrndl     ,cgrnds    ,&
-                 tref       ,qref       ,rst       ,assim      ,respc      ,&
-                 fsenl      ,fevpl      ,etr       ,dlrad      ,ulrad      ,&
-                 z0m        ,zol        ,rib       ,ustar      ,qstar      ,&
-                 tstar      ,fm         ,fh        ,fq         ,rootfr     ,&
-                 kmax_sun    ,kmax_sha  ,kmax_xyl  ,kmax_root  ,psi50_sun  ,&
-                 psi50_sha   ,psi50_xyl ,psi50_root,ck         ,vegwp      ,&
-                 gs0sun      ,gs0sha                                       ,&
-                 assimsun_out,etrsun_out,assimsha_out          ,etrsha_out ,&
+         CALL LeafTemperature(ipatch,1,deltim,csoilc   ,dewmx       ,htvp        ,&
+                 lai         ,sai         ,htop        ,hbot        ,sqrtdi      ,&
+                 effcon      ,vmax25      ,slti        ,hlti        ,shti        ,&
+                 hhti        ,trda        ,trdm        ,trop        ,g1          ,&
+                 g0          ,gradm       ,binter      ,extkn       ,extkb       ,&
+                 extkd       ,forc_hgt_u  ,forc_hgt_t  ,forc_hgt_q  ,forc_us     ,&
+                 forc_vs     ,thm         ,th          ,thv         ,forc_q      ,&
+                 forc_psrf   ,forc_rhoair ,parsun      ,parsha      ,sabv        ,&
+                 frl         ,fsun        ,thermk    ,rstfacsun_out,rstfacsha_out,&
+                 gssun_out   ,gssha_out   ,forc_po2m   ,forc_pco2m  ,z0h_g       ,&
+                 obu_g       ,ustar_g     ,zlnd        ,zsno        ,fsno        ,&
+                 sigf        ,etrc        ,t_grnd      ,qg,rss      ,&
+                 t_soil      ,t_snow      ,q_soil      ,q_snow      ,dqgdT       ,&
+                 emg         ,tleaf       ,ldew        ,ldew_rain   ,ldew_snow   ,&
+                 fwet_snow   ,taux        ,tauy        ,&
+                 fseng       ,fseng_soil  ,fseng_snow  ,&
+                 fevpg       ,fevpg_soil  ,fevpg_snow  ,&
+                 cgrnd       ,cgrndl      ,cgrnds      ,&
+                 tref        ,qref        ,rst         ,assim       ,respc       ,&
+                 fsenl       ,fevpl       ,etr         ,dlrad       ,ulrad       ,&
+                 z0m         ,zol         ,rib         ,ustar       ,qstar       ,&
+                 tstar       ,fm          ,fh          ,fq          ,rootfr      ,&
+                 kmax_sun    ,kmax_sha    ,kmax_xyl    ,kmax_root   ,psi50_sun   ,&
+                 psi50_sha   ,psi50_xyl   ,psi50_root  ,ck          ,vegwp       ,&
+                 gs0sun      ,gs0sha                                             ,&
+                 assimsun_out,etrsun_out  ,assimsha_out             ,etrsha_out  ,&
 !Ozone stress variables
-                 o3coefv_sun ,o3coefv_sha ,o3coefg_sun ,o3coefg_sha, &
-                 lai_old     ,o3uptakesun ,o3uptakesha ,forc_ozone , &
+                 o3coefv_sun ,o3coefv_sha ,o3coefg_sun ,o3coefg_sha ,&
+                 lai_old     ,o3uptakesun ,o3uptakesha ,forc_ozone  ,&
 !end ozone stress variables
-                 forc_hpbl                                                 ,&
-                 qintr_rain  ,qintr_snow,t_precip  ,hprl       ,smp        ,&
-                 hk(1:)      ,hksati(1:),rootflux(1:)                       )
+                 forc_hpbl   ,&
+                 qintr_rain  ,qintr_snow  ,t_precip    ,hprl        ,smp         ,&
+                 hk(1:)      ,hksati(1:)  ,rootflux(1:)                           )
       ELSE
          tleaf         = forc_t
          laisun        = 0.
@@ -761,6 +763,7 @@ ENDIF
             laisha_p(i)    = 0.
             ldew_rain_p(i) = 0.
             ldew_snow_p(i) = 0.
+            fwet_snow_p(i) = 0.
             ldew_p(i)      = 0.
             rootr_p(:,i)   = 0.
             rootflux_p(:,i)= 0.
@@ -776,42 +779,39 @@ IF (DEF_USE_PFT .or. patchclass(ipatch)==CROPLAND) THEN
          p = pftclass(i)
          IF (lai_p(i)+sai_p(i) > 1e-6) THEN
 
-            CALL LeafTemperature(ipatch,p,deltim,csoilc,dewmx   ,htvp       ,&
-                 lai_p(i)   ,sai_p(i)   ,htop_p(i)  ,hbot_p(i)  ,sqrtdi_p(p),&
-                 effcon_p(p),vmax25_p(p),slti_p(p)  ,hlti_p(p)  ,shti_p(p)  ,&
-                 hhti_p(p)  ,trda_p(p)  ,trdm_p(p)  ,trop_p(p)  ,g1_p(p)    ,&
-                 g0_p(p)    ,gradm_p(p) ,binter_p(p),extkn_p(p) ,extkb_p(i) ,&
-                 extkd_p(i) ,forc_hgt_u ,forc_hgt_t ,forc_hgt_q ,forc_us    ,&
-                 forc_vs    ,thm        ,th         ,thv        ,forc_q     ,&
-                 forc_psrf  ,forc_rhoair,parsun_p(i),parsha_p(i),sabv_p(i)  ,&
-                 !TODO
-                 frl,  fsun_p(i)  ,thermk_p(i),rstfacsun_p(i),rstfacsha_p(i),&
-                 gssun_p(i) ,gssha_p(i) ,forc_po2m  ,forc_pco2m ,z0h_g      ,&
-                 obu_g      ,ustar_g    ,zlnd       ,zsno       ,fsno       ,&
-                 sigf_p(i)  ,etrc_p(i)  ,t_grnd     ,qg,rss     ,&
-                 t_soil     ,t_snow     ,q_soil     ,q_snow     ,&
-                 dqgdT      ,&
-                 !TODO
-                 emg        ,tleaf_p(i) ,ldew_p(i)  ,ldew_rain_p(i),ldew_snow_p(i),&
-                 taux_p(i)  ,tauy_p(i)  ,&
-                 fseng_p(i),fseng_soil_p(i),fseng_snow_p(i), &
-                 fevpg_p(i),fevpg_soil_p(i),fevpg_snow_p(i), &
-                 cgrnd_p(i) ,cgrndl_p(i),cgrnds_p(i),&
-                 tref_p(i)  ,qref_p(i)  ,rst_p(i)   ,assim_p(i) ,respc_p(i) ,&
-                 fsenl_p(i) ,fevpl_p(i) ,etr_p(i)   ,dlrad_p(i) ,ulrad_p(i) ,&
-                 z0m_p(i)   ,zol_p(i)   ,rib_p(i)   ,ustar_p(i) ,qstar_p(i) ,&
-                 tstar_p(i) ,fm_p(i)    ,fh_p(i)    ,fq_p(i)    ,rootfr_p(:,p),&
-                 kmax_sun_p(p) ,kmax_sha_p(p) ,kmax_xyl_p(p)  ,kmax_root_p(p) ,psi50_sun_p(p),&
-                 psi50_sha_p(p),psi50_xyl_p(p),psi50_root_p(p),ck_p(p)        ,vegwp_p(:,i)  ,&
-                 gs0sun_p(i)   ,gs0sha_p(i)                                                  ,&
-                 assimsun_p(i) ,etrsun_p(i)   ,assimsha_p(i)  ,etrsha_p(i)    ,&
+            CALL LeafTemperature(ipatch,p,deltim,csoilc      ,dewmx         ,htvp          ,&
+                 lai_p(i)      ,sai_p(i)      ,htop_p(i)     ,hbot_p(i)     ,sqrtdi_p(p)   ,&
+                 effcon_p(p)   ,vmax25_p(p)   ,slti_p(p)     ,hlti_p(p)     ,shti_p(p)     ,&
+                 hhti_p(p)     ,trda_p(p)     ,trdm_p(p)     ,trop_p(p)     ,g1_p(p)       ,&
+                 g0_p(p)       ,gradm_p(p)    ,binter_p(p)   ,extkn_p(p)    ,extkb_p(i)    ,&
+                 extkd_p(i)    ,forc_hgt_u    ,forc_hgt_t    ,forc_hgt_q    ,forc_us       ,&
+                 forc_vs       ,thm           ,th            ,thv           ,forc_q        ,&
+                 forc_psrf     ,forc_rhoair   ,parsun_p(i)   ,parsha_p(i)   ,sabv_p(i)     ,&
+                 frl           ,fsun_p(i)     ,thermk_p(i)   ,rstfacsun_p(i),rstfacsha_p(i),&
+                 gssun_p(i)    ,gssha_p(i)    ,forc_po2m     ,forc_pco2m    ,z0h_g         ,&
+                 obu_g         ,ustar_g       ,zlnd          ,zsno          ,fsno          ,&
+                 sigf_p(i)     ,etrc_p(i)     ,t_grnd        ,qg            ,rss           ,&
+                 t_soil        ,t_snow        ,q_soil        ,q_snow        ,dqgdT         ,&
+                 emg           ,tleaf_p(i)    ,ldew_p(i)     ,ldew_rain_p(i),ldew_snow_p(i),&
+                 fwet_snow_p(i),taux_p(i)     ,tauy_p(i)     ,&
+                 fseng_p(i)  ,fseng_soil_p(i),fseng_snow_p(i),&
+                 fevpg_p(i)  ,fevpg_soil_p(i),fevpg_snow_p(i),&
+                 cgrnd_p(i)    ,cgrndl_p(i)   ,cgrnds_p(i)   ,&
+                 tref_p(i)     ,qref_p(i)     ,rst_p(i)      ,assim_p(i)    ,respc_p(i)    ,&
+                 fsenl_p(i)    ,fevpl_p(i)    ,etr_p(i)      ,dlrad_p(i)    ,ulrad_p(i)    ,&
+                 z0m_p(i)      ,zol_p(i)      ,rib_p(i)      ,ustar_p(i)    ,qstar_p(i)    ,&
+                 tstar_p(i)    ,fm_p(i)       ,fh_p(i)       ,fq_p(i)       ,rootfr_p(:,p) ,&
+                 kmax_sun_p(p) ,kmax_sha_p(p) ,kmax_xyl_p(p) ,kmax_root_p(p),psi50_sun_p(p),&
+                 psi50_sha_p(p),psi50_xyl_p(p),psi50_root_p(p),ck_p(p)      ,vegwp_p(:,i)  ,&
+                 gs0sun_p(i)   ,gs0sha_p(i)                                                ,&
+                 assimsun_p(i) ,etrsun_p(i)   ,assimsha_p(i)  ,etrsha_p(i)  ,&
 !Ozone stress variables
-                 o3coefv_sun_p(i) ,o3coefv_sha_p(i) ,o3coefg_sun_p(i) ,o3coefg_sha_p(i),&
-                 lai_old_p(i), o3uptakesun_p(i) ,o3uptakesha_p(i) ,forc_ozone ,&
+                 o3coefv_sun_p(i) ,o3coefv_sha_p(i) ,o3coefg_sun_p(i) ,o3coefg_sha_p(i)    ,&
+                 lai_old_p(i)     ,o3uptakesun_p(i) ,o3uptakesha_p(i) ,forc_ozone          ,&
 !end ozone stress variables
-                 forc_hpbl                                                  ,&
-                 qintr_rain_p(i),qintr_snow_p(i),t_precip,hprl_p(i),smp     ,&
-                 hk(1:)      ,hksati(1:),rootflux_p(1:,i)                    )
+                 forc_hpbl                                                                 ,&
+                 qintr_rain_p(i),qintr_snow_p(i),t_precip     ,hprl_p(i)    ,smp           ,&
+                 hk(1:)        ,hksati(1:)    ,rootflux_p(1:,i)                             )
 
          ELSE
 
@@ -886,14 +886,14 @@ IF (DEF_USE_PC .and. patchclass(ipatch)/=CROPLAND) THEN
          sigf_p(ps:pe)     ,etrc_p(:)         ,t_grnd            ,qg,rss            ,dqgdT             ,&
          emg               ,t_soil            ,t_snow            ,q_soil            ,q_snow            ,&
          z0m_p(ps:pe)      ,tleaf_p(ps:pe)    ,ldew_p(ps:pe)     ,ldew_rain_p(ps:pe),ldew_snow_p(ps:pe),&
-         taux              ,tauy              ,fseng             ,fseng_soil        ,fseng_snow        ,&
-         fevpg             ,fevpg_soil        ,fevpg_snow        ,cgrnd             ,cgrndl            ,&
-         cgrnds            ,tref              ,qref              ,rst_p(ps:pe)      ,assim_p(ps:pe)    ,&
-         respc_p(ps:pe)    ,fsenl_p(ps:pe)    ,fevpl_p(ps:pe)    ,etr_p(ps:pe)      ,dlrad             ,&
-         ulrad             ,z0m               ,zol               ,rib               ,ustar             ,&
-         qstar             ,tstar             ,fm                ,fh                ,fq                ,&
-         vegwp_p(:,ps:pe)  ,gs0sun_p(ps:pe)   ,gs0sha_p(ps:pe)   ,assimsun_p(:)     ,etrsun_p(:)       ,&
-         assimsha_p(:)     ,etrsha_p(:)       ,&
+         fwet_snow(ps:pe)  ,taux              ,tauy              ,fseng             ,fseng_soil        ,&
+         fseng_snow        ,fevpg             ,fevpg_soil        ,fevpg_snow        ,cgrnd             ,&
+         cgrndl            ,cgrnds            ,tref              ,qref              ,rst_p(ps:pe)      ,&
+         assim_p(ps:pe)    ,respc_p(ps:pe)    ,fsenl_p(ps:pe)    ,fevpl_p(ps:pe)    ,etr_p(ps:pe)      ,&
+         dlrad             ,ulrad             ,z0m               ,zol               ,rib               ,&
+         ustar             ,qstar             ,tstar             ,fm                ,fh                ,&
+         fq                ,vegwp_p(:,ps:pe)  ,gs0sun_p(ps:pe)   ,gs0sha_p(ps:pe)   ,assimsun_p(:)     ,&
+         etrsun_p(:)       ,assimsha_p(:)     ,etrsha_p(:)       ,&
 !Ozone stress variables
          o3coefv_sun_p(ps:pe) ,o3coefv_sha_p(ps:pe) ,o3coefg_sun_p(ps:pe) ,o3coefg_sha_p(ps:pe) ,&
          lai_old_p(ps:pe)     ,o3uptakesun_p(ps:pe) ,o3uptakesha_p(ps:pe) ,forc_ozone           ,&
@@ -903,12 +903,13 @@ IF (DEF_USE_PC .and. patchclass(ipatch)/=CROPLAND) THEN
          smp                  ,hk(1:)               ,hksati(1:)           ,rootflux_p(:,:)       )
 ENDIF
 
-      ! aggragation PFTs to a patch
+      ! aggregat PFTs to a patch
       laisun        = sum( laisun_p    (ps:pe)*pftfrac(ps:pe) )
       laisha        = sum( laisha_p    (ps:pe)*pftfrac(ps:pe) )
       tleaf         = sum( tleaf_p     (ps:pe)*pftfrac(ps:pe) )
       ldew_rain     = sum( ldew_rain_p (ps:pe)*pftfrac(ps:pe) )
       ldew_snow     = sum( ldew_snow_p (ps:pe)*pftfrac(ps:pe) )
+      fwet_snow     = sum( fwet_snow_p (ps:pe)*pftfrac(ps:pe) )
       ldew          = sum( ldew_p      (ps:pe)*pftfrac(ps:pe) )
       ! may have problem with rst, but the same for LC
       rst           = sum( rst_p       (ps:pe)*pftfrac(ps:pe) )

@@ -29,7 +29,7 @@ CONTAINS
 
    SUBROUTINE albland (ipatch, patchtype, deltim,&
                       soil_s_v_alb,soil_d_v_alb,soil_s_n_alb,soil_d_n_alb,&
-                      chil,rho,tau,fveg,green,lai,sai,coszen,&
+                      chil,rho,tau,fveg,green,lai,sai,fwet_snow,coszen,&
                       wt,fsno,scv,scvold,sag,ssw,pg_snow,forc_t,t_grnd,t_soisno,dz_soisno,&
                       snl,wliq_soisno,wice_soisno,snw_rds,snofrz,&
                       mss_bcpho,mss_bcphi,mss_ocpho,mss_ocphi,&
@@ -58,18 +58,21 @@ CONTAINS
 ! Original author : Yongjiu Dai, 09/15/1999; 08/30/2002, 03/2014
 !
 ! !REVISIONS:
-! Hua Yuan, 12/2019: added a wrap FUNCTION for PFT calculation, details see
-!                    twostream_wrap() added a wrap FUNCTION for PC (3D) calculation,
-!                    details see ThreeDCanopy_wrap()
+! 12/2019, Hua Yuan: added a wrap FUNCTION for PFT calculation, details see
+!          twostream_wrap() added a wrap FUNCTION for PC (3D) calculation,
+!          details see ThreeDCanopy_wrap()
 !
-! Hua Yuan, 03/2020: added an improved two-stream model, details see
-!                    twostream_mod()
+! 03/2020, Hua Yuan: added an improved two-stream model, details see
+!          twostream_mod()
 !
-! Hua Yuan, 08/2020: account for stem optical property effects in twostream
-!                    model
+! 08/2020, Hua Yuan: account for stem optical property effects in twostream
+!          model
 !
-! Hua Yuan, 01/2023: CALL SNICAR model to calculate snow albedo&absorption,
-!                    added SNICAR related variables
+! 01/2023, Hua Yuan: CALL SNICAR model to calculate snow albedo&absorption,
+!          added SNICAR related variables
+!
+! 04/2024, Hua Yuan: add option to account for vegetation snow process
+!
 !=======================================================================
 
    USE MOD_Precision
@@ -112,6 +115,7 @@ CONTAINS
         green,        &! green leaf fraction
         lai,          &! leaf area index (LAI+SAI) [m2/m2]
         sai,          &! stem area index (LAI+SAI) [m2/m2]
+        fwet_snow,    &! vegetation snow fractional cover [-]
 
         coszen,       &! cosine of solar zenith angle [-]
         wt,           &! fraction of vegetation covered by snow [-]
@@ -402,7 +406,7 @@ ENDIF
          IF (patchtype == 0) THEN  !soil patches
 
 #if (defined LULC_USGS || defined LULC_IGBP)
-            CALL twostream (chil,rho,tau,green,lai,sai,&
+            CALL twostream (chil,rho,tau,green,lai,sai,fwet_snow,&
                             czen,albg,albv,tran,thermk,extkb,extkd,ssun,ssha)
 
             ! 08/31/2023, yuan: to be consistent with PFT and PC
@@ -411,7 +415,7 @@ ENDIF
             alb(:,:) = albv(:,:)
 #endif
          ELSE  !other patchtypes (/=0)
-            CALL twostream (chil,rho,tau,green,lai,sai,&
+            CALL twostream (chil,rho,tau,green,lai,sai,fwet_snow,&
                             czen,albg,albv,tran,thermk,extkb,extkd,ssun,ssha)
 
             ! 08/31/2023, yuan: to be consistent with PFT and PC
@@ -457,7 +461,7 @@ ENDIF
    END SUBROUTINE albland
 
 
-   SUBROUTINE twostream ( chil, rho, tau, green, lai, sai, &
+   SUBROUTINE twostream ( chil, rho, tau, green, lai, sai, fwet_snow, &
               coszen, albg, albv, tran, thermk, extkb, extkd, ssun, ssha )
 
 !-----------------------------------------------------------------------
@@ -470,6 +474,7 @@ ENDIF
 !-----------------------------------------------------------------------
 
    USE MOD_Precision
+   USE MOD_Namelist, only: DEF_VEG_SNOW
    IMPLICIT NONE
 
 ! parameters
@@ -482,7 +487,8 @@ ENDIF
           ! time-space varying vegetation parameters
             green,         &! green leaf fraction
             lai,           &! leaf area index of exposed canopy (snow-free)
-            sai             ! stem area index
+            sai,           &! stem area index
+            fwet_snow       ! vegetation snow fractional cover [-]
 
 ! environmental variables
    real(r8), intent(in) :: &
@@ -512,7 +518,7 @@ ENDIF
             zmu2,          &! (zmu * zmu)
             as,            &! (a-s(mu))
             upscat,        &! (omega-beta)
-            betao,         &! (beta-0)
+            beta0,         &! (beta-0)
             psi,           &! (h)
 
             be,            &! (b)
@@ -556,7 +562,13 @@ ENDIF
             eup(2,2),      &! (integral of i_up*exp(-kx) )
             edown(2,2)      ! (integral of i_down*exp(-kx) )
 
-   integer iw                !
+   ! vegetation snow optical properties
+   real(r8) :: upscat_sno = 0.5   !upscat parameter for snow
+   real(r8) :: beta0_sno  = 0.5   !beta0 parameter for snow
+   real(r8) :: scat_sno(2)        !snow single scattering albedo
+   data scat_sno(1), scat_sno(2) /0.8, 0.4/   ! 1:vis, 2: nir
+
+   integer iw               ! band iterator
 
 !-----------------------------------------------------------------------
 ! projected area of phytoelements in direction of mu and
@@ -611,11 +623,21 @@ ENDIF
                log ( ( proj + coszen * phi2 + coszen * phi1 ) / ( coszen * phi1 ) ) )
 
 ! account for stem optical property effects
+      !TODO-done: betao -> beta0
       upscat = lai/lsai*tau(iw,1) + sai_/lsai*tau(iw,2)
       ! 09/12/2014, yuan: a bug, change 1. - chil -> 1. + chil
       upscat = 0.5 * ( scat + ( scat - 2. * upscat ) * &
                (( 1. + chil ) / 2. ) ** 2 )
-      betao = ( 1. + zmu * extkb ) / ( scat * zmu * extkb ) * as
+      beta0 = ( 1. + zmu * extkb ) / ( scat * zmu * extkb ) * as
+
+! account for snow on vegetation
+      ! modify scat, upscat and beta0
+      ! USE: fwet_snow, snow properties, scatter vis0.8, nir0.4, upscat0.5, beta0.5
+      IF ( DEF_VEG_SNOW ) THEN
+         scat   =   (1.-fwet_snow)*scat        + fwet_snow*scat_sno(iw)
+         upscat = ( (1.-fwet_snow)*scat*upscat + fwet_snow*scat_sno(iw)*upscat_sno ) / scat
+         beta0  = ( (1.-fwet_snow)*scat*beta0  + fwet_snow*scat_sno(iw)*beta0_sno  ) / scat
+      ENDIF
 
 !-----------------------------------------------------------------------
 !     intermediate variables identified in appendix of SE-85.
@@ -623,8 +645,8 @@ ENDIF
 
       be = 1. - scat + upscat
       ce = upscat
-      de = scat * zmu * extkb * betao
-      fe = scat * zmu * extkb * ( 1. - betao )
+      de = scat * zmu * extkb * beta0
+      fe = scat * zmu * extkb * ( 1. - beta0 )
 
       psi = sqrt(be**2 - ce**2)/zmu
       power1 = min( psi*lsai, 50. )
@@ -746,12 +768,12 @@ ENDIF
       tran(iw,2) = hh9 * s1 + hh10 / s1
 
       IF (abs(sigma) .gt. 1.e-10) THEN
-         eup(iw,2)   = hh7 * (1. - s1*s2) / (extkb + psi) &
-                     + hh8 * (1. - s2/s1) / (extkb - psi)
-         edown(iw,2) = hh9 * (1. - s1*s2) / (extkb + psi) &
+         eup(iw,2)   = hh7  * (1. - s1*s2) / (extkb + psi) &
+                     + hh8  * (1. - s2/s1) / (extkb - psi)
+         edown(iw,2) = hh9  * (1. - s1*s2) / (extkb + psi) &
                      + hh10 * (1. - s2/s1) / (extkb - psi)
       ELSE
-         eup(iw,2)   = hh7 * (1. - s1*s2) / ( extkb + psi) + hh8 * (lsai - 0.)
+         eup(iw,2)   = hh7 * (1. - s1*s2) / ( extkb + psi) + hh8  * (lsai - 0.)
          edown(iw,2) = hh9 * (1. - s1*s2) / ( extkb + psi) + hh10 * (lsai - 0.)
       ENDIF
 
@@ -770,7 +792,7 @@ ENDIF
 
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
-   SUBROUTINE twostream_mod ( chil, rho, tau, green, lai, sai, &
+   SUBROUTINE twostream_mod ( chil, rho, tau, green, lai, sai, fwet_snow, &
               coszen, albg, albv, tran, thermk, extkb, extkd, ssun, ssha )
 
 !-----------------------------------------------------------------------
@@ -790,6 +812,7 @@ ENDIF
 !-----------------------------------------------------------------------
 
    USE MOD_Precision
+   USE MOD_Namelist, only: DEF_VEG_SNOW
    IMPLICIT NONE
 
 ! parameters
@@ -802,7 +825,8 @@ ENDIF
           ! time-space varying vegetation parameters
             green,         &! green leaf fraction
             lai,           &! leaf area index of exposed canopy (snow-free)
-            sai             ! stem area index
+            sai,           &! stem area index
+            fwet_snow       ! vegetation snow fractional cover [-]
 
 ! environmental variables
    real(r8), intent(in) :: &
@@ -831,7 +855,7 @@ ENDIF
             zmu2,          &! (zmu * zmu)
             as,            &! (a-s(mu))
             upscat,        &! (omega-beta)
-            betao,         &! (beta-0)
+            beta0,         &! (beta-0)
             psi,           &! (h)
 
             be,            &! (b)
@@ -874,6 +898,12 @@ ENDIF
 
             eup,           &! (integral of i_up*exp(-kx) )
             edw             ! (integral of i_down*exp(-kx) )
+
+   ! vegetation snow optical properties
+   real(r8) :: upscat_sno = 0.5   !upscat parameter for snow
+   real(r8) :: beta0_sno  = 0.5   !beta0 parameter for snow
+   real(r8) :: scat_sno(2)        !snow single scattering albedo
+   data scat_sno(1), scat_sno(2) /0.8, 0.4/   ! 1:vis, 2: nir
 
    integer iw                ! band loop index
    integer ic                ! direct/diffuse loop index
@@ -950,15 +980,24 @@ ENDIF
 ! + stem optical properties
       ! scat ~ omega
       ! upscat ~ betail*scat
-      ! betao ~ betadl
+      ! beta0 ~ betadl
       ! scat-2.*upscat ~ rho - tau
       upscat = lai/lsai*tau(iw,1) + sai/lsai*tau(iw,2)
       upscat = 0.5 * ( scat + ( scat - 2. * upscat ) * &
                (( 1. + chil ) / 2. ) ** 2 )
-      betao = ( 1. + zmu * extkb ) / ( scat * zmu * extkb ) * as
+      beta0 = ( 1. + zmu * extkb ) / ( scat * zmu * extkb ) * as
 
       ! [MODI 1]
-      betao = 0.5_r8 * ( scat + 1._r8/extkb*(1._r8+chil)**2/4._r8*(wrho-wtau) )/scat
+      beta0 = 0.5_r8 * ( scat + 1._r8/extkb*(1._r8+chil)**2/4._r8*(wrho-wtau) )/scat
+
+! account for snow on vegetation
+      ! modify scat, upscat and beta0
+      ! USE: fwet_snow, snow properties, scatter vis0.8, nir0.4, upscat0.5, beta0.5
+      IF ( DEF_VEG_SNOW ) THEN
+         scat   =   (1.-fwet_snow)*scat        + fwet_snow*scat_sno(iw)
+         upscat = ( (1.-fwet_snow)*scat*upscat + fwet_snow*scat_sno(iw)*upscat_sno ) / scat
+         beta0  = ( (1.-fwet_snow)*scat*beta0  + fwet_snow*scat_sno(iw)*beta0_sno  ) / scat
+      ENDIF
 
 !-----------------------------------------------------------------------
 !     intermediate variables identified in appendix of SE-85.
@@ -966,8 +1005,8 @@ ENDIF
 
       be = 1. - scat + upscat
       ce = upscat
-      de = scat * zmu * extkb * betao
-      fe = scat * zmu * extkb * ( 1. - betao )
+      de = scat * zmu * extkb * beta0
+      fe = scat * zmu * extkb * ( 1. - beta0 )
 
       psi = sqrt(be**2 - ce**2)/zmu
       power1 = min( psi*lsai, 50. )
@@ -1191,7 +1230,7 @@ ENDIF
          p = pftclass(i)
          IF (lai_p(i)+sai_p(i) > 1.e-6) THEN
             CALL twostream_mod (chil_p(p),rho_p(:,:,p),tau_p(:,:,p),1.,lai_p(i),sai_p(i),&
-               coszen,albg,albv_p(:,:,i),tran_p(:,:,i),thermk_p(i),&
+               fwet_snow_p(i),coszen,albg,albv_p(:,:,i),tran_p(:,:,i),thermk_p(i),&
                extkb_p(i),extkd_p(i),ssun_p(:,:,i),ssha_p(:,:,i))
          ELSE
             albv_p(:,:,i) = albg(:,:)

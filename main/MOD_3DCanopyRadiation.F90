@@ -43,6 +43,7 @@ CONTAINS
 !
 
    USE MOD_Precision
+   USE MOD_Namelist, only: DEF_VEG_SNOW
    USE MOD_LandPFT, only: patch_pft_s, patch_pft_e
    USE MOD_Vars_Global
    USE MOD_Const_PFT
@@ -71,6 +72,11 @@ CONTAINS
    real(r8), allocatable :: csiz(:), chgt(:), chil(:), lsai(:)
    real(r8), allocatable :: fsun_id(:), fsun_ii(:), psun(:)
    real(r8), allocatable :: phi1(:), phi2(:), gdir(:)
+
+   ! vegetation snow optical properties, 1:vis, 2:nir
+   real(r8) :: rho_sno(2), tau_sno(2)
+   data rho_sno(1), rho_sno(2) /0.6, 0.3/
+   data tau_sno(1), tau_sno(2) /0.2, 0.1/
 
       ! get patch PFT index
       ps = patch_pft_s(ipatch)
@@ -122,6 +128,14 @@ CONTAINS
             tau(i,:) = tau_p(:,1,p)*lai_p(i)/lsai(i) &
                      + tau_p(:,2,p)*sai_p(i)/lsai(i)
          ENDIF
+
+         ! account for snow on vegetation
+         IF ( DEF_VEG_SNOW ) THEN
+            ! modify rho, tau, USE: fwet_snow_p
+            rho(i,:) = (1-fwet_snow_p(i))*rho(i,:) + fwet_snow_p(i)*rho_sno(:)
+            tau(i,:) = (1-fwet_snow_p(i))*tau(i,:) + fwet_snow_p(i)*tau_sno(:)
+         ENDIF
+
       ENDDO
 
       ! CALL 3D canopy radiation transfer model

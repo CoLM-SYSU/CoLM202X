@@ -75,7 +75,7 @@ MODULE MOD_Lulcc_Driver
 
 
       ! =============================================================
-      ! simple method for variable recovery
+      ! 1. Same Type Assignment (SAT) scheme for variable recovery
       ! =============================================================
 
       IF (DEF_LULCC_SCHEME == 1) THEN
@@ -87,7 +87,7 @@ MODULE MOD_Lulcc_Driver
 
 
       ! =============================================================
-      ! conserved method for variable revocery
+      ! 2. Mass and Energy conservation (MEC) scheme for variable revocery
       ! =============================================================
 
       IF (DEF_LULCC_SCHEME == 2) THEN

@@ -29,6 +29,7 @@ MODULE MOD_Vars_PFTimeVariables
    real(r8), allocatable :: ldew_p       (:) !depth of water on foliage [mm]
    real(r8), allocatable :: ldew_rain_p  (:) !depth of rain on foliage [mm]
    real(r8), allocatable :: ldew_snow_p  (:) !depth of snow on foliage [mm]
+   real(r8), allocatable :: fwet_snow_p  (:) !vegetation snow fractional cover [-]
    real(r8), allocatable :: sigf_p       (:) !fraction of veg cover, excluding snow-covered veg [-]
    real(r8), allocatable :: tlai_p       (:) !leaf area index
    real(r8), allocatable :: lai_p        (:) !leaf area index
@@ -98,6 +99,7 @@ CONTAINS
             allocate (ldew_p       (numpft)) ; ldew_p       (:) = spval !depth of water on foliage [mm]
             allocate (ldew_rain_p  (numpft)) ; ldew_rain_p  (:) = spval !depth of rain on foliage [mm]
             allocate (ldew_snow_p  (numpft)) ; ldew_snow_p  (:) = spval !depth of snow on foliage [mm]
+            allocate (fwet_snow_p  (numpft)) ; fwet_snow_p  (:) = spval !vegetation snow fractional cover [-]
             allocate (sigf_p       (numpft)) ; sigf_p       (:) = spval !fraction of veg cover, excluding snow-covered veg [-]
             allocate (tlai_p       (numpft)) ; tlai_p       (:) = spval !leaf area index
             allocate (lai_p        (numpft)) ; lai_p        (:) = spval !leaf area index
@@ -153,8 +155,9 @@ CONTAINS
 
       CALL ncio_read_vector (file_restart, 'tleaf_p  ', landpft, tleaf_p    ) !
       CALL ncio_read_vector (file_restart, 'ldew_p   ', landpft, ldew_p     ) !
-      CALL ncio_read_vector (file_restart, 'ldew_rain_p', landpft, ldew_rain_p) !depth of rain on foliage [mm]
-      CALL ncio_read_vector (file_restart, 'ldew_snow_p', landpft, ldew_snow_p) !depth of snow on foliage [mm]
+      CALL ncio_read_vector (file_restart, 'ldew_rain_p',landpft,ldew_rain_p) !
+      CALL ncio_read_vector (file_restart, 'ldew_snow_p',landpft,ldew_snow_p) !
+      CALL ncio_read_vector (file_restart, 'fwet_snow_p',landpft,fwet_snow_p) !
       CALL ncio_read_vector (file_restart, 'sigf_p   ', landpft, sigf_p     ) !
       CALL ncio_read_vector (file_restart, 'tlai_p   ', landpft, tlai_p     ) !
       CALL ncio_read_vector (file_restart, 'lai_p    ', landpft, lai_p      ) !
@@ -218,8 +221,9 @@ ENDIF
 
       CALL ncio_write_vector (file_restart, 'tleaf_p  ', 'pft', landpft, tleaf_p  , compress) !
       CALL ncio_write_vector (file_restart, 'ldew_p   ', 'pft', landpft, ldew_p   , compress) !
-      CALL ncio_write_vector (file_restart, 'ldew_rain_p', 'pft', landpft, ldew_rain_p, compress) !depth of rain on foliage [mm]
-      CALL ncio_write_vector (file_restart, 'ldew_snow_p', 'pft', landpft, ldew_snow_p, compress) !depth of snow on foliage [mm]
+      CALL ncio_write_vector (file_restart, 'ldew_rain_p','pft',landpft, ldew_rain_p,compress)!
+      CALL ncio_write_vector (file_restart, 'ldew_snow_p','pft',landpft, ldew_snow_p,compress)!
+      CALL ncio_write_vector (file_restart, 'fwet_snow_p','pft',landpft, fwet_snow_p,compress)!
       CALL ncio_write_vector (file_restart, 'sigf_p   ', 'pft', landpft, sigf_p   , compress) !
       CALL ncio_write_vector (file_restart, 'tlai_p   ', 'pft', landpft, tlai_p   , compress) !
       CALL ncio_write_vector (file_restart, 'lai_p    ', 'pft', landpft, lai_p    , compress) !
@@ -269,8 +273,9 @@ ENDIF
          IF (numpft > 0) THEN
             deallocate (tleaf_p  ) !leaf temperature [K]
             deallocate (ldew_p   ) !depth of water on foliage [mm]
-            deallocate (ldew_rain_p)
-            deallocate (ldew_snow_p)
+            deallocate (ldew_rain_p)!depth of rain on foliage [mm]
+            deallocate (ldew_snow_p)!depth of snow on foliage [mm]
+            deallocate (fwet_snow_p)!vegetation snow fractional cover [-]
             deallocate (sigf_p   ) !fraction of veg cover, excluding snow-covered veg [-]
             deallocate (tlai_p   ) !leaf area index
             deallocate (lai_p    ) !leaf area index
@@ -322,8 +327,9 @@ ENDIF
 
       CALL check_vector_data ('tleaf_p  ', tleaf_p  )      !
       CALL check_vector_data ('ldew_p   ', ldew_p   )      !
-      CALL check_vector_data ('ldew_rain_p', ldew_rain_p ) !depth of rain on foliage [mm]
-      CALL check_vector_data ('ldew_snow_p', ldew_snow_p ) !depth of snow on foliage [mm]
+      CALL check_vector_data ('ldew_rain_p',ldew_rain_p )  !
+      CALL check_vector_data ('ldew_snow_p',ldew_snow_p )  !
+      CALL check_vector_data ('fwet_snow_p',fwet_snow_p )  !
       CALL check_vector_data ('sigf_p   ', sigf_p   )      !
       CALL check_vector_data ('tlai_p   ', tlai_p   )      !
       CALL check_vector_data ('lai_p    ', lai_p    )      !
@@ -433,6 +439,7 @@ MODULE MOD_Vars_TimeVariables
    real(r8), allocatable :: ldew          (:) ! depth of water on foliage [mm]
    real(r8), allocatable :: ldew_rain     (:) ! depth of rain on foliage [mm]
    real(r8), allocatable :: ldew_snow     (:) ! depth of rain on foliage [mm]
+   real(r8), allocatable :: fwet_snow     (:) ! vegetation snow fractional cover [-]
    real(r8), allocatable :: sag           (:) ! non dimensional snow age [-]
    real(r8), allocatable :: scv           (:) ! snow cover, water equivalent [mm]
    real(r8), allocatable :: snowdp        (:) ! snow depth [meter]
@@ -585,6 +592,7 @@ CONTAINS
             allocate (ldew                        (numpatch)); ldew          (:) = spval
             allocate (ldew_rain                   (numpatch)); ldew_rain     (:) = spval
             allocate (ldew_snow                   (numpatch)); ldew_snow     (:) = spval
+            allocate (fwet_snow                   (numpatch)); fwet_snow     (:) = spval
             allocate (sag                         (numpatch)); sag           (:) = spval
             allocate (scv                         (numpatch)); scv           (:) = spval
             allocate (snowdp                      (numpatch)); snowdp        (:) = spval
@@ -741,6 +749,7 @@ CONTAINS
             deallocate (ldew                   )
             deallocate (ldew_rain              )
             deallocate (ldew_snow              )
+            deallocate (fwet_snow              )
             deallocate (sag                    )
             deallocate (scv                    )
             deallocate (snowdp                 )
@@ -961,6 +970,7 @@ ENDIF
       CALL ncio_write_vector (file_restart, 'ldew    '   , 'patch', landpatch, ldew      , compress)                    ! depth of water on foliage [mm]
       CALL ncio_write_vector (file_restart, 'ldew_rain'  , 'patch', landpatch, ldew_rain , compress)                    ! depth of water on foliage [mm]
       CALL ncio_write_vector (file_restart, 'ldew_snow'  , 'patch', landpatch, ldew_snow , compress)                    ! depth of water on foliage [mm]
+      CALL ncio_write_vector (file_restart, 'fwet_snow'  , 'patch', landpatch, fwet_snow , compress)                    ! vegetation snow fractional cover [-]
       CALL ncio_write_vector (file_restart, 'sag     '   , 'patch', landpatch, sag       , compress)                    ! non dimensional snow age [-]
       CALL ncio_write_vector (file_restart, 'scv     '   , 'patch', landpatch, scv       , compress)                    ! snow cover, water equivalent [mm]
       CALL ncio_write_vector (file_restart, 'snowdp  '   , 'patch', landpatch, snowdp    , compress)                    ! snow depth [meter]
@@ -1125,6 +1135,7 @@ ENDIF
       CALL ncio_read_vector (file_restart, 'ldew    '   , landpatch, ldew       ) ! depth of water on foliage [mm]
       CALL ncio_read_vector (file_restart, 'ldew_rain'  , landpatch, ldew_rain  ) ! depth of rain on foliage [mm]
       CALL ncio_read_vector (file_restart, 'ldew_snow'  , landpatch, ldew_snow  ) ! depth of snow on foliage [mm]
+      CALL ncio_read_vector (file_restart, 'fwet_snow'  , landpatch, fwet_snow  ) ! vegetation snow fractional cover [-]
       CALL ncio_read_vector (file_restart, 'sag     '   , landpatch, sag        ) ! non dimensional snow age [-]
       CALL ncio_read_vector (file_restart, 'scv     '   , landpatch, scv        ) ! snow cover, water equivalent [mm]
       CALL ncio_read_vector (file_restart, 'snowdp  '   , landpatch, snowdp     ) ! snow depth [meter]
@@ -1258,6 +1269,7 @@ ENDIF
       CALL check_vector_data ('ldew        [mm]   ', ldew       ) ! depth of water on foliage [mm]
       CALL check_vector_data ('ldew_rain   [mm]   ', ldew_rain  ) ! depth of rain on foliage [mm]
       CALL check_vector_data ('ldew_snow   [mm]   ', ldew_snow  ) ! depth of snow on foliage [mm]
+      CALL check_vector_data ('fwet_snow   [mm]   ', fwet_snow  ) ! vegetation snow fractional cover [-]
       CALL check_vector_data ('sag         [-]    ', sag        ) ! non dimensional snow age [-]
       CALL check_vector_data ('scv         [mm]   ', scv        ) ! snow cover, water equivalent [mm]
       CALL check_vector_data ('snowdp      [m]    ', snowdp     ) ! snow depth [meter]
