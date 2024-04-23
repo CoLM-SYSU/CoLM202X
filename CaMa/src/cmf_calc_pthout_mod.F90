@@ -123,7 +123,7 @@ CONTAINS
       ENDDO
 !$OMP END PARALLEL DO
 
-      D2PTHOUT(:,:)=P2PTHOUT(:,:)
+      D2PTHOUT(1:NSEQALL,1)=P2PTHOUT(1:NSEQALL,1)
 
 #ifndef NoAtom_CMF
 !$OMP PARALLEL DO  !! No OMP Atomic for bit-identical simulation (set in Mkinclude)
@@ -156,7 +156,7 @@ CONTAINS
 !$OMP END PARALLEL DO  !! No OMP Atomic for bit-identical simulation (set in Mkinclude)
 #endif
 
-      D2PTHINF(:,:)=P2PTHINF(:,:)
+   D2PTHINF(1:NSEQALL,1)=P2PTHINF(1:NSEQALL,1)
 
    END SUBROUTINE CMF_CALC_PTHOUT
 !####################################################################
