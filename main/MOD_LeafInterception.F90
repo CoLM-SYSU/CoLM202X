@@ -130,7 +130,7 @@ CONTAINS
 
 !REVISION HISTORY
 !----------------
-   !---2024.04.16  Hua Yuan: add option to account for vegetation snow process
+   !---2024.04.16  Hua Yuan: add option to account for vegetation snow process based on Niu et al., 2004
    !---2023.02.21  Zhongwang Wei @ SYSU : Snow and rain interception
    !---2021.12.08  Zhongwang Wei @ SYSU
    !---2019.06     Hua Yuan: remove sigf and USE lai+sai for judgement.

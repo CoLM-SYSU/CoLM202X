@@ -460,7 +460,7 @@ CONTAINS
         egsmax             ,&! max. evaporation which soil can provide at one time step
         egidif             ,&! the excess of evaporation over "egsmax"
         emg                ,&! ground emissivity (0.97 for snow,
-                                         ! glaciers and water surface; 0.96 for soil and wetland)
+                             ! glaciers and water surface; 0.96 for soil and wetland)
         etrc               ,&! maximum possible transpiration rate [mm/s]
         fac                ,&! soil wetness of surface layer
         factr(lbr:nl_roof) ,&! used in computing tridiagonal matrix
