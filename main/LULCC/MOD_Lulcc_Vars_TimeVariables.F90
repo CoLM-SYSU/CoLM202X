@@ -2,18 +2,19 @@
 
 MODULE MOD_Lulcc_Vars_TimeVariables
 
-! ======================================================================
-! Created by Hua Yuan, 04/2022
+!-----------------------------------------------------------------------
+!
+!  Created by Hua Yuan, 04/2022
 !
 !
 ! !REVISIONS:
 !
-! 07/2023, Wenzong Dong: porting to MPI version
-! 08/2023, Hua Yuan: unified PFT and PC process
-! 10/2023, Wanyi Lin: check with MOD_Vars_TimeVariables.F90, add variables,
-!          and remove unnecessary variables
+!  07/2023, Wenzong Dong: porting to MPI version
+!  08/2023, Hua Yuan: unified PFT and PC process
+!  10/2023, Wanyi Lin: check with MOD_Vars_TimeVariables.F90, add variables,
+!           and remove unnecessary variables
 !
-! ======================================================================
+!-----------------------------------------------------------------------
 
    USE MOD_Precision
    USE MOD_Vars_Global

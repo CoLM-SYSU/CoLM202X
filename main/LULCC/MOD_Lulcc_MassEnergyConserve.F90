@@ -3,7 +3,6 @@
 #ifdef LULCC
 MODULE MOD_Lulcc_MassEnergyConserve
 
-!-----------------------------------------------------------------------
    USE MOD_Precision
    IMPLICIT NONE
    SAVE
@@ -11,37 +10,36 @@ MODULE MOD_Lulcc_MassEnergyConserve
 ! PUBLIC MEMBER FUNCTIONS:
    PUBLIC :: LulccMassEnergyConserve
 
-!-----------------------------------------------------------------------
-
 CONTAINS
 
-!-----------------------------------------------------------------------
 
    SUBROUTINE LulccMassEnergyConserve
-! ======================================================================
-!
-! Created by Wanyi Lin and Hua Yuan, 07/2023
+
+!-----------------------------------------------------------------------
 !
 ! !DESCRIPTION
-! This is the main subroutine to execute the calculation of the restart
-! variables for the begin of next year.
-! There are mainly three ways to adjust restart variables:
+!  This is the main subroutine to execute the calculation of the restart
+!  variables for the begin of next year.
+!  There are mainly three ways to adjust restart variables:
 !
-! 1) variable related to mass: area weighted mean of the source patches,
-!    e.g., ldew, wliq_soisno.
-!    variable related to energy: keep energy conserve after the change
-!    of temperature, e.g., t_soisno.
+!  1) variable related to mass: area weighted mean of the source patches,
+!     e.g., ldew, wliq_soisno.
+!     variable related to energy: keep energy conserve after the change
+!     of temperature, e.g., t_soisno.
 !
-! 2) recalculate according to physical process, e.g., dz_sno, scv, fsno.
+!  2) recalculate according to physical process, e.g., dz_sno, scv, fsno.
 !
-! !REVISONS:
+!  Created by Wanyi Lin and Hua Yuan, 07/2023
 !
-! 10/2023, Wanyi Lin: share the codes with REST_LulccTimeVariables(), and
-!                     simplify the codes in this subroutine.
+! !REVISIONS:
 !
-! 01/2024, Wanyi Lin: use "enthalpy conservation" for snow layer temperature
-!                     calculation.
-! ======================================================================
+!  10/2023, Wanyi Lin: share the codes with REST_LulccTimeVariables(), and
+!           simplify the codes in this subroutine.
+!
+!  01/2024, Wanyi Lin: use "enthalpy conservation" for snow layer
+!           temperature calculation.
+!
+!-----------------------------------------------------------------------
 
 
    USE MOD_Precision

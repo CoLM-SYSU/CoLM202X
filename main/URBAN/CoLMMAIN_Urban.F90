@@ -1,26 +1,61 @@
 #include <define.h>
 
-!.......................................................................
+!-----------------------------------------------------------------------
 !
-!         --- CoLM 3D (Building Community) Urban Model ---
+!            --- CoLM 3D Building Community Urban Model ---
 !
-!              Sun
-!               \\\
-!                \\\
-!                       ______
-!                      |++++++|              roof
-!                      |++++++|_ AC         ______
-!                      |++++++|_|  ___     |++++++|
-!                  ______+++++|   |||||    |++++++|
-!                 |++++++|++++|  |||||||   |++++++|
-!          sunlit |[]++[]|++++|   |||||    |++++++| shaded
-!           wall  |++++++|          | tree |++++++|  wall
-!                 |[]++[]|          |      |++++++|
-!                 |++++++|  impervious/pervious ground
-!       __________|++++++|___________________________________
-!///////////////////////////////////////////////////////////////////////
+!                Sun
+!                 \\\
+!                  \\\
+!                         ______
+!                        |++++++|              roof
+!                        |++++++|_ AC         ______
+!                        |++++++|_|  ___     |++++++|
+!                    ______+++++|   |||||    |++++++|
+!                   |++++++|++++|  |||||||   |++++++|
+!            sunlit |[]++[]|++++|   |||||    |++++++| shaded
+!             wall  |++++++|          | tree |++++++|  wall
+!                   |[]++[]|          |      |++++++|
+!                   |++++++|  impervious/pervious ground
+!         __________|++++++|____________________________________
+!
+! !DESCRIPTION:
+!
+!  Unlike the traditional urban canyon model, the CoLM urban model is
+!  based on the assumption of a three-dimensional urban building
+!  community, including trees and water bodies. We have developed a new
+!  approach for shortwave and longwave radiation transfer, as well as
+!  turbulent exchange within the three-dimensional urban buildings. In
+!  the process of calculating radiation transfer and turbulent exchange,
+!  simulation of vegetation and water bodies has been added. The CoLM
+!  urban model uses comprehensive high-resolution data on urban cover,
+!  geometric structure, vegetation, water bodies, etc., and has
+!  developed a complete simulation of anthropogenic heat processes,
+!  including building energy consumption, traffic heat, and metabolic
+!  heat.
+!
+!  Created by Hua Yuan, 09/2021
+!
+!
+! !REVISIONS:
+!
+!  03/2022, Hua Yuan: complete the model with full coupling, and make
+!           it possible to run multiple scenario assumptions  through
+!           macro definitions.
+!
+!  07/2022, Wenzong Dong: add LUCY model initial version.
+!
+!  05/2023, Hua Yuan: Initial urban physical codes in MPI version. Add
+!           some interface or modifications for Urban model coupling.
+!
+!  05/2023, Wenzong Dong, Hua Yuan, Shupeng Zhang: porting urban making
+!           surface data codes to MPI parallel version.
+!
+!  05/2023, Hua Yuan: Rename files and modules to current version.
+!
+!-----------------------------------------------------------------------
 
-SUBROUTINE CoLMMAIN_Urban ( &
+   SUBROUTINE CoLMMAIN_Urban ( &
 
          ! model running information
            ipatch       ,idate        ,coszen       ,deltim       ,&
@@ -138,49 +173,49 @@ SUBROUTINE CoLMMAIN_Urban ( &
            ustar        ,qstar        ,tstar        ,fm           ,&
            fh           ,fq           ,hpbl                       )
 
-  USE MOD_Precision
-  USE MOD_Vars_Global
-  USE MOD_Const_Physical, only: tfrz, denh2o, denice
-  USE MOD_Vars_TimeVariables, only: tlai, tsai
-  USE MOD_SnowLayersCombineDivide
-  USE MOD_LeafInterception
-  USE MOD_Urban_Albedo
-  USE MOD_Urban_NetSolar
-  USE MOD_Urban_Thermal
-  USE MOD_Urban_Hydrology
-  USE MOD_Lake
-  USE MOD_TimeManager
-  USE MOD_RainSnowTemp, only: rain_snow_temp
-  USE MOD_NewSnow, only: newsnow
-  USE MOD_OrbCoszen, only: orb_coszen
-  USE MOD_SnowFraction, only: snowfraction
-  USE MOD_ALBEDO, only: snowage
-  USE MOD_Qsadv, only: qsadv
+   USE MOD_Precision
+   USE MOD_Vars_Global
+   USE MOD_Const_Physical, only: tfrz, denh2o, denice
+   USE MOD_Vars_TimeVariables, only: tlai, tsai
+   USE MOD_SnowLayersCombineDivide
+   USE MOD_LeafInterception
+   USE MOD_Urban_Albedo
+   USE MOD_Urban_NetSolar
+   USE MOD_Urban_Thermal
+   USE MOD_Urban_Hydrology
+   USE MOD_Lake
+   USE MOD_TimeManager
+   USE MOD_RainSnowTemp, only: rain_snow_temp
+   USE MOD_NewSnow, only: newsnow
+   USE MOD_OrbCoszen, only: orb_coszen
+   USE MOD_SnowFraction, only: snowfraction
+   USE MOD_ALBEDO, only: snowage
+   USE MOD_Qsadv, only: qsadv
 #ifdef USE_LUCY
-  USE MOD_Urban_LUCY
+   USE MOD_Urban_LUCY
 #endif
 
-  IMPLICIT NONE
+   IMPLICIT NONE
 
 ! ------------------------ Dummy Argument ------------------------------
-  integer, intent(in) :: &
+   integer, intent(in) :: &
         ipatch                ,&! maximum number of snow layers
         idate(3)              ,&! next time-step /year/julian day/second in a day/
         patchclass            ,&! land cover type of USGS classification or others
         patchtype               ! land patch type (0=soil, 1=urban and built-up,
                                 ! 2=wetland, 3=land ice, 4=land water bodies, 99 = ocean)
 
-  real(r8),intent(in) :: &
+   real(r8),intent(in) :: &
         deltim                ,&! seconds in a time step [second]
         patchlonr             ,&! logitude in radians
         patchlatr               ! latitude in radians
 
-  real(r8),intent(inout) :: &
+   real(r8),intent(inout) :: &
         coszen                  ! cosine of solar zenith angle
 
-! Parameters
-! ----------------------
-  real(r8), intent(in) :: &
+   ! Parameters
+   ! ----------------------
+   real(r8), intent(in) :: &
         fix_holiday(365)      ,&! Fixed public holidays, holiday(0) or workday(1)
         week_holiday(7)       ,&! week holidays
         hum_prof(24)          ,&! Diurnal metabolic heat profile
@@ -189,7 +224,7 @@ SUBROUTINE CoLMMAIN_Urban ( &
         pop_den               ,&! population density
         vehicle(3)              ! vehicle numbers per thousand people
 
-  real(r8), intent(in) :: &
+   real(r8), intent(in) :: &
         froof                 ,&! roof fractional cover [-]
         fgper                 ,&! impervious fraction to ground area [-]
         flake                 ,&! lake fraction to ground area [-]
@@ -200,7 +235,7 @@ SUBROUTINE CoLMMAIN_Urban ( &
         em_gimp               ,&! emissivity of impervious [-]
         em_gper                 ! emissivity of pervious [-]
 
-  real(r8), intent(in) :: &
+   real(r8), intent(in) :: &
         cv_roof   (1:nl_roof) ,&! heat capacity of roof [J/(m2 K)]
         cv_wall   (1:nl_wall) ,&! heat capacity of wall [J/(m2 K)]
         cv_gimp   (1:nl_soil) ,&! heat capacity of impervious [J/(m2 K)]
@@ -208,7 +243,7 @@ SUBROUTINE CoLMMAIN_Urban ( &
         tk_wall   (1:nl_wall) ,&! thermal conductivity of wall [W/m-K]
         tk_gimp   (1:nl_soil)   ! thermal conductivity of impervious [W/m-K]
 
-  real(r8), intent(in) :: &
+   real(r8), intent(in) :: &
         ! soil physical parameters and lake info
         vf_quartz   (nl_soil) ,&! volumetric fraction of quartz within mineral soil
         vf_gravels  (nl_soil) ,&! volumetric fraction of gravels
@@ -219,7 +254,7 @@ SUBROUTINE CoLMMAIN_Urban ( &
         porsl       (nl_soil) ,&! fraction of soil that is voids [-]
         psi0        (nl_soil) ,&! minimum soil suction [mm]
         bsw         (nl_soil) ,&! clapp and hornbereger "b" parameter [-]
-        theta_r     (nl_soil) ,&
+        theta_r     (nl_soil) ,&! residual water content (cm3/cm3)
 
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
         alpha_vgm (1:nl_soil) ,&! the parameter corresponding approximately to the inverse of the air-entry value
@@ -280,11 +315,11 @@ SUBROUTINE CoLMMAIN_Urban ( &
         trsmx0                ,&! max transpiration for moist soil+100% veg.  [mm/s]
         tcrit                   ! critical temp. to determine rain or snow
 
-  real(r8), intent(in) :: hpbl  ! atmospheric boundary layer height [m]
+   real(r8), intent(in) :: hpbl ! atmospheric boundary layer height [m]
 
-! Forcing
-! ----------------------
-  real(r8), intent(in) :: &
+   ! Forcing
+   ! ----------------------
+   real(r8), intent(in) :: &
         forc_pco2m            ,&! partial pressure of CO2 at observational height [pa]
         forc_po2m             ,&! partial pressure of O2 at observational height [pa]
         forc_us               ,&! wind speed in eastward direction [m/s]
@@ -306,15 +341,15 @@ SUBROUTINE CoLMMAIN_Urban ( &
         forc_rhoair             ! density air [kg/m3]
 
 #if(defined CaMa_Flood)
-  real(r8), intent(in)    :: fldfrc    !inundation fraction--> allow re-evaporation and infiltrition![0-1]
-  real(r8), intent(inout) :: flddepth  !inundation depth--> allow re-evaporation and infiltrition![mm]
-  real(r8), intent(out)   :: fevpg_fld !effective evaporation from inundation [mm/s]
-  real(r8), intent(out)   :: qinfl_fld !effective re-infiltration from inundation [mm/s]
+   real(r8), intent(in)    :: fldfrc    !inundation fraction--> allow re-evaporation and infiltrition![0-1]
+   real(r8), intent(inout) :: flddepth  !inundation depth--> allow re-evaporation and infiltrition![mm]
+   real(r8), intent(out)   :: fevpg_fld !effective evaporation from inundation [mm/s]
+   real(r8), intent(out)   :: qinfl_fld !effective re-infiltration from inundation [mm/s]
 #endif
 
 ! Variables required for restart run
 ! ----------------------------------------------------------------------
-  real(r8), intent(inout) :: &
+   real(r8), intent(inout) :: &
         t_wallsun    (       1:nl_wall) ,&! sunlit wall layer temperature [K]
         t_wallsha    (       1:nl_wall) ,&! shaded wall layer temperature [K]
         t_soisno     (maxsnl+1:nl_soil) ,&! soil + snow layer temperature [K]
@@ -440,7 +475,7 @@ SUBROUTINE CoLMMAIN_Urban ( &
         slake(2,2)              ! shaded canopy absorption for solar radiation
 
 ! additional diagnostic variables for output
-  real(r8), intent(out) :: &
+   real(r8), intent(out) :: &
         laisun                ,&! sunlit leaf area index
         laisha                ,&! shaded leaf area index
         rstfac                ,&! factor of soil water stress
@@ -450,7 +485,7 @@ SUBROUTINE CoLMMAIN_Urban ( &
 
 ! Fluxes
 ! ----------------------------------------------------------------------
-  real(r8), intent(out) :: &
+   real(r8), intent(out) :: &
         taux                  ,&! wind stress: E-W [kg/m/s**2]
         tauy                  ,&! wind stress: N-S [kg/m/s**2]
         fsena                 ,&! sensible heat from canopy height to atmosphere [W/m2]

@@ -1,17 +1,21 @@
 #include <define.h>
 
 MODULE MOD_LandUrban
-
-!--------------------------------------------------------------------------------------
-! DESCRIPTION:
+!-----------------------------------------------------------------------
 !
-!    Build pixelset "landurban".
+! !DESCRIPTION:
 !
-! Original authors: Hua Yuan and Wenzong Dong, 2022, OpenMP version.
+!  Build pixelset "landurban".
 !
-! REVISIONS:
-! Wenzong Dong, Hua Yuan, Shupeng Zhang, 05/2023: porting codes to MPI parallel version
-!--------------------------------------------------------------------------------------
+!  Original authors: Hua Yuan and Wenzong Dong, 2021, OpenMP version.
+!
+!
+! !REVISIONS:
+!
+!  05/2023, Wenzong Dong, Hua Yuan, Shupeng Zhang: porting codes to MPI
+!           parallel version.
+!
+!-----------------------------------------------------------------------
 
    USE MOD_Grid
    USE MOD_Pixelset
@@ -166,14 +170,14 @@ ENDIF
                            iurb        = ibuff(ib)
                            buff_p(iurb)= buff_p(iurb) + area_one(ib)
                         ENDIF
-                     ENDDO 
+                     ENDDO
                      buff_p(:) = buff_p(:)/sum(area_one)
                   ENDIF
 
                   DO iurb = 1, N_URB-1
                      buff_count(iurb) = int(buff_p(iurb)*imiss)
                   ENDDO
-                  buff_count(N_URB) =  imiss - sum(buff_count(1:N_URB-1)) 
+                  buff_count(N_URB) =  imiss - sum(buff_count(1:N_URB-1))
 
                   ! Some urban patches and NCAR/LCZ data are inconsistent (NCAR/LCZ has no urban ID),
                   ! so the these points are assigned

@@ -3,10 +3,10 @@
 MODULE MOD_Urban_LUCY
 ! -----------------------------------------------------------------------
 ! !DESCRIPTION:
-! Anthropogenic model to calculate anthropogenic heat flux for the rest
+!  Anthropogenic model to calculate anthropogenic heat flux for the rest
 !
-! ORIGINAL:
-! Wenzong Dong, May, 2022
+! !ORIGINAL:
+!  Wenzong Dong, May, 2022
 !
 ! -----------------------------------------------------------------------
 ! !USE
@@ -22,73 +22,77 @@ MODULE MOD_Urban_LUCY
 
 CONTAINS
 
-   ! -----------------------------------------------------------------------
+! -----------------------------------------------------------------------
    SUBROUTINE LUCY( idate       , deltim  , patchlonr, fix_holiday, &
                     week_holiday, hum_prof, wdh_prof , weh_prof   , pop_den, &
                     vehicle     , Fahe    , vehc     , meta        )
 
-   ! !DESCRIPTION:
-   ! Anthropogenic heat fluxes other than building heat were calculated
-   !
-   ! REFERENCES:
-   ! 1) Grimmond, C. S. B. (1992). The suburban energy balance: Methodological considerations and results
-   ! for a mid-latitude west coast city under winter and spring conditions. International Journal of Climatology,
-   ! 12(5), 481–497. https://doi.org/10.1002/joc.3370120506
-   ! 2) Allen, L., Lindberg, F., & Grimmond, C. S. B. (2011). Global to city scale urban anthropogenic
-   ! heat flux: Model and variability. International Journal of Climatology, 31(13),
-   ! 1990–2005. https://doi.org/10.1002/joc.2210
-   !
-   ! -----------------------------------------------------------------------
+! !DESCRIPTION:
+!  Anthropogenic heat fluxes other than building heat were calculated
+!
+! !REFERENCES:
+!  1) Grimmond, C. S. B. (1992). The suburban energy balance:
+!  Methodological considerations and results for a mid-latitude west
+!  coast city under winter and spring conditions. International Journal
+!  of Climatology, 12(5), 481–497.
+!  https://doi.org/10.1002/joc.3370120506
+!
+!  2) Allen, L., Lindberg, F., & Grimmond, C. S. B. (2011). Global to
+!  city scale urban anthropogenic heat flux: Model and variability.
+!  International Journal of Climatology, 31(13), 1990–2005.
+!  https://doi.org/10.1002/joc.2210
+!
+! -----------------------------------------------------------------------
    IMPLICIT NONE
 
    integer , intent(in) :: &
-      idate(3)   ! calendar (year, julian day, seconds)
+      idate(3)           ! calendar (year, julian day, seconds)
 
    real(r8), intent(in) :: &
-      fix_holiday(365), &! Fixed public holidays, holiday(0) or workday(1)
+      fix_holiday(365) ,&! Fixed public holidays, holiday(0) or workday(1)
       week_holiday(7)    ! week holidays
 
    real(r8), intent(in) :: &
-      deltim      , &! seconds in a time step [second]
-      patchlonr   , &! longitude of patch [radian]
-      hum_prof(24), &! Diurnal metabolic heat profile [W/person]
-      wdh_prof(24), &! Diurnal traffic flow profile of weekday
-      weh_prof(24), &! Diurnal traffic flow profile of weekend
-      pop_den     , &! population density [person per square kilometer]
-      vehicle(3)     ! vehicle numbers per thousand people
+      deltim           ,&! seconds in a time step [second]
+      patchlonr        ,&! longitude of patch [radian]
+      hum_prof(24)     ,&! Diurnal metabolic heat profile [W/person]
+      wdh_prof(24)     ,&! Diurnal traffic flow profile of weekday
+      weh_prof(24)     ,&! Diurnal traffic flow profile of weekend
+      pop_den          ,&! population density [person per square kilometer]
+      vehicle(3)         ! vehicle numbers per thousand people
 
    real(r8) :: &
-      vehc_prof(24,2), &
-      carscell, &! cars numbers per thousand people
-      frescell, &! freights numbers per thousand people
-      mbkscell   ! motobikes numbers per thousand people
+      vehc_prof(24,2)  ,&!
+      carscell         ,&! cars numbers per thousand people
+      frescell         ,&! freights numbers per thousand people
+      mbkscell           ! motobikes numbers per thousand people
 
    real(r8), intent(out) :: &
-      Fahe, &! flux from metabolic and vehicle
-      vehc, &! flux from vehicle
-      meta   ! flux from metabolic
+      Fahe             ,&! flux from metabolic and vehicle
+      vehc             ,&! flux from vehicle
+      meta               ! flux from metabolic
 
-   real(r8) ::  &
-      londeg   , &! longitude of path [degree]
-      car_sp   , &! distance traveled [km]
-      traf_frac, &! vehicle heat profile of hour [-]
-      meta_prof, &! metabolic heat profile of hour [-]
-      carflx   , &! flux from car [W/m2]
-      motflx   , &! flux from motorbike [W/m2]
-      freflx      ! flux from freight [W/m2]
+   real(r8) :: &
+      londeg           ,&! longitude of path [degree]
+      car_sp           ,&! distance traveled [km]
+      traf_frac        ,&! vehicle heat profile of hour [-]
+      meta_prof        ,&! metabolic heat profile of hour [-]
+      carflx           ,&! flux from car [W/m2]
+      motflx           ,&! flux from motorbike [W/m2]
+      freflx             ! flux from freight [W/m2]
 
 
    ! local vars
-   real(r8):: ldate(3) ! local time (year, julian day, seconds)
+   real(r8):: ldate(3)   ! local time (year, julian day, seconds)
    integer :: &
-         iweek   , &! day of week
-         ihour   , &! hour of day
-         day     , &! day of mmonth
-         month   , &! month of year
-         day_inx , &! holiday index, day=1(workday), day=1(holiday)
-         EC      , &! emission factor of car [J/m]
-         EF      , &! emission factor of freight [J/m]
-         EM         ! emission factor of motorbike [J/m]
+      iweek            ,&! day of week
+      ihour            ,&! hour of day
+      day              ,&! day of mmonth
+      month            ,&! month of year
+      day_inx          ,&! holiday index, day=1(workday), day=1(holiday)
+      EC               ,&! emission factor of car [J/m]
+      EF               ,&! emission factor of freight [J/m]
+      EM                 ! emission factor of motorbike [J/m]
 
       ! initializition
       meta = 0.

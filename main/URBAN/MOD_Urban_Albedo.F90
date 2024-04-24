@@ -3,13 +3,21 @@
 MODULE MOD_Urban_Albedo
 !-----------------------------------------------------------------------
 ! !DESCRIPTION:
-! Calculate urban albedo,
 !
-! Created by Hua Yuan, 09/2021
+!  Calculate the total urban albedo. Prepare albedo values over water,
+!  roof, ground with snow cover. Then CALL 3D urban radiation transfer
+!  model. Finally calculate the total albedo weightd by the urban and
+!  water fractional cover.
+!
+!  Created by Hua Yuan, 09/2021
 !
 !
-! REVISIONS:
+! !REVISIONS:
 !
+!  07/2023, Hua Yuan: Fix low zenith angle problem for urban radiation
+!           calculation and urban display height problem when considering
+!           vegetations. modify limitation for conzen value (0.001->0.01)
+!           for urban.
 !
 !-----------------------------------------------------------------------
    USE MOD_Precision
@@ -34,7 +42,7 @@ CONTAINS
                         dfwsun,extkd,alb,ssun,ssha,sroof,swsun,swsha,sgimp,sgper,slake)
 
 !=======================================================================
-! Calculates fragmented albedos (direct and diffuse) in
+! Calculates fragmented albedos (direct and diffuse) for urban area in
 ! wavelength regions split at 0.7um.
 !
 ! (1) snow albedos: as in BATS formulations, which are inferred from
@@ -74,80 +82,80 @@ CONTAINS
       alb_gper(2,2)   ! pervious albedo (iband,direct/diffuse)
 
    real(r8), intent(in) :: &
-      rho(2,2),  &! leaf reflectance (iw=iband, il=life and dead)
-      tau(2,2),  &! leaf transmittance (iw=iband, il=life and dead)
-      fveg,      &! fractional vegetation cover [-]
-      hveg,      &! vegetation central crown height [m]
-      lai,       &! leaf area index (LAI+SAI) [m2/m2]
-      sai,       &! stem area index (LAI+SAI) [m2/m2]
+      rho(2,2),      &! leaf reflectance (iw=iband, il=life and dead)
+      tau(2,2),      &! leaf transmittance (iw=iband, il=life and dead)
+      fveg,          &! fractional vegetation cover [-]
+      hveg,          &! vegetation central crown height [m]
+      lai,           &! leaf area index (LAI+SAI) [m2/m2]
+      sai,           &! stem area index (LAI+SAI) [m2/m2]
 
-                  ! variables
-      coszen,    &! cosine of solar zenith angle [-]
-      fwsun,     &! sunlit wall fraction [-]
-      tlake,     &! lake surface temperature [K]
-      fsno_roof, &! fraction of soil covered by snow [-]
-      fsno_gimp, &! fraction of soil covered by snow [-]
-      fsno_gper, &! fraction of soil covered by snow [-]
-      fsno_lake, &! fraction of soil covered by snow [-]
-      scv_roof,  &! snow cover, water equivalent [mm]
-      scv_gimp,  &! snow cover, water equivalent [mm]
-      scv_gper,  &! snow cover, water equivalent [mm]
-      scv_lake,  &! snow cover, water equivalent [mm]
-      sag_roof,  &! non dimensional snow age [-]
-      sag_gimp,  &! non dimensional snow age [-]
-      sag_gper,  &! non dimensional snow age [-]
-      sag_lake    ! non dimensional snow age [-]
+      ! variables
+      coszen,        &! cosine of solar zenith angle [-]
+      fwsun,         &! sunlit wall fraction [-]
+      tlake,         &! lake surface temperature [K]
+      fsno_roof,     &! fraction of soil covered by snow [-]
+      fsno_gimp,     &! fraction of soil covered by snow [-]
+      fsno_gper,     &! fraction of soil covered by snow [-]
+      fsno_lake,     &! fraction of soil covered by snow [-]
+      scv_roof,      &! snow cover, water equivalent [mm]
+      scv_gimp,      &! snow cover, water equivalent [mm]
+      scv_gper,      &! snow cover, water equivalent [mm]
+      scv_lake,      &! snow cover, water equivalent [mm]
+      sag_roof,      &! non dimensional snow age [-]
+      sag_gimp,      &! non dimensional snow age [-]
+      sag_gper,      &! non dimensional snow age [-]
+      sag_lake        ! non dimensional snow age [-]
 
    real(r8), intent(out) :: &
-      dfwsun,    &! change of fwsun
-      extkd,     &! diffuse and scattered diffuse PAR extinction coefficient
-      alb(2,2),  &! averaged albedo [-]
-      ssun(2,2), &! sunlit canopy absorption for solar radiation
-      ssha(2,2), &! shaded canopy absorption for solar radiation,
-      sroof(2,2),&! roof absorption for solar radiation,
-      swsun(2,2),&! sunlit wall absorption for solar radiation,
-      swsha(2,2),&! shaded wall absorption for solar radiation,
-      sgimp(2,2),&! impervious ground absorption for solar radiation,
-      sgper(2,2),&! pervious ground absorption for solar radiation,
-      slake(2,2)  ! lake absorption for solar radiation,
+      dfwsun,        &! change of fwsun
+      extkd,         &! diffuse and scattered diffuse PAR extinction coefficient
+      alb  (2,2),    &! averaged albedo [-]
+      ssun (2,2),    &! sunlit canopy absorption for solar radiation
+      ssha (2,2),    &! shaded canopy absorption for solar radiation,
+      sroof(2,2),    &! roof absorption for solar radiation,
+      swsun(2,2),    &! sunlit wall absorption for solar radiation,
+      swsha(2,2),    &! shaded wall absorption for solar radiation,
+      sgimp(2,2),    &! impervious ground absorption for solar radiation,
+      sgper(2,2),    &! pervious ground absorption for solar radiation,
+      slake(2,2)      ! lake absorption for solar radiation,
 
 !-------------------------- Local variables ----------------------------
-   real(r8) :: &!
-      age,       &! factor to reduce visible snow alb due to snow age [-]
-      albg0,     &! temporary varaiable [-]
-      alb_s_inc, &! decrease in soil albedo due to wetness [-]
-      beta0,     &! upscattering parameter for direct beam [-]
-      cff,       &! snow alb correction factor for zenith angle > 60 [-]
-      conn,      &! constant (=0.5) for visible snow alb calculation [-]
-      cons,      &! constant (=0.2) for nir snow albedo calculation [-]
-      czen,      &! cosine of solar zenith angle > 0 [-]
-      theta,     &! solar zenith angle
-      fwsun_,    &! sunlit wall fraction
-      czf,       &! solar zenith correction for new snow albedo [-]
-      dfalbl,    &! snow albedo for diffuse nir radiation [-]
-      dfalbs,    &! snow albedo for diffuse visible solar radiation [-]
-      dralbl,    &! snow albedo for visible radiation [-]
-      dralbs,    &! snow albedo for near infrared radiation [-]
-      sl,        &! factor that helps control alb zenith dependence [-]
-      snal0,     &! alb for visible,incident on new snow (zen ang<60) [-]
-      snal1       ! alb for NIR, incident on new snow (zen angle<60) [-]
+   real(r8) :: &
+      age,           &! factor to reduce visible snow alb due to snow age [-]
+      albg0,         &! temporary varaiable [-]
+      alb_s_inc,     &! decrease in soil albedo due to wetness [-]
+      beta0,         &! upscattering parameter for direct beam [-]
+      cff,           &! snow alb correction factor for zenith angle > 60 [-]
+      conn,          &! constant (=0.5) for visible snow alb calculation [-]
+      cons,          &! constant (=0.2) for nir snow albedo calculation [-]
+      czen,          &! cosine of solar zenith angle > 0 [-]
+      theta,         &! solar zenith angle
+      fwsun_,        &! sunlit wall fraction
+      czf,           &! solar zenith correction for new snow albedo [-]
+      dfalbl,        &! snow albedo for diffuse nir radiation [-]
+      dfalbs,        &! snow albedo for diffuse visible solar radiation [-]
+      dralbl,        &! snow albedo for visible radiation [-]
+      dralbs,        &! snow albedo for near infrared radiation [-]
+      sl,            &! factor that helps control alb zenith dependence [-]
+      snal0,         &! alb for visible,incident on new snow (zen ang<60) [-]
+      snal1           ! alb for NIR, incident on new snow (zen angle<60) [-]
 
-   real(r8) :: &!
-      erho(2),      &! effective reflection of leaf+stem
-      etau(2),      &! effective transmittance of leaf+stem
-      albsno(2,2),  &! snow albedo [-]
-      albroof(2,2), &! albedo, ground
-      albgimp(2,2), &! albedo, ground
-      albgper(2,2), &! albedo, ground
-      alblake(2,2)   ! albedo, ground
+   real(r8) :: &
+      erho(2),       &! effective reflection of leaf+stem
+      etau(2),       &! effective transmittance of leaf+stem
+      albsno (2,2),  &! snow albedo [-]
+      albroof(2,2),  &! albedo, ground
+      albgimp(2,2),  &! albedo, ground
+      albgper(2,2),  &! albedo, ground
+      alblake(2,2)    ! albedo, ground
 
 ! ----------------------------------------------------------------------
 ! 1. Initial set
 ! ----------------------------------------------------------------------
 
 ! short and long wave albedo for new snow
-      snal0 = 0.85     ! shortwave
-      snal1 = 0.65     ! long wave
+      snal0 = 0.85    ! shortwave
+      snal1 = 0.65    ! long wave
 
 ! ----------------------------------------------------------------------
 ! set default soil and vegetation albedos and solar absorption
@@ -218,7 +226,7 @@ CONTAINS
       ENDIF
 
       alblake(:,:) = (1.-fsno_lake)*alblake(:,:) + fsno_lake*albsno(:,:)
-      slake(:,:) = 1. - alblake(:,:)
+      slake(:,:)   = 1. - alblake(:,:)
 
 ! 2.2 roof albedo with snow
       IF (scv_roof > 0.) THEN

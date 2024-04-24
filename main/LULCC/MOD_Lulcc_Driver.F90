@@ -3,7 +3,6 @@
 #ifdef LULCC
 MODULE MOD_Lulcc_Driver
 
-!-----------------------------------------------------------------------
    USE MOD_Precision
    IMPLICIT NONE
    SAVE
@@ -11,29 +10,24 @@ MODULE MOD_Lulcc_Driver
 ! PUBLIC MEMBER FUNCTIONS:
    PUBLIC :: LulccDriver
 
-
-!-----------------------------------------------------------------------
-
  CONTAINS
-
-!-----------------------------------------------------------------------
-
 
 
    SUBROUTINE LulccDriver (casename,dir_landdata,dir_restart,&
                            idate,greenwich)
 
-! ======================================================================
-! !PURPOSE:
-!   the main subroutine for Land use and land cover change simulation
+!-----------------------------------------------------------------------
 !
-! Created by Hua Yuan, 04/08/2022
+! !DESCRIPTION:
+!  the main subroutine for Land use and land cover change simulation
 !
-! !REVISONS:
-! 07/2023, Wenzong Dong: porting to MPI version.
-! 08/2023, Wanyi Lin: add interface for Mass&Energy conserved scheme.
+!  Created by Hua Yuan, 04/08/2022
 !
-! ======================================================================
+! !REVISIONS:
+!  07/2023, Wenzong Dong: porting to MPI version.
+!  08/2023, Wanyi Lin: add interface for Mass&Energy conserved scheme.
+!
+!-----------------------------------------------------------------------
 
    USE MOD_Precision
    USE MOD_SPMD_Task

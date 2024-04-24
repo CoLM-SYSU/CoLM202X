@@ -1,26 +1,27 @@
 #include <define.h>
 
-!.......................................................................
+MODULE MOD_3DCanopyRadiation
+
+!-----------------------------------------------------------------------
 !
-!            --- A 3D Canopy Radiation Rransfer Model ---
+!            --- A 3D Canopy Radiation Transfer Model ---
 !                for Plant Community (PC) Simulation
 !
 !                                             Sun
 !                                            ///
 !                                           ///
-!            _____  tree           _____             --- Layer3
+!            _____  tree           _____              --- Layer3
 !          /|||||||               |||||||
 !         /|||||||||             |||||||||
 !        /  \|||||//            / \|||||//
-!       /      |  /            /     |  /            --- Layer2
+!       /      |  /            /     |  /             --- Layer2
 !      /       | /            /      | /        /xx\
-!     /        |/     grass  /       |/   shrub/\xx/
-!  __/.........|_________\\//\/......|________/..|/_ --- Layer1
-!///////////////////////////////////////////////////////////////////////
-
-MODULE MOD_3DCanopyRadiation
-
+!     / shadow |/     grass  /       |/   shrub/\xx/
+!  __/.........|_________\\//\/......|________/..|/__ --- Layer1
+! /////////////////////////////////////////////////////////////////////
+!
 !-----------------------------------------------------------------------
+
    USE MOD_Precision
    IMPLICIT NONE
    SAVE
@@ -46,18 +47,18 @@ CONTAINS
 
 !
 ! !DESCRIPTION:
-! This is a wrap SUBROUTINE to CALL 3D canopy radiative model below
-!   CALL ThreeDCanopy()
+!  This is a wrap SUBROUTINE to CALL 3D canopy radiative model below
+!    CALL ThreeDCanopy()
 !
-! Created by Hua Yuan, 08/2019
+!  Created by Hua Yuan, 08/2019
 !
-! REFERENCE:
-! Yuan, H., R. E. Dickinson, Y. Dai, M. J. Shaikh, L. Zhou, W. Shangguan,
-! and D. Ji, 2014: A 3D canopy radiative transfer model for global climate
-! modeling: Description, validation, and application. Journal of Climate,
-! 27, 1168–1192, https://doi.org/10.1175/JCLI-D-13-00155.1.
+! !REFERENCE:
+!  Yuan, H., R. E. Dickinson, Y. Dai, M. J. Shaikh, L. Zhou, W. Shangguan,
+!  and D. Ji, 2014: A 3D canopy radiative transfer model for global climate
+!  modeling: Description, validation, and application. Journal of Climate,
+!  27, 1168–1192, https://doi.org/10.1175/JCLI-D-13-00155.1.
 !
-! REVISIONS:
+! !REVISIONS:
 !
 
    USE MOD_Precision
@@ -257,22 +258,22 @@ CONTAINS
                           thermk, fshade)
 !
 ! !DESCRIPTION:
-! ThreeDCanopy based on Dickinson (2008) using three canopy layer
-! to calculate fluxes absorbed by vegetation, reflected by vegetation,
-! and transmitted through vegetation for unit incoming direct or
-! diffuse flux given an underlying surface with known albedo.
+!  ThreeDCanopy based on Dickinson (2008) using three canopy layer
+!  to calculate fluxes absorbed by vegetation, reflected by vegetation,
+!  and transmitted through vegetation for unit incoming direct or
+!  diffuse flux given an underlying surface with known albedo.
 !
-! Created by Hua Yuan, 08/2019
+!  Created by Hua Yuan, 08/2019
 !
 ! !HISTORY:
-! Before 2013: Robert E. Dickinson proposed the inital idea. Dickinson and
-!              Muhammad J. Shake contributed to the code writing.
+!  Before 2013: Robert E. Dickinson proposed the inital idea. Dickinson and
+!               Muhammad J. Shake contributed to the code writing.
 !
 ! !REFERENCE:
-! Yuan, H., R. E. Dickinson, Y. Dai, M. J. Shaikh, L. Zhou, W. Shangguan,
-! and D. Ji, 2014: A 3D canopy radiative transfer model for global climate
-! modeling: Description, validation, and application. Journal of Climate,
-! 27, 1168–1192, https://doi.org/10.1175/JCLI-D-13-00155.1.
+!  Yuan, H., R. E. Dickinson, Y. Dai, M. J. Shaikh, L. Zhou, W. Shangguan,
+!  and D. Ji, 2014: A 3D canopy radiative transfer model for global climate
+!  modeling: Description, validation, and application. Journal of Climate,
+!  27, 1168–1192, https://doi.org/10.1175/JCLI-D-13-00155.1.
 
 !
 ! !ARGUMENTS:

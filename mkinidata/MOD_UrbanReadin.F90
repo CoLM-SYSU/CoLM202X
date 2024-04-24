@@ -4,9 +4,17 @@
 
 MODULE MOD_UrbanReadin
 
-! ===========================================================
-! Read in the Urban dataset
-! ===========================================================
+!-----------------------------------------------------------------------
+!
+! !DESCRIPTION:
+!  Read in the Urban dataset.
+!
+!  Created by Hua Yuan, 11/26/2021
+!
+! !REVISIONS:
+!
+!  05/2023, Wenzong Dong, Hua Yuan: porting codes to MPI parallel version.
+!-----------------------------------------------------------------------
 
    USE MOD_Precision
    IMPLICIT NONE

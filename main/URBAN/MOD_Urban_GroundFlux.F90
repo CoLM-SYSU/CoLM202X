@@ -17,8 +17,15 @@ CONTAINS
                                z0m, z0hg, zol, ustar, qstar, tstar, fm, fh, fq)
 
 !=======================================================================
-! this is the main subroutine to execute the calculation
-! of bare ground fluxes
+! !DESCRIPTION:
+!  this is the main subroutine to execute the calculation
+!  of bare ground fluxes
+!
+!  Created by Hua Yuan, 09/2021
+!
+! !REVISIONS:
+!
+!  07/2022, Hua Yuan: Urban 2m T/q -> above bare ground 2m.
 !
 !=======================================================================
 
@@ -32,79 +39,79 @@ CONTAINS
         lbi
    real(r8), intent(in) :: &
         ! atmospherical variables and observational height
-        hu,       &! observational height of wind [m]
-        ht,       &! observational height of temperature [m]
-        hq,       &! observational height of humidity [m]
-        us,       &! wind component in eastward direction [m/s]
-        vs,       &! wind component in northward direction [m/s]
-        tm,       &! temperature at agcm reference height [kelvin] [not used]
-        qm,       &! specific humidity at agcm reference height [kg/kg]
-        rhoair,   &! density air [kg/m3]
-        psrf,     &! atmosphere pressure at the surface [pa] [not used]
+        hu,           &! observational height of wind [m]
+        ht,           &! observational height of temperature [m]
+        hq,           &! observational height of humidity [m]
+        us,           &! wind component in eastward direction [m/s]
+        vs,           &! wind component in northward direction [m/s]
+        tm,           &! temperature at agcm reference height [kelvin] [not used]
+        qm,           &! specific humidity at agcm reference height [kg/kg]
+        rhoair,       &! density air [kg/m3]
+        psrf,         &! atmosphere pressure at the surface [pa] [not used]
 
-        ur,       &! wind speed at reference height [m/s]
-        thm,      &! intermediate variable (tm+0.0098*ht)
-        th,       &! potential temperature (kelvin)
-        thv,      &! virtual potential temperature (kelvin)
+        ur,           &! wind speed at reference height [m/s]
+        thm,          &! intermediate variable (tm+0.0098*ht)
+        th,           &! potential temperature (kelvin)
+        thv,          &! virtual potential temperature (kelvin)
 
-        zlnd,     &! roughness length for soil [m]
-        zsno,     &! roughness length for snow [m]
-        fsno_gimp,&! fraction of impervious ground covered by snow
-        fcover(0:5),&! coverage of aboveground urban components [-]
+        zlnd,         &! roughness length for soil [m]
+        zsno,         &! roughness length for snow [m]
+        fsno_gimp,    &! fraction of impervious ground covered by snow
+        fcover(0:5),  &! coverage of aboveground urban components [-]
 
-        wliq_gimpsno,&! liqui water [kg/m2]
-        wice_gimpsno,&! ice lens [kg/m2]
+        wliq_gimpsno, &! liqui water [kg/m2]
+        wice_gimpsno, &! ice lens [kg/m2]
 
-        tgimp,    &! ground impervious temperature [K]
-        tgper,    &! ground pervious temperature [K]
-        qgimp,    &! ground impervious specific humidity [kg/kg]
-        qgper      ! ground pervious specific humidity [kg/kg]
-
-   real(r8), intent(out) :: &
-        tref,     &! 2 m height air temperature [kelvin]
-        qref       ! 2 m height air humidity
+        tgimp,        &! ground impervious temperature [K]
+        tgper,        &! ground pervious temperature [K]
+        qgimp,        &! ground impervious specific humidity [kg/kg]
+        qgper          ! ground pervious specific humidity [kg/kg]
 
    real(r8), intent(out) :: &
-        z0m,      &! effective roughness [m]
-        z0hg,     &! roughness length over ground, sensible heat [m]
-        zol,      &! dimensionless height (z/L) used in Monin-Obukhov theory
-        ustar,    &! friction velocity [m/s]
-        tstar,    &! temperature scaling parameter
-        qstar,    &! moisture scaling parameter
-        fm,       &! integral of profile function for momentum
-        fh,       &! integral of profile function for heat
-        fq         ! integral of profile function for moisture
+        tref,         &! 2 m height air temperature [kelvin]
+        qref           ! 2 m height air humidity
+
+   real(r8), intent(out) :: &
+        z0m,          &! effective roughness [m]
+        z0hg,         &! roughness length over ground, sensible heat [m]
+        zol,          &! dimensionless height (z/L) used in Monin-Obukhov theory
+        ustar,        &! friction velocity [m/s]
+        tstar,        &! temperature scaling parameter
+        qstar,        &! moisture scaling parameter
+        fm,           &! integral of profile function for momentum
+        fh,           &! integral of profile function for heat
+        fq             ! integral of profile function for moisture
 
 !------------------------ LOCAL VARIABLES ------------------------------
-   integer niters, &! maximum number of iterations for surface temperature
-        iter,     &! iteration index
-        nmozsgn    ! number of times moz changes sign
+   integer niters,    &! maximum number of iterations for surface temperature
+        iter,         &! iteration index
+        nmozsgn        ! number of times moz changes sign
 
-   real(r8) ::     &
-        beta,     &! coefficient of conective velocity [-]
-        displax,  &! zero-displacement height [m]
-        tg,       &! ground surface temperature [K]
-        qg,       &! ground specific humidity [kg/kg]
-        fg,       &! ground fractional cover [-]
-        fgimp,    &! weight of impervious ground
-        fgper,    &! weight of pervious ground
-        dth,      &! diff of virtual temp. between ref. height and surface
-        dqh,      &! diff of humidity between ref. height and surface
-        dthv,     &! diff of vir. poten. temp. between ref. height and surface
-        obu,      &! monin-obukhov length (m)
-        obuold,   &! monin-obukhov length from previous iteration
-        fh2m,     &! relation for temperature at 2m
-        fq2m,     &! relation for specific humidity at 2m
-        fm10m,    &! integral of profile function for momentum at 10m
-        thvstar,  &! virtual potential temperature scaling parameter
-        um,       &! wind speed including the stablity effect [m/s]
-        wc,       &! convective velocity [m/s]
-        wc2,      &! wc**2
-        zeta,     &! dimensionless height used in Monin-Obukhov theory
-        zii,      &! convective boundary height [m]
-        zldis,    &! reference height "minus" zero displacement heght [m]
-        z0mg,     &! roughness length over ground, momentum [m]
-        z0qg       ! roughness length over ground, latent heat [m]
+   real(r8) :: &
+        beta,         &! coefficient of conective velocity [-]
+        displax,      &! zero-displacement height [m]
+        tg,           &! ground surface temperature [K]
+        qg,           &! ground specific humidity [kg/kg]
+        fg,           &! ground fractional cover [-]
+        fgimp,        &! weight of impervious ground
+        fgper,        &! weight of pervious ground
+        dth,          &! diff of virtual temp. between ref. height and surface
+        dqh,          &! diff of humidity between ref. height and surface
+        dthv,         &! diff of vir. poten. temp. between ref. height and surface
+        obu,          &! monin-obukhov length (m)
+        obuold,       &! monin-obukhov length from previous iteration
+        fh2m,         &! relation for temperature at 2m
+        fq2m,         &! relation for specific humidity at 2m
+        fm10m,        &! integral of profile function for momentum at 10m
+        thvstar,      &! virtual potential temperature scaling parameter
+        um,           &! wind speed including the stablity effect [m/s]
+        wc,           &! convective velocity [m/s]
+        wc2,          &! wc**2
+        zeta,         &! dimensionless height used in Monin-Obukhov theory
+        zii,          &! convective boundary height [m]
+        zldis,        &! reference height "minus" zero displacement heght [m]
+        z0mg,         &! roughness length over ground, momentum [m]
+        z0qg           ! roughness length over ground, latent heat [m]
 
    real(r8) fwet_gimp, fwetfac
 

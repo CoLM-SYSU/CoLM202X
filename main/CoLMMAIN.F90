@@ -191,44 +191,44 @@ SUBROUTINE CoLMMAIN ( &
 ! Parameters
 ! ----------------------
    real(r8), intent(in) :: &
-        lakedepth        ,&! lake depth (m)
-        dz_lake(nl_lake) ,&! lake layer thickness (m)
+        lakedepth            ,&! lake depth (m)
+        dz_lake(nl_lake)     ,&! lake layer thickness (m)
 
-        topostd          ,&! standard deviation of elevation (m)
-        BVIC             ,&! vic model parameter b
+        topostd              ,&! standard deviation of elevation (m)
+        BVIC                 ,&! vic model parameter b
 
         ! soil physical parameters and lake info
-        soil_s_v_alb     ,&! albedo of visible of the saturated soil
-        soil_d_v_alb     ,&! albedo of visible of the dry soil
-        soil_s_n_alb     ,&! albedo of near infrared of the saturated soil
-        soil_d_n_alb     ,&! albedo of near infrared of the dry soil
+        soil_s_v_alb         ,&! albedo of visible of the saturated soil
+        soil_d_v_alb         ,&! albedo of visible of the dry soil
+        soil_s_n_alb         ,&! albedo of near infrared of the saturated soil
+        soil_d_n_alb         ,&! albedo of near infrared of the dry soil
 
-        vf_quartz (nl_soil)  ,& ! volumetric fraction of quartz within mineral soil
-        vf_gravels(nl_soil)  ,& ! volumetric fraction of gravels
-        vf_om     (nl_soil)  ,& ! volumetric fraction of organic matter
-        vf_sand   (nl_soil)  ,& ! volumetric fraction of sand
-        wf_gravels(nl_soil)  ,& ! gravimetric fraction of gravels
-        wf_sand   (nl_soil)  ,& ! gravimetric fraction of sand
-        porsl     (nl_soil)  ,& ! fraction of soil that is voids [-]
-        psi0      (nl_soil)  ,& ! minimum soil suction [mm]
-        bsw       (nl_soil)  ,& ! clapp and hornbereger "b" parameter [-]
-        theta_r  (1:nl_soil) ,& ! residual water content (cm3/cm3)
+        vf_quartz  (nl_soil) ,&! volumetric fraction of quartz within mineral soil
+        vf_gravels (nl_soil) ,&! volumetric fraction of gravels
+        vf_om      (nl_soil) ,&! volumetric fraction of organic matter
+        vf_sand    (nl_soil) ,&! volumetric fraction of sand
+        wf_gravels (nl_soil) ,&! gravimetric fraction of gravels
+        wf_sand    (nl_soil) ,&! gravimetric fraction of sand
+        porsl      (nl_soil) ,&! fraction of soil that is voids [-]
+        psi0       (nl_soil) ,&! minimum soil suction [mm]
+        bsw        (nl_soil) ,&! clapp and hornbereger "b" parameter [-]
+        theta_r  (1:nl_soil) ,&! residual water content (cm3/cm3)
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
-        alpha_vgm(1:nl_soil) ,& ! the parameter corresponding approximately to the inverse of the air-entry value
-        n_vgm    (1:nl_soil) ,& ! a shape parameter
-        L_vgm    (1:nl_soil) ,& ! pore-connectivity parameter
-        sc_vgm   (1:nl_soil) ,& ! saturation at the air entry value in the classical vanGenuchten model [-]
-        fc_vgm   (1:nl_soil) ,& ! a scaling factor by using air entry value in the Mualem model [-]
+        alpha_vgm(1:nl_soil) ,&! the parameter corresponding approximately to the inverse of the air-entry value
+        n_vgm    (1:nl_soil) ,&! a shape parameter
+        L_vgm    (1:nl_soil) ,&! pore-connectivity parameter
+        sc_vgm   (1:nl_soil) ,&! saturation at the air entry value in the classical vanGenuchten model [-]
+        fc_vgm   (1:nl_soil) ,&! a scaling factor by using air entry value in the Mualem model [-]
 #endif
-        hksati(nl_soil)   ,&! hydraulic conductivity at saturation [mm h2o/s]
-        csol(nl_soil)     ,&! heat capacity of soil solids [J/(m3 K)]
-        k_solids(nl_soil) ,&! thermal conductivity of minerals soil [W/m-K]
-        dksatu(nl_soil)   ,&! thermal conductivity of saturated unfrozen soil [W/m-K]
-        dksatf(nl_soil)   ,&! thermal conductivity of saturated frozen soil [W/m-K]
-        dkdry(nl_soil)    ,&! thermal conductivity for dry soil  [J/(K s m)]
-        BA_alpha(nl_soil) ,&! alpha in Balland and Arp(2005) thermal conductivity scheme
-        BA_beta (nl_soil) ,&! beta in Balland and Arp(2005) thermal conductivity scheme
-        rootfr(nl_soil)   ,&! fraction of roots in each soil layer
+        hksati     (nl_soil) ,&! hydraulic conductivity at saturation [mm h2o/s]
+        csol       (nl_soil) ,&! heat capacity of soil solids [J/(m3 K)]
+        k_solids   (nl_soil) ,&! thermal conductivity of minerals soil [W/m-K]
+        dksatu     (nl_soil) ,&! thermal conductivity of saturated unfrozen soil [W/m-K]
+        dksatf     (nl_soil) ,&! thermal conductivity of saturated frozen soil [W/m-K]
+        dkdry      (nl_soil) ,&! thermal conductivity for dry soil  [J/(K s m)]
+        BA_alpha   (nl_soil) ,&! alpha in Balland and Arp(2005) thermal conductivity scheme
+        BA_beta    (nl_soil) ,&! beta in Balland and Arp(2005) thermal conductivity scheme
+        rootfr     (nl_soil) ,&! fraction of roots in each soil layer
 
         ! vegetation static, dynamic, derived parameters
         htop        ,&! canopy top height [m]
@@ -313,7 +313,7 @@ SUBROUTINE CoLMMAIN ( &
    integer, intent(in) :: &
         idate(3)      ! next time-step /year/julian day/second in a day/
 
-   real(r8), intent(inout) :: oro  ! ocean(0)/seaice(2)/ flag
+   real(r8), intent(inout) :: oro       ! ocean(0)/seaice(2)/ flag
    real(r8), intent(inout) :: &
         z_sno      (maxsnl+1:0)       ,&! layer depth (m)
         dz_sno     (maxsnl+1:0)       ,&! layer thickness (m)
@@ -323,12 +323,12 @@ SUBROUTINE CoLMMAIN ( &
         hk(1:nl_soil)                 ,&! hydraulic conductivity [mm h2o/s]
         smp(1:nl_soil)                ,&! soil matrix potential [mm]
 
-        t_lake(nl_lake)       ,&! lake temperature (kelvin)
-        lake_icefrac(nl_lake) ,&! lake mass fraction of lake layer that is frozen
-        savedtke1             ,&! top level eddy conductivity (W/m K)
-        vegwp(nvegwcs)        ,&! ground surface temperature [k]
-        gs0sun                ,&! working copy of sunlit stomata conductance
-        gs0sha                ,&! working copy of shalit stomata conductance
+        t_lake(nl_lake)               ,&! lake temperature (kelvin)
+        lake_icefrac(nl_lake)         ,&! lake mass fraction of lake layer that is frozen
+        savedtke1                     ,&! top level eddy conductivity (W/m K)
+        vegwp(nvegwcs)                ,&! ground surface temperature [k]
+        gs0sun                        ,&! working copy of sunlit stomata conductance
+        gs0sha                        ,&! working copy of shalit stomata conductance
         !Ozone stress variables
         lai_old     ,&! lai in last time step
         o3uptakesun ,&! Ozone does, sunlit leaf (mmol O3/m^2)
@@ -349,16 +349,16 @@ SUBROUTINE CoLMMAIN ( &
         wa          ,&! water storage in aquifer [mm]
         wetwat      ,&! water storage in wetland [mm]
 
-        snw_rds   ( maxsnl+1:0 ) ,&! effective grain radius (col,lyr) [microns, m-6]
-        mss_bcpho ( maxsnl+1:0 ) ,&! mass of hydrophobic BC in snow  (col,lyr) [kg]
-        mss_bcphi ( maxsnl+1:0 ) ,&! mass of hydrophillic BC in snow (col,lyr) [kg]
-        mss_ocpho ( maxsnl+1:0 ) ,&! mass of hydrophobic OC in snow  (col,lyr) [kg]
-        mss_ocphi ( maxsnl+1:0 ) ,&! mass of hydrophillic OC in snow (col,lyr) [kg]
-        mss_dst1  ( maxsnl+1:0 ) ,&! mass of dust species 1 in snow  (col,lyr) [kg]
-        mss_dst2  ( maxsnl+1:0 ) ,&! mass of dust species 2 in snow  (col,lyr) [kg]
-        mss_dst3  ( maxsnl+1:0 ) ,&! mass of dust species 3 in snow  (col,lyr) [kg]
-        mss_dst4  ( maxsnl+1:0 ) ,&! mass of dust species 4 in snow  (col,lyr) [kg]
-        ssno_lyr  (2,2,maxsnl+1:1),&! snow layer absorption [-]
+        snw_rds   ( maxsnl+1:0 )      ,&! effective grain radius (col,lyr) [microns, m-6]
+        mss_bcpho ( maxsnl+1:0 )      ,&! mass of hydrophobic BC in snow  (col,lyr) [kg]
+        mss_bcphi ( maxsnl+1:0 )      ,&! mass of hydrophillic BC in snow (col,lyr) [kg]
+        mss_ocpho ( maxsnl+1:0 )      ,&! mass of hydrophobic OC in snow  (col,lyr) [kg]
+        mss_ocphi ( maxsnl+1:0 )      ,&! mass of hydrophillic OC in snow (col,lyr) [kg]
+        mss_dst1  ( maxsnl+1:0 )      ,&! mass of dust species 1 in snow  (col,lyr) [kg]
+        mss_dst2  ( maxsnl+1:0 )      ,&! mass of dust species 2 in snow  (col,lyr) [kg]
+        mss_dst3  ( maxsnl+1:0 )      ,&! mass of dust species 3 in snow  (col,lyr) [kg]
+        mss_dst4  ( maxsnl+1:0 )      ,&! mass of dust species 4 in snow  (col,lyr) [kg]
+        ssno_lyr  (2,2,maxsnl+1:1)    ,&! snow layer absorption [-]
 
         fveg        ,&! fraction of vegetation cover
         fsno        ,&! fractional snow cover
@@ -380,17 +380,17 @@ SUBROUTINE CoLMMAIN ( &
 
 ! additional diagnostic variables for output
    real(r8), intent(out) :: &
-        laisun        ,&! sunlit leaf area index
-        laisha        ,&! shaded leaf area index
-        rstfacsun_out ,&! factor of soil water stress
-        rstfacsha_out ,&! factor of soil water stress
-        gssun_out     ,&! sunlit stomata conductance
-        gssha_out     ,&! shaded stomata conductance
-        wat           ,&! total water storage
-        rss           ,&! soil surface resistance [s/m]
-        rootr(nl_soil),&! water exchange between soil and root. Positive: soil->root [?]
+        laisun           ,&! sunlit leaf area index
+        laisha           ,&! shaded leaf area index
+        rstfacsun_out    ,&! factor of soil water stress
+        rstfacsha_out    ,&! factor of soil water stress
+        gssun_out        ,&! sunlit stomata conductance
+        gssha_out        ,&! shaded stomata conductance
+        wat              ,&! total water storage
+        rss              ,&! soil surface resistance [s/m]
+        rootr(nl_soil)   ,&! water exchange between soil and root. Positive: soil->root [?]
         rootflux(nl_soil),&! water exchange between soil and root in different layers. Posiitive: soil->root [?]
-        h2osoi(nl_soil) ! volumetric soil water in layers [m3/m3]
+        h2osoi(nl_soil)    ! volumetric soil water in layers [m3/m3]
 
    real(r8), intent(out) :: &
         assimsun_out,&

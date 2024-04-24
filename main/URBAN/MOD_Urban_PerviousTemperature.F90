@@ -1,7 +1,23 @@
 #include <define.h>
 
 MODULE MOD_Urban_PerviousTemperature
-
+!-----------------------------------------------------------------------
+!
+! !DESCRIPTION:
+!
+!  The urban's pervious ground is equivalent to soil, and the heat
+!  transfer process of the surface soil is calculated consistently. This
+!  includes considering 10 layers of soil and up to 5 layers of snow,
+!  with a layering scheme consistent with the soil (snow). The phase
+!  change process is considered, and soil thermal parameters are
+!  obtained from global data. The difference lies in the fact that the
+!  shortwave and longwave radiation received at the surface, as well as
+!  the turbulent exchange flux (sensible heat, latent heat), are solved
+!  by the corresponding MODULE for the urban model.
+!
+!  Created by Yongjiu Dai and Hua Yuan, 05/2020
+!
+!-----------------------------------------------------------------------
    USE MOD_Precision
    IMPLICIT NONE
    SAVE

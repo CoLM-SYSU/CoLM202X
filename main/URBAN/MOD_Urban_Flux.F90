@@ -3,6 +3,37 @@
 MODULE MOD_Urban_Flux
 
 !-----------------------------------------------------------------------
+!
+! !DESCRIPTION:
+!
+!  The process of urban turbulence exchange is similar to the plant
+!  community (3D canopy) turbulence exchange. The sensible and latent
+!  heat exchange of roofs, walls (shaded and sunny sides), ground, and
+!  vegetation is calculated based on the M-O similarity theory
+!  similarity. However, the differences lie in the roughness, frontal
+!  area index, zero-plane displacement height, wind speed/turbulence
+!  exchange coefficient decay rate, and calculation of boundary layer
+!  resistance for building surfaces and vegetation. Each layer
+!  (equivalent height) conservation equation for flux is established and
+!  solved simultaneously.
+!
+!  The process of solving includes two situations:
+!
+!      1. not considering vegetation - Subroutine UrbanOnlyFlux()
+!
+!      2. considering vegetation     - Subroutine UrbanVegFlux()
+!
+!  Created by Hua Yuan, 09/2021
+!
+!
+! !REVISIONS:
+!
+!  10/2022, Hua Yuan: Add three options of decay coefficient for u and k.
+!           Add wet fraction for roof and impervious ground, set max
+!           ponding for roof and impervious from 10mm -> 1mm.
+!
+!  MM/YYYY, Wenzong Dong: TODO.
+!-----------------------------------------------------------------------
    USE MOD_Precision
    USE MOD_Vars_Global
    USE MOD_Qsadv, only: qsadv

@@ -3,10 +3,19 @@
 #ifdef URBAN_MODEL
 MODULE MOD_UrbanIniTimeVariable
 
-!=======================================================================
-! Created by Hua Yuan, 09/16/2021
+!-----------------------------------------------------------------------
 !
-!=======================================================================
+! !DESCRIPTION:
+!
+!  Initialize urban model time variables.
+!
+!  Created by Hua Yuan, 09/16/2021
+!
+! !REVISIONS:
+!
+!  05/2023, Wenzong Dong, Hua Yuan: porting codes to MPI parallel version.
+!
+!-----------------------------------------------------------------------
 
    USE MOD_Precision
    IMPLICIT NONE
