@@ -26,12 +26,12 @@ CONTAINS
 !=======================================================================
 !
 ! !DESCRIPTION:
-! Provide snow cover fraction
+!  Provide snow cover fraction
 !
-! Original author : Yongjiu Dai, /09/1999/, /04/2014/
+!  Original author: Yongjiu Dai, /09/1999/, /04/2014/
 !
-! REVISIONS:
-! 10/2019, Hua Yuan: removed fveg to be compatible with PFT classification
+! !REVISIONS:
+!  10/2019, Hua Yuan: removed fveg to be compatible with PFT classification
 !=======================================================================
 
    USE MOD_Precision
@@ -85,13 +85,13 @@ CONTAINS
 !=======================================================================
 !
 ! !DESCRIPTION:
-! A wrap SUBROUTINE to calculate snow cover fraction for PFT|PC run
+!  A wrap SUBROUTINE to calculate snow cover fraction for PFT|PC run
 !
 ! !REVISIONS:
 !
-! 06/2019, Hua Yuan: initial code adapted from snowfraction() by Yongjiu Dai
+!  06/2019, Hua Yuan: initial code adapted from snowfraction() by Yongjiu Dai
 !
-! 08/2019, Hua Yuan: removed fveg to be compatible with PFT classification
+!  08/2019, Hua Yuan: removed fveg to be compatible with PFT classification
 !=======================================================================
 
    USE MOD_Precision
@@ -146,7 +146,7 @@ CONTAINS
             ! for non-grass, use hbot, htop to determine how much lsai being buried.
             IF (p.gt.0 .and. p.le.11) THEN
                wt = max(0., (snowdp-hbot)) / (htop-hbot)
-               wt = max(wt, 1.)
+               wt = min(wt, 1.)
                sigf_p(i) = 1. - wt
             ELSE
             ! for grass, 0-0.2m?
