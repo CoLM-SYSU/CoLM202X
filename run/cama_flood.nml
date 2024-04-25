@@ -1,17 +1,17 @@
 &NRUNVER
-LADPSTP  = .FALSE.                      ! true: use adaptive time step
+LADPSTP  = .FALSE.                     ! true: use adaptive time step
 LFPLAIN  = .TRUE.                      ! true: consider floodplain (false: only river channel)
 LKINE    = .FALSE.                     ! true: use kinematic wave
 LFLDOUT  = .TRUE.                      ! true: floodplain flow (high-water channel flow) active
 LPTHOUT  = .TRUE.                      ! true: activate bifurcation scheme
-LDAMOUT  = .TRUE.                     ! true: activate dam operation (under development)
+LDAMOUT  = .FALSE.                     ! true: activate dam operation (under development)
 LLEVEE   = .FALSE.                     ! true: activate levee scheme  (under development)
 
 
 LROSPLIT     = .FALSE.                          ! true: input if surface (Qs) and sub-surface (Qsb) runoff
-LWEVAP       = .FALSE.                           ! true: input water evaporation to extract from floodplain
-LWEVAPFIX    = .FALSE.                          ! true: water balance closure extracting water from evap when available
-LWINFILT     = .FALSE.                           ! true: input water infiltration to extract from floodplain
+LWEVAP       = .TRUE.                          ! true: input water evaporation to extract from floodplain
+LWEVAPFIX    = .TRUE.                          ! true: water balance closure extracting water from evap when available
+LWINFILT     = .FALSE.                          ! true: input water infiltration to extract from floodplain
 LWINFILTFIX  = .FALSE.                          ! true: water balance closure extracting water from Infiltration when available
 LWEXTRACTRIV = .FALSE.                          ! true: also extract water from rivers 
 LSLOPEMOUTH  = .FALSE.                          ! true: prescribe water level slope == elevation slope on river month
@@ -28,14 +28,14 @@ LSTOONLY = .FALSE.                              ! true: storage only restart (ma
 LOUTPUT  = .TRUE.                               ! true: use standard output (to file)
 LOUTINI  = .FALSE.                              ! true: output initial storage (netCDF only)
 
-LGRIDMAP = .TRUE.                     ! true: for standard XY gridded 2D map
-LLEAPYR  = .TRUE.                      ! true: neglect leap year (Feb29 skipped)
+LGRIDMAP = .TRUE.                               ! true: for standard XY gridded 2D map
+LLEAPYR  = .TRUE.                               ! true: neglect leap year (Feb29 skipped)
 
-LMAPEND  = .FALSE.                     ! true: for map data endian conversion
-LSTG_ES  = .FALSE.                     ! true: for Vector Processor optimization (CMF_OPT_FLDSTG_ES) 
+LMAPEND  = .FALSE.                              ! true: for map data endian conversion
+LSTG_ES  = .FALSE.                              ! true: for Vector Processor optimization (CMF_OPT_FLDSTG_ES) 
 /
 &NDIMTIME
-CDIMINFO = "../CaMa/map/CaMaMap4CoLM_glb_0.25in_0.25out/diminfo_era5land-15min.txt"               ! text file for dimention information
+CDIMINFO = "../CaMa/map/CaMaMap4CoLM_glb_0.25in_0.25out/glb_0.25in_0.25out-diminfo.txt"               ! text file for dimention information
 DT       = 21600                                                                            ! time step length (sec)
 IFRQ_INP = 6                                                                               ! input forcing update frequency (hour)
 /
@@ -59,7 +59,7 @@ SYEAR   = 1900                            !  start year : will not gonna used in
 SMON    = 01                           !  month      : will not gonna used in here
 SDAY    = 01                             !  day        : will not gonna used in here
 SHOUR   = 00                        !  hour       : will not gonna used in here
-EYEAR   = 2020                     		!  end year   : will not gonna used in here
+EYEAR   = 2024                     		!  end year   : will not gonna used in here
 EMON    = 01                        	!  month      : will not gonna used in here
 EDAY    = 01                        	!  day        : will not gonna used in here
 EHOUR   = 00                        	!  hour       : will not gonna used in here
@@ -91,16 +91,16 @@ LRESTCDF = .FALSE.                 ! * true for netCDF restart file
 IFRQ_RST = 0                 ! restart write frequency (1-24: hour, 0:end of run)
 /
 &NFORCE
-LINTERP   = .FALSE.                  ! true for runoff interpolation using input matrix
+LINTERP   = .TRUE.                  ! true for runoff interpolation using input matrix
 LINPEND   = .TRUE.                  ! true for runoff endian conversion
 LITRPCDF  = .FALSE.                  ! * true for netCDF input matrix
-CINPMAT   = "../CaMa/map/CaMaMap4CoLM_glb_0.25in_0.25out/CRU-inpmat.bin"                ! input matrix file name
+CINPMAT   = "../CaMa/map/CaMaMap4CoLM_glb_0.25in_0.25out/glb_0.25in_0.25out-inpmat.bin"                ! input matrix file name
 DROFUNIT  = 1.0                 ! runoff unit conversion
 /
 &NOUTPUT
 COUTDIR  = "../../cases/"                ! OUTPUT DIRECTORY
 !CVARSOUT="wevap,winfilt,rivout,rivsto,rivdph,rivvel,fldout,fldsto,flddph,fldfrc,fldare,sfcelv,outflw,storge,pthflw,pthout,maxsto,maxflw,maxdph" # list output variable (comma separated)
-CVARSOUT = "wevap,winfilt,outflw,fldout,flddph,fldfrc,fldare,runoff"               ! Comma-separated list of output variables to save 
+CVARSOUT = "wevap,outflw,fldout,flddph,fldfrc,fldare,runoff"               ! Comma-separated list of output variables to save 
 COUTTAG  = "test"                ! Output Tag Name for each experiment
 LOUTVEC  = .FALSE                      ! TRUE FOR VECTORIAL OUTPUT, FALSE FOR NX,NY OUTPUT
 LOUTCDF  = .TRUE.                  ! * true for netcdf outptu false for binary
@@ -113,3 +113,4 @@ LDAMOPT  = "V13"                                       ! LIS H22 H06 V13
 LDAMTXT  = .TRUE.                                      ! true: dam inflow-outflw txt output
 /
 
+ 
