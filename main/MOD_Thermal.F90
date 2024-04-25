@@ -886,7 +886,7 @@ IF (DEF_USE_PC .and. patchclass(ipatch)/=CROPLAND) THEN
          sigf_p(ps:pe)     ,etrc_p(:)         ,t_grnd            ,qg,rss            ,dqgdT             ,&
          emg               ,t_soil            ,t_snow            ,q_soil            ,q_snow            ,&
          z0m_p(ps:pe)      ,tleaf_p(ps:pe)    ,ldew_p(ps:pe)     ,ldew_rain_p(ps:pe),ldew_snow_p(ps:pe),&
-         fwet_snow(ps:pe)  ,taux              ,tauy              ,fseng             ,fseng_soil        ,&
+         fwet_snow_p(ps:pe),taux              ,tauy              ,fseng             ,fseng_soil        ,&
          fseng_snow        ,fevpg             ,fevpg_soil        ,fevpg_snow        ,cgrnd             ,&
          cgrndl            ,cgrnds            ,tref              ,qref              ,rst_p(ps:pe)      ,&
          assim_p(ps:pe)    ,respc_p(ps:pe)    ,fsenl_p(ps:pe)    ,fevpl_p(ps:pe)    ,etr_p(ps:pe)      ,&
