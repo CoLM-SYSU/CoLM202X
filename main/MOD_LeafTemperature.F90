@@ -34,14 +34,15 @@ CONTAINS
               psrf       ,rhoair     ,parsun     ,parsha     ,sabv       ,frl        ,&
               fsun       ,thermk     ,rstfacsun  ,rstfacsha  ,gssun      ,gssha      ,&
               po2m       ,pco2m      ,z0h_g      ,obug       ,ustarg     ,zlnd       ,&
-              zsno       ,fsno       ,sigf       ,etrc       ,tg         ,qg,rss     ,&
-              t_soil     ,t_snow     ,q_soil     ,q_snow     ,dqgdT      ,emg        ,&
-              tl         ,ldew       ,ldew_rain  ,ldew_snow  ,fwet_snow  ,taux       ,&
-              tauy       ,fseng      ,fseng_soil ,fseng_snow ,fevpg      ,fevpg_soil ,&
-              fevpg_snow ,cgrnd      ,cgrndl     ,cgrnds     ,tref       ,qref       ,&
-              rst        ,assim      ,respc      ,fsenl      ,fevpl      ,etr        ,&
-              dlrad      ,ulrad      ,z0m        ,zol        ,rib        ,ustar      ,&
-              qstar      ,tstar      ,fm         ,fh         ,fq         ,rootfr     ,&
+              zsno       ,fsno       ,sigf       ,etrc       ,tg         ,qg         ,&
+              rss        ,t_soil     ,t_snow     ,q_soil     ,q_snow     ,dqgdT      ,&
+              emg        ,tl         ,ldew       ,ldew_rain  ,ldew_snow  ,fwet_snow  ,&
+              taux       ,tauy       ,fseng      ,fseng_soil ,fseng_snow ,fevpg      ,&
+              fevpg_soil ,fevpg_snow ,cgrnd      ,cgrndl     ,cgrnds     ,tref       ,&
+              qref       ,rst        ,assim      ,respc      ,fsenl      ,fevpl      ,&
+              etr        ,dlrad      ,ulrad      ,z0m        ,zol        ,rib        ,&
+              ustar      ,qstar      ,tstar      ,fm         ,fh         ,fq         ,&
+              rootfr     ,&
 !Plant Hydraulic variables
               kmax_sun   ,kmax_sha   ,kmax_xyl   ,kmax_root  ,psi50_sun  ,psi50_sha  ,&
               psi50_xyl  ,psi50_root ,ck         ,vegwp      ,gs0sun     ,gs0sha     ,&
@@ -51,8 +52,8 @@ CONTAINS
               lai_old    ,o3uptakesun,o3uptakesha,forc_ozone ,&
 !End ozone stress variables
               hpbl       ,&
-              qintr_rain ,qintr_snow ,t_precip   ,hprl       ,smp        ,hk         ,&
-              hksati     ,rootflux                                                    )
+              qintr_rain ,qintr_snow ,t_precip   ,hprl       ,dheatl     ,smp        ,&
+              hk         ,hksati     ,rootflux                                        )
 
 !=======================================================================
 ! !DESCRIPTION:
@@ -267,6 +268,7 @@ CONTAINS
         dlrad,      &! downward longwave radiation blow the canopy [W/m2]
         ulrad,      &! upward longwave radiation above the canopy [W/m2]
         hprl,       &! precipitation sensible heat from canopy
+        dheatl,     &! vegetation heat change [W/m2]
 !Ozone stress variables
         o3coefv_sun,&! Ozone stress factor for photosynthesis on sunlit leaf
         o3coefv_sha,&! Ozone stress factor for photosynthesis on sunlit leaf
@@ -1047,7 +1049,11 @@ ELSE
             + (1-emg)*thermk*fac*stefnc*tlbef**4 &
             + 4.*(1-emg)*thermk*fac*stefnc*tlbef**3*dtl(it-1)
 ENDIF
-      hprl = cpliq * qintr_rain*(t_precip-tl) + cpice * qintr_snow*(t_precip-tl)
+      ! precipitation sensible heat from canopy
+      hprl   = cpliq * qintr_rain*(t_precip-tl) + cpice * qintr_snow*(t_precip-tl)
+
+      ! vegetation heat change
+      dheatl = clai/deltim*dtl(it-1)
 
 !-----------------------------------------------------------------------
 ! Derivative of soil energy flux with respect to soil temperature (cgrnd)
@@ -1063,12 +1069,12 @@ ENDIF
 !-----------------------------------------------------------------------
 
       err = sabv + irab + dirab_dtl*dtl(it-1) - fsenl - hvap*fevpl + hprl &
-          ! plus vegetation heat capacity change
-          + clai/deltim*dtl(it-1)
+          ! account for vegetation heat change
+          - dheatl
 
 #if(defined CoLMDEBUG)
       IF(abs(err) .gt. .2) &
-      write(6,*) 'energy imbalance in LeafTemperature.F90',it-1,err,sabv,irab,fsenl,hvap*fevpl,hprl
+      write(6,*) 'energy imbalance in LeafTemperature.F90',it-1,err,sabv,irab,fsenl,hvap*fevpl,hprl,dheatl
 #endif
 
 !-----------------------------------------------------------------------

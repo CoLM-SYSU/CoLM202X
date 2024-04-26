@@ -327,8 +327,8 @@ CONTAINS
             CALL abort
          ENDIF
 
-         IF (abs(ldew-ldew_rain-ldew_snow) > 1.e-6) THEN
-            write(6,*) 'something wrong in interception code : '
+         IF (DEF_VEG_SNOW .and. abs(ldew-ldew_rain-ldew_snow) > 1.e-6) THEN
+            write(6,*) 'something wrong in interception code when DEF_VEG_SNOW : '
             write(6,*) ldew, ldew_rain, ldew_snow
             CALL abort
          ENDIF
