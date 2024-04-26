@@ -24,7 +24,7 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
    USE MOD_LandPatch, only: numpatch
    USE MOD_LandUrban, only: patch2urban
    USE MOD_Namelist, only: DEF_forcing, DEF_URBAN_RUN
-   USE MOD_Forcing, only: forcmask
+   USE MOD_Forcing, only: forcmask_pch
    USE omp_lib
 #ifdef CaMa_Flood
  ! get flood variables: inundation depth[mm], inundation fraction [0-1],
@@ -59,7 +59,7 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
 
          ! Apply forcing mask
          IF (DEF_forcing%has_missing_value) THEN
-            IF (.not. forcmask(i)) CYCLE
+            IF (.not. forcmask_pch(i)) CYCLE
          ENDIF
 
          ! Apply patch mask
