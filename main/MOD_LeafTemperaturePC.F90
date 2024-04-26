@@ -65,7 +65,8 @@ CONTAINS
 !End ozone stress variables
                hpbl, &
                qintr_rain ,qintr_snow ,t_precip   ,hprl       ,&
-               smp        ,hk         ,hksati     ,rootflux    )
+               dheatl     ,smp        ,hk         ,hksati     ,&
+               rootflux    )
 
 !=======================================================================
 !
@@ -256,7 +257,8 @@ CONTAINS
         fsenl,         &! sensible heat from leaves [W/m2]
         fevpl,         &! evaporation+transpiration from leaves [mm/s]
         etr,           &! transpiration rate [mm/s]
-        hprl            ! precipitation sensible heat from canopy
+        hprl,          &! precipitation sensible heat from canopy
+        dheatl          ! vegetation heat change [W/m2]
 
    real(r8), intent(inout) :: &
         z0m,           &! effective roughness [m]
@@ -1755,7 +1757,12 @@ ENDIF
 
             fevpl(i) = fevpl(i) - elwdif
             fsenl(i) = fsenl(i) + hvap*elwdif
+
+            ! precipitation sensible heat from canopy
             hprl (i) = cpliq*qintr_rain(i)*(t_precip-tl(i)) + cpice*qintr_snow(i)*(t_precip-tl(i))
+
+            ! vegetation heat change
+            dheatl(i) = clai(i)/deltim*dtl(it-1,i)
 
 !-----------------------------------------------------------------------
 ! Update dew accumulation (kg/m2)
@@ -1880,13 +1887,13 @@ ENDIF
 
             err = sabv(i) + irab(i) + dirab_dtl(i)*dtl(it-1,i) &
                 - fsenl(i) - hvap*fevpl(i) + hprl(i) &
-                ! plus vegetation heat capacity change
-                + clai(i)/deltim*dtl(it-1,i)
+                ! account for vegetation heat change
+                - dheatl(i)
 
 #if(defined CoLMDEBUG)
             IF(abs(err) .gt. .2) &
                write(6,*) 'energy imbalance in LeafTemperaturePC.F90', &
-                          i,it-1,err,sabv(i),irab(i),fsenl(i),hvap*fevpl(i),hprl(i)
+                          i,it-1,err,sabv(i),irab(i),fsenl(i),hvap*fevpl(i),hprl(i),dheatl(i)
 #endif
          ENDIF
       ENDDO
