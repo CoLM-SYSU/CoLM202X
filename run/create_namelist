@@ -5,14 +5,14 @@ Help()
 {
 #DISPLAY help
    echo "----------------------------- Usage ---------------------------------------"
-   echo "   Descripion: clone CoLM simulation case from an existing case  "
+   echo "   Descripion: create CoLM simulation namelist files  "
 
    echo '---------------------------------------------------------------------------'
-   echo 'Syntax: ./create_namelist -s $SourcePath -t $startyr -e $endyr -d $RAWDATA'
-   echo '         -r $RUNTIME -a $reslat -o $reslat -f $Forcing [ -S ]'
+   echo 'Syntax: ./create_namelist -p $CasePath -n CaseName -t $startyr -e $endyr '
+   echo '         -d $RAWDATA -r $RUNTIME -a $reslat -o $reslat -f $Forcing [ -S ]'
    echo '!--------------------------------------------------------------------------'
    echo options:
-   echo '  -s The path of the destimation case, which you want to create '
+   echo '  -p The path of the destimation case, which you want to create '
    echo    '(including case name but without ''/'' at end of case path)'
    echo
    echo '  -n The name of the namelist'
@@ -45,6 +45,16 @@ Help()
    echo '  -o|--reslon (optional) ${reslon} is the grid resolution of longitude'
    echo 
    echo '  -l|--landmask (optional) ${LandMask} is the filename with path of landmask file'
+   echo
+   echo '  -S|--south    (optional) ${EDGES} latitude of the south edge of simulation.'
+   echo
+   echo '  -N|--south    (optional) ${EDGEN} latitude of the north edge of simulation.'
+   echo
+   echo '  -W|--south    (optional) ${EDGEW} longitude of the west edge of simulation.'
+   echo
+   echo '  -E|--south    (optional) ${EDGEE} longitude of the east edge of simulation.'
+   echo
+   echo '  -i|--sasuspinup (optional) if present, sasu spinup is used.'
    echo
    echo -h display command information
 }
@@ -153,10 +163,10 @@ EOF
 
 }
 
-while getopts ":his:n:t:e:d:r:a:o:f:l:S:N:W:E:" options ;
+while getopts ":hip:n:t:e:d:r:a:o:f:l:S:N:W:E:" options ;
 do
     case $options in
-      s) CASENAMEPATH="$OPTARG" ;;
+      p) CASENAMEPATH="$OPTARG" ;;
       n) NMLNAME="$OPTARG"     ;;
       t) startyr="$OPTARG"  ;;
       e) endyr="$OPTARG"    ;;
