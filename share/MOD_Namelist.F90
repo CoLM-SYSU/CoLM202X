@@ -293,10 +293,6 @@ MODULE MOD_Namelist
    character(len=5)   :: DEF_precip_phase_discrimination_scheme = 'II'
    character(len=256) :: DEF_SSP='585' ! Co2 path for CMIP6 future scenario.
 
-   logical          :: DEF_USE_Forcing_Downscaling = .false.
-   character(len=5) :: DEF_DS_precipitation_adjust_scheme = 'II'
-   character(len=5) :: DEF_DS_longwave_adjust_scheme      = 'II'
-
    ! use irrigation
    logical :: DEF_USE_IRRIGATION = .false.
 
@@ -384,6 +380,12 @@ MODULE MOD_Namelist
 
    !CBL height
    logical            :: DEF_USE_CBL_HEIGHT = .false.
+
+   character(len=20) :: DEF_Forcing_Interp = 'areaweight'
+
+   logical          :: DEF_USE_Forcing_Downscaling = .false.
+   character(len=5) :: DEF_DS_precipitation_adjust_scheme = 'II'
+   character(len=5) :: DEF_DS_longwave_adjust_scheme      = 'II'
 
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ! ----- Part 13: history and restart -----
@@ -894,6 +896,7 @@ CONTAINS
 
       DEF_forcing_namelist,            &
 
+      DEF_Forcing_Interp,                 &
       DEF_USE_Forcing_Downscaling,        &
       DEF_DS_precipitation_adjust_scheme, &
       DEF_DS_longwave_adjust_scheme,      &
@@ -1339,6 +1342,7 @@ CONTAINS
       CALL mpi_bcast (DEF_REST_CompressLevel, 1, mpi_integer,   p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_HIST_CompressLevel, 1, mpi_integer,   p_root, p_comm_glb, p_err)
 
+      CALL mpi_bcast (DEF_Forcing_Interp,                20, mpi_character, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_USE_Forcing_Downscaling,        1, mpi_logical,   p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_DS_precipitation_adjust_scheme, 5, mpi_character, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_DS_longwave_adjust_scheme,      5, mpi_character, p_root, p_comm_glb, p_err)

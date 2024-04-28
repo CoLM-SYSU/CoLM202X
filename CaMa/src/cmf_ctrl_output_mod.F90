@@ -296,13 +296,17 @@ CONTAINS
                VAROUT(JF)%CVLNAME='ground water discharge'
                VAROUT(JF)%CVUNITS='m3/s'  
             CASE ('wevap')
-               VAROUT(JF)%CVNAME=CVNAMES(JF)
-               VAROUT(JF)%CVLNAME='water evaporation'
-               VAROUT(JF)%CVUNITS='m3/s'
+               IF (LWEVAP) THEN
+                  VAROUT(JF)%CVNAME=CVNAMES(JF)
+                  VAROUT(JF)%CVLNAME='water evaporation'
+                  VAROUT(JF)%CVUNITS='m3/s'
+               ENDIF
             CASE ('winfilt')
-               VAROUT(JF)%CVNAME=CVNAMES(JF)
-               VAROUT(JF)%CVLNAME='water infiltration'
-               VAROUT(JF)%CVUNITS='m3/s'
+               IF (LWINFILT) THEN
+                  VAROUT(JF)%CVNAME=CVNAMES(JF)
+                  VAROUT(JF)%CVLNAME='water infiltration'
+                  VAROUT(JF)%CVUNITS='m3/s'
+               ENDIF
             CASE ('outins')
                VAROUT(JF)%CVNAME=CVNAMES(JF)
                VAROUT(JF)%CVLNAME='instantaneous discharge'

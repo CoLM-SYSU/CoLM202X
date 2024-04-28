@@ -17,7 +17,6 @@ MODULE MOD_LeafInterception
    !* :SUBROUTINE:"LEAF_interception_VIC"        : interception and drainage of precipitation schemes modified from VIC
    !* :SUBROUTINE:"LEAF_interception_JULES"      : interception and drainage of precipitation schemes modified from JULES
    !* :SUBROUTINE:"LEAF_interception_pftwrap"    : wapper for pft land use classification
-   !* :SUBROUTINE:"LEAF_interception_pcwrap"     : wapper for pc land use classification
 
 !REVISION HISTORY:
 !----------------
@@ -1983,12 +1982,13 @@ CONTAINS
          ENDDO
       ENDIF
 
-     pg_rain = pg_rain_tmp
-     pg_snow = pg_snow_tmp
-     ldew  = sum(ldew_p(ps:pe) * pftfrac(ps:pe))
-     qintr = sum(qintr_p(ps:pe) * pftfrac(ps:pe))
-     qintr_rain = sum(qintr_rain_p(ps:pe) * pftfrac(ps:pe))
-     qintr_snow = sum(qintr_snow_p(ps:pe) * pftfrac(ps:pe))
+      pg_rain = pg_rain_tmp
+      pg_snow = pg_snow_tmp
+      ldew    = sum( ldew_p(ps:pe) * pftfrac(ps:pe))
+      qintr   = sum(qintr_p(ps:pe) * pftfrac(ps:pe))
+      qintr_rain = sum(qintr_rain_p(ps:pe) * pftfrac(ps:pe))
+      qintr_snow = sum(qintr_snow_p(ps:pe) * pftfrac(ps:pe))
+
    END SUBROUTINE LEAF_interception_pftwrap
 #endif
 

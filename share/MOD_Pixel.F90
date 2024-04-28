@@ -312,6 +312,7 @@ CONTAINS
                IF (iy1 > this%nlat) EXIT
             ENDDO
          ELSE
+            write(*,*) 'Warning: grid in latitude does not cover simulation region completely.'
             grd%ygrd(iy1) = -1
             iy1 = iy1 + 1
          ENDIF
@@ -336,6 +337,7 @@ CONTAINS
             ENDDO
 
          ELSE
+            write(*,*) 'Warning: grid in longitude does not cover simulation region completely.'
             grd%xgrd(ix1) = -1
             ix1 = ix1 + 1
          ENDIF

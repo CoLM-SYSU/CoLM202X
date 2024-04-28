@@ -119,7 +119,7 @@ CONTAINS
 #if(defined CaMa_Flood)
       USE MOD_CaMa_Vars !defination of CaMa variables
 #endif
-      USE MOD_Forcing, only: forcmask
+      USE MOD_Forcing, only: forcmask_pch
 #ifdef DataAssimilation
       USE MOD_DA_GRACE, only : fslp_k_mon
 #endif
@@ -259,7 +259,7 @@ CONTAINS
                filter(:) = patchtype < 99
 
                IF (DEF_forcing%has_missing_value) THEN
-                  filter = filter .and. forcmask
+                  filter = filter .and. forcmask_pch
                ENDIF
 
                filter = filter .and. patchmask
@@ -348,7 +348,7 @@ CONTAINS
                filter(:) = patchtype < 99
 
                IF (DEF_forcing%has_missing_value) THEN
-                  filter = filter .and. forcmask
+                  filter = filter .and. forcmask_pch
                ENDIF
 
                filter = filter .and. patchmask
@@ -637,7 +637,7 @@ CONTAINS
                filter(:) = patchtype == 2
 
                IF (DEF_forcing%has_missing_value) THEN
-                  filter = filter .and. forcmask
+                  filter = filter .and. forcmask_pch
                ENDIF
 
                filter = filter .and. patchmask
@@ -672,7 +672,7 @@ CONTAINS
                      filter_urb(u) = .true.
 
                      IF (DEF_forcing%has_missing_value) THEN
-                        filter_urb(u) = filter_urb(u) .and. forcmask(i)
+                        filter_urb(u) = filter_urb(u) .and. forcmask_pch(i)
                      ENDIF
                   ENDIF
                ENDDO
@@ -791,7 +791,7 @@ CONTAINS
             IF (numpatch > 0) THEN
                filter(:) = patchtype < 99
                IF (DEF_forcing%has_missing_value) THEN
-                  filter = filter .and. forcmask
+                  filter = filter .and. forcmask_pch
                ENDIF
             ENDIF
          ENDIF
@@ -3254,7 +3254,7 @@ CONTAINS
                filter(:) = patchtype <= 3
 
                IF (DEF_forcing%has_missing_value) THEN
-                  filter = filter .and. forcmask
+                  filter = filter .and. forcmask_pch
                ENDIF
 
                filter = filter .and. patchmask
@@ -3292,7 +3292,7 @@ CONTAINS
                filter(:) = patchtype <= 2
 
                IF (DEF_forcing%has_missing_value) THEN
-                  filter = filter .and. forcmask
+                  filter = filter .and. forcmask_pch
                ENDIF
 
                filter = filter .and. patchmask
@@ -3335,7 +3335,7 @@ CONTAINS
                filter(:) = (patchtype <= 4)
 
                IF (DEF_forcing%has_missing_value) THEN
-                  filter = filter .and. forcmask
+                  filter = filter .and. forcmask_pch
                ENDIF
 
                filter = filter .and. patchmask
@@ -3382,7 +3382,7 @@ CONTAINS
             IF (numpatch > 0) THEN
                filter(:) = patchtype == 4
                IF (DEF_forcing%has_missing_value) THEN
-                  filter = filter .and. forcmask
+                  filter = filter .and. forcmask_pch
                ENDIF
             ENDIF
          ENDIF
@@ -3410,7 +3410,7 @@ CONTAINS
                filter(:) = patchtype < 99
 
                IF (DEF_forcing%has_missing_value) THEN
-                  filter = filter .and. forcmask
+                  filter = filter .and. forcmask_pch
                ENDIF
 
                filter = filter .and. patchmask
@@ -3531,7 +3531,7 @@ CONTAINS
             IF (numpatch > 0) THEN
                filter(:) = nac_ln > 0
                IF (DEF_forcing%has_missing_value) THEN
-                  filter = filter .and. forcmask
+                  filter = filter .and. forcmask_pch
                ENDIF
             ENDIF
          ENDIF
