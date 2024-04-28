@@ -32,7 +32,8 @@ MODULE MOD_Urban_Flux
 !           Add wet fraction for roof and impervious ground, set max
 !           ponding for roof and impervious from 10mm -> 1mm.
 !
-!  MM/YYYY, Wenzong Dong: TODO.
+!  12/2022, Wenzong Dong: Traffic and metabolism heat flux are considered
+!           in turbulent flux exchange.
 !-----------------------------------------------------------------------
    USE MOD_Precision
    USE MOD_Vars_Global
