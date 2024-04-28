@@ -81,21 +81,21 @@ MODULE MOD_Namelist
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
    type nl_simulation_time_type
-      logical  :: greenwich   = .TRUE.
-      integer  :: start_year  = 2000
-      integer  :: start_month = 1
-      integer  :: start_day   = 1
-      integer  :: start_sec   = 0
-      integer  :: end_year    = 2003
-      integer  :: end_month   = 1
-      integer  :: end_day     = 1
-      integer  :: end_sec     = 0
-      integer  :: spinup_year = 2000
-      integer  :: spinup_month= 1
-      integer  :: spinup_day  = 1
-      integer  :: spinup_sec  = 0
+      logical  :: greenwich     = .TRUE.
+      integer  :: start_year    = 2000
+      integer  :: start_month   = 1
+      integer  :: start_day     = 1
+      integer  :: start_sec     = 0
+      integer  :: end_year      = 2003
+      integer  :: end_month     = 1
+      integer  :: end_day       = 1
+      integer  :: end_sec       = 0
+      integer  :: spinup_year   = 2000
+      integer  :: spinup_month  = 1
+      integer  :: spinup_day    = 1
+      integer  :: spinup_sec    = 0
       integer  :: spinup_repeat = 1
-      real(r8) :: timestep    = 1800.
+      real(r8) :: timestep      = 1800.
    END type nl_simulation_time_type
 
    type (nl_simulation_time_type) :: DEF_simulation_time
@@ -128,14 +128,14 @@ MODULE MOD_Namelist
 
    ! ----- Use surface data from existing dataset -----
    ! case 1: from a larger region
-   logical :: USE_srfdata_from_larger_region   = .false.
+   logical :: USE_srfdata_from_larger_region = .false.
    character(len=256) :: DEF_dir_existing_srfdata = 'path/to/landdata'
    ! case 2: from gridded data with dimensions [patch,lon,lat] or [pft,lon,lat]
    !         only available for USGS/IGBP/PFT CLASSIFICATION
    logical :: USE_srfdata_from_3D_gridded_data = .false.
 
    ! USE a static year land cover type
-   integer :: DEF_LC_YEAR      = 2005
+   integer :: DEF_LC_YEAR  = 2005
 
    ! ----- Subgrid scheme -----
    logical :: DEF_USE_USGS = .false.
@@ -401,7 +401,7 @@ MODULE MOD_Namelist
    character(len=256) :: DEF_HIST_FREQ    = 'none'  ! write history file frequency: TIMESTEP/HOURLY/DAILY/MONTHLY/YEARLY
    character(len=256) :: DEF_HIST_groupby = 'MONTH' ! history file in one file: DAY/MONTH/YEAR
    character(len=256) :: DEF_HIST_mode    = 'one'
-   logical :: DEF_HIST_WriteBack      = .false.
+   logical :: DEF_HIST_WriteBack     = .false.
    integer :: DEF_REST_CompressLevel = 1
    integer :: DEF_HIST_CompressLevel = 1
 
@@ -412,350 +412,350 @@ MODULE MOD_Namelist
    ! ----- history variables -----
    type history_var_type
 
-      logical :: xy_us        = .true.
-      logical :: xy_vs        = .true.
-      logical :: xy_t         = .true.
-      logical :: xy_q         = .true.
-      logical :: xy_prc       = .true.
-      logical :: xy_prl       = .true.
-      logical :: xy_pbot      = .true.
-      logical :: xy_frl       = .true.
-      logical :: xy_solarin   = .true.
-      logical :: xy_rain      = .true.
-      logical :: xy_snow      = .true.
-      logical :: xy_ozone     = .true.
+      logical :: xy_us                            = .true.
+      logical :: xy_vs                            = .true.
+      logical :: xy_t                             = .true.
+      logical :: xy_q                             = .true.
+      logical :: xy_prc                           = .true.
+      logical :: xy_prl                           = .true.
+      logical :: xy_pbot                          = .true.
+      logical :: xy_frl                           = .true.
+      logical :: xy_solarin                       = .true.
+      logical :: xy_rain                          = .true.
+      logical :: xy_snow                          = .true.
+      logical :: xy_ozone                         = .true.
 
-      logical :: xy_hpbl      = .true.
+      logical :: xy_hpbl                          = .true.
 
-      logical :: taux         = .true.
-      logical :: tauy         = .true.
-      logical :: fsena        = .true.
-      logical :: lfevpa       = .true.
-      logical :: fevpa        = .true.
-      logical :: fsenl        = .true.
-      logical :: fevpl        = .true.
-      logical :: etr          = .true.
-      logical :: fseng        = .true.
-      logical :: fevpg        = .true.
-      logical :: fgrnd        = .true.
-      logical :: sabvsun      = .true.
-      logical :: sabvsha      = .true.
-      logical :: sabg         = .true.
-      logical :: olrg         = .true.
-      logical :: rnet         = .true.
-      logical :: xerr         = .true.
-      logical :: zerr         = .true.
-      logical :: rsur         = .true.
-      logical :: rsur_se      = .true.
-      logical :: rsur_ie      = .true.
-      logical :: rsub         = .true.
-      logical :: rnof         = .true.
-      logical :: xwsur        = .true.
-      logical :: xwsub        = .true.
-      logical :: qintr        = .true.
-      logical :: qinfl        = .true.
-      logical :: qdrip        = .true.
-      logical :: wat          = .true.
-      logical :: wat_inst     = .true.
-      logical :: wetwat       = .true.
-      logical :: wetwat_inst  = .true.
-      logical :: assim        = .true.
-      logical :: respc        = .true.
-      logical :: qcharge      = .true.
-      logical :: t_grnd       = .true.
-      logical :: tleaf        = .true.
-      logical :: ldew         = .true.
-      logical :: scv          = .true.
-      logical :: snowdp       = .true.
-      logical :: fsno         = .true.
-      logical :: sigf         = .true.
-      logical :: green        = .true.
-      logical :: lai          = .true.
-      logical :: laisun       = .true.
-      logical :: laisha       = .true.
-      logical :: sai          = .true.
-      logical :: alb          = .true.
-      logical :: emis         = .true.
-      logical :: z0m          = .true.
-      logical :: trad         = .true.
-      logical :: rss          = .true.
-      logical :: tref         = .true.
-      logical :: qref         = .true.
+      logical :: taux                             = .true.
+      logical :: tauy                             = .true.
+      logical :: fsena                            = .true.
+      logical :: lfevpa                           = .true.
+      logical :: fevpa                            = .true.
+      logical :: fsenl                            = .true.
+      logical :: fevpl                            = .true.
+      logical :: etr                              = .true.
+      logical :: fseng                            = .true.
+      logical :: fevpg                            = .true.
+      logical :: fgrnd                            = .true.
+      logical :: sabvsun                          = .true.
+      logical :: sabvsha                          = .true.
+      logical :: sabg                             = .true.
+      logical :: olrg                             = .true.
+      logical :: rnet                             = .true.
+      logical :: xerr                             = .true.
+      logical :: zerr                             = .true.
+      logical :: rsur                             = .true.
+      logical :: rsur_se                          = .true.
+      logical :: rsur_ie                          = .true.
+      logical :: rsub                             = .true.
+      logical :: rnof                             = .true.
+      logical :: xwsur                            = .true.
+      logical :: xwsub                            = .true.
+      logical :: qintr                            = .true.
+      logical :: qinfl                            = .true.
+      logical :: qdrip                            = .true.
+      logical :: wat                              = .true.
+      logical :: wat_inst                         = .true.
+      logical :: wetwat                           = .true.
+      logical :: wetwat_inst                      = .true.
+      logical :: assim                            = .true.
+      logical :: respc                            = .true.
+      logical :: qcharge                          = .true.
+      logical :: t_grnd                           = .true.
+      logical :: tleaf                            = .true.
+      logical :: ldew                             = .true.
+      logical :: scv                              = .true.
+      logical :: snowdp                           = .true.
+      logical :: fsno                             = .true.
+      logical :: sigf                             = .true.
+      logical :: green                            = .true.
+      logical :: lai                              = .true.
+      logical :: laisun                           = .true.
+      logical :: laisha                           = .true.
+      logical :: sai                              = .true.
+      logical :: alb                              = .true.
+      logical :: emis                             = .true.
+      logical :: z0m                              = .true.
+      logical :: trad                             = .true.
+      logical :: rss                              = .true.
+      logical :: tref                             = .true.
+      logical :: qref                             = .true.
 
-      logical :: fsen_roof    = .true.
-      logical :: fsen_wsun    = .true.
-      logical :: fsen_wsha    = .true.
-      logical :: fsen_gimp    = .true.
-      logical :: fsen_gper    = .true.
-      logical :: fsen_urbl    = .true.
-      logical :: lfevp_roof   = .true.
-      logical :: lfevp_gimp   = .true.
-      logical :: lfevp_gper   = .true.
-      logical :: lfevp_urbl   = .true.
-      logical :: fhac         = .true.
-      logical :: fwst         = .true.
-      logical :: fach         = .true.
-      logical :: fhah         = .true.
-      logical :: meta         = .true.
-      logical :: vehc         = .true.
-      logical :: t_room       = .true.
-      logical :: tafu         = .true.
-      logical :: t_roof       = .true.
-      logical :: t_wall       = .true.
+      logical :: fsen_roof                        = .true.
+      logical :: fsen_wsun                        = .true.
+      logical :: fsen_wsha                        = .true.
+      logical :: fsen_gimp                        = .true.
+      logical :: fsen_gper                        = .true.
+      logical :: fsen_urbl                        = .true.
+      logical :: lfevp_roof                       = .true.
+      logical :: lfevp_gimp                       = .true.
+      logical :: lfevp_gper                       = .true.
+      logical :: lfevp_urbl                       = .true.
+      logical :: fhac                             = .true.
+      logical :: fwst                             = .true.
+      logical :: fach                             = .true.
+      logical :: fhah                             = .true.
+      logical :: meta                             = .true.
+      logical :: vehc                             = .true.
+      logical :: t_room                           = .true.
+      logical :: tafu                             = .true.
+      logical :: t_roof                           = .true.
+      logical :: t_wall                           = .true.
 
-      logical :: assimsun      = .true. !1
-      logical :: assimsha      = .true. !1
-      logical :: etrsun        = .true. !1
-      logical :: etrsha        = .true. !1
+      logical :: assimsun                         = .true. !1
+      logical :: assimsha                         = .true. !1
+      logical :: etrsun                           = .true. !1
+      logical :: etrsha                           = .true. !1
 
-      logical :: leafc              = .true.
-      logical :: leafc_storage      = .true.
-      logical :: leafc_xfer         = .true.
-      logical :: frootc             = .true.
-      logical :: frootc_storage     = .true.
-      logical :: frootc_xfer        = .true.
-      logical :: livestemc          = .true.
-      logical :: livestemc_storage  = .true.
-      logical :: livestemc_xfer     = .true.
-      logical :: deadstemc          = .true.
-      logical :: deadstemc_storage  = .true.
-      logical :: deadstemc_xfer     = .true.
-      logical :: livecrootc         = .true.
-      logical :: livecrootc_storage = .true.
-      logical :: livecrootc_xfer    = .true.
-      logical :: deadcrootc         = .true.
-      logical :: deadcrootc_storage = .true.
-      logical :: deadcrootc_xfer    = .true.
-      logical :: grainc             = .true.
-      logical :: grainc_storage     = .true.
-      logical :: grainc_xfer        = .true.
-      logical :: leafn              = .true.
-      logical :: leafn_storage      = .true.
-      logical :: leafn_xfer         = .true.
-      logical :: frootn             = .true.
-      logical :: frootn_storage     = .true.
-      logical :: frootn_xfer        = .true.
-      logical :: livestemn          = .true.
-      logical :: livestemn_storage  = .true.
-      logical :: livestemn_xfer     = .true.
-      logical :: deadstemn          = .true.
-      logical :: deadstemn_storage  = .true.
-      logical :: deadstemn_xfer     = .true.
-      logical :: livecrootn         = .true.
-      logical :: livecrootn_storage = .true.
-      logical :: livecrootn_xfer    = .true.
-      logical :: deadcrootn         = .true.
-      logical :: deadcrootn_storage = .true.
-      logical :: deadcrootn_xfer    = .true.
-      logical :: grainn             = .true.
-      logical :: grainn_storage     = .true.
-      logical :: grainn_xfer        = .true.
-      logical :: retrasn            = .true.
-      logical :: gpp                = .true.
-      logical :: downreg            = .true.
-      logical :: ar                 = .true.
-      logical :: cwdprod            = .true.
-      logical :: cwddecomp          = .true.
-      logical :: hr                 = .true.
-      logical :: fpg                = .true.
-      logical :: fpi                = .true.
-      logical :: gpp_enftemp        = .false. !1
-      logical :: gpp_enfboreal      = .false. !2
-      logical :: gpp_dnfboreal      = .false. !3
-      logical :: gpp_ebftrop        = .false. !4
-      logical :: gpp_ebftemp        = .false. !5
-      logical :: gpp_dbftrop        = .false. !6
-      logical :: gpp_dbftemp        = .false. !7
-      logical :: gpp_dbfboreal      = .false. !8
-      logical :: gpp_ebstemp        = .false. !9
-      logical :: gpp_dbstemp        = .false. !10
-      logical :: gpp_dbsboreal      = .false. !11
-      logical :: gpp_c3arcgrass     = .false. !12
-      logical :: gpp_c3grass        = .false. !13
-      logical :: gpp_c4grass        = .false. !14
-      logical :: leafc_enftemp      = .false. !1
-      logical :: leafc_enfboreal    = .false. !2
-      logical :: leafc_dnfboreal    = .false. !3
-      logical :: leafc_ebftrop      = .false. !4
-      logical :: leafc_ebftemp      = .false. !5
-      logical :: leafc_dbftrop      = .false. !6
-      logical :: leafc_dbftemp      = .false. !7
-      logical :: leafc_dbfboreal    = .false. !8
-      logical :: leafc_ebstemp      = .false. !9
-      logical :: leafc_dbstemp      = .false. !10
-      logical :: leafc_dbsboreal    = .false. !11
-      logical :: leafc_c3arcgrass   = .false. !12
-      logical :: leafc_c3grass      = .false. !13
-      logical :: leafc_c4grass      = .false. !14
+      logical :: leafc                            = .true.
+      logical :: leafc_storage                    = .true.
+      logical :: leafc_xfer                       = .true.
+      logical :: frootc                           = .true.
+      logical :: frootc_storage                   = .true.
+      logical :: frootc_xfer                      = .true.
+      logical :: livestemc                        = .true.
+      logical :: livestemc_storage                = .true.
+      logical :: livestemc_xfer                   = .true.
+      logical :: deadstemc                        = .true.
+      logical :: deadstemc_storage                = .true.
+      logical :: deadstemc_xfer                   = .true.
+      logical :: livecrootc                       = .true.
+      logical :: livecrootc_storage               = .true.
+      logical :: livecrootc_xfer                  = .true.
+      logical :: deadcrootc                       = .true.
+      logical :: deadcrootc_storage               = .true.
+      logical :: deadcrootc_xfer                  = .true.
+      logical :: grainc                           = .true.
+      logical :: grainc_storage                   = .true.
+      logical :: grainc_xfer                      = .true.
+      logical :: leafn                            = .true.
+      logical :: leafn_storage                    = .true.
+      logical :: leafn_xfer                       = .true.
+      logical :: frootn                           = .true.
+      logical :: frootn_storage                   = .true.
+      logical :: frootn_xfer                      = .true.
+      logical :: livestemn                        = .true.
+      logical :: livestemn_storage                = .true.
+      logical :: livestemn_xfer                   = .true.
+      logical :: deadstemn                        = .true.
+      logical :: deadstemn_storage                = .true.
+      logical :: deadstemn_xfer                   = .true.
+      logical :: livecrootn                       = .true.
+      logical :: livecrootn_storage               = .true.
+      logical :: livecrootn_xfer                  = .true.
+      logical :: deadcrootn                       = .true.
+      logical :: deadcrootn_storage               = .true.
+      logical :: deadcrootn_xfer                  = .true.
+      logical :: grainn                           = .true.
+      logical :: grainn_storage                   = .true.
+      logical :: grainn_xfer                      = .true.
+      logical :: retrasn                          = .true.
+      logical :: gpp                              = .true.
+      logical :: downreg                          = .true.
+      logical :: ar                               = .true.
+      logical :: cwdprod                          = .true.
+      logical :: cwddecomp                        = .true.
+      logical :: hr                               = .true.
+      logical :: fpg                              = .true.
+      logical :: fpi                              = .true.
+      logical :: gpp_enftemp                      = .false. !1
+      logical :: gpp_enfboreal                    = .false. !2
+      logical :: gpp_dnfboreal                    = .false. !3
+      logical :: gpp_ebftrop                      = .false. !4
+      logical :: gpp_ebftemp                      = .false. !5
+      logical :: gpp_dbftrop                      = .false. !6
+      logical :: gpp_dbftemp                      = .false. !7
+      logical :: gpp_dbfboreal                    = .false. !8
+      logical :: gpp_ebstemp                      = .false. !9
+      logical :: gpp_dbstemp                      = .false. !10
+      logical :: gpp_dbsboreal                    = .false. !11
+      logical :: gpp_c3arcgrass                   = .false. !12
+      logical :: gpp_c3grass                      = .false. !13
+      logical :: gpp_c4grass                      = .false. !14
+      logical :: leafc_enftemp                    = .false. !1
+      logical :: leafc_enfboreal                  = .false. !2
+      logical :: leafc_dnfboreal                  = .false. !3
+      logical :: leafc_ebftrop                    = .false. !4
+      logical :: leafc_ebftemp                    = .false. !5
+      logical :: leafc_dbftrop                    = .false. !6
+      logical :: leafc_dbftemp                    = .false. !7
+      logical :: leafc_dbfboreal                  = .false. !8
+      logical :: leafc_ebstemp                    = .false. !9
+      logical :: leafc_dbstemp                    = .false. !10
+      logical :: leafc_dbsboreal                  = .false. !11
+      logical :: leafc_c3arcgrass                 = .false. !12
+      logical :: leafc_c3grass                    = .false. !13
+      logical :: leafc_c4grass                    = .false. !14
 
-      logical :: cphase             = .true.
-      logical :: gddmaturity        = .true.
-      logical :: gddplant           = .true.
-      logical :: vf                 = .true.
-      logical :: hui                = .true.
-      logical :: cropprod1c         = .true.
-      logical :: cropprod1c_loss    = .true.
-      logical :: cropseedc_deficit  = .true.
-      logical :: grainc_to_cropprodc= .true.
-      logical :: plantdate_rainfed_temp_corn= .true.
-      logical :: plantdate_irrigated_temp_corn= .true.
-      logical :: plantdate_rainfed_spwheat= .true.
-      logical :: plantdate_irrigated_spwheat= .true.
-      logical :: plantdate_rainfed_wtwheat= .true.
-      logical :: plantdate_irrigated_wtwheat= .true.
-      logical :: plantdate_rainfed_temp_soybean= .true.
-      logical :: plantdate_irrigated_temp_soybean= .true.
-      logical :: plantdate_rainfed_cotton= .true.
-      logical :: plantdate_irrigated_cotton= .true.
-      logical :: plantdate_rainfed_rice= .true.
-      logical :: plantdate_irrigated_rice= .true.
-      logical :: plantdate_rainfed_sugarcane= .true.
-      logical :: plantdate_irrigated_sugarcane= .true.
-      logical :: plantdate_rainfed_trop_corn= .true.
-      logical :: plantdate_irrigated_trop_corn= .true.
-      logical :: plantdate_rainfed_trop_soybean= .true.
-      logical :: plantdate_irrigated_trop_soybean= .true.
-      logical :: plantdate_unmanagedcrop= .true.
-      logical :: cropprodc_rainfed_temp_corn= .true.
-      logical :: cropprodc_irrigated_temp_corn= .true.
-      logical :: cropprodc_rainfed_spwheat= .true.
-      logical :: cropprodc_irrigated_spwheat= .true.
-      logical :: cropprodc_rainfed_wtwheat= .true.
-      logical :: cropprodc_irrigated_wtwheat= .true.
-      logical :: cropprodc_rainfed_temp_soybean= .true.
-      logical :: cropprodc_irrigated_temp_soybean= .true.
-      logical :: cropprodc_rainfed_cotton= .true.
-      logical :: cropprodc_irrigated_cotton= .true.
-      logical :: cropprodc_rainfed_rice= .true.
-      logical :: cropprodc_irrigated_rice= .true.
-      logical :: cropprodc_rainfed_sugarcane= .true.
-      logical :: cropprodc_irrigated_sugarcane= .true.
-      logical :: cropprodc_rainfed_trop_corn= .true.
-      logical :: cropprodc_irrigated_trop_corn= .true.
-      logical :: cropprodc_rainfed_trop_soybean= .true.
-      logical :: cropprodc_irrigated_trop_soybean= .true.
-      logical :: cropprodc_unmanagedcrop= .true.
+      logical :: cphase                           = .true.
+      logical :: gddmaturity                      = .true.
+      logical :: gddplant                         = .true.
+      logical :: vf                               = .true.
+      logical :: hui                              = .true.
+      logical :: cropprod1c                       = .true.
+      logical :: cropprod1c_loss                  = .true.
+      logical :: cropseedc_deficit                = .true.
+      logical :: grainc_to_cropprodc              = .true.
+      logical :: plantdate_rainfed_temp_corn      = .true.
+      logical :: plantdate_irrigated_temp_corn    = .true.
+      logical :: plantdate_rainfed_spwheat        = .true.
+      logical :: plantdate_irrigated_spwheat      = .true.
+      logical :: plantdate_rainfed_wtwheat        = .true.
+      logical :: plantdate_irrigated_wtwheat      = .true.
+      logical :: plantdate_rainfed_temp_soybean   = .true.
+      logical :: plantdate_irrigated_temp_soybean = .true.
+      logical :: plantdate_rainfed_cotton         = .true.
+      logical :: plantdate_irrigated_cotton       = .true.
+      logical :: plantdate_rainfed_rice           = .true.
+      logical :: plantdate_irrigated_rice         = .true.
+      logical :: plantdate_rainfed_sugarcane      = .true.
+      logical :: plantdate_irrigated_sugarcane    = .true.
+      logical :: plantdate_rainfed_trop_corn      = .true.
+      logical :: plantdate_irrigated_trop_corn    = .true.
+      logical :: plantdate_rainfed_trop_soybean   = .true.
+      logical :: plantdate_irrigated_trop_soybean = .true.
+      logical :: plantdate_unmanagedcrop          = .true.
+      logical :: cropprodc_rainfed_temp_corn      = .true.
+      logical :: cropprodc_irrigated_temp_corn    = .true.
+      logical :: cropprodc_rainfed_spwheat        = .true.
+      logical :: cropprodc_irrigated_spwheat      = .true.
+      logical :: cropprodc_rainfed_wtwheat        = .true.
+      logical :: cropprodc_irrigated_wtwheat      = .true.
+      logical :: cropprodc_rainfed_temp_soybean   = .true.
+      logical :: cropprodc_irrigated_temp_soybean = .true.
+      logical :: cropprodc_rainfed_cotton         = .true.
+      logical :: cropprodc_irrigated_cotton       = .true.
+      logical :: cropprodc_rainfed_rice           = .true.
+      logical :: cropprodc_irrigated_rice         = .true.
+      logical :: cropprodc_rainfed_sugarcane      = .true.
+      logical :: cropprodc_irrigated_sugarcane    = .true.
+      logical :: cropprodc_rainfed_trop_corn      = .true.
+      logical :: cropprodc_irrigated_trop_corn    = .true.
+      logical :: cropprodc_rainfed_trop_soybean   = .true.
+      logical :: cropprodc_irrigated_trop_soybean = .true.
+      logical :: cropprodc_unmanagedcrop          = .true.
 
-      logical :: grainc_to_seed     = .true.
-      logical :: fert_to_sminn      = .true.
+      logical :: grainc_to_seed                   = .true.
+      logical :: fert_to_sminn                    = .true.
 
-      logical :: huiswheat          = .true.
-      logical :: pdcorn             = .true.
-      logical :: pdswheat           = .true.
-      logical :: pdwwheat           = .true.
-      logical :: pdsoybean          = .true.
-      logical :: pdcotton           = .true.
-      logical :: pdrice1            = .true.
-      logical :: pdrice2            = .true.
-      logical :: pdsugarcane        = .true.
-      logical :: fertnitro_corn     = .true.
-      logical :: fertnitro_swheat   = .true.
-      logical :: fertnitro_wwheat   = .true.
-      logical :: fertnitro_soybean  = .true.
-      logical :: fertnitro_cotton   = .true.
-      logical :: fertnitro_rice1    = .true.
-      logical :: fertnitro_rice2    = .true.
-      logical :: fertnitro_sugarcane= .true.
-      logical :: irrig_method_corn     = .true.
-      logical :: irrig_method_swheat   = .true.
-      logical :: irrig_method_wwheat   = .true.
-      logical :: irrig_method_soybean  = .true.
-      logical :: irrig_method_cotton   = .true.
-      logical :: irrig_method_rice1    = .true.
-      logical :: irrig_method_rice2    = .true.
-      logical :: irrig_method_sugarcane= .true.
+      logical :: huiswheat                        = .true.
+      logical :: pdcorn                           = .true.
+      logical :: pdswheat                         = .true.
+      logical :: pdwwheat                         = .true.
+      logical :: pdsoybean                        = .true.
+      logical :: pdcotton                         = .true.
+      logical :: pdrice1                          = .true.
+      logical :: pdrice2                          = .true.
+      logical :: pdsugarcane                      = .true.
+      logical :: fertnitro_corn                   = .true.
+      logical :: fertnitro_swheat                 = .true.
+      logical :: fertnitro_wwheat                 = .true.
+      logical :: fertnitro_soybean                = .true.
+      logical :: fertnitro_cotton                 = .true.
+      logical :: fertnitro_rice1                  = .true.
+      logical :: fertnitro_rice2                  = .true.
+      logical :: fertnitro_sugarcane              = .true.
+      logical :: irrig_method_corn                = .true.
+      logical :: irrig_method_swheat              = .true.
+      logical :: irrig_method_wwheat              = .true.
+      logical :: irrig_method_soybean             = .true.
+      logical :: irrig_method_cotton              = .true.
+      logical :: irrig_method_rice1               = .true.
+      logical :: irrig_method_rice2               = .true.
+      logical :: irrig_method_sugarcane           = .true.
 
-      logical :: irrig_rate         = .true.
-      logical :: deficit_irrig      = .true.
-      logical :: sum_irrig          = .true.
-      logical :: sum_irrig_count    = .true.
+      logical :: irrig_rate                       = .true.
+      logical :: deficit_irrig                    = .true.
+      logical :: sum_irrig                        = .true.
+      logical :: sum_irrig_count                  = .true.
 
-      logical :: ndep_to_sminn      = .true.
-      logical :: CONC_O2_UNSAT      = .true.
-      logical :: O2_DECOMP_DEPTH_UNSAT = .true.
-      logical :: abm                = .true.
-      logical :: gdp                = .true.
-      logical :: peatf              = .true.
-      logical :: hdm                = .true.
-      logical :: lnfm               = .true.
+      logical :: ndep_to_sminn                    = .true.
+      logical :: CONC_O2_UNSAT                    = .true.
+      logical :: O2_DECOMP_DEPTH_UNSAT            = .true.
+      logical :: abm                              = .true.
+      logical :: gdp                              = .true.
+      logical :: peatf                            = .true.
+      logical :: hdm                              = .true.
+      logical :: lnfm                             = .true.
 
-      logical :: t_soisno     = .true.
-      logical :: wliq_soisno  = .true.
-      logical :: wice_soisno  = .true.
+      logical :: t_soisno                         = .true.
+      logical :: wliq_soisno                      = .true.
+      logical :: wice_soisno                      = .true.
 
-      logical :: h2osoi       = .true.
-      logical :: rstfacsun    = .true.
-      logical :: rstfacsha    = .true.
-      logical :: gssun        = .true.
-      logical :: gssha        = .true.
-      logical :: rootr        = .true.
-      logical :: vegwp        = .true.
-      logical :: BD_all       = .true.
-      logical :: wfc          = .true.
-      logical :: OM_density   = .true.
-      logical :: wdsrf        = .true.
-      logical :: wdsrf_inst   = .true.
-      logical :: zwt          = .true.
-      logical :: wa           = .true.
-      logical :: wa_inst      = .true.
+      logical :: h2osoi                           = .true.
+      logical :: rstfacsun                        = .true.
+      logical :: rstfacsha                        = .true.
+      logical :: gssun                            = .true.
+      logical :: gssha                            = .true.
+      logical :: rootr                            = .true.
+      logical :: vegwp                            = .true.
+      logical :: BD_all                           = .true.
+      logical :: wfc                              = .true.
+      logical :: OM_density                       = .true.
+      logical :: wdsrf                            = .true.
+      logical :: wdsrf_inst                       = .true.
+      logical :: zwt                              = .true.
+      logical :: wa                               = .true.
+      logical :: wa_inst                          = .true.
 
-      logical :: t_lake       = .true.
-      logical :: lake_icefrac = .true.
+      logical :: t_lake                           = .true.
+      logical :: lake_icefrac                     = .true.
 
-      logical :: litr1c_vr    = .true.
-      logical :: litr2c_vr    = .true.
-      logical :: litr3c_vr    = .true.
-      logical :: soil1c_vr    = .true.
-      logical :: soil2c_vr    = .true.
-      logical :: soil3c_vr    = .true.
-      logical :: cwdc_vr      = .true.
-      logical :: litr1n_vr    = .true.
-      logical :: litr2n_vr    = .true.
-      logical :: litr3n_vr    = .true.
-      logical :: soil1n_vr    = .true.
-      logical :: soil2n_vr    = .true.
-      logical :: soil3n_vr    = .true.
-      logical :: cwdn_vr      = .true.
-      logical :: sminn_vr     = .true.
+      logical :: litr1c_vr                        = .true.
+      logical :: litr2c_vr                        = .true.
+      logical :: litr3c_vr                        = .true.
+      logical :: soil1c_vr                        = .true.
+      logical :: soil2c_vr                        = .true.
+      logical :: soil3c_vr                        = .true.
+      logical :: cwdc_vr                          = .true.
+      logical :: litr1n_vr                        = .true.
+      logical :: litr2n_vr                        = .true.
+      logical :: litr3n_vr                        = .true.
+      logical :: soil1n_vr                        = .true.
+      logical :: soil2n_vr                        = .true.
+      logical :: soil3n_vr                        = .true.
+      logical :: cwdn_vr                          = .true.
+      logical :: sminn_vr                         = .true.
 
-      logical :: ustar        = .true.
-      logical :: ustar2       = .true.
-      logical :: tstar        = .true.
-      logical :: qstar        = .true.
-      logical :: zol          = .true.
-      logical :: rib          = .true.
-      logical :: fm           = .true.
-      logical :: fh           = .true.
-      logical :: fq           = .true.
-      logical :: us10m        = .true.
-      logical :: vs10m        = .true.
-      logical :: fm10m        = .true.
-      logical :: sr           = .true.
-      logical :: solvd        = .true.
-      logical :: solvi        = .true.
-      logical :: solnd        = .true.
-      logical :: solni        = .true.
-      logical :: srvd         = .true.
-      logical :: srvi         = .true.
-      logical :: srnd         = .true.
-      logical :: srni         = .true.
+      logical :: ustar                            = .true.
+      logical :: ustar2                           = .true.
+      logical :: tstar                            = .true.
+      logical :: qstar                            = .true.
+      logical :: zol                              = .true.
+      logical :: rib                              = .true.
+      logical :: fm                               = .true.
+      logical :: fh                               = .true.
+      logical :: fq                               = .true.
+      logical :: us10m                            = .true.
+      logical :: vs10m                            = .true.
+      logical :: fm10m                            = .true.
+      logical :: sr                               = .true.
+      logical :: solvd                            = .true.
+      logical :: solvi                            = .true.
+      logical :: solnd                            = .true.
+      logical :: solni                            = .true.
+      logical :: srvd                             = .true.
+      logical :: srvi                             = .true.
+      logical :: srnd                             = .true.
+      logical :: srni                             = .true.
 
-      logical :: solvdln      = .true.
-      logical :: solviln      = .true.
-      logical :: solndln      = .true.
-      logical :: solniln      = .true.
-      logical :: srvdln       = .true.
-      logical :: srviln       = .true.
-      logical :: srndln       = .true.
-      logical :: srniln       = .true.
+      logical :: solvdln                          = .true.
+      logical :: solviln                          = .true.
+      logical :: solndln                          = .true.
+      logical :: solniln                          = .true.
+      logical :: srvdln                           = .true.
+      logical :: srviln                           = .true.
+      logical :: srndln                           = .true.
+      logical :: srniln                           = .true.
 
-      logical :: xsubs_bsn    = .true.
-      logical :: xsubs_hru    = .true.
-      logical :: riv_height   = .true.
-      logical :: riv_veloct   = .true.
-      logical :: discharge    = .true.
-      logical :: wdsrf_hru    = .true.
-      logical :: veloc_hru    = .true.
+      logical :: xsubs_bsn                        = .true.
+      logical :: xsubs_hru                        = .true.
+      logical :: riv_height                       = .true.
+      logical :: riv_veloct                       = .true.
+      logical :: discharge                        = .true.
+      logical :: wdsrf_hru                        = .true.
+      logical :: veloc_hru                        = .true.
 
    END type history_var_type
 
@@ -775,144 +775,144 @@ CONTAINS
    integer :: ivar
    integer :: ierr
 
-   namelist /nl_colm/          &
-      DEF_CASE_NAME,           &
-      DEF_domain,              &
+   namelist /nl_colm/                         &
+      DEF_CASE_NAME,                          &
+      DEF_domain,                             &
 
-      SITE_fsrfdata,            &
-      USE_SITE_pctpfts,         &
-      USE_SITE_pctcrop,         &
-      USE_SITE_htop,            &
-      USE_SITE_LAI,             &
-      USE_SITE_lakedepth,       &
-      USE_SITE_soilreflectance, &
-      USE_SITE_soilparameters,  &
-      USE_SITE_dbedrock,        &
-      USE_SITE_topography,      &
-      USE_SITE_topostd   ,      &
-      USE_SITE_BVIC      ,      &
-      USE_SITE_HistWriteBack,   &
-      USE_SITE_ForcingReadAhead,&
-      USE_SITE_urban_paras,     &
-      USE_SITE_thermal_paras,   &
-      USE_SITE_urban_LAI,       &
+      SITE_fsrfdata,                          &
+      USE_SITE_pctpfts,                       &
+      USE_SITE_pctcrop,                       &
+      USE_SITE_htop,                          &
+      USE_SITE_LAI,                           &
+      USE_SITE_lakedepth,                     &
+      USE_SITE_soilreflectance,               &
+      USE_SITE_soilparameters,                &
+      USE_SITE_dbedrock,                      &
+      USE_SITE_topography,                    &
+      USE_SITE_topostd   ,                    &
+      USE_SITE_BVIC      ,                    &
+      USE_SITE_HistWriteBack,                 &
+      USE_SITE_ForcingReadAhead,              &
+      USE_SITE_urban_paras,                   &
+      USE_SITE_thermal_paras,                 &
+      USE_SITE_urban_LAI,                     &
 
-      DEF_BlockInfoFile,               &
-      DEF_AverageElementSize,          &
-      DEF_nx_blocks,                   &
-      DEF_ny_blocks,                   &
-      DEF_PIO_groupsize,               &
-      DEF_simulation_time,             &
-      DEF_dir_rawdata,                 &
-      DEF_dir_runtime,                 &
-      DEF_dir_output,                  &
-      DEF_file_mesh,                   &
-      DEF_GRIDBASED_lon_res,           &
-      DEF_GRIDBASED_lat_res,           &
-      DEF_CatchmentMesh_data,          &
-      DEF_file_mesh_filter,            &
+      DEF_BlockInfoFile,                      &
+      DEF_AverageElementSize,                 &
+      DEF_nx_blocks,                          &
+      DEF_ny_blocks,                          &
+      DEF_PIO_groupsize,                      &
+      DEF_simulation_time,                    &
+      DEF_dir_rawdata,                        &
+      DEF_dir_runtime,                        &
+      DEF_dir_output,                         &
+      DEF_file_mesh,                          &
+      DEF_GRIDBASED_lon_res,                  &
+      DEF_GRIDBASED_lat_res,                  &
+      DEF_CatchmentMesh_data,                 &
+      DEF_file_mesh_filter,                   &
 
-      DEF_USE_LCT,                     &
-      DEF_USE_PFT,                     &
-      DEF_USE_PC,                      &
-      DEF_FAST_PC,                     &
-      DEF_SOLO_PFT,                    &
-      DEF_SUBGRID_SCHEME,              &
+      DEF_USE_LCT,                            &
+      DEF_USE_PFT,                            &
+      DEF_USE_PC,                             &
+      DEF_FAST_PC,                            &
+      DEF_SOLO_PFT,                           &
+      DEF_SUBGRID_SCHEME,                     &
 
-      DEF_LAI_MONTHLY,                 &   !add by zhongwang wei @ sysu 2021/12/23
-      DEF_NDEP_FREQUENCY,              &   !add by Fang Shang    @ pku  2023/08
-      DEF_Interception_scheme,         &   !add by zhongwang wei @ sysu 2022/05/23
-      DEF_SSP,                         &   !add by zhongwang wei @ sysu 2023/02/07
+      DEF_LAI_MONTHLY,                        & !add by zhongwang wei @ sysu 2021/12/23
+      DEF_NDEP_FREQUENCY,                     & !add by Fang Shang    @ pku  2023/08
+      DEF_Interception_scheme,                & !add by zhongwang wei @ sysu 2022/05/23
+      DEF_SSP,                                & !add by zhongwang wei @ sysu 2023/02/07
 
-      DEF_LAI_CHANGE_YEARLY,           &
-      DEF_USE_LAIFEEDBACK,             &   !add by Xingjie Lu, use for updating LAI with leaf carbon
-      DEF_USE_IRRIGATION,              &   ! use irrigation
+      DEF_LAI_CHANGE_YEARLY,                  &
+      DEF_USE_LAIFEEDBACK,                    & !add by Xingjie Lu, use for updating LAI with leaf carbon
+      DEF_USE_IRRIGATION,                     & ! use irrigation
 
-      DEF_LC_YEAR,                     &
-      DEF_LULCC_SCHEME,                &
+      DEF_LC_YEAR,                            &
+      DEF_LULCC_SCHEME,                       &
 
-      DEF_URBAN_type_scheme,           &
-      DEF_URBAN_ONLY,                  &
-      DEF_URBAN_RUN,                   &   !add by hua yuan, open urban model or not
-      DEF_URBAN_BEM,                   &   !add by hua yuan, open urban BEM model or not
-      DEF_URBAN_TREE,                  &   !add by hua yuan, modeling urban tree or not
-      DEF_URBAN_WATER,                 &   !add by hua yuan, modeling urban water or not
-      DEF_URBAN_LUCY,                  &
+      DEF_URBAN_type_scheme,                  &
+      DEF_URBAN_ONLY,                         &
+      DEF_URBAN_RUN,                          & !add by hua yuan, open urban model or not
+      DEF_URBAN_BEM,                          & !add by hua yuan, open urban BEM model or not
+      DEF_URBAN_TREE,                         & !add by hua yuan, modeling urban tree or not
+      DEF_URBAN_WATER,                        & !add by hua yuan, modeling urban water or not
+      DEF_URBAN_LUCY,                         &
 
-      DEF_USE_SOILPAR_UPS_FIT,         &
-      DEF_THERMAL_CONDUCTIVITY_SCHEME, &
-      DEF_USE_SUPERCOOL_WATER,         &
-      DEF_SOIL_REFL_SCHEME,            &
-      DEF_RSS_SCHEME,                  &
-      DEF_Runoff_SCHEME,               &
-      DEF_SPLIT_SOILSNOW,              &
-      DEF_VEG_SNOW,                    &
-      DEF_file_VIC_para,               &
+      DEF_USE_SOILPAR_UPS_FIT,                &
+      DEF_THERMAL_CONDUCTIVITY_SCHEME,        &
+      DEF_USE_SUPERCOOL_WATER,                &
+      DEF_SOIL_REFL_SCHEME,                   &
+      DEF_RSS_SCHEME,                         &
+      DEF_Runoff_SCHEME,                      &
+      DEF_SPLIT_SOILSNOW,                     &
+      DEF_VEG_SNOW,                           &
+      DEF_file_VIC_para,                      &
 
-      DEF_dir_existing_srfdata,        &
-      USE_srfdata_from_larger_region,  &
-      USE_srfdata_from_3D_gridded_data,&
-      USE_zip_for_aggregation,         &
-      DEF_Srfdata_CompressLevel,       &
+      DEF_dir_existing_srfdata,               &
+      USE_srfdata_from_larger_region,         &
+      USE_srfdata_from_3D_gridded_data,       &
+      USE_zip_for_aggregation,                &
+      DEF_Srfdata_CompressLevel,              &
 
-      DEF_USE_CBL_HEIGHT,              &   !add by zhongwang wei @ sysu 2022/12/31
-      DEF_USE_PLANTHYDRAULICS,         &   !add by xingjie lu @ sysu 2023/05/28
-      DEF_USE_MEDLYNST,                &   !add by xingjie lu @ sysu 2023/05/28
-      DEF_USE_SASU,                    &   !add by Xingjie Lu @ sysu 2023/06/27
-      DEF_USE_PN,                      &   !add by Xingjie Lu @ sysu 2023/06/27
-      DEF_USE_FERT,                    &   !add by Xingjie Lu @ sysu 2023/06/27
-      DEF_USE_NITRIF,                  &   !add by Xingjie Lu @ sysu 2023/06/27
-      DEF_USE_CNSOYFIXN,               &   !add by Xingjie Lu @ sysu 2023/06/27
-      DEF_USE_FIRE,                    &   !add by Xingjie Lu @ sysu 2023/06/27
+      DEF_USE_CBL_HEIGHT,                     & !add by zhongwang wei @ sysu 2022/12/31
+      DEF_USE_PLANTHYDRAULICS,                & !add by xingjie lu @ sysu 2023/05/28
+      DEF_USE_MEDLYNST,                       & !add by xingjie lu @ sysu 2023/05/28
+      DEF_USE_SASU,                           & !add by Xingjie Lu @ sysu 2023/06/27
+      DEF_USE_PN,                             & !add by Xingjie Lu @ sysu 2023/06/27
+      DEF_USE_FERT,                           & !add by Xingjie Lu @ sysu 2023/06/27
+      DEF_USE_NITRIF,                         & !add by Xingjie Lu @ sysu 2023/06/27
+      DEF_USE_CNSOYFIXN,                      & !add by Xingjie Lu @ sysu 2023/06/27
+      DEF_USE_FIRE,                           & !add by Xingjie Lu @ sysu 2023/06/27
 
-      DEF_LANDONLY,                    &
-      DEF_USE_DOMINANT_PATCHTYPE,      &
-      DEF_USE_VariablySaturatedFlow,   &
-      DEF_USE_BEDROCK,                 &
-      DEF_USE_OZONESTRESS,             &
-      DEF_USE_OZONEDATA,               &
-      DEF_USE_SNICAR,                  &
-      DEF_Aerosol_Readin,              &
-      DEF_Aerosol_Clim,                &
-      DEF_USE_EstimatedRiverDepth,     &
+      DEF_LANDONLY,                           &
+      DEF_USE_DOMINANT_PATCHTYPE,             &
+      DEF_USE_VariablySaturatedFlow,          &
+      DEF_USE_BEDROCK,                        &
+      DEF_USE_OZONESTRESS,                    &
+      DEF_USE_OZONEDATA,                      &
+      DEF_USE_SNICAR,                         &
+      DEF_Aerosol_Readin,                     &
+      DEF_Aerosol_Clim,                       &
+      DEF_USE_EstimatedRiverDepth,            &
 
       DEF_precip_phase_discrimination_scheme, &
 
-      DEF_USE_SoilInit,                &
-      DEF_file_SoilInit,               &
+      DEF_USE_SoilInit,                       &
+      DEF_file_SoilInit,                      &
 
-      DEF_USE_SnowInit,                &
-      DEF_file_SnowInit,               &
+      DEF_USE_SnowInit,                       &
+      DEF_file_SnowInit,                      &
 
-      DEF_USE_CN_INIT,               &
-      DEF_file_cn_init,              &
+      DEF_USE_CN_INIT,                        &
+      DEF_file_cn_init,                       &
 
-      DEF_file_snowoptics,             &
-      DEF_file_snowaging ,             &
+      DEF_file_snowoptics,                    &
+      DEF_file_snowaging ,                    &
 
-      DEF_ElementNeighbour_file,       &
+      DEF_ElementNeighbour_file,              &
 
-      DEF_DA_obsdir,                   &
+      DEF_DA_obsdir,                          &
 
-      DEF_forcing_namelist,            &
+      DEF_forcing_namelist,                   &
 
-      DEF_Forcing_Interp,                 &
-      DEF_USE_Forcing_Downscaling,        &
-      DEF_DS_precipitation_adjust_scheme, &
-      DEF_DS_longwave_adjust_scheme,      &
+      DEF_Forcing_Interp,                     &
+      DEF_USE_Forcing_Downscaling,            &
+      DEF_DS_precipitation_adjust_scheme,     &
+      DEF_DS_longwave_adjust_scheme,          &
 
-      DEF_HISTORY_IN_VECTOR,           &
-      DEF_HIST_lon_res,                &
-      DEF_HIST_lat_res,                &
-      DEF_HIST_grid_as_forcing,        &
-      DEF_WRST_FREQ,                   &
-      DEF_HIST_FREQ,                   &
-      DEF_HIST_groupby,                &
-      DEF_HIST_mode,                   &
-      DEF_HIST_WriteBack,              &
-      DEF_REST_CompressLevel,         &
-      DEF_HIST_CompressLevel,         &
-      DEF_HIST_vars_namelist,          &
+      DEF_HISTORY_IN_VECTOR,                  &
+      DEF_HIST_lon_res,                       &
+      DEF_HIST_lat_res,                       &
+      DEF_HIST_grid_as_forcing,               &
+      DEF_WRST_FREQ,                          &
+      DEF_HIST_FREQ,                          &
+      DEF_HIST_groupby,                       &
+      DEF_HIST_mode,                          &
+      DEF_HIST_WriteBack,                     &
+      DEF_REST_CompressLevel,                 &
+      DEF_HIST_CompressLevel,                 &
+      DEF_HIST_vars_namelist,                 &
       DEF_HIST_vars_out_default
 
    namelist /nl_colm_forcing/ DEF_dir_forcing, DEF_forcing
@@ -1179,208 +1179,208 @@ CONTAINS
 
 
 #ifdef USEMPI
-      CALL mpi_bcast (DEF_CASE_NAME,    256, mpi_character, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_domain%edges,   1, mpi_real8,     p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_domain%edgen,   1, mpi_real8,     p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_domain%edgew,   1, mpi_real8,     p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_domain%edgee,   1, mpi_real8,     p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_CASE_NAME                          ,256 ,mpi_character ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_domain%edges                       ,1   ,mpi_real8     ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_domain%edgen                       ,1   ,mpi_real8     ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_domain%edgew                       ,1   ,mpi_real8     ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_domain%edgee                       ,1   ,mpi_real8     ,p_root ,p_comm_glb ,p_err)
 
-      CALL mpi_bcast (DEF_BlockInfoFile, 256, mpi_character, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_AverageElementSize,  1, mpi_real8, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_nx_blocks,     1, mpi_integer, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_ny_blocks,     1, mpi_integer, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_PIO_groupsize, 1, mpi_integer, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_BlockInfoFile                      ,256 ,mpi_character ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_AverageElementSize                 ,1   ,mpi_real8     ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_nx_blocks                          ,1   ,mpi_integer   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_ny_blocks                          ,1   ,mpi_integer   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_PIO_groupsize                      ,1   ,mpi_integer   ,p_root ,p_comm_glb ,p_err)
 
-      CALL mpi_bcast (DEF_simulation_time%greenwich,     1, mpi_logical, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_simulation_time%greenwich          ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
 
-      CALL mpi_bcast (DEF_simulation_time%start_year,    1, mpi_integer, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_simulation_time%start_month,   1, mpi_integer, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_simulation_time%start_day,     1, mpi_integer, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_simulation_time%start_sec,     1, mpi_integer, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_simulation_time%start_year         ,1   ,mpi_integer   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_simulation_time%start_month        ,1   ,mpi_integer   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_simulation_time%start_day          ,1   ,mpi_integer   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_simulation_time%start_sec          ,1   ,mpi_integer   ,p_root ,p_comm_glb ,p_err)
 
-      CALL mpi_bcast (DEF_simulation_time%end_year,      1, mpi_integer, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_simulation_time%end_month,     1, mpi_integer, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_simulation_time%end_day,       1, mpi_integer, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_simulation_time%end_sec,       1, mpi_integer, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_simulation_time%end_year           ,1   ,mpi_integer   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_simulation_time%end_month          ,1   ,mpi_integer   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_simulation_time%end_day            ,1   ,mpi_integer   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_simulation_time%end_sec            ,1   ,mpi_integer   ,p_root ,p_comm_glb ,p_err)
 
-      CALL mpi_bcast (DEF_simulation_time%spinup_year,   1, mpi_integer, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_simulation_time%spinup_month,  1, mpi_integer, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_simulation_time%spinup_day,    1, mpi_integer, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_simulation_time%spinup_sec,    1, mpi_integer, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_simulation_time%spinup_repeat, 1, mpi_integer, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_simulation_time%spinup_year        ,1   ,mpi_integer   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_simulation_time%spinup_month       ,1   ,mpi_integer   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_simulation_time%spinup_day         ,1   ,mpi_integer   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_simulation_time%spinup_sec         ,1   ,mpi_integer   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_simulation_time%spinup_repeat      ,1   ,mpi_integer   ,p_root ,p_comm_glb ,p_err)
 
-      CALL mpi_bcast (DEF_simulation_time%timestep,      1, mpi_real8,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_simulation_time%timestep           ,1   ,mpi_real8     ,p_root ,p_comm_glb ,p_err)
 
-      CALL mpi_bcast (DEF_dir_rawdata,  256, mpi_character, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_dir_runtime,  256, mpi_character, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_dir_output,   256, mpi_character, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_dir_forcing,  256, mpi_character, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_dir_rawdata                        ,256 ,mpi_character ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_dir_runtime                        ,256 ,mpi_character ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_dir_output                         ,256 ,mpi_character ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_dir_forcing                        ,256 ,mpi_character ,p_root ,p_comm_glb ,p_err)
 
-      CALL mpi_bcast (DEF_dir_landdata, 256, mpi_character, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_dir_restart,  256, mpi_character, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_dir_history,  256, mpi_character, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_dir_landdata                       ,256 ,mpi_character ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_dir_restart                        ,256 ,mpi_character ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_dir_history                        ,256 ,mpi_character ,p_root ,p_comm_glb ,p_err)
 
 #if (defined GRIDBASED || defined UNSTRUCTURED)
-      CALL mpi_bcast (DEF_file_mesh,    256, mpi_character, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_GRIDBASED_lon_res,  1, mpi_real8, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_GRIDBASED_lat_res,  1, mpi_real8, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_file_mesh                          ,256 ,mpi_character ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_GRIDBASED_lon_res                  ,1   ,mpi_real8     ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_GRIDBASED_lat_res                  ,1   ,mpi_real8     ,p_root ,p_comm_glb ,p_err)
 #endif
 
 #ifdef CATCHMENT
-      CALL mpi_bcast (DEF_CatchmentMesh_data, 256, mpi_character, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_CatchmentMesh_data                 ,256 ,mpi_character ,p_root ,p_comm_glb ,p_err)
 #endif
 
-      CALL mpi_bcast (DEF_file_mesh_filter,   256, mpi_character, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_file_mesh_filter                   ,256 ,mpi_character ,p_root ,p_comm_glb ,p_err)
 
-      CALL mpi_bcast (DEF_dir_existing_srfdata,     256, mpi_character, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (USE_srfdata_from_larger_region,   1, mpi_logical, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (USE_srfdata_from_3D_gridded_data, 1, mpi_logical, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (USE_zip_for_aggregation,          1, mpi_logical, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_Srfdata_CompressLevel,        1, mpi_integer, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_dir_existing_srfdata               ,256 ,mpi_character ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (USE_srfdata_from_larger_region         ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (USE_srfdata_from_3D_gridded_data       ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (USE_zip_for_aggregation                ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_Srfdata_CompressLevel              ,1   ,mpi_integer   ,p_root ,p_comm_glb ,p_err)
 
       ! 07/2023, added by yuan: subgrid setting related
-      CALL mpi_bcast (DEF_USE_LCT,           1, mpi_logical,   p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_USE_PFT,           1, mpi_logical,   p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_USE_PC,            1, mpi_logical,   p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_FAST_PC,           1, mpi_logical,   p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_SOLO_PFT,          1, mpi_logical,   p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_SUBGRID_SCHEME,  256, mpi_character, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_USE_LCT                            ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_USE_PFT                            ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_USE_PC                             ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_FAST_PC                            ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_SOLO_PFT                           ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_SUBGRID_SCHEME                     ,256 ,mpi_character ,p_root ,p_comm_glb ,p_err)
 
-      CALL mpi_bcast (DEF_LAI_CHANGE_YEARLY, 1, mpi_logical, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_LAI_CHANGE_YEARLY                  ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
 
       ! 05/2023, added by Xingjie lu
-      CALL mpi_bcast (DEF_USE_LAIFEEDBACK,   1, mpi_logical, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_USE_IRRIGATION ,   1, mpi_logical, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_USE_LAIFEEDBACK                    ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_USE_IRRIGATION                     ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
 
       ! LULC related
-      CALL mpi_bcast (DEF_LC_YEAR,           1, mpi_integer, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_LULCC_SCHEME,      1, mpi_integer, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_LC_YEAR                            ,1   ,mpi_integer   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_LULCC_SCHEME                       ,1   ,mpi_integer   ,p_root ,p_comm_glb ,p_err)
 
-      CALL mpi_bcast (DEF_URBAN_type_scheme, 1, mpi_integer, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_URBAN_type_scheme                  ,1   ,mpi_integer   ,p_root ,p_comm_glb ,p_err)
       ! 05/2023, added by yuan
-      CALL mpi_bcast (DEF_URBAN_ONLY,        1, mpi_logical, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_URBAN_RUN,         1, mpi_logical, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_URBAN_BEM,         1, mpi_logical, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_URBAN_TREE,        1, mpi_logical, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_URBAN_WATER,       1, mpi_logical, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_URBAN_LUCY,        1, mpi_logical, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_URBAN_ONLY                         ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_URBAN_RUN                          ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_URBAN_BEM                          ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_URBAN_TREE                         ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_URBAN_WATER                        ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_URBAN_LUCY                         ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
 
       ! 06/2023, added by weinan
-      CALL mpi_bcast (DEF_USE_SOILPAR_UPS_FIT,          1, mpi_logical, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_THERMAL_CONDUCTIVITY_SCHEME,  1, mpi_integer, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_USE_SUPERCOOL_WATER,          1, mpi_logical, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_USE_SOILPAR_UPS_FIT                ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_THERMAL_CONDUCTIVITY_SCHEME        ,1   ,mpi_integer   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_USE_SUPERCOOL_WATER                ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
 
       ! 06/2023, added by hua yuan
-      CALL mpi_bcast (DEF_SOIL_REFL_SCHEME,             1, mpi_integer, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_SOIL_REFL_SCHEME                   ,1   ,mpi_integer   ,p_root ,p_comm_glb ,p_err)
       ! 07/2023, added by zhuo liu
-      CALL mpi_bcast (DEF_RSS_SCHEME,                   1, mpi_integer, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_RSS_SCHEME                         ,1   ,mpi_integer   ,p_root ,p_comm_glb ,p_err)
       ! 02/2024, added by Shupeng Zhang
-      CALL mpi_bcast (DEF_Runoff_SCHEME,   1, mpi_integer,   p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_file_VIC_para, 256, mpi_character, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_Runoff_SCHEME                      ,1   ,mpi_integer   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_file_VIC_para                      ,256 ,mpi_character ,p_root ,p_comm_glb ,p_err)
       ! 08/2023, added by hua yuan
-      CALL mpi_bcast (DEF_SPLIT_SOILSNOW,      1, mpi_logical, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_VEG_SNOW,            1, mpi_logical, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_SPLIT_SOILSNOW                     ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_VEG_SNOW                           ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
 
-      CALL mpi_bcast (DEF_LAI_MONTHLY,         1, mpi_logical, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_NDEP_FREQUENCY,      1, mpi_integer, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_Interception_scheme, 1, mpi_integer, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_SSP,             256, mpi_character, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_LAI_MONTHLY                        ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_NDEP_FREQUENCY                     ,1   ,mpi_integer   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_Interception_scheme                ,1   ,mpi_integer   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_SSP                                ,256 ,mpi_character ,p_root ,p_comm_glb ,p_err)
 
-      CALL mpi_bcast (DEF_USE_CBL_HEIGHT     , 1, mpi_logical, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_USE_PLANTHYDRAULICS, 1, mpi_logical, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_USE_MEDLYNST       , 1, mpi_logical, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_USE_SASU           , 1, mpi_logical, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_USE_PN             , 1, mpi_logical, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_USE_FERT           , 1, mpi_logical, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_USE_NITRIF         , 1, mpi_logical, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_USE_CNSOYFIXN      , 1, mpi_logical, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_USE_FIRE           , 1, mpi_logical, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_USE_CBL_HEIGHT                     ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_USE_PLANTHYDRAULICS                ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_USE_MEDLYNST                       ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_USE_SASU                           ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_USE_PN                             ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_USE_FERT                           ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_USE_NITRIF                         ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_USE_CNSOYFIXN                      ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_USE_FIRE                           ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
 
-      CALL mpi_bcast (DEF_LANDONLY                 , 1, mpi_logical, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_USE_DOMINANT_PATCHTYPE   , 1, mpi_logical, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_USE_VariablySaturatedFlow, 1, mpi_logical, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_USE_BEDROCK              , 1, mpi_logical, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_USE_OZONESTRESS          , 1, mpi_logical, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_USE_OZONEDATA            , 1, mpi_logical, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_LANDONLY                           ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_USE_DOMINANT_PATCHTYPE             ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_USE_VariablySaturatedFlow          ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_USE_BEDROCK                        ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_USE_OZONESTRESS                    ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_USE_OZONEDATA                      ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
 
-      CALL mpi_bcast (DEF_precip_phase_discrimination_scheme, 5, mpi_character, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_precip_phase_discrimination_scheme ,5   ,mpi_character ,p_root ,p_comm_glb ,p_err)
 
-      CALL mpi_bcast (DEF_USE_SoilInit,    1, mpi_logical,   p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_file_SoilInit, 256, mpi_character, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_USE_SoilInit                       ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_file_SoilInit                      ,256 ,mpi_character ,p_root ,p_comm_glb ,p_err)
 
-      CALL mpi_bcast (DEF_USE_SnowInit,    1, mpi_logical,   p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_file_SnowInit, 256, mpi_character, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_USE_SnowInit                       ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_file_SnowInit                      ,256 ,mpi_character ,p_root ,p_comm_glb ,p_err)
 
-      CALL mpi_bcast (DEF_USE_CN_INIT,    1, mpi_logical,   p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_file_cn_init, 256, mpi_character, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_USE_CN_INIT                        ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_file_cn_init                       ,256 ,mpi_character ,p_root ,p_comm_glb ,p_err)
 
-      CALL mpi_bcast (DEF_USE_SNICAR,        1, mpi_logical,   p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_file_snowoptics, 256, mpi_character, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_file_snowaging , 256, mpi_character, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_USE_SNICAR                         ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_file_snowoptics                    ,256 ,mpi_character ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_file_snowaging                     ,256 ,mpi_character ,p_root ,p_comm_glb ,p_err)
 
-      CALL mpi_bcast (DEF_ElementNeighbour_file, 256, mpi_character, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_ElementNeighbour_file              ,256 ,mpi_character ,p_root ,p_comm_glb ,p_err)
 
-      CALL mpi_bcast (DEF_DA_obsdir      , 256, mpi_character, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_DA_obsdir                          ,256 ,mpi_character ,p_root ,p_comm_glb ,p_err)
 
-      CALL mpi_bcast (DEF_Aerosol_Readin,    1, mpi_logical,   p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_Aerosol_Clim,      1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_Aerosol_Readin                     ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_Aerosol_Clim                       ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
 
-      CALL mpi_bcast (DEF_USE_EstimatedRiverDepth, 1, mpi_logical, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_USE_EstimatedRiverDepth            ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
 
-      CALL mpi_bcast (DEF_HISTORY_IN_VECTOR, 1, mpi_logical,  p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_HISTORY_IN_VECTOR                  ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
 
-      CALL mpi_bcast (DEF_HIST_lon_res,  1, mpi_real8, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_HIST_lat_res,  1, mpi_real8, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_HIST_lon_res                       ,1   ,mpi_real8     ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_HIST_lat_res                       ,1   ,mpi_real8     ,p_root ,p_comm_glb ,p_err)
 
-      CALL mpi_bcast (DEF_HIST_grid_as_forcing, 1, mpi_logical, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_HIST_grid_as_forcing               ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
 
-      CALL mpi_bcast (DEF_WRST_FREQ,         256, mpi_character, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_HIST_FREQ,         256, mpi_character, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_HIST_groupby,      256, mpi_character, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_HIST_mode,         256, mpi_character, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_HIST_WriteBack,      1, mpi_logical,   p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_REST_CompressLevel, 1, mpi_integer,   p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_HIST_CompressLevel, 1, mpi_integer,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_WRST_FREQ                          ,256 ,mpi_character ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_HIST_FREQ                          ,256 ,mpi_character ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_HIST_groupby                       ,256 ,mpi_character ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_HIST_mode                          ,256 ,mpi_character ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_HIST_WriteBack                     ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_REST_CompressLevel                 ,1   ,mpi_integer   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_HIST_CompressLevel                 ,1   ,mpi_integer   ,p_root ,p_comm_glb ,p_err)
 
-      CALL mpi_bcast (DEF_Forcing_Interp,                20, mpi_character, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_USE_Forcing_Downscaling,        1, mpi_logical,   p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_DS_precipitation_adjust_scheme, 5, mpi_character, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_DS_longwave_adjust_scheme,      5, mpi_character, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_Forcing_Interp                     ,20  ,mpi_character ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_USE_Forcing_Downscaling            ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_DS_precipitation_adjust_scheme     ,5   ,mpi_character ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_DS_longwave_adjust_scheme          ,5   ,mpi_character ,p_root ,p_comm_glb ,p_err)
 
-      CALL mpi_bcast (DEF_forcing%dataset,          256, mpi_character, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_forcing%solarin_all_band,   1, mpi_logical,   p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_forcing%HEIGHT_V,           1, mpi_real8,     p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_forcing%HEIGHT_T,           1, mpi_real8,     p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_forcing%HEIGHT_Q,           1, mpi_real8,     p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_forcing%regional,           1, mpi_logical,   p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_forcing%regbnd,             4, mpi_real8,     p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_forcing%has_missing_value,  1, mpi_logical,   p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_forcing%missing_value_name,256,mpi_character, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_forcing%NVAR,               1, mpi_integer,   p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_forcing%startyr,            1, mpi_integer,   p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_forcing%startmo,            1, mpi_integer,   p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_forcing%endyr,              1, mpi_integer,   p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_forcing%endmo,              1, mpi_integer,   p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_forcing%dtime,              8, mpi_integer,   p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_forcing%offset,             8, mpi_integer,   p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_forcing%nlands,             1, mpi_integer,   p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_forcing%leapyear,           1, mpi_logical,   p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_forcing%data2d,             1, mpi_logical,   p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_forcing%hightdim,           1, mpi_logical,   p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_forcing%dim2d,              1, mpi_logical,   p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_forcing%latname,          256, mpi_character, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_forcing%lonname,          256, mpi_character, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_forcing%groupby,          256, mpi_character, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_forcing%dataset                    ,256 ,mpi_character ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_forcing%solarin_all_band           ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_forcing%HEIGHT_V                   ,1   ,mpi_real8     ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_forcing%HEIGHT_T                   ,1   ,mpi_real8     ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_forcing%HEIGHT_Q                   ,1   ,mpi_real8     ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_forcing%regional                   ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_forcing%regbnd                     ,4   ,mpi_real8     ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_forcing%has_missing_value          ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_forcing%missing_value_name         ,256 ,mpi_character ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_forcing%NVAR                       ,1   ,mpi_integer   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_forcing%startyr                    ,1   ,mpi_integer   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_forcing%startmo                    ,1   ,mpi_integer   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_forcing%endyr                      ,1   ,mpi_integer   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_forcing%endmo                      ,1   ,mpi_integer   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_forcing%dtime                      ,8   ,mpi_integer   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_forcing%offset                     ,8   ,mpi_integer   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_forcing%nlands                     ,1   ,mpi_integer   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_forcing%leapyear                   ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_forcing%data2d                     ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_forcing%hightdim                   ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_forcing%dim2d                      ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_forcing%latname                    ,256 ,mpi_character ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_forcing%lonname                    ,256 ,mpi_character ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_forcing%groupby                    ,256 ,mpi_character ,p_root ,p_comm_glb ,p_err)
       DO ivar = 1, 8
-         CALL mpi_bcast (DEF_forcing%fprefix(ivar),  256, mpi_character, p_root, p_comm_glb, p_err)
-         CALL mpi_bcast (DEF_forcing%vname(ivar),    256, mpi_character, p_root, p_comm_glb, p_err)
-         CALL mpi_bcast (DEF_forcing%tintalgo(ivar), 256, mpi_character, p_root, p_comm_glb, p_err)
+         CALL mpi_bcast (DEF_forcing%fprefix(ivar)           ,256 ,mpi_character ,p_root ,p_comm_glb ,p_err)
+         CALL mpi_bcast (DEF_forcing%vname(ivar)             ,256 ,mpi_character ,p_root ,p_comm_glb ,p_err)
+         CALL mpi_bcast (DEF_forcing%tintalgo(ivar)          ,256 ,mpi_character ,p_root ,p_comm_glb ,p_err)
       ENDDO
-      CALL mpi_bcast (DEF_forcing%CBL_fprefix,      256, mpi_character, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_forcing%CBL_vname,        256, mpi_character, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_forcing%CBL_tintalgo,     256, mpi_character, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_forcing%CBL_dtime,          1, mpi_integer,   p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_forcing%CBL_offset,         1, mpi_integer,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_forcing%CBL_fprefix                ,256 ,mpi_character ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_forcing%CBL_vname                  ,256 ,mpi_character ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_forcing%CBL_tintalgo               ,256 ,mpi_character ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_forcing%CBL_dtime                  ,1   ,mpi_integer   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_forcing%CBL_offset                 ,1   ,mpi_integer   ,p_root ,p_comm_glb ,p_err)
 #endif
 
       CALL sync_hist_vars (set_defaults = .true.)
@@ -1413,180 +1413,180 @@ CONTAINS
 
    logical, intent(in) :: set_defaults
 
-      CALL sync_hist_vars_one (DEF_hist_vars%xy_us       ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%xy_vs       ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%xy_t        ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%xy_q        ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%xy_prc      ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%xy_prl      ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%xy_pbot     ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%xy_frl      ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%xy_solarin  ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%xy_rain     ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%xy_snow     ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%xy_us       , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%xy_vs       , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%xy_t        , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%xy_q        , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%xy_prc      , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%xy_prl      , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%xy_pbot     , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%xy_frl      , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%xy_solarin  , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%xy_rain     , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%xy_snow     , set_defaults)
 
-      CALL sync_hist_vars_one (DEF_hist_vars%xy_hpbl     ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%xy_hpbl     , set_defaults)
 
-      CALL sync_hist_vars_one (DEF_hist_vars%taux        ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%tauy        ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%fsena       ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%lfevpa      ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%fevpa       ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%fsenl       ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%fevpl       ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%etr         ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%fseng       ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%fevpg       ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%fgrnd       ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%sabvsun     ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%sabvsha     ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%sabg        ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%olrg        ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%rnet        ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%xerr        ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%zerr        ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%rsur        ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%rsur_se     ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%rsur_ie     ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%rsub        ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%rnof        ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%xwsur       ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%xwsub       ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%qintr       ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%qinfl       ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%qdrip       ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%wat         ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%wat_inst    ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%wetwat      ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%wetwat_inst ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%assim       ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%respc       ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%qcharge     ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%t_grnd      ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%tleaf       ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%ldew        ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%scv         ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%snowdp      ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%fsno        ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%sigf        ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%green       ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%lai         ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%laisun      ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%laisha      ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%sai         ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%alb         ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%emis        ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%z0m         ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%trad        ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%rss         ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%tref        ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%qref        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%taux        , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%tauy        , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%fsena       , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%lfevpa      , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%fevpa       , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%fsenl       , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%fevpl       , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%etr         , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%fseng       , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%fevpg       , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%fgrnd       , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%sabvsun     , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%sabvsha     , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%sabg        , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%olrg        , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%rnet        , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%xerr        , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%zerr        , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%rsur        , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%rsur_se     , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%rsur_ie     , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%rsub        , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%rnof        , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%xwsur       , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%xwsub       , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%qintr       , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%qinfl       , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%qdrip       , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%wat         , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%wat_inst    , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%wetwat      , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%wetwat_inst , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%assim       , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%respc       , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%qcharge     , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%t_grnd      , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%tleaf       , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%ldew        , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%scv         , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%snowdp      , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%fsno        , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%sigf        , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%green       , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%lai         , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%laisun      , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%laisha      , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%sai         , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%alb         , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%emis        , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%z0m         , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%trad        , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%rss         , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%tref        , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%qref        , set_defaults)
 #ifdef URBAN_MODEL
-      CALL sync_hist_vars_one (DEF_hist_vars%fsen_roof   ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%fsen_wsun   ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%fsen_wsha   ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%fsen_gimp   ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%fsen_gper   ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%fsen_urbl   ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%lfevp_roof  ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%lfevp_gimp  ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%lfevp_gper  ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%lfevp_urbl  ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%fhac        ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%fwst        ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%fach        ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%fhah        ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%meta        ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%vehc        ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%t_room      ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%tafu        ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%t_roof      ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%t_wall      ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%fsen_roof   , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%fsen_wsun   , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%fsen_wsha   , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%fsen_gimp   , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%fsen_gper   , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%fsen_urbl   , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%lfevp_roof  , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%lfevp_gimp  , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%lfevp_gper  , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%lfevp_urbl  , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%fhac        , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%fwst        , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%fach        , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%fhah        , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%meta        , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%vehc        , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%t_room      , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%tafu        , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%t_roof      , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%t_wall      , set_defaults)
 #endif
-      CALL sync_hist_vars_one (DEF_hist_vars%assimsun    ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%assimsha    ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%etrsun      ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%etrsha      ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%assimsun    , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%assimsha    , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%etrsun      , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%etrsha      , set_defaults)
 #ifdef BGC
-      CALL sync_hist_vars_one (DEF_hist_vars%leafc              ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%leafc_storage      ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%leafc_xfer         ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%frootc             ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%frootc_storage     ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%frootc_xfer        ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%livestemc          ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%livestemc_storage  ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%livestemc_xfer     ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%deadstemc          ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%deadstemc_storage  ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%deadstemc_xfer     ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%livecrootc         ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%livecrootc_storage ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%livecrootc_xfer    ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%deadcrootc         ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%deadcrootc_storage ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%deadcrootc_xfer    ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%grainc             ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%grainc_storage     ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%grainc_xfer        ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%leafn              ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%leafn_storage      ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%leafn_xfer         ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%frootn             ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%frootn_storage     ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%frootn_xfer        ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%livestemn          ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%livestemn_storage  ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%livestemn_xfer     ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%deadstemn          ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%deadstemn_storage  ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%deadstemn_xfer     ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%livecrootn         ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%livecrootn_storage ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%livecrootn_xfer    ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%deadcrootn         ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%deadcrootn_storage ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%deadcrootn_xfer    ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%grainn             ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%grainn_storage     ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%grainn_xfer        ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%retrasn            ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%gpp                ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%downreg            ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%ar                 ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%cwdprod            ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%cwddecomp          ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%hr                 ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%fpg                ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%fpi                ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%gpp_enftemp        ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%gpp_enfboreal      ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%gpp_dnfboreal      ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%gpp_ebftrop        ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%gpp_ebftemp        ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%gpp_dbftrop        ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%gpp_dbftemp        ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%gpp_dbfboreal      ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%gpp_ebstemp        ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%gpp_dbstemp        ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%gpp_dbsboreal      ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%gpp_c3arcgrass     ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%gpp_c3grass        ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%gpp_c4grass        ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%leafc_enftemp      ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%leafc_enfboreal    ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%leafc_dnfboreal    ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%leafc_ebftrop      ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%leafc_ebftemp      ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%leafc_dbftrop      ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%leafc_dbftemp      ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%leafc_dbfboreal    ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%leafc_ebstemp      ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%leafc_dbstemp      ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%leafc_dbsboreal    ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%leafc_c3arcgrass   ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%leafc_c3grass      ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%leafc_c4grass      ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%leafc              , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%leafc_storage      , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%leafc_xfer         , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%frootc             , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%frootc_storage     , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%frootc_xfer        , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%livestemc          , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%livestemc_storage  , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%livestemc_xfer     , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%deadstemc          , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%deadstemc_storage  , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%deadstemc_xfer     , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%livecrootc         , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%livecrootc_storage , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%livecrootc_xfer    , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%deadcrootc         , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%deadcrootc_storage , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%deadcrootc_xfer    , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%grainc             , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%grainc_storage     , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%grainc_xfer        , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%leafn              , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%leafn_storage      , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%leafn_xfer         , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%frootn             , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%frootn_storage     , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%frootn_xfer        , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%livestemn          , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%livestemn_storage  , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%livestemn_xfer     , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%deadstemn          , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%deadstemn_storage  , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%deadstemn_xfer     , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%livecrootn         , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%livecrootn_storage , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%livecrootn_xfer    , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%deadcrootn         , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%deadcrootn_storage , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%deadcrootn_xfer    , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%grainn             , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%grainn_storage     , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%grainn_xfer        , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%retrasn            , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gpp                , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%downreg            , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%ar                 , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%cwdprod            , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%cwddecomp          , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%hr                 , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%fpg                , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%fpi                , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gpp_enftemp        , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gpp_enfboreal      , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gpp_dnfboreal      , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gpp_ebftrop        , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gpp_ebftemp        , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gpp_dbftrop        , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gpp_dbftemp        , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gpp_dbfboreal      , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gpp_ebstemp        , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gpp_dbstemp        , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gpp_dbsboreal      , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gpp_c3arcgrass     , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gpp_c3grass        , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gpp_c4grass        , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%leafc_enftemp      , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%leafc_enfboreal    , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%leafc_dnfboreal    , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%leafc_ebftrop      , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%leafc_ebftemp      , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%leafc_dbftrop      , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%leafc_dbftemp      , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%leafc_dbfboreal    , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%leafc_ebstemp      , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%leafc_dbstemp      , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%leafc_dbsboreal    , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%leafc_c3arcgrass   , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%leafc_c3grass      , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%leafc_c4grass      , set_defaults)
 #ifdef CROP
       CALL sync_hist_vars_one (DEF_hist_vars%cphase                          , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%cropprod1c                      , set_defaults)
@@ -1638,10 +1638,10 @@ CONTAINS
       CALL sync_hist_vars_one (DEF_hist_vars%cropprodc_unmanagedcrop         , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%fert_to_sminn                   , set_defaults)
       IF(DEF_USE_IRRIGATION)THEN
-         CALL sync_hist_vars_one (DEF_hist_vars%irrig_rate                      , set_defaults)
-         CALL sync_hist_vars_one (DEF_hist_vars%deficit_irrig                   , set_defaults)
-         CALL sync_hist_vars_one (DEF_hist_vars%sum_irrig                       , set_defaults)
-         CALL sync_hist_vars_one (DEF_hist_vars%sum_irrig_count                 , set_defaults)
+         CALL sync_hist_vars_one (DEF_hist_vars%irrig_rate                   , set_defaults)
+         CALL sync_hist_vars_one (DEF_hist_vars%deficit_irrig                , set_defaults)
+         CALL sync_hist_vars_one (DEF_hist_vars%sum_irrig                    , set_defaults)
+         CALL sync_hist_vars_one (DEF_hist_vars%sum_irrig_count              , set_defaults)
       ENDIF
 #endif
       CALL sync_hist_vars_one (DEF_hist_vars%ndep_to_sminn                   , set_defaults)
@@ -1654,85 +1654,85 @@ CONTAINS
       ENDIF
 #endif
 
-      CALL sync_hist_vars_one (DEF_hist_vars%t_soisno    ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%wliq_soisno ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%wice_soisno ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%t_soisno    , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%wliq_soisno , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%wice_soisno , set_defaults)
 
-      CALL sync_hist_vars_one (DEF_hist_vars%h2osoi      ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%rstfacsun   ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%rstfacsha   ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%gssun   ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%gssha   ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%rootr       ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%vegwp       ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%BD_all      ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%wfc         ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%OM_density  ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%wdsrf       ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%wdsrf_inst  ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%zwt         ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%wa          ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%wa_inst     ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%h2osoi      , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%rstfacsun   , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%rstfacsha   , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gssun       , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gssha       , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%rootr       , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%vegwp       , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%BD_all      , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%wfc         , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%OM_density  , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%wdsrf       , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%wdsrf_inst  , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%zwt         , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%wa          , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%wa_inst     , set_defaults)
 
-      CALL sync_hist_vars_one (DEF_hist_vars%t_lake      ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%lake_icefrac,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%t_lake      , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%lake_icefrac, set_defaults)
 
 #ifdef BGC
-      CALL sync_hist_vars_one (DEF_hist_vars%litr1c_vr   ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%litr2c_vr   ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%litr3c_vr   ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%soil1c_vr   ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%soil2c_vr   ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%soil3c_vr   ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%cwdc_vr     ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%litr1n_vr   ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%litr2n_vr   ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%litr3n_vr   ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%soil1n_vr   ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%soil2n_vr   ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%soil3n_vr   ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%cwdn_vr     ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%sminn_vr    ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%litr1c_vr   , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%litr2c_vr   , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%litr3c_vr   , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%soil1c_vr   , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%soil2c_vr   , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%soil3c_vr   , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%cwdc_vr     , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%litr1n_vr   , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%litr2n_vr   , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%litr3n_vr   , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%soil1n_vr   , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%soil2n_vr   , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%soil3n_vr   , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%cwdn_vr     , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%sminn_vr    , set_defaults)
 #endif
 
-      CALL sync_hist_vars_one (DEF_hist_vars%ustar       ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%ustar2      ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%tstar       ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%qstar       ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%zol         ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%rib         ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%fm          ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%fh          ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%fq          ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%us10m       ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%vs10m       ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%fm10m       ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%sr          ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%solvd       ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%solvi       ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%solnd       ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%solni       ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%srvd        ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%srvi        ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%srnd        ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%srni        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%ustar       , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%ustar2      , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%tstar       , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%qstar       , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%zol         , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%rib         , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%fm          , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%fh          , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%fq          , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%us10m       , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%vs10m       , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%fm10m       , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%sr          , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%solvd       , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%solvi       , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%solnd       , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%solni       , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%srvd        , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%srvi        , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%srnd        , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%srni        , set_defaults)
 
-      CALL sync_hist_vars_one (DEF_hist_vars%solvdln     ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%solviln     ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%solndln     ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%solniln     ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%srvdln      ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%srviln      ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%srndln      ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%srniln      ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%solvdln     , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%solviln     , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%solndln     , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%solniln     , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%srvdln      , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%srviln      , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%srndln      , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%srniln      , set_defaults)
 
-      CALL sync_hist_vars_one (DEF_hist_vars%xsubs_bsn   ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%xsubs_hru   ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%riv_height  ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%riv_veloct  ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%discharge   ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%wdsrf_hru   ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%veloc_hru   ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%xsubs_bsn   , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%xsubs_hru   , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%riv_height  , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%riv_veloct  , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%discharge   , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%wdsrf_hru   , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%veloc_hru   , set_defaults)
 
    END SUBROUTINE sync_hist_vars
 
