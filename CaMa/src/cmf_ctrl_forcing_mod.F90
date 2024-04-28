@@ -11,6 +11,7 @@ MODULE CMF_CTRL_FORCING_MOD
 !
 ! (C) D.Yamazaki & E. Dutra  (U-Tokyo/FCUL)  Aug 2019
 !
+! Modifications: I. Ayan-Miguez (BSC) Apr 2023: Read inpmat.nc matrix by layers and added LECMF2LAKEC switch
 ! Licensed under the Apache License, Version 2.0 (the "License");
 !   You may not use this file except in compliance with the License.
 !   You may obtain a copy of the License at: http://www.apache.org/licenses/LICENSE-2.0
@@ -23,7 +24,8 @@ MODULE CMF_CTRL_FORCING_MOD
 
    !==========================================================
    USE PARKIND1,                only: JPIM, JPRB, JPRM
-   USE YOS_CMF_INPUT,           only: LOGNAM
+   USE YOS_CMF_INPUT,           only: LOGNAM, LWEVAP, LWINFILT
+
    !============================
    IMPLICIT NONE
    SAVE
@@ -187,10 +189,11 @@ CONTAINS
 
 
    !####################################################################
-   SUBROUTINE CMF_FORCING_INIT
+SUBROUTINE CMF_FORCING_INIT(LECMF2LAKEC)
    ! Initialize/open netcdf input 
    ! -- called from "Main Program / Coupler"
    IMPLICIT NONE
+      integer(KIND=JPIM),OPTIONAL,INTENT(IN) :: LECMF2LAKEC   !! Lake coupling: this is currently only used in ECMWF
       !================================================
       write(LOGNAM,*) ""
       write(LOGNAM,*) "!---------------------!"
@@ -204,7 +207,11 @@ CONTAINS
       IF( LINTERP ) THEN
          IF( LITRPCDF )THEN
 #ifdef UseCDF_CMF
-            CALL CMF_INPMAT_INIT_CDF
+            IF(PRESENT(LECMF2LAKEC)) THEN
+               CALL CMF_INPMAT_INIT_CDF(LECMF2LAKEC)
+            ELSE
+               CALL CMF_INPMAT_INIT_CDF
+    	    ENDIF
 #endif
          ELSE
             CALL CMF_INPMAT_INIT_BIN
@@ -292,12 +299,13 @@ CONTAINS
 !+
 !==========================================================
 #ifdef UseCDF_CMF
-      SUBROUTINE CMF_INPMAT_INIT_CDF
+      SUBROUTINE CMF_INPMAT_INIT_CDF(LECMF2LAKEC)
       USE YOS_CMF_INPUT,           only: NX, NY, INPN, LMAPEND, NXIN,NYIN
       USE YOS_CMF_MAP,             only: NSEQMAX
       USE CMF_UTILS_MOD,           only: INQUIRE_FID, NCERROR, mapD2vecD, mapI2vecI
       USE NETCDF
       IMPLICIT NONE
+      INTEGER(KIND=JPIM),OPTIONAL,INTENT(IN) :: LECMF2LAKEC  !! for lake coupling: currently only used in ECMWF
       integer(KIND=JPIM),ALLOCATABLE  :: I2TMP(:,:,:)
       real(KIND=JPRB),ALLOCATABLE     :: D2TMP(:,:,:)
 
@@ -351,6 +359,7 @@ CONTAINS
 
          !================================================
          !*** Check if inverse information is available  (only used in ECMWF/IFS v4.07)
+IF(PRESENT(LECMF2LAKEC) .AND. (LECMF2LAKEC .NE. 0)) THEN
          ISTATUS = NF90_INQ_VARID(NCID, 'levI', VARID)
          IF ( ISTATUS /= 0 ) THEN
             write(LOGNAM,*) "Could not find levI variable in inpmat.nc: inverse interpolation not available"
@@ -392,7 +401,7 @@ CONTAINS
             ENDDO
 !$OMP END PARALLEL DO
          ENDIF 
-
+ENDIF
 
       END SUBROUTINE CMF_INPMAT_INIT_CDF
 #endif
@@ -579,7 +588,7 @@ CONTAINS
 
    CONTAINS
       !==========================================================
-      !+ INTERTI
+!+ INTERPI
       !==========================================================
       SUBROUTINE INTERPI(PBUFFIN,PBUFFOUT)
       ! interporlate field using "input matrix inverse: from catchment to other grid"
@@ -637,13 +646,7 @@ CONTAINS
          ELSE
             D2ROFSUB(:,:) = 0._JPRB
          ENDIF
-         IF (LWEVAP) THEN
-            CALL ROFF_INTERP(PBUFF(:,:,3),D2WEVAP)
-         ENDIF
-         ! add water re-infiltration calculation 
-         IF (LWINFILT) THEN
-            CALL ROFF_INTERP(PBUFF(:,:,4),D2WINFILT)
-         ENDIF
+
       ELSE !  nearest point
          CALL CONV_RESOL(PBUFF(:,:,1),D2RUNOFF)
          IF (LROSPLIT) THEN
@@ -651,14 +654,26 @@ CONTAINS
          ELSE
             D2ROFSUB(:,:) = 0._JPRB
          ENDIF
-         IF (LWEVAP) THEN
-            CALL CONV_RESOL(PBUFF(:,:,3),D2WEVAP)
-         ENDIF 
-         !  add water re-infiltration calculation 
-         IF (LWINFILT) THEN
-            CALL CONV_RESOL(PBUFF(:,:,4),D2WINFILT)
-         ENDIF
       ENDIF 
+      IF (LWEVAP) THEN
+         !IF ( SIZE(PBUFF,3) == 3 ) THEN
+            CALL ROFF_INTERP(PBUFF(:,:,3),D2WEVAP)
+         !ELSE
+         !   WRITE(LOGNAM,*)  "LWEVAP is true but evaporation not provide in input array for interpolation"
+         !   WRITE(LOGNAM,*)  "CMF_FORCING_PUT(PBUFF), PBUFF should have 3 fields for interpolation "
+            !STOP 9
+         ! ENDIF
+      ENDIF 
+      IF (LWINFILT) THEN
+         !IF ( SIZE(PBUFF,3) == 3 ) THEN
+            CALL ROFF_INTERP(PBUFF(:,:,4),D2WINFILT)
+         !ELSE
+         !   WRITE(LOGNAM,*)  "LWINFILT is true but evaporation not provide in input array for interpolation"
+         !   WRITE(LOGNAM,*)  "CMF_FORCING_PUT(PBUFF), PBUFF should have 4 fields for interpolation "
+         !   STOP 9
+         !ENDIF
+      ENDIF 
+
 
    CONTAINS
       !==========================================================
@@ -667,6 +682,7 @@ CONTAINS
       !==========================================================
       SUBROUTINE ROFF_INTERP(PBUFFIN,PBUFFOUT)
       ! interporlate runoff using "input matrix"
+      USE CMF_UTILS_MOD,           ONLY: CMF_CheckNanB
       USE YOS_CMF_MAP,             only: NSEQALL
       USE YOS_CMF_INPUT,           only: NXIN, NYIN, INPN, RMIS
       IMPLICIT NONE
@@ -692,6 +708,7 @@ CONTAINS
                   IF( PBUFFIN(IXIN,IYIN).NE.RMIS )THEN
                      PBUFFOUT(ISEQ,1) = PBUFFOUT(ISEQ,1) + PBUFFIN(IXIN,IYIN) * INPA(ISEQ,INPI) / DROFUNIT   !! DTIN removed in v395
                   ENDIF
+                  IF( CMF_CheckNanB(PBUFFIN(IXIN,IYIN),0._JPRB) ) PBUFFOUT(ISEQ,1)=0._JPRB  !! treat NaN runoff input 
                ENDIF
             ENDDO
             PBUFFOUT(ISEQ,1)=MAX(PBUFFOUT(ISEQ,1), 0._JPRB)

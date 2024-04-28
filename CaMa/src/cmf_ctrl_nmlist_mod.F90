@@ -226,8 +226,8 @@ CONTAINS
       PMINSLP=1.E-5                                  !! minimum slope (kinematic wave)
 
       IMIS=-9999_JPIM
-      RMIS=1.E20_JPRM
-      DMIS=1.E20_JPRB
+      RMIS=-1.0E36_JPRM
+      DMIS=-1.0E36_JPRB
 
       CSUFBIN='.bin'
       CSUFVEC='.vec'
