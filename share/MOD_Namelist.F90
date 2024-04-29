@@ -112,7 +112,7 @@ MODULE MOD_Namelist
    character(len=256) :: DEF_dir_restart  = 'path/to/restart'
    character(len=256) :: DEF_dir_history  = 'path/to/history'
 
-   character(len=256) :: DEF_DA_obsdir = 'null'
+   character(len=256) :: DEF_DA_obsdir    = 'null'
 
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ! ----- Part 6: make surface data -----
@@ -134,7 +134,7 @@ MODULE MOD_Namelist
    !         only available for USGS/IGBP/PFT CLASSIFICATION
    logical :: USE_srfdata_from_3D_gridded_data = .false.
 
-   ! USE a static year land cover type
+   ! ----- land cover data year (for static land cover, i.e. non-LULCC) -----
    integer :: DEF_LC_YEAR  = 2005
 
    ! ----- Subgrid scheme -----
@@ -150,8 +150,9 @@ MODULE MOD_Namelist
    logical :: DEF_LANDONLY                  = .true.
    logical :: DEF_USE_DOMINANT_PATCHTYPE    = .false.
 
-   logical :: DEF_USE_SOILPAR_UPS_FIT = .true.     ! soil hydraulic parameters are upscaled from rawdata (1km resolution)
-                                                   ! to model patches through FIT algorithm (Montzka et al., 2017).
+   ! soil hydraulic parameters are upscaled from rawdata (1km resolution)
+   ! to model patches through FIT algorithm (Montzka et al., 2017).
+   logical :: DEF_USE_SOILPAR_UPS_FIT = .true.
 
    ! Options for soil reflectance setting schemes
    ! 1: Guessed soil color type according to land cover classes
@@ -168,13 +169,15 @@ MODULE MOD_Namelist
 ! ----- Part 7: Leaf Area Index -----
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-   !add by zhongwang wei @ sysu 2021/12/23
-   !To allow read satellite observed LAI
+   ! add by zhongwang wei @ sysu 2021/12/23
+   ! To allow read satellite observed LAI
    ! 06/2023, note by hua yuan: change DEF_LAI_CLIM to DEF_LAI_MONTHLY
    logical :: DEF_LAI_MONTHLY = .true.
+
    ! ------LAI change and Land cover year setting ----------
    ! 06/2023, add by wenzong dong and hua yuan: use for updating LAI with simulation year
    logical :: DEF_LAI_CHANGE_YEARLY = .true.
+
    ! 05/2023, add by Xingjie Lu: use for updating LAI with leaf carbon
    logical :: DEF_USE_LAIFEEDBACK = .false.
 
@@ -195,9 +198,6 @@ MODULE MOD_Namelist
 ! ----- Part 9: LULCC related ------
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-   ! 06/2023, add by hua yuan and wenzong dong
-   ! ------ Land use and land cover (LULC) related -------
-
    ! Options for LULCC year-to-year transfer schemes
    ! 1: Same Type Assignment scheme (STA), state variables assignment for the same type (LC, PFT or PC)
    ! 2: Mass and Energy Conservation scheme (MEC), DO mass and energy conservation calculation
@@ -207,31 +207,24 @@ MODULE MOD_Namelist
 ! ----- Part 10: Urban model related ------
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-   ! ------ Urban model related -------
    ! Options for urban type scheme
    ! 1: NCAR Urban Classification, 3 urban type with Tall Building, High Density and Medium Density
    ! 2: LCZ Classification, 10 urban type with LCZ 1-10
    integer :: DEF_URBAN_type_scheme = 1
-   logical :: DEF_URBAN_ONLY   = .false.
-   logical :: DEF_URBAN_RUN    = .false.
-   logical :: DEF_URBAN_BEM    = .true.
-   logical :: DEF_URBAN_TREE   = .true.
-   logical :: DEF_URBAN_WATER  = .true.
-   logical :: DEF_URBAN_LUCY   = .true.
+   logical :: DEF_URBAN_ONLY        = .false.
+   logical :: DEF_URBAN_RUN         = .false.
+   logical :: DEF_URBAN_BEM         = .true.
+   logical :: DEF_URBAN_TREE        = .true.
+   logical :: DEF_URBAN_WATER       = .true.
+   logical :: DEF_URBAN_LUCY        = .true.
 
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ! ----- Part 11: parameteration schemes -----
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-   ! ----- Atmospheric Nitrogen Deposition -----
-   !add by Fang Shang @ pku 2023/08
-   !1: To allow annuaul ndep data to be read in
-   !2: To allow monthly ndep data to be read in
-   integer :: DEF_NDEP_FREQUENCY = 1
-
    integer :: DEF_Interception_scheme = 1  !1:CoLM；2:CLM4.5; 3:CLM5; 4:Noah-MP; 5:MATSIRO; 6:VIC; 7:JULES
 
-   ! ------ SOIL parameters and supercool water setting -------
+   ! ----- SOIL parameters and supercool water setting ------
    integer :: DEF_THERMAL_CONDUCTIVITY_SCHEME = 4  ! Options for soil thermal conductivity schemes
                                                    ! 1: Farouki (1981)
                                                    ! 2: Johansen(1975)
@@ -241,9 +234,10 @@ MODULE MOD_Namelist
                                                    ! 6: Tarnawski and Leong (2012)
                                                    ! 7: De Vries (1963)
                                                    ! 8: Yan Hengnian, He Hailong et al.(2019)
+
    logical :: DEF_USE_SUPERCOOL_WATER = .true.     ! supercooled soil water scheme, Niu & Yang (2006)
 
-   ! Options for soil surface resistance schemes
+   ! ----- Options for soil surface resistance schemes -----
    ! 0: NONE soil surface resistance
    ! 1: SL14, Swenson and Lawrence (2014)
    ! 2: SZ09, Sakaguchi and Zeng (2009)
@@ -252,7 +246,7 @@ MODULE MOD_Namelist
    ! 5: S92,  Sellers et al (1992)
    integer :: DEF_RSS_SCHEME = 1
 
-   ! Options for runoff parameterization schemes
+   ! ----- Options for runoff parameterization schemes -----
    ! 0: scheme from SIMTOP model, also used in CoLM2014
    ! 1: scheme from VIC model
    ! 2: scheme from XinAnJiang model, also used in ECMWF model
@@ -261,21 +255,24 @@ MODULE MOD_Namelist
    integer :: DEF_Runoff_SCHEME = 0
    character(len=256) :: DEF_file_VIC_para = 'null'
 
-   ! Treat exposed soil and snow surface separatly, including
-   ! solar absorption, sensible/latent heat, ground temperature,
-   ! ground heat flux and groud evp/dew/subl/fros.
-   ! Corresponding vars are named as ***_soil, ***_snow.
+   ! ----- Treat exposed soil and snow surface separatly -----
+   ! including solar absorption, sensible/latent heat, ground temperature,
+   ! ground heat flux and groud evp/dew/subl/fros. Corresponding vars are
+   ! named as ***_soil, ***_snow.
    logical :: DEF_SPLIT_SOILSNOW = .false.
 
-   ! Account for vegetation snow process
+   ! ----- Account for vegetation snow process -----
    logical :: DEF_VEG_SNOW = .true.
 
+   ! ----- Variably Saturated Flow Soil Water -----
    logical :: DEF_USE_VariablySaturatedFlow = .true.
    logical :: DEF_USE_BEDROCK               = .false.
-   logical :: DEF_USE_OZONESTRESS           = .false.
-   logical :: DEF_USE_OZONEDATA             = .false.
 
-   ! .true. for running SNICAR model
+   ! ----- Ozone stress -----
+   logical :: DEF_USE_OZONESTRESS = .false.
+   logical :: DEF_USE_OZONEDATA   = .false.
+
+   ! ----- SNICAR model related -----
    logical :: DEF_USE_SNICAR                  = .false.
    character(len=256) :: DEF_file_snowoptics  = 'null'
    character(len=256) :: DEF_file_snowaging   = 'null'
@@ -286,6 +283,12 @@ MODULE MOD_Namelist
    ! .true. Read aerosol deposition climatology data or .false. yearly changed
    logical :: DEF_Aerosol_Clim                = .false.
 
+   ! ----- Atmospheric Nitrogen Deposition -----
+   !add by Fang Shang @ pku 2023/08
+   !1: To allow annuaul ndep data to be read in
+   !2: To allow monthly ndep data to be read in
+   integer :: DEF_NDEP_FREQUENCY = 1
+
    ! ----- lateral flow related -----
    logical :: DEF_USE_EstimatedRiverDepth     = .true.
    character(len=256) :: DEF_ElementNeighbour_file = 'null'
@@ -293,33 +296,41 @@ MODULE MOD_Namelist
    character(len=5)   :: DEF_precip_phase_discrimination_scheme = 'II'
    character(len=256) :: DEF_SSP='585' ! Co2 path for CMIP6 future scenario.
 
-   ! use irrigation
-   logical :: DEF_USE_IRRIGATION = .false.
+
+   !use irrigation
+   logical            :: DEF_USE_IRRIGATION      = .false.
 
    !Plant Hydraulics
    logical            :: DEF_USE_PLANTHYDRAULICS = .true.
+
    !Medlyn stomata model
-   logical            :: DEF_USE_MEDLYNST = .false.
+   logical            :: DEF_USE_MEDLYNST        = .false.
+
    !Semi-Analytic-Spin-Up
-   logical            :: DEF_USE_SASU = .false.
+   logical            :: DEF_USE_SASU            = .false.
+
    !Punctuated nitrogen addition Spin up
-   logical            :: DEF_USE_PN   = .false.
+   logical            :: DEF_USE_PN              = .false.
+
    !Fertilisation on crop
-   logical            :: DEF_USE_FERT = .true.
+   logical            :: DEF_USE_FERT            = .true.
+
    !Nitrification and denitrification switch
-   logical            :: DEF_USE_NITRIF = .true.
+   logical            :: DEF_USE_NITRIF          = .true.
+
    !Soy nitrogen fixation
-   logical            :: DEF_USE_CNSOYFIXN = .true.
+   logical            :: DEF_USE_CNSOYFIXN       = .true.
+
    !Fire MODULE
-   logical            :: DEF_USE_FIRE = .false.
+   logical            :: DEF_USE_FIRE            = .false.
 
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ! ----- Part 12: forcing -----
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-   character(len=256) :: DEF_dir_forcing  = 'path/to/forcing/data'
+   character(len=256) :: DEF_dir_forcing       = 'path/to/forcing/data'
 
-   character(len=256) :: DEF_forcing_namelist = 'null'
+   character(len=256) :: DEF_forcing_namelist  = 'null'
 
    type nl_forcing_type
 
@@ -335,7 +346,7 @@ MODULE MOD_Namelist
       character(len=256) :: missing_value_name = 'missing_value'
 
       integer            :: NVAR               = 8              ! variable number of forcing data
-      integer            :: startyr            = 2000           ! start year of forcing data        <MARK #1>
+      integer            :: startyr            = 2000           ! start year of forcing data
       integer            :: startmo            = 1              ! start month of forcing data
       integer            :: endyr              = 2003           ! end year of forcing data
       integer            :: endmo              = 12             ! end month of forcing data
@@ -353,7 +364,7 @@ MODULE MOD_Namelist
 
       character(len=256) :: groupby            = 'month'        ! file grouped by year/month
 
-      character(len=256) :: fprefix(8)          = (/ &
+      character(len=256) :: fprefix(8)         = (/ &
          'TPHWL6Hrly/clmforc.cruncep.V4.c2011.0.5d.TPQWL.', &
          'TPHWL6Hrly/clmforc.cruncep.V4.c2011.0.5d.TPQWL.', &
          'TPHWL6Hrly/clmforc.cruncep.V4.c2011.0.5d.TPQWL.', &
@@ -379,11 +390,11 @@ MODULE MOD_Namelist
    type (nl_forcing_type) :: DEF_forcing
 
    !CBL height
-   logical            :: DEF_USE_CBL_HEIGHT = .false.
+   logical           :: DEF_USE_CBL_HEIGHT     = .false.
 
-   character(len=20) :: DEF_Forcing_Interp = 'areaweight'
+   character(len=20) :: DEF_Forcing_Interp     = 'areaweight'
 
-   logical          :: DEF_USE_Forcing_Downscaling = .false.
+   logical          :: DEF_USE_Forcing_Downscaling        = .false.
    character(len=5) :: DEF_DS_precipitation_adjust_scheme = 'II'
    character(len=5) :: DEF_DS_longwave_adjust_scheme      = 'II'
 
@@ -391,22 +402,22 @@ MODULE MOD_Namelist
 ! ----- Part 13: history and restart -----
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-   logical  :: DEF_HISTORY_IN_VECTOR = .false.
+   logical  :: DEF_HISTORY_IN_VECTOR            = .false.
 
-   logical  :: DEF_HIST_grid_as_forcing = .false.
-   real(r8) :: DEF_HIST_lon_res = 0.5
-   real(r8) :: DEF_HIST_lat_res = 0.5
+   logical  :: DEF_HIST_grid_as_forcing         = .false.
+   real(r8) :: DEF_HIST_lon_res                 = 0.5
+   real(r8) :: DEF_HIST_lat_res                 = 0.5
 
-   character(len=256) :: DEF_WRST_FREQ    = 'none'  ! write restart file frequency: TIMESTEP/HOURLY/DAILY/MONTHLY/YEARLY
-   character(len=256) :: DEF_HIST_FREQ    = 'none'  ! write history file frequency: TIMESTEP/HOURLY/DAILY/MONTHLY/YEARLY
-   character(len=256) :: DEF_HIST_groupby = 'MONTH' ! history file in one file: DAY/MONTH/YEAR
-   character(len=256) :: DEF_HIST_mode    = 'one'
-   logical :: DEF_HIST_WriteBack     = .false.
-   integer :: DEF_REST_CompressLevel = 1
-   integer :: DEF_HIST_CompressLevel = 1
+   character(len=256) :: DEF_WRST_FREQ          = 'none'  ! write restart file frequency: TIMESTEP/HOURLY/DAILY/MONTHLY/YEARLY
+   character(len=256) :: DEF_HIST_FREQ          = 'none'  ! write history file frequency: TIMESTEP/HOURLY/DAILY/MONTHLY/YEARLY
+   character(len=256) :: DEF_HIST_groupby       = 'MONTH' ! history file in one file: DAY/MONTH/YEAR
+   character(len=256) :: DEF_HIST_mode          = 'one'
+   logical  :: DEF_HIST_WriteBack               = .false.
+   integer  :: DEF_REST_CompressLevel           = 1
+   integer  :: DEF_HIST_CompressLevel           = 1
 
    character(len=256) :: DEF_HIST_vars_namelist = 'null'
-   logical :: DEF_HIST_vars_out_default = .true.
+   logical  :: DEF_HIST_vars_out_default        = .true.
 
 
    ! ----- history variables -----
@@ -503,10 +514,10 @@ MODULE MOD_Namelist
       logical :: t_roof                           = .true.
       logical :: t_wall                           = .true.
 
-      logical :: assimsun                         = .true. !1
-      logical :: assimsha                         = .true. !1
-      logical :: etrsun                           = .true. !1
-      logical :: etrsha                           = .true. !1
+      logical :: assimsun                         = .true.
+      logical :: assimsha                         = .true.
+      logical :: etrsun                           = .true.
+      logical :: etrsha                           = .true.
 
       logical :: leafc                            = .true.
       logical :: leafc_storage                    = .true.
@@ -826,7 +837,7 @@ CONTAINS
 
       DEF_LAI_CHANGE_YEARLY,                  &
       DEF_USE_LAIFEEDBACK,                    & !add by Xingjie Lu, use for updating LAI with leaf carbon
-      DEF_USE_IRRIGATION,                     & ! use irrigation
+      DEF_USE_IRRIGATION,                     & !use irrigation
 
       DEF_LC_YEAR,                            &
       DEF_LULCC_SCHEME,                       &
