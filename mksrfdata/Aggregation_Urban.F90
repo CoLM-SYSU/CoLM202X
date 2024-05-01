@@ -58,7 +58,7 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
    integer , intent(in) :: lc_year
 
    type(grid_type), intent(in) :: grid_urban_5km
-   ! type(grid_type), intent(in) :: grid_urban_100m
+  !type(grid_type), intent(in) :: grid_urban_100m
    type(grid_type), intent(in) :: grid_urban_500m
 
    ! dimensions
@@ -105,49 +105,48 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
 
    ! urban morphological and thermal paras of NCAR data
    ! input variables, look-up-table data
-   real(r8), allocatable, dimension(:,:)  :: hwrcan, wtrd, emroof, emwall, ncar_wt
-   real(r8), allocatable, dimension(:,:)  :: emimrd, emperd, ncar_ht
-   real(r8), allocatable, dimension(:,:)  :: throof, thwall, tbmin, tbmax
-
-   real(r8), allocatable, dimension(:,:,:)  :: cvroof, cvwall, cvimrd, &
-                                               tkroof, tkwall, tkimrd
-   real(r8), allocatable, dimension(:,:,:,:):: albroof, albwall, albimrd, albperd
+   real(r8), allocatable, dimension(:,:)     :: hwrcan, wtrd, emroof, emwall, ncar_wt
+   real(r8), allocatable, dimension(:,:)     :: emimrd, emperd, ncar_ht
+   real(r8), allocatable, dimension(:,:)     :: throof, thwall, tbmin, tbmax
+   real(r8), allocatable, dimension(:,:,:)   :: cvroof, cvwall, cvimrd, &
+                                                tkroof, tkwall, tkimrd
+   real(r8), allocatable, dimension(:,:,:,:) :: albroof, albwall, albimrd, albperd
 
    ! output variables, vector data
-   real(r8), ALLOCATABLE, dimension(:) :: area_urb
-   real(r8), ALLOCATABLE, dimension(:) :: sarea_urb
-   real(r8), ALLOCATABLE, dimension(:) :: urb_frc
-   real(r8), ALLOCATABLE, dimension(:) :: urb_pct
+   real(r8), ALLOCATABLE, dimension(:)     :: area_urb
+   real(r8), ALLOCATABLE, dimension(:)     :: sarea_urb
+   real(r8), ALLOCATABLE, dimension(:)     :: urb_frc
+   real(r8), ALLOCATABLE, dimension(:)     :: urb_pct
 
-   real(r8), ALLOCATABLE, dimension(:) :: area_tb
-   real(r8), ALLOCATABLE, dimension(:) :: area_hd
-   real(r8), ALLOCATABLE, dimension(:) :: area_md
-   real(r8), ALLOCATABLE, dimension(:) :: hwr_can
-   real(r8), ALLOCATABLE, dimension(:) :: wt_rd
-   real(r8), ALLOCATABLE, dimension(:) :: em_roof
-   real(r8), ALLOCATABLE, dimension(:) :: em_wall
-   real(r8), ALLOCATABLE, dimension(:) :: em_imrd
-   real(r8), ALLOCATABLE, dimension(:) :: em_perd
-   real(r8), ALLOCATABLE, dimension(:) :: th_roof
-   real(r8), ALLOCATABLE, dimension(:) :: th_wall
-   real(r8), ALLOCATABLE, dimension(:) :: tb_min
-   real(r8), ALLOCATABLE, dimension(:) :: tb_max
+   real(r8), ALLOCATABLE, dimension(:)     :: area_tb
+   real(r8), ALLOCATABLE, dimension(:)     :: area_hd
+   real(r8), ALLOCATABLE, dimension(:)     :: area_md
+   real(r8), ALLOCATABLE, dimension(:)     :: hwr_can
+   real(r8), ALLOCATABLE, dimension(:)     :: wt_rd
+   real(r8), ALLOCATABLE, dimension(:)     :: em_roof
+   real(r8), ALLOCATABLE, dimension(:)     :: em_wall
+   real(r8), ALLOCATABLE, dimension(:)     :: em_imrd
+   real(r8), ALLOCATABLE, dimension(:)     :: em_perd
+   real(r8), ALLOCATABLE, dimension(:)     :: th_roof
+   real(r8), ALLOCATABLE, dimension(:)     :: th_wall
+   real(r8), ALLOCATABLE, dimension(:)     :: tb_min
+   real(r8), ALLOCATABLE, dimension(:)     :: tb_max
 
-   real(r8), ALLOCATABLE, dimension(:,:) :: cv_wgt
-   real(r8), ALLOCATABLE, dimension(:,:) :: tk_wgt
-   real(r8), ALLOCATABLE, dimension(:,:) :: cv_roof
-   real(r8), ALLOCATABLE, dimension(:,:) :: cv_wall
-   real(r8), ALLOCATABLE, dimension(:,:) :: cv_imrd
-   real(r8), ALLOCATABLE, dimension(:,:) :: tk_roof
-   real(r8), ALLOCATABLE, dimension(:,:) :: tk_wall
-   real(r8), ALLOCATABLE, dimension(:,:) :: tk_imrd
+   real(r8), ALLOCATABLE, dimension(:,:)   :: cv_wgt
+   real(r8), ALLOCATABLE, dimension(:,:)   :: tk_wgt
+   real(r8), ALLOCATABLE, dimension(:,:)   :: cv_roof
+   real(r8), ALLOCATABLE, dimension(:,:)   :: cv_wall
+   real(r8), ALLOCATABLE, dimension(:,:)   :: cv_imrd
+   real(r8), ALLOCATABLE, dimension(:,:)   :: tk_roof
+   real(r8), ALLOCATABLE, dimension(:,:)   :: tk_wall
+   real(r8), ALLOCATABLE, dimension(:,:)   :: tk_imrd
 
    real(r8), ALLOCATABLE, dimension(:,:,:) :: alb_roof
    real(r8), ALLOCATABLE, dimension(:,:,:) :: alb_wall
    real(r8), ALLOCATABLE, dimension(:,:,:) :: alb_imrd
    real(r8), ALLOCATABLE, dimension(:,:,:) :: alb_perd
 
-   integer , allocatable, dimension(:) :: locpxl
+   integer , allocatable, dimension(:)     :: locpxl
 
    ! landfile variables
    character(len=256) landsrfdir, landdir, landname, suffix
@@ -490,8 +489,8 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
 #endif
 
       ! ******* Building : Weight, HTOP_Roof *******
-      ! if building data is missing, how to look-up-table?
-      ! a new arry with region id was used for look-up-table (urban_reg)
+      ! if building data is missing, how to use look-up-table?
+      ! a new array with region id was used for look-up-table (urban_reg)
       IF (DEF_URBAN_type_scheme == 1) THEN
          ! only used when urban patch have nan data of building height and fraction
          landname = TRIM(dir_rawdata)//'urban/NCAR_urban_properties.nc'
@@ -547,7 +546,7 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
                ENDIF
 
                IF (any(reg_typid_one==0)) THEN
-                  WHERE(reg_typid_one==0) reg_typid_one =  num_max_frequency(reg_typid_one)
+                  WHERE(reg_typid_one==0) reg_typid_one = num_max_frequency(reg_typid_one)
                ENDIF
 
                WHERE (wt_roof_one <= 0)
@@ -966,9 +965,9 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
                ENDDO
 
                DO i = 1, numurban
-                  urb2p      = urban2patch(i)
-                  urb_frc (i)= elm_patch%subfrc(urb2p)
-                  urb_pct (i)= area_urb(i)/sarea_urb(i)
+                  urb2p       = urban2patch(i)
+                  urb_frc (i) = elm_patch%subfrc(urb2p)
+                  urb_pct (i) = area_urb(i)/sarea_urb(i)
                ENDDO
 
 #ifdef USEMPI
@@ -1042,55 +1041,55 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
 #endif
 #else
 
-         SITE_em_roof  (:) = em_roof
-         SITE_em_wall  (:) = em_wall
-         SITE_em_gimp  (:) = em_imrd
-         SITE_em_gper  (:) = em_perd
-         SITE_t_roommax(:) = tb_max
-         SITE_t_roommin(:) = tb_min
-         SITE_thickroof(:) = th_roof
-         SITE_thickwall(:) = th_wall
+         SITE_em_roof   (:)   = em_roof
+         SITE_em_wall   (:)   = em_wall
+         SITE_em_gimp   (:)   = em_imrd
+         SITE_em_gper   (:)   = em_perd
+         SITE_t_roommax (:)   = tb_max
+         SITE_t_roommin (:)   = tb_min
+         SITE_thickroof (:)   = th_roof
+         SITE_thickwall (:)   = th_wall
 
-         SITE_cv_roof  (:) = cv_roof(:,1)
-         SITE_cv_wall  (:) = cv_wall(:,1)
-         SITE_cv_gimp  (:) = cv_imrd(:,1)
-         SITE_tk_roof  (:) = tk_roof(:,1)
-         SITE_tk_wall  (:) = tk_wall(:,1)
-         SITE_tk_gimp  (:) = tk_imrd(:,1)
+         SITE_cv_roof   (:)   = cv_roof(:,1)
+         SITE_cv_wall   (:)   = cv_wall(:,1)
+         SITE_cv_gimp   (:)   = cv_imrd(:,1)
+         SITE_tk_roof   (:)   = tk_roof(:,1)
+         SITE_tk_wall   (:)   = tk_wall(:,1)
+         SITE_tk_gimp   (:)   = tk_imrd(:,1)
 
-         SITE_alb_roof (:,:) = alb_roof(:,:,1)
-         SITE_alb_wall (:,:) = alb_wall(:,:,1)
-         SITE_alb_gimp (:,:) = alb_imrd(:,:,1)
-         SITE_alb_gper (:,:) = alb_perd(:,:,1)
+         SITE_alb_roof  (:,:) = alb_roof(:,:,1)
+         SITE_alb_wall  (:,:) = alb_wall(:,:,1)
+         SITE_alb_gimp  (:,:) = alb_imrd(:,:,1)
+         SITE_alb_gper  (:,:) = alb_perd(:,:,1)
 
          IF (.not. USE_SITE_urban_paras) THEN
-            SITE_hwr  (:) = hwr_can
-            SITE_fgper(:) = wt_rd
-            SITE_fgimp(:) = 1 - SITE_fgper
+            SITE_hwr   (:) = hwr_can
+            SITE_fgper (:) = wt_rd
+            SITE_fgimp (:) = 1 - SITE_fgper
          ENDIF
 #endif
 
 #ifdef RangeCheck
-         CALL check_vector_data ('CANYON_HWR '    , hwr_can )
-         CALL check_vector_data ('WTROAD_PERV '   , wt_rd   )
-         CALL check_vector_data ('EM_ROOF '       , em_roof )
-         CALL check_vector_data ('EM_WALL '       , em_wall )
-         CALL check_vector_data ('EM_IMPROAD '    , em_imrd )
-         CALL check_vector_data ('EM_PERROAD '    , em_perd )
-         CALL check_vector_data ('ALB_ROOF '      , alb_roof)
-         CALL check_vector_data ('ALB_WALL '      , alb_wall)
-         CALL check_vector_data ('ALB_IMPROAD '   , alb_imrd)
-         CALL check_vector_data ('ALB_PERROAD '   , alb_perd)
-         CALL check_vector_data ('TK_ROOF '       , tk_roof )
-         CALL check_vector_data ('TK_WALL '       , tk_wall )
-         CALL check_vector_data ('TK_IMPROAD '    , tk_imrd )
-         CALL check_vector_data ('CV_ROOF '       , cv_roof )
-         CALL check_vector_data ('CV_WALL '       , cv_wall )
-         CALL check_vector_data ('CV_IMPROAD '    , cv_imrd )
-         CALL check_vector_data ('THICK_ROOF '    , th_roof )
-         CALL check_vector_data ('THICK_WALL '    , th_wall )
-         CALL check_vector_data ('T_BUILDING_MIN ', tb_min  )
-         CALL check_vector_data ('T_BUILDING_MAX ', tb_max  )
+         CALL check_vector_data ('CANYON_HWR '    , hwr_can  )
+         CALL check_vector_data ('WTROAD_PERV '   , wt_rd    )
+         CALL check_vector_data ('EM_ROOF '       , em_roof  )
+         CALL check_vector_data ('EM_WALL '       , em_wall  )
+         CALL check_vector_data ('EM_IMPROAD '    , em_imrd  )
+         CALL check_vector_data ('EM_PERROAD '    , em_perd  )
+         CALL check_vector_data ('ALB_ROOF '      , alb_roof )
+         CALL check_vector_data ('ALB_WALL '      , alb_wall )
+         CALL check_vector_data ('ALB_IMPROAD '   , alb_imrd )
+         CALL check_vector_data ('ALB_PERROAD '   , alb_perd )
+         CALL check_vector_data ('TK_ROOF '       , tk_roof  )
+         CALL check_vector_data ('TK_WALL '       , tk_wall  )
+         CALL check_vector_data ('TK_IMPROAD '    , tk_imrd  )
+         CALL check_vector_data ('CV_ROOF '       , cv_roof  )
+         CALL check_vector_data ('CV_WALL '       , cv_wall  )
+         CALL check_vector_data ('CV_IMPROAD '    , cv_imrd  )
+         CALL check_vector_data ('THICK_ROOF '    , th_roof  )
+         CALL check_vector_data ('THICK_WALL '    , th_wall  )
+         CALL check_vector_data ('T_BUILDING_MIN ', tb_min   )
+         CALL check_vector_data ('T_BUILDING_MAX ', tb_max   )
 #endif
 
 #ifdef USEMPI
@@ -1101,58 +1100,58 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
 
       IF (p_is_worker) THEN
 
-         IF (allocated(LUCY_coun)) deallocate (LUCY_coun)
-         IF (allocated(pop_den  )) deallocate (pop_den  )
-         IF (allocated(pct_tree )) deallocate (pct_tree )
-         IF (allocated(htop_urb )) deallocate (htop_urb )
-         IF (allocated(pct_urbwt)) deallocate (pct_urbwt)
-         IF (allocated(wt_roof  )) deallocate (wt_roof  )
-         IF (allocated(ht_roof  )) deallocate (ht_roof  )
-         IF (allocated(lai_urb  )) deallocate (lai_urb  )
-         IF (allocated(sai_urb  )) deallocate (sai_urb  )
+         IF ( allocated (LUCY_coun) ) deallocate (LUCY_coun )
+         IF ( allocated (pop_den  ) ) deallocate (pop_den   )
+         IF ( allocated (pct_tree ) ) deallocate (pct_tree  )
+         IF ( allocated (htop_urb ) ) deallocate (htop_urb  )
+         IF ( allocated (pct_urbwt) ) deallocate (pct_urbwt )
+         IF ( allocated (wt_roof  ) ) deallocate (wt_roof   )
+         IF ( allocated (ht_roof  ) ) deallocate (ht_roof   )
+         IF ( allocated (lai_urb  ) ) deallocate (lai_urb   )
+         IF ( allocated (sai_urb  ) ) deallocate (sai_urb   )
 
          IF (DEF_URBAN_type_scheme == 1) THEN
 
-            IF (allocated(area_urb )) deallocate (area_urb )
-            IF (allocated(sarea_urb)) deallocate (sarea_urb)
-            IF (allocated(ncar_ht  )) deallocate (ncar_ht  )
-            IF (allocated(ncar_wt  )) deallocate (ncar_wt  )
-            IF (allocated(area_urb )) deallocate (area_urb )
-            IF (allocated(hwr_can  )) deallocate (hwr_can  )
-            IF (allocated(wt_rd    )) deallocate (wt_rd    )
-            IF (allocated(em_roof  )) deallocate (em_roof  )
-            IF (allocated(em_wall  )) deallocate (em_wall  )
-            IF (allocated(em_imrd  )) deallocate (em_imrd  )
-            IF (allocated(em_perd  )) deallocate (em_perd  )
-            IF (allocated(th_roof  )) deallocate (th_roof  )
-            IF (allocated(th_wall  )) deallocate (th_wall  )
-            IF (allocated(tb_min   )) deallocate (tb_min   )
-            IF (allocated(tb_max   )) deallocate (tb_max   )
-            IF (allocated(tk_wgt   )) deallocate (tk_wgt   )
-            IF (allocated(cv_wgt   )) deallocate (cv_wgt   )
-            IF (allocated(cv_roof  )) deallocate (cv_roof  )
-            IF (allocated(cv_wall  )) deallocate (cv_wall  )
-            IF (allocated(cv_imrd  )) deallocate (cv_imrd  )
-            IF (allocated(tk_roof  )) deallocate (tk_roof  )
-            IF (allocated(tk_wall  )) deallocate (tk_wall  )
-            IF (allocated(tk_imrd  )) deallocate (tk_imrd  )
-            IF (allocated(alb_roof )) deallocate (alb_roof )
-            IF (allocated(alb_wall )) deallocate (alb_wall )
-            IF (allocated(alb_imrd )) deallocate (alb_imrd )
-            IF (allocated(alb_perd )) deallocate (alb_perd )
+            IF ( allocated (area_urb ) ) deallocate (area_urb  )
+            IF ( allocated (sarea_urb) ) deallocate (sarea_urb )
+            IF ( allocated (ncar_ht  ) ) deallocate (ncar_ht   )
+            IF ( allocated (ncar_wt  ) ) deallocate (ncar_wt   )
+            IF ( allocated (area_urb ) ) deallocate (area_urb  )
+            IF ( allocated (hwr_can  ) ) deallocate (hwr_can   )
+            IF ( allocated (wt_rd    ) ) deallocate (wt_rd     )
+            IF ( allocated (em_roof  ) ) deallocate (em_roof   )
+            IF ( allocated (em_wall  ) ) deallocate (em_wall   )
+            IF ( allocated (em_imrd  ) ) deallocate (em_imrd   )
+            IF ( allocated (em_perd  ) ) deallocate (em_perd   )
+            IF ( allocated (th_roof  ) ) deallocate (th_roof   )
+            IF ( allocated (th_wall  ) ) deallocate (th_wall   )
+            IF ( allocated (tb_min   ) ) deallocate (tb_min    )
+            IF ( allocated (tb_max   ) ) deallocate (tb_max    )
+            IF ( allocated (tk_wgt   ) ) deallocate (tk_wgt    )
+            IF ( allocated (cv_wgt   ) ) deallocate (cv_wgt    )
+            IF ( allocated (cv_roof  ) ) deallocate (cv_roof   )
+            IF ( allocated (cv_wall  ) ) deallocate (cv_wall   )
+            IF ( allocated (cv_imrd  ) ) deallocate (cv_imrd   )
+            IF ( allocated (tk_roof  ) ) deallocate (tk_roof   )
+            IF ( allocated (tk_wall  ) ) deallocate (tk_wall   )
+            IF ( allocated (tk_imrd  ) ) deallocate (tk_imrd   )
+            IF ( allocated (alb_roof ) ) deallocate (alb_roof  )
+            IF ( allocated (alb_wall ) ) deallocate (alb_wall  )
+            IF ( allocated (alb_imrd ) ) deallocate (alb_imrd  )
+            IF ( allocated (alb_perd ) ) deallocate (alb_perd  )
 
          ENDIF
 
-         IF (allocated(area_one    )) deallocate(area_one    )
-         IF (allocated(LUCY_reg_one)) deallocate(LUCY_reg_one)
-         IF (allocated(pop_one     )) deallocate(pop_one     )
-         IF (allocated(gfcc_tc_one )) deallocate(gfcc_tc_one )
-         IF (allocated(gedi_th_one )) deallocate(gedi_th_one )
-         IF (allocated(gl30_wt_one )) deallocate(gl30_wt_one )
-         IF (allocated(wt_roof_one )) deallocate(wt_roof_one )
-         IF (allocated(ht_roof_one )) deallocate(ht_roof_one )
-         IF (allocated(ulai_one    )) deallocate(ulai_one    )
-         IF (allocated(slai_one    )) deallocate(slai_one    )
+         IF ( allocated (area_one     ) ) deallocate (area_one     )
+         IF ( allocated (LUCY_reg_one ) ) deallocate (LUCY_reg_one )
+         IF ( allocated (pop_one      ) ) deallocate (pop_one      )
+         IF ( allocated (gfcc_tc_one  ) ) deallocate (gfcc_tc_one  )
+         IF ( allocated (gedi_th_one  ) ) deallocate (gedi_th_one  )
+         IF ( allocated (gl30_wt_one  ) ) deallocate (gl30_wt_one  )
+         IF ( allocated (wt_roof_one  ) ) deallocate (wt_roof_one  )
+         IF ( allocated (ht_roof_one  ) ) deallocate (ht_roof_one  )
+         IF ( allocated (ulai_one     ) ) deallocate (ulai_one     )
+         IF ( allocated (slai_one     ) ) deallocate (slai_one     )
 
       ENDIF
 

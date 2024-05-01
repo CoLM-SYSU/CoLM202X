@@ -111,6 +111,7 @@ CONTAINS
          CALL allocate_block_data (gurban, data_urb_class)
          CALL flush_block_data (data_urb_class, 0)
 
+         ! read urban type data
          suffix = 'URBTYP'
 IF (DEF_URBAN_type_scheme == 1) THEN
          CALL read_5x5_data (dir_urban, suffix, gurban, 'URBAN_DENSITY_CLASS', data_urb_class)
@@ -126,16 +127,16 @@ ENDIF
       IF (p_is_worker) THEN
 
          IF (numpatch > 0) THEN
-            ! a temporary numpatch with max urban patch
+            ! a temporary numpatch with max urban patch number
             numpatch_ = numpatch + count(landpatch%settyp == URBAN) * (N_URB-1)
 
-            allocate (eindex_(numpatch_))
-            allocate (ipxstt_(numpatch_))
-            allocate (ipxend_(numpatch_))
-            allocate (settyp_(numpatch_))
-            allocate (ielm_  (numpatch_))
+            allocate (eindex_ (numpatch_ ))
+            allocate (ipxstt_ (numpatch_ ))
+            allocate (ipxend_ (numpatch_ ))
+            allocate (settyp_ (numpatch_ ))
+            allocate (ielm_   (numpatch_ ))
 
-            ! max urban patch number
+            ! max urban patch number (temporary)
             numurban_ = count(landpatch%settyp == URBAN) * N_URB
             IF (numurban_ > 0) THEN
                allocate (urbclass(numurban_))
@@ -149,7 +150,6 @@ ENDIF
          DO ipatch = 1, numpatch
             IF (landpatch%settyp(ipatch) == URBAN) THEN
 
-               !???
                ie     = landpatch%ielm  (ipatch)
                ipxstt = landpatch%ipxstt(ipatch)
                ipxend = landpatch%ipxend(ipatch)
@@ -157,6 +157,8 @@ ENDIF
                CALL aggregation_request_data (landpatch, ipatch, gurban, zip = .false., area = area_one, &
                   data_i4_2d_in1 = data_urb_class, data_i4_2d_out1 = ibuff)
 
+               ! when there is missing urban types
+               !NOTE@tungwz: need duoble check below and add appropriate annotations
                imiss = count(ibuff<1 .or. ibuff>N_URB)
                IF (imiss > 0) THEN
                   WHERE (ibuff<1 .or. ibuff>N_URB)
@@ -167,8 +169,8 @@ ENDIF
                   IF (sum(area_one) > 0) THEN
                      DO ib = 1, size(area_one)
                         IF (ibuff(ib)>1 .and. ibuff(ib)<N_URB) THEN
-                           iurb        = ibuff(ib)
-                           buff_p(iurb)= buff_p(iurb) + area_one(ib)
+                           iurb         = ibuff(ib)
+                           buff_p(iurb) = buff_p(iurb) + area_one(ib)
                         ENDIF
                      ENDDO
                      buff_p(:) = buff_p(:)/sum(area_one)
@@ -177,7 +179,7 @@ ENDIF
                   DO iurb = 1, N_URB-1
                      buff_count(iurb) = int(buff_p(iurb)*imiss)
                   ENDDO
-                  buff_count(N_URB) =  imiss - sum(buff_count(1:N_URB-1))
+                  buff_count(N_URB) = imiss - sum(buff_count(1:N_URB-1))
 
                   ! Some urban patches and NCAR/LCZ data are inconsistent (NCAR/LCZ has no urban ID),
                   ! so the these points are assigned
@@ -192,7 +194,7 @@ ENDIF
                         IF (ibuff(ib)<1 .or. ibuff(ib)>N_URB) THEN
                            type_loop: DO iurb = 1, N_URB
                               IF (buff_count(iurb) > 0) THEN
-                                 ibuff(ib)                = iurb
+                                 ibuff(ib)        = iurb
                                  buff_count(iurb) = buff_count(iurb) - 1
                                  EXIT type_loop
                               ENDIF
@@ -213,7 +215,7 @@ ENDIF
                allocate (order (ipxstt:ipxend))
                order = (/ (ipxl, ipxl = ipxstt, ipxend) /)
 
-               ! change order vars, types->regid
+               ! change order vars, types->regid ? still types below
                ! add region information, because urban type may be same,
                ! but from different region in this urban patch
                ! relative code is changed
@@ -335,42 +337,42 @@ ENDIF
 
 #ifdef SinglePoint
 
-      allocate  ( SITE_urbtyp   (numurban) )
-      allocate  ( SITE_lucyid   (numurban) )
+      allocate  ( SITE_urbtyp    (numurban) )
+      allocate  ( SITE_lucyid    (numurban) )
 
 IF (.not. USE_SITE_urban_paras) THEN
-      allocate  ( SITE_fveg_urb (numurban) )
-      allocate  ( SITE_htop_urb (numurban) )
-      allocate  ( SITE_flake_urb(numurban) )
+      allocate  ( SITE_fveg_urb  (numurban) )
+      allocate  ( SITE_htop_urb  (numurban) )
+      allocate  ( SITE_flake_urb (numurban) )
 
-      allocate  ( SITE_popden   (numurban) )
-      allocate  ( SITE_froof    (numurban) )
-      allocate  ( SITE_hroof    (numurban) )
-      allocate  ( SITE_hwr      (numurban) )
-      allocate  ( SITE_fgper    (numurban) )
-      allocate  ( SITE_fgimp    (numurban) )
+      allocate  ( SITE_popden    (numurban) )
+      allocate  ( SITE_froof     (numurban) )
+      allocate  ( SITE_hroof     (numurban) )
+      allocate  ( SITE_hwr       (numurban) )
+      allocate  ( SITE_fgper     (numurban) )
+      allocate  ( SITE_fgimp     (numurban) )
 ENDIF
 
-      allocate  ( SITE_em_roof  (numurban) )
-      allocate  ( SITE_em_wall  (numurban) )
-      allocate  ( SITE_em_gimp  (numurban) )
-      allocate  ( SITE_em_gper  (numurban) )
-      allocate  ( SITE_t_roommax(numurban) )
-      allocate  ( SITE_t_roommin(numurban) )
-      allocate  ( SITE_thickroof(numurban) )
-      allocate  ( SITE_thickwall(numurban) )
+      allocate  ( SITE_em_roof   (numurban) )
+      allocate  ( SITE_em_wall   (numurban) )
+      allocate  ( SITE_em_gimp   (numurban) )
+      allocate  ( SITE_em_gper   (numurban) )
+      allocate  ( SITE_t_roommax (numurban) )
+      allocate  ( SITE_t_roommin (numurban) )
+      allocate  ( SITE_thickroof (numurban) )
+      allocate  ( SITE_thickwall (numurban) )
 
-      allocate  ( SITE_cv_roof  (nl_roof) )
-      allocate  ( SITE_cv_wall  (nl_wall) )
-      allocate  ( SITE_cv_gimp  (nl_soil) )
-      allocate  ( SITE_tk_roof  (nl_roof) )
-      allocate  ( SITE_tk_wall  (nl_wall) )
-      allocate  ( SITE_tk_gimp  (nl_soil) )
+      allocate  ( SITE_cv_roof   (nl_roof)  )
+      allocate  ( SITE_cv_wall   (nl_wall)  )
+      allocate  ( SITE_cv_gimp   (nl_soil)  )
+      allocate  ( SITE_tk_roof   (nl_roof)  )
+      allocate  ( SITE_tk_wall   (nl_wall)  )
+      allocate  ( SITE_tk_gimp   (nl_soil)  )
 
-      allocate  ( SITE_alb_roof (2, 2) )
-      allocate  ( SITE_alb_wall (2, 2) )
-      allocate  ( SITE_alb_gimp (2, 2) )
-      allocate  ( SITE_alb_gper (2, 2) )
+      allocate  ( SITE_alb_roof  (2, 2)     )
+      allocate  ( SITE_alb_wall  (2, 2)     )
+      allocate  ( SITE_alb_gimp  (2, 2)     )
+      allocate  ( SITE_alb_gper  (2, 2)     )
 
       SITE_urbtyp(:) = landurban%settyp
 #endif
@@ -396,18 +398,18 @@ ENDIF
       CALL write_patchfrac (DEF_dir_landdata, lc_year)
 #endif
 
-      IF (allocated(ibuff)) deallocate (ibuff)
-      IF (allocated(types)) deallocate (types)
-      IF (allocated(order)) deallocate (order)
+      IF (allocated (ibuff   )) deallocate (ibuff    )
+      IF (allocated (types   )) deallocate (types    )
+      IF (allocated (order   )) deallocate (order    )
 
-      IF (allocated(eindex_)) deallocate (eindex_)
-      IF (allocated(ipxstt_)) deallocate (ipxstt_)
-      IF (allocated(ipxend_)) deallocate (ipxend_)
-      IF (allocated(settyp_)) deallocate (settyp_)
-      IF (allocated(ielm_  )) deallocate (ielm_  )
+      IF (allocated (eindex_ )) deallocate (eindex_  )
+      IF (allocated (ipxstt_ )) deallocate (ipxstt_  )
+      IF (allocated (ipxend_ )) deallocate (ipxend_  )
+      IF (allocated (settyp_ )) deallocate (settyp_  )
+      IF (allocated (ielm_   )) deallocate (ielm_    )
 
-      IF (allocated(urbclass)) deallocate (urbclass)
-      IF (allocated(area_one)) deallocate (area_one)
+      IF (allocated (urbclass)) deallocate (urbclass )
+      IF (allocated (area_one)) deallocate (area_one )
 
    END SUBROUTINE landurban_build
 

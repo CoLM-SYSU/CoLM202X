@@ -274,7 +274,7 @@ CONTAINS
    USE MOD_NetCDFSerial
    USE MOD_Namelist
    USE MOD_Utils
-   USE MOD_Vars_Global, only : PI, URBAN
+   USE MOD_Vars_Global, only: PI, URBAN
    IMPLICIT NONE
 
    ! Local Variables
@@ -283,7 +283,7 @@ CONTAINS
    logical, intent(in), optional :: mkrun
 
       SITE_landtype = URBAN
-      CALL ncio_read_serial (fsrfdata, 'latitude',  SITE_lat_location)
+      CALL ncio_read_serial (fsrfdata, 'latitude' , SITE_lat_location)
       CALL ncio_read_serial (fsrfdata, 'longitude', SITE_lon_location)
 
       DEF_domain%edges = floor(SITE_lat_location)
@@ -307,9 +307,9 @@ CONTAINS
             CALL ncio_read_serial (fsrfdata, 'canyon_height_width_ratio'  , SITE_hwr       )
             CALL ncio_read_serial (fsrfdata, 'resident_population_density', SITE_popden    )
 
-            SITE_fgper    = 1 - (SITE_fgimp-SITE_froof)/(1-SITE_froof-SITE_flake_urb)
-            SITE_fveg_urb = SITE_fveg_urb * 100
-            SITE_flake_urb= SITE_flake_urb* 100
+            SITE_fgper     = 1 - (SITE_fgimp-SITE_froof)/(1-SITE_froof-SITE_flake_urb)
+            SITE_fveg_urb  = SITE_fveg_urb  * 100
+            SITE_flake_urb = SITE_flake_urb * 100
          ENDIF
       ELSE
          CALL ncio_read_serial (fsrfdata, 'LAI_year'      , SITE_LAI_year   )

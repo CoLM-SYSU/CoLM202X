@@ -302,7 +302,7 @@ PROGRAM MKSRFDATA
 #endif
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
-   CALL landpft_build(lc_year)
+   CALL landpft_build  (lc_year)
 #endif
 
 ! ................................................................

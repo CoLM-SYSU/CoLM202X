@@ -95,23 +95,23 @@ CONTAINS
          slake(2,2)      ! lake absorption for solar radiation,
 
    !-----------------------------------------------------------------------
-   real(r8) :: hveg    !height of crown central hight
+   real(r8) :: hveg      ! height of crown central hight
 
-      fsno_roof   = 0.   !fraction of ground covered by snow
-      fsno_gimp   = 0.   !fraction of ground covered by snow
-      fsno_gper   = 0.   !fraction of ground covered by snow
-      fsno_lake   = 0.   !fraction of soil covered by snow [-]
-      scv_roof    = 0.   !snow cover, water equivalent [mm, kg/m2]
-      scv_gimp    = 0.   !snow cover, water equivalent [mm, kg/m2]
-      scv_gper    = 0.   !snow cover, water equivalent [mm, kg/m2]
-      scv_lake    = 0.   !snow cover, water equivalent [mm]
-      sag_roof    = 0.   !roof snow age [-]
-      sag_gimp    = 0.   !impervious ground snow age [-]
-      sag_gper    = 0.   !pervious ground snow age [-]
-      sag_lake    = 0.   !urban lake snow age [-]
+      fsno_roof   = 0.   ! fraction of ground covered by snow
+      fsno_gimp   = 0.   ! fraction of ground covered by snow
+      fsno_gper   = 0.   ! fraction of ground covered by snow
+      fsno_lake   = 0.   ! fraction of soil covered by snow [-]
+      scv_roof    = 0.   ! snow cover, water equivalent [mm, kg/m2]
+      scv_gimp    = 0.   ! snow cover, water equivalent [mm, kg/m2]
+      scv_gper    = 0.   ! snow cover, water equivalent [mm, kg/m2]
+      scv_lake    = 0.   ! snow cover, water equivalent [mm]
+      sag_roof    = 0.   ! roof snow age [-]
+      sag_gimp    = 0.   ! impervious ground snow age [-]
+      sag_gper    = 0.   ! pervious ground snow age [-]
+      sag_lake    = 0.   ! urban lake snow age [-]
 
-      fwsun       = 0.5  !Fraction of sunlit wall [-]
-      dfwsun      = 0.   !change of fwsun
+      fwsun       = 0.5  ! Fraction of sunlit wall [-]
+      dfwsun      = 0.   ! change of fwsun
 
       hveg        = min(hroof, (htop+hbot)/2.)
 

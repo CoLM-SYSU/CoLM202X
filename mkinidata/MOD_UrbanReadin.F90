@@ -25,8 +25,7 @@ MODULE MOD_UrbanReadin
 
 CONTAINS
 
-   SUBROUTINE Urban_readin (dir_landdata, lc_year)!(dir_srfdata,dir_atmdata,nam_urbdata,nam_atmdata,lc_year)
-
+   SUBROUTINE Urban_readin (dir_landdata, lc_year)
 
    USE MOD_Precision
    USE MOD_SPMD_Task
@@ -49,7 +48,6 @@ CONTAINS
 
    integer, intent(in) :: lc_year    ! which year of land cover data used
    character(len=256), intent(in) :: dir_landdata
-
    character(len=256) :: dir_rawdata
    character(len=256) :: lndname
    character(len=256) :: cyear
@@ -213,12 +211,12 @@ ENDIF
       dir_rawdata = DEF_dir_rawdata
       lndname = trim(dir_rawdata)//'/urban/'//'/LUCY_rawdata.nc'
       print*, lndname
-      CALL ncio_read_bcast_serial (lndname,  "NUMS_VEHC"             , lvehicle     )
-      CALL ncio_read_bcast_serial (lndname,  "WEEKEND_DAY"           , lweek_holiday)
-      CALL ncio_read_bcast_serial (lndname,  "TraffProf_24hr_holiday", lweh_prof    )
-      CALL ncio_read_bcast_serial (lndname,  "TraffProf_24hr_work"   , lwdh_prof    )
-      CALL ncio_read_bcast_serial (lndname,  "HumMetabolic_24hr"     , lhum_prof    )
-      CALL ncio_read_bcast_serial (lndname,  "FIXED_HOLIDAY"         , lfix_holiday )
+      CALL ncio_read_bcast_serial (lndname, "NUMS_VEHC"             , lvehicle      )
+      CALL ncio_read_bcast_serial (lndname, "WEEKEND_DAY"           , lweek_holiday )
+      CALL ncio_read_bcast_serial (lndname, "TraffProf_24hr_holiday", lweh_prof     )
+      CALL ncio_read_bcast_serial (lndname, "TraffProf_24hr_work"   , lwdh_prof     )
+      CALL ncio_read_bcast_serial (lndname, "HumMetabolic_24hr"     , lhum_prof     )
+      CALL ncio_read_bcast_serial (lndname, "FIXED_HOLIDAY"         , lfix_holiday  )
 
       IF (p_is_worker) THEN
 
@@ -266,7 +264,7 @@ ELSEIF (DEF_URBAN_type_scheme == 2) THEN
 #else
             hwr  (u) = canyonhwr_lcz (landurban%settyp(u)) !average building height to their distance
             fgper(u) = wtperroad_lcz (landurban%settyp(u)) &
-                       /(1-wtroof_lcz(landurban%settyp(u))) !pervious fraction to ground area
+                     / (1-wtroof_lcz (landurban%settyp(u)))!pervious fraction to ground area
             fgper(u) = min(fgper(u), 1.)
 #endif
 
@@ -306,8 +304,8 @@ ELSEIF (DEF_URBAN_type_scheme == 2) THEN
                t_roommax(u) = 297.65 !tbuildingmax  (landurban%settyp(u)) !maximum temperature of inner room [K]
                t_roommin(u) = 290.65 !tbuildingmin  (landurban%settyp(u)) !minimum temperature of inner room [K]
             ELSE
-               t_roommax(u) = 373.16                !maximum temperature of inner room [K]
-               t_roommin(u) = 180.00                !minimum temperature of inner room [K]
+               t_roommax(u) = 373.16 !maximum temperature of inner room [K]
+               t_roommin(u) = 180.00 !minimum temperature of inner room [K]
             ENDIF
 ENDIF
 
@@ -345,7 +343,7 @@ ENDIF
             htop    (i) = htop_urb (u)
             hbot    (i) = hbot_urb (u)
 
-            ! roof and wall layer depth
+            ! roof and wall layer node depth
             DO l=1, nl_roof
                z_roof(l,u) = (l-0.5)*(thick_roof/nl_roof)
             ENDDO
@@ -354,6 +352,7 @@ ENDIF
                z_wall(l,u) = (l-0.5)*(thick_wall/nl_wall)
             ENDDO
 
+            ! roof and wall layer depth
             dz_roof(1,u) = 0.5*(z_roof(1,u)+z_roof(2,u))
             DO l = 2, nl_roof-1
                dz_roof(l,u) = 0.5*(z_roof(l+1,u)-z_roof(l-1,u))
@@ -374,15 +373,15 @@ ENDIF
       ENDIF
 
       IF (p_is_worker) THEN
-         IF (allocated(lvehicle     )) deallocate ( lvehicle      )
-         IF (allocated(lwdh_prof    )) deallocate ( lwdh_prof     )
-         IF (allocated(lweh_prof    )) deallocate ( lweh_prof     )
-         IF (allocated(lhum_prof    )) deallocate ( lhum_prof     )
-         IF (allocated(lweek_holiday)) deallocate ( lweek_holiday )
-         IF (allocated(lfix_holiday )) deallocate ( lfix_holiday  )
-         IF (allocated(thickroof    )) deallocate ( thickroof     )
-         IF (allocated(thickwall    )) deallocate ( thickwall     )
-         IF (allocated(lucyid       )) deallocate ( lucyid        )
+         IF (allocated(lvehicle      )) deallocate ( lvehicle      )
+         IF (allocated(lwdh_prof     )) deallocate ( lwdh_prof     )
+         IF (allocated(lweh_prof     )) deallocate ( lweh_prof     )
+         IF (allocated(lhum_prof     )) deallocate ( lhum_prof     )
+         IF (allocated(lweek_holiday )) deallocate ( lweek_holiday )
+         IF (allocated(lfix_holiday  )) deallocate ( lfix_holiday  )
+         IF (allocated(thickroof     )) deallocate ( thickroof     )
+         IF (allocated(thickwall     )) deallocate ( thickwall     )
+         IF (allocated(lucyid        )) deallocate ( lucyid        )
       ENDIF
 
    END SUBROUTINE Urban_readin
