@@ -13,7 +13,7 @@ MODULE MOD_UserSpecifiedForcing
    !     10) WFDE5         11) CRUJRA        12) WFDEI
    !     13) JRA55         14) GDAS          15) CLDAS
    !     16) CMFD          17) TPMFD         18) CMIP6
-   !     19) POINT         20）JRA3Q
+   !     19) POINT         20) JRA3Q         21) CRA40
    !
    !     PLEASE modify the following codes when specified forcing used
    ! ------------------------------------------------------------
@@ -559,6 +559,30 @@ CONTAINS
 
 
          metfilename = '/'//trim(fprefix(var_i))//'_'//trim(yearstr)//'.nc'
+
+      CASE ('CRA40')
+         !DESCRIPTION
+         !===========
+            !---CMA’s first-generation global atmospheric reanalysis (RA) covering 1979–2018 (CRA-40)
+   
+         !data source:
+         !-------------------
+            !---https://data.cma.cn/en
+   
+         !References:
+         !-------------------
+            !---Liu, Z., Jiang, L., Shi, C. et al. CRA-40/Atmosphere—The First-Generation Chinese Atmospheric Reanalysis (1979–2018): 
+            !   System Description and Performance Evaluation. J Meteorol Res 37, 1–19 (2023). https://doi.org/10.1007/s13351-023-2086-x
+
+
+   
+            !REVISION HISTORY
+         !----------------
+            !---2024.04.10   Zhongwang Wei @ SYSU: regroup the data into annual file;
+            !   zip file to reduce the size of the data; remove offset and scale_factor
+   
+   
+            metfilename = '/'//trim(fprefix(var_i))//'_'//trim(yearstr)//'.nc'
       CASE ('TPMFD')
       !DESCRIPTION
       !===========
@@ -578,7 +602,7 @@ CONTAINS
 
       !REVISION HISTORY
       !----------------
-         !---2021.11.01   Zhongwang Wei @ SYSU: regroup the data into monthly file;
+         !---2023.11.01   Zhongwang Wei @ SYSU: regroup the data into monthly file;
          !   zip file to reduce the size of the data; remove offset and scale_factor
 
          metfilename = '/'//trim(fprefix(var_i))//trim(yearstr)//trim(monthstr)//'.nc'

@@ -9,6 +9,8 @@ MODULE CMF_DRV_CONTROL_MOD
 !
 ! (C) D.Yamazaki & E. Dutra  (U-Tokyo/FCUL)  Aug 2019
 !
+! Modifications: I. Ayan-Miguez (BSC) Apr 2023: Added LECMF2LAKEC switch
+!
 ! Licensed under the Apache License, Version 2.0 (the "License");
 !   You may not use this file except in compliance with the License.
 !   You may obtain a copy of the License at: http://www.apache.org/licenses/LICENSE-2.0
@@ -133,7 +135,7 @@ CONTAINS
 
 
    !####################################################################
-   SUBROUTINE CMF_DRV_INIT
+SUBROUTINE CMF_DRV_INIT(LECMF2LAKEC)
    ! Initialize CaMa-Flood
    ! -- Called from CMF_DRV_INIT
    USE YOS_CMF_INPUT,           only: LRESTART, LSTOONLY, LOUTPUT, LSEALEV, LDAMOUT, LLEVEE, LOUTINI
@@ -157,6 +159,7 @@ CONTAINS
    USE CMF_UTILS_MOD,           only: INQUIRE_FID
    !$ USE OMP_LIB    
    IMPLICIT NONE
+      integer(KIND=JPIM),OPTIONAL,INTENT(IN)  :: LECMF2LAKEC !! for lake coupling, currently only used in ECMWF
       !================================================
       write(LOGNAM,*) ""
       write(LOGNAM,*) "!******************************!"
@@ -194,8 +197,12 @@ CONTAINS
       CALL CMF_OUTPUT_INIT
       !ENDIF
 
-      !*** 3b. Initialize forcing data
-      CALL CMF_FORCING_INIT
+!*** 3b. Initialize forcing data
+IF(PRESENT(LECMF2LAKEC)) THEN
+  CALL CMF_FORCING_INIT(LECMF2LAKEC)
+ELSE
+  CALL CMF_FORCING_INIT()
+ENDIF
 
       !*** 3b. Initialize dynamic sea level boundary data
       IF( LSEALEV )THEN

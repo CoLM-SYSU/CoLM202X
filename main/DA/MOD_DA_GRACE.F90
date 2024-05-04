@@ -71,7 +71,7 @@ CONTAINS
    USE MOD_Pixelset
    USE MOD_Mapping_Grid2pset
    USE MOD_Vars_TimeInvariants, only : patchtype
-   USE MOD_Forcing, only : forcmask
+   USE MOD_Forcing, only : forcmask_pch
    USE MOD_RangeCheck
    IMPLICIT NONE
    
@@ -144,7 +144,7 @@ CONTAINS
          IF (numpatch > 0) THEN
             rnofmask = patchtype == 0
             IF (DEF_forcing%has_missing_value) THEN
-               rnofmask = rnofmask .and. forcmask
+               rnofmask = rnofmask .and. forcmask_pch
             ENDIF
          ENDIF
       ENDIF

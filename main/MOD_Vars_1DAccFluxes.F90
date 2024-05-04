@@ -1359,7 +1359,7 @@ CONTAINS
 
    USE MOD_Precision
    USE MOD_SPMD_Task
-   USE mod_forcing, only: forcmask
+   USE mod_forcing, only: forcmask_pch
    USE MOD_Mesh,    only: numelm
    USE MOD_LandElm
    USE MOD_LandPatch,      only: numpatch, elm_patch
@@ -1449,7 +1449,7 @@ CONTAINS
             CALL acc1d (olrg    , a_olrg   )
 
             IF (DEF_forcing%has_missing_value) THEN
-               WHERE (forcmask)
+               WHERE (forcmask_pch)
                   rnet = sabg + sabvsun + sabvsha - olrg + forc_frl
                END WHERE
             ELSE
@@ -1526,7 +1526,7 @@ CONTAINS
             allocate (r_trad (numpatch)) ; r_trad(:) = spval
             DO i = 1, numpatch
                IF (DEF_forcing%has_missing_value) THEN
-                  IF (.not. forcmask(i)) CYCLE
+                  IF (.not. forcmask_pch(i)) CYCLE
                ENDIF
 
                IF (.not. patchmask(i)) CYCLE
@@ -1840,8 +1840,8 @@ CONTAINS
                filter(:) = patchmask(istt:iend)
 
                IF (DEF_forcing%has_missing_value) THEN
-                  WHERE (.not. forcmask(istt:iend)) filter = .false.
-                  filter = filter .and. forcmask(istt:iend)
+                  WHERE (.not. forcmask_pch(istt:iend)) filter = .false.
+                  filter = filter .and. forcmask_pch(istt:iend)
                ENDIF
 
                IF (.not. any(filter)) THEN

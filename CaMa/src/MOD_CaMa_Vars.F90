@@ -552,7 +552,7 @@ CONTAINS
    USE MOD_LandPatch
    USE MOD_Mapping_Pset2Grid
    USE MOD_Vars_TimeInvariants, only : patchtype
-   USE MOD_Forcing, only : forcmask
+   USE MOD_Forcing, only : forcmask_pch
 
    IMPLICIT NONE
 
@@ -585,7 +585,7 @@ CONTAINS
 
             filter(:) = patchtype < 99
             IF (DEF_forcing%has_missing_value) THEN
-               filter = filter .and. forcmask
+               filter = filter .and. forcmask_pch
             ENDIF
             vectmp (:) = 1.
          ENDIF
