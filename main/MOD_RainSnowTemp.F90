@@ -35,18 +35,17 @@ CONTAINS
    IMPLICIT NONE
 
 ! ------------------------ Dummy Argument ------------------------------
-   integer, intent(in) :: patchtype   ! land patch type (3=glaciers)
+   integer,  intent(in)  :: patchtype ! land patch type (3=glaciers)
 
+   real(r8), intent(in)  :: forc_t    ! temperature at agcm reference height [kelvin]
+   real(r8), intent(in)  :: forc_q    ! specific humidity at agcm reference height [kg/kg]
+   real(r8), intent(in)  :: forc_psrf ! atmosphere pressure at the surface [pa]
+   real(r8), intent(in)  :: forc_prc  ! convective precipitation [mm/s]
+   real(r8), intent(in)  :: forc_prl  ! large scale precipitation [mm/s]
+   real(r8), intent(in)  :: forc_us   ! wind speed in eastward direction [m/s]
+   real(r8), intent(in)  :: forc_vs   ! wind speed in northward direction [m/s]
 
-   real(r8), intent(in) :: forc_t     ! temperature at agcm reference height [kelvin]
-   real(r8), intent(in) :: forc_q     ! specific humidity at agcm reference height [kg/kg]
-   real(r8), intent(in) :: forc_psrf  ! atmosphere pressure at the surface [pa]
-   real(r8), intent(in) :: forc_prc   ! convective precipitation [mm/s]
-   real(r8), intent(in) :: forc_prl   ! large scale precipitation [mm/s]
-   real(r8), intent(in) :: forc_us    ! wind speed in eastward direction [m/s]
-   real(r8), intent(in) :: forc_vs    ! wind speed in northward direction [m/s]
-
-   real(r8), intent(in) :: tcrit      ! critical temp. to determine rain or snow
+   real(r8), intent(in)  :: tcrit     ! critical temp. to determine rain or snow
 
    real(r8), intent(out) :: prc_rain  ! convective rainfall [kg/(m2 s)]
    real(r8), intent(out) :: prc_snow  ! convective snowfall [kg/(m2 s)]
@@ -54,17 +53,19 @@ CONTAINS
    real(r8), intent(out) :: prl_snow  ! large scale snowfall [kg/(m2 s)]
    real(r8), intent(out) :: t_precip  ! snowfall/rainfall temperature [kelvin]
    real(r8), intent(out) :: bifall    ! bulk density of newly fallen dry snow [kg/m3]
-   real(r8) :: flfall  ! fraction of liquid water within falling precip.
 
-   real(r8) :: all_snow_t   ! temperature at which all precip falls entirely as snow (K)
-   real(r8) :: frac_rain_slope ! slope of the frac_rain vs. temperature relationship
-   real(r8) :: all_snow_t_c ! Temperature at which precip falls entirely as rain (deg C)
-   real(r8) :: all_rain_t_c ! Temperature at which precip falls entirely as snow (deg C)
+   ! local variables
+   real(r8) :: flfall                 ! fraction of liquid water within falling precip.
 
-   logical :: glaciers    ! true: glacier column
-   real(r8) :: t_for_bifall_degC  ! temperature to USE in bifall equation (deg C)
-   real(r8) :: forc_wind  ! wind speed [m/s]
-   real(r8) :: t_hydro    ! temperature of falling hydrometeor [deg C]
+   real(r8) :: all_snow_t             ! temperature at which all precip falls entirely as snow (K)
+   real(r8) :: frac_rain_slope        ! slope of the frac_rain vs. temperature relationship
+   real(r8) :: all_snow_t_c           ! Temperature at which precip falls entirely as rain (deg C)
+   real(r8) :: all_rain_t_c           ! Temperature at which precip falls entirely as snow (deg C)
+
+   logical  :: glaciers               ! true: glacier column
+   real(r8) :: t_for_bifall_degC      ! temperature to USE in bifall equation (deg C)
+   real(r8) :: forc_wind              ! wind speed [m/s]
+   real(r8) :: t_hydro                ! temperature of falling hydrometeor [deg C]
 !-----------------------------------------------------------------------
 
 ! wet-bulb temperature
@@ -83,7 +84,7 @@ CONTAINS
             flfall = 1.0      ! fraction of liquid water within falling precip
          ELSE IF (t_precip - tfrz >= -2.0)THEN
             flfall = max(0.0, 1.0 - 1.0/(1.0+5.00e-5*exp(2.0*(t_precip-tfrz+4.))))   !Figure 5c of Behrangi et al. (2018)
-            !*        flfall = max(0.0, 1.0 - 1.0/(1.0+6.99e-5*exp(2.0*(t_precip-tfrz+3.97)))) !Equation 1 of Wang et al. (2019)
+            !* flfall = max(0.0, 1.0 - 1.0/(1.0+6.99e-5*exp(2.0*(t_precip-tfrz+3.97)))) !Equation 1 of Wang et al. (2019)
          ELSE
             flfall = 0.0
          ENDIF
@@ -108,10 +109,10 @@ CONTAINS
 
          flfall = min(1.0_r8, max(0.0_r8,(forc_t - all_snow_t)*frac_rain_slope))
       ELSEIF (trim(DEF_precip_phase_discrimination_scheme) == 'III') THEN
-      ! Phillip Harder and John Pomeroy (2013)
-      ! Estimating precipitation phase using a psychrometric energy
-      ! balance method . Hydrol Process, 27, 1901–1914
-      ! Hydromet_Temp [K]
+         ! Phillip Harder and John Pomeroy (2013)
+         ! Estimating precipitation phase using a psychrometric energy
+         ! balance method . Hydrol Process, 27, 1901–1914
+         ! Hydromet_Temp [K]
          CALL Hydromet_Temp(forc_psrf,(forc_t-273.15),forc_q,t_hydro)
 
          IF(t_hydro > 3.0)THEN
@@ -174,8 +175,8 @@ CONTAINS
 
    real(r8), intent(out) :: bifall    ! bulk density of newly fallen dry snow [kg/m3]
 
-   real(r8) :: t_for_bifall_degC  ! temperature to USE in bifall equation (deg C)
-   real(r8) :: forc_wind  ! wind speed [m/s]
+   real(r8) :: t_for_bifall_degC      ! temperature to USE in bifall equation (deg C)
+   real(r8) :: forc_wind              ! wind speed [m/s]
 
    !-----------------------------------------------------------------------
 
@@ -231,11 +232,11 @@ CONTAINS
    real(r8), intent(in)   :: PTA          ! Air temperature (deg C)
    real(r8), intent(in)   :: PQA          ! Air specific humidity (kg/kg)
    real(r8), intent(out)  :: PTI          ! Hydrometeo temprtature in deg C
-   real(r8)               :: ZD    !diffusivity of water vapour in air [m^2 s-1]
-   real(r8)               :: ZLAMBDAT !thermal conductivity of air [J m^-1 s^-1 K^-1]
-   real(r8)               :: ZL    !latent heat of sublimation of vaporisation[J  kg^-1]
-   real(r8)               :: ZRHODA   !density of dry air [kg m-3]
-   real(r8)               :: ZRH   !relative humidity [-]
+   real(r8)               :: ZD           ! diffusivity of water vapour in air [m^2 s-1]
+   real(r8)               :: ZLAMBDAT     ! thermal conductivity of air [J m^-1 s^-1 K^-1]
+   real(r8)               :: ZL           ! latent heat of sublimation of vaporisation[J  kg^-1]
+   real(r8)               :: ZRHODA       ! density of dry air [kg m-3]
+   real(r8)               :: ZRH          ! relative humidity [-]
    real(r8)               :: RHO_VSAT_DIFF,ESAT,RHO_VSAT
    real(r8)               :: ZT,ZTINI,ZF,ZFDIFF,EVSAT
    integer :: JITER

@@ -709,11 +709,11 @@ CONTAINS
 !
 !-----------------------------------------------------------------------
 
-         co2s = co2a - 1.37*assimn/gbh2o                   ! mol mol-1
+         co2s = co2a - 1.37*assimn/gbh2o                  ! mol mol-1
 
          pco2in = ( co2s - 1.6 * assimn / gsh2o )*psrf    ! pa
 
-         eyy(ic) = pco2i - pco2in                          ! pa
+         eyy(ic) = pco2i - pco2in                         ! pa
 
 !-----------------------------------------------------------------------
 
