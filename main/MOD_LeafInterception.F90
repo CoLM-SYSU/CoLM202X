@@ -240,12 +240,6 @@ CONTAINS
             tex_rain = max( tex_rain, 0. )
             tex_snow = 0.
 
-#if(defined CoLMDEBUG)
-            IF (tex_rain+tex_snow+tti_rain+tti_snow-p0 > 1.e-10) THEN
-               write(6,*) 'tex_ + tti_ > p0 in interception code : '
-            ENDIF
-#endif
-
             ! 04/11/2024, yuan:
             !TODO-done: account for snow on vegetation,
             IF ( DEF_VEG_SNOW ) THEN
@@ -286,6 +280,12 @@ CONTAINS
                tti_snow = tti_snow * deltim
                tex_snow = tex_snow * deltim
             ENDIF
+
+#if(defined CoLMDEBUG)
+            IF (tex_rain+tex_snow+tti_rain+tti_snow-p0 > 1.e-10) THEN
+               write(6,*) 'tex_ + tti_ > p0 in interception code : '
+            ENDIF
+#endif
 
          ELSE
             ! all intercepted by canopy leves for very small precipitation

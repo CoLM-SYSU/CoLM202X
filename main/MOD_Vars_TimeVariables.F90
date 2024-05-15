@@ -325,44 +325,44 @@ ENDIF
 
    IMPLICIT NONE
 
-      CALL check_vector_data ('tleaf_p  ', tleaf_p  )      !
-      CALL check_vector_data ('ldew_p   ', ldew_p   )      !
-      CALL check_vector_data ('ldew_rain_p',ldew_rain_p )  !
-      CALL check_vector_data ('ldew_snow_p',ldew_snow_p )  !
-      CALL check_vector_data ('fwet_snow_p',fwet_snow_p )  !
-      CALL check_vector_data ('sigf_p   ', sigf_p   )      !
-      CALL check_vector_data ('tlai_p   ', tlai_p   )      !
-      CALL check_vector_data ('lai_p    ', lai_p    )      !
-      CALL check_vector_data ('laisun_p ', lai_p    )      !
-      CALL check_vector_data ('laisha_p ', lai_p    )      !
-      CALL check_vector_data ('tsai_p   ', tsai_p   )      !
-      CALL check_vector_data ('sai_p    ', sai_p    )      !
-      CALL check_vector_data ('ssun_p   ', ssun_p   )      !
-      CALL check_vector_data ('ssha_p   ', ssha_p   )      !
-      CALL check_vector_data ('thermk_p ', thermk_p )      !
-      CALL check_vector_data ('fshade_p ', fshade_p )      !
-      CALL check_vector_data ('extkb_p  ', extkb_p  )      !
-      CALL check_vector_data ('extkd_p  ', extkd_p  )      !
-      CALL check_vector_data ('tref_p   ', tref_p   )      !
-      CALL check_vector_data ('qref_p   ', qref_p   )      !
-      CALL check_vector_data ('rst_p    ', rst_p    )      !
-      CALL check_vector_data ('z0m_p    ', z0m_p    )      !
+      CALL check_vector_data ('       tleaf_p', tleaf_p        )
+      CALL check_vector_data ('        ldew_p', ldew_p         )
+      CALL check_vector_data ('   ldew_rain_p', ldew_rain_p    )
+      CALL check_vector_data ('   ldew_snow_p', ldew_snow_p    )
+      CALL check_vector_data ('   fwet_snow_p', fwet_snow_p    )
+      CALL check_vector_data ('        sigf_p', sigf_p         )
+      CALL check_vector_data ('        tlai_p', tlai_p         )
+      CALL check_vector_data ('         lai_p', lai_p          )
+      CALL check_vector_data ('      laisun_p', lai_p          )
+      CALL check_vector_data ('      laisha_p', lai_p          )
+      CALL check_vector_data ('        tsai_p', tsai_p         )
+      CALL check_vector_data ('         sai_p', sai_p          )
+      CALL check_vector_data ('        ssun_p', ssun_p         )
+      CALL check_vector_data ('        ssha_p', ssha_p         )
+      CALL check_vector_data ('      thermk_p', thermk_p       )
+      CALL check_vector_data ('      fshade_p', fshade_p       )
+      CALL check_vector_data ('       extkb_p', extkb_p        )
+      CALL check_vector_data ('       extkd_p', extkd_p        )
+      CALL check_vector_data ('        tref_p', tref_p         )
+      CALL check_vector_data ('        qref_p', qref_p         )
+      CALL check_vector_data ('         rst_p', rst_p          )
+      CALL check_vector_data ('         z0m_p', z0m_p          )
 IF(DEF_USE_PLANTHYDRAULICS)THEN
-      CALL check_vector_data ('vegwp_p  ', vegwp_p  )      !
-      CALL check_vector_data ('gs0sun_p ', gs0sun_p )      !
-      CALL check_vector_data ('gs0sha_p ', gs0sha_p )      !
+      CALL check_vector_data ('       vegwp_p', vegwp_p        )
+      CALL check_vector_data ('      gs0sun_p', gs0sun_p       )
+      CALL check_vector_data ('      gs0sha_p', gs0sha_p       )
 ENDIF
 IF(DEF_USE_OZONESTRESS)THEN
-      CALL check_vector_data ('o3coefv_sun_p', o3coefv_sun_p)
-      CALL check_vector_data ('o3coefv_sha_p', o3coefv_sha_p)
-      CALL check_vector_data ('o3coefg_sun_p', o3coefg_sun_p)
-      CALL check_vector_data ('o3coefg_sha_p', o3coefg_sha_p)
-      CALL check_vector_data ('lai_old_p    ', lai_old_p    )
-      CALL check_vector_data ('o3uptakesun_p', o3uptakesun_p)
-      CALL check_vector_data ('o3uptakesha_p', o3uptakesha_p)
+      CALL check_vector_data (' o3coefv_sun_p', o3coefv_sun_p  )
+      CALL check_vector_data (' o3coefv_sha_p', o3coefv_sha_p  )
+      CALL check_vector_data (' o3coefg_sun_p', o3coefg_sun_p  )
+      CALL check_vector_data (' o3coefg_sha_p', o3coefg_sha_p  )
+      CALL check_vector_data ('     lai_old_p', lai_old_p      )
+      CALL check_vector_data (' o3uptakesun_p', o3uptakesun_p  )
+      CALL check_vector_data (' o3uptakesha_p', o3uptakesha_p  )
 ENDIF
 IF(DEF_USE_IRRIGATION)THEN
-      CALL check_vector_data ('irrig_method_p', irrig_method_p)
+      CALL check_vector_data ('irrig_method_p', irrig_method_p )
 ENDIF
 
 #ifdef BGC

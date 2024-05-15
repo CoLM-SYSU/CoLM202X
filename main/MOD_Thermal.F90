@@ -772,6 +772,7 @@ ENDIF
             rootflux_p(:,i)= 0.
             rstfacsun_p(i) = 0.
             rstfacsha_p(i) = 0.
+            dheatl_p(i)    = 0.
          ENDIF
       ENDDO
 

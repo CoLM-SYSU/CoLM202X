@@ -229,7 +229,7 @@ CONTAINS
 
       ! 07/06/2023, yuan: use the values of previous timestep.
       ! for nighttime longwave calculations.
-      !thermk    = 1.e-3
+      !thermk   = 1.e-3
       IF (lai+sai <= 1.e-6) THEN
          thermk = 1.
       ENDIF

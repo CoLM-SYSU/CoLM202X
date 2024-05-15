@@ -1114,6 +1114,7 @@ CONTAINS
 
          ! (8) surface albedo
          ! Variables: alb, ssun, ssha, ssno, thermk, extkb, extkd
+         !NOTE: max(0.001,coszen) will make it always run to calculate initial values for the above.
          wt      = 0.
          pg_snow = 0.
          snofrz (:) = 0.
