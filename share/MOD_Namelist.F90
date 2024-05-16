@@ -993,6 +993,10 @@ CONTAINS
          DEF_USE_PC   = .false.
          DEF_FAST_PC  = .false.
          DEF_SOLO_PFT = .false.
+
+         write(*,*) '                  *****                  '
+         write(*,*) 'Note: Soil resistance is automaticlly turned off for USGS|IGBP scheme.'
+         DEF_RSS_SCHEME = 0
 #endif
 
 #ifdef LULC_IGBP_PFT
