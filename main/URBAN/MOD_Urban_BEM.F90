@@ -30,7 +30,27 @@ CONTAINS
 !
 !  A simple building energy model to calculate room temperature
 !
-!  o Solve the following equations
+!  The basic approach is as follows:
+!
+!     1. Predict indoor temperature using the indoor energy balance
+!     equations (see below) without turning on the air conditioning.
+!
+!     2. If the indoor temperature falls within the predefined comfort
+!     range, further energy consumption calculations are not necessary,
+!     only indoor and outdoor heat exchange is considered.
+!
+!     3. If the indoor temperature falls outside the predefined comfort
+!     range, calculate the minimum/maximum heating/cooling capacity
+!     based on the air conditioning usage strategy.
+!
+!     4. Calculate the indoor and outdoor heat exchange and waste heat
+!     discharge (taking into account energy utilization efficiency)
+!     based on the calculated heating/cooling capacity in step 3.
+!
+!     Finally, energy consumption can be calculated based on the total
+!     heat flux.
+!
+!  o Solve the following energy balance equations
 !  o variables: troom, troof_inner, twsun_inner, twsha_innter
 !
 !     Hc_roof = Fn_roof        .................................(1)

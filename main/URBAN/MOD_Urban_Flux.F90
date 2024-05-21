@@ -59,31 +59,31 @@ CONTAINS
 
    SUBROUTINE UrbanOnlyFlux ( &
          ! Model running information
-         ipatch      ,deltim      ,lbr         ,lbi         ,&
+         ipatch         ,deltim         ,lbr            ,lbi            ,&
          ! Forcing
-         hu          ,ht          ,hq          ,us          ,&
-         vs          ,thm         ,th          ,thv         ,&
-         qm          ,psrf        ,rhoair      ,Fhac        ,&
-         Fwst        ,Fach        ,vehc        ,meta        ,&
+         hu             ,ht             ,hq             ,us             ,&
+         vs             ,thm            ,th             ,thv            ,&
+         qm             ,psrf           ,rhoair         ,Fhac           ,&
+         Fwst           ,Fach           ,vehc           ,meta           ,&
          ! Urban parameters
-         hroof       ,hwr         ,nurb        ,fcover      ,&
+         hroof          ,hwr            ,nurb           ,fcover         ,&
          ! Status of surface
-         z0h_g       ,obug        ,ustarg      ,zlnd        ,&
-         zsno        ,fsno_roof   ,fsno_gimp   ,fsno_gper   ,&
-         wliq_roofsno,wliq_gimpsno,wice_roofsno,wice_gimpsno,&
-         htvp_roof   ,htvp_gimp   ,htvp_gper   ,troof       ,&
-         twsun       ,twsha       ,tgimp       ,tgper       ,&
-         qroof       ,qgimp       ,qgper       ,dqroofdT    ,&
-         dqgimpdT    ,dqgperdT    ,rsr                      ,&
+         z0h_g          ,obug           ,ustarg         ,zlnd           ,&
+         zsno           ,fsno_roof      ,fsno_gimp      ,fsno_gper      ,&
+         wliq_roofsno   ,wliq_gimpsno   ,wice_roofsno   ,wice_gimpsno   ,&
+         htvp_roof      ,htvp_gimp      ,htvp_gper      ,troof          ,&
+         twsun          ,twsha          ,tgimp          ,tgper          ,&
+         qroof          ,qgimp          ,qgper          ,dqroofdT       ,&
+         dqgimpdT       ,dqgperdT       ,rsr                            ,&
          ! Output
-         taux        ,tauy        ,fsenroof    ,fsenwsun    ,&
-         fsenwsha    ,fsengimp    ,fsengper    ,fevproof    ,&
-         fevpgimp    ,fevpgper    ,croofs      ,cwalls      ,&
-         cgrnds      ,croofl      ,cgimpl      ,cgperl      ,&
-         croof       ,cgimp       ,cgper       ,tref        ,&
-         qref        ,z0m         ,zol         ,rib         ,&
-         ustar       ,qstar       ,tstar       ,fm          ,&
-         fh          ,fq          ,tafu                      )
+         taux           ,tauy           ,fsenroof       ,fsenwsun       ,&
+         fsenwsha       ,fsengimp       ,fsengper       ,fevproof       ,&
+         fevpgimp       ,fevpgper       ,croofs         ,cwalls         ,&
+         cgrnds         ,croofl         ,cgimpl         ,cgperl         ,&
+         croof          ,cgimp          ,cgper          ,tref           ,&
+         qref           ,z0m            ,zol            ,rib            ,&
+         ustar          ,qstar          ,tstar          ,fm             ,&
+         fh             ,fq             ,tafu                            )
 
 !=======================================================================
    USE MOD_Precision
@@ -94,140 +94,140 @@ CONTAINS
 
 !----------------------- Dummy argument --------------------------------
    integer, intent(in) :: &
-        ipatch,   &! patch index [-]
-        lbr,      &! lower bound of array
-        lbi        ! lower bound of array
+        ipatch,       &! patch index [-]
+        lbr,          &! lower bound of array
+        lbi            ! lower bound of array
 
    real(r8), intent(in) :: &
-        deltim     ! seconds in a time step [second]
+        deltim         ! seconds in a time step [second]
 
    ! atmospherical variables and observational height
    real(r8), intent(in) :: &
-        hu,       &! observational height of wind [m]
-        ht,       &! observational height of temperature [m]
-        hq,       &! observational height of humidity [m]
-        us,       &! wind component in eastward direction [m/s]
-        vs,       &! wind component in northward direction [m/s]
-        thm,      &! intermediate variable (tm+0.0098*ht) [K]
-        th,       &! potential temperature (kelvin)
-        thv,      &! virtual potential temperature (kelvin)
-        qm,       &! specific humidity at agcm reference height [kg/kg]
-        psrf,     &! atmosphere pressure at the surface [pa] [not used]
-        rhoair     ! density air [kg/m3]
+        hu,           &! observational height of wind [m]
+        ht,           &! observational height of temperature [m]
+        hq,           &! observational height of humidity [m]
+        us,           &! wind component in eastward direction [m/s]
+        vs,           &! wind component in northward direction [m/s]
+        thm,          &! intermediate variable (tm+0.0098*ht) [K]
+        th,           &! potential temperature (kelvin)
+        thv,          &! virtual potential temperature (kelvin)
+        qm,           &! specific humidity at agcm reference height [kg/kg]
+        psrf,         &! atmosphere pressure at the surface [pa] [not used]
+        rhoair         ! density air [kg/m3]
 
    real(r8), intent(in) :: &
-        vehc,     &! flux from vehicle
-        meta,     &! flux from metabolic
-        Fhac,     &! flux from heat or cool AC
-        Fwst,     &! waste heat from cool or heat
-        Fach       ! flux from air exchange
+        vehc,         &! flux from vehicle
+        meta,         &! flux from metabolic
+        Fhac,         &! flux from heat or cool AC
+        Fwst,         &! waste heat from cool or heat
+        Fach           ! flux from air exchange
 
    integer, intent(in) :: &
-        nurb       ! number of aboveground urban components [-]
+        nurb           ! number of aboveground urban components [-]
 
    real(r8), intent(in) :: &
-        hroof,    &! average building height [m]
-        hwr,      &! average building height to their distance [-]
-        fcover(0:4)! coverage of aboveground urban components [-]
+        hroof,        &! average building height [m]
+        hwr,          &! average building height to their distance [-]
+        fcover(0:4)    ! coverage of aboveground urban components [-]
 
    real(r8), intent(in) :: &
-        rsr,      &! bare soil resistance for evaporation
-        z0h_g,    &! roughness length for bare ground, sensible heat [m]
-        obug,     &! monin-obukhov length for bare ground (m)
-        ustarg,   &! friction velocity for bare ground [m/s]
-        zlnd,     &! roughness length for soil [m]
-        zsno,     &! roughness length for snow [m]
-        fsno_roof,&! fraction of ground covered by snow [-]
-        fsno_gimp,&! fraction of ground covered by snow [-]
-        fsno_gper,&! fraction of ground covered by snow [-]
-        wliq_roofsno,&! liqui water [kg/m2]
-        wliq_gimpsno,&! liqui water [kg/m2]
-        wice_roofsno,&! ice lens [kg/m2]
-        wice_gimpsno,&! ice lens [kg/m2]
-        htvp_roof,&! latent heat of vapor of water (or sublimation) [j/kg]
-        htvp_gimp,&! latent heat of vapor of water (or sublimation) [j/kg]
-        htvp_gper,&! latent heat of vapor of water (or sublimation) [j/kg]
+        rsr,          &! bare soil resistance for evaporation
+        z0h_g,        &! roughness length for bare ground, sensible heat [m]
+        obug,         &! monin-obukhov length for bare ground (m)
+        ustarg,       &! friction velocity for bare ground [m/s]
+        zlnd,         &! roughness length for soil [m]
+        zsno,         &! roughness length for snow [m]
+        fsno_roof,    &! fraction of ground covered by snow [-]
+        fsno_gimp,    &! fraction of ground covered by snow [-]
+        fsno_gper,    &! fraction of ground covered by snow [-]
+        wliq_roofsno, &! liqui water [kg/m2]
+        wliq_gimpsno, &! liqui water [kg/m2]
+        wice_roofsno, &! ice lens [kg/m2]
+        wice_gimpsno, &! ice lens [kg/m2]
+        htvp_roof,    &! latent heat of vapor of water (or sublimation) [j/kg]
+        htvp_gimp,    &! latent heat of vapor of water (or sublimation) [j/kg]
+        htvp_gper,    &! latent heat of vapor of water (or sublimation) [j/kg]
 
-        troof,    &! temperature of roof [K]
-        twsun,    &! temperature of sunlit wall [K]
-        twsha,    &! temperature of shaded wall [K]
-        tgimp,    &! temperature of impervious road [K]
-        tgper,    &! pervious ground temperature [K]
+        troof,        &! temperature of roof [K]
+        twsun,        &! temperature of sunlit wall [K]
+        twsha,        &! temperature of shaded wall [K]
+        tgimp,        &! temperature of impervious road [K]
+        tgper,        &! pervious ground temperature [K]
 
-        qroof,    &! roof specific humidity [kg/kg]
-        qgimp,    &! imperivous road specific humidity [kg/kg]
-        qgper,    &! pervious ground specific humidity [kg/kg]
-        dqroofdT, &! d(qroof)/dT
-        dqgimpdT, &! d(qgimp)/dT
-        dqgperdT   ! d(qgper)/dT
+        qroof,        &! roof specific humidity [kg/kg]
+        qgimp,        &! imperivous road specific humidity [kg/kg]
+        qgper,        &! pervious ground specific humidity [kg/kg]
+        dqroofdT,     &! d(qroof)/dT
+        dqgimpdT,     &! d(qgimp)/dT
+        dqgperdT       ! d(qgper)/dT
 
    ! Output
    real(r8), intent(out) :: &
-        taux,     &! wind stress: E-W [kg/m/s**2]
-        tauy,     &! wind stress: N-S [kg/m/s**2]
-        fsenroof, &! sensible heat flux from roof [W/m2]
-        fsenwsun, &! sensible heat flux from snulit wall [W/m2]
-        fsenwsha, &! sensible heat flux from shaded wall [W/m2]
-        fsengimp, &! sensible heat flux from impervious road [W/m2]
-        fsengper, &! sensible heat flux from pervious ground [W/m2]
-        fevproof, &! evaperation heat flux from roof [W/m2]
-        fevpgimp, &! evaperation heat flux from impervious road [W/m2]
-        fevpgper, &! evaporation heat flux from pervious ground [mm/s]
+        taux,         &! wind stress: E-W [kg/m/s**2]
+        tauy,         &! wind stress: N-S [kg/m/s**2]
+        fsenroof,     &! sensible heat flux from roof [W/m2]
+        fsenwsun,     &! sensible heat flux from snulit wall [W/m2]
+        fsenwsha,     &! sensible heat flux from shaded wall [W/m2]
+        fsengimp,     &! sensible heat flux from impervious road [W/m2]
+        fsengper,     &! sensible heat flux from pervious ground [W/m2]
+        fevproof,     &! evaperation heat flux from roof [W/m2]
+        fevpgimp,     &! evaperation heat flux from impervious road [W/m2]
+        fevpgper,     &! evaporation heat flux from pervious ground [mm/s]
 
-        croofs,   &! deriv of roof sensible heat flux wrt soil temp [w/m**2/k]
-        cwalls,   &! deriv of wall sensible heat flux wrt soil temp [w/m**2/k]
-        cgrnds,   &! deriv of soil sensible heat flux wrt soil temp [w/m**2/k]
-        croofl,   &! deriv of roof latent heat flux wrt soil temp [w/m**2/k]
-        cgimpl,   &! deriv of gimp latent heat flux wrt soil temp [w/m**2/k]
-        cgperl,   &! deriv of soil latent heat flux wrt soil temp [w/m**2/k]
-        croof,    &! deriv of roof total heat flux wrt soil temp [w/m**2/k]
-        cgimp,    &! deriv of gimp total heat flux wrt soil temp [w/m**2/k]
-        cgper,    &! deriv of soil total heat flux wrt soil temp [w/m**2/k]
+        croofs,       &! deriv of roof sensible heat flux wrt soil temp [w/m**2/k]
+        cwalls,       &! deriv of wall sensible heat flux wrt soil temp [w/m**2/k]
+        cgrnds,       &! deriv of soil sensible heat flux wrt soil temp [w/m**2/k]
+        croofl,       &! deriv of roof latent heat flux wrt soil temp [w/m**2/k]
+        cgimpl,       &! deriv of gimp latent heat flux wrt soil temp [w/m**2/k]
+        cgperl,       &! deriv of soil latent heat flux wrt soil temp [w/m**2/k]
+        croof,        &! deriv of roof total heat flux wrt soil temp [w/m**2/k]
+        cgimp,        &! deriv of gimp total heat flux wrt soil temp [w/m**2/k]
+        cgper,        &! deriv of soil total heat flux wrt soil temp [w/m**2/k]
 
-        tref,     &! 2 m height air temperature [kelvin]
-        qref,     &! 2 m height air humidity [kg/kg]
+        tref,         &! 2 m height air temperature [kelvin]
+        qref,         &! 2 m height air humidity [kg/kg]
 
-        z0m,      &! effective roughness [m]
-        zol,      &! dimensionless height (z/L) used in Monin-Obukhov theory
-        rib,      &! bulk Richardson number in surface layer
-        ustar,    &! friction velocity [m/s]
-        tstar,    &! temperature scaling parameter
-        qstar,    &! moisture scaling parameter
-        fm,       &! integral of profile function for momentum
-        fh,       &! integral of profile function for heat
-        fq,       &! integral of profile function for moisture
-        tafu       ! effective urban air temperature (2nd layer, walls)
+        z0m,          &! effective roughness [m]
+        zol,          &! dimensionless height (z/L) used in Monin-Obukhov theory
+        rib,          &! bulk Richardson number in surface layer
+        ustar,        &! friction velocity [m/s]
+        tstar,        &! temperature scaling parameter
+        qstar,        &! moisture scaling parameter
+        fm,           &! integral of profile function for momentum
+        fh,           &! integral of profile function for heat
+        fq,           &! integral of profile function for moisture
+        tafu           ! effective urban air temperature (2nd layer, walls)
 
 !------------------------ LOCAL VARIABLES ------------------------------
-   integer ::   &
-        niters,   &! maximum number of iterations for surface temperature
-        iter,     &! iteration index
-        nmozsgn    ! number of times moz changes sign
+   integer :: &
+        niters,       &! maximum number of iterations for surface temperature
+        iter,         &! iteration index
+        nmozsgn        ! number of times moz changes sign
 
-   real(r8) ::  &
-        beta,     &! coefficient of conective velocity [-]
-        dth,      &! diff of virtual temp. between ref. height and surface
-        dqh,      &! diff of humidity between ref. height and surface
-        dthv,     &! diff of vir. poten. temp. between ref. height and surface
-        obu,      &! monin-obukhov length (m)
-        obuold,   &! monin-obukhov length from previous iteration
-        ram,      &! aerodynamical resistance [s/m]
-        rah,      &! thermal resistance [s/m]
-        raw,      &! moisture resistance [s/m]
-        fh2m,     &! relation for temperature at 2m
-        fq2m,     &! relation for specific humidity at 2m
-        fm10m,    &! integral of profile function for momentum at 10m
-        thvstar,  &! virtual potential temperature scaling parameter
-        um,       &! wind speed including the stablity effect [m/s]
-        ur,       &! wind speed at reference height [m/s]
-        wc,       &! convective velocity [m/s]
-        wc2,      &! wc**2
-        zeta,     &! dimensionless height used in Monin-Obukhov theory
-        zii,      &! convective boundary height [m]
-        zldis,    &! reference height "minus" zero displacement heght [m]
-        z0mg,     &! roughness length over ground, momentum [m]
-        z0hg,     &! roughness length over ground, sensible heat [m]
-        z0qg       ! roughness length over ground, latent heat [m]
+   real(r8) :: &
+        beta,         &! coefficient of conective velocity [-]
+        dth,          &! diff of virtual temp. between ref. height and surface
+        dqh,          &! diff of humidity between ref. height and surface
+        dthv,         &! diff of vir. poten. temp. between ref. height and surface
+        obu,          &! monin-obukhov length (m)
+        obuold,       &! monin-obukhov length from previous iteration
+        ram,          &! aerodynamical resistance [s/m]
+        rah,          &! thermal resistance [s/m]
+        raw,          &! moisture resistance [s/m]
+        fh2m,         &! relation for temperature at 2m
+        fq2m,         &! relation for specific humidity at 2m
+        fm10m,        &! integral of profile function for momentum at 10m
+        thvstar,      &! virtual potential temperature scaling parameter
+        um,           &! wind speed including the stablity effect [m/s]
+        ur,           &! wind speed at reference height [m/s]
+        wc,           &! convective velocity [m/s]
+        wc2,          &! wc**2
+        zeta,         &! dimensionless height used in Monin-Obukhov theory
+        zii,          &! convective boundary height [m]
+        zldis,        &! reference height "minus" zero displacement heght [m]
+        z0mg,         &! roughness length over ground, momentum [m]
+        z0hg,         &! roughness length over ground, sensible heat [m]
+        z0qg           ! roughness length over ground, latent heat [m]
 
    real(r8) evplwet, evplwet_dtl, elwmax, elwdif
 
@@ -236,81 +236,81 @@ CONTAINS
    integer, parameter :: nlay = 3  ! potential layer number
 
    integer :: &
-        clev,     &! current layer index
-        numlay     ! available layer number
+        clev,         &! current layer index
+        numlay         ! available layer number
 
    real(r8) :: &
-        huu,      &! observational height of wind [m]
-        htu,      &! observational height of temperature [m]
-        hqu,      &! observational height of humidity [m]
-        ktop,     &! K value at a specific height
-        utop,     &! u value at a specific height
-        fht,      &! integral of profile function for heat at the top layer
-        fqt,      &! integral of profile function for moisture at the top layer
-        fmtop,    &! fm value at a specific height
-        phih,     &! phi(h), similarity function for sensible heat
-        displa,   &! displacement height for urban
-        displau,  &! displacement height for urban building
-        z0mu,     &! roughless length for urban building only
-        z0h,      &! roughless length for sensible heat
-        z0q,      &! roughless length for latent heat
-        tg,       &! ground temperature
-        qg         ! ground specific humidity
+        huu,          &! observational height of wind [m]
+        htu,          &! observational height of temperature [m]
+        hqu,          &! observational height of humidity [m]
+        ktop,         &! K value at a specific height
+        utop,         &! u value at a specific height
+        fht,          &! integral of profile function for heat at the top layer
+        fqt,          &! integral of profile function for moisture at the top layer
+        fmtop,        &! fm value at a specific height
+        phih,         &! phi(h), similarity function for sensible heat
+        displa,       &! displacement height for urban
+        displau,      &! displacement height for urban building
+        z0mu,         &! roughless length for urban building only
+        z0h,          &! roughless length for sensible heat
+        z0q,          &! roughless length for latent heat
+        tg,           &! ground temperature
+        qg             ! ground specific humidity
 
    real(r8) :: &
-        fg,       &! ground fractional cover
-        fgimp,    &! weight of impervious ground
-        fgper,    &! weight of pervious ground
-        hlr,      &! average building height to their length of edge [-]
-        sqrtdragc,&! sqrt(drag coefficient)
-        lm,       &! mix length within canopy
-        fai,      &! frontal area index
-        fwet,     &! fractional wet area
-        delta,    &! 0 or 1
-        alpha      ! exponential extinction factor for u/k decline within urban
+        fg,           &! ground fractional cover
+        fgimp,        &! weight of impervious ground
+        fgper,        &! weight of pervious ground
+        hlr,          &! average building height to their length of edge [-]
+        sqrtdragc,    &! sqrt(drag coefficient)
+        lm,           &! mix length within canopy
+        fai,          &! frontal area index
+        fwet,         &! fractional wet area
+        delta,        &! 0 or 1
+        alpha          ! exponential extinction factor for u/k decline within urban
 
    real(r8), dimension(0:nurb) :: &
-        tu,       &! termperature array
-        fc,       &! fractional cover array
-        canlev,   &! urban canopy layer lookup table
-        rb,       &! leaf boundary layer resistance [s/m]
-        cfh,      &! heat conductance for leaf [m/s]
-        cfw,      &! latent heat conductance for leaf [m/s]
-        wtl0,     &! normalized heat conductance for air and leaf [-]
-        wtlq0,    &! normalized latent heat cond. for air and leaf [-]
+        tu,           &! termperature array
+        fc,           &! fractional cover array
+        canlev,       &! urban canopy layer lookup table
+        rb,           &! leaf boundary layer resistance [s/m]
+        cfh,          &! heat conductance for leaf [m/s]
+        cfw,          &! latent heat conductance for leaf [m/s]
+        wtl0,         &! normalized heat conductance for air and leaf [-]
+        wtlq0,        &! normalized latent heat cond. for air and leaf [-]
 
-        ei,       &! vapor pressure on leaf surface [pa]
-        deidT,    &! derivative of "ei" on "tl" [pa/K]
-        qsatl,    &! leaf specific humidity [kg/kg]
-        qsatldT    ! derivative of "qsatl" on "tlef"
+        ei,           &! vapor pressure on leaf surface [pa]
+        deidT,        &! derivative of "ei" on "tl" [pa/K]
+        qsatl,        &! leaf specific humidity [kg/kg]
+        qsatldT        ! derivative of "qsatl" on "tlef"
 
    real(r8), dimension(nlay) :: &
-        fah,      &! weight for thermal resistance to upper layer
-        faw,      &! weight for moisture resistance to upper layer
-        fgh,      &! weight for thermal resistance to lower layer
-        fgw,      &! weight for moisture resistance to lower layer
-        ueff_lay, &! effective wind speed within canopy layer [m/s]
-        ueff_lay_,&! effective wind speed within canopy layer [m/s]
-        taf,      &! air temperature within canopy space [K]
-        qaf,      &! humidity of canopy air [kg/kg]
-        rd,       &! aerodynamic resistance between layers [s/m]
-        rd_,      &! aerodynamic resistance between layers [s/m]
-        cah,      &! heat conductance for air [m/s]
-        cgh,      &! heat conductance for ground [m/s]
-        caw,      &! latent heat conductance for air [m/s]
-        cgw,      &! latent heat conductance for ground [m/s]
-        wtshi,    &! sensible heat resistance for air, grd and leaf [-]
-        wtsqi,    &! latent heat resistance for air, grd and leaf [-]
-        wta0,     &! normalized heat conductance for air [-]
-        wtg0,     &! normalized heat conductance for ground [-]
-        wtaq0,    &! normalized latent heat conductance for air [-]
-        wtgq0,    &! normalized heat conductance for ground [-]
-        wtll,     &! sum of normalized heat conductance for air and leaf
-        wtlql      ! sum of normalized heat conductance for air and leaf
+        fah,          &! weight for thermal resistance to upper layer
+        faw,          &! weight for moisture resistance to upper layer
+        fgh,          &! weight for thermal resistance to lower layer
+        fgw,          &! weight for moisture resistance to lower layer
+        ueff_lay,     &! effective wind speed within canopy layer [m/s]
+        ueff_lay_,    &! effective wind speed within canopy layer [m/s]
+        taf,          &! air temperature within canopy space [K]
+        qaf,          &! humidity of canopy air [kg/kg]
+        rd,           &! aerodynamic resistance between layers [s/m]
+        rd_,          &! aerodynamic resistance between layers [s/m]
+        cah,          &! heat conductance for air [m/s]
+        cgh,          &! heat conductance for ground [m/s]
+        caw,          &! latent heat conductance for air [m/s]
+        cgw,          &! latent heat conductance for ground [m/s]
+        wtshi,        &! sensible heat resistance for air, grd and leaf [-]
+        wtsqi,        &! latent heat resistance for air, grd and leaf [-]
+        wta0,         &! normalized heat conductance for air [-]
+        wtg0,         &! normalized heat conductance for ground [-]
+        wtaq0,        &! normalized latent heat conductance for air [-]
+        wtgq0,        &! normalized heat conductance for ground [-]
+        wtll,         &! sum of normalized heat conductance for air and leaf
+        wtlql          ! sum of normalized heat conductance for air and leaf
 
-   real(r8) ::  &
-        ra2m,     &! aerodynamic resistance between 2m and bottom layer [s/m]
-        rd2m       ! aerodynamic resistance between bottom layer and ground [s/m]
+   real(r8) :: &
+        ra2m,         &! aerodynamic resistance between 2m and bottom layer [s/m]
+        rd2m           ! aerodynamic resistance between bottom layer and ground [s/m]
 
    ! temporal
    integer i
@@ -405,7 +405,7 @@ CONTAINS
       ENDIF
 
       ! weighted qg
-      ! NOTE: IF fwet_gimp=1, same as previous
+      ! NOTE: IF fwet_gimp=1, same as pervious ground
       fwetfac = fgimp*fwet_gimp + fgper
       qg = (qgimp*fgimp*fwet_gimp + qgper*fgper) / fwetfac
 
@@ -898,47 +898,47 @@ CONTAINS
 
    SUBROUTINE  UrbanVegFlux ( &
          ! Model running information
-         ipatch      ,deltim      ,lbr         ,lbi         ,&
+         ipatch         ,deltim         ,lbr            ,lbi            ,&
          ! Forcing
-         hu          ,ht          ,hq          ,us          ,&
-         vs          ,thm         ,th          ,thv         ,&
-         qm          ,psrf        ,rhoair      ,frl         ,&
-         po2m        ,pco2m       ,par         ,sabv        ,&
-         rstfac      ,Fhac        ,Fwst        ,Fach        ,&
-         vehc        ,meta                                  ,&
+         hu             ,ht             ,hq             ,us             ,&
+         vs             ,thm            ,th             ,thv            ,&
+         qm             ,psrf           ,rhoair         ,frl            ,&
+         po2m           ,pco2m          ,par            ,sabv           ,&
+         rstfac         ,Fhac           ,Fwst           ,Fach           ,&
+         vehc           ,meta                                           ,&
          ! Urban and vegetation parameters
-         hroof       ,hwr         ,nurb        ,fcover      ,&
-         ewall       ,egimp       ,egper       ,ev          ,&
-         htop        ,hbot        ,lai         ,sai         ,&
-         sqrtdi      ,effcon      ,vmax25      ,slti        ,&
-         hlti        ,shti        ,hhti        ,trda        ,&
-         trdm        ,trop        ,g1          ,g0          ,&
-         gradm       ,binter      ,extkn       ,extkd       ,&
-         dewmx       ,etrc        ,&
+         hroof          ,hwr            ,nurb           ,fcover         ,&
+         ewall          ,egimp          ,egper          ,ev             ,&
+         htop           ,hbot           ,lai            ,sai            ,&
+         sqrtdi         ,effcon         ,vmax25         ,slti           ,&
+         hlti           ,shti           ,hhti           ,trda           ,&
+         trdm           ,trop           ,g1             ,g0             ,&
+         gradm          ,binter         ,extkn          ,extkd          ,&
+         dewmx          ,etrc                                           ,&
          ! Status of surface
-         z0h_g       ,obug        ,ustarg      ,zlnd        ,&
-         zsno        ,fsno_roof   ,fsno_gimp   ,fsno_gper   ,&
-         wliq_roofsno,wliq_gimpsno,wice_roofsno,wice_gimpsno,&
-         htvp_roof   ,htvp_gimp   ,htvp_gper   ,troof       ,&
-         twsun       ,twsha       ,tgimp       ,tgper       ,&
-         qroof       ,qgimp       ,qgper       ,dqroofdT    ,&
-         dqgimpdT    ,dqgperdT    ,sigf        ,tl          ,&
-         ldew        ,rsr                                   ,&
+         z0h_g          ,obug           ,ustarg         ,zlnd           ,&
+         zsno           ,fsno_roof      ,fsno_gimp      ,fsno_gper      ,&
+         wliq_roofsno   ,wliq_gimpsno   ,wice_roofsno   ,wice_gimpsno   ,&
+         htvp_roof      ,htvp_gimp      ,htvp_gper      ,troof          ,&
+         twsun          ,twsha          ,tgimp          ,tgper          ,&
+         qroof          ,qgimp          ,qgper          ,dqroofdT       ,&
+         dqgimpdT       ,dqgperdT       ,sigf           ,tl             ,&
+         ldew           ,rsr                                            ,&
          ! Longwave information
-         Ainv        ,B           ,B1          ,dBdT        ,&
-         SkyVF       ,VegVF                                 ,&
+         Ainv           ,B              ,B1             ,dBdT           ,&
+         SkyVF          ,VegVF                                          ,&
          ! Output
-         taux        ,tauy        ,fsenroof    ,fsenwsun    ,&
-         fsenwsha    ,fsengimp    ,fsengper    ,fevproof    ,&
-         fevpgimp    ,fevpgper    ,croofs      ,cwalls      ,&
-         cgrnds      ,croofl      ,cgimpl      ,cgperl      ,&
-         croof       ,cgimp       ,cgper       ,fsenl       ,&
-         fevpl       ,etr         ,rst         ,assim       ,&
-         respc       ,lwsun       ,lwsha       ,lgimp       ,&
-         lgper       ,lveg        ,lout        ,tref        ,&
-         qref        ,z0m         ,zol         ,rib         ,&
-         ustar       ,qstar       ,tstar       ,fm          ,&
-         fh          ,fq          ,tafu                      )
+         taux           ,tauy           ,fsenroof       ,fsenwsun       ,&
+         fsenwsha       ,fsengimp       ,fsengper       ,fevproof       ,&
+         fevpgimp       ,fevpgper       ,croofs         ,cwalls         ,&
+         cgrnds         ,croofl         ,cgimpl         ,cgperl         ,&
+         croof          ,cgimp          ,cgper          ,fsenl          ,&
+         fevpl          ,etr            ,rst            ,assim          ,&
+         respc          ,lwsun          ,lwsha          ,lgimp          ,&
+         lgper          ,lveg           ,lout           ,tref           ,&
+         qref           ,z0m            ,zol            ,rib            ,&
+         ustar          ,qstar          ,tstar          ,fm             ,&
+         fh             ,fq             ,tafu                            )
 
 !=======================================================================
 
@@ -951,119 +951,119 @@ CONTAINS
 
 !-----------------------Arguments---------------------------------------
    integer,  intent(in) :: &
-        ipatch,   &! patch index [-]
-        lbr,      &! lower bound of array
-        lbi        ! lower bound of array
+        ipatch,       &! patch index [-]
+        lbr,          &! lower bound of array
+        lbi            ! lower bound of array
 
    real(r8), intent(in) :: &
-        deltim     ! seconds in a time step [second]
+        deltim         ! seconds in a time step [second]
 
    ! Forcing
    real(r8), intent(in) :: &
-        hu,       &! observational height of wind [m]
-        ht,       &! observational height of temperature [m]
-        hq,       &! observational height of humidity [m]
-        us,       &! wind component in eastward direction [m/s]
-        vs,       &! wind component in northward direction [m/s]
-        thm,      &! intermediate variable (tm+0.0098*ht)
-        th,       &! potential temperature (kelvin)
-        thv,      &! virtual potential temperature (kelvin)
-        qm,       &! specific humidity at reference height [kg/kg]
-        psrf,     &! pressure at reference height [pa]
-        rhoair,   &! density air [kg/m**3]
+        hu,           &! observational height of wind [m]
+        ht,           &! observational height of temperature [m]
+        hq,           &! observational height of humidity [m]
+        us,           &! wind component in eastward direction [m/s]
+        vs,           &! wind component in northward direction [m/s]
+        thm,          &! intermediate variable (tm+0.0098*ht)
+        th,           &! potential temperature (kelvin)
+        thv,          &! virtual potential temperature (kelvin)
+        qm,           &! specific humidity at reference height [kg/kg]
+        psrf,         &! pressure at reference height [pa]
+        rhoair,       &! density air [kg/m**3]
 
-        frl,      &! atmospheric infrared (longwave) radiation [W/m2]
-        par,      &! par absorbed per unit sunlit lai [w/m**2]
-        sabv,     &! solar radiation absorbed by vegetation [W/m2]
-        rstfac,   &! factor of soil water stress to plant physiologocal processes
+        frl,          &! atmospheric infrared (longwave) radiation [W/m2]
+        par,          &! par absorbed per unit sunlit lai [w/m**2]
+        sabv,         &! solar radiation absorbed by vegetation [W/m2]
+        rstfac,       &! factor of soil water stress to plant physiologocal processes
 
-        po2m,     &! atmospheric partial pressure  o2 (pa)
-        pco2m,    &! atmospheric partial pressure co2 (pa)
+        po2m,         &! atmospheric partial pressure  o2 (pa)
+        pco2m,        &! atmospheric partial pressure co2 (pa)
 
-        vehc,     &! flux from vehicle
-        meta,     &! flux from metabolic
-        Fhac,     &! flux from heat or cool AC
-        Fwst,     &! waste heat from cool or heat
-        Fach       ! flux from air exchange
+        vehc,         &! flux from vehicle
+        meta,         &! flux from metabolic
+        Fhac,         &! flux from heat or cool AC
+        Fwst,         &! waste heat from cool or heat
+        Fach           ! flux from air exchange
 
    ! Urban and vegetation parameters
    integer,  intent(in) :: &
-        nurb       ! number of aboveground urban components [-]
+        nurb           ! number of aboveground urban components [-]
 
    real(r8), intent(in) :: &
-        hroof,    &! average building height [m]
-        hwr,      &! average building height to their distance [-]
-        fcover(0:5)! coverage of aboveground urban components [-]
+        hroof,        &! average building height [m]
+        hwr,          &! average building height to their distance [-]
+        fcover(0:5)    ! coverage of aboveground urban components [-]
 
    real(r8), intent(in) :: &
-        ewall,    &! emissivity of walls
-        egimp,    &! emissivity of impervious road
-        egper,    &! emissivity of pervious road
-        ev         ! emissivity of vegetation
+        ewall,        &! emissivity of walls
+        egimp,        &! emissivity of impervious road
+        egper,        &! emissivity of pervious road
+        ev             ! emissivity of vegetation
 
    real(r8), intent(in) :: &
-        htop,     &! PFT crown top height [m]
-        hbot,     &! PFT crown bottom height [m]
-        lai,      &! adjusted leaf area index for seasonal variation [-]
-        sai,      &! stem area index  [-]
-        sqrtdi,   &! inverse sqrt of leaf dimension [m**-0.5]
+        htop,         &! PFT crown top height [m]
+        hbot,         &! PFT crown bottom height [m]
+        lai,          &! adjusted leaf area index for seasonal variation [-]
+        sai,          &! stem area index  [-]
+        sqrtdi,       &! inverse sqrt of leaf dimension [m**-0.5]
 
-        effcon,   &! quantum efficiency of RuBP regeneration (mol CO2 / mol quanta)
-        vmax25,   &! maximum carboxylation rate at 25 C at canopy top
-                   ! the range : 30.e-6 <-> 100.e-6 (mol co2 m-2 s-1)
-        shti,     &! slope of high temperature inhibition function     (s1)
-        hhti,     &! 1/2 point of high temperature inhibition function (s2)
-        slti,     &! slope of low temperature inhibition function      (s3)
-        hlti,     &! 1/2 point of low temperature inhibition function  (s4)
-        trda,     &! temperature coefficient in gs-a model             (s5)
-        trdm,     &! temperature coefficient in gs-a model             (s6)
-        trop,     &! temperature coefficient in gs-a model         (273+25)
-        g1,       &! conductance-photosynthesis slope parameter for medlyn model
-        g0,       &! conductance-photosynthesis intercept for medlyn model
-        gradm,    &! conductance-photosynthesis slope parameter
-        binter,   &! conductance-photosynthesis intercept
+        effcon,       &! quantum efficiency of RuBP regeneration (mol CO2 / mol quanta)
+        vmax25,       &! maximum carboxylation rate at 25 C at canopy top
+                       ! the range : 30.e-6 <-> 100.e-6 (mol co2 m-2 s-1)
+        shti,         &! slope of high temperature inhibition function     (s1)
+        hhti,         &! 1/2 point of high temperature inhibition function (s2)
+        slti,         &! slope of low temperature inhibition function      (s3)
+        hlti,         &! 1/2 point of low temperature inhibition function  (s4)
+        trda,         &! temperature coefficient in gs-a model             (s5)
+        trdm,         &! temperature coefficient in gs-a model             (s6)
+        trop,         &! temperature coefficient in gs-a model         (273+25)
+        g1,           &! conductance-photosynthesis slope parameter for medlyn model
+        g0,           &! conductance-photosynthesis intercept for medlyn model
+        gradm,        &! conductance-photosynthesis slope parameter
+        binter,       &! conductance-photosynthesis intercept
 
-        extkn,    &! coefficient of leaf nitrogen allocation
-        extkd,    &! diffuse and scattered diffuse PAR extinction coefficient
-        dewmx,    &! maximum dew
-        etrc       ! maximum possible transpiration rate (mm/s)
+        extkn,        &! coefficient of leaf nitrogen allocation
+        extkd,        &! diffuse and scattered diffuse PAR extinction coefficient
+        dewmx,        &! maximum dew
+        etrc           ! maximum possible transpiration rate (mm/s)
 
    ! Status of surface
    real(r8), intent(in) :: &
-        rsr,      &! bare soil resistance for evaporation
-        z0h_g,    &! roughness length for bare ground, sensible heat [m]
-        obug,     &! monin-obukhov length for bare ground (m)
-        ustarg,   &! friction velocity for bare ground [m/s]
-        zlnd,     &! roughness length for soil [m]
-        zsno,     &! roughness length for snow [m]
-        fsno_roof,&! fraction of ground covered by snow
-        fsno_gimp,&! fraction of ground covered by snow
-        fsno_gper,&! fraction of ground covered by snow
-        wliq_roofsno,&! liqui water [kg/m2]
-        wliq_gimpsno,&! liqui water [kg/m2]
-        wice_roofsno,&! ice lens [kg/m2]
-        wice_gimpsno,&! ice lens [kg/m2]
-        htvp_roof,&! latent heat of vapor of water (or sublimation) [j/kg]
-        htvp_gimp,&! latent heat of vapor of water (or sublimation) [j/kg]
-        htvp_gper,&! latent heat of vapor of water (or sublimation) [j/kg]
+        rsr,          &! bare soil resistance for evaporation
+        z0h_g,        &! roughness length for bare ground, sensible heat [m]
+        obug,         &! monin-obukhov length for bare ground (m)
+        ustarg,       &! friction velocity for bare ground [m/s]
+        zlnd,         &! roughness length for soil [m]
+        zsno,         &! roughness length for snow [m]
+        fsno_roof,    &! fraction of ground covered by snow
+        fsno_gimp,    &! fraction of ground covered by snow
+        fsno_gper,    &! fraction of ground covered by snow
+        wliq_roofsno, &! liqui water [kg/m2]
+        wliq_gimpsno, &! liqui water [kg/m2]
+        wice_roofsno, &! ice lens [kg/m2]
+        wice_gimpsno, &! ice lens [kg/m2]
+        htvp_roof,    &! latent heat of vapor of water (or sublimation) [j/kg]
+        htvp_gimp,    &! latent heat of vapor of water (or sublimation) [j/kg]
+        htvp_gper,    &! latent heat of vapor of water (or sublimation) [j/kg]
 
-        troof,    &! temperature of roof [K]
-        twsun,    &! temperature of sunlit wall [K]
-        twsha,    &! temperature of shaded wall [K]
-        tgimp,    &! temperature of impervious road [K]
-        tgper,    &! pervious ground temperature [K]
+        troof,        &! temperature of roof [K]
+        twsun,        &! temperature of sunlit wall [K]
+        twsha,        &! temperature of shaded wall [K]
+        tgimp,        &! temperature of impervious road [K]
+        tgper,        &! pervious ground temperature [K]
 
-        qroof,    &! roof specific humidity [kg/kg]
-        qgimp,    &! imperivous road specific humidity [kg/kg]
-        qgper,    &! pervious ground specific humidity [kg/kg]
-        dqroofdT, &! d(qroof)/dT
-        dqgimpdT, &! d(qgimp)/dT
-        dqgperdT, &! d(qgper)/dT
-        sigf       !
+        qroof,        &! roof specific humidity [kg/kg]
+        qgimp,        &! imperivous road specific humidity [kg/kg]
+        qgper,        &! pervious ground specific humidity [kg/kg]
+        dqroofdT,     &! d(qroof)/dT
+        dqgimpdT,     &! d(qgimp)/dT
+        dqgperdT,     &! d(qgper)/dT
+        sigf           !
 
    real(r8), intent(inout) :: &
-        tl,       &! leaf temperature [K]
-        ldew       ! depth of water on foliage [mm]
+        tl,           &! leaf temperature [K]
+        ldew           ! depth of water on foliage [mm]
 
    real(r8), intent(in)    :: Ainv(5,5)  !Inverse of Radiation transfer matrix
    real(r8), intent(in)    :: SkyVF (5)  !View factor to sky
@@ -1073,57 +1073,57 @@ CONTAINS
    real(r8), intent(inout) :: dBdT  (5)  !Vectors of incident radition on each surface
 
    real(r8), intent(out) :: &
-        taux,     &! wind stress: E-W [kg/m/s**2]
-        tauy,     &! wind stress: N-S [kg/m/s**2]
-        fsenroof, &! sensible heat flux from roof [W/m2]
-        fsenwsun, &! sensible heat flux from sunlit wall [W/m2]
-        fsenwsha, &! sensible heat flux from shaded wall [W/m2]
-        fsengimp, &! sensible heat flux from impervious road [W/m2]
-        fsengper, &! sensible heat flux from pervious ground [W/m2]
-        fevproof, &! evaporation heat flux from roof [mm/s]
-        fevpgimp, &! evaporation heat flux from impervious road [mm/s]
-        fevpgper, &! evaporation heat flux from pervious ground [mm/s]
+        taux,         &! wind stress: E-W [kg/m/s**2]
+        tauy,         &! wind stress: N-S [kg/m/s**2]
+        fsenroof,     &! sensible heat flux from roof [W/m2]
+        fsenwsun,     &! sensible heat flux from sunlit wall [W/m2]
+        fsenwsha,     &! sensible heat flux from shaded wall [W/m2]
+        fsengimp,     &! sensible heat flux from impervious road [W/m2]
+        fsengper,     &! sensible heat flux from pervious ground [W/m2]
+        fevproof,     &! evaporation heat flux from roof [mm/s]
+        fevpgimp,     &! evaporation heat flux from impervious road [mm/s]
+        fevpgper,     &! evaporation heat flux from pervious ground [mm/s]
 
-        croofs,   &! deriv of roof sensible heat flux wrt soil temp [w/m**2/k]
-        cwalls,   &! deriv of wall sensible heat flux wrt soil temp [w/m**2/k]
-        cgrnds,   &! deriv of ground latent heat flux wrt soil temp [w/m**2/k]
-        croofl,   &! deriv of roof latent heat flux wrt soil temp [w/m**2/k]
-        cgimpl,   &! deriv of impervious latent heat flux wrt soil temp [w/m**2/k]
-        cgperl,   &! deriv of soil atent heat flux wrt soil temp [w/m**2/k]
-        croof,    &! deriv of roof total flux wrt soil temp [w/m**2/k]
-        cgimp,    &! deriv of impervious total heat flux wrt soil temp [w/m**2/k]
-        cgper,    &! deriv of soil total heat flux wrt soil temp [w/m**2/k]
+        croofs,       &! deriv of roof sensible heat flux wrt soil temp [w/m**2/k]
+        cwalls,       &! deriv of wall sensible heat flux wrt soil temp [w/m**2/k]
+        cgrnds,       &! deriv of ground latent heat flux wrt soil temp [w/m**2/k]
+        croofl,       &! deriv of roof latent heat flux wrt soil temp [w/m**2/k]
+        cgimpl,       &! deriv of impervious latent heat flux wrt soil temp [w/m**2/k]
+        cgperl,       &! deriv of soil atent heat flux wrt soil temp [w/m**2/k]
+        croof,        &! deriv of roof total flux wrt soil temp [w/m**2/k]
+        cgimp,        &! deriv of impervious total heat flux wrt soil temp [w/m**2/k]
+        cgper,        &! deriv of soil total heat flux wrt soil temp [w/m**2/k]
 
-        tref,     &! 2 m height air temperature [kelvin]
-        qref       ! 2 m height air humidity
+        tref,         &! 2 m height air temperature [kelvin]
+        qref           ! 2 m height air humidity
 
    real(r8), intent(out) :: &
-        fsenl,    &! sensible heat from leaves [W/m2]
-        fevpl,    &! evaporation+transpiration from leaves [mm/s]
-        etr,      &! transpiration rate [mm/s]
-        rst,      &! stomatal resistance
-        assim,    &! rate of assimilation
-        respc      ! rate of respiration
+        fsenl,        &! sensible heat from leaves [W/m2]
+        fevpl,        &! evaporation+transpiration from leaves [mm/s]
+        etr,          &! transpiration rate [mm/s]
+        rst,          &! stomatal resistance
+        assim,        &! rate of assimilation
+        respc          ! rate of respiration
 
    real(r8), intent(inout) :: &
-        lwsun,    &! net longwave radiation of sunlit wall
-        lwsha,    &! net longwave radiation of shaded wall
-        lgimp,    &! net longwave radiation of impervious road
-        lgper,    &! net longwave radiation of pervious road
-        lveg,     &! net longwave radiation of vegetation
-        lout       ! out-going longwave radiation
+        lwsun,        &! net longwave radiation of sunlit wall
+        lwsha,        &! net longwave radiation of shaded wall
+        lgimp,        &! net longwave radiation of impervious road
+        lgper,        &! net longwave radiation of pervious road
+        lveg,         &! net longwave radiation of vegetation
+        lout           ! out-going longwave radiation
 
    real(r8), intent(inout) :: &
-        z0m,      &! effective roughness [m]
-        zol,      &! dimensionless height (z/L) used in Monin-Obukhov theory
-        rib,      &! bulk Richardson number in surface layer
-        ustar,    &! friction velocity [m/s]
-        tstar,    &! temperature scaling parameter
-        qstar,    &! moisture scaling parameter
-        fm,       &! integral of profile function for momentum
-        fh,       &! integral of profile function for heat
-        fq,       &! integral of profile function for moisture
-        tafu       ! effective urban air temperature (2nd layer, walls)
+        z0m,          &! effective roughness [m]
+        zol,          &! dimensionless height (z/L) used in Monin-Obukhov theory
+        rib,          &! bulk Richardson number in surface layer
+        ustar,        &! friction velocity [m/s]
+        tstar,        &! temperature scaling parameter
+        qstar,        &! moisture scaling parameter
+        fm,           &! integral of profile function for momentum
+        fh,           &! integral of profile function for heat
+        fq,           &! integral of profile function for moisture
+        tafu           ! effective urban air temperature (2nd layer, walls)
 
 !-----------------------Local Variables---------------------------------
 ! assign iteration parameters
@@ -1135,52 +1135,52 @@ CONTAINS
 
    real(r8) dtl(0:itmax+1)             !difference of tl between two iterative step
 
-   real(r8) ::  &
-        zldis,    &! reference height "minus" zero displacement heght [m]
-        zii,      &! convective boundary layer height [m]
-        z0mv,     &! roughness length of vegetation only, momentum [m]
-        z0mu,     &! roughness length of building only, momentum [m]
-        z0h,      &! roughness length, sensible heat [m]
-        z0q,      &! roughness length, latent heat [m]
-        zeta,     &! dimensionless height used in Monin-Obukhov theory
-        beta,     &! coefficient of conective velocity [-]
-        wc,       &! convective velocity [m/s]
-        wc2,      &! wc**2
-        dth,      &! diff of virtual temp. between ref. height and surface
-        dthv,     &! diff of vir. poten. temp. between ref. height and surface
-        dqh,      &! diff of humidity between ref. height and surface
-        obu,      &! monin-obukhov length (m)
-        um,       &! wind speed including the stablity effect [m/s]
-        ur,       &! wind speed at reference height [m/s]
-        uaf,      &! velocity of air within foliage [m/s]
-        fh2m,     &! relation for temperature at 2m
-        fq2m,     &! relation for specific humidity at 2m
-        fm10m,    &! integral of profile function for momentum at 10m
-        thvstar,  &! virtual potential temperature scaling parameter
-        eah,      &! canopy air vapor pressure (pa)
-        pco2g,    &! co2 pressure (pa) at ground surface (pa)
-        pco2a,    &! canopy air co2 pressure (pa)
+   real(r8) :: &
+        zldis,        &! reference height "minus" zero displacement heght [m]
+        zii,          &! convective boundary layer height [m]
+        z0mv,         &! roughness length of vegetation only, momentum [m]
+        z0mu,         &! roughness length of building only, momentum [m]
+        z0h,          &! roughness length, sensible heat [m]
+        z0q,          &! roughness length, latent heat [m]
+        zeta,         &! dimensionless height used in Monin-Obukhov theory
+        beta,         &! coefficient of conective velocity [-]
+        wc,           &! convective velocity [m/s]
+        wc2,          &! wc**2
+        dth,          &! diff of virtual temp. between ref. height and surface
+        dthv,         &! diff of vir. poten. temp. between ref. height and surface
+        dqh,          &! diff of humidity between ref. height and surface
+        obu,          &! monin-obukhov length (m)
+        um,           &! wind speed including the stablity effect [m/s]
+        ur,           &! wind speed at reference height [m/s]
+        uaf,          &! velocity of air within foliage [m/s]
+        fh2m,         &! relation for temperature at 2m
+        fq2m,         &! relation for specific humidity at 2m
+        fm10m,        &! integral of profile function for momentum at 10m
+        thvstar,      &! virtual potential temperature scaling parameter
+        eah,          &! canopy air vapor pressure (pa)
+        pco2g,        &! co2 pressure (pa) at ground surface (pa)
+        pco2a,        &! canopy air co2 pressure (pa)
 
-        ram,      &! aerodynamical resistance [s/m]
-        rah,      &! thermal resistance [s/m]
-        raw,      &! moisture resistance [s/m]
-        clai,     &! canopy heat capacity [Jm-2K-1]
-        del,      &! absolute change in leaf temp in current iteration [K]
-        del2,     &! change in leaf temperature in previous iteration [K]
-        dele,     &! change in heat fluxes from leaf [K]
-        dele2,    &! change in heat fluxes from leaf [K]
-        det,      &! maximum leaf temp. change in two consecutive iter [K]
-        dee,      &! maximum leaf temp. change in two consecutive iter [K]
+        ram,          &! aerodynamical resistance [s/m]
+        rah,          &! thermal resistance [s/m]
+        raw,          &! moisture resistance [s/m]
+        clai,         &! canopy heat capacity [Jm-2K-1]
+        del,          &! absolute change in leaf temp in current iteration [K]
+        del2,         &! change in leaf temperature in previous iteration [K]
+        dele,         &! change in heat fluxes from leaf [K]
+        dele2,        &! change in heat fluxes from leaf [K]
+        det,          &! maximum leaf temp. change in two consecutive iter [K]
+        dee,          &! maximum leaf temp. change in two consecutive iter [K]
 
-        obuold,   &! monin-obukhov length from previous iteration
-        tlbef,    &! leaf temperature from previous iteration [K]
-        err,      &! balance error
+        obuold,       &! monin-obukhov length from previous iteration
+        tlbef,        &! leaf temperature from previous iteration [K]
+        err,          &! balance error
 
-        rs,       &! sunlit leaf stomatal resistance [s/m]
-        rsoil,    &! soil respiration
-        gah2o,    &! conductance between canopy and atmosphere
-        gdh2o,    &! conductance between canopy and ground
-        tprcor     ! tf*psur*100./1.013e5
+        rs,           &! sunlit leaf stomatal resistance [s/m]
+        rsoil,        &! soil respiration
+        gah2o,        &! conductance between canopy and atmosphere
+        gdh2o,        &! conductance between canopy and ground
+        tprcor         ! tf*psur*100./1.013e5
 
    integer it, nmozsgn
 
@@ -1194,93 +1194,93 @@ CONTAINS
    integer, parameter :: uvec(5) = (/0,0,0,0,1/) !unit vector
 
    integer :: &
-        clev,     &! current layer index
-        botlay,   &! botom layer index
-        numlay     ! available layer number
+        clev,         &! current layer index
+        botlay,       &! botom layer index
+        numlay         ! available layer number
 
    real(r8) :: &
-        huu,      &! observational height of wind [m]
-        htu,      &! observational height of temperature [m]
-        hqu,      &! observational height of humidity [m]
-        ktop,     &! K value at a specific height
-        utop,     &! u value at a specific height
-        fht,      &! integral of profile function for heat at the top layer
-        fqt,      &! integral of profile function for moisture at the top layer
-        fmtop,    &! fm value at a specific height
-        phih,     &! phi(h), similarity function for sensible heat
-        displa,   &! displacement height for urban
-        displau,  &! displacement height for urban building
-        displav,  &! displacement height for urban vegetation
-        displav_lay,&!displacement height for urban vegetation layer
-        z0mv_lay, &! roughless length for vegetation
-        ueff_veg, &! effective wind speed within canopy layer [m/s]
-        tg,       &! ground temperature
-        qg         ! ground specific humidity
+        huu,          &! observational height of wind [m]
+        htu,          &! observational height of temperature [m]
+        hqu,          &! observational height of humidity [m]
+        ktop,         &! K value at a specific height
+        utop,         &! u value at a specific height
+        fht,          &! integral of profile function for heat at the top layer
+        fqt,          &! integral of profile function for moisture at the top layer
+        fmtop,        &! fm value at a specific height
+        phih,         &! phi(h), similarity function for sensible heat
+        displa,       &! displacement height for urban
+        displau,      &! displacement height for urban building
+        displav,      &! displacement height for urban vegetation
+        displav_lay,  &! displacement height for urban vegetation layer
+        z0mv_lay,     &! roughless length for vegetation
+        ueff_veg,     &! effective wind speed within canopy layer [m/s]
+        tg,           &! ground temperature
+        qg             ! ground specific humidity
 
    real(r8) :: &
-        fg,       &! ground fractional cover
-        fgimp,    &! weight of impervious ground
-        fgper,    &! weight of pervious ground
-        hlr,      &! average building height to their length of edge [-]
-        sqrtdragc,&! sqrt(drag coefficient)
-        lm,       &! mix length within canopy
-        fai,      &! frontal area index for urban
-        faiv,     &! frontal area index for trees
-        lsai,     &! lai+sai
-        fwet,     &! fractional wet area
-        delta,    &! 0 or 1
-        alpha,    &! exponential extinction factor for u/k decline within urban
-        alphav     ! exponential extinction factor for u/k decline within trees
+        fg,           &! ground fractional cover
+        fgimp,        &! weight of impervious ground
+        fgper,        &! weight of pervious ground
+        hlr,          &! average building height to their length of edge [-]
+        sqrtdragc,    &! sqrt(drag coefficient)
+        lm,           &! mix length within canopy
+        fai,          &! frontal area index for urban
+        faiv,         &! frontal area index for trees
+        lsai,         &! lai+sai
+        fwet,         &! fractional wet area
+        delta,        &! 0 or 1
+        alpha,        &! exponential extinction factor for u/k decline within urban
+        alphav         ! exponential extinction factor for u/k decline within trees
 
    real(r8) :: &
-        lwsun_bef,&! change of lw for the last time
-        lwsha_bef,&! change of lw for the last time
-        lgimp_bef,&! change of lw for the last time
-        lgper_bef,&! change of lw for the last time
-        lveg_bef   ! change of lw for the last time
+        lwsun_bef,    &! change of lw for the last time
+        lwsha_bef,    &! change of lw for the last time
+        lgimp_bef,    &! change of lw for the last time
+        lgper_bef,    &! change of lw for the last time
+        lveg_bef       ! change of lw for the last time
 
    real(r8), dimension(0:nurb) :: &
-        tu,       &! termperature array
-        fc,       &! fractional cover array
-        canlev,   &! urban canopy layer lookup table
-        rb,       &! leaf boundary layer resistance [s/m]
-        cfh,      &! heat conductance for leaf [m/s]
-        cfw,      &! latent heat conductance for leaf [m/s]
-        wtl0,     &! normalized heat conductance for air and leaf [-]
-        wtlq0,    &! normalized latent heat cond. for air and leaf [-]
+        tu,           &! termperature array
+        fc,           &! fractional cover array
+        canlev,       &! urban canopy layer lookup table
+        rb,           &! leaf boundary layer resistance [s/m]
+        cfh,          &! heat conductance for leaf [m/s]
+        cfw,          &! latent heat conductance for leaf [m/s]
+        wtl0,         &! normalized heat conductance for air and leaf [-]
+        wtlq0,        &! normalized latent heat cond. for air and leaf [-]
 
-        ei,       &! vapor pressure on leaf surface [pa]
-        deidT,    &! derivative of "ei" on "tl" [pa/K]
-        qsatl,    &! leaf specific humidity [kg/kg]
-        qsatldT    ! derivative of "qsatl" on "tlef"
+        ei,           &! vapor pressure on leaf surface [pa]
+        deidT,        &! derivative of "ei" on "tl" [pa/K]
+        qsatl,        &! leaf specific humidity [kg/kg]
+        qsatldT        ! derivative of "qsatl" on "tlef"
 
    real(r8), dimension(nlay) :: &
-        fah,      &! weight for thermal resistance to upper layer
-        faw,      &! weight for moisture resistance to upper layer
-        fgh,      &! weight for thermal resistance to lower layer
-        fgw,      &! weight for moisture resistance to lower layer
-        ueff_lay, &! effective wind speed within canopy layer [m/s]
-        ueff_lay_,&! effective wind speed within canopy layer [m/s]
-        taf,      &! air temperature within canopy space [K]
-        qaf,      &! humidity of canopy air [kg/kg]
-        rd,       &! aerodynamic resistance between layers [s/m]
-        rd_,      &! aerodynamic resistance between layers [s/m]
-        cah,      &! heat conductance for air [m/s]
-        cgh,      &! heat conductance for ground [m/s]
-        caw,      &! latent heat conductance for air [m/s]
-        cgw,      &! latent heat conductance for ground [m/s]
-        wtshi,    &! sensible heat resistance for air, grd and leaf [-]
-        wtsqi,    &! latent heat resistance for air, grd and leaf [-]
-        wta0,     &! normalized heat conductance for air [-]
-        wtg0,     &! normalized heat conductance for ground [-]
-        wtaq0,    &! normalized latent heat conductance for air [-]
-        wtgq0,    &! normalized heat conductance for ground [-]
-        wtll,     &! sum of normalized heat conductance for air and leaf
-        wtlql      ! sum of normalized heat conductance for air and leaf
+        fah,          &! weight for thermal resistance to upper layer
+        faw,          &! weight for moisture resistance to upper layer
+        fgh,          &! weight for thermal resistance to lower layer
+        fgw,          &! weight for moisture resistance to lower layer
+        ueff_lay,     &! effective wind speed within canopy layer [m/s]
+        ueff_lay_,    &! effective wind speed within canopy layer [m/s]
+        taf,          &! air temperature within canopy space [K]
+        qaf,          &! humidity of canopy air [kg/kg]
+        rd,           &! aerodynamic resistance between layers [s/m]
+        rd_,          &! aerodynamic resistance between layers [s/m]
+        cah,          &! heat conductance for air [m/s]
+        cgh,          &! heat conductance for ground [m/s]
+        caw,          &! latent heat conductance for air [m/s]
+        cgw,          &! latent heat conductance for ground [m/s]
+        wtshi,        &! sensible heat resistance for air, grd and leaf [-]
+        wtsqi,        &! latent heat resistance for air, grd and leaf [-]
+        wta0,         &! normalized heat conductance for air [-]
+        wtg0,         &! normalized heat conductance for ground [-]
+        wtaq0,        &! normalized latent heat conductance for air [-]
+        wtgq0,        &! normalized heat conductance for ground [-]
+        wtll,         &! sum of normalized heat conductance for air and leaf
+        wtlql          ! sum of normalized heat conductance for air and leaf
 
    real(r8) :: &
-        ra2m,     &! aerodynamic resistance between 2m and bottom layer [s/m]
-        rd2m       ! aerodynamic resistance between bottom layer and ground [s/m]
+        ra2m,         &! aerodynamic resistance between 2m and bottom layer [s/m]
+        rd2m           ! aerodynamic resistance between bottom layer and ground [s/m]
 
    ! temporal
    integer i
@@ -2510,7 +2510,7 @@ CONTAINS
       !tref = thm + vonkar/(fh)*dth * (fh2m/vonkar - fh/vonkar)
       !qref =  qm + vonkar/(fq)*dqh * (fq2m/vonkar - fq/vonkar)
 
-  END SUBROUTINE UrbanVegFlux
+   END SUBROUTINE UrbanVegFlux
 !----------------------------------------------------------------------
 
 

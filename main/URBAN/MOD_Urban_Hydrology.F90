@@ -67,7 +67,7 @@ CONTAINS
 #endif
         forc_us        ,forc_vs                                        ,&
 ! SNICAR model variables
-        forc_aer       ,&
+        forc_aer                                                       ,&
         mss_bcpho      ,mss_bcphi      ,mss_ocpho      ,mss_ocphi      ,&
         mss_dst1       ,mss_dst2       ,mss_dst3       ,mss_dst4       ,&
 ! END SNICAR model variables
@@ -252,32 +252,31 @@ CONTAINS
 !=======================================================================
 ! [1] for pervious road, the same as soil
 !=======================================================================
+
       rootflux(:) = rootr(:)*etr
-      CALL WATER_2014 (ipatch,patchtype,lbp        ,nl_soil     ,deltim     ,&
-             z_gpersno   ,dz_gpersno  ,zi_gpersno  ,bsw         ,porsl      ,&
-             psi0        ,hksati      ,theta_r     ,topostd     ,BVIC       ,&
-             rootr       ,rootflux    ,t_gpersno   ,&
-             wliq_gpersno,wice_gpersno,smp         ,hk          ,pgper_rain ,&
-             sm_gper     ,etr         ,qseva_gper  ,qsdew_gper  ,qsubl_gper ,&
-             qfros_gper  ,&
+
+      CALL WATER_2014 (ipatch,patchtype,lbp        ,nl_soil     ,deltim      ,&
+             z_gpersno   ,dz_gpersno  ,zi_gpersno  ,bsw         ,porsl       ,&
+             psi0        ,hksati      ,theta_r     ,topostd     ,BVIC        ,&
+             rootr       ,rootflux    ,t_gpersno   ,wliq_gpersno,wice_gpersno,&
+             smp         ,hk          ,pgper_rain  ,sm_gper     ,etr         ,&
+             qseva_gper  ,qsdew_gper  ,qsubl_gper  ,qfros_gper               ,&
              !NOTE: temporal input, as urban mode doesn't support split soil&snow
              ! set all the same for soil and snow surface,
              ! and fsno=0. (no physical meaning here)
-             qseva_gper  ,qsdew_gper  ,qsubl_gper  ,qfros_gper  ,&
-             qseva_gper  ,qsdew_gper  ,qsubl_gper  ,qfros_gper  ,&
+             qseva_gper  ,qsdew_gper  ,qsubl_gper  ,qfros_gper               ,&
+             qseva_gper  ,qsdew_gper  ,qsubl_gper  ,qfros_gper               ,&
              0.          ,& ! fsno, not active
-             rsur_gper   ,rnof_gper   ,qinfl       ,wtfact      ,&
-             pondmx      ,ssi         ,wimp        ,smpmin      ,&
-             zwt         ,wa          ,qcharge     ,errw_rsub   ,&
+             rsur_gper   ,rnof_gper   ,qinfl       ,wtfact                   ,&
+             pondmx      ,ssi         ,wimp        ,smpmin                   ,&
+             zwt         ,wa          ,qcharge     ,errw_rsub                ,&
 #if(defined CaMa_Flood)
-             flddepth    ,fldfrc      ,qinfl_fld   ,&
+             flddepth    ,fldfrc      ,qinfl_fld                             ,&
 #endif
 ! SNICAR model variables
-             forc_aer    ,&
-             mss_bcpho   ,mss_bcphi   ,mss_ocpho   ,mss_ocphi   ,&
-             mss_dst1    ,mss_dst2    ,mss_dst3    ,mss_dst4     &
-! END SNICAR model variables
-            )
+             forc_aer                                                        ,&
+             mss_bcpho   ,mss_bcphi   ,mss_ocpho   ,mss_ocphi                ,&
+             mss_dst1    ,mss_dst2    ,mss_dst3    ,mss_dst4                  )
 
 !=======================================================================
 ! [2] for roof and impervious road
@@ -350,22 +349,22 @@ CONTAINS
       CALL snowwater_lake ( &
            ! "in" snowater_lake arguments
            ! ---------------------------
-           maxsnl       ,nl_soil      ,nl_lake         ,deltim          ,&
-           ssi          ,wimp         ,porsl           ,pg_rain_lake    ,&
-           pg_snow_lake ,dz_lake      ,imelt_lake(:0)  ,fioldl(:0)      ,&
-           qseva_lake   ,qsubl_lake   ,qsdew_lake      ,qfros_lake      ,&
+           maxsnl         ,nl_soil        ,nl_lake        ,deltim         ,&
+           ssi            ,wimp           ,porsl          ,pg_rain_lake   ,&
+           pg_snow_lake   ,dz_lake        ,imelt_lake(:0) ,fioldl(:0)     ,&
+           qseva_lake     ,qsubl_lake     ,qsdew_lake     ,qfros_lake     ,&
 
            ! "inout" snowater_lake arguments
            ! ---------------------------
-           z_lakesno    ,dz_lakesno   ,zi_lakesno      ,t_lakesno       ,&
-           wice_lakesno ,wliq_lakesno ,t_lake          ,lake_icefrac    ,&
-           gwat         ,&
-           dfseng       ,dfgrnd       ,snll            ,scv_lake        ,&
-           snowdp_lake  ,sm_lake      ,forc_us         ,forc_vs          &
+           z_lakesno      ,dz_lakesno     ,zi_lakesno     ,t_lakesno      ,&
+           wice_lakesno   ,wliq_lakesno   ,t_lake         ,lake_icefrac   ,&
+           gwat                                                           ,&
+           dfseng         ,dfgrnd         ,snll           ,scv_lake       ,&
+           snowdp_lake    ,sm_lake        ,forc_us        ,forc_vs        ,&
 ! SNICAR model variables
-           ,forc_aer    ,&
-           mss_bcpho    ,mss_bcphi    ,mss_ocpho       ,mss_ocphi       ,&
-           mss_dst1     ,mss_dst2     ,mss_dst3        ,mss_dst4        ,&
+           forc_aer                                                       ,&
+           mss_bcpho      ,mss_bcphi      ,mss_ocpho      ,mss_ocphi      ,&
+           mss_dst1       ,mss_dst2       ,mss_dst3       ,mss_dst4       ,&
 ! END SNICAR model variables
            urban_call=.true.)
 

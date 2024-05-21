@@ -18,7 +18,7 @@ CONTAINS
 
 !=======================================================================
 ! !DESCRIPTION:
-!  this is the main subroutine to execute the calculation
+!  This is the main subroutine to execute the calculation
 !  of bare ground fluxes
 !
 !  Created by Hua Yuan, 09/2021

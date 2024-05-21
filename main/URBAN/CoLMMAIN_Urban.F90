@@ -171,7 +171,7 @@
          ! additional variables required by coupling with WRF model
            emis         ,z0m          ,zol          ,rib          ,&
            ustar        ,qstar        ,tstar        ,fm           ,&
-           fh           ,fq           ,hpbl                       )
+           fh           ,fq           ,hpbl                        )
 
    USE MOD_Precision
    USE MOD_Vars_Global
@@ -936,86 +936,86 @@
       ! Thermal process
       CALL UrbanTHERMAL ( &
          ! model running information
-         ipatch               ,patchtype            ,lbr                  ,lbi                  ,&
-         lbp                  ,lbl                  ,deltim               ,patchlatr            ,&
+         ipatch             ,patchtype          ,lbr                ,lbi                ,&
+         lbp                ,lbl                ,deltim             ,patchlatr          ,&
          ! forcing
-         forc_hgt_u           ,forc_hgt_t           ,forc_hgt_q           ,forc_us              ,&
-         forc_vs              ,forc_t               ,forc_q               ,forc_psrf            ,&
-         forc_rhoair          ,forc_frl             ,forc_po2m            ,forc_pco2m           ,&
-         forc_sols            ,forc_soll            ,forc_solsd           ,forc_solld           ,&
-         theta                ,sabroof              ,sabwsun              ,sabwsha              ,&
-         sabgimp              ,sabgper              ,sablake              ,sabv                 ,&
-         par                  ,Fhac                 ,Fwst                 ,Fach                 ,&
-         Fahe                 ,Fhah                 ,vehc                 ,meta                 ,&
+         forc_hgt_u         ,forc_hgt_t         ,forc_hgt_q         ,forc_us            ,&
+         forc_vs            ,forc_t             ,forc_q             ,forc_psrf          ,&
+         forc_rhoair        ,forc_frl           ,forc_po2m          ,forc_pco2m         ,&
+         forc_sols          ,forc_soll          ,forc_solsd         ,forc_solld         ,&
+         theta              ,sabroof            ,sabwsun            ,sabwsha            ,&
+         sabgimp            ,sabgper            ,sablake            ,sabv               ,&
+         par                ,Fhac               ,Fwst               ,Fach               ,&
+         Fahe               ,Fhah               ,vehc               ,meta               ,&
          ! LUCY INPUT PARAMETERS
-         fix_holiday          ,week_holiday         ,hum_prof             ,pop_den              ,&
-         vehicle              ,weh_prof             ,wdh_prof             ,idate                ,&
-         patchlonr                                                                              ,&
+         fix_holiday        ,week_holiday       ,hum_prof           ,pop_den            ,&
+         vehicle            ,weh_prof           ,wdh_prof           ,idate              ,&
+         patchlonr                                                                      ,&
          ! GROUND PARAMETERS
-         froof                ,flake                ,hroof                ,hwr                  ,&
-         fgper                ,pondmx               ,em_roof              ,em_wall              ,&
-         em_gimp              ,em_gper              ,trsmx0               ,zlnd                 ,&
-         zsno                 ,capr                 ,cnfac                ,vf_quartz            ,&
-         vf_gravels           ,vf_om                ,vf_sand              ,wf_gravels           ,&
-         wf_sand              ,csol                 ,porsl                ,psi0                 ,&
+         froof              ,flake              ,hroof              ,hwr                ,&
+         fgper              ,pondmx             ,em_roof            ,em_wall            ,&
+         em_gimp            ,em_gper            ,trsmx0             ,zlnd               ,&
+         zsno               ,capr               ,cnfac              ,vf_quartz          ,&
+         vf_gravels         ,vf_om              ,vf_sand            ,wf_gravels         ,&
+         wf_sand            ,csol               ,porsl              ,psi0               ,&
 #ifdef Campbell_SOIL_MODEL
-         bsw                                                                                    ,&
+         bsw                                                                            ,&
 #endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
-         theta_r              ,alpha_vgm            ,n_vgm                ,L_vgm                ,&
-         sc_vgm               ,fc_vgm                                                           ,&
+         theta_r            ,alpha_vgm          ,n_vgm              ,L_vgm              ,&
+         sc_vgm             ,fc_vgm                                                     ,&
 #endif
-         k_solids             ,dksatu               ,dksatf               ,dkdry                ,&
-         BA_alpha             ,BA_beta                                                          ,&
-         cv_roof              ,cv_wall              ,cv_gimp                                    ,&
-         tk_roof              ,tk_wall              ,tk_gimp              ,dz_roofsno(lbr:)     ,&
-         dz_gimpsno(lbi:)     ,dz_gpersno(lbp:)     ,dz_lakesno(:)        ,dz_wall(:)           ,&
-         z_roofsno(lbr:)      ,z_gimpsno(lbi:)      ,z_gpersno(lbp:)      ,z_lakesno(:)         ,&
-         z_wall(:)            ,zi_roofsno(lbr-1:)   ,zi_gimpsno(lbi-1:)   ,zi_gpersno(lbp-1:)   ,&
-         zi_lakesno(:)        ,zi_wall(0:)          ,dz_lake(1:)          ,lakedepth            ,&
-         dewmx                ,sqrtdi               ,rootfr(:)            ,effcon               ,&
-         vmax25               ,slti                 ,hlti                 ,shti                 ,&
-         hhti                 ,trda                 ,trdm                 ,trop                 ,&
-         g1                   ,g0                   ,gradm                ,binter               ,&
-         extkn                                                                                  ,&
+         k_solids           ,dksatu             ,dksatf             ,dkdry              ,&
+         BA_alpha           ,BA_beta                                                    ,&
+         cv_roof            ,cv_wall            ,cv_gimp                                ,&
+         tk_roof            ,tk_wall            ,tk_gimp            ,dz_roofsno(lbr:)   ,&
+         dz_gimpsno(lbi:)   ,dz_gpersno(lbp:)   ,dz_lakesno(:)      ,dz_wall(:)         ,&
+         z_roofsno(lbr:)    ,z_gimpsno(lbi:)    ,z_gpersno(lbp:)    ,z_lakesno(:)       ,&
+         z_wall(:)          ,zi_roofsno(lbr-1:) ,zi_gimpsno(lbi-1:) ,zi_gpersno(lbp-1:) ,&
+         zi_lakesno(:)      ,zi_wall(0:)        ,dz_lake(1:)        ,lakedepth          ,&
+         dewmx              ,sqrtdi             ,rootfr(:)          ,effcon             ,&
+         vmax25             ,slti               ,hlti               ,shti               ,&
+         hhti               ,trda               ,trdm               ,trop               ,&
+         g1                 ,g0                 ,gradm              ,binter             ,&
+         extkn                                                                          ,&
          ! surface status
-         fsno_roof            ,fsno_gimp            ,fsno_gper            ,scv_roof             ,&
-         scv_gimp             ,scv_gper             ,scv_lake             ,snowdp_roof          ,&
-         snowdp_gimp          ,snowdp_gper          ,snowdp_lake          ,fwsun                ,&
-         dfwsun               ,lai                  ,sai                  ,htop                 ,&
-         hbot                 ,fveg                 ,sigf                 ,extkd                ,&
-         lwsun                ,lwsha                ,lgimp                ,lgper                ,&
-         t_grnd               ,t_roofsno(lbr:)      ,t_wallsun(:)         ,t_wallsha(:)         ,&
-         t_gimpsno(lbi:)      ,t_gpersno(lbp:)      ,t_lakesno(:)         ,wliq_roofsno(lbr:)   ,&
-         wliq_gimpsno(lbi:)   ,wliq_gpersno(lbp:)   ,wliq_lakesno(:)      ,wice_roofsno(lbr:)   ,&
-         wice_gimpsno(lbi:)   ,wice_gpersno(lbp:)   ,wice_lakesno(:)      ,t_lake(:)            ,&
-         lake_icefrac(:)      ,savedtke1            ,lveg                 ,tleaf                ,&
-         ldew                 ,t_room               ,troof_inner          ,twsun_inner          ,&
-         twsha_inner          ,t_roommax            ,t_roommin            ,tafu                 ,&
+         fsno_roof          ,fsno_gimp          ,fsno_gper          ,scv_roof           ,&
+         scv_gimp           ,scv_gper           ,scv_lake           ,snowdp_roof        ,&
+         snowdp_gimp        ,snowdp_gper        ,snowdp_lake        ,fwsun              ,&
+         dfwsun             ,lai                ,sai                ,htop               ,&
+         hbot               ,fveg               ,sigf               ,extkd              ,&
+         lwsun              ,lwsha              ,lgimp              ,lgper              ,&
+         t_grnd             ,t_roofsno(lbr:)    ,t_wallsun(:)       ,t_wallsha(:)       ,&
+         t_gimpsno(lbi:)    ,t_gpersno(lbp:)    ,t_lakesno(:)       ,wliq_roofsno(lbr:) ,&
+         wliq_gimpsno(lbi:) ,wliq_gpersno(lbp:) ,wliq_lakesno(:)    ,wice_roofsno(lbr:) ,&
+         wice_gimpsno(lbi:) ,wice_gpersno(lbp:) ,wice_lakesno(:)    ,t_lake(:)          ,&
+         lake_icefrac(:)    ,savedtke1          ,lveg               ,tleaf              ,&
+         ldew               ,t_room             ,troof_inner        ,twsun_inner        ,&
+         twsha_inner        ,t_roommax          ,t_roommin          ,tafu               ,&
 
 ! SNICAR model variables
-         snofrz(lbsn:0)       ,sabg_lyr(lbp:1)                                                  ,&
+         snofrz(lbsn:0)     ,sabg_lyr(lbp:1)                                            ,&
 ! END SNICAR model variables
 
          ! output
-         taux                 ,tauy                 ,fsena                ,fevpa                ,&
-         lfevpa               ,fsenl                ,fevpl                ,etr                  ,&
-         fseng                ,fevpg                ,olrg                 ,fgrnd                ,&
-         fsen_roof            ,fsen_wsun            ,fsen_wsha            ,fsen_gimp            ,&
-         fsen_gper            ,fsen_urbl            ,troof                ,twall                ,&
-         lfevp_roof           ,lfevp_gimp           ,lfevp_gper           ,lfevp_urbl           ,&
-         qseva_roof           ,qseva_gimp           ,qseva_gper           ,qseva_lake           ,&
-         qsdew_roof           ,qsdew_gimp           ,qsdew_gper           ,qsdew_lake           ,&
-         qsubl_roof           ,qsubl_gimp           ,qsubl_gper           ,qsubl_lake           ,&
-         qfros_roof           ,qfros_gimp           ,qfros_gper           ,qfros_lake           ,&
-         imeltr(lbr:)         ,imelti(lbi:)         ,imeltp(lbp:)         ,imeltl(:)            ,&
-         sm_roof              ,sm_gimp              ,sm_gper              ,sm_lake              ,&
-         sabg                 ,rstfac               ,rootr(:)             ,tref                 ,&
-         qref                 ,trad                 ,rst                  ,assim                ,&
-         respc                ,errore               ,emis                 ,z0m                  ,&
-         zol                  ,rib                  ,ustar                ,qstar                ,&
-         tstar                ,fm                   ,fh                   ,fq                   ,&
-         hpbl                                                                                    )
+         taux               ,tauy               ,fsena              ,fevpa              ,&
+         lfevpa             ,fsenl              ,fevpl              ,etr                ,&
+         fseng              ,fevpg              ,olrg               ,fgrnd              ,&
+         fsen_roof          ,fsen_wsun          ,fsen_wsha          ,fsen_gimp          ,&
+         fsen_gper          ,fsen_urbl          ,troof              ,twall              ,&
+         lfevp_roof         ,lfevp_gimp         ,lfevp_gper         ,lfevp_urbl         ,&
+         qseva_roof         ,qseva_gimp         ,qseva_gper         ,qseva_lake         ,&
+         qsdew_roof         ,qsdew_gimp         ,qsdew_gper         ,qsdew_lake         ,&
+         qsubl_roof         ,qsubl_gimp         ,qsubl_gper         ,qsubl_lake         ,&
+         qfros_roof         ,qfros_gimp         ,qfros_gper         ,qfros_lake         ,&
+         imeltr(lbr:)       ,imelti(lbi:)       ,imeltp(lbp:)       ,imeltl(:)          ,&
+         sm_roof            ,sm_gimp            ,sm_gper            ,sm_lake            ,&
+         sabg               ,rstfac             ,rootr(:)           ,tref               ,&
+         qref               ,trad               ,rst                ,assim              ,&
+         respc              ,errore             ,emis               ,z0m                ,&
+         zol                ,rib                ,ustar              ,qstar              ,&
+         tstar              ,fm                 ,fh                 ,fq                 ,&
+         hpbl                                                                            )
 
 !----------------------------------------------------------------------
 ! [5] Urban hydrology
@@ -1029,43 +1029,43 @@
 
       CALL UrbanHydrology ( &
          ! model running information
-         ipatch               ,patchtype            ,lbr                  ,lbi                  ,&
-         lbp                  ,lbl                  ,snll                 ,deltim               ,&
+         ipatch             ,patchtype          ,lbr                ,lbi                ,&
+         lbp                ,lbl                ,snll               ,deltim             ,&
          ! forcing
-         pg_rain              ,pgper_rain           ,pgimp_rain           ,pg_snow              ,&
-         pg_rain_lake         ,pg_snow_lake                                                     ,&
-         froof                ,fgper                ,flake                ,bsw                  ,&
-         porsl                ,psi0                 ,hksati               ,wtfact               ,&
-         pondmx               ,ssi                  ,wimp                 ,smpmin               ,&
-         theta_r              ,topostd              ,BVIC                                       ,&
-         rootr,rootflux       ,etrgper              ,fseng                ,fgrnd                ,&
-         t_gpersno(lbp:)      ,t_lakesno(:)         ,t_lake               ,dz_lake              ,&
-         z_gpersno(lbp:)      ,z_lakesno(:)         ,zi_gpersno(lbp-1:)   ,zi_lakesno(:)        ,&
-         dz_roofsno(lbr:)     ,dz_gimpsno(lbi:)     ,dz_gpersno(lbp:)     ,dz_lakesno(:)        ,&
-         wliq_roofsno(lbr:)   ,wliq_gimpsno(lbi:)   ,wliq_gpersno(lbp:)   ,wliq_lakesno(:)      ,&
-         wice_roofsno(lbr:)   ,wice_gimpsno(lbi:)   ,wice_gpersno(lbp:)   ,wice_lakesno(:)      ,&
-         qseva_roof           ,qseva_gimp           ,qseva_gper           ,qseva_lake           ,&
-         qsdew_roof           ,qsdew_gimp           ,qsdew_gper           ,qsdew_lake           ,&
-         qsubl_roof           ,qsubl_gimp           ,qsubl_gper           ,qsubl_lake           ,&
-         qfros_roof           ,qfros_gimp           ,qfros_gper           ,qfros_lake           ,&
-         sm_roof              ,sm_gimp              ,sm_gper              ,sm_lake              ,&
-         lake_icefrac         ,scv_lake             ,snowdp_lake          ,imeltl               ,&
-         fioldl               ,w_old                                                            ,&
+         pg_rain            ,pgper_rain         ,pgimp_rain         ,pg_snow            ,&
+         pg_rain_lake       ,pg_snow_lake                                               ,&
+         froof              ,fgper              ,flake              ,bsw                ,&
+         porsl              ,psi0               ,hksati             ,wtfact             ,&
+         pondmx             ,ssi                ,wimp               ,smpmin             ,&
+         theta_r            ,topostd            ,BVIC                                   ,&
+         rootr,rootflux     ,etrgper            ,fseng              ,fgrnd              ,&
+         t_gpersno(lbp:)    ,t_lakesno(:)       ,t_lake             ,dz_lake            ,&
+         z_gpersno(lbp:)    ,z_lakesno(:)       ,zi_gpersno(lbp-1:) ,zi_lakesno(:)      ,&
+         dz_roofsno(lbr:)   ,dz_gimpsno(lbi:)   ,dz_gpersno(lbp:)   ,dz_lakesno(:)      ,&
+         wliq_roofsno(lbr:) ,wliq_gimpsno(lbi:) ,wliq_gpersno(lbp:) ,wliq_lakesno(:)    ,&
+         wice_roofsno(lbr:) ,wice_gimpsno(lbi:) ,wice_gpersno(lbp:) ,wice_lakesno(:)    ,&
+         qseva_roof         ,qseva_gimp         ,qseva_gper         ,qseva_lake         ,&
+         qsdew_roof         ,qsdew_gimp         ,qsdew_gper         ,qsdew_lake         ,&
+         qsubl_roof         ,qsubl_gimp         ,qsubl_gper         ,qsubl_lake         ,&
+         qfros_roof         ,qfros_gimp         ,qfros_gper         ,qfros_lake         ,&
+         sm_roof            ,sm_gimp            ,sm_gper            ,sm_lake            ,&
+         lake_icefrac       ,scv_lake           ,snowdp_lake        ,imeltl             ,&
+         fioldl             ,w_old                                                      ,&
 #if(defined CaMa_Flood)
-         flddepth             ,fldfrc               ,qinfl_fld                                  ,&
+         flddepth           ,fldfrc             ,qinfl_fld                              ,&
 #endif
-         forc_us              ,forc_vs                                                          ,&
+         forc_us            ,forc_vs                                                    ,&
 
 ! SNICAR model variables
-         forc_aer                                                                               ,&
-         mss_bcpho(lbsn:0)    ,mss_bcphi(lbsn:0)    ,mss_ocpho(lbsn:0)    ,mss_ocphi(lbsn:0)    ,&
-         mss_dst1(lbsn:0)     ,mss_dst2(lbsn:0)     ,mss_dst3(lbsn:0)     ,mss_dst4(lbsn:0)     ,&
+         forc_aer                                                                       ,&
+         mss_bcpho(lbsn:0)  ,mss_bcphi(lbsn:0)  ,mss_ocpho(lbsn:0)  ,mss_ocphi(lbsn:0)  ,&
+         mss_dst1(lbsn:0)   ,mss_dst2(lbsn:0)   ,mss_dst3(lbsn:0)   ,mss_dst4(lbsn:0)   ,&
 ! END SNICAR model variables
 
          ! output
-         rsur                 ,rnof                 ,qinfl                ,zwt                  ,&
-         wa                   ,qcharge              ,smp                  ,hk                   ,&
-         errw_rsub            )
+         rsur               ,rnof               ,qinfl              ,zwt                ,&
+         wa                 ,qcharge            ,smp                ,hk                 ,&
+         errw_rsub                                                                       )
 
       ! roof
       !============================================================
