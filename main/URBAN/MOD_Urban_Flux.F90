@@ -35,6 +35,7 @@ MODULE MOD_Urban_Flux
 !  MM/YYYY, Wenzong Dong: TODO.
 !-----------------------------------------------------------------------
    USE MOD_Precision
+   USE MOD_Namelist, only: DEF_RSS_SCHEME, DEF_VEG_SNOW
    USE MOD_Vars_Global
    USE MOD_Qsadv, only: qsadv
    IMPLICIT NONE
@@ -74,7 +75,7 @@ CONTAINS
          htvp_roof      ,htvp_gimp      ,htvp_gper      ,troof          ,&
          twsun          ,twsha          ,tgimp          ,tgper          ,&
          qroof          ,qgimp          ,qgper          ,dqroofdT       ,&
-         dqgimpdT       ,dqgperdT       ,rsr                            ,&
+         dqgimpdT       ,dqgperdT       ,rss                            ,&
          ! Output
          taux           ,tauy           ,fsenroof       ,fsenwsun       ,&
          fsenwsha       ,fsengimp       ,fsengper       ,fevproof       ,&
@@ -131,7 +132,7 @@ CONTAINS
         fcover(0:4)    ! coverage of aboveground urban components [-]
 
    real(r8), intent(in) :: &
-        rsr,          &! bare soil resistance for evaporation
+        rss,          &! bare soil resistance for evaporation
         z0h_g,        &! roughness length for bare ground, sensible heat [m]
         obug,         &! monin-obukhov length for bare ground (m)
         ustarg,       &! friction velocity for bare ground [m/s]
@@ -702,8 +703,8 @@ CONTAINS
 
             ! - Equations:
             ! qaf(3) = (1/raw*qm + 1/rd(3)*qaf(2) + 1/rb(0)*qroof*fc(0))/(1/raw + 1/rd(3) + 1/rb(0)*fc(0))
-            ! qaf(2) = (1/rd(3)*qaf(3) + 1/(rd(2)+rsr)*qper*fgper*fg + fwetimp/rd(2)*qimp*fgimp*fg + AHE/rho)/ &
-            !          (1/rd(3) + 1/(rd(2)+rsr)*fgper*fg + fwetimp/rd(2)*fgimp*fg)
+            ! qaf(2) = (1/rd(3)*qaf(3) + 1/(rd(2)+rss)*qper*fgper*fg + fwetimp/rd(2)*qimp*fgimp*fg + AHE/rho)/ &
+            !          (1/rd(3) + 1/(rd(2)+rss)*fgper*fg + fwetimp/rd(2)*fgimp*fg)
             ! Also written as:
             ! qaf(3) = (caw(3)*qm + caw(2)*qaf(2) + cfw(0)*qroof*fc(0))/(caw(3) + caw(2) + cfw(0)*fc(0))
             ! qaf(2) = (caw(2)*qaf(3) + cgwper*qper*fgper*fg + cgwimp*qimp*fgimp*fg + AHE/rho)/ &
@@ -727,7 +728,7 @@ CONTAINS
               ! dew case. no soil resistance
               cgw_per= cgw(2)
             ELSE
-              cgw_per= 1/(1/cgw(2)+rsr)
+              cgw_per= 1/(1/cgw(2)+rss)
             ENDIF
 
             cgw_imp= fwet_gimp*cgw(2)
@@ -923,7 +924,8 @@ CONTAINS
          twsun          ,twsha          ,tgimp          ,tgper          ,&
          qroof          ,qgimp          ,qgper          ,dqroofdT       ,&
          dqgimpdT       ,dqgperdT       ,sigf           ,tl             ,&
-         ldew           ,rsr                                            ,&
+         ldew           ,ldew_rain      ,ldew_snow      ,fwet_snow      ,&
+         dheatl         ,rss                                            ,&
          ! Longwave information
          Ainv           ,B              ,B1             ,dBdT           ,&
          SkyVF          ,VegVF                                          ,&
@@ -943,7 +945,8 @@ CONTAINS
 !=======================================================================
 
    USE MOD_Precision
-   USE MOD_Const_Physical, only: vonkar,grav,hvap,cpair,stefnc
+   USE MOD_Const_Physical, only: vonkar,grav,hvap,cpair,stefnc,cpliq, cpice, &
+                                 hfus, tfrz, denice, denh2o
    USE MOD_FrictionVelocity
    USE MOD_CanopyLayerProfile
    USE MOD_AssimStomataConductance
@@ -1030,7 +1033,7 @@ CONTAINS
 
    ! Status of surface
    real(r8), intent(in) :: &
-        rsr,          &! bare soil resistance for evaporation
+        rss,          &! bare soil resistance for evaporation
         z0h_g,        &! roughness length for bare ground, sensible heat [m]
         obug,         &! monin-obukhov length for bare ground (m)
         ustarg,       &! friction velocity for bare ground [m/s]
@@ -1063,7 +1066,13 @@ CONTAINS
 
    real(r8), intent(inout) :: &
         tl,           &! leaf temperature [K]
-        ldew           ! depth of water on foliage [mm]
+        ldew,         &! depth of water on foliage [mm]
+        ldew_rain,    &! depth of rain on foliage [mm]
+        ldew_snow      ! depth of snow on foliage [mm]
+
+   real(r8), intent(out) :: &
+        fwet_snow,    &! vegetation snow fractional cover [-]
+        dheatl         ! vegetation heat change [W/m2]
 
    real(r8), intent(in)    :: Ainv(5,5)  !Inverse of Radiation transfer matrix
    real(r8), intent(in)    :: SkyVF (5)  !View factor to sky
@@ -1188,6 +1197,7 @@ CONTAINS
    real(r8) irab, dirab_dtl, fsenl_dtl, fevpl_dtl
    real(r8) z0mg, z0hg, z0qg, cint(3)
    real(r8) fevpl_bef, fevpl_noadj, dtl_noadj, erre
+   real(r8) qevpl, qdewl, qsubl, qfrol, qmelt, qfrz
 
 !----------------------- defination for 3d run ------------------------ !
    integer, parameter :: nlay = 3
@@ -1227,7 +1237,8 @@ CONTAINS
         fai,          &! frontal area index for urban
         faiv,         &! frontal area index for trees
         lsai,         &! lai+sai
-        fwet,         &! fractional wet area
+        fwet,         &! fractional wet area of foliage [-]
+        fdry,         &! fraction of foliage that is green and dry [-]
         delta,        &! 0 or 1
         alpha,        &! exponential extinction factor for u/k decline within urban
         alphav         ! exponential extinction factor for u/k decline within trees
@@ -1332,6 +1343,11 @@ CONTAINS
       clai = 0.0
       lsai = lai + sai
 
+      ! 0.2mm*LSAI, account for leaf (plus dew) heat capacity
+      IF ( DEF_VEG_SNOW ) THEN
+         clai = 0.2*(lai+sai)*cpliq + ldew_rain*cpliq + ldew_snow*cpice
+      ENDIF
+
       ! index 0:roof, 1:sunlit wall, 2:shaded wall, 3: vegetation
       tu(0) = troof; tu(1) = twsun; tu(2) = twsha; tu(3) = tl
 
@@ -1347,7 +1363,7 @@ CONTAINS
       B1_5   = B1(5)
       dBdT_5 = dBdT(5)
 
-      CALL dewfraction (sigf,lai,sai,dewmx,ldew,fwet)
+      CALL dewfraction (sigf,lai,sai,dewmx,ldew,ldew_rain,ldew_snow,fwet,fdry)
 
       qsatl(0) = qroof
       qsatldT(0) = dqroofDT
@@ -1861,8 +1877,8 @@ CONTAINS
             !          (cah(2) + cgh(2)*fg + cfh(1)*fc(1) + cfh(2)*fc(2) + cfh(3)*fc(3))
             ! - Equations:
             ! qaf(3) = (1/raw*qm + 1/rd(3)*qaf(2) + 1/rb(0)*qroof*fc(0))/(1/raw + 1/rd(3) + 1/rb(0)*fc(0))
-            ! qaf(2) = (1/rd(3)*qaf(3) + 1/(rd(2)+rsr)*qper*fgper*fg + fwetimp/rd(2)*qimp*fgimp*fg + lsai/(rb(3)+rs)*ql*fc(3) + AHE/rho)/ &
-            !          (1/rd(3) + 1/(rd(2)+rsr)*fgper*fg + fwetimp/rd(2)*fgimp*fg + lsai/(rb(3)+rs)*fc(3))
+            ! qaf(2) = (1/rd(3)*qaf(3) + 1/(rd(2)+rss)*qper*fgper*fg + fwetimp/rd(2)*qimp*fgimp*fg + lsai/(rb(3)+rs)*ql*fc(3) + AHE/rho)/ &
+            !          (1/rd(3) + 1/(rd(2)+rss)*fgper*fg + fwetimp/rd(2)*fgimp*fg + lsai/(rb(3)+rs)*fc(3))
             ! Also written as:
             ! qaf(3) = (caw(3)*qm + caw(2)*qaf(2) + cfw(0)*qroof*fc(0))/(caw(3) + caw(2) + cfw(0)*fc(0))
             ! qaf(2) = (caw(2)*qaf(3) + cgwper*qper*fgper*fg + cgwimp*qimp*fgimp*fg + cfw(3)*ql*fc(3) + AHE/rho)/ &
@@ -1886,7 +1902,7 @@ CONTAINS
               ! dew case. no soil resistance
               cgw_per= cgw(2)
             ELSE
-              cgw_per= 1/(1/cgw(2)+rsr)
+              cgw_per= 1/(1/cgw(2)+rss)
             ENDIF
 
             cgw_imp= fwet_gimp*cgw(2)
@@ -1925,8 +1941,8 @@ CONTAINS
             !          (1/raw+1/rd(3)+1/rb(0)*fc(0))
             ! qaf(2) = (1/rd(3)*qaf(3)+1/rd(2)*qaf(1))/&
             !          (1/rd(3) + 1/rd(2))
-            ! qaf(1) = (1/rd(2)*qaf(2)+1/(rd(1)+rsr)*qgper*fgper*fg+1/rd(1)*qimp*fgimp*fg+1/(rb(3)+rs)*ql*fc(3)+h_veh/rho))/&
-            !          (1/rd(2)+1/(rd(1)+rsr)*fgper*fg+1/rd(1)*fgimp*fg+1/(rb(3)+rs)*fc(3))
+            ! qaf(1) = (1/rd(2)*qaf(2)+1/(rd(1)+rss)*qgper*fgper*fg+1/rd(1)*qimp*fgimp*fg+1/(rb(3)+rs)*ql*fc(3)+h_veh/rho))/&
+            !          (1/rd(2)+1/(rd(1)+rss)*fgper*fg+1/rd(1)*fgimp*fg+1/(rb(3)+rs)*fc(3))
 
             tmpw1  = cah(1)*(cgh(1)*tg*fg + cfh(3)*tu(3)*fc(3) + (vehc+meta)/rhoair/cpair)/&
                      (cah(1) + cgh(1)*fg + cfh(3)*fc(3))
@@ -1954,7 +1970,7 @@ CONTAINS
               ! dew case. no soil resistance
               cgw_per= cgw(1)
             ELSE
-              cgw_per= 1/(1/cgw(1)+rsr)
+              cgw_per= 1/(1/cgw(1)+rss)
             ENDIF
 
             cgw_imp= fwet_gimp*cgw(1)
@@ -2066,7 +2082,7 @@ CONTAINS
 
          ! solve for leaf temperature
          dtl(it) = (sabv + irab - fsenl - hvap*fevpl) &
-            / (lsai*clai/deltim - dirab_dtl + fsenl_dtl + hvap*fevpl_dtl)
+            / (clai/deltim - dirab_dtl + fsenl_dtl + hvap*fevpl_dtl)
          dtl_noadj = dtl(it)
 
          ! check magnitude of change in leaf temperature limit to maximum allowed value
@@ -2128,8 +2144,8 @@ CONTAINS
             !          (cah(2) + cgh(2)*fg + cfh(1)*fc(1) + cfh(2)*fc(2) + cfh(3)*fc(3))
             ! - Equations:
             ! qaf(3) = (1/raw*qm + 1/rd(3)*qaf(2) + 1/rb(0)*qroof*fc(0))/(1/raw + 1/rd(3) + 1/rb(0)*fc(0))
-            ! qaf(2) = (1/rd(3)*qaf(3) + 1/(rd(2)+rsr)*qper*fgper*fg + fwetimp/rd(2)*qimp*fgimp*fg + lsai/(rb(3)+rs)*ql*fc(3) + AHE/rho)/ &
-            !          (1/rd(3) + 1/(rd(2)+rsr)*fgper*fg + fwetimp/rd(2)*fgimp*fg + lsai/(rb(3)+rs)*fc(3))
+            ! qaf(2) = (1/rd(3)*qaf(3) + 1/(rd(2)+rss)*qper*fgper*fg + fwetimp/rd(2)*qimp*fgimp*fg + lsai/(rb(3)+rs)*ql*fc(3) + AHE/rho)/ &
+            !          (1/rd(3) + 1/(rd(2)+rss)*fgper*fg + fwetimp/rd(2)*fgimp*fg + lsai/(rb(3)+rs)*fc(3))
             ! Also written as:
             ! qaf(3) = (caw(3)*qm + caw(2)*qaf(2) + cfw(0)*qroof*fc(0))/(caw(3) + caw(2) + cfw(0)*fc(0))
             ! qaf(2) = (caw(2)*qaf(3) + cgwper*qper*fgper*fg + cgwimp*qimp*fgimp*fg + cfw(3)*ql*fc(3) + AHE/rho)/ &
@@ -2153,7 +2169,7 @@ CONTAINS
               ! dew case. no soil resistance
               cgw_per= cgw(2)
             ELSE
-              cgw_per= 1/(1/cgw(2)+rsr)
+              cgw_per= 1/(1/cgw(2)+rss)
             ENDIF
 
             cgw_imp= fwet_gimp*cgw(2)
@@ -2192,8 +2208,8 @@ CONTAINS
             !          (1/raw+1/rd(3)+1/rb(0)*fc(0))
             ! qaf(2) = (1/rd(3)*qaf(3)+1/rd(2)*qaf(1))/&
             !          (1/rd(3) + 1/rd(2))
-            ! qaf(1) = (1/rd(2)*qaf(2)+1/(rd(1)+rsr)*qgper*fgper*fg+1/rd(1)*qimp*fgimp*fg+1/(rb(3)+rs)*ql*fc(3)+h_veh/rho))/&
-            !          (1/rd(2)+1/(rd(1)+rsr)*fgper*fg+1/rd(1)*fgimp*fg+1/(rb(3)+rs)*fc(3))
+            ! qaf(1) = (1/rd(2)*qaf(2)+1/(rd(1)+rss)*qgper*fgper*fg+1/rd(1)*qimp*fgimp*fg+1/(rb(3)+rs)*ql*fc(3)+h_veh/rho))/&
+            !          (1/rd(2)+1/(rd(1)+rss)*fgper*fg+1/rd(1)*fgimp*fg+1/(rb(3)+rs)*fc(3))
 
             tmpw1  = cah(1)*(cgh(1)*tg*fg + cfh(3)*tu(3)*fc(3) + (vehc+meta)/rhoair/cpair)/&
                      (cah(1) + cgh(1)*fg + cfh(3)*fc(3))
@@ -2221,7 +2237,7 @@ CONTAINS
               ! dew case. no soil resistance
               cgw_per= cgw(1)
             ELSE
-              cgw_per= 1/(1/cgw(1)+rsr)
+              cgw_per= 1/(1/cgw(1)+rss)
             ENDIF
 
             cgw_imp= fwet_gimp*cgw(1)
@@ -2354,7 +2370,7 @@ CONTAINS
 
       fsenl = fsenl + fsenl_dtl*dtl(it-1) &
          ! add the imbalanced energy below due to T adjustment to sensibel heat
-         + (dtl_noadj-dtl(it-1)) * (lsai*clai/deltim - dirab_dtl &
+         + (dtl_noadj-dtl(it-1)) * (clai/deltim - dirab_dtl &
          + fsenl_dtl + hvap*fevpl_dtl) &
          ! add the imbalanced energy below due to q adjustment to sensibel heat
          + hvap*erre
@@ -2378,17 +2394,84 @@ CONTAINS
 
       ldew = max(0., ldew-evplwet*deltim)
 
+      ! account for vegetation snow and update ldew_rain, ldew_snow, ldew
+      IF ( DEF_VEG_SNOW ) THEN
+         IF (tl > tfrz) THEN
+            qevpl = max (evplwet, 0.)
+            qdewl = abs (min (evplwet, 0.) )
+            qsubl = 0.
+            qfrol = 0.
+
+            IF (qevpl > ldew_rain/deltim) THEN
+               qsubl = qevpl - ldew_rain/deltim
+               qevpl = ldew_rain/deltim
+            ENDIF
+         ELSE
+            qevpl = 0.
+            qdewl = 0.
+            qsubl = max (evplwet, 0.)
+            qfrol = abs (min (evplwet, 0.) )
+
+            IF (qsubl > ldew_snow/deltim) THEN
+               qevpl = qsubl - ldew_snow/deltim
+               qsubl = ldew_snow/deltim
+            ENDIF
+         ENDIF
+
+         ldew_rain = ldew_rain + (qdewl-qevpl)*deltim
+         ldew_snow = ldew_snow + (qfrol-qsubl)*deltim
+
+         ldew = ldew_rain + ldew_snow
+      ENDIF
+
+      IF ( DEF_VEG_SNOW ) THEN
+         ! update fwet_snow
+         fwet_snow = 0
+         IF(ldew_snow > 0.) THEN
+            fwet_snow = ((10./(48.*(lai+sai)))*ldew_snow)**.666666666666
+            ! Check for maximum limit of fwet_snow
+            fwet_snow = min(fwet_snow,1.0)
+         ENDIF
+
+         ! phase change
+
+         qmelt = 0.
+         qfrz  = 0.
+
+         !TODO: double check below
+         IF (ldew_snow.gt.1.e-6 .and. tl.gt.tfrz) THEN
+            qmelt = min(ldew_snow/deltim,(tl-tfrz)*cpice*ldew_snow/(deltim*hfus))
+            ldew_snow = max(0.,ldew_snow - qmelt*deltim)
+            ldew_rain = max(0.,ldew_rain + qmelt*deltim)
+            !NOTE: There may be some problem, energy imbalance
+            !      However, detailed treatment could be somewhat trivial
+            tl = fwet_snow*tfrz + (1.-fwet_snow)*tl  !Niu et al., 2004
+         ENDIF
+
+         IF (ldew_rain.gt.1.e-6 .and. tl.lt.tfrz) THEN
+            qfrz  = min(ldew_rain/deltim,(tfrz-tl)*cpliq*ldew_rain/(deltim*hfus))
+            ldew_rain = max(0.,ldew_rain - qfrz*deltim)
+            ldew_snow = max(0.,ldew_snow + qfrz*deltim)
+            !NOTE: There may be some problem, energy imbalance
+            !      However, detailed treatment could be somewhat trivial
+            tl = fwet_snow*tfrz + (1.-fwet_snow)*tl  !Niu et al., 2004
+         ENDIF
+      ENDIF
+
+      ! vegetation heat change
+      dheatl = clai/deltim*dtl(it-1)
+
 !-----------------------------------------------------------------------
 ! balance check
 !-----------------------------------------------------------------------
 
       err = sabv + irab + dirab_dtl*dtl(it-1) &
-          - fsenl - hvap*fevpl
+          - fsenl - hvap*fevpl - dheatl
 
 #if(defined CLMDEBUG)
       IF (abs(err) .gt. .2) THEN
          write(6,*) 'energy imbalance in UrbanVegFlux.F90', &
-         i,it-1,err,sabv,irab,fsenl,hvap*fevpl
+         i,it-1,err,sabv,irab,fsenl,hvap*fevpl,dheatl
          CALL CoLM_stop()
       ENDIF
 #endif
@@ -2514,51 +2597,79 @@ CONTAINS
 !----------------------------------------------------------------------
 
 
-   SUBROUTINE dewfraction (sigf,lai,sai,dewmx,ldew,fwet)
-
+   SUBROUTINE dewfraction (sigf,lai,sai,dewmx,ldew,ldew_rain,ldew_snow,fwet,fdry)
 !=======================================================================
 ! Original author: Yongjiu Dai, September 15, 1999
 !
 ! determine fraction of foliage covered by water and
 ! fraction of foliage that is dry and transpiring
 !
+!
+! REVISIONS:
+!
+! 2024.04.16   Hua Yuan: add option to account for vegetation snow process
+! 2018.06      Hua Yuan: remove sigf, to compatible with PFT
 !=======================================================================
 
    USE MOD_Precision
    IMPLICIT NONE
 
-   real(r8), intent(in) :: sigf   ! fraction of veg cover, excluding snow-covered veg [-]
-   real(r8), intent(in) :: lai    ! leaf area index  [-]
-   real(r8), intent(in) :: sai    ! stem area index  [-]
-   real(r8), intent(in) :: dewmx  ! maximum allowed dew [0.1 mm]
-   real(r8), intent(in) :: ldew   ! depth of water on foliage [kg/m2/s]
+   real(r8), intent(in)  :: sigf      !fraction of veg cover, excluding snow-covered veg [-]
+   real(r8), intent(in)  :: lai       !leaf area index  [-]
+   real(r8), intent(in)  :: sai       !stem area index  [-]
+   real(r8), intent(in)  :: dewmx     !maximum allowed dew [0.1 mm]
+   real(r8), intent(in)  :: ldew      !depth of water on foliage [kg/m2/s]
+   real(r8), intent(in)  :: ldew_rain !depth of rain on foliage [kg/m2/s]
+   real(r8), intent(in)  :: ldew_snow !depth of snow on foliage [kg/m2/s]
+   real(r8), intent(out) :: fwet      !fraction of foliage covered by water&snow [-]
+   real(r8), intent(out) :: fdry      !fraction of foliage that is green and dry [-]
 
-   real(r8), intent(out) :: fwet  ! fraction of foliage covered by water [-]
-
-   real(r8) lsai                  ! lai + sai
-   real(r8) dewmxi                ! inverse of maximum allowed dew [1/mm]
-   real(r8) vegt                  ! sigf*lsai
+   real(r8) :: lsai                   !lai + sai
+   real(r8) :: dewmxi                 !inverse of maximum allowed dew [1/mm]
+   real(r8) :: vegt                   !sigf*lsai, NOTE: remove sigf
+   real(r8) :: fwet_rain              !fraction of foliage covered by water [-]
+   real(r8) :: fwet_snow              !fraction of foliage covered by snow [-]
 !
 !-----------------------------------------------------------------------
 ! Fwet is the fraction of all vegetation surfaces which are wet
 ! including stem area which contribute to evaporation
       lsai = lai + sai
       dewmxi = 1.0/dewmx
-       ! why * sigf? may have bugs
-       ! 06/17/2018:
-       ! for ONLY one PFT, there may be no problem
-       ! but for multiple PFTs, bugs exist!!!
-       ! convert the whole area ldew to sigf ldew
+      ! 06/2018, yuan: remove sigf, to compatible with PFT
       vegt   =  lsai
 
       fwet = 0
       IF (ldew > 0.) THEN
          fwet = ((dewmxi/vegt)*ldew)**.666666666666
-
-! Check for maximum limit of fwet
+         ! Check for maximum limit of fwet
          fwet = min(fwet,1.0)
-
       ENDIF
+
+      ! account for vegetation snow
+      ! calculate fwet_rain, fwet_snow, fwet
+      IF ( DEF_VEG_SNOW ) THEN
+
+         fwet_rain = 0
+         IF(ldew_rain > 0.) THEN
+            fwet_rain = ((dewmxi/vegt)*ldew_rain)**.666666666666
+            ! Check for maximum limit of fwet_rain
+            fwet_rain = min(fwet_rain,1.0)
+         ENDIF
+
+         fwet_snow = 0
+         IF(ldew_snow > 0.) THEN
+            fwet_snow = ((dewmxi/(48.*vegt))*ldew_snow)**.666666666666
+            ! Check for maximum limit of fwet_snow
+            fwet_snow = min(fwet_snow,1.0)
+         ENDIF
+
+         fwet = fwet_rain + fwet_snow - fwet_rain*fwet_snow
+         fwet = min(fwet,1.0)
+      ENDIF
+
+      ! fdry is the fraction of lai which is dry because only leaves can
+      ! transpire. Adjusted for stem area which does not transpire
+      fdry = (1.-fwet)*lai/lsai
 
    END SUBROUTINE dewfraction
 

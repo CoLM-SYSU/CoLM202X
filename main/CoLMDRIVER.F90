@@ -93,8 +93,7 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
                sc_vgm(1:,i),    fc_vgm(1:,i),                                      &
 #endif
                hksati(1:,i),    csol(1:,i),      k_solids(1:,i),  dksatu(1:,i),    &
-               dksatf(1:,i),    dkdry(1:,i),                                       &
-               BA_alpha(1:,i),  BA_beta(1:,i),                                     &
+               dksatf(1:,i),    dkdry(1:,i),     BA_alpha(1:,i),  BA_beta(1:,i),   &
                rootfr(1:,m),    lakedepth(i),    dz_lake(1:,i),   topostd(i),      &
                BVIC(1,i),                                                          &
 #if(defined CaMa_Flood)
@@ -222,14 +221,13 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
           ! SOIL INFORMATION AND LAKE DEPTH
             vf_quartz(1:,i) ,vf_gravels(1:,i),vf_om(1:,i)     ,vf_sand(1:,i)   ,&
             wf_gravels(1:,i),wf_sand(1:,i)   ,porsl(1:,i)     ,psi0(1:,i)      ,&
-            bsw(1:,i)       ,theta_r(1:,i)   ,&
+            bsw(1:,i)       ,theta_r(1:,i)                                     ,&
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
-            alpha_vgm(1:,i) ,n_vgm(1:,i)     ,L_vgm(1:,i)     ,&
-            sc_vgm (1:,i)   ,fc_vgm   (1:,i) ,&
+            alpha_vgm(1:,i) ,n_vgm(1:,i)     ,L_vgm(1:,i)                      ,&
+            sc_vgm (1:,i)   ,fc_vgm   (1:,i)                                   ,&
 #endif
             hksati(1:,i)    ,csol(1:,i)      ,k_solids(1:,i),  dksatu(1:,i)    ,&
-            dksatf(1:,i)    ,dkdry(1:,i)     ,&
-            BA_alpha(1:,i)  ,BA_beta(1:,i)   ,&
+            dksatf(1:,i)    ,dkdry(1:,i)     ,BA_alpha(1:,i)  ,BA_beta(1:,i)   ,&
             alb_roof(:,:,u) ,alb_wall(:,:,u) ,alb_gimp(:,:,u) ,alb_gper(:,:,u) ,&
 
           ! VEGETATION INFORMATION
@@ -266,7 +264,8 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
             t_wallsun   (1:,u)               ,t_wallsha   (1:,u)               ,&
 
             lai(i)          ,sai(i)          ,fveg(i)         ,sigf(i)         ,&
-            green(i)        ,tleaf(i)        ,ldew(i)         ,t_grnd(i)       ,&
+            green(i)        ,tleaf(i)        ,ldew(i)         ,ldew_rain(i)    ,&
+            ldew_snow(i)    ,fwet_snow(i)    ,t_grnd(i)                        ,&
 
             sag_roof(u)     ,sag_gimp(u)     ,sag_gper(u)     ,sag_lake(u)     ,&
             scv_roof(u)     ,scv_gimp(u)     ,scv_gper(u)     ,scv_lake(u)     ,&

@@ -2018,7 +2018,7 @@ ENDIF
       vegt   =  lsai
 
       fwet = 0
-      IF(ldew > 0.) THEN
+      IF (ldew > 0.) THEN
          fwet = ((dewmxi/vegt)*ldew)**.666666666666
          ! Check for maximum limit of fwet
          fwet = min(fwet,1.0)

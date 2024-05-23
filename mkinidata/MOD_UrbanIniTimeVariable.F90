@@ -29,7 +29,7 @@ CONTAINS
                     alb_roof,alb_wall,alb_gimp,alb_gper,&
                     rho,tau,fveg,htop,hbot,lai,sai,coszen,&
                     fsno_roof,fsno_gimp,fsno_gper,fsno_lake,&
-                    scv_roof,scv_gimp,scv_gper,scv_lake,&
+                    scv_roof,scv_gimp,scv_gper,scv_lake,fwet_snow,&
                     sag_roof,sag_gimp,sag_gper,sag_lake,tlake,fwsun,dfwsun,&
                     extkd,alb,ssun,ssha,sroof,swsun,swsha,sgimp,sgper,slake)
 
@@ -78,6 +78,7 @@ CONTAINS
          sag_gimp,      &! non dimensional snow age [-]
          sag_gper,      &! non dimensional snow age [-]
          sag_lake,      &! non dimensional snow age [-]
+         fwet_snow,     &! vegetation snow fractional cover [-]
          tlake           ! lake temperature
 
    real(r8), intent(out) :: &
@@ -109,6 +110,7 @@ CONTAINS
       sag_gimp    = 0.   ! impervious ground snow age [-]
       sag_gper    = 0.   ! pervious ground snow age [-]
       sag_lake    = 0.   ! urban lake snow age [-]
+      fwet_snow   = 0.   ! vegetation snow fractional cover [-]
 
       fwsun       = 0.5  ! Fraction of sunlit wall [-]
       dfwsun      = 0.   ! change of fwsun
@@ -118,7 +120,7 @@ CONTAINS
       ! urban surface albedo
       CALL alburban (ipatch,froof,fgper,flake,hwr,hroof,&
                      alb_roof,alb_wall,alb_gimp,alb_gper,&
-                     rho,tau,fveg,hveg,lai,sai,max(0.01,coszen),fwsun,tlake,&
+                     rho,tau,fveg,hveg,lai,sai,fwet_snow,max(0.01,coszen),fwsun,tlake,&
                      fsno_roof,fsno_gimp,fsno_gper,fsno_lake,&
                      scv_roof,scv_gimp,scv_gper,scv_lake,&
                      sag_roof,sag_gimp,sag_gper,sag_lake,&

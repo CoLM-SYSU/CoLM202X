@@ -1250,7 +1250,7 @@ CONTAINS
                   alb_roof(:,:,u),alb_wall(:,:,u),alb_gimp(:,:,u),alb_gper(:,:,u),&
                   rho(:,:,m),tau(:,:,m),fveg(i),htop(i),hbot(i),lai(i),sai(i),coszen(i),&
                   fsno_roof(u),fsno_gimp(u),fsno_gper(u),fsno_lake(u),&
-                  scv_roof(u),scv_gimp(u),scv_gper(u),scv_lake(u),&
+                  scv_roof(u),scv_gimp(u),scv_gper(u),scv_lake(u),fwet_snow(u),&
                   sag_roof(u),sag_gimp(u),sag_gper(u),sag_lake(u),t_lake(1,i),&
                   fwsun(u),dfwsun(u),extkd(i),alb(:,:,i),ssun(:,:,i),ssha(:,:,i),sroof(:,:,u),&
                   swsun(:,:,u),swsha(:,:,u),sgimp(:,:,u),sgper(:,:,u),slake(:,:,u))
