@@ -20,8 +20,7 @@ MODULE MOD_Forcing
    USE MOD_Precision
    USE MOD_Namelist
    USE MOD_Grid
-   USE MOD_Mapping_Grid2Pset
-   USE MOD_InterpBilinear
+   USE MOD_SpatialMapping
    USE MOD_UserSpecifiedForcing
    USE MOD_TimeManager
    USE MOD_SPMD_Task
@@ -33,14 +32,37 @@ MODULE MOD_Forcing
 
    type (grid_type), PUBLIC :: gforc
 
-   type (mapping_grid2pset_type) :: mg2p_forc   ! area weighted mapping from forcing to model unit
-   type (interp_bilinear_type)   :: forc_interp ! bilinear interpolation from forcing to model unit
+   type (spatial_mapping_type) :: mg2p_forc   ! area weighted mapping from forcing to model unit
 
    logical, allocatable :: forcmask_pch (:)
-   logical, allocatable :: forcmask_elm (:)
-
+   
    ! for Forcing_Downscaling
-   logical, allocatable :: glacierss    (:)
+   type(block_data_real8_2d) :: topo_grid, maxelv_grid
+   type(block_data_real8_2d) :: sumarea_grid
+
+   type(pointer_real8_1d), allocatable :: forc_topo_grid   (:)
+   type(pointer_real8_1d), allocatable :: forc_maxelv_grid (:)
+                                                                                
+   type(pointer_real8_1d), allocatable :: forc_t_grid    (:)
+   type(pointer_real8_1d), allocatable :: forc_th_grid   (:)
+   type(pointer_real8_1d), allocatable :: forc_q_grid    (:)
+   type(pointer_real8_1d), allocatable :: forc_pbot_grid (:)
+   type(pointer_real8_1d), allocatable :: forc_rho_grid  (:)
+   type(pointer_real8_1d), allocatable :: forc_prc_grid  (:)
+   type(pointer_real8_1d), allocatable :: forc_prl_grid  (:)
+   type(pointer_real8_1d), allocatable :: forc_lwrad_grid(:)
+   type(pointer_real8_1d), allocatable :: forc_hgt_grid  (:)
+
+   type(pointer_real8_1d), allocatable :: forc_t_part     (:)
+   type(pointer_real8_1d), allocatable :: forc_th_part    (:)
+   type(pointer_real8_1d), allocatable :: forc_q_part     (:)
+   type(pointer_real8_1d), allocatable :: forc_pbot_part  (:)
+   type(pointer_real8_1d), allocatable :: forc_rhoair_part(:)
+   type(pointer_real8_1d), allocatable :: forc_prc_part   (:)
+   type(pointer_real8_1d), allocatable :: forc_prl_part   (:)
+   type(pointer_real8_1d), allocatable :: forc_frl_part   (:)
+
+   logical, allocatable :: glacierss (:)
    
    ! local variables
    integer  :: deltim_int                ! model time step length
@@ -77,6 +99,7 @@ CONTAINS
 
    USE MOD_SPMD_Task
    USE MOD_Namelist
+   USE MOD_Block
    USE MOD_DataType
    USE MOD_Mesh
    USE MOD_LandElm
@@ -84,7 +107,6 @@ CONTAINS
 #ifdef CROP
    USE MOD_LandCrop
 #endif
-   USE MOD_Mapping_Grid2Pset
    USE MOD_UserSpecifiedForcing
    USE MOD_NetCDFSerial
    USE MOD_NetCDFVector
@@ -105,6 +127,9 @@ CONTAINS
    integer            :: ivar, year, month, day, time_i
    real(r8)           :: missing_value
    integer            :: ielm, istt, iend
+
+   real(r8), allocatable :: vecone(:)
+   integer :: iblkme, xblk, yblk, xloc, yloc
 
       CALL init_user_specified_forcing
 
@@ -152,13 +177,9 @@ CONTAINS
 
       ENDIF
 
-      IF (DEF_USE_Forcing_Downscaling) THEN
-         IF (p_is_worker) THEN
-#if (defined CROP)
-            CALL elm_patch%build (landelm, landpatch, use_frac = .true., sharedfrac = pctshrpch)
-#else
-            CALL elm_patch%build (landelm, landpatch, use_frac = .true.)
-#endif 
+      IF (p_is_worker) THEN
+         IF (numpatch > 0) THEN
+            allocate (forcmask_pch(numpatch));  forcmask_pch(:) = .true.
          ENDIF
       ENDIF
 
@@ -167,17 +188,6 @@ CONTAINS
          CALL setstampLB(ststamp, 1, year, month, day, time_i)
          filename = trim(dir_forcing)//trim(metfilename(year, month, day, 1))
          tstamp_LB(1) = timestamp(-1, -1, -1)
-
-         IF (p_is_worker) THEN
-            IF (numpatch > 0) THEN
-               allocate (forcmask_pch(numpatch));  forcmask_pch(:) = .true.
-            ENDIF
-            IF (DEF_USE_Forcing_Downscaling) THEN
-               IF (numelm > 0) THEN
-                  allocate (forcmask_elm(numelm)); forcmask_elm(:) = .true.
-               ENDIF
-            ENDIF
-         ENDIF
 
          IF (p_is_master) THEN
             CALL ncio_get_attr (filename, vname(1), trim(DEF_forcing%missing_value_name), missing_value)
@@ -190,72 +200,65 @@ CONTAINS
 
       ENDIF
 
-      IF (.not. DEF_USE_Forcing_Downscaling) THEN
+      IF (trim(DEF_Forcing_Interp_Method) == 'arealweight') THEN
+         CALL mg2p_forc%build_arealweighted (gforc, landpatch)
+      ELSEIF (trim(DEF_Forcing_Interp_Method) == 'bilinear') THEN
+         CALL mg2p_forc%build_bilinear (gforc, landpatch)
+      ENDIF
 
-         IF (.not. DEF_forcing%has_missing_value) THEN
-
-            IF (trim(DEF_Forcing_Interp) == 'areaweight') THEN
-               CALL mg2p_forc%build (gforc, landpatch)
-            ELSEIF (trim(DEF_Forcing_Interp) == 'bilinear') THEN
-               CALL forc_interp%build (gforc, landpatch)
-            ENDIF
-
-         ELSE
-
-            IF (trim(DEF_Forcing_Interp) == 'areaweight') THEN
-               CALL mg2p_forc%build (gforc, landpatch, metdata, missing_value, forcmask_pch)
-            ELSEIF (trim(DEF_Forcing_Interp) == 'bilinear') THEN
-               CALL forc_interp%build (gforc, landpatch, metdata, missing_value, forcmask_pch)
-            ENDIF
-
-         ENDIF
-
-      ELSE
-
-         IF (.not. DEF_forcing%has_missing_value) THEN
-
-            IF (trim(DEF_Forcing_Interp) == 'areaweight') THEN
-               CALL mg2p_forc%build (gforc, landelm)
-            ELSEIF (trim(DEF_Forcing_Interp) == 'bilinear') THEN
-               CALL forc_interp%build (gforc, landelm)
-            ENDIF
-
-         ELSE
-
-            IF (trim(DEF_Forcing_Interp) == 'areaweight') THEN
-               CALL mg2p_forc%build (gforc, landelm, metdata, missing_value, forcmask_elm)
-            ELSEIF (trim(DEF_Forcing_Interp) == 'bilinear') THEN
-               CALL forc_interp%build (gforc, landelm, metdata, missing_value, forcmask_elm)
-            ENDIF
-         
-            IF (p_is_worker) THEN
-               DO ielm = 1, numelm
-                  istt = elm_patch%substt(ielm)
-                  iend = elm_patch%subend(ielm)
-                  forcmask_pch(istt:iend) = forcmask_elm(ielm)
-               ENDDO
-            ENDIF
-
-         ENDIF
+      IF (DEF_forcing%has_missing_value) THEN
+         CALL mg2p_forc%set_missing_value (metdata, missing_value, forcmask_pch)
       ENDIF
 
       IF (DEF_USE_Forcing_Downscaling) THEN
-         IF (p_is_worker) THEN
-            IF (numpatch > 0) THEN
-               
-               forc_topo = topoelv
 
-               DO ielm = 1, numelm
-                  istt = elm_patch%substt(ielm)
-                  iend = elm_patch%subend(ielm)
-                  forc_topo_elm(ielm) = sum(forc_topo(istt:iend) * elm_patch%subfrc(istt:iend))
-               ENDDO
+         IF (p_is_worker .and. (numpatch > 0)) THEN
+            forc_topo = topoelv
+            WHERE(forc_topo == spval) forc_topo = 0.
+         ENDIF 
 
-               allocate (glacierss(numpatch))
-               glacierss(:) = patchtype(:) == 3
+         IF (p_is_io) CALL allocate_block_data (gforc, topo_grid)
+         CALL mg2p_forc%pset2grid (forc_topo, topo_grid)
+         
+         IF (p_is_io) CALL allocate_block_data (gforc, sumarea_grid)  
+         CALL mg2p_forc%get_sumarea (sumarea_grid)
+                  
+         CALL block_data_division (topo_grid, sumarea_grid)
+         
+         IF (p_is_io) CALL allocate_block_data (gforc, maxelv_grid)
+         CALL mg2p_forc%pset2grid_max (forc_topo, maxelv_grid)
+         
 
-            ENDIF
+         CALL mg2p_forc%allocate_part (forc_topo_grid  )
+         CALL mg2p_forc%allocate_part (forc_maxelv_grid)
+         
+         CALL mg2p_forc%allocate_part (forc_t_grid     )
+         CALL mg2p_forc%allocate_part (forc_th_grid    )
+         CALL mg2p_forc%allocate_part (forc_q_grid     )
+         CALL mg2p_forc%allocate_part (forc_pbot_grid  )
+         CALL mg2p_forc%allocate_part (forc_rho_grid   )
+         CALL mg2p_forc%allocate_part (forc_prc_grid   )
+         CALL mg2p_forc%allocate_part (forc_prl_grid   )
+         CALL mg2p_forc%allocate_part (forc_lwrad_grid )
+         CALL mg2p_forc%allocate_part (forc_hgt_grid   )
+
+         CALL mg2p_forc%allocate_part (forc_t_part     )
+         CALL mg2p_forc%allocate_part (forc_th_part    )
+         CALL mg2p_forc%allocate_part (forc_q_part     )
+         CALL mg2p_forc%allocate_part (forc_pbot_part  )
+         CALL mg2p_forc%allocate_part (forc_rhoair_part)
+         CALL mg2p_forc%allocate_part (forc_prc_part   )
+         CALL mg2p_forc%allocate_part (forc_prl_part   )
+         CALL mg2p_forc%allocate_part (forc_frl_part   )
+
+         CALL mg2p_forc%grid2part (topo_grid,   forc_topo_grid  )
+         CALL mg2p_forc%grid2part (maxelv_grid, forc_maxelv_grid)
+
+         IF (p_is_worker .and. (numpatch > 0)) THEN
+            allocate (glacierss(numpatch))
+            glacierss(:) = patchtype(:) == 3
          ENDIF
+
       ENDIF
 
       forcing_read_ahead = .false.
@@ -300,16 +303,46 @@ CONTAINS
    ! ---- forcing finalize ----
    SUBROUTINE forcing_final ()
 
+   USE MOD_LandPatch, only : numpatch 
    IMPLICIT NONE
 
       IF (allocated(forcmask_pch)) deallocate(forcmask_pch)
-      IF (allocated(forcmask_elm)) deallocate(forcmask_elm)
       IF (allocated(glacierss   )) deallocate(glacierss   )
       IF (allocated(forctime    )) deallocate(forctime    )
       IF (allocated(iforctime   )) deallocate(iforctime   )
       IF (allocated(forc_disk   )) deallocate(forc_disk   )
       IF (allocated(tstamp_LB   )) deallocate(tstamp_LB   )
       IF (allocated(tstamp_UB   )) deallocate(tstamp_UB   )
+      
+      IF (DEF_USE_Forcing_Downscaling) THEN
+         IF (p_is_worker) THEN
+            IF (numpatch > 0) THEN
+
+               deallocate (forc_topo_grid  )
+               deallocate (forc_maxelv_grid)
+               
+               deallocate (forc_t_grid     )
+               deallocate (forc_th_grid    )
+               deallocate (forc_q_grid     )
+               deallocate (forc_pbot_grid  )
+               deallocate (forc_rho_grid   )
+               deallocate (forc_prc_grid   )
+               deallocate (forc_prl_grid   )
+               deallocate (forc_lwrad_grid )
+               deallocate (forc_hgt_grid   )
+
+               deallocate (forc_t_part     )
+               deallocate (forc_th_part    )
+               deallocate (forc_q_part     )
+               deallocate (forc_pbot_part  )
+               deallocate (forc_rhoair_part)
+               deallocate (forc_prc_part   )
+               deallocate (forc_prl_part   )
+               deallocate (forc_frl_part   )
+
+            ENDIF
+         ENDIF
+      ENDIF
 
    END SUBROUTINE forcing_final
 
@@ -322,22 +355,6 @@ CONTAINS
       tstamp_UB(:) = timestamp(-1, -1, -1)
 
    END SUBROUTINE forcing_reset
-
-   ! ------------
-   SUBROUTINE forcing_xy2vec (f_xy, f_vec)
-
-   IMPLICIT NONE
-      
-      type(block_data_real8_2d) :: f_xy
-      real(r8) :: f_vec(:)
-
-      IF (trim(DEF_Forcing_Interp) == 'areaweight') THEN
-         CALL mg2p_forc%map_aweighted (f_xy, f_vec)
-      ELSEIF (trim(DEF_Forcing_Interp) == 'bilinear') THEN
-         CALL forc_interp%interp (f_xy, f_vec)
-      ENDIF
-
-   END SUBROUTINE forcing_xy2vec
 
    !--------------------------------
    SUBROUTINE read_forcing (idate, dir_forcing)
@@ -353,10 +370,9 @@ CONTAINS
    USE MOD_DataType
    USE MOD_Mesh
    USE MOD_LandPatch
-   USE MOD_Mapping_Grid2Pset
    USE MOD_RangeCheck
    USE MOD_UserSpecifiedForcing
-   USE MOD_ForcingDownscaling, only : rair, cpair, downscale_forcings
+   USE MOD_ForcingDownscaling, only : rair, cpair, downscale_forcings_1c
 
    IMPLICIT NONE
    integer, intent(in) :: idate(3)
@@ -364,7 +380,7 @@ CONTAINS
 
    ! local variables:
    integer  :: ivar, istt, iend
-   integer  :: iblkme, ib, jb, i, j, ilon, ilat, np, ne
+   integer  :: iblkme, ib, jb, i, j, ilon, ilat, np, ipart, ne
    real(r8) :: calday  ! Julian cal day (1.xx to 365.xx)
    real(r8) :: sunang, cloud, difrat, vnrat
    real(r8) :: a, hsolar, ratio_rvrf
@@ -590,39 +606,38 @@ CONTAINS
 
          ! Mapping the 2d atmospheric fields [lon_points]x[lat_points]
          !     -> the 1d vector of subgrid points [numpatch]
-         CALL forcing_xy2vec (forc_xy_pco2m,  forc_pco2m)
-         CALL forcing_xy2vec (forc_xy_po2m ,  forc_po2m )
-         CALL forcing_xy2vec (forc_xy_us   ,  forc_us   )
-         CALL forcing_xy2vec (forc_xy_vs   ,  forc_vs   )
+         CALL mg2p_forc%grid2pset (forc_xy_pco2m,  forc_pco2m)
+         CALL mg2p_forc%grid2pset (forc_xy_po2m ,  forc_po2m )
+         CALL mg2p_forc%grid2pset (forc_xy_us   ,  forc_us   )
+         CALL mg2p_forc%grid2pset (forc_xy_vs   ,  forc_vs   )
 
-         CALL forcing_xy2vec (forc_xy_psrf ,  forc_psrf )
+         CALL mg2p_forc%grid2pset (forc_xy_psrf ,  forc_psrf )
 
-         CALL forcing_xy2vec (forc_xy_sols ,  forc_sols )
-         CALL forcing_xy2vec (forc_xy_soll ,  forc_soll )
-         CALL forcing_xy2vec (forc_xy_solsd,  forc_solsd)
-         CALL forcing_xy2vec (forc_xy_solld,  forc_solld)
+         CALL mg2p_forc%grid2pset (forc_xy_sols ,  forc_sols )
+         CALL mg2p_forc%grid2pset (forc_xy_soll ,  forc_soll )
+         CALL mg2p_forc%grid2pset (forc_xy_solsd,  forc_solsd)
+         CALL mg2p_forc%grid2pset (forc_xy_solld,  forc_solld)
 
-         CALL forcing_xy2vec (forc_xy_hgt_t,  forc_hgt_t)
-         CALL forcing_xy2vec (forc_xy_hgt_u,  forc_hgt_u)
-         CALL forcing_xy2vec (forc_xy_hgt_q,  forc_hgt_q)
+         CALL mg2p_forc%grid2pset (forc_xy_hgt_t,  forc_hgt_t)
+         CALL mg2p_forc%grid2pset (forc_xy_hgt_u,  forc_hgt_u)
+         CALL mg2p_forc%grid2pset (forc_xy_hgt_q,  forc_hgt_q)
 
          IF (DEF_USE_CBL_HEIGHT) THEN
-            CALL forcing_xy2vec (forc_xy_hpbl, forc_hpbl)
+            CALL mg2p_forc%grid2pset (forc_xy_hpbl, forc_hpbl)
          ENDIF
 
-         CALL forcing_xy2vec (forc_xy_t    ,  forc_t    )
-         CALL forcing_xy2vec (forc_xy_q    ,  forc_q    )
-         CALL forcing_xy2vec (forc_xy_prc  ,  forc_prc  )
-         CALL forcing_xy2vec (forc_xy_prl  ,  forc_prl  )
-         CALL forcing_xy2vec (forc_xy_pbot ,  forc_pbot )
-         CALL forcing_xy2vec (forc_xy_frl  ,  forc_frl  )
+         CALL mg2p_forc%grid2pset (forc_xy_t    ,  forc_t    )
+         CALL mg2p_forc%grid2pset (forc_xy_q    ,  forc_q    )
+         CALL mg2p_forc%grid2pset (forc_xy_prc  ,  forc_prc  )
+         CALL mg2p_forc%grid2pset (forc_xy_prl  ,  forc_prl  )
+         CALL mg2p_forc%grid2pset (forc_xy_pbot ,  forc_pbot )
+         CALL mg2p_forc%grid2pset (forc_xy_frl  ,  forc_frl  )
 
          IF (p_is_worker) THEN
 
             DO np = 1, numpatch
-               IF (DEF_forcing%has_missing_value) THEN
-                  IF (.not. forcmask_pch(np)) CYCLE
-               ENDIF
+
+               IF (.not. forcmask_pch(np)) CYCLE
 
                ! The standard measuring conditions for temperature are two meters above the ground
                ! Scientists have measured the most frigid temperature ever
@@ -644,90 +659,87 @@ CONTAINS
 
          ! Mapping the 2d atmospheric fields [lon_points]x[lat_points]
          !     -> the 1d vector of subgrid points [numelm]
-         CALL forcing_xy2vec (forc_xy_pco2m,  forc_pco2m_elm)
-         CALL forcing_xy2vec (forc_xy_po2m ,  forc_po2m_elm )
-         CALL forcing_xy2vec (forc_xy_us   ,  forc_us_elm   )
-         CALL forcing_xy2vec (forc_xy_vs   ,  forc_vs_elm   )
+         CALL mg2p_forc%grid2pset (forc_xy_pco2m,  forc_pco2m)
+         CALL mg2p_forc%grid2pset (forc_xy_po2m ,  forc_po2m )
+         CALL mg2p_forc%grid2pset (forc_xy_us   ,  forc_us   )
+         CALL mg2p_forc%grid2pset (forc_xy_vs   ,  forc_vs   )
 
-         CALL forcing_xy2vec (forc_xy_psrf ,  forc_psrf_elm )
+         CALL mg2p_forc%grid2pset (forc_xy_psrf ,  forc_psrf )
 
-         CALL forcing_xy2vec (forc_xy_sols ,  forc_sols_elm )
-         CALL forcing_xy2vec (forc_xy_soll ,  forc_soll_elm )
-         CALL forcing_xy2vec (forc_xy_solsd,  forc_solsd_elm)
-         CALL forcing_xy2vec (forc_xy_solld,  forc_solld_elm)
+         CALL mg2p_forc%grid2pset (forc_xy_sols ,  forc_sols )
+         CALL mg2p_forc%grid2pset (forc_xy_soll ,  forc_soll )
+         CALL mg2p_forc%grid2pset (forc_xy_solsd,  forc_solsd)
+         CALL mg2p_forc%grid2pset (forc_xy_solld,  forc_solld)
 
-         CALL forcing_xy2vec (forc_xy_hgt_t,  forc_hgt_t_elm)
-         CALL forcing_xy2vec (forc_xy_hgt_u,  forc_hgt_u_elm)
-         CALL forcing_xy2vec (forc_xy_hgt_q,  forc_hgt_q_elm)
+         CALL mg2p_forc%grid2pset (forc_xy_hgt_t,  forc_hgt_t)
+         CALL mg2p_forc%grid2pset (forc_xy_hgt_u,  forc_hgt_u)
+         CALL mg2p_forc%grid2pset (forc_xy_hgt_q,  forc_hgt_q)
 
          IF (DEF_USE_CBL_HEIGHT) THEN
-            CALL forcing_xy2vec (forc_xy_hpbl, forc_hpbl_elm)
+            CALL mg2p_forc%grid2pset (forc_xy_hpbl, forc_hpbl)
          ENDIF
 
-         CALL forcing_xy2vec (forc_xy_t    ,  forc_t_elm    )
-         CALL forcing_xy2vec (forc_xy_q    ,  forc_q_elm    )
-         CALL forcing_xy2vec (forc_xy_prc  ,  forc_prc_elm  )
-         CALL forcing_xy2vec (forc_xy_prl  ,  forc_prl_elm  )
-         CALL forcing_xy2vec (forc_xy_pbot ,  forc_pbot_elm )
-         CALL forcing_xy2vec (forc_xy_frl  ,  forc_lwrad_elm)
-         CALL forcing_xy2vec (forc_xy_hgt_t,  forc_hgt_elm  )
+         CALL mg2p_forc%grid2part (forc_xy_t    ,  forc_t_grid    )
+         CALL mg2p_forc%grid2part (forc_xy_q    ,  forc_q_grid    )
+         CALL mg2p_forc%grid2part (forc_xy_prc  ,  forc_prc_grid  )
+         CALL mg2p_forc%grid2part (forc_xy_prl  ,  forc_prl_grid  )
+         CALL mg2p_forc%grid2part (forc_xy_pbot ,  forc_pbot_grid )
+         CALL mg2p_forc%grid2part (forc_xy_frl  ,  forc_lwrad_grid)
+         CALL mg2p_forc%grid2part (forc_xy_hgt_t,  forc_hgt_grid  )
 
          IF (p_is_worker) THEN
 
-            DO ne = 1, numelm
-               IF (DEF_forcing%has_missing_value) THEN
-                  IF (.not. forcmask_elm(ne)) CYCLE
-               ENDIF
+            DO np = 1, numpatch
+               DO ipart = 1, mg2p_forc%npart(np)
 
-               istt = elm_patch%substt(ne)
-               iend = elm_patch%subend(ne)
-         
-               forc_pco2m(istt:iend) = forc_pco2m_elm (ne)
-               forc_po2m (istt:iend) = forc_po2m_elm  (ne)
-               forc_us   (istt:iend) = forc_us_elm    (ne)
-               forc_vs   (istt:iend) = forc_vs_elm    (ne)
-                             
-               forc_psrf (istt:iend) = forc_psrf_elm  (ne)
-                             
-               forc_sols (istt:iend) = forc_sols_elm  (ne)
-               forc_soll (istt:iend) = forc_soll_elm  (ne)
-               forc_solsd(istt:iend) = forc_solsd_elm (ne)
-               forc_solld(istt:iend) = forc_solld_elm (ne)
-                             
-               forc_hgt_t(istt:iend) = forc_hgt_t_elm (ne)
-               forc_hgt_u(istt:iend) = forc_hgt_u_elm (ne)
-               forc_hgt_q(istt:iend) = forc_hgt_q_elm (ne)
+                  IF (mg2p_forc%areapart(np)%val(ipart) == 0.) CYCLE
 
-               IF (DEF_USE_CBL_HEIGHT) THEN
-                  forc_hpbl(istt:iend) = forc_hpbl_elm(ne)
-               ENDIF
+                  ! The standard measuring conditions for temperature are two meters above 
+                  ! the ground. Scientists have measured the most frigid temperature ever
+                  ! recorded on the continent's eastern highlands: about (180K) colder than 
+                  ! dry ice.
+                  IF(forc_t_grid(np)%val(ipart) < 180.) forc_t_grid(np)%val(ipart) = 180.
+                  ! the highest air temp was found in Kuwait 326 K, Sulaibya 2012-07-31;
+                  ! Pakistan, Sindh 2010-05-26; Iraq, Nasiriyah 2011-08-03
+                  IF(forc_t_grid(np)%val(ipart) > 326.) forc_t_grid(np)%val(ipart) = 326.
 
-               ! The standard measuring conditions for temperature are two meters above the ground
-               ! Scientists have measured the most frigid temperature ever
-               ! recorded on the continent's eastern highlands: about (180K) colder than dry ice.
-               IF(forc_t_elm(ne) < 180.) forc_t_elm(ne) = 180.
-               ! the highest air temp was found in Kuwait 326 K, Sulaibya 2012-07-31;
-               ! Pakistan, Sindh 2010-05-26; Iraq, Nasiriyah 2011-08-03
-               IF(forc_t_elm(ne) > 326.) forc_t_elm(ne) = 326.
+                  forc_rho_grid(np)%val(ipart) = (forc_pbot_grid(np)%val(ipart) &
+                     - 0.378*forc_q_grid(np)%val(ipart)*forc_pbot_grid(np)%val(ipart) &
+                     /(0.622+0.378*forc_q_grid(np)%val(ipart)))/(rgas*forc_t_grid(np)%val(ipart))
 
-               forc_rho_elm(ne) = (forc_pbot_elm(ne) &
-                  - 0.378*forc_q_elm(ne)*forc_pbot_elm(ne)/(0.622+0.378*forc_q_elm(ne)))&
-                  / (rgas*forc_t_elm(ne))
+                  forc_th_grid(np)%val(ipart) = forc_t_grid(np)%val(ipart) &
+                     * (1.e5/forc_pbot_grid(np)%val(ipart)) ** (rair/cpair)
 
-               forc_th_elm(ne) = forc_t_elm(ne) * (1.e5/forc_pbot_elm(ne)) ** (rair/cpair)
 
+                  CALL downscale_forcings_1c ( glacierss(np), &
+                     ! forcing in gridcells
+                     forc_topo_grid(np)%val(ipart),  forc_maxelv_grid(np)%val(ipart), &
+                     forc_t_grid(np)%val(ipart),     forc_th_grid(np)%val(ipart),     &
+                     forc_q_grid(np)%val(ipart),     forc_pbot_grid(np)%val(ipart),   &
+                     forc_rho_grid(np)%val(ipart),   forc_prc_grid(np)%val(ipart),    &
+                     forc_prl_grid(np)%val(ipart),   forc_lwrad_grid(np)%val(ipart),  &
+                     forc_hgt_grid(np)%val(ipart),   &
+                     ! forcing in part of patches
+                     forc_topo(np),                  forc_t_part(np)%val(ipart),      &
+                     forc_th_part(np)%val(ipart),    forc_q_part(np)%val(ipart),      &
+                     forc_pbot_part(np)%val(ipart),  forc_rhoair_part(np)%val(ipart), &
+                     forc_prc_part(np)%val(ipart),   forc_prl_part(np)%val(ipart),    &
+                     forc_frl_part(np)%val(ipart))
+               
+               ENDDO
             ENDDO
 
-            CALL downscale_forcings ( &
-               numelm, numpatch, elm_patch%substt, elm_patch%subend, glacierss, elm_patch%subfrc,   &
-               ! forcing in gridcells
-               forc_topo_elm, forc_t_elm,   forc_th_elm,  forc_q_elm,     forc_pbot_elm, &
-               forc_rho_elm,  forc_prc_elm, forc_prl_elm, forc_lwrad_elm, forc_hgt_elm,  &
-               ! forcing in patches
-               forc_topo,     forc_t,       forc_th,      forc_q,         forc_pbot,     &
-               forc_rhoair,   forc_prc,     forc_prl,     forc_frl)
+         ENDIF 
 
-         ENDIF
+         CALL mg2p_forc%normalize (forc_xy_frl, forc_frl_part)
+
+         CALL mg2p_forc%part2pset (forc_t_part,      forc_t     )
+         CALL mg2p_forc%part2pset (forc_q_part,      forc_q     )
+         CALL mg2p_forc%part2pset (forc_pbot_part,   forc_pbot  )
+         CALL mg2p_forc%part2pset (forc_rhoair_part, forc_rhoair)
+         CALL mg2p_forc%part2pset (forc_prc_part,    forc_prc   )
+         CALL mg2p_forc%part2pset (forc_prl_part,    forc_prl   )
+         CALL mg2p_forc%part2pset (forc_frl_part,    forc_frl   )
 
       ENDIF
 

@@ -69,6 +69,9 @@ contains
             CALL ncio_put_attr (filename, 'elmindex', 'long_name', &
                'element index in mesh')
 #endif
+
+            CALL ncio_write_colm_dimension (filename)
+   
          endif
 
          call ncio_write_time (filename, dataname, time, itime_in_file, DEF_HIST_FREQ)

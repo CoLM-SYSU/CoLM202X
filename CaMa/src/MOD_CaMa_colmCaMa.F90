@@ -185,8 +185,8 @@ CONTAINS
 
       !allocate the data structure for cama
       CALL gcama%define_by_ndims (NX, NY)  !define the data structure for cama
-      CALL mp2g_cama%build (landpatch, gcama) !build the mapping between cama and mpi
-      CALL mg2p_cama%build (gcama, landpatch)
+      CALL mp2g_cama%build_arealweighted (gcama, landpatch) !build the mapping between cama and mpi
+      CALL mg2p_cama%build_arealweighted (gcama, landpatch)
 
       CALL cama_gather%set (gcama)
 

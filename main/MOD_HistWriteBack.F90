@@ -249,6 +249,8 @@ CONTAINS
 
                ENDIF
 
+               CALL ncio_write_colm_dimension (filename)
+
             ENDIF
                
             CALL ncio_write_time (filename, dataname, time, itime_in_file, DEF_HIST_FREQ)
