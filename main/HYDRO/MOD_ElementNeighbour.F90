@@ -1,13 +1,13 @@
 #include <define.h>
 
 MODULE MOD_ElementNeighbour
-   !--------------------------------------------------------------------------------!
-   ! DESCRIPTION:                                                                   !
-   !                                                                                !
-   !    Element Neighbours : data and communication subroutines.                    !
-   !                                                                                !
-   ! Created by Shupeng Zhang, May 2023                                             !
-   !--------------------------------------------------------------------------------!
+!--------------------------------------------------------------------------------!
+! DESCRIPTION:                                                                   !
+!                                                                                !
+!    Element Neighbours : data and communication subroutines.                    !
+!                                                                                !
+! Created by Shupeng Zhang, May 2023                                             !
+!--------------------------------------------------------------------------------!
 
    USE MOD_Precision
    USE MOD_DataType
@@ -36,74 +36,79 @@ MODULE MOD_ElementNeighbour
    type(element_neighbour_type), allocatable :: elementneighbour (:)
 
    ! -- neighbour communication --
-   TYPE neighbour_sendrecv_type
-      INTEGER :: ndata
-      INTEGER*8, allocatable :: glbindex (:)
-      INTEGER,   allocatable :: ielement (:)
-   END TYPE neighbour_sendrecv_type
+   type neighbour_sendrecv_type
+      integer :: ndata
+      integer*8, allocatable :: glbindex (:)
+      integer,   allocatable :: ielement (:)
+   END type neighbour_sendrecv_type
 
-   TYPE(neighbour_sendrecv_type), allocatable :: recvaddr(:)
-   TYPE(neighbour_sendrecv_type), allocatable :: sendaddr(:)
+   type(neighbour_sendrecv_type), allocatable :: recvaddr(:)
+   type(neighbour_sendrecv_type), allocatable :: sendaddr(:)
+
+   INTERFACE allocate_neighbour_data
+      MODULE procedure allocate_neighbour_data_real8
+      MODULE procedure allocate_neighbour_data_logic
+   END INTERFACE allocate_neighbour_data
 
 CONTAINS
    
    ! ----------
    SUBROUTINE element_neighbour_init (lc_year)
 
-      USE MOD_SPMD_Task
-      USE MOD_Namelist
-      USE MOD_NetCDFSerial
-      USE MOD_NetCDFVector
-      USE MOD_Mesh
-      USE MOD_Pixel
-      USE MOD_LandElm
-      USE MOD_LandPatch
-      USE MOD_Utils
-      IMPLICIT NONE
-      
-      INTEGER, intent(in) :: lc_year    ! which year of land cover data used
-
-      ! Local Variables
-      CHARACTER(len=256) :: neighbour_file
-
-      INTEGER :: ielm
-      INTEGER :: iwork, mesg(2), isrc, idest
-      INTEGER :: nrecv, irecv
-      INTEGER :: iloc, iloc1, iloc2
-      INTEGER :: nnb, nnbinq, inb, ndata
+   USE MOD_SPMD_Task
+   USE MOD_Namelist
+   USE MOD_NetCDFSerial
+   USE MOD_NetCDFVector
+   USE MOD_Mesh
+   USE MOD_Pixel
+   USE MOD_LandElm
+   USE MOD_LandPatch
+   USE MOD_Utils
+   IMPLICIT NONE
    
-      INTEGER :: maxnnb
-      INTEGER , allocatable :: nnball   (:)
-      INTEGER , allocatable :: idxnball (:,:)
-      REAL(r8), allocatable :: lenbdall (:,:)
+   integer, intent(in) :: lc_year    ! which year of land cover data used
 
-      INTEGER , allocatable :: addrelement(:)
+   ! Local Variables
+   character(len=256) :: neighbour_file
 
-      INTEGER*8, allocatable :: eindex  (:)
-      INTEGER,   allocatable :: icache1 (:)
-      INTEGER,   allocatable :: icache2 (:,:)
-      REAL(r8),  allocatable :: rcache2 (:,:)
-
-      INTEGER*8, allocatable :: elm_sorted (:)
-      INTEGER,   allocatable :: order      (:)
-      INTEGER*8, allocatable :: idxinq     (:)
-      INTEGER,   allocatable :: addrinq    (:)
-
-      LOGICAL, allocatable :: mask(:)
-
-      REAL(r8), allocatable :: rlon_b(:), rlat_b(:)
-      TYPE(pointer_real8_1d), allocatable :: rlon_nb(:), rlat_nb(:)
+   integer :: ielm
+   integer :: iwork, mesg(2), isrc, idest
+   integer :: nrecv, irecv
+   integer :: iloc, iloc1, iloc2
+   integer :: nnb, nnbinq, inb, ndata
    
-      REAL(r8), allocatable :: area_b(:)
-      REAL(r8), allocatable :: elva_b(:)
+   integer :: maxnnb
+   integer , allocatable :: nnball   (:)
+   integer , allocatable :: idxnball (:,:)
+   real(r8), allocatable :: lenbdall (:,:)
 
-      character(len=256) :: lndname, cyear
-      REAL(r8), allocatable :: topo_patches(:)
+   integer , allocatable :: addrelement(:)
 
-      TYPE(pointer_real8_1d), allocatable :: area_nb (:)  ! m^2
-      TYPE(pointer_real8_1d), allocatable :: elva_nb (:)  ! m
+   integer*8, allocatable :: eindex  (:)
+   integer,   allocatable :: icache1 (:)
+   integer,   allocatable :: icache2 (:,:)
+   real(r8),  allocatable :: rcache2 (:,:)
 
-      integer :: ipxl, istt, iend
+   integer*8, allocatable :: elm_sorted (:)
+   integer,   allocatable :: order      (:)
+   integer*8, allocatable :: idxinq     (:)
+   integer,   allocatable :: addrinq    (:)
+
+   logical, allocatable :: mask(:)
+
+   real(r8), allocatable :: rlon_b(:), rlat_b(:)
+   type(pointer_real8_1d), allocatable :: rlon_nb(:), rlat_nb(:)
+   
+   real(r8), allocatable :: area_b(:)
+   real(r8), allocatable :: elva_b(:)
+
+   character(len=256) :: lndname, cyear
+   real(r8), allocatable :: topo_patches(:)
+
+   type(pointer_real8_1d), allocatable :: area_nb (:)  ! m^2
+   type(pointer_real8_1d), allocatable :: elva_nb (:)  ! m
+
+   integer :: ipxl, istt, iend
 
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
@@ -444,7 +449,7 @@ CONTAINS
 
       write(cyear,'(i4.4)') lc_year
       lndname = trim(DEF_dir_landdata) // '/topography/'//trim(cyear)//'/topography_patches.nc'
-      call ncio_read_vector (lndname, 'topography_patches', landpatch, topo_patches)
+      CALL ncio_read_vector (lndname, 'topography_patches', landpatch, topo_patches)
 
       IF (p_is_worker) THEN
 
@@ -533,19 +538,19 @@ CONTAINS
    ! ----------
    SUBROUTINE retrieve_neighbour_data (vec_in, nbdata)
 
-      USE MOD_Precision
-      USE MOD_SPMD_Task
-      USE MOD_Mesh, only : numelm
-      IMPLICIT NONE
+   USE MOD_Precision
+   USE MOD_SPMD_Task
+   USE MOD_Mesh, only : numelm
+   IMPLICIT NONE
 
-      REAL(r8), intent(inout) :: vec_in (:)
-      TYPE(pointer_real8_1d)  :: nbdata (:)
+   real(r8), intent(inout) :: vec_in (:)
+   type(pointer_real8_1d)  :: nbdata (:)
 
-      ! Local Variables
-      LOGICAL, allocatable :: smask(:), rmask(:)
-      INTEGER, allocatable :: req_send(:), req_recv(:)
-      TYPE(pointer_real8_1d), allocatable :: sbuff(:), rbuff(:)
-      INTEGER :: iwork, ielm, inb, iloc
+   ! Local Variables
+   logical, allocatable :: smask(:), rmask(:)
+   integer, allocatable :: req_send(:), req_recv(:)
+   type(pointer_real8_1d), allocatable :: sbuff(:), rbuff(:)
+   integer :: iwork, ielm, inb, iloc
 
       IF (p_is_worker) THEN
       
@@ -630,13 +635,13 @@ CONTAINS
    END SUBROUTINE retrieve_neighbour_data
 
    ! ---
-   SUBROUTINE allocate_neighbour_data (nbdata)
+   SUBROUTINE allocate_neighbour_data_real8 (nbdata)
       
-      USE MOD_Mesh, only : numelm
-      IMPLICIT NONE
+   USE MOD_Mesh, only : numelm
+   IMPLICIT NONE
 
-      TYPE(pointer_real8_1d), allocatable :: nbdata(:)
-      INTEGER :: ielm
+   type(pointer_real8_1d), allocatable :: nbdata(:)
+   integer :: ielm
             
       IF (numelm > 0) THEN
          allocate (nbdata(numelm))
@@ -647,13 +652,33 @@ CONTAINS
          ENDDO
       ENDIF 
 
-   END SUBROUTINE allocate_neighbour_data 
+   END SUBROUTINE allocate_neighbour_data_real8
+
+   ! ---
+   SUBROUTINE allocate_neighbour_data_logic (nbdata)
+      
+   USE MOD_Mesh, only : numelm
+   IMPLICIT NONE
+
+   type(pointer_logic_1d), allocatable :: nbdata(:)
+   integer :: ielm
+            
+      IF (numelm > 0) THEN
+         allocate (nbdata(numelm))
+         DO ielm = 1, numelm
+            IF (elementneighbour(ielm)%nnb > 0) THEN
+               allocate (nbdata(ielm)%val (elementneighbour(ielm)%nnb))
+            ENDIF
+         ENDDO
+      ENDIF 
+
+   END SUBROUTINE allocate_neighbour_data_logic
 
    ! ----------
    SUBROUTINE element_neighbour_final ()
 
-      IMPLICIT NONE
-      INTEGER :: i
+   IMPLICIT NONE
+   integer :: i
 
       IF (allocated(elementneighbour)) THEN
          DO i = 1, size(elementneighbour)

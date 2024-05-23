@@ -11,59 +11,60 @@ MODULE MOD_CropReadin
    ! PUBLIC MEMBER FUNCTIONS:
    PUBLIC :: CROP_readin
 
-   CONTAINS
+CONTAINS
 
    SUBROUTINE CROP_readin ()
-      ! ===========================================================
-      ! ! DESCRIPTION:
-      ! Read in crop planting date from data, and fertilization from data.
-      ! Save these data in patch vector.
-      !
-      ! Original: Shupeng Zhang, Zhongwang Wei, and Xingjie Lu, 2022
-      ! ===========================================================
+   ! ===========================================================
+   ! ! DESCRIPTION:
+   ! Read in crop planting date from data, and fertilization from data.
+   ! Save these data in patch vector.
+   !
+   ! Original: Shupeng Zhang, Zhongwang Wei, and Xingjie Lu, 2022
+   ! ===========================================================
 
-      use MOD_Precision
-      use MOD_Namelist
-      use MOD_SPMD_Task
-      use MOD_LandPatch
-      USE MOD_NetCDFSerial
-      USE MOD_NetCDFBlock
-      USE MOD_Mapping_Grid2Pset
-      use MOD_Vars_TimeInvariants
-      use MOD_Vars_TimeVariables
+   USE MOD_Precision
+   USE MOD_Namelist
+   USE MOD_SPMD_Task
+   USE MOD_LandPatch
+   USE MOD_NetCDFSerial
+   USE MOD_NetCDFBlock
+   USE MOD_Mapping_Grid2Pset
+   USE MOD_Vars_TimeInvariants
+   USE MOD_Vars_TimeVariables
 
-      USE MOD_Vars_Global
-      USE MOD_LandPFT
-      USE MOD_Vars_PFTimeVariables
-      USE MOD_RangeCheck
-      USE MOD_Block
+   USE MOD_Vars_Global
+   USE MOD_LandPFT
+   USE MOD_Vars_PFTimeVariables
+   USE MOD_RangeCheck
+   USE MOD_Block
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      CHARACTER(len=256) :: file_crop
-      TYPE(grid_type)    :: grid_crop
-      TYPE(block_data_real8_2d)    :: f_xy_crop
-      type(mapping_grid2pset_type) :: mg2patch_crop
-      type(mapping_grid2pset_type) :: mg2pft_crop
-      CHARACTER(len=256) :: file_irrig
-      TYPE(grid_type)    :: grid_irrig
-      TYPE(block_data_int32_2d)    :: f_xy_irrig
-      type(mapping_grid2pset_type) :: mg2pft_irrig
+   character(len=256) :: file_crop
+   type(grid_type)    :: grid_crop
+   type(block_data_real8_2d)    :: f_xy_crop
+   type(mapping_grid2pset_type) :: mg2patch_crop
+   type(mapping_grid2pset_type) :: mg2pft_crop
+   character(len=256) :: file_irrig
+   type(grid_type)    :: grid_irrig
+   type(block_data_int32_2d)    :: f_xy_irrig
+   type(mapping_grid2pset_type) :: mg2pft_irrig
 
-      real(r8),allocatable :: pdrice2_tmp      (:)
-      real(r8),allocatable :: plantdate_tmp    (:)
-      real(r8),allocatable :: fertnitro_tmp    (:)
-      integer ,allocatable :: irrig_method_tmp (:)
+   real(r8),allocatable :: pdrice2_tmp      (:)
+   real(r8),allocatable :: plantdate_tmp    (:)
+   real(r8),allocatable :: fertnitro_tmp    (:)
+   integer ,allocatable :: irrig_method_tmp (:)
 
-      ! Local variables
-      REAL(r8), allocatable :: lat(:), lon(:)
-      real(r8) :: missing_value
-      integer  :: cft, npatch, ipft
-      CHARACTER(LEN=2) :: cx
-      integer  :: iblkme, iblk, jblk
-      integer  :: maxvalue, minvalue
+   ! Local variables
+   real(r8), allocatable :: lat(:), lon(:)
+   real(r8) :: missing_value
+   integer  :: cft, npatch, ipft
+   character(len=2) :: cx
+   integer  :: iblkme, iblk, jblk
+   integer  :: maxvalue, minvalue
+
       ! READ in crops
-      
+
       file_crop = trim(DEF_dir_runtime) // '/crop/plantdt-colm-64cfts-rice2_fillcoast.nc'
 
       CALL ncio_read_bcast_serial (file_crop, 'lat', lat)
@@ -74,7 +75,7 @@ MODULE MOD_CropReadin
       IF (p_is_io) THEN
          CALL allocate_block_data  (grid_crop, f_xy_crop)
       ENDIF
-      
+
       ! missing value
       IF (p_is_master) THEN
          CALL ncio_get_attr (file_crop, 'pdrice2', 'missing_value', missing_value)
@@ -86,12 +87,12 @@ MODULE MOD_CropReadin
          CALL ncio_read_block (file_crop, 'pdrice2', grid_crop, f_xy_crop)
       ENDIF
 
-      call mg2patch_crop%build (grid_crop, landpatch, f_xy_crop, missing_value)
-      call mg2pft_crop%build   (grid_crop, landpft,   f_xy_crop, missing_value)
+      CALL mg2patch_crop%build (grid_crop, landpatch, f_xy_crop, missing_value)
+      CALL mg2pft_crop%build   (grid_crop, landpft,   f_xy_crop, missing_value)
 
       IF (allocated(lon)) deallocate(lon)
       IF (allocated(lat)) deallocate(lat)
-      
+
       IF (p_is_worker) THEN
          IF (numpatch > 0)  allocate(pdrice2_tmp   (numpatch))
          IF (numpft   > 0)  allocate(plantdate_tmp (numpft))
@@ -104,10 +105,10 @@ MODULE MOD_CropReadin
       IF (p_is_io) THEN
          CALL ncio_read_block (file_crop, 'pdrice2', grid_crop, f_xy_crop)
       ENDIF
-      
-      call mg2patch_crop%map_aweighted (f_xy_crop, pdrice2_tmp)
 
-      IF (p_is_worker) then
+      CALL mg2patch_crop%map_aweighted (f_xy_crop, pdrice2_tmp)
+
+      IF (p_is_worker) THEN
          DO npatch = 1, numpatch
             IF (pdrice2_tmp(npatch) /= spval) THEN
                pdrice2 (npatch) = int(pdrice2_tmp (npatch))
@@ -132,18 +133,18 @@ MODULE MOD_CropReadin
          IF (p_is_io) THEN
             CALL ncio_read_block_time (file_crop, 'PLANTDATE_CFT_'//trim(cx), grid_crop, 1, f_xy_crop)
          ENDIF
-      
-         call mg2pft_crop%map_aweighted (f_xy_crop, plantdate_tmp)
-      
-         if (p_is_worker) then
-            do ipft = 1, numpft
+
+         CALL mg2pft_crop%map_aweighted (f_xy_crop, plantdate_tmp)
+
+         IF (p_is_worker) THEN
+            DO ipft = 1, numpft
                IF(landpft%settyp(ipft) .eq. cft)THEN
                   plantdate_p(ipft) = plantdate_tmp(ipft)
-                  if(plantdate_p(ipft) <= 0._r8) then
+                  IF(plantdate_p(ipft) <= 0._r8) THEN
                      plantdate_p(ipft) = -99999999._r8
-                  end if
-               endif
-            end do
+                  ENDIF
+               ENDIF
+            ENDDO
          ENDIF
       ENDDO
 
@@ -161,21 +162,21 @@ MODULE MOD_CropReadin
          IF (p_is_io) THEN
             CALL ncio_read_block_time (file_crop, 'CONST_FERTNITRO_CFT_'//trim(cx), grid_crop, 1, f_xy_crop)
          ENDIF
-      
-         call mg2pft_crop%map_aweighted (f_xy_crop, fertnitro_tmp)
-      
-         if (p_is_worker) then
-            do ipft = 1, numpft
+
+         CALL mg2pft_crop%map_aweighted (f_xy_crop, fertnitro_tmp)
+
+         IF (p_is_worker) THEN
+            DO ipft = 1, numpft
                IF(landpft%settyp(ipft) .eq. cft)THEN
                   fertnitro_p(ipft) = fertnitro_tmp(ipft)
-                  if(fertnitro_p(ipft) <= 0._r8) then
+                  IF(fertnitro_p(ipft) <= 0._r8) THEN
                      fertnitro_p(ipft) = 0._r8
-                  end if
-               endif
-            end do
+                  ENDIF
+               ENDIF
+            ENDDO
          ENDIF
       ENDDO
-      
+
 #ifdef RangeCheck
       CALL check_vector_data ('fert nitro value ', fertnitro_p)
 #endif
@@ -193,7 +194,7 @@ MODULE MOD_CropReadin
          CALL allocate_block_data  (grid_irrig, f_xy_irrig)
       ENDIF
 
-      call mg2pft_irrig%build   (grid_irrig, landpft)
+      CALL mg2pft_irrig%build   (grid_irrig, landpft)
 
       IF (allocated(lon)) deallocate(lon)
       IF (allocated(lat)) deallocate(lat)
@@ -207,18 +208,18 @@ MODULE MOD_CropReadin
             CALL ncio_read_block_time (file_irrig, 'irrigation_method', grid_irrig, cft, f_xy_irrig)
          ENDIF
 
-         call mg2pft_irrig%map_max_frenquency_2d (f_xy_irrig, irrig_method_tmp)
+         CALL mg2pft_irrig%map_max_frequency_2d (f_xy_irrig, irrig_method_tmp)
 
-         if (p_is_worker) then
-            do ipft = 1, numpft
-               
+         IF (p_is_worker) THEN
+            DO ipft = 1, numpft
+
                IF(landpft%settyp(ipft) .eq. cft + 14)THEN
                   irrig_method_p(ipft) = irrig_method_tmp(ipft)
-                  if(irrig_method_p(ipft) < 0) then
+                  IF(irrig_method_p(ipft) < 0) THEN
                      irrig_method_p(ipft) = -99999999
-                  end if
-               endif
-            end do
+                  ENDIF
+               ENDIF
+            ENDDO
          ENDIF
       ENDDO
 

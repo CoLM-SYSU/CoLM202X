@@ -1,16 +1,16 @@
 #include <define.h>
 
-#ifdef LATERAL_FLOW
-module MOD_Hydro_Hist
-   !--------------------------------------------------------------------------------
-   ! DESCRIPTION:
-   ! 
-   !     Write out model results in lateral hydrological processes to history files.
-   !
-   ! Created by Shupeng Zhang, May 2023
-   !--------------------------------------------------------------------------------
+#ifdef CatchLateralFlow
+MODULE MOD_Hydro_Hist
+!--------------------------------------------------------------------------------
+! DESCRIPTION:
+!
+!     Write out model results in lateral hydrological processes to history files.
+!
+! Created by Shupeng Zhang, May 2023
+!--------------------------------------------------------------------------------
 
-   use MOD_Precision
+   USE MOD_Precision
    USE MOD_SPMD_Task
    USE MOD_NetCDFSerial
    USE MOD_Vars_Global,  only : spval
@@ -22,31 +22,31 @@ module MOD_Hydro_Hist
    USE MOD_Hydro_IO
 
    ! -- ACC Fluxes --
-   INTEGER :: nac_basin
+   integer :: nac_basin
 
-   REAL(r8), allocatable :: a_wdsrf_hru  (:)
-   REAL(r8), allocatable :: a_veloc_hru  (:)
+   real(r8), allocatable :: a_wdsrf_hru  (:)
+   real(r8), allocatable :: a_veloc_hru  (:)
 
-   REAL(r8), allocatable :: a_xsubs_bsn  (:)
-   REAL(r8), allocatable :: a_xsubs_hru  (:)
+   real(r8), allocatable :: a_xsubs_bsn  (:)
+   real(r8), allocatable :: a_xsubs_hru  (:)
 
-   REAL(r8), allocatable :: a_height_riv (:)
-   REAL(r8), allocatable :: a_veloct_riv (:)
-   REAL(r8), allocatable :: a_discharge  (:)
+   real(r8), allocatable :: a_height_riv (:)
+   real(r8), allocatable :: a_veloct_riv (:)
+   real(r8), allocatable :: a_discharge  (:)
 
    ! -- PUBLIC SUBROUTINEs --
-   public :: hist_basin_init
-   public :: hist_basin_out
-   public :: hist_basin_final
+   PUBLIC :: hist_basin_init
+   PUBLIC :: hist_basin_out
+   PUBLIC :: hist_basin_final
 
 !--------------------------------------------------------------------------
 CONTAINS
 
    SUBROUTINE hist_basin_init
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      INTEGER :: numbasin
+   integer :: numbasin
 
       numbasin = numelm
 
@@ -65,14 +65,14 @@ CONTAINS
          ENDIF
       ENDIF
 
-      call FLUSH_acc_fluxes_basin ()
+      CALL FLUSH_acc_fluxes_basin ()
 
    END SUBROUTINE hist_basin_init
 
    !--------------------------------------
-   subroutine hist_basin_final ()
+   SUBROUTINE hist_basin_final ()
 
-      implicit none
+   IMPLICIT NONE
 
       IF (allocated(a_wdsrf_hru )) deallocate(a_wdsrf_hru )
       IF (allocated(a_veloc_hru )) deallocate(a_veloc_hru )
@@ -84,38 +84,38 @@ CONTAINS
       IF (allocated(a_veloct_riv)) deallocate(a_veloct_riv)
       IF (allocated(a_discharge )) deallocate(a_discharge )
 
-   end subroutine hist_basin_final
+   END SUBROUTINE hist_basin_final
 
    !---------------------------------------
    SUBROUTINE hist_basin_out (file_hist, idate)
 
-      use MOD_Precision
-      use MOD_Namelist
-      use MOD_SPMD_Task
-      USE MOD_ElmVector
-      USE MOD_HRUVector
-      IMPLICIT NONE
+   USE MOD_Precision
+   USE MOD_Namelist
+   USE MOD_SPMD_Task
+   USE MOD_ElmVector
+   USE MOD_HRUVector
+   IMPLICIT NONE
 
-      character(LEN=*), intent(in) :: file_hist
-      integer,  INTENT(in) :: idate(3)
+   character(len=*), intent(in) :: file_hist
+   integer,  intent(in) :: idate(3)
 
-      ! Local variables
-      CHARACTER(len=256) :: file_hist_basin
-      LOGICAL :: fexists
-      integer :: itime_in_file
-      logical,  allocatable ::  filter(:)
-      INTEGER :: numbasin, i
+   ! Local variables
+   character(len=256) :: file_hist_basin
+   logical :: fexists
+   integer :: itime_in_file
+   logical,  allocatable ::  filter(:)
+   integer :: numbasin, i
 
-      if (p_is_master) then
+      IF (p_is_master) THEN
 
          i = len_trim (file_hist)
-         DO while (file_hist(i:i) /= '_')
+         DO WHILE (file_hist(i:i) /= '_')
             i = i - 1
          ENDDO
          file_hist_basin = file_hist(1:i) // 'basin_' // file_hist(i+1:)
 
          inquire (file=file_hist_basin, exist=fexists)
-         if (.not. fexists) then
+         IF (.not. fexists) THEN
             CALL ncio_create_file (trim(file_hist_basin))
             CALL ncio_define_dimension(file_hist_basin, 'time', 0)
             CALL ncio_define_dimension(file_hist_basin, 'basin',     totalnumelm)
@@ -131,18 +131,18 @@ CONTAINS
             CALL ncio_write_serial (file_hist_basin, 'hru_type' , htype_hru, 'hydrounit')
             CALL ncio_put_attr (file_hist_basin, 'hru_type' , 'long_name', &
                'index of hydrological units inside basin')
-         endif
+         ENDIF
 
-         call ncio_write_time (file_hist_basin, 'time', idate, itime_in_file, DEF_HIST_FREQ)
+         CALL ncio_write_time (file_hist_basin, 'time', idate, itime_in_file, DEF_HIST_FREQ)
 
       ENDIF
 
       numbasin = numelm
 
       IF (p_is_worker) THEN
-         where(a_height_riv /= spval)
+         WHERE(a_height_riv /= spval)
             a_height_riv = a_height_riv / nac_basin
-         END where
+         END WHERE
       ENDIF
 
       CALL vector_write_basin (&
@@ -150,9 +150,9 @@ CONTAINS
          DEF_hist_vars%riv_height, itime_in_file, 'River Height', 'm')
 
       IF (p_is_worker) THEN
-         where(a_veloct_riv /= spval)
+         WHERE(a_veloct_riv /= spval)
             a_veloct_riv = a_veloct_riv / nac_basin
-         END where
+         END WHERE
       ENDIF
 
       CALL vector_write_basin (&
@@ -160,9 +160,9 @@ CONTAINS
          DEF_hist_vars%riv_veloct, itime_in_file, 'River Velocity', 'm/s')
 
       IF (p_is_worker) THEN
-         where(a_discharge /= spval)
+         WHERE(a_discharge /= spval)
             a_discharge = a_discharge / nac_basin
-         END where
+         END WHERE
       ENDIF
 
       CALL vector_write_basin (&
@@ -170,9 +170,9 @@ CONTAINS
          DEF_hist_vars%discharge, itime_in_file, 'River Discharge', 'm^3/s')
 
       IF (p_is_worker) THEN
-         where(a_wdsrf_hru /= spval)
+         WHERE(a_wdsrf_hru /= spval)
             a_wdsrf_hru = a_wdsrf_hru / nac_basin
-         END where
+         END WHERE
       ENDIF
 
       CALL vector_write_basin (&
@@ -180,9 +180,9 @@ CONTAINS
          DEF_hist_vars%wdsrf_hru, itime_in_file, 'Depth of Surface Water in Hydro unit', 'm')
 
       IF (p_is_worker) THEN
-         where(a_veloc_hru /= spval)
+         WHERE(a_veloc_hru /= spval)
             a_veloc_hru = a_veloc_hru / nac_basin
-         END where
+         END WHERE
       ENDIF
 
       CALL vector_write_basin (&
@@ -190,9 +190,9 @@ CONTAINS
          DEF_hist_vars%veloc_hru, itime_in_file, 'Surface Flow Velocity in Hydro unit', 'm/s')
 
       IF (p_is_worker) THEN
-         where(a_xsubs_bsn /= spval)
+         WHERE(a_xsubs_bsn /= spval)
             a_xsubs_bsn = a_xsubs_bsn / nac_basin
-         END where
+         END WHERE
       ENDIF
 
       CALL vector_write_basin (&
@@ -200,31 +200,31 @@ CONTAINS
          DEF_hist_vars%xsubs_bsn, itime_in_file, 'Subsurface lateral flow between basins', 'm/s')
 
       IF (p_is_worker) THEN
-         where(a_xsubs_hru /= spval)
+         WHERE(a_xsubs_hru /= spval)
             a_xsubs_hru = a_xsubs_hru / nac_basin
-         END where
+         END WHERE
       ENDIF
 
       CALL vector_write_basin (&
          file_hist_basin, a_xsubs_hru, numhru, totalnumhru, 'xsubs_hru', 'hydrounit', hru_data_address, &
          DEF_hist_vars%xsubs_hru, itime_in_file, 'SubSurface lateral flow between HRUs', 'm/s')
 
-      call FLUSH_acc_fluxes_basin ()
+      CALL FLUSH_acc_fluxes_basin ()
 
    END SUBROUTINE hist_basin_out
 
    !-----------------------
    SUBROUTINE FLUSH_acc_fluxes_basin ()
 
-      use MOD_SPMD_Task
-      USE MOD_Mesh,    only : numelm
-      use MOD_LandHRU, only : numhru
-      use MOD_Vars_Global,  only : spval 
-      implicit none
+   USE MOD_SPMD_Task
+   USE MOD_Mesh,    only : numelm
+   USE MOD_LandHRU, only : numhru
+   USE MOD_Vars_Global,  only : spval
+   IMPLICIT NONE
 
-      INTEGER :: numbasin
+   integer :: numbasin
 
-      if (p_is_worker) then
+      IF (p_is_worker) THEN
 
          numbasin = numelm
 
@@ -250,9 +250,9 @@ CONTAINS
    ! -------
    SUBROUTINE accumulate_fluxes_basin
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      INTEGER :: numbasin
+   integer :: numbasin
 
       IF (p_is_worker) THEN
 
@@ -278,29 +278,28 @@ CONTAINS
 
    ! -------
    SUBROUTINE acc1d_basin (var, s)
-      
-      use MOD_Precision
-      use MOD_Vars_Global, only: spval
 
-      IMPLICIT NONE
+   USE MOD_Precision
+   USE MOD_Vars_Global, only: spval
 
-      real(r8), intent(in)    :: var(:)
-      real(r8), intent(inout) :: s  (:)
-      ! Local variables
-      integer :: i
+   IMPLICIT NONE
 
-      do i = lbound(var,1), ubound(var,1)
-         if (var(i) /= spval) then
-            if (s(i) /= spval) then
+   real(r8), intent(in)    :: var(:)
+   real(r8), intent(inout) :: s  (:)
+   ! Local variables
+   integer :: i
+
+      DO i = lbound(var,1), ubound(var,1)
+         IF (var(i) /= spval) THEN
+            IF (s(i) /= spval) THEN
                s(i) = s(i) + var(i)
-            else
+            ELSE
                s(i) = var(i)
-            end if
-         end if
-      end do
+            ENDIF
+         ENDIF
+      ENDDO
 
    END SUBROUTINE acc1d_basin
 
-
-end module MOD_Hydro_Hist
+END MODULE MOD_Hydro_Hist
 #endif

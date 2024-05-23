@@ -1,39 +1,39 @@
 MODULE MOD_Utils
 
-   !-----------------------------------------------------------------------------------------
-   ! DESCRIPTION:
-   !
-   !    This module contains utilities.
-   !
-   ! History:
-   !    Subroutines lmder, enorm, tridia and polint are moved from other files.
-   ! 
-   ! Created by Shupeng Zhang, May 2023
-   !-----------------------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
+! DESCRIPTION:
+!
+!    This MODULE CONTAINS utilities.
+!
+! History:
+!    Subroutines lmder, enorm, tridia and polint are moved from other files.
+!
+! Created by Shupeng Zhang, May 2023
+!-----------------------------------------------------------------------------------------
 
    ! ---- PUBLIC subroutines ----
 
    PUBLIC :: normalize_longitude
 
-   interface expand_list
+   INTERFACE expand_list
       MODULE procedure expand_list_int32
       MODULE procedure expand_list_int64
       MODULE procedure expand_list_real8
-   END interface expand_list
+   END INTERFACE expand_list
 
    PUBLIC :: append_to_list
 
-   interface insert_into_sorted_list1
+   INTERFACE insert_into_sorted_list1
       MODULE procedure insert_into_sorted_list1_int32
       MODULE procedure insert_into_sorted_list1_int64
-   END interface insert_into_sorted_list1
+   END INTERFACE insert_into_sorted_list1
 
    PUBLIC :: insert_into_sorted_list2
 
-   interface find_in_sorted_list1
+   INTERFACE find_in_sorted_list1
       MODULE procedure find_in_sorted_list1_int32
       MODULE procedure find_in_sorted_list1_int64
-   END interface find_in_sorted_list1
+   END INTERFACE find_in_sorted_list1
 
    PUBLIC :: find_in_sorted_list2
 
@@ -45,11 +45,11 @@ MODULE MOD_Utils
    PUBLIC :: lon_between_floor
    PUBLIC :: lon_between_ceil
 
-   interface quicksort
+   INTERFACE quicksort
       MODULE procedure quicksort_int32
       MODULE procedure quicksort_int64
       MODULE procedure quicksort_real8
-   END interface quicksort
+   END INTERFACE quicksort
 
    PUBLIC :: quickselect
    PUBLIC :: median
@@ -57,11 +57,11 @@ MODULE MOD_Utils
    PUBLIC :: areaquad
    PUBLIC :: arclen
 
-   interface unpack_inplace
+   INTERFACE unpack_inplace
       MODULE procedure unpack_inplace_int32
       MODULE procedure unpack_inplace_real8
       MODULE procedure unpack_inplace_lastdim_real8
-   END interface unpack_inplace
+   END INTERFACE unpack_inplace
 
    PUBLIC :: num_max_frequency
 
@@ -73,16 +73,16 @@ MODULE MOD_Utils
    PUBLIC :: enorm
    PUBLIC :: tridia
    PUBLIC :: polint
-   
+
 CONTAINS
 
    !---------------------------------
    SUBROUTINE normalize_longitude (lon)
 
-      USE MOD_Precision
-      IMPLICIT NONE
+   USE MOD_Precision
+   IMPLICIT NONE
 
-      REAL(r8), intent(inout) :: lon
+   real(r8), intent(inout) :: lon
 
       DO WHILE (lon >= 180.0)
          lon = lon - 360.0
@@ -97,15 +97,15 @@ CONTAINS
    !--------------------------------------------------
    SUBROUTINE expand_list_int32 (list, percent)
 
-      USE MOD_Precision
-      IMPLICIT NONE
+   USE MOD_Precision
+   IMPLICIT NONE
 
-      INTEGER, allocatable, intent(inout) :: list (:)
-      REAL(r8), intent(in) :: percent
+   integer, allocatable, intent(inout) :: list (:)
+   real(r8), intent(in) :: percent
 
-      ! Local variables
-      INTEGER :: n0, n1
-      INTEGER, allocatable :: temp (:)
+   ! Local variables
+   integer :: n0, n1
+   integer, allocatable :: temp (:)
 
       n0 = size(list)
 
@@ -125,15 +125,15 @@ CONTAINS
    !--------------------------------------------------
    SUBROUTINE expand_list_int64 (list, percent)
 
-      USE MOD_Precision
-      IMPLICIT NONE
+   USE MOD_Precision
+   IMPLICIT NONE
 
-      INTEGER*8, allocatable, intent(inout) :: list (:)
-      REAL(r8), intent(in) :: percent
+   integer*8, allocatable, intent(inout) :: list (:)
+   real(r8), intent(in) :: percent
 
-      ! Local variables
-      INTEGER :: n0, n1
-      INTEGER*8, allocatable :: temp (:)
+   ! Local variables
+   integer :: n0, n1
+   integer*8, allocatable :: temp (:)
 
       n0 = size(list)
 
@@ -153,15 +153,15 @@ CONTAINS
    !--------------------------------------------------
    SUBROUTINE expand_list_real8 (list, percent)
 
-      USE MOD_Precision
-      IMPLICIT NONE
+   USE MOD_Precision
+   IMPLICIT NONE
 
-      REAL(r8), allocatable, intent(inout) :: list (:)
-      REAL(r8), intent(in) :: percent
+   real(r8), allocatable, intent(inout) :: list (:)
+   real(r8), intent(in) :: percent
 
-      ! Local variables
-      INTEGER :: n0, n1
-      REAL(r8), allocatable :: temp (:)
+   ! Local variables
+   integer :: n0, n1
+   real(r8), allocatable :: temp (:)
 
       n0 = size(list)
 
@@ -181,14 +181,14 @@ CONTAINS
    !--------------------------------------------------
    SUBROUTINE append_to_list (list1, list2)
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      INTEGER, allocatable, intent(inout) :: list1 (:)
-      INTEGER, intent(in) :: list2 (:)
+   integer, allocatable, intent(inout) :: list1 (:)
+   integer, intent(in) :: list2 (:)
 
-      ! Local variables
-      INTEGER :: n1, n2
-      INTEGER, allocatable :: temp (:)
+   ! Local variables
+   integer :: n1, n2
+   integer, allocatable :: temp (:)
 
       IF (.not. allocated(list1)) THEN
          n1 = 0
@@ -220,17 +220,17 @@ CONTAINS
    !--------------------------------------------------
    SUBROUTINE insert_into_sorted_list1_int32 (x, n, list, iloc, is_new_out)
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      INTEGER, intent(in) :: x
-      INTEGER, intent(inout) :: n
-      INTEGER, intent(inout) :: list(:)
-      INTEGER, intent(out)   :: iloc
-      LOGICAL, intent(out), optional :: is_new_out
+   integer, intent(in) :: x
+   integer, intent(inout) :: n
+   integer, intent(inout) :: list(:)
+   integer, intent(out)   :: iloc
+   logical, intent(out), optional :: is_new_out
 
-      ! Local variables
-      LOGICAL :: is_new
-      INTEGER :: ileft, iright
+   ! Local variables
+   logical :: is_new
+   integer :: ileft, iright
 
       IF (n == 0) THEN
          iloc = 1
@@ -257,12 +257,12 @@ CONTAINS
                   iright = iloc
                ELSE
                   is_new = .false.
-                  exit
+                  EXIT
                ENDIF
             ELSE
                iloc = iright
                is_new = .true.
-               exit
+               EXIT
             ENDIF
          ENDDO
       ENDIF
@@ -285,17 +285,17 @@ CONTAINS
    !--------------------------------------------------
    SUBROUTINE insert_into_sorted_list1_int64 (x, n, list, iloc, is_new_out)
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      INTEGER*8, intent(in) :: x
-      INTEGER,   intent(inout) :: n
-      INTEGER*8, intent(inout) :: list(:)
-      INTEGER,   intent(out)   :: iloc
-      LOGICAL,   intent(out), optional :: is_new_out
+   integer*8, intent(in) :: x
+   integer,   intent(inout) :: n
+   integer*8, intent(inout) :: list(:)
+   integer,   intent(out)   :: iloc
+   logical,   intent(out), optional :: is_new_out
 
-      ! Local variables
-      LOGICAL :: is_new
-      INTEGER :: ileft, iright
+   ! Local variables
+   logical :: is_new
+   integer :: ileft, iright
 
       IF (n == 0) THEN
          iloc = 1
@@ -322,12 +322,12 @@ CONTAINS
                   iright = iloc
                ELSE
                   is_new = .false.
-                  exit
+                  EXIT
                ENDIF
             ELSE
                iloc = iright
                is_new = .true.
-               exit
+               EXIT
             ENDIF
          ENDDO
       ENDIF
@@ -350,17 +350,17 @@ CONTAINS
    !--------------------------------------------------
    SUBROUTINE insert_into_sorted_list2 (x, y, n, xlist, ylist, iloc, is_new_out)
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      INTEGER, intent(in) :: x, y
-      INTEGER, intent(inout) :: n
-      INTEGER, intent(inout) :: xlist(:), ylist(:)
-      INTEGER, intent(out)   :: iloc
-      LOGICAL, intent(out), optional :: is_new_out
+   integer, intent(in) :: x, y
+   integer, intent(inout) :: n
+   integer, intent(inout) :: xlist(:), ylist(:)
+   integer, intent(out)   :: iloc
+   logical, intent(out), optional :: is_new_out
 
-      ! Local variables
-      LOGICAL :: is_new
-      INTEGER :: ileft, iright
+   ! Local variables
+   logical :: is_new
+   integer :: ileft, iright
 
       IF (n == 0) THEN
          iloc = 1
@@ -387,12 +387,12 @@ CONTAINS
                   iright = iloc
                ELSE
                   is_new = .false.
-                  exit
+                  EXIT
                ENDIF
             ELSE
                iloc = iright
                is_new = .true.
-               exit
+               EXIT
             ENDIF
          ENDDO
       ENDIF
@@ -417,16 +417,16 @@ CONTAINS
    !--------------------------------------------------
    FUNCTION find_in_sorted_list1_int32 (x, n, list) result(iloc)
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      INTEGER :: iloc
+   integer :: iloc
 
-      INTEGER, intent(in) :: x
-      INTEGER, intent(in) :: n
-      INTEGER, intent(in) :: list (n)
+   integer, intent(in) :: x
+   integer, intent(in) :: n
+   integer, intent(in) :: list (n)
 
-      ! Local variables
-      INTEGER :: i, ileft, iright
+   ! Local variables
+   integer :: i, ileft, iright
 
       iloc = 0
       IF (n > 0) THEN
@@ -443,7 +443,7 @@ CONTAINS
                   i = (ileft + iright) / 2
                   IF (x == list(i)) THEN
                      iloc = i
-                     exit
+                     EXIT
                   ELSEIF (x > list(i)) THEN
                      ileft = i
                   ELSEIF (x < list(i)) THEN
@@ -459,16 +459,16 @@ CONTAINS
    !--------------------------------------------------
    FUNCTION find_in_sorted_list1_int64 (x, n, list) result(iloc)
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      INTEGER :: iloc
+   integer :: iloc
 
-      INTEGER*8, intent(in) :: x
-      INTEGER,   intent(in) :: n
-      INTEGER*8, intent(in) :: list (n)
+   integer*8, intent(in) :: x
+   integer,   intent(in) :: n
+   integer*8, intent(in) :: list (n)
 
-      ! Local variables
-      INTEGER :: i, ileft, iright
+   ! Local variables
+   integer :: i, ileft, iright
 
       iloc = 0
       IF (n > 0) THEN
@@ -485,7 +485,7 @@ CONTAINS
                   i = (ileft + iright) / 2
                   IF (x == list(i)) THEN
                      iloc = i
-                     exit
+                     EXIT
                   ELSEIF (x > list(i)) THEN
                      ileft = i
                   ELSEIF (x < list(i)) THEN
@@ -501,16 +501,16 @@ CONTAINS
    !--------------------------------------------------
    FUNCTION find_in_sorted_list2 (x, y, n, xlist, ylist) result(iloc)
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      INTEGER :: iloc
+   integer :: iloc
 
-      INTEGER, intent(in) :: x, y
-      INTEGER, intent(in) :: n
-      INTEGER, intent(in) :: xlist(:), ylist(:)
+   integer, intent(in) :: x, y
+   integer, intent(in) :: n
+   integer, intent(in) :: xlist(:), ylist(:)
 
-      ! Local variables
-      INTEGER :: i, ileft, iright
+   ! Local variables
+   integer :: i, ileft, iright
 
       iloc = 0
       IF (n < 1) RETURN
@@ -527,12 +527,12 @@ CONTAINS
          ileft  = 1
          iright = n
 
-         DO while (.true.)
+         DO WHILE (.true.)
             IF (iright - ileft > 1) THEN
                i = (ileft + iright) / 2
                IF ((y == ylist(i)) .and. (x == xlist(i))) THEN
                   iloc = i
-                  exit
+                  EXIT
                ELSEIF ((y > ylist(i)) .or. ((y == ylist(i)) .and. (x > xlist(i)))) THEN
                   ileft = i
                ELSEIF ((y < ylist(i)) .or. ((y == ylist(i)) .and. (x < xlist(i)))) THEN
@@ -540,7 +540,7 @@ CONTAINS
                ENDIF
             ELSE
                iloc = 0
-               exit
+               EXIT
             ENDIF
          ENDDO
       ENDIF
@@ -550,17 +550,17 @@ CONTAINS
    !-----------------------------------------------------
    FUNCTION find_nearest_south (y, n, lat) result(iloc)
 
-      USE MOD_Precision
-      IMPLICIT NONE
+   USE MOD_Precision
+   IMPLICIT NONE
 
-      INTEGER :: iloc
+   integer :: iloc
 
-      REAL(r8), intent(in) :: y
-      INTEGER,  intent(in) :: n
-      REAL(r8), intent(in) :: lat (n)
+   real(r8), intent(in) :: y
+   integer,  intent(in) :: n
+   real(r8), intent(in) :: lat (n)
 
-      ! Local variables
-      INTEGER :: i, iright, ileft
+   ! Local variables
+   integer :: i, iright, ileft
 
       IF (lat(1) < lat(n))  THEN
          IF (y <= lat(1)) THEN
@@ -570,7 +570,7 @@ CONTAINS
          ELSE
             ileft = 1;  iright = n
 
-            DO while (iright - ileft > 1)
+            DO WHILE (iright - ileft > 1)
                i = (iright + ileft) / 2
                IF (y >= lat(i)) THEN
                   ileft = i
@@ -589,7 +589,7 @@ CONTAINS
          ELSE
             ileft = 1;  iright = n
 
-            DO while (iright - ileft > 1)
+            DO WHILE (iright - ileft > 1)
                i = (iright + ileft) / 2
                IF (y >= lat(i)) THEN
                   iright = i
@@ -607,17 +607,17 @@ CONTAINS
    !-----------------------------------------------------
    FUNCTION find_nearest_north (y, n, lat)  result(iloc)
 
-      USE MOD_Precision
-      IMPLICIT NONE
+   USE MOD_Precision
+   IMPLICIT NONE
 
-      REAL(r8), intent(in) :: y
-      INTEGER,  intent(in) :: n
-      REAL(r8), intent(in) :: lat (n)
+   real(r8), intent(in) :: y
+   integer,  intent(in) :: n
+   real(r8), intent(in) :: lat (n)
 
-      INTEGER :: iloc
+   integer :: iloc
 
-      ! Local variables
-      INTEGER :: i, iright, ileft
+   ! Local variables
+   integer :: i, iright, ileft
 
       IF (lat(1) < lat(n))  THEN
          IF (y <= lat(1)) THEN
@@ -627,7 +627,7 @@ CONTAINS
          ELSE
             ileft = 1;  iright = n
 
-            DO while (iright - ileft > 1)
+            DO WHILE (iright - ileft > 1)
                i = (iright + ileft) / 2
                IF (y > lat(i)) THEN
                   ileft = i
@@ -646,7 +646,7 @@ CONTAINS
          ELSE
             ileft = 1;  iright = n
 
-            DO while (iright - ileft > 1)
+            DO WHILE (iright - ileft > 1)
                i = (iright + ileft) / 2
                IF (y > lat(i)) THEN
                   iright = i
@@ -662,12 +662,12 @@ CONTAINS
    END FUNCTION find_nearest_north
 
    !-----------------------------------------
-   LOGICAL FUNCTION lon_between_floor (lon, west, east)
+   logical FUNCTION lon_between_floor (lon, west, east)
 
-      USE MOD_Precision
-      IMPLICIT NONE
+   USE MOD_Precision
+   IMPLICIT NONE
 
-      REAL(r8), intent(in) :: lon, west, east ! [-180, 180)
+   real(r8), intent(in) :: lon, west, east ! [-180, 180)
 
       IF (west >= east) THEN
          lon_between_floor = (lon >= west) .or. (lon < east)
@@ -678,12 +678,12 @@ CONTAINS
    END FUNCTION lon_between_floor
 
    !-----------------------------------------
-   LOGICAL FUNCTION lon_between_ceil (lon, west, east)
+   logical FUNCTION lon_between_ceil (lon, west, east)
 
-      USE MOD_Precision
-      IMPLICIT NONE
+   USE MOD_Precision
+   IMPLICIT NONE
 
-      REAL(r8), intent(in) :: lon, west, east ! [-180, 180)
+   real(r8), intent(in) :: lon, west, east ! [-180, 180)
 
       IF (west >= east) THEN
          lon_between_ceil = (lon > west) .or. (lon <= east)
@@ -696,17 +696,17 @@ CONTAINS
    !-----------------------------------------------------
    FUNCTION find_nearest_west (x, n, lon) result(iloc)
 
-      USE MOD_Precision
-      IMPLICIT NONE
+   USE MOD_Precision
+   IMPLICIT NONE
 
-      REAL(r8), intent(in) :: x
-      INTEGER,  intent(in) :: n
-      REAL(r8), intent(in) :: lon (n)
+   real(r8), intent(in) :: x
+   integer,  intent(in) :: n
+   real(r8), intent(in) :: lon (n)
 
-      INTEGER :: iloc
+   integer :: iloc
 
-      ! Local variables
-      INTEGER :: i, iright, ileft
+   ! Local variables
+   integer :: i, iright, ileft
 
       IF (n == 1) THEN
          iloc = 1
@@ -719,7 +719,7 @@ CONTAINS
       ENDIF
 
       ileft = 1; iright = n
-      DO while (iright - ileft > 1)
+      DO WHILE (iright - ileft > 1)
          i = (iright + ileft)/2
          IF (lon_between_floor(x,lon(i),lon(iright))) THEN
             ileft = i
@@ -735,17 +735,17 @@ CONTAINS
    !-----------------------------------------------------
    FUNCTION find_nearest_east (x, n, lon) result(iloc)
 
-      USE MOD_Precision
-      IMPLICIT NONE
+   USE MOD_Precision
+   IMPLICIT NONE
 
-      REAL(r8), intent(in) :: x
-      INTEGER,  intent(in) :: n
-      REAL(r8), intent(in) :: lon (n)
+   real(r8), intent(in) :: x
+   integer,  intent(in) :: n
+   real(r8), intent(in) :: lon (n)
 
-      INTEGER :: iloc
+   integer :: iloc
 
-      ! Local variables
-      INTEGER :: i, iright, ileft
+   ! Local variables
+   integer :: i, iright, ileft
 
       IF (n == 1) THEN
          iloc = 1
@@ -758,7 +758,7 @@ CONTAINS
       ENDIF
 
       ileft = 1; iright = n
-      DO while (iright - ileft > 1)
+      DO WHILE (iright - ileft > 1)
          i = (iright + ileft)/2
          IF (lon_between_ceil(x,lon(i),lon(iright))) THEN
             ileft = i
@@ -775,18 +775,18 @@ CONTAINS
    !-----------------------------------------------------
    recursive SUBROUTINE quicksort_int32 (nA, A, order)
 
-      USE MOD_Precision
-      IMPLICIT NONE
+   USE MOD_Precision
+   IMPLICIT NONE
 
-      INTEGER, intent(in) :: nA
-      INTEGER, intent(inout) :: A     (nA)
-      INTEGER, intent(inout) :: order (nA)
+   integer, intent(in) :: nA
+   integer, intent(inout) :: A     (nA)
+   integer, intent(inout) :: order (nA)
 
-      ! Local variables
-      INTEGER :: left, right
-      INTEGER :: pivot
-      INTEGER :: marker
-      INTEGER :: itemp
+   ! Local variables
+   integer :: left, right
+   integer :: pivot
+   integer :: marker
+   integer :: itemp
 
       IF (nA > 1) THEN
 
@@ -794,14 +794,14 @@ CONTAINS
          left  = 0
          right = nA + 1
 
-         DO while (left < right)
+         DO WHILE (left < right)
             right = right - 1
-            DO while (A(right) > pivot)
+            DO WHILE (A(right) > pivot)
                right = right - 1
             ENDDO
 
             left = left + 1
-            DO while (A(left) < pivot)
+            DO WHILE (A(left) < pivot)
                left = left + 1
             ENDDO
 
@@ -828,16 +828,16 @@ CONTAINS
    !-----------------------------------------------------
    recursive SUBROUTINE quicksort_int64 (nA, A, order)
 
-      USE MOD_Precision
-      IMPLICIT NONE
+   USE MOD_Precision
+   IMPLICIT NONE
 
-      INTEGER,   intent(in) :: nA
-      INTEGER*8, intent(inout) :: A     (nA)
-      INTEGER,   intent(inout) :: order (nA)
+   integer,   intent(in) :: nA
+   integer*8, intent(inout) :: A     (nA)
+   integer,   intent(inout) :: order (nA)
 
-      ! Local variables
-      INTEGER*8 :: left, right, pivot, itemp
-      INTEGER   :: marker
+   ! Local variables
+   integer*8 :: left, right, pivot, itemp
+   integer   :: marker
 
       IF (nA > 1) THEN
 
@@ -845,14 +845,14 @@ CONTAINS
          left  = 0
          right = nA + 1
 
-         DO while (left < right)
+         DO WHILE (left < right)
             right = right - 1
-            DO while (A(right) > pivot)
+            DO WHILE (A(right) > pivot)
                right = right - 1
             ENDDO
 
             left = left + 1
-            DO while (A(left) < pivot)
+            DO WHILE (A(left) < pivot)
                left = left + 1
             ENDDO
 
@@ -879,16 +879,16 @@ CONTAINS
    !-----------------------------------------------------
    recursive SUBROUTINE quicksort_real8 (nA, A, order)
 
-      USE MOD_Precision
-      IMPLICIT NONE
+   USE MOD_Precision
+   IMPLICIT NONE
 
-      INTEGER,  intent(in) :: nA
-      real(r8), intent(inout) :: A     (nA)
-      INTEGER,  intent(inout) :: order (nA)
+   integer,  intent(in) :: nA
+   real(r8), intent(inout) :: A     (nA)
+   integer,  intent(inout) :: order (nA)
 
-      ! Local variables
-      real(r8) :: pivot, temp
-      integer  :: left,  right, marker, itemp
+   ! Local variables
+   real(r8) :: pivot, temp
+   integer  :: left,  right, marker, itemp
 
       IF (nA > 1) THEN
 
@@ -896,14 +896,14 @@ CONTAINS
          left  = 0
          right = nA + 1
 
-         DO while (left < right)
+         DO WHILE (left < right)
             right = right - 1
-            DO while (A(right) > pivot)
+            DO WHILE (A(right) > pivot)
                right = right - 1
             ENDDO
 
             left = left + 1
-            DO while (A(left) < pivot)
+            DO WHILE (A(left) < pivot)
                left = left + 1
             ENDDO
 
@@ -930,20 +930,20 @@ CONTAINS
    !-----------------------------------------------------
    recursive FUNCTION quickselect (nA, A, k) result(selected)
 
-      USE MOD_Precision
-      IMPLICIT NONE
+   USE MOD_Precision
+   IMPLICIT NONE
 
-      REAL(r8) :: selected
+   real(r8) :: selected
 
-      INTEGER , intent(in)    :: nA
-      REAL(r8), intent(inout) :: A (nA)
-      INTEGER,  intent(in)    :: k
+   integer , intent(in)    :: nA
+   real(r8), intent(inout) :: A (nA)
+   integer,  intent(in)    :: k
 
-      ! Local variables
-      INTEGER  :: left, right
-      REAL(r8) :: pivot
-      INTEGER  :: marker
-      REAL(r8) :: rtemp
+   ! Local variables
+   integer  :: left, right
+   real(r8) :: pivot
+   integer  :: marker
+   real(r8) :: rtemp
 
       IF (nA > 1) THEN
 
@@ -951,14 +951,14 @@ CONTAINS
          left  = 0
          right = nA + 1
 
-         DO while (left < right)
+         DO WHILE (left < right)
             right = right - 1
-            DO while (A(right) > pivot)
+            DO WHILE (A(right) > pivot)
                right = right - 1
             ENDDO
 
             left = left + 1
-            DO while (A(left) < pivot)
+            DO WHILE (A(left) < pivot)
                left = left + 1
             ENDDO
 
@@ -987,20 +987,20 @@ CONTAINS
    ! ------------------------
    FUNCTION median(x, n, spval) result(mval)
 
-      USE MOD_Precision
-      IMPLICIT NONE
+   USE MOD_Precision
+   IMPLICIT NONE
 
-      REAL(r8) :: mval
+   real(r8) :: mval
 
-      INTEGER,  intent(in) :: n
-      REAL(r8), intent(in) :: x(n)
-      REAL(r8), intent(in), optional :: spval
+   integer,  intent(in) :: n
+   real(r8), intent(in) :: x(n)
+   real(r8), intent(in), optional :: spval
 
-      ! Local variables
-      INTEGER  :: nc
-      REAL(r8), allocatable :: xtemp(:)
-      LOGICAL,  allocatable :: msk  (:)
-      REAL(r8) :: right, left
+   ! Local variables
+   integer  :: nc
+   real(r8), allocatable :: xtemp(:)
+   logical,  allocatable :: msk  (:)
+   real(r8) :: right, left
 
       IF (present(spval)) THEN
          allocate (msk (n))
@@ -1041,16 +1041,16 @@ CONTAINS
    !-----------------------------------------------------
    FUNCTION areaquad (lats, latn, lonw, lone) result(area)
 
-      USE MOD_Precision
-      IMPLICIT NONE
+   USE MOD_Precision
+   IMPLICIT NONE
 
-      REAL(r8) :: area ! in km^2
-      REAL(r8), parameter :: re = 6.37122e3 ! kilometer
-      REAL(r8), parameter :: deg2rad = 1.745329251994330e-2_r8
-      REAL(r8), intent(in) :: lats, latn, lonw, lone
+   real(r8) :: area ! in km^2
+   real(r8), parameter :: re = 6.37122e3 ! kilometer
+   real(r8), parameter :: deg2rad = 1.745329251994330e-2_r8
+   real(r8), intent(in) :: lats, latn, lonw, lone
 
-      ! Local variables
-      REAL(r8) :: dx, dy
+   ! Local variables
+   real(r8) :: dx, dy
 
       IF (lone < lonw) THEN
          dx = (lone + 360 - lonw) * deg2rad
@@ -1067,13 +1067,13 @@ CONTAINS
    ! --- spherical distance  ---
    FUNCTION arclen (lat1, lon1, lat2, lon2)
 
-      USE MOD_Precision
-      IMPLICIT NONE
+   USE MOD_Precision
+   IMPLICIT NONE
 
-      REAL(r8) :: arclen ! in km
-      REAL(r8), intent(in) :: lat1, lon1, lat2, lon2
+   real(r8) :: arclen ! in km
+   real(r8), intent(in) :: lat1, lon1, lat2, lon2
 
-      REAL(r8), parameter :: re = 6.37122e3 ! kilometer
+   real(r8), parameter :: re = 6.37122e3 ! kilometer
 
       arclen = re * acos (sin(lat1)*sin(lat2) + cos(lat1)*cos(lat2) * cos(lon1-lon2))
 
@@ -1082,14 +1082,14 @@ CONTAINS
    !-----------------------------------------------------
    SUBROUTINE unpack_inplace_int32 (din, msk, dout)
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      INTEGER, intent(in) :: din (:)
-      LOGICAL, intent(in) :: msk (:)
-      INTEGER, intent(inout) :: dout (:)
+   integer, intent(in) :: din (:)
+   logical, intent(in) :: msk (:)
+   integer, intent(inout) :: dout (:)
 
-      ! Local variables
-      INTEGER :: n, i
+   ! Local variables
+   integer :: n, i
 
       n = 0
       DO i = 1, size(msk)
@@ -1104,15 +1104,15 @@ CONTAINS
    !-----------------------------------------------------
    SUBROUTINE unpack_inplace_real8 (din, msk, dout)
 
-      USE MOD_Precision
-      IMPLICIT NONE
+   USE MOD_Precision
+   IMPLICIT NONE
 
-      REAL(r8), intent(in) :: din (:)
-      LOGICAL,  intent(in) :: msk (:)
-      REAL(r8), intent(inout) :: dout (:)
+   real(r8), intent(in) :: din (:)
+   logical,  intent(in) :: msk (:)
+   real(r8), intent(inout) :: dout (:)
 
-      ! Local variables
-      INTEGER :: n, i
+   ! Local variables
+   integer :: n, i
 
       n = 0
       DO i = 1, size(msk)
@@ -1127,15 +1127,15 @@ CONTAINS
    !-----------------------------------------------------
    SUBROUTINE unpack_inplace_lastdim_real8 (din, msk, dout)
 
-      USE MOD_Precision
-      IMPLICIT NONE
+   USE MOD_Precision
+   IMPLICIT NONE
 
-      REAL(r8), intent(in) :: din (:,:)
-      LOGICAL,  intent(in) :: msk (:)
-      REAL(r8), intent(inout) :: dout (:,:)
+   real(r8), intent(in) :: din (:,:)
+   logical,  intent(in) :: msk (:)
+   real(r8), intent(inout) :: dout (:,:)
 
-      ! Local variables
-      INTEGER :: n, i
+   ! Local variables
+   integer :: n, i
 
       n = 0
       DO i = 1, size(msk)
@@ -1148,16 +1148,16 @@ CONTAINS
    END SUBROUTINE unpack_inplace_lastdim_real8
 
    !---------------------------------------------------
-   INTEGER FUNCTION num_max_frequency (data_in)
+   integer FUNCTION num_max_frequency (data_in)
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      INTEGER, intent(in) :: data_in(:)
+   integer, intent(in) :: data_in(:)
 
-      ! Local Variables
-      INTEGER, allocatable :: data_(:), cnts(:)
-      INTEGER :: ndata, i, n, iloc
-      LOGICAL :: is_new
+   ! Local Variables
+   integer, allocatable :: data_(:), cnts(:)
+   integer :: ndata, i, n, iloc
+   logical :: is_new
 
       ndata = size(data_in)
       allocate (data_(ndata))
@@ -1184,14 +1184,14 @@ CONTAINS
 
    !----------------------------------------------------
    SUBROUTINE lmder ( fcn, m, n, x, fvec, fjac, ldfjac, ftol, xtol, gtol, maxfev, &
-     diag, mode, factor, nprint, info, nfev, njev, ipvt, qtf, xdat, npoint, ydat, nptf, phi, isiter,&
-     vf_om, vf_sand, vf_gravels)
+     diag, mode, factor, nprint, info, nfev, njev, ipvt, qtf, xdat, npoint, ydat, &
+     ydatks, nptf, phi, k_s, isiter, L_vgm)
 
    !*******************************************************************************
    !
    !! LMDER minimizes M functions in N variables by the Levenberg-Marquardt method
-   !  implemented for fitting the SW retention parameters of the Campbell/van Genuchten model
-   !  and Ke-Sr relationship in Balland V. and P. A. Arp (2005) model.
+   !  implemented for fitting the SW retention & hydraulic conductivity parameters
+   !  in the Campbell/van Genuchten models.
    !
    !  Discussion:
    !
@@ -1225,16 +1225,15 @@ CONTAINS
    !
    !    Input, external FCN, the name of the user-supplied subroutine which
    !    calculates the functions and the jacobian.  FCN should have the form:
-   !      subroutine fcn ( m, n, x, fvec, fjac, ldfjac, iflag, xdat, npoint, ydat, nptf, phi, isiter, &
-   !                       vf_om, vf_sand, vf_gravels)
+   !      subroutine fcn ( m, n, x, fvec, fjac, ldfjac, iflag, xdat, npoint, ydat, ydatks, nptf, phi, k_s, isiter, L_vgm)
    !      integer ( kind = 4 ) ldfjac
    !      integer ( kind = 4 ) n
    !      real ( kind = 8 ) fjac(ldfjac,n)
    !      real ( kind = 8 ) fvec(m)
    !      integer ( kind = 4 ) iflag
    !      real ( kind = 8 ) x(n)
-   !      xdat, npoint, ydat, nptf, phi and isiter are transfered as the coefficients of the fitting functions.
-   !      vf_om, vf_sand and vf_gravels are only used for fitting Ke-Sr relationship.
+   !      xdat, npoint, ydat, ydatks, nptf, phi, k_s and isiter are transfered as the inputs of the fitting functions.
+   !      L_vgm are only used for vanGenuchten_Mualem soil model input.
    !
    !    If IFLAG = 0 on input, then FCN is only being called to allow the user
    !    to print out the current iterate.
@@ -1337,425 +1336,419 @@ CONTAINS
    !
    !    Output, real ( kind = 8 ) QTF(N), contains the first N elements of Q'*FVEC.
    !
-     implicit none
+   IMPLICIT NONE
 
-     integer ( kind = 4 ) ldfjac
-     integer ( kind = 4 ) m
-     integer ( kind = 4 ) n
+   integer ( kind = 4 ) ldfjac
+   integer ( kind = 4 ) m
+   integer ( kind = 4 ) n
 
-     real ( kind = 8 ) actred
-     real ( kind = 8 ) delta
-     real ( kind = 8 ) diag(n)
-     real ( kind = 8 ) dirder
-     real ( kind = 8 ) epsmch
-     real ( kind = 8 ) factor
-     external fcn
-     real ( kind = 8 ) fjac(ldfjac,n)
-     real ( kind = 8 ) fnorm
-     real ( kind = 8 ) fnorm1
-     real ( kind = 8 ) ftol
-     real ( kind = 8 ) fvec(m)
-     real ( kind = 8 ) gnorm
-     real ( kind = 8 ) gtol
-     integer ( kind = 4 ) i
-     integer ( kind = 4 ) iflag
-     integer ( kind = 4 ) info
-     integer ( kind = 4 ) ipvt(n)
-     integer ( kind = 4 ) iter
-     integer ( kind = 4 ) j
-     integer ( kind = 4 ) l
-     integer ( kind = 4 ) maxfev
-     integer ( kind = 4 ) mode
-     integer ( kind = 4 ) nfev
-     integer ( kind = 4 ) njev
-     integer ( kind = 4 ) nprint
-     real ( kind = 8 ) par
-     logical pivot
-     real ( kind = 8 ) pnorm
-     real ( kind = 8 ) prered
-     real ( kind = 8 ) qtf(n)
-     real ( kind = 8 ) ratio
-     real ( kind = 8 ) sum2
-     real ( kind = 8 ) temp
-     real ( kind = 8 ) temp1
-     real ( kind = 8 ) temp2
-     real ( kind = 8 ) wa1(n)
-     real ( kind = 8 ) wa2(n)
-     real ( kind = 8 ) wa3(n)
-     real ( kind = 8 ) wa4(m)
-     real ( kind = 8 ) xnorm
-     real ( kind = 8 ) x(n)
-     real ( kind = 8 ) xtol
-     real ( kind = 8 ) phi
-     integer ( kind = 4 ) isiter
-     integer ( kind = 4 ) npoint
-     integer ( kind = 4 ) nptf
-     real ( kind = 8 ) xdat(npoint)
-     real ( kind = 8 ) ydat(nptf,npoint)
-     real ( kind = 8 ), optional :: vf_om
-     real ( kind = 8 ), optional :: vf_sand
-     real ( kind = 8 ), optional :: vf_gravels
+   real ( kind = 8 ) actred
+   real ( kind = 8 ) delta
+   real ( kind = 8 ) diag(n)
+   real ( kind = 8 ) dirder
+   real ( kind = 8 ) epsmch
+   real ( kind = 8 ) factor
+   external fcn
+   real ( kind = 8 ) fjac(ldfjac,n)
+   real ( kind = 8 ) fnorm
+   real ( kind = 8 ) fnorm1
+   real ( kind = 8 ) ftol
+   real ( kind = 8 ) fvec(m)
+   real ( kind = 8 ) gnorm
+   real ( kind = 8 ) gtol
+   integer ( kind = 4 ) i
+   integer ( kind = 4 ) iflag
+   integer ( kind = 4 ) info
+   integer ( kind = 4 ) ipvt(n)
+   integer ( kind = 4 ) iter
+   integer ( kind = 4 ) j
+   integer ( kind = 4 ) l
+   integer ( kind = 4 ) maxfev
+   integer ( kind = 4 ) mode
+   integer ( kind = 4 ) nfev
+   integer ( kind = 4 ) njev
+   integer ( kind = 4 ) nprint
+   real ( kind = 8 ) par
+   logical pivot
+   real ( kind = 8 ) pnorm
+   real ( kind = 8 ) prered
+   real ( kind = 8 ) qtf(n)
+   real ( kind = 8 ) ratio
+   real ( kind = 8 ) sum2
+   real ( kind = 8 ) temp
+   real ( kind = 8 ) temp1
+   real ( kind = 8 ) temp2
+   real ( kind = 8 ) wa1(n)
+   real ( kind = 8 ) wa2(n)
+   real ( kind = 8 ) wa3(n)
+   real ( kind = 8 ) wa4(m)
+   real ( kind = 8 ) xnorm
+   real ( kind = 8 ) x(n)
+   real ( kind = 8 ) xtol
+   real ( kind = 8 ) phi,k_s
+   integer ( kind = 4 ) isiter
+   integer ( kind = 4 ) npoint
+   integer ( kind = 4 ) nptf
+   real ( kind = 8 ) xdat(npoint)
+   real ( kind = 8 ) ydat  (nptf,npoint)
+   real ( kind = 8 ) ydatks(nptf,npoint)
+   real ( kind = 8 ), optional :: L_vgm
 
-     epsmch = epsilon ( epsmch )
+      epsmch = epsilon ( epsmch )
 
-     info = 0
-     iflag = 0
-     nfev = 0
-     njev = 0
+      info = 0
+      iflag = 0
+      nfev = 0
+      njev = 0
    !
    !  Check the input parameters for errors.
    !
-     if ( n <= 0 ) then
-       go to 300
-     end if
+      IF ( n <= 0 ) THEN
+         go to 300
+      ENDIF
 
-     if ( m < n ) then
-       go to 300
-     end if
+      IF ( m < n ) THEN
+         go to 300
+      ENDIF
 
-     if ( ldfjac < m &
+      IF ( ldfjac < m &
        .or. ftol < 0.0D+00 .or. xtol < 0.0D+00 .or. gtol < 0.0D+00 &
-        .or. maxfev <= 0 .or. factor <= 0.0D+00 ) then
-       go to 300
-     end if
+        .or. maxfev <= 0 .or. factor <= 0.0D+00 ) THEN
+         go to 300
+      ENDIF
 
-     if ( mode == 2 ) then
-       do j = 1, n
-         if ( diag(j) <= 0.0D+00 ) then
-           go to 300
-         end if
-       end do
-     end if
+      IF ( mode == 2 ) THEN
+         DO j = 1, n
+            IF ( diag(j) <= 0.0D+00 ) THEN
+               go to 300
+            ENDIF
+         ENDDO
+      ENDIF
    !
    !  Evaluate the function at the starting point and calculate its norm.
    !
-     iflag = 1
-     if (present(vf_om) .and. present(vf_sand) .and. present(vf_gravels)) then
-         CALL fcn ( m, n, x, fvec, fjac, ldfjac, iflag, xdat, npoint, ydat, nptf, phi, isiter,&
-                    vf_om, vf_sand, vf_gravels)
-     else
-         CALL fcn ( m, n, x, fvec, fjac, ldfjac, iflag, xdat, npoint, ydat, nptf, phi, isiter )
-     end if
-     nfev = 1
-     if ( iflag < 0 ) then
-       go to 300
-     end if
+      iflag = 1
+      IF (present(L_vgm)) THEN
+         CALL fcn ( m, n, x, fvec, fjac, ldfjac, iflag, xdat, npoint, ydat, ydatks, nptf, phi, k_s, isiter, L_vgm)
+      ELSE
+         CALL fcn ( m, n, x, fvec, fjac, ldfjac, iflag, xdat, npoint, ydat, ydatks, nptf, phi, k_s, isiter )
+      ENDIF
+      nfev = 1
+      IF ( iflag < 0 ) THEN
+         go to 300
+      ENDIF
 
-     fnorm = enorm ( m, fvec )
+      fnorm = enorm ( m, fvec )
    !
    !  Initialize Levenberg-Marquardt parameter and iteration counter.
    !
-     par = 0.0D+00
-     iter = 1
+      par = 0.0D+00
+      iter = 1
    !
    !  Beginning of the outer loop.
    !
-     do
+      DO
    !
    !  Calculate the jacobian matrix.
    !
-       iflag = 2
-       if (present(vf_om) .and. present(vf_sand) .and. present(vf_gravels)) then
-           CALL fcn ( m, n, x, fvec, fjac, ldfjac, iflag, xdat, npoint, ydat, nptf, phi, isiter,&
-                      vf_om, vf_sand, vf_gravels)
-       else
-           CALL fcn ( m, n, x, fvec, fjac, ldfjac, iflag, xdat, npoint, ydat, nptf, phi, isiter )
-       end if
+         iflag = 2
+         IF (present(L_vgm)) THEN
+            CALL fcn ( m, n, x, fvec, fjac, ldfjac, iflag, xdat, npoint, ydat, ydatks, nptf, phi, k_s, isiter, L_vgm)
+         ELSE
+            CALL fcn ( m, n, x, fvec, fjac, ldfjac, iflag, xdat, npoint, ydat, ydatks, nptf, phi, k_s, isiter )
+         ENDIF
 
-       njev = njev + 1
+         njev = njev + 1
 
-       if ( iflag < 0 ) then
-         go to 300
-       end if
+         IF ( iflag < 0 ) THEN
+            go to 300
+         ENDIF
    !
-   !  If requested, call FCN to enable printing of iterates.
+   !     IF requested, call FCN to enable printing of iterates.
    !
-       if ( 0 < nprint ) then
-         iflag = 0
-         if ( mod ( iter - 1, nprint ) == 0 ) then
-              if (present(vf_om) .and. present(vf_sand) .and. present(vf_gravels)) then
-                  CALL fcn ( m, n, x, fvec, fjac, ldfjac, iflag, xdat, npoint, ydat, nptf, phi, isiter,&
-                             vf_om, vf_sand, vf_gravels)
-              else
-                  CALL fcn ( m, n, x, fvec, fjac, ldfjac, iflag, xdat, npoint, ydat, nptf, phi, isiter )
-              end if
-         end if
-         if ( iflag < 0 ) then
-           go to 300
-         end if
-       end if
+         IF ( 0 < nprint ) THEN
+            iflag = 0
+            IF ( mod ( iter - 1, nprint ) == 0 ) THEN
+               IF (present(L_vgm)) THEN
+                  CALL fcn ( m, n, x, fvec, fjac, ldfjac, iflag, xdat, npoint, ydat, ydatks, nptf, phi, k_s, isiter, L_vgm)
+               ELSE
+                  CALL fcn ( m, n, x, fvec, fjac, ldfjac, iflag, xdat, npoint, ydat, ydatks, nptf, phi, k_s, isiter )
+               ENDIF
+            ENDIF
+            IF ( iflag < 0 ) THEN
+               go to 300
+            ENDIF
+         ENDIF
    !
-   !  Compute the QR factorization of the jacobian.
+   !     Compute the QR factorization of the jacobian.
    !
-       pivot = .true.
-       CALL qrfac ( m, n, fjac, ldfjac, pivot, ipvt, n, wa1, wa2 )
-   !
-   !  On the first iteration and if mode is 1, scale according
-   !  to the norms of the columns of the initial jacobian.
-   !
-       if ( iter == 1 ) then
+         pivot = .true.
+         CALL qrfac ( m, n, fjac, ldfjac, pivot, ipvt, n, wa1, wa2 )
 
-         if ( mode /= 2 ) then
-           diag(1:n) = wa2(1:n)
-           do j = 1, n
-             if ( wa2(j) == 0.0D+00 ) then
-               diag(j) = 1.0D+00
-             end if
-           end do
-         end if
+   !     On the first iteration and if mode is 1, scale according
+   !     to the norms of the columns of the initial jacobian.
    !
-   !  On the first iteration, calculate the norm of the scaled X
-   !  and initialize the step bound DELTA.
-   !
-         wa3(1:n) = diag(1:n) * x(1:n)
+         IF ( iter == 1 ) THEN
 
-         xnorm = enorm ( n, wa3 )
+            IF ( mode /= 2 ) THEN
+               diag(1:n) = wa2(1:n)
+               DO j = 1, n
+                  IF ( wa2(j) == 0.0D+00 ) THEN
+                     diag(j) = 1.0D+00
+                  ENDIF
+               ENDDO
+            ENDIF
+   !
+   !        On the first iteration, calculate the norm of the scaled X
+   !        and initialize the step bound DELTA.
+   !
+            wa3(1:n) = diag(1:n) * x(1:n)
 
-         if ( xnorm == 0.0D+00 ) then
-           delta = factor
-         else
-           delta = factor * xnorm
-         end if
+            xnorm = enorm ( n, wa3 )
 
-       end if
-   !
-   !  Form Q'*FVEC and store the first N components in QTF.
-   !
-       wa4(1:m) = fvec(1:m)
+            IF ( xnorm == 0.0D+00 ) THEN
+               delta = factor
+            ELSE
+               delta = factor * xnorm
+            ENDIF
 
-       do j = 1, n
+         ENDIF
+   !
+   !     Form Q'*FVEC and store the first N components in QTF.
+   !
+         wa4(1:m) = fvec(1:m)
 
-         if ( fjac(j,j) /= 0.0D+00 ) then
-           sum2 = dot_product ( wa4(j:m), fjac(j:m,j) )
-           temp = - sum2 / fjac(j,j)
-           wa4(j:m) = wa4(j:m) + fjac(j:m,j) * temp
-         end if
+         DO j = 1, n
 
-         fjac(j,j) = wa1(j)
-         qtf(j) = wa4(j)
+            IF ( fjac(j,j) /= 0.0D+00 ) THEN
+               sum2 = dot_product ( wa4(j:m), fjac(j:m,j) )
+               temp = - sum2 / fjac(j,j)
+               wa4(j:m) = wa4(j:m) + fjac(j:m,j) * temp
+            ENDIF
 
-       end do
-   !
-   !  Compute the norm of the scaled gradient.
-   !
-       gnorm = 0.0D+00
+            fjac(j,j) = wa1(j)
+            qtf(j) = wa4(j)
 
-       if ( fnorm /= 0.0D+00 ) then
+         ENDDO
+   !
+   !     Compute the norm of the scaled gradient.
+   !
+         gnorm = 0.0D+00
 
-         do j = 1, n
-           l = ipvt(j)
-           if ( wa2(l) /= 0.0D+00 ) then
-             sum2 = dot_product ( qtf(1:j), fjac(1:j,j) ) / fnorm
-             gnorm = max ( gnorm, abs ( sum2 / wa2(l) ) )
-           end if
-         end do
+         IF ( fnorm /= 0.0D+00 ) THEN
 
-       end if
-   !
-   !  Test for convergence of the gradient norm.
-   !
-       if ( gnorm <= gtol ) then
-         info = 4
-         go to 300
-       end if
-   !
-   !  Rescale if necessary.
-   !
-       if ( mode /= 2 ) then
-         do j = 1, n
-           diag(j) = max ( diag(j), wa2(j) )
-         end do
-       end if
-   !
-   !  Beginning of the inner loop.
-   !
-       do
-   !
-   !  Determine the Levenberg-Marquardt parameter.
-   !
-         CALL lmpar ( n, fjac, ldfjac, ipvt, diag, qtf, delta, par, wa1, wa2 )
-   !
-   !  Store the direction p and x + p. calculate the norm of p.
-   !
-         wa1(1:n) = - wa1(1:n)
-         wa2(1:n) = x(1:n) + wa1(1:n)
-         wa3(1:n) = diag(1:n) * wa1(1:n)
+            DO j = 1, n
+               l = ipvt(j)
+               IF ( wa2(l) /= 0.0D+00 ) THEN
+                  sum2 = dot_product ( qtf(1:j), fjac(1:j,j) ) / fnorm
+                  gnorm = max ( gnorm, abs ( sum2 / wa2(l) ) )
+               ENDIF
+            ENDDO
 
-         pnorm = enorm ( n, wa3 )
+         ENDIF
    !
-   !  On the first iteration, adjust the initial step bound.
+   !     Test for convergence of the gradient norm.
    !
-         if ( iter == 1 ) then
-           delta = min ( delta, pnorm )
-         end if
+         IF ( gnorm <= gtol ) THEN
+            info = 4
+            go to 300
+         ENDIF
    !
-   !  Evaluate the function at x + p and calculate its norm.
+   !     Rescale if necessary.
    !
-         iflag = 1
-         if (present(vf_om) .and. present(vf_sand) .and. present(vf_gravels)) then
-             CALL fcn ( m, n, wa2, wa4, fjac, ldfjac, iflag, xdat, npoint, ydat, nptf, phi, isiter,&
-                        vf_om, vf_sand, vf_gravels)
-         else
-             CALL fcn ( m, n, wa2, wa4, fjac, ldfjac, iflag, xdat, npoint, ydat, nptf, phi, isiter )
-         end if
+         IF ( mode /= 2 ) THEN
+            DO j = 1, n
+               diag(j) = max ( diag(j), wa2(j) )
+            ENDDO
+         ENDIF
+   !
+   !     Beginning of the inner loop.
+   !
+         DO
+   !
+   !     Determine the Levenberg-Marquardt parameter.
 
-         nfev = nfev + 1
+            CALL lmpar ( n, fjac, ldfjac, ipvt, diag, qtf, delta, par, wa1, wa2 )
 
-         if ( iflag < 0 ) then
-           go to 300
-         end if
-
-         fnorm1 = enorm ( m, wa4 )
+   !        Store the direction p and x + p. calculate the norm of p.
    !
-   !  Compute the scaled actual reduction.
-   !
-         if ( 0.1D+00 * fnorm1 < fnorm ) then
-           actred = 1.0D+00 - ( fnorm1 / fnorm ) ** 2
-         else
-           actred = - 1.0D+00
-         end if
-   !
-   !  Compute the scaled predicted reduction and
-   !  the scaled directional derivative.
-   !
-         do j = 1, n
-           wa3(j) = 0.0D+00
-           l = ipvt(j)
-           temp = wa1(l)
-           wa3(1:j) = wa3(1:j) + fjac(1:j,j) * temp
-         end do
+            wa1(1:n) = - wa1(1:n)
+            wa2(1:n) = x(1:n) + wa1(1:n)
+            wa3(1:n) = diag(1:n) * wa1(1:n)
 
-         temp1 = enorm ( n, wa3 ) / fnorm
-         temp2 = ( sqrt ( par ) * pnorm ) / fnorm
-         prered = temp1 ** 2 + temp2 ** 2 / 0.5D+00
-         dirder = - ( temp1 ** 2 + temp2 ** 2 )
+            pnorm = enorm ( n, wa3 )
    !
-   !  Compute the ratio of the actual to the predicted reduction.
+   !        On the first iteration, adjust the initial step bound.
    !
-         if ( prered /= 0.0D+00 ) then
-           ratio = actred / prered
-         else
-           ratio = 0.0D+00
-         end if
+            IF ( iter == 1 ) THEN
+               delta = min ( delta, pnorm )
+            ENDIF
    !
-   !  Update the step bound.
+   !        Evaluate the function at x + p and calculate its norm.
    !
-         if ( ratio <= 0.25D+00 ) then
+            iflag = 1
+            IF (present(L_vgm)) THEN
+               CALL fcn ( m, n, wa2, wa4, fjac, ldfjac, iflag, xdat, npoint, ydat, ydatks, nptf, phi, k_s, isiter, L_vgm)
+            ELSE
+               CALL fcn ( m, n, wa2, wa4, fjac, ldfjac, iflag, xdat, npoint, ydat, ydatks, nptf, phi, k_s, isiter )
+            ENDIF
 
-           if ( 0.0D+00 <= actred ) then
-             temp = 0.5D+00
-           end if
+            nfev = nfev + 1
 
-           if ( actred < 0.0D+00 ) then
-             temp = 0.5D+00 * dirder / ( dirder + 0.5D+00 * actred )
-           end if
+            IF ( iflag < 0 ) THEN
+               go to 300
+            ENDIF
 
-           if ( 0.1D+00 * fnorm1 >= fnorm .or. temp < 0.1D+00 ) then
-             temp = 0.1D+00
-           end if
-
-           delta = temp * min ( delta, pnorm / 0.1D+00 )
-           par = par / temp
-
-         else
-
-           if ( par == 0.0D+00 .or. ratio >= 0.75D+00 ) then
-             delta = 2.0D+00 * pnorm
-             par = 0.5D+00 * par
-           end if
-
-         end if
+            fnorm1 = enorm ( m, wa4 )
    !
-   !  Successful iteration.
+   !        Compute the scaled actual reduction.
    !
-   !  Update X, FVEC, and their norms.
+            IF ( 0.1D+00 * fnorm1 < fnorm ) THEN
+               actred = 1.0D+00 - ( fnorm1 / fnorm ) ** 2
+            ELSE
+               actred = - 1.0D+00
+            ENDIF
    !
-         if ( 0.0001D+00 <= ratio ) then
-           x(1:n) = wa2(1:n)
-           wa2(1:n) = diag(1:n) * x(1:n)
-           fvec(1:m) = wa4(1:m)
-           xnorm = enorm ( n, wa2 )
-           fnorm = fnorm1
-           iter = iter + 1
-         end if
+   !        Compute the scaled predicted reduction and
+   !        the scaled directional derivative.
    !
-   !  Tests for convergence.
+            DO j = 1, n
+               wa3(j) = 0.0D+00
+               l = ipvt(j)
+               temp = wa1(l)
+               wa3(1:j) = wa3(1:j) + fjac(1:j,j) * temp
+            ENDDO
+
+            temp1 = enorm ( n, wa3 ) / fnorm
+            temp2 = ( sqrt ( par ) * pnorm ) / fnorm
+            prered = temp1 ** 2 + temp2 ** 2 / 0.5D+00
+            dirder = - ( temp1 ** 2 + temp2 ** 2 )
    !
-         if ( abs ( actred) <= ftol .and. &
-           prered <= ftol .and. &
-           0.5D+00 * ratio <= 1.0D+00 ) then
-           info = 1
-         end if
-
-         if ( delta <= xtol * xnorm ) then
-           info = 2
-         end if
-
-         if ( abs ( actred) <= ftol .and. prered <= ftol &
-           .and. 0.5D+00 * ratio <= 1.0D+00 .and. info == 2 ) then
-           info = 3
-         end if
-
-         if ( info /= 0 ) then
-           go to 300
-         end if
+   !        Compute the ratio of the actual to the predicted reduction.
    !
-   !  Tests for termination and stringent tolerances.
+            IF ( prered /= 0.0D+00 ) THEN
+               ratio = actred / prered
+            ELSE
+               ratio = 0.0D+00
+            ENDIF
    !
-         if ( nfev >= maxfev ) then
-           info = 5
-         end if
-
-         if ( abs ( actred ) <= epsmch .and. prered <= epsmch &
-           .and. 0.5D+00 * ratio <= 1.0D+00 ) then
-           info = 6
-         end if
-
-         if ( delta <= epsmch * xnorm ) then
-           info = 7
-         end if
-
-         if ( gnorm <= epsmch ) then
-           info = 8
-         end if
-
-         if ( info /= 0 ) then
-           go to 300
-         end if
+   !        Update the step bound.
    !
-   !  End of the inner loop. repeat if iteration unsuccessful.
-   !
-         if ( 0.0001D+00 <= ratio ) then
-           exit
-         end if
+            IF ( ratio <= 0.25D+00 ) THEN
 
-       end do
+               IF ( 0.0D+00 <= actred ) THEN
+                  temp = 0.5D+00
+               ENDIF
+
+               IF ( actred < 0.0D+00 ) THEN
+                  temp = 0.5D+00 * dirder / ( dirder + 0.5D+00 * actred )
+               ENDIF
+
+               IF ( 0.1D+00 * fnorm1 >= fnorm .or. temp < 0.1D+00 ) THEN
+                  temp = 0.1D+00
+               ENDIF
+
+               delta = temp * min ( delta, pnorm / 0.1D+00 )
+               par = par / temp
+
+            ELSE
+
+               IF ( par == 0.0D+00 .or. ratio >= 0.75D+00 ) THEN
+                  delta = 2.0D+00 * pnorm
+                  par = 0.5D+00 * par
+               ENDIF
+
+            ENDIF
+   !
+   !        Successful iteration.
+   !
+   !        Update X, FVEC, and their norms.
+   !
+            IF ( 0.0001D+00 <= ratio ) THEN
+               x(1:n) = wa2(1:n)
+               wa2(1:n) = diag(1:n) * x(1:n)
+               fvec(1:m) = wa4(1:m)
+               xnorm = enorm ( n, wa2 )
+               fnorm = fnorm1
+               iter = iter + 1
+            ENDIF
+   !
+   !        Tests for convergence.
+   !
+            IF ( abs ( actred) <= ftol .and. &
+                 prered <= ftol .and. &
+                 0.5D+00 * ratio <= 1.0D+00 ) THEN
+               info = 1
+            ENDIF
+
+            IF ( delta <= xtol * xnorm ) THEN
+               info = 2
+            ENDIF
+
+            IF ( abs ( actred) <= ftol .and. prered <= ftol &
+                .and. 0.5D+00 * ratio <= 1.0D+00 .and. info == 2 ) THEN
+               info = 3
+            ENDIF
+
+            IF ( info /= 0 ) THEN
+               go to 300
+            ENDIF
+   !
+   !        Tests for termination and stringent tolerances.
+   !
+            IF ( nfev >= maxfev ) THEN
+               info = 5
+            ENDIF
+
+            IF ( abs ( actred ) <= epsmch .and. prered <= epsmch &
+               .and. 0.5D+00 * ratio <= 1.0D+00 ) THEN
+               info = 6
+            ENDIF
+
+            IF ( delta <= epsmch * xnorm ) THEN
+               info = 7
+            ENDIF
+
+            IF ( gnorm <= epsmch ) THEN
+               info = 8
+            ENDIF
+
+            IF ( info /= 0 ) THEN
+               go to 300
+            ENDIF
+   !
+   !        End of the inner loop. repeat IF iteration unsuccessful.
+   !
+            IF ( 0.0001D+00 <= ratio ) THEN
+               EXIT
+            ENDIF
+
+         ENDDO
    !
    !  End of the outer loop.
    !
-     end do
+      ENDDO
 
-     300 continue
+      300 continue
    !
    !  Termination, either normal or user imposed.
    !
-     if ( iflag < 0 ) then
-       info = iflag
-     end if
+      IF ( iflag < 0 ) THEN
+         info = iflag
+      ENDIF
 
-     iflag = 0
+      iflag = 0
 
-     if ( 0 < nprint ) then
-          if (present(vf_om) .and. present(vf_sand) .and. present(vf_gravels)) then
-              CALL fcn ( m, n, x, fvec, fjac, ldfjac, iflag, xdat, npoint, ydat, nptf, phi, isiter,&
-                         vf_om, vf_sand, vf_gravels)
-          else
-              CALL fcn ( m, n, x, fvec, fjac, ldfjac, iflag, xdat, npoint, ydat, nptf, phi, isiter )
-          end if
-     end if
+      IF ( 0 < nprint ) THEN
+         IF (present(L_vgm)) THEN
+            CALL fcn ( m, n, x, fvec, fjac, ldfjac, iflag, xdat, npoint, ydat, ydatks, nptf, phi, k_s, isiter, L_vgm)
+         ELSE
+            CALL fcn ( m, n, x, fvec, fjac, ldfjac, iflag, xdat, npoint, ydat, ydatks, nptf, phi, k_s, isiter )
+         ENDIF
+      ENDIF
 
-     RETURN
-   end SUBROUTINE lmder
+      RETURN
+   END SUBROUTINE lmder
 
    SUBROUTINE lmpar ( n, r, ldr, ipvt, diag, qtb, delta, par, x, sdiag )
 
@@ -1768,13 +1761,13 @@ CONTAINS
    !    Given an M by N matrix A, an N by N nonsingular diagonal
    !    matrix D, an M-vector B, and a positive number DELTA,
    !    the problem is to determine a value for the parameter
-   !    PAR such that if X solves the system
+   !    PAR such that IF X solves the system
    !
    !      A*X = B,
    !      sqrt ( PAR ) * D * X = 0,
    !
    !    in the least squares sense, and DXNORM is the euclidean
-   !    norm of D*X, then either PAR is zero and
+   !    norm of D*X, THEN either PAR is zero and
    !
    !      ( DXNORM - DELTA ) <= 0.1 * DELTA,
    !
@@ -1782,12 +1775,12 @@ CONTAINS
    !
    !      abs ( DXNORM - DELTA) <= 0.1 * DELTA.
    !
-   !    This function completes the solution of the problem
-   !    if it is provided with the necessary information from the
-   !    QR factorization, with column pivoting, of A.  That is, if
-   !    A*P = Q*R, where P is a permutation matrix, Q has orthogonal
+   !    This FUNCTION completes the solution of the problem
+   !    IF it is provided with the necessary information from the
+   !    QR factorization, with column pivoting, of A.  That is, IF
+   !    A*P = Q*R, WHERE P is a permutation matrix, Q has orthogonal
    !    columns, and R is an upper triangular matrix with diagonal
-   !    elements of nonincreasing magnitude, then LMPAR expects
+   !    elements of nonincreasing magnitude, THEN LMPAR expects
    !    the full upper triangle of R, the permutation matrix P,
    !    and the first N components of Q'*B.  On output
    !    LMPAR also provides an upper triangular matrix S such that
@@ -1799,7 +1792,7 @@ CONTAINS
    !    Only a few iterations are generally needed for convergence
    !    of the algorithm.
    !
-   !    If, however, the limit of 10 iterations is reached, then the output
+   !    IF, however, the limit of 10 iterations is reached, THEN the output
    !    PAR will contain the best value obtained so far.
    !
    !  Licensing:
@@ -1829,7 +1822,7 @@ CONTAINS
    !    Input/output, real ( kind = 8 ) R(LDR,N),the N by N matrix.  The full
    !    upper triangle must contain the full upper triangle of the matrix R.
    !    On output the full upper triangle is unaltered, and the strict lower
-   !    triangle contains the strict upper triangle (transposed) of the upper
+   !    triangle CONTAINS the strict upper triangle (transposed) of the upper
    !    triangular matrix S.
    !
    !    Input, integer ( kind = 4 ) LDR, the leading dimension of R.  LDR must be
@@ -1856,211 +1849,213 @@ CONTAINS
    !    Output, real ( kind = 8 ) SDIAG(N), the diagonal elements of the upper
    !    triangular matrix S.
    !
-     implicit none
+   IMPLICIT NONE
 
-     integer ( kind = 4 ) ldr
-     integer ( kind = 4 ) n
+   integer ( kind = 4 ) ldr
+   integer ( kind = 4 ) n
 
-     real ( kind = 8 ) delta
-     real ( kind = 8 ) diag(n)
-     real ( kind = 8 ) dwarf
-     real ( kind = 8 ) dxnorm
-     real ( kind = 8 ) gnorm
-     real ( kind = 8 ) fp
-     integer ( kind = 4 ) i
-     integer ( kind = 4 ) ipvt(n)
-     integer ( kind = 4 ) iter
-     integer ( kind = 4 ) j
-     integer ( kind = 4 ) k
-     integer ( kind = 4 ) l
-     integer ( kind = 4 ) nsing
-     real ( kind = 8 ) par
-     real ( kind = 8 ) parc
-     real ( kind = 8 ) parl
-     real ( kind = 8 ) paru
-     real ( kind = 8 ) qnorm
-     real ( kind = 8 ) qtb(n)
-     real ( kind = 8 ) r(ldr,n)
-     real ( kind = 8 ) sdiag(n)
-     real ( kind = 8 ) sum2
-     real ( kind = 8 ) temp
-     real ( kind = 8 ) wa1(n)
-     real ( kind = 8 ) wa2(n)
-     real ( kind = 8 ) x(n)
-   !
-   !  DWARF is the smallest positive magnitude.
-   !
-     dwarf = tiny ( dwarf )
-   !
-   !  Compute and store in X the Gauss-Newton direction.
-   !
-   !  If the jacobian is rank-deficient, obtain a least squares solution.
-   !
-     nsing = n
+   real ( kind = 8 ) delta
+   real ( kind = 8 ) diag(n)
+   real ( kind = 8 ) dwarf
+   real ( kind = 8 ) dxnorm
+   real ( kind = 8 ) gnorm
+   real ( kind = 8 ) fp
+   integer ( kind = 4 ) i
+   integer ( kind = 4 ) ipvt(n)
+   integer ( kind = 4 ) iter
+   integer ( kind = 4 ) j
+   integer ( kind = 4 ) k
+   integer ( kind = 4 ) l
+   integer ( kind = 4 ) nsing
+   real ( kind = 8 ) par
+   real ( kind = 8 ) parc
+   real ( kind = 8 ) parl
+   real ( kind = 8 ) paru
+   real ( kind = 8 ) qnorm
+   real ( kind = 8 ) qtb(n)
+   real ( kind = 8 ) r(ldr,n)
+   real ( kind = 8 ) sdiag(n)
+   real ( kind = 8 ) sum2
+   real ( kind = 8 ) temp
+   real ( kind = 8 ) wa1(n)
+   real ( kind = 8 ) wa2(n)
+   real ( kind = 8 ) x(n)
 
-     do j = 1, n
-       wa1(j) = qtb(j)
-       if ( r(j,j) == 0.0D+00 .and. nsing == n ) then
-         nsing = j - 1
-       end if
-       if ( nsing < n ) then
-         wa1(j) = 0.0D+00
-       end if
-     end do
+      !
+      !  DWARF is the smallest positive magnitude.
+      !
+      dwarf = tiny ( dwarf )
+      !
+      !  Compute and store in X the Gauss-Newton direction.
+      !
+      !  IF the jacobian is rank-deficient, obtain a least squares solution.
+      !
+      nsing = n
 
-     do k = 1, nsing
-       j = nsing - k + 1
-       wa1(j) = wa1(j) / r(j,j)
-       temp = wa1(j)
-       wa1(1:j-1) = wa1(1:j-1) - r(1:j-1,j) * temp
-     end do
+      DO j = 1, n
+         wa1(j) = qtb(j)
+         IF ( r(j,j) == 0.0D+00 .and. nsing == n ) THEN
+            nsing = j - 1
+         ENDIF
+         IF ( nsing < n ) THEN
+            wa1(j) = 0.0D+00
+         ENDIF
+      ENDDO
 
-     do j = 1, n
-       l = ipvt(j)
-       x(l) = wa1(j)
-     end do
-   !
-   !  Initialize the iteration counter.
-   !  Evaluate the function at the origin, and test
-   !  for acceptance of the Gauss-Newton direction.
-   !
-     iter = 0
-     wa2(1:n) = diag(1:n) * x(1:n)
-     dxnorm = enorm ( n, wa2 )
-     fp = dxnorm - delta
-
-     if ( fp <= 0.1D+00 * delta ) then
-       if ( iter == 0 ) then
-         par = 0.0D+00
-       end if
-       RETURN
-     end if
-   !
-   !  If the jacobian is not rank deficient, the Newton
-   !  step provides a lower bound, PARL, for the zero of
-   !  the function.
-   !
-   !  Otherwise set this bound to zero.
-   !
-     parl = 0.0D+00
-
-     if ( n <= nsing ) then
-
-       do j = 1, n
-         l = ipvt(j)
-         wa1(j) = diag(l) * ( wa2(l) / dxnorm )
-       end do
-
-       do j = 1, n
-         sum2 = dot_product ( wa1(1:j-1), r(1:j-1,j) )
-         wa1(j) = ( wa1(j) - sum2 ) / r(j,j)
-       end do
-
-       temp = enorm ( n, wa1 )
-       parl = ( ( fp / delta ) / temp ) / temp
-
-     end if
-   !
-   !  Calculate an upper bound, PARU, for the zero of the function.
-   !
-     do j = 1, n
-       sum2 = dot_product ( qtb(1:j), r(1:j,j) )
-       l = ipvt(j)
-       wa1(j) = sum2 / diag(l)
-     end do
-
-     gnorm = enorm ( n, wa1 )
-     paru = gnorm / delta
-
-     if ( paru == 0.0D+00 ) then
-       paru = dwarf / min ( delta, 0.1D+00 )
-     end if
-   !
-   !  If the input PAR lies outside of the interval (PARL, PARU),
-   !  set PAR to the closer endpoint.
-   !
-     par = max ( par, parl )
-     par = min ( par, paru )
-     if ( par == 0.0D+00 ) then
-       par = gnorm / dxnorm
-     end if
-   !
-   !  Beginning of an iteration.
-   !
-     do
-
-       iter = iter + 1
-   !
-   !  Evaluate the function at the current value of PAR.
-   !
-       if ( par == 0.0D+00 ) then
-         par = max ( dwarf, 0.001D+00 * paru )
-       end if
-
-       wa1(1:n) = sqrt ( par ) * diag(1:n)
-
-       CALL qrsolv ( n, r, ldr, ipvt, wa1, qtb, x, sdiag )
-
-       wa2(1:n) = diag(1:n) * x(1:n)
-       dxnorm = enorm ( n, wa2 )
-       temp = fp
-       fp = dxnorm - delta
-   !
-   !  If the function is small enough, accept the current value of PAR.
-   !
-       if ( abs ( fp ) <= 0.1D+00 * delta ) then
-         exit
-       end if
-   !
-   !  Test for the exceptional cases where PARL
-   !  is zero or the number of iterations has reached 10.
-   !
-       if ( parl == 0.0D+00 .and. fp <= temp .and. temp < 0.0D+00 ) then
-         exit
-       else if ( iter == 10 ) then
-         exit
-       end if
-   !
-   !  Compute the Newton correction.
-   !
-       do j = 1, n
-         l = ipvt(j)
-         wa1(j) = diag(l) * ( wa2(l) / dxnorm )
-       end do
-
-       do j = 1, n
-         wa1(j) = wa1(j) / sdiag(j)
+      DO k = 1, nsing
+         j = nsing - k + 1
+         wa1(j) = wa1(j) / r(j,j)
          temp = wa1(j)
-         wa1(j+1:n) = wa1(j+1:n) - r(j+1:n,j) * temp
-       end do
+         wa1(1:j-1) = wa1(1:j-1) - r(1:j-1,j) * temp
+      ENDDO
 
-       temp = enorm ( n, wa1 )
-       parc = ( ( fp / delta ) / temp ) / temp
-   !
-   !  Depending on the sign of the function, update PARL or PARU.
-   !
-       if ( 0.0D+00 < fp ) then
-         parl = max ( parl, par )
-       else if ( fp < 0.0D+00 ) then
-         paru = min ( paru, par )
-       end if
-   !
-   !  Compute an improved estimate for PAR.
-   !
-       par = max ( parl, par + parc )
-   !
-   !  End of an iteration.
-   !
-     end do
-   !
-   !  Termination.
-   !
-     if ( iter == 0 ) then
-       par = 0.0D+00
-     end if
+      DO j = 1, n
+         l = ipvt(j)
+         x(l) = wa1(j)
+      ENDDO
+      !
+      !  Initialize the iteration counter.
+      !  Evaluate the FUNCTION at the origin, and test
+      !  for acceptance of the Gauss-Newton direction.
+      !
+      iter = 0
+      wa2(1:n) = diag(1:n) * x(1:n)
+      dxnorm = enorm ( n, wa2 )
+      fp = dxnorm - delta
 
-     RETURN
-   end SUBROUTINE lmpar
+      IF ( fp <= 0.1D+00 * delta ) THEN
+         IF ( iter == 0 ) THEN
+            par = 0.0D+00
+         ENDIF
+         RETURN
+      ENDIF
+      !
+      !  IF the jacobian is not rank deficient, the Newton
+      !  step provides a lower bound, PARL, for the zero of
+      !  the FUNCTION.
+      !
+      !  Otherwise set this bound to zero.
+      !
+      parl = 0.0D+00
+
+      IF ( n <= nsing ) THEN
+
+         DO j = 1, n
+            l = ipvt(j)
+            wa1(j) = diag(l) * ( wa2(l) / dxnorm )
+         ENDDO
+
+         DO j = 1, n
+            sum2 = dot_product ( wa1(1:j-1), r(1:j-1,j) )
+            wa1(j) = ( wa1(j) - sum2 ) / r(j,j)
+         ENDDO
+
+         temp = enorm ( n, wa1 )
+         parl = ( ( fp / delta ) / temp ) / temp
+
+      ENDIF
+      !
+      !  Calculate an upper bound, PARU, for the zero of the FUNCTION.
+      !
+      DO j = 1, n
+         sum2 = dot_product ( qtb(1:j), r(1:j,j) )
+         l = ipvt(j)
+         wa1(j) = sum2 / diag(l)
+      ENDDO
+
+      gnorm = enorm ( n, wa1 )
+      paru = gnorm / delta
+
+      IF ( paru == 0.0D+00 ) THEN
+         paru = dwarf / min ( delta, 0.1D+00 )
+      ENDIF
+      !
+      !  IF the input PAR lies outside of the interval (PARL, PARU),
+      !  set PAR to the closer endpoint.
+      !
+      par = max ( par, parl )
+      par = min ( par, paru )
+      IF ( par == 0.0D+00 ) THEN
+         par = gnorm / dxnorm
+      ENDIF
+      !
+      !  Beginning of an iteration.
+      !
+      DO
+
+         iter = iter + 1
+         !
+         !  Evaluate the FUNCTION at the current value of PAR.
+         !
+         IF ( par == 0.0D+00 ) THEN
+            par = max ( dwarf, 0.001D+00 * paru )
+         ENDIF
+
+         wa1(1:n) = sqrt ( par ) * diag(1:n)
+
+         CALL qrsolv ( n, r, ldr, ipvt, wa1, qtb, x, sdiag )
+
+         wa2(1:n) = diag(1:n) * x(1:n)
+         dxnorm = enorm ( n, wa2 )
+         temp = fp
+         fp = dxnorm - delta
+         !
+         !  IF the FUNCTION is small enough, accept the current value of PAR.
+         !
+         IF ( abs ( fp ) <= 0.1D+00 * delta ) THEN
+            EXIT
+         ENDIF
+         !
+         !  Test for the exceptional cases WHERE PARL
+         !  is zero or the number of iterations has reached 10.
+         !
+         IF ( parl == 0.0D+00 .and. fp <= temp .and. temp < 0.0D+00 ) THEN
+            EXIT
+         ELSEIF ( iter == 10 ) THEN
+            EXIT
+         ENDIF
+         !
+         !  Compute the Newton correction.
+         !
+         DO j = 1, n
+            l = ipvt(j)
+            wa1(j) = diag(l) * ( wa2(l) / dxnorm )
+         ENDDO
+
+         DO j = 1, n
+            wa1(j) = wa1(j) / sdiag(j)
+            temp = wa1(j)
+            wa1(j+1:n) = wa1(j+1:n) - r(j+1:n,j) * temp
+         ENDDO
+
+         temp = enorm ( n, wa1 )
+         parc = ( ( fp / delta ) / temp ) / temp
+         !
+         !  Depending on the sign of the FUNCTION, update PARL or PARU.
+         !
+         IF ( 0.0D+00 < fp ) THEN
+            parl = max ( parl, par )
+         ELSEIF ( fp < 0.0D+00 ) THEN
+            paru = min ( paru, par )
+         ENDIF
+         !
+         !  Compute an improved estimate for PAR.
+         !
+         par = max ( parl, par + parc )
+         !
+         !  END of an iteration.
+         !
+      ENDDO
+      !
+      !  Termination.
+      !
+      IF ( iter == 0 ) THEN
+         par = 0.0D+00
+      ENDIF
+
+      RETURN
+
+   END SUBROUTINE lmpar
 
    SUBROUTINE qrfac ( m, n, a, lda, pivot, ipvt, lipvt, rdiag, acnorm )
 
@@ -2070,7 +2065,7 @@ CONTAINS
    !
    !  Discussion:
    !
-   !    This function uses Householder transformations with optional column
+   !    This FUNCTION uses Householder transformations with optional column
    !    pivoting to compute a QR factorization of the
    !    M by N matrix A.  That is, QRFAC determines an orthogonal
    !    matrix Q, a permutation matrix P, and an upper trapezoidal
@@ -2082,7 +2077,7 @@ CONTAINS
    !
    !      I - ( 1 / U(K) ) * U * U'
    !
-   !    where U has zeros in the first K-1 positions.
+   !    WHERE U has zeros in the first K-1 positions.
    !
    !    The form of this transformation and the method of pivoting first
    !    appeared in the corresponding LINPACK routine.
@@ -2114,150 +2109,151 @@ CONTAINS
    !    Input, integer ( kind = 4 ) N, the number of columns of A.
    !
    !    Input/output, real ( kind = 8 ) A(LDA,N), the M by N array.
-   !    On input, A contains the matrix for which the QR factorization is to
-   !    be computed.  On output, the strict upper trapezoidal part of A contains
+   !    On input, A CONTAINS the matrix for which the QR factorization is to
+   !    be computed.  On output, the strict upper trapezoidal part of A CONTAINS
    !    the strict upper trapezoidal part of R, and the lower trapezoidal
-   !    part of A contains a factored form of Q, the non-trivial elements of
+   !    part of A CONTAINS a factored form of Q, the non-trivial elements of
    !    the U vectors described above.
    !
    !    Input, integer ( kind = 4 ) LDA, the leading dimension of A, which must
    !    be no less than M.
    !
-   !    Input, logical PIVOT, is TRUE if column pivoting is to be carried out.
+   !    Input, logical PIVOT, is TRUE IF column pivoting is to be carried out.
    !
    !    Output, integer ( kind = 4 ) IPVT(LIPVT), defines the permutation matrix P
    !    such that A*P = Q*R.  Column J of P is column IPVT(J) of the identity
-   !    matrix.  If PIVOT is false, IPVT is not referenced.
+   !    matrix.  IF PIVOT is false, IPVT is not referenced.
    !
    !    Input, integer ( kind = 4 ) LIPVT, the dimension of IPVT, which should
-   !    be N if pivoting is used.
+   !    be N IF pivoting is used.
    !
-   !    Output, real ( kind = 8 ) RDIAG(N), contains the diagonal elements of R.
+   !    Output, real ( kind = 8 ) RDIAG(N), CONTAINS the diagonal elements of R.
    !
    !    Output, real ( kind = 8 ) ACNORM(N), the norms of the corresponding
-   !    columns of the input matrix A.  If this information is not needed,
-   !    then ACNORM can coincide with RDIAG.
+   !    columns of the input matrix A.  IF this information is not needed,
+   !    THEN ACNORM can coincide with RDIAG.
    !
-     implicit none
+   IMPLICIT NONE
 
-     integer ( kind = 4 ) lda
-     integer ( kind = 4 ) lipvt
-     integer ( kind = 4 ) m
-     integer ( kind = 4 ) n
+   integer ( kind = 4 ) lda
+   integer ( kind = 4 ) lipvt
+   integer ( kind = 4 ) m
+   integer ( kind = 4 ) n
 
-     real ( kind = 8 ) a(lda,n)
-     real ( kind = 8 ) acnorm(n)
-     real ( kind = 8 ) ajnorm
-     real ( kind = 8 ) epsmch
-     integer ( kind = 4 ) i
-     integer ( kind = 4 ) i4_temp
-     integer ( kind = 4 ) ipvt(lipvt)
-     integer ( kind = 4 ) j
-     integer ( kind = 4 ) k
-     integer ( kind = 4 ) kmax
-     integer ( kind = 4 ) minmn
-     logical pivot
-     real ( kind = 8 ) r8_temp(m)
-     real ( kind = 8 ) rdiag(n)
-     real ( kind = 8 ) temp
-     real ( kind = 8 ) wa(n)
+   real ( kind = 8 ) a(lda,n)
+   real ( kind = 8 ) acnorm(n)
+   real ( kind = 8 ) ajnorm
+   real ( kind = 8 ) epsmch
+   integer ( kind = 4 ) i
+   integer ( kind = 4 ) i4_temp
+   integer ( kind = 4 ) ipvt(lipvt)
+   integer ( kind = 4 ) j
+   integer ( kind = 4 ) k
+   integer ( kind = 4 ) kmax
+   integer ( kind = 4 ) minmn
+   logical pivot
+   real ( kind = 8 ) r8_temp(m)
+   real ( kind = 8 ) rdiag(n)
+   real ( kind = 8 ) temp
+   real ( kind = 8 ) wa(n)
 
-     epsmch = epsilon ( epsmch )
-   !
-   !  Compute the initial column norms and initialize several arrays.
-   !
-     do j = 1, n
-       acnorm(j) = enorm ( m, a(1:m,j) )
-     end do
+      epsmch = epsilon ( epsmch )
+      !
+      !  Compute the initial column norms and initialize several arrays.
+      !
+      DO j = 1, n
+         acnorm(j) = enorm ( m, a(1:m,j) )
+      ENDDO
 
-     rdiag(1:n) = acnorm(1:n)
-     wa(1:n) = acnorm(1:n)
+      rdiag(1:n) = acnorm(1:n)
+      wa(1:n) = acnorm(1:n)
 
-     if ( pivot ) then
-       do j = 1, n
-         ipvt(j) = j
-       end do
-     end if
-   !
-   !  Reduce A to R with Householder transformations.
-   !
-     minmn = min ( m, n )
+      IF ( pivot ) THEN
+         DO j = 1, n
+            ipvt(j) = j
+         ENDDO
+      ENDIF
+      !
+      !  Reduce A to R with Householder transformations.
+      !
+      minmn = min ( m, n )
 
-     do j = 1, minmn
-   !
-   !  Bring the column of largest norm into the pivot position.
-   !
-       if ( pivot ) then
+      DO j = 1, minmn
+         !
+         !  Bring the column of largest norm into the pivot position.
+         !
+         IF ( pivot ) THEN
 
-         kmax = j
+            kmax = j
 
-         do k = j, n
-           if ( rdiag(kmax) < rdiag(k) ) then
-             kmax = k
-           end if
-         end do
+            DO k = j, n
+               IF ( rdiag(kmax) < rdiag(k) ) THEN
+                  kmax = k
+               ENDIF
+            ENDDO
 
-         if ( kmax /= j ) then
+            IF ( kmax /= j ) THEN
 
-           r8_temp(1:m) = a(1:m,j)
-           a(1:m,j)     = a(1:m,kmax)
-           a(1:m,kmax)  = r8_temp(1:m)
+               r8_temp(1:m) = a(1:m,j)
+               a(1:m,j)     = a(1:m,kmax)
+               a(1:m,kmax)  = r8_temp(1:m)
 
-           rdiag(kmax) = rdiag(j)
-           wa(kmax) = wa(j)
+               rdiag(kmax) = rdiag(j)
+               wa(kmax) = wa(j)
 
-           i4_temp    = ipvt(j)
-           ipvt(j)    = ipvt(kmax)
-           ipvt(kmax) = i4_temp
+               i4_temp    = ipvt(j)
+               ipvt(j)    = ipvt(kmax)
+               ipvt(kmax) = i4_temp
 
-         end if
+            ENDIF
 
-       end if
-   !
-   !  Compute the Householder transformation to reduce the
-   !  J-th column of A to a multiple of the J-th unit vector.
-   !
-       ajnorm = enorm ( m-j+1, a(j,j) )
+         ENDIF
+         !
+         !  Compute the Householder transformation to reduce the
+         !  J-th column of A to a multiple of the J-th unit vector.
+         !
+         ajnorm = enorm ( m-j+1, a(j,j) )
 
-       if ( ajnorm /= 0.0D+00 ) then
+         IF ( ajnorm /= 0.0D+00 ) THEN
 
-         if ( a(j,j) < 0.0D+00 ) then
-           ajnorm = -ajnorm
-         end if
+            IF ( a(j,j) < 0.0D+00 ) THEN
+               ajnorm = -ajnorm
+            ENDIF
 
-         a(j:m,j) = a(j:m,j) / ajnorm
-         a(j,j) = a(j,j) + 1.0D+00
-   !
-   !  Apply the transformation to the remaining columns and update the norms.
-   !
-         do k = j + 1, n
+            a(j:m,j) = a(j:m,j) / ajnorm
+            a(j,j) = a(j,j) + 1.0D+00
+            !
+            !  Apply the transformation to the remaining columns and update the norms.
+            !
+            DO k = j + 1, n
 
-           temp = dot_product ( a(j:m,j), a(j:m,k) ) / a(j,j)
+               temp = dot_product ( a(j:m,j), a(j:m,k) ) / a(j,j)
 
-           a(j:m,k) = a(j:m,k) - temp * a(j:m,j)
+               a(j:m,k) = a(j:m,k) - temp * a(j:m,j)
 
-           if ( pivot .and. rdiag(k) /= 0.0D+00 ) then
+               IF ( pivot .and. rdiag(k) /= 0.0D+00 ) THEN
 
-             temp = a(j,k) / rdiag(k)
-             rdiag(k) = rdiag(k) * sqrt ( max ( 0.0D+00, 1.0D+00-temp ** 2 ) )
+                  temp = a(j,k) / rdiag(k)
+                  rdiag(k) = rdiag(k) * sqrt ( max ( 0.0D+00, 1.0D+00-temp ** 2 ) )
 
-             if ( 0.05D+00 * ( rdiag(k) / wa(k) ) ** 2 <= epsmch ) then
-               rdiag(k) = enorm ( m-j, a(j+1,k) )
-               wa(k) = rdiag(k)
-             end if
+                  IF ( 0.05D+00 * ( rdiag(k) / wa(k) ) ** 2 <= epsmch ) THEN
+                     rdiag(k) = enorm ( m-j, a(j+1,k) )
+                     wa(k) = rdiag(k)
+                  ENDIF
 
-           end if
+               ENDIF
 
-         end do
+            ENDDO
 
-       end if
+         ENDIF
 
-       rdiag(j) = - ajnorm
+         rdiag(j) = - ajnorm
 
-     end do
+      ENDDO
 
-     RETURN
-   end SUBROUTINE qrfac
+      RETURN
+
+   END SUBROUTINE qrfac
 
    SUBROUTINE qrsolv ( n, r, ldr, ipvt, diag, qtb, x, sdiag )
 
@@ -2276,22 +2272,22 @@ CONTAINS
    !
    !    in the least squares sense.
    !
-   !    This function completes the solution of the problem
-   !    if it is provided with the necessary information from the
-   !    QR factorization, with column pivoting, of A.  That is, if
-   !    A*P = Q*R, where P is a permutation matrix, Q has orthogonal
+   !    This FUNCTION completes the solution of the problem
+   !    IF it is provided with the necessary information from the
+   !    QR factorization, with column pivoting, of A.  That is, IF
+   !    A*P = Q*R, WHERE P is a permutation matrix, Q has orthogonal
    !    columns, and R is an upper triangular matrix with diagonal
-   !    elements of nonincreasing magnitude, then QRSOLV expects
+   !    elements of nonincreasing magnitude, THEN QRSOLV expects
    !    the full upper triangle of R, the permutation matrix p,
    !    and the first N components of Q'*B.
    !
-   !    The system is then equivalent to
+   !    The system is THEN equivalent to
    !
    !      R*Z = Q'*B
    !      P'*D*P*Z = 0
    !
-   !    where X = P*Z.  If this system does not have full rank,
-   !    then a least squares solution is obtained.  On output QRSOLV
+   !    WHERE X = P*Z.  IF this system does not have full rank,
+   !    THEN a least squares solution is obtained.  On output QRSOLV
    !    also provides an upper triangular matrix S such that
    !
    !      P'*(A'*A + D*D)*P = S'*S.
@@ -2325,7 +2321,7 @@ CONTAINS
    !    Input/output, real ( kind = 8 ) R(LDR,N), the N by N matrix.
    !    On input the full upper triangle must contain the full upper triangle
    !    of the matrix R.  On output the full upper triangle is unaltered, and
-   !    the strict lower triangle contains the strict upper triangle
+   !    the strict lower triangle CONTAINS the strict upper triangle
    !    (transposed) of the upper triangular matrix S.
    !
    !    Input, integer ( kind = 4 ) LDR, the leading dimension of R, which must be
@@ -2343,140 +2339,142 @@ CONTAINS
    !    Output, real ( kind = 8 ) SDIAG(N), the diagonal elements of the upper
    !    triangular matrix S.
    !
-     implicit none
+   IMPLICIT NONE
 
-     integer ( kind = 4 ) ldr
-     integer ( kind = 4 ) n
+   integer ( kind = 4 ) ldr
+   integer ( kind = 4 ) n
 
-     real ( kind = 8 ) c
-     real ( kind = 8 ) cotan
-     real ( kind = 8 ) diag(n)
-     integer ( kind = 4 ) i
-     integer ( kind = 4 ) ipvt(n)
-     integer ( kind = 4 ) j
-     integer ( kind = 4 ) k
-     integer ( kind = 4 ) l
-     integer ( kind = 4 ) nsing
-     real ( kind = 8 ) qtb(n)
-     real ( kind = 8 ) qtbpj
-     real ( kind = 8 ) r(ldr,n)
-     real ( kind = 8 ) s
-     real ( kind = 8 ) sdiag(n)
-     real ( kind = 8 ) sum2
-     real ( kind = 8 ) t
-     real ( kind = 8 ) temp
-     real ( kind = 8 ) wa(n)
-     real ( kind = 8 ) x(n)
-   !
-   !  Copy R and Q'*B to preserve input and initialize S.
-   !
-   !  In particular, save the diagonal elements of R in X.
-   !
-     do j = 1, n
-       r(j:n,j) = r(j,j:n)
-       x(j) = r(j,j)
-     end do
+   real ( kind = 8 ) c
+   real ( kind = 8 ) cotan
+   real ( kind = 8 ) diag(n)
+   integer ( kind = 4 ) i
+   integer ( kind = 4 ) ipvt(n)
+   integer ( kind = 4 ) j
+   integer ( kind = 4 ) k
+   integer ( kind = 4 ) l
+   integer ( kind = 4 ) nsing
+   real ( kind = 8 ) qtb(n)
+   real ( kind = 8 ) qtbpj
+   real ( kind = 8 ) r(ldr,n)
+   real ( kind = 8 ) s
+   real ( kind = 8 ) sdiag(n)
+   real ( kind = 8 ) sum2
+   real ( kind = 8 ) t
+   real ( kind = 8 ) temp
+   real ( kind = 8 ) wa(n)
+   real ( kind = 8 ) x(n)
 
-     wa(1:n) = qtb(1:n)
-   !
-   !  Eliminate the diagonal matrix D using a Givens rotation.
-   !
-     do j = 1, n
-   !
-   !  Prepare the row of D to be eliminated, locating the
-   !  diagonal element using P from the QR factorization.
-   !
-       l = ipvt(j)
+      !
+      !  Copy R and Q'*B to preserve input and initialize S.
+      !
+      !  In particular, SAVE the diagonal elements of R in X.
+      !
+      DO j = 1, n
+         r(j:n,j) = r(j,j:n)
+         x(j) = r(j,j)
+      ENDDO
 
-       if ( diag(l) /= 0.0D+00 ) then
+      wa(1:n) = qtb(1:n)
+      !
+      !  Eliminate the diagonal matrix D using a Givens rotation.
+      !
+      DO j = 1, n
+         !
+         !  Prepare the row of D to be eliminated, locating the
+         !  diagonal element using P from the QR factorization.
+         !
+         l = ipvt(j)
 
-         sdiag(j:n) = 0.0D+00
-         sdiag(j) = diag(l)
-   !
-   !  The transformations to eliminate the row of D
-   !  modify only a single element of Q'*B
-   !  beyond the first N, which is initially zero.
-   !
-         qtbpj = 0.0D+00
+         IF ( diag(l) /= 0.0D+00 ) THEN
 
-         do k = j, n
-   !
-   !  Determine a Givens rotation which eliminates the
-   !  appropriate element in the current row of D.
-   !
-           if ( sdiag(k) /= 0.0D+00 ) then
+            sdiag(j:n) = 0.0D+00
+            sdiag(j) = diag(l)
+            !
+            !  The transformations to eliminate the row of D
+            !  modify only a single element of Q'*B
+            !  beyond the first N, which is initially zero.
+            !
+            qtbpj = 0.0D+00
 
-             if ( abs ( r(k,k) ) < abs ( sdiag(k) ) ) then
-               cotan = r(k,k) / sdiag(k)
-               s = 0.5D+00 / sqrt ( 0.25D+00 + 0.25D+00 * cotan ** 2 )
-               c = s * cotan
-             else
-               t = sdiag(k) / r(k,k)
-               c = 0.5D+00 / sqrt ( 0.25D+00 + 0.25D+00 * t ** 2 )
-               s = c * t
-             end if
-   !
-   !  Compute the modified diagonal element of R and
-   !  the modified element of (Q'*B,0).
-   !
-             r(k,k) = c * r(k,k) + s * sdiag(k)
-             temp = c * wa(k) + s * qtbpj
-             qtbpj = - s * wa(k) + c * qtbpj
-             wa(k) = temp
-   !
-   !  Accumulate the tranformation in the row of S.
-   !
-             do i = k + 1, n
-               temp = c * r(i,k) + s * sdiag(i)
-               sdiag(i) = - s * r(i,k) + c * sdiag(i)
-               r(i,k) = temp
-             end do
+            DO k = j, n
+               !
+               !  Determine a Givens rotation which eliminates the
+               !  appropriate element in the current row of D.
+               !
+               IF ( sdiag(k) /= 0.0D+00 ) THEN
 
-           end if
+                  IF ( abs ( r(k,k) ) < abs ( sdiag(k) ) ) THEN
+                     cotan = r(k,k) / sdiag(k)
+                     s = 0.5D+00 / sqrt ( 0.25D+00 + 0.25D+00 * cotan ** 2 )
+                     c = s * cotan
+                  ELSE
+                     t = sdiag(k) / r(k,k)
+                     c = 0.5D+00 / sqrt ( 0.25D+00 + 0.25D+00 * t ** 2 )
+                     s = c * t
+                  ENDIF
+                  !
+                  !  Compute the modified diagonal element of R and
+                  !  the modified element of (Q'*B,0).
+                  !
+                  r(k,k) = c * r(k,k) + s * sdiag(k)
+                  temp = c * wa(k) + s * qtbpj
+                  qtbpj = - s * wa(k) + c * qtbpj
+                  wa(k) = temp
+                  !
+                  !  Accumulate the tranformation in the row of S.
+                  !
+                  DO i = k + 1, n
+                     temp = c * r(i,k) + s * sdiag(i)
+                     sdiag(i) = - s * r(i,k) + c * sdiag(i)
+                     r(i,k) = temp
+                  ENDDO
 
-         end do
+               ENDIF
 
-       end if
-   !
-   !  Store the diagonal element of S and restore
-   !  the corresponding diagonal element of R.
-   !
-       sdiag(j) = r(j,j)
-       r(j,j) = x(j)
+            ENDDO
 
-     end do
-   !
-   !  Solve the triangular system for Z.  If the system is
-   !  singular, then obtain a least squares solution.
-   !
-     nsing = n
+         ENDIF
+         !
+         !  Store the diagonal element of S and restore
+         !  the corresponding diagonal element of R.
+         !
+         sdiag(j) = r(j,j)
+         r(j,j) = x(j)
 
-     do j = 1, n
+      ENDDO
+      !
+      !  Solve the triangular system for Z.  IF the system is
+      !  singular, THEN obtain a least squares solution.
+      !
+      nsing = n
 
-       if ( sdiag(j) == 0.0D+00 .and. nsing == n ) then
-         nsing = j - 1
-       end if
+      DO j = 1, n
 
-       if ( nsing < n ) then
-         wa(j) = 0.0D+00
-       end if
+         IF ( sdiag(j) == 0.0D+00 .and. nsing == n ) THEN
+            nsing = j - 1
+         ENDIF
 
-     end do
+         IF ( nsing < n ) THEN
+            wa(j) = 0.0D+00
+         ENDIF
 
-     do j = nsing, 1, -1
-       sum2 = dot_product ( wa(j+1:nsing), r(j+1:nsing,j) )
-       wa(j) = ( wa(j) - sum2 ) / sdiag(j)
-     end do
-   !
-   !  Permute the components of Z back to components of X.
-   !
-     do j = 1, n
-       l = ipvt(j)
-       x(l) = wa(j)
-     end do
+      ENDDO
 
-     RETURN
-   end SUBROUTINE qrsolv
+      DO j = nsing, 1, -1
+         sum2 = dot_product ( wa(j+1:nsing), r(j+1:nsing,j) )
+         wa(j) = ( wa(j) - sum2 ) / sdiag(j)
+      ENDDO
+      !
+      !  Permute the components of Z back to components of X.
+      !
+      DO j = 1, n
+         l = ipvt(j)
+         x(l) = wa(j)
+      ENDDO
+
+      RETURN
+
+   END SUBROUTINE qrsolv
 
    FUNCTION enorm ( n, x )
 
@@ -2517,30 +2515,31 @@ CONTAINS
    !
    !    Output, real ( kind = 8 ) ENORM, the Euclidean norm of the vector.
    !
-     implicit none
+   IMPLICIT NONE
 
-     integer ( kind = 4 ) n
-     real ( kind = 8 ) x(n)
-     real ( kind = 8 ) enorm
+   integer ( kind = 4 ) n
+   real ( kind = 8 ) x(n)
+   real ( kind = 8 ) enorm
 
-     enorm = sqrt ( sum ( x(1:n) ** 2 ))
+      enorm = sqrt ( sum ( x(1:n) ** 2 ))
 
-     RETURN
-   end FUNCTION enorm
+      RETURN
+
+   END FUNCTION enorm
 
    SUBROUTINE tridia (n, a, b, c, r, u)
 
-      USE MOD_Precision
-      IMPLICIT NONE
-      INTEGER,  intent(in) :: n       !length of diagonal element vector
-      REAL(r8), intent(in) :: a(1:n)  !subdiagonal elements
-      REAL(r8), intent(in) :: b(1:n)  !diagonal elements
-      REAL(r8), intent(in) :: c(1:n)  !superdiagonal elements
-      REAL(r8), intent(in) :: r(1:n)  !right hand side
-      REAL(r8), intent(out) :: u(1:n) !solution vector
+   USE MOD_Precision
+   IMPLICIT NONE
+   integer,  intent(in) :: n       !length of diagonal element vector
+   real(r8), intent(in) :: a(1:n)  !subdiagonal elements
+   real(r8), intent(in) :: b(1:n)  !diagonal elements
+   real(r8), intent(in) :: c(1:n)  !superdiagonal elements
+   real(r8), intent(in) :: r(1:n)  !right hand side
+   real(r8), intent(out) :: u(1:n) !solution vector
 
-      INTEGER j
-      REAL(r8) gam(1:n),bet
+   integer j
+   real(r8) gam(1:n),bet
 
       bet = b(1)
       u(1) = r(1) / bet
@@ -2558,18 +2557,18 @@ CONTAINS
    ! -----------------------------------------------------------------
    SUBROUTINE polint(xa,ya,n,x,y)
 
-      ! Given arrays xa and ya, each of length n, and gi
-      ! value y, and an error estimate dy. If P (x) is the p
-      ! P (xa(i)) = ya(i), i = 1, . . . , n, then the returned value
-      ! (from: "Numerical Recipes")
+   ! Given arrays xa and ya, each of length n, and gi
+   ! value y, and an error estimate dy. IF P (x) is the p
+   ! P (xa(i)) = ya(i), i = 1, . . . , n, THEN the returned value
+   ! (from: "Numerical Recipes")
 
-      USE MOD_Precision
-      IMPLICIT NONE
-      INTEGER n,NMAX
-      REAL(r8) dy,x,y,xa(n),ya(n)
-      parameter (NMAX=10)      !Largest anticipated val
-      INTEGER i,m,ns
-      REAL(r8) den,dif,dift,ho,hp,w,c(NMAX),d(NMAX)
+   USE MOD_Precision
+   IMPLICIT NONE
+   integer n,NMAX
+   real(r8) dy,x,y,xa(n),ya(n)
+   parameter (NMAX=10)      !Largest anticipated val
+   integer i,m,ns
+   real(r8) den,dif,dift,ho,hp,w,c(NMAX),d(NMAX)
 
       ns=1
       dif=abs(x-xa(1))
@@ -2604,7 +2603,7 @@ CONTAINS
             dy=d(ns)          !the tableau-forking up or down. We DO this in such a
             ns=ns-1           !way as to take the most "straight line" route through the
          ENDIF                !tableau to its apex, updating ns accordingly to keep track
-         y=y+dy               !of where we are. This route keeps the partial approximations
+         y=y+dy               !of WHERE we are. This route keeps the partial approximations
       ENDDO                   !centered (insofar as possible) on the target x. T he
       !last dy added is thus the error indication.
 

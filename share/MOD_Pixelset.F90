@@ -2,86 +2,92 @@
 
 MODULE MOD_Pixelset
 
-   !------------------------------------------------------------------------------------
-   ! DESCRIPTION:
-   !
-   !    Pixelset refers to a set of pixels in CoLM.
-   ! 
-   !    In CoLM, the global/regional area is divided into a hierarchical structure:
-   !    1. If GRIDBASED or UNSTRUCTURED is defined, it is
-   !       ELEMENT >>> PATCH
-   !    2. If CATCHMENT is defined, it is
-   !       ELEMENT >>> HRU >>> PATCH
-   !    If Plant Function Type classification is used, PATCH is further divided into PFT.
-   !    If Plant Community classification is used,     PATCH is further divided into PC.
-   !
-   !    In CoLM, the land surface is first divided into pixels, which are rasterized 
-   !    points defined by fine-resolution data. Then ELEMENT, PATCH, HRU, PFT, PC 
-   !    are all consists of pixels, and hence they are all pixelsets.
-   ! 
-   !    The highest level pixelset in CoLM is ELEMENT, all other pixelsets are subsets 
-   !    of ELEMENTs. 
-   !    In a pixelset, pixels are sorted to make pixels in its subsets consecutive.
-   !    Thus a subset can be represented by starting pixel index and ending pixel index
-   !    in an ELEMENT. 
-   !
-   !                Example of hierarchical pixelsets
-   !        ************************************************ <-- pixels in an ELEMENT
-   !        |<------------------- ELEMENT ---------------->| <-- level 1
-   !        |   subset 1  |       subset 2      | subset 3 | <-- level 2
-   !        |s11|   s12   | s21 |   s22   | s23 |    s31   | <-- level 3
-   !
-   !    "Vector" is a collection of data when each pixelset in a given level is associated
-   !    with a value, representing its averaged physical, chemical or biological state.
-   !
-   !    "Vector" is usually defined on worker process, while its IO is through IO process.
-   !    To read,  vector is first loaded from files by IO and then scattered from IO to worker.
-   !    To write, vector is first gathered from worker to IO and then saved to files by IO.
-   !
-   ! Created by Shupeng Zhang, May 2023
-   !------------------------------------------------------------------------------------
+!------------------------------------------------------------------------------------
+! DESCRIPTION:
+!
+!    Pixelset refers to a set of pixels in CoLM.
+! 
+!    In CoLM, the global/regional area is divided into a hierarchical structure:
+!    1. If GRIDBASED or UNSTRUCTURED is defined, it is
+!       ELEMENT >>> PATCH
+!    2. If CATCHMENT is defined, it is
+!       ELEMENT >>> HRU >>> PATCH
+!    If Plant FUNCTION Type classification is used, PATCH is further divided into PFT.
+!    If Plant Community classification is used,     PATCH is further divided into PC.
+!
+!    In CoLM, the land surface is first divided into pixels, which are rasterized 
+!    points defined by fine-resolution data. Then ELEMENT, PATCH, HRU, PFT, PC 
+!    are all consists of pixels, and hence they are all pixelsets.
+! 
+!    The highest level pixelset in CoLM is ELEMENT, all other pixelsets are subsets 
+!    of ELEMENTs. 
+!    In a pixelset, pixels are sorted to make pixels in its subsets consecutive.
+!    Thus a subset can be represented by starting pixel index and ending pixel index
+!    in an ELEMENT. 
+!
+!                Example of hierarchical pixelsets
+!        ************************************************ <-- pixels in an ELEMENT
+!        |<------------------- ELEMENT ---------------->| <-- level 1
+!        |   subset 1  |       subset 2      | subset 3 | <-- level 2
+!        |s11|   s12   | s21 |   s22   | s23 |    s31   | <-- level 3
+!
+!    "Vector" is a collection of data when each pixelset in a given level is associated
+!    with a value, representing its averaged physical, chemical or biological state.
+!
+!    "Vector" is usually defined on worker process, while its IO is through IO process.
+!    To read,  vector is first loaded from files by IO and then scattered from IO to worker.
+!    To write, vector is first gathered from worker to IO and then saved to files by IO.
+!
+! Created by Shupeng Zhang, May 2023
+!------------------------------------------------------------------------------------
 
    USE MOD_Precision
    USE MOD_DataType
    IMPLICIT NONE
 
    ! ---- data types ----
-   TYPE :: vec_gather_scatter_type
+   type :: vec_gather_scatter_type
 
       ! for worker and io
-      INTEGER, allocatable :: vlen(:,:)
+      integer, allocatable :: vlen(:,:)
 
       ! for worker
-      INTEGER, allocatable :: vstt(:,:)
-      INTEGER, allocatable :: vend(:,:)
+      integer, allocatable :: vstt(:,:)
+      integer, allocatable :: vend(:,:)
 
       ! for io
-      INTEGER, allocatable :: vcnt(:,:,:)
-      INTEGER, allocatable :: vdsp(:,:,:)
+      integer, allocatable :: vcnt(:,:,:)
+      integer, allocatable :: vdsp(:,:,:)
 
    CONTAINS
       final  :: vec_gather_scatter_free_mem
 
-   END TYPE vec_gather_scatter_type
+   END type vec_gather_scatter_type
 
    ! ---- data types ----
-   TYPE :: pixelset_type
+   type :: pixelset_type
 
-      INTEGER :: nset
+      integer :: nset
 
-      INTEGER*8, allocatable :: eindex(:)
+      integer*8, allocatable :: eindex(:)
 
-      INTEGER, allocatable :: ipxstt(:)
-      INTEGER, allocatable :: ipxend(:)
-      INTEGER, allocatable :: settyp(:)
+      integer, allocatable :: ipxstt(:)
+      integer, allocatable :: ipxend(:)
+      integer, allocatable :: settyp(:)
 
-      INTEGER, allocatable :: ielm(:)
+      integer, allocatable :: ielm(:)
 
-      INTEGER :: nblkgrp
-      INTEGER, allocatable :: xblkgrp (:)
-      INTEGER, allocatable :: yblkgrp (:)
+      integer :: nblkgrp
+      integer, allocatable :: xblkgrp (:)
+      integer, allocatable :: yblkgrp (:)
 
-      TYPE(vec_gather_scatter_type) :: vecgs
+      integer :: nblkall
+      integer, allocatable :: xblkall (:)
+      integer, allocatable :: yblkall (:)
+
+      type(vec_gather_scatter_type) :: vecgs
+
+      integer, allocatable :: vlenall(:,:)
 
    CONTAINS
       procedure, PUBLIC :: set_vecgs         => vec_gather_scatter_set
@@ -90,50 +96,50 @@ MODULE MOD_Pixelset
       procedure, PUBLIC :: forc_free_mem     => pixelset_forc_free_mem
       final :: pixelset_free_mem
 
-   END TYPE pixelset_type
+   END type pixelset_type
 
    ! ---- data types ----
-   TYPE :: subset_type
+   type :: subset_type
 
-      INTEGER,  allocatable :: substt(:)
-      INTEGER,  allocatable :: subend(:)
-      REAL(r8), allocatable :: subfrc(:)
+      integer,  allocatable :: substt(:)
+      integer,  allocatable :: subend(:)
+      real(r8), allocatable :: subfrc(:)
 
    CONTAINS
       procedure, PUBLIC :: build => subset_build
       final :: subset_free_mem
 
-   END TYPE subset_type
+   END type subset_type
 
    ! ---- data types ----
-   TYPE :: superset_type
+   type :: superset_type
 
-      INTEGER,  allocatable :: sup(:)
+      integer,  allocatable :: sup(:)
 
    CONTAINS
       procedure, PUBLIC :: build => superset_build
       final :: superset_free_mem
 
-   END TYPE superset_type
+   END type superset_type
 
 CONTAINS
 
    ! --------------------------------
    SUBROUTINE pixelset_get_lonlat_radian (this, rlon, rlat)
 
-      USE MOD_Precision
-      USE MOD_Utils
-      USE MOD_Pixel
-      USE MOD_Mesh
+   USE MOD_Precision
+   USE MOD_Utils
+   USE MOD_Pixel
+   USE MOD_Mesh
 
-      IMPLICIT NONE
-      CLASS(pixelset_type) :: this
+   IMPLICIT NONE
+   CLASS(pixelset_type) :: this
 
-      REAL(r8), intent(inout) :: rlon(:), rlat(:)
+   real(r8), intent(inout) :: rlon(:), rlat(:)
 
-      ! Local Variables
-      INTEGER :: iset, ie, ipxstt, ipxend, npxl, ipxl
-      REAL(r8), allocatable :: area(:)
+   ! Local Variables
+   integer :: iset, ie, ipxstt, ipxend, npxl, ipxl
+   real(r8), allocatable :: area(:)
 
       DO iset = 1, this%nset
 
@@ -166,19 +172,19 @@ CONTAINS
    ! --------------------------------
    FUNCTION get_pixelset_rlat (npxl, ilat, area) result(rlat)
 
-      USE MOD_Precision
-      USE MOD_Vars_Global, only : pi
-      USE MOD_Pixel
-      IMPLICIT NONE
+   USE MOD_Precision
+   USE MOD_Vars_Global, only : pi
+   USE MOD_Pixel
+   IMPLICIT NONE
 
-      REAL(r8) :: rlat
+   real(r8) :: rlat
 
-      INTEGER,  intent(in) :: npxl
-      INTEGER,  intent(in) :: ilat(npxl)
-      REAL(r8), intent(in) :: area(npxl)
+   integer,  intent(in) :: npxl
+   integer,  intent(in) :: ilat(npxl)
+   real(r8), intent(in) :: area(npxl)
 
-      ! Local variables
-      INTEGER :: ipxl
+   ! Local variables
+   integer :: ipxl
 
       rlat = 0.0
       DO ipxl = 1, npxl
@@ -191,21 +197,21 @@ CONTAINS
    ! --------------------------------
    FUNCTION get_pixelset_rlon (npxl, ilon, area) result(rlon)
 
-      USE MOD_Precision
-      USE MOD_Utils
-      USE MOD_Vars_Global, only : pi
-      USE MOD_Pixel
-      IMPLICIT NONE
+   USE MOD_Precision
+   USE MOD_Utils
+   USE MOD_Vars_Global, only : pi
+   USE MOD_Pixel
+   IMPLICIT NONE
 
-      REAL(r8) :: rlon
+   real(r8) :: rlon
 
-      INTEGER,  intent(in) :: npxl
-      INTEGER,  intent(in) :: ilon(npxl)
-      REAL(r8), intent(in) :: area(npxl)
+   integer,  intent(in) :: npxl
+   integer,  intent(in) :: ilon(npxl)
+   real(r8), intent(in) :: area(npxl)
 
-      ! Local variables
-      INTEGER  :: ipxl
-      REAL(r8) :: lon, lon0, area_done
+   ! Local variables
+   integer  :: ipxl
+   real(r8) :: lon, lon0, area_done
 
       lon = 0.0
       area_done = 0.0
@@ -241,8 +247,8 @@ CONTAINS
    ! --------------------------------
    SUBROUTINE pixelset_free_mem (this)
 
-      IMPLICIT NONE
-      TYPE (pixelset_type) :: this
+   IMPLICIT NONE
+   type (pixelset_type) :: this
 
       IF (allocated(this%eindex)) deallocate(this%eindex)
       IF (allocated(this%ipxstt)) deallocate(this%ipxstt)
@@ -253,59 +259,79 @@ CONTAINS
 
       IF (allocated(this%xblkgrp)) deallocate(this%xblkgrp)
       IF (allocated(this%yblkgrp)) deallocate(this%yblkgrp)
+
+      IF (allocated(this%xblkall)) deallocate(this%xblkall)
+      IF (allocated(this%yblkall)) deallocate(this%yblkall)
+
+      IF (allocated(this%vlenall)) deallocate(this%vlenall)
 
    END SUBROUTINE pixelset_free_mem
 
    ! --------------------------------
    SUBROUTINE pixelset_forc_free_mem (this)
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      class(pixelset_type) :: this
+   class(pixelset_type) :: this
 
-      IF (allocated(this%eindex)) deallocate(this%eindex)
-      IF (allocated(this%ipxstt)) deallocate(this%ipxstt)
-      IF (allocated(this%ipxend)) deallocate(this%ipxend)
-      IF (allocated(this%settyp)) deallocate(this%settyp)
+      IF (allocated(this%eindex )) deallocate(this%eindex )
+      IF (allocated(this%ipxstt )) deallocate(this%ipxstt )
+      IF (allocated(this%ipxend )) deallocate(this%ipxend )
+      IF (allocated(this%settyp )) deallocate(this%settyp )
 
-      IF (allocated(this%ielm  )) deallocate(this%ielm  )
+      IF (allocated(this%ielm   )) deallocate(this%ielm   )
 
       IF (allocated(this%xblkgrp)) deallocate(this%xblkgrp)
       IF (allocated(this%yblkgrp)) deallocate(this%yblkgrp)
+      
+      IF (allocated(this%xblkall)) deallocate(this%xblkall)
+      IF (allocated(this%yblkall)) deallocate(this%yblkall)
+      
+      IF (allocated(this%vlenall)) deallocate(this%vlenall)
 
    END SUBROUTINE pixelset_forc_free_mem
+
    ! --------------------------------
    SUBROUTINE copy_pixelset(pixel_from, pixel_to)
-      IMPLICIT NONE
 
-      TYPE(pixelset_type), intent(in)  :: pixel_from
-      TYPE(pixelset_type), intent(out) :: pixel_to
+   IMPLICIT NONE
 
-      pixel_to%eindex = pixel_from%eindex
-      pixel_to%ipxstt = pixel_from%ipxstt
-      pixel_to%ipxend = pixel_from%ipxend
-      pixel_to%ielm   = pixel_from%ielm
+   type(pixelset_type), intent(in)  :: pixel_from
+   type(pixelset_type), intent(out) :: pixel_to
 
-      pixel_to%nset   = pixel_from%nset
-      pixel_to%nblkgrp= pixel_from%nblkgrp
-      pixel_to%xblkgrp= pixel_from%xblkgrp
-      pixel_to%yblkgrp= pixel_from%yblkgrp
+      pixel_to%nset    = pixel_from%nset
+      pixel_to%eindex  = pixel_from%eindex
+      pixel_to%ipxstt  = pixel_from%ipxstt
+      pixel_to%ipxend  = pixel_from%ipxend
+      pixel_to%settyp  = pixel_from%settyp
+      pixel_to%ielm    = pixel_from%ielm
+
+      pixel_to%nblkgrp = pixel_from%nblkgrp
+      pixel_to%xblkgrp = pixel_from%xblkgrp
+      pixel_to%yblkgrp = pixel_from%yblkgrp
+      
+      pixel_to%nblkall = pixel_from%nblkall
+      pixel_to%xblkall = pixel_from%xblkall
+      pixel_to%yblkall = pixel_from%yblkall
+
+      pixel_to%vlenall = pixel_from%vlenall
 
    END SUBROUTINE
+
    ! --------------------------------
    SUBROUTINE vec_gather_scatter_set (this)
 
-      USE MOD_Block
-      USE MOD_SPMD_Task
-      USE MOD_Mesh
-      IMPLICIT NONE
+   USE MOD_Block
+   USE MOD_SPMD_Task
+   USE MOD_Mesh
+   IMPLICIT NONE
 
-      class(pixelset_type)  :: this
+   class(pixelset_type)  :: this
 
-      ! Local variables
-      INTEGER :: iproc
-      INTEGER :: iset, ie, xblk, yblk, iblk, jblk, scnt, iblkgrp
-      LOGICAL, allocatable :: nonzero(:,:)
+   ! Local variables
+   integer :: iproc
+   integer :: iset, ie, xblk, yblk, iblk, jblk, scnt, iblkgrp, iblkall
+   logical, allocatable :: nonzero(:,:)
 
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
@@ -421,22 +447,56 @@ CONTAINS
          deallocate(nonzero)
       ENDIF
 
+      IF (p_is_io) THEN
+      
+         IF (.not. allocated(this%vlenall)) THEN
+            allocate (this%vlenall(gblock%nxblk,gblock%nyblk))
+         ENDIF
+
+         this%vlenall = this%vecgs%vlen
+#ifdef USEMPI
+         CALL mpi_allreduce (MPI_IN_PLACE, this%vlenall, gblock%nxblk * gblock%nyblk, &
+            MPI_INTEGER, MPI_SUM, p_comm_io, p_err)
+#endif
+
+
+         this%nblkall = count(this%vlenall > 0)
+
+         IF (allocated(this%xblkall)) deallocate(this%xblkall)
+         IF (allocated(this%yblkall)) deallocate(this%yblkall)
+
+         allocate (this%xblkall (this%nblkall))
+         allocate (this%yblkall (this%nblkall))
+
+         iblkall = 0
+         DO jblk = 1, gblock%nyblk
+            DO iblk = 1, gblock%nxblk
+               IF (this%vlenall(iblk,jblk) > 0) THEN
+                  iblkall = iblkall + 1
+                  this%xblkall(iblkall) = iblk
+                  this%yblkall(iblkall) = jblk
+               ENDIF
+            ENDDO
+         ENDDO
+
+      ENDIF
+
    END SUBROUTINE vec_gather_scatter_set
 
    ! --------------------------------
    SUBROUTINE pixelset_pack (this, mask, nset_packed)
 
-      USE MOD_SPMD_Task
-      IMPLICIT NONE
-      class(pixelset_type) :: this
-      LOGICAL, intent(in)  :: mask(:)
-      INTEGER, intent(out) :: nset_packed
+   USE MOD_SPMD_Task
+   IMPLICIT NONE
+   class(pixelset_type) :: this
+   logical, intent(in)  :: mask(:)
+   integer, intent(out) :: nset_packed
 
-      INTEGER*8, allocatable :: eindex1(:)
-      INTEGER,   allocatable :: ipxstt1(:)
-      INTEGER,   allocatable :: ipxend1(:)
-      INTEGER,   allocatable :: settyp1(:)
-      INTEGER,   allocatable :: ielm1  (:)
+   integer*8, allocatable :: eindex1(:)
+   integer,   allocatable :: ipxstt1(:)
+   integer,   allocatable :: ipxend1(:)
+   integer,   allocatable :: settyp1(:)
+   integer,   allocatable :: ielm1  (:)
 
       IF (p_is_worker) THEN
 
@@ -499,8 +559,8 @@ CONTAINS
    ! --------------------------------
    SUBROUTINE vec_gather_scatter_free_mem (this)
 
-      IMPLICIT NONE
-      TYPE (vec_gather_scatter_type) :: this
+   IMPLICIT NONE
+   type (vec_gather_scatter_type) :: this
 
       IF (allocated(this%vlen))  deallocate (this%vlen)
       IF (allocated(this%vstt))  deallocate (this%vstt)
@@ -513,20 +573,20 @@ CONTAINS
    ! --------------------------------
    SUBROUTINE subset_build (this, superset, subset, use_frac, sharedfrac)
 
-      USE MOD_Mesh
-      USE MOD_Pixel
-      USE MOD_Utils
-      IMPLICIT NONE
+   USE MOD_Mesh
+   USE MOD_Pixel
+   USE MOD_Utils
+   IMPLICIT NONE
 
-      CLASS(subset_type) :: this
+   CLASS(subset_type) :: this
 
-      TYPE (pixelset_type), intent(in) :: superset
-      TYPE (pixelset_type), intent(in) :: subset
-      LOGICAL, intent(in) :: use_frac
-      REAL(r8), intent(in), optional :: sharedfrac (:)
+   type (pixelset_type), intent(in) :: superset
+   type (pixelset_type), intent(in) :: subset
+   logical, intent(in) :: use_frac
+   real(r8), intent(in), optional :: sharedfrac (:)
 
-      ! Local Variables
-      INTEGER :: isuperset, isubset, ielm, ipxl, istt, iend
+   ! Local Variables
+   integer :: isuperset, isubset, ielm, ipxl, istt, iend
 
       IF (superset%nset <= 0) RETURN
 
@@ -544,7 +604,7 @@ CONTAINS
       DO WHILE (isubset <= subset%nset)
          IF (     (subset%eindex(isubset) == superset%eindex(isuperset)) &
             .and. (subset%ipxstt(isubset) >= superset%ipxstt(isuperset)) &
-            .and. (subset%ipxend(isubset) <= superset%ipxend(isuperset))) then
+            .and. (subset%ipxend(isubset) <= superset%ipxend(isuperset))) THEN
 
             IF (this%substt(isuperset) == 0) THEN
                this%substt(isuperset) = isubset
@@ -597,8 +657,8 @@ CONTAINS
    ! --------------------------------
    SUBROUTINE subset_free_mem (this)
 
-      IMPLICIT NONE
-      TYPE (subset_type) :: this
+   IMPLICIT NONE
+   type (subset_type) :: this
 
       IF (allocated(this%substt))  deallocate (this%substt)
       IF (allocated(this%subend))  deallocate (this%subend)
@@ -609,15 +669,15 @@ CONTAINS
    ! --------------------------------
    SUBROUTINE superset_build (this, superset, subset)
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      CLASS(superset_type) :: this
+   CLASS(superset_type) :: this
 
-      TYPE (pixelset_type), intent(in) :: superset
-      TYPE (pixelset_type), intent(in) :: subset
+   type (pixelset_type), intent(in) :: superset
+   type (pixelset_type), intent(in) :: subset
 
-      ! Local Variables
-      INTEGER :: isuperset, isubset
+   ! Local Variables
+   integer :: isuperset, isubset
 
       IF (subset%nset <= 0) RETURN
 
@@ -630,7 +690,7 @@ CONTAINS
       DO WHILE (isubset <= subset%nset)
          IF (     (subset%eindex(isubset) == superset%eindex(isuperset)) &
             .and. (subset%ipxstt(isubset) >= superset%ipxstt(isuperset)) &
-            .and. (subset%ipxend(isubset) <= superset%ipxend(isuperset))) then
+            .and. (subset%ipxend(isubset) <= superset%ipxend(isuperset))) THEN
 
             this%sup(isubset) = isuperset
 
@@ -645,8 +705,8 @@ CONTAINS
    ! --------------------------------
    SUBROUTINE superset_free_mem (this)
 
-      IMPLICIT NONE
-      TYPE (superset_type) :: this
+   IMPLICIT NONE
+   type (superset_type) :: this
 
       IF (allocated(this%sup))  deallocate (this%sup)
 

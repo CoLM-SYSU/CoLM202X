@@ -1,32 +1,32 @@
 #include <define.h>
 
-#ifdef LATERAL_FLOW
-MODULE MOD_Hydro_RiverLakeFlow
-   !-------------------------------------------------------------------------------------
-   ! DESCRIPTION:
-   !   
-   !   Shallow water equation solver in rivers.
-   !
-   !   References
-   !   [1] Toro EF. Shock-capturing methods for free-surface shallow flows. 
-   !      Chichester: John Wiley & Sons; 2001.
-   !   [2] Liang, Q., Borthwick, A. G. L. (2009). Adaptive quadtree simulation of shallow 
-   !      flows with wet-dry fronts over complex topography. 
-   !      Computers and Fluids, 38(2), 221–234.
-   !   [3] Audusse, E., Bouchut, F., Bristeau, M.-O., Klein, R., Perthame, B. (2004). 
-   !      A Fast and Stable Well-Balanced Scheme with Hydrostatic Reconstruction for 
-   !      Shallow Water Flows. SIAM Journal on Scientific Computing, 25(6), 2050–2065.
-   !
-   ! Created by Shupeng Zhang, May 2023
-   !-------------------------------------------------------------------------------------
+#ifdef CatchLateralFlow
+MODULE MOD_Catch_RiverLakeFlow
+!-------------------------------------------------------------------------------------
+! DESCRIPTION:
+!   
+!   Shallow water equation solver in rivers.
+!
+!   References
+!   [1] Toro EF. Shock-capturing methods for free-surface shallow flows. 
+!      Chichester: John Wiley & Sons; 2001.
+!   [2] Liang, Q., Borthwick, A. G. L. (2009). Adaptive quadtree simulation of shallow 
+!      flows with wet-dry fronts over complex topography. 
+!      Computers and Fluids, 38(2), 221–234.
+!   [3] Audusse, E., Bouchut, F., Bristeau, M.-O., Klein, R., Perthame, B. (2004). 
+!      A Fast and Stable Well-Balanced Scheme with Hydrostatic Reconstruction for 
+!      Shallow Water Flows. SIAM Journal on Scientific Computing, 25(6), 2050–2065.
+!
+! Created by Shupeng Zhang, May 2023
+!-------------------------------------------------------------------------------------
 
    USE MOD_Precision
    IMPLICIT NONE
    
-   REAL(r8), parameter :: nmanning_riv = 0.03
+   real(r8), parameter :: nmanning_riv = 0.03
    
-   REAL(r8), parameter :: RIVERMIN  = 1.e-5_r8 
-   REAL(r8), parameter :: VOLUMEMIN = 1.e-5_r8
+   real(r8), parameter :: RIVERMIN  = 1.e-5_r8 
+   real(r8), parameter :: VOLUMEMIN = 1.e-5_r8
 
    integer :: ntimestep_riverlake
    
@@ -35,41 +35,41 @@ CONTAINS
    ! ---------
    SUBROUTINE river_lake_flow (dt)
 
-      USE MOD_SPMD_Task
-      USE MOD_Mesh
-      USE MOD_LandHRU
-      USE MOD_LandPatch
-      USE MOD_Vars_TimeVariables
-      USE MOD_Hydro_Vars_1DFluxes
-      USE MOD_Hydro_HillslopeNetwork
-      USE MOD_Hydro_RiverLakeNetwork
-      USE MOD_Const_Physical, only : grav
-      IMPLICIT NONE
+   USE MOD_SPMD_Task
+   USE MOD_Mesh
+   USE MOD_LandHRU
+   USE MOD_LandPatch
+   USE MOD_Vars_TimeVariables
+   USE MOD_Hydro_Vars_1DFluxes
+   USE MOD_Catch_HillslopeNetwork
+   USE MOD_Catch_RiverLakeNetwork
+   USE MOD_Const_Physical, only : grav
+   IMPLICIT NONE
 
-      REAL(r8), intent(in) :: dt
+   real(r8), intent(in) :: dt
 
-      ! Local Variables
-      INTEGER :: nbasin
-      INTEGER :: hs, he, i, j
-      
-      REAL(r8), allocatable :: wdsrf_bsn_ds(:)
-      REAL(r8), allocatable :: veloc_riv_ds(:)
-      REAL(r8), allocatable :: momen_riv_ds(:)
+   ! Local Variables
+   integer :: nbasin
+   integer :: hs, he, i, j
+   
+   real(r8), allocatable :: wdsrf_bsn_ds(:)
+   real(r8), allocatable :: veloc_riv_ds(:)
+   real(r8), allocatable :: momen_riv_ds(:)
 
-      REAL(r8), allocatable :: hflux_fc(:)
-      REAL(r8), allocatable :: mflux_fc(:)
-      REAL(r8), allocatable :: zgrad_dn(:)
-      
-      REAL(r8), allocatable :: sum_hflux_riv(:)
-      REAL(r8), allocatable :: sum_mflux_riv(:)
-      REAL(r8), allocatable :: sum_zgrad_riv(:)
-      
-      REAL(r8) :: veloct_fc, height_fc, momen_fc, zsurf_fc
-      REAL(r8) :: bedelv_fc, height_up, height_dn
-      REAL(r8) :: vwave_up, vwave_dn, hflux_up, hflux_dn, mflux_up, mflux_dn
-      REAL(r8) :: totalvolume, loss, friction, dvol, nextl, nexta, nextv, ddep
-      REAL(r8) :: dt_res, dt_this
-      logical, allocatable :: mask(:)
+   real(r8), allocatable :: hflux_fc(:)
+   real(r8), allocatable :: mflux_fc(:)
+   real(r8), allocatable :: zgrad_dn(:)
+   
+   real(r8), allocatable :: sum_hflux_riv(:)
+   real(r8), allocatable :: sum_mflux_riv(:)
+   real(r8), allocatable :: sum_zgrad_riv(:)
+   
+   real(r8) :: veloct_fc, height_fc, momen_fc, zsurf_fc
+   real(r8) :: bedelv_fc, height_up, height_dn
+   real(r8) :: vwave_up, vwave_dn, hflux_up, hflux_dn, mflux_up, mflux_dn
+   real(r8) :: totalvolume, loss, friction, dvol, nextl, nexta, nextv, ddep
+   real(r8) :: dt_res, dt_this
+   logical, allocatable :: mask(:)
 
       
       IF (p_is_worker) THEN
@@ -165,7 +165,7 @@ CONTAINS
                         hflux_fc(i) = 0
                         mflux_fc(i) = 0
                         zgrad_dn(i) = 0
-                        cycle
+                        CYCLE
                      ENDIF
                   ENDIF
 
@@ -480,5 +480,5 @@ CONTAINS
 
    END SUBROUTINE river_lake_flow
 
-END MODULE MOD_Hydro_RiverLakeFlow
+END MODULE MOD_Catch_RiverLakeFlow
 #endif

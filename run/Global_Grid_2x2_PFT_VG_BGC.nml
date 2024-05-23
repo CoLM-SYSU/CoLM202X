@@ -49,8 +49,8 @@
 
    ! ----- forcing -----
    ! Options :
-   ! PRINCETON | GSWP3   | QIAN  | CRUNCEPV4 | CRUNCEPV7 | ERA5LAND | ERA5 |  MSWX
-   ! WFDE5     | CRUJRA  | WFDEI | JRA55     | GDAS      | CMFD     | POINT
+   ! PRINCETON | GSWP3   | QIAN  | CRUNCEPV4 | CRUNCEPV7 | ERA5LAND | ERA5  |  MSWX
+   ! WFDE5     | CRUJRA  | WFDEI | JRA55     | GDAS      | CMFD     | POINT |  JRA3Q
    DEF_forcing_namelist = '/share/home/dq010/CoLM/CoLM202X-CROP//run/forcing/GSWP3-boat.nml'
 
    ! ----- history -----
@@ -60,8 +60,8 @@
    DEF_HIST_FREQ = 'MONTHLY' ! write history file frequency: HOURLY/DAILY/MONTHLY/YEARLY
    DEF_HIST_groupby = 'MONTH' ! history in one file: DAY/MONTH/YEAR
    DEF_HIST_mode = 'one' ! history in one or block
-   DEF_REST_COMPRESS_LEVEL = 1
-   DEF_HIST_COMPRESS_LEVEL = 1
+   DEF_REST_CompressLevel = 1
+   DEF_HIST_CompressLevel = 1
 
    DEF_hist_vars_namelist = '/share/home/dq010/CoLM/CoLM202X-CROP/cases/GlobalBGCPFTnoCROPHist1851-2014-newPHS/history.nml'
    DEF_hist_vars_out_default = .true.

@@ -1,0 +1,53 @@
+&nl_colm
+   
+   DEF_CASE_NAME = 'PearlRiver_100km'         
+   
+   DEF_domain%edges = 20.0
+   DEF_domain%edgen = 30.0      
+   DEF_domain%edgew = 100.0   
+   DEF_domain%edgee = 115.0      
+   
+   DEF_simulation_time%greenwich    = .TRUE.
+   DEF_simulation_time%start_year   = 2000
+   DEF_simulation_time%start_month  = 1
+   DEF_simulation_time%start_day    = 1
+   DEF_simulation_time%start_sec    = 0
+   DEF_simulation_time%end_year     = 2003
+   DEF_simulation_time%end_month    = 12
+   DEF_simulation_time%end_day      = 31
+   DEF_simulation_time%end_sec      = 86400
+   DEF_simulation_time%spinup_year  = 2000
+   DEF_simulation_time%spinup_month = 1
+   DEF_simulation_time%spinup_day   = 1
+   DEF_simulation_time%spinup_sec   = 0
+   DEF_simulation_time%timestep     = 1800.
+   
+   DEF_dir_rawdata  = '/tera07/CLMrawdata/'
+   DEF_dir_runtime  = '/tera07/CoLMruntime/'
+   DEF_dir_output   = '/tera05/zhangsp/cases/'
+   
+   DEF_CatchmentMesh_data = '/tera04/zhangsp/hillslope/output/pearl_100km2.nc'
+   DEF_ElementNeighbour_file = '/tera04/zhangsp/hillslope/output/pearl_100km2.nc'
+
+   ! LAI setting
+   DEF_LAI_MONTHLY = .true.
+   DEF_LAI_CHANGE_YEARLY = .false.
+   
+   ! ----- forcing -----
+   DEF_forcing_namelist = '/tera04/zhangsp/git/CoLM202X/run/forcing/CRUJRA.nml'
+
+   ! ----- history -----
+   DEF_HISTORY_IN_VECTOR = .false.
+   DEF_hist_grid_as_forcing = .true.
+
+   DEF_WRST_FREQ = 'MONTHLY' ! write restart file frequency: HOURLY/DAILY/MONTHLY/YEARLY
+   DEF_HIST_FREQ = 'DAILY'   ! write history file frequency: HOURLY/DAILY/MONTHLY/YEARLY
+   DEF_HIST_groupby = 'MONTH'  ! history in one file: DAY/MONTH/YEAR
+   DEF_HIST_mode = 'one' ! history in one or block
+   DEF_REST_CompressLevel = 1
+   DEF_HIST_CompressLevel = 1
+   
+   DEF_hist_vars_out_default = .false.
+   DEF_hist_vars_namelist = '/tera04/zhangsp/CoLM2024/run/history.nml'
+   
+/

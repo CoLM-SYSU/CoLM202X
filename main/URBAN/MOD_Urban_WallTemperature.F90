@@ -1,19 +1,43 @@
 #include <define.h>
 
 MODULE MOD_Urban_WallTemperature
+!-----------------------------------------------------------------------
+!
+! !DESCRIPTION:
+!
+!  The thickness of the wall (including the shady wall and the sunny
+!  wall) is read from external data. Just like the soil, it is also
+!  divided into 10 layers, with the same thickness set for each layer,
+!  and its thermal parameters are also read from external data. Unlike
+!  pervious/impervious surfaces, the wall does not consider water
+!  accumulation or snow cover, so its thermal properties are completely
+!  determined by its own materials. At the same time, it does not
+!  consider water transfer, phase change processes, and latent heat
+!  exchange.
+!
+!  Another difference is in the setting of heat exchange for the
+!  innermost (bottom) layer. For soil and impervious surfaces, the lack
+!  of heat exchange in the bottom layer is considered. However, for
+!  walls, the heat exchange between the indoor wall surface air and the
+!  innermost layer of the wall is considered. Apart from this, the other
+!  aspects and the solution process are similar to the temperature
+!  solution for the soil.
+!
+!  Created by Yongjiu Dai and Hua Yuan, 05/2020
+!
+!-----------------------------------------------------------------------
+   USE MOD_Precision
+   IMPLICIT NONE
+   SAVE
 
-  USE MOD_Precision
-  IMPLICIT NONE
-  SAVE
-
-  PUBLIC :: UrbanWallTem
+   PUBLIC :: UrbanWallTem
 
 CONTAINS
 
 
- SUBROUTINE UrbanWallTem (deltim,capr,cnfac,&
-                          cv_wall,tk_wall,t_wall,dz_wall,z_wall,zi_wall,&
-                          twall_inner,lwall,clwall,sabwall,fsenwall,cwalls,tkdz_wall)
+   SUBROUTINE UrbanWallTem (deltim,capr,cnfac,&
+                            cv_wall,tk_wall,t_wall,dz_wall,z_wall,zi_wall,&
+                            twall_inner,lwall,clwall,sabwall,fsenwall,cwalls,tkdz_wall)
 
 !=======================================================================
 ! Wall temperatures
@@ -35,58 +59,58 @@ CONTAINS
 ! Original author : Yongjiu Dai, 05/2020
 !=======================================================================
 
-  USE MOD_Precision
-  USE MOD_Vars_Global
-  USE MOD_Const_Physical
-  USE MOD_Utils, only: tridia
+   USE MOD_Precision
+   USE MOD_Vars_Global
+   USE MOD_Const_Physical
+   USE MOD_Utils, only: tridia
 
-  IMPLICIT NONE
+   IMPLICIT NONE
 
-  REAL(r8), intent(in) :: deltim               !seconds in a time step [second]
-  REAL(r8), intent(in) :: capr                 !tuning factor to turn first layer T into surface T
-  REAL(r8), intent(in) :: cnfac                !Crank Nicholson factor between 0 and 1
+   real(r8), intent(in) :: deltim               !seconds in a time step [second]
+   real(r8), intent(in) :: capr                 !tuning factor to turn first layer T into surface T
+   real(r8), intent(in) :: cnfac                !Crank Nicholson factor between 0 and 1
 
-  REAL(r8), intent(in) :: cv_wall(1:nl_wall)   !heat capacity of urban wall [J/m3/K]
-  REAL(r8), intent(in) :: tk_wall(1:nl_wall)   !thermal conductivity of urban wall [W/m/K]
+   real(r8), intent(in) :: cv_wall(1:nl_wall)   !heat capacity of urban wall [J/m3/K]
+   real(r8), intent(in) :: tk_wall(1:nl_wall)   !thermal conductivity of urban wall [W/m/K]
 
-  REAL(r8), intent(in) :: dz_wall(1:nl_wall)   !layer thickiness [m]
-  REAL(r8), intent(in) :: z_wall (1:nl_wall)   !node depth [m]
-  REAL(r8), intent(in) :: zi_wall(0:nl_wall)   !interface depth [m]
+   real(r8), intent(in) :: dz_wall(1:nl_wall)   !layer thickiness [m]
+   real(r8), intent(in) :: z_wall (1:nl_wall)   !node depth [m]
+   real(r8), intent(in) :: zi_wall(0:nl_wall)   !interface depth [m]
 
-  REAL(r8), intent(in) :: twall_inner          !temperature at the wall inner surface [K]
-  REAL(r8), intent(in) :: lwall                !atmospheric infrared (longwave) radiation [W/m2]
-  REAL(r8), intent(in) :: clwall               !atmospheric infrared (longwave) radiation [W/m2]
-  REAL(r8), intent(in) :: sabwall              !solar radiation absorbed by wall [W/m2]
-  REAL(r8), intent(in) :: fsenwall             !sensible heat flux from wall [W/m2]
-  REAL(r8), intent(in) :: cwalls               !deriv. of wall energy flux wrt to wall temp [w/m2/k]
+   real(r8), intent(in) :: twall_inner          !temperature at the wall inner surface [K]
+   real(r8), intent(in) :: lwall                !atmospheric infrared (longwave) radiation [W/m2]
+   real(r8), intent(in) :: clwall               !atmospheric infrared (longwave) radiation [W/m2]
+   real(r8), intent(in) :: sabwall              !solar radiation absorbed by wall [W/m2]
+   real(r8), intent(in) :: fsenwall             !sensible heat flux from wall [W/m2]
+   real(r8), intent(in) :: cwalls               !deriv. of wall energy flux wrt to wall temp [w/m2/k]
 
-  REAL(r8), intent(inout) :: t_wall(1:nl_wall) !wall layers' temperature [K]
-  REAL(r8), intent(inout) :: tkdz_wall         !inner wall heat flux [w/m2/k]
+   real(r8), intent(inout) :: t_wall(1:nl_wall) !wall layers' temperature [K]
+   real(r8), intent(inout) :: tkdz_wall         !inner wall heat flux [w/m2/k]
 
 !------------------------ local variables ------------------------------
-  REAL(r8) wice_wall(1:nl_wall)  !ice lens [kg/m2]
-  REAL(r8) wliq_wall(1:nl_wall)  !liqui water [kg/m2]
+   real(r8) wice_wall(1:nl_wall)  !ice lens [kg/m2]
+   real(r8) wliq_wall(1:nl_wall)  !liqui water [kg/m2]
 
-  REAL(r8) cv (1:nl_wall)        !heat capacity [J/(m2 K)]
-  REAL(r8) thk(1:nl_wall)        !thermal conductivity of layer
-  REAL(r8) tk (1:nl_wall)        !thermal conductivity [W/(m K)]
+   real(r8) cv (1:nl_wall)        !heat capacity [J/(m2 K)]
+   real(r8) thk(1:nl_wall)        !thermal conductivity of layer
+   real(r8) tk (1:nl_wall)        !thermal conductivity [W/(m K)]
 
-  REAL(r8) at (1:nl_wall)        !"a" vector for tridiagonal matrix
-  REAL(r8) bt (1:nl_wall)        !"b" vector for tridiagonal matrix
-  REAL(r8) ct (1:nl_wall)        !"c" vector for tridiagonal matrix
-  REAL(r8) rt (1:nl_wall)        !"r" vector for tridiagonal solution
+   real(r8) at (1:nl_wall)        !"a" vector for tridiagonal matrix
+   real(r8) bt (1:nl_wall)        !"b" vector for tridiagonal matrix
+   real(r8) ct (1:nl_wall)        !"c" vector for tridiagonal matrix
+   real(r8) rt (1:nl_wall)        !"r" vector for tridiagonal solution
 
-  REAL(r8) fn (1:nl_wall)        !heat diffusion through the layer interface [W/m2]
-  REAL(r8) fn1(1:nl_wall)        !heat diffusion through the layer interface [W/m2]
-  REAL(r8) fact(1:nl_wall)       !used in computing tridiagonal matrix
-  REAL(r8) dzm                   !used in computing tridiagonal matrix
-  REAL(r8) dzp                   !used in computing tridiagonal matrix
+   real(r8) fn (1:nl_wall)        !heat diffusion through the layer interface [W/m2]
+   real(r8) fn1(1:nl_wall)        !heat diffusion through the layer interface [W/m2]
+   real(r8) fact(1:nl_wall)       !used in computing tridiagonal matrix
+   real(r8) dzm                   !used in computing tridiagonal matrix
+   real(r8) dzp                   !used in computing tridiagonal matrix
 
-  REAL(r8) t_wall_bef(1:nl_wall) !wall/snow temperature before update
-  REAL(r8) hs                    !net energy flux into the surface (w/m2)
-  REAL(r8) dhsdt                 !d(hs)/dT
+   real(r8) t_wall_bef(1:nl_wall) !wall/snow temperature before update
+   real(r8) hs                    !net energy flux into the surface (w/m2)
+   real(r8) dhsdt                 !d(hs)/dT
 
-  INTEGER i,j
+   integer i,j
 
 !=======================================================================
 
@@ -157,7 +181,7 @@ CONTAINS
       j = nl_wall
       fn1(j) = tk(j)*(twall_inner - cnfac*t_wall(j))/(zi_wall(j)-z_wall(j))
 
- END SUBROUTINE UrbanWallTem
+   END SUBROUTINE UrbanWallTem
 
 END MODULE MOD_Urban_WallTemperature
 ! ---------- EOP ------------

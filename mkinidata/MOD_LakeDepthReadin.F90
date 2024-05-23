@@ -2,7 +2,13 @@
 
 MODULE MOD_LakeDepthReadin
 
-!-----------------------------------------------------------------------
+!------------------------------------------------------------------------------------------
+! DESCRIPTION:
+! Read in lakedepth and assign lake thickness of each layer.
+!
+! Original author: Yongjiu Dai, 03/2018
+!------------------------------------------------------------------------------------------
+
    USE MOD_Precision
    IMPLICIT NONE
    SAVE
@@ -11,48 +17,37 @@ MODULE MOD_LakeDepthReadin
    PUBLIC :: lakedepth_readin
 
 
-!-----------------------------------------------------------------------
-
-   CONTAINS
-
-!-----------------------------------------------------------------------
+CONTAINS
 
 
    SUBROUTINE lakedepth_readin (dir_landdata, lc_year)
 
-   !------------------------------------------------------------------------------------------
-   ! DESCRIPTION:
-   ! Read in lakedepth and assign lake thickness of each layer.
-   !
-   ! Original author: Yongjiu Dai, 03/2018
-   !------------------------------------------------------------------------------------------
-
-      use MOD_Precision
-      USE MOD_Vars_Global, only : nl_lake
-      use MOD_SPMD_Task
-      use MOD_LandPatch
-      USE MOD_NetCDFVector
-      use MOD_Vars_TimeInvariants, only : lakedepth, dz_lake
+   USE MOD_Precision
+   USE MOD_Vars_Global, only : nl_lake
+   USE MOD_SPMD_Task
+   USE MOD_LandPatch
+   USE MOD_NetCDFVector
+   USE MOD_Vars_TimeInvariants, only : lakedepth, dz_lake
 #ifdef SinglePoint
-      USE MOD_SingleSrfdata
+   USE MOD_SingleSrfdata
 #endif
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      INTEGER, intent(in) :: lc_year    ! which year of land cover data used
-      character(LEN=256), INTENT(in) :: dir_landdata
+   integer, intent(in) :: lc_year    ! which year of land cover data used
+   character(len=256), intent(in) :: dir_landdata
 
-      ! Local Variables
-      character(len=256) :: lndname, cyear
-      real(r8) :: depthratio                  ! ratio of lake depth to standard deep lake depth
-      integer  :: ipatch
+   ! Local Variables
+   character(len=256) :: lndname, cyear
+   real(r8) :: depthratio                  ! ratio of lake depth to standard deep lake depth
+   integer  :: ipatch
 
-      ! -----------------------------------------------------------
-      ! For global simulations with 10 body layers,
-      ! the default (50 m lake) body layer thicknesses are given by :
-      ! The node depths zlak located at the center of each layer
-      real(r8), dimension(10) :: dzlak
-      real(r8), dimension(10) :: zlak
+   ! -----------------------------------------------------------
+   ! For global simulations with 10 body layers,
+   ! the default (50 m lake) body layer thicknesses are given by :
+   ! The node depths zlak located at the center of each layer
+   real(r8), dimension(10) :: dzlak
+   real(r8), dimension(10) :: zlak
 
       dzlak = (/0.1, 1., 2., 3., 4., 5., 7., 7., 10.45, 10.45/)  ! m
       zlak  = (/0.05, 0.6, 2.1, 4.6, 8.1, 12.6, 18.6, 25.6, 34.325, 44.775/)
@@ -81,32 +76,32 @@ MODULE MOD_LakeDepthReadin
 #else
       write(cyear,'(i4.4)') lc_year
       lndname = trim(dir_landdata)//'/lakedepth/'//trim(cyear)//'/lakedepth_patches.nc'
-      call ncio_read_vector (lndname, 'lakedepth_patches', landpatch, lakedepth)
+      CALL ncio_read_vector (lndname, 'lakedepth_patches', landpatch, lakedepth)
 #endif
 
       ! Define lake levels
-      if (p_is_worker) then
+      IF (p_is_worker) THEN
 
-         do ipatch = 1, numpatch
+         DO ipatch = 1, numpatch
 
             ! testing 14/05/2021, Zhang
-            if(lakedepth(ipatch) < 0.1) lakedepth(ipatch) = 0.1
+            IF(lakedepth(ipatch) < 0.1) lakedepth(ipatch) = 0.1
 
-            if(lakedepth(ipatch) > 1. .and. lakedepth(ipatch) < 1000.)then
+            IF(lakedepth(ipatch) > 1. .and. lakedepth(ipatch) < 1000.)THEN
                depthratio = lakedepth(ipatch) / sum(dzlak(1:nl_lake))
                dz_lake(1,ipatch) = dzlak(1)
                dz_lake(2:nl_lake-1,ipatch) = dzlak(2:nl_lake-1)*depthratio
                dz_lake(nl_lake,ipatch) = dzlak(nl_lake)*depthratio - (dz_lake(1,ipatch) - dzlak(1)*depthratio)
-            else if(lakedepth(ipatch) > 0. .and. lakedepth(ipatch) <= 1.)then
+            ELSEIF(lakedepth(ipatch) > 0. .and. lakedepth(ipatch) <= 1.)THEN
                dz_lake(:,ipatch) = lakedepth(ipatch) / nl_lake
-            else   ! non land water bodies or missing value of the lake depth
+            ELSE   ! non land water bodies or missing value of the lake depth
                lakedepth(ipatch) = sum(dzlak(1:nl_lake))
                dz_lake(1:nl_lake,ipatch) = dzlak(1:nl_lake)
-            end if
+            ENDIF
 
-         end do
+         ENDDO
 
-      end if
+      ENDIF
 
    END SUBROUTINE lakedepth_readin
 

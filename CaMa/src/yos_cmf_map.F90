@@ -10,74 +10,74 @@ MODULE YOS_CMF_MAP
 ! Unless required by applicable law or agreed to in writing, software distributed under the License is 
 !  distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
 ! See the License for the specific language governing permissions and limitations under the License.
-!==========================================================
-USE PARKIND1, ONLY: JPIM, JPRM, JPRB
-IMPLICIT NONE
-SAVE 
-!================================================
-!*** river network
-INTEGER(KIND=JPIM),ALLOCATABLE           ::  I2NEXTX(:,:)       !! POINT DOWNSTREAM HORIZONTAL
-INTEGER(KIND=JPIM),ALLOCATABLE           ::  I2NEXTY(:,:)       !! POINT DOWNSTREAM VERTICAL
+   !==========================================================
+   USE PARKIND1, only: JPIM, JPRM, JPRB
+   IMPLICIT NONE
+   SAVE 
+   !================================================
+   !*** river network
+   integer(KIND=JPIM),allocatable           ::  I2NEXTX(:,:)       !! POINT DOWNSTREAM HORIZONTAL
+   integer(KIND=JPIM),allocatable           ::  I2NEXTY(:,:)       !! POINT DOWNSTREAM VERTICAL
 
-INTEGER(KIND=JPIM),ALLOCATABLE           ::  I1SEQX(:)          !! 1D SEQUENCE HORIZONTAL
-INTEGER(KIND=JPIM),ALLOCATABLE           ::  I1SEQY(:)          !! 1D SEQUENCE VERTICAL
-INTEGER(KIND=JPIM),ALLOCATABLE           ::  I1NEXT(:)          !! 1D DOWNSTREAM
-INTEGER(KIND=JPIM)                       ::  NSEQRIV            !! LENGTH OF 1D SEQUNECE FOR RIVER
-INTEGER(KIND=JPIM)                       ::  NSEQALL            !! LENGTH OF 1D SEQUNECE FOR RIVER AND MOUTH
-INTEGER(KIND=JPIM)                       ::  NSEQMAX            !! MAX OF NSEQALL (PARALLEL)
+   integer(KIND=JPIM),allocatable           ::  I1SEQX(:)          !! 1D SEQUENCE HORIZONTAL
+   integer(KIND=JPIM),allocatable           ::  I1SEQY(:)          !! 1D SEQUENCE VERTICAL
+   integer(KIND=JPIM),allocatable           ::  I1NEXT(:)          !! 1D DOWNSTREAM
+   integer(KIND=JPIM)                       ::  NSEQRIV            !! LENGTH OF 1D SEQUNECE FOR RIVER
+   integer(KIND=JPIM)                       ::  NSEQALL            !! LENGTH OF 1D SEQUNECE FOR RIVER AND MOUTH
+   integer(KIND=JPIM)                       ::  NSEQMAX            !! MAX OF NSEQALL (PARALLEL)
 
-INTEGER(KIND=JPIM),ALLOCATABLE           ::  I2VECTOR(:,:)      !! VECTOR INDEX
-INTEGER(KIND=JPIM),ALLOCATABLE           ::  I2REGION(:,:)      !! REGION INDEX
-INTEGER(KIND=JPIM)                       ::  REGIONALL          !! REGION TOTAL
-INTEGER(KIND=JPIM)                       ::  REGIONTHIS         !! REGION THIS CPU
-INTEGER(KIND=JPIM)                       ::  MPI_COMM_CAMA      !! MPI COMMUNICATOR
+   integer(KIND=JPIM),allocatable           ::  I2VECTOR(:,:)      !! VECTOR INDEX
+   integer(KIND=JPIM),allocatable           ::  I2REGION(:,:)      !! REGION INDEX
+   integer(KIND=JPIM)                       ::  REGIONALL          !! REGION TOTAL
+   integer(KIND=JPIM)                       ::  REGIONTHIS         !! REGION THIS CPU
+   integer(KIND=JPIM)                       ::  MPI_COMM_CAMA      !! MPI COMMUNICATOR
 
-!================================================
-!*** lat, lon
-REAL(KIND=JPRB),ALLOCATABLE              ::  D1LON(:)           !! longitude [degree_east]
-REAL(KIND=JPRB),ALLOCATABLE              ::  D1LAT(:)           !! latitude  [degree_north]
+   !================================================
+   !*** lat, lon
+   real(KIND=JPRB),allocatable              ::  D1LON(:)           !! longitude [degree_east]
+   real(KIND=JPRB),allocatable              ::  D1LAT(:)           !! latitude  [degree_north]
 
-!================================================
-!*** River + Floodplain topography (map)
-REAL(KIND=JPRB),ALLOCATABLE              ::  D2GRAREA(:,:)      !! GRID AREA [M2]
-REAL(KIND=JPRB),ALLOCATABLE              ::  D2ELEVTN(:,:)      !! ELEVATION [M]
-REAL(KIND=JPRB),ALLOCATABLE              ::  D2NXTDST(:,:)      !! DISTANCE TO THE NEXT GRID [M]
-REAL(KIND=JPRB),ALLOCATABLE              ::  D2RIVLEN(:,:)      !! RIVER LENGTH [M]
-REAL(KIND=JPRB),ALLOCATABLE              ::  D2RIVWTH(:,:)      !! RIVER WIDTH [M]
-REAL(KIND=JPRB),ALLOCATABLE              ::  D2RIVMAN(:,:)      !! RIVER MANNING COEFFICIENT
-REAL(KIND=JPRB),ALLOCATABLE              ::  D2RIVHGT(:,:)      !! RIVER HEIGHT [M]
-REAL(KIND=JPRB),ALLOCATABLE              ::  D2FLDHGT(:,:,:)    !! FLOODPLAIN HEIGHT [M]
+   !================================================
+   !*** River + Floodplain topography (map)
+   real(KIND=JPRB),allocatable              ::  D2GRAREA(:,:)      !! GRID AREA [M2]
+   real(KIND=JPRB),allocatable              ::  D2ELEVTN(:,:)      !! ELEVATION [M]
+   real(KIND=JPRB),allocatable              ::  D2NXTDST(:,:)      !! DISTANCE TO THE NEXT GRID [M]
+   real(KIND=JPRB),allocatable              ::  D2RIVLEN(:,:)      !! RIVER LENGTH [M]
+   real(KIND=JPRB),allocatable              ::  D2RIVWTH(:,:)      !! RIVER WIDTH [M]
+   real(KIND=JPRB),allocatable              ::  D2RIVMAN(:,:)      !! RIVER MANNING COEFFICIENT
+   real(KIND=JPRB),allocatable              ::  D2RIVHGT(:,:)      !! RIVER HEIGHT [M]
+   real(KIND=JPRB),allocatable              ::  D2FLDHGT(:,:,:)    !! FLOODPLAIN HEIGHT [M]
 
-REAL(KIND=JPRB),ALLOCATABLE              ::  D2GDWDLY(:,:)      !! Ground water delay
-REAL(KIND=JPRB),ALLOCATABLE              ::  D2ELEVSLOPE(:,:)   !! River bed slope
-INTEGER(KIND=JPIM),ALLOCATABLE           ::  I2MASK(:,:)        !! Mask 
+   real(KIND=JPRB),allocatable              ::  D2GDWDLY(:,:)      !! Ground water delay
+   real(KIND=JPRB),allocatable              ::  D2ELEVSLOPE(:,:)   !! River bed slope
+   integer(KIND=JPIM),allocatable           ::  I2MASK(:,:)        !! Mask 
 
-!================================================
-!*** Floodplain Topography (diagnosed)
-REAL(KIND=JPRB),ALLOCATABLE              ::  D2RIVSTOMAX(:,:)   !! maximum river storage [m3]
-REAL(KIND=JPRB),ALLOCATABLE              ::  D2RIVELV(:,:)      !! elevation of river bed [m3]
-REAL(KIND=JPRB),ALLOCATABLE              ::  D2FLDSTOMAX(:,:,:) !! MAXIMUM FLOODPLAIN STORAGE [M3]
-REAL(KIND=JPRB),ALLOCATABLE              ::  D2FLDGRD(:,:,:)    !! FLOODPLAIN GRADIENT
-REAL(KIND=JPRB)                          ::  DFRCINC            !! FLOODPLAIN FRACTION INCREMENT [-] (1/NLFP)
+   !================================================
+   !*** Floodplain Topography (diagnosed)
+   real(KIND=JPRB),allocatable              ::  D2RIVSTOMAX(:,:)   !! maximum river storage [m3]
+   real(KIND=JPRB),allocatable              ::  D2RIVELV(:,:)      !! elevation of river bed [m3]
+   real(KIND=JPRB),allocatable              ::  D2FLDSTOMAX(:,:,:) !! MAXIMUM FLOODPLAIN STORAGE [M3]
+   real(KIND=JPRB),allocatable              ::  D2FLDGRD(:,:,:)    !! FLOODPLAIN GRADIENT
+   real(KIND=JPRB)                          ::  DFRCINC            !! FLOODPLAIN FRACTION INCREMENT [-] (1/NLFP)
 
-!================================================
-!*** Downstream boundary
-REAL(KIND=JPRB),ALLOCATABLE              ::  D2MEANSL(:,:)      !! MEAN SEA LEVEL [M]
-REAL(KIND=JPRB),ALLOCATABLE              ::  D2SEALEV(:,:)        !! sea level variation [m]
-REAL(KIND=JPRB),ALLOCATABLE              ::  D2DWNELV(:,:)        !! downstream boundary elevation [m]
+   !================================================
+   !*** Downstream boundary
+   real(KIND=JPRB),allocatable              ::  D2MEANSL(:,:)      !! MEAN SEA LEVEL [M]
+   real(KIND=JPRB),allocatable              ::  D2SEALEV(:,:)        !! sea level variation [m]
+   real(KIND=JPRB),allocatable              ::  D2DWNELV(:,:)        !! downstream boundary elevation [m]
 
-!================================================
-!*** bifurcation channel
-INTEGER(KIND=JPIM)                       ::  NPTHOUT            !! NUMBER OF FLOODPLAIN PATH
-INTEGER(KIND=JPIM)                       ::  NPTHLEV            !! NUMBER OF FLOODPLAIN PATH LAYER
-INTEGER(KIND=JPIM),ALLOCATABLE           ::  PTH_UPST(:)        !! FLOOD PATHWAY UPSTREAM   ISEQ
-INTEGER(KIND=JPIM),ALLOCATABLE           ::  PTH_DOWN(:)        !! FLOOD PATHWAY DOWNSTREAM JSEQ
-REAL(KIND=JPRB),ALLOCATABLE              ::  PTH_DST(:)         !! FLOOD PATHWAY DISTANCE [m]
-REAL(KIND=JPRB),ALLOCATABLE              ::  PTH_ELV(:,:)         !! FLOOD PATHWAY ELEVATION [m]
-REAL(KIND=JPRB),ALLOCATABLE              ::  PTH_WTH(:,:)         !! FLOOD PATHWAY WIDTH [m]
-REAL(KIND=JPRB),ALLOCATABLE              ::  PTH_MAN(:)         !! FLOOD PATHWAY Manning
+   !================================================
+   !*** bifurcation channel
+   integer(KIND=JPIM)                       ::  NPTHOUT            !! NUMBER OF FLOODPLAIN PATH
+   integer(KIND=JPIM)                       ::  NPTHLEV            !! NUMBER OF FLOODPLAIN PATH LAYER
+   integer(KIND=JPIM),allocatable           ::  PTH_UPST(:)        !! FLOOD PATHWAY UPSTREAM   ISEQ
+   integer(KIND=JPIM),allocatable           ::  PTH_DOWN(:)        !! FLOOD PATHWAY DOWNSTREAM JSEQ
+   real(KIND=JPRB),allocatable              ::  PTH_DST(:)         !! FLOOD PATHWAY DISTANCE [m]
+   real(KIND=JPRB),allocatable              ::  PTH_ELV(:,:)       !! FLOOD PATHWAY ELEVATION [m]
+   real(KIND=JPRB),allocatable              ::  PTH_WTH(:,:)       !! FLOOD PATHWAY WIDTH [m]
+   real(KIND=JPRB),allocatable              ::  PTH_MAN(:)         !! FLOOD PATHWAY Manning
 
-DATA REGIONALL  /1/
-DATA REGIONTHIS /1/
+   DATA REGIONALL  /1/
+   DATA REGIONTHIS /1/
 
 END MODULE YOS_CMF_MAP

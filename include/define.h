@@ -8,8 +8,8 @@
 ! 2. Land subgrid type classification:
 !    Select one of the following options.
 #undef LULC_USGS
-#undef LULC_IGBP
-#define LULC_IGBP_PFT
+#define LULC_IGBP
+#undef LULC_IGBP_PFT
 #undef LULC_IGBP_PC
 
 ! 2.1 3D Urban model (put it temporarily here):
@@ -34,10 +34,10 @@
 #undef   Campbell_SOIL_MODEL
 #define  vanGenuchten_Mualem_SOIL_MODEL
 ! 5.2 If defined, lateral flow is modeled.
-#define LATERAL_FLOW
+#define CatchLateralFlow
 !    Conflicts :
 #ifndef CATCHMENT
-#undef LATERAL_FLOW
+#undef CatchLateralFlow
 #endif
 
 ! 6. If defined, CaMa-Flood model will be used.
@@ -62,3 +62,14 @@
 
 ! 9. If defined, data assimilation is used.
 #undef DataAssimilation
+
+! 10. Vector write model.
+!     1) "VectorInOneFileP" : write vector data in one file in parallel mode;  
+!     2) "VectorInOneFileS" : write vector data in one file in serial mode;  
+!     3) Neither "VectorInOneFileS" nor "VectorInOneFileP" is defined : 
+!        write vector data in separate files.  
+#undef VectorInOneFileP
+!     Conflict
+#ifdef VectorInOneFileP
+#undef VectorInOneFileS
+#endif

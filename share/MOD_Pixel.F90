@@ -2,42 +2,42 @@
 
 MODULE MOD_Pixel
 
-   !------------------------------------------------------------------------------------
-   ! DESCRIPTION:
-   !
-   !    Pixels are rasterized points defined by fine-resolution data.
-   !   
-   !    CoLM use multiple grids to construct pixels. Grids are assimilated into pixel 
-   !    coordinate one by one. One grid is assimilated by adding grid lines not present 
-   !    in pixel coordinate. In other words, pixel coordinate is the union of all grids.
-   !   
-   !    Pixels are used to carry out land surface tessellation. The grids used to 
-   !    construct pixels are associated with surface data such as land cover types, soil 
-   !    parameters, plant function types, leaf area index and forest height. 
-   !    By using pixels, these variables are downscaled to fine resolution.
-   !
-   !    In pixel data type, region boundaries and each pixel boundaries are defined.
-   !    Subroutines to assimilate grid and map pixel to grid are defined as methods.
-   ! 
-   ! Created by Shupeng Zhang, May 2023
-   !------------------------------------------------------------------------------------
+!------------------------------------------------------------------------------------
+! DESCRIPTION:
+!
+!    Pixels are rasterized points defined by fine-resolution data.
+!   
+!    CoLM USE multiple grids to construct pixels. Grids are assimilated into pixel 
+!    coordinate one by one. One grid is assimilated by adding grid lines not present 
+!    in pixel coordinate. In other words, pixel coordinate is the union of all grids.
+!   
+!    Pixels are used to carry out land surface tessellation. The grids used to 
+!    construct pixels are associated with surface data such as land cover types, soil 
+!    parameters, plant function types, leaf area index and forest height. 
+!    By using pixels, these variables are downscaled to fine resolution.
+!
+!    In pixel data type, region boundaries and each pixel boundaries are defined.
+!    Subroutines to assimilate grid and map pixel to grid are defined as methods.
+! 
+! Created by Shupeng Zhang, May 2023
+!------------------------------------------------------------------------------------
 
    USE MOD_Precision
    IMPLICIT NONE
 
    ! ---- data types ----
-   TYPE :: pixel_type
+   type :: pixel_type
 
-      REAL(r8) :: edges  ! southern edge (degrees)
-      REAL(r8) :: edgen  ! northern edge (degrees)
-      REAL(r8) :: edgew  ! western  edge (degrees)
-      REAL(r8) :: edgee  ! eastern  edge (degrees)
+      real(r8) :: edges  ! southern edge (degrees)
+      real(r8) :: edgen  ! northern edge (degrees)
+      real(r8) :: edgew  ! western  edge (degrees)
+      real(r8) :: edgee  ! eastern  edge (degrees)
       
-      INTEGER :: nlon, nlat
-      REAL(r8), allocatable :: lat_s (:)
-      REAL(r8), allocatable :: lat_n (:)
-      REAL(r8), allocatable :: lon_w (:)
-      REAL(r8), allocatable :: lon_e (:)
+      integer :: nlon, nlat
+      real(r8), allocatable :: lat_s (:)
+      real(r8), allocatable :: lat_n (:)
+      real(r8), allocatable :: lon_w (:)
+      real(r8), allocatable :: lon_e (:)
 
    CONTAINS 
       procedure, PUBLIC :: set_edges   => pixel_set_edges
@@ -53,10 +53,10 @@ MODULE MOD_Pixel
       
       final :: pixel_free_mem
 
-   END TYPE pixel_type
+   END type pixel_type
    
    ! ---- Instance ----
-   TYPE(pixel_type) :: pixel
+   type(pixel_type) :: pixel
 
 CONTAINS
    
@@ -64,15 +64,15 @@ CONTAINS
    SUBROUTINE pixel_set_edges (this, & 
          edges_in, edgen_in, edgew_in, edgee_in)
       
-      USE MOD_Precision
-      USE MOD_SPMD_Task
-      USE MOD_Utils
-      IMPLICIT NONE
+   USE MOD_Precision
+   USE MOD_SPMD_Task
+   USE MOD_Utils
+   IMPLICIT NONE
 
-      class(pixel_type) :: this
+   class(pixel_type) :: this
 
-      REAL(r8), intent(in) :: edges_in, edgen_in
-      REAL(r8), intent(in) :: edgew_in, edgee_in
+   real(r8), intent(in) :: edges_in, edgen_in
+   real(r8), intent(in) :: edgew_in, edgee_in
 
       this%nlon = 1
       this%nlat = 1
@@ -108,26 +108,26 @@ CONTAINS
    SUBROUTINE pixel_assimilate_latlon (this, &
          nlat, lat_s, lat_n, nlon, lon_w, lon_e)
 
-      USE MOD_Precision
-      USE MOD_Utils
-      IMPLICIT NONE
-      class(pixel_type) :: this
+   USE MOD_Precision
+   USE MOD_Utils
+   IMPLICIT NONE
+   class(pixel_type) :: this
 
-      INTEGER,  intent(in) :: nlat
-      REAL(r8), intent(in) :: lat_s(nlat), lat_n(nlat)
-      INTEGER,  intent(in) :: nlon
-      REAL(r8), intent(in) :: lon_w(nlon), lon_e(nlon)
+   integer,  intent(in) :: nlat
+   real(r8), intent(in) :: lat_s(nlat), lat_n(nlat)
+   integer,  intent(in) :: nlon
+   real(r8), intent(in) :: lon_w(nlon), lon_e(nlon)
 
-      ! Local variables
-      REAL(r8) :: south, north, west, east
+   ! Local variables
+   real(r8) :: south, north, west, east
 
-      INTEGER :: ny, yinc
-      INTEGER :: iy1, iy2, ys2, yn2
-      REAL(r8), allocatable :: ytmp(:)
+   integer :: ny, yinc
+   integer :: iy1, iy2, ys2, yn2
+   real(r8), allocatable :: ytmp(:)
 
-      INTEGER :: nx
-      INTEGER :: ix1, ix2, xw2, xe2
-      REAL(r8), allocatable :: xtmp(:)
+   integer :: nx
+   integer :: ix1, ix2, xw2, xe2
+   real(r8), allocatable :: xtmp(:)
 
       IF (lat_s(1) <= lat_s(nlat)) THEN
          yinc = 1
@@ -213,11 +213,11 @@ CONTAINS
 
             IF (xw2 /= xe2) THEN
                ix2 = mod(xw2,nlon) + 1
-               DO while (.true.) 
+               DO WHILE (.true.) 
                   nx = nx + 1
                   xtmp(nx) = lon_w(ix2)
 
-                  IF (ix2 == xe2)  exit
+                  IF (ix2 == xe2)  EXIT
                   ix2 = mod(ix2,nlon) + 1
                ENDDO
             ENDIF
@@ -250,9 +250,9 @@ CONTAINS
    ! --------------------------------
    SUBROUTINE pixel_assimilate_gblock (this)
 
-      USE MOD_Block, only : gblock
-      IMPLICIT NONE
-      class(pixel_type) :: this
+   USE MOD_Block, only : gblock
+   IMPLICIT NONE
+   class(pixel_type) :: this
 
       CALL this%assimilate_latlon ( &
          gblock%nyblk, gblock%lat_s, gblock%lat_n, &
@@ -263,11 +263,11 @@ CONTAINS
    ! --------------------------------
    SUBROUTINE pixel_assimilate_grid (this, grid)
 
-      USE MOD_Grid
-      IMPLICIT NONE
-      class(pixel_type) :: this
+   USE MOD_Grid
+   IMPLICIT NONE
+   class(pixel_type) :: this
 
-      TYPE(grid_type), intent(in) :: grid
+   type(grid_type), intent(in) :: grid
 
       CALL this%assimilate_latlon ( &
          grid%nlat, grid%lat_s, grid%lat_n, &
@@ -278,16 +278,16 @@ CONTAINS
    ! --------------------------------
    SUBROUTINE pixel_map_to_grid (this, grd)
 
-      USE MOD_Grid
-      USE MOD_Utils
-      IMPLICIT NONE
-      class(pixel_type) :: this
+   USE MOD_Grid
+   USE MOD_Utils
+   IMPLICIT NONE
+   class(pixel_type) :: this
 
-      TYPE(grid_type), intent(inout) :: grd 
+   type(grid_type), intent(inout) :: grd 
 
-      ! Local variables
-      INTEGER :: iy1, iy2, ix1, ix2
-      REAL(r8) :: south, north, west, east
+   ! Local variables
+   integer :: iy1, iy2, ix1, ix2
+   real(r8) :: south, north, west, east
 
       IF (allocated (grd%xgrd))  deallocate (grd%xgrd)
       IF (allocated (grd%ygrd))  deallocate (grd%ygrd)
@@ -303,19 +303,20 @@ CONTAINS
       ENDIF
 
       iy1 = 1
-      DO while (.true.)
+      DO WHILE (.true.)
          IF ((this%lat_s(iy1) < north) .and. (this%lat_n(iy1) > south)) THEN 
             iy2 = find_nearest_south (this%lat_s(iy1), grd%nlat, grd%lat_s) 
-            DO while (this%lat_n(iy1) <= grd%lat_n(iy2))
+            DO WHILE (this%lat_n(iy1) <= grd%lat_n(iy2))
                grd%ygrd(iy1) = iy2
                iy1 = iy1 + 1
-               IF (iy1 > this%nlat) exit
+               IF (iy1 > this%nlat) EXIT
             ENDDO
          ELSE
+            write(*,*) 'Warning: grid in latitude does not cover simulation region completely.'
             grd%ygrd(iy1) = -1
             iy1 = iy1 + 1
          ENDIF
-         IF (iy1 > this%nlat) exit
+         IF (iy1 > this%nlat) EXIT
       ENDDO
 
       allocate (grd%xgrd (this%nlon))
@@ -324,22 +325,23 @@ CONTAINS
       east = grd%lon_e(grd%nlon)
       
       ix1 = 1
-      DO while (.true.)
+      DO WHILE (.true.)
          IF (    lon_between_floor(this%lon_w(ix1), west, east) &
             .or. lon_between_ceil (this%lon_e(ix1), west, east) ) THEN
 
             ix2 = find_nearest_west (this%lon_w(ix1), grd%nlon, grd%lon_w) 
-            DO while (lon_between_ceil(this%lon_e(ix1), grd%lon_w(ix2), grd%lon_e(ix2)))
+            DO WHILE (lon_between_ceil(this%lon_e(ix1), grd%lon_w(ix2), grd%lon_e(ix2)))
                grd%xgrd(ix1) = ix2
                ix1 = ix1 + 1
-               IF (ix1 > this%nlon) exit
+               IF (ix1 > this%nlon) EXIT
             ENDDO
 
          ELSE
+            write(*,*) 'Warning: grid in longitude does not cover simulation region completely.'
             grd%xgrd(ix1) = -1
             ix1 = ix1 + 1
          ENDIF
-         IF (ix1 > this%nlon) exit
+         IF (ix1 > this%nlon) EXIT
       ENDDO
 
    END SUBROUTINE pixel_map_to_grid 
@@ -347,15 +349,15 @@ CONTAINS
    ! --------------------------------
    SUBROUTINE pixel_save_to_file (this, dir_landdata)
 
-      USE MOD_SPMD_Task
-      USE MOD_NetCDFSerial
-      IMPLICIT NONE
-      class(pixel_type) :: this
+   USE MOD_SPMD_Task
+   USE MOD_NetCDFSerial
+   IMPLICIT NONE
+   class(pixel_type) :: this
 
-      CHARACTER(len=*), intent(in) :: dir_landdata 
+   character(len=*), intent(in) :: dir_landdata 
 
-      ! Local variables
-      CHARACTER(len=256) :: filename
+   ! Local variables
+   character(len=256) :: filename
 
       IF (p_is_master) THEN
          
@@ -383,14 +385,14 @@ CONTAINS
    ! --------------------------------
    SUBROUTINE pixel_load_from_file (this, dir_landdata)
 
-      USE MOD_NetCDFSerial 
-      IMPLICIT NONE
+   USE MOD_NetCDFSerial 
+   IMPLICIT NONE
 
-      class(pixel_type) :: this
+   class(pixel_type) :: this
 
-      CHARACTER(len=*), intent(in) :: dir_landdata
-      ! Local variables
-      CHARACTER(len=256) :: filename
+   character(len=*), intent(in) :: dir_landdata
+   ! Local variables
+   character(len=256) :: filename
 
       filename = trim(dir_landdata) // '/pixel.nc'
 
@@ -412,8 +414,8 @@ CONTAINS
    ! --------------------------------
    SUBROUTINE pixel_free_mem (this)
       
-      IMPLICIT NONE
-      TYPE (pixel_type) :: this
+   IMPLICIT NONE
+   type (pixel_type) :: this
 
       IF (allocated(this%lat_s))  deallocate(this%lat_s)
       IF (allocated(this%lat_n))  deallocate(this%lat_n)

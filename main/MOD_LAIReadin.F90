@@ -13,53 +13,54 @@ MODULE MOD_LAIReadin
 
 !-----------------------------------------------------------------------
 
-   CONTAINS
+CONTAINS
 
 !-----------------------------------------------------------------------
 
 
    SUBROUTINE LAI_readin (year, time, dir_landdata)
-      ! ===========================================================
-      ! Read in the LAI, the LAI dataset was created by Yuan et al. (2011)
-      ! http://globalchange.bnu.edu.cn
-      !
-      ! Created by Yongjiu Dai, March, 2014
-      ! ===========================================================
+   ! ===========================================================
+   ! Read in the LAI, the LAI dataset was created by Yuan et al. (2011)
+   ! http://globalchange.bnu.edu.cn
+   !
+   ! Created by Yongjiu Dai, March, 2014
+   ! ===========================================================
 
-      use MOD_Precision
-      use MOD_Namelist
-      use MOD_SPMD_Task
-      use MOD_NetCDFVector
-      use MOD_LandPatch
-      use MOD_Vars_TimeInvariants
-      use MOD_Vars_TimeVariables
+   USE MOD_Precision
+   USE MOD_Namelist
+   USE MOD_SPMD_Task
+   USE MOD_UserDefFun
+   USE MOD_NetCDFVector
+   USE MOD_LandPatch
+   USE MOD_Vars_TimeInvariants
+   USE MOD_Vars_TimeVariables
 
-      USE MOD_Vars_Global
-      USE MOD_Const_LC
+   USE MOD_Vars_Global
+   USE MOD_Const_LC
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
-      USE MOD_LandPFT
-      USE MOD_Vars_PFTimeVariables
+   USE MOD_LandPFT
+   USE MOD_Vars_PFTimeVariables
 #endif
 #ifdef SinglePoint
-      USE MOD_SingleSrfdata
+   USE MOD_SingleSrfdata
 #endif
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      integer, INTENT(in) :: year, time
-      character(LEN=256), INTENT(in) :: dir_landdata
+   integer, intent(in) :: year, time
+   character(len=256), intent(in) :: dir_landdata
 
-      ! Local variables
-      integer :: iyear, itime
-      character(LEN=256) :: cyear, ctime
-      character(LEN=256) :: landdir, lndname
-      integer :: m, npatch, pc
+   ! Local variables
+   integer :: iyear, itime
+   character(len=256) :: cyear, ctime
+   character(len=256) :: landdir, lndname
+   integer :: m, npatch, pc
 
 #ifdef LULC_USGS
-      real(r8), dimension(24), parameter :: &   ! Maximum fractional cover of vegetation [-]
-         vegc=(/1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, &
-                1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, &
-                1.0, 1.0, 0.0, 1.0, 1.0, 1.0, 0.0, 0.0 /)
+   real(r8), dimension(24), parameter :: &   ! Maximum fractional cover of vegetation [-]
+      vegc=(/1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, &
+             1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, &
+             1.0, 1.0, 0.0, 1.0, 1.0, 1.0, 0.0, 0.0 /)
 #endif
 
       ! READ in Leaf area index and stem area index
@@ -68,7 +69,7 @@ MODULE MOD_LAIReadin
 
 #ifdef SinglePoint
 #ifndef URBAN_MODEL
-      iyear = findloc(SITE_LAI_year, year, dim=1)
+      iyear = findloc_ud(SITE_LAI_year == year)
       IF (.not. DEF_LAI_MONTHLY) THEN
          itime = (time-1)/8 + 1
       ENDIF
@@ -93,32 +94,32 @@ MODULE MOD_LAIReadin
          write(ctime,'(i2.2)') time
 
          lndname = trim(landdir)//'/'//trim(cyear)//'/LAI_patches'//trim(ctime)//'.nc'
-         call ncio_read_vector (lndname, 'LAI_patches',  landpatch, tlai)
+         CALL ncio_read_vector (lndname, 'LAI_patches',  landpatch, tlai)
 
          lndname = trim(landdir)//'/'//trim(cyear)//'/SAI_patches'//trim(ctime)//'.nc'
-         call ncio_read_vector (lndname, 'SAI_patches',  landpatch, tsai)
+         CALL ncio_read_vector (lndname, 'SAI_patches',  landpatch, tsai)
       ELSE
          write(cyear,'(i4.4)') year
          write(ctime,'(i3.3)') time
          lndname = trim(landdir)//'/'//trim(cyear)//'/LAI_patches'//trim(ctime)//'.nc'
-         call ncio_read_vector (lndname, 'LAI_patches',  landpatch, tlai)
+         CALL ncio_read_vector (lndname, 'LAI_patches',  landpatch, tlai)
       ENDIF
 #endif
 
-      if (p_is_worker) then
-         if (numpatch > 0) then
+      IF (p_is_worker) THEN
+         IF (numpatch > 0) THEN
 
-            do npatch = 1, numpatch
+            DO npatch = 1, numpatch
                m = patchclass(npatch)
 #ifdef URBAN_MODEL
                IF(m == URBAN) CYCLE
 #endif
-               if( m == 0 )then
+               IF( m == 0 )THEN
                   fveg(npatch)  = 0.
                   tlai(npatch)  = 0.
                   tsai(npatch)  = 0.
                   green(npatch) = 0.
-               else
+               ELSE
                   fveg(npatch)  = fveg0(m)           !fraction of veg. cover
                   IF (fveg0(m) > 0) THEN
                      tlai(npatch)  = tlai(npatch)/fveg0(m) !leaf area index
@@ -133,8 +134,8 @@ MODULE MOD_LAIReadin
                      tsai(npatch)  = 0.
                      green(npatch) = 0.
                   ENDIF
-               endif
-            end do
+               ENDIF
+            ENDDO
 
          ENDIF
       ENDIF
@@ -166,22 +167,22 @@ MODULE MOD_LAIReadin
       write(ctime,'(i2.2)') time
       IF (.not. DEF_USE_LAIFEEDBACK)THEN
          lndname = trim(landdir)//'/'//trim(cyear)//'/LAI_patches'//trim(ctime)//'.nc'
-         call ncio_read_vector (lndname, 'LAI_patches',  landpatch, tlai )
-      END IF
+         CALL ncio_read_vector (lndname, 'LAI_patches',  landpatch, tlai )
+      ENDIF
       lndname = trim(landdir)//'/'//trim(cyear)//'/SAI_patches'//trim(ctime)//'.nc'
-      call ncio_read_vector (lndname, 'SAI_patches',  landpatch, tsai )
+      CALL ncio_read_vector (lndname, 'SAI_patches',  landpatch, tsai )
       IF (.not. DEF_USE_LAIFEEDBACK)THEN
          lndname = trim(landdir)//'/'//trim(cyear)//'/LAI_pfts'//trim(ctime)//'.nc'
-         call ncio_read_vector (lndname, 'LAI_pfts', landpft, tlai_p )
-      END IF
+         CALL ncio_read_vector (lndname, 'LAI_pfts', landpft, tlai_p )
+      ENDIF
       lndname = trim(landdir)//'/'//trim(cyear)//'/SAI_pfts'//trim(ctime)//'.nc'
-      call ncio_read_vector (lndname, 'SAI_pfts', landpft, tsai_p )
+      CALL ncio_read_vector (lndname, 'SAI_pfts', landpft, tsai_p )
 
 #endif
 
-      if (p_is_worker) then
-         if (numpatch > 0) then
-            do npatch = 1, numpatch
+      IF (p_is_worker) THEN
+         IF (numpatch > 0) THEN
+            DO npatch = 1, numpatch
                m = patchclass(npatch)
 
 #ifdef URBAN_MODEL
@@ -191,7 +192,7 @@ MODULE MOD_LAIReadin
                green(npatch) = 1.
                fveg (npatch) = fveg0(m)
 
-            end do
+            ENDDO
          ENDIF
       ENDIF
 

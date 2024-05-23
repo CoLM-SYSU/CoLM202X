@@ -2,76 +2,70 @@
 
 MODULE MOD_DBedrockReadin
 
-!-----------------------------------------------------------------------
    USE MOD_Precision
    IMPLICIT NONE
    SAVE
 
-! PUBLIC MEMBER FUNCTIONS:
+   ! PUBLIC MEMBER FUNCTIONS:
    PUBLIC :: dbedrock_readin
 
+CONTAINS
 
-!-----------------------------------------------------------------------
+   SUBROUTINE dbedrock_readin (dir_landdata)
 
-   CONTAINS
-
-!-----------------------------------------------------------------------
-
-
-   subroutine dbedrock_readin (dir_landdata)
-
-      use MOD_Precision
-      use MOD_SPMD_Task
-      USE mod_namelist
-      use MOD_LandPatch
-      use MOD_NetCDFVector
-      USE MOD_Vars_Global, only : nl_soil, dz_soi
-      use MOD_Vars_TimeInvariants, only : dbedrock, ibedrock
+   USE MOD_Precision
+   USE MOD_SPMD_Task
+   USE MOD_Namelist
+   USE MOD_UserDefFun
+   USE MOD_LandPatch
+   USE MOD_NetCDFVector
+   USE MOD_Vars_Global, only : nl_soil, dz_soi
+   USE MOD_Vars_TimeInvariants, only : dbedrock, ibedrock
 #ifdef SinglePoint
-      USE MOD_SingleSrfdata
+   USE MOD_SingleSrfdata
 #endif
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      character(LEN=256), INTENT(in) :: dir_landdata
+   character(len=256), intent(in) :: dir_landdata
 
-      ! Local Variables
-      character(len=256) :: lndname
-      integer  :: ipatch, L
+   ! Local Variables
+   character(len=256) :: lndname
+   integer  :: ipatch, L
 
 #ifdef SinglePoint
       dbedrock(:) = SITE_dbedrock
 #else
       lndname = trim(dir_landdata)//'/dbedrock/dbedrock_patches.nc'
-      call ncio_read_vector (lndname, 'dbedrock_patches', landpatch, dbedrock)
+      CALL ncio_read_vector (lndname, 'dbedrock_patches', landpatch, dbedrock)
 #endif
 
-      if (p_is_worker) then
+      IF (p_is_worker) THEN
 
-         do ipatch = 1, numpatch
+         DO ipatch = 1, numpatch
 
             L = landpatch%settyp(ipatch)
 
-            if (L == 0) then
+            IF (L == 0) THEN
                ibedrock(ipatch) = 0
-            else
+            ELSE
 
                dbedrock(ipatch) = dbedrock(ipatch) / 100.0 ! from cm to meter
                dbedrock(ipatch) = max(dbedrock(ipatch), dz_soi(1))
 
                IF (dbedrock(ipatch) > zi_soi(1)) THEN
-                  ibedrock(ipatch) = findloc(dbedrock(ipatch)>zi_soi, .true., back=.true., dim=1) + 1
+                  ibedrock(ipatch) = findloc_ud(dbedrock(ipatch)>zi_soi, back=.true.) + 1
                ELSE
                   ibedrock(ipatch) = 1
                ENDIF
 
-            end if
+            ENDIF
 
-         end do
+         ENDDO
 
-      end if
+      ENDIF
 
-   end subroutine dbedrock_readin
+   END SUBROUTINE dbedrock_readin
 
 END MODULE MOD_DBedrockReadin
 

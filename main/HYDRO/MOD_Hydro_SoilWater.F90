@@ -1,28 +1,29 @@
 #include <define.h>
 
-module MOD_Hydro_SoilWater
+MODULE MOD_Hydro_SoilWater
 
-   !-------------------------------------------------------------------------
-   ! Description:
-   !    
-   !    Numerical Solver of Richards equation. 
-   !
-   !    Dai, Y., Zhang, S., Yuan, H., & Wei, N. (2019).
-   !    Modeling Variably Saturated Flow in Stratified Soils
-   !      With Explicit Tracking of Wetting Front and Water Table Locations.
-   !    Water Resources Research. doi:10.1029/2019wr025368
-   !
-   ! Created by Shupeng Zhang, 2022.
-   !-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+! Description:
+!    
+!    Numerical Solver of Richards equation. 
+!
+!    Dai, Y., Zhang, S., Yuan, H., & Wei, N. (2019).
+!    Modeling Variably Saturated Flow in Stratified Soils
+!      With Explicit Tracking of Wetting Front and Water Table Locations.
+!    Water Resources Research. doi:10.1029/2019wr025368
+!
+! Created by Shupeng Zhang, 2022.
+!-------------------------------------------------------------------------
 
-   use MOD_Precision
-   use MOD_Hydro_SoilFunction
-   use MOD_Namelist, only: DEF_USE_PLANTHYDRAULICS
+   USE MOD_Precision
+   USE MOD_Hydro_SoilFunction
+   USE MOD_Namelist, only: DEF_USE_PLANTHYDRAULICS
+   USE MOD_UserDefFun, only : findloc_ud
 
-   implicit none
+   IMPLICIT NONE
 
    ! public subroutines and functions
-   public :: soil_water_vertical_movement
+   PUBLIC :: soil_water_vertical_movement
 
    ! boundary condition:
    ! 1: fixed pressure head
@@ -45,75 +46,75 @@ module MOD_Hydro_SoilWater
    real(r8), parameter :: tol_richards = 1.e-7
 
 #ifdef CoLMDEBUG
-   INTEGER(8) :: count_implicit = 0
-   INTEGER(8) :: count_explicit = 0
-   INTEGER(8) :: count_wet2dry  = 0
+   integer(8) :: count_implicit = 0
+   integer(8) :: count_explicit = 0
+   integer(8) :: count_wet2dry  = 0
 #endif
 
    ! private subroutines and functions
-   private :: Richards_solver
+   PRIVATE :: Richards_solver
 
-   private :: water_balance
-   private :: initialize_sublevel_structure
+   PRIVATE :: water_balance
+   PRIVATE :: initialize_sublevel_structure
 
-   private :: use_explicit_form
+   PRIVATE :: use_explicit_form
 
-   private :: var_perturb_level
-   private :: var_perturb_rainfall
-   private :: var_perturb_drainage
+   PRIVATE :: var_perturb_level
+   PRIVATE :: var_perturb_rainfall
+   PRIVATE :: var_perturb_drainage
 
-   private :: check_and_update_level
+   PRIVATE :: check_and_update_level
 
-   private :: flux_all
-   private :: flux_sat_zone_all
-   private :: flux_sat_zone_fixed_bc
-   private :: flux_inside_hm_soil
-   private :: flux_at_unsaturated_interface
-   private :: flux_top_transitive_interface
-   private :: flux_btm_transitive_interface
-   private :: flux_both_transitive_interface
+   PRIVATE :: flux_all
+   PRIVATE :: flux_sat_zone_all
+   PRIVATE :: flux_sat_zone_fixed_bc
+   PRIVATE :: flux_inside_hm_soil
+   PRIVATE :: flux_at_unsaturated_interface
+   PRIVATE :: flux_top_transitive_interface
+   PRIVATE :: flux_btm_transitive_interface
+   PRIVATE :: flux_both_transitive_interface
 
-   private :: get_zwt_from_wa
+   PRIVATE :: get_zwt_from_wa
 
-   private :: solve_least_squares_problem
-   private :: secant_method_iteration
+   PRIVATE :: solve_least_squares_problem
+   PRIVATE :: secant_method_iteration
 
-   private :: find_unsat_lev_lower
+   PRIVATE :: find_unsat_lev_lower
 
-contains
+CONTAINS
 
    ! ---- get equilibrium state ----
    SUBROUTINE get_water_equilibrium_state ( &
          zwtmm, nlev, wliq, smp, hk, wa, sp_zc, sp_zi, porsl, vl_r, psi_s, hksat, nprm, prms)
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      real(r8), intent(in) :: zwtmm   ! location of water table [mm]
+   real(r8), intent(in) :: zwtmm   ! location of water table [mm]
 
-      integer,  intent(in) :: nlev    ! number of levels
+   integer,  intent(in) :: nlev    ! number of levels
 
-      REAL(r8), intent(out) :: wliq(1:nlev) ! [mm] or [kg/m2]
-      REAL(r8), intent(out) :: smp (1:nlev) ! [mm]
-      REAL(r8), intent(out) :: hk  (1:nlev) ! [mm/s]
-      real(r8), intent(out) :: wa    ! water in aquifer [mm]
+   real(r8), intent(out) :: wliq(1:nlev) ! [mm] or [kg/m2]
+   real(r8), intent(out) :: smp (1:nlev) ! [mm]
+   real(r8), intent(out) :: hk  (1:nlev) ! [mm/s]
+   real(r8), intent(out) :: wa    ! water in aquifer [mm]
 
-      real(r8), intent(in) :: sp_zc (1:nlev)  ! soil parameter : centers of level [mm]
-      real(r8), intent(in) :: sp_zi (0:nlev)  ! soil parameter : interfaces of level [mm]
+   real(r8), intent(in) :: sp_zc (1:nlev)  ! soil parameter : centers of level [mm]
+   real(r8), intent(in) :: sp_zi (0:nlev)  ! soil parameter : interfaces of level [mm]
 
-      real(r8), intent(in) :: porsl (1:nlev)  ! soil porosity
-      real(r8), intent(in) :: vl_r  (1:nlev)  ! residual soil moisture
-      real(r8), intent(in) :: psi_s (1:nlev)  ! saturated capillary potential [mm, negative]
-      real(r8), intent(in) :: hksat (1:nlev)  ! saturated hydraulic conductivity [mm/s]
+   real(r8), intent(in) :: porsl (1:nlev)  ! soil porosity
+   real(r8), intent(in) :: vl_r  (1:nlev)  ! residual soil moisture
+   real(r8), intent(in) :: psi_s (1:nlev)  ! saturated capillary potential [mm, negative]
+   real(r8), intent(in) :: hksat (1:nlev)  ! saturated hydraulic conductivity [mm/s]
 
-      integer,  intent(in) :: nprm      ! number of parameters included in soil function
-      real(r8), intent(in) :: prms (nprm,1:nlev)  ! parameters included in soil function
+   integer,  intent(in) :: nprm      ! number of parameters included in soil function
+   real(r8), intent(in) :: prms (nprm,1:nlev)  ! parameters included in soil function
 
-      ! Local Variables
-      INTEGER  :: izwt, ilev
-      REAL(r8) :: psi_zwt, smp_up, vliq_up, vliq(1:nlev), psi, vl
+   ! Local Variables
+   integer  :: izwt, ilev
+   real(r8) :: psi_zwt, smp_up, vliq_up, vliq(1:nlev), psi, vl
 
       ! water table location
-      izwt = findloc(zwtmm >= sp_zi, .true., dim=1, back=.true.)
+      izwt = findloc_ud(zwtmm >= sp_zi, back=.true.)
 
       IF (izwt <= nlev) THEN
          psi_zwt = psi_s(izwt)
@@ -156,7 +157,7 @@ contains
    END SUBROUTINE get_water_equilibrium_state
 
    ! --- soil water movement ---
-   subroutine soil_water_vertical_movement (         &
+   SUBROUTINE soil_water_vertical_movement (         &
          nlev,  dt,   sp_zc, sp_zi,   is_permeable,  &
          porsl, vl_r, psi_s, hksat,   nprm,   prms,  &
          porsl_wa,                                   &
@@ -164,74 +165,74 @@ contains
          ss_dp, zwt,  wa,    ss_vliq, smp,    hk  ,  &
          tolerance )
 
-      !=======================================================================
-      ! this is the main subroutine to execute the calculation of
-      ! soil water movement
-      !=======================================================================
+   !=======================================================================
+   ! this is the main subroutine to execute the calculation of
+   ! soil water movement
+   !=======================================================================
 
-      use MOD_Const_Physical, only : tfrz
+   USE MOD_Const_Physical, only : tfrz
 
-      implicit none
+   IMPLICIT NONE
 
-      integer,  intent(in) :: nlev    ! number of levels
-      real(r8), intent(in) :: dt      ! time step (second)
+   integer,  intent(in) :: nlev    ! number of levels
+   real(r8), intent(in) :: dt      ! time step (second)
 
-      real(r8), intent(in) :: sp_zc (1:nlev)  ! soil parameter : centers of level    (mm)
-      real(r8), intent(in) :: sp_zi (0:nlev)  ! soil parameter : interfaces of level (mm)
+   real(r8), intent(in) :: sp_zc (1:nlev)  ! soil parameter : centers of level    (mm)
+   real(r8), intent(in) :: sp_zi (0:nlev)  ! soil parameter : interfaces of level (mm)
 
-      logical,  intent(in) :: is_permeable (1:nlev)
+   logical,  intent(in) :: is_permeable (1:nlev)
 
-      real(r8), intent(in) :: porsl (1:nlev)  ! soil porosity (mm^3/mm^3)
-      real(r8), intent(in) :: vl_r  (1:nlev)  ! residual soil moisture (mm^3/mm^3)
-      real(r8), intent(in) :: psi_s (1:nlev)  ! saturated capillary potential (mm)
-      real(r8), intent(in) :: hksat (1:nlev)  ! saturated hydraulic conductivity (mm/s)
+   real(r8), intent(in) :: porsl (1:nlev)  ! soil porosity (mm^3/mm^3)
+   real(r8), intent(in) :: vl_r  (1:nlev)  ! residual soil moisture (mm^3/mm^3)
+   real(r8), intent(in) :: psi_s (1:nlev)  ! saturated capillary potential (mm)
+   real(r8), intent(in) :: hksat (1:nlev)  ! saturated hydraulic conductivity (mm/s)
 
-      integer,  intent(in) :: nprm      ! number of parameters included in soil function
-      real(r8), intent(in) :: prms (nprm,1:nlev)  ! parameters included in soil function
+   integer,  intent(in) :: nprm      ! number of parameters included in soil function
+   real(r8), intent(in) :: prms (nprm,1:nlev)  ! parameters included in soil function
 
-      real(r8), intent(in) :: porsl_wa      ! soil porosity in aquifer (mm^3/mm^3)
-      
-      ! ground water including rain, snow melt and dew formation (mm/s)
-      REAL(r8), intent(in) :: qgtop          
-      
-      REAL(r8), intent(in) :: etr           ! transpiration rate (mm/s)
-      REAL(r8), intent(in) :: rootr(1:nlev) ! root fractions (percentage)
-      REAL(r8), intent(in) :: rootflux(1:nlev) ! root water uptake from different layers (mm/s)
+   real(r8), intent(in) :: porsl_wa      ! soil porosity in aquifer (mm^3/mm^3)
+   
+   ! ground water including rain, snow melt and dew formation (mm/s)
+   real(r8), intent(in) :: qgtop          
+   
+   real(r8), intent(in) :: etr           ! transpiration rate (mm/s)
+   real(r8), intent(in) :: rootr(1:nlev) ! root fractions (percentage)
+   real(r8), intent(in) :: rootflux(1:nlev) ! root water uptake from different layers (mm/s)
 
-      REAL(r8), intent(in)  :: rsubst ! subsurface runoff (mm/s)
-      REAL(r8), intent(out) :: qinfl  ! infiltration into soil (mm/s)
+   real(r8), intent(in)  :: rsubst ! subsurface runoff (mm/s)
+   real(r8), intent(out) :: qinfl  ! infiltration into soil (mm/s)
 
-      real(r8), intent(inout) :: ss_dp ! soil water state : depth of ponding water (mm)
-      real(r8), intent(inout) :: zwt   ! location of water table (mm)
-      real(r8), intent(inout) :: wa    ! water deficit in aquifer (negative, mm)
-      real(r8), intent(inout) :: ss_vliq(1:nlev) ! volume content of liquid water (mm^3/mm^3)
+   real(r8), intent(inout) :: ss_dp ! soil water state : depth of ponding water (mm)
+   real(r8), intent(inout) :: zwt   ! location of water table (mm)
+   real(r8), intent(inout) :: wa    ! water deficit in aquifer (negative, mm)
+   real(r8), intent(inout) :: ss_vliq(1:nlev) ! volume content of liquid water (mm^3/mm^3)
 
-      REAL(r8), intent(out) :: smp(1:nlev) ! soil matrix potential (mm)
-      REAL(r8), intent(out) :: hk (1:nlev) ! hydraulic conductivity (mm/s)
+   real(r8), intent(out) :: smp(1:nlev) ! soil matrix potential (mm)
+   real(r8), intent(out) :: hk (1:nlev) ! hydraulic conductivity (mm/s)
 
-      real(r8), intent(in) :: tolerance
+   real(r8), intent(in) :: tolerance
 
-      ! Local variables
-      integer  :: lb, ub, ilev, izwt
-      REAL(r8) :: sumroot, deficit, wexchange
-      REAL(r8) :: dp_m1, psi, vliq, zwtp, air
-      LOGICAL  :: is_sat
+   ! Local variables
+   integer  :: lb, ub, ilev, izwt
+   real(r8) :: sumroot, deficit, wexchange
+   real(r8) :: dp_m1, psi, vliq, zwtp, air
+   logical  :: is_sat
 
-      real(r8) :: sp_dz  (1:nlev)
-      REAL(r8) :: etroot (1:nlev)
-      REAL(r8) :: ss_wt  (1:nlev)
-      real(r8) :: ss_q   (0:nlev)
+   real(r8) :: sp_dz  (1:nlev)
+   real(r8) :: etroot (1:nlev)
+   real(r8) :: ss_wt  (1:nlev)
+   real(r8) :: ss_q   (0:nlev)
 
-      integer  :: ubc_typ_sub
-      real(r8) :: ubc_val_sub
-      integer  :: lbc_typ_sub
-      real(r8) :: lbc_val_sub
+   integer  :: ubc_typ_sub
+   real(r8) :: ubc_val_sub
+   integer  :: lbc_typ_sub
+   real(r8) :: lbc_val_sub
 
 #ifdef CoLMDEBUG
-      REAL(r8) :: w_sum_before, w_sum_after, wblc
+   real(r8) :: w_sum_before, w_sum_after, wblc
 #endif
 
-      REAL(r8) :: tol_q, tol_z, tol_v, tol_p
+   real(r8) :: tol_q, tol_z, tol_v, tol_p
 
       sp_dz(1:nlev) = sp_zi(1:nlev) - sp_zi(0:nlev-1)
 
@@ -244,7 +245,7 @@ contains
       tol_p = 1.0e-14
 
       ! water table location
-      izwt = findloc(zwt >= sp_zi, .true., dim=1, back=.true.)
+      izwt = findloc_ud(zwt >= sp_zi, back=.true.)
 
 #ifdef CoLMDEBUG
       ! total water mass
@@ -265,23 +266,23 @@ contains
 #endif
 
       ! transpiration
-      if(.not. DEF_USE_PLANTHYDRAULICS)then
+      IF(.not. DEF_USE_PLANTHYDRAULICS)THEN
          sumroot   = sum(rootr, mask = is_permeable .and. (rootr > 0.))
          etroot(:) = 0.
          IF (sumroot > 0.) THEN
-            where (is_permeable)
+            WHERE (is_permeable)
                etroot = etr * max(rootr, 0.) / sumroot
-            END where
+            END WHERE
             deficit = 0.
          ELSE
             deficit = etr*dt
          ENDIF
-      else
+      ELSE
          deficit = 0.
          etroot(:) = rootflux
-      end if
+      ENDIF
 
-      do ilev = 1, izwt-1
+      DO ilev = 1, izwt-1
          IF (is_permeable(ilev)) THEN
 
             ss_vliq(ilev) = (ss_vliq(ilev) * sp_dz(ilev) &
@@ -299,7 +300,7 @@ contains
          ELSE
             deficit = deficit + etroot(ilev)*dt
          ENDIF
-      enddo
+      ENDDO
 
       DO ilev = izwt, nlev
          deficit = deficit + etroot(ilev)*dt
@@ -323,45 +324,45 @@ contains
       ! Impermeable levels cut the soil column into several disconnected parts.
       ! The Richards solver is called to calcute water movement part by part.
       ub = nlev
-      soilcolumn : do while (ub >= 1)
+      soilcolumn : DO WHILE (ub >= 1)
 
-         do while (.not. is_permeable(ub))
+         DO WHILE (.not. is_permeable(ub))
 
             ss_q(ub-1:ub) = 0._r8
 
             IF (ub > 1) THEN
                ub = ub - 1
             ELSE
-               exit soilcolumn
+               EXIT soilcolumn
             ENDIF
-         end do
+         ENDDO
 
          lb = ub
-         do while (lb > 1)
-            if (is_permeable(lb-1)) then
+         DO WHILE (lb > 1)
+            IF (is_permeable(lb-1)) THEN
                lb = lb - 1
-            else
-               exit
-            end if
-         end do
+            ELSE
+               EXIT
+            ENDIF
+         ENDDO
 
-         if (lb == 1) then
+         IF (lb == 1) THEN
             ubc_typ_sub = bc_rainfall
             ubc_val_sub = qgtop
-         else
+         ELSE
             ubc_typ_sub = bc_fix_flux
             ubc_val_sub = 0
-         end if
+         ENDIF
 
-         if ((ub == nlev) .and. (izwt > nlev)) then
+         IF ((ub == nlev) .and. (izwt > nlev)) THEN
             lbc_typ_sub = bc_drainage
             lbc_val_sub = 0.
-         else
+         ELSE
             lbc_typ_sub = bc_fix_flux
             lbc_val_sub = 0.
-         end if
+         ENDIF
 
-         call Richards_solver ( &
+         CALL Richards_solver ( &
             lb, ub, dt, sp_zc(lb:ub), sp_zi(lb-1:ub), &
             porsl(lb:ub), vl_r(lb:ub), psi_s(lb:ub), hksat(lb:ub), nprm, prms(:,lb:ub), &
             porsl_wa, &
@@ -371,36 +372,36 @@ contains
 
          ub = lb - 1
 
-      end do soilcolumn
+      ENDDO soilcolumn
 
       IF (.not. is_permeable(1)) THEN
          ss_dp = max(ss_dp + qgtop * dt, 0._r8)
       ENDIF
 
       IF (wa >= 0) THEN
-         do ilev = nlev, 1, -1
+         DO ilev = nlev, 1, -1
             is_sat = (.not. is_permeable(ilev)) &
                .or. (ss_vliq(ilev) > porsl(ilev) - tol_v) &
                .or. (ss_wt  (ilev) > sp_dz(ilev) - tol_z)
             IF (.not. is_sat) THEN
                zwt = sp_zi(ilev) - ss_wt(ilev)
-               exit
+               EXIT
             ENDIF
-         end do
+         ENDDO
 
          IF (is_sat) THEN
             zwt = 0._r8
          ENDIF
       ELSE
          IF (is_permeable(nlev)) THEN
-            call get_zwt_from_wa ( &
+            CALL get_zwt_from_wa ( &
                porsl_wa, vl_r(nlev), psi_s(nlev), hksat(nlev), &
                nprm, prms(:,nlev), tol_v, tol_z, &
                wa, sp_zi(nlev), zwt)
          ENDIF
       ENDIF
 
-      izwt = findloc(zwt >= sp_zi, .true., dim=1, back=.true.)
+      izwt = findloc_ud(zwt >= sp_zi, back=.true.)
       DO ilev = izwt-1, 1, -1
          IF (is_permeable(ilev)) THEN
             ss_vliq(ilev) = (ss_vliq(ilev)*(sp_dz(ilev)-ss_wt(ilev)) &
@@ -452,43 +453,43 @@ contains
          ENDIF
       ENDDO
 
-   end subroutine soil_water_vertical_movement
+   END SUBROUTINE soil_water_vertical_movement
 
    ! --- water exchange between soil water and aquifer ---
    SUBROUTINE soilwater_aquifer_exchange ( &
          nlev, exwater, sp_zi, is_permeable, porsl, vl_r, psi_s, hksat, &
          nprm, prms, porsl_wa, ss_dp, ss_vliq, zwt, wa, izwt)
       
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      integer,  intent(in) :: nlev
+   integer,  intent(in) :: nlev
 
-      real(r8), intent(in) :: exwater ! total water exchange [mm]
-      
-      real(r8), intent(in) :: sp_zi (0:nlev)  ! soil parameter : interfaces of level [mm]
+   real(r8), intent(in) :: exwater ! total water exchange [mm]
+   
+   real(r8), intent(in) :: sp_zi (0:nlev)  ! soil parameter : interfaces of level [mm]
 
-      logical,  intent(in) :: is_permeable (1:nlev)
-      real(r8), intent(in) :: porsl (1:nlev)  ! soil porosity [mm^3/mm^3]
-      real(r8), intent(in) :: vl_r  (1:nlev)  ! residual soil moisture [mm^3/mm^3]
-      real(r8), intent(in) :: psi_s (1:nlev)  ! saturated capillary potential [mm]
-      real(r8), intent(in) :: hksat (1:nlev)  ! saturated hydraulic conductivity [mm/s]
+   logical,  intent(in) :: is_permeable (1:nlev)
+   real(r8), intent(in) :: porsl (1:nlev)  ! soil porosity [mm^3/mm^3]
+   real(r8), intent(in) :: vl_r  (1:nlev)  ! residual soil moisture [mm^3/mm^3]
+   real(r8), intent(in) :: psi_s (1:nlev)  ! saturated capillary potential [mm]
+   real(r8), intent(in) :: hksat (1:nlev)  ! saturated hydraulic conductivity [mm/s]
 
-      integer,  intent(in) :: nprm      ! number of parameters included in soil function
-      real(r8), intent(in) :: prms (nprm,1:nlev)  ! parameters included in soil function
+   integer,  intent(in) :: nprm      ! number of parameters included in soil function
+   real(r8), intent(in) :: prms (nprm,1:nlev)  ! parameters included in soil function
 
-      real(r8), intent(in) :: porsl_wa       ! soil porosity in aquifer [mm^3/mm^3]
-      
-      real(r8), intent(inout) :: ss_dp           ! depth of ponding water [mm]
-      real(r8), intent(inout) :: ss_vliq(1:nlev) ! volume content of liquid water [mm^3/mm^3]
-      real(r8), intent(inout) :: zwt             ! location of water table [mm]
-      real(r8), intent(inout) :: wa              ! water in aquifer [mm, negative]
+   real(r8), intent(in) :: porsl_wa       ! soil porosity in aquifer [mm^3/mm^3]
+   
+   real(r8), intent(inout) :: ss_dp           ! depth of ponding water [mm]
+   real(r8), intent(inout) :: ss_vliq(1:nlev) ! volume content of liquid water [mm^3/mm^3]
+   real(r8), intent(inout) :: zwt             ! location of water table [mm]
+   real(r8), intent(inout) :: wa              ! water in aquifer [mm, negative]
 
-      integer,  intent(out)   :: izwt
+   integer,  intent(out)   :: izwt
 
-      ! Local variables
-      real(r8) :: sp_dz(1:nlev)
-      real(r8) :: reswater, zwtp, psi, vliq, air
-      real(r8) :: tol_v, tol_z
+   ! Local variables
+   real(r8) :: sp_dz(1:nlev)
+   real(r8) :: reswater, zwtp, psi, vliq, air
+   real(r8) :: tol_v, tol_z
 
       sp_dz(1:nlev) = sp_zi(1:nlev) - sp_zi(0:nlev-1)
 
@@ -497,7 +498,7 @@ contains
       tol_v = tol_z / maxval(sp_dz)
 
       ! water table location
-      izwt = findloc(zwt >= sp_zi, .true., dim=1, back=.true.)
+      izwt = findloc_ud(zwt >= sp_zi, back=.true.)
 
       reswater = exwater 
 
@@ -508,7 +509,7 @@ contains
             IF (izwt <= nlev) THEN
                IF (is_permeable(izwt)) THEN
 
-                  call get_zwt_from_wa ( &
+                  CALL get_zwt_from_wa ( &
                      porsl(izwt), vl_r(izwt), psi_s(izwt), hksat(izwt), &
                      nprm, prms(:,izwt), tol_v, tol_z, -reswater, zwt, zwtp)
 
@@ -540,7 +541,7 @@ contains
                   izwt = izwt + 1
                ENDIF
             ELSE
-               call get_zwt_from_wa ( &
+               CALL get_zwt_from_wa ( &
                   porsl_wa, vl_r(nlev), psi_s(nlev), hksat(nlev), &
                   nprm, prms(:,nlev), tol_v, tol_z, wa-reswater, sp_zi(nlev), zwt)
                wa = wa - reswater
@@ -590,7 +591,7 @@ contains
    END SUBROUTINE soilwater_aquifer_exchange
 
    ! ---- Richards equation solver ----
-   subroutine Richards_solver ( &
+   SUBROUTINE Richards_solver ( &
          lb, ub, dt, sp_zc, sp_zi, &
          vl_s, vl_r, psi_s, hksat, nprm, prms, &
          vl_s_wa, &
@@ -598,116 +599,115 @@ contains
          ss_dp, waquifer, ss_vl, ss_wt, ss_q, &
          tol_q, tol_z, tol_v, tol_p)
 
+   IMPLICIT NONE
 
-      implicit none
+   integer,  intent(in) :: lb, ub      ! lower and upper boundary
 
-      integer,  intent(in) :: lb, ub      ! lower and upper boundary
+   real(r8), intent(in) :: dt          ! time step (second)
 
-      real(r8), intent(in) :: dt          ! time step (second)
+   real(r8), intent(in) :: sp_zc   (lb:ub)   ! soil parameter : centers of level (mm)
+   real(r8), intent(in) :: sp_zi (lb-1:ub)   ! soil parameter : interfaces of level (mm)
 
-      real(r8), intent(in) :: sp_zc   (lb:ub)   ! soil parameter : centers of level (mm)
-      real(r8), intent(in) :: sp_zi (lb-1:ub)   ! soil parameter : interfaces of level (mm)
+   real(r8), intent(in) :: vl_s  (lb:ub)  ! soil porosity (mm^3/mm^3)
+   real(r8), intent(in) :: vl_r  (lb:ub)  ! residual soil moisture (mm^3/mm^3)
+   real(r8), intent(in) :: psi_s (lb:ub)  ! saturated capillary potential (mm,negative)
+   real(r8), intent(in) :: hksat (lb:ub)  ! saturated hydraulic conductivity (mm/s)
 
-      real(r8), intent(in) :: vl_s  (lb:ub)  ! soil porosity (mm^3/mm^3)
-      real(r8), intent(in) :: vl_r  (lb:ub)  ! residual soil moisture (mm^3/mm^3)
-      real(r8), intent(in) :: psi_s (lb:ub)  ! saturated capillary potential (mm,negative)
-      real(r8), intent(in) :: hksat (lb:ub)  ! saturated hydraulic conductivity (mm/s)
+   integer,  intent(in) :: nprm        ! number of parameters included in soil function
+   real(r8), intent(in) :: prms(nprm,lb:ub)  ! parameters included in soil function
 
-      integer,  intent(in) :: nprm        ! number of parameters included in soil function
-      real(r8), intent(in) :: prms(nprm,lb:ub)  ! parameters included in soil function
+   real(r8), intent(in) :: vl_s_wa        ! soil porosity in aquifer (mm^3/mm^3)
 
-      real(r8), intent(in) :: vl_s_wa        ! soil porosity in aquifer (mm^3/mm^3)
+   integer,  intent(in) :: ubc_typ  ! upper boundary condition type
+   real(r8), intent(in) :: ubc_val  ! value of upper boundary condition
+   integer,  intent(in) :: lbc_typ  ! lower boundary condition type
+   real(r8), intent(in) :: lbc_val  ! value of lower boundary condition
 
-      integer,  intent(in) :: ubc_typ  ! upper boundary condition type
-      real(r8), intent(in) :: ubc_val  ! value of upper boundary condition
-      integer,  intent(in) :: lbc_typ  ! lower boundary condition type
-      real(r8), intent(in) :: lbc_val  ! value of lower boundary condition
+   real(r8), intent(inout) :: ss_dp    ! soil water state : depth of ponding water (mm)
+   real(r8), intent(inout) :: waquifer ! water deficit in aquifer (mm, negative)
+   real(r8), intent(inout) :: ss_vl   (lb:ub) ! soil water state : volume content of liquid water
+   real(r8), intent(inout) :: ss_wt   (lb:ub) ! soil water state : location of water table (mm)
+   real(r8), intent(out)   :: ss_q  (lb-1:ub) ! soil water state : flux between levels (mm/s)
 
-      real(r8), intent(inout) :: ss_dp    ! soil water state : depth of ponding water (mm)
-      real(r8), intent(inout) :: waquifer ! water deficit in aquifer (mm, negative)
-      real(r8), intent(inout) :: ss_vl   (lb:ub) ! soil water state : volume content of liquid water
-      real(r8), intent(inout) :: ss_wt   (lb:ub) ! soil water state : location of water table (mm)
-      real(r8), intent(out)   :: ss_q  (lb-1:ub) ! soil water state : flux between levels (mm/s)
+   real(r8), intent(in) :: tol_q    ! tolerence for flux
+   real(r8), intent(in) :: tol_z    ! tolerence for locations
+   real(r8), intent(in) :: tol_v    ! tolerence for volumetric water content
+   real(r8), intent(in) :: tol_p    ! tolerence for potential head
 
-      real(r8), intent(in) :: tol_q    ! tolerence for flux
-      real(r8), intent(in) :: tol_z    ! tolerence for locations
-      real(r8), intent(in) :: tol_v    ! tolerence for volumetric water content
-      real(r8), intent(in) :: tol_p    ! tolerence for potential head
+   ! Local variables
+   real(r8) :: zwt             ! location of water table (mm)
+   real(r8) :: sp_dz (lb:ub)   ! thickness of level (mm)
+   real(r8) :: ss_wf (lb:ub)   ! soil water state : location of wetting front
 
-      ! Local variables
-      real(r8) :: zwt             ! location of water table (mm)
-      real(r8) :: sp_dz (lb:ub)   ! thickness of level (mm)
-      real(r8) :: ss_wf (lb:ub)   ! soil water state : location of wetting front
+   logical :: is_sat (lb:ub)   ! whether a level is saturated or not at this time step
+   logical :: has_wf (lb:ub)   ! whether a wetting front is present or not
+   logical :: has_wt (lb:ub)   ! whether a water table is present or not
 
-      logical :: is_sat (lb:ub)   ! whether a level is saturated or not at this time step
-      logical :: has_wf (lb:ub)   ! whether a wetting front is present or not
-      logical :: has_wt (lb:ub)   ! whether a water table is present or not
+   real(r8) :: infl_max        ! maximum infiltration rate (mm/s)
 
-      real(r8) :: infl_max        ! maximum infiltration rate (mm/s)
+   real(r8) :: psi (lb:ub)     ! water pressure head in unsaturated soil (mm)
+   real(r8) :: hk  (lb:ub)     ! hydraulic conductivity in unsaturated soil (mm/s)
 
-      real(r8) :: psi (lb:ub)     ! water pressure head in unsaturated soil (mm)
-      real(r8) :: hk  (lb:ub)     ! hydraulic conductivity in unsaturated soil (mm/s)
+   real(r8) :: psi_pb (lb:ub)  ! perturbed water pressure head (mm)
+   real(r8) :: hk_pb  (lb:ub)  ! perturbed hydraulic conductivity (mm/s)
 
-      real(r8) :: psi_pb (lb:ub)  ! perturbed water pressure head (mm)
-      real(r8) :: hk_pb  (lb:ub)  ! perturbed hydraulic conductivity (mm/s)
+   real(r8) :: q_this(lb-1:ub) ! water flux between levels (mm/s)
+   real(r8) :: q_wf    (lb:ub) ! water flux at wetting front (mm/s)
+   real(r8) :: q_wt    (lb:ub) ! water flux at water table (mm/s)
 
-      real(r8) :: q_this(lb-1:ub) ! water flux between levels (mm/s)
-      real(r8) :: q_wf    (lb:ub) ! water flux at wetting front (mm/s)
-      real(r8) :: q_wt    (lb:ub) ! water flux at water table (mm/s)
+   real(r8) :: dp_m1           ! depth of ponding water at previous time step (mm)
+   real(r8) :: wf_m1 (lb:ub)   ! location of wetting front at previous time step (mm)
+   real(r8) :: vl_m1 (lb:ub)   ! volumetric water content at previous time step (mm/mm)
+   real(r8) :: wt_m1 (lb:ub)   ! location of water table at previous time step (mm)
+   real(r8) :: waquifer_m1     ! water deficit in aquifer at previous time step
 
-      real(r8) :: dp_m1           ! depth of ponding water at previous time step (mm)
-      real(r8) :: wf_m1 (lb:ub)   ! location of wetting front at previous time step (mm)
-      real(r8) :: vl_m1 (lb:ub)   ! volumetric water content at previous time step (mm/mm)
-      real(r8) :: wt_m1 (lb:ub)   ! location of water table at previous time step (mm)
-      real(r8) :: waquifer_m1     ! water deficit in aquifer at previous time step
+   real(r8) :: q_0  (lb-1:ub)  ! initial value of water flux between levels (mm/s)
+   real(r8) :: q_wf_0 (lb:ub)  ! initial value of water flux at wetting front (mm/s)
+   real(r8) :: q_wt_0 (lb:ub)  ! initial value of water flux at water table (mm/s)
 
-      real(r8) :: q_0  (lb-1:ub)  ! initial value of water flux between levels (mm/s)
-      real(r8) :: q_wf_0 (lb:ub)  ! initial value of water flux at wetting front (mm/s)
-      real(r8) :: q_wt_0 (lb:ub)  ! initial value of water flux at water table (mm/s)
+   real(r8) :: dp_pb           ! perturbed depth of ponding water (mm)
+   real(r8) :: vl_pb (lb:ub)   ! perturbed volumetric water content (mm/mm)
+   real(r8) :: wf_pb (lb:ub)   ! perturbed location of wetting front (mm)
+   real(r8) :: wt_pb (lb:ub)   ! perturbed location of water table (mm)
+   real(r8) :: zwt_pb, waquifer_pb
 
-      real(r8) :: dp_pb           ! perturbed depth of ponding water (mm)
-      real(r8) :: vl_pb (lb:ub)   ! perturbed volumetric water content (mm/mm)
-      real(r8) :: wf_pb (lb:ub)   ! perturbed location of wetting front (mm)
-      real(r8) :: wt_pb (lb:ub)   ! perturbed location of water table (mm)
-      real(r8) :: zwt_pb, waquifer_pb
+   real(r8) :: q_pb  (lb-1:ub) ! perturbed water flux between levels (mm/s)
+   real(r8) :: q_wf_pb (lb:ub) ! perturbed water flux at wetting front (mm/s)
+   real(r8) :: q_wt_pb (lb:ub) ! perturbed water flux at water table (mm/s)
 
-      real(r8) :: q_pb  (lb-1:ub) ! perturbed water flux between levels (mm/s)
-      real(r8) :: q_wf_pb (lb:ub) ! perturbed water flux at wetting front (mm/s)
-      real(r8) :: q_wt_pb (lb:ub) ! perturbed water flux at water table (mm/s)
+   real(r8) :: blc        (lb-1:ub+1)  ! mass balance (mm water)
+   logical  :: is_solvable
+   logical  :: lev_update (lb-1:ub+1)  ! whether a level is updated or not
+   real(r8) :: blc_pb     (lb-1:ub+1)  ! perturbed mass balance (mm water)
+   logical  :: vact       (lb-1:ub+1)  ! whether a level is active or not
+   integer  :: jsbl (lb:ub) ! which variable of wf,vl,wt inside each level is active
 
-      real(r8) :: blc        (lb-1:ub+1)  ! mass balance (mm water)
-      logical  :: is_solvable
-      logical  :: lev_update (lb-1:ub+1)  ! whether a level is updated or not
-      real(r8) :: blc_pb     (lb-1:ub+1)  ! perturbed mass balance (mm water)
-      logical  :: vact       (lb-1:ub+1)  ! whether a level is active or not
-      integer  :: jsbl (lb:ub) ! which variable of wf,vl,wt inside each level is active
+   real(r8) :: dr_dv (lb-1:ub+1,lb-1:ub+1)  ! the Jacobian matrix
+   real(r8) :: dv    (lb-1:ub+1)  ! searching step of variables
 
-      real(r8) :: dr_dv (lb-1:ub+1,lb-1:ub+1)  ! the Jacobian matrix
-      real(r8) :: dv    (lb-1:ub+1)  ! searching step of variables
+   real(r8) :: f2_norm (max_iters_richards)   ! sqrt( f2 ), where f2 = sum_i (r_i ^2)
 
-      real(r8) :: f2_norm (max_iters_richards)   ! sqrt( f2 ), where f2 = sum_i (r_i ^2)
+   real(r8) :: dt_this, dt_done
+   real(r8) :: dt_explicit      ! time step (day) for explicit scheme
 
-      real(r8) :: dt_this, dt_done
-      real(r8) :: dt_explicit      ! time step (day) for explicit scheme
+   integer  :: ilev, iter
+   real(r8) :: dlt
 
-      integer  :: ilev, iter
-      real(r8) :: dlt
+   logical  :: wet2dry
 
-      logical  :: wet2dry
-
-      REAL(r8) :: wsum_m1, wsum, werr
+   real(r8) :: wsum_m1, wsum, werr
 
       ss_wf(lb:ub) = 0
 
-      do ilev = lb, ub
+      DO ilev = lb, ub
          sp_dz(ilev) = sp_zi(ilev) - sp_zi(ilev-1)
-      end do
+      ENDDO
 
       dt_explicit = dt / max_iters_richards
 
       ss_q = 0
       dt_done = 0
-      do while (dt_done < dt)
+      DO WHILE (dt_done < dt)
 
          dt_this = dt - dt_done
 
@@ -723,26 +723,26 @@ contains
             wsum_m1 = wsum_m1 + waquifer
          ENDIF
 
-         if (ubc_typ == bc_rainfall) then
+         IF (ubc_typ == bc_rainfall) THEN
             dp_m1 = max(ss_dp, 0._r8)
             IF (dp_m1 < tol_z) dp_m1 = 0.
             infl_max = dp_m1/dt_this + ubc_val
-         end if
+         ENDIF
 
-         if (lbc_typ == bc_drainage) then
+         IF (lbc_typ == bc_drainage) THEN
             waquifer_m1 = waquifer
-            call get_zwt_from_wa ( &
+            CALL get_zwt_from_wa ( &
                vl_s_wa, vl_r(ub), psi_s(ub), hksat(ub), &
                nprm, prms(:,ub), tol_v, tol_z, &
                waquifer, sp_zi(ub), zwt)
-         end if
+         ENDIF
 
          iter = 0
-         do while (.true.)
+         DO WHILE (.true.)
 
             iter = iter + 1
 
-            call initialize_sublevel_structure ( &
+            CALL initialize_sublevel_structure ( &
                lb, ub, sp_dz, sp_zi(ub), &
                vl_s, vl_r, psi_s, hksat, nprm, prms, &
                ubc_typ, ubc_val, lbc_typ, lbc_val, &
@@ -751,7 +751,7 @@ contains
                tol_v, tol_z)
 
             lev_update (:) = .true.
-            call flux_all ( &
+            CALL flux_all ( &
                lb, ub, sp_dz, sp_zc, sp_zi, &
                vl_s, psi_s, hksat, nprm, prms, &
                ubc_typ, ubc_val, lbc_typ, lbc_val, &
@@ -761,35 +761,35 @@ contains
                q_this, q_wf, q_wt, &
                tol_q, tol_z, tol_p)
 
-            call water_balance ( &
+            CALL water_balance ( &
                lb, ub, sp_dz, dt_this, is_sat, vl_s, q_this, &
                ubc_typ, ubc_val, lbc_typ, lbc_val, &
                ss_wf, ss_vl, ss_wt, ss_dp, waquifer, &
                wf_m1, vl_m1, wt_m1, dp_m1, waquifer_m1, &
                blc, is_solvable, tol_richards * dt_this)
 
-            if (iter == 1) then
+            IF (iter == 1) THEN
                q_0 = q_this
                q_wf_0 = q_wf
                q_wt_0 = q_wt
-            end if
+            ENDIF
 
             wet2dry = .false.
-            if (ubc_typ == bc_rainfall) then
-               IF ((dp_m1 > 0.) .and. (q_0(lb-1) >= infl_max)) then
+            IF (ubc_typ == bc_rainfall) THEN
+               IF ((dp_m1 > 0.) .and. (q_0(lb-1) >= infl_max)) THEN
                   wet2dry = .true.
                ENDIF
             ENDIF
 
             f2_norm(iter) = sqrt(sum(blc**2))
 
-            if (    (f2_norm(iter) < tol_richards * dt_this)  &
+            IF (    (f2_norm(iter) < tol_richards * dt_this)  &
                .or. (dt_this < dt_explicit)                   &
                .or. (iter >= max_iters_richards) &
                .or. (.not. is_solvable)          &
                .or. wet2dry) THEN
 
-               if ((dt_this < dt_explicit) &
+               IF ((dt_this < dt_explicit) &
                   .or. (iter >= max_iters_richards) &
                   .or. (.not. is_solvable) &
                   .or. wet2dry) THEN
@@ -797,7 +797,7 @@ contains
                   dt_this = min(dt_this, dt_explicit)
                   q_this  = q_0
 
-                  call use_explicit_form ( &
+                  CALL use_explicit_form ( &
                      lb, ub, dt_this, sp_dz, sp_zc, sp_zi, &
                      vl_s, vl_r, psi_s, hksat, nprm, prms, &
                      vl_s_wa, &
@@ -807,14 +807,14 @@ contains
                      wf_m1, vl_m1, wt_m1, dp_m1, waquifer_m1, &
                      tol_q, tol_z, tol_v)
 
-               end if
+               ENDIF
 
                dt_done = dt_done + dt_this
 
 #ifdef CoLMDEBUG
-               if (f2_norm(iter) < tol_richards * dt_this) THEN
+               IF (f2_norm(iter) < tol_richards * dt_this) THEN
                   count_implicit = count_implicit + 1
-               else
+               ELSE
                   count_explicit = count_explicit + 1
                   IF (wet2dry) THEN
                      count_wet2dry = count_wet2dry + 1
@@ -822,26 +822,26 @@ contains
                ENDIF
 #endif
 
-               exit
+               EXIT
 
-            end if
+            ENDIF
 
             dr_dv = 0
             vact  = .false.
 
-            if (ubc_typ == bc_rainfall) then
+            IF (ubc_typ == bc_rainfall) THEN
 
-               call var_perturb_rainfall ( &
+               CALL var_perturb_rainfall ( &
                   blc(lb-1), ss_dp, dp_pb, dlt, vact(lb-1))
 
-               if (vact(lb-1)) then
+               IF (vact(lb-1)) THEN
                   q_pb    = q_this
                   q_wf_pb = q_wf
                   q_wt_pb = q_wt
 
                   lev_update(:)    = .false.
                   lev_update(lb-1) = .true.
-                  call flux_all ( &
+                  CALL flux_all ( &
                      lb, ub, sp_dz, sp_zc, sp_zi, &
                      vl_s, psi_s, hksat, nprm, prms, &
                      ubc_typ, ubc_val, lbc_typ, lbc_val, &
@@ -851,7 +851,7 @@ contains
                      q_pb, q_wf_pb, q_wt_pb, &
                      tol_q, tol_z, tol_p)
 
-                  call water_balance ( &
+                  CALL water_balance ( &
                      lb, ub, sp_dz, dt_this, is_sat, vl_s, q_pb, &
                      ubc_typ, ubc_val, lbc_typ, lbc_val, &
                      ss_wf, ss_vl, ss_wt, dp_pb, waquifer, &
@@ -860,12 +860,12 @@ contains
 
                   dr_dv(:,lb-1) = (blc_pb - blc) / dlt
 
-               end if
+               ENDIF
 
-            end if
+            ENDIF
 
-            do ilev = lb, ub
-               if (.not. is_sat(ilev)) then
+            DO ilev = lb, ub
+               IF (.not. is_sat(ilev)) THEN
 
                   wf_pb  = ss_wf
                   vl_pb  = ss_vl
@@ -873,7 +873,7 @@ contains
                   psi_pb = psi
                   hk_pb  = hk
 
-                  call var_perturb_level ( jsbl(ilev), blc(ilev), &
+                  CALL var_perturb_level ( jsbl(ilev), blc(ilev), &
                      sp_dz(ilev), sp_zc(ilev), sp_zi(ilev), &
                      vl_s(ilev), vl_r(ilev), psi_s(ilev), hksat(ilev), &
                      nprm, prms(:,ilev), &
@@ -883,7 +883,7 @@ contains
                      psi_pb(ilev), hk_pb(ilev), vact(ilev), &
                      tol_v)
 
-                  if (vact(ilev)) then
+                  IF (vact(ilev)) THEN
 
                      q_pb    = q_this
                      q_wf_pb = q_wf
@@ -891,7 +891,7 @@ contains
 
                      lev_update(:)    = .false.
                      lev_update(ilev) = .true.
-                     call flux_all ( &
+                     CALL flux_all ( &
                         lb, ub, sp_dz, sp_zc, sp_zi, &
                         vl_s, psi_s, hksat, nprm, prms, &
                         ubc_typ, ubc_val, lbc_typ, lbc_val, &
@@ -901,7 +901,7 @@ contains
                         q_pb, q_wf_pb, q_wt_pb, &
                         tol_q, tol_z, tol_p)
 
-                     call water_balance ( &
+                     CALL water_balance ( &
                         lb, ub, sp_dz, dt_this, is_sat, vl_s, q_pb, &
                         ubc_typ, ubc_val, lbc_typ, lbc_val, &
                         wf_pb, vl_pb, wt_pb, ss_dp, waquifer, &
@@ -910,15 +910,15 @@ contains
 
                      dr_dv(:,ilev) = (blc_pb - blc) / dlt
 
-                  end if
-               end if
-            end do
+                  ENDIF
+               ENDIF
+            ENDDO
 
-            if (lbc_typ == bc_drainage) then
+            IF (lbc_typ == bc_drainage) THEN
 
-               call var_perturb_drainage (sp_zi(ub), blc(ub+1), zwt, zwt_pb, dlt, vact(ub+1))
+               CALL var_perturb_drainage (sp_zi(ub), blc(ub+1), zwt, zwt_pb, dlt, vact(ub+1))
 
-               if (vact(ub+1)) then
+               IF (vact(ub+1)) THEN
                   q_pb    = q_this
                   q_wf_pb = q_wf
                   q_wt_pb = q_wt
@@ -929,7 +929,7 @@ contains
 
                   lev_update(:)    = .false.
                   lev_update(ub+1) = .true.
-                  call flux_all ( &
+                  CALL flux_all ( &
                      lb, ub, sp_dz, sp_zc, sp_zi, &
                      vl_s, psi_s, hksat, nprm, prms, &
                      ubc_typ, ubc_val, lbc_typ, lbc_val, &
@@ -939,7 +939,7 @@ contains
                      q_pb, q_wf_pb, q_wt_pb, &
                      tol_q, tol_z, tol_p)
 
-                  call water_balance ( &
+                  CALL water_balance ( &
                      lb, ub, sp_dz, dt_this, is_sat, vl_s, q_pb, &
                      ubc_typ, ubc_val, lbc_typ, lbc_val, &
                      ss_wf, ss_vl, ss_wt, ss_dp, waquifer_pb, &
@@ -948,25 +948,25 @@ contains
 
                   dr_dv(:,ub+1) = (blc_pb - blc) / dlt
 
-               end if
+               ENDIF
 
-            end if
+            ENDIF
 
             DO ilev = lb-1, ub+1
                vact(ilev) = vact(ilev) .and. (abs(dr_dv(ilev,ilev)) > tol_q)
             ENDDO
 
-            call solve_least_squares_problem (ub-lb+3, dr_dv, vact, blc, dv)
+            CALL solve_least_squares_problem (ub-lb+3, dr_dv, vact, blc, dv)
 
-            if (vact(lb-1)) then
+            IF (vact(lb-1)) THEN
                ss_dp = ss_dp - dv(lb-1)
                ss_dp = max(ss_dp, 0._r8)
-            end if
+            ENDIF
 
-            do ilev = lb, ub
-               if (vact(ilev)) then
-                  if (jsbl(ilev) == 1) then
-                     if ((ss_wf(ilev) == sp_dz(ilev)) .and. (dv(ilev) > 0)) then
+            DO ilev = lb, ub
+               IF (vact(ilev)) THEN
+                  IF (jsbl(ilev) == 1) THEN
+                     IF ((ss_wf(ilev) == sp_dz(ilev)) .and. (dv(ilev) > 0)) THEN
                         ss_wf(ilev) = ss_wf(ilev) - min(dv(ilev), sp_dz(ilev))
 
                         psi(ilev) = psi_s(ilev) + (1 - q_this(ilev)/hksat(ilev)) &
@@ -975,21 +975,21 @@ contains
                            vl_s(ilev), vl_r(ilev), psi_s(ilev), nprm, prms(:,ilev))
                         hk(ilev) = soil_hk_from_psi (psi(ilev), &
                            psi_s(ilev), hksat(ilev), nprm, prms(:,ilev))
-                     else
+                     ELSE
                         ss_wf(ilev) = ss_wf(ilev) - dv(ilev)
                         ss_wf(ilev) = max(ss_wf(ilev), 0._r8)
                         ss_wf(ilev) = min(ss_wf(ilev), sp_dz(ilev)-ss_wt(ilev))
-                     end if
-                  end if
+                     ENDIF
+                  ENDIF
 
-                  if (jsbl(ilev) == 2) then
+                  IF (jsbl(ilev) == 2) THEN
                      ss_vl(ilev) = ss_vl(ilev) - dv(ilev)
                      ss_vl(ilev) = max(ss_vl(ilev), tol_v)
                      ss_vl(ilev) = min(ss_vl(ilev), vl_s(ilev))
-                  end if
+                  ENDIF
 
-                  if (jsbl(ilev) == 3) then
-                     if ((ss_wt(ilev) == sp_dz(ilev)) .and. (dv(ilev) > 0)) then
+                  IF (jsbl(ilev) == 3) THEN
+                     IF ((ss_wt(ilev) == sp_dz(ilev)) .and. (dv(ilev) > 0)) THEN
                         ss_wt(ilev) = ss_wt(ilev) - min(dv(ilev), sp_dz(ilev))
 
                         psi(ilev) = psi_s(ilev) - (1 - q_this(ilev-1)/hksat(ilev)) &
@@ -998,31 +998,31 @@ contains
                            vl_s(ilev), vl_r(ilev), psi_s(ilev), nprm, prms(:,ilev))
                         hk(ilev) = soil_hk_from_psi (psi(ilev), &
                            psi_s(ilev), hksat(ilev), nprm, prms(:,ilev))
-                     else
+                     ELSE
                         ss_wt(ilev) = ss_wt(ilev) - dv(ilev)
                         ss_wt(ilev) = max(ss_wt(ilev), 0._r8)
                         ss_wt(ilev) = min(ss_wt(ilev), sp_dz(ilev)-ss_wf(ilev))
-                     end if
-                  end if
-               end if
+                     ENDIF
+                  ENDIF
+               ENDIF
 
-               call check_and_update_level (sp_dz(ilev), &
+               CALL check_and_update_level (sp_dz(ilev), &
                   vl_s(ilev), vl_r(ilev), psi_s(ilev), hksat(ilev), &
                   nprm, prms(:,ilev), &
                   is_sat(ilev), has_wf(ilev), has_wt(ilev), &
                   ss_wf(ilev), ss_vl(ilev), ss_wt(ilev), psi(ilev), hk(ilev), &
                   jsbl(ilev) == 2, tol_v)
-            end do
+            ENDDO
 
-            if (vact(ub+1)) then
+            IF (vact(ub+1)) THEN
                zwt = zwt - dv(ub+1)
                zwt = max(zwt, sp_zi(ub))
                waquifer  = - (zwt - sp_zi(ub)) * (vl_s_wa &
                   - soil_vliq_from_psi (psi_s(ub)+(sp_zi(ub)-zwt)*0.5, &
                   vl_s_wa, vl_r(ub), psi_s(ub), nprm, prms(:,ub)))
-            end if
+            ENDIF
 
-         end do
+         ENDDO
 
          ss_q = ss_q + q_this * dt_this
 
@@ -1036,7 +1036,7 @@ contains
 
          werr = wsum - (wsum_m1 + ubc_val * dt_this - lbc_val * dt_this)
 
-      end do
+      ENDDO
 
       ss_q = ss_q / dt
 
@@ -1048,62 +1048,62 @@ contains
          ENDIF
       ENDDO
 
-   end subroutine Richards_solver
+   END SUBROUTINE Richards_solver
 
 
    ! ---- water balance ----
-   subroutine water_balance ( &
+   SUBROUTINE water_balance ( &
          lb, ub, dz, dt, is_sat, vl_s, q, &
          ubc_typ, ubc_val, lbc_typ, lbc_val, &
          wf, vl, wt, dp, waquifer, &
          wf_m1, vl_m1, wt_m1, dp_m1, waquifer_m1, &
          blc, is_solvable, tol)
 
-      integer, intent(in) :: lb, ub
+   integer, intent(in) :: lb, ub
 
-      real(r8), intent(in) :: dz(lb:ub)
-      real(r8), intent(in) :: dt
+   real(r8), intent(in) :: dz(lb:ub)
+   real(r8), intent(in) :: dt
 
-      logical,  intent(in) :: is_sat(lb:ub)
-      real(r8), intent(in) :: vl_s  (lb:ub)
+   logical,  intent(in) :: is_sat(lb:ub)
+   real(r8), intent(in) :: vl_s  (lb:ub)
 
-      real(r8), intent(in) :: q(lb-1:ub)
+   real(r8), intent(in) :: q(lb-1:ub)
 
-      integer,  intent(in) :: ubc_typ
-      real(r8), intent(in) :: ubc_val
-      integer,  intent(in) :: lbc_typ
-      real(r8), intent(in) :: lbc_val
+   integer,  intent(in) :: ubc_typ
+   real(r8), intent(in) :: ubc_val
+   integer,  intent(in) :: lbc_typ
+   real(r8), intent(in) :: lbc_val
 
-      real(r8), intent(in) :: wf(lb:ub)
-      real(r8), intent(in) :: vl(lb:ub)
-      real(r8), intent(in) :: wt(lb:ub)
-      real(r8), intent(in) :: dp
-      real(r8), intent(in) :: waquifer
+   real(r8), intent(in) :: wf(lb:ub)
+   real(r8), intent(in) :: vl(lb:ub)
+   real(r8), intent(in) :: wt(lb:ub)
+   real(r8), intent(in) :: dp
+   real(r8), intent(in) :: waquifer
 
-      real(r8), intent(in) :: wf_m1(lb:ub)
-      real(r8), intent(in) :: vl_m1(lb:ub)
-      real(r8), intent(in) :: wt_m1(lb:ub)
-      real(r8), intent(in) :: dp_m1
-      real(r8), intent(in) :: waquifer_m1
+   real(r8), intent(in) :: wf_m1(lb:ub)
+   real(r8), intent(in) :: vl_m1(lb:ub)
+   real(r8), intent(in) :: wt_m1(lb:ub)
+   real(r8), intent(in) :: dp_m1
+   real(r8), intent(in) :: waquifer_m1
 
-      real(r8), intent(out) :: blc(lb-1:ub+1)
-      logical,  intent(out), optional :: is_solvable
-      real(r8), intent(in ), optional :: tol
+   real(r8), intent(out) :: blc(lb-1:ub+1)
+   logical,  intent(out), optional :: is_solvable
+   real(r8), intent(in ), optional :: tol
 
-      ! Local variables
-      integer  :: ilev, jlev
-      real(r8) :: dmss, qsum
+   ! Local variables
+   integer  :: ilev, jlev
+   real(r8) :: dmss, qsum
 
       blc(:)  = 0
 
-      if (ubc_typ == bc_rainfall) then
+      IF (ubc_typ == bc_rainfall) THEN
          dmss = max(dp, 0._r8) - max(dp_m1, 0._r8)
          qsum = ubc_val - q(lb-1)
          blc(lb-1) = dmss - qsum * dt
-      end if
+      ENDIF
 
       ilev = lb - 1
-      do jlev = lb, ub
+      DO jlev = lb, ub
 
          dmss = (vl_s(jlev) - vl_m1(jlev)) * (wf(jlev) - wf_m1(jlev))
          dmss = (vl_s(jlev) - vl_m1(jlev)) * (wt(jlev) - wt_m1(jlev)) + dmss
@@ -1111,45 +1111,45 @@ contains
 
          qsum = q(jlev-1) - q(jlev)
 
-         if (.not. is_sat(jlev)) then
+         IF (.not. is_sat(jlev)) THEN
 
             ilev = jlev
 
-            if ((ubc_typ /= bc_rainfall) .and. (blc(lb-1) /= 0)) then
+            IF ((ubc_typ /= bc_rainfall) .and. (blc(lb-1) /= 0)) THEN
                blc(ilev) = blc(ilev) + blc(lb-1)
                blc(lb-1) = 0
-            end if
-         end if
+            ENDIF
+         ENDIF
 
          blc(ilev) = blc(ilev) + dmss - qsum * dt
 
-      end do
+      ENDDO
 
-      if (lbc_typ == bc_drainage) then
-         if ((waquifer == 0) .and. (q(ub) >= 0)) then
+      IF (lbc_typ == bc_drainage) THEN
+         IF ((waquifer == 0) .and. (q(ub) >= 0)) THEN
             blc(ilev) = blc(ilev) - waquifer_m1 - q(ub) * dt
-         else
+         ELSE
             blc(ub+1) = waquifer - waquifer_m1 - q(ub) * dt
 
-            if ((ubc_typ /= bc_rainfall) .and. (blc(lb-1) /= 0)) then
+            IF ((ubc_typ /= bc_rainfall) .and. (blc(lb-1) /= 0)) THEN
                blc(ub+1) = blc(ub+1) + blc(lb-1)
                blc(lb-1) = 0
-            end if
-         end if
-      end if
+            ENDIF
+         ENDIF
+      ENDIF
 
-      if (present(is_solvable)) then
+      IF (present(is_solvable)) THEN
          IF (present(tol)) THEN
             is_solvable = (ubc_typ == bc_rainfall) .or. (blc(lb-1) < tol)
          ELSE
             is_solvable = (ubc_typ == bc_rainfall) .or. (blc(lb-1) == 0)
          ENDIF
-      end if
+      ENDIF
 
-   end subroutine water_balance
+   END SUBROUTINE water_balance
 
    ! ---- initialize sublevel structure ----
-   subroutine initialize_sublevel_structure ( &
+   SUBROUTINE initialize_sublevel_structure ( &
          lb, ub, dz, zbtm, &
          vl_s, vl_r, psi_s, hksat, nprm, prms, &
          ubc_typ, ubc_val, lbc_typ, lbc_val, &
@@ -1157,153 +1157,153 @@ contains
          wf, vl, wt, dp, psi, hk, &
          tol_v, tol_z)
 
-      integer,  intent(in) :: lb, ub
-      real(r8), intent(in) :: dz (lb:ub)
-      real(r8), intent(in) :: zbtm
+   integer,  intent(in) :: lb, ub
+   real(r8), intent(in) :: dz (lb:ub)
+   real(r8), intent(in) :: zbtm
 
-      real(r8), intent(in) :: vl_s  (lb:ub)
-      real(r8), intent(in) :: vl_r  (lb:ub)
-      real(r8), intent(in) :: psi_s (lb:ub)
-      real(r8), intent(in) :: hksat (lb:ub)
+   real(r8), intent(in) :: vl_s  (lb:ub)
+   real(r8), intent(in) :: vl_r  (lb:ub)
+   real(r8), intent(in) :: psi_s (lb:ub)
+   real(r8), intent(in) :: hksat (lb:ub)
 
-      integer,  intent(in) :: nprm
-      real(r8), intent(in) :: prms (nprm,lb:ub)
+   integer,  intent(in) :: nprm
+   real(r8), intent(in) :: prms (nprm,lb:ub)
 
-      integer,  intent(in) :: ubc_typ
-      real(r8), intent(in) :: ubc_val
-      integer,  intent(in) :: lbc_typ
-      real(r8), intent(in) :: lbc_val
+   integer,  intent(in) :: ubc_typ
+   real(r8), intent(in) :: ubc_val
+   integer,  intent(in) :: lbc_typ
+   real(r8), intent(in) :: lbc_val
 
-      logical, intent(inout) :: is_sat(lb:ub)
-      logical, intent(inout) :: has_wf(lb:ub)
-      logical, intent(inout) :: has_wt(lb:ub)
+   logical, intent(inout) :: is_sat(lb:ub)
+   logical, intent(inout) :: has_wf(lb:ub)
+   logical, intent(inout) :: has_wt(lb:ub)
 
-      real(r8), intent(inout) :: wf(lb:ub)
-      real(r8), intent(inout) :: vl(lb:ub)
-      real(r8), intent(inout) :: wt(lb:ub)
-      real(r8), intent(inout) :: dp
+   real(r8), intent(inout) :: wf(lb:ub)
+   real(r8), intent(inout) :: vl(lb:ub)
+   real(r8), intent(inout) :: wt(lb:ub)
+   real(r8), intent(inout) :: dp
 
-      real(r8), intent(inout) :: psi(lb:ub)
-      real(r8), intent(inout) :: hk (lb:ub)
+   real(r8), intent(inout) :: psi(lb:ub)
+   real(r8), intent(inout) :: hk (lb:ub)
 
-      real(r8), intent(in) :: tol_v
-      real(r8), intent(in) :: tol_z
+   real(r8), intent(in) :: tol_v
+   real(r8), intent(in) :: tol_z
 
-      ! Local variables
-      integer  :: ilev
+   ! Local variables
+   integer  :: ilev
 
-      do ilev = lb, ub
+      DO ilev = lb, ub
          is_sat(ilev) = (abs(vl(ilev) - vl_s(ilev)) < tol_v) &
             .or. (abs(wf(ilev) + wt(ilev) - dz(ilev)) < tol_z)
-      end do
+      ENDDO
 
-      if (ubc_typ == bc_fix_head) then
-         if (ubc_val < psi_s(lb)) then
-            if (is_sat(lb)) then
+      IF (ubc_typ == bc_fix_head) THEN
+         IF (ubc_val < psi_s(lb)) THEN
+            IF (is_sat(lb)) THEN
                is_sat(lb) = .false.
 
                wf(lb) = 0
                vl(lb) = vl_s(lb)
                wt(lb) = 0.9 * dz(lb)
-            elseif (wf(lb) >= tol_z) then
+            ELSEIF (wf(lb) >= tol_z) THEN
                vl(lb) = (wf(lb)*vl_s(lb) + vl(lb)*(dz(lb)-wf(lb)-wt(lb))) / (dz(lb)-wt(lb))
                wf(lb) = 0
-            end if
-         end if
-      end if
+            ENDIF
+         ENDIF
+      ENDIF
 
-      if (lbc_typ == bc_fix_head) then
-         if (lbc_val < psi_s(ub)) then
-            if (is_sat(ub)) then
+      IF (lbc_typ == bc_fix_head) THEN
+         IF (lbc_val < psi_s(ub)) THEN
+            IF (is_sat(ub)) THEN
                is_sat(ub) = .false.
 
                wf(ub) = 0.9 * dz(ub)
                vl(ub) = vl_s(ub)
                wt(ub) = 0
-            elseif (wt(ub) >= tol_z) then
+            ELSEIF (wt(ub) >= tol_z) THEN
                vl(ub) = (wt(ub)*vl_s(ub) + vl(ub)*(dz(ub)-wf(ub)-wt(ub))) / (dz(ub)-wf(ub))
                wt(ub) = 0
-            end if
-         end if
-      end if
+            ENDIF
+         ENDIF
+      ENDIF
 
-      do ilev = lb, ub
-         if (is_sat(ilev)) then
+      DO ilev = lb, ub
+         IF (is_sat(ilev)) THEN
             wf(ilev) = 0
             wt(ilev) = dz(ilev)
             vl(ilev) = vl_s(ilev)
-         else
-            if (ilev > lb) then
-               if (is_sat(ilev-1)) then
+         ELSE
+            IF (ilev > lb) THEN
+               IF (is_sat(ilev-1)) THEN
                   has_wf(ilev) = .true.
-               else
+               ELSE
                   has_wf(ilev) = (wf(ilev) >= tol_z) .or. (wt(ilev-1) >= tol_z)
-               end if
+               ENDIF
 
-               if (has_wf(ilev)) then
-                  if ((wf(ilev) < tol_z) .and. (psi_s(ilev) < psi_s(ilev-1))) then
+               IF (has_wf(ilev)) THEN
+                  IF ((wf(ilev) < tol_z) .and. (psi_s(ilev) < psi_s(ilev-1))) THEN
                      wf(ilev) = 0.1 * (dz(ilev)-wt(ilev))
-                  end if
-               end if
-            else
-               select case (ubc_typ)
-               case (bc_rainfall)
+                  ENDIF
+               ENDIF
+            ELSE
+               SELECTCASE (ubc_typ)
+               CASE (bc_rainfall)
                   has_wf(lb) = (dp >= tol_z) .or. (wf(lb) >= tol_z)
 
-                  if (has_wf(lb) .and. (wf(lb) < tol_z)) then
+                  IF (has_wf(lb) .and. (wf(lb) < tol_z)) THEN
                      wf(lb) = 0.01 * (dz(lb)-wt(lb))
-                  end if
-               case (bc_fix_head)
+                  ENDIF
+               CASE (bc_fix_head)
                   has_wf(lb) = (ubc_val > psi_s(lb)) .or. (wf(lb) >= tol_z)
 
-                  if (has_wf(lb) .and. (wf(lb) < tol_z)) then
+                  IF (has_wf(lb) .and. (wf(lb) < tol_z)) THEN
                      wf(lb) = 0.01 * (dz(lb)-wt(lb))
-                  end if
-               case (bc_fix_flux)
+                  ENDIF
+               CASE (bc_fix_flux)
                   has_wf(lb) = wf(lb) >= tol_z
-               end select
-            end if
+               ENDSELECT
+            ENDIF
 
-            if (ilev < ub) then
-               if (is_sat(ilev+1)) then
+            IF (ilev < ub) THEN
+               IF (is_sat(ilev+1)) THEN
                   has_wt(ilev) = .true.
-               else
+               ELSE
                   has_wt(ilev) = (wt(ilev) >= tol_z) .or. (wf(ilev+1) >= tol_z)
-               end if
+               ENDIF
 
-               if (has_wt(ilev)) then
-                  if ((wt(ilev) < tol_z) .and. (psi_s(ilev) < psi_s(ilev+1))) then
+               IF (has_wt(ilev)) THEN
+                  IF ((wt(ilev) < tol_z) .and. (psi_s(ilev) < psi_s(ilev+1))) THEN
                      wt(ilev) = 0.1 * (dz(ilev)-wf(ilev))
-                  end if
-               end if
-            else
-               select case (lbc_typ)
-               case (bc_drainage)
+                  ENDIF
+               ENDIF
+            ELSE
+               SELECTCASE (lbc_typ)
+               CASE (bc_drainage)
                   has_wt(ub) = (wt(ub) >= tol_z)
-               case (bc_fix_head)
+               CASE (bc_fix_head)
                   has_wt(ub) = (lbc_val > psi_s(lb)) .or. (wt(ub) >= tol_z)
 
-                  if ((has_wt(ub)) .and. (wt(ub) < tol_z)) then
+                  IF ((has_wt(ub)) .and. (wt(ub) < tol_z)) THEN
                      wt(ub) = 0.01 * (dz(ub)-wf(ub))
-                  end if
-               case (bc_fix_flux)
+                  ENDIF
+               CASE (bc_fix_flux)
                   has_wt(ub) = (wt(ub) >= tol_z)
-               end select
-            end if
-         end if
+               ENDSELECT
+            ENDIF
+         ENDIF
 
-         call check_and_update_level ( dz(ilev), &
+         CALL check_and_update_level ( dz(ilev), &
             vl_s(ilev), vl_r(ilev), psi_s(ilev), hksat(ilev), &
             nprm, prms(:,ilev), &
             is_sat(ilev), has_wf(ilev), has_wt(ilev), &
             wf(ilev), vl(ilev), wt(ilev), psi(ilev), hk(ilev), &
             .true., tol_v)
-      end do
+      ENDDO
 
-   end subroutine initialize_sublevel_structure
+   END SUBROUTINE initialize_sublevel_structure
 
    !-----------------------------------------------------------------------
-   subroutine use_explicit_form ( &
+   SUBROUTINE use_explicit_form ( &
          lb, ub, dt, dz, sp_zc, sp_zi, &
          vl_s, vl_r, psi_s, hksat, nprm, prms, &
          vl_s_wa, &
@@ -1312,74 +1312,74 @@ contains
          wf_m1, vl_m1, wt_m1, dp_m1, waquifer_m1, &
          tol_q, tol_z, tol_v)
 
-      integer,  intent(in) :: lb, ub
+   integer,  intent(in) :: lb, ub
 
-      real(r8), intent(in) :: dt
+   real(r8), intent(in) :: dt
 
-      real(r8), intent(in) :: dz     (lb:ub)
-      real(r8), intent(in) :: sp_zc  (lb:ub)
-      real(r8), intent(in) :: sp_zi(lb-1:ub)
+   real(r8), intent(in) :: dz     (lb:ub)
+   real(r8), intent(in) :: sp_zc  (lb:ub)
+   real(r8), intent(in) :: sp_zi(lb-1:ub)
 
-      real(r8), intent(in) :: vl_s  (lb:ub)
-      real(r8), intent(in) :: vl_r  (lb:ub)
-      real(r8), intent(in) :: psi_s (lb:ub)
-      real(r8), intent(in) :: hksat (lb:ub)
+   real(r8), intent(in) :: vl_s  (lb:ub)
+   real(r8), intent(in) :: vl_r  (lb:ub)
+   real(r8), intent(in) :: psi_s (lb:ub)
+   real(r8), intent(in) :: hksat (lb:ub)
 
-      integer,  intent(in) :: nprm
-      real(r8), intent(in) :: prms(nprm,lb:ub)
+   integer,  intent(in) :: nprm
+   real(r8), intent(in) :: prms(nprm,lb:ub)
 
-      real(r8), intent(in) :: vl_s_wa
+   real(r8), intent(in) :: vl_s_wa
 
-      integer,  intent(in) :: ubc_typ
-      real(r8), intent(in) :: ubc_val
-      integer,  intent(in) :: lbc_typ
-      real(r8), intent(in) :: lbc_val
+   integer,  intent(in) :: ubc_typ
+   real(r8), intent(in) :: ubc_val
+   integer,  intent(in) :: lbc_typ
+   real(r8), intent(in) :: lbc_val
 
-      real(r8), intent(inout) :: q (lb-1:ub)
-      real(r8), intent(in) :: q_wf (lb:ub)
-      real(r8), intent(in) :: q_wt (lb:ub)
+   real(r8), intent(inout) :: q (lb-1:ub)
+   real(r8), intent(in) :: q_wf (lb:ub)
+   real(r8), intent(in) :: q_wt (lb:ub)
 
-      real(r8), intent(inout) :: wf (lb:ub)
-      real(r8), intent(inout) :: vl (lb:ub)
-      real(r8), intent(inout) :: wt (lb:ub)
-      real(r8), intent(inout) :: dp
-      real(r8), intent(inout) :: waquifer
-      real(r8), intent(inout) :: zwt
+   real(r8), intent(inout) :: wf (lb:ub)
+   real(r8), intent(inout) :: vl (lb:ub)
+   real(r8), intent(inout) :: wt (lb:ub)
+   real(r8), intent(inout) :: dp
+   real(r8), intent(inout) :: waquifer
+   real(r8), intent(inout) :: zwt
 
-      real(r8), intent(in) :: wf_m1 (lb:ub)
-      real(r8), intent(in) :: vl_m1 (lb:ub)
-      real(r8), intent(in) :: wt_m1 (lb:ub)
-      real(r8), intent(in) :: dp_m1
-      real(r8), intent(in) :: waquifer_m1
+   real(r8), intent(in) :: wf_m1 (lb:ub)
+   real(r8), intent(in) :: vl_m1 (lb:ub)
+   real(r8), intent(in) :: wt_m1 (lb:ub)
+   real(r8), intent(in) :: dp_m1
+   real(r8), intent(in) :: waquifer_m1
 
-      real(r8), intent(in) :: tol_q
-      real(r8), intent(in) :: tol_z
-      real(r8), intent(in) :: tol_v
+   real(r8), intent(in) :: tol_q
+   real(r8), intent(in) :: tol_z
+   real(r8), intent(in) :: tol_v
 
-      ! Local variables
-      integer  :: ilev
-      real(r8) :: air_m1, wa_m1, dwat, dwat_s
-      real(r8) :: alp, zwf_this, zwt_this, vl_wa
+   ! Local variables
+   integer  :: ilev
+   real(r8) :: air_m1, wa_m1, dwat, dwat_s
+   real(r8) :: alp, zwf_this, zwt_this, vl_wa
 
-      real(r8) :: dmss, mblc
+   real(r8) :: dmss, mblc
 
       ! depleted : decrease outflux from top down
-      if (ubc_typ == bc_rainfall) then
-         if (dp_m1 <  - (ubc_val - q(lb-1))*dt) then
+      IF (ubc_typ == bc_rainfall) THEN
+         IF (dp_m1 <  - (ubc_val - q(lb-1))*dt) THEN
             q(lb-1) = dp_m1/dt + ubc_val
-         end if
-      end if
+         ENDIF
+      ENDIF
 
-      do ilev = lb, ub
+      DO ilev = lb, ub
 
          dwat = (q(ilev-1) - q(ilev)) * dt
          wa_m1 = (wt_m1(ilev)+wf_m1(ilev)) * vl_s(ilev) &
             + (dz(ilev)-wt_m1(ilev)-wf_m1(ilev)) * vl_m1(ilev)
-         if (dwat <= - wa_m1) then
+         IF (dwat <= - wa_m1) THEN
             q(ilev) = q(ilev-1) + wa_m1/dt
-         end if
+         ENDIF
 
-      end do
+      ENDDO
 
       IF ((lbc_typ == bc_fix_flux) .and. (q(ub) < lbc_val)) THEN
 
@@ -1388,49 +1388,49 @@ contains
             dwat = (q(ilev-1) - q(ilev)) * dt
             wa_m1 = (wt_m1(ilev)+wf_m1(ilev)) * vl_s(ilev) &
                + (dz(ilev)-wt_m1(ilev)-wf_m1(ilev)) * vl_m1(ilev)
-            if (dwat <= - wa_m1) then
+            IF (dwat <= - wa_m1) THEN
                q(ilev-1) = q(ilev) - wa_m1/dt
-            end if
+            ENDIF
          ENDDO
 
       ENDIF
 
       ! overfilled : increase influx from bottom up
-      if (lbc_typ == bc_drainage) then
-         if (q(ub)*dt > -waquifer_m1) then
+      IF (lbc_typ == bc_drainage) THEN
+         IF (q(ub)*dt > -waquifer_m1) THEN
             q(ub) = - waquifer_m1/dt
-         end if
-      end if
+         ENDIF
+      ENDIF
 
-      do ilev = ub, lb, -1
+      DO ilev = ub, lb, -1
 
          dwat = (q(ilev-1) - q(ilev)) * dt
          air_m1 = (vl_s(ilev) - vl_m1(ilev)) * (dz(ilev) - wt_m1(ilev) - wf_m1(ilev))
-         if (dwat >= air_m1) then
+         IF (dwat >= air_m1) THEN
             q(ilev-1) = q(ilev) + air_m1/dt
-         end if
+         ENDIF
 
-      end do
+      ENDDO
 
       IF ((ubc_typ == bc_fix_flux) .and. (q(lb-1) < ubc_val)) THEN
 
          q(lb-1) = ubc_val
-         do ilev = lb, ub
+         DO ilev = lb, ub
             dwat = (q(ilev-1) - q(ilev)) * dt
             air_m1 = (vl_s(ilev) - vl_m1(ilev)) * (dz(ilev) - wt_m1(ilev) - wf_m1(ilev))
-            if (dwat >= air_m1) then
+            IF (dwat >= air_m1) THEN
                q(ilev) = q(ilev-1) - air_m1/dt
-            end if
-         end do
+            ENDIF
+         ENDDO
 
       ENDIF
 
       ! update prognostic variables : dp, wf, vl, wt, zwt
-      if (ubc_typ == bc_rainfall) then
+      IF (ubc_typ == bc_rainfall) THEN
          dp = max(0., dp_m1 + (ubc_val - q(lb-1))*dt)
-      end if
+      ENDIF
 
-      do ilev = lb, ub
+      DO ilev = lb, ub
 
          dwat = (q(ilev-1) - q(ilev)) * dt
 
@@ -1439,68 +1439,68 @@ contains
          vl(ilev) = ((wt_m1(ilev)+wf_m1(ilev)) * vl_s(ilev) &
                + (dz(ilev)-wt_m1(ilev)-wf_m1(ilev)) * vl_m1(ilev) + dwat) / dz(ilev)
 
-      end do
+      ENDDO
 
-      if (lbc_typ == bc_drainage) then
+      IF (lbc_typ == bc_drainage) THEN
          waquifer = waquifer_m1 + q(ub)*dt
-         call get_zwt_from_wa ( &
+         CALL get_zwt_from_wa ( &
             vl_s_wa, vl_r(ub), psi_s(ub), hksat(ub), nprm, prms(:,ub), tol_v, tol_z, &
             waquifer, sp_zi(ub), zwt)
-      end if
+      ENDIF
 
-   end subroutine use_explicit_form
+   END SUBROUTINE use_explicit_form
 
    !----------------------------------------------------------------------
-   subroutine var_perturb_level ( jsbl, blc, &
+   SUBROUTINE var_perturb_level ( jsbl, blc, &
          dz, zc, zi, vl_s, vl_r, psi_s, hksat, nprm, prms, &
          is_sat, has_wf, has_wt, qin, qout, q_wf, q_wt, &
          wf_p, vl_p, wt_p, delta, psi_p, hk_p, is_act, &
          tol_v)
 
-      integer,  intent(out) :: jsbl
+   integer,  intent(out) :: jsbl
 
-      real(r8), intent(in) :: blc
+   real(r8), intent(in) :: blc
 
-      real(r8), intent(in) :: dz, zc, zi
-      real(r8), intent(in) :: vl_s, vl_r, psi_s, hksat
-      integer,  intent(in) :: nprm
-      real(r8), intent(in) :: prms(nprm)
+   real(r8), intent(in) :: dz, zc, zi
+   real(r8), intent(in) :: vl_s, vl_r, psi_s, hksat
+   integer,  intent(in) :: nprm
+   real(r8), intent(in) :: prms(nprm)
 
-      logical,  intent(in) :: is_sat, has_wf, has_wt
-      real(r8), intent(in) :: qin, qout, q_wf, q_wt
+   logical,  intent(in) :: is_sat, has_wf, has_wt
+   real(r8), intent(in) :: qin, qout, q_wf, q_wt
 
-      real(r8), intent(inout) :: wf_p, vl_p, wt_p
-      real(r8), intent(out)   :: delta
-      real(r8), intent(inout) :: psi_p, hk_p
-      logical,  intent(out)   :: is_act
+   real(r8), intent(inout) :: wf_p, vl_p, wt_p
+   real(r8), intent(out)   :: delta
+   real(r8), intent(inout) :: psi_p, hk_p
+   logical,  intent(out)   :: is_act
 
-      real(r8), intent(in)  :: tol_v
+   real(r8), intent(in)  :: tol_v
 
-      ! Local variables
-      real(r8), parameter :: vstep = 1.0e-6_r8
-      real(r8), parameter :: wstep = 1.0e-1_r8
+   ! Local variables
+   real(r8), parameter :: vstep = 1.0e-6_r8
+   real(r8), parameter :: wstep = 1.0e-1_r8
 
       jsbl = 2
 
-      if (has_wt) then
+      IF (has_wt) THEN
 
-         if ((wt_p == dz) .or. &
-            ((blc >= 0) .and. (q_wt < qout) .and. (wt_p > 0))) then
+         IF ((wt_p == dz) .or. &
+            ((blc >= 0) .and. (q_wt < qout) .and. (wt_p > 0))) THEN
             ! reduce water table
 
             jsbl = 3
 
             delta = - min(wstep, wt_p * 0.1_r8)
 
-            if (wt_p == dz) then
+            IF (wt_p == dz) THEN
                psi_p = psi_s - (1 - qin/hksat) * (-delta)*(zi-zc)/dz
                vl_p  = soil_vliq_from_psi (psi_p, vl_s, vl_r, psi_s, nprm, prms)
                hk_p  = soil_hk_from_psi (psi_p, psi_s, hksat, nprm, prms)
-            end if
+            ENDIF
 
             wt_p = wt_p + delta
 
-         elseif ((blc < 0) .and. (q_wt > qout)) then
+         ELSEIF ((blc < 0) .and. (q_wt > qout)) THEN
             ! increase water table
 
             jsbl = 3
@@ -1508,28 +1508,28 @@ contains
             delta = min(wstep, (dz - wf_p - wt_p) * 0.1_r8)
             wt_p = wt_p + delta
 
-         end if
+         ENDIF
 
-      end if
+      ENDIF
 
-      if ((jsbl == 2) .and. has_wf) then
+      IF ((jsbl == 2) .and. has_wf) THEN
 
-         if ((wf_p == dz) .or. &
-            ((blc >= 0) .and. (qin < q_wf) .and. (wf_p > 0))) then
+         IF ((wf_p == dz) .or. &
+            ((blc >= 0) .and. (qin < q_wf) .and. (wf_p > 0))) THEN
             ! reduce wetting front
 
             jsbl = 1
 
             delta = - min(wstep, wf_p * 0.1_r8)
-            if (wf_p == dz) then
+            IF (wf_p == dz) THEN
                psi_p = psi_s + (1 - qout/hksat) * (-delta)*(dz-(zi-zc))/dz
                vl_p  = soil_vliq_from_psi (psi_p, vl_s, vl_r, psi_s, nprm, prms)
                hk_p  = soil_hk_from_psi (psi_p, psi_s, hksat, nprm, prms)
-            end if
+            ENDIF
 
             wf_p = wf_p + delta
 
-         elseif ((blc < 0) .and. (qin > q_wf)) then
+         ELSEIF ((blc < 0) .and. (qin > q_wf)) THEN
             ! increase wetting front
 
             jsbl = 1
@@ -1537,159 +1537,159 @@ contains
             delta = min(wstep, (dz - wf_p - wt_p) * 0.1_r8)
             wf_p = wf_p + delta
 
-         end if
+         ENDIF
 
-      end if
+      ENDIF
 
-      if (jsbl == 2) then
+      IF (jsbl == 2) THEN
 
-         if (((blc > 0) .and. (vl_p > vl_r + tol_v)) .or. (vl_p >= vl_s)) then
+         IF (((blc > 0) .and. (vl_p > vl_r + tol_v)) .or. (vl_p >= vl_s)) THEN
             ! reduce water content
             delta = - min(vstep, (vl_p - vl_r - tol_v) * 0.5_r8)
-         elseif (((blc <= 0) .and. (vl_p < vl_s)) .or. (vl_p <= vl_r+tol_v)) then
+         ELSEIF (((blc <= 0) .and. (vl_p < vl_s)) .or. (vl_p <= vl_r+tol_v)) THEN
             ! increase water content
             delta = + min(vstep, (vl_s - vl_p) * 0.5_r8)
-         else
+         ELSE
             delta = 0
-         end if
+         ENDIF
 
          vl_p = vl_p + delta
 
-      end if
+      ENDIF
 
       is_act = (delta /= 0)
 
-      if (is_act) then
-         call check_and_update_level (dz, &
+      IF (is_act) THEN
+         CALL check_and_update_level (dz, &
             vl_s, vl_r, psi_s, hksat, nprm, prms, &
             is_sat, has_wf, has_wt, wf_p, vl_p, wt_p, psi_p, hk_p, &
             jsbl == 2, tol_v)
-      end if
+      ENDIF
 
-   end subroutine var_perturb_level
+   END SUBROUTINE var_perturb_level
 
    !----------------------------------------------------------------
-   subroutine var_perturb_rainfall ( &
+   SUBROUTINE var_perturb_rainfall ( &
          blc_srf, dp, dp_p, delta, is_act)
 
-      real(r8), intent(in) :: blc_srf
+   real(r8), intent(in) :: blc_srf
 
-      real(r8), intent(in)  :: dp
-      real(r8), intent(out) :: dp_p
-      real(r8), intent(out) :: delta
-      logical,  intent(out) :: is_act
+   real(r8), intent(in)  :: dp
+   real(r8), intent(out) :: dp_p
+   real(r8), intent(out) :: delta
+   logical,  intent(out) :: is_act
 
-      ! Local variables
-      real(r8), parameter :: wstep = 1.0e-1_r8
+   ! Local variables
+   real(r8), parameter :: wstep = 1.0e-1_r8
 
       delta = 0
 
-      if (blc_srf > 0) then
-         if (dp > 0) then
+      IF (blc_srf > 0) THEN
+         IF (dp > 0) THEN
             delta = - min(wstep, dp * 0.5_r8)
-         end if
-      elseif (blc_srf < 0) then
+         ENDIF
+      ELSEIF (blc_srf < 0) THEN
          delta = wstep
-      end if
+      ENDIF
 
       dp_p = dp + delta
       is_act = (delta /= 0)
 
-   end subroutine var_perturb_rainfall
+   END SUBROUTINE var_perturb_rainfall
 
    !----------------------------------------------------------------
-   subroutine var_perturb_drainage ( &
+   SUBROUTINE var_perturb_drainage ( &
          zmin, blc_btm, zwt, zwt_p, delta, is_act)
 
-      real(r8), intent(in) :: zmin
+   real(r8), intent(in) :: zmin
 
-      real(r8), intent(in) :: blc_btm
+   real(r8), intent(in) :: blc_btm
 
-      real(r8), intent(in)  :: zwt
-      real(r8), intent(out) :: zwt_p
-      real(r8), intent(out) :: delta
-      logical,  intent(out) :: is_act
+   real(r8), intent(in)  :: zwt
+   real(r8), intent(out) :: zwt_p
+   real(r8), intent(out) :: delta
+   logical,  intent(out) :: is_act
 
-      ! Local variables
-      real(r8), parameter :: wstep = 1.0e-1_r8
+   ! Local variables
+   real(r8), parameter :: wstep = 1.0e-1_r8
 
       delta = 0
 
-      if (blc_btm > 0) then
+      IF (blc_btm > 0) THEN
          delta = wstep
-      elseif (blc_btm < 0) then
+      ELSEIF (blc_btm < 0) THEN
          delta = - min(max((zwt-zmin)*0.5_r8,0.0), wstep)
-      end if
+      ENDIF
 
       zwt_p = zwt + delta
       is_act = (delta /= 0)
 
-   end subroutine var_perturb_drainage
+   END SUBROUTINE var_perturb_drainage
 
 
    !----------------------------------------------------------------
-   subroutine check_and_update_level ( dz, &
+   SUBROUTINE check_and_update_level ( dz, &
          vl_s, vl_r, psi_s, hksat, nprm, prms,  &
          is_sat, has_wf, has_wt, &
          wf, vl, wt, psi, hk, &
          is_update_psi_hk, tol_v)
 
-      real(r8), intent(in) :: dz
-      real(r8), intent(in) :: vl_s, vl_r, psi_s, hksat
-      integer,  intent(in) :: nprm
-      real(r8), intent(in) :: prms(nprm)
-      logical,  intent(in) :: is_sat, has_wf, has_wt
+   real(r8), intent(in) :: dz
+   real(r8), intent(in) :: vl_s, vl_r, psi_s, hksat
+   integer,  intent(in) :: nprm
+   real(r8), intent(in) :: prms(nprm)
+   logical,  intent(in) :: is_sat, has_wf, has_wt
 
-      real(r8), intent(inout) :: wf, vl, wt
-      real(r8), intent(inout) :: psi, hk
+   real(r8), intent(inout) :: wf, vl, wt
+   real(r8), intent(inout) :: psi, hk
 
-      logical,  intent(in) :: is_update_psi_hk
+   logical,  intent(in) :: is_update_psi_hk
 
-      real(r8), intent(in) :: tol_v
+   real(r8), intent(in) :: tol_v
 
-      ! Local variables
-      real(r8) :: alpha
+   ! Local variables
+   real(r8) :: alpha
 
-      if (.not. is_sat) then
+      IF (.not. is_sat) THEN
 
-         if (has_wf) then
+         IF (has_wf) THEN
             wf = min(max(wf, 0._r8), dz)
-         else
+         ELSE
             wf = 0
-         end if
+         ENDIF
 
-         if (has_wt) then
+         IF (has_wt) THEN
             wt = min(max(wt, 0._r8), dz)
-         else
+         ELSE
             wt = 0
-         end if
+         ENDIF
 
-         if (has_wf .and. has_wt) then
-            if (wf + wt > dz) then
+         IF (has_wf .and. has_wt) THEN
+            IF (wf + wt > dz) THEN
                alpha = wf / (wf + wt)
                wf = dz * alpha
                wt = dz * (1.0_r8 - alpha)
-            end if
-         end if
+            ENDIF
+         ENDIF
 
          vl = min(vl, vl_s)
          vl = max(vl, tol_v)
 
-         if (is_update_psi_hk) then
+         IF (is_update_psi_hk) THEN
             psi = soil_psi_from_vliq (vl,  vl_s, vl_r, psi_s, nprm, prms)
             hk  = soil_hk_from_psi   (psi, psi_s, hksat, nprm, prms)
-         end if
-      else
+         ENDIF
+      ELSE
          vl  = vl_s
          psi = psi_s
          hk  = hksat
-      end if
+      ENDIF
 
-   end subroutine check_and_update_level
+   END SUBROUTINE check_and_update_level
 
 
    !----------------------------------------------------------------------
-   subroutine flux_all ( &
+   SUBROUTINE flux_all ( &
          lb, ub, dz, sp_zc, sp_zi, &
          vl_s, psi_s, hksat, nprm, prms, &
          ubc_typ, ubc_val, lbc_typ, lbc_val, &
@@ -1699,237 +1699,237 @@ contains
          qq, qq_wf, qq_wt, &
          tol_q, tol_z, tol_p)
 
-      integer, intent(in) :: lb, ub
+   integer, intent(in) :: lb, ub
 
-      real(r8), intent(in) :: dz      (lb:ub)
-      real(r8), intent(in) :: sp_zc   (lb:ub)
-      real(r8), intent(in) :: sp_zi (lb-1:ub)
+   real(r8), intent(in) :: dz      (lb:ub)
+   real(r8), intent(in) :: sp_zc   (lb:ub)
+   real(r8), intent(in) :: sp_zi (lb-1:ub)
 
-      real(r8), intent(in) :: vl_s  (lb:ub)
-      real(r8), intent(in) :: psi_s (lb:ub)
-      real(r8), intent(in) :: hksat (lb:ub)
-      integer,  intent(in) :: nprm
-      real(r8), intent(in) :: prms (nprm,lb:ub)
+   real(r8), intent(in) :: vl_s  (lb:ub)
+   real(r8), intent(in) :: psi_s (lb:ub)
+   real(r8), intent(in) :: hksat (lb:ub)
+   integer,  intent(in) :: nprm
+   real(r8), intent(in) :: prms (nprm,lb:ub)
 
-      integer,  intent(in) :: ubc_typ
-      real(r8), intent(in) :: ubc_val
-      integer,  intent(in) :: lbc_typ
-      real(r8), intent(in) :: lbc_val
+   integer,  intent(in) :: ubc_typ
+   real(r8), intent(in) :: ubc_val
+   integer,  intent(in) :: lbc_typ
+   real(r8), intent(in) :: lbc_val
 
-      logical,  intent(in) :: lev_update (lb-1:ub+1)
-      logical,  intent(in) :: is_update_sublevel
+   logical,  intent(in) :: lev_update (lb-1:ub+1)
+   logical,  intent(in) :: is_update_sublevel
 
-      logical,  intent(inout) :: is_sat (lb:ub)
-      logical,  intent(inout) :: has_wf (lb:ub)
-      logical,  intent(inout) :: has_wt (lb:ub)
-      real(r8), intent(in) :: infl_max
+   logical,  intent(inout) :: is_sat (lb:ub)
+   logical,  intent(inout) :: has_wf (lb:ub)
+   logical,  intent(inout) :: has_wt (lb:ub)
+   real(r8), intent(in) :: infl_max
 
-      real(r8), intent(inout) :: wf (lb:ub)
-      real(r8), intent(inout) :: vl (lb:ub)
-      real(r8), intent(inout) :: wt (lb:ub)
-      real(r8), intent(inout) :: dp
-      real(r8), intent(inout) :: zwt
-      real(r8), intent(in) :: psi_us (lb:ub)
-      real(r8), intent(in) :: hk_us  (lb:ub)
+   real(r8), intent(inout) :: wf (lb:ub)
+   real(r8), intent(inout) :: vl (lb:ub)
+   real(r8), intent(inout) :: wt (lb:ub)
+   real(r8), intent(inout) :: dp
+   real(r8), intent(inout) :: zwt
+   real(r8), intent(in) :: psi_us (lb:ub)
+   real(r8), intent(in) :: hk_us  (lb:ub)
 
-      real(r8), intent(inout) :: qq  (lb-1:ub)
-      real(r8), intent(inout) :: qq_wf (lb:ub)
-      real(r8), intent(inout) :: qq_wt (lb:ub)
+   real(r8), intent(inout) :: qq  (lb-1:ub)
+   real(r8), intent(inout) :: qq_wf (lb:ub)
+   real(r8), intent(inout) :: qq_wt (lb:ub)
 
-      real(r8), intent(in) :: tol_q
-      real(r8), intent(in) :: tol_z
-      real(r8), intent(in) :: tol_p
+   real(r8), intent(in) :: tol_q
+   real(r8), intent(in) :: tol_z
+   real(r8), intent(in) :: tol_p
 
-      ! Local variables
-      integer  :: ilev_u, ilev_l
-      real(r8) :: hk_top, pbtm, hk_btm
-      real(r8) :: dz_this, dz_upp, dz_low
-      logical  :: has_sat_zone
-      real(r8) :: psi_i, hk_i
-      real(r8) :: qtest
+   ! Local variables
+   integer  :: ilev_u, ilev_l
+   real(r8) :: hk_top, pbtm, hk_btm
+   real(r8) :: dz_this, dz_upp, dz_low
+   logical  :: has_sat_zone
+   real(r8) :: psi_i, hk_i
+   real(r8) :: qtest
 
 
       ilev_u = lb - 1
       ilev_l = find_unsat_lev_lower (is_sat, lb, ub, ilev_u+1)
 
-      do while (.true.)
+      DO WHILE (.true.)
 
-         if (lev_update(ilev_u) .or. lev_update(ilev_l)) then
+         IF (lev_update(ilev_u) .or. lev_update(ilev_l)) THEN
 
-            if (ilev_l == lb) then
-               ! case 1: water flux on top
+            IF (ilev_l == lb) THEN
+               ! CASE 1: water flux on top
 
                dz_this = (dz(lb)-wt(lb)-wf(lb)) * (sp_zc(lb)-sp_zi(lb-1))/dz(lb)
 
-               select case (ubc_typ)
-               case (bc_fix_head)
+               SELECTCASE (ubc_typ)
+               CASE (bc_fix_head)
 
-                  if (has_wf(lb)) then
+                  IF (has_wf(lb)) THEN
                      qq(lb-1) = - hksat(lb) * ((psi_s(lb) - ubc_val) / wf(lb) - 1)
-                  else
+                  ELSE
                      hk_top = soil_hk_from_psi (ubc_val, &
                         psi_s(lb), hksat(lb), nprm, prms(:,lb))
                      qq(lb-1) = flux_inside_hm_soil ( &
                         psi_s(lb), hksat(lb), nprm, prms(:,lb),  &
                         dz_this, ubc_val, psi_us(lb), hk_top, hk_us(lb))
-                  end if
+                  ENDIF
 
-               case (bc_rainfall)
+               CASE (bc_rainfall)
 
-                  if (has_wf(lb))  then
-                     if (wf(lb) < tol_z) then
+                  IF (has_wf(lb))  THEN
+                     IF (wf(lb) < tol_z) THEN
                         qq(lb-1) = infl_max
-                     else
+                     ELSE
                         qq(lb-1) = - hksat(lb) * ((psi_s(lb) - dp) / wf(lb) - 1)
                         qq(lb-1) = min(qq(lb-1), infl_max)
-                     end if
-                  else
+                     ENDIF
+                  ELSE
 
                      qq(lb-1) = infl_max
 
-                     if (is_update_sublevel) then
-                        if (infl_max > hksat(lb)) then
+                     IF (is_update_sublevel) THEN
+                        IF (infl_max > hksat(lb)) THEN
                            qtest = flux_inside_hm_soil ( &
                               psi_s(lb), hksat(lb), nprm, prms(:,lb),  &
                               dz_this, psi_s(lb), psi_us(lb), hksat(lb), hk_us(lb))
-                           if (qq(lb-1) > qtest) then
+                           IF (qq(lb-1) > qtest) THEN
                               has_wf(lb) = .true.
                               wf(lb) = 0.0
-                           end if
-                        end if
-                     end if
+                           ENDIF
+                        ENDIF
+                     ENDIF
 
-                  end if
+                  ENDIF
 
-               case (bc_fix_flux)
+               CASE (bc_fix_flux)
 
                   qq(lb-1) = ubc_val
 
-                  if (is_update_sublevel) then
-                     if ((.not. has_wf(lb)) .and. (ubc_val > hksat(lb))) then
+                  IF (is_update_sublevel) THEN
+                     IF ((.not. has_wf(lb)) .and. (ubc_val > hksat(lb))) THEN
                         qtest = flux_inside_hm_soil ( &
                            psi_s(lb), hksat(lb), nprm, prms(:,lb),  &
                            dz_this, psi_s(lb), psi_us(lb), hksat(lb), hk_us(lb))
-                        if (qq(lb-1) > qtest) then
+                        IF (qq(lb-1) > qtest) THEN
                            has_wf(lb) = .true.
                            wf(lb) = 0.0
-                        end if
-                     end if
-                  end if
+                        ENDIF
+                     ENDIF
+                  ENDIF
 
-               end select
+               ENDSELECT
 
-               if ((has_wf(lb)) .and. (dz_this >= tol_z)) then
+               IF ((has_wf(lb)) .and. (dz_this >= tol_z)) THEN
                   qq_wf(lb) = flux_inside_hm_soil ( &
                      psi_s(lb), hksat(lb), nprm, prms(:,lb),  &
                      dz_this, psi_s(lb), psi_us(lb), hksat(lb), hk_us(lb))
-               else
-                  if (has_wf(lb)) then
+               ELSE
+                  IF (has_wf(lb)) THEN
                      qq_wf(lb) = qq(lb)
-                  else
+                  ELSE
                      qq_wf(lb) = qq(lb-1)
-                  end if
-               end if
+                  ENDIF
+               ENDIF
 
-            elseif (ilev_u == ub) then
-               ! case 2: water flux at bottom
+            ELSEIF (ilev_u == ub) THEN
+               ! CASE 2: water flux at bottom
 
                dz_this = (dz(ub) - wf(ub) - wt(ub)) * (sp_zi(ub) - sp_zc(ub))/ dz(ub)
 
-               select case (lbc_typ)
-               case (bc_fix_head)
+               SELECTCASE (lbc_typ)
+               CASE (bc_fix_head)
 
-                  if (has_wt(ub)) then
+                  IF (has_wt(ub)) THEN
                      qq(ub) = - hksat(ub) * ((lbc_val - psi_s(ub))/wt(ub) - 1)
-                  else
+                  ELSE
                      hk_btm = soil_hk_from_psi (lbc_val, &
                         psi_s(ub), hksat(ub), nprm, prms(:,ub))
                      qq(ub) = flux_inside_hm_soil ( &
                         psi_s(ub), hksat(ub), nprm, prms(:,ub), &
                         dz_this, psi_us(ub), lbc_val, hk_us(ub), hk_btm)
-                  end if
+                  ENDIF
 
-               case (bc_drainage)
+               CASE (bc_drainage)
 
-                  if (has_wt(ub)) then
-                     if (zwt > sp_zi(ub)) then
+                  IF (has_wt(ub)) THEN
+                     IF (zwt > sp_zi(ub)) THEN
                         qq(ub) = hksat(ub)
-                     else
+                     ELSE
                         qq(ub) = 0
-                     end if
-                  else
-                     if (zwt > sp_zi(ub)) then
+                     ENDIF
+                  ELSE
+                     IF (zwt > sp_zi(ub)) THEN
                         pbtm = psi_s(ub) + sp_zi(ub) - zwt
                         hk_btm = soil_hk_from_psi (pbtm, &
                            psi_s(ub), hksat(ub), nprm, prms(:,ub))
                         qq(ub) = flux_inside_hm_soil ( &
                            psi_s(ub), hksat(ub), nprm, prms(:,ub), &
                            dz_this, psi_us(ub), pbtm, hk_us(ub), hk_btm)
-                     else
+                     ELSE
                         qq(ub) = flux_inside_hm_soil ( &
                            psi_s(ub), hksat(ub), nprm, prms(:,ub), &
                            dz_this, psi_us(ub), psi_s(ub), hk_us(ub), hksat(ub))
 
-                        if (is_update_sublevel) then
-                           if (qq(ub) > 0) then
+                        IF (is_update_sublevel) THEN
+                           IF (qq(ub) > 0) THEN
                               has_wt(ub) = .true.
                               wt(ub) = 0
                               qq(ub) = 0
-                           end if
-                        end if
-                     end if
-                  end if
+                           ENDIF
+                        ENDIF
+                     ENDIF
+                  ENDIF
 
-               case (bc_fix_flux)
+               CASE (bc_fix_flux)
 
                   qq(ub) = lbc_val
 
-                  if (is_update_sublevel) then
-                     if ((.not. has_wt(ub)) .and. (lbc_val < hksat(ub))) then
+                  IF (is_update_sublevel) THEN
+                     IF ((.not. has_wt(ub)) .and. (lbc_val < hksat(ub))) THEN
                         qtest = flux_inside_hm_soil ( &
                            psi_s(ub), hksat(ub), nprm, prms(:,ub),  &
                            dz_this, psi_us(ub), psi_s(ub), hk_us(ub), hksat(ub))
 
-                        if (qtest > lbc_val) then
+                        IF (qtest > lbc_val) THEN
                            has_wt(ub) = .true.
                            wt(ub) = 0
-                        end if
-                     end if
-                  end if
+                        ENDIF
+                     ENDIF
+                  ENDIF
 
-               end select
+               ENDSELECT
 
-               if ((has_wt(ub)) .and. (dz_this >= tol_z))  then
+               IF ((has_wt(ub)) .and. (dz_this >= tol_z))  THEN
                   qq_wt(ub) = flux_inside_hm_soil ( &
                      psi_s(ub), hksat(ub), nprm, prms(:,ub), &
                      dz_this, psi_us(ub), psi_s(ub), hk_us(ub), hksat(ub))
-               else
-                  if (has_wt(ub)) then
+               ELSE
+                  IF (has_wt(ub)) THEN
                      qq_wt(ub) = qq(ub-1)
-                  else
+                  ELSE
                      qq_wt(ub) = qq(ub)
-                  end if
-               end if
+                  ENDIF
+               ENDIF
 
-            else
-               ! case 3: inside soil column
+            ELSE
+               ! CASE 3: inside soil column
 
-               if ((ilev_u == lb-1) .or. (ilev_l == ub+1)) then
+               IF ((ilev_u == lb-1) .or. (ilev_l == ub+1)) THEN
                   has_sat_zone = .true.
-               elseif (has_wf(ilev_l)) then
+               ELSEIF (has_wf(ilev_l)) THEN
                   has_sat_zone = .true.
-                  if (ilev_l == ilev_u+1) then
-                     if ((wf(ilev_l) < tol_z) .and. (wt(ilev_u) < tol_z)) then
+                  IF (ilev_l == ilev_u+1) THEN
+                     IF ((wf(ilev_l) < tol_z) .and. (wt(ilev_u) < tol_z)) THEN
                         has_sat_zone = .false.
-                     end if
-                  end if
-               else
+                     ENDIF
+                  ENDIF
+               ELSE
                   has_sat_zone = .false.
-               end if
+               ENDIF
 
-               if (has_sat_zone) then
-                  ! case 3(1): inside soil column, saturated zone
-                  call flux_sat_zone_all ( &
+               IF (has_sat_zone) THEN
+                  ! CASE 3(1): inside soil column, saturated zone
+                  CALL flux_sat_zone_all ( &
                      lb, ub, max(ilev_u,lb), min(ilev_l,ub), &
                      dz, sp_zc, sp_zi, vl_s, psi_s, hksat, nprm, prms, &
                      ubc_typ, ubc_val, lbc_typ, lbc_val, &
@@ -1937,51 +1937,51 @@ contains
                      wf, vl, wt, dp, infl_max, zwt, psi_us, hk_us, &
                      qq, qq_wt, qq_wf, tol_q, tol_z, tol_p)
 
-               else
-                  ! case 3(2): inside soil column, unsaturated zone
+               ELSE
+                  ! CASE 3(2): inside soil column, unsaturated zone
 
                   dz_upp = (dz(ilev_u) - wf(ilev_u))  * (sp_zi(ilev_u)-sp_zc(ilev_u))/dz(ilev_u)
                   dz_low = (dz(ilev_l) - wt(ilev_l))  * (sp_zc(ilev_l)-sp_zi(ilev_u))/dz(ilev_l)
 
-                  if ((dz_upp >= tol_z) .and. (dz_low >= tol_z)) then
+                  IF ((dz_upp >= tol_z) .and. (dz_low >= tol_z)) THEN
 
-                     call flux_at_unsaturated_interface (nprm, &
+                     CALL flux_at_unsaturated_interface (nprm, &
                         psi_s(ilev_u), hksat(ilev_u), prms(:,ilev_u), dz_upp, psi_us(ilev_u), hk_us(ilev_u), &
                         psi_s(ilev_l), hksat(ilev_l), prms(:,ilev_l), dz_low, psi_us(ilev_l), hk_us(ilev_l), &
                         qq_wt(ilev_u), qq_wf(ilev_l), tol_q, tol_p)
 
-                     if (abs(qq_wt(ilev_u) - qq_wf(ilev_l)) < tol_q) then
+                     IF (abs(qq_wt(ilev_u) - qq_wf(ilev_l)) < tol_q) THEN
 
                         qq(ilev_u) = (qq_wt(ilev_u) + qq_wf(ilev_l)) * 0.5_r8
                         qq_wt(ilev_u) = qq(ilev_u)
                         qq_wf(ilev_l) = qq(ilev_u)
 
-                        if (is_update_sublevel) then
+                        IF (is_update_sublevel) THEN
                            has_wt(ilev_u) = .false.
                            has_wf(ilev_l) = .false.
-                        end if
+                        ENDIF
 
-                     elseif (qq_wt(ilev_u) > qq_wf(ilev_l)) then
-                        if (is_update_sublevel) then
+                     ELSEIF (qq_wt(ilev_u) > qq_wf(ilev_l)) THEN
+                        IF (is_update_sublevel) THEN
                            has_wt(ilev_u) = .true.
                            wt(ilev_u) = 0
 
                            has_wf(ilev_l) = .true.
                            wf(ilev_l) = 0
-                        end if
+                        ENDIF
 
-                        if (has_wt(ilev_u) .and. has_wf(ilev_l)) then
-                           if (psi_s(ilev_u) >= psi_s(ilev_l)) then
+                        IF (has_wt(ilev_u) .and. has_wf(ilev_l)) THEN
+                           IF (psi_s(ilev_u) >= psi_s(ilev_l)) THEN
                               qq(ilev_u) = qq_wt(ilev_u)
-                           else
+                           ELSE
                               qq(ilev_u) = qq_wf(ilev_l)
-                           end if
-                        else
+                           ENDIF
+                        ELSE
                            qq(ilev_u) = (qq_wt(ilev_u) + qq_wf(ilev_l)) * 0.5_r8
-                        end if
-                     end if
+                        ENDIF
+                     ENDIF
 
-                  elseif ((dz_upp >= tol_z) .and. (dz_low < tol_z)) then
+                  ELSEIF ((dz_upp >= tol_z) .and. (dz_low < tol_z)) THEN
 
                      psi_i = min(psi_s(ilev_u), psi_s(ilev_l))
                      hk_i  = soil_hk_from_psi (psi_i, &
@@ -1994,7 +1994,7 @@ contains
                      qq_wf(ilev_l) = qq(ilev_u)
                      qq_wt(ilev_l) = qq(ilev_u)
 
-                  elseif ((dz_upp < tol_z) .and. (dz_low >= tol_z)) then
+                  ELSEIF ((dz_upp < tol_z) .and. (dz_low >= tol_z)) THEN
 
                      psi_i = min(psi_s(ilev_u), psi_s(ilev_l))
                      hk_i  = soil_hk_from_psi (psi_i, &
@@ -2007,8 +2007,8 @@ contains
                      qq_wt(ilev_u) = qq(ilev_u)
                      qq_wf(ilev_l) = qq(ilev_u)
 
-                  elseif ((dz_upp < tol_z) .and. (dz_low < tol_z)) then
-                     ! This case does not exist in principle.
+                  ELSEIF ((dz_upp < tol_z) .and. (dz_low < tol_z)) THEN
+                     ! This CASE does not exist in principle.
 
                      qq(ilev_u) = min(hksat(ilev_u), hksat(ilev_l))
 
@@ -2017,25 +2017,25 @@ contains
                      qq_wf(ilev_l) = qq(ilev_u)
                      qq_wt(ilev_l) = qq(ilev_u)
 
-                  end if
-               end if
+                  ENDIF
+               ENDIF
 
-            end if
-         end if
+            ENDIF
+         ENDIF
 
-         if (ilev_l == ub+1) then
-            exit
-         else
+         IF (ilev_l == ub+1) THEN
+            EXIT
+         ELSE
             ilev_u = ilev_l
             ilev_l = find_unsat_lev_lower (is_sat, lb, ub, ilev_u+1)
-         end if
-      end do
+         ENDIF
+      ENDDO
 
-   end subroutine flux_all
+   END SUBROUTINE flux_all
 
 
    !-------------------------------------------------------------------
-   subroutine flux_sat_zone_all ( &
+   SUBROUTINE flux_sat_zone_all ( &
          lb, ub, i_stt, i_end, dz, sp_zc, sp_zi, &
          vl_s, psi_s, hksat, nprm, prms, &
          ubc_typ, ubc_val, lbc_typ, lbc_val, &
@@ -2043,61 +2043,61 @@ contains
          wf, vl, wt, wdsrf, infl_max, zwt, psi_us, hk_us, &
          qq, qq_wt, qq_wf, tol_q, tol_z, tol_p)
 
-      integer,  intent(in) :: lb, ub
-      integer,  intent(in) :: i_stt, i_end
+   integer,  intent(in) :: lb, ub
+   integer,  intent(in) :: i_stt, i_end
 
-      real(r8), intent(in) :: dz      (lb:ub)
-      real(r8), intent(in) :: sp_zc   (lb:ub)
-      real(r8), intent(in) :: sp_zi (lb-1:ub)
+   real(r8), intent(in) :: dz      (lb:ub)
+   real(r8), intent(in) :: sp_zc   (lb:ub)
+   real(r8), intent(in) :: sp_zi (lb-1:ub)
 
-      real(r8), intent(in) :: vl_s  (lb:ub)
-      real(r8), intent(in) :: psi_s (lb:ub)
-      real(r8), intent(in) :: hksat (lb:ub)
-      integer,  intent(in) :: nprm
-      real(r8), intent(in) :: prms (nprm,lb:ub)
+   real(r8), intent(in) :: vl_s  (lb:ub)
+   real(r8), intent(in) :: psi_s (lb:ub)
+   real(r8), intent(in) :: hksat (lb:ub)
+   integer,  intent(in) :: nprm
+   real(r8), intent(in) :: prms (nprm,lb:ub)
 
-      integer,  intent(in) :: ubc_typ
-      real(r8), intent(in) :: ubc_val
-      integer,  intent(in) :: lbc_typ
-      real(r8), intent(in) :: lbc_val
+   integer,  intent(in) :: ubc_typ
+   real(r8), intent(in) :: ubc_val
+   integer,  intent(in) :: lbc_typ
+   real(r8), intent(in) :: lbc_val
 
-      logical,  intent(inout) :: is_sat (lb:ub)
-      logical,  intent(inout) :: has_wf (lb:ub)
-      logical,  intent(inout) :: has_wt (lb:ub)
-      logical,  intent(in) :: is_update_sublevel
+   logical,  intent(inout) :: is_sat (lb:ub)
+   logical,  intent(inout) :: has_wf (lb:ub)
+   logical,  intent(inout) :: has_wt (lb:ub)
+   logical,  intent(in) :: is_update_sublevel
 
-      real(r8), intent(inout) :: wf (lb:ub)
-      real(r8), intent(inout) :: vl (lb:ub)
-      real(r8), intent(inout) :: wt (lb:ub)
-      real(r8), intent(in) :: wdsrf, infl_max
-      real(r8), intent(in) :: zwt
-      real(r8), intent(in) :: psi_us (lb:ub)
-      real(r8), intent(in) :: hk_us  (lb:ub)
+   real(r8), intent(inout) :: wf (lb:ub)
+   real(r8), intent(inout) :: vl (lb:ub)
+   real(r8), intent(inout) :: wt (lb:ub)
+   real(r8), intent(in) :: wdsrf, infl_max
+   real(r8), intent(in) :: zwt
+   real(r8), intent(in) :: psi_us (lb:ub)
+   real(r8), intent(in) :: hk_us  (lb:ub)
 
-      real(r8), intent(inout) :: qq  (lb-1:ub)
-      real(r8), intent(inout) :: qq_wt (lb:ub)
-      real(r8), intent(inout) :: qq_wf (lb:ub)
+   real(r8), intent(inout) :: qq  (lb-1:ub)
+   real(r8), intent(inout) :: qq_wt (lb:ub)
+   real(r8), intent(inout) :: qq_wf (lb:ub)
 
-      real(r8), intent(in) :: tol_q
-      real(r8), intent(in) :: tol_z
-      real(r8), intent(in) :: tol_p
+   real(r8), intent(in) :: tol_q
+   real(r8), intent(in) :: tol_z
+   real(r8), intent(in) :: tol_p
 
-      ! Local variables
-      logical :: top_at_ground, top_at_interface, top_inside_level
-      logical :: btm_at_bottom, btm_at_interface, btm_inside_level
+   ! Local variables
+   logical :: top_at_ground, top_at_interface, top_inside_level
+   logical :: btm_at_bottom, btm_at_interface, btm_inside_level
 
-      integer :: i_s, i_e, ilev, iface
+   integer :: i_s, i_e, ilev, iface
 
-      integer :: nlev_sat
-      real(r8), allocatable :: qlc     (:)
-      real(r8), allocatable :: dz_sat  (:)
-      real(r8), allocatable :: psi_sat (:)
-      real(r8), allocatable :: hk_sat  (:)
+   integer :: nlev_sat
+   real(r8), allocatable :: qlc     (:)
+   real(r8), allocatable :: dz_sat  (:)
+   real(r8), allocatable :: psi_sat (:)
+   real(r8), allocatable :: hk_sat  (:)
 
-      real(r8) :: ptop, pbtm, qtop, qupper, qlower
-      real(r8) :: dz_us_top, dz_us_btm
+   real(r8) :: ptop, pbtm, qtop, qupper, qlower
+   real(r8) :: dz_us_top, dz_us_btm
 
-      logical :: is_trans
+   logical :: is_trans
 
       top_at_ground = (i_stt == lb) .and. is_sat(i_stt)
       top_at_interface = (.not. top_at_ground) .and. (wt(i_stt) < tol_z)
@@ -2107,17 +2107,17 @@ contains
       btm_at_interface = (.not. btm_at_bottom) .and. (wf(i_end) < tol_z)
       btm_inside_level = .not. (btm_at_bottom .or. btm_at_interface)
 
-      if (top_at_interface) then
+      IF (top_at_interface) THEN
          i_s = i_stt + 1
-      else
+      ELSE
          i_s = i_stt
-      end if
+      ENDIF
 
-      if (btm_at_interface) then
+      IF (btm_at_interface) THEN
          i_e = i_end - 1
-      else
+      ELSE
          i_e = i_end
-      end if
+      ENDIF
 
       nlev_sat = i_e - i_s + 1
 
@@ -2126,256 +2126,256 @@ contains
       allocate (hk_sat  (i_s:i_e))
       allocate (qlc     (i_s:i_e))
 
-      do ilev = i_s, i_e
+      DO ilev = i_s, i_e
          dz_sat (ilev) = dz   (ilev)
          psi_sat(ilev) = psi_s(ilev)
          hk_sat (ilev) = hksat(ilev)
-      end do
+      ENDDO
 
-      if (top_inside_level) dz_sat(i_s) = wt(i_stt)
-      if (btm_inside_level) dz_sat(i_e) = wf(i_end)
+      IF (top_inside_level) dz_sat(i_s) = wt(i_stt)
+      IF (btm_inside_level) dz_sat(i_e) = wf(i_end)
 
-      if (.not. top_at_ground) then
+      IF (.not. top_at_ground) THEN
          dz_us_top = (dz(i_stt) - wt(i_stt) - wf(i_stt)) &
             * (sp_zi(i_stt) - sp_zc(i_stt)) / dz(i_stt)
-      end if
+      ENDIF
 
-      if (.not. btm_at_bottom) then
+      IF (.not. btm_at_bottom) THEN
          dz_us_btm = (dz(i_end) - wt(i_end) - wf(i_end)) &
             * (sp_zc(i_end) - sp_zi(i_end-1)) / dz(i_end)
-      end if
+      ENDIF
 
       ! Case 1
-      if (top_at_ground .and. btm_at_bottom) then
+      IF (top_at_ground .and. btm_at_bottom) THEN
 
          ! Case 1-1
-         if ((ubc_typ == bc_fix_head) .and. (lbc_typ == bc_fix_head)) then
-            call flux_sat_zone_fixed_bc (nlev_sat, &
+         IF ((ubc_typ == bc_fix_head) .and. (lbc_typ == bc_fix_head)) THEN
+            CALL flux_sat_zone_fixed_bc (nlev_sat, &
                dz_sat, psi_sat, hk_sat, ubc_val, lbc_val, qlc)
-         end if
+         ENDIF
 
          ! Case 1-2
-         if ((ubc_typ == bc_rainfall) .and. (lbc_typ == bc_fix_head)) then
+         IF ((ubc_typ == bc_rainfall) .and. (lbc_typ == bc_fix_head)) THEN
 
-            call flux_sat_zone_fixed_bc (nlev_sat, &
+            CALL flux_sat_zone_fixed_bc (nlev_sat, &
                dz_sat, psi_sat, hk_sat, wdsrf, lbc_val, qlc)
 
-            if ((wdsrf < tol_z) .and. (qlc(lb) > infl_max)) then
+            IF ((wdsrf < tol_z) .and. (qlc(lb) > infl_max)) THEN
                ptop = psi_s(lb)
-               call flux_sat_zone_fixed_bc (nlev_sat, &
+               CALL flux_sat_zone_fixed_bc (nlev_sat, &
                   dz_sat, psi_sat, hk_sat, ptop, lbc_val, qlc, &
                   flux_top = infl_max)
-            end if
-         end if
+            ENDIF
+         ENDIF
 
          ! Case 1-3
-         if ((ubc_typ == bc_fix_flux) .and. (lbc_typ == bc_fix_head)) then
-            call flux_sat_zone_fixed_bc (nlev_sat, &
+         IF ((ubc_typ == bc_fix_flux) .and. (lbc_typ == bc_fix_head)) THEN
+            CALL flux_sat_zone_fixed_bc (nlev_sat, &
                dz_sat, psi_sat, hk_sat, psi_s(lb), lbc_val, qlc, &
                flux_top = ubc_val)
-         end if
+         ENDIF
 
          ! Case 1-4
-         if ((ubc_typ == bc_fix_head) .and. (lbc_typ == bc_fix_flux)) then
-            call flux_sat_zone_fixed_bc (nlev_sat, &
+         IF ((ubc_typ == bc_fix_head) .and. (lbc_typ == bc_fix_flux)) THEN
+            CALL flux_sat_zone_fixed_bc (nlev_sat, &
                dz_sat, psi_sat, hk_sat, ubc_val, psi_s(ub), qlc, &
                flux_btm = lbc_val)
-         end if
+         ENDIF
 
          ! Case 1-5
-         if ((ubc_typ == bc_rainfall) .and. (lbc_typ == bc_fix_flux)) then
+         IF ((ubc_typ == bc_rainfall) .and. (lbc_typ == bc_fix_flux)) THEN
 
-            call flux_sat_zone_fixed_bc (nlev_sat, &
+            CALL flux_sat_zone_fixed_bc (nlev_sat, &
                dz_sat, psi_sat, hk_sat, wdsrf, psi_s(ub), qlc, &
                flux_btm = lbc_val)
 
-            if ((wdsrf < tol_z) .and. (qlc(lb) > infl_max)) then
+            IF ((wdsrf < tol_z) .and. (qlc(lb) > infl_max)) THEN
                ptop = psi_s(lb)
-               call flux_sat_zone_fixed_bc (nlev_sat, &
+               CALL flux_sat_zone_fixed_bc (nlev_sat, &
                   dz_sat, psi_sat, hk_sat, ptop, psi_s(ub), qlc, &
                   flux_top = infl_max, flux_btm = lbc_val)
-            end if
-         end if
+            ENDIF
+         ENDIF
 
          ! Case 1-6
-         if ((ubc_typ == bc_fix_flux) .and. (lbc_typ == bc_fix_flux)) then
-            call flux_sat_zone_fixed_bc (nlev_sat, &
+         IF ((ubc_typ == bc_fix_flux) .and. (lbc_typ == bc_fix_flux)) THEN
+            CALL flux_sat_zone_fixed_bc (nlev_sat, &
                dz_sat, psi_sat, hk_sat, psi_s(lb), psi_s(ub), qlc, &
                flux_top = ubc_val, flux_btm = lbc_val)
-         end if
+         ENDIF
 
          ! Case 1-7
-         if ((ubc_typ == bc_fix_head) .and. (lbc_typ == bc_drainage)) then
-            if (zwt > sp_zi(ub)) then
-               call flux_sat_zone_fixed_bc (nlev_sat, &
+         IF ((ubc_typ == bc_fix_head) .and. (lbc_typ == bc_drainage)) THEN
+            IF (zwt > sp_zi(ub)) THEN
+               CALL flux_sat_zone_fixed_bc (nlev_sat, &
                   dz_sat, psi_sat, hk_sat, ubc_val, psi_s(ub), qlc)
-            else
-               call flux_sat_zone_fixed_bc (nlev_sat, &
+            ELSE
+               CALL flux_sat_zone_fixed_bc (nlev_sat, &
                   dz_sat, psi_sat, hk_sat, ubc_val, psi_s(ub), qlc, &
                   flux_btm = 0.0)
-            end if
-         end if
+            ENDIF
+         ENDIF
 
          ! Case 1-8
-         if ((ubc_typ == bc_rainfall) .and. (lbc_typ == bc_drainage)) then
-            if (zwt > sp_zi(ub)) then
-               call flux_sat_zone_fixed_bc (nlev_sat, &
+         IF ((ubc_typ == bc_rainfall) .and. (lbc_typ == bc_drainage)) THEN
+            IF (zwt > sp_zi(ub)) THEN
+               CALL flux_sat_zone_fixed_bc (nlev_sat, &
                   dz_sat, psi_sat, hk_sat, wdsrf, psi_s(ub), qlc)
-            else
-               call flux_sat_zone_fixed_bc (nlev_sat, &
+            ELSE
+               CALL flux_sat_zone_fixed_bc (nlev_sat, &
                   dz_sat, psi_sat, hk_sat, wdsrf, psi_s(ub), qlc, &
                   flux_btm = 0.0)
-            end if
+            ENDIF
 
-            if ((wdsrf < tol_z) .and. (qlc(lb) > infl_max)) then
+            IF ((wdsrf < tol_z) .and. (qlc(lb) > infl_max)) THEN
                ptop = psi_s(lb)
-               if (zwt > sp_zi(ub)) then
-                  call flux_sat_zone_fixed_bc (nlev_sat, &
+               IF (zwt > sp_zi(ub)) THEN
+                  CALL flux_sat_zone_fixed_bc (nlev_sat, &
                      dz_sat, psi_sat, hk_sat, ptop, psi_s(ub), qlc, &
                      flux_top = infl_max)
-               else
-                  call flux_sat_zone_fixed_bc (nlev_sat, &
+               ELSE
+                  CALL flux_sat_zone_fixed_bc (nlev_sat, &
                      dz_sat, psi_sat, hk_sat, ptop, psi_s(ub), qlc, &
                      flux_top = infl_max, flux_btm = 0.0)
-               end if
-            end if
+               ENDIF
+            ENDIF
 
-         end if
+         ENDIF
 
          ! Case 1-9
-         if ((ubc_typ == bc_fix_flux) .and. (lbc_typ == bc_drainage)) then
-            if (zwt > sp_zi(ub)) then
-               call flux_sat_zone_fixed_bc (nlev_sat, &
+         IF ((ubc_typ == bc_fix_flux) .and. (lbc_typ == bc_drainage)) THEN
+            IF (zwt > sp_zi(ub)) THEN
+               CALL flux_sat_zone_fixed_bc (nlev_sat, &
                   dz_sat, psi_sat, hk_sat, psi_s(lb), psi_s(ub), qlc, &
                   flux_top = ubc_val)
-            else
-               call flux_sat_zone_fixed_bc (nlev_sat, &
+            ELSE
+               CALL flux_sat_zone_fixed_bc (nlev_sat, &
                   dz_sat, psi_sat, hk_sat, psi_s(lb), psi_s(ub), qlc, &
                   flux_top = ubc_val, flux_btm = 0.0)
-            end if
-         end if
-      end if
+            ENDIF
+         ENDIF
+      ENDIF
 
       ! Case 2
-      if (top_at_ground .and. btm_at_interface) then
+      IF (top_at_ground .and. btm_at_interface) THEN
 
-         select case (ubc_typ)
-         case (bc_fix_head)
+         SELECTCASE (ubc_typ)
+         CASE (bc_fix_head)
 
-            call flux_btm_transitive_interface ( &
+            CALL flux_btm_transitive_interface ( &
                psi_s(i_end), hksat(i_end), nprm, prms(:,i_end), &
                dz_us_btm, psi_us(i_end), hk_us(i_end), &
                nlev_sat, dz_sat, psi_sat, hk_sat, ubc_val, &
                qq_wf(i_end), qlc, tol_q, tol_z, tol_p)
 
-         case (bc_fix_flux)
+         CASE (bc_fix_flux)
 
-            call flux_btm_transitive_interface ( &
+            CALL flux_btm_transitive_interface ( &
                psi_s(i_end), hksat(i_end), nprm, prms(:,i_end), &
                dz_us_btm, psi_us(i_end), hk_us(i_end), &
                nlev_sat, dz_sat, psi_sat, hk_sat, psi_s(lb), &
                qq_wf(i_end), qlc, tol_q, tol_z, tol_p, &
                flux_top = ubc_val)
 
-         case (bc_rainfall)
+         CASE (bc_rainfall)
 
-            call flux_btm_transitive_interface ( &
+            CALL flux_btm_transitive_interface ( &
                psi_s(i_end), hksat(i_end), nprm, prms(:,i_end), &
                dz_us_btm, psi_us(i_end), hk_us(i_end), &
                nlev_sat, dz_sat, psi_sat, hk_sat, wdsrf, &
                qq_wf(i_end), qlc, tol_q, tol_z, tol_p)
 
-            if ((wdsrf < tol_z) .and. (qlc(lb) > infl_max)) then
+            IF ((wdsrf < tol_z) .and. (qlc(lb) > infl_max)) THEN
                ptop = psi_s(lb)
-               call flux_btm_transitive_interface ( &
+               CALL flux_btm_transitive_interface ( &
                   psi_s(i_end), hksat(i_end), nprm, prms(:,i_end), &
                   dz_us_btm, psi_us(i_end), hk_us(i_end), &
                   nlev_sat, dz_sat, psi_sat, hk_sat, ptop, &
                   qq_wf(i_end), qlc, tol_q, tol_z, tol_p, &
                   flux_top = infl_max)
-            end if
+            ENDIF
 
-         end select
+         ENDSELECT
 
-      end if
+      ENDIF
 
       ! Case 3
-      if (top_at_ground .and. btm_inside_level) then
+      IF (top_at_ground .and. btm_inside_level) THEN
 
-         select case (ubc_typ)
-         case (bc_fix_head)
+         SELECTCASE (ubc_typ)
+         CASE (bc_fix_head)
 
-            call flux_sat_zone_fixed_bc (nlev_sat, dz_sat, psi_sat, &
+            CALL flux_sat_zone_fixed_bc (nlev_sat, dz_sat, psi_sat, &
                hk_sat, ubc_val, psi_s(i_end), qlc)
 
-         case (bc_fix_flux)
+         CASE (bc_fix_flux)
 
-            call flux_sat_zone_fixed_bc (nlev_sat, dz_sat, psi_sat, &
+            CALL flux_sat_zone_fixed_bc (nlev_sat, dz_sat, psi_sat, &
                hk_sat, psi_s(lb), psi_s(i_end), qlc, &
                flux_top = ubc_val)
 
-         case (bc_rainfall)
+         CASE (bc_rainfall)
 
-            call flux_sat_zone_fixed_bc (nlev_sat, dz_sat, psi_sat, &
+            CALL flux_sat_zone_fixed_bc (nlev_sat, dz_sat, psi_sat, &
                hk_sat, wdsrf, psi_s(i_end), qlc)
 
-            if ((wdsrf < tol_z) .and. (qlc(lb) > infl_max)) then
+            IF ((wdsrf < tol_z) .and. (qlc(lb) > infl_max)) THEN
                ptop = psi_s(lb)
-               call flux_sat_zone_fixed_bc (nlev_sat, dz_sat, psi_sat, &
+               CALL flux_sat_zone_fixed_bc (nlev_sat, dz_sat, psi_sat, &
                   hk_sat, ptop, psi_s(i_end), qlc, &
                   flux_top = infl_max)
-            end if
+            ENDIF
 
-         end select
+         ENDSELECT
 
-      end if
+      ENDIF
 
       ! Case 4
-      if (top_at_interface .and. btm_at_bottom) then
+      IF (top_at_interface .and. btm_at_bottom) THEN
 
-         select case (lbc_typ)
-         case (bc_fix_head)
+         SELECTCASE (lbc_typ)
+         CASE (bc_fix_head)
 
-            call flux_top_transitive_interface ( &
+            CALL flux_top_transitive_interface ( &
                psi_s(i_stt), hksat(i_stt), nprm, prms(:,i_stt), &
                dz_us_top, psi_us(i_stt), hk_us(i_stt), &
                nlev_sat, dz_sat, psi_sat, hk_sat, lbc_val, &
                qq_wt(i_stt), qlc, tol_q, tol_z, tol_p)
 
-         case (bc_fix_flux)
+         CASE (bc_fix_flux)
 
-            call flux_top_transitive_interface ( &
+            CALL flux_top_transitive_interface ( &
                psi_s(i_stt), hksat(i_stt), nprm, prms(:,i_stt), &
                dz_us_top, psi_us(i_stt), hk_us(i_stt), &
                nlev_sat, dz_sat, psi_sat, hk_sat, psi_s(ub), &
                qq_wt(i_stt), qlc, tol_q, tol_z, tol_p, &
                flux_btm = lbc_val)
 
-         case (bc_drainage)
+         CASE (bc_drainage)
 
-            if (zwt > sp_zi(ub)) then
-               call flux_top_transitive_interface ( &
+            IF (zwt > sp_zi(ub)) THEN
+               CALL flux_top_transitive_interface ( &
                   psi_s(i_stt), hksat(i_stt), nprm, prms(:,i_stt), &
                   dz_us_top, psi_us(i_stt), hk_us(i_stt), &
                   nlev_sat, dz_sat, psi_sat, hk_sat, psi_s(ub), &
                   qq_wt(i_stt), qlc, tol_q, tol_z, tol_p)
-            else
-               call flux_top_transitive_interface ( &
+            ELSE
+               CALL flux_top_transitive_interface ( &
                   psi_s(i_stt), hksat(i_stt), nprm, prms(:,i_stt), &
                   dz_us_top, psi_us(i_stt), hk_us(i_stt), &
                   nlev_sat, dz_sat, psi_sat, hk_sat, psi_s(ub), &
                   qq_wt(i_stt), qlc, tol_q, tol_z, tol_p, &
                   flux_btm = 0.0)
-            end if
+            ENDIF
 
-         end select
+         ENDSELECT
 
-      end if
+      ENDIF
 
       ! Case 5
-      if (top_at_interface .and. btm_at_interface) then
+      IF (top_at_interface .and. btm_at_interface) THEN
 
-         call flux_both_transitive_interface ( &
+         CALL flux_both_transitive_interface ( &
             i_stt, i_end, dz(i_stt:i_end), &
             psi_s(i_stt:i_end), hksat(i_stt:i_end), nprm, prms(:,i_stt:i_end), &
             dz_us_top, psi_us(i_stt), hk_us(i_stt), &
@@ -2383,106 +2383,106 @@ contains
             qq_wt(i_stt), qq_wf(i_end), qlc, &
             tol_q, tol_z, tol_p)
 
-      end if
+      ENDIF
 
       ! Case 6
-      if (top_at_interface .and. btm_inside_level) then
+      IF (top_at_interface .and. btm_inside_level) THEN
 
-         call flux_top_transitive_interface ( &
+         CALL flux_top_transitive_interface ( &
             psi_s(i_stt), hksat(i_stt), nprm, prms(:,i_stt), &
             dz_us_top, psi_us(i_stt), hk_us(i_stt), &
             nlev_sat, dz_sat, psi_sat, hk_sat, psi_s(i_end), &
             qq_wt(i_stt), qlc, tol_q, tol_z, tol_p)
 
-      end if
+      ENDIF
 
       ! Case 7
-      if (top_inside_level .and. btm_at_bottom) then
+      IF (top_inside_level .and. btm_at_bottom) THEN
 
-         select case (lbc_typ)
-         case (bc_fix_head)
+         SELECTCASE (lbc_typ)
+         CASE (bc_fix_head)
 
-            call flux_sat_zone_fixed_bc (nlev_sat, dz_sat, psi_sat, &
+            CALL flux_sat_zone_fixed_bc (nlev_sat, dz_sat, psi_sat, &
                hk_sat, psi_s(i_stt), lbc_val, qlc)
 
-         case (bc_fix_flux)
+         CASE (bc_fix_flux)
 
-            call flux_sat_zone_fixed_bc (nlev_sat, &
+            CALL flux_sat_zone_fixed_bc (nlev_sat, &
                dz_sat, psi_sat, hk_sat, psi_s(i_stt), psi_s(ub), &
                qlc, flux_btm = lbc_val)
 
-         case (bc_drainage)
+         CASE (bc_drainage)
 
-            if (zwt > sp_zi(ub)) then
-               call flux_sat_zone_fixed_bc (nlev_sat, dz_sat, psi_sat, &
+            IF (zwt > sp_zi(ub)) THEN
+               CALL flux_sat_zone_fixed_bc (nlev_sat, dz_sat, psi_sat, &
                   hk_sat, psi_s(i_stt), psi_s(ub), qlc)
-            else
-               call flux_sat_zone_fixed_bc (nlev_sat, &
+            ELSE
+               CALL flux_sat_zone_fixed_bc (nlev_sat, &
                   dz_sat, psi_sat, hk_sat, psi_s(i_stt), psi_s(ub), &
                   qlc, flux_btm = 0.0)
-            end if
+            ENDIF
 
-         end select
+         ENDSELECT
 
-      end if
+      ENDIF
 
       ! Case 8
-      if (top_inside_level .and. btm_at_interface) then
+      IF (top_inside_level .and. btm_at_interface) THEN
 
-         call flux_btm_transitive_interface ( &
+         CALL flux_btm_transitive_interface ( &
             psi_s(i_end), hksat(i_end), nprm, prms(:,i_end), &
             dz_us_btm, psi_us(i_end), hk_us(i_end), &
             nlev_sat, dz_sat, psi_sat, hk_sat, psi_s(i_stt), &
             qq_wf(i_end), qlc, tol_q, tol_z, tol_p)
 
-      end if
+      ENDIF
 
       ! Case 9
-      if (top_inside_level .and. btm_inside_level) then
+      IF (top_inside_level .and. btm_inside_level) THEN
 
-         call flux_sat_zone_fixed_bc ( &
+         CALL flux_sat_zone_fixed_bc ( &
             nlev_sat, dz_sat, psi_sat, hk_sat, &
             psi_s(i_stt), psi_s(i_end), qlc)
 
-      end if
+      ENDIF
 
-      if (top_inside_level) then
-         if (dz_us_top < tol_z) then
+      IF (top_inside_level) THEN
+         IF (dz_us_top < tol_z) THEN
             qq_wt(i_stt) = qq(i_stt-1)
-         else
+         ELSE
             qq_wt(i_stt) = flux_inside_hm_soil ( &
                psi_s(i_stt), hksat(i_stt), nprm, prms(:,i_stt), &
                dz_us_top, psi_us(i_stt), psi_s(i_stt), hk_us(i_stt), hksat(i_stt))
-         end if
-      end if
+         ENDIF
+      ENDIF
 
-      if (top_at_interface) then
-         if (dz_us_top < tol_z) then
+      IF (top_at_interface) THEN
+         IF (dz_us_top < tol_z) THEN
             qq_wf(i_stt) = qq_wt(i_stt)
-         end if
-      end if
+         ENDIF
+      ENDIF
 
-      if (top_at_ground) then
+      IF (top_at_ground) THEN
 
-         select case (ubc_typ)
-         case (bc_fix_head)
+         SELECTCASE (ubc_typ)
+         CASE (bc_fix_head)
             qq(lb-1) = qlc(lb)
             is_trans = .false.
-         case (bc_fix_flux)
+         CASE (bc_fix_flux)
             qq(lb-1) = ubc_val ! min(qlc(lb), ubc_val)
             is_trans = (qlc(lb) > ubc_val)
-         case (bc_rainfall)
-            if (wdsrf < tol_z) then
+         CASE (bc_rainfall)
+            IF (wdsrf < tol_z) THEN
                qq(lb-1) = min(qlc(lb), infl_max)
                is_trans = (qlc(lb) > infl_max)
-            else
+            ELSE
                qq(lb-1) = qlc(lb)
                is_trans = .false.
-            end if
-         end select
+            ENDIF
+         ENDSELECT
 
-         if (is_update_sublevel) then
-            if (is_trans .and. is_sat(lb)) then
+         IF (is_update_sublevel) THEN
+            IF (is_trans .and. is_sat(lb)) THEN
                is_sat(lb) = .false.
                has_wf(lb) = .false.
                has_wt(lb) = .true.
@@ -2492,33 +2492,33 @@ contains
                wf(lb) = 0
 
                qq_wt(lb) = qq(lb-1)
-            end if
-         end if
-      end if
+            ENDIF
+         ENDIF
+      ENDIF
 
-      do iface = i_stt, i_end-1
-         if (top_at_interface .and. (iface == i_stt)) then
+      DO iface = i_stt, i_end-1
+         IF (top_at_interface .and. (iface == i_stt)) THEN
             qupper = qq_wt(i_stt)
-         else
+         ELSE
             qupper = qlc(iface)
-         end if
+         ENDIF
 
-         if (btm_at_interface .and. (iface == i_end-1)) then
+         IF (btm_at_interface .and. (iface == i_end-1)) THEN
             qlower = qq_wf(i_end)
-         else
+         ELSE
             qlower = qlc(iface+1)
-         end if
+         ENDIF
 
-         if (qlower - qupper >= tol_q) then
-            if ((psi_s(iface) < psi_s(iface+1)) &
+         IF (qlower - qupper >= tol_q) THEN
+            IF ((psi_s(iface) < psi_s(iface+1)) &
                .or. &
                ((psi_s(iface) == psi_s(iface+1)) .and. (is_sat(iface+1))) &
                .or. &
-               (top_at_interface .and. (iface == i_stt))) then
+               (top_at_interface .and. (iface == i_stt))) THEN
 
                qq(iface) = qupper
 
-               if (is_update_sublevel .and. is_sat(iface+1)) then
+               IF (is_update_sublevel .and. is_sat(iface+1)) THEN
                   is_sat(iface+1) = .false.
                   has_wf(iface+1) = .false.
                   has_wt(iface+1) = .true.
@@ -2530,20 +2530,20 @@ contains
                   qq_wf(iface+1) = qq(iface)
                   qq_wt(iface+1) = qq(iface)
 
-                  if (top_at_interface .and. (iface == i_stt)) then
+                  IF (top_at_interface .and. (iface == i_stt)) THEN
                      has_wt(iface) = .false.
-                  end if
-               end if
+                  ENDIF
+               ENDIF
 
-            elseif ((psi_s(iface) > psi_s(iface+1)) &
+            ELSEIF ((psi_s(iface) > psi_s(iface+1)) &
                   .or. &
                   ((psi_s(iface) == psi_s(iface+1)) .and. (.not. is_sat(iface+1))) &
                   .or. &
-                  (btm_at_interface .and. (iface == i_end-1))) then
+                  (btm_at_interface .and. (iface == i_end-1))) THEN
 
                qq(iface) = qlower
 
-               if (is_update_sublevel .and. is_sat(iface)) then
+               IF (is_update_sublevel .and. is_sat(iface)) THEN
                   is_sat(iface) = .false.
                   has_wt(iface) = .false.
                   has_wf(iface) = .true.
@@ -2555,103 +2555,105 @@ contains
                   qq_wf(iface) = qq(iface)
                   qq_wt(iface) = qq(iface)
 
-                  if (btm_at_interface .and. (iface == i_end-1)) then
+                  IF (btm_at_interface .and. (iface == i_end-1)) THEN
                      has_wf(iface+1) = .false.
-                  end if
-               end if
-            end if
-         elseif (qupper - qlower >= tol_q) then
-            if (top_at_interface .and. (iface == i_stt)) then
+                  ENDIF
+               ENDIF
+            ENDIF
+         ELSEIF (qupper - qlower >= tol_q) THEN
+            IF (top_at_interface .and. (iface == i_stt)) THEN
                qq(iface) = qlower
-            end if
+            ENDIF
 
-            if (btm_at_interface .and. (iface == i_end-1)) then
+            IF (btm_at_interface .and. (iface == i_end-1)) THEN
                qq(iface) = qupper
-            end if
-         else
+            ENDIF
+         ELSE
             qq(iface) = (qupper + qlower) * 0.5_r8
-         end if
-      end do
+         ENDIF
+      ENDDO
 
-      if (btm_at_bottom) then
+      IF (btm_at_bottom) THEN
          qq(ub) = qlc(ub)
-      end if
+      ENDIF
 
-      if (btm_at_interface) then
-         if (dz_us_btm < tol_z) then
+      IF (btm_at_interface) THEN
+         IF (dz_us_btm < tol_z) THEN
             qq_wt(i_end) = qq_wf(i_end)
-         end if
-      end if
+         ENDIF
+      ENDIF
 
-      if (btm_inside_level) then
-         if (dz_us_btm < tol_z) then
+      IF (btm_inside_level) THEN
+         IF (dz_us_btm < tol_z) THEN
             qq_wf(i_end) = qq(i_end)
-         else
+         ELSE
             qq_wf(i_end) = flux_inside_hm_soil ( &
                psi_s(i_end), hksat(i_end), nprm, prms(:,i_end), &
                dz_us_btm, psi_s(i_end), psi_us(i_end), hksat(i_end), hk_us(i_end))
-         end if
-      end if
+         ENDIF
+      ENDIF
 
       deallocate (qlc    )
       deallocate (dz_sat )
       deallocate (psi_sat)
       deallocate (hk_sat )
 
-   end subroutine flux_sat_zone_all
+   END SUBROUTINE flux_sat_zone_all
 
    !--------------------------------------------------------------------------
-   subroutine flux_sat_zone_fixed_bc ( &
+   SUBROUTINE flux_sat_zone_fixed_bc ( &
          nlev_sat, dz_sat, psi_sat, hk_sat, &
          psi_top, psi_btm, qlc, flux_top, flux_btm)
 
-      integer,  intent(in) :: nlev_sat
+   IMPLICIT NONE
 
-      real(r8), intent(in) :: dz_sat  (nlev_sat)
-      real(r8), intent(in) :: psi_sat (nlev_sat)
-      real(r8), intent(in) :: hk_sat  (nlev_sat)
+   integer,  intent(in) :: nlev_sat
 
-      real(r8), intent(in) :: psi_top
-      real(r8), intent(in) :: psi_btm
+   real(r8), intent(in) :: dz_sat  (nlev_sat)
+   real(r8), intent(in) :: psi_sat (nlev_sat)
+   real(r8), intent(in) :: hk_sat  (nlev_sat)
 
-      real(r8), intent(inout) :: qlc (nlev_sat)
+   real(r8), intent(in) :: psi_top
+   real(r8), intent(in) :: psi_btm
 
-      real(r8), intent(in), optional :: flux_top
-      real(r8), intent(in), optional :: flux_btm
+   real(r8), intent(inout) :: qlc (nlev_sat)
 
-      ! Local variables
-      real(r8) :: psi (0:nlev_sat)
-      integer  :: ilev, ilev_u, ilev_l
-      integer  :: spr(1:nlev_sat)
+   real(r8), intent(in), optional :: flux_top
+   real(r8), intent(in), optional :: flux_btm
 
-      if (present(flux_top) .and. present(flux_btm)) then
-         if (flux_top >= flux_btm) then
+   ! Local variables
+   real(r8) :: psi (0:nlev_sat)
+   integer  :: ilev, ilev_u, ilev_l
+   integer  :: spr(1:nlev_sat)
+
+      IF (present(flux_top) .and. present(flux_btm)) THEN
+         IF (flux_top >= flux_btm) THEN
             qlc(:) = flux_btm
-            return
-         end if
-      end if
+            RETURN
+         ENDIF
+      ENDIF
 
       psi(0) = psi_top
       psi(nlev_sat) = psi_btm
 
-      do ilev = 1, nlev_sat
-         if (ilev < nlev_sat) then
+      DO ilev = 1, nlev_sat
+         IF (ilev < nlev_sat) THEN
             psi(ilev) = max(psi_sat(ilev),psi_sat(ilev+1))
-         end if
+         ENDIF
 
          qlc(ilev) = - hk_sat(ilev) &
             * ((psi(ilev) - psi(ilev-1)) / dz_sat(ilev) - 1)
 
          spr(ilev) = ilev
-      end do
+      ENDDO
 
       ilev_u = nlev_sat
       ilev_l = ilev_u
-      do while (.true.)
+      DO WHILE (.true.)
 
-         if (ilev_l < nlev_sat) then
-            ilev = findloc(spr, spr(ilev_l+1), dim=1, BACK=.true.)
-            do while (qlc(ilev_u) >= qlc(ilev))
+         IF (ilev_l < nlev_sat) THEN
+            ilev = findloc_ud(spr == spr(ilev_l+1), BACK=.true.)
+            DO WHILE (qlc(ilev_u) >= qlc(ilev))
 
                ilev_l = ilev
                qlc(ilev_u:ilev_l) = - (psi(ilev_l) - psi(ilev_u-1) &
@@ -2660,74 +2662,76 @@ contains
 
                spr(ilev_u:ilev_l) = ilev_u
 
-               if (ilev_l < nlev_sat) then
+               IF (ilev_l < nlev_sat) THEN
                   spr(ilev_l+1:nlev_sat) = spr(ilev_l+1:nlev_sat) - 1
-                  ilev = findloc(spr, spr(ilev_l+1), dim=1, BACK=.true.)
-               else
-                  exit
-               end if
-            end do
-         end if
+                  ilev = findloc_ud(spr == spr(ilev_l+1), BACK=.true.)
+               ELSE
+                  EXIT
+               ENDIF
+            ENDDO
+         ENDIF
 
-         if ((ilev_l == nlev_sat) .and. (present(flux_btm))) then
-            if (qlc(ilev_l) > flux_btm) then
+         IF ((ilev_l == nlev_sat) .and. (present(flux_btm))) THEN
+            IF (qlc(ilev_l) > flux_btm) THEN
                qlc(ilev_u:ilev_l) = flux_btm
-            end if
-         end if
+            ENDIF
+         ENDIF
 
-         if (ilev_u > 1) then
+         IF (ilev_u > 1) THEN
             ilev_u = ilev_u - 1
             ilev_l = ilev_u
-         else
-            if (present(flux_top)) then
-               do ilev = 1, nlev_sat
-                  if (flux_top > qlc(ilev)) then
+         ELSE
+            IF (present(flux_top)) THEN
+               DO ilev = 1, nlev_sat
+                  IF (flux_top > qlc(ilev)) THEN
                      qlc(ilev) = flux_top
-                  else
-                     exit
-                  end if
-               end do
-            end if
+                  ELSE
+                     EXIT
+                  ENDIF
+               ENDDO
+            ENDIF
 
-            exit
-         end if
+            EXIT
+         ENDIF
 
-      end do
+      ENDDO
 
-   end subroutine flux_sat_zone_fixed_bc
+   END SUBROUTINE flux_sat_zone_fixed_bc
 
 
    !-------------------------------------------------------------------------
-   real(r8) function flux_inside_hm_soil ( &
+   real(r8) FUNCTION flux_inside_hm_soil ( &
          psi_s, hksat, nprm, prms, &
          dz, psi_u, psi_l, hk_u, hk_l)
 
-      real(r8), intent(in) :: psi_s, hksat
-      integer,  intent(in) :: nprm
-      real(r8), intent(in) :: prms(nprm)
+   IMPLICIT NONE 
 
-      real(r8), intent(in) :: dz
-      real(r8), intent(in) :: psi_u, psi_l
-      real(r8), intent(in) :: hk_u,  hk_l
+   real(r8), intent(in) :: psi_s, hksat
+   integer,  intent(in) :: nprm
+   real(r8), intent(in) :: prms(nprm)
 
-      ! Local variables
-      real(r8) :: grad_psi
-      real(r8) :: hk_m
-      real(r8) :: r0, rr
+   real(r8), intent(in) :: dz
+   real(r8), intent(in) :: psi_u, psi_l
+   real(r8), intent(in) :: hk_u,  hk_l
+
+   ! Local variables
+   real(r8) :: grad_psi
+   real(r8) :: hk_m
+   real(r8) :: r0, rr
 
       grad_psi = (1.0_r8 - (psi_l - psi_u)/dz)
 
-      select case (effective_hk_type)
+      SELECTCASE (effective_hk_type)
 
-      case (type_upstream_mean)
+      CASE (type_upstream_mean)
 
-         if (grad_psi < 0) then
+         IF (grad_psi < 0) THEN
             flux_inside_hm_soil = hk_l * grad_psi
-         else
+         ELSE
             flux_inside_hm_soil = hk_u * grad_psi
-         end if
+         ENDIF
 
-      case (type_weighted_geometric_mean)
+      CASE (type_weighted_geometric_mean)
 
 #ifdef Campbell_SOIL_MODEL
          ! bsw => prms(1)
@@ -2738,55 +2742,57 @@ contains
          r0 = 1.0_r8 / (prms(3) * (prms(2) - 1.0_r8) + prms(2) * 2.0_r8)
 #endif
 
-         if (grad_psi < 0) then
+         IF (grad_psi < 0) THEN
             rr = r0
             hk_m = soil_hk_from_psi (psi_l-dz, psi_s, hksat, nprm, prms)
             flux_inside_hm_soil = hk_u**rr * hk_m**(1.0_r8 - rr) * grad_psi
-         elseif (grad_psi == 0) then
+         ELSEIF (grad_psi == 0) THEN
             flux_inside_hm_soil = 0
-         elseif ((grad_psi > 0) .and. (grad_psi < 1)) then
+         ELSEIF ((grad_psi > 0) .and. (grad_psi < 1)) THEN
             rr = max(1.0_r8+r0*psi_l/dz, 1.0_r8-r0)
             flux_inside_hm_soil = hk_u**rr * hk_l**(1.0_r8-rr) * grad_psi
-         elseif (grad_psi == 1) then
+         ELSEIF (grad_psi == 1) THEN
             flux_inside_hm_soil = hk_u
-         elseif (grad_psi > 1) then
+         ELSEIF (grad_psi > 1) THEN
             rr = r0
             flux_inside_hm_soil = hk_u + (psi_u - psi_l)/dz * hk_u**(1.0_r8-rr) * hk_l**rr
-         end if
+         ENDIF
 
-      end select
+      ENDSELECT
 
-   end function flux_inside_hm_soil
+   END FUNCTION flux_inside_hm_soil
 
 
    !--------------------------------------------------------
-   subroutine flux_at_unsaturated_interface (&
+   SUBROUTINE flux_at_unsaturated_interface (&
          nprm, &
          psi_s_u, hksat_u, prms_u, dz_u, psi_u, hk_u, &
          psi_s_l, hksat_l, prms_l, dz_l, psi_l, hk_l, &
          flux_u, flux_l, tol_q, tol_p)
 
-      integer,  intent(in) :: nprm
-      real(r8), intent(in) :: psi_s_u, hksat_u, prms_u(nprm)
-      real(r8), intent(in) :: psi_s_l, hksat_l, prms_l(nprm)
+   IMPLICIT NONE
 
-      real(r8), intent(in) :: dz_u, psi_u, hk_u
-      real(r8), intent(in) :: dz_l, psi_l, hk_l
+   integer,  intent(in) :: nprm
+   real(r8), intent(in) :: psi_s_u, hksat_u, prms_u(nprm)
+   real(r8), intent(in) :: psi_s_l, hksat_l, prms_l(nprm)
 
-      real(r8), intent(out) :: flux_u
-      real(r8), intent(out) :: flux_l
+   real(r8), intent(in) :: dz_u, psi_u, hk_u
+   real(r8), intent(in) :: dz_l, psi_l, hk_l
 
-      real(r8), intent(in) :: tol_q
-      real(r8), intent(in) :: tol_p
+   real(r8), intent(out) :: flux_u
+   real(r8), intent(out) :: flux_l
 
-      ! Local variables
-      real(r8) :: psi_s_min
-      real(r8) :: psi_i
-      real(r8) :: psi_i_r,  psi_i_l
-      real(r8) :: psi_i_k1
-      real(r8) :: hk_i_u, hk_i_l
-      real(r8) :: fval, fval_k1
-      integer  :: iter
+   real(r8), intent(in) :: tol_q
+   real(r8), intent(in) :: tol_p
+
+   ! Local variables
+   real(r8) :: psi_s_min
+   real(r8) :: psi_i
+   real(r8) :: psi_i_r,  psi_i_l
+   real(r8) :: psi_i_k1
+   real(r8) :: hk_i_u, hk_i_l
+   real(r8) :: fval, fval_k1
+   integer  :: iter
 
 
       psi_i_r = max(psi_u + dz_u, psi_l - dz_l)
@@ -2794,7 +2800,7 @@ contains
 
       psi_s_min = min(psi_s_u, psi_s_l)
 
-      if (psi_i_r > psi_s_min) then
+      IF (psi_i_r > psi_s_min) THEN
          hk_i_u = soil_hk_from_psi (psi_s_min, psi_s_u, hksat_u, nprm, prms_u)
          hk_i_l = soil_hk_from_psi (psi_s_min, psi_s_l, hksat_l, nprm, prms_l)
 
@@ -2806,20 +2812,20 @@ contains
             psi_s_l, hksat_l, nprm, prms_l,  &
             dz_l, psi_s_min, psi_l, hk_i_l, hk_l)
 
-         if (flux_u >= flux_l) then
-            return
-         else
+         IF (flux_u >= flux_l) THEN
+            RETURN
+         ELSE
             psi_i_r = psi_s_min
-         end if
-      end if
+         ENDIF
+      ENDIF
 
       psi_i = (dz_l * psi_u + dz_u * psi_l) / (dz_u + dz_l)
-      if ((psi_i < psi_i_l) .or. (psi_i > psi_i_r)) then
+      IF ((psi_i < psi_i_l) .or. (psi_i > psi_i_r)) THEN
          psi_i = (psi_i_r + psi_i_l)/2.0_r8
-      end if
+      ENDIF
 
       iter = 0
-      do while (iter < 50)
+      DO WHILE (iter < 50)
          hk_i_u = soil_hk_from_psi (psi_i, psi_s_u, hksat_u, nprm, prms_u)
          hk_i_l = soil_hk_from_psi (psi_i, psi_s_l, hksat_l, nprm, prms_l)
 
@@ -2833,97 +2839,99 @@ contains
 
          fval = flux_l - flux_u
 
-         if ((abs(fval) < tol_q) .or. (psi_i_r - psi_i_l < tol_p)) then
-            exit
-         else
-            if (iter == 0) then
-               if (fval < 0) then
+         IF ((abs(fval) < tol_q) .or. (psi_i_r - psi_i_l < tol_p)) THEN
+            EXIT
+         ELSE
+            IF (iter == 0) THEN
+               IF (fval < 0) THEN
                   psi_i_l = psi_i
-               else
+               ELSE
                   psi_i_r = psi_i
-               end if
+               ENDIF
 
                psi_i_k1 = psi_i
                fval_k1 = fval
 
                psi_i = (psi_i_r + psi_i_l)/2.0_r8
-            else
-               call secant_method_iteration ( &
+            ELSE
+               CALL secant_method_iteration ( &
                   fval, fval_k1, psi_i, psi_i_k1, psi_i_l, psi_i_r)
-            end if
-         end if
+            ENDIF
+         ENDIF
 
          iter = iter + 1
-      end do
+      ENDDO
 
 #if (defined CoLMDEBUG)
-      if (iter == 50) then
+      IF (iter == 50) THEN
          write(*,*) 'Warning : flux_at_unsaturated_interface: not converged.'
-      end if
+      ENDIF
 #endif
 
-   end subroutine flux_at_unsaturated_interface
+   END SUBROUTINE flux_at_unsaturated_interface
 
    !-------------------------------------------------------------------
-   subroutine flux_top_transitive_interface ( &
+   SUBROUTINE flux_top_transitive_interface ( &
          psi_s_u, hksat_u, nprm, prms_u, &
          dz_us, psi_us, hk_us, &
          nlev_sat, dz_sat, psi_sat, hk_sat, psi_btm, &
          q_us_up, qlc, tol_q, tol_z, tol_p, flux_btm)
 
-      real(r8), intent(in) :: psi_s_u, hksat_u
-      integer,  intent(in) :: nprm
-      real(r8), intent(in) :: prms_u(nprm)
+   IMPLICIT NONE 
 
-      real(r8), intent(in) :: dz_us
-      real(r8), intent(in) :: psi_us
-      real(r8), intent(in) :: hk_us
+   real(r8), intent(in) :: psi_s_u, hksat_u
+   integer,  intent(in) :: nprm
+   real(r8), intent(in) :: prms_u(nprm)
 
-      integer,  intent(in) :: nlev_sat
-      real(r8), intent(in) :: dz_sat  (nlev_sat)
-      real(r8), intent(in) :: psi_sat (nlev_sat)
-      real(r8), intent(in) :: hk_sat  (nlev_sat)
+   real(r8), intent(in) :: dz_us
+   real(r8), intent(in) :: psi_us
+   real(r8), intent(in) :: hk_us
 
-      real(r8), intent(in) :: psi_btm
+   integer,  intent(in) :: nlev_sat
+   real(r8), intent(in) :: dz_sat  (nlev_sat)
+   real(r8), intent(in) :: psi_sat (nlev_sat)
+   real(r8), intent(in) :: hk_sat  (nlev_sat)
 
-      real(r8), intent(out)   :: q_us_up
-      real(r8), intent(inout) :: qlc (nlev_sat)
+   real(r8), intent(in) :: psi_btm
 
-      real(r8), intent(in) :: tol_q
-      real(r8), intent(in) :: tol_z
-      real(r8), intent(in) :: tol_p
+   real(r8), intent(out)   :: q_us_up
+   real(r8), intent(inout) :: qlc (nlev_sat)
 
-      real(r8), intent(in), optional :: flux_btm
+   real(r8), intent(in) :: tol_q
+   real(r8), intent(in) :: tol_z
+   real(r8), intent(in) :: tol_p
 
-      ! Local variables
-      real(r8) :: psi_i
-      real(r8) :: psi_i_r,  psi_i_l
-      real(r8) :: psi_i_k1
-      real(r8) :: hk_i
-      real(r8) :: fval, fval_k1
-      integer  :: iter
+   real(r8), intent(in), optional :: flux_btm
+
+   ! Local variables
+   real(r8) :: psi_i
+   real(r8) :: psi_i_r,  psi_i_l
+   real(r8) :: psi_i_k1
+   real(r8) :: hk_i
+   real(r8) :: fval, fval_k1
+   integer  :: iter
 
 
-      if (dz_us < tol_z) then
+      IF (dz_us < tol_z) THEN
 
          psi_i = max(psi_s_u, psi_sat(1))
-         if (present(flux_btm)) then
-            call flux_sat_zone_fixed_bc ( &
+         IF (present(flux_btm)) THEN
+            CALL flux_sat_zone_fixed_bc ( &
                nlev_sat, dz_sat, psi_sat, hk_sat, &
                psi_i, psi_btm, qlc, flux_btm = flux_btm)
-         else
-            call flux_sat_zone_fixed_bc ( &
+         ELSE
+            CALL flux_sat_zone_fixed_bc ( &
                nlev_sat, dz_sat, psi_sat, hk_sat, &
                psi_i, psi_btm, qlc)
-         end if
+         ENDIF
 
          q_us_up = qlc(1)
 
-         return
+         RETURN
 
-      end if
+      ENDIF
 
-      if (psi_s_u <= psi_sat(1)) then
+      IF (psi_s_u <= psi_sat(1)) THEN
          ! The case psi_s_u < psi_sat(1) does not exist in principle.
 
          psi_i = psi_s_u
@@ -2933,19 +2941,19 @@ contains
             dz_us, psi_us, psi_i, hk_us, hk_i)
 
          psi_i = psi_sat(1)
-         if (present(flux_btm)) then
-            call flux_sat_zone_fixed_bc ( &
+         IF (present(flux_btm)) THEN
+            CALL flux_sat_zone_fixed_bc ( &
                nlev_sat, dz_sat, psi_sat, hk_sat, &
                psi_i, psi_btm, qlc, flux_btm = flux_btm)
-         else
-            call flux_sat_zone_fixed_bc ( &
+         ELSE
+            CALL flux_sat_zone_fixed_bc ( &
                nlev_sat, dz_sat, psi_sat, hk_sat, &
                psi_i, psi_btm, qlc)
-         end if
+         ENDIF
 
-         return
+         RETURN
 
-      end if
+      ENDIF
 
       psi_i = psi_sat(1)
       hk_i  = soil_hk_from_psi (psi_i, psi_s_u, hksat_u, nprm, prms_u)
@@ -2953,21 +2961,21 @@ contains
          psi_s_u, hksat_u, nprm, prms_u,  &
          dz_us, psi_us, psi_i, hk_us, hk_i)
 
-      if (present(flux_btm)) then
-         call flux_sat_zone_fixed_bc ( &
+      IF (present(flux_btm)) THEN
+         CALL flux_sat_zone_fixed_bc ( &
             nlev_sat, dz_sat, psi_sat, hk_sat, &
             psi_i, psi_btm, qlc, flux_btm = flux_btm)
-      else
-         call flux_sat_zone_fixed_bc ( &
+      ELSE
+         CALL flux_sat_zone_fixed_bc ( &
             nlev_sat, dz_sat, psi_sat, hk_sat, &
             psi_i, psi_btm, qlc)
-      end if
+      ENDIF
 
-      if (q_us_up <= qlc(1)) then
-         return
-      else
+      IF (q_us_up <= qlc(1)) THEN
+         RETURN
+      ELSE
          psi_i_l = psi_sat(1)
-      end if
+      ENDIF
 
       psi_i = psi_s_u
       hk_i  = hksat_u
@@ -2975,123 +2983,125 @@ contains
          psi_s_u, hksat_u, nprm, prms_u,  &
          dz_us, psi_us, psi_i, hk_us, hk_i)
 
-      if (present(flux_btm)) then
-         call flux_sat_zone_fixed_bc ( &
+      IF (present(flux_btm)) THEN
+         CALL flux_sat_zone_fixed_bc ( &
             nlev_sat, dz_sat, psi_sat, hk_sat, &
             psi_i, psi_btm, qlc, flux_btm = flux_btm)
-      else
-         call flux_sat_zone_fixed_bc ( &
+      ELSE
+         CALL flux_sat_zone_fixed_bc ( &
             nlev_sat, dz_sat, psi_sat, hk_sat, &
             psi_i, psi_btm, qlc)
-      end if
+      ENDIF
 
-      if (q_us_up >= qlc(1)) then
-         return
-      else
+      IF (q_us_up >= qlc(1)) THEN
+         RETURN
+      ELSE
          psi_i_r = psi_s_u
-      end if
+      ENDIF
 
       psi_i_k1 = psi_i_r
       fval_k1 = qlc(1) - q_us_up
 
       psi_i = (psi_i_r + psi_i_l)/2.0_r8
       iter = 0
-      do while (iter < 50)
+      DO WHILE (iter < 50)
          hk_i = soil_hk_from_psi (psi_i, psi_s_u, hksat_u, nprm, prms_u)
          q_us_up = flux_inside_hm_soil ( &
             psi_s_u, hksat_u, nprm, prms_u,  &
             dz_us, psi_us, psi_i, hk_us, hk_i)
 
-         if (present(flux_btm)) then
-            call flux_sat_zone_fixed_bc ( &
+         IF (present(flux_btm)) THEN
+            CALL flux_sat_zone_fixed_bc ( &
                nlev_sat, dz_sat, psi_sat, hk_sat, &
                psi_i, psi_btm, qlc, flux_btm = flux_btm)
-         else
-            call flux_sat_zone_fixed_bc ( &
+         ELSE
+            CALL flux_sat_zone_fixed_bc ( &
                nlev_sat, dz_sat, psi_sat, hk_sat, &
                psi_i, psi_btm, qlc)
-         end if
+         ENDIF
 
          fval = qlc(1) - q_us_up
 
-         if ((abs(fval) < tol_q) .or. (psi_i_r - psi_i_l < tol_p)) then
-            exit
-         else
-            call secant_method_iteration ( &
+         IF ((abs(fval) < tol_q) .or. (psi_i_r - psi_i_l < tol_p)) THEN
+            EXIT
+         ELSE
+            CALL secant_method_iteration ( &
                fval, fval_k1, psi_i, psi_i_k1, psi_i_l, psi_i_r)
-         end if
+         ENDIF
 
          iter = iter + 1
-      end do
+      ENDDO
 
 #if (defined CoLMDEBUG)
-      if (iter == 50) then
+      IF (iter == 50) THEN
          write(*,*) 'Warning : flux_top_transitive_interface: not converged.'
-      end if
+      ENDIF
 #endif
 
-   end subroutine flux_top_transitive_interface
+   END SUBROUTINE flux_top_transitive_interface
 
    !------------------------------------------------------------------------
-   subroutine flux_btm_transitive_interface ( &
+   SUBROUTINE flux_btm_transitive_interface ( &
          psi_s_l, hksat_l, nprm, prms_l, &
          dz_us, psi_us, hk_us, &
          nlev_sat, dz_sat, psi_sat, hk_sat, psi_top, &
          q_us_l, qlc, tol_q, tol_z, tol_p, flux_top)
 
-      real(r8), intent(in) :: psi_s_l, hksat_l
-      integer,  intent(in) :: nprm
-      real(r8), intent(in) :: prms_l(nprm)
+   IMPLICIT NONE
 
-      real(r8), intent(in) :: dz_us
-      real(r8), intent(in) :: psi_us
-      real(r8), intent(in) :: hk_us
+   real(r8), intent(in) :: psi_s_l, hksat_l
+   integer,  intent(in) :: nprm
+   real(r8), intent(in) :: prms_l(nprm)
 
-      integer,  intent(in) :: nlev_sat
-      real(r8), intent(in) :: dz_sat  (nlev_sat)
-      real(r8), intent(in) :: psi_sat (nlev_sat)
-      real(r8), intent(in) :: hk_sat  (nlev_sat)
+   real(r8), intent(in) :: dz_us
+   real(r8), intent(in) :: psi_us
+   real(r8), intent(in) :: hk_us
 
-      real(r8), intent(in) :: psi_top
+   integer,  intent(in) :: nlev_sat
+   real(r8), intent(in) :: dz_sat  (nlev_sat)
+   real(r8), intent(in) :: psi_sat (nlev_sat)
+   real(r8), intent(in) :: hk_sat  (nlev_sat)
 
-      real(r8), intent(out)   :: q_us_l
-      real(r8), intent(inout) :: qlc (nlev_sat)
+   real(r8), intent(in) :: psi_top
 
-      real(r8), intent(in) :: tol_q
-      real(r8), intent(in) :: tol_z
-      real(r8), intent(in) :: tol_p
+   real(r8), intent(out)   :: q_us_l
+   real(r8), intent(inout) :: qlc (nlev_sat)
 
-      real(r8), intent(in), optional :: flux_top
+   real(r8), intent(in) :: tol_q
+   real(r8), intent(in) :: tol_z
+   real(r8), intent(in) :: tol_p
 
-      ! Local variables
-      real(r8) :: psi_i
-      real(r8) :: psi_i_r,  psi_i_l
-      real(r8) :: psi_i_k1
-      real(r8) :: hk_i
-      real(r8) :: fval, fval_k1
-      integer  :: iter
+   real(r8), intent(in), optional :: flux_top
+
+   ! Local variables
+   real(r8) :: psi_i
+   real(r8) :: psi_i_r,  psi_i_l
+   real(r8) :: psi_i_k1
+   real(r8) :: hk_i
+   real(r8) :: fval, fval_k1
+   integer  :: iter
 
 
-      if (dz_us < tol_z) then
+      IF (dz_us < tol_z) THEN
 
          psi_i = max(psi_sat(nlev_sat), psi_s_l)
-         if (present(flux_top)) then
-            call flux_sat_zone_fixed_bc ( &
+         IF (present(flux_top)) THEN
+            CALL flux_sat_zone_fixed_bc ( &
                nlev_sat, dz_sat, psi_sat, hk_sat, &
                psi_top, psi_i, qlc, flux_top = flux_top)
-         else
-            call flux_sat_zone_fixed_bc ( &
+         ELSE
+            CALL flux_sat_zone_fixed_bc ( &
                nlev_sat, dz_sat, psi_sat, hk_sat, &
                psi_top, psi_i, qlc)
-         end if
+         ENDIF
 
          q_us_l = qlc(nlev_sat)
 
-         return
+         RETURN
 
-      end if
+      ENDIF
 
-      if (psi_sat(nlev_sat) >= psi_s_l) then
+      IF (psi_sat(nlev_sat) >= psi_s_l) THEN
          ! The case psi_sat(nlev_sat) > psi_s_l does not exist in principle.
 
          psi_i = psi_s_l
@@ -3101,82 +3111,82 @@ contains
             dz_us, psi_i, psi_us, hk_i, hk_us)
 
          psi_i = psi_sat(nlev_sat)
-         if (present(flux_top)) then
-            call flux_sat_zone_fixed_bc ( &
+         IF (present(flux_top)) THEN
+            CALL flux_sat_zone_fixed_bc ( &
                nlev_sat, dz_sat, psi_sat, hk_sat, &
                psi_top, psi_i, qlc, flux_top = flux_top)
-         else
-            call flux_sat_zone_fixed_bc ( &
+         ELSE
+            CALL flux_sat_zone_fixed_bc ( &
                nlev_sat, dz_sat, psi_sat, hk_sat, &
                psi_top, psi_i, qlc)
-         end if
+         ENDIF
 
-         return
+         RETURN
 
-      end if
+      ENDIF
 
       psi_i = psi_sat(nlev_sat)
 
-      if (present(flux_top)) then
-         call flux_sat_zone_fixed_bc ( &
+      IF (present(flux_top)) THEN
+         CALL flux_sat_zone_fixed_bc ( &
             nlev_sat, dz_sat, psi_sat, hk_sat, &
             psi_top, psi_i, qlc, flux_top = flux_top)
-      else
-         call flux_sat_zone_fixed_bc ( &
+      ELSE
+         CALL flux_sat_zone_fixed_bc ( &
             nlev_sat, dz_sat, psi_sat, hk_sat, &
             psi_top, psi_i, qlc)
-      end if
+      ENDIF
 
       hk_i = soil_hk_from_psi (psi_i, psi_s_l, hksat_l, nprm, prms_l)
       q_us_l = flux_inside_hm_soil ( &
          psi_s_l, hksat_l, nprm, prms_l,  &
          dz_us, psi_i, psi_us, hk_i, hk_us)
 
-      if (qlc(nlev_sat) <= q_us_l) then
-         return
-      else
+      IF (qlc(nlev_sat) <= q_us_l) THEN
+         RETURN
+      ELSE
          psi_i_l = psi_sat(nlev_sat)
-      end if
+      ENDIF
 
       psi_i = psi_s_l
 
-      if (present(flux_top)) then
-         call flux_sat_zone_fixed_bc ( &
+      IF (present(flux_top)) THEN
+         CALL flux_sat_zone_fixed_bc ( &
             nlev_sat, dz_sat, psi_sat, hk_sat, &
             psi_top, psi_i, qlc, flux_top = flux_top)
-      else
-         call flux_sat_zone_fixed_bc ( &
+      ELSE
+         CALL flux_sat_zone_fixed_bc ( &
             nlev_sat, dz_sat, psi_sat, hk_sat, &
             psi_top, psi_i, qlc)
-      end if
+      ENDIF
 
       hk_i = soil_hk_from_psi (psi_i, psi_s_l, hksat_l, nprm, prms_l)
       q_us_l = flux_inside_hm_soil ( &
          psi_s_l, hksat_l, nprm, prms_l,  &
          dz_us, psi_i, psi_us, hk_i, hk_us)
 
-      if (qlc(nlev_sat) >= q_us_l) then
-         return
-      else
+      IF (qlc(nlev_sat) >= q_us_l) THEN
+         RETURN
+      ELSE
          psi_i_r = psi_s_l
-      end if
+      ENDIF
 
       psi_i_k1 = psi_i_r
       fval_k1 = q_us_l - qlc(nlev_sat)
 
       psi_i = (psi_i_r + psi_i_l)/2.0_r8
       iter = 0
-      do while (iter < 50)
+      DO WHILE (iter < 50)
 
-         if (present(flux_top)) then
-            call flux_sat_zone_fixed_bc ( &
+         IF (present(flux_top)) THEN
+            CALL flux_sat_zone_fixed_bc ( &
                nlev_sat, dz_sat, psi_sat, hk_sat, &
                psi_top, psi_i, qlc, flux_top = flux_top)
-         else
-            call flux_sat_zone_fixed_bc ( &
+         ELSE
+            CALL flux_sat_zone_fixed_bc ( &
                nlev_sat, dz_sat, psi_sat, hk_sat, &
                psi_top, psi_i, qlc)
-         end if
+         ENDIF
 
          hk_i = soil_hk_from_psi (psi_i, psi_s_l, hksat_l, nprm, prms_l)
          q_us_l = flux_inside_hm_soil ( &
@@ -3185,27 +3195,27 @@ contains
 
          fval = q_us_l - qlc(nlev_sat)
 
-         if ((abs(fval) < tol_q) .or. (psi_i_r - psi_i_l < tol_p)) then
-            exit
-         else
-            call secant_method_iteration ( &
+         IF ((abs(fval) < tol_q) .or. (psi_i_r - psi_i_l < tol_p)) THEN
+            EXIT
+         ELSE
+            CALL secant_method_iteration ( &
                fval, fval_k1, psi_i, psi_i_k1, psi_i_l, psi_i_r)
-         end if
+         ENDIF
 
          iter = iter + 1
-      end do
+      ENDDO
 
 #if (defined CoLMDEBUG)
-      if (iter == 50) then
+      IF (iter == 50) THEN
          write(*,*) 'Warning : flux_btm_transitive_interface: not converged.'
-      end if
+      ENDIF
 #endif
 
-   end subroutine flux_btm_transitive_interface
+   END SUBROUTINE flux_btm_transitive_interface
 
 
    !-----------------------------------------------------------------------
-   subroutine flux_both_transitive_interface ( &
+   SUBROUTINE flux_both_transitive_interface ( &
          ilev_us_u, ilev_us_l, &
          dz, psi_s, hksat, nprm, prms, &
          dz_us_u, psi_us_u, hk_us_u, &
@@ -3213,82 +3223,84 @@ contains
          q_us_u, q_us_l, qlc, &
          tol_q, tol_z, tol_p)
 
-      integer,  intent(in) :: ilev_us_u, ilev_us_l
-      real(r8), intent(in) :: dz    (ilev_us_u:ilev_us_l)
-      real(r8), intent(in) :: psi_s (ilev_us_u:ilev_us_l)
-      real(r8), intent(in) :: hksat (ilev_us_u:ilev_us_l)
+   IMPLICIT NONE 
 
-      integer,  intent(in) :: nprm
-      real(r8), intent(in) :: prms (nprm,ilev_us_u:ilev_us_l)
+   integer,  intent(in) :: ilev_us_u, ilev_us_l
+   real(r8), intent(in) :: dz    (ilev_us_u:ilev_us_l)
+   real(r8), intent(in) :: psi_s (ilev_us_u:ilev_us_l)
+   real(r8), intent(in) :: hksat (ilev_us_u:ilev_us_l)
 
-      real(r8), intent(in) :: dz_us_u, psi_us_u, hk_us_u
-      real(r8), intent(in) :: dz_us_l, psi_us_l, hk_us_l
+   integer,  intent(in) :: nprm
+   real(r8), intent(in) :: prms (nprm,ilev_us_u:ilev_us_l)
 
-      real(r8), intent(out) :: q_us_u, q_us_l
-      real(r8), intent(inout) :: qlc (ilev_us_u+1:ilev_us_l-1)
+   real(r8), intent(in) :: dz_us_u, psi_us_u, hk_us_u
+   real(r8), intent(in) :: dz_us_l, psi_us_l, hk_us_l
 
-      real(r8), intent(in) :: tol_q
-      real(r8), intent(in) :: tol_z
-      real(r8), intent(in) :: tol_p
+   real(r8), intent(out) :: q_us_u, q_us_l
+   real(r8), intent(inout) :: qlc (ilev_us_u+1:ilev_us_l-1)
 
-      ! Local variables
-      integer  :: nlev_sat
-      real(r8) :: psi_i
-      real(r8) :: psi_i_r,  psi_i_l
-      real(r8) :: psi_i_k1
-      real(r8) :: hk_i
-      real(r8) :: fval, fval_k1
-      integer  :: iter
+   real(r8), intent(in) :: tol_q
+   real(r8), intent(in) :: tol_z
+   real(r8), intent(in) :: tol_p
+
+   ! Local variables
+   integer  :: nlev_sat
+   real(r8) :: psi_i
+   real(r8) :: psi_i_r,  psi_i_l
+   real(r8) :: psi_i_k1
+   real(r8) :: hk_i
+   real(r8) :: fval, fval_k1
+   integer  :: iter
 
       nlev_sat = ilev_us_l - ilev_us_u - 1
 
-      if ((psi_s(ilev_us_u) <= psi_s(ilev_us_u+1)) &
-         .or. (dz_us_u < tol_z)) then
+      IF ((psi_s(ilev_us_u) <= psi_s(ilev_us_u+1)) &
+         .or. (dz_us_u < tol_z)) THEN
 
          psi_i = max(psi_s(ilev_us_u), psi_s(ilev_us_u+1))
-         call flux_btm_transitive_interface ( &
+         CALL flux_btm_transitive_interface ( &
             psi_s(ilev_us_l), hksat(ilev_us_l), nprm, prms(:,ilev_us_l), &
             dz_us_l, psi_us_l, hk_us_l, &
             nlev_sat, dz(ilev_us_u+1:ilev_us_l-1), psi_s(ilev_us_u+1:ilev_us_l-1), &
             hksat(ilev_us_u+1:ilev_us_l-1), psi_i, &
             q_us_l, qlc, tol_q, tol_z, tol_p)
 
-         if (dz_us_u < tol_z) then
+         IF (dz_us_u < tol_z) THEN
             q_us_u = qlc(ilev_us_u+1)
-         else
+         ELSE
             q_us_u = flux_inside_hm_soil ( &
                psi_s(ilev_us_u), hksat(ilev_us_u), nprm, prms(:,ilev_us_u),  &
                dz_us_u, psi_us_u, psi_s(ilev_us_u), hk_us_u, hksat(ilev_us_u))
-         end if
+         ENDIF
 
-         return
-      end if
+         RETURN
+      ENDIF
 
-      if ((psi_s(ilev_us_l) <= psi_s(ilev_us_l-1)) &
-         .or. (dz_us_l < tol_z)) then
+      IF ((psi_s(ilev_us_l) <= psi_s(ilev_us_l-1)) &
+         .or. (dz_us_l < tol_z)) THEN
 
          psi_i = max(psi_s(ilev_us_l-1), psi_s(ilev_us_l))
-         call flux_top_transitive_interface ( &
+         CALL flux_top_transitive_interface ( &
             psi_s(ilev_us_u), hksat(ilev_us_u), nprm, prms(:,ilev_us_u), &
             dz_us_u, psi_us_u, hk_us_u, &
             nlev_sat, dz(ilev_us_u+1:ilev_us_l-1), &
             psi_s(ilev_us_u+1:ilev_us_l-1), hksat(ilev_us_u+1:ilev_us_l-1), psi_i, &
             q_us_u, qlc, tol_q, tol_z, tol_p)
 
-         if (dz_us_l < tol_z) then
+         IF (dz_us_l < tol_z) THEN
             q_us_l = qlc(ilev_us_l-1)
-         else
+         ELSE
             q_us_l = flux_inside_hm_soil ( &
                psi_s(ilev_us_l), hksat(ilev_us_l), nprm, prms(:,ilev_us_l),  &
                dz_us_l, psi_s(ilev_us_l), psi_us_l, hksat(ilev_us_l), hk_us_l)
-         end if
+         ENDIF
 
-         return
-      end if
+         RETURN
+      ENDIF
 
       psi_i_l = psi_s(ilev_us_l-1)
 
-      call flux_top_transitive_interface ( &
+      CALL flux_top_transitive_interface ( &
          psi_s(ilev_us_u), hksat(ilev_us_u), nprm, prms(:,ilev_us_u), &
          dz_us_u, psi_us_u, hk_us_u, &
          nlev_sat, dz(ilev_us_u+1:ilev_us_l-1), &
@@ -3301,13 +3313,13 @@ contains
          psi_s(ilev_us_l), hksat(ilev_us_l), nprm, prms(:,ilev_us_l),  &
          dz_us_l, psi_i_l, psi_us_l, hk_i, hk_us_l)
 
-      if (qlc(ilev_us_l-1) <= q_us_l) then
-         return
-      end if
+      IF (qlc(ilev_us_l-1) <= q_us_l) THEN
+         RETURN
+      ENDIF
 
       psi_i_r = psi_s(ilev_us_l)
 
-      call flux_top_transitive_interface ( &
+      CALL flux_top_transitive_interface ( &
          psi_s(ilev_us_u), hksat(ilev_us_u), nprm, prms(:,ilev_us_u), &
          dz_us_u, psi_us_u, hk_us_u, &
          nlev_sat, dz(ilev_us_u+1:ilev_us_l-1), &
@@ -3320,18 +3332,18 @@ contains
          psi_s(ilev_us_l), hksat(ilev_us_l), nprm, prms(:,ilev_us_l),  &
          dz_us_l, psi_i_r, psi_us_l, hk_i, hk_us_l)
 
-      if (qlc(ilev_us_l-1) >= q_us_l ) then
-         return
-      end if
+      IF (qlc(ilev_us_l-1) >= q_us_l ) THEN
+         RETURN
+      ENDIF
 
       psi_i_k1 = psi_i_r
       fval_k1 = q_us_l - qlc(ilev_us_l-1)
 
       psi_i = (psi_i_r + psi_i_l)/2.0_r8
       iter = 0
-      do while (iter < 50)
+      DO WHILE (iter < 50)
 
-         call flux_top_transitive_interface ( &
+         CALL flux_top_transitive_interface ( &
             psi_s(ilev_us_u), hksat(ilev_us_u), nprm, prms(:,ilev_us_u), &
             dz_us_u, psi_us_u, hk_us_u, &
             nlev_sat, dz(ilev_us_u+1:ilev_us_l-1), &
@@ -3346,60 +3358,60 @@ contains
 
          fval = q_us_l - qlc(ilev_us_l-1)
 
-         if ((abs(fval) < tol_q) .or. (psi_i_r - psi_i_l < tol_p)) then
-            exit
-         else
-            call secant_method_iteration ( &
+         IF ((abs(fval) < tol_q) .or. (psi_i_r - psi_i_l < tol_p)) THEN
+            EXIT
+         ELSE
+            CALL secant_method_iteration ( &
                fval, fval_k1, psi_i, psi_i_k1, psi_i_l, psi_i_r)
-         end if
+         ENDIF
 
          iter = iter + 1
-      end do
+      ENDDO
 
 #if (defined CoLMDEBUG)
-      if (iter == 50) then
+      IF (iter == 50) THEN
          write(*,*) 'Warning : flux_both_transitive_interface: not converged.'
-      end if
+      ENDIF
 #endif
 
-   end subroutine flux_both_transitive_interface
+   END SUBROUTINE flux_both_transitive_interface
 
    !-----------------------------------------------------------------
-   subroutine get_zwt_from_wa ( &
+   SUBROUTINE get_zwt_from_wa ( &
          vl_s, vl_r, psi_s, hksat, nprm, prms, tol_v, tol_z, &
          wa, zmin, zwt)
 
-      implicit none
+   IMPLICIT NONE
 
-      real(r8), intent(in)  :: vl_s, vl_r, psi_s, hksat
-      integer,  intent(in)  :: nprm
-      real(r8), intent(in)  :: prms(nprm)
-      real(r8), intent(in)  :: tol_v, tol_z
-      real(r8), intent(in)  :: wa, zmin
-      real(r8), intent(out) :: zwt
+   real(r8), intent(in)  :: vl_s, vl_r, psi_s, hksat
+   integer,  intent(in)  :: nprm
+   real(r8), intent(in)  :: prms(nprm)
+   real(r8), intent(in)  :: tol_v, tol_z
+   real(r8), intent(in)  :: wa, zmin
+   real(r8), intent(out) :: zwt
 
-      REAL(r8) :: vl
-      real(r8) :: zwt_l, zwt_r, zwt_k1
-      real(r8) :: fval, fval_k1
-      real(r8) :: psi
-      integer  :: iter
+   real(r8) :: vl
+   real(r8) :: zwt_l, zwt_r, zwt_k1
+   real(r8) :: fval, fval_k1
+   real(r8) :: psi
+   integer  :: iter
 
-      if (wa >= 0) then
+      IF (wa >= 0) THEN
          zwt = zmin
          vl  = vl_s
-         return
-      end if
+         RETURN
+      ENDIF
 
       zwt = zmin + (-wa)/vl_s * 2.0
       psi = psi_s - (zwt - zmin) * 0.5
       vl  = soil_vliq_from_psi (psi, &
          vl_s, vl_r, psi_s, nprm, prms)
-      do while (wa <= -(zwt-zmin)*(vl_s-vl))
+      DO WHILE (wa <= -(zwt-zmin)*(vl_s-vl))
          zwt = zmin + (zwt-zmin)*2 + 0.1
          psi = psi_s - (zwt - zmin) * 0.5
          vl  = soil_vliq_from_psi (psi, &
             vl_s, vl_r, psi_s, nprm, prms)
-      end do
+      ENDDO
 
       zwt_r = zwt
       zwt_l = zmin
@@ -3409,132 +3421,134 @@ contains
 
       zwt = (zwt_l + zwt_r) / 2.0
       iter = 0
-      do while (iter < 50)
+      DO WHILE (iter < 50)
 
          psi = psi_s - (zwt - zmin) * 0.5
          vl  = soil_vliq_from_psi (psi, &
                vl_s, vl_r, psi_s, nprm, prms)
          fval = wa + (zwt-zmin)* (vl_s-vl)
 
-         if ((abs(fval) < tol_v) .or. (zwt_r - zwt_l < tol_z)) then
-            exit
-         else
-            call secant_method_iteration ( &
+         IF ((abs(fval) < tol_v) .or. (zwt_r - zwt_l < tol_z)) THEN
+            EXIT
+         ELSE
+            CALL secant_method_iteration ( &
                fval, fval_k1, zwt, zwt_k1, zwt_l, zwt_r)
-         end if
+         ENDIF
 
          iter = iter + 1
-      end do
+      ENDDO
 
 #if (defined CoLMDEBUG)
-      if (iter == 50) then
+      IF (iter == 50) THEN
          write(*,*) 'Warning : get_zwt_from_wa: not converged.'
-      end if
+      ENDIF
 #endif
 
-   end subroutine get_zwt_from_wa
+   END SUBROUTINE get_zwt_from_wa
 
 
    !---------------------------------------------------------------------
-   subroutine solve_least_squares_problem (ndim, dr_dv, lact, rhs, dv)
+   SUBROUTINE solve_least_squares_problem (ndim, dr_dv, lact, rhs, dv)
       ! By using Givens rotation.
 
-      implicit none
+   IMPLICIT NONE
 
-      integer,  intent(in) :: ndim
-      real(r8), intent(in) :: dr_dv (ndim,ndim)
-      logical,  intent(in) :: lact  (ndim)
-      real(r8), intent(in) :: rhs   (ndim)
+   integer,  intent(in) :: ndim
+   real(r8), intent(in) :: dr_dv (ndim,ndim)
+   logical,  intent(in) :: lact  (ndim)
+   real(r8), intent(in) :: rhs   (ndim)
 
-      real(r8), intent(out) :: dv (ndim)
+   real(r8), intent(out) :: dv (ndim)
 
-      ! Local variables
-      real(r8) :: Amatrix (ndim,ndim)
-      real(r8) :: res     (ndim)
-      integer  :: i, j, k
-      real(r8) :: tau, c, s
-      real(r8) :: tmp
+   ! Local variables
+   real(r8) :: Amatrix (ndim,ndim)
+   real(r8) :: res     (ndim)
+   integer  :: i, j, k
+   real(r8) :: tau, c, s
+   real(r8) :: tmp
 
       Amatrix = dr_dv
       res = rhs
       dv = 0
 
-      do i = 1, ndim
-         if (lact(i)) then
+      DO i = 1, ndim
+         IF (lact(i)) THEN
 
-            do j = i+1, ndim
-               if (Amatrix(j,i) /= 0) then
-                  if (abs(Amatrix(j,i)) > abs(Amatrix(i,i))) then
+            DO j = i+1, ndim
+               IF (Amatrix(j,i) /= 0) THEN
+                  IF (abs(Amatrix(j,i)) > abs(Amatrix(i,i))) THEN
                      tau = Amatrix(i,i) / Amatrix(j,i)
                      s = 1 / sqrt(1 + tau**2)
                      c = s * tau
-                  else
+                  ELSE
                      tau = Amatrix(j,i) / Amatrix(i,i)
                      c = 1 / sqrt(1 + tau**2)
                      s = c * tau
-                  end if
+                  ENDIF
 
                   Amatrix(i,i) = c * Amatrix(i,i) + s * Amatrix(j,i)
                   Amatrix(j,i) = 0
 
-                  do k = i+1, ndim
-                     if (lact(k)) then
+                  DO k = i+1, ndim
+                     IF (lact(k)) THEN
                         tmp          =   c * Amatrix(i,k) + s * Amatrix(j,k)
                         Amatrix(j,k) = - s * Amatrix(i,k) + c * Amatrix(j,k)
                         Amatrix(i,k) = tmp
-                     end if
-                  end do
+                     ENDIF
+                  ENDDO
 
                   tmp    =   c * res(i) + s * res(j)
                   res(j) = - s * res(i) + c * res(j)
                   res(i) = tmp
-               end if
-            end do
+               ENDIF
+            ENDDO
 
-         end if
-      end do
+         ENDIF
+      ENDDO
 
       dv = 0
 
-      do i = ndim, 1, -1
-         if (lact(i)) then
+      DO i = ndim, 1, -1
+         IF (lact(i)) THEN
 
             dv(i) = res(i)
 
-            do k = i+1, ndim
-               if (lact(k)) then
+            DO k = i+1, ndim
+               IF (lact(k)) THEN
                   dv(i) = dv(i) - Amatrix(i,k) * dv(k)
-               end if
-            end do
+               ENDIF
+            ENDDO
 
             dv(i) = dv(i) / Amatrix(i,i)
 
-         end if
-      end do
+         ENDIF
+      ENDDO
 
-   end subroutine solve_least_squares_problem
+   END SUBROUTINE solve_least_squares_problem
 
 
    !---------------------------------------------------------------------------------
-   subroutine secant_method_iteration ( &
+   SUBROUTINE secant_method_iteration ( &
          fval, fval_k1, x_i, x_k1, x_l, x_r)
 
-      real(r8), intent(in) :: fval
-      real(r8), intent(inout) :: fval_k1
+   IMPLICIT NONE
 
-      real(r8), intent(inout) :: x_i, x_k1
-      real(r8), intent(inout) :: x_l, x_r
+   real(r8), intent(in) :: fval
+   real(r8), intent(inout) :: fval_k1
 
-      real(r8), parameter :: alp = 0.9_r8
+   real(r8), intent(inout) :: x_i, x_k1
+   real(r8), intent(inout) :: x_l, x_r
 
-      ! Local variables
-      real(r8) :: x_k2, fval_k2
+   real(r8), parameter :: alp = 0.9_r8
 
-      if (fval > 0.0_r8) then
+   ! Local variables
+   real(r8) :: x_k2, fval_k2
+
+      IF (fval > 0.0_r8) THEN
          x_r = x_i
-      else
+      ELSE
          x_l = x_i
-      end if
+      ENDIF
 
       fval_k2 = fval_k1
       fval_k1 = fval
@@ -3550,39 +3564,39 @@ contains
          x_i = min(x_i, x_l * (1.0_r8 - alp) + x_r * alp)
       ENDIF
 
-   end subroutine secant_method_iteration
+   END SUBROUTINE secant_method_iteration
 
 
    !-------------------------------------------------------------------------------
-   integer function find_unsat_lev_lower (is_sat, lb, ub, ilev)
+   integer FUNCTION find_unsat_lev_lower (is_sat, lb, ub, ilev)
 
-      implicit none
+   IMPLICIT NONE
 
-      integer, intent(in) :: lb, ub
-      logical, intent(in) :: is_sat (lb:ub)
-      integer, intent(in) :: ilev
+   integer, intent(in) :: lb, ub
+   logical, intent(in) :: is_sat (lb:ub)
+   integer, intent(in) :: ilev
 
       find_unsat_lev_lower = ilev
-      do while (find_unsat_lev_lower <= ub)
-         if (is_sat(find_unsat_lev_lower)) then
+      DO WHILE (find_unsat_lev_lower <= ub)
+         IF (is_sat(find_unsat_lev_lower)) THEN
             find_unsat_lev_lower = find_unsat_lev_lower + 1
-         else
-            exit
-         end if
-      end do
+         ELSE
+            EXIT
+         ENDIF
+      ENDDO
 
-   end function find_unsat_lev_lower
+   END FUNCTION find_unsat_lev_lower
 
    ! -----
    SUBROUTINE print_VSF_iteration_stat_info ()
       
-      USE MOD_SPMD_Task
-      IMPLICIT NONE
+   USE MOD_SPMD_Task
+   IMPLICIT NONE
    
-      INTEGER(8), SAVE :: count_implicit_accum = 0
-      INTEGER(8), SAVE :: count_explicit_accum = 0
-      INTEGER(8), SAVE :: count_wet2dry_accum  = 0
-      integer :: iwork
+   integer(8), SAVE :: count_implicit_accum = 0
+   integer(8), SAVE :: count_explicit_accum = 0
+   integer(8), SAVE :: count_wet2dry_accum  = 0
+   integer :: iwork
 
 #ifdef CoLMDEBUG
       IF (p_is_worker) THEN
@@ -3632,4 +3646,4 @@ contains
 #endif
    END SUBROUTINE print_VSF_iteration_stat_info
 
-end module MOD_Hydro_SoilWater
+END MODULE MOD_Hydro_SoilWater

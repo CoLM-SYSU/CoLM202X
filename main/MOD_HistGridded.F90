@@ -81,7 +81,7 @@ contains
 #endif
 
       if (trim(DEF_HIST_mode) == 'one') then
-         hist_data_id = 1000
+         hist_data_id = 1
       end if
          
    end subroutine hist_gridded_init
@@ -146,7 +146,7 @@ contains
          end do
       end if
 
-      compress = DEF_HIST_COMPRESS_LEVEL
+      compress = DEF_HIST_CompressLevel
       call hist_write_var_real8_2d (file_hist, varname, ghist, itime_in_file, &
          flux_xy_2d, compress, longname, units)
 
@@ -212,7 +212,7 @@ contains
          end do
       end if
 
-      compress = DEF_HIST_COMPRESS_LEVEL
+      compress = DEF_HIST_CompressLevel
       call hist_write_var_real8_2d (file_hist, varname, ghist, itime_in_file, flux_xy_2d, &
          compress, longname, units)
 
@@ -286,7 +286,7 @@ contains
          end do
       end if
 
-      compress = DEF_HIST_COMPRESS_LEVEL
+      compress = DEF_HIST_CompressLevel
       call hist_write_var_real8_3d (file_hist, varname, dim1name, ghist, &
          itime_in_file, flux_xy_3d, compress, longname, units)
 
@@ -363,7 +363,7 @@ contains
          end do
       end if
 
-      compress = DEF_HIST_COMPRESS_LEVEL
+      compress = DEF_HIST_CompressLevel
       call hist_write_var_real8_4d (file_hist, varname, dim1name, dim2name, &
          ghist, itime_in_file, flux_xy_4d, compress, longname, units)
 
@@ -437,7 +437,7 @@ contains
          end do
       end if
 
-      compress = DEF_HIST_COMPRESS_LEVEL
+      compress = DEF_HIST_CompressLevel
       call hist_write_var_real8_2d (file_hist, varname, ghist, itime_in_file, flux_xy_2d, &
          compress, longname, units)
 
@@ -684,7 +684,7 @@ contains
          end if
 #endif
 
-         hist_data_id = hist_data_id + 1
+         hist_data_id = mod(hist_data_id,1000) + 1
 
       elseif (trim(DEF_HIST_mode) == 'block') then
 
@@ -862,7 +862,7 @@ contains
          end if
 #endif
 
-         hist_data_id = hist_data_id + 1
+         hist_data_id = mod(hist_data_id,1000) + 1
 
       elseif (trim(DEF_HIST_mode) == 'block') then
 
@@ -1046,7 +1046,7 @@ contains
          end if
 #endif
 
-         hist_data_id = hist_data_id + 1
+         hist_data_id = mod(hist_data_id,1000) + 1
 
       elseif (trim(DEF_HIST_mode) == 'block') then
          if (p_is_io) then

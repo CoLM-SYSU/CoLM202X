@@ -1,23 +1,23 @@
 #include <define.h>
 
 MODULE MOD_Lulcc_TransferTrace
-! =======================================================================
-! Created by Wanyi Lin, Shupeng Zhang and Hua Yuan, 07/2023
+
+!------------------------------------------------------------------------
 !
 ! !DESCRIPTION:
-! The transfer matrix and patch tracing vector were created using the land
-! cover type data of the adjacent two years. Based on next year's patch,
-! the pixels within the patch and last years' land cover type of these
-! pixels were obtained. Then the percent of source land cover type of each
-! patch was derived.
+!  The transfer matrix and patch tracing vector were created using the
+!  land cover type data of the adjacent two years. Based on next year's
+!  patch, the pixels within the patch and last years' land cover type of
+!  these pixels were obtained. Then the percent of source land cover
+!  type of each patch was derived.
 !
-! =======================================================================
+!  Created by Wanyi Lin, Shupeng Zhang and Hua Yuan, 07/2023
+!------------------------------------------------------------------------
 
    USE MOD_Precision
    USE MOD_Vars_Global
    IMPLICIT NONE
    SAVE
-!------------------------------------------------------------------------
 
    real(r8), allocatable, dimension(:,:) :: lccpct_patches(:,:) !Percent area of source patches in a patch
    real(r8), allocatable, dimension(:,:) :: lccpct_matrix (:,:) !Percent area of source patches in a grid
@@ -29,11 +29,8 @@ MODULE MOD_Lulcc_TransferTrace
 
    ! PRIVATE MEMBER FUNCTIONS:
 
-!------------------------------------------------------------------------
 
 CONTAINS
-
-!------------------------------------------------------------------------
 
 
    SUBROUTINE allocate_LulccTransferTrace
@@ -41,14 +38,14 @@ CONTAINS
    ! Allocates memory for Lulcc time invariant variables
    ! --------------------------------------------------------------------
 
-      USE MOD_Precision
-      USE MOD_Vars_Global
-      USE MOD_LandPatch
-      USE MOD_SPMD_Task
+   USE MOD_Precision
+   USE MOD_Vars_Global
+   USE MOD_LandPatch
+   USE MOD_SPMD_Task
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      integer :: nlc = N_land_classification
+   integer :: nlc = N_land_classification
 
       IF (p_is_worker) THEN
          allocate (lccpct_patches (numpatch, 0:nlc))
@@ -62,48 +59,48 @@ CONTAINS
 
    SUBROUTINE MAKE_LulccTransferTrace (lc_year)
 
-      USE MOD_Precision
-      USE MOD_Namelist
-      USE MOD_SPMD_Task
-      USE MOD_Grid
-      USE MOD_LandPatch
-      USE MOD_NetCDFVector
-      USE MOD_NetCDFBlock
-      USE MOD_AggregationRequestData
-      USE MOD_Mesh
-      USE MOD_MeshFilter
-      USE MOD_LandElm
-      USE MOD_DataType
-      USE MOD_Block
-      USE MOD_Pixel
-      USE MOD_5x5DataReadin
-      USE MOD_RegionClip
-      USE MOD_Utils
+   USE MOD_Precision
+   USE MOD_Namelist
+   USE MOD_SPMD_Task
+   USE MOD_Grid
+   USE MOD_LandPatch
+   USE MOD_NetCDFVector
+   USE MOD_NetCDFBlock
+   USE MOD_AggregationRequestData
+   USE MOD_Mesh
+   USE MOD_MeshFilter
+   USE MOD_LandElm
+   USE MOD_DataType
+   USE MOD_Block
+   USE MOD_Pixel
+   USE MOD_5x5DataReadin
+   USE MOD_RegionClip
+   USE MOD_Utils
 #ifdef SrfdataDiag
-      USE MOD_SrfdataDiag
+   USE MOD_SrfdataDiag
 #endif
 #ifdef RangeCheck
-      USE MOD_RangeCheck
+   USE MOD_RangeCheck
 #endif
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      integer, intent(in) :: lc_year
+   integer, intent(in) :: lc_year
 
-      ! local variables:
-      ! ---------------------------------------------------------------
-      character(len=256) :: dir_5x5, suffix, lastyr, thisyr, dir_landdata, lndname
-      integer :: i,ipatch,ipxl,ipxstt,ipxend,numpxl,ilc
-      integer, allocatable, dimension(:) :: locpxl
-      type (block_data_int32_2d)         :: lcdatafr !land cover data of last year
-      integer, allocatable, dimension(:) :: lcdatafr_one(:), lcfrbuff(:)
-      real(r8),allocatable, dimension(:) :: area_one(:)    , areabuff(:)
-      real(r8) :: sum_areabuff, gridarea
-      integer, allocatable, dimension(:) :: grid_patch_s, grid_patch_e
+   ! local variables:
+   ! ---------------------------------------------------------------
+   character(len=256) :: dir_5x5, suffix, lastyr, thisyr, dir_landdata, lndname
+   integer :: i,ipatch,ipxl,ipxstt,ipxend,numpxl,ilc
+   integer, allocatable, dimension(:) :: locpxl
+   type (block_data_int32_2d)         :: lcdatafr !land cover data of last year
+   integer, allocatable, dimension(:) :: lcdatafr_one(:), lcfrbuff(:)
+   real(r8),allocatable, dimension(:) :: area_one(:)    , areabuff(:)
+   real(r8) :: sum_areabuff, gridarea
+   integer, allocatable, dimension(:) :: grid_patch_s, grid_patch_e
 ! for surface data diag
 #ifdef SrfdataDiag
-      integer  :: ityp
-      integer, allocatable, dimension(:) :: typindex
+   integer  :: ityp
+   integer, allocatable, dimension(:) :: typindex
 
       allocate( typindex(N_land_classification+1) )
 #endif
@@ -232,10 +229,10 @@ CONTAINS
 
 
    SUBROUTINE deallocate_LulccTransferTrace
-      ! --------------------------------------------------
-      ! Deallocates memory for Lulcc time invariant variables
-      ! --------------------------------------------------
-      USE MOD_SPMD_Task
+   ! --------------------------------------------------
+   ! Deallocates memory for Lulcc time invariant variables
+   ! --------------------------------------------------
+   USE MOD_SPMD_Task
 
       IF (p_is_worker) THEN
          IF (allocated(lccpct_patches)) deallocate (lccpct_patches)
