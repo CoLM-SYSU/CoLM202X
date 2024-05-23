@@ -34,6 +34,7 @@ MODULE MOD_Urban_Flux
 !
 !  12/2022, Wenzong Dong: Traffic and metabolism heat flux are considered
 !           in turbulent flux exchange.
+!  05/2024, Wenzong Dong: make the code consistant with technical report
 !-----------------------------------------------------------------------
    USE MOD_Precision
    USE MOD_Vars_Global
