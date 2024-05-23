@@ -35,7 +35,7 @@ CONTAINS
 
    SUBROUTINE alburban (ipatch,froof,fgper,flake,hwr,hroof,&
                         alb_roof,alb_wall,alb_gimp,alb_gper,&
-                        rho,tau,fveg,hveg,lai,sai,coszen,fwsun,tlake,&
+                        rho,tau,fveg,hveg,lai,sai,fwet_snow,coszen,fwsun,tlake,&
                         fsno_roof,fsno_gimp,fsno_gper,fsno_lake,&
                         scv_roof,scv_gimp,scv_gper,scv_lake,&
                         sag_roof,sag_gimp,sag_gper,sag_lake,&
@@ -59,6 +59,7 @@ CONTAINS
 
    USE MOD_Precision
    USE MOD_Const_Physical, only: tfrz
+   USE MOD_Namelist, only: DEF_VEG_SNOW
    USE MOD_Urban_Shortwave
 
    IMPLICIT NONE
@@ -88,6 +89,7 @@ CONTAINS
       hveg,          &! vegetation central crown height [m]
       lai,           &! leaf area index (LAI+SAI) [m2/m2]
       sai,           &! stem area index (LAI+SAI) [m2/m2]
+      fwet_snow,     &! vegetation snow fractional cover [-]
 
       ! variables
       coszen,        &! cosine of solar zenith angle [-]
@@ -149,6 +151,11 @@ CONTAINS
       albgper(2,2),  &! albedo, ground
       alblake(2,2)    ! albedo, ground
 
+   ! vegetation snow optical properties, 1:vis, 2:nir
+   real(r8) :: rho_sno(2), tau_sno(2)
+   data rho_sno(1), rho_sno(2) /0.6, 0.3/
+   data tau_sno(1), tau_sno(2) /0.2, 0.1/
+
 ! ----------------------------------------------------------------------
 ! 1. Initial set
 ! ----------------------------------------------------------------------
@@ -187,6 +194,13 @@ CONTAINS
       IF (lai+sai>1.e-6 .and. fveg>0.) THEN
          erho(:) = rho(:,1)*lai/(lai+sai) + rho(:,2)*sai/(lai+sai)
          etau(:) = tau(:,1)*lai/(lai+sai) + tau(:,2)*sai/(lai+sai)
+      ENDIF
+
+      ! correct for snow on leaf
+      IF ( DEF_VEG_SNOW ) THEN
+         ! modify rho, tau, USE: fwet_snow
+         erho(:) = (1-fwet_snow)*erho(:) + fwet_snow*rho_sno(:)
+         etau(:) = (1-fwet_snow)*etau(:) + fwet_snow*tau_sno(:)
       ENDIF
 
 ! ----------------------------------------------------------------------

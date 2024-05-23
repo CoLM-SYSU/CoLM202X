@@ -114,7 +114,8 @@
            t_wallsha                                              ,&
 
            lai          ,sai          ,fveg         ,sigf         ,&
-           green        ,tleaf        ,ldew         ,t_grnd       ,&
+           green        ,tleaf        ,ldew         ,ldew_rain    ,&
+           ldew_snow    ,fwet_snow    ,t_grnd                     ,&
 
            sag_roof     ,sag_gimp     ,sag_gper     ,sag_lake     ,&
            scv_roof     ,scv_gimp     ,scv_gper     ,scv_lake     ,&
@@ -399,6 +400,9 @@
         !tmax                 ,&! Diurnal Max 2 m height air temperature [kelvin]
         !tmin                 ,&! Diurnal Min 2 m height air temperature [kelvin]
         ldew                  ,&! depth of water on foliage [kg/m2/s]
+        ldew_rain             ,&! depth of rain on foliage[kg/m2/s]
+        ldew_snow             ,&! depth of snow on foliage[kg/m2/s]
+        fwet_snow             ,&! vegetation canopy snow fractional cover [-]
         sag                   ,&! non dimensional snow age [-]
         sag_roof              ,&! non dimensional snow age [-]
         sag_gimp              ,&! non dimensional snow age [-]
@@ -651,6 +655,8 @@
         pgimp_snow            ,&! snowfall onto ground including canopy runoff [kg/(m2 s)]
         pg_rain_lake          ,&! rainfall onto lake [kg/(m2 s)]
         pg_snow_lake          ,&! snowfall onto lake [kg/(m2 s)]
+        qintr_rain            ,&! rainfall interception (mm h2o/s)
+        qintr_snow            ,&! snowfall interception (mm h2o/s)
         etrgper               ,&! etr for pervious ground
         fveg_gper             ,&! fraction of fveg/fgper
         fveg_gimp               ! fraction of fveg/fgimp
@@ -847,7 +853,7 @@
       ! with vegetation canopy
       CALL LEAF_interception_CoLM2014 (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tref,tleaf,&
                               prc_rain,prc_snow,prl_rain,prl_snow,bifall,&
-                              ldew,ldew,ldew,z0m,forc_hgt_u,pgper_rain,pgper_snow,qintr,qintr,qintr)
+                              ldew,ldew_rain,ldew_snow,z0m,forc_hgt_u,pgper_rain,pgper_snow,qintr,qintr_rain,qintr_snow)
 
       ! for output, patch scale
       qintr = qintr * fveg * (1-flake)
@@ -990,8 +996,9 @@
          wliq_gimpsno(lbi:) ,wliq_gpersno(lbp:) ,wliq_lakesno(:)    ,wice_roofsno(lbr:) ,&
          wice_gimpsno(lbi:) ,wice_gpersno(lbp:) ,wice_lakesno(:)    ,t_lake(:)          ,&
          lake_icefrac(:)    ,savedtke1          ,lveg               ,tleaf              ,&
-         ldew               ,t_room             ,troof_inner        ,twsun_inner        ,&
-         twsha_inner        ,t_roommax          ,t_roommin          ,tafu               ,&
+         ldew               ,ldew_rain          ,ldew_snow          ,fwet_snow          ,&
+         t_room             ,troof_inner        ,twsun_inner        ,twsha_inner        ,&
+         t_roommax          ,t_roommin          ,tafu                                   ,&
 
 ! SNICAR model variables
          snofrz(lbsn:0)     ,sabg_lyr(lbp:1)                                            ,&
@@ -1276,7 +1283,7 @@
 
       CALL alburban (ipatch,froof,fgper,flake,hwr,hroof,&
                      alb_roof,alb_wall,alb_gimp,alb_gper,&
-                     rho,tau,fveg,(htop+hbot)/2.,lai,sai,coszen,fwsun,tlake,&
+                     rho,tau,fveg,(htop+hbot)/2.,lai,sai,fwet_snow,coszen,fwsun,tlake,&
                      fsno_roof,fsno_gimp,fsno_gper,fsno_lake,&
                      scv_roof,scv_gimp,scv_gper,scv_lake,&
                      sag_roof,sag_gimp,sag_gper,sag_lake,&

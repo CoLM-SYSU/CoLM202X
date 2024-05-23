@@ -46,15 +46,15 @@ CONTAINS
         vf_gravels     ,vf_om          ,vf_sand        ,wf_gravels     ,&
         wf_sand        ,csol           ,porsl          ,psi0           ,&
 #ifdef Campbell_SOIL_MODEL
-        bsw            ,&
+        bsw                                                            ,&
 #endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
         theta_r        ,alpha_vgm      ,n_vgm          ,L_vgm          ,&
-        sc_vgm         ,fc_vgm         ,&
+        sc_vgm         ,fc_vgm                                         ,&
 #endif
         k_solids       ,dksatu         ,dksatf         ,dkdry          ,&
-        BA_alpha       ,BA_beta        ,&
-        cv_roof        ,cv_wall        ,cv_gimp        ,&
+        BA_alpha       ,BA_beta                                        ,&
+        cv_roof        ,cv_wall        ,cv_gimp                        ,&
         tk_roof        ,tk_wall        ,tk_gimp        ,dz_roofsno     ,&
         dz_gimpsno     ,dz_gpersno     ,dz_lakesno     ,dz_wall        ,&
         z_roofsno      ,z_gimpsno      ,z_gpersno      ,z_lakesno      ,&
@@ -64,7 +64,7 @@ CONTAINS
         vmax25         ,slti           ,hlti           ,shti           ,&
         hhti           ,trda           ,trdm           ,trop           ,&
         g1             ,g0             ,gradm          ,binter         ,&
-        extkn          ,&
+        extkn                                                          ,&
 
         ! surface status
         fsno_roof      ,fsno_gimp      ,fsno_gper      ,scv_roof       ,&
@@ -78,8 +78,9 @@ CONTAINS
         wliq_gimpsno   ,wliq_gpersno   ,wliq_lakesno   ,wice_roofsno   ,&
         wice_gimpsno   ,wice_gpersno   ,wice_lakesno   ,t_lake         ,&
         lake_icefrac   ,savedtke1      ,lveg           ,tleaf          ,&
-        ldew           ,troom          ,troof_inner    ,twsun_inner    ,&
-        twsha_inner    ,troommax       ,troommin       ,tafu           ,&
+        ldew           ,ldew_rain      ,ldew_snow      ,fwet_snow      ,&
+        troom          ,troof_inner    ,twsun_inner    ,twsha_inner    ,&
+        troommax       ,troommin       ,tafu                           ,&
 
 ! SNICAR model variables
         snofrz         ,sabg_lyr                                       ,&
@@ -324,6 +325,9 @@ CONTAINS
         lveg                           ,&! net longwave radiation of vegetation [W/m2]
         tleaf                          ,&! leaf temperature [K]
         ldew                           ,&! depth of water on foliage [kg/(m2 s)]
+        ldew_rain                      ,&! depth of rain on foliage [kg/(m2 s)]
+        ldew_snow                      ,&! depth of rain on foliage [kg/(m2 s)]
+        fwet_snow                      ,&! vegetation canopy snow fractional cover [-]
         troom                          ,&! temperature of inner building
         troof_inner                    ,&! temperature of inner roof
         twsun_inner                    ,&! temperature of inner sunlit wall
@@ -474,7 +478,7 @@ CONTAINS
         olrb               ,&! olrg assuming blackbody emission [W/m2]
         psit               ,&! negative potential of soil
 
-        rsr                ,&! soil resistance
+        rss                ,&! soil resistance
         qroof              ,&! roof specific humudity [kg/kg]
         qgimp              ,&! ground impervious road specific humudity [kg/kg]
         qgper              ,&! ground pervious specific humudity [kg/kg]
@@ -545,7 +549,8 @@ CONTAINS
         tstar_lake         ,&! t* in similarity theory [K]
         fm_lake            ,&! integral of profile function for momentum
         fh_lake            ,&! integral of profile function for heat
-        fq_lake              ! integral of profile function for moisture
+        fq_lake            ,&! integral of profile function for moisture
+        dheatl               ! vegetation heat change [W/m2]
 
    real(r8) :: z0m_g,z0h_g,zol_g,obu_g,ustar_g,qstar_g,tstar_g
    real(r8) :: fm10m,fm_g,fh_g,fq_g,fh2m,fq2m,um,obu,eb
@@ -575,6 +580,8 @@ CONTAINS
       zol   = 0.;  rib   = 0.
       ustar = 0.;  qstar = 0.
       tstar = 0.;  rootr = 0.
+
+      dheatl = 0.
 
       ! latent heat, assumed that the sublimation occured only as wliq_gpersno=0
       htvp_roof = hvap
@@ -656,8 +663,8 @@ CONTAINS
       qred = 1.
       CALL qsadv(tgper,forc_psrf,eg,degdT,qsatg,qsatgdT)
 
-      ! initialization for rsr
-      rsr = 0.
+      ! initialization for rss
+      rss = 0.
 
       IF (patchtype <=1 ) THEN          !soil ground
          wx = (wliq_gpersno(1)/denh2o + wice_gpersno(1)/denice)/dz_gpersno(1)
@@ -692,7 +699,7 @@ CONTAINS
             ENDIF
 
             ! Sellers et al., 1992
-            rsr = (1-fsno_gper)*exp(8.206-4.255*fac)
+            rss = (1-fsno_gper)*exp(8.206-4.255*fac)
          ENDIF
       ENDIF
 
@@ -859,7 +866,8 @@ CONTAINS
             twsun          ,twsha          ,tgimp          ,tgper          ,&
             qroof          ,qgimp          ,qgper          ,dqroofdT       ,&
             dqgimpdT       ,dqgperdT       ,sigf           ,tleaf          ,&
-            ldew           ,rsr                                            ,&
+            ldew           ,ldew_rain      ,ldew_snow      ,fwet_snow      ,&
+            dheatl         ,rss                                            ,&
             ! longwave related
             Ainv           ,B              ,B1             ,dBdT           ,&
             SkyVF          ,VegVF                                          ,&
@@ -897,7 +905,7 @@ CONTAINS
             htvp_roof      ,htvp_gimp      ,htvp_gper      ,troof          ,&
             twsun          ,twsha          ,tgimp          ,tgper          ,&
             qroof          ,qgimp          ,qgper          ,dqroofdT       ,&
-            dqgimpdT       ,dqgperdT       ,rsr                            ,&
+            dqgimpdT       ,dqgperdT       ,rss                            ,&
             ! output
             taux           ,tauy           ,fsenroof       ,fsenwsun       ,&
             fsenwsha       ,fsengimp       ,fsengper       ,fevproof       ,&
@@ -909,14 +917,17 @@ CONTAINS
             fh             ,fq             ,tafu                            )
 
          !TODO: check
-         tleaf   = forc_t
-         ldew    = 0.
-         rstfac  = 0.
-         fsenl   = 0.0
-         fevpl   = 0.0
-         etr     = 0.0
-         assim   = 0.0
-         respc   = 0.0
+         tleaf     = forc_t
+         ldew      = 0.
+         ldew_rain = 0.
+         ldew_snow = 0.
+         fwet_snow = 0.
+         rstfac    = 0.
+         fsenl     = 0.0
+         fevpl     = 0.0
+         etr       = 0.0
+         assim     = 0.0
+         respc     = 0.0
 
       ENDIF
 
@@ -1309,7 +1320,7 @@ CONTAINS
 !=======================================================================
 
       IF ( doveg ) THEN
-         errore = sabv*fveg*(1-flake) + sabg + lnet - fsena - lfevpa - fgrnd
+         errore = sabv*fveg*(1-flake) + sabg + lnet - fsena - lfevpa - fgrnd - dheatl
       ELSE
          errore = sabg + lnet - fsena - lfevpa - fgrnd
       ENDIF

@@ -680,6 +680,7 @@ IF ( patchtype==0.and.DEF_USE_LCT .or. patchtype>0 ) THEN
          laisha        = 0.
          ldew_rain     = 0.
          ldew_snow     = 0.
+         fwet_snow     = 0.
          ldew          = 0.
          rstfacsun_out = 0.
          rstfacsha_out = 0.
