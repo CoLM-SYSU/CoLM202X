@@ -656,39 +656,39 @@ CONTAINS
          ENDDO
 
          ! claculate wtshi, wtsqi
-         wtshi(:) = cah(:)*fah(:) + cgh(:)*fgh(:)
-         wtsqi(:) = caw(:)*faw(:) + cgw(:)*fgw(:)
+         ! wtshi(:) = cah(:)*fah(:) + cgh(:)*fgh(:)
+         ! wtsqi(:) = caw(:)*faw(:) + cgw(:)*fgw(:)
 
-         DO i = 0, nurb
-            clev = canlev(i)
-            wtshi(clev) = wtshi(clev) + fc(i)*cfh(i)
-            wtsqi(clev) = wtsqi(clev) + fc(i)*cfw(i)
-         ENDDO
+         ! DO i = 0, nurb
+         !    clev = canlev(i)
+         !    wtshi(clev) = wtshi(clev) + fc(i)*cfh(i)
+         !    wtsqi(clev) = wtsqi(clev) + fc(i)*cfw(i)
+         ! ENDDO
 
-         DO i = 3, 2, -1
-            wtshi(i) = 1./wtshi(i)
-            wtsqi(i) = 1./wtsqi(i)
-         ENDDO
+         ! DO i = 3, 2, -1
+         !    wtshi(i) = 1./wtshi(i)
+         !    wtsqi(i) = 1./wtsqi(i)
+         ! ENDDO
 
-         wta0(:)  = cah(:) * wtshi(:) * fah(:)
-         wtg0(:)  = cgh(:) * wtshi(:) * fgh(:)
+         ! wta0(:)  = cah(:) * wtshi(:) * fah(:)
+         ! wtg0(:)  = cgh(:) * wtshi(:) * fgh(:)
 
-         wtaq0(:) = caw(:) * wtsqi(:) * faw(:)
-         wtgq0(:) = cgw(:) * wtsqi(:) * fgw(:)
+         ! wtaq0(:) = caw(:) * wtsqi(:) * faw(:)
+         ! wtgq0(:) = cgw(:) * wtsqi(:) * fgw(:)
 
          ! calculate wtl0, wtll, wtlq0, wtlql
-         wtll(:)  = 0.
-         wtlql(:) = 0.
+         ! wtll(:)  = 0.
+         ! wtlql(:) = 0.
 
-         DO i = 0, nurb
-            clev = canlev(i)
+         ! DO i = 0, nurb
+         !    clev = canlev(i)
 
-            wtl0(i)    = cfh(i) * wtshi(clev) * fc(i)
-            wtll(clev) = wtll(clev) + wtl0(i)*tu(i)
+         !    wtl0(i)    = cfh(i) * wtshi(clev) * fc(i)
+         !    wtll(clev) = wtll(clev) + wtl0(i)*tu(i)
 
-            wtlq0(i)    = cfw(i) * wtsqi(clev) * fc(i)
-            wtlql(clev) = wtlql(clev) + wtlq0(i)*qsatl(i)
-         ENDDO
+         !    wtlq0(i)    = cfw(i) * wtsqi(clev) * fc(i)
+         !    wtlql(clev) = wtlql(clev) + wtlq0(i)*qsatl(i)
+         ! ENDDO
 
          IF (numlay .eq. 2) THEN
 
@@ -831,8 +831,15 @@ CONTAINS
       ! fact   = 1. - wta0(2)*wtg0(3)
       ! facq   = 1. - wtaq0(2)*wtgq0(3)
       ! deduce: croofs = rhoair*cpair*cfh(0)*(1.-wtg0(3)*wta0(2)*wtl0(0)/fact-wtl0(0))
-      croofs = rhoair*cpair*cfh(0)*(1.-wtl0(0)/fact)
-      cwalls = rhoair*cpair*cfh(1)*(1.-wtl0(1)/fact)
+      ! croofs = rhoair*cpair*cfh(0)*(1.-wtl0(0)/fact)
+      ! cwalls = rhoair*cpair*cfh(1)*(1.-wtl0(1)/fact)
+      fact   = 1.-(cah(2)*cah(2)/(cah(3)+cah(2)+cfh(0)*fc(0)) &
+               /(cah(2)+cgh(2)*fg+cfh(1)*fc(1)+cfh(2)*fc(2)))
+      facq   = 1.-(caw(2)*caw(2) &
+               /(caw(3)+caw(2)+cfw(0)*fc(0)) &
+               /(caw(2)+cgw_per*fgper*fg+cgw_imp*fgimp*fg))
+      croofs = rhoair*cpair*cfh(0)*(1.-cfh(0)*fc(0)/(caw(3)+cgw(3)+cfh(0)*fc(0))/fact)
+      cwalls = rhoair*cpair*cfh(1)*(1.-cfh(1)*fc(1)/(cgh(3)+cgh(2)*fg+cfh(1)*fc(1)+cfh(2)*fc(2)/fact))
       ! deduce: croofl = rhoair*cfw(0)*(1.-wtgq0(3)*wtaq0(2)*wtlq0(0)/facq-wtlq0(0))*qsatldT(0)
       ! croofl = rhoair*cfw(0)*(1.-wtlq0(0)/facq)*qsatldT(0)
       croofl = rhoair*cfw(0)*(1.-cfw(0)*fc(0)/(caw(3)+cgw(3)+cfw(0)*fc(0))-cgw(3) &
@@ -870,10 +877,12 @@ CONTAINS
 ! Derivative of soil energy flux with respect to soil temperature (cgrnd)
 !-----------------------------------------------------------------------
 
-      cgrnds = cpair*rhoair*cgh(2)*(1.-wtg0(2)/fact)
+      ! cgrnds = cpair*rhoair*cgh(2)*(1.-wtg0(2)/fact)
       ! cgperl = rhoair*cgw(2)*(1.-wtgq0(2)/facq)*dqgperdT
       ! cgimpl = rhoair*cgw(2)*(1.-wtgq0(2)/facq)*dqgimpdT
 
+      cgrnds = cpair*rhoair*cgh(2) &
+               *(1.-cgh(2)*fg/(cgh(3)+cgh(2)*fg+cfh(1)*fc(1)+cfh(2)*fc(2))/fact)
       cgperl = rhoair*cgw_per*(dqgperdT &
                - (dqgperdT*cgw_per*fgper*fg) &
                /(caw(2) + cgw_per*fgper*fg + cgw_imp*fgimp*fg) &
@@ -1814,39 +1823,39 @@ CONTAINS
          ENDDO
 
          ! claculate wtshi, wtsqi
-         wtshi(:) = cah(:)*fah(:) + cgh(:)*fgh(:)
-         wtsqi(:) = caw(:)*faw(:) + cgw(:)*fgw(:)
+         ! wtshi(:) = cah(:)*fah(:) + cgh(:)*fgh(:)
+         ! wtsqi(:) = caw(:)*faw(:) + cgw(:)*fgw(:)
 
-         DO i = 0, nurb
-            clev = canlev(i)
-            wtshi(clev) = wtshi(clev) + fc(i)*cfh(i)
-            wtsqi(clev) = wtsqi(clev) + fc(i)*cfw(i)
-         ENDDO
+         ! DO i = 0, nurb
+         !    clev = canlev(i)
+         !    wtshi(clev) = wtshi(clev) + fc(i)*cfh(i)
+         !    wtsqi(clev) = wtsqi(clev) + fc(i)*cfw(i)
+         ! ENDDO
 
-         DO i = 3, 3-numlay+1, -1
-            wtshi(i) = 1./wtshi(i)
-            wtsqi(i) = 1./wtsqi(i)
-         ENDDO
+         ! DO i = 3, 3-numlay+1, -1
+         !    wtshi(i) = 1./wtshi(i)
+         !    wtsqi(i) = 1./wtsqi(i)
+         ! ENDDO
 
-         wta0(:) = cah(:) * wtshi(:) * fah(:)
-         wtg0(:) = cgh(:) * wtshi(:) * fgh(:)
+         ! wta0(:) = cah(:) * wtshi(:) * fah(:)
+         ! wtg0(:) = cgh(:) * wtshi(:) * fgh(:)
 
-         wtaq0(:) = caw(:) * wtsqi(:) * faw(:)
-         wtgq0(:) = cgw(:) * wtsqi(:) * fgw(:)
+         ! wtaq0(:) = caw(:) * wtsqi(:) * faw(:)
+         ! wtgq0(:) = cgw(:) * wtsqi(:) * fgw(:)
 
          ! calculate wtl0, wtll, wtlq0, wtlql
-         wtll(:)  = 0.
-         wtlql(:) = 0.
+         ! wtll(:)  = 0.
+         ! wtlql(:) = 0.
 
-         DO i = 0, nurb
-            clev = canlev(i)
+         ! DO i = 0, nurb
+         !    clev = canlev(i)
 
-            wtl0(i)  = cfh(i) * wtshi(clev) * fc(i)
-            wtll(clev) = wtll(clev) + wtl0(i)*tu(i)
+         !    wtl0(i)  = cfh(i) * wtshi(clev) * fc(i)
+         !    wtll(clev) = wtll(clev) + wtl0(i)*tu(i)
 
-            wtlq0(i) = cfw(i) * wtsqi(clev) * fc(i)
-            wtlql(clev) = wtlql(clev) + wtlq0(i)*qsatl(i)
-         ENDDO
+         !    wtlq0(i) = cfw(i) * wtsqi(clev) * fc(i)
+         !    wtlql(clev) = wtlql(clev) + wtlq0(i)*qsatl(i)
+         ! ENDDO
 
          ! to solve taf(:) and qaf(:)
 
@@ -2000,7 +2009,9 @@ CONTAINS
          ! 09/25/2017: re-written, check it clearfully
          ! 11/25/2021: re-written, double check
          IF (botlay == 2) THEN
-            fsenl_dtl = rhoair * cpair * cfh(i) * (1.-wtl0(i)/fact)
+            ! fsenl_dtl = rhoair * cpair * cfh(i) * (1.-wtl0(i)/fact)
+            fsenl_dtl = rhoair * cpair * cfh(3) &
+                        *(1.-cfh(3)*fc(3)/(cgh(3)+cgh(2)*fg+cfh(1)*fc(1)+cfh(2)*fc(2)+cfh(3)*fc(3))/fact)
          ELSE
             fsenl_dtl = rhoair * cpair * cfh(i) * (1.-wta0(1)*wtg0(2)*wtl0(i)/fact-wtl0(i))
          ENDIF
@@ -2011,8 +2022,11 @@ CONTAINS
              * (qsatl(i) - qaf(botlay))
 
          IF (botlay == 2) THEN
-            etr_dtl = rhoair * (1.-fwet) * delta * lai/(rb(i)+rs) &
-                    * (1.-wtlq0(i)/facq)*qsatldT(i)
+            ! etr_dtl = rhoair * (1.-fwet) * delta * lai/(rb(i)+rs) &
+            !         * (1.-wtlq0(i)/facq)*qsatldT(i)
+            etr_dtl = rhoair * (1.-fwet) * delta * lai/(rb(3)+rs) &
+                      *(1.-cfw(3)*fc(3)/(cgw(3)+cgw_per*fgper*fg+cgw_imp*fgimp*fg+cfw(3)*fc(3))/facq) &
+                      *qsatldT(3)
          ELSE
             etr_dtl = rhoair * (1.-fwet) * delta * lai/(rb(i)+rs) &
                     * (1.-wtaq0(1)*wtgq0(2)*wtlq0(i)/facq-wtlq0(i))*qsatldT(i)
@@ -2027,8 +2041,11 @@ CONTAINS
                  * (qsatl(i) - qaf(botlay))
 
          IF (botlay == 2) THEN
-            evplwet_dtl = rhoair * (1.-delta*(1.-fwet)) * lsai/rb(i) &
-                        * (1.-wtlq0(i)/facq)*qsatldT(i)
+            ! evplwet_dtl = rhoair * (1.-delta*(1.-fwet)) * lsai/rb(i) &
+            !             * (1.-wtlq0(i)/facq)*qsatldT(i)
+            evplwet_dtl = rhoair * (1.-delta*(1.-fwet)) * lsai/rb(3) &
+                          *(1.-cfw(3)*fc(3)/(cgw(3)+cgw_per*fgper*fg+cgw_imp*fgimp*fg+cfw(3)*fc(3))/facq) &
+                          *qsatldT(3)
          ELSE
             evplwet_dtl = rhoair * (1.-delta*(1.-fwet)) * lsai/rb(i) &
                         * (1.-wtaq0(1)*wtgq0(2)*wtlq0(i)/facq-wtlq0(i))*qsatldT(i)
@@ -2454,8 +2471,15 @@ CONTAINS
       fevproof = rhoair*cfw(0)*(qsatl(0)-qaf(3))
       fevproof = fevproof*fwet_roof
 
-      croofs = rhoair*cpair*cfh(0)*(1.-wtg0(3)*wta0(2)*wtl0(0)/fact-wtl0(0))
-      cwalls = rhoair*cpair*cfh(1)*(1.-wtl0(1)/fact)
+      ! croofs = rhoair*cpair*cfh(0)*(1.-wtg0(3)*wta0(2)*wtl0(0)/fact-wtl0(0))
+      ! cwalls = rhoair*cpair*cfh(1)*(1.-wtl0(1)/fact)
+      croofs = rhoair*cpair*cfh(0) &
+               *(1.-cgh(3)/(cah(3)+cgh(3)+cfh(0)*fc(0)) &
+               *cah(2)/(cah(2)+cgh(2)*fg+cfh(1)*fc(1)+cfh(2)*fc(2)+cfh(3)*fc(3)) &
+               *cfh(0)*fc(0)/(cah(3)+cgh(3)+cfh(0)*fc(0))/fact &
+               -cfh(0)*fc(0)/(cah(3)+cgh(3)+cfh(0)*fc(0)))
+      cwalls = rhoair*cpair*cfh(1) &
+               *(1.-cfh(1)*fc(1)/(cgh(3)+cgh(2)*fg+cfh(1)*fc(1)+cfh(2)*fc(2)+cfh(3)*fc(3))/fact)
       ! croofl = rhoair*cfw(0)*(1.-wtgq0(3)*wtaq0(2)*wtlq0(0)/facq-wtlq0(0))*qsatldT(0)
       croofl = rhoair*cfw(0)*(1.-cfw(0)*fc(0)/(caw(3)+cgw(3)+cfw(0)*fc(0))-cgw(3) &
                /(caw(3)+cgw(3)+cfw(0)*fc(0)) &
@@ -2482,15 +2506,17 @@ CONTAINS
 !-----------------------------------------------------------------------
 
       IF (botlay == 2) THEN
-         cgrnds = cpair*rhoair*cgh(2)*(1.-wtg0(2)/fact)
+         ! cgrnds = cpair*rhoair*cgh(2)*(1.-wtg0(2)/fact)
          ! cgperl = rhoair*cgw(2)*(1.-wtgq0(2)/facq)*dqgperdT
          ! cgimpl = rhoair*cgw(2)*(1.-wtgq0(2)/facq)*dqgimpdT
+         cgrnds = cpair*rhoair*cgh(2) &
+                  *(1.-cgh(2)*fg/(cgh(3)+cgh(2)*fg+cfh(1)*fc(1)+cfh(2)*fc(2)+cfh(3)*fc(3))/fact)
          cgperl = rhoair*cgw_per*(dqgperdT &
-                  - (dqgperdT*cgw_per*fgper*fg) &
+                  -(dqgperdT*cgw_per*fgper*fg) &
                   /(caw(2) + cgw_per*fgper*fg + cgw_imp*fgimp*fg + cfw(3)*fc(3)) &
                   /facq)
          cgimpl = rhoair*cgw_imp*(dqgimpdT &
-                  - (dqgimpdT*cgw_imp*fgimp*fg) &
+                  -(dqgimpdT*cgw_imp*fgimp*fg) &
                   /(caw(2) + cgw_per*fgper*fg + cgw_imp*fgimp*fg + cfw(3)*fc(3)) &
                   /facq)
          cgimpl = cgimpl*fwet_gimp
