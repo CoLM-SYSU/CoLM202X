@@ -128,9 +128,6 @@ CONTAINS
    real(r8)           :: missing_value
    integer            :: ielm, istt, iend
 
-   real(r8), allocatable :: vecone(:)
-   integer :: iblkme, xblk, yblk, xloc, yloc
-
       CALL init_user_specified_forcing
 
       ! CO2 data initialization

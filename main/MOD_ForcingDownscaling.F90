@@ -63,8 +63,6 @@ CONTAINS
    SUBROUTINE downscale_forcings(&
                    num_gridcells,num_columns,begc,endc,glaciers,wt_column,&
 
-                   mask_g,&
-
                    !slp_c, asp_c, cur_c, svf_c, sf_c,&
 
                    forc_topo_g ,forc_t_g   ,forc_th_g  ,forc_q_g     ,forc_pbot_g ,&
@@ -97,8 +95,6 @@ CONTAINS
    integer,  intent(in) :: endc (1:num_gridcells)   ! ending column index
    logical,  intent(in) :: glaciers (1:num_columns) ! true: glacier column (itypwat = 3)
    real(r8), intent(in) :: wt_column(1:num_columns) ! weight of the column relative to the grid cell
-
-   logical,  intent(in) :: mask_g(1:num_columns)
 
    ! topography factor
    !real(r8), intent(in) :: forc_slp_c(1:num_columns) ! slope factor
@@ -155,8 +151,6 @@ CONTAINS
       ! Initialize column forcing (needs to be done for ALL active columns)
       DO g = 1, num_gridcells
 
-         IF (.not. mask_g(g)) CYCLE
-
          DO c = begc(g), endc(g)
             forc_t_c    (c) = forc_t_g    (g)
             forc_th_c   (c) = forc_th_g   (g)
@@ -167,10 +161,10 @@ CONTAINS
             forc_prl_c  (c) = forc_prl_g  (g)
             forc_lwrad_c(c) = forc_lwrad_g(g)
          END DO
-      ! END DO
+      END DO
 
-      ! ! Downscale forc_t, forc_th, forc_q, forc_pbot, and forc_rho to columns.
-      ! DO g = 1, num_gridcells
+      ! Downscale forc_t, forc_th, forc_q, forc_pbot, and forc_rho to columns.
+      DO g = 1, num_gridcells
          hsurf_g = forc_topo_g(g)             ! gridcell sfc elevation
          tbot_g  = forc_t_g(g)                ! atm sfc temp
          thbot_g = forc_th_g(g)               ! atm sfc pot temp
@@ -283,7 +277,7 @@ CONTAINS
          END DO
       END DO
 
-      CALL downscale_longwave(num_gridcells, num_columns, begc, endc, glaciers, wt_column, mask_g,&
+      CALL downscale_longwave(num_gridcells, num_columns, begc, endc, glaciers, wt_column, &
                    forc_topo_g, forc_t_g, forc_q_g, forc_pbot_g, forc_lwrad_g, &
                    forc_topo_c, forc_t_c, forc_q_c, forc_pbot_c, forc_lwrad_c)
 
@@ -325,7 +319,7 @@ CONTAINS
 !-----------------------------------------------------------------------------
 
    SUBROUTINE downscale_longwave(&
-      num_gridcells, num_columns, begc, endc, glaciers, wt_column, mask_g,&
+      num_gridcells, num_columns, begc, endc, glaciers, wt_column, &
       forc_topo_g, forc_t_g, forc_q_g, forc_pbot_g, forc_lwrad_g, &
       forc_topo_c, forc_t_c, forc_q_c, forc_pbot_c, forc_lwrad_c)
 
@@ -344,8 +338,6 @@ CONTAINS
    integer,  intent(in) :: endc (1:num_gridcells) ! ending column index
    logical,  intent(in) :: glaciers  (1:num_columns) ! true: glacier column
    real(r8), intent(in) :: wt_column (1:num_columns) ! weight of the column relative to the grid cell
-
-   logical,  intent(in) :: mask_g(1:num_columns)
 
    real(r8), intent(in) :: forc_topo_g  (1:num_gridcells) ! atmospheric surface height (m)
    real(r8), intent(in) :: forc_t_g     (1:num_gridcells) ! atmospheric temperature [Kelvin]
@@ -381,25 +373,22 @@ CONTAINS
 
       ! Initialize column forcing (needs to be done for ALL active columns)
       DO g = 1, num_gridcells
-
-         IF (.not. mask_g(g)) CYCLE
-
          DO c = begc(g), endc(g)
             forc_lwrad_c(c) = forc_lwrad_g(g)
          END DO
-      ! END DO
+      END DO
 
       ! Downscale the longwave radiation, conserving energy
 
       ! Initialize variables related to normalization
-      ! DO g = 1, num_gridcells
+      DO g = 1, num_gridcells
          sum_lwrad_g(g) = 0._r8
          sum_wts_g(g) = 0._r8
          newsum_lwrad_g(g) = 0._r8
-      ! END DO
+      END DO
 
       ! Do the downscaling
-      ! DO g = 1, num_gridcells
+      DO g = 1, num_gridcells
          DO c = begc(g), endc(g)
 
             hsurf_g = forc_topo_g(g)
@@ -477,10 +466,10 @@ CONTAINS
             newsum_lwrad_g(g) = newsum_lwrad_g(g) + wt_column(c)*forc_lwrad_c(c)
          END DO
 
-      ! END DO
+      END DO
 
       ! Make sure that, after normalization, the grid cell mean is conserved
-      ! DO g = 1, num_gridcells
+      DO g = 1, num_gridcells
          IF (sum_wts_g(g) > 0._r8) THEN
             IF (abs((newsum_lwrad_g(g) / sum_wts_g(g)) - forc_lwrad_g(g)) > 1.e-8_r8) THEN
                write(6,*) 'g, newsum_lwrad_g, sum_wts_g, forc_lwrad_g: ', &

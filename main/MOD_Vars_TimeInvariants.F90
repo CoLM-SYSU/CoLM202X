@@ -143,7 +143,6 @@ CONTAINS
    SUBROUTINE check_PFTimeInvariants ()
 
    USE MOD_RangeCheck
-   USE MOD_LandPatch
    IMPLICIT NONE
 
       CALL check_vector_data ('pftfrac', pftfrac) !

@@ -378,7 +378,7 @@ MODULE MOD_Namelist
    !CBL height
    logical           :: DEF_USE_CBL_HEIGHT = .false.
 
-   character(len=20) :: DEF_Forcing_Interp_Method = 'arealweight'
+   character(len=20) :: DEF_Forcing_Interp_Method = 'arealweight' ! 'arealweight' (default) or 'bilinear'
    
    logical           :: DEF_USE_Forcing_Downscaling        = .false.
    character(len=5)  :: DEF_DS_precipitation_adjust_scheme = 'II'
