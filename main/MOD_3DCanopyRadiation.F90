@@ -3,6 +3,25 @@
 MODULE MOD_3DCanopyRadiation
 
 !-----------------------------------------------------------------------
+!
+!            --- A 3D Canopy Radiation Transfer Model ---
+!                for Plant Community (PC) Simulation
+!
+!                                             Sun
+!                                            ///
+!                                           ///
+!            _____  tree           _____              --- Layer3
+!          /|||||||               |||||||
+!         /|||||||||             |||||||||
+!        /  \|||||//            / \|||||//
+!       /      |  /            /     |  /             --- Layer2
+!      /       | /            /      | /        /xx\
+!     / shadow |/     grass  /       |/   shrub/\xx/
+!  __/.........|_________\\//\/......|________/..|/__ --- Layer1
+! /////////////////////////////////////////////////////////////////////
+!
+!-----------------------------------------------------------------------
+
    USE MOD_Precision
    IMPLICIT NONE
    SAVE
@@ -28,21 +47,22 @@ CONTAINS
 
 !
 ! !DESCRIPTION:
-! This is a wrap SUBROUTINE to CALL 3D canopy radiative model below
-!   CALL ThreeDCanopy()
+!  This is a wrap SUBROUTINE to CALL 3D canopy radiative model below
+!     CALL ThreeDCanopy()
 !
-! Created by Hua Yuan, 08/2019
+!  Created by Hua Yuan, 08/2019
 !
-! REFERENCE:
-! Yuan, H., R. E. Dickinson, Y. Dai, M. J. Shaikh, L. Zhou, W. Shangguan,
-! and D. Ji, 2014: A 3D canopy radiative transfer model for global climate
-! modeling: Description, validation, and application. Journal of Climate,
-! 27, 1168–1192, https://doi.org/10.1175/JCLI-D-13-00155.1.
+! !REFERENCE:
+!  Yuan, H., R. E. Dickinson, Y. Dai, M. J. Shaikh, L. Zhou, W. Shangguan,
+!  and D. Ji, 2014: A 3D canopy radiative transfer model for global climate
+!  modeling: Description, validation, and application. Journal of Climate,
+!  27, 1168–1192, https://doi.org/10.1175/JCLI-D-13-00155.1.
 !
-! REVISIONS:
+! !REVISIONS:
 !
 
    USE MOD_Precision
+   USE MOD_Namelist, only: DEF_VEG_SNOW
    USE MOD_LandPFT, only: patch_pft_s, patch_pft_e
    USE MOD_Vars_Global
    USE MOD_Const_PFT
@@ -71,6 +91,11 @@ CONTAINS
    real(r8), allocatable :: csiz(:), chgt(:), chil(:), lsai(:)
    real(r8), allocatable :: fsun_id(:), fsun_ii(:), psun(:)
    real(r8), allocatable :: phi1(:), phi2(:), gdir(:)
+
+   ! vegetation snow optical properties, 1:vis, 2:nir
+   real(r8) :: rho_sno(2), tau_sno(2)
+   data rho_sno(1), rho_sno(2) /0.6, 0.3/
+   data tau_sno(1), tau_sno(2) /0.2, 0.1/
 
       ! get patch PFT index
       ps = patch_pft_s(ipatch)
@@ -122,6 +147,14 @@ CONTAINS
             tau(i,:) = tau_p(:,1,p)*lai_p(i)/lsai(i) &
                      + tau_p(:,2,p)*sai_p(i)/lsai(i)
          ENDIF
+
+         ! account for snow on vegetation
+         IF ( DEF_VEG_SNOW ) THEN
+            ! modify rho, tau, USE: fwet_snow_p
+            rho(i,:) = (1-fwet_snow_p(i))*rho(i,:) + fwet_snow_p(i)*rho_sno(:)
+            tau(i,:) = (1-fwet_snow_p(i))*tau(i,:) + fwet_snow_p(i)*tau_sno(:)
+         ENDIF
+
       ENDDO
 
       ! CALL 3D canopy radiation transfer model
@@ -225,22 +258,22 @@ CONTAINS
                           thermk, fshade)
 !
 ! !DESCRIPTION:
-! ThreeDCanopy based on Dickinson (2008) using three canopy layer
-! to calculate fluxes absorbed by vegetation, reflected by vegetation,
-! and transmitted through vegetation for unit incoming direct or
-! diffuse flux given an underlying surface with known albedo.
+!  ThreeDCanopy based on Dickinson (2008) using three canopy layer
+!  to calculate fluxes absorbed by vegetation, reflected by vegetation,
+!  and transmitted through vegetation for unit incoming direct or
+!  diffuse flux given an underlying surface with known albedo.
 !
-! Created by Hua Yuan, 08/2019
+!  Created by Hua Yuan, 08/2019
 !
 ! !HISTORY:
-! Before 2013: Robert E. Dickinson proposed the inital idea. Dickinson and
-!              Muhammad J. Shake contributed to the code writing.
+!  Before 2013: Robert E. Dickinson proposed the inital idea. Dickinson and
+!               Muhammad J. Shake contributed to the code writing.
 !
 ! !REFERENCE:
-! Yuan, H., R. E. Dickinson, Y. Dai, M. J. Shaikh, L. Zhou, W. Shangguan,
-! and D. Ji, 2014: A 3D canopy radiative transfer model for global climate
-! modeling: Description, validation, and application. Journal of Climate,
-! 27, 1168–1192, https://doi.org/10.1175/JCLI-D-13-00155.1.
+!  Yuan, H., R. E. Dickinson, Y. Dai, M. J. Shaikh, L. Zhou, W. Shangguan,
+!  and D. Ji, 2014: A 3D canopy radiative transfer model for global climate
+!  modeling: Description, validation, and application. Journal of Climate,
+!  27, 1168–1192, https://doi.org/10.1175/JCLI-D-13-00155.1.
 
 !
 ! !ARGUMENTS:

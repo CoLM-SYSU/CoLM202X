@@ -3,9 +3,13 @@
 #if (defined URBAN_MODEL)
 MODULE MOD_Urban_Vars_TimeVariables
 
-! -------------------------------
-! Created by Hua Yuan, 12/2020
-! -------------------------------
+!-----------------------------------------------------------------------
+! !DESCRIPTION:
+!
+!  Define urban model time variant variables.
+!
+!  Created by Hua Yuan, 12/2020
+!-----------------------------------------------------------------------
 
    USE MOD_Precision
    IMPLICIT NONE

@@ -1,7 +1,24 @@
 #include <define.h>
 
 MODULE MOD_Urban_ImperviousTemperature
-
+!-----------------------------------------------------------------------
+!
+! !DESCRIPTION:
+!
+!  The main difference between calculating the temperature conduction
+!  for an impervious ground and a pervious surface lies in the need to
+!  USE the thermal properties (thermal conductivity and heat capacity)
+!  of the imperious surface layer instead of the soil thermal
+!  properties. Additionally, when snow, ice, and water are present, the
+!  heat capacity of the first impervious surface layer needs to be
+!  adjusted. The impervious surface does not consider the transmission
+!  of water below the surface, and the phase change process only
+!  considers the first impervious surface layer (surface water/ice) and
+!  the overlying snow cover layer.
+!
+!  Created by Yongjiu Dai and Hua Yuan, 05/2020
+!
+!-----------------------------------------------------------------------
    USE MOD_Precision
    IMPLICIT NONE
    SAVE

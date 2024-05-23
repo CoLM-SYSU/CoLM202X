@@ -72,16 +72,12 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
    type (block_data_real8_2d) :: SAI          ! plant stem area index (m2/m2)
    real(r8), allocatable :: SAI_patches(:), sai_one(:)
 
-   ! for PFT
+   ! for PFT and PC
    type (block_data_real8_3d) :: pftLSAI, pftPCT
    real(r8), allocatable :: pct_one (:), pct_pft_one(:,:)
    real(r8), allocatable :: LAI_pfts(:), lai_pft_one(:,:)
    real(r8), allocatable :: SAI_pfts(:), sai_pft_one(:,:)
-   integer :: p, ip
-
-   ! for PC
-   real(r8), allocatable :: LAI_pcs(:,:), SAI_pcs(:,:)
-   integer :: ipc, ipft
+   integer  :: p, ip
    real(r8) :: sumarea
 
 #ifdef SrfdataDiag
@@ -544,10 +540,10 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
                   lastdimname = 'Itime', lastdimvalue = month)
 #endif
 #else
-            !TODO: single point case
+               !TODO: single point case
                SITE_LAI_pfts_monthly(:,month,iy) = LAI_pfts(:)
 #endif
-         ! loop end of month
+            ! loop end of month
             ENDDO
 
          ENDIF

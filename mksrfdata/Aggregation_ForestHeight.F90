@@ -222,8 +222,8 @@ SUBROUTINE Aggregation_ForestHeight ( &
 
       IF (p_is_worker) THEN
          IF (allocated(htop_patches)) deallocate (htop_patches)
-         IF (allocated(htop_one))     deallocate (htop_one)
-         IF (allocated(area_one))     deallocate (area_one)
+         IF (allocated(htop_one    )) deallocate (htop_one    )
+         IF (allocated(area_one    )) deallocate (area_one    )
       ENDIF
 #endif
 
@@ -331,9 +331,9 @@ SUBROUTINE Aggregation_ForestHeight ( &
       IF (p_is_worker) THEN
          IF (allocated(htop_patches)) deallocate (htop_patches)
          IF (allocated(htop_pfts   )) deallocate (htop_pfts   )
-         IF (allocated(htop_one)) deallocate (htop_one)
-         IF (allocated(pct_one )) deallocate (pct_one )
-         IF (allocated(area_one)) deallocate (area_one)
+         IF (allocated(htop_one    )) deallocate (htop_one    )
+         IF (allocated(pct_one     )) deallocate (pct_one     )
+         IF (allocated(area_one    )) deallocate (area_one    )
       ENDIF
 #endif
 

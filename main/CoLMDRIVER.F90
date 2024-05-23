@@ -10,7 +10,7 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
 ! Initial : Yongjiu Dai, 1999-2014
 ! Revised : Hua Yuan, Shupeng Zhang, Nan Wei, Xingjie Lu, Zhongwang Wei, Yongjiu Dai
 !           2014-2024
-!           
+!
 !=======================================================================
 
    USE MOD_Precision
@@ -128,13 +128,14 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
              ! LAND SURFACE VARIABLES REQUIRED FOR RESTART
                z_sno(maxsnl+1:,i),               dz_sno(maxsnl+1:,i),              &
                t_soisno(maxsnl+1:,i),            wliq_soisno(maxsnl+1:,i),         &
-               wice_soisno(maxsnl+1:,i),         smp(1:,i),          hk(1:,i),     &
-               t_grnd(i),       tleaf(i),        ldew(i),ldew_rain(i),ldew_snow(i),&
-               sag(i),          scv(i),          snowdp(i),       fveg(i),         &
-               fsno(i),         sigf(i),         green(i),        lai(i),          &
-               sai(i),          alb(1:,1:,i),    ssun(1:,1:,i),   ssha(1:,1:,i),   &
-               ssoi(:,:,i),     ssno(:,:,i),     thermk(i),       extkb(i),        &
-               extkd(i),        vegwp(1:,i),     gs0sun(i),       gs0sha(i),       &
+               wice_soisno(maxsnl+1:,i),         smp(1:,i),       hk(1:,i),        &
+               t_grnd(i),       tleaf(i),        ldew(i),         ldew_rain(i),    &
+               ldew_snow(i),    fwet_snow(i),    sag(i),          scv(i),          &
+               snowdp(i),       fveg(i),         fsno(i),         sigf(i),         &
+               green(i),        lai(i),          sai(i),          alb(1:,1:,i),    &
+               ssun(1:,1:,i),   ssha(1:,1:,i),   ssoi(:,:,i),     ssno(:,:,i),     &
+               thermk(i),       extkb(i),        extkd(i),        vegwp(1:,i),     &
+               gs0sun(i),       gs0sha(i),       &
              ! Ozone Stress Variables
                lai_old(i),      o3uptakesun(i),  o3uptakesha(i)  ,forc_ozone(i),   &
              ! End ozone stress variables
@@ -156,7 +157,7 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
                taux(i),         tauy(i),         fsena(i),        fevpa(i),        &
                lfevpa(i),       fsenl(i),        fevpl(i),        etr(i),          &
                fseng(i),        fevpg(i),        olrg(i),         fgrnd(i),        &
-               trad(i),         tref(i),         qref(i),                          & 
+               trad(i),         tref(i),         qref(i),                          &
                rsur(i),         rsur_se(i),      rsur_ie(i),      rnof(i),         &
                qintr(i),        qinfl(i),        qdrip(i),                         &
                rst(i),          assim(i),        respc(i),        sabvsun(i),      &
@@ -201,7 +202,7 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
 
             !              ***** Call CoLM urban model *****
             !
-            CALL UrbanCoLMMAIN ( &
+            CALL CoLMMAIN_Urban ( &
           ! MODEL RUNNING PARAMETERS
             i               ,idate           ,coszen(i)       ,deltim          ,&
             patchlonr(i)    ,patchlatr(i)    ,patchclass(i)   ,patchtype(i)    ,&

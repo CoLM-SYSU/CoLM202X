@@ -185,8 +185,8 @@ CONTAINS
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
 
-               parsun_p(ps:pe)  = forc_sols*ssun_p(1,1,ps:pe) + forc_solsd*ssun_p(1,2,ps:pe)
-               parsha_p(ps:pe)  = forc_sols*ssha_p(1,1,ps:pe) + forc_solsd*ssha_p(1,2,ps:pe)
+               parsun_p (ps:pe) = forc_sols*ssun_p(1,1,ps:pe) + forc_solsd*ssun_p(1,2,ps:pe)
+               parsha_p (ps:pe) = forc_sols*ssha_p(1,1,ps:pe) + forc_solsd*ssha_p(1,2,ps:pe)
                sabvsun_p(ps:pe) = forc_sols*ssun_p(1,1,ps:pe) + forc_solsd*ssun_p(1,2,ps:pe) &
                                 + forc_soll*ssun_p(2,1,ps:pe) + forc_solld*ssun_p(2,2,ps:pe)
                sabvsha_p(ps:pe) = forc_sols*ssha_p(1,1,ps:pe) + forc_solsd*ssha_p(1,2,ps:pe) &
@@ -210,7 +210,7 @@ CONTAINS
          sabg_snow = sabg_snow * fsno
 
          ! balance check and adjustment for soil and snow absorption
-         IF (sabg_soil+sabg_snow-sabg>1.e-6) THEN ! this could happen when there is adjust to ssun,ssha
+         IF (abs(sabg_soil+sabg_snow-sabg)>1.e-6) THEN ! this could happen when there is adjustment to ssun,ssha
             print *, "MOD_NetSolar.F90: NOTE imbalance in spliting soil and snow surface!"
             print *, "sabg:", sabg, "sabg_soil:", sabg_soil, "sabg_snow", sabg_snow
             print *, "sabg_soil+sabg_snow:", sabg_soil+sabg_snow, "fsno:", fsno
@@ -228,10 +228,29 @@ CONTAINS
          ! snow layer absorption calculation and adjustment for SNICAR model
          IF (DEF_USE_SNICAR) THEN
             ! adjust snow layer absorption due to multiple reflection between ground and canopy
-            IF(sum(ssno_lyr(1,1,:))>0.) ssno_lyr(1,1,:) = ssno(1,1) * ssno_lyr(1,1,:)/sum(ssno_lyr(1,1,:))
-            IF(sum(ssno_lyr(1,2,:))>0.) ssno_lyr(1,2,:) = ssno(1,2) * ssno_lyr(1,2,:)/sum(ssno_lyr(1,2,:))
-            IF(sum(ssno_lyr(2,1,:))>0.) ssno_lyr(2,1,:) = ssno(2,1) * ssno_lyr(2,1,:)/sum(ssno_lyr(2,1,:))
-            IF(sum(ssno_lyr(2,2,:))>0.) ssno_lyr(2,2,:) = ssno(2,2) * ssno_lyr(2,2,:)/sum(ssno_lyr(2,2,:))
+            IF(sum(ssno_lyr(1,1,:))>0.) THEN
+               ssno_lyr(1,1,:) = ssno(1,1) * ssno_lyr(1,1,:)/sum(ssno_lyr(1,1,:))
+            ELSE
+               ssno_lyr(1,1,1) = ssno(1,1)
+            ENDIF
+
+            IF(sum(ssno_lyr(1,2,:))>0.) THEN
+               ssno_lyr(1,2,:) = ssno(1,2) * ssno_lyr(1,2,:)/sum(ssno_lyr(1,2,:))
+            ELSE
+               ssno_lyr(1,2,1) = ssno(1,2)
+            ENDIF
+
+            IF(sum(ssno_lyr(2,1,:))>0.) THEN
+               ssno_lyr(2,1,:) = ssno(2,1) * ssno_lyr(2,1,:)/sum(ssno_lyr(2,1,:))
+            ELSE
+               ssno_lyr(2,1,1) = ssno(2,1)
+            ENDIF
+
+            IF(sum(ssno_lyr(2,2,:))>0.) THEN
+               ssno_lyr(2,2,:) = ssno(2,2) * ssno_lyr(2,2,:)/sum(ssno_lyr(2,2,:))
+            ELSE
+               ssno_lyr(2,2,1) = ssno(2,2)
+            ENDIF
 
             ! snow layer absorption
             sabg_snow_lyr(:) = forc_sols*ssno_lyr(1,1,:) + forc_solsd*ssno_lyr(1,2,:) &
