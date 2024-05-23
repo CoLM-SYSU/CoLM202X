@@ -838,7 +838,11 @@ CONTAINS
       facq   = 1.-(caw(2)*caw(2) &
                /(caw(3)+caw(2)+cfw(0)*fc(0)) &
                /(caw(2)+cgw_per*fgper*fg+cgw_imp*fgimp*fg))
-      croofs = rhoair*cpair*cfh(0)*(1.-cfh(0)*fc(0)/(caw(3)+cgw(3)+cfh(0)*fc(0))/fact)
+      croofs = rhoair*cpair*cfh(0) &
+               *(1.-cgh(3)/(cah(3)+cgh(3)+cfh(0)*fc(0)) &
+               *cah(2)/(cah(2)+cgh(2)*fg+cfh(1)*fc(1)+cfh(2)*fc(2)) &
+               *cfh(0)*fc(0)/(cah(3)+cgh(3)+cfh(0)*fc(0))/fact &
+               -cfh(0)*fc(0)/(cah(3)+cgh(3)+cfh(0)*fc(0)))
       cwalls = rhoair*cpair*cfh(1)*(1.-cfh(1)*fc(1)/(cgh(3)+cgh(2)*fg+cfh(1)*fc(1)+cfh(2)*fc(2)/fact))
       ! deduce: croofl = rhoair*cfw(0)*(1.-wtgq0(3)*wtaq0(2)*wtlq0(0)/facq-wtlq0(0))*qsatldT(0)
       ! croofl = rhoair*cfw(0)*(1.-wtlq0(0)/facq)*qsatldT(0)
