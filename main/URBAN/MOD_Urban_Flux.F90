@@ -319,7 +319,7 @@ CONTAINS
 
    ! temporal
    integer i
-   real(r8) h_vec, l_vec, tmpw3, cgw_per, cgw_imp
+   real(r8) h_vec, l_vec, H_ahe1, H_ahe2, tmpw3, cgw_per, cgw_imp
    real(r8) bee, tmpw1, tmpw2, fact, facq
    real(r8) aT, bT, cT
    real(r8) aQ, bQ, cQ
