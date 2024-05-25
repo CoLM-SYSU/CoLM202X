@@ -30,7 +30,8 @@ MODULE MOD_CaMa_Vars
    USE MOD_DataType
    USE MOD_Mapping_Pset2Grid
    USE MOD_Mapping_Grid2Pset
-   USE YOS_CMF_INPUT,            only: RMIS, DMIS
+   USE YOS_CMF_INPUT,            only: DMIS
+   USE MOD_Vars_Global,    only: spval
 
    real(r8) :: nacc                                        ! number of accumulation
    real(r8), allocatable         :: a_rnof_cama (:)        ! on worker : total runoff [mm/s]
@@ -521,11 +522,11 @@ CONTAINS
       CALL vecP2mapR(var_in,R2OUT)
       compress = DEF_HIST_CompressLevel
       CALL ncio_write_serial_time (file_hist, varname,  &
-         itime_in_file, real(R2OUT), 'lon_cama', 'lat_cama', 'time',compress)
+         itime_in_file, real(R2OUT,kind=8), 'lon_cama', 'lat_cama', 'time',compress)
       IF (itime_in_file == 1) THEN
          CALL ncio_put_attr (file_hist, varname, 'long_name', longname)
          CALL ncio_put_attr (file_hist, varname, 'units', units)
-         CALL ncio_put_attr (file_hist, varname, 'missing_value',DMIS)
+         CALL ncio_put_attr (file_hist, varname, 'missing_value',spval)
       ENDIF
 
    END SUBROUTINE flux_map_and_write_2d_cama
