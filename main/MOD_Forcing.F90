@@ -41,7 +41,7 @@ MODULE MOD_Forcing
 
    ! for Forcing_Downscaling
    logical, allocatable :: glacierss    (:)
-   
+
    ! local variables
    integer  :: deltim_int                ! model time step length
    ! real(r8) :: deltim_real               ! model time step length
@@ -158,7 +158,7 @@ CONTAINS
             CALL elm_patch%build (landelm, landpatch, use_frac = .true., sharedfrac = pctshrpch)
 #else
             CALL elm_patch%build (landelm, landpatch, use_frac = .true.)
-#endif 
+#endif
          ENDIF
       ENDIF
 
@@ -227,7 +227,7 @@ CONTAINS
             ELSEIF (trim(DEF_Forcing_Interp) == 'bilinear') THEN
                CALL forc_interp%build (gforc, landelm, metdata, missing_value, forcmask_elm)
             ENDIF
-         
+
             IF (p_is_worker) THEN
                DO ielm = 1, numelm
                   istt = elm_patch%substt(ielm)
@@ -242,7 +242,7 @@ CONTAINS
       IF (DEF_USE_Forcing_Downscaling) THEN
          IF (p_is_worker) THEN
             IF (numpatch > 0) THEN
-               
+
                forc_topo = topoelv
 
                DO ielm = 1, numelm
@@ -327,7 +327,7 @@ CONTAINS
    SUBROUTINE forcing_xy2vec (f_xy, f_vec)
 
    IMPLICIT NONE
-      
+
       type(block_data_real8_2d) :: f_xy
       real(r8) :: f_vec(:)
 
@@ -549,7 +549,7 @@ CONTAINS
                         ilon = gforc%xdsp(ib) + i
                         IF (ilon > gforc%nlon) ilon = ilon - gforc%nlon
 
-                        a = forc_xy_solarin%blk(ib,jb)%val(i,j)
+                        a = max(0., forc_xy_solarin%blk(ib,jb)%val(i,j))
                         calday = calendarday(idate)
                         sunang = orb_coszen (calday, gforc%rlon(ilon), gforc%rlat(ilat))
 
@@ -681,19 +681,19 @@ CONTAINS
 
                istt = elm_patch%substt(ne)
                iend = elm_patch%subend(ne)
-         
+
                forc_pco2m(istt:iend) = forc_pco2m_elm (ne)
                forc_po2m (istt:iend) = forc_po2m_elm  (ne)
                forc_us   (istt:iend) = forc_us_elm    (ne)
                forc_vs   (istt:iend) = forc_vs_elm    (ne)
-                             
+
                forc_psrf (istt:iend) = forc_psrf_elm  (ne)
-                             
+
                forc_sols (istt:iend) = forc_sols_elm  (ne)
                forc_soll (istt:iend) = forc_soll_elm  (ne)
                forc_solsd(istt:iend) = forc_solsd_elm (ne)
                forc_solld(istt:iend) = forc_solld_elm (ne)
-                             
+
                forc_hgt_t(istt:iend) = forc_hgt_t_elm (ne)
                forc_hgt_u(istt:iend) = forc_hgt_u_elm (ne)
                forc_hgt_q(istt:iend) = forc_hgt_q_elm (ne)

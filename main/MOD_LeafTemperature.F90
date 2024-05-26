@@ -57,40 +57,40 @@ CONTAINS
 
 !=======================================================================
 ! !DESCRIPTION:
-! Foliage energy conservation is given by foliage energy budget equation
-!                      Rnet - Hf - LEf = 0
-! The equation is solved by Newton-Raphson iteration, in which this iteration
-! includes the calculation of the photosynthesis and stomatal resistance, and the
-! integration of turbulent flux profiles. The sensible and latent heat
-! transfer between foliage and atmosphere and ground is linked by the equations:
-!                      Ha = Hf + Hg and Ea = Ef + Eg
+!  Foliage energy conservation is given by foliage energy budget equation
+!                       Rnet - Hf - LEf = 0
+!  The equation is solved by Newton-Raphson iteration, in which this iteration
+!  includes the calculation of the photosynthesis and stomatal resistance, and the
+!  integration of turbulent flux profiles. The sensible and latent heat
+!  transfer between foliage and atmosphere and ground is linked by the equations:
+!                       Ha = Hf + Hg and Ea = Ef + Eg
 !
-! Original author : Yongjiu Dai, August 15, 2001
+!  Original author : Yongjiu Dai, August 15, 2001
 !
 ! !REVISIONS:
 !
-! 09/2014, Hua Yuan: imbalanced energy due to T/q adjustment is allocated
-!          to sensible heat flux.
+!  09/2014, Hua Yuan: imbalanced energy due to T/q adjustment is allocated
+!           to sensible heat flux.
 !
-! 10/2017, Hua Yuan: added options for z0, displa, rb and rd calculation
-!          (Dai, Y., Yuan, H., Xin, Q., Wang, D., Shangguan, W.,
-!          Zhang, S., et al. (2019). Different representations of
-!          canopy structure—A large source of uncertainty in global
-!          land surface modeling. Agricultural and Forest Meteorology,
-!          269–270, 119–135. https://doi.org/10.1016/j.agrformet.2019.02.006
+!  10/2017, Hua Yuan: added options for z0, displa, rb and rd calculation
+!           (Dai, Y., Yuan, H., Xin, Q., Wang, D., Shangguan, W.,
+!           Zhang, S., et al. (2019). Different representations of
+!           canopy structure—A large source of uncertainty in global
+!           land surface modeling. Agricultural and Forest Meteorology,
+!           269–270, 119–135. https://doi.org/10.1016/j.agrformet.2019.02.006
 !
-! 10/2019, Hua Yuan: change only the leaf tempertature from two-leaf
-!          to one-leaf (due to large differences may exist btween sunlit/shaded
-!          leaf temperature.
+!  10/2019, Hua Yuan: change only the leaf tempertature from two-leaf
+!           to one-leaf (due to large differences may exist btween sunlit/shaded
+!           leaf temperature.
 !
-! 01/2021, Xingjie Lu and Nan Wei: added plant hydraulic process interface
+!  01/2021, Xingjie Lu and Nan Wei: added plant hydraulic process interface.
 !
-! 01/2021, Nan Wei: added interaction btw prec and canopy
+!  01/2021, Nan Wei: added interaction btw prec and canopy.
 !
-! 05/2023, Shaofeng Liu: add option to call moninobuk_leddy, the LargeEddy
-!          surface turbulence scheme (LZD2022); make a proper update of um.
+!  05/2023, Shaofeng Liu: add option to call moninobuk_leddy, the LargeEddy
+!           surface turbulence scheme (LZD2022); make a proper update of um.
 !
-! 04/2024, Hua Yuan: add option to account for vegetation snow process
+!  04/2024, Hua Yuan: add option to account for vegetation snow process.
 !
 !=======================================================================
 

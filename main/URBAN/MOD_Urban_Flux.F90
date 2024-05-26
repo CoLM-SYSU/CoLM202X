@@ -34,7 +34,11 @@ MODULE MOD_Urban_Flux
 !
 !  12/2022, Wenzong Dong: Traffic and metabolism heat flux are considered
 !           in turbulent flux exchange.
-!  05/2024, Wenzong Dong: make the code consistant with technical report
+!
+!  05/2024, Wenzong Dong: make the code consistant with technical report.
+!
+!  04/2024, Hua Yuan: add option to account for vegetation snow process.
+!
 !-----------------------------------------------------------------------
    USE MOD_Precision
    USE MOD_Namelist, only: DEF_RSS_SCHEME, DEF_VEG_SNOW

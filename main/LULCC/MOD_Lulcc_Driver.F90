@@ -74,7 +74,7 @@ MODULE MOD_Lulcc_Driver
 
       IF (DEF_LULCC_SCHEME == 1) THEN
          IF (p_is_master) THEN
-            print *, ">>> LULCC: simple method for variable recovery..."
+            print *, ">>> LULCC: Same Type Assignment (SAT) scheme for variable recovery..."
          ENDIF
          CALL REST_LulccTimeVariables
       ENDIF
@@ -86,7 +86,7 @@ MODULE MOD_Lulcc_Driver
 
       IF (DEF_LULCC_SCHEME == 2) THEN
          IF (p_is_master) THEN
-            print *, ">>> LULCC: Mass&Energy conserve for variable recovery..."
+            print *, ">>> LULCC: Mass&Energy conserve (MEC) for variable recovery..."
          ENDIF
          CALL allocate_LulccTransferTrace()
          CALL REST_LulccTimeVariables
