@@ -158,6 +158,9 @@ CONTAINS
 #endif
          ENDIF
       ENDIF
+
+      CALL landpatch_%set_vecgs
+
    END SUBROUTINE SAVE_LulccTimeInvariants
 
 
