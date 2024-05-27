@@ -720,22 +720,24 @@ ENDIF
                      ENDIF
 
 #ifdef URBAN_MODEL
-                     u = patch2urban (np )
-                     u_= patch2urban_(np_)
+                     IF (numurban > 0) THEN
+                        u = patch2urban (np )
+                        u_= patch2urban_(np_)
 
-                     ! vars assignment needs same urb class for urban patch
-                     IF (patchclass(np) == URBAN) THEN
-                         ! IF a Urban type is missing, CYCLE
-                         IF (landurban%settyp(u) > urbclass_(u_)) THEN
-                            np_= np_+ 1
-                            CYCLE
-                         ENDIF
+                        ! vars assignment needs same urb class for urban patch
+                        IF (patchclass(np) == URBAN) THEN
+                           ! IF a Urban type is missing, CYCLE
+                           IF (landurban%settyp(u) > urbclass_(u_)) THEN
+                              np_= np_+ 1
+                              CYCLE
+                           ENDIF
 
-                         ! IF a urban type is added, CYCLE
-                         IF (landurban%settyp(u) < urbclass_(u_)) THEN
-                            np = np + 1
-                            CYCLE
-                         ENDIF
+                           ! IF a urban type is added, CYCLE
+                           IF (landurban%settyp(u) < urbclass_(u_)) THEN
+                              np = np + 1
+                              CYCLE
+                           ENDIF
+                        ENDIF
                      ENDIF
 #endif
                      ! otherwise, set patch value
