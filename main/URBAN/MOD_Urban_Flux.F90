@@ -977,6 +977,10 @@ CONTAINS
       !tref = thm + vonkar/(fh-fht)*dth * (fh2m/vonkar - fh/vonkar)
       !qref =  qm + vonkar/(fq-fqt)*dqh * (fq2m/vonkar - fq/vonkar)
 
+      ! assumption: (tg-t2m):(tg-taf) = 2:(displa+z0m)
+      tref = ( (displau+z0mu-2.)*tg + 2.*taf(2) ) / (displau+z0mu)
+      qref = ( (displau+z0mu-2.)*qg + 2.*qaf(2) ) / (displau+z0mu)
+
    END SUBROUTINE UrbanOnlyFlux
 
 
@@ -2782,6 +2786,15 @@ CONTAINS
 
       !tref = thm + vonkar/(fh)*dth * (fh2m/vonkar - fh/vonkar)
       !qref =  qm + vonkar/(fq)*dqh * (fq2m/vonkar - fq/vonkar)
+
+      ! assumption: (tg-t2m):(tg-taf) = 2:(displa+z0m)
+      IF (numlay == 2) THEN
+         tref = ( (displau+z0mu-2.)*tg + 2.*taf(botlay) ) / (displau+z0mu)
+         qref = ( (displau+z0mu-2.)*qg + 2.*qaf(botlay) ) / (displau+z0mu)
+      ELSE
+         tref = ( (displav+z0mv-2.)*tg + 2.*taf(botlay) ) / (displav+z0mv)
+         qref = ( (displav+z0mv-2.)*qg + 2.*qaf(botlay) ) / (displav+z0mv)
+      ENDIF
 
    END SUBROUTINE UrbanVegFlux
 !----------------------------------------------------------------------
