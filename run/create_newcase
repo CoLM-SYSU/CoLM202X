@@ -247,20 +247,22 @@ NdaysofYear()
 #FORCINGNML=$ROOT/run/forcing/GSWP3.nml
 
 #machine = baiduboat
-#ROOT=/share/home/dq010/CoLM/CoLM202X-CROP
-#RAWDATA=/share/home/dq010/CoLM/data/rawdata/CROP-NITRIF/CLMrawdata_updating/
-#RUNTIME=/share/home/dq010/CoLM/data/rawdata/CROP-NITRIF/CoLMruntime//
-#MAKEOPTION=$ROOT/include/Makeoptions-baiduboat-intel
-#FORCINGPATH=/share/home/dq010/CoLM/data/inputdata/atm/GSWP3/
-
-#machine = earthlab
-ROOT=/data/sysu_daiyj_01/luxj/CoLM202X/
-RAWDATA=/data/sysu_daiyj_01/data_mpi/CLMrawdata_igbp/
-RUNTIME=/data/sysu_daiyj_01/data_mpi/CoLMruntime/
-MAKEOPTION=$ROOT/include/Makeoptions-earthlab-par
-FORCINGPATH=/data/zhangh/data/lifang/GSWP-future/SSP126/
+ROOT=/share/home/dq010/CoLM/CoLM202X-CROP
+RAWDATA=/share/home/dq010/CoLM/data/rawdata/CROP-NITRIF/CLMrawdata_updating/
+RUNTIME=/share/home/dq010/CoLM/data/rawdata/CROP-NITRIF/CoLMruntime//
+MAKEOPTION=$ROOT/include/Makeoptions-baiduboat-intel
+FORCINGPATH=/share/home/dq010/CoLM/data/inputdata/atm/GSWP3/
 HEADER=$ROOT/run/jobs.config
 CONFIG=$ROOT/run/mpi.config
+
+#machine = earthlab
+#ROOT=/data/sysu_daiyj_01/luxj/CoLM202X/
+#RAWDATA=/data/sysu_daiyj_01/data_mpi/CLMrawdata_igbp/
+#RUNTIME=/data/sysu_daiyj_01/data_mpi/CoLMruntime/
+#MAKEOPTION=$ROOT/include/Makeoptions-earthlab-par
+#FORCINGPATH=/data/zhangh/data/lifang/GSWP-future/SSP126/
+#HEADER=$ROOT/run/jobs.config
+#CONFIG=$ROOT/run/mpi.config
 
 while getopts ":hbprlun:i:t:e:c:g:s:m:" options ;
 do
@@ -573,9 +575,11 @@ else
    fi
    if [ -z "$LuLCC" ];then
       IsDefLuLCC="#undef"
+      LandMask=False
    else
       if [ $LuLCC == True ];then
          IsDefLuLCC="#define"
+	 LandMask="DEF_file_mesh='$RAWDATA/landdata/landmask_igbp_10km_Guangdong-extended.nc'"
       else
 	 echo Error in LuLCC definition
 	 exit
@@ -717,6 +721,11 @@ else
 	    exit
 	    ;;
       esac
+   else
+      IsDefUSGS="#undef"
+      IsDefIGBP="#undef"
+      IsDefPFT="#define"
+      IsDefPC="#undef"
    fi
 
    if [ ! -z "$SoilModel" ];then

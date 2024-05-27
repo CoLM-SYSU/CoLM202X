@@ -23,6 +23,9 @@ MODULE MOD_Vars_PFTimeInvariants
    real(r8), allocatable :: pftfrac     (:)    !PFT fractional cover
    real(r8), allocatable :: htop_p      (:)    !canopy top height [m]
    real(r8), allocatable :: hbot_p      (:)    !canopy bottom height [m]
+#ifdef CROP
+   real(r8), allocatable :: cropfrac    (:)    !Crop fractional cover
+#endif
 
 ! PUBLIC MEMBER FUNCTIONS:
    PUBLIC :: allocate_PFTimeInvariants
@@ -47,6 +50,7 @@ CONTAINS
    ! --------------------------------------------------------------------
 
    USE MOD_SPMD_Task
+   USE MOD_LandPatch, only : numpatch
    USE MOD_LandPFT,   only : numpft
    USE MOD_Precision
    IMPLICIT NONE
@@ -57,6 +61,9 @@ CONTAINS
             allocate (pftfrac       (numpft))
             allocate (htop_p        (numpft))
             allocate (hbot_p        (numpft))
+#ifdef CROP
+            allocate (cropfrac    (numpatch))
+#endif
          ENDIF
       ENDIF
 
@@ -65,11 +72,8 @@ CONTAINS
    SUBROUTINE READ_PFTimeInvariants (file_restart)
 
    USE MOD_NetCDFVector
+   USE MOD_LandPatch
    USE MOD_LandPFT
-#ifdef CROP
-   USE MOD_LandCrop,  only : pctshrpch
-   USE MOD_LandPatch, only : landpatch
-#endif
    IMPLICIT NONE
 
    character(len=*), intent(in) :: file_restart
@@ -79,7 +83,7 @@ CONTAINS
       CALL ncio_read_vector (file_restart, 'htop_p  ', landpft, htop_p  ) !
       CALL ncio_read_vector (file_restart, 'hbot_p  ', landpft, hbot_p  ) !
 #ifdef CROP
-      CALL ncio_read_vector (file_restart, 'pct_crops', landpatch, pctshrpch) !
+      CALL ncio_read_vector (file_restart, 'cropfrac ', landpatch, cropfrac) !
 #endif
 
    END SUBROUTINE READ_PFTimeInvariants
@@ -88,12 +92,9 @@ CONTAINS
 
    USE MOD_NetCDFVector
    USE MOD_LandPFT
+   USE MOD_LandPatch
    USE MOD_Namelist
    USE MOD_Vars_Global
-#ifdef CROP
-   USE MOD_LandCrop,  only : pctshrpch
-   USE MOD_LandPatch, only : landpatch
-#endif
    IMPLICIT NONE
 
    ! Local variables
@@ -112,7 +113,7 @@ CONTAINS
 
 #ifdef CROP
       CALL ncio_define_dimension_vector (file_restart, landpatch, 'patch')
-      CALL ncio_write_vector (file_restart, 'pct_crops', 'patch', landpatch, pctshrpch, compress) !
+      CALL ncio_write_vector (file_restart, 'cropfrac', 'patch', landpatch, cropfrac, compress) !
 #endif
 
    END SUBROUTINE WRITE_PFTimeInvariants
@@ -123,9 +124,6 @@ CONTAINS
 ! --------------------------------------------------
    USE MOD_SPMD_Task
    USE MOD_LandPFT
-#ifdef CROP
-   USE MOD_LandCrop, only : pctshrpch
-#endif
 
       IF (p_is_worker) THEN
          IF (numpft > 0) THEN
@@ -133,10 +131,10 @@ CONTAINS
             deallocate (pftfrac )
             deallocate (htop_p  )
             deallocate (hbot_p  )
-         ENDIF
 #ifdef CROP
-         IF (allocated(pctshrpch)) deallocate(pctshrpch)
+            deallocate (cropfrac)
 #endif
+         ENDIF
       ENDIF
 
    END SUBROUTINE deallocate_PFTimeInvariants
@@ -145,16 +143,13 @@ CONTAINS
    SUBROUTINE check_PFTimeInvariants ()
 
    USE MOD_RangeCheck
-#ifdef CROP
-   USE MOD_LandCrop, only : pctshrpch
-#endif
    IMPLICIT NONE
 
       CALL check_vector_data ('pftfrac', pftfrac) !
       CALL check_vector_data ('htop_p ', htop_p ) !
       CALL check_vector_data ('hbot_p ', hbot_p ) !
 #ifdef CROP
-      CALL check_vector_data ('pct crop', pctshrpch) !
+      CALL check_vector_data ('cropfrac', cropfrac) !
 #endif
 
    END SUBROUTINE check_PFTimeInvariants

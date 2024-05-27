@@ -249,6 +249,8 @@ CONTAINS
 
                ENDIF
 
+               CALL ncio_write_colm_dimension (filename)
+
             ENDIF
                
             CALL ncio_write_time (filename, dataname, time, itime_in_file, DEF_HIST_FREQ)
@@ -369,8 +371,17 @@ CONTAINS
                deallocate(wdata1d)
             CASE (2)
 
-               CALL ncio_write_serial_time (filename, dataname, itime_in_file, wdata2d, &
-                  dim1name, dim2name, dim3name, compress)
+               IF (.not. &
+                  ((trim(dataname) == 'landarea') .or. (trim(dataname) == 'landfraction'))) THEN
+
+                  CALL ncio_write_serial_time (filename, dataname, itime_in_file, wdata2d, &
+                     dim1name, dim2name, dim3name, compress)
+
+               ELSEIF (itime_in_file == 1) THEN
+
+                  CALL ncio_write_serial (filename, dataname, wdata2d, dim1name, dim2name, compress)
+
+               ENDIF
 
                deallocate(wdata2d)
             CASE (3)

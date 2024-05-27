@@ -4,7 +4,6 @@
 MODULE MOD_DA_GRACE
 
    USE MOD_DataType
-   USE MOD_Mapping_Grid2Pset
    IMPLICIT NONE
 
    PUBLIC :: init_DA_GRACE
@@ -26,7 +25,7 @@ MODULE MOD_DA_GRACE
    integer,  allocatable :: obsyear  (:)
    integer,  allocatable :: obsmonth (:)
 
-   type (mapping_grid2pset_type) :: mg2p_grace
+   type (spatial_mapping_type) :: mg2p_grace
    
    real(r8), allocatable :: lwe_obs_this (:)
    real(r8), allocatable :: err_obs_this (:)
@@ -69,7 +68,6 @@ CONTAINS
    USE MOD_LandCrop
 #endif
    USE MOD_Pixelset
-   USE MOD_Mapping_Grid2pset
    USE MOD_Vars_TimeInvariants, only : patchtype
    USE MOD_Forcing, only : forcmask_pch
    USE MOD_RangeCheck
@@ -105,7 +103,7 @@ CONTAINS
 
       CALL grid_grace%define_by_center (latgrace,longrace)
 
-      CALL mg2p_grace%build (grid_grace, landelm)
+      CALL mg2p_grace%build_arealweighted (grid_grace, landelm)
 
       IF (p_is_worker) THEN
          IF (numelm > 0) THEN
@@ -133,11 +131,7 @@ CONTAINS
       ENDIF
       
       IF (p_is_worker) THEN
-#ifdef CROP 
-         CALL elm_patch%build (landelm, landpatch, use_frac = .true., sharedfrac = pctshrpch)
-#else
          CALL elm_patch%build (landelm, landpatch, use_frac = .true.)
-#endif
       ENDIF
 
       IF (p_is_worker) THEN
@@ -248,8 +242,8 @@ CONTAINS
             CALL ncio_read_block_time (file_grace, 'uncertainty'  , grid_grace, itime, f_grace_err)
          ENDIF
 
-         CALL mg2p_grace%map_aweighted (f_grace_lwe, lwe_obs_this)
-         CALL mg2p_grace%map_aweighted (f_grace_err, err_obs_this)
+         CALL mg2p_grace%grid2pset (f_grace_lwe, lwe_obs_this)
+         CALL mg2p_grace%grid2pset (f_grace_err, err_obs_this)
 
          IF (p_is_worker) THEN
             

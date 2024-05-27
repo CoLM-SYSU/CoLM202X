@@ -59,4 +59,4 @@ CreateHeader()
    fi
 }
 
-CreateHeader Global_Grid_50km_PFT_VG mksrf.submit /data/sysu_daiyj_01/luxj/CoLM202X/run/jobs.config-earthlab /data/sysu_daiyj_01/luxj/CoLM202X/run/mpi.config
+CreateHeader Global_Grid_50km_PFT_VG mksrf.submit $ROOT/run/jobs.config-earthlab $ROOT/run/mpi.config
