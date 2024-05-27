@@ -1245,6 +1245,8 @@ CONTAINS
                Fhac          (u) = 0.   !sensible flux from heat or cool AC [W/m2]
                Fwst          (u) = 0.   !waste heat flux from heat or cool AC [W/m2]
                Fach          (u) = 0.   !flux from inner and outter air exchange [W/m2]
+               meta          (u) = 0.   !flux from metabolic [W/m2]
+               vehc          (u) = 0.   !flux from vehicle [W/m2]
 
                CALL UrbanIniTimeVar(i,froof(u),fgper(u),flake(u),hwr(u),hroof(u),&
                   alb_roof(:,:,u),alb_wall(:,:,u),alb_gimp(:,:,u),alb_gper(:,:,u),&
