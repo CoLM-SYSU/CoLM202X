@@ -189,10 +189,10 @@ CONTAINS
       CALL mpi_bcast (real(D1LAT,kind=8)    ,   1, MPI_REAL8,   p_root, p_comm_glb, p_err) ! 
       CALL mpi_bcast (real(D1LON,kind=8)    ,   1, MPI_REAL8,   p_root, p_comm_glb, p_err)  !    
 
+      !allocate the data structure for cama
       CALL gcama%define_by_center (D1LAT,D1LON,real(SOUTH,kind=8), real(NORTH,kind=8), real(WEST,kind=8), real(EAST,kind=8)) !define the grid for cama
-      CALL mp2g_cama%build (landpatch, gcama) !build the mappcing between cama and mpi
-      CALL mg2p_cama%build (gcama, landpatch)
-
+      CALL mp2g_cama%build_arealweighted (gcama, landpatch) !build the mapping between cama and mpi
+      CALL mg2p_cama%build_arealweighted (gcama, landpatch)
       CALL cama_gather%set (gcama)
 
       !allocate the cama-flood related variable for accumulation

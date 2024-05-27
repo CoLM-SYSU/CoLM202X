@@ -147,6 +147,8 @@ contains
          CALL ncio_put_attr (filename, 'lon', 'long_name', 'longitude')
          CALL ncio_put_attr (filename, 'lon', 'units', 'degrees_east')
 
+         CALL ncio_write_colm_dimension (filename)
+
          IF (.not. USE_SITE_HistWriteBack) THEN
             CALL ncio_define_dimension(filename, 'time', 0)
          ENDIF

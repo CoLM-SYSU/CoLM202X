@@ -709,7 +709,7 @@ CONTAINS
    USE MOD_Block
    USE MOD_Mesh
    USE MOD_Grid
-   USE MOD_Mapping_Grid2Pset
+   USE MOD_SpatialMapping
    USE MOD_LandElm
    USE MOD_ElmVector
    USE MOD_ElementNeighbour
@@ -719,8 +719,8 @@ CONTAINS
    ! Local Variables
    character(len=256) :: file_rnof, file_rivdpt
    type(grid_type)    :: grid_rnof
-   type(block_data_real8_2d)    :: f_rnof
-   type(mapping_grid2pset_type) :: mg2p_rnof
+   type(block_data_real8_2d)  :: f_rnof
+   type(spatial_mapping_type) :: mg2p_rnof
 
    real(r8), allocatable :: bsnrnof(:) , bsndis(:)
    integer,  allocatable :: nups_riv(:), iups_riv(:), b_up2down(:)
@@ -739,7 +739,7 @@ CONTAINS
 
       CALL grid_rnof%define_from_file (file_rnof, 'lat', 'lon')
 
-      CALL mg2p_rnof%build (grid_rnof, landelm)
+      CALL mg2p_rnof%build_arealweighted (grid_rnof, landelm)
 
       IF (p_is_io) THEN
          CALL allocate_block_data (grid_rnof, f_rnof)
@@ -760,7 +760,7 @@ CONTAINS
          IF (numelm > 0) allocate (bsnrnof (numelm))
       ENDIF
 
-      CALL mg2p_rnof%map_aweighted (f_rnof, bsnrnof)
+      CALL mg2p_rnof%grid2pset (f_rnof, bsnrnof)
 
       IF (p_is_worker) THEN
          IF (numelm > 0) THEN
