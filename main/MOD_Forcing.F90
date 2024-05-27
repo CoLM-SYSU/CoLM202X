@@ -170,6 +170,7 @@ CONTAINS
 
          IF (p_is_worker) THEN
             IF (numpatch > 0) THEN
+               IF (allocated(forcmask_pch)) deallocate (forcmask_pch)
                allocate (forcmask_pch(numpatch));  forcmask_pch(:) = .true.
             ENDIF
             IF (DEF_USE_Forcing_Downscaling) THEN
