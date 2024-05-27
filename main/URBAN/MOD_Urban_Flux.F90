@@ -85,12 +85,12 @@ CONTAINS
          ! Output
          taux           ,tauy           ,fsenroof       ,fsenwsun       ,&
          fsenwsha       ,fsengimp       ,fsengper       ,fevproof       ,&
-         fevpgimp       ,fevpgper       ,croofs         ,cwalls         ,&
-         cgrnds         ,croofl         ,cgimpl         ,cgperl         ,&
-         croof          ,cgimp          ,cgper          ,tref           ,&
-         qref           ,z0m            ,zol            ,rib            ,&
-         ustar          ,qstar          ,tstar          ,fm             ,&
-         fh             ,fq             ,tafu                            )
+         fevpgimp       ,fevpgper       ,croofs         ,cwsuns         ,&
+         cwshas         ,cgrnds         ,croofl         ,cgimpl         ,&
+         cgperl         ,croof          ,cgimp          ,cgper          ,&
+         tref           ,qref           ,z0m            ,zol            ,&
+         rib            ,ustar          ,qstar          ,tstar          ,&
+         fm             ,fh             ,fq             ,tafu            )
 
 !=======================================================================
    USE MOD_Precision
@@ -184,7 +184,8 @@ CONTAINS
         fevpgper,     &! evaporation heat flux from pervious ground [mm/s]
 
         croofs,       &! deriv of roof sensible heat flux wrt soil temp [w/m**2/k]
-        cwalls,       &! deriv of wall sensible heat flux wrt soil temp [w/m**2/k]
+        cwsuns,       &! deriv of sunlit wall sensible heat flux wrt soil temp [w/m**2/k]
+        cwshas,       &! deriv of shaded wall sensible heat flux wrt soil temp [w/m**2/k]
         cgrnds,       &! deriv of soil sensible heat flux wrt soil temp [w/m**2/k]
         croofl,       &! deriv of roof latent heat flux wrt soil temp [w/m**2/k]
         cgimpl,       &! deriv of gimp latent heat flux wrt soil temp [w/m**2/k]
@@ -317,13 +318,16 @@ CONTAINS
         wtll,         &! sum of normalized heat conductance for air and leaf
         wtlql          ! sum of normalized heat conductance for air and leaf
 
+   real(r8), dimension(nlay) :: &
+        Hahe           ! anthropogenic heat emission (AHE)
+
    real(r8) :: &
         ra2m,         &! aerodynamic resistance between 2m and bottom layer [s/m]
         rd2m           ! aerodynamic resistance between bottom layer and ground [s/m]
 
    ! temporal
    integer i
-   real(r8) h_vec, l_vec, H_ahe1, H_ahe2, tmpw3, cgw_per, cgw_imp
+   real(r8) h_vec, l_vec, tmpw3, cgw_per, cgw_imp
    real(r8) bee, tmpw1, tmpw2, fact, facq
    real(r8) aT, bT, cT
    real(r8) aQ, bQ, cQ
@@ -734,16 +738,16 @@ CONTAINS
             !          (cah(2) + cgh(2)*fg + cfh(1)*fc(1) + cfh(2)*fc(2)) / &
             !          fact
 
-            H_ahe1 = 4*hlr/(4*hlr+1)*(Fhac+Fwst) + Fach + h_vec + meta
-            H_ahe2 = 1/(4*hlr+1)*(Fhac+Fwst)
+            Hahe(2) = 4*hlr/(4*hlr+1)*(Fhac+Fwst) + Fach + vehc + meta
+            Hahe(3) = 1/(4*hlr+1)*(Fhac+Fwst)
 
             bT     = 1/(rd(3) * (1/rah+1/rd(3)+fc(0)/rb(0)))
             cT     = 1/rd(3) + fg/rd(2) + fc(1)/rb(1) + fc(2)/rb(2)
-            aT     = (tu(0)*fc(0)/rb(0) + H_ahe2/(rhoair*cpair) + thm/rah)*bT
+            aT     = (tu(0)*fc(0)/rb(0) + Hahe(3)/(rhoair*cpair) + thm/rah)*bT
 
-            taf(2) = (tg*fg/rd(2) + H_ahe1/(rhoair*cpair) + tu(1)*fc(1)/rb(1) + tu(2)*fc(2)/rb(2) + aT) &
+            taf(2) = (tg*fg/rd(2) + Hahe(2)/(rhoair*cpair) + tu(1)*fc(1)/rb(1) + tu(2)*fc(2)/rb(2) + aT) &
                      /(cT * (1- bT/(cT*rd(3))))
-            taf(3) = (taf(2)/rd(3) + tu(0)*fc(0)/rb(0) + H_ahe2/(rhoair*cpair) + thm/rah) &
+            taf(3) = (taf(2)/rd(3) + tu(0)*fc(0)/rb(0) + Hahe(3)/(rhoair*cpair) + thm/rah) &
                      /(1/rah + 1/rd(3) + fc(0)/rb(0))
 
             IF (qgper < qaf(2)) THEN
@@ -868,14 +872,19 @@ CONTAINS
       cQ     = 1/rd(3) + fg*fgper/(rd(2)+rss) + fwet_gimp*fg*fgimp/rd(2)
       bQ     = 1/(rd(3) * (1/raw+1/rd(3)+fwet_roof*fc(0)/rb(0)))
 
-      cwalls = rhoair*cpair/rb(1) &
-               *(1.-fc(1)/(cT*rb(1)*(1-bT/(cT*rd(3)))))
+      !TODO: check below
+      cwsuns = rhoair*cpair/rb(1) &
+               *( 1. - fc(1) / (cT*rb(1)*(1-bT/(cT*rd(3)))) )
+      cwshas = rhoair*cpair/rb(2) &
+               *( 1. - fc(2) / (cT*rb(2)*(1-bT/(cT*rd(3)))) )
       croofs = rhoair*cpair/rb(0) &
-               *(1.-fc(0)*bT/(cT*rb(0)*rd(3)*(1/rah+1/rd(3)+fc(0)/rb(0))*(1-bT/(cT*rd(3))))-fc(0)/(rb(0)*(1/rah+1/rd(3)+fc(0)/rb(0))))
+               *( 1. - fc(0)*bT / (cT*rb(0)*rd(3)*(1/rah+1/rd(3)+fc(0)/rb(0))*(1-bT/(cT*rd(3)))) &
+                     - fc(0) / (rb(0)*(1/rah+1/rd(3)+fc(0)/rb(0))) )
 
+      !TODO: check below
       croofl = rhoair*fwet_roof/rb(0)*qsatldT(0) &
-               *(1.-fwet_roof*fc(0)*bQ/(cQ*rb(0)*rd(3)*(1/raw+1/rd(3)+fwet_roof*fc(0)/rb(0))*(1-bQ/(cQ*rd(3)))) &
-               -fwet_roof*fc(0)/(rb(0)*(1/raw+1/rd(3)+fwet_roof*fc(0)/rb(0))))
+               *( 1. - fwet_roof*fc(0)*bQ / (cQ*rb(0)*rd(3)*(1/raw+1/rd(3)+fwet_roof*fc(0)/rb(0))*(1-bQ/(cQ*rd(3)))) &
+                     - fwet_roof*fc(0) / (rb(0)*(1/raw+1/rd(3)+fwet_roof*fc(0)/rb(0))) )
       croof  = croofs + croofl*htvp_roof
       !---------------------------------------------------------
 
@@ -937,10 +946,10 @@ CONTAINS
       ! cgimpl = rhoair*cgw(2)*(1.-wtgq0(2)/facq)*dqgimpdT
 
       !--------------------------------------------
-      cgrnds = cpair*rhoair/rd(2)*(1.-fg/(cT*rd(2)*(1-bT/(cT*rd(3)))))
+      cgrnds = cpair*rhoair/rd(2)*( 1. - fg/(cT*rd(2)*(1-bT/(cT*rd(3)))) )
 
-      cgperl = rhoair/(rd(2)+rss)    *dqgperdT*(1-fg*fgper/(cQ*(rd(2)+rss)*(1-bQ/(cQ*rd(3)))))
-      cgimpl = rhoair*fwet_gimp/rd(2)*dqgimpdT*(1-fwet_gimp*fg*fgimp/(cQ*rd(2)*(1-bQ/(cQ*rd(3)))))
+      cgperl = rhoair/(rd(2)+rss)    *dqgperdT*( 1 - fg*fgper/(cQ*(rd(2)+rss)*(1-bQ/(cQ*rd(3)))) )
+      cgimpl = rhoair*fwet_gimp/rd(2)*dqgimpdT*( 1 - fwet_gimp*fg*fgimp/(cQ*rd(2)*(1-bQ/(cQ*rd(3)))) )
 
       cgimp  = cgrnds + cgimpl*htvp_gimp
       cgper  = cgrnds + cgperl*htvp_gper
@@ -1006,15 +1015,15 @@ CONTAINS
          ! Output
          taux           ,tauy           ,fsenroof       ,fsenwsun       ,&
          fsenwsha       ,fsengimp       ,fsengper       ,fevproof       ,&
-         fevpgimp       ,fevpgper       ,croofs         ,cwalls         ,&
-         cgrnds         ,croofl         ,cgimpl         ,cgperl         ,&
-         croof          ,cgimp          ,cgper          ,fsenl          ,&
-         fevpl          ,etr            ,rst            ,assim          ,&
-         respc          ,lwsun          ,lwsha          ,lgimp          ,&
-         lgper          ,lveg           ,lout           ,tref           ,&
-         qref           ,z0m            ,zol            ,rib            ,&
-         ustar          ,qstar          ,tstar          ,fm             ,&
-         fh             ,fq             ,tafu                            )
+         fevpgimp       ,fevpgper       ,croofs         ,cwsuns         ,&
+         cwshas         ,cgrnds         ,croofl         ,cgimpl         ,&
+         cgperl         ,croof          ,cgimp          ,cgper          ,&
+         fsenl          ,fevpl          ,etr            ,rst            ,&
+         assim          ,respc          ,lwsun          ,lwsha          ,&
+         lgimp          ,lgper          ,lveg           ,lout           ,&
+         tref           ,qref           ,z0m            ,zol            ,&
+         rib            ,ustar          ,qstar          ,tstar          ,&
+         fm             ,fh             ,fq             ,tafu            )
 
 !=======================================================================
 
@@ -1168,7 +1177,8 @@ CONTAINS
         fevpgper,     &! evaporation heat flux from pervious ground [mm/s]
 
         croofs,       &! deriv of roof sensible heat flux wrt soil temp [w/m**2/k]
-        cwalls,       &! deriv of wall sensible heat flux wrt soil temp [w/m**2/k]
+        cwsuns,       &! deriv of sunlit wall sensible heat flux wrt soil temp [w/m**2/k]
+        cwshas,       &! deriv of shaded wall sensible heat flux wrt soil temp [w/m**2/k]
         cgrnds,       &! deriv of ground latent heat flux wrt soil temp [w/m**2/k]
         croofl,       &! deriv of roof latent heat flux wrt soil temp [w/m**2/k]
         cgimpl,       &! deriv of impervious latent heat flux wrt soil temp [w/m**2/k]
@@ -1363,6 +1373,9 @@ CONTAINS
         wtll,         &! sum of normalized heat conductance for air and leaf
         wtlql          ! sum of normalized heat conductance for air and leaf
 
+   real(r8), dimension(nlay) :: &
+        Hahe           ! anthropogenic heat emission (AHE)
+
    real(r8) :: &
         rv,           &! aerodynamic resistance between layers [s/m]
         ra2m,         &! aerodynamic resistance between 2m and bottom layer [s/m]
@@ -1370,7 +1383,7 @@ CONTAINS
 
    ! temporal
    integer i
-   real(r8) aT, bT, cT, aQ, bQ, cQ, H_ahe1, H_ahe2
+   real(r8) aT, bT, cT, aQ, bQ, cQ
    real(r8) bee, cf, tmpw1, tmpw2, tmpw3, tmpw4, fact, facq, taftmp
    real(r8) B_5, B1_5, dBdT_5, X(5), dX(5)
    real(r8) fwet_roof, fwet_roof_, fwet_gimp, fwet_gimp_
@@ -1873,8 +1886,8 @@ CONTAINS
          !    ENDIF
          ! ENDDO
 
-         rv = 1/((1.-delta*(1.-fwet))*lsai/rb(3) &
-              +(1.-fwet)*delta* ( lai/(rb(3)+rs) ))
+         rv = 1/( (1.-delta*(1.-fwet))*lsai/rb(3) &
+                + (1.-fwet)*delta*( lai/(rb(3)+rs) ) )
 
          ! For simplicity, there is no water exchange on the wall
          ! cfw(1:2) = 0.
@@ -1977,17 +1990,17 @@ CONTAINS
             !          (cah(2) + cgh(2)*fg + cfh(1)*fc(1) + cfh(2)*fc(2) + cfh(3)*fc(3)) / &
             !          fact
 
-            H_ahe1 = 4*hlr/(4*hlr+1)*(Fhac+Fwst) + Fach + h_vec + meta
-            H_ahe2 = 1/(4*hlr+1)*(Fhac+Fwst)
+            Hahe(2) = 4*hlr/(4*hlr+1)*(Fhac+Fwst) + Fach + vehc + meta
+            Hahe(3) = 1/(4*hlr+1)*(Fhac+Fwst)
 
             bT     = 1/(rd(3) * (1/rah+1/rd(3)+fc(0)/rb(0)))
             cT     = 1/rd(3) + fg/rd(2) + fc(1)/rb(1) + fc(2)/rb(2) +fc(3)*lsai/rb(3)
-            aT     = (tu(0)*fc(0)/rb(0) + H_ahe2/(rhoair*cpair) + thm/rah)*bT
+            aT     = (tu(0)*fc(0)/rb(0) + Hahe(3)/(rhoair*cpair) + thm/rah)*bT
 
-            taf(2) = (tg*fg/rd(2) + H_ahe1/(rhoair*cpair) + tu(1)*fc(1)/rb(1) + tu(2)*fc(2)/rb(2) + tu(3)*fc(3)*lsai/rb(3) + aT) &
-                     /(cT * (1- bT/(cT*rd(3))))
-            taf(3) = (taf(2)/rd(3) + tu(0)*fc(0)/rb(0) + H_ahe2/(rhoair*cpair) + thm/rah) &
-                     /(1/rah + 1/rd(3) + fc(0)/rb(0))
+            taf(2) = (tg*fg/rd(2) + Hahe(2)/(rhoair*cpair) + tu(1)*fc(1)/rb(1) + tu(2)*fc(2)/rb(2) + tu(3)*fc(3)*lsai/rb(3) + aT) &
+                     / (cT * (1- bT/(cT*rd(3))))
+            taf(3) = (taf(2)/rd(3) + tu(0)*fc(0)/rb(0) + Hahe(3)/(rhoair*cpair) + thm/rah) &
+                     / (1/rah + 1/rd(3) + fc(0)/rb(0))
 
             IF (qgper < qaf(2)) THEN
               ! dew case. no soil resistance
@@ -2283,17 +2296,17 @@ CONTAINS
             !          (cah(2) + cgh(2)*fg + cfh(1)*fc(1) + cfh(2)*fc(2) + cfh(3)*fc(3)) / &
             !          fact
 
-            H_ahe1 = 4*hlr/(4*hlr+1)*(Fhac+Fwst) + Fach + h_vec + meta
-            H_ahe2 = 1/(4*hlr+1)*(Fhac+Fwst)
+            Hahe(2) = 4*hlr/(4*hlr+1)*(Fhac+Fwst) + Fach + h_vec + meta
+            Hahe(3) = 1/(4*hlr+1)*(Fhac+Fwst)
 
             bT     = 1/(rd(3) * (1/rah+1/rd(3)+fc(0)/rb(0)))
             cT     = 1/rd(3) + fg/rd(2) + fc(1)/rb(1) + fc(2)/rb(2) +fc(3)*lsai/rb(3)
-            aT     = (tu(0)*fc(0)/rb(0) + H_ahe2/(rhoair*cpair) + thm/rah)*bT
+            aT     = (tu(0)*fc(0)/rb(0) + Hahe(3)/(rhoair*cpair) + thm/rah)*bT
 
-            taf(2) = (tg*fg/rd(2) + H_ahe1/(rhoair*cpair) + tu(1)*fc(1)/rb(1) + tu(2)*fc(2)/rb(2) + tu(3)*fc(3)*lsai/rb(3) + aT) &
-                     /(cT * (1- bT/(cT*rd(3))))
-            taf(3) = (taf(2)/rd(3) + tu(0)*fc(0)/rb(0) + H_ahe2/(rhoair*cpair) + thm/rah) &
-                     /(1/rah + 1/rd(3) + fc(0)/rb(0))
+            taf(2) = (tg*fg/rd(2) + Hahe(2)/(rhoair*cpair) + tu(1)*fc(1)/rb(1) + tu(2)*fc(2)/rb(2) + tu(3)*fc(3)*lsai/rb(3) + aT) &
+                     / (cT * (1- bT/(cT*rd(3))))
+            taf(3) = (taf(2)/rd(3) + tu(0)*fc(0)/rb(0) + Hahe(3)/(rhoair*cpair) + thm/rah) &
+                     / (1/rah + 1/rd(3) + fc(0)/rb(0))
 
             IF (qgper < qaf(2)) THEN
               ! dew case. no soil resistance
@@ -2526,8 +2539,8 @@ CONTAINS
       elwdif  = max(0., evplwet-elwmax)
       evplwet = min(evplwet, elwmax)
 
-      fevpl = fevpl - elwdif
-      fsenl = fsenl + hvap*elwdif
+      fevpl   = fevpl - elwdif
+      fsenl   = fsenl + hvap*elwdif
 
 !-----------------------------------------------------------------------
 ! Update dew accumulation (kg/m2)
@@ -2684,14 +2697,17 @@ CONTAINS
       cQ     = 1/rd(3) + fg*fgper/(rd(2)+rss) + fwet_gimp*fg*fgimp/rd(2) + fc(3)/rv
       bQ     = 1/(rd(3) * (1/raw+1/rd(3)+fwet_roof*fc(0)/rb(0)))
 
-      cwalls = rhoair*cpair/rb(1) &
-               *(1.-fc(1)/(cT*rb(1)*(1-bT/(cT*rd(3)))))
+      cwsuns = rhoair*cpair/rb(1) &
+               *( 1. - fc(1)/(cT*rb(1)*(1-bT/(cT*rd(3)))) )
+      cwshas = rhoair*cpair/rb(2) &
+               *( 1. - fc(2)/(cT*rb(2)*(1-bT/(cT*rd(3)))) )
       croofs = rhoair*cpair/rb(0) &
-               *(1.-fc(0)*bT/(cT*rb(0)*rd(3)*(1/rah+1/rd(3)+fc(0)/rb(0))*(1-bT/(cT*rd(3))))-fc(0)/(rb(0)*(1/rah+1/rd(3)+fc(0)/rb(0))))
+               *( 1. - fc(0)*bT / (cT*rb(0)*rd(3)*(1/rah+1/rd(3)+fc(0)/rb(0))*(1-bT/(cT*rd(3)))) &
+                     - fc(0) / (rb(0)*(1/rah+1/rd(3)+fc(0)/rb(0))) )
 
       croofl = rhoair*fwet_roof/rb(0)*qsatldT(0) &
-               *(1.-fwet_roof*fc(0)*bQ/(cQ*rb(0)*rd(3)*(1/raw+1/rd(3)+fwet_roof*fc(0)/rb(0))*(1-bQ/(cQ*rd(3)))) &
-               -fwet_roof*fc(0)/(rb(0)*(1/raw+1/rd(3)+fwet_roof*fc(0)/rb(0))))
+               *( 1. - fwet_roof*fc(0)*bQ / (cQ*rb(0)*rd(3)*(1/raw+1/rd(3)+fwet_roof*fc(0)/rb(0))*(1-bQ/(cQ*rd(3)))) &
+                     - fwet_roof*fc(0) / (rb(0)*(1/raw+1/rd(3)+fwet_roof*fc(0)/rb(0))) )
       croof  = croofs + croofl*htvp_roof
       !-------------------------------------------
 
@@ -2730,10 +2746,10 @@ CONTAINS
 !-----------------------------------------------------------------------
 
       IF (botlay == 2) THEN
-         cgrnds = cpair*rhoair/rd(2)*(1.-fg/(cT*rd(2)*(1-bT/(cT*rd(3)))))
+         cgrnds = cpair*rhoair/rd(2)*( 1. - fg/(cT*rd(2)*(1-bT/(cT*rd(3)))) )
 
-         cgperl = rhoair/(rd(2)+rss)*dqgperdT*(1-fg*fgper/(cQ*(rd(2)+rss)*(1-bQ/(cQ*rd(3)))))
-         cgimpl = rhoair/rd(2)      *dqgimpdT*(1-fwet_gimp*fg*fgimp/(cQ*rd(2)*(1-bQ/(cQ*rd(3)))))
+         cgperl = rhoair/(rd(2)+rss)*dqgperdT*( 1 - fg*fgper/(cQ*(rd(2)+rss)*(1-bQ/(cQ*rd(3)))) )
+         cgimpl = rhoair/rd(2)      *dqgimpdT*( 1 - fwet_gimp*fg*fgimp/(cQ*rd(2)*(1-bQ/(cQ*rd(3)))) )
          cgimpl = cgimpl*fwet_gimp
 
          ! cgrnds = cpair*rhoair*cgh(2)*(1.-wtg0(2)/fact)

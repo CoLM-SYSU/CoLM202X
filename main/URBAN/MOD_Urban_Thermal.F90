@@ -446,7 +446,8 @@ CONTAINS
         fevpgper           ,&! evaporation heat flux from ground soil [mm/s]
 
         croofs             ,&! deriv of roof sensible heat flux wrt soil temp [w/m**2/k]
-        cwalls             ,&! deriv of wall sensible heat flux wrt soil temp [w/m**2/k]
+        cwsuns             ,&! deriv of sunlit wall sensible heat flux wrt soil temp [w/m**2/k]
+        cwshas             ,&! deriv of shaded wall sensible heat flux wrt soil temp [w/m**2/k]
         cgrnds             ,&! deriv of ground latent heat flux wrt soil temp [w/m**2/k]
         croofl             ,&! deriv of roof latent heat flux wrt soil temp [w/m**2/k]
         cgimpl             ,&! deriv of impervious latent heat flux wrt soil temp [w/m**2/k]
@@ -874,15 +875,15 @@ CONTAINS
             ! output
             taux           ,tauy           ,fsenroof       ,fsenwsun       ,&
             fsenwsha       ,fsengimp       ,fsengper       ,fevproof       ,&
-            fevpgimp       ,fevpgper       ,croofs         ,cwalls         ,&
-            cgrnds         ,croofl         ,cgimpl         ,cgperl         ,&
-            croof          ,cgimp          ,cgper          ,fsenl          ,&
-            fevpl          ,etr            ,rst            ,assim          ,&
-            respc          ,lwsun          ,lwsha          ,lgimp          ,&
-            lgper          ,lveg           ,lout           ,tref           ,&
-            qref           ,z0m            ,zol            ,rib            ,&
-            ustar          ,qstar          ,tstar          ,fm             ,&
-            fh             ,fq             ,tafu                            )
+            fevpgimp       ,fevpgper       ,croofs         ,cwsuns         ,&
+            cwshas         ,cgrnds         ,croofl         ,cgimpl         ,&
+            cgperl         ,croof          ,cgimp          ,cgper          ,&
+            fsenl          ,fevpl          ,etr            ,rst            ,&
+            assim          ,respc          ,lwsun          ,lwsha          ,&
+            lgimp          ,lgper          ,lveg           ,lout           ,&
+            tref           ,qref           ,z0m            ,zol            ,&
+            rib            ,ustar          ,qstar          ,tstar          ,&
+            fm             ,fh             ,fq             ,tafu            )
       ELSE
 
          nurb = 2
@@ -909,12 +910,12 @@ CONTAINS
             ! output
             taux           ,tauy           ,fsenroof       ,fsenwsun       ,&
             fsenwsha       ,fsengimp       ,fsengper       ,fevproof       ,&
-            fevpgimp       ,fevpgper       ,croofs         ,cwalls         ,&
-            cgrnds         ,croofl         ,cgimpl         ,cgperl         ,&
-            croof          ,cgimp          ,cgper          ,tref           ,&
-            qref           ,z0m            ,zol            ,rib            ,&
-            ustar          ,qstar          ,tstar          ,fm             ,&
-            fh             ,fq             ,tafu                            )
+            fevpgimp       ,fevpgper       ,croofs         ,cwsuns         ,&
+            cwshas         ,cgrnds         ,croofl         ,cgimpl         ,&
+            cgperl         ,croof          ,cgimp          ,cgper          ,&
+            tref           ,qref           ,z0m            ,zol            ,&
+            rib            ,ustar          ,qstar          ,tstar          ,&
+            fm             ,fh             ,fq             ,tafu            )
 
          !TODO: check
          tleaf     = forc_t
@@ -957,11 +958,11 @@ CONTAINS
 
       CALL UrbanWallTem (deltim,capr,cnfac,&
            cv_wall,tk_wall,t_wallsun,dz_wall,z_wall,zi_wall,&
-           twsun_inner,lwsun,clwsun,sabwsun,fsenwsun,cwalls,tkdz_wsun)
+           twsun_inner,lwsun,clwsun,sabwsun,fsenwsun,cwsuns,tkdz_wsun)
 
       CALL UrbanWallTem (deltim,capr,cnfac,&
            cv_wall,tk_wall,t_wallsha,dz_wall,z_wall,zi_wall,&
-           twsha_inner,lwsha,clwsha,sabwsha,fsenwsha,cwalls,tkdz_wsha)
+           twsha_inner,lwsha,clwsha,sabwsha,fsenwsha,cwshas,tkdz_wsha)
 
       CALL UrbanImperviousTem (patchtype,lbi,deltim,&
            capr,cnfac,csol,k_solids,porsl,psi0,dkdry,dksatu,dksatf,&
@@ -1049,8 +1050,8 @@ CONTAINS
 
       ! flux change due to temperture change
       fsenroof = fsenroof + dT(0)*croofs
-      fsenwsun = fsenwsun + dT(1)*cwalls
-      fsenwsha = fsenwsha + dT(2)*cwalls
+      fsenwsun = fsenwsun + dT(1)*cwsuns
+      fsenwsha = fsenwsha + dT(2)*cwshas
       fsengimp = fsengimp + dT(3)*cgrnds
       fsengper = fsengper + dT(4)*cgrnds
 
