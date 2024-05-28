@@ -449,7 +449,7 @@ CONTAINS
       displau = hroof * (1 + 4.43**(-fcover(0))*(fcover(0) - 1))
       fai  = 4/PI*hlr*fcover(0)
       z0mu = (hroof - displau) * &
-           exp( -(0.5*1.2/vonkar/vonkar*(1-displau/hroof)*fai)**(-0.5) )
+             exp( -(0.5*1.2/vonkar/vonkar*(1-displau/hroof)*fai)**(-0.5) )
 
       ! to compare z0 of urban and only the surface
       ! maximum assumption
@@ -466,7 +466,7 @@ CONTAINS
 ! calculate layer decay coefficient
 !-----------------------------------------------------------------------
 
-      !NOTE: the below is for vegetation, may not suitable for urban
+      !NOTE: the below is for vegetation, may not be suitable for urban
       ! Raupach, 1992
       !sqrtdragc = min( (0.003+0.3*fai)**0.5, 0.3 )
 
@@ -532,7 +532,7 @@ CONTAINS
          !NOTE: displat=hroof, z0mt=0, are set for roof
          ! fmtop is calculated at the same height of fht, fqt
          CALL moninobukm(huu,htu,hqu,displa,z0m,z0h,z0q,obu,um, &
-            hroof,0.,ustar,fh2m,fq2m,hroof,fmtop,fm,fh,fq,fht,fqt,phih)
+              hroof,0.,ustar,fh2m,fq2m,hroof,fmtop,fm,fh,fq,fht,fqt,phih)
 
 ! Aerodynamic resistance
          ! 09/16/2017:
@@ -574,6 +574,7 @@ CONTAINS
 
          ueff_lay(3) = utop
 
+         ! NOTE: another calculation method for double-check
          ! real(r8) FUNCTION kintegral(ktop, fc, bee, alpha, z0mg, displah, &
          !                             htop, hbot, obu, ustar, ztop, zbot)
          ! rd(3) = kintegral(ktop, 1., bee, alpha, z0mg, displa/hroof, &
@@ -867,19 +868,17 @@ CONTAINS
       cQ     = 1/rd(3) + fg*fgper/(rd(2)+rss) + fwet_gimp*fg*fgimp/rd(2)
       bQ     = 1/(rd(3) * (1/raw+1/rd(3)+fwet_roof*fc(0)/rb(0)))
 
-      !TODO: check below
       cwsuns = rhoair*cpair/rb(1) &
-               *( 1. - fc(1) / (cT*rb(1)*(1-bT/(cT*rd(3)))) )
+             * ( 1. - fc(1) / (cT*rb(1)*(1-bT/(cT*rd(3)))) )
       cwshas = rhoair*cpair/rb(2) &
-               *( 1. - fc(2) / (cT*rb(2)*(1-bT/(cT*rd(3)))) )
+             * ( 1. - fc(2) / (cT*rb(2)*(1-bT/(cT*rd(3)))) )
       croofs = rhoair*cpair/rb(0) &
-               *( 1. - fc(0)*bT / (cT*rb(0)*rd(3)*(1/rah+1/rd(3)+fc(0)/rb(0))*(1-bT/(cT*rd(3)))) &
-                     - fc(0) / (rb(0)*(1/rah+1/rd(3)+fc(0)/rb(0))) )
+             * ( 1. - fc(0)*bT / (cT*rb(0)*rd(3)*(1/rah+1/rd(3)+fc(0)/rb(0))*(1-bT/(cT*rd(3)))) &
+                    - fc(0) / (rb(0)*(1/rah+1/rd(3)+fc(0)/rb(0))) )
 
-      !TODO: check below
       croofl = rhoair*fwet_roof/rb(0)*qsatldT(0) &
-               *( 1. - fwet_roof*fc(0)*bQ / (cQ*rb(0)*rd(3)*(1/raw+1/rd(3)+fwet_roof*fc(0)/rb(0))*(1-bQ/(cQ*rd(3)))) &
-                     - fwet_roof*fc(0) / (rb(0)*(1/raw+1/rd(3)+fwet_roof*fc(0)/rb(0))) )
+             * ( 1. - fwet_roof*fc(0)*bQ / (cQ*rb(0)*rd(3)*(1/raw+1/rd(3)+fwet_roof*fc(0)/rb(0))*(1-bQ/(cQ*rd(3)))) &
+                    - fwet_roof*fc(0) / (rb(0)*(1/raw+1/rd(3)+fwet_roof*fc(0)/rb(0))) )
       croof  = croofs + croofl*htvp_roof
       !---------------------------------------------------------
 
@@ -1674,7 +1673,7 @@ CONTAINS
 ! Evaluate stability-dependent variables using moz from prior iteration
 
          CALL moninobukm(huu,htu,hqu,displa,z0m,z0h,z0q,obu,um, &
-            hroof,0.,ustar,fh2m,fq2m,hroof,fmtop,fm,fh,fq,fht,fqt,phih)
+              hroof,0.,ustar,fh2m,fq2m,hroof,fmtop,fm,fh,fq,fht,fqt,phih)
 
 ! Aerodynamic resistance
          ! 09/16/2017:
@@ -1716,6 +1715,7 @@ CONTAINS
          ueff_lay(3)  = utop
          ueff_lay_(3) = utop
 
+         ! NOTE: another calculation method for double-check
          ! real(r8) FUNCTION kintegral(ktop, fc, bee, alpha, z0mg, displah, &
          !                             htop, hbot, obu, ustar, ztop, zbot)
          ! rd_(3) = kintegral(ktop, 1., bee, alpha, z0mg, displa/hroof, &
@@ -2444,7 +2444,6 @@ CONTAINS
 !-----------------------------------------------------------------------
 
          ! USE the top layer taf and qaf
-         !TODO: need more check
          dth = thm - taf(2)
          dqh =  qm - qaf(2)
 
@@ -2578,7 +2577,6 @@ CONTAINS
          qmelt = 0.
          qfrz  = 0.
 
-         !TODO: double check below
          IF (ldew_snow.gt.1.e-6 .and. tl.gt.tfrz) THEN
             qmelt = min(ldew_snow/deltim,(tl-tfrz)*cpice*ldew_snow/(deltim*hfus))
             ldew_snow = max(0.,ldew_snow - qmelt*deltim)
@@ -2684,16 +2682,16 @@ CONTAINS
       bQ     = 1/(rd(3) * (1/raw+1/rd(3)+fwet_roof*fc(0)/rb(0)))
 
       cwsuns = rhoair*cpair/rb(1) &
-               *( 1. - fc(1)/(cT*rb(1)*(1-bT/(cT*rd(3)))) )
+             * ( 1. - fc(1)/(cT*rb(1)*(1-bT/(cT*rd(3)))) )
       cwshas = rhoair*cpair/rb(2) &
-               *( 1. - fc(2)/(cT*rb(2)*(1-bT/(cT*rd(3)))) )
+             * ( 1. - fc(2)/(cT*rb(2)*(1-bT/(cT*rd(3)))) )
       croofs = rhoair*cpair/rb(0) &
-               *( 1. - fc(0)*bT / (cT*rb(0)*rd(3)*(1/rah+1/rd(3)+fc(0)/rb(0))*(1-bT/(cT*rd(3)))) &
-                     - fc(0) / (rb(0)*(1/rah+1/rd(3)+fc(0)/rb(0))) )
+             * ( 1. - fc(0)*bT / (cT*rb(0)*rd(3)*(1/rah+1/rd(3)+fc(0)/rb(0))*(1-bT/(cT*rd(3)))) &
+                    - fc(0) / (rb(0)*(1/rah+1/rd(3)+fc(0)/rb(0))) )
 
       croofl = rhoair*fwet_roof/rb(0)*qsatldT(0) &
-               *( 1. - fwet_roof*fc(0)*bQ / (cQ*rb(0)*rd(3)*(1/raw+1/rd(3)+fwet_roof*fc(0)/rb(0))*(1-bQ/(cQ*rd(3)))) &
-                     - fwet_roof*fc(0) / (rb(0)*(1/raw+1/rd(3)+fwet_roof*fc(0)/rb(0))) )
+             * ( 1. - fwet_roof*fc(0)*bQ / (cQ*rb(0)*rd(3)*(1/raw+1/rd(3)+fwet_roof*fc(0)/rb(0))*(1-bQ/(cQ*rd(3)))) &
+                    - fwet_roof*fc(0) / (rb(0)*(1/raw+1/rd(3)+fwet_roof*fc(0)/rb(0))) )
       croof  = croofs + croofl*htvp_roof
       !-------------------------------------------
 
