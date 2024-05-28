@@ -57,7 +57,7 @@ CONTAINS
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
    USE MOD_Hydro_SoilFunction
 #endif
-   USE MOD_Mapping_Grid2Pset
+   USE MOD_SpatialMapping
 #ifdef CatchLateralFlow
    USE MOD_Mesh
    USE MOD_LandHRU
@@ -107,10 +107,10 @@ CONTAINS
    type(grid_type) :: gsoil
    type(grid_type) :: gsnow
    type(grid_type) :: gcn
-   type(mapping_grid2pset_type) :: ms2p
-   type(mapping_grid2pset_type) :: mc2p
-   type(mapping_grid2pset_type) :: mc2f
-   type(mapping_grid2pset_type) :: msoil2p, msnow2p
+   type(spatial_mapping_type) :: ms2p
+   type(spatial_mapping_type) :: mc2p
+   type(spatial_mapping_type) :: mc2f
+   type(spatial_mapping_type) :: msoil2p, msnow2p
 
    integer  :: nl_soil_ini
    real(r8) :: missing_value
@@ -182,8 +182,8 @@ CONTAINS
 
    character(len=256) :: fwtd
    type(grid_type)    :: gwtd
-   type(block_data_real8_2d)    :: wtd_xy  ! [m]
-   type(mapping_grid2pset_type) :: m_wtd2p
+   type(block_data_real8_2d)  :: wtd_xy  ! [m]
+   type(spatial_mapping_type) :: m_wtd2p
 
    real(r8) :: zwtmm
    real(r8) :: zc_soimm(1:nl_soil)
@@ -665,10 +665,12 @@ CONTAINS
                ENDIF
             ENDIF
 
-            CALL msoil2p%build (gsoil, landpatch, zwt_grid, missing_value, validval)
-            CALL msoil2p%map_aweighted (soil_t_grid, nl_soil_ini, soil_t)
-            CALL msoil2p%map_aweighted (soil_w_grid, nl_soil_ini, soil_w)
-            CALL msoil2p%map_aweighted (zwt_grid, zwt)
+            CALL msoil2p%build_arealweighted (gsoil, landpatch)
+            CALL msoil2p%set_missing_value   (zwt_grid, missing_value, validval)
+
+            CALL msoil2p%grid2pset (soil_t_grid, nl_soil_ini, soil_t)
+            CALL msoil2p%grid2pset (soil_w_grid, nl_soil_ini, soil_w)
+            CALL msoil2p%grid2pset (zwt_grid, zwt)
 
             IF (p_is_worker) THEN
                DO i = 1, numpatch
@@ -722,8 +724,8 @@ CONTAINS
          IF (use_cnini) THEN
 
             CALL gcn%define_from_file (fcndat,"lat","lon")
-            CALL mc2p%build (gcn, landpatch)
-            CALL mc2f%build (gcn, landpft)
+            CALL mc2p%build_arealweighted (gcn, landpatch)
+            CALL mc2f%build_arealweighted (gcn, landpft)
 
             IF (p_is_io) THEN
                ! soil layer litter & carbon (gC m-3)
@@ -834,30 +836,30 @@ CONTAINS
 
             ENDIF
 
-            CALL mc2p%map_aweighted (litr1c_grid, nl_soil, litr1c_vr)
-            CALL mc2p%map_aweighted (litr2c_grid, nl_soil, litr2c_vr)
-            CALL mc2p%map_aweighted (litr3c_grid, nl_soil, litr3c_vr)
-            CALL mc2p%map_aweighted (cwdc_grid  , nl_soil, cwdc_vr  )
-            CALL mc2p%map_aweighted (soil1c_grid, nl_soil, soil1c_vr)
-            CALL mc2p%map_aweighted (soil2c_grid, nl_soil, soil2c_vr)
-            CALL mc2p%map_aweighted (soil3c_grid, nl_soil, soil3c_vr)
-            CALL mc2p%map_aweighted (litr1n_grid, nl_soil, litr1n_vr)
-            CALL mc2p%map_aweighted (litr2n_grid, nl_soil, litr2n_vr)
-            CALL mc2p%map_aweighted (litr3n_grid, nl_soil, litr3n_vr)
-            CALL mc2p%map_aweighted (cwdn_grid  , nl_soil, cwdn_vr  )
-            CALL mc2p%map_aweighted (soil1n_grid, nl_soil, soil1n_vr)
-            CALL mc2p%map_aweighted (soil2n_grid, nl_soil, soil2n_vr)
-            CALL mc2p%map_aweighted (soil3n_grid, nl_soil, soil3n_vr)
-            CALL mc2p%map_aweighted (smin_nh4_grid , nl_soil, min_nh4_vr )
-            CALL mc2p%map_aweighted (smin_no3_grid , nl_soil, min_no3_vr )
-            CALL mc2f%map_aweighted (leafc_grid, leafcin_p )
-            CALL mc2f%map_aweighted (leafc_storage_grid, leafc_storagein_p )
-            CALL mc2f%map_aweighted (frootc_grid, frootcin_p )
-            CALL mc2f%map_aweighted (frootc_storage_grid, frootc_storagein_p )
-            CALL mc2f%map_aweighted (livestemc_grid, livestemcin_p )
-            CALL mc2f%map_aweighted (deadstemc_grid, deadstemcin_p )
-            CALL mc2f%map_aweighted (livecrootc_grid, livecrootcin_p )
-            CALL mc2f%map_aweighted (deadcrootc_grid, deadcrootcin_p )
+            CALL mc2p%grid2pset (litr1c_grid, nl_soil, litr1c_vr)
+            CALL mc2p%grid2pset (litr2c_grid, nl_soil, litr2c_vr)
+            CALL mc2p%grid2pset (litr3c_grid, nl_soil, litr3c_vr)
+            CALL mc2p%grid2pset (cwdc_grid  , nl_soil, cwdc_vr  )
+            CALL mc2p%grid2pset (soil1c_grid, nl_soil, soil1c_vr)
+            CALL mc2p%grid2pset (soil2c_grid, nl_soil, soil2c_vr)
+            CALL mc2p%grid2pset (soil3c_grid, nl_soil, soil3c_vr)
+            CALL mc2p%grid2pset (litr1n_grid, nl_soil, litr1n_vr)
+            CALL mc2p%grid2pset (litr2n_grid, nl_soil, litr2n_vr)
+            CALL mc2p%grid2pset (litr3n_grid, nl_soil, litr3n_vr)
+            CALL mc2p%grid2pset (cwdn_grid  , nl_soil, cwdn_vr  )
+            CALL mc2p%grid2pset (soil1n_grid, nl_soil, soil1n_vr)
+            CALL mc2p%grid2pset (soil2n_grid, nl_soil, soil2n_vr)
+            CALL mc2p%grid2pset (soil3n_grid, nl_soil, soil3n_vr)
+            CALL mc2p%grid2pset (smin_nh4_grid , nl_soil, min_nh4_vr )
+            CALL mc2p%grid2pset (smin_no3_grid , nl_soil, min_no3_vr )
+            CALL mc2f%grid2pset (leafc_grid, leafcin_p )
+            CALL mc2f%grid2pset (leafc_storage_grid, leafc_storagein_p )
+            CALL mc2f%grid2pset (frootc_grid, frootcin_p )
+            CALL mc2f%grid2pset (frootc_storage_grid, frootc_storagein_p )
+            CALL mc2f%grid2pset (livestemc_grid, livestemcin_p )
+            CALL mc2f%grid2pset (deadstemc_grid, deadstemcin_p )
+            CALL mc2f%grid2pset (livecrootc_grid, livecrootcin_p )
+            CALL mc2f%grid2pset (deadcrootc_grid, deadcrootcin_p )
 
             IF (p_is_worker) THEN
                DO i = 1, numpatch
@@ -953,8 +955,10 @@ CONTAINS
                ENDIF
             ENDIF
 
-            CALL msnow2p%build (gsnow, landpatch, snow_d_grid, missing_value, validval)
-            CALL msnow2p%map_aweighted (snow_d_grid, snow_d)
+            CALL msnow2p%build_arealweighted (gsnow, landpatch)
+            CALL msnow2p%set_missing_value   (snow_d_grid, missing_value, validval)
+
+            CALL msnow2p%grid2pset (snow_d_grid, snow_d)
 
             IF (p_is_worker) THEN
                WHERE (.not. validval)
@@ -996,8 +1000,8 @@ CONTAINS
             CALL ncio_read_block_time (fwtd, 'wtd', gwtd, month, wtd_xy)
          ENDIF
 
-         CALL m_wtd2p%build (gwtd, landpatch)
-         CALL m_wtd2p%map_aweighted (wtd_xy, zwt)
+         CALL m_wtd2p%build_arealweighted (gwtd, landpatch)
+         CALL m_wtd2p%grid2pset (wtd_xy, zwt)
 
       ENDIF
 

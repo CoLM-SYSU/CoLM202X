@@ -668,11 +668,7 @@ CONTAINS
       ENDIF
 
       IF (p_is_worker) THEN
-#if (defined CROP)
-         CALL elm_patch%build (landelm, landpatch, use_frac = .true., sharedfrac = pctshrpch)
-#else
          CALL elm_patch%build (landelm, landpatch, use_frac = .true.)
-#endif
       ENDIF
 
    END SUBROUTINE allocate_acc_fluxes

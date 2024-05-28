@@ -85,6 +85,10 @@ CONTAINS
          landpatch%ipxstt(:) = 1
          landpatch%ipxend(:) = 1
          landpatch%settyp(:) = CROPLAND
+         
+         landpatch%has_shared = .true.
+         allocate (landpatch%pctshared(numpatch))
+         landpatch%pctshared = pctshrpch
 
          landpatch%nset = numpatch
          CALL landpatch%set_vecgs
@@ -138,6 +142,14 @@ CONTAINS
       
       numpatch = landpatch%nset
 
+      landpatch%has_shared = .true.
+      IF (p_is_worker) THEN
+         IF (numpatch > 0) THEN
+            allocate(landpatch%pctshared(numpatch))
+            landpatch%pctshared = pctshrpch
+         ENDIF
+      ENDIF
+
       IF (allocated(pctshared  )) deallocate(pctshared  )
       IF (allocated(classshared)) deallocate(classshared)
 
@@ -154,9 +166,9 @@ CONTAINS
       write(*,'(A,I12,A)') 'Total: ', numpatch, ' patches.'
 #endif
 
-      CALL elm_patch%build (landelm, landpatch, use_frac = .true., sharedfrac = pctshrpch)
+      CALL elm_patch%build (landelm, landpatch, use_frac = .true.)
 #ifdef CATCHMENT
-      CALL hru_patch%build (landhru, landpatch, use_frac = .true., sharedfrac = pctshrpch)
+      CALL hru_patch%build (landhru, landpatch, use_frac = .true.)
 #endif
 
       CALL write_patchfrac (DEF_dir_landdata, lc_year)

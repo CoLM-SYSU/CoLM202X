@@ -6,7 +6,7 @@ MODULE MOD_Aerosol
    USE MOD_Precision
    USE MOD_Grid
    USE MOD_DataType
-   USE MOD_Mapping_Grid2Pset
+   USE MOD_SpatialMapping
    USE MOD_Vars_Global, only: maxsnl
    IMPLICIT NONE
    SAVE
@@ -27,8 +27,8 @@ MODULE MOD_Aerosol
    character(len=256)  :: file_aerosol
 
    type(grid_type) :: grid_aerosol
-   type(block_data_real8_2d) :: f_aerdep
-   type(mapping_grid2pset_type) :: mg2p_aerdep
+   type(block_data_real8_2d)  :: f_aerdep
+   type(spatial_mapping_type) :: mg2p_aerdep
 
    integer, parameter :: start_year = 1849
    integer, parameter :: end_year   = 2001
@@ -319,7 +319,7 @@ CONTAINS
 
       CALL allocate_block_data (grid_aerosol, f_aerdep)
 
-      CALL mg2p_aerdep%build (grid_aerosol, landpatch)
+      CALL mg2p_aerdep%build_arealweighted (grid_aerosol, landpatch)
 
       month_p = -1
 
@@ -365,59 +365,59 @@ CONTAINS
 
       ! BCPHIDRY , hydrophilic BC dry deposition
       CALL ncio_read_block_time (file_aerosol, 'BCPHIDRY', grid_aerosol, itime, f_aerdep)
-      CALL mg2p_aerdep%map_aweighted (f_aerdep, forc_aerdep(1,:))
+      CALL mg2p_aerdep%grid2pset (f_aerdep, forc_aerdep(1,:))
 
       ! BCPHODRY , hydrophobic BC dry deposition
       CALL ncio_read_block_time (file_aerosol, 'BCPHODRY', grid_aerosol, itime, f_aerdep)
-      CALL mg2p_aerdep%map_aweighted (f_aerdep, forc_aerdep(2,:))
+      CALL mg2p_aerdep%grid2pset (f_aerdep, forc_aerdep(2,:))
 
       ! BCDEPWET , hydrophilic BC wet deposition
       CALL ncio_read_block_time (file_aerosol, 'BCDEPWET', grid_aerosol, itime, f_aerdep)
-      CALL mg2p_aerdep%map_aweighted (f_aerdep, forc_aerdep(3,:))
+      CALL mg2p_aerdep%grid2pset (f_aerdep, forc_aerdep(3,:))
 
       ! OCPHIDRY , hydrophilic OC dry deposition
       CALL ncio_read_block_time (file_aerosol, 'OCPHIDRY', grid_aerosol, itime, f_aerdep)
-      CALL mg2p_aerdep%map_aweighted (f_aerdep, forc_aerdep(4,:))
+      CALL mg2p_aerdep%grid2pset (f_aerdep, forc_aerdep(4,:))
 
       ! OCPHODRY , hydrophobic OC dry deposition
       CALL ncio_read_block_time (file_aerosol, 'OCPHODRY', grid_aerosol, itime, f_aerdep)
-      CALL mg2p_aerdep%map_aweighted (f_aerdep, forc_aerdep(5,:))
+      CALL mg2p_aerdep%grid2pset (f_aerdep, forc_aerdep(5,:))
 
       ! OCDEPWET , hydrophilic OC wet deposition
       CALL ncio_read_block_time (file_aerosol, 'OCDEPWET', grid_aerosol, itime, f_aerdep)
-      CALL mg2p_aerdep%map_aweighted (f_aerdep, forc_aerdep(6,:))
+      CALL mg2p_aerdep%grid2pset (f_aerdep, forc_aerdep(6,:))
 
       ! DSTX01WD , DSTX01 wet deposition flux at bottom
       CALL ncio_read_block_time (file_aerosol, 'DSTX01WD', grid_aerosol, itime, f_aerdep)
-      CALL mg2p_aerdep%map_aweighted (f_aerdep, forc_aerdep(7,:))
+      CALL mg2p_aerdep%grid2pset (f_aerdep, forc_aerdep(7,:))
 
       ! DSTX01DD , DSTX01 dry deposition flux at bottom
       CALL ncio_read_block_time (file_aerosol, 'DSTX01DD', grid_aerosol, itime, f_aerdep)
-      CALL mg2p_aerdep%map_aweighted (f_aerdep, forc_aerdep(8,:))
+      CALL mg2p_aerdep%grid2pset (f_aerdep, forc_aerdep(8,:))
 
       ! DSTX02WD , DSTX02 wet deposition flux at bottom
       CALL ncio_read_block_time (file_aerosol, 'DSTX02WD', grid_aerosol, itime, f_aerdep)
-      CALL mg2p_aerdep%map_aweighted (f_aerdep, forc_aerdep(9,:))
+      CALL mg2p_aerdep%grid2pset (f_aerdep, forc_aerdep(9,:))
 
       ! DSTX02DD , DSTX02 dry deposition flux at bottom
       CALL ncio_read_block_time (file_aerosol, 'DSTX02DD', grid_aerosol, itime, f_aerdep)
-      CALL mg2p_aerdep%map_aweighted (f_aerdep, forc_aerdep(10,:))
+      CALL mg2p_aerdep%grid2pset (f_aerdep, forc_aerdep(10,:))
 
       ! DSTX03WD , DSTX03 wet deposition flux at bottom
       CALL ncio_read_block_time (file_aerosol, 'DSTX03WD', grid_aerosol, itime, f_aerdep)
-      CALL mg2p_aerdep%map_aweighted (f_aerdep, forc_aerdep(11,:))
+      CALL mg2p_aerdep%grid2pset (f_aerdep, forc_aerdep(11,:))
 
       ! DSTX03DD , DSTX03 dry deposition flux at bottom
       CALL ncio_read_block_time (file_aerosol, 'DSTX03DD', grid_aerosol, itime, f_aerdep)
-      CALL mg2p_aerdep%map_aweighted (f_aerdep, forc_aerdep(12,:))
+      CALL mg2p_aerdep%grid2pset (f_aerdep, forc_aerdep(12,:))
 
       ! DSTX04WD , DSTX04 wet deposition flux at bottom
       CALL ncio_read_block_time (file_aerosol, 'DSTX04WD', grid_aerosol, itime, f_aerdep)
-      CALL mg2p_aerdep%map_aweighted (f_aerdep, forc_aerdep(13,:))
+      CALL mg2p_aerdep%grid2pset (f_aerdep, forc_aerdep(13,:))
 
       ! DSTX04DD , DSTX04 dry deposition flux at bottom
       CALL ncio_read_block_time (file_aerosol, 'DSTX04DD', grid_aerosol, itime, f_aerdep)
-      CALL mg2p_aerdep%map_aweighted (f_aerdep, forc_aerdep(14,:))
+      CALL mg2p_aerdep%grid2pset (f_aerdep, forc_aerdep(14,:))
 
 #ifdef RangeCheck
       !CALL check_block_data  ('aerosol', f_aerdep)
