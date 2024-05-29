@@ -10,7 +10,7 @@ MODULE MOD_NdepData
  ! Lu Xingjie and Zhang Shupeng, 2023, prepare the original version of the ndep data module.
 
    USE MOD_Grid
-   USE MOD_Mapping_Grid2Pset
+   USE MOD_SpatialMapping
    USE MOD_BGC_Vars_TimeVariables, only : ndep
    USE MOD_BGC_Vars_1DFluxes, only: ndep_to_sminn
    IMPLICIT NONE
@@ -18,7 +18,7 @@ MODULE MOD_NdepData
    character(len=256) :: file_ndep
 
    type(grid_type) :: grid_ndep
-   type(mapping_grid2pset_type) :: mg2p_ndep
+   type(spatial_mapping_type) :: mg2p_ndep
 
 CONTAINS
 
@@ -49,7 +49,7 @@ CONTAINS
 
       CALL grid_ndep%define_by_center (lat, lon)
 
-      CALL mg2p_ndep%build (grid_ndep, landpatch)
+      CALL mg2p_ndep%build_arealweighted (grid_ndep, landpatch)
 
       IF (allocated(lon)) deallocate(lon)
       IF (allocated(lat)) deallocate(lat)
@@ -85,7 +85,7 @@ CONTAINS
 
       CALL grid_ndep%define_by_center (lat, lon)
 
-      CALL mg2p_ndep%build (grid_ndep, landpatch)
+      CALL mg2p_ndep%build_arealweighted (grid_ndep, landpatch)
 
       IF (allocated(lon)) deallocate(lon)
       IF (allocated(lat)) deallocate(lat)
@@ -131,7 +131,7 @@ CONTAINS
          CALL ncio_read_block_time (file_ndep, 'NDEP_year', grid_ndep, itime, f_xy_ndep)
       ENDIF
 
-      CALL mg2p_ndep%map_aweighted (f_xy_ndep, ndep)
+      CALL mg2p_ndep%grid2pset (f_xy_ndep, ndep)
 
       IF (p_is_worker .and. iswrite) THEN
          IF (numpatch > 0) THEN
@@ -197,7 +197,7 @@ CONTAINS
          CALL ncio_read_block_time (file_ndep, 'NDEP_month', grid_ndep, itime, f_xy_ndep) ! sf_add
       ENDIF
 
-      CALL mg2p_ndep%map_aweighted (f_xy_ndep, ndep)
+      CALL mg2p_ndep%grid2pset (f_xy_ndep, ndep)
 
       IF (p_is_worker .and. iswrite) THEN
          IF (numpatch > 0) THEN

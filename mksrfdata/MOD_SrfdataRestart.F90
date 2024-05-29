@@ -393,6 +393,10 @@ CONTAINS
       CALL ncio_write_vector (filename, 'ipxend', trim(psetname), pixelset, pixelset%ipxend, DEF_Srfdata_CompressLevel)
       CALL ncio_write_vector (filename, 'settyp', trim(psetname), pixelset, pixelset%settyp, DEF_Srfdata_CompressLevel)
 
+      IF (pixelset%has_shared) THEN
+         CALL ncio_write_vector (filename, 'pctshared', trim(psetname), pixelset, pixelset%pctshared, DEF_Srfdata_CompressLevel)
+      ENDIF
+
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
@@ -611,6 +615,26 @@ CONTAINS
       ENDIF
 
       numset = pixelset%nset
+      
+      pixelset%has_shared = .false.
+      IF (p_is_worker) THEN
+         DO iset = 1, pixelset%nset-1
+            IF ((pixelset%ielm(iset) == pixelset%ielm(iset+1)) &
+               .and. (pixelset%ipxstt(iset) == pixelset%ipxstt(iset+1))) THEN
+               pixelset%has_shared = .true.
+               exit
+            ENDIF
+         ENDDO
+      ENDIF
+
+#ifdef USEMPI
+      CALL mpi_allreduce (MPI_IN_PLACE, pixelset%has_shared, 1, MPI_LOGICAL, &
+         MPI_LOR, p_comm_glb, p_err)
+#endif
+
+      IF (pixelset%has_shared) THEN
+         CALL ncio_read_vector (filename, 'pctshared', pixelset, pixelset%pctshared)
+      ENDIF
 
 #ifdef CoLMDEBUG
       IF (p_is_io)  write(*,*) numset, trim(psetname), ' on group', p_iam_io

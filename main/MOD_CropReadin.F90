@@ -28,7 +28,7 @@ CONTAINS
    USE MOD_LandPatch
    USE MOD_NetCDFSerial
    USE MOD_NetCDFBlock
-   USE MOD_Mapping_Grid2Pset
+   USE MOD_SpatialMapping
    USE MOD_Vars_TimeInvariants
    USE MOD_Vars_TimeVariables
 
@@ -42,13 +42,13 @@ CONTAINS
 
    character(len=256) :: file_crop
    type(grid_type)    :: grid_crop
-   type(block_data_real8_2d)    :: f_xy_crop
-   type(mapping_grid2pset_type) :: mg2patch_crop
-   type(mapping_grid2pset_type) :: mg2pft_crop
+   type(block_data_real8_2d)  :: f_xy_crop
+   type(spatial_mapping_type) :: mg2patch_crop
+   type(spatial_mapping_type) :: mg2pft_crop
    character(len=256) :: file_irrig
    type(grid_type)    :: grid_irrig
-   type(block_data_int32_2d)    :: f_xy_irrig
-   type(mapping_grid2pset_type) :: mg2pft_irrig
+   type(block_data_int32_2d)  :: f_xy_irrig
+   type(spatial_mapping_type) :: mg2pft_irrig
 
    real(r8),allocatable :: pdrice2_tmp      (:)
    real(r8),allocatable :: plantdate_tmp    (:)
@@ -87,8 +87,11 @@ CONTAINS
          CALL ncio_read_block (file_crop, 'pdrice2', grid_crop, f_xy_crop)
       ENDIF
 
-      CALL mg2patch_crop%build (grid_crop, landpatch, f_xy_crop, missing_value)
-      CALL mg2pft_crop%build   (grid_crop, landpft,   f_xy_crop, missing_value)
+      CALL mg2patch_crop%build_arealweighted (grid_crop, landpatch)
+      CALL mg2patch_crop%set_missing_value   (f_xy_crop, missing_value)
+
+      CALL mg2pft_crop%build_arealweighted   (grid_crop, landpft)
+      CALL mg2pft_crop%set_missing_value     (f_xy_crop, missing_value)
 
       IF (allocated(lon)) deallocate(lon)
       IF (allocated(lat)) deallocate(lat)
@@ -106,7 +109,7 @@ CONTAINS
          CALL ncio_read_block (file_crop, 'pdrice2', grid_crop, f_xy_crop)
       ENDIF
 
-      CALL mg2patch_crop%map_aweighted (f_xy_crop, pdrice2_tmp)
+      CALL mg2patch_crop%grid2pset (f_xy_crop, pdrice2_tmp)
 
       IF (p_is_worker) THEN
          DO npatch = 1, numpatch
@@ -134,7 +137,7 @@ CONTAINS
             CALL ncio_read_block_time (file_crop, 'PLANTDATE_CFT_'//trim(cx), grid_crop, 1, f_xy_crop)
          ENDIF
 
-         CALL mg2pft_crop%map_aweighted (f_xy_crop, plantdate_tmp)
+         CALL mg2pft_crop%grid2pset (f_xy_crop, plantdate_tmp)
 
          IF (p_is_worker) THEN
             DO ipft = 1, numpft
@@ -163,7 +166,7 @@ CONTAINS
             CALL ncio_read_block_time (file_crop, 'CONST_FERTNITRO_CFT_'//trim(cx), grid_crop, 1, f_xy_crop)
          ENDIF
 
-         CALL mg2pft_crop%map_aweighted (f_xy_crop, fertnitro_tmp)
+         CALL mg2pft_crop%grid2pset (f_xy_crop, fertnitro_tmp)
 
          IF (p_is_worker) THEN
             DO ipft = 1, numpft
@@ -194,7 +197,7 @@ CONTAINS
          CALL allocate_block_data  (grid_irrig, f_xy_irrig)
       ENDIF
 
-      CALL mg2pft_irrig%build   (grid_irrig, landpft)
+      CALL mg2pft_irrig%build_arealweighted (grid_irrig, landpft)
 
       IF (allocated(lon)) deallocate(lon)
       IF (allocated(lat)) deallocate(lat)
@@ -208,7 +211,7 @@ CONTAINS
             CALL ncio_read_block_time (file_irrig, 'irrigation_method', grid_irrig, cft, f_xy_irrig)
          ENDIF
 
-         CALL mg2pft_irrig%map_max_frequency_2d (f_xy_irrig, irrig_method_tmp)
+         CALL mg2pft_irrig%grid2pset_dominant (f_xy_irrig, irrig_method_tmp)
 
          IF (p_is_worker) THEN
             DO ipft = 1, numpft

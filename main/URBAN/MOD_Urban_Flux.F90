@@ -241,7 +241,7 @@ CONTAINS
 
    real(r8) evplwet, evplwet_dtl, elwmax, elwdif
 
-!----------------------- defination for 3d run ------------------------ !
+!----------------------- defination for 3d run -------------------------
 
    integer, parameter :: nlay = 3  ! potential layer number
 
@@ -412,7 +412,7 @@ CONTAINS
          fwet_roof = fwet_roof_
       ENDIF
 
-      ! ! dew case
+      ! dew case
       IF (qm > qgimp) THEN
          fwet_gimp = 1.
       ELSE
@@ -449,7 +449,7 @@ CONTAINS
       displau = hroof * (1 + 4.43**(-fcover(0))*(fcover(0) - 1))
       fai  = 4/PI*hlr*fcover(0)
       z0mu = (hroof - displau) * &
-           exp( -(0.5*1.2/vonkar/vonkar*(1-displau/hroof)*fai)**(-0.5) )
+             exp( -(0.5*1.2/vonkar/vonkar*(1-displau/hroof)*fai)**(-0.5) )
 
       ! to compare z0 of urban and only the surface
       ! maximum assumption
@@ -466,7 +466,7 @@ CONTAINS
 ! calculate layer decay coefficient
 !-----------------------------------------------------------------------
 
-      !NOTE: the below is for vegetation, may not suitable for urban
+      !NOTE: the below is for vegetation, may not be suitable for urban
       ! Raupach, 1992
       !sqrtdragc = min( (0.003+0.3*fai)**0.5, 0.3 )
 
@@ -532,7 +532,7 @@ CONTAINS
          !NOTE: displat=hroof, z0mt=0, are set for roof
          ! fmtop is calculated at the same height of fht, fqt
          CALL moninobukm(huu,htu,hqu,displa,z0m,z0h,z0q,obu,um, &
-            hroof,0.,ustar,fh2m,fq2m,hroof,fmtop,fm,fh,fq,fht,fqt,phih)
+              hroof,0.,ustar,fh2m,fq2m,hroof,fmtop,fm,fh,fq,fht,fqt,phih)
 
 ! Aerodynamic resistance
          ! 09/16/2017:
@@ -574,38 +574,34 @@ CONTAINS
 
          ueff_lay(3) = utop
 
-         !real(r8) FUNCTION kintegral(ktop, fc, bee, alpha, z0mg, &
-         !      displah, htop, hbot, obu, ustar, ztop, zbot)
-         !rd(3)  = kintegral(ktop, 1., bee, alpha, z0mg, displa/hroof, &
-         !   hroof, 0., obug, ustarg, hroof, displa+z0m)
+         ! NOTE: another calculation method for double-check
+         ! real(r8) FUNCTION kintegral(ktop, fc, bee, alpha, z0mg, displah, &
+         !                             htop, hbot, obu, ustar, ztop, zbot)
+         ! rd(3) = kintegral(ktop, 1., bee, alpha, z0mg, displa/hroof, &
+         !                   hroof, 0., obug, ustarg, hroof, displa+z0m)
 
-         !real(r8) FUNCTION frd(ktop, htop, hbot, &
-         !      ztop, zbot, displah, z0h, obu, ustar, &
-         !      z0mg, alpha, bee, fc)
+         ! real(r8) FUNCTION frd(ktop, htop, hbot, ztop, zbot, displah, z0h, &
+         !                       obu, ustar, z0mg, alpha, bee, fc)
          rd(3) = frd(ktop, hroof, 0., hroof, displau+z0mu, displa/hroof, z0h_g, &
-            obug, ustarg, z0mg, alpha, bee, 1.)
+                     obug, ustarg, z0mg, alpha, bee, 1.)
 
-         !real(r8) FUNCTION uintegralz(utop, fc, bee, alpha, z0mg, htop, hbot, ztop, zbot)
-         !ueff_lay(2)  = uintegralz(utop, 1., bee, alpha, z0mg, hroof, 0., hroof, z0mg)
+         ! real(r8) FUNCTION uintegralz(utop, fc, bee, alpha, z0mg, htop, hbot, ztop, zbot)
+         ! ueff_lay(2) = uintegralz(utop, 1., bee, alpha, z0mg, hroof, 0., hroof, z0mg)
 
-         !real(r8) FUNCTION ueffectz(utop, htop, hbot, ztop, zbot, z0mg, alpha, bee, fc)
+         ! real(r8) FUNCTION ueffectz(utop, htop, hbot, ztop, zbot, z0mg, alpha, bee, fc)
          ueff_lay(2) = ueffectz(utop, hroof, 0., hroof, z0mg, z0mg, alpha, bee, 1.)
 
-         !rd(2)  = kintegral(ktop, 1., bee, alpha, z0mg, displa/hroof, &
-         !   hroof, 0., obug, ustarg, displau+z0mu, z0qg)
+         ! rd(2) = kintegral(ktop, 1., bee, alpha, z0mg, displa/hroof, &
+         !                   hroof, 0., obug, ustarg, displau+z0mu, z0qg)
          rd(2) = frd(ktop, hroof, 0., displau+z0mu, z0qg, displa/hroof, z0h_g, &
-            obug, ustarg, z0mg, alpha, bee, 1.)
+                     obug, ustarg, z0mg, alpha, bee, 1.)
 
-         !print *, "------------------------"
-         !print *, "rd :", rd
-         !print *, "rd_:", rd_
-
-         ! calculate ra2m, rd2m
+         ! calculate ra2m, rd2m. NOTE: not used now.
          ra2m = frd(ktop, hroof, 0., displau+z0mu, 2., displa/hroof, z0h_g, &
-            obug, ustarg, z0mg, alpha, bee, 1.)
+                    obug, ustarg, z0mg, alpha, bee, 1.)
 
          rd2m = frd(ktop, hroof, 0., 2., z0qg, displa/hroof, z0h_g, &
-            obug, ustarg, z0mg, alpha, bee, 1.)
+                    obug, ustarg, z0mg, alpha, bee, 1.)
 
          ! Masson, 2000: Account for different canyon orientations
          ! 2/PI is a factor derived from 0-360deg integration
@@ -873,19 +869,18 @@ CONTAINS
       cQ     = 1/rd(3) + fg*fgper/(rd(2)+rss) + fwet_gimp*fg*fgimp/rd(2)
       bQ     = 1/(rd(3) * (1/raw+1/rd(3)+fwet_roof*fc(0)/rb(0)))
 
-      !TODO: check below
       cwsuns = rhoair*cpair/rb(1) &
-               *( 1. - fc(1) / (cT*rb(1)*(1-bT/(cT*rd(3)))) )
+             * ( 1. - fc(1) / (cT*rb(1)*(1-bT/(cT*rd(3)))) )
       cwshas = rhoair*cpair/rb(2) &
-               *( 1. - fc(2) / (cT*rb(2)*(1-bT/(cT*rd(3)))) )
+             * ( 1. - fc(2) / (cT*rb(2)*(1-bT/(cT*rd(3)))) )
       croofs = rhoair*cpair/rb(0) &
-               *( 1. - fc(0)*bT*bT/ (cT*rb(0)*(1-bT/(cT*rd(3)))) &
+             * ( 1. - fc(0)*bT*bT/ (cT*rb(0)*(1-bT/(cT*rd(3)))) &
                      - fc(0) / (rb(0)*(1/rah+1/rd(3)+fc(0)/rb(0))) )
 
-      !TODO: check below
       croofl = rhoair*fwet_roof/rb(0)*qsatldT(0) &
-               *( 1. - fwet_roof*fc(0)*bQ*bQ / (cQ*rb(0)*(1-bQ/(cQ*rd(3)))) &
+              * ( 1. - fwet_roof*fc(0)*bQ*bQ / (cQ*rb(0)*(1-bQ/(cQ*rd(3)))) &
                      - fwet_roof*fc(0) / (rb(0)*(1/raw+1/rd(3)+fwet_roof*fc(0)/rb(0))) )
+                     
       croof  = croofs + croofl*htvp_roof
       
       ! --------------------ctl version------------------------------------
@@ -1678,7 +1673,7 @@ CONTAINS
 ! Evaluate stability-dependent variables using moz from prior iteration
 
          CALL moninobukm(huu,htu,hqu,displa,z0m,z0h,z0q,obu,um, &
-            hroof,0.,ustar,fh2m,fq2m,hroof,fmtop,fm,fh,fq,fht,fqt,phih)
+              hroof,0.,ustar,fh2m,fq2m,hroof,fmtop,fm,fh,fq,fht,fqt,phih)
 
 ! Aerodynamic resistance
          ! 09/16/2017:
@@ -1714,69 +1709,66 @@ CONTAINS
 
          ! calculate canopy top wind speed (utop) and exchange coefficient (ktop)
          ! need to update each time as obu changed after each iteration
-         ! print*, ustar, fmtop
          utop = ustar/vonkar * fmtop
          ktop = vonkar * (hroof-displa) * ustar / phih
 
          ueff_lay(3)  = utop
          ueff_lay_(3) = utop
 
-         ! real(r8) FUNCTION kintegral(ktop, fc, bee, alpha, z0mg, &
-         !      displah, htop, hbot, obu, ustar, ztop, zbot)
-         !rd_(3)  = kintegral(ktop, 1., bee, alpha, z0mg, displa/hroof, &
-         !   hroof, 0., obug, ustarg, hroof, displau+z0mu)
+         ! NOTE: another calculation method for double-check
+         ! real(r8) FUNCTION kintegral(ktop, fc, bee, alpha, z0mg, displah, &
+         !                             htop, hbot, obu, ustar, ztop, zbot)
+         ! rd_(3) = kintegral(ktop, 1., bee, alpha, z0mg, displa/hroof, &
+         !                    hroof, 0., obug, ustarg, hroof, displau+z0mu)
 
-         ! real(r8) FUNCTION frd(ktop, htop, hbot, &
-         !      ztop, zbot, displah, z0h, obu, ustar, &
-         !      z0mg, alpha, bee, fc)
+         ! real(r8) FUNCTION frd(ktop, htop, hbot, ztop, zbot, displah, z0h, &
+         !                       obu, ustar, z0mg, alpha, bee, fc)
          rd(3) = frd(ktop, hroof, 0., hroof, displau+z0mu, displa/hroof, z0h_g, &
-            obug, ustarg, z0mg, alpha, bee, 1.)
+                     obug, ustarg, z0mg, alpha, bee, 1.)
 
          ! real(r8) FUNCTION uintegralz(utop, fc, bee, alpha, z0mg, htop, hbot, ztop, zbot)
-         !ueff_lay(2)  = uintegralz(utop, 1., bee, alpha, z0mg, hroof, 0., hroof, z0mg)
+         ! ueff_lay(2) = uintegralz(utop, 1., bee, alpha, z0mg, hroof, 0., hroof, z0mg)
 
-         ! real(r8) FUNCTION ueffectz(utop, htop, hbot, &
-         !      ztop, zbot, z0mg, alpha, bee, fc)
+         ! real(r8) FUNCTION ueffectz(utop, htop, hbot, ztop, zbot, z0mg, alpha, bee, fc)
          ueff_lay(2) = ueffectz(utop, hroof, 0., hroof, z0mg, z0mg, alpha, bee, 1.)
 
          IF (numlay == 3) THEN
-            ! real(r8) FUNCTION kintegral(ktop, fc, bee, alpha, z0mg, &
-            !      displah, htop, hbot, obu, ustar, ztop, zbot)
-            !rd(2)  = kintegral(ktop, 1., bee, alpha, z0mg, displa/hroof, &
-            !   hroof, 0., obug, ustarg, displau+z0mu, displav+z0mv)
+            ! real(r8) FUNCTION kintegral(ktop, fc, bee, alpha, z0mg, displah, &
+            !                             htop, hbot, obu, ustar, ztop, zbot)
+            ! rd(2) = kintegral(ktop, 1., bee, alpha, z0mg, displa/hroof, &
+            !                   hroof, 0., obug, ustarg, displau+z0mu, displav+z0mv)
             rd(2) = frd(ktop, hroof, 0., displau+z0mu, displav+z0mv, displa/hroof, z0h_g, &
-               obug, ustarg, z0mg, alpha, bee, 1.)
+                        obug, ustarg, z0mg, alpha, bee, 1.)
 
-            !rd(1)  = kintegral(ktop, 1., bee, alpha, z0mg, displa/hroof, &
-            !   hroof, 0., obug, ustarg, displav+z0mv, z0qg)
+            ! rd(1) = kintegral(ktop, 1., bee, alpha, z0mg, displa/hroof, &
+            !                   hroof, 0., obug, ustarg, displav+z0mv, z0qg)
             rd(1) = frd(ktop, hroof, 0., displav+z0mv, z0qg, displa/hroof, z0h_g, &
-               obug, ustarg, z0mg, alpha, bee, 1.)
+                        obug, ustarg, z0mg, alpha, bee, 1.)
 
             ! calculate ra2m, rd2m
             ra2m = frd(ktop, hroof, 0., displav+z0mv, 2., displa/hroof, z0h_g, &
-               obug, ustarg, z0mg, alpha, bee, 1.)
+                       obug, ustarg, z0mg, alpha, bee, 1.)
 
             rd2m = frd(ktop, hroof, 0., 2., z0qg, displa/hroof, z0h_g, &
-               obug, ustarg, z0mg, alpha, bee, 1.)
+                       obug, ustarg, z0mg, alpha, bee, 1.)
          ELSE
-            !rd_(2)  = kintegral(ktop, 1., bee, alpha, z0mg, displa/hroof, &
-            !   hroof, 0., obug, ustarg, displau+z0mu, z0qg)
+            ! rd_(2) = kintegral(ktop, 1., bee, alpha, z0mg, displa/hroof, &
+            !                    hroof, 0., obug, ustarg, displau+z0mu, z0qg)
             rd(2) = frd(ktop, hroof, 0., displau+z0mu, z0qg, displa/hroof, z0h_g, &
-               obug, ustarg, z0mg, alpha, bee, 1.)
+                        obug, ustarg, z0mg, alpha, bee, 1.)
 
             ! calculate ra2m, rd2m
             ra2m = frd(ktop, hroof, 0., displau+z0mu, 2., displa/hroof, z0h_g, &
-               obug, ustarg, z0mg, alpha, bee, 1.)
+                       obug, ustarg, z0mg, alpha, bee, 1.)
 
             rd2m = frd(ktop, hroof, 0., 2., z0qg, displa/hroof, z0h_g, &
-               obug, ustarg, z0mg, alpha, bee, 1.)
+                       obug, ustarg, z0mg, alpha, bee, 1.)
          ENDIF
 
-         !ueff_lay(2)  = uintegralz(utop, 1., bee, alpha, z0mg, hroof, 0., hroof, z0mg)
-         !print *, "htop/hbot:", htop, hbot  !fordebug
-         !ueff_veg  = uintegralz(utop, 1., bee, alpha, z0mg, hroof, 0., htop, hbot)
+         ! ueff_lay(2) = uintegralz(utop, 1., bee, alpha, z0mg, hroof, 0., hroof, z0mg)
+         ! ueff_veg = uintegralz(utop, 1., bee, alpha, z0mg, hroof, 0., htop, hbot)
 
-         !ueff_lay_(2) = ueffectz(utop, hroof, 0., hroof, z0mg, z0mg, alpha, bee, 1.)
+         ! ueff_lay_(2) = ueffectz(utop, hroof, 0., hroof, z0mg, z0mg, alpha, bee, 1.)
          ueff_veg = ueffectz(utop, hroof, 0., htop, hbot, z0mg, alpha, bee, 1.)
 
          ! Masson, 2000: Account for different canyon orientations
@@ -1786,14 +1778,6 @@ CONTAINS
             ueff_veg    = 2/PI*ueff_veg
             rd(:)       = PI/2*rd(:)
          ENDIF
-
-         ! ueff_lay(3) = ueff_lay(2)
-
-         !print *, "ueff_lay :", ueff_lay
-         !print *, "ueff_lay_:", ueff_lay_
-         !print *, "------------------------"
-         !print *, "rd :", rd
-         !print *, "rd_:", rd_
 
 !-----------------------------------------------------------------------
 ! Bulk boundary layer resistance of leaves
@@ -1813,12 +1797,14 @@ CONTAINS
 
             ! Cole & Sturrock (1977) Building and Environment, 12, 207–214.
             ! rb(i) = rhoair * cpair / ( 5.8 + 4.1*ueff_lay(clev) )
-            !IF (ueff_lay(clev) > 5.) THEN
-            !   rb(i) = rhoair * cpair / (7.51*ueff_lay(clev)**0.78)
-            !ELSE
-            !   rb(i) = rhoair * cpair / (5.8 + 4.1*ueff_lay(clev))
-            !ENDIF
-            !rb(i) = rhoair * cpair / (cpair*vonkar*vonkar*ueff_lay(clev)/(log(0.1*hroof/)*(2.3+log(0.1*hroof/))))
+            ! IF (ueff_lay(clev) > 5.) THEN
+            !    rb(i) = rhoair * cpair / (7.51*ueff_lay(clev)**0.78)
+            ! ELSE
+            !    rb(i) = rhoair * cpair / (5.8 + 4.1*ueff_lay(clev))
+            ! ENDIF
+            ! rb(i) = rhoair * cpair &
+            !       / ( cpair*vonkar*vonkar*ueff_lay(clev)&
+            !           / (log(0.1*hroof/)*(2.3+log(0.1*hroof/))) )
          ENDDO
 
 !-----------------------------------------------------------------------
@@ -1826,9 +1812,6 @@ CONTAINS
 !-----------------------------------------------------------------------
 
          IF (lai > 0.) THEN
-
-            ! only for vegetation
-            ! rb(3) = rb(3)
 
             clev = canlev(3)
             eah = qaf(clev) * psrf / ( 0.622 + 0.378 * qaf(clev) )    !pa
@@ -2260,12 +2243,12 @@ CONTAINS
          dX = matmul(Ainv, dBdT*uvec)
 
          ! calculate longwave for vegetation
-         irab = ( (sum(X(1:4)*VegVF(1:4)) + frl*VegVF(5))*ev - B1(5))/fcover(5)*fg
-         dirab_dtl = ( sum(dX(1:4)*VegVF(1:4))*ev - dBdT(5) )/fcover(5)*fg
+         irab = ( (sum(X(1:4)*VegVF(1:4)) + frl*VegVF(5))*ev - B1(5) ) / fcover(5)*fg
+         dirab_dtl = ( sum(dX(1:4)*VegVF(1:4))*ev - dBdT(5) ) / fcover(5)*fg
 
          ! solve for leaf temperature
          dtl(it) = (sabv + irab - fsenl - hvap*fevpl) &
-            / (clai/deltim - dirab_dtl + fsenl_dtl + hvap*fevpl_dtl)
+                 / (clai/deltim - dirab_dtl + fsenl_dtl + hvap*fevpl_dtl)
          dtl_noadj = dtl(it)
 
          ! check magnitude of change in leaf temperature limit to maximum allowed value
@@ -2292,7 +2275,7 @@ CONTAINS
 
          del  = sqrt( dtl(it)*dtl(it) )
          dele = dtl(it) * dtl(it) * &
-            ( dirab_dtl**2 + fsenl_dtl**2 + hvap*fevpl_dtl**2 )
+                ( dirab_dtl**2 + fsenl_dtl**2 + hvap*fevpl_dtl**2 )
          dele = sqrt(dele)
 
 !-----------------------------------------------------------------------
@@ -2538,14 +2521,13 @@ CONTAINS
          gdh2o = 1.0/rd(botlay) * tprcor/thm              !mol m-2 s-1
 
          pco2a = pco2m - 1.37*psrf/max(0.446,gah2o) * &
-            (assim - respc - rsoil)
+                 (assim - respc - rsoil)
 
 !-----------------------------------------------------------------------
 ! Update monin-obukhov length and wind speed including the stability effect
 !-----------------------------------------------------------------------
 
          ! USE the top layer taf and qaf
-         !TODO: need more check
          dth = thm - taf(2)
          dqh =  qm - qaf(2)
 
@@ -2679,7 +2661,6 @@ CONTAINS
          qmelt = 0.
          qfrz  = 0.
 
-         !TODO: double check below
          IF (ldew_snow.gt.1.e-6 .and. tl.gt.tfrz) THEN
             qmelt = min(ldew_snow/deltim,(tl-tfrz)*cpice*ldew_snow/(deltim*hfus))
             ldew_snow = max(0.,ldew_snow - qmelt*deltim)
@@ -2811,11 +2792,11 @@ CONTAINS
                   *( 1. - fc(2)/(cT*rb(2)*(1-bT/(cT*rd(3)))) )
 
          croofs = rhoair*cpair/rb(0) &
-                  *( 1. - fc(0)*bT / (cT*rb(0)*rd(3)*(1/rah+1/rd(3)+fc(0)/rb(0))*(1-bT/(cT*rd(3)))) &
+                  *( 1. - fc(0)*bT*bT / (cT*rb(0)*(1-bT/(cT*rd(3)))) &
                   - fc(0) / (rb(0)*(1/rah+1/rd(3)+fc(0)/rb(0))) )
 
          croofl = rhoair*fwet_roof/rb(0)*qsatldT(0) &
-                  *( 1. - fwet_roof*fc(0)*bQ / (cQ*rb(0)*rd(3)*(1/raw+1/rd(3)+fwet_roof*fc(0)/rb(0))*(1-bQ/(cQ*rd(3)))) &
+                  *( 1. - fwet_roof*fc(0)*bQ*bQ / (cQ*rb(0)*(1-bQ/(cQ*rd(3)))) &
                   - fwet_roof*fc(0) / (rb(0)*(1/raw+1/rd(3)+fwet_roof*fc(0)/rb(0))) )
 
          croof  = croofs + croofl*htvp_roof

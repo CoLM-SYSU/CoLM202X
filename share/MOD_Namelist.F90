@@ -392,11 +392,11 @@ MODULE MOD_Namelist
    !CBL height
    logical           :: DEF_USE_CBL_HEIGHT     = .false.
 
-   character(len=20) :: DEF_Forcing_Interp     = 'areaweight'
+   character(len=20) :: DEF_Forcing_Interp_Method = 'arealweight' ! 'arealweight' (default) or 'bilinear'
 
-   logical          :: DEF_USE_Forcing_Downscaling        = .false.
-   character(len=5) :: DEF_DS_precipitation_adjust_scheme = 'II'
-   character(len=5) :: DEF_DS_longwave_adjust_scheme      = 'II'
+   logical           :: DEF_USE_Forcing_Downscaling        = .false.
+   character(len=5)  :: DEF_DS_precipitation_adjust_scheme = 'II'
+   character(len=5)  :: DEF_DS_longwave_adjust_scheme      = 'II'
 
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ! ----- Part 13: history and restart -----
@@ -907,7 +907,8 @@ CONTAINS
 
       DEF_forcing_namelist,                   &
 
-      DEF_Forcing_Interp,                     &
+      DEF_Forcing_Interp_Method,              &
+
       DEF_USE_Forcing_Downscaling,            &
       DEF_DS_precipitation_adjust_scheme,     &
       DEF_DS_longwave_adjust_scheme,          &
@@ -1357,7 +1358,7 @@ CONTAINS
       CALL mpi_bcast (DEF_REST_CompressLevel                 ,1   ,mpi_integer   ,p_root ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_HIST_CompressLevel                 ,1   ,mpi_integer   ,p_root ,p_comm_glb ,p_err)
 
-      CALL mpi_bcast (DEF_Forcing_Interp                     ,20  ,mpi_character ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_Forcing_Interp_Method              ,20  ,mpi_character ,p_root ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_USE_Forcing_Downscaling            ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_DS_precipitation_adjust_scheme     ,5   ,mpi_character ,p_root ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_DS_longwave_adjust_scheme          ,5   ,mpi_character ,p_root ,p_comm_glb ,p_err)
@@ -1386,6 +1387,7 @@ CONTAINS
       CALL mpi_bcast (DEF_forcing%latname                    ,256 ,mpi_character ,p_root ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_forcing%lonname                    ,256 ,mpi_character ,p_root ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_forcing%groupby                    ,256 ,mpi_character ,p_root ,p_comm_glb ,p_err)
+
       DO ivar = 1, 8
          CALL mpi_bcast (DEF_forcing%fprefix(ivar)           ,256 ,mpi_character ,p_root ,p_comm_glb ,p_err)
          CALL mpi_bcast (DEF_forcing%vname(ivar)             ,256 ,mpi_character ,p_root ,p_comm_glb ,p_err)

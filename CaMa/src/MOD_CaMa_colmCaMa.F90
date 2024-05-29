@@ -29,6 +29,9 @@ MODULE MOD_CaMa_colmCaMa
    USE YOS_CMF_INPUT,             only: NXIN, NYIN, DT,DTIN,IFRQ_INP,LLEAPYR,NX,NY,RMIS,DMIS
    USE MOD_Precision,             only: r8,r4
    USE YOS_CMF_INPUT ,            only: LROSPLIT,LWEVAP,LWINFILT
+   USE YOS_CMF_MAP,               only: D1LON, D1LAT
+   USE YOS_CMF_INPUT,             only: WEST,EAST,NORTH,SOUTH
+
    USE MOD_SPMD_Task
    USE CMF_CTRL_TIME_MOD
    USE MOD_Vars_Global,           only: spval
@@ -58,15 +61,17 @@ CONTAINS
    SUBROUTINE colm_CaMa_init
    USE MOD_LandPatch
    USE YOS_CMF_TIME,          only: YYYY0
+
    IMPLICIT NONE
    !** local variables
 
    integer i,j
    integer(KIND=JPIM)          :: JF
+
+ 
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
-      IF(p_is_master)THEN
          !Namelist handling
          CALL CMF_DRV_INPUT
          !get the time information from colm namelist
@@ -174,7 +179,6 @@ CONTAINS
                STOP
             END SELECT
          ENDDO
-      ENDIF
 
       !Broadcast the variables to all the processors
       CALL mpi_bcast (NX      ,   1, MPI_INTEGER,   p_root, p_comm_glb, p_err) ! number of grid points in x-direction of CaMa-Flood
@@ -182,12 +186,13 @@ CONTAINS
       CALL mpi_bcast (IFRQ_INP ,   1, MPI_INTEGER,  p_root, p_comm_glb, p_err) ! input frequency of CaMa-Flood (hour)
       CALL mpi_bcast (LWEVAP ,   1, MPI_LOGICAL,  p_root, p_comm_glb, p_err)   ! switch for inundation evaporation
       CALL mpi_bcast (LWINFILT ,   1, MPI_LOGICAL,  p_root, p_comm_glb, p_err) ! switch for inundation re-infiltration
+      CALL mpi_bcast (real(D1LAT,kind=8)    ,   1, MPI_REAL8,   p_root, p_comm_glb, p_err) ! 
+      CALL mpi_bcast (real(D1LON,kind=8)    ,   1, MPI_REAL8,   p_root, p_comm_glb, p_err)  !    
 
       !allocate the data structure for cama
-      CALL gcama%define_by_ndims (NX, NY)  !define the data structure for cama
-      CALL mp2g_cama%build (landpatch, gcama) !build the mapping between cama and mpi
-      CALL mg2p_cama%build (gcama, landpatch)
-
+      CALL gcama%define_by_center (D1LAT,D1LON,real(SOUTH,kind=8), real(NORTH,kind=8), real(WEST,kind=8), real(EAST,kind=8)) !define the grid for cama
+      CALL mp2g_cama%build_arealweighted (gcama, landpatch) !build the mapping between cama and mpi
+      CALL mg2p_cama%build_arealweighted (gcama, landpatch)
       CALL cama_gather%set (gcama)
 
       !allocate the cama-flood related variable for accumulation
