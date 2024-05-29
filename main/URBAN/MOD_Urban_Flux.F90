@@ -874,12 +874,12 @@ CONTAINS
       cwshas = rhoair*cpair/rb(2) &
              * ( 1. - fc(2) / (cT*rb(2)*(1-bT/(cT*rd(3)))) )
       croofs = rhoair*cpair/rb(0) &
-             * ( 1. - fc(0)*bT*bT/ (cT*rb(0)*(1-bT/(cT*rd(3)))) &
-                     - fc(0) / (rb(0)*(1/rah+1/rd(3)+fc(0)/rb(0))) )
+             * ( 1. - fc(0)*bT*bT / (cT*rb(0)*(1-bT/(cT*rd(3)))) &
+                    - fc(0) / (rb(0)*(1/rah+1/rd(3)+fc(0)/rb(0))) )
 
       croofl = rhoair*fwet_roof/rb(0)*qsatldT(0) &
-              * ( 1. - fwet_roof*fc(0)*bQ*bQ / (cQ*rb(0)*(1-bQ/(cQ*rd(3)))) &
-                     - fwet_roof*fc(0) / (rb(0)*(1/raw+1/rd(3)+fwet_roof*fc(0)/rb(0))) )
+             * ( 1. - fwet_roof*fc(0)*bQ*bQ / (cQ*rb(0)*(1-bQ/(cQ*rd(3)))) &
+                    - fwet_roof*fc(0) / (rb(0)*(1/raw+1/rd(3)+fwet_roof*fc(0)/rb(0))) )
                      
       croof  = croofs + croofl*htvp_roof
       
