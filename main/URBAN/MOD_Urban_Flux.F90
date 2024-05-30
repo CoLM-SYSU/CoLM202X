@@ -144,7 +144,7 @@ CONTAINS
         fcover(0:4)    ! coverage of aboveground urban components [-]
 
    real(r8), intent(in) :: &
-        rss           &! bare soil resistance for evaporation [s/m]
+        rss,          &! bare soil resistance for evaporation [s/m]
         z0h_g,        &! roughness length for bare ground, sensible heat [m]
         obug,         &! monin-obukhov length for bare ground (m)
         ustarg,       &! friction velocity for bare ground [m/s]
@@ -2902,7 +2902,7 @@ CONTAINS
 
          cgimpl = rhoair/rd(1)*dqgimpdT &
                   *( 1. - fg*fgimp*fwet_gimp/(rd(1)*(1/rd(2)+fg*fgper/(rss_+rd(1))+fg*fgimp*fwet_gimp/rd(1)+fc(3)/rv)) &
-                        - fg*fgimp*fwet_gimp*aQ*aQ/((rd(1)*cQ*(1-aQ/(cQ*rd(2))-bQ/(cQ*rd(3)))) )
+                        - fg*fgimp*fwet_gimp*aQ*aQ/(rd(1)*cQ*(1-aQ/(cQ*rd(2))-bQ/(cQ*rd(3)))) )
          cgimpl = cgimpl*fwet_gimp
       ENDIF
 
