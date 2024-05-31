@@ -431,7 +431,6 @@ PROGRAM CoLM
          ! ----------------------------------------------------------------------
 #ifdef LULCC
          IF ( isendofyear(idate, deltim) ) THEN
-
             ! Deallocate all Forcing and Fluxes variable of last year
             CALL deallocate_1D_Forcing
             CALL deallocate_1D_Fluxes
