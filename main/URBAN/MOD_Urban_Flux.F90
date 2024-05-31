@@ -2918,11 +2918,13 @@ CONTAINS
 
       ! assumption: (tg-t2m):(tg-taf) = 2:(displa+z0m)
       IF (numlay == 2) THEN
-         tref = ( (displau+z0mu-2.)*tg + 2.*taf(botlay) ) / (displau+z0mu)
-         qref = ( (displau+z0mu-2.)*qg + 2.*qaf(botlay) ) / (displau+z0mu)
+         tref = ( (displau+z0mu-2.)*tg + 2.*taf(2) ) / (displau+z0mu)
+         qref = ( (displau+z0mu-2.)*qg + 2.*qaf(2) ) / (displau+z0mu)
       ELSE
-         tref = ( (displav+z0mv-2.)*tg + 2.*taf(botlay) ) / (displav+z0mv)
-         qref = ( (displav+z0mv-2.)*qg + 2.*qaf(botlay) ) / (displav+z0mv)
+         tref = (((displau+z0mu+displav+z0mv)*0.5-2.)*tg + taf(1) + taf(2) ) &
+              / ( (displau+z0mu+displav+z0mv)*0.5 )
+         qref = (((displau+z0mu+displav+z0mv)*0.5-2.)*qg + qaf(1) + qaf(2) ) &
+              / ( (displau+z0mu+displav+z0mv)*0.5 )
       ENDIF
 
    END SUBROUTINE UrbanVegFlux
