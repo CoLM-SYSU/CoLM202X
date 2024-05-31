@@ -39,7 +39,7 @@ MODULE MOD_HistGridded
 CONTAINS
 
    !---------------------------------------
-   SUBROUTINE hist_gridded_init (dir_hist)
+   SUBROUTINE hist_gridded_init (dir_hist, lulcc_call)
 
    USE MOD_Vars_Global
    USE MOD_Namelist
@@ -56,7 +56,8 @@ CONTAINS
    USE MOD_Utils
    IMPLICIT NONE
 
-   character(len=*), intent(in) :: dir_hist
+   character(len=*) , intent(in) :: dir_hist
+   logical, optional, intent(in) :: lulcc_call
 
    ! Local Variables
    type(block_data_real8_2d) :: gridarea
@@ -68,12 +69,14 @@ CONTAINS
          CALL ghist%define_by_res (DEF_hist_lon_res, DEF_hist_lat_res)
       ENDIF
 
+      IF (present(lulcc_call)) CALL mp2g_hist%forc_free_mem
       CALL mp2g_hist%build_arealweighted (ghist, landpatch)
 
 #ifdef URBAN_MODEL
+      IF (present(lulcc_call)) CALL mp2g_hist_urb%forc_free_mem
       CALL mp2g_hist_urb%build_arealweighted (ghist, landurban)
 #endif
-            
+
       IF (p_is_io) THEN
          CALL allocate_block_data (ghist, landfraction)
          CALL allocate_block_data (ghist, gridarea)
@@ -91,7 +94,7 @@ CONTAINS
             ENDDO
          ENDDO
       ENDIF
-      
+
       CALL mp2g_hist%get_sumarea (landfraction)
       CALL block_data_division   (landfraction, gridarea)
 
@@ -104,7 +107,7 @@ CONTAINS
       IF (trim(DEF_HIST_mode) == 'one') THEN
          hist_data_id = 1
       ENDIF
-         
+
    END SUBROUTINE hist_gridded_init
 
    ! -------
@@ -138,7 +141,7 @@ CONTAINS
    integer :: compress
 
       IF (p_is_worker)  WHERE (acc_vec /= spval)  acc_vec = acc_vec / nac
-      IF (p_is_io)      CALL allocate_block_data (ghist, flux_xy_2d)  
+      IF (p_is_io)      CALL allocate_block_data (ghist, flux_xy_2d)
 
       CALL mp2g_hist%pset2grid (acc_vec, flux_xy_2d, spv = spval, msk = filter)
 
@@ -203,7 +206,7 @@ CONTAINS
    integer :: compress
 
       IF (p_is_worker)  WHERE (acc_vec /= spval)  acc_vec = acc_vec / nac
-      IF (p_is_io)      CALL allocate_block_data (ghist, flux_xy_2d)  
+      IF (p_is_io)      CALL allocate_block_data (ghist, flux_xy_2d)
 
       CALL mp2g_hist_urb%pset2grid (acc_vec, flux_xy_2d, spv = spval, msk = filter)
 
@@ -273,7 +276,7 @@ CONTAINS
          WHERE (acc_vec /= spval)  acc_vec = acc_vec / nac
       ENDIF
       IF (p_is_io) THEN
-         CALL allocate_block_data (ghist, flux_xy_3d, ndim1, lb1)  
+         CALL allocate_block_data (ghist, flux_xy_3d, ndim1, lb1)
       ENDIF
 
       CALL mp2g_hist%pset2grid (acc_vec, flux_xy_3d, spv = spval, msk = filter)
@@ -514,7 +517,7 @@ CONTAINS
                CALL ncio_write_colm_dimension (filename)
 
             ENDIF
-         
+
             CALL ncio_write_time (filename, dataname, time, itime, DEF_HIST_FREQ)
 
 #ifdef USEMPI
@@ -594,7 +597,7 @@ CONTAINS
 
 #ifdef USEMPI
             IF (.not. DEF_HIST_WriteBack) THEN
-               
+
                allocate (vdata (hist_concat%ginfo%nlon, hist_concat%ginfo%nlat))
                vdata(:,:) = spval
 
@@ -620,7 +623,7 @@ CONTAINS
                   deallocate (rbuf)
 
                ENDDO
-            
+
             ELSE
                CALL hist_writeback_var_header (hist_data_id, filename, dataname, &
                   2, 'lon', 'lat', 'time', '', '', compress, longname, units)
@@ -666,7 +669,7 @@ CONTAINS
                   CALL ncio_put_attr (filename, dataname, 'units', units)
                   CALL ncio_put_attr (filename, dataname, 'missing_value', spval)
                ENDIF
-            
+
                deallocate (vdata)
 #ifdef USEMPI
             ENDIF
@@ -726,7 +729,7 @@ CONTAINS
 
                IF (.not. &
                   ((trim(dataname) == 'landarea') .or. (trim(dataname) == 'landfraction'))) THEN
-               
+
                   CALL ncio_write_serial_time (fileblock, dataname, itime, &
                      wdata%blk(iblk,jblk)%val, 'lon', 'lat', 'time', compress)
 
@@ -809,7 +812,7 @@ CONTAINS
 
                   deallocate (rbuf)
                ENDDO
-            
+
             ELSE
                CALL hist_writeback_var_header (hist_data_id, filename, dataname, &
                   3, dim1name, 'lon', 'lat', 'time', '', compress, longname, units)
@@ -852,7 +855,7 @@ CONTAINS
                   CALL ncio_put_attr (filename, dataname, 'units', units)
                   CALL ncio_put_attr (filename, dataname, 'missing_value', spval)
                ENDIF
-               
+
                deallocate (vdata)
 #ifdef USEMPI
             ENDIF
@@ -1029,7 +1032,7 @@ CONTAINS
 
                CALL ncio_write_serial_time (filename, dataname, itime, vdata, &
                   dim1name, dim2name, 'lon', 'lat', 'time', compress)
-               
+
                IF (itime == 1) THEN
                   CALL ncio_put_attr (filename, dataname, 'long_name', longname)
                   CALL ncio_put_attr (filename, dataname, 'units', units)

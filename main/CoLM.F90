@@ -445,9 +445,9 @@ PROGRAM CoLM
 
             ! Allocate Forcing and Fluxes variable of next year
             CALL allocate_1D_Forcing
-            CALL forcing_init (dir_forcing, deltim, itstamp, jdate(1))
+            CALL forcing_init (dir_forcing, deltim, itstamp, jdate(1), lulcc_call=.true.)
 
-            CALL hist_init (dir_hist)
+            CALL hist_init (dir_hist, lulcc_call=.true.)
             CALL allocate_1D_Fluxes
          ENDIF
 #endif
