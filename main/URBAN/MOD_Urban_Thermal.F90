@@ -1189,12 +1189,10 @@ CONTAINS
       !respc  = respc *(1-flake)
 
       ! ground heat flux
-      IF ( doveg ) THEN
-         lnet  = lveg*fveg*(1-flake) + lnet
-         fgrnd = sabv*fveg*(1-flake) + sabg + lnet - (fsena+lfevpa)
-      ELSE
-         fgrnd = sabg + lnet - (fsena+lfevpa)
-      ENDIF
+      fgrnd = sabg + lnet - fseng &
+            - (lfevp_roof + lfevp_gimp + lfevp_gper)*(1-flake) &
+            - lfevpa_lake*flake &
+            - (Fhac + Fhah)*(1-flake)
 
       ! effective ground temperature, simple average
       ! 12/01/2021, yuan: !TODO Bugs. temperature cannot be weighted like below.
@@ -1320,11 +1318,17 @@ CONTAINS
 ! [10] energy balance error
 !=======================================================================
 
-      IF ( doveg ) THEN
-         errore = sabv*fveg*(1-flake) + sabg + lnet - fsena - lfevpa - fgrnd - dheatl
-      ELSE
-         errore = sabg + lnet - fsena - lfevpa - fgrnd
-      ENDIF
+      ! ground heat flux
+      fgrnd = sabg + lnet - fseng &
+            - (lfevp_roof + lfevp_gimp + lfevp_gper)*(1-flake) &
+            - lfevpa_lake*flake
+            ! (Fhac + Fhah + Fach)*(1-flake)
+
+      errore = sabv*fveg*(1-flake) + sabg + lnet &
+             - fsena - lfevpa - fgrnd &
+             ! (Fhac + Fwst + Fach + vech + meta)*(1-flake)&
+             ! (Fhac + Fhah)*(1-flake)
+             - dheatl
 
       ! deallocate memory
       deallocate ( Ainv   )
