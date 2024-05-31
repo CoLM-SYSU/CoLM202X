@@ -323,7 +323,7 @@ CONTAINS
    
    integer :: iblk, jblk, iproc
    integer :: iblk_south, iblk_north, iblk_west, iblk_east
-   integer :: numblocks
+   integer :: numblocks, ngrp
    integer :: iblkme
 
       IF (p_is_master) THEN
@@ -332,7 +332,10 @@ CONTAINS
       
 #ifdef USEMPI
       CALL mpi_bcast (numblocks, 1, MPI_INTEGER, p_root, p_comm_glb, p_err)
-      CALL divide_processes_into_groups (numblocks, DEF_PIO_groupsize)
+      
+      ngrp = max((p_np_glb-1) / DEF_PIO_groupsize, 1)
+      ngrp = min(ngrp, numblocks)
+      CALL divide_processes_into_groups (ngrp)
 #endif 
 
       allocate (this%pio (this%nxblk,this%nyblk))
@@ -415,7 +418,7 @@ CONTAINS
    character(len=256) :: filename, cyear
    integer, allocatable :: nelm_io(:), nelmblk(:,:)
    integer  :: iblk_south, iblk_north, iblk_west, iblk_east
-   integer  :: numblocks, iblk, jblk, iproc, jproc
+   integer  :: numblocks, ngrp, iblk, jblk, iproc, jproc
    integer  :: iblkme
       
       IF (p_is_master) THEN
@@ -424,15 +427,51 @@ CONTAINS
          filename = trim(dir_landdata) // '/mesh/' // trim(cyear) // '/mesh.nc'
          CALL ncio_read_serial (filename, 'nelm_blk', nelmblk)
          numblocks = count(nelmblk > 0)
-      ENDIF 
       
-      IF (p_is_master) THEN
          CALL this%clip (iblk_south, iblk_north, iblk_west, iblk_east)
+
       ENDIF
 
 #ifdef USEMPI
+      IF (p_is_master) THEN
+         ngrp = max((p_np_glb-1) / DEF_PIO_groupsize, 1)
+         ngrp = min(ngrp, numblocks)
+
+         DO WHILE (.true.)
+
+            allocate (nelm_io (ngrp))
+            nelm_io(:) = 0
+
+            DO jblk = iblk_south, iblk_north
+               iblk = iblk_west
+               DO WHILE (.true.)
+
+                  IF (nelmblk(iblk,jblk) > 0) THEN
+                     iproc = minloc(nelm_io, dim=1)
+                     nelm_io(iproc) = nelm_io(iproc) + nelmblk(iblk,jblk)
+                  ENDIF
+
+                  IF (iblk /= iblk_east) THEN
+                     iblk = mod(iblk,this%nxblk) + 1
+                  ELSE
+                     EXIT
+                  ENDIF
+               ENDDO
+            ENDDO
+         
+            IF (maxval(nelm_io) < 2 * minval(nelm_io)) THEN
+               deallocate (nelm_io)
+               EXIT
+            ELSE
+               ngrp = ngrp - 1
+               deallocate (nelm_io)
+            ENDIF
+         ENDDO 
+      ENDIF
+
       CALL mpi_bcast (numblocks, 1, MPI_INTEGER, p_root, p_comm_glb, p_err)
-      CALL divide_processes_into_groups (numblocks, DEF_PIO_groupsize)
+      CALL mpi_bcast (ngrp,      1, MPI_INTEGER, p_root, p_comm_glb, p_err)
+      CALL divide_processes_into_groups (ngrp)
 #endif
       
       allocate (this%pio (this%nxblk,this%nyblk))

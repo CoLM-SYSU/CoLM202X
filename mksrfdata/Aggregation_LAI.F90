@@ -50,8 +50,8 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
 
    integer, intent(in) :: lc_year
    type(grid_type),  intent(in) :: gridlai
-   character(LEN=*), intent(in) :: dir_rawdata
-   character(LEN=*), intent(in) :: dir_model_landdata
+   character(len=*), intent(in) :: dir_rawdata
+   character(len=*), intent(in) :: dir_model_landdata
 
    ! local variables:
    ! ----------------------------------------------------------------------
@@ -63,7 +63,7 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
    type (block_data_real8_2d) :: LAI          ! plant leaf area index (m2/m2)
    real(r8), allocatable :: LAI_patches(:), lai_one(:), area_one(:)
    integer :: itime, ntime, Julian_day, ipatch
-   character(LEN=4) :: c2, c3, cyear
+   character(len=4) :: c2, c3, cyear
    integer :: start_year, end_year, iy
 
    ! for IGBP data
@@ -96,7 +96,7 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
 
       ! LAI data root directory->case/landdata/LAI
       landdir = trim(dir_model_landdata) // '/LAI/'
-   
+
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
@@ -107,13 +107,13 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
-   
+
 #ifdef SinglePoint
       IF (USE_SITE_LAI) THEN
          RETURN
       ENDIF
 #endif
-   
+
       idate(1) = DEF_simulation_time%start_year
       IF (.not. isgreenwich) THEN
          idate(3) = DEF_simulation_time%start_sec
@@ -121,9 +121,9 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
             DEF_simulation_time%start_month, DEF_simulation_time%start_day, idate(2))
          CALL localtime2gmt(idate)
       ENDIF
-   
+
       simulation_lai_year_start = idate(1)
-   
+
       idate(1) = DEF_simulation_time%end_year
       IF (.not. isgreenwich) THEN
          idate(3) = DEF_simulation_time%end_sec
@@ -131,13 +131,13 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
             DEF_simulation_time%end_month, DEF_simulation_time%end_day, idate(2))
          CALL localtime2gmt(idate)
       ENDIF
-   
+
       simulation_lai_year_end = idate(1)
-   
+
 ! ................................................
 ! ... global plant leaf area index
 ! ................................................
-   
+
 #if (defined LULC_USGS || defined LULC_IGBP)
       ! add time variation of LAI
       IF (DEF_LAI_MONTHLY) THEN
@@ -166,36 +166,36 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
          end_year   = simulation_lai_year_end
          ntime      = 46
       ENDIF
-   
+
       ! ----- LAI -----
       IF (p_is_io) THEN
          CALL allocate_block_data (gridlai, LAI)
       ENDIF
-   
+
       IF (p_is_worker) THEN
          allocate (LAI_patches (numpatch))
       ENDIF
-   
+
 #ifdef SinglePoint
-   
+
       allocate (SITE_LAI_year (start_year:end_year))
       SITE_LAI_year = (/(iy, iy = start_year, end_year)/)
-   
+
       IF (DEF_LAI_MONTHLY) THEN
          !TODO-yuan-done: for multiple years
          allocate (SITE_LAI_monthly (12,start_year:end_year))
       ELSE
          allocate (SITE_LAI_8day    (46,start_year:end_year))
       ENDIF
-   
+
 #endif
-   
+
       IF(.not. DEF_USE_LAIFEEDBACK)THEN
          DO iy = start_year, end_year
-   
+
             write(cyear,'(i4.4)') iy
             CALL system('mkdir -p ' // trim(landdir) // trim(cyear))
-   
+
             ! loop for month or 8-day
             DO itime = 1, ntime
             ! -----------------------
@@ -207,11 +207,11 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
                   Julian_day = 1 + (itime-1)*8
                   write(c3, '(i3.3)') Julian_day
                ENDIF
-   
+
                IF (p_is_master) THEN
                   write(*,'(A,I4,A1,I3,A1,I3)') 'Aggregate LAI :', iy, ':', itime, '/', ntime
                ENDIF
-   
+
                IF (p_is_io) THEN
                   IF (DEF_LAI_MONTHLY) THEN
                      dir_5x5 = trim(dir_rawdata) // '/plant_15s'
@@ -222,32 +222,32 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
                      CALL ncio_read_block_time (lndname, 'lai', gridlai, itime, LAI)
                      CALL block_data_linear_transform (LAI, scl = 0.1)
                   ENDIF
-   
+
 #ifdef USEMPI
                   CALL aggregation_data_daemon (gridlai, data_r8_2d_in1 = LAI)
 #endif
                ENDIF
-   
+
 ! -------------------------------------------------------------------------------------------
 ! aggregate the plant leaf area index from the resolution of raw data to modelling resolution
 ! -------------------------------------------------------------------------------------------
-   
+
                IF (p_is_worker) THEN
                   DO ipatch = 1, numpatch
                      CALL aggregation_request_data (landpatch, ipatch, gridlai, zip = USE_zip_for_aggregation, &
                         area = area_one, data_r8_2d_in1 = LAI, data_r8_2d_out1 = lai_one)
                      LAI_patches(ipatch) = sum(lai_one * area_one) / sum(area_one)
                   ENDDO
-   
+
 #ifdef USEMPI
                   CALL aggregation_worker_done ()
 #endif
                ENDIF
-   
+
 #ifdef RangeCheck
                CALL check_vector_data ('LAI value '//trim(c3), LAI_patches)
 #endif
-   
+
 #ifdef USEMPI
                CALL mpi_barrier (p_comm_glb, p_err)
 #endif
@@ -261,11 +261,11 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
                   !TODO: rename filename of 8-day LAI
                   lndname = trim(landdir) // trim(cyear) // '/LAI_patches' // trim(c3) // '.nc'
                ENDIF
-   
+
                CALL ncio_create_file_vector (lndname, landpatch)
                CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
-               CALL ncio_write_vector (lndname, 'LAI_patches', 'patch', landpatch, LAI_patches, 1)
-   
+               CALL ncio_write_vector (lndname, 'LAI_patches', 'patch', landpatch, LAI_patches, DEF_Srfdata_CompressLevel)
+
 #ifdef SrfdataDiag
                typpatch = (/(ityp, ityp = 0, N_land_classification)/)
                lndname  = trim(dir_model_landdata) // '/diag/LAI_patch_'// trim(cyear) // '.nc'
@@ -291,64 +291,64 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
             ENDDO
          ENDDO
       ENDIF
-   
+
       ! ----- SAI -----
       IF (DEF_LAI_MONTHLY) THEN
-   
+
          IF (p_is_io) THEN
             CALL allocate_block_data (gridlai, SAI)
          ENDIF
-   
+
          IF (p_is_worker) THEN
             allocate (SAI_patches (numpatch))
          ENDIF
-   
+
 #ifdef SinglePoint
          allocate (SITE_SAI_monthly (12,start_year:end_year))
 #endif
-   
+
          dir_5x5 = trim(dir_rawdata) // '/plant_15s'
          DO iy = start_year, end_year
             write(cyear,'(i4.4)') iy
             suffix  = 'MOD'//trim(cyear)
-   
+
             DO itime = 1, 12
                write(c3, '(i2.2)') itime
-   
+
                IF (p_is_master) THEN
                   write(*,'(A,I4,A1,I3,A1,I3)') 'Aggregate SAI :', iy, ':', itime, '/', ntime
                ENDIF
-   
+
                IF (p_is_io) THEN
                   CALL read_5x5_data_time (dir_5x5, suffix, gridlai, 'MONTHLY_LC_SAI', itime, SAI)
-   
+
 #ifdef USEMPI
                   CALL aggregation_data_daemon (gridlai, data_r8_2d_in1 = SAI)
 #endif
                ENDIF
-   
+
 ! -------------------------------------------------------------------------------------------
 ! aggregate the plant stem area index from the resolution of raw data to modelling resolution
 ! -------------------------------------------------------------------------------------------
-   
+
                IF (p_is_worker) THEN
                   DO ipatch = 1, numpatch
-   
+
                      CALL aggregation_request_data (landpatch, ipatch, gridlai, zip = USE_zip_for_aggregation, &
                         area = area_one, data_r8_2d_in1 = SAI, data_r8_2d_out1 = sai_one)
                      SAI_patches(ipatch) = sum(sai_one * area_one) / sum(area_one)
-   
+
                   ENDDO
-   
+
 #ifdef USEMPI
                   CALL aggregation_worker_done ()
 #endif
                ENDIF
-   
+
 #ifdef RangeCheck
             CALL check_vector_data ('SAI value '//trim(c3), SAI_patches)
 #endif
-   
+
 #ifdef USEMPI
                CALL mpi_barrier (p_comm_glb, p_err)
 #endif
@@ -359,8 +359,8 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
                lndname = trim(landdir) // trim(cyear) // '/SAI_patches' // trim(c3) // '.nc'
                CALL ncio_create_file_vector (lndname, landpatch)
                CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
-               CALL ncio_write_vector (lndname, 'SAI_patches', 'patch', landpatch, SAI_patches, 1)
-   
+               CALL ncio_write_vector (lndname, 'SAI_patches', 'patch', landpatch, SAI_patches, DEF_Srfdata_CompressLevel)
+
 #ifdef SrfdataDiag
                typpatch = (/(ityp, ityp = 0, N_land_classification)/)
                lndname  = trim(dir_model_landdata) // '/diag/SAI_patch_'// trim(cyear) // '.nc'
@@ -382,7 +382,7 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
          ENDDO
       ENDIF
 #endif
-   
+
 ! For both PFT and PC run LAI!!!!!
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
          ! add time variation of LAI
@@ -405,38 +405,38 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
          ntime      = 12
       ENDIF
 #endif
-   
+
       IF (p_is_io) THEN
          CALL allocate_block_data (gridlai, pftLSAI, N_PFT_modis, lb1 = 0)
          CALL allocate_block_data (gridlai, pftPCT,  N_PFT_modis, lb1 = 0)
       ENDIF
-   
+
       IF (p_is_worker) THEN
          allocate(LAI_patches (numpatch))
          allocate(LAI_pfts    (numpft  ))
          allocate(SAI_patches (numpatch))
          allocate(SAI_pfts    (numpft  ))
       ENDIF
-   
+
 #ifdef SinglePoint
       allocate (SITE_LAI_year (start_year:end_year))
       SITE_LAI_year = (/(iy, iy = start_year, end_year)/)
-   
+
       !TODO-yuan-done: for multiple years
       allocate (SITE_LAI_pfts_monthly (numpft,12,start_year:end_year))
       allocate (SITE_SAI_pfts_monthly (numpft,12,start_year:end_year))
 #endif
-   
+
       dir_5x5 = trim(dir_rawdata) // '/plant_15s'
       DO iy = start_year, end_year
          write(cyear,'(i4.4)') iy
          suffix  = 'MOD'//trim(cyear)
          CALL system('mkdir -p ' // trim(landdir) // trim(cyear))
-   
+
          IF (p_is_io) THEN
             CALL read_5x5_data_pft (dir_5x5, suffix, gridlai, 'PCT_PFT', pftPCT)
          ENDIF
-   
+
          IF(.not. DEF_USE_LAIFEEDBACK)THEN
             DO month = 1, 12
                IF (p_is_io) THEN
@@ -447,29 +447,29 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
                      data_r8_3d_in2 = pftLSAI, n1_r8_3d_in2 = 16)
 #endif
                ENDIF
-   
+
 ! -------------------------------------------------------------------------------------------
 ! aggregate the plant leaf area index from the resolution of raw data to modelling resolution
 ! -------------------------------------------------------------------------------------------
-   
+
                IF (p_is_worker) THEN
                   DO ipatch = 1, numpatch
                      CALL aggregation_request_data (landpatch, ipatch, gridlai, zip = USE_zip_for_aggregation, area = area_one, &
                         data_r8_3d_in1 = pftPCT,  data_r8_3d_out1 = pct_pft_one, n1_r8_3d_in1 = 16, lb1_r8_3d_in1 = 0, &
                         data_r8_3d_in2 = pftLSAI, data_r8_3d_out2 = lai_pft_one, n1_r8_3d_in2 = 16, lb1_r8_3d_in2 = 0)
-   
+
                      IF (allocated(lai_one)) deallocate(lai_one)
                      allocate(lai_one(size(area_one)))
-   
+
                      IF (allocated(pct_one)) deallocate(pct_one)
                      allocate(pct_one(size(area_one)))
-   
+
                      pct_one = sum(pct_pft_one,dim=1)
                      pct_one = max(pct_one, 1.0e-6)
-   
+
                      lai_one = sum(lai_pft_one * pct_pft_one, dim=1) / pct_one
                      LAI_patches(ipatch) = sum(lai_one * area_one) / sum(area_one)
-   
+
 #ifndef CROP
                      IF (patchtypes(landpatch%settyp(ipatch)) == 0) THEN
 #else
@@ -493,12 +493,12 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
 #endif
                      ENDIF
                   ENDDO
-   
+
 #ifdef USEMPI
                   CALL aggregation_worker_done ()
 #endif
                ENDIF
-   
+
                write(c2,'(i2.2)') month
 #ifdef RangeCheck
                CALL check_vector_data ('LAI_patches ' // trim(c2), LAI_patches)
@@ -507,7 +507,7 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
 #ifdef USEMPI
                CALL mpi_barrier (p_comm_glb, p_err)
 #endif
-   
+
 ! ---------------------------------------------------
 ! write out the plant leaf area index of grid patches
 ! ---------------------------------------------------
@@ -515,8 +515,8 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
                lndname = trim(landdir)//trim(cyear)//'/LAI_patches'//trim(c2)//'.nc'
                CALL ncio_create_file_vector (lndname, landpatch)
                CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
-               CALL ncio_write_vector (lndname, 'LAI_patches', 'patch', landpatch, LAI_patches, 1)
-   
+               CALL ncio_write_vector (lndname, 'LAI_patches', 'patch', landpatch, LAI_patches, DEF_Srfdata_CompressLevel)
+
 #ifdef SrfdataDiag
                typpatch = (/(ityp, ityp = 0, N_land_classification)/)
                lndname  = trim(dir_model_landdata) // '/diag/LAI_patch_'// trim(cyear) // '.nc'
@@ -525,12 +525,12 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
                   -1.0e36_r8, lndname, trim(varname), compress = 0, write_mode = 'one', &
                   lastdimname = 'Itime', lastdimvalue = month)
 #endif
-   
+
                lndname = trim(landdir)//trim(cyear)//'/LAI_pfts'//trim(c2)//'.nc'
                CALL ncio_create_file_vector (lndname, landpft)
                CALL ncio_define_dimension_vector (lndname, landpft, 'pft')
-               CALL ncio_write_vector (lndname, 'LAI_pfts', 'pft', landpft, LAI_pfts, 1)
-   
+               CALL ncio_write_vector (lndname, 'LAI_pfts', 'pft', landpft, LAI_pfts, DEF_Srfdata_CompressLevel)
+
 #ifdef SrfdataDiag
 #ifndef CROP
                typpft  = (/(ityp, ityp = 0, N_PFT-1)/)
@@ -549,9 +549,9 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
 #endif
          ! loop end of month
             ENDDO
-   
+
          ENDIF
-   
+
          DO month = 1, 12
             IF (p_is_io) THEN
                CALL read_5x5_data_pft_time (dir_5x5, suffix, gridlai, 'MONTHLY_PFT_SAI', month, pftLSAI)
@@ -561,30 +561,30 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
                   data_r8_3d_in2 = pftLSAI, n1_r8_3d_in2 = 16)
 #endif
             ENDIF
-   
+
 ! -------------------------------------------------------------------------------------------
 ! aggregate the plant leaf area index from the resolution of raw data to modelling resolution
 ! -------------------------------------------------------------------------------------------
-   
+
             IF (p_is_worker) THEN
                DO ipatch = 1, numpatch
-   
+
                   CALL aggregation_request_data (landpatch, ipatch, gridlai, zip = USE_zip_for_aggregation, area = area_one, &
                      data_r8_3d_in1 = pftPCT,  data_r8_3d_out1 = pct_pft_one, n1_r8_3d_in1 = 16, lb1_r8_3d_in1 = 0, &
                      data_r8_3d_in2 = pftLSAI, data_r8_3d_out2 = sai_pft_one, n1_r8_3d_in2 = 16, lb1_r8_3d_in2 = 0)
-   
+
                   IF (allocated(sai_one)) deallocate(sai_one)
                   allocate(sai_one(size(area_one)))
-   
+
                   IF (allocated(pct_one)) deallocate(pct_one)
                   allocate(pct_one(size(area_one)))
-   
+
                   pct_one = sum(pct_pft_one,dim=1)
                   pct_one = max(pct_one, 1.0e-6)
-   
+
                   sai_one = sum(sai_pft_one * pct_pft_one, dim=1) / pct_one
                   SAI_patches(ipatch) = sum(sai_one * area_one) / sum(area_one)
-   
+
 #ifndef CROP
                   IF (patchtypes(landpatch%settyp(ipatch)) == 0) THEN
 #else
@@ -608,12 +608,12 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
 #endif
                   ENDIF
                ENDDO
-   
+
 #ifdef USEMPI
                CALL aggregation_worker_done ()
 #endif
             ENDIF
-   
+
          write(c2,'(i2.2)') month
 #ifdef RangeCheck
          CALL check_vector_data ('SAI_patches ' // trim(c2), SAI_patches)
@@ -622,7 +622,7 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
 #ifdef USEMPI
             CALL mpi_barrier (p_comm_glb, p_err)
 #endif
-   
+
 ! ---------------------------------------------------
 ! write out the plant stem area index of grid patches
 ! ---------------------------------------------------
@@ -630,8 +630,8 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
             lndname = trim(landdir)//trim(cyear)//'/SAI_patches'//trim(c2)//'.nc'
             CALL ncio_create_file_vector (lndname, landpatch)
             CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
-            CALL ncio_write_vector (lndname, 'SAI_patches', 'patch', landpatch, SAI_patches, 1)
-   
+            CALL ncio_write_vector (lndname, 'SAI_patches', 'patch', landpatch, SAI_patches, DEF_Srfdata_CompressLevel)
+
 #ifdef SrfdataDiag
             typpatch = (/(ityp, ityp = 0, N_land_classification)/)
             lndname  = trim(dir_model_landdata) // '/diag/SAI_patch_'// trim(cyear) // '.nc'
@@ -640,12 +640,12 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
                -1.0e36_r8, lndname, trim(varname), compress = 0, write_mode = 'one', &
                lastdimname = 'Itime', lastdimvalue = month)
 #endif
-   
+
             lndname = trim(landdir)//trim(cyear)//'/SAI_pfts'//trim(c2)//'.nc'
             CALL ncio_create_file_vector (lndname, landpft)
             CALL ncio_define_dimension_vector (lndname, landpft, 'pft')
-            CALL ncio_write_vector (lndname, 'SAI_pfts', 'pft', landpft, SAI_pfts, 1)
-   
+            CALL ncio_write_vector (lndname, 'SAI_pfts', 'pft', landpft, SAI_pfts, DEF_Srfdata_CompressLevel)
+
 #ifdef SrfdataDiag
 #ifndef CROP
             typpft  = (/(ityp, ityp = 0, N_PFT-1)/)
@@ -665,20 +665,20 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
          ENDDO
       ! loop end of year
       ENDDO
-   
+
       IF (p_is_worker) THEN
-   
+
          IF (allocated(LAI_patches)) deallocate(LAI_patches)
          IF (allocated(LAI_pfts   )) deallocate(LAI_pfts   )
          IF (allocated(lai_one    )) deallocate(lai_one    )
-   
+
          IF (allocated(SAI_patches)) deallocate(SAI_patches)
          IF (allocated(SAI_pfts   )) deallocate(SAI_pfts   )
          IF (allocated(sai_one    )) deallocate(sai_one    )
          IF (allocated(pct_one    )) deallocate(pct_one    )
          IF (allocated(pct_pft_one)) deallocate(pct_pft_one)
          IF (allocated(area_one   )) deallocate(area_one   )
-   
+
       ENDIF
 #endif
 

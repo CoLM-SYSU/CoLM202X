@@ -7,7 +7,7 @@ MODULE MOD_Utils
 !
 ! History:
 !    Subroutines lmder, enorm, tridia and polint are moved from other files.
-! 
+!
 ! Created by Shupeng Zhang, May 2023
 !-----------------------------------------------------------------------------------------
 
@@ -73,7 +73,7 @@ MODULE MOD_Utils
    PUBLIC :: enorm
    PUBLIC :: tridia
    PUBLIC :: polint
-   
+
 CONTAINS
 
    !---------------------------------
@@ -1184,20 +1184,20 @@ CONTAINS
 
    !----------------------------------------------------
    SUBROUTINE lmder ( fcn, m, n, x, fvec, fjac, ldfjac, ftol, xtol, gtol, maxfev, &
-     diag, mode, factor, nprint, info, nfev, njev, ipvt, qtf, xdat, npoint, ydat, nptf, phi, isiter,&
-     vf_om, vf_sand, vf_gravels)
+     diag, mode, factor, nprint, info, nfev, njev, ipvt, qtf, xdat, npoint, ydat, &
+     ydatks, nptf, phi, k_s, isiter, L_vgm)
 
    !*******************************************************************************
    !
    !! LMDER minimizes M functions in N variables by the Levenberg-Marquardt method
-   !  implemented for fitting the SW retention parameters of the Campbell/van Genuchten model
-   !  and Ke-Sr relationship in Balland V. and P. A. Arp (2005) model.
+   !  implemented for fitting the SW retention & hydraulic conductivity parameters
+   !  in the Campbell/van Genuchten models.
    !
    !  Discussion:
    !
    !    LMDER minimizes the sum of the squares of M nonlinear functions in
    !    N variables by a modification of the Levenberg-Marquardt algorithm.
-   !    The user must provide a SUBROUTINE which calculates the functions
+   !    The user must provide a subroutine which calculates the functions
    !    and the jacobian.
    !
    !  Licensing:
@@ -1223,26 +1223,25 @@ CONTAINS
    !
    !  Parameters:
    !
-   !    Input, external FCN, the name of the user-supplied SUBROUTINE which
+   !    Input, external FCN, the name of the user-supplied subroutine which
    !    calculates the functions and the jacobian.  FCN should have the form:
-   !      SUBROUTINE fcn ( m, n, x, fvec, fjac, ldfjac, iflag, xdat, npoint, ydat, nptf, phi, isiter, &
-   !                       vf_om, vf_sand, vf_gravels)
+   !      subroutine fcn ( m, n, x, fvec, fjac, ldfjac, iflag, xdat, npoint, ydat, ydatks, nptf, phi, k_s, isiter, L_vgm)
    !      integer ( kind = 4 ) ldfjac
    !      integer ( kind = 4 ) n
    !      real ( kind = 8 ) fjac(ldfjac,n)
    !      real ( kind = 8 ) fvec(m)
    !      integer ( kind = 4 ) iflag
    !      real ( kind = 8 ) x(n)
-   !      xdat, npoint, ydat, nptf, phi and isiter are transfered as the coefficients of the fitting functions.
-   !      vf_om, vf_sand and vf_gravels are only used for fitting Ke-Sr relationship.
+   !      xdat, npoint, ydat, ydatks, nptf, phi, k_s and isiter are transfered as the inputs of the fitting functions.
+   !      L_vgm are only used for vanGenuchten_Mualem soil model input.
    !
-   !    IF IFLAG = 0 on input, THEN FCN is only being called to allow the user
+   !    If IFLAG = 0 on input, then FCN is only being called to allow the user
    !    to print out the current iterate.
-   !    IF IFLAG = 1 on input, FCN should calculate the functions at X and
-   !    RETURN this vector in FVEC.
-   !    IF IFLAG = 2 on input, FCN should calculate the jacobian at X and
-   !    RETURN this matrix in FJAC.
-   !    To terminate the algorithm, FCN may set IFLAG negative on RETURN.
+   !    If IFLAG = 1 on input, FCN should calculate the functions at X and
+   !    return this vector in FVEC.
+   !    If IFLAG = 2 on input, FCN should calculate the jacobian at X and
+   !    return this matrix in FJAC.
+   !    To terminate the algorithm, FCN may set IFLAG negative on return.
    !
    !    Input, integer ( kind = 4 ) M, is the number of functions.
    !
@@ -1250,18 +1249,18 @@ CONTAINS
    !    N must not exceed M.
    !
    !    Input/output, real ( kind = 8 ) X(N).  On input, X must contain an initial
-   !    estimate of the solution vector.  On output X CONTAINS the final
+   !    estimate of the solution vector.  On output X contains the final
    !    estimate of the solution vector.
    !
    !    Output, real ( kind = 8 ) FVEC(M), the functions evaluated at the output X.
    !
    !    Output, real ( kind = 8 ) FJAC(LDFJAC,N), an M by N array.  The upper
-   !    N by N submatrix of FJAC CONTAINS an upper triangular matrix R with
+   !    N by N submatrix of FJAC contains an upper triangular matrix R with
    !    diagonal elements of nonincreasing magnitude such that
    !      P' * ( JAC' * JAC ) * P = R' * R,
-   !    WHERE P is a permutation matrix and JAC is the final calculated jacobian.
+   !    where P is a permutation matrix and JAC is the final calculated jacobian.
    !    Column J of P is column IPVT(J) of the identity matrix.  The lower
-   !    trapezoidal part of FJAC CONTAINS information generated during
+   !    trapezoidal part of FJAC contains information generated during
    !    the computation of R.
    !
    !    Input, integer ( kind = 4 ) LDFJAC, the leading dimension of FJAC.
@@ -1279,14 +1278,14 @@ CONTAINS
    !    Input, real ( kind = 8 ) GTOL.  Termination occurs when the cosine of the
    !    angle between FVEC and any column of the jacobian is at most GTOL in
    !    absolute value.  Therefore, GTOL measures the orthogonality desired
-   !    between the FUNCTION vector and the columns of the jacobian.  GTOL should
+   !    between the function vector and the columns of the jacobian.  GTOL should
    !    be nonnegative.
    !
    !    Input, integer ( kind = 4 ) MAXFEV.  Termination occurs when the number of
-   !    calls to FCN with IFLAG = 1 is at least MAXFEV by the END of an iteration.
+   !    calls to FCN with IFLAG = 1 is at least MAXFEV by the end of an iteration.
    !
-   !    Input/output, real ( kind = 8 ) DIAG(N).  IF MODE = 1, THEN DIAG is set
-   !    internally.  IF MODE = 2, THEN DIAG must contain positive entries that
+   !    Input/output, real ( kind = 8 ) DIAG(N).  If MODE = 1, then DIAG is set
+   !    internally.  If MODE = 2, then DIAG must contain positive entries that
    !    serve as multiplicative scale factors for the variables.
    !
    !    Input, integer ( kind = 4 ) MODE, scaling option.
@@ -1294,18 +1293,18 @@ CONTAINS
    !    2, scaling is specified by the input DIAG vector.
    !
    !    Input, real ( kind = 8 ) FACTOR, determines the initial step bound.  This
-   !    bound is set to the product of FACTOR and the euclidean norm of DIAG*X IF
-   !    nonzero, or ELSE to FACTOR itself.  In most cases, FACTOR should lie
+   !    bound is set to the product of FACTOR and the euclidean norm of DIAG*X if
+   !    nonzero, or else to FACTOR itself.  In most cases, FACTOR should lie
    !    in the interval (0.1, 100) with 100 the recommended value.
    !
    !    Input, integer ( kind = 4 ) NPRINT, enables controlled printing of iterates
-   !    IF it is positive.  In this CASE, FCN is called with IFLAG = 0 at the
+   !    if it is positive.  In this case, FCN is called with IFLAG = 0 at the
    !    beginning of the first iteration and every NPRINT iterations thereafter
-   !    and immediately prior to RETURN, with X and FVEC available
-   !    for printing.  IF NPRINT is not positive, no special calls
+   !    and immediately prior to return, with X and FVEC available
+   !    for printing.  If NPRINT is not positive, no special calls
    !    of FCN with IFLAG = 0 are made.
    !
-   !    Output, integer ( kind = 4 ) INFO, error flag.  IF the user has terminated
+   !    Output, integer ( kind = 4 ) INFO, error flag.  If the user has terminated
    !    execution, INFO is set to the (negative) value of IFLAG. See description
    !    of FCN.  Otherwise, INFO is set as follows:
    !    0, improper input parameters.
@@ -1330,12 +1329,12 @@ CONTAINS
    !    IFLAG = 2.
    !
    !    Output, integer ( kind = 4 ) IPVT(N), defines a permutation matrix P
-   !    such that JAC*P = Q*R, WHERE JAC is the final calculated jacobian, Q is
+   !    such that JAC*P = Q*R, where JAC is the final calculated jacobian, Q is
    !    orthogonal (not stored), and R is upper triangular with diagonal
    !    elements of nonincreasing magnitude.  Column J of P is column
    !    IPVT(J) of the identity matrix.
    !
-   !    Output, real ( kind = 8 ) QTF(N), CONTAINS the first N elements of Q'*FVEC.
+   !    Output, real ( kind = 8 ) QTF(N), contains the first N elements of Q'*FVEC.
    !
    IMPLICIT NONE
 
@@ -1386,15 +1385,14 @@ CONTAINS
    real ( kind = 8 ) xnorm
    real ( kind = 8 ) x(n)
    real ( kind = 8 ) xtol
-   real ( kind = 8 ) phi
+   real ( kind = 8 ) phi,k_s
    integer ( kind = 4 ) isiter
    integer ( kind = 4 ) npoint
    integer ( kind = 4 ) nptf
    real ( kind = 8 ) xdat(npoint)
-   real ( kind = 8 ) ydat(nptf,npoint)
-   real ( kind = 8 ), optional :: vf_om
-   real ( kind = 8 ), optional :: vf_sand
-   real ( kind = 8 ), optional :: vf_gravels
+   real ( kind = 8 ) ydat  (nptf,npoint)
+   real ( kind = 8 ) ydatks(nptf,npoint)
+   real ( kind = 8 ), optional :: L_vgm
 
       epsmch = epsilon ( epsmch )
 
@@ -1402,9 +1400,9 @@ CONTAINS
       iflag = 0
       nfev = 0
       njev = 0
-      !
-      !  Check the input parameters for errors.
-      !
+   !
+   !  Check the input parameters for errors.
+   !
       IF ( n <= 0 ) THEN
          go to 300
       ENDIF
@@ -1414,8 +1412,8 @@ CONTAINS
       ENDIF
 
       IF ( ldfjac < m &
-         .or. ftol < 0.0D+00 .or. xtol < 0.0D+00 .or. gtol < 0.0D+00 &
-         .or. maxfev <= 0 .or. factor <= 0.0D+00 ) THEN
+       .or. ftol < 0.0D+00 .or. xtol < 0.0D+00 .or. gtol < 0.0D+00 &
+        .or. maxfev <= 0 .or. factor <= 0.0D+00 ) THEN
          go to 300
       ENDIF
 
@@ -1426,15 +1424,14 @@ CONTAINS
             ENDIF
          ENDDO
       ENDIF
-      !
-      !  Evaluate the FUNCTION at the starting point and calculate its norm.
-      !
+   !
+   !  Evaluate the function at the starting point and calculate its norm.
+   !
       iflag = 1
-      IF (present(vf_om) .and. present(vf_sand) .and. present(vf_gravels)) THEN
-         CALL fcn ( m, n, x, fvec, fjac, ldfjac, iflag, xdat, npoint, ydat, nptf, phi, isiter,&
-            vf_om, vf_sand, vf_gravels)
+      IF (present(L_vgm)) THEN
+         CALL fcn ( m, n, x, fvec, fjac, ldfjac, iflag, xdat, npoint, ydat, ydatks, nptf, phi, k_s, isiter, L_vgm)
       ELSE
-         CALL fcn ( m, n, x, fvec, fjac, ldfjac, iflag, xdat, npoint, ydat, nptf, phi, isiter )
+         CALL fcn ( m, n, x, fvec, fjac, ldfjac, iflag, xdat, npoint, ydat, ydatks, nptf, phi, k_s, isiter )
       ENDIF
       nfev = 1
       IF ( iflag < 0 ) THEN
@@ -1442,24 +1439,23 @@ CONTAINS
       ENDIF
 
       fnorm = enorm ( m, fvec )
-      !
-      !  Initialize Levenberg-Marquardt parameter and iteration counter.
-      !
+   !
+   !  Initialize Levenberg-Marquardt parameter and iteration counter.
+   !
       par = 0.0D+00
       iter = 1
-      !
-      !  Beginning of the outer loop.
-      !
+   !
+   !  Beginning of the outer loop.
+   !
       DO
-         !
-         !  Calculate the jacobian matrix.
-         !
+   !
+   !  Calculate the jacobian matrix.
+   !
          iflag = 2
-         IF (present(vf_om) .and. present(vf_sand) .and. present(vf_gravels)) THEN
-            CALL fcn ( m, n, x, fvec, fjac, ldfjac, iflag, xdat, npoint, ydat, nptf, phi, isiter,&
-               vf_om, vf_sand, vf_gravels)
+         IF (present(L_vgm)) THEN
+            CALL fcn ( m, n, x, fvec, fjac, ldfjac, iflag, xdat, npoint, ydat, ydatks, nptf, phi, k_s, isiter, L_vgm)
          ELSE
-            CALL fcn ( m, n, x, fvec, fjac, ldfjac, iflag, xdat, npoint, ydat, nptf, phi, isiter )
+            CALL fcn ( m, n, x, fvec, fjac, ldfjac, iflag, xdat, npoint, ydat, ydatks, nptf, phi, k_s, isiter )
          ENDIF
 
          njev = njev + 1
@@ -1467,32 +1463,31 @@ CONTAINS
          IF ( iflag < 0 ) THEN
             go to 300
          ENDIF
-         !
-         !  IF requested, CALL FCN to enable printing of iterates.
-         !
+   !
+   !     IF requested, call FCN to enable printing of iterates.
+   !
          IF ( 0 < nprint ) THEN
             iflag = 0
             IF ( mod ( iter - 1, nprint ) == 0 ) THEN
-               IF (present(vf_om) .and. present(vf_sand) .and. present(vf_gravels)) THEN
-                  CALL fcn ( m, n, x, fvec, fjac, ldfjac, iflag, xdat, npoint, ydat, nptf, phi, isiter,&
-                     vf_om, vf_sand, vf_gravels)
+               IF (present(L_vgm)) THEN
+                  CALL fcn ( m, n, x, fvec, fjac, ldfjac, iflag, xdat, npoint, ydat, ydatks, nptf, phi, k_s, isiter, L_vgm)
                ELSE
-                  CALL fcn ( m, n, x, fvec, fjac, ldfjac, iflag, xdat, npoint, ydat, nptf, phi, isiter )
+                  CALL fcn ( m, n, x, fvec, fjac, ldfjac, iflag, xdat, npoint, ydat, ydatks, nptf, phi, k_s, isiter )
                ENDIF
             ENDIF
             IF ( iflag < 0 ) THEN
                go to 300
             ENDIF
          ENDIF
-         !
-         !  Compute the QR factorization of the jacobian.
-         !
+   !
+   !     Compute the QR factorization of the jacobian.
+   !
          pivot = .true.
          CALL qrfac ( m, n, fjac, ldfjac, pivot, ipvt, n, wa1, wa2 )
-         !
-         !  On the first iteration and IF mode is 1, scale according
-         !  to the norms of the columns of the initial jacobian.
-         !
+
+   !     On the first iteration and if mode is 1, scale according
+   !     to the norms of the columns of the initial jacobian.
+   !
          IF ( iter == 1 ) THEN
 
             IF ( mode /= 2 ) THEN
@@ -1503,10 +1498,10 @@ CONTAINS
                   ENDIF
                ENDDO
             ENDIF
-            !
-            !  On the first iteration, calculate the norm of the scaled X
-            !  and initialize the step bound DELTA.
-            !
+   !
+   !        On the first iteration, calculate the norm of the scaled X
+   !        and initialize the step bound DELTA.
+   !
             wa3(1:n) = diag(1:n) * x(1:n)
 
             xnorm = enorm ( n, wa3 )
@@ -1518,9 +1513,9 @@ CONTAINS
             ENDIF
 
          ENDIF
-         !
-         !  Form Q'*FVEC and store the first N components in QTF.
-         !
+   !
+   !     Form Q'*FVEC and store the first N components in QTF.
+   !
          wa4(1:m) = fvec(1:m)
 
          DO j = 1, n
@@ -1535,9 +1530,9 @@ CONTAINS
             qtf(j) = wa4(j)
 
          ENDDO
-         !
-         !  Compute the norm of the scaled gradient.
-         !
+   !
+   !     Compute the norm of the scaled gradient.
+   !
          gnorm = 0.0D+00
 
          IF ( fnorm /= 0.0D+00 ) THEN
@@ -1551,52 +1546,51 @@ CONTAINS
             ENDDO
 
          ENDIF
-         !
-         !  Test for convergence of the gradient norm.
-         !
+   !
+   !     Test for convergence of the gradient norm.
+   !
          IF ( gnorm <= gtol ) THEN
             info = 4
             go to 300
          ENDIF
-         !
-         !  Rescale IF necessary.
-         !
+   !
+   !     Rescale if necessary.
+   !
          IF ( mode /= 2 ) THEN
             DO j = 1, n
                diag(j) = max ( diag(j), wa2(j) )
             ENDDO
          ENDIF
-         !
-         !  Beginning of the inner loop.
-         !
+   !
+   !     Beginning of the inner loop.
+   !
          DO
-            !
-            !  Determine the Levenberg-Marquardt parameter.
-            !
+   !
+   !     Determine the Levenberg-Marquardt parameter.
+
             CALL lmpar ( n, fjac, ldfjac, ipvt, diag, qtf, delta, par, wa1, wa2 )
-            !
-            !  Store the direction p and x + p. calculate the norm of p.
-            !
+
+   !        Store the direction p and x + p. calculate the norm of p.
+   !
             wa1(1:n) = - wa1(1:n)
             wa2(1:n) = x(1:n) + wa1(1:n)
             wa3(1:n) = diag(1:n) * wa1(1:n)
 
             pnorm = enorm ( n, wa3 )
-            !
-            !  On the first iteration, adjust the initial step bound.
-            !
+   !
+   !        On the first iteration, adjust the initial step bound.
+   !
             IF ( iter == 1 ) THEN
                delta = min ( delta, pnorm )
             ENDIF
-            !
-            !  Evaluate the FUNCTION at x + p and calculate its norm.
-            !
+   !
+   !        Evaluate the function at x + p and calculate its norm.
+   !
             iflag = 1
-            IF (present(vf_om) .and. present(vf_sand) .and. present(vf_gravels)) THEN
-               CALL fcn ( m, n, wa2, wa4, fjac, ldfjac, iflag, xdat, npoint, ydat, nptf, phi, isiter,&
-                  vf_om, vf_sand, vf_gravels)
+            IF (present(L_vgm)) THEN
+               CALL fcn ( m, n, wa2, wa4, fjac, ldfjac, iflag, xdat, npoint, ydat, ydatks, nptf, phi, k_s, isiter, L_vgm)
             ELSE
-               CALL fcn ( m, n, wa2, wa4, fjac, ldfjac, iflag, xdat, npoint, ydat, nptf, phi, isiter )
+               CALL fcn ( m, n, wa2, wa4, fjac, ldfjac, iflag, xdat, npoint, ydat, ydatks, nptf, phi, k_s, isiter )
             ENDIF
 
             nfev = nfev + 1
@@ -1606,18 +1600,18 @@ CONTAINS
             ENDIF
 
             fnorm1 = enorm ( m, wa4 )
-            !
-            !  Compute the scaled actual reduction.
-            !
+   !
+   !        Compute the scaled actual reduction.
+   !
             IF ( 0.1D+00 * fnorm1 < fnorm ) THEN
                actred = 1.0D+00 - ( fnorm1 / fnorm ) ** 2
             ELSE
                actred = - 1.0D+00
             ENDIF
-            !
-            !  Compute the scaled predicted reduction and
-            !  the scaled directional derivative.
-            !
+   !
+   !        Compute the scaled predicted reduction and
+   !        the scaled directional derivative.
+   !
             DO j = 1, n
                wa3(j) = 0.0D+00
                l = ipvt(j)
@@ -1629,17 +1623,17 @@ CONTAINS
             temp2 = ( sqrt ( par ) * pnorm ) / fnorm
             prered = temp1 ** 2 + temp2 ** 2 / 0.5D+00
             dirder = - ( temp1 ** 2 + temp2 ** 2 )
-            !
-            !  Compute the ratio of the actual to the predicted reduction.
-            !
+   !
+   !        Compute the ratio of the actual to the predicted reduction.
+   !
             IF ( prered /= 0.0D+00 ) THEN
                ratio = actred / prered
             ELSE
                ratio = 0.0D+00
             ENDIF
-            !
-            !  Update the step bound.
-            !
+   !
+   !        Update the step bound.
+   !
             IF ( ratio <= 0.25D+00 ) THEN
 
                IF ( 0.0D+00 <= actred ) THEN
@@ -1665,11 +1659,11 @@ CONTAINS
                ENDIF
 
             ENDIF
-            !
-            !  Successful iteration.
-            !
-            !  Update X, FVEC, and their norms.
-            !
+   !
+   !        Successful iteration.
+   !
+   !        Update X, FVEC, and their norms.
+   !
             IF ( 0.0001D+00 <= ratio ) THEN
                x(1:n) = wa2(1:n)
                wa2(1:n) = diag(1:n) * x(1:n)
@@ -1678,12 +1672,12 @@ CONTAINS
                fnorm = fnorm1
                iter = iter + 1
             ENDIF
-            !
-            !  Tests for convergence.
-            !
+   !
+   !        Tests for convergence.
+   !
             IF ( abs ( actred) <= ftol .and. &
-               prered <= ftol .and. &
-               0.5D+00 * ratio <= 1.0D+00 ) THEN
+                 prered <= ftol .and. &
+                 0.5D+00 * ratio <= 1.0D+00 ) THEN
                info = 1
             ENDIF
 
@@ -1692,16 +1686,16 @@ CONTAINS
             ENDIF
 
             IF ( abs ( actred) <= ftol .and. prered <= ftol &
-               .and. 0.5D+00 * ratio <= 1.0D+00 .and. info == 2 ) THEN
+                .and. 0.5D+00 * ratio <= 1.0D+00 .and. info == 2 ) THEN
                info = 3
             ENDIF
 
             IF ( info /= 0 ) THEN
                go to 300
             ENDIF
-            !
-            !  Tests for termination and stringent tolerances.
-            !
+   !
+   !        Tests for termination and stringent tolerances.
+   !
             IF ( nfev >= maxfev ) THEN
                info = 5
             ENDIF
@@ -1722,23 +1716,23 @@ CONTAINS
             IF ( info /= 0 ) THEN
                go to 300
             ENDIF
-            !
-            !  END of the inner loop. repeat IF iteration unsuccessful.
-            !
+   !
+   !        End of the inner loop. repeat IF iteration unsuccessful.
+   !
             IF ( 0.0001D+00 <= ratio ) THEN
                EXIT
             ENDIF
 
          ENDDO
-         !
-         !  END of the outer loop.
-         !
+   !
+   !  End of the outer loop.
+   !
       ENDDO
 
       300 continue
-      !
-      !  Termination, either normal or user imposed.
-      !
+   !
+   !  Termination, either normal or user imposed.
+   !
       IF ( iflag < 0 ) THEN
          info = iflag
       ENDIF
@@ -1746,16 +1740,14 @@ CONTAINS
       iflag = 0
 
       IF ( 0 < nprint ) THEN
-         IF (present(vf_om) .and. present(vf_sand) .and. present(vf_gravels)) THEN
-            CALL fcn ( m, n, x, fvec, fjac, ldfjac, iflag, xdat, npoint, ydat, nptf, phi, isiter,&
-               vf_om, vf_sand, vf_gravels)
+         IF (present(L_vgm)) THEN
+            CALL fcn ( m, n, x, fvec, fjac, ldfjac, iflag, xdat, npoint, ydat, ydatks, nptf, phi, k_s, isiter, L_vgm)
          ELSE
-            CALL fcn ( m, n, x, fvec, fjac, ldfjac, iflag, xdat, npoint, ydat, nptf, phi, isiter )
+            CALL fcn ( m, n, x, fvec, fjac, ldfjac, iflag, xdat, npoint, ydat, ydatks, nptf, phi, k_s, isiter )
          ENDIF
       ENDIF
 
       RETURN
-
    END SUBROUTINE lmder
 
    SUBROUTINE lmpar ( n, r, ldr, ipvt, diag, qtb, delta, par, x, sdiag )
@@ -2019,7 +2011,7 @@ CONTAINS
          !
          IF ( parl == 0.0D+00 .and. fp <= temp .and. temp < 0.0D+00 ) THEN
             EXIT
-         ELSE IF ( iter == 10 ) THEN
+         ELSEIF ( iter == 10 ) THEN
             EXIT
          ENDIF
          !
@@ -2043,7 +2035,7 @@ CONTAINS
          !
          IF ( 0.0D+00 < fp ) THEN
             parl = max ( parl, par )
-         ELSE IF ( fp < 0.0D+00 ) THEN
+         ELSEIF ( fp < 0.0D+00 ) THEN
             paru = min ( paru, par )
          ENDIF
          !

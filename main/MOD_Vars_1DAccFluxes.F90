@@ -37,6 +37,8 @@ MODULE MOD_Vars_1DAccFluxes
    real(r8), allocatable :: a_xerr   (:)
    real(r8), allocatable :: a_zerr   (:)
    real(r8), allocatable :: a_rsur   (:)
+   real(r8), allocatable :: a_rsur_se(:)
+   real(r8), allocatable :: a_rsur_ie(:)
    real(r8), allocatable :: a_rsub   (:)
    real(r8), allocatable :: a_rnof   (:)
 #ifdef CatchLateralFlow
@@ -371,6 +373,8 @@ CONTAINS
             allocate (a_xerr      (numpatch))
             allocate (a_zerr      (numpatch))
             allocate (a_rsur      (numpatch))
+            allocate (a_rsur_se   (numpatch))
+            allocate (a_rsur_ie   (numpatch))
             allocate (a_rsub      (numpatch))
             allocate (a_rnof      (numpatch))
 #ifdef CatchLateralFlow
@@ -663,11 +667,7 @@ CONTAINS
       ENDIF
 
       IF (p_is_worker) THEN
-#if (defined CROP)
-         CALL elm_patch%build (landelm, landpatch, use_frac = .true., sharedfrac = pctshrpch)
-#else
          CALL elm_patch%build (landelm, landpatch, use_frac = .true.)
-#endif
       ENDIF
 
    END SUBROUTINE allocate_acc_fluxes
@@ -712,6 +712,8 @@ CONTAINS
             deallocate (a_xerr      )
             deallocate (a_zerr      )
             deallocate (a_rsur      )
+            deallocate (a_rsur_se   )
+            deallocate (a_rsur_ie   )
             deallocate (a_rsub      )
             deallocate (a_rnof      )
 #ifdef CatchLateralFlow
@@ -1052,6 +1054,8 @@ CONTAINS
             a_xerr    (:) = spval
             a_zerr    (:) = spval
             a_rsur    (:) = spval
+            a_rsur_se (:) = spval
+            a_rsur_ie (:) = spval
             a_rsub    (:) = spval
             a_rnof    (:) = spval
 #ifdef CatchLateralFlow
@@ -1351,7 +1355,7 @@ CONTAINS
 
    USE MOD_Precision
    USE MOD_SPMD_Task
-   USE mod_forcing, only: forcmask
+   USE mod_forcing, only: forcmask_pch
    USE MOD_Mesh,    only: numelm
    USE MOD_LandElm
    USE MOD_LandPatch,      only: numpatch, elm_patch
@@ -1441,7 +1445,7 @@ CONTAINS
             CALL acc1d (olrg    , a_olrg   )
 
             IF (DEF_forcing%has_missing_value) THEN
-               WHERE (forcmask)
+               WHERE (forcmask_pch)
                   rnet = sabg + sabvsun + sabvsha - olrg + forc_frl
                END WHERE
             ELSE
@@ -1455,6 +1459,9 @@ CONTAINS
             CALL acc1d (zerr    , a_zerr   )
             CALL acc1d (rsur    , a_rsur   )
 #ifndef CatchLateralFlow
+            CALL acc1d (rsur_se , a_rsur_se)
+            CALL acc1d (rsur_ie , a_rsur_ie)
+
             WHERE ((rsur /= spval) .and. (rnof /= spval))
                rsub = rnof - rsur
             ELSEWHERE
@@ -1515,7 +1522,7 @@ CONTAINS
             allocate (r_trad (numpatch)) ; r_trad(:) = spval
             DO i = 1, numpatch
                IF (DEF_forcing%has_missing_value) THEN
-                  IF (.not. forcmask(i)) CYCLE
+                  IF (.not. forcmask_pch(i)) CYCLE
                ENDIF
 
                IF (.not. patchmask(i)) CYCLE
@@ -1829,8 +1836,8 @@ CONTAINS
                filter(:) = patchmask(istt:iend)
 
                IF (DEF_forcing%has_missing_value) THEN
-                  WHERE (.not. forcmask(istt:iend)) filter = .false.
-                  filter = filter .and. forcmask(istt:iend)
+                  WHERE (.not. forcmask_pch(istt:iend)) filter = .false.
+                  filter = filter .and. forcmask_pch(istt:iend)
                ENDIF
 
                IF (.not. any(filter)) THEN

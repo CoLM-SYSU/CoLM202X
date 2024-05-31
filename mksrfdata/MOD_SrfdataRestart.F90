@@ -11,8 +11,6 @@ MODULE MOD_SrfdataRestart
 
    IMPLICIT NONE
 
-   integer, parameter, PRIVATE :: rcompress = 1
-
    ! ----- subroutines -----
    PUBLIC :: mesh_save_to_file
    PUBLIC :: mesh_load_from_file
@@ -358,6 +356,7 @@ CONTAINS
    !------------------------------------------------
    SUBROUTINE pixelset_save_to_file (dir_landdata, psetname, pixelset, lc_year)
 
+   USE MOD_Namelist
    USE MOD_SPMD_Task
    USE MOD_Block
    USE MOD_NetCDFVector
@@ -389,10 +388,14 @@ CONTAINS
       CALL ncio_create_file_vector (filename, pixelset)
       CALL ncio_define_dimension_vector (filename, pixelset, trim(psetname))
 
-      CALL ncio_write_vector (filename, 'eindex', trim(psetname), pixelset, pixelset%eindex, rcompress)
-      CALL ncio_write_vector (filename, 'ipxstt', trim(psetname), pixelset, pixelset%ipxstt, rcompress)
-      CALL ncio_write_vector (filename, 'ipxend', trim(psetname), pixelset, pixelset%ipxend, rcompress)
-      CALL ncio_write_vector (filename, 'settyp', trim(psetname), pixelset, pixelset%settyp, rcompress)
+      CALL ncio_write_vector (filename, 'eindex', trim(psetname), pixelset, pixelset%eindex, DEF_Srfdata_CompressLevel)
+      CALL ncio_write_vector (filename, 'ipxstt', trim(psetname), pixelset, pixelset%ipxstt, DEF_Srfdata_CompressLevel)
+      CALL ncio_write_vector (filename, 'ipxend', trim(psetname), pixelset, pixelset%ipxend, DEF_Srfdata_CompressLevel)
+      CALL ncio_write_vector (filename, 'settyp', trim(psetname), pixelset, pixelset%settyp, DEF_Srfdata_CompressLevel)
+
+      IF (pixelset%has_shared) THEN
+         CALL ncio_write_vector (filename, 'pctshared', trim(psetname), pixelset, pixelset%pctshared, DEF_Srfdata_CompressLevel)
+      ENDIF
 
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
@@ -450,7 +453,7 @@ CONTAINS
             iblk = gblock%xblkme(iblkme)
             jblk = gblock%yblkme(iblkme)
 
-#ifdef VectorInOneFile
+#if (defined VectorInOneFileS || defined VectorInOneFileP)
             CALL get_blockname (iblk, jblk, blockname)
             CALL ncio_inquire_length_grp (filename, 'eindex', &
                trim(psetname)//'_'//trim(blockname), nset)
@@ -468,7 +471,7 @@ CONTAINS
 #endif
          ENDDO
 
-#ifdef VectorInOneFile
+#if (defined VectorInOneFileS || defined VectorInOneFileP)
          fexists_any = pixelset%nset > 0
 #endif
 
@@ -489,7 +492,7 @@ CONTAINS
                iblk = gblock%xblkme(iblkme)
                jblk = gblock%yblkme(iblkme)
 
-#ifdef VectorInOneFile
+#if (defined VectorInOneFileS || defined VectorInOneFileP)
                CALL get_blockname (iblk, jblk, blockname)
                CALL ncio_inquire_length_grp (filename, 'eindex', &
                   trim(psetname)//'_'//trim(blockname), nset)
@@ -612,6 +615,26 @@ CONTAINS
       ENDIF
 
       numset = pixelset%nset
+      
+      pixelset%has_shared = .false.
+      IF (p_is_worker) THEN
+         DO iset = 1, pixelset%nset-1
+            IF ((pixelset%ielm(iset) == pixelset%ielm(iset+1)) &
+               .and. (pixelset%ipxstt(iset) == pixelset%ipxstt(iset+1))) THEN
+               pixelset%has_shared = .true.
+               exit
+            ENDIF
+         ENDDO
+      ENDIF
+
+#ifdef USEMPI
+      CALL mpi_allreduce (MPI_IN_PLACE, pixelset%has_shared, 1, MPI_LOGICAL, &
+         MPI_LOR, p_comm_glb, p_err)
+#endif
+
+      IF (pixelset%has_shared) THEN
+         CALL ncio_read_vector (filename, 'pctshared', pixelset, pixelset%pctshared)
+      ENDIF
 
 #ifdef CoLMDEBUG
       IF (p_is_io)  write(*,*) numset, trim(psetname), ' on group', p_iam_io

@@ -40,10 +40,10 @@ CONTAINS
    IMPLICIT NONE
 
    integer, intent(in) :: lc_year    ! which year of land cover data used
-   character(LEN=256), intent(in) :: dir_landdata
+   character(len=256), intent(in) :: dir_landdata
 
-   character(LEN=256) :: dir_rawdata
-   character(LEN=256) :: lndname
+   character(len=256) :: dir_rawdata
+   character(len=256) :: lndname
    character(len=256) :: cyear
 
    integer :: i, u, m, l, lucy_id, ns, nr, ulev
@@ -250,10 +250,17 @@ IF (DEF_URBAN_type_scheme == 1) THEN
                t_roommax(u) = 373.16
                t_roommin(u) = 180.00
             ENDIF
-ELSE IF (DEF_URBAN_type_scheme == 2) THEN
+ELSEIF (DEF_URBAN_type_scheme == 2) THEN
             ! read in LCZ constants
+#ifdef SinglePoint
+            hwr  (u) = SITE_hwr
+            fgper(u) = SITE_fgper
+#else
             hwr  (u) = canyonhwr_lcz (landurban%settyp(u)) !average building height to their distance
-            fgper(u) = wtperroad_lcz (landurban%settyp(u)) !pervious fraction to ground area
+            fgper(u) = wtperroad_lcz (landurban%settyp(u)) &
+                       /(1-wtroof_lcz(landurban%settyp(u))) !pervious fraction to ground area
+            fgper(u) = min(fgper(u), 1.)
+#endif
 
             DO ns = 1,2
                DO nr = 1,2

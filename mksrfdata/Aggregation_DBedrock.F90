@@ -6,9 +6,9 @@ SUBROUTINE Aggregation_DBedrock ( &
 ! ---------------------------------------------------------------------------
 ! Depth to bedrock
 !
-!    Shangguan, W., Hengl, T., Mendes de Jesus, J., Yuan, H., Dai, Y. (2017). 
-!    Mapping the global depth to bedrock for land surface modeling. 
-!    Journal of Advances in Modeling Earth Systems, 9(1), 65–88. 
+!    Shangguan, W., Hengl, T., Mendes de Jesus, J., Yuan, H., Dai, Y. (2017).
+!    Mapping the global depth to bedrock for land surface modeling.
+!    Journal of Advances in Modeling Earth Systems, 9(1), 65–88.
 !
 ! Created by Shupeng Zhang, 05/2023
 ! ----------------------------------------------------------------------
@@ -34,8 +34,8 @@ SUBROUTINE Aggregation_DBedrock ( &
 
    ! arguments:
    type(grid_type),  intent(in) :: gland
-   character(LEN=*), intent(in) :: dir_rawdata
-   character(LEN=*), intent(in) :: dir_model_landdata
+   character(len=*), intent(in) :: dir_rawdata
+   character(len=*), intent(in) :: dir_model_landdata
 
    ! local variables:
    character(len=256) :: landdir, lndname
@@ -50,7 +50,7 @@ SUBROUTINE Aggregation_DBedrock ( &
 #endif
 
       landdir = trim(dir_model_landdata) // '/dbedrock/'
-   
+
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
@@ -61,66 +61,66 @@ SUBROUTINE Aggregation_DBedrock ( &
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
-   
+
 #ifdef SinglePoint
       IF (USE_SITE_dbedrock) THEN
          RETURN
       ENDIF
 #endif
-   
+
       IF (p_is_io) THEN
-         
+
          CALL allocate_block_data (gland, dbedrock)
-            
-         lndname = trim(dir_rawdata)//'/dbedrock.nc' 
+
+         lndname = trim(dir_rawdata)//'/dbedrock.nc'
          CALL ncio_read_block (lndname, 'dbedrock', gland, dbedrock)
-   
+
 #ifdef USEMPI
          CALL aggregation_data_daemon (gland, data_r8_2d_in1 = dbedrock)
 #endif
       ENDIF
-   
+
       IF (p_is_worker) THEN
-   
+
          allocate (dbedrock_patches (numpatch))
-         
+
          DO ipatch = 1, numpatch
             CALL aggregation_request_data (landpatch, ipatch, gland, zip = USE_zip_for_aggregation, area = area_one, &
                data_r8_2d_in1 = dbedrock, data_r8_2d_out1 = dbedrock_one)
             dbedrock_patches (ipatch) = sum(dbedrock_one * area_one) / sum(area_one)
          ENDDO
-      
+
 #ifdef USEMPI
          CALL aggregation_worker_done ()
 #endif
       ENDIF
-   
+
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
-   
+
 #ifdef RangeCheck
       CALL check_vector_data ('dbedrock_patches ', dbedrock_patches, -9999.0)
 #endif
-   
+
       ! Write-out the depth of the pacth in the gridcell
 #ifndef SinglePoint
       lndname = trim(landdir)//'/dbedrock_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
       CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
-      CALL ncio_write_vector (lndname, 'dbedrock_patches', 'patch', landpatch, dbedrock_patches, 1)
-   
+      CALL ncio_write_vector (lndname, 'dbedrock_patches', 'patch', landpatch, dbedrock_patches, DEF_Srfdata_CompressLevel)
+
 #ifdef SrfdataDiag
       typpatch = (/(ityp, ityp = 0, N_land_classification)/)
       lndname  = trim(dir_model_landdata) // '/diag/dbedrock_patch.nc'
       CALL srfdata_map_and_write (dbedrock_patches, landpatch%settyp, typpatch, m_patch2diag, &
          -1.0e36_r8, lndname, 'dbedrock', compress = 1, write_mode = 'one')
 #endif
-   
+
 #else
       SITE_dbedrock = dbedrock_patches(1)
 #endif
-   
+
       IF (p_is_worker) THEN
          deallocate ( dbedrock_patches )
       ENDIF

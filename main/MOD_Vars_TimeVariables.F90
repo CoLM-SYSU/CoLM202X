@@ -149,7 +149,7 @@ CONTAINS
 
    IMPLICIT NONE
 
-      character(LEN=*), intent(in) :: file_restart
+      character(len=*), intent(in) :: file_restart
 
       CALL ncio_read_vector (file_restart, 'tleaf_p  ', landpft, tleaf_p    ) !
       CALL ncio_read_vector (file_restart, 'ldew_p   ', landpft, ldew_p     ) !
@@ -194,19 +194,19 @@ ENDIF
 
    SUBROUTINE WRITE_PFTimeVariables (file_restart)
 
-   USE MOD_Namelist, only : DEF_REST_COMPRESS_LEVEL, DEF_USE_PLANTHYDRAULICS, DEF_USE_OZONESTRESS, &
+   USE MOD_Namelist, only : DEF_REST_CompressLevel, DEF_USE_PLANTHYDRAULICS, DEF_USE_OZONESTRESS, &
                             DEF_USE_IRRIGATION
    USE MOD_LandPFT
    USE MOD_NetCDFVector
    USE MOD_Vars_Global
    IMPLICIT NONE
 
-   character(LEN=*), intent(in) :: file_restart
+   character(len=*), intent(in) :: file_restart
 
    ! Local variables
    integer :: compress
 
-      compress = DEF_REST_COMPRESS_LEVEL
+      compress = DEF_REST_CompressLevel
 
       CALL ncio_create_file_vector (file_restart, landpft)
       CALL ncio_define_dimension_vector (file_restart, landpft, 'pft')
@@ -888,7 +888,7 @@ CONTAINS
    !=======================================================================
 
    USE MOD_SPMD_Task
-   USE MOD_Namelist, only : DEF_REST_COMPRESS_LEVEL, DEF_USE_PLANTHYDRAULICS, DEF_USE_OZONESTRESS, &
+   USE MOD_Namelist, only : DEF_REST_CompressLevel, DEF_USE_PLANTHYDRAULICS, DEF_USE_OZONESTRESS, &
                             DEF_USE_IRRIGATION
    USE MOD_LandPatch
    USE MOD_NetCDFVector
@@ -897,16 +897,16 @@ CONTAINS
 
    integer, intent(in) :: idate(3)
    integer, intent(in) :: lc_year      !year of land cover type data
-   character(LEN=*), intent(in) :: site
-   character(LEN=*), intent(in) :: dir_restart
+   character(len=*), intent(in) :: site
+   character(len=*), intent(in) :: dir_restart
 
    ! Local variables
-   character(LEN=256) :: file_restart
+   character(len=256) :: file_restart
    character(len=14)  :: cdate
    character(len=256) :: cyear         !character for lc_year
    integer :: compress
 
-      compress = DEF_REST_COMPRESS_LEVEL
+      compress = DEF_REST_CompressLevel
 
       ! land cover type year
       write(cyear,'(i4.4)') lc_year
@@ -1081,11 +1081,11 @@ ENDIF
 
    integer, intent(in) :: idate(3)
    integer, intent(in) :: lc_year      !year of land cover type data
-   character(LEN=*), intent(in) :: site
-   character(LEN=*), intent(in) :: dir_restart
+   character(len=*), intent(in) :: site
+   character(len=*), intent(in) :: dir_restart
 
    ! Local variables
-   character(LEN=256) :: file_restart
+   character(len=256) :: file_restart
    character(len=14)  :: cdate, cyear
 
 #ifdef USEMPI

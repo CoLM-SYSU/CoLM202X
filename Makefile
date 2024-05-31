@@ -31,6 +31,7 @@ OBJS_SHARED =    \
 				  MOD_Const_Physical.o         \
 				  MOD_Const_LC.o               \
 				  MOD_Utils.o                  \
+				  MOD_UserDefFun.o             \
 				  MOD_TimeManager.o            \
 				  MOD_NetCDFSerial.o           \
 				  MOD_SingleSrfdata.o          \
@@ -44,10 +45,10 @@ OBJS_SHARED =    \
 				  MOD_Mesh.o                   \
 				  MOD_Pixelset.o               \
 				  MOD_NetCDFVectorBlk.o        \
-				  MOD_NetCDFVectorOne.o        \
+				  MOD_NetCDFVectorOneS.o       \
+				  MOD_NetCDFVectorOneP.o       \
 				  MOD_RangeCheck.o             \
-				  MOD_Mapping_Grid2Pset.o      \
-				  MOD_Mapping_Pset2Grid.o      \
+				  MOD_SpatialMapping.o         \
 				  MOD_AggregationRequestData.o \
 				  MOD_PixelsetShared.o         \
 				  MOD_LandElm.o                \
@@ -267,6 +268,9 @@ OBJS_MAIN = \
 				MOD_LeafTemperature.o                     \
 				MOD_LeafTemperaturePC.o                   \
 				MOD_SoilThermalParameters.o               \
+				MOD_Hydro_VIC_Variables.o                 \
+				MOD_Hydro_VIC.o                           \
+				MOD_Runoff.o                              \
 				MOD_SoilSnowHydrology.o                   \
 				MOD_SnowLayersCombineDivide.o             \
 				MOD_PhaseChange.o                         \

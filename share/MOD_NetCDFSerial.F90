@@ -121,6 +121,8 @@ MODULE MOD_NetCDFSerial
 
    PUBLIC :: get_time_now   
 
+   PUBLIC :: ncio_write_colm_dimension
+
 CONTAINS
 
    ! ----
@@ -2272,5 +2274,51 @@ CONTAINS
       CALL nccheck( nf90_close(ncid) )
 
    END SUBROUTINE ncio_write_serial_real8_4d_time
+
+   !----------------------
+   SUBROUTINE ncio_write_colm_dimension (filename)
+
+   USE MOD_Vars_Global, only : nl_soil, maxsnl, nl_lake, nvegwcs
+   IMPLICIT NONE
+
+   character(len=*), intent(in) :: filename
+
+   ! Local Variables
+   integer :: soillayers(1:nl_soil)
+   integer :: soilsnowlayers(-maxsnl+nl_soil)
+   integer :: lakelayers(1:nl_lake)
+   integer :: vegnodes(1:nvegwcs)
+   integer :: i
+
+
+      soillayers = (/(i, i = 1,nl_soil)/)
+      CALL ncio_define_dimension (filename, 'soil', nl_soil)
+      CALL ncio_write_serial (filename, 'soil', soillayers, 'soil')
+      CALL ncio_put_attr_str (filename, 'soil', 'long_name', 'soil layers')
+
+      soilsnowlayers = (/(i, i = maxsnl+1,nl_soil)/)
+      CALL ncio_define_dimension (filename, 'soilsnow', -maxsnl+nl_soil)
+      CALL ncio_write_serial (filename, 'soilsnow', soilsnowlayers, 'soilsnow')
+      CALL ncio_put_attr_str (filename, 'soilsnow', 'long_name', 'snow(<= 0) and soil(>0) layers')
+
+      lakelayers = (/(i, i = 1,nl_lake)/)
+      CALL ncio_define_dimension (filename, 'lake', nl_lake)
+      CALL ncio_write_serial (filename, 'lake', lakelayers, 'lake')
+      CALL ncio_put_attr_str (filename, 'lake', 'long_name', 'vertical lake layers')
+      
+      vegnodes = (/(i, i = 1,nvegwcs)/)
+      CALL ncio_define_dimension (filename, 'vegnodes', nvegwcs)
+      CALL ncio_write_serial (filename, 'vegnodes', vegnodes, 'vegnodes')
+      CALL ncio_put_attr_str (filename, 'vegnodes', 'long_name', 'vegetation water potential nodes')
+
+      CALL ncio_define_dimension (filename, 'band', 2)
+      CALL ncio_write_serial (filename, 'band', (/1,2/), 'band')
+      CALL ncio_put_attr_str (filename, 'band', 'long_name', '1 = visible; 2 = near-infrared')
+
+      CALL ncio_define_dimension (filename, 'rtyp', 2)
+      CALL ncio_write_serial (filename, 'rtyp', (/1,2/), 'rtyp')
+      CALL ncio_put_attr_str (filename, 'rtyp', 'long_name', '1 = direct; 2 = diffuse')
+
+   END SUBROUTINE ncio_write_colm_dimension 
 
 END MODULE MOD_NetCDFSerial

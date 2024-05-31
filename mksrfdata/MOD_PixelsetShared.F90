@@ -150,6 +150,8 @@ CONTAINS
             allocate (fracout    (nsetshared))
             allocate (sharedclass(nsetshared))
 
+            fracout(:) = 1.0
+
             jpset = 0
             DO ipset = 1, pixelset%nset
                IF (any(typfilter(:) == settyp1(ipset))) THEN

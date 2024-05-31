@@ -559,6 +559,7 @@ CONTAINS
 
    integer FUNCTION minutes_since_1900 (year, julianday, second)
 
+   USE MOD_UserDefFun
    IMPLICIT NONE
    integer, intent(in) :: year, julianday, second
 
@@ -567,7 +568,7 @@ CONTAINS
                               57854880,60484320,63113760/)
    integer :: iref, iyear
 
-      iref = findloc(refyear <= year, .true., back=.true., dim=1)
+      iref = findloc_ud(refyear <= year, back=.true.)
       minutes_since_1900 = refval(iref)
       DO iyear = refyear(iref), year-1
          IF (isleapyear(iyear)) THEN

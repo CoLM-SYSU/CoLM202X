@@ -4,7 +4,7 @@
 MODULE MOD_Hydro_Vars_TimeVariables
 !-------------------------------------------------------------------------------------
 ! DESCRIPTION:
-!   
+!
 !   Time Variables in lateral hydrological processes.
 !
 ! Created by Shupeng Zhang, May 2023
@@ -72,7 +72,7 @@ CONTAINS
    IMPLICIT NONE
 
    integer :: numbasin
-   character(LEN=*), intent(in) :: file_restart
+   character(len=*), intent(in) :: file_restart
 
       numbasin = numelm
 
@@ -98,7 +98,7 @@ CONTAINS
    IMPLICIT NONE
 
    integer :: numbasin, iwork
-   character(LEN=*), intent(in) :: file_restart
+   character(len=*), intent(in) :: file_restart
 
       numbasin = numelm
 

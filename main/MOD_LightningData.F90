@@ -12,7 +12,7 @@ MODULE MOD_LightningData
 
    USE MOD_Grid
    USE MOD_DataType
-   USE MOD_Mapping_Grid2Pset
+   USE MOD_SpatialMapping
    USE MOD_BGC_Vars_TimeVariables, only: lnfm
    IMPLICIT NONE
 
@@ -21,7 +21,7 @@ MODULE MOD_LightningData
 
    type(block_data_real8_2d) :: f_lnfm
 
-   type (mapping_grid2pset_type) :: mg2p_lnfm
+   type (spatial_mapping_type) :: mg2p_lnfm
 
 CONTAINS
 
@@ -58,7 +58,7 @@ CONTAINS
 
       CALL allocate_block_data (grid_lightning, f_lnfm)
 
-      CALL mg2p_lnfm%build (grid_lightning, landpatch)
+      CALL mg2p_lnfm%build_arealweighted (grid_lightning, landpatch)
 
       itime = (idate(2)-1)*8 + min(idate(3)/10800+1,8)
       IF (itime .gt. 2920)itime = itime - 8 ! for the leap year
@@ -102,7 +102,7 @@ CONTAINS
          CALL check_block_data ('lightning', f_lnfm)
 #endif
 
-         CALL mg2p_lnfm%map_aweighted (f_lnfm, lnfm)
+         CALL mg2p_lnfm%grid2pset (f_lnfm, lnfm)
 #ifdef RangeCheck
          CALL check_vector_data ('lightning', lnfm)
 #endif

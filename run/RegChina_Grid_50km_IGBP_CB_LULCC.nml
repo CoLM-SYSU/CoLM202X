@@ -1,0 +1,110 @@
+&nl_colm
+   
+!Author: Wanyi Lin
+
+   DEF_CASE_NAME = 'RegChina_Grid_50km_IGBP_CB_LULCC.nml'
+
+   DEF_domain%edges =  18.0
+   DEF_domain%edgen =  54.0      
+   DEF_domain%edgew =  73.0
+   DEF_domain%edgee = 135.0      
+   
+   DEF_nx_blocks = 30
+   DEF_ny_blocks = 30
+   DEF_PIO_groupsize = 6
+   
+   DEF_simulation_time%greenwich     = .TRUE.
+   DEF_simulation_time%start_year    = 2002
+   DEF_simulation_time%start_month   = 1
+   DEF_simulation_time%start_day     = 1
+   DEF_simulation_time%start_sec     = 0
+   DEF_simulation_time%end_year      = 2003
+   DEF_simulation_time%end_month     = 12
+   DEF_simulation_time%end_day       = 31
+   DEF_simulation_time%end_sec       = 86400
+   DEF_simulation_time%spinup_year   = 2000
+   DEF_simulation_time%spinup_month  = 1
+   DEF_simulation_time%spinup_day    = 1
+   DEF_simulation_time%spinup_sec    = 0
+   DEF_simulation_time%spinup_repeat = 0
+
+   DEF_simulation_time%timestep      = 1800.
+   
+   DEF_dir_rawdata  = '/tera07/CoLMrawdata/'
+   DEF_dir_runtime  = '/tera07/CoLMruntime/'
+   DEF_dir_output   = '/home/linwy20/stu01/colm202x-master/case'
+   
+   ! ----- land units and land sets -----
+   ! for GRIDBASED
+   DEF_file_mesh = 'NONE'
+   DEF_GRIDBASED_lon_res = 0.5
+   DEF_GRIDBASED_lat_res = 0.5
+
+   ! LAI setting
+   DEF_LAI_MONTHLY       = .true.
+   DEF_LAI_CHANGE_YEARLY = .true.
+
+   ! LandCover setting
+   DEF_LC_YEAR = 2002
+
+   ! Land use change scheme selection
+   DEF_LULCC_SCHEME = 2
+
+   ! Canopy DEF Interception scheme selection
+   DEF_Interception_scheme=1 !1:CoLM2014；2:CLM4.5; 3:CLM5; 4:Noah-MP; 5:MATSIRO; 6:VIC
+
+   ! ---------- Hydrology module ---------
+   DEF_USE_SUPERCOOL_WATER       = .false.
+   DEF_USE_VariablySaturatedFlow = .false.
+   DEF_USE_PLANTHYDRAULICS       = .false.
+   ! -------------------------------------
+
+   ! --------- SNICAR ---------
+   DEF_USE_SNICAR     = .false.
+   DEF_Aerosol_Readin = .true.
+   DEF_Aerosol_Clim   = .false.
+   ! --------------------------
+
+   ! ------ Ozone MODULE ------
+   DEF_USE_OZONESTRESS = .false.
+   DEF_USE_OZONEDATA   = .false.
+   ! --------------------------
+
+   ! ------- Bedrock -------
+   DEF_USE_BEDROCK = .false.
+   ! -----------------------
+
+   ! ---- Split Soil Snow ----
+   DEF_SPLIT_SOILSNOW = .false.
+   ! -------------------------
+
+   ! ---------- Forcing Downscalling ----------
+   DEF_USE_Forcing_Downscaling        = .false.
+   DEF_DS_precipitation_adjust_scheme = 'II'
+   DEF_DS_longwave_adjust_scheme      = 'II'
+   ! ------------------------------------------
+
+   
+   ! ----- forcing -----
+   ! Options : 
+   ! PRINCETON | GSWP3   | QIAN  | CRUNCEPV4 | CRUNCEPV7 | ERA5LAND | ERA5  |  MSWX
+   ! WFDE5     | CRUJRA  | WFDEI | JRA55     | GDAS      | CMFD     | POINT |  JRA3Q
+   ! CLDAS
+   DEF_forcing_namelist = './forcing/GSWP3.nml'
+
+   ! ----- history -----
+   DEF_hist_grid_as_forcing = .false.
+   DEF_hist_lon_res = 0.5
+   DEF_hist_lat_res = 0.5
+   DEF_WRST_FREQ = 'MONTHLY' ! write restart file frequency: HOURLY/DAILY/MONTHLY/YEARLY
+   DEF_HIST_FREQ = 'MONTHLY' ! write history file frequency: HOURLY/DAILY/MONTHLY/YEARLY
+   DEF_HIST_groupby = 'MONTH' ! history in one file: DAY/MONTH/YEAR
+   DEF_HIST_mode = 'one'     ! history in one or block 
+
+   DEF_REST_COMPRESS_LEVEL = 1
+   DEF_HIST_COMPRESS_LEVEL = 1
+   
+   DEF_hist_vars_namelist = '/tera04/zhangsp/CoLM202X/github/CoLM202X/run/history.nml'
+   DEF_hist_vars_out_default = .true.
+
+/

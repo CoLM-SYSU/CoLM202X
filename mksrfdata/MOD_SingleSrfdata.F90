@@ -71,8 +71,8 @@ MODULE MOD_SingleSrfdata
    real(r8), allocatable :: SITE_soil_k_solids          (:)
    real(r8), allocatable :: SITE_soil_psi_s             (:)
    real(r8), allocatable :: SITE_soil_lambda            (:)
-#ifdef vanGenuchten_Mualem_SOIL_MODEL
    real(r8), allocatable :: SITE_soil_theta_r           (:)
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
    real(r8), allocatable :: SITE_soil_alpha_vgm         (:)
    real(r8), allocatable :: SITE_soil_L_vgm             (:)
    real(r8), allocatable :: SITE_soil_n_vgm             (:)
@@ -83,6 +83,7 @@ MODULE MOD_SingleSrfdata
    real(r8) :: SITE_dbedrock = 0.
 
    real(r8) :: SITE_topography = 0.
+   real(r8) :: SITE_topostd    = 0.
 
    integer , allocatable :: SITE_urbtyp   (:)
 
@@ -244,6 +245,8 @@ CONTAINS
          CALL ncio_read_serial (fsrfdata, 'soil_alpha_vgm        ', SITE_soil_alpha_vgm        )
          CALL ncio_read_serial (fsrfdata, 'soil_L_vgm            ', SITE_soil_L_vgm            )
          CALL ncio_read_serial (fsrfdata, 'soil_n_vgm            ', SITE_soil_n_vgm            )
+#else
+         SITE_soil_theta_r(:) = 0.
 #endif
          CALL ncio_read_serial (fsrfdata, 'soil_BA_alpha         ', SITE_soil_BA_alpha         )
          CALL ncio_read_serial (fsrfdata, 'soil_BA_beta          ', SITE_soil_BA_beta          )
@@ -259,6 +262,7 @@ CONTAINS
       IF ((.not. mksrfdata) .or. USE_SITE_topography) THEN
          ! otherwise, retrieve from database by Aggregation_Topography.F90
          CALL ncio_read_serial (fsrfdata, 'elevation', SITE_topography)
+         CALL ncio_read_serial (fsrfdata, 'elvstd   ', SITE_topostd   )
       ENDIF
 
    END SUBROUTINE read_surface_data_single
@@ -382,6 +386,8 @@ CONTAINS
          CALL ncio_read_serial (fsrfdata, 'soil_alpha_vgm        ', SITE_soil_alpha_vgm        )
          CALL ncio_read_serial (fsrfdata, 'soil_L_vgm            ', SITE_soil_L_vgm            )
          CALL ncio_read_serial (fsrfdata, 'soil_n_vgm            ', SITE_soil_n_vgm            )
+#else
+         SITE_soil_theta_r(:) = 0.
 #endif
          CALL ncio_read_serial (fsrfdata, 'soil_BA_alpha         ', SITE_soil_BA_alpha         )
          CALL ncio_read_serial (fsrfdata, 'soil_BA_beta          ', SITE_soil_BA_beta          )
@@ -397,6 +403,7 @@ CONTAINS
       IF ((.not. mksrfdata) .or. USE_SITE_topography) THEN
          ! otherwise, retrieve from database by Aggregation_Topography.F90
          CALL ncio_read_serial (fsrfdata, 'elevation', SITE_topography)
+         CALL ncio_read_serial (fsrfdata, 'elvstd   ', SITE_topostd   )
       ENDIF
 
    END SUBROUTINE read_urban_surface_data_single
@@ -559,6 +566,9 @@ CONTAINS
 
       CALL ncio_write_serial (fsrfdata, 'elevation', SITE_topography)
       CALL ncio_put_attr     (fsrfdata, 'elevation', 'source', datasource(USE_SITE_topography))
+
+      CALL ncio_write_serial (fsrfdata, 'elvstd', SITE_topostd)
+      CALL ncio_put_attr     (fsrfdata, 'elvstd', 'source', datasource(USE_SITE_topostd))
 
    END SUBROUTINE write_surface_data_single
 
@@ -737,6 +747,9 @@ CONTAINS
       CALL ncio_write_serial (fsrfdata, 'elevation', SITE_topography)
       CALL ncio_put_attr     (fsrfdata, 'elevation', 'source', datasource(USE_SITE_topography))
 
+      CALL ncio_write_serial (fsrfdata, 'elvstd', SITE_topostd)
+      CALL ncio_put_attr     (fsrfdata, 'elvstd', 'source', datasource(USE_SITE_topostd))
+
    END SUBROUTINE write_urban_surface_data_single
 
    ! ---------
@@ -799,8 +812,8 @@ CONTAINS
       IF (allocated(SITE_soil_k_solids         )) deallocate(SITE_soil_k_solids         )
       IF (allocated(SITE_soil_psi_s            )) deallocate(SITE_soil_psi_s            )
       IF (allocated(SITE_soil_lambda           )) deallocate(SITE_soil_lambda           )
-#ifdef vanGenuchten_Mualem_SOIL_MODEL
       IF (allocated(SITE_soil_theta_r          )) deallocate(SITE_soil_theta_r          )
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
       IF (allocated(SITE_soil_alpha_vgm        )) deallocate(SITE_soil_alpha_vgm        )
       IF (allocated(SITE_soil_L_vgm            )) deallocate(SITE_soil_L_vgm            )
       IF (allocated(SITE_soil_n_vgm            )) deallocate(SITE_soil_n_vgm            )

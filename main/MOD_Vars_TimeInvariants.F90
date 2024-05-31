@@ -23,6 +23,9 @@ MODULE MOD_Vars_PFTimeInvariants
    real(r8), allocatable :: pftfrac     (:)    !PFT fractional cover
    real(r8), allocatable :: htop_p      (:)    !canopy top height [m]
    real(r8), allocatable :: hbot_p      (:)    !canopy bottom height [m]
+#ifdef CROP
+   real(r8), allocatable :: cropfrac    (:)    !Crop fractional cover
+#endif
 
 ! PUBLIC MEMBER FUNCTIONS:
    PUBLIC :: allocate_PFTimeInvariants
@@ -47,6 +50,7 @@ CONTAINS
    ! --------------------------------------------------------------------
 
    USE MOD_SPMD_Task
+   USE MOD_LandPatch, only : numpatch
    USE MOD_LandPFT,   only : numpft
    USE MOD_Precision
    IMPLICIT NONE
@@ -57,6 +61,9 @@ CONTAINS
             allocate (pftfrac       (numpft))
             allocate (htop_p        (numpft))
             allocate (hbot_p        (numpft))
+#ifdef CROP
+            allocate (cropfrac    (numpatch))
+#endif
          ENDIF
       ENDIF
 
@@ -65,21 +72,18 @@ CONTAINS
    SUBROUTINE READ_PFTimeInvariants (file_restart)
 
    USE MOD_NetCDFVector
+   USE MOD_LandPatch
    USE MOD_LandPFT
-#ifdef CROP
-   USE MOD_LandCrop,  only : pctshrpch
-   USE MOD_LandPatch, only : landpatch
-#endif
    IMPLICIT NONE
 
-   character(LEN=*), intent(in) :: file_restart
+   character(len=*), intent(in) :: file_restart
 
       CALL ncio_read_vector (file_restart, 'pftclass', landpft, pftclass) !
       CALL ncio_read_vector (file_restart, 'pftfrac ', landpft, pftfrac ) !
       CALL ncio_read_vector (file_restart, 'htop_p  ', landpft, htop_p  ) !
       CALL ncio_read_vector (file_restart, 'hbot_p  ', landpft, hbot_p  ) !
 #ifdef CROP
-      CALL ncio_read_vector (file_restart, 'pct_crops', landpatch, pctshrpch) !
+      CALL ncio_read_vector (file_restart, 'cropfrac ', landpatch, cropfrac) !
 #endif
 
    END SUBROUTINE READ_PFTimeInvariants
@@ -88,19 +92,16 @@ CONTAINS
 
    USE MOD_NetCDFVector
    USE MOD_LandPFT
+   USE MOD_LandPatch
    USE MOD_Namelist
    USE MOD_Vars_Global
-#ifdef CROP
-   USE MOD_LandCrop,  only : pctshrpch
-   USE MOD_LandPatch, only : landpatch
-#endif
    IMPLICIT NONE
 
    ! Local variables
    character(len=*), intent(in) :: file_restart
    integer :: compress
 
-      compress = DEF_REST_COMPRESS_LEVEL
+      compress = DEF_REST_CompressLevel
 
       CALL ncio_create_file_vector (file_restart, landpft)
       CALL ncio_define_dimension_vector (file_restart, landpft, 'pft')
@@ -112,7 +113,7 @@ CONTAINS
 
 #ifdef CROP
       CALL ncio_define_dimension_vector (file_restart, landpatch, 'patch')
-      CALL ncio_write_vector (file_restart, 'pct_crops', 'patch', landpatch, pctshrpch, compress) !
+      CALL ncio_write_vector (file_restart, 'cropfrac', 'patch', landpatch, cropfrac, compress) !
 #endif
 
    END SUBROUTINE WRITE_PFTimeInvariants
@@ -123,9 +124,6 @@ CONTAINS
 ! --------------------------------------------------
    USE MOD_SPMD_Task
    USE MOD_LandPFT
-#ifdef CROP
-   USE MOD_LandCrop, only : pctshrpch
-#endif
 
       IF (p_is_worker) THEN
          IF (numpft > 0) THEN
@@ -133,10 +131,10 @@ CONTAINS
             deallocate (pftfrac )
             deallocate (htop_p  )
             deallocate (hbot_p  )
-         ENDIF
 #ifdef CROP
-         IF (allocated(pctshrpch)) deallocate(pctshrpch)
+            deallocate (cropfrac)
 #endif
+         ENDIF
       ENDIF
 
    END SUBROUTINE deallocate_PFTimeInvariants
@@ -145,16 +143,13 @@ CONTAINS
    SUBROUTINE check_PFTimeInvariants ()
 
    USE MOD_RangeCheck
-#ifdef CROP
-   USE MOD_LandCrop, only : pctshrpch
-#endif
    IMPLICIT NONE
 
       CALL check_vector_data ('pftfrac', pftfrac) !
       CALL check_vector_data ('htop_p ', htop_p ) !
       CALL check_vector_data ('hbot_p ', hbot_p ) !
 #ifdef CROP
-      CALL check_vector_data ('pct crop', pctshrpch) !
+      CALL check_vector_data ('cropfrac', cropfrac) !
 #endif
 
    END SUBROUTINE check_PFTimeInvariants
@@ -211,14 +206,22 @@ MODULE MOD_Vars_TimeInvariants
    real(r8), allocatable :: porsl        (:,:)  !fraction of soil that is voids [-]
    real(r8), allocatable :: psi0         (:,:)  !minimum soil suction [mm] (NOTE: "-" valued)
    real(r8), allocatable :: bsw          (:,:)  !clapp and hornbereger "b" parameter [-]
-#ifdef vanGenuchten_Mualem_SOIL_MODEL
    real(r8), allocatable :: theta_r      (:,:)  !residual moisture content [-]
+   real(r8), allocatable :: BVIC         (:,:)  !b parameter in Fraction of saturated soil in a grid calculated by VIC
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
    real(r8), allocatable :: alpha_vgm    (:,:)  !a parameter corresponding approximately to the inverse of the air-entry value
    real(r8), allocatable :: L_vgm        (:,:)  !pore-connectivity parameter [dimensionless]
    real(r8), allocatable :: n_vgm        (:,:)  !a shape parameter [dimensionless]
    real(r8), allocatable :: sc_vgm       (:,:)  !saturation at the air entry value in the classical vanGenuchten model [-]
    real(r8), allocatable :: fc_vgm       (:,:)  !a scaling factor by using air entry value in the Mualem model [-]
 #endif
+
+   real(r8), allocatable :: vic_b_infilt (:)
+   real(r8), allocatable :: vic_Dsmax    (:)
+   real(r8), allocatable :: vic_Ds       (:)
+   real(r8), allocatable :: vic_Ws       (:)
+   real(r8), allocatable :: vic_c        (:)
+
    real(r8), allocatable :: hksati       (:,:)  !hydraulic conductivity at saturation [mm h2o/s]
    real(r8), allocatable :: csol         (:,:)  !heat capacity of soil solids [J/(m3 K)]
    real(r8), allocatable :: k_solids     (:,:)  !thermal conductivity of soil solids [W/m-K]
@@ -233,6 +236,8 @@ MODULE MOD_Vars_TimeInvariants
    real(r8), allocatable :: dbedrock       (:)  !depth to bedrock
    integer , allocatable :: ibedrock       (:)  !bedrock level
 
+   real(r8), allocatable :: topoelv (:)  !elevation above sea level [m]
+   real(r8), allocatable :: topostd (:)  !standard deviation of elevation [m]
 
    real(r8) :: zlnd                             !roughness length for soil [m]
    real(r8) :: zsno                             !roughness length for snow [m]
@@ -306,26 +311,37 @@ CONTAINS
             allocate (porsl        (nl_soil,numpatch))
             allocate (psi0         (nl_soil,numpatch))
             allocate (bsw          (nl_soil,numpatch))
+            allocate (theta_r      (nl_soil,numpatch))
+            allocate (BVIC         (nl_soil,numpatch))
+
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
-           allocate (theta_r      (nl_soil,numpatch))
-           allocate (alpha_vgm    (nl_soil,numpatch))
-           allocate (L_vgm        (nl_soil,numpatch))
-           allocate (n_vgm        (nl_soil,numpatch))
-           allocate (sc_vgm       (nl_soil,numpatch))
-           allocate (fc_vgm       (nl_soil,numpatch))
+            allocate (alpha_vgm    (nl_soil,numpatch))
+            allocate (L_vgm        (nl_soil,numpatch))
+            allocate (n_vgm        (nl_soil,numpatch))
+            allocate (sc_vgm       (nl_soil,numpatch))
+            allocate (fc_vgm       (nl_soil,numpatch))
 #endif
-           allocate (hksati       (nl_soil,numpatch))
-           allocate (csol         (nl_soil,numpatch))
-           allocate (k_solids     (nl_soil,numpatch))
-           allocate (dksatu       (nl_soil,numpatch))
-           allocate (dksatf       (nl_soil,numpatch))
-           allocate (dkdry        (nl_soil,numpatch))
-           allocate (BA_alpha     (nl_soil,numpatch))
-           allocate (BA_beta      (nl_soil,numpatch))
-           allocate (htop                 (numpatch))
-           allocate (hbot                 (numpatch))
-           allocate (dbedrock             (numpatch))
-           allocate (ibedrock             (numpatch))
+
+            allocate (vic_b_infilt (numpatch))
+            allocate (vic_Dsmax    (numpatch))
+            allocate (vic_Ds       (numpatch))
+            allocate (vic_Ws       (numpatch))
+            allocate (vic_c        (numpatch))
+
+            allocate (hksati       (nl_soil,numpatch))
+            allocate (csol         (nl_soil,numpatch))
+            allocate (k_solids     (nl_soil,numpatch))
+            allocate (dksatu       (nl_soil,numpatch))
+            allocate (dksatf       (nl_soil,numpatch))
+            allocate (dkdry        (nl_soil,numpatch))
+            allocate (BA_alpha     (nl_soil,numpatch))
+            allocate (BA_beta      (nl_soil,numpatch))
+            allocate (htop                 (numpatch))
+            allocate (hbot                 (numpatch))
+            allocate (dbedrock             (numpatch))
+            allocate (ibedrock             (numpatch))
+            allocate (topoelv              (numpatch))
+            allocate (topostd              (numpatch))
       ENDIF
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
@@ -364,11 +380,11 @@ CONTAINS
    IMPLICIT NONE
 
    integer         , intent(in) :: lc_year
-   character(LEN=*), intent(in) :: casename
-   character(LEN=*), intent(in) :: dir_restart
+   character(len=*), intent(in) :: casename
+   character(len=*), intent(in) :: dir_restart
 
    ! Local variables
-   character(LEN=256) :: file_restart, cyear
+   character(len=256) :: file_restart, cyear
 
       write(cyear,'(i4.4)') lc_year
       file_restart = trim(dir_restart) // '/const/' // trim(casename) //'_restart_const' // '_lc' // trim(cyear) // '.nc'
@@ -400,14 +416,23 @@ CONTAINS
       CALL ncio_read_vector (file_restart, 'porsl  ' ,     nl_soil, landpatch, porsl     ) ! fraction of soil that is voids [-]
       CALL ncio_read_vector (file_restart, 'psi0   ' ,     nl_soil, landpatch, psi0      ) ! minimum soil suction [mm] (NOTE: "-" valued)
       CALL ncio_read_vector (file_restart, 'bsw    ' ,     nl_soil, landpatch, bsw       ) ! clapp and hornbereger "b" parameter [-]
-#ifdef vanGenuchten_Mualem_SOIL_MODEL
       CALL ncio_read_vector (file_restart, 'theta_r  ' ,   nl_soil, landpatch, theta_r   ) ! residual moisture content [-]
+      CALL ncio_read_vector (file_restart, 'BVIC  ' ,   nl_soil, landpatch, BVIC   )       ! b parameter in Fraction of saturated soil in a grid calculated by VIC
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
       CALL ncio_read_vector (file_restart, 'alpha_vgm' ,   nl_soil, landpatch, alpha_vgm ) ! a parameter corresponding approximately to the inverse of the air-entry value
       CALL ncio_read_vector (file_restart, 'L_vgm    ' ,   nl_soil, landpatch, L_vgm     ) ! pore-connectivity parameter [dimensionless]
       CALL ncio_read_vector (file_restart, 'n_vgm    ' ,   nl_soil, landpatch, n_vgm     ) ! a shape parameter [dimensionless]
       CALL ncio_read_vector (file_restart, 'sc_vgm   ' ,   nl_soil, landpatch, sc_vgm    ) ! saturation at the air entry value in the classical vanGenuchten model [-]
       CALL ncio_read_vector (file_restart, 'fc_vgm   ' ,   nl_soil, landpatch, fc_vgm    ) ! a scaling factor by using air entry value in the Mualem model [-]
 #endif
+
+
+      CALL ncio_read_vector (file_restart, 'vic_b_infilt', landpatch, vic_b_infilt)
+      CALL ncio_read_vector (file_restart, 'vic_Dsmax'   , landpatch, vic_Dsmax   )
+      CALL ncio_read_vector (file_restart, 'vic_Ds'      , landpatch, vic_Ds      )
+      CALL ncio_read_vector (file_restart, 'vic_Ws'      , landpatch, vic_Ws      )
+      CALL ncio_read_vector (file_restart, 'vic_c'       , landpatch, vic_c       )
+
       CALL ncio_read_vector (file_restart, 'hksati ' ,     nl_soil, landpatch, hksati )    ! hydraulic conductivity at saturation [mm h2o/s]
       CALL ncio_read_vector (file_restart, 'csol   ' ,     nl_soil, landpatch, csol   )    ! heat capacity of soil solids [J/(m3 K)]
       CALL ncio_read_vector (file_restart, 'k_solids',     nl_soil, landpatch, k_solids)   ! thermal conductivity of soil solids [W/m-K]
@@ -423,6 +448,9 @@ CONTAINS
          CALL ncio_read_vector (file_restart, 'debdrock' ,    landpatch, dbedrock)         !
          CALL ncio_read_vector (file_restart, 'ibedrock' ,    landpatch, ibedrock)         !
       ENDIF
+
+      CALL ncio_read_vector (file_restart, 'topoelv', landpatch, topoelv)         !
+      CALL ncio_read_vector (file_restart, 'topostd', landpatch, topostd)         !
 
       CALL ncio_read_bcast_serial (file_restart, 'zlnd  ', zlnd  ) ! roughness length for soil [m]
       CALL ncio_read_bcast_serial (file_restart, 'zsno  ', zsno  ) ! roughness length for snow [m]
@@ -476,7 +504,7 @@ CONTAINS
    ! Original version: Yongjiu Dai, September 15, 1999, 03/2014
    !=======================================================================
 
-   USE MOD_Namelist, only : DEF_REST_COMPRESS_LEVEL, DEF_USE_BEDROCK
+   USE MOD_Namelist, only : DEF_REST_CompressLevel, DEF_USE_BEDROCK
    USE MOD_SPMD_Task
    USE MOD_NetCDFSerial
    USE MOD_NetCDFVector
@@ -493,7 +521,7 @@ CONTAINS
    character(len=256) :: file_restart, cyear
    integer :: compress
 
-      compress = DEF_REST_COMPRESS_LEVEL
+      compress = DEF_REST_CompressLevel
 
       write(cyear,'(i4.4)') lc_year
 
@@ -546,15 +574,23 @@ CONTAINS
       CALL ncio_write_vector (file_restart, 'porsl     ', 'soil', nl_soil, 'patch', landpatch, porsl     , compress) ! fraction of soil that is voids [-]
       CALL ncio_write_vector (file_restart, 'psi0      ', 'soil', nl_soil, 'patch', landpatch, psi0      , compress) ! minimum soil suction [mm] (NOTE: "-" valued)
       CALL ncio_write_vector (file_restart, 'bsw       ', 'soil', nl_soil, 'patch', landpatch, bsw       , compress) ! clapp and hornbereger "b" parameter [-]
+      CALL ncio_write_vector (file_restart, 'theta_r  ' , 'soil', nl_soil, 'patch', landpatch, theta_r   , compress) ! residual moisture content [-]
+      CALL ncio_write_vector (file_restart, 'BVIC    '  , 'soil', nl_soil, 'patch', landpatch, BVIC      , compress) ! b parameter in Fraction of saturated soil in a grid calculated by VIC
 
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
-      CALL ncio_write_vector (file_restart, 'theta_r  ' , 'soil', nl_soil, 'patch', landpatch, theta_r   , compress) ! residual moisture content [-]
       CALL ncio_write_vector (file_restart, 'alpha_vgm' , 'soil', nl_soil, 'patch', landpatch, alpha_vgm , compress) ! a parameter corresponding approximately to the inverse of the air-entry value
       CALL ncio_write_vector (file_restart, 'L_vgm    ' , 'soil', nl_soil, 'patch', landpatch, L_vgm     , compress) ! pore-connectivity parameter [dimensionless]
       CALL ncio_write_vector (file_restart, 'n_vgm    ' , 'soil', nl_soil, 'patch', landpatch, n_vgm     , compress) ! a shape parameter [dimensionless]
       CALL ncio_write_vector (file_restart, 'sc_vgm   ' , 'soil', nl_soil, 'patch', landpatch, sc_vgm    , compress) ! saturation at the air entry value in the classical vanGenuchten model [-]
       CALL ncio_write_vector (file_restart, 'fc_vgm   ' , 'soil', nl_soil, 'patch', landpatch, fc_vgm    , compress) ! a scaling factor by using air entry value in the Mualem model [-]
 #endif
+
+      CALL ncio_write_vector (file_restart, 'vic_b_infilt', 'patch', landpatch, vic_b_infilt)
+      CALL ncio_write_vector (file_restart, 'vic_Dsmax'   , 'patch', landpatch, vic_Dsmax   )
+      CALL ncio_write_vector (file_restart, 'vic_Ds'      , 'patch', landpatch, vic_Ds      )
+      CALL ncio_write_vector (file_restart, 'vic_Ws'      , 'patch', landpatch, vic_Ws      )
+      CALL ncio_write_vector (file_restart, 'vic_c'       , 'patch', landpatch, vic_c       )
+
       CALL ncio_write_vector (file_restart, 'hksati   ' , 'soil', nl_soil, 'patch', landpatch, hksati    , compress) ! hydraulic conductivity at saturation [mm h2o/s]
       CALL ncio_write_vector (file_restart, 'csol     ' , 'soil', nl_soil, 'patch', landpatch, csol      , compress) ! heat capacity of soil solids [J/(m3 K)]
       CALL ncio_write_vector (file_restart, 'k_solids ' , 'soil', nl_soil, 'patch', landpatch, k_solids  , compress) ! thermal conductivity of soil solids [W/m-K]
@@ -568,9 +604,12 @@ CONTAINS
       CALL ncio_write_vector (file_restart, 'hbot' , 'patch', landpatch, hbot)                                       !
 
       IF(DEF_USE_BEDROCK)THEN
-         CALL ncio_write_vector (file_restart, 'debdrock' , 'patch', landpatch, dbedrock)                            !
-         CALL ncio_write_vector (file_restart, 'ibedrock' , 'patch', landpatch, ibedrock)                            !
+         CALL ncio_write_vector (file_restart, 'debdrock' , 'patch', landpatch, dbedrock)
+         CALL ncio_write_vector (file_restart, 'ibedrock' , 'patch', landpatch, ibedrock)
       ENDIF
+
+      CALL ncio_write_vector (file_restart, 'topoelv', 'patch', landpatch, topoelv)
+      CALL ncio_write_vector (file_restart, 'topostd', 'patch', landpatch, topostd)
 
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
@@ -578,7 +617,7 @@ CONTAINS
 
       if (p_is_master) then
 
-#ifndef VectorInOneFile
+#if (!defined(VectorInOneFileS) && !defined(VectorInOneFileP))
          CALL ncio_create_file (file_restart)
 #endif
 
@@ -663,14 +702,22 @@ CONTAINS
             deallocate (porsl          )
             deallocate (psi0           )
             deallocate (bsw            )
-#ifdef vanGenuchten_Mualem_SOIL_MODEL
             deallocate (theta_r        )
+            deallocate (BVIC           )
+
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
             deallocate (alpha_vgm      )
             deallocate (L_vgm          )
             deallocate (n_vgm          )
             deallocate (sc_vgm         )
             deallocate (fc_vgm         )
 #endif
+            deallocate (vic_b_infilt   )
+            deallocate (vic_Dsmax      )
+            deallocate (vic_Ds         )
+            deallocate (vic_Ws         )
+            deallocate (vic_c          )
+
             deallocate (hksati         )
             deallocate (csol           )
             deallocate (k_solids       )
@@ -685,6 +732,9 @@ CONTAINS
 
             deallocate (dbedrock       )
             deallocate (ibedrock       )
+
+            deallocate (topoelv        )
+            deallocate (topostd        )
 
          ENDIF
       ENDIF
@@ -762,6 +812,10 @@ CONTAINS
       IF(DEF_USE_BEDROCK)THEN
          CALL check_vector_data ('dbedrock     [m]     ', dbedrock    ) !
       ENDIF
+
+      CALL check_vector_data ('topoelv      [m]     ', topoelv     ) !
+      CALL check_vector_data ('topostd      [m]     ', topostd     ) !
+      CALL check_vector_data ('BVIC        [-]      ', BVIC        ) !
 
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)

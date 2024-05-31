@@ -33,6 +33,7 @@ CONTAINS
    USE MOD_Utils
    USE MOD_Pixelset
    USE MOD_Utils
+   USE MOD_UserDefFun
    USE MOD_Mesh
    USE MOD_LandElm
    USE MOD_LandPatch
@@ -52,11 +53,7 @@ CONTAINS
    integer,   allocatable :: order    (:)
       
       IF (p_is_worker) THEN
-#if (defined CROP) 
-         CALL elm_patch%build (landelm, landpatch, use_frac = .true., sharedfrac = pctshrpch)
-#else
          CALL elm_patch%build (landelm, landpatch, use_frac = .true.)
-#endif
       ENDIF
 
       IF (p_is_worker) THEN
@@ -142,7 +139,7 @@ CONTAINS
 
 #ifdef USEMPI
          DO i = 1, totalnumelm
-            iwork = findloc(order(i) > vec_worker_dsp, .true., dim=1, back=.true.) - 1
+            iwork = findloc_ud(order(i) > vec_worker_dsp, back=.true.) - 1
             elm_data_address(iwork)%val(order(i)-vec_worker_dsp(iwork)) = i
          ENDDO
 #else

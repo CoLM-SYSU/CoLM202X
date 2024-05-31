@@ -8,8 +8,8 @@
 ! 2. Land subgrid type classification:
 !    Select one of the following options.
 #undef LULC_USGS
-#undef LULC_IGBP
-#define LULC_IGBP_PFT
+#define LULC_IGBP
+#undef LULC_IGBP_PFT
 #undef LULC_IGBP_PC
 
 ! 2.1 3D Urban model (put it temporarily here):
@@ -44,7 +44,7 @@
 #undef CaMa_Flood
 
 ! 7. If defined, BGC model is used.
-#define BGC
+#undef BGC
 
 !    Conflicts :  only used when LULC_IGBP_PFT is defined.
 #ifndef LULC_IGBP_PFT
@@ -63,4 +63,13 @@
 ! 9. If defined, data assimilation is used.
 #undef DataAssimilation
 
-#define VectorInOneFile
+! 10. Vector write model.
+!     1) "VectorInOneFileP" : write vector data in one file in parallel mode;  
+!     2) "VectorInOneFileS" : write vector data in one file in serial mode;  
+!     3) Neither "VectorInOneFileS" nor "VectorInOneFileP" is defined : 
+!        write vector data in separate files.  
+#undef VectorInOneFileP
+!     Conflict
+#ifdef VectorInOneFileP
+#undef VectorInOneFileS
+#endif
