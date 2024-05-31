@@ -159,8 +159,10 @@ ENDIF
 
                ! when there is missing urban types
                !NOTE@tungwz: need duoble check below and add appropriate annotations
+               ! check if there is urban pixel without URBAN ID
                imiss = count(ibuff<1 .or. ibuff>N_URB)
                IF (imiss > 0) THEN
+                  ! Calculate the relative ratio of each urban types by excluding urban pixels withoht URBAN ID
                   WHERE (ibuff<1 .or. ibuff>N_URB)
                      area_one = 0
                   END WHERE
@@ -176,6 +178,7 @@ ENDIF
                      buff_p(:) = buff_p(:)/sum(area_one)
                   ENDIF
 
+                  ! The number of URBAN ID of each type is assigned to urban pixels without URBAN ID in relative proportion
                   DO iurb = 1, N_URB-1
                      buff_count(iurb) = int(buff_p(iurb)*imiss)
                   ENDDO
@@ -184,12 +187,14 @@ ENDIF
                   ! Some urban patches and NCAR/LCZ data are inconsistent (NCAR/LCZ has no urban ID),
                   ! so the these points are assigned
                   IF (all(buff_count==0)) THEN
+                     ! If none of the urban pixels have an URBAN ID, they are assigned directly
                      IF (DEF_URBAN_type_scheme == 1) THEN
                         ibuff = 3
                      ELSEIF (DEF_URBAN_type_scheme == 2) THEN
                         ibuff = 9
                      ENDIF
                   ELSE
+                     ! Otherwise, URBAN ID are assigned based on the previously calculated number
                      DO ib = 1, size(ibuff)
                         IF (ibuff(ib)<1 .or. ibuff(ib)>N_URB) THEN
                            type_loop: DO iurb = 1, N_URB
