@@ -41,6 +41,7 @@ CONTAINS
    !---------------------------------------
    SUBROUTINE hist_gridded_init (dir_hist, lulcc_call)
 
+   USE MOD_SPMD_Task
    USE MOD_Vars_Global
    USE MOD_Namelist
    USE MOD_Block
