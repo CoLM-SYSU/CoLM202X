@@ -512,6 +512,7 @@ CONTAINS
         rout               ,&! out-going longwave radiation from roof
         lout               ,&! out-going longwave radiation
         lnet               ,&! overall net longwave radiation
+        dlw                ,&! change of net longwave radiation
         dlwsun             ,&! change of net longwave radiation of sunlit wall
         dlwsha             ,&! change of net longwave radiation of shaded wall
         dlgimp             ,&! change of net longwave radiation of impervious road
@@ -649,6 +650,10 @@ CONTAINS
       dlwsha = lwsha
       dlgimp = lgimp
       dlgper = lgper
+
+      dlw = dlwsun*fcover(1) + dlwsha*fcover(2) &
+          + dlgimp*fcover(3) + dlgper*fcover(4) + dlveg*fcover(5)
+      dlw = dlw*(1-flake)
 
       fg  = 1. - froof
 
@@ -1191,11 +1196,6 @@ CONTAINS
       !assim  = assim *(1-flake)
       !respc  = respc *(1-flake)
 
-      ! ground heat flux
-      fgrnd = sabg + lnet - fseng &
-            - (lfevp_roof + lfevp_gimp + lfevp_gper)*(1-flake) &
-            - lfevpa_lake*flake
-
       ! effective ground temperature, simple average
       ! 12/01/2021, yuan: !TODO Bugs. temperature cannot be weighted like below.
       !t_grnd = troof*fcover(0) + twsun*fcover(1) + twsha*fcover(2) + &
@@ -1317,13 +1317,21 @@ CONTAINS
       !emis = olru / olrb
 
 !=======================================================================
-! [10] energy balance error
+! [10] ground heat flux and energy balance error
 !=======================================================================
 
-      errore = sabg + lnet + sabv*fveg*(1-flake) + lveg*fveg*(1-flake) &
+      ! ground heat flux
+      fgrnd = sabg + lnet - dlout*fg*(1-flake) &
+            - 4.*eroof*stefnc*troof_bef**3*dT(0)*froof*(1-flake)&
+            - fseng - (lfevp_roof + lfevp_gimp + lfevp_gper)*(1-flake) &
+            - lfevpa_lake*flake
+
+      ! energy balance check
+      errore = sabg + sabv*fveg*(1-flake) &
+             + forc_frl + dlw*(1-flake) - olrg &
              + (Fhac + Fwst + Fach + vehc + meta)*(1-flake) &
              - fsena - lfevpa - fgrnd &
-             - dheatl
+             - dheatl*fveg*(1-flake)
 
       ! deallocate memory
       deallocate ( Ainv   )
