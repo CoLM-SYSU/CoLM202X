@@ -1296,11 +1296,9 @@ CONTAINS
       olrg = lout*fg + rout*froof
       olrg = olrg*(1-flake) + olrg_lake*flake
 
-      !print*, forc_t, tgper, tgimp, troof, twsha, twsun
-
-      IF (olrg < 0) THEN !fordebug
-         print*, ipatch, olrg
-         write(6,*) ipatch,sabv,sabg,forc_frl,olrg,fsenl,fseng,hvap*fevpl,lfevpa
+      IF (olrg < 0) THEN
+         write(6,*) 'Urban_THERMAL.F90: Urban out-going longwave radiation < 0!'
+         write(6,*) ipatch,olrg,lout,dlout,rout,olrg_lake,fg,froof,flake
          CALL CoLM_stop()
       ENDIF
 
@@ -1349,8 +1347,13 @@ CONTAINS
 
 #if (defined CoLMDEBUG)
       IF (abs(errore)>.5) THEN
-      write(6,*) 'THERMAL.F90: energy balance violation'
-      write(6,*) ipatch,errore,sabv,sabg,forc_frl,olrg,fsenl,fseng,hvap*fevpl,lfevpa,xmf
+         write(6,*) 'Urban_THERMAL.F90: Urban energy balance violation'
+         write(6,*) ipatch,errore,sabg,sabv*fveg*(1-flake)
+         write(6,*) forc_frl,dlw*(1-flake),olrg
+         write(6,*) Fhac,Fwst,Fach,vehc,meta,(1-flake)
+         write(6,*) fsena,lfevpa,fgrnd
+         write(6,*) dheatl*fveg*(1-flake)
+         CALL CoLM_stop()
       ENDIF
 100   format(10(f15.3))
 #endif
