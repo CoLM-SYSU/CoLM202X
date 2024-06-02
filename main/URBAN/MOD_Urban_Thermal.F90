@@ -651,10 +651,6 @@ CONTAINS
       dlgimp = lgimp
       dlgper = lgper
 
-      dlw = dlwsun*fcover(1) + dlwsha*fcover(2) &
-          + dlgimp*fcover(3) + dlgper*fcover(4) + dlveg*fcover(5)
-      dlw = dlw*(1-flake)
-
       fg  = 1. - froof
 
       IF (lai+sai>1.e-6 .and. fveg>0.) THEN
@@ -1163,6 +1159,10 @@ CONTAINS
       ENDIF
 
       fsena = fsena + Fhac + Fwst + Fach + vehc + meta
+
+      dlw = dlwsun*fcover(1) + dlwsha*fcover(2) &
+          + dlgimp*fcover(3) + dlgper*fcover(4) + dlveg*fcover(5)
+      dlw = dlw*(1-flake)
 
       ! flux/variable average weighted by fractional cover
       taux   = taux   *(1-flake) + taux_lake   *flake
