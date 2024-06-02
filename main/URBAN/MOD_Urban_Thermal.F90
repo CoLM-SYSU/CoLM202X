@@ -512,11 +512,13 @@ CONTAINS
         rout               ,&! out-going longwave radiation from roof
         lout               ,&! out-going longwave radiation
         lnet               ,&! overall net longwave radiation
-        lwsun_bef          ,&! net longwave radiation of sunlit wall
-        lwsha_bef          ,&! net longwave radiation of shaded wall
-        lgimp_bef          ,&! net longwave radiation of impervious road
-        lgper_bef          ,&! net longwave radiation of pervious road
-        dlout              ,&! changed out-going radiation due to temp change
+        dlw                ,&! change of net longwave radiation
+        dlwsun             ,&! change of net longwave radiation of sunlit wall
+        dlwsha             ,&! change of net longwave radiation of shaded wall
+        dlgimp             ,&! change of net longwave radiation of impervious road
+        dlgper             ,&! change of net longwave radiation of pervious road
+        dlveg              ,&! change of net longwave radiation of vegetation [W/m2]
+        dlout              ,&! change of out-going radiation due to temp change
         clroof             ,&! deriv of lroof wrt roof temp [w/m**2/k]
         clwsun             ,&! deriv of lwsun wrt wsun temp [w/m**2/k]
         clwsha             ,&! deriv of lwsha wrt wsha temp [w/m**2/k]
@@ -644,10 +646,14 @@ CONTAINS
       tgper_bef = tgper
 
       ! SAVE longwave for the last time
-      lwsun_bef = lwsun
-      lwsha_bef = lwsha
-      lgimp_bef = lgimp
-      lgper_bef = lgper
+      dlwsun = lwsun
+      dlwsha = lwsha
+      dlgimp = lgimp
+      dlgper = lgper
+
+      dlw = dlwsun*fcover(1) + dlwsha*fcover(2) &
+          + dlgimp*fcover(3) + dlgper*fcover(4) + dlveg*fcover(5)
+      dlw = dlw*(1-flake)
 
       fg  = 1. - froof
 
@@ -788,10 +794,10 @@ CONTAINS
          IF (fcover(4) >0.) lgper = lgper / fcover(4) * fg !/ fsoil
 
          ! added last time value
-         lwsun = lwsun + lwsun_bef
-         lwsha = lwsha + lwsha_bef
-         lgimp = lgimp + lgimp_bef
-         lgper = lgper + lgper_bef
+         lwsun = lwsun + dlwsun
+         lwsha = lwsha + dlwsha
+         lgimp = lgimp + dlgimp
+         lgper = lgper + dlgper
       ENDIF
 
       ! roof net longwave
@@ -1156,6 +1162,8 @@ CONTAINS
          fevpa  = fevpg
       ENDIF
 
+      fsena = fsena + Fhac + Fwst + Fach + vehc + meta
+
       ! flux/variable average weighted by fractional cover
       taux   = taux  *(1-flake) + taux_lake  *flake
       tauy   = tauy  *(1-flake) + tauy_lake  *flake
@@ -1187,12 +1195,6 @@ CONTAINS
       !etr    = etr   *(1-flake)
       !assim  = assim *(1-flake)
       !respc  = respc *(1-flake)
-
-      ! ground heat flux
-      fgrnd = sabg + lnet - fseng &
-            - (lfevp_roof + lfevp_gimp + lfevp_gper)*(1-flake) &
-            - lfevpa_lake*flake &
-            - (Fhac + Fhah)*(1-flake)
 
       ! effective ground temperature, simple average
       ! 12/01/2021, yuan: !TODO Bugs. temperature cannot be weighted like below.
@@ -1254,36 +1256,36 @@ CONTAINS
       ENDIF
 
 !=======================================================================
-! [9] Calculate the change rate of long-wave radiation caused by temperature change
+! [9] Calculate the change of long-wave radiation caused by temperature change
 !=======================================================================
 
       dX = matmul(Ainv, dBdT*dT(1:))
-      lwsun = ( ewall*dX(1) - dBdT(1)*dT(1) ) / (1-ewall)
-      lwsha = ( ewall*dX(2) - dBdT(2)*dT(2) ) / (1-ewall)
-      lgimp = ( egimp*dX(3) - dBdT(3)*dT(3) ) / (1-egimp)
-      lgper = ( egper*dX(4) - dBdT(4)*dT(4) ) / (1-egper)
+      dlwsun = ( ewall*dX(1) - dBdT(1)*dT(1) ) / (1-ewall)
+      dlwsha = ( ewall*dX(2) - dBdT(2)*dT(2) ) / (1-ewall)
+      dlgimp = ( egimp*dX(3) - dBdT(3)*dT(3) ) / (1-egimp)
+      dlgper = ( egper*dX(4) - dBdT(4)*dT(4) ) / (1-egper)
 
       IF ( doveg ) THEN
-         lveg = ( sum(dX(1:5)*VegVF(1:5))*ev )
+         dlveg = ( sum(dX(1:5)*VegVF(1:5))*ev )
       ELSE
-         lveg = 0.
+         dlveg = 0.
       ENDIF
 
       dlout = sum( dX * SkyVF )
 
       ! Energy balance check
-      eb = lwsun + lwsha + lgimp + lgper + lveg + dlout
+      eb = dlwsun + dlwsha + dlgimp + dlgper + dlveg + dlout
 
       IF (abs(eb) > 1e-6) THEN
          print *, "Urban Vegetation Longwave - Energy Balance Check error!", eb
       ENDIF
 
       ! for per unit surface
-      IF (fcover(1) > 0.) lwsun = lwsun / fcover(1) * fg !/ (4*fwsun*HL*fb/fg)
-      IF (fcover(2) > 0.) lwsha = lwsha / fcover(2) * fg !/ (4*fwsha*HL*fb/fg)
-      IF (fcover(3) > 0.) lgimp = lgimp / fcover(3) * fg !/ fgimp
-      IF (fcover(4) > 0.) lgper = lgper / fcover(4) * fg !/ fgper
-      IF ( doveg        ) lveg  = lveg  / fcover(5) * fg !/ fv/fg
+      IF (fcover(1) > 0.) dlwsun = dlwsun / fcover(1) * fg !/ (4*fwsun*HL*fb/fg)
+      IF (fcover(2) > 0.) dlwsha = dlwsha / fcover(2) * fg !/ (4*fwsha*HL*fb/fg)
+      IF (fcover(3) > 0.) dlgimp = dlgimp / fcover(3) * fg !/ fgimp
+      IF (fcover(4) > 0.) dlgper = dlgper / fcover(4) * fg !/ fgper
+      IF ( doveg        ) dlveg  = dlveg  / fcover(5) * fg !/ fv/fg
 
       ! calculate out going longwave by added the before value
       ! of lout and condsidered troof change
@@ -1294,11 +1296,9 @@ CONTAINS
       olrg = lout*fg + rout*froof
       olrg = olrg*(1-flake) + olrg_lake*flake
 
-      !print*, forc_t, tgper, tgimp, troof, twsha, twsun
-
-      IF (olrg < 0) THEN !fordebug
-         print*, ipatch, olrg
-         write(6,*) ipatch,sabv,sabg,forc_frl,olrg,fsenl,fseng,hvap*fevpl,lfevpa
+      IF (olrg < 0) THEN
+         write(6,*) 'Urban_THERMAL.F90: Urban out-going longwave radiation < 0!'
+         write(6,*) ipatch,olrg,lout,dlout,rout,olrg_lake,fg,froof,flake
          CALL CoLM_stop()
       ENDIF
 
@@ -1315,20 +1315,21 @@ CONTAINS
       !emis = olru / olrb
 
 !=======================================================================
-! [10] energy balance error
+! [10] ground heat flux and energy balance error
 !=======================================================================
 
       ! ground heat flux
-      fgrnd = sabg + lnet - fseng &
-            - (lfevp_roof + lfevp_gimp + lfevp_gper)*(1-flake) &
+      fgrnd = sabg + lnet - dlout*fg*(1-flake) &
+            - 4.*eroof*stefnc*troof_bef**3*dT(0)*froof*(1-flake)&
+            - fseng - (lfevp_roof + lfevp_gimp + lfevp_gper)*(1-flake) &
             - lfevpa_lake*flake
-            ! (Fhac + Fhah + Fach)*(1-flake)
 
-      errore = sabv*fveg*(1-flake) + sabg + lnet &
+      ! energy balance check
+      errore = sabg + sabv*fveg*(1-flake) &
+             + forc_frl + dlw*(1-flake) - olrg &
+             + (Fhac + Fwst + Fach + vehc + meta)*(1-flake) &
              - fsena - lfevpa - fgrnd &
-             ! (Fhac + Fwst + Fach + vech + meta)*(1-flake)&
-             ! (Fhac + Fhah)*(1-flake)
-             - dheatl
+             - dheatl*fveg*(1-flake)
 
       ! deallocate memory
       deallocate ( Ainv   )
@@ -1346,14 +1347,26 @@ CONTAINS
 
 #if (defined CoLMDEBUG)
       IF (abs(errore)>.5) THEN
-      write(6,*) 'THERMAL.F90: energy balance violation'
-      write(6,*) ipatch,errore,sabv,sabg,forc_frl,olrg,fsenl,fseng,hvap*fevpl,lfevpa,xmf
+         write(6,*) 'Urban_THERMAL.F90: Urban energy balance violation'
+         write(6,*) ipatch,errore,sabg,sabv*fveg*(1-flake)
+         write(6,*) forc_frl,dlw*(1-flake),olrg
+         write(6,*) Fhac,Fwst,Fach,vehc,meta,(1-flake)
+         write(6,*) fsena,lfevpa,fgrnd
+         write(6,*) dheatl*fveg*(1-flake)
+         CALL CoLM_stop()
       ENDIF
 100   format(10(f15.3))
 #endif
 
       ! diagnostic sabg only for pervious and impervious ground
-      sabg = sabgper*fgper + sabgimp*(1-fgper)
+      !sabg = sabgper*fgper + sabgimp*(1-fgper)
+
+      ! SAVE for next time run
+      lwsun = dlwsun
+      lwsha = dlwsha
+      lgimp = dlgimp
+      lgper = dlgper
+      lveg  = dlveg
 
 
 !=======================================================================

@@ -1333,11 +1333,11 @@ CONTAINS
         alphav         ! exponential extinction factor for u/k decline within trees
 
    real(r8) :: &
-        lwsun_bef,    &! change of lw for the last time
-        lwsha_bef,    &! change of lw for the last time
-        lgimp_bef,    &! change of lw for the last time
-        lgper_bef,    &! change of lw for the last time
-        lveg_bef       ! change of lw for the last time
+        dlwsun,       &! change of lw for the last time
+        dlwsha,       &! change of lw for the last time
+        dlgimp,       &! change of lw for the last time
+        dlgper,       &! change of lw for the last time
+        dlveg          ! change of lw for the last time
 
    real(r8), dimension(0:nurb) :: &
         tu,           &! termperature array
@@ -1466,11 +1466,11 @@ CONTAINS
       ENDDO
 
       ! Save the longwave for the last time
-      lwsun_bef = lwsun
-      lwsha_bef = lwsha
-      lgimp_bef = lgimp
-      lgper_bef = lgper
-      lveg_bef  = lveg
+      dlwsun = lwsun
+      dlwsha = lwsha
+      dlgimp = lgimp
+      dlgper = lgper
+      dlveg  = lveg
 
 !-----------------------------------------------------------------------
 ! Calculate the weighted qg, tg
@@ -2439,7 +2439,7 @@ CONTAINS
             ! taf(3) = (cah(3)*thm + cah(2)*taf(2) + cfh(0)*tu(0)*fc(0) + tmpw1)/&
             !          (cah(3) + cah(2) + cfh(0)*fc(0))
 
-            h_vehc  = vehc ! vech * 0.92
+            h_vehc  = vehc ! vehc * 0.92
             Hahe(1) = h_vehc + meta
             Hahe(2) = 4*hlr/(4*hlr+1)*(Fhac+Fwst) + Fach
             Hahe(3) = 1/(4*hlr+1)*(Fhac+Fwst)
@@ -2748,11 +2748,11 @@ CONTAINS
       IF (fcover(5) > 0.) lveg  = lveg  / fcover(5) * fg !/ fv/fg
 
       ! add previous longwave
-      lwsun = lwsun + lwsun_bef
-      lwsha = lwsha + lwsha_bef
-      lgimp = lgimp + lgimp_bef
-      lgper = lgper + lgper_bef
-      lveg  = lveg  + lveg_bef
+      lwsun = lwsun + dlwsun
+      lwsha = lwsha + dlwsha
+      lgimp = lgimp + dlgimp
+      lgper = lgper + dlgper
+      lveg  = lveg  + dlveg
 
       tafu = taf(2)
 
