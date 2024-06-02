@@ -513,6 +513,7 @@ CONTAINS
         lout               ,&! out-going longwave radiation
         lnet               ,&! overall net longwave radiation
         dlw                ,&! change of net longwave radiation
+        dlwbef             ,&! change of net longwave radiation
         dlwsun             ,&! change of net longwave radiation of sunlit wall
         dlwsha             ,&! change of net longwave radiation of shaded wall
         dlgimp             ,&! change of net longwave radiation of impervious road
@@ -796,9 +797,9 @@ CONTAINS
          lgper = lgper + dlgper
       ENDIF
 
-      dlw = dlwsun*fcover(1) + dlwsha*fcover(2) + dlgimp*fcover(3) + dlgper*fcover(4)
-      IF ( doveg) dlw = dlw + dlveg*fcover(5)
-      dlw = dlw*(1-flake)
+      dlwbef = dlwsun*fcover(1) + dlwsha*fcover(2) + dlgimp*fcover(3) + dlgper*fcover(4)
+      IF ( doveg) dlwbef = dlwbef + dlveg*fcover(5)
+      dlwbef = dlwbef*(1-flake)
 
       ! roof net longwave
       lroof = eroof*forc_frl - eroof*stefnc*troof**4
@@ -1287,6 +1288,10 @@ CONTAINS
       IF (fcover(4) > 0.) dlgper = dlgper / fcover(4) * fg !/ fgper
       IF ( doveg        ) dlveg  = dlveg  / fcover(5) * fg !/ fv/fg
 
+      dlw = dlwsun*fcover(1) + dlwsha*fcover(2) + dlgimp*fcover(3) + dlgper*fcover(4)
+      IF ( doveg) dlw = dlw + dlveg*fcover(5)
+      dlw = dlw*(1-flake)
+
       ! calculate out going longwave by added the before value
       ! of lout and condsidered troof change
       lout = lout + dlout
@@ -1319,14 +1324,14 @@ CONTAINS
 !=======================================================================
 
       ! ground heat flux
-      fgrnd = sabg + lnet - dlout*fg*(1-flake) &
+      fgrnd = sabg + lnet - dlw - dlout*fg*(1-flake) &
             - 4.*eroof*stefnc*troof_bef**3*dT(0)*froof*(1-flake)&
             - fseng - (lfevp_roof + lfevp_gimp + lfevp_gper)*(1-flake) &
             - lfevpa_lake*flake
 
       ! energy balance check
       errore = sabg + sabv*fveg*(1-flake) &
-             + forc_frl + dlw*(1-flake) - olrg &
+             + forc_frl + dlwbef - dlw - olrg &
              + (Fhac + Fwst + Fach + vehc + meta)*(1-flake) &
              - fsena - lfevpa - fgrnd &
              - dheatl*fveg*(1-flake)
