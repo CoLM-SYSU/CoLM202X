@@ -796,6 +796,10 @@ CONTAINS
          lgper = lgper + dlgper
       ENDIF
 
+      dlw = dlwsun*fcover(1) + dlwsha*fcover(2) + dlgimp*fcover(3) + dlgper*fcover(4)
+      IF ( doveg) dlw = dlw + dlveg*fcover(5)
+      dlw = dlw*(1-flake)
+
       ! roof net longwave
       lroof = eroof*forc_frl - eroof*stefnc*troof**4
 
@@ -1159,10 +1163,6 @@ CONTAINS
       ENDIF
 
       fsena = fsena + Fhac + Fwst + Fach + vehc + meta
-
-      dlw = dlwsun*fcover(1) + dlwsha*fcover(2) &
-          + dlgimp*fcover(3) + dlgper*fcover(4) + dlveg*fcover(5)
-      dlw = dlw*(1-flake)
 
       ! flux/variable average weighted by fractional cover
       taux   = taux   *(1-flake) + taux_lake   *flake
