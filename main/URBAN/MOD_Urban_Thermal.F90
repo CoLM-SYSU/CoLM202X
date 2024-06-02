@@ -651,10 +651,6 @@ CONTAINS
       dlgimp = lgimp
       dlgper = lgper
 
-      dlw = dlwsun*fcover(1) + dlwsha*fcover(2) &
-          + dlgimp*fcover(3) + dlgper*fcover(4) + dlveg*fcover(5)
-      dlw = dlw*(1-flake)
-
       fg  = 1. - froof
 
       IF (lai+sai>1.e-6 .and. fveg>0.) THEN
@@ -799,6 +795,10 @@ CONTAINS
          lgimp = lgimp + dlgimp
          lgper = lgper + dlgper
       ENDIF
+
+      dlw = dlwsun*fcover(1) + dlwsha*fcover(2) + dlgimp*fcover(3) + dlgper*fcover(4)
+      IF ( doveg) dlw = dlw + dlveg*fcover(5)
+      dlw = dlw*(1-flake)
 
       ! roof net longwave
       lroof = eroof*forc_frl - eroof*stefnc*troof**4
@@ -1155,8 +1155,8 @@ CONTAINS
          fevpa  = fevpl + fevpg
          lfevpa = lfevpa + hvap*fevpl
 
-         fsen_urbl = fsenl
-         lfevp_urbl= hvap*fevpl
+         fsen_urbl  = fsenl
+         lfevp_urbl = hvap*fevpl
       ELSE
          fsena  = fseng
          fevpa  = fevpg
@@ -1165,25 +1165,25 @@ CONTAINS
       fsena = fsena + Fhac + Fwst + Fach + vehc + meta
 
       ! flux/variable average weighted by fractional cover
-      taux   = taux  *(1-flake) + taux_lake  *flake
-      tauy   = tauy  *(1-flake) + tauy_lake  *flake
-      sabg   = sabg  *(1-flake) + sablake    *flake
-      lnet   = lnet  *(1-flake) + lnet_lake  *flake
-      fseng  = fseng *(1-flake) + fseng_lake *flake
-      fsena  = fsena *(1-flake) + fsena_lake *flake
-      fevpg  = fevpg *(1-flake) + fevpg_lake *flake
-      lfevpa = lfevpa*(1-flake) + lfevpa_lake*flake
-      tref   = tref  *(1-flake) + tref_lake  *flake
-      qref   = qref  *(1-flake) + qref_lake  *flake
-      z0m    = z0m   *(1-flake) + z0m_lake   *flake
-      zol    = zol   *(1-flake) + zol_lake   *flake
-      rib    = rib   *(1-flake) + rib_lake   *flake
-      ustar  = ustar *(1-flake) + ustar_lake *flake
-      qstar  = qstar *(1-flake) + qstar_lake *flake
-      tstar  = tstar *(1-flake) + tstar_lake *flake
-      fm     = fm    *(1-flake) + fm_lake    *flake
-      fh     = fh    *(1-flake) + fh_lake    *flake
-      fq     = fq    *(1-flake) + fq_lake    *flake
+      taux   = taux   *(1-flake) + taux_lake   *flake
+      tauy   = tauy   *(1-flake) + tauy_lake   *flake
+      sabg   = sabg   *(1-flake) + sablake     *flake
+      lnet   = lnet   *(1-flake) + lnet_lake   *flake
+      fseng  = fseng  *(1-flake) + fseng_lake  *flake
+      fsena  = fsena  *(1-flake) + fsena_lake  *flake
+      fevpg  = fevpg  *(1-flake) + fevpg_lake  *flake
+      lfevpa = lfevpa *(1-flake) + lfevpa_lake *flake
+      tref   = tref   *(1-flake) + tref_lake   *flake
+      qref   = qref   *(1-flake) + qref_lake   *flake
+      z0m    = z0m    *(1-flake) + z0m_lake    *flake
+      zol    = zol    *(1-flake) + zol_lake    *flake
+      rib    = rib    *(1-flake) + rib_lake    *flake
+      ustar  = ustar  *(1-flake) + ustar_lake  *flake
+      qstar  = qstar  *(1-flake) + qstar_lake  *flake
+      tstar  = tstar  *(1-flake) + tstar_lake  *flake
+      fm     = fm     *(1-flake) + fm_lake     *flake
+      fh     = fh     *(1-flake) + fh_lake     *flake
+      fq     = fq     *(1-flake) + fq_lake     *flake
 
       ! 10/01/2021, yuan: exclude lake fevpa.
       ! because we don't consider water balance for lake currently.
@@ -1331,20 +1331,6 @@ CONTAINS
              - fsena - lfevpa - fgrnd &
              - dheatl*fveg*(1-flake)
 
-      ! deallocate memory
-      deallocate ( Ainv   )
-      deallocate ( X      )
-      deallocate ( dX     )
-      deallocate ( B      )
-      deallocate ( B1     )
-      deallocate ( dBdT   )
-      deallocate ( SkyVF  )
-      deallocate ( dT     )
-
-      IF ( doveg ) THEN
-         deallocate ( VegVF )
-      ENDIF
-
 #if (defined CoLMDEBUG)
       IF (abs(errore)>.5) THEN
          write(6,*) 'Urban_THERMAL.F90: Urban energy balance violation'
@@ -1367,6 +1353,20 @@ CONTAINS
       lgimp = dlgimp
       lgper = dlgper
       lveg  = dlveg
+
+      ! deallocate memory
+      deallocate ( Ainv   )
+      deallocate ( X      )
+      deallocate ( dX     )
+      deallocate ( B      )
+      deallocate ( B1     )
+      deallocate ( dBdT   )
+      deallocate ( SkyVF  )
+      deallocate ( dT     )
+
+      IF ( doveg ) THEN
+         deallocate ( VegVF )
+      ENDIF
 
 
 !=======================================================================
