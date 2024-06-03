@@ -513,7 +513,6 @@ CONTAINS
         lout               ,&! out-going longwave radiation
         lnet               ,&! overall net longwave radiation
         dlw                ,&! change of net longwave radiation
-        dlwbef             ,&! change of net longwave radiation
         dlwsun             ,&! change of net longwave radiation of sunlit wall
         dlwsha             ,&! change of net longwave radiation of shaded wall
         dlgimp             ,&! change of net longwave radiation of impervious road
@@ -570,6 +569,7 @@ CONTAINS
    real(r8), allocatable :: SkyVF(:)  ! View factor to sky
    real(r8), allocatable :: VegVF(:)  ! View factor to vegetation
    real(r8), allocatable :: fcover(:) ! fractional cover of roof, wall, ground and veg
+
 
 !=======================================================================
 ! [1] Initial set and propositional variables
@@ -660,6 +660,7 @@ CONTAINS
          doveg = .false.
       ENDIF
 
+
 !=======================================================================
 ! [2] specific humidity and its derivative at ground surface
 !=======================================================================
@@ -721,6 +722,7 @@ CONTAINS
       CALL qsadv(troof,forc_psrf,eg,degdT,qsatg,qsatgdT)
       qroof    = qsatg
       dqroofdT = qsatgdT
+
 
 !=======================================================================
 ! [3] caluclate longwave radiation
@@ -797,20 +799,13 @@ CONTAINS
          lgper = lgper + dlgper
       ENDIF
 
-      dlwbef = dlwsun*fcover(1) + dlwsha*fcover(2) + dlgimp*fcover(3) + dlgper*fcover(4)
-      IF ( doveg) dlwbef = dlwbef + dlveg*fcover(5)
-      dlwbef = dlwbef*(1-flake)
+      dlw = dlwsun*fcover(1) + dlwsha*fcover(2) + dlgimp*fcover(3) + dlgper*fcover(4)
+      IF ( doveg) dlw = dlw + dlveg*fcover(5)
+      dlw = dlw*(1-flake)
 
       ! roof net longwave
       lroof = eroof*forc_frl - eroof*stefnc*troof**4
 
-      !TEST: run roof separately, can be removed.
-      !CALL UrbanRoofFlux (forc_hgt_u,forc_hgt_t,forc_hgt_q,forc_us, &
-      !                    forc_vs,forc_t,forc_q,forc_rhoair,forc_psrf, &
-      !                    ur,thm,th,thv,zsno,fsno_roof,hroof,htvp_roof, &
-      !                    lbr,wliq_roofsno(1),wice_roofsno(1),troof,qroof,dqroofdT, &
-      !                    croofs,croofl,croof,fsenroof,fevproof, &
-      !                    z0m_g,z0h_g,zol_g,ustar_g,qstar_g,tstar_g,fm_g,fh_g,fq_g)
 
 !=======================================================================
 ! [4] Compute sensible and latent fluxes and their derivatives with respect
@@ -827,6 +822,7 @@ CONTAINS
 
       ! SAVE variables for bareground case
       obu_g = forc_hgt_u / zol_g
+
 
 !=======================================================================
 ! [5] Canopy temperature, fluxes from roof/wall/ground
@@ -1288,10 +1284,6 @@ CONTAINS
       IF (fcover(4) > 0.) dlgper = dlgper / fcover(4) * fg !/ fgper
       IF ( doveg        ) dlveg  = dlveg  / fcover(5) * fg !/ fv/fg
 
-      dlw = dlwsun*fcover(1) + dlwsha*fcover(2) + dlgimp*fcover(3) + dlgper*fcover(4)
-      IF ( doveg) dlw = dlw + dlveg*fcover(5)
-      dlw = dlw*(1-flake)
-
       ! calculate out going longwave by added the before value
       ! of lout and condsidered troof change
       lout = lout + dlout
@@ -1319,6 +1311,7 @@ CONTAINS
       !olrb = ulrad + olrb
       !emis = olru / olrb
 
+
 !=======================================================================
 ! [10] ground heat flux and energy balance error
 !=======================================================================
@@ -1331,10 +1324,12 @@ CONTAINS
 
       ! energy balance check
       errore = sabg + sabv*fveg*(1-flake) &
-             + forc_frl + dlwbef - dlw - olrg &
+             + forc_frl - olrg &
              + (Fhac + Fwst + Fach + vehc + meta)*(1-flake) &
              - fsena - lfevpa - fgrnd &
              - dheatl*fveg*(1-flake)
+
+      fgrnd = fgrnd - Fach
 
 #if (defined CoLMDEBUG)
       IF (abs(errore)>.5) THEN
@@ -1390,6 +1385,8 @@ CONTAINS
       CALL LUCY ( idate       , deltim  , patchlonr, fix_holiday, &
                   week_holiday, hum_prof, wdh_prof , weh_prof   ,pop_den, &
                   vehicle     , Fahe    , vehc     , meta )
+
+      fgrnd = fgrnd + Fach
 
       deallocate ( fcover )
 

@@ -166,15 +166,16 @@ CONTAINS
 
 ! ----------------------------------------------------------------------
 ! set default soil and vegetation albedos and solar absorption
-      alb (:,:)  = 0. ! averaged
-      ssun(:,:)  = 0.
-      ssha(:,:)  = 0.
-      sroof(:,:) = 0.
-      swsun(:,:) = 0.
-      swsha(:,:) = 0.
-      sgimp(:,:) = 0.
-      sgper(:,:) = 0.
-      slake(:,:) = 0.
+      alb     (:,:) = 1. ! averaged
+      ssun    (:,:) = 0.
+      ssha    (:,:) = 0.
+      sroof   (:,:) = 0.
+      swsun   (:,:) = 0.
+      swsha   (:,:) = 0.
+      sgimp   (:,:) = 0.
+      sgper   (:,:) = 0.
+      alblake (:,:) = 1.
+      slake   (:,:) = 0.
 
       dfwsun = 0.
       extkd  = 0.718
