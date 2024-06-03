@@ -40,8 +40,9 @@ MODULE MOD_HistGridded
 CONTAINS
 
    !---------------------------------------
-   SUBROUTINE hist_gridded_init (dir_hist)
+   SUBROUTINE hist_gridded_init (dir_hist, lulcc_call)
 
+   USE MOD_SPMD_Task
    USE MOD_Vars_Global
    USE MOD_Namelist
    USE MOD_Block
@@ -57,7 +58,8 @@ CONTAINS
    USE MOD_Utils
    IMPLICIT NONE
 
-   character(len=*), intent(in) :: dir_hist
+   character(len=*) , intent(in) :: dir_hist
+   logical, optional, intent(in) :: lulcc_call
 
    ! Local Variables
    type(block_data_real8_2d) :: gridarea
@@ -69,9 +71,11 @@ CONTAINS
          CALL ghist%define_by_res (DEF_hist_lon_res, DEF_hist_lat_res)
       ENDIF
 
+      IF (present(lulcc_call)) CALL mp2g_hist%forc_free_mem
       CALL mp2g_hist%build_arealweighted (ghist, landpatch)
 
 #ifdef URBAN_MODEL
+      IF (present(lulcc_call)) CALL mp2g_hist_urb%forc_free_mem
       CALL mp2g_hist_urb%build_arealweighted (ghist, landurban)
 #endif
 

@@ -95,7 +95,7 @@ MODULE MOD_Forcing
 CONTAINS
 
    !--------------------------------
-   SUBROUTINE forcing_init (dir_forcing, deltatime, ststamp, lc_year, etstamp)
+   SUBROUTINE forcing_init (dir_forcing, deltatime, ststamp, lc_year, etstamp, lulcc_call)
 
    USE MOD_SPMD_Task
    USE MOD_Namelist
@@ -120,6 +120,7 @@ CONTAINS
    type(timestamp),  intent(in) :: ststamp
    integer, intent(in) :: lc_year    ! which year of land cover data used
    type(timestamp),  intent(in), optional :: etstamp
+   logical,          intent(in), optional :: lulcc_call   ! whether it is a lulcc CALL
 
    ! Local variables
    integer            :: idate(3)
@@ -198,8 +199,10 @@ CONTAINS
       ENDIF
 
       IF (trim(DEF_Forcing_Interp_Method) == 'arealweight') THEN
+         IF (present(lulcc_call)) CALL mg2p_forc%forc_free_mem
          CALL mg2p_forc%build_arealweighted (gforc, landpatch)
       ELSEIF (trim(DEF_Forcing_Interp_Method) == 'bilinear') THEN
+         IF (present(lulcc_call)) CALL mg2p_forc%forc_free_mem
          CALL mg2p_forc%build_bilinear (gforc, landpatch)
       ENDIF
 
