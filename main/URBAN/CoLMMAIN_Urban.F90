@@ -692,7 +692,7 @@
    real(r8) snofrz    (maxsnl+1:0)  !snow freezing rate (col,lyr) [kg m-2 s-1]
    real(r8) sabg_lyr  (maxsnl+1:1)  !snow layer absorption [W/m-2]
 
-      theta = acos(max(coszen,0.001))
+      theta = acos(max(coszen,0.01))
       forc_aer(:) = 0.          !aerosol deposition from atmosphere model (grd,aer) [kg m-1 s-1]
 
 !======================================================================

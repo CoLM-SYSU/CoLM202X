@@ -21,6 +21,7 @@ MODULE MOD_HistGridded
    USE MOD_SpatialMapping
    USE MOD_Namelist
    USE MOD_NetCDFSerial
+   USE MOD_SPMD_Task
 #ifdef USEMPI
    USE MOD_HistWriteBack
 #endif
