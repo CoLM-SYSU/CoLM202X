@@ -1329,7 +1329,7 @@ CONTAINS
              - fsena - lfevpa - fgrnd &
              - dheatl*fveg*(1-flake)
 
-      fgrnd = fgrnd - Fach
+      fgrnd = fgrnd - (Fhac + Fwst + Fach + vehc + meta)*(1-flake)
 
 #if (defined CoLMDEBUG)
       IF (abs(errore)>.5) THEN
@@ -1386,7 +1386,7 @@ CONTAINS
                   week_holiday, hum_prof, wdh_prof , weh_prof   ,pop_den, &
                   vehicle     , Fahe    , vehc     , meta )
 
-      fgrnd = fgrnd + Fach
+      fgrnd = fgrnd + (Fhac + Fwst + Fach + vehc + meta)*(1-flake)
 
       deallocate ( fcover )
 
