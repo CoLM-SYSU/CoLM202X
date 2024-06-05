@@ -80,6 +80,7 @@ CONTAINS
 
    USE MOD_Precision
    USE MOD_Const_Physical,      only : denice, denh2o, tfrz
+   USE MOD_Vars_TimeInvariants, only : vic_b_infilt, vic_Dsmax, vic_Ds, vic_Ws, vic_c
    USE MOD_Vars_1DFluxes,       only : fevpg
 
    IMPLICIT NONE
