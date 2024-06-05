@@ -420,7 +420,7 @@ ENDIF
 
 #if(defined CoLMDEBUG)
       IF(abs(err_solver) > 1.e-3)THEN
-         write(6,*) 'Warning: water balance violation after all soilwater calculation', err_solver, patchlatr(ipatch)*180/3.1415926, patchlonr(ipatch)*180/3.1415826, lb
+         write(6,*) 'Warning: water balance violation after all soilwater calculation', err_solver
       ENDIF
 #endif
 
