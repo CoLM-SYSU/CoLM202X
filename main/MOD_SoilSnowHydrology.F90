@@ -375,14 +375,12 @@ IF(patchtype<=1)THEN   ! soil ground only
 ! [4] subsurface runoff and the corrections
 !=======================================================================
 
-      ! IF (DEF_Runoff_SCHEME.ne.1) THEN
       CALL groundwater (ipatch,nl_soil,deltim,pondmx,&
                         eff_porosity,icefrac,dz_soisno(1:),zi_soisno(0:),&
                         wice_soisno(1:),wliq_soisno(1:),&
                         porsl,psi0,bsw,zwt,wa,&
                         qcharge,rsubst,errw_rsub)
 
-      ! ENDIF
       ! total runoff (mm/s)
       rnof = rsubst + rsur
 
@@ -656,8 +654,6 @@ ENDIF
 
    type(soil_con_struct ) :: soil_con
    type(cell_data_struct) :: cell
-   ! integer  :: ilay
-   ! real(r8) :: vic_tmp(Nlayer)
    real(r8) :: wliq_soisno_tmp(1:nl_soil)
 
 
@@ -1974,7 +1970,7 @@ ENDIF
    END SUBROUTINE soilwater
 
 
-   SUBROUTINE groundwater (ipatch,nl_soil,deltim,pondmx,&
+   SUBROUTINE groundwater (nl_soil,deltim,pondmx,&
                            eff_porosity,icefrac,&
                            dz_soisno,zi_soisno,wice_soisno,wliq_soisno,&
                            porsl,psi0,bsw,zwt,wa,&
@@ -1989,7 +1985,6 @@ ENDIF
 ! ARGUMENTS:
    IMPLICIT NONE
 
-   integer, intent(in) :: ipatch
    integer, intent(in) :: nl_soil       !
    real(r8), intent(in) :: deltim       ! land model time step (sec)
    real(r8), intent(in) :: pondmx       !
@@ -2188,9 +2183,7 @@ ENDIF
       zwt = max(0.0,zwt)
       zwt = min(80.,zwt)
 
-      ! IF (DEF_Runoff_SCHEME .ne.1) THEN
-         rsubst = drainage
-      ! ENDIF
+      rsubst = drainage
 
 
       ! Correction [1]
