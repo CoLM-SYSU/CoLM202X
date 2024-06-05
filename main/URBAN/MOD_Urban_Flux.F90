@@ -2256,6 +2256,7 @@ CONTAINS
 
          ! calculate longwave for vegetation
          irab = ( (sum(X(1:4)*VegVF(1:4)) + frl*VegVF(5))*ev - B1(5) ) / fcover(5)*fg
+         irab = irab + dlveg    ! plus the previous step dlveg
          dirab_dtl = ( sum(dX(1:4)*VegVF(1:4))*ev - dBdT(5) ) / fcover(5)*fg
 
          ! solve for leaf temperature

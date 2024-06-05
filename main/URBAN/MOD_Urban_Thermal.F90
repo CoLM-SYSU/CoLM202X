@@ -652,6 +652,7 @@ CONTAINS
       dlwsha = lwsha
       dlgimp = lgimp
       dlgper = lgper
+      dlveg  = lveg
 
       fg  = 1. - froof
 
@@ -1322,26 +1323,25 @@ CONTAINS
 !=======================================================================
 
       ! ground heat flux
-      fgrnd = sabg + lnet - dlw - dlout*fg*(1-flake) &
+      fgrnd = sabg + lnet - dlwbef - dlout*fg*(1-flake) &
             - 4.*eroof*stefnc*troof_bef**3*dT(0)*froof*(1-flake)&
             - fseng - (lfevp_roof + lfevp_gimp + lfevp_gper)*(1-flake) &
             - lfevpa_lake*flake
 
       ! energy balance check
       errore = sabg + sabv*fveg*(1-flake) &
-             + forc_frl + dlwbef - dlw - olrg &
+             + forc_frl - olrg &
              + (Fhac + Fwst + Fach + vehc + meta)*(1-flake) &
              - fsena - lfevpa - fgrnd &
              - dheatl*fveg*(1-flake)
 
-      fgrnd = fgrnd - dlwbef + dlw
       fgrnd = fgrnd - (Fhac + Fwst + Fach + vehc + meta)*(1-flake)
 
 #if (defined CoLMDEBUG)
       IF (abs(errore)>.5) THEN
          write(6,*) 'Urban_THERMAL.F90: Urban energy balance violation'
          write(6,*) ipatch,errore,sabg,sabv*fveg*(1-flake)
-         write(6,*) forc_frl,dlw*(1-flake),olrg
+         write(6,*) forc_frl,dlwbef,dlw,olrg
          write(6,*) Fhac,Fwst,Fach,vehc,meta,(1-flake)
          write(6,*) fsena,lfevpa,fgrnd
          write(6,*) dheatl*fveg*(1-flake)
