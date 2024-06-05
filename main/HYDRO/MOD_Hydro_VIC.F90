@@ -11,6 +11,61 @@ module MOD_Hydro_VIC
 
     contains
 
+    ! ******************************************************************************
+    subroutine Runoff_VIC(deltim, porsl, theta_r, hksati, bsw, &
+                          wice_soisno, wliq_soisno, fevpg, rootflux, ppt, &
+                          b_infilt, Dsmax, Ds, Ws, c, &
+                          rsur,rsubst,wliq_soisno_tmp)
+
+        USE MOD_Namelist
+        USE MOD_Precision
+        USE MOD_Vars_Global
+        implicit none
+
+        !-----------------------Arguments---------------------------------------
+        type(soil_con_struct)  :: soil_con
+        type(cell_data_struct) :: cell
+
+        real(r8), intent(in) :: porsl(1:nl_soil), theta_r(1:nl_soil), hksati(1:nl_soil), bsw(1:nl_soil)
+        real(r8), intent(in) :: wice_soisno(1:nl_soil)
+        real(r8), intent(in) :: wliq_soisno(1:nl_soil)
+        real(r8), intent(in) :: fevpg
+        real(r8), intent(in) :: rootflux(1:nl_soil)
+        real(r8), intent(in) :: ppt              ! /**< amount of liquid water coming to the surface   */
+        real(r8), intent(in) :: deltim           ! int(DEF_simulation_time%timestep)
+
+        real(r8), intent(in)    :: b_infilt, Dsmax, Ds, Ws, c
+
+        real(r8), intent(inout) :: rsur, rsubst
+        real(r8), intent(out)   :: wliq_soisno_tmp(1:nl_soil)
+
+        !-----------------------Local Variables---------------------------------
+        integer  :: ilay
+        real(r8) :: vic_tmp(Nlayer), vic_tmp_(Nlayer)
+        !-----------------------Arguments---------------------------------------
+
+        call vic_para(porsl, theta_r, hksati, bsw, wice_soisno(1:nl_soil), wliq_soisno(1:nl_soil), fevpg, rootflux, &
+                        b_infilt, Dsmax, Ds, Ws, c, &
+                        soil_con, cell)
+
+        call compute_vic_runoff(soil_con, ppt*deltim, soil_con%frost_fract, cell)
+
+        DO ilay = 1, Nlayer
+            vic_tmp(ilay) = cell%layer(ilay)%moist
+        ENDDO
+        wliq_soisno_tmp = 0.
+        call VIC2CoLM(wliq_soisno_tmp, vic_tmp)
+
+        DO ilay = 1, Nlayer
+           vic_tmp_(ilay) = sum(cell%layer(ilay)%ice)
+        ENDDO
+        ! call VIC2CoLM(wice_soisno(1:nl_soil), vic_tmp_)
+
+        if (ppt > 0.) rsur = cell%runoff/deltim
+        rsubst = cell%baseflow/deltim
+
+    end subroutine Runoff_VIC
+
     ! /******************************************************************************
     ! * @brief    Calculate infiltration and runoff from the surface, gravity driven
     ! *           drainage between all soil layers, and generates baseflow from the
@@ -59,12 +114,12 @@ module MOD_Hydro_VIC
         real(r8) :: sum_liq
         real(r8) :: evap_fraction
         real(r8) :: evap_sum
-        type(layer_data_struct), dimension(MAX_LAYERS) :: layer  
+        type(layer_data_struct), dimension(MAX_LAYERS) :: layer
 
         real(r8) :: dltime                !/**< timestep in seconds */
         integer  :: runoff_steps_per_day  !/**< Number of runoff timesteps per day */
         integer  :: model_steps_per_day   !/**< Number of model timesteps per day */
-        integer  :: runoff_steps_per_dt  
+        integer  :: runoff_steps_per_dt
 
         !-----------------------End Variable List-------------------------------
 
@@ -103,6 +158,7 @@ module MOD_Hydro_VIC
                 ! compute available soil moisture for each frost sub area
                 do fidx = 1, Nfrost
                     avail_liq(lindex, fidx) = org_moist(lindex) - layer(lindex)%ice(fidx) - resid_moist(lindex)
+                    !avail_liq(lindex, fidx) = org_moist(lindex) -  resid_moist(lindex)
                     if (avail_liq(lindex, fidx) < 0.0) then
                         avail_liq(lindex, fidx) = 0.0
                     end if
@@ -133,7 +189,7 @@ module MOD_Hydro_VIC
 
 
         do fidx = 1, Nfrost
-            ! ppt = amount of liquid water coming to the surface 
+            ! ppt = amount of liquid water coming to the surface
             inflow = ppt
 
             ! /**************************************************
@@ -149,7 +205,7 @@ module MOD_Hydro_VIC
 
             ! /******************************************************
             !    Runoff Based on Soil Moisture Level of Upper Layers
-            ! ******************************************************/        
+            ! ******************************************************/
             do lindex = 1, Nlayer
                 tmp_moist_for_runoff(lindex) = liq(lindex) + ice(lindex)
             end do
@@ -241,6 +297,7 @@ module MOD_Hydro_VIC
                         Q12(lindex) = Q12(lindex) + liq(lindex)
                         liq(lindex) = 0.0
                     endif
+
                     if ((liq(lindex) + ice(lindex)) < resid_moist(lindex)) then
                         ! moisture cannot fall below minimum
                         Q12(lindex) = Q12(lindex) + (liq(lindex) + ice(lindex)) - resid_moist(lindex)
@@ -360,7 +417,7 @@ module MOD_Hydro_VIC
         implicit none
         !-----------------------Arguments---------------------------------------
         type(soil_con_struct), intent(in) :: soil_con
-        real(r8), intent(in) :: moist(Nlayer)     
+        real(r8), intent(in) :: moist(Nlayer)
         real(r8), intent(in) :: inflow
         real(r8), intent(inout) :: A
         real(r8), intent(inout) :: runoff
@@ -435,7 +492,7 @@ module MOD_Hydro_VIC
         real(r8), intent(out) :: zwt
         !-----------------------Local Variables---------------------------------
         integer :: i
-        real(r8) :: MISSING =  -99999. !/**< missing value */ 
+        real(r8) :: MISSING =  -99999. !/**< missing value */
         !-----------------------End Variable List-------------------------------
 
         zwt = MISSING
@@ -453,7 +510,7 @@ module MOD_Hydro_VIC
                 zwt = soil_con%zwtvmoist_zwt(lindex, i) ! Just barely enough water for a water table
             end if
         else
-            zwt = soil_con%zwtvmoist_zwt(lindex, i+1) + & 
+            zwt = soil_con%zwtvmoist_zwt(lindex, i+1) + &
                     (soil_con%zwtvmoist_zwt(lindex, i) - soil_con%zwtvmoist_zwt(lindex, i+1)) * &
                     (moist - soil_con%zwtvmoist_moist(lindex, i+1)) / &
                     (soil_con%zwtvmoist_moist(lindex, i) - soil_con%zwtvmoist_moist(lindex, i+1))
