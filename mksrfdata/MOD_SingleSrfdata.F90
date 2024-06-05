@@ -14,13 +14,12 @@ MODULE MOD_SingleSrfdata
    USE MOD_Vars_Global
    USE MOD_Const_LC
    USE MOD_Namelist
+   USE MOD_SPMD_Task
    IMPLICIT NONE
    SAVE
 
    real(r8) :: SITE_lon_location = 0.
    real(r8) :: SITE_lat_location = 0.
-
-   integer  :: SITE_landtype = 1
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
    integer,  allocatable :: SITE_pfttyp  (:)
@@ -138,14 +137,26 @@ CONTAINS
    ! Local Variables
    integer :: iyear, itime
 
-      CALL ncio_read_serial (fsrfdata, 'latitude',  SITE_lat_location)
-      CALL ncio_read_serial (fsrfdata, 'longitude', SITE_lon_location)
+      IF (trim(fsrfdata) /= 'null') THEN
+
+         CALL ncio_read_serial (fsrfdata, 'latitude',  SITE_lat_location)
+         CALL ncio_read_serial (fsrfdata, 'longitude', SITE_lon_location)
 
 #ifdef LULC_USGS
-      CALL ncio_read_serial (fsrfdata, 'USGS_classification', SITE_landtype)
+         CALL ncio_read_serial (fsrfdata, 'USGS_classification', SITE_landtype)
 #else
-      CALL ncio_read_serial (fsrfdata, 'IGBP_classification', SITE_landtype)
+         CALL ncio_read_serial (fsrfdata, 'IGBP_classification', SITE_landtype)
 #endif
+      ELSE
+
+         SITE_lat_location = DEF_domain%edges
+         SITE_lon_location = DEF_domain%edgew
+
+         IF (SITE_landtype < 0) THEN
+            write(*,*) 'Error! Please set namelist SITE_landtype first!'
+            CALL CoLM_stop()
+         ENDIF
+      ENDIF
 
       CALL normalize_longitude (SITE_lon_location)
 

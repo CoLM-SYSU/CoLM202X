@@ -59,6 +59,7 @@ MODULE MOD_Namelist
 
    character(len=256) :: SITE_fsrfdata   = 'null'
 
+   integer  :: SITE_landtype             =    -1
    logical  :: USE_SITE_pctpfts          = .true.
    logical  :: USE_SITE_pctcrop          = .true.
    logical  :: USE_SITE_htop             = .true.
@@ -791,6 +792,7 @@ CONTAINS
       DEF_domain,                             &
 
       SITE_fsrfdata,                          &
+      SITE_landtype,                          &
       USE_SITE_pctpfts,                       &
       USE_SITE_pctcrop,                       &
       USE_SITE_htop,                          &
