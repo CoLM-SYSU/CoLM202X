@@ -375,7 +375,7 @@ IF(patchtype<=1)THEN   ! soil ground only
 ! [4] subsurface runoff and the corrections
 !=======================================================================
 
-      CALL groundwater (ipatch,nl_soil,deltim,pondmx,&
+      CALL groundwater (nl_soil,deltim,pondmx,&
                         eff_porosity,icefrac,dz_soisno(1:),zi_soisno(0:),&
                         wice_soisno(1:),wliq_soisno(1:),&
                         porsl,psi0,bsw,zwt,wa,&
@@ -423,7 +423,6 @@ ENDIF
 #endif
 
 
-      ! rnof = rsubst + rsur
 !=======================================================================
 ! [6] assumed hydrological scheme for the wetland and glacier
 !=======================================================================
