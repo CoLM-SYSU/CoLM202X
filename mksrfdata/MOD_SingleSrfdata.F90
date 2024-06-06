@@ -293,9 +293,19 @@ CONTAINS
    logical, intent(in) :: mksrfdata
    logical, intent(in), optional :: mkrun
 
-      SITE_landtype = URBAN
-      CALL ncio_read_serial (fsrfdata, 'latitude' , SITE_lat_location)
-      CALL ncio_read_serial (fsrfdata, 'longitude', SITE_lon_location)
+      IF (trim(fsrfdata) /= 'null') THEN
+         SITE_landtype = URBAN
+         CALL ncio_read_serial (fsrfdata, 'latitude' , SITE_lat_location)
+         CALL ncio_read_serial (fsrfdata, 'longitude', SITE_lon_location)
+      ELSE
+         SITE_lat_location = DEF_domain%edges
+         SITE_lon_location = DEF_domain%edgew
+
+         IF (SITE_landtype /= URBAN) THEN
+            write(*,*) 'Error! Please set namelist SITE_landtype first!'
+            CALL CoLM_stop()
+         ENDIF
+      ENDIF
 
       DEF_domain%edges = floor(SITE_lat_location)
       DEF_domain%edgen = DEF_domain%edges + 1.0
