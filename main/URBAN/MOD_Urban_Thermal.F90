@@ -662,6 +662,15 @@ CONTAINS
          doveg = .false.
       ENDIF
 
+      ! convert AHE to urban area, i.e. (1-flake)
+      IF ( 1-flake > 0. ) THEN
+         Fhac = Fhac / (1-flake)
+         Fwst = Fwst / (1-flake)
+         Fach = Fach / (1-flake)
+         vehc = vehc / (1-flake)
+         meta = meta / (1-flake)
+      ENDIF
+
 
 !=======================================================================
 ! [2] specific humidity and its derivative at ground surface
@@ -1393,6 +1402,16 @@ CONTAINS
                   vehicle     , Fahe    , vehc     , meta )
 
       fgrnd = fgrnd + (Fhac + Fwst + Fach + vehc + meta)*(1-flake)
+
+
+      ! convert BEM AHE to grid area values
+      ! NOTE: BEM AHE are assumed only affacting the urban area,
+      ! but vehc and meta area for the whole grid.
+      Fhac = Fhac * (1-flake)
+      Fwst = Fwst * (1-flake)
+      Fach = Fach * (1-flake)
+      Fhah = Fhah * (1-flake)
+
 
       deallocate ( fcover )
 
