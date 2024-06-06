@@ -811,7 +811,7 @@ CONTAINS
       ENDIF
 
       dlwbef = dlwsun*fcover(1) + dlwsha*fcover(2) + dlgimp*fcover(3) + dlgper*fcover(4)
-      IF ( doveg) dlwbef = dlwbef + dlveg*fcover(5)
+      IF ( doveg ) dlwbef = dlwbef + dlveg*fcover(5)
       dlwbef = dlwbef*(1-flake)
 
       ! roof net longwave
@@ -1401,7 +1401,7 @@ CONTAINS
                   week_holiday, hum_prof, wdh_prof , weh_prof   ,pop_den, &
                   vehicle     , Fahe    , vehc     , meta )
 
-      fgrnd = fgrnd + (Fhac + Fwst + Fach + vehc + meta)*(1-flake)
+      fgrnd = fgrnd + (Fhac + Fwst + Fach)*(1-flake) + vehc + meta
 
 
       ! convert BEM AHE to grid area values
