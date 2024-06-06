@@ -148,7 +148,7 @@ CONTAINS
       f_wsha = fcover(2)/fcover(0) !weight factor for shaded wall
 
       ! initialization
-      Fhac = 0.; Fwst = 0.; Fach = 0.;
+      Fhac = 0.; Fwst = 0.; Fach = 0.; Fhah = 0.;
 
       ! Ax = B
       ! set values for heat transfer matrix
@@ -228,7 +228,7 @@ CONTAINS
          Fhac = 0.5*hcv_roof*(troof_inner_bef-troom_bef)        + 0.5*hcv_roof*(troof_inner-troom)
          Fhac = 0.5*hcv_wall*(twsun_inner_bef-troom_bef)*f_wsun + 0.5*hcv_wall*(twsun_inner-troom)*f_wsun + Fhac
          Fhac = 0.5*hcv_wall*(twsha_inner_bef-troom_bef)*f_wsha + 0.5*hcv_wall*(twsha_inner-troom)*f_wsha + Fhac
-         Fhah = Fhac
+         IF ( heating ) Fhah = abs(Fhac)
          Fhac = abs(Fhac) + abs(Fach)
          Fwst = Fhac*waste_coef
          IF ( heating ) Fhac = 0.
