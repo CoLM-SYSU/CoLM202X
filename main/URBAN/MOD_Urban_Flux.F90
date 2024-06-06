@@ -62,7 +62,7 @@ MODULE MOD_Urban_Flux
    integer, parameter :: alpha_opt = 3
 
 ! Layer number setting, default is false, i.e., 2 layers
-   logical, parameter :: ThreeLayer = .false.
+   logical, parameter :: run_three_layer = .false.
 
 !-----------------------------------------------------------------------
 
@@ -354,6 +354,7 @@ CONTAINS
 !-----------------------------------------------------------------------
 ! initial roughness length for z0mg, z0hg, z0qg
 ! Roughness of the city ground only (excluding buildings and vegetation)
+!-----------------------------------------------------------------------
 
       !NOTE: change to original
       !z0mg = (1.-fsno)*zlnd + fsno*zsno
@@ -377,14 +378,8 @@ CONTAINS
       ENDDO
 
 !-----------------------------------------------------------------------
-! set weight
+! tg, qg and wet fraction calculation
 !-----------------------------------------------------------------------
-
-      ! set weighting factor
-      ! fah(1) = 1.; fah(2) = 1.; fah(3) = 1.
-      ! faw(1) = 1.; faw(2) = 1.; faw(3) = 1.
-      ! fgh(1) = 1.; fgh(2) = fg; fgh(3) = 1.
-      ! fgw(1) = 1.; fgw(2) = fg; fgw(3) = 1.
 
       ! weighted tg
       tg = tgimp*fgimp + tgper*fgper
@@ -428,7 +423,6 @@ CONTAINS
       fwetfac = fgimp*fwet_gimp + fgper
       qg = (qgimp*fgimp*fwet_gimp + qgper*fgper) / fwetfac
 
-      !fgw(2) = fg*fwetfac
 
 !-----------------------------------------------------------------------
 ! initial for fluxes profile
@@ -540,16 +534,16 @@ CONTAINS
 
 ! Aerodynamic resistance
          ! 09/16/2017:
-         ! note that for ram, it is the resistance from Href to z0mv+displa
+         ! NOTE that for ram, it is the resistance from Href to z0mv+displa
          ! however, for rah and raw is only from Href to canopy effective
          ! exchange height.
-         ! for Urban: from Href to roof height
+         ! For Urban: from Href to roof height
          ! so rah/raw is not comparable with that of 1D case
          ram = 1./(ustar*ustar/um)
 
          ! 05/02/2016: calculate resistance from the top layer (effective exchange
          ! height) to reference height
-         ! for Urban: from roof height to reference height
+         ! For Urban: from roof height to reference height
          rah = 1./(vonkar/(fh-fht)*ustar)
          raw = 1./(vonkar/(fq-fqt)*ustar)
 
@@ -626,83 +620,8 @@ CONTAINS
          ENDDO
 
 !-----------------------------------------------------------------------
-! dimensional and non-dimensional sensible and latent heat conductances
-! for canopy and soil flux calculations.
+! Solve taf(:) and qaf(:)
 !-----------------------------------------------------------------------
-
-         !NOTE: 0: roof, 1: sunlit wall, 2: shaded wall,
-         !      3: impervious road, 4: pervious road, 5: vegetation
-         ! cfh(:) = 0.
-         ! cfw(:) = 0.
-
-         ! DO i = 0, nurb
-         !    cfh(i) = 1 / rb(i)
-
-         !    IF (i == 0) THEN !roof
-         !       ! account for fwet
-         !       cfw(i) = fwet_roof / rb(i)
-         !    ELSE
-         !       cfw(i) = 1 / rb(i)
-         !    ENDIF
-         ! ENDDO
-
-         ! For simplicity, there is no water exchange on the wall
-         ! cfw(1:2) = 0.
-
-         ! initialization
-         ! cah(:) = 0.
-         ! caw(:) = 0.
-         ! cgh(:) = 0.
-         ! cgw(:) = 0.
-
-         ! conductance for each layer
-         ! DO i = 3, 2, -1
-         !    IF (i == 3) THEN
-         !       cah(i) = 1. / rah
-         !       caw(i) = 1. / raw
-         !    ELSE
-         !       cah(i) = 1. / rd(i+1)
-         !       caw(i) = 1. / rd(i+1)
-         !    ENDIF
-
-         !    cgh(i) = 1. / rd(i)
-         !    cgw(i) = 1. / rd(i)
-         ! ENDDO
-
-         ! claculate wtshi, wtsqi
-         ! wtshi(:) = cah(:)*fah(:) + cgh(:)*fgh(:)
-         ! wtsqi(:) = caw(:)*faw(:) + cgw(:)*fgw(:)
-
-         ! DO i = 0, nurb
-         !    clev = canlev(i)
-         !    wtshi(clev) = wtshi(clev) + fc(i)*cfh(i)
-         !    wtsqi(clev) = wtsqi(clev) + fc(i)*cfw(i)
-         ! ENDDO
-
-         ! DO i = 3, 2, -1
-         !    wtshi(i) = 1./wtshi(i)
-         !    wtsqi(i) = 1./wtsqi(i)
-         ! ENDDO
-
-         ! wta0(:)  = cah(:) * wtshi(:) * fah(:)
-         ! wtg0(:)  = cgh(:) * wtshi(:) * fgh(:)
-
-         ! wtaq0(:) = caw(:) * wtsqi(:) * faw(:)
-         ! wtgq0(:) = cgw(:) * wtsqi(:) * fgw(:)
-
-         ! calculate wtl0, wtll, wtlq0, wtlql
-         ! wtll(:)  = 0.
-         ! wtlql(:) = 0.
-
-         ! DO i = 0, nurb
-         !    clev = canlev(i)
-
-         !    wtl0(i)    = cfh(i) * wtshi(clev) * fc(i)
-         !    wtll(clev) = wtll(clev) + wtl0(i)*tu(i)
-
-         !    wtlq0(i)    = cfw(i) * wtsqi(clev) * fc(i)
-         !    wtlql(clev) = wtlql(clev) + wtlq0(i)*qsatl(i)
-         ! ENDDO
 
          IF (numlay .eq. 2) THEN
 
@@ -714,7 +633,7 @@ CONTAINS
             ! taf(3) = (cah(3)*thm + cah(2)*taf(2) + cfh(0)*troof*fc(0))/(cah(3) + cah(2) + cfh(0)*fc(0))
             ! taf(2) = (cah(2)*taf(3) + cgh(2)*tg*fg + cfh(1)*twsun*fc(1) + cfh(2)*twsha*fc(2) + AHE/(rho*cp))/ &
             !          (cah(2) + cgh(2)*fg + cfh(1)*fc(1) + cfh(2)*fc(2))
-
+            !
             ! - Equations:
             ! qaf(3) = (1/raw*qm + 1/rd(3)*qaf(2) + 1/rb(0)*qroof*fc(0))/(1/raw + 1/rd(3) + 1/rb(0)*fc(0))
             ! qaf(2) = (1/rd(3)*qaf(3) + 1/(rd(2)+rss)*qper*fgper*fg + fwetimp/rd(2)*qimp*fgimp*fg + AHE/rho)/ &
@@ -726,17 +645,6 @@ CONTAINS
 
             ! 06/20/2021, yuan: account for Anthropogenic heat
             ! 92% heat release as SH, Pigeon et al., 2007
-
-            ! h_vehc = vehc
-            ! tmpw1  = cah(2)*((cah(3)*thm + cfh(0)*tu(0)*fc(0) + 1/(4*hlr+1)*(Fhac+Fwst)/(rhoair*cpair))/&
-            !          (cah(3) + cah(2) + cfh(0)*fc(0)))
-            ! tmpw2  = (4*hlr/(4*hlr+1)*(Fhac+Fwst)+Fach)/(rhoair*cpair) + (h_vehc+meta)/(rhoair*cpair)
-            ! tmpw3  = cgh(2)*fg*tg + cfh(1)*tu(1)*fc(1) + cfh(2)*tu(2)*fc(2)
-            ! fact   = 1. - (cah(2)*cah(2)/(cah(3) + cah(2) + cfh(0)*fc(0))/&
-            !          (cah(2) + cgh(2)*fg + cfh(1)*fc(1) + cfh(2)*fc(2)))
-            ! taf(2) = (tmpw1 + tmpw2 + tmpw3) / &
-            !          (cah(2) + cgh(2)*fg + cfh(1)*fc(1) + cfh(2)*fc(2)) / &
-            !          fact
 
             h_vehc  = vehc! * 0.92
             Hahe(2) = 4*hlr/(4*hlr+1)*(Fhac+Fwst) + Fach + h_vehc + meta
@@ -754,33 +662,10 @@ CONTAINS
 
             IF (qgper < qaf(2)) THEN
               ! dew case. no soil resistance
-              ! cgw_per= cgw(2)
               rss_ = 0
             ELSE
               rss_ = rss
-              ! cgw_per= 1/(1/cgw(2)+rss)
             ENDIF
-
-            ! cgw_imp= fwet_gimp*cgw(2)
-
-            ! account for soil resistance, qgper and qgimp are calculated separately
-            ! l_vehc = 0
-            ! tmpw1  = caw(2)*((caw(3)*qm + cfw(0)*qsatl(0)*fc(0))/&
-            !          (caw(3) + caw(2) + cfw(0)*fc(0)))
-            ! tmpw2  = l_vehc/(rhoair)
-            ! tmpw3  = cgw_per*qgper*fgper*fg + cgw_imp*qgimp*fgimp*fg
-            ! facq   = 1. - (caw(2)*caw(2)/&
-            !          (caw(3) + caw(2) + cfw(0)*fc(0))/&
-            !          (caw(2) + cgw_per*fgper*fg + cgw_imp*fgimp*fg))
-            ! qaf(2) = (tmpw1 + tmpw2 + tmpw3)/&
-            !          (caw(2) + cgw_per*fgper*fg + cgw_imp*fgimp*fg)/&
-            !          facq
-
-            ! tmpw1  = 1/(4*hlr+1)*(Fhac+Fwst)/(rhoair*cpair)
-            ! taf(3) = (cah(3)*thm + cah(2)*taf(2) + cfh(0)*tu(0)*fc(0) + tmpw1)/&
-            !          (cah(3) + cah(2) + cfh(0)*fc(0))
-            ! qaf(3) = (caw(3)*qm  + caw(2)*qaf(2) + cfw(0)*qsatl(0)*fc(0))/&
-            !          (caw(3) + caw(2) + cfw(0)*fc(0))
 
             Lahe   = 0 ! vehc * 0.08
             cQ     = 1/rd(3) + fg*fgper/(rd(2)+rss_) + fwet_gimp*fg*fgimp/rd(2)
@@ -823,7 +708,6 @@ CONTAINS
 !-----------------------------------------------------------------------
 
          ! USE the top layer taf and qaf
-         !TODO: need more check
          dth = thm - taf(2)
          dqh =  qm - qaf(2)
 
@@ -890,33 +774,6 @@ CONTAINS
 
       croof  = croofs + croofl*htvp_roof
 
-      ! --------------------ctl version------------------------------------
-      ! fact   = 1. - wta0(2)*wtg0(3)
-      ! facq   = 1. - wtaq0(2)*wtgq0(3)
-      ! deduce: croofs = rhoair*cpair*cfh(0)*(1.-wtg0(3)*wta0(2)*wtl0(0)/fact-wtl0(0))
-      ! croofs = rhoair*cpair*cfh(0)*(1.-wtl0(0)/fact)
-      ! cwalls = rhoair*cpair*cfh(1)*(1.-wtl0(1)/fact)
-      ! deduce: croofl = rhoair*cfw(0)*(1.-wtgq0(3)*wtaq0(2)*wtlq0(0)/facq-wtlq0(0))*qsatldT(0)
-      ! croofl = rhoair*cfw(0)*(1.-wtlq0(0)/facq)*qsatldT(0)
-      ! -------------------------------------------------------------------
-      ! fact   = 1.-(cah(2)*cah(2)/(cah(3)+cah(2)+cfh(0)*fc(0)) &
-      !          /(cah(2)+cgh(2)*fg+cfh(1)*fc(1)+cfh(2)*fc(2)))
-      ! facq   = 1.-(caw(2)*caw(2) &
-      !          /(caw(3)+caw(2)+cfw(0)*fc(0)) &
-      !          /(caw(2)+cgw_per*fgper*fg+cgw_imp*fgimp*fg))
-      ! croofs = rhoair*cpair*cfh(0) &
-      !          *(1.-cgh(3)/(cah(3)+cgh(3)+cfh(0)*fc(0)) &
-      !          *cah(2)/(cah(2)+cgh(2)*fg+cfh(1)*fc(1)+cfh(2)*fc(2)) &
-      !          *cfh(0)*fc(0)/(cah(3)+cgh(3)+cfh(0)*fc(0))/fact &
-      !          -cfh(0)*fc(0)/(cah(3)+cgh(3)+cfh(0)*fc(0)))
-      ! cwalls = rhoair*cpair*cfh(1)*(1.-cfh(1)*fc(1)/(cgh(3)+cgh(2)*fg+cfh(1)*fc(1)+cfh(2)*fc(2)/fact))
-      ! croofl = rhoair*cfw(0)*(1.-cfw(0)*fc(0)/(caw(3)+cgw(3)+cfw(0)*fc(0))-cgw(3) &
-      !          /(caw(3)+cgw(3)+cfw(0)*fc(0)) &
-      !          /(cgw(3)+cgw_per*fgper*fg+cgw_imp*fgimp*fg)* &
-      !          cfw(0)*fc(0)*cgw(3)/(caw(3)+cgw(3)+cfw(0)*fc(0))/facq)*qsatldT(0)
-      ! croofl = croofl*fwet_roof
-      ! croof  = croofs + croofl*htvp_roof
-      ! --------------------------------------------------------------------
 
 #if(defined CoLMDEBUG)
 #endif
@@ -944,24 +801,6 @@ CONTAINS
 !-----------------------------------------------------------------------
 ! Derivative of soil energy flux with respect to soil temperature (cgrnd)
 !-----------------------------------------------------------------------
-
-      ! --------------------ctl version-----------------
-      ! cgrnds = cpair*rhoair*cgh(2)*(1.-wtg0(2)/fact)
-      ! cgperl = rhoair*cgw(2)*(1.-wtgq0(2)/facq)*dqgperdT
-      ! cgimpl = rhoair*cgw(2)*(1.-wtgq0(2)/facq)*dqgimpdT
-      ! ------------------------------------------------
-      ! cgrnds = cpair*rhoair*cgh(2) &
-      !          *(1.-cgh(2)*fg/(cgh(3)+cgh(2)*fg+cfh(1)*fc(1)+cfh(2)*fc(2))/fact)
-      ! cgperl = rhoair*cgw_per*(dqgperdT &
-      !          - (dqgperdT*cgw_per*fgper*fg) &
-      !          /(caw(2) + cgw_per*fgper*fg + cgw_imp*fgimp*fg) &
-      !          /facq)
-      ! cgimpl = rhoair*cgw_imp*(dqgimpdT &
-      !          - (dqgimpdT*cgw_imp*fgimp*fg) &
-      !          /(caw(2) + cgw_per*fgper*fg + cgw_imp*fgimp*fg) &
-      !          /facq)
-      ! cgimpl = cgimpl*fwet_gimp
-      ! ------------------------------------------------
 
       cgrnds = cpair*rhoair/rd(2)*( 1. - fg/(cT*rd(2)*(1-bT/(cT*rd(3)))) )
 
@@ -1433,7 +1272,6 @@ CONTAINS
 ! initial saturated vapor pressure and humidity and their derivation
 !-----------------------------------------------------------------------
 
-      !clai = 4.2 * 1000. * 0.2
       clai = 0.0
       lsai = lai + sai
 
@@ -1473,14 +1311,8 @@ CONTAINS
       dlveg  = lveg
 
 !-----------------------------------------------------------------------
-! Calculate the weighted qg, tg
+! Calculate the weighted qg, tg, and wet fraction
 !-----------------------------------------------------------------------
-
-      ! set weghting factor
-      ! fah(1) = 1.; fah(2) = 1.; fah(3) = 1.
-      ! faw(1) = 1.; faw(2) = 1.; faw(3) = 1.
-      ! fgh(1) = 1.; fgh(2) = 1.; fgh(3) = 1.
-      ! fgw(1) = 1.; fgw(2) = 1.; fgw(3) = 1.
 
       ! weighted tg and qg
       tg = tgimp*fgimp + tgper*fgper
@@ -1524,7 +1356,6 @@ CONTAINS
       fwetfac = fgimp*fwet_gimp + fgper
       qg = (qgimp*fgimp*fwet_gimp + qgper*fgper) / fwetfac
 
-      ! fgw(2) = fg*fwetfac
 
 !-----------------------------------------------------------------------
 ! initial for fluxes profile
@@ -1567,9 +1398,6 @@ CONTAINS
 
       ! to compare z0 of urban and only the surface
       ! maximum assumption
-      ! 11/26/2021, yuan: remove the below
-      !IF (z0mu < z0mv_lay) z0mu = z0mv_lay
-      !IF (displau < displav_lay) displau = displav_lay
       IF (z0m < z0mg) z0m = z0mg
       IF (displa >= hroof-z0mg) displa = hroof-z0mg
 
@@ -1577,12 +1405,10 @@ CONTAINS
       displau = max(hroof/2., displau)
 
       ! Layer setting
-      IF ( z0mv+displav > 0.5*(z0mu+displau) ) THEN
+      IF ( (.not.run_three_layer) .or. z0mv+displav > 0.5*(z0mu+displau) ) THEN
          numlay = 2; botlay = 2; canlev(3) = 2
-         ! fgh(2) = fg; fgw(2) = fg;
       ELSE
          numlay = 3; botlay = 1
-         ! fgh(1) = fg; fgw(1) = fg;
       ENDIF
 
 !-----------------------------------------------------------------------
@@ -1683,15 +1509,15 @@ CONTAINS
 
 ! Aerodynamic resistance
          ! 09/16/2017:
-         ! note that for ram, it is the resistance from Href to z0m+displa
+         ! NOTE that for ram, it is the resistance from Href to z0m+displa
          ! however, for rah and raw is only from Href to canopy effective
          ! exchange height.
-         ! so rah/raw is not comparable with that of 1D case
+         ! So rah/raw is not comparable with that of 1D case
          ram = 1./(ustar*ustar/um)
 
-         ! 05/02/2016: calculate resistance from the top layer (effective exchange
-         ! height) to reference height
-         ! for urban, from roof height to reference height
+         ! 05/02/2016: calculate resistance from the top layer (effective
+         ! exchange height) to reference height.
+         ! For urban, from roof height to reference height
          rah = 1./(vonkar/(fh-fht)*ustar)
          raw = 1./(vonkar/(fq-fqt)*ustar)
 
@@ -1788,6 +1614,7 @@ CONTAINS
 !-----------------------------------------------------------------------
 ! Bulk boundary layer resistance of leaves
 !-----------------------------------------------------------------------
+
          rb(:) = 0.
 
          DO i = 0, nurb
@@ -1810,7 +1637,7 @@ CONTAINS
             ! ENDIF
             ! rb(i) = rhoair * cpair &
             !       / ( cpair*vonkar*vonkar*ueff_lay(clev)&
-            !           / (log(0.1*hroof/)*(2.3+log(0.1*hroof/))) )
+            !         / (log(0.1*hroof/)*(2.3+log(0.1*hroof/))) )
          ENDDO
 
 !-----------------------------------------------------------------------
@@ -1851,108 +1678,9 @@ CONTAINS
                 + (1.-fwet)*delta*(lai/(rb(3)+rs)) )
 
 !-----------------------------------------------------------------------
-! dimensional and non-dimensional sensible and latent heat conductances
-! for canopy and soil flux calculations.
+! Solve taf(:) and qaf(:)
 !-----------------------------------------------------------------------
 
-         ! cfh(:) = 0.
-         ! cfw(:) = 0.
-
-         ! DO i = 0, nurb
-
-         !    IF (i == 3) THEN
-
-         !       clev = canlev(i)
-         !       delta = 0.0
-         !       IF (qsatl(i)-qaf(clev) .gt. 0.) delta = 1.0
-
-         !       ! calculate sensible heat conductance
-         !       cfh(i) = lsai / rb(i)
-
-         !       ! for building walls, cfw=0., no water transfer
-         !       ! for canopy, keep the same but for one leaf
-         !       ! calculate latent heat conductance
-         !       cfw(i) = (1.-delta*(1.-fwet))*lsai/rb(i) + &
-         !          (1.-fwet)*delta* ( lai/(rb(i)+rs) )
-         !    ELSE
-         !       cfh(i) = 1 / rb(i)
-
-         !       IF (i == 0) THEN !roof
-         !          ! account for fwet
-         !          cfw(i) = fwet_roof / rb(i)
-         !       ELSE
-         !          cfw(i) = 1 / rb(i)
-         !       ENDIF
-         !    ENDIF
-         ! ENDDO
-
-         ! For simplicity, there is no water exchange on the wall
-         ! cfw(1:2) = 0.
-
-         ! initialization
-         ! cah(:) = 0.
-         ! caw(:) = 0.
-         ! cgh(:) = 0.
-         ! cgw(:) = 0.
-
-         ! conductance for each layer
-         ! DO i = 3, botlay, -1
-         !    IF (i == 3) THEN
-         !       cah(i) = 1. / rah
-         !       caw(i) = 1. / raw
-         !    ! ELSE IF (i == 2) THEN
-         !    !    cah(i) = 1e6
-         !    !    caw(i) = 1e6
-         !    ELSE
-         !       cah(i) = 1. / rd(i+1)
-         !       caw(i) = 1. / rd(i+1)
-         !    ENDIF
-
-         !    ! IF (i == 3) THEN
-         !    !    cgh(i) = 1e6
-         !    !    cgw(i) = 1e6
-         !    ! ELSE
-         !       cgh(i) = 1. / rd(i)
-         !       cgw(i) = 1. / rd(i)
-         !    ! ENDIF
-         ! ENDDO
-
-         ! claculate wtshi, wtsqi
-         ! wtshi(:) = cah(:)*fah(:) + cgh(:)*fgh(:)
-         ! wtsqi(:) = caw(:)*faw(:) + cgw(:)*fgw(:)
-
-         ! DO i = 0, nurb
-         !    clev = canlev(i)
-         !    wtshi(clev) = wtshi(clev) + fc(i)*cfh(i)
-         !    wtsqi(clev) = wtsqi(clev) + fc(i)*cfw(i)
-         ! ENDDO
-
-         ! DO i = 3, 3-numlay+1, -1
-         !    wtshi(i) = 1./wtshi(i)
-         !    wtsqi(i) = 1./wtsqi(i)
-         ! ENDDO
-
-         ! wta0(:) = cah(:) * wtshi(:) * fah(:)
-         ! wtg0(:) = cgh(:) * wtshi(:) * fgh(:)
-
-         ! wtaq0(:) = caw(:) * wtsqi(:) * faw(:)
-         ! wtgq0(:) = cgw(:) * wtsqi(:) * fgw(:)
-
-         ! calculate wtl0, wtll, wtlq0, wtlql
-         ! wtll(:)  = 0.
-         ! wtlql(:) = 0.
-
-         ! DO i = 0, nurb
-         !    clev = canlev(i)
-
-         !    wtl0(i)  = cfh(i) * wtshi(clev) * fc(i)
-         !    wtll(clev) = wtll(clev) + wtl0(i)*tu(i)
-
-         !    wtlq0(i) = cfw(i) * wtsqi(clev) * fc(i)
-         !    wtlql(clev) = wtlql(clev) + wtlq0(i)*qsatl(i)
-         ! ENDDO
-
-         ! to solve taf(:) and qaf(:)
          IF (numlay .eq. 2) THEN
 
             ! - Equations:
@@ -1963,6 +1691,7 @@ CONTAINS
             ! taf(3) = (cah(3)*thm + cah(2)*taf(2) + cfh(0)*troof*fc(0))/(cah(3) + cah(2) + cfh(0)*fc(0))
             ! taf(2) = (cah(2)*taf(3) + cgh(2)*tg*fg + cfh(1)*twsun*fc(1) + cfh(2)*twsha*fc(2) + cfh(3)*tl*fc(3) + AHE/(rho*cp))/ &
             !          (cah(2) + cgh(2)*fg + cfh(1)*fc(1) + cfh(2)*fc(2) + cfh(3)*fc(3))
+            !
             ! - Equations:
             ! qaf(3) = (1/raw*qm + 1/rd(3)*qaf(2) + 1/rb(0)*qroof*fc(0))/(1/raw + 1/rd(3) + 1/rb(0)*fc(0))
             ! qaf(2) = (1/rd(3)*qaf(3) + 1/(rd(2)+rss)*qper*fgper*fg + fwetimp/rd(2)*qimp*fgimp*fg + lsai/(rb(3)+rs)*ql*fc(3) + AHE/rho)/ &
@@ -1974,17 +1703,6 @@ CONTAINS
 
             ! 06/20/2021, yuan: account for Anthropogenic heat
             ! 92% heat release as SH, Pigeon et al., 2007
-
-            ! h_vehc = vehc!
-            ! tmpw1  = cah(2)*((cah(3)*thm + cfh(0)*tu(0)*fc(0) + 1/(4*hlr+1)*(Fhac+Fwst)/(rhoair*cpair))/&
-            !          (cah(3) + cah(2) + cfh(0)*fc(0)))
-            ! tmpw2  = (4*hlr/(4*hlr+1)*(Fhac+Fwst)+Fach)/(rhoair*cpair) + (h_vehc+meta)/(rhoair*cpair)
-            ! tmpw3  = cgh(2)*fg*tg + cfh(1)*tu(1)*fc(1) + cfh(2)*tu(2)*fc(2) + cfh(3)*tu(3)*fc(3)
-            ! fact   = 1. - (cah(2)*cah(2)/(cah(3) + cah(2) + cfh(0)*fc(0))/&
-            !          (cah(2) + cgh(2)*fg + cfh(1)*fc(1) + cfh(2)*fc(2) + cfh(3)*fc(3)))
-            ! taf(2) = (tmpw1 + tmpw2 + tmpw3) / &
-            !          (cah(2) + cgh(2)*fg + cfh(1)*fc(1) + cfh(2)*fc(2) + cfh(3)*fc(3)) / &
-            !          fact
 
             h_vehc  = vehc !* 0.98
             Hahe(2) = 4*hlr/(4*hlr+1)*(Fhac+Fwst) + Fach + h_vehc + meta
@@ -2002,33 +1720,10 @@ CONTAINS
 
             IF (qgper < qaf(2)) THEN
               ! dew case. no soil resistance
-              ! cgw_per= cgw(2)
               rss_ = 0
             ELSE
               rss_ = rss
-            !   cgw_per= 1/(1/cgw(2)+rss)
             ENDIF
-
-            ! cgw_imp= fwet_gimp*cgw(2)
-
-            ! account for soil resistance, qgper and qgimp are calculated separately
-            ! l_vehc  = 0
-            ! tmpw1  = caw(2)*((caw(3)*qm + cfw(0)*qsatl(0)*fc(0))/&
-            !          (caw(3) + caw(2) + cfw(0)*fc(0)))
-            ! tmpw2  = l_vehc/(rhoair)
-            ! tmpw3  = cgw_per*qgper*fgper*fg + cgw_imp*qgimp*fgimp*fg + cfw(3)*qsatl(3)*fc(3)
-            ! facq   = 1. - (caw(2)*caw(2)/&
-            !          (caw(3) + caw(2) + cfw(0)*fc(0))/&
-            !          (caw(2) + cgw_per*fgper*fg + cgw_imp*fgimp*fg + cfw(3)*fc(3)))
-            ! qaf(2) = (tmpw1 + tmpw2 + tmpw3)/&
-            !          (caw(2) + cgw_per*fgper*fg + cgw_imp*fgimp*fg + cfw(3)*fc(3))/&
-            !          facq
-
-            ! tmpw1  = 1/(4*hlr+1)*(Fhac+Fwst)/(rhoair*cpair)
-            ! taf(3) = (cah(3)*thm + cah(2)*taf(2) + cfh(0)*tu(0)*fc(0) + tmpw1)/&
-            !          (cah(3) + cah(2) + cfh(0)*fc(0))
-            ! qaf(3) = (caw(3)*qm  + caw(2)*qaf(2) + cfw(0)*qsatl(0)*fc(0))/&
-            !          (caw(3) + caw(2) + cfw(0)*fc(0))
 
             Lahe   = 0 !vehc * 0.08
             cQ     = 1/rd(3) + fg*fgper/(rd(2)+rss_) + fwet_gimp*fg*fgimp/rd(2) + fc(3)/rv
@@ -2052,6 +1747,7 @@ CONTAINS
             !          (1/rd(3)+1/rd(2)+1/rb(1)*fc(1)+1/rb(2)*fc(2))
             ! taf(1) = (1/rd(2)*taf(2)+1/rd(1)*tg*fg+1/rb(3)*tl*fc(3)+Hveh/rhoair/cpair)/&
             !          (1/rd(2)+1/rd(1)*fg+1/rb(3)*fc(3))
+            !
             ! - Equations:
             ! qaf(3) = (1/raw*qm+1/rd(3)*qaf(2)+1/rb(0)*qroof*fc(0))/&
             !          (1/raw+1/rd(3)+1/rb(0)*fc(0))
@@ -2059,28 +1755,6 @@ CONTAINS
             !          (1/rd(3) + 1/rd(2))
             ! qaf(1) = (1/rd(2)*qaf(2)+1/(rd(1)+rss)*qgper*fgper*fg+1/rd(1)*qimp*fgimp*fg+1/(rb(3)+rs)*ql*fc(3)+h_veh/rho))/&
             !          (1/rd(2)+1/(rd(1)+rss)*fgper*fg+1/rd(1)*fgimp*fg+1/(rb(3)+rs)*fc(3))
-
-            ! tmpw1  = cah(1)*(cgh(1)*tg*fg + cfh(3)*tu(3)*fc(3) + (vehc+meta)/rhoair/cpair)/&
-            !          (cah(1) + cgh(1)*fg + cfh(3)*fc(3))
-            ! tmpw2  = cah(2)*(cah(3)*thm + cfh(0)*tu(0)*fc(0) + 1/(4*hlr+1)*(Fhac+Fwst)/(rhoair*cpair))/&
-            !          (cah(3) + cah(2) + cfh(0)*fc(0))
-            ! tmpw3  = cah(1)*cah(1)/&
-            !          (cah(1) + cgh(1)*fg + cfh(3)*fc(3))/&
-            !          (cah(1) + cah(2) + cfh(1)*fc(1) + cfh(2)*fc(2))
-            ! tmpw4  = cah(2)*cah(2)/&
-            !          (cah(3) + cah(2) + cfh(0)*fc(0))/&
-            !          (cah(1) + cah(2) + cfh(1)*fc(1) + cfh(2)*fc(2))
-            ! fact   = 1. - tmpw3 - tmpw4
-
-            ! taf(2) = (tmpw1 + tmpw2 + cfh(1)*tu(1)*fc(1) + cfh(2)*tu(2)*fc(2) + (4*hlr/(4*hlr+1)*(Fhac+Fwst)+Fach)/(rhoair*cpair))/&
-            !          (cah(1) + cah(2) + cfh(1)*fc(1) + cfh(2)*fc(2))/&
-            !          fact
-
-            ! taf(1) = (cah(1)*taf(2) + cgh(1)*tg*fg + cfh(3)*tu(3)*fc(3) + (vehc+meta)/rhoair/cpair)/&
-            !          (cah(1) + cgh(1)*fg + cfh(3)*fc(3))
-            ! tmpw1  = 1/(4*hlr+1)*(Fhac+Fwst)/(rhoair*cpair)
-            ! taf(3) = (cah(3)*thm + cah(2)*taf(2) + cfh(0)*tu(0)*fc(0) + tmpw1)/&
-            !          (cah(3) + cah(2) + cfh(0)*fc(0))
 
             Hahe(1) = vehc + meta ! vehc*0.98 + meta
             Hahe(2) = 4*hlr/(4*hlr+1)*(Fhac+Fwst) + Fach
@@ -2103,37 +1777,10 @@ CONTAINS
 
             IF (qgper < qaf(1)) THEN
               ! dew case. no soil resistance
-              ! cgw_per= cgw(1)
               rss_ = 0
             ELSE
               rss_ = rss
-              ! cgw_per= 1/(1/cgw(1)+rss)
             ENDIF
-
-            ! cgw_imp= fwet_gimp*cgw(1)
-
-            ! l_vehc = 0
-            ! tmpw1  = caw(1)*(cgw_per*qgper*fgper*fg + cgw_imp*qgimp*fgimp*fg + cfw(3)*qsatl(3)*fc(3) + l_vehc/(rhoair))/&
-            !          (caw(1) + cgw_per*fgper*fg + cgw_imp*fgimp*fg + cfw(3)*fc(3))
-            ! tmpw2  = caw(2)*(caw(3)*qm + cfw(0)*qsatl(0)*fc(0))/&
-            !          (caw(3) + caw(2) + cfw(0)*fc(0))
-            ! tmpw3  = caw(1)*caw(1)/&
-            !          (caw(1) + cgw_per*fgper*fg + cgw_imp*fgimp*fg + cfw(3)*fc(3))/&
-            !          (caw(2) + caw(1))
-            ! tmpw4  = caw(2)*caw(2)/&
-            !          (caw(3) + caw(2) + cfw(0)*fc(0))/&
-            !          (caw(2) + caw(1))
-            ! facq   = 1. - tmpw3 - tmpw4
-
-            ! qaf(2) = (tmpw1 + tmpw2)/&
-            !          (caw(2) + caw(1))/&
-            !          facq
-
-            ! tmpw1  = l_vehc/(rhoair)
-            ! qaf(1) = (caw(1)*qaf(2) + qgper*cgw_per*fgper*fg + qgimp*cgw_imp*fgimp*fg + cfw(3)*qsatl(3)*fc(3) + tmpw1)/&
-            !          (caw(1) + cgw_per*fgper*fg + cgw_imp*fgimp*fg + cfw(3)*fc(3))
-            ! qaf(3) = (caw(3)*qm + caw(2)*qaf(2) + cfw(0)*qsatl(0)*fc(0))/&
-            !          (caw(3) + caw(2) + cfw(0)*fc(0))
 
             Lahe   = 0 ! vehc*0.08
             cQ     = 1/rd(3) + 1/rd(2)
@@ -2163,17 +1810,10 @@ CONTAINS
 ! sensible heat fluxes and their derivatives
          fsenl = rhoair * cpair * lsai/rb(3) * (tl - taf(botlay))
 
-         ! 09/24/2017: why fact/facq here? bugs? YES
-         ! 09/25/2017: re-written, check it clearfully
-         ! 11/25/2021: re-written, double check
          IF (botlay == 2) THEN
-            ! fsenl_dtl = rhoair * cpair * cfh(i) * (1.-wtl0(i)/fact)
-            ! fsenl_dtl = rhoair * cpair * cfh(3) &
-            !             *(1.-cfh(3)*fc(3)/(cgh(3)+cgh(2)*fg+cfh(1)*fc(1)+cfh(2)*fc(2)+cfh(3)*fc(3))/fact)
             fsenl_dtl = rhoair * cpair * lsai/rb(3) &
                       * ( 1. - fc(3)*lsai/(rb(3)*cT*(1-bT/(cT*rd(3)))) )
          ELSE
-            ! fsenl_dtl = rhoair * cpair * cfh(i) * (1.-wta0(1)*wtg0(2)*wtl0(i)/fact-wtl0(i))
             fsenl_dtl = rhoair * cpair * lsai/rb(3) &
                       * ( 1. - fc(3)*lsai/(rb(3)*(1/rd(2)+fg/rd(1)+fc(3)*lsai/rb(3))) &
                              - fc(3)*lsai*aT*aT/(rb(3)*cT*(1-aT/(cT*rd(2))-bT/(cT*rd(3)))) )
@@ -2185,17 +1825,10 @@ CONTAINS
              * (qsatl(i) - qaf(botlay))
 
          IF (botlay == 2) THEN
-            ! etr_dtl = rhoair * (1.-fwet) * delta * lai/(rb(i)+rs) &
-            !         * (1.-wtlq0(i)/facq)*qsatldT(i)
-            ! etr_dtl = rhoair * (1.-fwet) * delta * lai/(rb(3)+rs) &
-            !           *(1.-cfw(3)*fc(3)/(cgw(3)+cgw_per*fgper*fg+cgw_imp*fgimp*fg+cfw(3)*fc(3))/facq) &
-            !           *qsatldT(3)
             etr_dtl = rhoair * (1.-fwet) * delta * lai/(rb(3)+rs) &
                     * (1.-fc(3)/(cQ*rv*(1-bQ/(cQ*rd(3))))) &
                     * qsatldT(3)
          ELSE
-            ! etr_dtl = rhoair * (1.-fwet) * delta * lai/(rb(i)+rs) &
-            !         * (1.-wtaq0(1)*wtgq0(2)*wtlq0(i)/facq-wtlq0(i))*qsatldT(i)
             etr_dtl = rhoair * (1.-fwet) * delta * lai/(rb(i)+rs) &
                     * ( 1. - fc(3)/(rv*(1/rd(2)+fg*fgimp*fwet_gimp/rd(1)+fg*fgper/(rss_+rd(1))+fc(3)/rv)) &
                            - fc(3)*aQ*aQ/(rv*CQ*(1-aQ/(cQ*rd(2))-bQ/(cQ*rd(3)))) )
@@ -2210,18 +1843,10 @@ CONTAINS
                  * (qsatl(i) - qaf(botlay))
 
          IF (botlay == 2) THEN
-            ! evplwet_dtl = rhoair * (1.-delta*(1.-fwet)) * lsai/rb(i) &
-            !             * (1.-wtlq0(i)/facq)*qsatldT(i)
-            ! evplwet_dtl = rhoair * (1.-delta*(1.-fwet)) * lsai/rb(3) &
-            !               *(1.-cfw(3)*fc(3)/(cgw(3)+cgw_per*fgper*fg+cgw_imp*fgimp*fg+cfw(3)*fc(3))/facq) &
-            !               *qsatldT(3)
             evplwet_dtl = rhoair * (1.-delta*(1.-fwet)) * lsai/rb(3) &
                         * (1.-fc(3)/(cQ*rv*(1-bQ/(cQ*rd(3))))) &
                         * qsatldT(3)
          ELSE
-            ! evplwet_dtl = rhoair * (1.-delta*(1.-fwet)) * lsai/rb(i) &
-            !             * (1.-wtaq0(1)*wtgq0(2)*wtlq0(i)/facq-wtlq0(i))*qsatldT(i)
-
             evplwet_dtl = rhoair * (1.-delta*(1.-fwet)) * lsai/rb(i) &
                         * ( 1. - fc(3)/(rv*(1/rd(2)+fg*fgimp*fwet_gimp/rd(1)+fg*fgper/(rss_+rd(1))+fc(3)/rv)) &
                                - fc(3)*aQ*aQ/(rv*CQ*(1-aQ/(cQ*rd(2))-bQ/(cQ*rd(3)))) )
@@ -2301,16 +1926,6 @@ CONTAINS
 ! update vegetation/ground surface temperature, canopy air temperature,
 ! canopy air humidity
 
-         ! calculate wtll, wtlql
-         ! wtll(:)  = 0.
-         ! wtlql(:) = 0.
-
-         ! DO i = 0, nurb
-         !    clev = canlev(i)
-         !    wtll(clev)  =  wtll(clev) + wtl0(i)*tu(i)
-         !    wtlql(clev) = wtlql(clev) + wtlq0(i)*qsatl(i)
-         ! ENDDO
-
          IF (numlay .eq. 2) THEN
 
             ! - Equations:
@@ -2321,6 +1936,7 @@ CONTAINS
             ! taf(3) = (cah(3)*thm + cah(2)*taf(2) + cfh(0)*troof*fc(0))/(cah(3) + cah(2) + cfh(0)*fc(0))
             ! taf(2) = (cah(2)*taf(3) + cgh(2)*tg*fg + cfh(1)*twsun*fc(1) + cfh(2)*twsha*fc(2) + cfh(3)*tl*fc(3) + AHE/(rho*cp))/ &
             !          (cah(2) + cgh(2)*fg + cfh(1)*fc(1) + cfh(2)*fc(2) + cfh(3)*fc(3))
+            !
             ! - Equations:
             ! qaf(3) = (1/raw*qm + 1/rd(3)*qaf(2) + 1/rb(0)*qroof*fc(0))/(1/raw + 1/rd(3) + 1/rb(0)*fc(0))
             ! qaf(2) = (1/rd(3)*qaf(3) + 1/(rd(2)+rss)*qper*fgper*fg + fwetimp/rd(2)*qimp*fgimp*fg + lsai/(rb(3)+rs)*ql*fc(3) + AHE/rho)/ &
@@ -2332,17 +1948,6 @@ CONTAINS
 
             ! 06/20/2021, yuan: account for AH
             ! 92% heat release as SH, Pigeon et al., 2007
-
-            ! h_vehc = vehc
-            ! tmpw1  = cah(2)*((cah(3)*thm + cfh(0)*tu(0)*fc(0) + 1/(4*hlr+1)*(Fhac+Fwst)/(rhoair*cpair))/&
-            !          (cah(3) + cah(2) + cfh(0)*fc(0)))
-            ! tmpw2  = (4*hlr/(4*hlr+1)*(Fhac+Fwst)+Fach)/(rhoair*cpair) + (h_vehc+meta)/(rhoair*cpair)
-            ! tmpw3  = cgh(2)*fg*tg + cfh(1)*tu(1)*fc(1) + cfh(2)*tu(2)*fc(2) + cfh(3)*tu(3)*fc(3)
-            ! fact   = 1. - (cah(2)*cah(2)/(cah(3) + cah(2) + cfh(0)*fc(0))/&
-            !          (cah(2) + cgh(2)*fg + cfh(1)*fc(1) + cfh(2)*fc(2) + cfh(3)*fc(3)))
-            ! taf(2) = (tmpw1 + tmpw2 + tmpw3) / &
-            !          (cah(2) + cgh(2)*fg + cfh(1)*fc(1) + cfh(2)*fc(2) + cfh(3)*fc(3)) / &
-            !          fact
 
             h_vehc  = vehc !* 0.92
             Hahe(2) = 4*hlr/(4*hlr+1)*(Fhac+Fwst) + Fach + h_vehc + meta
@@ -2360,33 +1965,10 @@ CONTAINS
 
             IF (qgper < qaf(2)) THEN
               ! dew case. no soil resistance
-              ! cgw_per= cgw(2)
               rss_ = 0
             ELSE
               rss_ = rss
-              ! cgw_per= 1/(1/cgw(2)+rss)
             ENDIF
-
-            ! cgw_imp= fwet_gimp*cgw(2)
-
-            ! account for soil resistance, qgper and qgimp are calculated separately
-            ! l_vehc = 0
-            ! tmpw1  = caw(2)*((caw(3)*qm + cfw(0)*qsatl(0)*fc(0))/&
-            !          (caw(3) + caw(2) + cfw(0)*fc(0)))
-            ! tmpw2  = l_vehc/(rhoair)
-            ! tmpw3  = cgw_per*qgper*fgper*fg + cgw_imp*qgimp*fgimp*fg + cfw(3)*qsatl(3)*fc(3)
-            ! facq   = 1. - (caw(2)*caw(2)/&
-            !          (caw(3) + caw(2) + cfw(0)*fc(0))/&
-            !          (caw(2) + cgw_per*fgper*fg + cgw_imp*fgimp*fg + cfw(3)*fc(3)))
-            ! qaf(2) = (tmpw1 + tmpw2 + tmpw3)/&
-            !          (caw(2) + cgw_per*fgper*fg + cgw_imp*fgimp*fg + cfw(3)*fc(3))/&
-            !          facq
-
-            ! tmpw1  = 1/(4*hlr+1)*(Fhac+Fwst)/(rhoair*cpair)
-            ! taf(3) = (cah(3)*thm + cah(2)*taf(2) + cfh(0)*tu(0)*fc(0) + tmpw1)/&
-            !          (cah(3) + cah(2) + cfh(0)*fc(0))
-            ! qaf(3) = (caw(3)*qm  + caw(2)*qaf(2) + cfw(0)*qsatl(0)*fc(0))/&
-            !          (caw(3) + caw(2) + cfw(0)*fc(0))
 
             Lahe   = 0 ! vehc * 0.08
             cQ     = 1/rd(3) + fg*fgper/(rd(2)+rss_) + fwet_gimp*fg*fgimp/rd(2) + fc(3)/rv
@@ -2410,6 +1992,7 @@ CONTAINS
             !          (1/rd(3)+1/rd(2)+1/rb(1)*fc(1)+1/rb(2)*fc(2))
             ! taf(1) = (1/rd(2)*taf(2)+1/rd(1)*tg*fg+1/rb(3)*tl*fc(3)+Hveh/rhoair/cpair)/&
             !          (1/rd(2)+1/rd(1)*fg+1/rb(3)*fc(3))
+            !
             ! - Equations:
             ! qaf(3) = (1/raw*qm+1/rd(3)*qaf(2)+1/rb(0)*qroof*fc(0))/&
             !          (1/raw+1/rd(3)+1/rb(0)*fc(0))
@@ -2417,28 +2000,6 @@ CONTAINS
             !          (1/rd(3) + 1/rd(2))
             ! qaf(1) = (1/rd(2)*qaf(2)+1/(rd(1)+rss)*qgper*fgper*fg+1/rd(1)*qimp*fgimp*fg+1/(rb(3)+rs)*ql*fc(3)+h_veh/rho))/&
             !          (1/rd(2)+1/(rd(1)+rss)*fgper*fg+1/rd(1)*fgimp*fg+1/(rb(3)+rs)*fc(3))
-
-            ! tmpw1  = cah(1)*(cgh(1)*tg*fg + cfh(3)*tu(3)*fc(3) + (vehc+meta)/rhoair/cpair)/&
-            !          (cah(1) + cgh(1)*fg + cfh(3)*fc(3))
-            ! tmpw2  = cah(2)*(cah(3)*thm + cfh(0)*tu(0)*fc(0) + 1/(4*hlr+1)*(Fhac+Fwst)/(rhoair*cpair))/&
-            !          (cah(3) + cah(2) + cfh(0)*fc(0))
-            ! tmpw3  = cah(1)*cah(1)/&
-            !          (cah(1) + cgh(1)*fg + cfh(3)*fc(3))/&
-            !          (cah(1) + cah(2) + cfh(1)*fc(1) + cfh(2)*fc(2))
-            ! tmpw4  = cah(2)*cah(2)/&
-            !          (cah(3) + cah(2) + cfh(0)*fc(0))/&
-            !          (cah(1) + cah(2) + cfh(1)*fc(1) + cfh(2)*fc(2))
-            ! fact   = 1. - tmpw3 - tmpw4
-
-            ! taf(2) = (tmpw1 + tmpw2 + cfh(1)*tu(1)*fc(1) + cfh(2)*tu(2)*fc(2) + (4*hlr/(4*hlr+1)*(Fhac+Fwst)+Fach)/(rhoair*cpair))/&
-            !          (cah(1) + cah(2) + cfh(1)*fc(1) + cfh(2)*fc(2))/&
-            !          fact
-
-            ! taf(1) = (cah(1)*taf(2) + cgh(1)*tg*fg + cfh(3)*tu(3)*fc(3) + (vehc+meta)/rhoair/cpair)/&
-            !          (cah(1) + cgh(1)*fg + cfh(3)*fc(3))
-            ! tmpw1  = 1/(4*hlr+1)*(Fhac+Fwst)/(rhoair*cpair)
-            ! taf(3) = (cah(3)*thm + cah(2)*taf(2) + cfh(0)*tu(0)*fc(0) + tmpw1)/&
-            !          (cah(3) + cah(2) + cfh(0)*fc(0))
 
             h_vehc  = vehc ! vehc * 0.92
             Hahe(1) = h_vehc + meta
@@ -2462,37 +2023,11 @@ CONTAINS
 
             IF (qgper < qaf(1)) THEN
               ! dew case. no soil resistance
-              ! cgw_per= cgw(1)
               rss_ = 0
             ELSE
               rss_ = rss
-              ! cgw_per= 1/(1/cgw(1)+rss)
             ENDIF
 
-            ! cgw_imp= fwet_gimp*cgw(1)
-
-            ! l_vehc = 0!vehc*0.08
-            ! tmpw1  = caw(1)*(cgw_per*qgper*fgper*fg + cgw_imp*qgimp*fgimp*fg + cfw(3)*qsatl(3)*fc(3) + l_vehc/(rhoair))/&
-            !          (caw(1) + cgw_per*fgper*fg + cgw_imp*fgimp*fg + cfw(3)*fc(3))
-            ! tmpw2  = caw(2)*(caw(3)*qm + cfw(0)*qsatl(0)*fc(0))/&
-            !          (caw(3) + caw(2) + cfw(0)*fc(0))
-            ! tmpw3  = caw(1)*caw(1)/&
-            !          (caw(1) + cgw_per*fgper*fg + cgw_imp*fgimp*fg + cfw(3)*fc(3))/&
-            !          (caw(2) + caw(1))
-            ! tmpw4  = caw(2)*caw(2)/&
-            !          (caw(3) + caw(2) + cfw(0)*fc(0))/&
-            !          (caw(2) + caw(1))
-            ! facq   = 1. - tmpw3 - tmpw4
-
-            ! qaf(2) = (tmpw1 + tmpw2)/&
-            !          (caw(2) + caw(1))/&
-            !          facq
-
-            ! tmpw1  = l_vehc/(rhoair)
-            ! qaf(1) = (caw(1)*qaf(2) + qgper*cgw_per*fgper*fg + qgimp*cgw_imp*fgimp*fg + cfw(3)*qsatl(3)*fc(3) + tmpw1)/&
-            !          (caw(1) + cgw_per*fgper*fg + cgw_imp*fgimp*fg + cfw(3)*fc(3))
-            ! qaf(3) = (caw(3)*qm + caw(2)*qaf(2) + cfw(0)*qsatl(0)*fc(0))/&
-            !          (caw(3) + caw(2) + cfw(0)*fc(0))
             Lahe   = 0
             cQ     = 1/rd(3) + 1/rd(2)
             bQ     = 1/(rd(3)*(1/raw+1/rd(3)+fwet_roof*fc(0)/rb(0)))
@@ -2778,24 +2313,6 @@ CONTAINS
       fevproof = fevproof*fwet_roof
 
       IF (botlay == 2) THEN
-         ! --------------------ctl version------------------------
-         ! cwalls = rhoair*cpair*cfh(1)*(1.-wtl0(1)/fact)
-         ! croofs = rhoair*cpair*cfh(0)*(1.-wtg0(3)*wta0(2)*wtl0(0)/fact-wtl0(0))
-         ! croofl = rhoair*cfw(0)*(1.-wtgq0(3)*wtaq0(2)*wtlq0(0)/facq-wtlq0(0))*qsatldT(0)
-         !
-         ! croofs = rhoair*cpair*cfh(0) &
-         !          *(1.-cgh(3)/(cah(3)+cgh(3)+cfh(0)*fc(0)) &
-         !          *cah(2)/(cah(2)+cgh(2)*fg+cfh(1)*fc(1)+cfh(2)*fc(2)+cfh(3)*fc(3)) &
-         !          *cfh(0)*fc(0)/(cah(3)+cgh(3)+cfh(0)*fc(0))/fact &
-         !          -cfh(0)*fc(0)/(cah(3)+cgh(3)+cfh(0)*fc(0)))
-         ! cwalls = rhoair*cpair*cfh(1) &
-         !          *(1.-cfh(1)*fc(1)/(cgh(3)+cgh(2)*fg+cfh(1)*fc(1)+cfh(2)*fc(2)+cfh(3)*fc(3))/fact)
-         !
-         ! croofl = rhoair*cfw(0)*(1.-cfw(0)*fc(0)/(caw(3)+cgw(3)+cfw(0)*fc(0))-cgw(3) &
-         !          /(caw(3)+cgw(3)+cfw(0)*fc(0)) &
-         !          /(cgw(3)+cgw_per*fgper*fg+cgw_imp*fgimp*fg+cfw(3)*fc(3))* &
-         !          cfw(0)*fc(0)*cgw(3)/(caw(3)+cgw(3)+cfw(0)*fc(0))/facq)*qsatldT(0)
-         ! --------------------------------------------------------
 
          bT     = 1/(rd(3) * (1/rah+1/rd(3)+fc(0)/rb(0)))
          cT     = 1/rd(3) + fg/rd(2) + fc(1)/rb(1) + fc(2)/rb(2) + fc(3)*lsai/rb(3)
@@ -2819,11 +2336,6 @@ CONTAINS
 
          croof  = croofs + croofl*htvp_roof
       ELSE
-         ! --------------------ctl version------------------------
-         ! cwalls = rhoair*cpair*cfh(1)*(1.-wtl0(1)/fact)
-         ! croofs = rhoair*cpair*cfh(0)*(1.-wtg0(3)*wta0(2)*wtl0(0)/fact-wtl0(0))
-         ! croofl = rhoair*cfw(0)*(1.-wtgq0(3)*wtaq0(2)*wtlq0(0)/facq-wtlq0(0))*qsatldT(0)
-         ! --------------------------------------------------------
 
          cT     = 1/rd(3) + 1/rd(2) + fc(1)/rb(1) + fc(2)/rb(2)
          bT     = 1/(rd(3)*(1/rah+1/rd(3)+fc(0)/rb(0)))
@@ -2865,22 +2377,6 @@ CONTAINS
 !-----------------------------------------------------------------------
 
       IF (botlay == 2) THEN
-         ! ------------ctl version---------------------------
-         ! cgrnds = cpair*rhoair*cgh(2)*(1.-wtg0(2)/fact)
-         ! cgperl = rhoair*cgw(2)*(1.-wtgq0(2)/facq)*dqgperdT
-         ! cgimpl = rhoair*cgw(2)*(1.-wtgq0(2)/facq)*dqgimpdT
-         !
-         ! cgrnds = cpair*rhoair*cgh(2) &
-         !          *(1.-cgh(2)*fg/(cgh(3)+cgh(2)*fg+cfh(1)*fc(1)+cfh(2)*fc(2)+cfh(3)*fc(3))/fact)
-         ! cgperl = rhoair*cgw_per*(dqgperdT &
-         !          -(dqgperdT*cgw_per*fgper*fg) &
-         !          /(caw(2) + cgw_per*fgper*fg + cgw_imp*fgimp*fg + cfw(3)*fc(3)) &
-         !          /facq)
-         ! cgimpl = rhoair*cgw_imp*(dqgimpdT &
-         !          -(dqgimpdT*cgw_imp*fgimp*fg) &
-         !          /(caw(2) + cgw_per*fgper*fg + cgw_imp*fgimp*fg + cfw(3)*fc(3)) &
-         !          /facq)
-         ! ----------------------------------------------------
          cgrnds = cpair*rhoair/rd(2)*( 1. - fg/(cT*rd(2)*(1-bT/(cT*rd(3)))) )
 
          cgperl = rhoair/(rd(2)+rss_)*dqgperdT*( 1 - fg*fgper/(cQ*(rd(2)+rss_)*(1-bQ/(cQ*rd(3)))) )
@@ -2888,11 +2384,6 @@ CONTAINS
          cgimpl = cgimpl*fwet_gimp
 
       ELSE !botlay == 1
-         ! -------------------------ctl version----------------
-         ! cgrnds = cpair*rhoair*cgh(1)*(1.-wta0(1)*wtg0(2)*wtg0(1)/fact-wtg0(1))
-         ! cgperl = rhoair*cgw_per*(1.-wtaq0(1)*wtgq0(2)*wtgq0(1)/facq-wtgq0(1))*dqgperdT
-         ! cgimpl = rhoair*cgw_imp*(1.-wtaq0(1)*wtgq0(2)*wtgq0(1)/facq-wtgq0(1))*dqgimpdT
-         ! ----------------------------------------------------
          cgrnds = cpair*rhoair/rd(1)* &
                   ( 1. - fg/(rd(1)*(1/rd(2)+fg/rd(1)+fc(3)*lsai/rb(3))) &
                        - fg*aT*aT/(rd(1)*cT*(1-aT/(cT*rd(2))-bT/(cT*rd(3)))) )
