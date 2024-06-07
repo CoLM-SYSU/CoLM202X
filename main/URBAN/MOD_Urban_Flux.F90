@@ -59,10 +59,15 @@ MODULE MOD_Urban_Flux
 !   1. Masson, 2000; Oleson et al., 2008
 !   2. Swaid, 1993; Kusaka, 2001; Lee and Park, 2008
 !   3. Macdonald, 2000
-   integer, parameter :: alpha_opt = 3
+   integer,  parameter :: alpha_opt = 3
 
 ! Layer number setting, default is false, i.e., 2 layers
-   logical, parameter :: run_three_layer = .false.
+   logical,  parameter :: run_three_layer = .false.
+
+! Percent of sensible/latent to AHE (only for Fhac, Fwst, vehc now),
+! 92% heat release as SH, 8% heat release as LH, Pigeon et al., 2007
+   real(r8), parameter :: fsh = 0.92
+   real(r8), parameter :: flh = 0.08
 
 !-----------------------------------------------------------------------
 
@@ -100,7 +105,7 @@ CONTAINS
 
 !=======================================================================
    USE MOD_Precision
-   USE MOD_Const_Physical, only: cpair,vonkar,grav
+   USE MOD_Const_Physical, only: cpair,vonkar,grav,hvap
    USE MOD_FrictionVelocity
    USE MOD_CanopyLayerProfile
    IMPLICIT NONE
@@ -331,7 +336,7 @@ CONTAINS
 
    ! temporal
    integer i
-   real(r8) h_vehc, tmpw3, cgw_per, cgw_imp
+   real(r8) tmpw3, cgw_per, cgw_imp
    real(r8) bee, tmpw1, tmpw2, fact, facq
    real(r8) aT, bT, cT
    real(r8) aQ, bQ, cQ, Lahe
@@ -646,9 +651,8 @@ CONTAINS
             ! 06/20/2021, yuan: account for Anthropogenic heat
             ! 92% heat release as SH, Pigeon et al., 2007
 
-            h_vehc  = vehc! * 0.92
-            Hahe(2) = 4*hlr/(4*hlr+1)*(Fhac+Fwst) + Fach + h_vehc + meta
-            Hahe(3) = 1/(4*hlr+1)*(Fhac+Fwst)
+            Hahe(2) = 4*hlr/(4*hlr+1)*(Fhac+Fwst)*fsh + Fach + vehc*fsh + meta
+            Hahe(3) = 1/(4*hlr+1)*(Fhac+Fwst)*fsh
 
             bT     = 1/(rd(3) * (1/rah+1/rd(3)+fc(0)/rb(0)))
             cT     = 1/rd(3) + fg/rd(2) + fc(1)/rb(1) + fc(2)/rb(2)
@@ -667,12 +671,12 @@ CONTAINS
               rss_ = rss
             ENDIF
 
-            Lahe   = 0 ! vehc * 0.08
+            Lahe   = (Fhac + Fwst + vehc)*flh
             cQ     = 1/rd(3) + fg*fgper/(rd(2)+rss_) + fwet_gimp*fg*fgimp/rd(2)
             bQ     = 1/(rd(3) * (1/raw+1/rd(3)+fwet_roof*fc(0)/rb(0)))
             aQ     = (qsatl(0)*fwet_roof*fc(0)/rb(0) + qm/raw)*bQ
 
-            qaf(2) = (qgper*fgper*fg/(rd(2)+rss_) + qgimp*fwet_gimp*fgimp*fg/rd(2) + aQ + Lahe/rhoair) &
+            qaf(2) = (qgper*fgper*fg/(rd(2)+rss_) + qgimp*fwet_gimp*fgimp*fg/rd(2) + aQ + Lahe/rhoair/hvap) &
                    / (cQ * (1-bQ/(cQ*rd(3))))
 
             qaf(3) = (qaf(2)/rd(3) + qsatl(0)*fwet_roof*fc(0)/rb(0) + qm/raw) &
@@ -1233,7 +1237,6 @@ CONTAINS
    real(r8) fwet_roof, fwet_roof_, fwet_gimp, fwet_gimp_, rss_
    real(r8) fwetfac, lambda
    real(r8) cgw_imp, cgw_per
-   real(r8) h_vehc, l_vehc
 
    ! for interface
    real(r8) o3coefv,o3coefg,assim_RuBP, assim_Rubisco, ci, vpd, gammas
@@ -1704,9 +1707,8 @@ CONTAINS
             ! 06/20/2021, yuan: account for Anthropogenic heat
             ! 92% heat release as SH, Pigeon et al., 2007
 
-            h_vehc  = vehc !* 0.98
-            Hahe(2) = 4*hlr/(4*hlr+1)*(Fhac+Fwst) + Fach + h_vehc + meta
-            Hahe(3) = 1/(4*hlr+1)*(Fhac+Fwst)
+            Hahe(2) = 4*hlr/(4*hlr+1)*(Fhac+Fwst)*fsh + Fach + vehc*fsh + meta
+            Hahe(3) = 1/(4*hlr+1)*(Fhac+Fwst)*fsh
 
             bT     = 1/(rd(3) * (1/rah+1/rd(3)+fc(0)/rb(0)))
             cT     = 1/rd(3) + fg/rd(2) + fc(1)/rb(1) + fc(2)/rb(2) + fc(3)*lsai/rb(3)
@@ -1725,12 +1727,12 @@ CONTAINS
               rss_ = rss
             ENDIF
 
-            Lahe   = 0 !vehc * 0.08
+            Lahe   = (Fhac + Fwst + vehc)*flh
             cQ     = 1/rd(3) + fg*fgper/(rd(2)+rss_) + fwet_gimp*fg*fgimp/rd(2) + fc(3)/rv
             bQ     = 1/(rd(3) * (1/raw+1/rd(3)+fwet_roof*fc(0)/rb(0)))
             aQ     = (qsatl(0)*fwet_roof*fc(0)/rb(0) + qm/raw)*bQ
 
-            qaf(2) = (qgper*fgper*fg/(rd(2)+rss_) + qgimp*fwet_gimp*fgimp*fg/rd(2) + qsatl(3)*fc(3)/rv + aQ + Lahe/rhoair) &
+            qaf(2) = (qgper*fgper*fg/(rd(2)+rss_) + qgimp*fwet_gimp*fgimp*fg/rd(2) + qsatl(3)*fc(3)/rv + aQ + Lahe/rhoair/hvap) &
                      / (cQ * (1-bQ/(cQ*rd(3))))
 
             qaf(3) = (qaf(2)/rd(3) + qsatl(0)*fwet_roof*fc(0)/rb(0) + qm/raw) &
@@ -1756,9 +1758,9 @@ CONTAINS
             ! qaf(1) = (1/rd(2)*qaf(2)+1/(rd(1)+rss)*qgper*fgper*fg+1/rd(1)*qimp*fgimp*fg+1/(rb(3)+rs)*ql*fc(3)+h_veh/rho))/&
             !          (1/rd(2)+1/(rd(1)+rss)*fgper*fg+1/rd(1)*fgimp*fg+1/(rb(3)+rs)*fc(3))
 
-            Hahe(1) = vehc + meta ! vehc*0.98 + meta
-            Hahe(2) = 4*hlr/(4*hlr+1)*(Fhac+Fwst) + Fach
-            Hahe(3) = 1/(4*hlr+1)*(Fhac+Fwst)
+            Hahe(1) = vehc*fsh + meta
+            Hahe(2) = 4*hlr/(4*hlr+1)*(Fhac+Fwst)*fsh + Fach
+            Hahe(3) = 1/(4*hlr+1)*(Fhac+Fwst)*fsh
 
             cT     = 1/rd(3) + 1/rd(2) + fc(1)/rb(1) + fc(2)/rb(2)
             at     = 1/(rd(2)*(1/rd(2)+fg/rd(1)+fc(3)*lsai/rb(3)))
@@ -1782,16 +1784,16 @@ CONTAINS
               rss_ = rss
             ENDIF
 
-            Lahe   = 0 ! vehc*0.08
+            Lahe   = (Fhac + Fwst + vehc)*flh
             cQ     = 1/rd(3) + 1/rd(2)
             bQ     = 1/(rd(3)*(1/raw+1/rd(3)+fwet_roof*fc(0)/rb(0)))
             aQ     = 1/(rd(2)*(1/rd(2)+fg*fgimp*fwet_gimp/rd(1)+fg*fgper/(rd(1)+rss_)+fc(3)/rv))
 
-            qaf(2) = ( (fg*fgimp*fwet_gimp*qgimp/rd(1) + fg*fgper*qgper/(rd(1)+rss_) + fc(3)*qsatl(3)/rv + Lahe/rhoair)*aQ &
+            qaf(2) = ( (fg*fgimp*fwet_gimp*qgimp/rd(1) + fg*fgper*qgper/(rd(1)+rss_) + fc(3)*qsatl(3)/rv + Lahe/rhoair/hvap)*aQ &
                      + (qm/raw+fc(0)*fwet_roof*qsatl(0)/rb(0))*bQ ) &
                      / ( cQ*(1-bQ/(cQ*rd(3))-aQ/(cQ*rd(2))) )
 
-            qaf(1) = ( fg*fgimp*fwet_gimp*qgimp/rd(1) + fg*fgper*qgper/(rd(1)+rss_) + fc(3)*qsatl(3)/rv + qaf(2)/rd(2) + Lahe/rhoair ) &
+            qaf(1) = ( fg*fgimp*fwet_gimp*qgimp/rd(1) + fg*fgper*qgper/(rd(1)+rss_) + fc(3)*qsatl(3)/rv + qaf(2)/rd(2) + Lahe/rhoair/hvap ) &
                      / ( 1/rd(2) + fg*fgimp*fwet_gimp/rd(1) + fg*fgper/(rd(1)+rss_) + fc(3)/rv )
 
             qaf(3) = ( fc(0)*fwet_roof*qsatl(0)/rb(0) + qaf(2)/rd(3) + qm/raw ) &
@@ -1949,9 +1951,8 @@ CONTAINS
             ! 06/20/2021, yuan: account for AH
             ! 92% heat release as SH, Pigeon et al., 2007
 
-            h_vehc  = vehc !* 0.92
-            Hahe(2) = 4*hlr/(4*hlr+1)*(Fhac+Fwst) + Fach + h_vehc + meta
-            Hahe(3) = 1/(4*hlr+1)*(Fhac+Fwst)
+            Hahe(2) = 4*hlr/(4*hlr+1)*(Fhac+Fwst)*fsh + Fach + vehc*fsh + meta
+            Hahe(3) = 1/(4*hlr+1)*(Fhac+Fwst)*fsh
 
             bT     = 1/(rd(3) * (1/rah+1/rd(3)+fc(0)/rb(0)))
             cT     = 1/rd(3) + fg/rd(2) + fc(1)/rb(1) + fc(2)/rb(2) + fc(3)*lsai/rb(3)
@@ -1970,12 +1971,12 @@ CONTAINS
               rss_ = rss
             ENDIF
 
-            Lahe   = 0 ! vehc * 0.08
+            Lahe   = (Fhac + Fwst + vehc)*flh
             cQ     = 1/rd(3) + fg*fgper/(rd(2)+rss_) + fwet_gimp*fg*fgimp/rd(2) + fc(3)/rv
             bQ     = 1/(rd(3) * (1/raw+1/rd(3)+fwet_roof*fc(0)/rb(0)))
             aQ     = (qsatl(0)*fwet_roof*fc(0)/rb(0) + qm/raw)*bQ
 
-            qaf(2) = (qgper*fgper*fg/(rd(2)+rss_) + qgimp*fwet_gimp*fgimp*fg/rd(2) + qsatl(3)*fc(3)/rv + aQ + Lahe/rhoair) &
+            qaf(2) = (qgper*fgper*fg/(rd(2)+rss_) + qgimp*fwet_gimp*fgimp*fg/rd(2) + qsatl(3)*fc(3)/rv + aQ + Lahe/rhoair/hvap) &
                      / (cQ * (1-bQ/(cQ*rd(3))))
 
             qaf(3) = (qaf(2)/rd(3) + qsatl(0)*fwet_roof*fc(0)/rb(0) + qm/raw) &
@@ -2001,10 +2002,9 @@ CONTAINS
             ! qaf(1) = (1/rd(2)*qaf(2)+1/(rd(1)+rss)*qgper*fgper*fg+1/rd(1)*qimp*fgimp*fg+1/(rb(3)+rs)*ql*fc(3)+h_veh/rho))/&
             !          (1/rd(2)+1/(rd(1)+rss)*fgper*fg+1/rd(1)*fgimp*fg+1/(rb(3)+rs)*fc(3))
 
-            h_vehc  = vehc ! vehc * 0.92
-            Hahe(1) = h_vehc + meta
-            Hahe(2) = 4*hlr/(4*hlr+1)*(Fhac+Fwst) + Fach
-            Hahe(3) = 1/(4*hlr+1)*(Fhac+Fwst)
+            Hahe(1) = vehc*fsh + meta
+            Hahe(2) = 4*hlr/(4*hlr+1)*(Fhac+Fwst)*fsh + Fach
+            Hahe(3) = 1/(4*hlr+1)*(Fhac+Fwst)*fsh
 
             cT     = 1/rd(3) + 1/rd(2) + fc(1)/rb(1) + fc(2)/rb(2)
             at     = 1/(rd(2)*(1/rd(2)+fg/rd(1)+fc(3)*lsai/rb(3)))
@@ -2028,16 +2028,16 @@ CONTAINS
               rss_ = rss
             ENDIF
 
-            Lahe   = 0
+            Lahe   = (Fhac + Fwst + vehc)*flh
             cQ     = 1/rd(3) + 1/rd(2)
             bQ     = 1/(rd(3)*(1/raw+1/rd(3)+fwet_roof*fc(0)/rb(0)))
             aQ     = 1/(rd(2)*(1/rd(2)+fg*fgimp*fwet_gimp/rd(1)+fg*fgper/(rd(1)+rss_)+fc(3)/rv))
 
-            qaf(2) = ((fg*fgimp*fwet_gimp*qgimp/rd(1)+fg*fgper*qgper/(rd(1)+rss_)+fc(3)*qsatl(3)/rv+Lahe/rhoair)*aQ &
+            qaf(2) = ((fg*fgimp*fwet_gimp*qgimp/rd(1)+fg*fgper*qgper/(rd(1)+rss_)+fc(3)*qsatl(3)/rv+Lahe/rhoair/hvap)*aQ &
                      + (qm/raw+fc(0)*fwet_roof*qsatl(0)/rb(0))*bQ) &
                      / (cQ*(1-bQ/(cQ*rd(3))-aQ/(cQ*rd(2))))
 
-            qaf(1) = (fg*fgimp*fwet_gimp*qgimp/rd(1)+fg*fgper*qgper/(rd(1)+rss_)+fc(3)*qsatl(3)/rv+qaf(2)/rd(2)+Lahe/rhoair) &
+            qaf(1) = (fg*fgimp*fwet_gimp*qgimp/rd(1)+fg*fgper*qgper/(rd(1)+rss_)+fc(3)*qsatl(3)/rv+qaf(2)/rd(2)+Lahe/rhoair/hvap) &
                      /(1/rd(2)+fg*fgimp*fwet_gimp/rd(1)+fg*fgper/(rd(1)+rss_)+fc(3)/rv)
 
             qaf(3) = (fc(0)*fwet_roof*qsatl(0)/rb(0)+qaf(2)/rd(3)+qm/raw) &
