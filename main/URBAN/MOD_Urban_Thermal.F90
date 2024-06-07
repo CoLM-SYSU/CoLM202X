@@ -1170,7 +1170,8 @@ CONTAINS
          fevpa  = fevpg
       ENDIF
 
-      fsena = fsena + Fhac + Fwst + Fach + vehc + meta
+      fsena  = fsena  + (Fhac + Fwst + vehc)*fsh + Fach + meta
+      lfevpa = lfevpa + (Fhac + Fwst + vehc)*flh
 
       ! flux/variable average weighted by fractional cover
       taux   = taux   *(1-flake) + taux_lake   *flake
