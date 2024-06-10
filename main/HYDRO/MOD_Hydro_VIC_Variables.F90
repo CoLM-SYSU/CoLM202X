@@ -59,7 +59,7 @@ module MOD_Hydro_VIC_Variables
       real(r8) :: bubble(MAX_LAYERS)                                  ! /**< Bubbling pressure, HBH 5.15 (cm)
       real(r8) :: zwtvmoist_zwt(MAX_LAYERS + 2, MAX_ZWTVMOIST)        ! /**< Zwt values in the zwt-v-moist curve for each layer */
       real(r8) :: zwtvmoist_moist(MAX_LAYERS + 2, MAX_ZWTVMOIST)      ! /**< Moist values in the zwt-v-moist curve for each layer */
-   end type soil_con_struct  
+   end type soil_con_struct
 
 contains
 
@@ -116,7 +116,7 @@ contains
 
       soil_con%frost_fract = 1
       if (sum(wice_soisno)>0) THEN
-         Nfrost = 3 
+         Nfrost = 3
          do k = 1, Nfrost
             if (Nfrost == 1) then
                soil_con%frost_fract(k) = 1.0
@@ -137,17 +137,25 @@ contains
          cell%layer(ilay)%moist = soil_tmp(ilay)
       enddo
 
+      do ilay=1, Nlayer
+         cell%layer(ilay)%ice(:) = 0
+      enddo
+
       if (sum(wice_soisno)>0) THEN
          do ilay = 1, Nlayer
             lp = colm2vic_lay(ilay)
             if (ilay==1) THEN
                lb = 1
-            else 
-               lb = colm2vic_lay(ilay-1)+1 
-            endif   
+            else
+               lb = colm2vic_lay(ilay-1)+1
+            endif
             call VIC_IceLay(lb, lp, wice_soisno(lb:lp), ice_tmp)
             cell%layer(ilay)%ice(:) = ice_tmp
          enddo
+      ! else
+      !    do ilay = 1, Nlayer
+      !       cell%layer(ilay)%ice(:) = 0
+      !    enddo
       endif
 
       call CoLM2VIC(rootflux, soil_tmp)
@@ -173,7 +181,7 @@ contains
    real(kind=8) :: totalSum
    real(kind=8) :: multiplier
    real(kind=8) :: ice_tmp(lp-lb+1)
-   integer      :: vic_lay=3     
+   integer      :: vic_lay=3
    !-----------------------End Variable List-------------------------------
 
       colm_lay = lp - lb + 1

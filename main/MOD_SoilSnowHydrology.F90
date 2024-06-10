@@ -103,7 +103,7 @@ CONTAINS
         wimp             , &! water impremeable if porosity less than wimp
         smpmin           , &! restriction for min of soil poten. (mm)
         topostd          , &! standard deviation of elevation (m)
-        BVIC            , &! 
+        BVIC            , &!
 
         z_soisno (lb:nl_soil)   , &! layer depth (m)
         dz_soisno(lb:nl_soil)   , &! layer thickness (m)
@@ -201,10 +201,7 @@ CONTAINS
 #endif
 
    ! **
-   type(soil_con_struct ) :: soil_con
-   type(cell_data_struct) :: cell
-   integer  :: ilay
-   real(r8) :: vic_tmp(Nlayer)
+   real(r8) :: wliq_soisno_tmp(1:nl_soil)
 
 !=======================================================================
 ! [1] update the liquid water within snow layer and the water onto soil
@@ -290,7 +287,7 @@ IF(patchtype<=1)THEN   ! soil ground only
 
       IF (DEF_Runoff_SCHEME  == 0) THEN
          ! 0: runoff scheme from TOPMODEL
-         
+
          IF (gwat > 0.) THEN
             CALL SurfaceRunoff_SIMTOP (nl_soil,wtfact,wimp,porsl,psi0,hksati,&
                z_soisno(1:),dz_soisno(1:),zi_soisno(0:),&
@@ -299,31 +296,23 @@ IF(patchtype<=1)THEN   ! soil ground only
             rsur = 0.
          ENDIF
 
-      ELSEIF (DEF_Runoff_SCHEME  == 1) THEN 
+      ELSEIF (DEF_Runoff_SCHEME  == 1) THEN
          ! 1: runoff scheme from VIC model
-      
-         call vic_para(porsl, theta_r, hksati, bsw, wice_soisno, wliq_soisno, fevpg(ipatch), rootflux, &
-            vic_b_infilt(ipatch), vic_Dsmax(ipatch), vic_Ds(ipatch), vic_Ws(ipatch), vic_c(ipatch),&
-            soil_con, cell)
 
-         call compute_vic_runoff(soil_con, gwat*deltim, soil_con%frost_fract, cell)
+         wliq_soisno_tmp(:) = 0
+         CALL Runoff_VIC(deltim, porsl, theta_r, hksati, bsw, &
+                         wice_soisno(1:nl_soil), wliq_soisno(1:nl_soil), fevpg(ipatch), rootflux, gwat, &
+                         vic_b_infilt(ipatch), vic_Dsmax(ipatch), vic_Ds(ipatch), vic_Ws(ipatch), vic_c(ipatch),&
+                         rsur, rsubst, wliq_soisno_tmp(1:nl_soil))
 
-         ! DO ilay = 1, Nlayer
-         !    vic_tmp(ilay) = cell%layer(ilay)%moist
-         ! ENDDO
-         ! call VIC2CoLM(wliq_soisno, vic_tmp)
-
-         if (gwat > 0.) rsur = cell%runoff/deltim
-         rsubst = cell%baseflow/deltim
-
-      ELSEIF (DEF_Runoff_SCHEME  == 2) THEN 
+      ELSEIF (DEF_Runoff_SCHEME  == 2) THEN
          ! 2: runoff scheme from XinAnJiang model
 
          CALL Runoff_XinAnJiang (&
             nl_soil, dz_soisno(1:nl_soil), eff_porosity(1:nl_soil), vol_liq(1:nl_soil), &
             topostd, gwat, deltim, rsur, rsubst)
 
-      ELSEIF (DEF_Runoff_SCHEME  == 3) THEN 
+      ELSEIF (DEF_Runoff_SCHEME  == 3) THEN
          ! 3: runoff scheme from Simple VIC model
          CALL Runoff_SimpleVIC (&
             nl_soil, dz_soisno(1:nl_soil), eff_porosity(1:nl_soil), vol_liq(1:nl_soil), &
@@ -665,8 +654,8 @@ ENDIF
 
    type(soil_con_struct ) :: soil_con
    type(cell_data_struct) :: cell
-   integer  :: ilay
-   real(r8) :: vic_tmp(Nlayer)
+   real(r8) :: wliq_soisno_tmp(1:nl_soil)
+
 
 !=======================================================================
 ! [1] update the liquid water within snow layer and the water onto soil
@@ -761,6 +750,9 @@ IF(patchtype<=1)THEN   ! soil ground only
 
       ! surface runoff including water table and surface staturated area
 
+      rsur   = 0.
+      rsubst = 0.
+
 #ifndef CatchLateralFlow
       IF (DEF_Runoff_SCHEME  == 0) THEN
 
@@ -771,28 +763,22 @@ IF(patchtype<=1)THEN   ! soil ground only
          ELSE
             rsur = 0.
          ENDIF
-      
+
          CALL SubsurfaceRunoff_SIMTOP (nl_soil, icefrac, dz_soisno(1:), zi_soisno(0:), &
             zwt, rsubst)
 
-      ELSEIF (DEF_Runoff_SCHEME  == 1) THEN 
+      ELSEIF (DEF_Runoff_SCHEME  == 1) THEN
          ! 1: runoff scheme from VIC model
-      
-         call vic_para(porsl, theta_r, hksati, bsw, wice_soisno, wliq_soisno, fevpg(ipatch), rootflux, &
-            vic_b_infilt(ipatch), vic_Dsmax(ipatch), vic_Ds(ipatch), vic_Ws(ipatch), vic_c(ipatch),&
-            soil_con, cell)
 
-         call compute_vic_runoff(soil_con, gwat*deltim, soil_con%frost_fract, cell)
+         CALL Runoff_VIC(deltim, porsl, theta_r, hksati, bsw, &
+                         wice_soisno(1:nl_soil), wliq_soisno(1:nl_soil), fevpg(ipatch), rootflux, gwat, &
+                         vic_b_infilt(ipatch), vic_Dsmax(ipatch), vic_Ds(ipatch), vic_Ws(ipatch), vic_c(ipatch),&
+                         rsur, rsubst, wliq_soisno_tmp)
 
-         ! DO ilay = 1, Nlayer
-         !    vic_tmp(ilay) = cell%layer(ilay)%moist
-         ! ENDDO
-         ! call VIC2CoLM(wliq_soisno, vic_tmp)
+         rsur_se = rsur
+         rsur_ie = 0.
 
-         if (gwat > 0.) rsur = cell%runoff/deltim
-         rsubst = cell%baseflow/deltim
-
-      ELSEIF (DEF_Runoff_SCHEME  == 2) THEN 
+      ELSEIF (DEF_Runoff_SCHEME  == 2) THEN
          ! 2: runoff scheme from XinAnJiang model
 
          CALL Runoff_XinAnJiang (&
@@ -801,7 +787,8 @@ IF(patchtype<=1)THEN   ! soil ground only
 
          rsur_se = rsur
          rsur_ie = 0.
-      ELSEIF (DEF_Runoff_SCHEME  == 3) THEN 
+
+      ELSEIF (DEF_Runoff_SCHEME  == 3) THEN
          ! 3: runoff scheme from XinAnJiang model with lateral flow
 
          CALL Runoff_SimpleVIC (&
@@ -821,7 +808,7 @@ IF(patchtype<=1)THEN   ! soil ground only
       ! infiltration into surface soil layer
       qgtop = gwat - rsur
 #else
-      ! for lateral flow, 
+      ! for lateral flow,
       ! "rsur" is calculated in HYDRO/MOD_Hydro_SurfaceFlow.F90
       ! and is removed from surface water there.
       qgtop = gwat
@@ -2130,7 +2117,7 @@ ENDIF
       ENDIF
 
 !-- Topographic runoff  ----------------------------------------------------------
-      IF (DEF_Runoff_SCHEME == 0) THEN 
+      IF (DEF_Runoff_SCHEME == 0) THEN
          CALL SubsurfaceRunoff_SIMTOP (nl_soil, icefrac, dz_soisno, zi_soisno, zwt, rsubst)
       ENDIF
 
