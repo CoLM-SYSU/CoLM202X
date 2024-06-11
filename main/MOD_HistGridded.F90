@@ -41,24 +41,26 @@ CONTAINS
    !---------------------------------------
    SUBROUTINE hist_gridded_init (dir_hist)
 
-      USE MOD_Vars_Global
-      USE MOD_Namelist
-      USE MOD_Block
-      USE MOD_LandPatch
+   USE MOD_Vars_Global
+   USE MOD_Namelist
+   USE MOD_Block
+   USE MOD_LandPatch
 #ifdef URBAN_MODEL
-      USE MOD_LandUrban
+   USE MOD_LandUrban
 #endif
-      USE MOD_Vars_1DAccFluxes
-      USE MOD_Forcing, only : gforc
+   USE MOD_Vars_1DAccFluxes
+   USE MOD_Forcing, only : gforc
 #ifdef SinglePoint
-      USE MOD_SingleSrfData
+   USE MOD_SingleSrfData
 #endif
-      USE MOD_Utils
-      IMPLICIT NONE
+   USE MOD_Utils
+   IMPLICIT NONE
 
-      character(len=*), intent(in) :: dir_hist
-      type(block_data_real8_2d) :: gridarea
-      integer :: iblkme, xblk, yblk, xloc, yloc, xglb, yglb
+   character(len=*), intent(in) :: dir_hist
+
+   ! Local Variables
+   type(block_data_real8_2d) :: gridarea
+   integer :: iblkme, xblk, yblk, xloc, yloc, xglb, yglb
 
       IF (DEF_hist_grid_as_forcing) THEN
          CALL ghist%define_by_copy (gforc)
@@ -110,30 +112,30 @@ CONTAINS
          acc_vec, file_hist, varname, itime_in_file, sumarea, filter, &
          longname, units)
 
-      USE MOD_Precision
-      USE MOD_SPMD_Task
-      USE MOD_Namelist
-      USE MOD_DataType
-      USE MOD_Block
-      USE MOD_Grid
-      USE MOD_Vars_1DAccFluxes,  only: nac
-      USE MOD_Vars_Global, only: spval
-      IMPLICIT NONE
+   USE MOD_Precision
+   USE MOD_SPMD_Task
+   USE MOD_Namelist
+   USE MOD_DataType
+   USE MOD_Block
+   USE MOD_Grid
+   USE MOD_Vars_1DAccFluxes,  only: nac
+   USE MOD_Vars_Global, only: spval
+   IMPLICIT NONE
 
-      real(r8), intent(inout) :: acc_vec(:)
-      character(len=*), intent(in) :: file_hist
-      character(len=*), intent(in) :: varname
-      integer,          intent(in) :: itime_in_file
-      character(len=*), intent(in) :: longname
-      character(len=*), intent(in) :: units
+   real(r8), intent(inout) :: acc_vec(:)
+   character(len=*), intent(in) :: file_hist
+   character(len=*), intent(in) :: varname
+   integer,          intent(in) :: itime_in_file
+   character(len=*), intent(in) :: longname
+   character(len=*), intent(in) :: units
 
-      type(block_data_real8_2d), intent(in) :: sumarea
-      logical, intent(in) :: filter(:)
+   type(block_data_real8_2d), intent(in) :: sumarea
+   logical, intent(in) :: filter(:)
 
-      ! Local variables
-      type(block_data_real8_2d) :: flux_xy_2d
-      integer :: iblkme, xblk, yblk, xloc, yloc
-      integer :: compress
+   ! Local variables
+   type(block_data_real8_2d) :: flux_xy_2d
+   integer :: iblkme, xblk, yblk, xloc, yloc
+   integer :: compress
 
       IF (p_is_worker)  WHERE (acc_vec /= spval)  acc_vec = acc_vec / nac
       IF (p_is_io)      CALL allocate_block_data (ghist, flux_xy_2d)  
@@ -175,30 +177,30 @@ CONTAINS
          acc_vec, file_hist, varname, itime_in_file, sumarea, filter, &
          longname, units)
 
-      USE MOD_Precision
-      USE MOD_SPMD_Task
-      USE MOD_Namelist
-      USE MOD_DataType
-      USE MOD_Block
-      USE MOD_Grid
-      USE MOD_Vars_1DAccFluxes,  only: nac
-      USE MOD_Vars_Global, only: spval
-      IMPLICIT NONE
+   USE MOD_Precision
+   USE MOD_SPMD_Task
+   USE MOD_Namelist
+   USE MOD_DataType
+   USE MOD_Block
+   USE MOD_Grid
+   USE MOD_Vars_1DAccFluxes,  only: nac
+   USE MOD_Vars_Global, only: spval
+   IMPLICIT NONE
 
-      real(r8), intent(inout) :: acc_vec(:)
-      character(len=*), intent(in) :: file_hist
-      character(len=*), intent(in) :: varname
-      integer,          intent(in) :: itime_in_file
-      character(len=*), intent(in) :: longname
-      character(len=*), intent(in) :: units
+   real(r8), intent(inout) :: acc_vec(:)
+   character(len=*), intent(in) :: file_hist
+   character(len=*), intent(in) :: varname
+   integer,          intent(in) :: itime_in_file
+   character(len=*), intent(in) :: longname
+   character(len=*), intent(in) :: units
 
-      type(block_data_real8_2d), intent(in) :: sumarea
-      logical, intent(in) :: filter(:)
+   type(block_data_real8_2d), intent(in) :: sumarea
+   logical, intent(in) :: filter(:)
 
-      ! Local variables
-      type(block_data_real8_2d) :: flux_xy_2d
-      integer :: iblkme, xblk, yblk, xloc, yloc
-      integer :: compress
+   ! Local variables
+   type(block_data_real8_2d) :: flux_xy_2d
+   integer :: iblkme, xblk, yblk, xloc, yloc
+   integer :: compress
 
       IF (p_is_worker)  WHERE (acc_vec /= spval)  acc_vec = acc_vec / nac
       IF (p_is_io)      CALL allocate_block_data (ghist, flux_xy_2d)  
@@ -240,32 +242,32 @@ CONTAINS
          acc_vec, file_hist, varname, itime_in_file, dim1name, lb1, ndim1, sumarea, filter, &
          longname, units)
 
-      USE MOD_Precision
-      USE MOD_SPMD_Task
-      USE MOD_Namelist
-      USE MOD_DataType
-      USE MOD_Block
-      USE MOD_Grid
-      USE MOD_Vars_1DAccFluxes,  only: nac
-      USE MOD_Vars_Global, only: spval
-      IMPLICIT NONE
+   USE MOD_Precision
+   USE MOD_SPMD_Task
+   USE MOD_Namelist
+   USE MOD_DataType
+   USE MOD_Block
+   USE MOD_Grid
+   USE MOD_Vars_1DAccFluxes,  only: nac
+   USE MOD_Vars_Global, only: spval
+   IMPLICIT NONE
 
-      real(r8), intent(inout) :: acc_vec(:,:)
-      character(len=*), intent(in) :: file_hist
-      character(len=*), intent(in) :: varname
-      integer, intent(in) :: itime_in_file
-      character(len=*), intent(in) :: dim1name
-      integer, intent(in) :: lb1, ndim1
+   real(r8), intent(inout) :: acc_vec(:,:)
+   character(len=*), intent(in) :: file_hist
+   character(len=*), intent(in) :: varname
+   integer, intent(in) :: itime_in_file
+   character(len=*), intent(in) :: dim1name
+   integer, intent(in) :: lb1, ndim1
 
-      type(block_data_real8_2d), intent(in) :: sumarea
-      logical, intent(in) :: filter(:)
-      character (len=*), intent(in) :: longname
-      character (len=*), intent(in) :: units
+   type(block_data_real8_2d), intent(in) :: sumarea
+   logical, intent(in) :: filter(:)
+   character (len=*), intent(in) :: longname
+   character (len=*), intent(in) :: units
 
-      ! Local variables
-      type(block_data_real8_3d) :: flux_xy_3d
-      integer :: iblkme, xblk, yblk, xloc, yloc, i1
-      integer :: compress
+   ! Local variables
+   type(block_data_real8_3d) :: flux_xy_3d
+   integer :: iblkme, xblk, yblk, xloc, yloc, i1
+   integer :: compress
 
       IF (p_is_worker)  THEN
          WHERE (acc_vec /= spval)  acc_vec = acc_vec / nac
@@ -314,32 +316,32 @@ CONTAINS
          dim1name, lb1, ndim1, dim2name, lb2, ndim2, &
          sumarea, filter, longname, units)
 
-      USE MOD_Precision
-      USE MOD_SPMD_Task
-      USE MOD_Namelist
-      USE MOD_DataType
-      USE MOD_Block
-      USE MOD_Grid
-      USE MOD_Vars_1DAccFluxes,  only: nac
-      USE MOD_Vars_Global, only: spval
-      IMPLICIT NONE
+   USE MOD_Precision
+   USE MOD_SPMD_Task
+   USE MOD_Namelist
+   USE MOD_DataType
+   USE MOD_Block
+   USE MOD_Grid
+   USE MOD_Vars_1DAccFluxes,  only: nac
+   USE MOD_Vars_Global, only: spval
+   IMPLICIT NONE
 
-      real(r8), intent(inout) :: acc_vec(:,:,:)
-      character(len=*), intent(in) :: file_hist
-      character(len=*), intent(in) :: varname
-      integer, intent(in) :: itime_in_file
-      character(len=*), intent(in) :: dim1name, dim2name
-      integer, intent(in) :: lb1, ndim1, lb2, ndim2
+   real(r8), intent(inout) :: acc_vec(:,:,:)
+   character(len=*), intent(in) :: file_hist
+   character(len=*), intent(in) :: varname
+   integer, intent(in) :: itime_in_file
+   character(len=*), intent(in) :: dim1name, dim2name
+   integer, intent(in) :: lb1, ndim1, lb2, ndim2
 
-      type(block_data_real8_2d), intent(in) :: sumarea
-      logical, intent(in) :: filter(:)
-      character (len=*), intent(in) :: longname
-      character (len=*), intent(in) :: units
+   type(block_data_real8_2d), intent(in) :: sumarea
+   logical, intent(in) :: filter(:)
+   character (len=*), intent(in) :: longname
+   character (len=*), intent(in) :: units
 
-      ! Local variables
-      type(block_data_real8_4d) :: flux_xy_4d
-      integer :: iblkme, xblk, yblk, xloc, yloc, i1, i2
-      integer :: compress
+   ! Local variables
+   type(block_data_real8_4d) :: flux_xy_4d
+   integer :: iblkme, xblk, yblk, xloc, yloc, i1, i2
+   integer :: compress
 
       IF (p_is_worker) THEN
          WHERE(acc_vec /= spval)  acc_vec = acc_vec / nac
@@ -389,30 +391,30 @@ CONTAINS
          acc_vec, file_hist, varname, itime_in_file, sumarea, filter, &
          longname, units)
 
-      USE MOD_Precision
-      USE MOD_SPMD_Task
-      USE MOD_Namelist
-      USE MOD_DataType
-      USE MOD_Block
-      USE MOD_Grid
-      USE MOD_Vars_1DAccFluxes,  only: nac_ln
-      USE MOD_Vars_Global, only: spval
-      IMPLICIT NONE
+   USE MOD_Precision
+   USE MOD_SPMD_Task
+   USE MOD_Namelist
+   USE MOD_DataType
+   USE MOD_Block
+   USE MOD_Grid
+   USE MOD_Vars_1DAccFluxes,  only: nac_ln
+   USE MOD_Vars_Global, only: spval
+   IMPLICIT NONE
 
-      real(r8), intent(inout) :: acc_vec(:)
-      character(len=*), intent(in) :: file_hist
-      character(len=*), intent(in) :: varname
-      integer, intent(in) :: itime_in_file
+   real(r8), intent(inout) :: acc_vec(:)
+   character(len=*), intent(in) :: file_hist
+   character(len=*), intent(in) :: varname
+   integer, intent(in) :: itime_in_file
 
-      type(block_data_real8_2d), intent(in) :: sumarea
-      logical,  intent(in) :: filter(:)
-      character (len=*), intent(in), optional :: longname
-      character (len=*), intent(in), optional :: units
+   type(block_data_real8_2d), intent(in) :: sumarea
+   logical,  intent(in) :: filter(:)
+   character (len=*), intent(in), optional :: longname
+   character (len=*), intent(in), optional :: units
 
-      ! Local variables
-      type(block_data_real8_2d) :: flux_xy_2d
-      integer :: i, iblkme, xblk, yblk, xloc, yloc
-      integer :: compress
+   ! Local variables
+   type(block_data_real8_2d) :: flux_xy_2d
+   integer :: i, iblkme, xblk, yblk, xloc, yloc
+   integer :: compress
 
       IF (p_is_worker) THEN
          DO i = lbound(acc_vec,1), ubound(acc_vec,1)
@@ -461,28 +463,29 @@ CONTAINS
    SUBROUTINE hist_gridded_write_time ( &
          filename, dataname, time, itime)
 
-      USE MOD_Namelist
-      USE MOD_Grid
-      USE MOD_Block
-      USE MOD_SPMD_Task
-      IMPLICIT NONE
+   USE MOD_Namelist
+   USE MOD_Grid
+   USE MOD_Block
+   USE MOD_SPMD_Task
+   IMPLICIT NONE
 
-      character (len=*), intent(in) :: filename
-      character (len=*), intent(in) :: dataname
+   character (len=*), intent(in) :: filename
+   character (len=*), intent(in) :: dataname
 
-      integer, intent(in)  :: time(3)
-      integer, intent(out) :: itime
+   integer, intent(in)  :: time(3)
+   integer, intent(out) :: itime
 
-      ! Local variables
-      character(len=256) :: fileblock
-      integer :: iblkme, iblk, jblk
-      logical :: fexists
+   ! Local variables
+   character(len=256) :: fileblock
+   integer :: iblkme, iblk, jblk
+   logical :: fexists
 
       IF (trim(DEF_HIST_mode) == 'one') THEN
          IF (p_is_master) THEN
 #ifdef USEMPI
             IF (DEF_HIST_WriteBack) THEN
                CALL hist_writeback_latlon_time (filename, dataname, time, hist_concat)
+               itime = 1
             ELSE
 #endif
             inquire (file=filename, exist=fexists)
@@ -520,9 +523,7 @@ CONTAINS
          ENDIF
 
 #ifdef USEMPI
-         IF (.not. DEF_HIST_WriteBack) THEN
-            CALL mpi_bcast (itime, 1, MPI_INTEGER, p_root, p_comm_glb, p_err)
-         ENDIF
+         CALL mpi_bcast (itime, 1, MPI_INTEGER, p_root, p_comm_glb, p_err)
 #endif
 
       ELSEIF (trim(DEF_HIST_mode) == 'block') THEN
@@ -561,31 +562,31 @@ CONTAINS
    SUBROUTINE hist_write_var_real8_2d ( &
          filename, dataname, grid, itime, wdata, compress, longname, units)
 
-      USE MOD_Namelist
-      USE MOD_Block
-      USE MOD_Grid
-      USE MOD_DataType
-      USE MOD_SPMD_Task
-      USE MOD_Vars_Global, only: spval
-      IMPLICIT NONE
+   USE MOD_Namelist
+   USE MOD_Block
+   USE MOD_Grid
+   USE MOD_DataType
+   USE MOD_SPMD_Task
+   USE MOD_Vars_Global, only: spval
+   IMPLICIT NONE
 
-      character (len=*), intent(in) :: filename
-      character (len=*), intent(in) :: dataname
-      type (grid_type),  intent(in) :: grid
-      integer, intent(in) :: itime
+   character (len=*), intent(in) :: filename
+   character (len=*), intent(in) :: dataname
+   type (grid_type),  intent(in) :: grid
+   integer, intent(in) :: itime
 
-      type (block_data_real8_2d), intent(in) :: wdata
+   type (block_data_real8_2d), intent(in) :: wdata
 
-      integer, intent(in) :: compress
-      character(len=*), intent(in) :: longname
-      character(len=*), intent(in) :: units
+   integer, intent(in) :: compress
+   character(len=*), intent(in) :: longname
+   character(len=*), intent(in) :: units
 
-      ! Local variables
-      integer :: iblkme, iblk, jblk, idata, ixseg, iyseg
-      integer :: xcnt, ycnt, xbdsp, ybdsp, xgdsp, ygdsp
-      integer :: rmesg(3), smesg(3), isrc
-      character(len=256) :: fileblock
-      real(r8), allocatable :: rbuf(:,:), sbuf(:,:), vdata(:,:)
+   ! Local variables
+   integer :: iblkme, iblk, jblk, idata, ixseg, iyseg
+   integer :: xcnt, ycnt, xbdsp, ybdsp, xgdsp, ygdsp
+   integer :: rmesg(3), smesg(3), isrc
+   character(len=256) :: fileblock
+   real(r8), allocatable :: rbuf(:,:), sbuf(:,:), vdata(:,:)
 
       IF (trim(DEF_HIST_mode) == 'one') THEN
 
@@ -650,8 +651,15 @@ CONTAINS
 #ifdef USEMPI
             IF (.not. DEF_HIST_WriteBack) THEN
 #endif
-               CALL ncio_write_serial_time (filename, dataname, itime, vdata, &
-                  'lon', 'lat', 'time', compress)
+               IF (.not. &
+                  ((trim(dataname) == 'landarea') .or. (trim(dataname) == 'landfraction'))) THEN
+
+                  CALL ncio_write_serial_time (filename, dataname, itime, vdata, &
+                     'lon', 'lat', 'time', compress)
+
+               ELSEIF (itime == 1) THEN
+                  CALL ncio_write_serial (filename, dataname, vdata, 'lon', 'lat', compress)
+               ENDIF
 
                IF (itime == 1) THEN
                   CALL ncio_put_attr (filename, dataname, 'long_name', longname)
@@ -716,8 +724,16 @@ CONTAINS
 
                CALL get_filename_block (filename, iblk, jblk, fileblock)
 
-               CALL ncio_write_serial_time (fileblock, dataname, itime, &
-                  wdata%blk(iblk,jblk)%val, 'lon', 'lat', 'time', compress)
+               IF (.not. &
+                  ((trim(dataname) == 'landarea') .or. (trim(dataname) == 'landfraction'))) THEN
+               
+                  CALL ncio_write_serial_time (fileblock, dataname, itime, &
+                     wdata%blk(iblk,jblk)%val, 'lon', 'lat', 'time', compress)
+
+               ELSEIF (itime == 1) THEN
+                  CALL ncio_write_serial (fileblock, dataname, &
+                     wdata%blk(iblk,jblk)%val, 'lon', 'lat', compress)
+               ENDIF
 
             ENDDO
 
@@ -730,32 +746,32 @@ CONTAINS
    SUBROUTINE hist_write_var_real8_3d ( &
          filename, dataname, dim1name, grid, itime, wdata, compress, longname, units)
 
-      USE MOD_Namelist
-      USE MOD_Block
-      USE MOD_Grid
-      USE MOD_DataType
-      USE MOD_SPMD_Task
-      USE MOD_Vars_Global, only: spval
-      IMPLICIT NONE
+   USE MOD_Namelist
+   USE MOD_Block
+   USE MOD_Grid
+   USE MOD_DataType
+   USE MOD_SPMD_Task
+   USE MOD_Vars_Global, only: spval
+   IMPLICIT NONE
 
-      character (len=*), intent(in) :: filename
-      character (len=*), intent(in) :: dataname
-      character (len=*), intent(in) :: dim1name
-      type (grid_type),  intent(in) :: grid
-      integer, intent(in) :: itime
+   character (len=*), intent(in) :: filename
+   character (len=*), intent(in) :: dataname
+   character (len=*), intent(in) :: dim1name
+   type (grid_type),  intent(in) :: grid
+   integer, intent(in) :: itime
 
-      type (block_data_real8_3d), intent(in) :: wdata
+   type (block_data_real8_3d), intent(in) :: wdata
 
-      integer, intent(in) :: compress
-      character(len=*), intent(in) :: longname
-      character(len=*), intent(in) :: units
+   integer, intent(in) :: compress
+   character(len=*), intent(in) :: longname
+   character(len=*), intent(in) :: units
 
-      ! Local variables
-      integer :: iblkme, iblk, jblk, idata, ixseg, iyseg
-      integer :: xcnt, ycnt, ndim1, xbdsp, ybdsp, xgdsp, ygdsp
-      integer :: rmesg(4), smesg(4), isrc
-      character(len=256) :: fileblock
-      real(r8), allocatable :: rbuf(:,:,:), sbuf(:,:,:), vdata(:,:,:)
+   ! Local variables
+   integer :: iblkme, iblk, jblk, idata, ixseg, iyseg
+   integer :: xcnt, ycnt, ndim1, xbdsp, ybdsp, xgdsp, ygdsp
+   integer :: rmesg(4), smesg(4), isrc
+   character(len=256) :: fileblock
+   real(r8), allocatable :: rbuf(:,:,:), sbuf(:,:,:), vdata(:,:,:)
 
       IF (trim(DEF_HIST_mode) == 'one') THEN
 
@@ -910,32 +926,32 @@ CONTAINS
    SUBROUTINE hist_write_var_real8_4d ( &
          filename, dataname, dim1name, dim2name, grid, itime, wdata, compress, longname, units)
 
-      USE MOD_Namelist
-      USE MOD_Block
-      USE MOD_Grid
-      USE MOD_DataType
-      USE MOD_SPMD_Task
-      USE MOD_Vars_Global, only: spval
-      IMPLICIT NONE
+   USE MOD_Namelist
+   USE MOD_Block
+   USE MOD_Grid
+   USE MOD_DataType
+   USE MOD_SPMD_Task
+   USE MOD_Vars_Global, only: spval
+   IMPLICIT NONE
 
-      character (len=*), intent(in) :: filename
-      character (len=*), intent(in) :: dataname
-      character (len=*), intent(in) :: dim1name, dim2name
-      type (grid_type),  intent(in) :: grid
-      integer, intent(in) :: itime
+   character (len=*), intent(in) :: filename
+   character (len=*), intent(in) :: dataname
+   character (len=*), intent(in) :: dim1name, dim2name
+   type (grid_type),  intent(in) :: grid
+   integer, intent(in) :: itime
 
-      type (block_data_real8_4d), intent(in) :: wdata
+   type (block_data_real8_4d), intent(in) :: wdata
 
-      integer, intent(in) :: compress
-      character(len=*), intent(in) :: longname
-      character(len=*), intent(in) :: units
+   integer, intent(in) :: compress
+   character(len=*), intent(in) :: longname
+   character(len=*), intent(in) :: units
 
-      ! Local variables
-      integer :: iblkme, iblk, jblk, idata, ixseg, iyseg
-      integer :: xcnt, ycnt, ndim1, ndim2, xbdsp, ybdsp, xgdsp, ygdsp
-      integer :: rmesg(5), smesg(5), isrc
-      character(len=256) :: fileblock
-      real(r8), allocatable :: rbuf(:,:,:,:), sbuf(:,:,:,:), vdata(:,:,:,:)
+   ! Local variables
+   integer :: iblkme, iblk, jblk, idata, ixseg, iyseg
+   integer :: xcnt, ycnt, ndim1, ndim2, xbdsp, ybdsp, xgdsp, ygdsp
+   integer :: rmesg(5), smesg(5), isrc
+   character(len=256) :: fileblock
+   real(r8), allocatable :: rbuf(:,:,:,:), sbuf(:,:,:,:), vdata(:,:,:,:)
 
       IF (trim(DEF_HIST_mode) == 'one') THEN
 
@@ -1093,17 +1109,17 @@ CONTAINS
    !------------------
    SUBROUTINE hist_write_grid_info (fileblock, grid, iblk, jblk)
 
-      USE MOD_Block
-      USE MOD_Grid
-      IMPLICIT NONE
+   USE MOD_Block
+   USE MOD_Grid
+   IMPLICIT NONE
 
-      character(len=*), intent(in) :: fileblock
-      type (grid_type), intent(in) :: grid
-      integer, intent(in) :: iblk, jblk
+   character(len=*), intent(in) :: fileblock
+   type (grid_type), intent(in) :: grid
+   integer, intent(in) :: iblk, jblk
 
-      ! Local variable
-      integer :: yl, yu, xl, xu, nx
-      real(r8), allocatable :: lat_s(:), lat_n(:), lon_w(:), lon_e(:)
+   ! Local variable
+   integer :: yl, yu, xl, xu, nx
+   real(r8), allocatable :: lat_s(:), lat_n(:), lon_w(:), lon_e(:)
 
       allocate (lon_w (grid%xcnt(iblk)))
       allocate (lon_e (grid%xcnt(iblk)))

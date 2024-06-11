@@ -19,6 +19,7 @@ MODULE MOD_LandCrop
    ! ---- Instance ----
    type(grid_type) :: gcrop
    integer,  allocatable :: cropclass (:)
+   real(r8), allocatable :: pctshrpch (:)
 
 CONTAINS
 
@@ -53,8 +54,7 @@ CONTAINS
    type(block_data_real8_3d) :: cropdata
    integer :: sharedfilter(1), cropfilter(1)
    integer :: iblkme, ib, jb
-   real(r8), allocatable :: pctshared1 (:)
-   real(r8), allocatable :: pctshared2 (:)
+   real(r8), allocatable :: pctshared  (:)
    integer , allocatable :: classshared(:)
 
       write(cyear,'(i4.4)') lc_year
@@ -67,12 +67,12 @@ CONTAINS
 
          numpatch = count(SITE_pctcrop > 0.)
 
-         allocate (pctshared2 (numpatch))
+         allocate (pctshrpch (numpatch))
          allocate (cropclass(numpatch))
-         cropclass  = pack(SITE_croptyp, SITE_pctcrop > 0.)
-         pctshared2 = pack(SITE_pctcrop, SITE_pctcrop > 0.)
+         cropclass = pack(SITE_croptyp, SITE_pctcrop > 0.)
+         pctshrpch = pack(SITE_pctcrop, SITE_pctcrop > 0.)
 
-         pctshared2 = pctshared2 / sum(pctshared2)
+         pctshrpch = pctshrpch / sum(pctshrpch)
 
          allocate (landpatch%eindex (numpatch))
          allocate (landpatch%ipxstt (numpatch))
@@ -88,7 +88,7 @@ CONTAINS
          
          landpatch%has_shared = .true.
          allocate (landpatch%pctshared(numpatch))
-         landpatch%pctshared = pctshared2
+         landpatch%pctshared = pctshrpch
 
          landpatch%nset = numpatch
          CALL landpatch%set_vecgs
@@ -121,7 +121,7 @@ CONTAINS
       sharedfilter = (/ 1 /)
 
       CALL pixelsetshared_build (landpatch, gpatch, pctshared_xy, 2, sharedfilter, &
-         pctshared1, classshared)
+         pctshared, classshared)
 
       IF (p_is_worker) THEN
          IF (landpatch%nset > 0) THEN
@@ -138,7 +138,7 @@ CONTAINS
       cropfilter = (/ CROPLAND /)
       
       CALL pixelsetshared_build (landpatch, gcrop, cropdata, N_CFT, cropfilter, &
-         pctshared2, cropclass, fracin = pctshared1)
+         pctshrpch, cropclass, fracin = pctshared)
       
       numpatch = landpatch%nset
 
@@ -146,12 +146,11 @@ CONTAINS
       IF (p_is_worker) THEN
          IF (numpatch > 0) THEN
             allocate(landpatch%pctshared(numpatch))
-            landpatch%pctshared = pctshared2
+            landpatch%pctshared = pctshrpch
          ENDIF
       ENDIF
 
-      IF (allocated(pctshared1 )) deallocate(pctshared1 )
-      IF (allocated(pctshared2 )) deallocate(pctshared2 )
+      IF (allocated(pctshared  )) deallocate(pctshared  )
       IF (allocated(classshared)) deallocate(classshared)
 
 #ifdef USEMPI

@@ -27,7 +27,7 @@ CONTAINS
 #endif
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
    USE MOD_LandPFT
-   USE MOD_Vars_PFTimeInvariants, only : pftfrac
+   USE MOD_Vars_PFTimeInvariants
 #endif
 #ifdef SinglePoint
    USE MOD_SingleSrfdata
@@ -50,6 +50,19 @@ CONTAINS
       pftfrac = pack(SITE_pctpfts, SITE_pctpfts > 0.)
 #endif
 
+#if (defined CROP)
+#ifndef SinglePoint
+      lndname = trim(dir_landdata)//'/pctpft/'//trim(cyear)//'/pct_crops.nc'
+      CALL ncio_read_vector (lndname, 'pct_crops', landpatch, cropfrac)
+#else
+      IF (SITE_landtype == CROPLAND) THEN
+         cropfrac = pack(SITE_pctcrop, SITE_pctcrop > 0.)
+      ELSE
+         cropfrac = 0.
+      ENDIF
+#endif
+#endif
+
 #ifdef RangeCheck
       IF (p_is_worker) THEN
          npatch = count(patchtypes(landpatch%settyp) == 0)
@@ -67,12 +80,10 @@ CONTAINS
 
       CALL check_vector_data ('Sum PFT pct', sumpct)
 #if (defined CROP)
-      IF (landpatch%has_shared) THEN
-         CALL check_vector_data ('CROP pct', landpatch%pctshared)
-      ENDIF
+      CALL check_vector_data ('CROP pct', cropfrac)
+#endif
 #endif
 
-#endif
 #endif
 
       IF (allocated(sumpct)) deallocate(sumpct)
