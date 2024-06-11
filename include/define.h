@@ -20,7 +20,7 @@
 ! 3.1 If defined, range of variables is checked.
 #define RangeCheck
 ! 3.1 If defined, surface data in vector is mapped to gridded data for checking.
-#undef SrfdataDiag
+#define SrfdataDiag
 
 ! 4. If defined, MPI parallelization is enabled.
 #define USEMPI
@@ -35,16 +35,20 @@
 #define  vanGenuchten_Mualem_SOIL_MODEL
 ! 5.2 If defined, lateral flow is modeled.
 #define CatchLateralFlow
+#define UnstrLateralFlow
 !    Conflicts :
 #ifndef CATCHMENT
 #undef CatchLateralFlow
+#endif
+#ifndef UNSTRUCTURED
+#undef UnstrLateralFlow
 #endif
 
 ! 6. If defined, CaMa-Flood model will be used.
 #undef CaMa_Flood
 
 ! 7. If defined, BGC model is used.
-#undef BGC
+#undef  BGC
 
 !    Conflicts :  only used when LULC_IGBP_PFT is defined.
 #ifndef LULC_IGBP_PFT
