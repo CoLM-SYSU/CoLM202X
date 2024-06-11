@@ -371,17 +371,8 @@ CONTAINS
                deallocate(wdata1d)
             CASE (2)
 
-               IF (.not. &
-                  ((trim(dataname) == 'landarea') .or. (trim(dataname) == 'landfraction'))) THEN
-
-                  CALL ncio_write_serial_time (filename, dataname, itime_in_file, wdata2d, &
-                     dim1name, dim2name, dim3name, compress)
-
-               ELSEIF (itime_in_file == 1) THEN
-
-                  CALL ncio_write_serial (filename, dataname, wdata2d, dim1name, dim2name, compress)
-
-               ENDIF
+               CALL ncio_write_serial_time (filename, dataname, itime_in_file, wdata2d, &
+                  dim1name, dim2name, dim3name, compress)
 
                deallocate(wdata2d)
             CASE (3)

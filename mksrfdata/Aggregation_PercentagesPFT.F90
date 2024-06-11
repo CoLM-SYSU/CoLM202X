@@ -191,22 +191,23 @@ SUBROUTINE Aggregation_PercentagesPFT (gland, dir_rawdata, dir_model_landdata, l
 
 #if (defined CROP)
 #ifndef SinglePoint
-      lndname = trim(landdir)//'/pct_crops.nc'
-      CALL ncio_create_file_vector (lndname, landpatch)
-      CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
-      CALL ncio_write_vector (lndname, 'pct_crops', 'patch', landpatch, pctshrpch, DEF_Srfdata_CompressLevel)
-
 #ifdef SrfdataDiag
-      typcrop = (/(ityp, ityp = 1, N_CFT)/)
-      lndname = trim(dir_model_landdata) // '/diag/pct_crop_patch_' // trim(cyear) // '.nc'
-      CALL srfdata_map_and_write (pctshrpch, cropclass, typcrop, m_patch2diag, &
-         -1.0e36_r8, lndname, 'pct_crop_patch', compress = 1, write_mode = 'one')
+      IF (landpatch%has_shared) THEN
+         typcrop = (/(ityp, ityp = 1, N_CFT)/)
+         lndname = trim(dir_model_landdata) // '/diag/pct_crop_patch_' // trim(cyear) // '.nc'
+         CALL srfdata_map_and_write (landpatch%pctshared, cropclass, typcrop, m_patch2diag, &
+            -1.0e36_r8, lndname, 'pct_crop_patch', compress = 1, write_mode = 'one')
+      ENDIF
 #endif
 #else
       allocate (SITE_croptyp(numpatch))
       allocate (SITE_pctcrop(numpatch))
       SITE_croptyp = cropclass
-      SITE_pctcrop = pctshrpch
+      IF (landpatch%has_shared) THEN
+         SITE_pctcrop = landpatch%pctshared
+      ELSE
+         SITE_pctcrop = 1.
+      ENDIF
 #endif
 #endif
 

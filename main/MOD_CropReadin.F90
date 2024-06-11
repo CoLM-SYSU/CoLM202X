@@ -42,12 +42,12 @@ CONTAINS
 
    character(len=256) :: file_crop
    type(grid_type)    :: grid_crop
-   type(block_data_real8_2d)  :: f_xy_crop
+   type(block_data_real8_2d)    :: f_xy_crop
    type(spatial_mapping_type) :: mg2patch_crop
    type(spatial_mapping_type) :: mg2pft_crop
    character(len=256) :: file_irrig
    type(grid_type)    :: grid_irrig
-   type(block_data_int32_2d)  :: f_xy_irrig
+   type(block_data_int32_2d)    :: f_xy_irrig
    type(spatial_mapping_type) :: mg2pft_irrig
 
    real(r8),allocatable :: pdrice2_tmp      (:)

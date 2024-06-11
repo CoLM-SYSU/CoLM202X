@@ -62,7 +62,6 @@ CONTAINS
          coszen*cos(dlat))/(sin(dlat)*sqrt(1-coszen*coszen))
       IF (orb_cosazi<-1) orb_cosazi = -1
       IF (orb_cosazi>1) orb_cosazi = 1
-                       
 
    END FUNCTION orb_cosazi
 
