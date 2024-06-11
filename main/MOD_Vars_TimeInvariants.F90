@@ -15,7 +15,6 @@ MODULE MOD_Vars_PFTimeInvariants
 
    USE MOD_Precision
    USE MOD_Vars_Global
-   
    IMPLICIT NONE
    SAVE
 
@@ -24,6 +23,9 @@ MODULE MOD_Vars_PFTimeInvariants
    real(r8), allocatable :: pftfrac     (:)    !PFT fractional cover
    real(r8), allocatable :: htop_p      (:)    !canopy top height [m]
    real(r8), allocatable :: hbot_p      (:)    !canopy bottom height [m]
+#ifdef CROP
+   real(r8), allocatable :: cropfrac    (:)    !Crop fractional cover
+#endif
 
 ! PUBLIC MEMBER FUNCTIONS:
    PUBLIC :: allocate_PFTimeInvariants
@@ -48,6 +50,7 @@ CONTAINS
    ! --------------------------------------------------------------------
 
    USE MOD_SPMD_Task
+   USE MOD_LandPatch, only : numpatch
    USE MOD_LandPFT,   only : numpft
    USE MOD_Precision
    IMPLICIT NONE
@@ -58,6 +61,9 @@ CONTAINS
             allocate (pftfrac       (numpft))
             allocate (htop_p        (numpft))
             allocate (hbot_p        (numpft))
+#ifdef CROP
+            allocate (cropfrac    (numpatch))
+#endif
          ENDIF
       ENDIF
 
@@ -66,6 +72,7 @@ CONTAINS
    SUBROUTINE READ_PFTimeInvariants (file_restart)
 
    USE MOD_NetCDFVector
+   USE MOD_LandPatch
    USE MOD_LandPFT
    IMPLICIT NONE
 
@@ -75,6 +82,9 @@ CONTAINS
       CALL ncio_read_vector (file_restart, 'pftfrac ', landpft, pftfrac ) !
       CALL ncio_read_vector (file_restart, 'htop_p  ', landpft, htop_p  ) !
       CALL ncio_read_vector (file_restart, 'hbot_p  ', landpft, hbot_p  ) !
+#ifdef CROP
+      CALL ncio_read_vector (file_restart, 'cropfrac ', landpatch, cropfrac) !
+#endif
 
    END SUBROUTINE READ_PFTimeInvariants
 
@@ -82,6 +92,7 @@ CONTAINS
 
    USE MOD_NetCDFVector
    USE MOD_LandPFT
+   USE MOD_LandPatch
    USE MOD_Namelist
    USE MOD_Vars_Global
    IMPLICIT NONE
@@ -100,6 +111,11 @@ CONTAINS
       CALL ncio_write_vector (file_restart, 'htop_p  ', 'pft', landpft, htop_p  , compress) !
       CALL ncio_write_vector (file_restart, 'hbot_p  ', 'pft', landpft, hbot_p  , compress) !
 
+#ifdef CROP
+      CALL ncio_define_dimension_vector (file_restart, landpatch, 'patch')
+      CALL ncio_write_vector (file_restart, 'cropfrac', 'patch', landpatch, cropfrac, compress) !
+#endif
+
    END SUBROUTINE WRITE_PFTimeInvariants
 
    SUBROUTINE deallocate_PFTimeInvariants
@@ -115,6 +131,9 @@ CONTAINS
             deallocate (pftfrac )
             deallocate (htop_p  )
             deallocate (hbot_p  )
+#ifdef CROP
+            deallocate (cropfrac)
+#endif
          ENDIF
       ENDIF
 
@@ -124,18 +143,13 @@ CONTAINS
    SUBROUTINE check_PFTimeInvariants ()
 
    USE MOD_RangeCheck
-#ifdef CROP
-   USE MOD_LandPatch
-#endif
    IMPLICIT NONE
 
       CALL check_vector_data ('pftfrac', pftfrac) !
       CALL check_vector_data ('htop_p ', htop_p ) !
       CALL check_vector_data ('hbot_p ', hbot_p ) !
 #ifdef CROP
-      IF (landpatch%has_shared) THEN
-         CALL check_vector_data ('pct crop', landpatch%pctshared) !
-      ENDIF
+      CALL check_vector_data ('cropfrac', cropfrac) !
 #endif
 
    END SUBROUTINE check_PFTimeInvariants
@@ -241,14 +255,6 @@ MODULE MOD_Vars_TimeInvariants
    real(r8) :: tcrit                            !critical temp. to determine rain or snow
    real(r8) :: wetwatmax                        !maximum wetland water (mm)
 
-! Used for downscaling
-   real(r8), allocatable    :: svf_patches (:)                                           ! sky view factor
-   real(r8), allocatable    :: cur_patches (:)                                           ! curvature
-   real(r8), allocatable    :: sf_lut_patches (:,:,:)                                    ! look up table of shadow factor of a patch
-   real(r8), allocatable    :: asp_type_patches        (:,:)                             ! topographic aspect of each character of one patch
-   real(r8), allocatable    :: slp_type_patches        (:,:)                             ! topographic slope of each character of one patch
-   real(r8), allocatable    :: area_type_patches       (:,:)                             ! area percentage of each character of one patch
-
 ! PUBLIC MEMBER FUNCTIONS:
    PUBLIC :: allocate_TimeInvariants
    PUBLIC :: deallocate_TimeInvariants
@@ -336,13 +342,6 @@ CONTAINS
             allocate (ibedrock             (numpatch))
             allocate (topoelv              (numpatch))
             allocate (topostd              (numpatch))
-! Used for downscaling
-            allocate (svf_patches          (numpatch))
-            allocate (asp_type_patches     (num_type,numpatch))
-            allocate (slp_type_patches     (num_type,numpatch))
-            allocate (area_type_patches    (num_type,numpatch))
-            allocate (sf_lut_patches       (num_azimuth,num_zenith,numpatch))
-            allocate (cur_patches          (numpatch))
       ENDIF
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
@@ -383,11 +382,13 @@ CONTAINS
    integer         , intent(in) :: lc_year
    character(len=*), intent(in) :: casename
    character(len=*), intent(in) :: dir_restart
+
    ! Local variables
-   character(len=256) :: file_restart, cyear, lndname
+   character(len=256) :: file_restart, cyear
 
       write(cyear,'(i4.4)') lc_year
       file_restart = trim(dir_restart) // '/const/' // trim(casename) //'_restart_const' // '_lc' // trim(cyear) // '.nc'
+
       CALL ncio_read_vector (file_restart, 'patchclass',   landpatch, patchclass)          !
       CALL ncio_read_vector (file_restart, 'patchtype' ,   landpatch, patchtype )          !
       CALL ncio_read_vector (file_restart, 'patchmask' ,   landpatch, patchmask )          !
@@ -466,26 +467,6 @@ CONTAINS
       CALL ncio_read_bcast_serial (file_restart, 'trsmx0', trsmx0) ! max transpiration for moist soil+100% veg.  [mm/s]
       CALL ncio_read_bcast_serial (file_restart, 'tcrit ', tcrit ) ! critical temp. to determine rain or snow
       CALL ncio_read_bcast_serial (file_restart, 'wetwatmax', wetwatmax) ! maximum wetland water (mm)
-
-      !-------------------------------------------------------------------------------------------------
-      ! Used for downscaling
-      !-------------------------------------------------------------------------------------------------
-      IF (DEF_USE_Forcing_Downscaling) THEN
-        lndname = trim(DEF_dir_landdata) // '/topography/'//trim(cyear)//'/slp_type_patches.nc'             ! slope
-        CALL ncio_read_vector (lndname, 'slp_type_patches', num_type, landpatch, slp_type_patches)
-        lndname = trim(DEF_dir_landdata) // '/topography/'//trim(cyear)//'/svf_patches.nc'               ! sky view factor
-        CALL ncio_read_vector (lndname, 'svf_patches', landpatch, svf_patches)
-        lndname = trim(DEF_dir_landdata) // '/topography/'//trim(cyear)//'/asp_type_patches.nc'            ! aspect
-        CALL ncio_read_vector (lndname, 'asp_type_patches', num_type, landpatch, asp_type_patches)
-        lndname = trim(DEF_dir_landdata) // '/topography/'//trim(cyear)//'/area_type_patches.nc'         ! area percent
-        CALL ncio_read_vector (lndname, 'area_type_patches', num_type, landpatch, area_type_patches)
-        lndname = trim(DEF_dir_landdata) // '/topography/'//trim(cyear)//'/sf_lut_patches.nc'        ! shadow mask
-        CALL ncio_read_vector (lndname, 'sf_lut_patches', num_azimuth, num_zenith, landpatch, sf_lut_patches)
-        lndname = trim(DEF_dir_landdata) // '/topography/'//trim(cyear)//'/cur_patches.nc'               ! curvature
-        CALL ncio_read_vector (lndname, 'cur_patches', landpatch, cur_patches)
-      ENDIF
-
-
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
       file_restart = trim(dir_restart) // '/const/' // trim(casename) //'_restart_pft_const' // '_lc' // trim(cyear) // '.nc'
@@ -683,7 +664,6 @@ CONTAINS
 
    USE MOD_SPMD_Task
    USE MOD_LandPatch, only: numpatch
-   USE MOD_Namelist
 
    IMPLICIT NONE
 
@@ -756,14 +736,6 @@ CONTAINS
             deallocate (topoelv        )
             deallocate (topostd        )
 
-         IF (DEF_USE_Forcing_Downscaling) THEN
-            deallocate(slp_type_patches  )
-            deallocate(svf_patches       )
-            deallocate(asp_type_patches  )
-            deallocate(area_type_patches )
-            deallocate(sf_lut_patches    )
-         ENDIF
-
          ENDIF
       ENDIF
 
@@ -786,7 +758,7 @@ CONTAINS
 
    USE MOD_SPMD_Task
    USE MOD_RangeCheck
-   USE MOD_Namelist   !, only : DEF_USE_BEDROCK
+   USE MOD_Namelist, only : DEF_USE_BEDROCK
 
    IMPLICIT NONE
 
@@ -844,15 +816,6 @@ CONTAINS
       CALL check_vector_data ('topoelv      [m]     ', topoelv     ) !
       CALL check_vector_data ('topostd      [m]     ', topostd     ) !
       CALL check_vector_data ('BVIC        [-]      ', BVIC        ) !
-
-      !???
-IF (DEF_USE_Forcing_Downscaling) THEN
-      CALL check_vector_data ('slp_type_patches    [rad] '  , slp_type_patches)     ! slope
-      CALL check_vector_data ('svf_patches          [-] '    , svf_patches)           ! sky view factor
-      CALL check_vector_data ('asp_type_patches    [rad] '  , asp_type_patches)     ! aspect
-      CALL check_vector_data ('area_type_patches [-] '    , area_type_patches)  ! area percent
-      CALL check_vector_data ('sf_lut_patches      [-] '    , sf_lut_patches)       ! shadow mask
-ENDIF
 
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)

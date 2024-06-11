@@ -375,7 +375,7 @@ MODULE MOD_Const_PFT
          , 57.0, 57.0, 57.0, 57.0, 57.0, 57.0, 57.0, 57.0&
          , 57.0, 57.0, 57.0, 57.0, 57.0, 57.0, 57.0  &
 #endif
-         /) * 0.3 * 1.e-6
+         /) * 1.e-6
 
    ! quantum efficiency
    real(r8), parameter :: effcon_p(0:N_PFT+N_CFT-1) &

@@ -77,7 +77,6 @@ OBJS_MKSRFDATA = \
 				  Aggregation_SoilParameters.o      \
 				  Aggregation_DBedrock.o            \
 				  Aggregation_Topography.o          \
-				  Aggregation_TopographyFactors.o   \
 				  Aggregation_Urban.o               \
 				  MOD_MeshFilter.o                  \
 				  MOD_RegionClip.o                  \
@@ -128,7 +127,6 @@ OBJS_BASIC =    \
 				 MOD_NdepData.o                 \
 				 MOD_FireData.o                 \
 				 MOD_OrbCoszen.o                \
-				 MOD_OrbCosazi.o                \
 				 MOD_3DCanopyRadiation.o        \
 				 MOD_Aerosol.o                  \
 				 MOD_SnowSnicar.o               \
