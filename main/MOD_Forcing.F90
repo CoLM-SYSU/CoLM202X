@@ -51,7 +51,10 @@ MODULE MOD_Forcing
    type(pointer_real8_1d), allocatable :: forc_prc_grid  (:)
    type(pointer_real8_1d), allocatable :: forc_prl_grid  (:)
    type(pointer_real8_1d), allocatable :: forc_lwrad_grid(:)
+   type(pointer_real8_1d), allocatable :: forc_swrad_grid(:)
    type(pointer_real8_1d), allocatable :: forc_hgt_grid  (:)
+   type(pointer_real8_1d), allocatable :: forc_us_grid   (:)
+   type(pointer_real8_1d), allocatable :: forc_vs_grid   (:)
 
    type(pointer_real8_1d), allocatable :: forc_t_part     (:)
    type(pointer_real8_1d), allocatable :: forc_th_part    (:)
@@ -61,6 +64,9 @@ MODULE MOD_Forcing
    type(pointer_real8_1d), allocatable :: forc_prc_part   (:)
    type(pointer_real8_1d), allocatable :: forc_prl_part   (:)
    type(pointer_real8_1d), allocatable :: forc_frl_part   (:)
+   type(pointer_real8_1d), allocatable :: forc_swrad_part (:)
+   type(pointer_real8_1d), allocatable :: forc_us_part    (:)
+   type(pointer_real8_1d), allocatable :: forc_vs_part    (:)
 
    logical, allocatable :: glacierss (:)
    
@@ -127,6 +133,9 @@ CONTAINS
    integer            :: ivar, year, month, day, time_i
    real(r8)           :: missing_value
    integer            :: ielm, istt, iend
+
+   real(r8), allocatable :: vecone(:)
+   integer :: iblkme, xblk, yblk, xloc, yloc
 
       CALL init_user_specified_forcing
 
@@ -237,7 +246,10 @@ CONTAINS
          CALL mg2p_forc%allocate_part (forc_prc_grid   )
          CALL mg2p_forc%allocate_part (forc_prl_grid   )
          CALL mg2p_forc%allocate_part (forc_lwrad_grid )
+         CALL mg2p_forc%allocate_part (forc_swrad_grid )
          CALL mg2p_forc%allocate_part (forc_hgt_grid   )
+         CALL mg2p_forc%allocate_part (forc_us_grid    )
+         CALL mg2p_forc%allocate_part (forc_vs_grid    )
 
          CALL mg2p_forc%allocate_part (forc_t_part     )
          CALL mg2p_forc%allocate_part (forc_th_part    )
@@ -247,6 +259,9 @@ CONTAINS
          CALL mg2p_forc%allocate_part (forc_prc_part   )
          CALL mg2p_forc%allocate_part (forc_prl_part   )
          CALL mg2p_forc%allocate_part (forc_frl_part   )
+         CALL mg2p_forc%allocate_part (forc_swrad_part )
+         CALL mg2p_forc%allocate_part (forc_us_part    )
+         CALL mg2p_forc%allocate_part (forc_vs_part    )
 
          CALL mg2p_forc%grid2part (topo_grid,   forc_topo_grid  )
          CALL mg2p_forc%grid2part (maxelv_grid, forc_maxelv_grid)
@@ -326,6 +341,7 @@ CONTAINS
                deallocate (forc_prc_grid   )
                deallocate (forc_prl_grid   )
                deallocate (forc_lwrad_grid )
+               deallocate (forc_swrad_grid )
                deallocate (forc_hgt_grid   )
 
                deallocate (forc_t_part     )
@@ -336,6 +352,7 @@ CONTAINS
                deallocate (forc_prc_part   )
                deallocate (forc_prl_part   )
                deallocate (forc_frl_part   )
+               deallocate (forc_swrad_part )
 
             ENDIF
          ENDIF
@@ -355,11 +372,12 @@ CONTAINS
 
    !--------------------------------
    SUBROUTINE read_forcing (idate, dir_forcing)
-
+   USE MOD_OrbCosazi
    USE MOD_Precision
    USE MOD_Namelist
    USE MOD_Const_Physical, only: rgas, grav
    USE MOD_Vars_TimeInvariants
+   USE MOD_Vars_TimeVariables, only: alb
    USE MOD_Vars_1DForcing
    USE MOD_Vars_2DForcing
    USE MOD_Block
@@ -369,146 +387,154 @@ CONTAINS
    USE MOD_LandPatch
    USE MOD_RangeCheck
    USE MOD_UserSpecifiedForcing
-   USE MOD_ForcingDownscaling, only : rair, cpair, downscale_forcings_1c
+   USE MOD_ForcingDownscaling, only : rair, cpair, downscale_forcings
+   USE MOD_NetCDFVector
 
    IMPLICIT NONE
+
    integer, intent(in) :: idate(3)
    character(len=*), intent(in) :: dir_forcing
 
    ! local variables:
-   integer  :: ivar, istt, iend
+   integer  :: ivar, istt, iend, id(3)
    integer  :: iblkme, ib, jb, i, j, ilon, ilat, np, ipart, ne
-   real(r8) :: calday  ! Julian cal day (1.xx to 365.xx)
+   real(r8) :: calday                                             ! Julian cal day (1.xx to 365.xx)
    real(r8) :: sunang, cloud, difrat, vnrat
    real(r8) :: a, hsolar, ratio_rvrf
    type(block_data_real8_2d) :: forc_xy_solarin
-
+   integer  :: ii
+   character(10) :: cyear = "2005"
+   character(256):: lndname
+      
    type(timestamp) :: mtstamp
-   integer  :: id(3)
    integer  :: dtLB, dtUB
-   real(r8) :: cosz
-   integer  :: year, month, mday
+   real(r8) :: cosz, coszen(numpatch), cosa, cosazi(numpatch), balb
+   INTEGER  :: year, month, mday
    logical  :: has_u,has_v
-
    real solar, frl, prcp, tm, us, vs, pres, qm
    real(r8) :: pco2m
 
-      IF (p_is_io) THEN
+   ! ! diagnostic variables
+   real(r8)  :: sm_azi_zen          (1:numpatch)                                    ! aggregated shadow mask on patch      
+   real(r8)  :: illumination_patch  (1:numpatch)                                    ! illumination angle (cos)
+   real(r8)  :: beam_swrad          (1:numpatch)                                    ! beam shortwave radiation (W/m**2)
+   real(r8)  :: diffuse_swrad       (1:numpatch)                                    ! diffuse shortwave radiation (W/m**2)
+   real(r8)  :: reflect_swrad       (1:numpatch)                                    ! reflect shortwave radiation (W/m**2)
+   real(r8)  :: alb_wsa             (1:numpatch)                                    ! white sky albedo, use model caculate diffuse albdeo
+   real(r8)  :: alb_bsa             (1:numpatch)                                    ! black sky albedo, use model caculate direct albedo
+                                     
 
-         !------------------------------------------------------------
-         ! READ in THE ATMOSPHERIC FORCING
+   IF (p_is_io) THEN
+   !------------------------------------------------------------
+   ! READ in THE ATMOSPHERIC FORCING
+   ! read lower and upper boundary forcing data
+   CALL metreadLBUB(idate, dir_forcing)
+   ! set model time stamp
+   id(:) = idate(:)
+   !CALL adj2end(id)
+   mtstamp = id
+   has_u = .true.
+   has_v = .true.
+   ! loop for variables
+   DO ivar = 1, NVAR
+      IF (ivar == 5 .and. trim(vname(ivar)) == 'NULL') has_u = .false.
+      IF (ivar == 6 .and. trim(vname(ivar)) == 'NULL') has_v = .false.
+      IF (trim(vname(ivar)) == 'NULL') CYCLE     ! no data, CYCLE
+      IF (trim(tintalgo(ivar)) == 'NULL') CYCLE
 
-         ! read lower and upper boundary forcing data
-         CALL metreadLBUB(idate, dir_forcing)
+      ! to make sure the forcing data calculated is in the range of time
+      ! interval [LB, UB]
+      IF ( (mtstamp < tstamp_LB(ivar)) .or. (tstamp_UB(ivar) < mtstamp) ) THEN
+         write(6, *) "the data required is out of range! STOP!"; CALL CoLM_stop()
+      ENDIF
 
-         ! set model time stamp
-         id(:) = idate(:)
-         !CALL adj2end(id)
-         mtstamp = id
+      ! calcualte distance to lower/upper boundary
+      dtLB = mtstamp - tstamp_LB(ivar)
+      dtUB = tstamp_UB(ivar) - mtstamp
 
-         has_u = .true.
-         has_v = .true.
-         ! loop for variables
-         DO ivar = 1, NVAR
-
-            IF (ivar == 5 .and. trim(vname(ivar)) == 'NULL') has_u = .false.
-            IF (ivar == 6 .and. trim(vname(ivar)) == 'NULL') has_v = .false.
-            IF (trim(vname(ivar)) == 'NULL') CYCLE     ! no data, CYCLE
-            IF (trim(tintalgo(ivar)) == 'NULL') CYCLE
-
-            ! to make sure the forcing data calculated is in the range of time
-            ! interval [LB, UB]
-            IF ( (mtstamp < tstamp_LB(ivar)) .or. (tstamp_UB(ivar) < mtstamp) ) THEN
-               write(6, *) "the data required is out of range! STOP!"; CALL CoLM_stop()
-            ENDIF
-
-            ! calcualte distance to lower/upper boundary
-            dtLB = mtstamp - tstamp_LB(ivar)
-            dtUB = tstamp_UB(ivar) - mtstamp
-
-            ! nearest method, for precipitation
-            IF (tintalgo(ivar) == 'nearest') THEN
-               IF (dtLB <= dtUB) THEN
-                  CALL block_data_copy (forcn_LB(ivar), forcn(ivar))
-               ELSE
-                  CALL block_data_copy (forcn_UB(ivar), forcn(ivar))
-               ENDIF
-            ENDIF
-
-            ! linear method, for T, Pres, Q, W, LW
-            IF (tintalgo(ivar) == 'linear') THEN
-               IF ( (dtLB+dtUB) > 0 ) THEN
-                  CALL block_data_linear_interp ( &
-                     forcn_LB(ivar), real(dtUB,r8)/real(dtLB+dtUB,r8), &
-                     forcn_UB(ivar), real(dtLB,r8)/real(dtLB+dtUB,r8), &
-                     forcn(ivar))
-               ELSE
-                  CALL block_data_copy (forcn_LB(ivar), forcn(ivar))
-               ENDIF
-            ENDIF
-
-            ! coszen method, for SW
-            IF (tintalgo(ivar) == 'coszen') THEN
-               DO iblkme = 1, gblock%nblkme
-                  ib = gblock%xblkme(iblkme)
-                  jb = gblock%yblkme(iblkme)
-
-                  DO j = 1, gforc%ycnt(jb)
-                     DO i = 1, gforc%xcnt(ib)
-
-                        ilat = gforc%ydsp(jb) + j
-                        ilon = gforc%xdsp(ib) + i
-                        IF (ilon > gforc%nlon) ilon = ilon - gforc%nlon
-
-                        calday = calendarday(mtstamp)
-                        cosz = orb_coszen(calday, gforc%rlon(ilon), gforc%rlat(ilat))
-                        cosz = max(0.001, cosz)
-                        forcn(ivar)%blk(ib,jb)%val(i,j) = &
-                           cosz / avgcos%blk(ib,jb)%val(i,j) * forcn_LB(ivar)%blk(ib,jb)%val(i,j)
-
-                     ENDDO
-                  ENDDO
-               ENDDO
-            ENDIF
-
-         ENDDO
-
-         ! preprocess for forcing data, only for QIAN data right now?
-         CALL metpreprocess (gforc, forcn)
-
-         CALL allocate_block_data (gforc, forc_xy_solarin)
-
-         CALL block_data_copy (forcn(1), forc_xy_t      )
-         CALL block_data_copy (forcn(2), forc_xy_q      )
-         CALL block_data_copy (forcn(3), forc_xy_psrf   )
-         CALL block_data_copy (forcn(3), forc_xy_pbot   )
-         CALL block_data_copy (forcn(4), forc_xy_prl, sca = 2/3._r8)
-         CALL block_data_copy (forcn(4), forc_xy_prc, sca = 1/3._r8)
-         CALL block_data_copy (forcn(7), forc_xy_solarin)
-         CALL block_data_copy (forcn(8), forc_xy_frl    )
-         IF (DEF_USE_CBL_HEIGHT) THEN
-            CALL block_data_copy (forcn(9), forc_xy_hpbl    )
-         ENDIF
-
-         IF (has_u .and. has_v) THEN
-            CALL block_data_copy (forcn(5), forc_xy_us )
-            CALL block_data_copy (forcn(6), forc_xy_vs )
-         ELSEif (has_u) THEN
-            CALL block_data_copy (forcn(5), forc_xy_us , sca = 1/sqrt(2.0_r8))
-            CALL block_data_copy (forcn(5), forc_xy_vs , sca = 1/sqrt(2.0_r8))
-         ELSEif (has_v) THEN
-            CALL block_data_copy (forcn(6), forc_xy_us , sca = 1/sqrt(2.0_r8))
-            CALL block_data_copy (forcn(6), forc_xy_vs , sca = 1/sqrt(2.0_r8))
+      ! nearest method, for precipitation
+      IF (tintalgo(ivar) == 'nearest') THEN
+         IF (dtLB <= dtUB) THEN
+            CALL block_data_copy (forcn_LB(ivar), forcn(ivar))
          ELSE
-            IF (.not.trim(DEF_forcing%dataset) == 'CPL7') THEN
-               write(6, *) "At least one of the wind components must be provided! STOP!";
-               CALL CoLM_stop()
-            ENDIF
+            CALL block_data_copy (forcn_UB(ivar), forcn(ivar))
          ENDIF
+      ENDIF
 
-         CALL flush_block_data (forc_xy_hgt_u, real(HEIGHT_V,r8))
-         CALL flush_block_data (forc_xy_hgt_t, real(HEIGHT_T,r8))
-         CALL flush_block_data (forc_xy_hgt_q, real(HEIGHT_Q,r8))
+      ! linear method, for T, Pres, Q, W, LW
+      IF (tintalgo(ivar) == 'linear') THEN
+         IF ( (dtLB+dtUB) > 0 ) THEN
+            CALL block_data_linear_interp ( &
+               forcn_LB(ivar), real(dtUB,r8)/real(dtLB+dtUB,r8), &
+               forcn_UB(ivar), real(dtLB,r8)/real(dtLB+dtUB,r8), &
+               forcn(ivar))
+         ELSE
+            CALL block_data_copy (forcn_LB(ivar), forcn(ivar))
+         ENDIF
+      ENDIF
+
+      ! coszen method, for SW
+      IF (tintalgo(ivar) == 'coszen') THEN
+         DO iblkme = 1, gblock%nblkme
+            ib = gblock%xblkme(iblkme)
+            jb = gblock%yblkme(iblkme)
+
+            DO j = 1, gforc%ycnt(jb)
+               DO i = 1, gforc%xcnt(ib)
+
+                  ilat = gforc%ydsp(jb) + j
+                  ilon = gforc%xdsp(ib) + i
+                  IF (ilon > gforc%nlon) ilon = ilon - gforc%nlon
+
+                  calday = calendarday(mtstamp)
+                  cosz = orb_coszen(calday, gforc%rlon(ilon), gforc%rlat(ilat))
+                  cosz = max(0.001, cosz)
+                  forcn(ivar)%blk(ib,jb)%val(i,j) = &
+                    cosz / avgcos%blk(ib,jb)%val(i,j) * forcn_LB(ivar)%blk(ib,jb)%val(i,j)
+
+               ENDDO
+            ENDDO
+         ENDDO
+      ENDIF
+
+   ENDDO
+
+   ! preprocess for forcing data, only for QIAN data right now?
+   CALL metpreprocess (gforc, forcn)
+
+   CALL allocate_block_data (gforc, forc_xy_solarin)
+
+   CALL block_data_copy (forcn(1), forc_xy_t   )
+   CALL block_data_copy (forcn(2), forc_xy_q   )
+   CALL block_data_copy (forcn(3), forc_xy_psrf   )
+   CALL block_data_copy (forcn(3), forc_xy_pbot   )
+   CALL block_data_copy (forcn(4), forc_xy_prl, sca = 2/3._r8)
+   CALL block_data_copy (forcn(4), forc_xy_prc, sca = 1/3._r8)
+   CALL block_data_copy (forcn(7), forc_xy_solarin)
+   CALL block_data_copy (forcn(8), forc_xy_frl    )
+   IF (DEF_USE_CBL_HEIGHT) THEN
+   CALL block_data_copy (forcn(9), forc_xy_hpbl    )
+   ENDIF
+
+   IF (has_u .and. has_v) THEN
+      CALL block_data_copy (forcn(5), forc_xy_us )
+      CALL block_data_copy (forcn(6), forc_xy_vs )
+   ELSEIF (has_u) THEN
+      CALL block_data_copy (forcn(5), forc_xy_us , sca = 1/sqrt(2.0_r8))
+      CALL block_data_copy (forcn(5), forc_xy_vs , sca = 1/sqrt(2.0_r8))
+   ELSEIF (has_v) THEN
+      CALL block_data_copy (forcn(6), forc_xy_us , sca = 1/sqrt(2.0_r8))
+      CALL block_data_copy (forcn(6), forc_xy_vs , sca = 1/sqrt(2.0_r8))
+   ELSE
+      IF (.not.trim(DEF_forcing%dataset) == 'CPL7') THEN
+         write(6, *) "At least one of the wind components must be provided! STOP!";
+      CALL CoLM_stop()
+      ENDIF
+   ENDIF
+
+   CALL flush_block_data (forc_xy_hgt_u, real(HEIGHT_V,r8))
+   CALL flush_block_data (forc_xy_hgt_t, real(HEIGHT_T,r8))
+   CALL flush_block_data (forc_xy_hgt_q, real(HEIGHT_Q,r8))
 
          IF (solarin_all_band) THEN
 
@@ -545,49 +571,48 @@ CONTAINS
                ENDDO
 
             ELSE
-               !---------------------------------------------------------------
-               ! as the downward solar is in full band, an empirical expression
-               ! will be used to divide fractions of band and incident
-               ! (visible, near-infrad, dirct, diffuse)
-               ! Julian calday (1.xx to 365.xx)
-               !---------------------------------------------------------------
-               DO iblkme = 1, gblock%nblkme
-                  ib = gblock%xblkme(iblkme)
-                  jb = gblock%yblkme(iblkme)
+      !---------------------------------------------------------------
+      ! as the downward solar is in full band, an empirical expression
+      ! will be used to divide fractions of band and incident
+      ! (visible, near-infrad, dirct, diffuse)
+      ! Julian calday (1.xx to 365.xx)
+      !---------------------------------------------------------------
+      DO iblkme = 1, gblock%nblkme
+         ib = gblock%xblkme(iblkme)
+         jb = gblock%yblkme(iblkme)
 
-                  DO j = 1, gforc%ycnt(jb)
-                     DO i = 1, gforc%xcnt(ib)
+         DO j = 1, gforc%ycnt(jb)
+            DO i = 1, gforc%xcnt(ib)
 
-                        ilat = gforc%ydsp(jb) + j
-                        ilon = gforc%xdsp(ib) + i
-                        IF (ilon > gforc%nlon) ilon = ilon - gforc%nlon
+               ilat = gforc%ydsp(jb) + j
+               ilon = gforc%xdsp(ib) + i
+               IF (ilon > gforc%nlon) ilon = ilon - gforc%nlon
 
-                        a = forc_xy_solarin%blk(ib,jb)%val(i,j)
-                        calday = calendarday(idate)
-                        sunang = orb_coszen (calday, gforc%rlon(ilon), gforc%rlat(ilat))
+               a = forc_xy_solarin%blk(ib,jb)%val(i,j)
+               calday = calendarday(idate)
+               sunang = orb_coszen (calday, gforc%rlon(ilon), gforc%rlat(ilat))
 
-                        cloud = (1160.*sunang-a)/(963.*sunang)
-                        cloud = max(cloud,0.)
-                        cloud = min(cloud,1.)
-                        cloud = max(0.58,cloud)
+               cloud = (1160.*sunang-a)/(963.*sunang)
+               cloud = max(cloud,0.)
+               cloud = min(cloud,1.)
+               cloud = max(0.58,cloud)
 
-                        difrat = 0.0604/(sunang-0.0223)+0.0683
-                        IF(difrat.lt.0.) difrat = 0.
-                        IF(difrat.gt.1.) difrat = 1.
+               difrat = 0.0604/(sunang-0.0223)+0.0683
+               IF(difrat.lt.0.) difrat = 0.
+               IF(difrat.gt.1.) difrat = 1.
 
-                        difrat = difrat+(1.0-difrat)*cloud
-                        vnrat = (580.-cloud*464.)/((580.-cloud*499.)+(580.-cloud*464.))
+               difrat = difrat+(1.0-difrat)*cloud
+               vnrat = (580.-cloud*464.)/((580.-cloud*499.)+(580.-cloud*464.))
 
-                        forc_xy_sols %blk(ib,jb)%val(i,j) = a*(1.0-difrat)*vnrat
-                        forc_xy_soll %blk(ib,jb)%val(i,j) = a*(1.0-difrat)*(1.0-vnrat)
-                        forc_xy_solsd%blk(ib,jb)%val(i,j) = a*difrat*vnrat
-                        forc_xy_solld%blk(ib,jb)%val(i,j) = a*difrat*(1.0-vnrat)
-                     ENDDO
-                  ENDDO
-               ENDDO
-            ENDIF
-
-         ENDIF
+               forc_xy_sols %blk(ib,jb)%val(i,j) = a*(1.0-difrat)*vnrat
+               forc_xy_soll %blk(ib,jb)%val(i,j) = a*(1.0-difrat)*(1.0-vnrat)
+               forc_xy_solsd%blk(ib,jb)%val(i,j) = a*difrat*vnrat
+               forc_xy_solld%blk(ib,jb)%val(i,j) = a*difrat*(1.0-vnrat)
+            ENDDO
+         ENDDO
+      ENDDO
+   ENDIF
+   ENDIF
 
          ! [GET ATMOSPHERE CO2 CONCENTRATION DATA]
          year  = idate(1)
@@ -597,7 +622,6 @@ CONTAINS
          CALL block_data_copy (forc_xy_pbot, forc_xy_po2m , sca = 0.209_r8     )
 
       ENDIF
-
 
       IF (.not. DEF_USE_Forcing_Downscaling) THEN
 
@@ -653,41 +677,55 @@ CONTAINS
          ENDIF
 
       ELSE
-
-         ! Mapping the 2d atmospheric fields [lon_points]x[lat_points]
-         !     -> the 1d vector of subgrid points [numelm]
-         CALL mg2p_forc%grid2pset (forc_xy_pco2m,  forc_pco2m)
-         CALL mg2p_forc%grid2pset (forc_xy_po2m ,  forc_po2m )
-         CALL mg2p_forc%grid2pset (forc_xy_us   ,  forc_us   )
-         CALL mg2p_forc%grid2pset (forc_xy_vs   ,  forc_vs   )
-
-         CALL mg2p_forc%grid2pset (forc_xy_psrf ,  forc_psrf )
-
-         CALL mg2p_forc%grid2pset (forc_xy_sols ,  forc_sols )
-         CALL mg2p_forc%grid2pset (forc_xy_soll ,  forc_soll )
-         CALL mg2p_forc%grid2pset (forc_xy_solsd,  forc_solsd)
-         CALL mg2p_forc%grid2pset (forc_xy_solld,  forc_solld)
-
-         CALL mg2p_forc%grid2pset (forc_xy_hgt_t,  forc_hgt_t)
-         CALL mg2p_forc%grid2pset (forc_xy_hgt_u,  forc_hgt_u)
-         CALL mg2p_forc%grid2pset (forc_xy_hgt_q,  forc_hgt_q)
+         ! ------------------------------------------------------
+         ! Forcing downscaling module
+         ! ------------------------------------------------------
+         ! init forcing on patches
+         CALL mg2p_forc%grid2pset (forc_xy_pco2m,   forc_pco2m)
+         CALL mg2p_forc%grid2pset (forc_xy_po2m ,   forc_po2m )
+         CALL mg2p_forc%grid2pset (forc_xy_us   ,   forc_us   )
+         CALL mg2p_forc%grid2pset (forc_xy_vs   ,   forc_vs   )
+         CALL mg2p_forc%grid2pset (forc_xy_psrf ,   forc_psrf )
+         CALL mg2p_forc%grid2pset (forc_xy_sols ,   forc_sols )
+         CALL mg2p_forc%grid2pset (forc_xy_soll ,   forc_soll )
+         CALL mg2p_forc%grid2pset (forc_xy_solsd,   forc_solsd)
+         CALL mg2p_forc%grid2pset (forc_xy_solld,   forc_solld)
+         CALL mg2p_forc%grid2pset (forc_xy_solarin, forc_swrad)
+         CALL mg2p_forc%grid2pset (forc_xy_hgt_t,   forc_hgt_t)
+         CALL mg2p_forc%grid2pset (forc_xy_hgt_u,   forc_hgt_u)
+         CALL mg2p_forc%grid2pset (forc_xy_hgt_q,   forc_hgt_q)
 
          IF (DEF_USE_CBL_HEIGHT) THEN
             CALL mg2p_forc%grid2pset (forc_xy_hpbl, forc_hpbl)
          ENDIF
 
-         CALL mg2p_forc%grid2part (forc_xy_t    ,  forc_t_grid    )
-         CALL mg2p_forc%grid2part (forc_xy_q    ,  forc_q_grid    )
-         CALL mg2p_forc%grid2part (forc_xy_prc  ,  forc_prc_grid  )
-         CALL mg2p_forc%grid2part (forc_xy_prl  ,  forc_prl_grid  )
-         CALL mg2p_forc%grid2part (forc_xy_pbot ,  forc_pbot_grid )
-         CALL mg2p_forc%grid2part (forc_xy_frl  ,  forc_lwrad_grid)
-         CALL mg2p_forc%grid2part (forc_xy_hgt_t,  forc_hgt_grid  )
+         ! Mapping the 2d atmospheric fields [lon_points]x[lat_points]
+         !     -> the 1d vector of subgrid points [numelm] 
+         !     by selected mapping methods
+         CALL mg2p_forc%grid2part (forc_xy_t    ,   forc_t_grid    )
+         CALL mg2p_forc%grid2part (forc_xy_q    ,   forc_q_grid    )
+         CALL mg2p_forc%grid2part (forc_xy_prc  ,   forc_prc_grid  )
+         CALL mg2p_forc%grid2part (forc_xy_prl  ,   forc_prl_grid  )
+         CALL mg2p_forc%grid2part (forc_xy_pbot ,   forc_pbot_grid )
+         CALL mg2p_forc%grid2part (forc_xy_frl  ,   forc_lwrad_grid)
+         CALL mg2p_forc%grid2part (forc_xy_hgt_t,   forc_hgt_grid  )
+         CALL mg2p_forc%grid2part (forc_xy_solarin, forc_swrad_grid)
+         CALL mg2p_forc%grid2part (forc_xy_us,      forc_us_grid   )
+         CALL mg2p_forc%grid2part (forc_xy_vs,      forc_vs_grid   )
+
+         calday = calendarday(idate) 
+         write(*,*) 'calday', calday
 
          IF (p_is_worker) THEN
-
-            DO np = 1, numpatch
-               DO ipart = 1, mg2p_forc%npart(np)
+            DO np = 1, numpatch ! patches
+               ! calculate albedo of each patches
+               balb = (alb(1,1,np)*forc_sols(np) &
+                        +alb(1,2,np)*forc_solsd(np) &
+                        +alb(2,1,np)*forc_soll(np) &
+                        +alb(2,2,np)*forc_solld(np)) &
+                        /(forc_sols(np)+forc_solsd(np)+forc_soll(np)+forc_solld(np))
+      
+               DO ipart = 1, mg2p_forc%npart(np) ! part loop of each patch
 
                   IF (mg2p_forc%areapart(np)%val(ipart) == 0.) CYCLE
 
@@ -695,10 +733,10 @@ CONTAINS
                   ! the ground. Scientists have measured the most frigid temperature ever
                   ! recorded on the continent's eastern highlands: about (180K) colder than 
                   ! dry ice.
-                  IF(forc_t_grid(np)%val(ipart) < 180.) forc_t_grid(np)%val(ipart) = 180.
+                  IF (forc_t_grid(np)%val(ipart) < 180.) forc_t_grid(np)%val(ipart) = 180.
                   ! the highest air temp was found in Kuwait 326 K, Sulaibya 2012-07-31;
                   ! Pakistan, Sindh 2010-05-26; Iraq, Nasiriyah 2011-08-03
-                  IF(forc_t_grid(np)%val(ipart) > 326.) forc_t_grid(np)%val(ipart) = 326.
+                  IF (forc_t_grid(np)%val(ipart) > 326.) forc_t_grid(np)%val(ipart) = 326.
 
                   forc_rho_grid(np)%val(ipart) = (forc_pbot_grid(np)%val(ipart) &
                      - 0.378*forc_q_grid(np)%val(ipart)*forc_pbot_grid(np)%val(ipart) &
@@ -707,29 +745,46 @@ CONTAINS
                   forc_th_grid(np)%val(ipart) = forc_t_grid(np)%val(ipart) &
                      * (1.e5/forc_pbot_grid(np)%val(ipart)) ** (rair/cpair)
 
+                  ! caculate sun zenith angle and sun azimuth angle and turn to degree
+                  coszen(np) = orb_coszen(calday, patchlonr(np), patchlatr(np))
+                  cosazi(np) = orb_cosazi(calday, patchlonr(np), patchlatr(np), coszen(np))
 
-                  CALL downscale_forcings_1c ( glacierss(np), &
-                     ! forcing in gridcells
+                  ! downscale forcing from grid to part
+                  CALL downscale_forcings ( &
+                     glacierss(np), &
+
+                     ! non-adjusted forcing
                      forc_topo_grid(np)%val(ipart),  forc_maxelv_grid(np)%val(ipart), &
                      forc_t_grid(np)%val(ipart),     forc_th_grid(np)%val(ipart),     &
                      forc_q_grid(np)%val(ipart),     forc_pbot_grid(np)%val(ipart),   &
                      forc_rho_grid(np)%val(ipart),   forc_prc_grid(np)%val(ipart),    &
                      forc_prl_grid(np)%val(ipart),   forc_lwrad_grid(np)%val(ipart),  &
-                     forc_hgt_grid(np)%val(ipart),   &
-                     ! forcing in part of patches
+                     forc_hgt_grid(np)%val(ipart),   forc_swrad_grid(np)%val(ipart),  &
+                     forc_us_grid(np)%val(ipart),    forc_vs_grid(np)%val(ipart),     &
+
+                     ! topography-based factor on patch
+                     slp_type_patches(:,np), asp_type_patches(:,np), area_type_patches(:,np), &
+                     svf_patches(np), cur_patches(np), sf_lut_patches(:,:,np), & 
+
+                     ! other factors
+                     calday, coszen(np), cosazi(np), balb, &
+
+                     ! adjusted forcing
                      forc_topo(np),                  forc_t_part(np)%val(ipart),      &
                      forc_th_part(np)%val(ipart),    forc_q_part(np)%val(ipart),      &
                      forc_pbot_part(np)%val(ipart),  forc_rhoair_part(np)%val(ipart), &
                      forc_prc_part(np)%val(ipart),   forc_prl_part(np)%val(ipart),    &
-                     forc_frl_part(np)%val(ipart))
-               
+                     forc_frl_part(np)%val(ipart),   forc_swrad_part(np)%val(ipart),  &
+                     forc_us_part(np)%val(ipart),    forc_vs_part(np)%val(ipart))
                ENDDO
             ENDDO
+         ENDIF
 
-         ENDIF 
-
-         CALL mg2p_forc%normalize (forc_xy_frl, forc_frl_part)
-
+         ! Conservation of short- and long- waves radiation in the grid of forcing
+         CALL mg2p_forc%normalize (forc_xy_solarin, forc_swrad_part)
+         CALL mg2p_forc%normalize (forc_xy_frl,     forc_frl_part  )
+   
+         ! mapping parts to patches
          CALL mg2p_forc%part2pset (forc_t_part,      forc_t     )
          CALL mg2p_forc%part2pset (forc_q_part,      forc_q     )
          CALL mg2p_forc%part2pset (forc_pbot_part,   forc_pbot  )
@@ -737,8 +792,40 @@ CONTAINS
          CALL mg2p_forc%part2pset (forc_prc_part,    forc_prc   )
          CALL mg2p_forc%part2pset (forc_prl_part,    forc_prl   )
          CALL mg2p_forc%part2pset (forc_frl_part,    forc_frl   )
+         CALL mg2p_forc%part2pset (forc_swrad_part,  forc_swrad )
+         CALL mg2p_forc%part2pset (forc_us_part,     forc_us    )
+         CALL mg2p_forc%part2pset (forc_vs_part,     forc_vs    )
 
-      ENDIF
+         ! divide fractions of downscaled shortwave radiation 
+         IF (p_is_worker) THEN
+            DO j = 1, numpatch
+                  a = forc_swrad(j)
+                  IF (isnan(a)) a = 0
+                  calday = calendarday(idate)
+                  sunang = orb_coszen (calday, patchlonr(j), patchlatr(j))
+                  IF (sunang.eq.0) THEN
+                     cloud = 0.
+                  ELSE
+                     cloud = (1160.*sunang-a)/(963.*sunang)
+                  ENDIF
+                  cloud = max(cloud,0.0001)
+                  cloud = min(cloud,1.)
+                  cloud = max(0.58,cloud)
+
+                  difrat = 0.0604/(sunang-0.0223)+0.0683
+                  IF(difrat.lt.0.) difrat = 0.
+                  IF(difrat.gt.1.) difrat = 1.
+
+                  difrat = difrat+(1.0-difrat)*cloud
+                  vnrat = (580.-cloud*464.)/((580.-cloud*499.)+(580.-cloud*464.))
+
+                  forc_sols(j)  = a*(1.0-difrat)*vnrat
+                  forc_soll(j)  = a*(1.0-difrat)*(1.0-vnrat)
+                  forc_solsd(j) = a*difrat*vnrat
+                  forc_solld(j) = a*difrat*(1.0-vnrat)
+            ENDDO
+         ENDIF
+         ENDIF
 
 #ifdef RangeCheck
 #ifdef USEMPI

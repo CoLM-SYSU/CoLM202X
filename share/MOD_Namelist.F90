@@ -378,8 +378,8 @@ MODULE MOD_Namelist
    !CBL height
    logical           :: DEF_USE_CBL_HEIGHT = .false.
 
-   character(len=20) :: DEF_Forcing_Interp_Method = 'arealweight' ! 'arealweight' (default) or 'bilinear'
-   
+   character(len=20) :: DEF_Forcing_Interp_Method = 'arealweight'
+   character(len=20) :: DEF_Hres_Grid = 'heihe_90m' 
    logical           :: DEF_USE_Forcing_Downscaling        = .false.
    character(len=5)  :: DEF_DS_precipitation_adjust_scheme = 'II'
    character(len=5)  :: DEF_DS_longwave_adjust_scheme      = 'II'
@@ -894,6 +894,8 @@ CONTAINS
 
       DEF_Forcing_Interp_Method,          &
 
+      DEF_Hres_Grid,                  &
+
       DEF_USE_Forcing_Downscaling,        &
       DEF_DS_precipitation_adjust_scheme, &
       DEF_DS_longwave_adjust_scheme,      &
@@ -1339,6 +1341,9 @@ CONTAINS
       CALL mpi_bcast (DEF_HIST_CompressLevel, 1, mpi_integer,   p_root, p_comm_glb, p_err)
 
       CALL mpi_bcast (DEF_Forcing_Interp_Method,         20, mpi_character, p_root, p_comm_glb, p_err)
+      ! added by Chen Sisi, used for reading high resolution terrain factor data
+      CALL mpi_bcast (DEF_Hres_Grid,                     20, mpi_character, p_root, p_comm_glb, p_err)
+
       CALL mpi_bcast (DEF_USE_Forcing_Downscaling,        1, mpi_logical,   p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_DS_precipitation_adjust_scheme, 5, mpi_character, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_DS_longwave_adjust_scheme,      5, mpi_character, p_root, p_comm_glb, p_err)
