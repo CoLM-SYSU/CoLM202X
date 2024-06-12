@@ -1,51 +1,48 @@
 #include <define.h>
 
 PROGRAM MKSRFDATA
-
-! ======================================================================
-! Surface grid edges:
-! The model domain was defined with the north, east, south, west edges:
-!          edgen: northern edge of grid : > -90 and <= 90 (degrees)
-!          edgee: eastern edge of grid  : > western edge and <= 180
-!          edges: southern edge of grid : >= -90  and <  90
-!          edgew: western edge of grid  : >= -180 and < 180
-!
-! Region (global) latitude grid goes from:
-!                 NORTHERN edge (POLE) to SOUTHERN edge (POLE)
-! Region (global) longitude grid starts at:
-!                 WESTERN edge (DATELINE with western edge)
-!                 West of Greenwich defined negative for global grids,
-!                 the western edge of the longitude grid starts at the dateline
-!
-! Land characteristics at the 30 arc-seconds grid resolution (RAW DATA):
-!              1. Global Terrain Dataset (elevation height,...)
-!              2. Global Land Cover Characteristics (land cover type, plant leaf area index, Forest Height, ...)
-!              3. Global Lakes and Wetlands Characteristics (lake and wetlands types, lake coverage and lake depth)
-!              4. Global Glacier Characteristics
-!              5. Global Urban Characteristics (urban extent, ...)
-!              6. Global Soil Characteristics (...)
-!              7. Global Cultural Characteristics (ON-GONG PROJECT)
-!
-! Land charateristics at the model grid resolution (CREATED):
-!              1. Model grid (longitude, latitude)
-!              2. Fraction (area) of patches of grid (0-1)
-!                 2.1 Fraction of land water bodies (lake, reservoir, river)
-!                 2.2 Fraction of wetland
-!                 2.3 Fraction of glacier
-!                 2.4 Fraction of urban and built-up
-!                 ......
-!              3. Plant leaf area index
-!              4. Tree height
-!              5. Lake depth
-!              6. Soil thermal and hydraulic parameters
-!
-! Created by Yongjiu Dai, 02/2014
-!
-! REVISIONS:
-! Shupeng Zhang, 01/2022: porting codes to MPI parallel version
-!
-! ======================================================================
-
+   ! ======================================================================
+   ! Surface grid edges:
+   ! The model domain was defined with the north, east, south, west edges:
+   !          edgen: northern edge of grid : > -90 and <= 90 (degrees)
+   !          edgee: eastern edge of grid  : > western edge and <= 180
+   !          edges: southern edge of grid : >= -90  and <  90
+   !          edgew: western edge of grid  : >= -180 and < 180
+   !
+   ! Region (global) latitude grid goes from:
+   !                 NORTHERN edge (POLE) to SOUTHERN edge (POLE)
+   ! Region (global) longitude grid starts at:
+   !                 WESTERN edge (DATELINE with western edge)
+   !                 West of Greenwich defined negative for global grids,
+   !                 the western edge of the longitude grid starts at the dateline
+   !
+   ! Land characteristics at the 30 arc-seconds grid resolution (RAW DATA):
+   !              1. Global Terrain Dataset (elevation height, aspect, slope, curvature, sky view factor, terrain elevation angle, ...)
+   !              2. Global Land Cover Characteristics (land cover TYPE, plant leaf area index, Forest Height, ...)
+   !              3. Global Lakes and Wetlands Characteristics (lake and wetlands types, lake coverage and lake depth)
+   !              4. Global Glacier Characteristics
+   !              5. Global Urban Characteristics (urban extent, ...)
+   !              6. Global Soil Characteristics (...)
+   !              7. Global Cultural Characteristics (ON-GONG PROJECT)
+   !
+   ! Land charateristics at the model grid resolution (CREATED):
+   !              1. Model grid (longitude, latitude)
+   !              2. Fraction (area) of patches of grid (0-1)
+   !                 2.1 Fraction of land water bodies (lake, reservoir, river)
+   !                 2.2 Fraction of wetland
+   !                 2.3 Fraction of glacier
+   !                 2.4 Fraction of urban and built-up
+   !                 ......
+   !              3. Plant leaf area index
+   !              4. Tree height
+   !              5. Lake depth
+   !              6. Soil thermal and hydraulic parameters
+   !
+   ! Created by Yongjiu Dai, 02/2014
+   !
+   ! REVISIONS:
+   ! Shupeng Zhang, 01/2022: porting codes to MPI parallel version
+   ! ======================================================================
    USE MOD_Precision
    USE MOD_SPMD_Task
    USE MOD_Namelist
@@ -74,26 +71,25 @@ PROGRAM MKSRFDATA
 #ifdef SrfdataDiag
    USE MOD_SrfdataDiag, only : gdiag, srfdata_diag_init
 #endif
-
    USE MOD_RegionClip
-
 
    IMPLICIT NONE
 
-   character(len=256) :: nlfile
 
-   character(len=256) :: dir_rawdata
-   character(len=256) :: dir_landdata
-   real(r8) :: edgen  ! northern edge of grid (degrees)
-   real(r8) :: edgee  ! eastern edge of grid (degrees)
-   real(r8) :: edges  ! southern edge of grid (degrees)
-   real(r8) :: edgew  ! western edge of grid (degrees)
+   CHARACTER(len=256) :: nlfile
+   CHARACTER(len=256) :: dir_rawdata
+   CHARACTER(len=256) :: dir_landdata
 
-   type (grid_type) :: gsoil, gridlai, gtopo
-   type (grid_type) :: grid_urban_5km, grid_urban_500m
+   REAL(r8) :: edgen  ! northern edge of grid (degrees)
+   REAL(r8) :: edgee  ! eastern edge of grid (degrees)
+   REAL(r8) :: edges  ! southern edge of grid (degrees)
+   REAL(r8) :: edgew  ! western edge of grid (degrees)
 
-   integer   :: lc_year
-   integer*8 :: start_time, end_time, c_per_sec, time_used
+   TYPE (grid_type) :: gsoil, gridlai, gtopo, grid_topo_factor
+   TYPE (grid_type) :: grid_urban_5km, grid_urban_500m
+
+   INTEGER   :: lc_year
+   INTEGER*8 :: start_time, end_time, c_per_sec, time_used
 
 
 #ifdef USEMPI
@@ -117,14 +113,12 @@ PROGRAM MKSRFDATA
 #endif
 
    IF (USE_srfdata_from_larger_region) THEN
-
       CALL srfdata_region_clip (DEF_dir_existing_srfdata, DEF_dir_landdata)
-
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
       CALL spmd_exit
 #endif
-      CALL EXIT()
+      CALL exit()
    ENDIF
 
    IF (USE_srfdata_from_3D_gridded_data) THEN
@@ -136,7 +130,7 @@ PROGRAM MKSRFDATA
       CALL mpi_barrier (p_comm_glb, p_err)
       CALL spmd_exit
 #endif
-      CALL EXIT()
+      CALL exit()
    ENDIF
 
    dir_rawdata  = DEF_dir_rawdata
@@ -149,13 +143,14 @@ PROGRAM MKSRFDATA
 
    ! define blocks
    CALL gblock%set ()
+   ! CALL gblock%set_by_file (DEF_file_block)
 
    CALL Init_GlobalVars
-   CAll Init_LC_Const
+   CALL Init_LC_Const
 
-! ...........................................................................
-! 1. Read in or create the modeling grids coordinates and related information
-! ...........................................................................
+   ! ...........................................................................
+   ! 1. Read in or create the modeling grids coordinates and related information
+   ! ...........................................................................
 
    ! define domain in pixel coordinate
    CALL pixel%set_edges (edges, edgen, edgew, edgee)
@@ -209,6 +204,10 @@ PROGRAM MKSRFDATA
    ! define grid for topography
    CALL gtopo%define_by_name ('colm_500m')
 
+   ! define grid for topography-based factor (used for forcing downscaling module)
+   ! TODO: need to change to merit 90m mesh
+   CALL grid_topo_factor%define_by_name ('heihe_90m')
+
    ! add by dong, only test for making urban data
 #ifdef URBAN_MODEL
    CALL gurban%define_by_name          ('colm_500m')
@@ -240,6 +239,7 @@ PROGRAM MKSRFDATA
 #endif
 
    CALL pixel%assimilate_grid (gtopo)
+   CALL pixel%assimilate_grid (grid_topo_factor)
 
    ! map pixels to grid coordinates
 #ifndef SinglePoint
@@ -265,6 +265,7 @@ PROGRAM MKSRFDATA
 #endif
 
    CALL pixel%map_to_grid (gtopo)
+   CALL pixel%map_to_grid (grid_topo_factor)
 
    ! build land elms
    CALL mesh_build ()
@@ -305,9 +306,9 @@ PROGRAM MKSRFDATA
    CALL landpft_build(lc_year)
 #endif
 
-! ................................................................
-! 2. SAVE land surface tessellation information
-! ................................................................
+   ! ................................................................
+   ! 2. SAVE land surface tessellation information
+   ! ................................................................
 
    CALL gblock%save_to_file    (dir_landdata)
 
@@ -331,11 +332,15 @@ PROGRAM MKSRFDATA
    CALL pixelset_save_to_file  (dir_landdata, 'landurban', landurban, lc_year)
 #endif
 
-! ................................................................
-! 3. Mapping land characteristic parameters to the model grids
-! ................................................................
+   ! ................................................................
+   ! 3. Mapping land characteristic parameters to the model grids
+   ! ................................................................
 #ifdef SrfdataDiag
+#if (defined CROP)
+   CALL elm_patch%build (landelm, landpatch, use_frac = .true., sharedfrac = pctshrpch)
+#else
    CALL elm_patch%build (landelm, landpatch, use_frac = .true.)
+#endif
 #ifdef GRIDBASED
    CALL gdiag%define_by_copy (gridmesh)
 #else
@@ -365,14 +370,18 @@ PROGRAM MKSRFDATA
 
    CALL Aggregation_Topography      (gtopo  , dir_rawdata, dir_landdata, lc_year)
 
+   IF (DEF_USE_Forcing_Downscaling) THEN   
+      CALL Aggregation_TopographyFactors (grid_topo_factor, dir_rawdata, dir_landdata, lc_year)
+   ENDIF
+   
 #ifdef URBAN_MODEL
    CALL Aggregation_urban (dir_rawdata, dir_landdata, lc_year, &
                            grid_urban_5km, grid_urban_500m)
 #endif
 
-! ................................................................
-! 4. Free memories.
-! ................................................................
+   ! ................................................................
+   ! 4. Free memories.
+   ! ................................................................
 
 #ifdef SinglePoint
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
