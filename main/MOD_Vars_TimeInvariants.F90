@@ -255,6 +255,14 @@ MODULE MOD_Vars_TimeInvariants
    real(r8) :: tcrit                            !critical temp. to determine rain or snow
    real(r8) :: wetwatmax                        !maximum wetland water (mm)
 
+   ! Used for downscaling
+   real(r8), allocatable    :: svf_patches (:)                                           ! sky view factor
+   real(r8), allocatable    :: cur_patches (:)                                           ! curvature
+   real(r8), allocatable    :: sf_lut_patches (:,:,:)                                    ! look up table of shadow factor of a patch
+   real(r8), allocatable    :: asp_type_patches        (:,:)                             ! topographic aspect of each character of one patch
+   real(r8), allocatable    :: slp_type_patches        (:,:)                             ! topographic slope of each character of one patch
+   real(r8), allocatable    :: area_type_patches       (:,:)                             ! area percentage of each character of one patch
+
 ! PUBLIC MEMBER FUNCTIONS:
    PUBLIC :: allocate_TimeInvariants
    PUBLIC :: deallocate_TimeInvariants
@@ -633,6 +641,15 @@ CONTAINS
 
       CALL ncio_write_vector (file_restart, 'topoelv', 'patch', landpatch, topoelv)
       CALL ncio_write_vector (file_restart, 'topostd', 'patch', landpatch, topostd)
+      
+      IF (DEF_USE_Forcing_Downscaling) THEN
+         CALL ncio_write_vector (file_restart, 'svf_patches', 'patch', landpatch, svf_patches)
+         CALL ncio_write_vector (file_restart, 'cur_patches', 'patch', landpatch, cur_patches)
+         CALL ncio_write_vector (file_restart, 'slp_type_patches', 'type', num_type, 'patch', landpatch, slp_type_patches)
+         CALL ncio_write_vector (file_restart, 'asp_type_patches', 'type', num_type, 'patch', landpatch, asp_type_patches)
+         CALL ncio_write_vector (file_restart, 'area_type_patches', 'type', num_type, 'patch', landpatch, area_type_patches)
+         CALL ncio_write_vector (file_restart, 'sf_lut_patches', 'azi', num_azimuth, 'zen', num_zenith, 'patch', landpatch, sf_lut_patches)
+      ENDIF
 
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
@@ -765,6 +782,7 @@ CONTAINS
                deallocate(asp_type_patches  )
                deallocate(area_type_patches )
                deallocate(sf_lut_patches    )
+               deallocate(cur_patches       )
             ENDIF
 
          ENDIF
@@ -853,6 +871,7 @@ CONTAINS
          CALL check_vector_data ('svf_patches          [-] '    , svf_patches)           ! sky view factor
          CALL check_vector_data ('asp_type_patches    [rad] '  , asp_type_patches)     ! aspect
          CALL check_vector_data ('area_type_patches [-] '    , area_type_patches)  ! area percent
+         CALL check_vector_data ('cur_patches         [-]', cur_patches         )
          CALL check_vector_data ('sf_lut_patches      [-] '    , sf_lut_patches)       ! shadow mask
       ENDIF
 
