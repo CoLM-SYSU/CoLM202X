@@ -396,7 +396,7 @@ CONTAINS
    IMPLICIT NONE
 
    integer         , intent(in) :: lc_year
-   character(len=*), intent(in) :: casename
+   character(len=*), intent(in) :: casename, lndname
    character(len=*), intent(in) :: dir_restart
 
    ! Local variables
