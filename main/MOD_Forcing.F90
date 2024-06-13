@@ -134,7 +134,6 @@ CONTAINS
    real(r8)           :: missing_value
    integer            :: ielm, istt, iend
 
-   real(r8), allocatable :: vecone(:)
    integer :: iblkme, xblk, yblk, xloc, yloc
 
       CALL init_user_specified_forcing
@@ -412,17 +411,7 @@ CONTAINS
    INTEGER  :: year, month, mday
    logical  :: has_u,has_v
    real solar, frl, prcp, tm, us, vs, pres, qm
-   real(r8) :: pco2m
-
-   ! ! diagnostic variables
-   real(r8)  :: sm_azi_zen          (1:numpatch)                                    ! aggregated shadow mask on patch      
-   real(r8)  :: illumination_patch  (1:numpatch)                                    ! illumination angle (cos)
-   real(r8)  :: beam_swrad          (1:numpatch)                                    ! beam shortwave radiation (W/m**2)
-   real(r8)  :: diffuse_swrad       (1:numpatch)                                    ! diffuse shortwave radiation (W/m**2)
-   real(r8)  :: reflect_swrad       (1:numpatch)                                    ! reflect shortwave radiation (W/m**2)
-   real(r8)  :: alb_wsa             (1:numpatch)                                    ! white sky albedo, use model caculate diffuse albdeo
-   real(r8)  :: alb_bsa             (1:numpatch)                                    ! black sky albedo, use model caculate direct albedo
-                                     
+   real(r8) :: pco2m                        
 
    IF (p_is_io) THEN
    !------------------------------------------------------------

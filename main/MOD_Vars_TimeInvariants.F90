@@ -702,6 +702,7 @@ CONTAINS
 
    SUBROUTINE deallocate_TimeInvariants ()
 
+   USE MOD_Namelist, only: DEF_USE_Forcing_Downscaling 
    USE MOD_SPMD_Task
    USE MOD_LandPatch, only: numpatch
 
@@ -807,7 +808,7 @@ CONTAINS
 
    USE MOD_SPMD_Task
    USE MOD_RangeCheck
-   USE MOD_Namelist, only : DEF_USE_BEDROCK
+   USE MOD_Namelist, only : DEF_USE_BEDROCK, DEF_USE_Forcing_Downscaling
 
    IMPLICIT NONE
 
