@@ -81,7 +81,7 @@ PROGRAM MKSRFDATA
    IMPLICIT NONE
 
    character(len=256) :: nlfile
-
+   character(len=256) :: lndname
    character(len=256) :: dir_rawdata
    character(len=256) :: dir_landdata
    real(r8) :: edgen  ! northern edge of grid (degrees)
@@ -211,7 +211,9 @@ PROGRAM MKSRFDATA
 
    ! define grid for topography factors
    IF (DEF_USE_Forcing_Downscaling) THEN
-      CALL grid_topo_factor%define_by_name ('merit_90m')
+      !CALL grid_topo_factor%define_by_name ('merit_90m')
+      lndname = trim(dir_rawdata)//"slope.nc"
+      CALL grid_topo_factor%define_from_file (lndname,"lat","lon")
    ENDIF
 
    ! add by dong, only test for making urban data

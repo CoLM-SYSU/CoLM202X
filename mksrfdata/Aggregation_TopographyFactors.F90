@@ -116,23 +116,23 @@ SUBROUTINE Aggregation_TopographyFactors ( &
       CALL allocate_block_data (grid_topo_factor, slp_grid)
       CALL ncio_read_block (lndname, 'slope', grid_topo_factor, slp_grid)
 
-      lndname= trim(dir_rawdata)//"aspect.nc"
+      lndname = trim(dir_rawdata)//"aspect.nc"
       CALL allocate_block_data (grid_topo_factor, asp_grid)
       CALL ncio_read_block (lndname, 'aspect', grid_topo_factor, asp_grid)
      
-      lndname= trim(dir_rawdata)//"terrain_elev_angle_front.nc"
+      lndname = trim(dir_rawdata)//"terrain_elev_angle_front.nc"
       CALL allocate_block_data (grid_topo_factor, tea_f_grid, num_azimuth)
       CALL ncio_read_block (lndname, 'tea_front', grid_topo_factor, num_azimuth, tea_f_grid)
 
-      lndname= trim(dir_rawdata)//"terrain_elev_angle_back.nc"
+      lndname = trim(dir_rawdata)//"terrain_elev_angle_back.nc"
       CALL allocate_block_data (grid_topo_factor, tea_b_grid, num_azimuth)
       CALL ncio_read_block (lndname, 'tea_back', grid_topo_factor, num_azimuth, tea_b_grid)
 
-      lndname= trim(dir_rawdata)//"sky_view_factor.nc"
+      lndname = trim(dir_rawdata)//"sky_view_factor.nc"
       CALL allocate_block_data (grid_topo_factor, svf_grid)
       CALL ncio_read_block (lndname, 'svf', grid_topo_factor, svf_grid)
 
-      lndname= trim(dir_rawdata)//"curvature.nc"
+      lndname = trim(dir_rawdata)//"curvature.nc"
       CALL allocate_block_data (grid_topo_factor, cur_grid)
       CALL ncio_read_block (lndname, 'curvature', grid_topo_factor, cur_grid)
 
@@ -158,7 +158,6 @@ SUBROUTINE Aggregation_TopographyFactors ( &
       allocate (slp_type_patches (num_type, numpatch))
       allocate (area_type_patches(num_type, numpatch)) 
       allocate (sf_lut_patches   (num_azimuth, num_zenith, numpatch))
-
       ! generate sine of sun zenith angles at equal intervals
       DO i = 1, num_zenith
          zenith_angle(i) = pi/(2*num_zenith)*(i-1)
@@ -197,14 +196,15 @@ SUBROUTINE Aggregation_TopographyFactors ( &
          ! ------------------------------------------------------------------------------
          ! aggregate look up table of shadow factor at patches
          ! ------------------------------------------------------------------------------
+         ! number of pixels
+         num_pixels = size(area_one)
+
          ! allocate pixel variables
          allocate(tea_f_one   (num_pixels))
          allocate(tea_b_one   (num_pixels))
          allocate(sf_one      (num_pixels))
          allocate(sf_mask_one (num_pixels))
 
-         ! number of pixels
-         num_pixels = size(area_one)
          ! sum of areas of one patch
          sum_area_one = sum(area_one, mask = area_one>0)
 
@@ -402,7 +402,14 @@ SUBROUTINE Aggregation_TopographyFactors ( &
          -1.0e36_r8, lndname, 'sf_'//trim(sdir), compress = 1, write_mode = 'one')
    ENDDO
 #endif
-   ! TODO: add single point part
+#else
+   ! factors for site
+   SITE_svf = svf_patches(1)
+   SITE_cur = cur_patches(1)
+   SITE_slp_type = slp_type_patches(:,1)
+   SITE_asp_type = asp_type_patches(:,1)
+   SITE_area_type = area_type_patches(:,1)
+   SITE_sf_lut = sf_lut_patches(:,:,1) 
 #endif
 
 

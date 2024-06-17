@@ -60,6 +60,7 @@ CONTAINS
 
       orb_cosazi = (-1*cos(declin)*cos(calday*2.0*pi+dlon)- &
          coszen*cos(dlat))/(sin(dlat)*sqrt(1-coszen*coszen))
+         
       IF (orb_cosazi<-1) orb_cosazi = -1
       IF (orb_cosazi>1) orb_cosazi = 1
 

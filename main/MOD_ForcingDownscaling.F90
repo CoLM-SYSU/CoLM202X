@@ -458,11 +458,13 @@ CONTAINS
    END SUBROUTINE downscale_longwave
 
 !-----------------------------------------------------------------------------
+
    SUBROUTINE downscale_shortwave( &
                         forc_topo_g, forc_pbot_g, forc_swrad_g, &
                         forc_topo_c, forc_pbot_c, forc_swrad_c, &
                         julian_day, coszen, cosazi, alb, &
                         slp_type_c, asp_type_c, svf_c, sf_lut_c, area_type_c)
+                        
 !-----------------------------------------------------------------------------
 ! DESCRIPTION:
 !
