@@ -293,7 +293,6 @@ SUBROUTINE Aggregation_TopographyFactors ( &
             END IF 
 
             IF ((area_one(i)>0).and.(area_one(i)<sum_area_one)) THEN      ! quality control
-                  write(*,*) 'type: ',type
                   area_type_one(type,i) = area_one(i)
                   asp_type_one (type,i) = asp_one(i)*area_one(i)
                   slp_type_one (type,i) = slp_one(i)*area_one(i)

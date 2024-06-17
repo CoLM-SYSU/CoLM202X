@@ -485,20 +485,14 @@ CONTAINS
       CALL ncio_read_bcast_serial (file_restart, 'wetwatmax', wetwatmax) ! maximum wetland water (mm)
 
       IF (DEF_USE_Forcing_Downscaling) THEN
-         lndname = trim(DEF_dir_landdata) // '/topography/'//trim(cyear)//'/slp_type_patches.nc'             ! slope
-         CALL ncio_read_vector (lndname, 'slp_type_patches', num_type, landpatch, slp_type_patches)
-         lndname = trim(DEF_dir_landdata) // '/topography/'//trim(cyear)//'/svf_patches.nc'               ! sky view factor
-         CALL ncio_read_vector (lndname, 'svf_patches', landpatch, svf_patches)
-         lndname = trim(DEF_dir_landdata) // '/topography/'//trim(cyear)//'/asp_type_patches.nc'            ! aspect
-         CALL ncio_read_vector (lndname, 'asp_type_patches', num_type, landpatch, asp_type_patches)
-         lndname = trim(DEF_dir_landdata) // '/topography/'//trim(cyear)//'/area_type_patches.nc'         ! area percent
-         CALL ncio_read_vector (lndname, 'area_type_patches', num_type, landpatch, area_type_patches)
-         lndname = trim(DEF_dir_landdata) // '/topography/'//trim(cyear)//'/sf_lut_patches.nc'        ! shadow mask
-         CALL ncio_read_vector (lndname, 'sf_lut_patches', num_azimuth, num_zenith, landpatch, sf_lut_patches)
-         lndname = trim(DEF_dir_landdata) // '/topography/'//trim(cyear)//'/cur_patches.nc'               ! curvature
-         CALL ncio_read_vector (lndname, 'cur_patches', landpatch, cur_patches)
+         CALL ncio_read_vector (file_restart, 'slp_type_patches', num_type, landpatch, slp_type_patches)
+         CALL ncio_read_vector (file_restart, 'svf_patches', landpatch, svf_patches)
+         CALL ncio_read_vector (file_restart, 'asp_type_patches', num_type, landpatch, asp_type_patches)
+         CALL ncio_read_vector (file_restart, 'area_type_patches', num_type, landpatch, area_type_patches)
+         CALL ncio_read_vector (file_restart, 'sf_lut_patches', num_azimuth, num_zenith, landpatch, sf_lut_patches)
+         CALL ncio_read_vector (file_restart, 'cur_patches', landpatch, cur_patches)
        ENDIF
-
+      
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
       file_restart = trim(dir_restart) // '/const/' // trim(casename) //'_restart_pft_const' // '_lc' // trim(cyear) // '.nc'
       CALL READ_PFTimeInvariants (file_restart)
@@ -577,6 +571,9 @@ CONTAINS
       CALL ncio_define_dimension_vector (file_restart, landpatch, 'soilsnow', nl_soil-maxsnl)
       CALL ncio_define_dimension_vector (file_restart, landpatch, 'soil',     nl_soil)
       CALL ncio_define_dimension_vector (file_restart, landpatch, 'lake',     nl_lake)
+      CALL ncio_define_dimension_vector (file_restart, landpatch, 'type',     num_type)
+      CALL ncio_define_dimension_vector (file_restart, landpatch, 'azi',      num_azimuth)
+      CALL ncio_define_dimension_vector (file_restart, landpatch, 'zen',      num_zenith)
 
       CALL ncio_write_vector (file_restart, 'patchclass', 'patch', landpatch, patchclass)                            !
       CALL ncio_write_vector (file_restart, 'patchtype' , 'patch', landpatch, patchtype )                            !
@@ -868,12 +865,12 @@ CONTAINS
       CALL check_vector_data ('BVIC        [-]      ', BVIC        ) !
 
       IF (DEF_USE_Forcing_Downscaling) THEN
-         CALL check_vector_data ('slp_type_patches    [rad] '  , slp_type_patches)     ! slope
-         CALL check_vector_data ('svf_patches          [-] '    , svf_patches)           ! sky view factor
-         CALL check_vector_data ('asp_type_patches    [rad] '  , asp_type_patches)     ! aspect
-         CALL check_vector_data ('area_type_patches [-] '    , area_type_patches)  ! area percent
-         CALL check_vector_data ('cur_patches         [-]', cur_patches         )
-         CALL check_vector_data ('sf_lut_patches      [-] '    , sf_lut_patches)       ! shadow mask
+         CALL check_vector_data ('slp_type_patches     [rad] ' , slp_type_patches)      ! slope
+         CALL check_vector_data ('svf_patches          [-] '   , svf_patches)           ! sky view factor
+         CALL check_vector_data ('asp_type_patches     [rad] ' , asp_type_patches)      ! aspect
+         CALL check_vector_data ('area_type_patches    [-] '   , area_type_patches)     ! area percent
+         CALL check_vector_data ('cur_patches          [-]'    , cur_patches )
+         CALL check_vector_data ('sf_lut_patches       [-] '   , sf_lut_patches)        ! shadow mask
       ENDIF
 
 #ifdef USEMPI
