@@ -625,6 +625,7 @@
         wt                    ,&! fraction of vegetation buried (covered) by snow [-]
         rootr    (1:nl_soil)  ,&! root resistance of a layer, all layers add to 1.0
         rootflux (1:nl_soil)  ,&! root resistance of a layer, all layers add to 1.0
+        urb_irrig             ,&! urban irrigation [mm/s]
 
         zi_wall    (       0:nl_wall) ,&! interface level below a "z" level [m]
         z_roofsno  (maxsnl+1:nl_roof) ,&! layer depth [m]
@@ -846,6 +847,8 @@
       totwb  = sum(wice_soisno(1:) + wliq_soisno(1:))
       totwb  = totwb + scv + ldew*fveg + wa*(1-froof)*fgper
 
+      urb_irrig = 0.
+
 !----------------------------------------------------------------------
 ! [2] Canopy interception and precipitation onto ground surface
 !----------------------------------------------------------------------
@@ -1017,19 +1020,19 @@
          qfros_roof         ,qfros_gimp         ,qfros_gper         ,qfros_lake         ,&
          imeltr(lbr:)       ,imelti(lbi:)       ,imeltp(lbp:)       ,imeltl(:)          ,&
          sm_roof            ,sm_gimp            ,sm_gper            ,sm_lake            ,&
-         sabg               ,rstfac             ,rootr(:)           ,tref               ,&
-         qref               ,trad               ,rst                ,assim              ,&
-         respc              ,errore             ,emis               ,z0m                ,&
-         zol                ,rib                ,ustar              ,qstar              ,&
-         tstar              ,fm                 ,fh                 ,fq                 ,&
-         hpbl                                                                            )
+         sabg               ,rstfac             ,rootr(:)           ,urb_irrig          ,&
+         tref               ,qref               ,trad               ,rst                ,&
+         assim              ,respc              ,errore             ,emis               ,&
+         z0m                ,zol                ,rib                ,ustar              ,&
+         qstar              ,tstar              ,fm                 ,fh                 ,&
+         fq                 ,hpbl                                                        )
 
 !----------------------------------------------------------------------
 ! [5] Urban hydrology
 !----------------------------------------------------------------------
       IF (fveg > 0) THEN
          ! convert to unit area
-         etrgper = etr/(1-froof)/fgper
+         etrgper = (etr-urb_irrig)/(1-froof)/fgper
       ELSE
          etrgper = 0.
       ENDIF
@@ -1227,7 +1230,7 @@
 
       endwb  = sum(wice_soisno(1:) + wliq_soisno(1:))
       endwb  = endwb + scv + ldew*fveg + wa*(1-froof)*fgper
-      errorw = (endwb - totwb) - (forc_prc + forc_prl - fevpa - rnof - errw_rsub)*deltim
+      errorw = (endwb - totwb) - (forc_prc + forc_prl + urb_irrig - fevpa - rnof - errw_rsub)*deltim
       xerr   = errorw/deltim
 
 #if(defined CoLMDEBUG)

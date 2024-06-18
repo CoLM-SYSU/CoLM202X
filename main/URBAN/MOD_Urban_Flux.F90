@@ -69,6 +69,8 @@ MODULE MOD_Urban_Flux
    real(r8), parameter :: fsh = 0.92
    real(r8), parameter :: flh = 0.08
 
+   logical,  parameter :: DEF_URBAN_Irrigation = .true.
+   real(r8), parameter :: rstfac_irrig = 1.
 !-----------------------------------------------------------------------
 
 CONTAINS
@@ -856,7 +858,7 @@ CONTAINS
          qroof          ,qgimp          ,qgper          ,dqroofdT       ,&
          dqgimpdT       ,dqgperdT       ,sigf           ,tl             ,&
          ldew           ,ldew_rain      ,ldew_snow      ,fwet_snow      ,&
-         dheatl         ,rss                                            ,&
+         dheatl         ,rss            ,urb_irrig                      ,&
          ! Longwave information
          Ainv           ,B              ,B1             ,dBdT           ,&
          SkyVF          ,VegVF                                          ,&
@@ -1046,6 +1048,9 @@ CONTAINS
         assim,        &! rate of assimilation
         respc          ! rate of respiration
 
+   real(r8), intent(out) :: &
+        urb_irrig      ! urban irrigation [mm/s]
+
    real(r8), intent(inout) :: &
         lwsun,        &! net longwave radiation of sunlit wall [W/m2]
         lwsha,        &! net longwave radiation of shaded wall [W/m2]
@@ -1234,12 +1239,12 @@ CONTAINS
    real(r8) aT, bT, cT, aQ, bQ, cQ, Lahe
    real(r8) bee, cf, tmpw1, tmpw2, tmpw3, tmpw4, fact, facq, taftmp
    real(r8) B_5, B1_5, dBdT_5, X(5), dX(5)
-   real(r8) fwet_roof, fwet_roof_, fwet_gimp, fwet_gimp_, rss_
+   real(r8) fwet_roof, fwet_roof_, fwet_gimp, fwet_gimp_, rss_, rs_, etr_
    real(r8) fwetfac, lambda
    real(r8) cgw_imp, cgw_per
 
    ! for interface
-   real(r8) o3coefv,o3coefg,assim_RuBP, assim_Rubisco, ci, vpd, gammas
+   real(r8) o3coefv, o3coefg, assim_RuBP, assim_Rubisco, ci, vpd, gammas
 
 !-----------------------End Variable List-------------------------------
 
@@ -1655,6 +1660,7 @@ CONTAINS
 !-----------------------------------------------------------------------
 ! note: calculate resistance for leaves
 !-----------------------------------------------------------------------
+
             CALL stomata (vmax25,effcon ,slti   ,hlti   ,&
                shti    ,hhti    ,trda   ,trdm   ,trop   ,&
                g1      ,g0      ,gradm  ,binter ,thm    ,&
@@ -1664,6 +1670,20 @@ CONTAINS
                rb(3)/lai,raw    ,rstfac ,cint(:),&
                assim   ,respc   ,rs     &
                )
+
+            rs_ = rs
+
+IF ( DEF_URBAN_Irrigation .and. rstfac < rstfac_irrig ) THEN
+            CALL stomata (vmax25,effcon ,slti   ,hlti   ,&
+               shti    ,hhti    ,trda   ,trdm   ,trop   ,&
+               g1      ,g0      ,gradm  ,binter ,thm    ,&
+               psrf    ,po2m    ,pco2m  ,pco2a  ,eah    ,&
+               ei(3)   ,tu(3)   ,par    ,&
+               o3coefv ,o3coefg ,&
+               rb(3)/lai,raw    ,rstfac_irrig   ,cint(:),&
+               assim   ,respc   ,rs     &
+               )
+ENDIF
          ELSE
             rs = 2.e4; assim = 0.; respc = 0.
          ENDIF
@@ -1671,6 +1691,7 @@ CONTAINS
 ! above stomatal resistances are for the canopy, the stomatal rsistances
 ! and the "rb" in the following calculations are the average for single leaf. thus,
          rs = rs * lai
+         rs_= rs_* lai
 
 ! calculate latent heat resistances
          clev  = canlev(3)
@@ -1825,6 +1846,15 @@ CONTAINS
 ! latent heat fluxes and their derivatives
          etr = rhoair * (1.-fwet) * delta * lai/(rb(i)+rs) &
              * (qsatl(i) - qaf(botlay))
+
+IF ( DEF_URBAN_Irrigation ) THEN
+         etr_= rhoair * (1.-fwet) * delta * lai/(rb(i)+rs_) &
+             * (qsatl(i) - qaf(botlay))
+
+         IF (etr_.ge.etrc) THEN
+            etr_ = etrc
+         ENDIF
+ENDIF
 
          IF (botlay == 2) THEN
             etr_dtl = rhoair * (1.-fwet) * delta * lai/(rb(3)+rs) &
@@ -2143,6 +2173,10 @@ CONTAINS
       ENDIF
       respc = respc + rsoil
 
+IF ( DEF_URBAN_Irrigation ) THEN
+      urb_irrig = max(0., etr - etr_)
+ENDIF
+
 ! canopy fluxes and total assimilation amd respiration
 
       fsenl = fsenl + fsenl_dtl*dtl(it-1) &
@@ -2164,6 +2198,7 @@ CONTAINS
 
       fevpl   = fevpl - elwdif
       fsenl   = fsenl + hvap*elwdif
+
 
 !-----------------------------------------------------------------------
 ! Update dew accumulation (kg/m2)
