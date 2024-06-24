@@ -99,7 +99,7 @@ CONTAINS
         qfros_roof     ,qfros_gimp     ,qfros_gper     ,qfros_lake     ,&
         imelt_roof     ,imelt_gimp     ,imelt_gper     ,imelt_lake     ,&
         sm_roof        ,sm_gimp        ,sm_gper        ,sm_lake        ,&
-        sabg           ,rstfac         ,rootr          ,urb_irrig      ,&
+        sabg           ,rstfac         ,rootr          ,etr_deficit    ,&
         tref           ,qref           ,trad           ,rst            ,&
         assim          ,respc          ,errore         ,emis           ,&
         z0m            ,zol            ,rib            ,ustar          ,&
@@ -403,7 +403,7 @@ CONTAINS
         sabg                           ,&! overall ground solar radiation absorption (+wall)
         rstfac                         ,&! factor of soil water stress
         rootr(1:nl_soil)               ,&! root resistance of a layer, all layers add to 1
-        urb_irrig                      ,&! urban irrigation [mm/s]
+        etr_deficit                    ,&! urban irrigation [mm/s]
         tref                           ,&! 2 m height air temperature [kelvin]
         qref                           ,&! 2 m height air specific humidity
         trad                           ,&! radiative temperature [K]
@@ -883,7 +883,7 @@ CONTAINS
             qroof          ,qgimp          ,qgper          ,dqroofdT       ,&
             dqgimpdT       ,dqgperdT       ,sigf           ,tleaf          ,&
             ldew           ,ldew_rain      ,ldew_snow      ,fwet_snow      ,&
-            dheatl         ,rss            ,urb_irrig                      ,&
+            dheatl         ,rss            ,etr_deficit                    ,&
             ! longwave related
             Ainv           ,B              ,B1             ,dBdT           ,&
             SkyVF          ,VegVF                                          ,&
@@ -1164,9 +1164,9 @@ CONTAINS
          fevpa  = fevpl + fevpg
          lfevpa = lfevpa + hvap*fevpl
 
-         fsen_urbl  = fsenl
-         lfevp_urbl = hvap*fevpl
-         urb_irrig  = urb_irrig*fveg
+         fsen_urbl   = fsenl
+         lfevp_urbl  = hvap*fevpl
+         etr_deficit = etr_deficit*fveg
       ELSE
          fsena  = fseng
          fevpa  = fevpg
