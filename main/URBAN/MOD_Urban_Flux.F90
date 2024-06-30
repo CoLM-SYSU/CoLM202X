@@ -858,7 +858,7 @@ CONTAINS
          qroof          ,qgimp          ,qgper          ,dqroofdT       ,&
          dqgimpdT       ,dqgperdT       ,sigf           ,tl             ,&
          ldew           ,ldew_rain      ,ldew_snow      ,fwet_snow      ,&
-         dheatl         ,rss            ,urb_irrig                      ,&
+         dheatl         ,rss            ,etr_deficit                    ,&
          ! Longwave information
          Ainv           ,B              ,B1             ,dBdT           ,&
          SkyVF          ,VegVF                                          ,&
@@ -1048,8 +1048,8 @@ CONTAINS
         assim,        &! rate of assimilation
         respc          ! rate of respiration
 
-   real(r8), intent(out) :: &
-        urb_irrig      ! urban irrigation [mm/s]
+   real(r8), intent(inout) :: &
+        etr_deficit    ! urban irrigation [mm/s]
 
    real(r8), intent(inout) :: &
         lwsun,        &! net longwave radiation of sunlit wall [W/m2]
@@ -1847,15 +1847,6 @@ ENDIF
          etr = rhoair * (1.-fwet) * delta * lai/(rb(i)+rs) &
              * (qsatl(i) - qaf(botlay))
 
-IF ( DEF_URBAN_Irrigation ) THEN
-         etr_= rhoair * (1.-fwet) * delta * lai/(rb(i)+rs_) &
-             * (qsatl(i) - qaf(botlay))
-
-         IF (etr_.ge.etrc) THEN
-            etr_ = etrc
-         ENDIF
-ENDIF
-
          IF (botlay == 2) THEN
             etr_dtl = rhoair * (1.-fwet) * delta * lai/(rb(3)+rs) &
                     * (1.-fc(3)/(cQ*rv*(1-bQ/(cQ*rd(3))))) &
@@ -1898,6 +1889,16 @@ ENDIF
             erre  = -0.9*fevpl
             fevpl =  0.1*fevpl
          ENDIF
+
+IF ( DEF_URBAN_Irrigation ) THEN
+         etr_= rhoair * (1.-fwet) * delta * lai/(rb(i)+rs_) &
+             * (qsatl(i) - qaf(botlay))
+
+         IF (etr_.ge.etrc) THEN
+            etr_ = etrc
+         ENDIF
+ENDIF
+
 
 !-----------------------------------------------------------------------
 ! difference of temperatures by quasi-newton-raphson method for the non-linear system equations
@@ -2174,7 +2175,7 @@ ENDIF
       respc = respc + rsoil
 
 IF ( DEF_URBAN_Irrigation ) THEN
-      urb_irrig = max(0., etr - etr_)
+      etr_deficit = max(0., etr - etr_)
 ENDIF
 
 ! canopy fluxes and total assimilation amd respiration

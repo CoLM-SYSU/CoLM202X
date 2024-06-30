@@ -581,7 +581,6 @@
         fioldl (maxsnl+1:nl_soil), &! fraction of ice relative to the total water
         w_old                 ,&! liquid water mass of the column at the previous time step (mm)
         theta                 ,&! sun zenith angle
-!       orb_coszen            ,&! cosine of the solar zenith angle
         sabv                  ,&! solar absorbed by vegetation [W/m2]
         sabroof               ,&! solar absorbed by vegetation [W/m2]
         sabwsun               ,&! solar absorbed by vegetation [W/m2]
@@ -625,7 +624,8 @@
         wt                    ,&! fraction of vegetation buried (covered) by snow [-]
         rootr    (1:nl_soil)  ,&! root resistance of a layer, all layers add to 1.0
         rootflux (1:nl_soil)  ,&! root resistance of a layer, all layers add to 1.0
-        urb_irrig             ,&! urban irrigation [mm/s]
+        etr_deficit           ,&! urban tree etr deficit [mm/s]
+        urb_irrig             ,&! named urban tree irrigation [mm/s]
 
         zi_wall    (       0:nl_wall) ,&! interface level below a "z" level [m]
         z_roofsno  (maxsnl+1:nl_roof) ,&! layer depth [m]
@@ -692,6 +692,9 @@
    real(r8) forc_aer        ( 14 )  !aerosol deposition from atmosphere model (grd,aer) [kg m-1 s-1]
    real(r8) snofrz    (maxsnl+1:0)  !snow freezing rate (col,lyr) [kg m-2 s-1]
    real(r8) sabg_lyr  (maxsnl+1:1)  !snow layer absorption [W/m-2]
+
+   ! a factor represents irrigation efficiency
+   real(r8), parameter :: wst_irrig = 1.0
 
       theta = acos(max(coszen,0.01))
       forc_aer(:) = 0.          !aerosol deposition from atmosphere model (grd,aer) [kg m-1 s-1]
@@ -847,7 +850,8 @@
       totwb  = sum(wice_soisno(1:) + wliq_soisno(1:))
       totwb  = totwb + scv + ldew*fveg + wa*(1-froof)*fgper
 
-      urb_irrig = 0.
+      etr_deficit = 0.
+      urb_irrig   = 0.
 
 !----------------------------------------------------------------------
 ! [2] Canopy interception and precipitation onto ground surface
@@ -1020,7 +1024,7 @@
          qfros_roof         ,qfros_gimp         ,qfros_gper         ,qfros_lake         ,&
          imeltr(lbr:)       ,imelti(lbi:)       ,imeltp(lbp:)       ,imeltl(:)          ,&
          sm_roof            ,sm_gimp            ,sm_gper            ,sm_lake            ,&
-         sabg               ,rstfac             ,rootr(:)           ,urb_irrig          ,&
+         sabg               ,rstfac             ,rootr(:)           ,etr_deficit        ,&
          tref               ,qref               ,trad               ,rst                ,&
          assim              ,respc              ,errore             ,emis               ,&
          z0m                ,zol                ,rib                ,ustar              ,&
@@ -1032,10 +1036,13 @@
 !----------------------------------------------------------------------
       IF (fveg > 0) THEN
          ! convert to unit area
-         etrgper = (etr-urb_irrig)/(1-froof)/fgper
+         etrgper = (etr-etr_deficit)/(1-froof)/fgper
       ELSE
          etrgper = 0.
       ENDIF
+
+      pgper_rain = pgper_rain  + wst_irrig*etr_deficit/(1-froof)/fgper
+      urb_irrig  = etr_deficit + wst_irrig*etr_deficit
 
       CALL UrbanHydrology ( &
          ! model running information
