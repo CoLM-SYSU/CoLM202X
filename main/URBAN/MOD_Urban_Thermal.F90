@@ -873,7 +873,7 @@ CONTAINS
             hlti           ,shti           ,hhti           ,trda           ,&
             trdm           ,trop           ,g1             ,g0             ,&
             gradm          ,binter         ,extkn          ,extkd          ,&
-            dewmx          ,etrc                                           ,&
+            dewmx          ,etrc           ,trsmx0                         ,&
             ! surface status
             z0h_g          ,obu_g          ,ustar_g        ,zlnd           ,&
             zsno           ,fsno_roof      ,fsno_gimp      ,fsno_gper      ,&

@@ -848,7 +848,7 @@ CONTAINS
          hlti           ,shti           ,hhti           ,trda           ,&
          trdm           ,trop           ,g1             ,g0             ,&
          gradm          ,binter         ,extkn          ,extkd          ,&
-         dewmx          ,etrc                                           ,&
+         dewmx          ,etrc           ,trsmx0                         ,&
          ! Status of surface
          z0h_g          ,obug           ,ustarg         ,zlnd           ,&
          zsno           ,fsno_roof      ,fsno_gimp      ,fsno_gper      ,&
@@ -962,6 +962,7 @@ CONTAINS
         extkn,        &! coefficient of leaf nitrogen allocation
         extkd,        &! diffuse and scattered diffuse PAR extinction coefficient
         dewmx,        &! maximum dew
+        trsmx0,       &! max transpiration for moist soil+100% veg.  [mm/s]
         etrc           ! maximum possible transpiration rate (mm/s)
 
    ! Status of surface
@@ -1857,10 +1858,17 @@ ENDIF
                            - fc(3)*aQ*aQ/(rv*CQ*(1-aQ/(cQ*rd(2))-bQ/(cQ*rd(3)))) )
          ENDIF
 
+IF ( DEF_URBAN_Irrigation ) THEN
+         IF (etr.ge.trsmx0*rstfac_irrig) THEN
+            etr = trsmx0*rstfac_irrig
+            etr_dtl = 0.
+         ENDIF
+ELSE
          IF (etr.ge.etrc) THEN
             etr = etrc
             etr_dtl = 0.
          ENDIF
+ENDIF
 
          evplwet = rhoair * (1.-delta*(1.-fwet)) * lsai/rb(i) &
                  * (qsatl(i) - qaf(botlay))
