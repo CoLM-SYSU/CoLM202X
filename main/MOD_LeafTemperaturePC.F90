@@ -375,8 +375,8 @@ CONTAINS
         rb       (ps:pe), &! leaf boundary layer resistance [s/m]
         cfh      (ps:pe), &! heat conductance for leaf [m/s]
         cfw      (ps:pe), &! latent heat conductance for leaf [m/s]
-        wtl0     (ps:pe), &! normalized heat conductance for air and leaf [-]
-        wtlq0    (ps:pe), &! normalized latent heat cond. for air and leaf [-]
+        wlh      (ps:pe), &! normalized heat conductance for air and leaf [-]
+        wlq      (ps:pe), &! normalized latent heat cond. for air and leaf [-]
 
         ei       (ps:pe), &! vapor pressure on leaf surface [pa]
         deidT    (ps:pe), &! derivative of "ei" on "tl" [pa/K]
@@ -467,12 +467,12 @@ CONTAINS
         cgw,           &! latent heat conductance for ground [m/s]
         wtshi,         &! sensible heat resistance for air, grd and leaf [-]
         wtsqi,         &! latent heat resistance for air, grd and leaf [-]
-        wta0,          &! normalized heat conductance for air [-]
-        wtg0,          &! normalized heat conductance for ground [-]
-        wtaq0,         &! normalized latent heat conductance for air [-]
-        wtgq0,         &! normalized heat conductance for ground [-]
-        wtll,          &! sum of normalized heat conductance for air and leaf
-        wtlql           ! sum of normalized heat conductance for air and leaf
+        wah,           &! normalized heat conductance for air [-]
+        wgh,           &! normalized heat conductance for ground [-]
+        waq,           &! normalized latent heat conductance for air [-]
+        wgq,           &! normalized heat conductance for ground [-]
+        wlhl,          &! sum of normalized heat conductance for air and leaf
+        wlql            ! sum of normalized heat conductance for air and leaf
 
    real(r8) :: ktop, utop, fmtop, bee, tmpw1, tmpw2, fact, facq
 
@@ -1262,33 +1262,33 @@ CONTAINS
             ENDIF
          ENDDO
 
-         wta0(:) = cah(:) * wtshi(:)
-         wtg0(:) = cgh(:) * wtshi(:)
+         wah(:) = cah(:) * wtshi(:)
+         wgh(:) = cgh(:) * wtshi(:)
 
-         wtaq0(:) = caw(:) * wtsqi(:)
-         wtgq0(:) = cgw(:) * wtsqi(:)
+         waq(:) = caw(:) * wtsqi(:)
+         wgq(:) = cgw(:) * wtsqi(:)
 
-         ! calculate wtl0, wtll, wtlq0, wtlql
-         wtll(:)  = 0.
-         wtlql(:) = 0.
+         ! calculate wlh, wlhl, wlq, wlql
+         wlhl(:) = 0.
+         wlql(:) = 0.
 
          DO i = ps, pe
             IF (fcover(i)>0 .and. lsai(i)>1.e-6) THEN
                clev = canlay(i)
 
-               wtl0(i)  = cfh(i) * wtshi(clev) * fcover(i)
-               wtll(clev) = wtll(clev) + wtl0(i)*tl(i)
+               wlh(i) = cfh(i) * wtshi(clev) * fcover(i)
+               wlhl(clev) = wlhl(clev) + wlh(i)*tl(i)
 
-               wtlq0(i) = cfw(i) * wtsqi(clev) * fcover(i)
-               wtlql(clev) = wtlql(clev) + wtlq0(i)*qsatl(i)
+               wlq(i) = cfw(i) * wtsqi(clev) * fcover(i)
+               wlql(clev) = wlql(clev) + wlq(i)*qsatl(i)
             ENDIF
          ENDDO
 
          ! to solve taf(:) and qaf(:)
          IF (numlay .eq. 1) THEN
 
-            taf(toplay) = wta0(toplay)*thm +  wtg0(toplay)*tg +  wtll(toplay)
-            qaf(toplay) = wtaq0(toplay)*qm + wtgq0(toplay)*qg + wtlql(toplay)
+            taf(toplay) = wah(toplay)*thm + wgh(toplay)*tg + wlhl(toplay)
+            qaf(toplay) = waq(toplay)*qm  + wgq(toplay)*qg + wlql(toplay)
             fact = 1.
             facq = 1.
 
@@ -1296,36 +1296,36 @@ CONTAINS
 
          IF (numlay .eq. 2) THEN
 
-            tmpw1 = wtg0(botlay)*tg + wtll(botlay)
-            fact  = 1. - wtg0(toplay)*wta0(botlay)
-            taf(toplay) = ( wta0(toplay)*thm + wtg0(toplay)*tmpw1 + wtll(toplay) ) / fact
+            tmpw1 = wgh(botlay)*tg + wlhl(botlay)
+            fact  = 1. - wgh(toplay)*wah(botlay)
+            taf(toplay) = ( wah(toplay)*thm + wgh(toplay)*tmpw1 + wlhl(toplay) ) / fact
 
-            tmpw1 = wtgq0(botlay)*qg + wtlql(botlay)
-            facq  = 1. - wtgq0(toplay)*wtaq0(botlay)
-            qaf(toplay) = ( wtaq0(toplay)*qm + wtgq0(toplay)*tmpw1 + wtlql(toplay) ) / facq
+            tmpw1 = wgq(botlay)*qg + wlql(botlay)
+            facq  = 1. - wgq(toplay)*waq(botlay)
+            qaf(toplay) = ( waq(toplay)*qm  + wgq(toplay)*tmpw1 + wlql(toplay) ) / facq
 
-            taf(botlay) =  wta0(botlay)*taf(toplay) +  wtg0(botlay)*tg +  wtll(botlay)
-            qaf(botlay) = wtaq0(botlay)*qaf(toplay) + wtgq0(botlay)*qg + wtlql(botlay)
+            taf(botlay) = wah(botlay)*taf(toplay) + wgh(botlay)*tg + wlhl(botlay)
+            qaf(botlay) = waq(botlay)*qaf(toplay) + wgq(botlay)*qg + wlql(botlay)
 
          ENDIF
 
          IF (numlay .eq. 3) THEN
 
-            tmpw1 = wta0(3)*thm + wtll(3)
-            tmpw2 = wtg0(1)*tg  + wtll(1)
-            fact  = 1. - wta0(2)*wtg0(3) - wtg0(2)*wta0(1)
-            taf(2) = ( wta0(2)*tmpw1 + wtg0(2)*tmpw2 + wtll(2) ) / fact
+            tmpw1  = wah(3)*thm + wlhl(3)
+            tmpw2  = wgh(1)*tg  + wlhl(1)
+            fact   = 1. - wah(2)*wgh(3) - wgh(2)*wah(1)
+            taf(2) = ( wah(2)*tmpw1 + wgh(2)*tmpw2 + wlhl(2) ) / fact
 
-            tmpw1 = wtaq0(3)*qm + wtlql(3)
-            tmpw2 = wtgq0(1)*qg + wtlql(1)
-            facq  = 1. - wtaq0(2)*wtgq0(3) - wtgq0(2)*wtaq0(1)
-            qaf(2) = ( wtaq0(2)*tmpw1 + wtgq0(2)*tmpw2 + wtlql(2) ) / facq
+            tmpw1  = waq(3)*qm + wlql(3)
+            tmpw2  = wgq(1)*qg + wlql(1)
+            facq   = 1. - waq(2)*wgq(3) - wgq(2)*waq(1)
+            qaf(2) = ( waq(2)*tmpw1 + wgq(2)*tmpw2 + wlql(2) ) / facq
 
-            taf(1) =  wta0(1)*taf(2) +  wtg0(1)*tg +  wtll(1)
-            qaf(1) = wtaq0(1)*qaf(2) + wtgq0(1)*qg + wtlql(1)
+            taf(1) = wah(1)*taf(2) + wgh(1)*tg + wlhl(1)
+            qaf(1) = waq(1)*qaf(2) + wgq(1)*qg + wlql(1)
 
-            taf(3) = wta0(3)*thm +  wtg0(3)*taf(2) +  wtll(3)
-            qaf(3) = wtaq0(3)*qm + wtgq0(3)*qaf(2) + wtlql(3)
+            taf(3) = wah(3)*thm + wgh(3)*taf(2) + wlhl(3)
+            qaf(3) = waq(3)*qm  + wgq(3)*qaf(2) + wlql(3)
 
          ENDIF
 
@@ -1394,7 +1394,7 @@ ENDIF
             ENDIF
          ENDDO
 
-! calculate delata(Lv)
+! calculate delta(Lv)
          dLv(:) = 0.
          DO i = ps, pe
             IF (fshade(i)>0 .and. canlay(i)>0) THEN
@@ -1422,17 +1422,17 @@ ENDIF
                ! 09/25/2017: re-written, check it clearfully
                ! When numlay<3, no matter how to calculate, /fact is consistent
                IF (numlay < 3 .or. clev == 2) THEN
-                  fsenl_dtl(i) = rhoair * cpair * cfh(i) * (1. - wtl0(i)/fact)
+                  fsenl_dtl(i) = rhoair * cpair * cfh(i) * (1. - wlh(i)/fact)
                ELSE
                   IF (clev == 1) THEN
-                     fsenl_dtl(i) = rhoair * cpair * cfh(i) * &
-                        !(1. - (1.-wta0(2)*wtg0(3))*wtl0(i)/fact) or
-                        (1. - wta0(1)*wtg0(2)*wtl0(i)/fact - wtl0(i))
+                     fsenl_dtl(i) = rhoair * cpair * cfh(i) &
+                                 !* (1. - (1.-wah(2)*wgh(3))*wlh(i)/fact) or
+                                  * (1. - wah(1)*wgh(2)*wlh(i)/fact - wlh(i))
                   ENDIF
                   IF (clev == 3) THEN
-                     fsenl_dtl(i) = rhoair * cpair * cfh(i) * &
-                        !(1. - (1.-wtg0(2)*wta0(1))*wtl0(i)/fact) or
-                        (1. - wtg0(3)*wta0(2)*wtl0(i)/fact - wtl0(i))
+                     fsenl_dtl(i) = rhoair * cpair * cfh(i) &
+                                 !* (1. - (1.-wgh(2)*wah(1))*wlh(i)/fact) or
+                                  * (1. - wgh(3)*wah(2)*wlh(i)/fact - wlh(i))
                   ENDIF
                ENDIF
 
@@ -1441,23 +1441,24 @@ ENDIF
                etr(i) = rhoair * (1.-fwet(i)) * delta(i) &
                       * ( laisun(i)/(rb(i)+rssun(i)) + laisha(i)/(rb(i)+rssha(i)) ) &
                       * ( qsatl(i) - qaf(clev) )
+
                ! 09/25/2017: re-written
                IF (numlay < 3 .or. clev == 2) THEN
                   etr_dtl(i) = rhoair * (1.-fwet(i)) * delta(i) &
-                     * ( laisun(i)/(rb(i)+rssun(i)) + laisha(i)/(rb(i)+rssha(i)) ) &
-                     * (1. - wtlq0(i)/facq)*qsatlDT(i)
+                             * ( laisun(i)/(rb(i)+rssun(i)) + laisha(i)/(rb(i)+rssha(i)) ) &
+                             * (1. - wlq(i)/facq)*qsatlDT(i)
                ELSE
                   IF (clev == 1) THEN
                      etr_dtl(i) = rhoair * (1.-fwet(i)) * delta(i) &
-                        * ( laisun(i)/(rb(i)+rssun(i)) + laisha(i)/(rb(i)+rssha(i)) ) &
-                        !* (1. - (1.-wtaq0(2)*wtgq0(3))*wtlq0(i)/facq)*qsatlDT(i) or
-                        * (1. - wtaq0(1)*wtgq0(2)*wtlq0(i)/facq - wtlq0(i))*qsatlDT(i)
+                                * ( laisun(i)/(rb(i)+rssun(i)) + laisha(i)/(rb(i)+rssha(i)) ) &
+                               !* (1. - (1.-waq(2)*wgq(3))*wlq(i)/facq)*qsatlDT(i) or
+                                * (1. - waq(1)*wgq(2)*wlq(i)/facq - wlq(i))*qsatlDT(i)
                   ENDIF
                   IF (clev == 3) THEN
                      etr_dtl(i) = rhoair * (1.-fwet(i)) * delta(i) &
-                        * ( laisun(i)/(rb(i)+rssun(i)) + laisha(i)/(rb(i)+rssha(i)) ) &
-                        !* (1. - (1.-wtgq0(2)*wtaq0(1))*wtlq0(i)/facq)*qsatlDT(i) or
-                        * (1. - wtgq0(3)*wtaq0(2)*wtlq0(i)/facq - wtlq0(i))*qsatlDT(i)
+                                * ( laisun(i)/(rb(i)+rssun(i)) + laisha(i)/(rb(i)+rssha(i)) ) &
+                               !* (1. - (1.-wgq(2)*waq(1))*wlq(i)/facq)*qsatlDT(i) or
+                                * (1. - wgq(3)*waq(2)*wlq(i)/facq - wlq(i))*qsatlDT(i)
                   ENDIF
                ENDIF
 
@@ -1474,17 +1475,17 @@ ENDIF
                ! 09/25/2017: re-written
                IF (numlay < 3 .or. clev == 2) THEN
                   evplwet_dtl(i) = rhoair * (1.-delta(i)*(1.-fwet(i))) * lsai(i)/rb(i) &
-                     * (1. - wtlq0(i)/facq)*qsatlDT(i)
+                                 * (1. - wlq(i)/facq)*qsatlDT(i)
                ELSE
                   IF (clev == 1) THEN
                      evplwet_dtl(i) = rhoair * (1.-delta(i)*(1.-fwet(i))) * lsai(i)/rb(i) &
-                        !* (1. - (1-wtaq0(2)*wtgq0(3))*wtlq0(i)/facq)*qsatlDT(i) or
-                        * (1. - wtaq0(1)*wtgq0(2)*wtlq0(i)/facq - wtlq0(i))*qsatlDT(i)
+                                   !* (1. - (1-waq(2)*wgq(3))*wlq(i)/facq)*qsatlDT(i) or
+                                    * (1. - waq(1)*wgq(2)*wlq(i)/facq - wlq(i))*qsatlDT(i)
                   ENDIF
                   IF (clev == 3) THEN
                      evplwet_dtl(i) = rhoair * (1.-delta(i)*(1.-fwet(i))) * lsai(i)/rb(i) &
-                        !* (1. - (1.-wtgq0(2)*wtaq0(1))*wtlq0(i)/facq)*qsatlDT(i)
-                        * (1. - wtgq0(3)*wtaq0(2)*wtlq0(i)/facq - wtlq0(i))*qsatlDT(i)
+                                   !* (1. - (1.-wgq(2)*waq(1))*wlq(i)/facq)*qsatlDT(i) or
+                                    * (1. - wgq(3)*waq(2)*wlq(i)/facq - wlq(i))*qsatlDT(i)
                   ENDIF
                ENDIF
 
@@ -1558,22 +1559,22 @@ ENDIF
 ! update vegetation/ground surface temperature, canopy air temperature,
 ! canopy air humidity
 
-         ! calculate wtll, wtlql
-         wtll (:) = 0.
-         wtlql(:) = 0.
+         ! calculate wlhl, wlql
+         wlhl(:) = 0.
+         wlql(:) = 0.
 
          DO i = ps, pe
             IF (fcover(i)>0 .and. lsai(i)>1.e-6) THEN
                clev = canlay(i)
-               wtll(clev)  =  wtll(clev) +  wtl0(i)*tl(i)
-               wtlql(clev) = wtlql(clev) + wtlq0(i)*qsatl(i)
+               wlhl(clev) = wlhl(clev) + wlh(i)*tl(i)
+               wlql(clev) = wlql(clev) + wlq(i)*qsatl(i)
             ENDIF
          ENDDO
 
          IF (numlay .eq. 1) THEN
 
-            taf(toplay) = wta0(toplay)*thm +  wtg0(toplay)*tg + wtll(toplay)
-            qaf(toplay) = wtaq0(toplay)*qm + wtgq0(toplay)*qg + wtlql(toplay)
+            taf(toplay) = wah(toplay)*thm + wgh(toplay)*tg + wlhl(toplay)
+            qaf(toplay) = waq(toplay)*qm  + wgq(toplay)*qg + wlql(toplay)
             fact = 1.
             facq = 1.
 
@@ -1581,36 +1582,36 @@ ENDIF
 
          IF (numlay .eq. 2) THEN
 
-            tmpw1 = wtg0(botlay)*tg + wtll(botlay)
-            fact  = 1. - wtg0(toplay)*wta0(botlay)
-            taf(toplay) = (wta0(toplay)*thm + wtg0(toplay)*tmpw1 + wtll(toplay)) / fact
+            tmpw1 = wgh(botlay)*tg + wlhl(botlay)
+            fact  = 1. - wgh(toplay)*wah(botlay)
+            taf(toplay) = (wah(toplay)*thm + wgh(toplay)*tmpw1 + wlhl(toplay)) / fact
 
-            tmpw1 = wtgq0(botlay)*qg + wtlql(botlay)
-            facq  = 1. - wtgq0(toplay)*wtaq0(botlay)
-            qaf(toplay) = (wtaq0(toplay)*qm + wtgq0(toplay)*tmpw1 + wtlql(toplay)) / facq
+            tmpw1 = wgq(botlay)*qg + wlql(botlay)
+            facq  = 1. - wgq(toplay)*waq(botlay)
+            qaf(toplay) = (waq(toplay)*qm  + wgq(toplay)*tmpw1 + wlql(toplay)) / facq
 
-            taf(botlay) =  wta0(botlay)*taf(toplay) +  wtg0(botlay)*tg +  wtll(botlay)
-            qaf(botlay) = wtaq0(botlay)*qaf(toplay) + wtgq0(botlay)*qg + wtlql(botlay)
+            taf(botlay) = wah(botlay)*taf(toplay) + wgh(botlay)*tg + wlhl(botlay)
+            qaf(botlay) = waq(botlay)*qaf(toplay) + wgq(botlay)*qg + wlql(botlay)
 
          ENDIF
 
          IF (numlay .eq. 3) THEN
 
-            tmpw1 = wta0(3)*thm + wtll(3)
-            tmpw2 = wtg0(1)*tg + wtll(1)
-            fact  = 1. - wta0(2)*wtg0(3) - wtg0(2)*wta0(1)
-            taf(2) = (wta0(2)*tmpw1 + wtg0(2)*tmpw2 + wtll(2)) / fact
+            tmpw1  = wah(3)*thm + wlhl(3)
+            tmpw2  = wgh(1)*tg  + wlhl(1)
+            fact   = 1. - wah(2)*wgh(3) - wgh(2)*wah(1)
+            taf(2) = (wah(2)*tmpw1 + wgh(2)*tmpw2 + wlhl(2)) / fact
 
-            tmpw1 = wtaq0(3)*qm + wtlql(3)
-            tmpw2 = wtgq0(1)*qg + wtlql(1)
-            facq  = 1. - wtaq0(2)*wtgq0(3) - wtgq0(2)*wtaq0(1)
-            qaf(2) = (wtaq0(2)*tmpw1 + wtgq0(2)*tmpw2 + wtlql(2)) / facq
+            tmpw1  = waq(3)*qm + wlql(3)
+            tmpw2  = wgq(1)*qg + wlql(1)
+            facq   = 1. - waq(2)*wgq(3) - wgq(2)*waq(1)
+            qaf(2) = (waq(2)*tmpw1 + wgq(2)*tmpw2 + wlql(2)) / facq
 
-            taf(1) =  wta0(1)*taf(2) +  wtg0(1)*tg + wtll(1)
-            qaf(1) = wtaq0(1)*qaf(2) + wtgq0(1)*qg + wtlql(1)
+            taf(1) = wah(1)*taf(2) + wgh(1)*tg + wlhl(1)
+            qaf(1) = waq(1)*qaf(2) + wgq(1)*qg + wlql(1)
 
-            taf(3) =  wta0(3)*thm + wtg0(3)*taf(2) + wtll(3)
-            qaf(3) = wtaq0(3)*qm + wtgq0(3)*qaf(2) + wtlql(3)
+            taf(3) = wah(3)*thm + wgh(3)*taf(2) + wlhl(3)
+            qaf(3) = waq(3)*qm  + wgq(3)*qaf(2) + wlql(3)
 
          ENDIF
 
@@ -1935,21 +1936,21 @@ ENDIF
       ENDIF
 
       !NOTE: the below EQs for check purpose only
-      ! taf = wta0*thm + wtg0*tg + wtl0*tl
-      ! taf(1) = wta0(1)*taf(2) + wtg0(1)*tg + wtll(1)
-      ! qaf(1) = wtaq0(1)*qaf(2) + wtgq0(1)*qg + wtlql(1)
-      ! taf(botlay) = wta0(botlay)*taf(toplay) + wtg0(botlay)*tg + wtll(botlay)
-      ! qaf(botlay) = wtaq0(botlay)*qaf(toplay) + wtgq0(botlay)*qg + wtlql(botlay)
-      ! taf(toplay) = wta0(toplay)*thm +  wtg0(toplay)*tg + wtll(toplay)
-      ! qaf(toplay) = wtaq0(toplay)*qm + wtgq0(toplay)*qg + wtlql(toplay)
+      ! taf = wah*thm + wgh*tg + wlh*tl
+      ! taf(1) = wah(1)*taf(2) + wgh(1)*tg + wlhl(1)
+      ! qaf(1) = waq(1)*qaf(2) + wgq(1)*qg + wlql(1)
+      ! taf(botlay) = wah(botlay)*taf(toplay) + wgh(botlay)*tg + wlhl(botlay)
+      ! qaf(botlay) = waq(botlay)*qaf(toplay) + wgq(botlay)*qg + wlql(botlay)
+      ! taf(toplay) = wah(toplay)*thm + wgh(toplay)*tg + wlhl(toplay)
+      ! qaf(toplay) = waq(toplay)*qm  + wgq(toplay)*qg + wlql(toplay)
 
       fseng = cpair*rhoair*cgh(botlay)*(tg-taf(botlay))
-      fseng_soil = cpair*rhoair*cgh(botlay)*((1.-wtg0(botlay))*t_soil-wta0(botlay)*ttaf-wtll(botlay))
-      fseng_snow = cpair*rhoair*cgh(botlay)*((1.-wtg0(botlay))*t_snow-wta0(botlay)*ttaf-wtll(botlay))
+      fseng_soil = cpair*rhoair*cgh(botlay)*((1.-wgh(botlay))*t_soil-wah(botlay)*ttaf-wlhl(botlay))
+      fseng_snow = cpair*rhoair*cgh(botlay)*((1.-wgh(botlay))*t_snow-wah(botlay)*ttaf-wlhl(botlay))
 
       fevpg = rhoair*cgw(botlay)*(qg-qaf(botlay))
-      fevpg_soil = rhoair*cgw(botlay)*((1.-wtgq0(botlay))*q_soil-wtaq0(botlay)*tqaf-wtlql(botlay))
-      fevpg_snow = rhoair*cgw(botlay)*((1.-wtgq0(botlay))*q_snow-wtaq0(botlay)*tqaf-wtlql(botlay))
+      fevpg_soil = rhoair*cgw(botlay)*((1.-wgq(botlay))*q_soil-waq(botlay)*tqaf-wlql(botlay))
+      fevpg_snow = rhoair*cgw(botlay)*((1.-wgq(botlay))*q_snow-waq(botlay)*tqaf-wlql(botlay))
 
 !-----------------------------------------------------------------------
 ! Derivative of soil energy flux with respect to soil temperature (cgrnd)
@@ -1957,12 +1958,13 @@ ENDIF
 
       !NOTE: When numlay<3, no matter how to get the solution, /fact is consistent
       IF (numlay < 3) THEN
-         cgrnds = cpair*rhoair*cgh(botlay)*(1.-wtg0(botlay)/fact)
-         cgrndl = rhoair*cgw(botlay)*(1.-wtgq0(botlay)/fact)*dqgdT
+         cgrnds = cpair*rhoair*cgh(botlay)*(1.-wgh(botlay)/fact)
+         cgrndl = rhoair*cgw(botlay)*(1.-wgq(botlay)/facq)*dqgdT
       ELSE
-         cgrnds = cpair*rhoair*cgh(botlay)*(1.-wta0(1)*wtg0(2)*wtg0(1)/fact-wtg0(1))
-         cgrndl = rhoair*cgw(botlay)*(1.-wtaq0(1)*wtgq0(2)*wtgq0(1)/facq-wtgq0(1))*dqgdT
+         cgrnds = cpair*rhoair*cgh(botlay)*(1.-wah(1)*wgh(2)*wgh(1)/fact-wgh(1))
+         cgrndl = rhoair*cgw(botlay)*(1.-waq(1)*wgq(2)*wgq(1)/facq-wgq(1))*dqgdT
       ENDIF
+
       cgrnd  = cgrnds + cgrndl*htvp
 
 !-----------------------------------------------------------------------
