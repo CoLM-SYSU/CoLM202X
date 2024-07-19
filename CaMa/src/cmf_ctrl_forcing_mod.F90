@@ -628,7 +628,7 @@ ENDIF
 
 
    !####################################################################
-   SUBROUTINE CMF_FORCING_PUT(PBUFF)
+   SUBROUTINE CMF_FORCING_PUT(PBUFF,PBUFF2)
       ! interporlate with inpmat, then send runoff data to CaMa-Flood 
       ! -- called from "Main Program / Coupler" or CMF_DRV_ADVANCE
       !  add water re-infiltration calculation 
@@ -637,6 +637,8 @@ ENDIF
       IMPLICIT NONE 
       ! Declaration of arguments 
       real(KIND=JPRB), intent(in)     :: PBUFF(:,:,:)
+      real(KIND=JPRB), intent(in)     :: PBUFF2(:,:,:)
+
       !============================
       ! Runoff interpolation & unit conversion (mm/dt -> m3/sec)
       IF (LINTERP) THEN ! mass conservation using "input matrix table (inpmat)"
@@ -657,7 +659,7 @@ ENDIF
       ENDIF 
       IF (LWEVAP) THEN
          !IF ( SIZE(PBUFF,3) == 3 ) THEN
-            CALL ROFF_INTERP(PBUFF(:,:,3),D2WEVAP)
+            CALL ROFF_INTERP(PBUFF2(:,:,1),D2WEVAP)
          !ELSE
          !   WRITE(LOGNAM,*)  "LWEVAP is true but evaporation not provide in input array for interpolation"
          !   WRITE(LOGNAM,*)  "CMF_FORCING_PUT(PBUFF), PBUFF should have 3 fields for interpolation "
@@ -666,7 +668,7 @@ ENDIF
       ENDIF 
       IF (LWINFILT) THEN
          !IF ( SIZE(PBUFF,3) == 3 ) THEN
-            CALL ROFF_INTERP(PBUFF(:,:,4),D2WINFILT)
+            CALL ROFF_INTERP(PBUFF2(:,:,2),D2WINFILT)
          !ELSE
          !   WRITE(LOGNAM,*)  "LWINFILT is true but evaporation not provide in input array for interpolation"
          !   WRITE(LOGNAM,*)  "CMF_FORCING_PUT(PBUFF), PBUFF should have 4 fields for interpolation "
