@@ -44,6 +44,7 @@ CONTAINS
    USE MOD_LandPatch
    USE MOD_Vars_TimeInvariants, only : patchtype
    USE MOD_Utils
+   USE MOD_UserDefFun
    IMPLICIT NONE
 
    ! Local Variables
@@ -289,7 +290,7 @@ CONTAINS
 
                DO i = 1, nhru
                   IF (nexthru(i,ibasin) >= 0) THEN
-                     j = findloc(indxhru(1:nhru,ibasin), nexthru(i,ibasin), dim=1)
+                     j = findloc_ud(indxhru(1:nhru,ibasin) == nexthru(i,ibasin))
                      hillslope_network(ibasin)%inext(i) = j 
                   ELSE
                      hillslope_network(ibasin)%inext(i) = -1

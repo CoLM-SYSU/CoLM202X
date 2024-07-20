@@ -49,8 +49,8 @@
 
    ! ----- forcing -----
    ! Options :
-   ! PRINCETON | GSWP3   | QIAN  | CRUNCEPV4 | CRUNCEPV7 | ERA5LAND | ERA5 |  MSWX
-   ! WFDE5     | CRUJRA  | WFDEI | JRA55     | GDAS      | CMFD     | POINT
+   ! PRINCETON | GSWP3   | QIAN  | CRUNCEPV4 | CRUNCEPV7 | ERA5LAND | ERA5  |  MSWX
+   ! WFDE5     | CRUJRA  | WFDEI | JRA55     | GDAS      | CMFD     | POINT |  JRA3Q
    DEF_forcing_namelist = '/share/home/dq010/CoLM/CoLM202X-CROP//run/forcing/GSWP3-boat.nml'
 
    ! ----- history -----

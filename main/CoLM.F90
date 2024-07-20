@@ -5,7 +5,7 @@ PROGRAM CoLM
 ! Description:
 !   This is the main program for the Common Land Model (CoLM)
 !
-!   @Copyright Yongjiu Dai Land Modeling Grop at the School of Atmospheric Sciences 
+!   @Copyright Yongjiu Dai Land Modeling Grop at the School of Atmospheric Sciences
 !   of the Sun Yat-sen University, Guangdong, CHINA.
 !   All rights reserved.
 !
@@ -98,8 +98,8 @@ PROGRAM CoLM
 
    IMPLICIT NONE
 
-   character(LEN=256) :: nlfile
-   character(LEN=256) :: casename
+   character(len=256) :: nlfile
+   character(len=256) :: casename
    character(len=256) :: dir_landdata
    character(len=256) :: dir_forcing
    character(len=256) :: dir_hist

@@ -147,7 +147,7 @@ CONTAINS
    integer, parameter :: ns = 2
    integer, parameter :: nr = 2
    integer, parameter :: ulev = 10
-   character(LEN=*), intent(in) :: file_restart
+   character(len=*), intent(in) :: file_restart
 
       ! vegetation
       CALL ncio_read_vector (file_restart, 'PCT_Tree'      , landurban, fveg_urb )

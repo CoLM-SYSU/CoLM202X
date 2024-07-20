@@ -20,7 +20,7 @@ Module MOD_Ozone
    USE MOD_Const_PFT, only: isevg, leaf_long, woody
    USE MOD_Grid
    USE MOD_DataType
-   USE MOD_Mapping_Grid2Pset
+   USE MOD_SpatialMapping
    USE MOD_Vars_1DForcing, only: forc_ozone
    USE MOD_Namelist, only: DEF_USE_OZONEDATA
    IMPLICIT NONE
@@ -31,7 +31,7 @@ Module MOD_Ozone
 
    type(block_data_real8_2d) :: f_ozone
 
-   type (mapping_grid2pset_type) :: mg2p_ozone
+   type(spatial_mapping_type) :: mg2p_ozone
 
    SAVE
 
@@ -205,7 +205,7 @@ CONTAINS
    real(r8), allocatable :: lat(:), lon(:)
    integer :: itime
    integer :: iyear, month, mday
-   character(LEN=8) :: syear, smonth
+   character(len=8) :: syear, smonth
 
       CALL julian2monthday(idate(1),idate(2),month,mday)
       iyear = idate(1)
@@ -222,7 +222,7 @@ CONTAINS
 
       CALL allocate_block_data (grid_ozone, f_ozone)
 
-      CALL mg2p_ozone%build (grid_ozone, landpatch)
+      CALL mg2p_ozone%build_arealweighted (grid_ozone, landpatch)
 
       itime = mday
 
@@ -253,7 +253,7 @@ CONTAINS
    type(timestamp) :: time_next
    integer :: month, mday
    integer :: iyear, imonth, imonth_next, iday, iday_next
-   character(LEN=8) :: syear, smonth
+   character(len=8) :: syear, smonth
 
       CALL julian2monthday(time%year,time%day,month,mday)
       imonth = month
@@ -279,7 +279,7 @@ CONTAINS
          CALL check_block_data ('Ozone', f_ozone)
 #endif
 
-         CALL mg2p_ozone%map_aweighted (f_ozone, forc_ozone)
+         CALL mg2p_ozone%grid2pset (f_ozone, forc_ozone)
          forc_ozone = forc_ozone * 1.e-9
 #ifdef RangeCheck
          CALL check_vector_data ('Ozone', forc_ozone)

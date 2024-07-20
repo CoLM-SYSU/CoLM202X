@@ -29,6 +29,7 @@ CONTAINS
    USE MOD_Precision
    USE MOD_Namelist
    USE MOD_SPMD_Task
+   USE MOD_UserDefFun
    USE MOD_NetCDFVector
    USE MOD_LandPatch
    USE MOD_Vars_TimeInvariants
@@ -47,12 +48,12 @@ CONTAINS
    IMPLICIT NONE
 
    integer, intent(in) :: year, time
-   character(LEN=256), intent(in) :: dir_landdata
+   character(len=256), intent(in) :: dir_landdata
 
    ! Local variables
    integer :: iyear, itime
-   character(LEN=256) :: cyear, ctime
-   character(LEN=256) :: landdir, lndname
+   character(len=256) :: cyear, ctime
+   character(len=256) :: landdir, lndname
    integer :: m, npatch, pc
 
 #ifdef LULC_USGS
@@ -68,7 +69,7 @@ CONTAINS
 
 #ifdef SinglePoint
 #ifndef URBAN_MODEL
-      iyear = findloc(SITE_LAI_year, year, dim=1)
+      iyear = findloc_ud(SITE_LAI_year == year)
       IF (.not. DEF_LAI_MONTHLY) THEN
          itime = (time-1)/8 + 1
       ENDIF

@@ -31,6 +31,7 @@ OBJS_SHARED =    \
 				  MOD_Const_Physical.o         \
 				  MOD_Const_LC.o               \
 				  MOD_Utils.o                  \
+				  MOD_UserDefFun.o             \
 				  MOD_TimeManager.o            \
 				  MOD_NetCDFSerial.o           \
 				  MOD_SingleSrfdata.o          \
@@ -47,8 +48,7 @@ OBJS_SHARED =    \
 				  MOD_NetCDFVectorOneS.o       \
 				  MOD_NetCDFVectorOneP.o       \
 				  MOD_RangeCheck.o             \
-				  MOD_Mapping_Grid2Pset.o      \
-				  MOD_Mapping_Pset2Grid.o      \
+				  MOD_SpatialMapping.o         \
 				  MOD_AggregationRequestData.o \
 				  MOD_PixelsetShared.o         \
 				  MOD_LandElm.o                \
@@ -77,6 +77,7 @@ OBJS_MKSRFDATA = \
 				  Aggregation_SoilParameters.o      \
 				  Aggregation_DBedrock.o            \
 				  Aggregation_Topography.o          \
+				  Aggregation_TopographyFactors.o   \
 				  Aggregation_Urban.o               \
 				  MOD_MeshFilter.o                  \
 				  MOD_RegionClip.o                  \
@@ -127,6 +128,7 @@ OBJS_BASIC =    \
 				 MOD_NdepData.o                 \
 				 MOD_FireData.o                 \
 				 MOD_OrbCoszen.o                \
+				 MOD_OrbCosazi.o                \
 				 MOD_3DCanopyRadiation.o        \
 				 MOD_Aerosol.o                  \
 				 MOD_SnowSnicar.o               \

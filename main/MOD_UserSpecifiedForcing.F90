@@ -13,7 +13,7 @@ MODULE MOD_UserSpecifiedForcing
    !     10) WFDE5         11) CRUJRA        12) WFDEI
    !     13) JRA55         14) GDAS          15) CLDAS
    !     16) CMFD          17) TPMFD         18) CMIP6
-   !     19) POINT
+   !     19) POINT         20) JRA3Q         21) CRA40
    !
    !     PLEASE modify the following codes when specified forcing used
    ! ------------------------------------------------------------
@@ -423,32 +423,56 @@ CONTAINS
          !---2021.11.01   Zhongwang Wei @ SYSU: zip file to reduce the size of the data; remove offset and scale_factor
 
          metfilename = '/'//trim(fprefix(var_i))//trim(yearstr)//'-'//trim(monthstr)//'.nc'
-      CASE ('JRA55')
+      CASE ('JRA3Q')
       !DESCRIPTION
       !===========
-         !---the Japanese 55-year Reanalysis
+         !---Japanese Reanalysis for Three Quarters of a Century
 
       !data source:
       !-------------------
-         !---https://jra.kishou.go.jp/JRA-55/index_en.html
+         !---https://rda.ucar.edu/datasets/ds640.0/
 
       !References:
       !-------------------
-         !---Kobayashi, S., Y. Ota, Y. Harada, A. Ebita, M. Moriya, H. Onoda, K. Onogi,
-         !   H. Kamahori, C. Kobayashi, H. Endo, K. Miyaoka, and K. Takahashi , 2015:
-         !   The JRA-55 Reanalysis: General specifications and basic characteristics.
-         !   J. Meteor. Soc. Japan, 93, 5-48, doi:10.2151/jmsj.2015-001.
-         !---Harada, Y., H. Kamahori, C. Kobayashi, H. Endo, S. Kobayashi, Y. Ota, H. Onoda,
-         !   K. Onogi, K. Miyaoka, and K. Takahashi, 2016: The JRA-55 Reanalysis:
-         !   Representation of atmospheric circulation and climate variability, J. Meteor. Soc. Japan,
-         !   94, 269-302, doi:10.2151/jmsj.2016-015.
+         !---Kosaka Y., S. Kobayashi, Y. Harada, C. Kobayashi, H. Naoe, K. Yoshimoto, M. Harada, N. Goto, J. Chiba, K. Miyaoka, R. Sekiguchi,
+         !   M. Deushi, H. Kamahori, T. Nakaegawa; T. Y.Tanaka, T. Tokuhiro, Y. Sato, Y. Matsushita, and K. Onogi, 2024: 
+         !   The JRA-3Q reanalysis. J. Meteor. Soc. Japan, 102, https://doi.org/10.2151/jmsj.2024-004.
+
 
       !REVISION HISTORY
       !----------------
-         !---2021.11.01   Zhongwang Wei @ SYSU: zip file to reduce the size of the data; remove offset and scale_factor
+         !---2024.03.04   Zhongwang Wei @ SYSU: remove offset and scale_factor
+         metfilename = '/'//trim(fprefix(var_i))//'_'//trim(yearstr)//'_'//trim(monthstr)//'.nc'
 
+      CASE ('JRA55')
+         !DESCRIPTION
+         !===========
+            !---the Japanese 55-year Reanalysis
+   
+         !data source:
+         !-------------------
+            !---https://jra.kishou.go.jp/JRA-55/index_en.html
+   
+         !References:
+         !-------------------
+            !---Kobayashi, S., Y. Ota, Y. Harada, A. Ebita, M. Moriya, H. Onoda, K. Onogi,
+            !   H. Kamahori, C. Kobayashi, H. Endo, K. Miyaoka, and K. Takahashi , 2015:
+            !   The JRA-55 Reanalysis: General specifications and basic characteristics.
+            !   J. Meteor. Soc. Japan, 93, 5-48, doi:10.2151/jmsj.2015-001.
+            !---Harada, Y., H. Kamahori, C. Kobayashi, H. Endo, S. Kobayashi, Y. Ota, H. Onoda,
+            !   K. Onogi, K. Miyaoka, and K. Takahashi, 2016: The JRA-55 Reanalysis:
+            !   Representation of atmospheric circulation and climate variability, J. Meteor. Soc. Japan,
+            !   94, 269-302, doi:10.2151/jmsj.2016-015.
+   
+         !REVISION HISTORY
+         !----------------
+            !---2021.11.01   Zhongwang Wei @ SYSU: zip file to reduce the size of the data; remove offset and scale_factor
+   
+   
 
          metfilename = '/'//trim(fprefix(var_i))//'_'//trim(yearstr)//'.nc'
+
+
       CASE ('GDAS')
       !DESCRIPTION
       !===========
@@ -535,6 +559,30 @@ CONTAINS
 
 
          metfilename = '/'//trim(fprefix(var_i))//'_'//trim(yearstr)//'.nc'
+
+      CASE ('CRA40')
+         !DESCRIPTION
+         !===========
+            !---CMA’s first-generation global atmospheric reanalysis (RA) covering 1979–2018 (CRA-40)
+   
+         !data source:
+         !-------------------
+            !---https://data.cma.cn/en
+   
+         !References:
+         !-------------------
+            !---Liu, Z., Jiang, L., Shi, C. et al. CRA-40/Atmosphere—The First-Generation Chinese Atmospheric Reanalysis (1979–2018): 
+            !   System Description and Performance Evaluation. J Meteorol Res 37, 1–19 (2023). https://doi.org/10.1007/s13351-023-2086-x
+
+
+   
+            !REVISION HISTORY
+         !----------------
+            !---2024.04.10   Zhongwang Wei @ SYSU: regroup the data into annual file;
+            !   zip file to reduce the size of the data; remove offset and scale_factor
+   
+   
+            metfilename = '/'//trim(fprefix(var_i))//'_'//trim(yearstr)//'.nc'
       CASE ('TPMFD')
       !DESCRIPTION
       !===========
@@ -554,7 +602,7 @@ CONTAINS
 
       !REVISION HISTORY
       !----------------
-         !---2021.11.01   Zhongwang Wei @ SYSU: regroup the data into monthly file;
+         !---2023.11.01   Zhongwang Wei @ SYSU: regroup the data into monthly file;
          !   zip file to reduce the size of the data; remove offset and scale_factor
 
          metfilename = '/'//trim(fprefix(var_i))//trim(yearstr)//trim(monthstr)//'.nc'
@@ -766,6 +814,15 @@ CONTAINS
                      ENDIF
 
                   CASE ('JRA55') ! JRA55 forcing
+
+                     forcn(4)%blk(ib,jb)%val(i,j)=forcn(4)%blk(ib,jb)%val(i,j)/86400.
+                     CALL qsadv (forcn(1)%blk(ib,jb)%val(i,j), forcn(3)%blk(ib,jb)%val(i,j), &
+                        es,esdT,qsat_tmp,dqsat_tmpdT)
+                     IF (qsat_tmp < forcn(2)%blk(ib,jb)%val(i,j)) THEN
+                        forcn(2)%blk(ib,jb)%val(i,j) = qsat_tmp
+                     ENDIF
+
+                  CASE ('JRA3Q') ! JRA3Q forcing
 
                      forcn(4)%blk(ib,jb)%val(i,j)=forcn(4)%blk(ib,jb)%val(i,j)/86400.
                      CALL qsadv (forcn(1)%blk(ib,jb)%val(i,j), forcn(3)%blk(ib,jb)%val(i,j), &

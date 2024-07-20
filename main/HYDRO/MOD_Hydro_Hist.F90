@@ -4,7 +4,7 @@
 MODULE MOD_Hydro_Hist
 !--------------------------------------------------------------------------------
 ! DESCRIPTION:
-! 
+!
 !     Write out model results in lateral hydrological processes to history files.
 !
 ! Created by Shupeng Zhang, May 2023
@@ -96,7 +96,7 @@ CONTAINS
    USE MOD_HRUVector
    IMPLICIT NONE
 
-   character(LEN=*), intent(in) :: file_hist
+   character(len=*), intent(in) :: file_hist
    integer,  intent(in) :: idate(3)
 
    ! Local variables
@@ -219,7 +219,7 @@ CONTAINS
    USE MOD_SPMD_Task
    USE MOD_Mesh,    only : numelm
    USE MOD_LandHRU, only : numhru
-   USE MOD_Vars_Global,  only : spval 
+   USE MOD_Vars_Global,  only : spval
    IMPLICIT NONE
 
    integer :: numbasin
@@ -278,7 +278,7 @@ CONTAINS
 
    ! -------
    SUBROUTINE acc1d_basin (var, s)
-      
+
    USE MOD_Precision
    USE MOD_Vars_Global, only: spval
 

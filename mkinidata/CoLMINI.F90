@@ -54,10 +54,10 @@ PROGRAM CoLMINI
 
    ! ----------------local variables ---------------------------------
    character(len=256) :: nlfile
-   character(LEN=256) :: casename ! case name
-   character(LEN=256) :: dir_landdata
-   character(LEN=256) :: dir_restart
-   character(LEN=256) :: fsrfdata
+   character(len=256) :: casename ! case name
+   character(len=256) :: dir_landdata
+   character(len=256) :: dir_restart
+   character(len=256) :: fsrfdata
    integer  :: s_year      ! starting date for run in year
    integer  :: s_month     ! starting date for run in month
    integer  :: s_day       ! starting date for run in day

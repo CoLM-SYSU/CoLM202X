@@ -190,5 +190,71 @@ CONTAINS
 
    END SUBROUTINE Runoff_XinAnJiang
 
+
+   ! -------------------------------------------------------------------------
+   SUBROUTINE Runoff_SimpleVIC ( &
+      nl_soil, dz_soisno, eff_porosity, vol_liq, BVIC, gwat, deltim, &
+      rsur, rsubst)
+
+   USE MOD_Precision
+   IMPLICIT NONE
+
+   integer,  intent(in) :: nl_soil ! number of soil layers
+
+   real(r8), intent(in) :: &
+      dz_soisno   (1:nl_soil),  & ! layer thickness (m)
+      eff_porosity(1:nl_soil),  & ! effective porosity = porosity - vol_ice
+      vol_liq     (1:nl_soil),  & ! partial volume of liquid water in layer
+      BVIC,                     & ! VIC infiltration parameter
+      gwat,                     & ! net water input from top
+      deltim                      ! time step (s)
+
+   real(r8), intent(out) :: rsur   ! surface runoff (mm h2o/s)
+   real(r8), intent(out) :: rsubst ! subsurface runoff (mm h2o/s)
+
+   ! Local Variables
+   real(r8) :: btopo, watin, w_int, wsat_int, wtmp, infil
+   real(r8) :: InfilExpFac, WaterDepthMax, WaterDepthInit, RunoffSurface, InfilVarTmp
+   real(r8) :: SoilSaturateFrac
+      
+      watin = gwat * deltim / 1000. ! convert mm/s to m
+
+      IF (watin <= 0.) THEN
+         rsur   = 0.
+         rsubst = 0.
+      ELSE
+         w_int    = sum(vol_liq     (1:6) * dz_soisno(1:6))
+         wsat_int = sum(eff_porosity(1:6) * dz_soisno(1:6))
+         ! fractional saturated area from soil moisture
+         InfilExpFac            = BVIC / ( 1.0 + BVIC )
+         SoilSaturateFrac = 1.0 - (max(0.0, (1.0-(w_int/wsat_int))))**InfilExpFac
+         SoilSaturateFrac = max(0.0, SoilSaturateFrac)
+         SoilSaturateFrac = min(1.0, SoilSaturateFrac)
+         
+         ! Infiltration for the previous time-step soil moisture based on SoilSaturateFrac
+         WaterDepthMax  = (1.0 + BVIC) * wsat_int
+         WaterDepthInit = WaterDepthMax * (1.0 - (1.0 - SoilSaturateFrac)**(1.0/BVIC))
+         
+         ! Solve for surface runoff
+         if ( WaterDepthMax <= 0.0 ) then
+            RunoffSurface = watin
+         ELSEIF   ( (WaterDepthInit + watin) > WaterDepthMax ) then
+            !RunoffSurface = (WaterDepthInit + w_int) - WaterDepthMax
+            RunoffSurface = watin - wsat_int + w_int 
+         ELSE
+            InfilVarTmp  = 1.0 - ((WaterDepthInit +watin ) / WaterDepthMax)
+            RunoffSurface =watin - wsat_int + w_int + wsat_int * (InfilVarTmp**(1.0+BVIC))
+         ENDIF
+
+         IF ( RunoffSurface < 0.0 ) RunoffSurface = 0.0
+         IF ( RunoffSurface > watin) RunoffSurface = watin
+     
+         infil = watin - RunoffSurface
+         rsur= RunoffSurface * 1000. / deltim
+         rsubst = 0.
+      ENDIF
+
+   END SUBROUTINE Runoff_SimpleVIC
+
 END MODULE MOD_Runoff
 ! --------- EOP ----------

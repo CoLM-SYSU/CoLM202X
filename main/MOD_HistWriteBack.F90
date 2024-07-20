@@ -71,9 +71,9 @@ MODULE MOD_HistWriteBack
    integer :: itime_in_file
 
    ! tags
-   integer, parameter :: tag_next = 100
-   integer, parameter :: tag_time = 101
-   integer, parameter :: tag_dims = 102
+   integer, parameter :: tag_next = 1
+   integer, parameter :: tag_time = 2
+   integer, parameter :: tag_dims = 3
 
 CONTAINS
 
@@ -249,6 +249,8 @@ CONTAINS
 
                ENDIF
 
+               CALL ncio_write_colm_dimension (filename)
+
             ENDIF
                
             CALL ncio_write_time (filename, dataname, time, itime_in_file, DEF_HIST_FREQ)
@@ -260,7 +262,7 @@ CONTAINS
             !--------------------------------
 
             ! (1) data header
-            tag = dataid*10000
+            tag = dataid*10
             CALL mpi_recv (recvint4(1:2), 2, MPI_INTEGER, &
                MPI_ANY_SOURCE, tag, p_comm_glb_plus, p_stat, p_err)
 
@@ -281,7 +283,7 @@ CONTAINS
             units    = recvchar(9)
 
             ! (2) data 
-            tag = dataid*10000+1
+            tag = dataid*10+1
 
             IF (SDimType == 1) THEN
                DO idata = 1, nGridData
@@ -369,8 +371,17 @@ CONTAINS
                deallocate(wdata1d)
             CASE (2)
 
-               CALL ncio_write_serial_time (filename, dataname, itime_in_file, wdata2d, &
-                  dim1name, dim2name, dim3name, compress)
+               IF (.not. &
+                  ((trim(dataname) == 'landarea') .or. (trim(dataname) == 'landfraction'))) THEN
+
+                  CALL ncio_write_serial_time (filename, dataname, itime_in_file, wdata2d, &
+                     dim1name, dim2name, dim3name, compress)
+
+               ELSEIF (itime_in_file == 1) THEN
+
+                  CALL ncio_write_serial (filename, dataname, wdata2d, dim1name, dim2name, compress)
+
+               ENDIF
 
                deallocate(wdata2d)
             CASE (3)
@@ -647,7 +658,7 @@ CONTAINS
       ENDDO
 
       LastSendBuffer%dataid  = dataid
-      LastSendBuffer%datatag = dataid*10000
+      LastSendBuffer%datatag = dataid*10
       
       LastSendBuffer%sendint4(1:2) = (/ndims, compress/)
 
@@ -715,7 +726,7 @@ CONTAINS
 
       ENDDO
 
-      LastSendBuffer%datatag = dataid*10000+1
+      LastSendBuffer%datatag = dataid*10+1
 
       ndim1 = 0
       ndim2 = 0

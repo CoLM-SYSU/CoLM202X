@@ -37,11 +37,11 @@ CONTAINS
    IMPLICIT NONE
 
    integer, intent(in) :: lc_year    ! which year of land cover data used
-   character(LEN=256), intent(in) :: dir_landdata
+   character(len=256), intent(in) :: dir_landdata
 
    ! Local Variables
-   character(LEN=256) :: c
-   character(LEN=256) :: landdir, lndname, cyear
+   character(len=256) :: c
+   character(len=256) :: landdir, lndname, cyear
    integer :: i,j,t,p,ps,pe,m,n,npatch
 
    real(r8), allocatable :: htoplc  (:)
