@@ -35,6 +35,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
    USE MOD_RangeCheck
 #endif
    USE MOD_Utils
+   USE MOD_UserDefFun
 #ifdef SinglePoint
    USE MOD_SingleSrfdata
 #endif
@@ -47,8 +48,8 @@ SUBROUTINE Aggregation_SoilParameters ( &
    ! arguments:
    integer, intent(in) :: lc_year
    type(grid_type),  intent(in) :: gland
-   character(LEN=*), intent(in) :: dir_rawdata
-   character(LEN=*), intent(in) :: dir_model_landdata
+   character(len=*), intent(in) :: dir_rawdata
+   character(len=*), intent(in) :: dir_model_landdata
 
    ! local variables:
    ! ---------------------------------------------------------------
@@ -284,7 +285,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
                   vf_quartz_mineral_s_patches (ipatch) = -1.0e36_r8
                ENDIF
 
-               IF (isnan(vf_quartz_mineral_s_patches(ipatch))) THEN
+               IF (isnan_ud(vf_quartz_mineral_s_patches(ipatch))) THEN
                   write(*,*) "NAN appears in vf_quartz_mineral_s_patches."
                   write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
                ENDIF
@@ -390,17 +391,17 @@ SUBROUTINE Aggregation_SoilParameters ( &
                   BA_beta_patches (ipatch) = -1.0e36_r8
                ENDIF
 
-               IF (isnan(vf_gravels_s_patches(ipatch))) THEN
+               IF (isnan_ud(vf_gravels_s_patches(ipatch))) THEN
                   write(*,*) "NAN appears in vf_gravels_s_patches."
                   write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
                ENDIF
 
-               IF (isnan(vf_sand_s_patches(ipatch))) THEN
+               IF (isnan_ud(vf_sand_s_patches(ipatch))) THEN
                   write(*,*) "NAN appears in vf_sand_s_patches."
                   write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
                ENDIF
 
-               IF (isnan(vf_om_s_patches(ipatch))) THEN
+               IF (isnan_ud(vf_om_s_patches(ipatch))) THEN
                   write(*,*) "NAN appears in vf_om_s_patches."
                   write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
                ENDIF
@@ -533,7 +534,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
                   wf_gravels_s_patches (ipatch) = -1.0e36_r8
                ENDIF
 
-               IF (isnan(wf_gravels_s_patches(ipatch))) THEN
+               IF (isnan_ud(wf_gravels_s_patches(ipatch))) THEN
                   write(*,*) "NAN appears in wf_gravels_s_patches."
                   write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
                ENDIF
@@ -595,7 +596,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
                   wf_sand_s_patches (ipatch) = -1.0e36_r8
                ENDIF
 
-               IF (isnan(wf_sand_s_patches(ipatch))) THEN
+               IF (isnan_ud(wf_sand_s_patches(ipatch))) THEN
                   write(*,*) "NAN appears in wf_sand_s_patches."
                   write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
                ENDIF
@@ -756,32 +757,32 @@ SUBROUTINE Aggregation_SoilParameters ( &
                   L_vgm_patches (ipatch)     = -1.0e36_r8
                ENDIF
 
-               IF (isnan(theta_r_patches(ipatch))) THEN
+               IF (isnan_ud(theta_r_patches(ipatch))) THEN
                   write(*,*) "NAN appears in theta_r_patches."
                   write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
                ENDIF
 
-               IF (isnan(alpha_vgm_patches(ipatch))) THEN
+               IF (isnan_ud(alpha_vgm_patches(ipatch))) THEN
                   write(*,*) "NAN appears in alpha_vgm_patches."
                   write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
                ENDIF
 
-               IF (isnan(n_vgm_patches(ipatch))) THEN
+               IF (isnan_ud(n_vgm_patches(ipatch))) THEN
                   write(*,*) "NAN appears in n_vgm_patches."
                   write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
                ENDIF
 
-               IF (isnan(theta_s_patches(ipatch))) THEN
+               IF (isnan_ud(theta_s_patches(ipatch))) THEN
                   write(*,*) "NAN appears in theta_s_patches."
                   write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
                ENDIF
 
-               IF (isnan(k_s_patches(ipatch))) THEN
+               IF (isnan_ud(k_s_patches(ipatch))) THEN
                   write(*,*) "NAN appears in k_s_patches."
                   write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
                ENDIF
 
-               IF (isnan(L_vgm_patches(ipatch))) THEN
+               IF (isnan_ud(L_vgm_patches(ipatch))) THEN
                   write(*,*) "NAN appears in L_vgm_patches."
                   write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
                ENDIF
@@ -1006,22 +1007,22 @@ SUBROUTINE Aggregation_SoilParameters ( &
                   lambda_patches (ipatch)  = -1.0e36_r8
                ENDIF
 
-               IF (isnan(theta_s_patches(ipatch))) THEN
+               IF (isnan_ud(theta_s_patches(ipatch))) THEN
                   write(*,*) "NAN appears in theta_s_patches."
                   write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
                ENDIF
 
-               IF (isnan(k_s_patches(ipatch))) THEN
+               IF (isnan_ud(k_s_patches(ipatch))) THEN
                   write(*,*) "NAN appears in k_s_patches."
                   write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
                ENDIF
 
-               IF (isnan(psi_s_patches(ipatch))) THEN
+               IF (isnan_ud(psi_s_patches(ipatch))) THEN
                   write(*,*) "NAN appears in psi_s_patches."
                   write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
                ENDIF
 
-               IF (isnan(lambda_patches(ipatch))) THEN
+               IF (isnan_ud(lambda_patches(ipatch))) THEN
                   write(*,*) "NAN appears in lambda_patches."
                   write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
                ENDIF
@@ -1137,7 +1138,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
                   csol_patches (ipatch) = -1.0e36_r8
                ENDIF
 
-               IF (isnan(csol_patches(ipatch))) THEN
+               IF (isnan_ud(csol_patches(ipatch))) THEN
                   write(*,*) "NAN appears in csol_patches."
                   write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
                ENDIF
@@ -1197,7 +1198,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
                   tksatu_patches (ipatch) = -1.0e36_r8
                ENDIF
 
-               IF (isnan(tksatu_patches(ipatch))) THEN
+               IF (isnan_ud(tksatu_patches(ipatch))) THEN
                   write(*,*) "NAN appears in tksatu_patches."
                   write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
                ENDIF
@@ -1257,7 +1258,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
                   tksatf_patches (ipatch) = -1.0e36_r8
                ENDIF
 
-               IF (isnan(tksatf_patches(ipatch))) THEN
+               IF (isnan_ud(tksatf_patches(ipatch))) THEN
                   write(*,*) "NAN appears in tksatf_patches."
                   write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
                ENDIF
@@ -1317,7 +1318,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
                   tkdry_patches (ipatch) = -1.0e36_r8
                ENDIF
 
-               IF (isnan(tkdry_patches(ipatch))) THEN
+               IF (isnan_ud(tkdry_patches(ipatch))) THEN
                   write(*,*) "NAN appears in tkdry_patches."
                   write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
                ENDIF
@@ -1377,7 +1378,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
                   k_solids_patches (ipatch) = -1.0e36_r8
                ENDIF
 
-               IF (isnan(k_solids_patches(ipatch))) THEN
+               IF (isnan_ud(k_solids_patches(ipatch))) THEN
                   write(*,*) "NAN appears in k_solids_patches."
                   write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
                ENDIF
@@ -1438,7 +1439,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
                   OM_density_s_patches (ipatch) = -1.0e36_r8
                ENDIF
 
-               IF (isnan(OM_density_s_patches(ipatch))) THEN
+               IF (isnan_ud(OM_density_s_patches(ipatch))) THEN
                   write(*,*) "NAN appears in OM_density_s_patches."
                   write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
                ENDIF
@@ -1499,7 +1500,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
                   BD_all_s_patches (ipatch) = -1.0e36_r8
                ENDIF
 
-               IF (isnan(BD_all_s_patches(ipatch))) THEN
+               IF (isnan_ud(BD_all_s_patches(ipatch))) THEN
                   write(*,*) "NAN appears in BD_all_s_patches."
                   write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
                ENDIF

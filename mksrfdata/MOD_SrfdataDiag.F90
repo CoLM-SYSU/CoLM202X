@@ -21,21 +21,21 @@ MODULE MOD_SrfdataDiag
 !-----------------------------------------------------------------------------------------
 
    USE MOD_Grid
-   USE MOD_Mapping_Pset2Grid
+   USE MOD_SpatialMapping
 
    IMPLICIT NONE
 
    ! PUBLIC variables and subroutines
    type(grid_type) :: gdiag
    
-   type(mapping_pset2grid_type) :: m_elm2diag
+   type(spatial_mapping_type) :: m_elm2diag
 
-   type(mapping_pset2grid_type) :: m_patch2diag
+   type(spatial_mapping_type) :: m_patch2diag
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
-   type(mapping_pset2grid_type) :: m_pft2diag
+   type(spatial_mapping_type) :: m_pft2diag
 #endif
 #ifdef URBAN_MODEL
-   type(mapping_pset2grid_type) :: m_urb2diag
+   type(spatial_mapping_type) :: m_urb2diag
 #endif
 
    PUBLIC :: srfdata_diag_init
@@ -80,20 +80,16 @@ CONTAINS
 
       CALL srf_concat%set (gdiag)
       
-      CALL m_elm2diag%build (landelm, gdiag)
+      CALL m_elm2diag%build_arealweighted (gdiag, landelm)
 
-#ifndef CROP
-      CALL m_patch2diag%build (landpatch, gdiag)
-#else
-      CALL m_patch2diag%build (landpatch, gdiag, pctshrpch)
-#endif
+      CALL m_patch2diag%build_arealweighted (gdiag, landpatch)
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
-      CALL m_pft2diag%build (landpft, gdiag)
+      CALL m_pft2diag%build_arealweighted (gdiag, landpft)
 #endif
 
 #ifdef URBAN_MODEL
-      CALL m_urb2diag%build (landurban, gdiag)
+      CALL m_urb2diag%build_arealweighted (gdiag, landurban)
 #endif
 
       srf_data_id = 666
@@ -139,7 +135,7 @@ CONTAINS
    integer , intent(in) :: settyp   (:)
    integer , intent(in) :: typindex (:)
 
-   type(mapping_pset2grid_type), intent(in) :: m_srf
+   type(spatial_mapping_type), intent(in) :: m_srf
 
    real(r8), intent(in) :: spv
 
@@ -185,8 +181,8 @@ CONTAINS
          ENDIF
       ENDIF
 
-      CALL m_srf%map_split (vecone  , settyp, typindex, sumwt, spv)
-      CALL m_srf%map_split (vsrfdata, settyp, typindex, wdata, spv)
+      CALL m_srf%pset2grid_split (vecone  , settyp, typindex, sumwt, spv)
+      CALL m_srf%pset2grid_split (vsrfdata, settyp, typindex, wdata, spv)
 
       IF (p_is_io) THEN
          DO iblkme = 1, gblock%nblkme

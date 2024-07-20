@@ -15,6 +15,7 @@ MODULE MOD_RangeCheck
 !-----------------------------------------------------------------------
 
 #ifdef RangeCheck
+   USE MOD_UserDefFun, only : isnan_ud
    IMPLICIT NONE
 
    INTERFACE check_block_data
@@ -32,18 +33,19 @@ MODULE MOD_RangeCheck
 CONTAINS
 
    ! ----------
-   SUBROUTINE check_block_data_real8_2d (varname, gdata, spv_in, largevalue)
+   SUBROUTINE check_block_data_real8_2d (varname, gdata, spv_in, limits)
 
    USE MOD_Precision
    USE MOD_SPMD_Task
    USE MOD_Block
    USE MOD_DataType
+   USE MOD_Vars_Global, only : spval
    IMPLICIT NONE
 
    character(len=*), intent(in)   :: varname
    type(block_data_real8_2d), intent(in) :: gdata
    real(r8), intent(in), optional :: spv_in
-   real(r8), intent(in), optional :: largevalue
+   real(r8), intent(in), optional :: limits(2)
 
    ! Local variables
    real(r8) :: gmin, gmax, spv
@@ -58,7 +60,7 @@ CONTAINS
          IF (present(spv_in)) THEN
             spv = spv_in
          ELSE
-            spv = -1.0e36_r8
+            spv = spval
          ENDIF
 
          gmin = spv
@@ -90,7 +92,7 @@ CONTAINS
 
             DO iy = 1, size(gdata%blk(ib,jb)%val,2)
                DO ix = 1, size(gdata%blk(ib,jb)%val,1)
-                  has_nan = has_nan .or. isnan(gdata%blk(ib,jb)%val(ix,iy))
+                  has_nan = has_nan .or. isnan_ud(gdata%blk(ib,jb)%val(ix,iy))
                ENDDO
             ENDDO
 
@@ -136,10 +138,9 @@ CONTAINS
                info = trim(info) // ' with NAN'
             ENDIF
 
-            IF (present(largevalue)) THEN
-               IF (max(abs(gmin),abs(gmax)) > largevalue) THEN
-                  write(ss,'(e12.2)') largevalue
-                  info = trim(info) // ' with value > ' // trim(ss)
+            IF (present(limits)) THEN
+               IF ((gmin < limits(1)) .or. (gmax > limits(2))) THEN
+                  info = trim(info) // ' Out of Range!'
                ENDIF
             ENDIF
 
@@ -160,16 +161,17 @@ CONTAINS
 
 
    ! ----------
-   SUBROUTINE check_vector_data_real8_1d (varname, vdata, spv_in, largevalue)
+   SUBROUTINE check_vector_data_real8_1d (varname, vdata, spv_in, limits)
 
    USE MOD_Precision
    USE MOD_SPMD_Task
+   USE MOD_Vars_Global, only : spval
    IMPLICIT NONE
 
    character(len=*), intent(in)   :: varname
    real(r8), intent(in)           :: vdata(:)
    real(r8), intent(in), optional :: spv_in
-   real(r8), intent(in), optional :: largevalue
+   real(r8), intent(in), optional :: limits(2)
 
    ! Local variables
    real(r8) :: vmin, vmax, spv
@@ -183,7 +185,7 @@ CONTAINS
          IF (present(spv_in)) THEN
             spv = spv_in
          ELSE
-            spv = -1.0e36_r8
+            spv = spval
          ENDIF
 
          IF (any(vdata /= spv)) THEN
@@ -196,7 +198,7 @@ CONTAINS
 
          has_nan = .false.
          DO i = 1, size(vdata)
-            has_nan = has_nan .or. isnan(vdata(i))
+            has_nan = has_nan .or. isnan_ud(vdata(i))
          ENDDO
 
 #ifdef USEMPI
@@ -238,10 +240,9 @@ CONTAINS
                info = trim(info) // ' with NAN'
             ENDIF
 
-            IF (present(largevalue)) THEN
-               IF (max(abs(vmin),abs(vmax)) > largevalue) THEN
-                  write(ss,'(e12.2)') largevalue
-                  info = trim(info) // ' with value > ' // trim(ss)
+            IF (present(limits)) THEN
+               IF ((vmin < limits(1)) .or. (vmax > limits(2))) THEN
+                  info = trim(info) // ' Out of Range!'
                ENDIF
             ENDIF
 
@@ -261,16 +262,17 @@ CONTAINS
    END SUBROUTINE check_vector_data_real8_1d
 
    ! ----------
-   SUBROUTINE check_vector_data_real8_2d (varname, vdata, spv_in, largevalue)
+   SUBROUTINE check_vector_data_real8_2d (varname, vdata, spv_in, limits)
 
    USE MOD_Precision
    USE MOD_SPMD_Task
+   USE MOD_Vars_Global, only : spval
    IMPLICIT NONE
 
    character(len=*), intent(in)   :: varname
    real(r8), intent(in)           :: vdata(:,:)
    real(r8), intent(in), optional :: spv_in
-   real(r8), intent(in), optional :: largevalue
+   real(r8), intent(in), optional :: limits(2) 
 
    ! Local variables
    real(r8) :: vmin, vmax, spv
@@ -284,7 +286,7 @@ CONTAINS
          IF (present(spv_in)) THEN
             spv = spv_in
          ELSE
-            spv = -1.0e36_r8
+            spv = spval
          ENDIF
 
          IF (any(vdata /= spv)) THEN
@@ -298,7 +300,7 @@ CONTAINS
          has_nan = .false.
          DO j = 1, size(vdata,2)
             DO i = 1, size(vdata,1)
-               has_nan = has_nan .or. isnan(vdata(i,j))
+               has_nan = has_nan .or. isnan_ud(vdata(i,j))
             ENDDO
          ENDDO
 
@@ -341,10 +343,9 @@ CONTAINS
                info = trim(info) // ' with NAN'
             ENDIF
 
-            IF (present(largevalue)) THEN
-               IF (max(abs(vmin),abs(vmax)) > largevalue) THEN
-                  write(ss,'(e12.2)') largevalue
-                  info = trim(info) // ' with value > ' // trim(ss)
+            IF (present(limits)) THEN
+               IF ((vmin < limits(1)) .or. (vmax > limits(2))) THEN
+                  info = trim(info) // ' Out of Range!'
                ENDIF
             ENDIF
 
@@ -364,16 +365,17 @@ CONTAINS
    END SUBROUTINE check_vector_data_real8_2d
 
    ! ----------
-   SUBROUTINE check_vector_data_real8_3d (varname, vdata, spv_in, largevalue)
+   SUBROUTINE check_vector_data_real8_3d (varname, vdata, spv_in, limits)
 
    USE MOD_Precision
    USE MOD_SPMD_Task
+   USE MOD_Vars_Global, only : spval
    IMPLICIT NONE
 
    character(len=*), intent(in)   :: varname
    real(r8), intent(in)           :: vdata(:,:,:)
    real(r8), intent(in), optional :: spv_in
-   real(r8), intent(in), optional :: largevalue
+   real(r8), intent(in), optional :: limits(2) 
 
    ! Local variables
    real(r8) :: vmin, vmax, spv
@@ -387,7 +389,7 @@ CONTAINS
          IF (present(spv_in)) THEN
             spv = spv_in
          ELSE
-            spv = -1.0e36_r8
+            spv = spval
          ENDIF
 
          IF (any(vdata /= spv)) THEN
@@ -402,7 +404,7 @@ CONTAINS
          DO k = 1, size(vdata,3)
             DO j = 1, size(vdata,2)
                DO i = 1, size(vdata,1)
-                  has_nan = has_nan .or. isnan(vdata(i,j,k))
+                  has_nan = has_nan .or. isnan_ud(vdata(i,j,k))
                ENDDO
             ENDDO
          ENDDO
@@ -447,10 +449,9 @@ CONTAINS
                info = trim(info) // ' with NAN'
             ENDIF
 
-            IF (present(largevalue)) THEN
-               IF (max(abs(vmin),abs(vmax)) > largevalue) THEN
-                  write(ss,'(e12.2)') largevalue
-                  info = trim(info) // ' with value > ' // trim(ss)
+            IF (present(limits)) THEN
+               IF ((vmin < limits(1)) .or. (vmax > limits(2))) THEN
+                  info = trim(info) // ' Out of Range!'
                ENDIF
             ENDIF
 
@@ -470,16 +471,17 @@ CONTAINS
    END SUBROUTINE check_vector_data_real8_3d
 
    ! ----------
-   SUBROUTINE check_vector_data_real8_4d (varname, vdata, spv_in, largevalue)
+   SUBROUTINE check_vector_data_real8_4d (varname, vdata, spv_in, limits)
 
    USE MOD_Precision
    USE MOD_SPMD_Task
+   USE MOD_Vars_Global, only : spval
    IMPLICIT NONE
 
    character(len=*), intent(in)   :: varname
    real(r8), intent(in)           :: vdata(:,:,:,:)
    real(r8), intent(in), optional :: spv_in
-   real(r8), intent(in), optional :: largevalue
+   real(r8), intent(in), optional :: limits(2) 
 
    ! Local variables
    real(r8) :: vmin, vmax, spv
@@ -493,7 +495,7 @@ CONTAINS
          IF (present(spv_in)) THEN
             spv = spv_in
          ELSE
-            spv = -1.0e36_r8
+            spv = spval
          ENDIF
 
          IF (any(vdata /= spv)) THEN
@@ -509,7 +511,7 @@ CONTAINS
             DO k = 1, size(vdata,3)
                DO j = 1, size(vdata,2)
                   DO i = 1, size(vdata,1)
-                     has_nan = has_nan .or. isnan(vdata(i,j,k,l))
+                     has_nan = has_nan .or. isnan_ud(vdata(i,j,k,l))
                   ENDDO
                ENDDO
             ENDDO
@@ -555,10 +557,9 @@ CONTAINS
                info = trim(info) // ' with NAN'
             ENDIF
 
-            IF (present(largevalue)) THEN
-               IF (max(abs(vmin),abs(vmax)) > largevalue) THEN
-                  write(ss,'(e12.2)') largevalue
-                  info = trim(info) // ' with value > ' // trim(ss)
+            IF (present(limits)) THEN
+               IF ((vmin < limits(1)) .or. (vmax > limits(2))) THEN
+                  info = trim(info) // ' Out of Range!'
                ENDIF
             ENDIF
 

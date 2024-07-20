@@ -1,0 +1,62 @@
+#!/bin/bash
+
+CreateHeader()
+{
+   CASENAME=$1
+   SCRIPTNAME=$2
+   HEADER=$3
+   CONFIG=$4
+
+   if [ ! -f $HEADER ];then
+      echo "ERROR: HEADER file $HEADER does not exist"
+      exit
+   fi
+
+   if [ -f $CONFIG ];then
+      case ${SCRIPTNAME} in
+      mksrf.submit)
+         NP=`awk '/NProcesses_mksrf/ {print $2}' $CONFIG`
+         NN=`awk '/NNodes_mksrf/ {print $2}' $CONFIG`
+         NTPN=`awk '/NTasksPerNode_mksrf/ {print $2}' $CONFIG`
+         MEM=`awk '/Memory_mksrf/ {print $2}' $CONFIG`
+         WT=`awk '/Walltime_mksrf/ {print $2}' $CONFIG`
+         QUEUE=`awk '/Queue_mksrf/ {print $2}' $CONFIG`
+         OUTPUT='mksrf'
+         ;;
+      init.submit)
+         NP=`awk '/NProcesses_mkini/ {print $2}' $CONFIG`
+         NN=`awk '/NNodes_mkini/ {print $2}' $CONFIG`
+         NTPN=`awk '/NTasksPerNode_mkini/ {print $2}' $CONFIG`
+         MEM=`awk '/Memory_mkini/ {print $2}' $CONFIG`
+         WT=`awk '/Walltime_mkini/ {print $2}' $CONFIG`
+         QUEUE=`awk '/Queue_mkini/ {print $2}' $CONFIG`
+         OUTPUT='init'
+         ;;
+      case.submit)
+         NP=`awk '/NProcesses_mksrf/ {print $2}' $CONFIG`
+         NN=`awk '/NNodes_mksrf/ {print $2}' $CONFIG`
+         NTPN=`awk '/NTasksPerNode_mksrf/ {print $2}' $CONFIG`
+         MEM=`awk '/Memory_mksrf/ {print $2}' $CONFIG`
+         WT=`awk '/Walltime_mksrf/ {print $2}' $CONFIG`
+         QUEUE=`awk '/Queue_mksrf/ {print $2}' $CONFIG`
+         OUTPUT='case'
+         ;;
+      *)
+         echo "Error: Unknown Unknown script name: $SCRIPTNAME in CreateScripts"
+         exit
+         ;;
+      esac
+
+         sed "s/<CASENAME>/${CASENAME}/g" $HEADER |sed "s/<QUEUE>/${QUEUE}/g" \
+       | sed "s/<OUTPUTFILE>/${OUTPUT}.out/g"|sed "s/<ERRORFILE>/${OUTPUT}.err/g" |sed "s/<MEMORY>/${MEM}/g" \
+       | sed "s/<NNODES>/${NN}/g" | sed "s/<NTASKSPERNODE>/${NTPN}/g" | sed "s/<NPROCESSES>/${NP}/g" \
+       | sed "s/<WALLTIME>/${WT}/g" > ${SCRIPTNAME}
+
+
+   else
+      echo "ERROR: CONFIG file $CONFIG does not exist"
+      exit
+   fi
+}
+
+CreateHeader Global_Grid_50km_PFT_VG mksrf.submit $ROOT/run/jobs.config-earthlab $ROOT/run/mpi.config
