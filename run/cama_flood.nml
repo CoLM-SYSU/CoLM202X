@@ -101,8 +101,8 @@ DROFUNIT  = 1.0                 ! runoff unit conversion
 COUTDIR  = "../../cases/"                ! OUTPUT DIRECTORY
 !CVARSOUT="wevap,winfilt,rivout,rivsto,rivdph,rivvel,fldout,fldsto,flddph,fldfrc,fldare,sfcelv,outflw,storge,pthflw,pthout,maxsto,maxflw,maxdph" # list output variable (comma separated)
 CVARSOUT = "wevap,outflw,fldout,flddph,fldfrc,fldare,runoff"               ! Comma-separated list of output variables to save 
-COUTTAG  = "test"                ! Output Tag Name for each experiment
-LOUTVEC  = .FALSE                      ! TRUE FOR VECTORIAL OUTPUT, FALSE FOR NX,NY OUTPUT
+COUTTAG  = "test"! Output Tag Name for each experiment
+LOUTVEC  = .FALSE.                      ! TRUE FOR VECTORIAL OUTPUT, FALSE FOR NX,NY OUTPUT
 LOUTCDF  = .TRUE.                  ! * true for netcdf outptu false for binary
 NDLEVEL  = 1                           ! * NETCDF DEFLATION LEVEL 
 IFRQ_OUT = 1                 ! output data write frequency (hour)
@@ -111,6 +111,10 @@ IFRQ_OUT = 1                 ! output data write frequency (hour)
 CDAMFILE = "../CaMa/map/dam_params_glb_15min/"         ! dam paramter file
 LDAMOPT  = "V13"                                       ! LIS H22 H06 V13 
 LDAMTXT  = .TRUE.                                      ! true: dam inflow-outflw txt output
+LDAMH22  = .FALSE.                                     ! True to use Hanazaki 2022 dam scheme. (False for Yamazaki&Funato scheme)
+LDAMYBY  = .FALSE.                                     ! .TRUE. to use Year-By-Year dam activation scheme. .False. for All-reservoirs-in scheme
+LiVnorm  = .FALSE.                                     ! .TRUE. to use Noemal Volume as initial reservoir storage. False for zero-additional storage.
+
 /
 
  
