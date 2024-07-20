@@ -139,6 +139,9 @@ CONTAINS
         g0,         &! conductance-photosynthesis intercept for medlyn model
         gradm,      &! conductance-photosynthesis slope parameter
         binter,     &! conductance-photosynthesis intercept
+!Ozone WUE stomata model parameter
+        lambda,     &! Marginal water cost of carbon gain ((mol h2o) (mol co2)-1)
+!End WUE stomata model parameter
         extkn        ! coefficient of leaf nitrogen allocation
    real(r8), intent(in) :: & ! for plant hydraulic scheme
         kmax_sun,   &! Plant Hydraulics Paramters
@@ -248,10 +251,7 @@ CONTAINS
         assimsun,   &! sunlit leaf assimilation rate [umol co2 /m**2/ s] [+]
         etrsun,     &! transpiration rate of sunlit leaf [mm/s]
         assimsha,   &! shaded leaf assimilation rate [umol co2 /m**2/ s] [+]
-        etrsha,     &! transpiration rate of shaded leaf [mm/s]
-!Ozone WUE stomata model parameter
-        lambda       ! Marginal water cost of carbon gain ((mol h2o) (mol co2)-1)
-!End WUE stomata model parameter
+        etrsha       ! transpiration rate of shaded leaf [mm/s]
 
    real(r8), intent(out) :: &
         rst,        &! stomatal resistance

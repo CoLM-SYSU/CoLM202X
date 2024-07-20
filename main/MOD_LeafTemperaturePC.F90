@@ -42,9 +42,6 @@ CONTAINS
                o3coefv_sun ,o3coefv_sha ,o3coefg_sun ,o3coefg_sha,&
                lai_old     ,o3uptakesun ,o3uptakesha ,forc_ozone ,&
 !End ozone stress variables
-!WUE stomata model parameter
-               lambda      ,&
-!WUE stomata model parameter
                hpbl, &
                qintr_rain  ,qintr_snow  ,t_precip    ,hprl       ,&
                smp         ,hk          ,hksati      ,rootflux    )
@@ -194,9 +191,6 @@ CONTAINS
         o3coefg_sun,   &! Ozone stress factor for stomata on shaded leaf
         o3coefg_sha,   &! Ozone stress factor for stomata on shaded leaf
 !End ozone stress variables
-!WUE stomata model parameter
-        lambda,        &! Marginal water cost of carbon gain
-!WUE stomata model parameter
         rstfacsun,     &! factor of soil water stress to transpiration on sunlit leaf
         rstfacsha,     &! factor of soil water stress to transpiration on shaded leaf
         gssun,         &! stomata conductance of sunlit leaf
@@ -284,6 +278,7 @@ CONTAINS
         g0,            &! conductance-photosynthesis intercept for medlyn model
         gradm,         &! conductance-photosynthesis slope parameter
         binter,        &! conductance-photosynthesis intercept
+        lambda,        &! marginal water cost of carbon gain
         extkn           ! coefficient of leaf nitrogen allocation
 
    real(r8), dimension(ps:pe) :: &
@@ -536,6 +531,7 @@ CONTAINS
          g0         (i) = g0_p         (p)
          gradm      (i) = gradm_p      (p)
          binter     (i) = binter_p     (p)
+         lambda     (i) = lambda_p     (p)
          extkn      (i) = extkn_p      (p)
 
          kmax_sun   (i) = kmax_sun_p   (p)

@@ -819,7 +819,7 @@ IF (DEF_USE_PFT .or. patchclass(ipatch)==CROPLAND) THEN
                  lai_old_p(i), o3uptakesun_p(i) ,o3uptakesha_p(i) ,forc_ozone ,&
 !end ozone stress variables
 !Ozone WUE stomata model parameter
-                 lambda_p(i)    ,&! Marginal water cost of carbon gain ((mol h2o) (mol co2)-1)
+                 lambda_p(p)    ,&! Marginal water cost of carbon gain ((mol h2o) (mol co2)-1)
 !End WUE stomata model parameter
                  forc_hpbl                                                  ,&
                  qintr_rain_p(i),qintr_snow_p(i),t_precip,hprl_p(i),smp     ,&

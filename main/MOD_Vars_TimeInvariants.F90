@@ -431,11 +431,13 @@ CONTAINS
 #endif
 
       
-      CALL ncio_read_vector (file_restart, 'vic_b_infilt', landpatch, vic_b_infilt) 
-      CALL ncio_read_vector (file_restart, 'vic_Dsmax'   , landpatch, vic_Dsmax   )
-      CALL ncio_read_vector (file_restart, 'vic_Ds'      , landpatch, vic_Ds      )
-      CALL ncio_read_vector (file_restart, 'vic_Ws'      , landpatch, vic_Ws      )
-      CALL ncio_read_vector (file_restart, 'vic_c'       , landpatch, vic_c       )
+      IF(DEF_Runoff_SCHEME == 1)THEN
+         CALL ncio_read_vector (file_restart, 'vic_b_infilt', landpatch, vic_b_infilt) 
+         CALL ncio_read_vector (file_restart, 'vic_Dsmax'   , landpatch, vic_Dsmax   )
+         CALL ncio_read_vector (file_restart, 'vic_Ds'      , landpatch, vic_Ds      )
+         CALL ncio_read_vector (file_restart, 'vic_Ws'      , landpatch, vic_Ws      )
+         CALL ncio_read_vector (file_restart, 'vic_c'       , landpatch, vic_c       )
+      ENDIF
 
       CALL ncio_read_vector (file_restart, 'hksati ' ,     nl_soil, landpatch, hksati )    ! hydraulic conductivity at saturation [mm h2o/s]
       CALL ncio_read_vector (file_restart, 'csol   ' ,     nl_soil, landpatch, csol   )    ! heat capacity of soil solids [J/(m3 K)]
