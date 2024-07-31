@@ -205,8 +205,8 @@ CONTAINS
       albv(2,1) = albd(ps,2); albv(2,2) = albi(ps,2)
 
       ! ssun(band, dir/dif, pft), fabd/fadd(pft, band)
-      ssun_p(1,1,ps:pe) = fadd(:,1) + (fabd(:,1)-fadd(:,1))*fsun_id
-      ssun_p(2,1,ps:pe) = fadd(:,2) + (fabd(:,2)-fadd(:,2))*fsun_id
+      ssun_p(1,1,ps:pe) = (fabd(:,1)-fadd(:,1)) * fsun_id + fadd(:,1)
+      ssun_p(2,1,ps:pe) = (fabd(:,2)-fadd(:,2)) * fsun_id + fadd(:,2)
       ssha_p(1,1,ps:pe) = (fabd(:,1)-fadd(:,1)) * (1.-fsun_id)
       ssha_p(2,1,ps:pe) = (fabd(:,2)-fadd(:,2)) * (1.-fsun_id)
       ssun_p(1,2,ps:pe) = fabi(:,1) * fsun_ii
@@ -385,8 +385,12 @@ CONTAINS
    real(r8) :: ftdi_lay(nlay)            !unscattered layer transmission for indirect beam
    real(r8) :: ftdd_lay_orig(nlay)       !unscattered layer transmission for direct beam without lad/crown_shape calibration
    real(r8) :: ftdi_lay_orig(nlay)       !unscattered layer transmission for indirect beam without lad/crown_shape calibratioin
+   real(r8) :: psun_lay(nlay)            !percent sunlit vegetation cover for layers
    real(r8) :: fsun_id_lay(nlay)         !frac of dif rad abs. by sunlit leaves incident dir for layers
-   real(r8) :: fsun_ii_lay(nlay)         !frac of dif rad abs. by sunlit leaves incident dir for layers
+   real(r8) :: fsun_ii_lay(nlay)         !frac of dif rad abs. by sunlit leaves incident dif for layers
+   real(r8) :: fsun_dd_lay(nlay)         !frac of dif rad abs. by sunlit leaves incident downward dir for layers
+   real(r8) :: fsun_dw_lay(nlay)         !frac of dif rad abs. by sunlit leaves incident downward dif for layers
+   real(r8) :: fsun_up_lay(nlay)         !frac of dif rad abs. by sunlit leaves incident upward dif for layers
    real(r8) :: ftid_lay(nlay)            !diffused layer transmission for direct beam
    real(r8) :: ftii_lay(nlay)            !diffused layer transmission for diffuse beam
    real(r8) :: ftran                     !pft transmittance
@@ -578,7 +582,12 @@ CONTAINS
 
 !=============================================================
 ! absorption fraction in sunlit leaves in diffuse radiation format
+! PART I
 !=============================================================
+
+      fsun_dd_lay(:) = D0
+      fsun_dw_lay(:) = D0
+      fsun_up_lay(:) = D0
 
       DO lev = 1, 3
          IF ( fc0(lev)>D0 .and. lsai_lay(lev)>D0 ) THEN
@@ -592,8 +601,9 @@ CONTAINS
             fsun_a = 0.5*(fsun_f + fsun_b)
             fsun_d = 0.5*(fsun_f - fsun_b)
 
-            fsun_id_lay(lev) = fsun_f
-            fsun_ii_lay(lev) = fsun_a + 0.5*cosz_lay(lev)*fsun_d
+            fsun_dd_lay(lev) = fsun_f
+            fsun_dw_lay(lev) = fsun_a + 0.5*cosz_lay(lev)*fsun_d
+            fsun_up_lay(lev) = fsun_a - 0.5*cosz_lay(lev)*fsun_d
          ENDIF
       ENDDO
 
@@ -653,8 +663,8 @@ CONTAINS
       IF (shadow_d(3) > 0) THEN
          tt(3,2) = shadow_d(2)*(shadow_d(3)-shad_oa(3,2))
          tt(3,2) = min(shadow_d(3), max(D0, tt(3,2)))
-         tt(3,1) = shadow_d(1)*(shadow_d(3)-shad_oa(3,1)- &
-            (shadow_d(3)-shad_oa(3,2))*(shadow_d(2)-shad_oa(2,1)))
+         tt(3,1) = shadow_d(1)*(shadow_d(3)-shad_oa(3,1) &
+                 - (shadow_d(3)-shad_oa(3,2))*(shadow_d(2)-shad_oa(2,1)))
          tt(3,1) = min(shadow_d(3)-tt(3,2), max(D0, tt(3,1)))
          tt(3,0) = shadow_d(3)-tt(3,2)-tt(3,1)
 
@@ -674,7 +684,7 @@ CONTAINS
       ENDIF
 
       ! direct sunlight passing through third canopy layer
-      IF (shadow_d(1) > 0)  THEN
+      IF (shadow_d(1) > 0) THEN
          tt(1,0) = ftdd_lay(1)*(tt(4,1) + tt(3,1) + tt(2,1))!*shadow_d(1)/shadow_d(1)
       ENDIF
 
@@ -826,17 +836,23 @@ CONTAINS
          ! Albedo
          fabs_leq(4,:) = X(1,:)
 
-         ! Three layers' absorption
-         fabs_leq(3,1) = tt(4,3)*faid_lay(3) + X(3,1)*shadow_i(3)*faii_lay(3)
-         fabs_leq(3,2) = shadow_i(3)*faii_lay(3) + X(3,2)*shadow_i(3)*faii_lay(3)
-         fabs_leq(2,1) = tt(3,2)*faid_lay(2) + (X(2,1) + X(5,1))*shadow_i(2)*faii_lay(2)
-         fabs_leq(2,2) = (X(2,2) + X(5,2)) * shadow_i(2) * faii_lay(2)
+         ! Three layers' absorption for incident direct radiation
+         fabs_leq(3,1) = tt(4,3)*faid_lay(3) + X(3,1)                                           *shadow_i(3)*faii_lay(3)
+         fabs_leq(2,1) = tt(3,2)*faid_lay(2) + (X(2,1) + X(5,1))                                *shadow_i(2)*faii_lay(2)
          fabs_leq(1,1) = tt(2,1)*faid_lay(1) + (X(4,1) + X(6,1)*albgri(ib) + tt(1,0)*albgrd(ib))*shadow_i(1)*faii_lay(1)
-         fabs_leq(1,2) = (X(4,2) + X(6,2)*albgri(ib)) * shadow_i(1) * faii_lay(1)
 
          ! Ground absorption
-         fabs_leq(0,1) = X(6,1) * (1.0 - albgri(ib)) + tt(1,0) * (1.0 - albgrd(ib))
+         fabs_leq(0,1) = tt(1,0)*(1.0 - albgrd(ib)) + X(6,1)*(1.0 - albgri(ib))
+
+
+         ! Three layers' absorption for incident diffuse radiation
+         fabs_leq(3,2) = (1.     + X(3,2))            *shadow_i(3)*faii_lay(3)
+         fabs_leq(2,2) = (X(2,2) + X(5,2))            *shadow_i(2)*faii_lay(2)
+         fabs_leq(1,2) = (X(4,2) + X(6,2)*albgri(ib)) *shadow_i(1)*faii_lay(1)
+
+         ! Ground absorption
          fabs_leq(0,2) = X(6,2) * (1.0 - albgri(ib))
+
 
          ! IF everything is ok, substitute fabs_lay for fabs_leq
          ! and delete the following line and the variables defined
@@ -846,10 +862,55 @@ CONTAINS
          ! set column absorption and reflection
          fabd_lay(1:3,ib) = fabs_lay(1:3,1)
          fabi_lay(1:3,ib) = fabs_lay(1:3,2)
-         fabd_col(ib) = fabs_lay(1,1)+fabs_lay(2,1)+fabs_lay(3,1)
-         fabi_col(ib) = fabs_lay(1,2)+fabs_lay(2,2)+fabs_lay(3,2)
+         fabd_col(ib) = fabs_lay(1,1) + fabs_lay(2,1) + fabs_lay(3,1)
+         fabi_col(ib) = fabs_lay(1,2) + fabs_lay(2,2) + fabs_lay(3,2)
          albd_col(ib) = fabs_lay(4,1)
          albi_col(ib) = fabs_lay(4,2)
+
+         ! calculation for sunlit fraction and sunlit absorptioin for each layer
+         IF (ib == 1) THEN !visible band only
+
+            psun_lay(:)    = D0
+            fsun_id_lay(:) = D0
+            fsun_ii_lay(:) = D0
+
+            ! - layer 3 -
+            IF ( fc0(3)>D0 .and. lsai_lay(3)>D0 ) THEN
+               ! sunlit fraction for layers
+               psun_lay(3) = tt(4,3)/shadow_d(3)
+               ! absorption fraction in sunlit leaves in diffuse radiation format
+               ! PART II
+               fsun_id_lay(3) = (psun_lay(3)*fsun_dd_lay(3) + X(3,1)*fsun_up_lay(3)) &
+                              / (psun_lay(3) + X(3,1))
+               fsun_ii_lay(3) = (1.*fsun_dw_lay(3) + X(3,2)*fsun_up_lay(3)) &
+                              / (1. + X(3,2))
+            ENDIF
+
+            ! - layer 2 -
+            IF ( fc0(2)>D0 .and. lsai_lay(2)>D0 ) THEN
+               ! sunlit fraction for layers
+               psun_lay(2) = tt(3,2)/shadow_d(2)
+               ! absorption fraction in sunlit leaves in diffuse radiation format
+               ! PART II
+               fsun_id_lay(2) = (psun_lay(2)*fsun_dd_lay(2) + X(2,1)*fsun_dw_lay(2) + X(5,1)*fsun_up_lay(2)) &
+                              / (psun_lay(2) + X(2,1) + X(5,1))
+               fsun_ii_lay(2) = (X(2,2)*fsun_dw_lay(2) + X(5,2)*fsun_up_lay(2)) &
+                              / (X(2,2) + X(5,2))
+            ENDIF
+
+            ! - layer 1 -
+            IF ( fc0(1)>D0 .and. lsai_lay(1)>D0 ) THEN
+               ! sunlit fraction for layers
+               psun_lay(1) = tt(2,1)/shadow_d(1)
+               ! absorption fraction in sunlit leaves in diffuse radiation format
+               ! PART II
+               fsun_id_lay(1) = (psun_lay(1)*fsun_dd_lay(1) + X(4,1)*fsun_dw_lay(1) &
+                              + (X(6,1)*albgri(ib) + tt(1,0)*albgrd(ib))*fsun_up_lay(1)) &
+                              / (psun_lay(1) + X(4,1) + X(6,1)*albgri(ib) + tt(1,0)*albgrd(ib))
+               fsun_ii_lay(1) = (X(4,2)*fsun_dw_lay(1) + X(6,2)*albgri(ib)*fsun_up_lay(1)) &
+                              / (X(4,2) + X(6,2)*albgri(ib))
+            ENDIF
+         ENDIF
 
          ! balance check
          IF (abs(fabd_col(ib)+albd_col(ib)+fabs_lay(0,1)-1) > 1e-6) THEN
@@ -950,7 +1011,7 @@ CONTAINS
 
                fadd(ip,ib) = min(fabd(ip,ib), fadd(ip,ib))
 
-               psun(ip)    = tt(clev+1,clev)/shadow_d(clev)
+               psun(ip)    = psun_lay(clev)
                fsun_id(ip) = fsun_id_lay(clev)
                fsun_ii(ip) = fsun_ii_lay(clev)
 

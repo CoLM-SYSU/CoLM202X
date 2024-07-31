@@ -182,9 +182,9 @@ CONTAINS
       czen,            &! cosine of solar zenith angle > 0 [-]
       czf,             &! solar zenith correction for new snow albedo [-]
       dfalbl,          &! snow albedo for diffuse nir radiation [-]
-      dfalbs,          &! snow albedo for diffuse visible solar radiation [-]
-      dralbl,          &! snow albedo for visible radiation [-]
-      dralbs,          &! snow albedo for near infrared radiation [-]
+      dfalbs,          &! snow albedo for diffuse vis radiation [-]
+      dralbl,          &! snow albedo for direct nir radiation [-]
+      dralbs,          &! snow albedo for direct vis radiation [-]
       lsai,            &! leaf and stem area index (LAI+SAI) [m2/m2]
       sl,              &! factor that helps control alb zenith dependence [-]
       snal0,           &! alb for visible,incident on new snow (zen ang<60) [-]
@@ -578,7 +578,7 @@ ENDIF
       phi2 = 0.877 * ( 1. - 2. * phi1 )
 
       proj = phi1 + phi2 * coszen
-      extkb = (phi1 + phi2 * coszen) / coszen
+      extkb = proj / coszen
 
       extkd = 0.719
 
@@ -960,7 +960,7 @@ ENDIF
       ENDIF
 
       proj = phi1 + phi2 * cosz
-      extkb = (phi1 + phi2 * cosz) / cosz
+      extkb = proj / cosz
 
 !-----------------------------------------------------------------------
 !     calculate average scattering coefficient, leaf projection and
