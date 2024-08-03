@@ -298,7 +298,7 @@ MODULE MOD_Namelist
    !Medlyn stomata model
    logical            :: DEF_USE_MEDLYNST = .false.
    !WUE stomata model
-   logical            :: DEF_USE_WUEST    = .false.
+   logical            :: DEF_USE_WUEST    = .true.
    !Semi-Analytic-Spin-Up
    logical            :: DEF_USE_SASU = .false.
    !Punctuated nitrogen addition Spin up
