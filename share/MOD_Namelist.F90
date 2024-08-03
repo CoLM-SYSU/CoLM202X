@@ -258,7 +258,7 @@ MODULE MOD_Namelist
    ! 2: scheme from XinAnJiang model, also used in ECMWF model
    ! 3: scheme from Simple VIC, also used in NoahMP 5.0
 
-   integer :: DEF_Runoff_SCHEME = 0
+   integer :: DEF_Runoff_SCHEME = 3
    character(len=256) :: DEF_file_VIC_para = 'null'
 
    ! Treat exposed soil and snow surface separatly, including
