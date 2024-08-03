@@ -206,7 +206,7 @@ CONTAINS
       ITERATION_LOOP: DO ic = 1, iterationtotal
 
          !IF(.not. DEF_USE_WUEST .or. epar .lt. 1.e-12)THEN
-         IF(.not. DEF_USE_WUEST)THEN
+         IF(.not. DEF_USE_WUEST .or. abs(c4 - 1) .lt. 0.001)THEN
             CALL sortin(eyy, pco2y, range, gammas, ic, iterationtotal)
             pco2i   = pco2y(ic)
             pco2i_c = pco2i
@@ -234,7 +234,7 @@ CONTAINS
          omc = vm   * ( pco2i_c-gammas ) / ( pco2i_c + rrkk ) * c3 + vm * c4
          ome = epar * ( pco2i_e-gammas ) / ( pco2i_e+2.*gammas ) * c3 + epar * c4
          !IF(.not. DEF_USE_WUEST .or. epar .lt. 1.e-12)THEN
-         IF(.not. DEF_USE_WUEST)THEN
+         IF(.not. DEF_USE_WUEST .or. abs(c4 - 1) .lt. 0.001)THEN
             oms = omss * c3 + omss*pco2i * c4
 
             sqrtin= max( 0., ( (ome+omc)**2 - 4.*atheta*ome*omc ) )
