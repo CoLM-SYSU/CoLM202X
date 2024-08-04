@@ -128,7 +128,7 @@ CONTAINS
       SUBROUTINE STORAGE_SEA_SURFACE
       ! set initial storage, assuming water surface not lower than downstream sea surface elevation
       USE YOS_CMF_MAP,  only: NSEQRIV,  NSEQALL,  I1NEXT
-      USE YOS_CMF_MAP,  only: D2DWNELV, D2RIVELV,D2RIVHGT,D2RIVWTH,D2RIVLEN
+      USE YOS_CMF_MAP,  ONLY: D2DWNELV, D2RIVELV,D2RIVHGT,D2RIVWTH,D2RIVLEN,P2RIVSTOMAX
       IMPLICIT NONE
       ! local variables
       integer(KIND=JPIM)   :: ISEQ, JSEQ
@@ -145,6 +145,7 @@ CONTAINS
             DDPH=MAX( DSEAELV-D2RIVELV(ISEQ,1),0._JPRB )
             DDPH=MIN( DDPH,D2RIVHGT(ISEQ,1) )
             P2RIVSTO(ISEQ,1)=DDPH*D2RIVLEN(ISEQ,1)*D2RIVWTH(ISEQ,1)
+            P2RIVSTO(ISEQ,1)=MIN( P2RIVSTO(ISEQ,1),P2RIVSTOMAX(ISEQ,1) )
             D2RIVDPH_PRE(ISEQ,1)=DDPH
          ENDDO
 !$OMP END PARALLEL DO
@@ -159,6 +160,7 @@ CONTAINS
             DDPH=MIN( DDPH,D2RIVHGT(ISEQ,1) )
 
             P2RIVSTO(ISEQ,1)=DDPH*D2RIVLEN(ISEQ,1)*D2RIVWTH(ISEQ,1)
+            P2RIVSTO(ISEQ,1)=MIN(  P2RIVSTO(ISEQ,1),P2RIVSTOMAX(ISEQ,1) )
             D2RIVDPH_PRE(ISEQ,1)=DDPH
          ENDDO
 
@@ -193,21 +195,18 @@ CONTAINS
    SUBROUTINE CMF_DIAG_INIT
 
    USE YOS_CMF_MAP,        only: NSEQMAX,NPTHOUT,NPTHLEV
-   USE YOS_CMF_PROG,       only: D2DAMMY
-   USE YOS_CMF_DIAG,       only: N2DIAG, D2DIAG, &
-                              &   D2RIVINF, D2RIVDPH, D2RIVVEL, D2FLDINF, D2FLDDPH, D2FLDFRC, D2FLDARE, &
-                              &   D2PTHOUT, D2PTHINF, D2SFCELV, D2OUTFLW, D2STORGE, D2OUTINS, D2LEVDPH, &
-                              &   D2WEVAPEX,D2WINFILTEX
-   USE YOS_CMF_DIAG,       only: N2DIAG_AVG, D2DIAG_AVG, NADD, &
-                              &   D2RIVOUT_AVG, D2FLDOUT_AVG, D2OUTFLW_AVG, D2RIVVEL_AVG, D2PTHOUT_AVG, &
-                              &   D2GDWRTN_AVG, D2RUNOFF_AVG, D2ROFSUB_AVG, D1PTHFLW_AVG, D2WEVAPEX_AVG,&
+
+USE YOS_CMF_DIAG,       ONLY: D2RIVINF, D2RIVDPH, D2RIVVEL, D2FLDINF, D2FLDDPH, D2FLDFRC, D2FLDARE, &
+                            & D2PTHOUT, D2PTHINF, D2SFCELV, D2OUTFLW, D2STORGE, D2OUTINS, D2LEVDPH, &
+                            & D2WEVAPEX,D2WINFILTEX
+
+USE YOS_CMF_DIAG,       ONLY: D2RIVOUT_AVG, D2FLDOUT_AVG, D2OUTFLW_AVG, D2RIVVEL_AVG, D2PTHOUT_AVG, &
+                            & D2GDWRTN_AVG, D2RUNOFF_AVG, D2ROFSUB_AVG, D1PTHFLW_AVG, D2WEVAPEX_AVG,&
                                  D2WINFILTEX_AVG, &
-                              &   D2DAMINF_AVG
-   USE YOS_CMF_DIAG,       only: N2DIAG_MAX, D2DIAG_MAX, &
-                              &   D2STORGE_MAX, D2OUTFLW_MAX, D2RIVDPH_MAX
+                              &   D2DAMINF_AVG,NADD
+
+USE YOS_CMF_DIAG,       ONLY: D2STORGE_MAX, D2OUTFLW_MAX, D2RIVDPH_MAX
    IMPLICIT NONE
-   !*** LOCAL
-   integer(KIND=JPIM),SAVE         :: IND
    !================================================
       write(LOGNAM,*) ""
       write(LOGNAM,*) "!---------------------!"
@@ -215,91 +214,81 @@ CONTAINS
       write(LOGNAM,*) "CMF::DIAG_INIT: initialize diagnostic variables"
 
       !*** 1. snapshot 2D diagnostics
-      N2DIAG=12
-      IF ( LLEVEE  ) N2DIAG=N2DIAG+1 !! levee variables are added     (P2LEVSTO )
-      ! add water re-infiltration calculation 
-      IF ( LWEVAP  ) N2DIAG=N2DIAG+1 !! evapolation added             (D2WEVAPEX) 
-      IF ( LWINFILT  ) N2DIAG=N2DIAG+1 !! Infiltration added            (D2WEVAPEX) 
-      IF ( LOUTINS ) N2DIAG=N2DIAG+1 !! instantaneous discharge added (D2OUTINS )
+ALLOCATE(D2RIVINF(NSEQMAX,1))
+ALLOCATE(D2RIVDPH(NSEQMAX,1))
+ALLOCATE(D2RIVVEL(NSEQMAX,1))
+ALLOCATE(D2FLDINF(NSEQMAX,1))
+ALLOCATE(D2FLDDPH(NSEQMAX,1))
+ALLOCATE(D2FLDFRC(NSEQMAX,1))
+ALLOCATE(D2FLDARE(NSEQMAX,1))
+ALLOCATE(D2PTHOUT(NSEQMAX,1))
+ALLOCATE(D2PTHINF(NSEQMAX,1))
+ALLOCATE(D2SFCELV(NSEQMAX,1))
+ALLOCATE(D2OUTFLW(NSEQMAX,1))
+ALLOCATE(D2STORGE(NSEQMAX,1))
+D2RIVINF(:,:)=0._JPRB
+D2RIVDPH(:,:)=0._JPRB
+D2RIVVEL(:,:)=0._JPRB
+D2FLDINF(:,:)=0._JPRB
+D2FLDDPH(:,:)=0._JPRB
+D2FLDFRC(:,:)=0._JPRB
+D2FLDARE(:,:)=0._JPRB
+D2PTHOUT(:,:)=0._JPRB
+D2PTHINF(:,:)=0._JPRB
+D2SFCELV(:,:)=0._JPRB
+D2OUTFLW(:,:)=0._JPRB
+D2STORGE(:,:)=0._JPRB
 
-      allocate(D2DIAG(NSEQMAX,1,N2DIAG))
-      D2DIAG(:,:,:) = 0._JPRB
-      D2RIVINF => D2DIAG(:,:,1)
-      D2RIVDPH => D2DIAG(:,:,2)
-      D2RIVVEL => D2DIAG(:,:,3)
-      D2FLDINF => D2DIAG(:,:,4)
-      D2FLDDPH => D2DIAG(:,:,5)
-      D2FLDFRC => D2DIAG(:,:,6)
-      D2FLDARE => D2DIAG(:,:,7)
-      D2PTHOUT => D2DIAG(:,:,8)
-      D2PTHINF => D2DIAG(:,:,9)
-      D2SFCELV => D2DIAG(:,:,10)
-      D2OUTFLW => D2DIAG(:,:,11)
-      D2STORGE => D2DIAG(:,:,12)
-
-      IND=12
-      IF ( LLEVEE  )THEN
-         IND=IND+1
-         D2LEVDPH => D2DIAG(:,:,IND)
-      ELSE
-         D2LEVDPH => D2DAMMY(:,:)
-      ENDIF
+IF ( LLEVEE  )THEN
+  ALLOCATE(D2LEVDPH(NSEQMAX,1))
+  D2LEVDPH(:,:)=0._JPRB
+ENDIF
       IF ( LWEVAP  )THEN
-         IND=IND+1
-         D2WEVAPEX => D2DIAG(:,:,IND)
-      ELSE
-         D2WEVAPEX => D2DAMMY(:,:)
+  ALLOCATE(D2WEVAPEX(NSEQMAX,1))
+  D2WEVAPEX(:,:)=0._JPRB
       ENDIF
       IF ( LWINFILT  )THEN
-         IND=IND+1
-         D2WINFILTEX => D2DIAG(:,:,IND)
-      ELSE
-         D2WINFILTEX => D2DAMMY(:,:)
+  ALLOCATE(D2WINFILTEX(NSEQMAX,1))
+  D2WINFILTEX(:,:)=0._JPRB
       ENDIF
-      IF ( LOUTINS  )THEN
-         IND=IND+1
-         D2OUTINS => D2DIAG(:,:,IND)
-      ELSE
-         D2OUTINS => D2DAMMY(:,:)
+IF ( LOUTINS  )THEN
+  ALLOCATE(D2OUTINS (NSEQMAX,1))
+  D2OUTINS (:,:)=0._JPRB
       ENDIF
 
       !============================
       !*** 2a. time-average 2D diagnostics
-      N2DIAG_AVG=8
-      IF ( LDAMOUT ) N2DIAG_AVG=N2DIAG_AVG+1    !!! D2DAMINF_AVG is added
 
-      allocate(D2DIAG_AVG(NSEQMAX,1,N2DIAG_AVG))
-      D2DIAG_AVG(:,:,:) = 0._JPRB 
-      D2RIVOUT_AVG => D2DIAG_AVG(:,:,1)
-      D2FLDOUT_AVG => D2DIAG_AVG(:,:,2)
-      D2OUTFLW_AVG => D2DIAG_AVG(:,:,3)
-      D2RIVVEL_AVG => D2DIAG_AVG(:,:,4)
-      D2PTHOUT_AVG => D2DIAG_AVG(:,:,5)
+ALLOCATE(D2RIVOUT_AVG(NSEQMAX,1))
+ALLOCATE(D2FLDOUT_AVG(NSEQMAX,1))
+ALLOCATE(D2OUTFLW_AVG(NSEQMAX,1))
+ALLOCATE(D2RIVVEL_AVG(NSEQMAX,1))
+ALLOCATE(D2PTHOUT_AVG(NSEQMAX,1))
+ALLOCATE(D2GDWRTN_AVG(NSEQMAX,1))
+ALLOCATE(D2RUNOFF_AVG(NSEQMAX,1))
+ALLOCATE(D2ROFSUB_AVG(NSEQMAX,1))
+D2RIVOUT_AVG(:,:)=0._JPRB
+D2FLDOUT_AVG(:,:)=0._JPRB
+D2OUTFLW_AVG(:,:)=0._JPRB
+D2RIVVEL_AVG(:,:)=0._JPRB
+D2PTHOUT_AVG(:,:)=0._JPRB
+D2GDWRTN_AVG(:,:)=0._JPRB
+D2RUNOFF_AVG(:,:)=0._JPRB
+D2ROFSUB_AVG(:,:)=0._JPRB
 
-      D2GDWRTN_AVG => D2DIAG_AVG(:,:,6)
-      D2RUNOFF_AVG => D2DIAG_AVG(:,:,7)
-      D2ROFSUB_AVG => D2DIAG_AVG(:,:,8)
-
-      IND=8
       IF ( LDAMOUT ) THEN
-         IND=IND+1
-         D2DAMINF_AVG => D2DIAG_AVG(:,:,IND)
-      ELSE
-         D2DAMINF_AVG => D2DAMMY(:,:)
+  ALLOCATE(D2DAMINF_AVG(NSEQMAX,1))
+
+  D2DAMINF_AVG(:,:)=0._JPRB
       ENDIF
       IF ( LWEVAP ) THEN
-         IND=IND+1
-         D2WEVAPEX_AVG => D2DIAG_AVG(:,:,IND)
-      ELSE
-         D2WEVAPEX_AVG => D2DAMMY(:,:)
+         ALLOCATE(D2WEVAPEX_AVG(NSEQMAX,1))
+         D2WEVAPEX_AVG(:,:)=0._JPRB
       ENDIF
-
       !  add water re-infiltration calculation 
       IF ( LWINFILT ) THEN
-         IND=IND+1
-         D2WINFILTEX_AVG => D2DIAG_AVG(:,:,IND)
-      ELSE
-         D2WINFILTEX_AVG => D2DAMMY(:,:)
+         ALLOCATE(D2WINFILTEX_AVG(NSEQMAX,1))
+  	 D2WINFILTEX_AVG(:,:)=0._JPRB
       ENDIF
       NADD=0
 
@@ -309,13 +298,13 @@ CONTAINS
 
       !============================
       !*** 3. Maximum 2D Diagnostics 
-      N2DIAG_MAX=3
 
-      allocate(D2DIAG_MAX(NSEQMAX,1,N2DIAG_MAX))
-      D2DIAG_MAX(:,:,:) = 0._JPRB 
-      D2STORGE_MAX => D2DIAG_MAX(:,:,1)
-      D2OUTFLW_MAX => D2DIAG_MAX(:,:,2)
-      D2RIVDPH_MAX => D2DIAG_MAX(:,:,3)
+ALLOCATE(D2STORGE_MAX(NSEQMAX,1))
+ALLOCATE(D2OUTFLW_MAX(NSEQMAX,1))
+ALLOCATE(D2RIVDPH_MAX(NSEQMAX,1))
+D2STORGE_MAX(:,:)=0._JPRB
+D2OUTFLW_MAX(:,:)=0._JPRB
+D2RIVDPH_MAX(:,:)=0._JPRB
 
       write(LOGNAM,*) "CMF::DIAG_INIT: end"
 

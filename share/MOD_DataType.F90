@@ -136,6 +136,7 @@ MODULE MOD_DataType
    PUBLIC :: block_data_linear_transform
    PUBLIC :: block_data_copy
    PUBLIC :: block_data_linear_interp
+   PUBLIC :: block_data_division
 
 CONTAINS
 
@@ -655,5 +656,54 @@ CONTAINS
 
    END SUBROUTINE block_data_linear_interp
 
+   !-----------------
+   SUBROUTINE block_data_division (gdata, sumdata, spv)
+
+   USE MOD_Precision
+   USE MOD_Block
+   USE MOD_SPMD_Task
+   USE MOD_Vars_Global, only : spval
+   IMPLICIT NONE
+
+   type(block_data_real8_2d), intent(inout) :: gdata
+   type(block_data_real8_2d), intent(inout) :: sumdata
+   real(r8), intent(in), optional :: spv
+
+   ! Local variables
+   integer :: iblkme, iblk, jblk
+
+      IF (p_is_io) THEN
+
+         IF (.not. present(spv)) THEN
+
+            DO iblkme = 1, gblock%nblkme 
+               iblk = gblock%xblkme(iblkme)
+               jblk = gblock%yblkme(iblkme)
+               WHERE (sumdata%blk(iblk,jblk)%val > 0.)
+                  gdata%blk(iblk,jblk)%val = &
+                     gdata%blk(iblk,jblk)%val / sumdata%blk(iblk,jblk)%val
+               ELSEWHERE
+                  gdata%blk(iblk,jblk)%val = spval
+               ENDWHERE 
+            ENDDO
+
+         ELSE
+
+            DO iblkme = 1, gblock%nblkme 
+               iblk = gblock%xblkme(iblkme)
+               jblk = gblock%yblkme(iblkme)
+               WHERE ((sumdata%blk(iblk,jblk)%val > 0.) .and. (gdata%blk(iblk,jblk)%val /= spv))
+                  gdata%blk(iblk,jblk)%val = &
+                     gdata%blk(iblk,jblk)%val / sumdata%blk(iblk,jblk)%val
+               ELSEWHERE
+                  gdata%blk(iblk,jblk)%val = spv
+               ENDWHERE 
+            ENDDO
+
+         ENDIF
+
+      ENDIF
+
+   END SUBROUTINE block_data_division
       
 END MODULE MOD_DataType

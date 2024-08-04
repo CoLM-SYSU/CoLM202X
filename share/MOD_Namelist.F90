@@ -69,6 +69,7 @@ MODULE MOD_Namelist
    logical  :: USE_SITE_dbedrock         = .true.
    logical  :: USE_SITE_topography       = .true.
    logical  :: USE_SITE_topostd          = .true.
+   logical  :: USE_SITE_BVIC             = .true.   
    logical  :: USE_SITE_HistWriteBack    = .true.
    logical  :: USE_SITE_ForcingReadAhead = .true.
    logical  :: USE_SITE_urban_paras      = .true.
@@ -255,6 +256,8 @@ MODULE MOD_Namelist
    ! 0: scheme from SIMTOP model, also used in CoLM2014
    ! 1: scheme from VIC model
    ! 2: scheme from XinAnJiang model, also used in ECMWF model
+   ! 3: scheme from Simple VIC, also used in NoahMP 5.0
+
    integer :: DEF_Runoff_SCHEME = 0
    character(len=256) :: DEF_file_VIC_para = 'null'
 
@@ -287,10 +290,6 @@ MODULE MOD_Namelist
    character(len=5)   :: DEF_precip_phase_discrimination_scheme = 'II'
    character(len=256) :: DEF_SSP='585' ! Co2 path for CMIP6 future scenario.
    
-   logical          :: DEF_USE_Forcing_Downscaling = .false.
-   character(len=5) :: DEF_DS_precipitation_adjust_scheme = 'II'
-   character(len=5) :: DEF_DS_longwave_adjust_scheme      = 'II'
-
    ! use irrigation
    logical :: DEF_USE_IRRIGATION = .false.
    
@@ -377,7 +376,13 @@ MODULE MOD_Namelist
    type (nl_forcing_type) :: DEF_forcing
 
    !CBL height
-   logical            :: DEF_USE_CBL_HEIGHT = .false.
+   logical           :: DEF_USE_CBL_HEIGHT = .false.
+
+   character(len=20) :: DEF_Forcing_Interp_Method = 'arealweight' ! 'arealweight' (default) or 'bilinear'
+   
+   logical           :: DEF_USE_Forcing_Downscaling        = .false.
+   character(len=5)  :: DEF_DS_precipitation_adjust_scheme = 'II'
+   character(len=5)  :: DEF_DS_longwave_adjust_scheme      = 'II'
 
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ! ----- Part 13: history and restart -----
@@ -782,6 +787,7 @@ CONTAINS
       USE_SITE_dbedrock,        &
       USE_SITE_topography,      &
       USE_SITE_topostd   ,      &
+      USE_SITE_BVIC      ,      &
       USE_SITE_HistWriteBack,   &
       USE_SITE_ForcingReadAhead,&
       USE_SITE_urban_paras,     &
@@ -885,6 +891,8 @@ CONTAINS
       DEF_DA_obsdir,                   &
 
       DEF_forcing_namelist,            &
+
+      DEF_Forcing_Interp_Method,          &
 
       DEF_USE_Forcing_Downscaling,        &
       DEF_DS_precipitation_adjust_scheme, &
@@ -1330,6 +1338,7 @@ CONTAINS
       CALL mpi_bcast (DEF_REST_CompressLevel, 1, mpi_integer,   p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_HIST_CompressLevel, 1, mpi_integer,   p_root, p_comm_glb, p_err)
 
+      CALL mpi_bcast (DEF_Forcing_Interp_Method,         20, mpi_character, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_USE_Forcing_Downscaling,        1, mpi_logical,   p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_DS_precipitation_adjust_scheme, 5, mpi_character, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_DS_longwave_adjust_scheme,      5, mpi_character, p_root, p_comm_glb, p_err)

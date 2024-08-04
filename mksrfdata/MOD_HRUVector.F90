@@ -58,11 +58,7 @@ CONTAINS
       
          CALL basin_hru%build (landelm, landhru,   use_frac = .true.)
 
-#if (defined CROP) 
-         CALL hru_patch%build (landhru, landpatch, use_frac = .true., sharedfrac = pctshrpch)
-#else
          CALL hru_patch%build (landhru, landpatch, use_frac = .true.)
-#endif
 
          IF (numelm > 0) THEN
             allocate (nhru_bsn (numelm))

@@ -107,7 +107,7 @@ CONTAINS
       USE MOD_Block
       USE MOD_DataType
       USE MOD_LandPatch
-      USE MOD_Mapping_Pset2Grid
+      USE MOD_SpatialMapping
       USE MOD_Vars_TimeInvariants, only: patchtype, patchclass, patchmask
 #ifdef URBAN_MODEL
       USE MOD_LandUrban
@@ -119,7 +119,7 @@ CONTAINS
 #if(defined CaMa_Flood)
       USE MOD_CaMa_Vars !defination of CaMa variables
 #endif
-      USE MOD_Forcing, only: forcmask
+      USE MOD_Forcing, only: forcmask_pch
 #ifdef DataAssimilation
       USE MOD_DA_GRACE, only : fslp_k_mon
 #endif
@@ -132,15 +132,15 @@ CONTAINS
       type(timestamp), intent(in) :: etstamp
       type(timestamp), intent(in) :: ptstamp
 
-      character(LEN=*), intent(in) :: dir_hist
-      character(LEN=*), intent(in) :: site
+      character(len=*), intent(in) :: dir_hist
+      character(len=*), intent(in) :: site
 
       ! Local variables
       logical :: lwrite
-      character(LEN=256) :: file_hist
+      character(len=256) :: file_hist
       integer :: itime_in_file
 #if(defined CaMa_Flood)
-      character(LEN=256) :: file_hist_cama
+      character(len=256) :: file_hist_cama
       integer :: itime_in_file_cama
 #endif
       integer :: month, day
@@ -149,13 +149,11 @@ CONTAINS
 
       type(block_data_real8_2d) :: sumarea
       type(block_data_real8_2d) :: sumarea_urb
-      real(r8), allocatable ::  VecOnes(:)
       real(r8), allocatable ::  vecacc (:)
       logical,  allocatable ::  filter (:)
 
       integer i, u
 #ifdef URBAN_MODEL
-      real(r8), allocatable ::  VecOnes_urb(:)
       logical,  allocatable ::  filter_urb (:)
 #endif
 
@@ -227,16 +225,12 @@ CONTAINS
 
          IF (p_is_worker) THEN
             IF (numpatch > 0) THEN
-               allocate (filter  (numpatch))
-               allocate (VecOnes (numpatch))
-               allocate (vecacc  (numpatch))
-               VecOnes(:) = 1.0_r8
+               allocate (filter (numpatch))
+               allocate (vecacc (numpatch))
             ENDIF
 #ifdef URBAN_MODEL
             IF (numurban > 0) THEN
-               allocate (filter_urb  (numurban))
-               allocate (VecOnes_urb (numurban))
-               VecOnes_urb(:) = 1.0_r8
+               allocate (filter_urb (numurban))
             ENDIF
 #endif
          ENDIF
@@ -259,7 +253,7 @@ CONTAINS
                filter(:) = patchtype < 99
 
                IF (DEF_forcing%has_missing_value) THEN
-                  filter = filter .and. forcmask
+                  filter = filter .and. forcmask_pch
                ENDIF
 
                filter = filter .and. patchmask
@@ -267,13 +261,15 @@ CONTAINS
          ENDIF
 
          IF (HistForm == 'Gridded') THEN
-            CALL mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
+            CALL mp2g_hist%get_sumarea (sumarea, filter)
          ENDIF
 
          IF (HistForm == 'Gridded') THEN
             IF (itime_in_file == 1) THEN
                CALL hist_write_var_real8_2d (file_hist, 'landarea', ghist, 1, sumarea, &
                   compress = 1, longname = 'land area', units = 'km2')
+               CALL hist_write_var_real8_2d (file_hist, 'landfraction', ghist, 1, landfraction, &
+                  compress = 1, longname = 'land fraction', units = '-')
             ENDIF
          ENDIF
 
@@ -348,7 +344,7 @@ CONTAINS
                filter(:) = patchtype < 99
 
                IF (DEF_forcing%has_missing_value) THEN
-                  filter = filter .and. forcmask
+                  filter = filter .and. forcmask_pch
                ENDIF
 
                filter = filter .and. patchmask
@@ -356,7 +352,7 @@ CONTAINS
          ENDIF
 
          IF (HistForm == 'Gridded') THEN
-            CALL mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
+            CALL mp2g_hist%get_sumarea (sumarea, filter)
          ENDIF
 
          ! wind stress: E-W [kg/m/s2]
@@ -637,7 +633,7 @@ CONTAINS
                filter(:) = patchtype == 2
 
                IF (DEF_forcing%has_missing_value) THEN
-                  filter = filter .and. forcmask
+                  filter = filter .and. forcmask_pch
                ENDIF
 
                filter = filter .and. patchmask
@@ -672,7 +668,7 @@ CONTAINS
                      filter_urb(u) = .true.
 
                      IF (DEF_forcing%has_missing_value) THEN
-                        filter_urb(u) = filter_urb(u) .and. forcmask(i)
+                        filter_urb(u) = filter_urb(u) .and. forcmask_pch(i)
                      ENDIF
                   ENDIF
                ENDDO
@@ -680,7 +676,7 @@ CONTAINS
          ENDIF
 
          IF (HistForm == 'Gridded') THEN
-            CALL mp2g_hist_urb%map (VecOnes_urb, sumarea_urb, spv = spval, msk = filter_urb)
+            CALL mp2g_hist_urb%get_sumarea (sumarea_urb, filter_urb)
          ENDIF
 
          ! sensible heat from building roof [W/m2]
@@ -791,13 +787,13 @@ CONTAINS
             IF (numpatch > 0) THEN
                filter(:) = patchtype < 99
                IF (DEF_forcing%has_missing_value) THEN
-                  filter = filter .and. forcmask
+                  filter = filter .and. forcmask_pch
                ENDIF
             ENDIF
          ENDIF
 
          IF (HistForm == 'Gridded') THEN
-            CALL mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
+            CALL mp2g_hist%get_sumarea (sumarea, filter)
          ENDIF
 
          ! 1: assimsun enf temperate
@@ -1339,7 +1335,7 @@ CONTAINS
          ENDIF
 
          IF (HistForm == 'Gridded') THEN
-            CALL mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
+            CALL mp2g_hist%get_sumarea (sumarea, filter)
          ENDIF
 
          ! 1: gpp enf temperate
@@ -1501,7 +1497,7 @@ CONTAINS
          ENDIF
 
          IF (HistForm == 'Gridded') THEN
-            CALL mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
+            CALL mp2g_hist%get_sumarea (sumarea, filter)
          ENDIF
 
          IF (p_is_worker) THEN
@@ -1532,7 +1528,7 @@ CONTAINS
          ENDIF
 
          IF (HistForm == 'Gridded') THEN
-            CALL mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
+            CALL mp2g_hist%get_sumarea (sumarea, filter)
          ENDIF
 
          CALL write_history_variable_2d ( DEF_hist_vars%pdcorn, &
@@ -1556,7 +1552,7 @@ CONTAINS
          ENDIF
 
          IF (HistForm == 'Gridded') THEN
-            CALL mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
+            CALL mp2g_hist%get_sumarea (sumarea, filter)
          ENDIF
 
          CALL write_history_variable_2d ( DEF_hist_vars%pdswheat, &
@@ -1580,7 +1576,7 @@ CONTAINS
          ENDIF
 
          IF (HistForm == 'Gridded') THEN
-            CALL mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
+            CALL mp2g_hist%get_sumarea (sumarea, filter)
          ENDIF
 
          CALL write_history_variable_2d ( DEF_hist_vars%pdwwheat, &
@@ -1605,7 +1601,7 @@ CONTAINS
          ENDIF
 
          IF (HistForm == 'Gridded') THEN
-            CALL mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
+            CALL mp2g_hist%get_sumarea (sumarea, filter)
          ENDIF
 
          CALL write_history_variable_2d ( DEF_hist_vars%pdsoybean, &
@@ -1629,7 +1625,7 @@ CONTAINS
          ENDIF
 
          IF (HistForm == 'Gridded') THEN
-            CALL mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
+            CALL mp2g_hist%get_sumarea (sumarea, filter)
          ENDIF
 
          CALL write_history_variable_2d ( DEF_hist_vars%pdcotton, &
@@ -1653,7 +1649,7 @@ CONTAINS
          ENDIF
 
          IF (HistForm == 'Gridded') THEN
-            CALL mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
+            CALL mp2g_hist%get_sumarea (sumarea, filter)
          ENDIF
 
          CALL write_history_variable_2d ( DEF_hist_vars%pdrice1, &
@@ -1677,7 +1673,7 @@ CONTAINS
          ENDIF
 
          IF (HistForm == 'Gridded') THEN
-            CALL mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
+            CALL mp2g_hist%get_sumarea (sumarea, filter)
          ENDIF
 
          CALL write_history_variable_2d ( DEF_hist_vars%pdrice2, &
@@ -1701,7 +1697,7 @@ CONTAINS
          ENDIF
 
          IF (HistForm == 'Gridded') THEN
-            CALL mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
+            CALL mp2g_hist%get_sumarea (sumarea, filter)
          ENDIF
 
          CALL write_history_variable_2d ( DEF_hist_vars%pdsugarcane, &
@@ -1726,7 +1722,7 @@ CONTAINS
          ENDIF
 
          IF (HistForm == 'Gridded') THEN
-            CALL mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
+            CALL mp2g_hist%get_sumarea (sumarea, filter)
          ENDIF
 
          CALL write_history_variable_2d ( DEF_hist_vars%fertnitro_corn, &
@@ -1750,7 +1746,7 @@ CONTAINS
          ENDIF
 
          IF (HistForm == 'Gridded') THEN
-            CALL mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
+            CALL mp2g_hist%get_sumarea (sumarea, filter)
          ENDIF
 
          CALL write_history_variable_2d ( DEF_hist_vars%fertnitro_swheat, &
@@ -1774,7 +1770,7 @@ CONTAINS
          ENDIF
 
          IF (HistForm == 'Gridded') THEN
-            CALL mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
+            CALL mp2g_hist%get_sumarea (sumarea, filter)
          ENDIF
 
          CALL write_history_variable_2d ( DEF_hist_vars%fertnitro_wwheat, &
@@ -1799,7 +1795,7 @@ CONTAINS
          ENDIF
 
          IF (HistForm == 'Gridded') THEN
-            CALL mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
+            CALL mp2g_hist%get_sumarea (sumarea, filter)
          ENDIF
 
          CALL write_history_variable_2d ( DEF_hist_vars%fertnitro_soybean, &
@@ -1823,7 +1819,7 @@ CONTAINS
          ENDIF
 
          IF (HistForm == 'Gridded') THEN
-            CALL mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
+            CALL mp2g_hist%get_sumarea (sumarea, filter)
          ENDIF
 
          CALL write_history_variable_2d ( DEF_hist_vars%fertnitro_cotton, &
@@ -1847,7 +1843,7 @@ CONTAINS
          ENDIF
 
          IF (HistForm == 'Gridded') THEN
-            CALL mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
+            CALL mp2g_hist%get_sumarea (sumarea, filter)
          ENDIF
 
          CALL write_history_variable_2d ( DEF_hist_vars%fertnitro_rice1, &
@@ -1871,7 +1867,7 @@ CONTAINS
          ENDIF
 
          IF (HistForm == 'Gridded') THEN
-            CALL mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
+            CALL mp2g_hist%get_sumarea (sumarea, filter)
          ENDIF
 
          CALL write_history_variable_2d ( DEF_hist_vars%fertnitro_rice2, &
@@ -1895,7 +1891,7 @@ CONTAINS
          ENDIF
 
          IF (HistForm == 'Gridded') THEN
-            CALL mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
+            CALL mp2g_hist%get_sumarea (sumarea, filter)
          ENDIF
 
          CALL write_history_variable_2d ( DEF_hist_vars%fertnitro_sugarcane, &
@@ -1920,7 +1916,7 @@ CONTAINS
             ENDIF
 
             IF (HistForm == 'Gridded') THEN
-               CALL mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
+               CALL mp2g_hist%get_sumarea (sumarea, filter)
             ENDIF
 
             CALL write_history_variable_2d ( DEF_hist_vars%irrig_method_corn, &
@@ -1944,7 +1940,7 @@ CONTAINS
             ENDIF
 
             IF (HistForm == 'Gridded') THEN
-               CALL mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
+               CALL mp2g_hist%get_sumarea (sumarea, filter)
             ENDIF
 
             CALL write_history_variable_2d ( DEF_hist_vars%irrig_method_swheat, &
@@ -1968,7 +1964,7 @@ CONTAINS
             ENDIF
 
             IF (HistForm == 'Gridded') THEN
-               CALL mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
+               CALL mp2g_hist%get_sumarea (sumarea, filter)
             ENDIF
 
             CALL write_history_variable_2d ( DEF_hist_vars%irrig_method_wwheat, &
@@ -1993,7 +1989,7 @@ CONTAINS
             ENDIF
 
             IF (HistForm == 'Gridded') THEN
-               CALL mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
+               CALL mp2g_hist%get_sumarea (sumarea, filter)
             ENDIF
 
             CALL write_history_variable_2d ( DEF_hist_vars%irrig_method_soybean, &
@@ -2017,7 +2013,7 @@ CONTAINS
             ENDIF
 
             IF (HistForm == 'Gridded') THEN
-               CALL mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
+               CALL mp2g_hist%get_sumarea (sumarea, filter)
             ENDIF
 
             CALL write_history_variable_2d ( DEF_hist_vars%irrig_method_cotton, &
@@ -2041,7 +2037,7 @@ CONTAINS
             ENDIF
 
             IF (HistForm == 'Gridded') THEN
-               CALL mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
+               CALL mp2g_hist%get_sumarea (sumarea, filter)
             ENDIF
 
             CALL write_history_variable_2d ( DEF_hist_vars%irrig_method_rice1, &
@@ -2065,7 +2061,7 @@ CONTAINS
             ENDIF
 
             IF (HistForm == 'Gridded') THEN
-               CALL mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
+               CALL mp2g_hist%get_sumarea (sumarea, filter)
             ENDIF
 
             CALL write_history_variable_2d ( DEF_hist_vars%irrig_method_rice2, &
@@ -2089,7 +2085,7 @@ CONTAINS
             ENDIF
 
             IF (HistForm == 'Gridded') THEN
-               CALL mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
+               CALL mp2g_hist%get_sumarea (sumarea, filter)
             ENDIF
 
             CALL write_history_variable_2d ( DEF_hist_vars%irrig_method_sugarcane, &
@@ -2115,7 +2111,7 @@ CONTAINS
          ENDIF
 
          IF (HistForm == 'Gridded') THEN
-            CALL mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
+            CALL mp2g_hist%get_sumarea (sumarea, filter)
          ENDIF
 
          ! planting date of rainfed temperate corn
@@ -2145,7 +2141,7 @@ CONTAINS
          ENDIF
 
          IF (HistForm == 'Gridded') THEN
-            CALL mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
+            CALL mp2g_hist%get_sumarea (sumarea, filter)
          ENDIF
 
          ! planting date of irrigated temperate corn
@@ -2176,7 +2172,7 @@ CONTAINS
 
 
          IF (HistForm == 'Gridded') THEN
-            CALL mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
+            CALL mp2g_hist%get_sumarea (sumarea, filter)
          ENDIF
 
          ! planting date of rainfed spring wheat
@@ -2207,7 +2203,7 @@ CONTAINS
 
 
          IF (HistForm == 'Gridded') THEN
-            CALL mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
+            CALL mp2g_hist%get_sumarea (sumarea, filter)
          ENDIF
 
          ! planting date of irrigated spring wheat
@@ -2237,7 +2233,7 @@ CONTAINS
          ENDIF
 
          IF (HistForm == 'Gridded') THEN
-            CALL mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
+            CALL mp2g_hist%get_sumarea (sumarea, filter)
          ENDIF
 
          ! planting date of rainfed winter wheat
@@ -2267,7 +2263,7 @@ CONTAINS
          ENDIF
 
          IF (HistForm == 'Gridded') THEN
-            CALL mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
+            CALL mp2g_hist%get_sumarea (sumarea, filter)
          ENDIF
 
          ! planting date of irrigated winter wheat
@@ -2297,7 +2293,7 @@ CONTAINS
          ENDIF
 
          IF (HistForm == 'Gridded') THEN
-            CALL mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
+            CALL mp2g_hist%get_sumarea (sumarea, filter)
          ENDIF
 
          ! planting date of rainfed temperate soybean
@@ -2327,7 +2323,7 @@ CONTAINS
          ENDIF
 
          IF (HistForm == 'Gridded') THEN
-            CALL mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
+            CALL mp2g_hist%get_sumarea (sumarea, filter)
          ENDIF
 
          ! planting date of irrigated temperate soybean
@@ -2357,7 +2353,7 @@ CONTAINS
          ENDIF
 
          IF (HistForm == 'Gridded') THEN
-            CALL mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
+            CALL mp2g_hist%get_sumarea (sumarea, filter)
          ENDIF
 
          ! planting date of rainfed cotton
@@ -2387,7 +2383,7 @@ CONTAINS
          ENDIF
 
          IF (HistForm == 'Gridded') THEN
-            CALL mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
+            CALL mp2g_hist%get_sumarea (sumarea, filter)
          ENDIF
 
          ! planting date of irrigated cotton
@@ -2417,7 +2413,7 @@ CONTAINS
          ENDIF
 
          IF (HistForm == 'Gridded') THEN
-            CALL mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
+            CALL mp2g_hist%get_sumarea (sumarea, filter)
          ENDIF
 
          ! planting date of rainfed rice
@@ -2447,7 +2443,7 @@ CONTAINS
          ENDIF
 
          IF (HistForm == 'Gridded') THEN
-            CALL mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
+            CALL mp2g_hist%get_sumarea (sumarea, filter)
          ENDIF
 
          ! planting date of irrigated rice
@@ -2477,7 +2473,7 @@ CONTAINS
          ENDIF
 
          IF (HistForm == 'Gridded') THEN
-            CALL mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
+            CALL mp2g_hist%get_sumarea (sumarea, filter)
          ENDIF
 
          ! planting date of rainfed sugarcane
@@ -2507,7 +2503,7 @@ CONTAINS
          ENDIF
 
          IF (HistForm == 'Gridded') THEN
-            CALL mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
+            CALL mp2g_hist%get_sumarea (sumarea, filter)
          ENDIF
 
          ! planting date of irrigated sugarcane
@@ -2537,7 +2533,7 @@ CONTAINS
          ENDIF
 
          IF (HistForm == 'Gridded') THEN
-            CALL mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
+            CALL mp2g_hist%get_sumarea (sumarea, filter)
          ENDIF
 
          ! planting date of rainfed trop corn
@@ -2567,7 +2563,7 @@ CONTAINS
          ENDIF
 
          IF (HistForm == 'Gridded') THEN
-            CALL mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
+            CALL mp2g_hist%get_sumarea (sumarea, filter)
          ENDIF
 
          ! planting date of irrigated trop corn
@@ -2597,7 +2593,7 @@ CONTAINS
          ENDIF
 
          IF (HistForm == 'Gridded') THEN
-            CALL mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
+            CALL mp2g_hist%get_sumarea (sumarea, filter)
          ENDIF
 
          ! planting date of rainfed trop soybean
@@ -2627,7 +2623,7 @@ CONTAINS
          ENDIF
 
          IF (HistForm == 'Gridded') THEN
-            CALL mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
+            CALL mp2g_hist%get_sumarea (sumarea, filter)
          ENDIF
 
          ! planting date of irrigated trop soybean
@@ -2658,7 +2654,7 @@ CONTAINS
 
 
          IF (HistForm == 'Gridded') THEN
-            CALL mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
+            CALL mp2g_hist%get_sumarea (sumarea, filter)
          ENDIF
 
          ! planting date of unmanaged crop production
@@ -2688,7 +2684,7 @@ CONTAINS
          ENDIF
 
          IF (HistForm == 'Gridded') THEN
-            CALL mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
+            CALL mp2g_hist%get_sumarea (sumarea, filter)
          ENDIF
 
          ! grain to corn production carbon
@@ -2718,7 +2714,7 @@ CONTAINS
          ENDIF
 
          IF (HistForm == 'Gridded') THEN
-            CALL mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
+            CALL mp2g_hist%get_sumarea (sumarea, filter)
          ENDIF
 
          ! grain to corn production carbon
@@ -2748,7 +2744,7 @@ CONTAINS
          ENDIF
 
          IF (HistForm == 'Gridded') THEN
-            CALL mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
+            CALL mp2g_hist%get_sumarea (sumarea, filter)
          ENDIF
 
          ! grain to spring wheat production carbon
@@ -2778,7 +2774,7 @@ CONTAINS
          ENDIF
 
          IF (HistForm == 'Gridded') THEN
-            CALL mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
+            CALL mp2g_hist%get_sumarea (sumarea, filter)
          ENDIF
 
          ! grain to spring wheat production carbon
@@ -2808,7 +2804,7 @@ CONTAINS
          ENDIF
 
          IF (HistForm == 'Gridded') THEN
-            CALL mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
+            CALL mp2g_hist%get_sumarea (sumarea, filter)
          ENDIF
 
          ! grain to winter wheat production carbon
@@ -2838,7 +2834,7 @@ CONTAINS
          ENDIF
 
          IF (HistForm == 'Gridded') THEN
-            CALL mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
+            CALL mp2g_hist%get_sumarea (sumarea, filter)
          ENDIF
 
          ! grain to winter wheat production carbon
@@ -2868,7 +2864,7 @@ CONTAINS
          ENDIF
 
          IF (HistForm == 'Gridded') THEN
-            CALL mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
+            CALL mp2g_hist%get_sumarea (sumarea, filter)
          ENDIF
 
          ! grain to soybean production carbon
@@ -2898,7 +2894,7 @@ CONTAINS
          ENDIF
 
          IF (HistForm == 'Gridded') THEN
-            CALL mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
+            CALL mp2g_hist%get_sumarea (sumarea, filter)
          ENDIF
 
          ! grain to soybean production carbon
@@ -2928,7 +2924,7 @@ CONTAINS
          ENDIF
 
          IF (HistForm == 'Gridded') THEN
-            CALL mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
+            CALL mp2g_hist%get_sumarea (sumarea, filter)
          ENDIF
 
          ! grain to cotton production carbon
@@ -2958,7 +2954,7 @@ CONTAINS
          ENDIF
 
          IF (HistForm == 'Gridded') THEN
-            CALL mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
+            CALL mp2g_hist%get_sumarea (sumarea, filter)
          ENDIF
 
          ! grain to cotton production carbon
@@ -2988,7 +2984,7 @@ CONTAINS
          ENDIF
 
          IF (HistForm == 'Gridded') THEN
-            CALL mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
+            CALL mp2g_hist%get_sumarea (sumarea, filter)
          ENDIF
 
          ! grain to rice production carbon
@@ -3018,7 +3014,7 @@ CONTAINS
          ENDIF
 
          IF (HistForm == 'Gridded') THEN
-            CALL mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
+            CALL mp2g_hist%get_sumarea (sumarea, filter)
          ENDIF
 
          ! grain to rice production carbon
@@ -3048,7 +3044,7 @@ CONTAINS
          ENDIF
 
          IF (HistForm == 'Gridded') THEN
-            CALL mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
+            CALL mp2g_hist%get_sumarea (sumarea, filter)
          ENDIF
 
          ! grain to sugarcane production carbon
@@ -3078,7 +3074,7 @@ CONTAINS
          ENDIF
 
          IF (HistForm == 'Gridded') THEN
-            CALL mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
+            CALL mp2g_hist%get_sumarea (sumarea, filter)
          ENDIF
 
          ! grain to sugarcane production carbon
@@ -3108,7 +3104,7 @@ CONTAINS
          ENDIF
 
          IF (HistForm == 'Gridded') THEN
-            CALL mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
+            CALL mp2g_hist%get_sumarea (sumarea, filter)
          ENDIF
 
          ! grain to sugarcane production carbon
@@ -3138,7 +3134,7 @@ CONTAINS
          ENDIF
 
          IF (HistForm == 'Gridded') THEN
-            CALL mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
+            CALL mp2g_hist%get_sumarea (sumarea, filter)
          ENDIF
 
          ! grain to sugarcane production carbon
@@ -3168,7 +3164,7 @@ CONTAINS
          ENDIF
 
          IF (HistForm == 'Gridded') THEN
-            CALL mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
+            CALL mp2g_hist%get_sumarea (sumarea, filter)
          ENDIF
 
          ! grain to sugarcane production carbon
@@ -3198,7 +3194,7 @@ CONTAINS
          ENDIF
 
          IF (HistForm == 'Gridded') THEN
-            CALL mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
+            CALL mp2g_hist%get_sumarea (sumarea, filter)
          ENDIF
 
          ! grain to sugarcane production carbon
@@ -3228,7 +3224,7 @@ CONTAINS
          ENDIF
 
          IF (HistForm == 'Gridded') THEN
-            CALL mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
+            CALL mp2g_hist%get_sumarea (sumarea, filter)
          ENDIF
 
          ! grain to unmanaged crop production carbon
@@ -3254,7 +3250,7 @@ CONTAINS
                filter(:) = patchtype <= 3
 
                IF (DEF_forcing%has_missing_value) THEN
-                  filter = filter .and. forcmask
+                  filter = filter .and. forcmask_pch
                ENDIF
 
                filter = filter .and. patchmask
@@ -3262,7 +3258,7 @@ CONTAINS
          ENDIF
 
          IF (HistForm == 'Gridded') THEN
-            CALL mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
+            CALL mp2g_hist%get_sumarea (sumarea, filter)
          ENDIF
 
          ! soil temperature [K]
@@ -3292,7 +3288,7 @@ CONTAINS
                filter(:) = patchtype <= 2
 
                IF (DEF_forcing%has_missing_value) THEN
-                  filter = filter .and. forcmask
+                  filter = filter .and. forcmask_pch
                ENDIF
 
                filter = filter .and. patchmask
@@ -3300,7 +3296,7 @@ CONTAINS
          ENDIF
 
          IF (HistForm == 'Gridded') THEN
-            CALL mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
+            CALL mp2g_hist%get_sumarea (sumarea, filter)
          ENDIF
 
          ! volumetric soil water in layers [m3/m3]
@@ -3335,7 +3331,7 @@ CONTAINS
                filter(:) = (patchtype <= 4)
 
                IF (DEF_forcing%has_missing_value) THEN
-                  filter = filter .and. forcmask
+                  filter = filter .and. forcmask_pch
                ENDIF
 
                filter = filter .and. patchmask
@@ -3343,7 +3339,7 @@ CONTAINS
          ENDIF
 
          IF (HistForm == 'Gridded') THEN
-            CALL mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
+            CALL mp2g_hist%get_sumarea (sumarea, filter)
          ENDIF
 
          ! water storage in aquifer [mm]
@@ -3382,13 +3378,13 @@ CONTAINS
             IF (numpatch > 0) THEN
                filter(:) = patchtype == 4
                IF (DEF_forcing%has_missing_value) THEN
-                  filter = filter .and. forcmask
+                  filter = filter .and. forcmask_pch
                ENDIF
             ENDIF
          ENDIF
 
          IF (HistForm == 'Gridded') THEN
-            CALL mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
+            CALL mp2g_hist%get_sumarea (sumarea, filter)
          ENDIF
 
          ! lake temperature [K]
@@ -3410,7 +3406,7 @@ CONTAINS
                filter(:) = patchtype < 99
 
                IF (DEF_forcing%has_missing_value) THEN
-                  filter = filter .and. forcmask
+                  filter = filter .and. forcmask_pch
                ENDIF
 
                filter = filter .and. patchmask
@@ -3418,7 +3414,7 @@ CONTAINS
          ENDIF
 
          IF (HistForm == 'Gridded') THEN
-            CALL mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
+            CALL mp2g_hist%get_sumarea (sumarea, filter)
          ENDIF
 
          ! u* in similarity theory [m/s]
@@ -3531,13 +3527,13 @@ CONTAINS
             IF (numpatch > 0) THEN
                filter(:) = nac_ln > 0
                IF (DEF_forcing%has_missing_value) THEN
-                  filter = filter .and. forcmask
+                  filter = filter .and. forcmask_pch
                ENDIF
             ENDIF
          ENDIF
 
          IF (HistForm == 'Gridded') THEN
-            CALL mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
+            CALL mp2g_hist%get_sumarea (sumarea, filter)
          ENDIF
 
          ! incident direct beam vis solar radiation at local noon (W/m2)
@@ -3593,11 +3589,9 @@ CONTAINS
          CALL hist_basin_out (file_hist, idate)
 #endif
 
-         IF (allocated(filter )) deallocate (filter )
-         IF (allocated(VecOnes)) deallocate (VecOnes)
+         IF (allocated(filter)) deallocate (filter)
 #ifdef URBAN_MODEL
-         IF (allocated(filter_urb )) deallocate(filter_urb )
-         IF (allocated(VecOnes_urb)) deallocate(VecOnes_urb)
+         IF (allocated(filter_urb)) deallocate(filter_urb)
 #endif
 
          CALL FLUSH_acc_fluxes ()

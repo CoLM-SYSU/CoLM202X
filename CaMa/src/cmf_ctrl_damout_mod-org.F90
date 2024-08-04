@@ -25,6 +25,7 @@ USE YOS_CMF_MAP,             ONLY: I2VECTOR, I1NEXT, NSEQALL, NSEQRIV, NSEQMAX
 USE YOS_CMF_MAP,             ONLY: NPTHOUT,  NPTHLEV, PTH_UPST, PTH_DOWN, PTH_ELV, I2MASK!! bifurcation pass
 USE YOS_CMF_PROG,            ONLY: D2RIVOUT, D2FLDOUT, P2RIVSTO, P2FLDSTO, P2DAMSTO, P2DAMINF, D2RUNOFF
 USE YOS_CMF_DIAG,            ONLY: D2RIVINF, D2FLDINF
+USE YOS_CMF_TIME,            ONLY: IYYYYMMDD,ISYYYY
 !============================
 IMPLICIT NONE
 SAVE
@@ -32,19 +33,23 @@ SAVE
 CHARACTER(LEN=256)              :: CDAMFILE    !! dam paramter file
 LOGICAL                         :: LDAMTXT     !! true: dam inflow-outflw txt output
 LOGICAL                         :: LDAMH22     !! true: Use Hanazaki 2022 scheme
-NAMELIST/NDAMOUT/   CDAMFILE, LDAMTXT, LDAMH22
+LOGICAL                         :: LDAMYBY     !! true: Use Year-By-Year dam activation
+LOGICAL                         :: LiVnorm     !! true: initialize dam storage with Normal Volume
+NAMELIST/NDAMOUT/   CDAMFILE, LDAMTXT, LDAMH22, LDAMYBY, LiVnorm
 
 !*** dam parameters
 INTEGER(KIND=JPIM)              :: IDAM, NDAM  !! number of dams
 INTEGER(KIND=JPIM)              :: NDAMX       !! exclude dams
 
-INTEGER(KIND=JPIM),ALLOCATABLE  :: GRanD_ID(:) !! GRanD ID
+INTEGER(KIND=JPIM),ALLOCATABLE  :: DamID(:) !! Dam ID
 CHARACTER(LEN=256),ALLOCATABLE  :: DamName(:)  !! 
 INTEGER(KIND=JPIM),ALLOCATABLE  :: DamIX(:), DamIY(:)  !! IX,IY of dam grid
 REAL(KIND=JPRB),ALLOCATABLE     :: DamLon(:), DamLat(:)  !! longitude, latitude of dam body
 REAL(KIND=JPRB),ALLOCATABLE     :: upreal(:)   !! observed drainage area of reservoir
 REAL(KIND=JPRB),ALLOCATABLE     :: R_VolUpa(:) !! ratio: flood storage capacity / drainage area
 REAL(KIND=JPRB),ALLOCATABLE     :: Qf(:), Qn(:) !! Qf: flood discharge, Qn: normal discharge
+INTEGER(KIND=JPIM),ALLOCATABLE  :: DamYear(:)  !! Dam activation year
+INTEGER(KIND=JPIM),ALLOCATABLE  :: DamStat(:)  !! Dam Status, 2=old, 1=new, -1=not_yet, IMIS=out_of_domain
 
 REAL(KIND=JPRB),ALLOCATABLE     :: EmeVol(:)   !! storage volume to start emergency operation
 REAL(KIND=JPRB),ALLOCATABLE     :: FldVol(:)   !! flood control volume: exclusive for flood control
@@ -52,8 +57,8 @@ REAL(KIND=JPRB),ALLOCATABLE     :: ConVol(:)   !! conservative volume: mainly fo
 REAL(KIND=JPRB),ALLOCATABLE     :: NorVol(:)   !! normal storage volume: impoundment
 
 ! internal dam param for stability
-REAL(KIND=JPRB),ALLOCATABLE     :: AdjVol(:)   !! 
-REAL(KIND=JPRB),ALLOCATABLE     :: Qa(:)       !!
+REAL(KIND=JPRB),ALLOCATABLE     :: AdjVol(:)   !! Dam storage for stabilization 
+REAL(KIND=JPRB),ALLOCATABLE     :: Qa(:)       !! Dam outflow for stabilization
 
 
 !*** dam map
@@ -87,6 +92,8 @@ WRITE(LOGNAM,*) "CMF::DAMOUT_NMLIST: namelist OPEN in unit: ", TRIM(CSETFILE), N
 CDAMFILE="./dam_params.csv"
 LDAMTXT=.TRUE.
 LDAMH22=.FALSE.
+LDAMYBY=.FALSE.
+LiVnorm=.FALSE.
 
 !*** 3. read namelist
 REWIND(NSETFILE)
@@ -94,9 +101,11 @@ READ(NSETFILE,NML=NDAMOUT)
 
 IF( LDAMOUT )THEN
   WRITE(LOGNAM,*)   "=== NAMELIST, NDAMOUT ==="
-  WRITE(LOGNAM,*)   "CDAMFILE: ", CDAMFILE
-  WRITE(LOGNAM,*)   "LDAMTXT: " , LDAMTXT
-  WRITE(LOGNAM,*)   "LDAMH22: " , LDAMH22
+  WRITE(LOGNAM,*)   "CDAMFILE: " , CDAMFILE
+  WRITE(LOGNAM,*)   "LDAMTXT:  " , LDAMTXT
+  WRITE(LOGNAM,*)   "LDAMH22:  " , LDAMH22
+  WRITE(LOGNAM,*)   "LDAMYBY:  " , LDAMYBY
+  WRITE(LOGNAM,*)   "LiVnorm: " , LiVnorm
 ENDIF
 
 CLOSE(NSETFILE)
@@ -136,11 +145,11 @@ WRITE(LOGNAM,*) "CMF::DAMOUT_INIT: number of dams", NDAM
 
 !! === ALLOCATE ===
 !! from CDAMFILE
-ALLOCATE(GRanD_ID(NDAM),DamName(NDAM))
+ALLOCATE(DamID(NDAM),DamName(NDAM))
 ALLOCATE(DamIX(NDAM),DamIY(NDAM),DamLon(NDAM),DamLat(NDAM))
 ALLOCATE(upreal(NDAM))
-ALLOCATE(R_VolUpa(NDAM))
 ALLOCATE(Qf(NDAM),Qn(NDAM))
+ALLOCATE(DamYear(NDAM),DamStat(NDAM))
 
 !! calculate from CDAMFILE
 ALLOCATE(DamSeq(NDAM))
@@ -149,22 +158,31 @@ ALLOCATE(FldVol(NDAM),ConVol(NDAM),EmeVol(NDAM),NorVol(NDAM))
 !! for outflw stability
 ALLOCATE(AdjVol(NDAM),Qa(NDAM))
 
+!! H22scheme parameter (FldVol/Upreal)
+ALLOCATE(R_VolUpa(NDAM))
+
 !! dam map, dam variable
 ALLOCATE(I1DAM(NSEQMAX))
 !! =================
-DamSeq(:)=IMIS
+DamSeq(:) =IMIS
+DamStat(:)=IMIS
 I1DAM(:)=0
 NDAMX=0
 !! read dam parameters
 DO IDAM = 1, NDAM
-  READ(NDAMFILE,*) GRanD_ID(IDAM), DamName(IDAM), DamLon(IDAM), DamLat(IDAM), upreal(IDAM), &
-   DamIX(IDAM), DamIY(IDAM), FldVol_mcm, ConVol_mcm, TotVol_mcm, R_VolUpa(IDAM), Qn(IDAM), Qf(IDAM)
+  IF( LDAMYBY) THEN
+    READ(NDAMFILE,*) DamID(IDAM), DamName(IDAM), DamLat(IDAM), DamLon(IDAM), upreal(IDAM), &
+     DamIX(IDAM), DamIY(IDAM), FldVol_mcm, ConVol_mcm, TotVol_mcm, Qn(IDAM), Qf(IDAM), DamYear(IDAM)
+  ELSE
+    READ(NDAMFILE,*) DamID(IDAM), DamName(IDAM), DamLat(IDAM), DamLon(IDAM), upreal(IDAM), &
+     DamIX(IDAM), DamIY(IDAM), FldVol_mcm, ConVol_mcm, TotVol_mcm, Qn(IDAM), Qf(IDAM)
+  ENDIF
 
   !! storage parameter --- from Million Cubic Meter to m3
   FldVol(IDAM) = FldVol_mcm * 1.E6                  ! Flood control storage capacity: exclusive for flood control
   ConVol(IDAM) = ConVol_mcm * 1.E6
 
-  EmeVol(IDAM) = ConVol(IDAM) + FldVol(IDAM) * 0.9     ! storage to start emergency operation
+  EmeVol(IDAM) = ConVol(IDAM) + FldVol(IDAM) * 0.95     ! storage to start emergency operation
 
   IX=DamIX(IDAM)
   IY=DamIY(IDAM)
@@ -174,19 +192,35 @@ DO IDAM = 1, NDAM
   IF( I1NEXT(ISEQ)==-9999 .or. ISEQ<=0 ) cycle
   NDAMX=NDAMX+1
 
-  DamSeq(IDAM)=ISEQ
+  DamSeq(IDAM) =ISEQ
+  DamStat(IDAM)=2
+
   I1DAM(ISEQ)=1
   I2MASK(ISEQ,1)=2   !! reservoir grid. skipped for adaptive time step
 
-  IF( LDAMH22 )THEN       !! 
-    NorVol(IDAM) = ConVol(IDAM) * 0.5    ! normal storage
-  ELSE
-    Vyr =Qn(IDAM)*(365.*24.*60.*60.)
-    Qsto=(ConVol(IDAM)*0.7+Vyr/8.)/(180.*24.*60.*60.)   !! possible outflow in 180day from (ConVil*0.7 + PotInflw)
-    Qn(IDAM)=min(Qn(IDAM),Qsto)*1.5
+  IF( LDAMH22 )THEN    !! Hanazaki 2022 scheme 
+    NorVol(IDAM)   = ConVol(IDAM) * 0.5    ! normal storage
+    R_VolUpa(NDAM) = FldVol(IDAM) * 1.E-6 / upreal(IDAM)
 
-    AdjVol(IDAM)=ConVol(IDAM)  + FldVol(IDAM)*0.1
-    Qa(IDAM)=( Qn(IDAM)+Qf(IDAM) )*0.5
+  ELSE  !! Yamazaki&Funato scheme (paper in prep)
+    Vyr =Qn(IDAM)*(365.*24.*60.*60.)                    !! Annual inflow -> assume dry period inflow is 1/8 of annual flow 
+    Qsto=(ConVol(IDAM)*0.7+Vyr/4.)/(180.*24.*60.*60.)   !! possible mean outflow in dry period (6month, ConVol*0.7 + Inflow)
+    Qn(IDAM)=min(Qn(IDAM),Qsto)*1.5                     !! Outflow at normal volume (*1.5 is parameter to decide outflw balance)
+
+    AdjVol(IDAM)=ConVol(IDAM)  + FldVol(IDAM)*0.1       !! AdjVol is for outflow stability (result is not so sensitive)
+    Qa(IDAM)=( Qn(IDAM)+Qf(IDAM) )*0.5                  !! Qa is also for stability
+  ENDIF
+
+  !! Year-by-Year scheme. If dam is not yet constructed
+  IF( LDAMYBY )THEN
+    IF( ISYYYY==DamYear(IDAM) )THEN
+      DamStat(IDAM)=1   !! new this year
+    ELSEIF( ISYYYY<DamYear(IDAM) .and. DamYear(IDAM)>0 )THEN
+      DamStat(IDAM)=-1  !! not yet activated
+      I1DAM(ISEQ)=-1
+      FldVol(IDAM)=0._JPRB
+      ConVol(IDAM)=0._JPRB
+    ENDIF
   ENDIF
 
 END DO
@@ -197,7 +231,7 @@ WRITE(LOGNAM,*) "CMF::DAMOUT_INIT: allocated dams:", NDAMX
 
 !! mark upstream of dam grid, for applying kinematic wave routine to suppress storage buffer effect.
 DO ISEQ=1, NSEQALL
-  IF( I1DAM(ISEQ)==0 .and. I1NEXT(ISEQ)>0 )THEN !! if target is non-dam grid
+  IF( I1DAM(ISEQ)<=0 .and. I1NEXT(ISEQ)>0 )THEN !! if target is non-dam grid
     JSEQ=I1NEXT(ISEQ)
     IF( I1DAM(JSEQ)==1 .or. I1DAM(JSEQ)==11 )THEN !! if downstream is dam
       I1DAM(ISEQ)=10            !! mark upstream of dam grid by "10"
@@ -215,15 +249,36 @@ DO ISEQ=1, NSEQALL
 END DO
 
 !! Initialize dam storage
-IF( .not. LRESTART )THEN
+IF( .not. LRESTART )THEN  !! Initialize without restart data
   P2DAMSTO(:,1)=0._JPRD
   DO IDAM=1, NDAM
-    IF( DamSeq(IDAM)>0 )THEN
-      ISEQ=DamSeq(IDAM)
-      P2DAMSTO(ISEQ,1)=ConVol(IDAM)*0.5  !! set initial storage to Normal Storage Volume
-      P2RIVSTO(ISEQ,1)=max(P2RIVSTO(ISEQ,1),ConVol(IDAM)*0.5_JPRD) !! also set initial river storage, in order to keep consistency
+    IF( DamStat(IDAM)==IMIS )CYCLE !
+    ISEQ=DamSeq(IDAM)
+    IF( DamStat(IDAM)==-1 )THEN !! Dam not yet constructed
+      P2DAMSTO(ISEQ,1)= P2RIVSTO(ISEQ,1)+P2FLDSTO(ISEQ,1)
+    ELSE
+      P2DAMSTO(ISEQ,1)=P2RIVSTO(ISEQ,1)+P2FLDSTO(ISEQ,1)
+      IF( P2DAMSTO(ISEQ,1)<ConVol(IDAM) )THEN  !! If Normal Volume > initial storage, replace
+        P2DAMSTO(ISEQ,1)=ConVol(IDAM)
+        P2RIVSTO(ISEQ,1)=ConVol(IDAM)  
+        P2FLDSTO(ISEQ,1)=0._JPRD
+      ENDIF
     ENDIF
   END DO
+ELSE       !! if from restart file
+  IF( LDAMYBY )THEN   !! for restart with year-by-year option, set damsto for newly constructed dam 
+    DO IDAM=1, NDAM
+      IF( DamStat(IDAM)==1 )THEN !! Dam newly activated from this year
+        ISEQ=DamSeq(IDAM)
+        P2DAMSTO(ISEQ,1)=P2RIVSTO(ISEQ,1)+P2FLDSTO(ISEQ,1)
+        IF( LiVnorm .and. P2DAMSTO(ISEQ,1)<ConVol(IDAM) )THEN  !! If Initialize Vnormal option & Vnor>Riv+Fld sto, replace
+          P2DAMSTO(ISEQ,1)=ConVol(IDAM)
+          P2RIVSTO(ISEQ,1)=ConVol(IDAM)  
+          P2FLDSTO(ISEQ,1)=0._JPRD
+        ENDIF
+      ENDIF
+    END DO
+  ENDIF
 ENDIF
 
 !! Initialize dam inflow
@@ -282,10 +337,10 @@ CALL UPDATE_INFLOW
 !     -- compare DamVol against storage level (NorVol, ConVol, EmeVol) & DamInflow against Qf
 !$OMP PARALLEL DO
 DO IDAM=1, NDAM
-  IF( DamSeq(IDAM)<=0 ) CYCLE
-  ISEQD=DamSeq(IDAM)
+  IF( DamStat(IDAM)<=0 ) CYCLE  !! no calculation for dams not activated
 
   !! *** 2a update dam volume and inflow -----------------------------------
+  ISEQD=DamSeq(IDAM)
   DamVol    = P2DAMSTO(ISEQD,1)    
   DamInflow = P2DAMINF(ISEQD,1)
 
@@ -324,15 +379,7 @@ DO IDAM=1, NDAM
       DamOutflw = Qn(IDAM) * (DamVol/ConVol(IDAM))**0.5
     !! case 2: water excess (just avobe ConVol, for outflow stability)
     ELSEIF( DamVol>ConVol(IDAM) .and. DamVol<=AdjVol(IDAM) ) THEN
-      !! (flood period)
-      IF( DamInflow >= Qf(IDAM) ) THEN
-        DamOutflw = Qn(IDAM) + ( (DamVol-ConVol(IDAM)) / (EmeVol(IDAM)-ConVol(IDAM)) )**1.0 * (DamInflow- Qn(IDAM))
-        DamOutTmp = Qn(IDAM) + ( (DamVol-ConVol(IDAM)) / (AdjVol(IDAM)-ConVol(IDAM)) )**3.0 * (Qa(IDAM) - Qn(IDAM))
-        DamOutflw = max( DamOutflw,DamOutTmp )
-      !! (non-flood period)
-      ELSE
-        DamOutflw = Qn(IDAM) + ( (DamVol-ConVol(IDAM)) / (AdjVol(IDAM)-ConVol(IDAM)) )**3.0 * (Qa(IDAM) - Qn(IDAM))
-      ENDIF
+      DamOutflw = Qn(IDAM) + ( (DamVol-ConVol(IDAM)) / (AdjVol(IDAM)-ConVol(IDAM)) )**3.0 * (Qa(IDAM) - Qn(IDAM))
     !! case 3: water excess
     ELSEIF( DamVol>AdjVol(IDAM) .and. DamVol<=EmeVol(IDAM) ) THEN
       !! (flood period)
@@ -467,7 +514,7 @@ GlbDAMOUT    = 0._JPRB
 
 !$OMP PARALLEL DO REDUCTION(+:GlbDAMSTO, GlbDAMSTONXT, GlbDAMINF, GlbDAMOUT)
 DO IDAM=1, NDAM
-  IF( DamSeq(IDAM)<=0 ) CYCLE
+  IF( DamStat(IDAM)==IMIS ) CYCLE  !! do not calculate for dams outside of calculation domain
   ISEQD = DamSeq(IDAM)
 
   DamInflow = D2RIVINF(ISEQD,1) + D2FLDINF(ISEQD,1) + D2RUNOFF(ISEQD,1)
@@ -494,10 +541,9 @@ END SUBROUTINE CMF_DAMOUT_WATBAL
 !
 !####################################################################
 SUBROUTINE CMF_DAMOUT_WRTE
-USE YOS_CMF_TIME,       ONLY: IYYYYMMDD,ISYYYY
 ! local
 CHARACTER(len=36)          :: WriteTXT(NDAMX), WriteTXT2(NDAMX)
-
+REAL(KIND=JPRB)            :: DDamInf, DDamOut
 ! File IO
 INTEGER(KIND=JPIM),SAVE    :: ISEQD, JDAM
 INTEGER(KIND=JPIM),SAVE    :: LOGDAM
@@ -508,9 +554,9 @@ LOGICAL,SAVE               :: IsOpen
 DATA IsOpen       /.FALSE./
 ! ==========================================
 
-IF( LDAMTXT .and. LDAMTXT)THEN
+IF( LDAMTXT )THEN
 
-  IF( .not. IsOpen)THEN
+  IF( .not. IsOpen )THEN
     IsOpen=.TRUE.
     WRITE(CYYYY,'(i4.4)') ISYYYY
     DAMTXT='./damtxt-'//trim(cYYYY)//'.txt'
@@ -523,12 +569,15 @@ IF( LDAMTXT .and. LDAMTXT)THEN
 
     JDAM=0
     DO IDAM=1, NDAM
-      IF( DamSeq(IDAM)<=0 ) CYCLE
+      IF( DamStat(IDAM)==IMIS )CYCLE
       JDAM=JDAM+1
-      ISEQD=DamSeq(IDAM)
-
-      WRITE(WriteTxt(JDAM), '(i12,2f12.2)') GRanD_ID(IDAM), (FldVol(IDAM)+ConVol(IDAM))*1.E-9, ConVol(IDAM)*1.E-9
-      WRITE(WriteTxt2(JDAM),'(3f12.2)') upreal(IDAM),   Qf(IDAM), Qn(IDAM)
+      IF( DamStat(IDAM)==-1 ) THEN   !! dam not activated yet
+        WRITE(WriteTxt(JDAM), '(i12,2f12.2)') DamID(IDAM), -9., -9.
+        WRITE(WriteTxt2(JDAM),'(3f12.2)') upreal(IDAM),   Qf(IDAM), Qn(IDAM)
+      ELSE
+        WRITE(WriteTxt(JDAM), '(i12,2f12.2)') DamID(IDAM), (FldVol(IDAM)+ConVol(IDAM))*1.E-9, ConVol(IDAM)*1.E-9
+        WRITE(WriteTxt2(JDAM),'(3f12.2)') upreal(IDAM),   Qf(IDAM), Qn(IDAM)
+      ENDIF
     END DO
 
     WRITE(LOGDAM,CFMT) NDAMX, (WriteTXT(JDAM) ,JDAM=1, NDAMX)
@@ -539,10 +588,12 @@ IF( LDAMTXT .and. LDAMTXT)THEN
 
   JDAM=0
   DO IDAM=1, NDAM
-    IF( DamSeq(IDAM)<=0 ) CYCLE
+    IF( DamStat(IDAM)==IMIS ) CYCLE
     JDAM=JDAM+1
     ISEQD=DamSeq(IDAM)
-    WRITE(WriteTxt(JDAM), '(3f12.2)') P2DAMSTO(ISEQD,1)*1.E-9, P2DAMINF(ISEQD,1), D2RIVOUT(ISEQD,1)
+    DDamInf=P2DAMINF(ISEQD,1)
+    DDamOut=D2RIVOUT(ISEQD,1) + D2FLDOUT(ISEQD,1)
+    WRITE(WriteTxt(JDAM), '(3f12.2)') P2DAMSTO(ISEQD,1)*1.E-9, DDamInf, DDamOut
   END DO
 
   CFMT="(i10,"//TRIM(CLEN)//"(a36))"  

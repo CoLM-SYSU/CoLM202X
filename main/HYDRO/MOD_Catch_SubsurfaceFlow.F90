@@ -102,6 +102,7 @@ CONTAINS
    SUBROUTINE subsurface_flow (deltime)
       
    USE MOD_SPMD_Task
+   USE MOD_UserDefFun
    USE MOD_Mesh
    USE MOD_LandElm
    USE MOD_LandPatch
@@ -605,7 +606,7 @@ CONTAINS
                   ENDIF
                ENDDO
 
-               izwt = findloc(zwtmm >= sp_zi, .true., dim=1, back=.true.)
+               izwt = findloc_ud(zwtmm >= sp_zi, back=.true.)
 
                IF (izwt <= nl_soil) THEN
                   IF (is_permeable(izwt) .and. (zwtmm > sp_zi(izwt-1))) THEN

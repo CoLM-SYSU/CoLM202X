@@ -18,8 +18,8 @@ PROGRAM MKSRFDATA
 !                 the western edge of the longitude grid starts at the dateline
 !
 ! Land characteristics at the 30 arc-seconds grid resolution (RAW DATA):
-!              1. Global Terrain Dataset (elevation height,...)
-!              2. Global Land Cover Characteristics (land cover TYPE, plant leaf area index, Forest Height, ...)
+!              1. Global Terrain Dataset (elevation height, topography-based factors)
+!              2. Global Land Cover Characteristics (land cover type, plant leaf area index, Forest Height, ...)
 !              3. Global Lakes and Wetlands Characteristics (lake and wetlands types, lake coverage and lake depth)
 !              4. Global Glacier Characteristics
 !              5. Global Urban Characteristics (urban extent, ...)
@@ -81,15 +81,15 @@ PROGRAM MKSRFDATA
    IMPLICIT NONE
 
    character(len=256) :: nlfile
-
-   character(LEN=256) :: dir_rawdata
-   character(LEN=256) :: dir_landdata
+   character(len=256) :: lndname
+   character(len=256) :: dir_rawdata
+   character(len=256) :: dir_landdata
    real(r8) :: edgen  ! northern edge of grid (degrees)
    real(r8) :: edgee  ! eastern edge of grid (degrees)
    real(r8) :: edges  ! southern edge of grid (degrees)
    real(r8) :: edgew  ! western edge of grid (degrees)
 
-   type (grid_type) :: gsoil, gridlai, gtopo
+   type (grid_type) :: gsoil, gridlai, gtopo, grid_topo_factor
    type (grid_type) :: grid_urban_5km, grid_urban_500m
 
    integer   :: lc_year
@@ -209,6 +209,13 @@ PROGRAM MKSRFDATA
    ! define grid for topography
    CALL gtopo%define_by_name ('colm_500m')
 
+   ! define grid for topography factors
+   IF (DEF_USE_Forcing_Downscaling) THEN
+      !CALL grid_topo_factor%define_by_name ('merit_90m')
+      lndname = trim(dir_rawdata)//"slope.nc"
+      CALL grid_topo_factor%define_from_file (lndname,"lat","lon")
+   ENDIF
+
    ! add by dong, only test for making urban data
 #ifdef URBAN_MODEL
    CALL gurban%define_by_name          ('colm_500m')
@@ -241,6 +248,10 @@ PROGRAM MKSRFDATA
 
    CALL pixel%assimilate_grid (gtopo)
 
+   IF (DEF_USE_Forcing_Downscaling) THEN
+      CALL pixel%assimilate_grid (grid_topo_factor)
+   ENDIF
+
    ! map pixels to grid coordinates
 #ifndef SinglePoint
    CALL pixel%map_to_grid (gridmesh)
@@ -265,6 +276,10 @@ PROGRAM MKSRFDATA
 #endif
 
    CALL pixel%map_to_grid (gtopo)
+
+   IF (DEF_USE_Forcing_Downscaling) THEN
+      CALL pixel%map_to_grid (grid_topo_factor)
+   ENDIF
 
    ! build land elms
    CALL mesh_build ()
@@ -335,11 +350,7 @@ PROGRAM MKSRFDATA
 ! 3. Mapping land characteristic parameters to the model grids
 ! ................................................................
 #ifdef SrfdataDiag
-#if (defined CROP)
-   CALL elm_patch%build (landelm, landpatch, use_frac = .true., sharedfrac = pctshrpch)
-#else
    CALL elm_patch%build (landelm, landpatch, use_frac = .true.)
-#endif
 #ifdef GRIDBASED
    CALL gdiag%define_by_copy (gridmesh)
 #else
@@ -369,6 +380,10 @@ PROGRAM MKSRFDATA
 
    CALL Aggregation_Topography      (gtopo  , dir_rawdata, dir_landdata, lc_year)
 
+   IF (DEF_USE_Forcing_Downscaling) THEN   
+      CALL Aggregation_TopographyFactors (grid_topo_factor, dir_rawdata, dir_landdata, lc_year)
+   ENDIF
+   
 #ifdef URBAN_MODEL
    CALL Aggregation_urban (dir_rawdata, dir_landdata, lc_year, &
                            grid_urban_5km, grid_urban_500m)
