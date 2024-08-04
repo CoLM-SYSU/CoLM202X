@@ -495,7 +495,11 @@ CONTAINS
                         calday = calendarday(idate)
                         sunang = orb_coszen (calday, gforc%rlon(ilon), gforc%rlat(ilat))
 
-                        cloud = (1160.*sunang-a)/(963.*sunang)
+                        IF (sunang .eq. 0)THEN
+                           cloud = 0.
+                        ELSE
+                           cloud = (1160.*sunang-a)/(963.*sunang)
+                        END IF
                         cloud = max(cloud,0.)
                         cloud = min(cloud,1.)
                         cloud = max(0.58,cloud)
