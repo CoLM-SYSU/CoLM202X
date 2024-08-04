@@ -244,7 +244,7 @@ CONTAINS
          ELSE
             assim = min(omc, ome)
          ENDIF
-         print*,'assimn',assim,omc,ome
+         !print*,'assimn',assim,omc,ome
          assimn= ( assim - respc)                         ! mol m-2 s-1
 
 !-----------------------------------------------------------------------
