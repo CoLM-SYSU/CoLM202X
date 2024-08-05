@@ -2,30 +2,33 @@
 # mpif90 - ifort 
 # 
 
- FF = mpiifort -f90=ifort
+FF = mpif90 
 
-# Netcdf with serial IO
- NETCDF_LIB = /share/home/dq013/software/netcdf-single/lib
- NETCDF_INC = /share/home/dq013/software/netcdf-single/include
+NETCDF_LIB = /share/home/dq013/software/netcdf_parallel_N/lib         #wherry
+NETCDF_INC = /share/home/dq013/software/netcdf_parallel_N/include     #wherry
+#NETCDF_LIB = /share/home/dq013/software/netcdf-single/lib          #wherry
+#NETCDF_INC = /share/home/dq013/software/netcdf-single/include      #wherry
+# NETCDF_LIB = /opt/netcdf/lib     #land machine
+# NETCDF_INC = /opt/netcdf/include #land machine
 
-# Netcdf with paralell IO
-# NETCDF_LIB = /share/home/dq013/software/netcdf_parallel/lib
-# NETCDF_INC = /share/home/dq013/software/netcdf_parallel/include
+MOD_CMD = -module  
 
-# HDF5_LIB = /share/home/dq013/software/hdf5-1.14.3-Intel_MPI/lib
-# HDF5_INC = /share/home/dq013/software/hdf5-1.14.3-Intel_MPI/include
+#<<<<<<< HEAD
+#FOPTS = -qopenmp -g -traceback -r8 -free -check uninit 
+       # -r8 -free -O0 -check uninit -check bounds -check pointers \
+       # -traceback  -assume byterecl -pthread -heap-arrays #-nogen-interface
 
-# szip_LIB = /share/home/dq013/software/szip-2.1.1/lib
-# szip_INC = /share/home/dq013/software/szip-2.1.1/include
+#INCLUDE_DIR = -I../include -I../share -I../mksrfdata \
+#               -I../mkinidata -I../main -I../hydro -I${NETCDF_INC}
+#LDFLAGS = -L${NETCDF_LIB} -lnetcdff
 
- MOD_CMD = -module 
 
  FOPTS = -qopenmp -O2 -traceback -r8 -free -check uninit -check bounds
 
- LDFLAGS = -L${NETCDF_LIB} -lnetcdff -L/share/home/dq013/software/miniconda3/lib/ -llapack -lblas #-L${HDF_LIB} -lhdf5_hl -lhdf5 -L${szip_LIB} -lsz -lcurl
+ LDFLAGS = -L${NETCDF_LIB} -lnetcdff -L/share/home/dq013/software//miniconda3/lib/ -llapack -lblas
 
 #============================================================
-# CaMa-Flood Mkinclude (for Linux, Intel fortran)
+# CaMa-Flood Mkinclude (for Linux, gfortran)
 
 RM = /bin/rm -f
 CP = /bin/cp
@@ -38,9 +41,8 @@ CP = /bin/cp
 #DMPI=-DUseMPI
 DCDF=-DUseCDF
 #DATM=-DNoAtom
-CFLAGS=$(DMPI) $(DCDF) $(DATM) 
+CFLAGS=$(DMPI) $(DCDF) $(DATM)
 #----
-# FCMP: main program (src/), FC: pre/post process (map/ etc/)
 FCMP = ifort -qopenmp
 FC = ifort
 LFLAGS =
