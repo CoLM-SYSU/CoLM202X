@@ -1081,6 +1081,7 @@ CONTAINS
    integer :: itime, maxday, id(3)
    integer*8 :: sec_long
    integer :: ivar, ntime, its, ite, it
+   real(r8) firstsec
 
    type(timestamp) :: etstamp_f
    type(timestamp), allocatable :: forctime_ (:)
@@ -1097,11 +1098,22 @@ CONTAINS
 
       allocate (forctime (size(forctime_sec)))
 
-      forctime(1)%year = year
-      forctime(1)%day  = get_calday(month*100+day, isleapyear(year))
-      forctime(1)%sec = hour*3600 + minute*60 + second + forctime_sec(1)
+      id(1) = year
+      id(2) = get_calday(month*100+day, isleapyear(year))
+      id(3) = hour*3600 + minute*60 + second
 
-      id(:) = (/forctime(1)%year, forctime(1)%day, forctime(1)%sec/)
+      firstsec = forctime_sec(1)
+      DO WHILE (firstsec > 86400)
+         CALL ticktime (86400., id)
+         firstsec = firstsec - 86400
+      ENDDO
+      CALL ticktime (firstsec, id)
+
+      !forctime(1)%year = year
+      !forctime(1)%day  = get_calday(month*100+day, isleapyear(year))
+      !forctime(1)%sec = hour*3600 + minute*60 + second + forctime_sec(1)
+
+      !id(:) = (/forctime(1)%year, forctime(1)%day, forctime(1)%sec/)
       CALL adj2end(id)
       forctime(1) = id
 
