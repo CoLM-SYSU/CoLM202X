@@ -525,86 +525,86 @@ CONTAINS
    CALL flush_block_data (forc_xy_hgt_t, real(HEIGHT_T,r8))
    CALL flush_block_data (forc_xy_hgt_q, real(HEIGHT_Q,r8))
 
-         IF (solarin_all_band) THEN
+   IF (solarin_all_band) THEN
 
-            IF (trim(DEF_forcing%dataset) == 'QIAN') THEN
-               !---------------------------------------------------------------
-               ! 04/2014, yuan: NOTE! codes from CLM4.5-CESM1.2.0
-               ! relationship between incoming NIR or VIS radiation and ratio of
-               ! direct to diffuse radiation calculated based on one year's worth of
-               ! hourly CAM output from CAM version cam3_5_55
-               !---------------------------------------------------------------
-               DO iblkme = 1, gblock%nblkme
-                  ib = gblock%xblkme(iblkme)
-                  jb = gblock%yblkme(iblkme)
+      IF (trim(DEF_forcing%dataset) == 'QIAN') THEN
+         !---------------------------------------------------------------
+         ! 04/2014, yuan: NOTE! codes from CLM4.5-CESM1.2.0
+         ! relationship between incoming NIR or VIS radiation and ratio of
+         ! direct to diffuse radiation calculated based on one year's worth of
+         ! hourly CAM output from CAM version cam3_5_55
+         !---------------------------------------------------------------
+         DO iblkme = 1, gblock%nblkme
+            ib = gblock%xblkme(iblkme)
+            jb = gblock%yblkme(iblkme)
 
-                  DO j = 1, gforc%ycnt(jb)
-                     DO i = 1, gforc%xcnt(ib)
+            DO j = 1, gforc%ycnt(jb)
+               DO i = 1, gforc%xcnt(ib)
 
-                        hsolar = forc_xy_solarin%blk(ib,jb)%val(i,j)*0.5_R8
+                  hsolar = forc_xy_solarin%blk(ib,jb)%val(i,j)*0.5_R8
 
-                        ! NIR (dir, diff)
-                        ratio_rvrf = min(0.99_R8,max(0.29548_R8 + 0.00504_R8*hsolar  &
-                           -1.4957e-05_R8*hsolar**2 + 1.4881e-08_R8*hsolar**3,0.01_R8))
-                        forc_xy_soll %blk(ib,jb)%val(i,j) = ratio_rvrf*hsolar
-                        forc_xy_solld%blk(ib,jb)%val(i,j) = (1._R8 - ratio_rvrf)*hsolar
+                  ! NIR (dir, diff)
+                  ratio_rvrf = min(0.99_R8,max(0.29548_R8 + 0.00504_R8*hsolar  &
+                     -1.4957e-05_R8*hsolar**2 + 1.4881e-08_R8*hsolar**3,0.01_R8))
+                  forc_xy_soll %blk(ib,jb)%val(i,j) = ratio_rvrf*hsolar
+                  forc_xy_solld%blk(ib,jb)%val(i,j) = (1._R8 - ratio_rvrf)*hsolar
 
-                        ! VIS (dir, diff)
-                        ratio_rvrf = min(0.99_R8,max(0.17639_R8 + 0.00380_R8*hsolar  &
-                           -9.0039e-06_R8*hsolar**2 + 8.1351e-09_R8*hsolar**3,0.01_R8))
-                        forc_xy_sols %blk(ib,jb)%val(i,j) = ratio_rvrf*hsolar
-                        forc_xy_solsd%blk(ib,jb)%val(i,j) = (1._R8 - ratio_rvrf)*hsolar
+                  ! VIS (dir, diff)
+                  ratio_rvrf = min(0.99_R8,max(0.17639_R8 + 0.00380_R8*hsolar  &
+                     -9.0039e-06_R8*hsolar**2 + 8.1351e-09_R8*hsolar**3,0.01_R8))
+                  forc_xy_sols %blk(ib,jb)%val(i,j) = ratio_rvrf*hsolar
+                  forc_xy_solsd%blk(ib,jb)%val(i,j) = (1._R8 - ratio_rvrf)*hsolar
 
-                     ENDDO
-                  ENDDO
                ENDDO
-
-            ELSE
-      !---------------------------------------------------------------
-      ! as the downward solar is in full band, an empirical expression
-      ! will be used to divide fractions of band and incident
-      ! (visible, near-infrad, dirct, diffuse)
-      ! Julian calday (1.xx to 365.xx)
-      !---------------------------------------------------------------
-      DO iblkme = 1, gblock%nblkme
-         ib = gblock%xblkme(iblkme)
-         jb = gblock%yblkme(iblkme)
-
-         DO j = 1, gforc%ycnt(jb)
-            DO i = 1, gforc%xcnt(ib)
-
-               ilat = gforc%ydsp(jb) + j
-               ilon = gforc%xdsp(ib) + i
-               IF (ilon > gforc%nlon) ilon = ilon - gforc%nlon
-
-               a = forc_xy_solarin%blk(ib,jb)%val(i,j)
-               calday = calendarday(idate)
-               sunang = orb_coszen (calday, gforc%rlon(ilon), gforc%rlat(ilat))
-
-               IF (sunang .eq. 0)THEN
-                  cloud = 0.
-               ELSE
-                  cloud = (1160.*sunang-a)/(963.*sunang)
-               END IF
-               cloud = max(cloud,0.)
-               cloud = min(cloud,1.)
-               cloud = max(0.58,cloud)
-
-               difrat = 0.0604/(sunang-0.0223)+0.0683
-               IF(difrat.lt.0.) difrat = 0.
-               IF(difrat.gt.1.) difrat = 1.
-
-               difrat = difrat+(1.0-difrat)*cloud
-               vnrat = (580.-cloud*464.)/((580.-cloud*499.)+(580.-cloud*464.))
-
-               forc_xy_sols %blk(ib,jb)%val(i,j) = a*(1.0-difrat)*vnrat
-               forc_xy_soll %blk(ib,jb)%val(i,j) = a*(1.0-difrat)*(1.0-vnrat)
-               forc_xy_solsd%blk(ib,jb)%val(i,j) = a*difrat*vnrat
-               forc_xy_solld%blk(ib,jb)%val(i,j) = a*difrat*(1.0-vnrat)
             ENDDO
          ENDDO
-      ENDDO
-   ENDIF
+
+      ELSE
+         !---------------------------------------------------------------
+         ! as the downward solar is in full band, an empirical expression
+         ! will be used to divide fractions of band and incident
+         ! (visible, near-infrad, dirct, diffuse)
+         ! Julian calday (1.xx to 365.xx)
+         !---------------------------------------------------------------
+         DO iblkme = 1, gblock%nblkme
+            ib = gblock%xblkme(iblkme)
+            jb = gblock%yblkme(iblkme)
+
+            DO j = 1, gforc%ycnt(jb)
+               DO i = 1, gforc%xcnt(ib)
+
+                  ilat = gforc%ydsp(jb) + j
+                  ilon = gforc%xdsp(ib) + i
+                  IF (ilon > gforc%nlon) ilon = ilon - gforc%nlon
+
+                  a = forc_xy_solarin%blk(ib,jb)%val(i,j)
+                  calday = calendarday(idate)
+                  sunang = orb_coszen (calday, gforc%rlon(ilon), gforc%rlat(ilat))
+
+                  IF (sunang .eq. 0)THEN
+                     cloud = 0.
+                  ELSE
+                     cloud = (1160.*sunang-a)/(963.*sunang)
+                  END IF
+                  cloud = max(cloud,0.)
+                  cloud = min(cloud,1.)
+                  cloud = max(0.58,cloud)
+
+                  difrat = 0.0604/(sunang-0.0223)+0.0683
+                  IF(difrat.lt.0.) difrat = 0.
+                  IF(difrat.gt.1.) difrat = 1.
+
+                  difrat = difrat+(1.0-difrat)*cloud
+                  vnrat = (580.-cloud*464.)/((580.-cloud*499.)+(580.-cloud*464.))
+
+                  forc_xy_sols %blk(ib,jb)%val(i,j) = a*(1.0-difrat)*vnrat
+                  forc_xy_soll %blk(ib,jb)%val(i,j) = a*(1.0-difrat)*(1.0-vnrat)
+                  forc_xy_solsd%blk(ib,jb)%val(i,j) = a*difrat*vnrat
+                  forc_xy_solld%blk(ib,jb)%val(i,j) = a*difrat*(1.0-vnrat)
+               ENDDO
+            ENDDO
+         ENDDO
+      ENDIF
    ENDIF
 
          ! [GET ATMOSPHERE CO2 CONCENTRATION DATA]
@@ -1081,6 +1081,7 @@ CONTAINS
    integer :: itime, maxday, id(3)
    integer*8 :: sec_long
    integer :: ivar, ntime, its, ite, it
+   real(r8) firstsec
 
    type(timestamp) :: etstamp_f
    type(timestamp), allocatable :: forctime_ (:)
@@ -1097,11 +1098,22 @@ CONTAINS
 
       allocate (forctime (size(forctime_sec)))
 
-      forctime(1)%year = year
-      forctime(1)%day  = get_calday(month*100+day, isleapyear(year))
-      forctime(1)%sec = hour*3600 + minute*60 + second + forctime_sec(1)
+      id(1) = year
+      id(2) = get_calday(month*100+day, isleapyear(year))
+      id(3) = hour*3600 + minute*60 + second
 
-      id(:) = (/forctime(1)%year, forctime(1)%day, forctime(1)%sec/)
+      firstsec = forctime_sec(1)
+      DO WHILE (firstsec > 86400)
+         CALL ticktime (86400., id)
+         firstsec = firstsec - 86400
+      ENDDO
+      CALL ticktime (firstsec, id)
+
+      !forctime(1)%year = year
+      !forctime(1)%day  = get_calday(month*100+day, isleapyear(year))
+      !forctime(1)%sec = hour*3600 + minute*60 + second + forctime_sec(1)
+
+      !id(:) = (/forctime(1)%year, forctime(1)%day, forctime(1)%sec/)
       CALL adj2end(id)
       forctime(1) = id
 
