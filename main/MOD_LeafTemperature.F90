@@ -209,7 +209,7 @@ CONTAINS
         t_precip,   &! snowfall/rainfall temperature [kelvin]
         qintr_rain, &! rainfall interception (mm h2o/s)
         qintr_snow, &! snowfall interception (mm h2o/s)
-        smp     (1:nl_soil), &! precipitation sensible heat from canopy
+        smp     (1:nl_soil), &! soil matrix potential
         rootfr  (1:nl_soil), &! root fraction
         hksati  (1:nl_soil), &! hydraulic conductivity at saturation [mm h2o/s]
         hk      (1:nl_soil)   ! soil hydraulic conducatance
