@@ -2,6 +2,8 @@
 # mpif90 - ifort 
 # 
 
+FF = mpif90
+
 NETCDF_LIB = /share/home/dq013/software/netcdf_parallel_N/lib         #wherry
 NETCDF_INC = /share/home/dq013/software/netcdf_parallel_N/include     #wherry
 #NETCDF_LIB = /share/home/dq013/software/netcdf-single/lib          #wherry
