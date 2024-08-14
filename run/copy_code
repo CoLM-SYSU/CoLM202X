@@ -38,6 +38,9 @@ CopyCode()
    mkdir -p $DestPathName
    cd $SourcePathName
    
+   if [ -f Makefile ];then
+      cp -p Makefile $DestPathName/
+   fi
    for files1 in *
    do
       if [ -f $files1 ];then
@@ -69,6 +72,9 @@ CopyCode()
                                  cp -p $files3 $DestPathName/$files1/$files2/
                               fi
                            done
+			   if [ -f Makefile ];then
+			      cp -p Makefile $DestPathName/$files1/$files2/
+			   fi
                            cd ../
                         else 
                            if echo $files2 | grep -q -E '.F90$'
@@ -77,6 +83,9 @@ CopyCode()
                            fi
                         fi
                      done
+		     if [ -f Makefile ];then
+                        cp -p Makefile $DestPathName/$files1/
+                     fi
                   fi
                fi
             fi

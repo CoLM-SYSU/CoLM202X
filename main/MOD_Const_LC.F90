@@ -317,6 +317,13 @@ MODULE MOD_Const_LC
           3.95, 3.95, 3.95, 3.95, 3.95, 3.95, &
           3.95, 3.95, 3.95,   0., 3.95, 3.95, &
             0., 3.95, 3.95, 3.95,   0.,   0./)
+
+   ! lambda for WUE stomata model
+   real(r8), parameter, dimension(N_land_classification) :: lambda_usgs &
+      = (/1000., 1000., 1000., 1000., 1000., 1000., &
+          1000., 1000., 1000., 1000., 1000., 1000., &
+          1000., 1000., 1000., 1000., 1000., 1000., &
+          1000., 1000., 1000., 1000., 1000., 1000./)
 !end plant hydraulic parameters
 #else
 
@@ -591,6 +598,12 @@ MODULE MOD_Const_LC
           3.95, 3.95, 3.95, 3.95, 3.95, 3.95, &
           3.95, 3.95,   0.,   0.,   0.  /)
 !end plant hydraulic parameters
+
+   ! lambda for WUE stomata model
+   real(r8), parameter, dimension(N_land_classification) :: lambda_igbp &
+      = (/1000., 1000., 1000., 1000., 1000., 1000., &
+          1000., 1000., 1000., 1000., 1000., 1000., &
+          1000., 1000., 1000., 1000., 1000./)
 #endif
 
    real(r8), dimension(N_land_classification) :: &
@@ -619,6 +632,8 @@ MODULE MOD_Const_LC
       hhti,       &! 1/2 point of high temperature inhibition function (s2)
       hlti,       &! 1/2 point of low temperature inhibition function (s4)
       extkn,      &! coefficient of leaf nitrogen allocation
+
+      lambda,     &! marginal water cost of carbon gain (mol mol-1)
 
       d50,        &! depth at 50% roots
       beta         ! coefficient of root profile
@@ -699,6 +714,9 @@ IF (DEF_USE_PLANTHYDRAULICS) THEN
       psi50_root (:) = psi50_root0_usgs(:)
       ck         (:) = ck0_usgs        (:)
 ENDIF
+IF (DEF_USE_WUEST)THEN
+      lambda     (:) = lambda_usgs     (:)
+ENDIF
       roota      (:) = roota_usgs      (:)
       rootb      (:) = rootb_usgs      (:)
       rho    (1,1,:) = rhol_vis_usgs   (:)
@@ -746,6 +764,9 @@ IF(DEF_USE_PLANTHYDRAULICS)THEN
       psi50_xyl  (:) = psi50_xyl0_igbp (:)
       psi50_root (:) = psi50_root0_igbp(:)
       ck         (:) = ck0_igbp        (:)
+ENDIF
+IF (DEF_USE_WUEST)THEN
+      lambda     (:) = lambda_igbp     (:)
 ENDIF
       roota      (:) = roota_igbp      (:)
       rootb      (:) = rootb_igbp      (:)
