@@ -815,7 +815,7 @@ CONTAINS
 
                   CASE ('JRA55') ! JRA55 forcing
 
-                     forcn(4)%blk(ib,jb)%val(i,j)=forcn(4)%blk(ib,jb)%val(i,j)/86400.
+                     forcn(4)%blk(ib,jb)%val(i,j)=forcn(4)%blk(ib,jb)%val(i,j)/86400.0 !mm/s
                      CALL qsadv (forcn(1)%blk(ib,jb)%val(i,j), forcn(3)%blk(ib,jb)%val(i,j), &
                         es,esdT,qsat_tmp,dqsat_tmpdT)
                      IF (qsat_tmp < forcn(2)%blk(ib,jb)%val(i,j)) THEN
@@ -824,7 +824,7 @@ CONTAINS
 
                   CASE ('JRA3Q') ! JRA3Q forcing
 
-                     forcn(4)%blk(ib,jb)%val(i,j)=forcn(4)%blk(ib,jb)%val(i,j)/86400.
+                     forcn(4)%blk(ib,jb)%val(i,j)=forcn(4)%blk(ib,jb)%val(i,j)
                      CALL qsadv (forcn(1)%blk(ib,jb)%val(i,j), forcn(3)%blk(ib,jb)%val(i,j), &
                         es,esdT,qsat_tmp,dqsat_tmpdT)
                      IF (qsat_tmp < forcn(2)%blk(ib,jb)%val(i,j)) THEN
