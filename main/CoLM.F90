@@ -505,13 +505,14 @@ PROGRAM CoLM
 #ifdef RangeCheck
          CALL check_TimeVariables ()
 #endif
+#ifdef USEMPI
+         CALL mpi_barrier (p_comm_glb, p_err)
+#endif
+
 #ifdef CoLMDEBUG
          CALL print_VSF_iteration_stat_info ()
 #endif
 
-#ifdef USEMPI
-         CALL mpi_barrier (p_comm_glb, p_err)
-#endif
 
          IF (p_is_master) THEN
             CALL system_clock (end_time, count_rate = c_per_sec)

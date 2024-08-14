@@ -53,8 +53,7 @@
    ! WFDE5     | CRUJRA  | WFDEI | JRA55     | GDAS      | CMFD     | POINT |  JRA3Q
    DEF_forcing_namelist = '/tera13/zhangsp/work/CoLM2024/run/forcing/ERA5LAND.nml'
    
-   DEF_USE_Forcing_Downscaling =.false.
-   DEF_Forcing_Interp_Method = 'bilinear' ! 'arealweight' (default) or 'bilinear'
+   DEF_Forcing_Interp_Method = 'arealweight' ! 'arealweight' (default) or 'bilinear'
 
    ! ----- history -----
    DEF_HIST_lon_res = 0.05

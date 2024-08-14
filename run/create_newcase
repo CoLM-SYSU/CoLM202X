@@ -247,10 +247,10 @@ NdaysofYear()
 #FORCINGNML=$ROOT/run/forcing/GSWP3.nml
 
 #machine = baiduboat
-ROOT=/share/home/dq010/CoLM/CoLM202X-CROP
+ROOT=/share/home/dq010/CoLM202X-test20240803/
 RAWDATA=/share/home/dq010/CoLM/data/rawdata/CROP-NITRIF/CLMrawdata_updating/
 RUNTIME=/share/home/dq010/CoLM/data/rawdata/CROP-NITRIF/CoLMruntime//
-MAKEOPTION=$ROOT/include/Makeoptions-baiduboat-intel
+MAKEOPTION=$ROOT/include/Makeoptions.SYSU-BaiduBoat
 FORCINGPATH=/share/home/dq010/CoLM/data/inputdata/atm/GSWP3/
 HEADER=$ROOT/run/jobs.config
 CONFIG=$ROOT/run/mpi.config

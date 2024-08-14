@@ -99,7 +99,7 @@ CONTAINS
        cintsha        ! scaling up from shaded leaf to canopy
 
    real(r8),intent(in), dimension(nl_soil) :: &
-       smp,          &! precipitation sensible heat from canopy
+       smp,          &! soil matrix potential
        rootfr,       &! root fraction
        hksati,       &! hydraulic conductivity at saturation [mm h2o/s]
        hk             ! soil hydraulic conducatance [mm h2o/s]
