@@ -802,7 +802,7 @@ CONTAINS
       ! solve co2i_c
       D = amax1((ei - ea),50._r8) / psrf
 
-      co2i_c = co2a - sqrt(1.6*D*(co2a-gammas/psrf)/lambda)
+      co2i_c = co2a - sqrt(1.6*D*(amax1(co2a-gammas/psrf,0._r8))/lambda)
       co2i_e = co2a - co2a / ( 1 + 1.37 * sqrt(lambda * gammas/psrf / D))
       
       pco2i_c = co2i_c * psrf
