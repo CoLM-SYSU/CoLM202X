@@ -38,6 +38,7 @@ SUBROUTINE UrbanCoLMMAIN ( &
            trop         ,g1           ,g0           ,gradm        ,&
            binter       ,extkn        ,rho          ,tau          ,&
            rootfr                     ,&
+           lambda                     ,&
 
          ! atmospheric forcing
            forc_pco2m   ,forc_po2m    ,forc_us      ,forc_vs      ,&
@@ -243,6 +244,7 @@ SUBROUTINE UrbanCoLMMAIN ( &
         tau(2,2)   ,&! leaf transmittance (iw=iband, il=life and dead)
 
         rootfr    (nl_soil),&! fraction of roots in each soil layer
+        lambda     ,&! marginal water cost of carbon gain
 
         ! tunable parameters
         zlnd       ,&! roughness length for soil [m]
@@ -923,6 +925,7 @@ SUBROUTINE UrbanCoLMMAIN ( &
          hhti                 ,trda                 ,trdm                 ,trop                 ,&
          g1                   ,g0                   ,gradm                ,binter               ,&
          extkn                                      ,&
+         lambda                                     ,&
          ! surface status
          fsno_roof            ,fsno_gimp            ,fsno_gper            ,scv_roof             ,&
          scv_gimp             ,scv_gper             ,scv_lake             ,snowdp_roof          ,&
