@@ -969,7 +969,7 @@ CONTAINS
                   ixseg = rmesg(2)
                   iyseg = rmesg(3)
                   ndim1 = rmesg(4)
-                  ndim2 = rmesg(4)
+                  ndim2 = rmesg(5)
 
                   xgdsp = hist_concat%xsegs(ixseg)%gdsp
                   ygdsp = hist_concat%ysegs(iyseg)%gdsp
