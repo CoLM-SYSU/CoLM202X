@@ -299,7 +299,7 @@ CONTAINS
          assmt = max( 1.e-12, assimn )
 
          !IF(DEF_USE_WUEST .and. epar .ge. 1.e-12)THEN
-         IF(DEF_USE_WUEST)THEN
+         IF(DEF_USE_WUEST .and. .not. abs(c4 - 1) .lt. 0.001)THEN
             IF(omc .lt. ome)THEN
                pco2i = pco2i_c
             ELSE
