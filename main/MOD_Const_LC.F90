@@ -672,6 +672,7 @@ CONTAINS
 
    SUBROUTINE Init_LC_Const
 
+   USE MOD_Namelist
    IMPLICIT NONE
 
    integer :: i, nsl
