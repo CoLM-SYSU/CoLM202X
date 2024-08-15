@@ -507,12 +507,13 @@ CONTAINS
                         river_dn%ndata(iproc) = river_dn%ndata(iproc) + 1
                      ENDIF
                   ENDDO
+               
+                  addrdown(river_dn%iloc)= 0
+
                ELSE
                   river_dn%nproc = 0
                ENDIF
                      
-               addrdown(river_dn%iloc)= 0
-
             ENDIF
 #endif
          ENDIF
