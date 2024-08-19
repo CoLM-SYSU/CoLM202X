@@ -69,6 +69,7 @@ MODULE MOD_Urban_Flux
    real(r8), parameter :: fsh = 0.92
    real(r8), parameter :: flh = 0.08
 
+! A simple urban irrigation scheme accounts for soil water stress of trees
    logical,  parameter :: DEF_URBAN_Irrigation = .true.
    real(r8), parameter :: rstfac_irrig = 1.
 !-----------------------------------------------------------------------
@@ -848,7 +849,7 @@ CONTAINS
          hlti           ,shti           ,hhti           ,trda           ,&
          trdm           ,trop           ,g1             ,g0             ,&
          gradm          ,binter         ,extkn          ,extkd          ,&
-         dewmx          ,etrc           ,trsmx0                         ,&
+         dewmx          ,etrc           ,trsmx0         ,lambda_wue     ,&
          ! Status of surface
          z0h_g          ,obug           ,ustarg         ,zlnd           ,&
          zsno           ,fsno_roof      ,fsno_gimp      ,fsno_gper      ,&
@@ -958,6 +959,7 @@ CONTAINS
         g0,           &! conductance-photosynthesis intercept for medlyn model
         gradm,        &! conductance-photosynthesis slope parameter
         binter,       &! conductance-photosynthesis intercept
+        lambda_wue,   &! marginal water cost of carbon gain
 
         extkn,        &! coefficient of leaf nitrogen allocation
         extkd,        &! diffuse and scattered diffuse PAR extinction coefficient
@@ -1667,7 +1669,7 @@ CONTAINS
                g1      ,g0      ,gradm  ,binter ,thm    ,&
                psrf    ,po2m    ,pco2m  ,pco2a  ,eah    ,&
                ei(3)   ,tu(3)   ,par    ,&
-               o3coefv ,o3coefg ,&
+               o3coefv ,o3coefg ,lambda_wue     ,&
                rb(3)/lai,raw    ,rstfac ,cint(:),&
                assim   ,respc   ,rs     &
                )
@@ -1680,7 +1682,7 @@ IF ( DEF_URBAN_Irrigation .and. rstfac < rstfac_irrig ) THEN
                g1      ,g0      ,gradm  ,binter ,thm    ,&
                psrf    ,po2m    ,pco2m  ,pco2a  ,eah    ,&
                ei(3)   ,tu(3)   ,par    ,&
-               o3coefv ,o3coefg ,&
+               o3coefv ,o3coefg ,lambda_wue     ,&
                rb(3)/lai,raw    ,rstfac_irrig   ,cint(:),&
                assim   ,respc   ,rs     &
                )

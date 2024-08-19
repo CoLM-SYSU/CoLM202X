@@ -103,7 +103,7 @@ CONTAINS
    character(len=256) :: fsoildat
    character(len=256) :: fsnowdat
    character(len=256) :: fcndat
-   character(len=256) :: ftopo
+   character(len=256) :: ftopo, lndname
    type(grid_type) :: gsoil
    type(grid_type) :: gsnow
    type(grid_type) :: gcn
@@ -383,7 +383,32 @@ CONTAINS
       ftopo = trim(dir_landdata)//'/topography/'//trim(cyear)//'/topostd_patches.nc'
       CALL ncio_read_vector (ftopo, 'topostd_patches', landpatch, topostd)
 #endif
-
+! ......................................
+! 1.5 Initialize topography factor data
+! ......................................
+#ifdef SinglePoint
+      slp_type_patches(:,1) = SITE_slp_type
+      asp_type_patches(:,1) = SITE_asp_type
+      area_type_patches(:,1) = SITE_area_type
+      svf_patches(:) = SITE_svf
+      cur_patches(:) = SITE_cur
+      sf_lut_patches(:,:,1) = SITE_sf_lut
+#else
+      IF (DEF_USE_Forcing_Downscaling) THEN
+         lndname = trim(DEF_dir_landdata) // '/topography/'//trim(cyear)//'/slp_type_patches.nc'             ! slope
+         CALL ncio_read_vector (lndname, 'slp_type_patches', num_type, landpatch, slp_type_patches)
+         lndname = trim(DEF_dir_landdata) // '/topography/'//trim(cyear)//'/svf_patches.nc'               ! sky view factor
+         CALL ncio_read_vector (lndname, 'svf_patches', landpatch, svf_patches)
+         lndname = trim(DEF_dir_landdata) // '/topography/'//trim(cyear)//'/asp_type_patches.nc'            ! aspect
+         CALL ncio_read_vector (lndname, 'asp_type_patches', num_type, landpatch, asp_type_patches)
+         lndname = trim(DEF_dir_landdata) // '/topography/'//trim(cyear)//'/area_type_patches.nc'         ! area percent
+         CALL ncio_read_vector (lndname, 'area_type_patches', num_type, landpatch, area_type_patches)
+         lndname = trim(DEF_dir_landdata) // '/topography/'//trim(cyear)//'/sf_lut_patches.nc'        ! shadow mask
+         CALL ncio_read_vector (lndname, 'sf_lut_patches', num_azimuth, num_zenith, landpatch, sf_lut_patches)
+         lndname = trim(DEF_dir_landdata) // '/topography/'//trim(cyear)//'/cur_patches.nc'               ! curvature
+         CALL ncio_read_vector (lndname, 'cur_patches', landpatch, cur_patches)
+       ENDIF
+#endif
 ! ................................
 ! 1.6 Initialize TUNABLE constants
 ! ................................

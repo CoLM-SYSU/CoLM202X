@@ -16,6 +16,7 @@ MODULE MOD_HistGridded
    !----------------------------------------------------------------------------
 
    USE MOD_Precision
+   USE MOD_SPMD_Task
    USE MOD_Grid
    USE MOD_DataType
    USE MOD_SpatialMapping
@@ -44,7 +45,6 @@ CONTAINS
 
    USE MOD_SPMD_Task
    USE MOD_Vars_Global
-   USE MOD_Namelist
    USE MOD_Block
    USE MOD_LandPatch
 #ifdef URBAN_MODEL
@@ -107,7 +107,7 @@ CONTAINS
 #endif
 
       IF (trim(DEF_HIST_mode) == 'one') THEN
-         hist_data_id = 1
+         hist_data_id = 10001
       ENDIF
 
    END SUBROUTINE hist_gridded_init
@@ -117,12 +117,7 @@ CONTAINS
          acc_vec, file_hist, varname, itime_in_file, sumarea, filter, &
          longname, units)
 
-   USE MOD_Precision
-   USE MOD_SPMD_Task
-   USE MOD_Namelist
-   USE MOD_DataType
    USE MOD_Block
-   USE MOD_Grid
    USE MOD_Vars_1DAccFluxes,  only: nac
    USE MOD_Vars_Global, only: spval
    IMPLICIT NONE
@@ -182,12 +177,7 @@ CONTAINS
          acc_vec, file_hist, varname, itime_in_file, sumarea, filter, &
          longname, units)
 
-   USE MOD_Precision
-   USE MOD_SPMD_Task
-   USE MOD_Namelist
-   USE MOD_DataType
    USE MOD_Block
-   USE MOD_Grid
    USE MOD_Vars_1DAccFluxes,  only: nac
    USE MOD_Vars_Global, only: spval
    IMPLICIT NONE
@@ -247,12 +237,7 @@ CONTAINS
          acc_vec, file_hist, varname, itime_in_file, dim1name, lb1, ndim1, sumarea, filter, &
          longname, units)
 
-   USE MOD_Precision
-   USE MOD_SPMD_Task
-   USE MOD_Namelist
-   USE MOD_DataType
    USE MOD_Block
-   USE MOD_Grid
    USE MOD_Vars_1DAccFluxes,  only: nac
    USE MOD_Vars_Global, only: spval
    IMPLICIT NONE
@@ -321,12 +306,7 @@ CONTAINS
          dim1name, lb1, ndim1, dim2name, lb2, ndim2, &
          sumarea, filter, longname, units)
 
-   USE MOD_Precision
-   USE MOD_SPMD_Task
-   USE MOD_Namelist
-   USE MOD_DataType
    USE MOD_Block
-   USE MOD_Grid
    USE MOD_Vars_1DAccFluxes,  only: nac
    USE MOD_Vars_Global, only: spval
    IMPLICIT NONE
@@ -396,12 +376,7 @@ CONTAINS
          acc_vec, file_hist, varname, itime_in_file, sumarea, filter, &
          longname, units)
 
-   USE MOD_Precision
-   USE MOD_SPMD_Task
-   USE MOD_Namelist
-   USE MOD_DataType
    USE MOD_Block
-   USE MOD_Grid
    USE MOD_Vars_1DAccFluxes,  only: nac_ln
    USE MOD_Vars_Global, only: spval
    IMPLICIT NONE
@@ -468,10 +443,7 @@ CONTAINS
    SUBROUTINE hist_gridded_write_time ( &
          filename, dataname, time, itime)
 
-   USE MOD_Namelist
-   USE MOD_Grid
    USE MOD_Block
-   USE MOD_SPMD_Task
    IMPLICIT NONE
 
    character (len=*), intent(in) :: filename
@@ -567,11 +539,7 @@ CONTAINS
    SUBROUTINE hist_write_var_real8_2d ( &
          filename, dataname, grid, itime, wdata, compress, longname, units)
 
-   USE MOD_Namelist
    USE MOD_Block
-   USE MOD_Grid
-   USE MOD_DataType
-   USE MOD_SPMD_Task
    USE MOD_Vars_Global, only: spval
    IMPLICIT NONE
 
@@ -715,7 +683,7 @@ CONTAINS
          ENDIF
 #endif
 
-         hist_data_id = mod(hist_data_id,1000) + 1
+         hist_data_id = mod(hist_data_id-10000,10000) + 100001
 
       ELSEIF (trim(DEF_HIST_mode) == 'block') THEN
 
@@ -751,11 +719,7 @@ CONTAINS
    SUBROUTINE hist_write_var_real8_3d ( &
          filename, dataname, dim1name, grid, itime, wdata, compress, longname, units)
 
-   USE MOD_Namelist
    USE MOD_Block
-   USE MOD_Grid
-   USE MOD_DataType
-   USE MOD_SPMD_Task
    USE MOD_Vars_Global, only: spval
    IMPLICIT NONE
 
@@ -901,7 +865,7 @@ CONTAINS
          ENDIF
 #endif
 
-         hist_data_id = mod(hist_data_id,1000) + 1
+         hist_data_id = mod(hist_data_id-10000,10000) + 100001
 
       ELSEIF (trim(DEF_HIST_mode) == 'block') THEN
 
@@ -931,11 +895,7 @@ CONTAINS
    SUBROUTINE hist_write_var_real8_4d ( &
          filename, dataname, dim1name, dim2name, grid, itime, wdata, compress, longname, units)
 
-   USE MOD_Namelist
    USE MOD_Block
-   USE MOD_Grid
-   USE MOD_DataType
-   USE MOD_SPMD_Task
    USE MOD_Vars_Global, only: spval
    IMPLICIT NONE
 
@@ -974,7 +934,7 @@ CONTAINS
                   ixseg = rmesg(2)
                   iyseg = rmesg(3)
                   ndim1 = rmesg(4)
-                  ndim2 = rmesg(4)
+                  ndim2 = rmesg(5)
 
                   xgdsp = hist_concat%xsegs(ixseg)%gdsp
                   ygdsp = hist_concat%ysegs(iyseg)%gdsp
@@ -1085,7 +1045,7 @@ CONTAINS
          ENDIF
 #endif
 
-         hist_data_id = mod(hist_data_id,1000) + 1
+         hist_data_id = mod(hist_data_id-10000,10000) + 100001
 
       ELSEIF (trim(DEF_HIST_mode) == 'block') THEN
          IF (p_is_io) THEN
@@ -1115,7 +1075,6 @@ CONTAINS
    SUBROUTINE hist_write_grid_info (fileblock, grid, iblk, jblk)
 
    USE MOD_Block
-   USE MOD_Grid
    IMPLICIT NONE
 
    character(len=*), intent(in) :: fileblock
