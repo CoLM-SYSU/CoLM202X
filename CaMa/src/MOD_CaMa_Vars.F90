@@ -410,23 +410,35 @@ CONTAINS
       CALL flux_map_and_write_2d_cama(DEF_hist_cama_vars%maxdph, &
       real(D2RIVDPH_MAX), file_hist, 'maxdph', itime_in_file,'daily maximum river depth','m')
 
+      IF (DEF_hist_cama_vars%damsto) THEN
       CALL flux_map_and_write_2d_cama(DEF_hist_cama_vars%damsto, &
       real(p2damsto), file_hist, 'damsto', itime_in_file,'reservoir storage','m3')
+      ENDIF
 
+      IF (DEF_hist_cama_vars%daminf) THEN
       CALL flux_map_and_write_2d_cama(DEF_hist_cama_vars%daminf, &
       real(d2daminf_avg), file_hist, 'daminf', itime_in_file,'reservoir inflow','m3/s')
+      ENDIF
 
+      IF (DEF_hist_cama_vars%wevap) THEN
       CALL flux_map_and_write_2d_cama(DEF_hist_cama_vars%wevap, &
       real(D2WEVAPEX_AVG), file_hist, 'wevap', itime_in_file,'inundation water evaporation','m/s')
+      ENDIF
 
+      IF (DEF_hist_cama_vars%winfilt) THEN
       CALL flux_map_and_write_2d_cama(DEF_hist_cama_vars%winfilt, &
       real(D2WINFILTEX_AVG), file_hist, 'winfilt', itime_in_file,'inundation water infiltration','m/s')
+      ENDIF
 
+      IF (DEF_hist_cama_vars%levsto) THEN
       CALL flux_map_and_write_2d_cama(DEF_hist_cama_vars%levsto, &
       real(P2LEVSTO), file_hist, 'levsto', itime_in_file,'protected area storage','m3')
+      ENDIF
 
+      IF (DEF_hist_cama_vars%levdph) THEN
       CALL flux_map_and_write_2d_cama(DEF_hist_cama_vars%levdph, &
       real(D2LEVDPH), file_hist, 'levdph', itime_in_file,'protected area depth','m')
+      ENDIF
       
       !*** reset variable
       CALL CMF_DIAG_RESET

@@ -428,7 +428,7 @@ CONTAINS
       ENDDO
       w_sum_after = w_sum_after + wa
 
-      wblc = w_sum_after - (w_sum_before + (qgtop - etr - rsubst) * dt)
+      wblc = w_sum_after - (w_sum_before + (qgtop - sum(etroot) - rsubst) * dt)
 
       IF (abs(wblc) > tolerance) THEN
          write(*,*) 'soil_water_vertical_movement balance error: ', wblc

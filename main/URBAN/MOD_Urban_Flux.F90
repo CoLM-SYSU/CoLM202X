@@ -884,6 +884,7 @@ CONTAINS
          trdm        ,trop        ,g1          ,g0          ,&
          gradm       ,binter      ,extkn       ,extkd       ,&
          dewmx       ,etrc        ,&
+         lambda_wue                   ,&
          ! Status of surface
          z0h_g       ,obug        ,ustarg      ,zlnd        ,&
          zsno        ,fsno_roof   ,fsno_gimp   ,fsno_gper   ,&
@@ -991,6 +992,7 @@ CONTAINS
         g0,       &! conductance-photosynthesis intercept for medlyn model
         gradm,    &! conductance-photosynthesis slope parameter
         binter,   &! conductance-photosynthesis intercept
+        lambda_wue,   &! marginal water cost of carbon gain
 
         extkn,    &! coefficient of leaf nitrogen allocation
         extkd,    &! diffuse and scattered diffuse PAR extinction coefficient
@@ -1703,6 +1705,7 @@ CONTAINS
                psrf    ,po2m    ,pco2m  ,pco2a  ,eah    ,&
                ei(3)   ,tu(3)   ,par    ,&
                o3coefv ,o3coefg ,&
+               lambda_wue       ,&
                rb(3)/lai,raw    ,rstfac ,cint(:),&
                assim   ,respc   ,rs     &
                )

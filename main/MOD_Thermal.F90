@@ -45,6 +45,9 @@ CONTAINS
 !Ozone stress variables
                        lai_old     ,o3uptakesun ,o3uptakesha ,forc_ozone, &
 !end ozone stress variables
+!Ozone WUE stomata model parameter
+                       lambda     ,&! Marginal water cost of carbon gain ((mol h2o) (mol co2)-1)
+!End WUE stomata model parameter
                        slti        ,hlti        ,shti        ,hhti       ,&
                        trda        ,trdm        ,trop        ,g1         ,&
                        g0          ,gradm       ,binter      ,extkn      ,&
@@ -262,6 +265,9 @@ CONTAINS
        o3uptakesha,  &! Ozone does, shaded leaf (mmol O3/m^2)
        forc_ozone ,  &! Ozone
 !end ozone stress variables
+!Ozone WUE stomata model parameter
+       lambda     ,  &! Marginal water cost of carbon gain ((mol h2o) (mol co2)-1)
+!End WUE stomata model parameter
        tleaf,        &! shaded leaf temperature [K]
        t_soisno(lb:nl_soil),   &! soil temperature [K]
        wice_soisno(lb:nl_soil),&! ice lens [kg/m2]
@@ -667,6 +673,9 @@ IF ( patchtype==0.and.DEF_USE_LCT .or. patchtype>0 ) THEN
                  o3coefv_sun ,o3coefv_sha ,o3coefg_sun ,o3coefg_sha, &
                  lai_old     ,o3uptakesun ,o3uptakesha ,forc_ozone , &
 !end ozone stress variables
+!Ozone WUE stomata model parameter
+                 lambda      ,&! Marginal water cost of carbon gain ((mol h2o) (mol co2)-1)
+!End WUE stomata model parameter
                  forc_hpbl                                                 ,&
                  qintr_rain  ,qintr_snow,t_precip  ,hprl       ,smp        ,&
                  hk(1:)      ,hksati(1:),rootflux(1:)                       )
@@ -809,6 +818,9 @@ IF (DEF_USE_PFT .or. patchclass(ipatch)==CROPLAND) THEN
                  o3coefv_sun_p(i) ,o3coefv_sha_p(i) ,o3coefg_sun_p(i) ,o3coefg_sha_p(i),&
                  lai_old_p(i), o3uptakesun_p(i) ,o3uptakesha_p(i) ,forc_ozone ,&
 !end ozone stress variables
+!Ozone WUE stomata model parameter
+                 lambda_p(p)    ,&! Marginal water cost of carbon gain ((mol h2o) (mol co2)-1)
+!End WUE stomata model parameter
                  forc_hpbl                                                  ,&
                  qintr_rain_p(i),qintr_snow_p(i),t_precip,hprl_p(i),smp     ,&
                  hk(1:)      ,hksati(1:),rootflux_p(1:,i)                    )

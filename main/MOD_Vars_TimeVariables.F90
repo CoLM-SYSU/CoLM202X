@@ -875,7 +875,7 @@ CONTAINS
       ENDSELECT
 
       IF (rwrite) THEN
-         rwrite = (ptstamp < itstamp)
+         rwrite = (ptstamp <= itstamp)
       ENDIF
 
    END FUNCTION save_to_restart

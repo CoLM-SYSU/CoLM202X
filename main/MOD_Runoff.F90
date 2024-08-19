@@ -239,7 +239,8 @@ CONTAINS
          if ( WaterDepthMax <= 0.0 ) then
             RunoffSurface = watin
          ELSEIF   ( (WaterDepthInit + watin) > WaterDepthMax ) then
-            RunoffSurface = (WaterDepthInit + w_int) - WaterDepthMax
+            !RunoffSurface = (WaterDepthInit + w_int) - WaterDepthMax
+            RunoffSurface = watin - wsat_int + w_int 
          ELSE
             InfilVarTmp  = 1.0 - ((WaterDepthInit +watin ) / WaterDepthMax)
             RunoffSurface =watin - wsat_int + w_int + wsat_int * (InfilVarTmp**(1.0+BVIC))

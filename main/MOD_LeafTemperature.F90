@@ -49,6 +49,9 @@ CONTAINS
               o3coefv_sun      ,o3coefv_sha      ,o3coefg_sun     ,o3coefg_sha ,&
               lai_old          ,o3uptakesun      ,o3uptakesha     ,forc_ozone  ,&
 !End ozone stress variables
+!WUE stomata model parameter
+              lambda                                                           ,&
+!End WUE stomata model parmaeter
               hpbl      ,&
               qintr_rain,qintr_snow,t_precip  ,hprl      ,smp       ,hk        ,&
               hksati    ,rootflux                                               )
@@ -136,6 +139,9 @@ CONTAINS
         g0,         &! conductance-photosynthesis intercept for medlyn model
         gradm,      &! conductance-photosynthesis slope parameter
         binter,     &! conductance-photosynthesis intercept
+!Ozone WUE stomata model parameter
+        lambda,     &! Marginal water cost of carbon gain ((mol h2o) (mol co2)-1)
+!End WUE stomata model parameter
         extkn        ! coefficient of leaf nitrogen allocation
    real(r8), intent(in) :: & ! for plant hydraulic scheme
         kmax_sun,   &! Plant Hydraulics Paramters
@@ -203,7 +209,7 @@ CONTAINS
         t_precip,   &! snowfall/rainfall temperature [kelvin]
         qintr_rain, &! rainfall interception (mm h2o/s)
         qintr_snow, &! snowfall interception (mm h2o/s)
-        smp     (1:nl_soil), &! precipitation sensible heat from canopy
+        smp     (1:nl_soil), &! soil matrix potential
         rootfr  (1:nl_soil), &! root fraction
         hksati  (1:nl_soil), &! hydraulic conductivity at saturation [mm h2o/s]
         hk      (1:nl_soil)   ! soil hydraulic conducatance
@@ -610,6 +616,9 @@ CONTAINS
             !Ozone stress variables
                  o3coefv_sun   ,o3coefg_sun   ,&
             !End ozone stress variables
+            !Ozone WUE stomata model parameter
+                 lambda   ,&
+            !End WUE stomata model parameter
                  rbsun    ,raw      ,rstfacsun,cintsun  ,&
                  assimsun ,respcsun ,rssun    )
 
@@ -622,6 +631,9 @@ CONTAINS
             ! Ozone stress variables
                  o3coefv_sha    ,o3coefg_sha  ,&
             ! End ozone stress variables
+            ! Ozone WUE stomata model parameter
+                 lambda   ,&
+            ! End WUE stomata model parameter
                  rbsha    ,raw      ,rstfacsha,cintsha  ,&
                  assimsha ,respcsha ,rssha    )
 
