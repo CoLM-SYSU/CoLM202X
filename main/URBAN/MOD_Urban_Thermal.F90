@@ -1011,7 +1011,7 @@ CONTAINS
       troof = t_roofsno(lbr)
       tgimp = t_gimpsno(lbi)
       tgper = t_gpersno(lbp)
-      twall = twsun*fwsun + twsha*fwsha
+      twall = (twsun*fwsun + twsha*fwsha)/(fwsun + fwsha)
 
       ! calculate lake temperture and sensible/latent heat fluxes
       CALL laketem ( &

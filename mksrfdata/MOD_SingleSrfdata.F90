@@ -87,10 +87,10 @@ MODULE MOD_SingleSrfdata
    ! topography factors used for downscaling
    real(r8) :: SITE_svf = 0.
    real(r8) :: SITE_cur = 0.
-   real(r8), allocatable :: SITE_slp_type(:)  
-   real(r8), allocatable :: SITE_asp_type(:) 
-   real(r8), allocatable :: SITE_area_type(:) 
-   real(r8), allocatable :: SITE_sf_lut(:,:)  
+   real(r8), allocatable :: SITE_slp_type(:)
+   real(r8), allocatable :: SITE_asp_type(:)
+   real(r8), allocatable :: SITE_area_type(:)
+   real(r8), allocatable :: SITE_sf_lut(:,:)
 
 
    integer , allocatable :: SITE_urbtyp   (:)
@@ -282,13 +282,15 @@ CONTAINS
       IF ((.not. mksrfdata) .or. USE_SITE_topography) THEN
          ! otherwise, retrieve from database by Aggregation_Topography.F90
          CALL ncio_read_serial (fsrfdata, 'elevation', SITE_topography)
-         CALL ncio_read_serial (fsrfdata, 'elvstd   ', SITE_topostd   )
-         CALL ncio_read_serial (fsrfdata, 'SITE_svf', SITE_svf)
-         CALL ncio_read_serial (fsrfdata, 'SITE_cur', SITE_cur)
-         CALL ncio_read_serial (fsrfdata, 'SITE_slp_type', SITE_slp_type)
-         CALL ncio_read_serial (fsrfdata, 'SITE_asp_type', SITE_asp_type)
-         CALL ncio_read_serial (fsrfdata, 'SITE_area_type', SITE_area_type)
-         CALL ncio_read_serial (fsrfdata, 'SITE_sf_lut', SITE_sf_lut)
+         IF (DEF_USE_Forcing_Downscaling) THEN
+            CALL ncio_read_serial (fsrfdata, 'elvstd   ', SITE_topostd   )
+            CALL ncio_read_serial (fsrfdata, 'SITE_svf', SITE_svf)
+            CALL ncio_read_serial (fsrfdata, 'SITE_cur', SITE_cur)
+            CALL ncio_read_serial (fsrfdata, 'SITE_slp_type', SITE_slp_type)
+            CALL ncio_read_serial (fsrfdata, 'SITE_asp_type', SITE_asp_type)
+            CALL ncio_read_serial (fsrfdata, 'SITE_area_type', SITE_area_type)
+            CALL ncio_read_serial (fsrfdata, 'SITE_sf_lut', SITE_sf_lut)
+         ENDIF
       ENDIF
 
    END SUBROUTINE read_surface_data_single
@@ -439,13 +441,15 @@ CONTAINS
       IF ((.not. mksrfdata) .or. USE_SITE_topography) THEN
          ! otherwise, retrieve from database by Aggregation_Topography.F90
          CALL ncio_read_serial (fsrfdata, 'elevation', SITE_topography)
-         CALL ncio_read_serial (fsrfdata, 'elvstd   ', SITE_topostd   )
-         CALL ncio_read_serial (fsrfdata, 'SITE_svf', SITE_svf)
-         CALL ncio_read_serial (fsrfdata, 'SITE_cur', SITE_cur)
-         CALL ncio_read_serial (fsrfdata, 'SITE_slp_type', SITE_slp_type)
-         CALL ncio_read_serial (fsrfdata, 'SITE_asp_type', SITE_asp_type)
-         CALL ncio_read_serial (fsrfdata, 'SITE_area_type', SITE_area_type)
-         CALL ncio_read_serial (fsrfdata, 'SITE_sf_lut', SITE_sf_lut)
+         IF (DEF_USE_Forcing_Downscaling) THEN
+            CALL ncio_read_serial (fsrfdata, 'elvstd   ', SITE_topostd   )
+            CALL ncio_read_serial (fsrfdata, 'SITE_svf', SITE_svf)
+            CALL ncio_read_serial (fsrfdata, 'SITE_cur', SITE_cur)
+            CALL ncio_read_serial (fsrfdata, 'SITE_slp_type', SITE_slp_type)
+            CALL ncio_read_serial (fsrfdata, 'SITE_asp_type', SITE_asp_type)
+            CALL ncio_read_serial (fsrfdata, 'SITE_area_type', SITE_area_type)
+            CALL ncio_read_serial (fsrfdata, 'SITE_sf_lut', SITE_sf_lut)
+         ENDIF
       ENDIF
 
    END SUBROUTINE read_urban_surface_data_single
@@ -610,19 +614,21 @@ CONTAINS
       ENDIF
 
       CALL ncio_write_serial (fsrfdata, 'elevation', SITE_topography)
-
-      ! used for downscaling
-      CALL ncio_write_serial (fsrfdata, 'SITE_svf', SITE_svf)
-      CALL ncio_write_serial (fsrfdata, 'SITE_cur', SITE_cur)
-      CALL ncio_write_serial (fsrfdata, 'SITE_sf_lut', SITE_sf_lut, 'azi', 'zen')
-      CALL ncio_write_serial (fsrfdata, 'SITE_slp_type', SITE_slp_type, 'type')
-      CALL ncio_write_serial (fsrfdata, 'SITE_asp_type', SITE_asp_type, 'type')
-      CALL ncio_write_serial (fsrfdata, 'SITE_area_type', SITE_area_type, 'type')
-
       CALL ncio_put_attr     (fsrfdata, 'elevation', 'source', datasource(USE_SITE_topography))
 
-      CALL ncio_write_serial (fsrfdata, 'elvstd', SITE_topostd)
-      CALL ncio_put_attr     (fsrfdata, 'elvstd', 'source', datasource(USE_SITE_topostd))
+      IF (DEF_USE_Forcing_Downscaling) THEN
+         ! used for downscaling
+         CALL ncio_write_serial (fsrfdata, 'SITE_svf', SITE_svf)
+         CALL ncio_write_serial (fsrfdata, 'SITE_cur', SITE_cur)
+         CALL ncio_write_serial (fsrfdata, 'SITE_sf_lut', SITE_sf_lut, 'azi', 'zen')
+         CALL ncio_write_serial (fsrfdata, 'SITE_slp_type', SITE_slp_type, 'type')
+         CALL ncio_write_serial (fsrfdata, 'SITE_asp_type', SITE_asp_type, 'type')
+         CALL ncio_write_serial (fsrfdata, 'SITE_area_type', SITE_area_type, 'type')
+
+
+         CALL ncio_write_serial (fsrfdata, 'elvstd', SITE_topostd)
+         CALL ncio_put_attr     (fsrfdata, 'elvstd', 'source', datasource(USE_SITE_topostd))
+      ENDIF
 
    END SUBROUTINE write_surface_data_single
 
@@ -804,19 +810,20 @@ CONTAINS
       ENDIF
 
       CALL ncio_write_serial (fsrfdata, 'elevation', SITE_topography)
-
-      ! used for downscaling
-      CALL ncio_write_serial (fsrfdata, 'SITE_svf', SITE_svf)
-      CALL ncio_write_serial (fsrfdata, 'SITE_cur', SITE_cur)
-      CALL ncio_write_serial (fsrfdata, 'SITE_sf_lut', SITE_sf_lut, 'azi', 'zen')
-      CALL ncio_write_serial (fsrfdata, 'SITE_slp_type', SITE_slp_type, 'type')
-      CALL ncio_write_serial (fsrfdata, 'SITE_asp_type', SITE_asp_type, 'type')
-      CALL ncio_write_serial (fsrfdata, 'SITE_area_type', SITE_area_type, 'type')
-
       CALL ncio_put_attr     (fsrfdata, 'elevation', 'source', datasource(USE_SITE_topography))
 
-      CALL ncio_write_serial (fsrfdata, 'elvstd', SITE_topostd)
-      CALL ncio_put_attr     (fsrfdata, 'elvstd', 'source', datasource(USE_SITE_topostd))
+      IF (DEF_USE_Forcing_Downscaling) THEN
+         ! used for downscaling
+         CALL ncio_write_serial (fsrfdata, 'SITE_svf', SITE_svf)
+         CALL ncio_write_serial (fsrfdata, 'SITE_cur', SITE_cur)
+         CALL ncio_write_serial (fsrfdata, 'SITE_sf_lut', SITE_sf_lut, 'azi', 'zen')
+         CALL ncio_write_serial (fsrfdata, 'SITE_slp_type', SITE_slp_type, 'type')
+         CALL ncio_write_serial (fsrfdata, 'SITE_asp_type', SITE_asp_type, 'type')
+         CALL ncio_write_serial (fsrfdata, 'SITE_area_type', SITE_area_type, 'type')
+
+         CALL ncio_write_serial (fsrfdata, 'elvstd', SITE_topostd)
+         CALL ncio_put_attr     (fsrfdata, 'elvstd', 'source', datasource(USE_SITE_topostd))
+      ENDIF
 
    END SUBROUTINE write_urban_surface_data_single
 
