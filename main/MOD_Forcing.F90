@@ -719,11 +719,9 @@ CONTAINS
                IF (forc_sols(np)+forc_solsd(np)+forc_soll(np)+forc_solld(np) == 0) THEN
                   balb = 0
                ELSE
-                  balb = (alb(1,1,np)*forc_sols(np) &
-                        +alb(1,2,np)*forc_solsd(np) &
-                        +alb(2,1,np)*forc_soll(np) &
-                        +alb(2,2,np)*forc_solld(np)) &
-                        /(forc_sols(np)+forc_solsd(np)+forc_soll(np)+forc_solld(np))
+                  balb = ( alb(1,1,np)*forc_sols (np) + alb(1,2,np)*forc_solsd(np)   &
+                         + alb(2,1,np)*forc_soll (np) + alb(2,2,np)*forc_solld(np) ) &
+                       / (forc_sols(np)+forc_solsd(np)+forc_soll(np)+forc_solld(np))
                ENDIF
 
                DO ipart = 1, mg2p_forc%npart(np) ! part loop of each patch
