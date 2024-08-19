@@ -84,7 +84,9 @@ CONTAINS
 
    ! sunlit absorption fraction calculation mode
    ! .true. USE 3D model, otherwise USE 1D case
-   logical, parameter :: fsun3D = .true.
+   ! NOTE: The 3D version will be activated in the new release,
+   !       accompained by a new set of canopy structure data.
+   logical, parameter :: fsun3D = .false.
 
    ! define allocatable variables
    integer,  allocatable :: canlay(:)
@@ -293,6 +295,8 @@ CONTAINS
    real(r8), intent(in)  :: fcover(ps:pe)        !fractional cover of pft within a patch
    real(r8), intent(in)  :: csiz  (ps:pe)        !crown size of vegetation
    real(r8), intent(in)  :: chgt  (ps:pe)        !central height of crown
+   ! NOTE: The 'cdcw' parameter will be activated in the new release, accompained by
+   !       a new set of canopy structure data. Currently we set cdcw = 1, i.e., sphere
    real(r8)              :: cdcw  (ps:pe)        !crown depth to crown width
    real(r8), intent(in)  :: chil  (ps:pe)        !leaf angle distribution parameter
    real(r8), intent(in)  :: lsai  (ps:pe)        !LAI+SAI

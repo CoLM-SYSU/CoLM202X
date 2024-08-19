@@ -693,7 +693,8 @@
    real(r8) snofrz    (maxsnl+1:0)  !snow freezing rate (col,lyr) [kg m-2 s-1]
    real(r8) sabg_lyr  (maxsnl+1:1)  !snow layer absorption [W/m-2]
 
-   ! a factor represents irrigation efficiency
+   ! A simple urban irrigation scheme accounts for soil water stress of trees
+   ! a factor represents irrigation efficiency, '1' represents a 50% direct irrigation efficiency.
    real(r8), parameter :: wst_irrig = 1.0
 
       theta = acos(max(coszen,0.01))

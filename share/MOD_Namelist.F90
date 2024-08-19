@@ -263,7 +263,9 @@ MODULE MOD_Namelist
    logical :: DEF_SPLIT_SOILSNOW = .false.
 
    ! ----- Account for vegetation snow process -----
-   logical :: DEF_VEG_SNOW = .true.
+   ! NOTE: This option will be activated in the new release, accompained by
+   !       a new set of canopy structure data, include the snow-free LAI.
+   logical :: DEF_VEG_SNOW = .false.
 
    ! ----- Variably Saturated Flow Soil Water -----
    logical :: DEF_USE_VariablySaturatedFlow = .true.

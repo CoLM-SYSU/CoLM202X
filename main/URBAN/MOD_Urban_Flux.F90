@@ -69,6 +69,7 @@ MODULE MOD_Urban_Flux
    real(r8), parameter :: fsh = 0.92
    real(r8), parameter :: flh = 0.08
 
+! A simple urban irrigation scheme accounts for soil water stress of trees
    logical,  parameter :: DEF_URBAN_Irrigation = .true.
    real(r8), parameter :: rstfac_irrig = 1.
 !-----------------------------------------------------------------------
