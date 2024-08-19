@@ -64,7 +64,7 @@ CONTAINS
         vmax25         ,slti           ,hlti           ,shti           ,&
         hhti           ,trda           ,trdm           ,trop           ,&
         g1             ,g0             ,gradm          ,binter         ,&
-        extkn                                                          ,&
+        extkn          ,lambda                                         ,&
 
         ! surface status
         fsno_roof      ,fsno_gimp      ,fsno_gper      ,scv_roof       ,&
@@ -273,6 +273,7 @@ CONTAINS
         g0                             ,&! conductance-photosynthesis intercept for medlyn model
         gradm                          ,&! conductance-photosynthesis slope parameter
         binter                         ,&! conductance-photosynthesis intercept
+        lambda                         ,&! marginal water cost of carbon gain
         extkn                            ! coefficient of leaf nitrogen allocation
 
    real(r8), intent(in) :: &
@@ -873,7 +874,7 @@ CONTAINS
             hlti           ,shti           ,hhti           ,trda           ,&
             trdm           ,trop           ,g1             ,g0             ,&
             gradm          ,binter         ,extkn          ,extkd          ,&
-            dewmx          ,etrc           ,trsmx0                         ,&
+            dewmx          ,etrc           ,trsmx0         ,lambda         ,&
             ! surface status
             z0h_g          ,obu_g          ,ustar_g        ,zlnd           ,&
             zsno           ,fsno_roof      ,fsno_gimp      ,fsno_gper      ,&

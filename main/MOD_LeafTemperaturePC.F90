@@ -307,6 +307,7 @@ CONTAINS
         g0,            &! conductance-photosynthesis intercept for medlyn model
         gradm,         &! conductance-photosynthesis slope parameter
         binter,        &! conductance-photosynthesis intercept
+        lambda,        &! marginal water cost of carbon gain
         extkn           ! coefficient of leaf nitrogen allocation
 
    real(r8), dimension(ps:pe) :: &
@@ -557,6 +558,7 @@ CONTAINS
          g0         (i) = g0_p         (p)
          gradm      (i) = gradm_p      (p)
          binter     (i) = binter_p     (p)
+         lambda     (i) = lambda_p     (p)
          extkn      (i) = extkn_p      (p)
 
          kmax_sun   (i) = kmax_sun_p   (p)
@@ -1122,6 +1124,7 @@ CONTAINS
 !Ozone stress variables
                     o3coefv_sun(i),     o3coefg_sun(i),&
 !End ozone stress variables
+                    lambda(i),                         &
                     rbsun      ,raw        ,rstfacsun(i),cintsun(:,i),&
                     assimsun(i),respcsun(i),rssun(i)   )
 
@@ -1133,6 +1136,9 @@ CONTAINS
 !Ozone stress variables
                     o3coefv_sun(i),     o3coefg_sun(i),&
 !End ozone stress variables
+!WUE stomata model parameter
+                    lambda(i)                                               ,&
+!WUE stomata model parameter
                     rbsha      ,raw        ,rstfacsha(i),cintsha(:,i),&
                     assimsha(i),respcsha(i),rssha(i)   )
 

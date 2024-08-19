@@ -44,6 +44,7 @@ MODULE MOD_CaMa_colmCaMa
    integer(KIND=JPIM)              :: ISTEPX              ! total time step
    integer(KIND=JPIM)              :: ISTEPADV            ! time step to be advanced within DRV_ADVANCE
    real(KIND=JPRB),ALLOCATABLE     :: ZBUFF(:,:,:)        ! Buffer to store forcing runoff
+   real(KIND=JPRB),ALLOCATABLE     :: ZBUFF_2(:,:,:)        ! Buffer to store forcing runoff
 
    INTERFACE colm_CaMa_init
       MODULE PROCEDURE colm_CaMa_init
@@ -206,7 +207,8 @@ CONTAINS
          allocate (fevpg_2d  (NX,NY))
          allocate (finfg_2d  (NX,NY))
          !allocate data buffer for input forcing, flood fraction and flood depth
-         allocate (ZBUFF(NX,NY,4))
+         allocate (ZBUFF(NX,NY,2))
+         allocate (ZBUFF_2(NX,NY,2))
          allocate (fldfrc_tmp(NX,NY))
          allocate (flddepth_tmp(NX,NY))
          !Initialize the data buffer for input forcing, flood fraction and flood depth
@@ -214,6 +216,7 @@ CONTAINS
          fevpg_2d(:,:)     = 0.0D0 !evaporation in master processor
          finfg_2d(:,:)     = 0.0D0 !re-infiltration in master processor
          ZBUFF(:,:,:)      = 0.0D0 !input forcing in master processor
+         ZBUFF_2(:,:,:)    = 0.0D0 !input forcing in master processor
          fldfrc_tmp(:,:)   = 0.0D0 !flood fraction in master processor
          flddepth_tmp(:,:) = 0.0D0 !flood depth in master processor
       ENDIF
@@ -276,14 +279,14 @@ CONTAINS
                   ZBUFF(i,j,1)=runoff_2d(i,j)/1000.0D0   ! mm/s -->m/s
                   ZBUFF(i,j,2)=0.0D0
                   IF (LWEVAP) THEN
-                     ZBUFF(i,j,3)=fevpg_2d(i,j)/1000.0D0 ! mm/s -->m/s
+                     ZBUFF_2(i,j,1)=fevpg_2d(i,j)/1000.0D0 ! mm/s -->m/s
                   ELSE
-                     ZBUFF(i,j,3)=0.0D0
+                     ZBUFF_2(i,j,1)=0.0D0
                   ENDIF
                   IF (LWINFILT) THEN
-                     ZBUFF(i,j,4)=finfg_2d(i,j)/1000.0D0  !mm/s -->m/s
+                     ZBUFF_2(i,j,2)=finfg_2d(i,j)/1000.0D0  !mm/s -->m/s
                   ELSE
-                     ZBUFF(i,j,4)=0.0D0
+                     ZBUFF_2(i,j,2)=0.0D0
                   ENDIF
                ENDDO
             ENDDO
@@ -294,7 +297,7 @@ CONTAINS
             ! Get the time step of cama-flood simulation
             ISTEPADV=INT(DTIN/DT,JPIM)
             ! Interporlate variables & send to CaMa-Flood
-            CALL CMF_FORCING_PUT(ZBUFF)
+            CALL CMF_FORCING_PUT(ZBUFF,ZBUFF_2)
             ! Advance CaMa-Flood model for ISTEPADV
             CALL CMF_DRV_ADVANCE(ISTEPADV)
             ! Get the flood depth and flood fraction from cama-flood model
@@ -630,6 +633,7 @@ CONTAINS
       qref   = qm + vonkar/fq*dqh * (fq2m/vonkar - fq/vonkar)
       z0m   = z0mg
    END SUBROUTINE get_fldevp
+
 
 #endif
 END MODULE MOD_CaMa_colmCaMa
