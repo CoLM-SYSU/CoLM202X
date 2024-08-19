@@ -283,13 +283,13 @@ CONTAINS
          ! otherwise, retrieve from database by Aggregation_Topography.F90
          CALL ncio_read_serial (fsrfdata, 'elevation', SITE_topography)
          IF (DEF_USE_Forcing_Downscaling) THEN
-            CALL ncio_read_serial (fsrfdata, 'elvstd   ', SITE_topostd   )
-            CALL ncio_read_serial (fsrfdata, 'SITE_svf', SITE_svf)
-            CALL ncio_read_serial (fsrfdata, 'SITE_cur', SITE_cur)
-            CALL ncio_read_serial (fsrfdata, 'SITE_slp_type', SITE_slp_type)
-            CALL ncio_read_serial (fsrfdata, 'SITE_asp_type', SITE_asp_type)
-            CALL ncio_read_serial (fsrfdata, 'SITE_area_type', SITE_area_type)
-            CALL ncio_read_serial (fsrfdata, 'SITE_sf_lut', SITE_sf_lut)
+            CALL ncio_read_serial (fsrfdata, 'elvstd   ', SITE_topostd        )
+            CALL ncio_read_serial (fsrfdata, 'SITE_svf' , SITE_svf            )
+            CALL ncio_read_serial (fsrfdata, 'SITE_cur' , SITE_cur            )
+            CALL ncio_read_serial (fsrfdata, 'SITE_slp_type' , SITE_slp_type  )
+            CALL ncio_read_serial (fsrfdata, 'SITE_asp_type' , SITE_asp_type  )
+            CALL ncio_read_serial (fsrfdata, 'SITE_area_type', SITE_area_type )
+            CALL ncio_read_serial (fsrfdata, 'SITE_sf_lut'   , SITE_sf_lut    )
          ENDIF
       ENDIF
 
@@ -442,13 +442,13 @@ CONTAINS
          ! otherwise, retrieve from database by Aggregation_Topography.F90
          CALL ncio_read_serial (fsrfdata, 'elevation', SITE_topography)
          IF (DEF_USE_Forcing_Downscaling) THEN
-            CALL ncio_read_serial (fsrfdata, 'elvstd   ', SITE_topostd   )
-            CALL ncio_read_serial (fsrfdata, 'SITE_svf', SITE_svf)
-            CALL ncio_read_serial (fsrfdata, 'SITE_cur', SITE_cur)
-            CALL ncio_read_serial (fsrfdata, 'SITE_slp_type', SITE_slp_type)
-            CALL ncio_read_serial (fsrfdata, 'SITE_asp_type', SITE_asp_type)
-            CALL ncio_read_serial (fsrfdata, 'SITE_area_type', SITE_area_type)
-            CALL ncio_read_serial (fsrfdata, 'SITE_sf_lut', SITE_sf_lut)
+            CALL ncio_read_serial (fsrfdata, 'elvstd  ', SITE_topostd         )
+            CALL ncio_read_serial (fsrfdata, 'SITE_svf', SITE_svf             )
+            CALL ncio_read_serial (fsrfdata, 'SITE_cur', SITE_cur             )
+            CALL ncio_read_serial (fsrfdata, 'SITE_slp_type' , SITE_slp_type  )
+            CALL ncio_read_serial (fsrfdata, 'SITE_asp_type' , SITE_asp_type  )
+            CALL ncio_read_serial (fsrfdata, 'SITE_area_type', SITE_area_type )
+            CALL ncio_read_serial (fsrfdata, 'SITE_sf_lut'   , SITE_sf_lut    )
          ENDIF
       ENDIF
 
@@ -620,9 +620,9 @@ CONTAINS
          ! used for downscaling
          CALL ncio_write_serial (fsrfdata, 'SITE_svf', SITE_svf)
          CALL ncio_write_serial (fsrfdata, 'SITE_cur', SITE_cur)
-         CALL ncio_write_serial (fsrfdata, 'SITE_sf_lut', SITE_sf_lut, 'azi', 'zen')
-         CALL ncio_write_serial (fsrfdata, 'SITE_slp_type', SITE_slp_type, 'type')
-         CALL ncio_write_serial (fsrfdata, 'SITE_asp_type', SITE_asp_type, 'type')
+         CALL ncio_write_serial (fsrfdata, 'SITE_sf_lut'   , SITE_sf_lut, 'azi', 'zen')
+         CALL ncio_write_serial (fsrfdata, 'SITE_slp_type' , SITE_slp_type , 'type')
+         CALL ncio_write_serial (fsrfdata, 'SITE_asp_type' , SITE_asp_type , 'type')
          CALL ncio_write_serial (fsrfdata, 'SITE_area_type', SITE_area_type, 'type')
 
 
@@ -816,9 +816,9 @@ CONTAINS
          ! used for downscaling
          CALL ncio_write_serial (fsrfdata, 'SITE_svf', SITE_svf)
          CALL ncio_write_serial (fsrfdata, 'SITE_cur', SITE_cur)
-         CALL ncio_write_serial (fsrfdata, 'SITE_sf_lut', SITE_sf_lut, 'azi', 'zen')
-         CALL ncio_write_serial (fsrfdata, 'SITE_slp_type', SITE_slp_type, 'type')
-         CALL ncio_write_serial (fsrfdata, 'SITE_asp_type', SITE_asp_type, 'type')
+         CALL ncio_write_serial (fsrfdata, 'SITE_sf_lut'   , SITE_sf_lut, 'azi', 'zen')
+         CALL ncio_write_serial (fsrfdata, 'SITE_slp_type' , SITE_slp_type , 'type')
+         CALL ncio_write_serial (fsrfdata, 'SITE_asp_type' , SITE_asp_type , 'type')
          CALL ncio_write_serial (fsrfdata, 'SITE_area_type', SITE_area_type, 'type')
 
          CALL ncio_write_serial (fsrfdata, 'elvstd', SITE_topostd)

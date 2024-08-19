@@ -388,12 +388,12 @@ CONTAINS
 ! ......................................
 #ifdef SinglePoint
       IF (DEF_USE_Forcing_Downscaling) THEN
-         slp_type_patches(:,1) = SITE_slp_type
-         asp_type_patches(:,1) = SITE_asp_type
+         slp_type_patches(:,1)  = SITE_slp_type
+         asp_type_patches(:,1)  = SITE_asp_type
          area_type_patches(:,1) = SITE_area_type
-         svf_patches(:) = SITE_svf
-         cur_patches(:) = SITE_cur
-         sf_lut_patches(:,:,1) = SITE_sf_lut
+         svf_patches(:)         = SITE_svf
+         cur_patches(:)         = SITE_cur
+         sf_lut_patches(:,:,1)  = SITE_sf_lut
       ENDIF
 #else
       IF (DEF_USE_Forcing_Downscaling) THEN

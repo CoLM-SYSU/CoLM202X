@@ -407,12 +407,12 @@ SUBROUTINE Aggregation_TopographyFactors ( &
    allocate ( SITE_asp_type  (num_type) )
    allocate ( SITE_area_type (num_type) )
    allocate ( SITE_sf_lut    (num_azimuth, num_zenith) )
-   SITE_svf = svf_patches(1)
-   SITE_cur = cur_patches(1)
-   SITE_slp_type = slp_type_patches(:,1)
-   SITE_asp_type = asp_type_patches(:,1)
+   SITE_svf       = svf_patches(1)
+   SITE_cur       = cur_patches(1)
+   SITE_slp_type  = slp_type_patches (:,1)
+   SITE_asp_type  = asp_type_patches (:,1)
    SITE_area_type = area_type_patches(:,1)
-   SITE_sf_lut = sf_lut_patches(:,:,1)
+   SITE_sf_lut    = sf_lut_patches (:,:,1)
 #endif
 
 
