@@ -58,23 +58,28 @@ MODULE MOD_Namelist
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
    character(len=256) :: SITE_fsrfdata   = 'null'
+   
+   real(r8) :: SITE_lon_location = 113.5897
+   real(r8) :: SITE_lat_location = 22.3507
 
-   logical  :: USE_SITE_pctpfts          = .true.
-   logical  :: USE_SITE_pctcrop          = .true.
-   logical  :: USE_SITE_htop             = .true.
-   logical  :: USE_SITE_LAI              = .true.
-   logical  :: USE_SITE_lakedepth        = .true.
-   logical  :: USE_SITE_soilreflectance  = .true.
-   logical  :: USE_SITE_soilparameters   = .true.
-   logical  :: USE_SITE_dbedrock         = .true.
-   logical  :: USE_SITE_topography       = .true.
-   logical  :: USE_SITE_topostd          = .true.
-   logical  :: USE_SITE_BVIC             = .true.   
-   logical  :: USE_SITE_HistWriteBack    = .true.
-   logical  :: USE_SITE_ForcingReadAhead = .true.
-   logical  :: USE_SITE_urban_paras      = .true.
+   logical  :: USE_SITE_landtype         = .false.
+   logical  :: USE_SITE_pctpfts          = .false.
+   logical  :: USE_SITE_pctcrop          = .false.
+   logical  :: USE_SITE_htop             = .false.
+   logical  :: USE_SITE_LAI              = .false.
+   logical  :: USE_SITE_lakedepth        = .false.
+   logical  :: USE_SITE_soilreflectance  = .false.
+   logical  :: USE_SITE_soilparameters   = .false.
+   logical  :: USE_SITE_dbedrock         = .false.
+   logical  :: USE_SITE_topography       = .false.
+   logical  :: USE_SITE_topostd          = .false.
+   logical  :: USE_SITE_BVIC             = .false.   
+   logical  :: USE_SITE_urban_paras      = .false.
    logical  :: USE_SITE_thermal_paras    = .false.
    logical  :: USE_SITE_urban_LAI        = .false.
+
+   logical  :: USE_SITE_HistWriteBack    = .true.
+   logical  :: USE_SITE_ForcingReadAhead = .true.
 
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ! ----- Part 4: simulation time type -----
@@ -779,6 +784,9 @@ CONTAINS
       DEF_domain,              &
 
       SITE_fsrfdata,            &
+      SITE_lon_location,        &
+      SITE_lat_location,        &
+      USE_SITE_landtype,        &
       USE_SITE_pctpfts,         &
       USE_SITE_pctcrop,         &
       USE_SITE_htop,            &

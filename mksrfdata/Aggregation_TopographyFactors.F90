@@ -105,6 +105,11 @@ SUBROUTINE Aggregation_TopographyFactors ( &
 #ifdef SinglePoint
    IF (USE_SITE_topography) THEN
       RETURN
+   ELSE
+      allocate (SITE_slp_type  (num_type))
+      allocate (SITE_asp_type  (num_type))
+      allocate (SITE_area_type (num_type))
+      allocate (SITE_sf_lut    (num_azimuth, num_zenith))
    ENDIF
 #endif
 

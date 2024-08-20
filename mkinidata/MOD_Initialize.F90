@@ -386,15 +386,15 @@ CONTAINS
 ! ......................................
 ! 1.5 Initialize topography factor data
 ! ......................................
-#ifdef SinglePoint
-      slp_type_patches(:,1) = SITE_slp_type
-      asp_type_patches(:,1) = SITE_asp_type
-      area_type_patches(:,1) = SITE_area_type
-      svf_patches(:) = SITE_svf
-      cur_patches(:) = SITE_cur
-      sf_lut_patches(:,:,1) = SITE_sf_lut
-#else
       IF (DEF_USE_Forcing_Downscaling) THEN
+#ifdef SinglePoint
+         slp_type_patches(:,1) = SITE_slp_type
+         asp_type_patches(:,1) = SITE_asp_type
+         area_type_patches(:,1) = SITE_area_type
+         svf_patches(:) = SITE_svf
+         cur_patches(:) = SITE_cur
+         sf_lut_patches(:,:,1) = SITE_sf_lut
+#else
          lndname = trim(DEF_dir_landdata) // '/topography/'//trim(cyear)//'/slp_type_patches.nc'             ! slope
          CALL ncio_read_vector (lndname, 'slp_type_patches', num_type, landpatch, slp_type_patches)
          lndname = trim(DEF_dir_landdata) // '/topography/'//trim(cyear)//'/svf_patches.nc'               ! sky view factor
@@ -407,8 +407,8 @@ CONTAINS
          CALL ncio_read_vector (lndname, 'sf_lut_patches', num_azimuth, num_zenith, landpatch, sf_lut_patches)
          lndname = trim(DEF_dir_landdata) // '/topography/'//trim(cyear)//'/cur_patches.nc'               ! curvature
          CALL ncio_read_vector (lndname, 'cur_patches', landpatch, cur_patches)
-       ENDIF
 #endif
+       ENDIF
 ! ................................
 ! 1.6 Initialize TUNABLE constants
 ! ................................
