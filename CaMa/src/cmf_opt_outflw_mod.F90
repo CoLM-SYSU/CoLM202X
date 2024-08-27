@@ -402,7 +402,7 @@ CONTAINS
                DFLW = MAX(DFLW,0._JPRB)
 
                IF( DFLW>1.E-5 )THEN
-      	          D1PTHFLW_PRE(IPTH,ILEV) = PTH_WTH(IPTH,ILEV) * DFLW * ( PTH_MAN(ILEV)**(-1.) * DFLW**(2./3.) * abs(DSLOPE)**(0.5) )
+                  D1PTHFLW_PRE(IPTH,ILEV) = PTH_WTH(IPTH,ILEV) * DFLW * ( PTH_MAN(ILEV)**(-1.) * DFLW**(2./3.) * abs(DSLOPE)**(0.5) )
                   IF( DSLOPE<0._JPRB ) D1PTHFLW_PRE(IPTH,ILEV)=-D1PTHFLW_PRE(IPTH,ILEV)
                ELSE
                   D1PTHFLW_PRE(IPTH,ILEV) = 0._JPRB
