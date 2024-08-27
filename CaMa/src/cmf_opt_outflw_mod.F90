@@ -292,7 +292,7 @@ CONTAINS
                D2FLDOUT(ISEQ,1) = DARE_F * DVEL_F
                D2FLDOUT(ISEQ,1) = MIN(  D2FLDOUT(ISEQ,1)*1._JPRD, P2FLDSTO(ISEQ,1)/DT )
             ENDIF
-         ENDIF 
+         ENDIF
       ENDDO
 !$OMP END PARALLEL DO
 

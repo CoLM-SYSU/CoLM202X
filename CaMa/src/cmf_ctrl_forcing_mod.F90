@@ -368,7 +368,7 @@ IF(PRESENT(LECMF2LAKEC) .AND. (LECMF2LAKEC .NE. 0)) THEN
             !* Find levels dimension
             CALL NCERROR( NF90_INQUIRE_VARIABLE(NCID,VARID,dimids=VDIMIDS),'getting levI dimensions ')
             CALL NCERROR( NF90_INQUIRE_DIMENSION(NCID,VDIMIDS(1),len=INPNI),'getting time len ')
-            write(LOGNAM,*) 'Alocating INP*I: NXIN, NYIN, INPNI =', NXIN, NYIN, INPNI
+            write(LOGNAM,*) 'Allocating INP*I: NXIN, NYIN, INPNI =', NXIN, NYIN, INPNI
             allocate( INPXI(NXIN,NYIN,INPNI),INPYI(NXIN,NYIN,INPNI),INPAI(NXIN,NYIN,INPNI) )
             
             write(LOGNAM,*)'INIT_MAP: inpaI:',TRIM(CINPMAT)

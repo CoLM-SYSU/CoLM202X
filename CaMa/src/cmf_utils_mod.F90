@@ -534,9 +534,9 @@ CONTAINS
    FUNCTION INQUIRE_FID() RESULT(FID)
    IMPLICIT NONE
    !* input/output
-   integer :: FID !< FILE ID
+   integer :: FID ! FILE ID
    !* local variable
-   logical :: I_OPENED !< FILE ID IS ALREADY USED or not?
+   logical :: I_OPENED ! FILE ID IS ALREADY USED or not?
    !================================================
       DO FID = 10, 999
          INQUIRE(FID,OPENED=I_OPENED)

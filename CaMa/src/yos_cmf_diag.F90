@@ -46,7 +46,7 @@ MODULE YOS_CMF_DIAG
    !*** Average diagnostics 
 
    real(KIND=JPRB),ALLOCATABLE,TARGET          :: D2RIVOUT_AVG(:,:)       !! average river       discharge
-   real(KIND=JPRB),ALLOCATABLE,TARGET          :: D2OUTFLW_AVG(:,:)       !! average total outflow       [m3/s] (rivout + fldout)  !! bugfix v362
+   real(KIND=JPRB),ALLOCATABLE,TARGET          :: D2OUTFLW_AVG(:,:)       !! average total outflow  [m3/s] (rivout + fldout)  
    real(KIND=JPRB),ALLOCATABLE,TARGET          :: D2FLDOUT_AVG(:,:)       !! average floodplain  discharge
    real(KIND=JPRB),ALLOCATABLE,TARGET          :: D2RIVVEL_AVG(:,:)       !! average flow velocity
    real(KIND=JPRB),ALLOCATABLE,TARGET          :: D2PTHOUT_AVG(:,:)       !! flood pathway net outflow (2D)
