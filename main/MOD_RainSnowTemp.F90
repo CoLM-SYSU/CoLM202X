@@ -112,7 +112,7 @@ CONTAINS
       ! Estimating precipitation phase using a psychrometric energy
       ! balance method . Hydrol Process, 27, 1901–1914
       ! Hydromet_Temp [K]
-         CALL Hydromet_Temp(forc_psrf,(forc_t-273.15),forc_q,t_hydro)
+         CALL hydromet_temp(forc_psrf,(forc_t-273.15),forc_q,t_hydro)
 
          IF(t_hydro > 3.0)THEN
             flfall = 1.0      ! fraction of liquid water within falling precip
@@ -209,93 +209,96 @@ CONTAINS
    !!==============================================
 
    !-----------------------------------------------------------------------------
-   SUBROUTINE HYDROMET_TEMP(PPA, PTA, PQA,PTI)
-   !DESCRIPTION
-   !===========
-      !  the temperature of a falling hydrometeor based on Harder, P., Pomeroy, J. (2013).
-
-   !Original Author:
-   !-------------------
+   SUBROUTINE hydromet_temp(ppa, pta, pqa, pti)
+      ! DESCRIPTION
+      ! ===========
+      ! Computes the temperature of a falling hydrometeor based on Harder, P., Pomeroy, J. (2013).
+   
+      ! Original Author:
+      ! ----------------
       ! V. Vionnet (11/2020)
-
-   !References:
-   !-------------------
-      !---Harder, P., Pomeroy, J. (2013).
-      !   Estimating precipitation phase using a psychrometric energy balance method
-      !   Hydrological Processes  27(13), 1901-1914. https://dx.doi.org/10.1002/hyp.9799
-   !REVISION HISTORY
-   !----------------
-      !---2023.07.30  Aobo Tan & Zhongwang Wei @ SYSU
-
-   real(r8), intent(in)   :: PPA          ! Air pressure (Pa)
-   real(r8), intent(in)   :: PTA          ! Air temperature (deg C)
-   real(r8), intent(in)   :: PQA          ! Air specific humidity (kg/kg)
-   real(r8), intent(out)  :: PTI          ! Hydrometeo temprtature in deg C
-   real(r8)               :: ZD    !diffusivity of water vapour in air [m^2 s-1]
-   real(r8)               :: ZLAMBDAT !thermal conductivity of air [J m^-1 s^-1 K^-1]
-   real(r8)               :: ZL    !latent heat of sublimation of vaporisation[J  kg^-1]
-   real(r8)               :: ZRHODA   !density of dry air [kg m-3]
-   real(r8)               :: ZRH   !relative humidity [-]
-   real(r8)               :: RHO_VSAT_DIFF,ESAT,RHO_VSAT
-   real(r8)               :: ZT,ZTINI,ZF,ZFDIFF,EVSAT
-   integer :: JITER
-   integer :: JJ,I,NN
-
-      ! 1. Compute diffusivity of water vapour in air [m2 s-1] (Thorpe and Mason, 1966)
-      ZD = 2.063e-5 * ((PTA+273.15)/273.15)**1.75
-
-      ! 2. Compute thermal conductivity of air  [J m-1 s-1 K-1]
-      ZLAMBDAT = 0.000063 * (PTA+273.15) + 0.00673
-
-      ! 3. Compute latent heat of sublimation or vaporisation (depending on air temperature)
-      IF(PTA <0.) THEN
-         ZL = 1000.0 * (2834.1 - 0.29 *PTA - 0.004*PTA**2.)
+   
+      ! References:
+      ! -----------
+      ! Harder, P., Pomeroy, J. (2013).
+      ! Estimating precipitation phase using a psychrometric energy balance method
+      ! Hydrological Processes 27(13), 1901-1914. https://dx.doi.org/10.1002/hyp.9799
+   
+      ! REVISION HISTORY
+      ! ----------------
+      ! 2023.07.30 Aobo Tan & Zhongwang Wei @ SYSU
+   
+      real(r8), intent(in)   :: ppa          ! Air pressure (Pa)
+      real(r8), intent(in)   :: pta          ! Air temperature (deg C)
+      real(r8), intent(in)   :: pqa          ! Air specific humidity (kg/kg)
+      real(r8), intent(out)  :: pti          ! Hydrometeor temperature in deg C
+   
+      real(r8) :: zd          ! Diffusivity of water vapour in air [m^2 s^-1]
+      real(r8) :: zlambda     ! Thermal conductivity of air [J m^-1 s^-1 K^-1]
+      real(r8) :: zl          ! Latent heat of sublimation or vaporization [J kg^-1]
+      real(r8) :: zrhoda      ! Density of dry air [kg m^-3]
+      real(r8) :: zrh         ! Relative humidity [-]
+      real(r8) :: rho_vast_diff, esat, rho_vast
+      real(r8) :: zt, ztint, zf, zfdiff, evsat
+      integer :: JITER
+      integer :: JJ, I, NN
+   
+      ! 1. Compute diffusivity of water vapour in air [m^2 s^-1] (Thorpe and Mason, 1966)
+      zd = 2.063e-5 * ((pta + 273.15) / 273.15) ** 1.75
+   
+      ! 2. Compute thermal conductivity of air [J m^-1 s^-1 K^-1]
+      zlambda = 0.000063 * (pta + 273.15) + 0.00673
+   
+      ! 3. Compute latent heat of sublimation or vaporization (depending on air temperature)
+      IF (pta < 0.) THEN
+         zl = 1000.0 * (2834.1 - 0.29 * pta - 0.004 * pta ** 2.)
       ELSE
-         ZL = 1000.0 * (2501.0 - (2.361 * PTA))
-      ENDIF
-
-      !TODO:check USE of dry air?
-
-      ! 4. Compute density of dry air [kg m-3]
-      ZRHODA =  PPA/(287.04*(PTA+273.15))
-
+         zl = 1000.0 * (2501.0 - (2.361 * pta))
+      END IF
+   
+      ! 4. Compute density of dry air [kg m^-3]
+      zrhoda = ppa / (287.04 * (pta + 273.15))
+   
       ! 5. Compute saturated water vapour pressure [Pa]
-      IF(PTA>0) THEN
-         EVSAT = 611.0*EXP(17.27*PTA/(PTA+237.3))
+      IF (pta > 0) THEN
+         evsat = 611.0 * EXP(17.27 * pta / (pta + 237.3))
       ELSE
-         EVSAT = 611.0*EXP(21.87*PTA/(PTA+265.5))
-      ENDIF
-
-      ! 6.  Solve iteratively to get Ti in Harder and Pomeroy (2013). using a Newton-Raphston approach
-      !set the 1st guess to PTA
-      ZT = PTA
-      !loop until convergence
-      DO JITER = 1,10
-         ZTINI = ZT   !
-
-         IF(ZT>0) THEN
-            ESAT = 611.0*EXP(17.27*ZT/(ZT+237.3))
+         evsat = 611.0 * EXP(21.87 * pta / (pta + 265.5))
+      END IF
+   
+      ! 6. Solve iteratively to get Ti in Harder and Pomeroy (2013) using a Newton-Raphson approach
+      ! Set the first guess to pta
+      zt = pta
+   
+      ! Loop until convergence
+      DO JITER = 1, 10
+         ztint = zt
+   
+         IF (zt > 0) THEN
+            esat = 611.0 * EXP(17.27 * zt / (zt + 237.3))
          ELSE
-            ESAT = 611.0*EXP(21.87*ZT/(ZT+265.5))
-         ENDIF
-
-         RHO_VSAT  = ESAT/(461.5*(ZT+273.15)) ! Saturated water vapour density
-
-         ZF = ZT - PTA - ZD*ZL/ZLAMBDAT * ( PQA*ZRHODA - RHO_VSAT)
-
-         IF(ZT>0) THEN
-            RHO_VSAT_DIFF  = 611.0/( 461.5*(ZT+273.15)) * EXP( 17.27*ZT/(ZT+ 237.3)) *  &
-                            (-1/(ZT+273.15) +  17.27* 237.3/((ZT+ 237.3))**2.)
+            esat = 611.0 * EXP(21.87 * zt / (zt + 265.5))
+         END IF
+   
+         rho_vast = esat / (461.5 * (zt + 273.15)) ! Saturated water vapour density
+   
+         zf = zt - pta - zd * zl / zlambda * (pqa * zrhoda - rho_vast)
+   
+         IF (zt > 0) THEN
+            rho_vast_diff = 611.0 / (461.5 * (zt + 273.15)) * EXP(17.27 * zt / (zt + 237.3)) * &
+                            (-1 / (zt + 273.15) + 17.27 * 237.3 / ((zt + 237.3) ** 2.))
          ELSE
-            RHO_VSAT_DIFF  = 611.0/( 461.5*(ZT+273.15)) * EXP( 21.87*ZT/(ZT+ 265.5)) *  &
-                            (-1/(ZT+273.15) +  21.87* 265.5/((ZT+ 265.5))**2.)
-         ENDIF
+            rho_vast_diff = 611.0 / (461.5 * (zt + 273.15)) * EXP(21.87 * zt / (zt + 265.5)) * &
+                            (-1 / (zt + 273.15) + 21.87 * 265.5 / ((zt + 265.5) ** 2.))
+         END IF
+   
+         zfdiff = 1 + zd * zl / zlambda * rho_vast_diff
+         zt = ztint - zf / zfdiff
+         IF (ABS(zt - ztint) .LT. 0.01) EXIT
+      END DO
+   
+      pti = zt
+   
+   END SUBROUTINE hydromet_temp
 
-
-         ZFDIFF = 1 +  ZD*ZL/ZLAMBDAT * RHO_VSAT_DIFF
-         ZT = ZTINI - ZF/ZFDIFF
-         IF(ABS(ZT- ZTINI) .lt. 0.01) EXIT
-      ENDDO
-      PTI = ZT
-   END SUBROUTINE HYDROMET_TEMP
 END MODULE MOD_RainSnowTemp
