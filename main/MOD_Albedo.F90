@@ -295,12 +295,12 @@ ENDIF
 
 ! ----------------------------------------------------------------------
 
-      lsai=lai+sai
-      IF(coszen<=0.) THEN
-         RETURN  !only DO albedo when coszen > 0
+      lsai = lai + sai
+      IF(coszen <= -0.3) THEN
+         RETURN  !only DO albedo when coszen > -0.3
       ENDIF
 
-      czen=max(coszen,0.001)
+      czen = max(coszen, 0.001)
 
 ! ----------------------------------------------------------------------
 ! 2. get albedo over land

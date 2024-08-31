@@ -180,16 +180,16 @@ CONTAINS
       dfwsun = 0.
       extkd  = 0.718
 
-      IF(coszen<=0.) THEN
+      IF(coszen <= -0.3) THEN
          !print *, "coszen < 0, ipatch and coszen: ", ipatch, coszen
-         RETURN  !only do albedo when coszen > 0
+         RETURN  !only do albedo when coszen > -0.3
       ENDIF
 
-      czen=max(coszen,0.01)
-      albsno(:,:)=0.      !set initial snow albedo
+      czen = max(coszen, 0.01)
+      albsno(:,:) = 0.    !set initial snow albedo
       cons = 0.2          !parameter for snow albedo
       conn = 0.5          !parameter for snow albedo
-      sl  = 2.0           !sl helps control albedo zenith dependence
+      sl   = 2.0          !sl helps control albedo zenith dependence
 
       ! effective leaf optical properties: rho and tau.
       IF (lai+sai>1.e-6 .and. fveg>0.) THEN
