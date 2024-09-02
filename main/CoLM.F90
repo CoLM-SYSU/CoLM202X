@@ -134,18 +134,20 @@ PROGRAM CoLM
 #ifdef USEMPI
 #ifdef USESplitAI
       integer :: num_procs, my_rank, ierr, color, new_comm
-      call MPI_Init(ierr) ! Initialize MPI
-      call MPI_Comm_size(MPI_COMM_WORLD, num_procs, ierr) ! Get the total number of processes
-      call MPI_Comm_rank(MPI_COMM_WORLD, my_rank, ierr) ! Get the rank of the current process
+      CALL MPI_Init(ierr) ! Initialize MPI
+      CALL MPI_Comm_size(MPI_COMM_WORLD, num_procs, ierr) ! Get the total number of processes
+      CALL MPI_Comm_rank(MPI_COMM_WORLD, my_rank, ierr) ! Get the rank of the current process
       color = 1 ! The pyroot process will be in its own communicator
       print*, 'before split I am process', my_rank, 'of', num_procs
-      call MPI_Comm_split(MPI_COMM_WORLD, color, my_rank, new_comm, ierr) ! Split the communicator
+      CALL MPI_Comm_split(MPI_COMM_WORLD, color, my_rank, new_comm, ierr) ! Split the communicator
       print*, 'after split I am process', my_rank, 'of', num_procs
-      call MPI_Comm_size(new_comm, num_procs, ierr) ! Get the total number of processes
-      call MPI_Comm_rank(new_comm, my_rank, ierr) ! Get the rank of the current process
+      CALL MPI_Comm_size(new_comm, num_procs, ierr) ! Get the total number of processes
+      CALL MPI_Comm_rank(new_comm, my_rank, ierr) ! Get the rank of the current process
       print*,num_procs,"for CoLM"
-#endif
       CALL spmd_init (new_comm)
+#else
+      CALL spmd_init ()
+#endif
 #endif
 
       CALL getarg (1, nlfile)
