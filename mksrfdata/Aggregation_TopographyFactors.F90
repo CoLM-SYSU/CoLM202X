@@ -209,11 +209,11 @@ SUBROUTINE Aggregation_TopographyFactors ( &
          sum_area_one = sum(area_one, mask = area_one>0)
 
          DO a = 1, num_azimuth
-            ! terrain elevation angle at each azimuth
-            tea_f_one(:) = tea_f_azi_one(a,:)
-            tea_b_one(:) = tea_b_azi_one(a,:) 
-
             DO z = 1, num_zenith
+               ! terrain elevation angle at each azimuth
+               tea_f_one(:) = tea_f_azi_one(a,:)
+               tea_b_one(:) = tea_b_azi_one(a,:) 
+
                ! count the pixels which are not missing value
                count_pixels = 0
 
