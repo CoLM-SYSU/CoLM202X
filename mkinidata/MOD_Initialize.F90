@@ -493,8 +493,9 @@ CONTAINS
          ELSE
             IF (p_is_worker) THEN
                IF (numpatch > 0) THEN
-                  fsatmax(:) = 0.4
-                  fsatdcf(:) = 0.53
+                  ! equal to 'wtfact = 0.38' and 'fff = 0.5'
+                  fsatmax(:) = 0.38
+                  fsatdcf(:) = 0.125
                ENDIF
             ENDIF
          ENDIF
