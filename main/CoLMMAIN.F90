@@ -8,10 +8,10 @@ SUBROUTINE CoLMMAIN ( &
            doalb,        dolai,        dosst,        oro,          &
 
          ! soil information and lake depth
-           soil_s_v_alb, soil_d_v_alb, soil_s_n_alb, soil_d_n_alb,  &
-           vf_quartz,    vf_gravels,   vf_om,        vf_sand,       &
-           wf_gravels,   wf_sand,      porsl,        psi0,          &
-           bsw,          theta_r,      fsatmax,      fsatdcf,       &
+           soil_s_v_alb, soil_d_v_alb, soil_s_n_alb, soil_d_n_alb, &
+           vf_quartz,    vf_gravels,   vf_om,        vf_sand,      &
+           wf_gravels,   wf_sand,      porsl,        psi0,         &
+           bsw,          theta_r,      fsatmax,      fsatdcf,      &
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
            alpha_vgm,    n_vgm,        L_vgm,        &
            sc_vgm,       fc_vgm,       &

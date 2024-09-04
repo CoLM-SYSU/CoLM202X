@@ -8,6 +8,17 @@
    SITE_lon_location = 113.5897
    SITE_lat_location = 22.3507
 
+   USE_SITE_landtype         = .false.
+   USE_SITE_htop             = .false.
+   USE_SITE_LAI              = .false.
+   USE_SITE_lakedepth        = .false.
+   USE_SITE_soilreflectance  = .false.
+   USE_SITE_soilparameters   = .false.
+   USE_SITE_dbedrock         = .false.
+   USE_SITE_topography       = .false.
+   USE_SITE_topostd          = .false.
+   USE_SITE_BVIC             = .false.
+
    DEF_simulation_time%greenwich    = .TRUE.
    DEF_simulation_time%start_year   = 1951
    DEF_simulation_time%start_month  = 1
