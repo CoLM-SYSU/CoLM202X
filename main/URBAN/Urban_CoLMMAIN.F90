@@ -21,7 +21,7 @@ SUBROUTINE UrbanCoLMMAIN ( &
          ! soil ground and wall information
            vf_quartz    ,vf_gravels   ,vf_om        ,vf_sand      ,&
            wf_gravels   ,wf_sand      ,porsl        ,psi0         ,&
-           bsw          ,theta_r      ,&
+           bsw          ,theta_r      ,fsatmax      ,fsatdcf      ,&
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
            alpha_vgm    ,n_vgm        ,L_vgm        ,&
            sc_vgm       ,fc_vgm       ,&
@@ -110,7 +110,7 @@ SUBROUTINE UrbanCoLMMAIN ( &
 
          ! TUNABLE modle constants
            zlnd         ,zsno         ,csoilc       ,dewmx        ,&
-           wtfact       ,capr         ,cnfac        ,ssi          ,&
+           capr         ,cnfac        ,ssi          ,&
            wimp         ,pondmx       ,smpmax       ,smpmin       ,&
            trsmx0       ,tcrit                                    ,&
 
@@ -201,6 +201,8 @@ SUBROUTINE UrbanCoLMMAIN ( &
         psi0      (nl_soil),&! minimum soil suction [mm]
         bsw       (nl_soil),&! clapp and hornbereger "b" parameter [-]
         theta_r   (nl_soil),&
+        fsatmax            ,&! maximum saturated area fraction [-] 
+        fsatdcf            ,&! decay factor in calucation of saturated area fraction [1/m] 
 
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
         alpha_vgm(1:nl_soil),&
@@ -251,7 +253,7 @@ SUBROUTINE UrbanCoLMMAIN ( &
         zsno       ,&! roughness length for snow [m]
         csoilc     ,&! drag coefficient for soil under canopy [-]
         dewmx      ,&! maximum dew
-        wtfact     ,&! fraction of model area with high water table
+        ! wtfact   ,&! (updated to gridded 'fsatmax' data) fraction of model area with high water table
         capr       ,&! tuning factor to turn first layer T into surface T
         cnfac      ,&! Crank Nicholson factor between 0 and 1
         ssi        ,&! irreducible water saturation of snow
@@ -983,9 +985,9 @@ SUBROUTINE UrbanCoLMMAIN ( &
         pg_rain              ,pgper_rain           ,pgimp_rain           ,pg_snow              ,&
         pg_rain_lake         ,pg_snow_lake                                                     ,&
         froof                ,fgper                ,flake                ,bsw                  ,&
-        porsl                ,psi0                 ,hksati               ,wtfact               ,&
+        porsl                ,psi0                 ,hksati                                     ,&
         pondmx               ,ssi                  ,wimp                 ,smpmin               ,&
-        theta_r              ,topostd              ,BVIC                                       ,&
+        theta_r              ,fsatmax,fsatdcf      ,topostd              ,BVIC                 ,&
         rootr,rootflux       ,etrgper              ,fseng                ,fgrnd                ,&
         t_gpersno(lbp:)      ,t_lakesno(:)         ,t_lake               ,dz_lake              ,&
         z_gpersno(lbp:)      ,z_lakesno(:)         ,zi_gpersno(lbp-1:)   ,zi_lakesno(:)        ,&

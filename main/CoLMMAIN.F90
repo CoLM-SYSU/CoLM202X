@@ -11,7 +11,7 @@ SUBROUTINE CoLMMAIN ( &
            soil_s_v_alb, soil_d_v_alb, soil_s_n_alb, soil_d_n_alb,  &
            vf_quartz,    vf_gravels,   vf_om,        vf_sand,       &
            wf_gravels,   wf_sand,      porsl,        psi0,          &
-           bsw,          theta_r,      &
+           bsw,          theta_r,      fsatmax,      fsatdcf,       &
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
            alpha_vgm,    n_vgm,        L_vgm,         &
            sc_vgm,       fc_vgm,       &
@@ -93,7 +93,8 @@ SUBROUTINE CoLMMAIN ( &
 
          ! TUNABLE modle constants
            zlnd,         zsno,         csoilc,       dewmx,         &
-           wtfact,       capr,         cnfac,        ssi,           &
+           ! 'wtfact' is updated to gridded 'fsatmax' data. 
+           capr,         cnfac,        ssi,           &
            wimp,         pondmx,       smpmax,       smpmin,        &
            trsmx0,       tcrit,        &
 
@@ -215,6 +216,8 @@ SUBROUTINE CoLMMAIN ( &
         psi0      (nl_soil)  ,& ! minimum soil suction [mm]
         bsw       (nl_soil)  ,& ! clapp and hornbereger "b" parameter [-]
         theta_r  (1:nl_soil) ,& ! residual water content (cm3/cm3) 
+        fsatmax              ,& ! maximum saturated area fraction [-] 
+        fsatdcf              ,& ! decay factor in calucation of saturated area fraction [1/m] 
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
         alpha_vgm(1:nl_soil) ,& ! the parameter corresponding approximately to the inverse of the air-entry value
         n_vgm    (1:nl_soil) ,& ! a shape parameter
@@ -268,7 +271,7 @@ SUBROUTINE CoLMMAIN ( &
         zsno        ,&! roughness length for snow [m]
         csoilc      ,&! drag coefficient for soil under canopy [-]
         dewmx       ,&! maximum dew
-        wtfact      ,&! fraction of model area with high water table
+        ! wtfact    ,&! (updated to gridded 'fsatmax' data) fraction of model area with high water table 
         capr        ,&! tuning factor to turn first layer T into surface T
         cnfac       ,&! Crank Nicholson factor between 0 and 1
         ssi         ,&! irreducible water saturation of snow
@@ -749,14 +752,15 @@ SUBROUTINE CoLMMAIN ( &
             CALL WATER_2014 (ipatch,patchtype         ,lb                ,nl_soil           ,&
                  deltim            ,z_soisno(lb:)     ,dz_soisno(lb:)    ,zi_soisno(lb-1:)  ,&
                  bsw               ,porsl             ,psi0              ,hksati            ,&
-                 theta_r           ,topostd           ,BVIC                                 ,&
+                 theta_r           ,fsatmax           ,fsatdcf           ,topostd           ,&
+                 BVIC              ,&
                  rootr             ,rootflux          ,t_soisno(lb:)     ,wliq_soisno(lb:)  ,&
                  wice_soisno(lb:)  ,smp               ,hk                ,pg_rain           ,&
                  sm                ,etr               ,qseva             ,qsdew             ,&
                  qsubl             ,qfros             ,qseva_soil        ,qsdew_soil        ,&
                  qsubl_soil        ,qfros_soil        ,qseva_snow        ,qsdew_snow        ,&
                  qsubl_snow        ,qfros_snow        ,fsno              ,rsur              ,&
-                 rnof              ,qinfl             ,wtfact            ,pondmx            ,&
+                 rnof              ,qinfl             ,pondmx            ,&
                  ssi               ,wimp              ,smpmin            ,zwt               ,&
                  wa                ,qcharge           ,errw_rsub         ,&
 
@@ -772,7 +776,8 @@ SUBROUTINE CoLMMAIN ( &
 
             CALL WATER_VSF (ipatch ,patchtype         ,lb                ,nl_soil           ,&
                  deltim            ,z_soisno(lb:)     ,dz_soisno(lb:)    ,zi_soisno(lb-1:)  ,&
-                 bsw               ,theta_r           ,topostd           ,BVIC              ,&
+                 bsw               ,theta_r           ,fsatmax           ,fsatdcf           ,&
+                 topostd           ,BVIC              ,&
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
                  alpha_vgm         ,n_vgm             ,L_vgm             ,sc_vgm            ,&
                  fc_vgm            ,&
@@ -784,7 +789,7 @@ SUBROUTINE CoLMMAIN ( &
                  qfros             ,qseva_soil        ,qsdew_soil        ,qsubl_soil        ,&
                  qfros_soil        ,qseva_snow        ,qsdew_snow        ,qsubl_snow        ,&
                  qfros_snow        ,fsno              ,rsur              ,rsur_se           ,&
-                 rsur_ie           ,rnof              ,qinfl             ,wtfact            ,&
+                 rsur_ie           ,rnof              ,qinfl             ,&
                  ssi               ,pondmx            ,wimp              ,zwt               ,&
                  wdsrf             ,wa                ,wetwat            ,&
 #if(defined CaMa_Flood)

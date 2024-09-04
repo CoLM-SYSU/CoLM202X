@@ -41,18 +41,18 @@ CONTAINS
 
 
 
-   SUBROUTINE WATER_2014 (ipatch,patchtype,lb       ,nl_soil ,deltim,&
-              z_soisno    ,dz_soisno   ,zi_soisno   ,bsw     ,porsl ,&
-              psi0        ,hksati      ,theta_r     ,topostd ,&
-              BVIC,                                                 &
+   SUBROUTINE WATER_2014 (ipatch,patchtype,lb       ,nl_soil ,deltim ,&
+              z_soisno    ,dz_soisno   ,zi_soisno   ,bsw     ,porsl  ,&
+              psi0        ,hksati      ,theta_r     ,fsatmax ,fsatdcf,&
+              topostd     ,BVIC        ,&
               rootr       ,rootflux    ,t_soisno    ,&
-              wliq_soisno ,wice_soisno ,smp         ,hk      ,pg_rain ,&
-              sm,   etr   ,qseva       ,qsdew       ,qsubl   ,qfros ,&
-              qseva_soil  ,qsdew_soil  ,qsubl_soil  ,qfros_soil     ,&
-              qseva_snow  ,qsdew_snow  ,qsubl_snow  ,qfros_snow     ,&
-              fsno                                                  ,&
-              rsur        ,rnof        ,qinfl       ,wtfact  ,pondmx,&
-              ssi         ,wimp        ,smpmin      ,zwt     ,wa    ,&
+              wliq_soisno ,wice_soisno ,smp         ,hk      ,pg_rain,&
+              sm,   etr   ,qseva       ,qsdew       ,qsubl   ,qfros  ,&
+              qseva_soil  ,qsdew_soil  ,qsubl_soil  ,qfros_soil      ,&
+              qseva_snow  ,qsdew_snow  ,qsubl_snow  ,qfros_snow      ,&
+              fsno                                                   ,&
+              rsur        ,rnof        ,qinfl       ,pondmx  ,&
+              ssi         ,wimp        ,smpmin      ,zwt     ,wa     ,&
               qcharge     ,errw_rsub   ,  &
 #if(defined CaMa_Flood)
               flddepth,fldfrc,qinfl_fld,  &
@@ -97,7 +97,7 @@ CONTAINS
 
    real(r8), intent(in) :: &
         deltim           , &! time step (s)
-        wtfact           , &! fraction of model area with high water table
+        ! wtfact         , &! (updated to gridded 'fsatmax' data) fraction of model area with high water table
         pondmx           , &! ponding depth (mm)
         ssi              , &! irreducible water saturation of snow
         wimp             , &! water impremeable if porosity less than wimp
@@ -114,6 +114,8 @@ CONTAINS
         psi0(1:nl_soil)  , &! saturated soil suction (mm) (NEGATIVE)
         hksati(1:nl_soil), &! hydraulic conductivity at saturation (mm h2o/s)
         theta_r(1:nl_soil),&! residual moisture content [-]
+        fsatmax          , &! maximum saturated area fraction [-]                         
+        fsatdcf          , &! decay factor in calucation of saturated area fraction [1/m] 
         rootr(1:nl_soil) , &! water uptake farction from different layers, all layers add to 1.0
         rootflux(1:nl_soil),&! root uptake from different layer, all layers add to transpiration
 
@@ -289,7 +291,7 @@ IF(patchtype<=1)THEN   ! soil ground only
          ! 0: runoff scheme from TOPMODEL
 
          IF (gwat > 0.) THEN
-            CALL SurfaceRunoff_SIMTOP (nl_soil,wtfact,wimp,porsl,psi0,hksati,&
+            CALL SurfaceRunoff_SIMTOP (nl_soil,wimp,porsl,psi0,hksati,fsatmax,fsatdcf,&
                z_soisno(1:),dz_soisno(1:),zi_soisno(0:),&
                eff_porosity,icefrac,zwt,gwat,rsur)
          ELSE
@@ -336,7 +338,7 @@ IF(patchtype<=1)THEN   ! soil ground only
             ! only the re-infiltration is added to water balance calculation.
             IF (DEF_Runoff_SCHEME  == 0) THEN
           
-               CALL SurfaceRunoff_SIMTOP (nl_soil,1.0,wimp,porsl,psi0,hksati,&
+               CALL SurfaceRunoff_SIMTOP (nl_soil,wimp,porsl,psi0,hksati,1.0,fsatdcf,&
                         z_soisno(1:),dz_soisno(1:),zi_soisno(0:),&
                         eff_porosity,icefrac,zwt,gfld,rsur_fld)
             ELSEIF (DEF_Runoff_SCHEME  == 1) THEN
@@ -483,7 +485,7 @@ ENDIF
 !-----------------------------------------------------------------------
    SUBROUTINE WATER_VSF (ipatch,  patchtype,lb      ,nl_soil ,deltim ,&
               z_soisno    ,dz_soisno   ,zi_soisno                    ,&
-              bsw         ,theta_r     ,topostd                      ,&
+              bsw         ,theta_r     ,fsatmax     ,fsatdcf,topostd ,&
               BVIC,                                                  &
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
               alpha_vgm   ,n_vgm       ,L_vgm       ,sc_vgm  ,fc_vgm ,&
@@ -496,7 +498,7 @@ ENDIF
               qseva_snow  ,qsdew_snow  ,qsubl_snow  ,qfros_snow      ,&
               fsno                                                   ,&
               rsur        ,rsur_se     ,rsur_ie     ,rnof            ,&
-              qinfl       ,wtfact      ,ssi         ,pondmx          ,&
+              qinfl       ,ssi         ,pondmx      ,&
               wimp        ,zwt         ,wdsrf       ,wa      ,wetwat ,&
 #if(defined CaMa_Flood)
               flddepth    ,fldfrc      ,qinfl_fld   ,                 &
@@ -546,7 +548,7 @@ ENDIF
 
    real(r8), intent(in) :: &
         deltim           , &! time step (s)
-        wtfact           , &! fraction of model area with high water table
+        ! wtfact         , &! (updated to gridded 'fsatmax' data) fraction of model area with high water table
         ssi              , &! irreducible water saturation of snow
         pondmx           , &! ponding depth (mm)
         wimp             , &! water impremeable IF porosity less than wimp
@@ -557,6 +559,8 @@ ENDIF
         zi_soisno(lb-1:nl_soil) , &! interface level below a "z" level (m)
         bsw      (1:nl_soil), &! clapp and hornbereger "b" parameter [-]
         theta_r  (1:nl_soil), & ! residual moisture content [-]
+        fsatmax             , & ! maximum saturated area fraction [-]                         
+        fsatdcf             , & ! decay factor in calucation of saturated area fraction [1/m] 
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
         alpha_vgm(1:nl_soil), & ! a parameter corresponding approximately to the inverse of the air-entry value
         n_vgm    (1:nl_soil), & ! a shape parameter [dimensionless]
@@ -774,7 +778,7 @@ IF(patchtype<=1)THEN   ! soil ground only
       IF (DEF_Runoff_SCHEME  == 0) THEN
 
          IF (gwat > 0.) THEN
-            CALL SurfaceRunoff_SIMTOP (nl_soil,wtfact,wimp,porsl,psi0,hksati,&
+            CALL SurfaceRunoff_SIMTOP (nl_soil,wimp,porsl,psi0,hksati,fsatmax,fsatdcf,&
                                        z_soisno(1:),dz_soisno(1:),zi_soisno(0:),&
                                        eff_porosity,icefrac,zwt,gwat,rsur,rsur_se,rsur_ie)
          ELSE
@@ -845,7 +849,7 @@ IF(patchtype<=1)THEN   ! soil ground only
             ! only the re-infiltration is added to water balance calculation.
             IF (DEF_Runoff_SCHEME  == 0) THEN
           
-               CALL SurfaceRunoff_SIMTOP (nl_soil,1.0,wimp,porsl,psi0,hksati,&
+               CALL SurfaceRunoff_SIMTOP (nl_soil,wimp,porsl,psi0,hksati,1.0,fsatdcf,&
                         z_soisno(1:),dz_soisno(1:),zi_soisno(0:),&
                         eff_porosity,icefrac,zwt,gfld,rsur_fld)
             ELSEIF (DEF_Runoff_SCHEME  == 1) THEN

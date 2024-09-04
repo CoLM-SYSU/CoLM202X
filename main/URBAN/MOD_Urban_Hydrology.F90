@@ -19,9 +19,10 @@ CONTAINS
         pg_rain_lake   ,pg_snow_lake                                   ,&
         ! surface parameters or status
         froof          ,fgper          ,flake          ,bsw            ,&
-        porsl          ,psi0           ,hksati         ,wtfact         ,&
+        porsl          ,psi0           ,hksati                         ,&
         pondmx         ,ssi            ,wimp           ,smpmin         ,&
-        theta_r        ,topostd        ,BVIC                           ,&
+        theta_r        ,fsatmax        ,fsatdcf        ,topostd        ,&
+        BVIC           ,&
         rootr,rootflux ,etr            ,fseng          ,fgrnd          ,&
         t_gpersno      ,t_lakesno      ,t_lake         ,dz_lake        ,&
         z_gpersno      ,z_lakesno      ,zi_gpersno     ,zi_lakesno     ,&
@@ -88,7 +89,7 @@ CONTAINS
         froof            ,&! roof fractional cover [-]
         fgper            ,&! weith of impervious ground [-]
         flake            ,&! lake fractional cover [-]
-        wtfact           ,&! fraction of model area with high water table
+        ! wtfact         ,&! (updated to gridded 'fsatmax' data) fraction of model area with high water table
         pondmx           ,&! ponding depth (mm)
         ssi              ,&! irreducible water saturation of snow
         wimp             ,&! water impremeable IF porosity less than wimp
@@ -102,6 +103,8 @@ CONTAINS
         psi0  (1:nl_soil),&! saturated soil suction (mm) (NEGATIVE)
         hksati(1:nl_soil),&! hydraulic conductivity at saturation (mm h2o/s)
         theta_r(1:nl_soil),&! residual moisture content [-]
+        fsatmax          ,&! maximum saturated area fraction [-] 
+        fsatdcf          ,&! decay factor in calucation of saturated area fraction [1/m] 
         rootr (1:nl_soil),&! root resistance of a layer, all layers add to 1.0
 
         etr              ,&! vegetation transpiration
@@ -228,7 +231,8 @@ CONTAINS
       rootflux(:) = rootr(:)*etr
       CALL WATER_2014 (ipatch,patchtype,lbp        ,nl_soil     ,deltim     ,&
              z_gpersno   ,dz_gpersno  ,zi_gpersno  ,bsw         ,porsl      ,&
-             psi0        ,hksati      ,theta_r     ,topostd     ,BVIC       ,&
+             psi0        ,hksati      ,theta_r     ,fsatmax     ,fsatdcf    ,&
+             topostd     ,BVIC        ,&
              rootr       ,rootflux    ,t_gpersno   ,&
              wliq_gpersno,wice_gpersno,smp         ,hk          ,pgper_rain ,&
              sm_gper     ,etr         ,qseva_gper  ,qsdew_gper  ,qsubl_gper ,&
@@ -239,7 +243,7 @@ CONTAINS
              qseva_gper  ,qsdew_gper  ,qsubl_gper  ,qfros_gper  ,&
              qseva_gper  ,qsdew_gper  ,qsubl_gper  ,qfros_gper  ,&
              0.          ,& ! fsno, not active
-             rsur_gper   ,rnof_gper   ,qinfl       ,wtfact      ,&
+             rsur_gper   ,rnof_gper   ,qinfl       ,&
              pondmx      ,ssi         ,wimp        ,smpmin      ,&
              zwt         ,wa          ,qcharge     ,errw_rsub   ,&
 #if(defined CaMa_Flood)

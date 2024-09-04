@@ -216,6 +216,9 @@ MODULE MOD_Vars_TimeInvariants
    real(r8), allocatable :: fc_vgm       (:,:)  !a scaling factor by using air entry value in the Mualem model [-]
 #endif
 
+   real(r8), allocatable :: fsatmax (:)  ! maximum saturated area fraction [-]                         
+   real(r8), allocatable :: fsatdcf (:)  ! decay factor in calucation of saturated area fraction [1/m] 
+
    real(r8), allocatable :: vic_b_infilt (:)
    real(r8), allocatable :: vic_Dsmax    (:)
    real(r8), allocatable :: vic_Ds       (:)
@@ -243,7 +246,8 @@ MODULE MOD_Vars_TimeInvariants
    real(r8) :: zsno                             !roughness length for snow [m]
    real(r8) :: csoilc                           !drag coefficient for soil under canopy [-]
    real(r8) :: dewmx                            !maximum dew
-   real(r8) :: wtfact                           !fraction of model area with high water table
+   ! 'wtfact' is updated to gridded 'fsatmax' data. 
+   ! real(r8) :: wtfact                         !fraction of model area with high water table
    real(r8) :: capr                             !tuning factor to turn first layer T into surface T
    real(r8) :: cnfac                            !Crank Nicholson factor between 0 and 1
    real(r8) :: ssi                              !irreducible water saturation of snow
@@ -329,6 +333,9 @@ CONTAINS
             allocate (sc_vgm       (nl_soil,numpatch))
             allocate (fc_vgm       (nl_soil,numpatch))
 #endif
+
+            allocate (fsatmax (numpatch))
+            allocate (fsatdcf (numpatch))
 
             allocate (vic_b_infilt (numpatch))
             allocate (vic_Dsmax    (numpatch))
@@ -442,6 +449,9 @@ CONTAINS
       CALL ncio_read_vector (file_restart, 'fc_vgm   ' ,   nl_soil, landpatch, fc_vgm    ) ! a scaling factor by using air entry value in the Mualem model [-]
 #endif
 
+      CALL ncio_read_vector (file_restart, 'fsatmax', landpatch, fsatmax)
+      CALL ncio_read_vector (file_restart, 'fsatdcf', landpatch, fsatdcf)
+
       CALL ncio_read_vector (file_restart, 'vic_b_infilt', landpatch, vic_b_infilt)
       CALL ncio_read_vector (file_restart, 'vic_Dsmax'   , landpatch, vic_Dsmax   )
       CALL ncio_read_vector (file_restart, 'vic_Ds'      , landpatch, vic_Ds      )
@@ -471,7 +481,7 @@ CONTAINS
       CALL ncio_read_bcast_serial (file_restart, 'zsno  ', zsno  ) ! roughness length for snow [m]
       CALL ncio_read_bcast_serial (file_restart, 'csoilc', csoilc) ! drag coefficient for soil under canopy [-]
       CALL ncio_read_bcast_serial (file_restart, 'dewmx ', dewmx ) ! maximum dew
-      CALL ncio_read_bcast_serial (file_restart, 'wtfact', wtfact) ! fraction of model area with high water table
+      ! CALL ncio_read_bcast_serial (file_restart, 'wtfact', wtfact) ! fraction of model area with high water table
       CALL ncio_read_bcast_serial (file_restart, 'capr  ', capr  ) ! tuning factor to turn first layer T into surface T
       CALL ncio_read_bcast_serial (file_restart, 'cnfac ', cnfac ) ! Crank Nicholson factor between 0 and 1
       CALL ncio_read_bcast_serial (file_restart, 'ssi   ', ssi   ) ! irreducible water saturation of snow
@@ -612,6 +622,9 @@ CONTAINS
       CALL ncio_write_vector (file_restart, 'fc_vgm   ' , 'soil', nl_soil, 'patch', landpatch, fc_vgm    , compress) ! a scaling factor by using air entry value in the Mualem model [-]
 #endif
 
+      CALL ncio_write_vector (file_restart, 'fsatmax', 'patch', landpatch, fsatmax)
+      CALL ncio_write_vector (file_restart, 'fsatdcf', 'patch', landpatch, fsatdcf)
+      
       CALL ncio_write_vector (file_restart, 'vic_b_infilt', 'patch', landpatch, vic_b_infilt)
       CALL ncio_write_vector (file_restart, 'vic_Dsmax'   , 'patch', landpatch, vic_Dsmax   )
       CALL ncio_write_vector (file_restart, 'vic_Ds'      , 'patch', landpatch, vic_Ds      )
@@ -661,7 +674,7 @@ CONTAINS
          CALL ncio_write_serial (file_restart, 'zsno  ', zsno  ) ! roughness length for snow [m]
          CALL ncio_write_serial (file_restart, 'csoilc', csoilc) ! drag coefficient for soil under canopy [-]
          CALL ncio_write_serial (file_restart, 'dewmx ', dewmx ) ! maximum dew
-         CALL ncio_write_serial (file_restart, 'wtfact', wtfact) ! fraction of model area with high water table
+         ! CALL ncio_write_serial (file_restart, 'wtfact', wtfact) ! fraction of model area with high water table
          CALL ncio_write_serial (file_restart, 'capr  ', capr  ) ! tuning factor to turn first layer T into surface T
          CALL ncio_write_serial (file_restart, 'cnfac ', cnfac ) ! Crank Nicholson factor between 0 and 1
          CALL ncio_write_serial (file_restart, 'ssi   ', ssi   ) ! irreducible water saturation of snow
@@ -749,6 +762,9 @@ CONTAINS
             deallocate (sc_vgm         )
             deallocate (fc_vgm         )
 #endif
+            deallocate (fsatmax        )
+            deallocate (fsatdcf        )
+
             deallocate (vic_b_infilt   )
             deallocate (vic_Dsmax      )
             deallocate (vic_Ds         )
@@ -882,7 +898,7 @@ CONTAINS
          write(*,'(A,E20.10)') 'zsno   [m]    ', zsno   ! roughness length for snow [m]
          write(*,'(A,E20.10)') 'csoilc [-]    ', csoilc ! drag coefficient for soil under canopy [-]
          write(*,'(A,E20.10)') 'dewmx  [mm]   ', dewmx  ! maximum dew
-         write(*,'(A,E20.10)') 'wtfact [-]    ', wtfact ! fraction of model area with high water table
+         ! write(*,'(A,E20.10)') 'wtfact [-]    ', wtfact ! fraction of model area with high water table
          write(*,'(A,E20.10)') 'capr   [-]    ', capr   ! tuning factor to turn first layer T into surface T
          write(*,'(A,E20.10)') 'cnfac  [-]    ', cnfac  ! Crank Nicholson factor between 0 and 1
          write(*,'(A,E20.10)') 'ssi    [-]    ', ssi    ! irreducible water saturation of snow
