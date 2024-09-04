@@ -3,7 +3,48 @@
 MODULE MOD_Urban_Flux
 
 !-----------------------------------------------------------------------
+!
+! !DESCRIPTION:
+!
+!  The process of urban turbulence exchange is similar to the plant
+!  community (3D canopy) turbulence exchange. The sensible and latent
+!  heat exchange of roofs, walls (shaded and sunny sides), ground, and
+!  vegetation is calculated based on the M-O similarity theory
+!  similarity. However, the differences lie in the roughness, frontal
+!  area index, zero-plane displacement height, wind speed/turbulence
+!  exchange coefficient decay rate, and calculation of boundary layer
+!  resistance for building surfaces and vegetation. Each layer
+!  (equivalent height) conservation equation for flux is established and
+!  solved simultaneously.
+!
+!  The process of solving includes two situations:
+!
+!      1. not considering vegetation - Subroutine UrbanOnlyFlux()
+!
+!      2. considering vegetation     - Subroutine UrbanVegFlux()
+!
+!  Created by Hua Yuan, 09/2021
+!
+!
+! !REVISIONS:
+!
+!  10/2022, Hua Yuan: Add three options of decay coefficient for u and k.
+!           Add wet fraction for roof and impervious ground, set max
+!           ponding for roof and impervious from 10mm -> 1mm.
+!
+!  12/2022, Wenzong Dong: Traffic and metabolism heat flux are considered
+!           in turbulent flux exchange.
+!
+!  05/2024, Wenzong Dong: re-write the two- and three-layer flux exchange
+!           code in resistance style and make it consistant with the
+!           technical report. [better for incorporating rss and further
+!           developments]
+!
+!  05/2024, Hua Yuan: add option to account for vegetation snow process.
+!
+!-----------------------------------------------------------------------
    USE MOD_Precision
+   USE MOD_Namelist, only: DEF_RSS_SCHEME, DEF_VEG_SNOW
    USE MOD_Vars_Global
    USE MOD_Qsadv, only: qsadv
    IMPLICIT NONE
@@ -18,8 +59,19 @@ MODULE MOD_Urban_Flux
 !   1. Masson, 2000; Oleson et al., 2008
 !   2. Swaid, 1993; Kusaka, 2001; Lee and Park, 2008
 !   3. Macdonald, 2000
-   integer, parameter :: alpha_opt = 3
+   integer,  parameter :: alpha_opt = 3
 
+! Layer number setting, default is false, i.e., 2 layers
+   logical,  parameter :: run_three_layer = .false.
+
+! Percent of sensible/latent to AHE (only for Fhac, Fwst, vehc now),
+! 92% heat release as SH, 8% heat release as LH, Pigeon et al., 2007
+   real(r8), parameter :: fsh = 0.92
+   real(r8), parameter :: flh = 0.08
+
+! A simple urban irrigation scheme accounts for soil water stress of trees
+   logical,  parameter :: DEF_URBAN_Irrigation = .true.
+   real(r8), parameter :: rstfac_irrig = 1.
 !-----------------------------------------------------------------------
 
 CONTAINS
@@ -28,264 +80,270 @@ CONTAINS
 
    SUBROUTINE UrbanOnlyFlux ( &
          ! Model running information
-         ipatch      ,deltim      ,lbr         ,lbi         ,&
+         ipatch         ,deltim         ,lbr            ,lbi            ,&
          ! Forcing
-         hu          ,ht          ,hq          ,us          ,&
-         vs          ,thm         ,th          ,thv         ,&
-         qm          ,psrf        ,rhoair      ,Fhac        ,&
-         Fwst        ,Fach        ,vehc        ,meta        ,&
+         hu             ,ht             ,hq             ,us             ,&
+         vs             ,thm            ,th             ,thv            ,&
+         qm             ,psrf           ,rhoair         ,Fhac           ,&
+         Fwst           ,Fach           ,vehc           ,meta           ,&
          ! Urban parameters
-         hroof       ,hwr         ,nurb        ,fcover      ,&
+         hroof          ,hwr            ,nurb           ,fcover         ,&
          ! Status of surface
-         z0h_g       ,obug        ,ustarg      ,zlnd        ,&
-         zsno        ,fsno_roof   ,fsno_gimp   ,fsno_gper   ,&
-         wliq_roofsno,wliq_gimpsno,wice_roofsno,wice_gimpsno,&
-         htvp_roof   ,htvp_gimp   ,htvp_gper   ,troof       ,&
-         twsun       ,twsha       ,tgimp       ,tgper       ,&
-         qroof       ,qgimp       ,qgper       ,dqroofdT    ,&
-         dqgimpdT    ,dqgperdT    ,rsr                      ,&
+         z0h_g          ,obug           ,ustarg         ,zlnd           ,&
+         zsno           ,fsno_roof      ,fsno_gimp      ,fsno_gper      ,&
+         wliq_roofsno   ,wliq_gimpsno   ,wice_roofsno   ,wice_gimpsno   ,&
+         htvp_roof      ,htvp_gimp      ,htvp_gper      ,troof          ,&
+         twsun          ,twsha          ,tgimp          ,tgper          ,&
+         qroof          ,qgimp          ,qgper          ,dqroofdT       ,&
+         dqgimpdT       ,dqgperdT       ,rss                            ,&
          ! Output
-         taux        ,tauy        ,fsenroof    ,fsenwsun    ,&
-         fsenwsha    ,fsengimp    ,fsengper    ,fevproof    ,&
-         fevpgimp    ,fevpgper    ,croofs      ,cwalls      ,&
-         cgrnds      ,croofl      ,cgimpl      ,cgperl      ,&
-         croof       ,cgimp       ,cgper       ,tref        ,&
-         qref        ,z0m         ,zol         ,rib         ,&
-         ustar       ,qstar       ,tstar       ,fm          ,&
-         fh          ,fq          ,tafu                      )
+         taux           ,tauy           ,fsenroof       ,fsenwsun       ,&
+         fsenwsha       ,fsengimp       ,fsengper       ,fevproof       ,&
+         fevpgimp       ,fevpgper       ,croofs         ,cwsuns         ,&
+         cwshas         ,cgrnds         ,croofl         ,cgimpl         ,&
+         cgperl         ,croof          ,cgimp          ,cgper          ,&
+         tref           ,qref           ,z0m            ,zol            ,&
+         rib            ,ustar          ,qstar          ,tstar          ,&
+         fm             ,fh             ,fq             ,tafu            )
 
 !=======================================================================
    USE MOD_Precision
-   USE MOD_Const_Physical, only: cpair,vonkar,grav
+   USE MOD_Const_Physical, only: cpair,vonkar,grav,hvap
    USE MOD_FrictionVelocity
    USE MOD_CanopyLayerProfile
    IMPLICIT NONE
 
 !----------------------- Dummy argument --------------------------------
    integer, intent(in) :: &
-        ipatch,   &! patch index [-]
-        lbr,      &! lower bound of array
-        lbi        ! lower bound of array
+        ipatch,       &! patch index [-]
+        lbr,          &! lower bound of array
+        lbi            ! lower bound of array
 
    real(r8), intent(in) :: &
-        deltim     ! seconds in a time step [second]
+        deltim         ! seconds in a time step [second]
 
    ! atmospherical variables and observational height
    real(r8), intent(in) :: &
-        hu,       &! observational height of wind [m]
-        ht,       &! observational height of temperature [m]
-        hq,       &! observational height of humidity [m]
-        us,       &! wind component in eastward direction [m/s]
-        vs,       &! wind component in northward direction [m/s]
-        thm,      &! intermediate variable (tm+0.0098*ht) [K]
-        th,       &! potential temperature (kelvin)
-        thv,      &! virtual potential temperature (kelvin)
-        qm,       &! specific humidity at agcm reference height [kg/kg]
-        psrf,     &! atmosphere pressure at the surface [pa] [not used]
-        rhoair     ! density air [kg/m3]
+        hu,           &! observational height of wind [m]
+        ht,           &! observational height of temperature [m]
+        hq,           &! observational height of humidity [m]
+        us,           &! wind component in eastward direction [m/s]
+        vs,           &! wind component in northward direction [m/s]
+        thm,          &! intermediate variable (tm+0.0098*ht) [K]
+        th,           &! potential temperature (kelvin)
+        thv,          &! virtual potential temperature (kelvin)
+        qm,           &! specific humidity at agcm reference height [kg/kg]
+        psrf,         &! atmosphere pressure at the surface [pa] [not used]
+        rhoair         ! density air [kg/m3]
 
    real(r8), intent(in) :: &
-        vehc,     &! flux from vehicle
-        meta,     &! flux from metabolic
-        Fhac,     &! flux from heat or cool AC
-        Fwst,     &! waste heat from cool or heat
-        Fach       ! flux from air exchange
+        vehc,         &! flux from vehicle [W/m2]
+        meta,         &! flux from metabolic [W/m2]
+        Fhac,         &! flux from heat or cool AC [W/m2]
+        Fwst,         &! waste heat from cool or heat [W/m2]
+        Fach           ! flux from air exchange [W/m2]
 
    integer, intent(in) :: &
-        nurb       ! number of aboveground urban components [-]
+        nurb           ! number of aboveground urban components [-]
 
    real(r8), intent(in) :: &
-        hroof,    &! average building height [m]
-        hwr,      &! average building height to their distance [-]
-        fcover(0:4)! coverage of aboveground urban components [-]
+        hroof,        &! average building height [m]
+        hwr,          &! average building height to their distance [-]
+        fcover(0:4)    ! coverage of aboveground urban components [-]
 
    real(r8), intent(in) :: &
-        rsr,      &! bare soil resistance for evaporation
-        z0h_g,    &! roughness length for bare ground, sensible heat [m]
-        obug,     &! monin-obukhov length for bare ground (m)
-        ustarg,   &! friction velocity for bare ground [m/s]
-        zlnd,     &! roughness length for soil [m]
-        zsno,     &! roughness length for snow [m]
-        fsno_roof,&! fraction of ground covered by snow [-]
-        fsno_gimp,&! fraction of ground covered by snow [-]
-        fsno_gper,&! fraction of ground covered by snow [-]
-        wliq_roofsno,&! liqui water [kg/m2]
-        wliq_gimpsno,&! liqui water [kg/m2]
-        wice_roofsno,&! ice lens [kg/m2]
-        wice_gimpsno,&! ice lens [kg/m2]
-        htvp_roof,&! latent heat of vapor of water (or sublimation) [j/kg]
-        htvp_gimp,&! latent heat of vapor of water (or sublimation) [j/kg]
-        htvp_gper,&! latent heat of vapor of water (or sublimation) [j/kg]
+        rss,          &! bare soil resistance for evaporation [s/m]
+        z0h_g,        &! roughness length for bare ground, sensible heat [m]
+        obug,         &! monin-obukhov length for bare ground (m)
+        ustarg,       &! friction velocity for bare ground [m/s]
+        zlnd,         &! roughness length for soil [m]
+        zsno,         &! roughness length for snow [m]
+        fsno_roof,    &! fraction of ground covered by snow [-]
+        fsno_gimp,    &! fraction of ground covered by snow [-]
+        fsno_gper,    &! fraction of ground covered by snow [-]
+        wliq_roofsno, &! liqui water [kg/m2]
+        wliq_gimpsno, &! liqui water [kg/m2]
+        wice_roofsno, &! ice lens [kg/m2]
+        wice_gimpsno, &! ice lens [kg/m2]
+        htvp_roof,    &! latent heat of vapor of water (or sublimation) [j/kg]
+        htvp_gimp,    &! latent heat of vapor of water (or sublimation) [j/kg]
+        htvp_gper,    &! latent heat of vapor of water (or sublimation) [j/kg]
 
-        troof,    &! temperature of roof [K]
-        twsun,    &! temperature of sunlit wall [K]
-        twsha,    &! temperature of shaded wall [K]
-        tgimp,    &! temperature of impervious road [K]
-        tgper,    &! pervious ground temperature [K]
+        troof,        &! temperature of roof [K]
+        twsun,        &! temperature of sunlit wall [K]
+        twsha,        &! temperature of shaded wall [K]
+        tgimp,        &! temperature of impervious road [K]
+        tgper,        &! pervious ground temperature [K]
 
-        qroof,    &! roof specific humidity [kg/kg]
-        qgimp,    &! imperivous road specific humidity [kg/kg]
-        qgper,    &! pervious ground specific humidity [kg/kg]
-        dqroofdT, &! d(qroof)/dT
-        dqgimpdT, &! d(qgimp)/dT
-        dqgperdT   ! d(qgper)/dT
+        qroof,        &! roof specific humidity [kg/kg]
+        qgimp,        &! imperivous road specific humidity [kg/kg]
+        qgper,        &! pervious ground specific humidity [kg/kg]
+        dqroofdT,     &! d(qroof)/dT
+        dqgimpdT,     &! d(qgimp)/dT
+        dqgperdT       ! d(qgper)/dT
 
    ! Output
    real(r8), intent(out) :: &
-        taux,     &! wind stress: E-W [kg/m/s**2]
-        tauy,     &! wind stress: N-S [kg/m/s**2]
-        fsenroof, &! sensible heat flux from roof [W/m2]
-        fsenwsun, &! sensible heat flux from snulit wall [W/m2]
-        fsenwsha, &! sensible heat flux from shaded wall [W/m2]
-        fsengimp, &! sensible heat flux from impervious road [W/m2]
-        fsengper, &! sensible heat flux from pervious ground [W/m2]
-        fevproof, &! evaperation heat flux from roof [W/m2]
-        fevpgimp, &! evaperation heat flux from impervious road [W/m2]
-        fevpgper, &! evaporation heat flux from pervious ground [mm/s]
+        taux,         &! wind stress: E-W [kg/m/s**2]
+        tauy,         &! wind stress: N-S [kg/m/s**2]
+        fsenroof,     &! sensible heat flux from roof [W/m2]
+        fsenwsun,     &! sensible heat flux from snulit wall [W/m2]
+        fsenwsha,     &! sensible heat flux from shaded wall [W/m2]
+        fsengimp,     &! sensible heat flux from impervious road [W/m2]
+        fsengper,     &! sensible heat flux from pervious ground [W/m2]
+        fevproof,     &! evaperation heat flux from roof [W/m2]
+        fevpgimp,     &! evaperation heat flux from impervious road [W/m2]
+        fevpgper,     &! evaporation heat flux from pervious ground [mm/s]
 
-        croofs,   &! deriv of roof sensible heat flux wrt soil temp [w/m**2/k]
-        cwalls,   &! deriv of wall sensible heat flux wrt soil temp [w/m**2/k]
-        cgrnds,   &! deriv of soil sensible heat flux wrt soil temp [w/m**2/k]
-        croofl,   &! deriv of roof latent heat flux wrt soil temp [w/m**2/k]
-        cgimpl,   &! deriv of gimp latent heat flux wrt soil temp [w/m**2/k]
-        cgperl,   &! deriv of soil latent heat flux wrt soil temp [w/m**2/k]
-        croof,    &! deriv of roof total heat flux wrt soil temp [w/m**2/k]
-        cgimp,    &! deriv of gimp total heat flux wrt soil temp [w/m**2/k]
-        cgper,    &! deriv of soil total heat flux wrt soil temp [w/m**2/k]
+        croofs,       &! deriv of roof sensible heat flux wrt soil temp [w/m**2/k]
+        cwsuns,       &! deriv of sunlit wall sensible heat flux wrt soil temp [w/m**2/k]
+        cwshas,       &! deriv of shaded wall sensible heat flux wrt soil temp [w/m**2/k]
+        cgrnds,       &! deriv of soil sensible heat flux wrt soil temp [w/m**2/k]
+        croofl,       &! deriv of roof latent heat flux wrt soil temp [w/m**2/k]
+        cgimpl,       &! deriv of gimp latent heat flux wrt soil temp [w/m**2/k]
+        cgperl,       &! deriv of soil latent heat flux wrt soil temp [w/m**2/k]
+        croof,        &! deriv of roof total heat flux wrt soil temp [w/m**2/k]
+        cgimp,        &! deriv of gimp total heat flux wrt soil temp [w/m**2/k]
+        cgper,        &! deriv of soil total heat flux wrt soil temp [w/m**2/k]
 
-        tref,     &! 2 m height air temperature [kelvin]
-        qref,     &! 2 m height air humidity [kg/kg]
+        tref,         &! 2 m height air temperature [kelvin]
+        qref,         &! 2 m height air humidity [kg/kg]
 
-        z0m,      &! effective roughness [m]
-        zol,      &! dimensionless height (z/L) used in Monin-Obukhov theory
-        rib,      &! bulk Richardson number in surface layer
-        ustar,    &! friction velocity [m/s]
-        tstar,    &! temperature scaling parameter
-        qstar,    &! moisture scaling parameter
-        fm,       &! integral of profile function for momentum
-        fh,       &! integral of profile function for heat
-        fq,       &! integral of profile function for moisture
-        tafu       ! effective urban air temperature (2nd layer, walls)
+        z0m,          &! effective roughness [m]
+        zol,          &! dimensionless height (z/L) used in Monin-Obukhov theory
+        rib,          &! bulk Richardson number in surface layer
+        ustar,        &! friction velocity [m/s]
+        tstar,        &! temperature scaling parameter
+        qstar,        &! moisture scaling parameter
+        fm,           &! integral of profile function for momentum
+        fh,           &! integral of profile function for heat
+        fq,           &! integral of profile function for moisture
+        tafu           ! effective urban air temperature (2nd layer, walls)
 
 !------------------------ LOCAL VARIABLES ------------------------------
-   integer ::   &
-        niters,   &! maximum number of iterations for surface temperature
-        iter,     &! iteration index
-        nmozsgn    ! number of times moz changes sign
+   integer :: &
+        niters,       &! maximum number of iterations for surface temperature
+        iter,         &! iteration index
+        nmozsgn        ! number of times moz changes sign
 
-   real(r8) ::  &
-        beta,     &! coefficient of conective velocity [-]
-        dth,      &! diff of virtual temp. between ref. height and surface
-        dqh,      &! diff of humidity between ref. height and surface
-        dthv,     &! diff of vir. poten. temp. between ref. height and surface
-        obu,      &! monin-obukhov length (m)
-        obuold,   &! monin-obukhov length from previous iteration
-        ram,      &! aerodynamical resistance [s/m]
-        rah,      &! thermal resistance [s/m]
-        raw,      &! moisture resistance [s/m]
-        fh2m,     &! relation for temperature at 2m
-        fq2m,     &! relation for specific humidity at 2m
-        fm10m,    &! integral of profile function for momentum at 10m
-        thvstar,  &! virtual potential temperature scaling parameter
-        um,       &! wind speed including the stablity effect [m/s]
-        ur,       &! wind speed at reference height [m/s]
-        wc,       &! convective velocity [m/s]
-        wc2,      &! wc**2
-        zeta,     &! dimensionless height used in Monin-Obukhov theory
-        zii,      &! convective boundary height [m]
-        zldis,    &! reference height "minus" zero displacement heght [m]
-        z0mg,     &! roughness length over ground, momentum [m]
-        z0hg,     &! roughness length over ground, sensible heat [m]
-        z0qg       ! roughness length over ground, latent heat [m]
+   real(r8) :: &
+        beta,         &! coefficient of conective velocity [-]
+        dth,          &! diff of virtual temp. between ref. height and surface
+        dqh,          &! diff of humidity between ref. height and surface
+        dthv,         &! diff of vir. poten. temp. between ref. height and surface
+        obu,          &! monin-obukhov length (m)
+        obuold,       &! monin-obukhov length from previous iteration
+        ram,          &! aerodynamical resistance [s/m]
+        rah,          &! thermal resistance [s/m]
+        raw,          &! moisture resistance [s/m]
+        fh2m,         &! relation for temperature at 2m
+        fq2m,         &! relation for specific humidity at 2m
+        fm10m,        &! integral of profile function for momentum at 10m
+        thvstar,      &! virtual potential temperature scaling parameter
+        um,           &! wind speed including the stablity effect [m/s]
+        ur,           &! wind speed at reference height [m/s]
+        wc,           &! convective velocity [m/s]
+        wc2,          &! wc**2
+        zeta,         &! dimensionless height used in Monin-Obukhov theory
+        zii,          &! convective boundary height [m]
+        zldis,        &! reference height "minus" zero displacement heght [m]
+        z0mg,         &! roughness length over ground, momentum [m]
+        z0hg,         &! roughness length over ground, sensible heat [m]
+        z0qg           ! roughness length over ground, latent heat [m]
 
    real(r8) evplwet, evplwet_dtl, elwmax, elwdif
 
-!----------------------- defination for 3d run ------------------------ !
+!----------------------- defination for 3d run -------------------------
 
    integer, parameter :: nlay = 3  ! potential layer number
 
    integer :: &
-        clev,     &! current layer index
-        numlay     ! available layer number
+        clev,         &! current layer index
+        numlay         ! available layer number
 
    real(r8) :: &
-        huu,      &! observational height of wind [m]
-        htu,      &! observational height of temperature [m]
-        hqu,      &! observational height of humidity [m]
-        ktop,     &! K value at a specific height
-        utop,     &! u value at a specific height
-        fht,      &! integral of profile function for heat at the top layer
-        fqt,      &! integral of profile function for moisture at the top layer
-        fmtop,    &! fm value at a specific height
-        phih,     &! phi(h), similarity function for sensible heat
-        displa,   &! displacement height for urban
-        displau,  &! displacement height for urban building
-        z0mu,     &! roughless length for urban building only
-        z0h,      &! roughless length for sensible heat
-        z0q,      &! roughless length for latent heat
-        tg,       &! ground temperature
-        qg         ! ground specific humidity
+        huu,          &! observational height of wind [m]
+        htu,          &! observational height of temperature [m]
+        hqu,          &! observational height of humidity [m]
+        ktop,         &! K value at a specific height
+        utop,         &! u value at a specific height
+        fht,          &! integral of profile function for heat at the top layer
+        fqt,          &! integral of profile function for moisture at the top layer
+        fmtop,        &! fm value at a specific height
+        phih,         &! phi(h), similarity function for sensible heat
+        displa,       &! displacement height for urban
+        displau,      &! displacement height for urban building
+        z0mu,         &! roughless length for urban building only
+        z0h,          &! roughless length for sensible heat
+        z0q,          &! roughless length for latent heat
+        tg,           &! ground temperature
+        qg             ! ground specific humidity
 
    real(r8) :: &
-        fg,       &! ground fractional cover
-        fgimp,    &! weight of impervious ground
-        fgper,    &! weight of pervious ground
-        hlr,      &! average building height to their length of edge [-]
-        sqrtdragc,&! sqrt(drag coefficient)
-        lm,       &! mix length within canopy
-        fai,      &! frontal area index
-        fwet,     &! fractional wet area
-        delta,    &! 0 or 1
-        alpha      ! exponential extinction factor for u/k decline within urban
+        fg,           &! ground fractional cover
+        fgimp,        &! weight of impervious ground
+        fgper,        &! weight of pervious ground
+        hlr,          &! average building height to their length of edge [-]
+        sqrtdragc,    &! sqrt(drag coefficient)
+        lm,           &! mix length within canopy
+        fai,          &! frontal area index
+        fwet,         &! fractional wet area
+        delta,        &! 0 or 1
+        alpha          ! exponential extinction factor for u/k decline within urban
 
    real(r8), dimension(0:nurb) :: &
-        tu,       &! termperature array
-        fc,       &! fractional cover array
-        canlev,   &! urban canopy layer lookup table
-        rb,       &! leaf boundary layer resistance [s/m]
-        cfh,      &! heat conductance for leaf [m/s]
-        cfw,      &! latent heat conductance for leaf [m/s]
-        wtl0,     &! normalized heat conductance for air and leaf [-]
-        wtlq0,    &! normalized latent heat cond. for air and leaf [-]
+        tu,           &! termperature array
+        fc,           &! fractional cover array
+        canlev,       &! urban canopy layer lookup table
+        rb,           &! leaf boundary layer resistance [s/m]
+        cfh,          &! heat conductance for leaf [m/s]
+        cfw,          &! latent heat conductance for leaf [m/s]
+        wtl0,         &! normalized heat conductance for air and leaf [-]
+        wtlq0,        &! normalized latent heat cond. for air and leaf [-]
 
-        ei,       &! vapor pressure on leaf surface [pa]
-        deidT,    &! derivative of "ei" on "tl" [pa/K]
-        qsatl,    &! leaf specific humidity [kg/kg]
-        qsatldT    ! derivative of "qsatl" on "tlef"
+        ei,           &! vapor pressure on leaf surface [pa]
+        deidT,        &! derivative of "ei" on "tl" [pa/K]
+        qsatl,        &! leaf specific humidity [kg/kg]
+        qsatldT        ! derivative of "qsatl" on "tlef"
 
    real(r8), dimension(nlay) :: &
-        fah,      &! weight for thermal resistance to upper layer
-        faw,      &! weight for moisture resistance to upper layer
-        fgh,      &! weight for thermal resistance to lower layer
-        fgw,      &! weight for moisture resistance to lower layer
-        ueff_lay, &! effective wind speed within canopy layer [m/s]
-        ueff_lay_,&! effective wind speed within canopy layer [m/s]
-        taf,      &! air temperature within canopy space [K]
-        qaf,      &! humidity of canopy air [kg/kg]
-        rd,       &! aerodynamic resistance between layers [s/m]
-        rd_,      &! aerodynamic resistance between layers [s/m]
-        cah,      &! heat conductance for air [m/s]
-        cgh,      &! heat conductance for ground [m/s]
-        caw,      &! latent heat conductance for air [m/s]
-        cgw,      &! latent heat conductance for ground [m/s]
-        wtshi,    &! sensible heat resistance for air, grd and leaf [-]
-        wtsqi,    &! latent heat resistance for air, grd and leaf [-]
-        wta0,     &! normalized heat conductance for air [-]
-        wtg0,     &! normalized heat conductance for ground [-]
-        wtaq0,    &! normalized latent heat conductance for air [-]
-        wtgq0,    &! normalized heat conductance for ground [-]
-        wtll,     &! sum of normalized heat conductance for air and leaf
-        wtlql      ! sum of normalized heat conductance for air and leaf
+        fah,          &! weight for thermal resistance to upper layer
+        faw,          &! weight for moisture resistance to upper layer
+        fgh,          &! weight for thermal resistance to lower layer
+        fgw,          &! weight for moisture resistance to lower layer
+        ueff_lay,     &! effective wind speed within canopy layer [m/s]
+        ueff_lay_,    &! effective wind speed within canopy layer [m/s]
+        taf,          &! air temperature within canopy space [K]
+        qaf,          &! humidity of canopy air [kg/kg]
+        rd,           &! aerodynamic resistance between layers [s/m]
+        rd_,          &! aerodynamic resistance between layers [s/m]
+        cah,          &! heat conductance for air [m/s]
+        cgh,          &! heat conductance for ground [m/s]
+        caw,          &! latent heat conductance for air [m/s]
+        cgw,          &! latent heat conductance for ground [m/s]
+        wtshi,        &! sensible heat resistance for air, grd and leaf [-]
+        wtsqi,        &! latent heat resistance for air, grd and leaf [-]
+        wta0,         &! normalized heat conductance for air [-]
+        wtg0,         &! normalized heat conductance for ground [-]
+        wtaq0,        &! normalized latent heat conductance for air [-]
+        wtgq0,        &! normalized heat conductance for ground [-]
+        wtll,         &! sum of normalized heat conductance for air and leaf
+        wtlql          ! sum of normalized heat conductance for air and leaf
 
-   real(r8) ::  &
-        ra2m,     &! aerodynamic resistance between 2m and bottom layer [s/m]
-        rd2m       ! aerodynamic resistance between bottom layer and ground [s/m]
+   real(r8), dimension(nlay) :: &
+        Hahe           ! anthropogenic heat emission (AHE)
+
+   real(r8) :: &
+        ra2m,         &! aerodynamic resistance between 2m and bottom layer [s/m]
+        rd2m           ! aerodynamic resistance between bottom layer and ground [s/m]
 
    ! temporal
    integer i
-   real(r8) h_vec, l_vec, tmpw3, cgw_per, cgw_imp
+   real(r8) tmpw3, cgw_per, cgw_imp
    real(r8) bee, tmpw1, tmpw2, fact, facq
-   real(r8) fwet_roof, fwet_roof_, fwet_gimp, fwet_gimp_
+   real(r8) aT, bT, cT
+   real(r8) aQ, bQ, cQ, Lahe
+   real(r8) fwet_roof, fwet_roof_, fwet_gimp, fwet_gimp_, rss_
    real(r8) fwetfac
 
 !-----------------------End Variable List-------------------------------
@@ -304,6 +362,7 @@ CONTAINS
 !-----------------------------------------------------------------------
 ! initial roughness length for z0mg, z0hg, z0qg
 ! Roughness of the city ground only (excluding buildings and vegetation)
+!-----------------------------------------------------------------------
 
       !NOTE: change to original
       !z0mg = (1.-fsno)*zlnd + fsno*zsno
@@ -327,14 +386,8 @@ CONTAINS
       ENDDO
 
 !-----------------------------------------------------------------------
-! set weight
+! tg, qg and wet fraction calculation
 !-----------------------------------------------------------------------
-
-      ! set weighting factor
-      fah(1) = 1.; fah(2) = 1.; fah(3) = 1.
-      faw(1) = 1.; faw(2) = 1.; faw(3) = 1.
-      fgh(1) = 1.; fgh(2) = fg; fgh(3) = 1.
-      fgw(1) = 1.; fgw(2) = fg; fgw(3) = 1.
 
       ! weighted tg
       tg = tgimp*fgimp + tgper*fgper
@@ -366,7 +419,7 @@ CONTAINS
          fwet_roof = fwet_roof_
       ENDIF
 
-      ! ! dew case
+      ! dew case
       IF (qm > qgimp) THEN
          fwet_gimp = 1.
       ELSE
@@ -374,11 +427,10 @@ CONTAINS
       ENDIF
 
       ! weighted qg
-      ! NOTE: IF fwet_gimp=1, same as previous
+      ! NOTE: IF fwet_gimp=1, same as pervious ground
       fwetfac = fgimp*fwet_gimp + fgper
       qg = (qgimp*fgimp*fwet_gimp + qgper*fgper) / fwetfac
 
-      fgw(2) = fg*fwetfac
 
 !-----------------------------------------------------------------------
 ! initial for fluxes profile
@@ -403,7 +455,7 @@ CONTAINS
       displau = hroof * (1 + 4.43**(-fcover(0))*(fcover(0) - 1))
       fai  = 4/PI*hlr*fcover(0)
       z0mu = (hroof - displau) * &
-           exp( -(0.5*1.2/vonkar/vonkar*(1-displau/hroof)*fai)**(-0.5) )
+             exp( -(0.5*1.2/vonkar/vonkar*(1-displau/hroof)*fai)**(-0.5) )
 
       ! to compare z0 of urban and only the surface
       ! maximum assumption
@@ -420,7 +472,7 @@ CONTAINS
 ! calculate layer decay coefficient
 !-----------------------------------------------------------------------
 
-      !NOTE: the below is for vegetation, may not suitable for urban
+      !NOTE: the below is for vegetation, may not be suitable for urban
       ! Raupach, 1992
       !sqrtdragc = min( (0.003+0.3*fai)**0.5, 0.3 )
 
@@ -486,20 +538,20 @@ CONTAINS
          !NOTE: displat=hroof, z0mt=0, are set for roof
          ! fmtop is calculated at the same height of fht, fqt
          CALL moninobukm(huu,htu,hqu,displa,z0m,z0h,z0q,obu,um, &
-            hroof,0.,ustar,fh2m,fq2m,hroof,fmtop,fm,fh,fq,fht,fqt,phih)
+              hroof,0.,ustar,fh2m,fq2m,hroof,fmtop,fm,fh,fq,fht,fqt,phih)
 
 ! Aerodynamic resistance
          ! 09/16/2017:
-         ! note that for ram, it is the resistance from Href to z0mv+displa
+         ! NOTE that for ram, it is the resistance from Href to z0mv+displa
          ! however, for rah and raw is only from Href to canopy effective
          ! exchange height.
-         ! for Urban: from Href to roof height
+         ! For Urban: from Href to roof height
          ! so rah/raw is not comparable with that of 1D case
          ram = 1./(ustar*ustar/um)
 
          ! 05/02/2016: calculate resistance from the top layer (effective exchange
          ! height) to reference height
-         ! for Urban: from roof height to reference height
+         ! For Urban: from roof height to reference height
          rah = 1./(vonkar/(fh-fht)*ustar)
          raw = 1./(vonkar/(fq-fqt)*ustar)
 
@@ -528,38 +580,34 @@ CONTAINS
 
          ueff_lay(3) = utop
 
-         !real(r8) FUNCTION kintegral(ktop, fc, bee, alpha, z0mg, &
-         !      displah, htop, hbot, obu, ustar, ztop, zbot)
-         !rd(3)  = kintegral(ktop, 1., bee, alpha, z0mg, displa/hroof, &
-         !   hroof, 0., obug, ustarg, hroof, displa+z0m)
+         ! NOTE: another calculation method for double-check
+         ! real(r8) FUNCTION kintegral(ktop, fc, bee, alpha, z0mg, displah, &
+         !                             htop, hbot, obu, ustar, ztop, zbot)
+         ! rd(3) = kintegral(ktop, 1., bee, alpha, z0mg, displa/hroof, &
+         !                   hroof, 0., obug, ustarg, hroof, displa+z0m)
 
-         !real(r8) FUNCTION frd(ktop, htop, hbot, &
-         !      ztop, zbot, displah, z0h, obu, ustar, &
-         !      z0mg, alpha, bee, fc)
+         ! real(r8) FUNCTION frd(ktop, htop, hbot, ztop, zbot, displah, z0h, &
+         !                       obu, ustar, z0mg, alpha, bee, fc)
          rd(3) = frd(ktop, hroof, 0., hroof, displau+z0mu, displa/hroof, z0h_g, &
-            obug, ustarg, z0mg, alpha, bee, 1.)
+                     obug, ustarg, z0mg, alpha, bee, 1.)
 
-         !real(r8) FUNCTION uintegralz(utop, fc, bee, alpha, z0mg, htop, hbot, ztop, zbot)
-         !ueff_lay(2)  = uintegralz(utop, 1., bee, alpha, z0mg, hroof, 0., hroof, z0mg)
+         ! real(r8) FUNCTION uintegralz(utop, fc, bee, alpha, z0mg, htop, hbot, ztop, zbot)
+         ! ueff_lay(2) = uintegralz(utop, 1., bee, alpha, z0mg, hroof, 0., hroof, z0mg)
 
-         !real(r8) FUNCTION ueffectz(utop, htop, hbot, ztop, zbot, z0mg, alpha, bee, fc)
+         ! real(r8) FUNCTION ueffectz(utop, htop, hbot, ztop, zbot, z0mg, alpha, bee, fc)
          ueff_lay(2) = ueffectz(utop, hroof, 0., hroof, z0mg, z0mg, alpha, bee, 1.)
 
-         !rd(2)  = kintegral(ktop, 1., bee, alpha, z0mg, displa/hroof, &
-         !   hroof, 0., obug, ustarg, displau+z0mu, z0qg)
+         ! rd(2) = kintegral(ktop, 1., bee, alpha, z0mg, displa/hroof, &
+         !                   hroof, 0., obug, ustarg, displau+z0mu, z0qg)
          rd(2) = frd(ktop, hroof, 0., displau+z0mu, z0qg, displa/hroof, z0h_g, &
-            obug, ustarg, z0mg, alpha, bee, 1.)
+                     obug, ustarg, z0mg, alpha, bee, 1.)
 
-         !print *, "------------------------"
-         !print *, "rd :", rd
-         !print *, "rd_:", rd_
-
-         ! calculate ra2m, rd2m
+         ! calculate ra2m, rd2m. NOTE: not used now.
          ra2m = frd(ktop, hroof, 0., displau+z0mu, 2., displa/hroof, z0h_g, &
-            obug, ustarg, z0mg, alpha, bee, 1.)
+                    obug, ustarg, z0mg, alpha, bee, 1.)
 
          rd2m = frd(ktop, hroof, 0., 2., z0qg, displa/hroof, z0h_g, &
-            obug, ustarg, z0mg, alpha, bee, 1.)
+                    obug, ustarg, z0mg, alpha, bee, 1.)
 
          ! Masson, 2000: Account for different canyon orientations
          ! 2/PI is a factor derived from 0-360deg integration
@@ -580,83 +628,8 @@ CONTAINS
          ENDDO
 
 !-----------------------------------------------------------------------
-! dimensional and non-dimensional sensible and latent heat conductances
-! for canopy and soil flux calculations.
+! Solve taf(:) and qaf(:)
 !-----------------------------------------------------------------------
-
-         !NOTE: 0: roof, 1: sunlit wall, 2: shaded wall,
-         !      3: impervious road, 4: pervious road, 5: vegetation
-         cfh(:) = 0.
-         cfw(:) = 0.
-
-         DO i = 0, nurb
-            cfh(i) = 1 / rb(i)
-
-            IF (i == 0) THEN !roof
-               ! account for fwet
-               cfw(i) = fwet_roof / rb(i)
-            ELSE
-               cfw(i) = 1 / rb(i)
-            ENDIF
-         ENDDO
-
-         ! For simplicity, there is no water exchange on the wall
-         cfw(1:2) = 0.
-
-         ! initialization
-         cah(:) = 0.
-         caw(:) = 0.
-         cgh(:) = 0.
-         cgw(:) = 0.
-
-         ! conductance for each layer
-         DO i = 3, 2, -1
-            IF (i == 3) THEN
-               cah(i) = 1. / rah
-               caw(i) = 1. / raw
-            ELSE
-               cah(i) = 1. / rd(i+1)
-               caw(i) = 1. / rd(i+1)
-            ENDIF
-
-            cgh(i) = 1. / rd(i)
-            cgw(i) = 1. / rd(i)
-         ENDDO
-
-         ! claculate wtshi, wtsqi
-         wtshi(:) = cah(:)*fah(:) + cgh(:)*fgh(:)
-         wtsqi(:) = caw(:)*faw(:) + cgw(:)*fgw(:)
-
-         DO i = 0, nurb
-            clev = canlev(i)
-            wtshi(clev) = wtshi(clev) + fc(i)*cfh(i)
-            wtsqi(clev) = wtsqi(clev) + fc(i)*cfw(i)
-         ENDDO
-
-         DO i = 3, 2, -1
-            wtshi(i) = 1./wtshi(i)
-            wtsqi(i) = 1./wtsqi(i)
-         ENDDO
-
-         wta0(:)  = cah(:) * wtshi(:) * fah(:)
-         wtg0(:)  = cgh(:) * wtshi(:) * fgh(:)
-
-         wtaq0(:) = caw(:) * wtsqi(:) * faw(:)
-         wtgq0(:) = cgw(:) * wtsqi(:) * fgw(:)
-
-         ! calculate wtl0, wtll, wtlq0, wtlql
-         wtll(:)  = 0.
-         wtlql(:) = 0.
-
-         DO i = 0, nurb
-            clev = canlev(i)
-
-            wtl0(i)    = cfh(i) * wtshi(clev) * fc(i)
-            wtll(clev) = wtll(clev) + wtl0(i)*tu(i)
-
-            wtlq0(i)    = cfw(i) * wtsqi(clev) * fc(i)
-            wtlql(clev) = wtlql(clev) + wtlq0(i)*qsatl(i)
-         ENDDO
 
          IF (numlay .eq. 2) THEN
 
@@ -668,11 +641,11 @@ CONTAINS
             ! taf(3) = (cah(3)*thm + cah(2)*taf(2) + cfh(0)*troof*fc(0))/(cah(3) + cah(2) + cfh(0)*fc(0))
             ! taf(2) = (cah(2)*taf(3) + cgh(2)*tg*fg + cfh(1)*twsun*fc(1) + cfh(2)*twsha*fc(2) + AHE/(rho*cp))/ &
             !          (cah(2) + cgh(2)*fg + cfh(1)*fc(1) + cfh(2)*fc(2))
-
+            !
             ! - Equations:
             ! qaf(3) = (1/raw*qm + 1/rd(3)*qaf(2) + 1/rb(0)*qroof*fc(0))/(1/raw + 1/rd(3) + 1/rb(0)*fc(0))
-            ! qaf(2) = (1/rd(3)*qaf(3) + 1/(rd(2)+rsr)*qper*fgper*fg + fwetimp/rd(2)*qimp*fgimp*fg + AHE/rho)/ &
-            !          (1/rd(3) + 1/(rd(2)+rsr)*fgper*fg + fwetimp/rd(2)*fgimp*fg)
+            ! qaf(2) = (1/rd(3)*qaf(3) + 1/(rd(2)+rss)*qper*fgper*fg + fwetimp/rd(2)*qimp*fgimp*fg + AHE/rho)/ &
+            !          (1/rd(3) + 1/(rd(2)+rss)*fgper*fg + fwetimp/rd(2)*fgimp*fg)
             ! Also written as:
             ! qaf(3) = (caw(3)*qm + caw(2)*qaf(2) + cfw(0)*qroof*fc(0))/(caw(3) + caw(2) + cfw(0)*fc(0))
             ! qaf(2) = (caw(2)*qaf(3) + cgwper*qper*fgper*fg + cgwimp*qimp*fgimp*fg + AHE/rho)/ &
@@ -681,44 +654,37 @@ CONTAINS
             ! 06/20/2021, yuan: account for Anthropogenic heat
             ! 92% heat release as SH, Pigeon et al., 2007
 
-            h_vec  = vehc
-            tmpw1  = cah(2)*((cah(3)*thm + cfh(0)*tu(0)*fc(0) + 1/(4*hlr+1)*(Fhac+Fwst)/(rhoair*cpair))/&
-                     (cah(3) + cah(2) + cfh(0)*fc(0)))
-            tmpw2  = (4*hlr/(4*hlr+1)*(Fhac+Fwst)+Fach)/(rhoair*cpair) + (h_vec+meta)/(rhoair*cpair)
-            tmpw3  = cgh(2)*fg*tg + cfh(1)*tu(1)*fc(1) + cfh(2)*tu(2)*fc(2)
-            fact   = 1. - (cah(2)*cah(2)/(cah(3) + cah(2) + cfh(0)*fc(0))/&
-                     (cah(2) + cgh(2)*fg + cfh(1)*fc(1) + cfh(2)*fc(2)))
-            taf(2) = (tmpw1 + tmpw2 + tmpw3) / &
-                     (cah(2) + cgh(2)*fg + cfh(1)*fc(1) + cfh(2)*fc(2)) / &
-                     fact
+            Hahe(2) = 4*hlr/(4*hlr+1)*(Fhac+Fwst)*fsh + Fach + vehc*fsh + meta
+            Hahe(3) = 1/(4*hlr+1)*(Fhac+Fwst)*fsh
+
+            bT     = 1/(rd(3) * (1/rah+1/rd(3)+fc(0)/rb(0)))
+            cT     = 1/rd(3) + fg/rd(2) + fc(1)/rb(1) + fc(2)/rb(2)
+            aT     = (tu(0)*fc(0)/rb(0) + Hahe(3)/(rhoair*cpair) + thm/rah)*bT
+
+            taf(2) = (tg*fg/rd(2) + Hahe(2)/(rhoair*cpair) + tu(1)*fc(1)/rb(1) + tu(2)*fc(2)/rb(2) + aT) &
+                   / (cT * (1- bT/(cT*rd(3))))
+
+            taf(3) = (taf(2)/rd(3) + tu(0)*fc(0)/rb(0) + Hahe(3)/(rhoair*cpair) + thm/rah) &
+                   / (1/rah + 1/rd(3) + fc(0)/rb(0))
 
             IF (qgper < qaf(2)) THEN
               ! dew case. no soil resistance
-              cgw_per= cgw(2)
+              rss_ = 0
             ELSE
-              cgw_per= 1/(1/cgw(2)+rsr)
+              rss_ = rss
             ENDIF
 
-            cgw_imp= fwet_gimp*cgw(2)
+            Lahe   = (Fhac + Fwst + vehc)*flh
+            cQ     = 1/rd(3) + fg*fgper/(rd(2)+rss_) + fwet_gimp*fg*fgimp/rd(2)
+            bQ     = 1/(rd(3) * (1/raw+1/rd(3)+fwet_roof*fc(0)/rb(0)))
+            aQ     = (qsatl(0)*fwet_roof*fc(0)/rb(0) + qm/raw)*bQ
 
-            ! account for soil resistance, qgper and qgimp are calculated separately
-            l_vec  = 0
-            tmpw1  = caw(2)*((caw(3)*qm + cfw(0)*qsatl(0)*fc(0))/&
-                     (caw(3) + caw(2) + cfw(0)*fc(0)))
-            tmpw2  = l_vec/(rhoair)
-            tmpw3  = cgw_per*qgper*fgper*fg + cgw_imp*qgimp*fgimp*fg
-            facq   = 1. - (caw(2)*caw(2)/&
-                     (caw(3) + caw(2) + cfw(0)*fc(0))/&
-                     (caw(2) + cgw_per*fgper*fg + cgw_imp*fgimp*fg))
-            qaf(2) = (tmpw1 + tmpw2 + tmpw3)/&
-                     (caw(2) + cgw_per*fgper*fg + cgw_imp*fgimp*fg)/&
-                     facq
+            qaf(2) = (qgper*fgper*fg/(rd(2)+rss_) + qgimp*fwet_gimp*fgimp*fg/rd(2) + aQ + Lahe/rhoair/hvap) &
+                   / (cQ * (1-bQ/(cQ*rd(3))))
 
-            tmpw1  = 1/(4*hlr+1)*(Fhac+Fwst)/(rhoair*cpair)
-            taf(3) = (cah(3)*thm + cah(2)*taf(2) + cfh(0)*tu(0)*fc(0) + tmpw1)/&
-                     (cah(3) + cah(2) + cfh(0)*fc(0))
-            qaf(3) = (caw(3)*qm  + caw(2)*qaf(2) + cfw(0)*qsatl(0)*fc(0))/&
-                     (caw(3) + caw(2) + cfw(0)*fc(0))
+            qaf(3) = (qaf(2)/rd(3) + qsatl(0)*fwet_roof*fc(0)/rb(0) + qm/raw) &
+                   / (1/raw + 1/rd(3) + fwet_roof*fc(0)/rb(0))
+
          ENDIF
 
          !------------------------------------------------
@@ -749,7 +715,6 @@ CONTAINS
 !-----------------------------------------------------------------------
 
          ! USE the top layer taf and qaf
-         !TODO: need more check
          dth = thm - taf(2)
          dqh =  qm - qaf(2)
 
@@ -788,28 +753,34 @@ CONTAINS
       rib = min(5.,zol*ustar**2/(vonkar**2/fh*um**2))
 
       ! sensible heat fluxes
-      fsenroof = rhoair*cpair*cfh(0)*(troof-taf(3))
-      fsenwsun = rhoair*cpair*cfh(1)*(twsun-taf(2))
-      fsenwsha = rhoair*cpair*cfh(2)*(twsha-taf(2))
+      fsenroof = rhoair*cpair/rb(0)*(troof-taf(3))
+      fsenwsun = rhoair*cpair/rb(1)*(twsun-taf(2))
+      fsenwsha = rhoair*cpair/rb(2)*(twsha-taf(2))
 
       ! latent heat fluxes
-      fevproof = rhoair*cfw(0)*(qsatl(0)-qaf(3))
+      fevproof = rhoair/rb(0)*(qsatl(0)-qaf(3))
       fevproof = fevproof*fwet_roof
 
-      ! fact   = 1. - wta0(2)*wtg0(3)
-      ! facq   = 1. - wtaq0(2)*wtgq0(3)
-      ! deduce: croofs = rhoair*cpair*cfh(0)*(1.-wtg0(3)*wta0(2)*wtl0(0)/fact-wtl0(0))
-      croofs = rhoair*cpair*cfh(0)*(1.-wtl0(0)/fact)
-      cwalls = rhoair*cpair*cfh(1)*(1.-wtl0(1)/fact)
-      ! deduce: croofl = rhoair*cfw(0)*(1.-wtgq0(3)*wtaq0(2)*wtlq0(0)/facq-wtlq0(0))*qsatldT(0)
-      ! croofl = rhoair*cfw(0)*(1.-wtlq0(0)/facq)*qsatldT(0)
-      croofl = rhoair*cfw(0)*(1.-cfw(0)*fc(0)/(caw(3)+cgw(3)+cfw(0)*fc(0))-cgw(3) &
-               /(caw(3)+cgw(3)+cfw(0)*fc(0)) &
-               /(cgw(3)+cgw_per*fgper*fg+cgw_imp*fgimp*fg)* &
-               cfw(0)*fc(0)*cgw(3)/(caw(3)+cgw(3)+cfw(0)*fc(0))/facq)*qsatldT(0)
-      croofl = croofl*fwet_roof
+      bT     = 1/(rd(3) * (1/rah+1/rd(3)+fc(0)/rb(0)))
+      cT     = 1/rd(3) + fg/rd(2) + fc(1)/rb(1) + fc(2)/rb(2)
 
-      croof = croofs + croofl*htvp_roof
+      cQ     = 1/rd(3) + fg*fgper/(rd(2)+rss_) + fwet_gimp*fg*fgimp/rd(2)
+      bQ     = 1/(rd(3) * (1/raw+1/rd(3)+fwet_roof*fc(0)/rb(0)))
+
+      cwsuns = rhoair*cpair/rb(1) &
+             * ( 1. - fc(1) / (cT*rb(1)*(1-bT/(cT*rd(3)))) )
+      cwshas = rhoair*cpair/rb(2) &
+             * ( 1. - fc(2) / (cT*rb(2)*(1-bT/(cT*rd(3)))) )
+      croofs = rhoair*cpair/rb(0) &
+             * ( 1. - fc(0)*bT*bT / (cT*rb(0)*(1-bT/(cT*rd(3)))) &
+                    - fc(0) / (rb(0)*(1/rah+1/rd(3)+fc(0)/rb(0))) )
+
+      croofl = rhoair*fwet_roof/rb(0)*qsatldT(0) &
+             * ( 1. - fwet_roof*fc(0)*bQ*bQ / (cQ*rb(0)*(1-bQ/(cQ*rd(3)))) &
+                    - fwet_roof*fc(0) / (rb(0)*(1/raw+1/rd(3)+fwet_roof*fc(0)/rb(0))) )
+
+      croof  = croofs + croofl*htvp_roof
+
 
 #if(defined CoLMDEBUG)
 #endif
@@ -827,30 +798,21 @@ CONTAINS
 ! fluxes from urban ground to canopy space
 !-----------------------------------------------------------------------
 
-      fsengper = cpair*rhoair*cgh(2)*(tgper-taf(2))
-      fsengimp = cpair*rhoair*cgh(2)*(tgimp-taf(2))
+      fsengper = cpair*rhoair/rd(2)*(tgper-taf(2))
+      fsengimp = cpair*rhoair/rd(2)*(tgimp-taf(2))
 
-      fevpgper = rhoair*cgw_per*(qgper-qaf(2))
-      fevpgimp = rhoair*cgw_imp*(qgimp-qaf(2))
+      fevpgper = rhoair/(rd(2)+rss_)*(qgper-qaf(2))
+      fevpgimp = rhoair/rd(2)       *(qgimp-qaf(2))
       fevpgimp = fevpgimp*fwet_gimp
 
 !-----------------------------------------------------------------------
 ! Derivative of soil energy flux with respect to soil temperature (cgrnd)
 !-----------------------------------------------------------------------
 
-      cgrnds = cpair*rhoair*cgh(2)*(1.-wtg0(2)/fact)
-      ! cgperl = rhoair*cgw(2)*(1.-wtgq0(2)/facq)*dqgperdT
-      ! cgimpl = rhoair*cgw(2)*(1.-wtgq0(2)/facq)*dqgimpdT
+      cgrnds = cpair*rhoair/rd(2)*( 1. - fg/(cT*rd(2)*(1-bT/(cT*rd(3)))) )
 
-      cgperl = rhoair*cgw_per*(dqgperdT &
-               - (dqgperdT*cgw_per*fgper*fg) &
-               /(caw(2) + cgw_per*fgper*fg + cgw_imp*fgimp*fg) &
-               /facq)
-      cgimpl = rhoair*cgw_imp*(dqgimpdT &
-               - (dqgimpdT*cgw_imp*fgimp*fg) &
-               /(caw(2) + cgw_per*fgper*fg + cgw_imp*fgimp*fg) &
-               /facq)
-      cgimpl = cgimpl*fwet_gimp
+      cgperl = rhoair/(rd(2)+rss_)   *dqgperdT*( 1 - fg*fgper/(cQ*(rd(2)+rss_)*(1-bQ/(cQ*rd(3)))) )
+      cgimpl = rhoair*fwet_gimp/rd(2)*dqgimpdT*( 1 - fwet_gimp*fg*fgimp/(cQ*rd(2)*(1-bQ/(cQ*rd(3)))) )
 
       cgimp  = cgrnds + cgimpl*htvp_gimp
       cgper  = cgrnds + cgperl*htvp_gper
@@ -862,58 +824,63 @@ CONTAINS
       !tref = thm + vonkar/(fh-fht)*dth * (fh2m/vonkar - fh/vonkar)
       !qref =  qm + vonkar/(fq-fqt)*dqh * (fq2m/vonkar - fq/vonkar)
 
+      ! assumption: (tg-t2m):(tg-taf) = 2:(displa+z0m)
+      tref = ( (displau+z0mu-2.)*tg + 2.*taf(2) ) / (displau+z0mu)
+      qref = ( (displau+z0mu-2.)*qg + 2.*qaf(2) ) / (displau+z0mu)
+
    END SUBROUTINE UrbanOnlyFlux
 
 
    SUBROUTINE  UrbanVegFlux ( &
          ! Model running information
-         ipatch      ,deltim      ,lbr         ,lbi         ,&
+         ipatch         ,deltim         ,lbr            ,lbi            ,&
          ! Forcing
-         hu          ,ht          ,hq          ,us          ,&
-         vs          ,thm         ,th          ,thv         ,&
-         qm          ,psrf        ,rhoair      ,frl         ,&
-         po2m        ,pco2m       ,par         ,sabv        ,&
-         rstfac      ,Fhac        ,Fwst        ,Fach        ,&
-         vehc        ,meta                                  ,&
+         hu             ,ht             ,hq             ,us             ,&
+         vs             ,thm            ,th             ,thv            ,&
+         qm             ,psrf           ,rhoair         ,frl            ,&
+         po2m           ,pco2m          ,par            ,sabv           ,&
+         rstfac         ,Fhac           ,Fwst           ,Fach           ,&
+         vehc           ,meta                                           ,&
          ! Urban and vegetation parameters
-         hroof       ,hwr         ,nurb        ,fcover      ,&
-         ewall       ,egimp       ,egper       ,ev          ,&
-         htop        ,hbot        ,lai         ,sai         ,&
-         sqrtdi      ,effcon      ,vmax25      ,slti        ,&
-         hlti        ,shti        ,hhti        ,trda        ,&
-         trdm        ,trop        ,g1          ,g0          ,&
-         gradm       ,binter      ,extkn       ,extkd       ,&
-         dewmx       ,etrc        ,&
-         lambda_wue                   ,&
+         hroof          ,hwr            ,nurb           ,fcover         ,&
+         ewall          ,egimp          ,egper          ,ev             ,&
+         htop           ,hbot           ,lai            ,sai            ,&
+         sqrtdi         ,effcon         ,vmax25         ,slti           ,&
+         hlti           ,shti           ,hhti           ,trda           ,&
+         trdm           ,trop           ,g1             ,g0             ,&
+         gradm          ,binter         ,extkn          ,extkd          ,&
+         dewmx          ,etrc           ,trsmx0         ,lambda_wue     ,&
          ! Status of surface
-         z0h_g       ,obug        ,ustarg      ,zlnd        ,&
-         zsno        ,fsno_roof   ,fsno_gimp   ,fsno_gper   ,&
-         wliq_roofsno,wliq_gimpsno,wice_roofsno,wice_gimpsno,&
-         htvp_roof   ,htvp_gimp   ,htvp_gper   ,troof       ,&
-         twsun       ,twsha       ,tgimp       ,tgper       ,&
-         qroof       ,qgimp       ,qgper       ,dqroofdT    ,&
-         dqgimpdT    ,dqgperdT    ,sigf        ,tl          ,&
-         ldew        ,rsr                                   ,&
+         z0h_g          ,obug           ,ustarg         ,zlnd           ,&
+         zsno           ,fsno_roof      ,fsno_gimp      ,fsno_gper      ,&
+         wliq_roofsno   ,wliq_gimpsno   ,wice_roofsno   ,wice_gimpsno   ,&
+         htvp_roof      ,htvp_gimp      ,htvp_gper      ,troof          ,&
+         twsun          ,twsha          ,tgimp          ,tgper          ,&
+         qroof          ,qgimp          ,qgper          ,dqroofdT       ,&
+         dqgimpdT       ,dqgperdT       ,sigf           ,tl             ,&
+         ldew           ,ldew_rain      ,ldew_snow      ,fwet_snow      ,&
+         dheatl         ,rss            ,etr_deficit                    ,&
          ! Longwave information
-         Ainv        ,B           ,B1          ,dBdT        ,&
-         SkyVF       ,VegVF                                 ,&
+         Ainv           ,B              ,B1             ,dBdT           ,&
+         SkyVF          ,VegVF                                          ,&
          ! Output
-         taux        ,tauy        ,fsenroof    ,fsenwsun    ,&
-         fsenwsha    ,fsengimp    ,fsengper    ,fevproof    ,&
-         fevpgimp    ,fevpgper    ,croofs      ,cwalls      ,&
-         cgrnds      ,croofl      ,cgimpl      ,cgperl      ,&
-         croof       ,cgimp       ,cgper       ,fsenl       ,&
-         fevpl       ,etr         ,rst         ,assim       ,&
-         respc       ,lwsun       ,lwsha       ,lgimp       ,&
-         lgper       ,lveg        ,lout        ,tref        ,&
-         qref        ,z0m         ,zol         ,rib         ,&
-         ustar       ,qstar       ,tstar       ,fm          ,&
-         fh          ,fq          ,tafu                      )
+         taux           ,tauy           ,fsenroof       ,fsenwsun       ,&
+         fsenwsha       ,fsengimp       ,fsengper       ,fevproof       ,&
+         fevpgimp       ,fevpgper       ,croofs         ,cwsuns         ,&
+         cwshas         ,cgrnds         ,croofl         ,cgimpl         ,&
+         cgperl         ,croof          ,cgimp          ,cgper          ,&
+         fsenl          ,fevpl          ,etr            ,rst            ,&
+         assim          ,respc          ,lwsun          ,lwsha          ,&
+         lgimp          ,lgper          ,lveg           ,lout           ,&
+         tref           ,qref           ,z0m            ,zol            ,&
+         rib            ,ustar          ,qstar          ,tstar          ,&
+         fm             ,fh             ,fq             ,tafu            )
 
 !=======================================================================
 
    USE MOD_Precision
-   USE MOD_Const_Physical, only: vonkar,grav,hvap,cpair,stefnc
+   USE MOD_Const_Physical, only: vonkar,grav,hvap,cpair,stefnc,cpliq, cpice, &
+                                 hfus, tfrz, denice, denh2o
    USE MOD_FrictionVelocity
    USE MOD_CanopyLayerProfile
    USE MOD_AssimStomataConductance
@@ -921,120 +888,127 @@ CONTAINS
 
 !-----------------------Arguments---------------------------------------
    integer,  intent(in) :: &
-        ipatch,   &! patch index [-]
-        lbr,      &! lower bound of array
-        lbi        ! lower bound of array
+        ipatch,       &! patch index [-]
+        lbr,          &! lower bound of array
+        lbi            ! lower bound of array
 
    real(r8), intent(in) :: &
-        deltim     ! seconds in a time step [second]
+        deltim         ! seconds in a time step [second]
 
    ! Forcing
    real(r8), intent(in) :: &
-        hu,       &! observational height of wind [m]
-        ht,       &! observational height of temperature [m]
-        hq,       &! observational height of humidity [m]
-        us,       &! wind component in eastward direction [m/s]
-        vs,       &! wind component in northward direction [m/s]
-        thm,      &! intermediate variable (tm+0.0098*ht)
-        th,       &! potential temperature (kelvin)
-        thv,      &! virtual potential temperature (kelvin)
-        qm,       &! specific humidity at reference height [kg/kg]
-        psrf,     &! pressure at reference height [pa]
-        rhoair,   &! density air [kg/m**3]
+        hu,           &! observational height of wind [m]
+        ht,           &! observational height of temperature [m]
+        hq,           &! observational height of humidity [m]
+        us,           &! wind component in eastward direction [m/s]
+        vs,           &! wind component in northward direction [m/s]
+        thm,          &! intermediate variable (tm+0.0098*ht)
+        th,           &! potential temperature (kelvin)
+        thv,          &! virtual potential temperature (kelvin)
+        qm,           &! specific humidity at reference height [kg/kg]
+        psrf,         &! pressure at reference height [pa]
+        rhoair,       &! density air [kg/m**3]
 
-        frl,      &! atmospheric infrared (longwave) radiation [W/m2]
-        par,      &! par absorbed per unit sunlit lai [w/m**2]
-        sabv,     &! solar radiation absorbed by vegetation [W/m2]
-        rstfac,   &! factor of soil water stress to plant physiologocal processes
+        frl,          &! atmospheric infrared (longwave) radiation [W/m2]
+        par,          &! par absorbed per unit sunlit lai [w/m**2]
+        sabv,         &! solar radiation absorbed by vegetation [W/m2]
+        rstfac,       &! factor of soil water stress to plant physiologocal processes
 
-        po2m,     &! atmospheric partial pressure  o2 (pa)
-        pco2m,    &! atmospheric partial pressure co2 (pa)
+        po2m,         &! atmospheric partial pressure  o2 (pa)
+        pco2m,        &! atmospheric partial pressure co2 (pa)
 
-        vehc,     &! flux from vehicle
-        meta,     &! flux from metabolic
-        Fhac,     &! flux from heat or cool AC
-        Fwst,     &! waste heat from cool or heat
-        Fach       ! flux from air exchange
+        vehc,         &! flux from vehicle [W/m2]
+        meta,         &! flux from metabolic [W/m2]
+        Fhac,         &! flux from heat or cool AC [W/m2]
+        Fwst,         &! waste heat from cool or heat [W/m2]
+        Fach           ! flux from air exchange [W/m2]
 
    ! Urban and vegetation parameters
    integer,  intent(in) :: &
-        nurb       ! number of aboveground urban components [-]
+        nurb           ! number of aboveground urban components [-]
 
    real(r8), intent(in) :: &
-        hroof,    &! average building height [m]
-        hwr,      &! average building height to their distance [-]
-        fcover(0:5)! coverage of aboveground urban components [-]
+        hroof,        &! average building height [m]
+        hwr,          &! average building height to their distance [-]
+        fcover(0:5)    ! coverage of aboveground urban components [-]
 
    real(r8), intent(in) :: &
-        ewall,    &! emissivity of walls
-        egimp,    &! emissivity of impervious road
-        egper,    &! emissivity of pervious road
-        ev         ! emissivity of vegetation
+        ewall,        &! emissivity of walls
+        egimp,        &! emissivity of impervious road
+        egper,        &! emissivity of pervious road
+        ev             ! emissivity of vegetation
 
    real(r8), intent(in) :: &
-        htop,     &! PFT crown top height [m]
-        hbot,     &! PFT crown bottom height [m]
-        lai,      &! adjusted leaf area index for seasonal variation [-]
-        sai,      &! stem area index  [-]
-        sqrtdi,   &! inverse sqrt of leaf dimension [m**-0.5]
+        htop,         &! PFT crown top height [m]
+        hbot,         &! PFT crown bottom height [m]
+        lai,          &! adjusted leaf area index for seasonal variation [-]
+        sai,          &! stem area index  [-]
+        sqrtdi,       &! inverse sqrt of leaf dimension [m**-0.5]
 
-        effcon,   &! quantum efficiency of RuBP regeneration (mol CO2 / mol quanta)
-        vmax25,   &! maximum carboxylation rate at 25 C at canopy top
-                   ! the range : 30.e-6 <-> 100.e-6 (mol co2 m-2 s-1)
-        shti,     &! slope of high temperature inhibition function     (s1)
-        hhti,     &! 1/2 point of high temperature inhibition function (s2)
-        slti,     &! slope of low temperature inhibition function      (s3)
-        hlti,     &! 1/2 point of low temperature inhibition function  (s4)
-        trda,     &! temperature coefficient in gs-a model             (s5)
-        trdm,     &! temperature coefficient in gs-a model             (s6)
-        trop,     &! temperature coefficient in gs-a model         (273+25)
-        g1,       &! conductance-photosynthesis slope parameter for medlyn model
-        g0,       &! conductance-photosynthesis intercept for medlyn model
-        gradm,    &! conductance-photosynthesis slope parameter
-        binter,   &! conductance-photosynthesis intercept
+        effcon,       &! quantum efficiency of RuBP regeneration (mol CO2 / mol quanta)
+        vmax25,       &! maximum carboxylation rate at 25 C at canopy top
+                       ! the range : 30.e-6 <-> 100.e-6 (mol co2 m-2 s-1)
+        shti,         &! slope of high temperature inhibition function     (s1)
+        hhti,         &! 1/2 point of high temperature inhibition function (s2)
+        slti,         &! slope of low temperature inhibition function      (s3)
+        hlti,         &! 1/2 point of low temperature inhibition function  (s4)
+        trda,         &! temperature coefficient in gs-a model             (s5)
+        trdm,         &! temperature coefficient in gs-a model             (s6)
+        trop,         &! temperature coefficient in gs-a model         (273+25)
+        g1,           &! conductance-photosynthesis slope parameter for medlyn model
+        g0,           &! conductance-photosynthesis intercept for medlyn model
+        gradm,        &! conductance-photosynthesis slope parameter
+        binter,       &! conductance-photosynthesis intercept
         lambda_wue,   &! marginal water cost of carbon gain
 
-        extkn,    &! coefficient of leaf nitrogen allocation
-        extkd,    &! diffuse and scattered diffuse PAR extinction coefficient
-        dewmx,    &! maximum dew
-        etrc       ! maximum possible transpiration rate (mm/s)
+        extkn,        &! coefficient of leaf nitrogen allocation
+        extkd,        &! diffuse and scattered diffuse PAR extinction coefficient
+        dewmx,        &! maximum dew
+        trsmx0,       &! max transpiration for moist soil+100% veg.  [mm/s]
+        etrc           ! maximum possible transpiration rate (mm/s)
 
    ! Status of surface
    real(r8), intent(in) :: &
-        rsr,      &! bare soil resistance for evaporation
-        z0h_g,    &! roughness length for bare ground, sensible heat [m]
-        obug,     &! monin-obukhov length for bare ground (m)
-        ustarg,   &! friction velocity for bare ground [m/s]
-        zlnd,     &! roughness length for soil [m]
-        zsno,     &! roughness length for snow [m]
-        fsno_roof,&! fraction of ground covered by snow
-        fsno_gimp,&! fraction of ground covered by snow
-        fsno_gper,&! fraction of ground covered by snow
-        wliq_roofsno,&! liqui water [kg/m2]
-        wliq_gimpsno,&! liqui water [kg/m2]
-        wice_roofsno,&! ice lens [kg/m2]
-        wice_gimpsno,&! ice lens [kg/m2]
-        htvp_roof,&! latent heat of vapor of water (or sublimation) [j/kg]
-        htvp_gimp,&! latent heat of vapor of water (or sublimation) [j/kg]
-        htvp_gper,&! latent heat of vapor of water (or sublimation) [j/kg]
+        rss,          &! bare soil resistance for evaporation [s/m]
+        z0h_g,        &! roughness length for bare ground, sensible heat [m]
+        obug,         &! monin-obukhov length for bare ground (m)
+        ustarg,       &! friction velocity for bare ground [m/s]
+        zlnd,         &! roughness length for soil [m]
+        zsno,         &! roughness length for snow [m]
+        fsno_roof,    &! fraction of ground covered by snow
+        fsno_gimp,    &! fraction of ground covered by snow
+        fsno_gper,    &! fraction of ground covered by snow
+        wliq_roofsno, &! liqui water [kg/m2]
+        wliq_gimpsno, &! liqui water [kg/m2]
+        wice_roofsno, &! ice lens [kg/m2]
+        wice_gimpsno, &! ice lens [kg/m2]
+        htvp_roof,    &! latent heat of vapor of water (or sublimation) [j/kg]
+        htvp_gimp,    &! latent heat of vapor of water (or sublimation) [j/kg]
+        htvp_gper,    &! latent heat of vapor of water (or sublimation) [j/kg]
 
-        troof,    &! temperature of roof [K]
-        twsun,    &! temperature of sunlit wall [K]
-        twsha,    &! temperature of shaded wall [K]
-        tgimp,    &! temperature of impervious road [K]
-        tgper,    &! pervious ground temperature [K]
+        troof,        &! temperature of roof [K]
+        twsun,        &! temperature of sunlit wall [K]
+        twsha,        &! temperature of shaded wall [K]
+        tgimp,        &! temperature of impervious road [K]
+        tgper,        &! pervious ground temperature [K]
 
-        qroof,    &! roof specific humidity [kg/kg]
-        qgimp,    &! imperivous road specific humidity [kg/kg]
-        qgper,    &! pervious ground specific humidity [kg/kg]
-        dqroofdT, &! d(qroof)/dT
-        dqgimpdT, &! d(qgimp)/dT
-        dqgperdT, &! d(qgper)/dT
-        sigf       !
+        qroof,        &! roof specific humidity [kg/kg]
+        qgimp,        &! imperivous road specific humidity [kg/kg]
+        qgper,        &! pervious ground specific humidity [kg/kg]
+        dqroofdT,     &! d(qroof)/dT
+        dqgimpdT,     &! d(qgimp)/dT
+        dqgperdT,     &! d(qgper)/dT
+        sigf           !
 
    real(r8), intent(inout) :: &
-        tl,       &! leaf temperature [K]
-        ldew       ! depth of water on foliage [mm]
+        tl,           &! leaf temperature [K]
+        ldew,         &! depth of water on foliage [mm]
+        ldew_rain,    &! depth of rain on foliage [mm]
+        ldew_snow      ! depth of snow on foliage [mm]
+
+   real(r8), intent(out) :: &
+        fwet_snow,    &! vegetation snow fractional cover [-]
+        dheatl         ! vegetation heat change [W/m2]
 
    real(r8), intent(in)    :: Ainv(5,5)  !Inverse of Radiation transfer matrix
    real(r8), intent(in)    :: SkyVF (5)  !View factor to sky
@@ -1044,57 +1018,61 @@ CONTAINS
    real(r8), intent(inout) :: dBdT  (5)  !Vectors of incident radition on each surface
 
    real(r8), intent(out) :: &
-        taux,     &! wind stress: E-W [kg/m/s**2]
-        tauy,     &! wind stress: N-S [kg/m/s**2]
-        fsenroof, &! sensible heat flux from roof [W/m2]
-        fsenwsun, &! sensible heat flux from sunlit wall [W/m2]
-        fsenwsha, &! sensible heat flux from shaded wall [W/m2]
-        fsengimp, &! sensible heat flux from impervious road [W/m2]
-        fsengper, &! sensible heat flux from pervious ground [W/m2]
-        fevproof, &! evaporation heat flux from roof [mm/s]
-        fevpgimp, &! evaporation heat flux from impervious road [mm/s]
-        fevpgper, &! evaporation heat flux from pervious ground [mm/s]
+        taux,         &! wind stress: E-W [kg/m/s**2]
+        tauy,         &! wind stress: N-S [kg/m/s**2]
+        fsenroof,     &! sensible heat flux from roof [W/m2]
+        fsenwsun,     &! sensible heat flux from sunlit wall [W/m2]
+        fsenwsha,     &! sensible heat flux from shaded wall [W/m2]
+        fsengimp,     &! sensible heat flux from impervious road [W/m2]
+        fsengper,     &! sensible heat flux from pervious ground [W/m2]
+        fevproof,     &! evaporation heat flux from roof [mm/s]
+        fevpgimp,     &! evaporation heat flux from impervious road [mm/s]
+        fevpgper,     &! evaporation heat flux from pervious ground [mm/s]
 
-        croofs,   &! deriv of roof sensible heat flux wrt soil temp [w/m**2/k]
-        cwalls,   &! deriv of wall sensible heat flux wrt soil temp [w/m**2/k]
-        cgrnds,   &! deriv of ground latent heat flux wrt soil temp [w/m**2/k]
-        croofl,   &! deriv of roof latent heat flux wrt soil temp [w/m**2/k]
-        cgimpl,   &! deriv of impervious latent heat flux wrt soil temp [w/m**2/k]
-        cgperl,   &! deriv of soil atent heat flux wrt soil temp [w/m**2/k]
-        croof,    &! deriv of roof total flux wrt soil temp [w/m**2/k]
-        cgimp,    &! deriv of impervious total heat flux wrt soil temp [w/m**2/k]
-        cgper,    &! deriv of soil total heat flux wrt soil temp [w/m**2/k]
+        croofs,       &! deriv of roof sensible heat flux wrt soil temp [w/m**2/k]
+        cwsuns,       &! deriv of sunlit wall sensible heat flux wrt soil temp [w/m**2/k]
+        cwshas,       &! deriv of shaded wall sensible heat flux wrt soil temp [w/m**2/k]
+        cgrnds,       &! deriv of ground latent heat flux wrt soil temp [w/m**2/k]
+        croofl,       &! deriv of roof latent heat flux wrt soil temp [w/m**2/k]
+        cgimpl,       &! deriv of impervious latent heat flux wrt soil temp [w/m**2/k]
+        cgperl,       &! deriv of soil atent heat flux wrt soil temp [w/m**2/k]
+        croof,        &! deriv of roof total flux wrt soil temp [w/m**2/k]
+        cgimp,        &! deriv of impervious total heat flux wrt soil temp [w/m**2/k]
+        cgper,        &! deriv of soil total heat flux wrt soil temp [w/m**2/k]
 
-        tref,     &! 2 m height air temperature [kelvin]
-        qref       ! 2 m height air humidity
+        tref,         &! 2 m height air temperature [kelvin]
+        qref           ! 2 m height air humidity
 
    real(r8), intent(out) :: &
-        fsenl,    &! sensible heat from leaves [W/m2]
-        fevpl,    &! evaporation+transpiration from leaves [mm/s]
-        etr,      &! transpiration rate [mm/s]
-        rst,      &! stomatal resistance
-        assim,    &! rate of assimilation
-        respc      ! rate of respiration
+        fsenl,        &! sensible heat from leaves [W/m2]
+        fevpl,        &! evaporation+transpiration from leaves [mm/s]
+        etr,          &! transpiration rate [mm/s]
+        rst,          &! stomatal resistance
+        assim,        &! rate of assimilation
+        respc          ! rate of respiration
 
    real(r8), intent(inout) :: &
-        lwsun,    &! net longwave radiation of sunlit wall
-        lwsha,    &! net longwave radiation of shaded wall
-        lgimp,    &! net longwave radiation of impervious road
-        lgper,    &! net longwave radiation of pervious road
-        lveg,     &! net longwave radiation of vegetation
-        lout       ! out-going longwave radiation
+        etr_deficit    ! urban irrigation [mm/s]
 
    real(r8), intent(inout) :: &
-        z0m,      &! effective roughness [m]
-        zol,      &! dimensionless height (z/L) used in Monin-Obukhov theory
-        rib,      &! bulk Richardson number in surface layer
-        ustar,    &! friction velocity [m/s]
-        tstar,    &! temperature scaling parameter
-        qstar,    &! moisture scaling parameter
-        fm,       &! integral of profile function for momentum
-        fh,       &! integral of profile function for heat
-        fq,       &! integral of profile function for moisture
-        tafu       ! effective urban air temperature (2nd layer, walls)
+        lwsun,        &! net longwave radiation of sunlit wall [W/m2]
+        lwsha,        &! net longwave radiation of shaded wall [W/m2]
+        lgimp,        &! net longwave radiation of impervious road [W/m2]
+        lgper,        &! net longwave radiation of pervious road [W/m2]
+        lveg,         &! net longwave radiation of vegetation [W/m2]
+        lout           ! out-going longwave radiation [W/m2]
+
+   real(r8), intent(inout) :: &
+        z0m,          &! effective roughness [m]
+        zol,          &! dimensionless height (z/L) used in Monin-Obukhov theory
+        rib,          &! bulk Richardson number in surface layer
+        ustar,        &! friction velocity [m/s]
+        tstar,        &! temperature scaling parameter
+        qstar,        &! moisture scaling parameter
+        fm,           &! integral of profile function for momentum
+        fh,           &! integral of profile function for heat
+        fq,           &! integral of profile function for moisture
+        tafu           ! effective urban air temperature (2nd layer, walls)
 
 !-----------------------Local Variables---------------------------------
 ! assign iteration parameters
@@ -1106,52 +1084,52 @@ CONTAINS
 
    real(r8) dtl(0:itmax+1)             !difference of tl between two iterative step
 
-   real(r8) ::  &
-        zldis,    &! reference height "minus" zero displacement heght [m]
-        zii,      &! convective boundary layer height [m]
-        z0mv,     &! roughness length of vegetation only, momentum [m]
-        z0mu,     &! roughness length of building only, momentum [m]
-        z0h,      &! roughness length, sensible heat [m]
-        z0q,      &! roughness length, latent heat [m]
-        zeta,     &! dimensionless height used in Monin-Obukhov theory
-        beta,     &! coefficient of conective velocity [-]
-        wc,       &! convective velocity [m/s]
-        wc2,      &! wc**2
-        dth,      &! diff of virtual temp. between ref. height and surface
-        dthv,     &! diff of vir. poten. temp. between ref. height and surface
-        dqh,      &! diff of humidity between ref. height and surface
-        obu,      &! monin-obukhov length (m)
-        um,       &! wind speed including the stablity effect [m/s]
-        ur,       &! wind speed at reference height [m/s]
-        uaf,      &! velocity of air within foliage [m/s]
-        fh2m,     &! relation for temperature at 2m
-        fq2m,     &! relation for specific humidity at 2m
-        fm10m,    &! integral of profile function for momentum at 10m
-        thvstar,  &! virtual potential temperature scaling parameter
-        eah,      &! canopy air vapor pressure (pa)
-        pco2g,    &! co2 pressure (pa) at ground surface (pa)
-        pco2a,    &! canopy air co2 pressure (pa)
+   real(r8) :: &
+        zldis,        &! reference height "minus" zero displacement heght [m]
+        zii,          &! convective boundary layer height [m]
+        z0mv,         &! roughness length of vegetation only, momentum [m]
+        z0mu,         &! roughness length of building only, momentum [m]
+        z0h,          &! roughness length, sensible heat [m]
+        z0q,          &! roughness length, latent heat [m]
+        zeta,         &! dimensionless height used in Monin-Obukhov theory
+        beta,         &! coefficient of conective velocity [-]
+        wc,           &! convective velocity [m/s]
+        wc2,          &! wc**2
+        dth,          &! diff of virtual temp. between ref. height and surface
+        dthv,         &! diff of vir. poten. temp. between ref. height and surface
+        dqh,          &! diff of humidity between ref. height and surface
+        obu,          &! monin-obukhov length (m)
+        um,           &! wind speed including the stablity effect [m/s]
+        ur,           &! wind speed at reference height [m/s]
+        uaf,          &! velocity of air within foliage [m/s]
+        fh2m,         &! relation for temperature at 2m
+        fq2m,         &! relation for specific humidity at 2m
+        fm10m,        &! integral of profile function for momentum at 10m
+        thvstar,      &! virtual potential temperature scaling parameter
+        eah,          &! canopy air vapor pressure (pa)
+        pco2g,        &! co2 pressure (pa) at ground surface (pa)
+        pco2a,        &! canopy air co2 pressure (pa)
 
-        ram,      &! aerodynamical resistance [s/m]
-        rah,      &! thermal resistance [s/m]
-        raw,      &! moisture resistance [s/m]
-        clai,     &! canopy heat capacity [Jm-2K-1]
-        del,      &! absolute change in leaf temp in current iteration [K]
-        del2,     &! change in leaf temperature in previous iteration [K]
-        dele,     &! change in heat fluxes from leaf [K]
-        dele2,    &! change in heat fluxes from leaf [K]
-        det,      &! maximum leaf temp. change in two consecutive iter [K]
-        dee,      &! maximum leaf temp. change in two consecutive iter [K]
+        ram,          &! aerodynamical resistance [s/m]
+        rah,          &! thermal resistance [s/m]
+        raw,          &! moisture resistance [s/m]
+        clai,         &! canopy heat capacity [Jm-2K-1]
+        del,          &! absolute change in leaf temp in current iteration [K]
+        del2,         &! change in leaf temperature in previous iteration [K]
+        dele,         &! change in heat fluxes from leaf [K]
+        dele2,        &! change in heat fluxes from leaf [K]
+        det,          &! maximum leaf temp. change in two consecutive iter [K]
+        dee,          &! maximum leaf temp. change in two consecutive iter [K]
 
-        obuold,   &! monin-obukhov length from previous iteration
-        tlbef,    &! leaf temperature from previous iteration [K]
-        err,      &! balance error
+        obuold,       &! monin-obukhov length from previous iteration
+        tlbef,        &! leaf temperature from previous iteration [K]
+        err,          &! balance error
 
-        rs,       &! sunlit leaf stomatal resistance [s/m]
-        rsoil,    &! soil respiration
-        gah2o,    &! conductance between canopy and atmosphere
-        gdh2o,    &! conductance between canopy and ground
-        tprcor     ! tf*psur*100./1.013e5
+        rs,           &! sunlit leaf stomatal resistance [s/m]
+        rsoil,        &! soil respiration
+        gah2o,        &! conductance between canopy and atmosphere
+        gdh2o,        &! conductance between canopy and ground
+        tprcor         ! tf*psur*100./1.013e5
 
    integer it, nmozsgn
 
@@ -1159,111 +1137,117 @@ CONTAINS
    real(r8) irab, dirab_dtl, fsenl_dtl, fevpl_dtl
    real(r8) z0mg, z0hg, z0qg, cint(3)
    real(r8) fevpl_bef, fevpl_noadj, dtl_noadj, erre
+   real(r8) qevpl, qdewl, qsubl, qfrol, qmelt, qfrz
 
 !----------------------- defination for 3d run ------------------------ !
    integer, parameter :: nlay = 3
    integer, parameter :: uvec(5) = (/0,0,0,0,1/) !unit vector
 
    integer :: &
-        clev,     &! current layer index
-        botlay,   &! botom layer index
-        numlay     ! available layer number
+        clev,         &! current layer index
+        botlay,       &! botom layer index
+        numlay         ! available layer number
 
    real(r8) :: &
-        huu,      &! observational height of wind [m]
-        htu,      &! observational height of temperature [m]
-        hqu,      &! observational height of humidity [m]
-        ktop,     &! K value at a specific height
-        utop,     &! u value at a specific height
-        fht,      &! integral of profile function for heat at the top layer
-        fqt,      &! integral of profile function for moisture at the top layer
-        fmtop,    &! fm value at a specific height
-        phih,     &! phi(h), similarity function for sensible heat
-        displa,   &! displacement height for urban
-        displau,  &! displacement height for urban building
-        displav,  &! displacement height for urban vegetation
-        displav_lay,&!displacement height for urban vegetation layer
-        z0mv_lay, &! roughless length for vegetation
-        ueff_veg, &! effective wind speed within canopy layer [m/s]
-        tg,       &! ground temperature
-        qg         ! ground specific humidity
+        huu,          &! observational height of wind [m]
+        htu,          &! observational height of temperature [m]
+        hqu,          &! observational height of humidity [m]
+        ktop,         &! K value at a specific height
+        utop,         &! u value at a specific height
+        fht,          &! integral of profile function for heat at the top layer
+        fqt,          &! integral of profile function for moisture at the top layer
+        fmtop,        &! fm value at a specific height
+        phih,         &! phi(h), similarity function for sensible heat
+        displa,       &! displacement height for urban
+        displau,      &! displacement height for urban building
+        displav,      &! displacement height for urban vegetation
+        displav_lay,  &! displacement height for urban vegetation layer
+        z0mv_lay,     &! roughless length for vegetation
+        ueff_veg,     &! effective wind speed within canopy layer [m/s]
+        tg,           &! ground temperature
+        qg             ! ground specific humidity
 
    real(r8) :: &
-        fg,       &! ground fractional cover
-        fgimp,    &! weight of impervious ground
-        fgper,    &! weight of pervious ground
-        hlr,      &! average building height to their length of edge [-]
-        sqrtdragc,&! sqrt(drag coefficient)
-        lm,       &! mix length within canopy
-        fai,      &! frontal area index for urban
-        faiv,     &! frontal area index for trees
-        lsai,     &! lai+sai
-        fwet,     &! fractional wet area
-        delta,    &! 0 or 1
-        alpha,    &! exponential extinction factor for u/k decline within urban
-        alphav     ! exponential extinction factor for u/k decline within trees
+        fg,           &! ground fractional cover
+        fgimp,        &! weight of impervious ground
+        fgper,        &! weight of pervious ground
+        hlr,          &! average building height to their length of edge [-]
+        sqrtdragc,    &! sqrt(drag coefficient)
+        lm,           &! mix length within canopy
+        fai,          &! frontal area index for urban
+        faiv,         &! frontal area index for trees
+        lsai,         &! lai+sai
+        fwet,         &! fractional wet area of foliage [-]
+        fdry,         &! fraction of foliage that is green and dry [-]
+        delta,        &! 0 or 1
+        alpha,        &! exponential extinction factor for u/k decline within urban
+        alphav         ! exponential extinction factor for u/k decline within trees
 
    real(r8) :: &
-        lwsun_bef,&! change of lw for the last time
-        lwsha_bef,&! change of lw for the last time
-        lgimp_bef,&! change of lw for the last time
-        lgper_bef,&! change of lw for the last time
-        lveg_bef   ! change of lw for the last time
+        dlwsun,       &! change of lw for the last time
+        dlwsha,       &! change of lw for the last time
+        dlgimp,       &! change of lw for the last time
+        dlgper,       &! change of lw for the last time
+        dlveg          ! change of lw for the last time
 
    real(r8), dimension(0:nurb) :: &
-        tu,       &! termperature array
-        fc,       &! fractional cover array
-        canlev,   &! urban canopy layer lookup table
-        rb,       &! leaf boundary layer resistance [s/m]
-        cfh,      &! heat conductance for leaf [m/s]
-        cfw,      &! latent heat conductance for leaf [m/s]
-        wtl0,     &! normalized heat conductance for air and leaf [-]
-        wtlq0,    &! normalized latent heat cond. for air and leaf [-]
+        tu,           &! termperature array
+        fc,           &! fractional cover array
+        canlev,       &! urban canopy layer lookup table
+        rb,           &! leaf boundary layer resistance [s/m]
+        cfh,          &! heat conductance for leaf [m/s]
+        cfw,          &! latent heat conductance for leaf [m/s]
+        wtl0,         &! normalized heat conductance for air and leaf [-]
+        wtlq0,        &! normalized latent heat cond. for air and leaf [-]
 
-        ei,       &! vapor pressure on leaf surface [pa]
-        deidT,    &! derivative of "ei" on "tl" [pa/K]
-        qsatl,    &! leaf specific humidity [kg/kg]
-        qsatldT    ! derivative of "qsatl" on "tlef"
+        ei,           &! vapor pressure on leaf surface [pa]
+        deidT,        &! derivative of "ei" on "tl" [pa/K]
+        qsatl,        &! leaf specific humidity [kg/kg]
+        qsatldT        ! derivative of "qsatl" on "tlef"
 
    real(r8), dimension(nlay) :: &
-        fah,      &! weight for thermal resistance to upper layer
-        faw,      &! weight for moisture resistance to upper layer
-        fgh,      &! weight for thermal resistance to lower layer
-        fgw,      &! weight for moisture resistance to lower layer
-        ueff_lay, &! effective wind speed within canopy layer [m/s]
-        ueff_lay_,&! effective wind speed within canopy layer [m/s]
-        taf,      &! air temperature within canopy space [K]
-        qaf,      &! humidity of canopy air [kg/kg]
-        rd,       &! aerodynamic resistance between layers [s/m]
-        rd_,      &! aerodynamic resistance between layers [s/m]
-        cah,      &! heat conductance for air [m/s]
-        cgh,      &! heat conductance for ground [m/s]
-        caw,      &! latent heat conductance for air [m/s]
-        cgw,      &! latent heat conductance for ground [m/s]
-        wtshi,    &! sensible heat resistance for air, grd and leaf [-]
-        wtsqi,    &! latent heat resistance for air, grd and leaf [-]
-        wta0,     &! normalized heat conductance for air [-]
-        wtg0,     &! normalized heat conductance for ground [-]
-        wtaq0,    &! normalized latent heat conductance for air [-]
-        wtgq0,    &! normalized heat conductance for ground [-]
-        wtll,     &! sum of normalized heat conductance for air and leaf
-        wtlql      ! sum of normalized heat conductance for air and leaf
+        fah,          &! weight for thermal resistance to upper layer
+        faw,          &! weight for moisture resistance to upper layer
+        fgh,          &! weight for thermal resistance to lower layer
+        fgw,          &! weight for moisture resistance to lower layer
+        ueff_lay,     &! effective wind speed within canopy layer [m/s]
+        ueff_lay_,    &! effective wind speed within canopy layer [m/s]
+        taf,          &! air temperature within canopy space [K]
+        qaf,          &! humidity of canopy air [kg/kg]
+        rd,           &! aerodynamic resistance between layers [s/m]
+        rd_,          &! aerodynamic resistance between layers [s/m]
+        cah,          &! heat conductance for air [m/s]
+        cgh,          &! heat conductance for ground [m/s]
+        caw,          &! latent heat conductance for air [m/s]
+        cgw,          &! latent heat conductance for ground [m/s]
+        wtshi,        &! sensible heat resistance for air, grd and leaf [-]
+        wtsqi,        &! latent heat resistance for air, grd and leaf [-]
+        wta0,         &! normalized heat conductance for air [-]
+        wtg0,         &! normalized heat conductance for ground [-]
+        wtaq0,        &! normalized latent heat conductance for air [-]
+        wtgq0,        &! normalized heat conductance for ground [-]
+        wtll,         &! sum of normalized heat conductance for air and leaf
+        wtlql          ! sum of normalized heat conductance for air and leaf
+
+   real(r8), dimension(nlay) :: &
+        Hahe           ! anthropogenic heat emission (AHE)
 
    real(r8) :: &
-        ra2m,     &! aerodynamic resistance between 2m and bottom layer [s/m]
-        rd2m       ! aerodynamic resistance between bottom layer and ground [s/m]
+        rv,           &! aerodynamic resistance between layers [s/m]
+        ra2m,         &! aerodynamic resistance between 2m and bottom layer [s/m]
+        rd2m           ! aerodynamic resistance between bottom layer and ground [s/m]
 
    ! temporal
    integer i
+   real(r8) aT, bT, cT, aQ, bQ, cQ, Lahe
    real(r8) bee, cf, tmpw1, tmpw2, tmpw3, tmpw4, fact, facq, taftmp
    real(r8) B_5, B1_5, dBdT_5, X(5), dX(5)
-   real(r8) fwet_roof, fwet_roof_, fwet_gimp, fwet_gimp_
+   real(r8) fwet_roof, fwet_roof_, fwet_gimp, fwet_gimp_, rss_, rs_, etr_
    real(r8) fwetfac, lambda
    real(r8) cgw_imp, cgw_per
-   real(r8) h_vec, l_vec
 
    ! for interface
-   real(r8) o3coefv,o3coefg,assim_RuBP, assim_Rubisco, ci, vpd, gammas
+   real(r8) o3coefv, o3coefg, assim_RuBP, assim_Rubisco, ci, vpd, gammas
 
 !-----------------------End Variable List-------------------------------
 
@@ -1299,9 +1283,13 @@ CONTAINS
 ! initial saturated vapor pressure and humidity and their derivation
 !-----------------------------------------------------------------------
 
-      !clai = 4.2 * 1000. * 0.2
       clai = 0.0
       lsai = lai + sai
+
+      ! 0.2mm*LSAI, account for leaf (plus dew) heat capacity
+      IF ( DEF_VEG_SNOW ) THEN
+         clai = 0.2*(lai+sai)*cpliq + ldew_rain*cpliq + ldew_snow*cpice
+      ENDIF
 
       ! index 0:roof, 1:sunlit wall, 2:shaded wall, 3: vegetation
       tu(0) = troof; tu(1) = twsun; tu(2) = twsha; tu(3) = tl
@@ -1318,7 +1306,7 @@ CONTAINS
       B1_5   = B1(5)
       dBdT_5 = dBdT(5)
 
-      CALL dewfraction (sigf,lai,sai,dewmx,ldew,fwet)
+      CALL dewfraction (sigf,lai,sai,dewmx,ldew,ldew_rain,ldew_snow,fwet,fdry)
 
       qsatl(0) = qroof
       qsatldT(0) = dqroofDT
@@ -1327,21 +1315,15 @@ CONTAINS
       ENDDO
 
       ! Save the longwave for the last time
-      lwsun_bef = lwsun
-      lwsha_bef = lwsha
-      lgimp_bef = lgimp
-      lgper_bef = lgper
-      lveg_bef  = lveg
+      dlwsun = lwsun
+      dlwsha = lwsha
+      dlgimp = lgimp
+      dlgper = lgper
+      dlveg  = lveg
 
 !-----------------------------------------------------------------------
-! Calculate the weighted qg, tg
+! Calculate the weighted qg, tg, and wet fraction
 !-----------------------------------------------------------------------
-
-      ! set weghting factor
-      fah(1) = 1.; fah(2) = 1.; fah(3) = 1.
-      faw(1) = 1.; faw(2) = 1.; faw(3) = 1.
-      fgh(1) = 1.; fgh(2) = 1.; fgh(3) = 1.
-      fgw(1) = 1.; fgw(2) = 1.; fgw(3) = 1.
 
       ! weighted tg and qg
       tg = tgimp*fgimp + tgper*fgper
@@ -1385,7 +1367,6 @@ CONTAINS
       fwetfac = fgimp*fwet_gimp + fgper
       qg = (qgimp*fgimp*fwet_gimp + qgper*fgper) / fwetfac
 
-      fgw(2) = fg*fwetfac
 
 !-----------------------------------------------------------------------
 ! initial for fluxes profile
@@ -1428,9 +1409,6 @@ CONTAINS
 
       ! to compare z0 of urban and only the surface
       ! maximum assumption
-      ! 11/26/2021, yuan: remove the below
-      !IF (z0mu < z0mv_lay) z0mu = z0mv_lay
-      !IF (displau < displav_lay) displau = displav_lay
       IF (z0m < z0mg) z0m = z0mg
       IF (displa >= hroof-z0mg) displa = hroof-z0mg
 
@@ -1438,14 +1416,11 @@ CONTAINS
       displau = max(hroof/2., displau)
 
       ! Layer setting
-      ! NOTE: right now only for 2 layers
-      !IF (z0mv+displav > z0mu+displau) THEN
+      IF ( (.not.run_three_layer) .or. z0mv+displav > 0.5*(z0mu+displau) ) THEN
          numlay = 2; botlay = 2; canlev(3) = 2
-         fgh(2) = fg; fgw(2) = fg;
-      !ELSE
-      !   numlay = 3; botlay = 1
-      !   fgh(1) = fg; fgw(1) = fg;
-      !ENDIF
+      ELSE
+         numlay = 3; botlay = 1
+      ENDIF
 
 !-----------------------------------------------------------------------
 ! calculate layer decay coefficient
@@ -1541,19 +1516,19 @@ CONTAINS
 ! Evaluate stability-dependent variables using moz from prior iteration
 
          CALL moninobukm(huu,htu,hqu,displa,z0m,z0h,z0q,obu,um, &
-            hroof,0.,ustar,fh2m,fq2m,hroof,fmtop,fm,fh,fq,fht,fqt,phih)
+              hroof,0.,ustar,fh2m,fq2m,hroof,fmtop,fm,fh,fq,fht,fqt,phih)
 
 ! Aerodynamic resistance
          ! 09/16/2017:
-         ! note that for ram, it is the resistance from Href to z0m+displa
+         ! NOTE that for ram, it is the resistance from Href to z0m+displa
          ! however, for rah and raw is only from Href to canopy effective
          ! exchange height.
-         ! so rah/raw is not comparable with that of 1D case
+         ! So rah/raw is not comparable with that of 1D case
          ram = 1./(ustar*ustar/um)
 
-         ! 05/02/2016: calculate resistance from the top layer (effective exchange
-         ! height) to reference height
-         ! for urban, from roof height to reference height
+         ! 05/02/2016: calculate resistance from the top layer (effective
+         ! exchange height) to reference height.
+         ! For urban, from roof height to reference height
          rah = 1./(vonkar/(fh-fht)*ustar)
          raw = 1./(vonkar/(fq-fqt)*ustar)
 
@@ -1577,69 +1552,66 @@ CONTAINS
 
          ! calculate canopy top wind speed (utop) and exchange coefficient (ktop)
          ! need to update each time as obu changed after each iteration
-         ! print*, ustar, fmtop
          utop = ustar/vonkar * fmtop
          ktop = vonkar * (hroof-displa) * ustar / phih
 
          ueff_lay(3)  = utop
          ueff_lay_(3) = utop
 
-         ! real(r8) FUNCTION kintegral(ktop, fc, bee, alpha, z0mg, &
-         !      displah, htop, hbot, obu, ustar, ztop, zbot)
-         !rd_(3)  = kintegral(ktop, 1., bee, alpha, z0mg, displa/hroof, &
-         !   hroof, 0., obug, ustarg, hroof, displau+z0mu)
+         ! NOTE: another calculation method for double-check
+         ! real(r8) FUNCTION kintegral(ktop, fc, bee, alpha, z0mg, displah, &
+         !                             htop, hbot, obu, ustar, ztop, zbot)
+         ! rd_(3) = kintegral(ktop, 1., bee, alpha, z0mg, displa/hroof, &
+         !                    hroof, 0., obug, ustarg, hroof, displau+z0mu)
 
-         ! real(r8) FUNCTION frd(ktop, htop, hbot, &
-         !      ztop, zbot, displah, z0h, obu, ustar, &
-         !      z0mg, alpha, bee, fc)
+         ! real(r8) FUNCTION frd(ktop, htop, hbot, ztop, zbot, displah, z0h, &
+         !                       obu, ustar, z0mg, alpha, bee, fc)
          rd(3) = frd(ktop, hroof, 0., hroof, displau+z0mu, displa/hroof, z0h_g, &
-            obug, ustarg, z0mg, alpha, bee, 1.)
+                     obug, ustarg, z0mg, alpha, bee, 1.)
 
          ! real(r8) FUNCTION uintegralz(utop, fc, bee, alpha, z0mg, htop, hbot, ztop, zbot)
-         !ueff_lay(2)  = uintegralz(utop, 1., bee, alpha, z0mg, hroof, 0., hroof, z0mg)
+         ! ueff_lay(2) = uintegralz(utop, 1., bee, alpha, z0mg, hroof, 0., hroof, z0mg)
 
-         ! real(r8) FUNCTION ueffectz(utop, htop, hbot, &
-         !      ztop, zbot, z0mg, alpha, bee, fc)
+         ! real(r8) FUNCTION ueffectz(utop, htop, hbot, ztop, zbot, z0mg, alpha, bee, fc)
          ueff_lay(2) = ueffectz(utop, hroof, 0., hroof, z0mg, z0mg, alpha, bee, 1.)
 
          IF (numlay == 3) THEN
-            ! real(r8) FUNCTION kintegral(ktop, fc, bee, alpha, z0mg, &
-            !      displah, htop, hbot, obu, ustar, ztop, zbot)
-            !rd(2)  = kintegral(ktop, 1., bee, alpha, z0mg, displa/hroof, &
-            !   hroof, 0., obug, ustarg, displau+z0mu, displav+z0mv)
+            ! real(r8) FUNCTION kintegral(ktop, fc, bee, alpha, z0mg, displah, &
+            !                             htop, hbot, obu, ustar, ztop, zbot)
+            ! rd(2) = kintegral(ktop, 1., bee, alpha, z0mg, displa/hroof, &
+            !                   hroof, 0., obug, ustarg, displau+z0mu, displav+z0mv)
             rd(2) = frd(ktop, hroof, 0., displau+z0mu, displav+z0mv, displa/hroof, z0h_g, &
-               obug, ustarg, z0mg, alpha, bee, 1.)
+                        obug, ustarg, z0mg, alpha, bee, 1.)
 
-            !rd(1)  = kintegral(ktop, 1., bee, alpha, z0mg, displa/hroof, &
-            !   hroof, 0., obug, ustarg, displav+z0mv, z0qg)
+            ! rd(1) = kintegral(ktop, 1., bee, alpha, z0mg, displa/hroof, &
+            !                   hroof, 0., obug, ustarg, displav+z0mv, z0qg)
             rd(1) = frd(ktop, hroof, 0., displav+z0mv, z0qg, displa/hroof, z0h_g, &
-               obug, ustarg, z0mg, alpha, bee, 1.)
+                        obug, ustarg, z0mg, alpha, bee, 1.)
 
             ! calculate ra2m, rd2m
             ra2m = frd(ktop, hroof, 0., displav+z0mv, 2., displa/hroof, z0h_g, &
-               obug, ustarg, z0mg, alpha, bee, 1.)
+                       obug, ustarg, z0mg, alpha, bee, 1.)
 
             rd2m = frd(ktop, hroof, 0., 2., z0qg, displa/hroof, z0h_g, &
-               obug, ustarg, z0mg, alpha, bee, 1.)
+                       obug, ustarg, z0mg, alpha, bee, 1.)
          ELSE
-            !rd_(2)  = kintegral(ktop, 1., bee, alpha, z0mg, displa/hroof, &
-            !   hroof, 0., obug, ustarg, displau+z0mu, z0qg)
+            ! rd_(2) = kintegral(ktop, 1., bee, alpha, z0mg, displa/hroof, &
+            !                    hroof, 0., obug, ustarg, displau+z0mu, z0qg)
             rd(2) = frd(ktop, hroof, 0., displau+z0mu, z0qg, displa/hroof, z0h_g, &
-               obug, ustarg, z0mg, alpha, bee, 1.)
+                        obug, ustarg, z0mg, alpha, bee, 1.)
 
             ! calculate ra2m, rd2m
             ra2m = frd(ktop, hroof, 0., displau+z0mu, 2., displa/hroof, z0h_g, &
-               obug, ustarg, z0mg, alpha, bee, 1.)
+                       obug, ustarg, z0mg, alpha, bee, 1.)
 
             rd2m = frd(ktop, hroof, 0., 2., z0qg, displa/hroof, z0h_g, &
-               obug, ustarg, z0mg, alpha, bee, 1.)
+                       obug, ustarg, z0mg, alpha, bee, 1.)
          ENDIF
 
-         !ueff_lay(2)  = uintegralz(utop, 1., bee, alpha, z0mg, hroof, 0., hroof, z0mg)
-         !print *, "htop/hbot:", htop, hbot  !fordebug
-         !ueff_veg  = uintegralz(utop, 1., bee, alpha, z0mg, hroof, 0., htop, hbot)
+         ! ueff_lay(2) = uintegralz(utop, 1., bee, alpha, z0mg, hroof, 0., hroof, z0mg)
+         ! ueff_veg = uintegralz(utop, 1., bee, alpha, z0mg, hroof, 0., htop, hbot)
 
-         !ueff_lay_(2) = ueffectz(utop, hroof, 0., hroof, z0mg, z0mg, alpha, bee, 1.)
+         ! ueff_lay_(2) = ueffectz(utop, hroof, 0., hroof, z0mg, z0mg, alpha, bee, 1.)
          ueff_veg = ueffectz(utop, hroof, 0., htop, hbot, z0mg, alpha, bee, 1.)
 
          ! Masson, 2000: Account for different canyon orientations
@@ -1650,17 +1622,10 @@ CONTAINS
             rd(:)       = PI/2*rd(:)
          ENDIF
 
-         ! ueff_lay(3) = ueff_lay(2)
-
-         !print *, "ueff_lay :", ueff_lay
-         !print *, "ueff_lay_:", ueff_lay_
-         !print *, "------------------------"
-         !print *, "rd :", rd
-         !print *, "rd_:", rd_
-
 !-----------------------------------------------------------------------
 ! Bulk boundary layer resistance of leaves
 !-----------------------------------------------------------------------
+
          rb(:) = 0.
 
          DO i = 0, nurb
@@ -1676,12 +1641,14 @@ CONTAINS
 
             ! Cole & Sturrock (1977) Building and Environment, 12, 207–214.
             ! rb(i) = rhoair * cpair / ( 5.8 + 4.1*ueff_lay(clev) )
-            !IF (ueff_lay(clev) > 5.) THEN
-            !   rb(i) = rhoair * cpair / (7.51*ueff_lay(clev)**0.78)
-            !ELSE
-            !   rb(i) = rhoair * cpair / (5.8 + 4.1*ueff_lay(clev))
-            !ENDIF
-            !rb(i) = rhoair * cpair / (cpair*vonkar*vonkar*ueff_lay(clev)/(log(0.1*hroof/)*(2.3+log(0.1*hroof/))))
+            ! IF (ueff_lay(clev) > 5.) THEN
+            !    rb(i) = rhoair * cpair / (7.51*ueff_lay(clev)**0.78)
+            ! ELSE
+            !    rb(i) = rhoair * cpair / (5.8 + 4.1*ueff_lay(clev))
+            ! ENDIF
+            ! rb(i) = rhoair * cpair &
+            !       / ( cpair*vonkar*vonkar*ueff_lay(clev)&
+            !         / (log(0.1*hroof/)*(2.3+log(0.1*hroof/))) )
          ENDDO
 
 !-----------------------------------------------------------------------
@@ -1690,25 +1657,36 @@ CONTAINS
 
          IF (lai > 0.) THEN
 
-            ! only for vegetation
-            ! rb(3) = rb(3)
-
             clev = canlev(3)
             eah = qaf(clev) * psrf / ( 0.622 + 0.378 * qaf(clev) )    !pa
 
 !-----------------------------------------------------------------------
 ! note: calculate resistance for leaves
 !-----------------------------------------------------------------------
+
             CALL stomata (vmax25,effcon ,slti   ,hlti   ,&
                shti    ,hhti    ,trda   ,trdm   ,trop   ,&
                g1      ,g0      ,gradm  ,binter ,thm    ,&
                psrf    ,po2m    ,pco2m  ,pco2a  ,eah    ,&
                ei(3)   ,tu(3)   ,par    ,&
-               o3coefv ,o3coefg ,&
-               lambda_wue       ,&
+               o3coefv ,o3coefg ,lambda_wue     ,&
                rb(3)/lai,raw    ,rstfac ,cint(:),&
                assim   ,respc   ,rs     &
                )
+
+            rs_ = rs
+
+IF ( DEF_URBAN_Irrigation .and. rstfac < rstfac_irrig ) THEN
+            CALL stomata (vmax25,effcon ,slti   ,hlti   ,&
+               shti    ,hhti    ,trda   ,trdm   ,trop   ,&
+               g1      ,g0      ,gradm  ,binter ,thm    ,&
+               psrf    ,po2m    ,pco2m  ,pco2a  ,eah    ,&
+               ei(3)   ,tu(3)   ,par    ,&
+               o3coefv ,o3coefg ,lambda_wue     ,&
+               rb(3)/lai,raw    ,rstfac_irrig   ,cint(:),&
+               assim   ,respc   ,rs     &
+               )
+ENDIF
          ELSE
             rs = 2.e4; assim = 0.; respc = 0.
          ENDIF
@@ -1716,110 +1694,19 @@ CONTAINS
 ! above stomatal resistances are for the canopy, the stomatal rsistances
 ! and the "rb" in the following calculations are the average for single leaf. thus,
          rs = rs * lai
+         rs_= rs_* lai
+
+! calculate latent heat resistances
+         clev  = canlev(3)
+         delta = 0.0
+         IF (qsatl(3)-qaf(clev) .gt. 0.) delta = 1.0
+
+         rv = 1/( (1.-delta*(1.-fwet))*lsai/rb(3) &
+                + (1.-fwet)*delta*(lai/(rb(3)+rs)) )
 
 !-----------------------------------------------------------------------
-! dimensional and non-dimensional sensible and latent heat conductances
-! for canopy and soil flux calculations.
+! Solve taf(:) and qaf(:)
 !-----------------------------------------------------------------------
-
-         cfh(:) = 0.
-         cfw(:) = 0.
-
-         DO i = 0, nurb
-
-            IF (i == 3) THEN
-
-               clev = canlev(i)
-               delta = 0.0
-               IF (qsatl(i)-qaf(clev) .gt. 0.) delta = 1.0
-
-               ! calculate sensible heat conductance
-               cfh(i) = lsai / rb(i)
-
-               ! for building walls, cfw=0., no water transfer
-               ! for canopy, keep the same but for one leaf
-               ! calculate latent heat conductance
-               cfw(i) = (1.-delta*(1.-fwet))*lsai/rb(i) + &
-                  (1.-fwet)*delta* ( lai/(rb(i)+rs) )
-            ELSE
-               cfh(i) = 1 / rb(i)
-
-               IF (i == 0) THEN !roof
-                  ! account for fwet
-                  cfw(i) = fwet_roof / rb(i)
-               ELSE
-                  cfw(i) = 1 / rb(i)
-               ENDIF
-            ENDIF
-         ENDDO
-
-         ! For simplicity, there is no water exchange on the wall
-         cfw(1:2) = 0.
-
-         ! initialization
-         cah(:) = 0.
-         caw(:) = 0.
-         cgh(:) = 0.
-         cgw(:) = 0.
-
-         ! conductance for each layer
-         DO i = 3, botlay, -1
-            IF (i == 3) THEN
-               cah(i) = 1. / rah
-               caw(i) = 1. / raw
-            ! ELSE IF (i == 2) THEN
-            !    cah(i) = 1e6
-            !    caw(i) = 1e6
-            ELSE
-               cah(i) = 1. / rd(i+1)
-               caw(i) = 1. / rd(i+1)
-            ENDIF
-
-            ! IF (i == 3) THEN
-            !    cgh(i) = 1e6
-            !    cgw(i) = 1e6
-            ! ELSE
-               cgh(i) = 1. / rd(i)
-               cgw(i) = 1. / rd(i)
-            ! ENDIF
-         ENDDO
-
-         ! claculate wtshi, wtsqi
-         wtshi(:) = cah(:)*fah(:) + cgh(:)*fgh(:)
-         wtsqi(:) = caw(:)*faw(:) + cgw(:)*fgw(:)
-
-         DO i = 0, nurb
-            clev = canlev(i)
-            wtshi(clev) = wtshi(clev) + fc(i)*cfh(i)
-            wtsqi(clev) = wtsqi(clev) + fc(i)*cfw(i)
-         ENDDO
-
-         DO i = 3, 3-numlay+1, -1
-            wtshi(i) = 1./wtshi(i)
-            wtsqi(i) = 1./wtsqi(i)
-         ENDDO
-
-         wta0(:) = cah(:) * wtshi(:) * fah(:)
-         wtg0(:) = cgh(:) * wtshi(:) * fgh(:)
-
-         wtaq0(:) = caw(:) * wtsqi(:) * faw(:)
-         wtgq0(:) = cgw(:) * wtsqi(:) * fgw(:)
-
-         ! calculate wtl0, wtll, wtlq0, wtlql
-         wtll(:)  = 0.
-         wtlql(:) = 0.
-
-         DO i = 0, nurb
-            clev = canlev(i)
-
-            wtl0(i)  = cfh(i) * wtshi(clev) * fc(i)
-            wtll(clev) = wtll(clev) + wtl0(i)*tu(i)
-
-            wtlq0(i) = cfw(i) * wtsqi(clev) * fc(i)
-            wtlql(clev) = wtlql(clev) + wtlq0(i)*qsatl(i)
-         ENDDO
-
-         ! to solve taf(:) and qaf(:)
 
          IF (numlay .eq. 2) THEN
 
@@ -1831,10 +1718,11 @@ CONTAINS
             ! taf(3) = (cah(3)*thm + cah(2)*taf(2) + cfh(0)*troof*fc(0))/(cah(3) + cah(2) + cfh(0)*fc(0))
             ! taf(2) = (cah(2)*taf(3) + cgh(2)*tg*fg + cfh(1)*twsun*fc(1) + cfh(2)*twsha*fc(2) + cfh(3)*tl*fc(3) + AHE/(rho*cp))/ &
             !          (cah(2) + cgh(2)*fg + cfh(1)*fc(1) + cfh(2)*fc(2) + cfh(3)*fc(3))
+            !
             ! - Equations:
             ! qaf(3) = (1/raw*qm + 1/rd(3)*qaf(2) + 1/rb(0)*qroof*fc(0))/(1/raw + 1/rd(3) + 1/rb(0)*fc(0))
-            ! qaf(2) = (1/rd(3)*qaf(3) + 1/(rd(2)+rsr)*qper*fgper*fg + fwetimp/rd(2)*qimp*fgimp*fg + lsai/(rb(3)+rs)*ql*fc(3) + AHE/rho)/ &
-            !          (1/rd(3) + 1/(rd(2)+rsr)*fgper*fg + fwetimp/rd(2)*fgimp*fg + lsai/(rb(3)+rs)*fc(3))
+            ! qaf(2) = (1/rd(3)*qaf(3) + 1/(rd(2)+rss)*qper*fgper*fg + fwetimp/rd(2)*qimp*fgimp*fg + lsai/(rb(3)+rs)*ql*fc(3) + AHE/rho)/ &
+            !          (1/rd(3) + 1/(rd(2)+rss)*fgper*fg + fwetimp/rd(2)*fgimp*fg + lsai/(rb(3)+rs)*fc(3))
             ! Also written as:
             ! qaf(3) = (caw(3)*qm + caw(2)*qaf(2) + cfw(0)*qroof*fc(0))/(caw(3) + caw(2) + cfw(0)*fc(0))
             ! qaf(2) = (caw(2)*qaf(3) + cgwper*qper*fgper*fg + cgwimp*qimp*fgimp*fg + cfw(3)*ql*fc(3) + AHE/rho)/ &
@@ -1843,44 +1731,37 @@ CONTAINS
             ! 06/20/2021, yuan: account for Anthropogenic heat
             ! 92% heat release as SH, Pigeon et al., 2007
 
-            h_vec  = vehc!
-            tmpw1  = cah(2)*((cah(3)*thm + cfh(0)*tu(0)*fc(0) + 1/(4*hlr+1)*(Fhac+Fwst)/(rhoair*cpair))/&
-                     (cah(3) + cah(2) + cfh(0)*fc(0)))
-            tmpw2  = (4*hlr/(4*hlr+1)*(Fhac+Fwst)+Fach)/(rhoair*cpair) + (h_vec+meta)/(rhoair*cpair)
-            tmpw3  = cgh(2)*fg*tg + cfh(1)*tu(1)*fc(1) + cfh(2)*tu(2)*fc(2) + cfh(3)*tu(3)*fc(3)
-            fact   = 1. - (cah(2)*cah(2)/(cah(3) + cah(2) + cfh(0)*fc(0))/&
-                     (cah(2) + cgh(2)*fg + cfh(1)*fc(1) + cfh(2)*fc(2) + cfh(3)*fc(3)))
-            taf(2) = (tmpw1 + tmpw2 + tmpw3) / &
-                     (cah(2) + cgh(2)*fg + cfh(1)*fc(1) + cfh(2)*fc(2) + cfh(3)*fc(3)) / &
-                     fact
+            Hahe(2) = 4*hlr/(4*hlr+1)*(Fhac+Fwst)*fsh + Fach + vehc*fsh + meta
+            Hahe(3) = 1/(4*hlr+1)*(Fhac+Fwst)*fsh
+
+            bT     = 1/(rd(3) * (1/rah+1/rd(3)+fc(0)/rb(0)))
+            cT     = 1/rd(3) + fg/rd(2) + fc(1)/rb(1) + fc(2)/rb(2) + fc(3)*lsai/rb(3)
+            aT     = (tu(0)*fc(0)/rb(0) + Hahe(3)/(rhoair*cpair) + thm/rah)*bT
+
+            taf(2) = (tg*fg/rd(2) + Hahe(2)/(rhoair*cpair) + tu(1)*fc(1)/rb(1) + tu(2)*fc(2)/rb(2) + tu(3)*fc(3)*lsai/rb(3) + aT) &
+                     / (cT * (1- bT/(cT*rd(3))))
+
+            taf(3) = (taf(2)/rd(3) + tu(0)*fc(0)/rb(0) + Hahe(3)/(rhoair*cpair) + thm/rah) &
+                     / (1/rah + 1/rd(3) + fc(0)/rb(0))
 
             IF (qgper < qaf(2)) THEN
               ! dew case. no soil resistance
-              cgw_per= cgw(2)
+              rss_ = 0
             ELSE
-              cgw_per= 1/(1/cgw(2)+rsr)
+              rss_ = rss
             ENDIF
 
-            cgw_imp= fwet_gimp*cgw(2)
+            Lahe   = (Fhac + Fwst + vehc)*flh
+            cQ     = 1/rd(3) + fg*fgper/(rd(2)+rss_) + fwet_gimp*fg*fgimp/rd(2) + fc(3)/rv
+            bQ     = 1/(rd(3) * (1/raw+1/rd(3)+fwet_roof*fc(0)/rb(0)))
+            aQ     = (qsatl(0)*fwet_roof*fc(0)/rb(0) + qm/raw)*bQ
 
-            ! account for soil resistance, qgper and qgimp are calculated separately
-            l_vec  = 0
-            tmpw1  = caw(2)*((caw(3)*qm + cfw(0)*qsatl(0)*fc(0))/&
-                     (caw(3) + caw(2) + cfw(0)*fc(0)))
-            tmpw2  = l_vec/(rhoair)
-            tmpw3  = cgw_per*qgper*fgper*fg + cgw_imp*qgimp*fgimp*fg + cfw(3)*qsatl(3)*fc(3)
-            facq   = 1. - (caw(2)*caw(2)/&
-                     (caw(3) + caw(2) + cfw(0)*fc(0))/&
-                     (caw(2) + cgw_per*fgper*fg + cgw_imp*fgimp*fg + cfw(3)*fc(3)))
-            qaf(2) = (tmpw1 + tmpw2 + tmpw3)/&
-                     (caw(2) + cgw_per*fgper*fg + cgw_imp*fgimp*fg + cfw(3)*fc(3))/&
-                     facq
+            qaf(2) = (qgper*fgper*fg/(rd(2)+rss_) + qgimp*fwet_gimp*fgimp*fg/rd(2) + qsatl(3)*fc(3)/rv + aQ + Lahe/rhoair/hvap) &
+                     / (cQ * (1-bQ/(cQ*rd(3))))
 
-            tmpw1  = 1/(4*hlr+1)*(Fhac+Fwst)/(rhoair*cpair)
-            taf(3) = (cah(3)*thm + cah(2)*taf(2) + cfh(0)*tu(0)*fc(0) + tmpw1)/&
-                     (cah(3) + cah(2) + cfh(0)*fc(0))
-            qaf(3) = (caw(3)*qm  + caw(2)*qaf(2) + cfw(0)*qsatl(0)*fc(0))/&
-                     (caw(3) + caw(2) + cfw(0)*fc(0))
+            qaf(3) = (qaf(2)/rd(3) + qsatl(0)*fwet_roof*fc(0)/rb(0) + qm/raw) &
+                     / (1/raw + 1/rd(3) + fwet_roof*fc(0)/rb(0))
+
          ENDIF
 
          IF (numlay .eq. 3) THEN
@@ -1892,67 +1773,55 @@ CONTAINS
             !          (1/rd(3)+1/rd(2)+1/rb(1)*fc(1)+1/rb(2)*fc(2))
             ! taf(1) = (1/rd(2)*taf(2)+1/rd(1)*tg*fg+1/rb(3)*tl*fc(3)+Hveh/rhoair/cpair)/&
             !          (1/rd(2)+1/rd(1)*fg+1/rb(3)*fc(3))
+            !
             ! - Equations:
             ! qaf(3) = (1/raw*qm+1/rd(3)*qaf(2)+1/rb(0)*qroof*fc(0))/&
             !          (1/raw+1/rd(3)+1/rb(0)*fc(0))
             ! qaf(2) = (1/rd(3)*qaf(3)+1/rd(2)*qaf(1))/&
             !          (1/rd(3) + 1/rd(2))
-            ! qaf(1) = (1/rd(2)*qaf(2)+1/(rd(1)+rsr)*qgper*fgper*fg+1/rd(1)*qimp*fgimp*fg+1/(rb(3)+rs)*ql*fc(3)+h_veh/rho))/&
-            !          (1/rd(2)+1/(rd(1)+rsr)*fgper*fg+1/rd(1)*fgimp*fg+1/(rb(3)+rs)*fc(3))
+            ! qaf(1) = (1/rd(2)*qaf(2)+1/(rd(1)+rss)*qgper*fgper*fg+1/rd(1)*qimp*fgimp*fg+1/(rb(3)+rs)*ql*fc(3)+h_veh/rho))/&
+            !          (1/rd(2)+1/(rd(1)+rss)*fgper*fg+1/rd(1)*fgimp*fg+1/(rb(3)+rs)*fc(3))
 
-            tmpw1  = cah(1)*(cgh(1)*tg*fg + cfh(3)*tu(3)*fc(3) + (vehc+meta)/rhoair/cpair)/&
-                     (cah(1) + cgh(1)*fg + cfh(3)*fc(3))
-            tmpw2  = cah(2)*(cah(3)*thm + cfh(0)*tu(0)*fc(0) + 1/(4*hlr+1)*(Fhac+Fwst)/(rhoair*cpair))/&
-                     (cah(3) + cah(2) + cfh(0)*fc(0))
-            tmpw3  = cah(1)*cah(1)/&
-                     (cah(1) + cgh(1)*fg + cfh(3)*fc(3))/&
-                     (cah(1) + cah(2) + cfh(1)*fc(1) + cfh(2)*fc(2))
-            tmpw4  = cah(2)*cah(2)/&
-                     (cah(3) + cah(2) + cfh(0)*fc(0))/&
-                     (cah(1) + cah(2) + cfh(1)*fc(1) + cfh(2)*fc(2))
-            fact   = 1. - tmpw3 - tmpw4
+            Hahe(1) = vehc*fsh + meta
+            Hahe(2) = 4*hlr/(4*hlr+1)*(Fhac+Fwst)*fsh + Fach
+            Hahe(3) = 1/(4*hlr+1)*(Fhac+Fwst)*fsh
 
-            taf(2) = (tmpw1 + tmpw2 + cfh(1)*tu(1)*fc(1) + cfh(2)*tu(2)*fc(2) + (4*hlr/(4*hlr+1)*(Fhac+Fwst)+Fach)/(rhoair*cpair))/&
-                     (cah(1) + cah(2) + cfh(1)*fc(1) + cfh(2)*fc(2))/&
-                     fact
+            cT     = 1/rd(3) + 1/rd(2) + fc(1)/rb(1) + fc(2)/rb(2)
+            at     = 1/(rd(2)*(1/rd(2)+fg/rd(1)+fc(3)*lsai/rb(3)))
+            bT     = 1/(rd(3)*(1/rah+1/rd(3)+fc(0)/rb(0)))
 
-            taf(1) = (cah(1)*taf(2) + cgh(1)*tg*fg + cfh(3)*tu(3)*fc(3) + (vehc+meta)/rhoair/cpair)/&
-                     (cah(1) + cgh(1)*fg + cfh(3)*fc(3))
-            tmpw1  = 1/(4*hlr+1)*(Fhac+Fwst)/(rhoair*cpair)
-            taf(3) = (cah(3)*thm + cah(2)*taf(2) + cfh(0)*tu(0)*fc(0) + tmpw1)/&
-                     (cah(3) + cah(2) + cfh(0)*fc(0))
+            taf(2) = (tu(1)*fc(1)/rb(1) + tu(2)*fc(2)/rb(2) &
+                     + (tu(3)*fc(3)*lsai/rb(3)+tg*fg/rd(1)+Hahe(1)/(rhoair*cpair))*aT &
+                     + (tu(0)*fc(0)/rb(0)+thm/rah+Hahe(3)/(rhoair*cpair))*bT + Hahe(2)/(rhoair*cpair)) &
+                     / (cT*(1-aT/(rd(2)*cT)-bT/(rd(3)*cT)))
+
+            taf(1) = (tu(3)*fc(3)*lsai/rb(3) + tg*fg/rd(1) + taf(2)/rd(2) + Hahe(1)/(rhoair*cpair)) &
+                     / (1/rd(2)+fg/rd(1)+fc(3)*lsai/rb(3))
+
+            taf(3) = (tu(0)*fc(0)/rb(0) + taf(2)/rd(3) + thm/rah + Hahe(3)/(rhoair*cpair)) &
+                     / (1/rah+1/rd(3)+fc(0)/rb(0))
 
             IF (qgper < qaf(1)) THEN
               ! dew case. no soil resistance
-              cgw_per= cgw(1)
+              rss_ = 0
             ELSE
-              cgw_per= 1/(1/cgw(1)+rsr)
+              rss_ = rss
             ENDIF
 
-            cgw_imp= fwet_gimp*cgw(1)
+            Lahe   = (Fhac + Fwst + vehc)*flh
+            cQ     = 1/rd(3) + 1/rd(2)
+            bQ     = 1/(rd(3)*(1/raw+1/rd(3)+fwet_roof*fc(0)/rb(0)))
+            aQ     = 1/(rd(2)*(1/rd(2)+fg*fgimp*fwet_gimp/rd(1)+fg*fgper/(rd(1)+rss_)+fc(3)/rv))
 
-            l_vec   = 0
-            tmpw1  = caw(1)*(cgw_per*qgper*fgper*fg + cgw_imp*qgimp*fgimp*fg + cfw(3)*qsatl(3)*fc(3) + l_vec/(rhoair))/&
-                     (caw(1) + cgw_per*fgper*fg + cgw_imp*fgimp*fg + cfw(3)*fc(3))
-            tmpw2  = caw(2)*(caw(3)*qm + cfw(0)*qsatl(0)*fc(0))/&
-                     (caw(3) + caw(2) + cfw(0)*fc(0))
-            tmpw3  = caw(1)*caw(1)/&
-                     (caw(1) + cgw_per*fgper*fg + cgw_imp*fgimp*fg + cfw(3)*fc(3))/&
-                     (caw(2) + caw(1))
-            tmpw4  = caw(2)*caw(2)/&
-                     (caw(3) + caw(2) + cfw(0)*fc(0))/&
-                     (caw(2) + caw(1))
-            facq   = 1. - tmpw3 - tmpw4
+            qaf(2) = ( (fg*fgimp*fwet_gimp*qgimp/rd(1) + fg*fgper*qgper/(rd(1)+rss_) + fc(3)*qsatl(3)/rv + Lahe/rhoair/hvap)*aQ &
+                     + (qm/raw+fc(0)*fwet_roof*qsatl(0)/rb(0))*bQ ) &
+                     / ( cQ*(1-bQ/(cQ*rd(3))-aQ/(cQ*rd(2))) )
 
-            qaf(2) = (tmpw1 + tmpw2)/&
-                     (caw(2) + caw(1))/&
-                     facq
+            qaf(1) = ( fg*fgimp*fwet_gimp*qgimp/rd(1) + fg*fgper*qgper/(rd(1)+rss_) + fc(3)*qsatl(3)/rv + qaf(2)/rd(2) + Lahe/rhoair/hvap ) &
+                     / ( 1/rd(2) + fg*fgimp*fwet_gimp/rd(1) + fg*fgper/(rd(1)+rss_) + fc(3)/rv )
 
-            tmpw1  = l_vec/(rhoair)
-            qaf(1) = (caw(1)*qaf(2) + qgper*cgw_per*fgper*fg + qgimp*cgw_imp*fgimp*fg + cfw(3)*qsatl(3)*fc(3) + tmpw1)/&
-                     (caw(1) + cgw_per*fgper*fg + cgw_imp*fgimp*fg + cfw(3)*fc(3))
-            qaf(3) = (caw(3)*qm + caw(2)*qaf(2) + cfw(0)*qsatl(0)*fc(0))/&
-                     (caw(3) + caw(2) + cfw(0)*fc(0))
+            qaf(3) = ( fc(0)*fwet_roof*qsatl(0)/rb(0) + qaf(2)/rd(3) + qm/raw ) &
+                     / ( 1/raw + 1/rd(3)+  fwet_roof*fc(0)/rb(0) )
          ENDIF
 
 !-----------------------------------------------------------------------
@@ -1965,15 +1834,15 @@ CONTAINS
          i = 3
 
 ! sensible heat fluxes and their derivatives
-         fsenl = rhoair * cpair * cfh(i) * (tl - taf(botlay))
+         fsenl = rhoair * cpair * lsai/rb(3) * (tl - taf(botlay))
 
-         ! 09/24/2017: why fact/facq here? bugs? YES
-         ! 09/25/2017: re-written, check it clearfully
-         ! 11/25/2021: re-written, double check
          IF (botlay == 2) THEN
-            fsenl_dtl = rhoair * cpair * cfh(i) * (1.-wtl0(i)/fact)
+            fsenl_dtl = rhoair * cpair * lsai/rb(3) &
+                      * ( 1. - fc(3)*lsai/(rb(3)*cT*(1-bT/(cT*rd(3)))) )
          ELSE
-            fsenl_dtl = rhoair * cpair * cfh(i) * (1.-wta0(1)*wtg0(2)*wtl0(i)/fact-wtl0(i))
+            fsenl_dtl = rhoair * cpair * lsai/rb(3) &
+                      * ( 1. - fc(3)*lsai/(rb(3)*(1/rd(2)+fg/rd(1)+fc(3)*lsai/rb(3))) &
+                             - fc(3)*lsai*aT*aT/(rb(3)*cT*(1-aT/(cT*rd(2))-bT/(cT*rd(3)))) )
          ENDIF
 
 
@@ -1982,27 +1851,38 @@ CONTAINS
              * (qsatl(i) - qaf(botlay))
 
          IF (botlay == 2) THEN
-            etr_dtl = rhoair * (1.-fwet) * delta * lai/(rb(i)+rs) &
-                    * (1.-wtlq0(i)/facq)*qsatldT(i)
+            etr_dtl = rhoair * (1.-fwet) * delta * lai/(rb(3)+rs) &
+                    * (1.-fc(3)/(cQ*rv*(1-bQ/(cQ*rd(3))))) &
+                    * qsatldT(3)
          ELSE
             etr_dtl = rhoair * (1.-fwet) * delta * lai/(rb(i)+rs) &
-                    * (1.-wtaq0(1)*wtgq0(2)*wtlq0(i)/facq-wtlq0(i))*qsatldT(i)
+                    * ( 1. - fc(3)/(rv*(1/rd(2)+fg*fgimp*fwet_gimp/rd(1)+fg*fgper/(rss_+rd(1))+fc(3)/rv)) &
+                           - fc(3)*aQ*aQ/(rv*CQ*(1-aQ/(cQ*rd(2))-bQ/(cQ*rd(3)))) )
          ENDIF
 
+IF ( DEF_URBAN_Irrigation ) THEN
+         IF (etr.ge.trsmx0*rstfac_irrig) THEN
+            etr = trsmx0*rstfac_irrig
+            etr_dtl = 0.
+         ENDIF
+ELSE
          IF (etr.ge.etrc) THEN
             etr = etrc
             etr_dtl = 0.
          ENDIF
+ENDIF
 
          evplwet = rhoair * (1.-delta*(1.-fwet)) * lsai/rb(i) &
                  * (qsatl(i) - qaf(botlay))
 
          IF (botlay == 2) THEN
-            evplwet_dtl = rhoair * (1.-delta*(1.-fwet)) * lsai/rb(i) &
-                        * (1.-wtlq0(i)/facq)*qsatldT(i)
+            evplwet_dtl = rhoair * (1.-delta*(1.-fwet)) * lsai/rb(3) &
+                        * (1.-fc(3)/(cQ*rv*(1-bQ/(cQ*rd(3))))) &
+                        * qsatldT(3)
          ELSE
             evplwet_dtl = rhoair * (1.-delta*(1.-fwet)) * lsai/rb(i) &
-                        * (1.-wtaq0(1)*wtgq0(2)*wtlq0(i)/facq-wtlq0(i))*qsatldT(i)
+                        * ( 1. - fc(3)/(rv*(1/rd(2)+fg*fgimp*fwet_gimp/rd(1)+fg*fgper/(rss_+rd(1))+fc(3)/rv)) &
+                               - fc(3)*aQ*aQ/(rv*CQ*(1-aQ/(cQ*rd(2))-bQ/(cQ*rd(3)))) )
          ENDIF
 
          IF (evplwet.ge.ldew/deltim) THEN
@@ -2020,6 +1900,16 @@ CONTAINS
             fevpl =  0.1*fevpl
          ENDIF
 
+IF ( DEF_URBAN_Irrigation ) THEN
+         etr_= rhoair * (1.-fwet) * delta * lai/(rb(i)+rs_) &
+             * (qsatl(i) - qaf(botlay))
+
+         IF (etr_.ge.etrc) THEN
+            etr_ = etrc
+         ENDIF
+ENDIF
+
+
 !-----------------------------------------------------------------------
 ! difference of temperatures by quasi-newton-raphson method for the non-linear system equations
 !-----------------------------------------------------------------------
@@ -2033,12 +1923,13 @@ CONTAINS
          dX = matmul(Ainv, dBdT*uvec)
 
          ! calculate longwave for vegetation
-         irab = ( (sum(X(1:4)*VegVF(1:4)) + frl*VegVF(5))*ev - B1(5))/fcover(5)*fg
-         dirab_dtl = ( sum(dX(1:4)*VegVF(1:4))*ev - dBdT(5) )/fcover(5)*fg
+         irab = ( (sum(X(1:4)*VegVF(1:4)) + frl*VegVF(5))*ev - B1(5) ) / fcover(5)*fg
+         irab = irab + dlveg    ! plus the previous step dlveg
+         dirab_dtl = ( sum(dX(1:4)*VegVF(1:4))*ev - dBdT(5) ) / fcover(5)*fg
 
          ! solve for leaf temperature
          dtl(it) = (sabv + irab - fsenl - hvap*fevpl) &
-            / (lsai*clai/deltim - dirab_dtl + fsenl_dtl + hvap*fevpl_dtl)
+                 / (clai/deltim - dirab_dtl + fsenl_dtl + hvap*fevpl_dtl)
          dtl_noadj = dtl(it)
 
          ! check magnitude of change in leaf temperature limit to maximum allowed value
@@ -2065,7 +1956,7 @@ CONTAINS
 
          del  = sqrt( dtl(it)*dtl(it) )
          dele = dtl(it) * dtl(it) * &
-            ( dirab_dtl**2 + fsenl_dtl**2 + hvap*fevpl_dtl**2 )
+                ( dirab_dtl**2 + fsenl_dtl**2 + hvap*fevpl_dtl**2 )
          dele = sqrt(dele)
 
 !-----------------------------------------------------------------------
@@ -2078,16 +1969,6 @@ CONTAINS
 ! update vegetation/ground surface temperature, canopy air temperature,
 ! canopy air humidity
 
-         ! calculate wtll, wtlql
-         wtll(:)  = 0.
-         wtlql(:) = 0.
-
-         DO i = 0, nurb
-            clev = canlev(i)
-            wtll(clev)  =  wtll(clev) + wtl0(i)*tu(i)
-            wtlql(clev) = wtlql(clev) + wtlq0(i)*qsatl(i)
-         ENDDO
-
          IF (numlay .eq. 2) THEN
 
             ! - Equations:
@@ -2098,10 +1979,11 @@ CONTAINS
             ! taf(3) = (cah(3)*thm + cah(2)*taf(2) + cfh(0)*troof*fc(0))/(cah(3) + cah(2) + cfh(0)*fc(0))
             ! taf(2) = (cah(2)*taf(3) + cgh(2)*tg*fg + cfh(1)*twsun*fc(1) + cfh(2)*twsha*fc(2) + cfh(3)*tl*fc(3) + AHE/(rho*cp))/ &
             !          (cah(2) + cgh(2)*fg + cfh(1)*fc(1) + cfh(2)*fc(2) + cfh(3)*fc(3))
+            !
             ! - Equations:
             ! qaf(3) = (1/raw*qm + 1/rd(3)*qaf(2) + 1/rb(0)*qroof*fc(0))/(1/raw + 1/rd(3) + 1/rb(0)*fc(0))
-            ! qaf(2) = (1/rd(3)*qaf(3) + 1/(rd(2)+rsr)*qper*fgper*fg + fwetimp/rd(2)*qimp*fgimp*fg + lsai/(rb(3)+rs)*ql*fc(3) + AHE/rho)/ &
-            !          (1/rd(3) + 1/(rd(2)+rsr)*fgper*fg + fwetimp/rd(2)*fgimp*fg + lsai/(rb(3)+rs)*fc(3))
+            ! qaf(2) = (1/rd(3)*qaf(3) + 1/(rd(2)+rss)*qper*fgper*fg + fwetimp/rd(2)*qimp*fgimp*fg + lsai/(rb(3)+rs)*ql*fc(3) + AHE/rho)/ &
+            !          (1/rd(3) + 1/(rd(2)+rss)*fgper*fg + fwetimp/rd(2)*fgimp*fg + lsai/(rb(3)+rs)*fc(3))
             ! Also written as:
             ! qaf(3) = (caw(3)*qm + caw(2)*qaf(2) + cfw(0)*qroof*fc(0))/(caw(3) + caw(2) + cfw(0)*fc(0))
             ! qaf(2) = (caw(2)*qaf(3) + cgwper*qper*fgper*fg + cgwimp*qimp*fgimp*fg + cfw(3)*ql*fc(3) + AHE/rho)/ &
@@ -2110,44 +1992,37 @@ CONTAINS
             ! 06/20/2021, yuan: account for AH
             ! 92% heat release as SH, Pigeon et al., 2007
 
-            h_vec  = vehc
-            tmpw1  = cah(2)*((cah(3)*thm + cfh(0)*tu(0)*fc(0) + 1/(4*hlr+1)*(Fhac+Fwst)/(rhoair*cpair))/&
-                     (cah(3) + cah(2) + cfh(0)*fc(0)))
-            tmpw2  = (4*hlr/(4*hlr+1)*(Fhac+Fwst)+Fach)/(rhoair*cpair) + (h_vec+meta)/(rhoair*cpair)
-            tmpw3  = cgh(2)*fg*tg + cfh(1)*tu(1)*fc(1) + cfh(2)*tu(2)*fc(2) + cfh(3)*tu(3)*fc(3)
-            fact   = 1. - (cah(2)*cah(2)/(cah(3) + cah(2) + cfh(0)*fc(0))/&
-                     (cah(2) + cgh(2)*fg + cfh(1)*fc(1) + cfh(2)*fc(2) + cfh(3)*fc(3)))
-            taf(2) = (tmpw1 + tmpw2 + tmpw3) / &
-                     (cah(2) + cgh(2)*fg + cfh(1)*fc(1) + cfh(2)*fc(2) + cfh(3)*fc(3)) / &
-                     fact
+            Hahe(2) = 4*hlr/(4*hlr+1)*(Fhac+Fwst)*fsh + Fach + vehc*fsh + meta
+            Hahe(3) = 1/(4*hlr+1)*(Fhac+Fwst)*fsh
+
+            bT     = 1/(rd(3) * (1/rah+1/rd(3)+fc(0)/rb(0)))
+            cT     = 1/rd(3) + fg/rd(2) + fc(1)/rb(1) + fc(2)/rb(2) + fc(3)*lsai/rb(3)
+            aT     = (tu(0)*fc(0)/rb(0) + Hahe(3)/(rhoair*cpair) + thm/rah)*bT
+
+            taf(2) = (tg*fg/rd(2) + Hahe(2)/(rhoair*cpair) + tu(1)*fc(1)/rb(1) + tu(2)*fc(2)/rb(2) + tu(3)*fc(3)*lsai/rb(3) + aT) &
+                     / (cT * (1- bT/(cT*rd(3))))
+
+            taf(3) = (taf(2)/rd(3) + tu(0)*fc(0)/rb(0) + Hahe(3)/(rhoair*cpair) + thm/rah) &
+                     / (1/rah + 1/rd(3) + fc(0)/rb(0))
 
             IF (qgper < qaf(2)) THEN
               ! dew case. no soil resistance
-              cgw_per= cgw(2)
+              rss_ = 0
             ELSE
-              cgw_per= 1/(1/cgw(2)+rsr)
+              rss_ = rss
             ENDIF
 
-            cgw_imp= fwet_gimp*cgw(2)
+            Lahe   = (Fhac + Fwst + vehc)*flh
+            cQ     = 1/rd(3) + fg*fgper/(rd(2)+rss_) + fwet_gimp*fg*fgimp/rd(2) + fc(3)/rv
+            bQ     = 1/(rd(3) * (1/raw+1/rd(3)+fwet_roof*fc(0)/rb(0)))
+            aQ     = (qsatl(0)*fwet_roof*fc(0)/rb(0) + qm/raw)*bQ
 
-            ! account for soil resistance, qgper and qgimp are calculated separately
-            l_vec  = 0
-            tmpw1  = caw(2)*((caw(3)*qm + cfw(0)*qsatl(0)*fc(0))/&
-                     (caw(3) + caw(2) + cfw(0)*fc(0)))
-            tmpw2  = l_vec/(rhoair)
-            tmpw3  = cgw_per*qgper*fgper*fg + cgw_imp*qgimp*fgimp*fg + cfw(3)*qsatl(3)*fc(3)
-            facq   = 1. - (caw(2)*caw(2)/&
-                     (caw(3) + caw(2) + cfw(0)*fc(0))/&
-                     (caw(2) + cgw_per*fgper*fg + cgw_imp*fgimp*fg + cfw(3)*fc(3)))
-            qaf(2) = (tmpw1 + tmpw2 + tmpw3)/&
-                     (caw(2) + cgw_per*fgper*fg + cgw_imp*fgimp*fg + cfw(3)*fc(3))/&
-                     facq
+            qaf(2) = (qgper*fgper*fg/(rd(2)+rss_) + qgimp*fwet_gimp*fgimp*fg/rd(2) + qsatl(3)*fc(3)/rv + aQ + Lahe/rhoair/hvap) &
+                     / (cQ * (1-bQ/(cQ*rd(3))))
 
-            tmpw1  = 1/(4*hlr+1)*(Fhac+Fwst)/(rhoair*cpair)
-            taf(3) = (cah(3)*thm + cah(2)*taf(2) + cfh(0)*tu(0)*fc(0) + tmpw1)/&
-                     (cah(3) + cah(2) + cfh(0)*fc(0))
-            qaf(3) = (caw(3)*qm  + caw(2)*qaf(2) + cfw(0)*qsatl(0)*fc(0))/&
-                     (caw(3) + caw(2) + cfw(0)*fc(0))
+            qaf(3) = (qaf(2)/rd(3) + qsatl(0)*fwet_roof*fc(0)/rb(0) + qm/raw) &
+                     / (1/raw + 1/rd(3) + fwet_roof*fc(0)/rb(0))
+
          ENDIF
 
          IF (numlay .eq. 3) THEN
@@ -2159,67 +2034,55 @@ CONTAINS
             !          (1/rd(3)+1/rd(2)+1/rb(1)*fc(1)+1/rb(2)*fc(2))
             ! taf(1) = (1/rd(2)*taf(2)+1/rd(1)*tg*fg+1/rb(3)*tl*fc(3)+Hveh/rhoair/cpair)/&
             !          (1/rd(2)+1/rd(1)*fg+1/rb(3)*fc(3))
+            !
             ! - Equations:
             ! qaf(3) = (1/raw*qm+1/rd(3)*qaf(2)+1/rb(0)*qroof*fc(0))/&
             !          (1/raw+1/rd(3)+1/rb(0)*fc(0))
             ! qaf(2) = (1/rd(3)*qaf(3)+1/rd(2)*qaf(1))/&
             !          (1/rd(3) + 1/rd(2))
-            ! qaf(1) = (1/rd(2)*qaf(2)+1/(rd(1)+rsr)*qgper*fgper*fg+1/rd(1)*qimp*fgimp*fg+1/(rb(3)+rs)*ql*fc(3)+h_veh/rho))/&
-            !          (1/rd(2)+1/(rd(1)+rsr)*fgper*fg+1/rd(1)*fgimp*fg+1/(rb(3)+rs)*fc(3))
+            ! qaf(1) = (1/rd(2)*qaf(2)+1/(rd(1)+rss)*qgper*fgper*fg+1/rd(1)*qimp*fgimp*fg+1/(rb(3)+rs)*ql*fc(3)+h_veh/rho))/&
+            !          (1/rd(2)+1/(rd(1)+rss)*fgper*fg+1/rd(1)*fgimp*fg+1/(rb(3)+rs)*fc(3))
 
-            tmpw1  = cah(1)*(cgh(1)*tg*fg + cfh(3)*tu(3)*fc(3) + (vehc+meta)/rhoair/cpair)/&
-                     (cah(1) + cgh(1)*fg + cfh(3)*fc(3))
-            tmpw2  = cah(2)*(cah(3)*thm + cfh(0)*tu(0)*fc(0) + 1/(4*hlr+1)*(Fhac+Fwst)/(rhoair*cpair))/&
-                     (cah(3) + cah(2) + cfh(0)*fc(0))
-            tmpw3  = cah(1)*cah(1)/&
-                     (cah(1) + cgh(1)*fg + cfh(3)*fc(3))/&
-                     (cah(1) + cah(2) + cfh(1)*fc(1) + cfh(2)*fc(2))
-            tmpw4  = cah(2)*cah(2)/&
-                     (cah(3) + cah(2) + cfh(0)*fc(0))/&
-                     (cah(1) + cah(2) + cfh(1)*fc(1) + cfh(2)*fc(2))
-            fact   = 1. - tmpw3 - tmpw4
+            Hahe(1) = vehc*fsh + meta
+            Hahe(2) = 4*hlr/(4*hlr+1)*(Fhac+Fwst)*fsh + Fach
+            Hahe(3) = 1/(4*hlr+1)*(Fhac+Fwst)*fsh
 
-            taf(2) = (tmpw1 + tmpw2 + cfh(1)*tu(1)*fc(1) + cfh(2)*tu(2)*fc(2) + (4*hlr/(4*hlr+1)*(Fhac+Fwst)+Fach)/(rhoair*cpair))/&
-                     (cah(1) + cah(2) + cfh(1)*fc(1) + cfh(2)*fc(2))/&
-                     fact
+            cT     = 1/rd(3) + 1/rd(2) + fc(1)/rb(1) + fc(2)/rb(2)
+            at     = 1/(rd(2)*(1/rd(2)+fg/rd(1)+fc(3)*lsai/rb(3)))
+            bT     = 1/(rd(3)*(1/rah+1/rd(3)+fc(0)/rb(0)))
 
-            taf(1) = (cah(1)*taf(2) + cgh(1)*tg*fg + cfh(3)*tu(3)*fc(3) + (vehc+meta)/rhoair/cpair)/&
-                     (cah(1) + cgh(1)*fg + cfh(3)*fc(3))
-            tmpw1  = 1/(4*hlr+1)*(Fhac+Fwst)/(rhoair*cpair)
-            taf(3) = (cah(3)*thm + cah(2)*taf(2) + cfh(0)*tu(0)*fc(0) + tmpw1)/&
-                     (cah(3) + cah(2) + cfh(0)*fc(0))
+            taf(2) = (tu(1)*fc(1)/rb(1) + tu(2)*fc(2)/rb(2) &
+                     + (tu(3)*fc(3)*lsai/rb(3)+tg*fg/rd(1)+Hahe(1)/(rhoair*cpair))*aT &
+                     + (tu(0)*fc(0)/rb(0)+thm/rah+Hahe(3)/(rhoair*cpair))*bT + Hahe(2)/(rhoair*cpair)) &
+                     / (cT*(1-aT/(rd(2)*cT)-bT/(rd(3)*cT)))
+
+            taf(1) = (tu(3)*fc(3)*lsai/rb(3) + tg*fg/rd(1) + taf(2)/rd(2) + Hahe(1)/(rhoair*cpair)) &
+                     / (1/rd(2)+fg/rd(1)+fc(3)*lsai/rb(3))
+
+            taf(3) = (tu(0)*fc(0)/rb(0) + taf(2)/rd(3) + thm/rah + Hahe(3)/(rhoair*cpair)) &
+                     / (1/rah+1/rd(3)+fc(0)/rb(0))
 
             IF (qgper < qaf(1)) THEN
               ! dew case. no soil resistance
-              cgw_per= cgw(1)
+              rss_ = 0
             ELSE
-              cgw_per= 1/(1/cgw(1)+rsr)
+              rss_ = rss
             ENDIF
 
-            cgw_imp= fwet_gimp*cgw(1)
+            Lahe   = (Fhac + Fwst + vehc)*flh
+            cQ     = 1/rd(3) + 1/rd(2)
+            bQ     = 1/(rd(3)*(1/raw+1/rd(3)+fwet_roof*fc(0)/rb(0)))
+            aQ     = 1/(rd(2)*(1/rd(2)+fg*fgimp*fwet_gimp/rd(1)+fg*fgper/(rd(1)+rss_)+fc(3)/rv))
 
-            l_vec   = 0!vehc*0.08
-            tmpw1  = caw(1)*(cgw_per*qgper*fgper*fg + cgw_imp*qgimp*fgimp*fg + cfw(3)*qsatl(3)*fc(3) + l_vec/(rhoair))/&
-                     (caw(1) + cgw_per*fgper*fg + cgw_imp*fgimp*fg + cfw(3)*fc(3))
-            tmpw2  = caw(2)*(caw(3)*qm + cfw(0)*qsatl(0)*fc(0))/&
-                     (caw(3) + caw(2) + cfw(0)*fc(0))
-            tmpw3  = caw(1)*caw(1)/&
-                     (caw(1) + cgw_per*fgper*fg + cgw_imp*fgimp*fg + cfw(3)*fc(3))/&
-                     (caw(2) + caw(1))
-            tmpw4  = caw(2)*caw(2)/&
-                     (caw(3) + caw(2) + cfw(0)*fc(0))/&
-                     (caw(2) + caw(1))
-            facq   = 1. - tmpw3 - tmpw4
+            qaf(2) = ((fg*fgimp*fwet_gimp*qgimp/rd(1)+fg*fgper*qgper/(rd(1)+rss_)+fc(3)*qsatl(3)/rv+Lahe/rhoair/hvap)*aQ &
+                     + (qm/raw+fc(0)*fwet_roof*qsatl(0)/rb(0))*bQ) &
+                     / (cQ*(1-bQ/(cQ*rd(3))-aQ/(cQ*rd(2))))
 
-            qaf(2) = (tmpw1 + tmpw2)/&
-                     (caw(2) + caw(1))/&
-                     facq
+            qaf(1) = (fg*fgimp*fwet_gimp*qgimp/rd(1)+fg*fgper*qgper/(rd(1)+rss_)+fc(3)*qsatl(3)/rv+qaf(2)/rd(2)+Lahe/rhoair/hvap) &
+                     /(1/rd(2)+fg*fgimp*fwet_gimp/rd(1)+fg*fgper/(rd(1)+rss_)+fc(3)/rv)
 
-            tmpw1  = l_vec/(rhoair)
-            qaf(1) = (caw(1)*qaf(2) + qgper*cgw_per*fgper*fg + qgimp*cgw_imp*fgimp*fg + cfw(3)*qsatl(3)*fc(3) + tmpw1)/&
-                     (caw(1) + cgw_per*fgper*fg + cgw_imp*fgimp*fg + cfw(3)*fc(3))
-            qaf(3) = (caw(3)*qm + caw(2)*qaf(2) + cfw(0)*qsatl(0)*fc(0))/&
-                     (caw(3) + caw(2) + cfw(0)*fc(0))
+            qaf(3) = (fc(0)*fwet_roof*qsatl(0)/rb(0)+qaf(2)/rd(3)+qm/raw) &
+                     /(1/raw+1/rd(3)+fwet_roof*fc(0)/rb(0))
 
          ENDIF
 
@@ -2253,14 +2116,13 @@ CONTAINS
          gdh2o = 1.0/rd(botlay) * tprcor/thm              !mol m-2 s-1
 
          pco2a = pco2m - 1.37*psrf/max(0.446,gah2o) * &
-            (assim - respc - rsoil)
+                 (assim - respc - rsoil)
 
 !-----------------------------------------------------------------------
 ! Update monin-obukhov length and wind speed including the stability effect
 !-----------------------------------------------------------------------
 
          ! USE the top layer taf and qaf
-         !TODO: need more check
          dth = thm - taf(2)
          dqh =  qm - qaf(2)
 
@@ -2322,11 +2184,15 @@ CONTAINS
       ENDIF
       respc = respc + rsoil
 
+IF ( DEF_URBAN_Irrigation ) THEN
+      etr_deficit = max(0., etr - etr_)
+ENDIF
+
 ! canopy fluxes and total assimilation amd respiration
 
       fsenl = fsenl + fsenl_dtl*dtl(it-1) &
          ! add the imbalanced energy below due to T adjustment to sensibel heat
-         + (dtl_noadj-dtl(it-1)) * (lsai*clai/deltim - dirab_dtl &
+         + (dtl_noadj-dtl(it-1)) * (clai/deltim - dirab_dtl &
          + fsenl_dtl + hvap*fevpl_dtl) &
          ! add the imbalanced energy below due to q adjustment to sensibel heat
          + hvap*erre
@@ -2341,8 +2207,9 @@ CONTAINS
       elwdif  = max(0., evplwet-elwmax)
       evplwet = min(evplwet, elwmax)
 
-      fevpl = fevpl - elwdif
-      fsenl = fsenl + hvap*elwdif
+      fevpl   = fevpl - elwdif
+      fsenl   = fsenl + hvap*elwdif
+
 
 !-----------------------------------------------------------------------
 ! Update dew accumulation (kg/m2)
@@ -2350,17 +2217,83 @@ CONTAINS
 
       ldew = max(0., ldew-evplwet*deltim)
 
+      ! account for vegetation snow and update ldew_rain, ldew_snow, ldew
+      IF ( DEF_VEG_SNOW ) THEN
+         IF (tl > tfrz) THEN
+            qevpl = max (evplwet, 0.)
+            qdewl = abs (min (evplwet, 0.) )
+            qsubl = 0.
+            qfrol = 0.
+
+            IF (qevpl > ldew_rain/deltim) THEN
+               qsubl = qevpl - ldew_rain/deltim
+               qevpl = ldew_rain/deltim
+            ENDIF
+         ELSE
+            qevpl = 0.
+            qdewl = 0.
+            qsubl = max (evplwet, 0.)
+            qfrol = abs (min (evplwet, 0.) )
+
+            IF (qsubl > ldew_snow/deltim) THEN
+               qevpl = qsubl - ldew_snow/deltim
+               qsubl = ldew_snow/deltim
+            ENDIF
+         ENDIF
+
+         ldew_rain = ldew_rain + (qdewl-qevpl)*deltim
+         ldew_snow = ldew_snow + (qfrol-qsubl)*deltim
+
+         ldew = ldew_rain + ldew_snow
+      ENDIF
+
+      IF ( DEF_VEG_SNOW ) THEN
+         ! update fwet_snow
+         fwet_snow = 0
+         IF(ldew_snow > 0.) THEN
+            fwet_snow = ((10./(48.*(lai+sai)))*ldew_snow)**.666666666666
+            ! Check for maximum limit of fwet_snow
+            fwet_snow = min(fwet_snow,1.0)
+         ENDIF
+
+         ! phase change
+
+         qmelt = 0.
+         qfrz  = 0.
+
+         IF (ldew_snow.gt.1.e-6 .and. tl.gt.tfrz) THEN
+            qmelt = min(ldew_snow/deltim,(tl-tfrz)*cpice*ldew_snow/(deltim*hfus))
+            ldew_snow = max(0.,ldew_snow - qmelt*deltim)
+            ldew_rain = max(0.,ldew_rain + qmelt*deltim)
+            !NOTE: There may be some problem, energy imbalance
+            !      However, detailed treatment could be somewhat trivial
+            tl = fwet_snow*tfrz + (1.-fwet_snow)*tl  !Niu et al., 2004
+         ENDIF
+
+         IF (ldew_rain.gt.1.e-6 .and. tl.lt.tfrz) THEN
+            qfrz  = min(ldew_rain/deltim,(tfrz-tl)*cpliq*ldew_rain/(deltim*hfus))
+            ldew_rain = max(0.,ldew_rain - qfrz*deltim)
+            ldew_snow = max(0.,ldew_snow + qfrz*deltim)
+            !NOTE: There may be some problem, energy imbalance
+            !      However, detailed treatment could be somewhat trivial
+            tl = fwet_snow*tfrz + (1.-fwet_snow)*tl  !Niu et al., 2004
+         ENDIF
+      ENDIF
+
+      ! vegetation heat change
+      dheatl = clai/deltim*dtl(it-1)
+
 !-----------------------------------------------------------------------
 ! balance check
 !-----------------------------------------------------------------------
 
       err = sabv + irab + dirab_dtl*dtl(it-1) &
-          - fsenl - hvap*fevpl
+          - fsenl - hvap*fevpl - dheatl
 
 #if(defined CLMDEBUG)
       IF (abs(err) .gt. .2) THEN
          write(6,*) 'energy imbalance in UrbanVegFlux.F90', &
-         i,it-1,err,sabv,irab,fsenl,hvap*fevpl
+         i,it-1,err,sabv,irab,fsenl,hvap*fevpl,dheatl
          CALL CoLM_stop()
       ENDIF
 #endif
@@ -2397,11 +2330,11 @@ CONTAINS
       IF (fcover(5) > 0.) lveg  = lveg  / fcover(5) * fg !/ fv/fg
 
       ! add previous longwave
-      lwsun = lwsun + lwsun_bef
-      lwsha = lwsha + lwsha_bef
-      lgimp = lgimp + lgimp_bef
-      lgper = lgper + lgper_bef
-      lveg  = lveg  + lveg_bef
+      lwsun = lwsun + dlwsun
+      lwsha = lwsha + dlwsha
+      lgimp = lgimp + dlgimp
+      lgper = lgper + dlgper
+      lveg  = lveg  + dlveg
 
       tafu = taf(2)
 
@@ -2417,34 +2350,71 @@ CONTAINS
 !-----------------------------------------------------------------------
 
       ! sensible heat fluxes
-      fsenroof = rhoair*cpair*cfh(0)*(troof-taf(3))
-      fsenwsun = rhoair*cpair*cfh(1)*(twsun-taf(2))
-      fsenwsha = rhoair*cpair*cfh(2)*(twsha-taf(2))
+      fsenroof = rhoair*cpair/rb(0)*(troof-taf(3))
+      fsenwsun = rhoair*cpair/rb(1)*(twsun-taf(2))
+      fsenwsha = rhoair*cpair/rb(2)*(twsha-taf(2))
 
       ! latent heat fluxes
-      fevproof = rhoair*cfw(0)*(qsatl(0)-qaf(3))
+      fevproof = rhoair/rb(0)*(qsatl(0)-qaf(3))
       fevproof = fevproof*fwet_roof
 
-      croofs = rhoair*cpair*cfh(0)*(1.-wtg0(3)*wta0(2)*wtl0(0)/fact-wtl0(0))
-      cwalls = rhoair*cpair*cfh(1)*(1.-wtl0(1)/fact)
-      ! croofl = rhoair*cfw(0)*(1.-wtgq0(3)*wtaq0(2)*wtlq0(0)/facq-wtlq0(0))*qsatldT(0)
-      croofl = rhoair*cfw(0)*(1.-cfw(0)*fc(0)/(caw(3)+cgw(3)+cfw(0)*fc(0))-cgw(3) &
-               /(caw(3)+cgw(3)+cfw(0)*fc(0)) &
-               /(cgw(3)+cgw_per*fgper*fg+cgw_imp*fgimp*fg+cfw(3)*fc(3))* &
-               cfw(0)*fc(0)*cgw(3)/(caw(3)+cgw(3)+cfw(0)*fc(0))/facq)*qsatldT(0)
-      croofl = croofl*fwet_roof
+      IF (botlay == 2) THEN
 
-      croof = croofs + croofl*htvp_roof
+         bT     = 1/(rd(3) * (1/rah+1/rd(3)+fc(0)/rb(0)))
+         cT     = 1/rd(3) + fg/rd(2) + fc(1)/rb(1) + fc(2)/rb(2) + fc(3)*lsai/rb(3)
+
+         cQ     = 1/rd(3) + fg*fgper/(rd(2)+rss_) + fwet_gimp*fg*fgimp/rd(2) + fc(3)/rv
+         bQ     = 1/(rd(3) * (1/raw+1/rd(3)+fwet_roof*fc(0)/rb(0)))
+
+         cwsuns = rhoair*cpair/rb(1) &
+                  *( 1. - fc(1)/(cT*rb(1)*(1-bT/(cT*rd(3)))) )
+
+         cwshas = rhoair*cpair/rb(2) &
+                  *( 1. - fc(2)/(cT*rb(2)*(1-bT/(cT*rd(3)))) )
+
+         croofs = rhoair*cpair/rb(0) &
+                  *( 1. - fc(0)*bT*bT / (cT*rb(0)*(1-bT/(cT*rd(3)))) &
+                        - fc(0) / (rb(0)*(1/rah+1/rd(3)+fc(0)/rb(0))) )
+
+         croofl = rhoair*fwet_roof/rb(0)*qsatldT(0) &
+                  * ( 1. - fwet_roof*fc(0)*bQ*bQ / (cQ*rb(0)*(1-bQ/(cQ*rd(3)))) &
+                         - fwet_roof*fc(0) / (rb(0)*(1/raw+1/rd(3)+fwet_roof*fc(0)/rb(0))) )
+
+         croof  = croofs + croofl*htvp_roof
+      ELSE
+
+         cT     = 1/rd(3) + 1/rd(2) + fc(1)/rb(1) + fc(2)/rb(2)
+         bT     = 1/(rd(3)*(1/rah+1/rd(3)+fc(0)/rb(0)))
+
+         cQ     = 1/rd(3) + 1/rd(2)
+         bQ     = 1/(rd(3) * (1/raw+1/rd(3)+fwet_roof*fc(0)/rb(0)))
+
+         cwsuns = rhoair*cpair/rb(1) &
+                  *( 1. - fc(1)/(cT*rb(1)*(1-aT/(rd(2)*cT)-bT/(rd(3)*cT))) )
+
+         cwshas = rhoair*cpair/rb(2) &
+                  *( 1. - fc(2)/(cT*rb(2)*(1-aT/(rd(2)*cT)-bT/(rd(3)*cT))) )
+
+         croofs = rhoair*cpair/rb(0) &
+                  *( 1. - fc(0)*bT*bT/(cT*rb(0)*(1-aT/(rd(2)*cT)-bT/(rd(3)*cT))) &
+                        - fc(0)/(rb(0)*(1/rah+1/rd(3)+fc(0)/rb(0))) )
+
+         croofl = rhoair*fwet_roof/rb(0)*qsatldT(0) &
+                  *( 1. - fwet_roof*fc(0)/(rb(0)*(1/raw+1/rd(3)+fwet_roof*fc(0)/rb(0))) &
+                        - fwet_roof*fc(0)*bQ*bQ/(rb(0)*cQ*(1-aQ/(cQ*rd(2))-bQ/(cQ*rd(3)))) )
+
+         croof  = croofs + croofl*htvp_roof
+      ENDIF
 
 !-----------------------------------------------------------------------
 ! fluxes from urban ground to canopy space
 !-----------------------------------------------------------------------
 
-      fsengimp = cpair*rhoair*cgh(botlay)*(tgimp-taf(botlay))
-      fsengper = cpair*rhoair*cgh(botlay)*(tgper-taf(botlay))
+      fsengimp = cpair*rhoair/rd(botlay)*(tgimp-taf(botlay))
+      fsengper = cpair*rhoair/rd(botlay)*(tgper-taf(botlay))
 
-      fevpgimp = rhoair*cgw_imp*(qgimp-qaf(botlay))
-      fevpgper = rhoair*cgw_per*(qgper-qaf(botlay))
+      fevpgper = rhoair/(rd(botlay)+rss_)*(qgper-qaf(botlay))
+      fevpgimp = rhoair/rd(botlay)       *(qgimp-qaf(botlay))
 
       fevpgimp = fevpgimp*fwet_gimp
 
@@ -2453,22 +2423,24 @@ CONTAINS
 !-----------------------------------------------------------------------
 
       IF (botlay == 2) THEN
-         cgrnds = cpair*rhoair*cgh(2)*(1.-wtg0(2)/fact)
-         ! cgperl = rhoair*cgw(2)*(1.-wtgq0(2)/facq)*dqgperdT
-         ! cgimpl = rhoair*cgw(2)*(1.-wtgq0(2)/facq)*dqgimpdT
-         cgperl = rhoair*cgw_per*(dqgperdT &
-                  - (dqgperdT*cgw_per*fgper*fg) &
-                  /(caw(2) + cgw_per*fgper*fg + cgw_imp*fgimp*fg + cfw(3)*fc(3)) &
-                  /facq)
-         cgimpl = rhoair*cgw_imp*(dqgimpdT &
-                  - (dqgimpdT*cgw_imp*fgimp*fg) &
-                  /(caw(2) + cgw_per*fgper*fg + cgw_imp*fgimp*fg + cfw(3)*fc(3)) &
-                  /facq)
+         cgrnds = cpair*rhoair/rd(2)*( 1. - fg/(cT*rd(2)*(1-bT/(cT*rd(3)))) )
+
+         cgperl = rhoair/(rd(2)+rss_)*dqgperdT*( 1 - fg*fgper/(cQ*(rd(2)+rss_)*(1-bQ/(cQ*rd(3)))) )
+         cgimpl = rhoair/rd(2)       *dqgimpdT*( 1 - fwet_gimp*fg*fgimp/(cQ*rd(2)*(1-bQ/(cQ*rd(3)))) )
          cgimpl = cgimpl*fwet_gimp
+
       ELSE !botlay == 1
-         cgrnds = cpair*rhoair*cgh(1)*(1.-wta0(1)*wtg0(2)*wtg0(1)/fact-wtg0(1))
-         cgperl = rhoair*cgw_per*(1.-wtaq0(1)*wtgq0(2)*wtgq0(1)/facq-wtgq0(1))*dqgperdT
-         cgimpl = rhoair*cgw_imp*(1.-wtaq0(1)*wtgq0(2)*wtgq0(1)/facq-wtgq0(1))*dqgimpdT
+         cgrnds = cpair*rhoair/rd(1)* &
+                  ( 1. - fg/(rd(1)*(1/rd(2)+fg/rd(1)+fc(3)*lsai/rb(3))) &
+                       - fg*aT*aT/(rd(1)*cT*(1-aT/(cT*rd(2))-bT/(cT*rd(3)))) )
+
+         cgperl = rhoair/(rd(1)+rss_)*dqgperdT &
+                  *( 1. - fg*fgper/((rss_+rd(1))*(1/rd(2)+fg*fgper/(rss_+rd(1))+fg*fgimp*fwet_gimp/rd(1)+fc(3)/rv)) &
+                        - fg*fgper*aQ*aQ/((rss_+rd(1))*cQ*(1-aQ/(cQ*rd(2))-bQ/(cQ*rd(3)))) )
+
+         cgimpl = rhoair/rd(1)*dqgimpdT &
+                  *( 1. - fg*fgimp*fwet_gimp/(rd(1)*(1/rd(2)+fg*fgper/(rss_+rd(1))+fg*fgimp*fwet_gimp/rd(1)+fc(3)/rv)) &
+                        - fg*fgimp*fwet_gimp*aQ*aQ/(rd(1)*cQ*(1-aQ/(cQ*rd(2))-bQ/(cQ*rd(3)))) )
          cgimpl = cgimpl*fwet_gimp
       ENDIF
 
@@ -2482,55 +2454,94 @@ CONTAINS
       !tref = thm + vonkar/(fh)*dth * (fh2m/vonkar - fh/vonkar)
       !qref =  qm + vonkar/(fq)*dqh * (fq2m/vonkar - fq/vonkar)
 
-  END SUBROUTINE UrbanVegFlux
+      ! assumption: (tg-t2m):(tg-taf) = 2:(displa+z0m)
+      IF (numlay == 2) THEN
+         tref = ( (displau+z0mu-2.)*tg + 2.*taf(2) ) / (displau+z0mu)
+         qref = ( (displau+z0mu-2.)*qg + 2.*qaf(2) ) / (displau+z0mu)
+      ELSE
+         tref = (((displau+z0mu+displav+z0mv)*0.5-2.)*tg + taf(1) + taf(2) ) &
+              / ( (displau+z0mu+displav+z0mv)*0.5 )
+         qref = (((displau+z0mu+displav+z0mv)*0.5-2.)*qg + qaf(1) + qaf(2) ) &
+              / ( (displau+z0mu+displav+z0mv)*0.5 )
+      ENDIF
+
+   END SUBROUTINE UrbanVegFlux
 !----------------------------------------------------------------------
 
 
-   SUBROUTINE dewfraction (sigf,lai,sai,dewmx,ldew,fwet)
-
+   SUBROUTINE dewfraction (sigf,lai,sai,dewmx,ldew,ldew_rain,ldew_snow,fwet,fdry)
 !=======================================================================
 ! Original author: Yongjiu Dai, September 15, 1999
 !
 ! determine fraction of foliage covered by water and
 ! fraction of foliage that is dry and transpiring
 !
+!
+! REVISIONS:
+!
+! 2024.04.16   Hua Yuan: add option to account for vegetation snow process
+! 2018.06      Hua Yuan: remove sigf, to compatible with PFT
 !=======================================================================
 
    USE MOD_Precision
    IMPLICIT NONE
 
-   real(r8), intent(in) :: sigf   ! fraction of veg cover, excluding snow-covered veg [-]
-   real(r8), intent(in) :: lai    ! leaf area index  [-]
-   real(r8), intent(in) :: sai    ! stem area index  [-]
-   real(r8), intent(in) :: dewmx  ! maximum allowed dew [0.1 mm]
-   real(r8), intent(in) :: ldew   ! depth of water on foliage [kg/m2/s]
+   real(r8), intent(in)  :: sigf      !fraction of veg cover, excluding snow-covered veg [-]
+   real(r8), intent(in)  :: lai       !leaf area index  [-]
+   real(r8), intent(in)  :: sai       !stem area index  [-]
+   real(r8), intent(in)  :: dewmx     !maximum allowed dew [0.1 mm]
+   real(r8), intent(in)  :: ldew      !depth of water on foliage [kg/m2/s]
+   real(r8), intent(in)  :: ldew_rain !depth of rain on foliage [kg/m2/s]
+   real(r8), intent(in)  :: ldew_snow !depth of snow on foliage [kg/m2/s]
+   real(r8), intent(out) :: fwet      !fraction of foliage covered by water&snow [-]
+   real(r8), intent(out) :: fdry      !fraction of foliage that is green and dry [-]
 
-   real(r8), intent(out) :: fwet  ! fraction of foliage covered by water [-]
-
-   real(r8) lsai                  ! lai + sai
-   real(r8) dewmxi                ! inverse of maximum allowed dew [1/mm]
-   real(r8) vegt                  ! sigf*lsai
+   real(r8) :: lsai                   !lai + sai
+   real(r8) :: dewmxi                 !inverse of maximum allowed dew [1/mm]
+   real(r8) :: vegt                   !sigf*lsai, NOTE: remove sigf
+   real(r8) :: fwet_rain              !fraction of foliage covered by water [-]
+   real(r8) :: fwet_snow              !fraction of foliage covered by snow [-]
 !
 !-----------------------------------------------------------------------
 ! Fwet is the fraction of all vegetation surfaces which are wet
 ! including stem area which contribute to evaporation
       lsai = lai + sai
       dewmxi = 1.0/dewmx
-       ! why * sigf? may have bugs
-       ! 06/17/2018:
-       ! for ONLY one PFT, there may be no problem
-       ! but for multiple PFTs, bugs exist!!!
-       ! convert the whole area ldew to sigf ldew
+      ! 06/2018, yuan: remove sigf, to compatible with PFT
       vegt   =  lsai
 
       fwet = 0
       IF (ldew > 0.) THEN
          fwet = ((dewmxi/vegt)*ldew)**.666666666666
-
-! Check for maximum limit of fwet
+         ! Check for maximum limit of fwet
          fwet = min(fwet,1.0)
-
       ENDIF
+
+      ! account for vegetation snow
+      ! calculate fwet_rain, fwet_snow, fwet
+      IF ( DEF_VEG_SNOW ) THEN
+
+         fwet_rain = 0
+         IF(ldew_rain > 0.) THEN
+            fwet_rain = ((dewmxi/vegt)*ldew_rain)**.666666666666
+            ! Check for maximum limit of fwet_rain
+            fwet_rain = min(fwet_rain,1.0)
+         ENDIF
+
+         fwet_snow = 0
+         IF(ldew_snow > 0.) THEN
+            fwet_snow = ((dewmxi/(48.*vegt))*ldew_snow)**.666666666666
+            ! Check for maximum limit of fwet_snow
+            fwet_snow = min(fwet_snow,1.0)
+         ENDIF
+
+         fwet = fwet_rain + fwet_snow - fwet_rain*fwet_snow
+         fwet = min(fwet,1.0)
+      ENDIF
+
+      ! fdry is the fraction of lai which is dry because only leaves can
+      ! transpire. Adjusted for stem area which does not transpire
+      fdry = (1.-fwet)*lai/lsai
 
    END SUBROUTINE dewfraction
 

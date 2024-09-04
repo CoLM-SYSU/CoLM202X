@@ -29,7 +29,7 @@ CONTAINS
 
    SUBROUTINE albland (ipatch, patchtype, deltim,&
                       soil_s_v_alb,soil_d_v_alb,soil_s_n_alb,soil_d_n_alb,&
-                      chil,rho,tau,fveg,green,lai,sai,coszen,&
+                      chil,rho,tau,fveg,green,lai,sai,fwet_snow,coszen,&
                       wt,fsno,scv,scvold,sag,ssw,pg_snow,forc_t,t_grnd,t_soisno,dz_soisno,&
                       snl,wliq_soisno,wice_soisno,snw_rds,snofrz,&
                       mss_bcpho,mss_bcphi,mss_ocpho,mss_ocphi,&
@@ -58,18 +58,21 @@ CONTAINS
 ! Original author : Yongjiu Dai, 09/15/1999; 08/30/2002, 03/2014
 !
 ! !REVISIONS:
-! Hua Yuan, 12/2019: added a wrap FUNCTION for PFT calculation, details see
-!                    twostream_wrap() added a wrap FUNCTION for PC (3D) calculation,
-!                    details see ThreeDCanopy_wrap()
+! 12/2019, Hua Yuan: added a wrap FUNCTION for PFT calculation, details see
+!          twostream_wrap() added a wrap FUNCTION for PC (3D) calculation,
+!          details see ThreeDCanopy_wrap()
 !
-! Hua Yuan, 03/2020: added an improved two-stream model, details see
-!                    twostream_mod()
+! 03/2020, Hua Yuan: added an improved two-stream model, details see
+!          twostream_mod()
 !
-! Hua Yuan, 08/2020: account for stem optical property effects in twostream
-!                    model
+! 08/2020, Hua Yuan: account for stem optical property effects in twostream
+!          model
 !
-! Hua Yuan, 01/2023: CALL SNICAR model to calculate snow albedo&absorption,
-!                    added SNICAR related variables
+! 01/2023, Hua Yuan: CALL SNICAR model to calculate snow albedo&absorption,
+!          added SNICAR related variables
+!
+! 04/2024, Hua Yuan: add option to account for vegetation snow process
+!
 !=======================================================================
 
    USE MOD_Precision
@@ -93,35 +96,36 @@ CONTAINS
 !------------------------- Dummy Arguments -----------------------------
 ! ground cover index
    integer, intent(in) :: &
-        ipatch,       &! patch index
-        patchtype      ! land patch type (0=soil, 1=urban or built-up, 2=wetland,
-                       ! 3=land ice, 4=deep lake)
+        ipatch,        &! patch index
+        patchtype       ! land patch type (0=soil, 1=urban or built-up, 2=wetland,
+                        ! 3=land ice, 4=deep lake)
    integer, intent(in) :: &
-        snl            ! number of snow layers
+        snl             ! number of snow layers
 
    real(r8), intent(in) :: &
-        deltim,       &! seconds in a time step [second]
-        soil_s_v_alb, &! albedo of visible of the saturated soil
-        soil_d_v_alb, &! albedo of visible of the dry soil
-        soil_s_n_alb, &! albedo of near infrared of the saturated soil
-        soil_d_n_alb, &! albedo of near infrared of the dry soil
-        chil,         &! leaf angle distribution factor
-        rho(2,2),     &! leaf reflectance (iw=iband, il=life and dead)
-        tau(2,2),     &! leaf transmittance (iw=iband, il=life and dead)
-        fveg,         &! fractional vegetation cover [-]
-        green,        &! green leaf fraction
-        lai,          &! leaf area index (LAI+SAI) [m2/m2]
-        sai,          &! stem area index (LAI+SAI) [m2/m2]
+        deltim,        &! seconds in a time step [second]
+        soil_s_v_alb,  &! albedo of visible of the saturated soil
+        soil_d_v_alb,  &! albedo of visible of the dry soil
+        soil_s_n_alb,  &! albedo of near infrared of the saturated soil
+        soil_d_n_alb,  &! albedo of near infrared of the dry soil
+        chil,          &! leaf angle distribution factor
+        rho(2,2),      &! leaf reflectance (iw=iband, il=life and dead)
+        tau(2,2),      &! leaf transmittance (iw=iband, il=life and dead)
+        fveg,          &! fractional vegetation cover [-]
+        green,         &! green leaf fraction
+        lai,           &! leaf area index (LAI+SAI) [m2/m2]
+        sai,           &! stem area index (LAI+SAI) [m2/m2]
+        fwet_snow,     &! vegetation snow fractional cover [-]
 
-        coszen,       &! cosine of solar zenith angle [-]
-        wt,           &! fraction of vegetation covered by snow [-]
-        fsno,         &! fraction of soil covered by snow [-]
-        ssw,          &! water volumetric content of soil surface layer [m3/m3]
-        scv,          &! snow cover, water equivalent [mm]
-        scvold,       &! snow cover for previous time step [mm]
-        pg_snow,      &! snowfall onto ground including canopy runoff [kg/(m2 s)]
-        forc_t,       &! atmospheric temperature [K]
-        t_grnd         ! ground surface temperature [K]
+        coszen,        &! cosine of solar zenith angle [-]
+        wt,            &! fraction of vegetation covered by snow [-]
+        fsno,          &! fraction of soil covered by snow [-]
+        ssw,           &! water volumetric content of soil surface layer [m3/m3]
+        scv,           &! snow cover, water equivalent [mm]
+        scvold,        &! snow cover for previous time step [mm]
+        pg_snow,       &! snowfall onto ground including canopy runoff [kg/(m2 s)]
+        forc_t,        &! atmospheric temperature [K]
+        t_grnd          ! ground surface temperature [K]
 
    real(r8), intent(in) :: &
         wliq_soisno  ( maxsnl+1:0 ), &! liquid water (kg/m2)
@@ -144,104 +148,104 @@ CONTAINS
    real(r8), intent(inout) :: sag     ! non dimensional snow age [-]
 
    real(r8), intent(out) :: &
-        alb(2,2),     &! averaged albedo [-]
-        ssun(2,2),    &! sunlit canopy absorption for solar radiation
-        ssha(2,2),    &! shaded canopy absorption for solar radiation,
-                       ! normalized by the incident flux
-        thermk,       &! canopy gap fraction for tir radiation
-        extkb,        &! (k, g(mu)/mu) direct solar extinction coefficient
-        extkd          ! diffuse and scattered diffuse PAR extinction coefficient
+        alb(2,2),      &! averaged albedo [-]
+        ssun(2,2),     &! sunlit canopy absorption for solar radiation
+        ssha(2,2),     &! shaded canopy absorption for solar radiation,
+                        ! normalized by the incident flux
+        thermk,        &! canopy gap fraction for tir radiation
+        extkb,         &! (k, g(mu)/mu) direct solar extinction coefficient
+        extkd           ! diffuse and scattered diffuse PAR extinction coefficient
 
    real(r8), intent(out) :: &
-        ssoi(2,2),    &! ground soil absorption [-]
-        ssno(2,2),    &! ground snow absorption [-]
+        ssoi(2,2),     &! ground soil absorption [-]
+        ssno(2,2),     &! ground snow absorption [-]
         ssno_lyr(2,2,maxsnl+1:1) ! ground snow layer absorption, by SNICAR [-]
 
 !-------------------------- Local variables ----------------------------
 
    real(r8) :: &!
-      age,          &! factor to reduce visible snow alb due to snow age [-]
-      albg0,        &! temporary varaiable [-]
-      albsoi(2,2),  &! soil albedo [-]
-      albsno(2,2),  &! snow albedo [-]
-      albsno_pur(2,2),&! snow albedo [-]
-      albsno_bc (2,2),&! snow albedo [-]
-      albsno_oc (2,2),&! snow albedo [-]
-      albsno_dst(2,2),&! snow albedo [-]
-      albg(2,2),    &! albedo, ground
-      albv(2,2),    &! albedo, vegetation [-]
-      alb_s_inc,    &! decrease in soil albedo due to wetness [-]
-      beta0,        &! upscattering parameter for direct beam [-]
-      cff,          &! snow alb correction factor for zenith angle > 60 [-]
-      conn,         &! constant (=0.5) for visible snow alb calculation [-]
-      cons,         &! constant (=0.2) for nir snow albedo calculation [-]
-      czen,         &! cosine of solar zenith angle > 0 [-]
-      czf,          &! solar zenith correction for new snow albedo [-]
-      dfalbl,       &! snow albedo for diffuse nir radiation [-]
-      dfalbs,       &! snow albedo for diffuse visible solar radiation [-]
-      dralbl,       &! snow albedo for visible radiation [-]
-      dralbs,       &! snow albedo for near infrared radiation [-]
-      lsai,         &! leaf and stem area index (LAI+SAI) [m2/m2]
-      sl,           &! factor that helps control alb zenith dependence [-]
-      snal0,        &! alb for visible,incident on new snow (zen ang<60) [-]
-      snal1,        &! alb for NIR, incident on new snow (zen angle<60) [-]
-      upscat,       &! upward scattered fraction for direct beam [-]
-      tran(2,3)      ! canopy transmittances for solar radiation
+      age,             &! factor to reduce visible snow alb due to snow age [-]
+      albg0,           &! temporary varaiable [-]
+      albsoi(2,2),     &! soil albedo [-]
+      albsno(2,2),     &! snow albedo [-]
+      albsno_pur(2,2), &! snow albedo [-]
+      albsno_bc (2,2), &! snow albedo [-]
+      albsno_oc (2,2), &! snow albedo [-]
+      albsno_dst(2,2), &! snow albedo [-]
+      albg(2,2),       &! albedo, ground
+      albv(2,2),       &! albedo, vegetation [-]
+      alb_s_inc,       &! decrease in soil albedo due to wetness [-]
+      beta0,           &! upscattering parameter for direct beam [-]
+      cff,             &! snow alb correction factor for zenith angle > 60 [-]
+      conn,            &! constant (=0.5) for visible snow alb calculation [-]
+      cons,            &! constant (=0.2) for nir snow albedo calculation [-]
+      czen,            &! cosine of solar zenith angle > 0 [-]
+      czf,             &! solar zenith correction for new snow albedo [-]
+      dfalbl,          &! snow albedo for diffuse nir radiation [-]
+      dfalbs,          &! snow albedo for diffuse vis radiation [-]
+      dralbl,          &! snow albedo for direct nir radiation [-]
+      dralbs,          &! snow albedo for direct vis radiation [-]
+      lsai,            &! leaf and stem area index (LAI+SAI) [m2/m2]
+      sl,              &! factor that helps control alb zenith dependence [-]
+      snal0,           &! alb for visible,incident on new snow (zen ang<60) [-]
+      snal1,           &! alb for NIR, incident on new snow (zen angle<60) [-]
+      upscat,          &! upward scattered fraction for direct beam [-]
+      tran(2,3)         ! canopy transmittances for solar radiation
 
    integer ps, pe
-   logical do_capsnow      ! true => DO snow capping
-   logical use_snicar_frc  ! true: IF radiative forcing is being calculated, first estimate clean-snow albedo
-   logical use_snicar_ad   ! true: use SNICAR_AD_RT, false: use SNICAR_RT
+   logical do_capsnow      !true => DO snow capping
+   logical use_snicar_frc  !true: IF radiative forcing is being calculated, first estimate clean-snow albedo
+   logical use_snicar_ad   !true: use SNICAR_AD_RT, false: use SNICAR_RT
 
-   real(r8) snwcp_ice                        !excess precipitation due to snow capping [kg m-2 s-1]
-   real(r8) mss_cnc_bcphi ( maxsnl+1:0 )     !mass concentration of hydrophilic BC (col,lyr) [kg/kg]
-   real(r8) mss_cnc_bcpho ( maxsnl+1:0 )     !mass concentration of hydrophobic BC (col,lyr) [kg/kg]
-   real(r8) mss_cnc_ocphi ( maxsnl+1:0 )     !mass concentration of hydrophilic OC (col,lyr) [kg/kg]
-   real(r8) mss_cnc_ocpho ( maxsnl+1:0 )     !mass concentration of hydrophobic OC (col,lyr) [kg/kg]
-   real(r8) mss_cnc_dst1  ( maxsnl+1:0 )     !mass concentration of dust aerosol species 1 (col,lyr) [kg/kg]
-   real(r8) mss_cnc_dst2  ( maxsnl+1:0 )     !mass concentration of dust aerosol species 2 (col,lyr) [kg/kg]
-   real(r8) mss_cnc_dst3  ( maxsnl+1:0 )     !mass concentration of dust aerosol species 3 (col,lyr) [kg/kg]
-   real(r8) mss_cnc_dst4  ( maxsnl+1:0 )     !mass concentration of dust aerosol species 4 (col,lyr) [kg/kg]
+   real(r8) snwcp_ice                     !excess precipitation due to snow capping [kg m-2 s-1]
+   real(r8) mss_cnc_bcphi ( maxsnl+1:0 )  !mass concentration of hydrophilic BC (col,lyr) [kg/kg]
+   real(r8) mss_cnc_bcpho ( maxsnl+1:0 )  !mass concentration of hydrophobic BC (col,lyr) [kg/kg]
+   real(r8) mss_cnc_ocphi ( maxsnl+1:0 )  !mass concentration of hydrophilic OC (col,lyr) [kg/kg]
+   real(r8) mss_cnc_ocpho ( maxsnl+1:0 )  !mass concentration of hydrophobic OC (col,lyr) [kg/kg]
+   real(r8) mss_cnc_dst1  ( maxsnl+1:0 )  !mass concentration of dust aerosol species 1 (col,lyr) [kg/kg]
+   real(r8) mss_cnc_dst2  ( maxsnl+1:0 )  !mass concentration of dust aerosol species 2 (col,lyr) [kg/kg]
+   real(r8) mss_cnc_dst3  ( maxsnl+1:0 )  !mass concentration of dust aerosol species 3 (col,lyr) [kg/kg]
+   real(r8) mss_cnc_dst4  ( maxsnl+1:0 )  !mass concentration of dust aerosol species 4 (col,lyr) [kg/kg]
 
 ! ----------------------------------------------------------------------
 ! 1. Initial set
 ! ----------------------------------------------------------------------
 
 ! visible and near infrared band albedo for new snow
-      snal0 = 0.85     ! visible band
-      snal1 = 0.65     ! near infrared
+      snal0 = 0.85         !visible band
+      snal1 = 0.65         !near infrared
 
 ! ----------------------------------------------------------------------
 ! set default soil and vegetation albedos and solar absorption
       !TODO: need double check
-      alb (:,:) = 1.   ! averaged
-      albg(:,:) = 1.   ! ground
-      albv(:,:) = 1.   ! vegetation
-      ssun(:,:) = 0.   ! sunlit leaf absorption
-      ssha(:,:) = 0.   ! shaded leaf absorption
-      tran(:,1) = 0.   ! incident direct  radiation duffuse transmittance
-      tran(:,2) = 1.   ! incident diffuse radiation diffuse transmittance
-      tran(:,3) = 1.   ! incident direct  radiation direct  transmittance
+      alb (:,:) = 1.       !averaged
+      albg(:,:) = 1.       !ground
+      albv(:,:) = 1.       !vegetation
+      ssun(:,:) = 0.       !sunlit leaf absorption
+      ssha(:,:) = 0.       !shaded leaf absorption
+      tran(:,1) = 0.       !incident direct  radiation diffuse transmittance
+      tran(:,2) = 1.       !incident diffuse radiation diffuse transmittance
+      tran(:,3) = 1.       !incident direct  radiation direct  transmittance
 
       ! 07/06/2023, yuan: use the values of previous timestep.
       ! for nighttime longwave calculations.
-      !thermk    = 1.e-3
+      !thermk   = 1.e-3
       IF (lai+sai <= 1.e-6) THEN
          thermk = 1.
       ENDIF
       extkb     = 1.
       extkd     = 0.718
 
-      albsno    (:,:) = 0.     !set initial snow albedo
-      albsno_pur(:,:) = 0.     !set initial pure snow albedo
-      albsno_bc (:,:) = 0.     !set initial BC   snow albedo
-      albsno_oc (:,:) = 0.     !set initial OC   snow albedo
-      albsno_dst(:,:) = 0.     !set initial dust snow albedo
+      albsno    (:,:) = 0. !set initial snow albedo
+      albsno_pur(:,:) = 0. !set initial pure snow albedo
+      albsno_bc (:,:) = 0. !set initial BC   snow albedo
+      albsno_oc (:,:) = 0. !set initial OC   snow albedo
+      albsno_dst(:,:) = 0. !set initial dust snow albedo
 
       ! soil and snow absorption
-      ssoi      (:,:) = 0.     !set initial soil absorption
-      ssno      (:,:) = 0.     !set initial snow absorption
-      ssno_lyr(:,:,:) = 0.     !set initial snow layer absorption
+      ssoi      (:,:) = 0. !set initial soil absorption
+      ssno      (:,:) = 0. !set initial snow absorption
+      ssno_lyr(:,:,:) = 0. !set initial snow layer absorption
 
 IF (patchtype == 0) THEN
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
@@ -264,8 +268,8 @@ ENDIF
 !  NEEDS TO BE AFTER SnowFiler is rebuilt, otherwise there
 !  can be zero snow layers but an active column in filter)
 
-      snwcp_ice   = 0.0       !excess precipitation due to snow capping [kg m-2 s-1]
-      do_capsnow  = .false.   !true => DO snow capping
+      snwcp_ice  = 0.0     !excess precipitation due to snow capping [kg m-2 s-1]
+      do_capsnow = .false. !true => DO snow capping
 
       CALL AerosolMasses( deltim, snl ,do_capsnow ,&
            wice_soisno(:0),wliq_soisno(:0),snwcp_ice      ,snw_rds       ,&
@@ -291,12 +295,12 @@ ENDIF
 
 ! ----------------------------------------------------------------------
 
-      lsai=lai+sai
-      IF(coszen<=0.) THEN
-         RETURN  !only DO albedo when coszen > 0
+      lsai = lai + sai
+      IF(coszen <= -0.3) THEN
+         RETURN  !only DO albedo when coszen > -0.3
       ENDIF
 
-      czen=max(coszen,0.001)
+      czen = max(coszen, 0.001)
 
 ! ----------------------------------------------------------------------
 ! 2. get albedo over land
@@ -402,7 +406,7 @@ ENDIF
          IF (patchtype == 0) THEN  !soil patches
 
 #if (defined LULC_USGS || defined LULC_IGBP)
-            CALL twostream (chil,rho,tau,green,lai,sai,&
+            CALL twostream (chil,rho,tau,green,lai,sai,fwet_snow,&
                             czen,albg,albv,tran,thermk,extkb,extkd,ssun,ssha)
 
             ! 08/31/2023, yuan: to be consistent with PFT and PC
@@ -411,7 +415,7 @@ ENDIF
             alb(:,:) = albv(:,:)
 #endif
          ELSE  !other patchtypes (/=0)
-            CALL twostream (chil,rho,tau,green,lai,sai,&
+            CALL twostream (chil,rho,tau,green,lai,sai,fwet_snow,&
                             czen,albg,albv,tran,thermk,extkb,extkd,ssun,ssha)
 
             ! 08/31/2023, yuan: to be consistent with PFT and PC
@@ -457,7 +461,7 @@ ENDIF
    END SUBROUTINE albland
 
 
-   SUBROUTINE twostream ( chil, rho, tau, green, lai, sai, &
+   SUBROUTINE twostream ( chil, rho, tau, green, lai, sai, fwet_snow, &
               coszen, albg, albv, tran, thermk, extkb, extkd, ssun, ssha )
 
 !-----------------------------------------------------------------------
@@ -470,6 +474,7 @@ ENDIF
 !-----------------------------------------------------------------------
 
    USE MOD_Precision
+   USE MOD_Namelist, only: DEF_VEG_SNOW
    IMPLICIT NONE
 
 ! parameters
@@ -482,7 +487,8 @@ ENDIF
           ! time-space varying vegetation parameters
             green,         &! green leaf fraction
             lai,           &! leaf area index of exposed canopy (snow-free)
-            sai             ! stem area index
+            sai,           &! stem area index
+            fwet_snow       ! vegetation snow fractional cover [-]
 
 ! environmental variables
    real(r8), intent(in) :: &
@@ -512,7 +518,7 @@ ENDIF
             zmu2,          &! (zmu * zmu)
             as,            &! (a-s(mu))
             upscat,        &! (omega-beta)
-            betao,         &! (beta-0)
+            beta0,         &! (beta-0)
             psi,           &! (h)
 
             be,            &! (b)
@@ -556,7 +562,13 @@ ENDIF
             eup(2,2),      &! (integral of i_up*exp(-kx) )
             edown(2,2)      ! (integral of i_down*exp(-kx) )
 
-   integer iw                !
+   ! vegetation snow optical properties
+   real(r8) :: upscat_sno = 0.5   !upscat parameter for snow
+   real(r8) :: beta0_sno  = 0.5   !beta0 parameter for snow
+   real(r8) :: scat_sno(2)        !snow single scattering albedo
+   data scat_sno(1), scat_sno(2) /0.8, 0.4/   ! 1:vis, 2: nir
+
+   integer iw               ! band iterator
 
 !-----------------------------------------------------------------------
 ! projected area of phytoelements in direction of mu and
@@ -566,7 +578,7 @@ ENDIF
       phi2 = 0.877 * ( 1. - 2. * phi1 )
 
       proj = phi1 + phi2 * coszen
-      extkb = (phi1 + phi2 * coszen) / coszen
+      extkb = proj / coszen
 
       extkd = 0.719
 
@@ -611,11 +623,21 @@ ENDIF
                log ( ( proj + coszen * phi2 + coszen * phi1 ) / ( coszen * phi1 ) ) )
 
 ! account for stem optical property effects
+      !TODO-done: betao -> beta0
       upscat = lai/lsai*tau(iw,1) + sai_/lsai*tau(iw,2)
       ! 09/12/2014, yuan: a bug, change 1. - chil -> 1. + chil
       upscat = 0.5 * ( scat + ( scat - 2. * upscat ) * &
                (( 1. + chil ) / 2. ) ** 2 )
-      betao = ( 1. + zmu * extkb ) / ( scat * zmu * extkb ) * as
+      beta0 = ( 1. + zmu * extkb ) / ( scat * zmu * extkb ) * as
+
+! account for snow on vegetation
+      ! modify scat, upscat and beta0
+      ! USE: fwet_snow, snow properties, scatter vis0.8, nir0.4, upscat0.5, beta0.5
+      IF ( DEF_VEG_SNOW ) THEN
+         scat   =   (1.-fwet_snow)*scat        + fwet_snow*scat_sno(iw)
+         upscat = ( (1.-fwet_snow)*scat*upscat + fwet_snow*scat_sno(iw)*upscat_sno ) / scat
+         beta0  = ( (1.-fwet_snow)*scat*beta0  + fwet_snow*scat_sno(iw)*beta0_sno  ) / scat
+      ENDIF
 
 !-----------------------------------------------------------------------
 !     intermediate variables identified in appendix of SE-85.
@@ -623,8 +645,8 @@ ENDIF
 
       be = 1. - scat + upscat
       ce = upscat
-      de = scat * zmu * extkb * betao
-      fe = scat * zmu * extkb * ( 1. - betao )
+      de = scat * zmu * extkb * beta0
+      fe = scat * zmu * extkb * ( 1. - beta0 )
 
       psi = sqrt(be**2 - ce**2)/zmu
       power1 = min( psi*lsai, 50. )
@@ -746,12 +768,12 @@ ENDIF
       tran(iw,2) = hh9 * s1 + hh10 / s1
 
       IF (abs(sigma) .gt. 1.e-10) THEN
-         eup(iw,2)   = hh7 * (1. - s1*s2) / (extkb + psi) &
-                     + hh8 * (1. - s2/s1) / (extkb - psi)
-         edown(iw,2) = hh9 * (1. - s1*s2) / (extkb + psi) &
+         eup(iw,2)   = hh7  * (1. - s1*s2) / (extkb + psi) &
+                     + hh8  * (1. - s2/s1) / (extkb - psi)
+         edown(iw,2) = hh9  * (1. - s1*s2) / (extkb + psi) &
                      + hh10 * (1. - s2/s1) / (extkb - psi)
       ELSE
-         eup(iw,2)   = hh7 * (1. - s1*s2) / ( extkb + psi) + hh8 * (lsai - 0.)
+         eup(iw,2)   = hh7 * (1. - s1*s2) / ( extkb + psi) + hh8  * (lsai - 0.)
          edown(iw,2) = hh9 * (1. - s1*s2) / ( extkb + psi) + hh10 * (lsai - 0.)
       ENDIF
 
@@ -770,7 +792,7 @@ ENDIF
 
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
-   SUBROUTINE twostream_mod ( chil, rho, tau, green, lai, sai, &
+   SUBROUTINE twostream_mod ( chil, rho, tau, green, lai, sai, fwet_snow, &
               coszen, albg, albv, tran, thermk, extkb, extkd, ssun, ssha )
 
 !-----------------------------------------------------------------------
@@ -790,6 +812,7 @@ ENDIF
 !-----------------------------------------------------------------------
 
    USE MOD_Precision
+   USE MOD_Namelist, only: DEF_VEG_SNOW
    IMPLICIT NONE
 
 ! parameters
@@ -802,7 +825,8 @@ ENDIF
           ! time-space varying vegetation parameters
             green,         &! green leaf fraction
             lai,           &! leaf area index of exposed canopy (snow-free)
-            sai             ! stem area index
+            sai,           &! stem area index
+            fwet_snow       ! vegetation snow fractional cover [-]
 
 ! environmental variables
    real(r8), intent(in) :: &
@@ -831,7 +855,7 @@ ENDIF
             zmu2,          &! (zmu * zmu)
             as,            &! (a-s(mu))
             upscat,        &! (omega-beta)
-            betao,         &! (beta-0)
+            beta0,         &! (beta-0)
             psi,           &! (h)
 
             be,            &! (b)
@@ -874,6 +898,12 @@ ENDIF
 
             eup,           &! (integral of i_up*exp(-kx) )
             edw             ! (integral of i_down*exp(-kx) )
+
+   ! vegetation snow optical properties
+   real(r8) :: upscat_sno = 0.5   !upscat parameter for snow
+   real(r8) :: beta0_sno  = 0.5   !beta0 parameter for snow
+   real(r8) :: scat_sno(2)        !snow single scattering albedo
+   data scat_sno(1), scat_sno(2) /0.8, 0.4/   ! 1:vis, 2: nir
 
    integer iw                ! band loop index
    integer ic                ! direct/diffuse loop index
@@ -930,7 +960,7 @@ ENDIF
       ENDIF
 
       proj = phi1 + phi2 * cosz
-      extkb = (phi1 + phi2 * cosz) / cosz
+      extkb = proj / cosz
 
 !-----------------------------------------------------------------------
 !     calculate average scattering coefficient, leaf projection and
@@ -950,15 +980,24 @@ ENDIF
 ! + stem optical properties
       ! scat ~ omega
       ! upscat ~ betail*scat
-      ! betao ~ betadl
+      ! beta0 ~ betadl
       ! scat-2.*upscat ~ rho - tau
       upscat = lai/lsai*tau(iw,1) + sai/lsai*tau(iw,2)
       upscat = 0.5 * ( scat + ( scat - 2. * upscat ) * &
                (( 1. + chil ) / 2. ) ** 2 )
-      betao = ( 1. + zmu * extkb ) / ( scat * zmu * extkb ) * as
+      beta0 = ( 1. + zmu * extkb ) / ( scat * zmu * extkb ) * as
 
       ! [MODI 1]
-      betao = 0.5_r8 * ( scat + 1._r8/extkb*(1._r8+chil)**2/4._r8*(wrho-wtau) )/scat
+      beta0 = 0.5_r8 * ( scat + 1._r8/extkb*(1._r8+chil)**2/4._r8*(wrho-wtau) )/scat
+
+! account for snow on vegetation
+      ! modify scat, upscat and beta0
+      ! USE: fwet_snow, snow properties, scatter vis0.8, nir0.4, upscat0.5, beta0.5
+      IF ( DEF_VEG_SNOW ) THEN
+         scat   =   (1.-fwet_snow)*scat        + fwet_snow*scat_sno(iw)
+         upscat = ( (1.-fwet_snow)*scat*upscat + fwet_snow*scat_sno(iw)*upscat_sno ) / scat
+         beta0  = ( (1.-fwet_snow)*scat*beta0  + fwet_snow*scat_sno(iw)*beta0_sno  ) / scat
+      ENDIF
 
 !-----------------------------------------------------------------------
 !     intermediate variables identified in appendix of SE-85.
@@ -966,8 +1005,8 @@ ENDIF
 
       be = 1. - scat + upscat
       ce = upscat
-      de = scat * zmu * extkb * betao
-      fe = scat * zmu * extkb * ( 1. - betao )
+      de = scat * zmu * extkb * beta0
+      fe = scat * zmu * extkb * ( 1. - beta0 )
 
       psi = sqrt(be**2 - ce**2)/zmu
       power1 = min( psi*lsai, 50. )
@@ -1191,7 +1230,7 @@ ENDIF
          p = pftclass(i)
          IF (lai_p(i)+sai_p(i) > 1.e-6) THEN
             CALL twostream_mod (chil_p(p),rho_p(:,:,p),tau_p(:,:,p),1.,lai_p(i),sai_p(i),&
-               coszen,albg,albv_p(:,:,i),tran_p(:,:,i),thermk_p(i),&
+               fwet_snow_p(i),coszen,albg,albv_p(:,:,i),tran_p(:,:,i),thermk_p(i),&
                extkb_p(i),extkd_p(i),ssun_p(:,:,i),ssha_p(:,:,i))
          ELSE
             albv_p(:,:,i) = albg(:,:)

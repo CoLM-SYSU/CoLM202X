@@ -302,16 +302,16 @@ CONTAINS
 
             DO ipatch = 1, numpatch
                DO i = 1, nl_soil
-                  !soil_solids_fractions.F90; 
+                  !soil_solids_fractions.F90;
                   !BVIC is the b parameter in Fraction of saturated soil in a grid calculated by VIC
                   !Modified from NoahmpTable.TBL in NoahMP
                   !SEE: a near-global, high resolution land surface parameter dataset for the variable infiltration capacity model
                   !soil type (USDA)      1        2       3           4          5         6        7          8        9         10        11        12     |   13        14        15        16        17        18      19
                   !BVIC          =    0.050,    0.080,    0.090,    0.250,    0.150,    0.180,    0.200,    0.220,    0.230,    0.250,    0.280,    0.300,   | 0.260,    0.000,    1.000,    1.000,    1.000,    0.350,    0.150
                   ! this should be revised using usda soil type
-                  IF (vf_quartz(i,ipatch) >= 0.95) THEN! sand 
+                  IF (vf_quartz(i,ipatch) >= 0.95) THEN! sand
                      BVIC(i,ipatch)=0.050
-                  ELSEIF (vf_quartz(i,ipatch) >= 0.85 .and. vf_quartz(i,ipatch) < 0.95) THEN ! loamy sand; soil types 1 
+                  ELSEIF (vf_quartz(i,ipatch) >= 0.85 .and. vf_quartz(i,ipatch) < 0.95) THEN ! loamy sand; soil types 1
                      BVIC(i,ipatch)=0.080
                   ELSEIF (vf_quartz(i,ipatch) >= 0.69 .and. vf_quartz(i,ipatch) <  0.85) THEN  !Sandy loam; soil types 3
                      BVIC(i,ipatch)=0.09
@@ -323,13 +323,13 @@ CONTAINS
                      BVIC(i,ipatch)=0.150
                   ELSEIF (vf_quartz(i,ipatch) >= 0.25 .and. vf_quartz(i,ipatch) <  0.41 .and. wf_sand(i,ipatch)<=0.20) THEN  !Silty clay loam ; soil types 8
                      BVIC(i,ipatch)=0.220
-                  ELSEIF (vf_quartz(i,ipatch) >= 0.25 .and. vf_quartz(i,ipatch) <  0.41 .and. wf_sand(i,ipatch)>0.20) THEN    !Clay; soil types 12 
-                     BVIC(i,ipatch)=0.30          
+                  ELSEIF (vf_quartz(i,ipatch) >= 0.25 .and. vf_quartz(i,ipatch) <  0.41 .and. wf_sand(i,ipatch)>0.20) THEN    !Clay; soil types 12
+                     BVIC(i,ipatch)=0.30
                   ELSEIF (vf_quartz(i,ipatch) >= 0.19 .and. vf_quartz(i,ipatch) <  0.25) THEN  !Loam; soil types 6
-                     BVIC(i,ipatch)=0.180 
+                     BVIC(i,ipatch)=0.180
                   ELSEIF (vf_quartz(i,ipatch) >= 0.09 .and. vf_quartz(i,ipatch) <  0.19) THEN  !Clay loam; soil types 9
                      BVIC(i,ipatch)=0.230
-                  ELSEIF (vf_quartz(i,ipatch) >= 0.08 .and. vf_quartz(i,ipatch) <  0.09) THEN  !Silty clay; soil types 11 
+                  ELSEIF (vf_quartz(i,ipatch) >= 0.08 .and. vf_quartz(i,ipatch) <  0.09) THEN  !Silty clay; soil types 11
                      BVIC(i,ipatch)=0.280
                   ELSEIF (vf_quartz(i,ipatch) >= 0.0 .and. vf_quartz(i,ipatch) <  0.08) THEN  !Silt loam; soil types 4
                      BVIC(i,ipatch)=0.100
@@ -387,12 +387,14 @@ CONTAINS
 ! 1.5 Initialize topography factor data
 ! ......................................
 #ifdef SinglePoint
-      slp_type_patches(:,1) = SITE_slp_type
-      asp_type_patches(:,1) = SITE_asp_type
-      area_type_patches(:,1) = SITE_area_type
-      svf_patches(:) = SITE_svf
-      cur_patches(:) = SITE_cur
-      sf_lut_patches(:,:,1) = SITE_sf_lut
+      IF (DEF_USE_Forcing_Downscaling) THEN
+         slp_type_patches(:,1)  = SITE_slp_type
+         asp_type_patches(:,1)  = SITE_asp_type
+         area_type_patches(:,1) = SITE_area_type
+         svf_patches(:)         = SITE_svf
+         cur_patches(:)         = SITE_cur
+         sf_lut_patches(:,:,1)  = SITE_sf_lut
+      ENDIF
 #else
       IF (DEF_USE_Forcing_Downscaling) THEN
          lndname = trim(DEF_dir_landdata) // '/topography/'//trim(cyear)//'/slp_type_patches.nc'             ! slope
@@ -654,13 +656,13 @@ CONTAINS
 
             ! soil layer depth (m)
             CALL ncio_read_bcast_serial (fsoildat, 'soildepth', soil_z)
-           
+
             nl_soil_ini = size(soil_z)
-            
+
             CALL gsoil%define_from_file (fsoildat, latname = 'lat', lonname = 'lon')
-         
+
             CALL julian2monthday (idate(1), idate(2), month, mday)
-         
+
             IF (p_is_master) THEN
                CALL ncio_get_attr (fsoildat, 'zwt', 'missing_value', missing_value)
             ENDIF
@@ -958,7 +960,7 @@ CONTAINS
          IF (use_snowini) THEN
 
             CALL gsnow%define_from_file (fsnowdat, latname = 'lat', lonname = 'lon')
-         
+
             CALL julian2monthday (idate(1), idate(2), month, mday)
 
             IF (p_is_master) THEN
@@ -973,7 +975,7 @@ CONTAINS
                CALL allocate_block_data (gsnow, snow_d_grid)
                CALL ncio_read_block_time (fsnowdat, 'snowdepth', gsnow, month, snow_d_grid)
             ENDIF
-            
+
             IF (p_is_worker) THEN
                IF (numpatch > 0) THEN
                   allocate (validval (numpatch))
@@ -984,11 +986,11 @@ CONTAINS
             CALL msnow2p%set_missing_value   (snow_d_grid, missing_value, validval)
 
             CALL msnow2p%grid2pset (snow_d_grid, snow_d)
-            
+
             IF (p_is_worker) THEN
                WHERE (.not. validval)
                   snow_d = 0.
-               END WHERE 
+               END WHERE
             ENDIF
 
             IF (allocated(validval)) deallocate(validval)
@@ -1177,7 +1179,7 @@ CONTAINS
 !Plant hydraulic variables
                ,vegwp(1:,i),gs0sun(i),gs0sha(i)&
 !END plant hydraulic variables
-               ,t_grnd(i),tleaf(i),ldew(i),ldew_rain(i),ldew_snow(i),sag(i),scv(i)&
+               ,t_grnd(i),tleaf(i),ldew(i),ldew_rain(i),ldew_snow(i),fwet_snow(i),sag(i),scv(i)&
                ,snowdp(i),fveg(i),fsno(i),sigf(i),green(i),lai(i),sai(i),coszen(i)&
                ,snw_rds(:,i),mss_bcpho(:,i),mss_bcphi(:,i),mss_ocpho(:,i),mss_ocphi(:,i)&
                ,mss_dst1(:,i),mss_dst2(:,i),mss_dst3(:,i),mss_dst4(:,i)&
@@ -1274,12 +1276,14 @@ CONTAINS
                Fhac          (u) = 0.   !sensible flux from heat or cool AC [W/m2]
                Fwst          (u) = 0.   !waste heat flux from heat or cool AC [W/m2]
                Fach          (u) = 0.   !flux from inner and outter air exchange [W/m2]
+               meta          (u) = 0.   !flux from metabolic [W/m2]
+               vehc          (u) = 0.   !flux from vehicle [W/m2]
 
                CALL UrbanIniTimeVar(i,froof(u),fgper(u),flake(u),hwr(u),hroof(u),&
                   alb_roof(:,:,u),alb_wall(:,:,u),alb_gimp(:,:,u),alb_gper(:,:,u),&
                   rho(:,:,m),tau(:,:,m),fveg(i),htop(i),hbot(i),lai(i),sai(i),coszen(i),&
                   fsno_roof(u),fsno_gimp(u),fsno_gper(u),fsno_lake(u),&
-                  scv_roof(u),scv_gimp(u),scv_gper(u),scv_lake(u),&
+                  scv_roof(u),scv_gimp(u),scv_gper(u),scv_lake(u),fwet_snow(u),&
                   sag_roof(u),sag_gimp(u),sag_gper(u),sag_lake(u),t_lake(1,i),&
                   fwsun(u),dfwsun(u),extkd(i),alb(:,:,i),ssun(:,:,i),ssha(:,:,i),sroof(:,:,u),&
                   swsun(:,:,u),swsha(:,:,u),sgimp(:,:,u),sgper(:,:,u),slake(:,:,u))

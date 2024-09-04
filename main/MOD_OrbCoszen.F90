@@ -48,12 +48,12 @@ CONTAINS
    real(r8) sinl                         !Sine of lmm
    real(r8) pi                           !3.14159265358979323846...
    real(r8), parameter :: &
-             dayspy=365.0,              &!days per year
-             ve=80.5,                   &!Calday of vernal equinox assumes Jan 1 = calday 1
-             eccen=1.672393084E-2,      &!Eccentricity
-             obliqr=0.409214646,        &!Earths obliquity in radians
-             lambm0=-3.2625366E-2,      &!Mean long of perihelion at the vernal equinox (radians)
-             mvelpp=4.92251015           !moving vernal equinox longitude of
+            dayspy=365.0,               &!days per year
+            ve=80.5,                    &!Calday of vernal equinox assumes Jan 1 = calday 1
+            eccen=1.672393084E-2,       &!Eccentricity
+            obliqr=0.409214646,         &!Earths obliquity in radians
+            lambm0=-3.2625366E-2,       &!Mean long of perihelion at the vernal equinox (radians)
+            mvelpp=4.92251015            !moving vernal equinox longitude of
                                          !perihelion plus pi (radians)
   !---------------------------------------------------------------------
 
@@ -72,9 +72,6 @@ CONTAINS
       orb_coszen = sin(dlat)*sin(declin) &
                  - cos(dlat)*cos(declin)*cos(calday*2.0*pi+dlon)
 
-      IF (orb_coszen<0) orb_coszen = 0
-      IF (orb_coszen>1) orb_coszen = 1
-      
    END FUNCTION orb_coszen
 
 END MODULE MOD_OrbCoszen

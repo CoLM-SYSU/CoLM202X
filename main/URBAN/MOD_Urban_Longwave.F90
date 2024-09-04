@@ -20,10 +20,44 @@ MODULE MOD_Urban_Longwave
 
 CONTAINS
 
-   !-------------------------------------------------
    SUBROUTINE UrbanOnlyLongwave (theta, HW, fb, fgper, H, LW, &
               twsun, twsha, tgimp, tgper, ewall, egimp, egper, &
               Ainv, B, B1, dBdT, SkyVF, fcover)
+
+!-----------------------------------------------------------------------
+!                Sun
+!                 \\\
+!                  \\\
+!                         ______
+!                        |++++++|              roof
+!                        |++++++|             ______
+!                        |++++++|            |++++++|
+!                    ______+++++|            |++++++|
+!                   |++++++|++++|            |++++++|
+!            sunlit |[]++[]|++++|            |++++++| shaded
+!             wall  |++++++|                 |++++++|  wall
+!                   |[]++[]|                 |++++++|
+!                   |++++++|  impervious/pervious ground
+!         __________|++++++|____________________________________
+!
+!
+! !DESCRIPTION:
+!
+!  The process of long-wave radiation transmission in the absence of
+!  vegetation is similar to the incident diffuse case of short-wave
+!  radiation transmission in the absence of vegetation (where long-wave
+!  radiation is approximated as a diffuse source). The long-wave
+!  radiation flux reaching each component surface is calculated, as well
+!  as the long-wave radiation emitted outward from each component
+!  surface. Multiple scattering and absorption between components are
+!  considered, and a long-wave radiation transmission equilibrium
+!  equation is established for solving.
+!
+!  Created by Hua Yuan, 09/2021
+!
+! !REVISIONS:
+!
+!-----------------------------------------------------------------------
 
    IMPLICIT NONE
 
@@ -209,10 +243,37 @@ CONTAINS
 
    END SUBROUTINE UrbanOnlyLongwave
 
-   !-------------------------------------------------
+
    SUBROUTINE UrbanVegLongwave (theta, HW, fb, fgper, H, LW, &
               twsun, twsha, tgimp, tgper, ewall, egimp, egper, lai, sai, fv, hv, &
               ev, Ainv, B, B1, dBdT, SkyVF, VegVF, fcover)
+
+!-----------------------------------------------------------------------
+!              Sun
+!               \\\
+!                \\\
+!                       ______
+!                      |++++++|              roof
+!                      |++++++|             ______
+!                      |++++++|    ___     |++++++|
+!                  ______+++++|   |||||    |++++++|
+!                 |++++++|++++|  |||||||   |++++++|
+!          sunlit |[]++[]|++++|   |||||    |++++++| shaded
+!           wall  |++++++|          | tree |++++++|  wall
+!                 |[]++[]|          |      |++++++|
+!                 |++++++|  impervious/pervious ground
+!       __________|++++++|___________________________________
+!
+! !DESCRIPTION:
+!
+!  The calculation of longwave radiation when considering vegetation
+!  (trees only) is similar to the shortwave radiation transmission with
+!  vegetation. On the basis of the longwave radiation transmission
+!  balance equation without vegetation, a balanced equation with
+!  vegetation is constructed, and the solution process is similar.
+!
+!  Created by Hua Yuan, 09/2021
+!-----------------------------------------------------------------------
 
    IMPLICIT NONE
 
