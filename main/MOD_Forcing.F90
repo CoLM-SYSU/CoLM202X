@@ -414,7 +414,9 @@ CONTAINS
    INTEGER  :: year, month, mday
    logical  :: has_u,has_v
    real solar, frl, prcp, tm, us, vs, pres, qm
-   real(r8) :: pco2m
+   real(r8) :: pco2m                        
+   real(r8), dimension(12, numpatch) :: spaceship !NOTE: 12 is the dimension size of spaceship
+   integer target_server, ierr
 
       IF (p_is_io) THEN
          !------------------------------------------------------------
@@ -709,8 +711,7 @@ CONTAINS
          CALL mg2p_forc%grid2part (forc_xy_us,      forc_us_grid   )
          CALL mg2p_forc%grid2part (forc_xy_vs,      forc_vs_grid   )
 
-         calday = calendarday(idate)
-         write(*,*) 'calday', calday
+         calday = calendarday(idate) 
 
          IF (p_is_worker) THEN
             DO np = 1, numpatch ! patches
@@ -780,10 +781,6 @@ CONTAINS
             ENDDO
          ENDIF
 
-         ! Conservation of short- and long- waves radiation in the grid of forcing
-         CALL mg2p_forc%normalize (forc_xy_solarin, forc_swrad_part)
-         CALL mg2p_forc%normalize (forc_xy_frl,     forc_frl_part  )
-
          ! mapping parts to patches
          CALL mg2p_forc%part2pset (forc_t_part,      forc_t     )
          CALL mg2p_forc%part2pset (forc_q_part,      forc_q     )
@@ -796,7 +793,61 @@ CONTAINS
          CALL mg2p_forc%part2pset (forc_us_part,     forc_us    )
          CALL mg2p_forc%part2pset (forc_vs_part,     forc_vs    )
 
-         ! divide fractions of downscaled shortwave radiation
+#ifndef SinglePoint
+         IF (trim(DEF_DS_precipitation_adjust_scheme) == 'III') THEN 
+            ! Sisi Chen, Lu Li, Yongjiu Dai et al., 2024, JGR
+            ! Using MPI to pass the forcing variable field to Python to accomplish precipitation downscaling
+            IF (p_is_worker) THEN
+               spaceship(1,1:numpatch) = forc_topo
+               spaceship(2,1:numpatch) = forc_t
+               spaceship(3,1:numpatch) = forc_pbot
+               spaceship(4,1:numpatch) = forc_q
+               spaceship(5,1:numpatch) = forc_frl
+               spaceship(6,1:numpatch) = forc_swrad
+               spaceship(7,1:numpatch) = forc_us
+               spaceship(8,1:numpatch) = forc_vs
+               spaceship(9,1:numpatch) = INT(calday)
+               spaceship(10,1:numpatch) = patchlatr
+               spaceship(11,1:numpatch) = patchlonr
+
+               target_server = p_iam_glb/5+p_np_glb
+               CALL MPI_SEND(spaceship,12*numpatch,MPI_REAL8,target_server,0,MPI_COMM_WORLD,ierr)
+               CALL MPI_RECV(forc_prc,numpatch,MPI_REAL8,target_server,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE,ierr)
+
+               forc_prl = forc_prc/3600*2/3._r8
+               forc_prc = forc_prc/3600*1/3._r8
+            ENDIF
+         
+            ! mapping forc_prl to forc_prl_part, forc_prc to forc_prc_part
+            IF (p_is_worker) THEN
+               DO np = 1, numpatch ! patches
+                  DO ipart = 1, mg2p_forc%npart(np) ! part loop of each patch
+                     IF (mg2p_forc%areapart(np)%val(ipart) == 0.) CYCLE
+
+                     forc_prl_part(np)%val(ipart) = forc_prl(np)
+                     forc_prc_part(np)%val(ipart) = forc_prc(np)
+
+                  ENDDO
+               ENDDO
+            ENDIF
+
+            ! Conservation of convective and large scale precipitation in the grid of forcing
+            CALL mg2p_forc%normalize (forc_xy_prc, forc_prc_part)
+            CALL mg2p_forc%normalize (forc_xy_prl, forc_prl_part)
+
+            ! mapping parts to patches
+            CALL mg2p_forc%part2pset (forc_prc_part, forc_prc)
+            CALL mg2p_forc%part2pset (forc_prl_part, forc_prl)
+         ENDIF
+   
+         ! Conservation of short- and long- waves radiation in the grid of forcing
+         CALL mg2p_forc%normalize (forc_xy_solarin, forc_swrad_part)
+         CALL mg2p_forc%normalize (forc_xy_frl,     forc_frl_part  )
+         CALL mg2p_forc%part2pset (forc_frl_part,    forc_frl   )
+         CALL mg2p_forc%part2pset (forc_swrad_part,  forc_swrad )
+#endif
+
+         ! divide fractions of downscaled shortwave radiation 
          IF (p_is_worker) THEN
             DO j = 1, numpatch
                   a = forc_swrad(j)

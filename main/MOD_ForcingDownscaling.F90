@@ -119,7 +119,7 @@ CONTAINS
    IMPLICIT NONE
 
    integer,  parameter :: S = 1370            ! solar constant (W/m**2)
-   real(r8), parameter :: thr = 85*PI/180      ! threshold of ??
+   real(r8), parameter :: thr = 85*PI/180      ! threshold of zenith angle
 
    ! ARGUMENTS:
    logical,  intent(in) :: glaciers            ! true: glacier column (itypwat = 3)
@@ -132,7 +132,7 @@ CONTAINS
    real(r8), intent(in) :: svf_c                                    ! sky view factor
    real(r8), intent(in) :: cur_c                                    ! curvature
    real(r8), intent(in) :: sf_lut_c   (1:num_azimuth,1:num_zenith)  ! look up table of shadow mask of a patch
-   real(r8), intent(in) :: asp_type_c (1:num_type)                  ! topographic aspect of each type of one patch
+   real(r8), intent(in) :: asp_type_c (1:num_type)                  ! topographic aspect of each type of one patch(rad)
    real(r8), intent(in) :: slp_type_c (1:num_type)                  ! topographic slope of each character of one patch
    real(r8), intent(in) :: area_type_c(1:num_type)                  ! area percentage of each character of one patch
 
@@ -223,7 +223,7 @@ CONTAINS
       ! save
       forc_t_c    = tbot_c
       forc_th_c   = thbot_c
-      forc_q_c    = qbot_c
+      forc_q_c    = qbot_c  
       forc_pbot_c = pbot_c
       forc_rho_c  = rhos_c
 
@@ -265,22 +265,15 @@ CONTAINS
          ! Liston, G. E. and Elder, K.: A meteorological distribution system
          ! for high-resolution terrestrial modeling (MicroMet), J. Hydrometeorol., 7, 217-234, 2006.
          ! Equation (33) and Table 1: chi range from January to December:
-         ! [0.35,0.35,0.35,0.30,0.25,0.20,0.20,0.20,0.20,0.25,0.30,0.35] (1/m)
+         ! [0.35,0.35,0.35,0.30,0.25,0.20,0.20,0.20,0.20,0.25,0.30,0.35] (1/km)
 
-         delta_prc_c = forc_prc_g * 2.0*0.27e-3*(forc_topo_c - forc_topo_g) &
-            /(1.0 - 0.27e-3*(forc_topo_c - forc_topo_g))
+         delta_prc_c = forc_prc_g *1.0*0.27*(forc_topo_c - forc_topo_g) &
+            /(1.0 - 0.27*(forc_topo_c - forc_topo_g))
          forc_prc_c = forc_prc_g + delta_prc_c   ! large scale precipitation [mm/s]
 
-         delta_prl_c = forc_prl_g * 2.0*0.27e-3*(forc_topo_c - forc_topo_g) &
-            /(1.0 - 0.27e-3*(forc_topo_c - forc_topo_g))
+         delta_prl_c = forc_prl_g *1.0*0.27*(forc_topo_c - forc_topo_g) &
+            /(1.0 - 0.27*(forc_topo_c - forc_topo_g))
          forc_prl_c = forc_prl_g + delta_prl_c   ! large scale precipitation [mm/s]
-
-      ELSEIF (trim(DEF_DS_precipitation_adjust_scheme) == 'III') THEN 
-         ! Mei, Y., Maggioni, V., Houser, P., Xue, Y., & Rouf, T. (2020). A nonparametric statistical 
-         ! technique for spatial downscaling of precipitation over High Mountain Asia. Water Resources Research, 
-         ! 56, e2020WR027472. https://doi.org/ 10.1029/2020WR027472
-
-         ! We implement this scheme in MOD_Forcing.F90
       END IF
 
       IF (forc_prl_c < 0) THEN
@@ -334,7 +327,7 @@ CONTAINS
 
       ! calculate wind direction
       IF (forc_us_g == 0.) THEN
-         wind_dir  = 0
+         wind_dir  = PI/2
       ELSE
          wind_dir  = atan(forc_vs_g /forc_us_g)
       ENDIF
@@ -344,7 +337,7 @@ CONTAINS
 
       ! compute the slope in the direction of the wind
       DO i = 1, num_type
-         wind_dir_slp(i) = slp_type_c(i)*cos(wind_dir-asp_type_c(i)*PI/180)
+         wind_dir_slp(i) = slp_type_c(i)*cos(wind_dir-asp_type_c(i))
       ENDDO
 
       ! compute wind speed ajustment
@@ -482,7 +475,7 @@ CONTAINS
    IMPLICIT NONE
 
    integer,  parameter :: S = 1370                               ! solar constant (W/m**2)
-   real(r8), parameter :: thr = 85*PI/180                        ! threshold of ??
+   real(r8), parameter :: thr = 85*PI/180                        ! threshold of zenith
    real(r8), parameter :: shortwave_downscaling_limit = 0.5_r8   ! relative limit for how much shortwave downscaling can be done (unitless)
 
    ! ARGUMENTS:
@@ -519,7 +512,7 @@ CONTAINS
    real(r8) :: svf, balb
 
    real(r8) :: diff_swrad_g, beam_swrad_g              ! diffuse and beam radiation
-   real(r8) :: diff_swrad_c, beam_swrad_c, refl_swrad_c! downscaled diffuse and beam radiation 
+   real(r8) :: diff_swrad_c, beam_swrad_c, refl_swrad_c! downscaled diffuse, beam radiation and reflect radiation 
    real(r8) :: beam_swrad_type (1:num_type)            ! beam radiation of one characterized patch
    real(r8) :: refl_swrad_type (1:num_type)            ! reflect radiation of one characterized patch
    real(r8) :: tcf_type        (1:num_type)            ! terrain configure factor
@@ -539,6 +532,7 @@ CONTAINS
       idx_zen = INT(zen_deg*num_zenith/90)
       IF (idx_azi==0) idx_azi = 1
       IF (idx_zen==0) idx_zen = 1
+      IF (idx_zen>num_zenith) idx_zen = num_zenith !constrain the upper boundary of zenith angle to 90 deg
 
       sf_c = sf_lut_c(idx_azi, idx_zen)
       IF (sf_c<0) sf_c = 0
@@ -549,8 +543,8 @@ CONTAINS
       toa_swrad = S*(rt_R**2)*coszen
          
       ! calculate clearness index
-      IF (toa_swrad.le.0) THEN
-         clr_idx = 1
+      IF (toa_swrad.eq.0) THEN
+         clr_idx = 0
       ELSE
          clr_idx = forc_swrad_g/toa_swrad
       ENDIF
@@ -589,7 +583,7 @@ CONTAINS
          ! calculate the cosine of solar illumination angle, cos(θ), 
          ! ranging between −1 and 1, indicates if the sun is below or 
          ! above the local horizon (note that values lower than 0 are set to 0 indicate self shadow)
-         cosill_type(i) = cos(slp_type_c(i))+tan(zen_rad)*sin(slp_type_c(i))*cos(asp_type_c(i)*PI/180)
+         cosill_type(i) = cos(slp_type_c(i))+tan(zen_rad)*sin(slp_type_c(i))*cos(asp_type_c(i))
          IF (cosill_type(i)>1) cosill_type(i) = 1
          IF (cosill_type(i)<0) cosill_type(i) = 0
 
@@ -633,7 +627,7 @@ CONTAINS
                forc_swrad_g * (1._r8 + shortwave_downscaling_limit))
       forc_swrad_c = max(forc_swrad_c, &
                forc_swrad_g * (1._r8 - shortwave_downscaling_limit))
-      ! for normalize
+      ! Ensure that the denominator is not 0 during shortwave normalization
       IF (forc_swrad_c==0.) forc_swrad_c = 0.0001
 
    END SUBROUTINE downscale_shortwave
