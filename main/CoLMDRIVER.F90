@@ -87,7 +87,7 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
                soil_s_v_alb(i), soil_d_v_alb(i), soil_s_n_alb(i), soil_d_n_alb(i), &
                vf_quartz(1:,i), vf_gravels(1:,i),vf_om(1:,i),     vf_sand(1:,i),   &
                wf_gravels(1:,i),wf_sand(1:,i),   porsl(1:,i),     psi0(1:,i),      &
-               bsw(1:,i),       theta_r(1:,i),                                     &
+               bsw(1:,i),       theta_r(1:,i),   fsatmax(i),      fsatdcf(:),      &
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
                alpha_vgm(1:,i), n_vgm(1:,i),     L_vgm(1:,i),                      &
                sc_vgm(1:,i),    fc_vgm(1:,i),                                      &
@@ -172,7 +172,8 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
 
              ! TUNABLE modle constants
                zlnd,            zsno,            csoilc,          dewmx,           &
-               wtfact,          capr,            cnfac,           ssi,             &
+               ! 'wtfact' is updated to gridded 'fsatmax' data. 
+               capr,            cnfac,           ssi,             &
                wimp,            pondmx,          smpmax,          smpmin,          &
                trsmx0,          tcrit,                                             &
 
@@ -224,7 +225,7 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
           ! SOIL INFORMATION AND LAKE DEPTH
             vf_quartz(1:,i) ,vf_gravels(1:,i),vf_om(1:,i)     ,vf_sand(1:,i)   ,&
             wf_gravels(1:,i),wf_sand(1:,i)   ,porsl(1:,i)     ,psi0(1:,i)      ,&
-            bsw(1:,i)       ,theta_r(1:,i)                                     ,&
+            bsw(1:,i)       ,theta_r(1:,i)   ,fsatmax(i)      ,fsatdcf(i)      ,&
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
             alpha_vgm(1:,i) ,n_vgm(1:,i)     ,L_vgm(1:,i)                      ,&
             sc_vgm (1:,i)   ,fc_vgm   (1:,i)                                   ,&
@@ -321,7 +322,8 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
 
           ! TUNABLE modle constants
             zlnd            ,zsno            ,csoilc          ,dewmx           ,&
-            wtfact          ,capr            ,cnfac           ,ssi             ,&
+            ! 'wtfact' is updated to gridded 'fsatmax' data. 
+            capr            ,cnfac           ,ssi             ,&
             wimp            ,pondmx          ,smpmax          ,smpmin          ,&
             trsmx0          ,tcrit                                             ,&
 

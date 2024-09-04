@@ -224,6 +224,14 @@ CONTAINS
 
    integer  :: txt_id
    real(r8) :: vic_b_infilt_, vic_Dsmax_, vic_Ds_, vic_Ws_, vic_c_
+   
+   ! for SimTop model parameters
+   character(len=256) :: file_simtop_para
+   logical            :: fexist
+   type(grid_type)    :: g_simtop_para
+   real(r8)           :: filval
+   type(block_data_real8_2d)  :: fsatmax_grid, fsatdcf_grid
+   type(spatial_mapping_type) :: map_simtop_para
 
 ! --------------------------------------------------------------------
 ! Allocates memory for CoLM 1d [numpatch] variables
@@ -386,17 +394,15 @@ CONTAINS
 ! ......................................
 ! 1.5 Initialize topography factor data
 ! ......................................
-#ifdef SinglePoint
       IF (DEF_USE_Forcing_Downscaling) THEN
+#ifdef SinglePoint
          slp_type_patches(:,1)  = SITE_slp_type
          asp_type_patches(:,1)  = SITE_asp_type
          area_type_patches(:,1) = SITE_area_type
          svf_patches(:)         = SITE_svf
          cur_patches(:)         = SITE_cur
          sf_lut_patches(:,:,1)  = SITE_sf_lut
-      ENDIF
 #else
-      IF (DEF_USE_Forcing_Downscaling) THEN
          lndname = trim(DEF_dir_landdata) // '/topography/'//trim(cyear)//'/slp_type_patches.nc'             ! slope
          CALL ncio_read_vector (lndname, 'slp_type_patches', num_type, landpatch, slp_type_patches)
          lndname = trim(DEF_dir_landdata) // '/topography/'//trim(cyear)//'/svf_patches.nc'               ! sky view factor
@@ -409,8 +415,8 @@ CONTAINS
          CALL ncio_read_vector (lndname, 'sf_lut_patches', num_azimuth, num_zenith, landpatch, sf_lut_patches)
          lndname = trim(DEF_dir_landdata) // '/topography/'//trim(cyear)//'/cur_patches.nc'               ! curvature
          CALL ncio_read_vector (lndname, 'cur_patches', landpatch, cur_patches)
-       ENDIF
 #endif
+       ENDIF
 ! ................................
 ! 1.6 Initialize TUNABLE constants
 ! ................................
@@ -418,7 +424,10 @@ CONTAINS
       zsno   = 0.0024  !Roughness length for snow [m]
       csoilc = 0.004   !Drag coefficient for soil under canopy [-]
       dewmx  = 0.1     !maximum dew
-      wtfact = 0.38    !Maximum saturated fraction (global mean; see Niu et al., 2005)
+
+      ! 'wtfact' is updated to gridded 'fsatmax' data. (by Shupeng Zhang)
+      ! wtfact = 0.38    !Maximum saturated fraction (global mean; see Niu et al., 2005)
+
       capr   = 0.34    !Tuning factor to turn first layer T into surface T
       cnfac  = 0.5     !Crank Nicholson factor between 0 and 1
       ssi    = 0.033   !Irreducible water saturation of snow
@@ -429,6 +438,68 @@ CONTAINS
       trsmx0 = 2.e-4   !Max transpiration for moist soil+100% veg. [mm/s]
       tcrit  = 2.5     !critical temp. to determine rain or snow
       wetwatmax = 200.0 !maximum wetland water (mm)
+
+      ! for SIMTOP model: read saturated fraction parameter data from files.
+      ! (see Niu et al., 2005)
+      IF (DEF_Runoff_SCHEME == 0) THEN
+
+         file_simtop_para = trim(DEF_dir_runtime) // '/SimTop_Parameters.nc'
+
+         IF (p_is_master) THEN
+            inquire (file=trim(file_simtop_para), exist=fexist)
+         ENDIF
+#ifdef USEMPI
+         CALL mpi_bcast (fexist, 1, MPI_LOGICAL, p_root, p_comm_glb, p_err)
+#endif
+
+         IF (fexist) THEN
+
+            CALL g_simtop_para%define_from_file (file_simtop_para, &
+               latname = 'latitude', lonname = 'longitude')
+
+            IF (p_is_io) THEN
+               CALL allocate_block_data (g_simtop_para, fsatmax_grid)
+               CALL allocate_block_data (g_simtop_para, fsatdcf_grid)
+               CALL ncio_read_block (file_simtop_para, 'fsatmax', g_simtop_para, fsatmax_grid)
+               CALL ncio_read_block (file_simtop_para, 'fsatdcf', g_simtop_para, fsatdcf_grid)
+            ENDIF
+
+            IF (p_is_master) THEN
+               CALL ncio_get_attr (file_simtop_para, 'fsatmax', '_FillValue', filval)
+            ENDIF
+#ifdef USEMPI
+            CALL mpi_bcast (filval, 1, MPI_REAL8, p_root, p_comm_glb, p_err)
+#endif
+            
+            CALL map_simtop_para%build_arealweighted (g_simtop_para, landpatch)
+            CALL map_simtop_para%set_missing_value   (fsatmax_grid, filval)
+
+            CALL map_simtop_para%grid2pset (fsatmax_grid, fsatmax)
+            CALL map_simtop_para%grid2pset (fsatdcf_grid, fsatdcf)
+
+            IF (p_is_worker) THEN
+               IF (numpatch > 0) THEN
+                  WHERE (fsatmax <= 0) fsatmax = 0.4
+                  WHERE (fsatmax >= 1) fsatmax = 0.4
+                  WHERE (fsatdcf <= 0) fsatdcf = 0.53
+                  WHERE (fsatdcf >= 1) fsatdcf = 0.53
+               ENDIF
+            ENDIF
+
+#ifdef RangeCheck
+            CALL check_vector_data ('maximum saturated fraction', fsatmax)
+            CALL check_vector_data ('fsat decay factor         ', fsatdcf)
+#endif
+         ELSE
+            IF (p_is_worker) THEN
+               IF (numpatch > 0) THEN
+                  ! equal to 'wtfact = 0.38' and 'fff = 0.5'
+                  fsatmax(:) = 0.38
+                  fsatdcf(:) = 0.125
+               ENDIF
+            ENDIF
+         ENDIF
+      ENDIF
 
       IF (DEF_Runoff_SCHEME == 1) THEN
          IF (p_is_master) THEN
