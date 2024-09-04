@@ -292,7 +292,7 @@ CONTAINS
                D2FLDOUT(ISEQ,1) = DARE_F * DVEL_F
                D2FLDOUT(ISEQ,1) = MIN(  D2FLDOUT(ISEQ,1)*1._JPRD, P2FLDSTO(ISEQ,1)/DT )
             ENDIF
-         ENDIF 
+         ENDIF
       ENDDO
 !$OMP END PARALLEL DO
 
@@ -371,7 +371,8 @@ CONTAINS
          DFLW   = D2RIVDPH(ISEQ,1)
          DAREA  = D2RIVWTH(ISEQ,1) * DFLW
          IF( DAREA>1.E-5 )THEN
-            D2RIVOUT_PRE(ISEQ,1) = DAREA * ( D2RIVMAN(ISEQ,1)**(-1.) * DFLW**(2./3.) * abs(DSLOPE)**(0.5) )
+            D2RIVOUT_PRE(ISEQ,1) = DAREA * ( D2RIVMAN(ISEQ,1)**(-1.) * &
+                            DFLW**(2./3.) * abs(DSLOPE)**(0.5) )
             IF( DSLOPE<0._JPRB ) D2RIVOUT_PRE(ISEQ,1)=-D2RIVOUT_PRE(ISEQ,1)
          ELSE
             D2RIVOUT_PRE(ISEQ,1) = 0._JPRB
@@ -381,7 +382,8 @@ CONTAINS
          DARE_F   = P2FLDSTO(ISEQ,1) * D2RIVLEN(ISEQ,1)**(-1.)
          DARE_F   = MAX( DARE_F - D2FLDDPH(ISEQ,1)*D2RIVWTH(ISEQ,1), 0._JPRB )   !! remove above river channel area
          IF( DARE_F>1.E-5 )THEN
-            D2FLDOUT_PRE(ISEQ,1) = DARE_F * ( PMANFLD**(-1.) * DFLW_F**(2./3.) * abs(DSLOPE_F)**(0.5) )
+            D2FLDOUT_PRE(ISEQ,1) = DARE_F * ( PMANFLD**(-1.) * &
+                                  DFLW_F**(2./3.) * abs(DSLOPE_F)**(0.5))
             IF( DSLOPE_F<0._JPRB ) D2FLDOUT_PRE(ISEQ,1)=-D2FLDOUT_PRE(ISEQ,1)
          ELSE
             D2FLDOUT_PRE(ISEQ,1) = 0._JPRB
@@ -402,7 +404,8 @@ CONTAINS
                DFLW = MAX(DFLW,0._JPRB)
 
                IF( DFLW>1.E-5 )THEN
-      	          D1PTHFLW_PRE(IPTH,ILEV) = PTH_WTH(IPTH,ILEV) * DFLW * ( PTH_MAN(ILEV)**(-1.) * DFLW**(2./3.) * abs(DSLOPE)**(0.5) )
+                  D1PTHFLW_PRE(IPTH,ILEV) = PTH_WTH(IPTH,ILEV) * DFLW * &
+                  ( PTH_MAN(ILEV)**(-1.) * DFLW**(2./3.) * abs(DSLOPE)**(0.5) )
                   IF( DSLOPE<0._JPRB ) D1PTHFLW_PRE(IPTH,ILEV)=-D1PTHFLW_PRE(IPTH,ILEV)
                ELSE
                   D1PTHFLW_PRE(IPTH,ILEV) = 0._JPRB

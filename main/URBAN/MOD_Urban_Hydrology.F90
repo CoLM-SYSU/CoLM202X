@@ -1,7 +1,34 @@
 #include <define.h>
 
 MODULE MOD_Urban_Hydrology
-
+!-----------------------------------------------------------------------
+!
+! !DESCRIPTION:
+!
+!  The urban hydrological processes mainly falls into three categories:
+!  1) previous surfaces; 2) roofs and imperious surfaces; 3) urban water
+!  bodies (lakes).
+!
+!  For pervious surfaces, the process is similar to soil water
+!  processes, involving the calculation of runoff and soil water
+!  transport. For urban water bodies, a lake model is used for
+!  simulation. For roofs and impermeable surfaces, snow accumulation and
+!  ponding processes are considered. The snow accumulation process is
+!  consistent with soil snow processes. The ponding process considers
+!  the surface as an impermeable area, with the maximum capacity of
+!  liquid water not exceeding a predetermined value (max ponding = 1 kg
+!  m−2). Any excess water is treated as runoff. The coverage ratio of
+!  ponded areas is calculated using a similar leaf wetness index
+!  calculation scheme.
+!
+!  Create by Hua Yuan, 09/2021
+!
+! !REVISIONS:
+!
+!  10/2022, Hua Yuan: Add wet fraction for roof and impervious ground;
+!           set max ponding for roof and impervious from 10mm -> 1mm.
+!
+!-----------------------------------------------------------------------
    USE MOD_Precision
    IMPLICIT NONE
    SAVE
@@ -41,7 +68,7 @@ CONTAINS
 #endif
         forc_us        ,forc_vs                                        ,&
 ! SNICAR model variables
-        forc_aer       ,&
+        forc_aer                                                       ,&
         mss_bcpho      ,mss_bcphi      ,mss_ocpho      ,mss_ocphi      ,&
         mss_dst1       ,mss_dst2       ,mss_dst3       ,mss_dst4       ,&
 ! END SNICAR model variables
@@ -67,74 +94,74 @@ CONTAINS
 
 !-----------------------Argument----------------------------------------
    integer, intent(in) :: &
-        ipatch           ,&! patch index
-        patchtype        ,&! land patch type (0=soil, 1=urban or built-up, 2=wetland,
-                           ! 3=land ice, 4=land water bodies, 99=ocean
-        lbr              ,&! lower bound of array
-        lbi              ,&! lower bound of array
-        lbp              ,&! lower bound of array
-        lbl                ! lower bound of array
+        ipatch             ,&! patch index
+        patchtype          ,&! land patch type (0=soil, 1=urban or built-up, 2=wetland,
+                             ! 3=land ice, 4=land water bodies, 99=ocean
+        lbr                ,&! lower bound of array
+        lbi                ,&! lower bound of array
+        lbp                ,&! lower bound of array
+        lbl                  ! lower bound of array
 
    integer, intent(inout) :: &
-        snll               ! number of snow layers
+        snll                 ! number of snow layers
 
    real(r8), intent(in) :: &
-        deltim           ,&! time step (s)
-        pg_rain          ,&! rainfall after removal of interception (mm h2o/s)
-        pg_snow          ,&! snowfall after removal of interception (mm h2o/s)
-        pgper_rain       ,&! rainfall after removal of interception (mm h2o/s)
-        pgimp_rain       ,&! rainfall after removal of interception (mm h2o/s)
-        pg_rain_lake     ,&! rainfall onto lake (mm h2o/s)
-        pg_snow_lake     ,&! snowfall onto lake (mm h2o/s)
-        froof            ,&! roof fractional cover [-]
-        fgper            ,&! weith of impervious ground [-]
-        flake            ,&! lake fractional cover [-]
-        ! wtfact         ,&! (updated to gridded 'fsatmax' data) fraction of model area with high water table
-        pondmx           ,&! ponding depth (mm)
-        ssi              ,&! irreducible water saturation of snow
-        wimp             ,&! water impremeable IF porosity less than wimp
-        smpmin           ,&! restriction for min of soil poten. (mm)
-        
-        topostd          ,&! standard deviation of elevation [m]
-        BVIC             ,&!  b parameter in Fraction of saturated soil in a grid calculated by VIC
+        deltim             ,&! time step (s)
+        pg_rain            ,&! rainfall after removal of interception (mm h2o/s)
+        pg_snow            ,&! snowfall after removal of interception (mm h2o/s)
+        pgper_rain         ,&! rainfall after removal of interception (mm h2o/s)
+        pgimp_rain         ,&! rainfall after removal of interception (mm h2o/s)
+        pg_rain_lake       ,&! rainfall onto lake (mm h2o/s)
+        pg_snow_lake       ,&! snowfall onto lake (mm h2o/s)
+        froof              ,&! roof fractional cover [-]
+        fgper              ,&! weith of impervious ground [-]
+        flake              ,&! lake fractional cover [-]
+        ! wtfact           ,&! (updated to gridded 'fsatmax' data) fraction of model area with high water table
+        pondmx             ,&! ponding depth (mm)
+        ssi                ,&! irreducible water saturation of snow
+        wimp               ,&! water impremeable IF porosity less than wimp
+        smpmin             ,&! restriction for min of soil poten. (mm)
 
-        bsw   (1:nl_soil),&! Clapp-Hornberger "B"
-        porsl (1:nl_soil),&! saturated volumetric soil water content(porosity)
-        psi0  (1:nl_soil),&! saturated soil suction (mm) (NEGATIVE)
-        hksati(1:nl_soil),&! hydraulic conductivity at saturation (mm h2o/s)
-        theta_r(1:nl_soil),&! residual moisture content [-]
-        fsatmax          ,&! maximum saturated area fraction [-] 
-        fsatdcf          ,&! decay factor in calucation of saturated area fraction [1/m] 
-        rootr (1:nl_soil),&! root resistance of a layer, all layers add to 1.0
+        topostd            ,&! standard deviation of elevation [m]
+        BVIC               ,&! b parameter in Fraction of saturated soil in a grid calculated by VIC
 
-        etr              ,&! vegetation transpiration
-        qseva_roof       ,&! ground surface evaporation rate (mm h2o/s)
-        qseva_gimp       ,&! ground surface evaporation rate (mm h2o/s)
-        qseva_gper       ,&! ground surface evaporation rate (mm h2o/s)
-        qseva_lake       ,&! ground surface evaporation rate (mm h2o/s)
-        qsdew_roof       ,&! ground surface dew formation (mm h2o /s) [+]
-        qsdew_gimp       ,&! ground surface dew formation (mm h2o /s) [+]
-        qsdew_gper       ,&! ground surface dew formation (mm h2o /s) [+]
-        qsdew_lake       ,&! ground surface dew formation (mm h2o /s) [+]
-        qsubl_roof       ,&! sublimation rate from snow pack (mm h2o /s) [+]
-        qsubl_gimp       ,&! sublimation rate from snow pack (mm h2o /s) [+]
-        qsubl_gper       ,&! sublimation rate from snow pack (mm h2o /s) [+]
-        qsubl_lake       ,&! sublimation rate from snow pack (mm h2o /s) [+]
-        qfros_roof       ,&! surface dew added to snow pack (mm h2o /s) [+]
-        qfros_gimp       ,&! surface dew added to snow pack (mm h2o /s) [+]
-        qfros_gper       ,&! surface dew added to snow pack (mm h2o /s) [+]
-        qfros_lake       ,&! surface dew added to snow pack (mm h2o /s) [+]
-        sm_roof          ,&! snow melt (mm h2o/s)
-        sm_gimp          ,&! snow melt (mm h2o/s)
-        sm_gper          ,&! snow melt (mm h2o/s)
-        w_old              ! liquid water mass of the column at the previous time step (mm)
+        bsw   (1:nl_soil)  ,&! Clapp-Hornberger "B"
+        porsl (1:nl_soil)  ,&! saturated volumetric soil water content(porosity)
+        psi0  (1:nl_soil)  ,&! saturated soil suction (mm) (NEGATIVE)
+        hksati(1:nl_soil)  ,&! hydraulic conductivity at saturation (mm h2o/s)
+        theta_r(1:nl_soil) ,&! residual moisture content [-]
+        fsatmax            ,&! maximum saturated area fraction [-] 
+        fsatdcf            ,&! decay factor in calucation of saturated area fraction [1/m] 
+        rootr (1:nl_soil)  ,&! root resistance of a layer, all layers add to 1.0
+
+        etr                ,&! vegetation transpiration
+        qseva_roof         ,&! ground surface evaporation rate (mm h2o/s)
+        qseva_gimp         ,&! ground surface evaporation rate (mm h2o/s)
+        qseva_gper         ,&! ground surface evaporation rate (mm h2o/s)
+        qseva_lake         ,&! ground surface evaporation rate (mm h2o/s)
+        qsdew_roof         ,&! ground surface dew formation (mm h2o /s) [+]
+        qsdew_gimp         ,&! ground surface dew formation (mm h2o /s) [+]
+        qsdew_gper         ,&! ground surface dew formation (mm h2o /s) [+]
+        qsdew_lake         ,&! ground surface dew formation (mm h2o /s) [+]
+        qsubl_roof         ,&! sublimation rate from snow pack (mm h2o /s) [+]
+        qsubl_gimp         ,&! sublimation rate from snow pack (mm h2o /s) [+]
+        qsubl_gper         ,&! sublimation rate from snow pack (mm h2o /s) [+]
+        qsubl_lake         ,&! sublimation rate from snow pack (mm h2o /s) [+]
+        qfros_roof         ,&! surface dew added to snow pack (mm h2o /s) [+]
+        qfros_gimp         ,&! surface dew added to snow pack (mm h2o /s) [+]
+        qfros_gper         ,&! surface dew added to snow pack (mm h2o /s) [+]
+        qfros_lake         ,&! surface dew added to snow pack (mm h2o /s) [+]
+        sm_roof            ,&! snow melt (mm h2o/s)
+        sm_gimp            ,&! snow melt (mm h2o/s)
+        sm_gper            ,&! snow melt (mm h2o/s)
+        w_old                ! liquid water mass of the column at the previous time step (mm)
 
    real(r8), intent(inout) :: rootflux(1:nl_soil)
 
 #if(defined CaMa_Flood)
-   real(r8), intent(inout) :: flddepth   ! inundation water depth [mm]
-   real(r8), intent(in)    :: fldfrc     ! inundation water depth [0-1]
-   real(r8), intent(out)   :: qinfl_fld  ! grid averaged inundation water input from top (mm/s)
+   real(r8), intent(inout) :: flddepth  ! inundation water depth [mm]
+   real(r8), intent(in)    :: fldfrc    ! inundation water depth [0-1]
+   real(r8), intent(out)   :: qinfl_fld ! grid averaged inundation water input from top (mm/s)
 #endif
 
    real(r8), intent(in) :: forc_us
@@ -142,7 +169,7 @@ CONTAINS
 
 ! SNICAR model variables
 ! Aerosol Fluxes (Jan. 07, 2023)
-   real(r8), intent(in) :: forc_aer (14) ! aerosol deposition from atmosphere model (grd,aer) [kg m-1 s-1]
+   real(r8), intent(in) :: forc_aer (14)! aerosol deposition from atmosphere model (grd,aer) [kg m-1 s-1]
 
    real(r8), intent(inout) :: &
         mss_bcpho (lbp:0)             ,&! mass of hydrophobic BC in snow  (col,lyr) [kg]
@@ -228,33 +255,32 @@ CONTAINS
 !=======================================================================
 ! [1] for pervious road, the same as soil
 !=======================================================================
+
       rootflux(:) = rootr(:)*etr
-      CALL WATER_2014 (ipatch,patchtype,lbp        ,nl_soil     ,deltim     ,&
-             z_gpersno   ,dz_gpersno  ,zi_gpersno  ,bsw         ,porsl      ,&
-             psi0        ,hksati      ,theta_r     ,fsatmax     ,fsatdcf    ,&
-             topostd     ,BVIC        ,&
-             rootr       ,rootflux    ,t_gpersno   ,&
-             wliq_gpersno,wice_gpersno,smp         ,hk          ,pgper_rain ,&
-             sm_gper     ,etr         ,qseva_gper  ,qsdew_gper  ,qsubl_gper ,&
-             qfros_gper  ,&
+
+      CALL WATER_2014 (ipatch,patchtype,lbp        ,nl_soil     ,deltim      ,&
+             z_gpersno   ,dz_gpersno  ,zi_gpersno  ,bsw         ,porsl       ,&
+             psi0        ,hksati      ,theta_r     ,fsatmax     ,fsatdcf     ,&
+             topostd     ,BVIC        ,rootr       ,rootflux    ,t_gpersno   ,&
+             wliq_gpersno,wice_gpersno,smp         ,hk          ,pgper_rain  ,&
+             sm_gper     ,etr         ,qseva_gper  ,qsdew_gper  ,qsubl_gper  ,&
+             qfros_gper                                                      ,&
              !NOTE: temporal input, as urban mode doesn't support split soil&snow
              ! set all the same for soil and snow surface,
              ! and fsno=0. (no physical meaning here)
-             qseva_gper  ,qsdew_gper  ,qsubl_gper  ,qfros_gper  ,&
-             qseva_gper  ,qsdew_gper  ,qsubl_gper  ,qfros_gper  ,&
+             qseva_gper  ,qsdew_gper  ,qsubl_gper  ,qfros_gper               ,&
+             qseva_gper  ,qsdew_gper  ,qsubl_gper  ,qfros_gper               ,&
              0.          ,& ! fsno, not active
-             rsur_gper   ,rnof_gper   ,qinfl       ,&
-             pondmx      ,ssi         ,wimp        ,smpmin      ,&
-             zwt         ,wa          ,qcharge     ,errw_rsub   ,&
+             rsur_gper   ,rnof_gper   ,qinfl                                 ,&
+             pondmx      ,ssi         ,wimp        ,smpmin                   ,&
+             zwt         ,wa          ,qcharge     ,errw_rsub                ,&
 #if(defined CaMa_Flood)
-             flddepth    ,fldfrc      ,qinfl_fld   ,&
+             flddepth    ,fldfrc      ,qinfl_fld                             ,&
 #endif
 ! SNICAR model variables
-             forc_aer    ,&
-             mss_bcpho   ,mss_bcphi   ,mss_ocpho   ,mss_ocphi   ,&
-             mss_dst1    ,mss_dst2    ,mss_dst3    ,mss_dst4     &
-! END SNICAR model variables
-            )
+             forc_aer                                                        ,&
+             mss_bcpho   ,mss_bcphi   ,mss_ocpho   ,mss_ocphi                ,&
+             mss_dst1    ,mss_dst2    ,mss_dst3    ,mss_dst4                  )
 
 !=======================================================================
 ! [2] for roof and impervious road
@@ -327,22 +353,22 @@ CONTAINS
       CALL snowwater_lake ( &
            ! "in" snowater_lake arguments
            ! ---------------------------
-           maxsnl       ,nl_soil      ,nl_lake         ,deltim          ,&
-           ssi          ,wimp         ,porsl           ,pg_rain_lake    ,&
-           pg_snow_lake ,dz_lake      ,imelt_lake(:0)  ,fioldl(:0)      ,&
-           qseva_lake   ,qsubl_lake   ,qsdew_lake      ,qfros_lake      ,&
+           maxsnl         ,nl_soil        ,nl_lake        ,deltim         ,&
+           ssi            ,wimp           ,porsl          ,pg_rain_lake   ,&
+           pg_snow_lake   ,dz_lake        ,imelt_lake(:0) ,fioldl(:0)     ,&
+           qseva_lake     ,qsubl_lake     ,qsdew_lake     ,qfros_lake     ,&
 
            ! "inout" snowater_lake arguments
            ! ---------------------------
-           z_lakesno    ,dz_lakesno   ,zi_lakesno      ,t_lakesno       ,&
-           wice_lakesno ,wliq_lakesno ,t_lake          ,lake_icefrac    ,&
-           gwat         ,&
-           dfseng       ,dfgrnd       ,snll            ,scv_lake        ,&
-           snowdp_lake  ,sm_lake      ,forc_us         ,forc_vs          &
+           z_lakesno      ,dz_lakesno     ,zi_lakesno     ,t_lakesno      ,&
+           wice_lakesno   ,wliq_lakesno   ,t_lake         ,lake_icefrac   ,&
+           gwat                                                           ,&
+           dfseng         ,dfgrnd         ,snll           ,scv_lake       ,&
+           snowdp_lake    ,sm_lake        ,forc_us        ,forc_vs        ,&
 ! SNICAR model variables
-           ,forc_aer    ,&
-           mss_bcpho    ,mss_bcphi    ,mss_ocpho       ,mss_ocphi       ,&
-           mss_dst1     ,mss_dst2     ,mss_dst3        ,mss_dst4        ,&
+           forc_aer                                                       ,&
+           mss_bcpho      ,mss_bcphi      ,mss_ocpho      ,mss_ocphi      ,&
+           mss_dst1       ,mss_dst2       ,mss_dst3       ,mss_dst4       ,&
 ! END SNICAR model variables
            urban_call=.true.)
 

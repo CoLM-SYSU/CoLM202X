@@ -287,7 +287,7 @@ CONTAINS
 
          dhsdT = -cgrnd - 4.*emg*stefnc*t_grnd**3 - cpliq*pg_rain - cpice*pg_snow
 
-         IF (sabg_soil+sabg_snow-sabg>1.e-6 .or. hs_soil+hs_snow-hs>1.e-6) THEN
+         IF (abs(sabg_soil+sabg_snow-sabg)>1.e-6 .or. abs(hs_soil+hs_snow-hs)>1.e-6) THEN
             print *, "MOD_GroundTemperature.F90: Error in spliting soil and snow surface!"
             print *, "sabg:", sabg, "sabg_soil:", sabg_soil, "sabg_snow", sabg_snow
             print *, "hs", hs, "hs_soil", hs_soil, "hs_snow:", hs_snow, "fsno:", fsno
