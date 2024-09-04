@@ -22,9 +22,39 @@ MODULE MOD_Urban_Shortwave
 
 CONTAINS
 
-   !-------------------------------------------------
+
    SUBROUTINE UrbanOnlyShortwave ( theta, HW, fb, fgper, H, &
-         aroof, awall, agimp, agper, fwsun, sroof, swsun, swsha, sgimp, sgper, albu)
+        aroof, awall, agimp, agper, fwsun, sroof, swsun, swsha, sgimp, sgper, albu)
+
+!-----------------------------------------------------------------------
+!                Sun
+!                 \\\
+!                  \\\
+!                         ______
+!                        |++++++|              roof
+!                        |++++++|             ______
+!                        |++++++|            |++++++|
+!                    ______+++++|            |++++++|
+!                   |++++++|++++|            |++++++|
+!            sunlit |[]++[]|++++|            |++++++| shaded
+!             wall  |++++++|                 |++++++|  wall
+!                   |[]++[]|                 |++++++|
+!                   |++++++|  impervious/pervious ground
+!         __________|++++++|____________________________________
+!
+! !DESCRIPTION:
+!
+!  Calculate the ground shadow area, the area of the sunny and shady
+!  walls taking into account mutual shading between buildings;
+!  calculate the visibility factor F between the sky, walls, and
+!  ground; calculate the initial radiation reaching each component
+!  surface, considering multiple scattering processes, and establish
+!  the radiation transfer balance equation for both incident direct
+!  and diffuse radaition cases for solving.
+!
+!
+!  Created by Hua Yuan, 09/2021
+!-----------------------------------------------------------------------
 
    IMPLICIT NONE
 
@@ -224,10 +254,42 @@ CONTAINS
 
    END SUBROUTINE UrbanOnlyShortwave
 
-   !-------------------------------------------------
+
    SUBROUTINE UrbanVegShortwave ( theta, HW, fb, fgper, H, &
          aroof, awall, agimp, agper, lai, sai, fv, hv, rho, tau, &
          fwsun, sroof, swsun, swsha, sgimp, sgper, sveg, albu )
+
+!-----------------------------------------------------------------------
+!                Sun
+!                 \\\
+!                  \\\
+!                         ______
+!                        |++++++|              roof
+!                        |++++++|             ______
+!                        |++++++|    ___     |++++++|
+!                    ______+++++|   |||||    |++++++|
+!                   |++++++|++++|  |||||||   |++++++|
+!            sunlit |[]++[]|++++|   |||||    |++++++| shaded
+!             wall  |++++++|          | tree |++++++|  wall
+!                   |[]++[]|          |      |++++++|
+!                   |++++++|  impervious/pervious ground
+!         __________|++++++|____________________________________
+!
+! !DESCRIPTION:
+!
+!  The process of shortwave radiation transfer in a city considering
+!  vegetation (trees only) is based on the radiation transfer without
+!  vegetation (UrbanOnlyShortwave), taking into account the visibility
+!  factors F between the various components including the vegetation, in
+!  order to calculate the radiation transfer matrix during radiation
+!  balance. A similar method is used to solve the radiation absorption
+!  of walls, ground, and vegetation. The additional part compared to
+!  urban radiation transfer without vegetation (UrbanOnlyShortwave) is
+!  the consideration of the visibility factors and shadow area
+!  calculation including the vegetation.
+!
+!  Created by Hua Yuan, 09/2021
+!-----------------------------------------------------------------------
 
    IMPLICIT NONE
 

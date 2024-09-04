@@ -4,9 +4,17 @@
 
 MODULE MOD_UrbanReadin
 
-! ===========================================================
-! Read in the Urban dataset
-! ===========================================================
+!-----------------------------------------------------------------------
+!
+! !DESCRIPTION:
+!  Read in the Urban dataset.
+!
+!  Created by Hua Yuan, 11/26/2021
+!
+! !REVISIONS:
+!
+!  05/2023, Wenzong Dong, Hua Yuan: porting codes to MPI parallel version.
+!-----------------------------------------------------------------------
 
    USE MOD_Precision
    IMPLICIT NONE
@@ -17,8 +25,7 @@ MODULE MOD_UrbanReadin
 
 CONTAINS
 
-   SUBROUTINE Urban_readin (dir_landdata, lc_year)!(dir_srfdata,dir_atmdata,nam_urbdata,nam_atmdata,lc_year)
-
+   SUBROUTINE Urban_readin (dir_landdata, lc_year)
 
    USE MOD_Precision
    USE MOD_SPMD_Task
@@ -41,7 +48,6 @@ CONTAINS
 
    integer, intent(in) :: lc_year    ! which year of land cover data used
    character(len=256), intent(in) :: dir_landdata
-
    character(len=256) :: dir_rawdata
    character(len=256) :: lndname
    character(len=256) :: cyear
@@ -75,47 +81,24 @@ IF (DEF_URBAN_type_scheme == 1) THEN
       allocate (thickwall (numurban))
 
 #ifdef SinglePoint
-      ! allocate (hwr   (numurban) )
-      ! allocate (fgper (numurban) )
-
       lucyid(:) = SITE_lucyid
       hwr   (:) = SITE_hwr
       fgper (:) = SITE_fgper
-
-      ! allocate ( em_roof (numurban) )
-      ! allocate ( em_wall (numurban) )
-      ! allocate ( em_gimp (numurban) )
-      ! allocate ( em_gper (numurban) )
 
       em_roof(:) = SITE_em_roof
       em_wall(:) = SITE_em_wall
       em_gimp(:) = SITE_em_gimp
       em_gper(:) = SITE_em_gper
 
-      ! allocate ( t_roommax (numurban) )
-      ! allocate ( t_roommin (numurban) )
-
       t_roommax(:) = SITE_t_roommax
       t_roommin(:) = SITE_t_roommin
       thickroof(:) = SITE_thickroof
       thickwall(:) = SITE_thickwall
 
-      ! allocate ( alb_roof (2, 2, numurban) )
-      ! allocate ( alb_wall (2, 2, numurban) )
-      ! allocate ( alb_gimp (2, 2, numurban) )
-      ! allocate ( alb_gper (2, 2, numurban) )
-
       alb_roof(:,:,1) = SITE_alb_roof
       alb_wall(:,:,1) = SITE_alb_wall
       alb_gimp(:,:,1) = SITE_alb_gimp
       alb_gper(:,:,1) = SITE_alb_gper
-
-      ! allocate ( cv_roof (10, numurban) )
-      ! allocate ( cv_wall (10, numurban) )
-      ! allocate ( cv_gimp (10, numurban) )
-      ! allocate ( tk_roof (10, numurban) )
-      ! allocate ( tk_wall (10, numurban) )
-      ! allocate ( tk_gimp (10, numurban) )
 
       cv_roof(:,1) = SITE_cv_roof
       cv_wall(:,1) = SITE_cv_wall
@@ -127,7 +110,7 @@ IF (DEF_URBAN_type_scheme == 1) THEN
 #else
       ! READ in urban data
       lndname = trim(dir_landdata)//'/urban/'//trim(cyear)//'/urban.nc'
-      print*,trim(lndname)
+
       CALL ncio_read_vector (lndname, 'CANYON_HWR  '  , landurban, hwr    ) ! average building height to their distance
       CALL ncio_read_vector (lndname, 'WTROAD_PERV'   , landurban, fgper  ) ! pervious fraction to ground area
       CALL ncio_read_vector (lndname, 'EM_ROOF'       , landurban, em_roof) ! emissivity of roof
@@ -155,14 +138,6 @@ IF (DEF_URBAN_type_scheme == 1) THEN
 ENDIF
 
 #ifdef SinglePoint
-      ! allocate( pop_den  (numurban) )
-      ! allocate( lucyid   (numurban) )
-      ! allocate( froof    (numurban) )
-      ! allocate( hroof    (numurban) )
-      ! allocate( flake    (numurban) )
-      ! allocate( fveg_urb (numurban) )
-      ! allocate( htop_urb (numurban) )
-
       pop_den  = SITE_popden
       lucyid   = SITE_lucyid
       froof    = SITE_froof
@@ -172,39 +147,31 @@ ENDIF
       htop_urb = SITE_htop_urb
 #else
       !TODO: Variables distinguish between time-varying and time-invariant variables
-      ! write(cyear,'(i4.4)') lc_year
       lndname = trim(dir_landdata)//'/urban/'//trim(cyear)//'/POP.nc'
-      print*, lndname
       CALL ncio_read_vector (lndname, 'POP_DEN'       , landurban, pop_den )
-      ! write(cyear,'(i4.4)') lc_year
+
       lndname = trim(dir_landdata)//'/urban/'//trim(cyear)//'/LUCY_country_id.nc'
-      print*, lndname
       CALL ncio_read_vector (lndname, 'LUCY_id'       , landurban, lucyid  )
-      ! write(cyear,'(i4.4)') lc_year
+
       lndname = trim(dir_landdata)//'/urban/'//trim(cyear)//'/WT_ROOF.nc'
-      print*, lndname
       CALL ncio_read_vector (lndname, 'WT_ROOF'       , landurban, froof   )
-      ! write(cyear,'(i4.4)') lc_year
+
       lndname = trim(dir_landdata)//'/urban/'//trim(cyear)//'/HT_ROOF.nc'
-      print*, lndname
       CALL ncio_read_vector (lndname, 'HT_ROOF'       , landurban, hroof   )
 
       lndname = trim(dir_landdata)//'/urban/'//trim(cyear)//'/PCT_Water.nc'
-      print*, lndname
       CALL ncio_read_vector (lndname, 'PCT_Water'     , landurban, flake   )
 
       lndname = trim(dir_landdata)//'/urban/'//trim(cyear)//'/PCT_Tree.nc'
-      print*, lndname
       CALL ncio_read_vector (lndname, 'PCT_Tree'      , landurban, fveg_urb)
 
       lndname = trim(dir_landdata)//'/urban/'//trim(cyear)//'/htop_urb.nc'
-      print*, lndname
       CALL ncio_read_vector (lndname, 'URBAN_TREE_TOP', landurban, htop_urb)
 #endif
 
       dir_rawdata = DEF_dir_rawdata
       lndname = trim(dir_rawdata)//'/urban/'//'/LUCY_rawdata.nc'
-      print*, lndname
+
       CALL ncio_read_bcast_serial (lndname,  "NUMS_VEHC"             , lvehicle     )
       CALL ncio_read_bcast_serial (lndname,  "WEEKEND_DAY"           , lweek_holiday)
       CALL ncio_read_bcast_serial (lndname,  "TraffProf_24hr_holiday", lweh_prof    )
@@ -253,12 +220,12 @@ IF (DEF_URBAN_type_scheme == 1) THEN
 ELSEIF (DEF_URBAN_type_scheme == 2) THEN
             ! read in LCZ constants
 #ifdef SinglePoint
-            hwr  (u) = SITE_hwr
-            fgper(u) = SITE_fgper
+            hwr  (:) = SITE_hwr
+            fgper(:) = SITE_fgper
 #else
-            hwr  (u) = canyonhwr_lcz (landurban%settyp(u)) !average building height to their distance
+            hwr  (u) = canyonhwr_lcz (landurban%settyp(u))  !average building height to their distance
             fgper(u) = wtperroad_lcz (landurban%settyp(u)) &
-                       /(1-wtroof_lcz(landurban%settyp(u))) !pervious fraction to ground area
+                     / (1-wtroof_lcz (landurban%settyp(u)))!pervious fraction to ground area
             fgper(u) = min(fgper(u), 1.)
 #endif
 
@@ -298,8 +265,8 @@ ELSEIF (DEF_URBAN_type_scheme == 2) THEN
                t_roommax(u) = 297.65 !tbuildingmax  (landurban%settyp(u)) !maximum temperature of inner room [K]
                t_roommin(u) = 290.65 !tbuildingmin  (landurban%settyp(u)) !minimum temperature of inner room [K]
             ELSE
-               t_roommax(u) = 373.16                !maximum temperature of inner room [K]
-               t_roommin(u) = 180.00                !minimum temperature of inner room [K]
+               t_roommax(u) = 373.16 !maximum temperature of inner room [K]
+               t_roommin(u) = 180.00 !minimum temperature of inner room [K]
             ENDIF
 ENDIF
 
@@ -337,7 +304,7 @@ ENDIF
             htop    (i) = htop_urb (u)
             hbot    (i) = hbot_urb (u)
 
-            ! roof and wall layer depth
+            ! roof and wall layer node depth
             DO l=1, nl_roof
                z_roof(l,u) = (l-0.5)*(thick_roof/nl_roof)
             ENDDO
@@ -346,6 +313,7 @@ ENDIF
                z_wall(l,u) = (l-0.5)*(thick_wall/nl_wall)
             ENDDO
 
+            ! roof and wall layer depth
             dz_roof(1,u) = 0.5*(z_roof(1,u)+z_roof(2,u))
             DO l = 2, nl_roof-1
                dz_roof(l,u) = 0.5*(z_roof(l+1,u)-z_roof(l-1,u))
@@ -366,15 +334,15 @@ ENDIF
       ENDIF
 
       IF (p_is_worker) THEN
-         IF (allocated(lvehicle     )) deallocate ( lvehicle      )
-         IF (allocated(lwdh_prof    )) deallocate ( lwdh_prof     )
-         IF (allocated(lweh_prof    )) deallocate ( lweh_prof     )
-         IF (allocated(lhum_prof    )) deallocate ( lhum_prof     )
-         IF (allocated(lweek_holiday)) deallocate ( lweek_holiday )
-         IF (allocated(lfix_holiday )) deallocate ( lfix_holiday  )
-         IF (allocated(thickroof    )) deallocate ( thickroof     )
-         IF (allocated(thickwall    )) deallocate ( thickwall     )
-         IF (allocated(lucyid       )) deallocate ( lucyid        )
+         IF (allocated(lvehicle      )) deallocate ( lvehicle      )
+         IF (allocated(lwdh_prof     )) deallocate ( lwdh_prof     )
+         IF (allocated(lweh_prof     )) deallocate ( lweh_prof     )
+         IF (allocated(lhum_prof     )) deallocate ( lhum_prof     )
+         IF (allocated(lweek_holiday )) deallocate ( lweek_holiday )
+         IF (allocated(lfix_holiday  )) deallocate ( lfix_holiday  )
+         IF (allocated(thickroof     )) deallocate ( thickroof     )
+         IF (allocated(thickwall     )) deallocate ( thickwall     )
+         IF (allocated(lucyid        )) deallocate ( lucyid        )
       ENDIF
 
    END SUBROUTINE Urban_readin

@@ -40,11 +40,12 @@ MODULE MOD_Hist
 CONTAINS
 
    !---------------------------------------
-   SUBROUTINE hist_init (dir_hist)
+   SUBROUTINE hist_init (dir_hist, lulcc_call)
 
       IMPLICIT NONE
 
-      character(len=*), intent(in) :: dir_hist
+      character(len=*) , intent(in) :: dir_hist
+      logical, optional, intent(in) :: lulcc_call
 
       CALL allocate_acc_fluxes ()
       CALL FLUSH_acc_fluxes ()
@@ -60,7 +61,11 @@ CONTAINS
 #endif
 
       IF (HistForm == 'Gridded') THEN
-         CALL hist_gridded_init (dir_hist)
+         IF (present(lulcc_call)) THEN
+            CALL hist_gridded_init (dir_hist, lulcc_call)
+         ELSE
+            CALL hist_gridded_init (dir_hist)
+         ENDIF
 #ifdef SinglePoint
       ELSEIF (HistForm == 'Single') THEN
          CALL hist_single_init  ()

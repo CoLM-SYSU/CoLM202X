@@ -1,7 +1,23 @@
 #include <define.h>
 
 MODULE MOD_Urban_RoofTemperature
-
+!-----------------------------------------------------------------------
+!
+! !DESCRIPTION:
+!
+!  The layer division scheme of the roof is the same as the wall (equal
+!  depth), and the thickness is read from external data. The temperature
+!  transfer is similar to the wall, but considering the influence of
+!  snow and water accumulation on the thermal properties of the first
+!  layer of the roof, as well as impervious surfaces. At the same time,
+!  the heat exchange between the innermost layer of the roof and the
+!  indoor roof surface air is considered, and the phase change process
+!  is only considered for the first layer of the roof and the snow cover
+!  layer.
+!
+!  Created by Yongjiu Dai and Hua Yuan, 05/2020
+!
+!-----------------------------------------------------------------------
    USE MOD_Precision
    IMPLICIT NONE
    SAVE
