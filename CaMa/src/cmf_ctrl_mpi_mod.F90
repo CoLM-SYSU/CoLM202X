@@ -1,5 +1,5 @@
 MODULE CMF_CTRL_MPI_MOD
-!! contains nothing is UseMPI_CMF is not defined
+!! contains nothing if UseMPI_CMF is not defined
 #ifdef UseMPI_CMF
 !==========================================================
 !* PURPOSE: modules related to MPI usage 
@@ -19,7 +19,11 @@ MODULE CMF_CTRL_MPI_MOD
 ! See the License for the specific language governing permissions and limitations under the License.
 !==========================================================
 !** shared variables in module
+#ifdef IFS_CMF
+   USE MPL_MODULE
+#else
    USE MPI
+#endif
    USE PARKIND1,                only: JPIM, JPRB, JPRM, JPRD
    USE YOS_CMF_INPUT,           only: LOGNAM
    USE YOS_CMF_MAP,             only: REGIONALL, REGIONTHIS, MPI_COMM_CAMA
@@ -37,11 +41,23 @@ CONTAINS
    ! -- CMF_DRV_END      : Finalize          CaMa-Flood
    !
    !####################################################################
+#ifdef IFS_CMF
+SUBROUTINE CMF_MPI_INIT(ICOMM_CMF)
+IMPLICIT NONE
+
+INTEGER(KIND=JPIM),OPTIONAL,INTENT(IN)  :: ICOMM_CMF
+#else
    SUBROUTINE CMF_MPI_INIT
    IMPLICIT NONE
+#endif
       !================================================
       !*** 0. MPI specific setting
       REGIONTHIS=1
+#ifdef IFS_CMF
+      MPI_COMM_CAMA=ICOMM_CMF
+      REGIONALL=MPL_NPROC(MPI_COMM_CAMA)
+      REGIONTHIS=MPL_MYRANK(MPI_COMM_CAMA)
+#else
       CALL MPI_Init(ierr)
 
       MPI_COMM_CAMA=MPI_COMM_WORLD
@@ -50,7 +66,7 @@ CONTAINS
 
       REGIONALL =Nproc
       REGIONTHIS=Nid+1
-
+#endif
       ! For BUGFIX: Check MPI  / OpenMPI is working or not.
       ! Write to standard output (log file is not opened yet)
       !!!!!#ifdef _OPENMP
@@ -79,17 +95,23 @@ CONTAINS
 
 !####################################################################
    SUBROUTINE CMF_MPI_AllReduce_R2MAP(R2MAP)
-   USE YOS_CMF_INPUT,           only: NX,NY
+   USE YOS_CMF_INPUT,           only: RMIS,NX,NY
    IMPLICIT NONE
    !* input/output
    real(KIND=JPRM),intent(inout)   :: R2MAP(NX,NY)
    !* local variable
    real(KIND=JPRM)                 :: R2TMP(NX,NY)
    !================================================
-      ! gather to master node
-      R2TMP(:,:)=1.E30
-      CALL MPI_AllReduce(R2MAP,R2TMP,NX*NY,MPI_REAL4,MPI_MIN,MPI_COMM_CAMA,ierr)
-      R2MAP(:,:)=R2TMP(:,:)
+   ! gather to master node
+#ifdef IFS_CMF
+   CALL MPL_ALLREDUCE(R2MAP,CDOPER='MIN',KCOMM=MPI_COMM_CAMA,KERROR=ierr)
+#else
+   R2TMP(:,:)=RMIS
+   CALL MPI_AllReduce(R2MAP,R2TMP,NX*NY,MPI_REAL4,MPI_MIN,MPI_COMM_CAMA,ierr)
+   R2MAP(:,:)=R2TMP(:,:)
+#endif
+
+
    END SUBROUTINE CMF_MPI_AllReduce_R2MAP
    !####################################################################
 
@@ -98,6 +120,7 @@ CONTAINS
 
    !####################################################################
    SUBROUTINE CMF_MPI_AllReduce_R1PTH(R1PTH)
+   USE YOS_CMF_INPUT,           ONLY: RMIS
    USE YOS_CMF_MAP,             only: NPTHOUT, NPTHLEV
    IMPLICIT NONE
    !* input/output
@@ -105,10 +128,14 @@ CONTAINS
    !* local variable
    real(KIND=JPRM)                 :: R1PTMP(NPTHOUT,NPTHLEV)
       !================================================
-      ! gather to master node
-      R1PTMP(:,:)=1.E30
-      CALL MPI_AllReduce(R1PTH,R1PTMP,NPTHOUT*NPTHLEV,MPI_REAL4,MPI_MIN,MPI_COMM_CAMA,ierr)
-      R1PTH(:,:)=R1PTMP(:,:)
+   ! gather to master node
+   #ifdef IFS_CMF
+   CALL MPL_ALLREDUCE(R1PTH,CDOPER='MIN',KCOMM=MPI_COMM_CAMA,KERROR=ierr)
+   #else
+   R1PTMP(:,:)=RMIS
+   CALL MPI_AllReduce(R1PTH,R1PTMP,NPTHOUT*NPTHLEV,MPI_REAL4,MPI_MIN,MPI_COMM_CAMA,ierr)
+   R1PTH(:,:)=R1PTMP(:,:)
+   #endif
    END SUBROUTINE CMF_MPI_AllReduce_R1PTH
    !####################################################################
 
@@ -116,7 +143,7 @@ CONTAINS
    !####################################################################
    SUBROUTINE CMF_MPI_AllReduce_D2MAP(D2MAP)
    ! only used in netCDF restart file. (cannot be compiled due to a bug in MacOS mpif90)
-   USE YOS_CMF_INPUT,           only: NX,NY
+   USE YOS_CMF_INPUT,           only: DMIS, NX,NY
    IMPLICIT NONE
    !* input/output
    real(KIND=JPRB),intent(inout)   :: D2MAP(NX,NY)
@@ -124,13 +151,17 @@ CONTAINS
    real(KIND=JPRB)                 :: D2TMP(NX,NY)
    !================================================
       ! gather to master node
-      D2TMP(:,:)=1.E30
+#ifdef IFS_CMF
+      CALL MPL_ALLREDUCE(D2MAP,CDOPER='MIN',KCOMM=MPI_COMM_CAMA,KERROR=ierr)
+#else
+      D2TMP(:,:)=DMIS
 #ifdef SinglePrec_CMF
       CALL MPI_AllReduce(D2MAP,D2TMP,NX*NY,MPI_REAL4,MPI_MIN,MPI_COMM_CAMA,ierr)
 #else
       CALL MPI_AllReduce(D2MAP,D2TMP,NX*NY,MPI_REAL8,MPI_MIN,MPI_COMM_CAMA,ierr)
 #endif
       D2MAP(:,:)=D2TMP(:,:)
+#endif
    END SUBROUTINE CMF_MPI_AllReduce_D2MAP
    !####################################################################
 
@@ -139,7 +170,7 @@ CONTAINS
    !####################################################################
    SUBROUTINE CMF_MPI_AllReduce_P2MAP(P2MAP)
    ! only used in netCDF restart file. (cannot be compiled due to a bug in MacOS mpif90)
-   USE YOS_CMF_INPUT,           only: NX,NY
+   USE YOS_CMF_INPUT,           ONLY: DMIS, NX,NY
    IMPLICIT NONE
    !* input/output
    real(KIND=JPRD),intent(inout)   :: P2MAP(NX,NY)
@@ -147,9 +178,13 @@ CONTAINS
    real(KIND=JPRD)                 :: P2TMP(NX,NY)
       !================================================
       ! gather to master node
-      P2TMP(:,:)=1.E30
+   #ifdef IFS_CMF
+      CALL MPL_ALLREDUCE(P2MAP,CDOPER='MIN',KCOMM=MPI_COMM_CAMA,KERROR=ierr)
+   #else
+      P2TMP(:,:)=DMIS
       CALL MPI_AllReduce(P2MAP,P2TMP,NX*NY,MPI_REAL8,MPI_MIN,MPI_COMM_CAMA,ierr)
       P2MAP(:,:)=P2TMP(:,:)
+   #endif
    END SUBROUTINE CMF_MPI_AllReduce_P2MAP
    !####################################################################
 
@@ -158,7 +193,9 @@ CONTAINS
 
    !####################################################################
    SUBROUTINE CMF_MPI_AllReduce_D1PTH(D1PTH)
+   USE YOS_CMF_INPUT,           ONLY: DMIS
    USE YOS_CMF_MAP,             only: NPTHOUT, NPTHLEV, PTH_UPST, PTH_DOWN
+
    IMPLICIT NONE
    !* input/output
    real(KIND=JPRB),intent(inout)   :: D1PTH(NPTHOUT,NPTHLEV)
@@ -167,25 +204,29 @@ CONTAINS
    integer(KIND=JPIM)              :: IPTH
       !================================================
       ! gather to master node
-      DO IPTH=1,NPTHOUT
-         IF (PTH_UPST(IPTH)<=0 .or. PTH_DOWN(IPTH)<=0 ) THEN
-            D1PTH(IPTH,:)=1.E20
-         ENDIF
-      ENDDO
-      D1PTMP(:,:)=1.E30
+   DO IPTH=1,NPTHOUT
+      IF (PTH_UPST(IPTH)<=0 .OR. PTH_DOWN(IPTH)<=0 ) THEN
+        D1PTH(IPTH,:)=DMIS
+      ENDIF
+    END DO
+#ifdef IFS_CMF
+    CALL MPL_ALLREDUCE(D1PTH,CDOPER='MIN',KCOMM=MPI_COMM_CAMA,KERROR=ierr)
+#else
+    D1PTMP(:,:)=DMIS
 #ifdef SinglePrec_CMF
-      !!  CALL MPI_Reduce(D1PTH,D1PTMP,NPTHOUT*NPTHLEV,MPI_REAL4,MPI_MIN,0,MPI_COMM_CAMA,ierr)
       CALL MPI_AllReduce(D1PTH,D1PTMP,NPTHOUT*NPTHLEV,MPI_REAL4,MPI_MIN,MPI_COMM_CAMA,ierr)
 #else
       CALL MPI_AllReduce(D1PTH,D1PTMP,NPTHOUT*NPTHLEV,MPI_REAL8,MPI_MIN,MPI_COMM_CAMA,ierr)
 #endif
       D1PTH(:,:)=D1PTMP(:,:)
+#endif
    END SUBROUTINE CMF_MPI_AllReduce_D1PTH
    !####################################################################
 
 
    !####################################################################
    SUBROUTINE CMF_MPI_AllReduce_P1PTH(P1PTH)
+   USE YOS_CMF_INPUT,           ONLY: DMIS
    USE YOS_CMF_MAP,             only: NPTHOUT, NPTHLEV, PTH_UPST, PTH_DOWN
    IMPLICIT NONE
    !* input/output
@@ -195,14 +236,18 @@ CONTAINS
    integer(KIND=JPIM)              :: IPTH
       !================================================
       ! gather to master node
-      DO IPTH=1,NPTHOUT
-         IF (PTH_UPST(IPTH)<=0 .or. PTH_DOWN(IPTH)<=0 ) THEN
-            P1PTH(IPTH,:)=1.E20
-         ENDIF
-      ENDDO
-      P1PTMP(:,:)=1.E30
-      CALL MPI_AllReduce(P1PTH,P1PTMP,NPTHOUT*NPTHLEV,MPI_REAL8,MPI_MIN,MPI_COMM_CAMA,ierr)
-      P1PTH(:,:)=P1PTMP(:,:)
+   DO IPTH=1,NPTHOUT
+      IF (PTH_UPST(IPTH)<=0 .OR. PTH_DOWN(IPTH)<=0 ) THEN
+        P1PTH(IPTH,:)=DMIS
+      ENDIF
+    END DO
+#ifdef IFS_CMF
+    CALL MPL_ALLREDUCE(P1PTH,CDOPER='MIN',KCOMM=MPI_COMM_CAMA,KERROR=ierr)
+#else
+    P1PTMP(:,:)=DMIS
+    CALL MPI_AllReduce(P1PTH,P1PTMP,NPTHOUT*NPTHLEV,MPI_REAL8,MPI_MIN,MPI_COMM_CAMA,ierr)
+    P1PTH(:,:)=P1PTMP(:,:)
+#endif
    END SUBROUTINE CMF_MPI_AllReduce_P1PTH
    !####################################################################
 
@@ -219,8 +264,12 @@ CONTAINS
    !================================================
       !*** MPI: use same DT in all node
       DT_LOC=DT_MIN
-
+#ifdef IFS_CMF
+      DT_OUT=DT_LOC
+      CALL MPL_ALLREDUCE(DT_OUT,CDOPER='MIN',KCOMM=MPI_COMM_CAMA,KERROR=ierr)
+#else
       CALL MPI_AllReduce(DT_LOC, DT_OUT, 1, MPI_DOUBLE_PRECISION, MPI_MIN, MPI_COMM_CAMA,ierr)
+#endif
       DT_MIN=DT_OUT
       write(LOGNAM,'(A,2F10.2)') "ADPSTP (MPI_AllReduce): DT_LOC->DTMIN", DT_LOC, DT_MIN
 
