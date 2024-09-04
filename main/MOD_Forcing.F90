@@ -791,6 +791,7 @@ CONTAINS
          CALL mg2p_forc%part2pset (forc_us_part,     forc_us    )
          CALL mg2p_forc%part2pset (forc_vs_part,     forc_vs    )
 
+#ifndef SinglePoint
          IF (trim(DEF_DS_precipitation_adjust_scheme) == 'III') THEN 
             ! Sisi Chen, Lu Li, Yongjiu Dai et al., 2024, JGR
             ! Using MPI to pass the forcing variable field to Python to accomplish precipitation downscaling
@@ -836,10 +837,11 @@ CONTAINS
             CALL mg2p_forc%part2pset (forc_prc_part, forc_prc)
             CALL mg2p_forc%part2pset (forc_prl_part, forc_prl)
          ENDIF
-         
+   
          ! Conservation of short- and long- waves radiation in the grid of forcing
          CALL mg2p_forc%normalize (forc_xy_solarin, forc_swrad_part)
          CALL mg2p_forc%normalize (forc_xy_frl,     forc_frl_part  )
+#endif
          CALL mg2p_forc%part2pset (forc_frl_part,    forc_frl   )
          CALL mg2p_forc%part2pset (forc_swrad_part,  forc_swrad )
 

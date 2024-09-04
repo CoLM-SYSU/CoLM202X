@@ -532,6 +532,7 @@ CONTAINS
       idx_zen = INT(zen_deg*num_zenith/90)
       IF (idx_azi==0) idx_azi = 1
       IF (idx_zen==0) idx_zen = 1
+      IF (idx_zen>num_zenith) idx_zen = num_zenith !constrain the upper boundary of zenith angle to 90 deg
 
       sf_c = sf_lut_c(idx_azi, idx_zen)
       IF (sf_c<0) sf_c = 0
