@@ -431,16 +431,22 @@ PROGRAM CoLM
          ! ----------------------------------------------------------------------
 #ifdef LULCC
          IF ( isendofyear(idate, deltim) ) THEN
+            ! Deallocate all Forcing and Fluxes variable of last year
             CALL deallocate_1D_Forcing
             CALL deallocate_1D_Fluxes
 
+            CALL forcing_final ()
+            CALL hist_final    ()
+
+            ! Call LULCC driver
             CALL LulccDriver (casename,dir_landdata,dir_restart,&
                               idate,greenwich)
 
+            ! Allocate Forcing and Fluxes variable of next year
             CALL allocate_1D_Forcing
-            CALL forcing_init (dir_forcing, deltim, itstamp, jdate(1))
-            CALL deallocate_acc_fluxes
-            CALL hist_init (dir_hist)
+            CALL forcing_init (dir_forcing, deltim, itstamp, jdate(1), lulcc_call=.true.)
+
+            CALL hist_init (dir_hist, lulcc_call=.true.)
             CALL allocate_1D_Fluxes
          ENDIF
 #endif

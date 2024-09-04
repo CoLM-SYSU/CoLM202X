@@ -3,10 +3,19 @@
 #ifdef URBAN_MODEL
 MODULE MOD_UrbanIniTimeVariable
 
-!=======================================================================
-! Created by Hua Yuan, 09/16/2021
+!-----------------------------------------------------------------------
 !
-!=======================================================================
+! !DESCRIPTION:
+!
+!  Initialize urban model time variables.
+!
+!  Created by Hua Yuan, 09/16/2021
+!
+! !REVISIONS:
+!
+!  05/2023, Wenzong Dong, Hua Yuan: porting codes to MPI parallel version.
+!
+!-----------------------------------------------------------------------
 
    USE MOD_Precision
    IMPLICIT NONE
@@ -20,7 +29,7 @@ CONTAINS
                     alb_roof,alb_wall,alb_gimp,alb_gper,&
                     rho,tau,fveg,htop,hbot,lai,sai,coszen,&
                     fsno_roof,fsno_gimp,fsno_gper,fsno_lake,&
-                    scv_roof,scv_gimp,scv_gper,scv_lake,&
+                    scv_roof,scv_gimp,scv_gper,scv_lake,fwet_snow,&
                     sag_roof,sag_gimp,sag_gper,sag_lake,tlake,fwsun,dfwsun,&
                     extkd,alb,ssun,ssha,sroof,swsun,swsha,sgimp,sgper,slake)
 
@@ -69,6 +78,7 @@ CONTAINS
          sag_gimp,      &! non dimensional snow age [-]
          sag_gper,      &! non dimensional snow age [-]
          sag_lake,      &! non dimensional snow age [-]
+         fwet_snow,     &! vegetation snow fractional cover [-]
          tlake           ! lake temperature
 
    real(r8), intent(out) :: &
@@ -86,30 +96,31 @@ CONTAINS
          slake(2,2)      ! lake absorption for solar radiation,
 
    !-----------------------------------------------------------------------
-   real(r8) :: hveg    !height of crown central hight
+   real(r8) :: hveg      ! height of crown central hight
 
-      fsno_roof   = 0.   !fraction of ground covered by snow
-      fsno_gimp   = 0.   !fraction of ground covered by snow
-      fsno_gper   = 0.   !fraction of ground covered by snow
-      fsno_lake   = 0.   !fraction of soil covered by snow [-]
-      scv_roof    = 0.   !snow cover, water equivalent [mm, kg/m2]
-      scv_gimp    = 0.   !snow cover, water equivalent [mm, kg/m2]
-      scv_gper    = 0.   !snow cover, water equivalent [mm, kg/m2]
-      scv_lake    = 0.   !snow cover, water equivalent [mm]
-      sag_roof    = 0.   !roof snow age [-]
-      sag_gimp    = 0.   !impervious ground snow age [-]
-      sag_gper    = 0.   !pervious ground snow age [-]
-      sag_lake    = 0.   !urban lake snow age [-]
+      fsno_roof   = 0.   ! fraction of ground covered by snow
+      fsno_gimp   = 0.   ! fraction of ground covered by snow
+      fsno_gper   = 0.   ! fraction of ground covered by snow
+      fsno_lake   = 0.   ! fraction of soil covered by snow [-]
+      scv_roof    = 0.   ! snow cover, water equivalent [mm, kg/m2]
+      scv_gimp    = 0.   ! snow cover, water equivalent [mm, kg/m2]
+      scv_gper    = 0.   ! snow cover, water equivalent [mm, kg/m2]
+      scv_lake    = 0.   ! snow cover, water equivalent [mm]
+      sag_roof    = 0.   ! roof snow age [-]
+      sag_gimp    = 0.   ! impervious ground snow age [-]
+      sag_gper    = 0.   ! pervious ground snow age [-]
+      sag_lake    = 0.   ! urban lake snow age [-]
+      fwet_snow   = 0.   ! vegetation snow fractional cover [-]
 
-      fwsun       = 0.5  !Fraction of sunlit wall [-]
-      dfwsun      = 0.   !change of fwsun
+      fwsun       = 0.5  ! Fraction of sunlit wall [-]
+      dfwsun      = 0.   ! change of fwsun
 
       hveg        = min(hroof, (htop+hbot)/2.)
 
       ! urban surface albedo
       CALL alburban (ipatch,froof,fgper,flake,hwr,hroof,&
                      alb_roof,alb_wall,alb_gimp,alb_gper,&
-                     rho,tau,fveg,hveg,lai,sai,max(0.01,coszen),fwsun,tlake,&
+                     rho,tau,fveg,hveg,lai,sai,fwet_snow,max(0.01,coszen),fwsun,tlake,&
                      fsno_roof,fsno_gimp,fsno_gper,fsno_lake,&
                      scv_roof,scv_gimp,scv_gper,scv_lake,&
                      sag_roof,sag_gimp,sag_gper,sag_lake,&

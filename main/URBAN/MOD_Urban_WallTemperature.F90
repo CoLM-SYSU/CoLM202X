@@ -1,7 +1,31 @@
 #include <define.h>
 
 MODULE MOD_Urban_WallTemperature
-
+!-----------------------------------------------------------------------
+!
+! !DESCRIPTION:
+!
+!  The thickness of the wall (including the shady wall and the sunny
+!  wall) is read from external data. Just like the soil, it is also
+!  divided into 10 layers, with the same thickness set for each layer,
+!  and its thermal parameters are also read from external data. Unlike
+!  pervious/impervious surfaces, the wall does not consider water
+!  accumulation or snow cover, so its thermal properties are completely
+!  determined by its own materials. At the same time, it does not
+!  consider water transfer, phase change processes, and latent heat
+!  exchange.
+!
+!  Another difference is in the setting of heat exchange for the
+!  innermost (bottom) layer. For soil and impervious surfaces, the lack
+!  of heat exchange in the bottom layer is considered. However, for
+!  walls, the heat exchange between the indoor wall surface air and the
+!  innermost layer of the wall is considered. Apart from this, the other
+!  aspects and the solution process are similar to the temperature
+!  solution for the soil.
+!
+!  Created by Yongjiu Dai and Hua Yuan, 05/2020
+!
+!-----------------------------------------------------------------------
    USE MOD_Precision
    IMPLICIT NONE
    SAVE

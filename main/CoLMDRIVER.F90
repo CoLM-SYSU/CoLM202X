@@ -10,7 +10,7 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
 ! Initial : Yongjiu Dai, 1999-2014
 ! Revised : Hua Yuan, Shupeng Zhang, Nan Wei, Xingjie Lu, Zhongwang Wei, Yongjiu Dai
 !           2014-2024
-!           
+!
 !=======================================================================
 
    USE MOD_Precision
@@ -93,8 +93,7 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
                sc_vgm(1:,i),    fc_vgm(1:,i),                                      &
 #endif
                hksati(1:,i),    csol(1:,i),      k_solids(1:,i),  dksatu(1:,i),    &
-               dksatf(1:,i),    dkdry(1:,i),                                       &
-               BA_alpha(1:,i),  BA_beta(1:,i),                                     &
+               dksatf(1:,i),    dkdry(1:,i),     BA_alpha(1:,i),  BA_beta(1:,i),   &
                rootfr(1:,m),    lakedepth(i),    dz_lake(1:,i),   topostd(i),      &
                BVIC(1,i),                                                          &
 #if(defined CaMa_Flood)
@@ -128,13 +127,14 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
              ! LAND SURFACE VARIABLES REQUIRED FOR RESTART
                z_sno(maxsnl+1:,i),               dz_sno(maxsnl+1:,i),              &
                t_soisno(maxsnl+1:,i),            wliq_soisno(maxsnl+1:,i),         &
-               wice_soisno(maxsnl+1:,i),         smp(1:,i),          hk(1:,i),     &
-               t_grnd(i),       tleaf(i),        ldew(i),ldew_rain(i),ldew_snow(i),&
-               sag(i),          scv(i),          snowdp(i),       fveg(i),         &
-               fsno(i),         sigf(i),         green(i),        lai(i),          &
-               sai(i),          alb(1:,1:,i),    ssun(1:,1:,i),   ssha(1:,1:,i),   &
-               ssoi(:,:,i),     ssno(:,:,i),     thermk(i),       extkb(i),        &
-               extkd(i),        vegwp(1:,i),     gs0sun(i),       gs0sha(i),       &
+               wice_soisno(maxsnl+1:,i),         smp(1:,i),       hk(1:,i),        &
+               t_grnd(i),       tleaf(i),        ldew(i),         ldew_rain(i),    &
+               ldew_snow(i),    fwet_snow(i),    sag(i),          scv(i),          &
+               snowdp(i),       fveg(i),         fsno(i),         sigf(i),         &
+               green(i),        lai(i),          sai(i),          alb(1:,1:,i),    &
+               ssun(1:,1:,i),   ssha(1:,1:,i),   ssoi(:,:,i),     ssno(:,:,i),     &
+               thermk(i),       extkb(i),        extkd(i),        vegwp(1:,i),     &
+               gs0sun(i),       gs0sha(i),       &
              ! Ozone Stress Variables
                lai_old(i),      o3uptakesun(i),  o3uptakesha(i)  ,forc_ozone(i),   &
              ! End ozone stress variables
@@ -159,7 +159,7 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
                taux(i),         tauy(i),         fsena(i),        fevpa(i),        &
                lfevpa(i),       fsenl(i),        fevpl(i),        etr(i),          &
                fseng(i),        fevpg(i),        olrg(i),         fgrnd(i),        &
-               trad(i),         tref(i),         qref(i),                          & 
+               trad(i),         tref(i),         qref(i),                          &
                rsur(i),         rsur_se(i),      rsur_ie(i),      rnof(i),         &
                qintr(i),        qinfl(i),        qdrip(i),                         &
                rst(i),          assim(i),        respc(i),        sabvsun(i),      &
@@ -204,7 +204,7 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
 
             !              ***** Call CoLM urban model *****
             !
-            CALL UrbanCoLMMAIN ( &
+            CALL CoLMMAIN_Urban ( &
           ! MODEL RUNNING PARAMETERS
             i               ,idate           ,coszen(i)       ,deltim          ,&
             patchlonr(i)    ,patchlatr(i)    ,patchclass(i)   ,patchtype(i)    ,&
@@ -224,14 +224,13 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
           ! SOIL INFORMATION AND LAKE DEPTH
             vf_quartz(1:,i) ,vf_gravels(1:,i),vf_om(1:,i)     ,vf_sand(1:,i)   ,&
             wf_gravels(1:,i),wf_sand(1:,i)   ,porsl(1:,i)     ,psi0(1:,i)      ,&
-            bsw(1:,i)       ,theta_r(1:,i)   ,&
+            bsw(1:,i)       ,theta_r(1:,i)                                     ,&
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
-            alpha_vgm(1:,i) ,n_vgm(1:,i)     ,L_vgm(1:,i)     ,&
-            sc_vgm (1:,i)   ,fc_vgm   (1:,i) ,&
+            alpha_vgm(1:,i) ,n_vgm(1:,i)     ,L_vgm(1:,i)                      ,&
+            sc_vgm (1:,i)   ,fc_vgm   (1:,i)                                   ,&
 #endif
             hksati(1:,i)    ,csol(1:,i)      ,k_solids(1:,i),  dksatu(1:,i)    ,&
-            dksatf(1:,i)    ,dkdry(1:,i)     ,&
-            BA_alpha(1:,i)  ,BA_beta(1:,i)   ,&
+            dksatf(1:,i)    ,dkdry(1:,i)     ,BA_alpha(1:,i)  ,BA_beta(1:,i)   ,&
             alb_roof(:,:,u) ,alb_wall(:,:,u) ,alb_gimp(:,:,u) ,alb_gper(:,:,u) ,&
 
           ! VEGETATION INFORMATION
@@ -271,7 +270,8 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
             t_wallsun   (1:,u)               ,t_wallsha   (1:,u)               ,&
 
             lai(i)          ,sai(i)          ,fveg(i)         ,sigf(i)         ,&
-            green(i)        ,tleaf(i)        ,ldew(i)         ,t_grnd(i)       ,&
+            green(i)        ,tleaf(i)        ,ldew(i)         ,ldew_rain(i)    ,&
+            ldew_snow(i)    ,fwet_snow(i)    ,t_grnd(i)                        ,&
 
             sag_roof(u)     ,sag_gimp(u)     ,sag_gper(u)     ,sag_lake(u)     ,&
             scv_roof(u)     ,scv_gimp(u)     ,scv_gper(u)     ,scv_lake(u)     ,&

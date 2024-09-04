@@ -54,10 +54,10 @@ MODULE MOD_Vars_Global
    integer, parameter :: nl_roof   = 10
    integer, parameter :: nl_wall   = 10
    integer, parameter :: nvegwcs   = 4  ! number of vegetation water potential nodes
-   
+
    ! used for downscaling
-   integer, parameter :: num_type = 4
-   integer, parameter :: num_zenith = 51
+   integer, parameter :: num_type    = 4
+   integer, parameter :: num_zenith  = 51
    integer, parameter :: num_azimuth = 36
 
    ! bgc variables

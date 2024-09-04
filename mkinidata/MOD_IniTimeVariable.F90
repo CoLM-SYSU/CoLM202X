@@ -23,7 +23,7 @@ CONTAINS
 !Plant Hydraulic parameters
                      ,vegwp,gs0sun,gs0sha&
 !End plant hydraulic parameter
-                     ,t_grnd,tleaf,ldew,ldew_rain,ldew_snow,sag,scv&
+                     ,t_grnd,tleaf,ldew,ldew_rain,ldew_snow,fwet_snow,sag,scv&
                      ,snowdp,fveg,fsno,sigf,green,lai,sai,coszen&
                      ,snw_rds,mss_bcpho,mss_bcphi,mss_ocpho,mss_ocphi&
                      ,mss_dst1,mss_dst2,mss_dst3,mss_dst4&
@@ -154,6 +154,7 @@ CONTAINS
          ldew_rain,              &! depth of rain on foliage [mm]
          ldew_snow,              &! depth of snow on foliage [mm]
 !#endif
+         fwet_snow,              &! vegetation snow fractional cover [-]
          ldew,                   &! depth of water on foliage [mm]
          sag,                    &! non dimensional snow age [-]
          scv,                    &! snow cover, water equivalent [mm]
@@ -543,6 +544,7 @@ CONTAINS
          ! Variables: ldew_rain, ldew_snow, ldew, t_leaf, vegwp, gs0sun, gs0sha
          ldew_rain  = 0.
          ldew_snow  = 0.
+         fwet_snow  = 0.
          ldew  = 0.
          tleaf = t_soisno(1)
          IF(DEF_USE_PLANTHYDRAULICS)THEN
@@ -557,6 +559,7 @@ CONTAINS
             pe = patch_pft_e(ipatch)
             ldew_rain_p(ps:pe) = 0.
             ldew_snow_p(ps:pe) = 0.
+            fwet_snow_p(ps:pe) = 0.
             ldew_p(ps:pe) = 0.
             tleaf_p(ps:pe)= t_soisno(1)
             tref_p(ps:pe) = t_soisno(1)
@@ -1111,12 +1114,13 @@ CONTAINS
 
          ! (8) surface albedo
          ! Variables: alb, ssun, ssha, ssno, thermk, extkb, extkd
+         !NOTE: max(0.001,coszen) will make it always run to calculate initial values for the above.
          wt      = 0.
          pg_snow = 0.
          snofrz (:) = 0.
          ssw = min(1.,1.e-3*wliq_soisno(1)/dz_soisno(1))
          CALL albland (ipatch,patchtype,1800.,soil_s_v_alb,soil_d_v_alb,soil_s_n_alb,soil_d_n_alb,&
-            chil,rho,tau,fveg,green,lai,sai,max(0.001,coszen),&
+            chil,rho,tau,fveg,green,lai,sai,fwet_snow,max(0.001,coszen),&
             wt,fsno,scv,scv,sag,ssw,pg_snow,273.15,t_grnd,t_soisno(:1),dz_soisno(:1),&
             snl,wliq_soisno,wice_soisno,snw_rds,snofrz,&
             mss_bcpho,mss_bcphi,mss_ocpho,mss_ocphi,&

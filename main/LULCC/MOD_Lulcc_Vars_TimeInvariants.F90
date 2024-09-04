@@ -1,15 +1,16 @@
 #include <define.h>
 
 MODULE MOD_Lulcc_Vars_TimeInvariants
-! ======================================================================
-! Created by Hua Yuan, 04/2022
+
+!-----------------------------------------------------------------------
+!  Created by Hua Yuan, 04/2022
 !
 ! !REVISIONS:
 !
-! 07/2023, Wenzong Dong: porting to MPI version
-! 08/2023, Hua Yuan: unified PFT and PC process
+!  07/2023, Wenzong Dong: porting to MPI version
+!  08/2023, Hua Yuan: unified PFT and PC process
 !
-! ======================================================================
+!-----------------------------------------------------------------------
 
    USE MOD_Precision
    USE MOD_Vars_Global
@@ -157,6 +158,9 @@ CONTAINS
 #endif
          ENDIF
       ENDIF
+
+      CALL landpatch_%set_vecgs
+
    END SUBROUTINE SAVE_LulccTimeInvariants
 
 

@@ -17,9 +17,15 @@ CONTAINS
                               solvd,solvi,solnd,solni,srvd,srvi,srnd,srni,&
                               solvdln,solviln,solndln,solniln,srvdln,srviln,srndln,srniln)
 
-!=======================================================================
-! Net solar absorbed by urban surface
-!=======================================================================
+!-----------------------------------------------------------------------
+! !DESCRIPTION:
+!  Net solar absorbed by urban surface.
+!
+!  Created by Hua Yuan, 09/2021
+!
+! !REVISIONS:
+!
+!-----------------------------------------------------------------------
 
    USE MOD_Precision
    USE MOD_Vars_Global

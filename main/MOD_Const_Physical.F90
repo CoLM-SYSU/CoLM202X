@@ -10,8 +10,8 @@ MODULE MOD_Const_Physical
   PUBLIC
   real(r8), parameter :: denice = 917.      ! density of ice [kg/m3]
   real(r8), parameter :: denh2o = 1000.     ! density of liquid water [kg/m3]
-  real(r8), parameter :: cpliq  = 4188.     ! Specific heat of water [J/kg-K]
-  real(r8), parameter :: cpice  = 2117.27   ! Specific heat of ice [J/kg-K]
+  real(r8), parameter :: cpliq  = 4188.     ! Specific heat of water [J/kg/K]
+  real(r8), parameter :: cpice  = 2117.27   ! Specific heat of ice [J/kg/K]
   real(r8), parameter :: cpair  = 1004.64   ! specific heat of dry air [J/kg/K]
   real(r8), parameter :: hfus   = 0.3336e6  ! latent heat of fusion for ice [J/kg]
   real(r8), parameter :: hvap   = 2.5104e6  ! latent heat of evap for water [J/kg]
