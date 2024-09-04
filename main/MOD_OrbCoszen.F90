@@ -72,9 +72,6 @@ CONTAINS
       orb_coszen = sin(dlat)*sin(declin) &
                  - cos(dlat)*cos(declin)*cos(calday*2.0*pi+dlon)
 
-      IF (orb_coszen<0) orb_coszen = 0
-      IF (orb_coszen>1) orb_coszen = 1
-
    END FUNCTION orb_coszen
 
 END MODULE MOD_OrbCoszen

@@ -290,6 +290,7 @@ D2ROFSUB_AVG(:,:)=0._JPRB
          ALLOCATE(D2WINFILTEX_AVG(NSEQMAX,1))
   	 D2WINFILTEX_AVG(:,:)=0._JPRB
       ENDIF
+      
       NADD=0
 
       !*** 2b time-average 1D Diagnostics (bifurcation channel)

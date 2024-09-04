@@ -876,6 +876,7 @@ CONTAINS
       DEF_USE_CBL_HEIGHT,                     & !add by zhongwang wei @ sysu 2022/12/31
       DEF_USE_PLANTHYDRAULICS,                & !add by xingjie lu @ sysu 2023/05/28
       DEF_USE_MEDLYNST,                       & !add by xingjie lu @ sysu 2023/05/28
+      DEF_USE_WUEST,                          & !add by xingjie lu @ sysu 2024/05/28
       DEF_USE_SASU,                           & !add by Xingjie Lu @ sysu 2023/06/27
       DEF_USE_PN,                             & !add by Xingjie Lu @ sysu 2023/06/27
       DEF_USE_FERT,                           & !add by Xingjie Lu @ sysu 2023/06/27
