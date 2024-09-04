@@ -841,9 +841,9 @@ CONTAINS
          ! Conservation of short- and long- waves radiation in the grid of forcing
          CALL mg2p_forc%normalize (forc_xy_solarin, forc_swrad_part)
          CALL mg2p_forc%normalize (forc_xy_frl,     forc_frl_part  )
-#endif
          CALL mg2p_forc%part2pset (forc_frl_part,    forc_frl   )
          CALL mg2p_forc%part2pset (forc_swrad_part,  forc_swrad )
+#endif
 
          ! divide fractions of downscaled shortwave radiation 
          IF (p_is_worker) THEN
