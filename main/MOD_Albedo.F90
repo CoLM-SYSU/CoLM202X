@@ -594,7 +594,7 @@ ENDIF
 #if(defined LULC_USGS)
       ! yuan: to be consistance with CoLM2014, no stem considered
       ! for twostream and leaf optical property calculations
-      sai_ = 0.
+      sai_ = 0.01
 #else
       sai_ = sai
 #endif
