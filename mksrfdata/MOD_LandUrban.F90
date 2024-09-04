@@ -1,17 +1,21 @@
 #include <define.h>
 
 MODULE MOD_LandUrban
-
-!--------------------------------------------------------------------------------------
-! DESCRIPTION:
+!-----------------------------------------------------------------------
 !
-!    Build pixelset "landurban".
+! !DESCRIPTION:
 !
-! Original authors: Hua Yuan and Wenzong Dong, 2022, OpenMP version.
+!  Build pixelset "landurban".
 !
-! REVISIONS:
-! Wenzong Dong, Hua Yuan, Shupeng Zhang, 05/2023: porting codes to MPI parallel version
-!--------------------------------------------------------------------------------------
+!  Original authors: Hua Yuan and Wenzong Dong, 2021, OpenMP version.
+!
+!
+! !REVISIONS:
+!
+!  05/2023, Wenzong Dong, Hua Yuan, Shupeng Zhang: porting codes to MPI
+!           parallel version.
+!
+!-----------------------------------------------------------------------
 
    USE MOD_Grid
    USE MOD_Pixelset
@@ -81,8 +85,13 @@ CONTAINS
    integer,   allocatable :: settyp_(:)
    integer,   allocatable :: ielm_  (:)
 
-   integer :: numurban_
-   integer, allocatable :: urbclass (:)
+   integer  :: numurban_
+   integer  :: iurb, ib, imiss
+   integer  :: buff_count(N_URB)
+   real(r8) :: buff_p(N_URB)
+
+   integer , allocatable :: urbclass (:)
+   real(r8), allocatable :: area_one (:)
 
    character(len=256) :: suffix, cyear
 
@@ -102,11 +111,9 @@ CONTAINS
          CALL allocate_block_data (gurban, data_urb_class)
          CALL flush_block_data (data_urb_class, 0)
 
-         !write(cyear,'(i4.4)') int(lc_year/5)*5
+         ! read urban type data
          suffix = 'URBTYP'
 IF (DEF_URBAN_type_scheme == 1) THEN
-         ! NOTE!!!
-         ! region id is assigned in aggreagation_urban.F90 now
          CALL read_5x5_data (dir_urban, suffix, gurban, 'URBAN_DENSITY_CLASS', data_urb_class)
 ELSE IF (DEF_URBAN_type_scheme == 2) THEN
          CALL read_5x5_data (dir_urban, suffix, gurban, 'LCZ_DOM', data_urb_class)
@@ -120,16 +127,16 @@ ENDIF
       IF (p_is_worker) THEN
 
          IF (numpatch > 0) THEN
-            ! a temporary numpatch with max urban patch
+            ! a temporary numpatch with max urban patch number
             numpatch_ = numpatch + count(landpatch%settyp == URBAN) * (N_URB-1)
 
-            allocate (eindex_(numpatch_))
-            allocate (ipxstt_(numpatch_))
-            allocate (ipxend_(numpatch_))
-            allocate (settyp_(numpatch_))
-            allocate (ielm_  (numpatch_))
+            allocate (eindex_ (numpatch_ ))
+            allocate (ipxstt_ (numpatch_ ))
+            allocate (ipxend_ (numpatch_ ))
+            allocate (settyp_ (numpatch_ ))
+            allocate (ielm_   (numpatch_ ))
 
-            ! max urban patch number
+            ! max urban patch number (temporary)
             numurban_ = count(landpatch%settyp == URBAN) * N_URB
             IF (numurban_ > 0) THEN
                allocate (urbclass(numurban_))
@@ -143,26 +150,64 @@ ENDIF
          DO ipatch = 1, numpatch
             IF (landpatch%settyp(ipatch) == URBAN) THEN
 
-               !???
                ie     = landpatch%ielm  (ipatch)
                ipxstt = landpatch%ipxstt(ipatch)
                ipxend = landpatch%ipxend(ipatch)
 
-               CALL aggregation_request_data (landpatch, ipatch, gurban, zip = .false., &
+               CALL aggregation_request_data (landpatch, ipatch, gurban, zip = .false., area = area_one, &
                   data_i4_2d_in1 = data_urb_class, data_i4_2d_out1 = ibuff)
 
-IF (DEF_URBAN_type_scheme == 1) THEN
-               ! Some urban patches and NCAR data are inconsistent (NCAR has no urban ID),
-               ! so the these points are assigned by the 3(medium density), or can define by ueser
-               WHERE (ibuff < 1 .or. ibuff > 3)
-                  ibuff = 3
-               END WHERE
-ELSE IF(DEF_URBAN_type_scheme == 2) THEN
-               ! Same for NCAR, fill the gap LCZ class of urban patch if LCZ data is non-urban
-               WHERE (ibuff > 10 .or. ibuff == 0)
-                  ibuff = 9
-               END WHERE
-ENDIF
+               ! when there is missing urban types
+               !NOTE@tungwz: need duoble check below and add appropriate annotations
+               ! check if there is urban pixel without URBAN ID
+               imiss = count(ibuff<1 .or. ibuff>N_URB)
+               IF (imiss > 0) THEN
+                  ! Calculate the relative ratio of each urban types by excluding urban pixels withoht URBAN ID
+                  WHERE (ibuff<1 .or. ibuff>N_URB)
+                     area_one = 0
+                  END WHERE
+
+                  buff_p = 0
+                  IF (sum(area_one) > 0) THEN
+                     DO ib = 1, size(area_one)
+                        IF (ibuff(ib)>1 .and. ibuff(ib)<N_URB) THEN
+                           iurb         = ibuff(ib)
+                           buff_p(iurb) = buff_p(iurb) + area_one(ib)
+                        ENDIF
+                     ENDDO
+                     buff_p(:) = buff_p(:)/sum(area_one)
+                  ENDIF
+
+                  ! The number of URBAN ID of each type is assigned to urban pixels without URBAN ID in relative proportion
+                  DO iurb = 1, N_URB-1
+                     buff_count(iurb) = int(buff_p(iurb)*imiss)
+                  ENDDO
+                  buff_count(N_URB) = imiss - sum(buff_count(1:N_URB-1))
+
+                  ! Some urban patches and NCAR/LCZ data are inconsistent (NCAR/LCZ has no urban ID),
+                  ! so the these points are assigned
+                  IF (all(buff_count==0)) THEN
+                     ! If none of the urban pixels have an URBAN ID, they are assigned directly
+                     IF (DEF_URBAN_type_scheme == 1) THEN
+                        ibuff = 3
+                     ELSEIF (DEF_URBAN_type_scheme == 2) THEN
+                        ibuff = 9
+                     ENDIF
+                  ELSE
+                     ! Otherwise, URBAN ID are assigned based on the previously calculated number
+                     DO ib = 1, size(ibuff)
+                        IF (ibuff(ib)<1 .or. ibuff(ib)>N_URB) THEN
+                           type_loop: DO iurb = 1, N_URB
+                              IF (buff_count(iurb) > 0) THEN
+                                 ibuff(ib)        = iurb
+                                 buff_count(iurb) = buff_count(iurb) - 1
+                                 EXIT type_loop
+                              ENDIF
+                           ENDDO type_loop
+                        ENDIF
+                     ENDDO
+                  ENDIF
+               ENDIF
 
                npxl = ipxend - ipxstt + 1
 
@@ -175,7 +220,7 @@ ENDIF
                allocate (order (ipxstt:ipxend))
                order = (/ (ipxl, ipxl = ipxstt, ipxend) /)
 
-               ! change order vars, types->regid
+               ! change order vars, types->regid ? still types below
                ! add region information, because urban type may be same,
                ! but from different region in this urban patch
                ! relative code is changed
@@ -297,42 +342,42 @@ ENDIF
 
 #ifdef SinglePoint
 
-      allocate  ( SITE_urbtyp   (numurban) )
-      allocate  ( SITE_lucyid   (numurban) )
+      allocate  ( SITE_urbtyp    (numurban) )
+      allocate  ( SITE_lucyid    (numurban) )
 
 IF (.not. USE_SITE_urban_paras) THEN
-      allocate  ( SITE_fveg_urb (numurban) )
-      allocate  ( SITE_htop_urb (numurban) )
-      allocate  ( SITE_flake_urb(numurban) )
+      allocate  ( SITE_fveg_urb  (numurban) )
+      allocate  ( SITE_htop_urb  (numurban) )
+      allocate  ( SITE_flake_urb (numurban) )
 
-      allocate  ( SITE_popden   (numurban) )
-      allocate  ( SITE_froof    (numurban) )
-      allocate  ( SITE_hroof    (numurban) )
-      allocate  ( SITE_hwr      (numurban) )
-      allocate  ( SITE_fgper    (numurban) )
-      allocate  ( SITE_fgimp    (numurban) )
+      allocate  ( SITE_popden    (numurban) )
+      allocate  ( SITE_froof     (numurban) )
+      allocate  ( SITE_hroof     (numurban) )
+      allocate  ( SITE_hwr       (numurban) )
+      allocate  ( SITE_fgper     (numurban) )
+      allocate  ( SITE_fgimp     (numurban) )
 ENDIF
 
-      allocate  ( SITE_em_roof  (numurban) )
-      allocate  ( SITE_em_wall  (numurban) )
-      allocate  ( SITE_em_gimp  (numurban) )
-      allocate  ( SITE_em_gper  (numurban) )
-      allocate  ( SITE_t_roommax(numurban) )
-      allocate  ( SITE_t_roommin(numurban) )
-      allocate  ( SITE_thickroof(numurban) )
-      allocate  ( SITE_thickwall(numurban) )
+      allocate  ( SITE_em_roof   (numurban) )
+      allocate  ( SITE_em_wall   (numurban) )
+      allocate  ( SITE_em_gimp   (numurban) )
+      allocate  ( SITE_em_gper   (numurban) )
+      allocate  ( SITE_t_roommax (numurban) )
+      allocate  ( SITE_t_roommin (numurban) )
+      allocate  ( SITE_thickroof (numurban) )
+      allocate  ( SITE_thickwall (numurban) )
 
-      allocate  ( SITE_cv_roof  (nl_roof) )
-      allocate  ( SITE_cv_wall  (nl_wall) )
-      allocate  ( SITE_cv_gimp  (nl_soil) )
-      allocate  ( SITE_tk_roof  (nl_roof) )
-      allocate  ( SITE_tk_wall  (nl_wall) )
-      allocate  ( SITE_tk_gimp  (nl_soil) )
+      allocate  ( SITE_cv_roof   (nl_roof)  )
+      allocate  ( SITE_cv_wall   (nl_wall)  )
+      allocate  ( SITE_cv_gimp   (nl_soil)  )
+      allocate  ( SITE_tk_roof   (nl_roof)  )
+      allocate  ( SITE_tk_wall   (nl_wall)  )
+      allocate  ( SITE_tk_gimp   (nl_soil)  )
 
-      allocate  ( SITE_alb_roof (2, 2) )
-      allocate  ( SITE_alb_wall (2, 2) )
-      allocate  ( SITE_alb_gimp (2, 2) )
-      allocate  ( SITE_alb_gper (2, 2) )
+      allocate  ( SITE_alb_roof  (2, 2)     )
+      allocate  ( SITE_alb_wall  (2, 2)     )
+      allocate  ( SITE_alb_gimp  (2, 2)     )
+      allocate  ( SITE_alb_gper  (2, 2)     )
 
       SITE_urbtyp(:) = landurban%settyp
 #endif
@@ -358,17 +403,18 @@ ENDIF
       CALL write_patchfrac (DEF_dir_landdata, lc_year)
 #endif
 
-      IF (allocated(ibuff)) deallocate (ibuff)
-      IF (allocated(types)) deallocate (types)
-      IF (allocated(order)) deallocate (order)
+      IF (allocated (ibuff   )) deallocate (ibuff    )
+      IF (allocated (types   )) deallocate (types    )
+      IF (allocated (order   )) deallocate (order    )
 
-      IF (allocated(eindex_)) deallocate (eindex_)
-      IF (allocated(ipxstt_)) deallocate (ipxstt_)
-      IF (allocated(ipxend_)) deallocate (ipxend_)
-      IF (allocated(settyp_)) deallocate (settyp_)
-      IF (allocated(ielm_  )) deallocate (ielm_  )
+      IF (allocated (eindex_ )) deallocate (eindex_  )
+      IF (allocated (ipxstt_ )) deallocate (ipxstt_  )
+      IF (allocated (ipxend_ )) deallocate (ipxend_  )
+      IF (allocated (settyp_ )) deallocate (settyp_  )
+      IF (allocated (ielm_   )) deallocate (ielm_    )
 
-      IF (allocated(urbclass)) deallocate (urbclass)
+      IF (allocated (urbclass)) deallocate (urbclass )
+      IF (allocated (area_one)) deallocate (area_one )
 
    END SUBROUTINE landurban_build
 

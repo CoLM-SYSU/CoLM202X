@@ -41,28 +41,24 @@ CONTAINS
 
 
 
-   SUBROUTINE WATER_2014 (ipatch,patchtype,lb       ,nl_soil ,deltim,&
-              z_soisno    ,dz_soisno   ,zi_soisno   ,bsw     ,porsl ,&
-              psi0        ,hksati      ,theta_r     ,topostd ,&
-              BVIC,                                                 &
-              rootr       ,rootflux    ,t_soisno    ,&
-              wliq_soisno ,wice_soisno ,smp         ,hk      ,pg_rain ,&
-              sm,   etr   ,qseva       ,qsdew       ,qsubl   ,qfros ,&
-              qseva_soil  ,qsdew_soil  ,qsubl_soil  ,qfros_soil     ,&
-              qseva_snow  ,qsdew_snow  ,qsubl_snow  ,qfros_snow     ,&
-              fsno                                                  ,&
-              rsur        ,rnof        ,qinfl       ,wtfact  ,pondmx,&
-              ssi         ,wimp        ,smpmin      ,zwt     ,wa    ,&
-              qcharge     ,errw_rsub   ,  &
+   SUBROUTINE WATER_2014 (ipatch,patchtype,lb       ,nl_soil     ,deltim      ,&
+              z_soisno    ,dz_soisno   ,zi_soisno   ,bsw         ,porsl       ,&
+              psi0        ,hksati      ,theta_r     ,topostd     ,BVIC        ,&
+              rootr       ,rootflux    ,t_soisno    ,wliq_soisno ,wice_soisno ,&
+              smp         ,hk          ,pg_rain     ,sm          ,etr         ,&
+              qseva       ,qsdew       ,qsubl       ,qfros       ,qseva_soil  ,&
+              qsdew_soil  ,qsubl_soil  ,qfros_soil  ,qseva_snow  ,qsdew_snow  ,&
+              qsubl_snow  ,qfros_snow  ,fsno        ,rsur        ,rnof        ,&
+              qinfl       ,wtfact      ,pondmx      ,ssi         ,wimp        ,&
+              smpmin      ,zwt         ,wa          ,qcharge     ,errw_rsub   ,&
 #if(defined CaMa_Flood)
-              flddepth,fldfrc,qinfl_fld,  &
+              flddepth    ,fldfrc      ,qinfl_fld                             ,&
 #endif
 ! SNICAR model variables
-              forc_aer                 ,  &
-              mss_bcpho   ,mss_bcphi   ,mss_ocpho   ,mss_ocphi   ,&
-              mss_dst1    ,mss_dst2    ,mss_dst3    ,mss_dst4     &
-! END SNICAR model variables
-             )
+              forc_aer                                                        ,&
+              mss_bcpho   ,mss_bcphi   ,mss_ocpho   ,mss_ocphi                ,&
+              mss_dst1    ,mss_dst2    ,mss_dst3    ,mss_dst4                  )
+
 !=======================================================================
 ! this is the main SUBROUTINE to execute the calculation of
 ! hydrological processes
@@ -87,71 +83,72 @@ CONTAINS
 
 !-----------------------Argument---------- ------------------------------
    integer, intent(in) :: &
-        ipatch           ,& ! patch index
-        patchtype           ! land patch type (0=soil, 1=urban or built-up, 2=wetland,
-                            ! 3=land ice, 4=land water bodies, 99=ocean
+        ipatch                  ,& ! patch index
+        patchtype                  ! land patch type (0=soil, 1=urban or built-up, 2=wetland,
+                                   ! 3=land ice, 4=land water bodies, 99=ocean
 
    integer, intent(in) :: &
-        lb              , & ! lower bound of array
-        nl_soil             ! upper bound of array
+        lb                      ,& ! lower bound of array
+        nl_soil                    ! upper bound of array
 
    real(r8), intent(in) :: &
-        deltim           , &! time step (s)
-        wtfact           , &! fraction of model area with high water table
-        pondmx           , &! ponding depth (mm)
-        ssi              , &! irreducible water saturation of snow
-        wimp             , &! water impremeable if porosity less than wimp
-        smpmin           , &! restriction for min of soil poten. (mm)
-        topostd          , &! standard deviation of elevation (m)
-        BVIC            , &!
+        deltim                  ,&! time step (s)
+        wtfact                  ,&! fraction of model area with high water table
+        pondmx                  ,&! ponding depth (mm)
+        ssi                     ,&! irreducible water saturation of snow
+        wimp                    ,&! water impremeable if porosity less than wimp
+        smpmin                  ,&! restriction for min of soil poten. (mm)
+        topostd                 ,&! standard deviation of elevation (m)
+        BVIC                    ,&!
 
-        z_soisno (lb:nl_soil)   , &! layer depth (m)
-        dz_soisno(lb:nl_soil)   , &! layer thickness (m)
-        zi_soisno(lb-1:nl_soil) , &! interface level below a "z" level (m)
+        z_soisno (lb:nl_soil)   ,&! layer depth (m)
+        dz_soisno(lb:nl_soil)   ,&! layer thickness (m)
+        zi_soisno(lb-1:nl_soil) ,&! interface level below a "z" level (m)
 
-        bsw(1:nl_soil)   , &! Clapp-Hornberger "B"
-        porsl(1:nl_soil) , &! saturated volumetric soil water content(porosity)
-        psi0(1:nl_soil)  , &! saturated soil suction (mm) (NEGATIVE)
-        hksati(1:nl_soil), &! hydraulic conductivity at saturation (mm h2o/s)
-        theta_r(1:nl_soil),&! residual moisture content [-]
-        rootr(1:nl_soil) , &! water uptake farction from different layers, all layers add to 1.0
-        rootflux(1:nl_soil),&! root uptake from different layer, all layers add to transpiration
+        bsw(1:nl_soil)          ,&! Clapp-Hornberger "B"
+        porsl(1:nl_soil)        ,&! saturated volumetric soil water content(porosity)
+        psi0(1:nl_soil)         ,&! saturated soil suction (mm) (NEGATIVE)
+        hksati(1:nl_soil)       ,&! hydraulic conductivity at saturation (mm h2o/s)
+        theta_r(1:nl_soil)      ,&! residual moisture content [-]
+        rootr(1:nl_soil)        ,&! water uptake farction from different layers, all layers add to 1.0
+        rootflux(1:nl_soil)     ,&! root uptake from different layer, all layers add to transpiration
 
-        t_soisno(lb:nl_soil), &! soil/snow skin temperature (K)
-        pg_rain          , &! rainfall after removal of interception (mm h2o/s)
-        sm               , &! snow melt (mm h2o/s)
-        etr              , &! actual transpiration (mm h2o/s)
-        qseva            , &! ground surface evaporation rate (mm h2o/s)
-        qsdew            , &! ground surface dew formation (mm h2o /s) [+]
-        qsubl            , &! sublimation rate from snow pack (mm h2o /s) [+]
-        qfros            , &! surface dew added to snow pack (mm h2o /s) [+]
-        qseva_soil       , &! ground soil surface evaporation rate (mm h2o/s)
-        qsdew_soil       , &! ground soil surface dew formation (mm h2o /s) [+]
-        qsubl_soil       , &! sublimation rate from soil ice pack (mm h2o /s) [+]
-        qfros_soil       , &! surface dew added to soil ice pack (mm h2o /s) [+]
-        qseva_snow       , &! ground snow surface evaporation rate (mm h2o/s)
-        qsdew_snow       , &! ground snow surface dew formation (mm h2o /s) [+]
-        qsubl_snow       , &! sublimation rate from snow pack (mm h2o /s) [+]
-        qfros_snow       , &! surface dew added to snow pack (mm h2o /s) [+]
-        fsno                ! snow fractional cover
+        t_soisno(lb:nl_soil)    ,&! soil/snow skin temperature (K)
+        pg_rain                 ,&! rainfall after removal of interception (mm h2o/s)
+        sm                      ,&! snow melt (mm h2o/s)
+        etr                     ,&! actual transpiration (mm h2o/s)
+        qseva                   ,&! ground surface evaporation rate (mm h2o/s)
+        qsdew                   ,&! ground surface dew formation (mm h2o /s) [+]
+        qsubl                   ,&! sublimation rate from snow pack (mm h2o /s) [+]
+        qfros                   ,&! surface dew added to snow pack (mm h2o /s) [+]
+        qseva_soil              ,&! ground soil surface evaporation rate (mm h2o/s)
+        qsdew_soil              ,&! ground soil surface dew formation (mm h2o /s) [+]
+        qsubl_soil              ,&! sublimation rate from soil ice pack (mm h2o /s) [+]
+        qfros_soil              ,&! surface dew added to soil ice pack (mm h2o /s) [+]
+        qseva_snow              ,&! ground snow surface evaporation rate (mm h2o/s)
+        qsdew_snow              ,&! ground snow surface dew formation (mm h2o /s) [+]
+        qsubl_snow              ,&! sublimation rate from snow pack (mm h2o /s) [+]
+        qfros_snow              ,&! surface dew added to snow pack (mm h2o /s) [+]
+        fsno                      ! snow fractional cover
+
 #if(defined CaMa_Flood)
    real(r8), intent(inout) :: flddepth  ! inundation water depth [mm]
    real(r8), intent(in)    :: fldfrc    ! inundation water depth   [0-1]
    real(r8), intent(out)   :: qinfl_fld ! grid averaged inundation water input from top (mm/s)
 #endif
    real(r8), intent(inout) :: &
-        wice_soisno(lb:nl_soil) , &! ice lens (kg/m2)
-        wliq_soisno(lb:nl_soil) , &! liquid water (kg/m2)
-        smp(1:nl_soil)   , &! soil matrix potential [mm]
-        hk (1:nl_soil)   , &! hydraulic conductivity [mm h2o/m]
-        zwt              , &! the depth from ground (soil) surface to water table [m]
-        wa                  ! water storage in aquifer [mm]
+        wice_soisno(lb:nl_soil) ,&! ice lens (kg/m2)
+        wliq_soisno(lb:nl_soil) ,&! liquid water (kg/m2)
+        smp(1:nl_soil)          ,&! soil matrix potential [mm]
+        hk (1:nl_soil)          ,&! hydraulic conductivity [mm h2o/m]
+        zwt                     ,&! the depth from ground (soil) surface to water table [m]
+        wa                        ! water storage in aquifer [mm]
 
    real(r8), intent(out) :: &
-        rsur             , &! surface runoff (mm h2o/s)
-        rnof             , &! total runoff (mm h2o/s)
-        qinfl            , &! infiltration rate (mm h2o/s)
-        qcharge          , &! groundwater recharge (positive to aquifer) [mm/s]
+        rsur                    ,&! surface runoff (mm h2o/s)
+        rnof                    ,&! total runoff (mm h2o/s)
+        qinfl                   ,&! infiltration rate (mm h2o/s)
+        qcharge                 ,&! groundwater recharge (positive to aquifer) [mm/s]
         errw_rsub
 
 ! SNICAR model variables
@@ -159,32 +156,32 @@ CONTAINS
    real(r8), intent(in) :: forc_aer ( 14 )  ! aerosol deposition from atmosphere model (grd,aer) [kg m-1 s-1]
 
    real(r8), intent(inout) :: &
-        mss_bcpho (lb:0), &! mass of hydrophobic BC in snow  (col,lyr) [kg]
-        mss_bcphi (lb:0), &! mass of hydrophillic BC in snow (col,lyr) [kg]
-        mss_ocpho (lb:0), &! mass of hydrophobic OC in snow  (col,lyr) [kg]
-        mss_ocphi (lb:0), &! mass of hydrophillic OC in snow (col,lyr) [kg]
-        mss_dst1  (lb:0), &! mass of dust species 1 in snow  (col,lyr) [kg]
-        mss_dst2  (lb:0), &! mass of dust species 2 in snow  (col,lyr) [kg]
-        mss_dst3  (lb:0), &! mass of dust species 3 in snow  (col,lyr) [kg]
-        mss_dst4  (lb:0)   ! mass of dust species 4 in snow  (col,lyr) [kg]
+        mss_bcpho (lb:0)        ,&! mass of hydrophobic BC in snow  (col,lyr) [kg]
+        mss_bcphi (lb:0)        ,&! mass of hydrophillic BC in snow (col,lyr) [kg]
+        mss_ocpho (lb:0)        ,&! mass of hydrophobic OC in snow  (col,lyr) [kg]
+        mss_ocphi (lb:0)        ,&! mass of hydrophillic OC in snow (col,lyr) [kg]
+        mss_dst1  (lb:0)        ,&! mass of dust species 1 in snow  (col,lyr) [kg]
+        mss_dst2  (lb:0)        ,&! mass of dust species 2 in snow  (col,lyr) [kg]
+        mss_dst3  (lb:0)        ,&! mass of dust species 3 in snow  (col,lyr) [kg]
+        mss_dst4  (lb:0)          ! mass of dust species 4 in snow  (col,lyr) [kg]
 ! Aerosol Fluxes (Jan. 07, 2023)
 ! END SNICAR model variables
 
 !-----------------------Local Variables------------------------------
 !
-   integer j                 ! loop counter
+   integer j                      ! loop counter
 
    real(r8) :: &
-       eff_porosity(1:nl_soil), &! effective porosity = porosity - vol_ice
-       dwat(1:nl_soil)   , &! change in soil water
-       gwat              , &! net water input from top (mm/s)
-       rsubst            , &! subsurface runoff (mm h2o/s)
-       vol_liq(1:nl_soil), &! partitial volume of liquid water in layer
-       vol_ice(1:nl_soil), &! partitial volume of ice lens in layer
-       icefrac(1:nl_soil), &! ice fraction (-)
-       zmm (1:nl_soil)   , &! layer depth (mm)
-       dzmm(1:nl_soil)   , &! layer thickness (mm)
-       zimm(0:nl_soil)      ! interface level below a "z" level (mm)
+       eff_porosity(1:nl_soil)  ,&! effective porosity = porosity - vol_ice
+       dwat(1:nl_soil)          ,&! change in soil water
+       gwat                     ,&! net water input from top (mm/s)
+       rsubst                   ,&! subsurface runoff (mm h2o/s)
+       vol_liq(1:nl_soil)       ,&! partitial volume of liquid water in layer
+       vol_ice(1:nl_soil)       ,&! partitial volume of ice lens in layer
+       icefrac(1:nl_soil)       ,&! ice fraction (-)
+       zmm (1:nl_soil)          ,&! layer depth (mm)
+       dzmm(1:nl_soil)          ,&! layer thickness (mm)
+       zimm(0:nl_soil)            ! interface level below a "z" level (mm)
 
    real(r8) :: err_solver, w_sum
 #if(defined CaMa_Flood)
@@ -335,7 +332,7 @@ IF(patchtype<=1)THEN   ! soil ground only
             ! otherwise, the surface runoff will be double counted.
             ! only the re-infiltration is added to water balance calculation.
             IF (DEF_Runoff_SCHEME  == 0) THEN
-          
+
                CALL SurfaceRunoff_SIMTOP (nl_soil,1.0,wimp,porsl,psi0,hksati,&
                         z_soisno(1:),dz_soisno(1:),zi_soisno(0:),&
                         eff_porosity,icefrac,zwt,gfld,rsur_fld)
@@ -481,32 +478,29 @@ ENDIF
    END SUBROUTINE WATER_2014
 
 !-----------------------------------------------------------------------
-   SUBROUTINE WATER_VSF (ipatch,  patchtype,lb      ,nl_soil ,deltim ,&
-              z_soisno    ,dz_soisno   ,zi_soisno                    ,&
-              bsw         ,theta_r     ,topostd                      ,&
-              BVIC,                                                  &
+   SUBROUTINE WATER_VSF (ipatch,  patchtype,lb      ,nl_soil     ,deltim      ,&
+              z_soisno    ,dz_soisno   ,zi_soisno                             ,&
+              bsw         ,theta_r     ,topostd     ,BVIC                     ,&
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
-              alpha_vgm   ,n_vgm       ,L_vgm       ,sc_vgm  ,fc_vgm ,&
+              alpha_vgm   ,n_vgm       ,L_vgm       ,sc_vgm      ,fc_vgm      ,&
 #endif
-              porsl       ,psi0        ,hksati      ,rootr   ,rootflux,&
-              t_soisno    ,wliq_soisno ,wice_soisno ,smp     ,hk     ,&
-              pg_rain     ,sm          ,                              &
-              etr         ,qseva       ,qsdew       ,qsubl   ,qfros  ,&
-              qseva_soil  ,qsdew_soil  ,qsubl_soil  ,qfros_soil      ,&
-              qseva_snow  ,qsdew_snow  ,qsubl_snow  ,qfros_snow      ,&
-              fsno                                                   ,&
-              rsur        ,rsur_se     ,rsur_ie     ,rnof            ,&
-              qinfl       ,wtfact      ,ssi         ,pondmx          ,&
-              wimp        ,zwt         ,wdsrf       ,wa      ,wetwat ,&
+              porsl       ,psi0        ,hksati      ,rootr       ,rootflux    ,&
+              t_soisno    ,wliq_soisno ,wice_soisno ,smp         ,hk          ,&
+              pg_rain     ,sm                                                 ,&
+              etr         ,qseva       ,qsdew       ,qsubl       ,qfros       ,&
+              qseva_soil  ,qsdew_soil  ,qsubl_soil  ,qfros_soil               ,&
+              qseva_snow  ,qsdew_snow  ,qsubl_snow  ,qfros_snow               ,&
+              fsno                                                            ,&
+              rsur        ,rsur_se     ,rsur_ie     ,rnof                     ,&
+              qinfl       ,wtfact      ,ssi         ,pondmx                   ,&
+              wimp        ,zwt         ,wdsrf       ,wa          ,wetwat      ,&
 #if(defined CaMa_Flood)
-              flddepth    ,fldfrc      ,qinfl_fld   ,                 &
+              flddepth    ,fldfrc      ,qinfl_fld                             ,&
 #endif
 ! SNICAR model variables
-              forc_aer    ,&
-              mss_bcpho   ,mss_bcphi   ,mss_ocpho   ,mss_ocphi ,&
-              mss_dst1    ,mss_dst2    ,mss_dst3    ,mss_dst4   &
-! END SNICAR model variables
-              )
+              forc_aer                                                        ,&
+              mss_bcpho   ,mss_bcphi   ,mss_ocpho   ,mss_ocphi                ,&
+              mss_dst1    ,mss_dst2    ,mss_dst3    ,mss_dst4                  )
 
 !===================================================================================
 ! this is the main SUBROUTINE to execute the calculation of soil water processes
@@ -844,7 +838,7 @@ IF(patchtype<=1)THEN   ! soil ground only
             ! otherwise, the surface runoff will be double counted.
             ! only the re-infiltration is added to water balance calculation.
             IF (DEF_Runoff_SCHEME  == 0) THEN
-          
+
                CALL SurfaceRunoff_SIMTOP (nl_soil,1.0,wimp,porsl,psi0,hksati,&
                         z_soisno(1:),dz_soisno(1:),zi_soisno(0:),&
                         eff_porosity,icefrac,zwt,gfld,rsur_fld)

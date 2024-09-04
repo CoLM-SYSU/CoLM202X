@@ -256,12 +256,12 @@ MODULE MOD_Vars_TimeInvariants
    real(r8) :: wetwatmax                        !maximum wetland water (mm)
 
    ! Used for downscaling
-   real(r8), allocatable    :: svf_patches (:)                                           ! sky view factor
-   real(r8), allocatable    :: cur_patches (:)                                           ! curvature
-   real(r8), allocatable    :: sf_lut_patches (:,:,:)                                    ! look up table of shadow factor of a patch
-   real(r8), allocatable    :: asp_type_patches        (:,:)                             ! topographic aspect of each character of one patch
-   real(r8), allocatable    :: slp_type_patches        (:,:)                             ! topographic slope of each character of one patch
-   real(r8), allocatable    :: area_type_patches       (:,:)                             ! area percentage of each character of one patch
+   real(r8), allocatable    :: svf_patches (:)         !sky view factor
+   real(r8), allocatable    :: cur_patches (:)         !curvature
+   real(r8), allocatable    :: sf_lut_patches  (:,:,:) !look up table of shadow factor of a patch
+   real(r8), allocatable    :: asp_type_patches  (:,:) !topographic aspect of each character of one patch
+   real(r8), allocatable    :: slp_type_patches  (:,:) !topographic slope of each character of one patch
+   real(r8), allocatable    :: area_type_patches (:,:) !area percentage of each character of one patch
 
 ! PUBLIC MEMBER FUNCTIONS:
    PUBLIC :: allocate_TimeInvariants
@@ -350,14 +350,14 @@ CONTAINS
             allocate (ibedrock             (numpatch))
             allocate (topoelv              (numpatch))
             allocate (topostd              (numpatch))
-      
+
             ! Used for downscaling
-            allocate (svf_patches          (numpatch))
-            allocate (asp_type_patches     (num_type,numpatch))
-            allocate (slp_type_patches     (num_type,numpatch))
-            allocate (area_type_patches    (num_type,numpatch))
-            allocate (sf_lut_patches       (num_azimuth,num_zenith,numpatch))
-            allocate (cur_patches          (numpatch))
+            allocate (svf_patches                              (numpatch))
+            allocate (asp_type_patches                (num_type,numpatch))
+            allocate (slp_type_patches                (num_type,numpatch))
+            allocate (area_type_patches               (num_type,numpatch))
+            allocate (sf_lut_patches    (num_azimuth,num_zenith,numpatch))
+            allocate (cur_patches                              (numpatch))
       ENDIF
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
@@ -433,7 +433,7 @@ CONTAINS
       CALL ncio_read_vector (file_restart, 'psi0   ' ,     nl_soil, landpatch, psi0      ) ! minimum soil suction [mm] (NOTE: "-" valued)
       CALL ncio_read_vector (file_restart, 'bsw    ' ,     nl_soil, landpatch, bsw       ) ! clapp and hornbereger "b" parameter [-]
       CALL ncio_read_vector (file_restart, 'theta_r  ' ,   nl_soil, landpatch, theta_r   ) ! residual moisture content [-]
-      CALL ncio_read_vector (file_restart, 'BVIC  ' ,   nl_soil, landpatch, BVIC   )       ! b parameter in Fraction of saturated soil in a grid calculated by VIC
+      CALL ncio_read_vector (file_restart, 'BVIC  ' ,      nl_soil, landpatch, BVIC   )    ! b parameter in Fraction of saturated soil in a grid calculated by VIC
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
       CALL ncio_read_vector (file_restart, 'alpha_vgm' ,   nl_soil, landpatch, alpha_vgm ) ! a parameter corresponding approximately to the inverse of the air-entry value
       CALL ncio_read_vector (file_restart, 'L_vgm    ' ,   nl_soil, landpatch, L_vgm     ) ! pore-connectivity parameter [dimensionless]
@@ -456,8 +456,8 @@ CONTAINS
       CALL ncio_read_vector (file_restart, 'dkdry  ' ,     nl_soil, landpatch, dkdry  )    ! thermal conductivity for dry soil  [W/(m-K)]
       CALL ncio_read_vector (file_restart, 'BA_alpha',     nl_soil, landpatch, BA_alpha)   ! alpha in Balland and Arp(2005) thermal conductivity scheme
       CALL ncio_read_vector (file_restart, 'BA_beta' ,     nl_soil, landpatch, BA_beta )   ! beta in Balland and Arp(2005) thermal conductivity scheme
-      CALL ncio_read_vector (file_restart, 'htop' ,    landpatch, htop)                    !
-      CALL ncio_read_vector (file_restart, 'hbot' ,    landpatch, hbot)                    !
+      CALL ncio_read_vector (file_restart, 'htop'    ,     landpatch, htop)                !
+      CALL ncio_read_vector (file_restart, 'hbot'    ,     landpatch, hbot)                !
 
       IF(DEF_USE_BEDROCK)THEN
          CALL ncio_read_vector (file_restart, 'debdrock' ,    landpatch, dbedrock)         !
@@ -484,14 +484,14 @@ CONTAINS
       CALL ncio_read_bcast_serial (file_restart, 'wetwatmax', wetwatmax) ! maximum wetland water (mm)
 
       IF (DEF_USE_Forcing_Downscaling) THEN
-         CALL ncio_read_vector (file_restart, 'slp_type_patches', num_type, landpatch, slp_type_patches)
-         CALL ncio_read_vector (file_restart, 'svf_patches', landpatch, svf_patches)
-         CALL ncio_read_vector (file_restart, 'asp_type_patches', num_type, landpatch, asp_type_patches)
-         CALL ncio_read_vector (file_restart, 'area_type_patches', num_type, landpatch, area_type_patches)
-         CALL ncio_read_vector (file_restart, 'sf_lut_patches', num_azimuth, num_zenith, landpatch, sf_lut_patches)
-         CALL ncio_read_vector (file_restart, 'cur_patches', landpatch, cur_patches)
+         CALL ncio_read_vector (file_restart, 'slp_type_patches' , num_type    , landpatch  , slp_type_patches)
+         CALL ncio_read_vector (file_restart, 'svf_patches'      , landpatch   , svf_patches )
+         CALL ncio_read_vector (file_restart, 'asp_type_patches' , num_type    , landpatch  , asp_type_patches)
+         CALL ncio_read_vector (file_restart, 'area_type_patches', num_type    , landpatch  , area_type_patches)
+         CALL ncio_read_vector (file_restart, 'sf_lut_patches'   , num_azimuth , num_zenith , landpatch, sf_lut_patches)
+         CALL ncio_read_vector (file_restart, 'cur_patches'      , landpatch   , cur_patches )
        ENDIF
-      
+
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
       file_restart = trim(dir_restart) // '/const/' // trim(casename) //'_restart_pft_const' // '_lc' // trim(cyear) // '.nc'
       CALL READ_PFTimeInvariants (file_restart)
@@ -637,14 +637,14 @@ CONTAINS
 
       CALL ncio_write_vector (file_restart, 'topoelv', 'patch', landpatch, topoelv)
       CALL ncio_write_vector (file_restart, 'topostd', 'patch', landpatch, topostd)
-      
+
       IF (DEF_USE_Forcing_Downscaling) THEN
          CALL ncio_write_vector (file_restart, 'svf_patches', 'patch', landpatch, svf_patches)
          CALL ncio_write_vector (file_restart, 'cur_patches', 'patch', landpatch, cur_patches)
-         CALL ncio_write_vector (file_restart, 'slp_type_patches', 'type', num_type, 'patch', landpatch, slp_type_patches)
-         CALL ncio_write_vector (file_restart, 'asp_type_patches', 'type', num_type, 'patch', landpatch, asp_type_patches)
+         CALL ncio_write_vector (file_restart, 'slp_type_patches',  'type', num_type, 'patch', landpatch, slp_type_patches)
+         CALL ncio_write_vector (file_restart, 'asp_type_patches',  'type', num_type, 'patch', landpatch, asp_type_patches)
          CALL ncio_write_vector (file_restart, 'area_type_patches', 'type', num_type, 'patch', landpatch, area_type_patches)
-         CALL ncio_write_vector (file_restart, 'sf_lut_patches', 'azi', num_azimuth, 'zen', num_zenith, 'patch', landpatch, sf_lut_patches)
+         CALL ncio_write_vector (file_restart, 'sf_lut_patches',    'azi' , num_azimuth,'zen', num_zenith, 'patch', landpatch, sf_lut_patches)
       ENDIF
 
 #ifdef USEMPI
@@ -698,7 +698,7 @@ CONTAINS
 
    SUBROUTINE deallocate_TimeInvariants ()
 
-   USE MOD_Namelist, only: DEF_USE_Forcing_Downscaling 
+   USE MOD_Namelist, only: DEF_USE_Forcing_Downscaling
    USE MOD_SPMD_Task
    USE MOD_LandPatch, only: numpatch
 

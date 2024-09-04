@@ -16,13 +16,62 @@ MODULE MOD_Urban_BEM
 
 CONTAINS
 
-   !-----------------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------
    SUBROUTINE SimpleBEM ( deltim, rhoair, fcover, H, troom_max, troom_min, &
                           troof_nl_bef, twsun_nl_bef, twsha_nl_bef, &
                           troof_nl, twsun_nl, twsha_nl, &
                           tkdz_roof, tkdz_wsun, tkdz_wsha, taf, &
                           troom, troof_inner, twsun_inner, twsha_inner, &
                           Fhac, Fwst, Fach, Fhah)
+
+!-----------------------------------------------------------------------------------
+!
+! !DESCRIPTION:
+!
+!  A simple building energy model to calculate room temperature
+!
+!  The basic approach is as follows:
+!
+!     1. Predict indoor temperature using the indoor energy balance
+!     equations (see below) without turning on the air conditioning.
+!
+!     2. If the indoor temperature falls within the predefined comfort
+!     range, further energy consumption calculations are not necessary,
+!     only indoor and outdoor heat exchange is considered.
+!
+!     3. If the indoor temperature falls outside the predefined comfort
+!     range, calculate the minimum/maximum heating/cooling capacity
+!     based on the air conditioning usage strategy.
+!
+!     4. Calculate the indoor and outdoor heat exchange and waste heat
+!     discharge (taking into account energy utilization efficiency)
+!     based on the calculated heating/cooling capacity in step 3.
+!
+!     Finally, energy consumption can be calculated based on the total
+!     heat flux.
+!
+!  o Solve the following energy balance equations
+!  o variables: troom, troof_inner, twsun_inner, twsha_innter
+!
+!     Hc_roof = Fn_roof        .................................(1)
+!     Hc_wsun = Fn_wsun        .................................(2)
+!     Hc_wsha = Fn_wsha        .................................(3)
+!
+!                    Troom' - Troom
+!     H*rhoair*cpair*-------------- =
+!                          dt
+!       ACH
+!     ------*H*rhoair*cpair*(Taf-Troom') + Hc_roof + Hc_wsun + Hc_wsha
+!      3600
+!                              .................................(4)
+!
+!  Created by Hua Yuan, 09/2021
+!
+! !REVISIONS:
+!
+!  11/2022, Hua Yuan: Add option for constant AC.
+!
+!-----------------------------------------------------------------------------------
 
    IMPLICIT NONE
 
@@ -33,9 +82,9 @@ CONTAINS
         H,               &! average building height [m]
         troom_max,       &! maximum temperature of inner building
         troom_min,       &! minimum temperature of inner building
-        troof_nl_bef,    &!roof temperature at layer nl_roof
-        twsun_nl_bef,    &!sunlit wall temperature at layer nl_wall
-        twsha_nl_bef,    &!shaded wall temperature at layer nl_wall
+        troof_nl_bef,    &! roof temperature at layer nl_roof
+        twsun_nl_bef,    &! sunlit wall temperature at layer nl_wall
+        twsha_nl_bef,    &! shaded wall temperature at layer nl_wall
         troof_nl,        &! roof temperature at layer nl_roof
         twsun_nl,        &! sunlit wall temperature at layer nl_wall
         twsha_nl,        &! shaded wall temperature at layer nl_wall
@@ -87,37 +136,19 @@ CONTAINS
    ! Option for continuous AC
    logical, parameter :: Constant_AC = .true.
 
-   !===================================================================================
-   !
-   ! o Solve the following equations
-   ! o variables: troom, troof_inner, twsun_inner, twsha_innter
-   !
-   !    Hc_roof = Fn_roof        .................................(1)
-   !    Hc_wsun = Fn_wsun        .................................(2)
-   !    Hc_wsha = Fn_wsha        .................................(3)
-   !
-   !                   Troom' - Troom
-   !    H*rhoair*cpair*-------------- =
-   !                         dt
-   !      ACH
-   !    ------*H*rhoair*cpair*(Taf-Troom') + Hc_roof + Hc_wsun + Hc_wsha
-   !     3600
-   !                             .................................(4)
-   !===================================================================================
-
-      ACH = 0.3          !air exchange coefficience
-      hcv_roof   = 4.040 !convective exchange ceofficience for roof<->room (W m-2 K-1)
-      hcv_wall   = 3.076 !convective exchange ceofficience for wall<->room (W m-2 K-1)
-      waste_cool = 0.6   !waste heat for AC cooling
-      waste_heat = 0.2   !waste heat for AC heating
-      cooling = .false.  !cooling case
-      heating = .false.  !heating case
+      ACH = 0.3           !air exchange coefficience
+      hcv_roof   = 4.040  !convective exchange ceofficience for roof<->room (W m-2 K-1)
+      hcv_wall   = 3.076  !convective exchange ceofficience for wall<->room (W m-2 K-1)
+      waste_cool = 0.6    !waste heat for AC cooling
+      waste_heat = 0.2    !waste heat for AC heating
+      cooling = .false.   !cooling case
+      heating = .false.   !heating case
 
       f_wsun = fcover(1)/fcover(0) !weight factor for sunlit wall
       f_wsha = fcover(2)/fcover(0) !weight factor for shaded wall
 
       ! initialization
-      Fhac = 0.; Fwst = 0.; Fach = 0.;
+      Fhac = 0.; Fwst = 0.; Fach = 0.; Fhah = 0.;
 
       ! Ax = B
       ! set values for heat transfer matrix
@@ -197,7 +228,7 @@ CONTAINS
          Fhac = 0.5*hcv_roof*(troof_inner_bef-troom_bef)        + 0.5*hcv_roof*(troof_inner-troom)
          Fhac = 0.5*hcv_wall*(twsun_inner_bef-troom_bef)*f_wsun + 0.5*hcv_wall*(twsun_inner-troom)*f_wsun + Fhac
          Fhac = 0.5*hcv_wall*(twsha_inner_bef-troom_bef)*f_wsha + 0.5*hcv_wall*(twsha_inner-troom)*f_wsha + Fhac
-         Fhah = Fhac
+         IF ( heating ) Fhah = abs(Fhac)
          Fhac = abs(Fhac) + abs(Fach)
          Fwst = Fhac*waste_coef
          IF ( heating ) Fhac = 0.
@@ -212,3 +243,4 @@ CONTAINS
    END SUBROUTINE SimpleBEM
 
 END MODULE MOD_Urban_BEM
+! --------- EOP ----------

@@ -17,11 +17,13 @@ CONTAINS
                              croofs, croofl, croof, fsenroof, fevproof, &
                              z0m, z0hg, zol, ustar, qstar, tstar, fm, fh, fq)
 
-!=======================================================================
-! this is the main subroutine to execute the calculation
-! of bare ground fluxes
+!-----------------------------------------------------------------------
+! !DESCRIPTION:
+!  This is the main subroutine to execute the calculation
+!  of roof fluxes - not used now.
 !
-!=======================================================================
+!  Created by Hua Yuan, 11/2022
+!-----------------------------------------------------------------------
 
    USE MOD_Precision
    USE MOD_Const_Physical, only: cpair,vonkar,grav
