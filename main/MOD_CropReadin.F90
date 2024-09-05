@@ -81,7 +81,7 @@ CONTAINS
          CALL ncio_get_attr (file_crop, 'pdrice2', 'missing_value', missing_value)
       ENDIF
 #ifdef USEMPI
-      CALL mpi_bcast (missing_value, 1, MPI_REAL8, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (missing_value, 1, MPI_REAL8, p_address_master, p_comm_glb, p_err)
 #endif
       IF (p_is_io) THEN
          CALL ncio_read_block (file_crop, 'pdrice2', grid_crop, f_xy_crop)

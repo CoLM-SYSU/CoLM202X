@@ -104,12 +104,12 @@ CONTAINS
       ENDIF
 
       IF (p_is_worker) THEN
-         CALL mpi_send (numelm, 1, MPI_INTEGER4, p_root, mpi_tag_size, p_comm_glb, p_err) 
+         CALL mpi_send (numelm, 1, MPI_INTEGER4, p_address_master, mpi_tag_size, p_comm_glb, p_err) 
          IF (numelm > 0) THEN
             allocate (lakeid (numelm))
-            CALL mpi_send (landelm%eindex, numelm, MPI_INTEGER8, p_root, mpi_tag_data, p_comm_glb, p_err) 
-            CALL mpi_recv (numhru, 1,      MPI_INTEGER4, p_root, mpi_tag_size, p_comm_glb, p_stat, p_err)
-            CALL mpi_recv (lakeid, numelm, MPI_INTEGER4, p_root, mpi_tag_data, p_comm_glb, p_stat, p_err)
+            CALL mpi_send (landelm%eindex, numelm, MPI_INTEGER8, p_address_master, mpi_tag_data, p_comm_glb, p_err) 
+            CALL mpi_recv (numhru, 1,      MPI_INTEGER4, p_address_master, mpi_tag_size, p_comm_glb, p_stat, p_err)
+            CALL mpi_recv (lakeid, numelm, MPI_INTEGER4, p_address_master, mpi_tag_data, p_comm_glb, p_stat, p_err)
          ENDIF
       ENDIF
 #else

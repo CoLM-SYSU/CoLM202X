@@ -156,10 +156,10 @@ CONTAINS
 
 #ifdef USEMPI
          mesg = (/p_iam_glb, numset/)
-         CALL mpi_send (mesg, 2, MPI_INTEGER, p_root, mpi_tag_mesg, p_comm_glb, p_err)
+         CALL mpi_send (mesg, 2, MPI_INTEGER, p_address_master, mpi_tag_mesg, p_comm_glb, p_err)
          IF (numset > 0) THEN
             CALL mpi_send (acc_vec, numset, MPI_REAL8, &
-               p_root, mpi_tag_data, p_comm_glb, p_err)
+               p_address_master, mpi_tag_data, p_comm_glb, p_err)
          ENDIF
 #endif
       ENDIF
@@ -318,10 +318,10 @@ CONTAINS
 
 #ifdef USEMPI
          mesg = (/p_iam_glb, numset/)
-         CALL mpi_send (mesg, 2, MPI_INTEGER, p_root, mpi_tag_mesg, p_comm_glb, p_err)
+         CALL mpi_send (mesg, 2, MPI_INTEGER, p_address_master, mpi_tag_mesg, p_comm_glb, p_err)
          IF (numset > 0) THEN
             CALL mpi_send (acc_vec, ndim1 * numset, MPI_REAL8, &
-               p_root, mpi_tag_data, p_comm_glb, p_err)
+               p_address_master, mpi_tag_data, p_comm_glb, p_err)
          ENDIF
 #endif
       ENDIF
@@ -491,10 +491,10 @@ CONTAINS
 
 #ifdef USEMPI
          mesg = (/p_iam_glb, numset/)
-         CALL mpi_send (mesg, 2, MPI_INTEGER, p_root, mpi_tag_mesg, p_comm_glb, p_err)
+         CALL mpi_send (mesg, 2, MPI_INTEGER, p_address_master, mpi_tag_mesg, p_comm_glb, p_err)
          IF (numset > 0) THEN
             CALL mpi_send (acc_vec, ndim1 * ndim2 * numset, MPI_REAL8, &
-               p_root, mpi_tag_data, p_comm_glb, p_err)
+               p_address_master, mpi_tag_data, p_comm_glb, p_err)
          ENDIF
 #endif
       ENDIF
@@ -656,10 +656,10 @@ CONTAINS
 
 #ifdef USEMPI
          mesg = (/p_iam_glb, numset/)
-         CALL mpi_send (mesg, 2, MPI_INTEGER, p_root, mpi_tag_mesg, p_comm_glb, p_err)
+         CALL mpi_send (mesg, 2, MPI_INTEGER, p_address_master, mpi_tag_mesg, p_comm_glb, p_err)
          IF (numset > 0) THEN
             CALL mpi_send (acc_vec, numset, MPI_REAL8, &
-               p_root, mpi_tag_data, p_comm_glb, p_err)
+               p_address_master, mpi_tag_data, p_comm_glb, p_err)
          ENDIF
 #endif
       ENDIF

@@ -63,19 +63,19 @@ CONTAINS
             indexelm = landelm%eindex 
          ENDIF
          
-         IF (p_iam_worker == 0) allocate (numelm_worker (0:p_np_worker-1))
+         IF (p_iam_worker == p_root) allocate (numelm_worker (0:p_np_worker-1))
          CALL mpi_gather (numelm, 1, MPI_INTEGER, &
             numelm_worker, 1, MPI_INTEGER, p_root, p_comm_worker, p_err)
 
-         IF (p_iam_worker == 0) THEN
+         IF (p_iam_worker == p_root) THEN
             CALL mpi_send (numelm_worker, p_np_worker, MPI_INTEGER, &
-               p_root, mpi_tag_size, p_comm_glb, p_err) 
+               p_address_master, mpi_tag_size, p_comm_glb, p_err) 
          ENDIF
 
          mesg = (/p_iam_glb, numelm/)
-         CALL mpi_send (mesg, 2, MPI_INTEGER, p_root, mpi_tag_mesg, p_comm_glb, p_err) 
+         CALL mpi_send (mesg, 2, MPI_INTEGER, p_address_master, mpi_tag_mesg, p_comm_glb, p_err) 
          IF (numelm > 0) THEN
-            CALL mpi_send (indexelm, numelm, MPI_INTEGER8, p_root, mpi_tag_data, p_comm_glb, p_err) 
+            CALL mpi_send (indexelm, numelm, MPI_INTEGER8, p_address_master, mpi_tag_data, p_comm_glb, p_err) 
          ENDIF
 #else
          IF (numelm > 0) THEN
@@ -88,7 +88,7 @@ CONTAINS
       IF (p_is_master) THEN
 #ifdef USEMPI
          allocate (numelm_worker (0:p_np_worker-1))
-         CALL mpi_recv (numelm_worker, p_np_worker, MPI_INTEGER, p_address_worker(0), &
+         CALL mpi_recv (numelm_worker, p_np_worker, MPI_INTEGER, p_address_worker(p_root), &
             mpi_tag_size, p_comm_glb, p_stat, p_err)
 
          allocate (vec_worker_dsp (0:p_np_worker-1))
@@ -128,7 +128,7 @@ CONTAINS
       ENDIF 
       
 #ifdef USEMPI
-      CALL mpi_bcast (totalnumelm, 1, MPI_INTEGER, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (totalnumelm, 1, MPI_INTEGER, p_address_master, p_comm_glb, p_err)
 #endif
 
       IF (p_is_master) THEN
