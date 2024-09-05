@@ -44,7 +44,7 @@ MODULE CMF_CTRL_MAPS_MOD
    character(LEN=256)              :: CRIVCLINC       !! river map netcdf
    character(LEN=256)              :: CRIVPARNC       !! river parameter netcdf (WIDTH,HEIGHT, Manning, ground wateer delay)
    character(LEN=256)              :: CMEANSLNC       !! mean sea level netCDF
-   character(LEN=256)              :: CMPIREGNC       !! MPI Region netCDF
+   character(LEN=256)              :: CMPIREGNC       !! MPI region map in netcdf
 
    NAMELIST/NMAP/     CNEXTXY,  CGRAREA,  CELEVTN,  CNXTDST, CRIVLEN, CFLDHGT, &
                      CRIVWTH,  CRIVHGT,  CRIVMAN,  CPTHOUT, CGDWDLY, CMEANSL, &
@@ -313,8 +313,11 @@ CONTAINS
       !
       integer(KIND=JPIM),SAVE         :: IX,IY
       integer(KIND=JPIM),SAVE         :: IREGION
+#ifdef UseMPI_CMF
 #ifdef UseCDF_CMF
-      integer(KIND=JPIM)              :: NCID,VARID
+INTEGER(KIND=JPIM)              :: NCID
+INTEGER(KIND=JPIM)              :: VARID
+#endif
 #endif
 !$OMP THREADPRIVATE               (IX)
       !================================================
@@ -381,7 +384,7 @@ CONTAINS
 
          write(LOGNAM,*) 'CALC_REGION: REGIONALL= ', REGIONALL
          write(LOGNAM,*) 'CALC_REGION: NSEQMAX='   , NSEQMAX
-
+         WRITE(LOGNAM,*) 'CALC_REGION: NSEQALL='   , NSEQALL
       END SUBROUTINE CALC_REGION
       !==========================================================
       !+

@@ -44,7 +44,7 @@ CP = /bin/cp
 # DATM=-DNoAtom: activate when OMP ATOMIC calculation should be avoided (bit identical simulation)
 #----
 #DMPI=-DUseMPI
-DCDF=-DUseCDF
+DCDF=-DUseCDF -DUseCDF_CMF
 #DATM=-DNoAtom
 CFLAGS=$(DMPI) $(DCDF) $(DATM) 
 #----

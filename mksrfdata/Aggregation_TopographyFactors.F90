@@ -36,8 +36,8 @@ SUBROUTINE Aggregation_TopographyFactors ( &
 
    ! local variables:
    ! ---------------------------------------------------------------
-   CHARACTER(len=256) :: landdir, lndname, cyear
-   CHARACTER(len=3)   :: sdir
+   CHARACTER(len=256) :: landdir, lndname, cyear                                                                   
+   CHARACTER(len=3)   :: sdir, sdir1
 
    TYPE (block_data_real8_2d) :: slp_grid    ! slope
    TYPE (block_data_real8_2d) :: asp_grid    ! aspect
@@ -83,7 +83,7 @@ SUBROUTINE Aggregation_TopographyFactors ( &
    REAL(r8) :: zenith_angle(num_zenith)    ! sine of sun zenith angle (divided by num_zenith part)
 
    ! local variables
-   INTEGER :: ipatch, i, ps, pe, type, a, z, count_pixels, num_pixels
+   INTEGER :: ipatch, i, ps, pe, type, a, z, count_pixels, num_pixels, j  
 
 #ifdef SrfdataDiag
    INTEGER :: typpatch(N_land_classification+1), ityp  ! number of land classification
@@ -105,6 +105,11 @@ SUBROUTINE Aggregation_TopographyFactors ( &
 #ifdef SinglePoint
    IF (USE_SITE_topography) THEN
       RETURN
+   ELSE
+      allocate (SITE_slp_type  (num_type))
+      allocate (SITE_asp_type  (num_type))
+      allocate (SITE_area_type (num_type))
+      allocate (SITE_sf_lut    (num_azimuth, num_zenith))
    ENDIF
 #endif
 
@@ -209,11 +214,11 @@ SUBROUTINE Aggregation_TopographyFactors ( &
          sum_area_one = sum(area_one, mask = area_one>0)
 
          DO a = 1, num_azimuth
-            ! terrain elevation angle at each azimuth
-            tea_f_one(:) = tea_f_azi_one(a,:)
-            tea_b_one(:) = tea_b_azi_one(a,:)
-
             DO z = 1, num_zenith
+               ! terrain elevation angle at each azimuth
+               tea_f_one(:) = tea_f_azi_one(a,:)
+               tea_b_one(:) = tea_b_azi_one(a,:) 
+
                ! count the pixels which are not missing value
                count_pixels = 0
 
@@ -280,19 +285,19 @@ SUBROUTINE Aggregation_TopographyFactors ( &
 
          DO i = 1, num_pixels
             ! Define the south slope, north slope, abrupt slope and gentle lope of target pixel
-            IF ((asp_one(i).ge.0 .and. asp_one(i).le.90) .or. (asp_one(i).ge.270 .and. asp_one(i).le.360).and.(slp_one(i).ge.15*pi/180)) THEN  ! north abrupt slope
-                 type = 1
-            ELSE IF ((asp_one(i).ge.0 .and. asp_one(i).le.90) .or. (asp_one(i).ge.270 .and. asp_one(i).le.360).and.(slp_one(i)<15*pi/180)) THEN  ! north gentle slope
+            IF ((asp_one(i).ge.0 .and. asp_one(i).le.90*pi/180) .or. (asp_one(i).ge.270*pi/180 .and. asp_one(i).le.360*pi/180).and.(slp_one(i).ge.15*pi/180)) THEN  ! north abrupt slope
+                 type = 1 
+            ELSE IF ((asp_one(i).ge.0 .and. asp_one(i).le.90*pi/180) .or. (asp_one(i).ge.270*pi/180 .and. asp_one(i).le.360*pi/180).and.(slp_one(i)<15*pi/180)) THEN  ! north gentle slope
                  type = 2
-            ELSE IF ((asp_one(i).gt.90) .and. (asp_one(i).lt.270) .and. (slp_one(i).ge.15*pi/180)) THEN  ! south abrupt slope
-                 type = 3
-            ELSE IF ((asp_one(i).gt.90) .and. (asp_one(i).lt.270) .and. (slp_one(i).lt.15*pi/180)) THEN  ! south gentle slope
-                 type = 4
+            ELSE IF ((asp_one(i).gt.90*pi/180) .and. (asp_one(i).lt.270*pi/180) .and. (slp_one(i).ge.15*pi/180)) THEN  ! south abrupt slope
+                 type = 3 
+            ELSE IF ((asp_one(i).gt.90*pi/180) .and. (asp_one(i).lt.270*pi/180) .and. (slp_one(i).lt.15*pi/180)) THEN  ! south gentle slope
+                 type = 4  
             ELSE ! missing value=-9999
                  cycle
             END IF
 
-            IF ((area_one(i)>0).and.(area_one(i)<sum_area_one)) THEN      ! quality control
+            IF ((area_one(i)>0).and.(area_one(i)<=sum_area_one)) THEN      ! quality control
                   area_type_one(type,i) = area_one(i)
                   asp_type_one (type,i) = asp_one(i)*area_one(i)
                   slp_type_one (type,i) = slp_one(i)*area_one(i)
@@ -381,24 +386,39 @@ SUBROUTINE Aggregation_TopographyFactors ( &
 
 #ifdef SrfdataDiag
    typpatch = (/(ityp, ityp = 0, N_land_classification)/)
-   lndname  = trim(dir_model_landdata) // '/diag/topo_factor_' // trim(cyear) // '.nc'
 
    ! only write the first type of slope and aspect at patches
-   CALL srfdata_map_and_write (slp_type_patches(1,:), landpatch%settyp, typpatch, m_patch2diag, &
-      -1.0e36_r8, lndname, 'slp', compress = 1, write_mode = 'one')
-   CALL srfdata_map_and_write (asp_type_patches(1,:), landpatch%settyp, typpatch, m_patch2diag, &
-      -1.0e36_r8, lndname, 'asp', compress = 1, write_mode = 'one')
+   lndname  = trim(dir_model_landdata) // '/diag/topo_factor_slp_' // trim(cyear) // '.nc'
+   DO i = 1, num_type
+      write(sdir,'(I0)') i
+      CALL srfdata_map_and_write (slp_type_patches(i,:), landpatch%settyp, typpatch, m_patch2diag, &
+         -1.0e36_r8, lndname, 'slp_'//trim(sdir), compress = 1, write_mode = 'one')
+   ENDDO
 
+   lndname  = trim(dir_model_landdata) // '/diag/topo_factor_asp_' // trim(cyear) // '.nc'
+   DO i = 1, num_type
+      write(sdir,'(I0)') i
+      CALL srfdata_map_and_write (asp_type_patches(i,:), landpatch%settyp, typpatch, m_patch2diag, &
+         -1.0e36_r8, lndname, 'asp_'//trim(sdir), compress = 1, write_mode = 'one')
+   ENDDO
+
+   lndname  = trim(dir_model_landdata) // '/diag/topo_factor_svf_' // trim(cyear) // '.nc'
    CALL srfdata_map_and_write (svf_patches, landpatch%settyp, typpatch, m_patch2diag, &
       -1.0e36_r8, lndname, 'svf', compress = 1, write_mode = 'one')
+   
+   lndname  = trim(dir_model_landdata) // '/diag/topo_factor_cur_' // trim(cyear) // '.nc'
    CALL srfdata_map_and_write (cur_patches, landpatch%settyp, typpatch, m_patch2diag, &
       -1.0e36_r8, lndname, 'cur', compress = 1, write_mode = 'one')
 
-   ! only write part of lut to save cache
-   DO i = 1, 11
-      write(sdir,'(I0)') i
-      CALL srfdata_map_and_write (sf_lut_patches(1,i,:), landpatch%settyp, typpatch, m_patch2diag, &
-         -1.0e36_r8, lndname, 'sf_'//trim(sdir), compress = 1, write_mode = 'one')
+   lndname  = trim(dir_model_landdata) // '/diag/topo_factor_sf_lut_' // trim(cyear) // '.nc'
+
+   DO j = 1, num_azimuth
+      DO i = 1, num_zenith 
+         write(sdir,'(I0)') j
+         write(sdir1,'(I0)') i
+         CALL srfdata_map_and_write (sf_lut_patches(j,i,:), landpatch%settyp, typpatch, m_patch2diag, &
+            -1.0e36_r8, lndname, 'sf_'//trim(sdir)//'_'//trim(sdir1), compress = 1, write_mode = 'one')
+      ENDDO
    ENDDO
 #endif
 #else

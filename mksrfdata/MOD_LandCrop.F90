@@ -67,12 +67,18 @@ CONTAINS
 
          numpatch = count(SITE_pctcrop > 0.)
 
-         allocate (pctshrpch (numpatch))
+         allocate (pctshrpch(numpatch))
          allocate (cropclass(numpatch))
          cropclass = pack(SITE_croptyp, SITE_pctcrop > 0.)
          pctshrpch = pack(SITE_pctcrop, SITE_pctcrop > 0.)
 
          pctshrpch = pctshrpch / sum(pctshrpch)
+
+         IF (allocated(landpatch%eindex))  deallocate(landpatch%eindex)
+         IF (allocated(landpatch%ipxstt))  deallocate(landpatch%ipxstt)
+         IF (allocated(landpatch%ipxend))  deallocate(landpatch%ipxend)
+         IF (allocated(landpatch%settyp))  deallocate(landpatch%settyp)
+         IF (allocated(landpatch%ielm  ))  deallocate(landpatch%ielm  )
 
          allocate (landpatch%eindex (numpatch))
          allocate (landpatch%ipxstt (numpatch))

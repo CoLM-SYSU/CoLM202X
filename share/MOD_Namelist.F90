@@ -58,8 +58,13 @@ MODULE MOD_Namelist
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
    character(len=256) :: SITE_fsrfdata   = 'null'
+   
+   real(r8) :: SITE_lon_location = 113.5897
+   real(r8) :: SITE_lat_location = 22.3507
 
-   integer  :: SITE_landtype             =    -1
+   integer  :: SITE_landtype             = -1
+
+   logical  :: USE_SITE_landtype         = .false.
    logical  :: USE_SITE_pctpfts          = .true.
    logical  :: USE_SITE_pctcrop          = .true.
    logical  :: USE_SITE_htop             = .true.
@@ -71,11 +76,11 @@ MODULE MOD_Namelist
    logical  :: USE_SITE_topography       = .true.
    logical  :: USE_SITE_topostd          = .true.
    logical  :: USE_SITE_BVIC             = .true.
-   logical  :: USE_SITE_HistWriteBack    = .true.
-   logical  :: USE_SITE_ForcingReadAhead = .true.
    logical  :: USE_SITE_urban_paras      = .true.
    logical  :: USE_SITE_thermal_paras    = .false.
    logical  :: USE_SITE_urban_LAI        = .false.
+   logical  :: USE_SITE_HistWriteBack    = .true.
+   logical  :: USE_SITE_ForcingReadAhead = .true.
 
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ! ----- Part 4: simulation time type -----
@@ -797,7 +802,10 @@ CONTAINS
       DEF_domain,                             &
 
       SITE_fsrfdata,                          &
+      SITE_lon_location,                      &
+      SITE_lat_location,                      &
       SITE_landtype,                          &
+      USE_SITE_landtype,                      &
       USE_SITE_pctpfts,                       &
       USE_SITE_pctcrop,                       &
       USE_SITE_htop,                          &
@@ -876,6 +884,7 @@ CONTAINS
       DEF_USE_CBL_HEIGHT,                     & !add by zhongwang wei @ sysu 2022/12/31
       DEF_USE_PLANTHYDRAULICS,                & !add by xingjie lu @ sysu 2023/05/28
       DEF_USE_MEDLYNST,                       & !add by xingjie lu @ sysu 2023/05/28
+      DEF_USE_WUEST,                          & !add by xingjie lu @ sysu 2024/05/28
       DEF_USE_SASU,                           & !add by Xingjie Lu @ sysu 2023/06/27
       DEF_USE_PN,                             & !add by Xingjie Lu @ sysu 2023/06/27
       DEF_USE_FERT,                           & !add by Xingjie Lu @ sysu 2023/06/27

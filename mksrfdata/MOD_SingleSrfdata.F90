@@ -18,9 +18,6 @@ MODULE MOD_SingleSrfdata
    IMPLICIT NONE
    SAVE
 
-   real(r8) :: SITE_lon_location = 0.
-   real(r8) :: SITE_lat_location = 0.
-
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
    integer,  allocatable :: SITE_pfttyp  (:)
    real(r8), allocatable :: SITE_pctpfts (:)
@@ -144,30 +141,43 @@ CONTAINS
    logical, intent(in) :: mksrfdata
 
    ! Local Variables
-   integer :: iyear, itime
+   real(r8) :: lat_in, lon_in
+   integer  :: iyear, itime
 
-      IF (trim(fsrfdata) /= 'null') THEN
-
-         CALL ncio_read_serial (fsrfdata, 'latitude',  SITE_lat_location)
-         CALL ncio_read_serial (fsrfdata, 'longitude', SITE_lon_location)
-
-#ifdef LULC_USGS
-         CALL ncio_read_serial (fsrfdata, 'USGS_classification', SITE_landtype)
-#else
-         CALL ncio_read_serial (fsrfdata, 'IGBP_classification', SITE_landtype)
-#endif
-      ELSE
-
-         SITE_lat_location = DEF_domain%edges
-         SITE_lon_location = DEF_domain%edgew
-
-         IF (SITE_landtype < 0) THEN
-            write(*,*) 'Error! Please set namelist SITE_landtype first!'
-            CALL CoLM_stop()
+      IF (ncio_var_exist(fsrfdata, 'latitude')) THEN
+         CALL ncio_read_serial (fsrfdata, 'latitude',  lat_in)
+         IF (lat_in /= SITE_lat_location) THEN
+            write(*,*) 'Warning: Latitude mismatch: ', &
+               lat_in, ' in data file and ', SITE_lat_location, 'in namelist.'
          ENDIF
+         SITE_lat_location = lat_in
       ENDIF
 
+      IF (ncio_var_exist(fsrfdata, 'longitude')) THEN
+         CALL ncio_read_serial (fsrfdata, 'longitude', lon_in)
+         IF (lon_in /= SITE_lon_location) THEN
+            write(*,*) 'Warning: Longitude mismatch: ', &
+               lon_in, ' in data file and ', SITE_lon_location, 'in namelist.'
+         ENDIF
+         SITE_lon_location = lon_in
+      ENDIF
+      
       CALL normalize_longitude (SITE_lon_location)
+
+      IF (USE_SITE_landtype) THEN
+         IF (trim(fsrfdata) /= 'null') THEN
+#ifdef LULC_USGS
+            CALL ncio_read_serial (fsrfdata, 'USGS_classification', SITE_landtype)
+#else
+            CALL ncio_read_serial (fsrfdata, 'IGBP_classification', SITE_landtype)
+#endif
+         ENDIF
+      ENDIF
+         
+      IF (SITE_landtype < 0) THEN
+         write(*,*) 'Error! Please set namelist SITE_landtype first!'
+         CALL CoLM_stop()
+      ENDIF
 
       DEF_domain%edges = floor(SITE_lat_location)
       DEF_domain%edgen = DEF_domain%edges + 1.0
@@ -193,11 +203,9 @@ CONTAINS
 
 #ifdef CROP
       IF ((.not. mksrfdata) .or. USE_SITE_pctcrop) THEN
-         IF (SITE_landtype == CROPLAND) THEN
-            CALL ncio_read_serial (fsrfdata, 'croptyp', SITE_croptyp)
-            CALL ncio_read_serial (fsrfdata, 'pctcrop', SITE_pctcrop)
-            ! otherwise, retrieve from database by MOD_LandPatch.F90
-         ENDIF
+         CALL ncio_read_serial (fsrfdata, 'croptyp', SITE_croptyp)
+         CALL ncio_read_serial (fsrfdata, 'pctcrop', SITE_pctcrop)
+         ! otherwise, retrieve from database by MOD_LandPatch.F90
       ENDIF
 #endif
 
@@ -282,8 +290,9 @@ CONTAINS
       IF ((.not. mksrfdata) .or. USE_SITE_topography) THEN
          ! otherwise, retrieve from database by Aggregation_Topography.F90
          CALL ncio_read_serial (fsrfdata, 'elevation', SITE_topography)
+         CALL ncio_read_serial (fsrfdata, 'elvstd   ', SITE_topostd   )
+
          IF (DEF_USE_Forcing_Downscaling) THEN
-            CALL ncio_read_serial (fsrfdata, 'elvstd   ', SITE_topostd        )
             CALL ncio_read_serial (fsrfdata, 'SITE_svf' , SITE_svf            )
             CALL ncio_read_serial (fsrfdata, 'SITE_cur' , SITE_cur            )
             CALL ncio_read_serial (fsrfdata, 'SITE_slp_type' , SITE_slp_type  )
@@ -305,23 +314,38 @@ CONTAINS
    USE MOD_Vars_Global, only: PI, URBAN
    IMPLICIT NONE
 
-   ! Local Variables
    character(len=*), intent(in) :: fsrfdata
    logical, intent(in) :: mksrfdata
    logical, intent(in), optional :: mkrun
 
+   ! Local Variables
+   real(r8) :: lat_in, lon_in
+
+      IF (ncio_var_exist(fsrfdata, 'latitude')) THEN
+         CALL ncio_read_serial (fsrfdata, 'latitude',  lat_in)
+         IF (lat_in /= SITE_lat_location) THEN
+            write(*,*) 'Warning: Latitude mismatch: ', &
+               lat_in, ' in data file and ', SITE_lat_location, 'in namelist.'
+         ENDIF
+         SITE_lat_location = lat_in
+      ENDIF
+
+      IF (ncio_var_exist(fsrfdata, 'longitude')) THEN
+         CALL ncio_read_serial (fsrfdata, 'longitude', lon_in)
+         IF (lon_in /= SITE_lon_location) THEN
+            write(*,*) 'Warning: Longitude mismatch: ', &
+               lon_in, ' in data file and ', SITE_lon_location, 'in namelist.'
+         ENDIF
+         SITE_lon_location = lon_in
+      ENDIF
+      
+      CALL normalize_longitude (SITE_lon_location)
+
       IF (trim(fsrfdata) /= 'null') THEN
          SITE_landtype = URBAN
-         CALL ncio_read_serial (fsrfdata, 'latitude' , SITE_lat_location)
-         CALL ncio_read_serial (fsrfdata, 'longitude', SITE_lon_location)
-      ELSE
-         SITE_lat_location = DEF_domain%edges
-         SITE_lon_location = DEF_domain%edgew
-
-         IF (SITE_landtype /= URBAN) THEN
-            write(*,*) 'Error! Please set namelist SITE_landtype first!'
-            CALL CoLM_stop()
-         ENDIF
+      ELSEIF (SITE_landtype /= URBAN) THEN
+         write(*,*) 'Error! Please set namelist SITE_landtype first!'
+         CALL CoLM_stop()
       ENDIF
 
       DEF_domain%edges = floor(SITE_lat_location)
@@ -441,8 +465,9 @@ CONTAINS
       IF ((.not. mksrfdata) .or. USE_SITE_topography) THEN
          ! otherwise, retrieve from database by Aggregation_Topography.F90
          CALL ncio_read_serial (fsrfdata, 'elevation', SITE_topography)
+         CALL ncio_read_serial (fsrfdata, 'elvstd   ', SITE_topostd   )
+
          IF (DEF_USE_Forcing_Downscaling) THEN
-            CALL ncio_read_serial (fsrfdata, 'elvstd  ', SITE_topostd         )
             CALL ncio_read_serial (fsrfdata, 'SITE_svf', SITE_svf             )
             CALL ncio_read_serial (fsrfdata, 'SITE_cur', SITE_cur             )
             CALL ncio_read_serial (fsrfdata, 'SITE_slp_type' , SITE_slp_type  )
@@ -616,18 +641,17 @@ CONTAINS
       CALL ncio_write_serial (fsrfdata, 'elevation', SITE_topography)
       CALL ncio_put_attr     (fsrfdata, 'elevation', 'source', datasource(USE_SITE_topography))
 
-      IF (DEF_USE_Forcing_Downscaling) THEN
-         ! used for downscaling
+      CALL ncio_write_serial (fsrfdata, 'elvstd', SITE_topostd)
+      CALL ncio_put_attr     (fsrfdata, 'elvstd', 'source', datasource(USE_SITE_topostd))
+
+      ! used for downscaling
+      IF (DEF_USE_Forcing_Downscaling) THEN   
          CALL ncio_write_serial (fsrfdata, 'SITE_svf', SITE_svf)
          CALL ncio_write_serial (fsrfdata, 'SITE_cur', SITE_cur)
          CALL ncio_write_serial (fsrfdata, 'SITE_sf_lut'   , SITE_sf_lut, 'azi', 'zen')
          CALL ncio_write_serial (fsrfdata, 'SITE_slp_type' , SITE_slp_type , 'type')
          CALL ncio_write_serial (fsrfdata, 'SITE_asp_type' , SITE_asp_type , 'type')
          CALL ncio_write_serial (fsrfdata, 'SITE_area_type', SITE_area_type, 'type')
-
-
-         CALL ncio_write_serial (fsrfdata, 'elvstd', SITE_topostd)
-         CALL ncio_put_attr     (fsrfdata, 'elvstd', 'source', datasource(USE_SITE_topostd))
       ENDIF
 
    END SUBROUTINE write_surface_data_single
@@ -825,6 +849,16 @@ CONTAINS
          CALL ncio_put_attr     (fsrfdata, 'elvstd', 'source', datasource(USE_SITE_topostd))
       ENDIF
 
+      ! used for downscaling
+      IF (DEF_USE_Forcing_Downscaling) THEN   
+         CALL ncio_write_serial (fsrfdata, 'SITE_svf', SITE_svf)
+         CALL ncio_write_serial (fsrfdata, 'SITE_cur', SITE_cur)
+         CALL ncio_write_serial (fsrfdata, 'SITE_sf_lut', SITE_sf_lut, 'azi', 'zen')
+         CALL ncio_write_serial (fsrfdata, 'SITE_slp_type', SITE_slp_type, 'type')
+         CALL ncio_write_serial (fsrfdata, 'SITE_asp_type', SITE_asp_type, 'type')
+         CALL ncio_write_serial (fsrfdata, 'SITE_area_type', SITE_area_type, 'type')
+      ENDIF
+
    END SUBROUTINE write_urban_surface_data_single
 
    ! ---------
@@ -895,6 +929,11 @@ CONTAINS
 #endif
       IF (allocated(SITE_soil_BA_alpha         )) deallocate(SITE_soil_BA_alpha         )
       IF (allocated(SITE_soil_BA_beta          )) deallocate(SITE_soil_BA_beta          )
+      
+      IF (allocated(SITE_sf_lut                )) deallocate(SITE_sf_lut                )
+      IF (allocated(SITE_slp_type              )) deallocate(SITE_slp_type              )
+      IF (allocated(SITE_asp_type              )) deallocate(SITE_asp_type              )
+      IF (allocated(SITE_area_type             )) deallocate(SITE_area_type             )
 
    END SUBROUTINE single_srfdata_final
 
