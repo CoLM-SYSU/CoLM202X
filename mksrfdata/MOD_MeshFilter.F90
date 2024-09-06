@@ -38,7 +38,7 @@ CONTAINS
       ENDIF
       
 #ifdef USEMPI
-      CALL mpi_bcast (fexists, 1, MPI_LOGICAL, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (fexists, 1, MPI_LOGICAL, p_address_master, p_comm_glb, p_err)
 #endif
 
       inquire_mesh_filter = fexists

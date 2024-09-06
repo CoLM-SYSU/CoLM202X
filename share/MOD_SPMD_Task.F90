@@ -74,6 +74,8 @@ MODULE MOD_SPMD_Task
 
    integer :: p_my_group
 
+   integer :: p_address_master
+
    ! Input/output processes 
    integer :: p_comm_io
    integer :: p_iam_io
@@ -89,6 +91,8 @@ MODULE MOD_SPMD_Task
    
    integer, allocatable :: p_itis_worker (:)
    integer, allocatable :: p_address_worker (:)
+
+   integer :: p_address_writeback
 
    integer :: p_stat (MPI_STATUS_SIZE)
    integer :: p_err
@@ -136,7 +140,9 @@ CONTAINS
       CALL mpi_comm_rank (p_comm_glb, p_iam_glb, p_err)  
       CALL mpi_comm_size (p_comm_glb, p_np_glb,  p_err) 
 
-      p_is_master = (p_iam_glb == p_root)
+      p_address_master = p_np_glb-1
+      p_is_master = (p_iam_glb == p_address_master)
+
       p_is_writeback = .false.
 
    END SUBROUTINE spmd_init
@@ -144,13 +150,19 @@ CONTAINS
    ! ----- -----
    SUBROUTINE spmd_assign_writeback ()
 
+   IMPLICIT NONE
+
+   integer :: p_np_glb_plus
+
       CALL MPI_Comm_dup  (p_comm_glb, p_comm_glb_plus, p_err)
 
       CALL MPI_Comm_free (p_comm_glb, p_err)
       
-      CALL mpi_comm_rank (p_comm_glb_plus, p_iam_glb_plus,  p_err)  
+      CALL mpi_comm_rank (p_comm_glb_plus, p_iam_glb_plus, p_err)  
+      CALL mpi_comm_size (p_comm_glb_plus, p_np_glb_plus,  p_err) 
 
-      p_is_writeback = (p_iam_glb_plus == 0)
+      p_address_writeback = p_np_glb_plus-1
+      p_is_writeback = (p_iam_glb_plus == p_address_writeback)
 
       IF (.not. p_is_writeback) THEN
 
@@ -158,7 +170,9 @@ CONTAINS
          CALL mpi_comm_split (p_comm_glb_plus, 0, p_iam_glb_plus, p_comm_glb, p_err)
          CALL mpi_comm_rank (p_comm_glb, p_iam_glb, p_err)  
          CALL mpi_comm_size (p_comm_glb, p_np_glb,  p_err) 
-         p_is_master = (p_iam_glb == p_root)
+
+         p_address_master = p_np_glb-1
+         p_is_master = (p_iam_glb == p_address_master)
 
       ELSE
          CALL mpi_comm_split (p_comm_glb_plus, MPI_UNDEFINED, p_iam_glb_plus, p_comm_glb, p_err)
@@ -193,11 +207,11 @@ CONTAINS
 
       IF (.not. p_is_master) THEN
          IF (p_iam_glb <= (nave+1)*nres) THEN
-            p_is_io = mod(p_iam_glb, nave+1) == 1
-            p_my_group = (p_iam_glb-1) / (nave+1)
+            p_is_io = mod(p_iam_glb, nave+1) == 0
+            p_my_group = p_iam_glb / (nave+1)
          ELSE
-            p_is_io = mod(p_iam_glb-(nave+1)*nres, nave) == 1
-            p_my_group = (p_iam_glb-(nave+1)*nres-1) / nave + nres
+            p_is_io = mod(p_iam_glb-(nave+1)*nres, nave) == 0
+            p_my_group = (p_iam_glb-(nave+1)*nres) / nave + nres
          ENDIF
 
          p_is_worker = .not. p_is_io      
@@ -263,7 +277,7 @@ CONTAINS
       IF (p_is_master) THEN
 
          write (*,'(A)')     '----- MPI information -----'
-         write (*,'(A,I0,A)') ' Master is <', p_root, '>'
+         write (*,'(A,I0,A)') ' Master is <', p_address_master, '>'
 
          DO igrp = 0, p_np_io-1
             write (*,'(A,I0,A,I0,A)') &

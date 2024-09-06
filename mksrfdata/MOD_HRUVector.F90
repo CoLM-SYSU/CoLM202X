@@ -67,9 +67,9 @@ CONTAINS
 
 #ifdef USEMPI
          mesg = (/p_iam_glb, numelm/)
-         CALL mpi_send (mesg, 2, MPI_INTEGER, p_root, mpi_tag_mesg, p_comm_glb, p_err) 
+         CALL mpi_send (mesg, 2, MPI_INTEGER, p_address_master, mpi_tag_mesg, p_comm_glb, p_err) 
          IF (numelm > 0) THEN
-            CALL mpi_send (nhru_bsn, numelm, MPI_INTEGER, p_root, mpi_tag_data, p_comm_glb, p_err) 
+            CALL mpi_send (nhru_bsn, numelm, MPI_INTEGER, p_address_master, mpi_tag_data, p_comm_glb, p_err) 
          ENDIF
 #endif
       ENDIF
@@ -141,15 +141,15 @@ CONTAINS
          ENDDO
       ENDIF
 #ifdef USEMPI
-      CALL mpi_bcast (totalnumhru, 1, MPI_INTEGER, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (totalnumhru, 1, MPI_INTEGER, p_address_master, p_comm_glb, p_err)
 #endif
       
 #ifdef USEMPI
       IF (p_is_worker) THEN
          mesg = (/p_iam_glb, numhru/)
-         CALL mpi_send (mesg, 2, MPI_INTEGER, p_root, mpi_tag_mesg, p_comm_glb, p_err) 
+         CALL mpi_send (mesg, 2, MPI_INTEGER, p_address_master, mpi_tag_mesg, p_comm_glb, p_err) 
          IF (numhru > 0) THEN
-            CALL mpi_send (landhru%settyp, numhru, MPI_INTEGER, p_root, mpi_tag_data, p_comm_glb, p_err) 
+            CALL mpi_send (landhru%settyp, numhru, MPI_INTEGER, p_address_master, mpi_tag_data, p_comm_glb, p_err) 
          ENDIF
       ENDIF
 #endif
@@ -194,7 +194,7 @@ CONTAINS
       ENDIF
 
 #ifdef USEMPI
-      CALL mpi_bcast (totalnumhru, 1, MPI_INTEGER, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (totalnumhru, 1, MPI_INTEGER, p_address_master, p_comm_glb, p_err)
 #endif
 
    END SUBROUTINE hru_vector_init 

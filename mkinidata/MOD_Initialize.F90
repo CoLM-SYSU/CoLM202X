@@ -449,7 +449,7 @@ CONTAINS
             inquire (file=trim(file_simtop_para), exist=fexist)
          ENDIF
 #ifdef USEMPI
-         CALL mpi_bcast (fexist, 1, MPI_LOGICAL, p_root, p_comm_glb, p_err)
+         CALL mpi_bcast (fexist, 1, MPI_LOGICAL, p_address_master, p_comm_glb, p_err)
 #endif
 
          IF (fexist) THEN
@@ -468,7 +468,7 @@ CONTAINS
                CALL ncio_get_attr (file_simtop_para, 'fsatmax', '_FillValue', filval)
             ENDIF
 #ifdef USEMPI
-            CALL mpi_bcast (filval, 1, MPI_REAL8, p_root, p_comm_glb, p_err)
+            CALL mpi_bcast (filval, 1, MPI_REAL8, p_address_master, p_comm_glb, p_err)
 #endif
             
             CALL map_simtop_para%build_arealweighted (g_simtop_para, landpatch)
@@ -511,11 +511,11 @@ CONTAINS
          ENDIF
 
 #ifdef USEMPI
-         CALL mpi_bcast (vic_b_infilt_, 1, MPI_REAL8, p_root, p_comm_glb, p_err)
-         CALL mpi_bcast (vic_Dsmax_   , 1, MPI_REAL8, p_root, p_comm_glb, p_err)
-         CALL mpi_bcast (vic_Ds_      , 1, MPI_REAL8, p_root, p_comm_glb, p_err)
-         CALL mpi_bcast (vic_Ws_      , 1, MPI_REAL8, p_root, p_comm_glb, p_err)
-         CALL mpi_bcast (vic_c_       , 1, MPI_REAL8, p_root, p_comm_glb, p_err)
+         CALL mpi_bcast (vic_b_infilt_, 1, MPI_REAL8, p_address_master, p_comm_glb, p_err)
+         CALL mpi_bcast (vic_Dsmax_   , 1, MPI_REAL8, p_address_master, p_comm_glb, p_err)
+         CALL mpi_bcast (vic_Ds_      , 1, MPI_REAL8, p_address_master, p_comm_glb, p_err)
+         CALL mpi_bcast (vic_Ws_      , 1, MPI_REAL8, p_address_master, p_comm_glb, p_err)
+         CALL mpi_bcast (vic_c_       , 1, MPI_REAL8, p_address_master, p_comm_glb, p_err)
 #endif
 
          IF (p_is_worker) THEN
@@ -720,7 +720,7 @@ CONTAINS
             inquire (file=trim(fsoildat), exist=use_soilini)
          ENDIF
 #ifdef USEMPI
-         CALL mpi_bcast (use_soilini, 1, MPI_LOGICAL, p_root, p_comm_glb, p_err)
+         CALL mpi_bcast (use_soilini, 1, MPI_LOGICAL, p_address_master, p_comm_glb, p_err)
 #endif
 
          IF (use_soilini) THEN
@@ -738,7 +738,7 @@ CONTAINS
                CALL ncio_get_attr (fsoildat, 'zwt', 'missing_value', missing_value)
             ENDIF
 #ifdef USEMPI
-            CALL mpi_bcast (missing_value, 1, MPI_REAL8, p_root, p_comm_glb, p_err)
+            CALL mpi_bcast (missing_value, 1, MPI_REAL8, p_address_master, p_comm_glb, p_err)
 #endif
 
             IF (p_is_io) THEN
@@ -816,7 +816,7 @@ CONTAINS
             ENDIF
          ENDIF
 #ifdef USEMPI
-         CALL mpi_bcast (use_cnini, 1, MPI_LOGICAL, p_root, p_comm_glb, p_err)
+         CALL mpi_bcast (use_cnini, 1, MPI_LOGICAL, p_address_master, p_comm_glb, p_err)
 #endif
 
          IF (use_cnini) THEN
@@ -1025,7 +1025,7 @@ CONTAINS
             inquire (file=trim(fsnowdat), exist=use_snowini)
          ENDIF
 #ifdef USEMPI
-         CALL mpi_bcast (use_snowini, 1, MPI_LOGICAL, p_root, p_comm_glb, p_err)
+         CALL mpi_bcast (use_snowini, 1, MPI_LOGICAL, p_address_master, p_comm_glb, p_err)
 #endif
 
          IF (use_snowini) THEN
@@ -1038,7 +1038,7 @@ CONTAINS
                CALL ncio_get_attr (fsnowdat, 'snowdepth', 'missing_value', missing_value)
             ENDIF
 #ifdef USEMPI
-            CALL mpi_bcast (missing_value, 1, MPI_REAL8, p_root, p_comm_glb, p_err)
+            CALL mpi_bcast (missing_value, 1, MPI_REAL8, p_address_master, p_comm_glb, p_err)
 #endif
 
             IF (p_is_io) THEN
@@ -1085,7 +1085,7 @@ CONTAINS
       ENDIF
 
 #ifdef USEMPI
-      CALL mpi_bcast (use_wtd, 1, MPI_LOGICAL, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (use_wtd, 1, MPI_LOGICAL, p_address_master, p_comm_glb, p_err)
 #endif
 
       IF (use_wtd) THEN
