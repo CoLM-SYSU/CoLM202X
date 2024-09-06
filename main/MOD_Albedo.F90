@@ -1938,11 +1938,11 @@ ENDIF
                   ENDIF
                ELSE
                   IF (ib == 1) THEN
-                     flx_absdv(i) = flx_absd_snw(i,ib)*(1.-albsnd(ib))
-                     flx_absiv(i) = flx_absi_snw(i,ib)*(1.-albsni(ib))
+                     flx_absdv(i) = flx_absd_snw(i,ib)!*(1.-albsnd(ib))
+                     flx_absiv(i) = flx_absi_snw(i,ib)!*(1.-albsni(ib))
                   elseif (ib == 2) THEN
-                     flx_absdn(i) = flx_absd_snw(i,ib)*(1.-albsnd(ib))
-                     flx_absin(i) = flx_absi_snw(i,ib)*(1.-albsni(ib))
+                     flx_absdn(i) = flx_absd_snw(i,ib)!*(1.-albsnd(ib))
+                     flx_absin(i) = flx_absi_snw(i,ib)!*(1.-albsni(ib))
                   ENDIF
                ENDIF
             ENDDO
