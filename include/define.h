@@ -74,4 +74,4 @@
 #undef VectorInOneFileS
 #endif
 
-#define USESplitAI
+#undef USESplitAI
