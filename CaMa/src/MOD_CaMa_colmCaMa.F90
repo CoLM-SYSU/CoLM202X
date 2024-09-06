@@ -182,13 +182,13 @@ CONTAINS
          ENDDO
 
       !Broadcast the variables to all the processors
-      CALL mpi_bcast (NX      ,   1, MPI_INTEGER,   p_root, p_comm_glb, p_err) ! number of grid points in x-direction of CaMa-Flood
-      CALL mpi_bcast (NY      ,   1, MPI_INTEGER,   p_root, p_comm_glb, p_err) ! number of grid points in y-direction of CaMa-Flood
-      CALL mpi_bcast (IFRQ_INP ,   1, MPI_INTEGER,  p_root, p_comm_glb, p_err) ! input frequency of CaMa-Flood (hour)
-      CALL mpi_bcast (LWEVAP ,   1, MPI_LOGICAL,  p_root, p_comm_glb, p_err)   ! switch for inundation evaporation
-      CALL mpi_bcast (LWINFILT ,   1, MPI_LOGICAL,  p_root, p_comm_glb, p_err) ! switch for inundation re-infiltration
-      CALL mpi_bcast (real(D1LAT,kind=8)    ,   1, MPI_REAL8,   p_root, p_comm_glb, p_err) ! 
-      CALL mpi_bcast (real(D1LON,kind=8)    ,   1, MPI_REAL8,   p_root, p_comm_glb, p_err)  !    
+      CALL mpi_bcast (NX      ,   1, MPI_INTEGER,   p_address_master, p_comm_glb, p_err) ! number of grid points in x-direction of CaMa-Flood
+      CALL mpi_bcast (NY      ,   1, MPI_INTEGER,   p_address_master, p_comm_glb, p_err) ! number of grid points in y-direction of CaMa-Flood
+      CALL mpi_bcast (IFRQ_INP ,   1, MPI_INTEGER,  p_address_master, p_comm_glb, p_err) ! input frequency of CaMa-Flood (hour)
+      CALL mpi_bcast (LWEVAP ,   1, MPI_LOGICAL,  p_address_master, p_comm_glb, p_err)   ! switch for inundation evaporation
+      CALL mpi_bcast (LWINFILT ,   1, MPI_LOGICAL,  p_address_master, p_comm_glb, p_err) ! switch for inundation re-infiltration
+      CALL mpi_bcast (real(D1LAT,kind=8)    ,   1, MPI_REAL8,   p_address_master, p_comm_glb, p_err) ! 
+      CALL mpi_bcast (real(D1LON,kind=8)    ,   1, MPI_REAL8,   p_address_master, p_comm_glb, p_err)  !    
 
       !allocate the data structure for cama
       CALL gcama%define_by_center (D1LAT,D1LON,real(SOUTH,kind=8), real(NORTH,kind=8), real(WEST,kind=8), real(EAST,kind=8)) !define the grid for cama

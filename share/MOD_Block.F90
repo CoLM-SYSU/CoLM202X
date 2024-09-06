@@ -331,7 +331,7 @@ CONTAINS
       ENDIF
       
 #ifdef USEMPI
-      CALL mpi_bcast (numblocks, 1, MPI_INTEGER, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (numblocks, 1, MPI_INTEGER, p_address_master, p_comm_glb, p_err)
       
       ngrp = max((p_np_glb-1) / DEF_PIO_groupsize, 1)
       ngrp = min(ngrp, numblocks)
@@ -368,7 +368,7 @@ CONTAINS
 
 #ifdef USEMPI
       CALL mpi_bcast (this%pio, this%nxblk * this%nyblk, MPI_INTEGER, &
-         p_root, p_comm_glb, p_err)
+         p_address_master, p_comm_glb, p_err)
 #endif 
 
 #ifndef SinglePoint
@@ -469,8 +469,8 @@ CONTAINS
          ENDDO 
       ENDIF
 
-      CALL mpi_bcast (numblocks, 1, MPI_INTEGER, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (ngrp,      1, MPI_INTEGER, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (numblocks, 1, MPI_INTEGER, p_address_master, p_comm_glb, p_err)
+      CALL mpi_bcast (ngrp,      1, MPI_INTEGER, p_address_master, p_comm_glb, p_err)
       CALL divide_processes_into_groups (ngrp)
 #endif
       
@@ -517,7 +517,7 @@ CONTAINS
 
 #ifdef USEMPI
       CALL mpi_bcast (this%pio, this%nxblk * this%nyblk, MPI_INTEGER, &
-         p_root, p_comm_glb, p_err)
+         p_address_master, p_comm_glb, p_err)
 #endif
       
 #ifndef SinglePoint

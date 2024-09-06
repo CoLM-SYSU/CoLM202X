@@ -74,7 +74,7 @@ CONTAINS
          inquire (file=trim(DEF_file_mesh), exist=read_mesh_from_file)
       ENDIF
 #ifdef USEMPI
-      CALL mpi_bcast (read_mesh_from_file, 1, MPI_LOGICAL, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (read_mesh_from_file, 1, MPI_LOGICAL, p_address_master, p_comm_glb, p_err)
 #endif
       IF (read_mesh_from_file) THEN
          CALL gridmesh%define_from_file (DEF_file_mesh)
@@ -159,7 +159,7 @@ CONTAINS
    logical, allocatable :: work_done(:)
    integer, allocatable :: blkdsp(:,:), blkcnt(:,:)
    integer :: iblk_p, jblk_p
-   integer :: nelm_glb
+   integer :: nelm_max_blk, nelm_glb
 
    integer, allocatable :: elmindx(:), order(:)
 
@@ -819,9 +819,6 @@ CONTAINS
                   DO ie = 1, blkcnt(iblk,jblk)
                      CALL copy_elm (meshtmp(blkdsp(iblk,jblk)+order(ie)), &
                         mesh(blkdsp(iblk,jblk)+ie))
-#ifdef GRIDBASED
-                     ! mesh(blkdsp(iblk,jblk)+ie)%indx = ie
-#endif
                   ENDDO
 
                   deallocate (elmindx)
@@ -861,9 +858,17 @@ CONTAINS
          write(*,'(I19,A,I6)') numelm, ' elements on IO ', p_iam_glb
 
          CALL mpi_reduce (numelm, nelm_glb, 1, MPI_INTEGER, MPI_SUM, p_root, p_comm_io, p_err)
-         IF (p_iam_io == 0) THEN
-            write(*,'(A,I12,A)') 'Total: ', nelm_glb, ' elements.'
+         IF (p_iam_io == p_root) THEN
+            write(*,'(A,I12,A)') 'Total   : ', nelm_glb, ' elements.'
          ENDIF
+
+         nelm_max_blk = maxval(nelm_blk)
+         CALL mpi_allreduce (MPI_IN_PLACE, nelm_max_blk, 1, MPI_INTEGER, MPI_MAX, p_comm_io, p_err)
+         IF (p_iam_io == p_root) THEN
+            write(*,'(A,I12,A)') 'Maximum : ', nelm_glb, &
+               ' elements in one block (More than 3600 is recommended).'
+         ENDIF
+
       ENDIF
 
       CALL mpi_barrier (p_comm_glb, p_err)

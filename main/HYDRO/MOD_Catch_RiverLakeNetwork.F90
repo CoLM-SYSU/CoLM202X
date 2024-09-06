@@ -261,39 +261,39 @@ CONTAINS
 
 #ifdef USEMPI
          mesg(1:2) = (/p_iam_glb, numbasin/)
-         CALL mpi_send (mesg(1:2), 2, MPI_INTEGER, p_root, mpi_tag_mesg, p_comm_glb, p_err) 
+         CALL mpi_send (mesg(1:2), 2, MPI_INTEGER, p_address_master, mpi_tag_mesg, p_comm_glb, p_err) 
 
          IF (numbasin > 0) THEN
             CALL mpi_send (bindex, numbasin, MPI_INTEGER, &
-               p_root, mpi_tag_data, p_comm_glb, p_err) 
+               p_address_master, mpi_tag_data, p_comm_glb, p_err) 
             
             allocate (lake_id (numbasin))
             CALL mpi_recv (lake_id, numbasin, MPI_INTEGER, &
-               p_root, mpi_tag_data, p_comm_glb, p_stat, p_err)
+               p_address_master, mpi_tag_data, p_comm_glb, p_stat, p_err)
 
             allocate (riverdown (numbasin))
             CALL mpi_recv (riverdown, numbasin, MPI_INTEGER, &
-               p_root, mpi_tag_data, p_comm_glb, p_stat, p_err)
+               p_address_master, mpi_tag_data, p_comm_glb, p_stat, p_err)
 
             allocate (to_lake (numbasin))
             CALL mpi_recv (to_lake, numbasin, MPI_LOGICAL, &
-               p_root, mpi_tag_data, p_comm_glb, p_stat, p_err)
+               p_address_master, mpi_tag_data, p_comm_glb, p_stat, p_err)
 
             allocate (riverlen (numbasin))
             CALL mpi_recv (riverlen, numbasin, MPI_REAL8, &
-               p_root, mpi_tag_data, p_comm_glb, p_stat, p_err)
+               p_address_master, mpi_tag_data, p_comm_glb, p_stat, p_err)
 
             allocate (riverelv (numbasin))
             CALL mpi_recv (riverelv, numbasin, MPI_REAL8, &
-               p_root, mpi_tag_data, p_comm_glb, p_stat, p_err)
+               p_address_master, mpi_tag_data, p_comm_glb, p_stat, p_err)
 
             allocate (riverdpth (numbasin))
             CALL mpi_recv (riverdpth, numbasin, MPI_REAL8, &
-               p_root, mpi_tag_data, p_comm_glb, p_stat, p_err)
+               p_address_master, mpi_tag_data, p_comm_glb, p_stat, p_err)
 
             allocate (basinelv (numbasin))
             CALL mpi_recv (basinelv, numbasin, MPI_REAL8, &
-               p_root, mpi_tag_data, p_comm_glb, p_stat, p_err)
+               p_address_master, mpi_tag_data, p_comm_glb, p_stat, p_err)
          ENDIF
 #else
          IF (numbasin > 0) THEN
@@ -370,11 +370,11 @@ CONTAINS
 
       IF (p_is_worker) THEN
 #ifdef USEMPI
-         CALL mpi_recv (ndata, 1, MPI_INTEGER, p_root, mpi_tag_size, p_comm_glb, p_stat, p_err)
+         CALL mpi_recv (ndata, 1, MPI_INTEGER, p_address_master, mpi_tag_size, p_comm_glb, p_stat, p_err)
          IF (ndata > 0) THEN
             allocate (exchange(4,ndata))
             CALL mpi_recv (exchange, 4*ndata, MPI_INTEGER, &
-               p_root, mpi_tag_data, p_comm_glb, p_stat, p_err)
+               p_address_master, mpi_tag_data, p_comm_glb, p_stat, p_err)
          ENDIF
 #endif
 
@@ -778,9 +778,9 @@ CONTAINS
 
       IF (p_is_worker) THEN
          mesg = (/p_iam_glb, numelm/)
-         CALL mpi_send (mesg, 2, MPI_INTEGER, p_root, mpi_tag_mesg, p_comm_glb, p_err) 
+         CALL mpi_send (mesg, 2, MPI_INTEGER, p_address_master, mpi_tag_mesg, p_comm_glb, p_err) 
          IF (numelm > 0) THEN
-            CALL mpi_send (bsnrnof, numelm, MPI_REAL8, p_root, mpi_tag_data, p_comm_glb, p_err) 
+            CALL mpi_send (bsnrnof, numelm, MPI_REAL8, p_address_master, mpi_tag_data, p_comm_glb, p_err) 
          ENDIF
       ENDIF
       

@@ -59,10 +59,10 @@ CONTAINS
 
       IF (p_is_worker) THEN
          mesg = (/p_iam_glb, vlen/)
-         CALL mpi_send (mesg, 2, MPI_INTEGER, p_root, mpi_tag_mesg, p_comm_glb, p_err) 
+         CALL mpi_send (mesg, 2, MPI_INTEGER, p_address_master, mpi_tag_mesg, p_comm_glb, p_err) 
          IF (vlen > 0) THEN
             CALL mpi_send (vector, vlen, MPI_REAL8, &
-               p_root, mpi_tag_data, p_comm_glb, p_err) 
+               p_address_master, mpi_tag_data, p_comm_glb, p_err) 
          ENDIF
       ENDIF
       
@@ -169,7 +169,7 @@ CONTAINS
       IF (p_is_worker) THEN
          IF (vlen > 0) THEN
             IF (.not. allocated(vector)) allocate(vector(vlen))
-            CALL mpi_recv (vector, vlen, MPI_REAL8, p_root, &
+            CALL mpi_recv (vector, vlen, MPI_REAL8, p_address_master, &
                mpi_tag_data, p_comm_glb, p_stat, p_err)
          ENDIF
       ENDIF
@@ -230,7 +230,7 @@ CONTAINS
       IF (p_is_worker) THEN
          IF (vlen > 0) THEN
             IF (.not. allocated(vector)) allocate(vector(vlen))
-            CALL mpi_recv (vector, vlen, MPI_INTEGER4, p_root, &
+            CALL mpi_recv (vector, vlen, MPI_INTEGER4, p_address_master, &
                mpi_tag_data, p_comm_glb, p_stat, p_err)
          ENDIF
       ENDIF
