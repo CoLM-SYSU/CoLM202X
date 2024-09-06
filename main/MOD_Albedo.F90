@@ -403,6 +403,9 @@ ENDIF
 ! ----------------------------------------------------------------------
       IF (lai+sai > 1e-6) THEN
 
+         ! initialization
+         albv(:,:) = albg(:,:)
+
          IF (patchtype == 0) THEN  !soil patches
 
 #if (defined LULC_USGS || defined LULC_IGBP)
@@ -574,10 +577,10 @@ ENDIF
 ! projected area of phytoelements in direction of mu and
 ! average inverse diffuse optical depth per unit leaf area
 
-      phi1 = 0.5 - 0.633 * chil - 0.33 * chil * chil
-      phi2 = 0.877 * ( 1. - 2. * phi1 )
+      phi1  = 0.5 - 0.633 * chil - 0.33 * chil * chil
+      phi2  = 0.877 * ( 1. - 2. * phi1 )
 
-      proj = phi1 + phi2 * coszen
+      proj  = phi1 + phi2 * coszen
       extkb = proj / coszen
 
       extkd = 0.719
@@ -594,7 +597,7 @@ ENDIF
 #if(defined LULC_USGS)
       ! yuan: to be consistance with CoLM2014, no stem considered
       ! for twostream and leaf optical property calculations
-      sai_ = 0.01
+      sai_ = 0.
 #else
       sai_ = sai
 #endif
@@ -615,20 +618,19 @@ ENDIF
 !-----------------------------------------------------------------------
 
 ! account for stem optical property effects
-      scat = lai/lsai * ( tau(iw,1) + rho(iw,1) ) + &
-            sai_/lsai * ( tau(iw,2) + rho(iw,2) )
+      scat =  lai/lsai * ( tau(iw,1) + rho(iw,1) ) &
+           + sai_/lsai * ( tau(iw,2) + rho(iw,2) )
 
       as = scat / 2. * proj / ( proj + coszen * phi2 )
       as = as * ( 1. - coszen * phi1 / ( proj + coszen * phi2 ) * &
-               log ( ( proj + coszen * phi2 + coszen * phi1 ) / ( coszen * phi1 ) ) )
+                 log ( ( proj + coszen * phi2 + coszen * phi1 ) / ( coszen * phi1 ) ) )
 
 ! account for stem optical property effects
       !TODO-done: betao -> beta0
       upscat = lai/lsai*tau(iw,1) + sai_/lsai*tau(iw,2)
       ! 09/12/2014, yuan: a bug, change 1. - chil -> 1. + chil
-      upscat = 0.5 * ( scat + ( scat - 2. * upscat ) * &
-               (( 1. + chil ) / 2. ) ** 2 )
-      beta0 = ( 1. + zmu * extkb ) / ( scat * zmu * extkb ) * as
+      upscat = 0.5 * ( scat + (scat - 2.*upscat) * ((1. + chil) / 2.) ** 2 )
+      beta0  = ( 1. + zmu * extkb ) / ( scat * zmu * extkb ) * as
 
 ! account for snow on vegetation
       ! modify scat, upscat and beta0
@@ -673,7 +675,7 @@ ENDIF
 
       sigma = ( zmu * extkb ) ** 2 + ( ce**2 - be**2 )
 
-      IF (abs(sigma) .gt. 1.e-10) THEN     !<======
+      IF (abs(sigma) .gt. 1.e-10) THEN
 
          hh1 = h1 / sigma
          hh4 = h4 / sigma
@@ -703,7 +705,7 @@ ENDIF
                      + hh5 * (1. - s1*s2) / (extkb + psi) &
                      + hh6 * (1. - s2/s1) / (extkb - psi)
 
-      ELSE                               !<======
+      ELSE
 
          m1 = f1 * s1
          m2 = f2 / s1
@@ -723,21 +725,18 @@ ENDIF
          hh6 = hh3 * p2 / ce
 
          albv(iw,1) =  - h1 / (2.*extkb*zmu2) + hh2 + hh3
-         tran(iw,1) = 1./ce * ( -h1 / (2.*extkb*zmu2) * &
-                                ( p3*lsai + p4 / (2.*extkb) ) - de ) * s2 &
-                     + hh5 * s1 + hh6 / s1
+         tran(iw,1) = 1./ce * ( -h1/(2.*extkb*zmu2) * (p3*lsai + p4/(2.*extkb)) - de ) * s2 &
+                    + hh5 * s1 + hh6 / s1
 
          eup(iw,1) = (hh2 - h1/(2.*extkb*zmu2)) * (1. - s2*s2) / (2.*extkb) &
                    + hh3 * (lsai - 0.) &
                    + h1/(2.*extkb*zmu2) * ( lsai*s2*s2 - (1. - s2*s2)/(2.*extkb) )
 
-         edown(iw,1) = (hh5 - (h1*p4/(4.*extkb*extkb*zmu) + de)/ce) * &
-                             (1. - s2*s2) / (2.*extkb) &
+         edown(iw,1) = (hh5 - (h1*p4/(4.*extkb*extkb*zmu) + de)/ce) * (1. - s2*s2)/(2.*extkb) &
                      + hh6 * (lsai - 0.) &
-                     + h1*p3/(ce*4.*extkb*extkb*zmu2) * &
-                                         ( lsai*s2*s2 - (1. - s2*s2)/(2.*extkb) )
+                     + h1*p3/(ce*4.*extkb*extkb*zmu2) * (lsai*s2*s2 - (1. - s2*s2)/(2.*extkb) )
 
-      ENDIF                              !<======
+      ENDIF
 
       ssun(iw,1) = (1.-scat) * ( 1.-s2 + 1. / zmu * (eup(iw,1) + edown(iw,1)) )
       ssha(iw,1) = scat * (1.-s2) &
@@ -917,8 +916,8 @@ ENDIF
 ! projected area of phytoelements in direction of mu and
 ! average inverse diffuse optical depth per unit leaf area
 
-      phi1 = 0.5 - 0.633 * chil - 0.33 * chil * chil
-      phi2 = 0.877 * ( 1. - 2. * phi1 )
+      phi1  = 0.5 - 0.633 * chil - 0.33 * chil * chil
+      phi2  = 0.877 * ( 1. - 2. * phi1 )
 
       extkd = 0.719
 
@@ -959,7 +958,7 @@ ENDIF
          cosz  = coszen
       ENDIF
 
-      proj = phi1 + phi2 * cosz
+      proj  = phi1 + phi2 * cosz
       extkb = proj / cosz
 
 !-----------------------------------------------------------------------
@@ -975,7 +974,7 @@ ENDIF
 
       as = scat / 2. * proj / ( proj + cosz * phi2 )
       as = as * ( 1. - cosz * phi1 / ( proj + cosz * phi2 ) * &
-               log ( ( proj + cosz * phi2 + cosz * phi1 ) / ( cosz * phi1 ) ) )
+                 log ( ( proj + cosz * phi2 + cosz * phi1 ) / ( cosz * phi1 ) ) )
 
 ! + stem optical properties
       ! scat ~ omega
@@ -983,9 +982,8 @@ ENDIF
       ! beta0 ~ betadl
       ! scat-2.*upscat ~ rho - tau
       upscat = lai/lsai*tau(iw,1) + sai/lsai*tau(iw,2)
-      upscat = 0.5 * ( scat + ( scat - 2. * upscat ) * &
-               (( 1. + chil ) / 2. ) ** 2 )
-      beta0 = ( 1. + zmu * extkb ) / ( scat * zmu * extkb ) * as
+      upscat = 0.5 * ( scat + (scat - 2.*upscat) * ((1. + chil) / 2.) ** 2 )
+      beta0  = ( 1. + zmu * extkb ) / ( scat * zmu * extkb ) * as
 
       ! [MODI 1]
       beta0 = 0.5_r8 * ( scat + 1._r8/extkb*(1._r8+chil)**2/4._r8*(wrho-wtau) )/scat
@@ -1038,7 +1036,7 @@ ENDIF
          extkbd = extkb
       ENDIF
 
-      IF (abs(sigma) .gt. 1.e-10) THEN     !<======
+      IF (abs(sigma) .gt. 1.e-10) THEN
 
          hh1 = h1 / sigma
          hh4 = h4 / sigma
@@ -1068,7 +1066,7 @@ ENDIF
              + hh5 * (1. - s2d*s1) / (extkbd + psi) &
              + hh6 * (1. - s2d/s1) / (extkbd - psi)
 
-      ELSE                               !<======
+      ELSE
 
          m1 = f1 * s1
          m2 = f2 / s1
@@ -1089,20 +1087,19 @@ ENDIF
 
          albv(iw,ic) =  - h1 / ((extkb+extkbd)*zmu2) + hh2 + hh3
          tran(iw,ic) = 1./ce * ( -h1 / ((extkb+extkbd)*zmu2) * &
-            ( p3*lsai + p4 / (extkb+extkbd) ) - de ) * s2 &
-            + hh5 * s1 + hh6 / s1
+                       ( p3*lsai + p4 / (extkb+extkbd) ) - de ) * s2 &
+                     + hh5 * s1 + hh6 / s1
 
          eup = (hh2 - h1/((extkb+extkbd)*zmu2)) * (1. - s2*s2d)/(extkb+extkbd) &
-            + hh3 * (lsai - 0.) &
-            + h1/((extkb+extkbd)*zmu2) * ( lsai*s2*s2d - (1. - s2*s2d)/(extkb+extkbd) )
+             + hh3 * (lsai - 0.) &
+             + h1/((extkb+extkbd)*zmu2) * ( lsai*s2*s2d - (1. - s2*s2d)/(extkb+extkbd) )
 
          edw = (hh5 - (h1*p4/((extkb+extkbd)*(extkb+extkbd)*zmu) + de)/ce) * &
-            (1. - s2*s2d) / (extkb+extkbd) &
-            + hh6 * (lsai - 0.) &
-            + h1*p3/(ce*(extkb+extkbd)*(extkb+extkbd)*zmu2) * &
-            ( lsai*s2*s2d - (1. - s2*s2d)/(extkb+extkbd) )
+               (1. - s2*s2d) / (extkb+extkbd) + hh6 * (lsai - 0.) &
+             + h1*p3/(ce*(extkb+extkbd)*(extkb+extkbd)*zmu2) * &
+               ( lsai*s2*s2d - (1. - s2*s2d)/(extkb+extkbd) )
 
-      ENDIF                              !<======
+      ENDIF
 
       sall(iw,ic) = 1. - albv(iw,ic) - (1.-albgblk)*(tran(iw,ic)+s2)
 
@@ -1126,7 +1123,7 @@ ENDIF
           + hh6 * (1._r8/s1/s2d - 1._r8) / (psi + extkbd)
 
       ssun_rev = s2d * (1._r8 - scat) * &
-         ( extkb*(1._r8-s2/s2d)/(extkb-extkbd) + 1._r8 / zmu * (eup + edw ) )
+                 ( extkb*(1._r8-s2/s2d)/(extkb-extkbd) + 1._r8 / zmu * (eup + edw ) )
 
       ! -----------------------------------------------------------
       ! consider the multiple reflectance between canopy and ground
@@ -1230,8 +1227,8 @@ ENDIF
          p = pftclass(i)
          IF (lai_p(i)+sai_p(i) > 1.e-6) THEN
             CALL twostream_mod (chil_p(p),rho_p(:,:,p),tau_p(:,:,p),1.,lai_p(i),sai_p(i),&
-               fwet_snow_p(i),coszen,albg,albv_p(:,:,i),tran_p(:,:,i),thermk_p(i),&
-               extkb_p(i),extkd_p(i),ssun_p(:,:,i),ssha_p(:,:,i))
+                 fwet_snow_p(i),coszen,albg,albv_p(:,:,i),tran_p(:,:,i),thermk_p(i),&
+                 extkb_p(i),extkd_p(i),ssun_p(:,:,i),ssha_p(:,:,i))
          ELSE
             albv_p(:,:,i) = albg(:,:)
             ssun_p(:,:,i) = 0.
