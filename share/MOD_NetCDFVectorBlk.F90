@@ -133,7 +133,9 @@ CONTAINS
 #endif
          IF (.not. any_data_exists) THEN
             write(*,*) 'Warning : restart data '//trim(dataname)//' in '//trim(filename)//' not found.'
-            CALL CoLM_stop ()
+            IF (.not. present(defval)) THEN
+               CALL CoLM_stop ()
+            ENDIF
          ENDIF
       ENDIF
 
@@ -238,7 +240,9 @@ CONTAINS
 #endif
          IF (.not. any_data_exists) THEN
             write(*,*) 'Warning : restart data '//trim(dataname)//' in '//trim(filename)//' not found.'
-            CALL CoLM_stop ()
+            IF (.not. present(defval)) THEN
+               CALL CoLM_stop ()
+            ENDIF
          ENDIF
       ENDIF
 
@@ -347,7 +351,9 @@ CONTAINS
 #endif
          IF (.not. any_data_exists) THEN
             write(*,*) 'Warning : restart data '//trim(dataname)//' in '//trim(filename)//' not found.'
-            CALL CoLM_stop ()
+            IF (.not. present(defval)) THEN
+               CALL CoLM_stop ()
+            ENDIF
          ENDIF
       ENDIF
 
@@ -453,7 +459,9 @@ CONTAINS
 #endif
          IF (.not. any_data_exists) THEN
             write(*,*) 'Warning : restart data '//trim(dataname)//' in '//trim(filename)//' not found.'
-            CALL CoLM_stop ()
+            IF (.not. present(defval)) THEN
+               CALL CoLM_stop ()
+            ENDIF
          ENDIF
       ENDIF
 
@@ -560,7 +568,9 @@ CONTAINS
 #endif
          IF (.not. any_data_exists) THEN
             write(*,*) 'Warning : restart data '//trim(dataname)//' in '//trim(filename)//' not found.'
-            CALL CoLM_stop ()
+            IF (.not. present(defval)) THEN
+               CALL CoLM_stop ()
+            ENDIF
          ENDIF
       ENDIF
 
@@ -667,7 +677,9 @@ CONTAINS
 #endif
          IF (.not. any_data_exists) THEN
             write(*,*) 'Warning : restart data '//trim(dataname)//' in '//trim(filename)//' not found.'
-            CALL CoLM_stop ()
+            IF (.not. present(defval)) THEN
+               CALL CoLM_stop ()
+            ENDIF
          ENDIF
       ENDIF
 
@@ -774,7 +786,9 @@ CONTAINS
 #endif
          IF (.not. any_data_exists) THEN
             write(*,*) 'Warning : restart data '//trim(dataname)//' in '//trim(filename)//' not found.'
-            CALL CoLM_stop ()
+            IF (.not. present(defval)) THEN
+               CALL CoLM_stop ()
+            ENDIF
          ENDIF
       ENDIF
 
