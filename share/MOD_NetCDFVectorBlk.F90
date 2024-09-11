@@ -94,7 +94,7 @@ CONTAINS
          ENDIF
       ENDIF
 
-      any_data_exists = present(defval)
+      any_data_exists = .false.
 
       IF (p_is_io) THEN
 
@@ -201,7 +201,7 @@ CONTAINS
          ENDIF
       ENDIF
 
-      any_data_exists = present(defval)
+      any_data_exists = .false.
 
       IF (p_is_io) THEN
 
@@ -308,7 +308,7 @@ CONTAINS
          ENDIF
       ENDIF
 
-      any_data_exists = present(defval)
+      any_data_exists = .false.
 
       IF (p_is_io) THEN
 
@@ -420,7 +420,7 @@ CONTAINS
          ENDIF
       ENDIF
       
-      any_data_exists = present(defval)
+      any_data_exists = .false.
 
       IF (p_is_io) THEN
 
@@ -436,7 +436,6 @@ CONTAINS
                any_data_exists = .true.
             ELSEIF (present(defval)) THEN
                sbuff(:) = defval
-               any_data_exists = .true.
             ENDIF
 
 #ifdef USEMPI
@@ -530,7 +529,7 @@ CONTAINS
          ENDIF
       ENDIF
 
-      any_data_exists = present(defval)
+      any_data_exists = .false.
 
       IF (p_is_io) THEN
 
@@ -639,7 +638,7 @@ CONTAINS
          ENDIF
       ENDIF
 
-      any_data_exists = present(defval)
+      any_data_exists = .false.
 
       IF (p_is_io) THEN
 
@@ -748,7 +747,7 @@ CONTAINS
          ENDIF
       ENDIF
 
-      any_data_exists = present(defval)
+      any_data_exists = .false.
 
       IF (p_is_io) THEN
 
