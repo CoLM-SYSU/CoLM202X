@@ -449,8 +449,8 @@ CONTAINS
       CALL ncio_read_vector (file_restart, 'fc_vgm   ' ,   nl_soil, landpatch, fc_vgm    ) ! a scaling factor by using air entry value in the Mualem model [-]
 #endif
 
-      CALL ncio_read_vector (file_restart, 'fsatmax', landpatch, fsatmax)
-      CALL ncio_read_vector (file_restart, 'fsatdcf', landpatch, fsatdcf)
+      CALL ncio_read_vector (file_restart, 'fsatmax', landpatch, fsatmax, defval = 0.38 )
+      CALL ncio_read_vector (file_restart, 'fsatdcf', landpatch, fsatdcf, defval = 0.125)
 
       CALL ncio_read_vector (file_restart, 'vic_b_infilt', landpatch, vic_b_infilt)
       CALL ncio_read_vector (file_restart, 'vic_Dsmax'   , landpatch, vic_Dsmax   )
