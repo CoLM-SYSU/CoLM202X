@@ -3605,18 +3605,18 @@ CONTAINS
          CALL mpi_allreduce (MPI_IN_PLACE, count_explicit, 1, MPI_INTEGER8, MPI_SUM, p_comm_worker, p_err)
          CALL mpi_allreduce (MPI_IN_PLACE, count_wet2dry , 1, MPI_INTEGER8, MPI_SUM, p_comm_worker, p_err)
 #endif
-         IF (p_iam_worker == 0) THEN
+         IF (p_iam_worker == p_root) THEN
             count_implicit_accum = count_implicit_accum + count_implicit
             count_explicit_accum = count_explicit_accum + count_explicit
             count_wet2dry_accum  = count_wet2dry_accum  + count_wet2dry
             
 #ifdef USEMPI
-            CALL mpi_send (count_implicit, 1, MPI_INTEGER, 0, mpi_tag_mesg, p_comm_glb, p_err)
-            CALL mpi_send (count_explicit, 1, MPI_INTEGER, 0, mpi_tag_mesg, p_comm_glb, p_err)
-            CALL mpi_send (count_wet2dry,  1, MPI_INTEGER, 0, mpi_tag_mesg, p_comm_glb, p_err)
-            CALL mpi_send (count_implicit_accum, 1, MPI_INTEGER, 0, mpi_tag_mesg, p_comm_glb, p_err)
-            CALL mpi_send (count_explicit_accum, 1, MPI_INTEGER, 0, mpi_tag_mesg, p_comm_glb, p_err)
-            CALL mpi_send (count_wet2dry_accum,  1, MPI_INTEGER, 0, mpi_tag_mesg, p_comm_glb, p_err)
+            CALL mpi_send (count_implicit,       1, MPI_INTEGER, p_address_master, mpi_tag_mesg, p_comm_glb, p_err)
+            CALL mpi_send (count_explicit,       1, MPI_INTEGER, p_address_master, mpi_tag_mesg, p_comm_glb, p_err)
+            CALL mpi_send (count_wet2dry,        1, MPI_INTEGER, p_address_master, mpi_tag_mesg, p_comm_glb, p_err)
+            CALL mpi_send (count_implicit_accum, 1, MPI_INTEGER, p_address_master, mpi_tag_mesg, p_comm_glb, p_err)
+            CALL mpi_send (count_explicit_accum, 1, MPI_INTEGER, p_address_master, mpi_tag_mesg, p_comm_glb, p_err)
+            CALL mpi_send (count_wet2dry_accum,  1, MPI_INTEGER, p_address_master, mpi_tag_mesg, p_comm_glb, p_err)
 #endif
          ENDIF
       ENDIF
@@ -3624,7 +3624,7 @@ CONTAINS
       IF (p_is_master) THEN
 
 #ifdef USEMPI
-         iwork = p_address_worker(0)
+         iwork = p_address_worker(p_root)
          CALL mpi_recv (count_implicit, 1, MPI_INTEGER, iwork, mpi_tag_mesg, p_comm_glb, p_stat, p_err)
          CALL mpi_recv (count_explicit, 1, MPI_INTEGER, iwork, mpi_tag_mesg, p_comm_glb, p_stat, p_err)
          CALL mpi_recv (count_wet2dry , 1, MPI_INTEGER, iwork, mpi_tag_mesg, p_comm_glb, p_stat, p_err)

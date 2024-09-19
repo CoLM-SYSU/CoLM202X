@@ -1142,8 +1142,8 @@ CONTAINS
          ENDDO
 
 #ifdef USEMPI
-         CALL mpi_send (p_iam_glb, 1, MPI_INTEGER, 0, mpi_tag_mesg, p_comm_glb, p_err)
-         CALL mpi_recv (lock, 1, MPI_INTEGER, 0, mpi_tag_mesg, p_comm_glb, p_stat, p_err)
+         CALL mpi_send (p_iam_glb, 1, MPI_INTEGER, p_address_master, mpi_tag_mesg, p_comm_glb, p_err)
+         CALL mpi_recv (lock, 1, MPI_INTEGER, p_address_master, mpi_tag_mesg, p_comm_glb, p_stat, p_err)
 #endif
          CALL nccheck( nf90_open(trim(filename), NF90_WRITE, ncid) )
          CALL nccheck( nf90_inq_ncid (ncid,  trim(dataname), grpid) )
@@ -1163,7 +1163,7 @@ CONTAINS
          CALL nccheck( nf90_sync (ncid) )
          CALL nccheck( nf90_close(ncid) )
 #ifdef USEMPI
-         CALL mpi_send (lock, 1, MPI_INTEGER, 0, mpi_tag_mesg, p_comm_glb, p_err)
+         CALL mpi_send (lock, 1, MPI_INTEGER, p_address_master, mpi_tag_mesg, p_comm_glb, p_err)
 #endif
       ENDIF
                
@@ -1267,8 +1267,8 @@ CONTAINS
          ENDDO
 
 #ifdef USEMPI
-         CALL mpi_send (p_iam_glb, 1, MPI_INTEGER, 0, mpi_tag_mesg, p_comm_glb, p_err)
-         CALL mpi_recv (lock, 1, MPI_INTEGER, 0, mpi_tag_mesg, p_comm_glb, p_stat, p_err)
+         CALL mpi_send (p_iam_glb, 1, MPI_INTEGER, p_address_master, mpi_tag_mesg, p_comm_glb, p_err)
+         CALL mpi_recv (lock, 1, MPI_INTEGER, p_address_master, mpi_tag_mesg, p_comm_glb, p_stat, p_err)
 #endif
          CALL nccheck( nf90_open(trim(filename), NF90_WRITE, ncid) )
          CALL nccheck( nf90_inq_ncid (ncid,  trim(dataname), grpid) )
@@ -1288,7 +1288,7 @@ CONTAINS
          CALL nccheck( nf90_sync (ncid) )
          CALL nccheck( nf90_close(ncid) )
 #ifdef USEMPI
-         CALL mpi_send (lock, 1, MPI_INTEGER, 0, mpi_tag_mesg, p_comm_glb, p_err)
+         CALL mpi_send (lock, 1, MPI_INTEGER, p_address_master, mpi_tag_mesg, p_comm_glb, p_err)
 #endif
       ENDIF
                
@@ -1392,8 +1392,8 @@ CONTAINS
          ENDDO
 
 #ifdef USEMPI
-         CALL mpi_send (p_iam_glb, 1, MPI_INTEGER, 0, mpi_tag_mesg, p_comm_glb, p_err)
-         CALL mpi_recv (lock, 1, MPI_INTEGER, 0, mpi_tag_mesg, p_comm_glb, p_stat, p_err)
+         CALL mpi_send (p_iam_glb, 1, MPI_INTEGER, p_address_master, mpi_tag_mesg, p_comm_glb, p_err)
+         CALL mpi_recv (lock, 1, MPI_INTEGER, p_address_master, mpi_tag_mesg, p_comm_glb, p_stat, p_err)
 #endif
          CALL nccheck( nf90_open(trim(filename), NF90_WRITE, ncid) )
          CALL nccheck( nf90_inq_ncid (ncid,  trim(dataname), grpid) )
@@ -1413,7 +1413,7 @@ CONTAINS
          CALL nccheck( nf90_sync (ncid) )
          CALL nccheck( nf90_close(ncid) )
 #ifdef USEMPI
-         CALL mpi_send (lock, 1, MPI_INTEGER, 0, mpi_tag_mesg, p_comm_glb, p_err)
+         CALL mpi_send (lock, 1, MPI_INTEGER, p_address_master, mpi_tag_mesg, p_comm_glb, p_err)
 #endif
       ENDIF
                
@@ -1511,8 +1511,8 @@ CONTAINS
          ENDDO
 
 #ifdef USEMPI
-         CALL mpi_send (p_iam_glb, 1, MPI_INTEGER, 0, mpi_tag_mesg, p_comm_glb, p_err)
-         CALL mpi_recv (lock, 1, MPI_INTEGER, 0, mpi_tag_mesg, p_comm_glb, p_stat, p_err)
+         CALL mpi_send (p_iam_glb, 1, MPI_INTEGER, p_address_master, mpi_tag_mesg, p_comm_glb, p_err)
+         CALL mpi_recv (lock, 1, MPI_INTEGER, p_address_master, mpi_tag_mesg, p_comm_glb, p_stat, p_err)
 #endif
          CALL nccheck( nf90_open(trim(filename), NF90_WRITE, ncid) )
          CALL nccheck( nf90_inq_ncid (ncid,  trim(dataname), grpid) )
@@ -1532,7 +1532,7 @@ CONTAINS
          CALL nccheck( nf90_sync (ncid) )
          CALL nccheck( nf90_close(ncid) )
 #ifdef USEMPI
-         CALL mpi_send (lock, 1, MPI_INTEGER, 0, mpi_tag_mesg, p_comm_glb, p_err)
+         CALL mpi_send (lock, 1, MPI_INTEGER, p_address_master, mpi_tag_mesg, p_comm_glb, p_err)
 #endif
       ENDIF
                
@@ -1633,8 +1633,8 @@ CONTAINS
          ENDDO
 
 #ifdef USEMPI
-         CALL mpi_send (p_iam_glb, 1, MPI_INTEGER, 0, mpi_tag_mesg, p_comm_glb, p_err)
-         CALL mpi_recv (lock, 1, MPI_INTEGER, 0, mpi_tag_mesg, p_comm_glb, p_stat, p_err)
+         CALL mpi_send (p_iam_glb, 1, MPI_INTEGER, p_address_master, mpi_tag_mesg, p_comm_glb, p_err)
+         CALL mpi_recv (lock, 1, MPI_INTEGER, p_address_master, mpi_tag_mesg, p_comm_glb, p_stat, p_err)
 #endif
          CALL nccheck( nf90_open(trim(filename), NF90_WRITE, ncid) )
          CALL nccheck( nf90_inq_ncid (ncid,  trim(dataname), grpid) )
@@ -1654,7 +1654,7 @@ CONTAINS
          CALL nccheck( nf90_sync (ncid) )
          CALL nccheck( nf90_close(ncid) )
 #ifdef USEMPI
-         CALL mpi_send (lock, 1, MPI_INTEGER, 0, mpi_tag_mesg, p_comm_glb, p_err)
+         CALL mpi_send (lock, 1, MPI_INTEGER, p_address_master, mpi_tag_mesg, p_comm_glb, p_err)
 #endif
       ENDIF
                
@@ -1755,8 +1755,8 @@ CONTAINS
          ENDDO
 
 #ifdef USEMPI
-         CALL mpi_send (p_iam_glb, 1, MPI_INTEGER, 0, mpi_tag_mesg, p_comm_glb, p_err)
-         CALL mpi_recv (lock, 1, MPI_INTEGER, 0, mpi_tag_mesg, p_comm_glb, p_stat, p_err)
+         CALL mpi_send (p_iam_glb, 1, MPI_INTEGER, p_address_master, mpi_tag_mesg, p_comm_glb, p_err)
+         CALL mpi_recv (lock, 1, MPI_INTEGER, p_address_master, mpi_tag_mesg, p_comm_glb, p_stat, p_err)
 #endif
          CALL nccheck( nf90_open(trim(filename), NF90_WRITE, ncid) )
          CALL nccheck( nf90_inq_ncid (ncid,  trim(dataname), grpid) )
@@ -1776,7 +1776,7 @@ CONTAINS
          CALL nccheck( nf90_sync (ncid) )
          CALL nccheck( nf90_close(ncid) )
 #ifdef USEMPI
-         CALL mpi_send (lock, 1, MPI_INTEGER, 0, mpi_tag_mesg, p_comm_glb, p_err)
+         CALL mpi_send (lock, 1, MPI_INTEGER, p_address_master, mpi_tag_mesg, p_comm_glb, p_err)
 #endif
       ENDIF
                
@@ -1878,8 +1878,8 @@ CONTAINS
          ENDDO
 
 #ifdef USEMPI
-         CALL mpi_send (p_iam_glb, 1, MPI_INTEGER, 0, mpi_tag_mesg, p_comm_glb, p_err)
-         CALL mpi_recv (lock, 1, MPI_INTEGER, 0, mpi_tag_mesg, p_comm_glb, p_stat, p_err)
+         CALL mpi_send (p_iam_glb, 1, MPI_INTEGER, p_address_master, mpi_tag_mesg, p_comm_glb, p_err)
+         CALL mpi_recv (lock, 1, MPI_INTEGER, p_address_master, mpi_tag_mesg, p_comm_glb, p_stat, p_err)
 #endif
          CALL nccheck( nf90_open(trim(filename), NF90_WRITE, ncid) )
          CALL nccheck( nf90_inq_ncid (ncid,  trim(dataname), grpid) )
@@ -1899,7 +1899,7 @@ CONTAINS
          CALL nccheck( nf90_sync (ncid) )
          CALL nccheck( nf90_close(ncid) )
 #ifdef USEMPI
-         CALL mpi_send (lock, 1, MPI_INTEGER, 0, mpi_tag_mesg, p_comm_glb, p_err)
+         CALL mpi_send (lock, 1, MPI_INTEGER, p_address_master, mpi_tag_mesg, p_comm_glb, p_err)
 #endif
       ENDIF
                
