@@ -87,7 +87,7 @@ CONTAINS
 
       IF (p_is_master) maxnumhru = size(indxhru,1) 
 #ifdef USEMPI
-      CALL mpi_bcast (maxnumhru, 1, MPI_INTEGER, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (maxnumhru, 1, MPI_INTEGER, p_address_master, p_comm_glb, p_err)
 #endif
 
       IF (p_is_master) THEN
@@ -215,7 +215,7 @@ CONTAINS
                
 #ifdef USEMPI
          mesg(1:2) = (/p_iam_glb,numbasin/)
-         CALL mpi_send (mesg(1:2), 2, MPI_INTEGER, p_root, mpi_tag_mesg, p_comm_glb, p_err) 
+         CALL mpi_send (mesg(1:2), 2, MPI_INTEGER, p_address_master, mpi_tag_mesg, p_comm_glb, p_err) 
 
          IF (numbasin > 0) THEN
             allocate (basinindex (numbasin))
@@ -224,35 +224,35 @@ CONTAINS
             ENDDO
 
             CALL mpi_send (basinindex, numbasin, MPI_INTEGER, &
-               p_root, mpi_tag_data, p_comm_glb, p_err) 
+               p_address_master, mpi_tag_data, p_comm_glb, p_err) 
 
             allocate (indxhru (maxnumhru,numbasin))
             CALL mpi_recv (indxhru, maxnumhru*numbasin, MPI_INTEGER, &
-               p_root, mpi_tag_data, p_comm_glb, p_stat, p_err)
+               p_address_master, mpi_tag_data, p_comm_glb, p_stat, p_err)
 
             allocate (areahru (maxnumhru,numbasin))
             CALL mpi_recv (areahru, maxnumhru*numbasin, MPI_REAL8, &
-               p_root, mpi_tag_data, p_comm_glb, p_stat, p_err)
+               p_address_master, mpi_tag_data, p_comm_glb, p_stat, p_err)
 
             allocate (handhru (maxnumhru,numbasin))
             CALL mpi_recv (handhru, maxnumhru*numbasin, MPI_REAL8, &
-               p_root, mpi_tag_data, p_comm_glb, p_stat, p_err)
+               p_address_master, mpi_tag_data, p_comm_glb, p_stat, p_err)
 
             allocate (elvahru (maxnumhru,numbasin))
             CALL mpi_recv (elvahru, maxnumhru*numbasin, MPI_REAL8, &
-               p_root, mpi_tag_data, p_comm_glb, p_stat, p_err)
+               p_address_master, mpi_tag_data, p_comm_glb, p_stat, p_err)
 
             allocate (plenhru (maxnumhru,numbasin))
             CALL mpi_recv (plenhru, maxnumhru*numbasin, MPI_REAL8, &
-               p_root, mpi_tag_data, p_comm_glb, p_stat, p_err)
+               p_address_master, mpi_tag_data, p_comm_glb, p_stat, p_err)
 
             allocate (lfachru (maxnumhru,numbasin))
             CALL mpi_recv (lfachru, maxnumhru*numbasin, MPI_REAL8, &
-               p_root, mpi_tag_data, p_comm_glb, p_stat, p_err)
+               p_address_master, mpi_tag_data, p_comm_glb, p_stat, p_err)
 
             allocate (nexthru (maxnumhru,numbasin))
             CALL mpi_recv (nexthru, maxnumhru*numbasin, MPI_INTEGER, &
-               p_root, mpi_tag_data, p_comm_glb, p_stat, p_err)
+               p_address_master, mpi_tag_data, p_comm_glb, p_stat, p_err)
          ENDIF
 #endif
 

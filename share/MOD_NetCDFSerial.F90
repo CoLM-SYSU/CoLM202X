@@ -794,7 +794,7 @@ CONTAINS
       ENDIF
 
 #ifdef USEMPI
-      CALL mpi_bcast (rdata, 1, MPI_INTEGER, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (rdata, 1, MPI_INTEGER, p_address_master, p_comm_glb, p_err)
 #endif
 
    END SUBROUTINE ncio_read_bcast_serial_int32_0d
@@ -815,7 +815,7 @@ CONTAINS
       ENDIF
 
 #ifdef USEMPI
-      CALL mpi_bcast (rdata, 1, MPI_REAL8, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (rdata, 1, MPI_REAL8, p_address_master, p_comm_glb, p_err)
 #endif
 
    END SUBROUTINE ncio_read_bcast_serial_real8_0d
@@ -837,9 +837,9 @@ CONTAINS
       ENDIF
 
 #ifdef USEMPI
-      CALL mpi_bcast (vlen, 1, MPI_INTEGER, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (vlen, 1, MPI_INTEGER, p_address_master, p_comm_glb, p_err)
       IF (.not. p_is_master)  allocate (rdata (vlen))
-      CALL mpi_bcast (rdata, vlen, MPI_INTEGER, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (rdata, vlen, MPI_INTEGER, p_address_master, p_comm_glb, p_err)
 #endif
 
    END SUBROUTINE ncio_read_bcast_serial_int32_1d
@@ -861,9 +861,9 @@ CONTAINS
       ENDIF
 
 #ifdef USEMPI
-      CALL mpi_bcast (vsize, 2, MPI_INTEGER, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (vsize, 2, MPI_INTEGER, p_address_master, p_comm_glb, p_err)
       IF (.not. p_is_master)  allocate (rdata (vsize(1), vsize(2)))
-      CALL mpi_bcast (rdata, vsize(1)*vsize(2), MPI_INTEGER, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (rdata, vsize(1)*vsize(2), MPI_INTEGER, p_address_master, p_comm_glb, p_err)
 #endif
 
    END SUBROUTINE ncio_read_bcast_serial_int32_2d
@@ -887,9 +887,9 @@ CONTAINS
       ENDIF
 
 #ifdef USEMPI
-      CALL mpi_bcast (vlen, 1, MPI_INTEGER, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (vlen, 1, MPI_INTEGER, p_address_master, p_comm_glb, p_err)
       IF (.not. p_is_master)  allocate (rdata (vlen))
-      CALL mpi_bcast (rdata, vlen, MPI_REAL8, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (rdata, vlen, MPI_REAL8, p_address_master, p_comm_glb, p_err)
 #endif
 
    END SUBROUTINE ncio_read_bcast_serial_real8_1d
@@ -913,9 +913,9 @@ CONTAINS
       ENDIF
 
 #ifdef USEMPI
-      CALL mpi_bcast (vsize, 2, MPI_INTEGER, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (vsize, 2, MPI_INTEGER, p_address_master, p_comm_glb, p_err)
       IF (.not. p_is_master)  allocate (rdata (vsize(1),vsize(2)))
-      CALL mpi_bcast (rdata, vsize(1)*vsize(2), MPI_REAL8, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (rdata, vsize(1)*vsize(2), MPI_REAL8, p_address_master, p_comm_glb, p_err)
 #endif
 
    END SUBROUTINE ncio_read_bcast_serial_real8_2d
@@ -939,9 +939,9 @@ CONTAINS
       ENDIF
 
 #ifdef USEMPI
-      CALL mpi_bcast (vsize, 3, MPI_INTEGER, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (vsize, 3, MPI_INTEGER, p_address_master, p_comm_glb, p_err)
       IF (.not. p_is_master)  allocate (rdata (vsize(1),vsize(2),vsize(3)))
-      CALL mpi_bcast (rdata, vsize(1)*vsize(2)*vsize(3), MPI_REAL8, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (rdata, vsize(1)*vsize(2)*vsize(3), MPI_REAL8, p_address_master, p_comm_glb, p_err)
 #endif
 
    END SUBROUTINE ncio_read_bcast_serial_real8_3d
@@ -965,9 +965,9 @@ CONTAINS
       ENDIF
 
 #ifdef USEMPI
-      CALL mpi_bcast (vsize, 4, MPI_INTEGER, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (vsize, 4, MPI_INTEGER, p_address_master, p_comm_glb, p_err)
       IF (.not. p_is_master)  allocate (rdata (vsize(1),vsize(2),vsize(3),vsize(4)))
-      CALL mpi_bcast (rdata, vsize(1)*vsize(2)*vsize(3)*vsize(4), MPI_REAL8, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (rdata, vsize(1)*vsize(2)*vsize(3)*vsize(4), MPI_REAL8, p_address_master, p_comm_glb, p_err)
 #endif
 
    END SUBROUTINE ncio_read_bcast_serial_real8_4d
@@ -991,9 +991,9 @@ CONTAINS
       ENDIF
 
 #ifdef USEMPI
-      CALL mpi_bcast (vsize, 5, MPI_INTEGER, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (vsize, 5, MPI_INTEGER, p_address_master, p_comm_glb, p_err)
       IF (.not. p_is_master)  allocate (rdata (vsize(1),vsize(2),vsize(3),vsize(4),vsize(5)))
-      CALL mpi_bcast (rdata, vsize(1)*vsize(2)*vsize(3)*vsize(4)*vsize(5), MPI_REAL8, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (rdata, vsize(1)*vsize(2)*vsize(3)*vsize(4)*vsize(5), MPI_REAL8, p_address_master, p_comm_glb, p_err)
 #endif
 
    END SUBROUTINE ncio_read_bcast_serial_real8_5d
@@ -1021,9 +1021,9 @@ CONTAINS
       ENDIF
 
 #ifdef USEMPI
-      CALL mpi_bcast (vlen, 1, MPI_INTEGER, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (vlen, 1, MPI_INTEGER, p_address_master, p_comm_glb, p_err)
       IF (.not. p_is_master)  allocate (rdata (vlen))
-      CALL mpi_bcast (rdata, vlen, MPI_LOGICAL, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (rdata, vlen, MPI_LOGICAL, p_address_master, p_comm_glb, p_err)
 #endif
 
    END SUBROUTINE ncio_read_bcast_serial_logical_1d

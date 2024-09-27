@@ -17,7 +17,8 @@ MODULE MOD_Runoff
 
 CONTAINS
 
-   SUBROUTINE SurfaceRunoff_SIMTOP (nl_soil,wtfact,wimp,porsl,psi0,hksati,&
+   SUBROUTINE SurfaceRunoff_SIMTOP (nl_soil,wimp,porsl,psi0,hksati,&
+                                    fsatmax,fsatdcf,&
                                     z_soisno,dz_soisno,zi_soisno,&
                                     eff_porosity,icefrac,zwt,gwat,&
                                     rsur,rsur_se,rsur_ie)
@@ -38,11 +39,13 @@ CONTAINS
 
    integer, intent(in) :: nl_soil   ! number of soil layers
    real(r8), intent(in) :: &
-        wtfact,                   &! fraction of model area with high water table
+        ! wtfact,                 &! (updated to gridded 'fsatmax' data) fraction of model area with high water table
         wimp,                     &! water impremeable if porosity less than wimp
         porsl(1:nl_soil),         &! saturated volumetric soil water content(porosity)
         psi0(1:nl_soil),          &! saturated soil suction (mm) (NEGATIVE)
         hksati(1:nl_soil),        &! hydraulic conductivity at saturation (mm h2o/s)
+        fsatmax,                  &! maximum fraction of saturation area [-] 
+        fsatdcf,                  &! decay factor in calucation of fraction of saturation area [1/m] 
         z_soisno(1:nl_soil),      &! layer depth (m)
         dz_soisno(1:nl_soil),     &! layer thickness (m)
         zi_soisno(0:nl_soil),     &! interface level below a "z" level (m)
@@ -60,12 +63,14 @@ CONTAINS
    real(r8) qinmax       ! maximum infiltration capability
    real(r8) fsat         ! fractional area with water table at surface
 
-   real(r8), parameter :: fff = 0.5   ! runoff decay factor (m-1)
+   ! updated to gridded 'fsatdcf' (by Shupeng Zhang)
+   ! real(r8), parameter :: fff = 0.5   ! runoff decay factor (m-1)
 
 !-----------------------END Variable List-------------------------------
 
-!  fraction of saturated area
-      fsat = wtfact*min(1.0,exp(-0.5*fff*zwt))
+!  fraction of saturated area (updated to gridded 'fsatmax' and 'fsatdcf')
+      !fsat = wtfact*min(1.0,exp(-0.5*fff*zwt))
+      fsat = fsatmax*min(1.0,exp(-2.0*fsatdcf*zwt))
 
 ! Maximum infiltration capacity
       qinmax = minval(10.**(-6.0*icefrac(1:min(3,nl_soil)))*hksati(1:min(3,nl_soil)))

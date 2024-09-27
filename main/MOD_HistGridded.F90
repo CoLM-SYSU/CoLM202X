@@ -500,7 +500,7 @@ CONTAINS
          ENDIF
 
 #ifdef USEMPI
-         CALL mpi_bcast (itime, 1, MPI_INTEGER, p_root, p_comm_glb, p_err)
+         CALL mpi_bcast (itime, 1, MPI_INTEGER, p_address_master, p_comm_glb, p_err)
 #endif
 
       ELSEIF (trim(DEF_HIST_mode) == 'block') THEN
@@ -668,9 +668,9 @@ CONTAINS
                      IF (.not. DEF_HIST_WriteBack) THEN
                         smesg = (/p_iam_glb, ixseg, iyseg/)
                         CALL mpi_send (smesg, 3, MPI_INTEGER, &
-                           p_root, hist_data_id, p_comm_glb, p_err)
+                           p_address_master, hist_data_id, p_comm_glb, p_err)
                         CALL mpi_send (sbuf, xcnt*ycnt, MPI_DOUBLE, &
-                           p_root, hist_data_id, p_comm_glb, p_err)
+                           p_address_master, hist_data_id, p_comm_glb, p_err)
                      ELSE
                         CALL hist_writeback_var (hist_data_id, ixseg, iyseg, wdata2d = sbuf)
                      ENDIF
@@ -851,9 +851,9 @@ CONTAINS
                      IF (.not. DEF_HIST_WriteBack) THEN
                         smesg = (/p_iam_glb, ixseg, iyseg, ndim1/)
                         CALL mpi_send (smesg, 4, MPI_INTEGER, &
-                           p_root, hist_data_id, p_comm_glb, p_err)
+                           p_address_master, hist_data_id, p_comm_glb, p_err)
                         CALL mpi_send (sbuf, ndim1*xcnt*ycnt, MPI_DOUBLE, &
-                           p_root, hist_data_id, p_comm_glb, p_err)
+                           p_address_master, hist_data_id, p_comm_glb, p_err)
                      ELSE
                         CALL hist_writeback_var (hist_data_id, ixseg, iyseg, wdata3d = sbuf)
                      ENDIF
@@ -1031,9 +1031,9 @@ CONTAINS
                      IF (.not. DEF_HIST_WriteBack) THEN
                         smesg = (/p_iam_glb, ixseg, iyseg, ndim1, ndim2/)
                         CALL mpi_send (smesg, 5, MPI_INTEGER, &
-                           p_root, hist_data_id, p_comm_glb, p_err)
+                           p_address_master, hist_data_id, p_comm_glb, p_err)
                         CALL mpi_send (sbuf, ndim1*ndim2*xcnt*ycnt, MPI_DOUBLE, &
-                           p_root, hist_data_id, p_comm_glb, p_err)
+                           p_address_master, hist_data_id, p_comm_glb, p_err)
                      ELSE
                         CALL hist_writeback_var (hist_data_id, ixseg, iyseg, wdata4d = sbuf)
                      ENDIF

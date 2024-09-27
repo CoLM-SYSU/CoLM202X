@@ -320,9 +320,9 @@ CONTAINS
 
                      smesg = (/p_iam_glb, ixseg, iyseg/)
                      CALL mpi_send (smesg, 3, MPI_INTEGER, &
-                        p_root, srf_data_id, p_comm_glb, p_err)
+                        p_address_master, srf_data_id, p_comm_glb, p_err)
                      CALL mpi_send (sbuf, ntyps*xcnt*ycnt, MPI_DOUBLE, &
-                        p_root, srf_data_id, p_comm_glb, p_err)
+                        p_address_master, srf_data_id, p_comm_glb, p_err)
 
                      deallocate (sbuf)
                   ENDIF

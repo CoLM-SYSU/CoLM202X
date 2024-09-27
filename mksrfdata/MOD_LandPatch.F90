@@ -88,37 +88,34 @@ CONTAINS
       ENDIF
 
 #ifdef SinglePoint
-#ifdef CROP
-      IF ((SITE_landtype == CROPLAND) .and. USE_SITE_pctcrop) THEN
+      IF (USE_SITE_landtype) THEN
+
+         numpatch = 1
+
+         allocate (landpatch%eindex (numpatch))
+         allocate (landpatch%ipxstt (numpatch))
+         allocate (landpatch%ipxend (numpatch))
+         allocate (landpatch%settyp (numpatch))
+         allocate (landpatch%ielm   (numpatch))
+
+         landpatch%eindex(:) = 1
+         landpatch%ielm  (:) = 1
+         landpatch%ipxstt(:) = 1
+         landpatch%ipxend(:) = 1
+         landpatch%settyp(:) = SITE_landtype
+
+         landpatch%nset = numpatch
+         CALL landpatch%set_vecgs
+
          RETURN
+
       ENDIF
-#endif
-
-      numpatch = 1
-
-      allocate (landpatch%eindex (numpatch))
-      allocate (landpatch%ipxstt (numpatch))
-      allocate (landpatch%ipxend (numpatch))
-      allocate (landpatch%settyp (numpatch))
-      allocate (landpatch%ielm   (numpatch))
-
-      landpatch%eindex(:) = 1
-      landpatch%ielm  (:) = 1
-      landpatch%ipxstt(:) = 1
-      landpatch%ipxend(:) = 1
-      landpatch%settyp(:) = SITE_landtype
-
-      landpatch%nset = numpatch
-      CALL landpatch%set_vecgs
-
-      RETURN
 #endif
 
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-#ifndef SinglePoint
       IF (p_is_io) THEN
          CALL allocate_block_data (gpatch, patchdata)
 
@@ -135,7 +132,6 @@ CONTAINS
          CALL aggregation_data_daemon (gpatch, data_i4_2d_in1 = patchdata)
 #endif
       ENDIF
-#endif
 
       IF (p_is_worker) THEN
 
@@ -170,7 +166,6 @@ CONTAINS
 
             allocate (types (ipxstt:ipxend))
 
-#ifndef SinglePoint
 #ifdef CATCHMENT
             CALL aggregation_request_data (landhru, iset, gpatch, zip = .false., &
 #else
@@ -181,8 +176,9 @@ CONTAINS
 
             types(:) = ibuff
             deallocate (ibuff)
-#else
-            types(:) = SITE_landtype
+
+#ifdef SinglePoint
+            SITE_landtype = types(1) 
 #endif
 
 #ifdef CATCHMENT

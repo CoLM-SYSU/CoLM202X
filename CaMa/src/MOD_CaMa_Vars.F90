@@ -669,9 +669,9 @@ CONTAINS
 
                   smesg = (/p_iam_glb, ixseg, iyseg/)
                   CALL mpi_send (smesg, 3, MPI_INTEGER, &
-                     p_root, 10011, p_comm_glb, p_err)
+                     p_address_master, 10011, p_comm_glb, p_err)
                   CALL mpi_send (sbuf, xcnt*ycnt, MPI_DOUBLE, &
-                     p_root, 10011, p_comm_glb, p_err)
+                     p_address_master, 10011, p_comm_glb, p_err)
 
                   deallocate (sbuf)
 
@@ -752,7 +752,7 @@ CONTAINS
          ENDDO
       ELSEIF  (p_is_io) THEN
          DO WHILE (.true.)
-            CALL mpi_recv (rmesg, 2, MPI_INTEGER, p_root, 10000, p_comm_glb, p_stat, p_err)
+            CALL mpi_recv (rmesg, 2, MPI_INTEGER, p_address_master, 10000, p_comm_glb, p_stat, p_err)
             ixseg = rmesg(1)
             iyseg = rmesg(2)
 
@@ -766,7 +766,7 @@ CONTAINS
 
                allocate (rbuf(xcnt,ycnt))
                CALL mpi_recv (rbuf, xcnt*ycnt, MPI_DOUBLE, &
-                  p_root, 10000, p_comm_glb, p_stat, p_err)
+                  p_address_master, 10000, p_comm_glb, p_stat, p_err)
                IOVar%blk(iblk,jblk)%val(xdsp+1:xdsp+xcnt,ydsp+1:ydsp+ycnt)= rbuf
                deallocate (rbuf)
             ELSE
