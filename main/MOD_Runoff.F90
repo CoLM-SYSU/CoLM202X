@@ -177,7 +177,7 @@ CONTAINS
 
       ELSE
 
-         btopo = (topostd - sigmin) / (topostd - sigmax)
+         btopo = (topostd - sigmin) / (topostd + sigmax)
          btopo = min(max(btopo, 0.01), 0.5)
 
          w_int    = sum(vol_liq     (1:6) * dz_soisno(1:6))
