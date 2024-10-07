@@ -609,7 +609,7 @@ SUBROUTINE CoLMMAIN ( &
 
 !======================================================================
 
-      is_dry_lake = DEF_USE_Dynamic_Lake .and. (patchtype == 4) .and. ((wdsrf < 0.1) .or. (zwt > 0.))
+      is_dry_lake = DEF_USE_Dynamic_Lake .and. (patchtype == 4) .and. ((wdsrf < 100.) .or. (zwt > 0.))
 
 
                                                   !         / SOIL GROUND          (patchtype = 0)
@@ -862,6 +862,20 @@ SUBROUTINE CoLMMAIN ( &
          lb = snl + 1
          t_grnd = t_soisno(lb)
 
+         IF (is_dry_lake) THEN
+            dz_lake = wdsrf*1.e-3/nl_lake
+            t_lake  = t_soisno(1)
+            IF (t_soisno(1) >= tfrz) THEN
+               lake_icefrac = 0.
+            ELSE
+               lake_icefrac = 1.
+            ENDIF
+
+            IF (wdsrf >= 100.) THEN
+               CALL adjust_lake_layer (nl_lake, dz_lake, t_lake, lake_icefrac)
+            ENDIF
+         ENDIF
+
          ! ----------------------------------------
          ! energy balance
          ! ----------------------------------------
@@ -910,10 +924,14 @@ SUBROUTINE CoLMMAIN ( &
 
 #if(defined CoLMDEBUG)
          IF (abs(errorw) > 1.e-3) THEN
-            IF (patchtype <= 1) THEN
+            IF     (patchtype == 0) THEN
                write(6,*) 'Warning: water balance violation in CoLMMAIN (soil) ', errorw
+            ELSEIF (patchtype == 1) THEN
+               write(6,*) 'Warning: water balance violation in CoLMMAIN (urban) ', errorw
             ELSEIF (patchtype == 2) THEN
                write(6,*) 'Warning: water balance violation in CoLMMAIN (wetland) ', errorw
+            ELSEIF (patchtype == 4) THEN
+               write(6,*) 'Warning: water balance violation in CoLMMAIN (dry lake) ', errorw
             ENDIF
             CALL CoLM_stop ()
          ENDIF
