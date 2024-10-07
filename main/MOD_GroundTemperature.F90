@@ -18,7 +18,7 @@ CONTAINS
 !-----------------------------------------------------------------------
 
 
-   SUBROUTINE GroundTemperature (patchtype,lb,nl_soil,deltim,&
+   SUBROUTINE GroundTemperature (patchtype,is_dry_lake,lb,nl_soil,deltim,&
                          capr,cnfac,vf_quartz,vf_gravels,vf_om,vf_sand,wf_gravels,wf_sand,&
                          porsl,psi0,&
 #ifdef Campbell_SOIL_MODEL
@@ -78,6 +78,7 @@ CONTAINS
    integer, intent(in) :: nl_soil                     !upper bound of array
    integer, intent(in) :: patchtype                   !land patch type (0=soil,1=urban or built-up,2=wetland,
                                                       !3=land ice, 4=deep lake, 5=shallow lake)
+   logical, intent(in) :: is_dry_lake
    real(r8), intent(in) :: deltim                     !seconds in a time step [second]
    real(r8), intent(in) :: capr                       !tuning factor to turn first layer T into surface T
    real(r8), intent(in) :: cnfac                      !Crank Nicholson factor between 0 and 1
@@ -398,7 +399,7 @@ CONTAINS
 
          wice_soisno_bef(lb:0) = wice_soisno(lb:0)
 
-         CALL meltf_snicar (patchtype,lb,nl_soil,deltim, &
+         CALL meltf_snicar (patchtype,is_dry_lake,lb,nl_soil,deltim, &
                   fact(lb:),brr(lb:),hs,hs_soil,hs_snow,fsno,sabg_snow_lyr(lb:),dhsdT, &
                   t_soisno_bef(lb:),t_soisno(lb:),wliq_soisno(lb:),wice_soisno(lb:),imelt(lb:), &
                   scv,snowdp,sm,xmf,porsl,psi0,&
@@ -419,7 +420,7 @@ CONTAINS
          ENDDO
 
       ELSE
-         CALL meltf (patchtype,lb,nl_soil,deltim, &
+         CALL meltf (patchtype,is_dry_lake,lb,nl_soil,deltim, &
                   fact(lb:),brr(lb:),hs,hs_soil,hs_snow,fsno,dhsdT, &
                   t_soisno_bef(lb:),t_soisno(lb:),wliq_soisno(lb:),wice_soisno(lb:),imelt(lb:), &
                   scv,snowdp,sm,xmf,porsl,psi0,&

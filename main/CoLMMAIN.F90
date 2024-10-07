@@ -696,7 +696,7 @@ SUBROUTINE CoLMMAIN ( &
          lb  = snl + 1           !lower bound of array
          lbsn = min(lb,0)
 
-         CALL THERMAL (ipatch   ,patchtype         ,lb                ,deltim            ,&
+         CALL THERMAL (ipatch,patchtype,is_dry_lake,lb                ,deltim            ,&
               trsmx0            ,zlnd              ,zsno              ,csoilc            ,&
               dewmx             ,capr              ,cnfac             ,vf_quartz         ,&
               vf_gravels        ,vf_om             ,vf_sand           ,wf_gravels        ,&
