@@ -482,7 +482,7 @@ ENDIF
    END SUBROUTINE WATER_2014
 
 !-----------------------------------------------------------------------
-   SUBROUTINE WATER_VSF (ipatch,  patchtype,lb      ,nl_soil     ,deltim      ,&
+   SUBROUTINE WATER_VSF (ipatch, patchtype,is_dry_lake, lb, nl_soil, deltim   ,&
               z_soisno    ,dz_soisno   ,zi_soisno                             ,&
               bsw         ,theta_r     ,fsatmax     ,fsatdcf     ,topostd     ,&
               BVIC                                                            ,&
@@ -538,6 +538,7 @@ ENDIF
         ipatch           ,& ! patch index
         patchtype           ! land patch type (0=soil, 1=urban or built-up, 2=wetland,
                             ! 3=land ice, 4=land water bodies, 99=ocean
+   logical, intent(in) :: is_dry_lake
 
    integer, intent(in) :: &
         lb               , &! lower bound of array
@@ -736,7 +737,7 @@ ENDIF
 ! [2] surface runoff and infiltration
 !=======================================================================
 
-IF((patchtype<=1) .or. (patchtype == 4))THEN   ! soil ground only
+IF((patchtype<=1) .or. is_dry_lake)THEN   ! soil ground only
 
       ! For water balance check, the sum of water in soil column before the calcultion
       w_sum = sum(wliq_soisno(1:nl_soil)) + sum(wice_soisno(1:nl_soil)) + wa + wdsrf
@@ -774,7 +775,7 @@ IF((patchtype<=1) .or. (patchtype == 4))THEN   ! soil ground only
       rsur_se = 0.
 
 #ifndef CatchLateralFlow
-      IF (patchtype /= 4) THEN
+      IF (.not. is_dry_lake) THEN
 
          IF (DEF_Runoff_SCHEME  == 0) THEN
 
@@ -992,7 +993,7 @@ ELSE
 ENDIF
 
 #ifndef CatchLateralFlow
-      IF (patchtype /= 4) THEN
+      IF (.not. is_dry_lake) THEN
          IF (wdsrf > pondmx) THEN
             rsur = rsur + (wdsrf - pondmx) / deltim
             rsur_ie = rsur_ie + (wdsrf - pondmx) / deltim

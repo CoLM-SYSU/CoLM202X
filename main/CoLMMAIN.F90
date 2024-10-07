@@ -781,7 +781,7 @@ SUBROUTINE CoLMMAIN ( &
                  mss_dst1(lbsn:0)  ,mss_dst2(lbsn:0)  ,mss_dst3(lbsn:0)  ,mss_dst4(lbsn:0)   )
          ELSE
 
-            CALL WATER_VSF (ipatch ,patchtype         ,lb                ,nl_soil           ,&
+            CALL WATER_VSF (ipatch,  patchtype,is_dry_lake,  lb          ,nl_soil           ,&
                  deltim            ,z_soisno(lb:)     ,dz_soisno(lb:)    ,zi_soisno(lb-1:)  ,&
                  bsw               ,theta_r           ,fsatmax           ,fsatdcf           ,&
                  topostd           ,BVIC              ,&
