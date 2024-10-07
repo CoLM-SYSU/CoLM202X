@@ -1006,6 +1006,8 @@ ENDIF
 
          ! total runoff (mm/s)
          rnof = rsubst + rsur
+      ELSE
+         rnof = 0.
       ENDIF
 #endif
 

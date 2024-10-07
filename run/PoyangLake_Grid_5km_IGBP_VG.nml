@@ -1,7 +1,7 @@
 &nl_colm
 
 ! Author: Shupeng Zhang 
-! Description : include soil state init from data.
+! Description : an example to use dynamic lake.
 
    DEF_CASE_NAME = 'PoyangLake_Grid_5km_IGBP_VG'
 

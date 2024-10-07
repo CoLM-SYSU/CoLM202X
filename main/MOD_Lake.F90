@@ -166,7 +166,7 @@ CONTAINS
                wliq_soisno(0) = 0.                ! kg/m2
                fiold(0) = 1.
             ENDIF
-               
+
          ELSEIF (lake_icefrac(1) >= 0.001) THEN
             IF (pg_rain > 0.0 .and. pg_snow > 0.0) THEN
                t_lake(1)=tfrz
@@ -1868,6 +1868,7 @@ CONTAINS
          dz_lake(1)      = wliq_lake(1) + wice_lake(1)
          dz_lake(1)      = max(dz_lake(1), 1.e-6)
          lake_icefrac(1) = wice_lake(1) / dz_lake(1)
+         lake_icefrac(1) = min(max(lake_icefrac(1), 0.), 1.)
 
          dz_lake(nl_lake) = dz_lake(nl_lake) + dw_soil/1.e3
          dz_lake(nl_lake) = max(dz_lake(nl_lake), 0.)
@@ -2067,7 +2068,7 @@ CONTAINS
    ! Local Variables
    integer  :: i, j
    real(r8) :: wdsrfm, depthratio, resi, resj
-   real(r8) :: ticesum, tliqsum, vicesum, vliqsum, olp, tliq, tice, a, b, c, d
+   real(r8) :: ticesum, tliqsum, wicesum, wliqsum, olp, tliq, tice, a, b, c, d
    real(r8) :: dz_lake_new      (nl_lake)
    real(r8) :: t_lake_new       (nl_lake)
    real(r8) :: lake_icefrac_new (nl_lake)
@@ -2091,17 +2092,17 @@ CONTAINS
 
          ticesum = 0.
          tliqsum = 0.
-         vicesum = 0.
-         vliqsum = 0.
+         wicesum = 0.
+         wliqsum = 0.
          
          resi = dz_lake_new(i)
          DO WHILE (resi > 1.e-8)
 
             olp = min(resi, resj)
             ticesum = ticesum + olp * lake_icefrac(j) * t_lake(j)
-            vicesum = vicesum + olp * lake_icefrac(j)
+            wicesum = wicesum + olp * lake_icefrac(j)
             tliqsum = tliqsum + olp * (1-lake_icefrac(j)) * t_lake(j)
-            vliqsum = vliqsum + olp * (1-lake_icefrac(j))
+            wliqsum = wliqsum + olp * (1-lake_icefrac(j))
 
             resi = resi - olp
             resj = resj - olp
@@ -2117,38 +2118,38 @@ CONTAINS
 
          ENDDO
 
-         IF (vicesum > 0.) tice = ticesum / vicesum
-         IF (vliqsum > 0.) tliq = tliqsum / vliqsum
+         IF (wicesum > 0.) tice = ticesum / wicesum
+         IF (wliqsum > 0.) tliq = tliqsum / wliqsum
 
-         IF ((vliqsum > 0.) .and. (vicesum > 0.)) THEN
+         IF ((wliqsum > 0.) .and. (wicesum > 0.)) THEN
 
-            a = cpliq*vliqsum*denh2o*(tliq-tfrz)
-            b = cpice*vicesum*denh2o*(tfrz-tice)
-            c = vicesum*denh2o*hfus
-            d = vliqsum*denh2o*hfus
+            a = cpliq*wliqsum*(tliq-tfrz)
+            b = cpice*wicesum*(tfrz-tice)
+            c = wicesum*hfus
+            d = wliqsum*hfus
 
             IF (a >= b + c) THEN
-               vicesum = 0.
-               vliqsum = dz_lake_new(i)
-               t_lake_new(i) = tfrz + (a-b-c)/(vliqsum*denh2o*cpliq)
+               wicesum = 0.
+               wliqsum = dz_lake_new(i)
+               t_lake_new(i) = tfrz + (a-b-c)/(wliqsum*cpliq)
             ELSEIF (a >= b) THEN
-               vicesum = vicesum - (a-b)/hfus/denh2o
+               wicesum = wicesum - (a-b)/hfus
                t_lake_new(i) = tfrz
             ELSEIF (a + d < b) THEN
-               vicesum = dz_lake_new(i)
-               t_lake_new(i) = tfrz - (b-a-d)/(vicesum*denh2o*cpice)
+               wicesum = dz_lake_new(i)
+               t_lake_new(i) = tfrz - (b-a-d)/(wicesum*cpice)
             ELSE ! (b-d <= a < b)
-               vicesum = vicesum + (b-a)/hfus/denh2o
+               wicesum = wicesum + (b-a)/hfus
                t_lake_new(i) = tfrz
             ENDIF
                
-         ELSEIF (vliqsum > 0.) THEN
+         ELSEIF (wliqsum > 0.) THEN
             t_lake_new(i) = tliq
-         ELSEIF (vicesum > 0.) THEN
+         ELSEIF (wicesum > 0.) THEN
             t_lake_new(i) = tice
          ENDIF
 
-         lake_icefrac_new(i) = vicesum / dz_lake_new(i)
+         lake_icefrac_new(i) = wicesum / dz_lake_new(i)
 
       ENDDO
 
