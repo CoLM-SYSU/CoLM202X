@@ -401,7 +401,7 @@ ENDIF
 ! ----------------------------------------------------------------------
 ! 4. canopy albedos: two stream approximation or 3D canopy radiation transfer
 ! ----------------------------------------------------------------------
-      IF (lai+sai > 1e-6) THEN
+      IF (lai+sai > 1e-6 .and. patchtype < 4) THEN
 
          ! initialization
          albv(:,:) = albg(:,:)
