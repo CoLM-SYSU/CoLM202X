@@ -3392,6 +3392,11 @@ CONTAINS
             CALL mp2g_hist%get_sumarea (sumarea, filter)
          ENDIF
 
+         ! lake layer depth [m]
+         CALL write_history_variable_3d ( DEF_hist_vars%dz_lake .and. DEF_USE_Dynamic_Lake, &
+            a_dz_lake, file_hist, 'f_dz_lake', itime_in_file, 'lake', 1, nl_lake, sumarea, filter, &
+            'lake layer thickness','m')
+
          ! lake temperature [K]
          CALL write_history_variable_3d ( DEF_hist_vars%t_lake, &
             a_t_lake, file_hist, 'f_t_lake', itime_in_file, 'lake', 1, nl_lake, sumarea, filter, &

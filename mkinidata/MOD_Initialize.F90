@@ -298,6 +298,10 @@ CONTAINS
 ! ------------------------------------------
       CALL lakedepth_readin (dir_landdata, lc_year)
 
+      IF (p_is_worker .and. (numpatch > 0)) THEN
+         WHERE (patchtype == 4) wdsrf = lakedepth * 1.e3
+      ENDIF
+         
 ! ...............................................................
 ! 1.3 Read in the soil parameters of the patches of the gridcells
 ! ...............................................................

@@ -72,7 +72,7 @@ MODULE MOD_Vars_1DFluxes
 
    real(r8), allocatable :: qcharge(:) !groundwater recharge [mm/s]
 
-   integer,  allocatable :: oroflag(:) !groundwater recharge [mm/s]
+   integer,  allocatable :: oroflag(:) 
 
 ! PUBLIC MEMBER FUNCTIONS:
    PUBLIC :: allocate_1D_Fluxes

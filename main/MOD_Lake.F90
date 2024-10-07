@@ -41,7 +41,7 @@ CONTAINS
 
 
 
-   SUBROUTINE newsnow_lake ( &
+   SUBROUTINE newsnow_lake ( USE_Dynamic_Lake, &
             ! "in" arguments
             ! ---------------
             maxsnl    , nl_lake   , deltim      , dz_lake ,&
@@ -68,6 +68,8 @@ CONTAINS
    USE MOD_Const_Physical, only : tfrz, denh2o, cpliq, cpice, hfus
    IMPLICIT NONE
 ! ------------------------ Dummy Argument ------------------------------
+   logical, intent(in) :: USE_Dynamic_Lake
+
    integer, intent(in) :: maxsnl    ! maximum number of snow layers
    integer, intent(in) :: nl_lake   ! number of soil layers
    real(r8), intent(in) :: deltim   ! seconds in a time step [second]
@@ -76,7 +78,7 @@ CONTAINS
    real(r8), intent(in) :: t_precip ! snowfall/rainfall temperature [kelvin]
    real(r8), intent(in) :: bifall   ! bulk density of newly fallen dry snow [kg/m3]
 
-   real(r8), intent(in) :: dz_lake(1:nl_lake) ! lake layer thickness (m)
+   real(r8), intent(inout) :: dz_lake(1:nl_lake)      ! lake layer thickness (m)
    real(r8), intent(inout) ::   zi_soisno(maxsnl:0)   ! interface level below a "z" level (m)
    real(r8), intent(inout) ::    z_soisno(maxsnl+1:0) ! snow layer depth (m)
    real(r8), intent(inout) ::   dz_soisno(maxsnl+1:0) ! snow layer thickness (m)
@@ -164,7 +166,7 @@ CONTAINS
                wliq_soisno(0) = 0.                ! kg/m2
                fiold(0) = 1.
             ENDIF
-
+               
          ELSEIF (lake_icefrac(1) >= 0.001) THEN
             IF (pg_rain > 0.0 .and. pg_snow > 0.0) THEN
                t_lake(1)=tfrz
@@ -221,6 +223,17 @@ CONTAINS
                            (cpice*pg_snow*deltim+cpice*denh2o*dz_lake(1))
                lake_icefrac(1) = 1.0
             ENDIF
+         ENDIF
+      
+         IF (USE_Dynamic_Lake) THEN
+            
+            wliq_lake(1)    = dz_lake(1) * (1-lake_icefrac(1)) + pg_rain*deltim*1.e-3
+            wice_lake(1)    = dz_lake(1) * lake_icefrac(1) 
+            dz_lake(1)      = wliq_lake(1) + wice_lake(1)
+            lake_icefrac(1) = wice_lake(1) / dz_lake(1)
+            
+            CALL adjust_lake_layer (nl_lake, dz_lake, t_lake, lake_icefrac)
+
          ENDIF
 
       ELSEIF (snl==0 .and. snowdp >= 0.01) THEN
@@ -640,6 +653,7 @@ CONTAINS
 ! ======================================================================
 !*[1] constants and model parameters
 ! ======================================================================
+
 
 ! constants for lake temperature model
       za = (/0.5, 0.6/)
@@ -1270,7 +1284,7 @@ CONTAINS
       qfros = 0.
 
       IF (fevpg >= 0.0) THEN
-         IF(lb < 0)THEN
+         IF(lb <= 0)THEN
             qseva = min(wliq_soisno(lb)/deltim, fevpg)
             qsubl = fevpg - qseva
          ELSE
@@ -1530,7 +1544,7 @@ CONTAINS
 
 
 
-   SUBROUTINE snowwater_lake ( &
+   SUBROUTINE snowwater_lake ( USE_Dynamic_Lake, &
              ! "in" arguments
              ! ---------------------------
              maxsnl      , nl_soil     , nl_lake   , deltim       ,&
@@ -1579,6 +1593,7 @@ CONTAINS
    IMPLICIT NONE
 
 ! ------------- in/inout/out variables -----------------------------------------
+   logical, intent(in) :: USE_Dynamic_Lake
 
    integer, intent(in) :: maxsnl  ! maximum number of snow layers
    integer, intent(in) :: nl_soil ! number of soil layers
@@ -1591,7 +1606,8 @@ CONTAINS
 
    real(r8), intent(in) :: pg_rain            ! rainfall incident on ground [mm/s]
    real(r8), intent(in) :: pg_snow            ! snowfall incident on ground [mm/s]
-   real(r8), intent(in) :: dz_lake(1:nl_lake) ! layer thickness for lake (m)
+
+   real(r8), intent(inout) :: dz_lake(1:nl_lake) ! layer thickness for lake (m)
 
    integer,  intent(in) :: imelt(maxsnl+1:0)  ! signifies if node in melting (imelt = 1)
    real(r8), intent(in) :: fiold(maxsnl+1:0)  ! fraction of ice relative to the total water content at the previous time step
@@ -1640,6 +1656,7 @@ CONTAINS
 ! END SNICAR model variables
 
 ! ------------- other local variables -----------------------------------------
+   logical  has_snow_bef
    integer  j          ! indices
    integer lb          ! lower bound of array
 
@@ -1650,6 +1667,7 @@ CONTAINS
    logical  unfrozen   ! true if top lake layer is unfrozen with snow layers above
    real(r8) heatsum    ! used in case above [J/m^2]
    real(r8) heatrem    ! used in case above [J/m^2]
+   real(r8) dw_soil
 
    real(r8) a, b, c, d
    real(r8) wice_lake(1:nl_lake)  ! ice lens (kg/m2)
@@ -1660,6 +1678,10 @@ CONTAINS
       ! for runoff calculation (assumed no mass change in the land water bodies)
       lb = snl + 1
       qout_snowb = 0.0
+
+      IF (USE_Dynamic_Lake .and. (snl == 0)) THEN
+         has_snow_bef = .false.
+      ENDIF
 
       ! ----------------------------------------------------------
       !*[1] snow layer on frozen lake
@@ -1731,6 +1753,8 @@ CONTAINS
             snl = 0
             scv = 0.
             snowdp = 0.
+            qout_snowb = qout_snowb + wliq_soisno(0)/deltim
+            wliq_soisno(0) = 0.
          ENDIF
 
       ENDIF
@@ -1777,6 +1801,7 @@ CONTAINS
             t_lake(1) = (cpliq*(denh2o*dz_lake(1)*t_lake(1) + (sumsnowice+sumsnowliq)*tfrz) - a - b) / &
                         (cpliq*(denh2o*dz_lake(1) + sumsnowice+ sumsnowice))
             sm = sm + scv/deltim
+            qout_snowb = qout_snowb + scv/deltim
             scv = 0.
             snowdp = 0.
             snl = 0
@@ -1784,6 +1809,7 @@ CONTAINS
          ELSEIF(c+d >= a+b)THEN
             t_lake(1) = tfrz
             sm = sm + scv/deltim
+            qout_snowb = qout_snowb + scv/deltim
             scv = 0.
             snowdp = 0.
             snl = 0
@@ -1805,7 +1831,11 @@ CONTAINS
       ! pore space opens up. Conversely, if excess ice is melting and the liquid water exceeds the
       ! saturation value, then remove water.
 
+      dw_soil = 0.
+
       DO j = 1, nl_soil
+         dw_soil = dw_soil + wliq_soisno(j) + wice_soisno(j)
+         
          a = wliq_soisno(j)/(dz_soisno(j)*denh2o) + wice_soisno(j)/(dz_soisno(j)*denice)
 
          IF (a < porsl(j)) THEN
@@ -1820,8 +1850,31 @@ CONTAINS
              wliq_soisno(j) = porsl(j)*denh2o*dz_soisno(j)
              wice_soisno(j) = 0.0
          ENDIF
+         
+         dw_soil = dw_soil - wliq_soisno(j) - wice_soisno(j)
       ENDDO
 
+      IF (USE_Dynamic_Lake) THEN
+
+         IF (has_snow_bef) THEN
+            wliq_lake(1) = dz_lake(1) * (1-lake_icefrac(1)) + qout_snowb*deltim*1.e-3
+            wice_lake(1) = dz_lake(1) * lake_icefrac(1)
+         ELSE
+            wliq_lake(1) = dz_lake(1) * (1-lake_icefrac(1)) + (sm + qsdew - qseva)*deltim*1.e-3
+            wliq_lake(1) = max(wliq_lake(1), 0.)
+            wice_lake(1) = dz_lake(1) * lake_icefrac(1) + (qfros - qsubl)*deltim*1.e-3
+            wice_lake(1) = max(wice_lake(1), 0.)
+         ENDIF
+         dz_lake(1)      = wliq_lake(1) + wice_lake(1)
+         dz_lake(1)      = max(dz_lake(1), 1.e-6)
+         lake_icefrac(1) = wice_lake(1) / dz_lake(1)
+
+         dz_lake(nl_lake) = dz_lake(nl_lake) + dw_soil/1.e3
+         dz_lake(nl_lake) = max(dz_lake(nl_lake), 0.)
+
+         CALL adjust_lake_layer (nl_lake, dz_lake, t_lake, lake_icefrac)
+
+      ENDIF
 
    END SUBROUTINE snowwater_lake
 
@@ -1999,6 +2052,111 @@ CONTAINS
       ENDIF
 
    END SUBROUTINE hConductivity_lake
+
+
+   SUBROUTINE adjust_lake_layer (nl_lake, dz_lake, t_lake, lake_icefrac)
+
+   USE MOD_Const_Physical
+   IMPLICIT NONE
+   
+   integer,  intent(in)    :: nl_lake
+   real(r8), intent(inout) :: dz_lake     (nl_lake)  ! lake layer thickness (m)
+   real(r8), intent(inout) :: t_lake      (nl_lake)  ! lake temperature (kelvin)
+   real(r8), intent(inout) :: lake_icefrac(nl_lake)  ! lake mass fraction of lake layer that is frozen
+      
+   ! Local Variables
+   integer  :: i, j
+   real(r8) :: wdsrfm, depthratio, resi, resj
+   real(r8) :: ticesum, tliqsum, vicesum, vliqsum, olp, tliq, tice, a, b, c, d
+   real(r8) :: dz_lake_new      (nl_lake)
+   real(r8) :: t_lake_new       (nl_lake)
+   real(r8) :: lake_icefrac_new (nl_lake)
+   real(r8), parameter :: dzlak(10) = (/0.1, 1., 2., 3., 4., 5., 7., 7., 10.45, 10.45/)  ! m
+
+      wdsrfm = sum(dz_lake)
+            
+      IF(wdsrfm > 1. .and. wdsrfm < 2000.)THEN
+         depthratio = wdsrfm / sum(dzlak(1:nl_lake))
+         dz_lake_new(1)           = dzlak(1)
+         dz_lake_new(2:nl_lake-1) = dzlak(2:nl_lake-1)*depthratio
+         dz_lake_new(nl_lake)     = dzlak(nl_lake)*depthratio - (dz_lake_new(1) - dzlak(1)*depthratio)
+      ELSEIF(wdsrfm > 0. .and. wdsrfm <= 1.)THEN
+         dz_lake_new(:) = wdsrfm / nl_lake
+      ENDIF
+
+      j = 1
+      resj = dz_lake(j)
+
+      DO i = 1, nl_lake
+
+         ticesum = 0.
+         tliqsum = 0.
+         vicesum = 0.
+         vliqsum = 0.
+         
+         resi = dz_lake_new(i)
+         DO WHILE (resi > 1.e-8)
+
+            olp = min(resi, resj)
+            ticesum = ticesum + olp * lake_icefrac(j) * t_lake(j)
+            vicesum = vicesum + olp * lake_icefrac(j)
+            tliqsum = tliqsum + olp * (1-lake_icefrac(j)) * t_lake(j)
+            vliqsum = vliqsum + olp * (1-lake_icefrac(j))
+
+            resi = resi - olp
+            resj = resj - olp
+            
+            IF (resj == 0.) THEN
+               IF (j == nl_lake) THEN 
+                  EXIT
+               ELSE
+                  j = j + 1
+                  resj = dz_lake(j)
+               ENDIF
+            ENDIF
+
+         ENDDO
+
+         IF (vicesum > 0.) tice = ticesum / vicesum
+         IF (vliqsum > 0.) tliq = tliqsum / vliqsum
+
+         IF ((vliqsum > 0.) .and. (vicesum > 0.)) THEN
+
+            a = cpliq*vliqsum*denh2o*(tliq-tfrz)
+            b = cpice*vicesum*denh2o*(tfrz-tice)
+            c = vicesum*denh2o*hfus
+            d = vliqsum*denh2o*hfus
+
+            IF (a >= b + c) THEN
+               vicesum = 0.
+               vliqsum = dz_lake_new(i)
+               t_lake_new(i) = tfrz + (a-b-c)/(vliqsum*denh2o*cpliq)
+            ELSEIF (a >= b) THEN
+               vicesum = vicesum - (a-b)/hfus/denh2o
+               t_lake_new(i) = tfrz
+            ELSEIF (a + d < b) THEN
+               vicesum = dz_lake_new(i)
+               t_lake_new(i) = tfrz - (b-a-d)/(vicesum*denh2o*cpice)
+            ELSE ! (b-d <= a < b)
+               vicesum = vicesum + (b-a)/hfus/denh2o
+               t_lake_new(i) = tfrz
+            ENDIF
+               
+         ELSEIF (vliqsum > 0.) THEN
+            t_lake_new(i) = tliq
+         ELSEIF (vicesum > 0.) THEN
+            t_lake_new(i) = tice
+         ENDIF
+
+         lake_icefrac_new(i) = vicesum / dz_lake_new(i)
+
+      ENDDO
+
+      dz_lake      = dz_lake_new
+      lake_icefrac = lake_icefrac_new
+      t_lake       = t_lake_new
+
+   END SUBROUTINE adjust_lake_layer
 
 
 END MODULE MOD_Lake

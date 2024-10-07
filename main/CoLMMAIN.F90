@@ -194,10 +194,10 @@ SUBROUTINE CoLMMAIN ( &
                       ! 2=wetland, 3=land ice, 4=land water bodies, 99 = ocean)
 ! Parameters
 ! ----------------------
-   real(r8), intent(in) :: &
-        lakedepth            ,&! lake depth (m)
-        dz_lake(nl_lake)     ,&! lake layer thickness (m)
+   real(r8), intent(in)    :: lakedepth         ! lake depth (m)
+   real(r8), intent(inout) :: dz_lake(nl_lake)  ! lake layer thickness (m)
 
+   real(r8), intent(in) :: &
         topostd              ,&! standard deviation of elevation (m)
         BVIC                 ,&! vic model parameter b
 
@@ -476,6 +476,8 @@ SUBROUTINE CoLMMAIN ( &
         fq            ! integral of profile function for moisture
 
 ! ----------------------- Local  Variables -----------------------------
+   logical  :: is_dry_lake
+
    real(r8) :: &
         calday      ,&! Julian cal day (1.xx to 365.xx)
         endwb       ,&! water mass at the end of time step
@@ -607,9 +609,13 @@ SUBROUTINE CoLMMAIN ( &
 
 !======================================================================
 
-                               !         / SOIL GROUND          (patchtype = 0)
-      IF (patchtype <= 2) THEN ! <=== is - URBAN and BUILT-UP   (patchtype = 1)
-                               !         \ WETLAND              (patchtype = 2)
+      is_dry_lake = DEF_USE_Dynamic_Lake .and. (patchtype == 4) .and. ((wdsrf < 0.1) .or. (zwt > 0.))
+
+
+                                                  !         / SOIL GROUND          (patchtype = 0)
+      IF ((patchtype <= 2) .or. is_dry_lake) THEN ! <=== is - URBAN and BUILT-UP   (patchtype = 1)
+                                                  !         \ WETLAND              (patchtype = 2)
+                                                  !           Dry Lake             (patchtype = 4)
 
 ! NOTE: PFT and PC are only for soil patches, i.e., patchtype=0.
 !======================================================================
@@ -1098,7 +1104,7 @@ SUBROUTINE CoLMMAIN ( &
 !======================================================================
 
          totwb = scv + sum(wice_soisno(1:)+wliq_soisno(1:)) + wa
-         IF (DEF_USE_VariablySaturatedFlow) THEN
+         IF (DEF_USE_Dynamic_Lake) THEN
             totwb = totwb + wdsrf
          ENDIF
 
@@ -1131,7 +1137,7 @@ SUBROUTINE CoLMMAIN ( &
          pg_rain = prc_rain + prl_rain
          pg_snow = prc_snow + prl_snow
 
-         CALL newsnow_lake ( &
+         CALL newsnow_lake ( DEF_USE_Dynamic_Lake, &
               ! "in" arguments
               ! ---------------
               maxsnl       ,nl_lake      ,deltim          ,dz_lake         ,&
@@ -1143,7 +1149,7 @@ SUBROUTINE CoLMMAIN ( &
               dz_soisno(:0),t_soisno(:0) ,wliq_soisno(:0) ,wice_soisno(:0) ,&
               fiold(:0)    ,snl          ,sag             ,scv             ,&
               snowdp       ,lake_icefrac )
-
+         
          CALL laketem ( &
               ! "in" laketem arguments
               ! ---------------------------
@@ -1179,7 +1185,7 @@ SUBROUTINE CoLMMAIN ( &
               rib          ,ustar        ,qstar           ,tstar           ,&
               fm           ,fh           ,fq              ,sm               )
 
-         CALL snowwater_lake ( &
+         CALL snowwater_lake ( DEF_USE_Dynamic_Lake, &
               ! "in" snowater_lake arguments
               ! ---------------------------
               maxsnl       ,nl_soil      ,nl_lake         ,deltim          ,&
@@ -1200,31 +1206,25 @@ SUBROUTINE CoLMMAIN ( &
               mss_bcpho    ,mss_bcphi    ,mss_ocpho       ,mss_ocphi       ,&
               mss_dst1     ,mss_dst2     ,mss_dst3        ,mss_dst4         )
 
-         ! We assume the land water bodies have zero extra liquid water capacity
-         ! (i.e.,constant capacity), all excess liquid water are put into the runoff,
-         ! this unreasonable assumption should be updated in the future version
-         a = (sum(wliq_soisno(1:))+sum(wice_soisno(1:))+scv-w_old-scvold)/deltim
-         aa = qseva+qsubl-qsdew-qfros
 
-         IF (.not. DEF_USE_VariablySaturatedFlow) THEN
+         IF (.not. DEF_USE_Dynamic_Lake) THEN
+            ! We assume the land water bodies have zero extra liquid water capacity
+            ! (i.e.,constant capacity), all excess liquid water are put into the runoff,
+            ! this unreasonable assumption should be updated in the future version
+            a = (sum(wliq_soisno(1:))+sum(wice_soisno(1:))+scv-w_old-scvold)/deltim
+            aa = qseva+qsubl-qsdew-qfros
             rsur = max(0., pg_rain + pg_snow - aa - a)
             rnof = rsur
          ELSE
-            ! for lateral flow, only water change vertically is calculated here.
-            ! TODO : snow should be considered.
-            wdsrf = wdsrf + (pg_rain + pg_snow - aa - a) * deltim
+           
+            wdsrf = sum(dz_lake) * 1.e3
 
-            IF (wdsrf + wa < 0) THEN
-               wa = wa + wdsrf
-               wdsrf = 0
-            ELSE
-               wdsrf = wa + wdsrf
-               wa = 0
-            ENDIF
 #ifndef CatchLateralFlow
-            IF (wdsrf > pondmx) THEN
-               rsur  = (wdsrf - pondmx) / deltim
-               wdsrf = pondmx
+            IF (wdsrf > lakedepth*1.e3) THEN
+               rsur  = (wdsrf - lakedepth*1.e3) / deltim
+               wdsrf = lakedepth*1.e3
+               dz_lake = dz_lake * lakedepth/sum(dz_lake)
+               CALL adjust_lake_layer (nl_lake, dz_lake, t_lake, lake_icefrac)
             ELSE
                rsur = 0.
             ENDIF
@@ -1235,7 +1235,7 @@ SUBROUTINE CoLMMAIN ( &
          ENDIF
 
          endwb  = scv + sum(wice_soisno(1:)+wliq_soisno(1:)) + wa
-         IF (DEF_USE_VariablySaturatedFlow) THEN
+         IF (DEF_USE_Dynamic_Lake) THEN
             endwb  = endwb  + wdsrf
          ENDIF
 
@@ -1245,7 +1245,7 @@ SUBROUTINE CoLMMAIN ( &
 #endif
 
 #if(defined CoLMDEBUG)
-         IF (DEF_USE_VariablySaturatedFlow) THEN
+         IF (DEF_USE_Dynamic_Lake) THEN
             IF (abs(errorw) > 1.e-3) THEN
                write(*,*) 'Warning: water balance violation in CoLMMAIN (lake) ', errorw
                CALL CoLM_stop ()
@@ -1253,7 +1253,7 @@ SUBROUTINE CoLMMAIN ( &
          ENDIF
 #endif
 
-         IF (DEF_USE_VariablySaturatedFlow) THEN
+         IF (DEF_USE_Dynamic_Lake) THEN
             xerr = errorw / deltim
          ELSE
             xerr = 0.
@@ -1416,7 +1416,7 @@ SUBROUTINE CoLMMAIN ( &
          dz_soisno_(:1) = dz_soisno(:1)
          t_soisno_ (:1) = t_soisno (:1)
 
-         IF (patchtype == 4) THEN
+         IF ((patchtype == 4) .and. (.not. is_dry_lake))  THEN
             dz_soisno_(1) = dz_lake(1)
             t_soisno_ (1) = t_lake (1)
          ENDIF
@@ -1444,7 +1444,7 @@ SUBROUTINE CoLMMAIN ( &
       ENDIF
 
       ! zero-filling set for glacier/ice-sheet/land water bodies/ocean components
-      IF (patchtype > 2) THEN
+      IF ((patchtype > 2) .and. (.not. is_dry_lake)) THEN
          lai           = 0.0
          sai           = 0.0
          laisun        = 0.0
