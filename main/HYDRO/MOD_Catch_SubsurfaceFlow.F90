@@ -473,7 +473,8 @@ CONTAINS
 
                IF ((.not. iam_lake)   .and. (area_up <= 0)) CYCLE
                IF ((.not. nb_is_lake) .and. (area_dn <= 0)) CYCLE
-               IF ((Ks_up == 0.) .or. (Ks_dn == 0.))        CYCLE
+               IF ((.not. iam_lake)   .and. (Ks_up == 0.) ) CYCLE 
+               IF ((.not. nb_is_lake) .and. (Ks_dn == 0.) ) CYCLE
 
                ! water body is dry.
                IF (iam_lake .and. (zsubs_up > zsubs_dn) .and. (wdsrf_bsn(ibasin) == 0.)) THEN

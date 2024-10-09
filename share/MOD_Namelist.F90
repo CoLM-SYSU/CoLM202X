@@ -783,6 +783,8 @@ MODULE MOD_Namelist
       logical :: wdsrf_hru                        = .true.
       logical :: veloc_hru                        = .true.
 
+      logical :: sensors                          = .true.
+
    END type history_var_type
 
    type (history_var_type) :: DEF_hist_vars
@@ -1798,6 +1800,8 @@ CONTAINS
       CALL sync_hist_vars_one (DEF_hist_vars%discharge   , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%wdsrf_hru   , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%veloc_hru   , set_defaults)
+      
+      CALL sync_hist_vars_one (DEF_hist_vars%sensors     , set_defaults)
 
    END SUBROUTINE sync_hist_vars
 

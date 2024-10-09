@@ -196,6 +196,9 @@ CONTAINS
    integer, parameter :: nprms = 5
 #endif
    real(r8) :: prms(nprms, 1:nl_soil)
+   
+   real(r8) :: wdsrfm, depthratio
+   real(r8), dimension(10) :: dzlak = (/0.1, 1., 2., 3., 4., 5., 7., 7., 10.45, 10.45/)  ! m
 
    ! CoLM soil layer thickiness and depths
    real(r8), allocatable :: z_soisno (:,:)
@@ -1400,6 +1403,22 @@ CONTAINS
                   pe = hru_patch%subend(hs)
                   wdsrf(ps:pe) = riverdpth(i) * 1.0e3 ! m to mm
                ENDIF
+            ENDIF
+         ENDDO
+
+         DO i = 1, numpatch
+            IF (wdsrf(i) > 0.) THEN
+               wdsrfm = wdsrf(i)*1.e-3
+               IF(wdsrfm > 1. .and. wdsrfm < 2000.)THEN
+                  depthratio = wdsrfm / sum(dzlak(1:nl_lake))
+                  dz_lake(1,i) = dzlak(1)
+                  dz_lake(2:nl_lake-1,i) = dzlak(2:nl_lake-1)*depthratio
+                  dz_lake(nl_lake,i) = dzlak(nl_lake)*depthratio - (dz_lake(1,i) - dzlak(1)*depthratio)
+               ELSEIF(wdsrfm > 0. .and. wdsrfm <= 1.)THEN
+                  dz_lake(:,i) = wdsrfm / nl_lake
+               ENDIF
+            ELSE
+               dz_lake(:,i) = 0.
             ENDIF
          ENDDO
 

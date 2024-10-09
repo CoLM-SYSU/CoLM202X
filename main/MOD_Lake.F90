@@ -225,7 +225,7 @@ CONTAINS
             ENDIF
          ENDIF
       
-         IF (USE_Dynamic_Lake) THEN
+         IF (USE_Dynamic_Lake .and. (snl == 0)) THEN
             
             wliq_lake(1)    = dz_lake(1) * (1-lake_icefrac(1)) + pg_rain*deltim*1.e-3
             wice_lake(1)    = dz_lake(1) * lake_icefrac(1) 
@@ -1679,8 +1679,8 @@ CONTAINS
       lb = snl + 1
       qout_snowb = 0.0
 
-      IF (USE_Dynamic_Lake .and. (snl == 0)) THEN
-         has_snow_bef = .false.
+      IF (USE_Dynamic_Lake) THEN
+         has_snow_bef = (snl < 0)
       ENDIF
 
       ! ----------------------------------------------------------
@@ -1861,10 +1861,17 @@ CONTAINS
             wice_lake(1) = dz_lake(1) * lake_icefrac(1)
          ELSE
             wliq_lake(1) = dz_lake(1) * (1-lake_icefrac(1)) + (sm + qsdew - qseva)*deltim*1.e-3
-            wliq_lake(1) = max(wliq_lake(1), 0.)
             wice_lake(1) = dz_lake(1) * lake_icefrac(1) + (qfros - qsubl)*deltim*1.e-3
-            wice_lake(1) = max(wice_lake(1), 0.)
+            IF (wliq_lake(1) < 0.) THEN
+               wice_lake(1) = wice_lake(1) + wliq_lake(1)
+               wliq_lake(1) = 0.
+            ENDIF
+            IF (wice_lake(1) < 0.) THEN
+               wliq_lake(1) = wliq_lake(1) + wice_lake(1)
+               wice_lake(1) = 0.
+            ENDIF
          ENDIF
+
          dz_lake(1)      = wliq_lake(1) + wice_lake(1)
          dz_lake(1)      = max(dz_lake(1), 1.e-6)
          lake_icefrac(1) = wice_lake(1) / dz_lake(1)

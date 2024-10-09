@@ -108,6 +108,7 @@ CONTAINS
       USE MOD_TimeManager
       USE MOD_SPMD_Task
       USE MOD_Vars_1DAccFluxes
+      USE MOD_Vars_1DFluxes, only : nsensor
       USE MOD_Vars_TimeVariables, only : wa, wat, wetwat, wdsrf
       USE MOD_Block
       USE MOD_DataType
@@ -3585,6 +3586,19 @@ CONTAINS
          CALL write_history_variable_ln ( DEF_hist_vars%srniln, &
             a_srniln, file_hist, 'f_srniln', itime_in_file, sumarea, filter, &
             'reflected diffuse beam nir solar radiation at local noon(W/m2)','W/m2')
+         
+
+         IF ((p_is_worker) .and. (numpatch > 0)) THEN
+            filter = (patchtype == 0) .and. patchmask
+            IF (DEF_forcing%has_missing_value) filter = filter .and. forcmask_pch
+         ENDIF
+         IF (HistForm == 'Gridded') THEN
+            CALL mp2g_hist%get_sumarea (sumarea, filter)
+         ENDIF
+
+         CALL write_history_variable_3d ( DEF_hist_vars%sensors, &
+            a_sensors, file_hist, 'sensors', itime_in_file, 'sensor', 1, nsensor, &
+            sumarea, filter, 'variable sensors','user defined')
 
 #if(defined CaMa_Flood)
 #ifdef USEMPI

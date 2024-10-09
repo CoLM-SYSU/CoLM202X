@@ -323,6 +323,8 @@ MODULE MOD_Vars_1DAccFluxes
    real(r8), allocatable :: a_srndln  (:)
    real(r8), allocatable :: a_srniln  (:)
 
+   real(r8), allocatable :: a_sensors (:,:)
+
    PUBLIC :: allocate_acc_fluxes
    PUBLIC :: deallocate_acc_fluxes
    PUBLIC :: flush_acc_fluxes
@@ -336,6 +338,7 @@ CONTAINS
    USE MOD_LandElm
    USE MOD_LandPatch
    USE MOD_LandUrban, only: numurban
+   USE MOD_Vars_1DFluxes, only: nsensor
 #ifdef CROP
    USE MOD_LandCrop
 #endif
@@ -663,6 +666,8 @@ CONTAINS
             allocate (a_srviln    (numpatch))
             allocate (a_srndln    (numpatch))
             allocate (a_srniln    (numpatch))
+            
+            allocate (a_sensors (nsensor,numpatch))
 
             allocate (nac_ln      (numpatch))
 
@@ -1005,6 +1010,8 @@ CONTAINS
             deallocate (a_srndln    )
             deallocate (a_srniln    )
 
+            deallocate (a_sensors   )
+
             deallocate (nac_ln      )
 
          ENDIF
@@ -1342,6 +1349,8 @@ CONTAINS
             a_srviln   (:) = spval
             a_srndln   (:) = spval
             a_srniln   (:) = spval
+
+            a_sensors(:,:) = spval
 
             nac_ln  (:) = 0
 
@@ -1999,6 +2008,8 @@ CONTAINS
             CALL acc1d (srviln , a_srviln )
             CALL acc1d (srndln , a_srndln )
             CALL acc1d (srniln , a_srniln )
+            
+            CALL acc2d (sensors, a_sensors)
 
             DO i = 1, numpatch
                IF (solvdln(i) /= spval) THEN
