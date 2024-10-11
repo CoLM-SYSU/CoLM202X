@@ -388,9 +388,14 @@ CONTAINS
                            ENDDO
                         ENDDO
                      ELSEIF (dvol < -VOLUMEMIN) THEN
+                        mask  = .true.
+                        nexta = 0.
                         DO WHILE (dvol < -VOLUMEMIN)
-                           mask = hillslope_network(i)%hand + wdsrf_hru(hs:he) > wdsrf_bsn(i) + handmin(i)
-                           nexta = sum(hillslope_network(i)%area, mask = (.not. mask)) 
+                           IF (any(mask)) THEN
+                              j = minloc(hillslope_network(i)%hand + wdsrf_hru(hs:he), 1, mask = mask)
+                              nexta = nexta + hillslope_network(i)%area(j)
+                              mask(j) = .false.
+                           ENDIF
                            IF (any(mask)) THEN
                               nextl = minval(hillslope_network(i)%hand + wdsrf_hru(hs:he), mask = mask)
                               nextv = nexta*(nextl-(wdsrf_bsn(i)+handmin(i)))

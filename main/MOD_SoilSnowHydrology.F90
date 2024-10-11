@@ -482,7 +482,7 @@ ENDIF
    END SUBROUTINE WATER_2014
 
 !-----------------------------------------------------------------------
-   SUBROUTINE WATER_VSF (ipatch,  patchtype,lb      ,nl_soil     ,deltim      ,&
+   SUBROUTINE WATER_VSF (ipatch, patchtype,is_dry_lake, lb, nl_soil, deltim   ,&
               z_soisno    ,dz_soisno   ,zi_soisno                             ,&
               bsw         ,theta_r     ,fsatmax     ,fsatdcf     ,topostd     ,&
               BVIC                                                            ,&
@@ -538,6 +538,7 @@ ENDIF
         ipatch           ,& ! patch index
         patchtype           ! land patch type (0=soil, 1=urban or built-up, 2=wetland,
                             ! 3=land ice, 4=land water bodies, 99=ocean
+   logical, intent(in) :: is_dry_lake
 
    integer, intent(in) :: &
         lb               , &! lower bound of array
@@ -736,7 +737,7 @@ ENDIF
 ! [2] surface runoff and infiltration
 !=======================================================================
 
-IF(patchtype<=1)THEN   ! soil ground only
+IF((patchtype<=1) .or. is_dry_lake)THEN   ! soil ground only
 
       ! For water balance check, the sum of water in soil column before the calcultion
       w_sum = sum(wliq_soisno(1:nl_soil)) + sum(wice_soisno(1:nl_soil)) + wa + wdsrf
@@ -768,69 +769,74 @@ IF(patchtype<=1)THEN   ! soil ground only
 
       ! surface runoff including water table and surface staturated area
 
-      rsur   = 0.
-      rsubst = 0.
+      rsur    = 0.
+      rsubst  = 0.
+      rsur_ie = 0.
+      rsur_se = 0.
 
 #ifndef CatchLateralFlow
-      IF (DEF_Runoff_SCHEME  == 0) THEN
+      IF (.not. is_dry_lake) THEN
 
-         IF (gwat > 0.) THEN
-            CALL SurfaceRunoff_SIMTOP (nl_soil,wimp,porsl,psi0,hksati,fsatmax,fsatdcf,&
-                                       z_soisno(1:),dz_soisno(1:),zi_soisno(0:),&
-                                       eff_porosity,icefrac,zwt,gwat,rsur,rsur_se,rsur_ie)
-         ELSE
-            rsur = 0.
+         IF (DEF_Runoff_SCHEME  == 0) THEN
+
+            IF (gwat > 0.) THEN
+               CALL SurfaceRunoff_SIMTOP (nl_soil,wimp,porsl,psi0,hksati,fsatmax,fsatdcf,&
+                  z_soisno(1:),dz_soisno(1:),zi_soisno(0:),&
+                  eff_porosity,icefrac,zwt,gwat,rsur,rsur_se,rsur_ie)
+            ELSE
+               rsur = 0.
+            ENDIF
+
+            CALL SubsurfaceRunoff_SIMTOP (nl_soil, icefrac, dz_soisno(1:), zi_soisno(0:), &
+               zwt, rsubst)
+
+         ELSEIF (DEF_Runoff_SCHEME  == 1) THEN
+            ! 1: runoff scheme from VIC model
+
+            CALL Runoff_VIC(deltim, porsl, theta_r, hksati, bsw, &
+               wice_soisno(1:nl_soil), wliq_soisno(1:nl_soil), fevpg(ipatch), rootflux, gwat, &
+               vic_b_infilt(ipatch), vic_Dsmax(ipatch), vic_Ds(ipatch), vic_Ws(ipatch), vic_c(ipatch),&
+               rsur, rsubst, wliq_soisno_tmp)
+
+            rsur_se = rsur
+            rsur_ie = 0.
+
+         ELSEIF (DEF_Runoff_SCHEME  == 2) THEN
+            ! 2: runoff scheme from XinAnJiang model
+
+            CALL Runoff_XinAnJiang (&
+               nl_soil, dz_soisno(1:nl_soil), eff_porosity(1:nl_soil), vol_liq(1:nl_soil), &
+               topostd, gwat, deltim, rsur, rsubst)
+
+            rsur_se = rsur
+            rsur_ie = 0.
+
+         ELSEIF (DEF_Runoff_SCHEME  == 3) THEN
+            ! 3: runoff scheme from XinAnJiang model with lateral flow
+
+            CALL Runoff_SimpleVIC (&
+               nl_soil, dz_soisno(1:nl_soil), eff_porosity(1:nl_soil), vol_liq(1:nl_soil), &
+               BVIC, gwat, deltim, rsur, rsubst)
+
+            rsur_se = rsur
+            rsur_ie = 0.
+
          ENDIF
 
-         CALL SubsurfaceRunoff_SIMTOP (nl_soil, icefrac, dz_soisno(1:), zi_soisno(0:), &
-            zwt, rsubst)
-
-      ELSEIF (DEF_Runoff_SCHEME  == 1) THEN
-         ! 1: runoff scheme from VIC model
-
-         CALL Runoff_VIC(deltim, porsl, theta_r, hksati, bsw, &
-                         wice_soisno(1:nl_soil), wliq_soisno(1:nl_soil), fevpg(ipatch), rootflux, gwat, &
-                         vic_b_infilt(ipatch), vic_Dsmax(ipatch), vic_Ds(ipatch), vic_Ws(ipatch), vic_c(ipatch),&
-                         rsur, rsubst, wliq_soisno_tmp)
-
-         rsur_se = rsur
-         rsur_ie = 0.
-
-      ELSEIF (DEF_Runoff_SCHEME  == 2) THEN
-         ! 2: runoff scheme from XinAnJiang model
-
-         CALL Runoff_XinAnJiang (&
-            nl_soil, dz_soisno(1:nl_soil), eff_porosity(1:nl_soil), vol_liq(1:nl_soil), &
-            topostd, gwat, deltim, rsur, rsubst)
-
-         rsur_se = rsur
-         rsur_ie = 0.
-
-      ELSEIF (DEF_Runoff_SCHEME  == 3) THEN
-         ! 3: runoff scheme from XinAnJiang model with lateral flow
-
-         CALL Runoff_SimpleVIC (&
-            nl_soil, dz_soisno(1:nl_soil), eff_porosity(1:nl_soil), vol_liq(1:nl_soil), &
-            BVIC, gwat, deltim, rsur, rsubst)
-
-         rsur_se = rsur
-         rsur_ie = 0.
-
-      ENDIF
-
 #ifdef DataAssimilation
-      rsur = max(min(rsur * fslp_k(ipatch), gwat), 0.)
-      rsubst = rsubst * fslp_k(ipatch)
+         rsur = max(min(rsur * fslp_k(ipatch), gwat), 0.)
+         rsubst = rsubst * fslp_k(ipatch)
 #endif
+      ENDIF
 
       ! infiltration into surface soil layer
       qgtop = gwat - rsur
 #else
       ! for lateral flow,
-      ! "rsur" is calculated in HYDRO/MOD_Hydro_SurfaceFlow.F90
+      ! "rsur" is calculated in HYDRO/MOD_Catch_HillslopeFlow.F90
       ! and is removed from surface water there.
       qgtop = gwat
-      ! "rsub" is calculated and removed from soil water in HYDRO/MOD_Hydro_SubsurfaceFlow.F90
+      ! "rsub" is calculated and removed from soil water in HYDRO/MOD_Catch_SubsurfaceFlow.F90
       rsubst = 0
 #endif
 
@@ -987,19 +993,23 @@ ELSE
 ENDIF
 
 #ifndef CatchLateralFlow
-      IF (wdsrf > pondmx) THEN
-         rsur = rsur + (wdsrf - pondmx) / deltim
-         rsur_ie = rsur_ie + (wdsrf - pondmx) / deltim
-         wdsrf = pondmx
-      ENDIF
+      IF (.not. is_dry_lake) THEN
+         IF (wdsrf > pondmx) THEN
+            rsur = rsur + (wdsrf - pondmx) / deltim
+            rsur_ie = rsur_ie + (wdsrf - pondmx) / deltim
+            wdsrf = pondmx
+         ENDIF
 
-      IF (zwt <= 0.) THEN
-         rsur_ie = 0.
-         rsur_se = rsur
-      ENDIF
+         IF (zwt <= 0.) THEN
+            rsur_ie = 0.
+            rsur_se = rsur
+         ENDIF
 
-      ! total runoff (mm/s)
-      rnof = rsubst + rsur
+         ! total runoff (mm/s)
+         rnof = rsubst + rsur
+      ELSE
+         rnof = 0.
+      ENDIF
 #endif
 
 #ifndef CatchLateralFlow
@@ -1156,7 +1166,11 @@ ENDIF
          wliq_soisno(lb) = wliq_soisno(lb) + wgdif
       ENDIF
       wliq_soisno(lb) = wliq_soisno(lb) + (pg_rain + qsdew - qseva)*deltim
-      wliq_soisno(lb) = max(0., wliq_soisno(lb))
+      IF (wliq_soisno(lb) < 0.) THEN
+         wice_soisno(lb) = wice_soisno(lb) + wliq_soisno(lb)
+         wice_soisno(lb) = max(wice_soisno(lb), 0.)
+         wliq_soisno(lb) = 0.
+      ENDIF
 
 ! Porosity and partitial volume
       DO j = lb, 0

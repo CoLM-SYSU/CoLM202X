@@ -350,7 +350,7 @@ CONTAINS
 ! [3] lake hydrology
 !=======================================================================
 
-      CALL snowwater_lake ( &
+      CALL snowwater_lake ( DEF_USE_Dynamic_Lake, &
            ! "in" snowater_lake arguments
            ! ---------------------------
            maxsnl         ,nl_soil        ,nl_lake        ,deltim         ,&

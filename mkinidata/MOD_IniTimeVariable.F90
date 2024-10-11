@@ -70,7 +70,7 @@ CONTAINS
    USE MOD_Precision
    USE MOD_Utils
    USE MOD_Const_Physical, only: tfrz, denh2o, denice
-   USE MOD_Vars_TimeVariables, only: tlai, tsai, wdsrf
+   USE MOD_Vars_TimeVariables, only: tlai, tsai
    USE MOD_Const_PFT, only: isevg, woody, leafcn, frootcn, livewdcn, deadwdcn, slatop
    USE MOD_Vars_TimeInvariants, only : ibedrock, dbedrock
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
@@ -390,6 +390,7 @@ CONTAINS
                ENDDO
 
                wa = 0.
+               zwt = 0.
 
             ELSEIF (patchtype == 3) THEN ! land ice
 
@@ -399,6 +400,7 @@ CONTAINS
                ENDDO
 
                wa = 0.
+               zwt = 0.
 
             ENDIF
 
@@ -573,9 +575,8 @@ CONTAINS
          ENDIF
 
          ! (5) Ground
-         ! Variables: t_grnd, wdsrf
+         ! Variables: t_grnd
          t_grnd = t_soisno(1)
-         wdsrf  = 0.
 
          ! (6) Leaf area
          ! Variables: sigf, lai, sai

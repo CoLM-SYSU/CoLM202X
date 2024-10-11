@@ -108,6 +108,7 @@ CONTAINS
       USE MOD_TimeManager
       USE MOD_SPMD_Task
       USE MOD_Vars_1DAccFluxes
+      USE MOD_Vars_1DFluxes, only : nsensor
       USE MOD_Vars_TimeVariables, only : wa, wat, wetwat, wdsrf
       USE MOD_Block
       USE MOD_DataType
@@ -408,7 +409,7 @@ CONTAINS
          ! evaporation heat flux from ground [mm/s]
          CALL write_history_variable_2d ( DEF_hist_vars%fevpg, &
             a_fevpg, file_hist, 'f_fevpg', itime_in_file, sumarea, filter, &
-            'evaporation heat flux from ground','mm/s')
+            'evaporation flux from ground','mm/s')
 
          ! ground heat flux [W/m2]
          CALL write_history_variable_2d ( DEF_hist_vars%fgrnd, &
@@ -455,6 +456,7 @@ CONTAINS
             a_rsur, file_hist, 'f_rsur', itime_in_file, sumarea, filter, &
             'surface runoff','mm/s')
 
+#ifndef CatchLateralFlow
          ! saturation excess surface runoff [mm/s]
          CALL write_history_variable_2d ( DEF_hist_vars%rsur_se, &
             a_rsur_se, file_hist, 'f_rsur_se', itime_in_file, sumarea, filter, &
@@ -464,6 +466,7 @@ CONTAINS
          CALL write_history_variable_2d ( DEF_hist_vars%rsur_ie, &
             a_rsur_ie, file_hist, 'f_rsur_ie', itime_in_file, sumarea, filter, &
             'infiltration excess surface runoff','mm/s')
+#endif
 
          ! subsurface runoff [mm/s]
          CALL write_history_variable_2d ( DEF_hist_vars%rsub, &
@@ -538,7 +541,7 @@ CONTAINS
             'respiration (plant+soil)','mol m-2 s-1')
 
          ! groundwater recharge rate [mm/s]
-         CALL write_history_variable_2d ( DEF_hist_vars%qcharge, &
+         CALL write_history_variable_2d ( DEF_hist_vars%qcharge .and. (.not.DEF_USE_VariablySaturatedFlow), &
             a_qcharge, file_hist, 'f_qcharge', itime_in_file, sumarea, filter, &
             'groundwater recharge rate','mm/s')
 
@@ -3392,6 +3395,11 @@ CONTAINS
             CALL mp2g_hist%get_sumarea (sumarea, filter)
          ENDIF
 
+         ! lake layer depth [m]
+         CALL write_history_variable_3d ( DEF_hist_vars%dz_lake .and. DEF_USE_Dynamic_Lake, &
+            a_dz_lake, file_hist, 'f_dz_lake', itime_in_file, 'lake', 1, nl_lake, sumarea, filter, &
+            'lake layer thickness','m')
+
          ! lake temperature [K]
          CALL write_history_variable_3d ( DEF_hist_vars%t_lake, &
             a_t_lake, file_hist, 'f_t_lake', itime_in_file, 'lake', 1, nl_lake, sumarea, filter, &
@@ -3580,6 +3588,19 @@ CONTAINS
          CALL write_history_variable_ln ( DEF_hist_vars%srniln, &
             a_srniln, file_hist, 'f_srniln', itime_in_file, sumarea, filter, &
             'reflected diffuse beam nir solar radiation at local noon(W/m2)','W/m2')
+         
+
+         IF ((p_is_worker) .and. (numpatch > 0)) THEN
+            filter = (patchtype == 0) .and. patchmask
+            IF (DEF_forcing%has_missing_value) filter = filter .and. forcmask_pch
+         ENDIF
+         IF (HistForm == 'Gridded') THEN
+            CALL mp2g_hist%get_sumarea (sumarea, filter)
+         ENDIF
+
+         CALL write_history_variable_3d ( DEF_hist_vars%sensors, &
+            a_sensors, file_hist, 'sensors', itime_in_file, 'sensor', 1, nsensor, &
+            sumarea, filter, 'variable sensors','user defined')
 
 #if(defined CaMa_Flood)
 #ifdef USEMPI

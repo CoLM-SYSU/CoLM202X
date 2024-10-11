@@ -93,15 +93,20 @@ CONTAINS
    ! ----------
    SUBROUTINE lateral_flow (deltime)
 
+   USE MOD_Namelist,  only : DEF_USE_Dynamic_Lake
    USE MOD_Mesh,      only : numelm
    USE MOD_LandHRU,   only : landhru,  numhru,    basin_hru
    USE MOD_LandPatch, only : numpatch, elm_patch, hru_patch
 
+   USE MOD_Vars_Global,         only : nl_lake
+   USE MOD_Const_Physical,      only : tfrz
    USE MOD_Vars_1DFluxes,       only : rsur, rsub, rnof
-   USE MOD_Vars_TimeVariables,  only : wdsrf
-   USE MOD_Vars_TimeInvariants, only : lakedepth
+   USE MOD_Vars_TimeVariables,  only : wdsrf, t_lake, lake_icefrac, t_soisno
+   USE MOD_Vars_TimeInvariants, only : lakedepth, dz_lake
    USE MOD_Hydro_Vars_1DFluxes
    USE MOD_Hydro_Vars_TimeVariables
+
+   USE MOD_Lake, only : adjust_lake_layer
 
    USE MOD_RangeCheck
    IMPLICIT NONE
@@ -194,8 +199,6 @@ CONTAINS
             xwsur(:) = (wdsrf_p(:) - wdsrf(:)) / deltime
          ENDIF
 
-         IF (allocated(wdsrf_p)) deallocate(wdsrf_p)
-
          ! (3) Subsurface lateral flow.
          CALL subsurface_flow (deltime)
          
@@ -207,6 +210,31 @@ CONTAINS
             h2osoi(:,i) = wliq_soisno(1:,i)/(dz_soi(1:)*denh2o) + wice_soisno(1:,i)/(dz_soi(1:)*denice)
             wat(i)      = sum(wice_soisno(1:,i)+wliq_soisno(1:,i)) + ldew(i) + scv(i) + wetwat(i)
          ENDDO
+
+         ! (4) vertical layers adjustment
+         IF (DEF_USE_Dynamic_Lake) THEN
+            DO i = 1, numpatch
+               IF (wdsrf_p(i) >= 100.) THEN
+                  ! wet previously
+                  dz_lake(:,i) = dz_lake(:,i) * wdsrf(i)*1.e-3/sum(dz_lake(:,i))
+               ELSE
+                  ! dry previously
+                  dz_lake(:,i) = wdsrf(i)*1.e-3/nl_lake
+                  t_lake (:,i) = t_soisno(1,i)
+                  IF (t_soisno(1,i) >= tfrz) THEN
+                     lake_icefrac(:,i) = 0.
+                  ELSE
+                     lake_icefrac(:,i) = 1.
+                  ENDIF
+               ENDIF
+                  
+               IF (wdsrf(i) >= 100.) THEN
+                  CALL adjust_lake_layer (nl_lake, dz_lake(:,i), t_lake(:,i), lake_icefrac(:,i))
+               ENDIF
+            ENDDO
+         ENDIF
+
+         IF (allocated(wdsrf_p)) deallocate(wdsrf_p)
 
       ENDIF
 
