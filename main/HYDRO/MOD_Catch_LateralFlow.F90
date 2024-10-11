@@ -228,7 +228,7 @@ CONTAINS
                   ENDIF
                ENDIF
                   
-               IF (wdsrf(i) > 0.) THEN
+               IF (wdsrf(i) >= 100.) THEN
                   CALL adjust_lake_layer (nl_lake, dz_lake(:,i), t_lake(:,i), lake_icefrac(:,i))
                ENDIF
             ENDDO

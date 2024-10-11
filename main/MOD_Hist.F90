@@ -409,7 +409,7 @@ CONTAINS
          ! evaporation heat flux from ground [mm/s]
          CALL write_history_variable_2d ( DEF_hist_vars%fevpg, &
             a_fevpg, file_hist, 'f_fevpg', itime_in_file, sumarea, filter, &
-            'evaporation heat flux from ground','mm/s')
+            'evaporation flux from ground','mm/s')
 
          ! ground heat flux [W/m2]
          CALL write_history_variable_2d ( DEF_hist_vars%fgrnd, &
@@ -456,6 +456,7 @@ CONTAINS
             a_rsur, file_hist, 'f_rsur', itime_in_file, sumarea, filter, &
             'surface runoff','mm/s')
 
+#ifndef CatchLateralFlow
          ! saturation excess surface runoff [mm/s]
          CALL write_history_variable_2d ( DEF_hist_vars%rsur_se, &
             a_rsur_se, file_hist, 'f_rsur_se', itime_in_file, sumarea, filter, &
@@ -465,6 +466,7 @@ CONTAINS
          CALL write_history_variable_2d ( DEF_hist_vars%rsur_ie, &
             a_rsur_ie, file_hist, 'f_rsur_ie', itime_in_file, sumarea, filter, &
             'infiltration excess surface runoff','mm/s')
+#endif
 
          ! subsurface runoff [mm/s]
          CALL write_history_variable_2d ( DEF_hist_vars%rsub, &
@@ -539,7 +541,7 @@ CONTAINS
             'respiration (plant+soil)','mol m-2 s-1')
 
          ! groundwater recharge rate [mm/s]
-         CALL write_history_variable_2d ( DEF_hist_vars%qcharge, &
+         CALL write_history_variable_2d ( DEF_hist_vars%qcharge .and. (.not.DEF_USE_VariablySaturatedFlow), &
             a_qcharge, file_hist, 'f_qcharge', itime_in_file, sumarea, filter, &
             'groundwater recharge rate','mm/s')
 
