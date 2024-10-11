@@ -1228,6 +1228,10 @@ CONTAINS
             write(*,*) '                   *** Warning ***                      '
             write(*,*) 'Dynamic Lake is not well supported without lateral flow.'
          ENDIF
+#else
+         DEF_USE_Dynamic_Lake = .true.
+         write(*,*) '                 *** Warning ***                          '
+         write(*,*) 'Dynamic Lake is used if CATCHMENT-based lateral flow used.'
 #endif
 
 ! ----- [Complement IF needed] ----- Macros&Namelist conflicts and dependency management
