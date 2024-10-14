@@ -80,6 +80,9 @@ CONTAINS
    USE MOD_LakeDepthReadin
    USE MOD_PercentagesPFTReadin
    USE MOD_SoilParametersReadin
+#ifdef NEW_LAKE
+   USE MOD_Lake_Utils, only: LakeIni
+#endif 
 
    IMPLICIT NONE
 
@@ -208,6 +211,11 @@ CONTAINS
 
    integer  :: i,j,ipatch,nsl,hs,he,ps,pe,ivt,m, u  ! indices
    real(r8) :: totalvolume
+
+#ifdef NEW_LAKE
+   integer  :: ipa
+   integer :: scwat
+#endif
 
    integer :: Julian_8day
    integer :: ltyp
@@ -1202,6 +1210,37 @@ CONTAINS
          lake_icefrac(:,:) = 0.
          savedtke1   (:)   = tkwat
 
+#ifdef NEW_LAKE
+         DO i = 1, numpatch
+            IF(patchtype(i) == 4) THEN
+               z0m(i) = DEF_LAKE_Z0M 
+               z0h(i) = DEF_LAKE_Z0H
+               z0q(i) = DEF_LAKE_Z0Q
+               felak(i) = DEF_LAKE_FETCH
+               btpri(i) = DEF_LAKE_BETAPRIME
+               gamma(i) = DEF_LAKE_GAMMA
+               etal(i) = DEF_LAKE_ETA
+               dplak(i) = lakedepth(i)
+               if (dplak(i) < 1.0) dplak(i) = 1.0
+               CALL LakeIni( &
+                           ! "in" arguments
+                           ! -------------------
+                           nlake = nl_lake     ,  nsnow = -maxsnl      ,  nsoil = nl_soil           ,  nlice = nlice        ,& 
+                           dplak = dplak(i)    ,  tskin = 285.         ,&
+                           ! "out" arguments
+                           ! -------------------
+                           zlake = zlake(:,i)  ,  zilak = zilak(:,i)   ,  dzlak = dzlak(:,i)        ,  lktmp = t_lake(:,i)  ,& 
+                           rhosnw = rhosnw(i)  ,  lkrho = lkrho(:,i)   ,  icefr = lake_icefrac(:,i) ,  stke1 = savedtke1(i) ,&
+                           tmsno = tmsno(i)    ,  tmice = tmice(i)     ,  tmmnw = tmmnw(i)          ,  tmwml = tmwml(i)     ,&
+                           tmbot = tmbot(i)    ,  tmups = tmups(i)     ,  mldp = mldp(i)            ,  upsdp = upsdp(i)     ,&
+                           CTfrac = CTfrac(i)  ,  icedp = icedp(i)     ,  bicedp = bicedp(i)        ,  wicedp = wicedp(i)   ,&
+                           uwatv = uwatv(:,i)  ,  vwatv = vwatv(:,i)   ,  lksal = lksal(:,i)        ,  tke = tke(:,i)       ,&
+                           eps = eps(:,i)      ,  etke = etke(i)       ,  num = num(:,i)            ,  nuh = nuh(:,i)       ,&
+                           ziarea = ziarea(:,i))
+            ENDIF
+         ENDDO
+#endif
+
       ENDIF
       ! ------------------------------------------
 
@@ -1293,6 +1332,15 @@ CONTAINS
                ,use_soilini, nl_soil_ini, soil_z, soil_t(1:,i), soil_w(1:,i), use_snowini, snow_d(i) &
                ! for SOIL Water INIT by using water table depth
                ,use_wtd, zwtmm, zc_soimm, zi_soimm, vliq_r, nprms, prms)
+
+#ifdef NEW_LAKE
+            DO ipa = 1, numpatch
+               IF(patchtype(ipa) == 4) THEN
+                  z0m(ipa) = DEF_LAKE_Z0M
+               ENDIF
+            ENDDO
+#endif
+
 
 #ifdef URBAN_MODEL
             IF (m == URBAN) THEN

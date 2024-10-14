@@ -12,15 +12,15 @@
 #undef LULC_IGBP_PFT
 #undef LULC_IGBP_PC
 
-! 2.1 3D Urban model (put it temporarily here):
+! 2.1 3 Urban model (put it temporarily here):
 #undef URBAN_MODEL
 
 ! 3. If defined, debug information is output.
 #define CoLMDEBUG
 ! 3.1 If defined, range of variables is checked.
-#define RangeCheck
+#undef RangeCheck
 ! 3.1 If defined, surface data in vector is mapped to gridded data for checking.
-#undef SrfdataDiag
+#define SrfdataDiag
 
 ! 4. If defined, MPI parallelization is enabled.
 #define USEMPI
@@ -51,7 +51,7 @@
 #undef BGC
 #endif
 ! 7.1 If defined, CROP model is used
-#define CROP
+#undef CROP
 !    Conflicts : only used when BGC is defined
 #ifndef BGC
 #undef CROP
@@ -75,3 +75,6 @@
 #endif
 
 #undef USESplitAI
+
+! 11. New Lake Driver
+#define NEW_LAKE
