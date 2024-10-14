@@ -1221,7 +1221,6 @@ SUBROUTINE CoLMMAIN ( &
 
 #ifndef NEW_LAKE
          CALL newsnow_lake ( DEF_USE_Dynamic_Lake, &
-
               ! "in" arguments
               ! ---------------
               maxsnl       ,nl_lake      ,deltim          ,dz_lake         ,&
@@ -1247,7 +1246,7 @@ SUBROUTINE CoLMMAIN ( &
               vf_om        ,vf_sand      ,wf_gravels      ,wf_sand         ,&
               porsl        ,csol         ,k_solids        ,&
               dksatu       ,dksatf       ,dkdry           ,&
-              BA_alpha     ,BA_beta      ,forc_hpbl       , ipatch         ,&
+              BA_alpha     ,BA_beta      ,forc_hpbl       ,&
 
               ! "inout" laketem arguments
               ! ---------------------------
