@@ -335,7 +335,6 @@ MODULE MOD_Namelist
    !Fire MODULE
    logical            :: DEF_USE_FIRE            = .false.
 
-
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ! ----- Part 11+: parameteration schemes related to New LakeDriver -----
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -395,6 +394,8 @@ MODULE MOD_Namelist
    ! FLake: Control the c_relax_C (Constant in the relaxation equation for the shape factor)
    real(r8):: DEF_LAKE_GAMMA = 1.0  ! lake mixing enhancement factor
 
+   !Dynamic Lake model
+   logical            :: DEF_USE_Dynamic_Lake    = .false.
 
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ! ----- Part 12: forcing -----
@@ -782,6 +783,7 @@ MODULE MOD_Namelist
       logical :: wa                               = .true.
       logical :: wa_inst                          = .true.
 
+      logical :: dz_lake                          = .true.
       logical :: t_lake                           = .true.
       logical :: lake_icefrac                     = .true.
 
@@ -876,6 +878,8 @@ MODULE MOD_Namelist
       logical :: discharge                        = .true.
       logical :: wdsrf_hru                        = .true.
       logical :: veloc_hru                        = .true.
+
+      logical :: sensors                          = .true.
 
    END type history_var_type
 
@@ -989,6 +993,8 @@ CONTAINS
       DEF_USE_NITRIF,                         & !add by Xingjie Lu @ sysu 2023/06/27
       DEF_USE_CNSOYFIXN,                      & !add by Xingjie Lu @ sysu 2023/06/27
       DEF_USE_FIRE,                           & !add by Xingjie Lu @ sysu 2023/06/27
+
+      DEF_USE_Dynamic_Lake,                   & !add by Shupeng Zhang @ sysu 2024/09/12
 
       DEF_LANDONLY,                           &
       DEF_USE_DOMINANT_PATCHTYPE,             &
@@ -1322,6 +1328,23 @@ CONTAINS
 #endif
 #endif
 
+! ----- dynamic lake run ----- Macros&Namelist conflicts and dependency management
+
+#ifndef CATCHMENT
+         IF ((.not. DEF_USE_VariablySaturatedFlow) .and. DEF_USE_Dynamic_Lake) THEN
+            DEF_USE_Dynamic_Lake = .false.
+            write(*,*) '                         *** Warning ***                                '
+            write(*,*) 'Dynamic Lake is closed if variably saturated flow algorithm is not used.'
+         ENDIF
+         IF (DEF_USE_Dynamic_Lake) THEN
+            write(*,*) '                   *** Warning ***                      '
+            write(*,*) 'Dynamic Lake is not well supported without lateral flow.'
+         ENDIF
+#else
+         DEF_USE_Dynamic_Lake = .true.
+         write(*,*) '                 *** Warning ***                          '
+         write(*,*) 'Dynamic Lake is used if CATCHMENT-based lateral flow used.'
+#endif
 
 ! ----- [Complement IF needed] ----- Macros&Namelist conflicts and dependency management
 
@@ -1451,6 +1474,8 @@ CONTAINS
       CALL mpi_bcast (DEF_USE_NITRIF                         ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_USE_CNSOYFIXN                      ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_USE_FIRE                           ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
+
+      CALL mpi_bcast (DEF_USE_Dynamic_Lake                   ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
 
       CALL mpi_bcast (DEF_LANDONLY                           ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_USE_DOMINANT_PATCHTYPE             ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
@@ -1846,6 +1871,7 @@ CONTAINS
       CALL sync_hist_vars_one (DEF_hist_vars%wa          , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%wa_inst     , set_defaults)
 
+      CALL sync_hist_vars_one (DEF_hist_vars%dz_lake     , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%t_lake      , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%lake_icefrac, set_defaults)
 
@@ -1941,6 +1967,8 @@ CONTAINS
       CALL sync_hist_vars_one (DEF_hist_vars%discharge   , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%wdsrf_hru   , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%veloc_hru   , set_defaults)
+      
+      CALL sync_hist_vars_one (DEF_hist_vars%sensors     , set_defaults)
 
    END SUBROUTINE sync_hist_vars
 

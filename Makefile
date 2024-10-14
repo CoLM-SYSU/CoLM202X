@@ -225,7 +225,6 @@ OBJS_MAIN = \
 				MOD_Catch_SubsurfaceFlow.o                \
 				MOD_Catch_RiverLakeFlow.o                 \
 				MOD_Hydro_Hist.o                          \
-				MOD_Catch_LateralFlow.o                   \
 				MOD_BGC_CNCStateUpdate1.o                 \
 				MOD_BGC_CNCStateUpdate2.o                 \
 				MOD_BGC_CNCStateUpdate3.o                 \
@@ -304,6 +303,7 @@ OBJS_MAIN = \
 				MOD_Hist.o                                \
 				MOD_LightningData.o                       \
 				MOD_CaMa_colmCaMa.o                       \
+				MOD_Catch_LateralFlow.o                   \
 				MOD_Urban_Longwave.o                      \
 				MOD_Urban_NetSolar.o                      \
 				MOD_Urban_Flux.o                          \

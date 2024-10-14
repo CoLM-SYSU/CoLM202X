@@ -927,7 +927,7 @@
                     wliq_gpersno(:0),wice_gpersno(:0),fioldp(:0),&
                     snlp,sag_gper,scv_gper,snowdp_gper,fsno_gper)
 
-      CALL newsnow_lake ( &
+      CALL newsnow_lake ( DEF_USE_Dynamic_Lake, &
            ! "in" arguments
            ! ---------------
            maxsnl        ,nl_lake       ,deltim          ,dz_lake         ,&

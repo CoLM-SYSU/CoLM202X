@@ -821,7 +821,7 @@ CONTAINS
 
          wice_icesno_bef(lb:0) = wice_icesno(lb:0)
 
-         CALL meltf_snicar (patchtype,lb,nl_ice,deltim, &
+         CALL meltf_snicar (patchtype,.false.,lb,nl_ice,deltim, &
                    !NOTE: compatibility settings for spliting soil&snow temproal input,
                    ! cause glacier patch doesn't support split soil&snow
                    ! hs_soil=hs, hs_snow=hs, fsno=1. not go into effect.
@@ -845,7 +845,7 @@ CONTAINS
          ENDDO
 
       ELSE
-         CALL meltf (patchtype,lb,nl_ice,deltim, &
+         CALL meltf (patchtype,.false.,lb,nl_ice,deltim, &
                    !NOTE: compatibility settings for spliting soil&snow temproal input,
                    ! cause glacier patch doesn't support split soil&snow
                    ! hs_soil=hs, hs_snow=hs, fsno=1. not go into effect.

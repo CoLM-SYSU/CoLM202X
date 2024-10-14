@@ -287,7 +287,7 @@ CONTAINS
          brr(j) = cnfac*(fn(j)-fn(j-1)) + (1.-cnfac)*(fn1(j)-fn1(j-1))
       ENDDO
 
-      CALL meltf (patchtype,lb,nl_soil,deltim, &
+      CALL meltf (patchtype,.false.,lb,nl_soil,deltim, &
                   !NOTE: compatibility settings for spliting soil&snow
                   ! temporal input, as urban mode doesn't support split soil&snow
                   ! hs_soil=hs, hs_snow=hs, fsno=0.

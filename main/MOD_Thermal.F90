@@ -18,7 +18,7 @@ CONTAINS
 !-----------------------------------------------------------------------
 
 
-   SUBROUTINE THERMAL (ipatch        ,patchtype     ,lb            ,deltim        ,&
+   SUBROUTINE THERMAL (ipatch ,patchtype,is_dry_lake,lb            ,deltim        ,&
                        trsmx0        ,zlnd          ,zsno          ,csoilc        ,&
                        dewmx         ,capr          ,cnfac         ,vf_quartz     ,&
                        vf_gravels    ,vf_om         ,vf_sand       ,wf_gravels    ,&
@@ -139,6 +139,7 @@ CONTAINS
        lb,                       &! lower bound of array
        patchtype                  ! land patch type (0=soil, 1=urban or built-up, 2=wetland,
                                   !                  3=glacier/ice sheet, 4=land water bodies)
+   logical, intent(in) :: is_dry_lake
 
    real(r8), intent(inout) :: &
        sai                        ! stem area index  [-]
@@ -526,7 +527,7 @@ ENDIF
       qred = 1.
       hr   = 1.
 
-      IF (patchtype<=1) THEN            !soil ground
+      IF ((patchtype<=1) .or. is_dry_lake) THEN            !soil ground
          wx   = (wliq_soisno(1)/denh2o + wice_soisno(1)/denice)/dz_soisno(1)
          IF (porsl(1) < 1.e-6) THEN     !bed rock
             fac  = 0.001
@@ -1036,7 +1037,7 @@ ENDIF
 ! [5] Gound temperature
 !=======================================================================
 
-      CALL GroundTemperature (patchtype,lb,nl_soil,deltim,&
+      CALL GroundTemperature (patchtype,is_dry_lake,lb,nl_soil,deltim,&
                       capr,cnfac,vf_quartz,vf_gravels,vf_om,vf_sand,wf_gravels,wf_sand,&
                       porsl,psi0,&
 #ifdef Campbell_SOIL_MODEL
