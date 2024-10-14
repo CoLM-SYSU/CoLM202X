@@ -12,7 +12,7 @@
 #undef LULC_IGBP_PFT
 #undef LULC_IGBP_PC
 
-! 2.1 3 Urban model (put it temporarily here):
+! 2.1 3D Urban model (put it temporarily here):
 #undef URBAN_MODEL
 
 ! 3. If defined, debug information is output.
