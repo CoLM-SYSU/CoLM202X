@@ -130,6 +130,7 @@ CONTAINS
 
    ! Local variables
    integer            :: idate(3)
+   type(timestamp)    :: tstamp
    character(len=256) :: filename, lndname, cyear
    integer            :: ivar, year, month, day, time_i
    real(r8)           :: missing_value
@@ -155,9 +156,10 @@ CONTAINS
       tstamp_UB(:) = timestamp(-1, -1, -1)
 
       idate = (/ststamp%year, ststamp%day, ststamp%sec/)
+      CALL adj2begin (idate)
 
       CALL metread_latlon (dir_forcing, idate)
-
+      
       IF (p_is_io) THEN
 
          IF (allocated(forcn   )) deallocate(forcn   )
@@ -191,7 +193,8 @@ CONTAINS
 
       IF (DEF_forcing%has_missing_value) THEN
 
-         CALL setstampLB(ststamp, 1, year, month, day, time_i)
+         tstamp = idate
+         CALL setstampLB(tstamp, 1, year, month, day, time_i)
          filename = trim(dir_forcing)//trim(metfilename(year, month, day, 1))
          tstamp_LB(1) = timestamp(-1, -1, -1)
 

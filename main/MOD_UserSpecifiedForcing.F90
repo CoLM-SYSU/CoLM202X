@@ -377,7 +377,7 @@ CONTAINS
       !----------------
          !---2021.11.01   Zhongwang Wei @ SYSU: zip file to reduce the size of the data; remove offset and scale_factor
 
-         metfilename = '/'//trim(fprefix(var_i))//trim(yearstr)//trim(monthstr)//'_v2.0.nc'
+         metfilename = '/'//trim(fprefix(var_i))//trim(yearstr)//trim(monthstr)//'_v2.1.nc'
       CASE ('CRUJRA')
       !DESCRIPTION
       !===========
