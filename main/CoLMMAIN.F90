@@ -1343,7 +1343,6 @@ SUBROUTINE CoLMMAIN ( &
          ! this unreasonable assumption should be updated in the future version
          a = (sum(wliq_soisno(1:))+sum(wice_soisno(1:))+scv-w_old-scvold)/deltim
          aa = qseva+qsubl-qsdew-qfros
-         IF (.not. DEF_USE_VariablySaturatedFlow) THEN
 
          IF (.not. DEF_USE_Dynamic_Lake) THEN
             ! We assume the land water bodies have zero extra liquid water capacity
