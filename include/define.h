@@ -77,4 +77,4 @@
 #undef USESplitAI
 
 ! 11. New Lake Driver
-#undef NEW_LAKE
+#define NEW_LAKE
