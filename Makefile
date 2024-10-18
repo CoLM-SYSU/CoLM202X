@@ -5,7 +5,7 @@ HEADER = include/define.h
 
 INCLUDE_DIR = -Iinclude -I.bld/ -I${NETCDF_INC}
 VPATH = include : share : mksrfdata : mkinidata \
-	: main : main/HYDRO : main/BGC : main/URBAN : main/LULCC : main/DA \
+	: main : main/HYDRO : main/BGC : main/URBAN : main/LULCC : main/DA : main/LAKE \
 	: CaMa/src : postprocess : .bld
 
 # ********** Targets ALL **********
@@ -121,6 +121,8 @@ OBJS_BASIC =    \
 				 MOD_Hydro_SoilWater.o          \
 				 MOD_Eroot.o                    \
 				 MOD_Qsadv.o                    \
+				 MOD_Lake_Const.o               \
+				 MOD_Lake_Utils.o               \
 				 MOD_LAIEmpirical.o             \
 				 MOD_LAIReadin.o                \
 				 MOD_CropReadin.o               \
@@ -276,6 +278,11 @@ OBJS_MAIN = \
 				MOD_SnowLayersCombineDivide.o             \
 				MOD_PhaseChange.o                         \
 				MOD_Glacier.o                             \
+				MOD_Lake_Subs.o                           \
+				MOD_Lake_CoLML.o                          \
+				MOD_Lake_FLake.o                          \
+				MOD_Lake_Simstrat.o                       \
+				MOD_Lake_Driver.o                         \
 				MOD_Lake.o                                \
 				MOD_SimpleOcean.o                         \
 				MOD_GroundFluxes.o                        \
