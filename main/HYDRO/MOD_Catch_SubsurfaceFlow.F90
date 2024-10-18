@@ -150,6 +150,7 @@ CONTAINS
    logical  :: iam_lake, nb_is_lake, has_river
 
    ! for water exchange
+   logical  :: is_dry_lake
    integer  :: izwt
    real(r8) :: exwater
    real(r8) :: sp_zi(0:nl_soil), sp_dz(1:nl_soil), zwtmm ! [mm]
@@ -565,7 +566,13 @@ CONTAINS
                + wa(ipatch) + wdsrf(ipatch) + wetwat(ipatch)
 #endif
 
-            IF (patchtype(ipatch) <= 1) THEN 
+            IF (DEF_USE_Dynamic_Lake) THEN
+               is_dry_lake = (patchtype(ipatch) == 4) .and. (zwt(ipatch) > 0.)
+            ELSE
+               is_dry_lake = .false.
+            ENDIF
+
+            IF ((patchtype(ipatch) <= 1) .or. is_dry_lake) THEN 
 
                exwater = xwsub(ipatch) * deltime
 

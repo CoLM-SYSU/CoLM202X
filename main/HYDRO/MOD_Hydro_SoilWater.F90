@@ -24,6 +24,8 @@ MODULE MOD_Hydro_SoilWater
 
    ! public subroutines and functions
    PUBLIC :: soil_water_vertical_movement
+   PUBLIC :: get_water_equilibrium_state
+   PUBLIC :: soilwater_aquifer_exchange 
 
    ! boundary condition:
    ! 1: fixed pressure head
@@ -31,10 +33,10 @@ MODULE MOD_Hydro_SoilWater
    !    and a flux such as rainfall into the ponding layer
    ! 3: fixed flux
    ! 4: drainage condition with aquifers below soil columns
-   integer, parameter :: bc_fix_head = 1
-   integer, parameter :: bc_rainfall = 2
-   integer, parameter :: bc_fix_flux = 3
-   integer, parameter :: bc_drainage = 4
+   integer, parameter :: BC_FIX_HEAD = 1
+   integer, parameter :: BC_RAINFALL = 2
+   integer, parameter :: BC_FIX_FLUX = 3
+   integer, parameter :: BC_DRAINAGE = 4
 
    ! formula of effective hydraulic conductivity between levels
    ! Please refer to Dai et al. (2019) for definitions
@@ -347,18 +349,18 @@ CONTAINS
          ENDDO
 
          IF (lb == 1) THEN
-            ubc_typ_sub = bc_rainfall
+            ubc_typ_sub = BC_RAINFALL
             ubc_val_sub = qgtop
          ELSE
-            ubc_typ_sub = bc_fix_flux
+            ubc_typ_sub = BC_FIX_FLUX
             ubc_val_sub = 0
          ENDIF
 
          IF ((ub == nlev) .and. (izwt > nlev)) THEN
-            lbc_typ_sub = bc_drainage
+            lbc_typ_sub = BC_DRAINAGE
             lbc_val_sub = 0.
          ELSE
-            lbc_typ_sub = bc_fix_flux
+            lbc_typ_sub = BC_FIX_FLUX
             lbc_val_sub = 0.
          ENDIF
 
@@ -503,6 +505,16 @@ CONTAINS
       reswater = exwater 
 
       IF (reswater > 0.) THEN
+      
+         IF ((zwt <= 0.) .and. (ss_dp > 0.)) THEN
+            IF (ss_dp > reswater) THEN
+               ss_dp = ss_dp - reswater
+               reswater = 0.
+            ELSE
+               reswater = reswater - ss_dp
+               ss_dp = 0.
+            ENDIF 
+         ENDIF
 
          ! remove water from aquifer
          DO WHILE (reswater > 0.)
@@ -643,8 +655,6 @@ CONTAINS
    logical :: has_wf (lb:ub)   ! whether a wetting front is present or not
    logical :: has_wt (lb:ub)   ! whether a water table is present or not
 
-   real(r8) :: infl_max        ! maximum infiltration rate (mm/s)
-
    real(r8) :: psi (lb:ub)     ! water pressure head in unsaturated soil (mm)
    real(r8) :: hk  (lb:ub)     ! hydraulic conductivity in unsaturated soil (mm/s)
 
@@ -716,20 +726,18 @@ CONTAINS
          wt_m1 = ss_wt
       
          wsum_m1 = sum(ss_vl * (sp_dz - ss_wt)) + sum(ss_wt * vl_s)
-         IF (ubc_typ == bc_rainfall) THEN
+         IF (ubc_typ == BC_RAINFALL) THEN
             wsum_m1 = wsum_m1 + ss_dp
          ENDIF
-         IF (lbc_typ == bc_drainage) THEN
+         IF (lbc_typ == BC_DRAINAGE) THEN
             wsum_m1 = wsum_m1 + waquifer
          ENDIF
 
-         IF (ubc_typ == bc_rainfall) THEN
+         IF (ubc_typ == BC_RAINFALL) THEN
             dp_m1 = max(ss_dp, 0._r8)
-            IF (dp_m1 < tol_z) dp_m1 = 0.
-            infl_max = dp_m1/dt_this + ubc_val
          ENDIF
 
-         IF (lbc_typ == bc_drainage) THEN
+         IF (lbc_typ == BC_DRAINAGE) THEN
             waquifer_m1 = waquifer
             CALL get_zwt_from_wa ( &
                vl_s_wa, vl_r(ub), psi_s(ub), hksat(ub), &
@@ -756,7 +764,7 @@ CONTAINS
                vl_s, psi_s, hksat, nprm, prms, &
                ubc_typ, ubc_val, lbc_typ, lbc_val, &
                lev_update, .true., &
-               is_sat, has_wf, has_wt, infl_max, &
+               is_sat, has_wf, has_wt, &
                ss_wf, ss_vl, ss_wt, ss_dp, zwt, psi, hk, &
                q_this, q_wf, q_wt, &
                tol_q, tol_z, tol_p)
@@ -772,18 +780,18 @@ CONTAINS
                q_0 = q_this
                q_wf_0 = q_wf
                q_wt_0 = q_wt
-            ENDIF
 
-            wet2dry = .false.
-            IF (ubc_typ == bc_rainfall) THEN
-               IF ((dp_m1 > 0.) .and. (q_0(lb-1) >= infl_max)) THEN
-                  wet2dry = .true.
+               wet2dry = .false.
+               IF (ubc_typ == BC_RAINFALL) THEN
+                  IF ((dp_m1 > tol_z) .and. (dp_m1 - (q_0(lb-1)-ubc_val)*dt_this < tol_z)) THEN
+                     wet2dry = .true.
+                  ENDIF
                ENDIF
             ENDIF
 
             f2_norm(iter) = sqrt(sum(blc**2))
 
-            IF (    (f2_norm(iter) < tol_richards * dt_this)  &
+            IF (    (f2_norm(iter) < tol_richards * dt_this)  &  ! converged
                .or. (dt_this < dt_explicit)                   &
                .or. (iter >= max_iters_richards) &
                .or. (.not. is_solvable)          &
@@ -814,11 +822,10 @@ CONTAINS
 #ifdef CoLMDEBUG
                IF (f2_norm(iter) < tol_richards * dt_this) THEN
                   count_implicit = count_implicit + 1
-               ELSE
+               ELSEIF (iter >= max_iters_richards) then
                   count_explicit = count_explicit + 1
-                  IF (wet2dry) THEN
-                     count_wet2dry = count_wet2dry + 1
-                  ENDIF
+               ELSEIF (wet2dry) THEN
+                  count_wet2dry = count_wet2dry + 1
                ENDIF
 #endif
 
@@ -829,7 +836,7 @@ CONTAINS
             dr_dv = 0
             vact  = .false.
 
-            IF (ubc_typ == bc_rainfall) THEN
+            IF (ubc_typ == BC_RAINFALL) THEN
 
                CALL var_perturb_rainfall ( &
                   blc(lb-1), ss_dp, dp_pb, dlt, vact(lb-1))
@@ -846,7 +853,7 @@ CONTAINS
                      vl_s, psi_s, hksat, nprm, prms, &
                      ubc_typ, ubc_val, lbc_typ, lbc_val, &
                      lev_update, .false., &
-                     is_sat, has_wf, has_wt, infl_max, &
+                     is_sat, has_wf, has_wt, &
                      ss_wf, ss_vl, ss_wt, dp_pb, zwt, psi, hk, &
                      q_pb, q_wf_pb, q_wt_pb, &
                      tol_q, tol_z, tol_p)
@@ -896,7 +903,7 @@ CONTAINS
                         vl_s, psi_s, hksat, nprm, prms, &
                         ubc_typ, ubc_val, lbc_typ, lbc_val, &
                         lev_update, .false., &
-                        is_sat, has_wf, has_wt, infl_max, &
+                        is_sat, has_wf, has_wt, &
                         wf_pb, vl_pb, wt_pb, ss_dp, zwt, psi_pb, hk_pb, &
                         q_pb, q_wf_pb, q_wt_pb, &
                         tol_q, tol_z, tol_p)
@@ -914,7 +921,7 @@ CONTAINS
                ENDIF
             ENDDO
 
-            IF (lbc_typ == bc_drainage) THEN
+            IF (lbc_typ == BC_DRAINAGE) THEN
 
                CALL var_perturb_drainage (sp_zi(ub), blc(ub+1), zwt, zwt_pb, dlt, vact(ub+1))
 
@@ -934,7 +941,7 @@ CONTAINS
                      vl_s, psi_s, hksat, nprm, prms, &
                      ubc_typ, ubc_val, lbc_typ, lbc_val, &
                      lev_update, .false., &
-                     is_sat, has_wf, has_wt, infl_max, &
+                     is_sat, has_wf, has_wt, &
                      ss_wf, ss_vl, ss_wt, ss_dp, zwt_pb, psi, hk, &
                      q_pb, q_wf_pb, q_wt_pb, &
                      tol_q, tol_z, tol_p)
@@ -1027,10 +1034,10 @@ CONTAINS
          ss_q = ss_q + q_this * dt_this
 
          wsum = sum(ss_vl * (sp_dz - ss_wt - ss_wf)) + sum((ss_wt + ss_wf) * vl_s)
-         IF (ubc_typ == bc_rainfall) THEN
+         IF (ubc_typ == BC_RAINFALL) THEN
             wsum = wsum + ss_dp
          ENDIF
-         IF (lbc_typ == bc_drainage) THEN
+         IF (lbc_typ == BC_DRAINAGE) THEN
             wsum = wsum + waquifer
          ENDIF
 
@@ -1096,7 +1103,7 @@ CONTAINS
 
       blc(:)  = 0
 
-      IF (ubc_typ == bc_rainfall) THEN
+      IF (ubc_typ == BC_RAINFALL) THEN
          dmss = max(dp, 0._r8) - max(dp_m1, 0._r8)
          qsum = ubc_val - q(lb-1)
          blc(lb-1) = dmss - qsum * dt
@@ -1115,7 +1122,7 @@ CONTAINS
 
             ilev = jlev
 
-            IF ((ubc_typ /= bc_rainfall) .and. (blc(lb-1) /= 0)) THEN
+            IF ((ubc_typ /= BC_RAINFALL) .and. (blc(lb-1) /= 0)) THEN
                blc(ilev) = blc(ilev) + blc(lb-1)
                blc(lb-1) = 0
             ENDIF
@@ -1125,13 +1132,13 @@ CONTAINS
 
       ENDDO
 
-      IF (lbc_typ == bc_drainage) THEN
+      IF (lbc_typ == BC_DRAINAGE) THEN
          IF ((waquifer == 0) .and. (q(ub) >= 0)) THEN
             blc(ilev) = blc(ilev) - waquifer_m1 - q(ub) * dt
          ELSE
             blc(ub+1) = waquifer - waquifer_m1 - q(ub) * dt
 
-            IF ((ubc_typ /= bc_rainfall) .and. (blc(lb-1) /= 0)) THEN
+            IF ((ubc_typ /= BC_RAINFALL) .and. (blc(lb-1) /= 0)) THEN
                blc(ub+1) = blc(ub+1) + blc(lb-1)
                blc(lb-1) = 0
             ENDIF
@@ -1140,9 +1147,9 @@ CONTAINS
 
       IF (present(is_solvable)) THEN
          IF (present(tol)) THEN
-            is_solvable = (ubc_typ == bc_rainfall) .or. (blc(lb-1) < tol)
+            is_solvable = (ubc_typ == BC_RAINFALL) .or. (blc(lb-1) < tol)
          ELSE
-            is_solvable = (ubc_typ == bc_rainfall) .or. (blc(lb-1) == 0)
+            is_solvable = (ubc_typ == BC_RAINFALL) .or. (blc(lb-1) == 0)
          ENDIF
       ENDIF
 
@@ -1197,7 +1204,7 @@ CONTAINS
             .or. (abs(wf(ilev) + wt(ilev) - dz(ilev)) < tol_z)
       ENDDO
 
-      IF (ubc_typ == bc_fix_head) THEN
+      IF (ubc_typ == BC_FIX_HEAD) THEN
          IF (ubc_val < psi_s(lb)) THEN
             IF (is_sat(lb)) THEN
                is_sat(lb) = .false.
@@ -1212,7 +1219,7 @@ CONTAINS
          ENDIF
       ENDIF
 
-      IF (lbc_typ == bc_fix_head) THEN
+      IF (lbc_typ == BC_FIX_HEAD) THEN
          IF (lbc_val < psi_s(ub)) THEN
             IF (is_sat(ub)) THEN
                is_sat(ub) = .false.
@@ -1247,19 +1254,15 @@ CONTAINS
                ENDIF
             ELSE
                SELECTCASE (ubc_typ)
-               CASE (bc_rainfall)
+               CASE (BC_RAINFALL)
                   has_wf(lb) = (dp >= tol_z) .or. (wf(lb) >= tol_z)
-
-                  IF (has_wf(lb) .and. (wf(lb) < tol_z)) THEN
-                     wf(lb) = 0.01 * (dz(lb)-wt(lb))
-                  ENDIF
-               CASE (bc_fix_head)
+               CASE (BC_FIX_HEAD)
                   has_wf(lb) = (ubc_val > psi_s(lb)) .or. (wf(lb) >= tol_z)
 
                   IF (has_wf(lb) .and. (wf(lb) < tol_z)) THEN
                      wf(lb) = 0.01 * (dz(lb)-wt(lb))
                   ENDIF
-               CASE (bc_fix_flux)
+               CASE (BC_FIX_FLUX)
                   has_wf(lb) = wf(lb) >= tol_z
                ENDSELECT
             ENDIF
@@ -1278,15 +1281,15 @@ CONTAINS
                ENDIF
             ELSE
                SELECTCASE (lbc_typ)
-               CASE (bc_drainage)
+               CASE (BC_DRAINAGE)
                   has_wt(ub) = (wt(ub) >= tol_z)
-               CASE (bc_fix_head)
+               CASE (BC_FIX_HEAD)
                   has_wt(ub) = (lbc_val > psi_s(lb)) .or. (wt(ub) >= tol_z)
 
                   IF ((has_wt(ub)) .and. (wt(ub) < tol_z)) THEN
                      wt(ub) = 0.01 * (dz(ub)-wf(ub))
                   ENDIF
-               CASE (bc_fix_flux)
+               CASE (BC_FIX_FLUX)
                   has_wt(ub) = (wt(ub) >= tol_z)
                ENDSELECT
             ENDIF
@@ -1364,7 +1367,7 @@ CONTAINS
    real(r8) :: dmss, mblc
 
       ! depleted : decrease outflux from top down
-      IF (ubc_typ == bc_rainfall) THEN
+      IF (ubc_typ == BC_RAINFALL) THEN
          IF (dp_m1 <  - (ubc_val - q(lb-1))*dt) THEN
             q(lb-1) = dp_m1/dt + ubc_val
          ENDIF
@@ -1381,7 +1384,7 @@ CONTAINS
 
       ENDDO
 
-      IF ((lbc_typ == bc_fix_flux) .and. (q(ub) < lbc_val)) THEN
+      IF ((lbc_typ == BC_FIX_FLUX) .and. (q(ub) < lbc_val)) THEN
 
          q(ub) = lbc_val
          DO ilev = ub, lb, -1
@@ -1396,7 +1399,7 @@ CONTAINS
       ENDIF
 
       ! overfilled : increase influx from bottom up
-      IF (lbc_typ == bc_drainage) THEN
+      IF (lbc_typ == BC_DRAINAGE) THEN
          IF (q(ub)*dt > -waquifer_m1) THEN
             q(ub) = - waquifer_m1/dt
          ENDIF
@@ -1412,7 +1415,7 @@ CONTAINS
 
       ENDDO
 
-      IF ((ubc_typ == bc_fix_flux) .and. (q(lb-1) < ubc_val)) THEN
+      IF ((ubc_typ == BC_FIX_FLUX) .and. (q(lb-1) < ubc_val)) THEN
 
          q(lb-1) = ubc_val
          DO ilev = lb, ub
@@ -1426,7 +1429,7 @@ CONTAINS
       ENDIF
 
       ! update prognostic variables : dp, wf, vl, wt, zwt
-      IF (ubc_typ == bc_rainfall) THEN
+      IF (ubc_typ == BC_RAINFALL) THEN
          dp = max(0., dp_m1 + (ubc_val - q(lb-1))*dt)
       ENDIF
 
@@ -1441,7 +1444,7 @@ CONTAINS
 
       ENDDO
 
-      IF (lbc_typ == bc_drainage) THEN
+      IF (lbc_typ == BC_DRAINAGE) THEN
          waquifer = waquifer_m1 + q(ub)*dt
          CALL get_zwt_from_wa ( &
             vl_s_wa, vl_r(ub), psi_s(ub), hksat(ub), nprm, prms(:,ub), tol_v, tol_z, &
@@ -1485,7 +1488,7 @@ CONTAINS
       IF (has_wt) THEN
 
          IF ((wt_p == dz) .or. &
-            ((blc >= 0) .and. (q_wt < qout) .and. (wt_p > 0))) THEN
+            ((blc >= 0) .and. (q_wt < qout) .and. (wt_p > 0) .and. (vl_p < vl_s))) THEN
             ! reduce water table
 
             jsbl = 3
@@ -1500,7 +1503,7 @@ CONTAINS
 
             wt_p = wt_p + delta
 
-         ELSEIF ((blc < 0) .and. (q_wt > qout)) THEN
+         ELSEIF ((blc < 0) .and. (q_wt > qout) .and. (vl_p < vl_s)) THEN
             ! increase water table
 
             jsbl = 3
@@ -1515,7 +1518,7 @@ CONTAINS
       IF ((jsbl == 2) .and. has_wf) THEN
 
          IF ((wf_p == dz) .or. &
-            ((blc >= 0) .and. (qin < q_wf) .and. (wf_p > 0))) THEN
+            ((blc >= 0) .and. (qin < q_wf) .and. (wf_p > 0) .and. (vl_p < vl_s))) THEN
             ! reduce wetting front
 
             jsbl = 1
@@ -1529,7 +1532,7 @@ CONTAINS
 
             wf_p = wf_p + delta
 
-         ELSEIF ((blc < 0) .and. (qin > q_wf)) THEN
+         ELSEIF ((blc < 0) .and. (qin > q_wf) .and. (vl_p < vl_s)) THEN
             ! increase wetting front
 
             jsbl = 1
@@ -1694,7 +1697,7 @@ CONTAINS
          vl_s, psi_s, hksat, nprm, prms, &
          ubc_typ, ubc_val, lbc_typ, lbc_val, &
          lev_update, is_update_sublevel, &
-         is_sat, has_wf, has_wt, infl_max, &
+         is_sat, has_wf, has_wt, &
          wf, vl, wt, dp, zwt, psi_us, hk_us, &
          qq, qq_wf, qq_wt, &
          tol_q, tol_z, tol_p)
@@ -1722,7 +1725,6 @@ CONTAINS
    logical,  intent(inout) :: is_sat (lb:ub)
    logical,  intent(inout) :: has_wf (lb:ub)
    logical,  intent(inout) :: has_wt (lb:ub)
-   real(r8), intent(in) :: infl_max
 
    real(r8), intent(inout) :: wf (lb:ub)
    real(r8), intent(inout) :: vl (lb:ub)
@@ -1762,7 +1764,7 @@ CONTAINS
                dz_this = (dz(lb)-wt(lb)-wf(lb)) * (sp_zc(lb)-sp_zi(lb-1))/dz(lb)
 
                SELECTCASE (ubc_typ)
-               CASE (bc_fix_head)
+               CASE (BC_FIX_HEAD)
 
                   IF (has_wf(lb)) THEN
                      qq(lb-1) = - hksat(lb) * ((psi_s(lb) - ubc_val) / wf(lb) - 1)
@@ -1774,24 +1776,26 @@ CONTAINS
                         dz_this, ubc_val, psi_us(lb), hk_top, hk_us(lb))
                   ENDIF
 
-               CASE (bc_rainfall)
+               CASE (BC_RAINFALL)
 
-                  IF (has_wf(lb))  THEN
-                     IF (wf(lb) < tol_z) THEN
-                        qq(lb-1) = infl_max
-                     ELSE
-                        qq(lb-1) = - hksat(lb) * ((psi_s(lb) - dp) / wf(lb) - 1)
-                        qq(lb-1) = min(qq(lb-1), infl_max)
-                     ENDIF
+                  IF (has_wf(lb) .and. (wf(lb) >= tol_z))  THEN
+                  
+                     qq(lb-1) = - hksat(lb) * ((psi_s(lb) - dp) / wf(lb) - 1)
+
                   ELSE
 
-                     qq(lb-1) = infl_max
+                     IF (dp > tol_z) THEN
+                        qq(lb-1) = flux_inside_hm_soil ( &
+                           psi_s(lb), hksat(lb), nprm, prms(:,lb),  &
+                           dz_this, dp, psi_us(lb), hksat(lb), hk_us(lb))
+                     ELSE
+                        qtest = flux_inside_hm_soil ( &
+                           psi_s(lb), hksat(lb), nprm, prms(:,lb),  &
+                           dz_this, psi_s(lb), psi_us(lb), hksat(lb), hk_us(lb))
 
-                     IF (is_update_sublevel) THEN
-                        IF (infl_max > hksat(lb)) THEN
-                           qtest = flux_inside_hm_soil ( &
-                              psi_s(lb), hksat(lb), nprm, prms(:,lb),  &
-                              dz_this, psi_s(lb), psi_us(lb), hksat(lb), hk_us(lb))
+                        qq(lb-1) = min(ubc_val, qtest)
+
+                        IF (is_update_sublevel) THEN
                            IF (qq(lb-1) > qtest) THEN
                               has_wf(lb) = .true.
                               wf(lb) = 0.0
@@ -1801,7 +1805,7 @@ CONTAINS
 
                   ENDIF
 
-               CASE (bc_fix_flux)
+               CASE (BC_FIX_FLUX)
 
                   qq(lb-1) = ubc_val
 
@@ -1837,7 +1841,7 @@ CONTAINS
                dz_this = (dz(ub) - wf(ub) - wt(ub)) * (sp_zi(ub) - sp_zc(ub))/ dz(ub)
 
                SELECTCASE (lbc_typ)
-               CASE (bc_fix_head)
+               CASE (BC_FIX_HEAD)
 
                   IF (has_wt(ub)) THEN
                      qq(ub) = - hksat(ub) * ((lbc_val - psi_s(ub))/wt(ub) - 1)
@@ -1849,7 +1853,7 @@ CONTAINS
                         dz_this, psi_us(ub), lbc_val, hk_us(ub), hk_btm)
                   ENDIF
 
-               CASE (bc_drainage)
+               CASE (BC_DRAINAGE)
 
                   IF (has_wt(ub)) THEN
                      IF (zwt > sp_zi(ub)) THEN
@@ -1880,7 +1884,7 @@ CONTAINS
                      ENDIF
                   ENDIF
 
-               CASE (bc_fix_flux)
+               CASE (BC_FIX_FLUX)
 
                   qq(ub) = lbc_val
 
@@ -1934,7 +1938,7 @@ CONTAINS
                      dz, sp_zc, sp_zi, vl_s, psi_s, hksat, nprm, prms, &
                      ubc_typ, ubc_val, lbc_typ, lbc_val, &
                      is_sat, has_wf, has_wt, is_update_sublevel, &
-                     wf, vl, wt, dp, infl_max, zwt, psi_us, hk_us, &
+                     wf, vl, wt, dp, zwt, psi_us, hk_us, &
                      qq, qq_wt, qq_wf, tol_q, tol_z, tol_p)
 
                ELSE
@@ -2040,7 +2044,7 @@ CONTAINS
          vl_s, psi_s, hksat, nprm, prms, &
          ubc_typ, ubc_val, lbc_typ, lbc_val, &
          is_sat, has_wf, has_wt, is_update_sublevel, &
-         wf, vl, wt, wdsrf, infl_max, zwt, psi_us, hk_us, &
+         wf, vl, wt, wdsrf, zwt, psi_us, hk_us, &
          qq, qq_wt, qq_wf, tol_q, tol_z, tol_p)
 
    integer,  intent(in) :: lb, ub
@@ -2069,7 +2073,7 @@ CONTAINS
    real(r8), intent(inout) :: wf (lb:ub)
    real(r8), intent(inout) :: vl (lb:ub)
    real(r8), intent(inout) :: wt (lb:ub)
-   real(r8), intent(in) :: wdsrf, infl_max
+   real(r8), intent(in) :: wdsrf
    real(r8), intent(in) :: zwt
    real(r8), intent(in) :: psi_us (lb:ub)
    real(r8), intent(in) :: hk_us  (lb:ub)
@@ -2149,63 +2153,51 @@ CONTAINS
       IF (top_at_ground .and. btm_at_bottom) THEN
 
          ! Case 1-1
-         IF ((ubc_typ == bc_fix_head) .and. (lbc_typ == bc_fix_head)) THEN
+         IF ((ubc_typ == BC_FIX_HEAD) .and. (lbc_typ == BC_FIX_HEAD)) THEN
             CALL flux_sat_zone_fixed_bc (nlev_sat, &
                dz_sat, psi_sat, hk_sat, ubc_val, lbc_val, qlc)
          ENDIF
 
          ! Case 1-2
-         IF ((ubc_typ == bc_rainfall) .and. (lbc_typ == bc_fix_head)) THEN
+         IF ((ubc_typ == BC_RAINFALL) .and. (lbc_typ == BC_FIX_HEAD)) THEN
 
             CALL flux_sat_zone_fixed_bc (nlev_sat, &
                dz_sat, psi_sat, hk_sat, wdsrf, lbc_val, qlc)
 
-            IF ((wdsrf < tol_z) .and. (qlc(lb) > infl_max)) THEN
-               ptop = psi_s(lb)
-               CALL flux_sat_zone_fixed_bc (nlev_sat, &
-                  dz_sat, psi_sat, hk_sat, ptop, lbc_val, qlc, &
-                  flux_top = infl_max)
-            ENDIF
          ENDIF
 
          ! Case 1-3
-         IF ((ubc_typ == bc_fix_flux) .and. (lbc_typ == bc_fix_head)) THEN
+         IF ((ubc_typ == BC_FIX_FLUX) .and. (lbc_typ == BC_FIX_HEAD)) THEN
             CALL flux_sat_zone_fixed_bc (nlev_sat, &
                dz_sat, psi_sat, hk_sat, psi_s(lb), lbc_val, qlc, &
                flux_top = ubc_val)
          ENDIF
 
          ! Case 1-4
-         IF ((ubc_typ == bc_fix_head) .and. (lbc_typ == bc_fix_flux)) THEN
+         IF ((ubc_typ == BC_FIX_HEAD) .and. (lbc_typ == BC_FIX_FLUX)) THEN
             CALL flux_sat_zone_fixed_bc (nlev_sat, &
                dz_sat, psi_sat, hk_sat, ubc_val, psi_s(ub), qlc, &
                flux_btm = lbc_val)
          ENDIF
 
          ! Case 1-5
-         IF ((ubc_typ == bc_rainfall) .and. (lbc_typ == bc_fix_flux)) THEN
+         IF ((ubc_typ == BC_RAINFALL) .and. (lbc_typ == BC_FIX_FLUX)) THEN
 
             CALL flux_sat_zone_fixed_bc (nlev_sat, &
                dz_sat, psi_sat, hk_sat, wdsrf, psi_s(ub), qlc, &
                flux_btm = lbc_val)
 
-            IF ((wdsrf < tol_z) .and. (qlc(lb) > infl_max)) THEN
-               ptop = psi_s(lb)
-               CALL flux_sat_zone_fixed_bc (nlev_sat, &
-                  dz_sat, psi_sat, hk_sat, ptop, psi_s(ub), qlc, &
-                  flux_top = infl_max, flux_btm = lbc_val)
-            ENDIF
          ENDIF
 
          ! Case 1-6
-         IF ((ubc_typ == bc_fix_flux) .and. (lbc_typ == bc_fix_flux)) THEN
+         IF ((ubc_typ == BC_FIX_FLUX) .and. (lbc_typ == BC_FIX_FLUX)) THEN
             CALL flux_sat_zone_fixed_bc (nlev_sat, &
                dz_sat, psi_sat, hk_sat, psi_s(lb), psi_s(ub), qlc, &
                flux_top = ubc_val, flux_btm = lbc_val)
          ENDIF
 
          ! Case 1-7
-         IF ((ubc_typ == bc_fix_head) .and. (lbc_typ == bc_drainage)) THEN
+         IF ((ubc_typ == BC_FIX_HEAD) .and. (lbc_typ == BC_DRAINAGE)) THEN
             IF (zwt > sp_zi(ub)) THEN
                CALL flux_sat_zone_fixed_bc (nlev_sat, &
                   dz_sat, psi_sat, hk_sat, ubc_val, psi_s(ub), qlc)
@@ -2217,7 +2209,7 @@ CONTAINS
          ENDIF
 
          ! Case 1-8
-         IF ((ubc_typ == bc_rainfall) .and. (lbc_typ == bc_drainage)) THEN
+         IF ((ubc_typ == BC_RAINFALL) .and. (lbc_typ == BC_DRAINAGE)) THEN
             IF (zwt > sp_zi(ub)) THEN
                CALL flux_sat_zone_fixed_bc (nlev_sat, &
                   dz_sat, psi_sat, hk_sat, wdsrf, psi_s(ub), qlc)
@@ -2227,23 +2219,10 @@ CONTAINS
                   flux_btm = 0.0)
             ENDIF
 
-            IF ((wdsrf < tol_z) .and. (qlc(lb) > infl_max)) THEN
-               ptop = psi_s(lb)
-               IF (zwt > sp_zi(ub)) THEN
-                  CALL flux_sat_zone_fixed_bc (nlev_sat, &
-                     dz_sat, psi_sat, hk_sat, ptop, psi_s(ub), qlc, &
-                     flux_top = infl_max)
-               ELSE
-                  CALL flux_sat_zone_fixed_bc (nlev_sat, &
-                     dz_sat, psi_sat, hk_sat, ptop, psi_s(ub), qlc, &
-                     flux_top = infl_max, flux_btm = 0.0)
-               ENDIF
-            ENDIF
-
          ENDIF
 
          ! Case 1-9
-         IF ((ubc_typ == bc_fix_flux) .and. (lbc_typ == bc_drainage)) THEN
+         IF ((ubc_typ == BC_FIX_FLUX) .and. (lbc_typ == BC_DRAINAGE)) THEN
             IF (zwt > sp_zi(ub)) THEN
                CALL flux_sat_zone_fixed_bc (nlev_sat, &
                   dz_sat, psi_sat, hk_sat, psi_s(lb), psi_s(ub), qlc, &
@@ -2260,7 +2239,7 @@ CONTAINS
       IF (top_at_ground .and. btm_at_interface) THEN
 
          SELECTCASE (ubc_typ)
-         CASE (bc_fix_head)
+         CASE (BC_FIX_HEAD)
 
             CALL flux_btm_transitive_interface ( &
                psi_s(i_end), hksat(i_end), nprm, prms(:,i_end), &
@@ -2268,7 +2247,7 @@ CONTAINS
                nlev_sat, dz_sat, psi_sat, hk_sat, ubc_val, &
                qq_wf(i_end), qlc, tol_q, tol_z, tol_p)
 
-         CASE (bc_fix_flux)
+         CASE (BC_FIX_FLUX)
 
             CALL flux_btm_transitive_interface ( &
                psi_s(i_end), hksat(i_end), nprm, prms(:,i_end), &
@@ -2277,23 +2256,13 @@ CONTAINS
                qq_wf(i_end), qlc, tol_q, tol_z, tol_p, &
                flux_top = ubc_val)
 
-         CASE (bc_rainfall)
+         CASE (BC_RAINFALL)
 
             CALL flux_btm_transitive_interface ( &
                psi_s(i_end), hksat(i_end), nprm, prms(:,i_end), &
                dz_us_btm, psi_us(i_end), hk_us(i_end), &
                nlev_sat, dz_sat, psi_sat, hk_sat, wdsrf, &
                qq_wf(i_end), qlc, tol_q, tol_z, tol_p)
-
-            IF ((wdsrf < tol_z) .and. (qlc(lb) > infl_max)) THEN
-               ptop = psi_s(lb)
-               CALL flux_btm_transitive_interface ( &
-                  psi_s(i_end), hksat(i_end), nprm, prms(:,i_end), &
-                  dz_us_btm, psi_us(i_end), hk_us(i_end), &
-                  nlev_sat, dz_sat, psi_sat, hk_sat, ptop, &
-                  qq_wf(i_end), qlc, tol_q, tol_z, tol_p, &
-                  flux_top = infl_max)
-            ENDIF
 
          ENDSELECT
 
@@ -2303,28 +2272,21 @@ CONTAINS
       IF (top_at_ground .and. btm_inside_level) THEN
 
          SELECTCASE (ubc_typ)
-         CASE (bc_fix_head)
+         CASE (BC_FIX_HEAD)
 
             CALL flux_sat_zone_fixed_bc (nlev_sat, dz_sat, psi_sat, &
                hk_sat, ubc_val, psi_s(i_end), qlc)
 
-         CASE (bc_fix_flux)
+         CASE (BC_FIX_FLUX)
 
             CALL flux_sat_zone_fixed_bc (nlev_sat, dz_sat, psi_sat, &
                hk_sat, psi_s(lb), psi_s(i_end), qlc, &
                flux_top = ubc_val)
 
-         CASE (bc_rainfall)
+         CASE (BC_RAINFALL)
 
             CALL flux_sat_zone_fixed_bc (nlev_sat, dz_sat, psi_sat, &
                hk_sat, wdsrf, psi_s(i_end), qlc)
-
-            IF ((wdsrf < tol_z) .and. (qlc(lb) > infl_max)) THEN
-               ptop = psi_s(lb)
-               CALL flux_sat_zone_fixed_bc (nlev_sat, dz_sat, psi_sat, &
-                  hk_sat, ptop, psi_s(i_end), qlc, &
-                  flux_top = infl_max)
-            ENDIF
 
          ENDSELECT
 
@@ -2334,7 +2296,7 @@ CONTAINS
       IF (top_at_interface .and. btm_at_bottom) THEN
 
          SELECTCASE (lbc_typ)
-         CASE (bc_fix_head)
+         CASE (BC_FIX_HEAD)
 
             CALL flux_top_transitive_interface ( &
                psi_s(i_stt), hksat(i_stt), nprm, prms(:,i_stt), &
@@ -2342,7 +2304,7 @@ CONTAINS
                nlev_sat, dz_sat, psi_sat, hk_sat, lbc_val, &
                qq_wt(i_stt), qlc, tol_q, tol_z, tol_p)
 
-         CASE (bc_fix_flux)
+         CASE (BC_FIX_FLUX)
 
             CALL flux_top_transitive_interface ( &
                psi_s(i_stt), hksat(i_stt), nprm, prms(:,i_stt), &
@@ -2351,7 +2313,7 @@ CONTAINS
                qq_wt(i_stt), qlc, tol_q, tol_z, tol_p, &
                flux_btm = lbc_val)
 
-         CASE (bc_drainage)
+         CASE (BC_DRAINAGE)
 
             IF (zwt > sp_zi(ub)) THEN
                CALL flux_top_transitive_interface ( &
@@ -2400,18 +2362,18 @@ CONTAINS
       IF (top_inside_level .and. btm_at_bottom) THEN
 
          SELECTCASE (lbc_typ)
-         CASE (bc_fix_head)
+         CASE (BC_FIX_HEAD)
 
             CALL flux_sat_zone_fixed_bc (nlev_sat, dz_sat, psi_sat, &
                hk_sat, psi_s(i_stt), lbc_val, qlc)
 
-         CASE (bc_fix_flux)
+         CASE (BC_FIX_FLUX)
 
             CALL flux_sat_zone_fixed_bc (nlev_sat, &
                dz_sat, psi_sat, hk_sat, psi_s(i_stt), psi_s(ub), &
                qlc, flux_btm = lbc_val)
 
-         CASE (bc_drainage)
+         CASE (BC_DRAINAGE)
 
             IF (zwt > sp_zi(ub)) THEN
                CALL flux_sat_zone_fixed_bc (nlev_sat, dz_sat, psi_sat, &
@@ -2465,16 +2427,16 @@ CONTAINS
       IF (top_at_ground) THEN
 
          SELECTCASE (ubc_typ)
-         CASE (bc_fix_head)
+         CASE (BC_FIX_HEAD)
             qq(lb-1) = qlc(lb)
             is_trans = .false.
-         CASE (bc_fix_flux)
+         CASE (BC_FIX_FLUX)
             qq(lb-1) = ubc_val ! min(qlc(lb), ubc_val)
             is_trans = (qlc(lb) > ubc_val)
-         CASE (bc_rainfall)
+         CASE (BC_RAINFALL)
             IF (wdsrf < tol_z) THEN
-               qq(lb-1) = min(qlc(lb), infl_max)
-               is_trans = (qlc(lb) > infl_max)
+               qq(lb-1) = min(ubc_val, qlc(lb))
+               is_trans = (qlc(lb) > ubc_val)
             ELSE
                qq(lb-1) = qlc(lb)
                is_trans = .false.
@@ -2487,7 +2449,7 @@ CONTAINS
                has_wf(lb) = .false.
                has_wt(lb) = .true.
 
-               wt(lb) = dz(lb)
+               wt(lb) = 0.9*dz(lb)
                vl(lb) = vl_s(lb)
                wf(lb) = 0
 
