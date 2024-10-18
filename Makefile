@@ -294,7 +294,7 @@ OBJS_MAIN = \
 				MOD_HistVector.o                          \
 				MOD_HistSingle.o                          \
 				MOD_Hist.o                                \
-				MOD_CheckEquillibrium.o                   \
+				MOD_CheckEquilibrium.o                    \
 				MOD_LightningData.o                       \
 				MOD_CaMa_colmCaMa.o                       \
 				MOD_Catch_LateralFlow.o                   \

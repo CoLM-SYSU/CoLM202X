@@ -1,11 +1,11 @@
 #include <define.h>
 
-MODULE MOD_CheckEquillibrium
+MODULE MOD_CheckEquilibrium
 
    !----------------------------------------------------------------------------
    ! DESCRIPTION:
    !
-   !   Check equillibrium state.
+   !   Check equilibrium state.
    !
    ! Created by Shupeng Zhang, 10/2024
    !----------------------------------------------------------------------------
@@ -34,7 +34,7 @@ MODULE MOD_CheckEquillibrium
 
    ! ----- Subroutines -----
    PUBLIC :: CheckEqb_init
-   PUBLIC :: CheckEquillibrium
+   PUBLIC :: CheckEquilibrium
    PUBLIC :: CheckEqb_final
 
 CONTAINS
@@ -81,7 +81,7 @@ CONTAINS
    END SUBROUTINE CheckEqb_final
 
    !---------------------------------------
-   SUBROUTINE CheckEquillibrium (idate, deltim, itstamp, dir_out, casename)
+   SUBROUTINE CheckEquilibrium (idate, deltim, itstamp, dir_out, casename)
 
       USE MOD_Precision
       USE MOD_Namelist
@@ -151,7 +151,7 @@ CONTAINS
          
             IF (p_is_master) THEN
                   
-               filename = trim(dir_out) // '/' // trim(casename) //'_check_equillibrium.nc'
+               filename = trim(dir_out) // '/' // trim(casename) //'_check_equilibrium.nc'
 
                IF (numcheck == 1) THEN
 
@@ -233,7 +233,7 @@ CONTAINS
 
       ENDIF
 
-   END SUBROUTINE CheckEquillibrium
+   END SUBROUTINE CheckEquilibrium
 
    !---------------------------------------
 #ifndef SinglePoint
@@ -431,4 +431,4 @@ CONTAINS
 
    END SUBROUTINE add_spv
 
-END MODULE MOD_CheckEquillibrium
+END MODULE MOD_CheckEquilibrium

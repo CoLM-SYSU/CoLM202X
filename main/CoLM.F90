@@ -29,7 +29,7 @@ PROGRAM CoLM
    USE MOD_Vars_1DAccFluxes
    USE MOD_Forcing
    USE MOD_Hist
-   USE MOD_CheckEquillibrium
+   USE MOD_CheckEquilibrium
    USE MOD_TimeManager
    USE MOD_RangeCheck
 
@@ -444,7 +444,7 @@ PROGRAM CoLM
          ! ----------------------------------------------------------------------
          CALL hist_out (idate, deltim, itstamp, etstamp, ptstamp, dir_hist, casename)
          
-         CALL CheckEquillibrium (idate, deltim, itstamp, dir_hist, casename)
+         CALL CheckEquilibrium (idate, deltim, itstamp, dir_hist, casename)
 
          ! DO land USE and land cover change simulation
          ! ----------------------------------------------------------------------
