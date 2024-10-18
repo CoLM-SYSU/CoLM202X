@@ -335,6 +335,65 @@ MODULE MOD_Namelist
    !Fire MODULE
    logical            :: DEF_USE_FIRE            = .false.
 
+! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+! ----- Part 11+: parameteration schemes related to New LakeDriver -----
+! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   !- Lake Model Options
+   ! [1] : CoLM-Lake(CoLML)
+   ! [2] : FLake
+   ! [3] : Simstrat
+   ! [4] : XOML (not supported yet)
+   integer :: DEF_LAKE_MODEL_SCHEME = 1          
+
+   !- Lake Surface Flux Scheme Options
+   ! [.true.]  : Use CoLM-Lake Surface flux scheme
+   ! [.false.] : Use Original Surface flux scheme in each lake model
+   logical :: DEF_USE_COLML_FLUX_SCHEME = .true.  
+   
+   !- Lake Layer Scheme Options
+   ! [1] : CoLML layer scheme
+   ! [2] : CSSPL layer scheme
+   ! [3] : equal layer scheme
+   ! [4] : MIN XU, log layer scheme
+   ! [5] : WMEJ, log layer scheme
+   integer :: DEF_LAKE_LAYER_SCHEME = 1           
+   
+   !- Lake Surface Roughness Scheme Options
+   ! [0] : Default scheme
+   ! [1] : Externally constant
+   integer :: DEF_LAKE_ROUGHNESSS_SCHEME = 0      
+   real(r8):: DEF_LAKE_Z0M = 0.001               ! roughness length over ground, momentum, only used when DEF_LAKE_ROUGHNESSS_SCHEME = 1
+   real(r8):: DEF_LAKE_Z0H = 0.0001              ! roughness length over ground,sensible heat, only used when DEF_LAKE_ROUGHNESSS_SCHEME = 1
+   real(r8):: DEF_LAKE_Z0Q = 0.0001              ! roughness length over ground, latent heat, only used when DEF_LAKE_ROUGHNESSS_SCHEME = 1
+   
+   !- Lake Betaprime Scheme Options
+   ! [0] : Default scheme
+   ! [1] : Externally constant
+   integer :: DEF_LAKE_BETAPRIME_SCHEME = 0      
+   real(r8):: DEF_LAKE_BETAPRIME = 0.3           ! betaprime in MOST, only used when DEF_LAKE_BETAPRIME_SCHEME = 1
+   
+   !- Lake light extinction coefficient Scheme Options
+   ! [0] : Default scheme
+   ! [1] : Externally constant
+   integer :: DEF_LAKE_ETA_SCHEME = 0           
+   real(r8):: DEF_LAKE_ETA = 0.5                 ! light extinction coefficient, only used when DEF_LAKE_ETA_SCHEME = 1
+   
+   !- Lake fetch length Scheme Options
+   ! [0] : Default scheme
+   ! [1] : Externally constant
+   integer :: DEF_LAKE_FETCH_SCHEME = 0         
+   real(r8):: DEF_LAKE_FETCH = 1000.0            ! lake fetch length, only used when DEF_LAKE_FETCH_SCHEME = 1
+
+   !- Lake mxing enhencement factor
+   ! [1.0] : Default scheme, no enhancement
+   ! [>1.0]: Enhancement lake mixing
+   ! [<1.0]: Suppression lake mixing
+   ! [<0.0]: Error
+   ! Simstrat: Control the α_Seiche (Fraction of wind energy which goes into seiche energy [-])
+   ! CoLM-Lake: Control the mixfact (Mixing enhancement factor [-])
+   ! FLake: Control the c_relax_C (Constant in the relaxation equation for the shape factor)
+   real(r8):: DEF_LAKE_GAMMA = 1.0  ! lake mixing enhancement factor
+
    !Dynamic Lake model
    logical            :: DEF_USE_Dynamic_Lake    = .false.
 
@@ -728,6 +787,43 @@ MODULE MOD_Namelist
       logical :: t_lake                           = .true.
       logical :: lake_icefrac                     = .true.
 
+#ifdef NEW_LAKE
+      logical :: dplak        = .true.
+      logical :: zlake        = .true.
+      logical :: zilak        = .true.
+      logical :: dzlak        = .true.
+      logical :: ziarea       = .true.
+      logical :: z0h          = .true.
+      logical :: z0q          = .true.
+      logical :: felak        = .true.
+      logical :: gamma        = .true.
+      logical :: etal         = .true.
+      logical :: btpri        = .true.
+      logical :: frlak        = .true.
+      logical :: tmsno        = .true.
+      logical :: tmice        = .true.
+      logical :: tmmnw        = .true.
+      logical :: tmwml        = .true.
+      logical :: tmbot        = .true.
+      logical :: tmups        = .true.
+      logical :: mldp         = .true.
+      logical :: upsdp        = .true.
+      logical :: icedp        = .true.
+      logical :: bicedp       = .true.
+      logical :: wicedp       = .true.
+      logical :: CTfrac       = .true.
+      logical :: rhosnw       = .true.
+      logical :: uwatv        = .true.
+      logical :: vwatv        = .true.
+      logical :: lksal        = .true.
+      logical :: tke          = .true.
+      logical :: etke         = .true.
+      logical :: eps          = .true.
+      logical :: num          = .true.
+      logical :: nuh          = .true.
+      logical :: lkrho       = .true.
+#endif
+
       logical :: litr1c_vr                        = .true.
       logical :: litr2c_vr                        = .true.
       logical :: litr3c_vr                        = .true.
@@ -928,6 +1024,22 @@ CONTAINS
       DEF_ElementNeighbour_file,              &
 
       DEF_DA_obsdir,                          &
+
+      DEF_LAKE_MODEL_SCHEME,                  &
+      DEF_USE_COLML_FLUX_SCHEME,              &
+      DEF_LAKE_LAYER_SCHEME,                  &
+      DEF_LAKE_ROUGHNESSS_SCHEME,             &
+      DEF_LAKE_Z0M,                           &
+      DEF_LAKE_Z0H,                           &
+      DEF_LAKE_Z0Q,                           &
+      DEF_LAKE_BETAPRIME_SCHEME,              &
+      DEF_LAKE_BETAPRIME,                     &
+      DEF_LAKE_ETA_SCHEME,                    &
+      DEF_LAKE_ETA,                           &
+      DEF_LAKE_FETCH_SCHEME,                  &
+      DEF_LAKE_FETCH,                         &
+      DEF_LAKE_GAMMA,                         &
+
 
       DEF_forcing_namelist,                   &
 
@@ -1451,6 +1563,21 @@ CONTAINS
       CALL mpi_bcast (DEF_forcing%CBL_tintalgo               ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_forcing%CBL_dtime                  ,1   ,mpi_integer   ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_forcing%CBL_offset                 ,1   ,mpi_integer   ,p_address_master ,p_comm_glb ,p_err)
+     
+      CALL mpi_bcast (DEF_LAKE_MODEL_SCHEME,           1, mpi_integer , p_address_master, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_USE_COLML_FLUX_SCHEME,       1, mpi_logical , p_address_master, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_LAKE_LAYER_SCHEME,           1, mpi_integer , p_address_master, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_LAKE_ROUGHNESSS_SCHEME,      1, mpi_integer , p_address_master, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_LAKE_Z0M,                    1, mpi_real8   , p_address_master, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_LAKE_Z0H,                    1, mpi_real8   , p_address_master, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_LAKE_Z0Q,                    1, mpi_real8   , p_address_master, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_LAKE_BETAPRIME_SCHEME,       1, mpi_integer , p_address_master, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_LAKE_BETAPRIME,              1, mpi_real8   , p_address_master, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_LAKE_ETA_SCHEME,             1, mpi_integer , p_address_master, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_LAKE_ETA,                    1, mpi_real8   , p_address_master, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_LAKE_FETCH_SCHEME,           1, mpi_integer , p_address_master, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_LAKE_FETCH,                  1, mpi_real8   , p_address_master, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_LAKE_GAMMA,                  1, mpi_real8   , p_address_master, p_comm_glb, p_err)
 #endif
 
       CALL sync_hist_vars (set_defaults = .true.)
@@ -1747,6 +1874,42 @@ CONTAINS
       CALL sync_hist_vars_one (DEF_hist_vars%dz_lake     , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%t_lake      , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%lake_icefrac, set_defaults)
+
+#ifdef NEW_LAKE
+      CALL sync_hist_vars_one (DEF_hist_vars%dplak       ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%zlake       ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%zilak       ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%dzlak       ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%ziarea      ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%z0h         ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%z0q         ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%felak       ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gamma       ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%etal        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%btpri       ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%frlak       ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%tmsno       ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%tmice       ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%tmmnw       ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%tmwml       ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%tmbot       ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%tmups       ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%mldp        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%upsdp       ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%icedp       ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%bicedp      ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%wicedp      ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%rhosnw      ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%uwatv       ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%vwatv       ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%lksal       ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%tke         ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%etke        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%eps         ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%num         ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%nuh         ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%lkrho      ,  set_defaults)
+#endif
 
 #ifdef BGC
       CALL sync_hist_vars_one (DEF_hist_vars%litr1c_vr   , set_defaults)

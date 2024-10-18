@@ -177,8 +177,24 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
                wimp,            pondmx,          smpmax,          smpmin,          &
                trsmx0,          tcrit,                                             &
 
+#ifdef NEW_LAKE
+              ! additional variables required by new lake driver
+                zlake(:,i),      dzlak(:,i),      zilak(:,i),      dplak(i),       &
+                ziarea(:,i),     uwatv(:,i),      vwatv(:,i),      lksal(:,i),     &
+                tke(:,i),        eps(:,i),        num(:,i),        nuh(:,i),       &
+                z0m(i),          z0h(i),          z0q(i),          felak(i),       &
+                gamma(i),        etal(i),         btpri(i),        tmsno(i),       &
+                tmice(i),        tmmnw(i),        tmwml(i),        tmbot(i),       &
+                tmups(i),        mldp(i),         upsdp(i),        icedp(i),       &
+                bicedp(i),       wicedp(i),       CTfrac(i),       frlak(i),       &
+                etke(i),         rhosnw(i),       lkrho(:,i),     &
+#endif
+             
              ! additional variables required by coupling with WRF model
-               emis(i),         z0m(i),          zol(i),          rib(i),          &
+#ifndef NEW_LAKE
+               z0m(i),          &
+#endif
+               emis(i),         zol(i),          rib(i),                           &
                ustar(i),        qstar(i),        tstar(i),                         &
                fm(i),           fh(i),           fq(i)                             )
 

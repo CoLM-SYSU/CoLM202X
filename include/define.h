@@ -75,3 +75,6 @@
 #endif
 
 #undef USESplitAI
+
+! 11. New Lake Drive
+#define NEW_LAKE

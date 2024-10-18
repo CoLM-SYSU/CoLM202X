@@ -3410,6 +3410,147 @@ CONTAINS
             a_lake_icefrac, file_hist, 'f_lake_icefrac', itime_in_file, 'lake', 1, nl_lake, &
             sumarea, filter, 'lake ice fraction cover','0-1')
 
+
+#ifdef NEW_LAKE
+         CALL write_history_variable_2d ( DEF_hist_vars%dplak, &
+            a_dplak, file_hist, 'f_dplak', itime_in_file, sumarea, filter, &
+            'lake depth ','m')
+         
+         CALL write_history_variable_3d ( DEF_hist_vars%zlake, &
+            a_zlake, file_hist, 'f_zlake', itime_in_file, 'lake', 1, nl_lake, sumarea, filter, &
+            'Lake layer node depth','m')
+
+         CALL write_history_variable_3d ( DEF_hist_vars%zilak, &
+            a_zilak, file_hist, 'f_zilak', itime_in_file, 'lakeI', 1, nl_lake+1, sumarea, filter, &
+            'Lake layer interface depth','m')
+         
+         CALL write_history_variable_3d ( DEF_hist_vars%dzlak, &
+            a_dzlak, file_hist, 'f_dzlak', itime_in_file, 'lake', 1, nl_lake, sumarea, filter, &
+            'Lake layer thickness','m')
+         
+         CALL write_history_variable_3d ( DEF_hist_vars%ziarea, &
+            a_ziarea, file_hist, 'f_ziarea', itime_in_file, 'lakeI', 1, nl_lake+1, sumarea, filter, &
+            'Lake layer interface area','m2')
+         
+         CALL write_history_variable_2d ( DEF_hist_vars%z0h, &
+            a_z0h, file_hist, 'f_z0h', itime_in_file, sumarea, filter, &
+            'Roughness length for sensible heat','m')
+
+         CALL write_history_variable_2d ( DEF_hist_vars%z0q, &
+            a_z0q, file_hist, 'f_z0q', itime_in_file, sumarea, filter, &
+            'Roughness length for latent heat','m')
+         
+         CALL write_history_variable_2d ( DEF_hist_vars%felak, &
+            a_felak, file_hist, 'f_felak', itime_in_file, sumarea, filter, &
+            'Lake fetch length','m')
+         
+         CALL write_history_variable_2d ( DEF_hist_vars%gamma, &
+            a_gamma, file_hist, 'f_gamma', itime_in_file, sumarea, filter, &
+            'Mixing enhancement factor','m')
+         
+         CALL write_history_variable_2d ( DEF_hist_vars%etal, &
+            a_etal, file_hist, 'f_etal', itime_in_file, sumarea, filter, &
+            'Lake extinction coefficient','1/m')
+
+         CALL write_history_variable_2d ( DEF_hist_vars%btpri, &
+            a_btpri, file_hist, 'f_btpri', itime_in_file, sumarea, filter, &
+            'Beta prime in Monin-Obukhov theory','1')
+
+         CALL write_history_variable_2d ( DEF_hist_vars%frlak, &
+            a_frlak, file_hist, 'f_frlak', itime_in_file, sumarea, filter, &
+            'Lake fraction','1')
+
+         CALL write_history_variable_2d ( DEF_hist_vars%tmsno, &
+            a_tmsno, file_hist, 'f_tmsno', itime_in_file, sumarea, filter, &
+            'Mean temperature of the snow column','K')
+
+         CALL write_history_variable_2d ( DEF_hist_vars%tmice, &
+            a_tmice, file_hist, 'f_tmice', itime_in_file, sumarea, filter, &
+            'Mean temperature of the ice column','K')
+
+         CALL write_history_variable_2d ( DEF_hist_vars%tmmnw, &
+            a_tmmnw, file_hist, 'f_tmmnw', itime_in_file, sumarea, filter, &
+            '!Mean temperature of the water column','K')
+
+         CALL write_history_variable_2d ( DEF_hist_vars%tmwml, &
+            a_tmwml, file_hist, 'f_tmwml', itime_in_file, sumarea, filter, &
+            'Mixed-layer temperature','K')
+         
+         CALL write_history_variable_2d ( DEF_hist_vars%tmbot, &
+            a_tmbot, file_hist, 'f_tmbot', itime_in_file, sumarea, filter, &
+            'Temperature at the water-bottom sediment interface','K')
+         
+         CALL write_history_variable_2d ( DEF_hist_vars%tmups, &
+            a_tmups, file_hist, 'f_tmups', itime_in_file, sumarea, filter, &
+            'Temperature at the bottom of the upper layer of the sediments','K')
+
+         CALL write_history_variable_2d ( DEF_hist_vars%mldp, &
+            a_mldp, file_hist, 'f_mldp', itime_in_file, sumarea, filter, &
+            'Mixed layer depth','m')
+         
+         CALL write_history_variable_2d ( DEF_hist_vars%upsdp, &
+            a_upsdp, file_hist, 'f_upsdp', itime_in_file, sumarea, filter, &
+            'Bottom of the upper layer of the sediments','m')
+         
+         CALL write_history_variable_2d ( DEF_hist_vars%icedp, &
+            a_icedp, file_hist, 'f_icedp', itime_in_file, sumarea, filter, &
+            'Mean temperature of the lake','K')
+         
+         CALL write_history_variable_2d ( DEF_hist_vars%bicedp, & 
+            a_bicedp, file_hist, 'f_bicedp', itime_in_file, sumarea, filter, &
+            'black ice depth','m')
+         
+         CALL write_history_variable_2d ( DEF_hist_vars%wicedp, &
+            a_wicedp, file_hist, 'f_wicedp', itime_in_file, sumarea, filter, &
+            'white ice depth','m')
+
+         CALL write_history_variable_2d ( DEF_hist_vars%CTfrac, &
+            a_CTfrac, file_hist, 'f_CTfrac', itime_in_file, sumarea, filter, &
+            'Shape factor (thermocline)','-')
+
+         CALL write_history_variable_2d ( DEF_hist_vars%rhosnw, &
+            a_rhosnw, file_hist, 'f_rhosnw', itime_in_file, sumarea, filter, &
+            'snow density','kg/m3')
+         
+         CALL write_history_variable_3d ( DEF_hist_vars%uwatv, &
+            a_uwatv, file_hist, 'f_uwatv', itime_in_file, 'lake', 1, nl_lake, sumarea, filter, &
+            'Water velocity in x-direction','m/s')
+
+         CALL write_history_variable_3d ( DEF_hist_vars%vwatv, &
+            a_vwatv, file_hist, 'f_vwatv', itime_in_file, 'lake', 1, nl_lake, sumarea, filter, &
+            'Water velocity in y-direction','m/s')
+
+         CALL write_history_variable_3d ( DEF_hist_vars%lksal, &
+            a_lksal, file_hist, 'f_lksal', itime_in_file, 'lake', 1, nl_lake, sumarea, filter, &
+            'Salinity','‰')
+
+         CALL write_history_variable_3d ( DEF_hist_vars%tke, &
+            a_tke, file_hist, 'f_tke', itime_in_file, 'lakeI', 1, nl_lake+1, sumarea, filter, &
+            'Turbulent kinetic energy','J/kg')
+         
+         CALL write_history_variable_2d ( DEF_hist_vars%etke, &
+            a_etke, file_hist, 'f_etke', itime_in_file, sumarea, filter, &
+            'Seiche energy','J')
+
+         CALL write_history_variable_3d ( DEF_hist_vars%eps, &
+            a_eps, file_hist, 'f_eps', itime_in_file, 'lakeI', 1, nl_lake+1, sumarea, filter, &
+            'TKE dissipation rate','W/kg')
+         
+         CALL write_history_variable_3d ( DEF_hist_vars%num, &
+            a_num, file_hist, 'f_num', itime_in_file, 'lakeI', 1, nl_lake+1, sumarea, filter, &
+            'Turbulent viscosity (momentum)','m2/s')
+
+         CALL write_history_variable_3d ( DEF_hist_vars%nuh, &
+            a_nuh, file_hist, 'f_nuh', itime_in_file, 'lakeI', 1, nl_lake+1, sumarea, filter, &
+            'Turbulent diffusivity (heat)','m2/s')
+         
+         CALL write_history_variable_3d ( DEF_hist_vars%lkrho, &
+            a_lkrho, file_hist, 'f_lkrho', itime_in_file, 'lake', 1, nl_lake, sumarea, filter, &
+            'Density of water','kg/m3')
+
+#endif
+
+
          ! --------------------------------
          ! Retrieve through averaged fluxes
          ! --------------------------------
