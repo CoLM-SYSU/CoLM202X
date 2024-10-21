@@ -228,6 +228,7 @@ MODULE MOD_Namelist
    logical :: DEF_URBAN_TREE        = .true.
    logical :: DEF_URBAN_WATER       = .true.
    logical :: DEF_URBAN_LUCY        = .true.
+   logical :: DEF_USE_CANYON_HWR    = .true.
 
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ! ----- Part 11: parameteration schemes -----
@@ -877,6 +878,7 @@ CONTAINS
       DEF_URBAN_TREE,                         & !add by hua yuan, modeling urban tree or not
       DEF_URBAN_WATER,                        & !add by hua yuan, modeling urban water or not
       DEF_URBAN_LUCY,                         &
+      DEF_USE_CANYON_HWR,                     &
 
       DEF_USE_SOILPAR_UPS_FIT,                &
       DEF_THERMAL_CONDUCTIVITY_SCHEME,        &
@@ -1349,6 +1351,7 @@ CONTAINS
       CALL mpi_bcast (DEF_URBAN_TREE                         ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_URBAN_WATER                        ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_URBAN_LUCY                         ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_USE_CANYON_HWR                     ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
 
       ! 06/2023, added by weinan
       CALL mpi_bcast (DEF_USE_SOILPAR_UPS_FIT                ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)

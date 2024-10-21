@@ -62,7 +62,7 @@
            patchlonr    ,patchlatr    ,patchclass   ,patchtype    ,&
 
          ! urban and lake depth
-           froof        ,flake        ,hroof        ,hwr          ,&
+           froof        ,flake        ,hroof        ,hlr          ,&
            fgper        ,em_roof      ,em_wall      ,em_gimp      ,&
            em_gper      ,cv_roof      ,cv_wall      ,cv_gimp      ,&
            tk_roof      ,tk_wall      ,tk_gimp      ,z_roof       ,&
@@ -230,7 +230,7 @@
         fgper                 ,&! impervious fraction to ground area [-]
         flake                 ,&! lake fraction to ground area [-]
         hroof                 ,&! average building height [m]
-        hwr                   ,&! average building height to their distance [-]
+        hlr                   ,&! average building height to their side length [-]
         em_roof               ,&! emissivity of roof [-]
         em_wall               ,&! emissivity of walls [-]
         em_gimp               ,&! emissivity of impervious [-]
@@ -256,8 +256,8 @@
         psi0        (nl_soil) ,&! minimum soil suction [mm]
         bsw         (nl_soil) ,&! clapp and hornbereger "b" parameter [-]
         theta_r     (nl_soil) ,&! residual water content (cm3/cm3)
-        fsatmax               ,&! maximum saturated area fraction [-] 
-        fsatdcf               ,&! decay factor in calucation of saturated area fraction [1/m] 
+        fsatmax               ,&! maximum saturated area fraction [-]
+        fsatdcf               ,&! decay factor in calucation of saturated area fraction [1/m]
 
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
         alpha_vgm (1:nl_soil) ,&! the parameter corresponding approximately to the inverse of the air-entry value
@@ -969,7 +969,7 @@
          vehicle            ,weh_prof           ,wdh_prof           ,idate              ,&
          patchlonr                                                                      ,&
          ! GROUND PARAMETERS
-         froof              ,flake              ,hroof              ,hwr                ,&
+         froof              ,flake              ,hroof              ,hlr                ,&
          fgper              ,pondmx             ,em_roof            ,em_wall            ,&
          em_gimp            ,em_gper            ,trsmx0             ,zlnd               ,&
          zsno               ,capr               ,cnfac              ,vf_quartz          ,&
@@ -1295,7 +1295,7 @@
       ! we supposed call it every time-step, because
       ! other vegeation related parameters are needed to create
 
-      CALL alburban (ipatch,froof,fgper,flake,hwr,hroof,&
+      CALL alburban (ipatch,froof,fgper,flake,hlr,hroof,&
                      alb_roof,alb_wall,alb_gimp,alb_gper,&
                      rho,tau,fveg,(htop+hbot)/2.,lai,sai,fwet_snow,coszen,fwsun,tlake,&
                      fsno_roof,fsno_gimp,fsno_gper,fsno_lake,&

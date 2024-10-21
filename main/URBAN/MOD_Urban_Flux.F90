@@ -87,7 +87,7 @@ CONTAINS
          qm             ,psrf           ,rhoair         ,Fhac           ,&
          Fwst           ,Fach           ,vehc           ,meta           ,&
          ! Urban parameters
-         hroof          ,hwr            ,nurb           ,fcover         ,&
+         hroof          ,hlr            ,nurb           ,fcover         ,&
          ! Status of surface
          z0h_g          ,obug           ,ustarg         ,zlnd           ,&
          zsno           ,fsno_roof      ,fsno_gimp      ,fsno_gper      ,&
@@ -148,7 +148,7 @@ CONTAINS
 
    real(r8), intent(in) :: &
         hroof,        &! average building height [m]
-        hwr,          &! average building height to their distance [-]
+        hlr,          &! average building height to their side length [-]
         fcover(0:4)    ! coverage of aboveground urban components [-]
 
    real(r8), intent(in) :: &
@@ -283,7 +283,7 @@ CONTAINS
         fg,           &! ground fractional cover
         fgimp,        &! weight of impervious ground
         fgper,        &! weight of pervious ground
-        hlr,          &! average building height to their length of edge [-]
+        hwr,          &! average building height to their distance [-]
         sqrtdragc,    &! sqrt(drag coefficient)
         lm,           &! mix length within canopy
         fai,          &! frontal area index
@@ -355,7 +355,8 @@ CONTAINS
       fg     = 1 - fcover(0)
       fgimp  = fcover(3)/fg
       fgper  = fcover(4)/fg
-      hlr    = hwr*(1-sqrt(fcover(0)))/sqrt(fcover(0))
+      !hlr   = hwr*(1-sqrt(fcover(0)))/sqrt(fcover(0))
+      hwr    = hlr*sqrt(fcover(0))/(1-sqrt(fcover(0)))
       canlev = (/3, 2, 2/)
       numlay = 2
 
@@ -842,7 +843,7 @@ CONTAINS
          rstfac         ,Fhac           ,Fwst           ,Fach           ,&
          vehc           ,meta                                           ,&
          ! Urban and vegetation parameters
-         hroof          ,hwr            ,nurb           ,fcover         ,&
+         hroof          ,hlr            ,nurb           ,fcover         ,&
          ewall          ,egimp          ,egper          ,ev             ,&
          htop           ,hbot           ,lai            ,sai            ,&
          sqrtdi         ,effcon         ,vmax25         ,slti           ,&
@@ -929,7 +930,7 @@ CONTAINS
 
    real(r8), intent(in) :: &
         hroof,        &! average building height [m]
-        hwr,          &! average building height to their distance [-]
+        hlr,          &! average building height to their side length [-]
         fcover(0:5)    ! coverage of aboveground urban components [-]
 
    real(r8), intent(in) :: &
@@ -1171,7 +1172,7 @@ CONTAINS
         fg,           &! ground fractional cover
         fgimp,        &! weight of impervious ground
         fgper,        &! weight of pervious ground
-        hlr,          &! average building height to their length of edge [-]
+        hwr,          &! average building height to their distance [-]
         sqrtdragc,    &! sqrt(drag coefficient)
         lm,           &! mix length within canopy
         fai,          &! frontal area index for urban
@@ -1299,7 +1300,8 @@ CONTAINS
       fc(3)  = fcover(5)
       fgimp  = fcover(3)/fg
       fgper  = fcover(4)/fg
-      hlr    = hwr*(1-sqrt(fcover(0)))/sqrt(fcover(0))
+      !hlr   = hwr*(1-sqrt(fcover(0)))/sqrt(fcover(0))
+      hwr    = hlr*sqrt(fcover(0))/(1-sqrt(fcover(0)))
       canlev = (/3, 2, 2, 1/)
 
       B_5    = B(5)
