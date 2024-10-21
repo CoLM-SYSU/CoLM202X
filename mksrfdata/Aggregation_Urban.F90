@@ -623,8 +623,8 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
       ! ******* LAI, SAI *******
 #ifndef LULCC
       IF (DEF_LAI_CHANGE_YEARLY) THEN
-         start_year = DEF_simulation_time%start_year
-         end_year   = DEF_simulation_time%end_year
+         start_year = max(DEF_LAI_START_YEAR, DEF_simulation_time%start_year)
+         end_year   = min(DEF_LAI_END_YEAR,   DEF_simulation_time%end_year  )
       ELSE
          start_year = lc_year
          end_year   = lc_year
