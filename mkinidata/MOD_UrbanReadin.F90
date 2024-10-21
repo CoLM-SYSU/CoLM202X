@@ -333,7 +333,7 @@ ENDIF
 
             ! IF the parameter read is canyon H/W ratio, convert it to H/R ratio
             IF (DEF_USE_CANYON_HWR) THEN
-               hlr(u) = hrl(u)*(1-sqrt(froof(u)))/sqrt(froof(u))
+               hlr(u) = hlr(u)*(1-sqrt(froof(u)))/sqrt(froof(u))
             ENDIF
 
          ENDDO
