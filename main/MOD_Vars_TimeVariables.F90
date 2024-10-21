@@ -473,6 +473,45 @@ MODULE MOD_Vars_TimeVariables
    real(r8), allocatable :: lake_icefrac(:,:) ! lake mass fraction of lake layer that is frozen
    real(r8), allocatable :: savedtke1     (:) ! top level eddy conductivity (W/m K)
 
+#ifdef NEW_LAKE
+   real(r8), allocatable :: dplak          (:)  !lake depth [m]
+   real(r8), allocatable :: zlake        (:,:)  !Lake layer node depth [m]
+   real(r8), allocatable :: zilak        (:,:)  !Lake layer interface depth [m]
+   real(r8), allocatable :: dzlak        (:,:)  !Lake layer thickness [m]
+   real(r8), allocatable :: ziarea       (:,:)  !Lake layerinterface area [m2], only for Simstrat
+!    real(r8), allocatable :: z0m            (:)  !Roughness length for momentum [m]
+   real(r8), allocatable :: z0h            (:)  !Roughness length for sensible heat  [m]
+   real(r8), allocatable :: z0q            (:)  !Roughness length for latent heat [m]
+   real(r8), allocatable :: felak          (:)  !Lake fetch length [m]
+   real(r8), allocatable :: gamma          (:)  !Mixing enhancement factor, the meaning is different for each model [-]
+   real(r8), allocatable :: etal           (:)  !Lake extinction coefficient [1/m]
+   real(r8), allocatable :: btpri          (:)  !Beta prime in Monin-Obukhov theory [-]
+   real(r8), allocatable :: frlak          (:)  !Lake fraction [-] 
+   real(r8), allocatable :: tmsno          (:)  !Mean snow temperature, only for FLake [K], only for FLake
+   real(r8), allocatable :: tmice          (:)  !Mean ice temperature, only for FLake [K], only for FLake
+   real(r8), allocatable :: tmmnw          (:)  !Mean temperature of the water column [K]
+   real(r8), allocatable :: tmwml          (:)  !Mixed-layer temperature [K], only for FLake
+   real(r8), allocatable :: tmbot          (:)  !Temperature at the water-bottom sediment interface [K], only for FLake
+   real(r8), allocatable :: tmups          (:)  !Temperature at the bottom of the upper layer of the sediments [K], only for FLake
+   real(r8), allocatable :: mldp           (:)  !Mixed layer depth [m], only for FLake
+   real(r8), allocatable :: upsdp          (:)  !Bottom of the upper layer of the sediments [m], only for FLake
+   real(r8), allocatable :: icedp          (:)  !Mean temperature of the lake [K], for FLake and Simstrat
+   real(r8), allocatable :: bicedp         (:)  !black ice depth [m], only for Simstrat
+   real(r8), allocatable :: wicedp         (:)  !white ice depth [m], only for Simstrat
+   real(r8), allocatable :: CTfrac         (:)  !Shape factor (thermocline)
+   real(r8), allocatable :: rhosnw         (:)  !snow density [kg/m3], only for Simstrat
+   real(r8), allocatable :: uwatv        (:,:)  !Water velocity in x-direction [m/s], only for Simstrat
+   real(r8), allocatable :: vwatv        (:,:)  !Water velocity in y-direction [m/s], only for Simstrat
+   real(r8), allocatable :: lksal        (:,:)  !Salinity [‰], only for Simstrat
+   real(r8), allocatable :: tke          (:,:)  !Turbulent kinetic energy (TKE) [J/kg], only for Simstrat
+   real(r8), allocatable :: etke           (:)  !Seiche energy [J], only for Simstrat
+   real(r8), allocatable :: eps          (:,:)  !TKE dissipation rate [W/kg], only for Simstrat
+   real(r8), allocatable :: num          (:,:)  !Turbulent viscosity (momentum) [m2/s], only for Simstrat
+   real(r8), allocatable :: nuh          (:,:)  !Turbulent diffusivity (heat) [m2/s], only for Simstrat
+   real(r8), allocatable :: lkrho       (:,:)  !Density of water [kg/m3]
+#endif
+
+
    real(r8), allocatable :: snw_rds     (:,:) ! effective grain radius (col,lyr) [microns, m-6]
    real(r8), allocatable :: mss_bcpho   (:,:) ! mass of hydrophobic BC in snow  (col,lyr) [kg]
    real(r8), allocatable :: mss_bcphi   (:,:) ! mass of hydrophillic BC in snow (col,lyr) [kg]
@@ -624,6 +663,43 @@ CONTAINS
             allocate (t_lake              (nl_lake,numpatch)); t_lake      (:,:) = spval
             allocate (lake_icefrac        (nl_lake,numpatch)); lake_icefrac(:,:) = spval
             allocate (savedtke1                   (numpatch)); savedtke1     (:) = spval
+
+#ifdef NEW_LAKE
+            allocate (dplak                       (numpatch)); dplak         (:) = spval 
+            allocate (zlake               (nl_lake,numpatch)); zlake       (:,:) = spval 
+            allocate (zilak             (nl_lake+1,numpatch)); zilak       (:,:) = spval 
+            allocate (dzlak               (nl_lake,numpatch)); dzlak       (:,:) = spval
+            allocate (ziarea            (nl_lake+1,numpatch)); ziarea      (:,:) = spval 
+            allocate (z0h                         (numpatch)); z0h           (:) = spval 
+            allocate (z0q                         (numpatch)); z0q           (:) = spval 
+            allocate (felak                       (numpatch)); felak         (:) = spval 
+            allocate (gamma                       (numpatch)); gamma         (:) = spval 
+            allocate (etal                        (numpatch)); etal          (:) = spval 
+            allocate (btpri                       (numpatch)); btpri         (:) = spval 
+            allocate (frlak                       (numpatch)); frlak         (:) = spval 
+            allocate (tmsno                       (numpatch)); tmsno         (:) = spval 
+            allocate (tmice                       (numpatch)); tmice         (:) = spval 
+            allocate (tmmnw                       (numpatch)); tmmnw         (:) = spval 
+            allocate (tmwml                       (numpatch)); tmwml         (:) = spval 
+            allocate (tmbot                       (numpatch)); tmbot         (:) = spval 
+            allocate (tmups                       (numpatch)); tmups         (:) = spval 
+            allocate (mldp                        (numpatch)); mldp          (:) = spval 
+            allocate (upsdp                       (numpatch)); upsdp         (:) = spval 
+            allocate (icedp                       (numpatch)); icedp         (:) = spval 
+            allocate (bicedp                      (numpatch)); bicedp        (:) = spval 
+            allocate (wicedp                      (numpatch)); wicedp        (:) = spval 
+            allocate (CTfrac                      (numpatch)); CTfrac        (:) = spval
+            allocate (rhosnw                      (numpatch)); rhosnw        (:) = spval 
+            allocate (uwatv               (nl_lake,numpatch)); uwatv       (:,:) = spval 
+            allocate (vwatv               (nl_lake,numpatch)); vwatv       (:,:) = spval 
+            allocate (lksal               (nl_lake,numpatch)); lksal       (:,:) = spval 
+            allocate (tke               (nl_lake+1,numpatch)); tke         (:,:) = spval 
+            allocate (etke                        (numpatch)); etke          (:) = spval 
+            allocate (eps               (nl_lake+1,numpatch)); eps         (:,:) = spval 
+            allocate (num               (nl_lake+1,numpatch)); num         (:,:) = spval 
+            allocate (nuh               (nl_lake+1,numpatch)); nuh         (:,:) = spval 
+            allocate (lkrho              (nl_lake,numpatch)); lkrho      (:,:) = spval 
+#endif
 
             allocate (snw_rds          (maxsnl+1:0,numpatch)); snw_rds     (:,:) = spval
             allocate (mss_bcpho        (maxsnl+1:0,numpatch)); mss_bcpho   (:,:) = spval
@@ -783,6 +859,43 @@ CONTAINS
             deallocate (lake_icefrac           ) ! new lake scheme
             deallocate (savedtke1              ) ! new lake scheme
 
+#ifdef NEW_LAKE
+            deallocate (dplak                  )  
+            deallocate (zlake                  )  
+            deallocate (zilak                  )  
+            deallocate (dzlak                  ) 
+            deallocate (ziarea                 )  
+            deallocate (z0h                    )  
+            deallocate (z0q                    )  
+            deallocate (felak                  )  
+            deallocate (gamma                  )  
+            deallocate (etal                   )  
+            deallocate (btpri                  )  
+            deallocate (frlak                  )  
+            deallocate (tmsno                  )  
+            deallocate (tmice                  )  
+            deallocate (tmmnw                  )  
+            deallocate (tmwml                  )  
+            deallocate (tmbot                  )  
+            deallocate (tmups                  )  
+            deallocate (mldp                   )  
+            deallocate (upsdp                  )  
+            deallocate (icedp                  )  
+            deallocate (bicedp                 )  
+            deallocate (wicedp                 )
+            deallocate (CTfrac                 )  
+            deallocate (rhosnw                 )  
+            deallocate (uwatv                  )  
+            deallocate (vwatv                  )  
+            deallocate (lksal                  )  
+            deallocate (tke                    )  
+            deallocate (etke                   )  
+            deallocate (eps                    )  
+            deallocate (num                    )  
+            deallocate (nuh                    )  
+            deallocate (lkrho                 )  
+#endif
+
             deallocate (snw_rds                )
             deallocate (mss_bcpho              )
             deallocate (mss_bcphi              )
@@ -940,6 +1053,9 @@ CONTAINS
       CALL ncio_define_dimension_vector (file_restart, landpatch, 'soilsnow', nl_soil-maxsnl)
       CALL ncio_define_dimension_vector (file_restart, landpatch, 'soil',     nl_soil)
       CALL ncio_define_dimension_vector (file_restart, landpatch, 'lake',     nl_lake)
+#ifdef NEW_LAKE
+      CALL ncio_define_dimension_vector (file_restart, landpatch, 'lakeI',    nl_lake+1     )
+#endif
 
 IF(DEF_USE_PLANTHYDRAULICS)THEN
       CALL ncio_define_dimension_vector (file_restart, landpatch, 'vegnodes', nvegwcs)
@@ -1004,6 +1120,44 @@ ENDIF
       CALL ncio_write_vector (file_restart, 't_lake  '   , 'lake', nl_lake, 'patch', landpatch, t_lake      , compress)
       CALL ncio_write_vector (file_restart, 'lake_icefrc', 'lake', nl_lake, 'patch', landpatch, lake_icefrac, compress)
       CALL ncio_write_vector (file_restart, 'savedtke1  ', 'patch', landpatch, savedtke1   , compress)
+
+#ifdef NEW_LAKE
+      CALL ncio_write_vector (file_restart, 'dplak      ', 'patch', landpatch, dplak, compress) 
+      CALL ncio_write_vector (file_restart, 'zlake      ', 'lake' , nl_lake  , 'patch'  , landpatch, zlake     , compress) 
+      CALL ncio_write_vector (file_restart, 'zilak      ', 'lakeI', nl_lake+1, 'patch'  , landpatch, zilak     , compress) 
+      CALL ncio_write_vector (file_restart, 'dzlak      ', 'lake' , nl_lake  , 'patch'  , landpatch, dzlak     , compress)
+      CALL ncio_write_vector (file_restart, 'ziarea     ', 'lakeI', nl_lake+1, 'patch'  , landpatch, ziarea    , compress) 
+      CALL ncio_write_vector (file_restart, 'z0h        ', 'patch', landpatch, z0h      , compress) 
+      CALL ncio_write_vector (file_restart, 'z0q        ', 'patch', landpatch, z0q      , compress) 
+      CALL ncio_write_vector (file_restart, 'felak      ', 'patch', landpatch, felak    , compress) 
+      CALL ncio_write_vector (file_restart, 'gamma      ', 'patch', landpatch, gamma    , compress) 
+      CALL ncio_write_vector (file_restart, 'etal       ', 'patch', landpatch, etal     , compress) 
+      CALL ncio_write_vector (file_restart, 'btpri      ', 'patch', landpatch, btpri    , compress) 
+      CALL ncio_write_vector (file_restart, 'frlak      ', 'patch', landpatch, frlak    , compress) 
+      CALL ncio_write_vector (file_restart, 'tmsno      ', 'patch', landpatch, tmsno    , compress) 
+      CALL ncio_write_vector (file_restart, 'tmice      ', 'patch', landpatch, tmice    , compress) 
+      CALL ncio_write_vector (file_restart, 'tmmnw      ', 'patch', landpatch, tmmnw    , compress) 
+      CALL ncio_write_vector (file_restart, 'tmwml      ', 'patch', landpatch, tmwml    , compress) 
+      CALL ncio_write_vector (file_restart, 'tmbot      ', 'patch', landpatch, tmbot    , compress) 
+      CALL ncio_write_vector (file_restart, 'tmups      ', 'patch', landpatch, tmups    , compress) 
+      CALL ncio_write_vector (file_restart, 'mldp       ', 'patch', landpatch, mldp     , compress) 
+      CALL ncio_write_vector (file_restart, 'upsdp      ', 'patch', landpatch, upsdp    , compress) 
+      CALL ncio_write_vector (file_restart, 'icedp      ', 'patch', landpatch, icedp    , compress) 
+      CALL ncio_write_vector (file_restart, 'bicedp     ', 'patch', landpatch, bicedp   , compress) 
+      CALL ncio_write_vector (file_restart, 'wicedp     ', 'patch', landpatch, wicedp   , compress)
+      CALL ncio_write_vector (file_restart, 'CTfrac     ', 'patch', landpatch, CTfrac   , compress) 
+      CALL ncio_write_vector (file_restart, 'rhosnw     ', 'patch', landpatch, rhosnw   , compress) 
+      CALL ncio_write_vector (file_restart, 'uwatv      ', 'lake' , nl_lake  , 'patch'  , landpatch, uwatv     , compress) 
+      CALL ncio_write_vector (file_restart, 'vwatv      ', 'lake' , nl_lake  , 'patch'  , landpatch, vwatv     , compress) 
+      CALL ncio_write_vector (file_restart, 'lksal      ', 'lake' , nl_lake  , 'patch'  , landpatch, lksal     , compress) 
+      CALL ncio_write_vector (file_restart, 'tke        ', 'lakeI', nl_lake+1, 'patch'  , landpatch, tke       , compress) 
+      CALL ncio_write_vector (file_restart, 'etke       ', 'patch', landpatch, etke     , compress) 
+      CALL ncio_write_vector (file_restart, 'eps        ', 'lakeI', nl_lake+1, 'patch'  , landpatch, eps       , compress) 
+      CALL ncio_write_vector (file_restart, 'num        ', 'lakeI', nl_lake+1, 'patch'  , landpatch, num       , compress) 
+      CALL ncio_write_vector (file_restart, 'nuh        ', 'lakeI', nl_lake+1, 'patch'  , landpatch, nuh       , compress) 
+      CALL ncio_write_vector (file_restart, 'lkrho     ', 'lake' , nl_lake  , 'patch'  , landpatch, lkrho    , compress) 
+#endif
+
       CALL ncio_write_vector (file_restart, 'snw_rds  ', 'snow', -maxsnl, 'patch', landpatch, snw_rds  , compress)
       CALL ncio_write_vector (file_restart, 'mss_bcpho', 'snow', -maxsnl, 'patch', landpatch, mss_bcpho, compress)
       CALL ncio_write_vector (file_restart, 'mss_bcphi', 'snow', -maxsnl, 'patch', landpatch, mss_bcphi, compress)
@@ -1175,6 +1329,44 @@ ENDIF
       CALL ncio_read_vector (file_restart, 'lake_icefrc', nl_lake, landpatch, lake_icefrac)
       CALL ncio_read_vector (file_restart, 'savedtke1', landpatch, savedtke1)
 
+#ifdef NEW_LAKE
+      CALL ncio_read_vector (file_restart, 'dplak    '  ,            landpatch, dplak     )   !lake depth
+      CALL ncio_read_vector (file_restart, 'zlake    '  , nl_lake  , landpatch, zlake     )   !Lake layer node depth
+      CALL ncio_read_vector (file_restart, 'zilak    '  , nl_lake+1, landpatch, zilak     )   !Lake layer interface depth
+      CALL ncio_read_vector (file_restart, 'dzlak    '  , nl_lake  , landpatch, dzlak     )   !Lake layer thickness
+      CALL ncio_read_vector (file_restart, 'ziarea   '  , nl_lake+1, landpatch, ziarea    )   !Lake layerinterface area [m2], only for Simstrat
+!    CALL ncio_read_vector (file_restart, 'z0m       '  ,            landpatch, z0m       )   !Roughness length for momentum [m]
+      CALL ncio_read_vector (file_restart, 'z0h      '  ,            landpatch, z0h       )   !Roughness length for sensible heat  [m]
+      CALL ncio_read_vector (file_restart, 'z0q      '  ,            landpatch, z0q       )   !Roughness length for latent heat [m]
+      CALL ncio_read_vector (file_restart, 'felak    '  ,            landpatch, felak     )   !Lake fetch length
+      CALL ncio_read_vector (file_restart, 'gamma    '  ,            landpatch, gamma     )   !Mixing enhancement factor, the meaning is different for each model [-]
+      CALL ncio_read_vector (file_restart, 'etal     '  ,            landpatch, etal      )   !Lake extinction coefficient [1/m]
+      CALL ncio_read_vector (file_restart, 'btpri    '  ,            landpatch, btpri     )   !Beta prime in Monin-Obukhov theory
+      CALL ncio_read_vector (file_restart, 'frlak    '  ,            landpatch, frlak     )   !Lake fraction [-] 
+      CALL ncio_read_vector (file_restart, 'tmsno    '  ,            landpatch, tmsno     )   !Mean snow temperature, only for FLake [K], only for FLake
+      CALL ncio_read_vector (file_restart, 'tmice    '  ,            landpatch, tmice     )   !Mean ice temperature, only for FLake [K], only for FLake
+      CALL ncio_read_vector (file_restart, 'tmmnw    '  ,            landpatch, tmmnw     )   !Mean temperature of the water column [K]
+      CALL ncio_read_vector (file_restart, 'tmwml    '  ,            landpatch, tmwml     )   !Mixed-layer temperature [K], only for FLake
+      CALL ncio_read_vector (file_restart, 'tmbot    '  ,            landpatch, tmbot     )   !Temperature at the water-bottom sediment interface [K], only for FLake
+      CALL ncio_read_vector (file_restart, 'tmups    '  ,            landpatch, tmups     )   !Temperature at the bottom of the upper layer of the sediments [K], only for FLake
+      CALL ncio_read_vector (file_restart, 'mldp     '  ,            landpatch, mldp      )   !Mixed layer depth [m], only for FLake
+      CALL ncio_read_vector (file_restart, 'upsdp    '  ,            landpatch, upsdp     )   !Bottom of the upper layer of the sediments [m], only for FLake
+      CALL ncio_read_vector (file_restart, 'icedp    '  ,            landpatch, icedp     )   !Mean temperature of the lake [K], for FLake and Simstrat
+      CALL ncio_read_vector (file_restart, 'bicedp   '  ,            landpatch, bicedp    )   !black ice depth (m), only for Simstrat
+      CALL ncio_read_vector (file_restart, 'wicedp   '  ,            landpatch, wicedp    )   !white ice depth (m), only for Simstrat
+      CALL ncio_read_vector (file_restart, 'CTfrac   '  ,            landpatch, CTfrac    )   !Shape factor (thermocline)
+      CALL ncio_read_vector (file_restart, 'rhosnw   '  ,            landpatch, rhosnw    )   !snow density (kg/m3), only for Simstrat
+      CALL ncio_read_vector (file_restart, 'uwatv    '  , nl_lake  , landpatch, uwatv     )   !Water velocity in x-direction [m/s], only for Simstrat
+      CALL ncio_read_vector (file_restart, 'vwatv    '  , nl_lake  , landpatch, vwatv     )   !Water velocity in y-direction [m/s], only for Simstrat
+      CALL ncio_read_vector (file_restart, 'lksal    '  , nl_lake  , landpatch, lksal     )   !Salinity [‰], only for Simstrat
+      CALL ncio_read_vector (file_restart, 'tke      '  , nl_lake+1, landpatch, tke       )   !Turbulent kinetic energy (TKE) [J/kg], only for Simstrat
+      CALL ncio_read_vector (file_restart, 'etke     '  ,            landpatch, etke      )   !Seiche energy [J], only for Simstrat
+      CALL ncio_read_vector (file_restart, 'eps      '  , nl_lake+1, landpatch, eps       )   !TKE dissipation rate [W/kg], only for Simstrat
+      CALL ncio_read_vector (file_restart, 'num      '  , nl_lake+1, landpatch, num       )   !Turbulent viscosity (momentum), only for Simstrat
+      CALL ncio_read_vector (file_restart, 'nuh      '  , nl_lake+1, landpatch, nuh       )   !Turbulent diffusivity (heat), only for Simstrat
+      CALL ncio_read_vector (file_restart, 'lkrho   '  , nl_lake  , landpatch, lkrho    )   !Density of water [kg/m3]
+#endif
+
       CALL ncio_read_vector (file_restart, 'snw_rds  ', -maxsnl, landpatch, snw_rds  )
       CALL ncio_read_vector (file_restart, 'mss_bcpho', -maxsnl, landpatch, mss_bcpho)
       CALL ncio_read_vector (file_restart, 'mss_bcphi', -maxsnl, landpatch, mss_bcphi)
@@ -1312,6 +1504,45 @@ ENDIF
       CALL check_vector_data ('t_lake      [K]    ', t_lake      )!
       CALL check_vector_data ('lake_icefrc [-]    ', lake_icefrac)!
       CALL check_vector_data ('savedtke1   [W/m K]', savedtke1   )!
+
+#ifdef NEW_LAKE
+      CALL check_vector_data ('dplak       [m]    ', dplak      ) ! lake depth
+      CALL check_vector_data ('zlake       [m]    ', zlake      ) ! Lake layer node depth
+      CALL check_vector_data ('zilak       [m]    ', zilak      ) ! Lake layer interface depth
+      CALL check_vector_data ('dzlak       [m]    ', dzlak      ) ! Lake layer thickness
+      CALL check_vector_data ('ziarea      [m2]   ', ziarea     ) ! Lake layerinterface area [m2], only for Simstrat
+!    CALL check_vector_data ('z0m          [m]    ', z0m        ) ! Roughness length for momentum [m]
+      CALL check_vector_data ('z0h         [m]    ', z0h        ) ! Roughness length for sensible heat  [m]
+      CALL check_vector_data ('z0q         [m]    ', z0q        ) ! Roughness length for latent heat [m]
+      CALL check_vector_data ('felak       [m]    ', felak      ) ! Lake fetch length
+      CALL check_vector_data ('gamma       [-]    ', gamma      ) ! Mixing enhancement factor, the meaning is different for each model [-]
+      CALL check_vector_data ('etal        [1/m]  ', etal       ) ! Lake extinction coefficient [1/m]
+      CALL check_vector_data ('btpri       [-]    ', btpri      ) ! Beta prime in Monin-Obukhov theory
+      CALL check_vector_data ('frlak       [-]    ', frlak      ) ! Lake fraction [-] 
+      CALL check_vector_data ('tmsno       [K]    ', tmsno      ) ! Mean snow temperature, only for FLake [K], only for FLake
+      CALL check_vector_data ('tmice       [K]    ', tmice      ) ! Mean ice temperature, only for FLake [K], only for FLake
+      CALL check_vector_data ('tmmnw       [K]    ', tmmnw      ) ! Mean temperature of the water column [K]
+      CALL check_vector_data ('tmwml       [K]    ', tmwml      ) ! Mixed-layer temperature [K], only for FLake
+      CALL check_vector_data ('tmbot       [K]    ', tmbot      ) ! Temperature at the water-bottom sediment interface [K], only for FLake
+      CALL check_vector_data ('tmups       [K]    ', tmups      ) ! Temperature at the bottom of the upper layer of the sediments [K], only for FLake
+      CALL check_vector_data ('mldp        [m]    ', mldp       ) ! Mixed layer depth [m], only for FLake
+      CALL check_vector_data ('upsdp       [m]    ', upsdp      ) ! Bottom of the upper layer of the sediments [m], only for FLake
+      CALL check_vector_data ('icedp       [m]    ', icedp      ) ! Mean temperature of the lake [K], for FLake and Simstrat
+      CALL check_vector_data ('bicedp      [m]    ', bicedp     ) ! black ice depth (m), only for Simstrat
+      CALL check_vector_data ('wicedp      [m]    ', wicedp     ) ! white ice depth (m), only for Simstrat
+      CALL check_vector_data ('CTfrac      [-]    ', CTfrac     ) ! Shape factor (thermocline)
+      CALL check_vector_data ('rhosnw      [kg/m3]', rhosnw     ) ! snow density (kg/m3), only for Simstrat
+      CALL check_vector_data ('uwatv       [m/s]  ', uwatv      ) ! Water velocity in x-direction [m/s], only for Simstrat
+      CALL check_vector_data ('vwatv       [m/s]  ', vwatv      ) ! Water velocity in y-direction [m/s], only for Simstrat
+      CALL check_vector_data ('lksal       [‰]    ', lksal      ) ! Salinity [‰], only for Simstrat
+      CALL check_vector_data ('tke         [J/kg] ', tke        ) ! Turbulent kinetic energy (TKE) [J/kg], only for Simstrat
+      CALL check_vector_data ('etke        [J]    ', etke       ) ! Seiche energy [J], only for Simstrat
+      CALL check_vector_data ('eps         [W/kg] ', eps        ) ! TKE dissipation rate [W/kg], only for Simstrat
+      CALL check_vector_data ('num         [m2/s] ', num        ) ! Turbulent viscosity (momentum), only for Simstrat
+      CALL check_vector_data ('nuh         [m2/s] ', nuh        ) ! Turbulent diffusivity (heat), only for Simstrat
+      CALL check_vector_data ('lkrho      [kg/m3]', lkrho     ) ! Density of water [kg/m3]
+#endif
+
       CALL check_vector_data ('z_sno       [m]    ', z_sno )      ! node depth [m]
       CALL check_vector_data ('dz_sno      [m]    ', dz_sno)      ! interface depth [m]
       CALL check_vector_data ('t_soisno    [K]    ', t_soisno   ) ! soil temperature [K]

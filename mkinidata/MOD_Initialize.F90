@@ -80,6 +80,9 @@ CONTAINS
    USE MOD_LakeDepthReadin
    USE MOD_PercentagesPFTReadin
    USE MOD_SoilParametersReadin
+#ifdef NEW_LAKE
+   USE MOD_Lake_Utils, only: LakeIni
+#endif 
 
    IMPLICIT NONE
 
@@ -198,7 +201,7 @@ CONTAINS
    real(r8) :: prms(nprms, 1:nl_soil)
    
    real(r8) :: wdsrfm, depthratio
-   real(r8), dimension(10) :: dzlak = (/0.1, 1., 2., 3., 4., 5., 7., 7., 10.45, 10.45/)  ! m
+   real(r8), dimension(10) :: dzlake = (/0.1, 1., 2., 3., 4., 5., 7., 7., 10.45, 10.45/)  ! m
 
    ! CoLM soil layer thickiness and depths
    real(r8), allocatable :: z_soisno (:,:)
@@ -211,6 +214,11 @@ CONTAINS
 
    integer  :: i,j,ipatch,nsl,hs,he,ps,pe,ivt,m, u  ! indices
    real(r8) :: totalvolume
+
+#ifdef NEW_LAKE
+   integer  :: ipa
+   integer :: scwat
+#endif
 
    integer :: Julian_8day
    integer :: ltyp
@@ -1209,6 +1217,37 @@ CONTAINS
          lake_icefrac(:,:) = 0.
          savedtke1   (:)   = tkwat
 
+#ifdef NEW_LAKE
+         DO i = 1, numpatch
+            IF(patchtype(i) == 4) THEN
+               z0m(i) = DEF_LAKE_Z0M 
+               z0h(i) = DEF_LAKE_Z0H
+               z0q(i) = DEF_LAKE_Z0Q
+               felak(i) = DEF_LAKE_FETCH
+               btpri(i) = DEF_LAKE_BETAPRIME
+               gamma(i) = DEF_LAKE_GAMMA
+               etal(i) = DEF_LAKE_ETA
+               dplak(i) = lakedepth(i)
+               if (dplak(i) < 1.0) dplak(i) = 1.0
+               CALL LakeIni( &
+                           ! "in" arguments
+                           ! -------------------
+                           nlake = nl_lake     ,  nsnow = -maxsnl      ,  nsoil = nl_soil           ,  nlice = nlice        ,& 
+                           dplak = dplak(i)    ,  tskin = 285.         ,&
+                           ! "out" arguments
+                           ! -------------------
+                           zlake = zlake(:,i)  ,  zilak = zilak(:,i)   ,  dzlak = dzlak(:,i)        ,  lktmp = t_lake(:,i)  ,& 
+                           rhosnw = rhosnw(i)  ,  lkrho = lkrho(:,i)   ,  icefr = lake_icefrac(:,i) ,  stke1 = savedtke1(i) ,&
+                           tmsno = tmsno(i)    ,  tmice = tmice(i)     ,  tmmnw = tmmnw(i)          ,  tmwml = tmwml(i)     ,&
+                           tmbot = tmbot(i)    ,  tmups = tmups(i)     ,  mldp = mldp(i)            ,  upsdp = upsdp(i)     ,&
+                           CTfrac = CTfrac(i)  ,  icedp = icedp(i)     ,  bicedp = bicedp(i)        ,  wicedp = wicedp(i)   ,&
+                           uwatv = uwatv(:,i)  ,  vwatv = vwatv(:,i)   ,  lksal = lksal(:,i)        ,  tke = tke(:,i)       ,&
+                           eps = eps(:,i)      ,  etke = etke(i)       ,  num = num(:,i)            ,  nuh = nuh(:,i)       ,&
+                           ziarea = ziarea(:,i))
+            ENDIF
+         ENDDO
+#endif
+
       ENDIF
       ! ------------------------------------------
 
@@ -1300,6 +1339,14 @@ CONTAINS
                ,use_soilini, nl_soil_ini, soil_z, soil_t(1:,i), soil_w(1:,i), use_snowini, snow_d(i) &
                ! for SOIL Water INIT by using water table depth
                ,use_wtd, zwtmm, zc_soimm, zi_soimm, vliq_r, nprms, prms)
+
+#ifdef NEW_LAKE
+            DO ipa = 1, numpatch
+               IF(patchtype(ipa) == 4) THEN
+                  z0m(ipa) = DEF_LAKE_Z0M
+               ENDIF
+            ENDDO
+#endif
 
 #ifdef URBAN_MODEL
             IF (m == URBAN) THEN
@@ -1410,10 +1457,10 @@ CONTAINS
             IF (wdsrf(i) > 0.) THEN
                wdsrfm = wdsrf(i)*1.e-3
                IF(wdsrfm > 1. .and. wdsrfm < 2000.)THEN
-                  depthratio = wdsrfm / sum(dzlak(1:nl_lake))
-                  dz_lake(1,i) = dzlak(1)
-                  dz_lake(2:nl_lake-1,i) = dzlak(2:nl_lake-1)*depthratio
-                  dz_lake(nl_lake,i) = dzlak(nl_lake)*depthratio - (dz_lake(1,i) - dzlak(1)*depthratio)
+                  depthratio = wdsrfm / sum(dzlake(1:nl_lake))
+                  dz_lake(1,i) = dzlake(1)
+                  dz_lake(2:nl_lake-1,i) = dzlake(2:nl_lake-1)*depthratio
+                  dz_lake(nl_lake,i) = dzlake(nl_lake)*depthratio - (dz_lake(1,i) - dzlake(1)*depthratio)
                ELSEIF(wdsrfm > 0. .and. wdsrfm <= 1.)THEN
                   dz_lake(:,i) = wdsrfm / nl_lake
                ENDIF

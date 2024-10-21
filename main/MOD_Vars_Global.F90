@@ -56,6 +56,10 @@ MODULE MOD_Vars_Global
    integer, parameter :: nl_wall   = 10
    integer, parameter :: nvegwcs   = 4  ! number of vegetation water potential nodes
 
+#ifdef NEW_LAKE
+   integer, parameter :: nlice     = 10 !+WMEJ add ice layers, for new lake model, 07/2024
+#endif
+
    ! used for downscaling
    integer, parameter :: num_type    = 4
    integer, parameter :: num_zenith  = 51
