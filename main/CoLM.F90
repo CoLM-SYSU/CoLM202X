@@ -29,6 +29,7 @@ PROGRAM CoLM
    USE MOD_Vars_1DAccFluxes
    USE MOD_Forcing
    USE MOD_Hist
+   USE MOD_CheckEquilibrium
    USE MOD_TimeManager
    USE MOD_RangeCheck
 
@@ -264,7 +265,7 @@ PROGRAM CoLM
       IF (ptstamp <= ststamp) THEN
          spinup_repeat = 0
       ELSE
-         spinup_repeat = max(0, spinup_repeat)
+         spinup_repeat = max(1, spinup_repeat)
       ENDIF
 
       ! ----------------------------------------------------------------------
@@ -294,6 +295,7 @@ PROGRAM CoLM
       CALL hist_init (dir_hist)
       CALL allocate_1D_Fluxes ()
 
+      CALL CheckEqb_init ()
 
 #if(defined CaMa_Flood)
       CALL colm_CaMa_init !initialize CaMa-Flood
@@ -441,6 +443,8 @@ PROGRAM CoLM
          ! Write out the model variables for restart run and the histroy file
          ! ----------------------------------------------------------------------
          CALL hist_out (idate, deltim, itstamp, etstamp, ptstamp, dir_hist, casename)
+         
+         CALL CheckEquilibrium (idate, deltim, itstamp, dir_hist, casename)
 
          ! DO land USE and land cover change simulation
          ! ----------------------------------------------------------------------
@@ -571,6 +575,7 @@ PROGRAM CoLM
 
       CALL forcing_final ()
       CALL hist_final    ()
+      CALL CheckEqb_final()
 
 #ifdef SinglePoint
       CALL single_srfdata_final ()
