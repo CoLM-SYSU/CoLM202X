@@ -58,7 +58,7 @@ MODULE MOD_Namelist
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
    character(len=256) :: SITE_fsrfdata   = 'null'
-   
+
    real(r8) :: SITE_lon_location = 113.5897
    real(r8) :: SITE_lat_location = 22.3507
 
@@ -141,6 +141,7 @@ MODULE MOD_Namelist
    logical :: USE_srfdata_from_3D_gridded_data = .false.
 
    ! ----- land cover data year (for static land cover, i.e. non-LULCC) -----
+   ! NOTE: Please check the LC data year range available
    integer :: DEF_LC_YEAR  = 2005
 
    ! ----- Subgrid scheme -----
@@ -174,6 +175,10 @@ MODULE MOD_Namelist
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ! ----- Part 7: Leaf Area Index -----
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+   ! NOTE: Please check the LAI data year range available
+   integer :: DEF_LAI_START_YEAR = 2000
+   integer :: DEF_LAI_END_YEAR   = 2020
 
    ! add by zhongwang wei @ sysu 2021/12/23
    ! To allow read satellite observed LAI
@@ -223,6 +228,7 @@ MODULE MOD_Namelist
    logical :: DEF_URBAN_TREE        = .true.
    logical :: DEF_URBAN_WATER       = .true.
    logical :: DEF_URBAN_LUCY        = .true.
+   logical :: DEF_USE_CANYON_HWR    = .true.
 
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ! ----- Part 11: parameteration schemes -----
@@ -856,6 +862,8 @@ CONTAINS
       DEF_Interception_scheme,                & !add by zhongwang wei @ sysu 2022/05/23
       DEF_SSP,                                & !add by zhongwang wei @ sysu 2023/02/07
 
+      DEF_LAI_START_YEAR,                     &
+      DEF_LAI_END_YEAR,                       &
       DEF_LAI_CHANGE_YEARLY,                  &
       DEF_USE_LAIFEEDBACK,                    & !add by Xingjie Lu, use for updating LAI with leaf carbon
       DEF_USE_IRRIGATION,                     & !use irrigation
@@ -870,6 +878,7 @@ CONTAINS
       DEF_URBAN_TREE,                         & !add by hua yuan, modeling urban tree or not
       DEF_URBAN_WATER,                        & !add by hua yuan, modeling urban water or not
       DEF_URBAN_LUCY,                         &
+      DEF_USE_CANYON_HWR,                     &
 
       DEF_USE_SOILPAR_UPS_FIT,                &
       DEF_THERMAL_CONDUCTIVITY_SCHEME,        &
@@ -1169,6 +1178,10 @@ CONTAINS
 
 #ifdef LULCC
 
+         write(*,*) '                  *****                  '
+         write(*,*) 'Warning: The LULCC data is provided for years 2000 to 2020 right now! '
+         write(*,*) 'Please make sure the year range you set is suitable. '
+
 #if (defined LULC_USGS || defined BGC)
          write(*,*) '                  *****                  '
          write(*,*) 'Fatal ERROR: LULCC is not supported for LULC_USGS/BGC at present. STOP! '
@@ -1192,8 +1205,8 @@ CONTAINS
          !write(*,*) '                  *****                  '
          !write(*,*) 'Fatal ERROR: LULCC is not supported for LULC_IGBP_PC/URBAN at present. STOP! '
          !write(*,*) 'It is coming soon. '
-         ![update] 24/10/2023: right now IGBP/PFT/PC and Urban are all supported.
          !CALL CoLM_stop ()
+         ![update] 24/10/2023: right now IGBP/PFT/PC and Urban are all supported.
 #endif
 
 #if (defined SinglePoint)
@@ -1203,6 +1216,12 @@ CONTAINS
          CALL CoLM_stop ()
 #endif
 
+#endif
+
+#if (defined DEF_LAI_CHANGE_YEARLY)
+         write(*,*) '                  *****                  '
+         write(*,*) 'Warning: The LAI data is provided for years 2000 to 2020 right now! '
+         write(*,*) 'Any year before 2000 or after 2020 will be treated as 2000 or 2020. '
 #endif
 
 
@@ -1312,6 +1331,8 @@ CONTAINS
       CALL mpi_bcast (DEF_SOLO_PFT                           ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_SUBGRID_SCHEME                     ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
 
+      CALL mpi_bcast (DEF_LAI_START_YEAR                     ,1   ,mpi_integer   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_LAI_END_YEAR                       ,1   ,mpi_integer   ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_LAI_CHANGE_YEARLY                  ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
 
       ! 05/2023, added by Xingjie lu
@@ -1330,6 +1351,7 @@ CONTAINS
       CALL mpi_bcast (DEF_URBAN_TREE                         ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_URBAN_WATER                        ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_URBAN_LUCY                         ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_USE_CANYON_HWR                     ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
 
       ! 06/2023, added by weinan
       CALL mpi_bcast (DEF_USE_SOILPAR_UPS_FIT                ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
@@ -1804,7 +1826,7 @@ CONTAINS
       CALL sync_hist_vars_one (DEF_hist_vars%discharge   , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%wdsrf_hru   , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%veloc_hru   , set_defaults)
-      
+
       CALL sync_hist_vars_one (DEF_hist_vars%sensors     , set_defaults)
 
    END SUBROUTINE sync_hist_vars
