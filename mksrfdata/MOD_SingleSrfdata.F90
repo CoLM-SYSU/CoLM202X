@@ -102,6 +102,7 @@ MODULE MOD_SingleSrfdata
    real(r8), allocatable :: SITE_fgimp    (:)
    real(r8), allocatable :: SITE_fgper    (:)
    real(r8), allocatable :: SITE_hlr      (:)
+   real(r8), allocatable :: SITE_lambdaw  (:)
    real(r8), allocatable :: SITE_popden   (:)
 
    real(r8), allocatable :: SITE_em_roof  (:)
@@ -366,8 +367,14 @@ CONTAINS
             CALL ncio_read_serial (fsrfdata, 'roof_area_fraction'         , SITE_froof     )
             CALL ncio_read_serial (fsrfdata, 'building_mean_height'       , SITE_hroof     )
             CALL ncio_read_serial (fsrfdata, 'impervious_area_fraction'   , SITE_fgimp     )
-            CALL ncio_read_serial (fsrfdata, 'canyon_height_width_ratio'  , SITE_hlr       )
+            CALL ncio_read_serial (fsrfdata, 'wall_to_plan_area_ratio'    , SITE_lambdaw   )
             CALL ncio_read_serial (fsrfdata, 'resident_population_density', SITE_popden    )
+IF (DEF_USE_CANYON_HWR) THEN
+            CALL ncio_read_serial (fsrfdata, 'canyon_height_width_ratio'  , SITE_hlr       )
+ELSE
+            CALL ncio_read_serial (fsrfdata, 'wall_to_plan_area_ratio'    , SITE_lambdaw   )
+            SITE_hlr       = SITE_lambdaw/4/SITE_froof
+ENDIF
 
             SITE_fgper     = 1 - (SITE_fgimp-SITE_froof)/(1-SITE_froof-SITE_flake_urb)
             SITE_fveg_urb  = SITE_fveg_urb  * 100
@@ -836,6 +843,9 @@ CONTAINS
       CALL ncio_write_serial (fsrfdata, 'elevation', SITE_topography)
       CALL ncio_put_attr     (fsrfdata, 'elevation', 'source', datasource(USE_SITE_topography))
 
+      CALL ncio_write_serial (fsrfdata, 'elvstd', SITE_topostd)
+      CALL ncio_put_attr     (fsrfdata, 'elvstd', 'source', datasource(USE_SITE_topostd))
+
       IF (DEF_USE_Forcing_Downscaling) THEN
          ! used for downscaling
          CALL ncio_write_serial (fsrfdata, 'SITE_svf', SITE_svf)
@@ -844,9 +854,6 @@ CONTAINS
          CALL ncio_write_serial (fsrfdata, 'SITE_slp_type' , SITE_slp_type , 'type')
          CALL ncio_write_serial (fsrfdata, 'SITE_asp_type' , SITE_asp_type , 'type')
          CALL ncio_write_serial (fsrfdata, 'SITE_area_type', SITE_area_type, 'type')
-
-         CALL ncio_write_serial (fsrfdata, 'elvstd', SITE_topostd)
-         CALL ncio_put_attr     (fsrfdata, 'elvstd', 'source', datasource(USE_SITE_topostd))
       ENDIF
 
       ! used for downscaling
