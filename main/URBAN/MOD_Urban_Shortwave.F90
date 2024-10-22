@@ -401,6 +401,7 @@ CONTAINS
       !W  = H/HW
       !L  = W*sqrt(fb)/(1-sqrt(fb))
       !HL = H/L !NOTE: Same as: HL = HW*(1-sqrt(fb))/sqrt(fb)
+      L  = H/HL
       fg = 1. - fb
 
       fgimp = 1. - fgper

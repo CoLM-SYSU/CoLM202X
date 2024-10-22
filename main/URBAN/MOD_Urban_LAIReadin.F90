@@ -57,7 +57,7 @@ CONTAINS
       write(cyear,'(i4.4)') min(DEF_LAI_END_YEAR, max(DEF_LAI_START_YEAR,year) )
 
 #ifdef SinglePoint
-      iyear = findloc_ud(SITE_LAI_year == min(DEF_LAI_END_YEAR, max(DEF_LAI_START_YEAR,year) )
+      iyear = findloc_ud(SITE_LAI_year == min(DEF_LAI_END_YEAR, max(DEF_LAI_START_YEAR,year)) )
       urb_lai(:) = SITE_LAI_monthly(time,iyear)
       urb_sai(:) = SITE_SAI_monthly(time,iyear)
 #else

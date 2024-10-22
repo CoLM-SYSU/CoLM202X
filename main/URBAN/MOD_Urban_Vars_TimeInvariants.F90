@@ -252,7 +252,7 @@ CONTAINS
       ! morphological paras
       CALL ncio_write_vector (file_restart, 'WT_ROOF'       , 'urban', landurban, froof    , DEF_REST_CompressLevel)
       CALL ncio_write_vector (file_restart, 'HT_ROOF'       , 'urban', landurban, hroof    , DEF_REST_CompressLevel)
-      CALL ncio_write_vector (file_restart, 'BUILDING_HWR'  , 'urban', landurban, hlr      , DEF_REST_CompressLevel)
+      CALL ncio_write_vector (file_restart, 'BUILDING_HLR'  , 'urban', landurban, hlr      , DEF_REST_CompressLevel)
       CALL ncio_write_vector (file_restart, 'WTROAD_PERV'   , 'urban', landurban, fgper    , DEF_REST_CompressLevel)
       CALL ncio_write_vector (file_restart, 'EM_ROOF'       , 'urban', landurban, em_roof  , DEF_REST_CompressLevel)
       CALL ncio_write_vector (file_restart, 'EM_WALL'       , 'urban', landurban, em_wall  , DEF_REST_CompressLevel)
