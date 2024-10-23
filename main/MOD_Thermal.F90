@@ -598,7 +598,11 @@ ENDIF
 #endif
                             dz_soisno,t_soisno,wliq_soisno,wice_soisno,fsno,qg,rss)
       ELSE
-         rss = 0.
+         IF (DEF_RSS_SCHEME == 4) THEN
+            rss = 1.        !LP92
+         ELSE
+            rss = 0.        !the other RSS schemes
+         ENDIF
       ENDIF
 
 !=======================================================================

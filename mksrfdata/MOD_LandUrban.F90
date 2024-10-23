@@ -353,7 +353,7 @@ IF (.not. USE_SITE_urban_paras) THEN
       allocate  ( SITE_popden    (numurban) )
       allocate  ( SITE_froof     (numurban) )
       allocate  ( SITE_hroof     (numurban) )
-      allocate  ( SITE_hwr       (numurban) )
+      allocate  ( SITE_hlr       (numurban) )
       allocate  ( SITE_fgper     (numurban) )
       allocate  ( SITE_fgimp     (numurban) )
 ENDIF

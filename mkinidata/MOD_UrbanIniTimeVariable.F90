@@ -25,7 +25,7 @@ MODULE MOD_UrbanIniTimeVariable
 
 CONTAINS
 
-   SUBROUTINE UrbanIniTimeVar(ipatch,froof,fgper,flake,hwr,hroof,&
+   SUBROUTINE UrbanIniTimeVar(ipatch,froof,fgper,flake,hlr,hroof,&
                     alb_roof,alb_wall,alb_gimp,alb_gper,&
                     rho,tau,fveg,htop,hbot,lai,sai,coszen,&
                     fsno_roof,fsno_gimp,fsno_gper,fsno_lake,&
@@ -46,7 +46,7 @@ CONTAINS
          froof,         &! roof fraction
          fgper,         &! impervious ground weight fraction
          flake,         &! lake fraction
-         hwr,           &! average building height to their distance
+         hlr,           &! average building height to their side length
          hroof           ! average building height
 
    real(r8), intent(in) :: &
@@ -118,7 +118,7 @@ CONTAINS
       hveg        = min(hroof, (htop+hbot)/2.)
 
       ! urban surface albedo
-      CALL alburban (ipatch,froof,fgper,flake,hwr,hroof,&
+      CALL alburban (ipatch,froof,fgper,flake,hlr,hroof,&
                      alb_roof,alb_wall,alb_gimp,alb_gper,&
                      rho,tau,fveg,hveg,lai,sai,fwet_snow,max(0.01,coszen),fwsun,tlake,&
                      fsno_roof,fsno_gimp,fsno_gper,fsno_lake,&

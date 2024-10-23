@@ -353,8 +353,8 @@ CONTAINS
          IF (udiff_lb == 0) THEN !root found
             rootn = rootn + 1
             IF (rootn > 2) THEN
-               print *, "U root number > 2, abort!"
-               CALL abort
+               print *, "Warning: U root number > 2, attention!"
+               RETURN !CALL abort
             ENDIF
             roots(rootn) = zmid
          ENDIF
@@ -362,8 +362,8 @@ CONTAINS
          IF (ztop-zmid < 0.01) THEN
             rootn = rootn + 1 !root found
             IF (rootn > 2) THEN
-               print *, "U root number > 2, abort!"
-               CALL abort
+               print *, "Warning: U root number > 2, attention!"
+               RETURN !CALL abort
             ENDIF
             roots(rootn) = (ztop+zmid)/2.
          ELSE
@@ -379,8 +379,8 @@ CONTAINS
          IF (udiff_ub == 0) THEN !root found
             rootn = rootn + 1
             IF (rootn > 2) THEN
-               print *, "U root number > 2, abort!"
-               CALL abort
+               print *, "Warning: U root number > 2, attention!"
+               RETURN !CALL abort
             ENDIF
             roots(rootn) = zmid
          ENDIF
@@ -388,8 +388,8 @@ CONTAINS
          IF (zmid-zbot < 0.01) THEN
             rootn = rootn + 1 !root found
             IF (rootn > 2) THEN
-               print *, "U root number > 2, abort!"
-               CALL abort
+               print *, "Warning: U root number > 2, attention!"
+               RETURN !CALL abort
             ENDIF
             roots(rootn) = (zmid+zbot)/2.
          ELSE
@@ -591,8 +591,8 @@ CONTAINS
          IF (kdiff_lb == 0) THEN !root found
             rootn = rootn + 1
             IF (rootn > 2) THEN
-               print *, "K root number > 2, abort!"
-               CALL abort
+               print *, "Warning: K root number > 2, attention!"
+               RETURN !CALL abort
             ENDIF
             roots(rootn) = zmid
          ENDIF
@@ -600,8 +600,8 @@ CONTAINS
          IF (ztop-zmid < 0.01) THEN
             rootn = rootn + 1 !root found
             IF (rootn > 2) THEN
-               print *, "K root number > 2, abort!"
-               CALL abort
+               print *, "Warning: K root number > 2, attention!"
+               RETURN !CALL abort
             ENDIF
             roots(rootn) = (ztop+zmid)/2.
          ELSE
@@ -617,8 +617,8 @@ CONTAINS
          IF (kdiff_ub == 0) THEN !root found
             rootn = rootn + 1
             IF (rootn > 2) THEN
-               print *, "K root number > 2, abort!"
-               CALL abort
+               print *, "Warning: K root number > 2, attention!"
+               RETURN !CALL abort
             ENDIF
             roots(rootn) = zmid
          ENDIF
@@ -626,8 +626,8 @@ CONTAINS
          IF (zmid-zbot < 0.01) THEN
             rootn = rootn + 1 !root found
             IF (rootn > 2) THEN
-               print *, "K root number > 2, abort!"
-               CALL abort
+               print *, "Warning: K root number > 2, attention!"
+               RETURN !CALL abort
             ENDIF
             roots(rootn) = (zmid+zbot)/2.
          ELSE

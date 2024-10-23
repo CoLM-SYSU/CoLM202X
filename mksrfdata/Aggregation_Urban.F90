@@ -105,7 +105,7 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
 
    ! urban morphological and thermal paras of NCAR data
    ! input variables, look-up-table data
-   real(r8), allocatable, dimension(:,:)     :: hwrcan, wtrd, emroof, emwall, ncar_wt
+   real(r8), allocatable, dimension(:,:)     :: hlrbld, wtrd, emroof, emwall, ncar_wt
    real(r8), allocatable, dimension(:,:)     :: emimrd, emperd, ncar_ht
    real(r8), allocatable, dimension(:,:)     :: throof, thwall, tbmin, tbmax
    real(r8), allocatable, dimension(:,:,:)   :: cvroof, cvwall, cvimrd, &
@@ -121,7 +121,7 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
    real(r8), ALLOCATABLE, dimension(:)     :: area_tb
    real(r8), ALLOCATABLE, dimension(:)     :: area_hd
    real(r8), ALLOCATABLE, dimension(:)     :: area_md
-   real(r8), ALLOCATABLE, dimension(:)     :: hwr_can
+   real(r8), ALLOCATABLE, dimension(:)     :: hlr_bld
    real(r8), ALLOCATABLE, dimension(:)     :: wt_rd
    real(r8), ALLOCATABLE, dimension(:)     :: em_roof
    real(r8), ALLOCATABLE, dimension(:)     :: em_wall
@@ -623,8 +623,8 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
       ! ******* LAI, SAI *******
 #ifndef LULCC
       IF (DEF_LAI_CHANGE_YEARLY) THEN
-         start_year = DEF_simulation_time%start_year
-         end_year   = DEF_simulation_time%end_year
+         start_year = max(DEF_LAI_START_YEAR, DEF_simulation_time%start_year)
+         end_year   = min(DEF_LAI_END_YEAR,   DEF_simulation_time%end_year  )
       ELSE
          start_year = lc_year
          end_year   = lc_year
@@ -761,7 +761,7 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
          ! look up table of NCAR urban properties (using look-up tables)
          landname = TRIM(dir_rawdata)//'urban/NCAR_urban_properties.nc'
 
-         CALL ncio_read_bcast_serial (landname,  "CANYON_HWR"    , hwrcan   )
+         CALL ncio_read_bcast_serial (landname,  "CANYON_HWR"    , hlrbld   )
          CALL ncio_read_bcast_serial (landname,  "WTROAD_PERV"   , wtrd     )
          CALL ncio_read_bcast_serial (landname,  "EM_ROOF"       , emroof   )
          CALL ncio_read_bcast_serial (landname,  "EM_WALL"       , emwall   )
@@ -798,7 +798,7 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
             allocate (area_tb          (numurban))
             allocate (area_hd          (numurban))
             allocate (area_md          (numurban))
-            allocate (hwr_can          (numurban))
+            allocate (hlr_bld          (numurban))
             allocate (wt_rd            (numurban))
             allocate (em_roof          (numurban))
             allocate (em_wall          (numurban))
@@ -827,7 +827,7 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
             area_tb  (:)     = 0.
             area_hd  (:)     = 0.
             area_md  (:)     = 0.
-            hwr_can  (:)     = 0.
+            hlr_bld  (:)     = 0.
             wt_rd    (:)     = 0.
             em_roof  (:)     = 0.
             em_wall  (:)     = 0.
@@ -878,7 +878,7 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
                   DO ipxl = 1, size(area_one) ! ipxstt, ipxend
 
                      urb_regidx = reg_typid_one(ipxl)
-                     hwr_can (iurban) = hwr_can (iurban) + hwrcan (urb_typidx,urb_regidx) * area_one(ipxl)
+                     hlr_bld (iurban) = hlr_bld (iurban) + hlrbld (urb_typidx,urb_regidx) * area_one(ipxl)
                      wt_rd   (iurban) = wt_rd   (iurban) + wtrd   (urb_typidx,urb_regidx) * area_one(ipxl)
                      em_roof (iurban) = em_roof (iurban) + emroof (urb_typidx,urb_regidx) * area_one(ipxl)
                      em_wall (iurban) = em_wall (iurban) + emwall (urb_typidx,urb_regidx) * area_one(ipxl)
@@ -915,7 +915,7 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
 
                   ENDDO
 
-                  hwr_can  (iurban) = hwr_can   (iurban) / sumarea
+                  hlr_bld  (iurban) = hlr_bld   (iurban) / sumarea
                   wt_rd    (iurban) = wt_rd     (iurban) / sumarea
                   em_roof  (iurban) = em_roof   (iurban) / sumarea
                   em_wall  (iurban) = em_wall   (iurban) / sumarea
@@ -988,7 +988,7 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
 
          CALL ncio_write_vector (landname, 'URBAN_PCT'     , 'urban', landurban, urb_pct, DEF_Srfdata_CompressLevel)
          CALL ncio_write_vector (landname, 'URBAN_FRAC'    , 'urban', landurban, urb_frc, DEF_Srfdata_CompressLevel)
-         CALL ncio_write_vector (landname, 'CANYON_HWR'    , 'urban', landurban, hwr_can, DEF_Srfdata_CompressLevel)
+         CALL ncio_write_vector (landname, 'BUILDING_HLR'  , 'urban', landurban, hlr_bld, DEF_Srfdata_CompressLevel)
          CALL ncio_write_vector (landname, 'WTROAD_PERV'   , 'urban', landurban, wt_rd  , DEF_Srfdata_CompressLevel)
          CALL ncio_write_vector (landname, 'EM_ROOF'       , 'urban', landurban, em_roof, DEF_Srfdata_CompressLevel)
          CALL ncio_write_vector (landname, 'EM_WALL'       , 'urban', landurban, em_wall, DEF_Srfdata_CompressLevel)
@@ -1013,9 +1013,9 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
 
 #ifdef SrfdataDiag
          typindex = (/(ityp, ityp = 1, N_URB)/)
-         landname  = trim(dir_srfdata) // '/diag/hwr.nc'
-         CALL srfdata_map_and_write (hwr_can, landurban%settyp, typindex, m_urb2diag, &
-            -1.0e36_r8, landname, 'CANYON_HWR_'//trim(cyear), compress = 0, write_mode = 'one')
+         landname  = trim(dir_srfdata) // '/diag/hlr.nc'
+         CALL srfdata_map_and_write (hlr_bld, landurban%settyp, typindex, m_urb2diag, &
+            -1.0e36_r8, landname, 'BUILDING_HLR_'//trim(cyear), compress = 0, write_mode = 'one')
 
          typindex = (/(ityp, ityp = 1, N_URB)/)
          landname  = trim(dir_srfdata) // '/diag/cv_imrd' // trim(cyear) // '.nc'
@@ -1063,14 +1063,14 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
          SITE_alb_gper  (:,:) = alb_perd(:,:,1)
 
          IF (.not. USE_SITE_urban_paras) THEN
-            SITE_hwr   (:) = hwr_can
+            SITE_hlr   (:) = hlr_bld
             SITE_fgper (:) = wt_rd
             SITE_fgimp (:) = 1 - SITE_fgper
          ENDIF
 #endif
 
 #ifdef RangeCheck
-         CALL check_vector_data ('CANYON_HWR '    , hwr_can  )
+         CALL check_vector_data ('BUILDING_HLR '  , hlr_bld  )
          CALL check_vector_data ('WTROAD_PERV '   , wt_rd    )
          CALL check_vector_data ('EM_ROOF '       , em_roof  )
          CALL check_vector_data ('EM_WALL '       , em_wall  )
@@ -1117,7 +1117,7 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
             IF ( allocated (ncar_ht  ) ) deallocate (ncar_ht   )
             IF ( allocated (ncar_wt  ) ) deallocate (ncar_wt   )
             IF ( allocated (area_urb ) ) deallocate (area_urb  )
-            IF ( allocated (hwr_can  ) ) deallocate (hwr_can   )
+            IF ( allocated (hlr_bld  ) ) deallocate (hlr_bld   )
             IF ( allocated (wt_rd    ) ) deallocate (wt_rd     )
             IF ( allocated (em_roof  ) ) deallocate (em_roof   )
             IF ( allocated (em_wall  ) ) deallocate (em_wall   )
