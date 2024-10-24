@@ -96,7 +96,7 @@ MODULE MOD_Namelist
       integer  :: end_month     = 1
       integer  :: end_day       = 1
       integer  :: end_sec       = 0
-      integer  :: spinup_year   = 2000
+      integer  :: spinup_year   = 0
       integer  :: spinup_month  = 1
       integer  :: spinup_day    = 1
       integer  :: spinup_sec    = 0
