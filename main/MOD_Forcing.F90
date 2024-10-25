@@ -1306,9 +1306,6 @@ CONTAINS
          sec    = (time_i-1)*dtime(var_i) + offset(var_i) - 86400*(day-1)
          tstamp_LB(var_i)%sec = sec
 
-         ! A trick, set one second backward
-         IF (trim(timelog(var_i)) == 'backward') sec = sec - 1
-
          ! set time stamp (ststamp_LB)
          IF (sec < 0) THEN
             tstamp_LB(var_i)%sec = 86400 + sec
@@ -1375,9 +1372,6 @@ CONTAINS
          sec    = (time_i-1)*dtime(var_i) + offset(var_i) - 86400*(mday-1)
          tstamp_LB(var_i)%sec  = sec
 
-         ! A trick, set one second backward
-         IF (trim(timelog(var_i)) == 'backward') sec = sec - 1
-
          ! set time stamp (ststamp_LB)
          IF (sec < 0) THEN
             tstamp_LB(var_i)%sec = 86400 + sec
@@ -1440,9 +1434,6 @@ CONTAINS
          time_i = floor( (sec-offset(var_i)) *1. / dtime(var_i) ) + 1
          sec    = (time_i-1)*dtime(var_i) + offset(var_i)
          tstamp_LB(var_i)%sec  = sec
-
-         ! A trick, set one second backward
-         IF (trim(timelog(var_i)) == 'backward') sec = sec - 1
 
          ! set time stamp (ststamp_LB)
          IF (sec < 0) THEN
@@ -1664,14 +1655,14 @@ CONTAINS
    real(r8) :: calday, cosz
    type(timestamp) :: tstamp
 
-      tstamp = tstamp_LB(7)
+      tstamp = idate !tstamp_LB(7)
       ntime = 0
       DO WHILE (tstamp < tstamp_UB(7))
          ntime  = ntime + 1
          tstamp = tstamp + deltim_int
       ENDDO
 
-      tstamp = tstamp_LB(7)
+      tstamp = idate !tstamp_LB(7)
       CALL flush_block_data (avgcos, 0._r8)
 
       DO WHILE (tstamp < tstamp_UB(7))
