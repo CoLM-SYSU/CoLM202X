@@ -159,7 +159,7 @@ CONTAINS
       CALL adj2begin (idate)
 
       CALL metread_latlon (dir_forcing, idate)
-      
+
       IF (p_is_io) THEN
 
          IF (allocated(forcn   )) deallocate(forcn   )
@@ -417,7 +417,7 @@ CONTAINS
    INTEGER  :: year, month, mday
    logical  :: has_u,has_v
    real solar, frl, prcp, tm, us, vs, pres, qm
-   real(r8) :: pco2m                        
+   real(r8) :: pco2m
    real(r8), dimension(12, numpatch) :: spaceship !NOTE: 12 is the dimension size of spaceship
    integer target_server, ierr
 
@@ -486,8 +486,14 @@ CONTAINS
                         calday = calendarday(mtstamp)
                         cosz = orb_coszen(calday, gforc%rlon(ilon), gforc%rlat(ilat))
                         cosz = max(0.001, cosz)
-                        forcn(ivar)%blk(ib,jb)%val(i,j) = &
-                          cosz / avgcos%blk(ib,jb)%val(i,j) * forcn_LB(ivar)%blk(ib,jb)%val(i,j)
+                        ! 10/24/2024, yuan: deal with time log with backward or foreward
+                        IF (timelog(ivar) == 'foreward') THEN
+                           forcn(ivar)%blk(ib,jb)%val(i,j) = &
+                              cosz / avgcos%blk(ib,jb)%val(i,j) * forcn_LB(ivar)%blk(ib,jb)%val(i,j)
+                        ELSE
+                           forcn(ivar)%blk(ib,jb)%val(i,j) = &
+                              cosz / avgcos%blk(ib,jb)%val(i,j) * forcn_UB(ivar)%blk(ib,jb)%val(i,j)
+                        ENDIF
 
                      ENDDO
                   ENDDO
@@ -501,8 +507,8 @@ CONTAINS
 
          CALL allocate_block_data (gforc, forc_xy_solarin)
 
-         CALL block_data_copy (forcn(1), forc_xy_t   )
-         CALL block_data_copy (forcn(2), forc_xy_q   )
+         CALL block_data_copy (forcn(1), forc_xy_t      )
+         CALL block_data_copy (forcn(2), forc_xy_q      )
          CALL block_data_copy (forcn(3), forc_xy_psrf   )
          CALL block_data_copy (forcn(3), forc_xy_pbot   )
          CALL block_data_copy (forcn(4), forc_xy_prl, sca = 2/3._r8)
@@ -510,7 +516,7 @@ CONTAINS
          CALL block_data_copy (forcn(7), forc_xy_solarin)
          CALL block_data_copy (forcn(8), forc_xy_frl    )
          IF (DEF_USE_CBL_HEIGHT) THEN
-         CALL block_data_copy (forcn(9), forc_xy_hpbl    )
+         CALL block_data_copy (forcn(9), forc_xy_hpbl   )
          ENDIF
 
          IF (has_u .and. has_v) THEN
@@ -714,7 +720,7 @@ CONTAINS
          CALL mg2p_forc%grid2part (forc_xy_us,      forc_us_grid   )
          CALL mg2p_forc%grid2part (forc_xy_vs,      forc_vs_grid   )
 
-         calday = calendarday(idate) 
+         calday = calendarday(idate)
 
          IF (p_is_worker) THEN
             DO np = 1, numpatch ! patches
@@ -797,7 +803,7 @@ CONTAINS
          CALL mg2p_forc%part2pset (forc_vs_part,     forc_vs    )
 
 #ifndef SinglePoint
-         IF (trim(DEF_DS_precipitation_adjust_scheme) == 'III') THEN 
+         IF (trim(DEF_DS_precipitation_adjust_scheme) == 'III') THEN
             ! Sisi Chen, Lu Li, Yongjiu Dai et al., 2024, JGR
             ! Using MPI to pass the forcing variable field to Python to accomplish precipitation downscaling
             IF (p_is_worker) THEN
@@ -820,7 +826,7 @@ CONTAINS
                forc_prl = forc_prc/3600*2/3._r8
                forc_prc = forc_prc/3600*1/3._r8
             ENDIF
-         
+
             ! mapping forc_prl to forc_prl_part, forc_prc to forc_prc_part
             IF (p_is_worker) THEN
                DO np = 1, numpatch ! patches
@@ -842,7 +848,7 @@ CONTAINS
             CALL mg2p_forc%part2pset (forc_prc_part, forc_prc)
             CALL mg2p_forc%part2pset (forc_prl_part, forc_prl)
          ENDIF
-   
+
          ! Conservation of short- and long- waves radiation in the grid of forcing
          CALL mg2p_forc%normalize (forc_xy_solarin, forc_swrad_part)
          CALL mg2p_forc%normalize (forc_xy_frl,     forc_frl_part  )
@@ -850,7 +856,7 @@ CONTAINS
          CALL mg2p_forc%part2pset (forc_swrad_part,  forc_swrad )
 #endif
 
-         ! divide fractions of downscaled shortwave radiation 
+         ! divide fractions of downscaled shortwave radiation
          IF (p_is_worker) THEN
             DO j = 1, numpatch
                   a = forc_swrad(j)
@@ -1300,6 +1306,9 @@ CONTAINS
          sec    = (time_i-1)*dtime(var_i) + offset(var_i) - 86400*(day-1)
          tstamp_LB(var_i)%sec = sec
 
+         ! A trick, set one second backward
+         IF (trim(timelog(var_i)) == 'backward') sec = sec - 1
+
          ! set time stamp (ststamp_LB)
          IF (sec < 0) THEN
             tstamp_LB(var_i)%sec = 86400 + sec
@@ -1366,6 +1375,9 @@ CONTAINS
          sec    = (time_i-1)*dtime(var_i) + offset(var_i) - 86400*(mday-1)
          tstamp_LB(var_i)%sec  = sec
 
+         ! A trick, set one second backward
+         IF (trim(timelog(var_i)) == 'backward') sec = sec - 1
+
          ! set time stamp (ststamp_LB)
          IF (sec < 0) THEN
             tstamp_LB(var_i)%sec = 86400 + sec
@@ -1428,6 +1440,9 @@ CONTAINS
          time_i = floor( (sec-offset(var_i)) *1. / dtime(var_i) ) + 1
          sec    = (time_i-1)*dtime(var_i) + offset(var_i)
          tstamp_LB(var_i)%sec  = sec
+
+         ! A trick, set one second backward
+         IF (trim(timelog(var_i)) == 'backward') sec = sec - 1
 
          ! set time stamp (ststamp_LB)
          IF (sec < 0) THEN
@@ -1649,14 +1664,14 @@ CONTAINS
    real(r8) :: calday, cosz
    type(timestamp) :: tstamp
 
-      tstamp = idate !tstamp_LB(7)
+      tstamp = tstamp_LB(7)
       ntime = 0
       DO WHILE (tstamp < tstamp_UB(7))
          ntime  = ntime + 1
          tstamp = tstamp + deltim_int
       ENDDO
 
-      tstamp = idate !tstamp_LB(7)
+      tstamp = tstamp_LB(7)
       CALL flush_block_data (avgcos, 0._r8)
 
       DO WHILE (tstamp < tstamp_UB(7))

@@ -91,7 +91,7 @@ CONTAINS
    real(r8) ::    &
         W,          &! Urban ground average width [m]
         L,          &! Urban building average length [m]
-        HW,         &! Ratio of H to L, H/L [-]
+        HW,         &! Ratio of H to W, H/W [-]
         fg,         &! Fraction of ground [-]
         fgimp,      &! Fraction of snow ground [-]
 
@@ -122,7 +122,6 @@ CONTAINS
       !W  = H/HW
       !L  = W*sqrt(fb)/(1-sqrt(fb))
       !HL = H/L !NOTE: Same as HL = HW*(1-sqrt(fb))/sqrt(fb)
-      L  = H/HL
       fg = 1. - fb
       fgimp = 1. - fgper
 
@@ -316,7 +315,7 @@ CONTAINS
    real(r8) :: &
         W,          &! Urban ground average width [m]
         L,          &! Urban building average length [m]
-        HW,         &! Ratio of H to L, H/L [-]
+        HW,         &! Ratio of H to W, H/W [-]
         fg,         &! Fraction of ground [-]
         fgimp,      &! Fraction of pervious ground [-]
 

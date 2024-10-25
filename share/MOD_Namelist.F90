@@ -396,6 +396,9 @@ MODULE MOD_Namelist
       character(len=256) :: vname(8)           = (/ &
          'TBOT    ','QBOT    ','PSRF    ','PRECTmms', &
          'NULL    ','WIND    ','FSDS    ','FLDS    ' /)
+      character(len=256) :: timelog(8)         = (/ &
+         'instant ','instant ','instant ','foreward', &
+         'NULL    ','instant ','forward ','foreward' /)
       character(len=256) :: tintalgo(8)        = (/ &
          'linear ','linear ','linear ','nearest', &
          'NULL   ','linear ','coszen ','linear ' /)
@@ -1466,6 +1469,7 @@ CONTAINS
       DO ivar = 1, 8
          CALL mpi_bcast (DEF_forcing%fprefix(ivar)           ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
          CALL mpi_bcast (DEF_forcing%vname(ivar)             ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
+         CALL mpi_bcast (DEF_forcing%timelog(ivar)           ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
          CALL mpi_bcast (DEF_forcing%tintalgo(ivar)          ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
       ENDDO
       CALL mpi_bcast (DEF_forcing%CBL_fprefix                ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
