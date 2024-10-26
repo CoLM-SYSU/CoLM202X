@@ -87,7 +87,7 @@ CONTAINS
             ! testing 14/05/2021, Zhang
             IF(lakedepth(ipatch) < 0.1) lakedepth(ipatch) = 0.1
 
-            IF(lakedepth(ipatch) > 1. .and. lakedepth(ipatch) < 1000.)THEN
+            IF(lakedepth(ipatch) > 1. .and. lakedepth(ipatch) < 2000.)THEN
                depthratio = lakedepth(ipatch) / sum(dzlak(1:nl_lake))
                dz_lake(1,ipatch) = dzlak(1)
                dz_lake(2:nl_lake-1,ipatch) = dzlak(2:nl_lake-1)*depthratio

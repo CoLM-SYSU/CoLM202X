@@ -870,7 +870,7 @@ ENDIF
 !-----------------------------------------------------------------------
 
          del  = sqrt( dtl(it)*dtl(it) )
-         dele = dtl(it) * dtl(it) * ( dirab_dtl**2 + fsenl_dtl**2 + hvap*fevpl_dtl**2 )
+         dele = dtl(it) * dtl(it) * ( dirab_dtl**2 + fsenl_dtl**2 + (hvap*fevpl_dtl)**2 )
          dele = sqrt(dele)
 
 !-----------------------------------------------------------------------

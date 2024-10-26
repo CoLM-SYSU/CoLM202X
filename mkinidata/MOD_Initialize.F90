@@ -197,6 +197,9 @@ CONTAINS
 #endif
    real(r8) :: prms(nprms, 1:nl_soil)
 
+   real(r8) :: wdsrfm, depthratio
+   real(r8), dimension(10) :: dzlak = (/0.1, 1., 2., 3., 4., 5., 7., 7., 10.45, 10.45/)  ! m
+
    ! CoLM soil layer thickiness and depths
    real(r8), allocatable :: z_soisno (:,:)
    real(r8), allocatable :: dz_soisno(:,:)
@@ -224,7 +227,7 @@ CONTAINS
 
    integer  :: txt_id
    real(r8) :: vic_b_infilt_, vic_Dsmax_, vic_Ds_, vic_Ws_, vic_c_
-   
+
    ! for SimTop model parameters
    character(len=256) :: file_simtop_para
    logical            :: fexist
@@ -297,6 +300,10 @@ CONTAINS
 ! 1.2 Lake depth and layers' thickness
 ! ------------------------------------------
       CALL lakedepth_readin (dir_landdata, lc_year)
+
+      IF (p_is_worker .and. (numpatch > 0)) THEN
+         WHERE (patchtype == 4) wdsrf = lakedepth * 1.e3
+      ENDIF
 
 ! ...............................................................
 ! 1.3 Read in the soil parameters of the patches of the gridcells
@@ -470,7 +477,7 @@ CONTAINS
 #ifdef USEMPI
             CALL mpi_bcast (filval, 1, MPI_REAL8, p_address_master, p_comm_glb, p_err)
 #endif
-            
+
             CALL map_simtop_para%build_arealweighted (g_simtop_para, landpatch)
             CALL map_simtop_para%set_missing_value   (fsatmax_grid, filval)
 
@@ -1350,7 +1357,7 @@ CONTAINS
                meta          (u) = 0.   !flux from metabolic [W/m2]
                vehc          (u) = 0.   !flux from vehicle [W/m2]
 
-               CALL UrbanIniTimeVar(i,froof(u),fgper(u),flake(u),hwr(u),hroof(u),&
+               CALL UrbanIniTimeVar(i,froof(u),fgper(u),flake(u),hlr(u),hroof(u),&
                   alb_roof(:,:,u),alb_wall(:,:,u),alb_gimp(:,:,u),alb_gper(:,:,u),&
                   rho(:,:,m),tau(:,:,m),fveg(i),htop(i),hbot(i),lai(i),sai(i),coszen(i),&
                   fsno_roof(u),fsno_gimp(u),fsno_gper(u),fsno_lake(u),&
@@ -1396,6 +1403,22 @@ CONTAINS
                   pe = hru_patch%subend(hs)
                   wdsrf(ps:pe) = riverdpth(i) * 1.0e3 ! m to mm
                ENDIF
+            ENDIF
+         ENDDO
+
+         DO i = 1, numpatch
+            IF (wdsrf(i) > 0.) THEN
+               wdsrfm = wdsrf(i)*1.e-3
+               IF(wdsrfm > 1. .and. wdsrfm < 2000.)THEN
+                  depthratio = wdsrfm / sum(dzlak(1:nl_lake))
+                  dz_lake(1,i) = dzlak(1)
+                  dz_lake(2:nl_lake-1,i) = dzlak(2:nl_lake-1)*depthratio
+                  dz_lake(nl_lake,i) = dzlak(nl_lake)*depthratio - (dz_lake(1,i) - dzlak(1)*depthratio)
+               ELSEIF(wdsrfm > 0. .and. wdsrfm <= 1.)THEN
+                  dz_lake(:,i) = wdsrfm / nl_lake
+               ENDIF
+            ELSE
+               dz_lake(:,i) = 0.
             ENDIF
          ENDDO
 

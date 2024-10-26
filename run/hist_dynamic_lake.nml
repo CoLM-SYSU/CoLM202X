@@ -1,0 +1,10 @@
+&nl_colm_history
+
+   ! ----- history -----
+   DEF_hist_vars%wdsrf        = .true. 
+   DEF_hist_vars%scv          = .true. 
+   DEF_hist_vars%dz_lake      = .true. 
+   DEF_hist_vars%t_lake       = .true. 
+   DEF_hist_vars%lake_icefrac = .true. 
+/
+

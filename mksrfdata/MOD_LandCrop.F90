@@ -126,8 +126,13 @@ CONTAINS
       
       sharedfilter = (/ 1 /)
 
-      CALL pixelsetshared_build (landpatch, gpatch, pctshared_xy, 2, sharedfilter, &
-         pctshared, classshared)
+      IF (landpatch%has_shared) then
+         CALL pixelsetshared_build (landpatch, gpatch, pctshared_xy, 2, sharedfilter, &
+            pctshared, classshared, fracin = landpatch%pctshared)
+      ELSE
+         CALL pixelsetshared_build (landpatch, gpatch, pctshared_xy, 2, sharedfilter, &
+            pctshared, classshared)
+      ENDIF
 
       IF (p_is_worker) THEN
          IF (landpatch%nset > 0) THEN
@@ -151,6 +156,10 @@ CONTAINS
       landpatch%has_shared = .true.
       IF (p_is_worker) THEN
          IF (numpatch > 0) THEN
+            IF (allocated(landpatch%pctshared)) THEN
+               deallocate(landpatch%pctshared)
+            ENDIF
+
             allocate(landpatch%pctshared(numpatch))
             landpatch%pctshared = pctshrpch
          ENDIF
