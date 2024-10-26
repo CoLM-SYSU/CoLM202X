@@ -82,7 +82,7 @@ IF (DEF_URBAN_type_scheme == 1) THEN
 
 #ifdef SinglePoint
       lucyid(:) = SITE_lucyid
-      hwr   (:) = SITE_hwr
+      hlr   (:) = SITE_hlr
       fgper (:) = SITE_fgper
 
       em_roof(:) = SITE_em_roof
@@ -111,7 +111,7 @@ IF (DEF_URBAN_type_scheme == 1) THEN
       ! READ in urban data
       lndname = trim(dir_landdata)//'/urban/'//trim(cyear)//'/urban.nc'
 
-      CALL ncio_read_vector (lndname, 'CANYON_HWR  '  , landurban, hwr    ) ! average building height to their distance
+      CALL ncio_read_vector (lndname, 'BUILDING_HLR'  , landurban, hlr    ) ! average building height to their side length
       CALL ncio_read_vector (lndname, 'WTROAD_PERV'   , landurban, fgper  ) ! pervious fraction to ground area
       CALL ncio_read_vector (lndname, 'EM_ROOF'       , landurban, em_roof) ! emissivity of roof
       CALL ncio_read_vector (lndname, 'EM_WALL'       , landurban, em_wall) ! emissivity of wall
@@ -220,10 +220,10 @@ IF (DEF_URBAN_type_scheme == 1) THEN
 ELSEIF (DEF_URBAN_type_scheme == 2) THEN
             ! read in LCZ constants
 #ifdef SinglePoint
-            hwr  (:) = SITE_hwr
+            hlr  (:) = SITE_hlr
             fgper(:) = SITE_fgper
 #else
-            hwr  (u) = canyonhwr_lcz (landurban%settyp(u))  !average building height to their distance
+            hlr  (u) = canyonhwr_lcz (landurban%settyp(u))  !average building height to their distance
             fgper(u) = wtperroad_lcz (landurban%settyp(u)) &
                      / (1-wtroof_lcz (landurban%settyp(u)))!pervious fraction to ground area
             fgper(u) = min(fgper(u), 1.)
@@ -330,6 +330,12 @@ ENDIF
             !NOTE: USE global lake depth right now, the below set to 1m
             !lakedepth(npatch) = 1.
             !dz_lake(:,npatch) = lakedepth(npatch) / nl_lake
+
+            ! IF the parameter read is canyon H/W ratio, convert it to H/R ratio
+            IF (DEF_USE_CANYON_HWR) THEN
+               hlr(u) = hlr(u)*(1-sqrt(froof(u)))/sqrt(froof(u))
+            ENDIF
+
          ENDDO
       ENDIF
 

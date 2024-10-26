@@ -1,41 +1,39 @@
 &nl_colm_forcing
-   
-  ! ----- forcing -----
-   DEF_dir_forcing  = '/tera06/zhwei/CoLM_Forcing/GDAS_GPCP/' 
 
-   DEF_forcing%dataset           = 'GDAS' 
-   DEF_forcing%solarin_all_band  = .true.  
-   DEF_forcing%HEIGHT_V          = 50.0    
+  ! ----- forcing -----
+   DEF_dir_forcing  = '/shr03/CoLM_Forcing/GDAS_GPCP/'
+
+   DEF_forcing%dataset           = 'GDAS'
+   DEF_forcing%solarin_all_band  = .true.
+   DEF_forcing%HEIGHT_V          = 50.0
    DEF_forcing%HEIGHT_T          = 40.
    DEF_forcing%HEIGHT_Q          = 40.
-   
+
    DEF_forcing%regional          = .true.
    DEF_forcing%regbnd            = -60.0 90.0 -180.0 180.0
 
    DEF_forcing%has_missing_value = .true.
    missing_value_name            = 'missing_value'
 
-
-   
-   DEF_forcing%NVAR              = 8        ! variable number of forcing data
-   DEF_forcing%startyr           = 2002     ! start year of forcing data  
-   DEF_forcing%startmo           = 1        ! start month of forcing data
-   DEF_forcing%endyr             = 2021     ! end year of forcing data
-   DEF_forcing%endmo             = 12       ! end month of forcing data
+   DEF_forcing%NVAR              = 8       ! variable number of forcing data
+   DEF_forcing%startyr           = 2002    ! start year of forcing data
+   DEF_forcing%startmo           = 1       ! start month of forcing data
+   DEF_forcing%endyr             = 2021    ! end year of forcing data
+   DEF_forcing%endmo             = 12      ! end month of forcing data
    DEF_forcing%dtime             = 10800 10800 10800 10800 0 10800 10800 10800
    DEF_forcing%offset            = 5400 5400 5400 5400 0 5400 0 5400
-   DEF_forcing%nlands            = 1        ! land grid number in 1d
-   
-   DEF_forcing%leapyear          = .true.   ! leapyear calendar
-   DEF_forcing%data2d            = .true.   ! data in 2 dimension (lon, lat)
-   DEF_forcing%hightdim          = .false.  ! have "z" dimension
-   DEF_forcing%dim2d             = .false.  ! lat/lon value in 2 dimension (lon, lat)
-   
-   DEF_forcing%latname           = 'lat'  ! dimension name of latitude
-   DEF_forcing%lonname           = 'lon' ! dimension name of longitude
-   
-   DEF_forcing%groupby           = 'month'  ! file grouped by year/month
-   
+   DEF_forcing%nlands            = 1       ! land grid number in 1d
+
+   DEF_forcing%leapyear          = .true.  ! leapyear calendar
+   DEF_forcing%data2d            = .true.  ! data in 2 dimension (lon, lat)
+   DEF_forcing%hightdim          = .false. ! have "z" dimension
+   DEF_forcing%dim2d             = .false. ! lat/lon value in 2 dimension (lon, lat)
+
+   DEF_forcing%latname           = 'lat'   ! dimension name of latitude
+   DEF_forcing%lonname           = 'lon'   ! dimension name of longitude
+
+   DEF_forcing%groupby           = 'month' ! file grouped by year/month
+
    DEF_forcing%fprefix(1) = 'GLDAS_GDAS_3H_Tair.'
    DEF_forcing%fprefix(2) = 'GLDAS_GDAS_3H_Qair.'
    DEF_forcing%fprefix(3) = 'GLDAS_GDAS_3H_Psurf.'
@@ -45,8 +43,9 @@
    DEF_forcing%fprefix(7) = 'GLDAS_GDAS_3H_SWdown.'
    DEF_forcing%fprefix(8) = 'GLDAS_GDAS_3H_LWdown.'
 
-   
-   DEF_forcing%vname    = 'Tair_f_inst' 'Qair_f_inst' 'Psurf_f_inst' 'Rainf_f_tavg' 'NULL' 'Wind_f_inst' 'SWdown_f_tavg' 'LWdown_f_tavg' 
+
+   DEF_forcing%vname    = 'Tair_f_inst' 'Qair_f_inst' 'Psurf_f_inst' 'Rainf_f_tavg' 'NULL' 'Wind_f_inst' 'SWdown_f_tavg' 'LWdown_f_tavg'
+   DEF_forcing%timelog  = 'instant' 'instant' 'instant' 'foreward' 'instant' 'instant' 'foreward' 'foreward'
    DEF_forcing%tintalgo = 'linear' 'linear' 'linear' 'nearest' 'NULL' 'linear' 'coszen' 'linear'
 
 /

@@ -1549,7 +1549,7 @@ ENDIF
 
                del(i)  = sqrt( dtl(it,i)*dtl(it,i) )
                dele(i) = dtl(it,i) * dtl(it,i) * &
-                       ( dirab_dtl(i)**2 + fsenl_dtl(i)**2 + hvap*fevpl_dtl(i)**2 )
+                       ( dirab_dtl(i)**2 + fsenl_dtl(i)**2 + (hvap*fevpl_dtl(i))**2 )
                dele(i) = sqrt(dele(i))
 
 !-----------------------------------------------------------------------
