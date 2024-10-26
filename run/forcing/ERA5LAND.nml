@@ -5,9 +5,12 @@
 
    DEF_forcing%dataset            = 'ERA5LAND'
    DEF_forcing%solarin_all_band   = .true.
-   DEF_forcing%HEIGHT_V           = 50.0
-   DEF_forcing%HEIGHT_T           = 40.
-   DEF_forcing%HEIGHT_Q           = 40.
+   DEF_forcing%HEIGHT_mode        = 'relative'  ! 'absolute' height to tree/building or
+                                                ! 'relative' height to ground surface
+                                                ! if not speficied, default is absolute
+   DEF_forcing%HEIGHT_V           = 10.0
+   DEF_forcing%HEIGHT_T           = 10.0
+   DEF_forcing%HEIGHT_Q           = 10.0
 
    DEF_forcing%has_missing_value  = .true.
    DEF_forcing%missing_value_name = 'missing_value'

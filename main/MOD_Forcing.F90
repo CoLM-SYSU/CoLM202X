@@ -487,7 +487,7 @@ CONTAINS
                         cosz = orb_coszen(calday, gforc%rlon(ilon), gforc%rlat(ilat))
                         cosz = max(0.001, cosz)
                         ! 10/24/2024, yuan: deal with time log with backward or foreward
-                        IF (timelog(ivar) == 'foreward') THEN
+                        IF (trim(timelog(ivar)) == 'foreward') THEN
                            forcn(ivar)%blk(ib,jb)%val(i,j) = &
                               cosz / avgcos%blk(ib,jb)%val(i,j) * forcn_LB(ivar)%blk(ib,jb)%val(i,j)
                         ELSE

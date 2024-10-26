@@ -356,6 +356,7 @@ MODULE MOD_Namelist
 
       character(len=256) :: dataset            = 'CRUNCEP'
       logical            :: solarin_all_band   = .true.
+      character(len=256) :: HEIGHT_mode        = 'absolute'
       real(r8)           :: HEIGHT_V           = 100.0
       real(r8)           :: HEIGHT_T           = 50.
       real(r8)           :: HEIGHT_Q           = 50.
@@ -1443,6 +1444,7 @@ CONTAINS
 
       CALL mpi_bcast (DEF_forcing%dataset                    ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_forcing%solarin_all_band           ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_forcing%HEIGHT_mode                ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_forcing%HEIGHT_V                   ,1   ,mpi_real8     ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_forcing%HEIGHT_T                   ,1   ,mpi_real8     ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_forcing%HEIGHT_Q                   ,1   ,mpi_real8     ,p_address_master ,p_comm_glb ,p_err)
