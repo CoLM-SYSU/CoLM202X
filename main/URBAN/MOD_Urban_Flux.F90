@@ -111,6 +111,7 @@ CONTAINS
    USE MOD_Const_Physical, only: cpair,vonkar,grav,hvap
    USE MOD_FrictionVelocity
    USE MOD_CanopyLayerProfile
+   USE MOD_UserSpecifiedForcing, only: HEIGHT_mode
    IMPLICIT NONE
 
 !----------------------- Dummy argument --------------------------------
@@ -262,9 +263,9 @@ CONTAINS
         numlay         ! available layer number
 
    real(r8) :: &
-        huu,          &! observational height of wind [m]
-        htu,          &! observational height of temperature [m]
-        hqu,          &! observational height of humidity [m]
+        hu_,          &! adjusted observational height of wind [m]
+        ht_,          &! adjusted observational height of temperature [m]
+        hq_,          &! adjusted observational height of humidity [m]
         ktop,         &! K value at a specific height
         utop,         &! u value at a specific height
         fht,          &! integral of profile function for heat at the top layer
@@ -509,12 +510,22 @@ CONTAINS
       dqh  =  qm - qaf(2)
       dthv = dth*(1.+0.61*qm) + 0.61*th*dqh
 
-      ! to ensure the obs height >= hroof+10.
-      huu = max(hroof+10., hu)
-      htu = max(hroof+10., ht)
-      hqu = max(hroof+10., hq)
+      hu_ = hu; ht_ = ht; hq_ = hq;
 
-      zldis = huu - displa
+      IF (trim(HEIGHT_mode) == 'absolute') THEN
+#ifndef SingPoint
+         ! to ensure the obs height >= hroof+10.
+         hu_ = max(hroof+10., hu)
+         ht_ = max(hroof+10., ht)
+         hq_ = max(hroof+10., hq)
+#endif
+      ELSE ! relative height
+         hu_ = hroof + hu
+         ht_ = hroof + ht
+         hq_ = hroof + hq
+      ENDIF
+
+      zldis = hu_ - displa
 
       IF (zldis <= 0.0) THEN
          write(6,*) 'the obs height of u less than the zero displacement heght'
@@ -538,7 +549,7 @@ CONTAINS
 
          !NOTE: displat=hroof, z0mt=0, are set for roof
          ! fmtop is calculated at the same height of fht, fqt
-         CALL moninobukm(huu,htu,hqu,displa,z0m,z0h,z0q,obu,um, &
+         CALL moninobukm(hu_,ht_,hq_,displa,z0m,z0h,z0q,obu,um, &
               hroof,0.,ustar,fh2m,fq2m,hroof,fmtop,fm,fh,fq,fht,fqt,phih)
 
 ! Aerodynamic resistance
@@ -885,6 +896,7 @@ CONTAINS
    USE MOD_FrictionVelocity
    USE MOD_CanopyLayerProfile
    USE MOD_AssimStomataConductance
+   USE MOD_UserSpecifiedForcing, only: HEIGHT_mode
    IMPLICIT NONE
 
 !-----------------------Arguments---------------------------------------
@@ -1150,9 +1162,9 @@ CONTAINS
         numlay         ! available layer number
 
    real(r8) :: &
-        huu,          &! observational height of wind [m]
-        htu,          &! observational height of temperature [m]
-        hqu,          &! observational height of humidity [m]
+        hu_,          &! adjusted observational height of wind [m]
+        ht_,          &! adjusted observational height of temperature [m]
+        hq_,          &! adjusted observational height of humidity [m]
         ktop,         &! K value at a specific height
         utop,         &! u value at a specific height
         fht,          &! integral of profile function for heat at the top layer
@@ -1487,12 +1499,22 @@ CONTAINS
       dqh =  qm - qaf(2)
       dthv = dth*(1.+0.61*qm) + 0.61*th*dqh
 
-      ! To ensure the obs height >= hroof+10.
-      huu = max(hroof+10., hu)
-      htu = max(hroof+10., ht)
-      hqu = max(hroof+10., hq)
+      hu_ = hu; ht_ = ht; hq_ = hq;
 
-      zldis = huu - displa
+      IF (trim(HEIGHT_mode) == 'absolute') THEN
+#ifndef SingPoint
+         ! to ensure the obs height >= hroof+10.
+         hu_ = max(hroof+10., hu)
+         ht_ = max(hroof+10., ht)
+         hq_ = max(hroof+10., hq)
+#endif
+      ELSE ! relative height
+         hu_ = hroof + hu
+         ht_ = hroof + ht
+         hq_ = hroof + hq
+      ENDIF
+
+      zldis = hu_ - displa
 
       IF (zldis <= 0.0) THEN
          write(6,*) 'the obs height of u less than the zero displacement heght'
@@ -1517,7 +1539,7 @@ CONTAINS
 !-----------------------------------------------------------------------
 ! Evaluate stability-dependent variables using moz from prior iteration
 
-         CALL moninobukm(huu,htu,hqu,displa,z0m,z0h,z0q,obu,um, &
+         CALL moninobukm(hu_,ht_,hq_,displa,z0m,z0h,z0q,obu,um, &
               hroof,0.,ustar,fh2m,fq2m,hroof,fmtop,fm,fh,fq,fht,fqt,phih)
 
 ! Aerodynamic resistance
