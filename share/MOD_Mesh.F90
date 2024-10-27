@@ -862,10 +862,10 @@ CONTAINS
             write(*,'(A,I12,A)') 'Total   : ', nelm_glb, ' elements.'
          ENDIF
 
-         nelm_max_blk = maxval(nelm_blk)
+         nelm_max_blk = maxval(nelm_blk, mask = gblock%pio == p_iam_glb)
          CALL mpi_allreduce (MPI_IN_PLACE, nelm_max_blk, 1, MPI_INTEGER, MPI_MAX, p_comm_io, p_err)
          IF (p_iam_io == p_root) THEN
-            write(*,'(A,I12,A)') 'Maximum : ', nelm_glb, &
+            write(*,'(A,I12,A)') 'Maximum : ', nelm_max_blk, &
                ' elements in one block (More than 3600 is recommended).'
          ENDIF
 

@@ -74,8 +74,6 @@ MODULE MOD_Namelist
    logical  :: USE_SITE_soilparameters   = .true.
    logical  :: USE_SITE_dbedrock         = .true.
    logical  :: USE_SITE_topography       = .true.
-   logical  :: USE_SITE_topostd          = .true.
-   logical  :: USE_SITE_BVIC             = .true.
    logical  :: USE_SITE_urban_paras      = .true.
    logical  :: USE_SITE_thermal_paras    = .false.
    logical  :: USE_SITE_urban_LAI        = .false.
@@ -342,9 +340,9 @@ MODULE MOD_Namelist
 ! ----- Part 12: forcing -----
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-   character(len=256) :: DEF_dir_forcing       = 'path/to/forcing/data'
-
    character(len=256) :: DEF_forcing_namelist  = 'null'
+
+   character(len=256) :: DEF_dir_forcing       = 'path/to/forcing/data'
 
    type nl_forcing_type
 
@@ -449,7 +447,6 @@ MODULE MOD_Namelist
       logical :: xy_rain                          = .true.
       logical :: xy_snow                          = .true.
       logical :: xy_ozone                         = .true.
-
       logical :: xy_hpbl                          = .true.
 
       logical :: taux                             = .true.
@@ -821,8 +818,6 @@ CONTAINS
       USE_SITE_soilparameters,                &
       USE_SITE_dbedrock,                      &
       USE_SITE_topography,                    &
-      USE_SITE_topostd   ,                    &
-      USE_SITE_BVIC      ,                    &
       USE_SITE_HistWriteBack,                 &
       USE_SITE_ForcingReadAhead,              &
       USE_SITE_urban_paras,                   &
