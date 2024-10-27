@@ -101,7 +101,8 @@ MODULE MOD_SingleSrfdata
    real(r8), allocatable :: SITE_hroof    (:)
    real(r8), allocatable :: SITE_fgimp    (:)
    real(r8), allocatable :: SITE_fgper    (:)
-   real(r8), allocatable :: SITE_hwr      (:)
+   real(r8), allocatable :: SITE_hlr      (:)
+   real(r8), allocatable :: SITE_lambdaw  (:)
    real(r8), allocatable :: SITE_popden   (:)
 
    real(r8), allocatable :: SITE_em_roof  (:)
@@ -161,7 +162,7 @@ CONTAINS
          ENDIF
          SITE_lon_location = lon_in
       ENDIF
-      
+
       CALL normalize_longitude (SITE_lon_location)
 
       IF (USE_SITE_landtype) THEN
@@ -172,7 +173,7 @@ CONTAINS
             CALL ncio_read_serial (fsrfdata, 'IGBP_classification', SITE_landtype)
 #endif
          ENDIF
-         
+
          IF (SITE_landtype < 0) THEN
             write(*,*) 'Error! Please set namelist SITE_landtype first!'
             CALL CoLM_stop()
@@ -338,7 +339,7 @@ CONTAINS
          ENDIF
          SITE_lon_location = lon_in
       ENDIF
-      
+
       CALL normalize_longitude (SITE_lon_location)
 
       IF (trim(fsrfdata) /= 'null') THEN
@@ -366,8 +367,14 @@ CONTAINS
             CALL ncio_read_serial (fsrfdata, 'roof_area_fraction'         , SITE_froof     )
             CALL ncio_read_serial (fsrfdata, 'building_mean_height'       , SITE_hroof     )
             CALL ncio_read_serial (fsrfdata, 'impervious_area_fraction'   , SITE_fgimp     )
-            CALL ncio_read_serial (fsrfdata, 'canyon_height_width_ratio'  , SITE_hwr       )
+            CALL ncio_read_serial (fsrfdata, 'wall_to_plan_area_ratio'    , SITE_lambdaw   )
             CALL ncio_read_serial (fsrfdata, 'resident_population_density', SITE_popden    )
+IF (DEF_USE_CANYON_HWR) THEN
+            CALL ncio_read_serial (fsrfdata, 'canyon_height_width_ratio'  , SITE_hlr       )
+ELSE
+            CALL ncio_read_serial (fsrfdata, 'wall_to_plan_area_ratio'    , SITE_lambdaw   )
+            SITE_hlr       = SITE_lambdaw/4/SITE_froof
+ENDIF
 
             SITE_fgper     = 1 - (SITE_fgimp-SITE_froof)/(1-SITE_froof-SITE_flake_urb)
             SITE_fveg_urb  = SITE_fveg_urb  * 100
@@ -386,7 +393,7 @@ CONTAINS
          CALL ncio_read_serial (fsrfdata, 'WT_ROOF'       , SITE_froof      )
          CALL ncio_read_serial (fsrfdata, 'HT_ROOF'       , SITE_hroof      )
          CALL ncio_read_serial (fsrfdata, 'WTROAD_PERV'   , SITE_fgper      )
-         CALL ncio_read_serial (fsrfdata, 'CANYON_HWR'    , SITE_hwr        )
+         CALL ncio_read_serial (fsrfdata, 'BUILDING_HLR'  , SITE_hlr        )
          CALL ncio_read_serial (fsrfdata, 'POP_DEN'       , SITE_popden     )
 
          CALL ncio_read_serial (fsrfdata, 'EM_ROOF'       , SITE_em_roof    )
@@ -645,7 +652,7 @@ CONTAINS
       CALL ncio_put_attr     (fsrfdata, 'elvstd', 'source', datasource(USE_SITE_topography))
 
       ! used for downscaling
-      IF (DEF_USE_Forcing_Downscaling) THEN   
+      IF (DEF_USE_Forcing_Downscaling) THEN
          CALL ncio_write_serial (fsrfdata, 'SITE_svf', SITE_svf)
          CALL ncio_write_serial (fsrfdata, 'SITE_cur', SITE_cur)
          CALL ncio_write_serial (fsrfdata, 'SITE_sf_lut'   , SITE_sf_lut, 'azi', 'zen')
@@ -713,7 +720,7 @@ CONTAINS
       CALL ncio_write_serial (fsrfdata, 'WT_ROOF'       , SITE_froof      , 'patch')
       CALL ncio_write_serial (fsrfdata, 'HT_ROOF'       , SITE_hroof      , 'patch')
       CALL ncio_write_serial (fsrfdata, 'WTROAD_PERV'   , SITE_fgper      , 'patch')
-      CALL ncio_write_serial (fsrfdata, 'CANYON_HWR'    , SITE_hwr        , 'patch')
+      CALL ncio_write_serial (fsrfdata, 'BUILDING_HLR'  , SITE_hlr        , 'patch')
       CALL ncio_write_serial (fsrfdata, 'POP_DEN'       , SITE_popden     , 'patch')
 
       CALL ncio_put_attr     (fsrfdata, 'PCT_Tree'      , 'source', source)
@@ -722,7 +729,7 @@ CONTAINS
       CALL ncio_put_attr     (fsrfdata, 'WT_ROOF'       , 'source', source)
       CALL ncio_put_attr     (fsrfdata, 'HT_ROOF'       , 'source', source)
       CALL ncio_put_attr     (fsrfdata, 'WTROAD_PERV'   , 'source', source)
-      CALL ncio_put_attr     (fsrfdata, 'CANYON_HWR'    , 'source', source)
+      CALL ncio_put_attr     (fsrfdata, 'BUILDING_HLR'  , 'source', source)
       CALL ncio_put_attr     (fsrfdata, 'POP_DEN'       , 'source', source)
 
       source = datasource(USE_SITE_thermal_paras)
@@ -836,6 +843,9 @@ CONTAINS
       CALL ncio_write_serial (fsrfdata, 'elevation', SITE_topography)
       CALL ncio_put_attr     (fsrfdata, 'elevation', 'source', datasource(USE_SITE_topography))
 
+      CALL ncio_write_serial (fsrfdata, 'elvstd', SITE_topostd)
+      CALL ncio_put_attr     (fsrfdata, 'elvstd', 'source', datasource(USE_SITE_topography))
+
       IF (DEF_USE_Forcing_Downscaling) THEN
          ! used for downscaling
          CALL ncio_write_serial (fsrfdata, 'SITE_svf', SITE_svf)
@@ -844,13 +854,10 @@ CONTAINS
          CALL ncio_write_serial (fsrfdata, 'SITE_slp_type' , SITE_slp_type , 'type')
          CALL ncio_write_serial (fsrfdata, 'SITE_asp_type' , SITE_asp_type , 'type')
          CALL ncio_write_serial (fsrfdata, 'SITE_area_type', SITE_area_type, 'type')
-
-         CALL ncio_write_serial (fsrfdata, 'elvstd', SITE_topostd)
-         CALL ncio_put_attr     (fsrfdata, 'elvstd', 'source', datasource(USE_SITE_topography))
       ENDIF
 
       ! used for downscaling
-      IF (DEF_USE_Forcing_Downscaling) THEN   
+      IF (DEF_USE_Forcing_Downscaling) THEN
          CALL ncio_write_serial (fsrfdata, 'SITE_svf', SITE_svf)
          CALL ncio_write_serial (fsrfdata, 'SITE_cur', SITE_cur)
          CALL ncio_write_serial (fsrfdata, 'SITE_sf_lut', SITE_sf_lut, 'azi', 'zen')
@@ -929,7 +936,7 @@ CONTAINS
 #endif
       IF (allocated(SITE_soil_BA_alpha         )) deallocate(SITE_soil_BA_alpha         )
       IF (allocated(SITE_soil_BA_beta          )) deallocate(SITE_soil_BA_beta          )
-      
+
       IF (allocated(SITE_sf_lut                )) deallocate(SITE_sf_lut                )
       IF (allocated(SITE_slp_type              )) deallocate(SITE_slp_type              )
       IF (allocated(SITE_asp_type              )) deallocate(SITE_asp_type              )
