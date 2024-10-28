@@ -649,7 +649,7 @@ ENDIF
       CALL ncio_put_attr     (fsrfdata, 'elevation', 'source', datasource(USE_SITE_topography))
 
       CALL ncio_write_serial (fsrfdata, 'elvstd', SITE_topostd)
-      CALL ncio_put_attr     (fsrfdata, 'elvstd', 'source', datasource(USE_SITE_topostd))
+      CALL ncio_put_attr     (fsrfdata, 'elvstd', 'source', datasource(USE_SITE_topography))
 
       ! used for downscaling
       IF (DEF_USE_Forcing_Downscaling) THEN
@@ -844,7 +844,7 @@ ENDIF
       CALL ncio_put_attr     (fsrfdata, 'elevation', 'source', datasource(USE_SITE_topography))
 
       CALL ncio_write_serial (fsrfdata, 'elvstd', SITE_topostd)
-      CALL ncio_put_attr     (fsrfdata, 'elvstd', 'source', datasource(USE_SITE_topostd))
+      CALL ncio_put_attr     (fsrfdata, 'elvstd', 'source', datasource(USE_SITE_topography))
 
       IF (DEF_USE_Forcing_Downscaling) THEN
          ! used for downscaling
