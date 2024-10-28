@@ -5,6 +5,9 @@
 
    DEF_forcing%dataset           = 'ERA5'
    DEF_forcing%solarin_all_band  = .true.
+   DEF_forcing%HEIGHT_mode       = 'absolute'  ! 'absolute' height to ground surface or
+                                               ! 'relative' height to tree/building top
+                                               ! if not speficied, default is absolute
    DEF_forcing%HEIGHT_V          = 50.0
    DEF_forcing%HEIGHT_T          = 40.0
    DEF_forcing%HEIGHT_Q          = 40.0
