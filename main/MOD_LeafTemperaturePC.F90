@@ -91,14 +91,14 @@ CONTAINS
 !
 ! !REVISIONS:
 !
-!  01/2021, Xingjie Lu and Nan Wei: added plant hydraulic process interface
+!  01/2021, Xingjie Lu and Nan Wei: added plant hydraulic process interface.
 !
-!  01/2021, Nan Wei: added interaction btw prec and canopy
+!  01/2021, Nan Wei: added interaction btw prec and canopy.
 !
 !  05/2023, Shaofeng Liu: add option to call moninobuk_leddy, the LargeEddy
 !           surface turbulence scheme (LZD2022); make a proper update of um.
 !
-!  04/2024, Hua Yuan: add option to account for vegetation snow process
+!  04/2024, Hua Yuan: add option to account for vegetation snow process.
 !
 !=======================================================================
 
@@ -114,6 +114,8 @@ CONTAINS
    USE MOD_AssimStomataConductance
    USE MOD_PlantHydraulic, only: PlantHydraulicStress_twoleaf
    USE MOD_Ozone, only: CalcOzoneStress
+   USE MOD_UserSpecifiedForcing, only: HEIGHT_mode
+
    IMPLICIT NONE
 
 !-----------------------Arguments---------------------------------------
@@ -325,6 +327,9 @@ CONTAINS
         rootfr(nl_soil,ps:pe) ! root fraction
 
    real(r8) :: &
+        hu_,           &! adjusted observational height of wind [m]
+        ht_,           &! adjusted observational height of temperature [m]
+        hq_,           &! adjusted observational height of humidity [m]
         zldis,         &! reference height "minus" zero displacement heght [m]
         zii,           &! convective boundary layer height [m]
         z0mv,          &! roughness length, momentum [m]
@@ -901,7 +906,23 @@ CONTAINS
       dth   = thm - taf(toplay)
       dqh   = qm  - qaf(toplay)
       dthv  = dth*(1.+0.61*qm) + 0.61*th*dqh
-      zldis = hu - displa_lays(3)
+
+      hu_ = hu; ht_ = ht; hq_ = hq;
+
+      IF (trim(HEIGHT_mode) == 'absolute') THEN
+#ifndef SingPoint
+         ! to ensure the obs height >= htop+10.
+         hu_ = max(htop_lay(toplay)+10., hu)
+         ht_ = max(htop_lay(toplay)+10., ht)
+         hq_ = max(htop_lay(toplay)+10., hq)
+#endif
+      ELSE ! relative height
+         hu_ = htop_lay(toplay) + hu
+         ht_ = htop_lay(toplay) + ht
+         hq_ = htop_lay(toplay) + hq
+      ENDIF
+
+      zldis = hu_ - displa_lays(3)
 
       IF(zldis <= 0.0) THEN
          write(6,*) 'the obs height of u less than the zero displacement heght'
@@ -935,11 +956,11 @@ CONTAINS
 ! Evaluate stability-dependent variables using moz from prior iteration
 
          IF (DEF_USE_CBL_HEIGHT) THEN
-            CALL moninobukm_leddy(hu,ht,hq,displa_lays(toplay),z0mv,z0hv,z0qv,obu,um, &
+            CALL moninobukm_leddy(hu_,ht_,hq_,displa_lays(toplay),z0mv,z0hv,z0qv,obu,um, &
                                   displa_lay(toplay),z0m_lay(toplay),hpbl,ustar,fh2m,fq2m, &
                                   htop_lay(toplay),fmtop,fm,fh,fq,fht,fqt,phih)
          ELSE
-            CALL moninobukm(hu,ht,hq,displa_lays(toplay),z0mv,z0hv,z0qv,obu,um, &
+            CALL moninobukm(hu_,ht_,hq_,displa_lays(toplay),z0mv,z0hv,z0qv,obu,um, &
                             displa_lay(toplay),z0m_lay(toplay),ustar,fh2m,fq2m, &
                             htop_lay(toplay),fmtop,fm,fh,fq,fht,fqt,phih)
          ENDIF
@@ -1659,7 +1680,7 @@ ENDIF
             um = max(ur,.1)
          ELSE
             IF (DEF_USE_CBL_HEIGHT) THEN !//TODO: Shaofeng, 2023.05.18
-              zii = max(5.*hu,hpbl)
+              zii = max(5.*hu_,hpbl)
             ENDIF !//TODO: Shaofeng, 2023.05.18
             wc = (-grav*ustar*thvstar*zii/thv)**(1./3.)
             wc2 = beta*beta*(wc*wc)
