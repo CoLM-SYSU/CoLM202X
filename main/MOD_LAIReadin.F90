@@ -69,7 +69,7 @@ CONTAINS
 
 #ifdef SinglePoint
 #ifndef URBAN_MODEL
-      iyear = findloc_ud(SITE_LAI_year == min(DEF_LAI_END_YEAR, max(DEF_LAI_START_YEAR,year) )
+      iyear = findloc_ud(SITE_LAI_year == min(DEF_LAI_END_YEAR, max(DEF_LAI_START_YEAR,year)))
       IF (.not. DEF_LAI_MONTHLY) THEN
          itime = (time-1)/8 + 1
       ENDIF
