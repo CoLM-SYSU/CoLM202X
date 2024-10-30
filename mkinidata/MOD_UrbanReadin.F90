@@ -48,7 +48,7 @@ CONTAINS
 
    integer, intent(in) :: lc_year    ! which year of land cover data used
    character(len=256), intent(in) :: dir_landdata
-   character(len=256) :: dir_rawdata
+   character(len=256) :: dir_rawdata, dir_runtime
    character(len=256) :: lndname
    character(len=256) :: cyear
 
@@ -169,8 +169,8 @@ ENDIF
       CALL ncio_read_vector (lndname, 'URBAN_TREE_TOP', landurban, htop_urb)
 #endif
 
-      dir_rawdata = DEF_dir_rawdata
-      lndname = trim(dir_rawdata)//'/urban/'//'/LUCY_rawdata.nc'
+      dir_runtime = DEF_dir_runtime
+      lndname = trim(dir_runtime)//'/urban/'//'/LUCY_rawdata.nc'
 
       CALL ncio_read_bcast_serial (lndname,  "NUMS_VEHC"             , lvehicle     )
       CALL ncio_read_bcast_serial (lndname,  "WEEKEND_DAY"           , lweek_holiday)
