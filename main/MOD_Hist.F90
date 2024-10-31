@@ -3411,7 +3411,7 @@ CONTAINS
             sumarea, filter, 'lake ice fraction cover','0-1')
 
 
-#ifdef NEW_LAKE
+#ifdef EXTERNAL_LAKE
          CALL write_history_variable_2d ( DEF_hist_vars%dplak, &
             a_dplak, file_hist, 'f_dplak', itime_in_file, sumarea, filter, &
             'lake depth ','m')

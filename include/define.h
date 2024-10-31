@@ -76,5 +76,9 @@
 
 #undef USESplitAI
 
-! 11. New Lake Drive
-#define NEW_LAKE
+! 11. External lake models.
+!     1) "CoLM-Lake": https://github.com/CoLM-SYSU/CoLM202X
+!     2) "FLake"    : http://www.flake.igb-berlin.de/
+!     3) "Simstrat" : https://github.com/Eawag-AppliedSystemAnalysis/Simstrat
+!     4) "XOML"     : https://doi.org/10.1002/2015MS000476
+#undef EXTERNAL_LAKE 

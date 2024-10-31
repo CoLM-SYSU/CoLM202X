@@ -473,7 +473,7 @@ MODULE MOD_Vars_TimeVariables
    real(r8), allocatable :: lake_icefrac(:,:) ! lake mass fraction of lake layer that is frozen
    real(r8), allocatable :: savedtke1     (:) ! top level eddy conductivity (W/m K)
 
-#ifdef NEW_LAKE
+#ifdef EXTERNAL_LAKE
    real(r8), allocatable :: dplak          (:)  !lake depth [m]
    real(r8), allocatable :: zlake        (:,:)  !Lake layer node depth [m]
    real(r8), allocatable :: zilak        (:,:)  !Lake layer interface depth [m]
@@ -664,7 +664,7 @@ CONTAINS
             allocate (lake_icefrac        (nl_lake,numpatch)); lake_icefrac(:,:) = spval
             allocate (savedtke1                   (numpatch)); savedtke1     (:) = spval
 
-#ifdef NEW_LAKE
+#ifdef EXTERNAL_LAKE
             allocate (dplak                       (numpatch)); dplak         (:) = spval 
             allocate (zlake               (nl_lake,numpatch)); zlake       (:,:) = spval 
             allocate (zilak             (nl_lake+1,numpatch)); zilak       (:,:) = spval 
@@ -859,7 +859,7 @@ CONTAINS
             deallocate (lake_icefrac           ) ! new lake scheme
             deallocate (savedtke1              ) ! new lake scheme
 
-#ifdef NEW_LAKE
+#ifdef EXTERNAL_LAKE
             deallocate (dplak                  )  
             deallocate (zlake                  )  
             deallocate (zilak                  )  
@@ -1053,7 +1053,7 @@ CONTAINS
       CALL ncio_define_dimension_vector (file_restart, landpatch, 'soilsnow', nl_soil-maxsnl)
       CALL ncio_define_dimension_vector (file_restart, landpatch, 'soil',     nl_soil)
       CALL ncio_define_dimension_vector (file_restart, landpatch, 'lake',     nl_lake)
-#ifdef NEW_LAKE
+#ifdef EXTERNAL_LAKE
       CALL ncio_define_dimension_vector (file_restart, landpatch, 'lakeI',    nl_lake+1     )
 #endif
 
@@ -1121,7 +1121,7 @@ ENDIF
       CALL ncio_write_vector (file_restart, 'lake_icefrc', 'lake', nl_lake, 'patch', landpatch, lake_icefrac, compress)
       CALL ncio_write_vector (file_restart, 'savedtke1  ', 'patch', landpatch, savedtke1   , compress)
 
-#ifdef NEW_LAKE
+#ifdef EXTERNAL_LAKE
       CALL ncio_write_vector (file_restart, 'dplak      ', 'patch', landpatch, dplak, compress) 
       CALL ncio_write_vector (file_restart, 'zlake      ', 'lake' , nl_lake  , 'patch'  , landpatch, zlake     , compress) 
       CALL ncio_write_vector (file_restart, 'zilak      ', 'lakeI', nl_lake+1, 'patch'  , landpatch, zilak     , compress) 
@@ -1329,7 +1329,7 @@ ENDIF
       CALL ncio_read_vector (file_restart, 'lake_icefrc', nl_lake, landpatch, lake_icefrac)
       CALL ncio_read_vector (file_restart, 'savedtke1', landpatch, savedtke1)
 
-#ifdef NEW_LAKE
+#ifdef EXTERNAL_LAKE
       CALL ncio_read_vector (file_restart, 'dplak    '  ,            landpatch, dplak     )   !lake depth
       CALL ncio_read_vector (file_restart, 'zlake    '  , nl_lake  , landpatch, zlake     )   !Lake layer node depth
       CALL ncio_read_vector (file_restart, 'zilak    '  , nl_lake+1, landpatch, zilak     )   !Lake layer interface depth
@@ -1505,7 +1505,7 @@ ENDIF
       CALL check_vector_data ('lake_icefrc [-]    ', lake_icefrac)!
       CALL check_vector_data ('savedtke1   [W/m K]', savedtke1   )!
 
-#ifdef NEW_LAKE
+#ifdef EXTERNAL_LAKE
       CALL check_vector_data ('dplak       [m]    ', dplak      ) ! lake depth
       CALL check_vector_data ('zlake       [m]    ', zlake      ) ! Lake layer node depth
       CALL check_vector_data ('zilak       [m]    ', zilak      ) ! Lake layer interface depth

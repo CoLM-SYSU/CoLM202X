@@ -273,7 +273,7 @@ MODULE MOD_Vars_1DAccFluxes
    real(r8), allocatable :: a_lake_icefrac(:,:)
 
 
-#ifdef NEW_LAKE
+#ifdef EXTERNAL_LAKE
    real(r8), allocatable :: a_dplak          (:)  !lake depth [m]
    real(r8), allocatable :: a_zlake        (:,:)  !Lake layer node depth [m]
    real(r8), allocatable :: a_zilak        (:,:)  !Lake layer interface depth [m]
@@ -654,7 +654,7 @@ CONTAINS
             allocate (a_t_lake      (nl_lake,         numpatch))
             allocate (a_lake_icefrac(nl_lake,         numpatch))
 
-#ifdef NEW_LAKE
+#ifdef EXTERNAL_LAKE
             allocate (a_dplak               (numpatch)) 
             allocate (a_zlake       (nl_lake,numpatch)) 
             allocate (a_zilak     (nl_lake+1,numpatch)) 
@@ -1035,7 +1035,7 @@ CONTAINS
             deallocate (a_t_lake      )
             deallocate (a_lake_icefrac)
 
-#ifdef NEW_LAKE
+#ifdef EXTERNAL_LAKE
             deallocate (a_dplak       )  
             deallocate (a_zlake       )  
             deallocate (a_zilak       )  
@@ -1414,7 +1414,7 @@ CONTAINS
             a_t_lake       (:,:) = spval
             a_lake_icefrac (:,:) = spval
 
-#ifdef NEW_LAKE
+#ifdef EXTERNAL_LAKE
             a_dplak         (:) = spval 
             a_zlake       (:,:) = spval 
             a_zilak       (:,:) = spval 
@@ -1894,7 +1894,7 @@ CONTAINS
             CALL acc2d (t_lake      , a_t_lake       )
             CALL acc2d (lake_icefrac, a_lake_icefrac )
 
-#ifdef NEW_LAKE
+#ifdef EXTERNAL_LAKE
             CALL acc1d (dplak       , a_dplak        )   
             CALL acc2d (zlake       , a_zlake        )   
             CALL acc2d (zilak       , a_zilak        )   

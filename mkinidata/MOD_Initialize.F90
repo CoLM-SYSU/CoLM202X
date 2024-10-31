@@ -80,7 +80,7 @@ CONTAINS
    USE MOD_LakeDepthReadin
    USE MOD_PercentagesPFTReadin
    USE MOD_SoilParametersReadin
-#ifdef NEW_LAKE
+#ifdef EXTERNAL_LAKE
    USE MOD_Lake_Utils, only: LakeIni
 #endif 
 
@@ -215,7 +215,7 @@ CONTAINS
    integer  :: i,j,ipatch,nsl,hs,he,ps,pe,ivt,m, u  ! indices
    real(r8) :: totalvolume
 
-#ifdef NEW_LAKE
+#ifdef EXTERNAL_LAKE
    integer  :: ipa
    integer :: scwat
 #endif
@@ -1217,7 +1217,7 @@ CONTAINS
          lake_icefrac(:,:) = 0.
          savedtke1   (:)   = tkwat
 
-#ifdef NEW_LAKE
+#ifdef EXTERNAL_LAKE
          DO i = 1, numpatch
             IF(patchtype(i) == 4) THEN
                z0m(i) = DEF_LAKE_Z0M 
@@ -1340,7 +1340,7 @@ CONTAINS
                ! for SOIL Water INIT by using water table depth
                ,use_wtd, zwtmm, zc_soimm, zi_soimm, vliq_r, nprms, prms)
 
-#ifdef NEW_LAKE
+#ifdef EXTERNAL_LAKE
             DO ipa = 1, numpatch
                IF(patchtype(ipa) == 4) THEN
                   z0m(ipa) = DEF_LAKE_Z0M
