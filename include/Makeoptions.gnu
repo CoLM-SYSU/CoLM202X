@@ -3,9 +3,12 @@
 # 
 
   FF = mpif90 -fopenmp
-   
-NETCDF_LIB = /usr/lib/x86_64-linux-gnu
-NETCDF_INC = /usr/include
+
+NETCDF_LIB = /stu01/lianghb21/CoLM202X/2023student/lib/netcdf/netcdf/lib
+NETCDF_INC = /stu01/lianghb21/CoLM202X/2023student/lib/netcdf/netcdf/include
+
+#NETCDF_LIB = /usr/lib/x86_64-linux-gnu
+#NETCDF_INC = /usr/include
 
 #  NETCDF_LIB = /opt/netcdf-c-4.9.2-fortran-4.6.0-gnu/lib
 #  NETCDF_INC = /opt/netcdf-c-4.9.2-fortran-4.6.0-gnu/include
