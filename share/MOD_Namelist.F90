@@ -335,6 +335,10 @@ MODULE MOD_Namelist
    !Fire MODULE
    logical            :: DEF_USE_FIRE            = .false.
 
+   !Dynamic Lake model
+   logical            :: DEF_USE_Dynamic_Lake    = .false.
+
+#ifdef EXTERNAL_LAKE
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ! ----- Part 11+: parameteration schemes related to New LakeDriver -----
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -394,8 +398,7 @@ MODULE MOD_Namelist
    ! FLake: Control the c_relax_C (Constant in the relaxation equation for the shape factor)
    real(r8):: DEF_LAKE_GAMMA = 1.0  ! lake mixing enhancement factor
 
-   !Dynamic Lake model
-   logical            :: DEF_USE_Dynamic_Lake    = .false.
+#endif
 
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ! ----- Part 12: forcing -----
@@ -787,7 +790,7 @@ MODULE MOD_Namelist
       logical :: t_lake                           = .true.
       logical :: lake_icefrac                     = .true.
 
-#ifdef NEW_LAKE
+#ifdef EXTERNAL_LAKE
       logical :: dplak        = .true.
       logical :: zlake        = .true.
       logical :: zilak        = .true.
@@ -821,7 +824,7 @@ MODULE MOD_Namelist
       logical :: eps          = .true.
       logical :: num          = .true.
       logical :: nuh          = .true.
-      logical :: lkrho       = .true.
+      logical :: lkrho        = .true.
 #endif
 
       logical :: litr1c_vr                        = .true.
@@ -1025,6 +1028,7 @@ CONTAINS
 
       DEF_DA_obsdir,                          &
 
+#ifdef EXTERNAL_LAKE
       DEF_LAKE_MODEL_SCHEME,                  &
       DEF_USE_COLML_FLUX_SCHEME,              &
       DEF_LAKE_LAYER_SCHEME,                  &
@@ -1039,7 +1043,7 @@ CONTAINS
       DEF_LAKE_FETCH_SCHEME,                  &
       DEF_LAKE_FETCH,                         &
       DEF_LAKE_GAMMA,                         &
-
+#endif
 
       DEF_forcing_namelist,                   &
 
@@ -1563,7 +1567,8 @@ CONTAINS
       CALL mpi_bcast (DEF_forcing%CBL_tintalgo               ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_forcing%CBL_dtime                  ,1   ,mpi_integer   ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_forcing%CBL_offset                 ,1   ,mpi_integer   ,p_address_master ,p_comm_glb ,p_err)
-     
+
+#ifdef EXTERNAL_LAKE
       CALL mpi_bcast (DEF_LAKE_MODEL_SCHEME,           1, mpi_integer , p_address_master, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_USE_COLML_FLUX_SCHEME,       1, mpi_logical , p_address_master, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_LAKE_LAYER_SCHEME,           1, mpi_integer , p_address_master, p_comm_glb, p_err)
@@ -1578,6 +1583,8 @@ CONTAINS
       CALL mpi_bcast (DEF_LAKE_FETCH_SCHEME,           1, mpi_integer , p_address_master, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_LAKE_FETCH,                  1, mpi_real8   , p_address_master, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_LAKE_GAMMA,                  1, mpi_real8   , p_address_master, p_comm_glb, p_err)
+#endif
+
 #endif
 
       CALL sync_hist_vars (set_defaults = .true.)
@@ -1875,7 +1882,7 @@ CONTAINS
       CALL sync_hist_vars_one (DEF_hist_vars%t_lake      , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%lake_icefrac, set_defaults)
 
-#ifdef NEW_LAKE
+#ifdef EXTERNAL_LAKE
       CALL sync_hist_vars_one (DEF_hist_vars%dplak       ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%zlake       ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%zilak       ,  set_defaults)

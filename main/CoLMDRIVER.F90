@@ -177,7 +177,7 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
                wimp,            pondmx,          smpmax,          smpmin,          &
                trsmx0,          tcrit,                                             &
 
-#ifdef NEW_LAKE
+#ifdef EXTERNAL_LAKE
               ! additional variables required by new lake driver
                 zlake(:,i),      dzlak(:,i),      zilak(:,i),      dplak(i),       &
                 ziarea(:,i),     uwatv(:,i),      vwatv(:,i),      lksal(:,i),     &
@@ -191,7 +191,7 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
 #endif
              
              ! additional variables required by coupling with WRF model
-#ifndef NEW_LAKE
+#ifndef EXTERNAL_LAKE
                z0m(i),          &
 #endif
                emis(i),         zol(i),          rib(i),                           &

@@ -99,7 +99,7 @@ SUBROUTINE CoLMMAIN ( &
            wimp,         pondmx,       smpmax,       smpmin,       &
            trsmx0,       tcrit,        &
 
-#ifdef NEW_LAKE
+#ifdef EXTERNAL_LAKE
          ! additional variables required by new lake driver
            zlake,        dzlak,        zilak,        dplak,         &
            ziarea,       uwatv,        vwatv,        lksal,         &
@@ -113,7 +113,7 @@ SUBROUTINE CoLMMAIN ( &
 #endif
 
          ! additional variables required by coupling with WRF model
-#ifndef NEW_LAKE
+#ifndef EXTERNAL_LAKE
            z0m,          &
 #endif
            emis,         zol,          rib,          &
@@ -188,7 +188,7 @@ SUBROUTINE CoLMMAIN ( &
    USE YOS_CMF_INPUT, only: LWINFILT,LWEVAP
 #endif
    USE MOD_SPMD_Task
-#ifdef NEW_LAKE
+#ifdef EXTERNAL_LAKE
    USE MOD_Lake_Driver, only: Lake_Driver
 #endif
 
@@ -485,7 +485,7 @@ SUBROUTINE CoLMMAIN ( &
         forc_snow   ,&! snow [mm/s]
 
         emis        ,&! averaged bulk surface emissivity
-#ifndef NEW_LAKE
+#ifndef EXTERNAL_LAKE
         z0m         ,&! effective roughness [m]
 #endif
         zol         ,&! dimensionless height (z/L) used in Monin-Obukhov theory
@@ -498,7 +498,7 @@ SUBROUTINE CoLMMAIN ( &
         fq            ! integral of profile function for moisture
 
 
-#ifdef NEW_LAKE
+#ifdef EXTERNAL_LAKE
    real(r8), intent(inout) :: &
       dplak                  ,&! lake depth (m)
       zlake(nl_lake)         ,&! lake layer depth [m]
@@ -1219,7 +1219,7 @@ SUBROUTINE CoLMMAIN ( &
          pg_snow = prc_snow + prl_snow
 
 
-#ifndef NEW_LAKE
+#ifndef EXTERNAL_LAKE
          CALL newsnow_lake ( DEF_USE_Dynamic_Lake, &
               ! "in" arguments
               ! ---------------
