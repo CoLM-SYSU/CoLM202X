@@ -74,8 +74,6 @@ MODULE MOD_Namelist
    logical  :: USE_SITE_soilparameters   = .true.
    logical  :: USE_SITE_dbedrock         = .true.
    logical  :: USE_SITE_topography       = .true.
-   logical  :: USE_SITE_topostd          = .true.
-   logical  :: USE_SITE_BVIC             = .true.
    logical  :: USE_SITE_urban_paras      = .true.
    logical  :: USE_SITE_thermal_paras    = .false.
    logical  :: USE_SITE_urban_LAI        = .false.
@@ -348,14 +346,15 @@ MODULE MOD_Namelist
 ! ----- Part 12: forcing -----
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-   character(len=256) :: DEF_dir_forcing       = 'path/to/forcing/data'
-
    character(len=256) :: DEF_forcing_namelist  = 'null'
+
+   character(len=256) :: DEF_dir_forcing       = 'path/to/forcing/data'
 
    type nl_forcing_type
 
       character(len=256) :: dataset            = 'CRUNCEP'
       logical            :: solarin_all_band   = .true.
+      character(len=256) :: HEIGHT_mode        = 'absolute'
       real(r8)           :: HEIGHT_V           = 100.0
       real(r8)           :: HEIGHT_T           = 50.
       real(r8)           :: HEIGHT_Q           = 50.
@@ -458,7 +457,6 @@ MODULE MOD_Namelist
       logical :: xy_rain                          = .true.
       logical :: xy_snow                          = .true.
       logical :: xy_ozone                         = .true.
-
       logical :: xy_hpbl                          = .true.
 
       logical :: taux                             = .true.
@@ -830,8 +828,6 @@ CONTAINS
       USE_SITE_soilparameters,                &
       USE_SITE_dbedrock,                      &
       USE_SITE_topography,                    &
-      USE_SITE_topostd   ,                    &
-      USE_SITE_BVIC      ,                    &
       USE_SITE_HistWriteBack,                 &
       USE_SITE_ForcingReadAhead,              &
       USE_SITE_urban_paras,                   &
@@ -1443,6 +1439,7 @@ CONTAINS
 
       CALL mpi_bcast (DEF_forcing%dataset                    ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_forcing%solarin_all_band           ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_forcing%HEIGHT_mode                ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_forcing%HEIGHT_V                   ,1   ,mpi_real8     ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_forcing%HEIGHT_T                   ,1   ,mpi_real8     ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_forcing%HEIGHT_Q                   ,1   ,mpi_real8     ,p_address_master ,p_comm_glb ,p_err)

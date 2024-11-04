@@ -45,6 +45,8 @@ MODULE MOD_UserSpecifiedForcing
    character(len=256) :: dataset
 
    logical  :: solarin_all_band   ! whether solar radiation in all bands is available
+
+   character(len=256) :: HEIGHT_mode ! observation height mode
    real(r8) :: HEIGHT_V           ! observation height of wind speed
    real(r8) :: HEIGHT_T           ! observation height of air temperature
    real(r8) :: HEIGHT_Q           ! observation height of specific humidity
@@ -110,6 +112,7 @@ CONTAINS
       allocate (tintalgo (NVAR))
 
       solarin_all_band = DEF_forcing%solarin_all_band ! whether solar radiation in all bands is available
+      HEIGHT_mode      = DEF_forcing%HEIGHT_mode      ! observation height mode
       HEIGHT_V         = DEF_forcing%HEIGHT_V         ! observation height of wind speed
       HEIGHT_T         = DEF_forcing%HEIGHT_T         ! observation height of air temperature
       HEIGHT_Q         = DEF_forcing%HEIGHT_Q         ! observation height of specific humidity
