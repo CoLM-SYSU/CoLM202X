@@ -80,7 +80,7 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
    type(block_data_int32_2d) :: reg_typid
 
    ! output variables
-   integer , ALLOCATABLE, dimension(:) :: LUCY_coun
+   integer , ALLOCATABLE, dimension(:) :: LUCY_rid
    real(r8), ALLOCATABLE, dimension(:) :: pop_den
    real(r8), ALLOCATABLE, dimension(:) :: pct_tree
    real(r8), ALLOCATABLE, dimension(:) :: htop_urb
@@ -190,9 +190,9 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
       ! allocate and read the LUCY id
       IF (p_is_io) THEN
 
-         landname = TRIM(dir_rawdata)//'urban/LUCY_countryid.nc'
+         landname = TRIM(dir_rawdata)//'urban/LUCY_regionid.nc'
          CALL allocate_block_data (grid_urban_5km, LUCY_reg)
-         CALL ncio_read_block (landname, 'LUCY_COUNTRY_ID', grid_urban_5km, LUCY_reg)
+         CALL ncio_read_block (landname, 'LUCY_REGION_ID', grid_urban_5km, LUCY_reg)
 
 #ifdef USEMPI
          CALL aggregation_data_daemon (grid_urban_5km, data_i4_2d_in1 = LUCY_reg)
@@ -201,9 +201,9 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
 
       IF (p_is_worker) THEN
 
-         allocate ( LUCY_coun (numurban))
+         allocate ( LUCY_rid (numurban))
 
-         LUCY_coun (:) = 0
+         LUCY_rid (:) = 0
 
          ! loop for each urban patch to get the LUCY id of all fine grid
          ! of iurban patch, then assign the most frequence id to this urban patch
@@ -212,7 +212,7 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
             CALL aggregation_request_data (landurban, iurban, grid_urban_5km, zip = USE_zip_for_aggregation, &
                data_i4_2d_in1 = LUCY_reg, data_i4_2d_out1 = LUCY_reg_one)
             ! the most frequence id to this urban patch
-            LUCY_coun(iurban) = num_max_frequency (LUCY_reg_one)
+            LUCY_rid(iurban) = num_max_frequency (LUCY_reg_one)
          ENDDO
 #ifdef USEMPI
          CALL aggregation_worker_done ()
@@ -221,19 +221,19 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
 
 #ifndef SinglePoint
       ! output
-      landname = trim(landsrfdir)//'/LUCY_country_id.nc'
+      landname = trim(landsrfdir)//'/LUCY_region_id.nc'
       CALL ncio_create_file_vector (landname, landurban)
       CALL ncio_define_dimension_vector (landname, landurban, 'urban')
-      CALL ncio_write_vector (landname, 'LUCY_id', 'urban', landurban, LUCY_coun, DEF_Srfdata_CompressLevel)
+      CALL ncio_write_vector (landname, 'LUCY_id', 'urban', landurban, LUCY_rid, DEF_Srfdata_CompressLevel)
 
 #ifdef SrfdataDiag
       typindex = (/(ityp, ityp = 1, N_URB)/)
-      landname  = trim(dir_srfdata) // '/diag/LUCY_country_id.nc'
-      ! CALL srfdata_map_and_write (LUCY_coun*1.0, landurban%settyp, typindex, m_urb2diag, &
+      landname  = trim(dir_srfdata) // '/diag/LUCY_region_id.nc'
+      ! CALL srfdata_map_and_write (LUCY_rid*1.0, landurban%settyp, typindex, m_urb2diag, &
       !    -1.0e36_r8, landname, 'LUCY_id_'//trim(cyear), compress = 0, write_mode = 'one')
 #endif
 #else
-      SITE_lucyid(:) = LUCY_coun
+      SITE_lucyid(:) = LUCY_rid
 #endif
 
 
@@ -242,7 +242,7 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
 #endif
 
 #ifdef RangeCheck
-      CALL check_vector_data ('LUCY_ID ', LUCY_coun)
+      CALL check_vector_data ('LUCY_ID ', LUCY_rid)
 #endif
 
       ! ******* POP_DEN *******
@@ -1100,7 +1100,7 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
 
       IF (p_is_worker) THEN
 
-         IF ( allocated (LUCY_coun) ) deallocate (LUCY_coun )
+         IF ( allocated (LUCY_rid ) ) deallocate (LUCY_rid  )
          IF ( allocated (pop_den  ) ) deallocate (pop_den   )
          IF ( allocated (pct_tree ) ) deallocate (pct_tree  )
          IF ( allocated (htop_urb ) ) deallocate (htop_urb  )
