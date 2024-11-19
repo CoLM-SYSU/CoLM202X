@@ -3,19 +3,19 @@
 ! Author: Shupeng Zhang 
 ! Description : an example to use dynamic lake.
 
-   DEF_CASE_NAME = 'Lake_Grid_5km_IGBP_VG' ! 'PoyangLake_Grid_5km_IGBP_VG'
+   DEF_CASE_NAME = 'PoyangLake_Grid_5km_IGBP_VG'
 
-   DEF_domain%edges = 29.0 ! 28.0
-   DEF_domain%edgen = 30.0 ! 30.0
-   DEF_domain%edgew = 98.0 ! 115.0
-   DEF_domain%edgee = 100.0! 117.0
+   DEF_domain%edges = 28.0
+   DEF_domain%edgen = 30.0
+   DEF_domain%edgew = 115.0
+   DEF_domain%edgee = 117.0
 
    DEF_simulation_time%greenwich    = .TRUE.
-   DEF_simulation_time%start_year   = 1980
+   DEF_simulation_time%start_year   = 2010
    DEF_simulation_time%start_month  = 1
    DEF_simulation_time%start_day    = 1
    DEF_simulation_time%start_sec    = 0
-   DEF_simulation_time%end_year     = 1982
+   DEF_simulation_time%end_year     = 2020
    DEF_simulation_time%end_month    = 12
    DEF_simulation_time%end_day      = 31
    DEF_simulation_time%end_sec      = 86400
@@ -59,7 +59,7 @@
    DEF_HIST_FREQ = 'DAILY' ! write history file frequency: HOURLY/DAILY/MONTHLY/YEARLY
    DEF_HIST_groupby = 'MONTH' ! history in one file: DAY/MONTH/YEAR
 
-   DEF_hist_vars_out_default = .true.
-   ! DEF_HIST_vars_namelist = 'run/hist_dynamic_lake.nml'
+   DEF_hist_vars_out_default = .false.
+   DEF_HIST_vars_namelist = 'run/hist_dynamic_lake.nml'
 
 /
