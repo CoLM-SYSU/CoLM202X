@@ -1,16 +1,16 @@
 &NRUNVER
-LADPSTP  = .FALSE.                     ! true: use adaptive time step
+LADPSTP  = .TRUE.                     ! true: use adaptive time step
 LFPLAIN  = .TRUE.                      ! true: consider floodplain (false: only river channel)
 LKINE    = .FALSE.                     ! true: use kinematic wave
 LFLDOUT  = .TRUE.                      ! true: floodplain flow (high-water channel flow) active
 LPTHOUT  = .TRUE.                      ! true: activate bifurcation scheme
-LDAMOUT  = .FALSE.                     ! true: activate dam operation (under development)
+LDAMOUT  = .FALSE.                     ! true: activate dam operation 
 LLEVEE   = .FALSE.                     ! true: activate levee scheme  (under development)
 
 
 LROSPLIT     = .FALSE.                          ! true: input if surface (Qs) and sub-surface (Qsb) runoff
-LWEVAP       = .TRUE.                          ! true: input water evaporation to extract from floodplain
-LWEVAPFIX    = .TRUE.                          ! true: water balance closure extracting water from evap when available
+LWEVAP       = .FALSE.                          ! true: input water evaporation to extract from floodplain
+LWEVAPFIX    = .FALSE.                          ! true: water balance closure extracting water from evap when available
 LWINFILT     = .FALSE.                          ! true: input water infiltration to extract from floodplain
 LWINFILTFIX  = .FALSE.                          ! true: water balance closure extracting water from Infiltration when available
 LWEXTRACTRIV = .FALSE.                          ! true: also extract water from rivers 
@@ -35,7 +35,7 @@ LMAPEND  = .FALSE.                              ! true: for map data endian conv
 LSTG_ES  = .FALSE.                              ! true: for Vector Processor optimization (CMF_OPT_FLDSTG_ES) 
 /
 &NDIMTIME
-CDIMINFO = "../CaMa/map/CaMaMap4CoLM_glb_0.25in_0.25out/glb_0.25in_0.25out-diminfo.txt"               ! text file for dimention information
+CDIMINFO = "/tera13/zhangsp/work/CoLM2024_simtop/CaMa/map/US_0.1/diminfo_US.txt"               ! text file for dimention information
 DT       = 21600                                                                            ! time step length (sec)
 IFRQ_INP = 6                                                                               ! input forcing update frequency (hour)
 /
@@ -47,8 +47,8 @@ PDSTMTH  = 10000.D0                    ! downstream distance at river mouth [m]
 PCADP    = 0.7                         ! CFL coefficient
 PMINSLP  = 1.D-5                       ! minimum slope (kinematic wave)
 IMIS     = -9999                       ! missing value for integer
-RMIS     = 1.E36                       ! missing value for real*4
-DMIS     = 1.E36                       ! missing value for real*8
+RMIS     = -1.0e+36                    ! missing value for real*4
+DMIS     = -1.0e+36                    ! missing value for real*8
 CSUFBIN  = '.bin'                      ! file suffix for plain binary 2D map
 CSUFVEC  = '.vec'                      ! file suffix for plain binary 1D vector
 CSUFPTH  = '.pth'                      ! file suffix for plain binary bifurcation channel
@@ -66,22 +66,22 @@ EHOUR   = 00                        	!  hour       : will not gonna used in here
 /
 &NMAP
 LMAPCDF    = .FALSE.                ! * true for netCDF map input
-CNEXTXY    = "../CaMa/map/CaMaMap4CoLM_glb_0.25in_0.25out/nextxy.bin"              ! river network nextxy
-CGRAREA    = "../CaMa/map/CaMaMap4CoLM_glb_0.25in_0.25out/ctmare.bin"              ! catchment area
-CELEVTN    = "../CaMa/map/CaMaMap4CoLM_glb_0.25in_0.25out/elevtn.bin"              ! bank top elevation
-CNXTDST    = "../CaMa/map/CaMaMap4CoLM_glb_0.25in_0.25out/nxtdst.bin"              ! distance to next outlet
-CRIVLEN    = "../CaMa/map/CaMaMap4CoLM_glb_0.25in_0.25out/rivlen.bin"              ! river channel length
-CFLDHGT    = "../CaMa/map/CaMaMap4CoLM_glb_0.25in_0.25out/fldhgt.bin"              ! floodplain elevation profile
-CRIVWTH    = "../CaMa/map/CaMaMap4CoLM_glb_0.25in_0.25out/rivwth_gwdlr.bin"        ! channel width
-CRIVHGT    = "../CaMa/map/CaMaMap4CoLM_glb_0.25in_0.25out/rivhgt.bin"              ! channel depth
-CRIVMAN    = "../CaMa/map/CaMaMap4CoLM_glb_0.25in_0.25out/rivman.bin"              ! river manning coefficient
-CPTHOUT    = "../CaMa/map/CaMaMap4CoLM_glb_0.25in_0.25out/bifprm.txt"              ! bifurcation channel table
+CNEXTXY    = "/tera13/zhangsp/work/CoLM2024_simtop/CaMa/map/US_0.1/nextxy.bin"              ! river network nextxy
+CGRAREA    = "/tera13/zhangsp/work/CoLM2024_simtop/CaMa/map/US_0.1/ctmare.bin"              ! catchment area
+CELEVTN    = "/tera13/zhangsp/work/CoLM2024_simtop/CaMa/map/US_0.1/elevtn.bin"              ! bank top elevation
+CNXTDST    = "/tera13/zhangsp/work/CoLM2024_simtop/CaMa/map/US_0.1/nxtdst.bin"              ! distance to next outlet
+CRIVLEN    = "/tera13/zhangsp/work/CoLM2024_simtop/CaMa/map/US_0.1/rivlen.bin"              ! river channel length
+CFLDHGT    = "/tera13/zhangsp/work/CoLM2024_simtop/CaMa/map/US_0.1/fldhgt.bin"              ! floodplain elevation profile
+CRIVWTH    = "/tera13/zhangsp/work/CoLM2024_simtop/CaMa/map/US_0.1/rivwth_gwdlr.bin"        ! channel width
+CRIVHGT    = "/tera13/zhangsp/work/CoLM2024_simtop/CaMa/map/US_0.1/rivhgt.bin"              ! channel depth
+CRIVMAN    = "/tera13/zhangsp/work/CoLM2024_simtop/CaMa/map/US_0.1/rivman.bin"              ! river manning coefficient
+CPTHOUT    = "/tera13/zhangsp/work/CoLM2024_simtop/CaMa/map/US_0.1/bifprm.txt"              ! bifurcation channel table
 CGDWDLY    = ""              							    ! Groundwater Delay Parameter
 CMEANSL    = ""              							    ! mean sea level
 CRIVCLINC  = ""            							        ! * river map netcdf
 CRIVPARNC  = ""            							        ! * river parameter netcdf (width, height, manning, ground water delay)
 CMEANSLNC  = ""            							        ! * mean sea level netCDF
-!CMPIREG    = "../CaMa/map/CaMaMap4CoLM_glb_0.25in_0.25out/mpireg-2.bin"
+!CMPIREG    = "/share/home/dq094/baif/CoLM202X-20240514_test1/CaMa/map/US_0.1/mpireg-2.bin"
 /
 &NRESTART
 CRESTSTO = ""               ! restart file
@@ -94,15 +94,15 @@ IFRQ_RST = 0                 ! restart write frequency (1-24: hour, 0:end of run
 LINTERP   = .TRUE.                  ! true for runoff interpolation using input matrix
 LINPEND   = .TRUE.                  ! true for runoff endian conversion
 LITRPCDF  = .FALSE.                  ! * true for netCDF input matrix
-CINPMAT   = "../CaMa/map/CaMaMap4CoLM_glb_0.25in_0.25out/glb_0.25in_0.25out-inpmat.bin"                ! input matrix file name
+CINPMAT   = "/tera13/zhangsp/work/CoLM2024_simtop/CaMa/map/US_0.1/inpmat_US.bin"                ! input matrix file name
 DROFUNIT  = 1.0                 ! runoff unit conversion
 /
 &NOUTPUT
 COUTDIR  = "../../cases/"                ! OUTPUT DIRECTORY
 !CVARSOUT="wevap,winfilt,rivout,rivsto,rivdph,rivvel,fldout,fldsto,flddph,fldfrc,fldare,sfcelv,outflw,storge,pthflw,pthout,maxsto,maxflw,maxdph" # list output variable (comma separated)
-CVARSOUT = "wevap,outflw,fldout,flddph,fldfrc,fldare,runoff"               ! Comma-separated list of output variables to save 
-COUTTAG  = "test"! Output Tag Name for each experiment
-LOUTVEC  = .FALSE.                      ! TRUE FOR VECTORIAL OUTPUT, FALSE FOR NX,NY OUTPUT
+CVARSOUT = "outflw,fldout,flddph,fldfrc,fldare,runoff"               ! Comma-separated list of output variables to save 
+COUTTAG  = "test"                ! Output Tag Name for each experiment
+LOUTVEC  = .FALSE                      ! TRUE FOR VECTORIAL OUTPUT, FALSE FOR NX,NY OUTPUT
 LOUTCDF  = .TRUE.                  ! * true for netcdf outptu false for binary
 NDLEVEL  = 1                           ! * NETCDF DEFLATION LEVEL 
 IFRQ_OUT = 1                 ! output data write frequency (hour)
@@ -111,10 +111,6 @@ IFRQ_OUT = 1                 ! output data write frequency (hour)
 CDAMFILE = "../CaMa/map/dam_params_glb_15min/"         ! dam paramter file
 LDAMOPT  = "V13"                                       ! LIS H22 H06 V13 
 LDAMTXT  = .TRUE.                                      ! true: dam inflow-outflw txt output
-LDAMH22  = .FALSE.                                     ! True to use Hanazaki 2022 dam scheme. (False for Yamazaki&Funato scheme)
-LDAMYBY  = .FALSE.                                     ! .TRUE. to use Year-By-Year dam activation scheme. .False. for All-reservoirs-in scheme
-LiVnorm  = .FALSE.                                     ! .TRUE. to use Noemal Volume as initial reservoir storage. False for zero-additional storage.
-
 /
 
  
