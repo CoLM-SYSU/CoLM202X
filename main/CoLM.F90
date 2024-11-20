@@ -278,10 +278,8 @@ PROGRAM CoLM
       CALL READ_TimeVariables (jdate, lc_year, casename, dir_restart)
 
       ! Read in SNICAR optical and aging parameters
-      IF (DEF_USE_SNICAR) THEN
-         CALL SnowOptics_init( DEF_file_snowoptics ) ! SNICAR optical parameters
-         CALL SnowAge_init( DEF_file_snowaging )     ! SNICAR aging   parameters
-      ENDIF
+      CALL SnowOptics_init( DEF_file_snowoptics ) ! SNICAR optical parameters
+      CALL SnowAge_init( DEF_file_snowaging )     ! SNICAR aging   parameters
 
       ! ----------------------------------------------------------------------
       doalb = .true.
