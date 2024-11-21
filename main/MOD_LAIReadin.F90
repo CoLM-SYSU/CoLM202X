@@ -114,7 +114,7 @@ CONTAINS
 #ifdef URBAN_MODEL
                IF(m == URBAN) CYCLE
 #endif
-               IF( m == 0 )THEN
+               IF(m == 0 .or. m == WATERBODY)THEN
                   fveg(npatch)  = 0.
                   tlai(npatch)  = 0.
                   tsai(npatch)  = 0.
