@@ -94,7 +94,7 @@ SUBROUTINE CoLMMAIN ( &
 
          ! TUNABLE modle constants
            zlnd,         zsno,         csoilc,       dewmx,        &
-           ! 'wtfact' is updated to gridded 'fsatmax' data. 
+           ! 'wtfact' is updated to gridded 'fsatmax' data.
            capr,         cnfac,        ssi,                        &
            wimp,         pondmx,       smpmax,       smpmin,       &
            trsmx0,       tcrit,        &
@@ -217,8 +217,8 @@ SUBROUTINE CoLMMAIN ( &
         psi0       (nl_soil) ,&! minimum soil suction [mm]
         bsw        (nl_soil) ,&! clapp and hornbereger "b" parameter [-]
         theta_r  (1:nl_soil) ,&! residual water content (cm3/cm3)
-        fsatmax              ,&! maximum saturated area fraction [-] 
-        fsatdcf              ,&! decay factor in calucation of saturated area fraction [1/m] 
+        fsatmax              ,&! maximum saturated area fraction [-]
+        fsatdcf              ,&! decay factor in calucation of saturated area fraction [1/m]
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
         alpha_vgm(1:nl_soil) ,&! the parameter corresponding approximately to the inverse of the air-entry value
         n_vgm    (1:nl_soil) ,&! a shape parameter
@@ -272,7 +272,7 @@ SUBROUTINE CoLMMAIN ( &
         zsno        ,&! roughness length for snow [m]
         csoilc      ,&! drag coefficient for soil under canopy [-]
         dewmx       ,&! maximum dew
-        ! wtfact    ,&! (updated to gridded 'fsatmax' data) fraction of model area with high water table 
+        ! wtfact    ,&! (updated to gridded 'fsatmax' data) fraction of model area with high water table
         capr        ,&! tuning factor to turn first layer T into surface T
         cnfac       ,&! Crank Nicholson factor between 0 and 1
         ssi         ,&! irreducible water saturation of snow
@@ -1167,7 +1167,7 @@ SUBROUTINE CoLMMAIN ( &
               dz_soisno(:0),t_soisno(:0) ,wliq_soisno(:0) ,wice_soisno(:0) ,&
               fiold(:0)    ,snl          ,sag             ,scv             ,&
               snowdp       ,lake_icefrac )
-         
+
          CALL laketem ( &
               ! "in" laketem arguments
               ! ---------------------------
@@ -1234,7 +1234,7 @@ SUBROUTINE CoLMMAIN ( &
             rsur = max(0., pg_rain + pg_snow - aa - a)
             rnof = rsur
          ELSE
-           
+
             wdsrf = sum(dz_lake) * 1.e3
 
 #ifndef CatchLateralFlow
