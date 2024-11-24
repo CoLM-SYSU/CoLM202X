@@ -40,7 +40,7 @@
 ! !REVISIONS:
 !
 !  03/2022, Hua Yuan: complete the model with full coupling, and make
-!           it possible to run multiple scenario assumptions  through
+!           it possible to run multiple scenario assumptions through
 !           macro definitions.
 !
 !  07/2022, Wenzong Dong: add LUCY model initial version.

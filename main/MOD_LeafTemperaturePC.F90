@@ -521,8 +521,8 @@ CONTAINS
          ENDIF
       ENDDO
 
+      ! When there is no vegetation in this Plant Community Patch, RETURN
       IF (.not. is_vegetated_patch) THEN
-         print *, "NOTE: There is no vegetation in this Plant Community Patch, RETURN."
          RETURN
       ENDIF
 
