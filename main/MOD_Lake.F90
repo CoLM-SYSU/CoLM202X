@@ -1839,16 +1839,16 @@ CONTAINS
          a = wliq_soisno(j)/(dz_soisno(j)*denh2o) + wice_soisno(j)/(dz_soisno(j)*denice)
 
          IF (a < porsl(j)) THEN
-            wliq_soisno(j) = max( 0., (porsl(j)*dz_soisno(j) - wice_soisno(j)/denice)*denh2o )
-            wice_soisno(j) = max( 0., (porsl(j)*dz_soisno(j) - wliq_soisno(j)/denh2o)*denice )
+            wliq_soisno(j) = max(0., (porsl(j)*dz_soisno(j) - wice_soisno(j)/denice)*denh2o )
+            wice_soisno(j) = max(0., (porsl(j)*dz_soisno(j) - wliq_soisno(j)/denh2o)*denice )
          ELSE
             wliq_soisno(j) = max(0., wliq_soisno(j) - (a - porsl(j))*denh2o*dz_soisno(j) )
-            wice_soisno(j) = max( 0., (porsl(j)*dz_soisno(j) - wliq_soisno(j)/denh2o)*denice )
+            wice_soisno(j) = max(0., (porsl(j)*dz_soisno(j) - wliq_soisno(j)/denh2o)*denice )
          ENDIF
 
          IF (wliq_soisno(j) > porsl(j)*denh2o*dz_soisno(j)) THEN
-             wliq_soisno(j) = porsl(j)*denh2o*dz_soisno(j)
-             wice_soisno(j) = 0.0
+            wliq_soisno(j) = porsl(j)*denh2o*dz_soisno(j)
+            wice_soisno(j) = 0.0
          ENDIF
          
          dw_soil = dw_soil - wliq_soisno(j) - wice_soisno(j)
@@ -1878,7 +1878,16 @@ CONTAINS
          lake_icefrac(1) = min(max(lake_icefrac(1), 0.), 1.)
 
          dz_lake(nl_lake) = dz_lake(nl_lake) + dw_soil/1.e3
-         dz_lake(nl_lake) = max(dz_lake(nl_lake), 0.)
+
+         IF (dz_lake(nl_lake) < 0.) THEN
+            j = nl_lake
+            DO WHILE (dz_lake(j) < 0.)
+               IF (j > 1) dz_lake(j-1) = dz_lake(j-1) + dz_lake(j)
+               dz_lake(j) = 0.
+               j = j - 1
+               IF (j == 0) EXIT
+            ENDDO 
+         ENDIF
 
          CALL adjust_lake_layer (nl_lake, dz_lake, t_lake, lake_icefrac)
 

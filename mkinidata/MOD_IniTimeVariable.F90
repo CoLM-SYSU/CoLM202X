@@ -333,9 +333,9 @@ CONTAINS
       IF(patchtype <= 5)THEN ! land grid
 
          ! (1) SOIL temperature, water and SNOW
-         ! Variables: t_soisno, wliq_soisno, wice_soisno
-         !            snowdp, sag, scv, fsno, snl, z_soisno, dz_soisno
+         ! Variables: t_soisno, wliq_soisno, wice_soisno, wa, zwt
          IF (use_soilini) THEN
+            ! (1.1) all temperature, water and zwt from data.
 
             zi_soi_a(:) = (/0., zi_soi/)
 
@@ -408,9 +408,36 @@ CONTAINS
                wa = wa + 5000.
             ENDIF
 
-         ELSE
+         ELSEIF (use_wtd) THEN
+            ! (1.2) only zwt is from data.
 
-            ! soil temperature, water content
+            DO j = 1, nl_soil
+               IF(patchtype==3)THEN !land ice
+                  t_soisno(j) = 253.
+                  wliq_soisno(j) = 0.
+                  wice_soisno(j) = dz_soisno(j)*denice
+               ELSE
+                  t_soisno(j) = 283.
+                  wliq_soisno(j) = dz_soisno(j)*porsl(j)*denh2o
+                  wice_soisno(j) = 0.
+               ENDIF
+            ENDDO 
+
+            IF (patchtype <= 1) THEN
+               CALL get_water_equilibrium_state (zwtmm, nl_soil, wliq_soisno(1:nl_soil), smp, hk, wa, &
+                  zc_soimm, zi_soimm, porsl, vliq_r, psi0, hksati, nprms, prms)
+            ELSE
+               wa  = 0.
+               zwt = 0.
+            ENDIF
+
+            IF (.not. DEF_USE_VariablySaturatedFlow) THEN
+               wa = wa + 5000.
+            ENDIF
+
+         ELSE
+            ! (1.3) cold start
+
             DO j = 1, nl_soil
                IF(patchtype==3)THEN !land ice
                   t_soisno(j) = 253.
@@ -423,8 +450,21 @@ CONTAINS
                ENDIF
             ENDDO
 
+            IF (DEF_USE_VariablySaturatedFlow) THEN
+               wa  = 0.
+               zwt = zi_soimm(nl_soil)/1000.
+            ELSE
+               ! water table depth (initially at 1.0 m below the model bottom; wa when zwt
+               !                    is below the model bottom zi(nl_soil)
+               wa  = 4800.                             !assuming aquifer capacity is 5000 mm
+               zwt = (25. + z_soisno(nl_soil))+dz_soisno(nl_soil)/2. - wa/1000./0.2 !to result in zwt = zi(nl_soil) + 1.0 m
+            ENDIF
+
          ENDIF
 
+
+         ! (2) snow initialization
+         !     variables: snowdp, sag, scv, fsno, snl, z_soisno, dz_soisno
          z0m = htop * z0mr
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
          IF(patchtype==0)THEN
@@ -500,34 +540,6 @@ CONTAINS
 
          ENDIF
 
-         ! (2) SOIL aquifer and water table
-         ! Variables: wa, zwt
-         IF (.not. use_wtd) THEN
-
-            IF (.not. use_soilini) THEN
-               IF (DEF_USE_VariablySaturatedFlow) THEN
-                  wa  = 0.
-                  zwt = zi_soimm(nl_soil)/1000.
-               ELSE
-                  ! water table depth (initially at 1.0 m below the model bottom; wa when zwt
-                  !                    is below the model bottom zi(nl_soil)
-                  wa  = 4800.                             !assuming aquifer capacity is 5000 mm
-                  zwt = (25. + z_soisno(nl_soil))+dz_soisno(nl_soil)/2. - wa/1000./0.2 !to result in zwt = zi(nl_soil) + 1.0 m
-               ENDIF
-            ENDIF
-         ELSE
-            IF (patchtype <= 1) THEN
-               CALL get_water_equilibrium_state (zwtmm, nl_soil, wliq_soisno(1:nl_soil), smp, hk, wa, &
-                  zc_soimm, zi_soimm, porsl, vliq_r, psi0, hksati, nprms, prms)
-            ELSE
-               wa  = 0.
-               zwt = 0.
-            ENDIF
-
-            IF (.not. DEF_USE_VariablySaturatedFlow) THEN
-               wa = wa + 5000.
-            ENDIF
-         ENDIF
 
          ! (3) soil matrix potential hydraulic conductivity
          ! Variables: smp, hk

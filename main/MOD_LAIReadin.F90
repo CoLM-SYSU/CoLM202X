@@ -69,7 +69,7 @@ CONTAINS
 
 #ifdef SinglePoint
 #ifndef URBAN_MODEL
-      iyear = findloc_ud(SITE_LAI_year == min(DEF_LAI_END_YEAR, max(DEF_LAI_START_YEAR,year) )
+      iyear = findloc_ud(SITE_LAI_year == min(DEF_LAI_END_YEAR, max(DEF_LAI_START_YEAR,year)))
       IF (.not. DEF_LAI_MONTHLY) THEN
          itime = (time-1)/8 + 1
       ENDIF
@@ -114,7 +114,7 @@ CONTAINS
 #ifdef URBAN_MODEL
                IF(m == URBAN) CYCLE
 #endif
-               IF( m == 0 )THEN
+               IF(m == 0 .or. m == WATERBODY)THEN
                   fveg(npatch)  = 0.
                   tlai(npatch)  = 0.
                   tsai(npatch)  = 0.

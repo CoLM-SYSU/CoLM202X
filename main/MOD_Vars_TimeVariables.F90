@@ -884,7 +884,7 @@ CONTAINS
       ENDSELECT
 
       IF (rwrite) THEN
-         rwrite = (ptstamp <= itstamp)
+         rwrite = ((ptstamp <= itstamp) .or. isendofyear(idate,deltim))
       ENDIF
 
    END FUNCTION save_to_restart
