@@ -24,7 +24,7 @@ MODULE MOD_SingleSrfdata
 #endif
 
 #ifdef CROP
-   real(r8), allocatable :: SITE_croptyp (:)
+   integer,  allocatable :: SITE_croptyp (:)
    real(r8), allocatable :: SITE_pctcrop (:)
 #endif
 

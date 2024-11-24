@@ -126,7 +126,7 @@ CONTAINS
 #ifdef CROP
             ELSEIF (landpatch%settyp(1) == CROPLAND) THEN
                DO ipft = 1, numpft
-                  landpft%settyp(ipft) = cropclass(ipft) + N_PFT - 1
+                  landpft%settyp(ipft) = cropclass(ipft)
                   pft2patch   (ipft) = ipft
                   patch_pft_s (ipft) = ipft
                   patch_pft_e (ipft) = ipft
@@ -273,7 +273,7 @@ CONTAINS
                      landpft%eindex(npft) = landpatch%eindex(ipatch)
                      landpft%ipxstt(npft) = landpatch%ipxstt(ipatch)
                      landpft%ipxend(npft) = landpatch%ipxend(ipatch)
-                     landpft%settyp(npft) = cropclass(ipatch) + N_PFT - 1
+                     landpft%settyp(npft) = cropclass(ipatch)
                            
                      landpft%pctshared(npft) = landpatch%pctshared(ipatch)
 
