@@ -263,6 +263,7 @@ MODULE MOD_Vars_TimeInvariants
    real(r8), allocatable    :: svf_patches (:)         !sky view factor
    real(r8), allocatable    :: cur_patches (:)         !curvature
    real(r8), allocatable    :: sf_lut_patches  (:,:,:) !look up table of shadow factor of a patch
+   real(r8), allocatable    :: sf_curve_patches(:,:,:) !curve parameters of shadow factor of a patch
    real(r8), allocatable    :: asp_type_patches  (:,:) !topographic aspect of each character of one patch
    real(r8), allocatable    :: slp_type_patches  (:,:) !topographic slope of each character of one patch
    real(r8), allocatable    :: area_type_patches (:,:) !area percentage of each character of one patch
@@ -359,12 +360,17 @@ CONTAINS
             allocate (topostd              (numpatch))
 
             ! Used for downscaling
-            allocate (svf_patches                              (numpatch))
-            allocate (asp_type_patches                (num_type,numpatch))
-            allocate (slp_type_patches                (num_type,numpatch))
-            allocate (area_type_patches               (num_type,numpatch))
-            allocate (sf_lut_patches    (num_azimuth,num_zenith,numpatch))
-            allocate (cur_patches                              (numpatch))
+            allocate (svf_patches                      (numpatch))
+            allocate (asp_type_patches  (num_slope_type,numpatch))
+            allocate (slp_type_patches  (num_slope_type,numpatch))
+            allocate (area_type_patches (num_slope_type,numpatch))
+            allocate (cur_patches                      (numpatch))
+#ifdef SinglePoint
+            allocate (sf_lut_patches   (num_azimuth,num_zenith,numpatch))
+#else
+            allocate (sf_curve_patches (num_azimuth,num_zenith_parameter,numpatch))
+#endif
+         ENDIF
       ENDIF
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
@@ -378,8 +384,6 @@ CONTAINS
 #ifdef URBAN_MODEL
       CALL allocate_UrbanTimeInvariants
 #endif
-
-   ENDIF
 
    END SUBROUTINE allocate_TimeInvariants
 
@@ -494,12 +498,16 @@ CONTAINS
       CALL ncio_read_bcast_serial (file_restart, 'wetwatmax', wetwatmax) ! maximum wetland water (mm)
 
       IF (DEF_USE_Forcing_Downscaling) THEN
-         CALL ncio_read_vector (file_restart, 'slp_type_patches' , num_type    , landpatch  , slp_type_patches)
-         CALL ncio_read_vector (file_restart, 'svf_patches'      , landpatch   , svf_patches )
-         CALL ncio_read_vector (file_restart, 'asp_type_patches' , num_type    , landpatch  , asp_type_patches)
-         CALL ncio_read_vector (file_restart, 'area_type_patches', num_type    , landpatch  , area_type_patches)
-         CALL ncio_read_vector (file_restart, 'sf_lut_patches'   , num_azimuth , num_zenith , landpatch, sf_lut_patches)
-         CALL ncio_read_vector (file_restart, 'cur_patches'      , landpatch   , cur_patches )
+         CALL ncio_read_vector (file_restart, 'slp_type_patches' , num_slope_type, landpatch, slp_type_patches)
+         CALL ncio_read_vector (file_restart, 'svf_patches'      ,                 landpatch, svf_patches     )
+         CALL ncio_read_vector (file_restart, 'asp_type_patches' , num_slope_type, landpatch, asp_type_patches)
+         CALL ncio_read_vector (file_restart, 'area_type_patches', num_slope_type, landpatch, area_type_patches)
+         CALL ncio_read_vector (file_restart, 'cur_patches'      ,                 landpatch, cur_patches )
+#ifdef SinglePoint
+         CALL ncio_read_vector (file_restart, 'sf_lut_patches'   , num_azimuth , num_zenith, landpatch, sf_lut_patches)
+#else
+         CALL ncio_read_vector (file_restart, 'sf_curve_patches' , num_azimuth , num_zenith_parameter, landpatch, sf_curve_patches)
+#endif
        ENDIF
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
@@ -580,9 +588,10 @@ CONTAINS
       CALL ncio_define_dimension_vector (file_restart, landpatch, 'soilsnow', nl_soil-maxsnl)
       CALL ncio_define_dimension_vector (file_restart, landpatch, 'soil',     nl_soil)
       CALL ncio_define_dimension_vector (file_restart, landpatch, 'lake',     nl_lake)
-      CALL ncio_define_dimension_vector (file_restart, landpatch, 'type',     num_type)
+      CALL ncio_define_dimension_vector (file_restart, landpatch, 'type',     num_slope_type)
       CALL ncio_define_dimension_vector (file_restart, landpatch, 'azi',      num_azimuth)
       CALL ncio_define_dimension_vector (file_restart, landpatch, 'zen',      num_zenith)
+      CALL ncio_define_dimension_vector (file_restart, landpatch, 'zen_p',    num_zenith_parameter)
 
       CALL ncio_write_vector (file_restart, 'patchclass', 'patch', landpatch, patchclass)                            !
       CALL ncio_write_vector (file_restart, 'patchtype' , 'patch', landpatch, patchtype )                            !
@@ -654,10 +663,14 @@ CONTAINS
       IF (DEF_USE_Forcing_Downscaling) THEN
          CALL ncio_write_vector (file_restart, 'svf_patches', 'patch', landpatch, svf_patches)
          CALL ncio_write_vector (file_restart, 'cur_patches', 'patch', landpatch, cur_patches)
-         CALL ncio_write_vector (file_restart, 'slp_type_patches',  'type', num_type, 'patch', landpatch, slp_type_patches)
-         CALL ncio_write_vector (file_restart, 'asp_type_patches',  'type', num_type, 'patch', landpatch, asp_type_patches)
-         CALL ncio_write_vector (file_restart, 'area_type_patches', 'type', num_type, 'patch', landpatch, area_type_patches)
+         CALL ncio_write_vector (file_restart, 'slp_type_patches',  'type', num_slope_type, 'patch', landpatch, slp_type_patches)
+         CALL ncio_write_vector (file_restart, 'asp_type_patches',  'type', num_slope_type, 'patch', landpatch, asp_type_patches)
+         CALL ncio_write_vector (file_restart, 'area_type_patches', 'type', num_slope_type, 'patch', landpatch, area_type_patches)
+#ifdef SinglePoint
          CALL ncio_write_vector (file_restart, 'sf_lut_patches',    'azi' , num_azimuth,'zen', num_zenith, 'patch', landpatch, sf_lut_patches)
+#else
+         CALL ncio_write_vector (file_restart, 'sf_curve_patches',  'azi' , num_azimuth,'zen_p', num_zenith_parameter, 'patch', landpatch, sf_curve_patches)
+#endif
       ENDIF
 
 #ifdef USEMPI
@@ -794,7 +807,11 @@ CONTAINS
                deallocate(svf_patches       )
                deallocate(asp_type_patches  )
                deallocate(area_type_patches )
+#ifdef SinglePoint
                deallocate(sf_lut_patches    )
+#else
+               deallocate(sf_curve_patches  )
+#endif
                deallocate(cur_patches       )
             ENDIF
 
@@ -877,15 +894,21 @@ CONTAINS
 
       CALL check_vector_data ('topoelv      [m]     ', topoelv     ) !
       CALL check_vector_data ('topostd      [m]     ', topostd     ) !
-      CALL check_vector_data ('BVIC        [-]      ', BVIC        ) !
+      CALL check_vector_data ('BVIC         [-]     ', BVIC        ) !
 
       IF (DEF_USE_Forcing_Downscaling) THEN
-         CALL check_vector_data ('slp_type_patches     [rad] ' , slp_type_patches)      ! slope
-         CALL check_vector_data ('svf_patches          [-] '   , svf_patches)           ! sky view factor
-         CALL check_vector_data ('asp_type_patches     [rad] ' , asp_type_patches)      ! aspect
-         CALL check_vector_data ('area_type_patches    [-] '   , area_type_patches)     ! area percent
-         CALL check_vector_data ('cur_patches          [-]'    , cur_patches )
-         CALL check_vector_data ('sf_lut_patches       [-] '   , sf_lut_patches)        ! shadow mask
+         CALL check_vector_data ('slp_type     [rad]   ', slp_type_patches ) ! slope
+         CALL check_vector_data ('svf          [-]     ', svf_patches      ) ! sky view factor
+         CALL check_vector_data ('asp_type     [rad]   ', asp_type_patches ) ! aspect
+         CALL check_vector_data ('area_type    [-]     ', area_type_patches) ! area percent
+         CALL check_vector_data ('cur          [-]     ', cur_patches      )
+#ifdef SinglePoint
+         CALL check_vector_data ('sf_lut       [-]     ', sf_lut_patches   ) ! shadow mask
+#else
+         CALL check_vector_data ('1 sf_curve p [-]     ', sf_curve_patches(:,1,:)) ! shadow mask
+         CALL check_vector_data ('2 sf_curve p [-]     ', sf_curve_patches(:,2,:)) ! shadow mask
+         CALL check_vector_data ('3 sf_curve p [-]     ', sf_curve_patches(:,3,:)) ! shadow mask
+#endif
       ENDIF
 
 #ifdef USEMPI

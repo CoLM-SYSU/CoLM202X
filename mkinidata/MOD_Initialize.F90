@@ -410,17 +410,17 @@ CONTAINS
          cur_patches(:)         = SITE_cur
          sf_lut_patches(:,:,1)  = SITE_sf_lut
 #else
-         lndname = trim(DEF_dir_landdata) // '/topography/'//trim(cyear)//'/slp_type_patches.nc'             ! slope
-         CALL ncio_read_vector (lndname, 'slp_type_patches', num_type, landpatch, slp_type_patches)
-         lndname = trim(DEF_dir_landdata) // '/topography/'//trim(cyear)//'/svf_patches.nc'               ! sky view factor
+         lndname = trim(DEF_dir_landdata) // '/topography/'//trim(cyear)//'/slp_type_patches.nc'      ! slope
+         CALL ncio_read_vector (lndname, 'slp_type_patches', num_slope_type, landpatch, slp_type_patches)
+         lndname = trim(DEF_dir_landdata) // '/topography/'//trim(cyear)//'/svf_patches.nc'           ! sky view factor
          CALL ncio_read_vector (lndname, 'svf_patches', landpatch, svf_patches)
-         lndname = trim(DEF_dir_landdata) // '/topography/'//trim(cyear)//'/asp_type_patches.nc'            ! aspect
-         CALL ncio_read_vector (lndname, 'asp_type_patches', num_type, landpatch, asp_type_patches)
-         lndname = trim(DEF_dir_landdata) // '/topography/'//trim(cyear)//'/area_type_patches.nc'         ! area percent
-         CALL ncio_read_vector (lndname, 'area_type_patches', num_type, landpatch, area_type_patches)
-         lndname = trim(DEF_dir_landdata) // '/topography/'//trim(cyear)//'/sf_lut_patches.nc'        ! shadow mask
-         CALL ncio_read_vector (lndname, 'sf_lut_patches', num_azimuth, num_zenith, landpatch, sf_lut_patches)
-         lndname = trim(DEF_dir_landdata) // '/topography/'//trim(cyear)//'/cur_patches.nc'               ! curvature
+         lndname = trim(DEF_dir_landdata) // '/topography/'//trim(cyear)//'/asp_type_patches.nc'      ! aspect
+         CALL ncio_read_vector (lndname, 'asp_type_patches', num_slope_type, landpatch, asp_type_patches)
+         lndname = trim(DEF_dir_landdata) // '/topography/'//trim(cyear)//'/area_type_patches.nc'     ! area percent
+         CALL ncio_read_vector (lndname, 'area_type_patches', num_slope_type, landpatch, area_type_patches)
+         lndname = trim(DEF_dir_landdata) // '/topography/'//trim(cyear)//'/sf_curve_patches.nc'      ! shadow mask
+         CALL ncio_read_vector (lndname, 'sf_curve_patches', num_azimuth, num_zenith_parameter, landpatch, sf_curve_patches)
+         lndname = trim(DEF_dir_landdata) // '/topography/'//trim(cyear)//'/cur_patches.nc'           ! curvature
          CALL ncio_read_vector (lndname, 'cur_patches', landpatch, cur_patches)
 #endif
        ENDIF

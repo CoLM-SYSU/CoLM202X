@@ -1,7 +1,7 @@
 #include <define.h>
 
 SUBROUTINE Aggregation_TopographyFactors ( &
-      grid_topo_factor , dir_rawdata, dir_model_landdata, lc_year)
+      grid_topo_factor , dir_topodata, dir_model_landdata, lc_year)
    ! ----------------------------------------------------------------------
    ! Global topography-based factors data
    !
@@ -31,7 +31,7 @@ SUBROUTINE Aggregation_TopographyFactors ( &
    ! ---------------------------------------------------------------
    INTEGER, intent(in) :: lc_year
    TYPE(grid_type),  intent(in) :: grid_topo_factor    ! Grid structure for high resolution topography factors
-   CHARACTER(len=*), intent(in) :: dir_rawdata         ! Direct of Rawdata
+   CHARACTER(len=*), intent(in) :: dir_topodata        ! Direct of Rawdata
    CHARACTER(len=*), intent(in) :: dir_model_landdata
 
    ! local variables:
@@ -51,7 +51,8 @@ SUBROUTINE Aggregation_TopographyFactors ( &
    REAL(r8), allocatable :: cur_patches (:)
    REAL(r8), allocatable :: tea_f_azi_patches (:,:) ! shape as (azimuth, patches)
    REAL(r8), allocatable :: tea_b_azi_patches (:,:)
-   REAL(r8), allocatable :: sf_lut_patches (:,:,:)  ! shape as (azimuth, zenith, patches)
+   REAL(r8), allocatable :: sf_lut_patches  (:,:,:) ! shape as (azimuth, zenith, patches)
+   REAL(r8), allocatable :: sf_curve_patches(:,:,:) ! shape as (azimuth, parameters, patches)
 
    ! four defined types at all patches
    REAL(r8), allocatable :: asp_type_patches (:,:)  ! shape as (type, patches)
@@ -82,8 +83,21 @@ SUBROUTINE Aggregation_TopographyFactors ( &
    REAL(r8) :: sum_area_one                ! sum of pixel area of a patch
    REAL(r8) :: zenith_angle(num_zenith)    ! sine of sun zenith angle (divided by num_zenith part)
 
+   ! Intermediate variables used in reducing the dimensionality of masking factors
+   REAL(r8) :: x2_sum
+   REAL(r8) :: x_sum
+   REAL(r8) :: y_sum
+   REAL(r8) :: xy_sum
+   REAL(r8) :: a1                          ! Function Parameters
+   REAL(r8) :: a2                          ! Function Parameters
+   REAL(r8) :: y(num_zenith)               ! shadow factor under a single azimuth and single patch
+   REAL(r8) :: x(num_zenith)               ! Solar zenith angle used as a predictor
+   REAL(r8), allocatable :: y_train(:)        ! The part of y used to fit the function
+   REAL(r8), allocatable :: x_train(:)        ! The part of x used to fit the function
+   REAL(r8), allocatable :: y_train_transform(:)  ! The transform function of y_train
+
    ! local variables
-   INTEGER :: ipatch, i, ps, pe, type, a, z, count_pixels, num_pixels, j  
+   INTEGER :: ipatch, i, ps, pe, type, a, z, count_pixels, num_pixels, j, index, n 
 
 #ifdef SrfdataDiag
    INTEGER :: typpatch(N_land_classification+1), ityp  ! number of land classification
@@ -106,9 +120,9 @@ SUBROUTINE Aggregation_TopographyFactors ( &
    IF (USE_SITE_topography) THEN
       RETURN
    ELSE
-      allocate (SITE_slp_type  (num_type))
-      allocate (SITE_asp_type  (num_type))
-      allocate (SITE_area_type (num_type))
+      allocate (SITE_slp_type  (num_slope_type))
+      allocate (SITE_asp_type  (num_slope_type))
+      allocate (SITE_area_type (num_slope_type))
       allocate (SITE_sf_lut    (num_azimuth, num_zenith))
    ENDIF
 #endif
@@ -117,27 +131,27 @@ SUBROUTINE Aggregation_TopographyFactors ( &
    ! read topography-based factor data
    ! -------------------------------------------------------------------
    IF (p_is_io) THEN
-      lndname = trim(dir_rawdata)//"slope.nc"
+      lndname = trim(dir_topodata)//"/slope.nc"
       CALL allocate_block_data (grid_topo_factor, slp_grid)
       CALL ncio_read_block (lndname, 'slope', grid_topo_factor, slp_grid)
 
-      lndname = trim(dir_rawdata)//"aspect.nc"
+      lndname = trim(dir_topodata)//"/aspect.nc"
       CALL allocate_block_data (grid_topo_factor, asp_grid)
       CALL ncio_read_block (lndname, 'aspect', grid_topo_factor, asp_grid)
 
-      lndname = trim(dir_rawdata)//"terrain_elev_angle_front.nc"
+      lndname = trim(dir_topodata)//"/terrain_elev_angle_front.nc"
       CALL allocate_block_data (grid_topo_factor, tea_f_grid, num_azimuth)
       CALL ncio_read_block (lndname, 'tea_front', grid_topo_factor, num_azimuth, tea_f_grid)
 
-      lndname = trim(dir_rawdata)//"terrain_elev_angle_back.nc"
+      lndname = trim(dir_topodata)//"/terrain_elev_angle_back.nc"
       CALL allocate_block_data (grid_topo_factor, tea_b_grid, num_azimuth)
       CALL ncio_read_block (lndname, 'tea_back', grid_topo_factor, num_azimuth, tea_b_grid)
 
-      lndname = trim(dir_rawdata)//"sky_view_factor.nc"
+      lndname = trim(dir_topodata)//"/sky_view_factor.nc"
       CALL allocate_block_data (grid_topo_factor, svf_grid)
       CALL ncio_read_block (lndname, 'svf', grid_topo_factor, svf_grid)
 
-      lndname = trim(dir_rawdata)//"curvature.nc"
+      lndname = trim(dir_topodata)//"/curvature.nc"
       CALL allocate_block_data (grid_topo_factor, cur_grid)
       CALL ncio_read_block (lndname, 'curvature', grid_topo_factor, cur_grid)
 
@@ -159,9 +173,9 @@ SUBROUTINE Aggregation_TopographyFactors ( &
       ! allocate for output variables at patches
       allocate (svf_patches      (numpatch))
       allocate (cur_patches      (numpatch))
-      allocate (asp_type_patches (num_type, numpatch))
-      allocate (slp_type_patches (num_type, numpatch))
-      allocate (area_type_patches(num_type, numpatch))
+      allocate (asp_type_patches (num_slope_type, numpatch))
+      allocate (slp_type_patches (num_slope_type, numpatch))
+      allocate (area_type_patches(num_slope_type, numpatch))
       allocate (sf_lut_patches   (num_azimuth, num_zenith, numpatch))
       ! generate sine of sun zenith angles at equal intervals
       DO i = 1, num_zenith
@@ -270,14 +284,14 @@ SUBROUTINE Aggregation_TopographyFactors ( &
          ! aggregate slope and aspect at four defined types at patches
          ! -----------------------------------------------------------------------------------------------
          ! allocate pixelsets variables
-         allocate(asp_type_one(1:num_type,1:num_pixels))
-         allocate(slp_type_one(1:num_type,1:num_pixels))
-         allocate(area_type_one(1:num_type,1:num_pixels))
+         allocate(asp_type_one(1:num_slope_type,1:num_pixels))
+         allocate(slp_type_one(1:num_slope_type,1:num_pixels))
+         allocate(area_type_one(1:num_slope_type,1:num_pixels))
          allocate(slp_mask_one(1:num_pixels))
          allocate(asp_mask_one(1:num_pixels))
          allocate(area_mask_one(1:num_pixels))
 
-         DO i = 1, num_type
+         DO i = 1, num_slope_type
             asp_type_one(i,:) = -9999
             slp_type_one(i,:) = -9999
             area_type_one(i,:) = -9999
@@ -305,7 +319,7 @@ SUBROUTINE Aggregation_TopographyFactors ( &
          ENDDO
 
          ! assign value to four types at patches
-         DO i = 1, num_type
+         DO i = 1, num_slope_type
             IF (sum_area_one.eq.0.0) THEN
                area_type_patches(i,ipatch) = 0
                asp_type_patches(i,ipatch) = 0
@@ -340,12 +354,77 @@ SUBROUTINE Aggregation_TopographyFactors ( &
 #endif
 
 #ifdef RangeCheck
-   CALL check_vector_data ('svf_patches ',       svf_patches)
-   CALL check_vector_data ('cur_patches ',       cur_patches)
-   CALL check_vector_data ('slp_type_patches ',  slp_type_patches)
-   CALL check_vector_data ('asp_type_patches ',  asp_type_patches)
+   CALL check_vector_data ('svf_patches       ', svf_patches      )
+   CALL check_vector_data ('cur_patches       ', cur_patches      )
+   CALL check_vector_data ('slp_type_patches  ', slp_type_patches )
+   CALL check_vector_data ('asp_type_patches  ', asp_type_patches )
    CALL check_vector_data ('area_type_patches ', area_type_patches)
-   CALL check_vector_data ('sf_lut_patches ',    sf_lut_patches)
+   CALL check_vector_data ('sf_lut_patches    ', sf_lut_patches   )
+#endif
+
+#ifndef SinglePoint
+! Reduce the dimension of the shadow factor array
+! Construct a new array with dimensions of sf_curve_patches(azimuth, shadow factor parameters, patches)
+   allocate(sf_curve_patches(num_azimuth,num_zenith_parameter,numpatch))
+   DO a = 1, num_azimuth
+      DO ipatch = 1, numpatch
+         y(:) = sf_lut_patches(a,:,ipatch)
+         x(:) = zenith_angle(:)
+
+         ! Obtain the last position of y==1
+         DO z = 1, num_zenith-1
+            IF ((y(z)==1.).and.(y(z+1)<1.)) THEN
+               index = z+1
+            ENDIF
+         ENDDO
+
+         ! allocate Allocate memory to dynamic arrays
+         n = num_zenith - index +1
+         allocate(y_train(n))
+         allocate(x_train(n))
+         allocate(y_train_transform(n))
+
+         ! Obtain the predicted value y_train and prediction factor x_train for fitting, the form of the fitting function is
+         ! ln(-ln(y_train)) = a1*x_train+a2
+         y_train(:) = y(index:)
+         x_train(:) = x(index:)
+
+         ! Transform y_train to enable linear regression fitting
+         DO i = 1, n 
+            IF (y_train(i) <= 0.) y_train(i) = 0.001
+            IF (y_train(i) >= 1.) y_train(i) = 0.999
+         ENDDO
+         y_train_transform(:) = log(-1*log(y_train(:)))
+
+         ! Obtain parameters a1 and a2 using the least squares method
+         x_sum = 0.
+         xy_sum = 0.
+         y_sum = 0.
+         x2_sum = 0.
+         DO z = 1, n
+            xy_sum = xy_sum + x_train(z)*y_train_transform(z)
+            x_sum = x_sum + x_train(z)
+            y_sum = y_sum + y_train_transform(z)
+            x2_sum = x2_sum + x_train(z)*x_train(z)
+         ENDDO
+         IF (n*x2_sum - x_sum*x_sum == 0.) THEN
+            a1 = 0
+            a2 = 0
+         ELSE
+            a1 = (n*xy_sum - x_sum*y_sum)/(n*x2_sum - x_sum*x_sum)
+            a2 = (y_sum - a1*x_sum)/n
+         ENDIF
+         sf_curve_patches(a,1,ipatch) = x(index-1) ! Minimum zenith angle at which occlusion begins
+         sf_curve_patches(a,2,ipatch) = a1
+         sf_curve_patches(a,3,ipatch) = a2
+
+         ! deallocate
+         deallocate(y_train)
+         deallocate(x_train)
+         deallocate(y_train_transform)
+      ENDDO
+   ENDDO
+
 #endif
 
 #ifndef SinglePoint
@@ -362,41 +441,41 @@ SUBROUTINE Aggregation_TopographyFactors ( &
    lndname = trim(landdir)//'/slp_type_patches.nc'
    CALL ncio_create_file_vector (lndname, landpatch)
    CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
-   CALL ncio_define_dimension_vector (lndname, landpatch, 'type', num_type)
-   CALL ncio_write_vector (lndname, 'slp_type_patches', 'type', num_type, 'patch', landpatch, slp_type_patches, 1)
+   CALL ncio_define_dimension_vector (lndname, landpatch, 'slope_type', num_slope_type)
+   CALL ncio_write_vector (lndname, 'slp_type_patches', 'slope_type', num_slope_type, 'patch', landpatch, slp_type_patches, 1)
 
    lndname = trim(landdir)//'/asp_type_patches.nc'
    CALL ncio_create_file_vector (lndname, landpatch)
    CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
-   CALL ncio_define_dimension_vector (lndname, landpatch, 'type', num_type)
-   CALL ncio_write_vector (lndname, 'asp_type_patches', 'type', num_type, 'patch', landpatch, asp_type_patches, 1)
+   CALL ncio_define_dimension_vector (lndname, landpatch, 'slope_type', num_slope_type)
+   CALL ncio_write_vector (lndname, 'asp_type_patches', 'slope_type', num_slope_type, 'patch', landpatch, asp_type_patches, 1)
 
    lndname = trim(landdir)//'/area_type_patches.nc'
    CALL ncio_create_file_vector (lndname, landpatch)
    CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
-   CALL ncio_define_dimension_vector (lndname, landpatch, 'type', num_type)
-   CALL ncio_write_vector (lndname, 'area_type_patches', 'type', num_type, 'patch', landpatch, area_type_patches, 1)
+   CALL ncio_define_dimension_vector (lndname, landpatch, 'slope_type', num_slope_type)
+   CALL ncio_write_vector (lndname, 'area_type_patches', 'slope_type', num_slope_type, 'patch', landpatch, area_type_patches, 1)
 
-   lndname = trim(landdir)//'/sf_lut_patches.nc'
+   lndname = trim(landdir)//'/sf_curve_patches.nc'
    CALL ncio_create_file_vector (lndname, landpatch)
    CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
    CALL ncio_define_dimension_vector (lndname, landpatch, 'azimuth', num_azimuth)
-   CALL ncio_define_dimension_vector (lndname, landpatch, 'zenith', num_zenith)
-   CALL ncio_write_vector (lndname, 'sf_lut_patches', 'azimuth', num_azimuth, 'zenith', num_zenith, 'patch', landpatch, sf_lut_patches, 1)
+   CALL ncio_define_dimension_vector (lndname, landpatch, 'zenith_p', num_zenith_parameter)
+   CALL ncio_write_vector (lndname, 'sf_curve_patches', 'azimuth', num_azimuth, 'zenith_p', num_zenith_parameter, 'patch', landpatch, sf_curve_patches, 1)
 
 #ifdef SrfdataDiag
    typpatch = (/(ityp, ityp = 0, N_land_classification)/)
 
    ! only write the first type of slope and aspect at patches
    lndname  = trim(dir_model_landdata) // '/diag/topo_factor_slp_' // trim(cyear) // '.nc'
-   DO i = 1, num_type
+   DO i = 1, num_slope_type
       write(sdir,'(I0)') i
       CALL srfdata_map_and_write (slp_type_patches(i,:), landpatch%settyp, typpatch, m_patch2diag, &
          -1.0e36_r8, lndname, 'slp_'//trim(sdir), compress = 1, write_mode = 'one')
    ENDDO
 
    lndname  = trim(dir_model_landdata) // '/diag/topo_factor_asp_' // trim(cyear) // '.nc'
-   DO i = 1, num_type
+   DO i = 1, num_slope_type
       write(sdir,'(I0)') i
       CALL srfdata_map_and_write (asp_type_patches(i,:), landpatch%settyp, typpatch, m_patch2diag, &
          -1.0e36_r8, lndname, 'asp_'//trim(sdir), compress = 1, write_mode = 'one')
@@ -423,9 +502,9 @@ SUBROUTINE Aggregation_TopographyFactors ( &
 #endif
 #else
    ! factors for site
-   allocate ( SITE_slp_type  (num_type) )
-   allocate ( SITE_asp_type  (num_type) )
-   allocate ( SITE_area_type (num_type) )
+   allocate ( SITE_slp_type  (num_slope_type) )
+   allocate ( SITE_asp_type  (num_slope_type) )
+   allocate ( SITE_area_type (num_slope_type) )
    allocate ( SITE_sf_lut    (num_azimuth, num_zenith) )
    SITE_svf       = svf_patches(1)
    SITE_cur       = cur_patches(1)
@@ -437,11 +516,12 @@ SUBROUTINE Aggregation_TopographyFactors ( &
 
 
    IF (p_is_worker) THEN
-      deallocate ( slp_type_patches  )
-      deallocate ( asp_type_patches  )
-      deallocate ( sf_lut_patches )
-      deallocate ( svf_patches)
-      deallocate ( cur_patches)
+      IF (allocated(slp_type_patches)) deallocate ( slp_type_patches )
+      IF (allocated(asp_type_patches)) deallocate ( asp_type_patches )
+      IF (allocated(sf_lut_patches  )) deallocate ( sf_lut_patches   )
+      IF (allocated(sf_curve_patches)) deallocate ( sf_curve_patches )
+      IF (allocated(svf_patches     )) deallocate ( svf_patches      )
+      IF (allocated(cur_patches     )) deallocate ( cur_patches      )
    ENDIF
 
 END SUBROUTINE Aggregation_TopographyFactors

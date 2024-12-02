@@ -212,7 +212,7 @@ PROGRAM MKSRFDATA
    ! define grid for topography factors
    IF (DEF_USE_Forcing_Downscaling) THEN
       !CALL grid_topo_factor%define_by_name ('merit_90m')
-      lndname = trim(dir_rawdata)//"slope.nc"
+      lndname = trim(DEF_DS_HiresTopographyDataDir) // '/slope.nc'
       CALL grid_topo_factor%define_from_file (lndname,"lat","lon")
    ENDIF
 
@@ -381,7 +381,8 @@ PROGRAM MKSRFDATA
    CALL Aggregation_Topography      (gtopo  , dir_rawdata, dir_landdata, lc_year)
 
    IF (DEF_USE_Forcing_Downscaling) THEN   
-      CALL Aggregation_TopographyFactors (grid_topo_factor, dir_rawdata, dir_landdata, lc_year)
+      CALL Aggregation_TopographyFactors (grid_topo_factor, &
+         trim(DEF_DS_HiresTopographyDataDir), dir_landdata, lc_year)
    ENDIF
    
 #ifdef URBAN_MODEL
