@@ -477,7 +477,7 @@ CONTAINS
 
 
 
-         metfilename = '/'//trim(fprefix(var_i))//'_'//trim(yearstr)//'.nc'
+         metfilename = '/'//trim(fprefix(var_i))//trim(yearstr)//trim(monthstr)//'.nc'
 
 
       CASE ('GDAS')
