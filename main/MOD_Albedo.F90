@@ -832,7 +832,7 @@ ENDIF
             coszen,        &! consine of solar zenith angle
             albg(2,2)       ! albedos of ground
 
-! output
+! output 输出
    real(r8), intent(out) :: &
             albv(2,2),     &! albedo, vegetation [-]
             tran(2,3),     &! canopy transmittances for solar radiation
