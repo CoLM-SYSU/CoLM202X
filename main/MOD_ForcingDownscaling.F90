@@ -291,12 +291,12 @@ CONTAINS
       END IF
 
       IF (forc_prl_c < 0) THEN
-         IF (forc_prc_c < -1.e-5) write(*,*) 'negative prl', forc_prl_g, forc_maxelv_g, forc_topo_c, forc_topo_g
+         write(*,*) 'negative prl', forc_prl_g, forc_maxelv_g, forc_topo_c, forc_topo_g
          forc_prl_c = 0.
       END IF
 
       IF (forc_prc_c < 0) THEN
-         IF (forc_prc_c < -1.e-5)write(*,*) 'negative prc', forc_prc_g, forc_maxelv_g, forc_topo_c, forc_topo_g
+         write(*,*) 'negative prc', forc_prc_g, forc_maxelv_g, forc_topo_c, forc_topo_g
          forc_prc_c = 0.
       END IF
 
