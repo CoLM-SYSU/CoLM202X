@@ -275,10 +275,13 @@ CONTAINS
        tleaf,                    &! shaded leaf temperature [K]
        t_soisno(lb:nl_soil),     &! soil temperature [K]
        wice_soisno(lb:nl_soil),  &! ice lens [kg/m2]
-       wliq_soisno(lb:nl_soil),  &! liqui water [kg/m2]
+       wliq_soisno(lb:nl_soil)    ! liqui water [kg/m2]
+   
+   real(r8), intent(in) :: &
        smp(1:nl_soil)         ,  &! soil matrix potential [mm]
-       hk(1:nl_soil)          ,  &! hydraulic conductivity [mm h2o/s]
+       hk(1:nl_soil)              ! hydraulic conductivity [mm h2o/s]
 
+   real(r8), intent(inout) :: &
        ldew,                     &! depth of water on foliage [kg/(m2 s)]
        ldew_rain,                &! depth of rain on foliage [kg/(m2 s)]
        ldew_snow,                &! depth of rain on foliage [kg/(m2 s)]

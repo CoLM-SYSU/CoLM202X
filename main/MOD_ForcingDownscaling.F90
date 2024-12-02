@@ -528,8 +528,8 @@ CONTAINS
    real(r8), intent(in) :: area_type_c(1:num_slope_type)                     ! area percentage of each character of one patch
 
    ! LOCAL VARIABLES:
-   real(r8) :: zen_rad, azi_rad, azi_deg               ! rad and deg of sun zenith and azimuth angles
-   integer  :: idx_azi                                 ! index used to cal shadow factor from look up table
+   real(r8) :: zen_rad, zen_deg, azi_rad, azi_deg      ! rad and deg of sun zenith and azimuth angles
+   integer  :: idx_azi, idx_zen                        ! index used to cal shadow factor from look up table
    real(r8) :: sf_c                                    ! shadow factor
    real(r8) :: rt_R                                    ! The ratio of the current distance between the sun and the earth                                                                                     ! to the average distance between the sun and the earth
    real(r8) :: toa_swrad                               ! top of atmosphere shortwave radiation

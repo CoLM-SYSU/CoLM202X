@@ -421,7 +421,7 @@ MODULE MOD_Namelist
 
    logical           :: DEF_USE_Forcing_Downscaling        = .false.
    character(len=256):: DEF_DS_HiresTopographyDataDir      = 'null'
-   character(len=5)  :: DEF_DS_precipitation_adjust_scheme = 'II'
+   character(len=5)  :: DEF_DS_precipitation_adjust_scheme = 'I'
    character(len=5)  :: DEF_DS_longwave_adjust_scheme      = 'II'
 
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
