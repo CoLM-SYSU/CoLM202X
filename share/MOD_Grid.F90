@@ -458,6 +458,32 @@ CONTAINS
       ELSE
          this%yinc = -1
       ENDIF
+      
+      ! align grid
+      DO ilon = 1, this%nlon-1
+         IF (lon_between_ceil(this%lon_e(ilon), this%lon_w(ilon+1), this%lon_e(ilon+1))) THEN
+            this%lon_e(ilon) = this%lon_w(ilon+1)
+         ELSE
+            this%lon_w(ilon+1) = this%lon_e(ilon)
+         ENDIF
+      ENDDO
+      
+      IF (this%nlon > 1) THEN
+         ilon = this%nlon
+         IF (lon_between_ceil(this%lon_e(ilon), this%lon_w(1), this%lon_e(1))) THEN
+            this%lon_e(ilon) = this%lon_w(1)
+         ENDIF
+      ENDIF
+
+      DO ilat = 1, this%nlat-1
+         IF (this%yinc == 1) THEN
+            this%lat_n(ilat)   = max(this%lat_n(ilat),this%lat_s(ilat+1))
+            this%lat_s(ilat+1) = this%lat_n(ilat)
+         ELSEIF (this%yinc == -1) THEN
+            this%lat_s(ilat)   = min(this%lat_s(ilat),this%lat_n(ilat+1))
+            this%lat_n(ilat+1) = this%lat_s(ilat)
+         ENDIF
+      ENDDO
 
    END SUBROUTINE grid_normalize
 
