@@ -15,7 +15,7 @@
    DEF_forcing%endyr             = 2023     ! end year of forcing data
    DEF_forcing%endmo             = 12       ! end month of forcing data
    DEF_forcing%dtime             = 10800 10800 10800 10800 10800 10800 10800 10800
-   DEF_forcing%offset            = 0 0 0 5400 0 0 0 5400
+   DEF_forcing%offset            = 0 0 0 5400 0 0 5400 5400
    DEF_forcing%nlands            = 1        ! land grid number in 1d
    
    DEF_forcing%leapyear          = .true.   ! leapyear calendar
