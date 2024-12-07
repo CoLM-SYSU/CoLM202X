@@ -124,7 +124,7 @@ CONTAINS
          file_patch = trim(DEF_dir_rawdata)//'landtypes/landtype-igbp-modis-'//trim(cyear)//'.nc'
 #else
          !TODO: need usgs land cover type data
-         file_patch = trim(DEF_dir_rawdata) //'/landtypes/landtype_usgs_update.nc'
+         file_patch = trim(DEF_dir_rawdata) //'/landtypes/landtype-usgs-update.nc'
 #endif
          CALL ncio_read_block (file_patch, 'landtype', gpatch, patchdata)
 

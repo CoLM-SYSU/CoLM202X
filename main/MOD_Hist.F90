@@ -182,7 +182,9 @@ CONTAINS
       CASE ('YEARLY')
          lwrite = isendofyear (idate, deltim) .or. (.not. (itstamp < etstamp))
       CASE default
+         lwrite = .false.
          write(*,*) 'Warning : Please USE one of TIMESTEP/HOURLY/DAILY/MONTHLY/YEARLY for history frequency.'
+         write(*,*) '          Set to FALSE by default.                                                     '
       END select
 
       IF (lwrite) THEN
