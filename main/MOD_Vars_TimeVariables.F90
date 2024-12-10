@@ -880,7 +880,9 @@ CONTAINS
       CASE ('YEARLY')
          rwrite = isendofyear(idate, deltim)
       CASE default
+         rwrite = .false.
          write(*,*) 'Warning: Please USE one of TIMESTEP/HOURLY/DAILY/MONTHLY/YEARLY for restart frequency.'
+         write(*,*) '         Set to FALSE by default.                                                     '
       ENDSELECT
 
       IF (rwrite) THEN

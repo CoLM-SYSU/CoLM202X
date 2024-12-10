@@ -57,7 +57,7 @@ MODULE MOD_Namelist
 ! ----- Part 3: For Single Point -----
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-   character(len=256) :: SITE_fsrfdata   = 'null'
+   character(len=256) :: SITE_fsitedata = 'null'
 
    real(r8) :: SITE_lon_location = 113.5897
    real(r8) :: SITE_lat_location = 22.3507
@@ -818,7 +818,7 @@ CONTAINS
       DEF_CASE_NAME,                          &
       DEF_domain,                             &
 
-      SITE_fsrfdata,                          &
+      SITE_fsitedata,                         &
       SITE_lon_location,                      &
       SITE_lat_location,                      &
       SITE_landtype,                          &
