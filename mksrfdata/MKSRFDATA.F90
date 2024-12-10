@@ -110,9 +110,9 @@ PROGRAM MKSRFDATA
 
 #ifdef SinglePoint
 #ifndef URBAN_MODEL
-   CALL read_surface_data_single (SITE_fsrfdata, mksrfdata=.true.)
+   CALL read_surface_data_single (SITE_fsitedata, mksrfdata=.true.)
 #else
-   CALL read_urban_surface_data_single (SITE_fsrfdata, mksrfdata=.true.)
+   CALL read_urban_surface_data_single (SITE_fsitedata, mksrfdata=.true.)
 #endif
 #endif
 
