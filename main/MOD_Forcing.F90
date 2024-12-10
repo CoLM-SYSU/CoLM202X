@@ -392,7 +392,7 @@ CONTAINS
    USE MOD_LandPatch
    USE MOD_RangeCheck
    USE MOD_UserSpecifiedForcing
-   USE MOD_ForcingDownscaling, only : rair, cpair, downscale_forcings
+   USE MOD_ForcingDownscaling, only : rair, cpair, downscale_forcings, downscale_wind
    USE MOD_NetCDFVector
 
    IMPLICIT NONE
@@ -773,7 +773,12 @@ CONTAINS
 
                      ! topography-based factor on patch
                      slp_type_patches(:,np), asp_type_patches(:,np), area_type_patches(:,np), &
-                     svf_patches(np), cur_patches(np), sf_lut_patches(:,:,np), &
+                     svf_patches(np), cur_patches(np), &
+#ifdef SinglePoint
+                     sf_lut_patches  (:,:,np), &
+#else
+                     sf_curve_patches(:,:,np), &
+#endif
 
                      ! other factors
                      calday, coszen(np), cosazi(np), balb, &
@@ -801,6 +806,14 @@ CONTAINS
          CALL mg2p_forc%part2pset (forc_swrad_part,  forc_swrad )
          CALL mg2p_forc%part2pset (forc_us_part,     forc_us    )
          CALL mg2p_forc%part2pset (forc_vs_part,     forc_vs    )
+
+         ! wind downscaling
+         IF (p_is_worker) THEN
+            DO np = 1, numpatch
+               IF ((forc_us(np)==spval).or.(forc_vs(np)==spval)) cycle
+               CALL downscale_wind(forc_us(np), forc_vs(np), slp_type_patches(:,np), asp_type_patches(:,np), area_type_patches(:,np), cur_patches(np))
+            ENDDO
+         ENDIF
 
 #ifndef SinglePoint
          IF (trim(DEF_DS_precipitation_adjust_scheme) == 'III') THEN

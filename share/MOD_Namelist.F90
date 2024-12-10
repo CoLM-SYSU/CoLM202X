@@ -57,7 +57,7 @@ MODULE MOD_Namelist
 ! ----- Part 3: For Single Point -----
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-   character(len=256) :: SITE_fsrfdata   = 'null'
+   character(len=256) :: SITE_fsitedata = 'null'
 
    real(r8) :: SITE_lon_location = 113.5897
    real(r8) :: SITE_lat_location = 22.3507
@@ -420,7 +420,8 @@ MODULE MOD_Namelist
    character(len=20) :: DEF_Forcing_Interp_Method = 'arealweight' ! 'arealweight' (default) or 'bilinear'
 
    logical           :: DEF_USE_Forcing_Downscaling        = .false.
-   character(len=5)  :: DEF_DS_precipitation_adjust_scheme = 'II'
+   character(len=256):: DEF_DS_HiresTopographyDataDir      = 'null'
+   character(len=5)  :: DEF_DS_precipitation_adjust_scheme = 'I'
    character(len=5)  :: DEF_DS_longwave_adjust_scheme      = 'II'
 
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -817,7 +818,7 @@ CONTAINS
       DEF_CASE_NAME,                          &
       DEF_domain,                             &
 
-      SITE_fsrfdata,                          &
+      SITE_fsitedata,                         &
       SITE_lon_location,                      &
       SITE_lat_location,                      &
       SITE_landtype,                          &
@@ -946,6 +947,7 @@ CONTAINS
       DEF_Forcing_Interp_Method,              &
 
       DEF_USE_Forcing_Downscaling,            &
+      DEF_DS_HiresTopographyDataDir,          & 
       DEF_DS_precipitation_adjust_scheme,     &
       DEF_DS_longwave_adjust_scheme,          &
 
@@ -1439,6 +1441,7 @@ CONTAINS
 
       CALL mpi_bcast (DEF_Forcing_Interp_Method              ,20  ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_USE_Forcing_Downscaling            ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_DS_HiresTopographyDataDir          ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_DS_precipitation_adjust_scheme     ,5   ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_DS_longwave_adjust_scheme          ,5   ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
 

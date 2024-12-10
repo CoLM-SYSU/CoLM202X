@@ -141,9 +141,13 @@ CONTAINS
 #endif
    real(r8), intent(inout) :: &
         wice_soisno(lb:nl_soil) ,&! ice lens (kg/m2)
-        wliq_soisno(lb:nl_soil) ,&! liquid water (kg/m2)
+        wliq_soisno(lb:nl_soil)   ! liquid water (kg/m2)
+
+   real(r8), intent(out) :: &
         smp(1:nl_soil)          ,&! soil matrix potential [mm]
-        hk (1:nl_soil)          ,&! hydraulic conductivity [mm h2o/m]
+        hk (1:nl_soil)            ! hydraulic conductivity [mm h2o/m]
+   
+   real(r8), intent(inout) :: &
         zwt                     ,&! the depth from ground (soil) surface to water table [m]
         wa                        ! water storage in aquifer [mm]
 
@@ -597,9 +601,13 @@ ENDIF
 
    real(r8), intent(inout) :: &
         wice_soisno(lb:nl_soil) , &! ice lens (kg/m2)
-        wliq_soisno(lb:nl_soil) , &! liquid water (kg/m2)
+        wliq_soisno(lb:nl_soil)    ! liquid water (kg/m2)
+
+   real(r8), intent(out) :: &
         smp(1:nl_soil)   , &! soil matrix potential [mm]
-        hk (1:nl_soil)   , &! hydraulic conductivity [mm h2o/m]
+        hk (1:nl_soil)      ! hydraulic conductivity [mm h2o/m]
+
+   real(r8), intent(inout) :: &
         zwt              , &! the depth from ground (soil) surface to water table [m]
         wdsrf            , &! depth of surface water [mm]
         wa               , &! water storage in aquifer [mm]
@@ -1763,8 +1771,8 @@ ENDIF
 
    real(r8), intent(out) :: dwat(1:nl_soil)   ! change of soil water [m3/m3]
    real(r8), intent(out) :: qcharge           ! aquifer recharge rate (positive to aquifer) (mm/s)
-   real(r8), intent(inout) :: smp(1:nl_soil)  ! soil matrix potential [mm]
-   real(r8), intent(inout) :: hk (1:nl_soil)  ! hydraulic conductivity [mm h2o/s]
+   real(r8), intent(out) :: smp(1:nl_soil)    ! soil matrix potential [mm]
+   real(r8), intent(out) :: hk (1:nl_soil)    ! hydraulic conductivity [mm h2o/s]
 
 !
 ! local arguments

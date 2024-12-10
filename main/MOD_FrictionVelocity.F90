@@ -478,7 +478,7 @@ CONTAINS
          fh_bot = log(obu/z0h) + 5. - 5.*z0h/obu + (5.*log(zeta)+zeta-1.)
       ENDIF
 
-      kintmoninobuk = 1./(vonkar/(fh_top-fh_bot)*ustar)
+      kintmoninobuk = (fh_top-fh_bot)/(vonkar*ustar)
 
    END FUNCTION kintmoninobuk
 

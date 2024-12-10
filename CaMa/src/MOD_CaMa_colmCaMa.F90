@@ -318,8 +318,8 @@ CONTAINS
 #ifdef USEMPI
             CALL mpi_barrier (p_comm_glb, p_err)
 #endif
-            flddepth_cama=flddepth_cama*1000.D0 !m --> mm
-            fldfrc_cama=fldfrc_cama/100.D0     !% --> [0-1]
+            IF (p_is_worker) flddepth_cama=flddepth_cama*1000.D0 !m --> mm
+            IF (p_is_worker) fldfrc_cama=fldfrc_cama/100.D0     !% --> [0-1]
          ENDIF
       ENDIF
    END SUBROUTINE colm_cama_drv
