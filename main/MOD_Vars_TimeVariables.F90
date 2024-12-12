@@ -880,11 +880,13 @@ CONTAINS
       CASE ('YEARLY')
          rwrite = isendofyear(idate, deltim)
       CASE default
+         rwrite = .false.
          write(*,*) 'Warning: Please USE one of TIMESTEP/HOURLY/DAILY/MONTHLY/YEARLY for restart frequency.'
+         write(*,*) '         Set to FALSE by default.                                                     '
       ENDSELECT
 
       IF (rwrite) THEN
-         rwrite = (ptstamp <= itstamp)
+         rwrite = ((ptstamp <= itstamp) .or. isendofyear(idate,deltim))
       ENDIF
 
    END FUNCTION save_to_restart
@@ -898,10 +900,11 @@ CONTAINS
 
    USE MOD_SPMD_Task
    USE MOD_Namelist, only : DEF_REST_CompressLevel, DEF_USE_PLANTHYDRAULICS, DEF_USE_OZONESTRESS, &
-                            DEF_USE_IRRIGATION
+                            DEF_USE_IRRIGATION, DEF_USE_Dynamic_Lake
    USE MOD_LandPatch
    USE MOD_NetCDFVector
    USE MOD_Vars_Global
+   USE MOD_Vars_TimeInvariants, only : dz_lake
    IMPLICIT NONE
 
    integer, intent(in) :: idate(3)
@@ -997,6 +1000,9 @@ ENDIF
       CALL ncio_write_vector (file_restart, 'wdsrf   '   , 'patch', landpatch, wdsrf     , compress)                    ! depth of surface water [mm]
       CALL ncio_write_vector (file_restart, 'rss     '   , 'patch', landpatch, rss       , compress)                    ! soil surface resistance [s/m]
 
+IF (DEF_USE_Dynamic_Lake) THEN
+      CALL ncio_write_vector (file_restart, 'dz_lake'    , 'lake', nl_lake, 'patch', landpatch, dz_lake     , compress)
+ENDIF
       CALL ncio_write_vector (file_restart, 't_lake  '   , 'lake', nl_lake, 'patch', landpatch, t_lake      , compress)
       CALL ncio_write_vector (file_restart, 'lake_icefrc', 'lake', nl_lake, 'patch', landpatch, lake_icefrac, compress)
       CALL ncio_write_vector (file_restart, 'savedtke1  ', 'patch', landpatch, savedtke1   , compress)
@@ -1087,6 +1093,7 @@ ENDIF
 #endif
    USE MOD_LandPatch
    USE MOD_Vars_Global
+   USE MOD_Vars_TimeInvariants, only : dz_lake
 
    IMPLICIT NONE
 
@@ -1163,6 +1170,9 @@ ENDIF
       CALL ncio_read_vector (file_restart, 'wdsrf   '   , landpatch, wdsrf      ) ! depth of surface water [mm]
       CALL ncio_read_vector (file_restart, 'rss     '   , landpatch, rss        ) ! soil surface resistance [s/m]
 
+IF (DEF_USE_Dynamic_Lake) THEN
+      CALL ncio_read_vector (file_restart, 'dz_lake'    , nl_lake, landpatch, dz_lake     )
+ENDIF
       CALL ncio_read_vector (file_restart, 't_lake  '   , nl_lake, landpatch, t_lake      )
       CALL ncio_read_vector (file_restart, 'lake_icefrc', nl_lake, landpatch, lake_icefrac)
       CALL ncio_read_vector (file_restart, 'savedtke1', landpatch, savedtke1)
@@ -1255,7 +1265,8 @@ ENDIF
    USE MOD_SPMD_Task
    USE MOD_RangeCheck
    USE MOD_Namelist, only: DEF_USE_PLANTHYDRAULICS, DEF_USE_OZONESTRESS, DEF_USE_IRRIGATION, &
-                           DEF_USE_SNICAR
+                           DEF_USE_SNICAR, DEF_USE_Dynamic_Lake
+   USE MOD_Vars_TimeInvariants, only : dz_lake
 
    IMPLICIT NONE
 
@@ -1297,6 +1308,9 @@ ENDIF
       CALL check_vector_data ('wetwat      [mm]   ', wetwat     ) ! water storage in wetland [mm]
       CALL check_vector_data ('wdsrf       [mm]   ', wdsrf      ) ! depth of surface water [mm]
       CALL check_vector_data ('rss         [s/m]  ', rss        ) ! soil surface resistance [s/m]
+IF (DEF_USE_Dynamic_Lake) THEN
+      CALL check_vector_data ('dz_lake     [m]    ', dz_lake     )!
+ENDIF
       CALL check_vector_data ('t_lake      [K]    ', t_lake      )!
       CALL check_vector_data ('lake_icefrc [-]    ', lake_icefrac)!
       CALL check_vector_data ('savedtke1   [W/m K]', savedtke1   )!

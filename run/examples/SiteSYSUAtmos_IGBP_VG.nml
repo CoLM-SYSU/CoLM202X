@@ -1,0 +1,64 @@
+&nl_colm
+
+! Author: Shupeng Zhang 
+! Description : an example for SinglePoint with all surface data from database instead of observations.
+
+   DEF_CASE_NAME = 'SiteSYSUAtmos_IGBP_VG'
+   
+   SITE_lon_location = 113.5897
+   SITE_lat_location = 22.3507
+
+   USE_SITE_landtype         = .false.
+   USE_SITE_htop             = .false.
+   USE_SITE_LAI              = .false.
+   USE_SITE_lakedepth        = .false.
+   USE_SITE_soilreflectance  = .false.
+   USE_SITE_soilparameters   = .false.
+   USE_SITE_dbedrock         = .false.
+   USE_SITE_topography       = .false.
+   USE_SITE_topostd          = .false.
+   USE_SITE_BVIC             = .false.
+
+   DEF_simulation_time%greenwich    = .TRUE.
+   DEF_simulation_time%start_year   = 1951
+   DEF_simulation_time%start_month  = 1
+   DEF_simulation_time%start_day    = 1
+   DEF_simulation_time%start_sec    = 0
+   DEF_simulation_time%end_year     = 1951
+   DEF_simulation_time%end_month    = 1
+   DEF_simulation_time%end_day      = 11
+   DEF_simulation_time%end_sec      = 86400
+   DEF_simulation_time%spinup_year  = 0
+   DEF_simulation_time%spinup_month = 1
+   DEF_simulation_time%spinup_day   = 365
+   DEF_simulation_time%spinup_sec   = 86400
+   DEF_simulation_time%spinup_repeat = 0
+
+   DEF_simulation_time%timestep     = 1800.
+
+   DEF_dir_rawdata = '/shr03/CoLMrawdata/'
+   DEF_dir_runtime = '/shr03/CoLMruntime/'
+   DEF_dir_output  = '/tera09/training/CoLM202X-Tutorial/cases/'
+
+   ! soil state init
+   DEF_USE_SoilInit  = .true.
+   DEF_file_SoilInit = '/tera13/zhangsp/landdata/soilstate/soilstate.nc' 
+
+   ! LAI setting
+   DEF_LAI_MONTHLY = .true.
+   DEF_LAI_CHANGE_YEARLY = .false.
+
+   ! ----- forcing -----
+   ! Options :
+   ! PRINCETON | GSWP3   | QIAN  | CRUNCEPV4 | CRUNCEPV7 | ERA5LAND | ERA5  |  MSWX
+   ! WFDE5     | CRUJRA  | WFDEI | JRA55     | GDAS      | CMFD     | POINT |  JRA3Q
+   DEF_forcing_namelist = '/tera13/zhangsp/work/CoLM2024/run/forcing/ERA5LAND.nml'
+   
+   ! ----- history -----
+   DEF_WRST_FREQ = 'MONTHLY' ! write restart file frequency: HOURLY/DAILY/MONTHLY/YEARLY
+   DEF_HIST_FREQ = 'DAILY' ! write history file frequency: HOURLY/DAILY/MONTHLY/YEARLY
+   DEF_HIST_groupby = 'MONTH' ! history in one file: DAY/MONTH/YEAR
+
+   DEF_hist_vars_out_default = .true.
+
+/

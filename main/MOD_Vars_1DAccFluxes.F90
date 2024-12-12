@@ -304,6 +304,7 @@ MODULE MOD_Vars_1DAccFluxes
 !Plant Hydraulic parameters
    real(r8), allocatable :: a_vegwp       (:,:)
 !END plant hydraulic parameters
+   real(r8), allocatable :: a_dz_lake     (:,:)
    real(r8), allocatable :: a_t_lake      (:,:)
    real(r8), allocatable :: a_lake_icefrac(:,:)
 
@@ -374,6 +375,8 @@ MODULE MOD_Vars_1DAccFluxes
    real(r8), allocatable :: a_srndln  (:)
    real(r8), allocatable :: a_srniln  (:)
 
+   real(r8), allocatable :: a_sensors (:,:)
+
    PUBLIC :: allocate_acc_fluxes
    PUBLIC :: deallocate_acc_fluxes
    PUBLIC :: flush_acc_fluxes
@@ -387,6 +390,7 @@ CONTAINS
    USE MOD_LandElm
    USE MOD_LandPatch
    USE MOD_LandUrban, only: numurban
+   USE MOD_Vars_1DFluxes, only: nsensor
 #ifdef CROP
    USE MOD_LandCrop
 #endif
@@ -696,6 +700,7 @@ CONTAINS
 !Plant Hydraulic parameters
             allocate (a_vegwp       (1:nvegwcs,       numpatch))
 !End Plant Hydraulic parameters
+            allocate (a_dz_lake     (nl_lake,         numpatch))
             allocate (a_t_lake      (nl_lake,         numpatch))
             allocate (a_lake_icefrac(nl_lake,         numpatch))
 
@@ -766,6 +771,8 @@ CONTAINS
             allocate (a_srviln    (numpatch))
             allocate (a_srndln    (numpatch))
             allocate (a_srniln    (numpatch))
+            
+            allocate (a_sensors (nsensor,numpatch))
 
             allocate (nac_ln      (numpatch))
 
@@ -1090,6 +1097,7 @@ CONTAINS
 !Plant Hydraulic parameters
             deallocate (a_vegwp       )
 !END plant hydraulic parameters
+            deallocate (a_dz_lake     )
             deallocate (a_t_lake      )
             deallocate (a_lake_icefrac)
 #ifdef BGC
@@ -1158,6 +1166,8 @@ CONTAINS
             deallocate (a_srviln    )
             deallocate (a_srndln    )
             deallocate (a_srniln    )
+
+            deallocate (a_sensors   )
 
             deallocate (nac_ln      )
 
@@ -1480,6 +1490,7 @@ CONTAINS
 !Plant Hydraulic parameters
             a_vegwp        (:,:) = spval
 !END plant hydraulic parameters
+            a_dz_lake      (:,:) = spval
             a_t_lake       (:,:) = spval
             a_lake_icefrac (:,:) = spval
 #ifdef BGC
@@ -1550,6 +1561,8 @@ CONTAINS
             a_srviln   (:) = spval
             a_srndln   (:) = spval
             a_srniln   (:) = spval
+
+            a_sensors(:,:) = spval
 
             nac_ln  (:) = 0
 
@@ -1974,6 +1987,9 @@ CONTAINS
             IF(DEF_USE_PLANTHYDRAULICS)THEN
                CALL acc2d (vegwp    , a_vegwp        )
             ENDIF
+            IF (DEF_USE_Dynamic_Lake) THEN
+               CALL acc2d (dz_lake  , a_dz_lake      )
+            ENDIF
             CALL acc2d (t_lake      , a_t_lake       )
             CALL acc2d (lake_icefrac, a_lake_icefrac )
 #ifdef BGC
@@ -2330,6 +2346,8 @@ CONTAINS
             CALL acc1d (srviln , a_srviln )
             CALL acc1d (srndln , a_srndln )
             CALL acc1d (srniln , a_srniln )
+            
+            CALL acc2d (sensors, a_sensors)
 
             DO i = 1, numpatch
                IF (solvdln(i) /= spval) THEN

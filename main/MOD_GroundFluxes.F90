@@ -32,11 +32,12 @@ CONTAINS
 ! Original author : Yongjiu Dai, 09/15/1999; 08/30/2002
 !
 ! REVISIONS:
-! Hua Yuan, 09/2019: removed sigf to be consistant with PFT runs, removed fsena,
-!                    fevpa, renamed z0ma to z0m
-! Shaofeng Liu, 05/2023: add option to call moninobuk_leddy, the LargeEddy
-!                        surface turbulence scheme (LZD2022);
-!                        make a proper update of um.
+! 09/2019, Hua Yuan: removed sigf to be consistant with PFT runs, removed
+!          fsena, fevpa, renamed z0ma to z0m.
+!
+! 05/2023, Shaofeng Liu: add option to call moninobuk_leddy, the LargeEddy
+!          surface turbulence scheme (LZD2022); make a proper update of um.
+!
 !=======================================================================
 
    USE MOD_Precision
@@ -44,6 +45,7 @@ CONTAINS
    USE MOD_FrictionVelocity
    USE mod_namelist, only: DEF_USE_CBL_HEIGHT,DEF_RSS_SCHEME
    USE MOD_TurbulenceLEddy
+
    IMPLICIT NONE
 
 !----------------------- Dummy argument --------------------------------

@@ -57,8 +57,8 @@ MODULE MOD_Namelist
 ! ----- Part 3: For Single Point -----
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-   character(len=256) :: SITE_fsrfdata   = 'null'
-   
+   character(len=256) :: SITE_fsitedata = 'null'
+
    real(r8) :: SITE_lon_location = 113.5897
    real(r8) :: SITE_lat_location = 22.3507
 
@@ -74,8 +74,6 @@ MODULE MOD_Namelist
    logical  :: USE_SITE_soilparameters   = .true.
    logical  :: USE_SITE_dbedrock         = .true.
    logical  :: USE_SITE_topography       = .true.
-   logical  :: USE_SITE_topostd          = .true.
-   logical  :: USE_SITE_BVIC             = .true.
    logical  :: USE_SITE_urban_paras      = .true.
    logical  :: USE_SITE_thermal_paras    = .false.
    logical  :: USE_SITE_urban_LAI        = .false.
@@ -96,7 +94,7 @@ MODULE MOD_Namelist
       integer  :: end_month     = 1
       integer  :: end_day       = 1
       integer  :: end_sec       = 0
-      integer  :: spinup_year   = 2000
+      integer  :: spinup_year   = 0
       integer  :: spinup_month  = 1
       integer  :: spinup_day    = 1
       integer  :: spinup_sec    = 0
@@ -141,6 +139,7 @@ MODULE MOD_Namelist
    logical :: USE_srfdata_from_3D_gridded_data = .false.
 
    ! ----- land cover data year (for static land cover, i.e. non-LULCC) -----
+   ! NOTE: Please check the LC data year range available
    integer :: DEF_LC_YEAR  = 2005
 
    ! ----- Subgrid scheme -----
@@ -174,6 +173,10 @@ MODULE MOD_Namelist
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ! ----- Part 7: Leaf Area Index -----
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+   ! NOTE: Please check the LAI data year range available
+   integer :: DEF_LAI_START_YEAR = 2000
+   integer :: DEF_LAI_END_YEAR   = 2020
 
    ! add by zhongwang wei @ sysu 2021/12/23
    ! To allow read satellite observed LAI
@@ -223,6 +226,7 @@ MODULE MOD_Namelist
    logical :: DEF_URBAN_TREE        = .true.
    logical :: DEF_URBAN_WATER       = .true.
    logical :: DEF_URBAN_LUCY        = .true.
+   logical :: DEF_USE_CANYON_HWR    = .true.
 
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ! ----- Part 11: parameteration schemes -----
@@ -337,18 +341,25 @@ MODULE MOD_Namelist
    !Fire MODULE
    logical            :: DEF_USE_FIRE            = .false.
 
+   !Dynamic Lake model
+   logical            :: DEF_USE_Dynamic_Lake    = .false.
+
+   !
+   logical            :: DEF_CheckEquilibrium    = .false.
+
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ! ----- Part 12: forcing -----
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-   character(len=256) :: DEF_dir_forcing       = 'path/to/forcing/data'
-
    character(len=256) :: DEF_forcing_namelist  = 'null'
+
+   character(len=256) :: DEF_dir_forcing       = 'path/to/forcing/data'
 
    type nl_forcing_type
 
       character(len=256) :: dataset            = 'CRUNCEP'
       logical            :: solarin_all_band   = .true.
+      character(len=256) :: HEIGHT_mode        = 'absolute'
       real(r8)           :: HEIGHT_V           = 100.0
       real(r8)           :: HEIGHT_T           = 50.
       real(r8)           :: HEIGHT_Q           = 50.
@@ -389,6 +400,9 @@ MODULE MOD_Namelist
       character(len=256) :: vname(8)           = (/ &
          'TBOT    ','QBOT    ','PSRF    ','PRECTmms', &
          'NULL    ','WIND    ','FSDS    ','FLDS    ' /)
+      character(len=256) :: timelog(8)         = (/ &
+         'instant ','instant ','instant ','foreward', &
+         'NULL    ','instant ','forward ','foreward' /)
       character(len=256) :: tintalgo(8)        = (/ &
          'linear ','linear ','linear ','nearest', &
          'NULL   ','linear ','coszen ','linear ' /)
@@ -408,7 +422,8 @@ MODULE MOD_Namelist
    character(len=20) :: DEF_Forcing_Interp_Method = 'arealweight' ! 'arealweight' (default) or 'bilinear'
 
    logical           :: DEF_USE_Forcing_Downscaling        = .false.
-   character(len=5)  :: DEF_DS_precipitation_adjust_scheme = 'II'
+   character(len=256):: DEF_DS_HiresTopographyDataDir      = 'null'
+   character(len=5)  :: DEF_DS_precipitation_adjust_scheme = 'I'
    character(len=5)  :: DEF_DS_longwave_adjust_scheme      = 'II'
 
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -448,7 +463,6 @@ MODULE MOD_Namelist
       logical :: xy_rain                          = .true.
       logical :: xy_snow                          = .true.
       logical :: xy_ozone                         = .true.
-
       logical :: xy_hpbl                          = .true.
 
       logical :: taux                             = .true.
@@ -762,6 +776,7 @@ MODULE MOD_Namelist
       logical :: wa                               = .true.
       logical :: wa_inst                          = .true.
 
+      logical :: dz_lake                          = .true.
       logical :: t_lake                           = .true.
       logical :: lake_icefrac                     = .true.
 
@@ -836,6 +851,8 @@ MODULE MOD_Namelist
       logical :: wdsrf_hru                        = .true.
       logical :: veloc_hru                        = .true.
 
+      logical :: sensors                          = .true.
+
    END type history_var_type
 
    type (history_var_type) :: DEF_hist_vars
@@ -858,7 +875,7 @@ CONTAINS
       DEF_CASE_NAME,                          &
       DEF_domain,                             &
 
-      SITE_fsrfdata,                          &
+      SITE_fsitedata,                         &
       SITE_lon_location,                      &
       SITE_lat_location,                      &
       SITE_landtype,                          &
@@ -872,8 +889,6 @@ CONTAINS
       USE_SITE_soilparameters,                &
       USE_SITE_dbedrock,                      &
       USE_SITE_topography,                    &
-      USE_SITE_topostd   ,                    &
-      USE_SITE_BVIC      ,                    &
       USE_SITE_HistWriteBack,                 &
       USE_SITE_ForcingReadAhead,              &
       USE_SITE_urban_paras,                   &
@@ -907,6 +922,8 @@ CONTAINS
       DEF_Interception_scheme,                & !add by zhongwang wei @ sysu 2022/05/23
       DEF_SSP,                                & !add by zhongwang wei @ sysu 2023/02/07
 
+      DEF_LAI_START_YEAR,                     &
+      DEF_LAI_END_YEAR,                       &
       DEF_LAI_CHANGE_YEARLY,                  &
       DEF_USE_LAIFEEDBACK,                    & !add by Xingjie Lu, use for updating LAI with leaf carbon
       DEF_USE_IRRIGATION,                     & !use irrigation
@@ -921,6 +938,7 @@ CONTAINS
       DEF_URBAN_TREE,                         & !add by hua yuan, modeling urban tree or not
       DEF_URBAN_WATER,                        & !add by hua yuan, modeling urban water or not
       DEF_URBAN_LUCY,                         &
+      DEF_USE_CANYON_HWR,                     &
 
       DEF_USE_SOILPAR_UPS_FIT,                &
       DEF_THERMAL_CONDUCTIVITY_SCHEME,        &
@@ -949,6 +967,9 @@ CONTAINS
       DEF_USE_NITRIF,                         & !add by Xingjie Lu @ sysu 2023/06/27
       DEF_USE_CNSOYFIXN,                      & !add by Xingjie Lu @ sysu 2023/06/27
       DEF_USE_FIRE,                           & !add by Xingjie Lu @ sysu 2023/06/27
+
+      DEF_USE_Dynamic_Lake,                   & !add by Shupeng Zhang @ sysu 2024/09/12
+      DEF_CheckEquilibrium,                   & !add by Shupeng Zhang @ sysu 2024/11/26
 
       DEF_LANDONLY,                           &
       DEF_USE_DOMINANT_PATCHTYPE,             &
@@ -984,6 +1005,7 @@ CONTAINS
       DEF_Forcing_Interp_Method,              &
 
       DEF_USE_Forcing_Downscaling,            &
+      DEF_DS_HiresTopographyDataDir,          & 
       DEF_DS_precipitation_adjust_scheme,     &
       DEF_DS_longwave_adjust_scheme,          &
 
@@ -1226,6 +1248,10 @@ CONTAINS
 
 #ifdef LULCC
 
+         write(*,*) '                  *****                  '
+         write(*,*) 'Warning: The LULCC data is provided for years 2000 to 2020 right now! '
+         write(*,*) 'Please make sure the year range you set is suitable. '
+
 #if (defined LULC_USGS || defined BGC)
          write(*,*) '                  *****                  '
          write(*,*) 'Fatal ERROR: LULCC is not supported for LULC_USGS/BGC at present. STOP! '
@@ -1249,8 +1275,8 @@ CONTAINS
          !write(*,*) '                  *****                  '
          !write(*,*) 'Fatal ERROR: LULCC is not supported for LULC_IGBP_PC/URBAN at present. STOP! '
          !write(*,*) 'It is coming soon. '
-         ![update] 24/10/2023: right now IGBP/PFT/PC and Urban are all supported.
          !CALL CoLM_stop ()
+         ![update] 24/10/2023: right now IGBP/PFT/PC and Urban are all supported.
 #endif
 
 #if (defined SinglePoint)
@@ -1260,6 +1286,12 @@ CONTAINS
          CALL CoLM_stop ()
 #endif
 
+#endif
+
+#if (defined DEF_LAI_CHANGE_YEARLY)
+         write(*,*) '                  *****                  '
+         write(*,*) 'Warning: The LAI data is provided for years 2000 to 2020 right now! '
+         write(*,*) 'Any year before 2000 or after 2020 will be treated as 2000 or 2020. '
 #endif
 
 
@@ -1273,6 +1305,23 @@ CONTAINS
 #endif
 #endif
 
+! ----- dynamic lake run ----- Macros&Namelist conflicts and dependency management
+
+#ifndef CATCHMENT
+         IF ((.not. DEF_USE_VariablySaturatedFlow) .and. DEF_USE_Dynamic_Lake) THEN
+            DEF_USE_Dynamic_Lake = .false.
+            write(*,*) '                         *** Warning ***                                '
+            write(*,*) 'Dynamic Lake is closed if variably saturated flow algorithm is not used.'
+         ENDIF
+         IF (DEF_USE_Dynamic_Lake) THEN
+            write(*,*) '                   *** Warning ***                      '
+            write(*,*) 'Dynamic Lake is not well supported without lateral flow.'
+         ENDIF
+#else
+         DEF_USE_Dynamic_Lake = .true.
+         write(*,*) '                 *** Warning ***                          '
+         write(*,*) 'Dynamic Lake is used if CATCHMENT-based lateral flow used.'
+#endif
 
 ! ----- [Complement IF needed] ----- Macros&Namelist conflicts and dependency management
 
@@ -1352,6 +1401,8 @@ CONTAINS
       CALL mpi_bcast (DEF_SOLO_PFT                           ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_SUBGRID_SCHEME                     ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
 
+      CALL mpi_bcast (DEF_LAI_START_YEAR                     ,1   ,mpi_integer   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_LAI_END_YEAR                       ,1   ,mpi_integer   ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_LAI_CHANGE_YEARLY                  ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
 
       ! 05/2023, added by Xingjie lu
@@ -1370,6 +1421,7 @@ CONTAINS
       CALL mpi_bcast (DEF_URBAN_TREE                         ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_URBAN_WATER                        ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_URBAN_LUCY                         ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_USE_CANYON_HWR                     ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
 
       ! 06/2023, added by weinan
       CALL mpi_bcast (DEF_USE_SOILPAR_UPS_FIT                ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
@@ -1403,6 +1455,9 @@ CONTAINS
       CALL mpi_bcast (DEF_USE_NITRIF                         ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_USE_CNSOYFIXN                      ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_USE_FIRE                           ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
+
+      CALL mpi_bcast (DEF_USE_Dynamic_Lake                   ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_CheckEquilibrium                   ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
 
       CALL mpi_bcast (DEF_LANDONLY                           ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_USE_DOMINANT_PATCHTYPE             ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
@@ -1452,11 +1507,13 @@ CONTAINS
 
       CALL mpi_bcast (DEF_Forcing_Interp_Method              ,20  ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_USE_Forcing_Downscaling            ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_DS_HiresTopographyDataDir          ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_DS_precipitation_adjust_scheme     ,5   ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_DS_longwave_adjust_scheme          ,5   ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
 
       CALL mpi_bcast (DEF_forcing%dataset                    ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_forcing%solarin_all_band           ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_forcing%HEIGHT_mode                ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_forcing%HEIGHT_V                   ,1   ,mpi_real8     ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_forcing%HEIGHT_T                   ,1   ,mpi_real8     ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_forcing%HEIGHT_Q                   ,1   ,mpi_real8     ,p_address_master ,p_comm_glb ,p_err)
@@ -1483,6 +1540,7 @@ CONTAINS
       DO ivar = 1, 8
          CALL mpi_bcast (DEF_forcing%fprefix(ivar)           ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
          CALL mpi_bcast (DEF_forcing%vname(ivar)             ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
+         CALL mpi_bcast (DEF_forcing%timelog(ivar)           ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
          CALL mpi_bcast (DEF_forcing%tintalgo(ivar)          ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
       ENDDO
       CALL mpi_bcast (DEF_forcing%CBL_fprefix                ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
@@ -1891,6 +1949,7 @@ CONTAINS
       CALL sync_hist_vars_one (DEF_hist_vars%wa          , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%wa_inst     , set_defaults)
 
+      CALL sync_hist_vars_one (DEF_hist_vars%dz_lake     , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%t_lake      , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%lake_icefrac, set_defaults)
 
@@ -1950,6 +2009,8 @@ CONTAINS
       CALL sync_hist_vars_one (DEF_hist_vars%discharge   , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%wdsrf_hru   , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%veloc_hru   , set_defaults)
+
+      CALL sync_hist_vars_one (DEF_hist_vars%sensors     , set_defaults)
 
    END SUBROUTINE sync_hist_vars
 

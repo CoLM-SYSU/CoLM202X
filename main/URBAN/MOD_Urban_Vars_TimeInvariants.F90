@@ -37,7 +37,7 @@ MODULE MOD_Urban_Vars_TimeInvariants
    real(r8), allocatable :: fgper         (:) !impervious fraction to ground area [-]
    real(r8), allocatable :: flake         (:) !lake fraction to ground area [-]
    real(r8), allocatable :: hroof         (:) !average building height [m]
-   real(r8), allocatable :: hwr           (:) !average building height to their distance [-]
+   real(r8), allocatable :: hlr           (:) !average building height to their side length [-]
 
    real(r8), allocatable :: z_roof      (:,:) !depth of each roof layer [m]
    real(r8), allocatable :: z_wall      (:,:) !depth of each wall layer [m]
@@ -102,7 +102,7 @@ CONTAINS
             allocate (fgper                (numurban))
             allocate (flake                (numurban))
             allocate (hroof                (numurban))
-            allocate (hwr                  (numurban))
+            allocate (hlr                  (numurban))
 
             allocate (alb_roof         (2,2,numurban))
             allocate (alb_wall         (2,2,numurban))
@@ -171,7 +171,7 @@ CONTAINS
       ! morphological paras
       CALL ncio_read_vector (file_restart, 'WT_ROOF'       , landurban, froof    )
       CALL ncio_read_vector (file_restart, 'HT_ROOF'       , landurban, hroof    )
-      CALL ncio_read_vector (file_restart, 'CANYON_HWR'    , landurban, hwr      )
+      CALL ncio_read_vector (file_restart, 'BUILDING_HLR'  , landurban, hlr      )
       CALL ncio_read_vector (file_restart, 'WTROAD_PERV'   , landurban, fgper    )
       CALL ncio_read_vector (file_restart, 'EM_ROOF'       , landurban, em_roof  )
       CALL ncio_read_vector (file_restart, 'EM_WALL'       , landurban, em_wall  )
@@ -252,7 +252,7 @@ CONTAINS
       ! morphological paras
       CALL ncio_write_vector (file_restart, 'WT_ROOF'       , 'urban', landurban, froof    , DEF_REST_CompressLevel)
       CALL ncio_write_vector (file_restart, 'HT_ROOF'       , 'urban', landurban, hroof    , DEF_REST_CompressLevel)
-      CALL ncio_write_vector (file_restart, 'CANYON_HWR'    , 'urban', landurban, hwr      , DEF_REST_CompressLevel)
+      CALL ncio_write_vector (file_restart, 'BUILDING_HLR'  , 'urban', landurban, hlr      , DEF_REST_CompressLevel)
       CALL ncio_write_vector (file_restart, 'WTROAD_PERV'   , 'urban', landurban, fgper    , DEF_REST_CompressLevel)
       CALL ncio_write_vector (file_restart, 'EM_ROOF'       , 'urban', landurban, em_roof  , DEF_REST_CompressLevel)
       CALL ncio_write_vector (file_restart, 'EM_WALL'       , 'urban', landurban, em_wall  , DEF_REST_CompressLevel)
@@ -297,7 +297,7 @@ CONTAINS
             deallocate (fgper        )
             deallocate (flake        )
             deallocate (hroof        )
-            deallocate (hwr          )
+            deallocate (hlr          )
 
             deallocate (alb_roof     )
             deallocate (alb_wall     )

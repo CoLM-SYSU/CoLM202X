@@ -105,6 +105,7 @@ CONTAINS
    USE MOD_CanopyLayerProfile
    USE MOD_TurbulenceLEddy
    USE MOD_AssimStomataConductance
+   USE MOD_UserSpecifiedForcing, only: HEIGHT_mode
    USE MOD_Vars_TimeInvariants, only: patchclass
    USE MOD_Const_LC, only: z0mr, displar
    USE MOD_PlantHydraulic, only :PlantHydraulicStress_twoleaf, getvegwp_twoleaf
@@ -304,6 +305,9 @@ CONTAINS
 
    real(r8) :: &
         displa,     &! displacement height [m]
+        hu_,        &! adjusted observational height of wind [m]
+        ht_,        &! adjusted observational height of temperature [m]
+        hq_,        &! adjusted observational height of humidity [m]
         zldis,      &! reference height "minus" zero displacement heght [m]
         zii,        &! convective boundary layer height [m]
         z0mv,       &! roughness length, momentum [m]
@@ -518,7 +522,23 @@ CONTAINS
       dth = thm - taf
       dqh = qm  - qaf
       dthv  = dth*(1.+0.61*qm) + 0.61*th*dqh
-      zldis = hu - displa
+
+      hu_ = hu; ht_ = ht; hq_ = hq;
+
+      IF (trim(HEIGHT_mode) == 'absolute') THEN
+#ifndef SingPoint
+         ! to ensure the obs height >= htop+10.
+         hu_ = max(htop+10., hu)
+         ht_ = max(htop+10., ht)
+         hq_ = max(htop+10., hq)
+#endif
+      ELSE ! relative height
+         hu_ = htop + hu
+         ht_ = htop + ht
+         hq_ = htop + hq
+      ENDIF
+
+      zldis = hu_ - displa
 
       IF(zldis <= 0.0) THEN
          write(6,*) 'the obs height of u less than the zero displacement heght'
@@ -550,11 +570,11 @@ CONTAINS
 ! Evaluate stability-dependent variables using moz from prior iteration
          IF (rd_opt == 3) THEN
             IF (DEF_USE_CBL_HEIGHT) THEN
-              CALL moninobukm_leddy(hu,ht,hq,displa,z0mv,z0hv,z0qv,obu,um, &
+              CALL moninobukm_leddy(hu_,ht_,hq_,displa,z0mv,z0hv,z0qv,obu,um, &
                                     displasink,z0mv,hpbl,ustar,fh2m,fq2m, &
                                     htop,fmtop,fm,fh,fq,fht,fqt,phih)
             ELSE
-              CALL moninobukm(hu,ht,hq,displa,z0mv,z0hv,z0qv,obu,um, &
+              CALL moninobukm(hu_,ht_,hq_,displa,z0mv,z0hv,z0qv,obu,um, &
                               displasink,z0mv,ustar,fh2m,fq2m, &
                               htop,fmtop,fm,fh,fq,fht,fqt,phih)
             ENDIF
@@ -564,10 +584,10 @@ CONTAINS
             raw = 1./(vonkar/(fq-fqt)*ustar)
          ELSE
             IF (DEF_USE_CBL_HEIGHT) THEN
-               CALL moninobuk_leddy(hu,ht,hq,displa,z0mv,z0hv,z0qv,obu,um,hpbl, &
+               CALL moninobuk_leddy(hu_,ht_,hq_,displa,z0mv,z0hv,z0qv,obu,um,hpbl, &
                                     ustar,fh2m,fq2m,fm10m,fm,fh,fq)
             ELSE
-               CALL moninobuk(hu,ht,hq,displa,z0mv,z0hv,z0qv,obu,um,&
+               CALL moninobuk(hu_,ht_,hq_,displa,z0mv,z0hv,z0qv,obu,um,&
                               ustar,fh2m,fq2m,fm10m,fm,fh,fq)
             ENDIF
             ! Aerodynamic resistance
@@ -870,7 +890,7 @@ ENDIF
 !-----------------------------------------------------------------------
 
          del  = sqrt( dtl(it)*dtl(it) )
-         dele = dtl(it) * dtl(it) * ( dirab_dtl**2 + fsenl_dtl**2 + hvap*fevpl_dtl**2 )
+         dele = dtl(it) * dtl(it) * ( dirab_dtl**2 + fsenl_dtl**2 + (hvap*fevpl_dtl)**2 )
          dele = sqrt(dele)
 
 !-----------------------------------------------------------------------
@@ -918,7 +938,7 @@ ENDIF
            um = max(ur,.1)
          ELSE
            IF (DEF_USE_CBL_HEIGHT) THEN !//TODO: Shaofeng, 2023.05.18
-             zii = max(5.*hu,hpbl)
+             zii = max(5.*hu_,hpbl)
            ENDIF !//TODO: Shaofeng, 2023.05.18
            wc = (-grav*ustar*thvstar*zii/thv)**(1./3.)
           wc2 = beta*beta*(wc*wc)

@@ -87,7 +87,7 @@ CONTAINS
          qm             ,psrf           ,rhoair         ,Fhac           ,&
          Fwst           ,Fach           ,vehc           ,meta           ,&
          ! Urban parameters
-         hroof          ,hwr            ,nurb           ,fcover         ,&
+         hroof          ,hlr            ,nurb           ,fcover         ,&
          ! Status of surface
          z0h_g          ,obug           ,ustarg         ,zlnd           ,&
          zsno           ,fsno_roof      ,fsno_gimp      ,fsno_gper      ,&
@@ -111,6 +111,7 @@ CONTAINS
    USE MOD_Const_Physical, only: cpair,vonkar,grav,hvap
    USE MOD_FrictionVelocity
    USE MOD_CanopyLayerProfile
+   USE MOD_UserSpecifiedForcing, only: HEIGHT_mode
    IMPLICIT NONE
 
 !----------------------- Dummy argument --------------------------------
@@ -148,7 +149,7 @@ CONTAINS
 
    real(r8), intent(in) :: &
         hroof,        &! average building height [m]
-        hwr,          &! average building height to their distance [-]
+        hlr,          &! average building height to their side length [-]
         fcover(0:4)    ! coverage of aboveground urban components [-]
 
    real(r8), intent(in) :: &
@@ -262,9 +263,9 @@ CONTAINS
         numlay         ! available layer number
 
    real(r8) :: &
-        huu,          &! observational height of wind [m]
-        htu,          &! observational height of temperature [m]
-        hqu,          &! observational height of humidity [m]
+        hu_,          &! adjusted observational height of wind [m]
+        ht_,          &! adjusted observational height of temperature [m]
+        hq_,          &! adjusted observational height of humidity [m]
         ktop,         &! K value at a specific height
         utop,         &! u value at a specific height
         fht,          &! integral of profile function for heat at the top layer
@@ -283,7 +284,7 @@ CONTAINS
         fg,           &! ground fractional cover
         fgimp,        &! weight of impervious ground
         fgper,        &! weight of pervious ground
-        hlr,          &! average building height to their length of edge [-]
+        hwr,          &! average building height to their distance [-]
         sqrtdragc,    &! sqrt(drag coefficient)
         lm,           &! mix length within canopy
         fai,          &! frontal area index
@@ -355,7 +356,8 @@ CONTAINS
       fg     = 1 - fcover(0)
       fgimp  = fcover(3)/fg
       fgper  = fcover(4)/fg
-      hlr    = hwr*(1-sqrt(fcover(0)))/sqrt(fcover(0))
+      !hlr   = hwr*(1-sqrt(fcover(0)))/sqrt(fcover(0))
+      hwr    = hlr*sqrt(fcover(0))/(1-sqrt(fcover(0)))
       canlev = (/3, 2, 2/)
       numlay = 2
 
@@ -508,12 +510,22 @@ CONTAINS
       dqh  =  qm - qaf(2)
       dthv = dth*(1.+0.61*qm) + 0.61*th*dqh
 
-      ! to ensure the obs height >= hroof+10.
-      huu = max(hroof+10., hu)
-      htu = max(hroof+10., ht)
-      hqu = max(hroof+10., hq)
+      hu_ = hu; ht_ = ht; hq_ = hq;
 
-      zldis = huu - displa
+      IF (trim(HEIGHT_mode) == 'absolute') THEN
+#ifndef SingPoint
+         ! to ensure the obs height >= hroof+10.
+         hu_ = max(hroof+10., hu)
+         ht_ = max(hroof+10., ht)
+         hq_ = max(hroof+10., hq)
+#endif
+      ELSE ! relative height
+         hu_ = hroof + hu
+         ht_ = hroof + ht
+         hq_ = hroof + hq
+      ENDIF
+
+      zldis = hu_ - displa
 
       IF (zldis <= 0.0) THEN
          write(6,*) 'the obs height of u less than the zero displacement heght'
@@ -537,7 +549,7 @@ CONTAINS
 
          !NOTE: displat=hroof, z0mt=0, are set for roof
          ! fmtop is calculated at the same height of fht, fqt
-         CALL moninobukm(huu,htu,hqu,displa,z0m,z0h,z0q,obu,um, &
+         CALL moninobukm(hu_,ht_,hq_,displa,z0m,z0h,z0q,obu,um, &
               hroof,0.,ustar,fh2m,fq2m,hroof,fmtop,fm,fh,fq,fht,fqt,phih)
 
 ! Aerodynamic resistance
@@ -842,7 +854,7 @@ CONTAINS
          rstfac         ,Fhac           ,Fwst           ,Fach           ,&
          vehc           ,meta                                           ,&
          ! Urban and vegetation parameters
-         hroof          ,hwr            ,nurb           ,fcover         ,&
+         hroof          ,hlr            ,nurb           ,fcover         ,&
          ewall          ,egimp          ,egper          ,ev             ,&
          htop           ,hbot           ,lai            ,sai            ,&
          sqrtdi         ,effcon         ,vmax25         ,slti           ,&
@@ -884,6 +896,7 @@ CONTAINS
    USE MOD_FrictionVelocity
    USE MOD_CanopyLayerProfile
    USE MOD_AssimStomataConductance
+   USE MOD_UserSpecifiedForcing, only: HEIGHT_mode
    IMPLICIT NONE
 
 !-----------------------Arguments---------------------------------------
@@ -929,7 +942,7 @@ CONTAINS
 
    real(r8), intent(in) :: &
         hroof,        &! average building height [m]
-        hwr,          &! average building height to their distance [-]
+        hlr,          &! average building height to their side length [-]
         fcover(0:5)    ! coverage of aboveground urban components [-]
 
    real(r8), intent(in) :: &
@@ -1149,9 +1162,9 @@ CONTAINS
         numlay         ! available layer number
 
    real(r8) :: &
-        huu,          &! observational height of wind [m]
-        htu,          &! observational height of temperature [m]
-        hqu,          &! observational height of humidity [m]
+        hu_,          &! adjusted observational height of wind [m]
+        ht_,          &! adjusted observational height of temperature [m]
+        hq_,          &! adjusted observational height of humidity [m]
         ktop,         &! K value at a specific height
         utop,         &! u value at a specific height
         fht,          &! integral of profile function for heat at the top layer
@@ -1171,7 +1184,7 @@ CONTAINS
         fg,           &! ground fractional cover
         fgimp,        &! weight of impervious ground
         fgper,        &! weight of pervious ground
-        hlr,          &! average building height to their length of edge [-]
+        hwr,          &! average building height to their distance [-]
         sqrtdragc,    &! sqrt(drag coefficient)
         lm,           &! mix length within canopy
         fai,          &! frontal area index for urban
@@ -1299,7 +1312,8 @@ CONTAINS
       fc(3)  = fcover(5)
       fgimp  = fcover(3)/fg
       fgper  = fcover(4)/fg
-      hlr    = hwr*(1-sqrt(fcover(0)))/sqrt(fcover(0))
+      !hlr   = hwr*(1-sqrt(fcover(0)))/sqrt(fcover(0))
+      hwr    = hlr*sqrt(fcover(0))/(1-sqrt(fcover(0)))
       canlev = (/3, 2, 2, 1/)
 
       B_5    = B(5)
@@ -1485,12 +1499,22 @@ CONTAINS
       dqh =  qm - qaf(2)
       dthv = dth*(1.+0.61*qm) + 0.61*th*dqh
 
-      ! To ensure the obs height >= hroof+10.
-      huu = max(hroof+10., hu)
-      htu = max(hroof+10., ht)
-      hqu = max(hroof+10., hq)
+      hu_ = hu; ht_ = ht; hq_ = hq;
 
-      zldis = huu - displa
+      IF (trim(HEIGHT_mode) == 'absolute') THEN
+#ifndef SingPoint
+         ! to ensure the obs height >= hroof+10.
+         hu_ = max(hroof+10., hu)
+         ht_ = max(hroof+10., ht)
+         hq_ = max(hroof+10., hq)
+#endif
+      ELSE ! relative height
+         hu_ = hroof + hu
+         ht_ = hroof + ht
+         hq_ = hroof + hq
+      ENDIF
+
+      zldis = hu_ - displa
 
       IF (zldis <= 0.0) THEN
          write(6,*) 'the obs height of u less than the zero displacement heght'
@@ -1515,7 +1539,7 @@ CONTAINS
 !-----------------------------------------------------------------------
 ! Evaluate stability-dependent variables using moz from prior iteration
 
-         CALL moninobukm(huu,htu,hqu,displa,z0m,z0h,z0q,obu,um, &
+         CALL moninobukm(hu_,ht_,hq_,displa,z0m,z0h,z0q,obu,um, &
               hroof,0.,ustar,fh2m,fq2m,hroof,fmtop,fm,fh,fq,fht,fqt,phih)
 
 ! Aerodynamic resistance
@@ -1956,7 +1980,7 @@ ENDIF
 
          del  = sqrt( dtl(it)*dtl(it) )
          dele = dtl(it) * dtl(it) * &
-                ( dirab_dtl**2 + fsenl_dtl**2 + hvap*fevpl_dtl**2 )
+                ( dirab_dtl**2 + fsenl_dtl**2 + (hvap*fevpl_dtl)**2 )
          dele = sqrt(dele)
 
 !-----------------------------------------------------------------------
