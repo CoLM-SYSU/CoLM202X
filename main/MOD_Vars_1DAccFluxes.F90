@@ -229,29 +229,65 @@ MODULE MOD_Vars_1DAccFluxes
    real(r8), allocatable :: a_irrig_method_rice2    (:)
    real(r8), allocatable :: a_irrig_method_sugarcane(:)
 
-   real(r8), allocatable :: a_cphase             (:)
-   real(r8), allocatable :: a_gddplant           (:)
-   real(r8), allocatable :: a_gddmaturity        (:)
-   real(r8), allocatable :: a_vf                 (:)
-   real(r8), allocatable :: a_hui                (:)
-   real(r8), allocatable :: a_cropprod1c         (:)
-   real(r8), allocatable :: a_cropprod1c_loss    (:)
-   real(r8), allocatable :: a_cropseedc_deficit  (:)
-   real(r8), allocatable :: a_grainc_to_cropprodc(:)
-   real(r8), allocatable :: a_grainc_to_seed     (:)
-   real(r8), allocatable :: a_fert_to_sminn      (:)
+   real(r8), allocatable :: a_cphase                (:)
+   real(r8), allocatable :: a_gddplant              (:)
+   real(r8), allocatable :: a_gddmaturity           (:)
+   real(r8), allocatable :: a_vf                    (:)
+   real(r8), allocatable :: a_hui                   (:)
+   real(r8), allocatable :: a_cropprod1c            (:)
+   real(r8), allocatable :: a_cropprod1c_loss       (:)
+   real(r8), allocatable :: a_cropseedc_deficit     (:)
+   real(r8), allocatable :: a_grainc_to_cropprodc   (:)
+   real(r8), allocatable :: a_grainc_to_seed        (:)
+   real(r8), allocatable :: a_fert_to_sminn         (:)
 
-   real(r8), allocatable :: a_irrig_rate         (:)
-   real(r8), allocatable :: a_deficit_irrig      (:)
-   real(r8), allocatable :: a_sum_irrig          (:)
-   real(r8), allocatable :: a_sum_irrig_count    (:)
+   real(r8), allocatable :: a_irrig_rate            (:)
+   real(r8), allocatable :: a_deficit_irrig         (:)
+   real(r8), allocatable :: a_sum_irrig             (:)
+   real(r8), allocatable :: a_sum_irrig_count       (:)
 #endif
-   real(r8), allocatable :: a_ndep_to_sminn      (:)
-   real(r8), allocatable :: a_abm                (:)
-   real(r8), allocatable :: a_gdp                (:)
-   real(r8), allocatable :: a_peatf              (:)
-   real(r8), allocatable :: a_hdm                (:)
-   real(r8), allocatable :: a_lnfm               (:)
+   real(r8), allocatable :: a_ndep_to_sminn         (:)
+   real(r8), allocatable :: a_abm                   (:)
+   real(r8), allocatable :: a_gdp                   (:)
+   real(r8), allocatable :: a_peatf                 (:)
+   real(r8), allocatable :: a_hdm                   (:)
+   real(r8), allocatable :: a_lnfm                  (:)
+   real(r8), allocatable :: a_leafcCap              (:)
+   real(r8), allocatable :: a_leafc_storageCap      (:)
+   real(r8), allocatable :: a_leafc_xferCap         (:)
+   real(r8), allocatable :: a_frootcCap             (:)
+   real(r8), allocatable :: a_frootc_storageCap     (:)
+   real(r8), allocatable :: a_frootc_xferCap        (:)
+   real(r8), allocatable :: a_livestemcCap          (:)
+   real(r8), allocatable :: a_livestemc_storageCap  (:)
+   real(r8), allocatable :: a_livestemc_xferCap     (:)
+   real(r8), allocatable :: a_deadstemcCap          (:)
+   real(r8), allocatable :: a_deadstemc_storageCap  (:)
+   real(r8), allocatable :: a_deadstemc_xferCap     (:)
+   real(r8), allocatable :: a_livecrootcCap         (:)
+   real(r8), allocatable :: a_livecrootc_storageCap (:)
+   real(r8), allocatable :: a_livecrootc_xferCap    (:)
+   real(r8), allocatable :: a_deadcrootcCap         (:)
+   real(r8), allocatable :: a_deadcrootc_storageCap (:)
+   real(r8), allocatable :: a_deadcrootc_xferCap    (:)
+   real(r8), allocatable :: a_leafnCap              (:)
+   real(r8), allocatable :: a_leafn_storageCap      (:)
+   real(r8), allocatable :: a_leafn_xferCap         (:)
+   real(r8), allocatable :: a_frootnCap             (:)
+   real(r8), allocatable :: a_frootn_storageCap     (:)
+   real(r8), allocatable :: a_frootn_xferCap        (:)
+   real(r8), allocatable :: a_livestemnCap          (:)
+   real(r8), allocatable :: a_livestemn_storageCap  (:)
+   real(r8), allocatable :: a_livestemn_xferCap     (:)
+   real(r8), allocatable :: a_deadstemnCap          (:)
+   real(r8), allocatable :: a_deadstemn_storageCap  (:)
+   real(r8), allocatable :: a_deadstemn_xferCap     (:)
+   real(r8), allocatable :: a_livecrootnCap         (:)
+   real(r8), allocatable :: a_livecrootn_storageCap (:)
+   real(r8), allocatable :: a_livecrootn_xferCap    (:)
+   real(r8), allocatable :: a_deadcrootnCap         (:)
+   real(r8), allocatable :: a_deadcrootn_storageCap (:)
+   real(r8), allocatable :: a_deadcrootn_xferCap    (:)
 #endif
 ! Ozone stress variables
    real(r8), allocatable :: a_ozone              (:)
@@ -286,6 +322,22 @@ MODULE MOD_Vars_1DAccFluxes
    real(r8), allocatable :: a_soil2n_vr   (:,:)
    real(r8), allocatable :: a_soil3n_vr   (:,:)
    real(r8), allocatable :: a_cwdn_vr     (:,:)
+   real(r8), allocatable :: a_litr1cCap_vr(:,:)
+   real(r8), allocatable :: a_litr2cCap_vr(:,:)
+   real(r8), allocatable :: a_litr3cCap_vr(:,:)
+   real(r8), allocatable :: a_soil1cCap_vr(:,:)
+   real(r8), allocatable :: a_soil2cCap_vr(:,:)
+   real(r8), allocatable :: a_soil3cCap_vr(:,:)
+   real(r8), allocatable :: a_cwdcCap_vr  (:,:)
+   real(r8), allocatable :: a_litr1nCap_vr(:,:)
+   real(r8), allocatable :: a_litr2nCap_vr(:,:)
+   real(r8), allocatable :: a_litr3nCap_vr(:,:)
+   real(r8), allocatable :: a_soil1nCap_vr(:,:)
+   real(r8), allocatable :: a_soil2nCap_vr(:,:)
+   real(r8), allocatable :: a_soil3nCap_vr(:,:)
+   real(r8), allocatable :: a_cwdnCap_vr  (:,:)
+   real(r8), allocatable :: a_t_scalar    (:,:)
+   real(r8), allocatable :: a_w_scalar    (:,:)
    real(r8), allocatable :: a_sminn_vr    (:,:)
    real(r8), allocatable :: decomp_vr_tmp (:,:)
 #endif
@@ -593,6 +645,42 @@ CONTAINS
             allocate (a_hdm                (numpatch))
             allocate (a_lnfm               (numpatch))
 
+            allocate (a_leafcCap              (numpatch))
+            allocate (a_leafc_storageCap      (numpatch))
+            allocate (a_leafc_xferCap         (numpatch))
+            allocate (a_frootcCap             (numpatch))
+            allocate (a_frootc_storageCap     (numpatch))
+            allocate (a_frootc_xferCap        (numpatch))
+            allocate (a_livestemcCap          (numpatch))
+            allocate (a_livestemc_storageCap  (numpatch))
+            allocate (a_livestemc_xferCap     (numpatch))
+            allocate (a_deadstemcCap          (numpatch))
+            allocate (a_deadstemc_storageCap  (numpatch))
+            allocate (a_deadstemc_xferCap     (numpatch))
+            allocate (a_livecrootcCap         (numpatch))
+            allocate (a_livecrootc_storageCap (numpatch))
+            allocate (a_livecrootc_xferCap    (numpatch))
+            allocate (a_deadcrootcCap         (numpatch))
+            allocate (a_deadcrootc_storageCap (numpatch))
+            allocate (a_deadcrootc_xferCap    (numpatch))
+            allocate (a_leafnCap              (numpatch))
+            allocate (a_leafn_storageCap      (numpatch))
+            allocate (a_leafn_xferCap         (numpatch))
+            allocate (a_frootnCap             (numpatch))
+            allocate (a_frootn_storageCap     (numpatch))
+            allocate (a_frootn_xferCap        (numpatch))
+            allocate (a_livestemnCap          (numpatch))
+            allocate (a_livestemn_storageCap  (numpatch))
+            allocate (a_livestemn_xferCap     (numpatch))
+            allocate (a_deadstemnCap          (numpatch))
+            allocate (a_deadstemn_storageCap  (numpatch))
+            allocate (a_deadstemn_xferCap     (numpatch))
+            allocate (a_livecrootnCap         (numpatch))
+            allocate (a_livecrootn_storageCap (numpatch))
+            allocate (a_livecrootn_xferCap    (numpatch))
+            allocate (a_deadcrootnCap         (numpatch))
+            allocate (a_deadcrootn_storageCap (numpatch))
+            allocate (a_deadcrootn_xferCap    (numpatch))
 #endif
 ! Ozone stress variables
             allocate (a_ozone              (numpatch))
@@ -628,6 +716,23 @@ CONTAINS
             allocate (a_cwdn_vr     (1:nl_soil,       numpatch))
             allocate (a_sminn_vr    (1:nl_soil,       numpatch))
             allocate (decomp_vr_tmp (1:nl_soil,       numpatch))
+
+            allocate (a_litr1cCap_vr(1:nl_soil,       numpatch))
+            allocate (a_litr2cCap_vr(1:nl_soil,       numpatch))
+            allocate (a_litr3cCap_vr(1:nl_soil,       numpatch))
+            allocate (a_soil1cCap_vr(1:nl_soil,       numpatch))
+            allocate (a_soil2cCap_vr(1:nl_soil,       numpatch))
+            allocate (a_soil3cCap_vr(1:nl_soil,       numpatch))
+            allocate (a_cwdcCap_vr  (1:nl_soil,       numpatch))
+            allocate (a_litr1nCap_vr(1:nl_soil,       numpatch))
+            allocate (a_litr2nCap_vr(1:nl_soil,       numpatch))
+            allocate (a_litr3nCap_vr(1:nl_soil,       numpatch))
+            allocate (a_soil1nCap_vr(1:nl_soil,       numpatch))
+            allocate (a_soil2nCap_vr(1:nl_soil,       numpatch))
+            allocate (a_soil3nCap_vr(1:nl_soil,       numpatch))
+            allocate (a_cwdnCap_vr  (1:nl_soil,       numpatch))
+            allocate (a_t_scalar    (1:nl_soil,       numpatch))
+            allocate (a_w_scalar    (1:nl_soil,       numpatch))
 #endif
 
             allocate (a_ustar     (numpatch))
@@ -933,6 +1038,42 @@ CONTAINS
             deallocate (a_hdm                )
             deallocate (a_lnfm               )
 
+            deallocate (a_leafcCap             )
+            deallocate (a_leafc_storageCap     )
+            deallocate (a_leafc_xferCap        )
+            deallocate (a_frootcCap            )
+            deallocate (a_frootc_storageCap    )
+            deallocate (a_frootc_xferCap       )
+            deallocate (a_livestemcCap         )
+            deallocate (a_livestemc_storageCap )
+            deallocate (a_livestemc_xferCap    )
+            deallocate (a_deadstemcCap         )
+            deallocate (a_deadstemc_storageCap )
+            deallocate (a_deadstemc_xferCap    )
+            deallocate (a_livecrootcCap        )
+            deallocate (a_livecrootc_storageCap)
+            deallocate (a_livecrootc_xferCap   )
+            deallocate (a_deadcrootcCap        )
+            deallocate (a_deadcrootc_storageCap)
+            deallocate (a_deadcrootc_xferCap   )
+            deallocate (a_leafnCap             )
+            deallocate (a_leafn_storageCap     )
+            deallocate (a_leafn_xferCap        )
+            deallocate (a_frootnCap            )
+            deallocate (a_frootn_storageCap    )
+            deallocate (a_frootn_xferCap       )
+            deallocate (a_livestemnCap         )
+            deallocate (a_livestemn_storageCap )
+            deallocate (a_livestemn_xferCap    )
+            deallocate (a_deadstemnCap         )
+            deallocate (a_deadstemn_storageCap )
+            deallocate (a_deadstemn_xferCap    )
+            deallocate (a_livecrootnCap        )
+            deallocate (a_livecrootn_storageCap)
+            deallocate (a_livecrootn_xferCap   )
+            deallocate (a_deadcrootnCap        )
+            deallocate (a_deadcrootn_storageCap)
+            deallocate (a_deadcrootn_xferCap   )
 #endif
 ! Ozone stress variables
             deallocate (a_ozone              )
@@ -968,6 +1109,22 @@ CONTAINS
             deallocate (a_cwdn_vr     )
             deallocate (a_sminn_vr    )
             deallocate (decomp_vr_tmp )
+            deallocate (a_litr1cCap_vr)
+            deallocate (a_litr2cCap_vr)
+            deallocate (a_litr3cCap_vr)
+            deallocate (a_soil1cCap_vr)
+            deallocate (a_soil2cCap_vr)
+            deallocate (a_soil3cCap_vr)
+            deallocate (a_cwdcCap_vr  )
+            deallocate (a_litr1nCap_vr)
+            deallocate (a_litr2nCap_vr)
+            deallocate (a_litr3nCap_vr)
+            deallocate (a_soil1nCap_vr)
+            deallocate (a_soil2nCap_vr)
+            deallocate (a_soil3nCap_vr)
+            deallocate (a_cwdnCap_vr  )
+            deallocate (a_t_scalar    )
+            deallocate (a_w_scalar    )
 #endif
 
             deallocate (a_ustar     )
@@ -1273,6 +1430,42 @@ CONTAINS
             a_hdm                (:) = spval
             a_lnfm               (:) = spval
 
+            a_leafcCap             (:) = spval
+            a_leafc_storageCap     (:) = spval
+            a_leafc_xferCap        (:) = spval
+            a_frootcCap            (:) = spval
+            a_frootc_storageCap    (:) = spval
+            a_frootc_xferCap       (:) = spval
+            a_livestemcCap         (:) = spval
+            a_livestemc_storageCap (:) = spval
+            a_livestemc_xferCap    (:) = spval
+            a_deadstemcCap         (:) = spval
+            a_deadstemc_storageCap (:) = spval
+            a_deadstemc_xferCap    (:) = spval
+            a_livecrootcCap        (:) = spval
+            a_livecrootc_storageCap(:) = spval
+            a_livecrootc_xferCap   (:) = spval
+            a_deadcrootcCap        (:) = spval
+            a_deadcrootc_storageCap(:) = spval
+            a_deadcrootc_xferCap   (:) = spval
+            a_leafnCap             (:) = spval
+            a_leafn_storageCap     (:) = spval
+            a_leafn_xferCap        (:) = spval
+            a_frootnCap            (:) = spval
+            a_frootn_storageCap    (:) = spval
+            a_frootn_xferCap       (:) = spval
+            a_livestemnCap         (:) = spval
+            a_livestemn_storageCap (:) = spval
+            a_livestemn_xferCap    (:) = spval
+            a_deadstemnCap         (:) = spval
+            a_deadstemn_storageCap (:) = spval
+            a_deadstemn_xferCap    (:) = spval
+            a_livecrootnCap        (:) = spval
+            a_livecrootn_storageCap(:) = spval
+            a_livecrootn_xferCap   (:) = spval
+            a_deadcrootnCap        (:) = spval
+            a_deadcrootn_storageCap(:) = spval
+            a_deadcrootn_xferCap   (:) = spval
 #endif
             a_ozone              (:) = spval
 
@@ -1304,6 +1497,25 @@ CONTAINS
             a_soil2n_vr    (:,:) = spval
             a_soil3n_vr    (:,:) = spval
             a_cwdn_vr      (:,:) = spval
+
+            a_litr1cCap_vr (:,:) = spval
+            a_litr2cCap_vr (:,:) = spval
+            a_litr3cCap_vr (:,:) = spval
+            a_soil1cCap_vr (:,:) = spval
+            a_soil2cCap_vr (:,:) = spval
+            a_soil3cCap_vr (:,:) = spval
+            a_cwdcCap_vr   (:,:) = spval
+            a_litr1nCap_vr (:,:) = spval
+            a_litr2nCap_vr (:,:) = spval
+            a_litr3nCap_vr (:,:) = spval
+            a_soil1nCap_vr (:,:) = spval
+            a_soil2nCap_vr (:,:) = spval
+            a_soil3nCap_vr (:,:) = spval
+            a_cwdnCap_vr   (:,:) = spval
+
+            a_t_scalar     (:,:) = spval
+            a_w_scalar     (:,:) = spval
+
             a_sminn_vr     (:,:) = spval
 #endif
 
@@ -1707,6 +1919,44 @@ CONTAINS
                CALL acc1d (hdm_lf          ,   a_hdm                )
                CALL acc1d (lnfm            ,   a_lnfm               )
             ENDIF
+            IF(DEF_USE_DiagMatrix)THEN
+               CALL acc1d (leafcCap             ,a_leafcCap             )
+               CALL acc1d (leafc_storageCap     ,a_leafc_storageCap     )
+               CALL acc1d (leafc_xferCap        ,a_leafc_xferCap        )
+               CALL acc1d (frootcCap            ,a_frootcCap            )
+               CALL acc1d (frootc_storageCap    ,a_frootc_storageCap    )
+               CALL acc1d (frootc_xferCap       ,a_frootc_xferCap       )
+               CALL acc1d (livestemcCap         ,a_livestemcCap         )
+               CALL acc1d (livestemc_storageCap ,a_livestemc_storageCap )
+               CALL acc1d (livestemc_xferCap    ,a_livestemc_xferCap    )
+               CALL acc1d (deadstemcCap         ,a_deadstemcCap         )
+               CALL acc1d (deadstemc_storageCap ,a_deadstemc_storageCap )
+               CALL acc1d (deadstemc_xferCap    ,a_deadstemc_xferCap    )
+               CALL acc1d (livecrootcCap        ,a_livecrootcCap        )
+               CALL acc1d (livecrootc_storageCap,a_livecrootc_storageCap)
+               CALL acc1d (livecrootc_xferCap   ,a_livecrootc_xferCap   )
+               CALL acc1d (deadcrootcCap        ,a_deadcrootcCap        )
+               CALL acc1d (deadcrootc_storageCap,a_deadcrootc_storageCap)
+               CALL acc1d (deadcrootc_xferCap   ,a_deadcrootc_xferCap   )
+               CALL acc1d (leafnCap             ,a_leafnCap             )
+               CALL acc1d (leafn_storageCap     ,a_leafn_storageCap     )
+               CALL acc1d (leafn_xferCap        ,a_leafn_xferCap        )
+               CALL acc1d (frootnCap            ,a_frootnCap            )
+               CALL acc1d (frootn_storageCap    ,a_frootn_storageCap    )
+               CALL acc1d (frootn_xferCap       ,a_frootn_xferCap       )
+               CALL acc1d (livestemnCap         ,a_livestemnCap         )
+               CALL acc1d (livestemn_storageCap ,a_livestemn_storageCap )
+               CALL acc1d (livestemn_xferCap    ,a_livestemn_xferCap    )
+               CALL acc1d (deadstemnCap         ,a_deadstemnCap         )
+               CALL acc1d (deadstemn_storageCap ,a_deadstemn_storageCap )
+               CALL acc1d (deadstemn_xferCap    ,a_deadstemn_xferCap    )
+               CALL acc1d (livecrootnCap        ,a_livecrootnCap        )
+               CALL acc1d (livecrootn_storageCap,a_livecrootn_storageCap)
+               CALL acc1d (livecrootn_xferCap   ,a_livecrootn_xferCap   )
+               CALL acc1d (deadcrootnCap        ,a_deadcrootnCap        )
+               CALL acc1d (deadcrootn_storageCap,a_deadcrootn_storageCap)
+               CALL acc1d (deadcrootn_xferCap   ,a_deadcrootn_xferCap   )
+            ENDIF
 #endif
             IF(DEF_USE_OZONESTRESS)THEN
                CALL acc1d (forc_ozone      ,   a_ozone              )
@@ -1811,7 +2061,95 @@ CONTAINS
                ENDDO
             ENDDO
             CALL acc2d (decomp_vr_tmp, a_cwdn_vr     )
+
+            DO i = 1, numpatch
+               DO j = 1, nl_soil
+                  decomp_vr_tmp(j,i)  = decomp_cpools_vr_Cap(j,i_met_lit,i)
+               ENDDO
+            ENDDO
+            CALL acc2d (decomp_vr_tmp, a_litr1cCap_vr   )
+            DO i = 1, numpatch
+               DO j = 1, nl_soil
+                  decomp_vr_tmp(j,i)  = decomp_cpools_vr_Cap(j,i_cel_lit,i)
+               ENDDO
+            ENDDO
+            CALL acc2d (decomp_vr_tmp, a_litr2cCap_vr   )
+            DO i = 1, numpatch
+               DO j = 1, nl_soil
+                  decomp_vr_tmp(j,i)  = decomp_cpools_vr_Cap(j,i_lig_lit,i)
+               ENDDO
+            ENDDO
+            CALL acc2d (decomp_vr_tmp, a_litr3cCap_vr   )
+            DO i = 1, numpatch
+               DO j = 1, nl_soil
+                  decomp_vr_tmp(j,i)  = decomp_cpools_vr_Cap(j,i_soil1,i)
+               ENDDO
+            ENDDO
+            CALL acc2d (decomp_vr_tmp, a_soil1cCap_vr   )
+            DO i = 1, numpatch
+               DO j = 1, nl_soil
+                  decomp_vr_tmp(j,i)  = decomp_cpools_vr_Cap(j,i_soil2,i)
+               ENDDO
+            ENDDO
+            CALL acc2d (decomp_vr_tmp, a_soil2cCap_vr   )
+            DO i = 1, numpatch
+               DO j = 1, nl_soil
+                  decomp_vr_tmp(j,i)  = decomp_cpools_vr_Cap(j,i_soil3,i)
+               ENDDO
+            ENDDO
+            CALL acc2d (decomp_vr_tmp, a_soil3cCap_vr   )
+            DO i = 1, numpatch
+               DO j = 1, nl_soil
+                  decomp_vr_tmp(j,i)  = decomp_cpools_vr_Cap(j,i_cwd,i)
+               ENDDO
+            ENDDO
+            CALL acc2d (decomp_vr_tmp, a_cwdcCap_vr     )
+            DO i = 1, numpatch
+               DO j = 1, nl_soil
+                  decomp_vr_tmp(j,i)  = decomp_npools_vr_Cap(j,i_met_lit,i)
+               ENDDO
+            ENDDO
+            CALL acc2d (decomp_vr_tmp, a_litr1nCap_vr   )
+            DO i = 1, numpatch
+               DO j = 1, nl_soil
+                  decomp_vr_tmp(j,i)  = decomp_npools_vr_Cap(j,i_cel_lit,i)
+               ENDDO
+            ENDDO
+            CALL acc2d (decomp_vr_tmp, a_litr2nCap_vr   )
+            DO i = 1, numpatch
+               DO j = 1, nl_soil
+                  decomp_vr_tmp(j,i)  = decomp_npools_vr_Cap(j,i_lig_lit,i)
+               ENDDO
+            ENDDO
+            CALL acc2d (decomp_vr_tmp, a_litr3nCap_vr   )
+            DO i = 1, numpatch
+               DO j = 1, nl_soil
+                  decomp_vr_tmp(j,i)  = decomp_npools_vr_Cap(j,i_soil1,i)
+               ENDDO
+            ENDDO
+            CALL acc2d (decomp_vr_tmp, a_soil1nCap_vr   )
+            DO i = 1, numpatch
+               DO j = 1, nl_soil
+                  decomp_vr_tmp(j,i)  = decomp_npools_vr_Cap(j,i_soil2,i)
+               ENDDO
+            ENDDO
+            CALL acc2d (decomp_vr_tmp, a_soil2nCap_vr   )
+            DO i = 1, numpatch
+               DO j = 1, nl_soil
+                  decomp_vr_tmp(j,i)  = decomp_npools_vr_Cap(j,i_soil3,i)
+               ENDDO
+            ENDDO
+            CALL acc2d (decomp_vr_tmp, a_soil3nCap_vr   )
+            DO i = 1, numpatch
+               DO j = 1, nl_soil
+                  decomp_vr_tmp(j,i)  = decomp_npools_vr_Cap(j,i_cwd,i)
+               ENDDO
+            ENDDO
+            CALL acc2d (decomp_vr_tmp, a_cwdnCap_vr     )
             CALL acc2d (sminn_vr     , a_sminn_vr    )
+
+            CALL acc2d (t_scalar             ,a_t_scalar             )
+            CALL acc2d (w_scalar             ,a_w_scalar             )
 #endif
             allocate (r_ustar  (numpatch));  r_ustar (:) = spval
             allocate (r_ustar2 (numpatch));  r_ustar2(:) = spval !Shaofeng, 2023.05.20

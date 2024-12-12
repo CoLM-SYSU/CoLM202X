@@ -435,6 +435,8 @@ CONTAINS
       pondmx = 10.0    !Ponding depth (mm)
       smpmax = -1.5e5  !Wilting point potential in mm
       smpmin = -1.e8   !Restriction for min of soil poten. (mm)
+      smpmax_hr = -2.e2  !Wilting point potential in mm
+      smpmin_hr = -2.e5   !Restriction for min of soil poten. (mm)
       trsmx0 = 2.e-4   !Max transpiration for moist soil+100% veg. [mm/s]
       tcrit  = 2.5     !critical temp. to determine rain or snow
       wetwatmax = 200.0 !maximum wetland water (mm)

@@ -17,7 +17,7 @@ MODULE MOD_BGC_CNCStateUpdate2
 !                   2) Record the accumulated gap-mortality-associated C transfers for veg and soil C semi-analytic spinup
 
    USE MOD_Precision
-   USE MOD_Namelist, only : DEF_USE_SASU
+   USE MOD_Namelist, only : DEF_USE_SASU, DEF_USE_DiagMatrix
    USE MOD_Vars_TimeInvariants, only: &
             i_met_lit,i_cel_lit,i_lig_lit ,i_cwd 
    USE MOD_Vars_TimeVariables, only: &
@@ -87,7 +87,7 @@ CONTAINS
                   decomp_cpools_vr(j,i_cwd,i)     + gap_mortality_to_cwdc(j,i) * deltim
       ENDDO
   
-      IF(DEF_USE_SASU)THEN
+      IF(DEF_USE_SASU .or. DEF_USE_DiagMatrix)THEN
          DO j = 1,nl_soil
             I_met_c_vr_acc(j,i) = I_met_c_vr_acc(j,i) + gap_mortality_to_met_c(j,i) * deltim
             I_cel_c_vr_acc(j,i) = I_cel_c_vr_acc(j,i) + gap_mortality_to_cel_c(j,i) * deltim
@@ -146,7 +146,7 @@ CONTAINS
          deadcrootc_xfer_p   (m) = deadcrootc_xfer_p   (m) &
                                  - m_deadcrootc_xfer_to_litter_p   (m) * deltim
   
-         IF(DEF_USE_SASU)THEN
+         IF(DEF_USE_SASU .or. DEF_USE_DiagMatrix)THEN
             AKX_leafc_exit_p_acc        (m) = AKX_leafc_exit_p_acc        (m) + m_leafc_to_litter_p             (m) * deltim
             AKX_frootc_exit_p_acc       (m) = AKX_frootc_exit_p_acc       (m) + m_frootc_to_litter_p            (m) * deltim
             AKX_livestemc_exit_p_acc    (m) = AKX_livestemc_exit_p_acc    (m) + m_livestemc_to_litter_p         (m) * deltim

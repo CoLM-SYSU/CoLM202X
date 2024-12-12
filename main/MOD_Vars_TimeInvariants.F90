@@ -255,6 +255,8 @@ MODULE MOD_Vars_TimeInvariants
    real(r8) :: pondmx                           !ponding depth (mm)
    real(r8) :: smpmax                           !wilting point potential in mm
    real(r8) :: smpmin                           !restriction for min of soil poten. (mm)
+   real(r8) :: smpmax_hr                        !wilting point potential in mm for heterotrophic respiration
+   real(r8) :: smpmin_hr                        !restriction for min of soil poten for heterotrophic respiration. (mm)
    real(r8) :: trsmx0                           !max transpiration for moist soil+100% veg.  [mm/s]
    real(r8) :: tcrit                            !critical temp. to determine rain or snow
    real(r8) :: wetwatmax                        !maximum wetland water (mm)
@@ -489,6 +491,8 @@ CONTAINS
       CALL ncio_read_bcast_serial (file_restart, 'pondmx', pondmx) ! ponding depth (mm)
       CALL ncio_read_bcast_serial (file_restart, 'smpmax', smpmax) ! wilting point potential in mm
       CALL ncio_read_bcast_serial (file_restart, 'smpmin', smpmin) ! restriction for min of soil poten. (mm)
+      CALL ncio_read_bcast_serial (file_restart, 'smpmax_hr', smpmax_hr) ! wilting point potential in mm
+      CALL ncio_read_bcast_serial (file_restart, 'smpmin_hr', smpmin_hr) ! restriction for min of soil poten. (mm)
       CALL ncio_read_bcast_serial (file_restart, 'trsmx0', trsmx0) ! max transpiration for moist soil+100% veg.  [mm/s]
       CALL ncio_read_bcast_serial (file_restart, 'tcrit ', tcrit ) ! critical temp. to determine rain or snow
       CALL ncio_read_bcast_serial (file_restart, 'wetwatmax', wetwatmax) ! maximum wetland water (mm)
@@ -682,6 +686,8 @@ CONTAINS
          CALL ncio_write_serial (file_restart, 'pondmx', pondmx) ! ponding depth (mm)
          CALL ncio_write_serial (file_restart, 'smpmax', smpmax) ! wilting point potential in mm
          CALL ncio_write_serial (file_restart, 'smpmin', smpmin) ! restriction for min of soil poten. (mm)
+         CALL ncio_write_serial (file_restart, 'smpmax_hr', smpmax_hr) ! wilting point potential in mm
+         CALL ncio_write_serial (file_restart, 'smpmin_hr', smpmin_hr) ! restriction for min of soil poten. (mm)
          CALL ncio_write_serial (file_restart, 'trsmx0', trsmx0) ! max transpiration for moist soil+100% veg.  [mm/s]
          CALL ncio_write_serial (file_restart, 'tcrit ', tcrit ) ! critical temp. to determine rain or snow
          CALL ncio_write_serial (file_restart, 'wetwatmax', wetwatmax) ! maximum wetland water (mm)
@@ -906,6 +912,8 @@ CONTAINS
          write(*,'(A,E20.10)') 'pondmx [mm]   ', pondmx ! ponding depth (mm)
          write(*,'(A,E20.10)') 'smpmax [mm]   ', smpmax ! wilting point potential in mm
          write(*,'(A,E20.10)') 'smpmin [mm]   ', smpmin ! restriction for min of soil poten. (mm)
+         write(*,'(A,E20.10)') 'smpmax_hr [mm]', smpmax_hr ! wilting point potential in mm
+         write(*,'(A,E20.10)') 'smpmin_hr [mm]', smpmin_hr ! restriction for min of soil poten. (mm)
          write(*,'(A,E20.10)') 'trsmx0 [mm/s] ', trsmx0 ! max transpiration for moist soil+100% veg.  [mm/s]
          write(*,'(A,E20.10)') 'tcrit  [K]    ', tcrit  ! critical temp. to determine rain or snow
          write(*,'(A,E20.10)') 'wetwatmax [mm]', wetwatmax ! maximum wetland water (mm)
