@@ -24,7 +24,7 @@
 
 
    USE MOD_Precision
-   USE MOD_Namelist, only : DEF_USE_SASU, DEF_USE_NITRIF, DEF_USE_CNSOYFIXN, DEF_USE_FIRE, DEF_USE_IRRIGATION
+   USE MOD_Namelist, only : DEF_USE_SASU, DEF_USE_DiagMatrix, DEF_USE_NITRIF, DEF_USE_CNSOYFIXN, DEF_USE_FIRE, DEF_USE_IRRIGATION
    USE MOD_Const_Physical, only : tfrz, denh2o, denice
    USE MOD_Vars_PFTimeInvariants, only: pftfrac
    USE MOD_LandPFT, only: patch_pft_s, patch_pft_e
@@ -143,7 +143,7 @@
       CALL SoilBiogeochemNLeaching(i,deltim,nl_soil,zi_soi,dz_soi)
       CALL NstateUpdate3(i, ps, pe, deltim, nl_soil, ndecomp_pools,dz_soi)
   
-      IF(DEF_USE_SASU)THEN
+      IF(DEF_USE_SASU .or. DEF_USE_DiagMatrix)THEN
          CALL CNSASU(i,ps,pe,deltim,idate(1:3),nl_soil,ndecomp_transitions,ndecomp_pools,ndecomp_pools_vr)! only for spin up
       ENDIF
   

@@ -24,7 +24,7 @@ MODULE MOD_BGC_Soil_BiogeochemLittVertTransp
 !                   2) Record accumulated organic CN vertical transfer rates for semi-analytic spin-up.
 
    USE MOD_Precision
-   USE MOD_Namelist, only : DEF_USE_SASU
+   USE MOD_Namelist, only : DEF_USE_SASU, DEF_USE_DiagMatrix
    USE MOD_BGC_Vars_TimeInvariants, only: &
        is_cwd, som_adv_flux, som_diffus, cryoturb_diffusion_k, max_altdepth_cryoturbation, max_depth_cryoturb
    USE MOD_BGC_Vars_TimeVariables, only: &
@@ -231,7 +231,7 @@ CONTAINS
                   b_tri(j) = - a_tri(j) - c_tri(j) + a_p_0
                   r_tri_c(j) = decomp_cpools_sourcesink(j,s,i) * dz_soi(j) /deltim + (a_p_0 - adv_flux(j)) * conc_trcr_c(j)
                   r_tri_n(j) = decomp_npools_sourcesink(j,s,i) * dz_soi(j) /deltim + (a_p_0 - adv_flux(j)) * conc_trcr_n(j)
-                  IF(DEF_USE_SASU)THEN
+                  IF(DEF_USE_SASU .or. DEF_USE_DiagMatrix)THEN
                      upperVX_c_vr_acc(j,s,i) = upperVX_c_vr_acc(j,s,i) -  c_tri(j)          / dz_soi(j) * deltim * conc_trcr_c(j+1)! upwards transfer
                      diagVX_c_vr_acc (j,s,i) = diagVX_c_vr_acc (j,s,i) + (b_tri(j) - a_p_0) / dz_soi(j) * deltim * conc_trcr_c(j)! EXIT flux
                      upperVX_n_vr_acc(j,s,i) = upperVX_n_vr_acc(j,s,i) -  c_tri(j)          / dz_soi(j) * deltim * conc_trcr_n(j+1)! upwards transfer
@@ -245,7 +245,7 @@ CONTAINS
                   r_tri_c(j) = decomp_cpools_sourcesink(j,s,i) * dz_soi(j) /deltim + a_p_0 * conc_trcr_c(j)
                   r_tri_n(j) = decomp_npools_sourcesink(j,s,i) * dz_soi(j) /deltim + a_p_0 * conc_trcr_n(j)
   
-                  IF(DEF_USE_SASU)THEN
+                  IF(DEF_USE_SASU .or. DEF_USE_DiagMatrix)THEN
                      IF(j .le. nbedrock)THEN
                         lowerVX_c_vr_acc(j,s,i) = lowerVX_c_vr_acc(j,s,i) - a_tri(j) / dz_soi(j) * deltim * conc_trcr_c(j-1)
                         lowerVX_n_vr_acc(j,s,i) = lowerVX_n_vr_acc(j,s,i) - a_tri(j) / dz_soi(j) * deltim * conc_trcr_n(j-1)
