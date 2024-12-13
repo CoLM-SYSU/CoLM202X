@@ -75,7 +75,7 @@ Help()
    echo '          -m vg -b) Global 2.5x1.875; Lat-lon grid cells; IGBP PFT subgrid;'
    echo '          vanGenuchten Mualem model; bgc on; crop off; lulcc off; urban '
    echo '          off; cama off'
-   echo '       5. Global_Grid_2x2_PF_VG_BGC-spinup'
+   echo '       5. Global_Grid_2x2_PFT_VG_BGC-spinup'
    echo '          equivalent to the custom configuration (-i sasund -t 1850 -e 1850 '
    echo '          -g grid_g144x96 -s pc -m vg -b) Global 2.5x1.875; Lat-lon grid '
    echo '          cells; IGBP PC subgrid; vanGenuchten Mualem model; bgc on; crop '
@@ -221,7 +221,7 @@ if [ ! -f machine.config ];then
    exit
 fi
 ROOT=`awk '/ROOT/ {print $2}' machine.config`
-CONFIG=$ROOT/run/machine.config
+CONFIG=$ROOT/run/scripts/machine.config
 RAWDATA=`awk '/RAWDATA/ {print $2}' $CONFIG`
 RUNTIME=`awk '/RUNTIME/ {print $2}' $CONFIG`
 MAKEOPTION=$ROOT/include/`awk '/MAKEOPTION/ {print $2}' $CONFIG`
@@ -232,7 +232,7 @@ FORCINGPATH=`awk '/FORCINGPATH/ {print $2}' $CONFIG`
 #RUNTIME=/share/home/dq010/CoLM/data/rawdata/CROP-NITRIF/CoLMruntime//
 #MAKEOPTION=$ROOT/include/Makeoptions.SYSU-BaiduBoat
 #FORCINGPATH=/share/home/dq010/CoLM/data/inputdata/atm/GSWP3/
-HEADER=$ROOT/run/batch.config
+HEADER=$ROOT/run/scripts/batch.config
 
 echo ROOT is $ROOT
 echo RAWDATA is $RAWDATA
@@ -246,8 +246,8 @@ echo FORCINGPATH is $FORCINGPATH
 #RUNTIME=/data/sysu_daiyj_01/data_mpi/CoLMruntime/
 #MAKEOPTION=$ROOT/include/Makeoptions-earthlab-par
 #FORCINGPATH=/data/zhangh/data/lifang/GSWP-future/SSP126/
-#HEADER=$ROOT/run/jobs.config
-#CONFIG=$ROOT/run/machine.config
+#HEADER=$ROOT/run/scripts/jobs.config
+#CONFIG=$ROOT/run/scripts/machine.config
 
 while getopts ":hbprlun:i:t:e:c:g:s:m:" options ;
 do
@@ -285,7 +285,7 @@ fi
 
 if [ -z "${Forcing}" ];then
    echo "Forcing is not specified, use GSWP3 as the default forcing"
-   Forcing=GSWP3
+   Forcing=CRUJRA
 fi
 
 if [ -z "${SpinupScheme}" ];then
@@ -823,13 +823,13 @@ mkdir -p landdata
 ENDYEAR=`expr $endyr + 1`
 echo startyr is $startyr
 
-${ROOT}/run/create_namelist -p $CASEPATH/${CASENAME} -n input_${CASENAME}.nml -t $startyr -e $ENDYEAR -d $RAWDATA \
+${ROOT}/run/scripts/create_namelist -p $CASEPATH/${CASENAME} -n input_${CASENAME}.nml -t $startyr -e $ENDYEAR -d $RAWDATA \
 	                    -r $RUNTIME -o ${RESLON} -a ${RESLAT} -f ${Forcing} -l $LandMask \
 			    -S $EDGES -N $EDGEN -W $EDGEW -E $EDGEE
 
 if [ ! -z "$SpinupScheme" ];then
    if [ $SpinupScheme == "sasund" ];then
-      ${ROOT}/run/create_namelist -p $CASEPATH/${CASENAME} -n input_${CASENAME}-SASU.nml -t $startyr -e $ENDYEAR -d $RAWDATA \
+      ${ROOT}/run/scripts/create_namelist -p $CASEPATH/${CASENAME} -n input_${CASENAME}-SASU.nml -t $startyr -e $ENDYEAR -d $RAWDATA \
 	                          -r $RUNTIME -o ${RESLON} -a ${RESLAT} -f ${Forcing} -l $LandMask -i \
 			          -S $EDGES -N $EDGEN -W $EDGEW -E $EDGEE 
    fi
@@ -841,14 +841,14 @@ mkdir -p $CASEPATH/$CASENAME/bld/run
 sed "s/DEF_dir_forcing.*/DEF_dir_forcing = '${FORCINGPATH//\//\\/}'/g" ${ROOT}/run/forcing/${Forcing}.nml>$CASEPATH/$CASENAME/bld/run/${Forcing}.nml
 
 if [ ! -z "SpinupScheme" ];then
-   echo "${ROOT}/run/create_scripts -p $CASEPATH/${CASENAME} -t $startyr -e $ENDYEAR -f $HEADER -c $CONFIG -i ${SpinupScheme}"
-   ${ROOT}/run/create_scripts -p $CASEPATH/${CASENAME} -t $startyr -e $ENDYEAR -f $HEADER -c $CONFIG -i ${SpinupScheme}
+   echo "${ROOT}/run/scripts/create_scripts -p $CASEPATH/${CASENAME} -t $startyr -e $ENDYEAR -f $HEADER -c $CONFIG -i ${SpinupScheme}"
+   ${ROOT}/run/scripts/create_scripts -p $CASEPATH/${CASENAME} -t $startyr -e $ENDYEAR -f $HEADER -c $CONFIG -i ${SpinupScheme}
 else 
-   echo "${ROOT}/run/create_scripts -p $CASEPATH/${CASENAME} -t $startyr -e $ENDYEAR -f $HEADER -c $CONFIG"
-   ${ROOT}/run/create_scripts -p $CASEPATH/${CASENAME} -t $startyr -e $ENDYEAR -f $HEADER -c $CONFIG
+   echo "${ROOT}/run/scripts/create_scripts -p $CASEPATH/${CASENAME} -t $startyr -e $ENDYEAR -f $HEADER -c $CONFIG"
+   ${ROOT}/run/scripts/create_scripts -p $CASEPATH/${CASENAME} -t $startyr -e $ENDYEAR -f $HEADER -c $CONFIG
 fi
 
-$ROOT/run/copy_code -s $ROOT -d ${CASEPATH}/${CASENAME}/bld
+$ROOT/run/scripts/copy_code -s $ROOT -d ${CASEPATH}/${CASENAME}/bld
 
 cat>bld/include/define.h<<EOF
 ! 1. Spatial structure:
