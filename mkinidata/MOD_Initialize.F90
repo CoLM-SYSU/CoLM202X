@@ -723,8 +723,15 @@ CONTAINS
       IF (DEF_USE_SoilInit) THEN
 
          fsoildat = DEF_file_SoilInit
+
          IF (p_is_master) THEN
             inquire (file=trim(fsoildat), exist=use_soilini)
+            IF (use_soilini) THEN
+               write(*,'(/,2A)') 'Use soil water content, soil temperature and water table depth ' &
+                  // 'to initialize soil state from file ', trim(fsoildat)
+            ELSE
+               write(*,*) 'No initial data for soil state from ', trim(fsoildat)
+            ENDIF
          ENDIF
 #ifdef USEMPI
          CALL mpi_bcast (use_soilini, 1, MPI_LOGICAL, p_address_master, p_comm_glb, p_err)
@@ -1081,19 +1088,25 @@ CONTAINS
 
 
       ! for SOIL Water INIT by using water table depth
-      fwtd = trim(DEF_dir_runtime) // '/wtd.nc'
-      IF (p_is_master) THEN
-         inquire (file=trim(fwtd), exist=use_wtd)
-         IF (use_soilini) use_wtd = .false.
-         IF (use_wtd) THEN
-            write(*,'(/, 2A)') 'Use water table depth and derived equilibrium state ' &
-               // ' to initialize soil water content: ', trim(fwtd)
-         ENDIF
-      ENDIF
+      use_wtd = (.not. use_soilini) .and. DEF_USE_WaterTableInit
+      
+      IF (use_wtd) THEN
 
+         fwtd = DEF_file_WaterTable 
+
+         IF (p_is_master) THEN
+            inquire (file=trim(fwtd), exist=use_wtd)
+            IF (use_wtd) THEN
+               write(*,'(/, 2A)') 'Use water table depth and derived equilibrium state ' &
+                  // ' to initialize soil water content from file ', trim(fwtd)
+            ELSE
+               write(*,*) 'No initial data for water table depth from ', trim(fwtd)
+            ENDIF
+         ENDIF
 #ifdef USEMPI
-      CALL mpi_bcast (use_wtd, 1, MPI_LOGICAL, p_address_master, p_comm_glb, p_err)
+         CALL mpi_bcast (use_wtd, 1, MPI_LOGICAL, p_address_master, p_comm_glb, p_err)
 #endif
+      ENDIF
 
       IF (use_wtd) THEN
 
