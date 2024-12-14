@@ -19,7 +19,7 @@ MODULE MOD_BGC_CNCStateUpdate1
 !                   3) Record the accumulated decomposition-associated C transfer for soil C semi-analytic spinup
 
    USE MOD_Precision
-   USE MOD_Namelist, only : DEF_USE_SASU
+   USE MOD_Namelist, only : DEF_USE_SASU, DEF_USE_DiagMatrix
    USE MOD_Vars_PFTimeInvariants, only: pftclass, pftfrac
    USE MOD_Const_PFT, only: woody
    USE MOD_BGC_Vars_TimeInvariants, only: &
@@ -168,7 +168,7 @@ CONTAINS
          decomp_cpools_sourcesink(j,i_cwd    ,i) = 0._r8
       ENDDO
   
-      IF(DEF_USE_SASU)THEN
+      IF(DEF_USE_SASU .or. DEF_USE_DiagMatrix)THEN
          DO j=1,nl_soil
             I_met_c_vr_acc(j,i) = I_met_c_vr_acc(j,i) + phenology_to_met_c(j,i) *deltim
             I_cel_c_vr_acc(j,i) = I_cel_c_vr_acc(j,i) + phenology_to_cel_c(j,i) *deltim
@@ -194,7 +194,7 @@ CONTAINS
          ENDIF
       ENDDO
   
-      IF(DEF_USE_SASU)THEN
+      IF(DEF_USE_SASU .or. DEF_USE_DiagMatrix)THEN
          DO j = 1, nl_soil
             AKX_met_to_soil1_c_vr_acc  (j,i) = AKX_met_to_soil1_c_vr_acc  (j,i) + decomp_ctransfer_vr(j, 1,i) * deltim
             AKX_cel_to_soil1_c_vr_acc  (j,i) = AKX_cel_to_soil1_c_vr_acc  (j,i) + decomp_ctransfer_vr(j, 2,i) * deltim
@@ -244,7 +244,7 @@ CONTAINS
             grainc_xfer_p   (m)  = grainc_xfer_p   (m) - grainc_xfer_to_grainc_p      (m) * deltim
          ENDIF
   
-         IF(DEF_USE_SASU)THEN
+         IF(DEF_USE_SASU .or. DEF_USE_DiagMatrix)THEN
             AKX_leafc_xf_to_leafc_p_acc  (m) = AKX_leafc_xf_to_leafc_p_acc  (m) + leafc_xfer_to_leafc_p  (m) * deltim
             AKX_frootc_xf_to_frootc_p_acc(m) = AKX_frootc_xf_to_frootc_p_acc(m) + frootc_xfer_to_frootc_p(m) * deltim
             AKX_leafc_xf_exit_p_acc      (m) = AKX_leafc_xf_exit_p_acc      (m) + leafc_xfer_to_leafc_p  (m) * deltim
@@ -284,7 +284,7 @@ CONTAINS
             cropseedc_deficit_p(m) = cropseedc_deficit_p(m) - crop_seedc_to_leaf_p(m) * deltim + grainc_to_seed_p(m) * deltim
          ENDIF
   
-         IF(DEF_USE_SASU)THEN
+         IF(DEF_USE_SASU .or. DEF_USE_DiagMatrix)THEN
             AKX_leafc_exit_p_acc (m) = AKX_leafc_exit_p_acc (m) + leafc_to_litter_p (m) * deltim
             AKX_frootc_exit_p_acc(m) = AKX_frootc_exit_p_acc(m) + frootc_to_litter_p(m) * deltim
             IF(woody(ivt) == 1) THEN
@@ -356,7 +356,7 @@ CONTAINS
             cpool_p            (m) = cpool_p            (m) - cpool_to_grainc_storage_p   (m) * deltim
             grainc_storage_p   (m) = grainc_storage_p   (m) + cpool_to_grainc_storage_p   (m) * deltim
          ENDIF
-         IF(DEF_USE_SASU)THEN
+         IF(DEF_USE_SASU .or. DEF_USE_DiagMatrix)THEN
             I_leafc_p_acc(m) = I_leafc_p_acc(m) + cpool_to_leafc_p         (m) * deltim
             I_leafc_st_p_acc(m) = I_leafc_st_p_acc(m) + cpool_to_leafc_storage_p     (m) * deltim
             I_frootc_p_acc(m) = I_frootc_p_acc(m) + cpool_to_frootc_p         (m) * deltim
@@ -447,7 +447,7 @@ CONTAINS
             grainc_storage_p    (m) = grainc_storage_p   (m) - grainc_storage_to_xfer_p   (m) * deltim
             grainc_xfer_p       (m) = grainc_xfer_p      (m) + grainc_storage_to_xfer_p   (m) * deltim
          ENDIF
-         IF(DEF_USE_SASU)THEN
+         IF(DEF_USE_SASU .or. DEF_USE_DiagMatrix)THEN
             AKX_leafc_st_to_leafc_xf_p_acc  (m) = AKX_leafc_st_to_leafc_xf_p_acc  (m) + leafc_storage_to_xfer_p (m) * deltim
             AKX_leafc_st_exit_p_acc         (m) = AKX_leafc_st_exit_p_acc         (m) + leafc_storage_to_xfer_p (m) * deltim
             AKX_frootc_st_to_frootc_xf_p_acc(m) = AKX_frootc_st_to_frootc_xf_p_acc(m) + frootc_storage_to_xfer_p(m) * deltim

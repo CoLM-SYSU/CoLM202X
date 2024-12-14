@@ -28,29 +28,6 @@ Help()
    echo '  -n|--casename (Mandatoray) ${Name} is the path and name of case to be '
    echo '       created. Note that ''/'' should not be appeared at end of case path'
    echo
-   echo '  -i|--spinup (optional) ${SpinupScheme} specify the spinup scheme set up '
-   echo '       by the bash script case.submit and namelist file:'
-   echo
-   echo '       1. none (default)'
-   echo '          No spinup is set up in the bash script case.submit, but spinup '
-   echo '          still can be setup in the namelist'
-   echo '       2. nd'
-   echo '          Natural dynamic spin up method is set up in the bash script '
-   echo '          case.submit.'
-   echo '       3. sasund'
-   echo '          This option is for bgc. Semi-analytic spinup method (sasu) will'
-   echo '          work together with Natural dynamic (nd) method (e.g. 100-year '
-   echo '          sasu + 30-year nd). Spinup procedure is set up in the bash script'
-   echo '          case.submit. Two namelists for sasu and nd will be generated '
-   echo '          respectively. In default, sasu mode will be activated until '
-   echo '          simulation is done for 100 years. and then followed by nd for 30'
-   echo '          years. The spinup protocol can be revised in case.submit after '
-   echo '          case is created.'
-   echo
-   echo "    Note. this script for SpinupScheme only works if the simulation period"
-   echo "    covers whole years. i.e. End day must be 365 (or 366 if it's leap year)"
-   echo "    and end second must be 86400."
-   echo
    echo '  -t|--startyr (optional) ${startyr} is the start year of the simulation:'
    echo
    echo '          ${startyr} (default: 1980)'
@@ -98,15 +75,17 @@ Help()
    echo '          -m vg -b) Global 2.5x1.875; Lat-lon grid cells; IGBP PFT subgrid;'
    echo '          vanGenuchten Mualem model; bgc on; crop off; lulcc off; urban '
    echo '          off; cama off'
-   echo '       5. Global_Grid_2x2_PF_VG_BGC-spinup1850'
+   echo '       5. Global_Grid_2x2_PF_VG_BGC-spinup'
    echo '          equivalent to the custom configuration (-i sasund -t 1850 -e 1850 '
    echo '          -g grid_g144x96 -s pc -m vg -b) Global 2.5x1.875; Lat-lon grid '
    echo '          cells; IGBP PC subgrid; vanGenuchten Mualem model; bgc on; crop '
    echo '          off; lulcc off; urban off; cama off'
    echo 
    echo '   following option is only valid when "-c|--config" is absent, if '
-   echo '       following option is absent, default configuration will be used: '
-   echo '       -g|--gridtype (optional) ${GridName} specify grid mesh types from '
+   echo '       following option is absent, default configuration will be used. '
+   echo '       (default option is tagged alone the default instant)'
+   echo
+   echo '  -g|--gridtype (optional) ${GridName} specify grid mesh types from '
    echo '       following option:'
    echo
    echo '       1. grid_g720x360 (default)'
@@ -168,6 +147,30 @@ Help()
    echo '          vanGenuchten Mualem model'
    echo '       2. cb'
    echo '          Campbell model'
+   echo 
+   echo '  -i|--spinup (optional) ${SpinupScheme} specify the spinup scheme set up '
+   echo '       by the bash script case.submit and namelist file:'
+   echo
+   echo '       1. none (default)'
+   echo '          No spinup is set up in the bash script case.submit, but spinup '
+   echo '          still can be setup in the namelist'
+   echo '       2. nd'
+   echo '          Natural dynamic spin up method is set up in the bash script '
+   echo '          case.submit.'
+   echo '       3. sasund'
+   echo '          This option is for bgc. Semi-analytic spinup method (sasu) will'
+   echo '          work together with Natural dynamic (nd) method (e.g. 100-year '
+   echo '          sasu + 30-year nd). Spinup procedure is set up in the bash script'
+   echo '          case.submit. Two namelists for sasu and nd will be generated '
+   echo '          respectively. In default, sasu mode will be activated until '
+   echo '          simulation is done for 100 years. and then followed by nd for 30'
+   echo '          years. The spinup protocol can be revised in case.submit after '
+   echo '          case is created.'
+   echo
+   echo "    Note. this script for SpinupScheme only works if the simulation period"
+   echo "    covers whole years. i.e. End day must be 365 (or 366 if it's leap year)"
+   echo "    and end second must be 86400."
+   echo
    echo 
    echo '  -r|--cama (optional) Switch for CaMa river routing model is on if the '
    echo '       argument "-r" is present'
@@ -320,6 +323,9 @@ if [ ! -z "$ConfigName" ]; then
    if [ ! -z "$SoilModel" ]; then
       echo "Warning: -c|--config option is present, ignore -m|--soilmodel $SoilModel option"
    fi   
+   if [ ! -z "${SpinupScheme}" ];then
+      echo "Warning: -c|--config option is present, ignore -i|--spinup $SpinupScheme option"
+   fi
    case $ConfigName in
       Global_Grid_50km_PFT_VG)
 	 IsDefBGC="#undef"
@@ -344,6 +350,7 @@ if [ ! -z "$ConfigName" ]; then
          IsDefVG="#define"
 	 IsDefCB="#undef"
 	 LandMask=False
+	 SpinupScheme=none
 	 ;;
       Global_Grid_50km_USGS_VG)
 	 IsDefBGC="#undef"
@@ -368,6 +375,7 @@ if [ ! -z "$ConfigName" ]; then
          IsDefVG="#define"
 	 IsDefCB="#undef"
 	 LandMask=False
+	 SpinupScheme=none
 	 ;;
       Global_Grid_50km_IGBP_VG)
 	 IsDefBGC="#undef"
@@ -392,6 +400,7 @@ if [ ! -z "$ConfigName" ]; then
          IsDefVG="#define"
 	 IsDefCB="#undef"
 	 LandMask=False
+	 SpinupScheme=none
 	 ;;
       Global_Grid_2x2_PFT_VG_BGC)
 	 IsDefBGC="#define"
@@ -417,8 +426,9 @@ if [ ! -z "$ConfigName" ]; then
 	 IsDefCB="#undef"
 	 BGC=True
 	 LandMask=False
+	 SpinupScheme=none
 	 ;;
-      Global_Grid_2x2_PFT_VG_BGC-spinup1850)
+      Global_Grid_2x2_PFT_VG_BGC-spinup)
 	 IsDefBGC="#define"
 	 IsDefCrop="#undef"
 	 IsDefCaMa="#undef"
@@ -469,6 +479,7 @@ if [ ! -z "$ConfigName" ]; then
          IsDefVG="#define"
 	 IsDefCB="#undef"
 	 LandMask=False
+	 SpinupScheme=none
 	 ;;
       Global_Grid_2x2_PFT_VG_BGC_CROP)
 	 IsDefBGC="#define"
@@ -494,6 +505,7 @@ if [ ! -z "$ConfigName" ]; then
 	 IsDefCB="#undef"
 	 BGC=True
 	 LandMask=False
+	 SpinupScheme=none
 	 ;;
       Global_Grid_50km_PFT_VG_CaMa)
 	 IsDefBGC="#undef"
@@ -519,6 +531,7 @@ if [ ! -z "$ConfigName" ]; then
 	 IsDefCB="#undef"
 	 LandMask=False
 	 BGC=True
+	 SpinupScheme=none
 	 ;;
       RegGuangdong_Grid_10km_PFT_VG_BGC_CROP)
 	 IsDefBGC="#define"
@@ -544,6 +557,7 @@ if [ ! -z "$ConfigName" ]; then
          IsDefCB="#undef"
 	 LandMask="DEF_file_mesh='$RAWDATA/landdata/landmask_igbp_10km_Guangdong-extended.nc'"
          BGC=True
+	 SpinupScheme=none
 	 ;;
       *)
          echo "Error: the argument for the -c|--config option is incorret."
