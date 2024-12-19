@@ -304,6 +304,9 @@ MODULE MOD_Namelist
    !2: To allow monthly ndep data to be read in
    integer :: DEF_NDEP_FREQUENCY = 1
 
+   ! ----- CaMa-Flood -----
+   character(len=256) :: DEF_CaMa_Namelist = 'null'
+
    ! ----- lateral flow related -----
    logical :: DEF_USE_EstimatedRiverDepth     = .true.
    character(len=256) :: DEF_ElementNeighbour_file = 'null'
@@ -1002,6 +1005,8 @@ CONTAINS
       DEF_file_snowoptics,                    &
       DEF_file_snowaging ,                    &
 
+      DEF_CaMa_Namelist,                      &
+
       DEF_ElementNeighbour_file,              &
 
       DEF_DA_obsdir,                          &
@@ -1499,6 +1504,8 @@ CONTAINS
       CALL mpi_bcast (DEF_file_snowoptics                    ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_file_snowaging                     ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
 
+      CALL mpi_bcast (DEF_CaMa_Namelist                      ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
+      
       CALL mpi_bcast (DEF_ElementNeighbour_file              ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
 
       CALL mpi_bcast (DEF_DA_obsdir                          ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
