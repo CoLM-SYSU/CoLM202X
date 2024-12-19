@@ -539,7 +539,7 @@ CONTAINS
       IF (itime_in_file == 1) THEN
          CALL ncio_put_attr (file_hist, varname, 'long_name', longname)
          CALL ncio_put_attr (file_hist, varname, 'units', units)
-         CALL ncio_put_attr (file_hist, varname, 'missing_value',spval)
+         CALL ncio_put_attr (file_hist, varname, 'missing_value',real(real(spval,kind=JPRM),kind=8))
       ENDIF
 
    END SUBROUTINE flux_map_and_write_2d_cama

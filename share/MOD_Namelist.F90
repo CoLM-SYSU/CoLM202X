@@ -203,6 +203,9 @@ MODULE MOD_Namelist
    logical :: DEF_USE_CN_INIT   = .false.
    character(len=256) :: DEF_file_cn_init  = 'null'
 
+   logical :: DEF_USE_WaterTableInit = .false.
+   character(len=256) :: DEF_file_WaterTable = 'null'
+
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ! ----- Part 9: LULCC related ------
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -300,6 +303,9 @@ MODULE MOD_Namelist
    !1: To allow annuaul ndep data to be read in
    !2: To allow monthly ndep data to be read in
    integer :: DEF_NDEP_FREQUENCY = 1
+
+   ! ----- CaMa-Flood -----
+   character(len=256) :: DEF_CaMa_Namelist = 'null'
 
    ! ----- lateral flow related -----
    logical :: DEF_USE_EstimatedRiverDepth     = .true.
@@ -993,8 +999,13 @@ CONTAINS
       DEF_USE_CN_INIT,                        &
       DEF_file_cn_init,                       &
 
+      DEF_USE_WaterTableInit,                 &
+      DEF_file_WaterTable,                    &
+
       DEF_file_snowoptics,                    &
       DEF_file_snowaging ,                    &
+
+      DEF_CaMa_Namelist,                      &
 
       DEF_ElementNeighbour_file,              &
 
@@ -1305,6 +1316,15 @@ CONTAINS
 #endif
 #endif
 
+! ----- Soil water and temperature Initialization ----- Namelist conflicts
+
+         IF (DEF_USE_SoilInit .and. DEF_USE_WaterTableInit) THEN
+            write(*,*) '                  *****                  '
+            write(*,*) 'If both DEF_USE_SoilInit and DEF_USE_WaterTableInit are .TRUE.,   '
+            write(*,*) 'initial value of water table depth is read from DEF_file_SoilInit,'
+            write(*,*) 'instead of DEF_file_WaterTable (which is useless in this CASE).   '
+         ENDIF 
+
 ! ----- dynamic lake run ----- Macros&Namelist conflicts and dependency management
 
 #ifndef CATCHMENT
@@ -1477,10 +1497,15 @@ CONTAINS
       CALL mpi_bcast (DEF_USE_CN_INIT                        ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_file_cn_init                       ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
 
+      CALL mpi_bcast (DEF_USE_WaterTableInit                 ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_file_WaterTable                    ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
+
       CALL mpi_bcast (DEF_USE_SNICAR                         ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_file_snowoptics                    ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_file_snowaging                     ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
 
+      CALL mpi_bcast (DEF_CaMa_Namelist                      ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
+      
       CALL mpi_bcast (DEF_ElementNeighbour_file              ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
 
       CALL mpi_bcast (DEF_DA_obsdir                          ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
