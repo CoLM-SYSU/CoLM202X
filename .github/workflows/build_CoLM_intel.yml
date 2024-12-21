@@ -1,0 +1,125 @@
+name: Build_CoLM202X_intel
+on:
+  pull_request:
+    branches: 
+      - master
+    paths-ignore:
+      - 'postprocess/**'
+      - 'preprocess/**'
+      - 'run/**'
+      - 'README.md'
+      - '.gitignore'
+      - '**/**.sh'
+  push:
+    branches:
+      - master
+
+  workflow_dispatch:
+
+jobs:
+  Build-CoLM-intel:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, ubuntu-22.04]
+        mpi: ['mpich', 'openmpi', 'intelmpi']
+        toolchain:
+          - {compiler: intel, version: '2024.2'}
+          - {compiler: intel-classic, version: '2021.12'}
+       # include:
+       #   - os: ubuntu-latest
+       #     toolchain: {compiler: gcc, version: 12}
+       # exclude:
+       #   - os: ubuntu-22.04
+       #     toolchain: {compiler: gcc, version: 14}
+       #   - mpi: 'mpich'
+       #     toolchain: {compiler: gcc, version: 9}
+       #     # mpich compiling FCFLAG has --fallow-type-mismatch, and will cause gfortran 9 failing
+
+    steps:
+     - uses: actions/checkout@v4
+     - uses: mpi4py/setup-mpi@v1
+       with:
+          mpi: ${{ matrix.mpi }}
+     - uses: fortran-lang/setup-fortran@v1
+       id: setup-fortran
+       with:
+          compiler: ${{ matrix.toolchain.compiler }}
+          version: ${{ matrix.toolchain.version }} 
+     #- name: Install mkl
+     #  shell: bash -l {0}
+     #  run: |
+     #     sudo apt-get update & sudo apt-get install -y intel-oneapi-mkl
+     #  #   source /opt/intel/oneapi/setvars.sh
+     - name: Install hdf5
+       run: |
+          mkdir -p /opt/src
+          cd /opt/src
+          wget https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.10/hdf5-1.10.10/src/hdf5-1.10.10.tar.gz
+          tar -xzf hdf5-1.10.10.tar.gz
+          cd hdf5-1.10.10
+          ./configure --prefix=/opt/hdf5 --enable-parallel --enable-fortran
+          make -j 4 install 2>&1 | tee build.log
+          export HDF5=/opt/hdf5
+          export PATH=${HDF5}/bin:${PATH}'
+          export LD_LIBRARY_PATH=${HDF5}/lib:${LD_LIBRARY_PATH}
+     - name: Install netcdf-c library
+       shell: bash -l {0}
+       run: |
+          cd /opt/src
+          wget https://downloads.unidata.ucar.edu/netcdf-c/4.9.2/netcdf-c-4.9.2.tar.gz
+          tar -xzf netcdf-c-4.9.2.tar.gz
+          cd netcdf-c-4.9.2
+          export CPPFLAGS="-I${HDF5}/include"
+          export LDFLAGS="-L${HDF5}/lib"
+          ./configure --prefix=/opt/netcdf --disable-dap-remote-tests --enable-mmap --enable-netcdf4
+          make -j 4 install
+          export NETCDF=/opt/netcdf
+          export PATH=${NETCDF}/bin:${PATH}
+          export LD_LIBRARY_PATH=${NETCDF}/lib:${LD_LIBRARY_PATH}
+     - name: Install netcdf-fortran library
+       shell: bash -l {0}
+       run: |
+          cd /opt/src
+          wget https://downloads.unidata.ucar.edu/netcdf-fortran/4.5.3/netcdf-fortran-4.5.3.tar.gz
+          tar -xzf netcdf-fortran-4.5.3.tar.gz
+          cd netcdf-fortran-4.5.3
+          export CPPFLAGS="-I${HDF5}/include"
+          export LDFLAGS="-L${HDF5}/lib"
+          ./configure --prefix=/opt/netcdf
+          make install
+     - name: Test mpi and netcdf
+       #run: mpif90 -v
+       run: which mpif90
+     - name: Test netcdf
+       run: nc-config --all
+     - name: Build CoLM202X
+     #  run: make clean && make all
+       run: |
+            cd ${{ github.workspace }}
+            ln -sf include/Makeoptions.github.intel include/Makeoptions
+            TestList=./.github/workflows/TestCaseLists
+            for CaseName in `awk '{print $1}' $TestList`
+            do
+              echo "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
+              echo "Create test cases"
+              echo $CaseName
+              echo "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
+ 
+              echo defineh `cat $TestList |grep $CaseName |awk '{print $2,$3,$4,$5,$6,$7,$8}'`
+              ./.github/workflows/create_defineh.bash `cat $TestList |grep $CaseName |awk '{print $2,$3,$4,$5,$6,$7,$8}'`
+
+              echo "Create test case $CaseName Complete!"
+              cat ./include/define.h
+
+              echo "...................................................................."
+              echo "Start Compilation $CaseName"
+              echo "...................................................................."
+ 
+              make clean && make all
+            done
+
+            echo "----------------------------------------------------------------------"
+            echo "All test cases are compiled successfully! "
+            echo "----------------------------------------------------------------------"
