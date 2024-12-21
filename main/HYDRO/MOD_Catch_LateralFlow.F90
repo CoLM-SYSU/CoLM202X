@@ -272,7 +272,7 @@ CONTAINS
          CALL mpi_allreduce (MPI_IN_PLACE, toldis, 1, MPI_REAL8, MPI_SUM, p_comm_worker, p_err)
 #endif
          IF (p_iam_worker == 0) THEN
-            write(*,'(A,F10.5,A,ES10.3,A,ES10.3,A)') 'Total surface water error: ', dtolw, &
+            write(*,'(A,F10.2,A,ES10.3,A,ES10.3,A)') 'Total surface water error: ', dtolw, &
                '(m^3) in area ', landarea, '(m^2), discharge ', toldis, '(m^3)' 
          ENDIF
 
@@ -282,7 +282,7 @@ CONTAINS
          CALL mpi_allreduce (MPI_IN_PLACE, dtolw,  1, MPI_REAL8, MPI_SUM, p_comm_worker, p_err)
 #endif
          IF (p_iam_worker == 0) THEN
-            write(*,'(A,F10.5,A,ES10.3,A)') 'Total ground  water error: ', dtolw, &
+            write(*,'(A,F10.2,A,ES10.3,A)') 'Total ground  water error: ', dtolw, &
                '(m^3) in area ', landarea, '(m^2)'
          ENDIF
       ENDIF
