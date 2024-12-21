@@ -331,11 +331,12 @@ CONTAINS
 
    IMPLICIT NONE
    character(len=*), optional :: mesg
+   integer :: errorcode
 
       IF (present(mesg)) write(*,*) trim(mesg)
 
 #ifdef USEMPI
-      CALL mpi_abort (p_comm_glb, p_err)
+      CALL mpi_abort (p_comm_glb, errorcode, p_err)
 #else
       STOP
 #endif

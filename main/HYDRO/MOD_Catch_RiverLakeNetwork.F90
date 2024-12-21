@@ -682,6 +682,9 @@ CONTAINS
 
                   IF (inb <= 0) THEN
                      outletwth(ibasin) = 0
+                     IF (riverdown(ibasin) > 0) THEN
+                        outletwth(ibasin) = 90.
+                     ENDIF
                   ELSE
                      outletwth(ibasin) = elementneighbour(ibasin)%lenbdr(inb)
                   ENDIF

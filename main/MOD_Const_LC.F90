@@ -596,7 +596,7 @@ MODULE MOD_Const_LC
    real(r8), parameter, dimension(N_land_classification) :: ck0_igbp &
       = (/3.95, 3.95, 3.95, 3.95, 3.95, 3.95, &
           3.95, 3.95, 3.95, 3.95, 3.95, 3.95, &
-          3.95, 3.95,   0.,   0.,   0.  /)
+          3.95, 3.95, 3.95, 3.95, 3.95  /)
 !end plant hydraulic parameters
 
    ! lambda for WUE stomata model

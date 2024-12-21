@@ -28,7 +28,7 @@ MODULE MOD_CaMa_colmCaMa
    USE CMF_CTRL_OUTPUT_MOD,       only: CMF_OUTPUT_INIT,CMF_OUTPUT_END,NVARSOUT,VAROUT
    USE YOS_CMF_INPUT,             only: NXIN, NYIN, DT,DTIN,IFRQ_INP,LLEAPYR,NX,NY,RMIS,DMIS
    USE MOD_Precision,             only: r8,r4
-   USE YOS_CMF_INPUT ,            only: LROSPLIT,LWEVAP,LWINFILT
+   USE YOS_CMF_INPUT ,            only: LROSPLIT,LWEVAP,LWINFILT,CSETFILE
    USE YOS_CMF_MAP,               only: D1LON, D1LAT
    USE YOS_CMF_INPUT,             only: WEST,EAST,NORTH,SOUTH
 
@@ -73,6 +73,11 @@ CONTAINS
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
+
+      IF (p_is_master) THEN
+
+         CSETFILE = DEF_CaMa_Namelist
+
          !Namelist handling
          CALL CMF_DRV_INPUT
          !get the time information from colm namelist
@@ -181,14 +186,33 @@ CONTAINS
             END SELECT
          ENDDO
 
+      ENDIF 
+
       !Broadcast the variables to all the processors
       CALL mpi_bcast (NX      ,   1, MPI_INTEGER,   p_address_master, p_comm_glb, p_err) ! number of grid points in x-direction of CaMa-Flood
       CALL mpi_bcast (NY      ,   1, MPI_INTEGER,   p_address_master, p_comm_glb, p_err) ! number of grid points in y-direction of CaMa-Flood
       CALL mpi_bcast (IFRQ_INP ,   1, MPI_INTEGER,  p_address_master, p_comm_glb, p_err) ! input frequency of CaMa-Flood (hour)
       CALL mpi_bcast (LWEVAP ,   1, MPI_LOGICAL,  p_address_master, p_comm_glb, p_err)   ! switch for inundation evaporation
       CALL mpi_bcast (LWINFILT ,   1, MPI_LOGICAL,  p_address_master, p_comm_glb, p_err) ! switch for inundation re-infiltration
-      CALL mpi_bcast (real(D1LAT,kind=8)    ,   1, MPI_REAL8,   p_address_master, p_comm_glb, p_err) ! 
-      CALL mpi_bcast (real(D1LON,kind=8)    ,   1, MPI_REAL8,   p_address_master, p_comm_glb, p_err)  !    
+
+      IF (.not. allocated(D1LAT))  allocate (D1LAT(NY))
+      IF (.not. allocated(D1LON))  allocate (D1LON(NX))
+
+#ifdef SinglePrec_CMF
+      CALL mpi_bcast (D1LAT, NY, MPI_REAL4, p_address_master, p_comm_glb, p_err) !
+      CALL mpi_bcast (D1LON, NX, MPI_REAL4, p_address_master, p_comm_glb, p_err) !
+      CALL mpi_bcast (SOUTH,  1, MPI_REAL4, p_address_master, p_comm_glb, p_err) !
+      CALL mpi_bcast (NORTH,  1, MPI_REAL4, p_address_master, p_comm_glb, p_err) !
+      CALL mpi_bcast (WEST ,  1, MPI_REAL4, p_address_master, p_comm_glb, p_err) !
+      CALL mpi_bcast (EAST ,  1, MPI_REAL4, p_address_master, p_comm_glb, p_err) !
+#else
+      CALL mpi_bcast (D1LAT, NY, MPI_REAL8, p_address_master, p_comm_glb, p_err) !
+      CALL mpi_bcast (D1LON, NX, MPI_REAL8, p_address_master, p_comm_glb, p_err) !
+      CALL mpi_bcast (SOUTH,  1, MPI_REAL8, p_address_master, p_comm_glb, p_err) !
+      CALL mpi_bcast (NORTH,  1, MPI_REAL8, p_address_master, p_comm_glb, p_err) !
+      CALL mpi_bcast (WEST ,  1, MPI_REAL8, p_address_master, p_comm_glb, p_err) !
+      CALL mpi_bcast (EAST ,  1, MPI_REAL8, p_address_master, p_comm_glb, p_err) !
+#endif
 
       !allocate the data structure for cama
       CALL gcama%define_by_center (D1LAT,D1LON,real(SOUTH,kind=8), real(NORTH,kind=8), real(WEST,kind=8), real(EAST,kind=8)) !define the grid for cama
