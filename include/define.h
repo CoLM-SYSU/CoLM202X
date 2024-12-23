@@ -29,6 +29,10 @@
 #undef USEMPI
 #endif
 
+#if (defined SinglePoint && defined URBAN_MODEL && undefined LULC_IGBP)
+#define LULC_IGBP
+#endif
+
 ! 5. Hydrological process options.
 ! 5.1 Two soil hydraulic models can be used.
 #undef   Campbell_SOIL_MODEL
@@ -64,10 +68,10 @@
 #undef DataAssimilation
 
 ! 10. Vector write model.
-!     1) "VectorInOneFileP" : write vector data in one file in parallel mode;  
-!     2) "VectorInOneFileS" : write vector data in one file in serial mode;  
-!     3) Neither "VectorInOneFileS" nor "VectorInOneFileP" is defined : 
-!        write vector data in separate files.  
+!     1) "VectorInOneFileP" : write vector data in one file in parallel mode;
+!     2) "VectorInOneFileS" : write vector data in one file in serial mode;
+!     3) Neither "VectorInOneFileS" nor "VectorInOneFileP" is defined :
+!        write vector data in separate files.
 #undef VectorInOneFileP
 !     Conflict
 #ifdef VectorInOneFileP

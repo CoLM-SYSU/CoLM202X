@@ -220,6 +220,7 @@ MODULE MOD_Namelist
    ! 1: NCAR Urban Classification, 3 urban type with Tall Building, High Density and Medium Density
    ! 2: LCZ Classification, 10 urban type with LCZ 1-10
    integer :: DEF_URBAN_type_scheme = 1
+   integer :: DEF_URBAN_data        = 1
    logical :: DEF_URBAN_ONLY        = .false.
    logical :: DEF_URBAN_RUN         = .false.
    logical :: DEF_URBAN_BEM         = .true.
@@ -932,6 +933,7 @@ CONTAINS
       DEF_LULCC_SCHEME,                       &
 
       DEF_URBAN_type_scheme,                  &
+      DEF_URBAN_data,                         &
       DEF_URBAN_ONLY,                         &
       DEF_URBAN_RUN,                          & !add by hua yuan, open urban model or not
       DEF_URBAN_BEM,                          & !add by hua yuan, open urban BEM model or not
@@ -1231,7 +1233,14 @@ CONTAINS
 
          IF (DEF_USE_SNICAR) THEN
             write(*,*) '                  *****                  '
-            write(*,*) 'Note: SNICAR is not applied for URBAN model, but for other land covers. '
+            write(*,*) 'When URBAN model is opened, WUEST/SUPERCOOL_WATER/PLANTHYDRAULICS/OZONESTRESS/SOILSNOW'
+            write(*,*) 'will be set to false automatically.'
+            DEF_USE_WUEST           = .false.
+            DEF_USE_SUPERCOOL_WATER = .false.
+            DEF_USE_PLANTHYDRAULICS = .false. 
+            DEF_USE_OZONESTRESS     = .false.
+            DEF_USE_OZONEDATA       = .false.
+            DEF_SPLIT_SOILSNOW      = .false.
          ENDIF
 #else
          IF (DEF_URBAN_RUN) THEN
@@ -1414,6 +1423,7 @@ CONTAINS
       CALL mpi_bcast (DEF_LULCC_SCHEME                       ,1   ,mpi_integer   ,p_address_master ,p_comm_glb ,p_err)
 
       CALL mpi_bcast (DEF_URBAN_type_scheme                  ,1   ,mpi_integer   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_URBAN_data                         ,1   ,mpi_integer   ,p_address_master ,p_comm_glb ,p_err)
       ! 05/2023, added by yuan
       CALL mpi_bcast (DEF_URBAN_ONLY                         ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_URBAN_RUN                          ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
