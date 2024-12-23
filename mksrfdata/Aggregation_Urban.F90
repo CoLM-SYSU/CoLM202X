@@ -511,11 +511,13 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
 
          landdir = TRIM(dir_rawdata)//'/urban/'
          suffix  = 'URBSRF'//trim(c5year)
-         CALL read_5x5_data (landdir, suffix, grid_urban_500m, "PCT_ROOF", wtrf)
-
-         landdir = TRIM(dir_rawdata)//'/urban/'
-         suffix  = 'URBSRF'//trim(c5year)
-         CALL read_5x5_data (landdir, suffix, grid_urban_500m, "HT_ROOF", htrf)
+IF (DEF_Urban_data == 1) THEN
+         CALL read_5x5_data (landdir, suffix, grid_urban_500m, "PCT_ROOF_GHSL", wtrf)
+         CALL read_5x5_data (landdir, suffix, grid_urban_500m, "HT_ROOF_GHSL" , htrf)
+ELSE
+         CALL read_5x5_data (landdir, suffix, grid_urban_500m, "PCT_ROOF_Li", wtrf)
+         CALL read_5x5_data (landdir, suffix, grid_urban_500m, "HT_ROOF_Li" , htrf)
+ENDIF
 
 #ifdef USEMPI
          CALL aggregation_data_daemon (grid_urban_500m, data_i4_2d_in1 = reg_typid, &
@@ -667,8 +669,8 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
          CALL system('mkdir -p ' // trim(adjustl(landsrfdir)))
 
          ! allocate and read grided LSAI raw data
-         landdir = trim(dir_rawdata)//'/urban_lai_5x5/'
-         suffix  = 'UrbLAI_'//trim(iyear)
+         landdir = trim(dir_rawdata)//'/urban_lai_500m/'
+         suffix  = 'URBLAI_'//trim(iyear)
          ! loop for month
          DO imonth = 1, 12
 

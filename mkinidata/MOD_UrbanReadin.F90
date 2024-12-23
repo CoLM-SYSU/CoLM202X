@@ -150,7 +150,7 @@ ENDIF
       lndname = trim(dir_landdata)//'/urban/'//trim(cyear)//'/POP.nc'
       CALL ncio_read_vector (lndname, 'POP_DEN'       , landurban, pop_den )
 
-      lndname = trim(dir_landdata)//'/urban/'//trim(cyear)//'/LUCY_country_id.nc'
+      lndname = trim(dir_landdata)//'/urban/'//trim(cyear)//'/LUCY_region_id.nc'
       CALL ncio_read_vector (lndname, 'LUCY_id'       , landurban, lucyid  )
 
       lndname = trim(dir_landdata)//'/urban/'//trim(cyear)//'/WT_ROOF.nc'
