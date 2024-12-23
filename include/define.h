@@ -14,6 +14,12 @@
 
 ! 2.1 3D Urban model (put it temporarily here):
 #undef URBAN_MODEL
+#if (defined URBAN_MODEL && defined SinglePoint)
+#undef LULC_USGS
+#define LULC_IGBP
+#undef LULC_IGBP_PFT
+#undef LULC_IGBP_PC
+#endif
 
 ! 3. If defined, debug information is output.
 #define CoLMDEBUG
@@ -64,10 +70,10 @@
 #undef DataAssimilation
 
 ! 10. Vector write model.
-!     1) "VectorInOneFileP" : write vector data in one file in parallel mode;  
-!     2) "VectorInOneFileS" : write vector data in one file in serial mode;  
-!     3) Neither "VectorInOneFileS" nor "VectorInOneFileP" is defined : 
-!        write vector data in separate files.  
+!     1) "VectorInOneFileP" : write vector data in one file in parallel mode;
+!     2) "VectorInOneFileS" : write vector data in one file in serial mode;
+!     3) Neither "VectorInOneFileS" nor "VectorInOneFileP" is defined :
+!        write vector data in separate files.
 #undef VectorInOneFileP
 !     Conflict
 #ifdef VectorInOneFileP
