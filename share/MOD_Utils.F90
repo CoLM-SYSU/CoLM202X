@@ -1074,8 +1074,11 @@ CONTAINS
    real(r8), intent(in) :: lat1, lon1, lat2, lon2
 
    real(r8), parameter :: re = 6.37122e3 ! kilometer
+   real(r8) :: tmp
 
-      arclen = re * acos (sin(lat1)*sin(lat2) + cos(lat1)*cos(lat2) * cos(lon1-lon2))
+      tmp = sin(lat1)*sin(lat2) + cos(lat1)*cos(lat2) * cos(lon1-lon2)
+      tmp = min(max(tmp, -1.), 1.)
+      arclen = re * acos(tmp)
 
    END FUNCTION arclen
 

@@ -16,6 +16,7 @@ MODULE MOD_CheckEquilibrium
    USE MOD_NetCDFSerial
    USE MOD_SpatialMapping
    USE MOD_Vars_Global, only : spval
+   USE MOD_Namelist,    only : DEF_CheckEquilibrium
 
    ! ----- Variables -----
    integer :: numcheck
@@ -46,6 +47,8 @@ CONTAINS
    USE MOD_LandPatch, only : numpatch, landpatch
    IMPLICIT NONE
 
+      IF (.not. DEF_CheckEquilibrium) return
+
       numcheck = -1
       
       IF (p_is_worker) THEN
@@ -74,6 +77,8 @@ CONTAINS
 
    IMPLICIT NONE
 
+      IF (.not. DEF_CheckEquilibrium) return
+
       IF (allocated(tws_last)) deallocate(tws_last)
       IF (allocated(tws_this)) deallocate(tws_this)
       IF (allocated(prcp_acc)) deallocate(prcp_acc)
@@ -83,32 +88,34 @@ CONTAINS
    !---------------------------------------
    SUBROUTINE CheckEquilibrium (idate, deltim, itstamp, dir_out, casename)
 
-      USE MOD_Precision
-      USE MOD_Namelist
-      USE MOD_TimeManager
-      USE MOD_DataType
-      USE MOD_LandPatch
-      USE MOD_Vars_1DForcing,     only : forc_prc, forc_prl
-      USE MOD_Vars_TimeVariables, only : wa, wat, wdsrf
+   USE MOD_Precision
+   USE MOD_Namelist
+   USE MOD_TimeManager
+   USE MOD_DataType
+   USE MOD_LandPatch
+   USE MOD_Vars_1DForcing,     only : forc_prc, forc_prl
+   USE MOD_Vars_TimeVariables, only : wa, wat, wdsrf
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      integer,  intent(in) :: idate(3)
-      real(r8), intent(in) :: deltim
-      type(timestamp), intent(in) :: itstamp
+   integer,  intent(in) :: idate(3)
+   real(r8), intent(in) :: deltim
+   type(timestamp), intent(in) :: itstamp
 
-      character(len=*), intent(in) :: dir_out
-      character(len=*), intent(in) :: casename
+   character(len=*), intent(in) :: dir_out
+   character(len=*), intent(in) :: casename
 
-      ! Local variables
-      logical :: docheck
-      character(len=256) :: filename
-      integer :: ncid, time_id, varid
+   ! Local variables
+   logical :: docheck
+   character(len=256) :: filename
+   integer :: ncid, time_id, varid
 
-      real(r8), allocatable     :: pct_dtws (:)
-      logical,  allocatable     :: filter   (:)
-      type(block_data_real8_2d) :: sumarea
+   real(r8), allocatable     :: pct_dtws (:)
+   logical,  allocatable     :: filter   (:)
+   type(block_data_real8_2d) :: sumarea
 
+
+      IF (.not. DEF_CheckEquilibrium) return
 
       IF (p_is_worker) THEN
          IF (numpatch > 0) THEN

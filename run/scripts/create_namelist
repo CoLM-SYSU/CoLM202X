@@ -8,8 +8,9 @@ Help()
    echo "   Descripion: create CoLM simulation namelist files  "
 
    echo '---------------------------------------------------------------------------'
-   echo 'Syntax: ./create_namelist -p $CasePath -n CaseName -t $startyr -e $endyr '
-   echo '         -d $RAWDATA -r $RUNTIME -a $reslat -o $reslat -f $Forcing [ -S ]'
+   echo 'Syntax: ./create_namelist -p $CasePath -n CaseName [ -t $startyr ] [ -e $endyr ]'
+   echo '        [ -d $RAWDATA ] [ -r $RUNTIME ] [ -a $reslat ] [ -o $reslat ] [ -f $Forcing ]'
+   echo '        [ -S $EDGES ] [ -N $EDGEN ] [ -E $EDGEE ] [ -W $EDGEW ]'
    echo '!--------------------------------------------------------------------------'
    echo options:
    echo '  -p The path of the destimation case, which you want to create '
@@ -288,7 +289,7 @@ if [ -z "${Forcing}" ];then
    echo
    echo "Note: -f option is absent, set Forcing GSWP as the default."
    echo
-   Forcing=GSWP
+   Forcing=CRUJRA
 fi
 
 if [ -z "${LandMask}" ];then

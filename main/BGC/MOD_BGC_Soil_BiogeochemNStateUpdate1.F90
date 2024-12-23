@@ -19,7 +19,7 @@ MODULE MOD_BGC_Soil_BiogeochemNStateUpdate1
 !                   2) Record accumulated nitrogen transfer network for semi-analytic spinup
 
    USE MOD_Precision
-   USE MOD_Namelist, only : DEF_USE_SASU, DEF_USE_NITRIF, DEF_USE_CNSOYFIXN
+   USE MOD_Namelist, only : DEF_USE_SASU, DEF_USE_DiagMatrix, DEF_USE_NITRIF, DEF_USE_CNSOYFIXN
    USE MOD_BGC_Vars_TimeInvariants, only: &
      ! bgc constants
        i_met_lit, i_cel_lit, i_lig_lit, i_cwd, i_soil1, i_soil2, i_soil3
@@ -134,7 +134,7 @@ CONTAINS
          ENDIF
       ENDDO
   
-      IF(DEF_USE_SASU)THEN
+      IF(DEF_USE_SASU .or. DEF_USE_DiagMatrix)THEN
          DO j = 1, nl_soil
             AKX_met_to_soil1_n_vr_acc  (j,i) = AKX_met_to_soil1_n_vr_acc  (j,i) + (decomp_ntransfer_vr(j, 1,i) + decomp_sminn_flux_vr(j, 1,i)) * deltim
             AKX_cel_to_soil1_n_vr_acc  (j,i) = AKX_cel_to_soil1_n_vr_acc  (j,i) + (decomp_ntransfer_vr(j, 2,i) + decomp_sminn_flux_vr(j, 2,i)) * deltim

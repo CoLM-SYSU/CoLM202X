@@ -2,19 +2,16 @@
 # mpif90 - ifort 
 # 
 
- FF = mpif90 -f90=ifort
+ FF = mpif90
 
- NETCDF_LIB = /share/home/dq013/software/netcdf_parallel/lib
- NETCDF_INC = /share/home/dq013/software/netcdf_parallel/include
-
- MATH_LIB = /share/home/dq013/software/miniconda3/lib  #MKL LIB_PATH
-
+ NETCDF_LIB = /opt/netcdf/lib
+ NETCDF_INC = /opt/netcdf/include
 
  MOD_CMD = -module 
 
  FOPTS = -qopenmp -O2 -traceback -r8 -free -check uninit -check bounds
 
- LDFLAGS = -L${NETCDF_LIB} -L${MATH_LIB} -L/share/home/dq013/software/hdf5-1.14.3-Intel_MPI/hdf_plugins_test -lnetcdff -llapack -lblas
+ LDFLAGS = -L${NETCDF_LIB} -lnetcdff -llapack -lblas
 
 #============================================================
 # CaMa-Flood Mkinclude (for Linux, Intel fortran)

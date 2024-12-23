@@ -24,7 +24,7 @@ MODULE MOD_SingleSrfdata
 #endif
 
 #ifdef CROP
-   real(r8), allocatable :: SITE_croptyp (:)
+   integer,  allocatable :: SITE_croptyp (:)
    real(r8), allocatable :: SITE_pctcrop (:)
 #endif
 
@@ -509,7 +509,7 @@ ENDIF
       CALL ncio_define_dimension (fsrfdata, 'soil',  nl_soil )
       CALL ncio_define_dimension (fsrfdata, 'azi', num_azimuth)
       CALL ncio_define_dimension (fsrfdata, 'zen', num_zenith)
-      CALL ncio_define_dimension (fsrfdata, 'type', num_type)
+      CALL ncio_define_dimension (fsrfdata, 'slope_type', num_slope_type)
       CALL ncio_define_dimension (fsrfdata, 'patch', numpatch)
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
       CALL ncio_define_dimension (fsrfdata, 'pft', numpft)
@@ -686,7 +686,7 @@ ENDIF
 
       CALL ncio_define_dimension (fsrfdata, 'azi', num_azimuth)
       CALL ncio_define_dimension (fsrfdata, 'zen', num_zenith)
-      CALL ncio_define_dimension (fsrfdata, 'type', num_type)
+      CALL ncio_define_dimension (fsrfdata, 'slope_type', num_slope_type)
 
       CALL ncio_define_dimension (fsrfdata, 'patch', numurban)
 

@@ -15,7 +15,7 @@
    DEF_forcing%endyr             = 2023     ! end year of forcing data
    DEF_forcing%endmo             = 12       ! end month of forcing data
    DEF_forcing%dtime             = 3600 3600 3600 3600 3600 3600 3600 3600
-   DEF_forcing%offset            = 1800 1800 1800 1800 1800 1800 1800 1800
+   DEF_forcing%offset            = 0 0 0 1800 0 0 0 1800
    DEF_forcing%nlands            = 1        ! land grid number in 1d
 
    DEF_forcing%leapyear          = .true.   ! leapyear calendar
@@ -41,7 +41,7 @@
 
    DEF_forcing%vname    = 'tmp2m-hgt-fc-gauss' 'spfh2m-hgt-fc-gauss' 'pres-sfc-fc-gauss' 'tprate1have-sfc-fc-gauss' 'ugrd10m-hgt-fc-gauss' 'vgrd10m-hgt-fc-gauss' 'dswrf1have-sfc-fc-gauss' 'dlwrf1have-sfc-fc-gauss'
    DEF_forcing%timelog  = 'instant' 'instant' 'instant' 'foreward' 'instant' 'instant' 'foreward' 'foreward'
-   DEF_forcing%tintalgo = 'linear' 'linear' 'linear' 'linear' 'NULL' 'linear' 'coszen' 'linear'
+   DEF_forcing%tintalgo = 'linear' 'linear' 'linear' 'linear' 'linear' 'linear' 'coszen' 'linear'
 
 
 /

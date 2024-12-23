@@ -57,7 +57,7 @@ MODULE MOD_Namelist
 ! ----- Part 3: For Single Point -----
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-   character(len=256) :: SITE_fsrfdata   = 'null'
+   character(len=256) :: SITE_fsitedata = 'null'
 
    real(r8) :: SITE_lon_location = 113.5897
    real(r8) :: SITE_lat_location = 22.3507
@@ -325,6 +325,8 @@ MODULE MOD_Namelist
    !Semi-Analytic-Spin-Up
    logical            :: DEF_USE_SASU            = .false.
 
+   logical            :: DEF_USE_DiagMatrix      = .false.
+
    !Punctuated nitrogen addition Spin up
    logical            :: DEF_USE_PN              = .false.
 
@@ -342,6 +344,9 @@ MODULE MOD_Namelist
 
    !Dynamic Lake model
    logical            :: DEF_USE_Dynamic_Lake    = .false.
+
+   !
+   logical            :: DEF_CheckEquilibrium    = .false.
 
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ! ----- Part 12: forcing -----
@@ -418,7 +423,8 @@ MODULE MOD_Namelist
    character(len=20) :: DEF_Forcing_Interp_Method = 'arealweight' ! 'arealweight' (default) or 'bilinear'
 
    logical           :: DEF_USE_Forcing_Downscaling        = .false.
-   character(len=5)  :: DEF_DS_precipitation_adjust_scheme = 'II'
+   character(len=256):: DEF_DS_HiresTopographyDataDir      = 'null'
+   character(len=5)  :: DEF_DS_precipitation_adjust_scheme = 'I'
    character(len=5)  :: DEF_DS_longwave_adjust_scheme      = 'II'
 
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -712,6 +718,45 @@ MODULE MOD_Namelist
       logical :: hdm                              = .true.
       logical :: lnfm                             = .true.
 
+      logical :: leafcCap                         = .false.
+      logical :: leafc_storageCap                 = .false.
+      logical :: leafc_xferCap                    = .false.
+      logical :: frootcCap                        = .false.
+      logical :: frootc_storageCap                = .false.
+      logical :: frootc_xferCap                   = .false.
+      logical :: livestemcCap                     = .false.
+      logical :: livestemc_storageCap             = .false.
+      logical :: livestemc_xferCap                = .false.
+      logical :: deadstemcCap                     = .false.
+      logical :: deadstemc_storageCap             = .false.
+      logical :: deadstemc_xferCap                = .false.
+      logical :: livecrootcCap                    = .false.
+      logical :: livecrootc_storageCap            = .false.
+      logical :: livecrootc_xferCap               = .false.
+      logical :: deadcrootcCap                    = .false.
+      logical :: deadcrootc_storageCap            = .false.
+      logical :: deadcrootc_xferCap               = .false.
+      logical :: leafnCap                         = .false.
+      logical :: leafn_storageCap                 = .false.
+      logical :: leafn_xferCap                    = .false.
+      logical :: frootnCap                        = .false.
+      logical :: frootn_storageCap                = .false.
+      logical :: frootn_xferCap                   = .false.
+      logical :: livestemnCap                     = .false.
+      logical :: livestemn_storageCap             = .false.
+      logical :: livestemn_xferCap                = .false.
+      logical :: deadstemnCap                     = .false.
+      logical :: deadstemn_storageCap             = .false.
+      logical :: deadstemn_xferCap                = .false.
+      logical :: livecrootnCap                    = .false.
+      logical :: livecrootn_storageCap            = .false.
+      logical :: livecrootn_xferCap               = .false.
+      logical :: deadcrootnCap                    = .false.
+      logical :: deadcrootn_storageCap            = .false.
+      logical :: deadcrootn_xferCap               = .false.
+      logical :: t_scalar                         = .false.
+      logical :: w_scalar                         = .false.
+
       logical :: t_soisno                         = .true.
       logical :: wliq_soisno                      = .true.
       logical :: wice_soisno                      = .true.
@@ -750,6 +795,22 @@ MODULE MOD_Namelist
       logical :: soil2n_vr                        = .true.
       logical :: soil3n_vr                        = .true.
       logical :: cwdn_vr                          = .true.
+
+      logical :: litr1cCap_vr                     = .false.
+      logical :: litr2cCap_vr                     = .false.
+      logical :: litr3cCap_vr                     = .false.
+      logical :: soil1cCap_vr                     = .false.
+      logical :: soil2cCap_vr                     = .false.
+      logical :: soil3cCap_vr                     = .false.
+      logical :: cwdcCap_vr                       = .false.
+      logical :: litr1nCap_vr                     = .false.
+      logical :: litr2nCap_vr                     = .false.
+      logical :: litr3nCap_vr                     = .false.
+      logical :: soil1nCap_vr                     = .false.
+      logical :: soil2nCap_vr                     = .false.
+      logical :: soil3nCap_vr                     = .false.
+      logical :: cwdnCap_vr                       = .false.
+
       logical :: sminn_vr                         = .true.
 
       logical :: ustar                            = .true.
@@ -815,7 +876,7 @@ CONTAINS
       DEF_CASE_NAME,                          &
       DEF_domain,                             &
 
-      SITE_fsrfdata,                          &
+      SITE_fsitedata,                         &
       SITE_lon_location,                      &
       SITE_lat_location,                      &
       SITE_landtype,                          &
@@ -902,6 +963,7 @@ CONTAINS
       DEF_USE_MEDLYNST,                       & !add by xingjie lu @ sysu 2023/05/28
       DEF_USE_WUEST,                          & !add by xingjie lu @ sysu 2024/05/28
       DEF_USE_SASU,                           & !add by Xingjie Lu @ sysu 2023/06/27
+      DEF_USE_DiagMatrix,                     & !add by Xingjie Lu @ sysu 2023/06/27
       DEF_USE_PN,                             & !add by Xingjie Lu @ sysu 2023/06/27
       DEF_USE_FERT,                           & !add by Xingjie Lu @ sysu 2023/06/27
       DEF_USE_NITRIF,                         & !add by Xingjie Lu @ sysu 2023/06/27
@@ -909,6 +971,7 @@ CONTAINS
       DEF_USE_FIRE,                           & !add by Xingjie Lu @ sysu 2023/06/27
 
       DEF_USE_Dynamic_Lake,                   & !add by Shupeng Zhang @ sysu 2024/09/12
+      DEF_CheckEquilibrium,                   & !add by Shupeng Zhang @ sysu 2024/11/26
 
       DEF_LANDONLY,                           &
       DEF_USE_DOMINANT_PATCHTYPE,             &
@@ -944,6 +1007,7 @@ CONTAINS
       DEF_Forcing_Interp_Method,              &
 
       DEF_USE_Forcing_Downscaling,            &
+      DEF_DS_HiresTopographyDataDir,          & 
       DEF_DS_precipitation_adjust_scheme,     &
       DEF_DS_longwave_adjust_scheme,          &
 
@@ -1074,6 +1138,13 @@ CONTAINS
             write(*,*) '                  *****                  '
             write(*,*) 'Warning: Semi-Analytic Spin-up is on when BGC is off.'
             write(*,*) 'DEF_USE_SASU is set to false automatically when BGC is turned off.'
+         ENDIF
+
+         IF(DEF_USE_DiagMatrix)THEN
+            DEF_USE_DiagMatrix = .false.
+            write(*,*) '                  *****                  '
+            write(*,*) 'Warning: CN Matrix Diagnostic is on when BGC is off.'
+            write(*,*) 'DEF_USE_DiagMatrix is set to false automatically when BGC is turned off.'
          ENDIF
 
          IF(DEF_USE_PN)THEN
@@ -1388,6 +1459,7 @@ CONTAINS
       CALL mpi_bcast (DEF_USE_MEDLYNST                       ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_USE_WUEST                          ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_USE_SASU                           ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_USE_DiagMatrix                     ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_USE_PN                             ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_USE_FERT                           ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_USE_NITRIF                         ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
@@ -1395,6 +1467,7 @@ CONTAINS
       CALL mpi_bcast (DEF_USE_FIRE                           ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
 
       CALL mpi_bcast (DEF_USE_Dynamic_Lake                   ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_CheckEquilibrium                   ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
 
       CALL mpi_bcast (DEF_LANDONLY                           ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_USE_DOMINANT_PATCHTYPE             ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
@@ -1444,6 +1517,7 @@ CONTAINS
 
       CALL mpi_bcast (DEF_Forcing_Interp_Method              ,20  ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_USE_Forcing_Downscaling            ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_DS_HiresTopographyDataDir          ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_DS_precipitation_adjust_scheme     ,5   ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_DS_longwave_adjust_scheme          ,5   ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
 
@@ -1503,6 +1577,61 @@ CONTAINS
             close(10)
          ENDIF
 
+         IF(DEF_USE_DiagMatrix)THEN
+            DEF_hist_vars%leafcCap                         = .true.
+            DEF_hist_vars%leafc_storageCap                 = .true.
+            DEF_hist_vars%leafc_xferCap                    = .true.
+            DEF_hist_vars%frootcCap                        = .true.
+            DEF_hist_vars%frootc_storageCap                = .true.
+            DEF_hist_vars%frootc_xferCap                   = .true.
+            DEF_hist_vars%livestemcCap                     = .true.
+            DEF_hist_vars%livestemc_storageCap             = .true.
+            DEF_hist_vars%livestemc_xferCap                = .true.
+            DEF_hist_vars%deadstemcCap                     = .true.
+            DEF_hist_vars%deadstemc_storageCap             = .true.
+            DEF_hist_vars%deadstemc_xferCap                = .true.
+            DEF_hist_vars%livecrootcCap                    = .true.
+            DEF_hist_vars%livecrootc_storageCap            = .true.
+            DEF_hist_vars%livecrootc_xferCap               = .true.
+            DEF_hist_vars%deadcrootcCap                    = .true.
+            DEF_hist_vars%deadcrootc_storageCap            = .true.
+            DEF_hist_vars%deadcrootc_xferCap               = .true.
+            DEF_hist_vars%leafnCap                         = .true.
+            DEF_hist_vars%leafn_storageCap                 = .true.
+            DEF_hist_vars%leafn_xferCap                    = .true.
+            DEF_hist_vars%frootnCap                        = .true.
+            DEF_hist_vars%frootn_storageCap                = .true.
+            DEF_hist_vars%frootn_xferCap                   = .true.
+            DEF_hist_vars%livestemnCap                     = .true.
+            DEF_hist_vars%livestemn_storageCap             = .true.
+            DEF_hist_vars%livestemn_xferCap                = .true.
+            DEF_hist_vars%deadstemnCap                     = .true.
+            DEF_hist_vars%deadstemn_storageCap             = .true.
+            DEF_hist_vars%deadstemn_xferCap                = .true.
+            DEF_hist_vars%livecrootnCap                    = .true.
+            DEF_hist_vars%livecrootn_storageCap            = .true.
+            DEF_hist_vars%livecrootn_xferCap               = .true.
+            DEF_hist_vars%deadcrootnCap                    = .true.
+            DEF_hist_vars%deadcrootn_storageCap            = .true.
+            DEF_hist_vars%deadcrootn_xferCap               = .true.
+            DEF_hist_vars%t_scalar                         = .true.
+            DEF_hist_vars%w_scalar                         = .true.
+
+            DEF_hist_vars%litr1cCap_vr                     = .true.
+            DEF_hist_vars%litr2cCap_vr                     = .true.
+            DEF_hist_vars%litr3cCap_vr                     = .true.
+            DEF_hist_vars%soil1cCap_vr                     = .true.
+            DEF_hist_vars%soil2cCap_vr                     = .true.
+            DEF_hist_vars%soil3cCap_vr                     = .true.
+            DEF_hist_vars%cwdcCap_vr                       = .true.
+            DEF_hist_vars%litr1nCap_vr                     = .true.
+            DEF_hist_vars%litr2nCap_vr                     = .true.
+            DEF_hist_vars%litr3nCap_vr                     = .true.
+            DEF_hist_vars%soil1nCap_vr                     = .true.
+            DEF_hist_vars%soil2nCap_vr                     = .true.
+            DEF_hist_vars%soil3nCap_vr                     = .true.
+            DEF_hist_vars%cwdnCap_vr                       = .true.
+         ENDIF
       ENDIF
 
       CALL sync_hist_vars (set_defaults = .false.)
@@ -1755,6 +1884,59 @@ CONTAINS
          CALL sync_hist_vars_one (DEF_hist_vars%hdm                          , set_defaults)
          CALL sync_hist_vars_one (DEF_hist_vars%lnfm                         , set_defaults)
       ENDIF
+      CALL sync_hist_vars_one (DEF_hist_vars%leafcCap                        , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%leafc_storageCap                , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%leafc_xferCap                   , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%frootcCap                       , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%frootc_storageCap               , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%frootc_xferCap                  , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%livestemcCap                    , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%livestemc_storageCap            , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%livestemc_xferCap               , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%deadstemcCap                    , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%deadstemc_storageCap            , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%deadstemc_xferCap               , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%livecrootcCap                   , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%livecrootc_storageCap           , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%livecrootc_xferCap              , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%deadcrootcCap                   , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%deadcrootc_storageCap           , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%deadcrootc_xferCap              , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%leafnCap                        , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%leafn_storageCap                , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%leafn_xferCap                   , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%frootnCap                       , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%frootn_storageCap               , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%frootn_xferCap                  , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%livestemnCap                    , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%livestemn_storageCap            , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%livestemn_xferCap               , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%deadstemnCap                    , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%deadstemn_storageCap            , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%deadstemn_xferCap               , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%livecrootnCap                   , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%livecrootn_storageCap           , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%livecrootn_xferCap              , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%deadcrootnCap                   , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%deadcrootn_storageCap           , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%deadcrootn_xferCap              , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%t_scalar                        , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%w_scalar                        , set_defaults)
+      
+      CALL sync_hist_vars_one (DEF_hist_vars%litr1cCap_vr                    , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%litr2cCap_vr                    , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%litr3cCap_vr                    , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%soil1cCap_vr                    , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%soil2cCap_vr                    , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%soil3cCap_vr                    , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%cwdcCap_vr                      , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%litr1nCap_vr                    , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%litr2nCap_vr                    , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%litr3nCap_vr                    , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%soil1nCap_vr                    , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%soil2nCap_vr                    , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%soil3nCap_vr                    , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%cwdnCap_vr                      , set_defaults)
 #endif
 
       CALL sync_hist_vars_one (DEF_hist_vars%t_soisno    , set_defaults)

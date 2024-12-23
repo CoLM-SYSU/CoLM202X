@@ -93,7 +93,12 @@ CONTAINS
                   forc_hgt_g  ,forc_swrad_g  ,forc_us_g  ,forc_vs_g  , &
 
                   ! topography-based factor on patch
-                  slp_type_c, asp_type_c, area_type_c, svf_c, cur_c, sf_lut_c, & 
+                  slp_type_c, asp_type_c, area_type_c, svf_c, cur_c, & 
+#ifdef SinglePoint
+                  sf_lut_c, &
+#else
+                  sf_curve_c, &
+#endif
 
                   ! other factors
                   julian_day, coszen, cosazi, alb, &
@@ -131,10 +136,14 @@ CONTAINS
    ! topography-based factor
    real(r8), intent(in) :: svf_c                                    ! sky view factor
    real(r8), intent(in) :: cur_c                                    ! curvature
+#ifdef SinglePoint
    real(r8), intent(in) :: sf_lut_c   (1:num_azimuth,1:num_zenith)  ! look up table of shadow mask of a patch
-   real(r8), intent(in) :: asp_type_c (1:num_type)                  ! topographic aspect of each type of one patch(rad)
-   real(r8), intent(in) :: slp_type_c (1:num_type)                  ! topographic slope of each character of one patch
-   real(r8), intent(in) :: area_type_c(1:num_type)                  ! area percentage of each character of one patch
+#else
+   real(r8), intent(in) :: sf_curve_c (1:num_azimuth,1:num_zenith_parameter)  ! curve of shadow mask of a patch
+#endif
+   real(r8), intent(in) :: asp_type_c (1:num_slope_type)            ! topographic aspect of each type of one patch(rad)
+   real(r8), intent(in) :: slp_type_c (1:num_slope_type)            ! topographic slope of each character of one patch
+   real(r8), intent(in) :: area_type_c(1:num_slope_type)            ! area percentage of each character of one patch
 
    ! non-downscaled fields:
    real(r8), intent(in) :: forc_topo_g   ! atmospheric surface height [m]
@@ -230,9 +239,8 @@ CONTAINS
       ! --------------------------------------------------------------------------------------
       ! 2. adjust wind speed
       ! --------------------------------------------------------------------------------------
-      CALL downscale_wind(forc_us_g, forc_vs_g, &
-                          forc_us_c, forc_vs_c, &
-                          slp_type_c, asp_type_c, area_type_c, cur_c)
+      forc_us_c = forc_us_g
+      forc_vs_c = forc_vs_g
 
       ! --------------------------------------------------------------------------------------
       ! 3. adjust longwave radiation and shortwave radiation
@@ -245,7 +253,13 @@ CONTAINS
                      forc_topo_g, forc_pbot_g, forc_swrad_g, &
                      forc_topo_c, forc_pbot_c, forc_swrad_c, &
                      julian_day, coszen, cosazi, alb, &
-                     slp_type_c, asp_type_c, svf_c, sf_lut_c, area_type_c)
+                     slp_type_c, asp_type_c, svf_c,   &
+#ifdef SinglePoint
+                     sf_lut_c,   &
+#else
+                     sf_curve_c, &
+#endif
+                     area_type_c)
 
       ! --------------------------------------------------------------------------------------
       ! 4. adjust precipitation
@@ -291,36 +305,34 @@ CONTAINS
 !-----------------------------------------------------------------------------
 
    SUBROUTINE downscale_wind(forc_us_g, forc_vs_g, &
-                             forc_us_c, forc_vs_c, &
                              slp_type_c, asp_type_c, area_type_c, cur_c)
 
 !-----------------------------------------------------------------------------
 ! DESCRIPTION:
-! Downscale wind speed 
+! Downscale wind speed
 !
 ! Liston, G. E. and Elder, K.: A meteorological distribution system
 ! for high-resolution terrestrial modeling (MicroMet), J. Hydrometeorol., 7, 217-234, 2006.
 !-----------------------------------------------------------------------------
 
    IMPLICIT NONE
-   
+
    ! ARGUMENTS:
-   real(r8), intent(in)  :: forc_us_g                                ! eastward wind (m/s)
-   real(r8), intent(in)  :: forc_vs_g                                ! northward wind (m/s)
-   real(r8), intent(out) :: forc_us_c                                ! adjusted eastward wind (m/s)
-   real(r8), intent(out) :: forc_vs_c                                ! adjusted northward wind (m/s)
+   real(r8), intent(inout)  :: forc_us_g                                ! eastward wind (m/s)
+   real(r8), intent(inout)  :: forc_vs_g                                ! northward wind (m/s)
 
    real(r8), intent(in) :: cur_c                                     ! curvature
-   real(r8), intent(in) :: asp_type_c        (1:num_type)            ! topographic aspect of each character of one patch
-   real(r8), intent(in) :: slp_type_c        (1:num_type)            ! topographic slope of each character of one patch
-   real(r8), intent(in) :: area_type_c       (1:num_type)            ! area percentage of each character of one patch
+   real(r8), intent(in) :: asp_type_c        (1:num_slope_type)      ! topographic aspect of each character of one patch
+   real(r8), intent(in) :: slp_type_c        (1:num_slope_type)      ! topographic slope of each character of one patch
+   real(r8), intent(in) :: area_type_c       (1:num_slope_type)      ! area percentage of each character of one patch
 
    ! local variables
    real(r8) :: wind_dir                                              ! wind direction
    real(r8) :: ws_g                                                  ! non-downscaled wind speed
-   real(r8) :: wind_dir_slp (1:num_type)                             ! the slope in the direction of the wind
-   real(r8) :: ws_c_type(1:num_type)                                 ! downscaled wind speed of each type in each patch
+   real(r8) :: wind_dir_slp (1:num_slope_type)                       ! the slope in the direction of the wind
+   real(r8) :: ws_c_type(1:num_slope_type)                           ! downscaled wind speed of each type in each patch
    real(r8) :: ws_c                                                  ! downscaled wind speed
+   real(r8) :: scale_factor                                          ! Combined scaling factor for regulating wind speed
    integer :: g, c, i
 
 !-----------------------------------------------------------------------------
@@ -331,24 +343,31 @@ CONTAINS
       ELSE
          wind_dir  = atan(forc_vs_g /forc_us_g)
       ENDIF
-      
+
       ! non-adjusted wind speed
-      ws_g  = sqrt(forc_vs_g *forc_vs_g +forc_us_g *forc_us_g ) 
+      ws_g  = sqrt(forc_vs_g *forc_vs_g +forc_us_g *forc_us_g )
 
       ! compute the slope in the direction of the wind
-      DO i = 1, num_type
+      DO i = 1, num_slope_type
          wind_dir_slp(i) = slp_type_c(i)*cos(wind_dir-asp_type_c(i))
       ENDDO
 
       ! compute wind speed ajustment
-      DO i = 1, num_type
-         ws_c_type(i) = ws_g *(1+(0.58*wind_dir_slp(i))+0.42*cur_c)*area_type_c(i)
+      DO i = 1, num_slope_type
+         scale_factor = (1+(0.58*wind_dir_slp(i))+0.42*cur_c)
+         ! Limiting the scope of proportionality adjustments
+         IF (scale_factor>1.5) THEN
+             scale_factor = 1.5
+         ELSE IF (scale_factor<-1.5) THEN
+             scale_factor = -1.5
+         ENDIF
+         ws_c_type(i) = ws_g *scale_factor*area_type_c(i)
       ENDDO
 
       ! adjusted wind speed
       ws_c = sum(ws_c_type(:))
-      forc_us_c = ws_c*cos(wind_dir)
-      forc_vs_c = ws_c*sin(wind_dir) 
+      forc_us_g = ws_c*cos(wind_dir)
+      forc_vs_g = ws_c*sin(wind_dir)
 
    END SUBROUTINE downscale_wind
 
@@ -456,7 +475,13 @@ CONTAINS
                         forc_topo_g, forc_pbot_g, forc_swrad_g, &
                         forc_topo_c, forc_pbot_c, forc_swrad_c, &
                         julian_day, coszen, cosazi, alb, &
-                        slp_type_c, asp_type_c, svf_c, sf_lut_c, area_type_c)
+                        slp_type_c, asp_type_c, svf_c,   &
+#ifdef SinglePoint
+                        sf_lut_c,   &
+#else
+                        sf_curve_c, &
+#endif
+                        area_type_c)
                         
 !-----------------------------------------------------------------------------
 ! DESCRIPTION:
@@ -492,14 +517,18 @@ CONTAINS
    real(r8), intent(in) :: forc_pbot_c                                    ! atmospheric pressure [Pa]
    real(r8), intent(out):: forc_swrad_c                                   ! downward shortwave (W/m**2)
 
-   real(r8), intent(in) :: svf_c                                          ! sky view factor
-   real(r8), intent(in) :: sf_lut_c   (1:num_azimuth,1:num_zenith)        ! look up table of shadow factor
-   real(r8), intent(in) :: asp_type_c (1:num_type)                        ! topographic aspect of each character of one patch (°)
-   real(r8), intent(in) :: slp_type_c (1:num_type)                        ! topographic slope of each character of one patch
-   real(r8), intent(in) :: area_type_c(1:num_type)                        ! area percentage of each character of one patch
+   real(r8), intent(in) :: svf_c                                             ! sky view factor
+#ifdef SinglePoint
+   real(r8), intent(in) :: sf_lut_c   (1:num_azimuth,1:num_zenith)  ! look up table of shadow mask of a patch
+#else
+   real(r8), intent(in) :: sf_curve_c (1:num_azimuth,1:num_zenith_parameter)  ! curve of shadow mask of a patch
+#endif
+   real(r8), intent(in) :: asp_type_c (1:num_slope_type)                     ! topographic aspect of each character of one patch (°)
+   real(r8), intent(in) :: slp_type_c (1:num_slope_type)                     ! topographic slope of each character of one patch
+   real(r8), intent(in) :: area_type_c(1:num_slope_type)                     ! area percentage of each character of one patch
 
    ! LOCAL VARIABLES:
-   real(r8) :: zen_rad, azi_rad, zen_deg, azi_deg      ! rad and deg of sun zenith and azimuth angles
+   real(r8) :: zen_rad, zen_deg, azi_rad, azi_deg      ! rad and deg of sun zenith and azimuth angles
    integer  :: idx_azi, idx_zen                        ! index used to cal shadow factor from look up table
    real(r8) :: sf_c                                    ! shadow factor
    real(r8) :: rt_R                                    ! The ratio of the current distance between the sun and the earth                                                                                     ! to the average distance between the sun and the earth
@@ -513,10 +542,12 @@ CONTAINS
 
    real(r8) :: diff_swrad_g, beam_swrad_g              ! diffuse and beam radiation
    real(r8) :: diff_swrad_c, beam_swrad_c, refl_swrad_c! downscaled diffuse, beam radiation and reflect radiation 
-   real(r8) :: beam_swrad_type (1:num_type)            ! beam radiation of one characterized patch
-   real(r8) :: refl_swrad_type (1:num_type)            ! reflect radiation of one characterized patch
-   real(r8) :: tcf_type        (1:num_type)            ! terrain configure factor
-   real(r8) :: cosill_type     (1:num_type)            ! illumination angle (cos) at defined types
+   real(r8) :: beam_swrad_type (1:num_slope_type)      ! beam radiation of one characterized patch
+   real(r8) :: refl_swrad_type (1:num_slope_type)      ! reflect radiation of one characterized patch
+   real(r8) :: tcf_type        (1:num_slope_type)      ! terrain configure factor
+   real(r8) :: cosill_type     (1:num_slope_type)      ! illumination angle (cos) at defined types
+
+   real(r8) :: zenith_segment, a1, a2                  ! Segmented function segmentation points (rad), parameter1, parameter2
 
    integer  :: i
 
@@ -525,16 +556,35 @@ CONTAINS
       ! calculate shadow factor according to sun zenith and azimuth angle 
       zen_rad = acos(coszen)
       azi_rad = acos(cosazi)
-      zen_deg = zen_rad*180/PI ! turn deg
       azi_deg = azi_rad*180.0/PI ! turn deg
 
       idx_azi = INT(azi_deg*num_azimuth/360)
-      idx_zen = INT(zen_deg*num_zenith/90)
+
       IF (idx_azi==0) idx_azi = 1
+
+#ifdef SinglePoint
+      zen_deg = zen_rad*180/PI ! turn deg
+      idx_zen = INT(zen_deg*num_zenith/90)
       IF (idx_zen==0) idx_zen = 1
       IF (idx_zen>num_zenith) idx_zen = num_zenith !constrain the upper boundary of zenith angle to 90 deg
 
       sf_c = sf_lut_c(idx_azi, idx_zen)
+#else
+      ! Constructing a shadow factor function from zenith angle parameters  
+      ! shadow factor = exp(-1*exp(a1*zenith+a2))
+      zenith_segment = sf_curve_c(idx_azi, 1)               ! Segmented function segmentation points (rad)
+      a1 = sf_curve_c(idx_azi, 2)                           ! parameter of function
+      a2 = sf_curve_c(idx_azi, 3)                           ! parameter of function
+
+      IF (zen_rad <= zenith_segment) THEN
+         sf_c = 1.
+      ELSE IF (a1<=1e-10) THEN
+         sf_c = 1.
+      ELSE 
+         sf_c = exp(-1*exp(min(a1*zen_rad+a2,3.5)))
+      ENDIF
+#endif
+
       IF (sf_c<0) sf_c = 0
       IF (sf_c>1) sf_c = 1
 
@@ -555,7 +605,7 @@ CONTAINS
       ! Proposal of a regressive model for the hourly diffuse solar radiation under all sky 
       ! conditions. Energy Conversion and Management, 51(5), 881–893. 
       ! https://doi.org/10.1016/j.enconman.2009.11.024
-      diff_wgt = 0.952-1.041*exp(-1*exp(2.3-4.702*clr_idx))
+      diff_wgt = 0.952-1.041*exp(-1*exp(min(2.3-4.702*clr_idx,3.5)))
       IF (diff_wgt>1) diff_wgt = 1
       IF (diff_wgt<0) diff_wgt = 0
 
@@ -579,7 +629,7 @@ CONTAINS
       IF (zen_rad>thr) zen_rad=thr
 
       ! loop for four defined types to downscale beam radiation
-      DO i = 1, num_type
+      DO i = 1, num_slope_type
          ! calculate the cosine of solar illumination angle, cos(θ), 
          ! ranging between −1 and 1, indicates if the sun is below or 
          ! above the local horizon (note that values lower than 0 are set to 0 indicate self shadow)
@@ -603,7 +653,7 @@ CONTAINS
 
       ! downscaling reflected radiation
       balb = alb
-      DO i = 1, num_type
+      DO i = 1, num_slope_type
          tcf_type(i) = (1+cos(slp_type_c(i)))/2-svf
          IF (tcf_type(i)<0) tcf_type(i) = 0
       
