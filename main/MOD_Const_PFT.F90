@@ -1604,7 +1604,7 @@ MODULE MOD_Const_PFT
 
    ! shape-fitting parameter for vulnerability curve (-)
    real(r8), parameter :: ck_p(0:N_PFT+N_CFT-1) &
-      = (/  0.,  3.95, 3.95,  3.95, 3.95,  3.95, 3.95, 3.95&
+      = (/3.95,  3.95, 3.95,  3.95, 3.95,  3.95, 3.95, 3.95&
          ,3.95,  3.95, 3.95,  3.95, 3.95,  3.95, 3.95, 3.95&
 #ifdef CROP
          ,3.95,  3.95, 3.95,  3.95, 3.95,  3.95, 3.95, 3.95&
