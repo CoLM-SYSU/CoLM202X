@@ -203,6 +203,9 @@ MODULE MOD_Namelist
    logical :: DEF_USE_CN_INIT   = .false.
    character(len=256) :: DEF_file_cn_init  = 'null'
 
+   logical :: DEF_USE_WaterTableInit = .false.
+   character(len=256) :: DEF_file_WaterTable = 'null'
+
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ! ----- Part 9: LULCC related ------
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -220,6 +223,7 @@ MODULE MOD_Namelist
    ! 1: NCAR Urban Classification, 3 urban type with Tall Building, High Density and Medium Density
    ! 2: LCZ Classification, 10 urban type with LCZ 1-10
    integer :: DEF_URBAN_type_scheme = 1
+   integer :: DEF_URBAN_data        = 1
    logical :: DEF_URBAN_ONLY        = .false.
    logical :: DEF_URBAN_RUN         = .false.
    logical :: DEF_URBAN_BEM         = .true.
@@ -300,6 +304,9 @@ MODULE MOD_Namelist
    !1: To allow annuaul ndep data to be read in
    !2: To allow monthly ndep data to be read in
    integer :: DEF_NDEP_FREQUENCY = 1
+
+   ! ----- CaMa-Flood -----
+   character(len=256) :: DEF_CaMa_Namelist = 'null'
 
    ! ----- lateral flow related -----
    logical :: DEF_USE_EstimatedRiverDepth     = .true.
@@ -932,6 +939,7 @@ CONTAINS
       DEF_LULCC_SCHEME,                       &
 
       DEF_URBAN_type_scheme,                  &
+      DEF_URBAN_data,                         &
       DEF_URBAN_ONLY,                         &
       DEF_URBAN_RUN,                          & !add by hua yuan, open urban model or not
       DEF_URBAN_BEM,                          & !add by hua yuan, open urban BEM model or not
@@ -993,8 +1001,13 @@ CONTAINS
       DEF_USE_CN_INIT,                        &
       DEF_file_cn_init,                       &
 
+      DEF_USE_WaterTableInit,                 &
+      DEF_file_WaterTable,                    &
+
       DEF_file_snowoptics,                    &
       DEF_file_snowaging ,                    &
+
+      DEF_CaMa_Namelist,                      &
 
       DEF_ElementNeighbour_file,              &
 
@@ -1231,7 +1244,14 @@ CONTAINS
 
          IF (DEF_USE_SNICAR) THEN
             write(*,*) '                  *****                  '
-            write(*,*) 'Note: SNICAR is not applied for URBAN model, but for other land covers. '
+            write(*,*) 'When URBAN model is opened, WUEST/SUPERCOOL_WATER/PLANTHYDRAULICS/OZONESTRESS/SOILSNOW'
+            write(*,*) 'will be set to false automatically.'
+            DEF_USE_WUEST           = .false.
+            DEF_USE_SUPERCOOL_WATER = .false.
+            DEF_USE_PLANTHYDRAULICS = .false. 
+            DEF_USE_OZONESTRESS     = .false.
+            DEF_USE_OZONEDATA       = .false.
+            DEF_SPLIT_SOILSNOW      = .false.
          ENDIF
 #else
          IF (DEF_URBAN_RUN) THEN
@@ -1304,6 +1324,15 @@ CONTAINS
 #undef SrfdataDiag
 #endif
 #endif
+
+! ----- Soil water and temperature Initialization ----- Namelist conflicts
+
+         IF (DEF_USE_SoilInit .and. DEF_USE_WaterTableInit) THEN
+            write(*,*) '                  *****                  '
+            write(*,*) 'If both DEF_USE_SoilInit and DEF_USE_WaterTableInit are .TRUE.,   '
+            write(*,*) 'initial value of water table depth is read from DEF_file_SoilInit,'
+            write(*,*) 'instead of DEF_file_WaterTable (which is useless in this CASE).   '
+         ENDIF 
 
 ! ----- dynamic lake run ----- Macros&Namelist conflicts and dependency management
 
@@ -1414,6 +1443,7 @@ CONTAINS
       CALL mpi_bcast (DEF_LULCC_SCHEME                       ,1   ,mpi_integer   ,p_address_master ,p_comm_glb ,p_err)
 
       CALL mpi_bcast (DEF_URBAN_type_scheme                  ,1   ,mpi_integer   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_URBAN_data                         ,1   ,mpi_integer   ,p_address_master ,p_comm_glb ,p_err)
       ! 05/2023, added by yuan
       CALL mpi_bcast (DEF_URBAN_ONLY                         ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_URBAN_RUN                          ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
@@ -1477,10 +1507,15 @@ CONTAINS
       CALL mpi_bcast (DEF_USE_CN_INIT                        ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_file_cn_init                       ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
 
+      CALL mpi_bcast (DEF_USE_WaterTableInit                 ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_file_WaterTable                    ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
+
       CALL mpi_bcast (DEF_USE_SNICAR                         ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_file_snowoptics                    ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_file_snowaging                     ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
 
+      CALL mpi_bcast (DEF_CaMa_Namelist                      ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
+      
       CALL mpi_bcast (DEF_ElementNeighbour_file              ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
 
       CALL mpi_bcast (DEF_DA_obsdir                          ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)

@@ -35,6 +35,10 @@
 #undef USEMPI
 #endif
 
+#if (defined SinglePoint && defined URBAN_MODEL && undefined LULC_IGBP)
+#define LULC_IGBP
+#endif
+
 ! 5. Hydrological process options.
 ! 5.1 Two soil hydraulic models can be used.
 #undef   Campbell_SOIL_MODEL
