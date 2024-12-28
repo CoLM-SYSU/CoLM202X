@@ -27,7 +27,7 @@ MODULE YOS_CMF_INPUT
    character(LEN=256)              :: CSETFILE                !! input namelist file name
 
    DATA LLOGOUT       /.TRUE./
-   DATA CLOGOUT       /'../run/log_CaMa.txt'/
+   DATA CLOGOUT       /'./log_CaMa.txt'/
    DATA CSETFILE      /'../run/cama_flood.nml'/
 
    !================================================
