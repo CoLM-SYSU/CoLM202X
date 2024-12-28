@@ -511,7 +511,7 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
 
          landdir = TRIM(dir_rawdata)//'/urban/'
          suffix  = 'URBSRF'//trim(c5year)
-IF (DEF_Urban_data == 1) THEN
+IF (DEF_Urban_geom_data == 1) THEN
          CALL read_5x5_data (landdir, suffix, grid_urban_500m, "PCT_ROOF_GHSL", wtrf)
          CALL read_5x5_data (landdir, suffix, grid_urban_500m, "HT_ROOF_GHSL" , htrf)
 ELSE
