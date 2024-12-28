@@ -14,7 +14,8 @@
 
 ! 2.1 3D Urban model (put it temporarily here):
 #undef URBAN_MODEL
-!    Dependence:  only LULC_IGBP subgrid type for URBAN_MODEL right now.
+!    Dependence:  only LULC_IGBP subgrid type for
+!    single point URBAN_MODEL right now.
 #if (defined URBAN_MODEL && defined SinglePoint)
 #define LULC_IGBP
 #undef LULC_USGS
