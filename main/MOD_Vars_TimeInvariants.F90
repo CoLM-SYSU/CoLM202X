@@ -361,17 +361,19 @@ CONTAINS
             allocate (topoelv              (numpatch))
             allocate (topostd              (numpatch))
 
-            ! Used for downscaling
-            allocate (svf_patches                      (numpatch))
-            allocate (asp_type_patches  (num_slope_type,numpatch))
-            allocate (slp_type_patches  (num_slope_type,numpatch))
-            allocate (area_type_patches (num_slope_type,numpatch))
-            allocate (cur_patches                      (numpatch))
+            IF (DEF_USE_Forcing_Downscaling) THEN
+               ! Used for downscaling
+               allocate (svf_patches                      (numpatch))
+               allocate (asp_type_patches  (num_slope_type,numpatch))
+               allocate (slp_type_patches  (num_slope_type,numpatch))
+               allocate (area_type_patches (num_slope_type,numpatch))
+               allocate (cur_patches                      (numpatch))
 #ifdef SinglePoint
-            allocate (sf_lut_patches   (num_azimuth,num_zenith,numpatch))
+               allocate (sf_lut_patches   (num_azimuth,num_zenith,numpatch))
 #else
-            allocate (sf_curve_patches (num_azimuth,num_zenith_parameter,numpatch))
+               allocate (sf_curve_patches (num_azimuth,num_zenith_parameter,numpatch))
 #endif
+            ENDIF
          ENDIF
       ENDIF
 
