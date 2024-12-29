@@ -388,9 +388,14 @@ CONTAINS
                            ENDDO
                         ENDDO
                      ELSEIF (dvol < -VOLUMEMIN) THEN
+                        mask  = .true.
+                        nexta = 0.
                         DO WHILE (dvol < -VOLUMEMIN)
-                           mask = hillslope_network(i)%hand + wdsrf_hru(hs:he) > wdsrf_bsn(i) + handmin(i)
-                           nexta = sum(hillslope_network(i)%area, mask = (.not. mask)) 
+                           IF (any(mask)) THEN
+                              j = minloc(hillslope_network(i)%hand + wdsrf_hru(hs:he), 1, mask = mask)
+                              nexta = nexta + hillslope_network(i)%area(j)
+                              mask(j) = .false.
+                           ENDIF
                            IF (any(mask)) THEN
                               nextl = minval(hillslope_network(i)%hand + wdsrf_hru(hs:he), mask = mask)
                               nextv = nexta*(nextl-(wdsrf_bsn(i)+handmin(i)))
@@ -449,21 +454,22 @@ CONTAINS
                momen_riv_ta(:) = momen_riv_ta(:) + momen_riv(:) * dt_this
                discharge   (:) = discharge   (:) + hflux_fc (:) * dt_this
             ENDIF
+         
+            DO i = 1, nbasin
+               IF (lake_id(i) > 0) THEN ! for lakes
+                  hs = basin_hru%substt(i)
+                  he = basin_hru%subend(i)
+                  DO j = hs, he
+                     wdsrf_hru(j) = max(wdsrf_bsn(i) - (lakes(i)%depth(1) - lakes(i)%depth0(j-hs+1)), 0.)
+                     wdsrf_hru_ta(j) = wdsrf_hru_ta(j) + wdsrf_hru(j) * dt_this
+                  ENDDO
+               ENDIF
+            ENDDO
 
             dt_res = dt_res - dt_this
 
          ENDDO
 
-         DO i = 1, nbasin
-            IF (lake_id(i) > 0) THEN ! for lakes
-               hs = basin_hru%substt(i)
-               he = basin_hru%subend(i)
-               DO j = hs, he
-                  wdsrf_hru(j) = max(wdsrf_bsn(i) - (lakes(i)%depth(1) - lakes(i)%depth0(j-hs+1)), 0.)
-               ENDDO
-            ENDIF
-         ENDDO
-         
          wdsrf_bsn_prev(:) = wdsrf_bsn(:)
 
          IF (allocated(wdsrf_bsn_ds )) deallocate(wdsrf_bsn_ds )

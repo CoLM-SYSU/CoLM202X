@@ -28,9 +28,11 @@ MODULE MOD_CaMa_Vars
    USE MOD_Precision
    USE MOD_Grid
    USE MOD_DataType
-   USE MOD_Mapping_Pset2Grid
-   USE MOD_Mapping_Grid2Pset
+
+   USE MOD_SpatialMapping
    USE YOS_CMF_INPUT,            only: RMIS, DMIS
+   USE MOD_Vars_Global,    only: spval
+
 
    real(r8) :: nacc                                        ! number of accumulation
    real(r8), allocatable         :: a_rnof_cama (:)        ! on worker : total runoff [mm/s]
@@ -57,8 +59,8 @@ MODULE MOD_CaMa_Vars
    real(r8), allocatable         :: finfg_2d (:,:)         ! on Master : total runoff [mm/s]
    type(grid_type) :: gcama
 
-   type (mapping_pset2grid_type) :: mp2g_cama               ! mapping pset to grid
-   type (mapping_grid2pset_type) :: mg2p_cama               ! mapping grid to pset
+   type (spatial_mapping_type) :: mp2g_cama               ! mapping pset to grid
+   type (spatial_mapping_type) :: mg2p_cama               ! mapping grid to pset
 
    type (grid_concat_type)       :: cama_gather            ! gather grid
 
@@ -408,23 +410,35 @@ CONTAINS
       CALL flux_map_and_write_2d_cama(DEF_hist_cama_vars%maxdph, &
       real(D2RIVDPH_MAX), file_hist, 'maxdph', itime_in_file,'daily maximum river depth','m')
 
+      IF (DEF_hist_cama_vars%damsto) THEN
       CALL flux_map_and_write_2d_cama(DEF_hist_cama_vars%damsto, &
       real(p2damsto), file_hist, 'damsto', itime_in_file,'reservoir storage','m3')
+      ENDIF
 
+      IF (DEF_hist_cama_vars%daminf) THEN
       CALL flux_map_and_write_2d_cama(DEF_hist_cama_vars%daminf, &
       real(d2daminf_avg), file_hist, 'daminf', itime_in_file,'reservoir inflow','m3/s')
+      ENDIF
 
+      IF (DEF_hist_cama_vars%wevap) THEN
       CALL flux_map_and_write_2d_cama(DEF_hist_cama_vars%wevap, &
       real(D2WEVAPEX_AVG), file_hist, 'wevap', itime_in_file,'inundation water evaporation','m/s')
+      ENDIF
 
+      IF (DEF_hist_cama_vars%winfilt) THEN
       CALL flux_map_and_write_2d_cama(DEF_hist_cama_vars%winfilt, &
       real(D2WINFILTEX_AVG), file_hist, 'winfilt', itime_in_file,'inundation water infiltration','m/s')
+      ENDIF
 
+      IF (DEF_hist_cama_vars%levsto) THEN
       CALL flux_map_and_write_2d_cama(DEF_hist_cama_vars%levsto, &
       real(P2LEVSTO), file_hist, 'levsto', itime_in_file,'protected area storage','m3')
+      ENDIF
 
+      IF (DEF_hist_cama_vars%levdph) THEN
       CALL flux_map_and_write_2d_cama(DEF_hist_cama_vars%levdph, &
       real(D2LEVDPH), file_hist, 'levdph', itime_in_file,'protected area depth','m')
+      ENDIF
       
       !*** reset variable
       CALL CMF_DIAG_RESET
@@ -521,11 +535,11 @@ CONTAINS
       CALL vecP2mapR(var_in,R2OUT)
       compress = DEF_HIST_CompressLevel
       CALL ncio_write_serial_time (file_hist, varname,  &
-         itime_in_file, real(R2OUT), 'lon_cama', 'lat_cama', 'time',compress)
+         itime_in_file, real(R2OUT,kind=8), 'lon_cama', 'lat_cama', 'time',compress)
       IF (itime_in_file == 1) THEN
          CALL ncio_put_attr (file_hist, varname, 'long_name', longname)
          CALL ncio_put_attr (file_hist, varname, 'units', units)
-         CALL ncio_put_attr (file_hist, varname, 'missing_value',DMIS)
+         CALL ncio_put_attr (file_hist, varname, 'missing_value',real(real(spval,kind=JPRM),kind=8))
       ENDIF
 
    END SUBROUTINE flux_map_and_write_2d_cama
@@ -550,7 +564,6 @@ CONTAINS
    USE MOD_Block
    USE MOD_DataType
    USE MOD_LandPatch
-   USE MOD_Mapping_Pset2Grid
    USE MOD_Vars_TimeInvariants, only : patchtype
    USE MOD_Forcing, only : forcmask_pch
 
@@ -561,7 +574,6 @@ CONTAINS
    real(r8),                  intent(inout) :: MasterVar(:,:)  !varialbe on master processer
 
    type(block_data_real8_2d) :: sumwt                          !sum of weight
-   real(r8), allocatable     :: vectmp(:)                      !temporary vector
    logical,  allocatable     :: filter(:)                      !filter for patchtype
    !----------------------- Dummy argument --------------------------------
    integer :: xblk, yblk, xloc, yloc
@@ -581,23 +593,19 @@ CONTAINS
 
          IF (numpatch > 0) THEN
             allocate (filter (numpatch))
-            allocate (vectmp (numpatch))
 
             filter(:) = patchtype < 99
             IF (DEF_forcing%has_missing_value) THEN
                filter = filter .and. forcmask_pch
             ENDIF
-            vectmp (:) = 1.
          ENDIF
       ENDIF
 
-      CALL mp2g_cama%map (WorkerVar, IOVar, spv = spval, msk = filter)
+      CALL mp2g_cama%pset2grid (WorkerVar, IOVar, spv = spval, msk = filter)
 
-      IF (p_is_io) THEN
-         CALL allocate_block_data (gcama, sumwt)
-      ENDIF
+      IF (p_is_io) CALL allocate_block_data (gcama, sumwt)
+      CALL mp2g_cama%get_sumarea (sumwt, filter)
 
-      CALL mp2g_cama%map (vectmp, sumwt, spv = spval, msk = filter)
 
       IF (p_is_io) THEN
          DO yblk = 1, gblock%nyblk
@@ -661,9 +669,9 @@ CONTAINS
 
                   smesg = (/p_iam_glb, ixseg, iyseg/)
                   CALL mpi_send (smesg, 3, MPI_INTEGER, &
-                     p_root, 10011, p_comm_glb, p_err)
+                     p_address_master, 10011, p_comm_glb, p_err)
                   CALL mpi_send (sbuf, xcnt*ycnt, MPI_DOUBLE, &
-                     p_root, 10011, p_comm_glb, p_err)
+                     p_address_master, 10011, p_comm_glb, p_err)
 
                   deallocate (sbuf)
 
@@ -673,7 +681,6 @@ CONTAINS
       ENDIF
 
       IF (allocated(filter)) deallocate(filter)
-      IF (allocated(vectmp)) deallocate(vectmp)
 
    END SUBROUTINE colm2cama_real8
 
@@ -699,7 +706,6 @@ CONTAINS
    USE MOD_Block
    USE MOD_DataType
    USE MOD_LandPatch
-   USE MOD_Mapping_Pset2Grid
    USE MOD_Vars_TimeInvariants, only : patchtype
    USE MOD_Grid
 
@@ -746,7 +752,7 @@ CONTAINS
          ENDDO
       ELSEIF  (p_is_io) THEN
          DO WHILE (.true.)
-            CALL mpi_recv (rmesg, 2, MPI_INTEGER, p_root, 10000, p_comm_glb, p_stat, p_err)
+            CALL mpi_recv (rmesg, 2, MPI_INTEGER, p_address_master, 10000, p_comm_glb, p_stat, p_err)
             ixseg = rmesg(1)
             iyseg = rmesg(2)
 
@@ -760,7 +766,7 @@ CONTAINS
 
                allocate (rbuf(xcnt,ycnt))
                CALL mpi_recv (rbuf, xcnt*ycnt, MPI_DOUBLE, &
-                  p_root, 10000, p_comm_glb, p_stat, p_err)
+                  p_address_master, 10000, p_comm_glb, p_stat, p_err)
                IOVar%blk(iblk,jblk)%val(xdsp+1:xdsp+xcnt,ydsp+1:ydsp+ycnt)= rbuf
                deallocate (rbuf)
             ELSE
@@ -769,7 +775,7 @@ CONTAINS
          ENDDO
       ENDIF
 
-      CALL mg2p_cama%map_aweighted (IOVar, WorkerVar) !mapping grid to pset_type
+      CALL mg2p_cama%grid2pset (IOVar, WorkerVar) !mapping grid to pset_type
 
    END SUBROUTINE cama2colm_real8
 

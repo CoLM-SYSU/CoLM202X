@@ -261,39 +261,39 @@ CONTAINS
 
 #ifdef USEMPI
          mesg(1:2) = (/p_iam_glb, numbasin/)
-         CALL mpi_send (mesg(1:2), 2, MPI_INTEGER, p_root, mpi_tag_mesg, p_comm_glb, p_err) 
+         CALL mpi_send (mesg(1:2), 2, MPI_INTEGER, p_address_master, mpi_tag_mesg, p_comm_glb, p_err) 
 
          IF (numbasin > 0) THEN
             CALL mpi_send (bindex, numbasin, MPI_INTEGER, &
-               p_root, mpi_tag_data, p_comm_glb, p_err) 
+               p_address_master, mpi_tag_data, p_comm_glb, p_err) 
             
             allocate (lake_id (numbasin))
             CALL mpi_recv (lake_id, numbasin, MPI_INTEGER, &
-               p_root, mpi_tag_data, p_comm_glb, p_stat, p_err)
+               p_address_master, mpi_tag_data, p_comm_glb, p_stat, p_err)
 
             allocate (riverdown (numbasin))
             CALL mpi_recv (riverdown, numbasin, MPI_INTEGER, &
-               p_root, mpi_tag_data, p_comm_glb, p_stat, p_err)
+               p_address_master, mpi_tag_data, p_comm_glb, p_stat, p_err)
 
             allocate (to_lake (numbasin))
             CALL mpi_recv (to_lake, numbasin, MPI_LOGICAL, &
-               p_root, mpi_tag_data, p_comm_glb, p_stat, p_err)
+               p_address_master, mpi_tag_data, p_comm_glb, p_stat, p_err)
 
             allocate (riverlen (numbasin))
             CALL mpi_recv (riverlen, numbasin, MPI_REAL8, &
-               p_root, mpi_tag_data, p_comm_glb, p_stat, p_err)
+               p_address_master, mpi_tag_data, p_comm_glb, p_stat, p_err)
 
             allocate (riverelv (numbasin))
             CALL mpi_recv (riverelv, numbasin, MPI_REAL8, &
-               p_root, mpi_tag_data, p_comm_glb, p_stat, p_err)
+               p_address_master, mpi_tag_data, p_comm_glb, p_stat, p_err)
 
             allocate (riverdpth (numbasin))
             CALL mpi_recv (riverdpth, numbasin, MPI_REAL8, &
-               p_root, mpi_tag_data, p_comm_glb, p_stat, p_err)
+               p_address_master, mpi_tag_data, p_comm_glb, p_stat, p_err)
 
             allocate (basinelv (numbasin))
             CALL mpi_recv (basinelv, numbasin, MPI_REAL8, &
-               p_root, mpi_tag_data, p_comm_glb, p_stat, p_err)
+               p_address_master, mpi_tag_data, p_comm_glb, p_stat, p_err)
          ENDIF
 #else
          IF (numbasin > 0) THEN
@@ -370,11 +370,11 @@ CONTAINS
 
       IF (p_is_worker) THEN
 #ifdef USEMPI
-         CALL mpi_recv (ndata, 1, MPI_INTEGER, p_root, mpi_tag_size, p_comm_glb, p_stat, p_err)
+         CALL mpi_recv (ndata, 1, MPI_INTEGER, p_address_master, mpi_tag_size, p_comm_glb, p_stat, p_err)
          IF (ndata > 0) THEN
             allocate (exchange(4,ndata))
             CALL mpi_recv (exchange, 4*ndata, MPI_INTEGER, &
-               p_root, mpi_tag_data, p_comm_glb, p_stat, p_err)
+               p_address_master, mpi_tag_data, p_comm_glb, p_stat, p_err)
          ENDIF
 #endif
 
@@ -507,12 +507,13 @@ CONTAINS
                         river_dn%ndata(iproc) = river_dn%ndata(iproc) + 1
                      ENDIF
                   ENDDO
+               
+                  addrdown(river_dn%iloc)= 0
+
                ELSE
                   river_dn%nproc = 0
                ENDIF
                      
-               addrdown(river_dn%iloc)= 0
-
             ENDIF
 #endif
          ENDIF
@@ -681,6 +682,9 @@ CONTAINS
 
                   IF (inb <= 0) THEN
                      outletwth(ibasin) = 0
+                     IF (riverdown(ibasin) > 0) THEN
+                        outletwth(ibasin) = 90.
+                     ENDIF
                   ELSE
                      outletwth(ibasin) = elementneighbour(ibasin)%lenbdr(inb)
                   ENDIF
@@ -709,7 +713,7 @@ CONTAINS
    USE MOD_Block
    USE MOD_Mesh
    USE MOD_Grid
-   USE MOD_Mapping_Grid2Pset
+   USE MOD_SpatialMapping
    USE MOD_LandElm
    USE MOD_ElmVector
    USE MOD_ElementNeighbour
@@ -719,8 +723,8 @@ CONTAINS
    ! Local Variables
    character(len=256) :: file_rnof, file_rivdpt
    type(grid_type)    :: grid_rnof
-   type(block_data_real8_2d)    :: f_rnof
-   type(mapping_grid2pset_type) :: mg2p_rnof
+   type(block_data_real8_2d)  :: f_rnof
+   type(spatial_mapping_type) :: mg2p_rnof
 
    real(r8), allocatable :: bsnrnof(:) , bsndis(:)
    integer,  allocatable :: nups_riv(:), iups_riv(:), b_up2down(:)
@@ -739,7 +743,7 @@ CONTAINS
 
       CALL grid_rnof%define_from_file (file_rnof, 'lat', 'lon')
 
-      CALL mg2p_rnof%build (grid_rnof, landelm)
+      CALL mg2p_rnof%build_arealweighted (grid_rnof, landelm)
 
       IF (p_is_io) THEN
          CALL allocate_block_data (grid_rnof, f_rnof)
@@ -760,7 +764,7 @@ CONTAINS
          IF (numelm > 0) allocate (bsnrnof (numelm))
       ENDIF
 
-      CALL mg2p_rnof%map_aweighted (f_rnof, bsnrnof)
+      CALL mg2p_rnof%grid2pset (f_rnof, bsnrnof)
 
       IF (p_is_worker) THEN
          IF (numelm > 0) THEN
@@ -777,9 +781,9 @@ CONTAINS
 
       IF (p_is_worker) THEN
          mesg = (/p_iam_glb, numelm/)
-         CALL mpi_send (mesg, 2, MPI_INTEGER, p_root, mpi_tag_mesg, p_comm_glb, p_err) 
+         CALL mpi_send (mesg, 2, MPI_INTEGER, p_address_master, mpi_tag_mesg, p_comm_glb, p_err) 
          IF (numelm > 0) THEN
-            CALL mpi_send (bsnrnof, numelm, MPI_REAL8, p_root, mpi_tag_data, p_comm_glb, p_err) 
+            CALL mpi_send (bsnrnof, numelm, MPI_REAL8, p_address_master, mpi_tag_data, p_comm_glb, p_err) 
          ENDIF
       ENDIF
       

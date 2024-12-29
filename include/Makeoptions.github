@@ -6,7 +6,7 @@
    
   NETCDF_LIB = /usr/lib/x86_64-linux-gnu
   NETCDF_INC = /usr/include
-   
+
   MOD_CMD = -J
 
 # determine the gfortran version
@@ -41,7 +41,7 @@ CP = /bin/cp
 # DATM=-DNoAtom: activate when OMP ATOMIC calculation should be avoided (bit identical simulation)
 #----
 #DMPI=-DUseMPI
-DCDF=-DUseCDF
+DCDF=-DUseCDF -DUseCDF_CMF
 #DATM=-DNoAtom
 CFLAGS=$(DMPI) $(DCDF) $(DATM) 
 #----

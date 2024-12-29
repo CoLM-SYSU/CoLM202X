@@ -28,7 +28,10 @@ MODULE MOD_CaMa_colmCaMa
    USE CMF_CTRL_OUTPUT_MOD,       only: CMF_OUTPUT_INIT,CMF_OUTPUT_END,NVARSOUT,VAROUT
    USE YOS_CMF_INPUT,             only: NXIN, NYIN, DT,DTIN,IFRQ_INP,LLEAPYR,NX,NY,RMIS,DMIS
    USE MOD_Precision,             only: r8,r4
-   USE YOS_CMF_INPUT ,            only: LROSPLIT,LWEVAP,LWINFILT
+   USE YOS_CMF_INPUT ,            only: LROSPLIT,LWEVAP,LWINFILT,CSETFILE
+   USE YOS_CMF_MAP,               only: D1LON, D1LAT
+   USE YOS_CMF_INPUT,             only: WEST,EAST,NORTH,SOUTH
+
    USE MOD_SPMD_Task
    USE CMF_CTRL_TIME_MOD
    USE MOD_Vars_Global,           only: spval
@@ -41,6 +44,7 @@ MODULE MOD_CaMa_colmCaMa
    integer(KIND=JPIM)              :: ISTEPX              ! total time step
    integer(KIND=JPIM)              :: ISTEPADV            ! time step to be advanced within DRV_ADVANCE
    real(KIND=JPRB),ALLOCATABLE     :: ZBUFF(:,:,:)        ! Buffer to store forcing runoff
+   real(KIND=JPRB),ALLOCATABLE     :: ZBUFF_2(:,:,:)        ! Buffer to store forcing runoff
 
    INTERFACE colm_CaMa_init
       MODULE PROCEDURE colm_CaMa_init
@@ -58,15 +62,22 @@ CONTAINS
    SUBROUTINE colm_CaMa_init
    USE MOD_LandPatch
    USE YOS_CMF_TIME,          only: YYYY0
+
    IMPLICIT NONE
    !** local variables
 
    integer i,j
    integer(KIND=JPIM)          :: JF
+
+ 
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
-      IF(p_is_master)THEN
+
+      IF (p_is_master) THEN
+
+         CSETFILE = DEF_CaMa_Namelist
+
          !Namelist handling
          CALL CMF_DRV_INPUT
          !get the time information from colm namelist
@@ -174,20 +185,39 @@ CONTAINS
                STOP
             END SELECT
          ENDDO
-      ENDIF
+
+      ENDIF 
 
       !Broadcast the variables to all the processors
-      CALL mpi_bcast (NX      ,   1, MPI_INTEGER,   p_root, p_comm_glb, p_err) ! number of grid points in x-direction of CaMa-Flood
-      CALL mpi_bcast (NY      ,   1, MPI_INTEGER,   p_root, p_comm_glb, p_err) ! number of grid points in y-direction of CaMa-Flood
-      CALL mpi_bcast (IFRQ_INP ,   1, MPI_INTEGER,  p_root, p_comm_glb, p_err) ! input frequency of CaMa-Flood (hour)
-      CALL mpi_bcast (LWEVAP ,   1, MPI_LOGICAL,  p_root, p_comm_glb, p_err)   ! switch for inundation evaporation
-      CALL mpi_bcast (LWINFILT ,   1, MPI_LOGICAL,  p_root, p_comm_glb, p_err) ! switch for inundation re-infiltration
+      CALL mpi_bcast (NX      ,   1, MPI_INTEGER,   p_address_master, p_comm_glb, p_err) ! number of grid points in x-direction of CaMa-Flood
+      CALL mpi_bcast (NY      ,   1, MPI_INTEGER,   p_address_master, p_comm_glb, p_err) ! number of grid points in y-direction of CaMa-Flood
+      CALL mpi_bcast (IFRQ_INP ,   1, MPI_INTEGER,  p_address_master, p_comm_glb, p_err) ! input frequency of CaMa-Flood (hour)
+      CALL mpi_bcast (LWEVAP ,   1, MPI_LOGICAL,  p_address_master, p_comm_glb, p_err)   ! switch for inundation evaporation
+      CALL mpi_bcast (LWINFILT ,   1, MPI_LOGICAL,  p_address_master, p_comm_glb, p_err) ! switch for inundation re-infiltration
+
+      IF (.not. allocated(D1LAT))  allocate (D1LAT(NY))
+      IF (.not. allocated(D1LON))  allocate (D1LON(NX))
+
+#ifdef SinglePrec_CMF
+      CALL mpi_bcast (D1LAT, NY, MPI_REAL4, p_address_master, p_comm_glb, p_err) !
+      CALL mpi_bcast (D1LON, NX, MPI_REAL4, p_address_master, p_comm_glb, p_err) !
+      CALL mpi_bcast (SOUTH,  1, MPI_REAL4, p_address_master, p_comm_glb, p_err) !
+      CALL mpi_bcast (NORTH,  1, MPI_REAL4, p_address_master, p_comm_glb, p_err) !
+      CALL mpi_bcast (WEST ,  1, MPI_REAL4, p_address_master, p_comm_glb, p_err) !
+      CALL mpi_bcast (EAST ,  1, MPI_REAL4, p_address_master, p_comm_glb, p_err) !
+#else
+      CALL mpi_bcast (D1LAT, NY, MPI_REAL8, p_address_master, p_comm_glb, p_err) !
+      CALL mpi_bcast (D1LON, NX, MPI_REAL8, p_address_master, p_comm_glb, p_err) !
+      CALL mpi_bcast (SOUTH,  1, MPI_REAL8, p_address_master, p_comm_glb, p_err) !
+      CALL mpi_bcast (NORTH,  1, MPI_REAL8, p_address_master, p_comm_glb, p_err) !
+      CALL mpi_bcast (WEST ,  1, MPI_REAL8, p_address_master, p_comm_glb, p_err) !
+      CALL mpi_bcast (EAST ,  1, MPI_REAL8, p_address_master, p_comm_glb, p_err) !
+#endif
 
       !allocate the data structure for cama
-      CALL gcama%define_by_ndims (NX, NY)  !define the data structure for cama
-      CALL mp2g_cama%build (landpatch, gcama) !build the mapping between cama and mpi
-      CALL mg2p_cama%build (gcama, landpatch)
-
+      CALL gcama%define_by_center (D1LAT,D1LON,real(SOUTH,kind=8), real(NORTH,kind=8), real(WEST,kind=8), real(EAST,kind=8)) !define the grid for cama
+      CALL mp2g_cama%build_arealweighted (gcama, landpatch) !build the mapping between cama and mpi
+      CALL mg2p_cama%build_arealweighted (gcama, landpatch)
       CALL cama_gather%set (gcama)
 
       !allocate the cama-flood related variable for accumulation
@@ -201,7 +231,8 @@ CONTAINS
          allocate (fevpg_2d  (NX,NY))
          allocate (finfg_2d  (NX,NY))
          !allocate data buffer for input forcing, flood fraction and flood depth
-         allocate (ZBUFF(NX,NY,4))
+         allocate (ZBUFF(NX,NY,2))
+         allocate (ZBUFF_2(NX,NY,2))
          allocate (fldfrc_tmp(NX,NY))
          allocate (flddepth_tmp(NX,NY))
          !Initialize the data buffer for input forcing, flood fraction and flood depth
@@ -209,6 +240,7 @@ CONTAINS
          fevpg_2d(:,:)     = 0.0D0 !evaporation in master processor
          finfg_2d(:,:)     = 0.0D0 !re-infiltration in master processor
          ZBUFF(:,:,:)      = 0.0D0 !input forcing in master processor
+         ZBUFF_2(:,:,:)    = 0.0D0 !input forcing in master processor
          fldfrc_tmp(:,:)   = 0.0D0 !flood fraction in master processor
          flddepth_tmp(:,:) = 0.0D0 !flood depth in master processor
       ENDIF
@@ -271,14 +303,14 @@ CONTAINS
                   ZBUFF(i,j,1)=runoff_2d(i,j)/1000.0D0   ! mm/s -->m/s
                   ZBUFF(i,j,2)=0.0D0
                   IF (LWEVAP) THEN
-                     ZBUFF(i,j,3)=fevpg_2d(i,j)/1000.0D0 ! mm/s -->m/s
+                     ZBUFF_2(i,j,1)=fevpg_2d(i,j)/1000.0D0 ! mm/s -->m/s
                   ELSE
-                     ZBUFF(i,j,3)=0.0D0
+                     ZBUFF_2(i,j,1)=0.0D0
                   ENDIF
                   IF (LWINFILT) THEN
-                     ZBUFF(i,j,4)=finfg_2d(i,j)/1000.0D0  !mm/s -->m/s
+                     ZBUFF_2(i,j,2)=finfg_2d(i,j)/1000.0D0  !mm/s -->m/s
                   ELSE
-                     ZBUFF(i,j,4)=0.0D0
+                     ZBUFF_2(i,j,2)=0.0D0
                   ENDIF
                ENDDO
             ENDDO
@@ -289,7 +321,7 @@ CONTAINS
             ! Get the time step of cama-flood simulation
             ISTEPADV=INT(DTIN/DT,JPIM)
             ! Interporlate variables & send to CaMa-Flood
-            CALL CMF_FORCING_PUT(ZBUFF)
+            CALL CMF_FORCING_PUT(ZBUFF,ZBUFF_2)
             ! Advance CaMa-Flood model for ISTEPADV
             CALL CMF_DRV_ADVANCE(ISTEPADV)
             ! Get the flood depth and flood fraction from cama-flood model
@@ -310,8 +342,8 @@ CONTAINS
 #ifdef USEMPI
             CALL mpi_barrier (p_comm_glb, p_err)
 #endif
-            flddepth_cama=flddepth_cama*1000.D0 !m --> mm
-            fldfrc_cama=fldfrc_cama/100.D0     !% --> [0-1]
+            IF (p_is_worker) flddepth_cama=flddepth_cama*1000.D0 !m --> mm
+            IF (p_is_worker) fldfrc_cama=fldfrc_cama/100.D0     !% --> [0-1]
          ENDIF
       ENDIF
    END SUBROUTINE colm_cama_drv
@@ -625,6 +657,7 @@ CONTAINS
       qref   = qm + vonkar/fq*dqh * (fq2m/vonkar - fq/vonkar)
       z0m   = z0mg
    END SUBROUTINE get_fldevp
+
 
 #endif
 END MODULE MOD_CaMa_colmCaMa

@@ -19,7 +19,7 @@ CONTAINS
 !-----------------------------------------------------------------------
 
 
-   SUBROUTINE meltf (patchtype,lb,nl_soil,deltim, &
+   SUBROUTINE meltf (patchtype,is_dry_lake,lb,nl_soil,deltim, &
                      fact,brr,hs,hs_soil,hs_snow,fsno,dhsdT, &
                      t_soisno_bef,t_soisno,wliq_soisno,wice_soisno,imelt, &
                      scv,snowdp,sm,xmf,porsl,psi0,&
@@ -62,6 +62,7 @@ CONTAINS
 
     integer, intent(in) :: patchtype                   !land patch type (0=soil,1=urban or built-up,2=wetland,
                                                        !3=land ice, 4=deep lake, 5=shallow lake)
+    logical, intent(in) :: is_dry_lake
     integer, intent(in) :: nl_soil                     !upper bound of array (i.e., soil layers)
     integer, intent(in) :: lb                          !lower bound of array (i.e., snl +1)
    real(r8), intent(in) :: deltim                      !time step [second]
@@ -130,7 +131,7 @@ CONTAINS
       IF (DEF_USE_SUPERCOOL_WATER) THEN
          DO j = 1, nl_soil
             supercool(j) = 0.0
-            IF(t_soisno(j) < tfrz .and. patchtype <=2 ) THEN
+            IF(t_soisno(j) < tfrz .and. ((patchtype <=2) .or. is_dry_lake)) THEN
                smp = hfus * (t_soisno(j)-tfrz)/(grav*t_soisno(j)) * 1000.     ! mm
                IF (porsl(j) > 0.) THEN
 #ifdef Campbell_SOIL_MODEL
@@ -191,7 +192,7 @@ CONTAINS
             tinc = t_soisno(j)-t_soisno_bef(j)
 
             IF(j > lb)THEN             ! => not the top layer
-               IF (j==1 .and. DEF_SPLIT_SOILSNOW .and. patchtype<3) THEN
+               IF (j==1 .and. DEF_SPLIT_SOILSNOW .and. ((patchtype<3) .or. is_dry_lake)) THEN
                                        ! -> interface soil layer
                   ! 03/08/2020, yuan: seperate soil/snow heat flux, exclude glacier(3)
                   hm(j) = hs_soil + (1.-fsno)*dhsdT*tinc + brr(j) - tinc/fact(j)
@@ -273,7 +274,7 @@ CONTAINS
 
             IF(abs(heatr) > 0.)THEN
                IF(j > lb)THEN             ! => not the top layer
-                  IF (j==1 .and. DEF_SPLIT_SOILSNOW .and. patchtype<3) THEN
+                  IF (j==1 .and. DEF_SPLIT_SOILSNOW .and. ((patchtype<3) .or. is_dry_lake)) THEN
                                           ! -> interface soil layer
                      t_soisno(j) = t_soisno(j) + fact(j)*heatr/(1.-fact(j)*(1.-fsno)*dhsdT)
                   ELSE                    ! -> internal layers other than the interface soil layer
@@ -317,7 +318,7 @@ CONTAINS
    END SUBROUTINE meltf
 
 
-   SUBROUTINE meltf_snicar (patchtype,lb,nl_soil,deltim, &
+   SUBROUTINE meltf_snicar (patchtype,is_dry_lake,lb,nl_soil,deltim, &
                      fact,brr,hs,hs_soil,hs_snow,fsno,sabg_snow_lyr,dhsdT, &
                      t_soisno_bef,t_soisno,wliq_soisno,wice_soisno,imelt, &
                      scv,snowdp,sm,xmf,porsl,psi0,&
@@ -361,6 +362,7 @@ CONTAINS
 
     integer, intent(in) :: patchtype                   !land patch type (0=soil,1=urban or built-up,2=wetland,
                                                        !3=land ice, 4=deep lake, 5=shallow lake)
+    logical, intent(in) :: is_dry_lake
     integer, intent(in) :: nl_soil                     !upper bound of array (i.e., soil layers)
     integer, intent(in) :: lb                          !lower bound of array (i.e., snl +1)
    real(r8), intent(in) :: deltim                      !time step [second]
@@ -431,7 +433,7 @@ CONTAINS
       IF (DEF_USE_SUPERCOOL_WATER) THEN
          DO j = 1, nl_soil
             supercool(j) = 0.0
-            IF(t_soisno(j) < tfrz .and. patchtype <= 2) THEN
+            IF(t_soisno(j) < tfrz .and. ((patchtype <= 2) .or. is_dry_lake)) THEN
                smp = hfus * (t_soisno(j)-tfrz)/(grav*t_soisno(j)) * 1000.     ! mm
                IF (porsl(j) > 0.) THEN
 #ifdef Campbell_SOIL_MODEL
@@ -493,7 +495,7 @@ CONTAINS
             tinc = t_soisno(j)-t_soisno_bef(j)
 
             IF(j > lb)THEN             ! => not the top layer
-               IF (j==1 .and. DEF_SPLIT_SOILSNOW .and. patchtype<3) THEN
+               IF (j==1 .and. DEF_SPLIT_SOILSNOW .and. ((patchtype<3).or.is_dry_lake)) THEN
                                        ! -> interface soil layer
                   ! 03/08/2020, yuan: seperate soil/snow heat flux, exclude glacier(3)
                   hm(j) = hs_soil + (1.-fsno)*dhsdT*tinc + brr(j) - tinc/fact(j)
@@ -579,7 +581,7 @@ CONTAINS
 
             IF(abs(heatr) > 0.)THEN
                IF(j > lb)THEN             ! => not the top layer
-                  IF (j==1 .and. DEF_SPLIT_SOILSNOW .and. patchtype<3) THEN
+                  IF (j==1 .and. DEF_SPLIT_SOILSNOW .and. ((patchtype<3).or.is_dry_lake)) THEN
                                           ! -> interface soil layer
                      t_soisno(j) = t_soisno(j) + fact(j)*heatr/(1.-fact(j)*(1.-fsno)*dhsdT)
                   ELSE                    ! -> internal layers other than the interface soil layer

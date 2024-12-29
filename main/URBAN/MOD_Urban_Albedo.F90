@@ -33,9 +33,9 @@ CONTAINS
 
 !-----------------------------------------------------------------------
 
-   SUBROUTINE alburban (ipatch,froof,fgper,flake,hwr,hroof,&
+   SUBROUTINE alburban (ipatch,froof,fgper,flake,hlr,hroof,&
                         alb_roof,alb_wall,alb_gimp,alb_gper,&
-                        rho,tau,fveg,hveg,lai,sai,coszen,fwsun,tlake,&
+                        rho,tau,fveg,hveg,lai,sai,fwet_snow,coszen,fwsun,tlake,&
                         fsno_roof,fsno_gimp,fsno_gper,fsno_lake,&
                         scv_roof,scv_gimp,scv_gper,scv_lake,&
                         sag_roof,sag_gimp,sag_gper,sag_lake,&
@@ -59,6 +59,7 @@ CONTAINS
 
    USE MOD_Precision
    USE MOD_Const_Physical, only: tfrz
+   USE MOD_Namelist, only: DEF_VEG_SNOW
    USE MOD_Urban_Shortwave
 
    IMPLICIT NONE
@@ -72,7 +73,7 @@ CONTAINS
       froof,         &! roof fraction
       fgper,         &! impervious ground weight fraction
       flake,         &! lake fraction
-      hwr,           &! average building height to their distance
+      hlr,           &! average building height to their side length
       hroof           ! average building height
 
    real(r8), intent(in) :: &
@@ -88,6 +89,7 @@ CONTAINS
       hveg,          &! vegetation central crown height [m]
       lai,           &! leaf area index (LAI+SAI) [m2/m2]
       sai,           &! stem area index (LAI+SAI) [m2/m2]
+      fwet_snow,     &! vegetation snow fractional cover [-]
 
       ! variables
       coszen,        &! cosine of solar zenith angle [-]
@@ -149,6 +151,11 @@ CONTAINS
       albgper(2,2),  &! albedo, ground
       alblake(2,2)    ! albedo, ground
 
+   ! vegetation snow optical properties, 1:vis, 2:nir
+   real(r8) :: rho_sno(2), tau_sno(2)
+   data rho_sno(1), rho_sno(2) /0.6, 0.3/
+   data tau_sno(1), tau_sno(2) /0.2, 0.1/
+
 ! ----------------------------------------------------------------------
 ! 1. Initial set
 ! ----------------------------------------------------------------------
@@ -159,34 +166,42 @@ CONTAINS
 
 ! ----------------------------------------------------------------------
 ! set default soil and vegetation albedos and solar absorption
-      alb (:,:)  = 0. ! averaged
-      ssun(:,:)  = 0.
-      ssha(:,:)  = 0.
-      sroof(:,:) = 0.
-      swsun(:,:) = 0.
-      swsha(:,:) = 0.
-      sgimp(:,:) = 0.
-      sgper(:,:) = 0.
-      slake(:,:) = 0.
+      alb     (:,:) = 1. ! averaged
+      ssun    (:,:) = 0.
+      ssha    (:,:) = 0.
+      sroof   (:,:) = 0.
+      swsun   (:,:) = 0.
+      swsha   (:,:) = 0.
+      sgimp   (:,:) = 0.
+      sgper   (:,:) = 0.
+      alblake (:,:) = 1.
+      slake   (:,:) = 0.
 
       dfwsun = 0.
       extkd  = 0.718
 
-      IF(coszen<=0.) THEN
+      IF(coszen <= -0.3) THEN
          !print *, "coszen < 0, ipatch and coszen: ", ipatch, coszen
-         RETURN  !only do albedo when coszen > 0
+         RETURN  !only do albedo when coszen > -0.3
       ENDIF
 
-      czen=max(coszen,0.01)
-      albsno(:,:)=0.      !set initial snow albedo
+      czen = max(coszen, 0.01)
+      albsno(:,:) = 0.    !set initial snow albedo
       cons = 0.2          !parameter for snow albedo
       conn = 0.5          !parameter for snow albedo
-      sl  = 2.0           !sl helps control albedo zenith dependence
+      sl   = 2.0          !sl helps control albedo zenith dependence
 
       ! effective leaf optical properties: rho and tau.
       IF (lai+sai>1.e-6 .and. fveg>0.) THEN
          erho(:) = rho(:,1)*lai/(lai+sai) + rho(:,2)*sai/(lai+sai)
          etau(:) = tau(:,1)*lai/(lai+sai) + tau(:,2)*sai/(lai+sai)
+      ENDIF
+
+      ! correct for snow on leaf
+      IF ( DEF_VEG_SNOW ) THEN
+         ! modify rho, tau, USE: fwet_snow
+         erho(:) = (1-fwet_snow)*erho(:) + fwet_snow*rho_sno(:)
+         etau(:) = (1-fwet_snow)*etau(:) + fwet_snow*tau_sno(:)
       ENDIF
 
 ! ----------------------------------------------------------------------
@@ -313,14 +328,14 @@ CONTAINS
       IF (lai+sai>1.e-6 .and. fveg>0.) THEN
 
          CALL UrbanVegShortwave ( &
-            theta, hwr, froof, fgper, hroof, &
+            theta, hlr, froof, fgper, hroof, &
             albroof(1,1), alb_wall(1,1), albgimp(1,1), albgper(1,1), &
             lai, sai, fveg, hveg, erho(1), etau(1), &
             fwsun_, sroof(1,:), swsun(1,:), swsha(1,:), sgimp(1,:), &
             sgper(1,:), ssun(1,:), alb(1,:))
 
          CALL UrbanVegShortwave ( &
-            theta, hwr, froof, fgper, hroof, &
+            theta, hlr, froof, fgper, hroof, &
             albroof(2,1), alb_wall(2,1), albgimp(2,1), albgper(2,1), &
             lai, sai, fveg, hveg, erho(2), etau(2), &
             fwsun_, sroof(2,:), swsun(2,:), swsha(2,:), sgimp(2,:), &
@@ -328,13 +343,13 @@ CONTAINS
       ELSE
 
          CALL UrbanOnlyShortwave ( &
-            theta, hwr, froof, fgper, hroof, &
+            theta, hlr, froof, fgper, hroof, &
             albroof(1,1), alb_wall(1,1), albgimp(1,1), albgper(1,1), &
             fwsun_, sroof(1,:), swsun(1,:), swsha(1,:), sgimp(1,:), &
             sgper(1,:), alb(1,:))
 
          CALL UrbanOnlyShortwave ( &
-            theta, hwr, froof, fgper, hroof, &
+            theta, hlr, froof, fgper, hroof, &
             albroof(2,1), alb_wall(2,1), albgimp(2,1), albgper(2,1), &
             fwsun_, sroof(2,:), swsun(2,:), swsha(2,:), sgimp(2,:), &
             sgper(2,:), alb(2,:))

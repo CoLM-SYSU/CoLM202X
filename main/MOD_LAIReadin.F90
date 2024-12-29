@@ -69,7 +69,7 @@ CONTAINS
 
 #ifdef SinglePoint
 #ifndef URBAN_MODEL
-      iyear = findloc_ud(SITE_LAI_year == year)
+      iyear = findloc_ud(SITE_LAI_year == min(DEF_LAI_END_YEAR, max(DEF_LAI_START_YEAR,year)))
       IF (.not. DEF_LAI_MONTHLY) THEN
          itime = (time-1)/8 + 1
       ENDIF
@@ -90,7 +90,7 @@ CONTAINS
 #endif
 #else
       IF (DEF_LAI_MONTHLY) THEN
-         write(cyear,'(i4.4)') year
+         write(cyear,'(i4.4)') min(DEF_LAI_END_YEAR, max(DEF_LAI_START_YEAR,year) )
          write(ctime,'(i2.2)') time
 
          lndname = trim(landdir)//'/'//trim(cyear)//'/LAI_patches'//trim(ctime)//'.nc'
@@ -99,7 +99,7 @@ CONTAINS
          lndname = trim(landdir)//'/'//trim(cyear)//'/SAI_patches'//trim(ctime)//'.nc'
          CALL ncio_read_vector (lndname, 'SAI_patches',  landpatch, tsai)
       ELSE
-         write(cyear,'(i4.4)') year
+         write(cyear,'(i4.4)') min(DEF_LAI_END_YEAR, max(DEF_LAI_START_YEAR,year) )
          write(ctime,'(i3.3)') time
          lndname = trim(landdir)//'/'//trim(cyear)//'/LAI_patches'//trim(ctime)//'.nc'
          CALL ncio_read_vector (lndname, 'LAI_patches',  landpatch, tlai)
@@ -114,7 +114,7 @@ CONTAINS
 #ifdef URBAN_MODEL
                IF(m == URBAN) CYCLE
 #endif
-               IF( m == 0 )THEN
+               IF(m == 0 .or. m == WATERBODY)THEN
                   fveg(npatch)  = 0.
                   tlai(npatch)  = 0.
                   tsai(npatch)  = 0.
@@ -163,7 +163,7 @@ CONTAINS
 #endif
 #else
 
-      write(cyear,'(i4.4)') year
+      write(cyear,'(i4.4)') min(DEF_LAI_END_YEAR, max(DEF_LAI_START_YEAR,year) )
       write(ctime,'(i2.2)') time
       IF (.not. DEF_USE_LAIFEEDBACK)THEN
          lndname = trim(landdir)//'/'//trim(cyear)//'/LAI_patches'//trim(ctime)//'.nc'

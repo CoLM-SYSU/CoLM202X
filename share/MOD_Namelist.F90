@@ -57,8 +57,14 @@ MODULE MOD_Namelist
 ! ----- Part 3: For Single Point -----
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-   character(len=256) :: SITE_fsrfdata   = 'null'
+   character(len=256) :: SITE_fsitedata = 'null'
 
+   real(r8) :: SITE_lon_location = 113.5897
+   real(r8) :: SITE_lat_location = 22.3507
+
+   integer  :: SITE_landtype             = -1
+
+   logical  :: USE_SITE_landtype         = .false.
    logical  :: USE_SITE_pctpfts          = .true.
    logical  :: USE_SITE_pctcrop          = .true.
    logical  :: USE_SITE_htop             = .true.
@@ -68,13 +74,11 @@ MODULE MOD_Namelist
    logical  :: USE_SITE_soilparameters   = .true.
    logical  :: USE_SITE_dbedrock         = .true.
    logical  :: USE_SITE_topography       = .true.
-   logical  :: USE_SITE_topostd          = .true.
-   logical  :: USE_SITE_BVIC             = .true.
-   logical  :: USE_SITE_HistWriteBack    = .true.
-   logical  :: USE_SITE_ForcingReadAhead = .true.
    logical  :: USE_SITE_urban_paras      = .true.
    logical  :: USE_SITE_thermal_paras    = .false.
    logical  :: USE_SITE_urban_LAI        = .false.
+   logical  :: USE_SITE_HistWriteBack    = .true.
+   logical  :: USE_SITE_ForcingReadAhead = .true.
 
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ! ----- Part 4: simulation time type -----
@@ -90,7 +94,7 @@ MODULE MOD_Namelist
       integer  :: end_month     = 1
       integer  :: end_day       = 1
       integer  :: end_sec       = 0
-      integer  :: spinup_year   = 2000
+      integer  :: spinup_year   = 0
       integer  :: spinup_month  = 1
       integer  :: spinup_day    = 1
       integer  :: spinup_sec    = 0
@@ -135,6 +139,7 @@ MODULE MOD_Namelist
    logical :: USE_srfdata_from_3D_gridded_data = .false.
 
    ! ----- land cover data year (for static land cover, i.e. non-LULCC) -----
+   ! NOTE: Please check the LC data year range available
    integer :: DEF_LC_YEAR  = 2005
 
    ! ----- Subgrid scheme -----
@@ -169,6 +174,10 @@ MODULE MOD_Namelist
 ! ----- Part 7: Leaf Area Index -----
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+   ! NOTE: Please check the LAI data year range available
+   integer :: DEF_LAI_START_YEAR = 2000
+   integer :: DEF_LAI_END_YEAR   = 2020
+
    ! add by zhongwang wei @ sysu 2021/12/23
    ! To allow read satellite observed LAI
    ! 06/2023, note by hua yuan: change DEF_LAI_CLIM to DEF_LAI_MONTHLY
@@ -194,6 +203,9 @@ MODULE MOD_Namelist
    logical :: DEF_USE_CN_INIT   = .false.
    character(len=256) :: DEF_file_cn_init  = 'null'
 
+   logical :: DEF_USE_WaterTableInit = .false.
+   character(len=256) :: DEF_file_WaterTable = 'null'
+
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ! ----- Part 9: LULCC related ------
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -217,6 +229,7 @@ MODULE MOD_Namelist
    logical :: DEF_URBAN_TREE        = .true.
    logical :: DEF_URBAN_WATER       = .true.
    logical :: DEF_URBAN_LUCY        = .true.
+   logical :: DEF_USE_CANYON_HWR    = .true.
 
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ! ----- Part 11: parameteration schemes -----
@@ -252,7 +265,7 @@ MODULE MOD_Namelist
    ! 2: scheme from XinAnJiang model, also used in ECMWF model
    ! 3: scheme from Simple VIC, also used in NoahMP 5.0
 
-   integer :: DEF_Runoff_SCHEME = 0
+   integer :: DEF_Runoff_SCHEME = 3
    character(len=256) :: DEF_file_VIC_para = 'null'
 
    ! ----- Treat exposed soil and snow surface separatly -----
@@ -262,7 +275,9 @@ MODULE MOD_Namelist
    logical :: DEF_SPLIT_SOILSNOW = .false.
 
    ! ----- Account for vegetation snow process -----
-   logical :: DEF_VEG_SNOW = .true.
+   ! NOTE: This option will be activated in the new release, accompained by
+   !       a new set of canopy structure data, include the snow-free LAI.
+   logical :: DEF_VEG_SNOW = .false.
 
    ! ----- Variably Saturated Flow Soil Water -----
    logical :: DEF_USE_VariablySaturatedFlow = .true.
@@ -289,6 +304,9 @@ MODULE MOD_Namelist
    !2: To allow monthly ndep data to be read in
    integer :: DEF_NDEP_FREQUENCY = 1
 
+   ! ----- CaMa-Flood -----
+   character(len=256) :: DEF_CaMa_Namelist = 'null'
+
    ! ----- lateral flow related -----
    logical :: DEF_USE_EstimatedRiverDepth     = .true.
    character(len=256) :: DEF_ElementNeighbour_file = 'null'
@@ -306,8 +324,13 @@ MODULE MOD_Namelist
    !Medlyn stomata model
    logical            :: DEF_USE_MEDLYNST        = .false.
 
+   !WUE stomata model
+   logical            :: DEF_USE_WUEST           = .true.
+
    !Semi-Analytic-Spin-Up
    logical            :: DEF_USE_SASU            = .false.
+
+   logical            :: DEF_USE_DiagMatrix      = .false.
 
    !Punctuated nitrogen addition Spin up
    logical            :: DEF_USE_PN              = .false.
@@ -324,18 +347,25 @@ MODULE MOD_Namelist
    !Fire MODULE
    logical            :: DEF_USE_FIRE            = .false.
 
+   !Dynamic Lake model
+   logical            :: DEF_USE_Dynamic_Lake    = .false.
+
+   !
+   logical            :: DEF_CheckEquilibrium    = .false.
+
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ! ----- Part 12: forcing -----
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-   character(len=256) :: DEF_dir_forcing       = 'path/to/forcing/data'
-
    character(len=256) :: DEF_forcing_namelist  = 'null'
+
+   character(len=256) :: DEF_dir_forcing       = 'path/to/forcing/data'
 
    type nl_forcing_type
 
       character(len=256) :: dataset            = 'CRUNCEP'
       logical            :: solarin_all_band   = .true.
+      character(len=256) :: HEIGHT_mode        = 'absolute'
       real(r8)           :: HEIGHT_V           = 100.0
       real(r8)           :: HEIGHT_T           = 50.
       real(r8)           :: HEIGHT_Q           = 50.
@@ -376,6 +406,9 @@ MODULE MOD_Namelist
       character(len=256) :: vname(8)           = (/ &
          'TBOT    ','QBOT    ','PSRF    ','PRECTmms', &
          'NULL    ','WIND    ','FSDS    ','FLDS    ' /)
+      character(len=256) :: timelog(8)         = (/ &
+         'instant ','instant ','instant ','foreward', &
+         'NULL    ','instant ','forward ','foreward' /)
       character(len=256) :: tintalgo(8)        = (/ &
          'linear ','linear ','linear ','nearest', &
          'NULL   ','linear ','coszen ','linear ' /)
@@ -392,11 +425,12 @@ MODULE MOD_Namelist
    !CBL height
    logical           :: DEF_USE_CBL_HEIGHT     = .false.
 
-   character(len=20) :: DEF_Forcing_Interp     = 'areaweight'
+   character(len=20) :: DEF_Forcing_Interp_Method = 'arealweight' ! 'arealweight' (default) or 'bilinear'
 
-   logical          :: DEF_USE_Forcing_Downscaling        = .false.
-   character(len=5) :: DEF_DS_precipitation_adjust_scheme = 'II'
-   character(len=5) :: DEF_DS_longwave_adjust_scheme      = 'II'
+   logical           :: DEF_USE_Forcing_Downscaling        = .false.
+   character(len=256):: DEF_DS_HiresTopographyDataDir      = 'null'
+   character(len=5)  :: DEF_DS_precipitation_adjust_scheme = 'I'
+   character(len=5)  :: DEF_DS_longwave_adjust_scheme      = 'II'
 
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ! ----- Part 13: history and restart -----
@@ -435,7 +469,6 @@ MODULE MOD_Namelist
       logical :: xy_rain                          = .true.
       logical :: xy_snow                          = .true.
       logical :: xy_ozone                         = .true.
-
       logical :: xy_hpbl                          = .true.
 
       logical :: taux                             = .true.
@@ -690,6 +723,45 @@ MODULE MOD_Namelist
       logical :: hdm                              = .true.
       logical :: lnfm                             = .true.
 
+      logical :: leafcCap                         = .false.
+      logical :: leafc_storageCap                 = .false.
+      logical :: leafc_xferCap                    = .false.
+      logical :: frootcCap                        = .false.
+      logical :: frootc_storageCap                = .false.
+      logical :: frootc_xferCap                   = .false.
+      logical :: livestemcCap                     = .false.
+      logical :: livestemc_storageCap             = .false.
+      logical :: livestemc_xferCap                = .false.
+      logical :: deadstemcCap                     = .false.
+      logical :: deadstemc_storageCap             = .false.
+      logical :: deadstemc_xferCap                = .false.
+      logical :: livecrootcCap                    = .false.
+      logical :: livecrootc_storageCap            = .false.
+      logical :: livecrootc_xferCap               = .false.
+      logical :: deadcrootcCap                    = .false.
+      logical :: deadcrootc_storageCap            = .false.
+      logical :: deadcrootc_xferCap               = .false.
+      logical :: leafnCap                         = .false.
+      logical :: leafn_storageCap                 = .false.
+      logical :: leafn_xferCap                    = .false.
+      logical :: frootnCap                        = .false.
+      logical :: frootn_storageCap                = .false.
+      logical :: frootn_xferCap                   = .false.
+      logical :: livestemnCap                     = .false.
+      logical :: livestemn_storageCap             = .false.
+      logical :: livestemn_xferCap                = .false.
+      logical :: deadstemnCap                     = .false.
+      logical :: deadstemn_storageCap             = .false.
+      logical :: deadstemn_xferCap                = .false.
+      logical :: livecrootnCap                    = .false.
+      logical :: livecrootn_storageCap            = .false.
+      logical :: livecrootn_xferCap               = .false.
+      logical :: deadcrootnCap                    = .false.
+      logical :: deadcrootn_storageCap            = .false.
+      logical :: deadcrootn_xferCap               = .false.
+      logical :: t_scalar                         = .false.
+      logical :: w_scalar                         = .false.
+
       logical :: t_soisno                         = .true.
       logical :: wliq_soisno                      = .true.
       logical :: wice_soisno                      = .true.
@@ -710,6 +782,7 @@ MODULE MOD_Namelist
       logical :: wa                               = .true.
       logical :: wa_inst                          = .true.
 
+      logical :: dz_lake                          = .true.
       logical :: t_lake                           = .true.
       logical :: lake_icefrac                     = .true.
 
@@ -727,6 +800,22 @@ MODULE MOD_Namelist
       logical :: soil2n_vr                        = .true.
       logical :: soil3n_vr                        = .true.
       logical :: cwdn_vr                          = .true.
+
+      logical :: litr1cCap_vr                     = .false.
+      logical :: litr2cCap_vr                     = .false.
+      logical :: litr3cCap_vr                     = .false.
+      logical :: soil1cCap_vr                     = .false.
+      logical :: soil2cCap_vr                     = .false.
+      logical :: soil3cCap_vr                     = .false.
+      logical :: cwdcCap_vr                       = .false.
+      logical :: litr1nCap_vr                     = .false.
+      logical :: litr2nCap_vr                     = .false.
+      logical :: litr3nCap_vr                     = .false.
+      logical :: soil1nCap_vr                     = .false.
+      logical :: soil2nCap_vr                     = .false.
+      logical :: soil3nCap_vr                     = .false.
+      logical :: cwdnCap_vr                       = .false.
+
       logical :: sminn_vr                         = .true.
 
       logical :: ustar                            = .true.
@@ -768,6 +857,8 @@ MODULE MOD_Namelist
       logical :: wdsrf_hru                        = .true.
       logical :: veloc_hru                        = .true.
 
+      logical :: sensors                          = .true.
+
    END type history_var_type
 
    type (history_var_type) :: DEF_hist_vars
@@ -790,7 +881,11 @@ CONTAINS
       DEF_CASE_NAME,                          &
       DEF_domain,                             &
 
-      SITE_fsrfdata,                          &
+      SITE_fsitedata,                         &
+      SITE_lon_location,                      &
+      SITE_lat_location,                      &
+      SITE_landtype,                          &
+      USE_SITE_landtype,                      &
       USE_SITE_pctpfts,                       &
       USE_SITE_pctcrop,                       &
       USE_SITE_htop,                          &
@@ -800,8 +895,6 @@ CONTAINS
       USE_SITE_soilparameters,                &
       USE_SITE_dbedrock,                      &
       USE_SITE_topography,                    &
-      USE_SITE_topostd   ,                    &
-      USE_SITE_BVIC      ,                    &
       USE_SITE_HistWriteBack,                 &
       USE_SITE_ForcingReadAhead,              &
       USE_SITE_urban_paras,                   &
@@ -835,6 +928,8 @@ CONTAINS
       DEF_Interception_scheme,                & !add by zhongwang wei @ sysu 2022/05/23
       DEF_SSP,                                & !add by zhongwang wei @ sysu 2023/02/07
 
+      DEF_LAI_START_YEAR,                     &
+      DEF_LAI_END_YEAR,                       &
       DEF_LAI_CHANGE_YEARLY,                  &
       DEF_USE_LAIFEEDBACK,                    & !add by Xingjie Lu, use for updating LAI with leaf carbon
       DEF_USE_IRRIGATION,                     & !use irrigation
@@ -849,6 +944,7 @@ CONTAINS
       DEF_URBAN_TREE,                         & !add by hua yuan, modeling urban tree or not
       DEF_URBAN_WATER,                        & !add by hua yuan, modeling urban water or not
       DEF_URBAN_LUCY,                         &
+      DEF_USE_CANYON_HWR,                     &
 
       DEF_USE_SOILPAR_UPS_FIT,                &
       DEF_THERMAL_CONDUCTIVITY_SCHEME,        &
@@ -869,12 +965,17 @@ CONTAINS
       DEF_USE_CBL_HEIGHT,                     & !add by zhongwang wei @ sysu 2022/12/31
       DEF_USE_PLANTHYDRAULICS,                & !add by xingjie lu @ sysu 2023/05/28
       DEF_USE_MEDLYNST,                       & !add by xingjie lu @ sysu 2023/05/28
+      DEF_USE_WUEST,                          & !add by xingjie lu @ sysu 2024/05/28
       DEF_USE_SASU,                           & !add by Xingjie Lu @ sysu 2023/06/27
+      DEF_USE_DiagMatrix,                     & !add by Xingjie Lu @ sysu 2023/06/27
       DEF_USE_PN,                             & !add by Xingjie Lu @ sysu 2023/06/27
       DEF_USE_FERT,                           & !add by Xingjie Lu @ sysu 2023/06/27
       DEF_USE_NITRIF,                         & !add by Xingjie Lu @ sysu 2023/06/27
       DEF_USE_CNSOYFIXN,                      & !add by Xingjie Lu @ sysu 2023/06/27
       DEF_USE_FIRE,                           & !add by Xingjie Lu @ sysu 2023/06/27
+
+      DEF_USE_Dynamic_Lake,                   & !add by Shupeng Zhang @ sysu 2024/09/12
+      DEF_CheckEquilibrium,                   & !add by Shupeng Zhang @ sysu 2024/11/26
 
       DEF_LANDONLY,                           &
       DEF_USE_DOMINANT_PATCHTYPE,             &
@@ -898,8 +999,13 @@ CONTAINS
       DEF_USE_CN_INIT,                        &
       DEF_file_cn_init,                       &
 
+      DEF_USE_WaterTableInit,                 &
+      DEF_file_WaterTable,                    &
+
       DEF_file_snowoptics,                    &
       DEF_file_snowaging ,                    &
+
+      DEF_CaMa_Namelist,                      &
 
       DEF_ElementNeighbour_file,              &
 
@@ -907,8 +1013,10 @@ CONTAINS
 
       DEF_forcing_namelist,                   &
 
-      DEF_Forcing_Interp,                     &
+      DEF_Forcing_Interp_Method,              &
+
       DEF_USE_Forcing_Downscaling,            &
+      DEF_DS_HiresTopographyDataDir,          & 
       DEF_DS_precipitation_adjust_scheme,     &
       DEF_DS_longwave_adjust_scheme,          &
 
@@ -1041,6 +1149,13 @@ CONTAINS
             write(*,*) 'DEF_USE_SASU is set to false automatically when BGC is turned off.'
          ENDIF
 
+         IF(DEF_USE_DiagMatrix)THEN
+            DEF_USE_DiagMatrix = .false.
+            write(*,*) '                  *****                  '
+            write(*,*) 'Warning: CN Matrix Diagnostic is on when BGC is off.'
+            write(*,*) 'DEF_USE_DiagMatrix is set to false automatically when BGC is turned off.'
+         ENDIF
+
          IF(DEF_USE_PN)THEN
             DEF_USE_PN = .false.
             write(*,*) '                  *****                  '
@@ -1095,6 +1210,15 @@ CONTAINS
             ENDIF
          ENDIF
 
+         IF(DEF_USE_MEDLYNST)THEN
+            IF(DEF_USE_WUEST)THEN
+                DEF_USE_MEDLYNST = .false.
+                DEF_USE_WUEST    = .false.
+                write(*,*) '                  *****                  '
+                write(*,*) 'Warning: configure conflict, both DEF_USE_MEDLYNST and DEF_USE_WUEST were set true.'
+                write(*,*) 'set both DEF_USE_MEDLYNST and DEF_USE_WUEST to false.'
+            ENDIF
+         ENDIF
 
 ! ----- SNICAR model ------ Macros&Namelist conflicts and dependency management
 
@@ -1135,6 +1259,10 @@ CONTAINS
 
 #ifdef LULCC
 
+         write(*,*) '                  *****                  '
+         write(*,*) 'Warning: The LULCC data is provided for years 2000 to 2020 right now! '
+         write(*,*) 'Please make sure the year range you set is suitable. '
+
 #if (defined LULC_USGS || defined BGC)
          write(*,*) '                  *****                  '
          write(*,*) 'Fatal ERROR: LULCC is not supported for LULC_USGS/BGC at present. STOP! '
@@ -1158,8 +1286,8 @@ CONTAINS
          !write(*,*) '                  *****                  '
          !write(*,*) 'Fatal ERROR: LULCC is not supported for LULC_IGBP_PC/URBAN at present. STOP! '
          !write(*,*) 'It is coming soon. '
-         ![update] 24/10/2023: right now IGBP/PFT/PC and Urban are all supported.
          !CALL CoLM_stop ()
+         ![update] 24/10/2023: right now IGBP/PFT/PC and Urban are all supported.
 #endif
 
 #if (defined SinglePoint)
@@ -1169,6 +1297,12 @@ CONTAINS
          CALL CoLM_stop ()
 #endif
 
+#endif
+
+#if (defined DEF_LAI_CHANGE_YEARLY)
+         write(*,*) '                  *****                  '
+         write(*,*) 'Warning: The LAI data is provided for years 2000 to 2020 right now! '
+         write(*,*) 'Any year before 2000 or after 2020 will be treated as 2000 or 2020. '
 #endif
 
 
@@ -1182,6 +1316,32 @@ CONTAINS
 #endif
 #endif
 
+! ----- Soil water and temperature Initialization ----- Namelist conflicts
+
+         IF (DEF_USE_SoilInit .and. DEF_USE_WaterTableInit) THEN
+            write(*,*) '                  *****                  '
+            write(*,*) 'If both DEF_USE_SoilInit and DEF_USE_WaterTableInit are .TRUE.,   '
+            write(*,*) 'initial value of water table depth is read from DEF_file_SoilInit,'
+            write(*,*) 'instead of DEF_file_WaterTable (which is useless in this CASE).   '
+         ENDIF 
+
+! ----- dynamic lake run ----- Macros&Namelist conflicts and dependency management
+
+#ifndef CATCHMENT
+         IF ((.not. DEF_USE_VariablySaturatedFlow) .and. DEF_USE_Dynamic_Lake) THEN
+            DEF_USE_Dynamic_Lake = .false.
+            write(*,*) '                         *** Warning ***                                '
+            write(*,*) 'Dynamic Lake is closed if variably saturated flow algorithm is not used.'
+         ENDIF
+         IF (DEF_USE_Dynamic_Lake) THEN
+            write(*,*) '                   *** Warning ***                      '
+            write(*,*) 'Dynamic Lake is not well supported without lateral flow.'
+         ENDIF
+#else
+         DEF_USE_Dynamic_Lake = .true.
+         write(*,*) '                 *** Warning ***                          '
+         write(*,*) 'Dynamic Lake is used if CATCHMENT-based lateral flow used.'
+#endif
 
 ! ----- [Complement IF needed] ----- Macros&Namelist conflicts and dependency management
 
@@ -1194,208 +1354,225 @@ CONTAINS
 
 
 #ifdef USEMPI
-      CALL mpi_bcast (DEF_CASE_NAME                          ,256 ,mpi_character ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_domain%edges                       ,1   ,mpi_real8     ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_domain%edgen                       ,1   ,mpi_real8     ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_domain%edgew                       ,1   ,mpi_real8     ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_domain%edgee                       ,1   ,mpi_real8     ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_CASE_NAME                          ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_domain%edges                       ,1   ,mpi_real8     ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_domain%edgen                       ,1   ,mpi_real8     ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_domain%edgew                       ,1   ,mpi_real8     ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_domain%edgee                       ,1   ,mpi_real8     ,p_address_master ,p_comm_glb ,p_err)
 
-      CALL mpi_bcast (DEF_BlockInfoFile                      ,256 ,mpi_character ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_AverageElementSize                 ,1   ,mpi_real8     ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_nx_blocks                          ,1   ,mpi_integer   ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_ny_blocks                          ,1   ,mpi_integer   ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_PIO_groupsize                      ,1   ,mpi_integer   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_BlockInfoFile                      ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_AverageElementSize                 ,1   ,mpi_real8     ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_nx_blocks                          ,1   ,mpi_integer   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_ny_blocks                          ,1   ,mpi_integer   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_PIO_groupsize                      ,1   ,mpi_integer   ,p_address_master ,p_comm_glb ,p_err)
 
-      CALL mpi_bcast (DEF_simulation_time%greenwich          ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_simulation_time%greenwich          ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
 
-      CALL mpi_bcast (DEF_simulation_time%start_year         ,1   ,mpi_integer   ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_simulation_time%start_month        ,1   ,mpi_integer   ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_simulation_time%start_day          ,1   ,mpi_integer   ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_simulation_time%start_sec          ,1   ,mpi_integer   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_simulation_time%start_year         ,1   ,mpi_integer   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_simulation_time%start_month        ,1   ,mpi_integer   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_simulation_time%start_day          ,1   ,mpi_integer   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_simulation_time%start_sec          ,1   ,mpi_integer   ,p_address_master ,p_comm_glb ,p_err)
 
-      CALL mpi_bcast (DEF_simulation_time%end_year           ,1   ,mpi_integer   ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_simulation_time%end_month          ,1   ,mpi_integer   ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_simulation_time%end_day            ,1   ,mpi_integer   ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_simulation_time%end_sec            ,1   ,mpi_integer   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_simulation_time%end_year           ,1   ,mpi_integer   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_simulation_time%end_month          ,1   ,mpi_integer   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_simulation_time%end_day            ,1   ,mpi_integer   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_simulation_time%end_sec            ,1   ,mpi_integer   ,p_address_master ,p_comm_glb ,p_err)
 
-      CALL mpi_bcast (DEF_simulation_time%spinup_year        ,1   ,mpi_integer   ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_simulation_time%spinup_month       ,1   ,mpi_integer   ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_simulation_time%spinup_day         ,1   ,mpi_integer   ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_simulation_time%spinup_sec         ,1   ,mpi_integer   ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_simulation_time%spinup_repeat      ,1   ,mpi_integer   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_simulation_time%spinup_year        ,1   ,mpi_integer   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_simulation_time%spinup_month       ,1   ,mpi_integer   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_simulation_time%spinup_day         ,1   ,mpi_integer   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_simulation_time%spinup_sec         ,1   ,mpi_integer   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_simulation_time%spinup_repeat      ,1   ,mpi_integer   ,p_address_master ,p_comm_glb ,p_err)
 
-      CALL mpi_bcast (DEF_simulation_time%timestep           ,1   ,mpi_real8     ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_simulation_time%timestep           ,1   ,mpi_real8     ,p_address_master ,p_comm_glb ,p_err)
 
-      CALL mpi_bcast (DEF_dir_rawdata                        ,256 ,mpi_character ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_dir_runtime                        ,256 ,mpi_character ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_dir_output                         ,256 ,mpi_character ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_dir_forcing                        ,256 ,mpi_character ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_dir_rawdata                        ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_dir_runtime                        ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_dir_output                         ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_dir_forcing                        ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
 
-      CALL mpi_bcast (DEF_dir_landdata                       ,256 ,mpi_character ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_dir_restart                        ,256 ,mpi_character ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_dir_history                        ,256 ,mpi_character ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_dir_landdata                       ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_dir_restart                        ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_dir_history                        ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
 
 #if (defined GRIDBASED || defined UNSTRUCTURED)
-      CALL mpi_bcast (DEF_file_mesh                          ,256 ,mpi_character ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_GRIDBASED_lon_res                  ,1   ,mpi_real8     ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_GRIDBASED_lat_res                  ,1   ,mpi_real8     ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_file_mesh                          ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_GRIDBASED_lon_res                  ,1   ,mpi_real8     ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_GRIDBASED_lat_res                  ,1   ,mpi_real8     ,p_address_master ,p_comm_glb ,p_err)
 #endif
 
 #ifdef CATCHMENT
-      CALL mpi_bcast (DEF_CatchmentMesh_data                 ,256 ,mpi_character ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_CatchmentMesh_data                 ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
 #endif
 
-      CALL mpi_bcast (DEF_file_mesh_filter                   ,256 ,mpi_character ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_file_mesh_filter                   ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
 
-      CALL mpi_bcast (DEF_dir_existing_srfdata               ,256 ,mpi_character ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (USE_srfdata_from_larger_region         ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (USE_srfdata_from_3D_gridded_data       ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (USE_zip_for_aggregation                ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_Srfdata_CompressLevel              ,1   ,mpi_integer   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_dir_existing_srfdata               ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (USE_srfdata_from_larger_region         ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (USE_srfdata_from_3D_gridded_data       ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (USE_zip_for_aggregation                ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_Srfdata_CompressLevel              ,1   ,mpi_integer   ,p_address_master ,p_comm_glb ,p_err)
 
       ! 07/2023, added by yuan: subgrid setting related
-      CALL mpi_bcast (DEF_USE_LCT                            ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_USE_PFT                            ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_USE_PC                             ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_FAST_PC                            ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_SOLO_PFT                           ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_SUBGRID_SCHEME                     ,256 ,mpi_character ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_USE_LCT                            ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_USE_PFT                            ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_USE_PC                             ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_FAST_PC                            ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_SOLO_PFT                           ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_SUBGRID_SCHEME                     ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
 
-      CALL mpi_bcast (DEF_LAI_CHANGE_YEARLY                  ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_LAI_START_YEAR                     ,1   ,mpi_integer   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_LAI_END_YEAR                       ,1   ,mpi_integer   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_LAI_CHANGE_YEARLY                  ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
 
       ! 05/2023, added by Xingjie lu
-      CALL mpi_bcast (DEF_USE_LAIFEEDBACK                    ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_USE_IRRIGATION                     ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_USE_LAIFEEDBACK                    ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_USE_IRRIGATION                     ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
 
       ! LULC related
-      CALL mpi_bcast (DEF_LC_YEAR                            ,1   ,mpi_integer   ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_LULCC_SCHEME                       ,1   ,mpi_integer   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_LC_YEAR                            ,1   ,mpi_integer   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_LULCC_SCHEME                       ,1   ,mpi_integer   ,p_address_master ,p_comm_glb ,p_err)
 
-      CALL mpi_bcast (DEF_URBAN_type_scheme                  ,1   ,mpi_integer   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_URBAN_type_scheme                  ,1   ,mpi_integer   ,p_address_master ,p_comm_glb ,p_err)
       ! 05/2023, added by yuan
-      CALL mpi_bcast (DEF_URBAN_ONLY                         ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_URBAN_RUN                          ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_URBAN_BEM                          ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_URBAN_TREE                         ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_URBAN_WATER                        ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_URBAN_LUCY                         ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_URBAN_ONLY                         ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_URBAN_RUN                          ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_URBAN_BEM                          ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_URBAN_TREE                         ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_URBAN_WATER                        ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_URBAN_LUCY                         ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_USE_CANYON_HWR                     ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
 
       ! 06/2023, added by weinan
-      CALL mpi_bcast (DEF_USE_SOILPAR_UPS_FIT                ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_THERMAL_CONDUCTIVITY_SCHEME        ,1   ,mpi_integer   ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_USE_SUPERCOOL_WATER                ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_USE_SOILPAR_UPS_FIT                ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_THERMAL_CONDUCTIVITY_SCHEME        ,1   ,mpi_integer   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_USE_SUPERCOOL_WATER                ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
 
       ! 06/2023, added by hua yuan
-      CALL mpi_bcast (DEF_SOIL_REFL_SCHEME                   ,1   ,mpi_integer   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_SOIL_REFL_SCHEME                   ,1   ,mpi_integer   ,p_address_master ,p_comm_glb ,p_err)
       ! 07/2023, added by zhuo liu
-      CALL mpi_bcast (DEF_RSS_SCHEME                         ,1   ,mpi_integer   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_RSS_SCHEME                         ,1   ,mpi_integer   ,p_address_master ,p_comm_glb ,p_err)
       ! 02/2024, added by Shupeng Zhang
-      CALL mpi_bcast (DEF_Runoff_SCHEME                      ,1   ,mpi_integer   ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_file_VIC_para                      ,256 ,mpi_character ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_Runoff_SCHEME                      ,1   ,mpi_integer   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_file_VIC_para                      ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
       ! 08/2023, added by hua yuan
-      CALL mpi_bcast (DEF_SPLIT_SOILSNOW                     ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_VEG_SNOW                           ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_SPLIT_SOILSNOW                     ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_VEG_SNOW                           ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
 
-      CALL mpi_bcast (DEF_LAI_MONTHLY                        ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_NDEP_FREQUENCY                     ,1   ,mpi_integer   ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_Interception_scheme                ,1   ,mpi_integer   ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_SSP                                ,256 ,mpi_character ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_LAI_MONTHLY                        ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_NDEP_FREQUENCY                     ,1   ,mpi_integer   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_Interception_scheme                ,1   ,mpi_integer   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_SSP                                ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
 
-      CALL mpi_bcast (DEF_USE_CBL_HEIGHT                     ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_USE_PLANTHYDRAULICS                ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_USE_MEDLYNST                       ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_USE_SASU                           ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_USE_PN                             ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_USE_FERT                           ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_USE_NITRIF                         ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_USE_CNSOYFIXN                      ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_USE_FIRE                           ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_USE_CBL_HEIGHT                     ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_USE_PLANTHYDRAULICS                ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_USE_MEDLYNST                       ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_USE_WUEST                          ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_USE_SASU                           ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_USE_DiagMatrix                     ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_USE_PN                             ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_USE_FERT                           ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_USE_NITRIF                         ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_USE_CNSOYFIXN                      ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_USE_FIRE                           ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
 
-      CALL mpi_bcast (DEF_LANDONLY                           ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_USE_DOMINANT_PATCHTYPE             ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_USE_VariablySaturatedFlow          ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_USE_BEDROCK                        ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_USE_OZONESTRESS                    ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_USE_OZONEDATA                      ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_USE_Dynamic_Lake                   ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_CheckEquilibrium                   ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
 
-      CALL mpi_bcast (DEF_precip_phase_discrimination_scheme ,5   ,mpi_character ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_LANDONLY                           ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_USE_DOMINANT_PATCHTYPE             ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_USE_VariablySaturatedFlow          ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_USE_BEDROCK                        ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_USE_OZONESTRESS                    ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_USE_OZONEDATA                      ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
 
-      CALL mpi_bcast (DEF_USE_SoilInit                       ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_file_SoilInit                      ,256 ,mpi_character ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_precip_phase_discrimination_scheme ,5   ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
 
-      CALL mpi_bcast (DEF_USE_SnowInit                       ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_file_SnowInit                      ,256 ,mpi_character ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_USE_SoilInit                       ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_file_SoilInit                      ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
 
-      CALL mpi_bcast (DEF_USE_CN_INIT                        ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_file_cn_init                       ,256 ,mpi_character ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_USE_SnowInit                       ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_file_SnowInit                      ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
 
-      CALL mpi_bcast (DEF_USE_SNICAR                         ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_file_snowoptics                    ,256 ,mpi_character ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_file_snowaging                     ,256 ,mpi_character ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_USE_CN_INIT                        ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_file_cn_init                       ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
 
-      CALL mpi_bcast (DEF_ElementNeighbour_file              ,256 ,mpi_character ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_USE_WaterTableInit                 ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_file_WaterTable                    ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
 
-      CALL mpi_bcast (DEF_DA_obsdir                          ,256 ,mpi_character ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_USE_SNICAR                         ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_file_snowoptics                    ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_file_snowaging                     ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
 
-      CALL mpi_bcast (DEF_Aerosol_Readin                     ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_Aerosol_Clim                       ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_CaMa_Namelist                      ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
+      
+      CALL mpi_bcast (DEF_ElementNeighbour_file              ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
 
-      CALL mpi_bcast (DEF_USE_EstimatedRiverDepth            ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_DA_obsdir                          ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
 
-      CALL mpi_bcast (DEF_HISTORY_IN_VECTOR                  ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_Aerosol_Readin                     ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_Aerosol_Clim                       ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
 
-      CALL mpi_bcast (DEF_HIST_lon_res                       ,1   ,mpi_real8     ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_HIST_lat_res                       ,1   ,mpi_real8     ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_USE_EstimatedRiverDepth            ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
 
-      CALL mpi_bcast (DEF_HIST_grid_as_forcing               ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_HISTORY_IN_VECTOR                  ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
 
-      CALL mpi_bcast (DEF_WRST_FREQ                          ,256 ,mpi_character ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_HIST_FREQ                          ,256 ,mpi_character ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_HIST_groupby                       ,256 ,mpi_character ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_HIST_mode                          ,256 ,mpi_character ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_HIST_WriteBack                     ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_REST_CompressLevel                 ,1   ,mpi_integer   ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_HIST_CompressLevel                 ,1   ,mpi_integer   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_HIST_lon_res                       ,1   ,mpi_real8     ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_HIST_lat_res                       ,1   ,mpi_real8     ,p_address_master ,p_comm_glb ,p_err)
 
-      CALL mpi_bcast (DEF_Forcing_Interp                     ,20  ,mpi_character ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_USE_Forcing_Downscaling            ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_DS_precipitation_adjust_scheme     ,5   ,mpi_character ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_DS_longwave_adjust_scheme          ,5   ,mpi_character ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_HIST_grid_as_forcing               ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
 
-      CALL mpi_bcast (DEF_forcing%dataset                    ,256 ,mpi_character ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_forcing%solarin_all_band           ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_forcing%HEIGHT_V                   ,1   ,mpi_real8     ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_forcing%HEIGHT_T                   ,1   ,mpi_real8     ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_forcing%HEIGHT_Q                   ,1   ,mpi_real8     ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_forcing%regional                   ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_forcing%regbnd                     ,4   ,mpi_real8     ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_forcing%has_missing_value          ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_forcing%missing_value_name         ,256 ,mpi_character ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_forcing%NVAR                       ,1   ,mpi_integer   ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_forcing%startyr                    ,1   ,mpi_integer   ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_forcing%startmo                    ,1   ,mpi_integer   ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_forcing%endyr                      ,1   ,mpi_integer   ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_forcing%endmo                      ,1   ,mpi_integer   ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_forcing%dtime                      ,8   ,mpi_integer   ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_forcing%offset                     ,8   ,mpi_integer   ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_forcing%nlands                     ,1   ,mpi_integer   ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_forcing%leapyear                   ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_forcing%data2d                     ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_forcing%hightdim                   ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_forcing%dim2d                      ,1   ,mpi_logical   ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_forcing%latname                    ,256 ,mpi_character ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_forcing%lonname                    ,256 ,mpi_character ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_forcing%groupby                    ,256 ,mpi_character ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_WRST_FREQ                          ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_HIST_FREQ                          ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_HIST_groupby                       ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_HIST_mode                          ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_HIST_WriteBack                     ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_REST_CompressLevel                 ,1   ,mpi_integer   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_HIST_CompressLevel                 ,1   ,mpi_integer   ,p_address_master ,p_comm_glb ,p_err)
+
+      CALL mpi_bcast (DEF_Forcing_Interp_Method              ,20  ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_USE_Forcing_Downscaling            ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_DS_HiresTopographyDataDir          ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_DS_precipitation_adjust_scheme     ,5   ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_DS_longwave_adjust_scheme          ,5   ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
+
+      CALL mpi_bcast (DEF_forcing%dataset                    ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_forcing%solarin_all_band           ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_forcing%HEIGHT_mode                ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_forcing%HEIGHT_V                   ,1   ,mpi_real8     ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_forcing%HEIGHT_T                   ,1   ,mpi_real8     ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_forcing%HEIGHT_Q                   ,1   ,mpi_real8     ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_forcing%regional                   ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_forcing%regbnd                     ,4   ,mpi_real8     ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_forcing%has_missing_value          ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_forcing%missing_value_name         ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_forcing%NVAR                       ,1   ,mpi_integer   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_forcing%startyr                    ,1   ,mpi_integer   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_forcing%startmo                    ,1   ,mpi_integer   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_forcing%endyr                      ,1   ,mpi_integer   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_forcing%endmo                      ,1   ,mpi_integer   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_forcing%dtime                      ,8   ,mpi_integer   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_forcing%offset                     ,8   ,mpi_integer   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_forcing%nlands                     ,1   ,mpi_integer   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_forcing%leapyear                   ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_forcing%data2d                     ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_forcing%hightdim                   ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_forcing%dim2d                      ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_forcing%latname                    ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_forcing%lonname                    ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_forcing%groupby                    ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
+
       DO ivar = 1, 8
-         CALL mpi_bcast (DEF_forcing%fprefix(ivar)           ,256 ,mpi_character ,p_root ,p_comm_glb ,p_err)
-         CALL mpi_bcast (DEF_forcing%vname(ivar)             ,256 ,mpi_character ,p_root ,p_comm_glb ,p_err)
-         CALL mpi_bcast (DEF_forcing%tintalgo(ivar)          ,256 ,mpi_character ,p_root ,p_comm_glb ,p_err)
+         CALL mpi_bcast (DEF_forcing%fprefix(ivar)           ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
+         CALL mpi_bcast (DEF_forcing%vname(ivar)             ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
+         CALL mpi_bcast (DEF_forcing%timelog(ivar)           ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
+         CALL mpi_bcast (DEF_forcing%tintalgo(ivar)          ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
       ENDDO
-      CALL mpi_bcast (DEF_forcing%CBL_fprefix                ,256 ,mpi_character ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_forcing%CBL_vname                  ,256 ,mpi_character ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_forcing%CBL_tintalgo               ,256 ,mpi_character ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_forcing%CBL_dtime                  ,1   ,mpi_integer   ,p_root ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_forcing%CBL_offset                 ,1   ,mpi_integer   ,p_root ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_forcing%CBL_fprefix                ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_forcing%CBL_vname                  ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_forcing%CBL_tintalgo               ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_forcing%CBL_dtime                  ,1   ,mpi_integer   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_forcing%CBL_offset                 ,1   ,mpi_integer   ,p_address_master ,p_comm_glb ,p_err)
 #endif
 
       CALL sync_hist_vars (set_defaults = .true.)
@@ -1415,6 +1592,61 @@ CONTAINS
             close(10)
          ENDIF
 
+         IF(DEF_USE_DiagMatrix)THEN
+            DEF_hist_vars%leafcCap                         = .true.
+            DEF_hist_vars%leafc_storageCap                 = .true.
+            DEF_hist_vars%leafc_xferCap                    = .true.
+            DEF_hist_vars%frootcCap                        = .true.
+            DEF_hist_vars%frootc_storageCap                = .true.
+            DEF_hist_vars%frootc_xferCap                   = .true.
+            DEF_hist_vars%livestemcCap                     = .true.
+            DEF_hist_vars%livestemc_storageCap             = .true.
+            DEF_hist_vars%livestemc_xferCap                = .true.
+            DEF_hist_vars%deadstemcCap                     = .true.
+            DEF_hist_vars%deadstemc_storageCap             = .true.
+            DEF_hist_vars%deadstemc_xferCap                = .true.
+            DEF_hist_vars%livecrootcCap                    = .true.
+            DEF_hist_vars%livecrootc_storageCap            = .true.
+            DEF_hist_vars%livecrootc_xferCap               = .true.
+            DEF_hist_vars%deadcrootcCap                    = .true.
+            DEF_hist_vars%deadcrootc_storageCap            = .true.
+            DEF_hist_vars%deadcrootc_xferCap               = .true.
+            DEF_hist_vars%leafnCap                         = .true.
+            DEF_hist_vars%leafn_storageCap                 = .true.
+            DEF_hist_vars%leafn_xferCap                    = .true.
+            DEF_hist_vars%frootnCap                        = .true.
+            DEF_hist_vars%frootn_storageCap                = .true.
+            DEF_hist_vars%frootn_xferCap                   = .true.
+            DEF_hist_vars%livestemnCap                     = .true.
+            DEF_hist_vars%livestemn_storageCap             = .true.
+            DEF_hist_vars%livestemn_xferCap                = .true.
+            DEF_hist_vars%deadstemnCap                     = .true.
+            DEF_hist_vars%deadstemn_storageCap             = .true.
+            DEF_hist_vars%deadstemn_xferCap                = .true.
+            DEF_hist_vars%livecrootnCap                    = .true.
+            DEF_hist_vars%livecrootn_storageCap            = .true.
+            DEF_hist_vars%livecrootn_xferCap               = .true.
+            DEF_hist_vars%deadcrootnCap                    = .true.
+            DEF_hist_vars%deadcrootn_storageCap            = .true.
+            DEF_hist_vars%deadcrootn_xferCap               = .true.
+            DEF_hist_vars%t_scalar                         = .true.
+            DEF_hist_vars%w_scalar                         = .true.
+
+            DEF_hist_vars%litr1cCap_vr                     = .true.
+            DEF_hist_vars%litr2cCap_vr                     = .true.
+            DEF_hist_vars%litr3cCap_vr                     = .true.
+            DEF_hist_vars%soil1cCap_vr                     = .true.
+            DEF_hist_vars%soil2cCap_vr                     = .true.
+            DEF_hist_vars%soil3cCap_vr                     = .true.
+            DEF_hist_vars%cwdcCap_vr                       = .true.
+            DEF_hist_vars%litr1nCap_vr                     = .true.
+            DEF_hist_vars%litr2nCap_vr                     = .true.
+            DEF_hist_vars%litr3nCap_vr                     = .true.
+            DEF_hist_vars%soil1nCap_vr                     = .true.
+            DEF_hist_vars%soil2nCap_vr                     = .true.
+            DEF_hist_vars%soil3nCap_vr                     = .true.
+            DEF_hist_vars%cwdnCap_vr                       = .true.
+         ENDIF
       ENDIF
 
       CALL sync_hist_vars (set_defaults = .false.)
@@ -1667,6 +1899,59 @@ CONTAINS
          CALL sync_hist_vars_one (DEF_hist_vars%hdm                          , set_defaults)
          CALL sync_hist_vars_one (DEF_hist_vars%lnfm                         , set_defaults)
       ENDIF
+      CALL sync_hist_vars_one (DEF_hist_vars%leafcCap                        , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%leafc_storageCap                , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%leafc_xferCap                   , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%frootcCap                       , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%frootc_storageCap               , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%frootc_xferCap                  , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%livestemcCap                    , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%livestemc_storageCap            , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%livestemc_xferCap               , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%deadstemcCap                    , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%deadstemc_storageCap            , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%deadstemc_xferCap               , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%livecrootcCap                   , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%livecrootc_storageCap           , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%livecrootc_xferCap              , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%deadcrootcCap                   , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%deadcrootc_storageCap           , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%deadcrootc_xferCap              , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%leafnCap                        , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%leafn_storageCap                , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%leafn_xferCap                   , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%frootnCap                       , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%frootn_storageCap               , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%frootn_xferCap                  , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%livestemnCap                    , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%livestemn_storageCap            , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%livestemn_xferCap               , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%deadstemnCap                    , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%deadstemn_storageCap            , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%deadstemn_xferCap               , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%livecrootnCap                   , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%livecrootn_storageCap           , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%livecrootn_xferCap              , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%deadcrootnCap                   , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%deadcrootn_storageCap           , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%deadcrootn_xferCap              , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%t_scalar                        , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%w_scalar                        , set_defaults)
+      
+      CALL sync_hist_vars_one (DEF_hist_vars%litr1cCap_vr                    , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%litr2cCap_vr                    , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%litr3cCap_vr                    , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%soil1cCap_vr                    , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%soil2cCap_vr                    , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%soil3cCap_vr                    , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%cwdcCap_vr                      , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%litr1nCap_vr                    , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%litr2nCap_vr                    , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%litr3nCap_vr                    , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%soil1nCap_vr                    , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%soil2nCap_vr                    , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%soil3nCap_vr                    , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%cwdnCap_vr                      , set_defaults)
 #endif
 
       CALL sync_hist_vars_one (DEF_hist_vars%t_soisno    , set_defaults)
@@ -1689,6 +1974,7 @@ CONTAINS
       CALL sync_hist_vars_one (DEF_hist_vars%wa          , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%wa_inst     , set_defaults)
 
+      CALL sync_hist_vars_one (DEF_hist_vars%dz_lake     , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%t_lake      , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%lake_icefrac, set_defaults)
 
@@ -1749,6 +2035,8 @@ CONTAINS
       CALL sync_hist_vars_one (DEF_hist_vars%wdsrf_hru   , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%veloc_hru   , set_defaults)
 
+      CALL sync_hist_vars_one (DEF_hist_vars%sensors     , set_defaults)
+
    END SUBROUTINE sync_hist_vars
 
    SUBROUTINE sync_hist_vars_one (onoff, set_defaults)
@@ -1766,7 +2054,7 @@ CONTAINS
       ENDIF
 
 #ifdef USEMPI
-      CALL mpi_bcast (onoff, 1, mpi_logical, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (onoff, 1, mpi_logical, p_address_master, p_comm_glb, p_err)
 #endif
 
    END SUBROUTINE sync_hist_vars_one

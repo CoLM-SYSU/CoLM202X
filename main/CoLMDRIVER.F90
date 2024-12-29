@@ -87,14 +87,13 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
                soil_s_v_alb(i), soil_d_v_alb(i), soil_s_n_alb(i), soil_d_n_alb(i), &
                vf_quartz(1:,i), vf_gravels(1:,i),vf_om(1:,i),     vf_sand(1:,i),   &
                wf_gravels(1:,i),wf_sand(1:,i),   porsl(1:,i),     psi0(1:,i),      &
-               bsw(1:,i),       theta_r(1:,i),                                     &
+               bsw(1:,i),       theta_r(1:,i),   fsatmax(i),      fsatdcf(:),      &
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
                alpha_vgm(1:,i), n_vgm(1:,i),     L_vgm(1:,i),                      &
                sc_vgm(1:,i),    fc_vgm(1:,i),                                      &
 #endif
                hksati(1:,i),    csol(1:,i),      k_solids(1:,i),  dksatu(1:,i),    &
-               dksatf(1:,i),    dkdry(1:,i),                                       &
-               BA_alpha(1:,i),  BA_beta(1:,i),                                     &
+               dksatf(1:,i),    dkdry(1:,i),     BA_alpha(1:,i),  BA_beta(1:,i),   &
                rootfr(1:,m),    lakedepth(i),    dz_lake(1:,i),   topostd(i),      &
                BVIC(1,i),                                                          &
 #if(defined CaMa_Flood)
@@ -139,6 +138,9 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
              ! Ozone Stress Variables
                lai_old(i),      o3uptakesun(i),  o3uptakesha(i)  ,forc_ozone(i),   &
              ! End ozone stress variables
+             ! WUE stomata model parameter
+               lambda(m),                                                          &
+             ! End WUE model parameter
                zwt(i),          wdsrf(i),        wa(i),           wetwat(i),       &
                t_lake(1:,i),    lake_icefrac(1:,i),               savedtke1(i),    &
 
@@ -170,7 +172,8 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
 
              ! TUNABLE modle constants
                zlnd,            zsno,            csoilc,          dewmx,           &
-               wtfact,          capr,            cnfac,           ssi,             &
+               ! 'wtfact' is updated to gridded 'fsatmax' data.
+               capr,            cnfac,           ssi,             &
                wimp,            pondmx,          smpmax,          smpmin,          &
                trsmx0,          tcrit,                                             &
 
@@ -208,7 +211,7 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
             patchlonr(i)    ,patchlatr(i)    ,patchclass(i)   ,patchtype(i)    ,&
 
           ! URBAN PARAMETERS
-            froof(u)        ,flake(u)        ,hroof(u)        ,hwr(u)          ,&
+            froof(u)        ,flake(u)        ,hroof(u)        ,hlr(u)          ,&
             fgper(u)        ,em_roof(u)      ,em_wall(u)      ,em_gimp(u)      ,&
             em_gper(u)      ,cv_roof(:,u)    ,cv_wall(:,u)    ,cv_gimp(:,u)    ,&
             tk_roof(:,u)    ,tk_wall(:,u)    ,tk_gimp(:,u)    ,z_roof(:,u)     ,&
@@ -222,14 +225,13 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
           ! SOIL INFORMATION AND LAKE DEPTH
             vf_quartz(1:,i) ,vf_gravels(1:,i),vf_om(1:,i)     ,vf_sand(1:,i)   ,&
             wf_gravels(1:,i),wf_sand(1:,i)   ,porsl(1:,i)     ,psi0(1:,i)      ,&
-            bsw(1:,i)       ,theta_r(1:,i)   ,&
+            bsw(1:,i)       ,theta_r(1:,i)   ,fsatmax(i)      ,fsatdcf(i)      ,&
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
-            alpha_vgm(1:,i) ,n_vgm(1:,i)     ,L_vgm(1:,i)     ,&
-            sc_vgm (1:,i)   ,fc_vgm   (1:,i) ,&
+            alpha_vgm(1:,i) ,n_vgm(1:,i)     ,L_vgm(1:,i)                      ,&
+            sc_vgm (1:,i)   ,fc_vgm   (1:,i)                                   ,&
 #endif
             hksati(1:,i)    ,csol(1:,i)      ,k_solids(1:,i),  dksatu(1:,i)    ,&
-            dksatf(1:,i)    ,dkdry(1:,i)     ,&
-            BA_alpha(1:,i)  ,BA_beta(1:,i)   ,&
+            dksatf(1:,i)    ,dkdry(1:,i)     ,BA_alpha(1:,i)  ,BA_beta(1:,i)   ,&
             alb_roof(:,:,u) ,alb_wall(:,:,u) ,alb_gimp(:,:,u) ,alb_gper(:,:,u) ,&
 
           ! VEGETATION INFORMATION
@@ -238,6 +240,9 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
             shti(m)         ,hhti(m)         ,trda(m)         ,trdm(m)         ,&
             trop(m)         ,g1(m)           ,g0(m),gradm(m)  ,binter(m)       ,&
             extkn(m)        ,rho(1:,1:,m)    ,tau(1:,1:,m)    ,rootfr(1:,m)    ,&
+          ! WUE model parameter
+            lambda(m)                                                          ,&
+          ! END WUE model parameter
 
           ! ATMOSPHERIC FORCING
             forc_pco2m(i)   ,forc_po2m(i)    ,forc_us(i)      ,forc_vs(i)      ,&
@@ -266,7 +271,8 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
             t_wallsun   (1:,u)               ,t_wallsha   (1:,u)               ,&
 
             lai(i)          ,sai(i)          ,fveg(i)         ,sigf(i)         ,&
-            green(i)        ,tleaf(i)        ,ldew(i)         ,t_grnd(i)       ,&
+            green(i)        ,tleaf(i)        ,ldew(i)         ,ldew_rain(i)    ,&
+            ldew_snow(i)    ,fwet_snow(i)    ,t_grnd(i)                        ,&
 
             sag_roof(u)     ,sag_gimp(u)     ,sag_gper(u)     ,sag_lake(u)     ,&
             scv_roof(u)     ,scv_gimp(u)     ,scv_gper(u)     ,scv_lake(u)     ,&
@@ -316,7 +322,8 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
 
           ! TUNABLE modle constants
             zlnd            ,zsno            ,csoilc          ,dewmx           ,&
-            wtfact          ,capr            ,cnfac           ,ssi             ,&
+            ! 'wtfact' is updated to gridded 'fsatmax' data.
+            capr            ,cnfac           ,ssi             ,&
             wimp            ,pondmx          ,smpmax          ,smpmin          ,&
             trsmx0          ,tcrit                                             ,&
 

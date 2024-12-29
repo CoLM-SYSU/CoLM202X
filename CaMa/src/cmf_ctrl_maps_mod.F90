@@ -18,7 +18,7 @@ MODULE CMF_CTRL_MAPS_MOD
 ! See the License for the specific language governing permissions and limitations under the License.
 !==========================================================
    ! shared variables in module
-   USE PARKIND1,                only: JPIM, JPRB, JPRM
+   USE PARKIND1,                ONLY: JPIM, JPRB, JPRD, JPRM
    USE YOS_CMF_INPUT,           only: LOGNAM
    IMPLICIT NONE
    SAVE
@@ -44,7 +44,7 @@ MODULE CMF_CTRL_MAPS_MOD
    character(LEN=256)              :: CRIVCLINC       !! river map netcdf
    character(LEN=256)              :: CRIVPARNC       !! river parameter netcdf (WIDTH,HEIGHT, Manning, ground wateer delay)
    character(LEN=256)              :: CMEANSLNC       !! mean sea level netCDF
-   character(LEN=256)              :: CMPIREGNC       !! MPI Region netCDF
+   character(LEN=256)              :: CMPIREGNC       !! MPI region map in netcdf
 
    NAMELIST/NMAP/     CNEXTXY,  CGRAREA,  CELEVTN,  CNXTDST, CRIVLEN, CFLDHGT, &
                      CRIVWTH,  CRIVHGT,  CRIVMAN,  CPTHOUT, CGDWDLY, CMEANSL, &
@@ -313,8 +313,11 @@ CONTAINS
       !
       integer(KIND=JPIM),SAVE         :: IX,IY
       integer(KIND=JPIM),SAVE         :: IREGION
+#ifdef UseMPI_CMF
 #ifdef UseCDF_CMF
-      integer(KIND=JPIM)              :: NCID,VARID
+INTEGER(KIND=JPIM)              :: NCID
+INTEGER(KIND=JPIM)              :: VARID
+#endif
 #endif
 !$OMP THREADPRIVATE               (IX)
       !================================================
@@ -381,8 +384,7 @@ CONTAINS
 
          write(LOGNAM,*) 'CALC_REGION: REGIONALL= ', REGIONALL
          write(LOGNAM,*) 'CALC_REGION: NSEQMAX='   , NSEQMAX
-         write(LOGNAM,*) 'CALC_REGION: NSEQALL='   , NSEQALL
-
+         WRITE(LOGNAM,*) 'CALC_REGION: NSEQALL='   , NSEQALL
       END SUBROUTINE CALC_REGION
       !==========================================================
       !+
@@ -582,7 +584,7 @@ CONTAINS
                            & LFPLAIN,  LMEANSL,  LGDWDLY,  LSLPMIX, LSLOPEMOUTH
    USE YOS_CMF_MAP,    only: D2NXTDST, D2GRAREA, D2ELEVTN, D2RIVLEN, &
                            & D2RIVWTH, D2RIVHGT, D2FLDHGT, D2RIVELV, &
-                           & D2FLDGRD, D2RIVMAN, D2RIVSTOMAX, D2FLDSTOMAX,  &
+                           & D2FLDGRD, D2RIVMAN, P2RIVSTOMAX, P2FLDSTOMAX,  &
                            & DFRCINC,  NSEQALL,  NSEQMAX, D2MEANSL, D2DWNELV, &
                            & D2GDWDLY, I2MASK
    IMPLICIT NONE
@@ -632,21 +634,21 @@ CONTAINS
       ! *** 3a. Calc Channel Parameters
       write(LOGNAM,*) 'TOPO_INIT: calc river channel parameters'
 
-      allocate(D2RIVSTOMAX(NSEQMAX,1))
+      ALLOCATE(P2RIVSTOMAX(NSEQMAX,1))
       allocate(D2RIVELV(NSEQMAX,1))
 
       IF ( LFPLAIN ) THEN
-         D2RIVSTOMAX(:,:) = D2RIVLEN(:,:) * D2RIVWTH(:,:) * D2RIVHGT(:,:)
+         P2RIVSTOMAX(:,:) = D2RIVLEN(:,:) * D2RIVWTH(:,:) * D2RIVHGT(:,:)
       ELSE
          write(LOGNAM,*) 'TOPO_INIT: no floodplain (rivstomax=1.D18)'
-         D2RIVSTOMAX(:,:) = 1.E18
+         P2RIVSTOMAX(:,:) = 1.E18
       ENDIF
       D2RIVELV(:,:) = D2ELEVTN(:,:) - D2RIVHGT(:,:)
 
       !*** 3b. Calc Channel Parameters
       write(LOGNAM,*) 'TOPO_INIT: calc floodplain parameters'
 
-      allocate(D2FLDSTOMAX(NSEQMAX,1,NLFP))
+      ALLOCATE(P2FLDSTOMAX(NSEQMAX,1,NLFP))
       allocate(D2FLDGRD(NSEQMAX,1,NLFP))
       CALL SET_FLDSTG
 
@@ -903,20 +905,20 @@ CONTAINS
    real(KIND=JPRB),SAVE     ::  DWTHINC
 !$OMP THREADPRIVATE               (I,DSTONOW,DSTOPRE,DHGTPRE,DWTHINC)
       !================================================
-      D2FLDSTOMAX(:,:,:) = 0._JPRB
+      P2FLDSTOMAX(:,:,:) = 0._JPRD
       D2FLDGRD(:,:,:)    = 0._JPRB
       DFRCINC=dble(NLFP)**(-1.)
       !
 !$OMP PARALLEL DO
       DO ISEQ=1, NSEQALL
-         DSTOPRE = D2RIVSTOMAX(ISEQ,1)
+         DSTOPRE = P2RIVSTOMAX(ISEQ,1)
          DHGTPRE = 0._JPRB
          DWTHINC = D2GRAREA(ISEQ,1) * D2RIVLEN(ISEQ,1)**(-1.) * DFRCINC
          DO I=1, NLFP
             DSTONOW = D2RIVLEN(ISEQ,1) * ( D2RIVWTH(ISEQ,1) + DWTHINC*(DBLE(I)-0.5) ) * (D2FLDHGT(ISEQ,1,I)-DHGTPRE)
-            D2FLDSTOMAX(ISEQ,1,I) = DSTOPRE + DSTONOW
+            P2FLDSTOMAX(ISEQ,1,I) = DSTOPRE + DSTONOW
             D2FLDGRD(ISEQ,1,I) = (D2FLDHGT(ISEQ,1,I)-DHGTPRE) * DWTHINC**(-1.)
-            DSTOPRE = D2FLDSTOMAX(ISEQ,1,I)
+            DSTOPRE = P2FLDSTOMAX(ISEQ,1,I)
             DHGTPRE = D2FLDHGT(ISEQ,1,I)
          ENDDO
       ENDDO

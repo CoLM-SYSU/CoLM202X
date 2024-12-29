@@ -27,12 +27,16 @@ CONTAINS
 #endif
          psi0,rootfr, dz_soisno,t_soisno,wliq_soisno,rootr,etrc,rstfac)
 
-  !=======================================================================
-  ! !DESCRIPTION:
-  ! effective root fraction and maximum possible transpiration rate
-  ! Original author : Yongjiu Dai, 08/30/2002
-  ! Revision author : Shupeng Zhang and Xingjie Lu.
-  !=======================================================================
+!=======================================================================
+! !DESCRIPTION:
+!  effective root fraction and maximum possible transpiration rate
+!
+!  Original author : Yongjiu Dai, 08/30/2002
+!
+! !HISTORY:
+!  09/2021, Shupeng Zhang and Xingjie Lu: add vanGenuchten scheme to
+!           calculate soil water potential.
+!=======================================================================
 
    USE MOD_Precision
    USE MOD_Const_Physical, only : tfrz
@@ -41,14 +45,14 @@ CONTAINS
 #endif
    IMPLICIT NONE
 
-  !-----------------------Argument-----------------------------------------
+  !-----------------------Argument--------------------------------------
 
-   integer, intent(in) :: nl_soil            ! upper bound of array
+   integer, intent(in) :: nl_soil                  ! upper bound of array
 
-   real(r8), intent(in) :: trsmx0            ! max transpiration for moist soil+100% veg.[mm/s]
-   real(r8), intent(in) :: porsl(1:nl_soil)  ! soil porosity [-]
+   real(r8), intent(in) :: trsmx0                  ! max transpiration for moist soil+100% veg.[mm/s]
+   real(r8), intent(in) :: porsl(1:nl_soil)        ! soil porosity [-]
 #ifdef Campbell_SOIL_MODEL
-   real(r8), intent(in) :: bsw(1:nl_soil)    ! Clapp-Hornberger "B"
+   real(r8), intent(in) :: bsw(1:nl_soil)          ! Clapp-Hornberger "B"
 #endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
    real(r8), intent(in) :: theta_r  (1:nl_soil)
@@ -58,17 +62,17 @@ CONTAINS
    real(r8), intent(in) :: sc_vgm   (1:nl_soil)
    real(r8), intent(in) :: fc_vgm   (1:nl_soil)
 #endif
-   real(r8), intent(in) :: psi0(1:nl_soil)   ! saturated soil suction (mm) (NEGATIVE)
-   real(r8), intent(in) :: rootfr(1:nl_soil) ! fraction of roots in a layer,
-   real(r8), intent(in) :: dz_soisno(1:nl_soil)   ! layer thickness (m)
-   real(r8), intent(in) :: t_soisno(1:nl_soil)    ! soil/snow skin temperature (K)
-   real(r8), intent(in) :: wliq_soisno(1:nl_soil) ! liquid water (kg/m2)
+   real(r8), intent(in) :: psi0(1:nl_soil)         ! saturated soil suction (mm) (NEGATIVE)
+   real(r8), intent(in) :: rootfr(1:nl_soil)       ! fraction of roots in a layer,
+   real(r8), intent(in) :: dz_soisno(1:nl_soil)    ! layer thickness (m)
+   real(r8), intent(in) :: t_soisno(1:nl_soil)     ! soil/snow skin temperature (K)
+   real(r8), intent(in) :: wliq_soisno(1:nl_soil)  ! liquid water (kg/m2)
 
-   real(r8), intent(out) :: rootr(1:nl_soil) ! root resistance of a layer, all layers add to 1
-   real(r8), intent(out) :: etrc             ! maximum possible transpiration rate (mm h2o/s)
-   real(r8), intent(out) :: rstfac           ! factor of soil water stress for photosynthesis
+   real(r8), intent(out) :: rootr(1:nl_soil)       ! root resistance of a layer, all layers add to 1
+   real(r8), intent(out) :: etrc                   ! maximum possible transpiration rate (mm h2o/s)
+   real(r8), intent(out) :: rstfac                 ! factor of soil water stress for photosynthesis
 
-  !-----------------------Local Variables------------------------------
+  !-----------------------Local Variables-------------------------------
 
    real(r8) roota             ! accumulates root resistance factors
    real(r8) rresis(1:nl_soil) ! soil water contribution to root resistance
@@ -78,7 +82,7 @@ CONTAINS
 
    integer i                  ! loop counter
 
-  !-----------------------End Variables list---------------------------
+  !-----------------------End Variables list----------------------------
 
       ! transpiration potential(etrc) and root resistance factors (rstfac)
 

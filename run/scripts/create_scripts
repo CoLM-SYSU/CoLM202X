@@ -201,7 +201,7 @@ CreateScripts()
    RESTENDYR=`expr $ENDYR + 1`
    ILOOP='$iloop'
    LOOPPLUS='iloop=`expr $iloop + 1`'
-   SEQYR='`seq -w `'${STARTYR}' '${ENDYR}'`'
+   SEQYR='`seq -w '${STARTYR}' '${ENDYR}'`'
    SEQMO='`seq -w 1 12 `'
    YEARMON='${iyr}-${i}'
    NDAYSOFENDYR=`NdaysofYear ${endyr}`
@@ -393,6 +393,8 @@ if [ -z "${ENDYR}" ];then
    echo "Note: -e option is absent, set endyr 2000 as the default."
    echo
    ENDYR=2000
+else
+   ENDYR=`expr $ENDYR - 1`
 fi
 
 echo HEADER before check $HEADER

@@ -45,6 +45,8 @@ MODULE MOD_UserSpecifiedForcing
    character(len=256) :: dataset
 
    logical  :: solarin_all_band   ! whether solar radiation in all bands is available
+
+   character(len=256) :: HEIGHT_mode ! observation height mode
    real(r8) :: HEIGHT_V           ! observation height of wind speed
    real(r8) :: HEIGHT_T           ! observation height of air temperature
    real(r8) :: HEIGHT_Q           ! observation height of specific humidity
@@ -70,6 +72,7 @@ MODULE MOD_UserSpecifiedForcing
 
    character(len=256), allocatable :: fprefix(:)   ! file prefix
    character(len=256), allocatable :: vname(:)     ! variable name
+   character(len=256), allocatable :: timelog(:)   ! variable time log info
    character(len=256), allocatable :: tintalgo(:)  ! interpolation algorithm
 
    ! ----- public subroutines -----
@@ -101,12 +104,15 @@ CONTAINS
 
       IF (allocated(fprefix )) deallocate(fprefix )
       IF (allocated(vname   )) deallocate(vname   )
+      IF (allocated(timelog )) deallocate(timelog )
       IF (allocated(tintalgo)) deallocate(tintalgo)
       allocate (fprefix  (NVAR))
       allocate (vname    (NVAR))
+      allocate (timelog  (NVAR))
       allocate (tintalgo (NVAR))
 
       solarin_all_band = DEF_forcing%solarin_all_band ! whether solar radiation in all bands is available
+      HEIGHT_mode      = DEF_forcing%HEIGHT_mode      ! observation height mode
       HEIGHT_V         = DEF_forcing%HEIGHT_V         ! observation height of wind speed
       HEIGHT_T         = DEF_forcing%HEIGHT_T         ! observation height of air temperature
       HEIGHT_Q         = DEF_forcing%HEIGHT_Q         ! observation height of specific humidity
@@ -129,16 +135,17 @@ CONTAINS
       groupby          = DEF_forcing%groupby          ! file grouped by year/month
 
       DO ivar = 1, NVAR_default
-         fprefix (ivar) = DEF_forcing%fprefix(ivar)  ! file prefix
-         vname   (ivar) = DEF_forcing%vname(ivar)    ! variable name
-         tintalgo(ivar) = DEF_forcing%tintalgo(ivar) ! interpolation algorithm
+         fprefix (ivar) = DEF_forcing%fprefix(ivar)   ! file prefix
+         vname   (ivar) = DEF_forcing%vname(ivar)     ! variable name
+         timelog (ivar) = DEF_forcing%timelog(ivar)   ! variable name
+         tintalgo(ivar) = DEF_forcing%tintalgo(ivar)  ! interpolation algorithm
       END DO
       IF (DEF_USE_CBL_HEIGHT) THEN
          fprefix (NVAR) = DEF_forcing%CBL_fprefix
          vname   (NVAR) = DEF_forcing%CBL_vname
          tintalgo(NVAR) = DEF_forcing%CBL_tintalgo
-         dtime(NVAR)    = DEF_forcing%CBL_dtime
-         offset(NVAR)   = DEF_forcing%CBL_offset
+         dtime   (NVAR) = DEF_forcing%CBL_dtime
+         offset  (NVAR) = DEF_forcing%CBL_offset
       ENDIF
    END SUBROUTINE init_user_specified_forcing
 
@@ -377,7 +384,7 @@ CONTAINS
       !----------------
          !---2021.11.01   Zhongwang Wei @ SYSU: zip file to reduce the size of the data; remove offset and scale_factor
 
-         metfilename = '/'//trim(fprefix(var_i))//trim(yearstr)//trim(monthstr)//'_v2.0.nc'
+         metfilename = '/'//trim(fprefix(var_i))//trim(yearstr)//trim(monthstr)//'_v2.1.nc'
       CASE ('CRUJRA')
       !DESCRIPTION
       !===========
@@ -435,7 +442,7 @@ CONTAINS
       !References:
       !-------------------
          !---Kosaka Y., S. Kobayashi, Y. Harada, C. Kobayashi, H. Naoe, K. Yoshimoto, M. Harada, N. Goto, J. Chiba, K. Miyaoka, R. Sekiguchi,
-         !   M. Deushi, H. Kamahori, T. Nakaegawa; T. Y.Tanaka, T. Tokuhiro, Y. Sato, Y. Matsushita, and K. Onogi, 2024: 
+         !   M. Deushi, H. Kamahori, T. Nakaegawa; T. Y.Tanaka, T. Tokuhiro, Y. Sato, Y. Matsushita, and K. Onogi, 2024:
          !   The JRA-3Q reanalysis. J. Meteor. Soc. Japan, 102, https://doi.org/10.2151/jmsj.2024-004.
 
 
@@ -448,11 +455,11 @@ CONTAINS
          !DESCRIPTION
          !===========
             !---the Japanese 55-year Reanalysis
-   
+
          !data source:
          !-------------------
             !---https://jra.kishou.go.jp/JRA-55/index_en.html
-   
+
          !References:
          !-------------------
             !---Kobayashi, S., Y. Ota, Y. Harada, A. Ebita, M. Moriya, H. Onoda, K. Onogi,
@@ -463,14 +470,14 @@ CONTAINS
             !   K. Onogi, K. Miyaoka, and K. Takahashi, 2016: The JRA-55 Reanalysis:
             !   Representation of atmospheric circulation and climate variability, J. Meteor. Soc. Japan,
             !   94, 269-302, doi:10.2151/jmsj.2016-015.
-   
+
          !REVISION HISTORY
          !----------------
             !---2021.11.01   Zhongwang Wei @ SYSU: zip file to reduce the size of the data; remove offset and scale_factor
-   
-   
 
-         metfilename = '/'//trim(fprefix(var_i))//'_'//trim(yearstr)//'.nc'
+
+
+         metfilename = '/'//trim(fprefix(var_i))//trim(yearstr)//trim(monthstr)//'.nc'
 
 
       CASE ('GDAS')
@@ -564,24 +571,24 @@ CONTAINS
          !DESCRIPTION
          !===========
             !---CMA’s first-generation global atmospheric reanalysis (RA) covering 1979–2018 (CRA-40)
-   
+
          !data source:
          !-------------------
             !---https://data.cma.cn/en
-   
+
          !References:
          !-------------------
-            !---Liu, Z., Jiang, L., Shi, C. et al. CRA-40/Atmosphere—The First-Generation Chinese Atmospheric Reanalysis (1979–2018): 
+            !---Liu, Z., Jiang, L., Shi, C. et al. CRA-40/Atmosphere—The First-Generation Chinese Atmospheric Reanalysis (1979–2018):
             !   System Description and Performance Evaluation. J Meteorol Res 37, 1–19 (2023). https://doi.org/10.1007/s13351-023-2086-x
 
 
-   
+
             !REVISION HISTORY
          !----------------
             !---2024.04.10   Zhongwang Wei @ SYSU: regroup the data into annual file;
             !   zip file to reduce the size of the data; remove offset and scale_factor
-   
-   
+
+
             metfilename = '/'//trim(fprefix(var_i))//'_'//trim(yearstr)//'.nc'
       CASE ('TPMFD')
       !DESCRIPTION
@@ -815,7 +822,7 @@ CONTAINS
 
                   CASE ('JRA55') ! JRA55 forcing
 
-                     forcn(4)%blk(ib,jb)%val(i,j)=forcn(4)%blk(ib,jb)%val(i,j)/86400.
+                     forcn(4)%blk(ib,jb)%val(i,j)=forcn(4)%blk(ib,jb)%val(i,j)/86400.0 !mm/s
                      CALL qsadv (forcn(1)%blk(ib,jb)%val(i,j), forcn(3)%blk(ib,jb)%val(i,j), &
                         es,esdT,qsat_tmp,dqsat_tmpdT)
                      IF (qsat_tmp < forcn(2)%blk(ib,jb)%val(i,j)) THEN
@@ -824,7 +831,7 @@ CONTAINS
 
                   CASE ('JRA3Q') ! JRA3Q forcing
 
-                     forcn(4)%blk(ib,jb)%val(i,j)=forcn(4)%blk(ib,jb)%val(i,j)/86400.
+                     forcn(4)%blk(ib,jb)%val(i,j)=forcn(4)%blk(ib,jb)%val(i,j)
                      CALL qsadv (forcn(1)%blk(ib,jb)%val(i,j), forcn(3)%blk(ib,jb)%val(i,j), &
                         es,esdT,qsat_tmp,dqsat_tmpdT)
                      IF (qsat_tmp < forcn(2)%blk(ib,jb)%val(i,j)) THEN

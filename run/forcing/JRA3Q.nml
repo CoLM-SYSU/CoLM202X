@@ -1,0 +1,47 @@
+&nl_colm_forcing
+
+   ! ----- forcing -----
+   DEF_dir_forcing  ='/share/home/dq013/zhwei/colm/data/CoLM_Forcing/JRA3Q/'
+
+   DEF_forcing%dataset           = 'JRA3Q'
+   DEF_forcing%solarin_all_band  = .true.
+   DEF_forcing%HEIGHT_V          = 50.0
+   DEF_forcing%HEIGHT_T          = 40.
+   DEF_forcing%HEIGHT_Q          = 40.
+
+   DEF_forcing%NVAR              = 8        ! variable number of forcing data
+   DEF_forcing%startyr           = 2003     ! start year of forcing data
+   DEF_forcing%startmo           = 1        ! start month of forcing data
+   DEF_forcing%endyr             = 2023     ! end year of forcing data
+   DEF_forcing%endmo             = 12       ! end month of forcing data
+   DEF_forcing%dtime             = 3600 3600 3600 3600 3600 3600 3600 3600
+   DEF_forcing%offset            = 0 0 0 1800 0 0 0 1800
+   DEF_forcing%nlands            = 1        ! land grid number in 1d
+
+   DEF_forcing%leapyear          = .true.   ! leapyear calendar
+   DEF_forcing%data2d            = .true.   ! data in 2 dimension (lon, lat)
+   DEF_forcing%hightdim          = .false.  ! have "z" dimension
+   DEF_forcing%dim2d             = .false.  ! lat/lon value in 2 dimension (lon, lat)
+
+   DEF_forcing%latname           = 'lat'    ! dimension name of latitude
+   DEF_forcing%lonname           = 'lon'    ! dimension name of longitude
+
+   DEF_forcing%groupby           = 'month'  ! file grouped by year/month
+
+   DEF_forcing%fprefix(1) = 'tmp2m/tmp2m'
+   DEF_forcing%fprefix(2) = 'spfh2m/spfh2m'
+   DEF_forcing%fprefix(3) = 'pres/pres'
+   DEF_forcing%fprefix(4) = 'tprate/tprate'
+   DEF_forcing%fprefix(5) = 'u/u'
+   DEF_forcing%fprefix(6) = 'v/v'
+   DEF_forcing%fprefix(7) = 'dswrf/dswrf'
+   DEF_forcing%fprefix(8) = 'dlwrf/dlwrf'
+
+
+
+   DEF_forcing%vname    = 'tmp2m-hgt-fc-gauss' 'spfh2m-hgt-fc-gauss' 'pres-sfc-fc-gauss' 'tprate1have-sfc-fc-gauss' 'ugrd10m-hgt-fc-gauss' 'vgrd10m-hgt-fc-gauss' 'dswrf1have-sfc-fc-gauss' 'dlwrf1have-sfc-fc-gauss'
+   DEF_forcing%timelog  = 'instant' 'instant' 'instant' 'foreward' 'instant' 'instant' 'foreward' 'foreward'
+   DEF_forcing%tintalgo = 'linear' 'linear' 'linear' 'linear' 'linear' 'linear' 'coszen' 'linear'
+
+
+/

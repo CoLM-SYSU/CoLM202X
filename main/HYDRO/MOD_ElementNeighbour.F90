@@ -128,7 +128,7 @@ CONTAINS
 
 #ifdef USEMPI
 
-      CALL mpi_bcast (maxnnb, 1, MPI_INTEGER, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (maxnnb, 1, MPI_INTEGER, p_address_master, p_comm_glb, p_err)
 
       IF (p_is_master) THEN
 
@@ -191,23 +191,23 @@ CONTAINS
 
 #ifdef USEMPI
          mesg(1:2) = (/p_iam_glb, numelm/)
-         CALL mpi_send (mesg(1:2), 2, MPI_INTEGER, p_root, mpi_tag_mesg, p_comm_glb, p_err) 
+         CALL mpi_send (mesg(1:2), 2, MPI_INTEGER, p_address_master, mpi_tag_mesg, p_comm_glb, p_err) 
 
          IF (numelm > 0) THEN
             CALL mpi_send (eindex, numelm, MPI_INTEGER8, &
-               p_root, mpi_tag_data, p_comm_glb, p_err) 
+               p_address_master, mpi_tag_data, p_comm_glb, p_err) 
 
             allocate (nnball (numelm))
             CALL mpi_recv (nnball, numelm, MPI_INTEGER, &
-               p_root, mpi_tag_data, p_comm_glb, p_stat, p_err)
+               p_address_master, mpi_tag_data, p_comm_glb, p_stat, p_err)
 
             allocate (idxnball (maxnnb,numelm))
             CALL mpi_recv (idxnball, maxnnb*numelm, MPI_INTEGER, &
-               p_root, mpi_tag_data, p_comm_glb, p_stat, p_err)
+               p_address_master, mpi_tag_data, p_comm_glb, p_stat, p_err)
 
             allocate (lenbdall (maxnnb,numelm))
             CALL mpi_recv (lenbdall, maxnnb*numelm, MPI_REAL8, &
-               p_root, mpi_tag_data, p_comm_glb, p_stat, p_err)
+               p_address_master, mpi_tag_data, p_comm_glb, p_stat, p_err)
          ENDIF
 #else
          allocate (icache1 (numelm))
@@ -319,16 +319,16 @@ CONTAINS
 
 #ifdef USEMPI
          mesg(1:2) = (/p_iam_glb, nnbinq/)
-         CALL mpi_send (mesg(1:2), 2, MPI_INTEGER, p_root, mpi_tag_mesg, p_comm_glb, p_err) 
+         CALL mpi_send (mesg(1:2), 2, MPI_INTEGER, p_address_master, mpi_tag_mesg, p_comm_glb, p_err) 
 
          IF (nnbinq > 0) THEN
             
             CALL mpi_send (idxinq(1:nnbinq), nnbinq, MPI_INTEGER8, &
-               p_root, mpi_tag_data, p_comm_glb, p_err) 
+               p_address_master, mpi_tag_data, p_comm_glb, p_err) 
 
             allocate (addrinq (nnbinq))
             CALL mpi_recv (addrinq, nnbinq, MPI_INTEGER, &
-               p_root, mpi_tag_data, p_comm_glb, p_stat, p_err)
+               p_address_master, mpi_tag_data, p_comm_glb, p_stat, p_err)
 
          ENDIF
 

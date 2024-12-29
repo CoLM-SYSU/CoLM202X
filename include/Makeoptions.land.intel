@@ -2,12 +2,10 @@
 # mpif90 - ifort 
 # 
 
- FF = mpif90 -f90=ifort
+ FF = mpif90
 
- NETCDF_LIB = /usr/lib/x86_64-linux-gnu
- NETCDF_INC = /usr/include
-
- MATH_LIB = /share/home/dq013/software//miniconda3/lib/  #MKL LIB_PATH
+ NETCDF_LIB = /opt/netcdf-c-4.9.2-fortran-4.6.0-intel/lib
+ NETCDF_INC = /opt/netcdf-c-4.9.2-fortran-4.6.0-intel/include
 
  MOD_CMD = -module 
 

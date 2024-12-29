@@ -51,46 +51,49 @@ CONTAINS
               o3coefv_sun,o3coefv_sha,o3coefg_sun,o3coefg_sha,&
               lai_old    ,o3uptakesun,o3uptakesha,forc_ozone ,&
 !End ozone stress variables
+!WUE stomata model parameter
+              lambda                                                           ,&
+!End WUE stomata model parmaeter
               hpbl       ,&
               qintr_rain ,qintr_snow ,t_precip   ,hprl       ,dheatl     ,smp        ,&
               hk         ,hksati     ,rootflux                                        )
 
 !=======================================================================
 ! !DESCRIPTION:
-! Foliage energy conservation is given by foliage energy budget equation
-!                      Rnet - Hf - LEf = 0
-! The equation is solved by Newton-Raphson iteration, in which this iteration
-! includes the calculation of the photosynthesis and stomatal resistance, and the
-! integration of turbulent flux profiles. The sensible and latent heat
-! transfer between foliage and atmosphere and ground is linked by the equations:
-!                      Ha = Hf + Hg and Ea = Ef + Eg
+!  Foliage energy conservation is given by foliage energy budget equation
+!                       Rnet - Hf - LEf = 0
+!  The equation is solved by Newton-Raphson iteration, in which this iteration
+!  includes the calculation of the photosynthesis and stomatal resistance, and the
+!  integration of turbulent flux profiles. The sensible and latent heat
+!  transfer between foliage and atmosphere and ground is linked by the equations:
+!                       Ha = Hf + Hg and Ea = Ef + Eg
 !
-! Original author : Yongjiu Dai, August 15, 2001
+!  Original author : Yongjiu Dai, August 15, 2001
 !
 ! !REVISIONS:
 !
-! 09/2014, Hua Yuan: imbalanced energy due to T/q adjustment is allocated
-!          to sensible heat flux.
+!  09/2014, Hua Yuan: imbalanced energy due to T/q adjustment is allocated
+!           to sensible heat flux.
 !
-! 10/2017, Hua Yuan: added options for z0, displa, rb and rd calculation
-!          (Dai, Y., Yuan, H., Xin, Q., Wang, D., Shangguan, W.,
-!          Zhang, S., et al. (2019). Different representations of
-!          canopy structure—A large source of uncertainty in global
-!          land surface modeling. Agricultural and Forest Meteorology,
-!          269–270, 119–135. https://doi.org/10.1016/j.agrformet.2019.02.006
+!  10/2017, Hua Yuan: added options for z0, displa, rb and rd calculation
+!           (Dai, Y., Yuan, H., Xin, Q., Wang, D., Shangguan, W.,
+!           Zhang, S., et al. (2019). Different representations of
+!           canopy structure—A large source of uncertainty in global
+!           land surface modeling. Agricultural and Forest Meteorology,
+!           269–270, 119–135. https://doi.org/10.1016/j.agrformet.2019.02.006
 !
-! 10/2019, Hua Yuan: change only the leaf tempertature from two-leaf
-!          to one-leaf (due to large differences may exist btween sunlit/shaded
-!          leaf temperature.
+!  10/2019, Hua Yuan: change only the leaf tempertature from two-leaf
+!           to one-leaf (due to large differences may exist btween sunlit/shaded
+!           leaf temperature.
 !
-! 01/2021, Xingjie Lu and Nan Wei: added plant hydraulic process interface
+!  01/2021, Xingjie Lu and Nan Wei: added plant hydraulic process interface.
 !
-! 01/2021, Nan Wei: added interaction btw prec and canopy
+!  01/2021, Nan Wei: added interaction btw prec and canopy.
 !
-! 05/2023, Shaofeng Liu: add option to call moninobuk_leddy, the LargeEddy
-!          surface turbulence scheme (LZD2022); make a proper update of um.
+!  05/2023, Shaofeng Liu: add option to call moninobuk_leddy, the LargeEddy
+!           surface turbulence scheme (LZD2022); make a proper update of um.
 !
-! 04/2024, Hua Yuan: add option to account for vegetation snow process
+!  04/2024, Hua Yuan: add option to account for vegetation snow process.
 !
 !=======================================================================
 
@@ -102,6 +105,7 @@ CONTAINS
    USE MOD_CanopyLayerProfile
    USE MOD_TurbulenceLEddy
    USE MOD_AssimStomataConductance
+   USE MOD_UserSpecifiedForcing, only: HEIGHT_mode
    USE MOD_Vars_TimeInvariants, only: patchclass
    USE MOD_Const_LC, only: z0mr, displar
    USE MOD_PlantHydraulic, only :PlantHydraulicStress_twoleaf, getvegwp_twoleaf
@@ -141,6 +145,9 @@ CONTAINS
         g0,         &! conductance-photosynthesis intercept for medlyn model
         gradm,      &! conductance-photosynthesis slope parameter
         binter,     &! conductance-photosynthesis intercept
+!Ozone WUE stomata model parameter
+        lambda,     &! Marginal water cost of carbon gain ((mol h2o) (mol co2)-1)
+!End WUE stomata model parameter
         extkn        ! coefficient of leaf nitrogen allocation
    real(r8), intent(in) :: & ! for plant hydraulic scheme
         kmax_sun,   &! Plant Hydraulics Paramters
@@ -208,7 +215,7 @@ CONTAINS
         t_precip,   &! snowfall/rainfall temperature [kelvin]
         qintr_rain, &! rainfall interception (mm h2o/s)
         qintr_snow, &! snowfall interception (mm h2o/s)
-        smp     (1:nl_soil), &! precipitation sensible heat from canopy
+        smp     (1:nl_soil), &! soil matrix potential
         rootfr  (1:nl_soil), &! root fraction
         hksati  (1:nl_soil), &! hydraulic conductivity at saturation [mm h2o/s]
         hk      (1:nl_soil)   ! soil hydraulic conducatance
@@ -298,6 +305,9 @@ CONTAINS
 
    real(r8) :: &
         displa,     &! displacement height [m]
+        hu_,        &! adjusted observational height of wind [m]
+        ht_,        &! adjusted observational height of temperature [m]
+        hq_,        &! adjusted observational height of humidity [m]
         zldis,      &! reference height "minus" zero displacement heght [m]
         zii,        &! convective boundary layer height [m]
         z0mv,       &! roughness length, momentum [m]
@@ -512,7 +522,23 @@ CONTAINS
       dth = thm - taf
       dqh = qm  - qaf
       dthv  = dth*(1.+0.61*qm) + 0.61*th*dqh
-      zldis = hu - displa
+
+      hu_ = hu; ht_ = ht; hq_ = hq;
+
+      IF (trim(HEIGHT_mode) == 'absolute') THEN
+#ifndef SingPoint
+         ! to ensure the obs height >= htop+10.
+         hu_ = max(htop+10., hu)
+         ht_ = max(htop+10., ht)
+         hq_ = max(htop+10., hq)
+#endif
+      ELSE ! relative height
+         hu_ = htop + hu
+         ht_ = htop + ht
+         hq_ = htop + hq
+      ENDIF
+
+      zldis = hu_ - displa
 
       IF(zldis <= 0.0) THEN
          write(6,*) 'the obs height of u less than the zero displacement heght'
@@ -544,11 +570,11 @@ CONTAINS
 ! Evaluate stability-dependent variables using moz from prior iteration
          IF (rd_opt == 3) THEN
             IF (DEF_USE_CBL_HEIGHT) THEN
-              CALL moninobukm_leddy(hu,ht,hq,displa,z0mv,z0hv,z0qv,obu,um, &
+              CALL moninobukm_leddy(hu_,ht_,hq_,displa,z0mv,z0hv,z0qv,obu,um, &
                                     displasink,z0mv,hpbl,ustar,fh2m,fq2m, &
                                     htop,fmtop,fm,fh,fq,fht,fqt,phih)
             ELSE
-              CALL moninobukm(hu,ht,hq,displa,z0mv,z0hv,z0qv,obu,um, &
+              CALL moninobukm(hu_,ht_,hq_,displa,z0mv,z0hv,z0qv,obu,um, &
                               displasink,z0mv,ustar,fh2m,fq2m, &
                               htop,fmtop,fm,fh,fq,fht,fqt,phih)
             ENDIF
@@ -558,10 +584,10 @@ CONTAINS
             raw = 1./(vonkar/(fq-fqt)*ustar)
          ELSE
             IF (DEF_USE_CBL_HEIGHT) THEN
-               CALL moninobuk_leddy(hu,ht,hq,displa,z0mv,z0hv,z0qv,obu,um,hpbl, &
+               CALL moninobuk_leddy(hu_,ht_,hq_,displa,z0mv,z0hv,z0qv,obu,um,hpbl, &
                                     ustar,fh2m,fq2m,fm10m,fm,fh,fq)
             ELSE
-               CALL moninobuk(hu,ht,hq,displa,z0mv,z0hv,z0qv,obu,um,&
+               CALL moninobuk(hu_,ht_,hq_,displa,z0mv,z0hv,z0qv,obu,um,&
                               ustar,fh2m,fq2m,fm10m,fm,fh,fq)
             ENDIF
             ! Aerodynamic resistance
@@ -634,6 +660,9 @@ CONTAINS
             !Ozone stress variables
                  o3coefv_sun   ,o3coefg_sun   ,&
             !End ozone stress variables
+            !Ozone WUE stomata model parameter
+                 lambda   ,&
+            !End WUE stomata model parameter
                  rbsun    ,raw      ,rstfacsun,cintsun  ,&
                  assimsun ,respcsun ,rssun    )
 
@@ -646,6 +675,9 @@ CONTAINS
             ! Ozone stress variables
                  o3coefv_sha    ,o3coefg_sha  ,&
             ! End ozone stress variables
+            ! Ozone WUE stomata model parameter
+                 lambda   ,&
+            ! End WUE stomata model parameter
                  rbsha    ,raw      ,rstfacsha,cintsha  ,&
                  assimsha ,respcsha ,rssha    )
 
@@ -858,7 +890,7 @@ ENDIF
 !-----------------------------------------------------------------------
 
          del  = sqrt( dtl(it)*dtl(it) )
-         dele = dtl(it) * dtl(it) * ( dirab_dtl**2 + fsenl_dtl**2 + hvap*fevpl_dtl**2 )
+         dele = dtl(it) * dtl(it) * ( dirab_dtl**2 + fsenl_dtl**2 + (hvap*fevpl_dtl)**2 )
          dele = sqrt(dele)
 
 !-----------------------------------------------------------------------
@@ -906,7 +938,7 @@ ENDIF
            um = max(ur,.1)
          ELSE
            IF (DEF_USE_CBL_HEIGHT) THEN !//TODO: Shaofeng, 2023.05.18
-             zii = max(5.*hu,hpbl)
+             zii = max(5.*hu_,hpbl)
            ENDIF !//TODO: Shaofeng, 2023.05.18
            wc = (-grav*ustar*thvstar*zii/thv)**(1./3.)
           wc2 = beta*beta*(wc*wc)
@@ -1284,7 +1316,7 @@ ENDIF
       vegt   =  lsai
 
       fwet = 0
-      IF(ldew > 0.) THEN
+      IF (ldew > 0.) THEN
          fwet = ((dewmxi/vegt)*ldew)**.666666666666
          ! Check for maximum limit of fwet
          fwet = min(fwet,1.0)

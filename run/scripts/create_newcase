@@ -28,29 +28,6 @@ Help()
    echo '  -n|--casename (Mandatoray) ${Name} is the path and name of case to be '
    echo '       created. Note that ''/'' should not be appeared at end of case path'
    echo
-   echo '  -i|--spinup (optional) ${SpinupScheme} specify the spinup scheme set up '
-   echo '       by the bash script case.submit and namelist file:'
-   echo
-   echo '       1. none (default)'
-   echo '          No spinup is set up in the bash script case.submit, but spinup '
-   echo '          still can be setup in the namelist'
-   echo '       2. nd'
-   echo '          Natural dynamic spin up method is set up in the bash script '
-   echo '          case.submit.'
-   echo '       3. sasund'
-   echo '          This option is for bgc. Semi-analytic spinup method (sasu) will'
-   echo '          work together with Natural dynamic (nd) method (e.g. 100-year '
-   echo '          sasu + 20-year nd). Spinup procedure is set up in the bash script'
-   echo '          case.submit. Two namelists for sasu and nd will be generated '
-   echo '          respectively. In default, sasu mode will be activated until '
-   echo '          simulation is done for 100 years. and then followed by nd for 20'
-   echo '          years. The spinup protocol can be revised in case.submit after '
-   echo '          case is created.'
-   echo
-   echo "    Note. this script for SpinupScheme only works if the simulation period"
-   echo "    covers whole years. i.e. End day must be 365 (or 366 if it's leap year)"
-   echo "    and end second must be 86400."
-   echo
    echo '  -t|--startyr (optional) ${startyr} is the start year of the simulation:'
    echo
    echo '          ${startyr} (default: 1980)'
@@ -68,10 +45,10 @@ Help()
    echo '  -f|--forcing (optional) ${Forcing} is the name of meteorological forcing'
    echo '       dataset, you may choose from following list:'
    echo
-   echo '       1. GSWP3 (default)'
+   echo '       1. GSWP3'
    echo '       2. CLDAS'
    echo '       3. CMFD'
-   echo '       4. CRUJRA'
+   echo '       4. CRUJRA (default)'
    echo '       5. CRUNCEPV4'
    echo '       6. CRUNCEPV7'
    echo
@@ -98,50 +75,17 @@ Help()
    echo '          -m vg -b) Global 2.5x1.875; Lat-lon grid cells; IGBP PFT subgrid;'
    echo '          vanGenuchten Mualem model; bgc on; crop off; lulcc off; urban '
    echo '          off; cama off'
-   echo '       5. Global_Grid_2x2_PC_VG_BGC'
-   echo '          equivalent to the custom configuration (-g grid_g144x96 -s pc -m'
-   echo '          vg -b) Global 2.5x1.875; Lat-lon grid cells; IGBP PC subgrid; '
-   echo '          vanGenuchten Mualem model; bgc on; crop off; lulcc off; urban '
-   echo '          off; cama off'
-   echo '       6. Global_Grid_2x2_PFT_VG_BGC_CROP'
-   echo '          equivalent to the custom configuration (-g grid_g144x96 -s pft -m'
-   echo '          vg -b -p ) Global 2.5x1.875; Lat-lon grid cells; IGBP PFT '
-   echo '          subgrid; vanGenuchten Mualem model; bgc on; crop on; lulcc off;'
-   echo '          urban off; cama off'
-   echo '       7. Global_Grid_50km_PFT_VG_URBAN'
-   echo '          equivalent to the custom configuration (-g grid_g720x360 -s pft '
-   echo '          -m vg -u) Global 0.5x0.5; Lat-lon grid cells; IGBP PFT subgrid; '
-   echo '          vanGenuchten Mualem model;  bgc off; crop off; lulcc off; urban'
-   echo '          on; cama off'
-   echo '       8. Global_Grid_50km_PFT_VG_LULCC'
-   echo '          equivalent to the custom configuration (-g grid_g720x360 -s pft '
-   echo '          -m vg -l) Global 0.5x0.5; Lat-lon grid cells; IGBP PFT subgrid; '
-   echo '          vanGenuchten Mualem model; bgc off; crop off; lulcc on; urban '
-   echo '          off; cama off'
-   echo '       9. Global_Grid_50km_PFT_VG_CaMa'
-   echo '          equivalent to the custom configuration (-g grid_g720x360 -s pft'
-   echo '          -m vg -r) Global 0.5x0.5; Lat-lon grid cells; IGBP PFT subgrid;'
-   echo '          vanGenuchten Mualem model; bgc off; crop off; lulcc off; urban'
-   echo '          off; cama on'
-   echo '      10. RegChina_Grid_10km_PFT_VG'
-   echo '          equivalent to the custom configuration (-g grid_rChina10km -s pft'
-   echo '          -m vg) China Region 10km resolution; Lat-lon grid cells; IGBP PFT'
-   echo '          subgrid; vanGenuchten Mualem model; bgc off; crop off; lulcc off;'
-   echo '          urban off; cama off'
-   echo '      11. Global_Unstr100_PFT_VG_CaMa'
-   echo '          equivalent to the custom configuration (-g unstr_g100 -s pft -m '
-   echo '          vg -r) Global ; Unstructure grid cell; Lat-lon grid cells; IGBP '
-   echo '          PFT subgrid; vanGenuchten Mualem model; bgc off; crop off; lulcc'
-   echo '          off; urban off; cama on'
-   echo '      12. RegPearl_Catch_PFT_VG'
-   echo '          equivalent to the custom configuration (-g catch_rPearl -s pft -m'
-   echo '          vg) Pearl River Basin Region; Catchment cell; Lat-lon grid cells;'
-   echo '          IGBP PFT subgrid; vanGenuchten Mualem model; bgc off; crop off; '
-   echo '          lulcc off; urban off; cama off'
+   echo '       5. Global_Grid_2x2_PF_VG_BGC-spinup'
+   echo '          equivalent to the custom configuration (-i sasund -t 1850 -e 1850 '
+   echo '          -g grid_g144x96 -s pc -m vg -b) Global 2.5x1.875; Lat-lon grid '
+   echo '          cells; IGBP PC subgrid; vanGenuchten Mualem model; bgc on; crop '
+   echo '          off; lulcc off; urban off; cama off'
    echo 
    echo '   following option is only valid when "-c|--config" is absent, if '
-   echo '       following option is absent, default configuration will be used: '
-   echo '       -g|--gridtype (optional) ${GridName} specify grid mesh types from '
+   echo '       following option is absent, default configuration will be used. '
+   echo '       (default option is tagged alone the default instant)'
+   echo
+   echo '  -g|--gridtype (optional) ${GridName} specify grid mesh types from '
    echo '       following option:'
    echo
    echo '       1. grid_g720x360 (default)'
@@ -204,6 +148,30 @@ Help()
    echo '       2. cb'
    echo '          Campbell model'
    echo 
+   echo '  -i|--spinup (optional) ${SpinupScheme} specify the spinup scheme set up '
+   echo '       by the bash script case.submit and namelist file:'
+   echo
+   echo '       1. none (default)'
+   echo '          No spinup is set up in the bash script case.submit, but spinup '
+   echo '          still can be setup in the namelist'
+   echo '       2. nd'
+   echo '          Natural dynamic spin up method is set up in the bash script '
+   echo '          case.submit.'
+   echo '       3. sasund'
+   echo '          This option is for bgc. Semi-analytic spinup method (sasu) will'
+   echo '          work together with Natural dynamic (nd) method (e.g. 100-year '
+   echo '          sasu + 30-year nd). Spinup procedure is set up in the bash script'
+   echo '          case.submit. Two namelists for sasu and nd will be generated '
+   echo '          respectively. In default, sasu mode will be activated until '
+   echo '          simulation is done for 100 years. and then followed by nd for 30'
+   echo '          years. The spinup protocol can be revised in case.submit after '
+   echo '          case is created.'
+   echo
+   echo "    Note. this script for SpinupScheme only works if the simulation period"
+   echo "    covers whole years. i.e. End day must be 365 (or 366 if it's leap year)"
+   echo "    and end second must be 86400."
+   echo
+   echo 
    echo '  -r|--cama (optional) Switch for CaMa river routing model is on if the '
    echo '       argument "-r" is present'
    echo	           
@@ -247,20 +215,39 @@ NdaysofYear()
 #FORCINGNML=$ROOT/run/forcing/GSWP3.nml
 
 #machine = baiduboat
-#ROOT=/share/home/dq010/CoLM/CoLM202X-CROP
+#machine.config
+if [ ! -f machine.config ];then
+   echo machine.config does not exist
+   exit
+fi
+ROOT=`awk '/ROOT/ {print $2}' machine.config`
+CONFIG=$ROOT/run/machine.config
+RAWDATA=`awk '/RAWDATA/ {print $2}' $CONFIG`
+RUNTIME=`awk '/RUNTIME/ {print $2}' $CONFIG`
+MAKEOPTION=$ROOT/include/`awk '/MAKEOPTION/ {print $2}' $CONFIG`
+FORCINGPATH=`awk '/FORCINGPATH/ {print $2}' $CONFIG`
+
+#ROOT=/share/home/dq010/CoLM202X-test20240803/
 #RAWDATA=/share/home/dq010/CoLM/data/rawdata/CROP-NITRIF/CLMrawdata_updating/
 #RUNTIME=/share/home/dq010/CoLM/data/rawdata/CROP-NITRIF/CoLMruntime//
-#MAKEOPTION=$ROOT/include/Makeoptions-baiduboat-intel
+#MAKEOPTION=$ROOT/include/Makeoptions.SYSU-BaiduBoat
 #FORCINGPATH=/share/home/dq010/CoLM/data/inputdata/atm/GSWP3/
+HEADER=$ROOT/run/batch.config
+
+echo ROOT is $ROOT
+echo RAWDATA is $RAWDATA
+echo RUNTIME is $RUNTIME
+echo MAKEOPTION is $MAKEOPTION
+echo FORCINGPATH is $FORCINGPATH
 
 #machine = earthlab
-ROOT=/data/sysu_daiyj_01/luxj/CoLM202X/
-RAWDATA=/data/sysu_daiyj_01/data_mpi/CLMrawdata_igbp/
-RUNTIME=/data/sysu_daiyj_01/data_mpi/CoLMruntime/
-MAKEOPTION=$ROOT/include/Makeoptions-earthlab-par
-FORCINGPATH=/data/zhangh/data/lifang/GSWP-future/SSP126/
-HEADER=$ROOT/run/jobs.config
-CONFIG=$ROOT/run/mpi.config
+#ROOT=/data/sysu_daiyj_01/luxj/CoLM202X/
+#RAWDATA=/data/sysu_daiyj_01/data_mpi/CLMrawdata_igbp/
+#RUNTIME=/data/sysu_daiyj_01/data_mpi/CoLMruntime/
+#MAKEOPTION=$ROOT/include/Makeoptions-earthlab-par
+#FORCINGPATH=/data/zhangh/data/lifang/GSWP-future/SSP126/
+#HEADER=$ROOT/run/jobs.config
+#CONFIG=$ROOT/run/machine.config
 
 while getopts ":hbprlun:i:t:e:c:g:s:m:" options ;
 do
@@ -336,6 +323,9 @@ if [ ! -z "$ConfigName" ]; then
    if [ ! -z "$SoilModel" ]; then
       echo "Warning: -c|--config option is present, ignore -m|--soilmodel $SoilModel option"
    fi   
+   if [ ! -z "${SpinupScheme}" ];then
+      echo "Warning: -c|--config option is present, ignore -i|--spinup $SpinupScheme option"
+   fi
    case $ConfigName in
       Global_Grid_50km_PFT_VG)
 	 IsDefBGC="#undef"
@@ -360,6 +350,7 @@ if [ ! -z "$ConfigName" ]; then
          IsDefVG="#define"
 	 IsDefCB="#undef"
 	 LandMask=False
+	 SpinupScheme=none
 	 ;;
       Global_Grid_50km_USGS_VG)
 	 IsDefBGC="#undef"
@@ -384,6 +375,7 @@ if [ ! -z "$ConfigName" ]; then
          IsDefVG="#define"
 	 IsDefCB="#undef"
 	 LandMask=False
+	 SpinupScheme=none
 	 ;;
       Global_Grid_50km_IGBP_VG)
 	 IsDefBGC="#undef"
@@ -408,6 +400,7 @@ if [ ! -z "$ConfigName" ]; then
          IsDefVG="#define"
 	 IsDefCB="#undef"
 	 LandMask=False
+	 SpinupScheme=none
 	 ;;
       Global_Grid_2x2_PFT_VG_BGC)
 	 IsDefBGC="#define"
@@ -433,6 +426,35 @@ if [ ! -z "$ConfigName" ]; then
 	 IsDefCB="#undef"
 	 BGC=True
 	 LandMask=False
+	 SpinupScheme=none
+	 ;;
+      Global_Grid_2x2_PFT_VG_BGC-spinup)
+	 IsDefBGC="#define"
+	 IsDefCrop="#undef"
+	 IsDefCaMa="#undef"
+	 IsDefLuLCC="#undef"
+	 IsDefUrban="#undef"
+         IsDefGrid="#define"
+	 IsDefCatch="#undef"
+	 IsDefUnstr="#undef"
+	 IsDefSingl="#undef"
+	 EDGES=-90
+	 EDGEN=90
+	 EDGEE=180
+	 EDGEW=-180
+	 RESLAT=1.875
+	 RESLON=2.5
+   	 IsDefUSGS="#undef"
+   	 IsDefIGBP="#undef"
+   	 IsDefPFT="#define"
+   	 IsDefPC="#undef"
+         IsDefVG="#define"
+	 IsDefCB="#undef"
+	 BGC=True
+	 LandMask=False
+	 SpinupScheme=sasund
+	 startyr=1850
+	 endyr=1850
 	 ;;
       Global_Grid_2x2_PC_VG_BGC)
 	 IsDefBGC="#define"
@@ -457,6 +479,7 @@ if [ ! -z "$ConfigName" ]; then
          IsDefVG="#define"
 	 IsDefCB="#undef"
 	 LandMask=False
+	 SpinupScheme=none
 	 ;;
       Global_Grid_2x2_PFT_VG_BGC_CROP)
 	 IsDefBGC="#define"
@@ -482,6 +505,7 @@ if [ ! -z "$ConfigName" ]; then
 	 IsDefCB="#undef"
 	 BGC=True
 	 LandMask=False
+	 SpinupScheme=none
 	 ;;
       Global_Grid_50km_PFT_VG_CaMa)
 	 IsDefBGC="#undef"
@@ -507,6 +531,7 @@ if [ ! -z "$ConfigName" ]; then
 	 IsDefCB="#undef"
 	 LandMask=False
 	 BGC=True
+	 SpinupScheme=none
 	 ;;
       RegGuangdong_Grid_10km_PFT_VG_BGC_CROP)
 	 IsDefBGC="#define"
@@ -532,6 +557,7 @@ if [ ! -z "$ConfigName" ]; then
          IsDefCB="#undef"
 	 LandMask="DEF_file_mesh='$RAWDATA/landdata/landmask_igbp_10km_Guangdong-extended.nc'"
          BGC=True
+	 SpinupScheme=none
 	 ;;
       *)
          echo "Error: the argument for the -c|--config option is incorret."
@@ -573,9 +599,11 @@ else
    fi
    if [ -z "$LuLCC" ];then
       IsDefLuLCC="#undef"
+      LandMask=False
    else
       if [ $LuLCC == True ];then
          IsDefLuLCC="#define"
+	 LandMask="DEF_file_mesh='$RAWDATA/landdata/landmask_igbp_10km_Guangdong-extended.nc'"
       else
 	 echo Error in LuLCC definition
 	 exit
@@ -717,6 +745,11 @@ else
 	    exit
 	    ;;
       esac
+   else
+      IsDefUSGS="#undef"
+      IsDefIGBP="#undef"
+      IsDefPFT="#define"
+      IsDefPC="#undef"
    fi
 
    if [ ! -z "$SoilModel" ];then

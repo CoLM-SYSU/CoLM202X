@@ -54,6 +54,7 @@ CONTAINS
    USE MOD_Grid
    USE MOD_Block
    USE MOD_Utils
+   USE MOD_UserDefFun
    IMPLICIT NONE
 
    type(grid_type), intent(in) :: ghist
@@ -63,8 +64,8 @@ CONTAINS
    integer :: ilat_l, ilat_u, ilat, ilatloc, jblk, iyseg
    integer :: ilon_w, ilon_e, ilon, ilonloc, iblk, ixseg
 
-      ilat_l = findloc(ghist%yblk /= 0, .true., dim=1)
-      ilat_u = findloc(ghist%yblk /= 0, .true., dim=1, back=.true.)
+      ilat_l = findloc_ud(ghist%yblk /= 0)
+      ilat_u = findloc_ud(ghist%yblk /= 0, back=.true.)
 
       block_info%ginfo%nlat = ilat_u - ilat_l + 1
       allocate (block_info%ginfo%lat_s (block_info%ginfo%nlat))
@@ -107,7 +108,7 @@ CONTAINS
          ilon_w = 1
          ilon_e = ghist%nlon
       ELSE
-         ilon_w = findloc(ghist%xblk /= 0, .true., dim=1)
+         ilon_w = findloc_ud(ghist%xblk /= 0)
          DO WHILE (.true.)
             ilon = ilon_w - 1
             IF (ilon == 0) ilon = ghist%nlon

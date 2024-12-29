@@ -368,7 +368,7 @@ IF(PRESENT(LECMF2LAKEC) .AND. (LECMF2LAKEC .NE. 0)) THEN
             !* Find levels dimension
             CALL NCERROR( NF90_INQUIRE_VARIABLE(NCID,VARID,dimids=VDIMIDS),'getting levI dimensions ')
             CALL NCERROR( NF90_INQUIRE_DIMENSION(NCID,VDIMIDS(1),len=INPNI),'getting time len ')
-            write(LOGNAM,*) 'Alocating INP*I: NXIN, NYIN, INPNI =', NXIN, NYIN, INPNI
+            write(LOGNAM,*) 'Allocating INP*I: NXIN, NYIN, INPNI =', NXIN, NYIN, INPNI
             allocate( INPXI(NXIN,NYIN,INPNI),INPYI(NXIN,NYIN,INPNI),INPAI(NXIN,NYIN,INPNI) )
             
             write(LOGNAM,*)'INIT_MAP: inpaI:',TRIM(CINPMAT)
@@ -550,9 +550,11 @@ ENDIF
          IRECINP=INT( (KMIN-ROFCDF%NSTART)*60_JPIM,JPIM ) / INT(DTIN,JPIM) + 1     !! (second from netcdf start time) / (input time step)
 
          !*** 2. read runoff
-         CALL NCERROR( NF90_GET_VAR(ROFCDF%NCID,ROFCDF%NVARID(1),PBUFF(:,:,1),(/1,1,IRECINP/),(/NXIN,NYIN,1/)),'READING RUNOFF 1 ' )
+         CALL NCERROR( NF90_GET_VAR(ROFCDF%NCID,ROFCDF%NVARID(1),PBUFF(:,:,1),&
+         (/1,1,IRECINP/),(/NXIN,NYIN,1/)),'READING RUNOFF 1 ' )
          IF ( ROFCDF%NVARID(2) .NE. -1 ) THEN
-            CALL NCERROR( NF90_GET_VAR(ROFCDF%NCID,ROFCDF%NVARID(2),PBUFF(:,:,2),(/1,1,IRECINP/),(/NXIN,NYIN,1/)),'READING RUNOFF 2' )
+            CALL NCERROR( NF90_GET_VAR(ROFCDF%NCID,ROFCDF%NVARID(2),PBUFF(:,:,2) &
+            ,(/1,1,IRECINP/),(/NXIN,NYIN,1/)),'READING RUNOFF 2' )
          ENDIF
          write(LOGNAM,*) "CMF::FORCING_GET_CDF: read runoff:",IYYYYMMDD,IHHMM,IRECINP
 
@@ -628,7 +630,7 @@ ENDIF
 
 
    !####################################################################
-   SUBROUTINE CMF_FORCING_PUT(PBUFF)
+   SUBROUTINE CMF_FORCING_PUT(PBUFF,PBUFF2)
       ! interporlate with inpmat, then send runoff data to CaMa-Flood 
       ! -- called from "Main Program / Coupler" or CMF_DRV_ADVANCE
       !  add water re-infiltration calculation 
@@ -637,6 +639,8 @@ ENDIF
       IMPLICIT NONE 
       ! Declaration of arguments 
       real(KIND=JPRB), intent(in)     :: PBUFF(:,:,:)
+      real(KIND=JPRB), intent(in)     :: PBUFF2(:,:,:)
+
       !============================
       ! Runoff interpolation & unit conversion (mm/dt -> m3/sec)
       IF (LINTERP) THEN ! mass conservation using "input matrix table (inpmat)"
@@ -657,7 +661,7 @@ ENDIF
       ENDIF 
       IF (LWEVAP) THEN
          !IF ( SIZE(PBUFF,3) == 3 ) THEN
-            CALL ROFF_INTERP(PBUFF(:,:,3),D2WEVAP)
+            CALL ROFF_INTERP(PBUFF2(:,:,1),D2WEVAP)
          !ELSE
          !   WRITE(LOGNAM,*)  "LWEVAP is true but evaporation not provide in input array for interpolation"
          !   WRITE(LOGNAM,*)  "CMF_FORCING_PUT(PBUFF), PBUFF should have 3 fields for interpolation "
@@ -666,7 +670,7 @@ ENDIF
       ENDIF 
       IF (LWINFILT) THEN
          !IF ( SIZE(PBUFF,3) == 3 ) THEN
-            CALL ROFF_INTERP(PBUFF(:,:,4),D2WINFILT)
+            CALL ROFF_INTERP(PBUFF2(:,:,2),D2WINFILT)
          !ELSE
          !   WRITE(LOGNAM,*)  "LWINFILT is true but evaporation not provide in input array for interpolation"
          !   WRITE(LOGNAM,*)  "CMF_FORCING_PUT(PBUFF), PBUFF should have 4 fields for interpolation "

@@ -223,82 +223,82 @@ CONTAINS
 
    character(len=*), intent(in) :: file_restart
 
-      CALL ncio_read_vector (file_restart, 'fwsun' , landurban, fwsun ) !
-      CALL ncio_read_vector (file_restart, 'dfwsun', landurban, dfwsun) !
+      CALL ncio_read_vector (file_restart, 'fwsun' , landurban, fwsun )
+      CALL ncio_read_vector (file_restart, 'dfwsun', landurban, dfwsun)
 
-      CALL ncio_read_vector (file_restart, 'sroof', 2, 2, landurban, sroof) !
-      CALL ncio_read_vector (file_restart, 'swsun', 2, 2, landurban, swsun) !
-      CALL ncio_read_vector (file_restart, 'swsha', 2, 2, landurban, swsha) !
-      CALL ncio_read_vector (file_restart, 'sgimp', 2, 2, landurban, sgimp) !
-      CALL ncio_read_vector (file_restart, 'sgper', 2, 2, landurban, sgper) !
-      CALL ncio_read_vector (file_restart, 'slake', 2, 2, landurban, slake) !
+      CALL ncio_read_vector (file_restart, 'sroof', 2, 2, landurban, sroof)
+      CALL ncio_read_vector (file_restart, 'swsun', 2, 2, landurban, swsun)
+      CALL ncio_read_vector (file_restart, 'swsha', 2, 2, landurban, swsha)
+      CALL ncio_read_vector (file_restart, 'sgimp', 2, 2, landurban, sgimp)
+      CALL ncio_read_vector (file_restart, 'sgper', 2, 2, landurban, sgper)
+      CALL ncio_read_vector (file_restart, 'slake', 2, 2, landurban, slake)
 
-      CALL ncio_read_vector (file_restart, 'lwsun', landurban, lwsun) !
-      CALL ncio_read_vector (file_restart, 'lwsha', landurban, lwsha) !
-      CALL ncio_read_vector (file_restart, 'lgimp', landurban, lgimp) !
-      CALL ncio_read_vector (file_restart, 'lgper', landurban, lgper) !
-      CALL ncio_read_vector (file_restart, 'lveg' , landurban, lveg ) !
+      CALL ncio_read_vector (file_restart, 'lwsun', landurban, lwsun)
+      CALL ncio_read_vector (file_restart, 'lwsha', landurban, lwsha)
+      CALL ncio_read_vector (file_restart, 'lgimp', landurban, lgimp)
+      CALL ncio_read_vector (file_restart, 'lgper', landurban, lgper)
+      CALL ncio_read_vector (file_restart, 'lveg' , landurban, lveg )
 
-      CALL ncio_read_vector (file_restart, 'z_sno_roof' , -maxsnl, landurban, z_sno_roof ) !
-      CALL ncio_read_vector (file_restart, 'z_sno_gimp' , -maxsnl, landurban, z_sno_gimp ) !
-      CALL ncio_read_vector (file_restart, 'z_sno_gper' , -maxsnl, landurban, z_sno_gper ) !
-      CALL ncio_read_vector (file_restart, 'z_sno_lake' , -maxsnl, landurban, z_sno_lake ) !
+      CALL ncio_read_vector (file_restart, 'z_sno_roof' , -maxsnl, landurban, z_sno_roof )
+      CALL ncio_read_vector (file_restart, 'z_sno_gimp' , -maxsnl, landurban, z_sno_gimp )
+      CALL ncio_read_vector (file_restart, 'z_sno_gper' , -maxsnl, landurban, z_sno_gper )
+      CALL ncio_read_vector (file_restart, 'z_sno_lake' , -maxsnl, landurban, z_sno_lake )
 
-      CALL ncio_read_vector (file_restart, 'dz_sno_roof', -maxsnl, landurban, dz_sno_roof) !
-      CALL ncio_read_vector (file_restart, 'dz_sno_gimp', -maxsnl, landurban, dz_sno_gimp) !
-      CALL ncio_read_vector (file_restart, 'dz_sno_gper', -maxsnl, landurban, dz_sno_gper) !
-      CALL ncio_read_vector (file_restart, 'dz_sno_lake', -maxsnl, landurban, dz_sno_lake) !
+      CALL ncio_read_vector (file_restart, 'dz_sno_roof', -maxsnl, landurban, dz_sno_roof)
+      CALL ncio_read_vector (file_restart, 'dz_sno_gimp', -maxsnl, landurban, dz_sno_gimp)
+      CALL ncio_read_vector (file_restart, 'dz_sno_gper', -maxsnl, landurban, dz_sno_gper)
+      CALL ncio_read_vector (file_restart, 'dz_sno_lake', -maxsnl, landurban, dz_sno_lake)
 
-      CALL ncio_read_vector (file_restart, 'troof_inner', landurban, troof_inner) !
-      CALL ncio_read_vector (file_restart, 'twsun_inner', landurban, twsun_inner) !
-      CALL ncio_read_vector (file_restart, 'twsha_inner', landurban, twsha_inner) !
+      CALL ncio_read_vector (file_restart, 'troof_inner', landurban, troof_inner)
+      CALL ncio_read_vector (file_restart, 'twsun_inner', landurban, twsun_inner)
+      CALL ncio_read_vector (file_restart, 'twsha_inner', landurban, twsha_inner)
 
-      CALL ncio_read_vector (file_restart, 't_roofsno', nl_roof-maxsnl, landurban, t_roofsno) !
-      CALL ncio_read_vector (file_restart, 't_wallsun', nl_wall-maxsnl, landurban, t_wallsun) !
-      CALL ncio_read_vector (file_restart, 't_wallsha', nl_wall-maxsnl, landurban, t_wallsha) !
-      CALL ncio_read_vector (file_restart, 't_gimpsno', nl_soil-maxsnl, landurban, t_gimpsno) !
-      CALL ncio_read_vector (file_restart, 't_gpersno', nl_soil-maxsnl, landurban, t_gpersno) !
-      CALL ncio_read_vector (file_restart, 't_lakesno', nl_soil-maxsnl, landurban, t_lakesno) !
+      CALL ncio_read_vector (file_restart, 't_roofsno', nl_roof-maxsnl, landurban, t_roofsno)
+      CALL ncio_read_vector (file_restart, 't_wallsun', nl_wall-maxsnl, landurban, t_wallsun)
+      CALL ncio_read_vector (file_restart, 't_wallsha', nl_wall-maxsnl, landurban, t_wallsha)
+      CALL ncio_read_vector (file_restart, 't_gimpsno', nl_soil-maxsnl, landurban, t_gimpsno)
+      CALL ncio_read_vector (file_restart, 't_gpersno', nl_soil-maxsnl, landurban, t_gpersno)
+      CALL ncio_read_vector (file_restart, 't_lakesno', nl_soil-maxsnl, landurban, t_lakesno)
 
-      CALL ncio_read_vector (file_restart, 'wliq_roofsno', nl_roof-maxsnl, landurban, wliq_roofsno) !
-      CALL ncio_read_vector (file_restart, 'wliq_gimpsno', nl_soil-maxsnl, landurban, wliq_gimpsno) !
-      CALL ncio_read_vector (file_restart, 'wliq_gpersno', nl_soil-maxsnl, landurban, wliq_gpersno) !
-      CALL ncio_read_vector (file_restart, 'wliq_lakesno', nl_soil-maxsnl, landurban, wliq_lakesno) !
-      CALL ncio_read_vector (file_restart, 'wice_roofsno', nl_roof-maxsnl, landurban, wice_roofsno) !
-      CALL ncio_read_vector (file_restart, 'wice_gimpsno', nl_soil-maxsnl, landurban, wice_gimpsno) !
-      CALL ncio_read_vector (file_restart, 'wice_gpersno', nl_soil-maxsnl, landurban, wice_gpersno) !
-      CALL ncio_read_vector (file_restart, 'wice_lakesno', nl_soil-maxsnl, landurban, wice_lakesno) !
+      CALL ncio_read_vector (file_restart, 'wliq_roofsno', nl_roof-maxsnl, landurban, wliq_roofsno)
+      CALL ncio_read_vector (file_restart, 'wliq_gimpsno', nl_soil-maxsnl, landurban, wliq_gimpsno)
+      CALL ncio_read_vector (file_restart, 'wliq_gpersno', nl_soil-maxsnl, landurban, wliq_gpersno)
+      CALL ncio_read_vector (file_restart, 'wliq_lakesno', nl_soil-maxsnl, landurban, wliq_lakesno)
+      CALL ncio_read_vector (file_restart, 'wice_roofsno', nl_roof-maxsnl, landurban, wice_roofsno)
+      CALL ncio_read_vector (file_restart, 'wice_gimpsno', nl_soil-maxsnl, landurban, wice_gimpsno)
+      CALL ncio_read_vector (file_restart, 'wice_gpersno', nl_soil-maxsnl, landurban, wice_gpersno)
+      CALL ncio_read_vector (file_restart, 'wice_lakesno', nl_soil-maxsnl, landurban, wice_lakesno)
 
-      CALL ncio_read_vector (file_restart, 'sag_roof'   , landurban, sag_roof   ) !
-      CALL ncio_read_vector (file_restart, 'sag_gimp'   , landurban, sag_gimp   ) !
-      CALL ncio_read_vector (file_restart, 'sag_gper'   , landurban, sag_gper   ) !
-      CALL ncio_read_vector (file_restart, 'sag_lake'   , landurban, sag_lake   ) !
-      CALL ncio_read_vector (file_restart, 'scv_roof'   , landurban, scv_roof   ) !
-      CALL ncio_read_vector (file_restart, 'scv_gimp'   , landurban, scv_gimp   ) !
-      CALL ncio_read_vector (file_restart, 'scv_gper'   , landurban, scv_gper   ) !
-      CALL ncio_read_vector (file_restart, 'scv_lake'   , landurban, scv_lake   ) !
-      CALL ncio_read_vector (file_restart, 'fsno_roof'  , landurban, fsno_roof  ) !
-      CALL ncio_read_vector (file_restart, 'fsno_gimp'  , landurban, fsno_gimp  ) !
-      CALL ncio_read_vector (file_restart, 'fsno_gper'  , landurban, fsno_gper  ) !
-      CALL ncio_read_vector (file_restart, 'fsno_lake'  , landurban, fsno_lake  ) !
-      CALL ncio_read_vector (file_restart, 'snowdp_roof', landurban, snowdp_roof) !
-      CALL ncio_read_vector (file_restart, 'snowdp_gimp', landurban, snowdp_gimp) !
-      CALL ncio_read_vector (file_restart, 'snowdp_gper', landurban, snowdp_gper) !
-      CALL ncio_read_vector (file_restart, 'snowdp_lake', landurban, snowdp_lake) !
-      CALL ncio_read_vector (file_restart, 'Fhac'       , landurban, Fhac       ) !
-      CALL ncio_read_vector (file_restart, 'Fwst'       , landurban, Fwst       ) !
-      CALL ncio_read_vector (file_restart, 'Fach'       , landurban, Fach       ) !
-      CALL ncio_read_vector (file_restart, 'Fahe'       , landurban, Fahe       ) !
-      CALL ncio_read_vector (file_restart, 'Fhah'       , landurban, Fhah       ) !
-      CALL ncio_read_vector (file_restart, 'vehc'       , landurban, vehc       ) !
-      CALL ncio_read_vector (file_restart, 'meta'       , landurban, meta       ) !
-      CALL ncio_read_vector (file_restart, 't_room '    , landurban, t_room     ) !
-      CALL ncio_read_vector (file_restart, 't_roof'     , landurban, t_roof     ) !
-      CALL ncio_read_vector (file_restart, 't_wall'     , landurban, t_wall     ) !
-      CALL ncio_read_vector (file_restart, 'tafu'       , landurban, tafu       ) !
-      CALL ncio_read_vector (file_restart, 'urb_green'  , landurban, urb_green  ) !
-      CALL ncio_read_vector (file_restart, 'tree_lai'   , landurban, urb_lai    ) !
-      CALL ncio_read_vector (file_restart, 'tree_sai'   , landurban, urb_sai    ) !
+      CALL ncio_read_vector (file_restart, 'sag_roof'   , landurban, sag_roof   )
+      CALL ncio_read_vector (file_restart, 'sag_gimp'   , landurban, sag_gimp   )
+      CALL ncio_read_vector (file_restart, 'sag_gper'   , landurban, sag_gper   )
+      CALL ncio_read_vector (file_restart, 'sag_lake'   , landurban, sag_lake   )
+      CALL ncio_read_vector (file_restart, 'scv_roof'   , landurban, scv_roof   )
+      CALL ncio_read_vector (file_restart, 'scv_gimp'   , landurban, scv_gimp   )
+      CALL ncio_read_vector (file_restart, 'scv_gper'   , landurban, scv_gper   )
+      CALL ncio_read_vector (file_restart, 'scv_lake'   , landurban, scv_lake   )
+      CALL ncio_read_vector (file_restart, 'fsno_roof'  , landurban, fsno_roof  )
+      CALL ncio_read_vector (file_restart, 'fsno_gimp'  , landurban, fsno_gimp  )
+      CALL ncio_read_vector (file_restart, 'fsno_gper'  , landurban, fsno_gper  )
+      CALL ncio_read_vector (file_restart, 'fsno_lake'  , landurban, fsno_lake  )
+      CALL ncio_read_vector (file_restart, 'snowdp_roof', landurban, snowdp_roof)
+      CALL ncio_read_vector (file_restart, 'snowdp_gimp', landurban, snowdp_gimp)
+      CALL ncio_read_vector (file_restart, 'snowdp_gper', landurban, snowdp_gper)
+      CALL ncio_read_vector (file_restart, 'snowdp_lake', landurban, snowdp_lake)
+      CALL ncio_read_vector (file_restart, 'Fhac'       , landurban, Fhac       )
+      CALL ncio_read_vector (file_restart, 'Fwst'       , landurban, Fwst       )
+      CALL ncio_read_vector (file_restart, 'Fach'       , landurban, Fach       )
+      CALL ncio_read_vector (file_restart, 'Fahe'       , landurban, Fahe       )
+      CALL ncio_read_vector (file_restart, 'Fhah'       , landurban, Fhah       )
+      CALL ncio_read_vector (file_restart, 'vehc'       , landurban, vehc       )
+      CALL ncio_read_vector (file_restart, 'meta'       , landurban, meta       )
+      CALL ncio_read_vector (file_restart, 't_room '    , landurban, t_room     )
+      CALL ncio_read_vector (file_restart, 't_roof'     , landurban, t_roof     )
+      CALL ncio_read_vector (file_restart, 't_wall'     , landurban, t_wall     )
+      CALL ncio_read_vector (file_restart, 'tafu'       , landurban, tafu       )
+      CALL ncio_read_vector (file_restart, 'urb_green'  , landurban, urb_green  )
+      CALL ncio_read_vector (file_restart, 'tree_lai'   , landurban, urb_lai    )
+      CALL ncio_read_vector (file_restart, 'tree_sai'   , landurban, urb_sai    )
 
    END SUBROUTINE READ_UrbanTimeVariables
 
@@ -331,82 +331,82 @@ CONTAINS
       CALL ncio_define_dimension_vector (file_restart, landurban, 'band', 2)
       CALL ncio_define_dimension_vector (file_restart, landurban, 'rtyp', 2)
 
-      CALL ncio_write_vector (file_restart, 'fwsun' , 'urban', landurban, fwsun , compress) !
-      CALL ncio_write_vector (file_restart, 'dfwsun', 'urban', landurban, dfwsun, compress) !
+      CALL ncio_write_vector (file_restart, 'fwsun' , 'urban', landurban, fwsun , compress)
+      CALL ncio_write_vector (file_restart, 'dfwsun', 'urban', landurban, dfwsun, compress)
 
-      CALL ncio_write_vector (file_restart, 'sroof', 'band', 2, 'rtyp', 2, 'urban', landurban, sroof, compress) !
-      CALL ncio_write_vector (file_restart, 'swsun', 'band', 2, 'rtyp', 2, 'urban', landurban, swsun, compress) !
-      CALL ncio_write_vector (file_restart, 'swsha', 'band', 2, 'rtyp', 2, 'urban', landurban, swsha, compress) !
-      CALL ncio_write_vector (file_restart, 'sgimp', 'band', 2, 'rtyp', 2, 'urban', landurban, sgimp, compress) !
-      CALL ncio_write_vector (file_restart, 'sgper', 'band', 2, 'rtyp', 2, 'urban', landurban, sgper, compress) !
-      CALL ncio_write_vector (file_restart, 'slake', 'band', 2, 'rtyp', 2, 'urban', landurban, slake, compress) !
+      CALL ncio_write_vector (file_restart, 'sroof', 'band', 2, 'rtyp', 2, 'urban', landurban, sroof, compress)
+      CALL ncio_write_vector (file_restart, 'swsun', 'band', 2, 'rtyp', 2, 'urban', landurban, swsun, compress)
+      CALL ncio_write_vector (file_restart, 'swsha', 'band', 2, 'rtyp', 2, 'urban', landurban, swsha, compress)
+      CALL ncio_write_vector (file_restart, 'sgimp', 'band', 2, 'rtyp', 2, 'urban', landurban, sgimp, compress)
+      CALL ncio_write_vector (file_restart, 'sgper', 'band', 2, 'rtyp', 2, 'urban', landurban, sgper, compress)
+      CALL ncio_write_vector (file_restart, 'slake', 'band', 2, 'rtyp', 2, 'urban', landurban, slake, compress)
 
-      CALL ncio_write_vector (file_restart, 'lwsun', 'urban', landurban, lwsun, compress) !
-      CALL ncio_write_vector (file_restart, 'lwsha', 'urban', landurban, lwsha, compress) !
-      CALL ncio_write_vector (file_restart, 'lgimp', 'urban', landurban, lgimp, compress) !
-      CALL ncio_write_vector (file_restart, 'lgper', 'urban', landurban, lgper, compress) !
-      CALL ncio_write_vector (file_restart, 'lveg' , 'urban', landurban, lveg , compress) !
+      CALL ncio_write_vector (file_restart, 'lwsun', 'urban', landurban, lwsun, compress)
+      CALL ncio_write_vector (file_restart, 'lwsha', 'urban', landurban, lwsha, compress)
+      CALL ncio_write_vector (file_restart, 'lgimp', 'urban', landurban, lgimp, compress)
+      CALL ncio_write_vector (file_restart, 'lgper', 'urban', landurban, lgper, compress)
+      CALL ncio_write_vector (file_restart, 'lveg' , 'urban', landurban, lveg , compress)
 
-      CALL ncio_write_vector (file_restart, 'z_sno_roof' , 'snow', -maxsnl, 'urban', landurban, z_sno_roof , compress) !
-      CALL ncio_write_vector (file_restart, 'z_sno_gimp' , 'snow', -maxsnl, 'urban', landurban, z_sno_gimp , compress) !
-      CALL ncio_write_vector (file_restart, 'z_sno_gper' , 'snow', -maxsnl, 'urban', landurban, z_sno_gper , compress) !
-      CALL ncio_write_vector (file_restart, 'z_sno_lake' , 'snow', -maxsnl, 'urban', landurban, z_sno_lake , compress) !
+      CALL ncio_write_vector (file_restart, 'z_sno_roof' , 'snow', -maxsnl, 'urban', landurban, z_sno_roof , compress)
+      CALL ncio_write_vector (file_restart, 'z_sno_gimp' , 'snow', -maxsnl, 'urban', landurban, z_sno_gimp , compress)
+      CALL ncio_write_vector (file_restart, 'z_sno_gper' , 'snow', -maxsnl, 'urban', landurban, z_sno_gper , compress)
+      CALL ncio_write_vector (file_restart, 'z_sno_lake' , 'snow', -maxsnl, 'urban', landurban, z_sno_lake , compress)
 
-      CALL ncio_write_vector (file_restart, 'dz_sno_roof', 'snow', -maxsnl, 'urban', landurban, dz_sno_roof, compress) !
-      CALL ncio_write_vector (file_restart, 'dz_sno_gimp', 'snow', -maxsnl, 'urban', landurban, dz_sno_gimp, compress) !
-      CALL ncio_write_vector (file_restart, 'dz_sno_gper', 'snow', -maxsnl, 'urban', landurban, dz_sno_gper, compress) !
-      CALL ncio_write_vector (file_restart, 'dz_sno_lake', 'snow', -maxsnl, 'urban', landurban, dz_sno_lake, compress) !
+      CALL ncio_write_vector (file_restart, 'dz_sno_roof', 'snow', -maxsnl, 'urban', landurban, dz_sno_roof, compress)
+      CALL ncio_write_vector (file_restart, 'dz_sno_gimp', 'snow', -maxsnl, 'urban', landurban, dz_sno_gimp, compress)
+      CALL ncio_write_vector (file_restart, 'dz_sno_gper', 'snow', -maxsnl, 'urban', landurban, dz_sno_gper, compress)
+      CALL ncio_write_vector (file_restart, 'dz_sno_lake', 'snow', -maxsnl, 'urban', landurban, dz_sno_lake, compress)
 
-      CALL ncio_write_vector (file_restart, 'troof_inner', 'urban', landurban, troof_inner, compress) !
-      CALL ncio_write_vector (file_restart, 'twsun_inner', 'urban', landurban, twsun_inner, compress) !
-      CALL ncio_write_vector (file_restart, 'twsha_inner', 'urban', landurban, twsha_inner, compress) !
+      CALL ncio_write_vector (file_restart, 'troof_inner', 'urban', landurban, troof_inner, compress)
+      CALL ncio_write_vector (file_restart, 'twsun_inner', 'urban', landurban, twsun_inner, compress)
+      CALL ncio_write_vector (file_restart, 'twsha_inner', 'urban', landurban, twsha_inner, compress)
 
-      CALL ncio_write_vector (file_restart, 't_roofsno', 'roofsnow', nl_roof-maxsnl, 'urban', landurban, t_roofsno, compress) !
-      CALL ncio_write_vector (file_restart, 't_wallsun', 'wallsnow', nl_wall-maxsnl, 'urban', landurban, t_wallsun, compress) !
-      CALL ncio_write_vector (file_restart, 't_wallsha', 'wallsnow', nl_wall-maxsnl, 'urban', landurban, t_wallsha, compress) !
-      CALL ncio_write_vector (file_restart, 't_gimpsno', 'soilsnow', nl_soil-maxsnl, 'urban', landurban, t_gimpsno, compress) !
-      CALL ncio_write_vector (file_restart, 't_gpersno', 'soilsnow', nl_soil-maxsnl, 'urban', landurban, t_gpersno, compress) !
-      CALL ncio_write_vector (file_restart, 't_lakesno', 'soilsnow', nl_soil-maxsnl, 'urban', landurban, t_lakesno, compress) !
+      CALL ncio_write_vector (file_restart, 't_roofsno', 'roofsnow', nl_roof-maxsnl, 'urban', landurban, t_roofsno, compress)
+      CALL ncio_write_vector (file_restart, 't_wallsun', 'wallsnow', nl_wall-maxsnl, 'urban', landurban, t_wallsun, compress)
+      CALL ncio_write_vector (file_restart, 't_wallsha', 'wallsnow', nl_wall-maxsnl, 'urban', landurban, t_wallsha, compress)
+      CALL ncio_write_vector (file_restart, 't_gimpsno', 'soilsnow', nl_soil-maxsnl, 'urban', landurban, t_gimpsno, compress)
+      CALL ncio_write_vector (file_restart, 't_gpersno', 'soilsnow', nl_soil-maxsnl, 'urban', landurban, t_gpersno, compress)
+      CALL ncio_write_vector (file_restart, 't_lakesno', 'soilsnow', nl_soil-maxsnl, 'urban', landurban, t_lakesno, compress)
 
-      CALL ncio_write_vector (file_restart, 'wliq_roofsno', 'roofsnow', nl_roof-maxsnl, 'urban', landurban, wliq_roofsno, compress) !
-      CALL ncio_write_vector (file_restart, 'wliq_gimpsno', 'soilsnow', nl_soil-maxsnl, 'urban', landurban, wliq_gimpsno, compress) !
-      CALL ncio_write_vector (file_restart, 'wliq_gpersno', 'soilsnow', nl_soil-maxsnl, 'urban', landurban, wliq_gpersno, compress) !
-      CALL ncio_write_vector (file_restart, 'wliq_lakesno', 'soilsnow', nl_soil-maxsnl, 'urban', landurban, wliq_lakesno, compress) !
-      CALL ncio_write_vector (file_restart, 'wice_roofsno', 'roofsnow', nl_roof-maxsnl, 'urban', landurban, wice_roofsno, compress) !
-      CALL ncio_write_vector (file_restart, 'wice_gimpsno', 'soilsnow', nl_soil-maxsnl, 'urban', landurban, wice_gimpsno, compress) !
-      CALL ncio_write_vector (file_restart, 'wice_gpersno', 'soilsnow', nl_soil-maxsnl, 'urban', landurban, wice_gpersno, compress) !
-      CALL ncio_write_vector (file_restart, 'wice_lakesno', 'soilsnow', nl_soil-maxsnl, 'urban', landurban, wice_lakesno, compress) !
+      CALL ncio_write_vector (file_restart, 'wliq_roofsno', 'roofsnow', nl_roof-maxsnl, 'urban', landurban, wliq_roofsno, compress)
+      CALL ncio_write_vector (file_restart, 'wliq_gimpsno', 'soilsnow', nl_soil-maxsnl, 'urban', landurban, wliq_gimpsno, compress)
+      CALL ncio_write_vector (file_restart, 'wliq_gpersno', 'soilsnow', nl_soil-maxsnl, 'urban', landurban, wliq_gpersno, compress)
+      CALL ncio_write_vector (file_restart, 'wliq_lakesno', 'soilsnow', nl_soil-maxsnl, 'urban', landurban, wliq_lakesno, compress)
+      CALL ncio_write_vector (file_restart, 'wice_roofsno', 'roofsnow', nl_roof-maxsnl, 'urban', landurban, wice_roofsno, compress)
+      CALL ncio_write_vector (file_restart, 'wice_gimpsno', 'soilsnow', nl_soil-maxsnl, 'urban', landurban, wice_gimpsno, compress)
+      CALL ncio_write_vector (file_restart, 'wice_gpersno', 'soilsnow', nl_soil-maxsnl, 'urban', landurban, wice_gpersno, compress)
+      CALL ncio_write_vector (file_restart, 'wice_lakesno', 'soilsnow', nl_soil-maxsnl, 'urban', landurban, wice_lakesno, compress)
 
-      CALL ncio_write_vector (file_restart, 'sag_roof'   , 'urban', landurban, sag_roof   , compress) !
-      CALL ncio_write_vector (file_restart, 'sag_gimp'   , 'urban', landurban, sag_gimp   , compress) !
-      CALL ncio_write_vector (file_restart, 'sag_gper'   , 'urban', landurban, sag_gper   , compress) !
-      CALL ncio_write_vector (file_restart, 'sag_lake'   , 'urban', landurban, sag_lake   , compress) !
-      CALL ncio_write_vector (file_restart, 'scv_roof'   , 'urban', landurban, scv_roof   , compress) !
-      CALL ncio_write_vector (file_restart, 'scv_gimp'   , 'urban', landurban, scv_gimp   , compress) !
-      CALL ncio_write_vector (file_restart, 'scv_gper'   , 'urban', landurban, scv_gper   , compress) !
-      CALL ncio_write_vector (file_restart, 'scv_lake'   , 'urban', landurban, scv_lake   , compress) !
-      CALL ncio_write_vector (file_restart, 'fsno_roof'  , 'urban', landurban, fsno_roof  , compress) !
-      CALL ncio_write_vector (file_restart, 'fsno_gimp'  , 'urban', landurban, fsno_gimp  , compress) !
-      CALL ncio_write_vector (file_restart, 'fsno_gper'  , 'urban', landurban, fsno_gper  , compress) !
-      CALL ncio_write_vector (file_restart, 'fsno_lake'  , 'urban', landurban, fsno_lake  , compress) !
-      CALL ncio_write_vector (file_restart, 'snowdp_roof', 'urban', landurban, snowdp_roof, compress) !
-      CALL ncio_write_vector (file_restart, 'snowdp_gimp', 'urban', landurban, snowdp_gimp, compress) !
-      CALL ncio_write_vector (file_restart, 'snowdp_gper', 'urban', landurban, snowdp_gper, compress) !
-      CALL ncio_write_vector (file_restart, 'snowdp_lake', 'urban', landurban, snowdp_lake, compress) !
-      CALL ncio_write_vector (file_restart, 't_room'     , 'urban', landurban, t_room     , compress) !
-      CALL ncio_write_vector (file_restart, 't_roof'     , 'urban', landurban, t_roof     , compress) !
-      CALL ncio_write_vector (file_restart, 't_wall'     , 'urban', landurban, t_wall     , compress) !
-      CALL ncio_write_vector (file_restart, 'tafu'       , 'urban', landurban, tafu       , compress) !
-      CALL ncio_write_vector (file_restart, 'Fhac'       , 'urban', landurban, Fhac       , compress) !
-      CALL ncio_write_vector (file_restart, 'Fwst'       , 'urban', landurban, Fwst       , compress) !
-      CALL ncio_write_vector (file_restart, 'Fach'       , 'urban', landurban, Fach       , compress) !
-      CALL ncio_write_vector (file_restart, 'Fahe'       , 'urban', landurban, Fahe       , compress) !
-      CALL ncio_write_vector (file_restart, 'Fhah'       , 'urban', landurban, Fhah       , compress) !
-      CALL ncio_write_vector (file_restart, 'vehc'       , 'urban', landurban, vehc       , compress) !
-      CALL ncio_write_vector (file_restart, 'meta'       , 'urban', landurban, meta       , compress) !
-      CALL ncio_write_vector (file_restart, 'tree_lai'   , 'urban', landurban, urb_lai    , compress) !
-      CALL ncio_write_vector (file_restart, 'tree_sai'   , 'urban', landurban, urb_sai    , compress) !
-      CALL ncio_write_vector (file_restart, 'urb_green'  , 'urban', landurban, urb_green  , compress) !
+      CALL ncio_write_vector (file_restart, 'sag_roof'   , 'urban', landurban, sag_roof   , compress)
+      CALL ncio_write_vector (file_restart, 'sag_gimp'   , 'urban', landurban, sag_gimp   , compress)
+      CALL ncio_write_vector (file_restart, 'sag_gper'   , 'urban', landurban, sag_gper   , compress)
+      CALL ncio_write_vector (file_restart, 'sag_lake'   , 'urban', landurban, sag_lake   , compress)
+      CALL ncio_write_vector (file_restart, 'scv_roof'   , 'urban', landurban, scv_roof   , compress)
+      CALL ncio_write_vector (file_restart, 'scv_gimp'   , 'urban', landurban, scv_gimp   , compress)
+      CALL ncio_write_vector (file_restart, 'scv_gper'   , 'urban', landurban, scv_gper   , compress)
+      CALL ncio_write_vector (file_restart, 'scv_lake'   , 'urban', landurban, scv_lake   , compress)
+      CALL ncio_write_vector (file_restart, 'fsno_roof'  , 'urban', landurban, fsno_roof  , compress)
+      CALL ncio_write_vector (file_restart, 'fsno_gimp'  , 'urban', landurban, fsno_gimp  , compress)
+      CALL ncio_write_vector (file_restart, 'fsno_gper'  , 'urban', landurban, fsno_gper  , compress)
+      CALL ncio_write_vector (file_restart, 'fsno_lake'  , 'urban', landurban, fsno_lake  , compress)
+      CALL ncio_write_vector (file_restart, 'snowdp_roof', 'urban', landurban, snowdp_roof, compress)
+      CALL ncio_write_vector (file_restart, 'snowdp_gimp', 'urban', landurban, snowdp_gimp, compress)
+      CALL ncio_write_vector (file_restart, 'snowdp_gper', 'urban', landurban, snowdp_gper, compress)
+      CALL ncio_write_vector (file_restart, 'snowdp_lake', 'urban', landurban, snowdp_lake, compress)
+      CALL ncio_write_vector (file_restart, 't_room'     , 'urban', landurban, t_room     , compress)
+      CALL ncio_write_vector (file_restart, 't_roof'     , 'urban', landurban, t_roof     , compress)
+      CALL ncio_write_vector (file_restart, 't_wall'     , 'urban', landurban, t_wall     , compress)
+      CALL ncio_write_vector (file_restart, 'tafu'       , 'urban', landurban, tafu       , compress)
+      CALL ncio_write_vector (file_restart, 'Fhac'       , 'urban', landurban, Fhac       , compress)
+      CALL ncio_write_vector (file_restart, 'Fwst'       , 'urban', landurban, Fwst       , compress)
+      CALL ncio_write_vector (file_restart, 'Fach'       , 'urban', landurban, Fach       , compress)
+      CALL ncio_write_vector (file_restart, 'Fahe'       , 'urban', landurban, Fahe       , compress)
+      CALL ncio_write_vector (file_restart, 'Fhah'       , 'urban', landurban, Fhah       , compress)
+      CALL ncio_write_vector (file_restart, 'vehc'       , 'urban', landurban, vehc       , compress)
+      CALL ncio_write_vector (file_restart, 'meta'       , 'urban', landurban, meta       , compress)
+      CALL ncio_write_vector (file_restart, 'tree_lai'   , 'urban', landurban, urb_lai    , compress)
+      CALL ncio_write_vector (file_restart, 'tree_sai'   , 'urban', landurban, urb_sai    , compress)
+      CALL ncio_write_vector (file_restart, 'urb_green'  , 'urban', landurban, urb_green  , compress)
 
    END SUBROUTINE WRITE_UrbanTimeVariables
 
