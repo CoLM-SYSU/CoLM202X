@@ -26,7 +26,33 @@ MODULE MOD_Lulcc_Driver
 ! !REVISIONS:
 !  07/2023, Wenzong Dong: porting to MPI version.
 !  08/2023, Wanyi Lin: add interface for Mass&Energy conserved scheme.
-!
+
+! Extra processes when adding a new variable and #define LULCC:
+! 1. Save a copy of new variable (if called "var", save it to "var_") with 2 steps:
+!    1.1 main/LULCC/MOD_Lulcc_Vars_TimeVariables.F90's subroutine "allocate_LulccTimeVariables":
+!       allocate (var_(dimension))
+!    1.2 main/LULCC/MOD_Lulcc_Vars_TimeVariables.F90's subroutine "SAVE_LulccTimeVariables":
+!       var_ = var
+
+! 2. Reassignment for the next year
+!    2.1 if used Same Type Assignment (SAT) scheme for variable recovery
+!       main/LULCC/MOD_Lulcc_Vars_TimeVariables.F90's subroutine “REST_LulccTimeVariables
+!       var(np) = var_(np_)
+
+!    2.2 if used Mass and Energy conservation (MEC) scheme for variable revocery
+!       2.2.1 main/LULCC/MOD_Lulcc_Vars_TimeVariables.F90's subroutine “REST_LulccTimeVariables:
+!          var(np) = var_(np_)
+      
+!       2.2.2 [No need for PFT/PC scheme] Mass and Energy conserve adjustment, add after line 519
+!          if variable should be mass conserve:
+!             var(:,np) = var(:,np) + var(:,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+!          if variable should be energy conserve, take soil temperature "t_soisno" as an example: [May neeed extra calculation]
+!             t_soisno (1:nl_soil,np) = t_soisno (1:nl_soil,np) + t_soisno_(1:nl_soil,frnp_(k))*cvsoil_(1:nl_soil,k)*lccpct_np(patchclass_(frnp_(k)))/wgt(1:nl_soil)
+!             where cvsoil_ is the heat capacity, wgt is the sum of cvsoil_(1:nl_soil,k)*lccpct_np(patchclass_(frnp_(k))), which need to be calculated in advance.
+
+! 3. deallocate the copy of new variable in MOD_Lulcc_Vars_TimeVariables.F90's subroutine "deallocate_LulccTimeVariables":
+!    deallocate (var_)
+
 !-----------------------------------------------------------------------
 
    USE MOD_Precision
