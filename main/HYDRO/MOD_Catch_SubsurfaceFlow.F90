@@ -23,10 +23,10 @@ MODULE MOD_Catch_SubsurfaceFlow
    
    ! anisotropy ratio of lateral/vertical hydraulic conductivity (unitless)
    ! for USDA soil texture class:
-   ! -1, 0: undefined
+   !  <= 0: undefined
    ! 1: clay;  2: silty clay;  3: sandy clay;   4: clay loam;   5: silty clay loam;   6: sandy clay loam; &    
    ! 7: loam;  8: silty loam;  9: sandy loam;  10: silt;       11: loamy sand;       12: sand
-   real(r8), parameter :: raniso(-1:12) = (/ 1., 1., &
+   real(r8), parameter :: raniso(0:12) = (/ 1., &
                                             48., 40., 28., 24., 20., 14., 12., 10., 4., 2., 3., 2. /)
    
    ! -- neighbour variables --
@@ -267,7 +267,7 @@ CONTAINS
                         DO ilev = 1, nl_soil
                            icefrac = min(1., wice_soisno(ilev,ipatch)/denice/dz_soi(ilev)/porsl(ilev,ipatch))
                            imped   = 10.**(-e_ice*icefrac)
-                           Kl_h(i) = Kl_h(i) + hru_patch%subfrc(ipatch) * raniso(soiltext(ipatch)) &
+                           Kl_h(i) = Kl_h(i) + hru_patch%subfrc(ipatch) * raniso(max(soiltext(ipatch),0)) &
                               * hksati(ilev,ipatch)/1.0e3 * imped * dz_soi(ilev)/zi_soi(nl_soil) 
                         ENDDO
                         sumwt = sumwt + hru_patch%subfrc(ipatch)

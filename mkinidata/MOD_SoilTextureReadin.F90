@@ -42,6 +42,13 @@ CONTAINS
       CALL ncio_read_vector (lndname, 'soiltext_patches', landpatch, soiltext)
 #endif
 
+      IF (p_is_worker) THEN
+         IF (numpatch > 0) THEN
+            WHERE (soiltext < 0 )  soiltext = 0
+            WHERE (soiltext > 12)  soiltext = 0
+         ENDIF
+      ENDIF
+
    END SUBROUTINE soiltext_readin
 
 END MODULE MOD_SoilTextureReadin
