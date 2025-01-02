@@ -13,7 +13,13 @@ on:
   push:
     branches:
       - master
-
+    paths-ignore:
+      - 'postprocess/**'
+      - 'preprocess/**'
+      - 'run/**'
+      - 'README.md'
+      - '.gitignore'
+      - '**/**.sh'
   workflow_dispatch:
 
 jobs:
