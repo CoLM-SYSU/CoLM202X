@@ -261,7 +261,7 @@ CONTAINS
                   ENDIF
 
                   Kl_h(i) = 0.
-                  sumwt    = 0.
+                  sumwt   = 0.
                   DO ipatch = ps, pe
                      IF (patchtype(ipatch) <= 2) THEN
                         DO ilev = 1, nl_soil

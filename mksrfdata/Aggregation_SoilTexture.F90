@@ -57,7 +57,7 @@ SUBROUTINE Aggregation_SoilTexture ( &
 #endif
 
       write(cyear,'(i4.4)') lc_year
-      landdir = trim(dir_model_landdata) // '/soiltexture/' // trim(cyear)
+      landdir = trim(dir_model_landdata) // '/soil/' // trim(cyear)
 
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
@@ -76,11 +76,11 @@ SUBROUTINE Aggregation_SoilTexture ( &
       ENDIF
 #endif
 
-      lndname = trim(dir_rawdata)//'/soiltexture.nc'
+      lndname = trim(dir_rawdata)//'/soil/soil_type.nc'
 
       IF (p_is_io) THEN
          CALL allocate_block_data (gland, soiltext)
-         CALL ncio_read_block (lndname, 'soiltexture', gland, soiltext)
+         CALL ncio_read_block (lndname, 'soil_type_l6', gland, soiltext)
 
 #ifdef USEMPI
          CALL aggregation_data_daemon (gland, data_i4_2d_in1 = soiltext)
@@ -124,7 +124,7 @@ SUBROUTINE Aggregation_SoilTexture ( &
          m_patch2diag, -1., lndname, 'soiltexture', compress = 1, write_mode = 'one')
 #endif
 #else
-      SITE_soiltexture = soiltext_patches(1)
+      SITE_soil_texture = soiltext_patches(1)
 #endif
 
       IF (p_is_worker) THEN

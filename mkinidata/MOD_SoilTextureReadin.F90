@@ -35,10 +35,10 @@ CONTAINS
    integer  :: ipatch
 
 #ifdef SinglePoint
-      soiltext(:) = SITE_soiltexture
+      soiltext(:) = SITE_soil_texture
 #else
       write(cyear,'(i4.4)') lc_year
-      lndname = trim(dir_landdata)// '/soiltexture/' // trim(cyear) // '/soiltexture_patches.nc'
+      lndname = trim(dir_landdata)// '/soil/' // trim(cyear) // '/soiltexture_patches.nc'
       CALL ncio_read_vector (lndname, 'soiltext_patches', landpatch, soiltext)
 #endif
 
