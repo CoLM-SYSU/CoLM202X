@@ -378,8 +378,8 @@ ELSE
             CALL ncio_read_serial (fsrfdata, 'wall_to_plan_area_ratio'    , SITE_lambdaw   )
             SITE_hlr       = SITE_lambdaw/4/SITE_froof
 ENDIF
-
             SITE_fgper     = 1 - (SITE_fgimp-SITE_froof)/(1-SITE_froof-SITE_flake_urb)
+            SITE_froof     = SITE_froof/(1-SITE_flake_urb)
             SITE_fveg_urb  = SITE_fveg_urb  * 100
             SITE_flake_urb = SITE_flake_urb * 100
          ENDIF
