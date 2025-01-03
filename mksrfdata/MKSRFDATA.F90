@@ -285,6 +285,7 @@ PROGRAM MKSRFDATA
    CALL mesh_build ()
    CALL landelm_build
 
+#ifndef CATCHMENT
    IF (DEF_LANDONLY) THEN
       !TODO: distinguish USGS and IGBP land cover
 #ifndef LULC_USGS
@@ -293,6 +294,7 @@ PROGRAM MKSRFDATA
       CALL mesh_filter (gpatch, trim(DEF_dir_rawdata)//'/landtypes/landtype-usgs-update.nc', 'landtype')
 #endif
    ENDIF
+#endif
 
    ! Filtering pixels
    IF (has_mesh_filter) THEN
