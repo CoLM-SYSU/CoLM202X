@@ -20,13 +20,20 @@ MODULE MOD_Catch_SubsurfaceFlow
    IMPLICIT NONE
     
    real(r8), parameter :: e_ice  = 6.0   ! soil ice impedance factor
-   real(r8), parameter :: raniso = 1.    ! anisotropy ratio, unitless
+   
+   ! anisotropy ratio of lateral/vertical hydraulic conductivity (unitless)
+   ! for USDA soil texture class:
+   ! 0: undefined
+   ! 1: clay;  2: silty clay;  3: sandy clay;   4: clay loam;   5: silty clay loam;   6: sandy clay loam; &    
+   ! 7: loam;  8: silty loam;  9: sandy loam;  10: silt;       11: loamy sand;       12: sand
+   real(r8), parameter :: raniso(0:12) = (/ 1., &
+                                            48., 40., 28., 24., 20., 14., 12., 10., 4., 2., 3., 2. /)
    
    ! -- neighbour variables --
    type(pointer_real8_1d), allocatable :: agwt_nb    (:)  ! ground water area (for patchtype <= 2) of neighbours [m^2]
    type(pointer_real8_1d), allocatable :: theta_a_nb (:)  ! saturated volume content [-]
    type(pointer_real8_1d), allocatable :: zwt_nb     (:)  ! water table depth [m]
-   type(pointer_real8_1d), allocatable :: Ks_nb      (:)  ! saturated hydraulic conductivity [m/s]
+   type(pointer_real8_1d), allocatable :: Kl_nb      (:)  ! lateral hydraulic conductivity [m/s]
    type(pointer_real8_1d), allocatable :: wdsrf_nb   (:)  ! depth of surface water [m]
    type(pointer_logic_1d), allocatable :: islake_nb  (:)  ! whether a neighbour is water body
 
@@ -59,7 +66,7 @@ CONTAINS
          CALL allocate_neighbour_data (agwt_nb   )
          CALL allocate_neighbour_data (theta_a_nb)
          CALL allocate_neighbour_data (zwt_nb    )
-         CALL allocate_neighbour_data (Ks_nb     )
+         CALL allocate_neighbour_data (Kl_nb    )
          CALL allocate_neighbour_data (wdsrf_nb  )
          CALL allocate_neighbour_data (islake_nb )
       
@@ -127,7 +134,7 @@ CONTAINS
 
    real(r8), allocatable :: theta_a_h (:) 
    real(r8), allocatable :: zwt_h     (:) 
-   real(r8), allocatable :: Ks_h      (:) ! [m/s]
+   real(r8), allocatable :: Kl_h      (:) ! [m/s]
    real(r8), allocatable :: xsubs_h   (:) ! [m/s]
    real(r8), allocatable :: xsubs_fc  (:) ! [m/s]
 
@@ -135,17 +142,17 @@ CONTAINS
    real(r8) :: theta_s_h, air_h, icefrac, imped, delp
    real(r8) :: sumwt, sumarea, zwt_mean
    real(r8) :: zsubs_h_up, zsubs_h_dn
-   real(r8) :: slope, bdamp, Ks_fc, Ks_in
+   real(r8) :: slope, bdamp, Kl_fc, Kl_in
    real(r8) :: ca, cb
    real(r8) :: alp
 
    real(r8), allocatable :: theta_a_bsn (:) 
    real(r8), allocatable :: zwt_bsn     (:) 
-   real(r8), allocatable :: Ks_bsn      (:) ! [m/s]
+   real(r8), allocatable :: Kl_bsn      (:) ! [m/s]
 
    integer  :: jnb
-   real(r8) :: zsubs_up, zwt_up, Ks_up, theta_a_up, area_up
-   real(r8) :: zsubs_dn, zwt_dn, Ks_dn, theta_a_dn, area_dn
+   real(r8) :: zsubs_up, zwt_up, Kl_up, theta_a_up, area_up
+   real(r8) :: zsubs_dn, zwt_dn, Kl_dn, theta_a_dn, area_dn
    real(r8) :: lenbdr, xsubs_nb
    logical  :: iam_lake, nb_is_lake, has_river
 
@@ -185,7 +192,7 @@ CONTAINS
          IF (numbasin > 0) THEN
             allocate (theta_a_bsn (numbasin));  theta_a_bsn = 0.
             allocate (zwt_bsn     (numbasin));  zwt_bsn     = 0.
-            allocate (Ks_bsn      (numbasin));  Ks_bsn      = 0.
+            allocate (Kl_bsn      (numbasin));  Kl_bsn      = 0.
          ENDIF
 
          DO ibasin = 1, numbasin
@@ -199,7 +206,7 @@ CONTAINS
             
             allocate (theta_a_h (nhru));  theta_a_h = 0.
             allocate (zwt_h     (nhru));  zwt_h     = 0.
-            allocate (Ks_h      (nhru));  Ks_h      = 0.
+            allocate (Kl_h      (nhru));  Kl_h      = 0.
 
             DO i = 1, nhru
                
@@ -253,23 +260,23 @@ CONTAINS
                      ENDIF
                   ENDIF
 
-                  Ks_h(i) = 0.
+                  Kl_h(i) = 0.
                   sumwt   = 0.
                   DO ipatch = ps, pe
                      IF (patchtype(ipatch) <= 2) THEN
                         DO ilev = 1, nl_soil
                            icefrac = min(1., wice_soisno(ilev,ipatch)/denice/dz_soi(ilev)/porsl(ilev,ipatch))
                            imped   = 10.**(-e_ice*icefrac)
-                           Ks_h(i) = Ks_h(i) + hru_patch%subfrc(ipatch) &
+                           Kl_h(i) = Kl_h(i) + hru_patch%subfrc(ipatch) * raniso(soiltext(ipatch)) &
                               * hksati(ilev,ipatch)/1.0e3 * imped * dz_soi(ilev)/zi_soi(nl_soil) 
                         ENDDO
                         sumwt = sumwt + hru_patch%subfrc(ipatch)
                      ENDIF
                   ENDDO
-                  IF (sumwt > 0) Ks_h(i) = Ks_h(i) / sumwt
+                  IF (sumwt > 0) Kl_h(i) = Kl_h(i) / sumwt
                ELSE
                   ! Frozen soil.
-                  Ks_h(i) = 0.
+                  Kl_h(i) = 0.
                ENDIF
 
             ENDDO
@@ -285,11 +292,11 @@ CONTAINS
                j = hrus%inext(i)
 
                IF (j <= 0)        CYCLE ! downstream is out of catchment
-               IF (Ks_h(i) == 0.) CYCLE ! this HRU is frozen
+               IF (Kl_h(i) == 0.) CYCLE ! this HRU is frozen
                
                j_is_river = (hrus%indx(j) == 0)
 
-               IF ((.not. j_is_river) .and. (Ks_h(j) == 0.)) CYCLE ! non-river downstream HRU is frozen
+               IF ((.not. j_is_river) .and. (Kl_h(j) == 0.)) CYCLE ! non-river downstream HRU is frozen
                   
                zsubs_h_up = hrus%elva(i) - zwt_h(i)
 
@@ -317,27 +324,27 @@ CONTAINS
                IF ((zsubs_h_up > zsubs_h_dn) .or. j_is_river) THEN
                   IF (zwt_h(i) > 1.5) THEN
                      ! from Fan et al., JGR 112(D10125)
-                     Ks_fc = raniso * Ks_h(i) * bdamp * exp(-(zwt_h(i)-1.5)/bdamp)
+                     Kl_fc = Kl_h(i) * bdamp * exp(-(zwt_h(i)-1.5)/bdamp)
                   ELSE
-                     Ks_fc = raniso * Ks_h(i) * ((1.5-zwt_h(i)) + bdamp)
+                     Kl_fc = Kl_h(i) * ((1.5-zwt_h(i)) + bdamp)
                   ENDIF
                ELSE
                   IF (zwt_h(j) > 1.5) THEN
-                     Ks_fc = raniso * Ks_h(j) * bdamp * exp(-(zwt_h(j)-1.5)/bdamp)
+                     Kl_fc = Kl_h(j) * bdamp * exp(-(zwt_h(j)-1.5)/bdamp)
                   ELSE
-                     Ks_fc = raniso * Ks_h(j) * ((1.5-zwt_h(j)) + bdamp)
+                     Kl_fc = Kl_h(j) * ((1.5-zwt_h(j)) + bdamp)
                   ENDIF
                ENDIF
 
-               ca = hrus%flen(i) * Ks_fc / theta_a_h(i) / delp / hrus%agwt(i) * deltime
+               ca = hrus%flen(i) * Kl_fc / theta_a_h(i) / delp / hrus%agwt(i) * deltime
 
                IF (.not. j_is_river) THEN
-                  cb = hrus%flen(i) * Ks_fc / theta_a_h(j) / delp / hrus%agwt(j) * deltime
+                  cb = hrus%flen(i) * Kl_fc / theta_a_h(j) / delp / hrus%agwt(j) * deltime
                ELSE
-                  cb = hrus%flen(i) * Ks_fc / delp / hrus%area(j) * deltime
+                  cb = hrus%flen(i) * Kl_fc / delp / hrus%area(j) * deltime
                ENDIF
                
-               xsubs_fc(i) = (zsubs_h_up - zsubs_h_dn) * hrus%flen(i) * Ks_fc / (1+ca+cb) / delp
+               xsubs_fc(i) = (zsubs_h_up - zsubs_h_dn) * hrus%flen(i) * Kl_fc / (1+ca+cb) / delp
 
                xsubs_h(i) = xsubs_h(i) + xsubs_fc(i) / hrus%agwt(i)
 
@@ -390,9 +397,9 @@ CONTAINS
                
                   IF (zwt_h(i) > 1.5) THEN
                      ! from Fan et al., JGR 112(D10125)
-                     Ks_in = raniso * Ks_h(i) * bdamp * exp(-(zwt_h(i)-1.5)/bdamp)
+                     Kl_in = Kl_h(i) * bdamp * exp(-(zwt_h(i)-1.5)/bdamp)
                   ELSE
-                     Ks_in = raniso * Ks_h(i) * ((1.5-zwt_h(i)) + bdamp)
+                     Kl_in = Kl_h(i) * ((1.5-zwt_h(i)) + bdamp)
                   ENDIF
 
                   ps = hru_patch%substt(hrus%ihru(i))
@@ -403,7 +410,7 @@ CONTAINS
 
                      DO ipatch = ps, pe
                         IF (patchtype(ipatch) <= 2) THEN
-                           xsubs_pch(ipatch) = - Ks_in * (zwt(ipatch) - zwt_mean) *6.0*pi/hrus%agwt(i)
+                           xsubs_pch(ipatch) = - Kl_in * (zwt(ipatch) - zwt_mean) *6.0*pi/hrus%agwt(i)
                            ! Update total subsurface lateral flow (2): Between patches
                            xwsub(ipatch) = xwsub(ipatch) + xsubs_pch(ipatch) * 1.e3 ! m/s to mm/s
                         ENDIF
@@ -416,12 +423,12 @@ CONTAINS
             IF (sumarea > 0) THEN
                theta_a_bsn (ibasin) = sum(theta_a_h * hrus%agwt) / sumarea
                zwt_bsn     (ibasin) = sum(zwt_h     * hrus%agwt) / sumarea
-               Ks_bsn      (ibasin) = sum(Ks_h      * hrus%agwt) / sumarea
+               Kl_bsn      (ibasin) = sum(Kl_h      * hrus%agwt) / sumarea
             ENDIF
 
             deallocate (theta_a_h)
             deallocate (zwt_h    )
-            deallocate (Ks_h     )
+            deallocate (Kl_h     )
             deallocate (xsubs_h  )
             deallocate (xsubs_fc )
 
@@ -429,7 +436,7 @@ CONTAINS
 
          CALL retrieve_neighbour_data (theta_a_bsn, theta_a_nb)
          CALL retrieve_neighbour_data (zwt_bsn    , zwt_nb    )
-         CALL retrieve_neighbour_data (Ks_bsn     , Ks_nb     )
+         CALL retrieve_neighbour_data (Kl_bsn     , Kl_nb     )
          CALL retrieve_neighbour_data (wdsrf_bsn  , wdsrf_nb  )
 
          DO ibasin = 1, numbasin
@@ -449,7 +456,7 @@ CONTAINS
                ENDIF
                
                IF (.not. iam_lake) THEN
-                  Ks_up      = Ks_bsn     (ibasin)
+                  Kl_up      = Kl_bsn    (ibasin)
                   zwt_up     = zwt_bsn    (ibasin)
                   theta_a_up = theta_a_bsn(ibasin)
                   zsubs_up   = elementneighbour(ibasin)%myelva - zwt_up 
@@ -461,7 +468,7 @@ CONTAINS
                ENDIF
 
                IF (.not. nb_is_lake) THEN
-                  Ks_dn      = Ks_nb(ibasin)%val(jnb)
+                  Kl_dn      = Kl_nb(ibasin)%val(jnb)
                   zwt_dn     = zwt_nb(ibasin)%val(jnb)
                   theta_a_dn = theta_a_nb(ibasin)%val(jnb)
                   zsubs_dn   = elementneighbour(ibasin)%elva(jnb) - zwt_dn
@@ -474,8 +481,8 @@ CONTAINS
 
                IF ((.not. iam_lake)   .and. (area_up <= 0)) CYCLE
                IF ((.not. nb_is_lake) .and. (area_dn <= 0)) CYCLE
-               IF ((.not. iam_lake)   .and. (Ks_up == 0.) ) CYCLE 
-               IF ((.not. nb_is_lake) .and. (Ks_dn == 0.) ) CYCLE
+               IF ((.not. iam_lake)   .and. (Kl_up == 0. )) CYCLE 
+               IF ((.not. nb_is_lake) .and. (Kl_dn == 0. )) CYCLE
 
                ! water body is dry.
                IF (iam_lake .and. (zsubs_up > zsubs_dn) .and. (wdsrf_bsn(ibasin) == 0.)) THEN
@@ -507,22 +514,22 @@ CONTAINS
                IF (nb_is_lake .or. ((.not. iam_lake) .and. (zsubs_up > zsubs_dn))) THEN
                   IF (zwt_up > 1.5) THEN
                      ! from Fan et al., JGR 112(D10125)
-                     Ks_fc = raniso * Ks_up * bdamp * exp(-(zwt_up-1.5)/bdamp)
+                     Kl_fc = Kl_up * bdamp * exp(-(zwt_up-1.5)/bdamp)
                   ELSE
-                     Ks_fc = raniso * Ks_up * ((1.5-zwt_up) + bdamp)
+                     Kl_fc = Kl_up * ((1.5-zwt_up) + bdamp)
                   ENDIF
                ELSE
                   IF (zwt_dn > 1.5) THEN
-                     Ks_fc = raniso * Ks_dn * bdamp * exp(-(zwt_dn-1.5)/bdamp)
+                     Kl_fc = Kl_dn * bdamp * exp(-(zwt_dn-1.5)/bdamp)
                   ELSE
-                     Ks_fc = raniso * Ks_dn * ((1.5-zwt_dn) + bdamp)
+                     Kl_fc = Kl_dn * ((1.5-zwt_dn) + bdamp)
                   ENDIF
                ENDIF
 
-               ca = lenbdr * Ks_fc / theta_a_up / delp / area_up * deltime
-               cb = lenbdr * Ks_fc / theta_a_dn / delp / area_dn * deltime
+               ca = lenbdr * Kl_fc / theta_a_up / delp / area_up * deltime
+               cb = lenbdr * Kl_fc / theta_a_dn / delp / area_dn * deltime
 
-               xsubs_nb = (zsubs_up - zsubs_dn) * lenbdr * Ks_fc / (1+ca+cb) / delp
+               xsubs_nb = (zsubs_up - zsubs_dn) * lenbdr * Kl_fc / (1+ca+cb) / delp
 
                IF (.not. iam_lake) THEN
                   xsubs_nb = xsubs_nb / sum(hrus%agwt)
@@ -547,7 +554,7 @@ CONTAINS
 
          IF (allocated(theta_a_bsn)) deallocate(theta_a_bsn)
          IF (allocated(zwt_bsn    )) deallocate(zwt_bsn    )
-         IF (allocated(Ks_bsn     )) deallocate(Ks_bsn     )
+         IF (allocated(Kl_bsn     )) deallocate(Kl_bsn     )
 
       ENDIF
 
@@ -712,7 +719,7 @@ CONTAINS
 
       IF (allocated(theta_a_nb)) deallocate(theta_a_nb)
       IF (allocated(zwt_nb    )) deallocate(zwt_nb    )
-      IF (allocated(Ks_nb     )) deallocate(Ks_nb     )
+      IF (allocated(Kl_nb     )) deallocate(Kl_nb     )
       IF (allocated(wdsrf_nb  )) deallocate(wdsrf_nb  )
       IF (allocated(agwt_nb   )) deallocate(agwt_nb   )
       IF (allocated(islake_nb )) deallocate(islake_nb )

@@ -216,6 +216,8 @@ MODULE MOD_Vars_TimeInvariants
    real(r8), allocatable :: fc_vgm       (:,:)  !a scaling factor by using air entry value in the Mualem model [-]
 #endif
 
+   integer,  allocatable :: soiltext(:)  ! USDA soil texture class
+
    real(r8), allocatable :: fsatmax (:)  ! maximum saturated area fraction [-]                         
    real(r8), allocatable :: fsatdcf (:)  ! decay factor in calucation of saturated area fraction [1/m] 
 
@@ -336,6 +338,7 @@ CONTAINS
             allocate (sc_vgm       (nl_soil,numpatch))
             allocate (fc_vgm       (nl_soil,numpatch))
 #endif
+            allocate (soiltext(numpatch))
 
             allocate (fsatmax (numpatch))
             allocate (fsatdcf (numpatch))
@@ -454,6 +457,8 @@ CONTAINS
       CALL ncio_read_vector (file_restart, 'sc_vgm   ' ,   nl_soil, landpatch, sc_vgm    ) ! saturation at the air entry value in the classical vanGenuchten model [-]
       CALL ncio_read_vector (file_restart, 'fc_vgm   ' ,   nl_soil, landpatch, fc_vgm    ) ! a scaling factor by using air entry value in the Mualem model [-]
 #endif
+
+      CALL ncio_read_vector (file_restart, 'soiltext', landpatch, soiltext, defval = 0  )
 
       CALL ncio_read_vector (file_restart, 'fsatmax', landpatch, fsatmax, defval = 0.38 )
       CALL ncio_read_vector (file_restart, 'fsatdcf', landpatch, fsatdcf, defval = 0.125)
@@ -635,6 +640,8 @@ CONTAINS
       CALL ncio_write_vector (file_restart, 'fc_vgm   ' , 'soil', nl_soil, 'patch', landpatch, fc_vgm    , compress) ! a scaling factor by using air entry value in the Mualem model [-]
 #endif
 
+      CALL ncio_write_vector (file_restart, 'soiltext', 'patch', landpatch, soiltext)
+
       CALL ncio_write_vector (file_restart, 'fsatmax', 'patch', landpatch, fsatmax)
       CALL ncio_write_vector (file_restart, 'fsatdcf', 'patch', landpatch, fsatdcf)
       
@@ -781,6 +788,7 @@ CONTAINS
             deallocate (sc_vgm         )
             deallocate (fc_vgm         )
 #endif
+            deallocate (soiltext       )
             deallocate (fsatmax        )
             deallocate (fsatdcf        )
 
@@ -891,13 +899,15 @@ CONTAINS
       CALL check_vector_data ('BA_alpha     [-]     ', BA_alpha    ) ! alpha in Balland and Arp(2005) thermal conductivity scheme
       CALL check_vector_data ('BA_beta      [-]     ', BA_beta     ) ! beta in Balland and Arp(2005) thermal conductivity scheme
 
+      CALL check_vector_data ('soiltexture  [-]     ', soiltext    , -1) !
+
       CALL check_vector_data ('htop         [m]     ', htop        )
       CALL check_vector_data ('hbot         [m]     ', hbot        )
 
       IF(DEF_USE_BEDROCK)THEN
          CALL check_vector_data ('dbedrock     [m]     ', dbedrock    ) !
       ENDIF
-
+      
       CALL check_vector_data ('topoelv      [m]     ', topoelv     ) !
       CALL check_vector_data ('topostd      [m]     ', topostd     ) !
       CALL check_vector_data ('BVIC         [-]     ', BVIC        ) !
