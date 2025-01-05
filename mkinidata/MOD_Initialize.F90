@@ -80,6 +80,7 @@ CONTAINS
    USE MOD_LakeDepthReadin
    USE MOD_PercentagesPFTReadin
    USE MOD_SoilParametersReadin
+   USE MOD_SoilTextureReadin
 
    IMPLICIT NONE
 
@@ -356,9 +357,6 @@ CONTAINS
          ENDIF
       ENDIF
 
-
-
-
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
       IF (p_is_worker) THEN
          IF (numpatch > 0) THEN
@@ -375,6 +373,8 @@ CONTAINS
          ENDIF
       ENDIF
 #endif
+
+      CALL soiltext_readin (dir_landdata, lc_year)
 
 ! ...............................................................
 ! 1.4 Plant time-invariant variables

@@ -286,16 +286,6 @@ CONTAINS
 
       CALL landpatch%set_vecgs
 
-      IF (DEF_LANDONLY) THEN
-         IF ((p_is_worker) .and. (numpatch > 0)) THEN
-            allocate(msk(numpatch))
-            msk = (landpatch%settyp /= 0)
-         ENDIF
-
-         CALL landpatch%pset_pack (msk, numpatch)
-
-         IF (allocated(msk)) deallocate(msk)
-      ENDIF
 
 #if (!defined(URBAN_MODEL) && !defined(CROP))
 #ifdef USEMPI

@@ -661,4 +661,35 @@ CONTAINS
 
 #endif
 
+
+   SUBROUTINE fillnan (vec)
+
+   USE MOD_Precision
+   USE MOD_UserDefFun, only : isnan_ud
+   IMPLICIT NONE
+
+   real(r8), intent(inout) :: vec(:)
+
+   ! local variables
+   integer  :: i, n
+   real(r8) :: s
+      
+      n = 0
+      s = 0.
+      DO i = lbound(vec,1), ubound(vec,1)
+         IF (.not. isnan_ud(vec(i))) THEN
+            n = n + 1
+            s = s + vec(i)
+         ENDIF
+      ENDDO
+
+      IF ((n > 0) .and. (n < size(vec))) THEN
+         s = s/n
+         DO i = lbound(vec,1), ubound(vec,1)
+            IF (isnan_ud(vec(i))) vec(i) = s
+         ENDDO
+      ENDIF
+
+   END SUBROUTINE fillnan
+
 END MODULE MOD_AggregationRequestData
