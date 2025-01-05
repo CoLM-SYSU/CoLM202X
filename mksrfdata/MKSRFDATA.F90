@@ -285,8 +285,8 @@ PROGRAM MKSRFDATA
    CALL mesh_build ()
    CALL landelm_build
 
-#ifdef GRIDBASED
-   IF (.not. read_mesh_from_file) THEN
+#ifndef CATCHMENT
+   IF (DEF_LANDONLY) THEN
       !TODO: distinguish USGS and IGBP land cover
 #ifndef LULC_USGS
       CALL mesh_filter (gpatch, trim(DEF_dir_rawdata)//'/landtype_update.nc', 'landtype')
@@ -389,6 +389,8 @@ PROGRAM MKSRFDATA
    CALL Aggregation_urban (dir_rawdata, dir_landdata, lc_year, &
                            grid_urban_5km, grid_urban_500m)
 #endif
+
+   CALL Aggregation_SoilTexture (gsoil, dir_rawdata, dir_landdata, lc_year)
 
 ! ................................................................
 ! 4. Free memories.
