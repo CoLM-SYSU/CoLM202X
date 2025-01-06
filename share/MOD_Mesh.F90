@@ -664,15 +664,15 @@ CONTAINS
 
          allocate (blkdsp (gblock%nxblk, gblock%nyblk))
          blkdsp(1,1) = 0
-         DO jblk = 1, gblock%nyblk
-            DO iblk = 1, gblock%nxblk
+         DO iblk = 1, gblock%nxblk
+            DO jblk = 1, gblock%nyblk
                IF ((iblk /= 1) .or. (jblk /= 1)) THEN
-                  IF (iblk == 1) THEN
-                     iblk_p = gblock%nxblk
-                     jblk_p = jblk - 1
-                  ELSE
+                  IF (jblk == 1) THEN
                      iblk_p = iblk - 1
-                     jblk_p = jblk
+                     jblk_p = gblock%nyblk
+                  ELSE
+                     iblk_p = iblk
+                     jblk_p = jblk - 1
                   ENDIF
 
                   IF (gblock%pio(iblk_p,jblk_p) == p_iam_glb) THEN
@@ -892,6 +892,9 @@ CONTAINS
    integer :: smesg(4), rmesg(4)
    integer, allocatable :: nelm_worker(:)
    integer :: iblkme
+   character(len=20) :: wfmt
+
+      CALL mpi_barrier (p_comm_glb, p_err)
 
       IF (p_is_io) THEN
 
@@ -909,6 +912,13 @@ CONTAINS
                IF (iproc <= nres)  nelm_worker(iproc) = nelm_worker(iproc) + 1
             ENDDO
          ENDDO
+
+         write(wfmt,'(A,I0,A)') '(A,I6,A,', p_np_group-1, '(X,I0))'
+         write(*,wfmt) 'Numbers of elements by workers in group ', p_iam_glb, ' are ', nelm_worker
+         IF (any(nelm_worker == 0)) THEN
+            write(*,'(A,/,A)') 'Warning: there are idle workers, please use less processors ' // &
+               'OR larger working group ', '  (set by DEF_PIO_groupsize in CoLM namelist).'
+         ENDIF
 
          DO iproc = 1, p_np_group-1
             CALL mpi_send (nelm_worker(iproc), 1, MPI_INTEGER, &
@@ -971,9 +981,12 @@ CONTAINS
                CALL mpi_recv (mesh(ie)%ilat, mesh(ie)%npxl, MPI_INTEGER, &
                   p_root, mpi_tag_data, p_comm_group, p_stat, p_err)
             ENDDO
+
          ENDIF
 
       ENDIF
+
+      CALL mpi_barrier (p_comm_glb, p_err)
 
    END SUBROUTINE scatter_mesh_from_io_to_worker
 
