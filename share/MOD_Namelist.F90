@@ -1337,17 +1337,17 @@ CONTAINS
 #ifndef CATCHMENT
          IF ((.not. DEF_USE_VariablySaturatedFlow) .and. DEF_USE_Dynamic_Lake) THEN
             DEF_USE_Dynamic_Lake = .false.
-            write(*,*) '                         *** Warning ***                                '
-            write(*,*) 'Dynamic Lake is closed if variably saturated flow algorithm is not used.'
+            write(*,*) '                  *****                  '
+            write(*,*) 'Warning: Dynamic Lake is closed if variably saturated flow algorithm is not used.'
          ENDIF
          IF (DEF_USE_Dynamic_Lake) THEN
-            write(*,*) '                   *** Warning ***                      '
-            write(*,*) 'Dynamic Lake is not well supported without lateral flow.'
+            write(*,*) '                  *****                  '
+            write(*,*) 'Warning: Dynamic Lake is not well supported without lateral flow.'
          ENDIF
 #else
          DEF_USE_Dynamic_Lake = .true.
-         write(*,*) '                 *** Warning ***                          '
-         write(*,*) 'Dynamic Lake is used if CATCHMENT-based lateral flow used.'
+         write(*,*) '                  *****                  '
+         write(*,*) 'Warning: Dynamic Lake is used if CATCHMENT-based lateral flow used.'
 #endif
 
 ! ----- [Complement IF needed] ----- Macros&Namelist conflicts and dependency management

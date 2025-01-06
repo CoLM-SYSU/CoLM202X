@@ -31,9 +31,9 @@ CONTAINS
          inquire (file=trim(DEF_file_mesh_filter), exist=fexists)
 
          IF (.not. fexists) THEN
-            write(*,'(/, 2A)') 'Mesh Filter not used: file ', trim(DEF_file_mesh_filter)
+            write(*,'(/, 2A)') 'Note: Mesh Filter not used: file ', trim(DEF_file_mesh_filter)
          ELSE
-            write(*,'(/, 2A)') 'Mesh Filter from file ', trim(DEF_file_mesh_filter)
+            write(*,'(/, 2A)') 'Note: Mesh Filter from file ', trim(DEF_file_mesh_filter)
          ENDIF
       ENDIF
       

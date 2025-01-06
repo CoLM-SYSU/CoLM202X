@@ -24,10 +24,7 @@
            -ffree-line-length-0
   endif
 
-  INCLUDE_DIR = -I../include -I../share -I../mksrfdata -I../mkinidata -I../main -I$(NETCDF_INC)
   LDFLAGS = -L$(NETCDF_LIB) -lnetcdff -lnetcdf -llapack -lblas 
-
-
 
 #============================================================
 # CaMa-Flood Mkinclude (for Linux, gfortran)
