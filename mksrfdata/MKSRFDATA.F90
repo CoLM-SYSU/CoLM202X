@@ -93,6 +93,7 @@ PROGRAM MKSRFDATA
    type (grid_type) :: grid_urban_5km, grid_urban_500m
 
    integer   :: lc_year
+   character(len=4) :: cyear
    integer*8 :: start_time, end_time, c_per_sec, time_used
 
 
@@ -289,10 +290,12 @@ PROGRAM MKSRFDATA
    IF (DEF_LANDONLY) THEN
       !TODO: distinguish USGS and IGBP land cover
 #ifndef LULC_USGS
-      CALL mesh_filter (gpatch, trim(DEF_dir_rawdata)//'/landtype_update.nc', 'landtype')
+      write(cyear,'(i4.4)') lc_year
+      lndname = trim(DEF_dir_rawdata)//'/landtypes/landtype-igbp-modis-'//trim(cyear)//'.nc'
 #else
-      CALL mesh_filter (gpatch, trim(DEF_dir_rawdata)//'/landtypes/landtype-usgs-update.nc', 'landtype')
+      lndname = trim(DEF_dir_rawdata)//'/landtypes/landtype-usgs-update.nc'
 #endif
+      CALL mesh_filter (gpatch, lndname, 'landtype')
    ENDIF
 #endif
 
