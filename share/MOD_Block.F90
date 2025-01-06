@@ -173,7 +173,8 @@ CONTAINS
       ENDIF
 
       IF (p_is_master) THEN
-         write (*,'(A)') 'Block information:'
+         write (*,*) 
+         write (*,'(A)') '----- Block information -----'
          write (*,'(I4,A,I4,A)') this%nxblk, ' blocks in longitude,', &
             this%nyblk, ' blocks in latitude.'
          write (*,*)

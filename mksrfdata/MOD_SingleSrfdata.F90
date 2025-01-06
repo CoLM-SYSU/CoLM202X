@@ -76,7 +76,7 @@ MODULE MOD_SingleSrfdata
    real(r8), allocatable :: SITE_soil_BA_alpha          (:)
    real(r8), allocatable :: SITE_soil_BA_beta           (:)
    
-   integer,  allocatable :: SITE_soil_texture           (:)
+   integer :: SITE_soil_texture
 
    real(r8) :: SITE_dbedrock = 0.
 
@@ -644,7 +644,7 @@ ENDIF
       CALL ncio_put_attr     (fsrfdata, 'soil_BA_alpha', 'source', source)
       CALL ncio_put_attr     (fsrfdata, 'soil_BA_beta ', 'source', source)
       
-      CALL ncio_write_serial (fsrfdata, 'soil_texture ', SITE_soil_texture, 'soil')
+      CALL ncio_write_serial (fsrfdata, 'soil_texture ', SITE_soil_texture)
       CALL ncio_put_attr     (fsrfdata, 'soil_texture ', 'source', source)
 
       IF(DEF_USE_BEDROCK)THEN
@@ -842,7 +842,7 @@ ENDIF
       CALL ncio_put_attr     (fsrfdata, 'soil_BA_alpha', 'source', source)
       CALL ncio_put_attr     (fsrfdata, 'soil_BA_beta ', 'source', source)
 
-      CALL ncio_write_serial (fsrfdata, 'soil_texture ', SITE_soil_texture, 'soil')
+      CALL ncio_write_serial (fsrfdata, 'soil_texture ', SITE_soil_texture)
       CALL ncio_put_attr     (fsrfdata, 'soil_texture ', 'source', source)
 
       IF(DEF_USE_BEDROCK)THEN
@@ -947,8 +947,6 @@ ENDIF
       IF (allocated(SITE_soil_BA_alpha         )) deallocate(SITE_soil_BA_alpha         )
       IF (allocated(SITE_soil_BA_beta          )) deallocate(SITE_soil_BA_beta          )
       
-      IF (allocated(SITE_soil_texture          )) deallocate(SITE_soil_texture          )
-
       IF (allocated(SITE_sf_lut                )) deallocate(SITE_sf_lut                )
       IF (allocated(SITE_slp_type              )) deallocate(SITE_slp_type              )
       IF (allocated(SITE_asp_type              )) deallocate(SITE_asp_type              )
