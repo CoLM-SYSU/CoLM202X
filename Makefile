@@ -79,6 +79,7 @@ OBJS_MKSRFDATA = \
 				  Aggregation_Topography.o          \
 				  Aggregation_TopographyFactors.o   \
 				  Aggregation_Urban.o               \
+				  Aggregation_SoilTexture.o         \
 				  MOD_MeshFilter.o                  \
 				  MOD_RegionClip.o                  \
 				  MKSRFDATA.o
@@ -143,6 +144,7 @@ OBJS_BASIC =    \
 				 MOD_DBedrockReadin.o           \
 				 MOD_SoilColorRefl.o            \
 				 MOD_SoilParametersReadin.o     \
+				 MOD_SoilTextureReadin.o        \
 				 MOD_HtopReadin.o               \
 				 MOD_UrbanReadin.o              \
 				 MOD_BGC_CNSummary.o            \
@@ -154,7 +156,7 @@ OBJS_BASIC =    \
 				 MOD_Initialize.o
 
 
-$(OBJS_BASIC) : %.o : %.F90 ${HEADER}
+$(OBJS_BASIC) : %.o : %.F90 ${HEADER} ${OBJS_SHARED}
 	${FF} -c ${FOPTS} $(INCLUDE_DIR) -o .bld/$@ $< ${MOD_CMD}.bld
 
 OBJS_BASIC_T = $(addprefix .bld/,${OBJS_BASIC})

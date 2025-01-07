@@ -14,6 +14,14 @@
 
 ! 2.1 3D Urban model (put it temporarily here):
 #undef URBAN_MODEL
+!    Dependence:  only LULC_IGBP subgrid type for
+!    single point URBAN_MODEL right now.
+#if (defined URBAN_MODEL && defined SinglePoint)
+#define LULC_IGBP
+#undef LULC_USGS
+#undef LULC_IGBP_PFT
+#undef LULC_IGBP_PC
+#endif
 
 ! 3. If defined, debug information is output.
 #define CoLMDEBUG
@@ -27,10 +35,6 @@
 !    Conflict: not used when defined SingPoint.
 #if (defined SinglePoint)
 #undef USEMPI
-#endif
-
-#if (defined SinglePoint && defined URBAN_MODEL && undefined LULC_IGBP)
-#define LULC_IGBP
 #endif
 
 ! 5. Hydrological process options.

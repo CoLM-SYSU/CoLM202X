@@ -96,10 +96,9 @@ CONTAINS
       this%lon_e(1) = this%edgee
 
       IF (p_is_master) THEN
-         write(*,'(A)') 'Region information:'
+         write(*,'(A)') '----- Region information -----'
          write(*,'(A,F10.4,A,F10.4,A,F10.4,A,F10.4,A)') ' (south,north,west,east) = (', &
             this%edges, ',', this%edgen, ',', this%edgew, ',', this%edgee, ')'
-         write(*,*)
       ENDIF
 
    END SUBROUTINE pixel_set_edges
