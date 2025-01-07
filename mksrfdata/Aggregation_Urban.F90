@@ -39,7 +39,7 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
    USE MOD_LandElm
    USE MOD_Mesh
    USE MOD_Vars_Global, only: N_URB
-   USE MOD_Urban_Const_LCZ, only: wtroof_lcz, htroof_lcz
+   USE MOD_Urban_Const_LCZ
 #ifdef SinglePoint
    USE MOD_SingleSrfdata
 #endif
@@ -78,6 +78,7 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
    type(block_data_real8_2d) :: ulai
    type(block_data_real8_2d) :: usai
    type(block_data_int32_2d) :: reg_typid
+   type(block_data_int32_2d) :: lcz_typid
 
    ! output variables
    integer , ALLOCATABLE, dimension(:) :: LUCY_rid
@@ -92,6 +93,7 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
 
    ! delete variables not used
    integer , allocatable, dimension(:) :: reg_typid_one
+   integer , allocatable, dimension(:) :: lcz_typid_one
    integer , allocatable, dimension(:) :: LUCY_reg_one
    real(r8), allocatable, dimension(:) :: area_one
    real(r8), allocatable, dimension(:) :: pop_one
@@ -118,9 +120,6 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
    real(r8), ALLOCATABLE, dimension(:)     :: urb_frc
    real(r8), ALLOCATABLE, dimension(:)     :: urb_pct
 
-   real(r8), ALLOCATABLE, dimension(:)     :: area_tb
-   real(r8), ALLOCATABLE, dimension(:)     :: area_hd
-   real(r8), ALLOCATABLE, dimension(:)     :: area_md
    real(r8), ALLOCATABLE, dimension(:)     :: hlr_bld
    real(r8), ALLOCATABLE, dimension(:)     :: wt_rd
    real(r8), ALLOCATABLE, dimension(:)     :: em_roof
@@ -509,6 +508,11 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
          suffix  = 'URBTYP'
          CALL read_5x5_data (landdir, suffix, grid_urban_500m, "REGION_ID", reg_typid)
 
+#ifdef SinglePoint
+         CALL allocate_block_data (grid_urban_500m, lcz_typid)
+         CALL read_5x5_data       (landdir, suffix, grid_urban_500m, "LCZ_DOM", lcz_typid)
+#endif
+
          landdir = TRIM(dir_rawdata)//'/urban/'
          suffix  = 'URBSRF'//trim(c5year)
 IF (DEF_Urban_geom_data == 1) THEN
@@ -526,16 +530,26 @@ ENDIF
       ENDIF
 
       IF (p_is_worker) THEN
-         allocate (wt_roof (numurban))
-         allocate (ht_roof (numurban))
+         allocate (wt_roof  (numurban))
+         allocate (ht_roof  (numurban))
+         allocate (urb_pct  (numurban))
+         allocate (urb_frc  (numurban))
+         allocate (sarea_urb(numurban))
+         allocate (area_urb (numurban))
 
+         sarea_urb(:)     = 0.
+         area_urb (:)     = 0.
          ! loop for urban patch to aggregate building height and fraction data with area-weighted average
          DO iurban = 1, numurban
             CALL aggregation_request_data (landurban, iurban, grid_urban_500m, zip = USE_zip_for_aggregation, area = area_one, &
                data_i4_2d_in1 = reg_typid, data_i4_2d_out1 = reg_typid_one, &
+#ifdef SinglePoint
+               data_i4_2d_in2 = lcz_typid, data_i4_2d_out2 = lcz_typid_one, &
+#endif
                data_r8_2d_in1 = wtrf, data_r8_2d_out1 = wt_roof_one, &
                data_r8_2d_in2 = htrf, data_r8_2d_out2 = ht_roof_one)
 
+            area_urb(iurban) = sum(area_one)
             IF (DEF_URBAN_type_scheme == 1) THEN
                ! when urban patch has no data, use table data to fill gap
                ! urban type and region id for look-up-table
@@ -578,6 +592,29 @@ ENDIF
 
          ENDDO
 
+         DO i = 1, numelm
+            numpxl = count(landurban%eindex==landelm%eindex(i))
+
+            IF (allocated(locpxl)) deallocate(locpxl)
+            allocate(locpxl(numpxl))
+
+            locpxl = pack([(ipxl, ipxl=1, numurban)], &
+                     landurban%eindex==landelm%eindex(i))
+
+            urb_s = minval(locpxl)
+            urb_e = maxval(locpxl)
+
+            DO il = urb_s, urb_e
+               sarea_urb(urb_s:urb_e) = sarea_urb(urb_s:urb_e) + area_urb(il)
+            ENDDO
+         ENDDO
+
+         DO i = 1, numurban
+            urb2p       = urban2patch(i)
+            urb_frc (i) = elm_patch%subfrc(urb2p)
+            urb_pct (i) = area_urb(i)/sarea_urb(i)
+         ENDDO
+
 #ifdef USEMPI
          CALL aggregation_worker_done ()
 #endif
@@ -605,6 +642,14 @@ ENDIF
       landname  = trim(dir_srfdata) // '/diag/wt_roof.nc'
       CALL srfdata_map_and_write (wt_roof, landurban%settyp, typindex, m_urb2diag, &
          -1.0e36_r8, landname, 'WT_ROOF_'//trim(cyear), compress = 0, write_mode = 'one')
+
+      typindex = (/(ityp, ityp = 1, N_URB)/)
+      landname  = trim(dir_srfdata) // '/diag/pct_urban' // trim(cyear) // '.nc'
+      CALL srfdata_map_and_write (urb_pct(:), landurban%settyp, typindex, m_urb2diag, &
+      -1.0e36_r8, landname, 'URBAN_PCT', compress = 0, write_mode = 'one')
+
+      CALL srfdata_map_and_write (urb_frc(:), landurban%settyp, typindex, m_urb2diag, &
+      -1.0e36_r8, landname, 'URBAN_PATCH_FRAC', compress = 0, write_mode = 'one')
 #endif
 #else
       IF (.not. USE_SITE_urban_paras) THEN
@@ -793,13 +838,6 @@ ENDIF
 
          IF (p_is_worker) THEN
 
-            allocate (urb_pct          (numurban))
-            allocate (urb_frc          (numurban))
-            allocate (sarea_urb        (numurban))
-            allocate (area_urb         (numurban))
-            allocate (area_tb          (numurban))
-            allocate (area_hd          (numurban))
-            allocate (area_md          (numurban))
             allocate (hlr_bld          (numurban))
             allocate (wt_rd            (numurban))
             allocate (em_roof          (numurban))
@@ -824,11 +862,6 @@ ENDIF
             allocate (alb_perd (nr, ns, numurban))
 
             ! initialization
-            sarea_urb(:)     = 0.
-            area_urb (:)     = 0.
-            area_tb  (:)     = 0.
-            area_hd  (:)     = 0.
-            area_md  (:)     = 0.
             hlr_bld  (:)     = 0.
             wt_rd    (:)     = 0.
             em_roof  (:)     = 0.
@@ -949,29 +982,6 @@ ENDIF
 
                ENDDO
 
-               DO i = 1, numelm
-                   numpxl = count(landurban%eindex==landelm%eindex(i))
-
-                   IF (allocated(locpxl)) deallocate(locpxl)
-                   allocate(locpxl(numpxl))
-
-                   locpxl = pack([(ipxl, ipxl=1, numurban)], &
-                            landurban%eindex==landelm%eindex(i))
-
-                   urb_s = minval(locpxl)
-                   urb_e = maxval(locpxl)
-
-                   DO il = urb_s, urb_e
-                      sarea_urb(urb_s:urb_e) = sarea_urb(urb_s:urb_e) + area_urb(il)
-                   ENDDO
-               ENDDO
-
-               DO i = 1, numurban
-                  urb2p       = urban2patch(i)
-                  urb_frc (i) = elm_patch%subfrc(urb2p)
-                  urb_pct (i) = area_urb(i)/sarea_urb(i)
-               ENDDO
-
 #ifdef USEMPI
             CALL aggregation_worker_done ()
 #endif
@@ -1030,15 +1040,6 @@ ENDIF
             !    -1.0e36_r8, landname, 'CV_IMPROAD_'//trim(clay), compress = 0, write_mode = 'one')
          ENDDO
 
-         typindex = (/(ityp, ityp = 1, N_URB)/)
-         landname  = trim(dir_srfdata) // '/diag/pct_urban' // trim(cyear) // '.nc'
-
-         CALL srfdata_map_and_write (urb_pct(:), landurban%settyp, typindex, m_urb2diag, &
-         -1.0e36_r8, landname, 'URBAN_PCT', compress = 0, write_mode = 'one')
-
-         CALL srfdata_map_and_write (urb_frc(:), landurban%settyp, typindex, m_urb2diag, &
-         -1.0e36_r8, landname, 'URBAN_PATCH_FRAC', compress = 0, write_mode = 'one')
-
          deallocate(typindex)
 #endif
 #else
@@ -1052,12 +1053,12 @@ ENDIF
          SITE_thickroof (:)   = th_roof
          SITE_thickwall (:)   = th_wall
 
-         SITE_cv_roof   (:)   = cv_roof(:,1)
-         SITE_cv_wall   (:)   = cv_wall(:,1)
-         SITE_cv_gimp   (:)   = cv_imrd(:,1)
-         SITE_tk_roof   (:)   = tk_roof(:,1)
-         SITE_tk_wall   (:)   = tk_wall(:,1)
-         SITE_tk_gimp   (:)   = tk_imrd(:,1)
+         SITE_cv_roof   (:)   = cvroof_lcz   (lcz_typid_one(1))
+         SITE_cv_wall   (:)   = cvwall_lcz   (lcz_typid_one(1))
+         SITE_cv_gimp   (:)   = cvimproad_lcz(lcz_typid_one(1))
+         SITE_tk_roof   (:)   = tkroof_lcz   (lcz_typid_one(1))
+         SITE_tk_wall   (:)   = tkwall_lcz   (lcz_typid_one(1))
+         SITE_tk_gimp   (:)   = tkimproad_lcz(lcz_typid_one(1))
 
          SITE_alb_roof  (:,:) = alb_roof(:,:,1)
          SITE_alb_wall  (:,:) = alb_wall(:,:,1)
@@ -1111,14 +1112,15 @@ ENDIF
          IF ( allocated (ht_roof  ) ) deallocate (ht_roof   )
          IF ( allocated (lai_urb  ) ) deallocate (lai_urb   )
          IF ( allocated (sai_urb  ) ) deallocate (sai_urb   )
+         IF ( allocated (area_urb ) ) deallocate (area_urb  )
+         IF ( allocated (sarea_urb) ) deallocate (sarea_urb )
+         IF ( allocated (urb_frc  ) ) deallocate (urb_frc   )
+         IF ( allocated (urb_pct  ) ) deallocate (urb_pct   )
 
          IF (DEF_URBAN_type_scheme == 1) THEN
 
-            IF ( allocated (area_urb ) ) deallocate (area_urb  )
-            IF ( allocated (sarea_urb) ) deallocate (sarea_urb )
             IF ( allocated (ncar_ht  ) ) deallocate (ncar_ht   )
             IF ( allocated (ncar_wt  ) ) deallocate (ncar_wt   )
-            IF ( allocated (area_urb ) ) deallocate (area_urb  )
             IF ( allocated (hlr_bld  ) ) deallocate (hlr_bld   )
             IF ( allocated (wt_rd    ) ) deallocate (wt_rd     )
             IF ( allocated (em_roof  ) ) deallocate (em_roof   )
