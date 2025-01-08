@@ -517,19 +517,19 @@ CONTAINS
          IF (hu <= hroof+1) THEN
             hu_ = hroof + 1.
             IF (taux == spval) & ! only print warning for the firt time-step
-               write(6,*) 'Warning: the obs height of u less than htop+1, set it to hroof+1.'
+               write(6,*) 'Warning: the obs height of u less than hroof+1, set it to hroof+1.'
          ENDIF
 
          IF (ht <= hroof+1) THEN
             ht_ = hroof + 1.
             IF (taux == spval) & ! only print warning for the firt time-step
-               write(6,*) 'Warning: the obs height of t less than htop+1, set it to hroof+1.'
+               write(6,*) 'Warning: the obs height of t less than hroof+1, set it to hroof+1.'
          ENDIF
 
          IF (hq <= hroof+1) THEN
             hq_ = hroof + 1.
             IF (taux == spval) & ! only print warning for the firt time-step
-               write(6,*) 'Warning: the obs height of q less than htop+1, set it to hroof+1.'
+               write(6,*) 'Warning: the obs height of q less than hroof+1, set it to hroof+1.'
          ENDIF
 
       ELSE ! relative height
@@ -1518,17 +1518,20 @@ CONTAINS
 
          IF (hu <= hroof+1) THEN
             hu_ = hroof + 1.
-            write(6,*) 'Warning: the obs height of u less than hroof+1, set it to hroof+1.'
+            IF (taux == spval) & ! only print warning for the firt time-step
+               write(6,*) 'Warning: the obs height of u less than hroof+1, set it to hroof+1.'
          ENDIF
 
          IF (ht <= hroof+1) THEN
             ht_ = hroof + 1.
-            write(6,*) 'Warning: the obs height of t less than hroof+1, set it to hroof+1.'
+            IF (taux == spval) & ! only print warning for the firt time-step
+               write(6,*) 'Warning: the obs height of t less than hroof+1, set it to hroof+1.'
          ENDIF
 
          IF (hq <= hroof+1) THEN
             hq_ = hroof + 1.
-            write(6,*) 'Warning: the obs height of q less than hroof+1, set it to hroof+1.'
+            IF (taux == spval) & ! only print warning for the firt time-step
+               write(6,*) 'Warning: the obs height of q less than hroof+1, set it to hroof+1.'
          ENDIF
 
       ELSE ! relative height
