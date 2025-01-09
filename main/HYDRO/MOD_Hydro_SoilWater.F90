@@ -216,7 +216,7 @@ CONTAINS
 
    ! Local variables
    integer  :: lb, ub, ilev, izwt
-   real(r8) :: sumroot, deficit, wexchange
+   real(r8) :: sumroot, deficit, etrdef, wexchange
    real(r8) :: dp_m1, psi, vliq, zwtp, air
    logical  :: is_sat
 
@@ -275,14 +275,16 @@ CONTAINS
             WHERE (is_permeable)
                etroot = etr * max(rootr, 0.) / sumroot
             END WHERE
-            deficit = 0.
+            etrdef = 0.
          ELSE
-            deficit = etr*dt
+            etrdef = etr*dt
          ENDIF
       ELSE
-         deficit = 0.
+         etrdef = 0.
          etroot(:) = rootflux
       ENDIF
+
+      deficit = etrdef
 
       DO ilev = 1, izwt-1
          IF (is_permeable(ilev)) THEN
@@ -430,7 +432,7 @@ CONTAINS
       ENDDO
       w_sum_after = w_sum_after + wa
 
-      wblc = w_sum_after - (w_sum_before + (qgtop - sum(etroot) - rsubst) * dt)
+      wblc = w_sum_after - (w_sum_before + (qgtop - sum(etroot) - rsubst) * dt - etrdef)
 
       IF (abs(wblc) > tolerance) THEN
          write(*,*) 'soil_water_vertical_movement balance error: ', wblc
