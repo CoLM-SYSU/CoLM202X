@@ -71,7 +71,7 @@ MODULE MOD_Const_LC
           0.5,  17.0,   0.5,   0.5,   0.5,   0.5,   0.5,   0.5/)
 
    ! Look-up table canopy bottom height
-   ! 01/06/2020, yuan: adjust hbop: grass/shrub -> 0, tree->1
+   ! 01/06/2020, yuan: adjust hbot: grass/shrub -> 0, tree->1
    real(r8), parameter, dimension(N_land_classification) :: hbot0_usgs &
      !=(/0.01,  0.01,  0.01,  0.01,  0.01,  0.01,  0.01,   0.1,&
      !    0.1,   0.1,  11.5,   8.5,   1.0,   8.5,  10.0,   0.1,&
@@ -357,23 +357,24 @@ MODULE MOD_Const_LC
 
    ! Look-up table canopy top height
    !NOTE: now read from input NetCDF file
+   ! shrub land 0.5m? grass like land 1m? all set to 0.5
    real(r8), parameter, dimension(N_land_classification) :: htop0_igbp &
+     !=(/17.0,  35.0,  17.0,  20.0,  20.0,   0.5,   0.5,   1.0,&
+     !    1.0,   1.0,   1.0,   1.0,   1.0,   1.0,   1.0,   1.0,&
+     !    1.0 /)
       =(/17.0,  35.0,  17.0,  20.0,  20.0,   0.5,   0.5,   1.0,&
-          1.0,   1.0,   1.0,   1.0,   1.0,   1.0,   1.0,   1.0,&
-          1.0 /)
-     !=(/17.0,  35.0,  17.0,  20.0,  20.0,   0.5,   0.5,   0.5,&
-     !    0.5,   0.5,   0.5,   0.5,   1.0,   0.5,   0.5,   0.5,&
-     !    0.5 /)
+          0.5,   0.5,   0.5,   0.5,   1.0,   0.5,   0.5,   0.5,&
+          0.5 /)
 
    ! Look-up table canopy bottom height
    ! 01/06/2020, yuan: adjust hbop: grass/shrub -> 0, tree->1
    real(r8), parameter, dimension(N_land_classification) :: hbot0_igbp &
-      =(/ 8.5,   1.0,   8.5,  11.5,  10.0,   0.1,   0.1,   0.1,&
-          0.1,  0.01,  0.01,  0.01,   0.3,  0.01,  0.01,  0.01,&
-          0.01 /)
-     !=(/ 1.0,   1.0,   1.0,   1.0,   1.0,   0.0,   0.0,   0.0,&
-     !    0.1,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,&
-     !    0.0 /)
+     !=(/ 8.5,   1.0,   8.5,  11.5,  10.0,   0.1,   0.1,   0.1,&
+     !    0.1,  0.01,  0.01,  0.01,   0.3,  0.01,  0.01,  0.01,&
+     !   0.01 /)
+      =(/ 1.0,   1.0,   1.0,   1.0,   1.0,   0.0,   0.0,   0.0,&
+          0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,&
+          0.0 /)
 
    ! Look-up table vegetation fractional cover
    real(r8), parameter, dimension(N_land_classification) :: fveg0_igbp &

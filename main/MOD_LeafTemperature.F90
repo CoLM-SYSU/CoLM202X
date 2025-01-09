@@ -526,12 +526,25 @@ CONTAINS
       hu_ = hu; ht_ = ht; hq_ = hq;
 
       IF (trim(HEIGHT_mode) == 'absolute') THEN
-#ifndef SingPoint
-         ! to ensure the obs height >= htop+10.
-         hu_ = max(htop+10., hu)
-         ht_ = max(htop+10., ht)
-         hq_ = max(htop+10., hq)
-#endif
+
+         IF (hu <= htop+1) THEN
+            hu_ = htop + 1.
+            IF (taux == spval) & ! only print warning for the firt time-step
+               write(6,*) 'Warning: the obs height of u less than htop+1, set it to htop+1.'
+         ENDIF
+
+         IF (ht <= htop+1) THEN
+            ht_ = htop + 1.
+            IF (taux == spval) & ! only print warning for the firt time-step
+               write(6,*) 'Warning: the obs height of t less than htop+1, set it to htop+1.'
+         ENDIF
+
+         IF (hq <= htop+1) THEN
+            hq_ = htop + 1.
+            IF (taux == spval) & ! only print warning for the firt time-step
+               write(6,*) 'Warning: the obs height of q less than htop+1, set it to htop+1.'
+         ENDIF
+
       ELSE ! relative height
          hu_ = htop + hu
          ht_ = htop + ht
