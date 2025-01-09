@@ -247,7 +247,7 @@ CONTAINS
    !soil type          0    1        2       3           4          5         6        7          8        9         10        11        12      
    !BVIC          =   1.0  0.050,    0.080,    0.090,    0.250,    0.150,    0.180,    0.200,    0.220,    0.230,    0.250,    0.280,    0.300
    !re-arranged BVIC for USDA soil texture class:
-   real(r8), parameter :: BVIC_USGS(0:12) = (/ 1., 0.300,  0.280, 0.250, 0.230,  0.220, 0.200,  0.180, 0.250,  0.090, 0.150, 0.080,  0.050/)    
+   real(r8), parameter :: BVIC_USDA(0:12) = (/ 1., 0.300,  0.280, 0.250, 0.230,  0.220, 0.200,  0.180, 0.250,  0.090, 0.150, 0.080,  0.050/)    
 
 ! --------------------------------------------------------------------
 ! Allocates memory for CoLM 1d [numpatch] variables
@@ -346,7 +346,7 @@ CONTAINS
       IF (p_is_worker) THEN
          IF (numpatch > 0) THEN
             DO ipatch = 1, numpatch
-               BVIC(ipatch)=BVIC_USGS(soiltext(ipatch))
+               BVIC(ipatch)=BVIC_USDA(soiltext(ipatch))
             ENDDO
          ENDIF
       ENDIF

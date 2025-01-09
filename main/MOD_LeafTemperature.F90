@@ -529,17 +529,20 @@ CONTAINS
 
          IF (hu <= htop+1) THEN
             hu_ = htop + 1.
-            write(6,*) 'Warning: the obs height of u less than htop+1, set it to htop+1.'
+            IF (taux == spval) & ! only print warning for the firt time-step
+               write(6,*) 'Warning: the obs height of u less than htop+1, set it to htop+1.'
          ENDIF
 
          IF (ht <= htop+1) THEN
             ht_ = htop + 1.
-            write(6,*) 'Warning: the obs height of t less than htop+1, set it to htop+1.'
+            IF (taux == spval) & ! only print warning for the firt time-step
+               write(6,*) 'Warning: the obs height of t less than htop+1, set it to htop+1.'
          ENDIF
 
          IF (hq <= htop+1) THEN
             hq_ = htop + 1.
-            write(6,*) 'Warning: the obs height of q less than htop+1, set it to htop+1.'
+            IF (taux == spval) & ! only print warning for the firt time-step
+               write(6,*) 'Warning: the obs height of q less than htop+1, set it to htop+1.'
          ENDIF
 
       ELSE ! relative height
