@@ -71,6 +71,8 @@ CreateHeader()
    if [ -f $CONFIG ];then
       case ${SCRIPTNAME} in
       mksrf.submit)
+	 EXEC=`awk '/Exe_command/ {print $2}' $CONFIG`
+	 EXEO=`awk '/Exe_opt/ {print $2}' $CONFIG`
          NP=`awk '/NProcesses_mksrf/ {print $2}' $CONFIG`
          NN=`awk '/NNodes_mksrf/ {print $2}' $CONFIG`
          NTPN=`awk '/NTasksPerNode_mksrf/ {print $2}' $CONFIG`
@@ -80,6 +82,8 @@ CreateHeader()
          OUTPUT='mksrf'
          ;;
       init.submit)
+	 EXEC=`awk '/Exe_command/ {print $2 $3}' $CONFIG`
+	 EXEO=`awk '/Exe_opt/ {print $2}' $CONFIG`
          NP=`awk '/NProcesses_mkini/ {print $2}' $CONFIG`
          NN=`awk '/NNodes_mkini/ {print $2}' $CONFIG`
          NTPN=`awk '/NTasksPerNode_mkini/ {print $2}' $CONFIG`
@@ -89,6 +93,8 @@ CreateHeader()
          OUTPUT='init'
          ;;
       case.submit)
+	 EXEC=`awk '/Exe_command/ {print $2 $3}' $CONFIG`
+	 EXEO=`awk '/Exe_opt/ {print $2}' $CONFIG`
          NP=`awk '/NProcesses_case/ {print $2}' $CONFIG`
          NN=`awk '/NNodes_case/ {print $2}' $CONFIG`
          NTPN=`awk '/NTasksPerNode_case/ {print $2}' $CONFIG`
@@ -106,6 +112,8 @@ CreateHeader()
       echo SCRIPTNAME $SCRIPTNAME
       echo HEADER $HEADER
       echo CONFIG $CONFIG
+      echo EXEC $EXEC
+      echo EXEO $EXEO
       if [ $NP -gt 0 ] 2>/dev/null;then
          echo Number of processes is assigned from $CONFIG
       else
@@ -150,6 +158,8 @@ CreateHeader()
          WT=24:00:00
          QUEUE=normal
          OUTPUT='mksrf'
+	 EXEC='mpirun'
+	 EXEO='-np'
          ;;
       init.submit)
          NP=24
@@ -159,6 +169,8 @@ CreateHeader()
          WT=24:00:00
          QUEUE=normal
          OUTPUT='init'
+	 EXEC='mpirun'
+	 EXEO='-np'
          ;;
       case.submit)
          NP=120
@@ -168,6 +180,8 @@ CreateHeader()
          WT=24:00:00
          QUEUE=normal
          OUTPUT='case'
+	 EXEC='mpirun'
+	 EXEO='-np'
          ;;
       *)
          echo "Error: Unknown Unknown script name: $SCRIPTNAME in CreateScripts"
@@ -231,7 +245,7 @@ CreateScripts()
    fi
    cat>>mksrf.submit<<EOF
 cd ${CASEPATH}/${CASENAME}/bld/run/
-mpirun -np $NP ./mksrfdata.x ../../input_${CASENAME}.nml > ../../logmksrfdata
+${EXE} $NP ./mksrfdata.x ../../input_${CASENAME}.nml > ../../logmksrfdata
 
 EOF
    
@@ -257,7 +271,7 @@ EOF
    fi
    cat>>init.submit<<EOF
 cd ${CASEPATH}/${CASENAME}/bld/run/
-mpirun -np $NP ./mkinidata.x ../../input_${CASENAME}.nml > ../../logini
+${EXEC} ${EXEO} $NP ./mkinidata.x ../../input_${CASENAME}.nml > ../../logini
 
 EOF
 
@@ -285,7 +299,7 @@ EOF
       none)
          cat>>'case.submit'<<EOF
 cd ${CASEPATH}/${CASENAME}/bld/run/
-mpirun -np $NP ./colm.x ../../input_${CASENAME}.nml > ../../log
+${EXEC} ${EXEO} $NP ./colm.x ../../input_${CASENAME}.nml > ../../log
 EOF
          ;;
       nd)
@@ -294,7 +308,7 @@ iloop=1
 while [ ${ILOOP} -le 100 ]
 do
    cd ${CASEPATH}/${CASENAME}/bld/run/
-   mpirun -np $NP ./colm.x ../../input_${CASENAME}.nml > ../../log-${ILOOP}
+   ${EXEC} ${EXEO} $NP ./colm.x ../../input_${CASENAME}.nml > ../../log-${ILOOP}
    mkdir -p ${CASEPATH}/${CASENAME}/restart/loop-${ILOOP}
    mkdir -p ${CASEPATH}/${CASENAME}/history/loop-${ILOOP}
    cd ${CASEPATH}/${CASENAME}/restart
@@ -322,9 +336,9 @@ while [ ${ILOOP} -le 130 ]
 do
    cd ${CASEPATH}/${CASENAME}/bld/run/
    if [ ${ILOOP} -le 100 ];then
-      mpirun -np 240 ./colm.x ../../input_${CASENAME}-SASU.nml > ../../log-${ILOOP}
+      ${EXEC} ${EXEO} 240 ./colm.x ../../input_${CASENAME}-SASU.nml > ../../log-${ILOOP}
    else
-      mpirun -np 240 ./colm.x ../../input_${CASENAME}.nml > ../../log-${ILOOP}
+      ${EXEC} ${EXEO} 240 ./colm.x ../../input_${CASENAME}.nml > ../../log-${ILOOP}
    fi
    mkdir -p ${CASEPATH}/${CASENAME}/restart/loop-${ILOOP}
    mkdir -p ${CASEPATH}/${CASENAME}/history/loop-${ILOOP}
