@@ -276,12 +276,13 @@ CONTAINS
          CALL ncio_read_serial (fsrfdata, 'soil_alpha_vgm        ', SITE_soil_alpha_vgm        )
          CALL ncio_read_serial (fsrfdata, 'soil_L_vgm            ', SITE_soil_L_vgm            )
          CALL ncio_read_serial (fsrfdata, 'soil_n_vgm            ', SITE_soil_n_vgm            )
-#else
-         !SITE_soil_theta_r(:) = 0.
 #endif
          CALL ncio_read_serial (fsrfdata, 'soil_BA_alpha         ', SITE_soil_BA_alpha         )
          CALL ncio_read_serial (fsrfdata, 'soil_BA_beta          ', SITE_soil_BA_beta          )
-         CALL ncio_read_serial (fsrfdata, 'soil_texture          ', SITE_soil_texture          )
+
+         IF (DEF_Runoff_SCHEME == 3) THEN ! for Simple VIC
+            CALL ncio_read_serial (fsrfdata, 'soil_texture       ', SITE_soil_texture          )
+         ENDIF
       ENDIF
 
       IF (DEF_USE_BEDROCK) THEN
@@ -463,7 +464,10 @@ ENDIF
 #endif
          CALL ncio_read_serial (fsrfdata, 'soil_BA_alpha         ', SITE_soil_BA_alpha         )
          CALL ncio_read_serial (fsrfdata, 'soil_BA_beta          ', SITE_soil_BA_beta          )
-         CALL ncio_read_serial (fsrfdata, 'soil_texture          ', SITE_soil_texture          )
+         
+         IF (DEF_Runoff_SCHEME == 3) THEN ! for Simple VIC
+            CALL ncio_read_serial (fsrfdata, 'soil_texture       ', SITE_soil_texture          )
+         ENDIF
       ENDIF
 
       IF (DEF_USE_BEDROCK) THEN
@@ -644,8 +648,10 @@ ENDIF
       CALL ncio_put_attr     (fsrfdata, 'soil_BA_alpha', 'source', source)
       CALL ncio_put_attr     (fsrfdata, 'soil_BA_beta ', 'source', source)
       
-      CALL ncio_write_serial (fsrfdata, 'soil_texture ', SITE_soil_texture)
-      CALL ncio_put_attr     (fsrfdata, 'soil_texture ', 'source', source)
+      IF (DEF_Runoff_SCHEME == 3) THEN ! for Simple VIC
+         CALL ncio_write_serial (fsrfdata, 'soil_texture ', SITE_soil_texture)
+         CALL ncio_put_attr     (fsrfdata, 'soil_texture ', 'source', source)
+      ENDIF
 
       IF(DEF_USE_BEDROCK)THEN
          CALL ncio_write_serial (fsrfdata, 'depth_to_bedrock', SITE_dbedrock)
@@ -842,8 +848,10 @@ ENDIF
       CALL ncio_put_attr     (fsrfdata, 'soil_BA_alpha', 'source', source)
       CALL ncio_put_attr     (fsrfdata, 'soil_BA_beta ', 'source', source)
 
-      CALL ncio_write_serial (fsrfdata, 'soil_texture ', SITE_soil_texture)
-      CALL ncio_put_attr     (fsrfdata, 'soil_texture ', 'source', source)
+      IF (DEF_Runoff_SCHEME == 3) THEN ! for Simple VIC
+         CALL ncio_write_serial (fsrfdata, 'soil_texture ', SITE_soil_texture)
+         CALL ncio_put_attr     (fsrfdata, 'soil_texture ', 'source', source)
+      ENDIF
 
       IF(DEF_USE_BEDROCK)THEN
          CALL ncio_write_serial (fsrfdata, 'depth_to_bedrock', SITE_dbedrock)

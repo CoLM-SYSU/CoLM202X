@@ -236,6 +236,8 @@ CONTAINS
    real(r8)           :: filval
    type(block_data_real8_2d)  :: fsatmax_grid, fsatdcf_grid
    type(spatial_mapping_type) :: map_simtop_para
+
+   logical :: use_soiltext
    ! for USDA soil texture class:
    ! 0: undefined
    ! 1: clay;  2: silty clay;  3: sandy clay;   4: clay loam;   5: silty clay loam;   6: sandy clay loam; &    
@@ -342,12 +344,19 @@ CONTAINS
       ENDIF
 #endif
 
-      CALL soiltext_readin (dir_landdata, lc_year)
-      IF (p_is_worker) THEN
-         IF (numpatch > 0) THEN
-            DO ipatch = 1, numpatch
-               BVIC(ipatch)=BVIC_USDA(soiltext(ipatch))
-            ENDDO
+#ifdef CatchLateralFlow
+      use_soiltext = .true.
+#else
+      use_soiltext = (DEF_Runoff_SCHEME == 3) ! only for Simple VIC
+#endif
+      IF (use_soiltext) THEN
+         CALL soiltext_readin (dir_landdata, lc_year)
+         IF (p_is_worker) THEN
+            IF (numpatch > 0) THEN
+               DO ipatch = 1, numpatch
+                  BVIC(ipatch)=BVIC_USDA(soiltext(ipatch))
+               ENDDO
+            ENDIF
          ENDIF
       ENDIF
 
