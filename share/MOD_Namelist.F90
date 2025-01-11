@@ -1074,6 +1074,11 @@ CONTAINS
          DEF_HIST_mode = 'one'
 #endif
 
+         IF (DEF_simulation_time%timestep > 3600.) THEN
+            write(*,*) '                  *****                  '
+            write(*,*) 'Warning: timestep should be less than or equal to 3600 seconds.'
+            CALL CoLM_Stop ()
+         ENDIF
 
 ! ===============================================================
 ! ----- Macros&Namelist conflicts and dependency management -----

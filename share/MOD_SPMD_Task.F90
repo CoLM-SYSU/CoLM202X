@@ -218,7 +218,7 @@ CONTAINS
       ELSE
          p_is_io     = .false.
          p_is_worker = .false.
-         p_my_group  = -1
+         p_my_group  = p_np_glb
       ENDIF
 
       ! 3. Construct IO communicator and address book.

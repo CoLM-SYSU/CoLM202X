@@ -61,6 +61,8 @@ OBJS_SHARED =    \
 				  MOD_SrfdataRestart.o         \
 				  MOD_ElmVector.o              \
 				  MOD_HRUVector.o              \
+				  MOD_MeshFilter.o             \
+				  MOD_RegionClip.o             \
 				  MOD_Urban_Const_LCZ.o
 
 ${OBJS_SHARED} : %.o : %.F90 ${HEADER}
@@ -80,8 +82,6 @@ OBJS_MKSRFDATA = \
 				  Aggregation_TopographyFactors.o   \
 				  Aggregation_Urban.o               \
 				  Aggregation_SoilTexture.o         \
-				  MOD_MeshFilter.o                  \
-				  MOD_RegionClip.o                  \
 				  MKSRFDATA.o
 
 $(OBJS_MKSRFDATA) : %.o : %.F90 ${HEADER} ${OBJS_SHARED}
