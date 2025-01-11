@@ -281,8 +281,7 @@ CONTAINS
 #endif
          CALL ncio_read_serial (fsrfdata, 'soil_BA_alpha         ', SITE_soil_BA_alpha         )
          CALL ncio_read_serial (fsrfdata, 'soil_BA_beta          ', SITE_soil_BA_beta          )
-         ! skip for site temporally untill data available
-        !CALL ncio_read_serial (fsrfdata, 'soil_texture          ', SITE_soil_texture          )
+         CALL ncio_read_serial (fsrfdata, 'soil_texture          ', SITE_soil_texture          )
       ENDIF
 
       IF (DEF_USE_BEDROCK) THEN
