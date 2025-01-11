@@ -75,7 +75,7 @@ MODULE MOD_SingleSrfdata
 #endif
    real(r8), allocatable :: SITE_soil_BA_alpha          (:)
    real(r8), allocatable :: SITE_soil_BA_beta           (:)
-   
+
    integer :: SITE_soil_texture
 
    real(r8) :: SITE_dbedrock = 0.
@@ -954,7 +954,7 @@ ENDIF
 #endif
       IF (allocated(SITE_soil_BA_alpha         )) deallocate(SITE_soil_BA_alpha         )
       IF (allocated(SITE_soil_BA_beta          )) deallocate(SITE_soil_BA_beta          )
-      
+
       IF (allocated(SITE_sf_lut                )) deallocate(SITE_sf_lut                )
       IF (allocated(SITE_slp_type              )) deallocate(SITE_slp_type              )
       IF (allocated(SITE_asp_type              )) deallocate(SITE_asp_type              )
