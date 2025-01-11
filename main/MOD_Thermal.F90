@@ -276,7 +276,7 @@ CONTAINS
        t_soisno(lb:nl_soil),     &! soil temperature [K]
        wice_soisno(lb:nl_soil),  &! ice lens [kg/m2]
        wliq_soisno(lb:nl_soil)    ! liqui water [kg/m2]
-   
+
    real(r8), intent(in) :: &
        smp(1:nl_soil)         ,  &! soil matrix potential [mm]
        hk(1:nl_soil)              ! hydraulic conductivity [mm h2o/s]
@@ -896,6 +896,7 @@ IF (DEF_USE_PC .and. patchclass(ipatch)/=CROPLAND) THEN
       etr_p   (ps:pe) = 0.
       hprl_p  (ps:pe) = 0.
       z0m_p   (ps:pe) = (1.-fsno)*zlnd + fsno*zsno
+      z0m             = sum( z0m_p (ps:pe)*pftfrac(ps:pe) )
 
       IF (DEF_USE_PLANTHYDRAULICS) THEN
          vegwp_p (:,ps:pe) = -2.5e4
