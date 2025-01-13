@@ -1090,14 +1090,14 @@ ELSE
          zwt = 0.
 
 
-         IF (lb >= 1) THEN
-            IF (.not.DEF_SPLIT_SOILSNOW) THEN
+         IF (.not.DEF_SPLIT_SOILSNOW) THEN
+            IF (lb >= 1) THEN
                wetwat = wdsrf + wa + wetwat + (gwat - etr + qsdew + qfros - qsubl) * deltim
             ELSE
-               wetwat = wdsrf + wa + wetwat + (gwat - etr + qsdew_soil + qfros_soil - qsubl_soil) * deltim
+               wetwat = wdsrf + wa + wetwat + (gwat - etr) * deltim
             ENDIF
          ELSE
-            wetwat = wdsrf + wa + wetwat + (gwat - etr) * deltim
+            wetwat = wdsrf + wa + wetwat + (gwat - etr + qsdew_soil + qfros_soil - qsubl_soil) * deltim
          ENDIF
 
          wresi(:) = 0.
