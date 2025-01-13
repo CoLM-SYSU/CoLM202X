@@ -159,13 +159,12 @@ CONTAINS
    END SUBROUTINE get_water_equilibrium_state
 
    ! --- soil water movement ---
-   SUBROUTINE soil_water_vertical_movement (         &
-         nlev,  dt,   sp_zc, sp_zi,   is_permeable,  &
-         porsl, vl_r, psi_s, hksat,   nprm,   prms,  &
-         porsl_wa,                                   &
-         qgtop, etr,  rootr, rootflux, rsubst,  qinfl,         &
-         ss_dp, zwt,  wa,    ss_vliq, smp,    hk  ,  &
-         tolerance )
+   SUBROUTINE soil_water_vertical_movement (                      &
+         nlev,       dt,    sp_zc,  sp_zi,    is_permeable,  porsl,    &
+         vl_r,       psi_s, hksat,  nprm,     prms,          porsl_wa, &
+         qgtop,      etr,   rootr,  rootflux, rsubst,        qinfl,    &
+         ss_dp,      zwt,   wa,     ss_vliq,  smp,           hk,       &
+         tolerance,  wblc)
 
    !=======================================================================
    ! this is the main subroutine to execute the calculation of
@@ -214,9 +213,11 @@ CONTAINS
 
    real(r8), intent(in) :: tolerance
 
+   real(r8), intent(out) :: wblc
+
    ! Local variables
    integer  :: lb, ub, ilev, izwt
-   real(r8) :: sumroot, deficit, wexchange
+   real(r8) :: sumroot, deficit, etrdef, wexchange
    real(r8) :: dp_m1, psi, vliq, zwtp, air
    logical  :: is_sat
 
@@ -230,9 +231,7 @@ CONTAINS
    integer  :: lbc_typ_sub
    real(r8) :: lbc_val_sub
 
-#ifdef CoLMDEBUG
-   real(r8) :: w_sum_before, w_sum_after, wblc
-#endif
+   real(r8) :: w_sum_before, w_sum_after
 
    real(r8) :: tol_q, tol_z, tol_v, tol_p
 
@@ -249,7 +248,6 @@ CONTAINS
       ! water table location
       izwt = findloc_ud(zwt >= sp_zi, back=.true.)
 
-#ifdef CoLMDEBUG
       ! total water mass
       w_sum_before = ss_dp
       DO ilev = 1, nlev
@@ -265,7 +263,6 @@ CONTAINS
          ENDIF
       ENDDO
       w_sum_before = w_sum_before + wa
-#endif
 
       ! transpiration
       IF(.not. DEF_USE_PLANTHYDRAULICS)THEN
@@ -275,14 +272,16 @@ CONTAINS
             WHERE (is_permeable)
                etroot = etr * max(rootr, 0.) / sumroot
             END WHERE
-            deficit = 0.
+            etrdef = 0.
          ELSE
-            deficit = etr*dt
+            etrdef = etr*dt
          ENDIF
       ELSE
-         deficit = 0.
+         etrdef = 0.
          etroot(:) = rootflux
       ENDIF
+
+      deficit = etrdef
 
       DO ilev = 1, izwt-1
          IF (is_permeable(ilev)) THEN
@@ -413,7 +412,6 @@ CONTAINS
 
       qinfl = qgtop - (ss_dp - dp_m1)/dt
 
-#ifdef CoLMDEBUG
       ! total water mass
       w_sum_after = ss_dp
       DO ilev = 1, nlev
@@ -430,13 +428,14 @@ CONTAINS
       ENDDO
       w_sum_after = w_sum_after + wa
 
-      wblc = w_sum_after - (w_sum_before + (qgtop - sum(etroot) - rsubst) * dt)
+      wblc = w_sum_after - (w_sum_before + (qgtop - sum(etroot) - rsubst) * dt - etrdef)
 
       IF (abs(wblc) > tolerance) THEN
-         write(*,*) 'soil_water_vertical_movement balance error: ', wblc
-         write(*,*) w_sum_after, w_sum_before, qgtop, etr, rsubst, is_permeable(1), ss_dp
+         write(*,*) 'soil_water_vertical_movement balance error: ', wblc, ' in mm.'
+         write(*,*) 'qtop: ', qgtop, 'etr: ', etr, 'rsubst: ', rsubst, 'surf dep: ', ss_dp
+         write(*,*) 'permeable (1-10): ', is_permeable
+         write(*,*) 'vliq (1-10): ', ss_vliq
       ENDIF
-#endif
 
       DO ilev = 1, nlev
          IF (ilev < izwt) THEN
