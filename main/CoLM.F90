@@ -278,8 +278,10 @@ PROGRAM CoLM
       CALL READ_TimeVariables (jdate, lc_year, casename, dir_restart)
 
       ! Read in SNICAR optical and aging parameters
-      CALL SnowOptics_init( DEF_file_snowoptics ) ! SNICAR optical parameters
-      CALL SnowAge_init( DEF_file_snowaging )     ! SNICAR aging   parameters
+      IF (DEF_USE_SNICAR) THEN
+         CALL SnowOptics_init( DEF_file_snowoptics ) ! SNICAR optical parameters
+         CALL SnowAge_init( DEF_file_snowaging )     ! SNICAR aging   parameters
+      ENDIF
 
       ! ----------------------------------------------------------------------
       doalb = .true.
@@ -443,7 +445,7 @@ PROGRAM CoLM
          ! Write out the model variables for restart run and the histroy file
          ! ----------------------------------------------------------------------
          CALL hist_out (idate, deltim, itstamp, etstamp, ptstamp, dir_hist, casename)
-         
+
          CALL CheckEquilibrium (idate, deltim, itstamp, dir_hist, casename)
 
          ! DO land USE and land cover change simulation
@@ -535,7 +537,9 @@ PROGRAM CoLM
 #endif
 
 #ifdef CoLMDEBUG
-         CALL print_VSF_iteration_stat_info ()
+         IF (DEF_USE_VariablySaturatedFlow) THEN
+            CALL print_VSF_iteration_stat_info ()
+         ENDIF
 #endif
 
 

@@ -1103,10 +1103,11 @@ CONTAINS
          DEF_USE_PC   = .false.
          DEF_FAST_PC  = .false.
          DEF_SOLO_PFT = .false.
-
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
          write(*,*) '                  *****                  '
-         write(*,*) 'Note: Soil resistance is automaticlly turned off for USGS|IGBP scheme.'
+         write(*,*) 'Note: Soil resistance is automaticlly turned off for VG soil + USGS|IGBP scheme.'
          DEF_RSS_SCHEME = 0
+#endif
 #endif
 
 #ifdef LULC_IGBP_PFT
