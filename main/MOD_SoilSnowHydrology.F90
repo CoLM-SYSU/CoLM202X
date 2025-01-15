@@ -658,6 +658,7 @@ ENDIF
    logical  :: is_permeable(1:nl_soil)
    real(r8) :: dzsum, dz
    real(r8) :: icefracsum, fracice_rsub, imped
+   real(r8) :: wblc
 
 #ifdef CROP
    integer  :: ps, pe
@@ -967,7 +968,7 @@ IF((patchtype<=1) .or. is_dry_lake)THEN   ! soil ground only
          eff_porosity(1:nl_soil), theta_r(1:nl_soil), psi0(1:nl_soil), hksati(1:nl_soil), &
          nprms, prms(:,1:nl_soil), porsl(nl_soil),     &
          qgtop, etr, rootr(1:nl_soil), rootflux(1:nl_soil), rsubst, qinfl, &
-         wdsrf, zwtmm, wa, vol_liq(1:nl_soil), smp(1:nl_soil), hk(1:nl_soil), 1.e-3)
+         wdsrf, zwtmm, wa, vol_liq(1:nl_soil), smp(1:nl_soil), hk(1:nl_soil), 1.e-3, wblc)
 
       ! update the mass of liquid water
       DO j = nl_soil, 1, -1
@@ -1000,6 +1001,22 @@ ELSE
       wliq_soisno(1) = max(0., wliq_soisno(1) + qsdew_soil * deltim)
       wice_soisno(1) = max(0., wice_soisno(1) + (qfros_soil-qsubl_soil) * deltim)
 ENDIF
+
+      ! water imbalance mainly due to insufficient liquid water for evapotranspiration
+      IF (wblc > 0.) THEN
+         DO j = 1, nl_soil
+            IF (wice_soisno(j) > wblc) THEN
+               wice_soisno(j) = wice_soisno(j) - wblc
+               wblc = 0.
+               EXIT
+            ELSE
+               wblc = wblc - wice_soisno(j)
+               wice_soisno(j) = 0.
+            ENDIF
+         ENDDO
+
+         IF (wblc > 0.) wa = wa - wblc
+      ENDIF
 
 #ifndef CatchLateralFlow
       IF (.not. is_dry_lake) THEN
@@ -1073,10 +1090,14 @@ ELSE
          zwt = 0.
 
 
-         IF (lb >= 1) THEN
-            wetwat = wdsrf + wa + wetwat + (gwat - etr + qsdew + qfros - qsubl) * deltim
+         IF (.not.DEF_SPLIT_SOILSNOW) THEN
+            IF (lb >= 1) THEN
+               wetwat = wdsrf + wa + wetwat + (gwat - etr + qsdew + qfros - qsubl) * deltim
+            ELSE
+               wetwat = wdsrf + wa + wetwat + (gwat - etr) * deltim
+            ENDIF
          ELSE
-            wetwat = wdsrf + wa + wetwat + (gwat - etr) * deltim
+            wetwat = wdsrf + wa + wetwat + (gwat - etr + qsdew_soil + qfros_soil - qsubl_soil) * deltim
          ENDIF
 
          wresi(:) = 0.

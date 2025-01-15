@@ -71,7 +71,7 @@ SUBROUTINE Aggregation_SoilTexture ( &
 #endif
 
 #ifdef SinglePoint
-      IF (USE_SITE_soilparameters) THEN
+      IF (USE_SITE_soilparameters .or. (DEF_Runoff_SCHEME /= 3)) THEN
          ! Since the site soil texture is not available now, temporally
          !RETURN
          write(*,'(/, A)') 'Reading from global dataset ...'
