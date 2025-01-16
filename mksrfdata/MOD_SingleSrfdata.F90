@@ -281,7 +281,8 @@ CONTAINS
          CALL ncio_read_serial (fsrfdata, 'soil_BA_beta          ', SITE_soil_BA_beta          )
 
          IF (DEF_Runoff_SCHEME == 3) THEN ! for Simple VIC
-            CALL ncio_read_serial (fsrfdata, 'soil_texture       ', SITE_soil_texture          )
+            ! reading from global dataset currently
+            !CALL ncio_read_serial (fsrfdata, 'soil_texture       ', SITE_soil_texture          )
          ENDIF
       ENDIF
 
@@ -464,7 +465,7 @@ ENDIF
 #endif
          CALL ncio_read_serial (fsrfdata, 'soil_BA_alpha         ', SITE_soil_BA_alpha         )
          CALL ncio_read_serial (fsrfdata, 'soil_BA_beta          ', SITE_soil_BA_beta          )
-         
+
          IF (DEF_Runoff_SCHEME == 3) THEN ! for Simple VIC
             CALL ncio_read_serial (fsrfdata, 'soil_texture       ', SITE_soil_texture          )
          ENDIF
@@ -647,7 +648,7 @@ ENDIF
       CALL ncio_write_serial (fsrfdata, 'soil_BA_beta ', SITE_soil_BA_beta , 'soil')
       CALL ncio_put_attr     (fsrfdata, 'soil_BA_alpha', 'source', source)
       CALL ncio_put_attr     (fsrfdata, 'soil_BA_beta ', 'source', source)
-      
+
       IF (DEF_Runoff_SCHEME == 3) THEN ! for Simple VIC
          CALL ncio_write_serial (fsrfdata, 'soil_texture ', SITE_soil_texture)
          CALL ncio_put_attr     (fsrfdata, 'soil_texture ', 'source', source)
