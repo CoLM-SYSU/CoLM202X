@@ -282,7 +282,7 @@ CONTAINS
             ENDIF
 
 #if(defined CoLMDEBUG)
-            IF (tex_rain+tex_snow+tti_rain+tti_snow-p0 > 1.e-10) THEN
+            IF (tex_rain+tex_snow+tti_rain+tti_snow-p0 > 1.e-10 .and. .not.DEF_VEG_SNOW) THEN
                write(6,*) 'tex_ + tti_ > p0 in interception code : '
             ENDIF
 #endif
