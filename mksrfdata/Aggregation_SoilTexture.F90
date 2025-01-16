@@ -5,10 +5,10 @@ SUBROUTINE Aggregation_SoilTexture ( &
 
 ! ----------------------------------------------------------------------
 ! DESCRIPTION:
-! Aggregate soil texture class within a patch. 
+! Aggregate soil texture class within a patch.
 !
-! Use the USDA soil texture triangle (using the amount of sand, clay, and 
-! silt contents) to identify the soil texture in fine grid resolution and 
+! Use the USDA soil texture triangle (using the amount of sand, clay, and
+! silt contents) to identify the soil texture in fine grid resolution and
 ! then finding the major soil type in a patch by counting number of fine
 ! grids with each type of soil and adopting the major one.
 !
@@ -71,8 +71,10 @@ SUBROUTINE Aggregation_SoilTexture ( &
 #endif
 
 #ifdef SinglePoint
-      IF (USE_SITE_soilparameters) THEN
-         RETURN
+      IF (USE_SITE_soilparameters .or. (DEF_Runoff_SCHEME /= 3)) THEN
+         ! Since the site soil texture is not available now, temporally
+         !RETURN
+         write(*,'(/, A)') 'Reading from global dataset ...'
       ENDIF
 #endif
 
@@ -86,7 +88,7 @@ SUBROUTINE Aggregation_SoilTexture ( &
          CALL aggregation_data_daemon (gland, data_i4_2d_in1 = soiltext)
 #endif
       ENDIF
-            
+
       IF (p_is_worker) THEN
 
          IF (numpatch > 0) allocate (soiltext_patches (numpatch))

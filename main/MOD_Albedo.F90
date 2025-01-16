@@ -267,7 +267,7 @@ ENDIF
 !  (based on new snow level state, after SnowFilter is rebuilt.
 !  NEEDS TO BE AFTER SnowFiler is rebuilt, otherwise there
 !  can be zero snow layers but an active column in filter)
-
+IF (DEF_USE_SNICAR) THEN
       snwcp_ice  = 0.0     !excess precipitation due to snow capping [kg m-2 s-1]
       do_capsnow = .false. !true => DO snow capping
 
@@ -292,7 +292,7 @@ ENDIF
            wliq_soisno (:0),wice_soisno(:0),&
            t_soisno    (:1),t_grnd         ,&
            forc_t          ,snw_rds         )
-
+ENDIF
 ! ----------------------------------------------------------------------
 
       lsai = lai + sai
