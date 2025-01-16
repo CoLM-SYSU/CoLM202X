@@ -27,6 +27,7 @@ MODULE MOD_Forcing
    USE MOD_MonthlyinSituCO2MaunaLoa
    USE MOD_Vars_Global, only : pi
    USE MOD_OrbCoszen
+   USE MOD_UserDefFun
 
    IMPLICIT NONE
 
@@ -873,7 +874,7 @@ CONTAINS
          IF (p_is_worker) THEN
             DO j = 1, numpatch
                   a = forc_swrad(j)
-                  IF (isnan(a)) a = 0
+                  IF (isnan_ud(a)) a = 0
                   calday = calendarday(idate)
                   sunang = orb_coszen (calday, patchlonr(j), patchlatr(j))
                   IF (sunang.eq.0) THEN

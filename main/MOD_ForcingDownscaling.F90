@@ -20,6 +20,7 @@ MODULE MOD_ForcingDownscaling
    USE MOD_Namelist
    USE MOD_Const_Physical
    USE MOD_Vars_Global
+   USE MOD_UserDefFun
 
    IMPLICIT NONE
 
@@ -657,7 +658,7 @@ CONTAINS
          tcf_type(i) = (1+cos(slp_type_c(i)))/2-svf
          IF (tcf_type(i)<0) tcf_type(i) = 0
       
-         IF (isnan(alb)) THEN
+         IF (isnan_ud(alb)) THEN
             refl_swrad_type(i) = -1.0e36
          ELSE
             IF ((balb<0).or.(balb>1)) balb = 0

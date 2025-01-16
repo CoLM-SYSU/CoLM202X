@@ -1074,6 +1074,11 @@ CONTAINS
          DEF_HIST_mode = 'one'
 #endif
 
+         IF (DEF_simulation_time%timestep > 3600.) THEN
+            write(*,*) '                  *****                  '
+            write(*,*) 'Warning: timestep should be less than or equal to 3600 seconds.'
+            CALL CoLM_Stop ()
+         ENDIF
 
 ! ===============================================================
 ! ----- Macros&Namelist conflicts and dependency management -----
@@ -1103,10 +1108,11 @@ CONTAINS
          DEF_USE_PC   = .false.
          DEF_FAST_PC  = .false.
          DEF_SOLO_PFT = .false.
-
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
          write(*,*) '                  *****                  '
-         write(*,*) 'Note: Soil resistance is automaticlly turned off for USGS|IGBP scheme.'
+         write(*,*) 'Note: Soil resistance is automaticlly turned off for VG soil + USGS|IGBP scheme.'
          DEF_RSS_SCHEME = 0
+#endif
 #endif
 
 #ifdef LULC_IGBP_PFT

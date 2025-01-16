@@ -132,7 +132,7 @@ cat>${CASEPATH}/${CASENAME}/${NMLNAME}<<EOF
    DEF_LAI_CHANGE_YEARLY = .false.
 
    DEF_USE_CN_INIT = .true.
-   DEF_file_cn_init = '$RAWDATA/cnsteadystate.nc'
+   DEF_file_cn_init = '$RUNTIME/cnsteadystate.nc'
    ${LandMask}
    ${ISUSESASU}
 

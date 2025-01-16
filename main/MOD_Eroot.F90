@@ -62,7 +62,7 @@ CONTAINS
    real(r8), intent(in) :: sc_vgm   (1:nl_soil)
    real(r8), intent(in) :: fc_vgm   (1:nl_soil)
 #endif
-   real(r8), intent(in) :: psi0(1:nl_soil)         ! saturated soil suction (mm) (NEGATIVE)
+   real(r8), intent(in) :: psi0(1:nl_soil)         ! saturated soil suction (cm) (NEGATIVE)
    real(r8), intent(in) :: rootfr(1:nl_soil)       ! fraction of roots in a layer,
    real(r8), intent(in) :: dz_soisno(1:nl_soil)    ! layer thickness (m)
    real(r8), intent(in) :: t_soisno(1:nl_soil)     ! soil/snow skin temperature (K)
@@ -77,7 +77,7 @@ CONTAINS
    real(r8) roota             ! accumulates root resistance factors
    real(r8) rresis(1:nl_soil) ! soil water contribution to root resistance
    real(r8) s_node            ! vol_liq/porosity
-   real(r8) smpmax            ! wilting point potential in mm
+   real(r8) smpmax            ! wilting point potential in cm
    real(r8) smp_node          ! matrix potential
 
    integer i                  ! loop counter
