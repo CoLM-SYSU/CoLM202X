@@ -107,7 +107,7 @@ PROGRAM CoLM
    character(len=256) :: dir_restart
    character(len=256) :: fsrfdata
 
-   real(r8) :: deltim       ! time step (senconds)
+   real(r8) :: deltim       ! time step (seconds)
    integer  :: sdate(3)     ! calendar (year, julian day, seconds)
    integer  :: idate(3)     ! calendar (year, julian day, seconds)
    integer  :: edate(3)     ! calendar (year, julian day, seconds)
