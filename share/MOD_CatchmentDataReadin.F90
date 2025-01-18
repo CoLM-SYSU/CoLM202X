@@ -64,7 +64,12 @@ CONTAINS
          ENDIF
       ENDIF 
 
-      in_one_file = ncio_var_exist (file_meshdata_in, dataname)
+      IF (p_is_master) THEN
+         in_one_file = ncio_var_exist (file_meshdata_in, dataname)
+      ENDIF
+#ifdef USEMPI
+      CALL mpi_bcast (in_one_file, 1, mpi_logical, p_address_master, p_comm_glb, p_err)
+#endif
 
       IF (in_one_file) THEN
 

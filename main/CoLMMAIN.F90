@@ -523,8 +523,7 @@ SUBROUTINE CoLMMAIN ( &
         pg_rain     ,&! rainfall onto ground including canopy runoff [kg/(m2 s)]
         pg_snow     ,&! snowfall onto ground including canopy runoff [kg/(m2 s)]
         qintr_rain  ,&! rainfall interception (mm h2o/s)
-        qintr_snow  ,&! snowfall interception (mm h2o/s)
-        errw_rsub     ! the possible subsurface runoff deficit after PHS is included
+        qintr_snow    ! snowfall interception (mm h2o/s)
 
    integer snl      ,&! number of snow layers
         imelt(maxsnl+1:nl_soil), &! flag for: melting=1, freezing=2, Nothing happended=0
@@ -645,8 +644,6 @@ SUBROUTINE CoLMMAIN ( &
                totwb = totwb + wetwat
             ENDIF
          ENDIF
-
-         errw_rsub = 0._r8
 
          fiold(:) = 0.0
          IF (snl <0 ) THEN
@@ -769,7 +766,7 @@ SUBROUTINE CoLMMAIN ( &
                  qsubl_snow        ,qfros_snow        ,fsno              ,rsur              ,&
                  rnof              ,qinfl             ,pondmx            ,&
                  ssi               ,wimp              ,smpmin            ,zwt               ,&
-                 wa                ,qcharge           ,errw_rsub         ,&
+                 wa                ,qcharge           ,&
 
 #if(defined CaMa_Flood)
              !add variables for flood depth [mm], flood fraction [0-1] and re-infiltration [mm/s] calculation.
@@ -906,10 +903,10 @@ SUBROUTINE CoLMMAIN ( &
 #endif
 
 #ifndef CatchLateralFlow
-         errorw=(endwb-totwb)-(forc_prc+forc_prl-fevpa-rnof-errw_rsub)*deltim
+         errorw=(endwb-totwb)-(forc_prc+forc_prl-fevpa-rnof)*deltim
 #else
       ! for lateral flow, "rsur" is considered in HYDRO/MOD_Hydro_SurfaceFlow.F90
-         errorw=(endwb-totwb)-(forc_prc+forc_prl-fevpa-errw_rsub)*deltim
+         errorw=(endwb-totwb)-(forc_prc+forc_prl-fevpa)*deltim
 #endif
 
 #ifdef CROP
@@ -934,9 +931,6 @@ SUBROUTINE CoLMMAIN ( &
                write(6,*) 'Warning: water balance violation in CoLMMAIN (dry lake) ', errorw
             ENDIF
             CALL CoLM_stop ()
-         ENDIF
-         IF(abs(errw_rsub*deltim)>1.e-3) THEN
-            write(6,*) 'Subsurface runoff deficit due to PHS', errw_rsub*deltim
          ENDIF
 #endif
 
