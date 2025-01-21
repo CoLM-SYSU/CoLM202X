@@ -286,7 +286,7 @@ PROGRAM MKSRFDATA
    CALL mesh_build ()
    CALL landelm_build
 
-#ifndef CATCHMENT
+#if (defined GRIDBASED || defined UNSTRUCTURED)
    IF (DEF_LANDONLY) THEN
       !TODO: distinguish USGS and IGBP land cover
 #ifndef LULC_USGS

@@ -170,6 +170,32 @@ SUBROUTINE Aggregation_SoilParameters ( &
    real(r8),allocatable :: fjacc(:,:),fvecc(:),fjacv(:,:),fvecv(:),fjacb(:,:),fvecb(:)
    integer isiter                         ! flags to tell whether the iteration is completed, 1=Yes, 0=No
 
+   ! Parameters to fill water body patches
+   real(r8), parameter :: vf_quartz_mineral_fill_water(8) = (/0.6,   0.6,   0.6,   0.6,   0.6,   0.6,   0.6,   0.4  /)
+   real(r8), parameter :: vf_gravels_fill_water(8)        = (/0.,    0.,    0.,    0.,    0.,    0.011, 0.010, 0.010/)
+   real(r8), parameter :: vf_sand_fill_water(8)           = (/0.703, 0.703, 0.704, 0.705, 0.717, 0.722, 0.697, 0.512/)
+   real(r8), parameter :: vf_om_fill_water(8)             = (/0.023, 0.022, 0.021, 0.019, 0.016, 0.011, 0.006, 0.003/)
+   real(r8), parameter :: wf_gravels_fill_water(8)        = (/0.,    0.,    0.,    0.,    0.,    0.011, 0.011, 0.010/)
+   real(r8), parameter :: wf_sand_fill_water(8)           = (/0.72,  0.72,  0.72,  0.72,  0.73,  0.74,  0.71,  0.52 /)
+   real(r8), parameter :: theta_r_fill_water(8)           = (/0.078, 0.078, 0.077, 0.074, 0.075, 0.074, 0.075, 0.091/)
+   real(r8), parameter :: alpha_vgm_fill_water(8)         = (/0.051, 0.051, 0.050, 0.048, 0.047, 0.044, 0.040, 0.029/) 
+   real(r8), parameter :: n_vgm_fill_water(8)             = (/1.413, 1.412, 1.412, 1.414, 1.410, 1.422, 1.399, 1.188/)
+   real(r8), parameter :: theta_s_fill_water(8)           = (/0.374, 0.371, 0.366, 0.358, 0.345, 0.323, 0.297, 0.281/)
+   real(r8), parameter :: k_s_fill_water(8)               = (/96.,   89.,   79.,   75.,   79.,   74.,   55.,   19.  /)
+   real(r8), parameter :: L_vgm_fill_water(8)             = (/0.5,   0.5,   0.5,   0.5,   0.5,   0.5,   0.5,   0.5  /)
+   real(r8), parameter :: psi_s_fill_water(8)             = (/-13.5, -13.7, -13.9, -14.8, -15.1, -16.0, -19.8, -45.6/)
+   real(r8), parameter :: lambda_fill_water(8)            = (/0.275, 0.275, 0.275, 0.284, 0.287, 0.291, 0.286, 0.194/)
+   real(r8), parameter :: csol_fill_water(8)              = (/1.3e6, 1.3e6, 1.3e6, 1.3e6, 1.4e6, 1.4e6, 1.5e6, 1.5e6/)
+   real(r8), parameter :: tksatu_fill_water(8)            = (/1.985, 2.002, 2.026, 2.066, 2.133, 2.240, 2.388, 2.053/)
+   real(r8), parameter :: tksatf_fill_water(8)            = (/3.343, 3.356, 3.373, 3.401, 3.448, 3.515, 3.613, 3.036/)
+   real(r8), parameter :: tkdry_fill_water(8)             = (/0.260, 0.264, 0.269, 0.278, 0.293, 0.321, 0.359, 0.387/)
+   real(r8), parameter :: k_solids_fill_water(8)          = (/2.450, 2.467, 2.490, 2.528, 2.590, 2.688, 2.823, 2.405/)
+   real(r8), parameter :: OM_density_fill_water(8)        = (/19.18, 18.57, 17.74, 16.37, 14.18, 10.54, 6.088, 3.319/)
+   real(r8), parameter :: BD_all_fill_water(8)            = (/1673., 1683., 1698., 1721., 1758., 1821., 1897., 1944./)
+   real(r8), parameter :: BA_alpha_fill_water(8)          = (/0.38,  0.38,  0.38,  0.38,  0.38,  0.38,  0.38,  0.38 /)
+   real(r8), parameter :: BA_beta_fill_water (8)          = (/35,    35,    35,    35,    35,    35,    35,    35   /)
+
+
 #ifdef SrfdataDiag
    integer :: typpatch(N_land_classification+1), ityp
 #endif
@@ -287,8 +313,12 @@ SUBROUTINE Aggregation_SoilParameters ( &
                ENDIF
 
                IF (isnan_ud(vf_quartz_mineral_s_patches(ipatch))) THEN
-                  write(*,*) "NAN appears in vf_quartz_mineral_s_patches."
-                  write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
+                  IF (L == WATERBODY) THEN
+                     vf_quartz_mineral_s_patches(ipatch) = vf_quartz_mineral_fill_water(nsl)
+                  ELSE
+                     write(*,*) "Warning: NAN appears in vf_quartz_mineral_s_patches."
+                     write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
+                  ENDIF
                ENDIF
 
             ENDDO
@@ -397,18 +427,48 @@ SUBROUTINE Aggregation_SoilParameters ( &
                ENDIF
 
                IF (isnan_ud(vf_gravels_s_patches(ipatch))) THEN
-                  write(*,*) "NAN appears in vf_gravels_s_patches."
-                  write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
+                  IF (L == WATERBODY) THEN
+                     vf_gravels_s_patches(ipatch) = vf_gravels_fill_water(nsl)
+                  ELSE
+                     write(*,*) "Warning: NAN appears in vf_gravels_s_patches."
+                     write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
+                  ENDIF
                ENDIF
 
                IF (isnan_ud(vf_sand_s_patches(ipatch))) THEN
-                  write(*,*) "NAN appears in vf_sand_s_patches."
-                  write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
+                  IF (L == WATERBODY) THEN
+                     vf_sand_s_patches(ipatch) = vf_sand_fill_water(nsl)
+                  ELSE
+                     write(*,*) "Warning: NAN appears in vf_sand_s_patches."
+                     write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
+                  ENDIF
                ENDIF
 
                IF (isnan_ud(vf_om_s_patches(ipatch))) THEN
-                  write(*,*) "NAN appears in vf_om_s_patches."
-                  write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
+                  IF (L == WATERBODY) THEN
+                     vf_om_s_patches(ipatch) = vf_om_fill_water(nsl)
+                  ELSE
+                     write(*,*) "Warning: NAN appears in vf_om_s_patches."
+                     write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
+                  ENDIF
+               ENDIF
+
+               IF (isnan_ud(BA_alpha_patches(ipatch))) THEN
+                  IF (L == WATERBODY) THEN
+                     BA_alpha_patches(ipatch) = BA_alpha_fill_water(nsl)
+                  ELSE
+                     write(*,*) "Warning: NAN appears in BA_alpha_patches."
+                     write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
+                  ENDIF
+               ENDIF
+
+               IF (isnan_ud(BA_beta_patches(ipatch))) THEN
+                  IF (L == WATERBODY) THEN
+                     BA_beta_patches(ipatch) = BA_beta_fill_water(nsl)
+                  ELSE
+                     write(*,*) "Warning: NAN appears in BA_beta_patches."
+                     write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
+                  ENDIF
                ENDIF
 
             ENDDO
@@ -541,8 +601,12 @@ SUBROUTINE Aggregation_SoilParameters ( &
                ENDIF
 
                IF (isnan_ud(wf_gravels_s_patches(ipatch))) THEN
-                  write(*,*) "NAN appears in wf_gravels_s_patches."
-                  write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
+                  IF (L == WATERBODY) THEN
+                     wf_gravels_s_patches(ipatch) = wf_gravels_fill_water(nsl)
+                  ELSE
+                     write(*,*) "Warning: NAN appears in wf_gravels_s_patches."
+                     write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
+                  ENDIF
                ENDIF
 
             ENDDO
@@ -604,8 +668,12 @@ SUBROUTINE Aggregation_SoilParameters ( &
                ENDIF
 
                IF (isnan_ud(wf_sand_s_patches(ipatch))) THEN
-                  write(*,*) "NAN appears in wf_sand_s_patches."
-                  write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
+                  IF (L == WATERBODY) THEN
+                     wf_sand_s_patches(ipatch) = wf_sand_fill_water(nsl)
+                  ELSE
+                     write(*,*) "Warning: NAN appears in wf_sand_s_patches."
+                     write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
+                  ENDIF
                ENDIF
 
             ENDDO
@@ -771,33 +839,57 @@ SUBROUTINE Aggregation_SoilParameters ( &
                ENDIF
 
                IF (isnan_ud(theta_r_patches(ipatch))) THEN
-                  write(*,*) "NAN appears in theta_r_patches."
-                  write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
+                  IF (L == WATERBODY) THEN
+                     theta_r_patches(ipatch) = theta_r_fill_water(nsl)
+                  ELSE
+                     write(*,*) "Warning: NAN appears in theta_r_patches."
+                     write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
+                  ENDIF
                ENDIF
 
                IF (isnan_ud(alpha_vgm_patches(ipatch))) THEN
-                  write(*,*) "NAN appears in alpha_vgm_patches."
-                  write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
+                  IF (L == WATERBODY) THEN
+                     alpha_vgm_patches(ipatch) = alpha_vgm_fill_water(nsl)
+                  ELSE
+                     write(*,*) "Warning: NAN appears in alpha_vgm_patches."
+                     write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
+                  ENDIF
                ENDIF
 
                IF (isnan_ud(n_vgm_patches(ipatch))) THEN
-                  write(*,*) "NAN appears in n_vgm_patches."
-                  write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
+                  IF (L == WATERBODY) THEN
+                     n_vgm_patches(ipatch) = n_vgm_fill_water(nsl)
+                  ELSE
+                     write(*,*) "Warning: NAN appears in n_vgm_patches."
+                     write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
+                  ENDIF
                ENDIF
 
                IF (isnan_ud(theta_s_patches(ipatch))) THEN
-                  write(*,*) "NAN appears in theta_s_patches."
-                  write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
+                  IF (L == WATERBODY) THEN
+                     theta_s_patches(ipatch) = theta_s_fill_water(nsl)
+                  ELSE
+                     write(*,*) "Warning: NAN appears in theta_s_patches."
+                     write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
+                  ENDIF
                ENDIF
 
                IF (isnan_ud(k_s_patches(ipatch))) THEN
-                  write(*,*) "NAN appears in k_s_patches."
-                  write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
+                  IF (L == WATERBODY) THEN
+                     k_s_patches(ipatch) = k_s_fill_water(nsl)
+                  ELSE
+                     write(*,*) "Warning: NAN appears in k_s_patches."
+                     write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
+                  ENDIF
                ENDIF
 
                IF (isnan_ud(L_vgm_patches(ipatch))) THEN
-                  write(*,*) "NAN appears in L_vgm_patches."
-                  write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
+                  IF (L == WATERBODY) THEN
+                     L_vgm_patches(ipatch) = L_vgm_fill_water(nsl)
+                  ELSE
+                     write(*,*) "Warning: NAN appears in L_vgm_patches."
+                     write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
+                  ENDIF
                ENDIF
 
             ENDDO
@@ -1025,23 +1117,39 @@ SUBROUTINE Aggregation_SoilParameters ( &
                ENDIF
 
                IF (isnan_ud(theta_s_patches(ipatch))) THEN
-                  write(*,*) "NAN appears in theta_s_patches."
-                  write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
+                  IF (L == WATERBODY) THEN
+                     theta_s_patches(ipatch) = theta_s_fill_water(nsl)
+                  ELSE
+                     write(*,*) "Warning: NAN appears in theta_s_patches."
+                     write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
+                  ENDIF
                ENDIF
 
                IF (isnan_ud(k_s_patches(ipatch))) THEN
-                  write(*,*) "NAN appears in k_s_patches."
-                  write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
+                  IF (L == WATERBODY) THEN
+                     k_s_patches(ipatch) = k_s_fill_water(nsl)
+                  ELSE
+                     write(*,*) "Warning: NAN appears in k_s_patches."
+                     write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
+                  ENDIF
                ENDIF
 
                IF (isnan_ud(psi_s_patches(ipatch))) THEN
-                  write(*,*) "NAN appears in psi_s_patches."
-                  write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
+                  IF (L == WATERBODY) THEN
+                     psi_s_patches(ipatch) = psi_s_fill_water(nsl)
+                  ELSE
+                     write(*,*) "Warning: NAN appears in psi_s_patches."
+                     write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
+                  ENDIF
                ENDIF
 
                IF (isnan_ud(lambda_patches(ipatch))) THEN
-                  write(*,*) "NAN appears in lambda_patches."
-                  write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
+                  IF (L == WATERBODY) THEN
+                     lambda_patches(ipatch) = lambda_fill_water(nsl)
+                  ELSE
+                     write(*,*) "Warning: NAN appears in lambda_patches."
+                     write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
+                  ENDIF
                ENDIF
 
             ENDDO
@@ -1157,8 +1265,12 @@ SUBROUTINE Aggregation_SoilParameters ( &
                ENDIF
 
                IF (isnan_ud(csol_patches(ipatch))) THEN
-                  write(*,*) "NAN appears in csol_patches."
-                  write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
+                  IF (L == WATERBODY) THEN
+                     csol_patches(ipatch) = csol_fill_water(nsl)
+                  ELSE
+                     write(*,*) "Warning: NAN appears in csol_patches."
+                     write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
+                  ENDIF
                ENDIF
 
             ENDDO
@@ -1218,8 +1330,12 @@ SUBROUTINE Aggregation_SoilParameters ( &
                ENDIF
 
                IF (isnan_ud(tksatu_patches(ipatch))) THEN
-                  write(*,*) "NAN appears in tksatu_patches."
-                  write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
+                  IF (L == WATERBODY) THEN
+                     tksatu_patches(ipatch) = tksatu_fill_water(nsl)
+                  ELSE
+                     write(*,*) "Warning: NAN appears in tksatu_patches."
+                     write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
+                  ENDIF
                ENDIF
 
             ENDDO
@@ -1279,8 +1395,12 @@ SUBROUTINE Aggregation_SoilParameters ( &
                ENDIF
 
                IF (isnan_ud(tksatf_patches(ipatch))) THEN
-                  write(*,*) "NAN appears in tksatf_patches."
-                  write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
+                  IF (L == WATERBODY) THEN
+                     tksatf_patches(ipatch) = tksatf_fill_water(nsl)
+                  ELSE
+                     write(*,*) "Warning: NAN appears in tksatf_patches."
+                     write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
+                  ENDIF
                ENDIF
 
             ENDDO
@@ -1340,8 +1460,12 @@ SUBROUTINE Aggregation_SoilParameters ( &
                ENDIF
 
                IF (isnan_ud(tkdry_patches(ipatch))) THEN
-                  write(*,*) "NAN appears in tkdry_patches."
-                  write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
+                  IF (L == WATERBODY) THEN
+                     tkdry_patches(ipatch) = tkdry_fill_water(nsl)
+                  ELSE
+                     write(*,*) "Warning: NAN appears in tkdry_patches."
+                     write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
+                  ENDIF
                ENDIF
 
             ENDDO
@@ -1401,8 +1525,12 @@ SUBROUTINE Aggregation_SoilParameters ( &
                ENDIF
 
                IF (isnan_ud(k_solids_patches(ipatch))) THEN
-                  write(*,*) "NAN appears in k_solids_patches."
-                  write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
+                  IF (L == WATERBODY) THEN
+                     k_solids_patches(ipatch) = k_solids_fill_water(nsl)
+                  ELSE
+                     write(*,*) "Warning: NAN appears in k_solids_patches."
+                     write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
+                  ENDIF
                ENDIF
 
             ENDDO
@@ -1463,8 +1591,12 @@ SUBROUTINE Aggregation_SoilParameters ( &
                ENDIF
 
                IF (isnan_ud(OM_density_s_patches(ipatch))) THEN
-                  write(*,*) "NAN appears in OM_density_s_patches."
-                  write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
+                  IF (L == WATERBODY) THEN
+                     OM_density_s_patches(ipatch) = OM_density_fill_water(nsl)
+                  ELSE
+                     write(*,*) "Warning: NAN appears in OM_density_s_patches."
+                     write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
+                  ENDIF
                ENDIF
 
             ENDDO
@@ -1525,8 +1657,12 @@ SUBROUTINE Aggregation_SoilParameters ( &
                ENDIF
 
                IF (isnan_ud(BD_all_s_patches(ipatch))) THEN
-                  write(*,*) "NAN appears in BD_all_s_patches."
-                  write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
+                  IF (L == WATERBODY) THEN
+                     BD_all_s_patches(ipatch) = BD_all_fill_water(nsl)
+                  ELSE
+                     write(*,*) "Warning: NAN appears in BD_all_s_patches."
+                     write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
+                  ENDIF
                ENDIF
 
             ENDDO

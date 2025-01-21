@@ -75,8 +75,7 @@ CONTAINS
 
         ! output
         rsur           ,rnof           ,qinfl          ,zwt            ,&
-        wa             ,qcharge        ,smp            ,hk             ,&
-        errw_rsub      )
+        wa             ,qcharge        ,smp            ,hk             )
 
 !=======================================================================
 ! this is the main SUBROUTINE to execute the calculation of URBAN
@@ -227,8 +226,7 @@ CONTAINS
 
    real(r8), intent(out) :: &
         smp(1:nl_soil)   ,&! soil matrix potential [mm]
-        hk (1:nl_soil)   ,&! hydraulic conductivity [mm h2o/m]
-        errw_rsub          ! the possible subsurface runoff deficit after PHS is included
+        hk (1:nl_soil)     ! hydraulic conductivity [mm h2o/m]
 !
 !-----------------------Local Variables------------------------------
 !
@@ -273,7 +271,7 @@ CONTAINS
              0.          ,& ! fsno, not active
              rsur_gper   ,rnof_gper   ,qinfl                                 ,&
              pondmx      ,ssi         ,wimp        ,smpmin                   ,&
-             zwt         ,wa          ,qcharge     ,errw_rsub                ,&
+             zwt         ,wa          ,qcharge                               ,&
 #if(defined CaMa_Flood)
              flddepth    ,fldfrc      ,qinfl_fld                             ,&
 #endif
