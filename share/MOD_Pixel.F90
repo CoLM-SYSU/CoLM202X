@@ -124,9 +124,9 @@ CONTAINS
    integer :: iy1, iy2, ys2, yn2
    real(r8), allocatable :: ytmp(:)
 
-   integer :: nx
-   integer :: ix1, ix2, xw2, xe2
-   real(r8), allocatable :: xtmp(:)
+   integer :: nx, nlonc
+   integer :: ix1, ix2, xw2
+   real(r8), allocatable :: xtmp(:), loncirc(:)
 
       IF (lat_s(1) <= lat_s(nlat)) THEN
          yinc = 1
@@ -180,55 +180,45 @@ CONTAINS
       west = lon_w(1)
       east = lon_e(nlon)
 
-      allocate (xtmp (this%nlon+nlon+2))
+      IF (west == east) THEN
+         nlonc = nlon
+         allocate (loncirc (nlonc))
+         loncirc = lon_w
+      ELSE
+         nlonc = nlon + 1
+         allocate (loncirc (nlonc))
+         loncirc(1:nlon) = lon_w
+         loncirc(nlon+1) = east
+      ENDIF
 
+      allocate (xtmp (this%nlon+nlon+2))
       nx = 0
       DO ix1 = 1, this%nlon
+
          nx = nx + 1
          xtmp(nx) = this%lon_w(ix1)
 
-         IF (    lon_between_floor(this%lon_w(ix1), west, east) &
-            .or. lon_between_ceil (this%lon_e(ix1), west, east) &
-            .or. lon_between_floor(west, this%lon_w(ix1), this%lon_e(ix1)) &
-            .or. lon_between_ceil (east, this%lon_w(ix1), this%lon_e(ix1))) THEN
-
-            xw2 = find_nearest_west (this%lon_w(ix1), nlon, lon_w) 
-            xe2 = find_nearest_east (this%lon_e(ix1), nlon, lon_e) 
-
-            IF (.not. lon_between_floor(this%lon_w(ix1), lon_w(xw2), lon_e(xw2))) THEN
-               xw2 = mod(xw2,nlon) + 1
-            ENDIF
-
-            IF (.not. lon_between_ceil(this%lon_e(ix1), lon_w(xe2), lon_e(xe2))) THEN
-               xe2 = xe2 - 1
-               IF (xe2 == 0) xe2 = nlon
-            ENDIF
-
-            IF ((lon_between_floor(lon_w(xw2), this%lon_w(ix1), this%lon_e(ix1)) &
-               .and. (lon_w(xw2) /= this%lon_w(ix1)))) THEN
-               nx = nx + 1
-               xtmp(nx) = lon_w(xw2)
-            ENDIF
-
-            IF (xw2 /= xe2) THEN
-               ix2 = mod(xw2,nlon) + 1
-               DO WHILE (.true.) 
+         xw2 = find_nearest_west (this%lon_w(ix1), nlonc, loncirc) 
+         ix2 = mod(xw2,nlonc) + 1
+         DO WHILE (.true.)
+            IF (lon_between_floor(loncirc(ix2), this%lon_w(ix1), this%lon_e(ix1))) THEN
+               IF (loncirc(ix2) /= this%lon_w(ix1)) THEN
                   nx = nx + 1
-                  xtmp(nx) = lon_w(ix2)
+                  xtmp(nx) = loncirc(ix2)
+               ENDIF
 
-                  IF (ix2 == xe2)  EXIT
-                  ix2 = mod(ix2,nlon) + 1
-               ENDDO
+               IF (ix2 /= xw2) THEN
+                  ix2 = mod(ix2,nlonc) + 1
+               ELSE
+                  EXIT
+               ENDIF
+            ELSE
+               EXIT
             ENDIF
+         ENDDO
 
-            IF ((lon_between_ceil(lon_e(xe2), this%lon_w(ix1), this%lon_e(ix1))) &
-               .and. (lon_e(xe2) /= this%lon_e(ix1))) THEN
-               nx = nx + 1
-               xtmp(nx) = lon_e(xe2)
-            ENDIF
-         ENDIF
       ENDDO
-
+               
       nx = nx + 1
       xtmp(nx) = this%lon_e(this%nlon)
 
