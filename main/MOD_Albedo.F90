@@ -569,7 +569,7 @@ ENDIF
    real(r8) :: upscat_sno = 0.5   !upscat parameter for snow
    real(r8) :: beta0_sno  = 0.5   !beta0 parameter for snow
    real(r8) :: scat_sno(2)        !snow single scattering albedo
-   data scat_sno(1), scat_sno(2) /0.8, 0.4/   ! 1:vis, 2: nir
+   data scat_sno(1), scat_sno(2) /0.6, 0.4/   ! 1:vis, 2: nir
 
    integer iw               ! band iterator
 
@@ -902,7 +902,7 @@ ENDIF
    real(r8) :: upscat_sno = 0.5   !upscat parameter for snow
    real(r8) :: beta0_sno  = 0.5   !beta0 parameter for snow
    real(r8) :: scat_sno(2)        !snow single scattering albedo
-   data scat_sno(1), scat_sno(2) /0.8, 0.4/   ! 1:vis, 2: nir
+   data scat_sno(1), scat_sno(2) /0.6, 0.4/   ! 1:vis, 2: nir
 
    integer iw                ! band loop index
    integer ic                ! direct/diffuse loop index

@@ -100,8 +100,8 @@ CONTAINS
 
    ! vegetation snow optical properties, 1:vis, 2:nir
    real(r8) :: rho_sno(2), tau_sno(2)
-   data rho_sno(1), rho_sno(2) /0.4, 0.2/
-   data tau_sno(1), tau_sno(2) /0.4, 0.2/
+   data rho_sno(1), rho_sno(2) /0.3, 0.2/
+   data tau_sno(1), tau_sno(2) /0.3, 0.2/
 
       ! get patch PFT index
       ps = patch_pft_s(ipatch)
