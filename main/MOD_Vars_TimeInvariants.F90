@@ -535,8 +535,8 @@ CONTAINS
 #endif
 
 #if (defined BGC)
-       file_restart = trim(dir_restart) // '/const/' // trim(casename) //'_restart_bgc_const' // '_lc' // trim(cyear) // '.nc'
-       CALL READ_BGCTimeInvariants (file_restart)
+      file_restart = trim(dir_restart) // '/const/' // trim(casename) //'_restart_bgc_const' // '_lc' // trim(cyear) // '.nc'
+      CALL READ_BGCTimeInvariants (file_restart)
 #endif
 
 #if (defined URBAN_MODEL)
