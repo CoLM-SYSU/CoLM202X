@@ -131,8 +131,8 @@ CONTAINS
                   patch_pft_s (ipft) = ipft
                   patch_pft_e (ipft) = ipft
                ENDDO
-               
-               landpft%pctshared = landpatch%pctshared 
+
+               landpft%pctshared = landpatch%pctshared
 #endif
             ENDIF
          ELSE
@@ -151,7 +151,7 @@ CONTAINS
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
-   
+
       landpft%has_shared = .true.
 
       IF (p_is_io) THEN
@@ -274,7 +274,7 @@ CONTAINS
                      landpft%ipxstt(npft) = landpatch%ipxstt(ipatch)
                      landpft%ipxend(npft) = landpatch%ipxend(ipatch)
                      landpft%settyp(npft) = cropclass(ipatch)
-                           
+
                      landpft%pctshared(npft) = landpatch%pctshared(ipatch)
 
                      pft2patch(npft) = npatch

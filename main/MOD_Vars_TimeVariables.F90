@@ -900,11 +900,12 @@ CONTAINS
 
    USE MOD_SPMD_Task
    USE MOD_Namelist, only : DEF_REST_CompressLevel, DEF_USE_PLANTHYDRAULICS, DEF_USE_OZONESTRESS, &
-                            DEF_USE_IRRIGATION, DEF_USE_Dynamic_Lake
+                            DEF_USE_IRRIGATION, DEF_USE_Dynamic_Lake, SITE_landtype
    USE MOD_LandPatch
    USE MOD_NetCDFVector
    USE MOD_Vars_Global
    USE MOD_Vars_TimeInvariants, only : dz_lake
+   USE MOD_Const_LC, only: patchtypes
    IMPLICIT NONE
 
    integer, intent(in) :: idate(3)
@@ -1058,8 +1059,15 @@ IF (DEF_USE_IRRIGATION) THEN
 ENDIF
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
+#ifdef SinglePoint
+      IF (patchtypes(SITE_landtype) == 0) THEN
+         file_restart = trim(dir_restart)// '/'//trim(cdate)//'/' // trim(site) //'_restart_pft_'//trim(cdate)//'_lc'//trim(cyear)//'.nc'
+         CALL WRITE_PFTimeVariables (file_restart)
+      ENDIF
+#else
       file_restart = trim(dir_restart)// '/'//trim(cdate)//'/' // trim(site) //'_restart_pft_'//trim(cdate)//'_lc'//trim(cyear)//'.nc'
       CALL WRITE_PFTimeVariables (file_restart)
+#endif
 #endif
 
 #if (defined BGC)
@@ -1094,6 +1102,7 @@ ENDIF
    USE MOD_LandPatch
    USE MOD_Vars_Global
    USE MOD_Vars_TimeInvariants, only : dz_lake
+   USE MOD_Const_LC, only: patchtypes
 
    IMPLICIT NONE
 
@@ -1229,8 +1238,15 @@ IF (DEF_USE_IRRIGATION) THEN
 ENDIF
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
+#ifdef SinglePoint
+      IF (patchtypes(SITE_landtype) == 0) THEN
+         file_restart = trim(dir_restart)// '/'//trim(cdate)//'/' // trim(site) //'_restart_pft_'//trim(cdate)//'_lc'//trim(cyear)//'.nc'
+         CALL READ_PFTimeVariables (file_restart)
+      ENDIF
+#else
       file_restart = trim(dir_restart)// '/'//trim(cdate)//'/' // trim(site) //'_restart_pft_'//trim(cdate)//'_lc'//trim(cyear)//'.nc'
       CALL READ_PFTimeVariables (file_restart)
+#endif
 #endif
 
 #if (defined BGC)
