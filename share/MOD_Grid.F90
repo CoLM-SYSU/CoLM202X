@@ -864,7 +864,7 @@ CONTAINS
       ilonloc = 0
       DO WHILE (.true.)
          ilon = mod(ilon,grid%nlon) + 1
-         IF (grid%xblk(ilon) /= iblk) THEN
+         IF ((grid%xblk(ilon) /= iblk) .or. (grid%xloc(ilon) == 1)) THEN
             this%nxseg = this%nxseg + 1
             iblk = grid%xblk(ilon)
          ENDIF
@@ -899,7 +899,7 @@ CONTAINS
       DO WHILE (.true.)
          ilon = mod(ilon,grid%nlon) + 1
          ilonloc = ilonloc + 1
-         IF (grid%xblk(ilon) /= iblk) THEN
+         IF ((grid%xblk(ilon) /= iblk) .or. (grid%xloc(ilon) == 1)) THEN
             ixseg = ixseg + 1
             iblk = grid%xblk(ilon)
             this%xsegs(ixseg)%blk  = iblk

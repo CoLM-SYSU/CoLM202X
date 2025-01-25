@@ -81,6 +81,8 @@ PROGRAM CoLMINI
       CALL getarg (1, nlfile)
       CALL read_namelist (nlfile)
 
+      DEF_PIO_groupsize = 2
+
       casename     = DEF_CASE_NAME
       dir_landdata = DEF_dir_landdata
       dir_restart  = DEF_dir_restart
