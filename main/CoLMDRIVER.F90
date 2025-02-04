@@ -37,7 +37,7 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
    integer,  intent(in) :: idate(3) ! model calendar for next time step (year, julian day, seconds)
    real(r8), intent(in) :: deltim   ! seconds in a time-step
 
-   logical,  intent(in) :: dolai    ! true if time for time-varying vegetation paramter
+   logical,  intent(in) :: dolai    ! true if time for time-varying vegetation parameter
    logical,  intent(in) :: doalb    ! true if time for surface albedo calculation
    logical,  intent(in) :: dosst    ! true if time for update sst/ice/snow
 
@@ -68,7 +68,7 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
          m = patchclass(i)
 
          steps_in_one_deltim = 1
-         ! deltim need to be within 1800s for waterbody with snow in order to avoid large
+         ! deltim need to be within 1800s for water body with snow in order to avoid large
          ! temperature fluctuations due to rapid snow heat conductance
          IF(m == WATERBODY .and. snowdp(i) > 0.0) steps_in_one_deltim = ceiling(deltim/1800.)
          deltim_phy = deltim/steps_in_one_deltim
@@ -320,7 +320,7 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
             solniln(i)      ,srvdln(i)       ,srviln(i)       ,srndln(i)       ,&
             srniln(i)       ,qcharge(i)      ,xerr(i)         ,zerr(i)         ,&
 
-          ! TUNABLE modle constants
+          ! TUNABLE model constants
             zlnd            ,zsno            ,csoilc          ,dewmx           ,&
             ! 'wtfact' is updated to gridded 'fsatmax' data.
             capr            ,cnfac           ,ssi             ,&

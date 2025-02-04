@@ -26,7 +26,7 @@ CONTAINS
 ! ======================================================================
 ! Original author : Yongjiu Dai, September 15, 1999
 !
-! calculation of friction velocity, relation for potential temperatur
+! calculation of friction velocity, relation for potential temperature
 ! and humidity profiles of surface boundary layer.
 ! the scheme is based on the work of Zeng et al. (1998):
 ! Intercomparison of bulk aerodynamic algorithms for the computation
@@ -47,7 +47,7 @@ CONTAINS
    real(r8), intent(in) :: z0h      ! roughness length, sensible heat [m]
    real(r8), intent(in) :: z0q      ! roughness length, latent heat [m]
    real(r8), intent(in) :: obu      ! monin-obukhov length (m)
-   real(r8), intent(in) :: um       ! wind speed including the stablity effect [m/s]
+   real(r8), intent(in) :: um       ! wind speed including the stability effect [m/s]
 
    real(r8), intent(out) :: ustar   ! friction velocity [m/s]
    real(r8), intent(out) :: fh2m    ! relation for temperature at 2m
@@ -59,7 +59,7 @@ CONTAINS
 
 !------------------------ local variables ------------------------------
 
-   real(r8) zldis  ! reference height "minus" zero displacement heght [m]
+   real(r8) zldis  ! reference height "minus" zero displacement height [m]
    real(r8) zetam  ! transition point of flux-gradient relation (wind profile)
    real(r8) zetat  ! transition point of flux-gradient relation (temp. profile)
    real(r8) zeta   ! dimensionless height used in Monin-Obukhov theory
@@ -79,7 +79,7 @@ CONTAINS
       ELSE IF(zeta < 0.)THEN          ! -1 <= zeta < 0
          fm    = log(zldis/z0m) - psi(1,zeta) + psi(1,z0m/obu)
          ustar = vonkar*um / fm
-      ELSE IF(zeta <= 1.)THEN         !  0 <= ztea <= 1
+      ELSE IF(zeta <= 1.)THEN         !  0 <= zeta <= 1
          fm    = log(zldis/z0m) + 5.*zeta - 5.*z0m/obu
          ustar = vonkar*um / fm
       ELSE                            !  1 < zeta, phi=5+zeta
@@ -96,7 +96,7 @@ CONTAINS
                 + psi(1,z0m/obu) + 1.14*((-zeta)**0.333-(zetam)**0.333)
       ELSE IF(zeta < 0.)THEN          ! -1 <= zeta < 0
          fm10m  = log(zldis/z0m) - psi(1,zeta) + psi(1,z0m/obu)
-      ELSE IF(zeta <= 1.)THEN         !  0 <= ztea <= 1
+      ELSE IF(zeta <= 1.)THEN         !  0 <= zeta <= 1
          fm10m  = log(zldis/z0m) + 5.*zeta - 5.*z0m/obu
       ELSE                            !  1 < zeta, phi=5+zeta
          fm10m  = log(obu/z0m) + 5. - 5.*z0m/obu + (5.*log(zeta)+zeta-1.)
@@ -111,7 +111,7 @@ CONTAINS
                + psi(2,z0h/obu) + 0.8*((zetat)**(-0.333)-(-zeta)**(-0.333))
       ELSE IF(zeta < 0.)THEN          ! -1 <= zeta < 0
          fh    = log(zldis/z0h) - psi(2,zeta) + psi(2,z0h/obu)
-      ELSE IF(zeta <= 1.)THEN         !  0 <= ztea <= 1
+      ELSE IF(zeta <= 1.)THEN         !  0 <= zeta <= 1
          fh    = log(zldis/z0h) + 5.*zeta - 5.*z0h/obu
       ELSE                            !  1 < zeta, phi=5+zeta
          fh    = log(obu/z0h) + 5. - 5.*z0h/obu + (5.*log(zeta)+zeta-1.)
@@ -126,7 +126,7 @@ CONTAINS
               + psi(2,z0h/obu) + 0.8*((zetat)**(-0.333)-(-zeta)**(-0.333))
       ELSE IF(zeta < 0.)THEN          ! -1 <= zeta < 0
          fh2m = log(zldis/z0h) - psi(2,zeta) + psi(2,z0h/obu)
-      ELSE IF(zeta <= 1.)THEN         !  0 <= ztea <= 1
+      ELSE IF(zeta <= 1.)THEN         !  0 <= zeta <= 1
          fh2m = log(zldis/z0h) + 5.*zeta - 5.*z0h/obu
       ELSE                            !  1 < zeta, phi=5+zeta
          fh2m = log(obu/z0h) + 5. - 5.*z0h/obu + (5.*log(zeta)+zeta-1.)
@@ -141,7 +141,7 @@ CONTAINS
                + psi(2,z0q/obu) + 0.8*((zetat)**(-0.333)-(-zeta)**(-0.333))
       ELSE IF(zeta < 0.)THEN          ! -1 <= zeta < 0
          fq    = log(zldis/z0q) - psi(2,zeta) + psi(2,z0q/obu)
-      ELSE IF(zeta <= 1.)THEN         !  0 <= ztea <= 1
+      ELSE IF(zeta <= 1.)THEN         !  0 <= zeta <= 1
          fq    = log(zldis/z0q) + 5.*zeta - 5.*z0q/obu
       ELSE                            !  1 < zeta, phi=5+zeta
          fq    = log(obu/z0q) + 5. - 5.*z0q/obu + (5.*log(zeta)+zeta-1.)
@@ -175,7 +175,7 @@ CONTAINS
 !
 ! Original author : Yongjiu Dai, September 15, 1999
 !
-! calculation of friction velocity, relation for potential temperatur
+! calculation of friction velocity, relation for potential temperature
 ! and humidity profiles of surface boundary layer.
 ! the scheme is based on the work of Zeng et al. (1998):
 ! Intercomparison of bulk aerodynamic algorithms for the computation
@@ -203,7 +203,7 @@ CONTAINS
    real(r8), intent(in) :: z0mt     ! roughness length of the top layer, latent heat [m]
    real(r8), intent(in) :: htop     ! canopy top height of the top layer [m]
    real(r8), intent(in) :: obu      ! monin-obukhov length (m)
-   real(r8), intent(in) :: um       ! wind speed including the stablity effect [m/s]
+   real(r8), intent(in) :: um       ! wind speed including the stability effect [m/s]
 
    real(r8), intent(out) :: ustar   ! friction velocity [m/s]
    real(r8), intent(out) :: fh2m    ! relation for temperature at 2m
@@ -218,7 +218,7 @@ CONTAINS
 
 !------------------------ local variables ------------------------------
 
-   real(r8) zldis  ! reference height "minus" zero displacement heght [m]
+   real(r8) zldis  ! reference height "minus" zero displacement height [m]
    real(r8) zetam  ! transition point of flux-gradient relation (wind profile)
    real(r8) zetat  ! transition point of flux-gradient relation (temp. profile)
    real(r8) zeta   ! dimensionless height used in Monin-Obukhov theory
@@ -238,7 +238,7 @@ CONTAINS
       ELSE IF(zeta < 0.)THEN          ! -1 <= zeta < 0
          fm    = log(zldis/z0m) - psi(1,zeta) + psi(1,z0m/obu)
          ustar = vonkar*um / fm
-      ELSE IF(zeta <= 1.)THEN         !  0 <= ztea <= 1
+      ELSE IF(zeta <= 1.)THEN         !  0 <= zeta <= 1
          fm    = log(zldis/z0m) + 5.*zeta - 5.*z0m/obu
          ustar = vonkar*um / fm
       ELSE                            !  1 < zeta, phi=5+zeta
@@ -256,7 +256,7 @@ CONTAINS
                 + psi(1,z0m/obu) + 1.14*((-zeta)**0.333-(zetam)**0.333)
       ELSE IF(zeta < 0.)THEN          ! -1 <= zeta < 0
          fmtop  = log(zldis/z0m) - psi(1,zeta) + psi(1,z0m/obu)
-      ELSE IF(zeta <= 1.)THEN         !  0 <= ztea <= 1
+      ELSE IF(zeta <= 1.)THEN         !  0 <= zeta <= 1
          fmtop  = log(zldis/z0m) + 5.*zeta - 5.*z0m/obu
       ELSE                            !  1 < zeta, phi=5+zeta
          fmtop  = log(obu/z0m) + 5. - 5.*z0m/obu + (5.*log(zeta)+zeta-1.)
@@ -271,7 +271,7 @@ CONTAINS
                + psi(2,z0h/obu) + 0.8*((zetat)**(-0.333)-(-zeta)**(-0.333))
       ELSE IF(zeta < 0.)THEN          ! -1 <= zeta < 0
          fh    = log(zldis/z0h) - psi(2,zeta) + psi(2,z0h/obu)
-      ELSE IF(zeta <= 1.)THEN         !  0 <= ztea <= 1
+      ELSE IF(zeta <= 1.)THEN         !  0 <= zeta <= 1
          fh    = log(zldis/z0h) + 5.*zeta - 5.*z0h/obu
       ELSE                            !  1 < zeta, phi=5+zeta
          fh    = log(obu/z0h) + 5. - 5.*z0h/obu + (5.*log(zeta)+zeta-1.)
@@ -286,7 +286,7 @@ CONTAINS
               + psi(2,z0h/obu) + 0.8*((zetat)**(-0.333)-(-zeta)**(-0.333))
       ELSE IF(zeta < 0.)THEN          ! -1 <= zeta < 0
          fh2m = log(zldis/z0h) - psi(2,zeta) + psi(2,z0h/obu)
-      ELSE IF(zeta <= 1.)THEN         !  0 <= ztea <= 1
+      ELSE IF(zeta <= 1.)THEN         !  0 <= zeta <= 1
          fh2m = log(zldis/z0h) + 5.*zeta - 5.*z0h/obu
       ELSE                            !  1 < zeta, phi=5+zeta
          fh2m = log(obu/z0h) + 5. - 5.*z0h/obu + (5.*log(zeta)+zeta-1.)
@@ -301,7 +301,7 @@ CONTAINS
              + psi(2,z0h/obu) + 0.8*((zetat)**(-0.333)-(-zeta)**(-0.333))
       ELSE IF(zeta < 0.)THEN          ! -1 <= zeta < 0
          fht = log(zldis/z0h) - psi(2,zeta) + psi(2,z0h/obu)
-      ELSE IF(zeta <= 1.)THEN         !  0 <= ztea <= 1
+      ELSE IF(zeta <= 1.)THEN         !  0 <= zeta <= 1
          fht = log(zldis/z0h) + 5.*zeta - 5.*z0h/obu
       ELSE                            !  1 < zeta, phi=5+zeta
          fht = log(obu/z0h) + 5. - 5.*z0h/obu + (5.*log(zeta)+zeta-1.)
@@ -316,7 +316,7 @@ CONTAINS
          phih = 0.9*vonkar**(1.333)*(-zeta)**(-0.333)
       ELSE IF(zeta < 0.)THEN          ! -1 <= zeta < 0
          phih = (1. - 16.*zeta)**(-0.5)
-      ELSE IF(zeta <= 1.)THEN         !  0 <= ztea <= 1
+      ELSE IF(zeta <= 1.)THEN         !  0 <= zeta <= 1
          phih = 1. + 5.*zeta
       ELSE                            !  1 < zeta, phi=5+zeta
          phih = 5. + zeta
@@ -331,7 +331,7 @@ CONTAINS
                + psi(2,z0q/obu) + 0.8*((zetat)**(-0.333)-(-zeta)**(-0.333))
       ELSE IF(zeta < 0.)THEN          ! -1 <= zeta < 0
          fq    = log(zldis/z0q) - psi(2,zeta) + psi(2,z0q/obu)
-      ELSE IF(zeta <= 1.)THEN         !  0 <= ztea <= 1
+      ELSE IF(zeta <= 1.)THEN         !  0 <= zeta <= 1
          fq    = log(zldis/z0q) + 5.*zeta - 5.*z0q/obu
       ELSE                            !  1 < zeta, phi=5+zeta
          fq    = log(obu/z0q) + 5. - 5.*z0q/obu + (5.*log(zeta)+zeta-1.)
@@ -390,7 +390,7 @@ CONTAINS
 
 !------------------------ local variables ------------------------------
 
-   real(r8) zldis  ! reference height "minus" zero displacement heght [m]
+   real(r8) zldis  ! reference height "minus" zero displacement height [m]
    real(r8) zetam  ! transition point of flux-gradient relation (wind profile)
    real(r8) zetat  ! transition point of flux-gradient relation (temp. profile)
    real(r8) zeta   ! dimensionless height used in Monin-Obukhov theory
@@ -409,7 +409,7 @@ CONTAINS
          phih = 0.9*vonkar**(1.333)*(-zeta)**(-0.333)
       ELSE IF(zeta < 0.)THEN          ! -1 <= zeta < 0
          phih = (1. - 16.*zeta)**(-0.5)
-      ELSE IF(zeta <= 1.)THEN         !  0 <= ztea <= 1
+      ELSE IF(zeta <= 1.)THEN         !  0 <= zeta <= 1
          phih = 1. + 5.*zeta
       ELSE                            !  1 < zeta, phi=5+zeta
          phih = 5. + zeta
@@ -443,7 +443,7 @@ CONTAINS
 
 !------------------------ local variables ------------------------------
 
-   real(r8) zldis  ! reference height "minus" zero displacement heght [m]
+   real(r8) zldis  ! reference height "minus" zero displacement height [m]
    real(r8) zetam  ! transition point of flux-gradient relation (wind profile)
    real(r8) zetat  ! transition point of flux-gradient relation (temp. profile)
    real(r8) zeta   ! dimensionless height used in Monin-Obukhov theory
@@ -458,7 +458,7 @@ CONTAINS
                 + psi(2,z0h/obu) + 0.8*((zetat)**(-0.333)-(-zeta)**(-0.333))
       ELSE IF(zeta < 0.)THEN          ! -1 <= zeta < 0
          fh_top = log(zldis/z0h) - psi(2,zeta) + psi(2,z0h/obu)
-      ELSE IF(zeta <= 1.)THEN         !  0 <= ztea <= 1
+      ELSE IF(zeta <= 1.)THEN         !  0 <= zeta <= 1
          fh_top = log(zldis/z0h) + 5.*zeta - 5.*z0h/obu
       ELSE                            !  1 < zeta, phi=5+zeta
          fh_top = log(obu/z0h) + 5. - 5.*z0h/obu + (5.*log(zeta)+zeta-1.)
@@ -472,7 +472,7 @@ CONTAINS
                 + psi(2,z0h/obu) + 0.8*((zetat)**(-0.333)-(-zeta)**(-0.333))
       ELSE IF(zeta < 0.)THEN          ! -1 <= zeta < 0
          fh_bot = log(zldis/z0h) - psi(2,zeta) + psi(2,z0h/obu)
-      ELSE IF(zeta <= 1.)THEN         !  0 <= ztea <= 1
+      ELSE IF(zeta <= 1.)THEN         !  0 <= zeta <= 1
          fh_bot = log(zldis/z0h) + 5.*zeta - 5.*z0h/obu
       ELSE                            !  1 < zeta, phi=5+zeta
          fh_bot = log(obu/z0h) + 5. - 5.*z0h/obu + (5.*log(zeta)+zeta-1.)
@@ -488,7 +488,7 @@ CONTAINS
 ! ======================================================================
 ! Original author : Yongjiu Dai, September 15, 1999
 !
-! initialzation of Monin-Obukhov length,
+! initialization of Monin-Obukhov length,
 ! the scheme is based on the work of Zeng et al. (1998):
 ! Intercomparison of bulk aerodynamic algorithms for the computation
 ! of sea surface fluxes using TOGA CORE and TAO data. J. Climate, Vol. 11: 2628-2644
@@ -506,10 +506,10 @@ CONTAINS
    real(r8), intent(in) :: dth   ! diff of virtual temp. between ref. height and surface
    real(r8), intent(in) :: dthv  ! diff of vir. poten. temp. between ref. height and surface
    real(r8), intent(in) :: dqh   ! diff of humidity between ref. height and surface
-   real(r8), intent(in) :: zldis ! reference height "minus" zero displacement heght [m]
+   real(r8), intent(in) :: zldis ! reference height "minus" zero displacement height [m]
    real(r8), intent(in) :: z0m   ! roughness length, momentum [m]
 
-   real(r8), intent(out) :: um   ! wind speed including the stablity effect [m/s]
+   real(r8), intent(out) :: um   ! wind speed including the stability effect [m/s]
    real(r8), intent(out) :: obu  ! monin-obukhov length (m)
 
 ! Local

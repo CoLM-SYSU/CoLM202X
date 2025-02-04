@@ -224,14 +224,14 @@ CONTAINS
                lake_icefrac(1) = 1.0
             ENDIF
          ENDIF
-      
+
          IF (USE_Dynamic_Lake .and. (snl == 0)) THEN
-            
+
             wliq_lake(1)    = dz_lake(1) * (1-lake_icefrac(1)) + pg_rain*deltim*1.e-3
-            wice_lake(1)    = dz_lake(1) * lake_icefrac(1) 
+            wice_lake(1)    = dz_lake(1) * lake_icefrac(1)
             dz_lake(1)      = wliq_lake(1) + wice_lake(1)
             lake_icefrac(1) = wice_lake(1) / dz_lake(1)
-            
+
             CALL adjust_lake_layer (nl_lake, dz_lake, t_lake, lake_icefrac)
 
          ENDIF
@@ -487,7 +487,7 @@ CONTAINS
    real(r8) dthv     ! diff of vir. poten. temp. between ref. height and surface
    real(r8) dzsur    ! 1/2 the top layer thickness (m)
    real(r8) tsur     ! top layer temperature
-   real(r8) rhosnow  ! partitial density of water (ice + liquid)
+   real(r8) rhosnow  ! partial density of water (ice + liquid)
    real(r8) eg       ! water vapor pressure at temperature T [pa]
    real(r8) emg      ! ground emissivity (0.97 for snow,
    real(r8) errore   ! lake temperature energy conservation error (w/m**2)
@@ -512,14 +512,14 @@ CONTAINS
    real(r8) thv      ! virtual potential temperature (kelvin)
    real(r8) thvstar  ! virtual potential temperature scaling parameter
    real(r8) tksur    ! thermal conductivity of snow/soil (w/m/kelvin)
-   real(r8) um       ! wind speed including the stablity effect [m/s]
+   real(r8) um       ! wind speed including the stability effect [m/s]
    real(r8) ur       ! wind speed at reference height [m/s]
    real(r8) visa     ! kinematic viscosity of dry air [m2/s]
    real(r8) wc       ! convective velocity [m/s]
    real(r8) wc2      ! wc*wc
    real(r8) zeta     ! dimensionless height used in Monin-Obukhov theory
    real(r8) zii      ! convective boundary height [m]
-   real(r8) zldis    ! reference height "minus" zero displacement heght [m]
+   real(r8) zldis    ! reference height "minus" zero displacement height [m]
    real(r8) z0mg     ! roughness length over ground, momentum [m]
    real(r8) z0hg     ! roughness length over ground, sensible heat [m]
    real(r8) z0qg     ! roughness length over ground, latent heat [m]
@@ -527,7 +527,7 @@ CONTAINS
    real(r8) wliq_lake(nl_lake)  ! lake liquid water (kg/m2)
    real(r8) wice_lake(nl_lake)  ! lake ice lens (kg/m2)
    real(r8) vf_water(1:nl_soil) ! volumetric fraction liquid water within underlying soil
-   real(r8) vf_ice(1:nl_soil)   ! volumetric fraction ice len within underlying soil
+   real(r8) vf_ice(1:nl_soil)   ! volumetric fraction ice lens within underlying soil
 
    real(r8) fgrnd1  ! ground heat flux into the first snow/lake layer [W/m2]
 
@@ -695,7 +695,7 @@ CONTAINS
 
 
 ! ======================================================================
-!*[2] pre-processing for the calcilation of the surface temperature and fluxes
+!*[2] pre-processing for the calculation of the surface temperature and fluxes
 ! ======================================================================
 
       IF (.not. DEF_USE_SNICAR .or. present(urban_call)) THEN
@@ -710,7 +710,7 @@ CONTAINS
             betaprime = betaprime + (1.0-betaprime)*betavis
          ELSE
             ! or frozen but no snow layers or
-            ! currently ignor the transmission of solar in snow and ice layers
+            ! currently ignore the transmission of solar in snow and ice layers
             ! to be updated in the future version
             betaprime = 1.0
          ENDIF
@@ -727,14 +727,14 @@ CONTAINS
       ENDIF
 
       CALL qsadv(t_grnd,forc_psrf,eg,degdT,qsatg,qsatgdT)
-! potential temperatur at the reference height
+! potential temperature at the reference height
       beta1=1.       ! -  (in computing W_*)
       zii = 1000.    ! m  (pbl height)
       thm = forc_t + 0.0098*forc_hgt_t  ! intermediate variable equivalent to
                                         ! forc_t*(pgcm/forc_psrf)**(rgas/cpair)
-      th = forc_t*(100000./forc_psrf)**(rgas/cpair) ! potential T
+      th  = forc_t*(100000./forc_psrf)**(rgas/cpair) ! potential T
       thv = th*(1.+0.61*forc_q)         ! virtual potential T
-      ur = max(0.1,sqrt(forc_us*forc_us+forc_vs*forc_vs))   ! limit set to 0.1
+      ur  = max(0.1,sqrt(forc_us*forc_us+forc_vs*forc_vs))   ! limit set to 0.1
 
 ! Initialization variables
       nmozsgn = 0
@@ -821,7 +821,7 @@ CONTAINS
                         ustar,fh2m,fq2m,fm10m,fm,fh,fq)
          ENDIF
 
-! Get derivative of fluxes with repect to ground temperature
+! Get derivative of fluxes with respect to ground temperature
          ram    = 1./(ustar*ustar/um)
          rah    = 1./(vonkar/fh*ustar)
          raw    = 1./(vonkar/fq*ustar)
@@ -996,10 +996,10 @@ CONTAINS
 
 ! the following consideration is try to avoid the snow conductivity
 ! to be dominant in the thermal conductivity of the interface.
-! Because when the distance of bottom snow node to the interfacee
+! Because when the distance of bottom snow node to the interface
 ! is larger than that of interface to top soil node,
 ! the snow thermal conductivity will be dominant, and the result is that
-! lees heat tranfer between snow and soil
+! lees heat transfer between snow and soil
 
 ! modified by Nan Wei, 08/25/2014
          IF (i /= 0) THEN
@@ -1038,7 +1038,7 @@ CONTAINS
                ! extinction coefficient from surface data (1/m), if no eta from surface data,
                ! set eta, the extinction coefficient, according to L Hakanson, Aquatic Sciences, 1995
                ! (regression of secchi depth with lake depth for small glacial basin lakes), and the
-               ! Poole & Atkins expression for extinction coeffient of 1.7 / secchi Depth (m).
+               ! Poole & Atkins expression for extinction coefficient of 1.7 / secchi Depth (m).
 
                eta = 1.1925*max(lakedepth,1.)**(-0.424)
                zin  = z_lake(j) - 0.5*dz_lake(j)
@@ -1601,7 +1601,7 @@ CONTAINS
 
    real(r8), intent(in) :: deltim             ! seconds in a time step (sec)
    real(r8), intent(in) :: ssi                ! irreducible water saturation of snow
-   real(r8), intent(in) :: wimp               ! water impremeable if porosity less than wimp
+   real(r8), intent(in) :: wimp               ! water impermeable if porosity less than wimp
    real(r8), intent(in) :: porsl(1:nl_soil)   ! volumetric soil water at saturation (porosity)
 
    real(r8), intent(in) :: pg_rain            ! rainfall incident on ground [mm/s]
@@ -1835,7 +1835,7 @@ CONTAINS
 
       DO j = 1, nl_soil
          dw_soil = dw_soil + wliq_soisno(j) + wice_soisno(j)
-         
+
          a = wliq_soisno(j)/(dz_soisno(j)*denh2o) + wice_soisno(j)/(dz_soisno(j)*denice)
 
          IF (a < porsl(j)) THEN
@@ -1850,7 +1850,7 @@ CONTAINS
             wliq_soisno(j) = porsl(j)*denh2o*dz_soisno(j)
             wice_soisno(j) = 0.0
          ENDIF
-         
+
          dw_soil = dw_soil - wliq_soisno(j) - wice_soisno(j)
       ENDDO
 
@@ -1886,7 +1886,7 @@ CONTAINS
                dz_lake(j) = 0.
                j = j - 1
                IF (j == 0) EXIT
-            ENDDO 
+            ENDDO
          ENDIF
 
          CALL adjust_lake_layer (nl_lake, dz_lake, t_lake, lake_icefrac)
@@ -1950,7 +1950,7 @@ CONTAINS
          z0mg = 0.001              ! z0mg won't have changed
          z0hg = z0mg/exp(0.13 * (ustar*z0mg/1.5e-5)**0.45)
          z0qg = z0hg
-      ELSE                          ! use roughness over snow
+      ELSE                         ! use roughness over snow
          z0mg = 0.0024             ! z0mg won't have changed
          z0hg = z0mg/exp(0.13 * (ustar*z0mg/1.5e-5)**0.45)
          z0qg = z0hg
@@ -2075,12 +2075,12 @@ CONTAINS
 
    USE MOD_Const_Physical
    IMPLICIT NONE
-   
+
    integer,  intent(in)    :: nl_lake
    real(r8), intent(inout) :: dz_lake     (nl_lake)  ! lake layer thickness (m)
    real(r8), intent(inout) :: t_lake      (nl_lake)  ! lake temperature (kelvin)
    real(r8), intent(inout) :: lake_icefrac(nl_lake)  ! lake mass fraction of lake layer that is frozen
-      
+
    ! Local Variables
    integer  :: i, j
    real(r8) :: wdsrfm, depthratio, resi, resj
@@ -2091,7 +2091,7 @@ CONTAINS
    real(r8), parameter :: dzlak(10) = (/0.1, 1., 2., 3., 4., 5., 7., 7., 10.45, 10.45/)  ! m
 
       wdsrfm = sum(dz_lake)
-            
+
       IF(wdsrfm > 1. .and. wdsrfm < 2000.)THEN
          depthratio = wdsrfm / sum(dzlak(1:nl_lake))
          dz_lake_new(1)           = dzlak(1)
@@ -2110,7 +2110,7 @@ CONTAINS
          tliqsum = 0.
          wicesum = 0.
          wliqsum = 0.
-         
+
          resi = dz_lake_new(i)
          DO WHILE (resi > 1.e-8)
 
@@ -2122,9 +2122,9 @@ CONTAINS
 
             resi = resi - olp
             resj = resj - olp
-            
+
             IF (resj == 0.) THEN
-               IF (j == nl_lake) THEN 
+               IF (j == nl_lake) THEN
                   EXIT
                ELSE
                   j = j + 1
@@ -2158,7 +2158,7 @@ CONTAINS
                wicesum = wicesum + (b-a)/hfus
                t_lake_new(i) = tfrz
             ENDIF
-               
+
          ELSEIF (wliqsum > 0.) THEN
             t_lake_new(i) = tliq
          ELSEIF (wicesum > 0.) THEN

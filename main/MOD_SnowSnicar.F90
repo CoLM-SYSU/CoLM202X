@@ -37,7 +37,7 @@ MODULE MOD_SnowSnicar
 
 !--------------------------------------------------------------------
 ! DAI, Dec. 29, 2022
-! Temporay setting
+! Temporary setting
 
    logical, parameter :: use_extrasnowlayers = .false.
    character(len=256), parameter :: snow_shape = 'sphere'        ! (=1), 'spheroid'(=2), 'hexagonal_plate'(=3), 'koch_snowflake'(=4)
@@ -56,7 +56,7 @@ MODULE MOD_SnowSnicar
    ! !PUBLIC MEMBER FUNCTIONS:
    PUBLIC :: SNICAR_RT        ! Snow albedo and vertically-resolved solar absorption
    PUBLIC :: SNICAR_AD_RT     ! Snow albedo and vertically-resolved solar absorption by adding-doubling solution
-                              ! To USE this subtroutine, set use_snicar_ad = true
+                              ! To USE this subroutine, set use_snicar_ad = true
    PUBLIC :: SnowAge_grain    ! Snow effective grain size evolution
    PUBLIC :: SnowAge_init     ! Initial read in of snow-aging file
    PUBLIC :: SnowOptics_init  ! Initial read in of snow-optics file
@@ -72,11 +72,11 @@ MODULE MOD_SnowSnicar
    integer,  parameter :: nir_bnd_bgn    = 2              ! first band index in near-IR spectrum [idx]
    integer,  parameter :: nir_bnd_end    = 5              ! ending near-IR band index [idx]
    integer,  parameter :: idx_Mie_snw_mx = 1471           ! number of effective radius indices used in Mie lookup table [idx]
-   integer,  parameter :: idx_T_max      = 11             ! maxiumum temperature index used in aging lookup table [idx]
+   integer,  parameter :: idx_T_max      = 11             ! maximum temperature index used in aging lookup table [idx]
    integer,  parameter :: idx_T_min      = 1              ! minimum temperature index used in aging lookup table [idx]
-   integer,  parameter :: idx_Tgrd_max   = 31             ! maxiumum temperature gradient index used in aging lookup table [idx]
+   integer,  parameter :: idx_Tgrd_max   = 31             ! maximum temperature gradient index used in aging lookup table [idx]
    integer,  parameter :: idx_Tgrd_min   = 1              ! minimum temperature gradient index used in aging lookup table [idx]
-   integer,  parameter :: idx_rhos_max   = 8              ! maxiumum snow density index used in aging lookup table [idx]
+   integer,  parameter :: idx_rhos_max   = 8              ! maximum snow density index used in aging lookup table [idx]
    integer,  parameter :: idx_rhos_min   = 1              ! minimum snow density index used in aging lookup table [idx]
 
 #ifdef MODAL_AER
@@ -93,7 +93,7 @@ MODULE MOD_SnowSnicar
 #endif
 
    integer,  parameter :: snw_rds_max_tbl = 1500          ! maximum effective radius defined in Mie lookup table [microns]
-   integer,  parameter :: snw_rds_min_tbl = 30            ! minimium effective radius defined in Mie lookup table [microns]
+   integer,  parameter :: snw_rds_min_tbl = 30            ! minimum effective radius defined in Mie lookup table [microns]
    real(r8), parameter :: snw_rds_max     = 1500._r8      ! maximum allowed snow effective radius [microns]
    real(r8), parameter :: snw_rds_min     = 54.526_r8     ! minimum allowed snow effective radius (also "fresh snow" value) [microns
    real(r8), parameter :: snw_rds_refrz   = 1000._r8      ! effective radius of re-frozen snow [microns]

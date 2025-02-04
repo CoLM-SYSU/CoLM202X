@@ -408,8 +408,8 @@ MODULE MOD_Namelist
          'TBOT    ','QBOT    ','PSRF    ','PRECTmms', &
          'NULL    ','WIND    ','FSDS    ','FLDS    ' /)
       character(len=256) :: timelog(8)         = (/ &
-         'instant ','instant ','instant ','foreward', &
-         'NULL    ','instant ','forward ','foreward' /)
+         'instant ','instant ','instant ','forward ', &
+         'NULL    ','instant ','forward ','forward ' /)
       character(len=256) :: tintalgo(8)        = (/ &
          'linear ','linear ','linear ','nearest', &
          'NULL   ','linear ','coszen ','linear ' /)

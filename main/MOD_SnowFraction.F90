@@ -49,7 +49,7 @@ CONTAINS
    real(r8), intent(out) :: sigf  ! fraction of veg cover, excluding snow-covered veg [-]
    real(r8), intent(out) :: fsno  ! fraction of soil covered by snow [-]
 
-   real(r8) :: fmelt              ! dimensionless metling factor
+   real(r8) :: fmelt              ! dimensionless melting factor
    real(r8), parameter :: m = 1.0 ! the value of m used in CLM4.5 is 1.0.
                                   ! WHILE the value of m given by Niu et al (2007) is 1.6
                                   ! WHILE Niu (2012) suggested 3.0
@@ -111,7 +111,7 @@ CONTAINS
    real(r8), intent(out) :: sigf  ! fraction of veg cover, excluding snow-covered veg [-]
    real(r8), intent(out) :: fsno  ! fraction of soil covered by snow [-]
 
-   real(r8) :: fmelt              ! dimensionless metling factor
+   real(r8) :: fmelt              ! dimensionless melting factor
    real(r8), parameter :: m = 1.0 ! the value of m used in CLM4.5 is 1.0.
                                   ! WHILE the value of m given by Niu et al (2007) is 1.6
                                   ! WHILE Niu (2012) suggested 3.0

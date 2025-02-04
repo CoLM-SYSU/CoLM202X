@@ -71,22 +71,24 @@ CONTAINS
 !=======================================================================
 !
 ! !DESCRIPTION:
-!  Leaf temperature resolved for Plant Community (3D) case
-!  Foliage energy conservation for each PFT is given by foliage energy budget equation
+!  Leaf temperature resolved for Plant Community (3D) case Foliage energy
+!  conservation for each PFT is given by foliage energy budget equation
 !                       Rnet - Hf - LEf = 0
 !  The equation is solved by Newton-Raphson iteration, in which this iteration
-!  includes the calculation of the photosynthesis and stomatal resistance, and the
-!  integration of turbulent flux profiles. The sensible and latent heat
-!  transfer between foliage and atmosphere and ground is linked by the equations:
+!  includes the calculation of the photosynthesis and stomatal resistance, and
+!  the integration of turbulent flux profiles. The sensible and latent heat
+!  transfer between foliage and atmosphere and ground is linked by the
+!  equations:
 !                       Ha = Hf + Hg and Ea = Ef + Eg
 !
 !  Original author : Hua Yuan and Yongjiu Dai, September, 2017
 !
 !
 ! !REFERENCES:
-!  1) Dai, Y., Yuan, H., Xin, Q., Wang, D., Shangguan, W., Zhang, S., et al. (2019).
-!  Different representations of canopy structure—A large source of uncertainty in
-!  global land surface modeling. Agricultural and Forest Meteorology, 269–270, 119–135.
+!  1) Dai, Y., Yuan, H., Xin, Q., Wang, D., Shangguan, W., Zhang, S., et al.
+!  (2019).  Different representations of canopy structure—A large source of
+!  uncertainty in global land surface modeling. Agricultural and Forest
+!  Meteorology, 269–270, 119–135.
 !  https://doi.org/10.1016/j.agrformet.2019.02.006
 !
 ! !REVISIONS:
@@ -136,7 +138,7 @@ CONTAINS
         pftclass        ! PFT class
 
    real(r8), dimension(ps:pe), intent(in) :: &
-        fcover,        &! PFT fractiona coverage [-]
+        fcover,        &! PFT fractional coverage [-]
         htop,          &! PFT crown top height [m]
         hbot,          &! PFT crown bottom height [m]
         lai,           &! adjusted leaf area index for seasonal variation [-]
@@ -201,7 +203,7 @@ CONTAINS
         qintr_snow(ps:pe),   &! snowfall interception (mm h2o/s)
         smp     (1:nl_soil), &! precipitation sensible heat from canopy
         hksati  (1:nl_soil), &! hydraulic conductivity at saturation [mm h2o/s]
-        hk      (1:nl_soil)   ! soil hydraulic conducatance
+        hk      (1:nl_soil)   ! soil hydraulic conductance
 
    real(r8), intent(in) :: &
         hpbl            ! atmospheric boundary layer height [m]
@@ -313,10 +315,10 @@ CONTAINS
         extkn           ! coefficient of leaf nitrogen allocation
 
    real(r8), dimension(ps:pe) :: &
-        kmax_sun,      &! Plant Hydraulics Paramters
-        kmax_sha,      &! Plant Hydraulics Paramters
-        kmax_xyl,      &! Plant Hydraulics Paramters
-        kmax_root,     &! Plant Hydraulics Paramters
+        kmax_sun,      &! Plant Hydraulics Parameters
+        kmax_sha,      &! Plant Hydraulics Parameters
+        kmax_xyl,      &! Plant Hydraulics Parameters
+        kmax_root,     &! Plant Hydraulics Parameters
         psi50_sun,     &! water potential at 50% loss of sunlit leaf tissue conductance (mmH2O)
         psi50_sha,     &! water potential at 50% loss of shaded leaf tissue conductance (mmH2O)
         psi50_xyl,     &! water potential at 50% loss of xylem tissue conductance (mmH2O)
@@ -330,20 +332,20 @@ CONTAINS
         hu_,           &! adjusted observational height of wind [m]
         ht_,           &! adjusted observational height of temperature [m]
         hq_,           &! adjusted observational height of humidity [m]
-        zldis,         &! reference height "minus" zero displacement heght [m]
+        zldis,         &! reference height "minus" zero displacement height [m]
         zii,           &! convective boundary layer height [m]
         z0mv,          &! roughness length, momentum [m]
         z0hv,          &! roughness length, sensible heat [m]
         z0qv,          &! roughness length, latent heat [m]
         zeta,          &! dimensionless height used in Monin-Obukhov theory
-        beta,          &! coefficient of conective velocity [-]
+        beta,          &! coefficient of convective velocity [-]
         wc,            &! convective velocity [m/s]
         wc2,           &! wc**2
         dth,           &! diff of virtual temp. between ref. height and surface
         dthv,          &! diff of vir. poten. temp. between ref. height and surface
         dqh,           &! diff of humidity between ref. height and surface
         obu,           &! monin-obukhov length (m)
-        um,            &! wind speed including the stablity effect [m/s]
+        um,            &! wind speed including the stability effect [m/s]
         ur,            &! wind speed at reference height [m/s]
         uaf,           &! velocity of air within foliage [m/s]
         fh2m,          &! relation for temperature at 2m
@@ -417,7 +419,7 @@ CONTAINS
    real(r8),dimension(nl_soil) :: k_ax_root      ! axial root conductance
 
    ! .................................................................
-   ! defination for 3d run
+   ! definition for 3d run
    ! .................................................................
 
    integer , parameter :: nlay = 3
@@ -463,7 +465,7 @@ CONTAINS
         ktop_lay,      &! eddy coefficient at layer top
         kbot_lay,      &! eddy coefficient at layer bottom
         z0m_lay,       &! roughness length for the vegetation covered area
-        displa_lay,    &! displacement height for the vegetaion covered area
+        displa_lay,    &! displacement height for the vegetation covered area
         taf,           &! air temperature within canopy space [K]
         qaf,           &! humidity of canopy air [kg/kg]
         rd,            &! aerodynamic resistance between layers [s/m]
@@ -496,15 +498,15 @@ CONTAINS
    real(r8) :: thermk_lay(nlay) !transmittance of longwave radiation for each layer
    real(r8) :: fshade_lay(nlay) !shadow of each layer
    real(r8) :: L(nlay)          !longwave radiation emitted by canopy layer
-   real(r8) :: Ltd(nlay)        !trasmitted downward longwave radiation from canopy layer
-   real(r8) :: Ltu(nlay)        !trasmitted upward longwave radiation from canopy layer
-   real(r8) :: Lin(0:4)         !incomming longwave radiation for each layer
+   real(r8) :: Ltd(nlay)        !transmitted downward longwave radiation from canopy layer
+   real(r8) :: Ltu(nlay)        !transmitted upward longwave radiation from canopy layer
+   real(r8) :: Lin(0:4)         !incoming longwave radiation for each layer
    real(r8) :: Ld(0:4)          !total downward longwave radiation for each layer
    real(r8) :: Lu(0:4)          !total upward longwave radiation for each layer
    real(r8) :: Lg               !emitted longwave radiation from ground
-   real(r8) :: Lv(ps:pe)        !absorbed longwave raidation for each pft
+   real(r8) :: Lv(ps:pe)        !absorbed longwave radiation for each pft
    real(r8) :: dLv(ps:pe)       !LW change due to temperature change
-   real(r8) :: dLvpar(nlay)     !temporal variable for calcualting dLv
+   real(r8) :: dLvpar(nlay)     !temporal variable for calculating dLv
 
 !-----------------------End Variable List-------------------------------
 
@@ -583,10 +585,10 @@ CONTAINS
 ! scaling-up coefficients from leaf to canopy
 !-----------------------------------------------------------------------
 
-! note: need to sperate to sunlit/shaded pars
+! note: need to separate to sunlit/shaded pars
 !-----------------------------------------------------------------------
 
-! partion visible canopy absorption to sunlit and shaded fractions
+! partition visible canopy absorption to sunlit and shaded fractions
 ! to get average absorbed par for sunlit and shaded leaves
       fsha(:)   = 1. - fsun(:)
       laisun(:) = lai(:)*fsun(:)
@@ -630,7 +632,7 @@ CONTAINS
       beta    = 1.    !- (in computing W_*)
 
 !-----------------------------------------------------------------------
-! calculate layer average propeties: height (htop_lay, hbot_lay), lsai_lay, ...
+! calculate layer average properties: height (htop_lay, hbot_lay), lsai_lay, ...
 ! !!NOTE: adjustment may needed for htop_lay/hbot_lay
 !-----------------------------------------------------------------------
       htop_lay(:)   = 0
@@ -762,7 +764,7 @@ CONTAINS
       ENDDO
 
 !-----------------------------------------------------------------------
-! claculate layer info
+! calculate layer info
 ! how may layers, top layer and bottom layer number
 !-----------------------------------------------------------------------
 
@@ -860,7 +862,7 @@ CONTAINS
 
 !-----------------------------------------------------------------------
 ! first guess for taf and qaf for each layer
-! a large differece from previous schemes
+! a large difference from previous schemes
 !-----------------------------------------------------------------------
       taf(:) = 0.
       qaf(:) = 0.
@@ -913,19 +915,19 @@ CONTAINS
 
          IF (hu <= htop_lay(toplay)+1) THEN
             hu_ = htop_lay(toplay) + 1.
-            IF (taux == spval) & ! only print warning for the firt time-step
+            IF (taux == spval) & ! only print warning for the first time-step
                write(6,*) 'Warning: the obs height of u less than htop+1, set it to htop+1.'
          ENDIF
 
          IF (ht <= htop_lay(toplay)+1) THEN
             ht_ = htop_lay(toplay) + 1.
-            IF (taux == spval) & ! only print warning for the firt time-step
+            IF (taux == spval) & ! only print warning for the first time-step
                write(6,*) 'Warning: the obs height of t less than htop+1, set it to htop+1.'
          ENDIF
 
          IF (hq <= htop_lay(toplay)+1) THEN
             hq_ = htop_lay(toplay) + 1.
-            IF (taux == spval) & ! only print warning for the firt time-step
+            IF (taux == spval) & ! only print warning for the first time-step
                write(6,*) 'Warning: the obs height of q less than htop+1, set it to htop+1.'
          ENDIF
 
@@ -1204,7 +1206,7 @@ CONTAINS
                                      effcon(i), vmax25(i), gradm(i), trop(i), slti(i), hlti(i), shti(i), hhti(i), &
                                      trda(i), trdm(i), cintsha(:,i), assimsha(i), respcsha(i))
 
-                  ! leaf scale stomata resisitence
+                  ! leaf scale stomata resistance
                   rssun(i) = tprcor / tl(i) * 1.e6 /gssun(i)
                   rssha(i) = tprcor / tl(i) * 1.e6 /gssha(i)
 
@@ -1220,7 +1222,7 @@ CONTAINS
             ENDIF
          ENDDO
 
-! above stomatal resistances are for the canopy, the stomatal rsistances
+! above stomatal resistances are for the canopy, the stomatal resistances
 ! and the "rb" in the following calculations are the average for single leaf. thus,
          rssun = rssun * laisun
          rssha = rssha * laisha
@@ -1283,7 +1285,7 @@ CONTAINS
             ENDIF
          ENDDO
 
-         ! claculate wtshi, wtsqi
+         ! calculate wtshi, wtsqi
          wtshi(:) = cah(:) + cgh(:)
          wtsqi(:) = caw(:) + cgw(:)
 
@@ -1373,7 +1375,7 @@ CONTAINS
 ! IR radiation, sensible and latent heat fluxes and their derivatives
 !-----------------------------------------------------------------------
 ! the partial derivatives of areodynamical resistance are ignored
-! which cannot be determined analtically
+! which cannot be determined analytically
 
 ! calculate L for each canopy layer
          L(:) = 0.
@@ -1400,7 +1402,7 @@ CONTAINS
 ! calculate Lin = Ld * tdn
          Lin(:) = matmul(Ld(:), tdn(:,:))
 
-! calcilate Lg = (1-emg)*dlrad + emg*stefnc*tg**4
+! calculate Lg = (1-emg)*dlrad + emg*stefnc*tg**4
 ! dlrad = Lin(0)
 IF (.not.DEF_SPLIT_SOILSNOW) THEN
          Lg = (1 - emg)*Lin(0) + emg*stefnc*tg**4
@@ -1459,7 +1461,7 @@ ENDIF
 ! sensible heat fluxes and their derivatives
                fsenl(i) = rhoair * cpair * cfh(i) * (tl(i) - taf(clev))
 
-               ! 09/25/2017: re-written, check it clearfully
+               ! 09/25/2017: re-written, check it carefully
                ! When numlay<3, no matter how to calculate, /fact is consistent
                IF (numlay < 3 .or. clev == 2) THEN
                   fsenl_dtl(i) = rhoair * cpair * cfh(i) * (1. - wlh(i)/fact)
@@ -1737,7 +1739,7 @@ ENDIF
       zol  = zeta
       rib  = min(5.,zol*ustar**2/(vonkar**2/fh*um**2))
 
-! canopy fluxes and total assimilation amd respiration
+! canopy fluxes and total assimilation and respiration
 
       DO i = ps, pe
          IF (fcover(i)>0 .and. lsai(i)>1.e-6) THEN
@@ -1753,12 +1755,12 @@ ENDIF
             assim(i) = assimsun(i) + assimsha(i)
             respc(i) = respcsun(i) + respcsha(i) + rsoil
 
-! canopy fluxes and total assimilation amd respiration
+! canopy fluxes and total assimilation and respiration
             fsenl(i) = fsenl(i) + fsenl_dtl(i)*dtl(it-1,i) &
-                     ! add the imbalanced energy below due to T adjustment to sensibel heat
+                     ! add the imbalanced energy below due to T adjustment to sensible heat
                      + (dtl_noadj(i)-dtl(it-1,i)) * (clai(i)/deltim - dirab_dtl(i) &
                      + fsenl_dtl(i) + hvap*fevpl_dtl(i) + cpliq*qintr_rain(i) + cpice*qintr_snow(i)) &
-                     ! add the imbalanced energy below due to q adjustment to sensibel heat
+                     ! add the imbalanced energy below due to q adjustment to sensible heat
                      + hvap*erre(i)
 
             etr0(i) = etr(i)

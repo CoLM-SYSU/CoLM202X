@@ -92,7 +92,7 @@ SUBROUTINE CoLMMAIN ( &
            srviln,       srndln,       srniln,       qcharge,      &
            xerr,         zerr,         &
 
-         ! TUNABLE modle constants
+         ! TUNABLE model constants
            zlnd,         zsno,         csoilc,       dewmx,        &
            ! 'wtfact' is updated to gridded 'fsatmax' data.
            capr,         cnfac,        ssi,                        &
@@ -185,7 +185,7 @@ SUBROUTINE CoLMMAIN ( &
         ipatch        ! patch index
 
    real(r8), intent(in) :: &
-        patchlonr   ,&! logitude in radians
+        patchlonr   ,&! longitude in radians
         patchlatr     ! latitude in radians
 
    integer, intent(in) :: &
@@ -218,7 +218,7 @@ SUBROUTINE CoLMMAIN ( &
         bsw        (nl_soil) ,&! clapp and hornberger "b" parameter [-]
         theta_r  (1:nl_soil) ,&! residual water content (cm3/cm3)
         fsatmax              ,&! maximum saturated area fraction [-]
-        fsatdcf              ,&! decay factor in calucation of saturated area fraction [1/m]
+        fsatdcf              ,&! decay factor in calculation of saturated area fraction [1/m]
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
         alpha_vgm(1:nl_soil) ,&! the parameter corresponding approximately to the inverse of the air-entry value
         n_vgm    (1:nl_soil) ,&! a shape parameter
@@ -242,10 +242,10 @@ SUBROUTINE CoLMMAIN ( &
         sqrtdi      ,&! inverse sqrt of leaf dimension [m**-0.5]
         effcon      ,&! quantum efficiency of RuBP regeneration (mol CO2/mol quanta)
         vmax25      ,&! maximum carboxylation rate at 25 C at canopy top
-        kmax_sun    ,&! Plant Hydraulics Paramters
-        kmax_sha    ,&! Plant Hydraulics Paramters
-        kmax_xyl    ,&! Plant Hydraulics Paramters
-        kmax_root   ,&! Plant Hydraulics Paramters
+        kmax_sun    ,&! Plant Hydraulics Parameters
+        kmax_sha    ,&! Plant Hydraulics Parameters
+        kmax_xyl    ,&! Plant Hydraulics Parameters
+        kmax_root   ,&! Plant Hydraulics Parameters
         psi50_sun   ,&! water potential at 50% loss of sunlit leaf tissue conductance (mmH2O)
         psi50_sha   ,&! water potential at 50% loss of shaded leaf tissue conductance (mmH2O)
         psi50_xyl   ,&! water potential at 50% loss of xylem tissue conductance (mmH2O)
@@ -276,7 +276,7 @@ SUBROUTINE CoLMMAIN ( &
         capr        ,&! tuning factor to turn first layer T into surface T
         cnfac       ,&! Crank Nicholson factor between 0 and 1
         ssi         ,&! irreducible water saturation of snow
-        wimp        ,&! water impremeable if porosity less than wimp
+        wimp        ,&! water impermeable if porosity less than wimp
         pondmx      ,&! ponding depth (mm)
         smpmax      ,&! wilting point potential in mm
         smpmin      ,&! restriction for min of soil poten.  (mm)
@@ -309,8 +309,8 @@ SUBROUTINE CoLMMAIN ( &
         forc_aerdep(14)!atmospheric aerosol deposition data [kg/m/s]
 
 #if(defined CaMa_Flood)
-   real(r8), intent(in)    :: fldfrc    !inundation fraction--> allow re-evaporation and infiltrition![0-1]
-   real(r8), intent(inout) :: flddepth  !inundation depth--> allow re-evaporation and infiltrition![mm]
+   real(r8), intent(in)    :: fldfrc    !inundation fraction--> allow re-evaporation and infiltration![0-1]
+   real(r8), intent(inout) :: flddepth  !inundation depth--> allow re-evaporation and infiltration![mm]
    real(r8), intent(out)   :: fevpg_fld !effective evaporation from inundation [mm/s]
    real(r8), intent(out)   :: qinfl_fld !effective re-infiltration from inundation [mm/s]
 #endif
@@ -398,7 +398,7 @@ SUBROUTINE CoLMMAIN ( &
         wat              ,&! total water storage
         rss              ,&! soil surface resistance [s/m]
         rootr(nl_soil)   ,&! water exchange between soil and root. Positive: soil->root [?]
-        rootflux(nl_soil),&! water exchange between soil and root in different layers. Posiitive: soil->root [?]
+        rootflux(nl_soil),&! water exchange between soil and root in different layers. Positive: soil->root [?]
         h2osoi(nl_soil)    ! volumetric soil water in layers [m3/m3]
 
    real(r8), intent(out) :: &
@@ -414,7 +414,7 @@ SUBROUTINE CoLMMAIN ( &
         fsena       ,&! sensible heat from canopy height to atmosphere [W/m2]
         fevpa       ,&! evapotranspiration from canopy height to atmosphere [mm/s]
         lfevpa      ,&! latent heat flux from canopy height to atmosphere [W/2]
-        fsenl       ,&! ensible heat from leaves [W/m2]
+        fsenl       ,&! sensible heat from leaves [W/m2]
         fevpl       ,&! evaporation+transpiration from leaves [mm/s]
         etr         ,&! transpiration rate [mm/s]
         fseng       ,&! sensible heat flux from ground [W/m2]
@@ -422,7 +422,7 @@ SUBROUTINE CoLMMAIN ( &
         olrg        ,&! outgoing long-wave radiation from ground+canopy
         fgrnd       ,&! ground heat flux [W/m2]
         xerr        ,&! water balance error at current time-step [mm/s]
-        zerr        ,&! energy balnce errore at current time-step [W/m2]
+        zerr        ,&! energy balance error at current time-step [W/m2]
 
         tref        ,&! 2 m height air temperature [K]
         qref        ,&! 2 m height air specific humidity
@@ -432,7 +432,7 @@ SUBROUTINE CoLMMAIN ( &
         rsur_ie     ,&! infiltration excess surface runoff (mm h2o/s)
         rnof        ,&! total runoff (mm h2o/s)
         qintr       ,&! interception (mm h2o/s)
-        qinfl       ,&! inflitration (mm h2o/s)
+        qinfl       ,&! infiltration (mm h2o/s)
         qdrip       ,&! throughfall (mm h2o/s)
         qcharge     ,&! groundwater recharge [mm/s]
 
@@ -481,8 +481,8 @@ SUBROUTINE CoLMMAIN ( &
    real(r8) :: &
         calday      ,&! Julian cal day (1.xx to 365.xx)
         endwb       ,&! water mass at the end of time step
-        errore      ,&! energy balnce errore (Wm-2)
-        errorw      ,&! water balnce errore (mm)
+        errore      ,&! energy balance error (Wm-2)
+        errorw      ,&! water balance error (mm)
         fiold(maxsnl+1:nl_soil), &! fraction of ice relative to the total water
         w_old       ,&! liquid water mass of the column at the previous time step (mm)
 
@@ -507,7 +507,7 @@ SUBROUTINE CoLMMAIN ( &
         ssw         ,&! water volumetric content of soil surface layer [m3/m3]
         tssub(7)    ,&! surface/sub-surface temperatures [K]
         tssea       ,&! sea surface temperature [K]
-        totwb       ,&! water mass at the begining of time step
+        totwb       ,&! water mass at the beginning of time step
         wt          ,&! fraction of vegetation buried (covered) by snow [-]
         z_soisno (maxsnl+1:nl_soil), &! layer depth (m)
         dz_soisno(maxsnl+1:nl_soil), &! layer thickness (m)
@@ -526,7 +526,7 @@ SUBROUTINE CoLMMAIN ( &
         qintr_snow    ! snowfall interception (mm h2o/s)
 
    integer snl      ,&! number of snow layers
-        imelt(maxsnl+1:nl_soil), &! flag for: melting=1, freezing=2, Nothing happended=0
+        imelt(maxsnl+1:nl_soil), &! flag for: melting=1, freezing=2, Nothing happened=0
         lb ,lbsn    ,&! lower bound of arrays
         j             ! do looping index
 
@@ -678,7 +678,7 @@ SUBROUTINE CoLMMAIN ( &
          qdrip = pg_rain + pg_snow
 
 !----------------------------------------------------------------------
-! [3] Initilize new snow nodes for snowfall / sleet
+! [3] Initialize new snow nodes for snowfall / sleet
 !----------------------------------------------------------------------
 
          snl_bef = snl
@@ -993,7 +993,7 @@ SUBROUTINE CoLMMAIN ( &
          ENDIF
 
          !----------------------------------------------------------------
-         ! Initilize new snow nodes for snowfall / sleet
+         ! Initialize new snow nodes for snowfall / sleet
          !----------------------------------------------------------------
 
          snl_bef = snl
@@ -1111,7 +1111,7 @@ SUBROUTINE CoLMMAIN ( &
 
 !======================================================================
 
-      ELSE IF(patchtype == 4) THEN   ! <=== is LAND WATER BODIES (lake, reservior and river) (patchtype = 4)
+      ELSE IF(patchtype == 4) THEN   ! <=== is LAND WATER BODIES (lake, reservoir and river) (patchtype = 4)
 
 !======================================================================
 
@@ -1348,7 +1348,7 @@ SUBROUTINE CoLMMAIN ( &
 
 !======================================================================
 ! Preparation for the next time step
-! 1) time-varying parameters for vegatation
+! 1) time-varying parameters for vegetation
 ! 2) fraction of snow cover
 ! 3) solar zenith angle and
 ! 4) albedos
@@ -1423,7 +1423,7 @@ SUBROUTINE CoLMMAIN ( &
 ! ============================================================================
 ! Snow aging routine based on Flanner and Zender (2006), Linking snowpack
 ! microphysics and albedo evolution, JGR, and Brun (1989), Investigation of
-! wet-snow metamorphism in respect of liquid-water content, Ann. Glaciol.
+! wet-snow metamorphism in respect of liquid-water content, Ann. Glacial.
 
          dz_soisno_(:1) = dz_soisno(:1)
          t_soisno_ (:1) = t_soisno (:1)
@@ -1436,7 +1436,7 @@ SUBROUTINE CoLMMAIN ( &
 ! ============================================================================
          ! albedos
          ! we supposed CALL it every time-step, because
-         ! other vegeation related parameters are needed to create
+         ! other vegetation related parameters are needed to create
          IF (doalb) THEN
             CALL albland (ipatch, patchtype,deltim,&
                  soil_s_v_alb,soil_d_v_alb,soil_s_n_alb,soil_d_n_alb,&

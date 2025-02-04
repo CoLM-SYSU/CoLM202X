@@ -99,7 +99,7 @@ CONTAINS
 !-----------------------Local Variables------------------------------
 
    REAL(r8) :: &
-        wx,               &! patitial volume of ice and water of surface layer
+        wx,               &! patial volume of ice and water of surface layer
         vol_liq,          &! water content by volume [m3/m3]
         s_node,           &! vol_liq/porosity
         smp_node,         &! matrix potential [m]

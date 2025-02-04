@@ -53,8 +53,8 @@ CONTAINS
    real(r8), intent(in) :: csol(1:nl_soil)   ! heat capacity of soil soilds [J/(m3 K)]
    real(r8), intent(in) :: porsl(1:nl_soil)  ! soil porosity
    real(r8), intent(in) :: wice_soisno(lb:nl_soil)  ! ice lens [kg/m2]
-   real(r8), intent(in) :: wliq_soisno(lb:nl_soil)  ! liqui water [kg/m2]
-   real(r8), intent(in) :: dz_soisno(lb:nl_soil)    ! layer thickiness [m]
+   real(r8), intent(in) :: wliq_soisno(lb:nl_soil)  ! liquid water [kg/m2]
+   real(r8), intent(in) :: dz_soisno(lb:nl_soil)    ! layer thickness [m]
    real(r8), intent(in) :: scv               ! snow water equivalent [mm]
    real(r8), intent(out) :: cv(lb:nl_soil)   ! heat capacity [J/(m2 K)]
 
@@ -112,18 +112,18 @@ CONTAINS
    real(r8), intent(in) ::  dkdry(1:nl_soil)  ! thermal conductivity for dry soil [W/m-K]
    real(r8), intent(in) :: dksatu(1:nl_soil)  ! Thermal conductivity of saturated soil [W/m-K]
    real(r8), intent(in) ::  porsl(1:nl_soil)  ! fractional volume between soil grains=1.-dmvol
-   real(r8), intent(in) ::   dz_soisno(lb:nl_soil)   ! layer thickiness [m]
+   real(r8), intent(in) ::   dz_soisno(lb:nl_soil)   ! layer thickness [m]
    real(r8), intent(in) ::    z_soisno(lb:nl_soil)   ! node depth [m]
    real(r8), intent(in) ::   zi_soisno(lb-1:nl_soil) ! interface depth [m]
    real(r8), intent(in) ::    t_soisno(lb:nl_soil)   ! Nodal temperature [K]
    real(r8), intent(in) :: wice_soisno(lb:nl_soil)   ! ice lens [kg/m2]
-   real(r8), intent(in) :: wliq_soisno(lb:nl_soil)   ! liqui water [kg/m2]
+   real(r8), intent(in) :: wliq_soisno(lb:nl_soil)   ! liquid water [kg/m2]
 
    real(r8), intent(out) :: tk(lb:nl_soil)    ! thermal conductivity [W/(m K)]
    real(r8), optional, intent(out) :: tktopsoil
 
 !  local
-   real(r8) rhosnow  ! partitial density of water (ice + liquid)
+   real(r8) rhosnow  ! partial density of water (ice + liquid)
    real(r8) dksat    ! thermal conductivity for saturated soil (j/(k s m))
    real(r8) dke      ! kersten number
    real(r8) fl       ! fraction of liquid or unfrozen water to total water
@@ -197,12 +197,11 @@ CONTAINS
 ! Thermal conductivity at the layer interface
       DO i = lb, nl_soil-1
 
-! the following consideration is try to avoid the snow conductivity
-! to be dominant in the thermal conductivity of the interface.
-! Because when the distance of bottom snow node to the interfacee
-! is larger than that of interface to top soil node,
-! the snow thermal conductivity will be dominant, and the result is that
-! lees heat tranfer between snow and soil
+! the following consideration is try to avoid the snow conductivity to be
+! dominant in the thermal conductivity of the interface.  Because when the
+! distance of bottom snow node to the interface is larger than that of
+! interface to top soil node, the snow thermal conductivity will be dominant,
+! and the result is that lees heat transfer between snow and soil
 
 ! modified by Nan Wei, 08/25/2014
          IF (patchtype<=3) THEN                                       ! soil ground and wetland
@@ -333,7 +332,7 @@ CONTAINS
                ELSE            ! Fine-grained
                   ke = log10(max(sr,0.1)) + 1.0
                ENDIF
-            ELSE                         ! Fozen or partially frozen soils
+            ELSE                         ! Frozen or partially frozen soils
                ke = sr
             ENDIF
 
@@ -358,7 +357,7 @@ CONTAINS
                   kappa = 0.60
                ENDIF
 
-            ELSE                         ! Fozen or partially frozen soils
+            ELSE                         ! Frozen or partially frozen soils
 !              kappa =                      Frozen
 !              /gravels and coarse sand     /1.70/
 !              /medium and fine sands       /0.95/
@@ -389,7 +388,7 @@ CONTAINS
 
                ke = sr**(0.5*(1.0+vf_om_s-BA_alpha*vf_sand_s-vf_gravels_s)) &
                       * ((1.0/(1.0+exp(-BA_beta*sr)))**3-((1.0-sr)/2.0)**3)**(1.0-vf_om_s)
-            ELSE                         ! Fozen or partially frozen soils
+            ELSE                         ! Frozen or partially frozen soils
                ke = sr**(1.0+vf_om_s)
             ENDIF
 
@@ -408,7 +407,7 @@ CONTAINS
 
             IF(temperature > tfrz)THEN ! Unfrozen soils
                ke = exp(alpha*(1.0-sr**(alpha-beta)))
-            ELSE                         ! Fozen or partially frozen soils
+            ELSE                         ! Frozen or partially frozen soils
                ke = sr
             ENDIF
          END select

@@ -185,7 +185,7 @@ CONTAINS
    SUBROUTINE init_ozone_data (idate)
 
    !----------------------
-   ! DESCTIPTION:
+   ! DESCRIPTION:
    ! open ozone netcdf file from DEF_dir_rawdata, read latitude and longitude info.
    ! Initialize Ozone data read in.
 
@@ -237,7 +237,7 @@ CONTAINS
    SUBROUTINE update_ozone_data (time, deltim)
 
    !----------------------
-   ! DESCTIPTION:
+   ! DESCRIPTION:
    ! read ozone data during simulation
 
    USE MOD_TimeManager

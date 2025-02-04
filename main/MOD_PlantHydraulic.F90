@@ -71,7 +71,7 @@ CONTAINS
 
        rb,           &! boundary resistance from canopy to cas (s m-1)
        rd,           &! aerodynamical resistance between ground and canopy air
-       ra             ! aerodynamic resistance from cas to refence height (s m-1)
+       ra             ! aerodynamic resistance from cas to reference height (s m-1)
 
    real(r8),intent(inout) :: &
        rstfacsun,    &! canopy resistance stress factors to soil moisture for sunlit leaf
@@ -102,7 +102,7 @@ CONTAINS
        smp,          &! soil matrix potential
        rootfr,       &! root fraction
        hksati,       &! hydraulic conductivity at saturation [mm h2o/s]
-       hk             ! soil hydraulic conducatance [mm h2o/s]
+       hk             ! soil hydraulic conductance [mm h2o/s]
 
 
    real(r8),intent(out) :: &! ATTENTION : all for canopy not leaf
@@ -214,7 +214,7 @@ CONTAINS
       ! one side leaf boundary layer conductance for water vapor [=1/(2*rb)]
       ! ATTENTION: rb in CLM is for one side leaf, but for SiB2 rb for
       ! 2-side leaf, so the gbh2o shold be " 0.5/rb * tprcor/tl "
-      gb_mol = 1./rb * cf  ! resistence to conductance (s/m -> umol/m**2/s)
+      gb_mol = 1./rb * cf  ! resistance to conductance (s/m -> umol/m**2/s)
 
       x = vegwp(1:nvegwcs)
 
@@ -446,7 +446,7 @@ CONTAINS
 
       grav1 = htop*1000._r8
 
-      !compute conductance attentuation for each segment
+      !compute conductance attenuation for each segment
       fsto1 =  plc(x(leafsun),psi50_sun,ck)
       fsto2 =  plc(x(leafsha),psi50_sha,ck)
       fx =     plc(x(xyl),psi50_xyl,ck)

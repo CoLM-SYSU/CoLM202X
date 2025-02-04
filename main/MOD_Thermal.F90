@@ -191,10 +191,10 @@ CONTAINS
 
        effcon,                   &! quantum efficiency of RuBP regeneration (mol CO2/mol quanta)
        vmax25,                   &! maximum carboxylation rate at 25 C at canopy top
-       kmax_sun,                 &! Plant Hydraulics Paramters
-       kmax_sha,                 &! Plant Hydraulics Paramters
-       kmax_xyl,                 &! Plant Hydraulics Paramters
-       kmax_root,                &! Plant Hydraulics Paramters
+       kmax_sun,                 &! Plant Hydraulics Parameters
+       kmax_sha,                 &! Plant Hydraulics Parameters
+       kmax_xyl,                 &! Plant Hydraulics Parameters
+       kmax_root,                &! Plant Hydraulics Parameters
        psi50_sun,                &! water potential at 50% loss of sunlit leaf tissue conductance (mmH2O)
        psi50_sha,                &! water potential at 50% loss of shaded leaf tissue conductance (mmH2O)
        psi50_xyl,                &! water potential at 50% loss of xylem tissue conductance (mmH2O)
@@ -249,18 +249,18 @@ CONTAINS
        ! state variable (1)
        fsno,                     &! fraction of ground covered by snow
        sigf,                     &! fraction of veg cover, excluding snow-covered veg [-]
-       dz_soisno(lb:nl_soil),    &! layer thickiness [m]
+       dz_soisno(lb:nl_soil),    &! layer thickness [m]
        z_soisno (lb:nl_soil),    &! node depth [m]
        zi_soisno(lb-1:nl_soil)    ! interface depth [m]
 
    real(r8), intent(in) :: &
-       sabg_snow_lyr(lb:1)        ! snow layer aborption
+       sabg_snow_lyr(lb:1)        ! snow layer absorption
 
        ! state variables (2)
    real(r8), intent(inout) :: &
        vegwp(1:nvegwcs),         &! vegetation water potential
        gs0sun,                   &! working copy of sunlit stomata conductance
-       gs0sha,                   &! working copy of shalit stomata conductance
+       gs0sha,                   &! working copy of shaded stomata conductance
 !Ozone stress variables
        lai_old    ,              &! lai in last time step
        o3uptakesun,              &! Ozone does, sunlit leaf (mmol O3/m^2)
@@ -275,7 +275,7 @@ CONTAINS
        tleaf,                    &! shaded leaf temperature [K]
        t_soisno(lb:nl_soil),     &! soil temperature [K]
        wice_soisno(lb:nl_soil),  &! ice lens [kg/m2]
-       wliq_soisno(lb:nl_soil)    ! liqui water [kg/m2]
+       wliq_soisno(lb:nl_soil)    ! liquid water [kg/m2]
 
    real(r8), intent(in) :: &
        smp(1:nl_soil)         ,  &! soil matrix potential [mm]
@@ -316,14 +316,14 @@ CONTAINS
        fsena,                    &! sensible heat from canopy height to atmosphere [W/m2]
        fevpa,                    &! evapotranspiration from canopy height to atmosphere [mm/s]
        lfevpa,                   &! latent heat flux from canopy height to atmosphere [W/m2]
-       fsenl,                    &! ensible heat from leaves [W/m2]
+       fsenl,                    &! sensible heat from leaves [W/m2]
        fevpl,                    &! evaporation+transpiration from leaves [mm/s]
        etr,                      &! transpiration rate [mm/s]
        fseng,                    &! sensible heat flux from ground [W/m2]
        fevpg,                    &! evaporation heat flux from ground [mm/s]
        olrg,                     &! outgoing long-wave radiation from ground+canopy
        fgrnd,                    &! ground heat flux [W/m2]
-       rootr(1:nl_soil),         &! water uptake farction from different layers, all layers add to 1.0
+       rootr(1:nl_soil),         &! water uptake fraction from different layers, all layers add to 1.0
        rootflux(1:nl_soil),      &! root uptake from different layer, all layers add to transpiration
 
        qseva,                    &! ground surface evaporation rate (mm h2o/s)
@@ -393,8 +393,8 @@ CONTAINS
        psit,                     &! negative potential of soil
        qg,                       &! ground specific humidity [kg/kg]
 ! 03/07/2020, yuan:
-       q_soil,                   &! ground soil specific humudity [kg/kg]
-       q_snow,                   &! ground snow specific humudity [kg/kg]
+       q_soil,                   &! ground soil specific humidity [kg/kg]
+       q_snow,                   &! ground snow specific humidity [kg/kg]
        qsatg,                    &! saturated humidity [kg/kg]
        qsatgdT,                  &! d(qsatg)/dT
        qred,                     &! soil surface relative humidity
@@ -413,7 +413,7 @@ CONTAINS
        ulrad,                    &! upward longwave radiation above the canopy [W/m2]
        wice0(lb:nl_soil),        &! ice mass from previous time-step
        wliq0(lb:nl_soil),        &! liquid mass from previous time-step
-       wx,                       &! patitial volume of ice and water of surface layer
+       wx,                       &! patial volume of ice and water of surface layer
        xmf,                      &! total latent heat of phase change of ground water [W/m2]
        hprl,                     &! precipitation sensible heat from canopy [W/m2]
        dheatl                     ! vegetation heat change [W/m2]
@@ -511,11 +511,11 @@ ENDIF
       wice0(lb:) = wice_soisno(lb:)
       wliq0(lb:) = wliq_soisno(lb:)
 
-      ! latent heat, assumed that the sublimation occured only as wliq_soisno=0
+      ! latent heat, assumed that the sublimation occurred only as wliq_soisno=0
       htvp = hvap
       IF (wliq_soisno(lb)<=0. .and. wice_soisno(lb)>0.) htvp = hsub
 
-      ! potential temperatur at the reference height
+      ! potential temperature at the reference height
       thm = forc_t + 0.0098*forc_hgt_t                     !intermediate variable equivalent to
                                                            !forc_t*(pgcm/forc_psrf)**(rgas/cpair)
       th  = forc_t*(100000./forc_psrf)**(rgas/cpair)       !potential T
@@ -932,7 +932,7 @@ IF (DEF_USE_PC .and. patchclass(ipatch)/=CROPLAND) THEN
          rootflux_p(:,:)       )
 ENDIF
 
-      ! aggregat PFTs to a patch
+      ! aggregate PFTs to a patch
       laisun        = sum( laisun_p    (ps:pe)*pftfrac(ps:pe) )
       laisha        = sum( laisha_p    (ps:pe)*pftfrac(ps:pe) )
       tleaf         = sum( tleaf_p     (ps:pe)*pftfrac(ps:pe) )
@@ -1042,7 +1042,7 @@ ENDIF
 
 
 !=======================================================================
-! [5] Gound temperature
+! [5] Ground temperature
 !=======================================================================
 
       CALL GroundTemperature (patchtype,is_dry_lake,lb,nl_soil,deltim,&
@@ -1181,7 +1181,7 @@ ENDIF
 ! total fluxes to atmosphere
       fsena  = fsenl + fseng
       fevpa  = fevpl + fevpg
-      lfevpa = hvap*fevpl + htvp*fevpg   ! W/m^2 (accouting for sublimation)
+      lfevpa = hvap*fevpl + htvp*fevpg   ! W/m^2 (accounting for sublimation)
 
 ! ground heat flux
 IF (.not.DEF_SPLIT_SOILSNOW) THEN
@@ -1221,7 +1221,7 @@ ENDIF
 
       trad = (olrg/stefnc)**0.25
 
-! additonal variables required by WRF and RSM model
+! additional variables required by WRF and RSM model
       IF (lai+sai <= 1e-6) THEN
          ustar = ustar_g
          tstar = tstar_g

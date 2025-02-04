@@ -74,7 +74,7 @@ CONTAINS
    SUBROUTINE update_lightning_data (time, deltim)
 
    !----------------------
-   ! DESCTIPTION:
+   ! DESCRIPTION:
    ! read lightning data during simulation
 
    USE MOD_TimeManager

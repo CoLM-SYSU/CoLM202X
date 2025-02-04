@@ -207,25 +207,25 @@ MODULE MOD_Vars_TimeInvariants
    real(r8), allocatable :: psi0         (:,:)  !minimum soil suction [mm] (NOTE: "-" valued)
    real(r8), allocatable :: bsw          (:,:)  !clapp and hornberger "b" parameter [-]
    real(r8), allocatable :: theta_r      (:,:)  !residual moisture content [-]
-   real(r8), allocatable :: BVIC         (:)  !b parameter in Fraction of saturated soil in a grid calculated by VIC
+   real(r8), allocatable :: BVIC         (:)    !b parameter in Fraction of saturated soil in a grid calculated by VIC
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
-   real(r8), allocatable :: alpha_vgm    (:,:)  !a parameter corresponding approximately to the inverse of the air-entry value
-   real(r8), allocatable :: L_vgm        (:,:)  !pore-connectivity parameter [dimensionless]
-   real(r8), allocatable :: n_vgm        (:,:)  !a shape parameter [dimensionless]
-   real(r8), allocatable :: sc_vgm       (:,:)  !saturation at the air entry value in the classical vanGenuchten model [-]
-   real(r8), allocatable :: fc_vgm       (:,:)  !a scaling factor by using air entry value in the Mualem model [-]
+   real(r8), allocatable :: alpha_vgm    (:,:)  ! a parameter corresponding approximately to the inverse of the air-entry value
+   real(r8), allocatable :: L_vgm        (:,:)  ! pore-connectivity parameter [dimensionless]
+   real(r8), allocatable :: n_vgm        (:,:)  ! a shape parameter [dimensionless]
+   real(r8), allocatable :: sc_vgm       (:,:)  ! saturation at the air entry value in the classical vanGenuchten model [-]
+   real(r8), allocatable :: fc_vgm       (:,:)  ! a scaling factor by using air entry value in the Mualem model [-]
 #endif
 
-   integer,  allocatable :: soiltext(:)  ! USDA soil texture class
+   integer,  allocatable :: soiltext       (:)  ! USDA soil texture class
 
-   real(r8), allocatable :: fsatmax (:)  ! maximum saturated area fraction [-]
-   real(r8), allocatable :: fsatdcf (:)  ! decay factor in calucation of saturated area fraction [1/m]
+   real(r8), allocatable :: fsatmax        (:)  ! maximum saturated area fraction [-]
+   real(r8), allocatable :: fsatdcf        (:)  ! decay factor in calculation of saturated area fraction [1/m]
 
-   real(r8), allocatable :: vic_b_infilt (:)
-   real(r8), allocatable :: vic_Dsmax    (:)
-   real(r8), allocatable :: vic_Ds       (:)
-   real(r8), allocatable :: vic_Ws       (:)
-   real(r8), allocatable :: vic_c        (:)
+   real(r8), allocatable :: vic_b_infilt   (:)
+   real(r8), allocatable :: vic_Dsmax      (:)
+   real(r8), allocatable :: vic_Ds         (:)
+   real(r8), allocatable :: vic_Ws         (:)
+   real(r8), allocatable :: vic_c          (:)
 
    real(r8), allocatable :: hksati       (:,:)  !hydraulic conductivity at saturation [mm h2o/s]
    real(r8), allocatable :: csol         (:,:)  !heat capacity of soil solids [J/(m3 K)]
@@ -241,8 +241,8 @@ MODULE MOD_Vars_TimeInvariants
    real(r8), allocatable :: dbedrock       (:)  !depth to bedrock
    integer , allocatable :: ibedrock       (:)  !bedrock level
 
-   real(r8), allocatable :: topoelv (:)  !elevation above sea level [m]
-   real(r8), allocatable :: topostd (:)  !standard deviation of elevation [m]
+   real(r8), allocatable :: topoelv        (:)  !elevation above sea level [m]
+   real(r8), allocatable :: topostd        (:)  !standard deviation of elevation [m]
 
    real(r8) :: zlnd                             !roughness length for soil [m]
    real(r8) :: zsno                             !roughness length for snow [m]
@@ -253,7 +253,7 @@ MODULE MOD_Vars_TimeInvariants
    real(r8) :: capr                             !tuning factor to turn first layer T into surface T
    real(r8) :: cnfac                            !Crank Nicholson factor between 0 and 1
    real(r8) :: ssi                              !irreducible water saturation of snow
-   real(r8) :: wimp                             !water impremeable IF porosity less than wimp
+   real(r8) :: wimp                             !water impermeable IF porosity less than wimp
    real(r8) :: pondmx                           !ponding depth (mm)
    real(r8) :: smpmax                           !wilting point potential in mm
    real(r8) :: smpmin                           !restriction for min of soil poten. (mm)
@@ -329,7 +329,7 @@ CONTAINS
             allocate (psi0         (nl_soil,numpatch))
             allocate (bsw          (nl_soil,numpatch))
             allocate (theta_r      (nl_soil,numpatch))
-            allocate (BVIC         (numpatch))
+            allocate (BVIC                 (numpatch))
 
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
             allocate (alpha_vgm    (nl_soil,numpatch))
@@ -338,16 +338,16 @@ CONTAINS
             allocate (sc_vgm       (nl_soil,numpatch))
             allocate (fc_vgm       (nl_soil,numpatch))
 #endif
-            allocate (soiltext(numpatch))
+            allocate (soiltext             (numpatch))
 
-            allocate (fsatmax (numpatch))
-            allocate (fsatdcf (numpatch))
+            allocate (fsatmax              (numpatch))
+            allocate (fsatdcf              (numpatch))
 
-            allocate (vic_b_infilt (numpatch))
-            allocate (vic_Dsmax    (numpatch))
-            allocate (vic_Ds       (numpatch))
-            allocate (vic_Ws       (numpatch))
-            allocate (vic_c        (numpatch))
+            allocate (vic_b_infilt         (numpatch))
+            allocate (vic_Dsmax            (numpatch))
+            allocate (vic_Ds               (numpatch))
+            allocate (vic_Ws               (numpatch))
+            allocate (vic_c                (numpatch))
 
             allocate (hksati       (nl_soil,numpatch))
             allocate (csol         (nl_soil,numpatch))
@@ -499,7 +499,7 @@ CONTAINS
       CALL ncio_read_bcast_serial (file_restart, 'capr  ', capr  ) ! tuning factor to turn first layer T into surface T
       CALL ncio_read_bcast_serial (file_restart, 'cnfac ', cnfac ) ! Crank Nicholson factor between 0 and 1
       CALL ncio_read_bcast_serial (file_restart, 'ssi   ', ssi   ) ! irreducible water saturation of snow
-      CALL ncio_read_bcast_serial (file_restart, 'wimp  ', wimp  ) ! water impremeable IF porosity less than wimp
+      CALL ncio_read_bcast_serial (file_restart, 'wimp  ', wimp  ) ! water impermeable IF porosity less than wimp
       CALL ncio_read_bcast_serial (file_restart, 'pondmx', pondmx) ! ponding depth (mm)
       CALL ncio_read_bcast_serial (file_restart, 'smpmax', smpmax) ! wilting point potential in mm
       CALL ncio_read_bcast_serial (file_restart, 'smpmin', smpmin) ! restriction for min of soil poten. (mm)
@@ -712,7 +712,7 @@ CONTAINS
          CALL ncio_write_serial (file_restart, 'capr  ', capr  ) ! tuning factor to turn first layer T into surface T
          CALL ncio_write_serial (file_restart, 'cnfac ', cnfac ) ! Crank Nicholson factor between 0 and 1
          CALL ncio_write_serial (file_restart, 'ssi   ', ssi   ) ! irreducible water saturation of snow
-         CALL ncio_write_serial (file_restart, 'wimp  ', wimp  ) ! water impremeable if porosity less than wimp
+         CALL ncio_write_serial (file_restart, 'wimp  ', wimp  ) ! water impermeable if porosity less than wimp
          CALL ncio_write_serial (file_restart, 'pondmx', pondmx) ! ponding depth (mm)
          CALL ncio_write_serial (file_restart, 'smpmax', smpmax) ! wilting point potential in mm
          CALL ncio_write_serial (file_restart, 'smpmin', smpmin) ! restriction for min of soil poten. (mm)
@@ -909,13 +909,13 @@ CONTAINS
       CALL check_vector_data ('BA_alpha     [-]     ', BA_alpha    ) ! alpha in Balland and Arp(2005) thermal conductivity scheme
       CALL check_vector_data ('BA_beta      [-]     ', BA_beta     ) ! beta in Balland and Arp(2005) thermal conductivity scheme
 
-      CALL check_vector_data ('soiltexture  [-]     ', soiltext    , -1) !
+      CALL check_vector_data ('soiltexture  [-]     ', soiltext, -1) !
 
       CALL check_vector_data ('htop         [m]     ', htop        )
       CALL check_vector_data ('hbot         [m]     ', hbot        )
 
       IF(DEF_USE_BEDROCK)THEN
-         CALL check_vector_data ('dbedrock     [m]     ', dbedrock    ) !
+         CALL check_vector_data ('dbedrock     [m]     ', dbedrock ) !
       ENDIF
 
       CALL check_vector_data ('topoelv      [m]     ', topoelv     ) !
@@ -951,7 +951,7 @@ CONTAINS
          write(*,'(A,E20.10)') 'capr   [-]    ', capr   ! tuning factor to turn first layer T into surface T
          write(*,'(A,E20.10)') 'cnfac  [-]    ', cnfac  ! Crank Nicholson factor between 0 and 1
          write(*,'(A,E20.10)') 'ssi    [-]    ', ssi    ! irreducible water saturation of snow
-         write(*,'(A,E20.10)') 'wimp   [m3/m3]', wimp   ! water impremeable IF porosity less than wimp
+         write(*,'(A,E20.10)') 'wimp   [m3/m3]', wimp   ! water impermeable IF porosity less than wimp
          write(*,'(A,E20.10)') 'pondmx [mm]   ', pondmx ! ponding depth (mm)
          write(*,'(A,E20.10)') 'smpmax [mm]   ', smpmax ! wilting point potential in mm
          write(*,'(A,E20.10)') 'smpmin [mm]   ', smpmin ! restriction for min of soil poten. (mm)

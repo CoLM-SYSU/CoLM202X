@@ -40,12 +40,12 @@ CONTAINS
    integer, intent(in) :: nl_soil   ! number of soil layers
    real(r8), intent(in) :: &
         ! wtfact,                 &! (updated to gridded 'fsatmax' data) fraction of model area with high water table
-        wimp,                     &! water impremeable if porosity less than wimp
+        wimp,                     &! water impermeable if porosity less than wimp
         porsl(1:nl_soil),         &! saturated volumetric soil water content(porosity)
         psi0(1:nl_soil),          &! saturated soil suction (mm) (NEGATIVE)
         hksati(1:nl_soil),        &! hydraulic conductivity at saturation (mm h2o/s)
-        fsatmax,                  &! maximum fraction of saturation area [-] 
-        fsatdcf,                  &! decay factor in calucation of fraction of saturation area [1/m] 
+        fsatmax,                  &! maximum fraction of saturation area [-]
+        fsatdcf,                  &! decay factor in calculation of fraction of saturation area [1/m]
         z_soisno(1:nl_soil),      &! layer depth (m)
         dz_soisno(1:nl_soil),     &! layer thickness (m)
         zi_soisno(0:nl_soil),     &! interface level below a "z" level (m)
@@ -95,7 +95,7 @@ CONTAINS
 ! ARGUMENTS:
    IMPLICIT NONE
 
-   integer,  intent(in) :: nl_soil       !
+   integer,  intent(in) :: nl_soil                 !
    real(r8), intent(in) :: icefrac(1:nl_soil)      ! ice fraction (-)
 
    real(r8), intent(in) :: dz_soisno  (1:nl_soil)  ! layer depth (m)
@@ -138,7 +138,7 @@ CONTAINS
       ! add ice impedance factor to baseflow
       fracice_rsub = max(0.,exp(-3.*(1.-(icefracsum/dzsum)))-exp(-3.))/(1.0-exp(-3.))
       imped = max(0.,1.-fracice_rsub)
-      rsubst = imped * 5.5e-3 * exp(-2.5*zwt)  
+      rsubst = imped * 5.5e-3 * exp(-2.5*zwt)
 
    END SUBROUTINE SubsurfaceRunoff_SIMTOP
 
@@ -188,7 +188,7 @@ CONTAINS
 
          infil = min(infil, watin)
 
-         rsur   = (watin - infil) * 1000. / deltim 
+         rsur   = (watin - infil) * 1000. / deltim
          rsubst = 0.
 
       ENDIF
@@ -221,7 +221,7 @@ CONTAINS
    real(r8) :: btopo, watin, w_int, wsat_int, wtmp, infil
    real(r8) :: InfilExpFac, WaterDepthMax, WaterDepthInit, RunoffSurface, InfilVarTmp
    real(r8) :: SoilSaturateFrac
-      
+
       watin = gwat * deltim / 1000. ! convert mm/s to m
 
       IF (watin <= 0.) THEN
@@ -235,17 +235,17 @@ CONTAINS
          SoilSaturateFrac = 1.0 - (max(0.0, (1.0-(w_int/wsat_int))))**InfilExpFac
          SoilSaturateFrac = max(0.0, SoilSaturateFrac)
          SoilSaturateFrac = min(1.0, SoilSaturateFrac)
-         
+
          ! Infiltration for the previous time-step soil moisture based on SoilSaturateFrac
          WaterDepthMax  = (1.0 + BVIC) * wsat_int
          WaterDepthInit = WaterDepthMax * (1.0 - (1.0 - SoilSaturateFrac)**(1.0/BVIC))
-         
+
          ! Solve for surface runoff
          if ( WaterDepthMax <= 0.0 ) then
             RunoffSurface = watin
          ELSEIF   ( (WaterDepthInit + watin) > WaterDepthMax ) then
             !RunoffSurface = (WaterDepthInit + w_int) - WaterDepthMax
-            RunoffSurface = watin - wsat_int + w_int 
+            RunoffSurface = watin - wsat_int + w_int
          ELSE
             InfilVarTmp  = 1.0 - ((WaterDepthInit +watin ) / WaterDepthMax)
             RunoffSurface =watin - wsat_int + w_int + wsat_int * (InfilVarTmp**(1.0+BVIC))
@@ -253,7 +253,7 @@ CONTAINS
 
          IF ( RunoffSurface < 0.0 ) RunoffSurface = 0.0
          IF ( RunoffSurface > watin) RunoffSurface = watin
-     
+
          infil = watin - RunoffSurface
          rsur= RunoffSurface * 1000. / deltim
          rsubst = 0.

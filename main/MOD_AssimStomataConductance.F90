@@ -114,7 +114,7 @@ CONTAINS
 !End WUE stomata model parameter
 
       rb,           &! boundary resistance from canopy to cas (s m-1)
-      ra,           &! aerodynamic resistance from cas to refence height (s m-1)
+      ra,           &! aerodynamic resistance from cas to reference height (s m-1)
       rstfac         ! canopy resistance stress factors to soil moisture
 
    real(r8),intent(in), dimension(3) :: &
@@ -148,11 +148,11 @@ CONTAINS
 
       atheta,       &! wc, we coupling parameter
       btheta,       &! wc & we, ws coupling parameter
-      omss,         &! intermediate calcuation for oms
+      omss,         &! intermediate calculation for oms
       omc,          &! rubisco limited assimilation (omega-c: mol m-2 s-1)
       ome,          &! light limited assimilation (omega-e: mol m-2 s-1)
       oms,          &! sink limited assimilation (omega-s: mol m-2 s-1)
-      omp,          &! intermediate calcuation for omc, ome
+      omp,          &! intermediate calculation for omc, ome
 
       co2m,         &! co2 concentration in atmos (mol mol-1)
       co2a,         &! co2 concentration at cas (mol mol-1)
@@ -309,7 +309,7 @@ CONTAINS
             pco2in = pco2i ! No need to iteratively solve pco2i for WUE model.
                            ! Let pco2in = pco2i to exit loop.
             IF(pco2i .gt. pco2a)THEN
-               write(*,*) 'warning: pco2i greater than pco2a, use bb model' 
+               write(*,*) 'warning: pco2i greater than pco2a, use bb model'
             ENDIF
          ELSE
             IF(DEF_USE_MEDLYNST)THEN
@@ -765,9 +765,9 @@ CONTAINS
    SUBROUTINE WUE_solver(gammas, lambda, co2a, ei, ea, psrf, pco2i_c, pco2i_e)
 
 !-------------------------------------------------------------------------------------------
-! Solve internal co2 concentration for Rubisco limit and RuBP regeneration limit. 
+! Solve internal co2 concentration for Rubisco limit and RuBP regeneration limit.
 !
-! When Rubisco is limit (omc < ome), solve following equation (Liang et al., 2023, S18a) 
+! When Rubisco is limit (omc < ome), solve following equation (Liang et al., 2023, S18a)
 ! for pco2i_c:
 !  {1-(1.6*D)/[lambda*(gammas+rrkk)]} * co2i_c^2                                        &
 !    - {2*co2a+[1.6*D*(rrkk-gammas)]/[lambda*(gammas+rrkk)]-(1.6*D)/lambda} * co2i_c    &
@@ -804,10 +804,10 @@ CONTAINS
 
       co2i_c = co2a - sqrt(1.6*D*(amax1(co2a-gammas/psrf,0._r8))/lambda)
       co2i_e = co2a - co2a / ( 1 + 1.37 * sqrt(lambda * gammas/psrf / D))
-      
+
       pco2i_c = co2i_c * psrf
       pco2i_e = co2i_e * psrf
-               
+
    END SUBROUTINE WUE_solver
 
 END MODULE MOD_AssimStomataConductance

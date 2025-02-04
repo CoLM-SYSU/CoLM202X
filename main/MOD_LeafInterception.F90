@@ -144,7 +144,7 @@ CONTAINS
    real(r8), intent(in) :: forc_us      !wind speed
    real(r8), intent(in) :: forc_vs      !wind speed
    real(r8), intent(in) :: chil         !leaf angle distribution factor
-   real(r8), intent(in) :: prc_rain     !convective ranfall [mm/s]
+   real(r8), intent(in) :: prc_rain     !convective rainfall [mm/s]
    real(r8), intent(in) :: prc_snow     !convective snowfall [mm/s]
    real(r8), intent(in) :: prl_rain     !large-scale rainfall [mm/s]
    real(r8), intent(in) :: prl_snow     !large-scale snowfall [mm/s]
@@ -288,7 +288,7 @@ CONTAINS
 #endif
 
          ELSE
-            ! all intercepted by canopy leves for very small precipitation
+            ! all intercepted by canopy leaves for very small precipitation
             tti_rain = 0.
             tti_snow = 0.
             tex_rain = 0.
@@ -321,13 +321,13 @@ CONTAINS
 #if(defined CoLMDEBUG)
          w = w - ldew - (pg_rain+pg_snow)*deltim
          IF (abs(w) > 1.e-6) THEN
-            write(6,*) 'something wrong in interception code : '
+            write(6,*) 'something wrong in interception code: '
             write(6,*) w, ldew, (pg_rain+pg_snow)*deltim, satcap
             CALL abort
          ENDIF
 
          IF (DEF_VEG_SNOW .and. abs(ldew-ldew_rain-ldew_snow) > 1.e-6) THEN
-            write(6,*) 'something wrong in interception code when DEF_VEG_SNOW : '
+            write(6,*) 'something wrong in interception code when DEF_VEG_SNOW: '
             write(6,*) ldew, ldew_rain, ldew_snow
             CALL abort
          ENDIF
@@ -395,7 +395,7 @@ CONTAINS
    real(r8), intent(in) :: forc_us      !wind speed
    real(r8), intent(in) :: forc_vs      !wind speed
    real(r8), intent(in) :: chil         !leaf angle distribution factor
-   real(r8), intent(in) :: prc_rain     !convective ranfall [mm/s]
+   real(r8), intent(in) :: prc_rain     !convective rainfall [mm/s]
    real(r8), intent(in) :: prc_snow     !convective snowfall [mm/s]
    real(r8), intent(in) :: prl_rain     !large-scale rainfall [mm/s]
    real(r8), intent(in) :: prl_snow     !large-scale snowfall [mm/s]
@@ -576,7 +576,7 @@ CONTAINS
    real(r8), intent(in) :: forc_us      !wind speed
    real(r8), intent(in) :: forc_vs      !wind speed
    real(r8), intent(in) :: chil         !leaf angle distribution factor
-   real(r8), intent(in) :: prc_rain     !convective ranfall [mm/s]
+   real(r8), intent(in) :: prc_rain     !convective rainfall [mm/s]
    real(r8), intent(in) :: prc_snow     !convective snowfall [mm/s]
    real(r8), intent(in) :: prl_rain     !large-scale rainfall [mm/s]
    real(r8), intent(in) :: prl_snow     !large-scale snowfall [mm/s]
@@ -641,7 +641,7 @@ CONTAINS
 #endif
 
          ELSE
-            ! all intercepted by canopy leves for very small precipitation
+            ! all intercepted by canopy leaves for very small precipitation
             tti_rain = 0.
             tti_snow = 0.
             tex_rain = 0.
@@ -741,7 +741,7 @@ CONTAINS
    real(r8), intent(in) :: forc_us      !wind speed
    real(r8), intent(in) :: forc_vs      !wind speed
    real(r8), intent(in) :: chil         !leaf angle distribution factor
-   real(r8), intent(in) :: prc_rain     !convective ranfall [mm/s]
+   real(r8), intent(in) :: prc_rain     !convective rainfall [mm/s]
    real(r8), intent(in) :: prc_snow     !convective snowfall [mm/s]
    real(r8), intent(in) :: prl_rain     !large-scale rainfall [mm/s]
    real(r8), intent(in) :: prl_snow     !large-scale snowfall [mm/s]
@@ -814,7 +814,7 @@ CONTAINS
             ENDIF
 #endif
          ELSE
-            ! all intercepted by canopy leves for very small precipitation
+            ! all intercepted by canopy leaves for very small precipitation
             tti_rain = 0.
             tti_snow = 0.
             tex_rain = 0.
@@ -913,7 +913,7 @@ CONTAINS
    real(r8), intent(in)    :: forc_us    !wind speed
    real(r8), intent(in)    :: forc_vs    !wind speed
    real(r8), intent(in)    :: chil       !leaf angle distribution factor
-   real(r8), intent(in)    :: prc_rain   !convective ranfall [mm/s]
+   real(r8), intent(in)    :: prc_rain   !convective rainfall [mm/s]
    real(r8), intent(in)    :: prc_snow   !convective snowfall [mm/s]
    real(r8), intent(in)    :: prl_rain   !large-scale rainfall [mm/s]
    real(r8), intent(in)    :: prl_snow   !large-scale snowfall [mm/s]
@@ -1010,7 +1010,7 @@ CONTAINS
             ENDIF
 #endif
          ELSE
-            ! all intercepted by canopy leves for very small precipitation
+            ! all intercepted by canopy leaves for very small precipitation
             tti_rain = 0.
             tti_snow = 0.
             tex_rain = 0.
@@ -1111,7 +1111,7 @@ CONTAINS
    real(r8), intent(in) :: forc_us      !wind speed
    real(r8), intent(in) :: forc_vs      !wind speed
    real(r8), intent(in) :: chil         !leaf angle distribution factor
-   real(r8), intent(in) :: prc_rain     !convective ranfall [mm/s]
+   real(r8), intent(in) :: prc_rain     !convective rainfall [mm/s]
    real(r8), intent(in) :: prc_snow     !convective snowfall [mm/s]
    real(r8), intent(in) :: prl_rain     !large-scale rainfall [mm/s]
    real(r8), intent(in) :: prl_snow     !large-scale snowfall [mm/s]
@@ -1139,7 +1139,7 @@ CONTAINS
 
       !the canopy water capacity per leaf area index is set to 0.2mm
       dewmx_MATSIRO = 0.2
-      !the fracrtion of the convective precipitation area is assumed to be uniform (0.1)
+      !the fraction of the convective precipitation area is assumed to be uniform (0.1)
       Ac            = 0.1
 
       IF (lai+sai > 1e-6) THEN
@@ -1253,7 +1253,7 @@ CONTAINS
 #endif
 
          ELSE
-            ! all intercepted by canopy leves for very small precipitation
+            ! all intercepted by canopy leaves for very small precipitation
             tti_rain = 0.
             tti_snow = 0.
             tex_rain = 0.
@@ -1352,7 +1352,7 @@ CONTAINS
    real(r8), intent(in) :: forc_us      !wind speed
    real(r8), intent(in) :: forc_vs      !wind speed
    real(r8), intent(in) :: chil         !leaf angle distribution factor
-   real(r8), intent(in) :: prc_rain     !convective ranfall [mm/s]
+   real(r8), intent(in) :: prc_rain     !convective rainfall [mm/s]
    real(r8), intent(in) :: prc_snow     !convective snowfall [mm/s]
    real(r8), intent(in) :: prl_rain     !large-scale rainfall [mm/s]
    real(r8), intent(in) :: prl_snow     !large-scale snowfall [mm/s]
@@ -1494,7 +1494,7 @@ CONTAINS
 #endif
 
          ELSE
-            ! all intercepted by canopy leves for very small precipitation
+            ! all intercepted by canopy leaves for very small precipitation
             tti_rain = 0.
             tti_snow = 0.
             tex_rain = 0.
@@ -1585,7 +1585,7 @@ CONTAINS
    real(r8), intent(in)    :: forc_us    !wind speed
    real(r8), intent(in)    :: forc_vs    !wind speed
    real(r8), intent(in)    :: chil       !leaf angle distribution factor
-   real(r8), intent(in)    :: prc_rain   !convective ranfall [mm/s]
+   real(r8), intent(in)    :: prc_rain   !convective rainfall [mm/s]
    real(r8), intent(in)    :: prc_snow   !convective snowfall [mm/s]
    real(r8), intent(in)    :: prl_rain   !large-scale rainfall [mm/s]
    real(r8), intent(in)    :: prl_snow   !large-scale snowfall [mm/s]
@@ -1621,7 +1621,7 @@ CONTAINS
          satcap_snow       = 4.4 *lsai
          satcap_rain       = 0.1 *lsai
 
-         ! Caution here: JULES is PFT based, fvegc is not exxisitng
+         ! Caution here: JULES is PFT based, fvegc is not existing
          fvegc       = max(0.05,1.0-exp(-0.52*lsai))
 
          p0          = (prc_rain + prc_snow + prl_rain + prl_snow+qflx_irrig_sprinkler)*deltim
@@ -1689,7 +1689,7 @@ CONTAINS
             ENDIF
 #endif
          ELSE
-            ! all intercepted by canopy leves for very small precipitation
+            ! all intercepted by canopy leaves for very small precipitation
             tti_rain = 0.
             tti_snow = 0.
             tex_rain = 0.
@@ -1769,7 +1769,7 @@ CONTAINS
    real(r8), intent(in)    :: forc_us    !wind speed
    real(r8), intent(in)    :: forc_vs    !wind speed
    real(r8), intent(in)    :: chil       !leaf angle distribution factor
-   real(r8), intent(in)    :: prc_rain   !convective ranfall [mm/s]
+   real(r8), intent(in)    :: prc_rain   !convective rainfall [mm/s]
    real(r8), intent(in)    :: prc_snow   !convective snowfall [mm/s]
    real(r8), intent(in)    :: prl_rain   !large-scale rainfall [mm/s]
    real(r8), intent(in)    :: prl_snow   !large-scale snowfall [mm/s]

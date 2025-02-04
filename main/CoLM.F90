@@ -5,7 +5,7 @@ PROGRAM CoLM
 ! Description:
 !   This is the main program for the Common Land Model (CoLM)
 !
-!   @Copyright Yongjiu Dai Land Modeling Grop at the School of Atmospheric Sciences
+!   @Copyright Yongjiu Dai Land Modeling Group at the School of Atmospheric Sciences
 !   of the Sun Yat-sen University, Guangdong, CHINA.
 !   All rights reserved.
 !
@@ -116,7 +116,7 @@ PROGRAM CoLM
    logical  :: greenwich    ! greenwich time
 
    logical :: doalb         ! true => start up the surface albedo calculation
-   logical :: dolai         ! true => start up the time-varying vegetation paramter
+   logical :: dolai         ! true => start up the time-varying vegetation parameter
    logical :: dosst         ! true => update sst/ice/snow
 
    integer :: Julian_1day_p, Julian_1day
@@ -497,8 +497,8 @@ PROGRAM CoLM
          ! Hua Yuan, 06/2023: change namelist DEF_LAI_CLIM to DEF_LAI_MONTHLY
          ! and add DEF_LAI_CHANGE_YEARLY for monthly LAI data
          !
-         ! NOTES: Should be caution for setting DEF_LAI_CHANGE_YEARLY to ture in non-LULCC
-         ! case, that means the LAI changes without condisderation of land cover change.
+         ! NOTES: Should be caution for setting DEF_LAI_CHANGE_YEARLY to true in non-LULCC
+         ! case, that means the LAI changes without consideration of land cover change.
 
          IF (DEF_LAI_CHANGE_YEARLY) THEN
             lai_year = jdate(1)
@@ -518,7 +518,7 @@ PROGRAM CoLM
             Julian_8day = int(calendarday(jdate)-1)/8*8 + 1
             IF ((itstamp < etstamp) .and. (Julian_8day /= Julian_8day_p)) THEN
                CALL LAI_readin (jdate(1), Julian_8day, dir_landdata)
-               ! 06/2023, yuan: or depend on DEF_LAI_CHANGE_YEARLY nanemlist
+               ! 06/2023, yuan: or depend on DEF_LAI_CHANGE_YEARLY namelist
                !CALL LAI_readin (lai_year, Julian_8day, dir_landdata)
             ENDIF
          ENDIF

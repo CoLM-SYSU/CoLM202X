@@ -23,7 +23,7 @@ CONTAINS
    SUBROUTINE init_nitrif_data (idate)
 
    !----------------------
-   ! DESCTIPTION:
+   ! DESCRIPTION:
    ! open nitrif netcdf file from DEF_dir_runtime, read latitude and longitude info.
    ! Initialize nitrif data read in.
 

@@ -58,7 +58,7 @@ CONTAINS
    integer,  intent(in) :: idate(3)   !model time
    integer,  intent(in) :: patchtype  !land patch type (99-sea)
 
-   real(r8), intent(in) :: dlon       !logitude in radians
+   real(r8), intent(in) :: dlon       !longitude in radians
    real(r8), intent(in) :: deltim     !seconds in a time step [second]
 
    real(r8), intent(in) :: &
@@ -257,7 +257,7 @@ CONTAINS
             sabg_snow_lyr(:) = forc_sols*ssno_lyr(1,1,:) + forc_solsd*ssno_lyr(1,2,:) &
                              + forc_soll*ssno_lyr(2,1,:) + forc_solld*ssno_lyr(2,2,:)
 
-            ! convert to the whole area producted by snow fractional cover
+            ! convert to the whole area multiplied by snow fractional cover
             sabg_snow_lyr(:) = sabg_snow_lyr(:)*fsno
 
             ! attribute the first layer absorption to soil absorption

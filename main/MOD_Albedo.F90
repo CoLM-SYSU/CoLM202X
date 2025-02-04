@@ -44,32 +44,34 @@ CONTAINS
 !     soil color and moisture in the surface soil layer
 ! (2) snow albedos: as in BATS formulations, which are inferred from
 !     the calculations of Wiscombe and Warren (1980) and the snow model
-!     and data of Anderson(1976), and the function of snow age, grain size,
-!     solar zenith angle, pollution, the amount of the fresh snow
+!     and data of Anderson(1976), and the function of snow age, grain
+!     size, solar zenith angle, pollution, the amount of the fresh snow
 ! (3) canopy albedo: two-stream approximation model
-! (4) glacier albedos: as in BATS, which are set to constants (0.8 for visible beam,
-!     0.55 for near-infrared)
-! (5) lake and wetland albedos: as in BATS, which depend on cosine solar zenith angle,
-!     based on data in Henderson-Sellers (1986). The frozen lake and wetland albedos
-!     are set to constants (0.6 for visible beam, 0.4 for near-infrared)
-! (6) over the snow covered tile, the surface albedo is estimated by a linear
-!     combination of albedos for snow, canopy and bare soil (or lake, wetland, glacier).
+! (4) glacier albedos: as in BATS, which are set to constants (0.8 for
+!     visible beam, 0.55 for near-infrared)
+! (5) lake and wetland albedos: as in BATS, which depend on cosine solar
+!     zenith angle, based on data in Henderson-Sellers (1986). The
+!     frozen lake and wetland albedos are set to constants (0.6 for
+!     visible beam, 0.4 for near-infrared)
+! (6) over the snow covered tile, the surface albedo is estimated by a
+!     linear combination of albedos for snow, canopy and bare soil (or
+!     lake, wetland, glacier).
 !
 ! Original author : Yongjiu Dai, 09/15/1999; 08/30/2002, 03/2014
 !
 ! !REVISIONS:
-! 12/2019, Hua Yuan: added a wrap FUNCTION for PFT calculation, details see
-!          twostream_wrap() added a wrap FUNCTION for PC (3D) calculation,
-!          details see ThreeDCanopy_wrap()
+! 12/2019, Hua Yuan: added a wrap FUNCTION for PFT calculation, details
+!          see twostream_wrap() added a wrap FUNCTION for PC (3D)
+!          calculation, details see ThreeDCanopy_wrap()
 !
 ! 03/2020, Hua Yuan: added an improved two-stream model, details see
 !          twostream_mod()
 !
-! 08/2020, Hua Yuan: account for stem optical property effects in twostream
-!          model
+! 08/2020, Hua Yuan: account for stem optical property effects in
+!          twostream model
 !
-! 01/2023, Hua Yuan: CALL SNICAR model to calculate snow albedo&absorption,
-!          added SNICAR related variables
+! 01/2023, Hua Yuan: CALL SNICAR model to calculate snow
+!          albedo&absorption, added SNICAR related variables
 !
 ! 04/2024, Hua Yuan: add option to account for vegetation snow process
 !
@@ -165,7 +167,7 @@ CONTAINS
 
    real(r8) :: &!
       age,             &! factor to reduce visible snow alb due to snow age [-]
-      albg0,           &! temporary varaiable [-]
+      albg0,           &! temporary variable [-]
       albsoi(2,2),     &! soil albedo [-]
       albsno(2,2),     &! snow albedo [-]
       albsno_pur(2,2), &! snow albedo [-]
@@ -283,7 +285,7 @@ IF (DEF_USE_SNICAR) THEN
 ! ----------------------------------------------------------------------
 ! Snow aging routine based on Flanner and Zender (2006), Linking snowpack
 ! microphysics and albedo evolution, JGR, and Brun (1989), Investigation of
-! wet-snow metamorphism in respect of liquid-water content, Ann. Glaciol.
+! wet-snow metamorphism in respect of liquid-water content, Ann. Glacial.
 
       CALL SnowAge_grain(   deltim ,snl    ,dz_soisno(:1)  ,&
            pg_snow         ,snwcp_ice      ,snofrz         ,&
@@ -574,7 +576,7 @@ ENDIF
    integer iw               ! band iterator
 
 !-----------------------------------------------------------------------
-! projected area of phytoelements in direction of mu and
+! projected area of photo elements in direction of mu and
 ! average inverse diffuse optical depth per unit leaf area
 
       phi1  = 0.5 - 0.633 * chil - 0.33 * chil * chil
@@ -595,7 +597,7 @@ ENDIF
       zmu2 = zmu * zmu
 
 #if(defined LULC_USGS)
-      ! yuan: to be consistance with CoLM2014, no stem considered
+      ! yuan: to be consistent with CoLM2014, no stem considered
       ! for twostream and leaf optical property calculations
       sai_ = 0.
 #else
@@ -829,7 +831,7 @@ ENDIF
 
 ! environmental variables
    real(r8), intent(in) :: &
-            coszen,        &! consine of solar zenith angle
+            coszen,        &! cosine of solar zenith angle
             albg(2,2)       ! albedos of ground
 
 ! output
@@ -899,7 +901,7 @@ ENDIF
             edw             ! (integral of i_down*exp(-kx) )
 
    ! vegetation snow optical properties
-   real(r8) :: upscat_sno = 0.5   !upscat parameter for snow
+   real(r8) :: upscat_sno = 0.5   !upscatter parameter for snow
    real(r8) :: beta0_sno  = 0.5   !beta0 parameter for snow
    real(r8) :: scat_sno(2)        !snow single scattering albedo
    data scat_sno(1), scat_sno(2) /0.6, 0.4/   ! 1:vis, 2: nir
@@ -913,7 +915,7 @@ ENDIF
    real(r8) :: s2d, extkbd, sall(2,2), q, ssun_rev
 
 !-----------------------------------------------------------------------
-! projected area of phytoelements in direction of mu and
+! projected area of photo elements in direction of mu and
 ! average inverse diffuse optical depth per unit leaf area
 
       phi1  = 0.5 - 0.633 * chil - 0.33 * chil * chil
@@ -1202,7 +1204,7 @@ ENDIF
 
       ! environmental variables
       real(r8), intent(in) ::  &
-            coszen,        &! consine of solar zenith angle
+            coszen,        &! cosine of solar zenith angle
             albg(2,2)       ! albedos of ground
 
       ! output
@@ -1308,12 +1310,12 @@ ENDIF
       IF(scv <= 0.) THEN
          sag = 0.
 !
-! Over antarctica
+! Over Antarctica
 !
       ELSE IF (scv > 800.) THEN
          sag = 0.
 !
-! Away from antarctica
+! Away from Antarctica
 !
       ELSE
          age3  = 0.3
@@ -1377,7 +1379,7 @@ ENDIF
    IMPLICIT NONE
 
 !-------------------------------------------------------------------------
-! temporay setting
+! temporary setting
 
    integer, parameter :: numrad  = 2            !  number of solar radiation bands: vis, nir
    integer, parameter :: sno_nbr_aer = 8        !  number of aerosol species in snowpack
@@ -1977,7 +1979,7 @@ ENDIF
 ! Approximation for Solar Radiation in the NCAR Community Climate Model,
 ! Journal of Geophysical Research, Vol 97, D7, pp7603-7612).
 !
-! yongjiu dai and xin-zhong liang (08/01/2001)
+! Yongjiu Dai and Xin-Zhong Liang (08/01/2001)
 !-----------------------------------------------------------------------
 
    USE MOD_Precision
