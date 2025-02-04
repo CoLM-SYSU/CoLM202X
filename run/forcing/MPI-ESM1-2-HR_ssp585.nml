@@ -39,7 +39,7 @@
 
 
    DEF_forcing%vname    = 'tas' 'huss' 'ps' 'pr' 'uas' 'vas' 'rsds' 'rlds'
-   DEF_forcing%timelog  = 'instant' 'instant' 'instant' 'foreward' 'instant' 'instant' 'foreward' 'foreward'
+   DEF_forcing%timelog  = 'instant' 'instant' 'instant' 'forward' 'instant' 'instant' 'forward' 'forward'
    DEF_forcing%tintalgo = 'linear' 'linear' 'linear' 'nearest' 'linear' 'linear' 'coszen' 'linear'
 
 /
