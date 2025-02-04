@@ -22,8 +22,8 @@ CONTAINS
 !  Created by Hua Yuan, 04/08/2022
 !
 ! !REVISIONS:
-!  08/2023, Wenzong Dong: Porting to MPI version and share the same code with
-!           MOD_Initialize:initialize()
+!  08/2023, Wenzong Dong: Porting to MPI version and share the same code
+!           with MOD_Initialize:initialize()
 !
 !-----------------------------------------------------------------------
 

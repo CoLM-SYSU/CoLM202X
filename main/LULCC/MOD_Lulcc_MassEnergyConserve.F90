@@ -93,16 +93,16 @@ CONTAINS
    real(r8):: sum_lccpct_np, wgt(maxsnl+1:nl_soil), hc(maxsnl+1:0)
    real(r8):: zi_sno(maxsnl+1:0)        !local variable for snow node and depth calculation
    real(r8):: vf_water                  !volumetric fraction liquid water within soil
-   real(r8):: vf_ice                    !volumetric fraction ice len within soil
+   real(r8):: vf_ice                    !volumetric fraction ice lens within soil
    real(r8):: hcap                      !J/(m3 K)
    real(r8):: c_water                   !Specific heat of water * density of liquid water
    real(r8):: c_ice                     !Specific heat of ice   * density of ice
    real(r8):: denice_np(maxsnl+1:0), denh2o_np(maxsnl+1:0), rhosnow_np(maxsnl+1:0)
    real(r8):: wbef,wpre                 !water before and water present for water calculation heck
-   ! real(r8):: fmelt                   !dimensionless metling factor
+   ! real(r8):: fmelt                   !dimensionless melting factor
    real(r8):: wt                        !fraction of vegetation covered with snow [-]
    real(r8), parameter :: m = 1.0       !the value of m used in CLM4.5 is 1.0.
-   ! real(r8) :: deltim = 1800.         !time step (senconds) TODO: be intent in
+   ! real(r8) :: deltim = 1800.         !time step (seconds) TODO: be intent in
    logical :: FROM_SOIL
 
       IF (p_is_worker) THEN
@@ -234,7 +234,7 @@ ENDIF
                         IF(DEF_USE_PLANTHYDRAULICS)THEN
                            vegwp    (:,np)                = 0  !vegetation water potential [mm]
                            gs0sun     (np)                = 0  !working copy of sunlit stomata conductance
-                           gs0sha     (np)                = 0  !working copy of shalit stomata conductance
+                           gs0sha     (np)                = 0  !working copy of shaded stomata conductance
                         ENDIF
 
                         IF(DEF_USE_OZONESTRESS)THEN
@@ -322,7 +322,7 @@ ENDIF
                         nsl_max = count(wgt(:0)        .gt. 0)
                         ! denh2o_np(maxsnl+1:0) = 0
                         ! denice_np(maxsnl+1:0) = 0
-                        rhosnow_np(maxsnl+1:0) = 0 ! partitial density of water/snow (ice + liquid)
+                        rhosnow_np(maxsnl+1:0) = 0 ! partial density of water/snow (ice + liquid)
 
                         IF (nsl > 0) THEN
                            ! move wgt above nsl to nsl
