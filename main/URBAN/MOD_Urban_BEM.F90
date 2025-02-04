@@ -51,7 +51,7 @@ CONTAINS
 !     heat flux.
 !
 !  o Solve the following energy balance equations
-!  o variables: troom, troof_inner, twsun_inner, twsha_innter
+!  o Variables: troom, troof_inner, twsun_inner, twsha_innter
 !
 !     Hc_roof = Fn_roof        .................................(1)
 !     Hc_wsun = Fn_wsun        .................................(2)
@@ -107,9 +107,9 @@ CONTAINS
 
    ! local variables
    real(r8) :: &
-        ACH,             &! air exchange coefficience
-        hcv_roof,        &! convective exchange ceofficience for roof<->room
-        hcv_wall,        &! convective exchange ceofficience for wall<->room
+        ACH,             &! air exchange coefficient
+        hcv_roof,        &! convective exchange coefficient for roof<->room
+        hcv_wall,        &! convective exchange coefficient for wall<->room
         waste_coef,      &! waste coefficient
         waste_cool,      &! waste heat for AC cooling
         waste_heat        ! waste heat for AC heating
@@ -136,9 +136,9 @@ CONTAINS
    ! Option for continuous AC
    logical, parameter :: Constant_AC = .true.
 
-      ACH = 0.3           !air exchange coefficience
-      hcv_roof   = 4.040  !convective exchange ceofficience for roof<->room (W m-2 K-1)
-      hcv_wall   = 3.076  !convective exchange ceofficience for wall<->room (W m-2 K-1)
+      ACH = 0.3           !air exchange coefficient
+      hcv_roof   = 4.040  !convective exchange coefficient for roof<->room (W m-2 K-1)
+      hcv_wall   = 3.076  !convective exchange coefficient for wall<->room (W m-2 K-1)
       waste_cool = 0.6    !waste heat for AC cooling
       waste_heat = 0.2    !waste heat for AC heating
       cooling = .false.   !cooling case
@@ -174,7 +174,7 @@ CONTAINS
       ! Inverse of matrix A
       Ainv = MatrixInverse(A)
 
-      ! Matrix computing to revole multiple reflections
+      ! Matrix computing to resolve multiple reflections
       X = matmul(Ainv, B)
 
       troof_inner_bef = troof_inner
@@ -200,7 +200,7 @@ CONTAINS
          Fhac  = H*rhoair*cpair*(troom-troom_min)/deltim
          troom = troom_min
          Fwst  = abs(Fhac)*waste_heat
-         ! nagative value, set it to 0.
+         ! negative value, set it to 0.
          Fhac  = 0.
       ENDIF
 

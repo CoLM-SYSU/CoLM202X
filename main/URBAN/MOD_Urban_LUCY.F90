@@ -86,14 +86,14 @@ CONTAINS
    integer :: &
       iweek            ,&! day of week
       ihour            ,&! hour of day
-      day              ,&! day of mmonth
+      day              ,&! day of month
       month            ,&! month of year
       day_inx          ,&! holiday index, day=1(workday), day=1(holiday)
       EC               ,&! emission factor of car [J/m]
       EF               ,&! emission factor of freight [J/m]
       EM                 ! emission factor of motorbike [J/m]
 
-      ! initializition
+      ! initialization
       meta = 0.
       vehc = 0.
       Fahe = 0.

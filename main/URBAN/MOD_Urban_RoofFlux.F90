@@ -55,7 +55,7 @@ CONTAINS
         fsno_roof,&! fraction of impervious ground covered by snow
         hroof,    &! average building height [m]
 
-        wliq_roofsno,&! liqui water [kg/m2]
+        wliq_roofsno,&! liquid water [kg/m2]
         wice_roofsno,&! ice lens [kg/m2]
 
         troof,    &! ground impervious temperature [K]
@@ -70,7 +70,7 @@ CONTAINS
 
    real(r8), intent(out) :: &
         fsenroof, &! sensible heat flux from roof [W/m2]
-        fevproof   ! evaperation heat flux from roof [W/m2]
+        fevproof   ! evaporation heat flux from roof [W/m2]
 
    real(r8), intent(out) :: &
         z0m,      &! effective roughness [m]
@@ -89,7 +89,7 @@ CONTAINS
         nmozsgn    ! number of times moz changes sign
 
    real(r8) :: &
-        beta,     &! coefficient of conective velocity [-]
+        beta,     &! coefficient of convective velocity [-]
         displax,  &! zero-displacement height [m]
         tg,       &! ground surface temperature [K]
         qg,       &! ground specific humidity [kg/kg]
@@ -109,12 +109,12 @@ CONTAINS
         fq2m,     &! relation for specific humidity at 2m
         fm10m,    &! integral of profile function for momentum at 10m
         thvstar,  &! virtual potential temperature scaling parameter
-        um,       &! wind speed including the stablity effect [m/s]
+        um,       &! wind speed including the stability effect [m/s]
         wc,       &! convective velocity [m/s]
         wc2,      &! wc**2
         zeta,     &! dimensionless height used in Monin-Obukhov theory
         zii,      &! convective boundary height [m]
-        zldis,    &! reference height "minus" zero displacement heght [m]
+        zldis,    &! reference height "minus" zero displacement height [m]
         z0mg,     &! roughness length over ground, momentum [m]
         z0qg       ! roughness length over ground, latent heat [m]
 
@@ -132,7 +132,7 @@ CONTAINS
       z0hg = z0mg
       z0qg = z0mg
 
-! potential temperatur at the reference height
+! potential temperature at the reference height
       beta = 1.       !-  (in computing W_*)
       zii  = 1000.    !m  (pbl height)
       z0m  = z0mg
@@ -210,7 +210,7 @@ CONTAINS
       ENDDO ITERATION                         !end stability iteration
       !----------------------------------------------------------------
 
-! Get derivative of fluxes with repect to ground temperature
+! Get derivative of fluxes with respect to ground temperature
       ram    = 1./(ustar*ustar/um)
       rah    = 1./(vonkar/fh*ustar)
       raw    = 1./(vonkar/fq*ustar)

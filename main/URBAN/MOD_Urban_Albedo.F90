@@ -6,7 +6,7 @@ MODULE MOD_Urban_Albedo
 !
 !  Calculate the total urban albedo. Prepare albedo values over water,
 !  roof, ground with snow cover. Then CALL 3D urban radiation transfer
-!  model. Finally calculate the total albedo weightd by the urban and
+!  model. Finally calculate the total albedo weighted by the urban and
 !  water fractional cover.
 !
 !  Created by Hua Yuan, 09/2021
@@ -15,9 +15,11 @@ MODULE MOD_Urban_Albedo
 ! !REVISIONS:
 !
 !  07/2023, Hua Yuan: Fix low zenith angle problem for urban radiation
-!           calculation and urban display height problem when considering
-!           vegetations. modify limitation for conzen value (0.001->0.01)
-!           for urban.
+!           calculation and urban display height problem when
+!           considering vegetations. modify limitation for conzen value
+!           (0.001->0.01) for urban.
+!
+!  05/2024, Hua Yuan: Account for vegetation snow optical properties.
 !
 !-----------------------------------------------------------------------
    USE MOD_Precision

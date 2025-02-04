@@ -37,21 +37,22 @@ CONTAINS
 ! Snow and roof temperatures
 ! o The volumetric heat capacity is calculated as a linear combination
 !   in terms of the volumetric fraction of the constituent phases.
-! o The thermal conductivity of roof is given by LOOK-UP table, and of snow is from
-!   the formulation used in SNTHERM (Jordan 1991).
+! o The thermal conductivity of roof is given by LOOK-UP table, and of
+!   snow is from the formulation used in SNTHERM (Jordan 1991).
 ! o Boundary conditions:
 !   F = Rnet - Hg - LEg (top),
-!   For urban sunwall, shadewall, and roof columns, there is a non-zero heat flux across
-!   the bottom "building inner surface" layer and the equations are derived assuming
-!   a prescribed or adjusted internal building temperature.
-!   T = T_roof_inner (at the roof inner surface).
+!   For urban sunwall, shadewall, and roof columns, there is a non-zero
+!   heat flux across the bottom "building inner surface" layer and the
+!   equations are derived assuming a prescribed or adjusted internal
+!   building temperature.  T = T_roof_inner (at the roof inner surface).
 ! o Roof / snow temperature is predicted from heat conduction
-!   in N roof layers and up to 5 snow layers.
-!   The thermal conductivities at the interfaces between two neighbor layers
-!   (j, j+1) are derived from an assumption that the flux across the interface
-!   is equal to that from the node j to the interface and the flux from the
-!   interface to the node j+1. The equation is solved using the Crank-Nicholson
-!   method and resulted in a tridiagonal system equation.
+!   in N roof layers and up to 5 snow layers.  The thermal
+!   conductivities at the interfaces between two neighbor layers (j,
+!   j+1) are derived from an assumption that the flux across the
+!   interface is equal to that from the node j to the interface and the
+!   flux from the interface to the node j+1. The equation is solved
+!   using the Crank-Nicholson method and resulted in a tridiagonal
+!   system equation.
 !
 ! Phase change (see MOD_PhaseChange.F90)
 !
@@ -74,7 +75,7 @@ CONTAINS
    real(r8), intent(in) :: cv_roof(1:nl_roof)          !heat capacity of urban roof [J/m3/K]
    real(r8), intent(in) :: tk_roof(1:nl_roof)          !thermal conductivity of urban roof [W/m/K]
 
-   real(r8), intent(in) :: dz_roofsno(lb:nl_roof)      !layer thickiness [m]
+   real(r8), intent(in) :: dz_roofsno(lb:nl_roof)      !layer thickness [m]
    real(r8), intent(in) :: z_roofsno (lb:nl_roof)      !node depth [m]
    real(r8), intent(in) :: zi_roofsno(lb-1:nl_roof)    !interface depth [m]
 
@@ -89,7 +90,7 @@ CONTAINS
 
    real(r8), intent(inout) :: t_roofsno   (lb:nl_roof) !roof layers' temperature [K]
    real(r8), intent(inout) :: wice_roofsno(lb:nl_roof) !ice lens [kg/m2]
-   real(r8), intent(inout) :: wliq_roofsno(lb:nl_roof) !liqui water [kg/m2]
+   real(r8), intent(inout) :: wliq_roofsno(lb:nl_roof) !liquid water [kg/m2]
    real(r8), intent(inout) :: scv_roof                 !snow cover, water equivalent [mm, kg/m2]
    real(r8), intent(inout) :: snowdp_roof              !snow depth [m]
 
@@ -117,7 +118,7 @@ CONTAINS
    real(r8) t_roofsno_bef(lb:nl_roof) !roof/snow temperature before update
    real(r8) hs                        !net energy flux into the surface (w/m2)
    real(r8) dhsdt                     !d(hs)/dT
-   real(r8) brr(lb:nl_roof)           !temporay set
+   real(r8) brr(lb:nl_roof)           !temporary set
    real(r8) bw                        !snow density [kg/m3]
 
    integer i,j

@@ -80,10 +80,10 @@ CONTAINS
 
    real(r8), intent(out) :: &
         Ainv(4,4),  &! Inverse of Radiation transfer matrix
-        B(4),       &! Vectors of incident radition on each surface
-        B1(4),      &! Vectors of incident radition on each surface
-        dBdT(4),    &! Vectors of incident radition on each surface
-        SkyVF(4),   &! Viewall factor to sky
+        B(4),       &! Vectors of incident radiation on each surface
+        B1(4),      &! Vectors of incident radiation on each surface
+        dBdT(4),    &! Vectors of incident radiation on each surface
+        SkyVF(4),   &! View factor to sky
         fcover(0:4)  ! View factor to sky
 
    ! Local variables
@@ -117,7 +117,7 @@ CONTAINS
    ! Temporal
    real(r8) :: tmp, eb
 
-      ! Claculate urban structure parameters
+      ! Calculate urban structure parameters
       !-------------------------------------------------
       !W  = H/HW
       !L  = W*sqrt(fb)/(1-sqrt(fb))
@@ -177,7 +177,7 @@ CONTAINS
       Igimp = Ig*fgimp
       Igper = Ig*fgper
 
-      ! Vector of initial LW radiatioin on each surface
+      ! Vector of initial LW radiation on each surface
       !NOTE: for 3D, absorption per unit area: 4*HL*fb/fg
       !      for canyon: absorption per unit area: 2*HW
       B(1) = Iwsun*(1.-ewall) + 4*fwsun*HL*fb/fg*stefnc*ewall*twsun**4
@@ -301,9 +301,9 @@ CONTAINS
    real(r8), intent(out) :: &
         ev,         &! emissivity of vegetation
         Ainv(5,5),  &! Inverse of Radiation transfer matrix
-        B(5),       &! Vectors of incident radition on each surface
-        B1(5),      &! Vectors of incident radition on each surface
-        dBdT(5),    &! Vectors of incident radition on each surface
+        B(5),       &! Vectors of incident radiation on each surface
+        B1(5),      &! Vectors of incident radiation on each surface
+        dBdT(5),    &! Vectors of incident radiation on each surface
         SkyVF(5),   &! View factor to sky
         VegVF(5),   &! View factor to sky
         fcover(0:5)  ! View factor to sky
@@ -372,7 +372,7 @@ CONTAINS
    ! Temporal
    real(r8) :: tmp, eb, fac1, fac2, lsai
 
-      ! Claculate urban structure parameters
+      ! Calculate urban structure parameters
       !-------------------------------------------------
       !W  = H/HW
       !L  = W*sqrt(fb)/(1-sqrt(fb))
@@ -382,7 +382,7 @@ CONTAINS
 
       fgimp = 1. - fgper
 
-      ! Calculate transmittion and albedo of tree
+      ! Calculate transmission and albedo of tree
       !-------------------------------------------------
       lsai = (lai+sai)*fv/cos(PI/3)/ShadowTree(fv, PI/3)
       Td = tee(DD1*3/8.*lsai)
@@ -418,7 +418,7 @@ CONTAINS
       Sv  = ShadowTree(fv_, PI/3)
 
       ! Overlapped shadow between tree and building
-      ! (to groud only)
+      ! (to ground only)
       Swv = (Sw-Sw_) * Sv
 
       ! convert Sv to ground ratio
@@ -443,7 +443,7 @@ CONTAINS
       Sv  = ShadowTree(fv_, PI/3)
 
       ! Overlapped shadow between tree and building
-      ! (to groud only)
+      ! (to ground only)
       Swv = (Sw-Sw_) * Sv
 
       ! convert Sv to ground ratio
@@ -499,7 +499,7 @@ CONTAINS
       ! Calculate wall sunlit fraction
       !-------------------------------------------------
 
-      ! Builing wall shadow
+      ! Building wall shadow
       Sw = ShadowWall_dir(fb/fg, HL, theta)
 
       Sw_ = Sw; fv_ = fv;
@@ -511,7 +511,7 @@ CONTAINS
       Sv = ShadowTree(fv_, theta)
 
       ! Overlapped shadow between tree and building
-      ! (to groud only)
+      ! (to ground only)
       Swv = (Sw-Sw_) * Sv
 
       ! convert Sv to ground ratio
@@ -555,7 +555,7 @@ CONTAINS
       Igper = Ig*fgper
       Iv    = LW*Fsv
 
-      ! Vector of initial LW radiatioin on each surface
+      ! Vector of initial LW radiation on each surface
       !NOTE: for 3D, absorption per unit area: 4*HL*fb/fg
       !      for canyon: absorption per unit area: 2*HW
       B(1) = Iwsun*(1.-ewall) + 4*fwsun*HL*fb/fg*stefnc*ewall*twsun**4

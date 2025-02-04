@@ -164,7 +164,7 @@ CONTAINS
        porsl     (1:nl_soil),    &! soil porosity [-]
        psi0      (1:nl_soil),    &! soil water suction, negative potential [mm]
 #ifdef Campbell_SOIL_MODEL
-       bsw(1:nl_soil),           &! clapp and hornbereger "b" parameter [-]
+       bsw(1:nl_soil),           &! clapp and hornberger "b" parameter [-]
 #endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
        theta_r   (1:nl_soil),    &! residual moisture content [-]

@@ -113,12 +113,12 @@ CONTAINS
         pg_rain_lake       ,&! rainfall onto lake (mm h2o/s)
         pg_snow_lake       ,&! snowfall onto lake (mm h2o/s)
         froof              ,&! roof fractional cover [-]
-        fgper              ,&! weith of impervious ground [-]
+        fgper              ,&! weight of impervious ground [-]
         flake              ,&! lake fractional cover [-]
         ! wtfact           ,&! (updated to gridded 'fsatmax' data) fraction of model area with high water table
         pondmx             ,&! ponding depth (mm)
         ssi                ,&! irreducible water saturation of snow
-        wimp               ,&! water impremeable IF porosity less than wimp
+        wimp               ,&! water impermeable IF porosity less than wimp
         smpmin             ,&! restriction for min of soil poten. (mm)
 
         topostd            ,&! standard deviation of elevation [m]
@@ -129,8 +129,8 @@ CONTAINS
         psi0  (1:nl_soil)  ,&! saturated soil suction (mm) (NEGATIVE)
         hksati(1:nl_soil)  ,&! hydraulic conductivity at saturation (mm h2o/s)
         theta_r(1:nl_soil) ,&! residual moisture content [-]
-        fsatmax            ,&! maximum saturated area fraction [-] 
-        fsatdcf            ,&! decay factor in calucation of saturated area fraction [1/m] 
+        fsatmax            ,&! maximum saturated area fraction [-]
+        fsatdcf            ,&! decay factor in calculation of saturated area fraction [1/m]
         rootr (1:nl_soil)  ,&! root resistance of a layer, all layers add to 1.0
 
         etr                ,&! vegetation transpiration

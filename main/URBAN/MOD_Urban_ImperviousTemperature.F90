@@ -41,17 +41,19 @@ CONTAINS
 ! o The volumetric heat capacity is calculated as a linear combination
 !   in terms of the volumetric fraction of the constituent phases.
 ! o The thermal conductivity of road soil is computed from
-!   the algorithm of Johansen (as reported by Farouki 1981), impervious and perivious from
-!   LOOK-UP table and of snow is from the formulation used in SNTHERM (Jordan 1991).
+!   the algorithm of Johansen (as reported by Farouki 1981), impervious
+!   and pervious from LOOK-UP table and of snow is from the formulation
+!   used in SNTHERM (Jordan 1991).
 ! o Boundary conditions:
 !   F = Rnet - Hg - LEg (top),  F = 0 (base of the soil column).
 ! o Soil / snow temperature is predicted from heat conduction
-!   in 10 soil layers and up to 5 snow layers.
-!   The thermal conductivities at the interfaces between two neighbor layers
-!   (j, j+1) are derived from an assumption that the flux across the interface
-!   is equal to that from the node j to the interface and the flux from the
-!   interface to the node j+1. The equation is solved using the Crank-Nicholson
-!   method and resulted in a tridiagonal system equation.
+!   in 10 soil layers and up to 5 snow layers.  The thermal
+!   conductivities at the interfaces between two neighbor layers (j,j+1)
+!   are derived from an assumption that the flux across the interface is
+!   equal to that from the node j to the interface and the flux from the
+!   interface to the node j+1. The equation is solved using the
+!   Crank-Nicholson method and resulted in a tridiagonal system
+!   equation.
 !
 ! Phase change (see MOD_PhaseChange.F90)
 !
@@ -96,7 +98,7 @@ CONTAINS
    real(r8), intent(in) :: cv_gimp   (1:nl_soil)       !heat capacity of urban impervious [J/m3/K]
    real(r8), intent(in) :: tk_gimp   (1:nl_soil)       !thermal conductivity of urban impervious [W/m/K]
 
-   real(r8), intent(in) :: dz_gimpsno(lb  :nl_soil)    !layer thickiness [m]
+   real(r8), intent(in) :: dz_gimpsno(lb  :nl_soil)    !layer thickness [m]
    real(r8), intent(in) :: z_gimpsno (lb  :nl_soil)    !node depth [m]
    real(r8), intent(in) :: zi_gimpsno(lb-1:nl_soil)    !interface depth [m]
 
@@ -125,7 +127,7 @@ CONTAINS
 
    real(r8) hcap(1:nl_soil)           !J/(m3 K)
    real(r8) thk(lb:nl_soil)           !W/(m K)
-   real(r8) rhosnow                   !partitial density of water (ice + liquid)
+   real(r8) rhosnow                   !partial density of water (ice + liquid)
 
    real(r8) at (lb:nl_soil)           !"a" vector for tridiagonal matrix
    real(r8) bt (lb:nl_soil)           !"b" vector for tridiagonal matrix
@@ -140,7 +142,7 @@ CONTAINS
    real(r8) t_gimpsno_bef(lb:nl_soil) !soil/snow temperature before update
    real(r8) hs                        !net energy flux into the surface (w/m2)
    real(r8) dhsdt                     !d(hs)/dT
-   real(r8) brr(lb:nl_soil)           !temporay set
+   real(r8) brr(lb:nl_soil)           !temporary set
 
    real(r8) vf_water(1:nl_soil)       !volumetric fraction liquid water within soil
    real(r8) vf_ice  (1:nl_soil)       !volumetric fraction ice len within soil
@@ -197,10 +199,10 @@ CONTAINS
 
 ! the following consideration is try to avoid the snow conductivity
 ! to be dominant in the thermal conductivity of the interface.
-! Because when the distance of bottom snow node to the interfacee
+! Because when the distance of bottom snow node to the interface
 ! is larger than that of interface to top soil node,
 ! the snow thermal conductivity will be dominant, and the result is that
-! lees heat tranfer between snow and soil
+! lees heat transfer between snow and soil
          IF((i==0) .and. (z_gimpsno(i+1)-zi_gimpsno(i)<zi_gimpsno(i)-z_gimpsno(i)))THEN
             tk(i) = 2.*thk(i)*thk(i+1)/(thk(i)+thk(i+1))
             tk(i) = max(0.5*thk(i+1),tk(i))

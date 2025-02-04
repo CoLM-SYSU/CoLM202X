@@ -43,17 +43,19 @@ CONTAINS
 ! Wall temperatures
 ! o Boundary conditions:
 !   F = Rnet - Hg - LEg (top),
-!   For urban sunwall, shadewall, and wall columns, there is a non-zero heat flux across
-!   the bottom "building inner surface" layer and the equations are derived assuming
-!   a prescribed or adjusted internal building temperature.
-!   T = T_wall_inner (at the wall inner surface).
-! o Wall temperature is predicted from heat conduction
-!   in N wall layers and up to 5 snow layers.
-!   The thermal conductivities at the interfaces between two neighbor layers
-!   (j, j+1) are derived from an assumption that the flux across the interface
-!   is equal to that from the node j to the interface and the flux from the
-!   interface to the node j+1. The equation is solved using the Crank-Nicholson
-!   method and resulted in a tridiagonal system equation.
+!   For urban sunwall, shadewall, and wall columns, there is a non-zero
+!   heat flux across the bottom "building inner surface" layer and the
+!   equations are derived assuming a prescribed or adjusted internal
+!   building temperature.  T = T_wall_inner (at the wall inner surface).
+!
+! o Wall temperature is predicted from heat conduction in N wall layers
+!   and up to 5 snow layers. The thermal conductivities at the
+!   interfaces between two neighbor layers (j, j+1) are derived from an
+!   assumption that the flux across the interface is equal to that from
+!   the node j to the interface and the flux from the interface to the
+!   node j+1. The equation is solved using the Crank-Nicholson method
+!   and resulted in a tridiagonal system equation.
+!
 ! o no Phase change
 !
 ! Original author : Yongjiu Dai, 05/2020
@@ -73,7 +75,7 @@ CONTAINS
    real(r8), intent(in) :: cv_wall(1:nl_wall)   !heat capacity of urban wall [J/m3/K]
    real(r8), intent(in) :: tk_wall(1:nl_wall)   !thermal conductivity of urban wall [W/m/K]
 
-   real(r8), intent(in) :: dz_wall(1:nl_wall)   !layer thickiness [m]
+   real(r8), intent(in) :: dz_wall(1:nl_wall)   !layer thickness [m]
    real(r8), intent(in) :: z_wall (1:nl_wall)   !node depth [m]
    real(r8), intent(in) :: zi_wall(0:nl_wall)   !interface depth [m]
 
@@ -89,7 +91,7 @@ CONTAINS
 
 !------------------------ local variables ------------------------------
    real(r8) wice_wall(1:nl_wall)  !ice lens [kg/m2]
-   real(r8) wliq_wall(1:nl_wall)  !liqui water [kg/m2]
+   real(r8) wliq_wall(1:nl_wall)  !liquid water [kg/m2]
 
    real(r8) cv (1:nl_wall)        !heat capacity [J/(m2 K)]
    real(r8) thk(1:nl_wall)        !thermal conductivity of layer

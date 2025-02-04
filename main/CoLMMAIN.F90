@@ -215,7 +215,7 @@ SUBROUTINE CoLMMAIN ( &
         wf_sand    (nl_soil) ,&! gravimetric fraction of sand
         porsl      (nl_soil) ,&! fraction of soil that is voids [-]
         psi0       (nl_soil) ,&! minimum soil suction [mm]
-        bsw        (nl_soil) ,&! clapp and hornbereger "b" parameter [-]
+        bsw        (nl_soil) ,&! clapp and hornberger "b" parameter [-]
         theta_r  (1:nl_soil) ,&! residual water content (cm3/cm3)
         fsatmax              ,&! maximum saturated area fraction [-]
         fsatdcf              ,&! decay factor in calucation of saturated area fraction [1/m]

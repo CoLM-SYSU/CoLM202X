@@ -36,7 +36,7 @@ CONTAINS
    integer,  intent(in) :: ipatch   ! patch index
    integer,  intent(in) :: idate(3) ! model time
 
-   real(r8), intent(in) :: dlon     ! logitude in radians
+   real(r8), intent(in) :: dlon     ! longitude in radians
    real(r8), intent(in) :: deltim   ! seconds in a time step [second]
 
    real(r8), intent(in) :: &

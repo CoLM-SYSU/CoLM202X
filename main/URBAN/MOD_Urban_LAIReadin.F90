@@ -67,7 +67,7 @@ CONTAINS
       lndname = trim(dir_landdata)//'/urban/'//trim(cyear)//'/LAI/urban_SAI_'//trim(ctime)//'.nc'
       CALL ncio_read_vector (lndname, 'TREE_SAI',  landurban, urb_sai)
 #endif
-      ! loop for urban atch to assign fraction of green leaf
+      ! loop for urban patch to assign fraction of green leaf
       IF (p_is_worker) THEN
          DO u = 1, numurban
             npatch = urban2patch(u)

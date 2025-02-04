@@ -21,23 +21,24 @@
 !
 ! !DESCRIPTION:
 !
-!  Unlike the traditional urban canyon model, the CoLM urban model is
+!  Unlike the traditional urban canyon models, the CoLM urban model is
 !  based on the assumption of a three-dimensional urban building
 !  community, including trees and water bodies. We have developed a new
 !  approach for shortwave and longwave radiation transfer, as well as
 !  turbulent exchange within the three-dimensional urban buildings. In
 !  the process of calculating radiation transfer and turbulent exchange,
-!  simulation of vegetation and water bodies has been added. The CoLM
-!  urban model uses comprehensive high-resolution data on urban cover,
-!  geometric structure, vegetation, water bodies, etc., and has
-!  developed a complete simulation of anthropogenic heat processes,
-!  including building energy consumption, traffic heat, and metabolic
-!  heat.
+!  we have integrated simulations of vegetation and water bodies.
+!
+!  The CoLM urban model utilizes comprehensive high-resolution data on
+!  urban cover, geometric structure, vegetation, water bodies, etc.
+!  Furthermore, it has developed a complete simulation of anthropogenic
+!  heat processes, including building energy consumption, traffic heat,
+!  and metabolic heat.
 !
 !  Created by Hua Yuan, 09/2021
 !
 !
-! !REVISIONS:
+! !REVISIONS (major):
 !
 !  03/2022, Hua Yuan: complete the model with full coupling, and make
 !           it possible to run multiple scenario assumptions through
@@ -51,7 +52,8 @@
 !  05/2023, Wenzong Dong, Hua Yuan, Shupeng Zhang: porting urban making
 !           surface data codes to MPI parallel version.
 !
-!  05/2023, Hua Yuan: Rename files and modules to current version.
+!  05/2023, Hua Yuan: Rename files and modules align with current
+!           version.
 !
 !-----------------------------------------------------------------------
 
@@ -163,7 +165,7 @@
            solniln      ,srvdln       ,srviln       ,srndln       ,&
            srniln       ,qcharge      ,xerr         ,zerr         ,&
 
-         ! TUNABLE modle constants
+         ! TUNABLE model constants
            zlnd         ,zsno         ,csoilc       ,dewmx        ,&
            capr         ,cnfac        ,ssi                        ,&
            wimp         ,pondmx       ,smpmax       ,smpmin       ,&
@@ -208,7 +210,7 @@
 
    real(r8),intent(in) :: &
         deltim                ,&! seconds in a time step [second]
-        patchlonr             ,&! logitude in radians
+        patchlonr             ,&! longitude in radians
         patchlatr               ! latitude in radians
 
    real(r8),intent(inout) :: &
@@ -254,7 +256,7 @@
         wf_sand     (nl_soil) ,&! gravimetric fraction of sand
         porsl       (nl_soil) ,&! fraction of soil that is voids [-]
         psi0        (nl_soil) ,&! minimum soil suction [mm]
-        bsw         (nl_soil) ,&! clapp and hornbereger "b" parameter [-]
+        bsw         (nl_soil) ,&! clapp and hornberger "b" parameter [-]
         theta_r     (nl_soil) ,&! residual water content (cm3/cm3)
         fsatmax               ,&! maximum saturated area fraction [-]
         fsatdcf               ,&! decay factor in calucation of saturated area fraction [1/m]
@@ -312,7 +314,7 @@
         capr                  ,&! tuning factor to turn first layer T into surface T
         cnfac                 ,&! Crank Nicholson factor between 0 and 1
         ssi                   ,&! irreducible water saturation of snow
-        wimp                  ,&! water impremeable IF porosity less than wimp
+        wimp                  ,&! water impermeable IF porosity less than wimp
         pondmx                ,&! ponding depth (mm)
         smpmax                ,&! wilting point potential in mm
         smpmin                ,&! restriction for min of soil poten.  (mm)
@@ -345,8 +347,8 @@
         forc_rhoair             ! density air [kg/m3]
 
 #if(defined CaMa_Flood)
-   real(r8), intent(in)    :: fldfrc    !inundation fraction--> allow re-evaporation and infiltrition![0-1]
-   real(r8), intent(inout) :: flddepth  !inundation depth--> allow re-evaporation and infiltrition![mm]
+   real(r8), intent(in)    :: fldfrc    !inundation fraction--> allow re-evaporation and infiltration![0-1]
+   real(r8), intent(inout) :: flddepth  !inundation depth--> allow re-evaporation and infiltration![mm]
    real(r8), intent(out)   :: fevpg_fld !effective evaporation from inundation [mm/s]
    real(r8), intent(out)   :: qinfl_fld !effective re-infiltration from inundation [mm/s]
 #endif
@@ -464,7 +466,7 @@
         tafu                  ,&! temperature of outer building [K]
         Fhac                  ,&! sensible flux from heat or cool AC [W/m2]
         Fwst                  ,&! waste heat flux from heat or cool AC [W/m2]
-        Fach                  ,&! flux from inner and outter air exchange [W/m2]
+        Fach                  ,&! flux from inner and outer air exchange [W/m2]
         Fahe                  ,&! flux from metabolism and vehicle [W/m2]
         Fhah                  ,&! sensible heat flux from heating [W/m2]
         vehc                  ,&! flux from vehicle [W/m2]
@@ -498,7 +500,7 @@
         fsena                 ,&! sensible heat from canopy height to atmosphere [W/m2]
         fevpa                 ,&! evapotranspiration from canopy height to atmosphere [mm/s]
         lfevpa                ,&! latent heat flux from canopy height to atmosphere [W/2]
-        fsenl                 ,&! ensible heat from leaves [W/m2]
+        fsenl                 ,&! sensible heat from leaves [W/m2]
         fevpl                 ,&! evaporation+transpiration from leaves [mm/s]
         etr                   ,&! transpiration rate [mm/s]
         fseng                 ,&! sensible heat flux from ground [W/m2]
@@ -506,7 +508,7 @@
         olrg                  ,&! outgoing long-wave radiation from ground+canopy
         fgrnd                 ,&! ground heat flux [W/m2]
         xerr                  ,&! water balance error at current time-step [mm/s]
-        zerr                  ,&! energy balnce errore at current time-step [W/m2]
+        zerr                  ,&! energy balance error at current time-step [W/m2]
 
         tref                  ,&! 2 m height air temperature [K]
         qref                  ,&! 2 m height air specific humidity
@@ -514,7 +516,7 @@
         rsur                  ,&! surface runoff (mm h2o/s)
         rnof                  ,&! total runoff (mm h2o/s)
         qintr                 ,&! interception (mm h2o/s)
-        qinfl                 ,&! inflitration (mm h2o/s)
+        qinfl                 ,&! infiltration (mm h2o/s)
         qdrip                 ,&! throughfall (mm h2o/s)
         qcharge               ,&! groundwater recharge [mm/s]
 
@@ -576,8 +578,8 @@
    real(r8) :: &
         calday                ,&! Julian cal day (1.xx to 365.xx)
         endwb                 ,&! water mass at the end of time step
-        errore                ,&! energy balnce errore (Wm-2)
-        errorw                ,&! water balnce errore (mm)
+        errore                ,&! energy balance error (Wm-2)
+        errorw                ,&! water balance error (mm)
         fioldr (maxsnl+1:nl_roof), &! fraction of ice relative to the total water
         fioldi (maxsnl+1:nl_soil), &! fraction of ice relative to the total water
         fioldp (maxsnl+1:nl_soil), &! fraction of ice relative to the total water
@@ -676,10 +678,10 @@
         snli                  ,&! number of snow layers
         snlp                  ,&! number of snow layers
         snll                  ,&! number of snow layers
-        imeltr (maxsnl+1:nl_roof), &! flag for: melting=1, freezing=2, Nothing happended=0
-        imelti (maxsnl+1:nl_soil), &! flag for: melting=1, freezing=2, Nothing happended=0
-        imeltp (maxsnl+1:nl_soil), &! flag for: melting=1, freezing=2, Nothing happended=0
-        imeltl (maxsnl+1:nl_soil), &! flag for: melting=1, freezing=2, Nothing happended=0
+        imeltr (maxsnl+1:nl_roof), &! flag for: melting=1, freezing=2, Nothing happened=0
+        imelti (maxsnl+1:nl_soil), &! flag for: melting=1, freezing=2, Nothing happened=0
+        imeltp (maxsnl+1:nl_soil), &! flag for: melting=1, freezing=2, Nothing happened=0
+        imeltl (maxsnl+1:nl_soil), &! flag for: melting=1, freezing=2, Nothing happened=0
         lbr                   ,&! lower bound of arrays
         lbi                   ,&! lower bound of arrays
         lbp                   ,&! lower bound of arrays
@@ -899,7 +901,7 @@
       ENDIF
 
 !----------------------------------------------------------------------
-! [3] Initilize new snow nodes for snowfall / sleet
+! [3] Initialize new snow nodes for snowfall / sleet
 !----------------------------------------------------------------------
 
       lbr = snlr + 1           !lower bound of array
@@ -1249,7 +1251,7 @@
 
 !======================================================================
 ! Preparation for the next time step
-! 1) time-varying parameters for vegatation
+! 1) time-varying parameters for vegetation
 ! 2) fraction of snow cover
 ! 3) solar zenith angle and
 ! 4) albedos
@@ -1285,7 +1287,7 @@
 
       ! albedos
       ! we supposed call it every time-step, because
-      ! other vegeation related parameters are needed to create
+      ! other vegetation related parameters are needed to create
 
       CALL alburban (ipatch,froof,fgper,flake,hlr,hroof,&
                      alb_roof,alb_wall,alb_gimp,alb_gper,&

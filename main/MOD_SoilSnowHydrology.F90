@@ -556,7 +556,7 @@ ENDIF
         z_soisno (lb:nl_soil)   , &! layer depth (m)
         dz_soisno(lb:nl_soil)   , &! layer thickness (m)
         zi_soisno(lb-1:nl_soil) , &! interface level below a "z" level (m)
-        bsw      (1:nl_soil), &! clapp and hornbereger "b" parameter [-]
+        bsw      (1:nl_soil), &! clapp and hornberger "b" parameter [-]
         theta_r  (1:nl_soil), & ! residual moisture content [-]
         fsatmax             , & ! maximum saturated area fraction [-]                         
         fsatdcf             , & ! decay factor in calucation of saturated area fraction [1/m] 
