@@ -201,7 +201,7 @@ CONTAINS
    real(r8) :: wdsrfm, depthratio
    real(r8), dimension(10) :: dzlak = (/0.1, 1., 2., 3., 4., 5., 7., 7., 10.45, 10.45/)  ! m
 
-   ! CoLM soil layer thickiness and depths
+   ! CoLM soil layer thickness and depths
    real(r8), allocatable :: z_soisno (:,:)
    real(r8), allocatable :: dz_soisno(:,:)
 
@@ -240,16 +240,16 @@ CONTAINS
    logical :: use_soiltext
    ! for USDA soil texture class:
    ! 0: undefined
-   ! 1: clay;  2: silty clay;  3: sandy clay;   4: clay loam;   5: silty clay loam;   6: sandy clay loam; &    
+   ! 1: clay;  2: silty clay;  3: sandy clay;   4: clay loam;   5: silty clay loam;   6: sandy clay loam; &
    ! 7: loam;  8: silty loam;  9: sandy loam;  10: silt;       11: loamy sand;       12: sand
 
    ! original VIC soil texture class in noahmp:
    !  1: SAND 2: LOAMY SAND 3: SANDY LOAM 4: SILT LOAM 5: SILT 6: LOAM 7: SANDY CLAY LOAM 8: SILTY CLAY LOAM 9: CLAY LOAM 10: SANDY CLAY 11: SILTY CLAY 12: CLAY 13: ORGANIC MATERIAL 14: WATER 15: BEDROCK 16: OTHER(land-ice) 17: PLAYA 18: LAVA 19: WHITE SAND
-   !  9: CLAY LOAM 10: SANDY CLAY 11: SILTY CLAY 12: CLAY  
-   !soil type          0    1        2       3           4          5         6        7          8        9         10        11        12      
+   !  9: CLAY LOAM 10: SANDY CLAY 11: SILTY CLAY 12: CLAY
+   !soil type          0    1        2       3           4          5         6        7          8        9         10        11        12
    !BVIC          =   1.0  0.050,    0.080,    0.090,    0.250,    0.150,    0.180,    0.200,    0.220,    0.230,    0.250,    0.280,    0.300
    !re-arranged BVIC for USDA soil texture class:
-   real(r8), parameter :: BVIC_USDA(0:12) = (/ 1., 0.300,  0.280, 0.250, 0.230,  0.220, 0.200,  0.180, 0.100,  0.090, 0.150, 0.080,  0.050/)    
+   real(r8), parameter :: BVIC_USDA(0:12) = (/ 1., 0.300,  0.280, 0.250, 0.230,  0.220, 0.200,  0.180, 0.100,  0.090, 0.150, 0.080,  0.050/)
 
 ! --------------------------------------------------------------------
 ! Allocates memory for CoLM 1d [numpatch] variables
@@ -1075,10 +1075,10 @@ CONTAINS
 
       ! for SOIL Water INIT by using water table depth
       use_wtd = (.not. use_soilini) .and. DEF_USE_WaterTableInit
-      
+
       IF (use_wtd) THEN
 
-         fwtd = DEF_file_WaterTable 
+         fwtd = DEF_file_WaterTable
 
          IF (p_is_master) THEN
             inquire (file=trim(fwtd), exist=use_wtd)
@@ -1113,7 +1113,7 @@ CONTAINS
 ! 2.4 LEAF area index
 ! ...................
 #if(defined DYN_PHENOLOGY)
-      ! CREAT fraction of vegetation cover, greenness, leaf area index, stem index
+      ! CREATE fraction of vegetation cover, greenness, leaf area index, stem index
       IF (p_is_worker) THEN
 
          DO i = 1, numpatch
@@ -1321,10 +1321,10 @@ CONTAINS
                wice_gimpsno(:,u) = 0.   !ice lens [kg/m2]
                wice_gpersno(:,u) = 0.   !ice lens [kg/m2]
                wice_lakesno(:,u) = 0.   !ice lens [kg/m2]
-               wliq_roofsno(:,u) = 0.   !liqui water [kg/m2]
-               wliq_gimpsno(:,u) = 0.   !liqui water [kg/m2]
-               wliq_gpersno(:,u) = wliq_soisno(:,i) !liqui water [kg/m2]
-               wliq_lakesno(:,u) = wliq_soisno(:,i) !liqui water [kg/m2]
+               wliq_roofsno(:,u) = 0.   !liquid water [kg/m2]
+               wliq_gimpsno(:,u) = 0.   !liquid water [kg/m2]
+               wliq_gpersno(:,u) = wliq_soisno(:,i) !liquid water [kg/m2]
+               wliq_lakesno(:,u) = wliq_soisno(:,i) !liquid water [kg/m2]
 
                wliq_soisno(: ,i) = 0.
                wliq_soisno(:1,i) = wliq_roofsno(:1,u)*froof(u)
@@ -1352,7 +1352,7 @@ CONTAINS
                twsha_inner   (u) = 283. !temperature of inner shaded wall [K]
                Fhac          (u) = 0.   !sensible flux from heat or cool AC [W/m2]
                Fwst          (u) = 0.   !waste heat flux from heat or cool AC [W/m2]
-               Fach          (u) = 0.   !flux from inner and outter air exchange [W/m2]
+               Fach          (u) = 0.   !flux from inner and outer air exchange [W/m2]
                meta          (u) = 0.   !flux from metabolic [W/m2]
                vehc          (u) = 0.   !flux from vehicle [W/m2]
 
@@ -1460,7 +1460,7 @@ CONTAINS
 #endif
 
       IF ( .not. present(lulcc_call) ) THEN
-         ! only be called in runing MKINI, LULCC will be executed later
+         ! only be called in running MKINI, LULCC will be executed later
          CALL WRITE_TimeVariables (idate, lc_year, casename, dir_restart)
       ENDIF
 
@@ -1475,7 +1475,7 @@ CONTAINS
 ! Deallocates memory for CoLM 1d [numpatch] variables
 ! --------------------------------------------------
       IF ( .not. present(lulcc_call) ) THEN
-         ! only be called in runing MKINI, LULCC will be executed later
+         ! only be called in running MKINI, LULCC will be executed later
          CALL deallocate_TimeInvariants
          CALL deallocate_TimeVariables
       ENDIF
