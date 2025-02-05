@@ -19,22 +19,22 @@ CONTAINS
 !
 ! !DESCRIPTION
 !  This is the main subroutine to execute the calculation of the restart
-!  variables for the begin of next year.
-!  There are mainly three ways to adjust restart variables:
+!  variables for the begin of next year.  There are mainly three ways to
+!  adjust restart variables:
 !
-!  1) variable related to mass: area weighted mean of the source patches,
-!     e.g., ldew, wliq_soisno.
-!     variable related to energy: keep energy conserve after the change
-!     of temperature, e.g., t_soisno.
+!  1) variable related to mass: area weighted mean of the source
+!  patches, e.g., ldew, wliq_soisno.  variable related to energy: keep
+!  energy conserve after the change of temperature, e.g., t_soisno.
 !
-!  2) recalculate according to physical process, e.g., dz_sno, scv, fsno.
+!  2) recalculate according to physical process, e.g., dz_sno, scv,
+!  fsno.
 !
 !  Created by Wanyi Lin and Hua Yuan, 07/2023
 !
 ! !REVISIONS:
 !
-!  10/2023, Wanyi Lin: share the codes with REST_LulccTimeVariables(), and
-!           simplify the codes in this subroutine.
+!  10/2023, Wanyi Lin: share the codes with REST_LulccTimeVariables(),
+!           and simplify the codes in this subroutine.
 !
 !  01/2024, Wanyi Lin: use "enthalpy conservation" for snow layer
 !           temperature calculation.
@@ -546,7 +546,7 @@ ENDIF
                            mss_dst4  (:,np) = mss_dst4  (:,np) + mss_dst4_  (:,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
                            ssno_lyr  (:,:,:,np) = ssno_lyr (:,:,:,np) + ssno_lyr_ (:,:,:,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
 
-                           ! TODO:or use same type assignment
+                           ! TODO: or use same type assignment
                            smp       (:,np) = smp    (:,np) + smp_   (:,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
                            hk        (:,np) = hk     (:,np) + hk_    (:,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
 
