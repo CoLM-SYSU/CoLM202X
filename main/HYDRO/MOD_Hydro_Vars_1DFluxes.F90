@@ -4,12 +4,12 @@
 MODULE MOD_Hydro_Vars_1DFluxes
 !-------------------------------------------------------------------------------------
 ! DESCRIPTION:
-!   
+!
 !   1D fluxes in lateral hydrological processes.
 !
 ! Created by Shupeng Zhang, May 2023
 !-------------------------------------------------------------------------------------
-   
+
    USE MOD_Precision
    IMPLICIT NONE
 
@@ -24,18 +24,18 @@ MODULE MOD_Hydro_Vars_1DFluxes
 
    real(r8), allocatable :: wdsrf_hru_ta (:) ! time step average of surface water depth    [m]
    real(r8), allocatable :: momen_hru_ta (:) ! time step average of surface water momentum [m^2/s]
-   real(r8), allocatable :: veloc_hru_ta (:) ! time step average of surface water veloctiy [m/s]
-  
+   real(r8), allocatable :: veloc_hru_ta (:) ! time step average of surface water velocity [m/s]
+
    real(r8), allocatable :: xwsur (:) ! surface water exchange [mm h2o/s]
    real(r8), allocatable :: xwsub (:) ! subsurface water exchange [mm h2o/s]
-   
+
    real(r8), allocatable :: discharge (:) ! river discharge [m^3/s]
 
    ! PUBLIC MEMBER FUNCTIONS:
    PUBLIC :: allocate_1D_HydroFluxes
    PUBLIC :: deallocate_1D_HydroFluxes
 
-CONTAINS 
+CONTAINS
 
    SUBROUTINE allocate_1D_HydroFluxes
 
@@ -80,15 +80,15 @@ CONTAINS
       IF (allocated(xsubs_pch)) deallocate(xsubs_pch)
       IF (allocated(xsubs_hru)) deallocate(xsubs_hru)
       IF (allocated(xsubs_bsn)) deallocate(xsubs_bsn)
-      
+
       IF (allocated(wdsrf_bsn_ta)) deallocate(wdsrf_bsn_ta)
       IF (allocated(momen_riv_ta)) deallocate(momen_riv_ta)
       IF (allocated(veloc_riv_ta)) deallocate(veloc_riv_ta)
-      
+
       IF (allocated(wdsrf_hru_ta)) deallocate(wdsrf_hru_ta)
       IF (allocated(momen_hru_ta)) deallocate(momen_hru_ta)
       IF (allocated(veloc_hru_ta)) deallocate(veloc_hru_ta)
-      
+
       IF (allocated(xwsur)) deallocate(xwsur)
       IF (allocated(xwsub)) deallocate(xwsub)
 

@@ -265,7 +265,7 @@ print *, 'OPENMP enabled, threads num = ', OPENMP
                fraction_patches(15,i,j) = f_glacier_patches  ! MODIS IGBP GLACIER/ICE SHEET (15)
 #endif
                Loca = maxloc(fraction_patches(:,i,j))    ! maxloc get the Loca: 1 - N_land_classification + 1
-               nn = Loca(1) - 1                          ! the definition of demension of fraction_patches: 0 - N_land_classification
+               nn = Loca(1) - 1                          ! the definition of dimension of fraction_patches: 0 - N_land_classification
                fraction_patches(nn,i,j) = err_f_glacier + fraction_patches(nn,i,j)
             endif
 

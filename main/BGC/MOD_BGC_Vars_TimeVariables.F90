@@ -4,7 +4,7 @@ MODULE MOD_BGC_Vars_TimeVariables
 #ifdef BGC
 !---------------------------------------------------------------------------------------------------------
 ! !DESCRIPTION
-! Define, allocate, and deallocate biogeochmeical state variables at patch level.
+! Define, allocate, and deallocate biogeochemical state variables at patch level.
 ! Read and write biogeochemical state variables at patch level from/to restart files.
 
 ! !ORIGINAL:
