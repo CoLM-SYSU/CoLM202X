@@ -59,11 +59,11 @@ CONTAINS
 ! Original author : Yongjiu Dai, 09/15/1999; 08/30/2002; 05/2018
 !
 ! REVISIONS:
-! Nan Wei,  07/2017: interaction btw prec and land surface
-! Nan Wei,  01/2019: USE the new version of soil thermal parameters to
-!                    calculate soil temperature
-! Hua Yuan, 01/2023: modified ground heat flux, temperature and meltf
-!                    calculation for SNICAR model
+! 07/2017, Nan Wei: interaction btw prec and land surface
+! 01/2019, Nan Wei: USE the new version of soil thermal parameters to
+!          calculate soil temperature
+! 01/2023, Hua Yuan: modified ground heat flux, temperature and meltf
+!          calculation for SNICAR model
 !=======================================================================
 
    USE MOD_Precision

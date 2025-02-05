@@ -96,11 +96,12 @@ CONTAINS
 !
 !
 ! REVISIONS:
-! Hua Yuan, 08/2019: added initial codes for PFT and Plant Community (PC)
-!                    vegetation classification processes
+! 08/2019, Hua Yuan: added initial codes for PFT and Plant Community
+!          (PC) vegetation classification processes
 !
-! Nan Wei,  01/2021: added variables passing of plant hydraulics and precipitation sensible heat
-!                    with canopy and ground for PFT and Plant Community (PC)
+! 01/2021, Nan Wei: added variables passing of plant hydraulics and
+!          precipitation sensible heat with canopy and ground for PFT
+!          and Plant Community (PC)
 !=======================================================================
 
    USE MOD_Precision
@@ -1084,7 +1085,7 @@ ENDIF
 
 ! calculation of evaporative potential; flux in kg m-2 s-1.
 ! egidif holds the excess energy IF all water is evaporated
-! during the timestep.  this energy is later added to the sensible heat flux.
+! during the timestep. This energy is later added to the sensible heat flux.
 
       qseva = 0.
       qsubl = 0.
@@ -1264,3 +1265,4 @@ ENDIF
   END SUBROUTINE THERMAL
 
 END MODULE MOD_Thermal
+! ---------- EOP ------------

@@ -100,7 +100,7 @@ CONTAINS
    integer, intent(in) :: &
         ipatch,        &! patch index
         patchtype       ! land patch type (0=soil, 1=urban or built-up, 2=wetland,
-                        ! 3=land ice, 4=deep lake)
+                        ! 3=land ice, 4=water body)
    integer, intent(in) :: &
         snl             ! number of snow layers
 
@@ -345,7 +345,7 @@ ENDIF
          IF (.not. DEF_USE_SNICAR) THEN
             cons = 0.2
             conn = 0.5
-            sl   = 2.0               !sl helps control albedo zenith dependence
+            sl   = 2.0    !sl helps control albedo zenith dependence
 
             ! 05/02/2023, Dai: move from CoLMMAIN.F90
             ! update the snow age
@@ -450,7 +450,7 @@ ENDIF
 #endif
       ENDIF
 
-      ! treat soil/snow albedo in direct and diffuse respectively
+      ! treat soil/snow absorption in direct and diffuse respectively
       ssoi(1,1) = tran(1,1)*(1.-albsoi(1,2)) + tran(1,3)*(1-albsoi(1,1))
       ssoi(2,1) = tran(2,1)*(1.-albsoi(2,2)) + tran(2,3)*(1-albsoi(2,1))
       ssoi(1,2) = tran(1,2)*(1.-albsoi(1,2))

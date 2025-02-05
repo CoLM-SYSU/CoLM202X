@@ -86,7 +86,7 @@ CONTAINS
 
       ! transpiration potential(etrc) and root resistance factors (rstfac)
 
-      roota = 1.e-10         ! must be non-zero to begin
+      roota = 1.e-10          ! must be non-zero to begin
       DO i = 1, nl_soil
 
          IF(t_soisno(i)>tfrz .and. porsl(i)>=1.e-6)THEN

@@ -2,21 +2,21 @@
 MODULE MOD_LeafInterception
 ! -----------------------------------------------------------------
 ! !DESCRIPTION:
-! For calculating vegetation canopy preciptation interception.
+! For calculating vegetation canopy precipitation interception.
 !
 ! This MODULE is the coupler for the colm and CaMa-Flood model.
 
 !ANCILLARY FUNCTIONS AND SUBROUTINES
 !-------------------
-   !* :SUBROUTINE:"LEAF_interception_CoLM2014"   : interception and drainage of precipitation schemes based on colm2014 version
-   !* :SUBROUTINE:"LEAF_interception_CoLM202x"   : interception and drainage of precipitation schemes besed on new colm version (under development)
-   !* :SUBROUTINE:"LEAF_interception_CLM4"       : interception and drainage of precipitation schemes modified from CLM4
-   !* :SUBROUTINE:"LEAF_interception_CLM5"       : interception and drainage of precipitation schemes modified from CLM5
-   !* :SUBROUTINE:"LEAF_interception_NOAHMP"     : interception and drainage of precipitation schemes modified from Noah-MP
-   !* :SUBROUTINE:"LEAF_interception_MATSIRO"    : interception and drainage of precipitation schemes modified from MATSIRO 2021 version
-   !* :SUBROUTINE:"LEAF_interception_VIC"        : interception and drainage of precipitation schemes modified from VIC
-   !* :SUBROUTINE:"LEAF_interception_JULES"      : interception and drainage of precipitation schemes modified from JULES
-   !* :SUBROUTINE:"LEAF_interception_pftwrap"    : wapper for pft land use classification
+   !* :SUBROUTINE:"LEAF_interception_CoLM2014" : Leaf interception and drainage schemes based on colm2014 version
+   !* :SUBROUTINE:"LEAF_interception_CoLM202x" : Leaf interception and drainage schemes besed on new colm version (under development)
+   !* :SUBROUTINE:"LEAF_interception_CLM4"     : Leaf interception and drainage schemes modified from CLM4
+   !* :SUBROUTINE:"LEAF_interception_CLM5"     : Leaf interception and drainage schemes modified from CLM5
+   !* :SUBROUTINE:"LEAF_interception_NOAHMP"   : Leaf interception and drainage schemes modified from Noah-MP
+   !* :SUBROUTINE:"LEAF_interception_MATSIRO"  : Leaf interception and drainage schemes modified from MATSIRO 2021 version
+   !* :SUBROUTINE:"LEAF_interception_VIC"      : Leaf interception and drainage schemes modified from VIC
+   !* :SUBROUTINE:"LEAF_interception_JULES"    : Leaf interception and drainage schemes modified from JULES
+   !* :SUBROUTINE:"LEAF_interception_pftwrap"  : wrapper for pft land use classification
 
 !REVISION HISTORY:
 !----------------
@@ -102,25 +102,30 @@ CONTAINS
 
 !References:
 !-------------------
-   !---Dai, Y., Zeng, X., Dickinson, R.E., Baker, I., Bonan, G.B., BosiloVICh, M.G., Denning, A.S.,
-   !   Dirmeyer, P.A., Houser, P.R., Niu, G. and Oleson, K.W., 2003.
-   !   The common land model. Bulletin of the American Meteorological Society, 84(8), pp.1013-1024.
+   !---Dai, Y., Zeng, X., Dickinson, R.E., Baker, I., Bonan, G.B., BosiloVICh,
+   !   M.G., Denning, A.S., Dirmeyer, P.A., Houser, P.R., Niu, G. and Oleson,
+   !   K.W., 2003.  The common land model. Bulletin of the American
+   !   Meteorological Society, 84(8), pp.1013-1024.
 
-   !---Lawrence, D.M., Thornton, P.E., Oleson, K.W. and Bonan, G.B., 2007.
-   !   The partitioning of evapotranspiration into transpiration, soil evaporation,
-   !   and canopy evaporation in a GCM: Impacts on land–atmosphere interaction. Journal of Hydrometeorology, 8(4), pp.862-880.
+   !---Lawrence, D.M., Thornton, P.E., Oleson, K.W. and Bonan, G.B., 2007.  The
+   !   partitioning of evapotranspiration into transpiration, soil evaporation,
+   !   and canopy evaporation in a GCM: Impacts on land–atmosphere interaction.
+   !   Journal of Hydrometeorology, 8(4), pp.862-880.
 
-   !---Oleson, K., Dai, Y., Bonan, B., BosiloVIChm, M., Dickinson, R., Dirmeyer, P., Hoffman,
-   !   F., Houser, P., Levis, S., Niu, G.Y. and Thornton, P., 2004.
-   !   Technical description of the community land model (CLM).
+   !---Oleson, K., Dai, Y., Bonan, B., BosiloVIChm, M., Dickinson, R.,
+   !   Dirmeyer, P., Hoffman, F., Houser, P., Levis, S., Niu, G.Y. and
+   !   Thornton, P., 2004.  Technical description of the community land model
+   !   (CLM).
 
-   !---Sellers, P.J., Randall, D.A., Collatz, G.J., Berry, J.A., Field, C.B., Dazlich, D.A., Zhang, C.,
-   !   Collelo, G.D. and Bounoua, L., 1996. A revised land surface parameterization (SiB2) for atmospheric GCMs.
-   !   Part I: Model formulation. Journal of climate, 9(4), pp.676-705.
+   !---Sellers, P.J., Randall, D.A., Collatz, G.J., Berry, J.A., Field, C.B.,
+   !   Dazlich, D.A., Zhang, C., Collelo, G.D. and Bounoua, L., 1996. A revised
+   !   land surface parameterization (SiB2) for atmospheric GCMs.  Part I:
+   !   Model formulation. Journal of climate, 9(4), pp.676-705.
 
-   !---Sellers, P.J., Tucker, C.J., Collatz, G.J., Los, S.O., Justice, C.O., Dazlich, D.A. and Randall, D.A., 1996.
-   !   A revised land surface parameterization (SiB2) for atmospheric GCMs. Part II:
-   !   The generation of global fields of terrestrial biophysical parameters from satellite data.
+   !---Sellers, P.J., Tucker, C.J., Collatz, G.J., Los, S.O., Justice, C.O.,
+   !   Dazlich, D.A. and Randall, D.A., 1996.  A revised land surface
+   !   parameterization (SiB2) for atmospheric GCMs. Part II: The generation of
+   !   global fields of terrestrial biophysical parameters from satellite data.
    !   Journal of climate, 9(4), pp.706-737.
 
 

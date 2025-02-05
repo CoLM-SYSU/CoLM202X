@@ -541,21 +541,21 @@ CONTAINS
       vm = vm * cint(1)
 
       rgas = 8.314467591                 ! universal gas constant (J mol-1 K-1)
-!---> jmax25 = 2.39 * vmax25 - 14.2e-6        ! (mol m-2 s-1)
-!--->      jmax25 = 2.1 * vmax25        ! (mol m-2 s-1)
+!---> jmax25 = 2.39 * vmax25 - 14.2e-6   ! (mol m-2 s-1)
+!---> jmax25 = 2.1 * vmax25              ! (mol m-2 s-1)
 !/05/2014/
-      jmax25 = 1.97 * vmax25       ! (mol m-2 s-1)
+      jmax25 = 1.97 * vmax25             ! (mol m-2 s-1)
       jmax = jmax25 * exp( 37.e3 * (tlef - trop) / (rgas*trop*tlef) ) * &
              ( 1. + exp( (710.*trop-220.e3)/(rgas*trop) ) ) / &
              ( 1. + exp( (710.*tlef-220.e3)/(rgas*tlef) ) )
-                                   ! 37000  (J mol-1)
-                                   ! 220000 (J mol-1)
-                                   ! 710    (J K-1)
+                                         ! 37000  (J mol-1)
+                                         ! 220000 (J mol-1)
+                                         ! 710    (J K-1)
 
       jmax = jmax * rstfac
       jmax = jmax * cint(2)
 
-!--->      epar = min(4.6e-6 * par * effcon, 0.25*jmax)
+!---> epar = min(4.6e-6 * par * effcon, 0.25*jmax)
 ! /05/2014/
       epar = min(4.6e-6 * par * effcon, jmax)
 
@@ -578,9 +578,9 @@ CONTAINS
       gbh2o  = 1./rb * tprcor/tlef                    ! mol m-2 s-1
 
 ! rb is for single leaf, but here the flux is for canopy, thus
-       ! Xingjie Lu: rb has already been converted to canopy scale,
-       ! thus, there is no need for gbh2o *cint(3) (sunlit/shaded LAI)
-!      gbh2o  = gbh2o * cint(3)
+      ! Xingjie Lu: rb has already been converted to canopy scale,
+      ! thus, there is no need for gbh2o *cint(3) (sunlit/shaded LAI)
+!     gbh2o  = gbh2o * cint(3)
 
    END SUBROUTINE calc_photo_params
 

@@ -52,7 +52,7 @@ CONTAINS
           1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, &
           1.0, 1.0, 0.0, 1.0, 1.0, 1.0, 0.0, 0.0 /)
 ! Maximum leaf area index, the numbers are based on the data of
-! "worldwide histrorical estimates of leaf area index, 1932-2000" :
+! "worldwide historical estimates of leaf area index, 1932-2000" :
 ! http://www.daac.ornl.gov/global_vegetation/HistoricalLai/data"
    real(r8), dimension(24), parameter :: &
    xla=(/1.50, 3.29, 4.18, 3.50, 2.50, 3.60, 2.02, 1.53, &

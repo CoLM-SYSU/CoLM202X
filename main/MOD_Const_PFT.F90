@@ -10,7 +10,7 @@ MODULE MOD_Const_PFT
 ! Created by Hua Yuan, 08/2019
 !
 ! REVISIONS:
-! Xingjie Lu, TODO:10/2021?: added for crop PFTs
+! 10/2021, Xingjie Lu: added for crop PFTs
 !
 ! !USES:
    USE MOD_Precision

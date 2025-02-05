@@ -71,34 +71,37 @@ CONTAINS
 !=======================================================================
 !
 ! !DESCRIPTION:
-!  Leaf temperature resolved for Plant Community (3D) case Foliage energy
-!  conservation for each PFT is given by foliage energy budget equation
+!  Leaf temperature resolved for Plant Community (3D) case Foliage
+!  energy conservation for each PFT is given by foliage energy budget
+!  equation:
 !                       Rnet - Hf - LEf = 0
-!  The equation is solved by Newton-Raphson iteration, in which this iteration
-!  includes the calculation of the photosynthesis and stomatal resistance, and
-!  the integration of turbulent flux profiles. The sensible and latent heat
-!  transfer between foliage and atmosphere and ground is linked by the
-!  equations:
+!  The equation is solved by Newton-Raphson iteration, in which this
+!  iteration includes the calculation of the photosynthesis and stomatal
+!  resistance, and the integration of turbulent flux profiles. The
+!  sensible and latent heat transfer between foliage and atmosphere and
+!  ground is linked by the equations:
 !                       Ha = Hf + Hg and Ea = Ef + Eg
 !
 !  Original author : Hua Yuan and Yongjiu Dai, September, 2017
 !
 !
 ! !REFERENCES:
-!  1) Dai, Y., Yuan, H., Xin, Q., Wang, D., Shangguan, W., Zhang, S., et al.
-!  (2019).  Different representations of canopy structure—A large source of
-!  uncertainty in global land surface modeling. Agricultural and Forest
-!  Meteorology, 269–270, 119–135.
+!  1) Dai, Y., Yuan, H., Xin, Q., Wang, D., Shangguan, W., Zhang, S., et
+!  al.  (2019).  Different representations of canopy structure—A large
+!  source of uncertainty in global land surface modeling. Agricultural
+!  and Forest Meteorology, 269–270, 119–135.
 !  https://doi.org/10.1016/j.agrformet.2019.02.006
 !
 ! !REVISIONS:
 !
-!  01/2021, Xingjie Lu and Nan Wei: added plant hydraulic process interface.
+!  01/2021, Xingjie Lu and Nan Wei: added plant hydraulic process
+!           interface.
 !
 !  01/2021, Nan Wei: added interaction btw prec and canopy.
 !
-!  05/2023, Shaofeng Liu: add option to call moninobuk_leddy, the LargeEddy
-!           surface turbulence scheme (LZD2022); make a proper update of um.
+!  05/2023, Shaofeng Liu: add option to call moninobuk_leddy, the
+!           LargeEddy surface turbulence scheme (LZD2022); make a proper
+!           update of um.
 !
 !  04/2024, Hua Yuan: add option to account for vegetation snow process.
 !
@@ -106,8 +109,8 @@ CONTAINS
 
    USE MOD_Precision
    USE MOD_Vars_Global
-   USE MOD_Const_Physical, only: vonkar, grav, hvap, hsub, cpair, stefnc, cpliq, cpice, &
-                                 hfus, tfrz, denice, denh2o
+   USE MOD_Const_Physical, only: vonkar, grav, hvap, hsub, cpair, stefnc, &
+                                 cpliq, cpice, hfus, tfrz, denice, denh2o
    USE MOD_Const_PFT
    USE MOD_FrictionVelocity
    USE MOD_CanopyLayerProfile

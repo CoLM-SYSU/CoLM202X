@@ -24,11 +24,12 @@ CONTAINS
                                     rsur,rsur_se,rsur_ie)
 
 !=======================================================================
-! the original code was provide by Robert E. Dickinson based on following clues:
-! a water table level determination level added including highland and
-! lowland levels and fractional area of wetland (water table above the surface.
-! Runoff is parametrized from the lowlands in terms of precip incident on
-! wet areas and a base flow, where these are estimated using ideas from TOPMODEL.
+! the original code was provide by Robert E. Dickinson based on
+! following clues: a water table level determination level added
+! including highland and lowland levels and fractional area of wetland
+! (water table above the surface.  Runoff is parametrized from the
+! lowlands in terms of precip incident on wet areas and a base flow,
+! where these are estimated using ideas from TOPMODEL.
 !
 ! Author : Yongjiu Dai, 07/29/2002, Guoyue Niu, 06/2012
 !=======================================================================
@@ -207,12 +208,12 @@ CONTAINS
    integer,  intent(in) :: nl_soil ! number of soil layers
 
    real(r8), intent(in) :: &
-      dz_soisno   (1:nl_soil),  & ! layer thickness (m)
-      eff_porosity(1:nl_soil),  & ! effective porosity = porosity - vol_ice
-      vol_liq     (1:nl_soil),  & ! partial volume of liquid water in layer
-      BVIC,                     & ! VIC infiltration parameter
-      gwat,                     & ! net water input from top
-      deltim                      ! time step (s)
+      dz_soisno   (1:nl_soil),  &  ! layer thickness (m)
+      eff_porosity(1:nl_soil),  &  ! effective porosity = porosity - vol_ice
+      vol_liq     (1:nl_soil),  &  ! partial volume of liquid water in layer
+      BVIC,                     &  ! VIC infiltration parameter
+      gwat,                     &  ! net water input from top
+      deltim                       ! time step (s)
 
    real(r8), intent(out) :: rsur   ! surface runoff (mm h2o/s)
    real(r8), intent(out) :: rsubst ! subsurface runoff (mm h2o/s)

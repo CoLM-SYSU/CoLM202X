@@ -3,7 +3,8 @@
 MODULE MOD_SoilSurfaceResistance
 ! -----------------------------------------------------------------------
 ! !DESCRIPTION:
-! Calculate the soil surface resistance with multiple parameterization schemes
+! Calculate the soil surface resistance with multiple parameterization
+! schemes
 !
 ! Created by Zhuo Liu and Hua Yuan, 06/2023
 !
@@ -47,15 +48,15 @@ CONTAINS
 
 !=======================================================================
 ! !DESCRIPTION:
-! Main SUBROUTINE to CALL soil resistance model
-! - Options for soil surface resistance schemes
+!  Main SUBROUTINE to CALL soil resistance model
+!  - Options for soil surface resistance schemes
 !    1: SL14, Swenson and Lawrence (2014)
 !    2: SZ09, Sakaguchi and Zeng (2009)
 !    3: TR13, Tang and Riley (2013)
 !    4: LP92, Lee and Pielke (1992)
 !    5: S92,  Sellers et al (1992)
 !
-! NOTE: Support for both Campbell and VG soil parameters.
+!  NOTE: Support for both Campbell and VG soil parameters.
 !=======================================================================
 
    USE MOD_Precision
@@ -99,7 +100,7 @@ CONTAINS
 !-----------------------Local Variables------------------------------
 
    REAL(r8) :: &
-        wx,               &! patial volume of ice and water of surface layer
+        wx,               &! partial volume of ice and water of surface layer
         vol_liq,          &! water content by volume [m3/m3]
         s_node,           &! vol_liq/porosity
         smp_node,         &! matrix potential [m]

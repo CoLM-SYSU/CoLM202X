@@ -63,7 +63,7 @@ SUBROUTINE CoLMMAIN ( &
            !WUE stomata model parameter
            lambda,                                                 &
            !End WUE stomata model parameter
-           zwt,          wdsrf,        wa,           wetwat,        &
+           zwt,          wdsrf,        wa,           wetwat,       &
            t_lake,       lake_icefrac, savedtke1,    &
 
          ! SNICAR snow model related

@@ -29,17 +29,17 @@ CONTAINS
 !-----------------------------------------------------------------------
 ! Original author : Yongjiu Dai, September 15, 1999
 !
-! calculation of heat capacities of snow / soil layers
-! the volumetric heat capacity is calculated as a linear combination
-! in terms of the volumetric fraction of the constituent phases.
-! Only used in urban model. TODO: merge with SUBROUTINE soil_hcap_cond
+! calculation of heat capacities of snow / soil layers the volumetric
+! heat capacity is calculated as a linear combination in terms of the
+! volumetric fraction of the constituent phases.  Only used in urban
+! model. TODO: merge with SUBROUTINE soil_hcap_cond
 !
 ! ________________
 ! REVISION HISTORY:
-! 07/19/2014, Yongjiu Dai: treat the wetland as soil column instead of water
-!                          body.
+! 07/19/2014, Yongjiu Dai: treat the wetland as soil column instead of
+!             water body.
 ! 08/16/2014, Nan Wei: recalculate the heat capacity of soil layers
-!                      underneath the lake
+!             underneath the lake
 !
 !-----------------------------------------------------------------------
 
@@ -47,16 +47,16 @@ CONTAINS
    USE MOD_Const_Physical, only : cpice,cpliq
    IMPLICIT NONE
 
-   integer, intent(in) :: lb       ! lower bound of array
-   integer, intent(in) :: nl_soil  ! upper bound of array
-   integer, intent(in) :: patchtype! land patch type (0=soil, 1=urban, 2=wetland,
-   real(r8), intent(in) :: csol(1:nl_soil)   ! heat capacity of soil soilds [J/(m3 K)]
-   real(r8), intent(in) :: porsl(1:nl_soil)  ! soil porosity
-   real(r8), intent(in) :: wice_soisno(lb:nl_soil)  ! ice lens [kg/m2]
-   real(r8), intent(in) :: wliq_soisno(lb:nl_soil)  ! liquid water [kg/m2]
-   real(r8), intent(in) :: dz_soisno(lb:nl_soil)    ! layer thickness [m]
-   real(r8), intent(in) :: scv               ! snow water equivalent [mm]
-   real(r8), intent(out) :: cv(lb:nl_soil)   ! heat capacity [J/(m2 K)]
+   integer, intent(in) :: lb                       ! lower bound of array
+   integer, intent(in) :: nl_soil                  ! upper bound of array
+   integer, intent(in) :: patchtype                ! land patch type (0=soil, 1=urban, 2=wetland,
+   real(r8), intent(in) :: csol(1:nl_soil)         ! heat capacity of soil soilds [J/(m3 K)]
+   real(r8), intent(in) :: porsl(1:nl_soil)        ! soil porosity
+   real(r8), intent(in) :: wice_soisno(lb:nl_soil) ! ice lens [kg/m2]
+   real(r8), intent(in) :: wliq_soisno(lb:nl_soil) ! liquid water [kg/m2]
+   real(r8), intent(in) :: dz_soisno(lb:nl_soil)   ! layer thickness [m]
+   real(r8), intent(in) :: scv                     ! snow water equivalent [mm]
+   real(r8), intent(out) :: cv(lb:nl_soil)         ! heat capacity [J/(m2 K)]
 
 !-----------------------------------------------------------------------
 ! Soil heat capacity, which from de Vires (1963)
@@ -82,36 +82,36 @@ CONTAINS
 !-----------------------------------------------------------------------
 ! Original author : Yongjiu Dai, September 15, 1999
 !
-! calculation of thermal conductivities of snow / soil layers
-! The thermal conductivity of soil is computed from
-! the algorithm of Johansen (as reported by Farouki 1981), and of snow is from
-! the formulation used in SNTHERM (Jordan 1991).
+! calculation of thermal conductivities of snow / soil layers The
+! thermal conductivity of soil is computed from the algorithm of
+! Johansen (as reported by Farouki 1981), and of snow is from the
+! formulation used in SNTHERM (Jordan 1991).
 !
-! The thermal conductivities at the interfaces between two neighbor layers
-! (j, j+1) are derived from an assumption that the flux across the interface
-! is equal to that from the node j to the interface and the flux from the
-! interface to the node j+1.
+! The thermal conductivities at the interfaces between two neighbor
+! layers (j, j+1) are derived from an assumption that the flux across
+! the interface is equal to that from the node j to the interface and
+! the flux from the interface to the node j+1.
 !
 ! Only used in urban model. TODO: merge with subroutine soil_hcap_cond
 ! ________________
 ! REVISION HISTORY:
-! 07/19/2014, Yongjiu Dai: treat the wetland as soil column instead of water
-!                          body.
+! 07/19/2014, Yongjiu Dai: treat the wetland as soil column instead of
+!             water body.
 ! 08/16/2014, Nan Wei: recalculate the heat conductivity of soil layers
-!                      underneath the lake
+!             underneath the lake
 !-----------------------------------------------------------------------
 
    USE MOD_Precision
    USE MOD_Const_Physical, only : denh2o,denice,tfrz,tkwat,tkice,tkair
    IMPLICIT NONE
 
-   integer, intent(in) :: lb       ! lower bound of array
-   integer, intent(in) :: nl_soil  ! upper bound of array
-   integer, intent(in) :: patchtype! land patch type (0=soil, 1=urban, 2=wetland,
-                                   ! 3=land ice, 4=deep lake, 5=shallow lake)
-   real(r8), intent(in) ::  dkdry(1:nl_soil)  ! thermal conductivity for dry soil [W/m-K]
-   real(r8), intent(in) :: dksatu(1:nl_soil)  ! Thermal conductivity of saturated soil [W/m-K]
-   real(r8), intent(in) ::  porsl(1:nl_soil)  ! fractional volume between soil grains=1.-dmvol
+   integer, intent(in) :: lb                         ! lower bound of array
+   integer, intent(in) :: nl_soil                    ! upper bound of array
+   integer, intent(in) :: patchtype                  ! land patch type (0=soil, 1=urban, 2=wetland,
+                                                     ! 3=land ice, 4=deep lake, 5=shallow lake)
+   real(r8), intent(in) ::  dkdry(1:nl_soil)         ! thermal conductivity for dry soil [W/m-K]
+   real(r8), intent(in) :: dksatu(1:nl_soil)         ! Thermal conductivity of saturated soil [W/m-K]
+   real(r8), intent(in) ::  porsl(1:nl_soil)         ! fractional volume between soil grains=1.-dmvol
    real(r8), intent(in) ::   dz_soisno(lb:nl_soil)   ! layer thickness [m]
    real(r8), intent(in) ::    z_soisno(lb:nl_soil)   ! node depth [m]
    real(r8), intent(in) ::   zi_soisno(lb-1:nl_soil) ! interface depth [m]
@@ -119,16 +119,16 @@ CONTAINS
    real(r8), intent(in) :: wice_soisno(lb:nl_soil)   ! ice lens [kg/m2]
    real(r8), intent(in) :: wliq_soisno(lb:nl_soil)   ! liquid water [kg/m2]
 
-   real(r8), intent(out) :: tk(lb:nl_soil)    ! thermal conductivity [W/(m K)]
+   real(r8), intent(out) :: tk(lb:nl_soil)           ! thermal conductivity [W/(m K)]
    real(r8), optional, intent(out) :: tktopsoil
 
 !  local
-   real(r8) rhosnow  ! partial density of water (ice + liquid)
-   real(r8) dksat    ! thermal conductivity for saturated soil (j/(k s m))
-   real(r8) dke      ! kersten number
-   real(r8) fl       ! fraction of liquid or unfrozen water to total water
-   real(r8) satw     ! relative total water content of soil.
-   real(r8) thk(lb:nl_soil)  ! thermal conductivity of layer
+   real(r8) rhosnow         ! partial density of water (ice + liquid)
+   real(r8) dksat           ! thermal conductivity for saturated soil (j/(k s m))
+   real(r8) dke             ! kersten number
+   real(r8) fl              ! fraction of liquid or unfrozen water to total water
+   real(r8) satw            ! relative total water content of soil.
+   real(r8) thk(lb:nl_soil) ! thermal conductivity of layer
    real(r8) xicevol
 
    integer i
@@ -233,20 +233,23 @@ CONTAINS
                                   temperature,vf_water,vf_ice,hcap,thk)
 
 !-----------------------------------------------------------------------
-! DESCRIPTION:
-! Calculate bulk soil heat capacity and soil thermal conductivity with 8 optional schemes
-! The default soil thermal conductivity scheme is the fourth one (Balland V. and P. A. Arp, 2005)
+! !DESCRIPTION:
+!  Calculate bulk soil heat capacity and soil thermal conductivity with
+!  8 optional schemes The default soil thermal conductivity scheme is
+!  the fourth one (Balland V. and P. A. Arp, 2005)
 !
-! Reference:
-! Dai et al.,2019: Evaluation of Soil Thermal Conductivity Schemes for Use in Land Surface Modeling
-! J. of Advances in Modeling Earth Systems, DOI: 10.1029/2019MS001723
+! !Reference:
+!  Dai et al.,2019: Evaluation of Soil Thermal Conductivity Schemes for
+!  Use in Land Surface Modeling J. of Advances in Modeling Earth
+!  Systems, DOI: 10.1029/2019MS001723
 !
-! Original author: Yongjiu Dai, 02/2018/
+! !Original author: Yongjiu Dai, 02/2018/
 !
-! Revisions:
-! Nan Wei, 06/2018: add to CoLM/main
-! Nan Wei, 09/2022: add soil thermal conductivity of Hailong He (Yan & He et al., 2019)
-! -----------------------------------------------------------------------------------------
+! !Revisions:
+!  06/2018, Nan Wei: add to CoLM/main
+!  09/2022, Nan Wei: add soil thermal conductivity of Hailong He (Yan &
+!           He et al., 2019)
+!  -----------------------------------------------------------------------------------------
    USE MOD_Precision
    USE MOD_Const_Physical,only:tfrz
    USE MOD_Namelist

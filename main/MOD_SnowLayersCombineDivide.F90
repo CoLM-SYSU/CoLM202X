@@ -54,7 +54,8 @@ CONTAINS
    integer,  intent(in) :: lb          ! lower bound of array
    real(r8), intent(in) :: deltim      ! seconds i a time step [second]
    integer,  intent(in) :: imelt(lb:0) ! signifies IF node in melting (imelt = 1)
-   real(r8), intent(in) :: fiold(lb:0) ! fraction of ice relative to the total water content at the previous time step
+   real(r8), intent(in) :: fiold(lb:0) ! fraction of ice relative to the total water content
+                                       ! at the previous time step
    real(r8), intent(in) :: t_soisno(lb:0)    ! nodal temperature [K]
    real(r8), intent(in) :: wice_soisno(lb:0) ! ice lens [kg/m2]
    real(r8), intent(in) :: wliq_soisno(lb:0) ! liquid water [kg/m2]

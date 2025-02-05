@@ -19,12 +19,12 @@ MODULE MOD_Vars_PFTimeInvariants
    SAVE
 
    ! for LULC_IGBP_PFT and LULC_IGBP_PC
-   integer , allocatable :: pftclass    (:)    !PFT type
-   real(r8), allocatable :: pftfrac     (:)    !PFT fractional cover
-   real(r8), allocatable :: htop_p      (:)    !canopy top height [m]
-   real(r8), allocatable :: hbot_p      (:)    !canopy bottom height [m]
+   integer , allocatable :: pftclass    (:) !PFT type
+   real(r8), allocatable :: pftfrac     (:) !PFT fractional cover
+   real(r8), allocatable :: htop_p      (:) !canopy top height [m]
+   real(r8), allocatable :: hbot_p      (:) !canopy bottom height [m]
 #ifdef CROP
-   real(r8), allocatable :: cropfrac    (:)    !Crop fractional cover
+   real(r8), allocatable :: cropfrac    (:) !Crop fractional cover
 #endif
 
 ! PUBLIC MEMBER FUNCTIONS:
@@ -209,17 +209,17 @@ MODULE MOD_Vars_TimeInvariants
    real(r8), allocatable :: theta_r      (:,:)  !residual moisture content [-]
    real(r8), allocatable :: BVIC         (:)    !b parameter in Fraction of saturated soil in a grid calculated by VIC
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
-   real(r8), allocatable :: alpha_vgm    (:,:)  ! a parameter corresponding approximately to the inverse of the air-entry value
-   real(r8), allocatable :: L_vgm        (:,:)  ! pore-connectivity parameter [dimensionless]
-   real(r8), allocatable :: n_vgm        (:,:)  ! a shape parameter [dimensionless]
-   real(r8), allocatable :: sc_vgm       (:,:)  ! saturation at the air entry value in the classical vanGenuchten model [-]
-   real(r8), allocatable :: fc_vgm       (:,:)  ! a scaling factor by using air entry value in the Mualem model [-]
+   real(r8), allocatable :: alpha_vgm    (:,:)  !a parameter corresponding approximately to the inverse of the air-entry value
+   real(r8), allocatable :: L_vgm        (:,:)  !pore-connectivity parameter [dimensionless]
+   real(r8), allocatable :: n_vgm        (:,:)  !a shape parameter [dimensionless]
+   real(r8), allocatable :: sc_vgm       (:,:)  !saturation at the air entry value in the classical vanGenuchten model [-]
+   real(r8), allocatable :: fc_vgm       (:,:)  !a scaling factor by using air entry value in the Mualem model [-]
 #endif
 
-   integer,  allocatable :: soiltext       (:)  ! USDA soil texture class
+   integer,  allocatable :: soiltext       (:)  !USDA soil texture class
 
-   real(r8), allocatable :: fsatmax        (:)  ! maximum saturated area fraction [-]
-   real(r8), allocatable :: fsatdcf        (:)  ! decay factor in calculation of saturated area fraction [1/m]
+   real(r8), allocatable :: fsatmax        (:)  !maximum saturated area fraction [-]
+   real(r8), allocatable :: fsatdcf        (:)  !decay factor in calculation of saturated area fraction [1/m]
 
    real(r8), allocatable :: vic_b_infilt   (:)
    real(r8), allocatable :: vic_Dsmax      (:)
@@ -452,7 +452,7 @@ CONTAINS
       CALL ncio_read_vector (file_restart, 'psi0   ' ,     nl_soil, landpatch, psi0      ) ! minimum soil suction [mm] (NOTE: "-" valued)
       CALL ncio_read_vector (file_restart, 'bsw    ' ,     nl_soil, landpatch, bsw       ) ! clapp and hornberger "b" parameter [-]
       CALL ncio_read_vector (file_restart, 'theta_r  ' ,   nl_soil, landpatch, theta_r   ) ! residual moisture content [-]
-      CALL ncio_read_vector (file_restart, 'BVIC  ' ,      landpatch, BVIC   )    ! b parameter in Fraction of saturated soil in a grid calculated by VIC
+      CALL ncio_read_vector (file_restart, 'BVIC  ' ,      landpatch, BVIC   )             ! b parameter in Fraction of saturated soil in a grid calculated by VIC
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
       CALL ncio_read_vector (file_restart, 'alpha_vgm' ,   nl_soil, landpatch, alpha_vgm ) ! a parameter corresponding approximately to the inverse of the air-entry value
       CALL ncio_read_vector (file_restart, 'L_vgm    ' ,   nl_soil, landpatch, L_vgm     ) ! pore-connectivity parameter [dimensionless]
@@ -704,22 +704,22 @@ CONTAINS
          CALL ncio_create_file (file_restart)
 #endif
 
-         CALL ncio_write_serial (file_restart, 'zlnd  ', zlnd  ) ! roughness length for soil [m]
-         CALL ncio_write_serial (file_restart, 'zsno  ', zsno  ) ! roughness length for snow [m]
-         CALL ncio_write_serial (file_restart, 'csoilc', csoilc) ! drag coefficient for soil under canopy [-]
-         CALL ncio_write_serial (file_restart, 'dewmx ', dewmx ) ! maximum dew
-         ! CALL ncio_write_serial (file_restart, 'wtfact', wtfact) ! fraction of model area with high water table
-         CALL ncio_write_serial (file_restart, 'capr  ', capr  ) ! tuning factor to turn first layer T into surface T
-         CALL ncio_write_serial (file_restart, 'cnfac ', cnfac ) ! Crank Nicholson factor between 0 and 1
-         CALL ncio_write_serial (file_restart, 'ssi   ', ssi   ) ! irreducible water saturation of snow
-         CALL ncio_write_serial (file_restart, 'wimp  ', wimp  ) ! water impermeable if porosity less than wimp
-         CALL ncio_write_serial (file_restart, 'pondmx', pondmx) ! ponding depth (mm)
-         CALL ncio_write_serial (file_restart, 'smpmax', smpmax) ! wilting point potential in mm
-         CALL ncio_write_serial (file_restart, 'smpmin', smpmin) ! restriction for min of soil poten. (mm)
+         CALL ncio_write_serial (file_restart, 'zlnd  ', zlnd  )       ! roughness length for soil [m]
+         CALL ncio_write_serial (file_restart, 'zsno  ', zsno  )       ! roughness length for snow [m]
+         CALL ncio_write_serial (file_restart, 'csoilc', csoilc)       ! drag coefficient for soil under canopy [-]
+         CALL ncio_write_serial (file_restart, 'dewmx ', dewmx )       ! maximum dew
+       ! CALL ncio_write_serial (file_restart, 'wtfact', wtfact)       ! fraction of model area with high water table
+         CALL ncio_write_serial (file_restart, 'capr  ', capr  )       ! tuning factor to turn first layer T into surface T
+         CALL ncio_write_serial (file_restart, 'cnfac ', cnfac )       ! Crank Nicholson factor between 0 and 1
+         CALL ncio_write_serial (file_restart, 'ssi   ', ssi   )       ! irreducible water saturation of snow
+         CALL ncio_write_serial (file_restart, 'wimp  ', wimp  )       ! water impermeable if porosity less than wimp
+         CALL ncio_write_serial (file_restart, 'pondmx', pondmx)       ! ponding depth (mm)
+         CALL ncio_write_serial (file_restart, 'smpmax', smpmax)       ! wilting point potential in mm
+         CALL ncio_write_serial (file_restart, 'smpmin', smpmin)       ! restriction for min of soil poten. (mm)
          CALL ncio_write_serial (file_restart, 'smpmax_hr', smpmax_hr) ! wilting point potential in mm
          CALL ncio_write_serial (file_restart, 'smpmin_hr', smpmin_hr) ! restriction for min of soil poten. (mm)
-         CALL ncio_write_serial (file_restart, 'trsmx0', trsmx0) ! max transpiration for moist soil+100% veg.  [mm/s]
-         CALL ncio_write_serial (file_restart, 'tcrit ', tcrit ) ! critical temp. to determine rain or snow
+         CALL ncio_write_serial (file_restart, 'trsmx0', trsmx0)       ! max transpiration for moist soil+100% veg.  [mm/s]
+         CALL ncio_write_serial (file_restart, 'tcrit ', tcrit )       ! critical temp. to determine rain or snow
          CALL ncio_write_serial (file_restart, 'wetwatmax', wetwatmax) ! maximum wetland water (mm)
 
       END if
@@ -943,22 +943,22 @@ CONTAINS
 
       IF (p_is_master) THEN
          write(*,'(/,A)') 'Checking Constants ...'
-         write(*,'(A,E20.10)') 'zlnd   [m]    ', zlnd   ! roughness length for soil [m]
-         write(*,'(A,E20.10)') 'zsno   [m]    ', zsno   ! roughness length for snow [m]
-         write(*,'(A,E20.10)') 'csoilc [-]    ', csoilc ! drag coefficient for soil under canopy [-]
-         write(*,'(A,E20.10)') 'dewmx  [mm]   ', dewmx  ! maximum dew
-         ! write(*,'(A,E20.10)') 'wtfact [-]    ', wtfact ! fraction of model area with high water table
-         write(*,'(A,E20.10)') 'capr   [-]    ', capr   ! tuning factor to turn first layer T into surface T
-         write(*,'(A,E20.10)') 'cnfac  [-]    ', cnfac  ! Crank Nicholson factor between 0 and 1
-         write(*,'(A,E20.10)') 'ssi    [-]    ', ssi    ! irreducible water saturation of snow
-         write(*,'(A,E20.10)') 'wimp   [m3/m3]', wimp   ! water impermeable IF porosity less than wimp
-         write(*,'(A,E20.10)') 'pondmx [mm]   ', pondmx ! ponding depth (mm)
-         write(*,'(A,E20.10)') 'smpmax [mm]   ', smpmax ! wilting point potential in mm
-         write(*,'(A,E20.10)') 'smpmin [mm]   ', smpmin ! restriction for min of soil poten. (mm)
+         write(*,'(A,E20.10)') 'zlnd   [m]    ', zlnd      ! roughness length for soil [m]
+         write(*,'(A,E20.10)') 'zsno   [m]    ', zsno      ! roughness length for snow [m]
+         write(*,'(A,E20.10)') 'csoilc [-]    ', csoilc    ! drag coefficient for soil under canopy [-]
+         write(*,'(A,E20.10)') 'dewmx  [mm]   ', dewmx     ! maximum dew
+       ! write(*,'(A,E20.10)') 'wtfact [-]    ', wtfact    ! fraction of model area with high water table
+         write(*,'(A,E20.10)') 'capr   [-]    ', capr      ! tuning factor to turn first layer T into surface T
+         write(*,'(A,E20.10)') 'cnfac  [-]    ', cnfac     ! Crank Nicholson factor between 0 and 1
+         write(*,'(A,E20.10)') 'ssi    [-]    ', ssi       ! irreducible water saturation of snow
+         write(*,'(A,E20.10)') 'wimp   [m3/m3]', wimp      ! water impermeable IF porosity less than wimp
+         write(*,'(A,E20.10)') 'pondmx [mm]   ', pondmx    ! ponding depth (mm)
+         write(*,'(A,E20.10)') 'smpmax [mm]   ', smpmax    ! wilting point potential in mm
+         write(*,'(A,E20.10)') 'smpmin [mm]   ', smpmin    ! restriction for min of soil poten. (mm)
          write(*,'(A,E20.10)') 'smpmax_hr [mm]', smpmax_hr ! wilting point potential in mm
          write(*,'(A,E20.10)') 'smpmin_hr [mm]', smpmin_hr ! restriction for min of soil poten. (mm)
-         write(*,'(A,E20.10)') 'trsmx0 [mm/s] ', trsmx0 ! max transpiration for moist soil+100% veg.  [mm/s]
-         write(*,'(A,E20.10)') 'tcrit  [K]    ', tcrit  ! critical temp. to determine rain or snow
+         write(*,'(A,E20.10)') 'trsmx0 [mm/s] ', trsmx0    ! max transpiration for moist soil+100% veg.  [mm/s]
+         write(*,'(A,E20.10)') 'tcrit  [K]    ', tcrit     ! critical temp. to determine rain or snow
          write(*,'(A,E20.10)') 'wetwatmax [mm]', wetwatmax ! maximum wetland water (mm)
       ENDIF
 

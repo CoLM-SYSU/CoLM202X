@@ -69,7 +69,7 @@ CONTAINS
 
       dz_snowf = pg_snow/bifall
       snowdp = snowdp + dz_snowf*deltim
-      scv = scv + pg_snow*deltim            ! snow water equivalent (mm)
+      scv = scv + pg_snow*deltim              ! snow water equivalent (mm)
 
       IF(patchtype==2 .and. t_grnd>tfrz)THEN  ! snowfall on warmer wetland
          IF (present(wetwat) .and. DEF_USE_VariablySaturatedFlow) THEN

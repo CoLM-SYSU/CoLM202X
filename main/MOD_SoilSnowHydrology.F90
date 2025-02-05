@@ -83,13 +83,13 @@ CONTAINS
 
 !-----------------------Argument---------- ------------------------------
    integer, intent(in) :: &
-        ipatch                  ,& ! patch index
-        patchtype                  ! land patch type (0=soil, 1=urban or built-up, 2=wetland,
-                                   ! 3=land ice, 4=land water bodies, 99=ocean
+        ipatch                  ,&! patch index
+        patchtype                 ! land patch type (0=soil, 1=urban or built-up, 2=wetland,
+                                  ! 3=land ice, 4=land water bodies, 99=ocean
 
    integer, intent(in) :: &
-        lb                      ,& ! lower bound of array
-        nl_soil                    ! upper bound of array
+        lb                      ,&! lower bound of array
+        nl_soil                   ! upper bound of array
 
    real(r8), intent(in) :: &
         deltim                  ,&! time step (s)
@@ -550,7 +550,7 @@ ENDIF
         ! wtfact         , &! (updated to gridded 'fsatmax' data) fraction of model area with high water table
         ssi              , &! irreducible water saturation of snow
         pondmx           , &! ponding depth (mm)
-        wimp             , &! water impremeable IF porosity less than wimp
+        wimp             , &! water impermeable IF porosity less than wimp
         topostd          , &! standard deviation of elevation (m)
         BVIC             , &!
         z_soisno (lb:nl_soil)   , &! layer depth (m)

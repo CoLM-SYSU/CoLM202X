@@ -8,12 +8,12 @@ MODULE MOD_Glacier
 ! Original author: Yongjiu Dai, /05/2014/
 !
 ! REVISIONS:
-! Hua Yuan, 01/2023: added GLACIER_WATER_snicar() to account for SNICAR
-!                    model effects on snow water [see snowwater_snicar()],
-!                    snow layers combine [see snowlayerscombine_snicar()],
-!                    snow layers divide  [see snowlayersdivide_snicar()]
+! 01/2023, Hua Yuan: added GLACIER_WATER_snicar() to account for SNICAR
+!          model effects on snow water [see snowwater_snicar()], snow
+!          layers combine [see snowlayerscombine_snicar()], snow layers
+!          divide [see snowlayersdivide_snicar()]
 !
-! Hua Yuan, 01/2023: added snow layer absorption in GLACIER_TEMP()
+! 01/2023, Hua Yuan: added snow layer absorption in GLACIER_TEMP()
 !-----------------------------------------------------------------------
    USE MOD_Precision
    IMPLICIT NONE
@@ -56,8 +56,8 @@ CONTAINS
                       pg_snow     ,t_precip   ,snofrz      ,sabg_snow_lyr)
 
 !=======================================================================
-! this is the main SUBROUTINE to execute the calculation
-! of thermal processes and surface fluxes of the land ice (glacier and ice sheet)
+! this is the main SUBROUTINE to execute the calculation of thermal processes
+! and surface fluxes of the land ice (glacier and ice sheet)
 !
 ! Original author : Yongjiu Dai and Nan Wei, /05/2014/
 ! Modified by Nan Wei, 07/2017/  interaction btw prec and land ice
@@ -81,7 +81,8 @@ CONTAINS
 !---------------------Argument------------------------------------------
 
    integer, intent(in) :: &
-        patchtype,&   ! land patch type (0=soil, 1=urban and built-up,  2=wetland, 3=land ice, 4=land water bodies, 99 = ocean)
+        patchtype,&   ! land patch type (0=soil, 1=urban and built-up,
+                      ! 2=wetland, 3=land ice, 4=land water bodies, 99 = ocean)
         lb,          &! lower bound of array
         nl_ice        ! upper bound of array
 
@@ -130,10 +131,10 @@ CONTAINS
         snowdp                  ! snow depth [m]
 
    real(r8), intent(inout) :: &
-        snofrz (lb:0)    ! snow freezing rate (lyr) [kg m-2 s-1]
+        snofrz (lb:0)           ! snow freezing rate (lyr) [kg m-2 s-1]
 
    integer, intent(out) :: &
-        imelt(lb:nl_ice)  ! flag for melting or freezing [-]
+        imelt(lb:nl_ice)        ! flag for melting or freezing [-]
 
         ! Output fluxes
    real(r8), intent(out) :: &
@@ -349,9 +350,8 @@ CONTAINS
 ! Original author : Yongjiu Dai and Nan Wei, /05/2014/
 !
 ! REVISIONS:
-! Shaofeng Liu, 05/2023: add option to CALL moninobuk_leddy, the LargeEddy
-!                        surface turbulence scheme (LZD2022);
-!                        make a proper update of um.
+! 05/2023, Shaofeng Liu: add option to CALL moninobuk_leddy, the LargeEddy
+!          surface turbulence scheme (LZD2022); make a proper update of um.
 !=======================================================================
 
    USE MOD_Precision
@@ -573,25 +573,26 @@ CONTAINS
 ! SNOW and LAND ICE temperatures
 ! o The volumetric heat capacity is calculated as a linear combination
 !   in terms of the volumetric fraction of the constituent phases.
-! o The thermal conductivity of snow/ice is computed from
-!   the formulation used in SNTHERM (Jordan 1991) and Yen (1981), respectively.
+! o The thermal conductivity of snow/ice is computed from the
+!   formulation used in SNTHERM (Jordan 1991) and Yen (1981),
+!   respectively.
 ! o Boundary conditions:
 !   F = Rnet - Hg - LEg (top) + HPR, F= 0 (base of the land ice column).
-! o Ice/snow temperature is predicted from heat conduction
-!   in 10 ice layers and up to 5 snow layers.
-!   The thermal conductivities at the interfaces between two neighbor layers
-!   (j, j+1) are derived from an assumption that the flux across the interface
-!   is equal to that from the node j to the interface and the flux from the
-!   interface to the node j+1. The equation is solved using the Crank-Nicholson
-!   method and resulted in a tridiagonal system equation.
+! o Ice/snow temperature is predicted from heat conduction in 10 ice
+!   layers and up to 5 snow layers.  The thermal conductivities at the
+!   interfaces between two neighbor layers (j, j+1) are derived from an
+!   assumption that the flux across the interface is equal to that from
+!   the node j to the interface and the flux from the interface to the
+!   node j+1. The equation is solved using the Crank-Nicholson method
+!   and resulted in a tridiagonal system equation.
 !
 ! Phase change (see meltf.F90)
 !
 ! Original author : Yongjiu Dai, /05/2014/
 !
 ! REVISIONS:
-! Hua Yuan, 01/2023: account for snow layer absorption (SNICAR) in ground heat
-!                    flux, temperature and melt calculation.
+! 01/2023, Hua Yuan: account for snow layer absorption (SNICAR) in
+!          ground heat flux, temperature and melt calculation.
 !=======================================================================
 
    USE MOD_Precision
@@ -906,7 +907,7 @@ CONTAINS
        forc_vs
 
    integer, intent(in) :: imelt(maxsnl+1:nl_ice)  ! flag for: melting=1, freezing=2, nothing happened=0
-   integer, intent(inout) :: snl ! lower bound of array
+   integer, intent(inout) :: snl       ! lower bound of array
 
    real(r8), intent(inout) :: &
        z_icesno   (maxsnl+1:nl_ice) , &! layer depth (m)
@@ -926,13 +927,16 @@ CONTAINS
    integer lb, j
 
 !=======================================================================
-! [1] update the liquid water within snow layer and the water onto the ice surface
+! [1] update the liquid water within snow layer and the water onto the
+! ice surface
 !
 ! Snow melting is treated in a realistic fashion, with meltwater
-! percolating downward through snow layers as long as the snow is unsaturated.
-! Once the underlying snow is saturated, any additional meltwater runs off.
-! When glacier ice melts, however, the meltwater is assumed to remain in place until it refreezes.
-! In warm parts of the ice sheet, the meltwater does not refreeze, but stays in place indefinitely.
+! percolating downward through snow layers as long as the snow is
+! unsaturated.  Once the underlying snow is saturated, any additional
+! meltwater runs off.  When glacier ice melts, however, the meltwater is
+! assumed to remain in place until it refreezes.  In warm parts of the
+! ice sheet, the meltwater does not refreeze, but stays in place
+! indefinitely.
 !=======================================================================
 
       lb = snl + 1
@@ -1024,7 +1028,7 @@ CONTAINS
        fiold(maxsnl+1:nl_ice)  ! fraction of ice relative to the total water
 
    integer, intent(in) :: imelt(maxsnl+1:nl_ice)  ! flag for: melting=1, freezing=2, nothing happened=0
-   integer, intent(inout) :: snl ! lower bound of array
+   integer, intent(inout) :: snl       ! lower bound of array
 
    real(r8), intent(inout) :: &
        z_icesno   (maxsnl+1:nl_ice) , &! layer depth (m)
@@ -1062,13 +1066,16 @@ CONTAINS
    integer lb, j
 
 !=======================================================================
-! [1] update the liquid water within snow layer and the water onto the ice surface
+! [1] update the liquid water within snow layer and the water onto the
+! ice surface
 !
 ! Snow melting is treated in a realistic fashion, with meltwater
-! percolating downward through snow layers as long as the snow is unsaturated.
-! Once the underlying snow is saturated, any additional meltwater runs off.
-! When glacier ice melts, however, the meltwater is assumed to remain in place until it refreezes.
-! In warm parts of the ice sheet, the meltwater does not refreeze, but stays in place indefinitely.
+! percolating downward through snow layers as long as the snow is
+! unsaturated.  Once the underlying snow is saturated, any additional
+! meltwater runs off.  When glacier ice melts, however, the meltwater is
+! assumed to remain in place until it refreezes.  In warm parts of the
+! ice sheet, the meltwater does not refreeze, but stays in place
+! indefinitely.
 !=======================================================================
 
       lb = snl + 1

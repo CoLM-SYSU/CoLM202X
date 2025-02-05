@@ -9,9 +9,9 @@ MODULE MOD_Const_LC
 ! Created by Hua Yuan, 08/2019
 !
 ! !REVISIONS:
-! Hua Yuan, 08/2019: initial version adapted from IniTimeConst.F90 of CoLM2014
-! Hua Yuan, 08/2019: added constants values for IGBP land cover types
-! Xingjie Lu, 05/2023: added Plant Hydraulics Parameters
+! 08/2019, Hua Yuan: initial version adapted from IniTimeConst.F90 of CoLM2014
+! 08/2019, Hua Yuan: added constants values for IGBP land cover types
+! 05/2023, Xingjie Lu: added Plant Hydraulics Parameters
 !
 ! !USES:
    USE MOD_Precision
@@ -258,7 +258,7 @@ MODULE MOD_Const_LC
           2.012,  1.964,  1.955,  1.953,  1.303,  2.175,  1.631,  2.608,&
           2.608,  1.631,  8.992,  8.992,  8.992,  8.992,  0.978,  2.608/)
 
-! Plant Hydraulics Parameters
+   ! Plant Hydraulics Parameters
    real(r8), parameter, dimension(N_land_classification) :: kmax_sun0_usgs &
       = (/     0., 2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008,&
           2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008,&
@@ -548,7 +548,7 @@ MODULE MOD_Const_LC
           1.627,  2.608,  2.608,  2.614,  2.614,  2.614,  2.608,  0.978,&
           2.608 /)
 
-! Plant Hydraulics Parameters
+   ! Plant Hydraulics Parameters
    real(r8), parameter, dimension(N_land_classification) :: kmax_sun0_igbp &
       = (/2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008, &
           2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008, &
@@ -598,7 +598,7 @@ MODULE MOD_Const_LC
       = (/3.95, 3.95, 3.95, 3.95, 3.95, 3.95, &
           3.95, 3.95, 3.95, 3.95, 3.95, 3.95, &
           3.95, 3.95, 3.95, 3.95, 3.95  /)
-!end plant hydraulic parameters
+   !end plant hydraulic parameters
 
    ! lambda for WUE stomata model
    real(r8), parameter, dimension(N_land_classification) :: lambda_igbp &

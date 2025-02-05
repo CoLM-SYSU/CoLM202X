@@ -26,8 +26,8 @@ CONTAINS
                             z0m, z0hg, zol, rib, ustar, qstar, tstar, fm, fh, fq)
 
 !=======================================================================
-! this is the main SUBROUTINE to execute the calculation of thermal processes
-! and surface fluxes
+! This is the main SUBROUTINE to execute the calculation of thermal
+! processes and surface fluxes
 !
 ! Original author : Yongjiu Dai, 09/15/1999; 08/30/2002
 !
@@ -187,7 +187,7 @@ CONTAINS
          z0hg = z0mg/exp(0.13 * (ustar*z0mg/1.5e-5)**0.45)
          z0qg = z0hg
 
-  ! 2023.04.06, weinan
+         ! 2023.04.06, weinan
          !thvstar=tstar+0.61*th*qstar
          thvstar=tstar*(1.+0.61*qm)+0.61*th*qstar
          zeta=zldis*vonkar*grav*thvstar/(ustar**2*thv)

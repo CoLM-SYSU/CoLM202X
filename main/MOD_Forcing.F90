@@ -73,7 +73,7 @@ MODULE MOD_Forcing
 
    ! local variables
    integer  :: deltim_int                ! model time step length
-   ! real(r8) :: deltim_real               ! model time step length
+   ! real(r8) :: deltim_real             ! model time step length
 
    !  for SinglePoint
    type(timestamp), allocatable :: forctime (:)
@@ -125,9 +125,9 @@ CONTAINS
    character(len=*), intent(in) :: dir_forcing
    real(r8),         intent(in) :: deltatime  ! model time step
    type(timestamp),  intent(in) :: ststamp
-   integer, intent(in) :: lc_year    ! which year of land cover data used
+   integer,          intent(in) :: lc_year    ! which year of land cover data used
    type(timestamp),  intent(in), optional :: etstamp
-   logical,          intent(in), optional :: lulcc_call   ! whether it is a lulcc CALL
+   logical,          intent(in), optional :: lulcc_call ! whether it is a lulcc CALL
 
    ! Local variables
    integer            :: idate(3)
@@ -755,7 +755,7 @@ CONTAINS
                   forc_th_grid(np)%val(ipart) = forc_t_grid(np)%val(ipart) &
                      * (1.e5/forc_pbot_grid(np)%val(ipart)) ** (rair/cpair)
 
-                  ! caculate sun zenith angle and sun azimuth angle and turn to degree
+                  ! calculate sun zenith angle and sun azimuth angle and turn to degree
                   coszen(np) = orb_coszen(calday, patchlonr(np), patchlatr(np))
                   cosazi(np) = orb_cosazi(calday, patchlonr(np), patchlatr(np), coszen(np))
 
@@ -812,7 +812,8 @@ CONTAINS
          IF (p_is_worker) THEN
             DO np = 1, numpatch
                IF ((forc_us(np)==spval).or.(forc_vs(np)==spval)) cycle
-               CALL downscale_wind(forc_us(np), forc_vs(np), slp_type_patches(:,np), asp_type_patches(:,np), area_type_patches(:,np), cur_patches(np))
+               CALL downscale_wind(forc_us(np), forc_vs(np), slp_type_patches(:,np), &
+                        asp_type_patches(:,np), area_type_patches(:,np), cur_patches(np))
             ENDDO
          ENDIF
 
@@ -934,8 +935,8 @@ CONTAINS
    ! ------------------------------------------------------------
    !
    ! !DESCRIPTION:
-   !    read lower and upper boundary forcing data, a major interface of this
-   !    MODULE
+   !    read lower and upper boundary forcing data, a major interface of
+   !    this MODULE
    !
    ! REVISIONS:
    ! Hua Yuan, 04/2014: initial code
@@ -1266,7 +1267,7 @@ CONTAINS
 !    o year alternation
 !    o month alternation
 !    o leap year
-!    o required dada just beyond the first record
+!    o required data just beyond the first record
 !
 ! REVISIONS:
 ! Hua Yuan, 04/2014: initial code

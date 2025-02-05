@@ -25,17 +25,18 @@ CONTAINS
 
 ! ======================================================================
 !
-! Implement the LZD2022 scheme (Liu et al., 2022), which accounts for large
-! eddy effects by including the boundary layer height in the phim FUNCTION,
-! to compute friction velocity, relation for potential temperature and
-! humidity profiles of surface boundary layer.
+! Implement the LZD2022 scheme (Liu et al., 2022), which accounts for
+! large eddy effects by including the boundary layer height in the phim
+! FUNCTION, to compute friction velocity, relation for potential
+! temperature and humidity profiles of surface boundary layer.
 !
 ! References:
 ! [1] Zeng et al., 1998: Intercomparison of bulk aerodynamic algorithms
-!     for the computation of sea surface fluxes using TOGA CORE and TAO data.
-!     J. Climate, 11: 2628-2644.
+!     for the computation of sea surface fluxes using TOGA CORE and TAO
+!     data.  J. Climate, 11: 2628-2644.
 ! [2] Liu et al., 2022: A surface flux estimation scheme accounting for
-!     large-eddy effects for land surface modeling. GRL, 49, e2022GL101754.
+!     large-eddy effects for land surface modeling. GRL, 49,
+!     e2022GL101754.
 !
 ! Created by Shaofeng Liu, May 5, 2023
 !

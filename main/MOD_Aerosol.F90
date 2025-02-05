@@ -59,7 +59,7 @@ CONTAINS
 
    ! !ARGUMENTS:
    !
-   real(r8),intent(in)     ::  dtime            !seconds in a time step [second]
+   real(r8),intent(in)     ::  dtime            !  seconds in a time step [second]
    integer, intent(in)     ::  snl              !  number of snow layers
 
    logical,  intent(in)    ::  do_capsnow       !  true => do snow capping
@@ -177,7 +177,7 @@ CONTAINS
    !
    !-----------------------------------------------------------------------
    ! !ARGUMENTS:
-   real(r8),intent(in)  :: dtime           !seconds in a time step [second]
+   real(r8),intent(in)  :: dtime           ! seconds in a time step [second]
    integer, intent(in)  :: snl             ! number of snow layers
 
    real(r8), intent(in) :: forc_aer (14 )  ! aerosol deposition from atmosphere model (grd,aer) [kg m-1 s-1]

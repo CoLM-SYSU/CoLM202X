@@ -290,7 +290,7 @@ MODULE MOD_Vars_1DAccFluxes
    real(r8), allocatable :: a_deadcrootn_xferCap    (:)
 #endif
 ! Ozone stress variables
-   real(r8), allocatable :: a_ozone              (:)
+   real(r8), allocatable :: a_ozone                 (:)
 ! End ozone stress variables
 
    real(r8), allocatable :: a_t_soisno    (:,:)
@@ -2447,4 +2447,4 @@ CONTAINS
    END SUBROUTINE acc3d
 
 END MODULE MOD_Vars_1DAccFluxes
-! ----- EOP ---------
+! ---------- EOP ------------
