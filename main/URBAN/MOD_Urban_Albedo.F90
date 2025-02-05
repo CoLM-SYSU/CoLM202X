@@ -49,13 +49,15 @@ CONTAINS
 !
 ! (1) snow albedos: as in BATS formulations, which are inferred from
 !     the calculations of Wiscombe and Warren (1980) and the snow model
-!     and data of Anderson(1976), and the function of snow age, grain size,
-!     solar zenith angle, pollution, the amount of the fresh snow
-! (2) lake and wetland albedos: as in BATS, which depend on cosine solar zenith angle,
-!     based on data in Henderson-Sellers (1986). The frozen lake and wetland albedos
-!     are set to constants (0.6 for visible beam, 0.4 for near-infrared)
-! (3) over the snow covered surface, the surface albedo is estimated by a linear
-!     combination of albedos for snow, roof, impervious and pervious ground
+!     and data of Anderson(1976), and the function of snow age, grain
+!     size, solar zenith angle, pollution, the amount of the fresh snow
+! (2) lake and wetland albedos: as in BATS, which depend on cosine solar
+!     zenith angle, based on data in Henderson-Sellers (1986). The
+!     frozen lake and wetland albedos are set to constants (0.6 for
+!     visible beam, 0.4 for near-infrared)
+! (3) over the snow covered surface, the surface albedo is estimated by
+!     a linear combination of albedos for snow, roof, impervious and
+!     pervious ground
 !
 !=======================================================================
 
@@ -366,4 +368,4 @@ CONTAINS
    END SUBROUTINE alburban
 
 END MODULE MOD_Urban_Albedo
-! --------- EOP ----------
+! ---------- EOP ------------

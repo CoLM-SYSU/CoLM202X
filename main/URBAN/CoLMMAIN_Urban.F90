@@ -137,7 +137,7 @@
          ! SNICAR snow model related
            snw_rds      ,ssno                                     ,&
            mss_bcpho    ,mss_bcphi    ,mss_ocpho    ,mss_ocphi    ,&
-           mss_dst1     , mss_dst2    ,mss_dst3     ,mss_dst4     ,&
+           mss_dst1     ,mss_dst2     ,mss_dst3     ,mss_dst4     ,&
 
 #if(defined CaMa_Flood)
            ! flood depth [mm], flood fraction[0-1],
@@ -863,7 +863,8 @@
       ! with vegetation canopy
       CALL LEAF_interception_CoLM2014 (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tref,tleaf,&
                               prc_rain,prc_snow,prl_rain,prl_snow,bifall,&
-                              ldew,ldew_rain,ldew_snow,z0m,forc_hgt_u,pgper_rain,pgper_snow,qintr,qintr_rain,qintr_snow)
+                              ldew,ldew_rain,ldew_snow,z0m,forc_hgt_u,pgper_rain,pgper_snow,&
+                              qintr,qintr_rain,qintr_snow)
 
       ! for output, patch scale
       qintr = qintr * fveg * (1-flake)
