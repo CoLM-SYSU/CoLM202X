@@ -34,7 +34,7 @@ CONTAINS
    USE MOD_FrictionVelocity
    IMPLICIT NONE
 
-!------------------------- Dummy Arguments -----------------------------
+!-------------------------- Dummy Arguments ----------------------------
    integer , intent(in) :: &
         lbi
    real(r8), intent(in) :: &

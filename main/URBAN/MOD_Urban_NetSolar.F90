@@ -32,7 +32,7 @@ CONTAINS
    USE MOD_TimeManager, only: isgreenwich
    IMPLICIT NONE
 
-!------------------------- Dummy Arguments -----------------------------
+!-------------------------- Dummy Arguments ----------------------------
    integer,  intent(in) :: ipatch   ! patch index
    integer,  intent(in) :: idate(3) ! model time
 

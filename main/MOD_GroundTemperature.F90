@@ -76,11 +76,12 @@ CONTAINS
 
    IMPLICIT NONE
 
-   integer, intent(in) :: lb                          !lower bound of array
-   integer, intent(in) :: nl_soil                     !upper bound of array
-   integer, intent(in) :: patchtype                   !land patch type (0=soil,1=urban or built-up,2=wetland,
+!-------------------------- Dummy Arguments ----------------------------
+   integer,  intent(in) :: lb                         !lower bound of array
+   integer,  intent(in) :: nl_soil                    !upper bound of array
+   integer,  intent(in) :: patchtype                  !land patch type (0=soil,1=urban or built-up,2=wetland,
                                                       !3=land ice, 4=deep lake, 5=shallow lake)
-   logical, intent(in) :: is_dry_lake
+   logical,  intent(in) :: is_dry_lake
    real(r8), intent(in) :: deltim                     !seconds in a time step [second]
    real(r8), intent(in) :: capr                       !tuning factor to turn first layer T into surface T
    real(r8), intent(in) :: cnfac                      !Crank Nicholson factor between 0 and 1
@@ -155,7 +156,7 @@ CONTAINS
 
    real(r8), intent(out) :: snofrz(lb:0)              !snow freezing rate (lyr) [kg m-2 s-1]
 
-!------------------------ local variables ------------------------------
+!-------------------------- Local Variables ----------------------------
    real(r8) cv (lb:nl_soil)          !heat capacity [J/(m2 K)]
    real(r8) tk (lb:nl_soil)          !thermal conductivity [W/(m K)]
    real(r8) hcap(1:nl_soil)          !J/(m3 K)
@@ -183,7 +184,7 @@ CONTAINS
    real(r8) rhosnow                  !partial density of water (ice + liquid)
    integer i,j
 
-!=======================================================================
+!-----------------------------------------------------------------------
 ! soil ground and wetland heat capacity
       DO i = 1, nl_soil
          vf_water(i) = wliq_soisno(i)/(dz_soisno(i)*denh2o)

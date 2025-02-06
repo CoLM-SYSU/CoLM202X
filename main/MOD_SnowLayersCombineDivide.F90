@@ -49,7 +49,7 @@ CONTAINS
    USE MOD_Const_Physical, only : denice, denh2o, tfrz
    IMPLICIT NONE
 
-!-------------------------- Dummy argument -----------------------------
+! ------------------------- Dummy Arguments ----------------------------
 
    integer,  intent(in) :: lb          ! lower bound of array
    real(r8), intent(in) :: deltim      ! seconds i a time step [second]
@@ -64,7 +64,7 @@ CONTAINS
 
    real(r8), intent(inout) :: dz_soisno(lb:0) ! layer thickness [m]
 
-!----------------------- local variables ------------------------------
+!-------------------------- Local Variables ----------------------------
    integer j  ! Numeber of doing loop
 
    real(r8), parameter ::  c1 = 2.777e-7  ! [m2/(kg s)]
@@ -97,7 +97,7 @@ CONTAINS
                        ! (only valid IF wind_dependent_snow_density is .true.)
    real(r8) :: f1, f2, eta, forc_wind
 
-!=======================================================================
+!-----------------------------------------------------------------------
       ! Begin calculation - note that the following column loops are only invoked IF lb < 0
 
       burden = 0.0
@@ -257,7 +257,7 @@ CONTAINS
    USE MOD_Precision
    IMPLICIT NONE
 
-!-------------------------- Dummy argument -----------------------------
+! ------------------------- Dummy Arguments ----------------------------
    integer, intent(in) :: lb               ! lower bound of array
 
 ! numbering from 1 (bottom) mss (surface)
@@ -271,7 +271,7 @@ CONTAINS
    real(r8), intent(inout) :: scv          ! snow mass - water equivalent [kg/m2]
    integer, intent(inout) :: snl           ! Number of snow
 
-!----------------------- Local variables ------------------------------
+!-------------------------- Local Variables ----------------------------
    real(r8) :: drr           ! thickness of the combined [m]
    real(r8) :: dzmin(5)      ! minimum of snow layer 1 (top) to msn0 (bottom)
    real(r8) :: zwice         ! total ice mass in snow
@@ -431,7 +431,7 @@ CONTAINS
    USE MOD_Precision
    IMPLICIT NONE
 
-!-------------------------- Dummy argument -----------------------------
+! ------------------------- Dummy Arguments ----------------------------
 
     integer, intent(in) :: lb              ! lower bound of array
     integer, intent(inout) :: snl          ! Number of snow
@@ -442,7 +442,7 @@ CONTAINS
    real(r8), intent(inout) :: z_soisno   (lb:0)   ! Node depth [m]
    real(r8), intent(inout) :: zi_soisno  (lb-1:0) ! Depth of layer interface [m]
 
-!----------------------- Local variables ------------------------------
+!-------------------------- Local Variables ----------------------------
 
 ! numbering from 1 (surface) msno (bottom)
    real(r8) :: drr      ! thickness of the combined [m]
@@ -637,7 +637,7 @@ CONTAINS
    USE MOD_Const_Physical, only : cpice, cpliq, hfus, tfrz
    IMPLICIT NONE
 
-!-------------------------- Dummy argument -----------------------------
+! ------------------------- Dummy Arguments ----------------------------
 
    real(r8), intent(in) :: dz2     ! nodal thickness of 2 elements being combined [m]
    real(r8), intent(in) :: wliq2   ! liquid water of element 2 [kg/m2]
@@ -649,7 +649,7 @@ CONTAINS
    real(r8), intent(inout) :: wice_soisno ! ice of element 1 [kg/m2]
    real(r8), intent(inout) :: t    ! node temperature of elment 1 [K]
 
-!----------------------- Local variables ------------------------------
+!-------------------------- Local Variables ----------------------------
 
    real(r8) dzc    ! Total thickness of nodes 1 and 2 (dzc=dz_soisno+dz2).
    real(r8) wliqc  ! Combined liquid water [kg/m2]
@@ -707,7 +707,7 @@ CONTAINS
 
    IMPLICIT NONE
 
-!-------------------------- Dummy argument -----------------------------
+! ------------------------- Dummy Arguments ----------------------------
    integer, intent(in) :: lb               ! lower bound of array
 
 ! numbering from 1 (bottom) mss (surface)
@@ -733,7 +733,7 @@ CONTAINS
         mss_dst4  (lb:0)   ! mass of dust species 4 in snow  (col,lyr) [kg]
 ! Aerosol Fluxes (Jan. 07, 2023)
 
-!----------------------- Local variables ------------------------------
+!-------------------------- Local Variables ----------------------------
    real(r8) :: drr          ! thickness of the combined [m]
    real(r8) :: dzmin(5)     ! minimum of snow layer 1 (top) to msn0 (bottom)
    real(r8) :: zwice        ! total ice mass in snow
@@ -973,7 +973,7 @@ CONTAINS
 
    IMPLICIT NONE
 
-!-------------------------- Dummy argument -----------------------------
+! ------------------------- Dummy Arguments ----------------------------
 
     integer, intent(in) :: lb       ! lower bound of array
     integer, intent(inout) :: snl   ! Number of snow
@@ -996,7 +996,7 @@ CONTAINS
         mss_dst4  (lb:0)   ! mass of dust species 4 in snow  (col,lyr) [kg]
 ! Aerosol Fluxes (Jan. 07, 2023)
 
-!----------------------- Local variables ------------------------------
+!-------------------------- Local Variables ----------------------------
 
 ! numbering from 1 (surface) msno (bottom)
    real(r8) :: drr      ! thickness of the combined [m]
@@ -1276,7 +1276,6 @@ CONTAINS
       ENDDO
 
    END SUBROUTINE SnowLayersDivide_snicar
-!-----------------------------------------------------------------------
-
 
 END MODULE MOD_SnowLayersCombineDivide
+! ---------- EOP ------------

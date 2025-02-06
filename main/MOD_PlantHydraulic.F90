@@ -47,6 +47,7 @@ CONTAINS
    USE MOD_Precision
    IMPLICIT NONE
 
+!-------------------------- Dummy Arguments ----------------------------
    integer ,intent(in) :: nl_soil ! upper bound of array
    integer ,intent(in) :: nvegwcs ! upper bound of array
    real(r8),intent(in), dimension(nl_soil) :: &
@@ -60,7 +61,7 @@ CONTAINS
 
    real(r8),intent(in) :: &
        rss,          &! soil surface resistance [s/m]
-       psrf,         & ! surface atmospheric pressure (pa)
+       psrf,         &! surface atmospheric pressure (pa)
        qg,           &! specific humidity at ground surface [kg/kg]
        qm             ! specific humidity at reference height [kg/kg]
 
@@ -117,9 +118,7 @@ CONTAINS
    real(r8),intent(inout) :: gssun                           ! sunlit leaf conductance
    real(r8),intent(inout) :: gssha                           ! shaded leaf conductance
 
-
-
-!-------------------- local --------------------------------------------
+!-------------------------- Local Variables ----------------------------
 
    integer, parameter :: iterationtotal = 6
 
@@ -1086,4 +1085,4 @@ CONTAINS
 
 
 END MODULE MOD_PlantHydraulic
-! -------------- EOP ---------------
+! ---------- EOP ------------

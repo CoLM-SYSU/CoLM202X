@@ -68,7 +68,7 @@ CONTAINS
 
    IMPLICIT NONE
 
-!------------------------- Dummy Arguments -----------------------------
+!-------------------------- Dummy Arguments ----------------------------
 ! ground cover index
    integer, intent(in) :: &
       ipatch          ! patch index

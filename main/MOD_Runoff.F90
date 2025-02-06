@@ -36,7 +36,7 @@ CONTAINS
 
    IMPLICIT NONE
 
-!-----------------------Arguments---------------------------------------
+! ------------------------- Dummy Arguments ----------------------------
 
    integer, intent(in) :: nl_soil   ! number of soil layers
    real(r8), intent(in) :: &
@@ -59,7 +59,7 @@ CONTAINS
    real(r8), intent(out), optional :: rsur_se! saturation excess surface runoff (mm h2o/s)
    real(r8), intent(out), optional :: rsur_ie! infiltration excess surface runoff (mm h2o/s)
 
-!-----------------------Local Variables---------------------------------
+!-------------------------- Local Variables ----------------------------
 
    real(r8) qinmax       ! maximum infiltration capability
    real(r8) fsat         ! fractional area with water table at surface
@@ -67,7 +67,7 @@ CONTAINS
    ! updated to gridded 'fsatdcf' (by Shupeng Zhang)
    ! real(r8), parameter :: fff = 0.5   ! runoff decay factor (m-1)
 
-!-----------------------END Variable List-------------------------------
+!-----------------------------------------------------------------------
 
 !  fraction of saturated area (updated to gridded 'fsatmax' and 'fsatdcf')
       !fsat = wtfact*min(1.0,exp(-0.5*fff*zwt))
@@ -93,9 +93,9 @@ CONTAINS
 ! -------------------------------------------------------------------------
    SUBROUTINE SubsurfaceRunoff_SIMTOP (nl_soil, icefrac, dz_soisno, zi_soisno, zwt, rsubst)
 
-! ARGUMENTS:
    IMPLICIT NONE
 
+! ------------------------- Dummy Arguments ----------------------------
    integer,  intent(in) :: nl_soil                 !
    real(r8), intent(in) :: icefrac(1:nl_soil)      ! ice fraction (-)
 
@@ -105,7 +105,7 @@ CONTAINS
    real(r8), intent(in)  :: zwt    ! the depth from ground (soil) surface to water table [m]
    real(r8), intent(out) :: rsubst ! subsurface runoff (positive = out of soil column) (mm H2O /s)
 
-! LOCAL ARGUMENTS
+!-------------------------- Local Variables ----------------------------
 
    integer  :: j                ! indices
    integer  :: jwt              ! index of the soil layer right above the water table (-)
@@ -115,6 +115,7 @@ CONTAINS
    real(r8) :: icefracsum
    real(r8) :: fracice_rsub
    real(r8) :: imped
+!-----------------------------------------------------------------------
 
       DO j = 1,nl_soil
          dzmm(j) = dz_soisno(j)*1000.
@@ -263,4 +264,4 @@ CONTAINS
    END SUBROUTINE Runoff_SimpleVIC
 
 END MODULE MOD_Runoff
-! --------- EOP ----------
+! ---------- EOP ------------

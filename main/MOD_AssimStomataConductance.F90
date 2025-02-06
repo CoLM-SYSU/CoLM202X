@@ -78,6 +78,7 @@ CONTAINS
    USE MOD_Precision
    IMPLICIT NONE
 
+!-------------------------- Dummy Arguments ----------------------------
    real(r8),intent(in) :: &
       effcon,       &! quantum efficiency of RuBP regeneration (mol CO2 / mol quanta)
       vmax25,       &! maximum carboxylation rate at 25 C at canopy top
@@ -127,7 +128,7 @@ CONTAINS
 
    real(r8)  gammas
 
-!-------------------- local --------------------------------------------
+!-------------------------- Local Variables ----------------------------
 
    integer, parameter :: iterationtotal = 6   ! total iteration number in pco2i calculation
 
@@ -179,6 +180,7 @@ CONTAINS
       range                    !
 
    integer ic
+!-----------------------------------------------------------------------
 
       CALL calc_photo_params(tlef, po2m, par , psrf, rstfac, rb, effcon, vmax25, &
                              trop, slti, hlti, shti, hhti, trda, trdm, cint, &
@@ -369,12 +371,13 @@ CONTAINS
    USE MOD_Precision
    IMPLICIT NONE
 
-   integer, intent(in) :: ic,iterationtotal
+!-------------------------- Dummy Arguments ----------------------------
+   integer,  intent(in) :: ic,iterationtotal
    real(r8), intent(in) :: range
    real(r8), intent(in) :: gammas
    real(r8), intent(inout), dimension(iterationtotal) :: eyy, pco2y
 
-!----- Local -----------------------------------------------------------
+!-------------------------- Local Variables ----------------------------
    integer i, j, n, i1, i2, i3, is, isp, ix
    real(r8) a, b, pmin, emin, eyy_a
    real(r8) pco2b, pco2yl, pco2yq
@@ -457,6 +460,7 @@ CONTAINS
    USE MOD_Precision
    IMPLICIT NONE
 
+!-------------------------- Dummy Arguments ----------------------------
    real(r8),intent(in) :: &
             tlef,     &! leaf temperature (K)
             po2m,     &! O2 concentration in atmos. (pascals)
@@ -490,6 +494,7 @@ CONTAINS
             c3,       &! c3 vegetation : 1; 0 for c4
             c4         ! c4 vegetation : 1; 0 for c3
 
+!-------------------------- Local Variables ----------------------------
     real(r8) :: &
             qt,       &! (tleaf - 298.16) / 10
             kc,       &! Michaelis-Menten constant for co2
@@ -502,7 +507,7 @@ CONTAINS
             respcp,   &! respiration fraction of vmax (mol co2 m-2 s-1)
             tprcor     ! coefficient for unit transfer
 
-!=======================================================================
+!-----------------------------------------------------------------------
 
       c3 = 0.
       IF( effcon .gt. 0.07 ) c3 = 1.
@@ -591,6 +596,7 @@ CONTAINS
    USE MOD_Precision
    IMPLICIT NONE
 
+!-------------------------- Dummy Arguments ----------------------------
    real(r8),intent(in) :: &
             tlef,     &! leaf temperature (K)
             po2m,     &! O2 concentration in atmos. (pascals)
@@ -621,6 +627,7 @@ CONTAINS
             assim,    &! canopy assimilation rate (mol m-2 s-1)
             respc      ! canopy respiration (mol m-2 s-1)
 
+!-------------------------- Local Variables ----------------------------
    real(r8) ::        &
             vm,       &! maximum catalytic activity of Rubison (mol co2 m-2 s-1)
             epar,     &! electron transport rate (mol electron m-2 s-1)
@@ -659,6 +666,7 @@ CONTAINS
             range                    !
 
    integer ic
+!-----------------------------------------------------------------------
 
       CALL calc_photo_params(tlef, po2m, par , psrf, rstfac, rb, effcon, vmax25, &
                              trop, slti, hlti, shti, hhti, trda, trdm, cint, &
@@ -764,7 +772,7 @@ CONTAINS
 
    SUBROUTINE WUE_solver(gammas, lambda, co2a, ei, ea, psrf, pco2i_c, pco2i_e)
 
-!-------------------------------------------------------------------------------------------
+!-----------------------------------------------------------------------
 ! Solve internal co2 concentration for Rubisco limit and RuBP regeneration limit.
 !
 ! When Rubisco is limit (omc < ome), solve following equation (Liang et al., 2023, S18a)
@@ -778,10 +786,12 @@ CONTAINS
 !  [1-(1.6*D)/(3*lambda*gammas)] * co2i_e^2                                             &
 !    - [2*co2a-(3.2*D)/(3*lambda)] * co2i_e                                             &
 !    + [co2a^2 - (1.6*D*co2a)/lambda + (3.2*D*gammas)/(3*lambda)]                     = 0
+!-----------------------------------------------------------------------
 
    USE MOD_Precision
    IMPLICIT NONE
 
+!-------------------------- Dummy Arguments ----------------------------
    real(r8),intent(in) :: &
             gammas,   &! CO2 compensation point (pa)
             lambda,   &! marginal water use efficiency ((mol h2o) (mol co2)-1)
@@ -794,10 +804,13 @@ CONTAINS
             pco2i_c,  &! internal co2 concentration when Rubisco is limited (pa)
             pco2i_e    ! internal co2 concentration when RuBP regeneration is limited (pa)
 
+!-------------------------- Local Variables ----------------------------
    real(r8) :: &
             D,        &! leaf-to-air-vapour mole fraction difference ((mol h2o) (mol air)-1)
             co2i_c,   &! internal co2 concentration when Rubisco is limited ((mol co2) (mol air)-1)
             co2i_e     ! internal co2 concentration when RuBP is limited ((mol co2) (mol air)-1)
+
+!-----------------------------------------------------------------------
 
       ! solve co2i_c
       D = amax1((ei - ea),50._r8) / psrf

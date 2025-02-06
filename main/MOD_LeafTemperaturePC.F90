@@ -123,7 +123,7 @@ CONTAINS
 
    IMPLICIT NONE
 
-!-----------------------Arguments---------------------------------------
+!-------------------------- Dummy Arguments ----------------------------
 
    integer,  intent(in) :: ipatch
    integer,  intent(in) :: &
@@ -283,7 +283,7 @@ CONTAINS
         cgrndl,        &! deriv, of soil latent heat flux wrt soil temp [w/m2/k]
         cgrnds          ! deriv of soil sensible heat flux wrt soil temp [w/m**2/k]
 
-!-----------------------Local Variables---------------------------------
+!-------------------------- Local Variables ----------------------------
 ! assign iteration parameters
    integer, parameter :: itmax  = 40   !maximum number of iteration
    integer, parameter :: itmin  = 6    !minimum number of iteration
@@ -511,7 +511,7 @@ CONTAINS
    real(r8) :: dLv(ps:pe)       !LW change due to temperature change
    real(r8) :: dLvpar(nlay)     !temporal variable for calculating dLv
 
-!-----------------------End Variable List-------------------------------
+!-----------------------------------------------------------------------
 
 ! only process with vegetated patches
 
@@ -2055,7 +2055,7 @@ ENDIF
    real(r8) :: vegt                   !sigf*lsai, NOTE: remove sigf
    real(r8) :: fwet_rain              !fraction of foliage covered by water [-]
    real(r8) :: fwet_snow              !fraction of foliage covered by snow [-]
-!
+
 !-----------------------------------------------------------------------
 ! Fwet is the fraction of all vegetation surfaces which are wet
 ! including stem area which contribute to evaporation

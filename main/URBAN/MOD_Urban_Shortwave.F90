@@ -61,7 +61,7 @@ CONTAINS
 
    IMPLICIT NONE
 
-!------------------------- Dummy Arguments -----------------------------
+!-------------------------- Dummy Arguments ----------------------------
    real(r8), intent(in) :: &
         theta,      &! Sun zenith angle [radian]
         HL,         &! Ratio of building height to their side length [-]
@@ -301,7 +301,7 @@ CONTAINS
 
    IMPLICIT NONE
 
-!------------------------- Dummy Arguments -----------------------------
+!-------------------------- Dummy Arguments ----------------------------
    real(r8), intent(in) :: &
         theta,      &! Sun zenith angle [radian]
         HL,         &! Ratio of building height to their side length [-]

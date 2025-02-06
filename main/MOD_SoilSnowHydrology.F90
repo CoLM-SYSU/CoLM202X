@@ -81,7 +81,7 @@ CONTAINS
 
    IMPLICIT NONE
 
-!-----------------------Argument---------- ------------------------------
+! ------------------------- Dummy Arguments ----------------------------
    integer, intent(in) :: &
         ipatch                  ,&! patch index
         patchtype                 ! land patch type (0=soil, 1=urban or built-up, 2=wetland,
@@ -172,8 +172,8 @@ CONTAINS
 ! Aerosol Fluxes (Jan. 07, 2023)
 ! END SNICAR model variables
 
-!-----------------------Local Variables------------------------------
-!
+!-------------------------- Local Variables ----------------------------
+
    integer j                      ! loop counter
 
    real(r8) :: &
@@ -202,7 +202,6 @@ CONTAINS
    real(r8) :: qflx_irrig_paddy
 #endif
 
-   ! **
    real(r8) :: wliq_soisno_tmp(1:nl_soil)
 
 !=======================================================================
@@ -534,7 +533,7 @@ ENDIF
 
    IMPLICIT NONE
 
-!-----------------------Argument---------- ------------------------------
+! ------------------------- Dummy Arguments ----------------------------
    integer, intent(in) :: &
         ipatch           ,& ! patch index
         patchtype           ! land patch type (0=soil, 1=urban or built-up, 2=wetland,
@@ -634,8 +633,8 @@ ENDIF
 ! Aerosol Fluxes (Jan. 07, 2023)
 ! END SNICAR model variables
 
-!-----------------------Local Variables------------------------------
-!
+!-------------------------- Local Variables ----------------------------
+
    integer j                 ! loop counter
 
    real(r8) :: &
@@ -1159,7 +1158,7 @@ ENDIF
    USE MOD_Const_Physical, only : denice, denh2o  ! physical constant
    IMPLICIT NONE
 
-!----------------------- dummy argument --------------------------------
+! ------------------------- Dummy Arguments ----------------------------
    integer, intent(in) :: &
         lb          ! lower bound of array
 
@@ -1182,7 +1181,7 @@ ENDIF
    real(r8), intent(out) :: &
         qout_snowb  ! rate of water out of snow bottom (mm/s)
 
-!----------------------- local variables --------------------------------
+!-------------------------- Local Variables ----------------------------
    integer j           ! k do loop/array indices
 
    real(r8) :: &
@@ -1285,7 +1284,7 @@ ENDIF
    real(r8), parameter :: denice = 917.0_r8  ! density of ice [kg/m3]
    real(r8), parameter :: denh2o = 1000.0_r8 ! density of liquid water [kg/m3]
 
-!----------------------- dummy argument --------------------------------
+! ------------------------- Dummy Arguments ----------------------------
    integer, intent(in) :: &
         lb          ! lower bound of array
 
@@ -1322,7 +1321,7 @@ ENDIF
         mss_dst4  (lb:0)   ! mass of dust species 4 in snow  (col,lyr) [kg]
 !  Aerosol Fluxes (Jan. 07, 2023)
 
-!----------------------- local variables --------------------------------
+!-------------------------- Local Variables ----------------------------
    integer j         ! do loop/array indices
 
    real(r8) :: &
@@ -1769,11 +1768,12 @@ ENDIF
 !
 !-----------------------------------------------------------------------
    USE MOD_Precision
-   USE MOD_Const_Physical , only : grav,hfus,tfrz,denh2o,denice
+   USE MOD_Const_Physical, only: grav,hfus,tfrz,denh2o,denice
    USE MOD_Utils
 
    IMPLICIT NONE
 
+! ------------------------- Dummy Arguments ----------------------------
    integer , intent(in) :: patchtype ! land patch type
    integer , intent(in) :: nl_soil   ! number of soil layers
    real(r8), intent(in) :: deltim    ! land model time step (sec)
@@ -1806,9 +1806,8 @@ ENDIF
    real(r8), intent(out) :: smp(1:nl_soil)    ! soil matrix potential [mm]
    real(r8), intent(out) :: hk (1:nl_soil)    ! hydraulic conductivity [mm h2o/s]
 
-!
-! local arguments
-!
+!-------------------------- Local Variables ----------------------------
+
    integer  :: j                 ! do loop indices
    real(r8) :: amx(1:nl_soil)    ! "a" left off diagonal of tridiagonal matrix
    real(r8) :: bmx(1:nl_soil)    ! "b" diagonal column for tridiagonal matrix
@@ -2071,10 +2070,9 @@ ENDIF
 
    USE MOD_Precision
    USE MOD_Const_Physical, only : tfrz
-!
-! ARGUMENTS:
    IMPLICIT NONE
 
+! ------------------------- Dummy Arguments ----------------------------
    integer , intent(in) :: nl_soil      !
    real(r8), intent(in) :: deltim       ! land model time step (sec)
    real(r8), intent(in) :: pondmx       !
@@ -2096,10 +2094,7 @@ ENDIF
    real(r8), intent(in)    :: qcharge   ! aquifer recharge rate (positive to aquifer) (mm/s)
    real(r8), intent(inout) :: rsubst    ! subsurface runoff (positive = out of soil column) (mm H2O /s)
 
-!
-! LOCAL ARGUMENTS
-!
-
+!-------------------------- Local Variables ----------------------------
    integer  :: j                ! indices
    integer  :: jwt              ! index of the soil layer right above the water table (-)
    real(r8) :: xs               ! water needed to bring soil moisture to watmin (mm)
@@ -2131,10 +2126,9 @@ ENDIF
    real(r8), parameter :: rsbmx  = 5.0   ! baseflow coefficient [mm/s]
    real(r8), parameter :: timean = 10.5  ! global mean topographic index
 
-
 ! -------------------------------------------------------------------------
 
-!   ! Convert layer thicknesses from m to mm
+!     ! Convert layer thicknesses from m to mm
 
       DO j = 1,nl_soil
          dzmm(j) = dz_soisno(j)*1000.
@@ -2366,4 +2360,4 @@ ENDIF
 
 
 END MODULE MOD_SoilSnowHydrology
-! --------- EOP ----------
+! ---------- EOP ------------

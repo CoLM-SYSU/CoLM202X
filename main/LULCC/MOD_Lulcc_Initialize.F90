@@ -52,7 +52,7 @@ CONTAINS
 
    IMPLICIT NONE
 
-!------------------------- Dummy Arguments -----------------------------
+!-------------------------- Dummy Arguments ----------------------------
    character(len=*), intent(in) :: casename      ! case name
    character(len=*), intent(in) :: dir_landdata
    character(len=*), intent(in) :: dir_restart

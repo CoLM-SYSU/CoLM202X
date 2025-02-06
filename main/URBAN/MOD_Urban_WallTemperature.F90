@@ -68,7 +68,7 @@ CONTAINS
 
    IMPLICIT NONE
 
-!------------------------- Dummy Arguments -----------------------------
+!-------------------------- Dummy Arguments ----------------------------
    real(r8), intent(in) :: deltim               !seconds in a time step [second]
    real(r8), intent(in) :: capr                 !tuning factor to turn first layer T into surface T
    real(r8), intent(in) :: cnfac                !Crank Nicholson factor between 0 and 1

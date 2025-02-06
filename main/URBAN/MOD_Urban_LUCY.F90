@@ -44,7 +44,7 @@ CONTAINS
 ! -----------------------------------------------------------------------
    IMPLICIT NONE
 
-!------------------------- Dummy Arguments -----------------------------
+!-------------------------- Dummy Arguments ----------------------------
    integer , intent(in) :: &
       idate(3)           ! calendar (year, julian day, seconds)
 

@@ -131,6 +131,7 @@ PROGRAM CoLM
    type(timestamp) :: ststamp, itstamp, etstamp, ptstamp
 
    integer*8 :: start_time, end_time, c_per_sec, time_used
+!-----------------------------------------------------------------------
 
 #ifdef USEMPI
 #ifdef USESplitAI

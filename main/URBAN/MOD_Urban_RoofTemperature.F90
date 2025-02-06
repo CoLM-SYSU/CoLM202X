@@ -67,7 +67,7 @@ CONTAINS
 
    IMPLICIT NONE
 
-!------------------------- Dummy Arguments -----------------------------
+!-------------------------- Dummy Arguments ----------------------------
    integer , intent(in) :: lb                          !lower bound of array
    real(r8), intent(in) :: deltim                      !seconds in a time step [second]
    real(r8), intent(in) :: capr                        !tuning factor to turn first layer T into surface T

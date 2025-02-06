@@ -31,7 +31,7 @@ CONTAINS
 
    IMPLICIT NONE
 
-! ------------------------ Dummy Argument ------------------------------
+!-------------------------- Dummy Arguments ----------------------------
 
    integer, intent(in) :: maxsnl     ! maximum number of snow layers
    integer, intent(in) :: patchtype  ! land patch type (0=soil, 1=urban and built-up,
@@ -58,13 +58,14 @@ CONTAINS
 
    real(r8), intent(inout), optional :: wetwat  ! wetland water [mm]
 
-! ----------------------- Local  Variables -----------------------------
+!-------------------------- Local Variables ----------------------------
 
    real(r8) dz_snowf  ! layer thickness rate change due to precipitation [mm/s]
    integer newnode    ! signification when new snow node is set, (1=yes, 0=no)
    integer lb
 
 !-----------------------------------------------------------------------
+
       newnode = 0
 
       dz_snowf = pg_snow/bifall
@@ -121,3 +122,4 @@ CONTAINS
    END SUBROUTINE newsnow
 
 END MODULE MOD_NewSnow
+! ---------- EOP ------------

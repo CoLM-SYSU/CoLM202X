@@ -118,7 +118,7 @@ CONTAINS
 
    IMPLICIT NONE
 
-!-----------------------Arguments---------------------------------------
+!-------------------------- Dummy Arguments ----------------------------
 
    integer,  intent(in) :: ipatch,ivt
    real(r8), intent(in) :: &
@@ -297,7 +297,7 @@ CONTAINS
         fh,         &! integral of profile function for heat
         fq           ! integral of profile function for moisture
 
-!-----------------------Local Variables---------------------------------
+!-------------------------- Local Variables ----------------------------
 ! assign iteration parameters
    integer, parameter :: itmax  = 40   !maximum number of iteration
    integer, parameter :: itmin  = 6    !minimum number of iteration
@@ -419,7 +419,7 @@ CONTAINS
    integer,  parameter :: rb_opt = 3             ! rb with vertical profile consideration
    integer,  parameter :: rd_opt = 3             ! rd with vertical profile consideration
 
-!-----------------------End Variable List-------------------------------
+!-----------------------------------------------------------------------
 
 ! initialization of errors and  iteration parameters
       it     = 1    !counter for leaf temperature iteration

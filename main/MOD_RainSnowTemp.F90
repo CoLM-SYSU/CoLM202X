@@ -34,7 +34,7 @@ CONTAINS
 
    IMPLICIT NONE
 
-! ------------------------ Dummy Argument ------------------------------
+! ------------------------- Dummy Arguments ----------------------------
    integer,  intent(in)  :: patchtype ! land patch type (3=glaciers)
 
    real(r8), intent(in)  :: forc_t    ! temperature at agcm reference height [kelvin]
@@ -54,7 +54,7 @@ CONTAINS
    real(r8), intent(out) :: t_precip  ! snowfall/rainfall temperature [kelvin]
    real(r8), intent(out) :: bifall    ! bulk density of newly fallen dry snow [kg/m3]
 
-   ! local variables
+!-------------------------- Local Variables ----------------------------
    real(r8) :: flfall                 ! fraction of liquid water within falling precip.
 
    real(r8) :: all_snow_t             ! temperature at which all precip falls entirely as snow (K)

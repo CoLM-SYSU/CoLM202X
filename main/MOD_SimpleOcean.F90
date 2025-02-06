@@ -39,7 +39,7 @@ CONTAINS
    USE MOD_Const_Physical, only : tfrz, hvap, hsub, stefnc, vonkar
    IMPLICIT NONE
 
-!------------------------------Arguments--------------------------------
+! ------------------------- Dummy Arguments ----------------------------
 
    integer, parameter :: psrfty=7  ! Number of surface types
    integer, parameter :: plsice=4  ! number of seaice levels
@@ -85,7 +85,7 @@ CONTAINS
    real(r8), intent(out) :: emis   ! averaged bulk surface emissivity
    real(r8), intent(out) :: olrg   ! longwave up flux at surface [W/m2]
 
-!-----------------------------------------------------------------------
+!-------------------------- Local Variables ----------------------------
    integer isrfty   ! surface type index (1-7)
    real(r8) cgrndl  ! deriv, of soil sensible heat flux wrt soil temp [w/m2/k]
    real(r8) cgrnds  ! deriv of soil latent heat flux wrt soil temp [w/m**2/k]
@@ -199,7 +199,7 @@ CONTAINS
    USE MOD_Qsadv
    IMPLICIT NONE
 
-!----------------------- Dummy argument --------------------------------
+! ------------------------- Dummy Arguments ----------------------------
 
    real(r8), intent(in) :: &
         oro,      &! ocean(0)/seaice(2)/ flag
@@ -239,7 +239,7 @@ CONTAINS
         cgrndl,   &! deriv, of soil sensible heat flux wrt soil temp [w/m2/k]
         cgrnds     ! deriv of soil latent heat flux wrt soil temp [w/m**2/k]
 
-!------------------------ LOCAL VARIABLES ------------------------------
+!-------------------------- Local Variables ----------------------------
    integer i
    integer niters,&! maximum number of iterations for surface temperature
        iter,      &! iteration index
@@ -440,7 +440,7 @@ CONTAINS
    USE MOD_Utils
    IMPLICIT NONE
 
-!------------------------------Arguments--------------------------------
+! ------------------------- Dummy Arguments ----------------------------
 
    integer, parameter :: psrfty = 7  ! Number of surface types
    integer, parameter :: plsice = 4  ! number of seaice levels
@@ -453,7 +453,7 @@ CONTAINS
 
    real(r8), intent(inout) :: tsbsf(1:plsice) ! surface/sub-surface tmps
 
-!---------------------------Local variables-----------------------------
+!-------------------------- Local Variables ----------------------------
 
    integer :: j, jndx        ! sub-surface layer index
 
@@ -677,3 +677,4 @@ CONTAINS
    END SUBROUTINE srftsb
 
 END MODULE MOD_SimpleOcean
+! ---------- EOP ------------

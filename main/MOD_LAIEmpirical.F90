@@ -28,8 +28,9 @@ CONTAINS
    USE MOD_Precision
    IMPLICIT NONE
 
-   integer, intent(in)  :: ivt      !land cover type
-   integer, intent(in)  :: nl_soil  !number of soil layers
+!-------------------------- Dummy Arguments ----------------------------
+   integer,  intent(in)  :: ivt     !land cover type
+   integer,  intent(in)  :: nl_soil !number of soil layers
 
    real(r8), intent(in)  :: rootfr(1:nl_soil)  !root fraction
    real(r8), intent(in)  :: t(1:nl_soil)  !soil temperature
@@ -38,7 +39,7 @@ CONTAINS
    real(r8), intent(out) :: fveg    !fractional cover of vegetation
    real(r8), intent(out) :: green   !greenness
 
-!local variable
+!-------------------------- Local Variables ----------------------------
    real(r8) f      !
    real(r8) roota  !accumulates root fraction
    integer jrt     !number of soil layers with 90% root fraction

@@ -46,7 +46,7 @@ CONTAINS
    USE MOD_Const_Physical, only : vonkar
    IMPLICIT NONE
 
-! ---------------------- dummy argument --------------------------------
+! ------------------------- Dummy Arguments ----------------------------
 
    real(r8), intent(in) :: hu       ! observational height of wind [m]
    real(r8), intent(in) :: ht       ! observational height of temperature [m]
@@ -67,7 +67,7 @@ CONTAINS
    real(r8), intent(out) :: fh      ! integral of profile FUNCTION for heat
    real(r8), intent(out) :: fq      ! integral of profile FUNCTION for moisture
 
-!------------------------ local variables ------------------------------
+!-------------------------- Local Variables ----------------------------
 
    real(r8) zldis  ! reference height "minus" zero displacement height [m]
    real(r8) zetam, &
@@ -463,4 +463,3 @@ CONTAINS
 
 END MODULE MOD_TurbulenceLEddy
 ! --------- EOP ------------
-

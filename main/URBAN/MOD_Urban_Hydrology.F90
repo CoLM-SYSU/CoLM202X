@@ -91,7 +91,7 @@ CONTAINS
 
    IMPLICIT NONE
 
-!------------------------- Dummy Arguments -----------------------------
+!-------------------------- Dummy Arguments ----------------------------
    integer, intent(in) :: &
         ipatch             ,&! patch index
         patchtype          ,&! land patch type (0=soil, 1=urban or built-up, 2=wetland,

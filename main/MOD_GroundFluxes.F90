@@ -48,7 +48,7 @@ CONTAINS
 
    IMPLICIT NONE
 
-!----------------------- Dummy argument --------------------------------
+!-------------------------- Dummy Arguments ----------------------------
    real(r8), intent(in) :: &
           zlnd,      &! roughness length for soil [m]
           zsno,      &! roughness length for snow [m]
@@ -108,7 +108,7 @@ CONTAINS
           fh,        &! integral of profile FUNCTION for heat
           fq          ! integral of profile FUNCTION for moisture
 
-  !------------------------ LOCAL VARIABLES ------------------------------
+!-------------------------- Local Variables ----------------------------
    integer niters,   &! maximum number of iterations for surface temperature
          iter,       &! iteration index
          nmozsgn      ! number of times moz changes sign
@@ -139,7 +139,7 @@ CONTAINS
          z0mg,       &! roughness length over ground, momentum [m]
          z0qg         ! roughness length over ground, latent heat [m]
 
-  !----------------------- Dummy argument --------------------------------
+!-----------------------------------------------------------------------
   ! initial roughness length
       ! 09/2019, yuan: change to a combination of zlnd and zsno
       z0mg = (1.-fsno)*zlnd + fsno*zsno

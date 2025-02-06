@@ -95,7 +95,7 @@ CONTAINS
 
    IMPLICIT NONE
 
-!------------------------- Dummy Arguments -----------------------------
+!-------------------------- Dummy Arguments ----------------------------
 ! ground cover index
    integer, intent(in) :: &
         ipatch,        &! patch index
@@ -163,7 +163,7 @@ CONTAINS
         ssno(2,2),     &! ground snow absorption [-]
         ssno_lyr(2,2,maxsnl+1:1) ! ground snow layer absorption, by SNICAR [-]
 
-!-------------------------- Local variables ----------------------------
+!-------------------------- Local Variables ----------------------------
 
    real(r8) :: &!
       age,             &! factor to reduce visible snow alb due to snow age [-]
@@ -482,7 +482,7 @@ ENDIF
    USE MOD_Namelist, only: DEF_VEG_SNOW
    IMPLICIT NONE
 
-! parameters
+!-------------------------- Dummy Arguments ----------------------------
    real(r8), intent(in) :: &
           ! static parameters associated with vegetation type
             chil,          &! leaf angle distribution factor
@@ -511,7 +511,7 @@ ENDIF
             ssha(2,2)       ! shaded canopy absorption for solar radiation,
                             ! normalized by the incident flux
 
-!-------------------------- local -----------------------------------
+!-------------------------- Local Variables ----------------------------
    real(r8) :: &
             lsai,          &! lai+sai
             sai_,          &! sai=0 for USGS, no stem
@@ -816,7 +816,7 @@ ENDIF
    USE MOD_Namelist, only: DEF_VEG_SNOW
    IMPLICIT NONE
 
-! parameters
+!-------------------------- Dummy Arguments ----------------------------
    real(r8), intent(in) :: &
           ! static parameters associated with vegetation type
             chil,          &! leaf angle distribution factor
@@ -845,7 +845,7 @@ ENDIF
             ssha(2,2)       ! shaded canopy absorption for solar radiation,
                             ! normalized by the incident flux
 
-!-------------------------- local -----------------------------------
+!-------------------------- Local Variables ----------------------------
    real(r8) :: &
             lsai,          &! lai+sai
             phi1,          &! (phi-1)
@@ -1191,33 +1191,36 @@ ENDIF
 ! Created by Hua Yuan, 03/2020
 !
 !-----------------------------------------------------------------------
-      USE MOD_Precision
-      USE MOD_LandPFT
-      USE MOD_Const_PFT
-      USE MOD_Vars_PFTimeInvariants
-      USE MOD_Vars_PFTimeVariables
-      IMPLICIT NONE
+   USE MOD_Precision
+   USE MOD_LandPFT
+   USE MOD_Const_PFT
+   USE MOD_Vars_PFTimeInvariants
+   USE MOD_Vars_PFTimeVariables
+   IMPLICIT NONE
 
-      ! parameters
-      integer, intent(in) :: &
-            ipatch          ! patch index
+!-------------------------- Dummy Arguments ----------------------------
+   integer, intent(in) :: &
+         ipatch          ! patch index
 
-      ! environmental variables
-      real(r8), intent(in) ::  &
-            coszen,        &! cosine of solar zenith angle
-            albg(2,2)       ! albedos of ground
+   ! environmental variables
+   real(r8), intent(in) ::  &
+         coszen,        &! cosine of solar zenith angle
+         albg(2,2)       ! albedos of ground
 
-      ! output
-      real(r8), intent(out) :: &
-            albv(2,2),     &! albedo, vegetation [-]
-            tran(2,3),     &! canopy transmittances for solar radiation
-            ssun(2,2),     &! sunlit canopy absorption for solar radiation
-            ssha(2,2)       ! shaded canopy absorption for solar radiation,
-                            ! normalized by the incident flux
+   ! output
+   real(r8), intent(out) :: &
+         albv(2,2),     &! albedo, vegetation [-]
+         tran(2,3),     &! canopy transmittances for solar radiation
+         ssun(2,2),     &! sunlit canopy absorption for solar radiation
+         ssha(2,2)       ! shaded canopy absorption for solar radiation,
+                         ! normalized by the incident flux
 
-      integer :: i, p, ps, pe
-      real(r8), allocatable :: tran_p(:,:,:)
-      real(r8), allocatable :: albv_p(:,:,:)
+!-------------------------- Local Variables ----------------------------
+   integer :: i, p, ps, pe
+   real(r8), allocatable :: tran_p(:,:,:)
+   real(r8), allocatable :: albv_p(:,:,:)
+
+!-----------------------------------------------------------------------
 
       ps = patch_pft_s(ipatch)
       pe = patch_pft_e(ipatch)
@@ -1287,7 +1290,7 @@ ENDIF
    USE MOD_Const_Physical, only : tfrz
    IMPLICIT NONE
 
-!-------------------------- Dummy Argument -----------------------------
+!-------------------------- Dummy Arguments ----------------------------
 
    real(r8), intent(in) :: deltim ! seconds in a time step [second]
    real(r8), intent(in) :: tg     ! temperature of soil at surface [K]
@@ -1295,7 +1298,7 @@ ENDIF
    real(r8), intent(in) :: scvold ! snow cover for previous time step [mm]
    real(r8), intent(inout) :: sag ! non dimensional snow age [-]
 
-!-------------------------- Local variables ----------------------------
+!-------------------------- Local Variables ----------------------------
 
    real(r8) :: age1   ! snow aging factor due to crystal growth [-]
    real(r8) :: age2   ! snow aging factor due to surface growth [-]
@@ -1985,7 +1988,7 @@ ENDIF
    USE MOD_Precision
    IMPLICIT NONE
 
-!------------------------------Arguments--------------------------------
+!-------------------------- Dummy Arguments ----------------------------
 
    real(r8), intent(in) :: oro       ! /ocean(0)/seaice(2) flag
    real(r8), intent(in) :: scv       ! snow water equivalent) [mm]
@@ -1994,7 +1997,7 @@ ENDIF
    real(r8), intent(out) :: alb(2,2) ! srf alb for direct (diffuse) rad 0.2-0.7 micro-ms
                                      ! Srf alb for direct (diffuse) rad 0.7-5.0 micro-ms
 
-!---------------------------Local variables-----------------------------
+!-------------------------- Local Variables ----------------------------
 
    real(r8) frsnow       ! horizontal fraction of snow cover
    real(r8) snwhgt       ! physical snow height

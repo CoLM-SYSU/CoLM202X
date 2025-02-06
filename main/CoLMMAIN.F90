@@ -175,7 +175,7 @@ SUBROUTINE CoLMMAIN ( &
 
    IMPLICIT NONE
 
-! ------------------------ Dummy Argument ------------------------------
+!-------------------------- Dummy Arguments ----------------------------
    real(r8),intent(in) :: deltim  !seconds in a time step [second]
    logical, intent(in) :: doalb   !true if time for surface albedo calculation
    logical, intent(in) :: dolai   !true if time for leaf area index calculation
@@ -475,7 +475,7 @@ SUBROUTINE CoLMMAIN ( &
         fh          ,&! integral of profile function for heat
         fq            ! integral of profile function for moisture
 
-! ----------------------- Local  Variables -----------------------------
+!-------------------------- Local Variables ----------------------------
    logical  :: is_dry_lake
 
    real(r8) :: &
@@ -545,7 +545,6 @@ SUBROUTINE CoLMMAIN ( &
    real(r8) :: wextra, t_rain, t_snow
    integer ps, pe, pc
 
-!======================================================================
 #if(defined CaMa_Flood)
    !add variables for flood evaporation [mm/s] and re-infiltration [mm/s] calculation.
    real(r8) :: kk
@@ -566,6 +565,8 @@ SUBROUTINE CoLMMAIN ( &
    real(r8) :: fh_fld      ! integral of profile function for heat
    real(r8) :: fq_fld      ! integral of profile function for moisture
 #endif
+
+!-----------------------------------------------------------------------
 
       z_soisno (maxsnl+1:0) = z_sno (maxsnl+1:0)
       z_soisno (1:nl_soil ) = z_soi (1:nl_soil )

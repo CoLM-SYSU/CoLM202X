@@ -67,16 +67,17 @@ CONTAINS
    USE MOD_Precision
    USE MOD_Const_Physical, only : tfrz, denh2o, cpliq, cpice, hfus
    IMPLICIT NONE
-! ------------------------ Dummy Argument ------------------------------
-   logical, intent(in) :: USE_Dynamic_Lake
 
-   integer, intent(in) :: maxsnl    ! maximum number of snow layers
-   integer, intent(in) :: nl_lake   ! number of soil layers
-   real(r8), intent(in) :: deltim   ! seconds in a time step [second]
-   real(r8), intent(inout) :: pg_rain  ! liquid water onto ground [kg/(m2 s)]
-   real(r8), intent(inout) :: pg_snow  ! ice onto ground [kg/(m2 s)]
-   real(r8), intent(in) :: t_precip ! snowfall/rainfall temperature [kelvin]
-   real(r8), intent(in) :: bifall   ! bulk density of newly fallen dry snow [kg/m3]
+!-------------------------- Dummy Arguments ----------------------------
+   logical,  intent(in) :: USE_Dynamic_Lake
+
+   integer,  intent(in) :: maxsnl     ! maximum number of snow layers
+   integer,  intent(in) :: nl_lake    ! number of soil layers
+   real(r8), intent(in) :: deltim     ! seconds in a time step [second]
+   real(r8), intent(inout) :: pg_rain ! liquid water onto ground [kg/(m2 s)]
+   real(r8), intent(inout) :: pg_snow ! ice onto ground [kg/(m2 s)]
+   real(r8), intent(in) :: t_precip   ! snowfall/rainfall temperature [kelvin]
+   real(r8), intent(in) :: bifall     ! bulk density of newly fallen dry snow [kg/m3]
 
    real(r8), intent(inout) :: dz_lake(1:nl_lake)      ! lake layer thickness (m)
    real(r8), intent(inout) ::   zi_soisno(maxsnl:0)   ! interface level below a "z" level (m)
@@ -86,14 +87,14 @@ CONTAINS
    real(r8), intent(inout) :: wliq_soisno(maxsnl+1:0) ! snow layer liquid water (kg/m2)
    real(r8), intent(inout) :: wice_soisno(maxsnl+1:0) ! snow layer ice lens (kg/m2)
    real(r8), intent(inout) ::       fiold(maxsnl+1:0) ! fraction of ice relative to the total water
-   integer, intent(inout) :: snl    ! number of snow layers
-   real(r8), intent(inout) :: sag    ! non dimensional snow age [-]
-   real(r8), intent(inout) :: scv    ! snow mass (kg/m2)
-   real(r8), intent(inout) :: snowdp ! snow depth (m)
+   integer,  intent(inout) :: snl     ! number of snow layers
+   real(r8), intent(inout) :: sag     ! non dimensional snow age [-]
+   real(r8), intent(inout) :: scv     ! snow mass (kg/m2)
+   real(r8), intent(inout) :: snowdp  ! snow depth (m)
    real(r8), intent(inout) :: lake_icefrac(1:nl_lake) ! mass fraction of lake layer that is frozen
    real(r8), intent(inout) :: t_lake(1:nl_lake)       ! lake layer temperature (m)
 
-! ----------------------- Local  Variables -----------------------------
+!-------------------------- Local Variables ----------------------------
 
    integer lb
    integer newnode    ! signification when new snow node is set, (1=yes, 0=non)
@@ -373,7 +374,7 @@ CONTAINS
    USE MOD_Utils
 
    IMPLICIT NONE
-!  ------------------------ input/output variables -----------------
+!-------------------------- Dummy Arguments ----------------------------
    integer, intent(in) :: patchtype    ! land patch type (4=deep lake, 5=shallow lake)
    integer, intent(in) :: maxsnl       ! maximum number of snow layers
    integer, intent(in) :: nl_soil      ! number of soil layers
@@ -473,6 +474,7 @@ CONTAINS
    real(r8), intent(out) :: sm     ! rate of snowmelt [mm/s, kg/(m2 s)]
    logical, optional, intent(in) :: urban_call   ! whether it is a urban CALL
 
+!-------------------------- Local Variables ----------------------------
 !  ---------------- local variables in surface temp and fluxes calculation -----------------
    integer idlak     ! index of lake, 1 = deep lake, 2 = shallow lake
    real(r8) z_lake (nl_lake)  ! lake node depth (middle point of layer) (m)
@@ -1592,7 +1594,7 @@ CONTAINS
 
    IMPLICIT NONE
 
-! ------------- in/inout/out variables -----------------------------------------
+!-------------------------- Dummy Arguments ----------------------------
    logical, intent(in) :: USE_Dynamic_Lake
 
    integer, intent(in) :: maxsnl  ! maximum number of snow layers
@@ -1655,7 +1657,7 @@ CONTAINS
 ! Aerosol Fluxes (Jan. 07, 2023)
 ! END SNICAR model variables
 
-! ------------- other local variables -----------------------------------------
+!-------------------------- Local Variables ----------------------------
    logical  has_snow_bef
    integer  j          ! indices
    integer lb          ! lower bound of array
@@ -1936,6 +1938,7 @@ CONTAINS
 
    real(r8) kva    ! kinematic viscosity of air at ground temperature and forcing pressure
    real(r8) sqre0  ! root of roughness Reynolds number
+!-----------------------------------------------------------------------
 
       IF (t_grnd > tfrz .and. t_lake(1) > tfrz .and. snl == 0) THEN
          kva = kva0 * (t_grnd/293.15)**1.5 * 1.013e5/forc_psrf ! kinematic viscosity of air
@@ -1974,6 +1977,7 @@ CONTAINS
 
    IMPLICIT NONE
 
+!-------------------------- Dummy Arguments ----------------------------
    integer, intent(in) :: nl_lake  ! number of soil layers
    integer, intent(in) :: snl      ! number of snow layers
    real(r8), intent(in) :: t_grnd  ! ground surface temperature [k]
@@ -1992,7 +1996,7 @@ CONTAINS
    real(r8), intent(out) :: tk_lake(nl_lake) ! thermal conductivity at layer node [W/(m K)]
    real(r8), intent(out) :: savedtke1      ! top level eddy conductivity (W/mK)
 
-! local
+!-------------------------- Local Variables ----------------------------
    real(r8) kme(nl_lake) ! molecular + eddy diffusion coefficient (m**2/s)
    real(r8) cwat   ! specific heat capacity of water (j/m**3/kelvin)
    real(r8) den    ! used in calculating ri

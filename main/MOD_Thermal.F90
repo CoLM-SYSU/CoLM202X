@@ -133,7 +133,7 @@ CONTAINS
 
    IMPLICIT NONE
 
-!---------------------Argument------------------------------------------
+! ------------------------- Dummy Arguments ----------------------------
 
    integer, intent(in) :: &
        ipatch,                   &! patch index
@@ -361,7 +361,7 @@ CONTAINS
        fh,                       &! integral of profile function for heat
        fq                         ! integral of profile function for moisture
 
-!---------------------Local Variables-----------------------------------
+!-------------------------- Local Variables ----------------------------
 
    integer i,j
 

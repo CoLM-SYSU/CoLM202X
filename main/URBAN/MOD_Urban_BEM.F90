@@ -75,7 +75,7 @@ CONTAINS
 
    IMPLICIT NONE
 
-!------------------------- Dummy Arguments -----------------------------
+!-------------------------- Dummy Arguments ----------------------------
    real(r8), intent(in) :: &
         deltim,          &! seconds in a time step [second]
         rhoair,          &! density air [kg/m3]

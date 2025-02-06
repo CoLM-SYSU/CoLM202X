@@ -38,7 +38,7 @@ CONTAINS
    USE MOD_Const_Physical, only : vonkar
    IMPLICIT NONE
 
-! ---------------------- dummy argument --------------------------------
+!-------------------------- Dummy Arguments ----------------------------
 
    real(r8), intent(in) :: hu       ! observational height of wind [m]
    real(r8), intent(in) :: ht       ! observational height of temperature [m]
@@ -58,7 +58,7 @@ CONTAINS
    real(r8), intent(out) :: fh      ! integral of profile FUNCTION for heat
    real(r8), intent(out) :: fq      ! integral of profile FUNCTION for moisture
 
-!------------------------ local variables ------------------------------
+!-------------------------- Local Variables ----------------------------
 
    real(r8) zldis  ! reference height "minus" zero displacement height [m]
    real(r8) zetam  ! transition point of flux-gradient relation (wind profile)
@@ -192,7 +192,7 @@ CONTAINS
    USE MOD_Const_Physical, only : vonkar
    IMPLICIT NONE
 
-! ---------------------- dummy argument --------------------------------
+!-------------------------- Dummy Arguments ----------------------------
 
    real(r8), intent(in) :: hu       ! observational height of wind [m]
    real(r8), intent(in) :: ht       ! observational height of temperature [m]
@@ -218,7 +218,7 @@ CONTAINS
    real(r8), intent(out) :: fqt     ! integral of profile FUNCTION for moisture at the top layer
    real(r8), intent(out) :: phih    ! phi(h), similarity FUNCTION for sensible heat
 
-!------------------------ local variables ------------------------------
+!-------------------------- Local Variables ----------------------------
 
    real(r8) zldis  ! reference height "minus" zero displacement height [m]
    real(r8) zetam  ! transition point of flux-gradient relation (wind profile)
@@ -383,20 +383,22 @@ CONTAINS
    USE MOD_Const_Physical, only : vonkar
    IMPLICIT NONE
 
-! ---------------------- dummy argument --------------------------------
+!-------------------------- Dummy Arguments ----------------------------
 
    real(r8), intent(in) :: displa   ! displacement height [m]
    real(r8), intent(in) :: obu      ! monin-obukhov length (m)
    real(r8), intent(in) :: ustar    ! friction velocity [m/s]
    real(r8), intent(in) :: z        ! height of windspeed [m]
 
-!------------------------ local variables ------------------------------
+!-------------------------- Local Variables ----------------------------
 
    real(r8) zldis  ! reference height "minus" zero displacement height [m]
    real(r8) zetam  ! transition point of flux-gradient relation (wind profile)
    real(r8) zetat  ! transition point of flux-gradient relation (temp. profile)
    real(r8) zeta   ! dimensionless height used in Monin-Obukhov theory
    real(r8) phih   ! phi(h), similarity FUNCTION for sensible heat
+
+!-----------------------------------------------------------------------
 
       IF ( z .le. displa ) THEN
          kmoninobuk = 0.
@@ -434,7 +436,7 @@ CONTAINS
    USE MOD_Const_Physical, only : vonkar
    IMPLICIT NONE
 
-! ---------------------- dummy argument --------------------------------
+!-------------------------- Dummy Arguments ----------------------------
 
    real(r8), intent(in) :: displa   ! displacement height [m]
    real(r8), intent(in) :: z0h      ! roughness length, sensible heat [m]
@@ -443,7 +445,7 @@ CONTAINS
    real(r8), intent(in) :: ztop     ! height top
    real(r8), intent(in) :: zbot     ! height bottom
 
-!------------------------ local variables ------------------------------
+!-------------------------- Local Variables ----------------------------
 
    real(r8) zldis  ! reference height "minus" zero displacement height [m]
    real(r8) zetam  ! transition point of flux-gradient relation (wind profile)
@@ -451,6 +453,8 @@ CONTAINS
    real(r8) zeta   ! dimensionless height used in Monin-Obukhov theory
 
    real(r8) :: fh_top, fh_bot         ! integral of profile FUNCTION for heat
+
+!-----------------------------------------------------------------------
 
       zldis=ztop-displa
       zeta=zldis/obu
@@ -501,7 +505,7 @@ CONTAINS
    USE MOD_Const_Physical, only : grav, vonkar
    IMPLICIT NONE
 
-! Dummy argument
+!-------------------------- Dummy Arguments ----------------------------
    real(r8), intent(in) :: ur    ! wind speed at reference height [m/s]
    real(r8), intent(in) :: thm   ! intermediate variable (tm+0.0098*ht)
    real(r8), intent(in) :: th    ! potential temperature [kelvin]
@@ -515,7 +519,7 @@ CONTAINS
    real(r8), intent(out) :: um   ! wind speed including the stability effect [m/s]
    real(r8), intent(out) :: obu  ! monin-obukhov length (m)
 
-! Local
+!-------------------------- Local Variables ----------------------------
    real(r8) wc     ! convective velocity [m/s]
    real(r8) rib    ! bulk Richardson number
    real(r8) zeta   ! dimensionless height used in Monin-Obukhov theory

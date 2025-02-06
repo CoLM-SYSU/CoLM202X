@@ -42,9 +42,9 @@ CONTAINS
 
 #ifdef LULC_IGBP_PC
 
-!-----------------------------------------------------------------------
    SUBROUTINE ThreeDCanopy_wrap (ipatch, czen, albg, albv, tran, ssun, ssha)
 
+!-----------------------------------------------------------------------
 !
 ! !DESCRIPTION:
 !  This is a wrap SUBROUTINE to CALL 3D canopy radiative model below
@@ -60,6 +60,7 @@ CONTAINS
 !
 ! !REVISIONS:
 !
+!-----------------------------------------------------------------------
 
    USE MOD_Precision
    USE MOD_Namelist, only: DEF_VEG_SNOW
@@ -71,6 +72,7 @@ CONTAINS
 
    IMPLICIT NONE
 
+!-------------------------- Dummy Arguments ----------------------------
    integer,  intent(in)  :: ipatch
    real(r8), intent(in)  :: czen
    real(r8), intent(in)  :: albg(2,2)
@@ -79,7 +81,7 @@ CONTAINS
    real(r8), intent(out) :: ssun(2,2)
    real(r8), intent(out) :: ssha(2,2)
 
-   ! local variables
+!-------------------------- Local Variables ----------------------------
    integer :: i, p, ps, pe;
 
    ! sunlit absorption fraction calculation mode
@@ -102,6 +104,7 @@ CONTAINS
    real(r8) :: rho_sno(2), tau_sno(2)
    data rho_sno(1), rho_sno(2) /0.3, 0.2/
    data tau_sno(1), tau_sno(2) /0.3, 0.2/
+!-----------------------------------------------------------------------
 
       ! get patch PFT index
       ps = patch_pft_s(ipatch)
@@ -264,7 +267,7 @@ CONTAINS
                            lsai, rho, tau, albgrd, albgri, albd, albi, &
                            fabd, fabi, ftdd, ftid, ftii, fadd, psun, &
                            fsun_id, fsun_ii, thermk, fshade)
-!
+!-----------------------------------------------------------------------
 ! !DESCRIPTION:
 !  ThreeDCanopy based on Dickinson (2008) using three canopy layer
 !  to calculate fluxes absorbed by vegetation, reflected by vegetation,
@@ -282,14 +285,16 @@ CONTAINS
 !  and D. Ji, 2014: A 3D canopy radiative transfer model for global climate
 !  modeling: Description, validation, and application. Journal of Climate,
 !  27, 1168–1192, https://doi.org/10.1175/JCLI-D-13-00155.1.
-
 !
-! !ARGUMENTS:
+! !REVISIONS:
+!
+!-----------------------------------------------------------------------
+
    IMPLICIT NONE
 
    integer, parameter :: numrad = 2
 
-! !ARGUMENTS:
+!-------------------------- Dummy Arguments ----------------------------
    integer , intent(in)  :: ps, pe               !pft index bounds
    integer , intent(in)  :: canlay(ps:pe)        !canopy level for current pft
    real(r8), intent(in)  :: fcover(ps:pe)        !fractional cover of pft within a patch
@@ -321,7 +326,7 @@ CONTAINS
    real(r8), intent(out) :: thermk  (ps:pe)      !direct transmittance of diffuse radiation
    real(r8), intent(out) :: fshade  (ps:pe)      !shadow in diffuse case of vegetation
 
-! !OTHER LOCAL VARIABLES:
+!-------------------------- Local Variables ----------------------------
    real(r8), parameter :: mpe = 1.0e-06_r8       !prevents overflow for division by zero
    integer , parameter :: nlay=3                 !number of canopy layers
    real(r8), parameter :: D0=0.0_r8              !double accuracy real number
@@ -447,6 +452,7 @@ CONTAINS
    logical  :: soilveg(ps:pe)            !true if pft over soil with veg and cosz > 0
 
    real(r8) :: phi1(ps:pe), phi2(ps:pe)
+!-----------------------------------------------------------------------
 
       ! 11/07/2018: calculate gee FUNCTION consider LAD
       phi1 = 0.5 - 0.633 * chil - 0.33 * chil * chil
@@ -1123,7 +1129,7 @@ CONTAINS
                         ftid, ftii, frid, frii, faid, faii)
    IMPLICIT NONE
 
-   ! input variables
+!-------------------------- Dummy Arguments ----------------------------
    real(r8) :: cosz      !0.001 <= coszen <= 1.000
    real(r8) :: cosd      !0.001 <= coszen <= 1.000
    real(r8) :: faid      !direct absorption
@@ -1154,7 +1160,7 @@ CONTAINS
    real(r8) :: phi_dif_o !total rad scattered in all direction per diffuse beam
    real(r8) :: pa2       !total rad scattered in all direction per direct beam
 
-   ! local variables
+!-------------------------- Local Variables ----------------------------
    logical  :: runmode = .true.
    real(r8) :: tau
    real(r8) :: muv       !forward frac of 3D scat rad in all direction for diffuse
@@ -1178,6 +1184,7 @@ CONTAINS
    real(r16), parameter :: DD1 = 1.0_r16    !128-bit real number
 
    real(r8) , parameter :: pi  = 3.14159265358979323846_R8  !pi
+!-----------------------------------------------------------------------
 
       tau = D3/D4*gee*lsai
 

@@ -78,7 +78,7 @@ CONTAINS
 
    IMPLICIT NONE
 
-!---------------------Argument------------------------------------------
+!-------------------------- Dummy Arguments ----------------------------
 
    integer, intent(in) :: &
         patchtype,&   ! land patch type (0=soil, 1=urban and built-up,
@@ -169,7 +169,7 @@ CONTAINS
         fh,          &! integral of profile FUNCTION for heat
         fq            ! integral of profile FUNCTION for moisture
 
-!---------------------Local Variables-----------------------------------
+!-------------------------- Local Variables ----------------------------
    integer i,j
 
    real(r8) :: &
@@ -361,7 +361,7 @@ CONTAINS
    USE MOD_TurbulenceLEddy
    IMPLICIT NONE
 
-!----------------------- Dummy argument --------------------------------
+!-------------------------- Dummy Arguments ----------------------------
    real(r8), intent(in) :: &
         zlnd,     &! roughness length for ice [m]
         zsno,     &! roughness length for snow [m]
@@ -415,7 +415,7 @@ CONTAINS
         fh,       &! integral of profile FUNCTION for heat
         fq         ! integral of profile FUNCTION for moisture
 
-!------------------------ LOCAL VARIABLES ------------------------------
+!-------------------------- Local Variables ----------------------------
    integer niters, &! maximum number of iterations for surface temperature
        iter,      &! iteration index
        nmozsgn     ! number of times moz changes sign
@@ -447,7 +447,7 @@ CONTAINS
        z0hg,      &! roughness length over ground, sensible heat [m]
        z0qg        ! roughness length over ground, latent heat [m]
 
-!----------------------- Dummy argument --------------------------------
+!-----------------------------------------------------------------------
 ! initial roughness length
       IF(fsno > 0.)THEN
        ! z0mg = zsno
@@ -603,10 +603,11 @@ CONTAINS
 
    IMPLICIT NONE
 
-   integer, intent(in) :: patchtype  ! land patch type (0=soil, 1=urban and built-up,
-                                     ! 2=wetland, 3=land ice, 4=land water bodies, 99 = ocean)
-   integer, intent(in) :: lb         !lower bound of array
-   integer, intent(in) :: nl_ice     !upper bound of array
+!-------------------------- Dummy Arguments ----------------------------
+   integer,  intent(in) :: patchtype !land patch type (0=soil, 1=urban and built-up,
+                                     !2=wetland, 3=land ice, 4=land water bodies, 99 = ocean)
+   integer,  intent(in) :: lb        !lower bound of array
+   integer,  intent(in) :: nl_ice    !upper bound of array
    real(r8), intent(in) :: deltim    !seconds in a time step [second]
    real(r8), intent(in) :: capr      !tuning factor to turn first layer T into surface T
    real(r8), intent(in) :: cnfac     !Crank Nicholson factor between 0 and 1
@@ -641,7 +642,7 @@ CONTAINS
 
    real(r8), intent(out) :: snofrz(lb:0)        !snow freezing rate (lyr) [kg m-2 s-1]
 
-!------------------------ local variables ------------------------------
+!-------------------------- Local Variables ----------------------------
    real(r8) rhosnow         ! partial density of water (ice + liquid)
    real(r8) cv(lb:nl_ice)   ! heat capacity [J/(m2 K)]
    real(r8) thk(lb:nl_ice)  ! thermal conductivity of layer
@@ -679,7 +680,7 @@ CONTAINS
                fc_vgm   (1:nl_ice)
 #endif
 
-!=======================================================================
+!-----------------------------------------------------------------------
 ! SNOW and LAND ICE heat capacity
       cv(1:) = wice_icesno(1:)*cpice + wliq_icesno(1:)*cpliq
       IF(lb==1 .and. scv>0.) cv(1) = cv(1) + cpice*scv
@@ -885,7 +886,7 @@ CONTAINS
 
    IMPLICIT NONE
 
-!-----------------------Argument---------- ------------------------------
+!-------------------------- Dummy Arguments ----------------------------
    integer, intent(in) :: nl_ice  ! upper bound of array
    integer, intent(in) :: maxsnl  ! maximum number of snow layers
 
@@ -921,9 +922,9 @@ CONTAINS
 
    real(r8), intent(out) :: &
        gwat   ! net water input from top (mm/s)
-!
-!-----------------------Local Variables------------------------------
-!
+
+!-------------------------- Local Variables ----------------------------
+
    integer lb, j
 
 !=======================================================================
@@ -1010,7 +1011,7 @@ CONTAINS
 
    IMPLICIT NONE
 
-!-----------------------Argument---------- ------------------------------
+!-------------------------- Dummy Arguments ----------------------------
    integer, intent(in) :: nl_ice  ! upper bound of array
    integer, intent(in) :: maxsnl  ! maximum number of snow layers
 
@@ -1060,9 +1061,8 @@ CONTAINS
         mss_dst4  (maxsnl+1:0)   ! mass of dust species 4 in snow  (col,lyr) [kg]
 ! Aerosol Fluxes (Jan. 07, 2023)
 
-!
-!-----------------------Local Variables------------------------------
-!
+!-------------------------- Local Variables ----------------------------
+
    integer lb, j
 
 !=======================================================================

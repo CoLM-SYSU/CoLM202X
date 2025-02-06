@@ -200,7 +200,7 @@
 
    IMPLICIT NONE
 
-!------------------------- Dummy Arguments -----------------------------
+!-------------------------- Dummy Arguments ----------------------------
    integer, intent(in) :: &
         ipatch                ,&! maximum number of snow layers
         idate(3)              ,&! next time-step /year/julian day/second in a day/

@@ -58,7 +58,7 @@ CONTAINS
    USE MOD_Namelist
    IMPLICIT NONE
 
-!-----------------------------------------------------------------------
+!-------------------------- Dummy Arguments ----------------------------
 
     integer, intent(in) :: patchtype                   !land patch type (0=soil,1=urban or built-up,2=wetland,
                                                        !3=land ice, 4=deep lake, 5=shallow lake)
@@ -99,7 +99,7 @@ CONTAINS
    real(r8), intent(out) :: xmf                        !total latent heat of phase change
     integer, intent(out) :: imelt(lb:nl_soil)          !flag for melting or freezing [-]
 
-! Local
+!-------------------------- Local Variables ----------------------------
    real(r8) :: hm(lb:nl_soil)                          !energy residual [W/m2]
    real(r8) :: xm(lb:nl_soil)                          !melting or freezing within a time step [kg/m2]
    real(r8) :: heatr                                   !energy residual or loss after melting or freezing
@@ -358,7 +358,7 @@ CONTAINS
    USE MOD_Namelist
    IMPLICIT NONE
 
-!-----------------------------------------------------------------------
+!-------------------------- Dummy Arguments ----------------------------
 
     integer, intent(in) :: patchtype                   !land patch type (0=soil,1=urban or built-up,2=wetland,
                                                        !3=land ice, 4=deep lake, 5=shallow lake)
@@ -400,7 +400,7 @@ CONTAINS
    real(r8), intent(out) :: xmf                        !total latent heat of phase change
     integer, intent(out) :: imelt(lb:nl_soil)          !flag for melting or freezing [-]
 
-! Local
+!-------------------------- Local Variables ----------------------------
    real(r8) :: hm(lb:nl_soil)                          !energy residual [W/m2]
    real(r8) :: xm(lb:nl_soil)                          !melting or freezing within a time step [kg/m2]
    real(r8) :: heatr                                   !energy residual or loss after melting or freezing
@@ -655,7 +655,7 @@ CONTAINS
    USE MOD_Const_Physical, only : tfrz, hfus
    IMPLICIT NONE
 
-!-----------------------------------------------------------------------
+!-------------------------- Dummy Arguments ----------------------------
 
     integer, intent(in) :: nl_soil                     !upper bound of array (i.e., soil layers)
     integer, intent(in) :: lb                          !lower bound of array (i.e., snl +1)
@@ -676,7 +676,7 @@ CONTAINS
    real(r8), intent(out) :: xmf                        !total latent heat of phase change
    integer,  intent(out) :: imelt(lb:nl_soil)          !flag for melting or freezing [-]
 
-! Local
+!-------------------------- Local Variables ----------------------------
    real(r8) :: hm(lb:nl_soil)                          !energy residual [W/m2]
    real(r8) :: xm(lb:nl_soil)                          !melting or freezing within a time step [kg/m2]
    real(r8) :: heatr                                   !energy residual or loss after melting or freezing
@@ -817,3 +817,4 @@ CONTAINS
    END SUBROUTINE meltf_urban
 
 END MODULE MOD_PhaseChange
+! ---------- EOP ------------
