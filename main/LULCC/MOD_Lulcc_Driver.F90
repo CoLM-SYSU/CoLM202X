@@ -96,6 +96,7 @@ MODULE MOD_Lulcc_Driver
 
    logical, intent(in)    :: greenwich   !true: greenwich time, false: local time
    integer, intent(inout) :: idate(3)    !year, julian day, seconds of the starting time
+!-----------------------------------------------------------------------
 
       ! allocate Lulcc memory
       CALL allocate_LulccTimeInvariants

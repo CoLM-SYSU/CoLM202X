@@ -52,7 +52,7 @@ CONTAINS
 
    IMPLICIT NONE
 
-   ! ----------------------------------------------------------------------
+!------------------------- Dummy Arguments -----------------------------
    character(len=*), intent(in) :: casename      ! case name
    character(len=*), intent(in) :: dir_landdata
    character(len=*), intent(in) :: dir_restart
@@ -60,9 +60,10 @@ CONTAINS
    integer, intent(inout) :: idate(3)   ! year, julian day, seconds of the starting time
    logical, intent(in)    :: greenwich  ! true: greenwich time, false: local time
 
-   ! local vars
+!-------------------------- Local Variables ----------------------------
    integer :: year, jday
-   ! ----------------------------------------------------------------------
+
+!-----------------------------------------------------------------------
 
       ! initial time of model run
       ! ............................

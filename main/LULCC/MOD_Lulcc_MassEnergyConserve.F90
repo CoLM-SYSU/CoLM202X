@@ -41,7 +41,6 @@ CONTAINS
 !
 !-----------------------------------------------------------------------
 
-
    USE MOD_Precision
    USE MOD_Vars_Global
    USE MOD_LandPatch
@@ -71,6 +70,7 @@ CONTAINS
 
    IMPLICIT NONE
 
+!-------------------------- Local Variables ----------------------------
    integer, allocatable, dimension(:) :: grid_patch_s , grid_patch_e
    integer, allocatable, dimension(:) :: grid_patch_s_, grid_patch_e_
    integer, allocatable, dimension(:) :: locpxl
@@ -104,6 +104,7 @@ CONTAINS
    real(r8), parameter :: m = 1.0       !the value of m used in CLM4.5 is 1.0.
    ! real(r8) :: deltim = 1800.         !time step (seconds) TODO: be intent in
    logical :: FROM_SOIL
+!-----------------------------------------------------------------------
 
       IF (p_is_worker) THEN
 
