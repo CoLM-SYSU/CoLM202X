@@ -68,6 +68,7 @@ CONTAINS
 
    IMPLICIT NONE
 
+!------------------------- Dummy Arguments -----------------------------
    real(r8), intent(in) :: deltim               !seconds in a time step [second]
    real(r8), intent(in) :: capr                 !tuning factor to turn first layer T into surface T
    real(r8), intent(in) :: cnfac                !Crank Nicholson factor between 0 and 1
@@ -89,7 +90,7 @@ CONTAINS
    real(r8), intent(inout) :: t_wall(1:nl_wall) !wall layers' temperature [K]
    real(r8), intent(inout) :: tkdz_wall         !inner wall heat flux [w/m2/k]
 
-!------------------------ local variables ------------------------------
+!-------------------------- Local Variables ----------------------------
    real(r8) wice_wall(1:nl_wall)  !ice lens [kg/m2]
    real(r8) wliq_wall(1:nl_wall)  !liquid water [kg/m2]
 
@@ -114,7 +115,7 @@ CONTAINS
 
    integer i,j
 
-!=======================================================================
+!-----------------------------------------------------------------------
 
       wice_wall(1:) = 0.0  !ice lens [kg/m2]
       wliq_wall(1:) = 0.0  !liquid water [kg/m2]

@@ -31,9 +31,9 @@
 !
 !  The CoLM urban model utilizes comprehensive high-resolution data on
 !  urban cover, geometric structure, vegetation, water bodies, etc.
-!  Furthermore, it has developed a complete simulation of anthropogenic
-!  heat processes, including building energy consumption, traffic heat,
-!  and metabolic heat.
+!  Furthermore, it has developed a relatively complete simulation of
+!  anthropogenic heat processes, including building energy consumption,
+!  traffic heat, and metabolic heat.
 !
 !  Created by Hua Yuan, 09/2021
 !
@@ -200,7 +200,7 @@
 
    IMPLICIT NONE
 
-! ------------------------ Dummy Argument ------------------------------
+!------------------------- Dummy Arguments -----------------------------
    integer, intent(in) :: &
         ipatch                ,&! maximum number of snow layers
         idate(3)              ,&! next time-step /year/julian day/second in a day/
@@ -259,7 +259,7 @@
         bsw         (nl_soil) ,&! clapp and hornberger "b" parameter [-]
         theta_r     (nl_soil) ,&! residual water content (cm3/cm3)
         fsatmax               ,&! maximum saturated area fraction [-]
-        fsatdcf               ,&! decay factor in calucation of saturated area fraction [1/m]
+        fsatdcf               ,&! decay factor in calculation of saturated area fraction [1/m]
 
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
         alpha_vgm (1:nl_soil) ,&! the parameter corresponding approximately to the inverse of the air-entry value
@@ -435,7 +435,7 @@
         mss_dst2  ( maxsnl+1:0 ) ,&! mass of dust species 2 in snow  (col,lyr) [kg]
         mss_dst3  ( maxsnl+1:0 ) ,&! mass of dust species 3 in snow  (col,lyr) [kg]
         mss_dst4  ( maxsnl+1:0 ) ,&! mass of dust species 4 in snow  (col,lyr) [kg]
-        ssno    (2,2,maxsnl+1:1) ,&! snow layer absorption [-]
+        ssno   (2,2,maxsnl+1:1 ) ,&! snow layer absorption [-]
 
         fveg                  ,&! fraction of vegetation cover
         fsno                  ,&! fractional snow cover
@@ -574,7 +574,7 @@
         fh                    ,&! integral of profile function for heat
         fq                      ! integral of profile function for moisture
 
-! ----------------------- Local  Variables -----------------------------
+!-------------------------- Local Variables ----------------------------
    real(r8) :: &
         calday                ,&! Julian cal day (1.xx to 365.xx)
         endwb                 ,&! water mass at the end of time step
@@ -698,6 +698,8 @@
    ! A simple urban irrigation scheme accounts for soil water stress of trees
    ! a factor represents irrigation efficiency, '1' represents a 50% direct irrigation efficiency.
    real(r8), parameter :: wst_irrig = 1.0
+
+!-----------------------------------------------------------------------
 
       theta = acos(max(coszen,0.01))
       forc_aer(:) = 0.          !aerosol deposition from atmosphere model (grd,aer) [kg m-1 s-1]
@@ -1080,7 +1082,7 @@
 ! SNICAR model variables
          forc_aer                                                                       ,&
          mss_bcpho(lbsn:0)  ,mss_bcphi(lbsn:0)  ,mss_ocpho(lbsn:0)  ,mss_ocphi(lbsn:0)  ,&
-         mss_dst1(lbsn:0)   ,mss_dst2(lbsn:0)   ,mss_dst3(lbsn:0)   ,mss_dst4(lbsn:0)   ,&
+         mss_dst1 (lbsn:0)  ,mss_dst2 (lbsn:0)  ,mss_dst3 (lbsn:0)  ,mss_dst4 (lbsn:0)  ,&
 ! END SNICAR model variables
 
          ! output

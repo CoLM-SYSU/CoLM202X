@@ -91,7 +91,7 @@ CONTAINS
 
    IMPLICIT NONE
 
-!-----------------------Argument----------------------------------------
+!------------------------- Dummy Arguments -----------------------------
    integer, intent(in) :: &
         ipatch             ,&! patch index
         patchtype          ,&! land patch type (0=soil, 1=urban or built-up, 2=wetland,
@@ -227,9 +227,9 @@ CONTAINS
    real(r8), intent(out) :: &
         smp(1:nl_soil)   ,&! soil matrix potential [mm]
         hk (1:nl_soil)     ! hydraulic conductivity [mm h2o/m]
-!
-!-----------------------Local Variables------------------------------
-!
+
+!-------------------------- Local Variables ----------------------------
+
    real(r8) :: &
         fg               ,&! ground fractional cover [-]
         gwat             ,&! net water input from top (mm/s)
@@ -245,6 +245,8 @@ CONTAINS
         dfgrnd             ! change of lake ground heat flux [W/m2]
 
    real(r8) :: a, aa, xs1
+
+!-----------------------------------------------------------------------
 
       fg = 1 - froof
       dfseng = 0.

@@ -67,6 +67,7 @@ CONTAINS
 
    IMPLICIT NONE
 
+!------------------------- Dummy Arguments -----------------------------
    integer , intent(in) :: lb                          !lower bound of array
    real(r8), intent(in) :: deltim                      !seconds in a time step [second]
    real(r8), intent(in) :: capr                        !tuning factor to turn first layer T into surface T
@@ -100,7 +101,7 @@ CONTAINS
    real(r8), intent(out) :: tkdz_roof                  !heat diffusion with inner room space
    integer , intent(out) :: imelt_roof(lb:nl_roof)     !flag for melting or freezing [-]
 
-!------------------------ local variables ------------------------------
+!-------------------------- Local Variables ----------------------------
    real(r8) cv (lb:nl_roof)           !heat capacity [J/(m2 K)]
    real(r8) thk(lb:nl_roof)           !thermal conductivity of layer
    real(r8) tk (lb:nl_roof)           !thermal conductivity [W/(m K)]
@@ -123,7 +124,7 @@ CONTAINS
 
    integer i,j
 
-!=======================================================================
+!-----------------------------------------------------------------------
 
       wice_roofsno(2:) = 0.0 !ice lens [kg/m2]
       wliq_roofsno(2:) = 0.0 !liquid water [kg/m2]
@@ -155,7 +156,7 @@ CONTAINS
          ENDDO
       ENDIF
 
-    ! thermal conductivity at the layer interface
+! thermal conductivity at the layer interface
       thk(1:) = tk_roof(1:)
       IF (lb <= 0) THEN
          DO j = lb, 0

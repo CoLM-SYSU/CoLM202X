@@ -18,7 +18,7 @@ MODULE MOD_Urban_LUCY
    USE MOD_TimeManager
    IMPLICIT NONE
    SAVE
-   PUBLIC  :: LUCY
+   PUBLIC :: LUCY
 
 CONTAINS
 
@@ -44,6 +44,7 @@ CONTAINS
 ! -----------------------------------------------------------------------
    IMPLICIT NONE
 
+!------------------------- Dummy Arguments -----------------------------
    integer , intent(in) :: &
       idate(3)           ! calendar (year, julian day, seconds)
 
@@ -80,8 +81,7 @@ CONTAINS
       motflx           ,&! flux from motorbike [W/m2]
       freflx             ! flux from freight [W/m2]
 
-
-   ! local vars
+!-------------------------- Local Variables ----------------------------
    real(r8):: ldate(3)   ! local time (year, julian day, seconds)
    integer :: &
       iweek            ,&! day of week
@@ -92,6 +92,8 @@ CONTAINS
       EC               ,&! emission factor of car [J/m]
       EF               ,&! emission factor of freight [J/m]
       EM                 ! emission factor of motorbike [J/m]
+
+!-----------------------------------------------------------------------
 
       ! initialization
       meta = 0.

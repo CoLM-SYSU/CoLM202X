@@ -83,7 +83,7 @@ CONTAINS
         fh,       &! integral of profile function for heat
         fq         ! integral of profile function for moisture
 
-!------------------------ LOCAL VARIABLES ------------------------------
+!-------------------------- Local Variables ----------------------------
    integer niters,&! maximum number of iterations for surface temperature
         iter,     &! iteration index
         nmozsgn    ! number of times moz changes sign
@@ -120,7 +120,7 @@ CONTAINS
 
    real(r8) fwet_roof
 
-!----------------------- Dummy argument --------------------------------
+!-----------------------------------------------------------------------
 ! initial roughness length
       !TODO: change to original
       !z0mg = (1.-fsno)*zlnd + fsno*zsno
@@ -225,10 +225,10 @@ CONTAINS
 
 ! surface fluxes of momentum, sensible and latent
 ! using ground temperatures from previous time step
-      !taux   = -rhoair*us/ram
-      !tauy   = -rhoair*vs/ram
-      fsenroof  = -raih*dth
-      fevproof  = -raiw*dqh*fwet_roof
+      !taux    = -rhoair*us/ram
+      !tauy    = -rhoair*vs/ram
+      fsenroof = -raih*dth
+      fevproof = -raiw*dqh*fwet_roof
 
    END SUBROUTINE UrbanRoofFlux
 

@@ -16,15 +16,15 @@ MODULE MOD_Urban_BEM
 
 CONTAINS
 
-!-----------------------------------------------------------------------------------
-   SUBROUTINE SimpleBEM ( deltim, rhoair, fcover, H, troom_max, troom_min, &
-                          troof_nl_bef, twsun_nl_bef, twsha_nl_bef, &
-                          troof_nl, twsun_nl, twsha_nl, &
-                          tkdz_roof, tkdz_wsun, tkdz_wsha, taf, &
-                          troom, troof_inner, twsun_inner, twsha_inner, &
-                          Fhac, Fwst, Fach, Fhah)
+!-----------------------------------------------------------------------
+   SUBROUTINE SimpleBEM (deltim, rhoair, fcover, H, troom_max, troom_min, &
+                         troof_nl_bef, twsun_nl_bef, twsha_nl_bef, &
+                         troof_nl, twsun_nl, twsha_nl, &
+                         tkdz_roof, tkdz_wsun, tkdz_wsha, taf, &
+                         troom, troof_inner, twsun_inner, twsha_inner, &
+                         Fhac, Fwst, Fach, Fhah)
 
-!-----------------------------------------------------------------------------------
+!-----------------------------------------------------------------------
 !
 ! !DESCRIPTION:
 !
@@ -71,10 +71,11 @@ CONTAINS
 !
 !  11/2022, Hua Yuan: Add option for constant AC.
 !
-!-----------------------------------------------------------------------------------
+!-----------------------------------------------------------------------
 
    IMPLICIT NONE
 
+!------------------------- Dummy Arguments -----------------------------
    real(r8), intent(in) :: &
         deltim,          &! seconds in a time step [second]
         rhoair,          &! density air [kg/m3]
@@ -105,7 +106,7 @@ CONTAINS
         Fwst,            &! waste heat from cool or heat
         Fach              ! flux from air exchange
 
-   ! local variables
+!-------------------------- Local Variables ----------------------------
    real(r8) :: &
         ACH,             &! air exchange coefficient
         hcv_roof,        &! convective exchange coefficient for roof<->room
@@ -135,6 +136,8 @@ CONTAINS
 
    ! Option for continuous AC
    logical, parameter :: Constant_AC = .true.
+
+!-----------------------------------------------------------------------
 
       ACH = 0.3           !air exchange coefficient
       hcv_roof   = 4.040  !convective exchange coefficient for roof<->room (W m-2 K-1)

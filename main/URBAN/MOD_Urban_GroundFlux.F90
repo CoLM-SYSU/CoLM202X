@@ -34,7 +34,7 @@ CONTAINS
    USE MOD_FrictionVelocity
    IMPLICIT NONE
 
-!----------------------- Dummy argument --------------------------------
+!------------------------- Dummy Arguments -----------------------------
    integer , intent(in) :: &
         lbi
    real(r8), intent(in) :: &
@@ -82,7 +82,7 @@ CONTAINS
         fh,           &! integral of profile function for heat
         fq             ! integral of profile function for moisture
 
-!------------------------ LOCAL VARIABLES ------------------------------
+!-------------------------- Local Variables ----------------------------
    integer niters,    &! maximum number of iterations for surface temperature
         iter,         &! iteration index
         nmozsgn        ! number of times moz changes sign
@@ -115,7 +115,8 @@ CONTAINS
 
    real(r8) fwet_gimp, fwetfac
 
-!----------------------- Dummy argument --------------------------------
+!-----------------------------------------------------------------------
+
 ! initial roughness length
       !NOTE: change to original
       !z0mg = (1.-fsno)*zlnd + fsno*zsno

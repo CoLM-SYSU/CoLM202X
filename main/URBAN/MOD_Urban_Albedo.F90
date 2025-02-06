@@ -125,7 +125,7 @@ CONTAINS
       sgper(2,2),    &! pervious ground absorption for solar radiation,
       slake(2,2)      ! lake absorption for solar radiation,
 
-!-------------------------- Local variables ----------------------------
+!-------------------------- Local Variables ----------------------------
    real(r8) :: &
       age,           &! factor to reduce visible snow alb due to snow age [-]
       albg0,         &! temporary varaiable [-]

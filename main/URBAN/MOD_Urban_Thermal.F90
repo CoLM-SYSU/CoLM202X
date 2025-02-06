@@ -130,7 +130,7 @@ CONTAINS
 
    IMPLICIT NONE
 
-!---------------------Argument------------------------------------------
+!------------------------- Dummy Arguments -----------------------------
    integer,  intent(in) :: &
         idate(3)   ,&
         ipatch                         ,&! patch index
@@ -430,7 +430,7 @@ CONTAINS
    real(r8), intent(out) :: snofrz  (lbp:0) !snow freezing rate (col,lyr) [kg m-2 s-1]
 ! END SNICAR model variables
 
-!---------------------Local Variables-----------------------------------
+!-------------------------- Local Variables ----------------------------
 
    integer :: nurb           ! number of aboveground urban components [-]
 

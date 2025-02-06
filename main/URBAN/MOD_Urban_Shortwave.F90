@@ -54,10 +54,14 @@ CONTAINS
 !
 !
 !  Created by Hua Yuan, 09/2021
+!
+! !REVISIONS:
+!
 !-----------------------------------------------------------------------
 
    IMPLICIT NONE
 
+!------------------------- Dummy Arguments -----------------------------
    real(r8), intent(in) :: &
         theta,      &! Sun zenith angle [radian]
         HL,         &! Ratio of building height to their side length [-]
@@ -80,8 +84,7 @@ CONTAINS
         sgper(2),   &! Urban pervious ground absorption [-]
         albu(2)      ! Urban overall albedo [-]
 
-   ! Local variables
-   !-------------------------------------------------
+!-------------------------- Local Variables ----------------------------
    real(r8) ::    &
         W,          &! Urban ground average width [m]
         L,          &! Urban building average length [m]
@@ -112,6 +115,8 @@ CONTAINS
 
    ! Temporal
    real(r8) :: fac1, fac2, eb
+
+!-----------------------------------------------------------------------
 
       ! Calculate urban structure parameters
       !-------------------------------------------------
@@ -289,10 +294,14 @@ CONTAINS
 !  calculation including the vegetation.
 !
 !  Created by Hua Yuan, 09/2021
+!
+! !REVISIONS:
+!
 !-----------------------------------------------------------------------
 
    IMPLICIT NONE
 
+!------------------------- Dummy Arguments -----------------------------
    real(r8), intent(in) :: &
         theta,      &! Sun zenith angle [radian]
         HL,         &! Ratio of building height to their side length [-]
@@ -324,9 +333,8 @@ CONTAINS
         sveg(2),    &! Urban building tree absorption [-]
         albu(2)      ! Urban overall albedo [-]
 
-   ! Local variables
-   !-------------------------------------------------
-   real(r16),parameter:: DD1=1.0_r16 !quad accuracy real number
+!-------------------------- Local Variables ----------------------------
+   real(r16),parameter :: DD1=1.0_r16 !quad accuracy real number
 
    real(r8) :: &
         W,          &! Urban ground average width
@@ -395,6 +403,7 @@ CONTAINS
    real(r8) :: phi_dif    !Temporal
    real(r8) :: pa2        !Temporal
    real(r8) :: lsai       !lai+sai
+!-----------------------------------------------------------------------
 
       ! Calculate urban structure parameters
       !-------------------------------------------------

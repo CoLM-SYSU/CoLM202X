@@ -69,6 +69,7 @@ CONTAINS
 
    IMPLICIT NONE
 
+!------------------------- Dummy Arguments -----------------------------
    integer, intent(in)  :: lb                          !lower bound of array
    integer, intent(in)  :: patchtype                   !land patch type (0=soil,1=urban or built-up,2=wetland,
                                                        !3=land ice, 4=deep lake, 5=shallow lake)
@@ -121,7 +122,7 @@ CONTAINS
    real(r8), intent(out) :: fact (lb:nl_soil)          !used in computing tridiagonal matrix
    integer,  intent(out) :: imelt(lb:nl_soil)          !flag for melting or freezing [-]
 
-!------------------------ local variables ------------------------------
+!-------------------------- Local Variables ----------------------------
    real(r8) cv (lb:nl_soil)           !heat capacity [J/(m2 K)]
    real(r8) tk (lb:nl_soil)           !thermal conductivity [W/(m K)]
 
@@ -148,6 +149,8 @@ CONTAINS
    real(r8) vf_ice  (1:nl_soil)       !volumetric fraction ice len within soil
 
    integer i,j
+
+!-----------------------------------------------------------------------
 
       wice_gimpsno(2:) = 0.0         !ice lens [kg/m2]
       wliq_gimpsno(2:) = 0.0         !liquid water [kg/m2]

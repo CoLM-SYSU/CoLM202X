@@ -55,23 +55,24 @@ MODULE MOD_Urban_Flux
    PUBLIC :: UrbanVegFlux
    PUBLIC :: dewfraction
 
-! Exponential extinction factor (alpha) options:
-!   1. Masson, 2000; Oleson et al., 2008
-!   2. Swaid, 1993; Kusaka, 2001; Lee and Park, 2008
-!   3. Macdonald, 2000
+   ! Exponential extinction factor (alpha) options:
+   !   1. Masson, 2000; Oleson et al., 2008
+   !   2. Swaid, 1993; Kusaka, 2001; Lee and Park, 2008
+   !   3. Macdonald, 2000
    integer,  parameter :: alpha_opt = 3
 
-! Layer number setting, default is false, i.e., 2 layers
+   ! Layer number setting, default is false, i.e., 2 layers
    logical,  parameter :: run_three_layer = .false.
 
-! Percent of sensible/latent to AHE (only for Fhac, Fwst, vehc now),
-! 92% heat release as SH, 8% heat release as LH, Pigeon et al., 2007
+   ! Percent of sensible/latent to AHE (only for Fhac, Fwst, vehc now),
+   ! 92% heat release as SH, 8% heat release as LH, Pigeon et al., 2007
    real(r8), parameter :: fsh = 0.92
    real(r8), parameter :: flh = 0.08
 
-! A simple urban irrigation scheme accounts for soil water stress of trees
+   ! A simple urban irrigation scheme accounts for soil water stress of trees
    logical,  parameter :: DEF_URBAN_Irrigation = .true.
    real(r8), parameter :: rstfac_irrig = 1.
+
 !-----------------------------------------------------------------------
 
 CONTAINS
@@ -114,7 +115,7 @@ CONTAINS
    USE MOD_UserSpecifiedForcing, only: HEIGHT_mode
    IMPLICIT NONE
 
-!----------------------- Dummy argument --------------------------------
+!------------------------- Dummy Arguments -----------------------------
    integer, intent(in) :: &
         ipatch,       &! patch index [-]
         lbr,          &! lower bound of array
@@ -221,7 +222,7 @@ CONTAINS
         fq,           &! integral of profile function for moisture
         tafu           ! effective urban air temperature (2nd layer, walls)
 
-!------------------------ LOCAL VARIABLES ------------------------------
+!-------------------------- Local Variables ----------------------------
    integer :: &
         niters,       &! maximum number of iterations for surface temperature
         iter,         &! iteration index
@@ -347,7 +348,7 @@ CONTAINS
    real(r8) fwet_roof, fwet_roof_, fwet_gimp, fwet_gimp_, rss_
    real(r8) fwetfac
 
-!-----------------------End Variable List-------------------------------
+!-----------------------------------------------------------------------
 
 ! initialization
       tu(0) = troof; tu(1) = twsun; tu(2) = twsha
@@ -912,7 +913,7 @@ CONTAINS
    USE MOD_UserSpecifiedForcing, only: HEIGHT_mode
    IMPLICIT NONE
 
-!-----------------------Arguments---------------------------------------
+!------------------------- Dummy Arguments -----------------------------
    integer,  intent(in) :: &
         ipatch,       &! patch index [-]
         lbr,          &! lower bound of array
@@ -1275,7 +1276,7 @@ CONTAINS
    ! for interface
    real(r8) o3coefv, o3coefg, assim_RuBP, assim_Rubisco, ci, vpd, gammas
 
-!-----------------------End Variable List-------------------------------
+!-----------------------------------------------------------------------
 
 ! initialization of errors and  iteration parameters
       it    = 1    !counter for leaf temperature iteration

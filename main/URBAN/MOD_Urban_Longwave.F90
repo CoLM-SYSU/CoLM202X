@@ -61,6 +61,7 @@ CONTAINS
 
    IMPLICIT NONE
 
+!------------------------- Dummy Arguments -----------------------------
    real(r8), intent(in) :: &
         theta,      &! Sun zenith angle [radian]
         HL,         &! Ratio of building height to ground width [-]
@@ -86,8 +87,7 @@ CONTAINS
         SkyVF(4),   &! View factor to sky
         fcover(0:4)  ! View factor to sky
 
-   ! Local variables
-   !-------------------------------------------------
+!-------------------------- Local Variables ----------------------------
    real(r8) ::    &
         W,          &! Urban ground average width [m]
         L,          &! Urban building average length [m]
@@ -116,6 +116,7 @@ CONTAINS
 
    ! Temporal
    real(r8) :: tmp, eb
+!-----------------------------------------------------------------------
 
       ! Calculate urban structure parameters
       !-------------------------------------------------
@@ -277,6 +278,7 @@ CONTAINS
 
    IMPLICIT NONE
 
+!------------------------- Dummy Arguments -----------------------------
    real(r8), intent(in) :: &
         theta,      &! Sun zenith angle [radian]
         HL,         &! Ratio of building height to ground width [-]
@@ -308,9 +310,8 @@ CONTAINS
         VegVF(5),   &! View factor to sky
         fcover(0:5)  ! View factor to sky
 
-   ! Local variables
-   !-------------------------------------------------
-   real(r16),parameter:: DD1=1.0_r16 !quad accuracy real number
+!-------------------------- Local Variables ----------------------------
+   real(r16),parameter :: DD1=1.0_r16 !quad accuracy real number
 
    real(r8) :: &
         W,          &! Urban ground average width [m]
@@ -371,6 +372,7 @@ CONTAINS
 
    ! Temporal
    real(r8) :: tmp, eb, fac1, fac2, lsai
+!-----------------------------------------------------------------------
 
       ! Calculate urban structure parameters
       !-------------------------------------------------
