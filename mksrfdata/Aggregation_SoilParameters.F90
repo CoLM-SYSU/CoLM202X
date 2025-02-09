@@ -1919,7 +1919,7 @@ SUBROUTINE SW_VG_dist ( m, n, x, fvec, fjac, ldfjac, iflag, xdat, npoint, ydatv,
 
       ELSEIF ( iflag == 1 ) THEN
 
-         IF (x(2) <= 0.0 .or. x(3) <= 0.1 .or. x(3) >= 1000. .or. x(4) <= 0.0) THEN
+         IF (x(2) <= 0.0 .or. x(3) <= 0.1 .or. x(3) >= 100. .or. x(4) <= 0.0) THEN
             isiter = 0
             RETURN
          ENDIF
@@ -1932,7 +1932,7 @@ SUBROUTINE SW_VG_dist ( m, n, x, fvec, fjac, ldfjac, iflag, xdat, npoint, ydatv,
 
       ELSEIF ( iflag == 2 ) THEN
 
-         IF (x(2) <= 0.0 .or. x(3) <= 0.1 .or. x(3) >= 1000. .or. x(4) <= 0.0) THEN
+         IF (x(2) <= 0.0 .or. x(3) <= 0.1 .or. x(3) >= 100. .or. x(4) <= 0.0) THEN
             isiter = 0
             RETURN
          ENDIF
