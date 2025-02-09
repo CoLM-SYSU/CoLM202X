@@ -245,7 +245,7 @@ CreateScripts()
    fi
    cat>>mksrf.submit<<EOF
 cd ${CASEPATH}/${CASENAME}/bld/run/
-${EXEC} $NP ./mksrfdata.x ../../input_${CASENAME}.nml > ../../logmksrfdata
+${EXEC} ${EXEO} $NP ./mksrfdata.x ../../input_${CASENAME}.nml > ../../logmksrfdata
 
 EOF
    
