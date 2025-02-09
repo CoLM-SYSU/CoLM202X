@@ -1755,11 +1755,6 @@ SUBROUTINE SW_VG_dist ( m, n, x, fvec, fjac, ldfjac, iflag, xdat, npoint, ydatv,
             RETURN
          ENDIF
 
-         IF (log10(1+x(2)*maxval(xdat))+x(3) > 300.) THEN
-            isiter = 0
-            RETURN
-         ENDIF
-
          DO i = 1, m
             fvec(i) = sum(((x(1) + (phi - x(1))*(1+(x(2)*xdat(i))**x(3))**(1.0/x(3)-1) - ydatv(:,i))/phi)**2) &
                     + sum(((log10(x(4)) + (1.0/x(3)-1)*L_vgm*log10(1+(x(2)*xdat(i))**x(3)) + &
