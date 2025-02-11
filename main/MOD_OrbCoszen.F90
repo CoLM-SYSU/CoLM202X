@@ -20,15 +20,19 @@ CONTAINS
    FUNCTION orb_coszen(calday,dlon,dlat)
 
 !-----------------------------------------------------------------------
-! FUNCTION to return the cosine of the solar zenith angle. Assumes 365.0
-! days/year.  Compute earth/orbit parameters using formula suggested by
-! Duane Thresher. Use formulas from Berger, Andre 1978: Long-Term
-! Variations of Daily Insolation and Quaternary Climatic Changes. J. of
-! the Atmo. Sci. 35:2362-2367.
+! !DESCRIPTION:
+!  FUNCTION to return the cosine of the solar zenith angle. Assumes
+!  365.0 days/year.  Compute earth/orbit parameters using formula
+!  suggested by Duane Thresher. Use formulas from Berger, Andre 1978:
+!  Long-Term Variations of Daily Insolation and Quaternary Climatic
+!  Changes. J. of the Atmo. Sci. 35:2362-2367.
 !
-! Original version:  Erik Kluzek, Oct/1997, Brian Kauffman, Jan/98
-! CCSM2.0 standard
-! Yongjiu Dai (07/23/2002)
+!  Original version: Erik Kluzek, Oct/1997, Brian Kauffman, Jan/98
+!  CCSM2.0 standard
+!  Yongjiu Dai (07/23/2002)
+!
+! !REVISIONS:
+!
 !-----------------------------------------------------------------------
 
    USE MOD_Precision
