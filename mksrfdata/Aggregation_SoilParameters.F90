@@ -61,6 +61,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
    type (block_data_real8_2d) :: vf_gravels_s_grid
    type (block_data_real8_2d) :: vf_om_s_grid
    type (block_data_real8_2d) :: vf_sand_s_grid
+   type (block_data_real8_2d) :: vf_clay_s_grid
    type (block_data_real8_2d) :: wf_gravels_s_grid
    type (block_data_real8_2d) :: wf_sand_s_grid
    type (block_data_real8_2d) :: OM_density_s_grid
@@ -85,6 +86,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
    real(r8), allocatable :: vf_gravels_s_patches (:)
    real(r8), allocatable :: vf_om_s_patches (:)
    real(r8), allocatable :: vf_sand_s_patches (:)
+   real(r8), allocatable :: vf_clay_s_patches (:)
    real(r8), allocatable :: wf_gravels_s_patches (:)
    real(r8), allocatable :: wf_sand_s_patches (:)
    real(r8), allocatable :: OM_density_s_patches (:)
@@ -111,6 +113,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
    real(r8), allocatable :: vf_gravels_s_one (:)
    real(r8), allocatable :: vf_om_s_one (:)
    real(r8), allocatable :: vf_sand_s_one (:)
+   real(r8), allocatable :: vf_clay_s_one (:)
    real(r8), allocatable :: wf_gravels_s_one (:)
    real(r8), allocatable :: wf_sand_s_one (:)
    real(r8), allocatable :: OM_density_s_one (:)
@@ -171,29 +174,30 @@ SUBROUTINE Aggregation_SoilParameters ( &
    integer isiter                         ! flags to tell whether the iteration is completed, 1=Yes, 0=No
 
    ! Parameters to fill water body patches
-   real(r8), parameter :: vf_quartz_mineral_fill_water(8) = (/0.6,   0.6,   0.6,   0.6,   0.6,   0.6,   0.6,   0.4  /)
-   real(r8), parameter :: vf_gravels_fill_water(8)        = (/0.,    0.,    0.,    0.,    0.,    0.011, 0.010, 0.010/)
-   real(r8), parameter :: vf_sand_fill_water(8)           = (/0.703, 0.703, 0.704, 0.705, 0.717, 0.722, 0.697, 0.512/)
-   real(r8), parameter :: vf_om_fill_water(8)             = (/0.023, 0.022, 0.021, 0.019, 0.016, 0.011, 0.006, 0.003/)
-   real(r8), parameter :: wf_gravels_fill_water(8)        = (/0.,    0.,    0.,    0.,    0.,    0.011, 0.011, 0.010/)
-   real(r8), parameter :: wf_sand_fill_water(8)           = (/0.72,  0.72,  0.72,  0.72,  0.73,  0.74,  0.71,  0.52 /)
-   real(r8), parameter :: theta_r_fill_water(8)           = (/0.078, 0.078, 0.077, 0.074, 0.075, 0.074, 0.075, 0.091/)
-   real(r8), parameter :: alpha_vgm_fill_water(8)         = (/0.051, 0.051, 0.050, 0.048, 0.047, 0.044, 0.040, 0.029/) 
-   real(r8), parameter :: n_vgm_fill_water(8)             = (/1.413, 1.412, 1.412, 1.414, 1.410, 1.422, 1.399, 1.188/)
-   real(r8), parameter :: theta_s_fill_water(8)           = (/0.374, 0.371, 0.366, 0.358, 0.345, 0.323, 0.297, 0.281/)
-   real(r8), parameter :: k_s_fill_water(8)               = (/96.,   89.,   79.,   75.,   79.,   74.,   55.,   19.  /)
-   real(r8), parameter :: L_vgm_fill_water(8)             = (/0.5,   0.5,   0.5,   0.5,   0.5,   0.5,   0.5,   0.5  /)
-   real(r8), parameter :: psi_s_fill_water(8)             = (/-13.5, -13.7, -13.9, -14.8, -15.1, -16.0, -19.8, -45.6/)
-   real(r8), parameter :: lambda_fill_water(8)            = (/0.275, 0.275, 0.275, 0.284, 0.287, 0.291, 0.286, 0.194/)
-   real(r8), parameter :: csol_fill_water(8)              = (/1.3e6, 1.3e6, 1.3e6, 1.3e6, 1.4e6, 1.4e6, 1.5e6, 1.5e6/)
-   real(r8), parameter :: tksatu_fill_water(8)            = (/1.985, 2.002, 2.026, 2.066, 2.133, 2.240, 2.388, 2.053/)
-   real(r8), parameter :: tksatf_fill_water(8)            = (/3.343, 3.356, 3.373, 3.401, 3.448, 3.515, 3.613, 3.036/)
-   real(r8), parameter :: tkdry_fill_water(8)             = (/0.260, 0.264, 0.269, 0.278, 0.293, 0.321, 0.359, 0.387/)
-   real(r8), parameter :: k_solids_fill_water(8)          = (/2.450, 2.467, 2.490, 2.528, 2.590, 2.688, 2.823, 2.405/)
-   real(r8), parameter :: OM_density_fill_water(8)        = (/19.18, 18.57, 17.74, 16.37, 14.18, 10.54, 6.088, 3.319/)
-   real(r8), parameter :: BD_all_fill_water(8)            = (/1673., 1683., 1698., 1721., 1758., 1821., 1897., 1944./)
-   real(r8), parameter :: BA_alpha_fill_water(8)          = (/0.38,  0.38,  0.38,  0.38,  0.38,  0.38,  0.38,  0.38 /)
-   real(r8), parameter :: BA_beta_fill_water (8)          = (/35,    35,    35,    35,    35,    35,    35,    35   /)
+   real(r8), parameter :: vf_quartz_mineral_fill_water(8) = 0.1
+   real(r8), parameter :: vf_gravels_fill_water(8)        = 0.0
+   real(r8), parameter :: vf_sand_fill_water(8)           = 0.09
+   real(r8), parameter :: vf_clay_fill_water(8)           = 0.189
+   real(r8), parameter :: vf_om_fill_water(8)             = 0.102
+   real(r8), parameter :: wf_gravels_fill_water(8)        = 0.0
+   real(r8), parameter :: wf_sand_fill_water(8)           = 0.1
+   real(r8), parameter :: theta_r_fill_water(8)           = 0.116
+   real(r8), parameter :: alpha_vgm_fill_water(8)         = 0.01
+   real(r8), parameter :: n_vgm_fill_water(8)             = 1.352
+   real(r8), parameter :: theta_s_fill_water(8)           = 0.532
+   real(r8), parameter :: k_s_fill_water(8)               = 11.616
+   real(r8), parameter :: L_vgm_fill_water(8)             = 0.5
+   real(r8), parameter :: psi_s_fill_water(8)             = -35.446
+   real(r8), parameter :: lambda_fill_water(8)            = 0.108
+   real(r8), parameter :: csol_fill_water(8)              = 1.102e6
+   real(r8), parameter :: tksatu_fill_water(8)            = 1.145
+   real(r8), parameter :: tksatf_fill_water(8)            = 2.401
+   real(r8), parameter :: tkdry_fill_water(8)             = 0.136
+   real(r8), parameter :: k_solids_fill_water(8)          = 1.545
+   real(r8), parameter :: OM_density_fill_water(8)        = 62.064
+   real(r8), parameter :: BD_all_fill_water(8)            = 1200
+   real(r8), parameter :: BA_alpha_fill_water(8)          = 0.2
+   real(r8), parameter :: BA_beta_fill_water (8)          = 10
 
 
 #ifdef SrfdataDiag
@@ -229,6 +233,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
          allocate ( SITE_soil_vf_gravels        (nl_soil) )
          allocate ( SITE_soil_vf_om             (nl_soil) )
          allocate ( SITE_soil_vf_sand           (nl_soil) )
+         allocate ( SITE_soil_vf_clay           (nl_soil) )
          allocate ( SITE_soil_wf_gravels        (nl_soil) )
          allocate ( SITE_soil_wf_sand           (nl_soil) )
          allocate ( SITE_soil_OM_density        (nl_soil) )
@@ -259,6 +264,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
          allocate ( vf_gravels_s_patches       (numpatch) )
          allocate ( vf_om_s_patches            (numpatch) )
          allocate ( vf_sand_s_patches          (numpatch) )
+         allocate ( vf_clay_s_patches          (numpatch) )
          allocate ( wf_gravels_s_patches       (numpatch) )
          allocate ( wf_sand_s_patches          (numpatch) )
          allocate ( OM_density_s_patches       (numpatch) )
@@ -1601,6 +1607,71 @@ SUBROUTINE Aggregation_SoilParameters ( &
          SITE_soil_BD_all(nsl) = BD_all_s_patches(1)
 #endif
 
+         ! (22) volumetric fraction of clay
+         IF (p_is_io) THEN
+
+            CALL allocate_block_data (gland, vf_clay_s_grid)
+            lndname = trim(dir_rawdata)//'/soil/vf_clay_s.nc'
+            CALL ncio_read_block (lndname, 'vf_clay_s_l'//trim(c), gland, vf_clay_s_grid)
+#ifdef USEMPI
+            CALL aggregation_data_daemon (gland, data_r8_2d_in1 = vf_clay_s_grid)
+#endif
+         ENDIF
+
+         IF (p_is_worker) THEN
+
+            DO ipatch = 1, numpatch
+               L = landpatch%settyp(ipatch)
+
+               IF (L /= 0) THEN
+                  CALL aggregation_request_data (landpatch, ipatch, gland, zip = USE_zip_for_aggregation, area = area_one, &
+                     data_r8_2d_in1 = vf_clay_s_grid, data_r8_2d_out1 = vf_clay_s_one)
+                  CALL fillnan (vf_clay_s_one)
+                  vf_clay_s_patches (ipatch) = sum (vf_clay_s_one * (area_one/sum(area_one)))
+               ELSE
+                  vf_clay_s_patches (ipatch) = -1.0e36_r8
+               ENDIF
+
+               IF (isnan_ud(vf_clay_s_patches(ipatch))) THEN
+                  IF (L == WATERBODY) THEN
+                     vf_clay_s_patches(ipatch) = vf_clay_fill_water(nsl)
+                  ELSE
+                     write(*,*) "Warning: NAN appears in vf_clay_s_patches."
+                     write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
+                  ENDIF
+               ENDIF
+
+            ENDDO
+
+#ifdef USEMPI
+            CALL aggregation_worker_done ()
+#endif
+         ENDIF
+
+#ifdef USEMPI
+         CALL mpi_barrier (p_comm_glb, p_err)
+#endif
+
+#ifdef RangeCheck
+         CALL check_vector_data ('vf_clay_s lev '//trim(c), vf_clay_s_patches)
+#endif
+
+#ifndef SinglePoint
+         lndname = trim(landdir)//'/vf_clay_s_l'//trim(c)//'_patches.nc'
+         CALL ncio_create_file_vector (lndname, landpatch)
+         CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
+         CALL ncio_write_vector (lndname, 'vf_clay_s_l'//trim(c)//'_patches', 'patch',&
+                                 landpatch, vf_clay_s_patches, DEF_Srfdata_CompressLevel)
+
+#ifdef SrfdataDiag
+         typpatch = (/(ityp, ityp = 0, N_land_classification)/)
+         lndname  = trim(dir_model_landdata) // '/diag/soil_parameters_' // trim(cyear) // '.nc'
+         CALL srfdata_map_and_write (vf_clay_s_patches, landpatch%settyp, typpatch, m_patch2diag, &
+            -1.0e36_r8, lndname, 'vf_clay_s_l'//trim(c), compress = 1, write_mode = 'one')
+#endif
+#else
+         SITE_soil_vf_clay(nsl) = vf_clay_s_patches(1)
+#endif
 
       ENDDO
 
@@ -1614,6 +1685,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
          deallocate ( vf_gravels_s_patches )
          deallocate ( vf_om_s_patches )
          deallocate ( vf_sand_s_patches )
+         deallocate ( vf_clay_s_patches )
          deallocate ( wf_gravels_s_patches )
          deallocate ( wf_sand_s_patches )
          deallocate ( OM_density_s_patches )
@@ -1640,6 +1712,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
          IF (allocated(vf_gravels_s_one))        deallocate (vf_gravels_s_one)
          IF (allocated(vf_om_s_one))             deallocate (vf_om_s_one)
          IF (allocated(vf_sand_s_one))           deallocate (vf_sand_s_one)
+         IF (allocated(vf_clay_s_one))           deallocate (vf_clay_s_one)
          IF (allocated(wf_gravels_s_one))        deallocate (wf_gravels_s_one)
          IF (allocated(wf_sand_s_one))           deallocate (wf_sand_s_one)
          IF (allocated(OM_density_s_one))        deallocate (OM_density_s_one)
@@ -1750,7 +1823,7 @@ SUBROUTINE SW_VG_dist ( m, n, x, fvec, fjac, ldfjac, iflag, xdat, npoint, ydatv,
 
       ELSEIF ( iflag == 1 ) THEN
 
-         IF (x(2) <= 0.0 .or. x(3) <= 0.1 .or. x(3) >= 1000. .or. x(4) <= 0.0) THEN
+         IF (x(2) <= 0.0 .or. x(3) <= 0.1 .or. x(3) >= 100. .or. x(4) <= 0.0) THEN
             isiter = 0
             RETURN
          ENDIF
@@ -1763,7 +1836,7 @@ SUBROUTINE SW_VG_dist ( m, n, x, fvec, fjac, ldfjac, iflag, xdat, npoint, ydatv,
 
       ELSEIF ( iflag == 2 ) THEN
 
-         IF (x(2) <= 0.0 .or. x(3) <= 0.1 .or. x(3) >= 1000. .or. x(4) <= 0.0) THEN
+         IF (x(2) <= 0.0 .or. x(3) <= 0.1 .or. x(3) >= 100. .or. x(4) <= 0.0) THEN
             isiter = 0
             RETURN
          ENDIF
