@@ -27,7 +27,7 @@ MODULE MOD_Hist
    USE MOD_HistSingle
 #endif
 #ifdef CatchLateralFlow
-   USE MOD_Hydro_Hist
+   USE MOD_Catch_Hist
 #endif
 
    PUBLIC :: hist_init
@@ -453,12 +453,12 @@ CONTAINS
             a_zerr, file_hist, 'f_zerr', itime_in_file, sumarea, filter, &
             'the error of energy balance','W/m2')
 
+#ifndef CatchLateralFlow
          ! surface runoff [mm/s]
          CALL write_history_variable_2d ( DEF_hist_vars%rsur, &
             a_rsur, file_hist, 'f_rsur', itime_in_file, sumarea, filter, &
             'surface runoff','mm/s')
 
-#ifndef CatchLateralFlow
          ! saturation excess surface runoff [mm/s]
          CALL write_history_variable_2d ( DEF_hist_vars%rsur_se, &
             a_rsur_se, file_hist, 'f_rsur_se', itime_in_file, sumarea, filter, &
@@ -468,7 +468,6 @@ CONTAINS
          CALL write_history_variable_2d ( DEF_hist_vars%rsur_ie, &
             a_rsur_ie, file_hist, 'f_rsur_ie', itime_in_file, sumarea, filter, &
             'infiltration excess surface runoff','mm/s')
-#endif
 
          ! subsurface runoff [mm/s]
          CALL write_history_variable_2d ( DEF_hist_vars%rsub, &
@@ -479,6 +478,7 @@ CONTAINS
          CALL write_history_variable_2d ( DEF_hist_vars%rnof, &
             a_rnof, file_hist, 'f_rnof', itime_in_file, sumarea, filter, &
             'total runoff','mm/s')
+#endif
 
 #ifdef DataAssimilation
          ! slope factors for runoff [-]

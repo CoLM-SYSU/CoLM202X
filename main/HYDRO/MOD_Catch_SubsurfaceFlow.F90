@@ -8,7 +8,7 @@ MODULE MOD_Catch_SubsurfaceFlow
 !   Ground water lateral flow.
 !
 !   Ground water fluxes are calculated
-!   1. between basins
+!   1. between elements
 !   2. between hydrological response units
 !   3. between patches inside one HRU  
 !
@@ -17,7 +17,16 @@ MODULE MOD_Catch_SubsurfaceFlow
 
    USE MOD_Precision
    USE MOD_DataType
+   USE MOD_Catch_HillslopeNetwork
    IMPLICIT NONE
+
+   ! --- information of HRU on hillslope ---
+   type(hillslope_network_type), pointer :: hillslope_element (:)
+
+   integer,  allocatable :: lake_id_elm  (:)
+   real(r8), allocatable :: lakedepth_elm(:)
+   real(r8), allocatable :: riverdpth_elm(:)
+   real(r8), allocatable :: wdsrf_elm    (:)
     
    real(r8), parameter :: e_ice  = 6.0   ! soil ice impedance factor
    
@@ -36,63 +45,123 @@ MODULE MOD_Catch_SubsurfaceFlow
    type(pointer_real8_1d), allocatable :: Kl_nb      (:)  ! lateral hydraulic conductivity [m/s]
    type(pointer_real8_1d), allocatable :: wdsrf_nb   (:)  ! depth of surface water [m]
    type(pointer_logic_1d), allocatable :: islake_nb  (:)  ! whether a neighbour is water body
+   type(pointer_real8_1d), allocatable :: lakedp_nb  (:)  ! lake depth of neighbour [m]
 
 CONTAINS
    
    ! ----------
-   SUBROUTINE basin_neighbour_init ()
+   SUBROUTINE subsurface_network_init ()
 
    USE MOD_SPMD_Task
+   USE MOD_Utils
    USE MOD_Mesh
+   USE MOD_Pixel
+   USE MOD_LandElm
+   USE MOD_LandPatch
    USE MOD_ElementNeighbour
-   USE MOD_Catch_HillslopeNetwork, only : hillslope_network
-   USE MOD_Catch_RiverLakeNetwork, only : lake_id
+   USE MOD_Catch_BasinNetwork,     only : worker_push_data, iam_bsn, iam_elm
+   USE MOD_Catch_RiverLakeNetwork, only : lake_id, riverdpth
+   USE MOD_Vars_TimeInvariants,    only : patchtype, lakedepth
    IMPLICIT NONE
    
-   integer :: numbasin, ibasin, inb
+   integer :: ielm, inb, i, ihru, ps, pe, ipatch, ipxl
    
    real(r8), allocatable :: agwt_b(:)
    real(r8), allocatable :: islake(:)
    type(pointer_real8_1d), allocatable :: iswat_nb (:)  
 
+   integer, allocatable :: eindex(:)
+
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-      numbasin = numelm
+      IF (p_is_worker) THEN
+         IF (numelm > 0) THEN
+            allocate (eindex (numelm))
+            eindex = landelm%eindex
+         ENDIF
+      ENDIF
+
+      CALL hillslope_network_init (numelm, eindex, hillslope_element)
+
+      IF (allocated(eindex)) deallocate (eindex)
 
       IF (p_is_worker) THEN
+         
+         IF (numelm > 0) allocate (lake_id_elm  (numelm))
+         IF (numelm > 0) allocate (riverdpth_elm(numelm))
+         IF (numelm > 0) allocate (lakedepth_elm(numelm))
+         IF (numelm > 0) allocate (wdsrf_elm    (numelm))
+
+         CALL worker_push_data (iam_bsn, iam_elm, .false., lake_id,   lake_id_elm  )
+         CALL worker_push_data (iam_bsn, iam_elm, .false., riverdpth, riverdpth_elm)
+
+         DO ielm = 1, numelm
+            IF (lake_id_elm(ielm) <= 0) THEN
+               DO i = 1, hillslope_element(ielm)%nhru
+
+                  hillslope_element(ielm)%agwt(i) = 0
+
+                  ihru = hillslope_element(ielm)%ihru(i)
+                  ps = hru_patch%substt(ihru)
+                  pe = hru_patch%subend(ihru)
+                  DO ipatch = ps, pe
+                     IF (patchtype(ipatch) <= 2) THEN
+                        DO ipxl = landpatch%ipxstt(ipatch), landpatch%ipxend(ipatch)
+                           hillslope_element(ielm)%agwt(i) = hillslope_element(ielm)%agwt(i) &
+                              + 1.0e6 * areaquad ( &
+                              pixel%lat_s(mesh(ielm)%ilat(ipxl)), pixel%lat_n(mesh(ielm)%ilat(ipxl)), &
+                              pixel%lon_w(mesh(ielm)%ilon(ipxl)), pixel%lon_e(mesh(ielm)%ilon(ipxl)) )
+                        ENDDO
+                     ENDIF
+                  ENDDO
+
+               ENDDO
+            ENDIF
+         ENDDO
+
+         lakedepth_elm(:) = 0.
+         DO ielm = 1, numelm
+            IF (lake_id_elm(ielm) > 0) THEN
+               ps = elm_patch%substt(ielm)
+               pe = elm_patch%subend(ielm)
+               lakedepth_elm(ielm) = sum(lakedepth(ps:pe) * elm_patch%subfrc(ps:pe))
+            ENDIF
+         ENDDO
          
          CALL allocate_neighbour_data (agwt_nb   )
          CALL allocate_neighbour_data (theta_a_nb)
          CALL allocate_neighbour_data (zwt_nb    )
-         CALL allocate_neighbour_data (Kl_nb    )
+         CALL allocate_neighbour_data (Kl_nb     )
          CALL allocate_neighbour_data (wdsrf_nb  )
          CALL allocate_neighbour_data (islake_nb )
-      
+         CALL allocate_neighbour_data (lakedp_nb )
          CALL allocate_neighbour_data (iswat_nb  )
 
-         IF (numbasin > 0) THEN
-            allocate (agwt_b(numbasin))
-            allocate (islake(numbasin))
-            DO ibasin = 1, numbasin
-               IF (lake_id(ibasin) <= 0) THEN
-                  agwt_b(ibasin) = sum(hillslope_network(ibasin)%agwt)
-                  islake(ibasin) = 0.
+         IF (numelm > 0) THEN
+            allocate (agwt_b(numelm))
+            allocate (islake(numelm))
+            DO ielm = 1, numelm
+               IF (lake_id_elm(ielm) <= 0) THEN
+                  agwt_b(ielm) = sum(hillslope_element(ielm)%agwt)
+                  islake(ielm) = 0.
                ELSE
-                  agwt_b(ibasin) = 0.
-                  islake(ibasin) = 1.
+                  agwt_b(ielm) = 0.
+                  islake(ielm) = 1.
                ENDIF
             ENDDO
          ENDIF
          
+         CALL retrieve_neighbour_data (lakedepth_elm, lakedp_nb)
+         
          CALL retrieve_neighbour_data (agwt_b, agwt_nb )
          CALL retrieve_neighbour_data (islake, iswat_nb)
          
-         DO ibasin = 1, numbasin
-            DO inb = 1, elementneighbour(ibasin)%nnb
-               IF (elementneighbour(ibasin)%glbindex(inb) > 0) THEN ! skip ocean neighbour
-                  islake_nb(ibasin)%val(inb) = (iswat_nb(ibasin)%val(inb) > 0)
+         DO ielm = 1, numelm
+            DO inb = 1, elementneighbour(ielm)%nnb
+               IF (elementneighbour(ielm)%glbindex(inb) > 0) THEN ! skip ocean neighbour
+                  islake_nb(ielm)%val(inb) = (iswat_nb(ielm)%val(inb) > 0)
                ENDIF
             ENDDO
          ENDDO
@@ -103,7 +172,7 @@ CONTAINS
          
       ENDIF
 
-   END SUBROUTINE basin_neighbour_init
+   END SUBROUTINE subsurface_network_init
 
    ! ---------
    SUBROUTINE subsurface_flow (deltime)
@@ -112,12 +181,12 @@ CONTAINS
    USE MOD_UserDefFun
    USE MOD_Mesh
    USE MOD_LandElm
+   USE MOD_LandHRU
    USE MOD_LandPatch
    USE MOD_Vars_TimeVariables
    USE MOD_Vars_TimeInvariants
    USE MOD_Vars_1DFluxes
    USE MOD_Catch_HillslopeNetwork
-   USE MOD_Catch_RiverLakeNetwork
    USE MOD_ElementNeighbour
    USE MOD_Const_Physical,  only : denice, denh2o
    USE MOD_Vars_Global,     only : pi, nl_soil, zi_soi
@@ -128,9 +197,9 @@ CONTAINS
    real(r8), intent(in) :: deltime
 
    ! Local Variables
-   integer :: numbasin, nhru, ibasin, i, i0, j, ihru, ipatch, ps, pe, ilev
+   integer :: nhru, ielm, i, i0, j, ihru, ipatch, ps, pe, hs, he, ilev
 
-   type(hillslope_network_info_type), pointer :: hrus
+   type(hillslope_network_type), pointer :: hrus
 
    real(r8), allocatable :: theta_a_h (:) 
    real(r8), allocatable :: zwt_h     (:) 
@@ -146,9 +215,9 @@ CONTAINS
    real(r8) :: ca, cb
    real(r8) :: alp
 
-   real(r8), allocatable :: theta_a_bsn (:) 
-   real(r8), allocatable :: zwt_bsn     (:) 
-   real(r8), allocatable :: Kl_bsn      (:) ! [m/s]
+   real(r8), allocatable :: theta_a_elm (:) 
+   real(r8), allocatable :: zwt_elm     (:) 
+   real(r8), allocatable :: Kl_elm      (:) ! [m/s]
 
    integer  :: jnb
    real(r8) :: zsubs_up, zwt_up, Kl_up, theta_a_up, area_up
@@ -179,9 +248,7 @@ CONTAINS
 
       IF (p_is_worker) THEN
 
-         numbasin = numelm
-            
-         xsubs_bsn(:) = 0.  ! subsurface lateral flow between basins                     
+         xsubs_elm(:) = 0.  ! subsurface lateral flow between element basins
          xsubs_hru(:) = 0.  ! subsurface lateral flow between hydrological response units
          xsubs_pch(:) = 0.  ! subsurface lateral flow between patches inside one HRU     
 
@@ -189,20 +256,20 @@ CONTAINS
 
          bdamp = 4.8
 
-         IF (numbasin > 0) THEN
-            allocate (theta_a_bsn (numbasin));  theta_a_bsn = 0.
-            allocate (zwt_bsn     (numbasin));  zwt_bsn     = 0.
-            allocate (Kl_bsn      (numbasin));  Kl_bsn      = 0.
+         IF (numelm > 0) THEN
+            allocate (theta_a_elm (numelm));  theta_a_elm = 0.
+            allocate (zwt_elm     (numelm));  zwt_elm     = 0.
+            allocate (Kl_elm      (numelm));  Kl_elm      = 0.
          ENDIF
 
-         DO ibasin = 1, numbasin
+         DO ielm = 1, numelm
 
-            hrus => hillslope_network(ibasin)
+            hrus => hillslope_element(ielm)
 
             nhru = hrus%nhru
 
-            IF (lake_id(ibasin) > 0) CYCLE  ! lake
-            IF (sum(hrus%agwt) <= 0) CYCLE  ! no area of soil, urban or wetland
+            IF (lake_id_elm(ielm) > 0) CYCLE  ! lake
+            IF (sum(hrus%agwt) <= 0)   CYCLE  ! no area of soil, urban or wetland
             
             allocate (theta_a_h (nhru));  theta_a_h = 0.
             allocate (zwt_h     (nhru));  zwt_h     = 0.
@@ -303,7 +370,7 @@ CONTAINS
                IF (.not. j_is_river) THEN
                   zsubs_h_dn = hrus%elva(j) - zwt_h(j)
                ELSE
-                  zsubs_h_dn = hrus%elva(1) - riverdpth(ibasin) + wdsrf_hru(hrus%ihru(1)) 
+                  zsubs_h_dn = hrus%elva(1) - riverdpth_elm(ielm) + wdsrf_hru(hrus%ihru(1)) 
                ENDIF
 
                IF (.not. j_is_river) THEN
@@ -358,8 +425,8 @@ CONTAINS
             
             IF (hrus%indx(1) == 0) THEN
                ! xsubs_h(1) is positive = out of soil column
-               IF (xsubs_h(1)*deltime > wdsrf_bsn(ibasin)) THEN 
-                  alp = wdsrf_bsn(ibasin) / (xsubs_h(1)*deltime)
+               IF (xsubs_h(1)*deltime > wdsrf_hru(hrus%ihru(1))) THEN 
+                  alp = wdsrf_hru(hrus%ihru(1)) / (xsubs_h(1)*deltime)
                   xsubs_h(1) = xsubs_h(1) * alp
                   DO i = 2, nhru
                      IF ((hrus%inext(i) == 1) .and. (hrus%agwt(i) > 0.)) THEN
@@ -385,7 +452,7 @@ CONTAINS
                IF (hrus%indx(1) == 0) THEN
                   DO ipatch = ps, pe
                      IF (patchtype(ipatch) <= 2) THEN 
-                        rsub(ipatch) = - xsubs_h(1) * riverarea(ibasin) / sum(hrus%agwt) * 1.0e3 ! m/s to mm/s
+                        rsub(ipatch) = - xsubs_h(1) * hrus%area(1) / sum(hrus%agwt) * 1.0e3 ! m/s to mm/s
                      ENDIF
                   ENDDO
                ENDIF
@@ -421,9 +488,9 @@ CONTAINS
 
             sumarea = sum(hrus%agwt)
             IF (sumarea > 0) THEN
-               theta_a_bsn (ibasin) = sum(theta_a_h * hrus%agwt) / sumarea
-               zwt_bsn     (ibasin) = sum(zwt_h     * hrus%agwt) / sumarea
-               Kl_bsn      (ibasin) = sum(Kl_h      * hrus%agwt) / sumarea
+               theta_a_elm (ielm) = sum(theta_a_h * hrus%agwt) / sumarea
+               zwt_elm     (ielm) = sum(zwt_h     * hrus%agwt) / sumarea
+               Kl_elm      (ielm) = sum(Kl_h      * hrus%agwt) / sumarea
             ENDIF
 
             deallocate (theta_a_h)
@@ -434,49 +501,55 @@ CONTAINS
 
          ENDDO
 
-         CALL retrieve_neighbour_data (theta_a_bsn, theta_a_nb)
-         CALL retrieve_neighbour_data (zwt_bsn    , zwt_nb    )
-         CALL retrieve_neighbour_data (Kl_bsn     , Kl_nb     )
-         CALL retrieve_neighbour_data (wdsrf_bsn  , wdsrf_nb  )
+         DO ielm = 1, numelm
+            hs = elm_hru%substt(ielm)
+            he = elm_hru%subend(ielm)
+            wdsrf_elm(ielm) = sum(wdsrf_hru(hs:he) * elm_hru%subfrc(hs:he))
+         ENDDO
 
-         DO ibasin = 1, numbasin
+         CALL retrieve_neighbour_data (theta_a_elm, theta_a_nb)
+         CALL retrieve_neighbour_data (zwt_elm    , zwt_nb    )
+         CALL retrieve_neighbour_data (Kl_elm     , Kl_nb     )
+         CALL retrieve_neighbour_data (wdsrf_elm  , wdsrf_nb  )
+
+         DO ielm = 1, numelm
             
-            hrus => hillslope_network(ibasin)
+            hrus => hillslope_element(ielm)
                
-            iam_lake = (lake_id(ibasin) > 0)
+            iam_lake = (lake_id_elm(ielm) > 0)
             
-            DO jnb = 1, elementneighbour(ibasin)%nnb
+            DO jnb = 1, elementneighbour(ielm)%nnb
 
-               IF (elementneighbour(ibasin)%glbindex(jnb) == -9) CYCLE ! skip ocean neighbour
+               IF (elementneighbour(ielm)%glbindex(jnb) == -9) CYCLE ! skip ocean neighbour
 
-               nb_is_lake = islake_nb(ibasin)%val(jnb)
+               nb_is_lake = islake_nb(ielm)%val(jnb)
 
                IF (iam_lake .and. nb_is_lake) THEN
                   CYCLE
                ENDIF
                
                IF (.not. iam_lake) THEN
-                  Kl_up      = Kl_bsn    (ibasin)
-                  zwt_up     = zwt_bsn    (ibasin)
-                  theta_a_up = theta_a_bsn(ibasin)
-                  zsubs_up   = elementneighbour(ibasin)%myelva - zwt_up 
+                  Kl_up      = Kl_elm    (ielm)
+                  zwt_up     = zwt_elm    (ielm)
+                  theta_a_up = theta_a_elm(ielm)
+                  zsubs_up   = elementneighbour(ielm)%myelva - zwt_up 
                   area_up    = sum(hrus%agwt)
                ELSE
                   theta_a_up = 1.
-                  zsubs_up   = elementneighbour(ibasin)%myelva + wdsrf_bsn(ibasin) 
-                  area_up    = elementneighbour(ibasin)%myarea
+                  zsubs_up   = elementneighbour(ielm)%myelva - lakedepth_elm(ielm) + wdsrf_elm(ielm) 
+                  area_up    = elementneighbour(ielm)%myarea
                ENDIF
 
                IF (.not. nb_is_lake) THEN
-                  Kl_dn      = Kl_nb(ibasin)%val(jnb)
-                  zwt_dn     = zwt_nb(ibasin)%val(jnb)
-                  theta_a_dn = theta_a_nb(ibasin)%val(jnb)
-                  zsubs_dn   = elementneighbour(ibasin)%elva(jnb) - zwt_dn
-                  area_dn    = agwt_nb(ibasin)%val(jnb)
+                  Kl_dn      = Kl_nb(ielm)%val(jnb)
+                  zwt_dn     = zwt_nb(ielm)%val(jnb)
+                  theta_a_dn = theta_a_nb(ielm)%val(jnb)
+                  zsubs_dn   = elementneighbour(ielm)%elva(jnb) - zwt_dn
+                  area_dn    = agwt_nb(ielm)%val(jnb)
                ELSE
                   theta_a_dn = 1.
-                  zsubs_dn   = elementneighbour(ibasin)%elva(jnb) + wdsrf_nb(ibasin)%val(jnb)
-                  area_dn    = elementneighbour(ibasin)%area(jnb)
+                  zsubs_dn   = elementneighbour(ielm)%elva(jnb) - lakedp_nb(ielm)%val(jnb) + wdsrf_nb(ielm)%val(jnb)
+                  area_dn    = elementneighbour(ielm)%area(jnb)
                ENDIF
 
                IF ((.not. iam_lake)   .and. (area_up <= 0)) CYCLE
@@ -485,25 +558,25 @@ CONTAINS
                IF ((.not. nb_is_lake) .and. (Kl_dn == 0. )) CYCLE
 
                ! water body is dry.
-               IF (iam_lake .and. (zsubs_up > zsubs_dn) .and. (wdsrf_bsn(ibasin) == 0.)) THEN
+               IF (iam_lake .and. (zsubs_up > zsubs_dn) .and. (wdsrf_elm(ielm) == 0.)) THEN
                   CYCLE
                ENDIF
-               IF (nb_is_lake .and. (zsubs_up < zsubs_dn) .and. (wdsrf_nb(ibasin)%val(jnb) == 0.)) THEN
+               IF (nb_is_lake .and. (zsubs_up < zsubs_dn) .and. (wdsrf_nb(ielm)%val(jnb) == 0.)) THEN
                   CYCLE
                ENDIF
                
-               lenbdr = elementneighbour(ibasin)%lenbdr(jnb)
+               lenbdr = elementneighbour(ielm)%lenbdr(jnb)
 
-               delp = elementneighbour(ibasin)%dist(jnb)
+               delp = elementneighbour(ielm)%dist(jnb)
                IF (iam_lake) THEN
-                  delp = elementneighbour(ibasin)%area(jnb) / lenbdr * 0.5
+                  delp = elementneighbour(ielm)%area(jnb) / lenbdr * 0.5
                ENDIF
                IF (nb_is_lake) THEN
-                  delp = elementneighbour(ibasin)%myarea / lenbdr * 0.5
+                  delp = elementneighbour(ielm)%myarea / lenbdr * 0.5
                ENDIF
 
                ! from Fan et al., JGR 112(D10125)
-               slope = abs(elementneighbour(ibasin)%slope(jnb))
+               slope = abs(elementneighbour(ielm)%slope(jnb))
                IF (slope > 0.16) THEN
                   bdamp = 4.8
                ELSE
@@ -534,27 +607,27 @@ CONTAINS
                IF (.not. iam_lake) THEN
                   xsubs_nb = xsubs_nb / sum(hrus%agwt)
                ELSE
-                  xsubs_nb = xsubs_nb / elementneighbour(ibasin)%myarea
+                  xsubs_nb = xsubs_nb / elementneighbour(ielm)%myarea
                ENDIF
                
-               xsubs_bsn(ibasin) = xsubs_bsn(ibasin) + xsubs_nb
+               xsubs_elm(ielm) = xsubs_elm(ielm) + xsubs_nb
 
             ENDDO
 
             ! Update total subsurface lateral flow (3): Between basins
-            ps = elm_patch%substt(ibasin)
-            pe = elm_patch%subend(ibasin)
+            ps = elm_patch%substt(ielm)
+            pe = elm_patch%subend(ielm)
             DO ipatch = ps, pe
                IF (iam_lake .or. (patchtype(ipatch) <= 2)) THEN
-                  xwsub(ipatch) = xwsub(ipatch) + xsubs_bsn(ibasin) * 1.e3 ! m/s to mm/s
+                  xwsub(ipatch) = xwsub(ipatch) + xsubs_elm(ielm) * 1.e3 ! m/s to mm/s
                ENDIF
             ENDDO
 
          ENDDO
 
-         IF (allocated(theta_a_bsn)) deallocate(theta_a_bsn)
-         IF (allocated(zwt_bsn    )) deallocate(zwt_bsn    )
-         IF (allocated(Kl_bsn     )) deallocate(Kl_bsn     )
+         IF (allocated(theta_a_elm)) deallocate(theta_a_elm)
+         IF (allocated(zwt_elm    )) deallocate(zwt_elm    )
+         IF (allocated(Kl_elm     )) deallocate(Kl_elm     )
 
       ENDIF
 
@@ -713,9 +786,14 @@ CONTAINS
    END SUBROUTINE subsurface_flow
 
    ! ----------
-   SUBROUTINE basin_neighbour_final ()
+   SUBROUTINE subsurface_network_final ()
 
    IMPLICIT NONE
+
+      IF (allocated(lake_id_elm  )) deallocate(lake_id_elm  )
+      IF (allocated(riverdpth_elm)) deallocate(riverdpth_elm)
+      IF (allocated(lakedepth_elm)) deallocate(lakedepth_elm)
+      IF (allocated(wdsrf_elm    )) deallocate(wdsrf_elm    )
 
       IF (allocated(theta_a_nb)) deallocate(theta_a_nb)
       IF (allocated(zwt_nb    )) deallocate(zwt_nb    )
@@ -723,8 +801,11 @@ CONTAINS
       IF (allocated(wdsrf_nb  )) deallocate(wdsrf_nb  )
       IF (allocated(agwt_nb   )) deallocate(agwt_nb   )
       IF (allocated(islake_nb )) deallocate(islake_nb )
+      IF (allocated(lakedp_nb )) deallocate(lakedp_nb )
       
-   END SUBROUTINE basin_neighbour_final
+      IF (associated(hillslope_element)) deallocate(hillslope_element)
+      
+   END SUBROUTINE subsurface_network_final
 
 END MODULE MOD_Catch_SubsurfaceFlow
 #endif
