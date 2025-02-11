@@ -58,13 +58,14 @@ CONTAINS
 
    ! Local Variables
    character(len=256)   :: basin_file
-   integer, allocatable :: basindown(:), lakeid(:), nhru_all(:), nhru_in_bsn(:)
+   integer, allocatable :: basindown(:), nhru_all(:), nhru_in_bsn(:)
 
    integer :: totalnumbasin, ibasin, nbasin
-   integer :: iworker, mesg(2), isrc, nrecv, idata, ndatall, ip, iloc, ielm, i, j, ithis, nave
+   integer :: iworker, mesg(2), isrc, nrecv, idata, ndatall
+   integer :: ip, iloc, ielm, i, j, ithis, nave, nups
    
-   integer, allocatable :: eindex  (:), bindex  (:), addrelm (:), addrbasin(:)
-   integer, allocatable :: nups_nst(:), iups_nst(:), nups_all(:), b_up2down(:), orderbsn(:)
+   integer, allocatable :: eindex  (:), bindex  (:), addrelm (:), addrbasin(:), orderbsn(:)
+   integer, allocatable :: nups_nst(:), iups_nst(:), nups_all(:), b_up2down(:)
    integer, allocatable :: nelm_wrk(:), paddr   (:), icache  (:)
 
    integer, allocatable :: basin_sorted(:), element_sorted(:)
@@ -79,7 +80,6 @@ CONTAINS
       ! step 1: read in parameters from file.
       IF (p_is_master) THEN
          CALL ncio_read_serial (basin_file, 'basin_downstream', basindown)
-         CALL ncio_read_serial (basin_file, 'lake_id',             lakeid)
          CALL ncio_read_serial (basin_file, 'basin_numhru',     nhru_all )
          totalnumbasin = size(basindown)
       ENDIF
@@ -169,11 +169,7 @@ CONTAINS
          deallocate (nups_nst)
          deallocate (iups_nst)
 
-         allocate (nups_all (totalnumbasin));  
-         nups_all(:) = 1
-         ! WHERE (lakeid == -1)
-         !    nups_all(:) = 0
-         ! ENDWHERE
+         allocate (nups_all (totalnumbasin));  nups_all(:) = 1
 
          DO i = 1, totalnumbasin
             j = basindown(b_up2down(i))
@@ -194,8 +190,9 @@ CONTAINS
 
          allocate (addrbasin (totalnumbasin))
          addrbasin(:) = -1
-
-         ithis = totalnumbasin
+         
+         ithis   = totalnumbasin
+         iworker = p_np_worker-1
          DO WHILE (ithis > 0)
 
             i = b_up2down(ithis)
@@ -214,19 +211,14 @@ CONTAINS
                ENDIF
             ENDIF
 
-            ! IF (lakeid(i) == -1) THEN
-            !    ithis = ithis - 1
-            !    CYCLE
-            ! ENDIF
-
-            IF (nups_all(i) <= nave) THEN
-               iworker = p_itis_worker(addrelm(i))
-               IF (nelm_wrk(iworker) >= nave) THEN
-                  iworker = minloc(nelm_wrk,1) - 1
-               ENDIF
+            IF (nups_all(i) <= nave-nelm_wrk(iworker)) THEN
                   
                addrbasin(i) = p_address_worker(iworker)
                nelm_wrk(iworker) = nelm_wrk(iworker) + nups_all(i)
+
+               IF (nelm_wrk(iworker) == nave) THEN
+                  iworker = iworker - 1
+               ENDIF
 
                j = basindown(i)
                DO WHILE (j > 0) 
@@ -237,13 +229,6 @@ CONTAINS
             ELSE
                ithis = ithis - 1
             ENDIF 
-         ENDDO
-
-         DO i = totalnumbasin, 1, -1
-            j = b_up2down(i)
-            IF ((addrbasin(j) == -1) .and. (lakeid(j) == -1)) THEN
-               addrbasin(j) = addrbasin(basindown(j))
-            ENDIF
          ENDDO
 
          deallocate (b_up2down)
@@ -596,7 +581,6 @@ CONTAINS
       IF (allocated(addrbasin     )) deallocate(addrbasin     )
       IF (allocated(addrelm       )) deallocate(addrelm       )
       IF (allocated(basindown     )) deallocate(basindown     )
-      IF (allocated(lakeid        )) deallocate(lakeid        )
       IF (allocated(nhru_all      )) deallocate(nhru_all      )  
       IF (allocated(nhru_in_bsn   )) deallocate(nhru_in_bsn   )  
       IF (allocated(basin_sorted  )) deallocate(basin_sorted  )
