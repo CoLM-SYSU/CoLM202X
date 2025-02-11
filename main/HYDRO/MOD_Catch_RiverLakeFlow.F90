@@ -427,6 +427,9 @@ CONTAINS
                   veloc_riv(i) = min(0., veloc_riv(i))
                ENDIF
 
+               veloc_riv(i) = min(veloc_riv(i),  20.)
+               veloc_riv(i) = max(veloc_riv(i), -20.)
+
             ENDDO
 
             IF (numbasin > 0) THEN
