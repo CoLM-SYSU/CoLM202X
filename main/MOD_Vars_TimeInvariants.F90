@@ -197,6 +197,7 @@ MODULE MOD_Vars_TimeInvariants
    real(r8), allocatable :: vf_gravels   (:,:)  !volumetric fraction of gravels
    real(r8), allocatable :: vf_om        (:,:)  !volumetric fraction of organic matter
    real(r8), allocatable :: vf_sand      (:,:)  !volumetric fraction of sand
+   real(r8), allocatable :: vf_clay      (:,:)  !volumetric fraction of clay
    real(r8), allocatable :: wf_gravels   (:,:)  !gravimetric fraction of gravels
    real(r8), allocatable :: wf_sand      (:,:)  !gravimetric fraction of sand
    real(r8), allocatable :: OM_density   (:,:)  !OM density (kg/m3)
@@ -320,6 +321,7 @@ CONTAINS
             allocate (vf_gravels   (nl_soil,numpatch))
             allocate (vf_om        (nl_soil,numpatch))
             allocate (vf_sand      (nl_soil,numpatch))
+            allocate (vf_clay      (nl_soil,numpatch))
             allocate (wf_gravels   (nl_soil,numpatch))
             allocate (wf_sand      (nl_soil,numpatch))
             allocate (OM_density   (nl_soil,numpatch))
@@ -442,6 +444,7 @@ CONTAINS
       CALL ncio_read_vector (file_restart, 'vf_gravels',   nl_soil, landpatch, vf_gravels) ! volumetric fraction of gravels
       CALL ncio_read_vector (file_restart, 'vf_om     ',   nl_soil, landpatch, vf_om     ) ! volumetric fraction of organic matter
       CALL ncio_read_vector (file_restart, 'vf_sand   ',   nl_soil, landpatch, vf_sand   ) ! volumetric fraction of sand
+      CALL ncio_read_vector (file_restart, 'vf_clay   ',   nl_soil, landpatch, vf_clay  ,defval = 0.1 ) ! volumetric fraction of clay
       CALL ncio_read_vector (file_restart, 'wf_gravels',   nl_soil, landpatch, wf_gravels) ! gravimetric fraction of gravels
       CALL ncio_read_vector (file_restart, 'wf_sand   ',   nl_soil, landpatch, wf_sand   ) ! gravimetric fraction of sand
       CALL ncio_read_vector (file_restart, 'OM_density',   nl_soil, landpatch, OM_density) ! OM density
@@ -623,6 +626,7 @@ CONTAINS
       CALL ncio_write_vector (file_restart, 'vf_gravels', 'soil', nl_soil, 'patch', landpatch, vf_gravels, compress) ! volumetric fraction of gravels
       CALL ncio_write_vector (file_restart, 'vf_om     ', 'soil', nl_soil, 'patch', landpatch, vf_om     , compress) ! volumetric fraction of organic matter
       CALL ncio_write_vector (file_restart, 'vf_sand   ', 'soil', nl_soil, 'patch', landpatch, vf_sand   , compress) ! volumetric fraction of sand
+      CALL ncio_write_vector (file_restart, 'vf_clay   ', 'soil', nl_soil, 'patch', landpatch, vf_clay   , compress) ! volumetric fraction of clay
       CALL ncio_write_vector (file_restart, 'wf_gravels', 'soil', nl_soil, 'patch', landpatch, wf_gravels, compress) ! gravimetric fraction of gravels
       CALL ncio_write_vector (file_restart, 'wf_sand   ', 'soil', nl_soil, 'patch', landpatch, wf_sand   , compress) ! gravimetric fraction of sand
       CALL ncio_write_vector (file_restart, 'OM_density', 'soil', nl_soil, 'patch', landpatch, OM_density, compress) ! OM_density
@@ -772,6 +776,7 @@ CONTAINS
             deallocate (vf_gravels     )
             deallocate (vf_om          )
             deallocate (vf_sand        )
+            deallocate (vf_clay        )
             deallocate (wf_gravels     )
             deallocate (wf_sand        )
             deallocate (OM_density     )
@@ -857,6 +862,8 @@ CONTAINS
 
    IMPLICIT NONE
 
+      real(r8), allocatable :: tmpcheck(:,:)
+
       IF (p_is_master) THEN
          write(*,'(/,A29)') 'Checking Time Invariants ...'
       ENDIF
@@ -876,6 +883,7 @@ CONTAINS
       CALL check_vector_data ('vf_gravels   [m3/m3] ', vf_gravels  ) ! volumetric fraction of gravels
       CALL check_vector_data ('vf_om        [m3/m3] ', vf_om       ) ! volumetric fraction of organic matter
       CALL check_vector_data ('vf_sand      [m3/m3] ', vf_sand     ) ! volumetric fraction of sand
+      CALL check_vector_data ('vf_clay      [m3/m3] ', vf_clay     ) ! volumetric fraction of clay
       CALL check_vector_data ('wf_gravels   [kg/kg] ', wf_gravels  ) ! gravimetric fraction of gravels
       CALL check_vector_data ('wf_sand      [kg/kg] ', wf_sand     ) ! gravimetric fraction of sand
       CALL check_vector_data ('OM_density   [kg/m3] ', OM_density  ) ! OM density
@@ -923,9 +931,16 @@ CONTAINS
 #ifdef SinglePoint
          CALL check_vector_data ('sf_lut       [-]     ', sf_lut_patches   ) ! shadow mask
 #else
-         CALL check_vector_data ('1 sf_curve p [-]     ', sf_curve_patches(:,1,:)) ! shadow mask
-         CALL check_vector_data ('2 sf_curve p [-]     ', sf_curve_patches(:,2,:)) ! shadow mask
-         CALL check_vector_data ('3 sf_curve p [-]     ', sf_curve_patches(:,3,:)) ! shadow mask
+         IF (allocated(sf_curve_patches)) allocate(tmpcheck(size(sf_curve_patches,1),size(sf_curve_patches,3)))
+         
+         IF (allocated(sf_curve_patches)) tmpcheck = sf_curve_patches(:,1,:)
+         CALL check_vector_data ('1 sf_curve p [-]     ', tmpcheck) ! shadow mask
+         IF (allocated(sf_curve_patches)) tmpcheck = sf_curve_patches(:,2,:)
+         CALL check_vector_data ('2 sf_curve p [-]     ', tmpcheck) ! shadow mask
+         IF (allocated(sf_curve_patches)) tmpcheck = sf_curve_patches(:,3,:)
+         CALL check_vector_data ('3 sf_curve p [-]     ', tmpcheck) ! shadow mask
+         
+         IF (allocated(tmpcheck)) deallocate(tmpcheck)
 #endif
       ENDIF
 

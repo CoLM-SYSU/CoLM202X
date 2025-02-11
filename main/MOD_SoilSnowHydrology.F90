@@ -51,7 +51,6 @@ CONTAINS
               qseva_snow  ,qsdew_snow  ,qsubl_snow  ,qfros_snow  ,fsno        ,&
               rsur        ,rnof        ,qinfl       ,pondmx      ,ssi         ,&
               wimp        ,smpmin      ,zwt         ,wa          ,qcharge     ,&
-              errw_rsub   ,&
 #if(defined CaMa_Flood)
               flddepth    ,fldfrc      ,qinfl_fld                             ,&
 #endif
@@ -155,8 +154,7 @@ CONTAINS
         rsur                    ,&! surface runoff (mm h2o/s)
         rnof                    ,&! total runoff (mm h2o/s)
         qinfl                   ,&! infiltration rate (mm h2o/s)
-        qcharge                 ,&! groundwater recharge (positive to aquifer) [mm/s]
-        errw_rsub
+        qcharge                   ! groundwater recharge (positive to aquifer) [mm/s]
 
 ! SNICAR model variables
 ! Aerosol Fluxes (Jan. 07, 2023)
@@ -402,7 +400,7 @@ IF(patchtype<=1)THEN   ! soil ground only
                         eff_porosity,icefrac,dz_soisno(1:),zi_soisno(0:),&
                         wice_soisno(1:),wliq_soisno(1:),&
                         porsl,psi0,bsw,zwt,wa,&
-                        qcharge,rsubst,errw_rsub)
+                        qcharge,rsubst)
 
       ! total runoff (mm/s)
       rnof = rsubst + rsur
@@ -416,7 +414,7 @@ IF ((.not.DEF_SPLIT_SOILSNOW) .or. (patchtype==1 .and. DEF_URBAN_RUN)) THEN
       ENDIF
 
       err_solver = (sum(wliq_soisno(1:))+sum(wice_soisno(1:))+wa) - w_sum &
-                 - (gwat-etr-rnof-errw_rsub)*deltim
+                 - (gwat-etr-rnof)*deltim
 
       IF(lb >= 1)THEN
          err_solver = err_solver-(qsdew+qfros-qsubl)*deltim
@@ -427,7 +425,7 @@ ELSE
       wice_soisno(1) = max(0., wice_soisno(1) + (qfros_soil-qsubl_soil) * deltim)
 
       err_solver = (sum(wliq_soisno(1:))+sum(wice_soisno(1:))+wa) - w_sum &
-                 - (gwat-etr-rnof-errw_rsub)*deltim
+                 - (gwat-etr-rnof)*deltim
 
       err_solver = err_solver-(qsdew_soil+qfros_soil-qsubl_soil)*deltim
 ENDIF
@@ -479,7 +477,6 @@ ELSE
       wa = 4800.
       zwt = 0.
       qcharge = 0.
-      errw_rsub = 0.
 
 ENDIF
 
@@ -2065,7 +2062,7 @@ ENDIF
                            eff_porosity,icefrac,&
                            dz_soisno,zi_soisno,wice_soisno,wliq_soisno,&
                            porsl,psi0,bsw,zwt,wa,&
-                           qcharge,rsubst,errw_rsub)
+                           qcharge,rsubst)
 
 ! -------------------------------------------------------------------------
 
@@ -2096,7 +2093,6 @@ ENDIF
    real(r8), intent(inout) :: wa        ! water in the unconfined aquifer (mm)
    real(r8), intent(in)    :: qcharge   ! aquifer recharge rate (positive to aquifer) (mm/s)
    real(r8), intent(inout) :: rsubst    ! subsurface runoff (positive = out of soil column) (mm H2O /s)
-   real(r8), intent(out)   :: errw_rsub ! the possible subsurface runoff dificit after PHS is included
 
 !
 ! LOCAL ARGUMENTS
@@ -2316,9 +2312,11 @@ ENDIF
       ENDDO
 
       ! Sub-surface runoff and drainage
-      errw_rsub = min(0., rsubst + xs/deltim)
-      rsubst = max(0., rsubst + xs/deltim)
-
+      rsubst = rsubst + xs/deltim
+      IF (rsubst < 0.) THEN
+         wa = wa + rsubst*deltim
+         rsubst = 0.
+      ENDIF
 
 !     DO j = 1, nl_soil-1
 !        IF (wice_soisno(j)*wice_soisno(j+1) < 1.e-6)THEN

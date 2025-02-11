@@ -1799,7 +1799,7 @@ CONTAINS
          ! all snow melt
          IF (c>=a+b)THEN
             t_lake(1) = (cpliq*(denh2o*dz_lake(1)*t_lake(1) + (sumsnowice+sumsnowliq)*tfrz) - a - b) / &
-                        (cpliq*(denh2o*dz_lake(1) + sumsnowice+ sumsnowice))
+                        (cpliq*(denh2o*dz_lake(1) + sumsnowice + sumsnowliq))
             sm = sm + scv/deltim
             qout_snowb = qout_snowb + scv/deltim
             scv = 0.

@@ -666,9 +666,6 @@
         fveg_gimp               ! fraction of fveg/fgimp
 
    real(r8) :: &
-        errw_rsub               ! the possible subsurface runoff deficit after PHS is included
-
-   real(r8) :: &
         ei                    ,&! vapor pressure on leaf surface [pa]
         deidT                 ,&! derivative of "ei" on "tl" [pa/K]
         qsatl                 ,&! leaf specific humidity [kg/kg]
@@ -1085,8 +1082,7 @@
 
          ! output
          rsur               ,rnof               ,qinfl              ,zwt                ,&
-         wa                 ,qcharge            ,smp                ,hk                 ,&
-         errw_rsub                                                                       )
+         wa                 ,qcharge            ,smp                ,hk                 )
 
       ! roof
       !============================================================
@@ -1241,17 +1237,13 @@
 
       endwb  = sum(wice_soisno(1:) + wliq_soisno(1:))
       endwb  = endwb + scv + ldew*fveg + wa*(1-froof)*fgper
-      errorw = (endwb - totwb) - (forc_prc + forc_prl + urb_irrig - fevpa - rnof - errw_rsub)*deltim
+      errorw = (endwb - totwb) - (forc_prc + forc_prl + urb_irrig - fevpa - rnof)*deltim
       xerr   = errorw/deltim
 
 #if(defined CoLMDEBUG)
       IF(abs(errorw)>1.e-3) THEN
          write(6,*) 'Warning: water balance violation', errorw, ipatch, patchclass
          !STOP
-      ENDIF
-
-      IF(abs(errw_rsub*deltim)>1.e-3) THEN
-         write(6,*) 'Subsurface runoff deficit due to PHS', errw_rsub*deltim
       ENDIF
 #endif
 

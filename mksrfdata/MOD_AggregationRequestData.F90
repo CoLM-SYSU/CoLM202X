@@ -662,13 +662,15 @@ CONTAINS
 #endif
 
 
-   SUBROUTINE fillnan (vec)
+   SUBROUTINE fillnan (vec, fill, defval)
 
    USE MOD_Precision
    USE MOD_UserDefFun, only : isnan_ud
    IMPLICIT NONE
 
    real(r8), intent(inout) :: vec(:)
+   logical,  intent(in)    :: fill
+   real(r8), intent(in)    :: defval
 
    ! local variables
    integer  :: i, n
@@ -688,6 +690,10 @@ CONTAINS
          DO i = lbound(vec,1), ubound(vec,1)
             IF (isnan_ud(vec(i))) vec(i) = s
          ENDDO
+      ENDIF
+
+      IF ((n == 0) .and. fill) THEN
+         vec(:) = defval
       ENDIF
 
    END SUBROUTINE fillnan
