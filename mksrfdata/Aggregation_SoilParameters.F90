@@ -1626,19 +1626,15 @@ SUBROUTINE Aggregation_SoilParameters ( &
                IF (L /= 0) THEN
                   CALL aggregation_request_data (landpatch, ipatch, gland, zip = USE_zip_for_aggregation, area = area_one, &
                      data_r8_2d_in1 = vf_clay_s_grid, data_r8_2d_out1 = vf_clay_s_one)
-                  CALL fillnan (vf_clay_s_one)
+                  CALL fillnan (vf_clay_s_one, L == WATERBODY, vf_clay_fill_water(nsl))
                   vf_clay_s_patches (ipatch) = sum (vf_clay_s_one * (area_one/sum(area_one)))
                ELSE
                   vf_clay_s_patches (ipatch) = -1.0e36_r8
                ENDIF
 
                IF (isnan_ud(vf_clay_s_patches(ipatch))) THEN
-                  IF (L == WATERBODY) THEN
-                     vf_clay_s_patches(ipatch) = vf_clay_fill_water(nsl)
-                  ELSE
-                     write(*,*) "Warning: NAN appears in vf_clay_s_patches."
-                     write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
-                  ENDIF
+                  write(*,*) "Warning: NAN appears in vf_clay_s_patches."
+                  write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
                ENDIF
 
             ENDDO
