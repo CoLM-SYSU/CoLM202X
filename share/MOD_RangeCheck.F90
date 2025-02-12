@@ -168,8 +168,9 @@ CONTAINS
    USE MOD_Vars_Global, only : spval
    IMPLICIT NONE
 
-   character(len=*), intent(in)   :: varname
-   real(r8), intent(in)           :: vdata(:)
+   character(len=*),      intent(in) :: varname
+   real(r8), allocatable, intent(in) :: vdata(:)
+
    real(r8), intent(in), optional :: spv_in
    real(r8), intent(in), optional :: limits(2)
 
@@ -188,18 +189,23 @@ CONTAINS
             spv = spval
          ENDIF
 
-         IF (any(vdata /= spv)) THEN
-            vmin = minval(vdata, mask = vdata /= spv)
-            vmax = maxval(vdata, mask = vdata /= spv)
-         ELSE
-            vmin = spv
-            vmax = spv
-         ENDIF
+         IF (allocated(vdata)) THEN
+            IF (any(vdata /= spv)) THEN
+               vmin = minval(vdata, mask = vdata /= spv)
+               vmax = maxval(vdata, mask = vdata /= spv)
+            ELSE
+               vmin = spv
+               vmax = spv
+            ENDIF
 
-         has_nan = .false.
-         DO i = 1, size(vdata)
-            has_nan = has_nan .or. isnan_ud(vdata(i))
-         ENDDO
+            has_nan = .false.
+            DO i = lbound(vdata,1), ubound(vdata,1)
+               has_nan = has_nan .or. isnan_ud(vdata(i))
+            ENDDO
+         ELSE
+            vmin = spv; vmax = spv
+            has_nan = .false.
+         ENDIF
 
 #ifdef USEMPI
          IF (p_iam_worker == p_root) THEN
@@ -269,8 +275,9 @@ CONTAINS
    USE MOD_Vars_Global, only : spval
    IMPLICIT NONE
 
-   character(len=*), intent(in)   :: varname
-   real(r8), intent(in)           :: vdata(:,:)
+   character(len=*),      intent(in) :: varname
+   real(r8), allocatable, intent(in) :: vdata(:,:)
+
    real(r8), intent(in), optional :: spv_in
    real(r8), intent(in), optional :: limits(2) 
 
@@ -289,20 +296,25 @@ CONTAINS
             spv = spval
          ENDIF
 
-         IF (any(vdata /= spv)) THEN
-            vmin = minval(vdata, mask = vdata /= spv)
-            vmax = maxval(vdata, mask = vdata /= spv)
-         ELSE
-            vmin = spv
-            vmax = spv
-         ENDIF
+         IF (allocated(vdata)) THEN
+            IF (any(vdata /= spv)) THEN
+               vmin = minval(vdata, mask = vdata /= spv)
+               vmax = maxval(vdata, mask = vdata /= spv)
+            ELSE
+               vmin = spv
+               vmax = spv
+            ENDIF
 
-         has_nan = .false.
-         DO j = 1, size(vdata,2)
-            DO i = 1, size(vdata,1)
-               has_nan = has_nan .or. isnan_ud(vdata(i,j))
+            has_nan = .false.
+            DO j = lbound(vdata,2), ubound(vdata,2)
+               DO i = lbound(vdata,1), ubound(vdata,1)
+                  has_nan = has_nan .or. isnan_ud(vdata(i,j))
+               ENDDO
             ENDDO
-         ENDDO
+         ELSE
+            vmin = spv; vmax = spv
+            has_nan = .false.
+         ENDIF
 
 #ifdef USEMPI
          IF (p_iam_worker == p_root) THEN
@@ -372,8 +384,9 @@ CONTAINS
    USE MOD_Vars_Global, only : spval
    IMPLICIT NONE
 
-   character(len=*), intent(in)   :: varname
-   real(r8), intent(in)           :: vdata(:,:,:)
+   character(len=*),      intent(in) :: varname
+   real(r8), allocatable, intent(in) :: vdata(:,:,:)
+   
    real(r8), intent(in), optional :: spv_in
    real(r8), intent(in), optional :: limits(2) 
 
@@ -392,22 +405,27 @@ CONTAINS
             spv = spval
          ENDIF
 
-         IF (any(vdata /= spv)) THEN
-            vmin = minval(vdata, mask = vdata /= spv)
-            vmax = maxval(vdata, mask = vdata /= spv)
-         ELSE
-            vmin = spv
-            vmax = spv
-         ENDIF
+         IF (allocated(vdata)) THEN
+            IF (any(vdata /= spv)) THEN
+               vmin = minval(vdata, mask = vdata /= spv)
+               vmax = maxval(vdata, mask = vdata /= spv)
+            ELSE
+               vmin = spv
+               vmax = spv
+            ENDIF
 
-         has_nan = .false.
-         DO k = 1, size(vdata,3)
-            DO j = 1, size(vdata,2)
-               DO i = 1, size(vdata,1)
-                  has_nan = has_nan .or. isnan_ud(vdata(i,j,k))
+            has_nan = .false.
+            DO k = lbound(vdata,3), ubound(vdata,3)
+               DO j = lbound(vdata,2), ubound(vdata,2)
+                  DO i = lbound(vdata,1), ubound(vdata,1)
+                     has_nan = has_nan .or. isnan_ud(vdata(i,j,k))
+                  ENDDO
                ENDDO
             ENDDO
-         ENDDO
+         ELSE
+            vmin = spv; vmax = spv
+            has_nan = .false.
+         ENDIF
 
 #ifdef USEMPI
          IF (p_iam_worker == p_root) THEN
@@ -478,8 +496,9 @@ CONTAINS
    USE MOD_Vars_Global, only : spval
    IMPLICIT NONE
 
-   character(len=*), intent(in)   :: varname
-   real(r8), intent(in)           :: vdata(:,:,:,:)
+   character(len=*),      intent(in) :: varname
+   real(r8), allocatable, intent(in) :: vdata(:,:,:,:)
+
    real(r8), intent(in), optional :: spv_in
    real(r8), intent(in), optional :: limits(2) 
 
@@ -498,24 +517,29 @@ CONTAINS
             spv = spval
          ENDIF
 
-         IF (any(vdata /= spv)) THEN
-            vmin = minval(vdata, mask = vdata /= spv)
-            vmax = maxval(vdata, mask = vdata /= spv)
-         ELSE
-            vmin = spv
-            vmax = spv
-         ENDIF
+         IF (allocated(vdata)) THEN
+            IF (any(vdata /= spv)) THEN
+               vmin = minval(vdata, mask = vdata /= spv)
+               vmax = maxval(vdata, mask = vdata /= spv)
+            ELSE
+               vmin = spv
+               vmax = spv
+            ENDIF
 
-         has_nan = .false.
-         DO l = 1, size(vdata,4)
-            DO k = 1, size(vdata,3)
-               DO j = 1, size(vdata,2)
-                  DO i = 1, size(vdata,1)
-                     has_nan = has_nan .or. isnan_ud(vdata(i,j,k,l))
+            has_nan = .false.
+            DO l = lbound(vdata,4), ubound(vdata,4)
+               DO k = lbound(vdata,3), ubound(vdata,3)
+                  DO j = lbound(vdata,2), ubound(vdata,2)
+                     DO i = lbound(vdata,1), ubound(vdata,1)
+                        has_nan = has_nan .or. isnan_ud(vdata(i,j,k,l))
+                     ENDDO
                   ENDDO
                ENDDO
             ENDDO
-         ENDDO
+         ELSE
+            vmin = spv; vmax = spv
+            has_nan = .false.
+         ENDIF
 
 #ifdef USEMPI
          IF (p_iam_worker == p_root) THEN
@@ -585,59 +609,60 @@ CONTAINS
    USE MOD_SPMD_Task
    IMPLICIT NONE
 
-   character(len=*), intent(in)  :: varname
-   integer, intent(in)           :: vdata(:)
+   character(len=*),     intent(in)  :: varname
+   integer, allocatable, intent(in)  :: vdata(:)
+
    integer, intent(in), optional :: spv_in
 
    ! Local variables
    integer :: vmin, vmax
+   logical :: isnull
+   logical, allocatable :: null_all(:)
    integer, allocatable :: vmin_all(:), vmax_all(:)
    character(len=256) :: wfmt
 
       IF (p_is_worker) THEN
 
-         IF (present(spv_in)) THEN
-            IF (any(vdata /= spv_in)) THEN
-               vmin = minval(vdata, mask = vdata /= spv_in)
-               vmax = maxval(vdata, mask = vdata /= spv_in)
+         isnull = .not. allocated(vdata)
+
+         IF (.not. isnull) THEN
+            IF (present(spv_in)) THEN
+               IF (any(vdata /= spv_in)) THEN
+                  vmin = minval(vdata, mask = vdata /= spv_in)
+                  vmax = maxval(vdata, mask = vdata /= spv_in)
+               ELSE
+                  vmin = spv_in
+                  vmax = spv_in
+               ENDIF
             ELSE
-               vmin = spv_in
-               vmax = spv_in
+               vmin = minval(vdata)
+               vmax = maxval(vdata)
             ENDIF
-         ELSE
-            vmin = minval(vdata)
-            vmax = maxval(vdata)
          ENDIF
 
 #ifdef USEMPI
          IF (p_iam_worker == p_root) THEN
+            allocate (null_all (0:p_np_worker-1))
             allocate (vmin_all (0:p_np_worker-1))
             allocate (vmax_all (0:p_np_worker-1))
-            CALL mpi_gather (vmin, 1, MPI_INTEGER, vmin_all, 1, MPI_INTEGER, p_root, p_comm_worker, p_err)
-            CALL mpi_gather (vmax, 1, MPI_INTEGER, vmax_all, 1, MPI_INTEGER, p_root, p_comm_worker, p_err)
+            CALL mpi_gather (isnull, 1, MPI_LOGICAL, null_all, 1, MPI_LOGICAL, p_root, p_comm_worker, p_err)
+            CALL mpi_gather (vmin,   1, MPI_INTEGER, vmin_all, 1, MPI_INTEGER, p_root, p_comm_worker, p_err)
+            CALL mpi_gather (vmax,   1, MPI_INTEGER, vmax_all, 1, MPI_INTEGER, p_root, p_comm_worker, p_err)
          ELSE
-            CALL mpi_gather (vmin, 1, MPI_INTEGER, MPI_INULL_P, 1, MPI_INTEGER, p_root, p_comm_worker, p_err)
-            CALL mpi_gather (vmax, 1, MPI_INTEGER, MPI_INULL_P, 1, MPI_INTEGER, p_root, p_comm_worker, p_err)
+            CALL mpi_gather (isnull, 1, MPI_LOGICAL, MPI_LNULL_P, 1, MPI_LOGICAL, p_root, p_comm_worker, p_err)
+            CALL mpi_gather (vmin,   1, MPI_INTEGER, MPI_INULL_P, 1, MPI_INTEGER, p_root, p_comm_worker, p_err)
+            CALL mpi_gather (vmax,   1, MPI_INTEGER, MPI_INULL_P, 1, MPI_INTEGER, p_root, p_comm_worker, p_err)
          ENDIF
 
          IF (p_iam_worker == p_root) THEN
             IF (present(spv_in)) THEN
-               IF (any(vmin_all /= spv_in)) THEN
-                  vmin = minval(vmin_all, mask = (vmin_all /= spv_in))
-               ELSE
-                  vmin = spv_in
-               ENDIF
-
-               IF (any(vmax_all /= spv_in)) THEN
-                  vmax = maxval(vmax_all, mask = (vmax_all /= spv_in))
-               ELSE
-                  vmax = spv_in
-               ENDIF
-            ELSE
-               vmin = minval(vmin_all)
-               vmax = maxval(vmax_all)
+               null_all = null_all .and. (vmin_all == spv_in)
             ENDIF
 
+            vmin = minval(vmin_all, mask = .not. null_all)
+            vmax = maxval(vmax_all, mask = .not. null_all)
+
+            deallocate (null_all)
             deallocate (vmin_all)
             deallocate (vmax_all)
          ENDIF

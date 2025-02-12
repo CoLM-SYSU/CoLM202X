@@ -495,6 +495,12 @@ CONTAINS
                   CALL clip_vector (file_in, file_out, iblk, jblk, &
                      'BD_all_s_l'//trim(c1)//'_patches', patchmask)
 
+                  ! (22) volumetric fraction of clay
+                  file_in  = trim(dir_landdata_in)  // '/soil/vf_clay_s_l'//trim(c1)//'_patches.nc'
+                  file_out = trim(dir_landdata_out) // '/soil/vf_clay_s_l'//trim(c1)//'_patches.nc'
+                  CALL clip_vector (file_in, file_out, iblk, jblk, &
+                     'vf_clay_s_l'//trim(c1)//'_patches', patchmask)
+
                ENDDO
 
                ! topography

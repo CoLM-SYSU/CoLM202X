@@ -60,8 +60,8 @@ PROGRAM CoLM
 #ifdef SinglePoint
    USE MOD_SingleSrfdata
 #endif
-
 #if (defined CatchLateralFlow)
+   USE MOD_Catch_BasinNetwork
    USE MOD_Catch_LateralFlow
 #endif
 
@@ -256,6 +256,10 @@ PROGRAM CoLM
 #ifdef CATCHMENT
       CALL hru_vector_init ()
 #endif
+#endif
+
+#ifdef CatchLateralFlow
+      CALL build_basin_network ()
 #endif
 
       CALL adj2end(sdate)
