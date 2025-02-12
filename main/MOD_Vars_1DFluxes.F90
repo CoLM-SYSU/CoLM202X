@@ -13,7 +13,7 @@ MODULE MOD_Vars_1DFluxes
    USE MOD_BGC_Vars_1DFluxes
 #endif
 #ifdef CatchLateralFlow
-   USE MOD_Hydro_Vars_1DFluxes
+   USE MOD_Catch_Vars_1DFluxes
 #endif
 #ifdef URBAN_MODEL
    USE MOD_Urban_Vars_1DFluxes
@@ -168,7 +168,7 @@ CONTAINS
 #endif
 
 #ifdef CatchLateralFlow
-      CALL allocate_1D_HydroFluxes
+      CALL allocate_1D_CatchFluxes
 #endif
 
 #ifdef URBAN_MODEL
@@ -252,7 +252,7 @@ CONTAINS
 #endif
 
 #ifdef CatchLateralFlow
-      CALL deallocate_1D_HydroFluxes
+      CALL deallocate_1D_CatchFluxes
 #endif
 
 #ifdef URBAN_MODEL

@@ -59,13 +59,9 @@ CONTAINS
 #endif
    USE MOD_SpatialMapping
 #ifdef CatchLateralFlow
-   USE MOD_Mesh
    USE MOD_LandHRU
-   USE MOD_LandPatch
-   USE MOD_ElmVector
-   USE MOD_HRUVector
+   USE MOD_Catch_BasinNetwork
    USE MOD_ElementNeighbour
-   USE MOD_Catch_HillslopeNetwork
    USE MOD_Catch_RiverLakeNetwork
 #endif
 #ifdef CROP
@@ -250,6 +246,11 @@ CONTAINS
    !BVIC          =   1.0  0.050,    0.080,    0.090,    0.250,    0.150,    0.180,    0.200,    0.220,    0.230,    0.250,    0.280,    0.300
    !re-arranged BVIC for USDA soil texture class:
    real(r8), parameter :: BVIC_USDA(0:12) = (/ 1., 0.300,  0.280, 0.250, 0.230,  0.220, 0.200,  0.180, 0.100,  0.090, 0.150, 0.080,  0.050/)    
+
+
+#ifdef CatchLateralFlow
+      CALL build_basin_network ()
+#endif
 
 ! --------------------------------------------------------------------
 ! Allocates memory for CoLM 1d [numpatch] variables
@@ -1381,30 +1382,51 @@ CONTAINS
 #ifdef CatchLateralFlow
 
       CALL element_neighbour_init  (lc_year)
-      CALL hillslope_network_init  ()
       CALL river_lake_network_init ()
 
       IF (p_is_worker) THEN
 
-         IF (numpatch > 0) THEN
-            wdsrf(:) = 0.
-         ENDIF
+         ! set variables "veloc_bsnhru", "wdsrf_bsnhru_prev"
+         DO i = 1, numbasin
+            hs = basin_hru%substt(i)
+            he = basin_hru%subend(i)
 
-         DO i = 1, numelm
-            IF (lake_id(i) > 0) THEN
-               ps = elm_patch%substt(i)
-               pe = elm_patch%subend(i)
-               wdsrf(ps:pe) = lakedepth(ps:pe) * 1.0e3 ! m to mm
-            ELSE
-               IF (hillslope_network(i)%indx(1) == 0) THEN
-                  hs = basin_hru%substt(i)
-                  ps = hru_patch%substt(hs)
-                  pe = hru_patch%subend(hs)
-                  wdsrf(ps:pe) = riverdpth(i) * 1.0e3 ! m to mm
-               ENDIF
+            wdsrf_bsnhru(hs:he) = 0.
+            IF (lake_id(i) == 0) THEN
+               wdsrf_bsnhru(hs) = riverdpth(i)
+            ELSEIF (lake_id(i) > 0) THEN
+               wdsrf_bsnhru(hs:he) = lakeinfo(i)%depth0
             ENDIF
+         
+            veloc_bsnhru(hs:he) = 0.
+            wdsrf_bsnhru_prev(hs:he) = wdsrf_bsnhru(hs:he)
          ENDDO
 
+         ! set variables "veloc_riv", "wdsrf_bsn_prev"
+         DO i = 1, numbasin
+            hs = basin_hru%substt(i)
+            he = basin_hru%subend(i)
+            IF (lake_id(i) <= 0) THEN
+               wdsrf_bsn(i) = minval(hillslope_basin(i)%hand + wdsrf_bsnhru(hs:he))
+            ELSE
+               ! lake
+               totalvolume  = sum(wdsrf_bsnhru(hs:he) * lakeinfo(i)%area0)
+               wdsrf_bsn(i) = lakeinfo(i)%surface(totalvolume)
+            ENDIF
+            veloc_riv(i) = 0
+            wdsrf_bsn_prev(i) = wdsrf_bsn(i)
+         ENDDO
+
+         CALL worker_push_subset_data (iam_bsn, iam_elm, basin_hru, elm_hru, wdsrf_bsnhru, wdsrf_hru)
+
+         ! adjust "wdsrf" according to river and lake water depth
+         DO i = 1, numhru
+            ps = hru_patch%substt(i)
+            pe = hru_patch%subend(i)
+            wdsrf(ps:pe) = wdsrf_hru(i) * 1.0e3 ! m to mm
+         ENDDO
+
+         ! adjust lake levels "dz_lake" according to lake depth
          DO i = 1, numpatch
             IF (wdsrf(i) > 0.) THEN
                wdsrfm = wdsrf(i)*1.e-3
@@ -1420,33 +1442,6 @@ CONTAINS
                dz_lake(:,i) = 0.
             ENDIF
          ENDDO
-
-         IF (numhru > 0) THEN
-            DO i = 1, numhru
-               ps = hru_patch%substt(i)
-               pe = hru_patch%subend(i)
-               wdsrf_hru(i) = sum(wdsrf(ps:pe) * hru_patch%subfrc(ps:pe))
-               wdsrf_hru(i) = wdsrf_hru(i) / 1.0e3 ! mm to m
-            ENDDO
-            veloc_hru(:) = 0
-            wdsrf_hru_prev(:) = wdsrf_hru(:)
-         ENDIF
-
-         IF (numelm > 0) THEN
-            DO i = 1, numelm
-               hs = basin_hru%substt(i)
-               he = basin_hru%subend(i)
-               IF (lake_id(i) <= 0) THEN
-                  wdsrf_bsn(i) = minval(hillslope_network(i)%hand + wdsrf_hru(hs:he))
-               ELSE
-                  ! lake
-                  totalvolume  = sum(wdsrf_hru(hs:he) * lakes(i)%area0)
-                  wdsrf_bsn(i) = lakes(i)%surface(totalvolume)
-               ENDIF
-            ENDDO
-            veloc_riv(:) = 0
-            wdsrf_bsn_prev(:) = wdsrf_bsn(:)
-         ENDIF
 
       ENDIF
 #endif
