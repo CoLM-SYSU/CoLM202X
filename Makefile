@@ -101,9 +101,10 @@ mksrfdata.x : mkdir_build ${HEADER} ${OBJS_SHARED} ${OBJS_MKSRFDATA}
 # ----- End of Target 1 mksrfdata ----
 
 OBJS_BASIC =    \
-				 MOD_Hydro_IO.o                 \
-				 MOD_Hydro_Vars_TimeVariables.o \
-				 MOD_Hydro_Vars_1DFluxes.o      \
+				 MOD_Catch_BasinNetwork.o       \
+				 MOD_Catch_IO.o                 \
+				 MOD_Catch_Vars_TimeVariables.o \
+				 MOD_Catch_Vars_1DFluxes.o      \
 				 MOD_BGC_Vars_1DFluxes.o        \
 				 MOD_BGC_Vars_1DPFTFluxes.o     \
 				 MOD_BGC_Vars_PFTimeVariables.o \
@@ -224,7 +225,7 @@ OBJS_MAIN = \
 				MOD_Catch_HillslopeFlow.o                 \
 				MOD_Catch_SubsurfaceFlow.o                \
 				MOD_Catch_RiverLakeFlow.o                 \
-				MOD_Hydro_Hist.o                          \
+				MOD_Catch_Hist.o                          \
 				MOD_BGC_CNCStateUpdate1.o                 \
 				MOD_BGC_CNCStateUpdate2.o                 \
 				MOD_BGC_CNCStateUpdate3.o                 \

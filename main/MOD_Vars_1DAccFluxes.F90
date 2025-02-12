@@ -1596,8 +1596,8 @@ CONTAINS
    USE MOD_TurbulenceLEddy
    USE MOD_Vars_Global
 #ifdef CatchLateralFlow
-   USE MOD_Hydro_Vars_1DFluxes
-   USE MOD_Hydro_Hist, only: accumulate_fluxes_basin
+   USE MOD_Catch_Vars_1DFluxes
+   USE MOD_Catch_Hist, only: accumulate_fluxes_basin
 #endif
 
    IMPLICIT NONE

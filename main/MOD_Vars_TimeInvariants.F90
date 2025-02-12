@@ -870,6 +870,8 @@ CONTAINS
 
    IMPLICIT NONE
 
+      real(r8), allocatable :: tmpcheck(:,:)
+
       IF (p_is_master) THEN
          write(*,'(/,A29)') 'Checking Time Invariants ...'
       ENDIF
@@ -937,9 +939,16 @@ CONTAINS
 #ifdef SinglePoint
          CALL check_vector_data ('sf_lut       [-]     ', sf_lut_patches   ) ! shadow mask
 #else
-         CALL check_vector_data ('1 sf_curve p [-]     ', sf_curve_patches(:,1,:)) ! shadow mask
-         CALL check_vector_data ('2 sf_curve p [-]     ', sf_curve_patches(:,2,:)) ! shadow mask
-         CALL check_vector_data ('3 sf_curve p [-]     ', sf_curve_patches(:,3,:)) ! shadow mask
+         IF (allocated(sf_curve_patches)) allocate(tmpcheck(size(sf_curve_patches,1),size(sf_curve_patches,3)))
+         
+         IF (allocated(sf_curve_patches)) tmpcheck = sf_curve_patches(:,1,:)
+         CALL check_vector_data ('1 sf_curve p [-]     ', tmpcheck) ! shadow mask
+         IF (allocated(sf_curve_patches)) tmpcheck = sf_curve_patches(:,2,:)
+         CALL check_vector_data ('2 sf_curve p [-]     ', tmpcheck) ! shadow mask
+         IF (allocated(sf_curve_patches)) tmpcheck = sf_curve_patches(:,3,:)
+         CALL check_vector_data ('3 sf_curve p [-]     ', tmpcheck) ! shadow mask
+         
+         IF (allocated(tmpcheck)) deallocate(tmpcheck)
 #endif
       ENDIF
 
