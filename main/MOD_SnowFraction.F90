@@ -141,22 +141,14 @@ CONTAINS
          ENDIF
 
          ! snow on vegetation, USE snowdp to calculate buried fraction
-         ! distingush tree, shrub and grass
          IF ( DEF_VEG_SNOW .and. tlai_p(i)+tsai_p(i) > 1.e-6 ) THEN
-            ! for non-grass, use hbot, htop to determine how much lsai being buried.
-            IF (p.gt.0 .and. p.le.11) THEN
+            ! for trees, use hbot, htop to determine how much lsai being buried.
+            IF (p.gt.0 .and. p.le.8) THEN
                wt = max(0., (snowdp-hbot_p(i))) / (htop_p(i)-hbot_p(i))
                wt = min(wt, 1.)
                sigf_p(i) = 1. - wt
-            ELSE
-            ! for grass, 0-0.2m?
-               wt = min(1., snowdp/0.2)
-               sigf_p(i) = 1. - wt
             ENDIF
          ENDIF
-
-         !IF(sigf_p(i) < 0.001) sigf_p(i) = 0.
-         !IF(sigf_p(i) > 0.999) sigf_p(i) = 1.
 
          wt_tmp = wt_tmp + wt*pftfrac(i)
       ENDDO

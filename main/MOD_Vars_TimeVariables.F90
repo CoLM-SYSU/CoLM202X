@@ -900,11 +900,12 @@ CONTAINS
 
    USE MOD_SPMD_Task
    USE MOD_Namelist, only : DEF_REST_CompressLevel, DEF_USE_PLANTHYDRAULICS, DEF_USE_OZONESTRESS, &
-                            DEF_USE_IRRIGATION, DEF_USE_Dynamic_Lake
+                            DEF_USE_IRRIGATION, DEF_USE_Dynamic_Lake, SITE_landtype
    USE MOD_LandPatch
    USE MOD_NetCDFVector
    USE MOD_Vars_Global
    USE MOD_Vars_TimeInvariants, only : dz_lake
+   USE MOD_Const_LC, only: patchtypes
    IMPLICIT NONE
 
    integer, intent(in) :: idate(3)
@@ -1034,32 +1035,39 @@ ENDIF
       CALL ncio_write_vector (file_restart, 'fq   ', 'patch', landpatch, fq   , compress) ! integral of profile FUNCTION for moisture
 
 IF (DEF_USE_IRRIGATION) THEN
-      CALL Ncio_write_vector (file_restart, 'irrig_rate            ' , 'patch',landpatch,irrig_rate            , compress)
-      CALL Ncio_write_vector (file_restart, 'deficit_irrig         ' , 'patch',landpatch,deficit_irrig         , compress)
-      CALL Ncio_write_vector (file_restart, 'sum_irrig             ' , 'patch',landpatch,sum_irrig             , compress)
-      CALL Ncio_write_vector (file_restart, 'sum_irrig_count       ' , 'patch',landpatch,sum_irrig_count       , compress)
-      CALL Ncio_write_vector (file_restart, 'n_irrig_steps_left    ' , 'patch',landpatch,n_irrig_steps_left    , compress)
-      CALL Ncio_write_vector (file_restart, 'tairday               ' , 'patch',landpatch,tairday               , compress)
-      CALL Ncio_write_vector (file_restart, 'usday                 ' , 'patch',landpatch,usday                 , compress)
-      CALL Ncio_write_vector (file_restart, 'vsday                 ' , 'patch',landpatch,vsday                 , compress)
-      CALL Ncio_write_vector (file_restart, 'pairday               ' , 'patch',landpatch,pairday               , compress)
-      CALL Ncio_write_vector (file_restart, 'rnetday               ' , 'patch',landpatch,rnetday               , compress)
-      CALL Ncio_write_vector (file_restart, 'fgrndday              ' , 'patch',landpatch,fgrndday              , compress)
-      CALL Ncio_write_vector (file_restart, 'potential_evapotranspiration', 'patch',landpatch, &
+      CALL ncio_write_vector (file_restart, 'irrig_rate            ' , 'patch',landpatch,irrig_rate            , compress)
+      CALL ncio_write_vector (file_restart, 'deficit_irrig         ' , 'patch',landpatch,deficit_irrig         , compress)
+      CALL ncio_write_vector (file_restart, 'sum_irrig             ' , 'patch',landpatch,sum_irrig             , compress)
+      CALL ncio_write_vector (file_restart, 'sum_irrig_count       ' , 'patch',landpatch,sum_irrig_count       , compress)
+      CALL ncio_write_vector (file_restart, 'n_irrig_steps_left    ' , 'patch',landpatch,n_irrig_steps_left    , compress)
+      CALL ncio_write_vector (file_restart, 'tairday               ' , 'patch',landpatch,tairday               , compress)
+      CALL ncio_write_vector (file_restart, 'usday                 ' , 'patch',landpatch,usday                 , compress)
+      CALL ncio_write_vector (file_restart, 'vsday                 ' , 'patch',landpatch,vsday                 , compress)
+      CALL ncio_write_vector (file_restart, 'pairday               ' , 'patch',landpatch,pairday               , compress)
+      CALL ncio_write_vector (file_restart, 'rnetday               ' , 'patch',landpatch,rnetday               , compress)
+      CALL ncio_write_vector (file_restart, 'fgrndday              ' , 'patch',landpatch,fgrndday              , compress)
+      CALL ncio_write_vector (file_restart, 'potential_evapotranspiration', 'patch',landpatch, &
                                                                                    potential_evapotranspiration, compress)
-      CALL Ncio_write_vector (file_restart, 'irrig_method_corn     ' , 'patch',landpatch,irrig_method_corn     , compress)
-      CALL Ncio_write_vector (file_restart, 'irrig_method_swheat   ' , 'patch',landpatch,irrig_method_swheat   , compress)
-      CALL Ncio_write_vector (file_restart, 'irrig_method_wwheat   ' , 'patch',landpatch,irrig_method_wwheat   , compress)
-      CALL Ncio_write_vector (file_restart, 'irrig_method_soybean  ' , 'patch',landpatch,irrig_method_soybean  , compress)
-      CALL Ncio_write_vector (file_restart, 'irrig_method_cotton   ' , 'patch',landpatch,irrig_method_cotton   , compress)
-      CALL Ncio_write_vector (file_restart, 'irrig_method_rice1    ' , 'patch',landpatch,irrig_method_rice1    , compress)
-      CALL Ncio_write_vector (file_restart, 'irrig_method_rice2    ' , 'patch',landpatch,irrig_method_rice2    , compress)
-      CALL Ncio_write_vector (file_restart, 'irrig_method_sugarcane' , 'patch',landpatch,irrig_method_sugarcane, compress)
+      CALL ncio_write_vector (file_restart, 'irrig_method_corn     ' , 'patch',landpatch,irrig_method_corn     , compress)
+      CALL ncio_write_vector (file_restart, 'irrig_method_swheat   ' , 'patch',landpatch,irrig_method_swheat   , compress)
+      CALL ncio_write_vector (file_restart, 'irrig_method_wwheat   ' , 'patch',landpatch,irrig_method_wwheat   , compress)
+      CALL ncio_write_vector (file_restart, 'irrig_method_soybean  ' , 'patch',landpatch,irrig_method_soybean  , compress)
+      CALL ncio_write_vector (file_restart, 'irrig_method_cotton   ' , 'patch',landpatch,irrig_method_cotton   , compress)
+      CALL ncio_write_vector (file_restart, 'irrig_method_rice1    ' , 'patch',landpatch,irrig_method_rice1    , compress)
+      CALL ncio_write_vector (file_restart, 'irrig_method_rice2    ' , 'patch',landpatch,irrig_method_rice2    , compress)
+      CALL ncio_write_vector (file_restart, 'irrig_method_sugarcane' , 'patch',landpatch,irrig_method_sugarcane, compress)
 ENDIF
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
+#ifdef SinglePoint
+      IF (patchtypes(SITE_landtype) == 0) THEN
+         file_restart = trim(dir_restart)// '/'//trim(cdate)//'/' // trim(site) //'_restart_pft_'//trim(cdate)//'_lc'//trim(cyear)//'.nc'
+         CALL WRITE_PFTimeVariables (file_restart)
+      ENDIF
+#else
       file_restart = trim(dir_restart)// '/'//trim(cdate)//'/' // trim(site) //'_restart_pft_'//trim(cdate)//'_lc'//trim(cyear)//'.nc'
       CALL WRITE_PFTimeVariables (file_restart)
+#endif
 #endif
 
 #if (defined BGC)
@@ -1094,6 +1102,7 @@ ENDIF
    USE MOD_LandPatch
    USE MOD_Vars_Global
    USE MOD_Vars_TimeInvariants, only : dz_lake
+   USE MOD_Const_LC, only: patchtypes
 
    IMPLICIT NONE
 
@@ -1229,8 +1238,15 @@ IF (DEF_USE_IRRIGATION) THEN
 ENDIF
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
+#ifdef SinglePoint
+      IF (patchtypes(SITE_landtype) == 0) THEN
+         file_restart = trim(dir_restart)// '/'//trim(cdate)//'/' // trim(site) //'_restart_pft_'//trim(cdate)//'_lc'//trim(cyear)//'.nc'
+         CALL READ_PFTimeVariables (file_restart)
+      ENDIF
+#else
       file_restart = trim(dir_restart)// '/'//trim(cdate)//'/' // trim(site) //'_restart_pft_'//trim(cdate)//'_lc'//trim(cyear)//'.nc'
       CALL READ_PFTimeVariables (file_restart)
+#endif
 #endif
 
 #if (defined BGC)
