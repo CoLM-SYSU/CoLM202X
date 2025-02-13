@@ -65,7 +65,7 @@ CONTAINS
    USE MOD_Hydro_SoilFunction
    IMPLICIT NONE
 
-! ------------------------- Dummy Arguments ----------------------------
+!-------------------------- Dummy Arguments ----------------------------
    integer, intent(in) :: &
         nl_soil                       ! upper bound of array
 

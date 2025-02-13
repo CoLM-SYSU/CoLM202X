@@ -46,7 +46,7 @@ CONTAINS
    USE MOD_Const_Physical, only : vonkar
    IMPLICIT NONE
 
-! ------------------------- Dummy Arguments ----------------------------
+!-------------------------- Dummy Arguments ----------------------------
 
    real(r8), intent(in) :: hu       ! observational height of wind [m]
    real(r8), intent(in) :: ht       ! observational height of temperature [m]

@@ -37,7 +37,7 @@ CONTAINS
    USE MOD_Precision
    IMPLICIT NONE
 
-! ------------------------- Dummy Arguments ----------------------------
+!-------------------------- Dummy Arguments ----------------------------
    real(r8), intent(in) :: scv    ! snow water equivalent [mm or kg/m3]
    real(r8), intent(in) :: snowdp ! snow depth [m]
    real(r8), intent(in) :: z0m    ! aerodynamic roughness length [m]
@@ -102,7 +102,7 @@ CONTAINS
    USE MOD_Vars_PFTimeVariables
    IMPLICIT NONE
 
-! ------------------------- Dummy Arguments ----------------------------
+!-------------------------- Dummy Arguments ----------------------------
    integer,  intent(in) :: ipatch ! patch index
 
    real(r8), intent(in) :: zlnd   ! aerodynamic roughness length over soil surface [m]

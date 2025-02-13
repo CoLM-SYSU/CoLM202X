@@ -81,7 +81,7 @@ CONTAINS
 
    IMPLICIT NONE
 
-! ------------------------- Dummy Arguments ----------------------------
+!-------------------------- Dummy Arguments ----------------------------
    integer, intent(in) :: &
         ipatch                  ,&! patch index
         patchtype                 ! land patch type (0=soil, 1=urban or built-up, 2=wetland,
@@ -533,7 +533,7 @@ ENDIF
 
    IMPLICIT NONE
 
-! ------------------------- Dummy Arguments ----------------------------
+!-------------------------- Dummy Arguments ----------------------------
    integer, intent(in) :: &
         ipatch           ,& ! patch index
         patchtype           ! land patch type (0=soil, 1=urban or built-up, 2=wetland,
@@ -1158,7 +1158,7 @@ ENDIF
    USE MOD_Const_Physical, only : denice, denh2o  ! physical constant
    IMPLICIT NONE
 
-! ------------------------- Dummy Arguments ----------------------------
+!-------------------------- Dummy Arguments ----------------------------
    integer, intent(in) :: &
         lb          ! lower bound of array
 
@@ -1284,7 +1284,7 @@ ENDIF
    real(r8), parameter :: denice = 917.0_r8  ! density of ice [kg/m3]
    real(r8), parameter :: denh2o = 1000.0_r8 ! density of liquid water [kg/m3]
 
-! ------------------------- Dummy Arguments ----------------------------
+!-------------------------- Dummy Arguments ----------------------------
    integer, intent(in) :: &
         lb          ! lower bound of array
 
@@ -1773,7 +1773,7 @@ ENDIF
 
    IMPLICIT NONE
 
-! ------------------------- Dummy Arguments ----------------------------
+!-------------------------- Dummy Arguments ----------------------------
    integer , intent(in) :: patchtype ! land patch type
    integer , intent(in) :: nl_soil   ! number of soil layers
    real(r8), intent(in) :: deltim    ! land model time step (sec)
@@ -2072,7 +2072,7 @@ ENDIF
    USE MOD_Const_Physical, only : tfrz
    IMPLICIT NONE
 
-! ------------------------- Dummy Arguments ----------------------------
+!-------------------------- Dummy Arguments ----------------------------
    integer , intent(in) :: nl_soil      !
    real(r8), intent(in) :: deltim       ! land model time step (sec)
    real(r8), intent(in) :: pondmx       !

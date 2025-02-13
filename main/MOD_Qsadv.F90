@@ -32,7 +32,7 @@ CONTAINS
    USE MOD_Precision
    IMPLICIT NONE
 
-! ------------------------- Dummy Arguments ----------------------------
+!-------------------------- Dummy Arguments ----------------------------
    real(r8), intent(in)  :: T        ! temperature (K)
    real(r8), intent(in)  :: p        ! surface atmospheric pressure (pa)
 

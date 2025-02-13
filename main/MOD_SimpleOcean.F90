@@ -39,7 +39,7 @@ CONTAINS
    USE MOD_Const_Physical, only : tfrz, hvap, hsub, stefnc, vonkar
    IMPLICIT NONE
 
-! ------------------------- Dummy Arguments ----------------------------
+!-------------------------- Dummy Arguments ----------------------------
 
    integer, parameter :: psrfty=7  ! Number of surface types
    integer, parameter :: plsice=4  ! number of seaice levels
@@ -199,7 +199,7 @@ CONTAINS
    USE MOD_Qsadv
    IMPLICIT NONE
 
-! ------------------------- Dummy Arguments ----------------------------
+!-------------------------- Dummy Arguments ----------------------------
 
    real(r8), intent(in) :: &
         oro,      &! ocean(0)/seaice(2)/ flag
@@ -440,7 +440,7 @@ CONTAINS
    USE MOD_Utils
    IMPLICIT NONE
 
-! ------------------------- Dummy Arguments ----------------------------
+!-------------------------- Dummy Arguments ----------------------------
 
    integer, parameter :: psrfty = 7  ! Number of surface types
    integer, parameter :: plsice = 4  ! number of seaice levels

@@ -133,7 +133,7 @@ CONTAINS
 
    IMPLICIT NONE
 
-! ------------------------- Dummy Arguments ----------------------------
+!-------------------------- Dummy Arguments ----------------------------
 
    integer, intent(in) :: &
        ipatch,                   &! patch index

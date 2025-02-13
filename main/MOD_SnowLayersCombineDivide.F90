@@ -49,7 +49,7 @@ CONTAINS
    USE MOD_Const_Physical, only : denice, denh2o, tfrz
    IMPLICIT NONE
 
-! ------------------------- Dummy Arguments ----------------------------
+!-------------------------- Dummy Arguments ----------------------------
 
    integer,  intent(in) :: lb          ! lower bound of array
    real(r8), intent(in) :: deltim      ! seconds i a time step [second]
@@ -257,7 +257,7 @@ CONTAINS
    USE MOD_Precision
    IMPLICIT NONE
 
-! ------------------------- Dummy Arguments ----------------------------
+!-------------------------- Dummy Arguments ----------------------------
    integer, intent(in) :: lb               ! lower bound of array
 
 ! numbering from 1 (bottom) mss (surface)
@@ -431,7 +431,7 @@ CONTAINS
    USE MOD_Precision
    IMPLICIT NONE
 
-! ------------------------- Dummy Arguments ----------------------------
+!-------------------------- Dummy Arguments ----------------------------
 
     integer, intent(in) :: lb              ! lower bound of array
     integer, intent(inout) :: snl          ! Number of snow
@@ -637,7 +637,7 @@ CONTAINS
    USE MOD_Const_Physical, only : cpice, cpliq, hfus, tfrz
    IMPLICIT NONE
 
-! ------------------------- Dummy Arguments ----------------------------
+!-------------------------- Dummy Arguments ----------------------------
 
    real(r8), intent(in) :: dz2     ! nodal thickness of 2 elements being combined [m]
    real(r8), intent(in) :: wliq2   ! liquid water of element 2 [kg/m2]
@@ -707,7 +707,7 @@ CONTAINS
 
    IMPLICIT NONE
 
-! ------------------------- Dummy Arguments ----------------------------
+!-------------------------- Dummy Arguments ----------------------------
    integer, intent(in) :: lb               ! lower bound of array
 
 ! numbering from 1 (bottom) mss (surface)
@@ -973,7 +973,7 @@ CONTAINS
 
    IMPLICIT NONE
 
-! ------------------------- Dummy Arguments ----------------------------
+!-------------------------- Dummy Arguments ----------------------------
 
     integer, intent(in) :: lb       ! lower bound of array
     integer, intent(inout) :: snl   ! Number of snow

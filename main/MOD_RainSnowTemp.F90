@@ -34,7 +34,7 @@ CONTAINS
 
    IMPLICIT NONE
 
-! ------------------------- Dummy Arguments ----------------------------
+!-------------------------- Dummy Arguments ----------------------------
    integer,  intent(in)  :: patchtype ! land patch type (3=glaciers)
 
    real(r8), intent(in)  :: forc_t    ! temperature at agcm reference height [kelvin]

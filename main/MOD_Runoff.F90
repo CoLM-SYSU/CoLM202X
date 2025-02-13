@@ -36,7 +36,7 @@ CONTAINS
 
    IMPLICIT NONE
 
-! ------------------------- Dummy Arguments ----------------------------
+!-------------------------- Dummy Arguments ----------------------------
 
    integer, intent(in) :: nl_soil   ! number of soil layers
    real(r8), intent(in) :: &
@@ -95,7 +95,7 @@ CONTAINS
 
    IMPLICIT NONE
 
-! ------------------------- Dummy Arguments ----------------------------
+!-------------------------- Dummy Arguments ----------------------------
    integer,  intent(in) :: nl_soil                 !
    real(r8), intent(in) :: icefrac(1:nl_soil)      ! ice fraction (-)
 
