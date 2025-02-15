@@ -590,6 +590,7 @@ CONTAINS
    ! Local variables
    integer :: ncid, varid
    integer, allocatable :: varsize(:)
+   integer :: dsp, nread
 
       CALL check_ncfile_exist (filename)
 
@@ -598,7 +599,19 @@ CONTAINS
 
       CALL nccheck( nf90_open(trim(filename), NF90_NOWRITE, ncid) )
       CALL nccheck( nf90_inq_varid(ncid, trim(dataname), varid) )
-      CALL nccheck( nf90_get_var(ncid, varid, rdata) )
+
+      IF ((varsize(1) > 1000) .and. (varsize(2) > 100000)) THEN
+         dsp = 0
+         DO WHILE (dsp < varsize(2))
+            nread = min(100000,varsize(2)-dsp)
+            CALL nccheck (nf90_get_var(ncid, varid, &
+               rdata(1:varsize(1),dsp+1:dsp+nread), (/1,dsp+1/), (/varsize(1),nread/)))
+            dsp = dsp + nread
+         ENDDO
+      ELSE
+         CALL nccheck( nf90_get_var(ncid, varid, rdata) )
+      ENDIF
+
       CALL nccheck( nf90_close(ncid) )
 
       deallocate (varsize)
@@ -648,6 +661,7 @@ CONTAINS
    ! Local variables
    integer :: ncid, varid
    integer, allocatable :: varsize(:)
+   integer :: dsp, nread
 
       CALL check_ncfile_exist (filename)
 
@@ -656,7 +670,19 @@ CONTAINS
 
       CALL nccheck( nf90_open(trim(filename), NF90_NOWRITE, ncid) )
       CALL nccheck( nf90_inq_varid(ncid, trim(dataname), varid) )
-      CALL nccheck( nf90_get_var(ncid, varid, rdata) )
+
+      IF ((varsize(1) > 1000) .and. (varsize(2) > 100000)) THEN
+         dsp = 0
+         DO WHILE (dsp < varsize(2))
+            nread = min(100000,varsize(2)-dsp)
+            CALL nccheck (nf90_get_var(ncid, varid, &
+               rdata(1:varsize(1),dsp+1:dsp+nread), (/1,dsp+1/), (/varsize(1),nread/)))
+            dsp = dsp + nread
+         ENDDO
+      ELSE
+         CALL nccheck( nf90_get_var(ncid, varid, rdata) )
+      ENDIF
+
       CALL nccheck( nf90_close(ncid) )
 
       deallocate (varsize)

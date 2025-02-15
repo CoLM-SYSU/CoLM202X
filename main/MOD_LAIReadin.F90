@@ -192,6 +192,13 @@ CONTAINS
                green(npatch) = 1.
                fveg (npatch) = fveg0(m)
 
+               IF (m == WATERBODY) THEN
+                  fveg(npatch)  = 0.
+                  tlai(npatch)  = 0.
+                  tsai(npatch)  = 0.
+                  green(npatch) = 0.
+               ENDIF
+
             ENDDO
          ENDIF
       ENDIF

@@ -234,7 +234,7 @@ CONTAINS
 #ifdef RangeCheck
       IF (p_is_worker .and. (p_iam_worker == 0)) THEN
          write(*,'(/,A)') 'Checking Lateral Flow Variables ...'
-         write(*,'(A,F12.5,A)') 'River Lake Flow average timestep: ', &
+         write(*,'(A,F12.5,A)') 'River Lake Flow minimum average timestep: ', &
                dt_average/nsubstep, ' seconds'
       ENDIF
 
@@ -265,7 +265,7 @@ CONTAINS
          CALL mpi_allreduce (MPI_IN_PLACE, toldis, 1, MPI_REAL8, MPI_SUM, p_comm_worker, p_err)
 #endif
          IF (p_iam_worker == 0) THEN
-            write(*,'(A,F10.2,A,ES10.3,A,ES10.3,A)') 'Total surface water error: ', dtolw, &
+            write(*,'(A,F12.2,A,ES8.1,A,ES10.3,A)') 'Total surface water error: ', dtolw, &
                '(m^3) in area ', landarea, '(m^2), discharge ', toldis, '(m^3)' 
          ENDIF
 
@@ -275,7 +275,7 @@ CONTAINS
          CALL mpi_allreduce (MPI_IN_PLACE, dtolw,  1, MPI_REAL8, MPI_SUM, p_comm_worker, p_err)
 #endif
          IF (p_iam_worker == 0) THEN
-            write(*,'(A,F10.2,A,ES10.3,A)') 'Total ground  water error: ', dtolw, &
+            write(*,'(A,F12.2,A,ES8.1,A)') 'Total ground  water error: ', dtolw, &
                '(m^3) in area ', landarea, '(m^2)'
          ENDIF
       ENDIF
@@ -291,6 +291,7 @@ CONTAINS
 
       CALL river_lake_network_final ()
       CALL subsurface_network_final ()
+      CALL basin_network_final      ()
 
 #ifdef CoLMDEBUG
       IF (allocated(patcharea)) deallocate(patcharea)

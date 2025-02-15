@@ -2099,6 +2099,8 @@ CONTAINS
          dz_lake_new(nl_lake)     = dzlak(nl_lake)*depthratio - (dz_lake_new(1) - dzlak(1)*depthratio)
       ELSEIF(wdsrfm > 0. .and. wdsrfm <= 1.)THEN
          dz_lake_new(:) = wdsrfm / nl_lake
+      ELSE
+         write(*,*) 'Warning: lake depth is over 2000 meters!'
       ENDIF
 
       j = 1

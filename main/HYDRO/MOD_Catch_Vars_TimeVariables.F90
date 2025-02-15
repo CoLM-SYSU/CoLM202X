@@ -88,10 +88,10 @@ CONTAINS
    character(len=*), intent(in) :: file_restart
 
       CALL vector_read_basin (file_restart, veloc_elm, numelm, 'veloc_riv', elm_data_address)
-      CALL worker_push_data  (iam_elm, iam_bsn, .false., veloc_elm, veloc_riv)
+      CALL worker_push_data  (iam_elm, iam_bsn, veloc_elm, veloc_riv)
 
       CALL vector_read_basin (file_restart, wdsrf_elm_prev, numelm, 'wdsrf_bsn_prev', elm_data_address)
-      CALL worker_push_data  (iam_elm, iam_bsn, .false., wdsrf_elm_prev, wdsrf_bsn_prev)
+      CALL worker_push_data  (iam_elm, iam_bsn, wdsrf_elm_prev, wdsrf_bsn_prev)
 
       CALL vector_read_basin (file_restart, veloc_hru, numhru, 'veloc_hru', hru_data_address)
       CALL worker_push_subset_data (iam_elm, iam_bsn, elm_hru, basin_hru, veloc_hru, veloc_bsnhru)
@@ -132,11 +132,11 @@ CONTAINS
             'long_name', 'index of hydrological units inside basin')
       ENDIF
 
-      CALL worker_push_data (iam_bsn, iam_elm, .false., veloc_riv, veloc_elm)
+      CALL worker_push_data (iam_bsn, iam_elm, veloc_riv, veloc_elm)
       CALL vector_write_basin (&
          file_restart, veloc_elm, numelm, totalnumelm, 'veloc_riv', 'basin', elm_data_address)
 
-      CALL worker_push_data (iam_bsn, iam_elm, .false., wdsrf_bsn_prev, wdsrf_elm_prev)
+      CALL worker_push_data (iam_bsn, iam_elm, wdsrf_bsn_prev, wdsrf_elm_prev)
       CALL vector_write_basin (&
          file_restart, wdsrf_elm_prev, numelm, totalnumelm, 'wdsrf_bsn_prev', 'basin', elm_data_address)
 

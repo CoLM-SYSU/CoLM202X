@@ -1407,7 +1407,7 @@ CONTAINS
             hs = basin_hru%substt(i)
             he = basin_hru%subend(i)
             IF (lake_id(i) <= 0) THEN
-               wdsrf_bsn(i) = minval(hillslope_basin(i)%hand + wdsrf_bsnhru(hs:he))
+               wdsrf_bsn(i) = minval(hillslope_basin(i)%hand + wdsrf_bsnhru(hs:he)) - handmin(i)
             ELSE
                ! lake
                totalvolume  = sum(wdsrf_bsnhru(hs:he) * lakeinfo(i)%area0)
@@ -1442,6 +1442,9 @@ CONTAINS
                dz_lake(:,i) = 0.
             ENDIF
          ENDDO
+      
+         CALL check_vector_data ('Basin Water Depth   [m]  ', wdsrf_bsn)
+         CALL check_vector_data ('HRU Water Depth     [m]  ', wdsrf_bsnhru)
 
       ENDIF
 #endif

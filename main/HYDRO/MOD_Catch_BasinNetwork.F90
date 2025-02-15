@@ -14,6 +14,9 @@ MODULE MOD_Catch_BasinNetwork
    ! -- instances --
    integer :: numbasin
    integer, allocatable :: basinindex(:)
+
+   integer :: numrivmth
+   integer, allocatable :: rivermouth(:)
    
    integer :: numbsnhru
    type(subset_type) :: basin_hru
@@ -28,6 +31,7 @@ MODULE MOD_Catch_BasinNetwork
       integer, allocatable :: paddr (:)
       integer, allocatable :: ndata (:)
       integer, allocatable :: ipush (:)
+      integer, allocatable :: isdrv (:)
    CONTAINS
       final :: basin_pushdata_free_mem
    END type basin_pushdata_type
@@ -231,12 +235,28 @@ CONTAINS
             ENDIF 
          ENDDO
 
+         allocate (rivermouth (totalnumbasin))
+         ithis = 0
+         DO i = totalnumbasin, 1, -1
+            j = basindown(b_up2down(i))
+            IF (j <= 0) THEN
+               ithis = ithis + 1
+               rivermouth(b_up2down(i)) = ithis
+            ELSE
+               rivermouth(b_up2down(i)) = rivermouth(j)
+            ENDIF
+         ENDDO
+
+         numrivmth = ithis
+
          deallocate (b_up2down)
          deallocate (nups_all )
          deallocate (orderbsn )
          deallocate (nelm_wrk )
 
       ENDIF
+
+      CALL mpi_bcast (numrivmth, 1, MPI_INTEGER, p_address_master, p_comm_glb, p_err)
 
       ! 3-3: send basin index to workers
       IF (p_is_master) THEN
@@ -263,6 +283,10 @@ CONTAINS
                   mpi_tag_data, p_comm_glb, p_err) 
                
                icache = basindown(bindex)
+               CALL mpi_send (icache, nbasin, MPI_INTEGER, p_address_worker(iworker), &
+                  mpi_tag_data, p_comm_glb, p_err) 
+               
+               icache = rivermouth(bindex)
                CALL mpi_send (icache, nbasin, MPI_INTEGER, p_address_worker(iworker), &
                   mpi_tag_data, p_comm_glb, p_err) 
                
@@ -295,6 +319,10 @@ CONTAINS
                
             allocate (basindown (numbasin))
             CALL mpi_recv (basindown, numbasin, MPI_INTEGER, p_address_master, &
+               mpi_tag_data, p_comm_glb, p_stat, p_err)
+
+            allocate (rivermouth (numbasin))
+            CALL mpi_recv (rivermouth, numbasin, MPI_INTEGER, p_address_master, &
                mpi_tag_data, p_comm_glb, p_stat, p_err)
 
             allocate (nhru_in_bsn (numbasin))
@@ -592,7 +620,7 @@ CONTAINS
 
    
    ! ----------
-   SUBROUTINE worker_push_data_real8 (send_pointer, recv_pointer, accum, vec_send, vec_recv)
+   SUBROUTINE worker_push_data_real8 (send_pointer, recv_pointer, vec_send, vec_recv)
 
    USE MOD_Precision
    USE MOD_SPMD_Task
@@ -600,7 +628,6 @@ CONTAINS
 
    type(basin_pushdata_type) :: send_pointer
    type(basin_pushdata_type) :: recv_pointer
-   logical, intent(in) :: accum
 
    real(r8), intent(in)    :: vec_send(:)
    real(r8), intent(inout) :: vec_recv(:)
@@ -619,14 +646,7 @@ CONTAINS
       IF (p_is_worker) THEN
 
          IF (send_pointer%nself > 0) THEN
-            IF (.not. accum) THEN
-               vec_recv(recv_pointer%iself) = vec_send(send_pointer%iself)
-            ELSE
-               DO i = 1, send_pointer%nself
-                  vec_recv(recv_pointer%iself(i)) = &
-                     vec_recv(recv_pointer%iself(i)) + vec_send(send_pointer%iself(i))
-               ENDDO
-            ENDIF
+            vec_recv(recv_pointer%iself) = vec_send(send_pointer%iself)
          ENDIF
 
 #ifdef USEMPI
@@ -675,17 +695,8 @@ CONTAINS
          ENDIF
 
          IF (recv_pointer%nproc > 0) THEN
-
             CALL mpi_waitall(recv_pointer%nproc, req_recv, MPI_STATUSES_IGNORE, p_err)
-
-            IF (accum) THEN
-               DO i = 1, ndatarecv
-                  vec_recv(recv_pointer%ipush(i)) = &
-                     vec_recv(recv_pointer%ipush(i)) + recvcache(i)
-               ENDDO
-            ELSE
-               vec_recv(recv_pointer%ipush) = recvcache
-            ENDIF
+            vec_recv(recv_pointer%ipush) = recvcache
          ENDIF
 
          IF (send_pointer%nproc > 0) THEN
@@ -705,7 +716,7 @@ CONTAINS
    END SUBROUTINE worker_push_data_real8
 
    ! ----------
-   SUBROUTINE worker_push_data_int32 (send_pointer, recv_pointer, accum, vec_send, vec_recv)
+   SUBROUTINE worker_push_data_int32 (send_pointer, recv_pointer, vec_send, vec_recv)
 
    USE MOD_Precision
    USE MOD_SPMD_Task
@@ -713,7 +724,6 @@ CONTAINS
 
    type(basin_pushdata_type) :: send_pointer
    type(basin_pushdata_type) :: recv_pointer
-   logical, intent(in) :: accum
 
    integer, intent(in)    :: vec_send(:)
    integer, intent(inout) :: vec_recv(:)
@@ -732,14 +742,7 @@ CONTAINS
       IF (p_is_worker) THEN
 
          IF (send_pointer%nself > 0) THEN
-            IF (.not. accum) THEN
-               vec_recv(recv_pointer%iself) = vec_send(send_pointer%iself)
-            ELSE
-               DO i = 1, send_pointer%nself
-                  vec_recv(recv_pointer%iself(i)) = &
-                     vec_recv(recv_pointer%iself(i)) + vec_send(send_pointer%iself(i))
-               ENDDO
-            ENDIF
+            vec_recv(recv_pointer%iself) = vec_send(send_pointer%iself)
          ENDIF
 
 #ifdef USEMPI
@@ -788,17 +791,8 @@ CONTAINS
          ENDIF
 
          IF (recv_pointer%nproc > 0) THEN
-
             CALL mpi_waitall(recv_pointer%nproc, req_recv, MPI_STATUSES_IGNORE, p_err)
-
-            IF (accum) THEN
-               DO i = 1, ndatarecv
-                  vec_recv(recv_pointer%ipush(i)) = &
-                     vec_recv(recv_pointer%ipush(i)) + recvcache(i)
-               ENDDO
-            ELSE
-               vec_recv(recv_pointer%ipush) = recvcache
-            ENDIF
+            vec_recv(recv_pointer%ipush) = recvcache
          ENDIF
 
          IF (send_pointer%nproc > 0) THEN
@@ -1004,6 +998,16 @@ CONTAINS
    END SUBROUTINE worker_push_subset_data
 
    ! ---------
+   SUBROUTINE basin_network_final ()
+
+   IMPLICIT NONE 
+
+      IF (allocated(basinindex)) deallocate(basinindex)
+      IF (allocated(rivermouth)) deallocate(rivermouth)
+
+   END SUBROUTINE basin_network_final
+
+   ! ---------
    SUBROUTINE basin_pushdata_free_mem (this)
       
    IMPLICIT NONE
@@ -1013,6 +1017,7 @@ CONTAINS
       IF (allocated(this%paddr)) deallocate(this%paddr)
       IF (allocated(this%ndata)) deallocate(this%ndata)
       IF (allocated(this%ipush)) deallocate(this%ipush)
+      IF (allocated(this%isdrv)) deallocate(this%isdrv)
 
    END SUBROUTINE basin_pushdata_free_mem
 

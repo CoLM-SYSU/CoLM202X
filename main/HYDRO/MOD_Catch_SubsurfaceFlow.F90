@@ -94,8 +94,8 @@ CONTAINS
          IF (numelm > 0) allocate (lakedepth_elm(numelm))
          IF (numelm > 0) allocate (wdsrf_elm    (numelm))
 
-         CALL worker_push_data (iam_bsn, iam_elm, .false., lake_id,   lake_id_elm  )
-         CALL worker_push_data (iam_bsn, iam_elm, .false., riverdpth, riverdpth_elm)
+         CALL worker_push_data (iam_bsn, iam_elm, lake_id,   lake_id_elm  )
+         CALL worker_push_data (iam_bsn, iam_elm, riverdpth, riverdpth_elm)
 
          DO ielm = 1, numelm
             IF (lake_id_elm(ielm) <= 0) THEN

@@ -164,7 +164,7 @@ CONTAINS
          END WHERE
       ENDIF
          
-      CALL worker_push_data (iam_bsn, iam_elm, .false., a_wdsrf_bsn, a_wdsrf_elm)
+      CALL worker_push_data (iam_bsn, iam_elm, a_wdsrf_bsn, a_wdsrf_elm)
 
       CALL vector_write_basin (&
          file_hist_basin, a_wdsrf_elm, numelm, totalnumelm, 'wdsrf_bsn', 'basin', elm_data_address, &
@@ -177,7 +177,7 @@ CONTAINS
          END WHERE
       ENDIF
       
-      CALL worker_push_data (iam_bsn, iam_elm, .false., a_veloc_riv, a_veloc_elm)
+      CALL worker_push_data (iam_bsn, iam_elm, a_veloc_riv, a_veloc_elm)
 
       CALL vector_write_basin (&
          file_hist_basin, a_veloc_elm, numelm, totalnumelm, 'veloc_riv', 'basin', elm_data_address, &
@@ -190,7 +190,7 @@ CONTAINS
          END WHERE
       ENDIF
       
-      CALL worker_push_data (iam_bsn, iam_elm, .false., a_discharge, a_dschg_elm)
+      CALL worker_push_data (iam_bsn, iam_elm, a_discharge, a_dschg_elm)
 
       CALL vector_write_basin (&
          file_hist_basin, a_dschg_elm, numelm, totalnumelm, 'discharge', 'basin', elm_data_address, &
