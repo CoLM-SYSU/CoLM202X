@@ -5,14 +5,14 @@ MODULE MOD_BGC_Soil_BiogeochemVerticalProfile
 !------------------------------------------------------------------------------------
 ! !DESCRIPTION:
 ! This MODULE calculate soil vertical profile of different C and N inputs, including:
-! nitrogen fixation, nitrogen deposition, fine root litter, coarse root litter, 
+! nitrogen fixation, nitrogen deposition, fine root litter, coarse root litter,
 ! leaf litter and stem litter.
 !
 ! !ORIGINAL:
 ! The Community Land Model version 5.0 (CLM5)
 !
 ! !REVISION:
-! Xingjie Lu, 2021, revised the CLM5 code to be compatible with CoLM code sturcture.
+! Xingjie Lu, 2021, revised the CLM5 code to be compatible with CoLM code structure.
 
 
    USE MOD_Precision
@@ -24,9 +24,9 @@ MODULE MOD_BGC_Soil_BiogeochemVerticalProfile
    USE MOD_Vars_PFTimeInvariants, only: &
        pftclass, pftfrac
    IMPLICIT NONE
- 
+
    PUBLIC SoilBiogeochemVerticalProfile
- 
+
    real(r8), PUBLIC :: surfprof_exp  = 10. ! how steep profile is for surface components (1/ e_folding depth) (1/m)
 
 CONTAINS
@@ -49,7 +49,7 @@ CONTAINS
    real(r8) :: rootfr_tot
    real(r8) :: col_cinput_rootfr(1:nl_soil_full)
    integer  :: ivt, m
-   integer  :: j 
+   integer  :: j
    ! debugging temp variables
    real(r8) :: froot_prof_sum
    real(r8) :: croot_prof_sum
@@ -66,7 +66,7 @@ CONTAINS
             surface_prof(j) = 0._r8
          ENDIF
       ENDDO
-  
+
       ! initialize profiles to zero
       col_cinput_rootfr(:)   = 0._r8
       nfixation_prof   (:,i) = 0._r8
@@ -77,19 +77,19 @@ CONTAINS
          froot_prof_p(:,m)     = 0._r8
          croot_prof_p(:,m)     = 0._r8
          stem_prof_p (:,m)     = 0._r8
-  
+
          cinput_rootfr_p(:,m)    = 0._r8
-  
+
          IF (ivt /= 0) THEN
             DO j = 1, nl_soil
                cinput_rootfr_p(j,m) = rootfr_p(j,ivt) / dz_soi(j)
             ENDDO
-  
+
          ELSE
             cinput_rootfr_p(1,m) = 0.
          ENDIF
       ENDDO
-  
+
       DO m = ps , pe
       ! integrate rootfr over active layer of soil column
          rootfr_tot = 0._r8
@@ -104,7 +104,7 @@ CONTAINS
             DO j = 1, min(max(altmax_lastyear_indx(i), 1), nl_soil)
                froot_prof_p(j,m) = cinput_rootfr_p(j,m) / rootfr_tot
                croot_prof_p(j,m) = cinput_rootfr_p(j,m) / rootfr_tot
-  
+
                IF (j > nbedrock .and. cinput_rootfr_p(j,m) > 0._r8) THEN
                   write(*,*) 'ERROR: cinput_rootfr_p > 0 in bedrock'
                ENDIF
@@ -120,15 +120,15 @@ CONTAINS
             stem_prof_p(1,m)  = 1./dz_soi(1)
          ENDIF
       ENDDO
-  
-  
+
+
       !! aggregate root profile to column
       DO m = ps , pe
          DO j = 1,nl_soil
             col_cinput_rootfr(j) = col_cinput_rootfr(j) + cinput_rootfr_p(j,m) * pftfrac(m)
          ENDDO
       ENDDO
-  
+
       ! repeat for column-native profiles: Ndep and Nfix
       rootfr_tot = 0._r8
       surface_prof_tot = 0._r8
@@ -146,7 +146,7 @@ CONTAINS
          nfixation_prof(1,i) = 1./dz_soi(1)
          ndep_prof(1,i) = 1./dz_soi(1)
       ENDIF
-  
+
     ! check to make sure integral of all profiles = 1.
       ndep_prof_sum = 0.
       nfixation_prof_sum = 0.
@@ -168,7 +168,7 @@ CONTAINS
          write(*,*) 'ERROR: _prof_sum-1>delta'
          CALL abort()
       ENDIF
-  
+
       DO m = ps , pe
          froot_prof_sum = 0.
          croot_prof_sum = 0.

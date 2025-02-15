@@ -26,7 +26,7 @@ PROGRAM MKSRFDATA
 !              6. Global Soil Characteristics (...)
 !              7. Global Cultural Characteristics (ON-GONG PROJECT)
 !
-! Land charateristics at the model grid resolution (CREATED):
+! Land characteristics at the model grid resolution (CREATED):
 !              1. Model grid (longitude, latitude)
 !              2. Fraction (area) of patches of grid (0-1)
 !                 2.1 Fraction of land water bodies (lake, reservoir, river)
@@ -286,7 +286,7 @@ PROGRAM MKSRFDATA
    CALL mesh_build ()
    CALL landelm_build
 
-#ifndef CATCHMENT
+#if (defined GRIDBASED || defined UNSTRUCTURED)
    IF (DEF_LANDONLY) THEN
       !TODO: distinguish USGS and IGBP land cover
 #ifndef LULC_USGS
@@ -383,11 +383,11 @@ PROGRAM MKSRFDATA
 
    CALL Aggregation_Topography      (gtopo  , dir_rawdata, dir_landdata, lc_year)
 
-   IF (DEF_USE_Forcing_Downscaling) THEN   
+   IF (DEF_USE_Forcing_Downscaling) THEN
       CALL Aggregation_TopographyFactors (grid_topo_factor, &
          trim(DEF_DS_HiresTopographyDataDir), dir_landdata, lc_year)
    ENDIF
-   
+
 #ifdef URBAN_MODEL
    CALL Aggregation_urban (dir_rawdata, dir_landdata, lc_year, &
                            grid_urban_5km, grid_urban_500m)

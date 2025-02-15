@@ -158,11 +158,11 @@ ENDIF
                   data_i4_2d_in1 = data_urb_class, data_i4_2d_out1 = ibuff)
 
                ! when there is missing urban types
-               !NOTE@tungwz: need duoble check below and add appropriate annotations
+               !NOTE@tungwz: need double check below and add appropriate annotations
                ! check if there is urban pixel without URBAN ID
                imiss = count(ibuff<1 .or. ibuff>N_URB)
                IF (imiss > 0) THEN
-                  ! Calculate the relative ratio of each urban types by excluding urban pixels withoht URBAN ID
+                  ! Calculate the relative ratio of each urban types by excluding urban pixels without URBAN ID
                   WHERE (ibuff<1 .or. ibuff>N_URB)
                      area_one = 0
                   END WHERE

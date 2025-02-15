@@ -11,25 +11,25 @@
 !               2) gather from workers to IO and write vectors by IO
 !    3. Block : read blocked data by IO
 !               Notice: input file is a single file.
-!    
+!
 !    This MODULE CONTAINS subroutines of "2. Vector".
-!    
+!
 !    Two implementations can be used,
-!    1) "MOD_NetCDFVectorBlk.F90": 
-!       A vector is saved in separated files, each associated with a block. 
+!    1) "MOD_NetCDFVectorBlk.F90":
+!       A vector is saved in separated files, each associated with a block.
 !       READ/WRITE are fast in this way and compression can be used.
-!       However, there may be too many files, especially when blocks are small. 
+!       However, there may be too many files, especially when blocks are small.
 !       CHOOSE this implementation by "#undef VectorInOneFile" in include/define.h
-!    2) "MOD_NetCDFVectorOne.F90": 
-!       A vector is saved in one file. 
+!    2) "MOD_NetCDFVectorOne.F90":
+!       A vector is saved in one file.
 !       READ/WRITE may be slow in this way.
 !       CHOOSE this implementation by "#define VectorInOneFile" in include/define.h
 !
 ! Created by Shupeng Zhang, May 2023
 !----------------------------------------------------------------------------------
 
-! Put vector in seperated files.
-#if (!defined(VectorInOneFileS) && !defined(VectorInOneFileP)) 
+! Put vector in separated files.
+#if (!defined(VectorInOneFileS) && !defined(VectorInOneFileP))
 
 MODULE MOD_NetCDFVector
 
@@ -40,31 +40,31 @@ MODULE MOD_NetCDFVector
    ! PUBLIC subroutines
 
    INTERFACE ncio_read_vector
-      MODULE procedure ncio_read_vector_logical_1d 
-      MODULE procedure ncio_read_vector_int32_1d 
-      MODULE procedure ncio_read_vector_int64_1d 
-      MODULE procedure ncio_read_vector_real8_1d 
-      MODULE procedure ncio_read_vector_real8_2d 
-      MODULE procedure ncio_read_vector_real8_3d 
-      MODULE procedure ncio_read_vector_real8_4d 
+      MODULE procedure ncio_read_vector_logical_1d
+      MODULE procedure ncio_read_vector_int32_1d
+      MODULE procedure ncio_read_vector_int64_1d
+      MODULE procedure ncio_read_vector_real8_1d
+      MODULE procedure ncio_read_vector_real8_2d
+      MODULE procedure ncio_read_vector_real8_3d
+      MODULE procedure ncio_read_vector_real8_4d
    END INTERFACE ncio_read_vector
 
-   PUBLIC :: ncio_create_file_vector 
-   PUBLIC :: ncio_define_dimension_vector 
+   PUBLIC :: ncio_create_file_vector
+   PUBLIC :: ncio_define_dimension_vector
 
    INTERFACE ncio_write_vector
       MODULE procedure ncio_write_vector_logical_1d
-      MODULE procedure ncio_write_vector_int32_1d 
-      MODULE procedure ncio_write_vector_int32_3d 
-      MODULE procedure ncio_write_vector_int64_1d 
-      MODULE procedure ncio_write_vector_real8_1d 
-      MODULE procedure ncio_write_vector_real8_2d 
-      MODULE procedure ncio_write_vector_real8_3d 
-      MODULE procedure ncio_write_vector_real8_4d 
+      MODULE procedure ncio_write_vector_int32_1d
+      MODULE procedure ncio_write_vector_int32_3d
+      MODULE procedure ncio_write_vector_int64_1d
+      MODULE procedure ncio_write_vector_real8_1d
+      MODULE procedure ncio_write_vector_real8_2d
+      MODULE procedure ncio_write_vector_real8_3d
+      MODULE procedure ncio_write_vector_real8_4d
    END INTERFACE ncio_write_vector
 
 CONTAINS
-   
+
    !---------------------------------------------------------
    SUBROUTINE ncio_read_vector_int32_1d ( &
          filename, dataname, pixelset, rdata, defval)
@@ -104,8 +104,8 @@ CONTAINS
 
             allocate (sbuff (pixelset%vecgs%vlen(iblk,jblk)))
             CALL get_filename_block (filename, iblk, jblk, fileblock)
-      
-            IF (ncio_var_exist(fileblock,dataname)) THEN 
+
+            IF (ncio_var_exist(fileblock,dataname)) THEN
                CALL ncio_read_serial (fileblock, dataname, sbuff)
                any_data_exists = .true.
             ELSEIF (present(defval)) THEN
@@ -141,11 +141,11 @@ CONTAINS
 
 #ifdef USEMPI
       IF (p_is_worker) THEN
-         
+
          DO iblkgrp = 1, pixelset%nblkgrp
             iblk = pixelset%xblkgrp(iblkgrp)
             jblk = pixelset%yblkgrp(iblkgrp)
-                     
+
             IF (pixelset%vecgs%vlen(iblk,jblk) > 0) THEN
                allocate (rbuff (pixelset%vecgs%vlen(iblk,jblk)))
             ELSE
@@ -211,8 +211,8 @@ CONTAINS
 
             allocate (sbuff (pixelset%vecgs%vlen(iblk,jblk)))
             CALL get_filename_block (filename, iblk, jblk, fileblock)
-      
-            IF (ncio_var_exist(fileblock,dataname)) THEN 
+
+            IF (ncio_var_exist(fileblock,dataname)) THEN
                CALL ncio_read_serial (fileblock, dataname, sbuff)
                any_data_exists = .true.
             ELSEIF (present(defval)) THEN
@@ -248,11 +248,11 @@ CONTAINS
 
 #ifdef USEMPI
       IF (p_is_worker) THEN
-         
+
          DO iblkgrp = 1, pixelset%nblkgrp
             iblk = pixelset%xblkgrp(iblkgrp)
             jblk = pixelset%yblkgrp(iblkgrp)
-                     
+
             IF (pixelset%vecgs%vlen(iblk,jblk) > 0) THEN
                allocate (rbuff (pixelset%vecgs%vlen(iblk,jblk)))
             ELSE
@@ -319,7 +319,7 @@ CONTAINS
             allocate (sbuff (pixelset%vecgs%vlen(iblk,jblk)))
             CALL get_filename_block (filename, iblk, jblk, fileblock)
 
-            IF (ncio_var_exist(fileblock,dataname)) THEN 
+            IF (ncio_var_exist(fileblock,dataname)) THEN
                CALL ncio_read_serial (fileblock, dataname, sbuff)
                any_data_exists = .true.
             ELSEIF (present(defval)) THEN
@@ -413,13 +413,13 @@ CONTAINS
    character(len=256) :: fileblock
    real(r8), allocatable :: sbuff(:), rbuff(:)
    logical :: any_data_exists
-         
+
       IF (p_is_worker) THEN
          IF ((pixelset%nset > 0) .and. (.not. allocated(rdata))) THEN
             allocate (rdata (pixelset%nset))
          ENDIF
       ENDIF
-      
+
       any_data_exists = .false.
 
       IF (p_is_io) THEN
@@ -431,7 +431,7 @@ CONTAINS
             allocate (sbuff (pixelset%vecgs%vlen(iblk,jblk)))
             CALL get_filename_block (filename, iblk, jblk, fileblock)
 
-            IF (ncio_var_exist(fileblock,dataname)) THEN 
+            IF (ncio_var_exist(fileblock,dataname)) THEN
                CALL ncio_read_serial (fileblock, dataname, sbuff)
                any_data_exists = .true.
             ELSEIF (present(defval)) THEN
@@ -467,7 +467,7 @@ CONTAINS
 
 #ifdef USEMPI
       IF (p_is_worker) THEN
-         
+
          DO iblkgrp = 1, pixelset%nblkgrp
             iblk = pixelset%xblkgrp(iblkgrp)
             jblk = pixelset%yblkgrp(iblkgrp)
@@ -540,7 +540,7 @@ CONTAINS
             allocate (sbuff (ndim1, pixelset%vecgs%vlen(iblk,jblk)))
             CALL get_filename_block (filename, iblk, jblk, fileblock)
 
-            IF (ncio_var_exist(fileblock,dataname)) THEN 
+            IF (ncio_var_exist(fileblock,dataname)) THEN
                CALL ncio_read_serial (fileblock, dataname, sbuff)
                any_data_exists = .true.
             ELSEIF (present(defval)) THEN
@@ -576,7 +576,7 @@ CONTAINS
 
 #ifdef USEMPI
       IF (p_is_worker) THEN
-         
+
          DO iblkgrp = 1, pixelset%nblkgrp
             iblk = pixelset%xblkgrp(iblkgrp)
             jblk = pixelset%yblkgrp(iblkgrp)
@@ -649,7 +649,7 @@ CONTAINS
             allocate (sbuff (ndim1,ndim2, pixelset%vecgs%vlen(iblk,jblk)))
             CALL get_filename_block (filename, iblk, jblk, fileblock)
 
-            IF (ncio_var_exist(fileblock,dataname)) THEN 
+            IF (ncio_var_exist(fileblock,dataname)) THEN
                CALL ncio_read_serial (fileblock, dataname, sbuff)
                any_data_exists = .true.
             ELSEIF (present(defval)) THEN
@@ -715,7 +715,7 @@ CONTAINS
 #endif
 
    END SUBROUTINE ncio_read_vector_real8_3d
-   
+
    !---------------------------------------------------------
    SUBROUTINE ncio_read_vector_real8_4d ( &
          filename, dataname, ndim1, ndim2, ndim3, pixelset, rdata, defval)
@@ -758,7 +758,7 @@ CONTAINS
             allocate (sbuff (ndim1,ndim2,ndim3, pixelset%vecgs%vlen(iblk,jblk)))
             CALL get_filename_block (filename, iblk, jblk, fileblock)
 
-            IF (ncio_var_exist(fileblock,dataname)) THEN 
+            IF (ncio_var_exist(fileblock,dataname)) THEN
                CALL ncio_read_serial (fileblock, dataname, sbuff)
                any_data_exists = .true.
             ELSEIF (present(defval)) THEN
@@ -794,7 +794,7 @@ CONTAINS
 
 #ifdef USEMPI
       IF (p_is_worker) THEN
-         
+
          DO iblkgrp = 1, pixelset%nblkgrp
             iblk = pixelset%xblkgrp(iblkgrp)
             jblk = pixelset%yblkgrp(iblkgrp)
@@ -824,7 +824,7 @@ CONTAINS
 #endif
 
    END SUBROUTINE ncio_read_vector_real8_4d
-   
+
    !---------------------------------------------------------
    SUBROUTINE ncio_create_file_vector (filename, pixelset)
 
@@ -851,7 +851,7 @@ CONTAINS
 
          ENDDO
       ENDIF
-               
+
    END SUBROUTINE ncio_create_file_vector
 
    !---------------------------------------------------------
@@ -880,7 +880,7 @@ CONTAINS
 
             CALL get_filename_block (filename, iblk, jblk, fileblock)
             inquire (file=trim(fileblock), exist=fexists)
-            IF (.not. fexists) THEN 
+            IF (.not. fexists) THEN
                CALL ncio_create_file (fileblock)
             ENDIF
 
@@ -893,7 +893,7 @@ CONTAINS
 
          ENDDO
       ENDIF
-               
+
    END SUBROUTINE ncio_define_dimension_vector
 
    !---------------------------------------------------------
@@ -951,7 +951,7 @@ CONTAINS
          ENDDO
 
       ENDIF
-               
+
 #ifdef USEMPI
       IF (p_is_worker) THEN
 
@@ -1043,7 +1043,7 @@ CONTAINS
          ENDDO
 
       ENDIF
-               
+
 #ifdef USEMPI
       IF (p_is_worker) THEN
 
@@ -1110,7 +1110,7 @@ CONTAINS
          DO iblkgrp = 1, pixelset%nblkgrp
             iblk = pixelset%xblkgrp(iblkgrp)
             jblk = pixelset%yblkgrp(iblkgrp)
-                     
+
             allocate (rbuff (ndim1,ndim2,pixelset%vecgs%vlen(iblk,jblk)))
 #ifdef USEMPI
             CALL mpi_gatherv (MPI_IN_PLACE, 0, MPI_INTEGER, &
@@ -1138,7 +1138,7 @@ CONTAINS
          ENDDO
 
       ENDIF
-               
+
 #ifdef USEMPI
       IF (p_is_worker) THEN
 
@@ -1224,7 +1224,7 @@ CONTAINS
          ENDDO
 
       ENDIF
-               
+
 #ifdef USEMPI
       IF (p_is_worker) THEN
 
@@ -1271,7 +1271,7 @@ CONTAINS
    character(len=*), intent(in) :: dimname
    type(pixelset_type), intent(in) :: pixelset
    real(r8), intent(in) :: wdata (:)
-   
+
    integer, intent(in), optional :: compress_level
 
    ! Local variables
@@ -1310,7 +1310,7 @@ CONTAINS
          ENDDO
 
       ENDIF
-               
+
 #ifdef USEMPI
       IF (p_is_worker) THEN
 
@@ -1400,7 +1400,7 @@ CONTAINS
          ENDDO
 
       ENDIF
-               
+
 #ifdef USEMPI
       IF (p_is_worker) THEN
 
@@ -1449,7 +1449,7 @@ CONTAINS
    type(pixelset_type), intent(in) :: pixelset
    integer,  intent(in) :: ndim1, ndim2
    real(r8), intent(in) :: wdata (:,:,:)
-   
+
    integer,  intent(in), optional :: compress_level
 
    ! Local variables
@@ -1489,7 +1489,7 @@ CONTAINS
          ENDDO
 
       ENDIF
-               
+
 #ifdef USEMPI
       IF (p_is_worker) THEN
 
@@ -1538,7 +1538,7 @@ CONTAINS
    integer,  intent(in) :: ndim1, ndim2, ndim3
    type(pixelset_type), intent(in) :: pixelset
    real(r8), intent(in) :: wdata (:,:,:,:)
-   
+
    integer,  intent(in), optional :: compress_level
 
    ! Local variables
@@ -1578,7 +1578,7 @@ CONTAINS
          ENDDO
 
       ENDIF
-               
+
 #ifdef USEMPI
       IF (p_is_worker) THEN
 

@@ -140,7 +140,7 @@ CONTAINS
    real(r8) :: dlatp, dlonp
    logical  :: is_new
    integer  :: nsend, nrecv, irecv
-   integer  :: smesg(5), rmesg(5)
+   integer  :: smesg(5), rmesg(5), blktag, elmtag
 
    integer, allocatable :: nelm_worker(:)
    type(pointer_int64_1d), allocatable :: elist_worker(:)
@@ -429,6 +429,7 @@ CONTAINS
 
             allocate (sbuf64 (nxp*nyp))
 
+            blktag = iblkme
             ipt2 = mod(elist2, p_np_worker)
             DO iproc = 0, p_np_worker-1
                msk2  = (ipt2 == iproc) .and. (elist2 > 0)
@@ -437,25 +438,25 @@ CONTAINS
 
                   idest = p_address_worker(iproc)
 
-                  smesg(1:2) = (/p_iam_glb, nsend/)
+                  smesg(1:3) = (/p_iam_glb, nsend, blktag/)
                   ! send(03)
-                  CALL mpi_send (smesg(1:2), 2, MPI_INTEGER, &
+                  CALL mpi_send (smesg(1:3), 3, MPI_INTEGER, &
                      idest, mpi_tag_mesg, p_comm_glb, p_err)
 
                   sbuf64(1:nsend) = pack(elist2, msk2)
                   ! send(04)
                   CALL mpi_send (sbuf64(1:nsend), nsend, MPI_INTEGER8, &
-                     idest, mpi_tag_data, p_comm_glb, p_err)
+                     idest, blktag, p_comm_glb, p_err)
 
                   sbuf(1:nsend) = pack(xlist2, msk2)
                   ! send(05)
                   CALL mpi_send (sbuf(1:nsend), nsend, MPI_INTEGER, &
-                     idest, mpi_tag_data, p_comm_glb, p_err)
+                     idest, blktag, p_comm_glb, p_err)
 
                   sbuf(1:nsend) = pack(ylist2, msk2)
                   ! send(06)
                   CALL mpi_send (sbuf(1:nsend), nsend, MPI_INTEGER, &
-                     idest, mpi_tag_data, p_comm_glb, p_err)
+                     idest, blktag, p_comm_glb, p_err)
 
                ENDIF
             ENDDO
@@ -517,8 +518,8 @@ CONTAINS
          DO iworker = 0, p_np_worker-1
             idest = p_address_worker(iworker)
             ! send(07)
-            rmesg(1:2) = (/p_iam_glb, 0/)
-            CALL mpi_send (rmesg(1:2), 2, MPI_INTEGER, &
+            smesg(1:3) = (/p_iam_glb, 0, 0/)
+            CALL mpi_send (smesg(1:3), 3, MPI_INTEGER, &
                idest, mpi_tag_mesg, p_comm_glb, p_err)
          ENDDO
 #endif
@@ -532,27 +533,28 @@ CONTAINS
          work_done(:) = .false.
          DO WHILE (.not. all(work_done))
             ! recv(03,07)
-            CALL mpi_recv (rmesg(1:2), 2, MPI_INTEGER, &
+            CALL mpi_recv (rmesg(1:3), 3, MPI_INTEGER, &
                MPI_ANY_SOURCE, mpi_tag_mesg, p_comm_glb, p_stat, p_err)
 
-            isrc  = rmesg(1)
-            nrecv = rmesg(2)
+            isrc   = rmesg(1)
+            nrecv  = rmesg(2)
+            blktag = rmesg(3)
             IF (nrecv > 0) THEN
 
                allocate (elist_recv (nrecv))
                ! recv(04)
                CALL mpi_recv (elist_recv, nrecv, MPI_INTEGER8, &
-                  isrc, mpi_tag_data, p_comm_glb, p_stat, p_err)
+                  isrc, blktag, p_comm_glb, p_stat, p_err)
 
                allocate (xlist_recv (nrecv))
                ! recv(05)
                CALL mpi_recv (xlist_recv, nrecv, MPI_INTEGER, &
-                  isrc, mpi_tag_data, p_comm_glb, p_stat, p_err)
+                  isrc, blktag, p_comm_glb, p_stat, p_err)
 
                allocate (ylist_recv (nrecv))
                ! recv(06)
                CALL mpi_recv (ylist_recv, nrecv, MPI_INTEGER, &
-                  isrc, mpi_tag_data, p_comm_glb, p_stat, p_err)
+                  isrc, blktag, p_comm_glb, p_stat, p_err)
 
                allocate (msk(nrecv))
 
@@ -692,23 +694,19 @@ CONTAINS
 
             idest = gblock%pio (meshtmp(ie)%xblk, meshtmp(ie)%yblk)
 
-            ! send(09-1)
-            CALL mpi_send (p_iam_glb, 1, MPI_INTEGER, &
-               idest, mpi_tag_mesg, p_comm_glb, p_err)
-            ! send(09-2)
-            CALL mpi_send (meshtmp(ie)%indx, 1, MPI_INTEGER8, &
-               idest, mpi_tag_mesg, p_comm_glb, p_err)
-            ! send(09-3)
-            smesg(1:3) = (/meshtmp(ie)%xblk, meshtmp(ie)%yblk, meshtmp(ie)%npxl/)
-            CALL mpi_send (smesg(1:3), 3, MPI_INTEGER, &
-               idest, mpi_tag_mesg, p_comm_glb, p_err)
+            ! send(09)
+            elmtag = meshtmp(ie)%indx
+            smesg(1:5) = (/p_iam_glb, elmtag, meshtmp(ie)%xblk, meshtmp(ie)%yblk, meshtmp(ie)%npxl/)
+            CALL mpi_send (smesg(1:5), 5, MPI_INTEGER, idest, mpi_tag_mesg, p_comm_glb, p_err)
+
+            CALL mpi_send (meshtmp(ie)%indx, 1, MPI_INTEGER8, idest, elmtag, p_comm_glb, p_err)
 
             ! send(10)
             CALL mpi_send (meshtmp(ie)%ilon, meshtmp(ie)%npxl, MPI_INTEGER, &
-               idest, mpi_tag_data, p_comm_glb, p_err)
+               idest, elmtag, p_comm_glb, p_err)
             ! send(11)
             CALL mpi_send (meshtmp(ie)%ilat, meshtmp(ie)%npxl, MPI_INTEGER, &
-               idest, mpi_tag_data, p_comm_glb, p_err)
+               idest, elmtag, p_comm_glb, p_err)
          ENDDO
       ENDIF
 
@@ -724,36 +722,33 @@ CONTAINS
             blkcnt(:,:) = 0
             DO ie = 1, numelm
 
-               ! recv(09-1)
-               CALL mpi_recv (isrc, 1, MPI_INTEGER, &
-                  MPI_ANY_SOURCE, mpi_tag_mesg, p_comm_glb, p_stat, p_err)
-               ! recv(09-2)
-               CALL mpi_recv (elmid, 1, MPI_INTEGER8, &
-                  isrc, mpi_tag_mesg, p_comm_glb, p_stat, p_err)
-               ! recv(09-3)
-               CALL mpi_recv (rmesg(1:3), 3, MPI_INTEGER, &
-                  isrc, mpi_tag_mesg, p_comm_glb, p_stat, p_err)
-
-               xblk = rmesg(1)
-               yblk = rmesg(2)
+               ! recv(09)
+               CALL mpi_recv (rmesg(1:5), 5, MPI_INTEGER, MPI_ANY_SOURCE, mpi_tag_mesg, p_comm_glb, p_stat, p_err)
+               isrc   = rmesg(1)
+               elmtag = rmesg(2)
+               xblk   = rmesg(3)
+               yblk   = rmesg(4)
+               npxl   = rmesg(5)
+            
+               CALL mpi_recv (elmid, 1, MPI_INTEGER8, isrc, elmtag, p_comm_glb, p_stat, p_err)
 
                blkcnt(xblk,yblk) = blkcnt(xblk,yblk) + 1
                je = blkdsp(xblk,yblk) + blkcnt(xblk,yblk)
 
                mesh(je)%indx = elmid
-               mesh(je)%xblk = rmesg(1)
-               mesh(je)%yblk = rmesg(2)
-               mesh(je)%npxl = rmesg(3)
+               mesh(je)%xblk = xblk
+               mesh(je)%yblk = yblk
+               mesh(je)%npxl = npxl
 
                allocate (mesh(je)%ilon (mesh(je)%npxl))
                allocate (mesh(je)%ilat (mesh(je)%npxl))
 
                ! recv(10)
                CALL mpi_recv (mesh(je)%ilon, mesh(je)%npxl, MPI_INTEGER, &
-                  isrc, mpi_tag_data, p_comm_glb, p_stat, p_err)
+                  isrc, elmtag, p_comm_glb, p_stat, p_err)
                ! recv(11)
                CALL mpi_recv (mesh(je)%ilat, mesh(je)%npxl, MPI_INTEGER, &
-                  isrc, mpi_tag_data, p_comm_glb, p_stat, p_err)
+                  isrc, elmtag, p_comm_glb, p_stat, p_err)
 
             ENDDO
 
@@ -790,7 +785,7 @@ CONTAINS
          IF (allocated (meshtmp)) THEN
             DO ie = 1, size(meshtmp)
                IF (allocated(meshtmp(ie)%ilon))  deallocate (meshtmp(ie)%ilon)
-               IF (allocated(meshtmp(ie)%ilon))  deallocate (meshtmp(ie)%ilat)
+               IF (allocated(meshtmp(ie)%ilat))  deallocate (meshtmp(ie)%ilat)
             ENDDO
             deallocate (meshtmp)
          ENDIF

@@ -45,7 +45,7 @@ CONTAINS
 #endif
    IMPLICIT NONE
 
-  !-----------------------Argument--------------------------------------
+!-------------------------- Dummy Arguments ----------------------------
 
    integer, intent(in) :: nl_soil                  ! upper bound of array
 
@@ -62,7 +62,7 @@ CONTAINS
    real(r8), intent(in) :: sc_vgm   (1:nl_soil)
    real(r8), intent(in) :: fc_vgm   (1:nl_soil)
 #endif
-   real(r8), intent(in) :: psi0(1:nl_soil)         ! saturated soil suction (cm) (NEGATIVE)
+   real(r8), intent(in) :: psi0(1:nl_soil)         ! saturated soil suction (mm) (NEGATIVE)
    real(r8), intent(in) :: rootfr(1:nl_soil)       ! fraction of roots in a layer,
    real(r8), intent(in) :: dz_soisno(1:nl_soil)    ! layer thickness (m)
    real(r8), intent(in) :: t_soisno(1:nl_soil)     ! soil/snow skin temperature (K)
@@ -72,21 +72,21 @@ CONTAINS
    real(r8), intent(out) :: etrc                   ! maximum possible transpiration rate (mm h2o/s)
    real(r8), intent(out) :: rstfac                 ! factor of soil water stress for photosynthesis
 
-  !-----------------------Local Variables-------------------------------
+!-------------------------- Local Variables ----------------------------
 
    real(r8) roota             ! accumulates root resistance factors
    real(r8) rresis(1:nl_soil) ! soil water contribution to root resistance
    real(r8) s_node            ! vol_liq/porosity
-   real(r8) smpmax            ! wilting point potential in cm
+   real(r8) smpmax            ! wilting point potential in mm
    real(r8) smp_node          ! matrix potential
 
    integer i                  ! loop counter
 
-  !-----------------------End Variables list----------------------------
+!-----------------------------------------------------------------------
 
       ! transpiration potential(etrc) and root resistance factors (rstfac)
 
-      roota = 1.e-10         ! must be non-zero to begin
+      roota = 1.e-10          ! must be non-zero to begin
       DO i = 1, nl_soil
 
          IF(t_soisno(i)>tfrz .and. porsl(i)>=1.e-6)THEN

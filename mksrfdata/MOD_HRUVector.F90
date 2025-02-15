@@ -56,13 +56,13 @@ CONTAINS
       
       IF (p_is_worker) THEN
       
-         CALL basin_hru%build (landelm, landhru,   use_frac = .true.)
+         CALL elm_hru%build (landelm, landhru,   use_frac = .true.)
 
          CALL hru_patch%build (landhru, landpatch, use_frac = .true.)
 
          IF (numelm > 0) THEN
             allocate (nhru_bsn (numelm))
-            nhru_bsn = basin_hru%subend - basin_hru%substt + 1
+            nhru_bsn = elm_hru%subend - elm_hru%substt + 1
          ENDIF
 
 #ifdef USEMPI

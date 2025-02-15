@@ -130,7 +130,7 @@ CONTAINS
 
    IMPLICIT NONE
 
-!---------------------Argument------------------------------------------
+!-------------------------- Dummy Arguments ----------------------------
    integer,  intent(in) :: &
         idate(3)   ,&
         ipatch                         ,&! patch index
@@ -212,7 +212,7 @@ CONTAINS
         porsl     (1:nl_soil)          ,&! soil porosity [-]
         psi0      (1:nl_soil)          ,&! soil water suction, negative potential [mm]
 #ifdef Campbell_SOIL_MODEL
-        bsw       (1:nl_soil)          ,&! clapp and hornbereger "b" parameter [-]
+        bsw       (1:nl_soil)          ,&! clapp and hornberger "b" parameter [-]
 #endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
         theta_r   (1:nl_soil)          ,&! residual water content (cm3/cm3)
@@ -236,10 +236,10 @@ CONTAINS
         tk_wall   (1:nl_wall)          ,&! thermal conductivity of wall [W/m-K]
         tk_gimp   (1:nl_soil)          ,&! thermal conductivity of impervious [W/m-K]
 
-        dz_roofsno(lbr  :nl_roof)      ,&! layer thickiness [m]
-        dz_gimpsno(lbi  :nl_soil)      ,&! layer thickiness [m]
-        dz_gpersno(lbp  :nl_soil)      ,&! layer thickiness [m]
-        dz_wall   (    1:nl_wall)      ,&! layer thickiness [m]
+        dz_roofsno(lbr  :nl_roof)      ,&! layer thickness [m]
+        dz_gimpsno(lbi  :nl_soil)      ,&! layer thickness [m]
+        dz_gpersno(lbp  :nl_soil)      ,&! layer thickness [m]
+        dz_wall   (    1:nl_wall)      ,&! layer thickness [m]
         z_roofsno (lbr  :nl_roof)      ,&! node depth [m]
         z_gimpsno (lbi  :nl_soil)      ,&! node depth [m]
         z_gpersno (lbp  :nl_soil)      ,&! node depth [m]
@@ -252,10 +252,10 @@ CONTAINS
         lakedepth                      ,&! lake depth (m)
 
         z_lakesno (maxsnl+1:nl_soil)   ,&! node depth [m]
-        dz_lakesno(maxsnl+1:nl_soil)   ,&! layer thickiness [m]
+        dz_lakesno(maxsnl+1:nl_soil)   ,&! layer thickness [m]
         zi_lakesno(maxsnl  :nl_soil)   ,&! interface depth [m]
 
-        ! vegetationparameters
+        ! vegetation parameters
         dewmx                          ,&! maximum dew
         sqrtdi                         ,&! inverse sqrt of leaf dimension [m**-0.5]
         rootfr    (1:nl_soil)          ,&! root fraction
@@ -303,16 +303,16 @@ CONTAINS
         t_wallsha   (         nl_wall) ,&! temperatures of roof layers
         t_gimpsno   (     lbi:nl_soil) ,&! temperatures of roof layers
         t_gpersno   (     lbp:nl_soil) ,&! temperatures of roof layers
-        wliq_roofsno(     lbr:nl_roof) ,&! liqui water [kg/m2]
-        wliq_gimpsno(     lbi:nl_soil) ,&! liqui water [kg/m2]
-        wliq_gpersno(     lbp:nl_soil) ,&! liqui water [kg/m2]
+        wliq_roofsno(     lbr:nl_roof) ,&! liquid water [kg/m2]
+        wliq_gimpsno(     lbi:nl_soil) ,&! liquid water [kg/m2]
+        wliq_gpersno(     lbp:nl_soil) ,&! liquid water [kg/m2]
         wice_roofsno(     lbr:nl_roof) ,&! ice lens [kg/m2]
         wice_gimpsno(     lbi:nl_soil) ,&! ice lens [kg/m2]
         wice_gpersno(     lbp:nl_soil) ,&! ice lens [kg/m2]
         t_lake      (         nl_lake) ,&! lake temperature [K]
         lake_icefrac(         nl_lake) ,&! lake mass fraction of lake layer that is frozen
         t_lakesno   (maxsnl+1:nl_soil) ,&! temperatures of roof layers
-        wliq_lakesno(maxsnl+1:nl_soil) ,&! liqui water [kg/m2]
+        wliq_lakesno(maxsnl+1:nl_soil) ,&! liquid water [kg/m2]
         wice_lakesno(maxsnl+1:nl_soil) ,&! ice lens [kg/m2]
         savedtke1                      ,&! top level eddy conductivity (W/m K)
         scv_roof                       ,&! snow cover, water equivalent [mm, kg/m2]
@@ -350,7 +350,7 @@ CONTAINS
         fsena                          ,&! sensible heat from canopy height to atmosphere [W/m2]
         fevpa                          ,&! evapotranspiration from canopy height to atmosphere [mm/s]
         lfevpa                         ,&! latent heat flux from canopy height to atmosphere [W/m2]
-        fsenl                          ,&! ensible heat from leaves [W/m2]
+        fsenl                          ,&! sensible heat from leaves [W/m2]
         fevpl                          ,&! evaporation+transpiration from leaves [mm/s]
         etr                            ,&! transpiration rate [mm/s]
         fseng                          ,&! sensible heat flux from ground [W/m2]
@@ -411,9 +411,9 @@ CONTAINS
         rst                            ,&! stomatal resistance (s m-1)
         assim                          ,&! assimilation
         respc                          ,&! respiration
-        errore                         ,&! energy balnce error [w/m2]
+        errore                         ,&! energy balance error [w/m2]
 
-        ! additionalvariables required by coupling with WRF or RSM model
+        ! additional variables required by coupling with WRF or RSM model
         emis                           ,&! averaged bulk surface emissivity
         z0m                            ,&! effective roughness [m]
         zol                            ,&! dimensionless height (z/L) used in Monin-Obukhov theory
@@ -426,11 +426,11 @@ CONTAINS
         fq                               ! integral of profile function for moisture
 
 ! SNICAR model variables
-   real(r8), intent(in)  :: sabg_lyr(lbp:1) !snow layer aborption
+   real(r8), intent(in)  :: sabg_lyr(lbp:1) !snow layer absorption
    real(r8), intent(out) :: snofrz  (lbp:0) !snow freezing rate (col,lyr) [kg m-2 s-1]
 ! END SNICAR model variables
 
-!---------------------Local Variables-----------------------------------
+!-------------------------- Local Variables ----------------------------
 
    integer :: nurb           ! number of aboveground urban components [-]
 
@@ -477,14 +477,14 @@ CONTAINS
         htvp_roof          ,&! latent heat of vapor of water (or sublimation) [J/Kg]
         htvp_gimp          ,&! latent heat of vapor of water (or sublimation) [J/Kg]
         htvp_gper          ,&! latent heat of vapor of water (or sublimation) [J/Kg]
-        olru               ,&! olrg excluding dwonwelling reflection [W/m2]
-        olrb               ,&! olrg assuming blackbody emission [W/m2]
+        olru               ,&! olrg excluding downwelling reflection [W/m2]
+        olrb               ,&! olrg assuming black body emission [W/m2]
         psit               ,&! negative potential of soil
 
         rss                ,&! soil resistance
-        qroof              ,&! roof specific humudity [kg/kg]
-        qgimp              ,&! ground impervious road specific humudity [kg/kg]
-        qgper              ,&! ground pervious specific humudity [kg/kg]
+        qroof              ,&! roof specific humidity [kg/kg]
+        qgimp              ,&! ground impervious road specific humidity [kg/kg]
+        qgper              ,&! ground pervious specific humidity [kg/kg]
         qsatg              ,&! saturated humidity [kg/kg]
         qsatgdT            ,&! d(qsatg)/dT
         qred               ,&! soil surface relative humidity
@@ -529,7 +529,7 @@ CONTAINS
         clgper             ,&! deriv of lgper wrt soil temp [w/m**2/k]
         fwsha              ,&! fraction of shaded wall [-]
         ur                 ,&! wind speed at reference height [m/s]
-        wx                 ,&! patitial volume of ice and water of surface layer
+        wx                 ,&! partial volume of ice and water of surface layer
         xmf                  ! total latent heat of phase change of ground water
 
    real(r8) :: &
@@ -561,14 +561,14 @@ CONTAINS
    real(r8) :: z0m_g,z0h_g,zol_g,obu_g,ustar_g,qstar_g,tstar_g
    real(r8) :: fm10m,fm_g,fh_g,fq_g,fh2m,fq2m,um,obu,eb
 
-   ! defination for urban related
+   ! definition for urban related
    real(r8), allocatable :: Ainv(:,:) ! Inverse of Radiation transfer matrix
    real(r8), allocatable :: X(:)      ! solution
    real(r8), allocatable :: dX(:)     ! solution
-   real(r8), allocatable :: B(:)      ! Vectors of incident radition on each surface
-   real(r8), allocatable :: B1(:)     ! Vectors of incident radition on each surface
-   real(r8), allocatable :: dBdT(:)   ! Vectors of incident radition on each surface
-   real(r8), allocatable :: dT(:)     ! Vectors of incident radition on each surface
+   real(r8), allocatable :: B(:)      ! Vectors of incident radiation on each surface
+   real(r8), allocatable :: B1(:)     ! Vectors of incident radiation on each surface
+   real(r8), allocatable :: dBdT(:)   ! Vectors of incident radiation on each surface
+   real(r8), allocatable :: dT(:)     ! Vectors of incident radiation on each surface
    real(r8), allocatable :: SkyVF(:)  ! View factor to sky
    real(r8), allocatable :: VegVF(:)  ! View factor to vegetation
    real(r8), allocatable :: fcover(:) ! fractional cover of roof, wall, ground and veg
@@ -590,7 +590,7 @@ CONTAINS
 
       dheatl = 0.
 
-      ! latent heat, assumed that the sublimation occured only as wliq_gpersno=0
+      ! latent heat, assumed that the sublimation occurred only as wliq_gpersno=0
       htvp_roof = hvap
       htvp_gimp = hvap
       htvp_gper = hvap
@@ -598,7 +598,7 @@ CONTAINS
       IF (wliq_gimpsno(lbi)<=0. .and. wice_gimpsno(lbi)>0.) htvp_gimp = hsub
       IF (wliq_gpersno(lbp)<=0. .and. wice_gpersno(lbp)>0.) htvp_gper = hsub
 
-      ! potential temperatur at the reference height
+      ! potential temperature at the reference height
       thm = forc_t + 0.0098*forc_hgt_t                     !intermediate variable equivalent to
                                                            !forc_t*(pgcm/forc_psrf)**(rgas/cpair)
       th  = forc_t*(100000./forc_psrf)**(rgas/cpair)       !potential T
@@ -738,7 +738,7 @@ CONTAINS
 
 
 !=======================================================================
-! [3] caluclate longwave radiation
+! [3] calculate longwave radiation
 !=======================================================================
 
       IF ( doveg ) THEN
@@ -833,7 +833,7 @@ CONTAINS
                             fcover,tgimp,tgper,qgimp,qgper,tref,qref, &
                             z0m_g,z0h_g,zol_g,ustar_g,qstar_g,tstar_g,fm_g,fh_g,fq_g)
 
-      ! SAVE variables for bareground case
+      ! SAVE variables for bare ground case
       obu_g = forc_hgt_u / zol_g
 
 
@@ -843,7 +843,7 @@ CONTAINS
 
       IF ( doveg ) THEN
 
-         ! soil water strees factor on stomatal resistance
+         ! soil water stress factor on stomatal resistance
          CALL eroot (nl_soil,trsmx0,porsl,&
 #ifdef Campbell_SOIL_MODEL
             bsw,&
@@ -1013,7 +1013,7 @@ CONTAINS
       tgper = t_gpersno(lbp)
       twall = (twsun*fwsun + twsha*fwsha)/(fwsun + fwsha)
 
-      ! calculate lake temperture and sensible/latent heat fluxes
+      ! calculate lake temperature and sensible/latent heat fluxes
       CALL laketem ( &
            ! "in" laketem arguments
            ! ---------------------------
@@ -1064,7 +1064,7 @@ CONTAINS
       dT(4) = tgper - tgper_bef
       IF ( doveg ) dT(5) = 0.
 
-      ! flux change due to temperture change
+      ! flux change due to temperature change
       fsenroof = fsenroof + dT(0)*croofs
       fsenwsun = fsenwsun + dT(1)*cwsuns
       fsenwsha = fsenwsha + dT(2)*cwshas
@@ -1304,7 +1304,7 @@ CONTAINS
       dlw = dlw*(1-flake)
 
       ! calculate out going longwave by added the before value
-      ! of lout and condsidered troof change
+      ! of lout and considered troof change
       lout = lout + dlout
       rout = (1-eroof)*forc_frl + eroof*stefnc*troof_bef**4 &
            + 4.*eroof*stefnc*troof_bef**3*dT(0)
@@ -1409,7 +1409,7 @@ CONTAINS
 
 
       ! convert BEM AHE to grid area values
-      ! NOTE: BEM AHE are assumed only affacting the urban area,
+      ! NOTE: BEM AHE are assumed only affecting the urban area,
       ! but vehc and meta area for the whole grid.
       Fhac = Fhac * (1-flake)
       Fwst = Fwst * (1-flake)

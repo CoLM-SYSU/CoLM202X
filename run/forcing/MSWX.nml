@@ -39,7 +39,7 @@
 
 
    DEF_forcing%vname    = 'air_temperature' 'specific_humidity' 'surface_pressure' 'precipitation' 'NULL' 'wind_speed' 'downward_shortwave_radiation' 'downward_longwave_radiation'
-   DEF_forcing%timelog  = 'instant' 'instant' 'instant' 'foreward' 'instant' 'instant' 'foreward' 'foreward'
+   DEF_forcing%timelog  = 'instant' 'instant' 'instant' 'forward' 'instant' 'instant' 'forward' 'forward'
    DEF_forcing%tintalgo = 'linear' 'linear' 'linear' 'nearest' 'NULL' 'linear' 'coszen' 'linear'
 
 /

@@ -74,7 +74,7 @@ CONTAINS
    SUBROUTINE init_monthly_co2_mlo
    !DESCRIPTION
    !===========
-      !---This MODULE is used for initilize the CO2 concentration.
+      !---This MODULE is used for initialize the CO2 concentration.
 
    !ANCILLARY FUNCTIONS AND SUBROUTINES
    !-------------------
@@ -278,7 +278,7 @@ CONTAINS
       !co2mlo( 2013 ,:) = (/ 395.31 , 395.31 , 395.31 , 395.31 , 395.31 , 395.31 , 395.31 , 395.31 , 395.31 , 395.31 , 395.31 , 395.31 /)
       !co2mlo( 2014 ,:) = (/ 397.12 , 397.12 , 397.12 , 397.12 , 397.12 , 397.12 , 397.12 , 397.12 , 397.12 , 397.12 , 397.12 , 397.12 /)
 
-      !NOTE: the below numbers can be manualy updated IF new records are available [Unit: ppm]
+      !NOTE: the below numbers can be manually updated IF new records are available [Unit: ppm]
       co2mlo(1958,:) = (/ 314.85, 314.85, 315.71, 317.45, 317.51, 317.25, 315.86, 314.93, 313.21, 312.43, 313.33, 314.67 /)
       co2mlo(1959,:) = (/ 315.58, 316.49, 316.65, 317.72, 318.29, 318.15, 316.54, 314.80, 313.84, 313.33, 314.81, 315.58 /)
       co2mlo(1960,:) = (/ 316.43, 316.98, 317.58, 319.03, 320.03, 319.58, 318.18, 315.90, 314.17, 313.83, 315.00, 316.19 /)

@@ -101,7 +101,7 @@ CONTAINS
          soil_d_n_alb,           &! albedo of near infrared of the dry soil
          zlnd,                   &! aerodynamic roughness length over soil surface [m]
          z0mr,                   &! ratio to calculate roughness length z0m
-         htop,                   &! Caonpy top height [m]
+         htop,                   &! canopy top height [m]
          chil,                   &! leaf angle distribution factor
          rho(2,2),               &! leaf reflectance (iw=iband, il=life and dead)
          tau(2,2),               &! leaf transmittance (iw=iband, il=life and dead)
@@ -146,7 +146,7 @@ CONTAINS
 !Plant Hydraulic parameters
          vegwp(1:nvegwcs),       &! vegetation water potential
          gs0sun,                 &! working copy of sunlit stomata conductance
-         gs0sha,                 &! working copy of shalit stomata conductance
+         gs0sha,                 &! working copy of shaded stomata conductance
 !end plant hydraulic parameters
          t_grnd,                 &! ground surface temperature [K]
          tleaf,                  &! sunlit leaf temperature [K]
@@ -188,7 +188,7 @@ CONTAINS
          mss_dst4 ( maxsnl+1:0 ), &! mass concentration of dust aerosol species 4 (col,lyr) [kg/kg]
          ssno_lyr (2,2,maxsnl+1:1 ), &! snow layer absorption [-]
 
-                     ! Additional variables required by reginal model (WRF & RSM)
+                     ! Additional variables required by regional model (WRF & RSM)
                      ! ---------------------------------------------------------
          trad,                   &! radiative temperature of surface [K]
          tref,                   &! 2 m height air temperature [kelvin]
@@ -421,7 +421,7 @@ CONTAINS
                   wliq_soisno(j) = dz_soisno(j)*porsl(j)*denh2o
                   wice_soisno(j) = 0.
                ENDIF
-            ENDDO 
+            ENDDO
 
             IF (patchtype <= 1) THEN
                CALL get_water_equilibrium_state (zwtmm, nl_soil, wliq_soisno(1:nl_soil), smp, hk, wa, &
@@ -1173,7 +1173,7 @@ CONTAINS
          extkd = 0.0
       ENDIF
 
-      ! Additional variables required by reginal model (WRF & RSM)
+      ! Additional variables required by regional model (WRF & RSM)
       ! totally arbitrarily assigned here
       trad  = t_grnd
       tref  = t_grnd

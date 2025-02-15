@@ -37,7 +37,7 @@ CONTAINS
    USE MOD_Precision
    IMPLICIT NONE
 
-! dummy arguments
+!-------------------------- Dummy Arguments ----------------------------
    real(r8), intent(in) :: scv    ! snow water equivalent [mm or kg/m3]
    real(r8), intent(in) :: snowdp ! snow depth [m]
    real(r8), intent(in) :: z0m    ! aerodynamic roughness length [m]
@@ -49,10 +49,12 @@ CONTAINS
    real(r8), intent(out) :: sigf  ! fraction of veg cover, excluding snow-covered veg [-]
    real(r8), intent(out) :: fsno  ! fraction of soil covered by snow [-]
 
-   real(r8) :: fmelt              ! dimensionless metling factor
+!-------------------------- Local Variables ----------------------------
+   real(r8) :: fmelt              ! dimensionless melting factor
    real(r8), parameter :: m = 1.0 ! the value of m used in CLM4.5 is 1.0.
                                   ! WHILE the value of m given by Niu et al (2007) is 1.6
                                   ! WHILE Niu (2012) suggested 3.0
+
 !-----------------------------------------------------------------------
       IF(lai+sai > 1e-6) THEN
          ! Fraction of vegetation buried (covered) by snow
@@ -100,7 +102,7 @@ CONTAINS
    USE MOD_Vars_PFTimeVariables
    IMPLICIT NONE
 
-! dummy arguments
+!-------------------------- Dummy Arguments ----------------------------
    integer,  intent(in) :: ipatch ! patch index
 
    real(r8), intent(in) :: zlnd   ! aerodynamic roughness length over soil surface [m]
@@ -111,15 +113,15 @@ CONTAINS
    real(r8), intent(out) :: sigf  ! fraction of veg cover, excluding snow-covered veg [-]
    real(r8), intent(out) :: fsno  ! fraction of soil covered by snow [-]
 
-   real(r8) :: fmelt              ! dimensionless metling factor
+!-------------------------- Local Variables ----------------------------
+   real(r8) :: fmelt              ! dimensionless melting factor
    real(r8), parameter :: m = 1.0 ! the value of m used in CLM4.5 is 1.0.
                                   ! WHILE the value of m given by Niu et al (2007) is 1.6
                                   ! WHILE Niu (2012) suggested 3.0
-!-----------------------------------------------------------------------
 
-   ! local variables
    integer i, p, ps, pe
    real(r8) wt_tmp
+!-----------------------------------------------------------------------
 
       wt_tmp = 0.
       ps = patch_pft_s(ipatch)
@@ -141,22 +143,14 @@ CONTAINS
          ENDIF
 
          ! snow on vegetation, USE snowdp to calculate buried fraction
-         ! distingush tree, shrub and grass
          IF ( DEF_VEG_SNOW .and. tlai_p(i)+tsai_p(i) > 1.e-6 ) THEN
-            ! for non-grass, use hbot, htop to determine how much lsai being buried.
-            IF (p.gt.0 .and. p.le.11) THEN
+            ! for trees, use hbot, htop to determine how much lsai being buried.
+            IF (p.gt.0 .and. p.le.8) THEN
                wt = max(0., (snowdp-hbot_p(i))) / (htop_p(i)-hbot_p(i))
                wt = min(wt, 1.)
                sigf_p(i) = 1. - wt
-            ELSE
-            ! for grass, 0-0.2m?
-               wt = min(1., snowdp/0.2)
-               sigf_p(i) = 1. - wt
             ENDIF
          ENDIF
-
-         !IF(sigf_p(i) < 0.001) sigf_p(i) = 0.
-         !IF(sigf_p(i) > 0.999) sigf_p(i) = 1.
 
          wt_tmp = wt_tmp + wt*pftfrac(i)
       ENDDO
@@ -175,3 +169,4 @@ CONTAINS
 #endif
 
 END MODULE MOD_SnowFraction
+! ---------- EOP ------------

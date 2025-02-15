@@ -39,7 +39,7 @@
 
 
    DEF_forcing%vname    = 't2m' 'q' 'sp' 'mtpr' 'u10' 'v10' 'msdwswrf' 'msdwlwrf'
-   DEF_forcing%timelog  = 'instant' 'instant' 'instant' 'foreward' 'instant' 'instant' 'foreward' 'foreward'
+   DEF_forcing%timelog  = 'instant' 'instant' 'instant' 'forward' 'instant' 'instant' 'forward' 'forward'
    DEF_forcing%tintalgo = 'linear' 'linear' 'linear' 'nearest' 'linear' 'linear' 'coszen' 'linear'
 
    DEF_forcing%CBL_fprefix        = 'boundary_layer_height/ERA5'

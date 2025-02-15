@@ -19,28 +19,27 @@ CONTAINS
 !
 ! !DESCRIPTION
 !  This is the main subroutine to execute the calculation of the restart
-!  variables for the begin of next year.
-!  There are mainly three ways to adjust restart variables:
+!  variables for the begin of next year.  There are mainly three ways to
+!  adjust restart variables:
 !
-!  1) variable related to mass: area weighted mean of the source patches,
-!     e.g., ldew, wliq_soisno.
-!     variable related to energy: keep energy conserve after the change
-!     of temperature, e.g., t_soisno.
+!  1) variable related to mass: area weighted mean of the source
+!  patches, e.g., ldew, wliq_soisno.  variable related to energy: keep
+!  energy conserve after the change of temperature, e.g., t_soisno.
 !
-!  2) recalculate according to physical process, e.g., dz_sno, scv, fsno.
+!  2) recalculate according to physical process, e.g., dz_sno, scv,
+!  fsno.
 !
 !  Created by Wanyi Lin and Hua Yuan, 07/2023
 !
 ! !REVISIONS:
 !
-!  10/2023, Wanyi Lin: share the codes with REST_LulccTimeVariables(), and
-!           simplify the codes in this subroutine.
+!  10/2023, Wanyi Lin: share the codes with REST_LulccTimeVariables(),
+!           and simplify the codes in this subroutine.
 !
 !  01/2024, Wanyi Lin: use "enthalpy conservation" for snow layer
 !           temperature calculation.
 !
 !-----------------------------------------------------------------------
-
 
    USE MOD_Precision
    USE MOD_Vars_Global
@@ -71,6 +70,7 @@ CONTAINS
 
    IMPLICIT NONE
 
+!-------------------------- Local Variables ----------------------------
    integer, allocatable, dimension(:) :: grid_patch_s , grid_patch_e
    integer, allocatable, dimension(:) :: grid_patch_s_, grid_patch_e_
    integer, allocatable, dimension(:) :: locpxl
@@ -93,17 +93,18 @@ CONTAINS
    real(r8):: sum_lccpct_np, wgt(maxsnl+1:nl_soil), hc(maxsnl+1:0)
    real(r8):: zi_sno(maxsnl+1:0)        !local variable for snow node and depth calculation
    real(r8):: vf_water                  !volumetric fraction liquid water within soil
-   real(r8):: vf_ice                    !volumetric fraction ice len within soil
+   real(r8):: vf_ice                    !volumetric fraction ice lens within soil
    real(r8):: hcap                      !J/(m3 K)
    real(r8):: c_water                   !Specific heat of water * density of liquid water
    real(r8):: c_ice                     !Specific heat of ice   * density of ice
    real(r8):: denice_np(maxsnl+1:0), denh2o_np(maxsnl+1:0), rhosnow_np(maxsnl+1:0)
    real(r8):: wbef,wpre                 !water before and water present for water calculation heck
-   ! real(r8):: fmelt                   !dimensionless metling factor
+   ! real(r8):: fmelt                   !dimensionless melting factor
    real(r8):: wt                        !fraction of vegetation covered with snow [-]
    real(r8), parameter :: m = 1.0       !the value of m used in CLM4.5 is 1.0.
-   ! real(r8) :: deltim = 1800.         !time step (senconds) TODO: be intent in
+   ! real(r8) :: deltim = 1800.         !time step (seconds) TODO: be intent in
    logical :: FROM_SOIL
+!-----------------------------------------------------------------------
 
       IF (p_is_worker) THEN
 
@@ -234,7 +235,7 @@ ENDIF
                         IF(DEF_USE_PLANTHYDRAULICS)THEN
                            vegwp    (:,np)                = 0  !vegetation water potential [mm]
                            gs0sun     (np)                = 0  !working copy of sunlit stomata conductance
-                           gs0sha     (np)                = 0  !working copy of shalit stomata conductance
+                           gs0sha     (np)                = 0  !working copy of shaded stomata conductance
                         ENDIF
 
                         IF(DEF_USE_OZONESTRESS)THEN
@@ -322,7 +323,7 @@ ENDIF
                         nsl_max = count(wgt(:0)        .gt. 0)
                         ! denh2o_np(maxsnl+1:0) = 0
                         ! denice_np(maxsnl+1:0) = 0
-                        rhosnow_np(maxsnl+1:0) = 0 ! partitial density of water/snow (ice + liquid)
+                        rhosnow_np(maxsnl+1:0) = 0 ! partial density of water/snow (ice + liquid)
 
                         IF (nsl > 0) THEN
                            ! move wgt above nsl to nsl
@@ -546,7 +547,7 @@ ENDIF
                            mss_dst4  (:,np) = mss_dst4  (:,np) + mss_dst4_  (:,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
                            ssno_lyr  (:,:,:,np) = ssno_lyr (:,:,:,np) + ssno_lyr_ (:,:,:,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
 
-                           ! TODO:or use same type assignment
+                           ! TODO: or use same type assignment
                            smp       (:,np) = smp    (:,np) + smp_   (:,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
                            hk        (:,np) = hk     (:,np) + hk_    (:,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
 

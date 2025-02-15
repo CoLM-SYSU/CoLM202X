@@ -1,7 +1,7 @@
 #include <define.h>
 
 #ifdef CatchLateralFlow
-MODULE MOD_Hydro_IO
+MODULE MOD_Catch_IO
 !-----------------------------------------------------------------------
 ! DESCRIPTION:
 !
@@ -11,11 +11,7 @@ MODULE MOD_Hydro_IO
 !-----------------------------------------------------------------------
 
    PUBLIC :: vector_write_basin
-
-   INTERFACE vector_read_basin
-      MODULE procedure vector_read_basin_real8
-      MODULE procedure vector_read_basin_int32
-   END INTERFACE vector_read_basin
+   PUBLIC :: vector_read_basin
 
 CONTAINS
 
@@ -124,7 +120,7 @@ CONTAINS
    END SUBROUTINE vector_write_basin 
 
    ! -----
-   SUBROUTINE vector_read_basin_real8 ( &
+   SUBROUTINE vector_read_basin ( &
          file_basin, vector, vlen, varname, data_address)
 
    USE MOD_Precision
@@ -182,68 +178,7 @@ CONTAINS
 
       IF (p_is_master) deallocate(rdata)
 
-   END SUBROUTINE vector_read_basin_real8
+   END SUBROUTINE vector_read_basin
 
-   ! -----
-   SUBROUTINE vector_read_basin_int32 ( &
-         file_basin, vector, vlen, varname, data_address)
-
-   USE MOD_Precision
-   USE MOD_SPMD_Task
-   USE MOD_DataType
-   USE MOD_NetCDFSerial
-   IMPLICIT NONE
-
-   character(len=*),       intent(in)    :: file_basin
-   integer,   allocatable, intent(inout) :: vector (:)
-   integer,                intent(in)    :: vlen
-   character(len=*),       intent(in)    :: varname
-   type(pointer_int32_1d), intent(in)    :: data_address (0:)
-
-   ! Local variables
-   integer :: iwork, ndata
-   integer, allocatable :: rdata(:), rcache(:)
-
-      IF (p_is_master) THEN
-         CALL ncio_read_serial (file_basin, varname, rdata)
-      ENDIF
-
-#ifdef USEMPI
-      CALL mpi_barrier (p_comm_glb, p_err)
-
-      IF (p_is_master) THEN
-         DO iwork = 0, p_np_worker-1
-            IF (allocated(data_address(iwork)%val)) THEN
-               
-               ndata = size(data_address(iwork)%val)
-               allocate(rcache (ndata))
-               rcache = rdata(data_address(iwork)%val)
-
-               CALL mpi_send (rcache, ndata, MPI_INTEGER4, &
-                  p_address_worker(iwork), mpi_tag_data, p_comm_glb, p_err) 
-
-               deallocate (rcache)
-            ENDIF
-         ENDDO
-      ENDIF
-      
-      IF (p_is_worker) THEN
-         IF (vlen > 0) THEN
-            IF (.not. allocated(vector)) allocate(vector(vlen))
-            CALL mpi_recv (vector, vlen, MPI_INTEGER4, p_address_master, &
-               mpi_tag_data, p_comm_glb, p_stat, p_err)
-         ENDIF
-      ENDIF
-      
-      CALL mpi_barrier (p_comm_glb, p_err)
-#else
-      IF (.not. allocated(vector)) allocate(vector(vlen))
-      vector = rdata(data_address(0)%val)
-#endif
-
-      IF (p_is_master) deallocate(rdata)
-
-   END SUBROUTINE vector_read_basin_int32
-
-END MODULE MOD_Hydro_IO
+END MODULE MOD_Catch_IO
 #endif

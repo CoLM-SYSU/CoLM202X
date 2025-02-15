@@ -45,7 +45,7 @@
 
 
    DEF_forcing%vname    = 'temp' 'shum' 'pres' 'prec' 'NULL' 'wind' 'srad' 'lrad'
-   DEF_forcing%timelog  = 'instant' 'instant' 'instant' 'foreward' 'instant' 'instant' 'foreward' 'foreward'
+   DEF_forcing%timelog  = 'instant' 'instant' 'instant' 'forward' 'instant' 'instant' 'forward' 'forward'
    DEF_forcing%tintalgo = 'linear' 'linear' 'linear' 'nearest' 'NULL' 'linear' 'coszen' 'linear'
 
 /
