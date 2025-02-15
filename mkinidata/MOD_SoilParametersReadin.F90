@@ -250,7 +250,7 @@ CONTAINS
 
          ! (24) read in the volumetric fraction of clay
          lndname = trim(landdir)//'/vf_clay_s_l'//trim(c)//'_patches.nc'
-         CALL ncio_read_vector (lndname, 'vf_clay_s_l'//trim(c)//'_patches', landpatch, soil_vf_clay_s_l)
+         CALL ncio_read_vector (lndname, 'vf_clay_s_l'//trim(c)//'_patches', landpatch, soil_vf_clay_s_l, defval = 0.1)
 
 #endif
 
