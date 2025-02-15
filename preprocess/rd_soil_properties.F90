@@ -31,7 +31,7 @@ SUBROUTINE rd_soil_properties(dir_rawdata)
 !
 ! Original author: Yongjiu Dai, 12/2013/
 !
-! Rivisions:
+! Revisions:
 ! Hua Yuan, 06/2016: add OPENMP parallel function.
 ! Yongjiu Dai and Nan Wei,
 !           06/2018: update a new version of soil hydraulic and thermal parameters
@@ -58,7 +58,7 @@ IMPLICIT NONE
       ! ---------------------------------
       integer, allocatable :: landtypes(:,:)  ! GLCC USGS/MODIS IGBP land cover types
 
-      ! (2) global soil characteristcs
+      ! (2) global soil characteristics
       ! --------------------------
 
       integer(kind=1), allocatable :: int_soil_grav_l (:,:) ! Coarse fragments volumetric in %
@@ -108,7 +108,7 @@ IMPLICIT NONE
       real(r8), allocatable :: OM_density_l(:,:) ! OM_density(kg/m3)
       REAL(r8), allocatable :: BD_all_l(:,:)     ! Bulk density of soil (GRAVELS + MINERALS + ORGANIC MATTER)(kg/m3)
 
-! CoLM soil layer thickiness and depths
+! CoLM soil layer thickness and depths
       integer nl_soil
       real(r8), allocatable ::  zsoi(:)  ! soil layer depth [m]
       real(r8), allocatable ::  dzsoi(:) ! soil node thickness [m]
@@ -160,7 +160,7 @@ IMPLICIT NONE
       integer ii, iii, iiii, jj, jjj, jjjj
 
 ! ........................................
-! ... (1) gloabl land cover characteristics
+! ... (1) global land cover characteristics
 ! ........................................
       iunit = 100
       inquire(iolength=length) land_chr1
@@ -195,7 +195,7 @@ IMPLICIT NONE
 #endif
 
 ! .................................
-! ... (2) global soil charateristics
+! ... (2) global soil characteristics
 ! .................................
       nl_soil = 10
       allocate ( zsoi(1:nl_soil), dzsoi(1:nl_soil), zsoih(0:nl_soil) )
@@ -267,7 +267,7 @@ IMPLICIT NONE
          write(c,'(i1)') MODEL_SOIL_LAYER
 
          ! ------------------------------------
-         ! (6.1) precentage of gravel (% volume)
+         ! (6.1) percentage of gravel (% volume)
          ! ------------------------------------
          inquire(iolength=length) land_int1
          lndname = trim(dir_rawdata)//'soil/GRAV_L'//trim(c)
@@ -441,8 +441,8 @@ print *, 'OPENMP enabled, threads num = ', OPENMP, "soil parameters..."
                   ! ------------------------------------
                   if( soil_sand_l < 0.0 ) soil_sand_l = 43.   ! missing value = -100
                   if( soil_clay_l < 0.0 ) soil_clay_l = 18.   ! missing value = -100
-                  if( soil_oc_l   < 0.0   ) soil_oc_l = 1.0     ! missing value = -999
-                  if( soil_bd_l   < 0.0   ) soil_bd_l = 1.2     ! missing value = -999
+                  if( soil_oc_l   < 0.0   ) soil_oc_l = 1.0   ! missing value = -999
+                  if( soil_bd_l   < 0.0   ) soil_bd_l = 1.2   ! missing value = -999
 
                   if( soil_sand_l < 1.0   ) soil_sand_l = 1.
                   if( soil_clay_l < 1.0   ) soil_clay_l = 1.

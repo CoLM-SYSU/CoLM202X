@@ -97,7 +97,7 @@ MODULE MOD_Vars_1DAccFluxes
    real(r8), allocatable :: a_tafu      (:) !temperature of outer building [K]
    real(r8), allocatable :: a_fhac      (:) !sensible flux from heat or cool AC [W/m2]
    real(r8), allocatable :: a_fwst      (:) !waste heat flux from heat or cool AC [W/m2]
-   real(r8), allocatable :: a_fach      (:) !flux from inner and outter air exchange [W/m2]
+   real(r8), allocatable :: a_fach      (:) !flux from inner and outer air exchange [W/m2]
    real(r8), allocatable :: a_fahe      (:) !flux from metabolic and vehicle [W/m2]
    real(r8), allocatable :: a_fhah      (:) !sensible flux from heating [W/m2]
    real(r8), allocatable :: a_vehc      (:) !flux from vehicle [W/m2]
@@ -290,7 +290,7 @@ MODULE MOD_Vars_1DAccFluxes
    real(r8), allocatable :: a_deadcrootn_xferCap    (:)
 #endif
 ! Ozone stress variables
-   real(r8), allocatable :: a_ozone              (:)
+   real(r8), allocatable :: a_ozone                 (:)
 ! End ozone stress variables
 
    real(r8), allocatable :: a_t_soisno    (:,:)
@@ -771,7 +771,7 @@ CONTAINS
             allocate (a_srviln    (numpatch))
             allocate (a_srndln    (numpatch))
             allocate (a_srniln    (numpatch))
-            
+
             allocate (a_sensors (nsensor,numpatch))
 
             allocate (nac_ln      (numpatch))
@@ -2346,7 +2346,7 @@ CONTAINS
             CALL acc1d (srviln , a_srviln )
             CALL acc1d (srndln , a_srndln )
             CALL acc1d (srniln , a_srniln )
-            
+
             CALL acc2d (sensors, a_sensors)
 
             DO i = 1, numpatch
@@ -2447,4 +2447,4 @@ CONTAINS
    END SUBROUTINE acc3d
 
 END MODULE MOD_Vars_1DAccFluxes
-! ----- EOP ---------
+! ---------- EOP ------------

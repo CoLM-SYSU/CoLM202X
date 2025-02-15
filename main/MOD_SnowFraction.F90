@@ -37,7 +37,7 @@ CONTAINS
    USE MOD_Precision
    IMPLICIT NONE
 
-! dummy arguments
+!-------------------------- Dummy Arguments ----------------------------
    real(r8), intent(in) :: scv    ! snow water equivalent [mm or kg/m3]
    real(r8), intent(in) :: snowdp ! snow depth [m]
    real(r8), intent(in) :: z0m    ! aerodynamic roughness length [m]
@@ -49,10 +49,12 @@ CONTAINS
    real(r8), intent(out) :: sigf  ! fraction of veg cover, excluding snow-covered veg [-]
    real(r8), intent(out) :: fsno  ! fraction of soil covered by snow [-]
 
-   real(r8) :: fmelt              ! dimensionless metling factor
+!-------------------------- Local Variables ----------------------------
+   real(r8) :: fmelt              ! dimensionless melting factor
    real(r8), parameter :: m = 1.0 ! the value of m used in CLM4.5 is 1.0.
                                   ! WHILE the value of m given by Niu et al (2007) is 1.6
                                   ! WHILE Niu (2012) suggested 3.0
+
 !-----------------------------------------------------------------------
       IF(lai+sai > 1e-6) THEN
          ! Fraction of vegetation buried (covered) by snow
@@ -100,7 +102,7 @@ CONTAINS
    USE MOD_Vars_PFTimeVariables
    IMPLICIT NONE
 
-! dummy arguments
+!-------------------------- Dummy Arguments ----------------------------
    integer,  intent(in) :: ipatch ! patch index
 
    real(r8), intent(in) :: zlnd   ! aerodynamic roughness length over soil surface [m]
@@ -111,15 +113,15 @@ CONTAINS
    real(r8), intent(out) :: sigf  ! fraction of veg cover, excluding snow-covered veg [-]
    real(r8), intent(out) :: fsno  ! fraction of soil covered by snow [-]
 
-   real(r8) :: fmelt              ! dimensionless metling factor
+!-------------------------- Local Variables ----------------------------
+   real(r8) :: fmelt              ! dimensionless melting factor
    real(r8), parameter :: m = 1.0 ! the value of m used in CLM4.5 is 1.0.
                                   ! WHILE the value of m given by Niu et al (2007) is 1.6
                                   ! WHILE Niu (2012) suggested 3.0
-!-----------------------------------------------------------------------
 
-   ! local variables
    integer i, p, ps, pe
    real(r8) wt_tmp
+!-----------------------------------------------------------------------
 
       wt_tmp = 0.
       ps = patch_pft_s(ipatch)
@@ -167,3 +169,4 @@ CONTAINS
 #endif
 
 END MODULE MOD_SnowFraction
+! ---------- EOP ------------

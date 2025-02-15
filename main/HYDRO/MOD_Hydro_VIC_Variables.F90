@@ -55,7 +55,7 @@ module MOD_Hydro_VIC_Variables
       real(r8) :: Dsmax                        ! /**< Maximum subsurface flow rate (mm/day) */
       real(r8) :: c                            ! /**< Exponent in ARNO baseflow scheme */
       real(r8) :: depth(MAX_LAYERS)            ! /**< Thickness of each soil moisture layer (m) */
-      !!! for zwt calcaulation, not used
+      !!! for zwt calculation, not used
       real(r8) :: bubble(MAX_LAYERS)                                  ! /**< Bubbling pressure, HBH 5.15 (cm)
       real(r8) :: zwtvmoist_zwt(MAX_LAYERS + 2, MAX_ZWTVMOIST)        ! /**< Zwt values in the zwt-v-moist curve for each layer */
       real(r8) :: zwtvmoist_moist(MAX_LAYERS + 2, MAX_ZWTVMOIST)      ! /**< Moist values in the zwt-v-moist curve for each layer */

@@ -239,7 +239,7 @@ ELSEIF (DEF_URBAN_type_scheme == 2) THEN
             ENDDO
 
             em_roof(u) = emroof_lcz    (landurban%settyp(u)) !emissivity of roof
-            em_wall(u) = emwall_lcz    (landurban%settyp(u)) !emissiviry of wall
+            em_wall(u) = emwall_lcz    (landurban%settyp(u)) !emissivity of wall
             em_gimp(u) = emimproad_lcz (landurban%settyp(u)) !emissivity of impervious
             em_gper(u) = emperroad_lcz (landurban%settyp(u)) !emissivity of pervious
 

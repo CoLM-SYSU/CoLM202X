@@ -36,7 +36,7 @@ SUBROUTINE Aggregation_TopographyFactors ( &
 
    ! local variables:
    ! ---------------------------------------------------------------
-   CHARACTER(len=256) :: landdir, lndname, cyear                                                                   
+   CHARACTER(len=256) :: landdir, lndname, cyear
    CHARACTER(len=3)   :: sdir, sdir1
 
    TYPE (block_data_real8_2d) :: slp_grid    ! slope
@@ -97,7 +97,7 @@ SUBROUTINE Aggregation_TopographyFactors ( &
    REAL(r8), allocatable :: y_train_transform(:)  ! The transform function of y_train
 
    ! local variables
-   INTEGER :: ipatch, i, ps, pe, type, a, z, count_pixels, num_pixels, j, index, n 
+   INTEGER :: ipatch, i, ps, pe, type, a, z, count_pixels, num_pixels, j, index, n
 
 #ifdef SrfdataDiag
    INTEGER :: typpatch(N_land_classification+1), ityp  ! number of land classification
@@ -231,7 +231,7 @@ SUBROUTINE Aggregation_TopographyFactors ( &
             DO z = 1, num_zenith
                ! terrain elevation angle at each azimuth
                tea_f_one(:) = tea_f_azi_one(a,:)
-               tea_b_one(:) = tea_b_azi_one(a,:) 
+               tea_b_one(:) = tea_b_azi_one(a,:)
 
                ! count the pixels which are not missing value
                count_pixels = 0
@@ -300,13 +300,13 @@ SUBROUTINE Aggregation_TopographyFactors ( &
          DO i = 1, num_pixels
             ! Define the south slope, north slope, abrupt slope and gentle lope of target pixel
             IF ((asp_one(i).ge.0 .and. asp_one(i).le.90*pi/180) .or. (asp_one(i).ge.270*pi/180 .and. asp_one(i).le.360*pi/180).and.(slp_one(i).ge.15*pi/180)) THEN  ! north abrupt slope
-                 type = 1 
+                 type = 1
             ELSE IF ((asp_one(i).ge.0 .and. asp_one(i).le.90*pi/180) .or. (asp_one(i).ge.270*pi/180 .and. asp_one(i).le.360*pi/180).and.(slp_one(i)<15*pi/180)) THEN  ! north gentle slope
                  type = 2
             ELSE IF ((asp_one(i).gt.90*pi/180) .and. (asp_one(i).lt.270*pi/180) .and. (slp_one(i).ge.15*pi/180)) THEN  ! south abrupt slope
-                 type = 3 
+                 type = 3
             ELSE IF ((asp_one(i).gt.90*pi/180) .and. (asp_one(i).lt.270*pi/180) .and. (slp_one(i).lt.15*pi/180)) THEN  ! south gentle slope
-                 type = 4  
+                 type = 4
             ELSE ! missing value=-9999
                  cycle
             END IF
@@ -390,7 +390,7 @@ SUBROUTINE Aggregation_TopographyFactors ( &
          x_train(:) = x(index:)
 
          ! Transform y_train to enable linear regression fitting
-         DO i = 1, n 
+         DO i = 1, n
             IF (y_train(i) <= 0.) y_train(i) = 0.001
             IF (y_train(i) >= 1.) y_train(i) = 0.999
          ENDDO
@@ -484,7 +484,7 @@ SUBROUTINE Aggregation_TopographyFactors ( &
    lndname  = trim(dir_model_landdata) // '/diag/topo_factor_svf_' // trim(cyear) // '.nc'
    CALL srfdata_map_and_write (svf_patches, landpatch%settyp, typpatch, m_patch2diag, &
       -1.0e36_r8, lndname, 'svf', compress = 1, write_mode = 'one')
-   
+
    lndname  = trim(dir_model_landdata) // '/diag/topo_factor_cur_' // trim(cyear) // '.nc'
    CALL srfdata_map_and_write (cur_patches, landpatch%settyp, typpatch, m_patch2diag, &
       -1.0e36_r8, lndname, 'cur', compress = 1, write_mode = 'one')
@@ -492,7 +492,7 @@ SUBROUTINE Aggregation_TopographyFactors ( &
    lndname  = trim(dir_model_landdata) // '/diag/topo_factor_sf_lut_' // trim(cyear) // '.nc'
 
    DO j = 1, num_azimuth
-      DO i = 1, num_zenith 
+      DO i = 1, num_zenith
          write(sdir,'(I0)') j
          write(sdir1,'(I0)') i
          CALL srfdata_map_and_write (sf_lut_patches(j,i,:), landpatch%settyp, typpatch, m_patch2diag, &

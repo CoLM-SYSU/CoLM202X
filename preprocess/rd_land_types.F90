@@ -3,13 +3,13 @@ SUBROUTINE rd_land_types(dir_rawdata)
 ! ----------------------------------------------------------------------
 ! => Read in land cover dataset from original "raw" data files -
 !     data with 30 arc seconds resolution
-! => Fill the missing data 
+! => Fill the missing data
 ! => Correct and update the land types with the specific datasets
 !
 ! 1. Global Elevation Dataset (GTOPO30)
 !    (http://webgis.wr.usgs.gov/globalgis/gtopo30/)
 !    The elevation values range from -407 to 8,752 meters.
-!    ocean areas have been assigned a value of -9999. 
+!    ocean areas have been assigned a value of -9999.
 !
 ! 2. Global Land Cover Characteristics
 ! 2.1 GLCC USGS Land cover /land use types
@@ -62,7 +62,7 @@ SUBROUTINE rd_land_types(dir_rawdata)
 !	16 	Barren or Sparsely Vegetated
 !	17 	Land Water Bodies
 !
-! 2.3 PFT classification (ON GOING PROJECT ......) 
+! 2.3 PFT classification (ON GOING PROJECT ......)
 !
 ! 3. Global Glacier/Ice Sheet Characteristics
 !    (http://www.glims.org/RGI/; http://glims.colorado.edu/glacierdata/)
@@ -98,7 +98,7 @@ use spmd_io
 IMPLICIT NONE
 
 ! arguments:
-      character(len=256), intent(in) :: dir_rawdata 
+      character(len=256), intent(in) :: dir_rawdata
 
 ! local variables:
       integer, parameter :: nlat=21600    ! 180*(60*2)
@@ -125,7 +125,7 @@ IMPLICIT NONE
       ! (2) global land cover characteristics
       ! ---------------------------------
 #if(defined LULC_USGS)
-      integer, allocatable :: landtypes_usgs(:,:)  ! GLCC USGS land cover types 
+      integer, allocatable :: landtypes_usgs(:,:)  ! GLCC USGS land cover types
 #endif
 #if(defined LULC_IGBP)
       integer, allocatable :: landtypes_igbp(:,:)  ! MODIS IGBP land cover types
@@ -135,19 +135,19 @@ IMPLICIT NONE
       ! ------------------------------
       real(r8), allocatable :: glacier(:,:)            ! glacier coverage (%)
 
-      ! (4) global lakes and wetlands characteristics 
+      ! (4) global lakes and wetlands characteristics
       ! -----------------------------------------
       integer, allocatable :: lakewetland(:,:)     ! land water and wetland types
 
-      ! (5) global urban and build-up land characteristics 
+      ! (5) global urban and build-up land characteristics
       ! -----------------------------------------
-      integer, allocatable :: urban(:,:)           ! urban and built-up land 
+      integer, allocatable :: urban(:,:)           ! urban and built-up land
 
 !   ---------------------------------------------------------------
       integer ia
       integer i, j, L
       integer nrow, ncol
-      integer iunit    
+      integer iunit
       integer length
 
       character c
@@ -155,8 +155,8 @@ IMPLICIT NONE
       integer ii, iii, iiii, jj, jjj, jjjj
       integer nl, np
 
-      integer, allocatable :: exclude(:)  
-      integer, allocatable :: ntmp(:,:)  
+      integer, allocatable :: exclude(:)
+      integer, allocatable :: ntmp(:,:)
 
       integer  :: buff_lb
       integer  :: buff_ub
@@ -176,13 +176,13 @@ IMPLICIT NONE
 ! Initialize MPI tasks
 #if (defined usempi)
       nrow_start = fine_lat_map%bdisp(1) + 1
-      nrow_end   = fine_lat_map%bdisp(1) + fine_lat_map%bstrd(1) 
+      nrow_end   = fine_lat_map%bdisp(1) + fine_lat_map%bstrd(1)
       buff_lb = max(nrow_start-rmax, 1)
       buff_ub = min(nrow_end  +rmax, nlat)
 
       allocate (buff_fine_lat_map%bstrd(1))
       allocate (buff_fine_lat_map%bdisp(1))
-     
+
       buff_fine_lat_map%total = nlat
       buff_fine_lat_map%num   = buff_ub - buff_lb + 1
 
@@ -192,22 +192,22 @@ IMPLICIT NONE
 #else
       nrow_start = 1
       nrow_end   = nlat
-      buff_lb = 1 
+      buff_lb = 1
       buff_ub = nlat
 #endif
 !   ---------------------------------------------------------------
-!   
+!
       allocate ( elevation      (nlon,buff_lb:buff_ub) ,&
 #if(defined LULC_USGS)
-                 landtypes_usgs (nlon,buff_lb:buff_ub) ,& 
+                 landtypes_usgs (nlon,buff_lb:buff_ub) ,&
 #endif
 #if(defined LULC_IGBP)
-                 landtypes_igbp (nlon,buff_lb:buff_ub) ,& 
+                 landtypes_igbp (nlon,buff_lb:buff_ub) ,&
 #endif
 
                  lakewetland    (nlon,buff_lb:buff_ub) ,&
-                 glacier        (nlon,buff_lb:buff_ub) ,& 
-                 urban          (nlon,buff_lb:buff_ub)  ) 
+                 glacier        (nlon,buff_lb:buff_ub) ,&
+                 urban          (nlon,buff_lb:buff_ub)  )
 
 ! ----------------------------------------------------------------------
 ! ... (1) global digital elevation model (DEM) data
@@ -221,7 +221,7 @@ IMPLICIT NONE
       fdisp = 0
       call mpi_rdwr_data (lndname, 'read', fdisp, buff_fine_lat_map, nlon*2, land_chr2)
 
-      do nrow = buff_lb, buff_ub 
+      do nrow = buff_lb, buff_ub
          do ncol = 1, nlon
             elevation(ncol,nrow) = ia(land_chr2(ncol,nrow),2,-9999)
          enddo
@@ -230,8 +230,8 @@ IMPLICIT NONE
 #else
       iunit = 100
       inquire(iolength=length) land_chr2
-      open(iunit,file=trim(lndname),access='direct',recl=length,form='unformatted',status='old') 
-      do nrow = 1, nlat 
+      open(iunit,file=trim(lndname),access='direct',recl=length,form='unformatted',status='old')
+      do nrow = 1, nlat
          read(iunit,rec=nrow,err=100) land_chr2
          do ncol = 1, nlon
             elevation(ncol,nrow) = ia(land_chr2(ncol),2,-9999)
@@ -241,7 +241,7 @@ IMPLICIT NONE
 #endif
 
       ii=0
-      do nrow = nrow_start, nrow_end 
+      do nrow = nrow_start, nrow_end
          do ncol = 1, nlon
              if( elevation(ncol,nrow) < -9990)then
                  ii = ii + 1
@@ -266,15 +266,15 @@ IMPLICIT NONE
       if (p_master) print*,'ii=', ii
 
 ! ........................................
-! ... (2) gloabl land cover characteristics  
+! ... (2) gloabl land cover characteristics
 ! ........................................
-!     (2.1) global land cover type (version 2.0) (USGS) 
+!     (2.1) global land cover type (version 2.0) (USGS)
 
 #if(defined LULC_USGS)
      ! GLCC USGS classification
      ! -------------------
 
-      lndname = trim(dir_rawdata)//'landtypes/landtypes-usgs.bin' 
+      lndname = trim(dir_rawdata)//'landtypes/landtypes-usgs.bin'
       if (p_master) print*,trim(lndname)
 
 #if (defined usempi)
@@ -284,15 +284,15 @@ IMPLICIT NONE
       landtypes_usgs = ichar(land_chr1)
       deallocate (land_chr1)
 #else
-      iunit = 100 
-      inquire(iolength=length) land_chr1 
-      open(iunit,file=trim(lndname),access='direct',recl=length,form='unformatted',status='old') 
-      do nrow = 1, nlat 
-         read(iunit,rec=nrow,err=100) land_chr1 
-         do ncol = 1, nlon 
-            landtypes_usgs(ncol,nrow) = ichar(land_chr1(ncol)) 
-         enddo 
-      enddo 
+      iunit = 100
+      inquire(iolength=length) land_chr1
+      open(iunit,file=trim(lndname),access='direct',recl=length,form='unformatted',status='old')
+      do nrow = 1, nlat
+         read(iunit,rec=nrow,err=100) land_chr1
+         do ncol = 1, nlon
+            landtypes_usgs(ncol,nrow) = ichar(land_chr1(ncol))
+         enddo
+      enddo
       close (iunit)
 #endif
 
@@ -300,7 +300,7 @@ IMPLICIT NONE
       iii = 0
       iiii = 0
       jjj = 0
-      do nrow = nrow_start, nrow_end 
+      do nrow = nrow_start, nrow_end
          do ncol = 1, nlon
             if(elevation(ncol,nrow) > -9990) then
                if(landtypes_usgs(ncol,nrow) == 16) then
@@ -320,7 +320,7 @@ IMPLICIT NONE
             if(elevation(ncol,nrow) < -9990) then
                landtypes_usgs(ncol,nrow) = 0
             endif
-         enddo 
+         enddo
       enddo
       int_min = minval(landtypes_usgs(:,nrow_start:nrow_end))
       int_max = maxval(landtypes_usgs(:,nrow_start:nrow_end))
@@ -421,14 +421,14 @@ IMPLICIT NONE
       if (p_master) print*, int_min, int_max
       if (p_master) print*,' MODIS IGBP land cover '
       if (p_master) print*,'land water points =', ii, 'wetland points=', iii, 'glacier points=', iiii, 'urban points=', jjj
-#endif 
+#endif
 
 ! ................................................
-! ... (3) global lakes and wetland characterristics
+! ... (3) global lakes and wetland characteristics
 ! ................................................
-!     (3.1) global lakes and wetland 
+!     (3.1) global lakes and wetland
 
-      lndname = trim(dir_rawdata)//'lake_wetland/glwd.bin' 
+      lndname = trim(dir_rawdata)//'lake_wetland/glwd.bin'
       if (p_master) print*,trim(lndname)
 
 #if (defined usempi)
@@ -440,19 +440,19 @@ IMPLICIT NONE
 #else
       iunit = 100
       inquire(iolength=length) land_chr1
-      open(iunit,file=trim(lndname),access='direct',recl=length,form='unformatted',status='old') 
-      do nrow = 1, nlat 
+      open(iunit,file=trim(lndname),access='direct',recl=length,form='unformatted',status='old')
+      do nrow = 1, nlat
          read(iunit,rec=nrow,err=100) land_chr1
          do ncol = 1, nlon
             lakewetland(ncol,nrow) = ichar(land_chr1(ncol))
          enddo
-      enddo 
+      enddo
       close (iunit)
 #endif
 
       ii = 0
       iii = 0
-      do nrow = nrow_start, nrow_end 
+      do nrow = nrow_start, nrow_end
          do ncol = 1, nlon
             if(elevation(ncol,nrow)>-9990) then
                ! Replace GLCC_USGS and MODIS_IGBP water bodies with GLWD classification
@@ -478,12 +478,12 @@ IMPLICIT NONE
 !#endif
 !                  iii = iii + 1
 !               endif
-               if(nrow > 18000)then  ! (90N + 60S) * 120  
+               if(nrow > 18000)then  ! (90N + 60S) * 120
                   lakewetland(ncol,nrow) = 255
                endif
             endif
          enddo
-      enddo 
+      enddo
       int_min = minval(lakewetland(:,nrow_start:nrow_end))
       int_max = maxval(lakewetland(:,nrow_start:nrow_end))
 #if (defined usempi)
@@ -505,10 +505,10 @@ IMPLICIT NONE
       if (p_master) print*,'land water (1-3) =', ii, 'wetland (4-12) =',iii
 
 ! ......................................
-! ... (4) global glacier and ice sheet characterristics
+! ... (4) global glacier and ice sheet characteristics
 ! ......................................
 
-      lndname = trim(dir_rawdata)//'glacier/glacier.bin' 
+      lndname = trim(dir_rawdata)//'glacier/glacier.bin'
       if (p_master) print*,trim(lndname)
 
 #if (defined usempi)
@@ -520,18 +520,18 @@ IMPLICIT NONE
 #else
       iunit = 100
       inquire(iolength=length) land_int2
-      open(iunit,file=trim(lndname),access='direct',recl=length,form='unformatted',status='old') 
-      do nrow = 1, nlat 
+      open(iunit,file=trim(lndname),access='direct',recl=length,form='unformatted',status='old')
+      do nrow = 1, nlat
          read(iunit,rec=nrow,err=100) land_int2
          do ncol = 1, nlon
             glacier(ncol,nrow) = land_int2(ncol) * 0.1
          enddo
-      enddo 
+      enddo
       close (iunit)
 #endif
 
       ii = 0
-      do nrow = nrow_start, nrow_end 
+      do nrow = nrow_start, nrow_end
          do ncol = 1, nlon
             if(elevation(ncol,nrow)>-9990) then
                ! Replace GLCC and MODIS glacier/ice sheet with glacier specific dataset
@@ -544,8 +544,8 @@ IMPLICIT NONE
 #endif
                   ii = ii + 1
                endif
-               ! Antarctic (ice sheet / baren ONLY)
-               if(nrow > 18000)then  ! (90N + 60S) * 120  
+               ! Antarctic (ice sheet / barren ONLY)
+               if(nrow > 18000)then  ! (90N + 60S) * 120
 #if(defined LULC_USGS)
                   if(landtypes_usgs(ncol,nrow)/=23)then
                      landtypes_usgs(ncol,nrow) = 24
@@ -560,12 +560,12 @@ IMPLICIT NONE
 #endif
                endif
 ! modified by dai, 06/02/2016
-!               ! Greenland  (ice sheet / baren / built-up ONLY)
+!               ! Greenland  (ice sheet / barren / built-up ONLY)
 !               ! BETWEEN (59-83N, 74-11W) =>| 0<nrow<(90-31)*120, (180-74)*120<ncol<(180-11)*120
 !               if(nrow<3720 .and. (ncol>12720 .and. ncol<20280))then
 !#if(defined LULC_USGS)
 !                  if(landtypes_usgs(ncol,nrow)/=23 .or. landtypes_usgs(ncol,nrow)/=1)then
-!                     landtypes_usgs(ncol,nrow) = 24  
+!                     landtypes_usgs(ncol,nrow) = 24
 !                     glacier(ncol,nrow) = 100.
 !                  endif
 !#endif
@@ -578,7 +578,7 @@ IMPLICIT NONE
 !               endif
             endif
          enddo
-      enddo 
+      enddo
 
 
       r8_min = minval(glacier(:,nrow_start:nrow_end))
@@ -600,7 +600,7 @@ IMPLICIT NONE
       if (p_master) print*,'glacier (> 0.5%) =', ii
 
 ! ....................................
-! ... (5) global urban characterristics
+! ... (5) global urban characteristics
 ! ....................................
 
       lndname = trim(dir_rawdata)//'urban/urban-builtup.bin'
@@ -619,7 +619,7 @@ IMPLICIT NONE
       do nrow = 1, nlat
          read(iunit,rec=nrow,err=100) land_chr1
          do ncol = 1, nlon
-            urban(ncol,nrow) = ichar(land_chr1(ncol)) 
+            urban(ncol,nrow) = ichar(land_chr1(ncol))
          enddo
       enddo
       close (iunit)
@@ -639,7 +639,7 @@ IMPLICIT NONE
 #endif
                   ii = ii + 1
                endif
-               if(nrow > 18000)then  ! (90N + 60S) * 120  
+               if(nrow > 18000)then  ! (90N + 60S) * 120
                   urban(ncol,nrow) = 0
                endif
             endif
@@ -757,7 +757,7 @@ IMPLICIT NONE
 #endif
 #endif
 !---------------------------------------------------------------------------------------------
-! Correct the land cover types on which the types (GLCC_USGS/MODIS_IGBP) were classified 
+! Correct the land cover types on which the types (GLCC_USGS/MODIS_IGBP) were classified
 ! water bodies/wetland/glacier/urban, but NOT classified in GLWD/GLACIER/URBAN specific dataset
 !---------------------------------------------------------------------------------------------
       allocate (ntmp(nlon,buff_lb:buff_ub))
@@ -773,7 +773,7 @@ IMPLICIT NONE
 !!     exclude = (/1,16,17,18,24/) !/urban and built-up(1),water bodies(16),herbaceous wetland(17),wooded wetland(18),snow and ice(24)/
 !      np = 4
 !      allocate (exclude(4))
-!      exclude = (/1,16,17,18/) 
+!      exclude = (/1,16,17,18/)
 !      ntmp = landtypes_usgs
 !      do j = nrow_start, nrow_end
 !         do i = 1, nlon
@@ -809,7 +809,7 @@ IMPLICIT NONE
 !!     exclude = (/11,13,15,17/)  !/permanent wetland(11),urban and built-up(13),snow and ice(15),water bodies(17)/
 !      np = 3
 !      allocate (exclude(3))
-!      exclude = (/11,13,17/) 
+!      exclude = (/11,13,17/)
 !      ntmp = landtypes_igbp
 !      do j = nrow_start, nrow_end
 !         do i = 1, nlon
@@ -879,11 +879,11 @@ IMPLICIT NONE
 !      if (p_master) print*, 'MODIS IGBP WATER BODIES','iiii=',iiii
 !#endif
 !#endif
-  
+
 ! deleted by dai, 07/27/2016
 ! The Global Lake and Wetlands Types (http://www.wwfus.org/science/data.cfm)
 ! may have some problems in presenting the wetland type in some regions.
-! 
+!
 !      ! WETLAND
 !      ! -------
 !#if(defined LULC_USGS)
@@ -1328,7 +1328,7 @@ IMPLICIT NONE
 ! ... (6) global cultural characteristics (crops)
 ! ..............................................
 !
-!#endif 
+!#endif
 
 ! Write out the land cover types
 #if(defined LULC_USGS)
@@ -1421,26 +1421,26 @@ INTEGER FUNCTION ia(chr,n,ispval)
 !        ** the integer data file is saved as a n-byte character
 !           data file. this function is used to recover the
 !           character data to the integer data.
-!                                                                                
+!
 !  n      --- the number of bytes in chr
 !  ispval --- default value for the negative integer.
-                                                                                
+
       character*(*) chr
       integer bit_1, bit_2
 
       bit_1 = '200'O     ! BINARY '10000000'
       bit_2 = '377'O     ! BINARY '11111111'
       ia    = 0
-                                                                                
+
       ii1 = ichar(chr(1:1))
 ! .. get the sign -- isn=0 positive, isn=1 negative:
       jj  = iand(ii1,bit_1)
       isn = ishft(jj,-7)
-                                                                                
+
 ! .. for negative number:
 !    because the negative integers are represented by the supplementary
 !    binary code inside machine.
-                                                                                
+
         if (isn.eq.1) then
           do m = n+1,4
              nbit = (m-1)*8
@@ -1448,7 +1448,7 @@ INTEGER FUNCTION ia(chr,n,ispval)
              ia = ieor(jj,ia)
           end do
         endif
-                                                                                
+
 !   .. get the byte from chr:
          do m = 1,n
            ii2 = ichar(chr(m:m))
@@ -1458,7 +1458,7 @@ INTEGER FUNCTION ia(chr,n,ispval)
 !   .. the abs(integer):
            ia = ieor(ia,ia2)
          end do
-                                                                                
+
       if (ia.lt.0) ia = ispval
 
       return
@@ -1538,8 +1538,8 @@ SUBROUTINE update_buff (buff, nlon, nlat, buff_lb, nrow_start, nrow_end, buff_ub
     use spmd_TM
 
     implicit none
-    integer, intent(in)    :: nlon 
-    integer, intent(in)    :: nlat 
+    integer, intent(in)    :: nlon
+    integer, intent(in)    :: nlat
 
     integer, intent(in)    :: buff_lb
     integer, intent(in)    :: buff_ub
@@ -1554,14 +1554,14 @@ SUBROUTINE update_buff (buff, nlon, nlat, buff_lb, nrow_start, nrow_end, buff_ub
     character, allocatable :: cbuff_g(:,:)
 
     integer, parameter :: rmax = 100  ! searching radius (grid cells)
-    integer :: iproc 
+    integer :: iproc
     integer, allocatable :: reqs(:)
-    integer :: blb, bub 
+    integer :: blb, bub
 
 
     allocate (cbuff (nlon,buff_lb:buff_ub))
     cbuff = char(buff)
-    
+
     if (p_iam_slave == 0) then
         allocate (reqs     (0:p_nslaves-1))
         allocate (nlat_proc(0:p_nslaves-1))
@@ -1586,7 +1586,7 @@ SUBROUTINE update_buff (buff, nlon, nlat, buff_lb, nrow_start, nrow_end, buff_ub
             call mpi_isend (cbuff_g(:,blb:bub), nlon*(bub-blb+1), MPI_CHARACTER, &
                             iproc, iproc, p_comm_slave, reqs(iproc), p_err)
         end do
-        call mpi_waitall (p_nslaves-1, reqs(1:p_nslaves-1), MPI_STATUSES_IGNORE, p_err) 
+        call mpi_waitall (p_nslaves-1, reqs(1:p_nslaves-1), MPI_STATUSES_IGNORE, p_err)
     else
         call mpi_gather  (nrow_end-nrow_start+1, 1, MPI_INTEGER, 0, 1, MPI_INTEGER, &
                           0, p_comm_slave, p_err)

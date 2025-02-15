@@ -4,7 +4,7 @@ MODULE MOD_ForcingDownscaling
 
 !-----------------------------------------------------------------------------
 ! DESCRIPTION:
-! Downscaling meteorological forcings 
+! Downscaling meteorological forcings
 !
 ! INITIAL:
 ! The Community Land Model version 5.0 (CLM5.0)
@@ -46,7 +46,7 @@ MODULE MOD_ForcingDownscaling
    SAVE
 
 ! PUBLIC MEMBER FUNCTIONS:
-   PUBLIC :: downscale_forcings     ! Downscale atmospheric forcing 
+   PUBLIC :: downscale_forcings     ! Downscale atmospheric forcing
 
 ! PRIVATE MEMBER FUNCTIONS:
    PRIVATE :: rhos                  ! calculate atmospheric density
@@ -58,20 +58,20 @@ CONTAINS
 !-----------------------------------------------------------------------------
 
    PURE FUNCTION rhos(qbot, pbot, tbot)
-   
+
 !-----------------------------------------------------------------------------
 ! DESCRIPTION:
 ! Compute atmospheric density (kg/m**3)
 !-----------------------------------------------------------------------------
 
    IMPLICIT NONE
-   
+
    ! ARGUMENTS:
    real(r8) :: rhos              ! function result: atmospheric density (kg/m**3)
    real(r8), intent(in) :: qbot  ! atmospheric specific humidity (kg/kg)
    real(r8), intent(in) :: pbot  ! atmospheric pressure (Pa)
    real(r8), intent(in) :: tbot  ! atmospheric temperature (K)
-   
+
    ! LOCAL VARIABLES:
    real(r8) :: egcm
    real(r8) :: wv_to_dair_weight_ratio  ! ratio of molecular weight of water vapor to that of dry air [-]
@@ -84,7 +84,7 @@ CONTAINS
    END FUNCTION rhos
 
 !-----------------------------------------------------------------------------
-   
+
    SUBROUTINE downscale_forcings (&
                   glaciers, &
 
@@ -94,7 +94,7 @@ CONTAINS
                   forc_hgt_g  ,forc_swrad_g  ,forc_us_g  ,forc_vs_g  , &
 
                   ! topography-based factor on patch
-                  slp_type_c, asp_type_c, area_type_c, svf_c, cur_c, & 
+                  slp_type_c, asp_type_c, area_type_c, svf_c, cur_c, &
 #ifdef SinglePoint
                   sf_lut_c, &
 #else
@@ -103,7 +103,7 @@ CONTAINS
 
                   ! other factors
                   julian_day, coszen, cosazi, alb, &
-                                 
+
                   ! adjusted forcing
                   forc_topo_c ,forc_t_c   ,forc_th_c  ,forc_q_c     ,forc_pbot_c ,&
                   forc_rho_c  ,forc_prc_c ,forc_prl_c ,forc_lwrad_c, forc_swrad_c, &
@@ -111,7 +111,7 @@ CONTAINS
 
 !-----------------------------------------------------------------------------
 ! DESCRIPTION:
-! Downscale atmospheric forcing fields. 
+! Downscale atmospheric forcing fields.
 !
 ! Downscaling is done based on the difference between each land model column's elevation and
 ! the atmosphere's surface elevation (which is the elevation at which the atmospheric
@@ -124,14 +124,14 @@ CONTAINS
 
    IMPLICIT NONE
 
-   integer,  parameter :: S = 1370            ! solar constant (W/m**2)
+   integer,  parameter :: S = 1370             ! solar constant (W/m**2)
    real(r8), parameter :: thr = 85*PI/180      ! threshold of zenith angle
 
    ! ARGUMENTS:
    logical,  intent(in) :: glaciers            ! true: glacier column (itypwat = 3)
    real(r8), intent(in) :: julian_day          ! day of year
    real(r8), intent(in) :: coszen              ! cosine of sun zenith angle at an hour
-   real(r8), intent(in) :: cosazi              ! cosine of sun azimuth angle at an hour 
+   real(r8), intent(in) :: cosazi              ! cosine of sun azimuth angle at an hour
    real(r8), intent(in) :: alb                 ! blue sky albedo
 
    ! topography-based factor
@@ -176,7 +176,7 @@ CONTAINS
    real(r8), intent(out) :: forc_us_c    ! column eastward wind [m/s]
    real(r8), intent(out) :: forc_vs_c    ! column northward wind [m/s]
 
-   ! Local variables for topo downscaling:  
+   ! Local variables for topo downscaling:
    real(r8) :: hsurf_g, hsurf_c
    real(r8) :: Hbot, zbot
    real(r8) :: tbot_g, pbot_g, thbot_g, qbot_g, qs_g, es_g, rhos_g
@@ -233,7 +233,7 @@ CONTAINS
       ! save
       forc_t_c    = tbot_c
       forc_th_c   = thbot_c
-      forc_q_c    = qbot_c  
+      forc_q_c    = qbot_c
       forc_pbot_c = pbot_c
       forc_rho_c  = rhos_c
 
@@ -319,8 +319,8 @@ CONTAINS
    IMPLICIT NONE
 
    ! ARGUMENTS:
-   real(r8), intent(inout)  :: forc_us_g                                ! eastward wind (m/s)
-   real(r8), intent(inout)  :: forc_vs_g                                ! northward wind (m/s)
+   real(r8), intent(inout)  :: forc_us_g                             ! eastward wind (m/s)
+   real(r8), intent(inout)  :: forc_vs_g                             ! northward wind (m/s)
 
    real(r8), intent(in) :: cur_c                                     ! curvature
    real(r8), intent(in) :: asp_type_c        (1:num_slope_type)      ! topographic aspect of each character of one patch
@@ -353,7 +353,7 @@ CONTAINS
          wind_dir_slp(i) = slp_type_c(i)*cos(wind_dir-asp_type_c(i))
       ENDDO
 
-      ! compute wind speed ajustment
+      ! compute wind speed adjustment
       DO i = 1, num_slope_type
          scale_factor = (1+(0.58*wind_dir_slp(i))+0.42*cur_c)
          ! Limiting the scope of proportionality adjustments
@@ -386,7 +386,7 @@ CONTAINS
    IMPLICIT NONE
 
    ! ARGUMENTS:
-   logical,  intent(in) :: glaciers  ! true: glacier column
+   logical,  intent(in) :: glaciers      ! true: glacier column
 
    real(r8), intent(in) :: forc_topo_g   ! atmospheric surface height (m)
    real(r8), intent(in) :: forc_t_g      ! atmospheric temperature [Kelvin]
@@ -483,15 +483,15 @@ CONTAINS
                         sf_curve_c, &
 #endif
                         area_type_c)
-                        
+
 !-----------------------------------------------------------------------------
 ! DESCRIPTION:
 !
-! Rouf, T., Mei, Y., Maggioni, V., Houser, P., & Noonan, M. (2020). A Physically Based 
-!     Atmospheric Variables Downscaling Technique. Journal of Hydrometeorology, 
+! Rouf, T., Mei, Y., Maggioni, V., Houser, P., & Noonan, M. (2020). A Physically Based
+!     Atmospheric Variables Downscaling Technique. Journal of Hydrometeorology,
 !     21(1), 93–108. https://doi.org/10.1175/JHM-D-19-0109.1
-!                        
-! Sisi Chen, Lu Li, Yongjiu Dai, et al. Exploring Topography Downscaling Methods for 
+!
+! Sisi Chen, Lu Li, Yongjiu Dai, et al. Exploring Topography Downscaling Methods for
 !     Hyper-Resolution Land Surface Modeling. Authorea. April 25, 2024.
 !     DOI: 10.22541/au.171403656.68476353/v1
 !
@@ -507,23 +507,23 @@ CONTAINS
    ! ARGUMENTS:
    real(r8), intent(in) :: julian_day          ! day of year
    real(r8), intent(in) :: coszen              ! zenith angle at an hour
-   real(r8), intent(in) :: cosazi              ! azimuth angle at an hour 
+   real(r8), intent(in) :: cosazi              ! azimuth angle at an hour
    real(r8), intent(in) :: alb                 ! blue sky albedo
 
-   real(r8), intent(in) :: forc_topo_g                                    ! atmospheric surface height (m)
-   real(r8), intent(in) :: forc_pbot_g                                    ! atmospheric pressure [Pa]
-   real(r8), intent(in) :: forc_swrad_g                                   ! downward shortwave (W/m**2)
-   
-   real(r8), intent(in) :: forc_topo_c                                    ! column surface height (m)
-   real(r8), intent(in) :: forc_pbot_c                                    ! atmospheric pressure [Pa]
-   real(r8), intent(out):: forc_swrad_c                                   ! downward shortwave (W/m**2)
+   real(r8), intent(in) :: forc_topo_g                                       ! atmospheric surface height (m)
+   real(r8), intent(in) :: forc_pbot_g                                       ! atmospheric pressure [Pa]
+   real(r8), intent(in) :: forc_swrad_g                                      ! downward shortwave (W/m**2)
+
+   real(r8), intent(in) :: forc_topo_c                                       ! column surface height (m)
+   real(r8), intent(in) :: forc_pbot_c                                       ! atmospheric pressure [Pa]
+   real(r8), intent(out):: forc_swrad_c                                      ! downward shortwave (W/m**2)
 
    real(r8), intent(in) :: svf_c                                             ! sky view factor
-#ifdef SinglePoint
-   real(r8), intent(in) :: sf_lut_c   (1:num_azimuth,1:num_zenith)  ! look up table of shadow mask of a patch
-#else
-   real(r8), intent(in) :: sf_curve_c (1:num_azimuth,1:num_zenith_parameter)  ! curve of shadow mask of a patch
-#endif
+# ifdef SinglePoint
+   real(r8), intent(in) :: sf_lut_c   (1:num_azimuth,1:num_zenith)           ! look up table of shadow mask of a patch
+# else
+   real(r8), intent(in) :: sf_curve_c (1:num_azimuth,1:num_zenith_parameter) ! curve of shadow mask of a patch
+# endif
    real(r8), intent(in) :: asp_type_c (1:num_slope_type)                     ! topographic aspect of each character of one patch (°)
    real(r8), intent(in) :: slp_type_c (1:num_slope_type)                     ! topographic slope of each character of one patch
    real(r8), intent(in) :: area_type_c(1:num_slope_type)                     ! area percentage of each character of one patch
@@ -535,14 +535,14 @@ CONTAINS
    real(r8) :: rt_R                                    ! The ratio of the current distance between the sun and the earth                                                                                     ! to the average distance between the sun and the earth
    real(r8) :: toa_swrad                               ! top of atmosphere shortwave radiation
    real(r8) :: clr_idx                                 ! atmospheric transparency
-   real(r8) :: diff_wgt                                ! diffuse weight 
+   real(r8) :: diff_wgt                                ! diffuse weight
    real(r8) :: k_c                                     ! column broadband attenuation coefficient [Pa^-1]
    real(r8) :: opt_factor                              ! optical length factor
    real(r8) :: a_p
    real(r8) :: svf, balb
 
    real(r8) :: diff_swrad_g, beam_swrad_g              ! diffuse and beam radiation
-   real(r8) :: diff_swrad_c, beam_swrad_c, refl_swrad_c! downscaled diffuse, beam radiation and reflect radiation 
+   real(r8) :: diff_swrad_c, beam_swrad_c, refl_swrad_c! downscaled diffuse, beam radiation and reflect radiation
    real(r8) :: beam_swrad_type (1:num_slope_type)      ! beam radiation of one characterized patch
    real(r8) :: refl_swrad_type (1:num_slope_type)      ! reflect radiation of one characterized patch
    real(r8) :: tcf_type        (1:num_slope_type)      ! terrain configure factor
@@ -553,8 +553,8 @@ CONTAINS
    integer  :: i
 
 !-----------------------------------------------------------------------------
-      
-      ! calculate shadow factor according to sun zenith and azimuth angle 
+
+      ! calculate shadow factor according to sun zenith and azimuth angle
       zen_rad = acos(coszen)
       azi_rad = acos(cosazi)
       azi_deg = azi_rad*180.0/PI ! turn deg
@@ -571,7 +571,7 @@ CONTAINS
 
       sf_c = sf_lut_c(idx_azi, idx_zen)
 #else
-      ! Constructing a shadow factor function from zenith angle parameters  
+      ! Constructing a shadow factor function from zenith angle parameters
       ! shadow factor = exp(-1*exp(a1*zenith+a2))
       zenith_segment = sf_curve_c(idx_azi, 1)               ! Segmented function segmentation points (rad)
       a1 = sf_curve_c(idx_azi, 2)                           ! parameter of function
@@ -581,7 +581,7 @@ CONTAINS
          sf_c = 1.
       ELSE IF (a1<=1e-10) THEN
          sf_c = 1.
-      ELSE 
+      ELSE
          sf_c = exp(-1*exp(min(a1*zen_rad+a2,3.5)))
       ENDIF
 #endif
@@ -592,7 +592,7 @@ CONTAINS
       ! calculate top-of-atmosphere incident shortwave radiation
       rt_R = 1-0.01672*cos(0.9856*(julian_day-4))
       toa_swrad = S*(rt_R**2)*coszen
-         
+
       ! calculate clearness index
       IF (toa_swrad.eq.0) THEN
          clr_idx = 0
@@ -602,9 +602,9 @@ CONTAINS
       IF (clr_idx>1) clr_idx = 1
 
       ! calculate diffuse weight
-      ! Ruiz-Arias, J. A., Alsamamra, H., Tovar-Pescador, J., & Pozo-Vázquez, D. (2010). 
-      ! Proposal of a regressive model for the hourly diffuse solar radiation under all sky 
-      ! conditions. Energy Conversion and Management, 51(5), 881–893. 
+      ! Ruiz-Arias, J. A., Alsamamra, H., Tovar-Pescador, J., & Pozo-Vázquez, D. (2010).
+      ! Proposal of a regressive model for the hourly diffuse solar radiation under all sky
+      ! conditions. Energy Conversion and Management, 51(5), 881–893.
       ! https://doi.org/10.1016/j.enconman.2009.11.024
       diff_wgt = 0.952-1.041*exp(-1*exp(min(2.3-4.702*clr_idx,3.5)))
       IF (diff_wgt>1) diff_wgt = 1
@@ -614,7 +614,7 @@ CONTAINS
       diff_swrad_g = forc_swrad_g*diff_wgt
       beam_swrad_g = forc_swrad_g*(1-diff_wgt)
 
-      ! calcualte broadband attenuation coefficient [Pa^-1]
+      ! calculate broadband attenuation coefficient [Pa^-1]
       IF (clr_idx.le.0) THEN
          k_c = 0
       ELSE
@@ -631,8 +631,8 @@ CONTAINS
 
       ! loop for four defined types to downscale beam radiation
       DO i = 1, num_slope_type
-         ! calculate the cosine of solar illumination angle, cos(θ), 
-         ! ranging between −1 and 1, indicates if the sun is below or 
+         ! calculate the cosine of solar illumination angle, cos(θ),
+         ! ranging between −1 and 1, indicates if the sun is below or
          ! above the local horizon (note that values lower than 0 are set to 0 indicate self shadow)
          cosill_type(i) = cos(slp_type_c(i))+tan(zen_rad)*sin(slp_type_c(i))*cos(asp_type_c(i))
          IF (cosill_type(i)>1) cosill_type(i) = 1
@@ -657,7 +657,7 @@ CONTAINS
       DO i = 1, num_slope_type
          tcf_type(i) = (1+cos(slp_type_c(i)))/2-svf
          IF (tcf_type(i)<0) tcf_type(i) = 0
-      
+
          IF (isnan_ud(alb)) THEN
             refl_swrad_type(i) = -1.0e36
          ELSE

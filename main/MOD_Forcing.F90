@@ -73,7 +73,7 @@ MODULE MOD_Forcing
 
    ! local variables
    integer  :: deltim_int                ! model time step length
-   ! real(r8) :: deltim_real               ! model time step length
+   ! real(r8) :: deltim_real             ! model time step length
 
    !  for SinglePoint
    type(timestamp), allocatable :: forctime (:)
@@ -93,8 +93,8 @@ MODULE MOD_Forcing
 #endif
 
    type(block_data_real8_2d), allocatable :: forcn    (:)  ! forcing data
-   type(block_data_real8_2d), allocatable :: forcn_LB (:)  ! forcing data at lower bondary
-   type(block_data_real8_2d), allocatable :: forcn_UB (:)  ! forcing data at upper bondary
+   type(block_data_real8_2d), allocatable :: forcn_LB (:)  ! forcing data at lower boundary
+   type(block_data_real8_2d), allocatable :: forcn_UB (:)  ! forcing data at upper boundary
 
    PUBLIC :: forcing_init
    PUBLIC :: read_forcing
@@ -125,9 +125,9 @@ CONTAINS
    character(len=*), intent(in) :: dir_forcing
    real(r8),         intent(in) :: deltatime  ! model time step
    type(timestamp),  intent(in) :: ststamp
-   integer, intent(in) :: lc_year    ! which year of land cover data used
+   integer,          intent(in) :: lc_year    ! which year of land cover data used
    type(timestamp),  intent(in), optional :: etstamp
-   logical,          intent(in), optional :: lulcc_call   ! whether it is a lulcc CALL
+   logical,          intent(in), optional :: lulcc_call ! whether it is a lulcc CALL
 
    ! Local variables
    integer            :: idate(3)
@@ -446,7 +446,7 @@ CONTAINS
                write(6, *) "the data required is out of range! STOP!"; CALL CoLM_stop()
             ENDIF
 
-            ! calcualte distance to lower/upper boundary
+            ! calculate distance to lower/upper boundary
             dtLB = mtstamp - tstamp_LB(ivar)
             dtUB = tstamp_UB(ivar) - mtstamp
 
@@ -487,8 +487,8 @@ CONTAINS
                         calday = calendarday(mtstamp)
                         cosz = orb_coszen(calday, gforc%rlon(ilon), gforc%rlat(ilat))
                         cosz = max(0.001, cosz)
-                        ! 10/24/2024, yuan: deal with time log with backward or foreward
-                        IF (trim(timelog(ivar)) == 'foreward') THEN
+                        ! 10/24/2024, yuan: deal with time log with backward or forward
+                        IF (trim(timelog(ivar)) == 'forward') THEN
                            forcn(ivar)%blk(ib,jb)%val(i,j) = &
                               cosz / avgcos%blk(ib,jb)%val(i,j) * forcn_LB(ivar)%blk(ib,jb)%val(i,j)
                         ELSE
@@ -755,7 +755,7 @@ CONTAINS
                   forc_th_grid(np)%val(ipart) = forc_t_grid(np)%val(ipart) &
                      * (1.e5/forc_pbot_grid(np)%val(ipart)) ** (rair/cpair)
 
-                  ! caculate sun zenith angle and sun azimuth angle and turn to degree
+                  ! calculate sun zenith angle and sun azimuth angle and turn to degree
                   coszen(np) = orb_coszen(calday, patchlonr(np), patchlatr(np))
                   cosazi(np) = orb_cosazi(calday, patchlonr(np), patchlatr(np), coszen(np))
 
@@ -812,7 +812,8 @@ CONTAINS
          IF (p_is_worker) THEN
             DO np = 1, numpatch
                IF ((forc_us(np)==spval).or.(forc_vs(np)==spval)) cycle
-               CALL downscale_wind(forc_us(np), forc_vs(np), slp_type_patches(:,np), asp_type_patches(:,np), area_type_patches(:,np), cur_patches(np))
+               CALL downscale_wind(forc_us(np), forc_vs(np), slp_type_patches(:,np), &
+                        asp_type_patches(:,np), area_type_patches(:,np), cur_patches(np))
             ENDDO
          ENDIF
 
@@ -934,8 +935,8 @@ CONTAINS
    ! ------------------------------------------------------------
    !
    ! !DESCRIPTION:
-   !    read lower and upper boundary forcing data, a major interface of this
-   !    MODULE
+   !    read lower and upper boundary forcing data, a major interface of
+   !    this MODULE
    !
    ! REVISIONS:
    ! Hua Yuan, 04/2014: initial code
@@ -1266,7 +1267,7 @@ CONTAINS
 !    o year alternation
 !    o month alternation
 !    o leap year
-!    o required dada just beyond the first record
+!    o required data just beyond the first record
 !
 ! REVISIONS:
 ! Hua Yuan, 04/2014: initial code
@@ -1314,7 +1315,7 @@ CONTAINS
       ! in the case of one year one file
       IF ( trim(groupby) == 'year' ) THEN
 
-         ! calculate the intitial second
+         ! calculate the initial second
          sec    = 86400*(day-1) + sec
          time_i = floor( (sec-offset(var_i)) *1. / dtime(var_i) ) + 1
          sec    = (time_i-1)*dtime(var_i) + offset(var_i) - 86400*(day-1)
@@ -1337,7 +1338,7 @@ CONTAINS
          ! set record info (year, time_i)
          IF ( sec<0 .or. (sec==0 .and. offset(var_i).NE.0) ) THEN
 
-            ! IF the required dada just behind the first record
+            ! IF the required data just behind the first record
             ! -> set to the first record
             IF ( year==startyr .and. month==startmo .and. day==1 ) THEN
                sec = offset(var_i)
@@ -1357,7 +1358,7 @@ CONTAINS
             ENDIF
          ENDIF ! ENDIF (sec <= 0)
 
-         ! in case of leapyear with a non-leayyear calendar
+         ! in case of leapyear with a non-leapyear calendar
          ! USE the data 1 day before after FEB 28th (Julian day 59).
          IF ( .not. leapyear .and. isleapyear(year) .and. day>59 ) THEN
             day = day - 1
@@ -1427,7 +1428,7 @@ CONTAINS
             ENDIF
          ENDIF
 
-         ! in case of leapyear with a non-leayyear calendar
+         ! in case of leapyear with a non-leapyear calendar
          ! USE the data 1 day before, i.e., FEB 28th.
          IF ( .not. leapyear .and. isleapyear(year) .and. month==2 .and. mday==29 ) THEN
             mday = 28
@@ -1472,7 +1473,7 @@ CONTAINS
             ENDIF
          ENDIF
 
-         ! in case of leapyear with a non-leayyear calendar
+         ! in case of leapyear with a non-leapyear calendar
          ! USE the data 1 day before, i.e., FEB 28th.
          IF ( .not. leapyear .and. isleapyear(year) .and. month==2 .and. mday==29 ) THEN
             mday = 28
@@ -1533,7 +1534,7 @@ CONTAINS
          tstamp_UB(var_i) = tstamp_UB(var_i) + dtime(var_i)
       ENDIF
 
-      ! calcualte initial year, day, and second values
+      ! calculate initial year, day, and second values
       year = tstamp_UB(var_i)%year
       day  = tstamp_UB(var_i)%day
       sec  = tstamp_UB(var_i)%sec
@@ -1552,7 +1553,7 @@ CONTAINS
             ENDIF
          ENDIF
 
-         ! in case of leapyear with a non-leayyear calendar
+         ! in case of leapyear with a non-leapyear calendar
          ! USE the data 1 day before after FEB 28th (Julian day 59).
          IF ( .not. leapyear .and. isleapyear(year) .and. day>59 ) THEN
             day = day - 1
@@ -1592,7 +1593,7 @@ CONTAINS
             ENDIF
          ENDIF
 
-         ! in case of leapyear with a non-leayyear calendar
+         ! in case of leapyear with a non-leapyear calendar
          ! for day 29th Feb, USE the data 1 day before, i.e., 28th FEB.
          IF ( .not. leapyear .and. isleapyear(year) .and. month==2 .and. mday==29 ) THEN
             mday = 28
@@ -1632,7 +1633,7 @@ CONTAINS
             ENDIF
          ENDIF
 
-         ! in case of leapyear with a non-leayyear calendar
+         ! in case of leapyear with a non-leapyear calendar
          ! for day 29th Feb, USE the data 1 day before, i.e., 28th FEB.
          IF ( .not. leapyear .and. isleapyear(year) .and. month==2 .and. mday==29 ) THEN
             mday = 28
@@ -1652,7 +1653,7 @@ CONTAINS
 
 ! ------------------------------------------------------------
 ! !DESCRIPTION:
-! calculate time average coszen value bwteeen [LB, UB]
+! calculate time average coszen value between [LB, UB]
 !
 ! REVISIONS:
 ! 04/2014, yuan: this method is adapted from CLM

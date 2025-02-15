@@ -2,12 +2,12 @@
 
 #ifdef BGC
 MODULE MOD_NitrifData
- !-----------------------------------------------------------------------
- ! !DESCRIPTION:
- ! This module read in nitrif data.
- !
- ! !ORIGINAL:
- ! Lu Xingjie and Zhang Shupeng, 2023, prepare the original version of the nitrif data module.
+!-----------------------------------------------------------------------
+! !DESCRIPTION:
+! This module read in nitrif data.
+!
+! !ORIGINAL:
+! Lu Xingjie and Zhang Shupeng, 2023, prepare the original version of the nitrif data module.
 
    USE MOD_Grid
    USE MOD_SpatialMapping
@@ -23,7 +23,7 @@ CONTAINS
    SUBROUTINE init_nitrif_data (idate)
 
    !----------------------
-   ! DESCTIPTION:
+   ! DESCRIPTION:
    ! open nitrif netcdf file from DEF_dir_runtime, read latitude and longitude info.
    ! Initialize nitrif data read in.
 

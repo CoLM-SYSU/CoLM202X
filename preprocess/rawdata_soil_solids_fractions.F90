@@ -172,7 +172,7 @@ IMPLICIT NONE
 
       real(r8) silt
       integer, parameter :: PNUM=12  ! number of polygons(texture classes)
-      logical c(PNUM)   ! indicate wheather a soil is in an class
+      logical c(PNUM)   ! indicate whether a soil is in an class
       integer i
 
       vf_quartz_s = 0.0
@@ -216,17 +216,17 @@ IMPLICIT NONE
    integer, parameter :: PONUM(PNUM)=(/5,3,4,6,4,5,5,8,7,4,4,3/) ! number of points in a polygon (texture class)
    real(r8), intent(in) :: x       ! x(silt) of a soil
    real(r8), intent(in) :: y       ! y(clay) of a soil
-   logical, intent(out) :: c(PNUM) ! indicate wheather a soil is in an class
+   logical, intent(out) :: c(PNUM) ! indicate whether a soil is in an class
 
    integer i,j
    real(r8) :: xpos(TNUM)          ! x(silt) coordinates of the  points in the triangle
    real(r8) :: ypos(TNUM)          ! y(clay) coordinates of the  points in the triangle
-   integer :: points(PNUM,8)       ! sequence number of the points in a poygon (texture class)
+   integer :: points(PNUM,8)       ! sequence number of the points in a polygon (texture class)
                                    ! 8 is the maximun number of the points
    character(len=15) :: tnames(PNUM)  ! name of a texture class
    integer :: tcodes(PNUM)         ! code of a texture class, may be change accordingly
-   real(r8) :: xpol(8)             ! x(silt) coordinates of the  points in a poygon
-   real(r8) :: ypol(8)             ! y(clay) coordinates of the  points in a poygon
+   real(r8) :: xpol(8)             ! x(silt) coordinates of the  points in a polygon
+   real(r8) :: ypol(8)             ! y(clay) coordinates of the  points in a polygon
 
    xpos = (/ 0.0,  40.0,   0.0,  20.0,  15.0,  40.0,  60.0,   0.0,  27.5,  27.5,  50.0,  52.5,&
             72.5,   0.0,   0.0,  40.0,  50.0,  80.0,  87.5,  15.0,  30.0,  50.0,  80.0,   0.0,&
@@ -294,7 +294,7 @@ IMPLICIT NONE
    integer, intent(in) :: ponum ! number of points in a polygon
    real(r8), intent(in) :: xp, yp   ! x, y of a point
    real(r8), intent(in) :: xpol(ponum), ypol(ponum)
-   logical, intent(out) :: c    ! indicate wheather a soil is in an class
+   logical, intent(out) :: c    ! indicate whether a soil is in an class
 
    integer i, i1   ! point index; i1 = i-1 mod n
    real(r8) x      ! x intersection of e with ray
@@ -345,7 +345,7 @@ IMPLICIT NONE
     else if( mod(Rcross,2) .NE. mod(Lcross, 2) )then
        c = .true.
        c2 = 'e'
-    ! q inside iff an odd number of crossings.
+    ! q inside if an odd number of crossings.
     else if( mod(Rcross,2) == 1 )then
        c = .true.
        c2 = 'i'

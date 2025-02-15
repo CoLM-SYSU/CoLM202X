@@ -59,7 +59,7 @@ CONTAINS
 
    ! !ARGUMENTS:
    !
-   real(r8),intent(in)     ::  dtime            !seconds in a time step [second]
+   real(r8),intent(in)     ::  dtime            !  seconds in a time step [second]
    integer, intent(in)     ::  snl              !  number of snow layers
 
    logical,  intent(in)    ::  do_capsnow       !  true => do snow capping
@@ -102,7 +102,7 @@ CONTAINS
          IF (.not. use_extrasnowlayers) THEN
             ! Correct the top layer aerosol mass to account for snow capping.
             ! This approach conserves the aerosol mass concentration
-            ! (but not the aerosol amss) when snow-capping is invoked
+            ! (but not the aerosol mass) when snow-capping is invoked
 
             IF (j == snl+1) THEN
                IF (do_capsnow) THEN
@@ -171,13 +171,13 @@ CONTAINS
                              mss_dst1   ,mss_dst2   ,mss_dst3   ,mss_dst4   )
    !
    ! !DESCRIPTION:
-   ! Compute aerosol fluxes through snowpack and aerosol deposition fluxes into top layere
+   ! Compute aerosol fluxes through snowpack and aerosol deposition fluxes into top layer
    !
    IMPLICIT NONE
    !
    !-----------------------------------------------------------------------
    ! !ARGUMENTS:
-   real(r8),intent(in)  :: dtime           !seconds in a time step [second]
+   real(r8),intent(in)  :: dtime           ! seconds in a time step [second]
    integer, intent(in)  :: snl             ! number of snow layers
 
    real(r8), intent(in) :: forc_aer (14 )  ! aerosol deposition from atmosphere model (grd,aer) [kg m-1 s-1]

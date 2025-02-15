@@ -121,7 +121,7 @@ IMPLICIT NONE
       k_gravels_wet = 2.875    ! Cote and Konrad(2005), Thermal conductivity of base-course materials,
                                ! mean value of Table 3
 
-! The thermal conductivty of non-quartz soil minerals
+! The thermal conductivity of non-quartz soil minerals
       if(vf_quartz_mineral_s > 0.2)then ! non-quartz soil minerals
          k_minerals_o = 2.0
       else ! coarse-grained soil with low quartz contents
