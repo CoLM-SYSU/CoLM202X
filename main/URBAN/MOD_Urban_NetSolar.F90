@@ -32,11 +32,11 @@ CONTAINS
    USE MOD_TimeManager, only: isgreenwich
    IMPLICIT NONE
 
-! Dummy argument
+!-------------------------- Dummy Arguments ----------------------------
    integer,  intent(in) :: ipatch   ! patch index
    integer,  intent(in) :: idate(3) ! model time
 
-   real(r8), intent(in) :: dlon     ! logitude in radians
+   real(r8), intent(in) :: dlon     ! longitude in radians
    real(r8), intent(in) :: deltim   ! seconds in a time step [second]
 
    real(r8), intent(in) :: &
@@ -90,9 +90,11 @@ CONTAINS
         srndln,   &! reflected direct beam nir solar radiation at local noon(W/m2)
         srniln     ! reflected diffuse beam nir solar radiation at local noon(W/m2)
 
-! ----------------local variables ---------------------------------
+!-------------------------- Local Variables ----------------------------
    integer  :: local_secs
    real(r8) :: radpsec
+
+!-----------------------------------------------------------------------
 
       sabroof = 0.
       sabwsun = 0.
@@ -179,3 +181,4 @@ CONTAINS
    END SUBROUTINE netsolar_urban
 
 END MODULE MOD_Urban_NetSolar
+! ---------- EOP ------------

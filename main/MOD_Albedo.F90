@@ -44,32 +44,34 @@ CONTAINS
 !     soil color and moisture in the surface soil layer
 ! (2) snow albedos: as in BATS formulations, which are inferred from
 !     the calculations of Wiscombe and Warren (1980) and the snow model
-!     and data of Anderson(1976), and the function of snow age, grain size,
-!     solar zenith angle, pollution, the amount of the fresh snow
+!     and data of Anderson(1976), and the function of snow age, grain
+!     size, solar zenith angle, pollution, the amount of the fresh snow
 ! (3) canopy albedo: two-stream approximation model
-! (4) glacier albedos: as in BATS, which are set to constants (0.8 for visible beam,
-!     0.55 for near-infrared)
-! (5) lake and wetland albedos: as in BATS, which depend on cosine solar zenith angle,
-!     based on data in Henderson-Sellers (1986). The frozen lake and wetland albedos
-!     are set to constants (0.6 for visible beam, 0.4 for near-infrared)
-! (6) over the snow covered tile, the surface albedo is estimated by a linear
-!     combination of albedos for snow, canopy and bare soil (or lake, wetland, glacier).
+! (4) glacier albedos: as in BATS, which are set to constants (0.8 for
+!     visible beam, 0.55 for near-infrared)
+! (5) lake and wetland albedos: as in BATS, which depend on cosine solar
+!     zenith angle, based on data in Henderson-Sellers (1986). The
+!     frozen lake and wetland albedos are set to constants (0.6 for
+!     visible beam, 0.4 for near-infrared)
+! (6) over the snow covered tile, the surface albedo is estimated by a
+!     linear combination of albedos for snow, canopy and bare soil (or
+!     lake, wetland, glacier).
 !
 ! Original author : Yongjiu Dai, 09/15/1999; 08/30/2002, 03/2014
 !
 ! !REVISIONS:
-! 12/2019, Hua Yuan: added a wrap FUNCTION for PFT calculation, details see
-!          twostream_wrap() added a wrap FUNCTION for PC (3D) calculation,
-!          details see ThreeDCanopy_wrap()
+! 12/2019, Hua Yuan: added a wrap FUNCTION for PFT calculation, details
+!          see twostream_wrap() added a wrap FUNCTION for PC (3D)
+!          calculation, details see ThreeDCanopy_wrap()
 !
 ! 03/2020, Hua Yuan: added an improved two-stream model, details see
 !          twostream_mod()
 !
-! 08/2020, Hua Yuan: account for stem optical property effects in twostream
-!          model
+! 08/2020, Hua Yuan: account for stem optical property effects in
+!          twostream model
 !
-! 01/2023, Hua Yuan: CALL SNICAR model to calculate snow albedo&absorption,
-!          added SNICAR related variables
+! 01/2023, Hua Yuan: CALL SNICAR model to calculate snow
+!          albedo&absorption, added SNICAR related variables
 !
 ! 04/2024, Hua Yuan: add option to account for vegetation snow process
 !
@@ -93,12 +95,12 @@ CONTAINS
 
    IMPLICIT NONE
 
-!------------------------- Dummy Arguments -----------------------------
+!-------------------------- Dummy Arguments ----------------------------
 ! ground cover index
    integer, intent(in) :: &
         ipatch,        &! patch index
         patchtype       ! land patch type (0=soil, 1=urban or built-up, 2=wetland,
-                        ! 3=land ice, 4=deep lake)
+                        ! 3=land ice, 4=water body)
    integer, intent(in) :: &
         snl             ! number of snow layers
 
@@ -161,11 +163,11 @@ CONTAINS
         ssno(2,2),     &! ground snow absorption [-]
         ssno_lyr(2,2,maxsnl+1:1) ! ground snow layer absorption, by SNICAR [-]
 
-!-------------------------- Local variables ----------------------------
+!-------------------------- Local Variables ----------------------------
 
    real(r8) :: &!
       age,             &! factor to reduce visible snow alb due to snow age [-]
-      albg0,           &! temporary varaiable [-]
+      albg0,           &! temporary variable [-]
       albsoi(2,2),     &! soil albedo [-]
       albsno(2,2),     &! snow albedo [-]
       albsno_pur(2,2), &! snow albedo [-]
@@ -283,7 +285,7 @@ IF (DEF_USE_SNICAR) THEN
 ! ----------------------------------------------------------------------
 ! Snow aging routine based on Flanner and Zender (2006), Linking snowpack
 ! microphysics and albedo evolution, JGR, and Brun (1989), Investigation of
-! wet-snow metamorphism in respect of liquid-water content, Ann. Glaciol.
+! wet-snow metamorphism in respect of liquid-water content, Ann. Glacial.
 
       CALL SnowAge_grain(   deltim ,snl    ,dz_soisno(:1)  ,&
            pg_snow         ,snwcp_ice      ,snofrz         ,&
@@ -343,7 +345,7 @@ ENDIF
          IF (.not. DEF_USE_SNICAR) THEN
             cons = 0.2
             conn = 0.5
-            sl   = 2.0               !sl helps control albedo zenith dependence
+            sl   = 2.0    !sl helps control albedo zenith dependence
 
             ! 05/02/2023, Dai: move from CoLMMAIN.F90
             ! update the snow age
@@ -448,7 +450,7 @@ ENDIF
 #endif
       ENDIF
 
-      ! treat soil/snow albedo in direct and diffuse respectively
+      ! treat soil/snow absorption in direct and diffuse respectively
       ssoi(1,1) = tran(1,1)*(1.-albsoi(1,2)) + tran(1,3)*(1-albsoi(1,1))
       ssoi(2,1) = tran(2,1)*(1.-albsoi(2,2)) + tran(2,3)*(1-albsoi(2,1))
       ssoi(1,2) = tran(1,2)*(1.-albsoi(1,2))
@@ -480,7 +482,7 @@ ENDIF
    USE MOD_Namelist, only: DEF_VEG_SNOW
    IMPLICIT NONE
 
-! parameters
+!-------------------------- Dummy Arguments ----------------------------
    real(r8), intent(in) :: &
           ! static parameters associated with vegetation type
             chil,          &! leaf angle distribution factor
@@ -509,7 +511,7 @@ ENDIF
             ssha(2,2)       ! shaded canopy absorption for solar radiation,
                             ! normalized by the incident flux
 
-!-------------------------- local -----------------------------------
+!-------------------------- Local Variables ----------------------------
    real(r8) :: &
             lsai,          &! lai+sai
             sai_,          &! sai=0 for USGS, no stem
@@ -574,7 +576,7 @@ ENDIF
    integer iw               ! band iterator
 
 !-----------------------------------------------------------------------
-! projected area of phytoelements in direction of mu and
+! projected area of photo elements in direction of mu and
 ! average inverse diffuse optical depth per unit leaf area
 
       phi1  = 0.5 - 0.633 * chil - 0.33 * chil * chil
@@ -595,7 +597,7 @@ ENDIF
       zmu2 = zmu * zmu
 
 #if(defined LULC_USGS)
-      ! yuan: to be consistance with CoLM2014, no stem considered
+      ! yuan: to be consistent with CoLM2014, no stem considered
       ! for twostream and leaf optical property calculations
       sai_ = 0.
 #else
@@ -814,7 +816,7 @@ ENDIF
    USE MOD_Namelist, only: DEF_VEG_SNOW
    IMPLICIT NONE
 
-! parameters
+!-------------------------- Dummy Arguments ----------------------------
    real(r8), intent(in) :: &
           ! static parameters associated with vegetation type
             chil,          &! leaf angle distribution factor
@@ -829,7 +831,7 @@ ENDIF
 
 ! environmental variables
    real(r8), intent(in) :: &
-            coszen,        &! consine of solar zenith angle
+            coszen,        &! cosine of solar zenith angle
             albg(2,2)       ! albedos of ground
 
 ! output
@@ -843,7 +845,7 @@ ENDIF
             ssha(2,2)       ! shaded canopy absorption for solar radiation,
                             ! normalized by the incident flux
 
-!-------------------------- local -----------------------------------
+!-------------------------- Local Variables ----------------------------
    real(r8) :: &
             lsai,          &! lai+sai
             phi1,          &! (phi-1)
@@ -899,7 +901,7 @@ ENDIF
             edw             ! (integral of i_down*exp(-kx) )
 
    ! vegetation snow optical properties
-   real(r8) :: upscat_sno = 0.5   !upscat parameter for snow
+   real(r8) :: upscat_sno = 0.5   !upscatter parameter for snow
    real(r8) :: beta0_sno  = 0.5   !beta0 parameter for snow
    real(r8) :: scat_sno(2)        !snow single scattering albedo
    data scat_sno(1), scat_sno(2) /0.8, 0.4/   ! 1:vis, 2: nir
@@ -913,7 +915,7 @@ ENDIF
    real(r8) :: s2d, extkbd, sall(2,2), q, ssun_rev
 
 !-----------------------------------------------------------------------
-! projected area of phytoelements in direction of mu and
+! projected area of photo elements in direction of mu and
 ! average inverse diffuse optical depth per unit leaf area
 
       phi1  = 0.5 - 0.633 * chil - 0.33 * chil * chil
@@ -1189,33 +1191,36 @@ ENDIF
 ! Created by Hua Yuan, 03/2020
 !
 !-----------------------------------------------------------------------
-      USE MOD_Precision
-      USE MOD_LandPFT
-      USE MOD_Const_PFT
-      USE MOD_Vars_PFTimeInvariants
-      USE MOD_Vars_PFTimeVariables
-      IMPLICIT NONE
+   USE MOD_Precision
+   USE MOD_LandPFT
+   USE MOD_Const_PFT
+   USE MOD_Vars_PFTimeInvariants
+   USE MOD_Vars_PFTimeVariables
+   IMPLICIT NONE
 
-      ! parameters
-      integer, intent(in) :: &
-            ipatch          ! patch index
+!-------------------------- Dummy Arguments ----------------------------
+   integer, intent(in) :: &
+         ipatch          ! patch index
 
-      ! environmental variables
-      real(r8), intent(in) ::  &
-            coszen,        &! consine of solar zenith angle
-            albg(2,2)       ! albedos of ground
+   ! environmental variables
+   real(r8), intent(in) ::  &
+         coszen,        &! cosine of solar zenith angle
+         albg(2,2)       ! albedos of ground
 
-      ! output
-      real(r8), intent(out) :: &
-            albv(2,2),     &! albedo, vegetation [-]
-            tran(2,3),     &! canopy transmittances for solar radiation
-            ssun(2,2),     &! sunlit canopy absorption for solar radiation
-            ssha(2,2)       ! shaded canopy absorption for solar radiation,
-                            ! normalized by the incident flux
+   ! output
+   real(r8), intent(out) :: &
+         albv(2,2),     &! albedo, vegetation [-]
+         tran(2,3),     &! canopy transmittances for solar radiation
+         ssun(2,2),     &! sunlit canopy absorption for solar radiation
+         ssha(2,2)       ! shaded canopy absorption for solar radiation,
+                         ! normalized by the incident flux
 
-      integer :: i, p, ps, pe
-      real(r8), allocatable :: tran_p(:,:,:)
-      real(r8), allocatable :: albv_p(:,:,:)
+!-------------------------- Local Variables ----------------------------
+   integer :: i, p, ps, pe
+   real(r8), allocatable :: tran_p(:,:,:)
+   real(r8), allocatable :: albv_p(:,:,:)
+
+!-----------------------------------------------------------------------
 
       ps = patch_pft_s(ipatch)
       pe = patch_pft_e(ipatch)
@@ -1285,7 +1290,7 @@ ENDIF
    USE MOD_Const_Physical, only : tfrz
    IMPLICIT NONE
 
-!-------------------------- Dummy Argument -----------------------------
+!-------------------------- Dummy Arguments ----------------------------
 
    real(r8), intent(in) :: deltim ! seconds in a time step [second]
    real(r8), intent(in) :: tg     ! temperature of soil at surface [K]
@@ -1293,7 +1298,7 @@ ENDIF
    real(r8), intent(in) :: scvold ! snow cover for previous time step [mm]
    real(r8), intent(inout) :: sag ! non dimensional snow age [-]
 
-!-------------------------- Local variables ----------------------------
+!-------------------------- Local Variables ----------------------------
 
    real(r8) :: age1   ! snow aging factor due to crystal growth [-]
    real(r8) :: age2   ! snow aging factor due to surface growth [-]
@@ -1308,12 +1313,12 @@ ENDIF
       IF(scv <= 0.) THEN
          sag = 0.
 !
-! Over antarctica
+! Over Antarctica
 !
       ELSE IF (scv > 800.) THEN
          sag = 0.
 !
-! Away from antarctica
+! Away from Antarctica
 !
       ELSE
          age3  = 0.3
@@ -1377,7 +1382,7 @@ ENDIF
    IMPLICIT NONE
 
 !-------------------------------------------------------------------------
-! temporay setting
+! temporary setting
 
    integer, parameter :: numrad  = 2            !  number of solar radiation bands: vis, nir
    integer, parameter :: sno_nbr_aer = 8        !  number of aerosol species in snowpack
@@ -1977,13 +1982,13 @@ ENDIF
 ! Approximation for Solar Radiation in the NCAR Community Climate Model,
 ! Journal of Geophysical Research, Vol 97, D7, pp7603-7612).
 !
-! yongjiu dai and xin-zhong liang (08/01/2001)
+! Yongjiu Dai and Xin-Zhong Liang (08/01/2001)
 !-----------------------------------------------------------------------
 
    USE MOD_Precision
    IMPLICIT NONE
 
-!------------------------------Arguments--------------------------------
+!-------------------------- Dummy Arguments ----------------------------
 
    real(r8), intent(in) :: oro       ! /ocean(0)/seaice(2) flag
    real(r8), intent(in) :: scv       ! snow water equivalent) [mm]
@@ -1992,7 +1997,7 @@ ENDIF
    real(r8), intent(out) :: alb(2,2) ! srf alb for direct (diffuse) rad 0.2-0.7 micro-ms
                                      ! Srf alb for direct (diffuse) rad 0.7-5.0 micro-ms
 
-!---------------------------Local variables-----------------------------
+!-------------------------- Local Variables ----------------------------
 
    real(r8) frsnow       ! horizontal fraction of snow cover
    real(r8) snwhgt       ! physical snow height

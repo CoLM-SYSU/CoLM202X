@@ -35,12 +35,13 @@ CONTAINS
 ! Original author: Yongjiu Dai, September 15, 1999
 ! Revision: Yongjiu Dai, /07/31/2023
 !
-! Four of metamorphisms of changing snow characteristics are implemented,
-! i.e., destructive, overburden, melt and wind drift. The treatments of the destructive compaction
-! was from SNTHERM.89 and SNTHERM.99 (1991, 1999). The contribution due to
-! melt metamorphism is simply taken as a ratio of snow ice fraction after
-! the melting versus before the melting. The treatments of the overburden comaction and the drifing compaction
-! were borrowed from CLM5.0 which based on Vionnet et al. (2012) and van Kampenhout et al (2017).
+! Four of metamorphisms of changing snow characteristics are implemented, i.e.,
+! destructive, overburden, melt and wind drift. The treatments of the
+! destructive compaction was from SNTHERM.89 and SNTHERM.99 (1991, 1999). The
+! contribution due to melt metamorphism is simply taken as a ratio of snow ice
+! fraction after the melting versus before the melting. The treatments of the
+! overburden compaction and the drifting compaction were borrowed from CLM5.0
+! which based on Vionnet et al. (2012) and van Kampenhout et al (2017).
 !
 !=======================================================================
 
@@ -48,12 +49,13 @@ CONTAINS
    USE MOD_Const_Physical, only : denice, denh2o, tfrz
    IMPLICIT NONE
 
-!-------------------------- Dummy argument -----------------------------
+!-------------------------- Dummy Arguments ----------------------------
 
-   integer, intent(in) :: lb           ! lower bound of array
+   integer,  intent(in) :: lb          ! lower bound of array
    real(r8), intent(in) :: deltim      ! seconds i a time step [second]
-   integer, intent(in) :: imelt(lb:0)  ! signifies IF node in melting (imelt = 1)
-   real(r8), intent(in) :: fiold(lb:0) ! fraction of ice relative to the total water content at the previous time step
+   integer,  intent(in) :: imelt(lb:0) ! signifies IF node in melting (imelt = 1)
+   real(r8), intent(in) :: fiold(lb:0) ! fraction of ice relative to the total water content
+                                       ! at the previous time step
    real(r8), intent(in) :: t_soisno(lb:0)    ! nodal temperature [K]
    real(r8), intent(in) :: wice_soisno(lb:0) ! ice lens [kg/m2]
    real(r8), intent(in) :: wliq_soisno(lb:0) ! liquid water [kg/m2]
@@ -62,7 +64,7 @@ CONTAINS
 
    real(r8), intent(inout) :: dz_soisno(lb:0) ! layer thickness [m]
 
-!----------------------- local variables ------------------------------
+!-------------------------- Local Variables ----------------------------
    integer j  ! Numeber of doing loop
 
    real(r8), parameter ::  c1 = 2.777e-7  ! [m2/(kg s)]
@@ -95,7 +97,7 @@ CONTAINS
                        ! (only valid IF wind_dependent_snow_density is .true.)
    real(r8) :: f1, f2, eta, forc_wind
 
-!=======================================================================
+!-----------------------------------------------------------------------
       ! Begin calculation - note that the following column loops are only invoked IF lb < 0
 
       burden = 0.0
@@ -166,17 +168,21 @@ CONTAINS
 
 
 
-   !-----------------------------------------------------------------------
    SUBROUTINE winddriftcompaction(bi,forc_wind,dz,zpseudo,mobile,compaction_rate)
 
-! Compute wind drift compaction for a single column and level.
-! Also updates zpseudo and mobile for this column. However, zpseudo remains unchanged
-! IF mobile is already false or becomes false within this SUBROUTINE.
+!=======================================================================
+! Original author: Yongjiu Dai, September 15, 1999
+! Revision: Yongjiu Dai, /07/31/2023
 !
-! The structure of the updates done here for zpseudo and mobile requires that this
-! SUBROUTINE be called first for the top layer of snow, THEN for the 2nd layer down,
-! etc. - and finally for the bottom layer. Before beginning the loops over layers,
-! mobile should be initialized to .true. and zpseudo should be initialized to 0.
+! Compute wind drift compaction for a single column and level.  Also updates
+! zpseudo and mobile for this column. However, zpseudo remains unchanged IF
+! mobile is already false or becomes false within this SUBROUTINE.
+!
+! The structure of the updates done here for zpseudo and mobile requires that
+! this SUBROUTINE be called first for the top layer of snow, THEN for the 2nd
+! layer down, etc. - and finally for the bottom layer. Before beginning the
+! loops over layers, mobile should be initialized to .true. and zpseudo should
+! be initialized to 0.
 !
 ! !USES:
    USE MOD_Precision
@@ -251,13 +257,13 @@ CONTAINS
    USE MOD_Precision
    IMPLICIT NONE
 
-!-------------------------- Dummy argument -----------------------------
+!-------------------------- Dummy Arguments ----------------------------
    integer, intent(in) :: lb               ! lower bound of array
 
 ! numbering from 1 (bottom) mss (surface)
    real(r8), intent(inout) :: wice_soisno(lb:1)   ! ice lens [kg/m2]
    real(r8), intent(inout) :: wliq_soisno(lb:1)   ! liquid water {kg/m2]
-   real(r8), intent(inout) :: t_soisno (lb:1)     ! nodel temperature [K]
+   real(r8), intent(inout) :: t_soisno (lb:1)     ! node temperature [K]
    real(r8), intent(inout) :: dz_soisno  (lb:1)   ! layer thickness [m]
    real(r8), intent(inout) :: z_soisno   (lb:1)   ! node depth [m]
    real(r8), intent(inout) :: zi_soisno  (lb-1:1) ! depth of layer interface [m]
@@ -265,7 +271,7 @@ CONTAINS
    real(r8), intent(inout) :: scv          ! snow mass - water equivalent [kg/m2]
    integer, intent(inout) :: snl           ! Number of snow
 
-!----------------------- Local variables ------------------------------
+!-------------------------- Local Variables ----------------------------
    real(r8) :: drr           ! thickness of the combined [m]
    real(r8) :: dzmin(5)      ! minimum of snow layer 1 (top) to msn0 (bottom)
    real(r8) :: zwice         ! total ice mass in snow
@@ -391,7 +397,7 @@ CONTAINS
 
                   IF(snl >= -1) EXIT
 
-! The layer thickness great than the prescibed minimum value
+! The layer thickness great than the prescribed minimum value
 
                ELSE
                   mssi = mssi + 1
@@ -425,18 +431,18 @@ CONTAINS
    USE MOD_Precision
    IMPLICIT NONE
 
-!-------------------------- Dummy argument -----------------------------
+!-------------------------- Dummy Arguments ----------------------------
 
     integer, intent(in) :: lb              ! lower bound of array
     integer, intent(inout) :: snl          ! Number of snow
    real(r8), intent(inout) :: wice_soisno(lb:0)   ! ice lens [kg/m2]
    real(r8), intent(inout) :: wliq_soisno(lb:0)   ! liquid water [kg/m2]
-   real(r8), intent(inout) :: t_soisno   (lb:0)   ! Nodel temperature [K]
+   real(r8), intent(inout) :: t_soisno   (lb:0)   ! Node temperature [K]
    real(r8), intent(inout) :: dz_soisno  (lb:0)   ! Layer thickness [m]
    real(r8), intent(inout) :: z_soisno   (lb:0)   ! Node depth [m]
    real(r8), intent(inout) :: zi_soisno  (lb-1:0) ! Depth of layer interface [m]
 
-!----------------------- Local variables ------------------------------
+!-------------------------- Local Variables ----------------------------
 
 ! numbering from 1 (surface) msno (bottom)
    real(r8) :: drr      ! thickness of the combined [m]
@@ -524,7 +530,7 @@ CONTAINS
          CALL combo(dzsno(3),swliq(3),swice(3),tsno(3), &
                     drr,     zwliq,   zwice,   tsno(2))
 
-!        write(6,*)'Subdivided 50 mm from the subsface layer &
+!        write(6,*)'Subdivided 50 mm from the subsurface layer &
 !                   &and combined into underlying neighbor'
 
          IF(msno <= 3 .and. dzsno(3) > 0.18)THEN
@@ -631,7 +637,7 @@ CONTAINS
    USE MOD_Const_Physical, only : cpice, cpliq, hfus, tfrz
    IMPLICIT NONE
 
-!-------------------------- Dummy argument -----------------------------
+!-------------------------- Dummy Arguments ----------------------------
 
    real(r8), intent(in) :: dz2     ! nodal thickness of 2 elements being combined [m]
    real(r8), intent(in) :: wliq2   ! liquid water of element 2 [kg/m2]
@@ -641,9 +647,9 @@ CONTAINS
    real(r8), intent(inout) :: dz_soisno   ! nodal thickness of 1 elements being combined [m]
    real(r8), intent(inout) :: wliq_soisno ! liquid water of element 1
    real(r8), intent(inout) :: wice_soisno ! ice of element 1 [kg/m2]
-   real(r8), intent(inout) :: t    ! nodel temperature of elment 1 [K]
+   real(r8), intent(inout) :: t    ! node temperature of elment 1 [K]
 
-!----------------------- Local variables ------------------------------
+!-------------------------- Local Variables ----------------------------
 
    real(r8) dzc    ! Total thickness of nodes 1 and 2 (dzc=dz_soisno+dz2).
    real(r8) wliqc  ! Combined liquid water [kg/m2]
@@ -701,13 +707,13 @@ CONTAINS
 
    IMPLICIT NONE
 
-!-------------------------- Dummy argument -----------------------------
+!-------------------------- Dummy Arguments ----------------------------
    integer, intent(in) :: lb               ! lower bound of array
 
 ! numbering from 1 (bottom) mss (surface)
    real(r8), intent(inout) :: wice_soisno(lb:1)   ! ice lens [kg/m2]
    real(r8), intent(inout) :: wliq_soisno(lb:1)   ! liquid water {kg/m2]
-   real(r8), intent(inout) :: t_soisno   (lb:1)   ! nodel temperature [K]
+   real(r8), intent(inout) :: t_soisno   (lb:1)   ! node temperature [K]
    real(r8), intent(inout) :: dz_soisno  (lb:1)   ! layer thickness [m]
    real(r8), intent(inout) :: z_soisno   (lb:1)   ! node depth [m]
    real(r8), intent(inout) :: zi_soisno  (lb-1:1) ! depth of layer interface [m]
@@ -727,7 +733,7 @@ CONTAINS
         mss_dst4  (lb:0)   ! mass of dust species 4 in snow  (col,lyr) [kg]
 ! Aerosol Fluxes (Jan. 07, 2023)
 
-!----------------------- Local variables ------------------------------
+!-------------------------- Local Variables ----------------------------
    real(r8) :: drr          ! thickness of the combined [m]
    real(r8) :: dzmin(5)     ! minimum of snow layer 1 (top) to msn0 (bottom)
    real(r8) :: zwice        ! total ice mass in snow
@@ -924,7 +930,7 @@ CONTAINS
 
                   IF(snl >= -1) EXIT
 
-! The layer thickness great than the prescibed minimum value
+! The layer thickness great than the prescribed minimum value
 
                ELSE
                   mssi = mssi + 1
@@ -967,13 +973,13 @@ CONTAINS
 
    IMPLICIT NONE
 
-!-------------------------- Dummy argument -----------------------------
+!-------------------------- Dummy Arguments ----------------------------
 
     integer, intent(in) :: lb       ! lower bound of array
     integer, intent(inout) :: snl   ! Number of snow
    real(r8), intent(inout) :: wice_soisno(lb:0)   ! ice lens [kg/m2]
    real(r8), intent(inout) :: wliq_soisno(lb:0)   ! liquid water [kg/m2]
-   real(r8), intent(inout) :: t_soisno   (lb:0)   ! Nodel temperature [K]
+   real(r8), intent(inout) :: t_soisno   (lb:0)   ! Node temperature [K]
    real(r8), intent(inout) :: dz_soisno  (lb:0)   ! Layer thickness [m]
    real(r8), intent(inout) :: z_soisno   (lb:0)   ! Node depth [m]
    real(r8), intent(inout) :: zi_soisno  (lb-1:0) ! Depth of layer interface [m]
@@ -990,14 +996,14 @@ CONTAINS
         mss_dst4  (lb:0)   ! mass of dust species 4 in snow  (col,lyr) [kg]
 ! Aerosol Fluxes (Jan. 07, 2023)
 
-!----------------------- Local variables ------------------------------
+!-------------------------- Local Variables ----------------------------
 
 ! numbering from 1 (surface) msno (bottom)
    real(r8) :: drr      ! thickness of the combined [m]
    real(r8) :: dzsno(5) ! Snow layer thickness [m]
    real(r8) :: swice(5) ! Partial volume of ice [m3/m3]
    real(r8) :: swliq(5) ! Partial volume of liquid water [m3/m3]
-   real(r8) :: tsno(5)  ! Nodel temperature [K]
+   real(r8) :: tsno(5)  ! Node temperature [K]
 
    integer k            ! number of DO looping
    integer msno         ! number of snow layer 1 (top) to msno (bottom)
@@ -1132,7 +1138,7 @@ CONTAINS
             mss_aerosol(3,:) = z_mss_aerosol(:) + mss_aerosol(3,:)
 !Aerosol Fluxes (January 07, 2023)
 
-!           write(6,*)'Subdivided 50 mm from the subsface layer &
+!           write(6,*)'Subdivided 50 mm from the subsurface layer &
 !                      &and combined into underlying neighbor'
 
             IF(msno <= 3 .and. dzsno(3) > 0.18)THEN
@@ -1270,7 +1276,6 @@ CONTAINS
       ENDDO
 
    END SUBROUTINE SnowLayersDivide_snicar
-!-----------------------------------------------------------------------
-
 
 END MODULE MOD_SnowLayersCombineDivide
+! ---------- EOP ------------

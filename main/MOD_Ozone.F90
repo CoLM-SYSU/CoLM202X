@@ -2,16 +2,17 @@
 
 Module MOD_Ozone
 
- !-----------------------------------------------------------------------
- ! !DESCRIPTION:
- ! This module hold the plant physiological response to the ozone, including vcmax response and stomata response.
- ! Ozone concentration can be either readin through Mod_OzoneData module or set to constant.
- !
- ! !ORIGINAL:
- ! The Community Land Model version 5.0 (CLM5.0)
- !
- ! !REVISION:
- ! Xingjie Lu 2022, revised the CLM5 code to be compatible with CoLM code structure.
+!-----------------------------------------------------------------------
+! !DESCRIPTION:
+!  This module hold the plant physiological response to the ozone,
+!  including vcmax response and stomata response.  Ozone concentration
+!  can be either readin through Mod_OzoneData module or set to constant.
+!
+! !ORIGINAL:
+!  The Community Land Model version 5.0 (CLM5.0)
+!
+! !REVISION:
+!  Xingjie Lu 2022, revised the CLM5 code to be compatible with CoLM code structure.
 
 
 
@@ -185,7 +186,7 @@ CONTAINS
    SUBROUTINE init_ozone_data (idate)
 
    !----------------------
-   ! DESCTIPTION:
+   ! DESCRIPTION:
    ! open ozone netcdf file from DEF_dir_rawdata, read latitude and longitude info.
    ! Initialize Ozone data read in.
 
@@ -237,7 +238,7 @@ CONTAINS
    SUBROUTINE update_ozone_data (time, deltim)
 
    !----------------------
-   ! DESCTIPTION:
+   ! DESCRIPTION:
    ! read ozone data during simulation
 
    USE MOD_TimeManager
@@ -289,3 +290,4 @@ CONTAINS
    END SUBROUTINE update_ozone_data
 
 END MODULE MOD_Ozone
+! ---------- EOP ------------

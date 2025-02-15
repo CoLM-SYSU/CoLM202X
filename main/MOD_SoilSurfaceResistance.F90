@@ -3,7 +3,8 @@
 MODULE MOD_SoilSurfaceResistance
 ! -----------------------------------------------------------------------
 ! !DESCRIPTION:
-! Calculate the soil surface resistance with multiple parameterization schemes
+! Calculate the soil surface resistance with multiple parameterization
+! schemes
 !
 ! Created by Zhuo Liu and Hua Yuan, 06/2023
 !
@@ -47,15 +48,15 @@ CONTAINS
 
 !=======================================================================
 ! !DESCRIPTION:
-! Main SUBROUTINE to CALL soil resistance model
-! - Options for soil surface resistance schemes
+!  Main SUBROUTINE to CALL soil resistance model
+!  - Options for soil surface resistance schemes
 !    1: SL14, Swenson and Lawrence (2014)
 !    2: SZ09, Sakaguchi and Zeng (2009)
 !    3: TR13, Tang and Riley (2013)
 !    4: LP92, Lee and Pielke (1992)
 !    5: S92,  Sellers et al (1992)
 !
-! NOTE: Support for both Campbell and VG soil parameters.
+!  NOTE: Support for both Campbell and VG soil parameters.
 !=======================================================================
 
    USE MOD_Precision
@@ -64,9 +65,7 @@ CONTAINS
    USE MOD_Hydro_SoilFunction
    IMPLICIT NONE
 
-
-!-----------------------Argument-----------------------------------------
-
+!-------------------------- Dummy Arguments ----------------------------
    integer, intent(in) :: &
         nl_soil                       ! upper bound of array
 
@@ -76,7 +75,7 @@ CONTAINS
         porsl       (1:nl_soil),     &! soil porosity [-]
         psi0        (1:nl_soil),     &! saturated soil suction [mm] (NEGATIVE)
 #ifdef Campbell_SOIL_MODEL
-        bsw         (1:nl_soil),     &! clapp and hornbereger "b" parameter [-]
+        bsw         (1:nl_soil),     &! clapp and hornberger "b" parameter [-]
 #endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
         theta_r     (1:nl_soil),     &! residual moisture content [-]
@@ -96,10 +95,10 @@ CONTAINS
    real(r8), intent(out) :: &
         rss                           ! soil surface resistance [s/m]
 
-!-----------------------Local Variables------------------------------
+!-------------------------- Local Variables ----------------------------
 
    REAL(r8) :: &
-        wx,               &! patitial volume of ice and water of surface layer
+        wx,               &! partial volume of ice and water of surface layer
         vol_liq,          &! water content by volume [m3/m3]
         s_node,           &! vol_liq/porosity
         smp_node,         &! matrix potential [m]
@@ -123,8 +122,7 @@ CONTAINS
         fac_fc,           &! temporal variable for calculating wx/wfc
         B                  ! bunsen solubility coefficient
 
-!-----------------------End Variables list---------------------------
-
+!-----------------------------------------------------------------------
 
       ! calculate the top soil volumetric water content (m3/m3), soil matrix potential
       ! and soil hydraulic conductivity
@@ -225,6 +223,7 @@ CONTAINS
 
       SELECTCASE (DEF_RSS_SCHEME)
 
+!-----------------------------------------------------------------------
       ! calculate rss by SL14
       CASE (1)
          dsl = dz_soisno(1)*max(1.e-6_r8,(0.8*eff_porosity - vol_liq)) &
@@ -237,6 +236,7 @@ CONTAINS
          !fordebug only
          !write(*,*) dsl, dg, aird, vol_liq/porsl(1), eff_porosity, wice_soisno(1),vol_liq, rss
 
+!-----------------------------------------------------------------------
       ! calculate rss by SZ09
       CASE (2)
          dsl = dz_soisno(1)*(exp((1._r8 - vol_liq/porsl(1))**5) - 1._r8)/ (exp(1._r8) - 1._r8)
@@ -245,6 +245,7 @@ CONTAINS
 
          rss = dsl/dg
 
+!-----------------------------------------------------------------------
       ! calculate rss by TR13
       CASE (3)
          ! TR13, Eq. (11) and Eq. (12):
@@ -255,6 +256,7 @@ CONTAINS
          rss_1 = rg_1 + rw_1
          rss   = 1.0/rss_1
 
+!-----------------------------------------------------------------------
       ! LP92 beta scheme
       CASE (4)
          wx  = (max(wliq_soisno(1),1.e-6)/denh2o+wice_soisno(1)/denice)/dz_soisno(1)
@@ -279,6 +281,7 @@ CONTAINS
             rss  = 1._r8
          ENDIF
 
+!-----------------------------------------------------------------------
       ! Sellers, 1992
       CASE (5)
          wx  = (max(wliq_soisno(1),1.e-6)/denh2o+wice_soisno(1)/denice)/dz_soisno(1)
@@ -289,6 +292,7 @@ CONTAINS
                                       !for wet soil according to Noah-MP v5
       ENDSELECT
 
+!-----------------------------------------------------------------------
       ! account for snow fractional cover for rss
       IF (DEF_RSS_SCHEME .ne. 4) THEN
          ! with 1/rss = fsno/rss_snow + (1-fsno)/rss_soil,
@@ -311,3 +315,4 @@ CONTAINS
    END Subroutine SoilSurfaceResistance
 
 END MODULE MOD_SoilSurfaceResistance
+! ---------- EOP ------------

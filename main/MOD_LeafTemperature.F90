@@ -52,8 +52,8 @@ CONTAINS
               lai_old    ,o3uptakesun,o3uptakesha,forc_ozone ,&
 !End ozone stress variables
 !WUE stomata model parameter
-              lambda                                                           ,&
-!End WUE stomata model parmaeter
+              lambda     ,&
+!End WUE stomata model parameter
               hpbl       ,&
               qintr_rain ,qintr_snow ,t_precip   ,hprl       ,dheatl     ,smp        ,&
               hk         ,hksati     ,rootflux                                        )
@@ -62,36 +62,40 @@ CONTAINS
 ! !DESCRIPTION:
 !  Foliage energy conservation is given by foliage energy budget equation
 !                       Rnet - Hf - LEf = 0
-!  The equation is solved by Newton-Raphson iteration, in which this iteration
-!  includes the calculation of the photosynthesis and stomatal resistance, and the
-!  integration of turbulent flux profiles. The sensible and latent heat
-!  transfer between foliage and atmosphere and ground is linked by the equations:
+!  The equation is solved by Newton-Raphson iteration, in which this
+!  iteration includes the calculation of the photosynthesis and stomatal
+!  resistance, and the integration of turbulent flux profiles. The
+!  sensible and latent heat transfer between foliage and atmosphere and
+!  ground is linked by the equations:
 !                       Ha = Hf + Hg and Ea = Ef + Eg
 !
 !  Original author : Yongjiu Dai, August 15, 2001
 !
 ! !REVISIONS:
 !
-!  09/2014, Hua Yuan: imbalanced energy due to T/q adjustment is allocated
-!           to sensible heat flux.
+!  09/2014, Hua Yuan: imbalanced energy due to T/q adjustment is
+!           allocated to sensible heat flux.
 !
-!  10/2017, Hua Yuan: added options for z0, displa, rb and rd calculation
-!           (Dai, Y., Yuan, H., Xin, Q., Wang, D., Shangguan, W.,
-!           Zhang, S., et al. (2019). Different representations of
-!           canopy structure—A large source of uncertainty in global
-!           land surface modeling. Agricultural and Forest Meteorology,
-!           269–270, 119–135. https://doi.org/10.1016/j.agrformet.2019.02.006
+!  10/2017, Hua Yuan: added options for z0, displa, rb and rd
+!           calculation (Dai, Y., Yuan, H., Xin, Q., Wang, D.,
+!           Shangguan, W., Zhang, S., et al. (2019). Different
+!           representations of canopy structure—A large source of
+!           uncertainty in global land surface modeling. Agricultural
+!           and Forest Meteorology, 269–270, 119–135.
+!           https://doi.org/10.1016/j.agrformet.2019.02.006
 !
-!  10/2019, Hua Yuan: change only the leaf tempertature from two-leaf
-!           to one-leaf (due to large differences may exist btween sunlit/shaded
-!           leaf temperature.
+!  10/2019, Hua Yuan: change only the leaf temperature from two-leaf
+!           to one-leaf (due to large differences may exist between
+!           sunlit/shaded leaf temperature.
 !
-!  01/2021, Xingjie Lu and Nan Wei: added plant hydraulic process interface.
+!  01/2021, Xingjie Lu and Nan Wei: added plant hydraulic process
+!           interface.
 !
 !  01/2021, Nan Wei: added interaction btw prec and canopy.
 !
-!  05/2023, Shaofeng Liu: add option to call moninobuk_leddy, the LargeEddy
-!           surface turbulence scheme (LZD2022); make a proper update of um.
+!  05/2023, Shaofeng Liu: add option to call moninobuk_leddy, the
+!           LargeEddy surface turbulence scheme (LZD2022); make a proper
+!           update of um.
 !
 !  04/2024, Hua Yuan: add option to account for vegetation snow process.
 !
@@ -114,7 +118,7 @@ CONTAINS
 
    IMPLICIT NONE
 
-!-----------------------Arguments---------------------------------------
+!-------------------------- Dummy Arguments ----------------------------
 
    integer,  intent(in) :: ipatch,ivt
    real(r8), intent(in) :: &
@@ -150,10 +154,10 @@ CONTAINS
 !End WUE stomata model parameter
         extkn        ! coefficient of leaf nitrogen allocation
    real(r8), intent(in) :: & ! for plant hydraulic scheme
-        kmax_sun,   &! Plant Hydraulics Paramters
-        kmax_sha,   &! Plant Hydraulics Paramters
-        kmax_xyl,   &! Plant Hydraulics Paramters
-        kmax_root,  &! Plant Hydraulics Paramters
+        kmax_sun,   &! Plant Hydraulics Parameters
+        kmax_sha,   &! Plant Hydraulics Parameters
+        kmax_xyl,   &! Plant Hydraulics Parameters
+        kmax_root,  &! Plant Hydraulics Parameters
         psi50_sun,  &! water potential at 50% loss of sunlit leaf tissue conductance (mmH2O)
         psi50_sha,  &! water potential at 50% loss of shaded leaf tissue conductance (mmH2O)
         psi50_xyl,  &! water potential at 50% loss of xylem tissue conductance (mmH2O)
@@ -218,7 +222,7 @@ CONTAINS
         smp     (1:nl_soil), &! soil matrix potential
         rootfr  (1:nl_soil), &! root fraction
         hksati  (1:nl_soil), &! hydraulic conductivity at saturation [mm h2o/s]
-        hk      (1:nl_soil)   ! soil hydraulic conducatance
+        hk      (1:nl_soil)   ! soil hydraulic conductance
    real(r8), intent(in) :: &
         hpbl         ! atmospheric boundary layer height [m]
 
@@ -293,7 +297,7 @@ CONTAINS
         fh,         &! integral of profile function for heat
         fq           ! integral of profile function for moisture
 
-!-----------------------Local Variables---------------------------------
+!-------------------------- Local Variables ----------------------------
 ! assign iteration parameters
    integer, parameter :: itmax  = 40   !maximum number of iteration
    integer, parameter :: itmin  = 6    !minimum number of iteration
@@ -308,20 +312,20 @@ CONTAINS
         hu_,        &! adjusted observational height of wind [m]
         ht_,        &! adjusted observational height of temperature [m]
         hq_,        &! adjusted observational height of humidity [m]
-        zldis,      &! reference height "minus" zero displacement heght [m]
+        zldis,      &! reference height "minus" zero displacement height [m]
         zii,        &! convective boundary layer height [m]
         z0mv,       &! roughness length, momentum [m]
         z0hv,       &! roughness length, sensible heat [m]
         z0qv,       &! roughness length, latent heat [m]
         zeta,       &! dimensionless height used in Monin-Obukhov theory
-        beta,       &! coefficient of conective velocity [-]
+        beta,       &! coefficient of convective velocity [-]
         wc,         &! convective velocity [m/s]
         wc2,        &! wc**2
         dth,        &! diff of virtual temp. between ref. height and surface
         dthv,       &! diff of vir. poten. temp. between ref. height and surface
         dqh,        &! diff of humidity between ref. height and surface
         obu,        &! monin-obukhov length (m)
-        um,         &! wind speed including the stablity effect [m/s]
+        um,         &! wind speed including the stability effect [m/s]
         ur,         &! wind speed at reference height [m/s]
         uaf,        &! velocity of air within foliage [m/s]
         fh2m,       &! relation for temperature at 2m
@@ -415,7 +419,7 @@ CONTAINS
    integer,  parameter :: rb_opt = 3             ! rb with vertical profile consideration
    integer,  parameter :: rd_opt = 3             ! rd with vertical profile consideration
 
-!-----------------------End Variable List-------------------------------
+!-----------------------------------------------------------------------
 
 ! initialization of errors and  iteration parameters
       it     = 1    !counter for leaf temperature iteration
@@ -493,7 +497,7 @@ CONTAINS
 
          CALL cal_z0_displa(lai+sai, htop, 1., z0mv, displa)
 
-         ! NOTE: adjusted for samll displa
+         ! NOTE: adjusted for small displa
          displasink = max(htop/2., displa)
          hsink = z0mv + displasink
 
@@ -529,19 +533,19 @@ CONTAINS
 
          IF (hu <= htop+1) THEN
             hu_ = htop + 1.
-            IF (taux == spval) & ! only print warning for the firt time-step
+            IF (taux == spval) & ! only print warning for the first time-step
                write(6,*) 'Warning: the obs height of u less than htop+1, set it to htop+1.'
          ENDIF
 
          IF (ht <= htop+1) THEN
             ht_ = htop + 1.
-            IF (taux == spval) & ! only print warning for the firt time-step
+            IF (taux == spval) & ! only print warning for the first time-step
                write(6,*) 'Warning: the obs height of t less than htop+1, set it to htop+1.'
          ENDIF
 
          IF (hq <= htop+1) THEN
             hq_ = htop + 1.
-            IF (taux == spval) & ! only print warning for the firt time-step
+            IF (taux == spval) & ! only print warning for the first time-step
                write(6,*) 'Warning: the obs height of q less than htop+1, set it to htop+1.'
          ENDIF
 
@@ -702,7 +706,7 @@ CONTAINS
                sai = amax1(sai,0.1)
                ! PHS update actual stomata conductance (resistance), assimilation rate
                ! and leaf respiration. above stomatal resistances are for the canopy,
-               ! the stomatal rsistances and the "rb" in the following calculations are
+               ! the stomatal resistances and the "rb" in the following calculations are
                ! the average for single leaf. thus,
                CALL PlantHydraulicStress_twoleaf (       nl_soil    ,nvegwcs    ,&
                      z_soi      ,dz_soi     ,rootfr     ,psrf       ,qsatl      ,&
@@ -747,7 +751,7 @@ CONTAINS
             ENDIF
          ENDIF
 
-! above stomatal resistances are for the canopy, the stomatal rsistances
+! above stomatal resistances are for the canopy, the stomatal resistances
 ! and the "rb" in the following calculations are the average for single leaf. thus,
          rssun = rssun * laisun
          rssha = rssha * laisha
@@ -792,7 +796,7 @@ CONTAINS
 ! IR radiation, sensible and latent heat fluxes and their derivatives
 !-----------------------------------------------------------------------
 ! the partial derivatives of areodynamical resistance are ignored
-! which cannot be determined analtically
+! which cannot be determined analytically
          fac = 1. - thermk
 
 ! longwave absorption and their derivatives
@@ -1014,10 +1018,10 @@ ENDIF
 
 ! canopy fluxes and total assimilation amd respiration
       fsenl = fsenl + fsenl_dtl*dtl(it-1) &
-            ! yuan: add the imbalanced energy below due to T adjustment to sensibel heat
+            ! yuan: add the imbalanced energy below due to T adjustment to sensible heat
             + (dtl_noadj-dtl(it-1)) * (clai/deltim - dirab_dtl + fsenl_dtl + hvap*fevpl_dtl &
             + cpliq * qintr_rain + cpice * qintr_snow) &
-            ! yuan: add the imbalanced energy below due to q adjustment to sensibel heat
+            ! yuan: add the imbalanced energy below due to q adjustment to sensible heat
             + hvap*erre
 
       etr0  = etr
@@ -1158,7 +1162,7 @@ ENDIF
             ldew = ldew_rain + ldew_snow
          ENDIF
 
-      ELSEIF (DEF_Interception_scheme .eq. 2) THEN!CLM4.5
+      ELSEIF (DEF_Interception_scheme .eq. 2) THEN !CLM4.5
          ldew = max(0., ldew-evplwet*deltim)
 
       ELSEIF (DEF_Interception_scheme .eq. 3) THEN !CLM5

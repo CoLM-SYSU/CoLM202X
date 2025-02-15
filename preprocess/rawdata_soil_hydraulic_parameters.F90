@@ -17,9 +17,9 @@ SUBROUTINE soil_hydraulic_parameters(BD,SAND,CLAY,SOC,SOILDEPTH,&
 !
 ! Original author: Yongjiu Dai, Wei Shangguan, 12/2013/
 !
-! Rivisions:
+! Revisions:
 ! Yongjiu Dai, Nan Wei and Yonggen Zhang,
-!          06/2018: add more highly cited or newly developped soil Pedotransfer functions.
+!          06/2018: add more highly cited or newly developed soil Pedotransfer functions.
 ! Nan Wei, 01/2019: add algorithms for fitting soil hydraulic parameters by multiple soil Pedotransfer functions.
 ! Yongjiu Dai and Nan Wei,
 !          06/2019: consider the gravel effects on soil hydraulic parameters
@@ -111,9 +111,9 @@ SUBROUTINE CampBC(BD,SAND,CLAY,SOM,SOC,phi,psi_s,lambda_s)
 !
 ! Original author: Yongjiu Dai, Wei Shangguan, 12/2013/
 !
-! Rivisions:
+! Revisions:
 ! Yongjiu Dai, Nan Wei and Yonggen Zhang,
-!          06/2018: add more highly cited or newly developped soil Pedotransfer functions.
+!          06/2018: add more highly cited or newly developed soil Pedotransfer functions.
 ! Nan Wei, 01/2019: add algorithms for fitting soil hydraulic parameters by multiple soil Pedotransfer functions.
 ! ----------------------------------------------------
 use MOD_Precision
@@ -131,7 +131,7 @@ REAL(r8), INTENT(OUT) :: psi_s  ! MATRIC POTENTIAL AT SATURATION ! cm
 REAL(r8), INTENT(OUT) :: lambda_s !
 
 integer, parameter :: nc = 8  !  the number of PTFs in estimating SW retention parameters in the Campbell model
-logical c(12) ! indicate wheather a soil is in an class
+logical c(12) ! indicate whether a soil is in an class
 ! soil_classes=c('Sa','LoSa','SaLo','Lo','SaClLo','SaCl','ClLo','SiLo','Si','SiClLo','SiCl','Cl')
 
 REAL(r8) CH_b(12),CH_ths(12),CH_psi_s(12)
@@ -385,9 +385,9 @@ SUBROUTINE VGM(BD,sand,clay,SOM,SOC,TOPSOIL,phi,theta_r_l,alpha_l,n_l,L_l,&
 !
 ! Original author: Yongjiu Dai, Wei Shangguan, 12/2013/
 !
-! Rivisions:
+! Revisions:
 ! Yongjiu Dai, Nan Wei and Yonggen Zhang,
-!          06/2018: add more highly cited or newly developped soil Pedotransfer functions.
+!          06/2018: add more highly cited or newly developed soil Pedotransfer functions.
 ! Nan Wei, 01/2019: add algorithms for fitting soil hydraulic parameters by multiple soil Pedotransfer functions.
 ! ----------------------------------------------------
 use MOD_Precision
@@ -437,7 +437,7 @@ data PRajkai/0.0,3.0,10.0,32.0,500.0,2512.0,15849.0,1259000.0/
 data PRawls02/0.0,100.0,200.0,330.0,600.0,1000.0,2000.0,4000.0,7000.0,10000.0,15000.0/
 data PRawls03/0.0,200.0,300.0,600.0,1000.0,2000.0,4000.0,7000.0,10000.0,15000.0/
 
-logical c(12) ! indicate wheather a soil is in an class
+logical c(12) ! indicate whether a soil is in an class
 REAL(r8) CP_thr(12),CP_alpha(12),CP_n(12)
 data CP_thr  /0.045,0.057,0.065,0.078,0.095,0.1  ,0.095,0.067,0.034,0.089,0.07 ,0.068/
 data CP_alpha/0.145,0.124,0.075,0.036,0.019,0.027,0.019,0.02 ,0.016,0.01 ,0.005,0.008/
@@ -761,8 +761,8 @@ SUBROUTINE ksat(BD,SOM,SOC,SAND,CLAY,TOPSOIL,phi,psi,lambda,k_s,k_s_Rose)
 !
 ! Original author: Yongjiu Dai, Wei Shangguan, 12/2013/
 !
-! Rivisions:
-! Yongjiu Dai, Nan Wei and Yonggen Zhang, 06/2018: add more highly cited or newly developped soil Pedotransfer functions.
+! Revisions:
+! Yongjiu Dai, Nan Wei and Yonggen Zhang, 06/2018: add more highly cited or newly developed soil Pedotransfer functions.
 ! ----------------------------------------------------
 use MOD_Precision
 
@@ -786,7 +786,7 @@ real(r8) :: SILT      ! percentage of silt particle-size distribution
 real(r8) :: theta_33  ! the water content at a potential of -33 kPa
 real(r8) :: phi_e     ! phi minus theta_33
 real(r8) x,B,zs,z33,zs33,z1500,lam_g,d_g,sigma_g
-logical c(12) ! indicate wheather a soil is in an class
+logical c(12) ! indicate whether a soil is in an class
 integer itype
 real params(7,10)
 data params/0.025,0.403,0.0383,1.3774,0.2740, 1.2500,60.000, &

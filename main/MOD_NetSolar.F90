@@ -24,7 +24,8 @@ CONTAINS
                         parsun,parsha,sabvsun,sabvsha,sabg,sabg_soil,sabg_snow,fsno,sabg_snow_lyr,sr,&
                         solvd,solvi,solnd,solni,srvd,srvi,srnd,srni,&
                         solvdln,solviln,solndln,solniln,srvdln,srviln,srndln,srniln)
-!
+
+!-----------------------------------------------------------------------
 ! !DESCRIPTION:
 ! Net solar absorbed by surface
 !
@@ -39,6 +40,7 @@ CONTAINS
 !
 ! Hua Yuan, 12/2022: calculated snow layer absorption by SNICAR model
 !
+!-----------------------------------------------------------------------
 ! !USES:
    USE MOD_Precision
    USE MOD_Vars_Global
@@ -53,12 +55,12 @@ CONTAINS
 
    IMPLICIT NONE
 
-! Dummy argument
+!-------------------------- Dummy Arguments ----------------------------
    integer,  intent(in) :: ipatch     !patch index
    integer,  intent(in) :: idate(3)   !model time
    integer,  intent(in) :: patchtype  !land patch type (99-sea)
 
-   real(r8), intent(in) :: dlon       !logitude in radians
+   real(r8), intent(in) :: dlon       !longitude in radians
    real(r8), intent(in) :: deltim     !seconds in a time step [second]
 
    real(r8), intent(in) :: &
@@ -116,13 +118,13 @@ CONTAINS
    real(r8), intent(out) :: &
          sabg_snow_lyr(maxsnl+1:1)   ! solar absorbed by snow layers [W/m2]
 
-! ----------------local variables ---------------------------------
+!-------------------------- Local Variables ----------------------------
    integer  :: local_secs
    real(r8) :: radpsec, sabvg, sabg_noadj
 
    integer ps, pe, p
 
-!=======================================================================
+!-----------------------------------------------------------------------
 
       sabvsun = 0.
       sabvsha = 0.
@@ -257,7 +259,7 @@ CONTAINS
             sabg_snow_lyr(:) = forc_sols*ssno_lyr(1,1,:) + forc_solsd*ssno_lyr(1,2,:) &
                              + forc_soll*ssno_lyr(2,1,:) + forc_solld*ssno_lyr(2,2,:)
 
-            ! convert to the whole area producted by snow fractional cover
+            ! convert to the whole area multiplied by snow fractional cover
             sabg_snow_lyr(:) = sabg_snow_lyr(:)*fsno
 
             ! attribute the first layer absorption to soil absorption
@@ -312,3 +314,4 @@ CONTAINS
    END SUBROUTINE netsolar
 
 END MODULE MOD_NetSolar
+! ---------- EOP ------------

@@ -44,7 +44,7 @@
    DEF_forcing%fprefix(8) = 'surface_thermal_radiation_downwards_w_m2/ERA5LAND'
 
    DEF_forcing%vname    = 't2m' 'Q' 'sp' 'tp' 'u10' 'v10' 'ssrd' 'strd'
-   DEF_forcing%timelog  = 'instant' 'instant' 'instant' 'foreward' 'instant' 'instant' 'foreward' 'foreward'
+   DEF_forcing%timelog  = 'instant' 'instant' 'instant' 'forward' 'instant' 'instant' 'forward' 'forward'
    DEF_forcing%tintalgo = 'linear' 'linear' 'linear' 'nearest' 'linear' 'linear' 'coszen' 'linear'
 
 /

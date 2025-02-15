@@ -10,7 +10,7 @@ MODULE MOD_Const_PFT
 ! Created by Hua Yuan, 08/2019
 !
 ! REVISIONS:
-! Xingjie Lu, TODO:10/2021?: added for crop PFTs
+! 10/2021, Xingjie Lu: added for crop PFTs
 !
 ! !USES:
    USE MOD_Precision
@@ -155,7 +155,7 @@ MODULE MOD_Const_PFT
 #endif
          /)
 
-   ! defulat vegetation fractional cover
+   ! default vegetation fractional cover
    real(r8), parameter :: fveg0_p(0:N_PFT+N_CFT-1) &
       = 1.0 !(/.../)
 
@@ -200,7 +200,7 @@ MODULE MOD_Const_PFT
 #endif
          /)
 
-   ! reflectance of green leaf in virsible band
+   ! reflectance of green leaf in visible band
 #if(defined LULC_IGBP_PC)
    ! Leaf optical properties adapted from measured data (Dong et al., 2021)
    real(r8), parameter :: rhol_vis_p(0:N_PFT+N_CFT-1) &
@@ -223,7 +223,7 @@ MODULE MOD_Const_PFT
 #endif
          /)
 
-   ! reflectance of dead leaf in virsible band
+   ! reflectance of dead leaf in visible band
    real(r8), parameter :: rhos_vis_p(0:N_PFT+N_CFT-1) &
       = (/0.310,  0.160,  0.160,  0.160,  0.160,  0.160,  0.160,  0.160&
         , 0.160,  0.160,  0.160,  0.160,  0.310,  0.310,  0.310,  0.310&
@@ -280,7 +280,7 @@ MODULE MOD_Const_PFT
 
    ! transmittance of green leaf in visible band
 #if(defined LULC_IGBP_PC)
-   ! Leaf optical properties adpated from measured data (Dong et al., 2021)
+   ! Leaf optical properties adapted from measured data (Dong et al., 2021)
    real(r8), parameter :: taul_vis_p(0:N_PFT+N_CFT-1) &
       = (/0.050,  0.050,  0.050,  0.050,  0.050,  0.060,  0.050,  0.060&
         , 0.050,  0.050,  0.050,  0.050,  0.050,  0.050,  0.050,  0.050&
@@ -1478,7 +1478,7 @@ MODULE MOD_Const_PFT
 #endif
 !   end bgc variables
 
-! Plant Hydraulics Paramters
+! Plant Hydraulics Parameters
    real(r8), parameter :: kmax_sun_p(0:N_PFT+N_CFT-1) &
       = (/     0.,1.e-007,1.e-007,1.e-007,1.e-007,1.e-007,1.e-007,1.e-007&
          ,1.e-007,1.e-007,1.e-007,1.e-007,1.e-007,1.e-007,1.e-007,1.e-007&
@@ -1619,7 +1619,7 @@ MODULE MOD_Const_PFT
          /)
 !end plant hydraulic parameters
 
-  ! Temporarilly tune Vegetation parameter to match VGM model (soil too wet)
+  ! Temporally tune Vegetation parameter to match VGM model (soil too wet)
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
    real(r8), parameter :: lambda_p(0:N_PFT+N_CFT-1) &
       = (/1000.,  1000., 1000.,  1000., 1000.,  1000., 1000., 1000.&
@@ -1653,7 +1653,7 @@ MODULE MOD_Const_PFT
 #endif
       ! irrigation parameter for irrigated crop
    logical , parameter :: irrig_crop(0:N_PFT+N_CFT-1)  & ! True => is tropical broadleaf evergreen tree
-            =(/.False., .False., .False., .False., .False., .False., .False., .False. &
+           =(/.False., .False., .False., .False., .False., .False., .False., .False. &
             , .False., .False., .False., .False., .False., .False., .False., .False. &
 #ifdef CROP
             , .True., .False., .True., .False., .True., .False., .True., .False. &

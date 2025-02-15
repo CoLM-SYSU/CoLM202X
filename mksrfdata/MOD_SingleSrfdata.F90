@@ -168,7 +168,7 @@ CONTAINS
 
       CALL normalize_longitude (SITE_lon_location)
 
-      IF (USE_SITE_landtype) THEN
+      IF (USE_SITE_landtype .or. .not.mksrfdata) THEN
          IF (trim(fsrfdata) /= 'null') THEN
 #ifdef LULC_USGS
             CALL ncio_read_serial (fsrfdata, 'USGS_classification', SITE_landtype)

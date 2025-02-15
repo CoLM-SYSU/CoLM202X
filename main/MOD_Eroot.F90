@@ -45,7 +45,7 @@ CONTAINS
 #endif
    IMPLICIT NONE
 
-  !-----------------------Argument--------------------------------------
+!-------------------------- Dummy Arguments ----------------------------
 
    integer, intent(in) :: nl_soil                  ! upper bound of array
 
@@ -72,7 +72,7 @@ CONTAINS
    real(r8), intent(out) :: etrc                   ! maximum possible transpiration rate (mm h2o/s)
    real(r8), intent(out) :: rstfac                 ! factor of soil water stress for photosynthesis
 
-  !-----------------------Local Variables-------------------------------
+!-------------------------- Local Variables ----------------------------
 
    real(r8) roota             ! accumulates root resistance factors
    real(r8) rresis(1:nl_soil) ! soil water contribution to root resistance
@@ -82,11 +82,11 @@ CONTAINS
 
    integer i                  ! loop counter
 
-  !-----------------------End Variables list----------------------------
+!-----------------------------------------------------------------------
 
       ! transpiration potential(etrc) and root resistance factors (rstfac)
 
-      roota = 1.e-10         ! must be non-zero to begin
+      roota = 1.e-10          ! must be non-zero to begin
       DO i = 1, nl_soil
 
          IF(t_soisno(i)>tfrz .and. porsl(i)>=1.e-6)THEN

@@ -41,27 +41,29 @@ CONTAINS
 ! o The volumetric heat capacity is calculated as a linear combination
 !   in terms of the volumetric fraction of the constituent phases.
 ! o The thermal conductivity of soil is computed from
-!   the algorithm of Johansen (as reported by Farouki 1981), and of snow is from
-!   the formulation used in SNTHERM (Jordan 1991).
+!   the algorithm of Johansen (as reported by Farouki 1981), and of snow
+!   is from the formulation used in SNTHERM (Jordan 1991).
 ! o Boundary conditions:
 !   F = Rnet - Hg - LEg + Hpr(top),  F= 0 (base of the soil column).
 ! o Soil / snow temperature is predicted from heat conduction
-!   in 10 soil layers and up to 5 snow layers.
-!   The thermal conductivities at the interfaces between two neighbor layers
-!   (j, j+1) are derived from an assumption that the flux across the interface
-!   is equal to that from the node j to the interface and the flux from the
-!   interface to the node j+1. The equation is solved using the Crank-Nicholson
-!   method and resulted in a tridiagonal system equation.
+!   in 10 soil layers and up to 5 snow layers.  The thermal
+!   conductivities at the interfaces between two neighbor layers (j,
+!   j+1) are derived from an assumption that the flux across the
+!   interface is equal to that from the node j to the interface and the
+!   flux from the interface to the node j+1.  The equation is solved
+!   using the Crank-Nicholson method and resulted in a tridiagonal
+!   system equation.
 !
 ! Phase change (see meltf.F90)
 !
 ! Original author : Yongjiu Dai, 09/15/1999; 08/30/2002; 05/2018
 !
 ! REVISIONS:
-! Nan Wei,  07/2017: interaction btw prec and land surface
-! Nan Wei,  01/2019: USE the new version of soil thermal parameters to calculate soil temperature
-! Hua Yuan, 01/2023: modified ground heat flux, temperature and meltf
-!                    calculation for SNICAR model
+! 07/2017, Nan Wei: interaction btw prec and land surface
+! 01/2019, Nan Wei: USE the new version of soil thermal parameters to
+!          calculate soil temperature
+! 01/2023, Hua Yuan: modified ground heat flux, temperature and meltf
+!          calculation for SNICAR model
 !=======================================================================
 
    USE MOD_Precision
@@ -74,11 +76,12 @@ CONTAINS
 
    IMPLICIT NONE
 
-   integer, intent(in) :: lb                          !lower bound of array
-   integer, intent(in) :: nl_soil                     !upper bound of array
-   integer, intent(in) :: patchtype                   !land patch type (0=soil,1=urban or built-up,2=wetland,
+!-------------------------- Dummy Arguments ----------------------------
+   integer,  intent(in) :: lb                         !lower bound of array
+   integer,  intent(in) :: nl_soil                    !upper bound of array
+   integer,  intent(in) :: patchtype                  !land patch type (0=soil,1=urban or built-up,2=wetland,
                                                       !3=land ice, 4=deep lake, 5=shallow lake)
-   logical, intent(in) :: is_dry_lake
+   logical,  intent(in) :: is_dry_lake
    real(r8), intent(in) :: deltim                     !seconds in a time step [second]
    real(r8), intent(in) :: capr                       !tuning factor to turn first layer T into surface T
    real(r8), intent(in) :: cnfac                      !Crank Nicholson factor between 0 and 1
@@ -93,7 +96,7 @@ CONTAINS
    real(r8), intent(in) :: porsl(1:nl_soil)           !soil porosity [-]
    real(r8), intent(in) :: psi0 (1:nl_soil)           !soil water suction, negative potential [mm]
 #ifdef Campbell_SOIL_MODEL
-   real(r8), intent(in) :: bsw(1:nl_soil)             !clapp and hornbereger "b" parameter [-]
+   real(r8), intent(in) :: bsw(1:nl_soil)             !clapp and hornberger "b" parameter [-]
 #endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
    real(r8), intent(in) :: theta_r  (1:nl_soil), &    !
@@ -112,7 +115,7 @@ CONTAINS
    real(r8), intent(in) :: BA_beta  (1:nl_soil)       !beta in Balland and Arp(2005) thermal conductivity scheme
 
    real(r8), intent(in) :: sigf                       !fraction of veg cover, excluding snow-covered veg [-]
-   real(r8), intent(in) :: dz_soisno(lb:nl_soil)      !layer thickiness [m]
+   real(r8), intent(in) :: dz_soisno(lb:nl_soil)      !layer thickness [m]
    real(r8), intent(in) :: z_soisno (lb:nl_soil)      !node depth [m]
    real(r8), intent(in) :: zi_soisno(lb-1:nl_soil)    !interface depth [m]
 
@@ -141,7 +144,7 @@ CONTAINS
 
    real(r8), intent(inout) :: t_soisno   (lb:nl_soil) !soil temperature [K]
    real(r8), intent(inout) :: wice_soisno(lb:nl_soil) !ice lens [kg/m2]
-   real(r8), intent(inout) :: wliq_soisno(lb:nl_soil) !liqui water [kg/m2]
+   real(r8), intent(inout) :: wliq_soisno(lb:nl_soil) !liquid water [kg/m2]
    real(r8), intent(inout) :: scv                     !snow cover, water equivalent [mm, kg/m2]
    real(r8), intent(inout) :: snowdp                  !snow depth [m]
    real(r8), intent(in)    :: fsno                    !snow fractional cover [-]
@@ -153,7 +156,7 @@ CONTAINS
 
    real(r8), intent(out) :: snofrz(lb:0)              !snow freezing rate (lyr) [kg m-2 s-1]
 
-!------------------------ local variables ------------------------------
+!-------------------------- Local Variables ----------------------------
    real(r8) cv (lb:nl_soil)          !heat capacity [J/(m2 K)]
    real(r8) tk (lb:nl_soil)          !thermal conductivity [W/(m K)]
    real(r8) hcap(1:nl_soil)          !J/(m3 K)
@@ -175,13 +178,13 @@ CONTAINS
    real(r8) hs_soil                  !net energy flux into the surface soil (w/m2)
    real(r8) hs_snow                  !net energy flux into the surface snow (w/m2)
    real(r8) dhsdT                    !d(hs)/dT
-   real(r8) brr    (lb:nl_soil)      !temporay set
+   real(r8) brr    (lb:nl_soil)      !temporary set
    real(r8) vf_water(1:nl_soil)      !volumetric fraction liquid water within soil
-   real(r8) vf_ice  (1:nl_soil)      !volumetric fraction ice len within soil
-   real(r8) rhosnow                  !partitial density of water (ice + liquid)
+   real(r8) vf_ice  (1:nl_soil)      !volumetric fraction ice lens within soil
+   real(r8) rhosnow                  !partial density of water (ice + liquid)
    integer i,j
 
-!=======================================================================
+!-----------------------------------------------------------------------
 ! soil ground and wetland heat capacity
       DO i = 1, nl_soil
          vf_water(i) = wliq_soisno(i)/(dz_soisno(i)*denh2o)
@@ -228,10 +231,10 @@ CONTAINS
 
 ! the following consideration is try to avoid the snow conductivity
 ! to be dominant in the thermal conductivity of the interface.
-! Because when the distance of bottom snow node to the interfacee
+! Because when the distance of bottom snow node to the interface
 ! is larger than that of interface to top soil node,
 ! the snow thermal conductivity will be dominant, and the result is that
-! lees heat tranfer between snow and soil
+! lees heat transfer between snow and soil
          IF((i==0) .and. (z_soisno(i+1)-zi_soisno(i)<zi_soisno(i)-z_soisno(i)))THEN
             tk(i) = 2.*thk(i)*thk(i+1)/(thk(i)+thk(i+1))
             tk(i) = max(0.5*thk(i+1),tk(i))
