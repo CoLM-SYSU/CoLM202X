@@ -695,7 +695,7 @@ CONTAINS
             idest = gblock%pio (meshtmp(ie)%xblk, meshtmp(ie)%yblk)
 
             ! send(09)
-            elmtag = meshtmp(ie)%indx
+            elmtag = mod(meshtmp(ie)%indx, 30000)
             smesg(1:5) = (/p_iam_glb, elmtag, meshtmp(ie)%xblk, meshtmp(ie)%yblk, meshtmp(ie)%npxl/)
             CALL mpi_send (smesg(1:5), 5, MPI_INTEGER, idest, mpi_tag_mesg, p_comm_glb, p_err)
 
