@@ -433,8 +433,8 @@ CONTAINS
 
 !-------------------------- Dummy Arguments ----------------------------
 
-    integer, intent(in) :: lb              ! lower bound of array
-    integer, intent(inout) :: snl          ! Number of snow
+    integer, intent(in)    :: lb                  ! lower bound of array
+    integer, intent(inout) :: snl                 ! Number of snow
    real(r8), intent(inout) :: wice_soisno(lb:0)   ! ice lens [kg/m2]
    real(r8), intent(inout) :: wliq_soisno(lb:0)   ! liquid water [kg/m2]
    real(r8), intent(inout) :: t_soisno   (lb:0)   ! Node temperature [K]
@@ -647,7 +647,7 @@ CONTAINS
    real(r8), intent(inout) :: dz_soisno   ! nodal thickness of 1 elements being combined [m]
    real(r8), intent(inout) :: wliq_soisno ! liquid water of element 1
    real(r8), intent(inout) :: wice_soisno ! ice of element 1 [kg/m2]
-   real(r8), intent(inout) :: t    ! node temperature of elment 1 [K]
+   real(r8), intent(inout) :: t           ! node temperature of elment 1 [K]
 
 !-------------------------- Local Variables ----------------------------
 
@@ -708,7 +708,7 @@ CONTAINS
    IMPLICIT NONE
 
 !-------------------------- Dummy Arguments ----------------------------
-   integer, intent(in) :: lb               ! lower bound of array
+   integer, intent(in) :: lb                      ! lower bound of array
 
 ! numbering from 1 (bottom) mss (surface)
    real(r8), intent(inout) :: wice_soisno(lb:1)   ! ice lens [kg/m2]
@@ -975,8 +975,8 @@ CONTAINS
 
 !-------------------------- Dummy Arguments ----------------------------
 
-    integer, intent(in) :: lb       ! lower bound of array
-    integer, intent(inout) :: snl   ! Number of snow
+    integer, intent(in)    :: lb                  ! lower bound of array
+    integer, intent(inout) :: snl                 ! Number of snow
    real(r8), intent(inout) :: wice_soisno(lb:0)   ! ice lens [kg/m2]
    real(r8), intent(inout) :: wliq_soisno(lb:0)   ! liquid water [kg/m2]
    real(r8), intent(inout) :: t_soisno   (lb:0)   ! Node temperature [K]

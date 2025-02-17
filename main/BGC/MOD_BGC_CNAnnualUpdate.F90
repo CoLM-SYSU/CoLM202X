@@ -16,7 +16,7 @@ MODULE MOD_BGC_CNAnnualUpdate
 ! !ORIGINAL:
 ! The Community Land Model version 5.0 (CLM5.0)
 
-! !REFERENCE:
+! !REFERENCES:
 ! Lawrence, D.M., Fisher, R.A., Koven, C.D., Oleson, K.W., Swenson, S.C., Bonan, G., Collier, N., 
 ! Ghimire, B., van Kampenhout, L., Kennedy, D. and Kluzek, E., 2019. 
 ! The Community Land Model version 5: Description of new features, benchmarking,

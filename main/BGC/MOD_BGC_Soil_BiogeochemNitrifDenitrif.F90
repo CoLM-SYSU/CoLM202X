@@ -6,7 +6,7 @@ MODULE MOD_BGC_Soil_BiogeochemNitrifDenitrif
 ! !DESCRIPTION:
 ! Calculate the potential nitrification and dentrification rate.
 !
-! !REFERENCE:
+! !REFERENCES:
 ! Parton, W. et al. 1996. Generalized model for N2 and N2O production from nitrification and
 ! denitrification. Global Biogeochemical Cycles 10(3):401-412.
 ! Parton, W.J. et al. 2001. Generalized model for NOx and N2O emissions from soils. J. Geophys. Res.

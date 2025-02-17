@@ -209,20 +209,20 @@ CONTAINS
 ! !DESCRIPTION:
 !
 !
-! Original author : Yongjiu Dai, September 15, 1999
+!  Original author : Yongjiu Dai, September 15, 1999
 !
-! calculation of friction velocity, relation for potential temperature and
-! humidity profiles of surface boundary layer.  the scheme is based on the work
-! of Zeng et al. (1998): Intercomparison of bulk aerodynamic algorithms for the
-! computation of sea surface fluxes using TOGA CORE and TAO data. J. Climate,
-! Vol. 11: 2628-2644
+!  calculation of friction velocity, relation for potential temperature and
+!  humidity profiles of surface boundary layer.  the scheme is based on the work
+!  of Zeng et al. (1998): Intercomparison of bulk aerodynamic algorithms for the
+!  computation of sea surface fluxes using TOGA CORE and TAO data. J. Climate,
+!  Vol. 11: 2628-2644
 !
-! REVISIONS:
-! Hua Yuan, 09/2017: adapted from moninobuk FUNCTION to calculate canopy top
-!                    fm, fq and phih for roughness sublayer u/k profile calculation
-! Shaofeng Liu, 05/2023: implement the LZD2022 scheme (Liu et al., 2022), which
-!                        accounts for large eddy effects by including the
-!                        boundary leyer height in the phim FUNCTION.
+! !REVISIONS:
+!  Hua Yuan, 09/2017: adapted from moninobuk FUNCTION to calculate canopy top
+!                     fm, fq and phih for roughness sublayer u/k profile calculation
+!  Shaofeng Liu, 05/2023: implement the LZD2022 scheme (Liu et al., 2022), which
+!                         accounts for large eddy effects by including the
+!                         boundary leyer height in the phim FUNCTION.
 ! ======================================================================
 
    USE MOD_Precision

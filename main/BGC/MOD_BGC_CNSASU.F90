@@ -19,7 +19,7 @@ MODULE MOD_BGC_CNSASU
 ! !ORIGINAL:
 ! The Community Land Model version 5.1 (CLM5.1) unreleased version developed by Xingjie Lu
 !
-! !REFERENCE:
+! !REFERENCES:
 ! Lu, X., Du, Z., Huang, Y., Lawrence, D., Kluzek, E., Collier, N., Lombardozzi, D., Sobhani, N., Schuur, E.A. and Luo, Y., 2020. 
 ! Full implementation of matrix approach to biogeochemistry MODULE of CLM5. Journal of Advances in Modeling Earth Systems, 12(11), e2020MS002105.  
 ! Liao, C., Lu, X., Huang Y., Tao F., Lawrence, D., Koven C., Oleson, K., Wieder, W., Kluzek, E., Huang, X., Luo, Y. (in submission)

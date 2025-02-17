@@ -68,8 +68,8 @@
            fgper        ,em_roof      ,em_wall      ,em_gimp      ,&
            em_gper      ,cv_roof      ,cv_wall      ,cv_gimp      ,&
            tk_roof      ,tk_wall      ,tk_gimp      ,z_roof       ,&
-           z_wall       ,dz_roof      ,dz_wall                    ,&
-           lakedepth    ,dz_lake      ,topostd      ,BVIC         ,&
+           z_wall       ,dz_roof      ,dz_wall      ,lakedepth    ,&
+           dz_lake      ,topostd      ,BVIC                       ,&
 
          ! LUCY model input parameters
            fix_holiday  ,week_holiday ,hum_prof     ,pop_den      ,&
@@ -84,8 +84,7 @@
            sc_vgm       ,fc_vgm                                   ,&
 #endif
            hksati       ,csol         ,k_solids     ,dksatu       ,&
-           dksatf       ,dkdry                                    ,&
-           BA_alpha     ,BA_beta                                  ,&
+           dksatf       ,dkdry        ,BA_alpha     ,BA_beta      ,&
            alb_roof     ,alb_wall     ,alb_gimp     ,alb_gper     ,&
 
          ! vegetation information
@@ -167,9 +166,9 @@
 
          ! TUNABLE model constants
            zlnd         ,zsno         ,csoilc       ,dewmx        ,&
-           capr         ,cnfac        ,ssi                        ,&
-           wimp         ,pondmx       ,smpmax       ,smpmin       ,&
-           trsmx0       ,tcrit                                    ,&
+           capr         ,cnfac        ,ssi          ,wimp         ,&
+           pondmx       ,smpmax       ,smpmin       ,trsmx0       ,&
+           tcrit                                                  ,&
 
          ! additional variables required by coupling with WRF model
            emis         ,z0m          ,zol          ,rib          ,&

@@ -173,19 +173,18 @@ CONTAINS
 !
 ! !DESCRIPTION:
 !
+!  Original author : Yongjiu Dai, September 15, 1999
 !
-! Original author : Yongjiu Dai, September 15, 1999
+!  calculation of friction velocity, relation for potential temperature
+!  and humidity profiles of surface boundary layer.  the scheme is based
+!  on the work of Zeng et al. (1998): Intercomparison of bulk aerodynamic
+!  algorithms for the computation of sea surface fluxes using TOGA CORE
+!  and TAO data. J. Climate, Vol. 11: 2628-2644
 !
-! calculation of friction velocity, relation for potential temperature
-! and humidity profiles of surface boundary layer.  the scheme is based
-! on the work of Zeng et al. (1998): Intercomparison of bulk aerodynamic
-! algorithms for the computation of sea surface fluxes using TOGA CORE
-! and TAO data. J. Climate, Vol. 11: 2628-2644
-!
-! REVISIONS:
-! 09/2017, Hua Yuan: adapted from moninobuk FUNCTION to calculate canopy
-!          top fm, fq and phih for roughness sublayer u/k profile
-!          calculation.
+! !REVISIONS:
+!  09/2017, Hua Yuan: adapted from moninobuk FUNCTION to calculate canopy
+!           top fm, fq and phih for roughness sublayer u/k profile
+!           calculation.
 ! ======================================================================
 
    USE MOD_Precision
@@ -371,14 +370,14 @@ CONTAINS
 
    END SUBROUTINE moninobukm
 
-!-----------------------------------------------------------------------
    real(r8) FUNCTION kmoninobuk(displa,obu,ustar,z)
-!
+!-----------------------------------------------------------------------
 ! !DESCRIPTION:
-! k profile calculation for bare ground case
+!  k profile calculation for bare ground case
 !
-! Created by Hua Yuan, 09/2017
+!  Created by Hua Yuan, 09/2017
 !
+!-----------------------------------------------------------------------
    USE MOD_Precision
    USE MOD_Const_Physical, only : vonkar
    IMPLICIT NONE
@@ -423,14 +422,14 @@ CONTAINS
 
    END FUNCTION kmoninobuk
 
-!-----------------------------------------------------------------------
    real(r8) FUNCTION kintmoninobuk(displa,z0h,obu,ustar,ztop,zbot)
-!
+!-----------------------------------------------------------------------
 ! !DESCRIPTION:
-! k profile integration for bare ground case
+!  k profile integration for bare ground case
 !
-! Created by Hua Yuan, 09/2017
+!  Created by Hua Yuan, 09/2017
 !
+!-----------------------------------------------------------------------
 
    USE MOD_Precision
    USE MOD_Const_Physical, only : vonkar

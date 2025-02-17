@@ -435,7 +435,7 @@ PROGRAM CoLM
 #endif
 
 
-         ! Call colm driver
+         ! Call CoLM driver
          ! ----------------------------------------------------------------------
          IF (p_is_worker) THEN
             CALL CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oroflag)
@@ -460,7 +460,7 @@ PROGRAM CoLM
 
          CALL CheckEquilibrium (idate, deltim, itstamp, dir_hist, casename)
 
-         ! DO land USE and land cover change simulation
+         ! DO land use and land cover change simulation
          ! ----------------------------------------------------------------------
 #ifdef LULCC
          IF ( isendofyear(idate, deltim) ) THEN
@@ -541,9 +541,11 @@ PROGRAM CoLM
             ENDIF
 #endif
          ENDIF
+
 #ifdef RangeCheck
          CALL check_TimeVariables ()
 #endif
+
 #ifdef USEMPI
          CALL mpi_barrier (p_comm_glb, p_err)
 #endif
@@ -553,7 +555,6 @@ PROGRAM CoLM
             CALL print_VSF_iteration_stat_info ()
          ENDIF
 #endif
-
 
          IF (p_is_master) THEN
             CALL system_clock (end_time, count_rate = c_per_sec)

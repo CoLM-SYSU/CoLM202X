@@ -238,14 +238,14 @@ CONTAINS
 !  8 optional schemes The default soil thermal conductivity scheme is
 !  the fourth one (Balland V. and P. A. Arp, 2005)
 !
-! !Reference:
+! !REFERENCES:
 !  Dai et al.,2019: Evaluation of Soil Thermal Conductivity Schemes for
 !  Use in Land Surface Modeling J. of Advances in Modeling Earth
 !  Systems, DOI: 10.1029/2019MS001723
 !
 ! !Original author: Yongjiu Dai, 02/2018/
 !
-! !Revisions:
+! !REVISIONS:
 !  06/2018, Nan Wei: add to CoLM/main
 !  09/2022, Nan Wei: add soil thermal conductivity of Hailong He (Yan &
 !           He et al., 2019)

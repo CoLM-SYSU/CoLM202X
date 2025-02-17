@@ -8,9 +8,9 @@
 MODULE MOD_Vars_PFTimeInvariants
 ! -----------------------------------------------------------------
 ! !DESCRIPTION:
-! Define PFT time invariables
+!  Define PFT time invariables
 !
-! Added by Hua Yuan, 08/2019
+!  Added by Hua Yuan, 08/2019
 ! -----------------------------------------------------------------
 
    USE MOD_Precision
@@ -940,14 +940,14 @@ CONTAINS
          CALL check_vector_data ('sf_lut       [-]     ', sf_lut_patches   ) ! shadow mask
 #else
          IF (allocated(sf_curve_patches)) allocate(tmpcheck(size(sf_curve_patches,1),size(sf_curve_patches,3)))
-         
+
          IF (allocated(sf_curve_patches)) tmpcheck = sf_curve_patches(:,1,:)
          CALL check_vector_data ('1 sf_curve p [-]     ', tmpcheck) ! shadow mask
          IF (allocated(sf_curve_patches)) tmpcheck = sf_curve_patches(:,2,:)
          CALL check_vector_data ('2 sf_curve p [-]     ', tmpcheck) ! shadow mask
          IF (allocated(sf_curve_patches)) tmpcheck = sf_curve_patches(:,3,:)
          CALL check_vector_data ('3 sf_curve p [-]     ', tmpcheck) ! shadow mask
-         
+
          IF (allocated(tmpcheck)) deallocate(tmpcheck)
 #endif
       ENDIF

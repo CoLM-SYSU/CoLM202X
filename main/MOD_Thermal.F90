@@ -24,19 +24,18 @@ CONTAINS
                        vf_gravels    ,vf_om         ,vf_sand       ,wf_gravels    ,&
                        wf_sand       ,csol          ,porsl         ,psi0          ,&
 #ifdef Campbell_SOIL_MODEL
-                       bsw           ,                                             &
+                       bsw           ,&
 #endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
                        theta_r       ,alpha_vgm     ,n_vgm         ,L_vgm         ,&
                        sc_vgm        ,fc_vgm        ,                              &
 #endif
                        k_solids      ,dksatu        ,dksatf        ,dkdry         ,&
-                       BA_alpha      ,BA_beta                                     ,&
-                       lai           ,laisun        ,laisha        ,sai           ,&
-                       htop          ,hbot          ,sqrtdi        ,rootfr        ,&
-                       rstfacsun_out ,rstfacsha_out ,rss           ,gssun_out     ,&
-                       gssha_out     ,assimsun_out  ,etrsun_out    ,assimsha_out  ,&
-                       etrsha_out    ,&
+                       BA_alpha      ,BA_beta       ,lai           ,laisun        ,&
+                       laisha        ,sai           ,htop          ,hbot          ,&
+                       sqrtdi        ,rootfr        ,rstfacsun_out ,rstfacsha_out ,&
+                       rss           ,gssun_out     ,gssha_out     ,assimsun_out  ,&
+                       etrsun_out    ,assimsha_out  ,etrsha_out    ,&
 !photosynthesis and plant hydraulic variables
                        effcon        ,vmax25        ,hksati        ,smp     ,hk   ,&
                        kmax_sun      ,kmax_sha      ,kmax_xyl      ,kmax_root     ,&
@@ -64,17 +63,16 @@ CONTAINS
                        taux          ,tauy          ,fsena         ,fevpa         ,&
                        lfevpa        ,fsenl         ,fevpl         ,etr           ,&
                        fseng         ,fevpg         ,olrg          ,fgrnd         ,&
-                       rootr         ,rootflux      ,&
-                       qseva         ,qsdew         ,qsubl         ,qfros         ,&
-                       qseva_soil    ,qsdew_soil    ,qsubl_soil    ,qfros_soil    ,&
-                       qseva_snow    ,qsdew_snow    ,qsubl_snow    ,qfros_snow    ,&
-                       sm            ,tref          ,qref          ,&
-                       trad          ,rst           ,assim         ,respc         ,&
-                       errore        ,emis          ,z0m           ,zol           ,&
-                       rib           ,ustar         ,qstar         ,tstar         ,&
-                       fm            ,fh            ,fq            ,pg_rain       ,&
-                       pg_snow       ,t_precip      ,qintr_rain    ,qintr_snow    ,&
-                       snofrz        ,sabg_snow_lyr                                )
+                       rootr         ,rootflux      ,qseva         ,qsdew         ,&
+                       qsubl         ,qfros         ,qseva_soil    ,qsdew_soil    ,&
+                       qsubl_soil    ,qfros_soil    ,qseva_snow    ,qsdew_snow    ,&
+                       qsubl_snow    ,qfros_snow    ,sm            ,tref          ,&
+                       qref          ,trad          ,rst           ,assim         ,&
+                       respc         ,errore        ,emis          ,z0m           ,&
+                       zol           ,rib           ,ustar         ,qstar         ,&
+                       tstar         ,fm            ,fh            ,fq            ,&
+                       pg_rain       ,pg_snow       ,t_precip      ,qintr_rain    ,&
+                       qintr_snow    ,snofrz        ,sabg_snow_lyr                 )
 
 !=======================================================================
 ! this is the main subroutine to execute the calculation

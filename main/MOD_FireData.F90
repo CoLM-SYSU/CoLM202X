@@ -4,10 +4,10 @@
 MODULE MOD_FireData
 !-----------------------------------------------------------------------
 ! !DESCRIPTION:
-! This module read in fire data.
+!  This module read in fire data.
 !
 ! !ORIGINAL:
-! Lu Xingjie and Zhang Shupeng, 2023, prepare the original version of the fire data module.
+!  Lu Xingjie and Zhang Shupeng, 2023, prepare the original version of the fire data module.
 
    USE MOD_Grid
    USE MOD_SpatialMapping

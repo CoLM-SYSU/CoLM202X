@@ -101,7 +101,7 @@ CONTAINS
 ! !DESCRIPTION:
 ! Read in the Nitrogen deposition data from CLM5.
 !
-! !REFERENCE:
+! !REFERENCES:
 ! Galloway, J.N., et al. 2004. Nitrogen cycles: past, present, and future. Biogeochem. 70:153-226.
 !
 ! !ORIGINAL:
@@ -164,7 +164,7 @@ CONTAINS
 ! !DESCRIPTION:
 ! Read in the Nitrogen deposition data from CLM5.
 !
-! !REFERENCE:
+! !REFERENCES:
 ! Galloway, J.N., et al. 2004. Nitrogen cycles: past, present, and future. Biogeochem. 70:153-226.
 !
 ! !ORIGINAL:

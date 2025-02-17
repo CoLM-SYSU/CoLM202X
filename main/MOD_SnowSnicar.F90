@@ -2395,12 +2395,11 @@ CONTAINS
    !-----------------------------------------------------------------------
 
 
-   SUBROUTINE SnowAge_grain( dtime          , snl            , dz              , &
-                             qflx_snow_grnd , qflx_snwcp_ice , qflx_snofrz_lyr , &
-                             do_capsnow     , frac_sno       , h2osno          , &
-                             h2osno_liq     , h2osno_ice     , &
-                             t_soisno       , t_grnd         , &
-                             forc_t         , snw_rds        )
+   SUBROUTINE SnowAge_grain( dtime          , snl            , dz              ,&
+                             qflx_snow_grnd , qflx_snwcp_ice , qflx_snofrz_lyr ,&
+                             do_capsnow     , frac_sno       , h2osno          ,&
+                             h2osno_liq     , h2osno_ice     , t_soisno        ,&
+                             t_grnd         , forc_t         , snw_rds          )
    !
    ! !DESCRIPTION:
    ! Updates the snow effective grain size (radius).

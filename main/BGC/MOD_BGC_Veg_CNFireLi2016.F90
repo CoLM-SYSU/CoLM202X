@@ -7,7 +7,7 @@ MODULE MOD_BGC_Veg_CNFireLi2016
 ! This module calculate burned area of each fire. The burned area is used to calculate fire induced CN loss rates
 ! in bgc_veg_CNFireBaseMod.F90
 !
-! !REFERENCE:
+! !REFERENCES:
 ! Li, F., Levis, S., and Ward, D. S. 2013a. Quantifying the role of fire in the Earth system – Part 1: Improved global fire
 ! modeling in the Community Earth System Model (CESM1). Biogeosciences 10:2293-2314.
 ! Li, F., and Lawrence, D. 2017. Role of fire in the global land water budget during the 20th century through changing

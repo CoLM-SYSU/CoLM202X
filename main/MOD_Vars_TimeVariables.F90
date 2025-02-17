@@ -8,9 +8,9 @@
 MODULE MOD_Vars_PFTimeVariables
 ! -----------------------------------------------------------------
 ! !DESCRIPTION:
-! Define PFT time variables
+!  Define PFT time variables
 !
-! Added by Hua Yuan, 08/2019
+!  Added by Hua Yuan, 08/2019
 ! -----------------------------------------------------------------
 
    USE MOD_Precision

@@ -5,9 +5,9 @@
 MODULE MOD_Vars_1DPFTFluxes
 ! -----------------------------------------------------------------
 ! !DESCRIPTION:
-! Define PFT flux variables
+!  Define PFT flux variables
 !
-! Created by Hua Yuan, 08/2019
+!  Created by Hua Yuan, 08/2019
 ! -----------------------------------------------------------------
 
    USE MOD_Precision

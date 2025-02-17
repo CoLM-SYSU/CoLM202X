@@ -7,7 +7,7 @@ MODULE MOD_BGC_Veg_CNFireBase
 ! This MODULE calculate fire-induced vegetation and litter CN transfers flux, the calculation is based on the fire-induced
 ! CN loss rates (f). The CN loss rates (f) is calculated from bgc_veg_CNFireLi2016Mod.F90.
 !
-! !REFERENCE:
+! !REFERENCES:
 ! Li, F., Levis, S., and Ward, D. S. 2013a. Quantifying the role of fire in the Earth system – Part 1: Improved global fire
 ! modeling in the Community Earth System Model (CESM1). Biogeosciences 10:2293-2314.
 ! Li, F., and Lawrence, D. 2017. Role of fire in the global land water budget during the 20th century through changing

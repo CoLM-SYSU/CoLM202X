@@ -3,16 +3,16 @@
 MODULE MOD_ForcingDownscaling
 
 !-----------------------------------------------------------------------------
-! DESCRIPTION:
-! Downscaling meteorological forcings
+! !DESCRIPTION:
+!  Downscaling meteorological forcings
 !
-! INITIAL:
-! The Community Land Model version 5.0 (CLM5.0)
+! !INITIAL:
+!  The Community Land Model version 5.0 (CLM5.0)
 !
-! REVISIONS:
-! Updated by Yongjiu Dai, January 16, 2023
-! Revised by Lu Li, January 24, 2024
-! Revised by Sisi Chen, Lu Li, June, 2024
+! !REVISIONS:
+!  Updated by Yongjiu Dai, January 16, 2023
+!  Revised by Lu Li, January 24, 2024
+!  Revised by Sisi Chen, Lu Li, June, 2024
 !-----------------------------------------------------------------------------
 
    USE MOD_Precision

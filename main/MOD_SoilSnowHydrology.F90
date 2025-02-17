@@ -483,22 +483,19 @@ ENDIF
 
 !-----------------------------------------------------------------------
    SUBROUTINE WATER_VSF (ipatch, patchtype,is_dry_lake, lb, nl_soil, deltim   ,&
-              z_soisno    ,dz_soisno   ,zi_soisno                             ,&
-              bsw         ,theta_r     ,fsatmax     ,fsatdcf     ,topostd     ,&
-              BVIC                                                            ,&
+              z_soisno    ,dz_soisno   ,zi_soisno   ,bsw         ,theta_r     ,&
+              fsatmax     ,fsatdcf     ,topostd     ,BVIC                     ,&
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
               alpha_vgm   ,n_vgm       ,L_vgm       ,sc_vgm      ,fc_vgm      ,&
 #endif
               porsl       ,psi0        ,hksati      ,rootr       ,rootflux    ,&
               t_soisno    ,wliq_soisno ,wice_soisno ,smp         ,hk          ,&
-              pg_rain     ,sm                                                 ,&
-              etr         ,qseva       ,qsdew       ,qsubl       ,qfros       ,&
-              qseva_soil  ,qsdew_soil  ,qsubl_soil  ,qfros_soil               ,&
-              qseva_snow  ,qsdew_snow  ,qsubl_snow  ,qfros_snow               ,&
-              fsno                                                            ,&
-              rsur        ,rsur_se     ,rsur_ie     ,rnof                     ,&
-              qinfl       ,ssi         ,pondmx                                ,&
-              wimp        ,zwt         ,wdsrf       ,wa          ,wetwat      ,&
+              pg_rain     ,sm          ,etr         ,qseva       ,qsdew       ,&
+              qsubl       ,qfros       ,qseva_soil  ,qsdew_soil  ,qsubl_soil  ,&
+              qfros_soil  ,qseva_snow  ,qsdew_snow  ,qsubl_snow  ,qfros_snow  ,&
+              fsno        ,rsur        ,rsur_se     ,rsur_ie     ,rnof        ,&
+              qinfl       ,ssi         ,pondmx      ,wimp        ,zwt         ,&
+              wdsrf       ,wa          ,wetwat      ,&
 #if(defined CaMa_Flood)
               flddepth    ,fldfrc      ,qinfl_fld                             ,&
 #endif

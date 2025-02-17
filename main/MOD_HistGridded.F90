@@ -3,16 +3,16 @@
 MODULE MOD_HistGridded
 
 !----------------------------------------------------------------------------
-! DESCRIPTION:
+! !DESCRIPTION:
 !
 !     Write out gridded model results to history files.
 !
-! Original version: Yongjiu Dai, September 15, 1999, 03/2014
+!  Original version: Yongjiu Dai, September 15, 1999, 03/2014
 !
-! REVISIONS:
-! Shupeng Zhang, 05/2023: 1) porting codes to MPI parallel version
+! !REVISIONS:
+!  Shupeng Zhang, 05/2023: 1) porting codes to MPI parallel version
 !
-! TODO...(need complement)
+!  TODO...(need complement)
 !----------------------------------------------------------------------------
 
    USE MOD_Precision

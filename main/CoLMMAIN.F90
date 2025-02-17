@@ -68,36 +68,35 @@ SUBROUTINE CoLMMAIN ( &
 
          ! SNICAR snow model related
            snw_rds,      ssno_lyr,     &
-           mss_bcpho,    mss_bcphi,    mss_ocpho,     mss_ocphi,   &
-           mss_dst1,     mss_dst2,     mss_dst3,      mss_dst4,    &
+           mss_bcpho,    mss_bcphi,    mss_ocpho,    mss_ocphi,    &
+           mss_dst1,     mss_dst2,     mss_dst3,     mss_dst4,     &
 
          ! additional diagnostic variables for output
-           laisun,       laisha,       rootr,rootflux,rss,         &
+           laisun,       laisha,       rootr,        rootflux,     &
            rstfacsun_out,rstfacsha_out,gssun_out,    gssha_out,    &
            assimsun_out, etrsun_out,   assimsha_out, etrsha_out,   &
-           h2osoi,       wat,          &
+           h2osoi,       wat,          rss,          &
 
          ! FLUXES
            taux,         tauy,         fsena,        fevpa,        &
            lfevpa,       fsenl,        fevpl,        etr,          &
            fseng,        fevpg,        olrg,         fgrnd,        &
-           trad,         tref,         qref,                       &
-           rsur,         rsur_se,      rsur_ie,      rnof,         &
-           qintr,        qinfl,        qdrip,                      &
-           rst,          assim,        respc,        sabvsun,      &
-           sabvsha,      sabg,         sr,           solvd,        &
-           solvi,        solnd,        solni,        srvd,         &
-           srvi,         srnd,         srni,         solvdln,      &
-           solviln,      solndln,      solniln,      srvdln,       &
-           srviln,       srndln,       srniln,       qcharge,      &
-           xerr,         zerr,         &
+           trad,         tref,         qref,         rsur,         &
+           rsur_se,      rsur_ie,      rnof,         qintr,        &
+           qinfl,        qdrip,        rst,          assim,        &
+           respc,        sabvsun,      sabvsha,      sabg,         &
+           sr,           solvd,        solvi,        solnd,        &
+           solni,        srvd,         srvi,         srnd,         &
+           srni,         solvdln,      solviln,      solndln,      &
+           solniln,      srvdln,       srviln,       srndln,       &
+           srniln,       qcharge,      xerr,         zerr,         &
 
          ! TUNABLE model constants
            zlnd,         zsno,         csoilc,       dewmx,        &
            ! 'wtfact' is updated to gridded 'fsatmax' data.
-           capr,         cnfac,        ssi,                        &
-           wimp,         pondmx,       smpmax,       smpmin,       &
-           trsmx0,       tcrit,        &
+           capr,         cnfac,        ssi,          wimp,         &
+           pondmx,       smpmax,       smpmin,       trsmx0,       &
+           tcrit,        &
 
          ! additional variables required by coupling with WRF model
            emis,         z0m,          zol,          rib,          &
@@ -145,7 +144,7 @@ SUBROUTINE CoLMMAIN ( &
    USE MOD_Const_Physical, only: tfrz, denh2o, denice, cpliq, cpice
    USE MOD_Vars_TimeVariables, only: tlai, tsai, irrig_rate
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
-   USE MOD_LandPFT, only : patch_pft_s, patch_pft_e
+   USE MOD_LandPFT, only: patch_pft_s, patch_pft_e
    USE MOD_Vars_PFTimeInvariants
    USE MOD_Vars_PFTimeVariables
 #endif
@@ -595,9 +594,9 @@ SUBROUTINE CoLMMAIN ( &
 
       CALL netsolar (ipatch,idate,deltim,patchlonr,patchtype,&
                      forc_sols,forc_soll,forc_solsd,forc_solld,&
-                     alb,ssun,ssha,lai,sai,rho,tau,ssoi,ssno,ssno_lyr,&
-                     parsun,parsha,sabvsun,sabvsha,sabg,sabg_soil,sabg_snow,fsno,sabg_snow_lyr,sr,&
-                     solvd,solvi,solnd,solni,srvd,srvi,srnd,srni,&
+                     alb,ssun,ssha,lai,sai,rho,tau,ssoi,ssno,ssno_lyr,fsno,&
+                     parsun,parsha,sabvsun,sabvsha,sabg,sabg_soil,sabg_snow,sabg_snow_lyr,&
+                     sr,solvd,solvi,solnd,solni,srvd,srvi,srnd,srni,&
                      solvdln,solviln,solndln,solniln,srvdln,srviln,srndln,srniln)
 
       CALL rain_snow_temp (patchtype, &
@@ -707,12 +706,11 @@ SUBROUTINE CoLMMAIN ( &
               sc_vgm            ,fc_vgm            ,&
 #endif
               k_solids          ,dksatu            ,dksatf            ,dkdry             ,&
-              BA_alpha          ,BA_beta           ,&
-              lai               ,laisun            ,laisha            ,sai               ,&
-              htop              ,hbot              ,sqrtdi            ,rootfr            ,&
-              rstfacsun_out     ,rstfacsha_out     ,rss               ,gssun_out         ,&
-              gssha_out         ,assimsun_out      ,etrsun_out        ,assimsha_out      ,&
-              etrsha_out        ,&
+              BA_alpha          ,BA_beta           ,lai               ,laisun            ,&
+              laisha            ,sai               ,htop              ,hbot              ,&
+              sqrtdi            ,rootfr            ,rstfacsun_out     ,rstfacsha_out     ,&
+              rss               ,gssun_out         ,gssha_out         ,assimsun_out      ,&
+              etrsun_out        ,assimsha_out      ,etrsha_out        ,&
 
               effcon            ,vmax25            ,hksati            ,smp ,hk           ,&
               kmax_sun          ,kmax_sha          ,kmax_xyl          ,kmax_root         ,&
@@ -740,17 +738,16 @@ SUBROUTINE CoLMMAIN ( &
               taux              ,tauy              ,fsena             ,fevpa             ,&
               lfevpa            ,fsenl             ,fevpl             ,etr               ,&
               fseng             ,fevpg             ,olrg              ,fgrnd             ,&
-              rootr             ,rootflux          ,&
-              qseva             ,qsdew             ,qsubl             ,qfros             ,&
-              qseva_soil        ,qsdew_soil        ,qsubl_soil        ,qfros_soil        ,&
-              qseva_snow        ,qsdew_snow        ,qsubl_snow        ,qfros_snow        ,&
-              sm                ,tref              ,qref              ,&
-              trad              ,rst               ,assim             ,respc             ,&
-              errore            ,emis              ,z0m               ,zol               ,&
-              rib               ,ustar             ,qstar             ,tstar             ,&
-              fm                ,fh                ,fq                ,pg_rain           ,&
-              pg_snow           ,t_precip          ,qintr_rain        ,qintr_snow        ,&
-              snofrz(lbsn:0)    ,sabg_snow_lyr(lb:1)                                      )
+              rootr             ,rootflux          ,qseva             ,qsdew             ,&
+              qsubl             ,qfros             ,qseva_soil        ,qsdew_soil        ,&
+              qsubl_soil        ,qfros_soil        ,qseva_snow        ,qsdew_snow        ,&
+              qsubl_snow        ,qfros_snow        ,sm                ,tref              ,&
+              qref              ,trad              ,rst               ,assim             ,&
+              respc             ,errore            ,emis              ,z0m               ,&
+              zol               ,rib               ,ustar             ,qstar             ,&
+              tstar             ,fm                ,fh                ,fq                ,&
+              pg_rain           ,pg_snow           ,t_precip          ,qintr_rain        ,&
+              qintr_snow        ,snofrz(lbsn:0)    ,sabg_snow_lyr(lb:1)                   )
 
          IF (.not. DEF_USE_VariablySaturatedFlow) THEN
 
@@ -758,14 +755,13 @@ SUBROUTINE CoLMMAIN ( &
                  deltim            ,z_soisno(lb:)     ,dz_soisno(lb:)    ,zi_soisno(lb-1:)  ,&
                  bsw               ,porsl             ,psi0              ,hksati            ,&
                  theta_r           ,fsatmax           ,fsatdcf           ,topostd           ,&
-                 BVIC              ,&
-                 rootr             ,rootflux          ,t_soisno(lb:)     ,wliq_soisno(lb:)  ,&
-                 wice_soisno(lb:)  ,smp               ,hk                ,pg_rain           ,&
-                 sm                ,etr               ,qseva             ,qsdew             ,&
-                 qsubl             ,qfros             ,qseva_soil        ,qsdew_soil        ,&
-                 qsubl_soil        ,qfros_soil        ,qseva_snow        ,qsdew_snow        ,&
-                 qsubl_snow        ,qfros_snow        ,fsno              ,rsur              ,&
-                 rnof              ,qinfl             ,pondmx            ,&
+                 BVIC              ,rootr             ,rootflux          ,t_soisno(lb:)     ,&
+                 wliq_soisno(lb:)  ,wice_soisno(lb:)  ,smp               ,hk                ,&
+                 pg_rain           ,sm                ,etr               ,qseva             ,&
+                 qsdew             ,qsubl             ,qfros             ,qseva_soil        ,&
+                 qsdew_soil        ,qsubl_soil        ,qfros_soil        ,qseva_snow        ,&
+                 qsdew_snow        ,qsubl_snow        ,qfros_snow        ,fsno              ,&
+                 rsur              ,rnof              ,qinfl             ,pondmx            ,&
                  ssi               ,wimp              ,smpmin            ,zwt               ,&
                  wa                ,qcharge           ,&
 
@@ -794,9 +790,9 @@ SUBROUTINE CoLMMAIN ( &
                  qfros             ,qseva_soil        ,qsdew_soil        ,qsubl_soil        ,&
                  qfros_soil        ,qseva_snow        ,qsdew_snow        ,qsubl_snow        ,&
                  qfros_snow        ,fsno              ,rsur              ,rsur_se           ,&
-                 rsur_ie           ,rnof              ,qinfl             ,&
-                 ssi               ,pondmx            ,wimp              ,zwt               ,&
-                 wdsrf             ,wa                ,wetwat            ,&
+                 rsur_ie           ,rnof              ,qinfl             ,ssi               ,&
+                 pondmx            ,wimp              ,zwt               ,wdsrf             ,&
+                 wa                ,wetwat            ,&
 #if(defined CaMa_Flood)
              !add variables for flood depth [mm], flood fraction [0-1] and re-infiltration [mm/s] calculation.
                  flddepth          ,fldfrc            ,qinfl_fld         ,&
@@ -906,7 +902,7 @@ SUBROUTINE CoLMMAIN ( &
 #ifndef CatchLateralFlow
          errorw=(endwb-totwb)-(forc_prc+forc_prl-fevpa-rnof)*deltim
 #else
-      ! for lateral flow, "rsur" is considered in HYDRO/MOD_Hydro_SurfaceFlow.F90
+         ! for lateral flow, "rsur" is considered in HYDRO/MOD_Hydro_SurfaceFlow.F90
          errorw=(endwb-totwb)-(forc_prc+forc_prl-fevpa)*deltim
 #endif
 
@@ -1009,7 +1005,7 @@ SUBROUTINE CoLMMAIN ( &
          lb  = snl + 1            !lower bound of array
          lbsn = min(lb,0)
 
-         CALL GLACIER_TEMP (patchtype,   lb    ,nl_soil    ,deltim      ,&
+         CALL GLACIER_TEMP (patchtype,lb       ,nl_soil    ,deltim      ,&
                       zlnd        ,zsno        ,capr       ,cnfac       ,&
                       forc_hgt_u  ,forc_hgt_t  ,forc_hgt_q ,forc_us     ,&
                       forc_vs     ,forc_t      ,forc_q     ,forc_hpbl   ,&
@@ -1035,8 +1031,8 @@ SUBROUTINE CoLMMAIN ( &
                       wliq_soisno ,wice_soisno ,pg_rain    ,pg_snow     ,&
                       sm          ,scv         ,snowdp     ,imelt       ,&
                       fiold       ,snl         ,qseva      ,qsdew       ,&
-                      qsubl       ,qfros       ,gwat       ,&
-                      ssi         ,wimp        ,forc_us    ,forc_vs     ,&
+                      qsubl       ,qfros       ,gwat       ,ssi         ,&
+                      wimp        ,forc_us     ,forc_vs    ,&
                       ! SNICAR
                       forc_aer    ,&
                       mss_bcpho   ,mss_bcphi   ,mss_ocpho  ,mss_ocphi   ,&
@@ -1047,8 +1043,8 @@ SUBROUTINE CoLMMAIN ( &
                       wliq_soisno ,wice_soisno ,pg_rain    ,pg_snow     ,&
                       sm          ,scv         ,snowdp     ,imelt       ,&
                       fiold       ,snl         ,qseva      ,qsdew       ,&
-                      qsubl       ,qfros       ,gwat       ,&
-                      ssi         ,wimp        ,forc_us    ,forc_vs     )
+                      qsubl       ,qfros       ,gwat       ,ssi         ,&
+                      wimp        ,forc_us    ,forc_vs                   )
          ENDIF
 
          IF (.not. DEF_USE_VariablySaturatedFlow) THEN
@@ -1439,7 +1435,7 @@ SUBROUTINE CoLMMAIN ( &
          ! we supposed CALL it every time-step, because
          ! other vegetation related parameters are needed to create
          IF (doalb) THEN
-            CALL albland (ipatch, patchtype,deltim,&
+            CALL albland (ipatch,patchtype,deltim,&
                  soil_s_v_alb,soil_d_v_alb,soil_s_n_alb,soil_d_n_alb,&
                  chil,rho,tau,fveg,green,lai,sai,fwet_snow,coszen,&
                  wt,fsno,scv,scvold,sag,ssw,pg_snow,forc_t,t_grnd,t_soisno_,dz_soisno_,&

@@ -3,17 +3,17 @@
 MODULE MOD_Glacier
 
 !-----------------------------------------------------------------------
-! Energy and Mass Balance Model of LAND ICE (GLACIER / ICE SHEET)
+!  Energy and Mass Balance Model of LAND ICE (GLACIER / ICE SHEET)
 !
-! Original author: Yongjiu Dai, /05/2014/
+!  Original author: Yongjiu Dai, /05/2014/
 !
-! REVISIONS:
-! 01/2023, Hua Yuan: added GLACIER_WATER_snicar() to account for SNICAR
-!          model effects on snow water [see snowwater_snicar()], snow
-!          layers combine [see snowlayerscombine_snicar()], snow layers
-!          divide [see snowlayersdivide_snicar()]
+! !REVISIONS:
+!  01/2023, Hua Yuan: added GLACIER_WATER_snicar() to account for SNICAR
+!           model effects on snow water [see snowwater_snicar()], snow
+!           layers combine [see snowlayerscombine_snicar()], snow layers
+!           divide [see snowlayersdivide_snicar()]
 !
-! 01/2023, Hua Yuan: added snow layer absorption in GLACIER_TEMP()
+!  01/2023, Hua Yuan: added snow layer absorption in GLACIER_TEMP()
 !-----------------------------------------------------------------------
    USE MOD_Precision
    IMPLICIT NONE
@@ -37,11 +37,10 @@ CONTAINS
 !-----------------------------------------------------------------------
 
 
-   SUBROUTINE GLACIER_TEMP (patchtype,   lb   ,nl_ice      ,deltim      ,&
+   SUBROUTINE GLACIER_TEMP (patchtype,lb      ,nl_ice      ,deltim      ,&
                       zlnd        ,zsno       ,capr        ,cnfac       ,&
-                      forc_hgt_u ,forc_hgt_t  ,forc_hgt_q  ,&
-                      forc_us     ,forc_vs    ,forc_t      ,forc_q      ,&
-                      forc_hpbl                                         ,&
+                      forc_hgt_u  ,forc_hgt_t ,forc_hgt_q  ,forc_us     ,&
+                      forc_vs     ,forc_t     ,forc_q      ,forc_hpbl   ,&
                       forc_rhoair ,forc_psrf  ,coszen      ,sabg        ,&
                       forc_frl    ,fsno       ,dz_icesno   ,z_icesno    ,&
                       zi_icesno   ,t_icesno   ,wice_icesno ,wliq_icesno ,&
@@ -344,14 +343,14 @@ CONTAINS
                                     z0m,zol,rib,ustar,qstar,tstar,fm,fh,fq)
 
 !=======================================================================
-! this is the main SUBROUTINE to execute the calculation of thermal processes
-! and surface fluxes of land ice (glacier and ice sheet)
+!  this is the main SUBROUTINE to execute the calculation of thermal processes
+!  and surface fluxes of land ice (glacier and ice sheet)
 !
-! Original author : Yongjiu Dai and Nan Wei, /05/2014/
+!  Original author : Yongjiu Dai and Nan Wei, /05/2014/
 !
-! REVISIONS:
-! 05/2023, Shaofeng Liu: add option to CALL moninobuk_leddy, the LargeEddy
-!          surface turbulence scheme (LZD2022); make a proper update of um.
+! !REVISIONS:
+!  05/2023, Shaofeng Liu: add option to CALL moninobuk_leddy, the LargeEddy
+!           surface turbulence scheme (LZD2022); make a proper update of um.
 !=======================================================================
 
    USE MOD_Precision
@@ -570,29 +569,29 @@ CONTAINS
                         imelt,snofrz,sm,xmf,fact,pg_rain,pg_snow,t_precip)
 
 !=======================================================================
-! SNOW and LAND ICE temperatures
-! o The volumetric heat capacity is calculated as a linear combination
-!   in terms of the volumetric fraction of the constituent phases.
-! o The thermal conductivity of snow/ice is computed from the
-!   formulation used in SNTHERM (Jordan 1991) and Yen (1981),
-!   respectively.
-! o Boundary conditions:
-!   F = Rnet - Hg - LEg (top) + HPR, F= 0 (base of the land ice column).
-! o Ice/snow temperature is predicted from heat conduction in 10 ice
-!   layers and up to 5 snow layers.  The thermal conductivities at the
-!   interfaces between two neighbor layers (j, j+1) are derived from an
-!   assumption that the flux across the interface is equal to that from
-!   the node j to the interface and the flux from the interface to the
-!   node j+1. The equation is solved using the Crank-Nicholson method
-!   and resulted in a tridiagonal system equation.
+!  SNOW and LAND ICE temperatures
+!  o The volumetric heat capacity is calculated as a linear combination
+!    in terms of the volumetric fraction of the constituent phases.
+!  o The thermal conductivity of snow/ice is computed from the
+!    formulation used in SNTHERM (Jordan 1991) and Yen (1981),
+!    respectively.
+!  o Boundary conditions:
+!    F = Rnet - Hg - LEg (top) + HPR, F= 0 (base of the land ice column).
+!  o Ice/snow temperature is predicted from heat conduction in 10 ice
+!    layers and up to 5 snow layers.  The thermal conductivities at the
+!    interfaces between two neighbor layers (j, j+1) are derived from an
+!    assumption that the flux across the interface is equal to that from
+!    the node j to the interface and the flux from the interface to the
+!    node j+1. The equation is solved using the Crank-Nicholson method
+!    and resulted in a tridiagonal system equation.
 !
-! Phase change (see meltf.F90)
+!  Phase change (see meltf.F90)
 !
-! Original author : Yongjiu Dai, /05/2014/
+!  Original author : Yongjiu Dai, /05/2014/
 !
-! REVISIONS:
-! 01/2023, Hua Yuan: account for snow layer absorption (SNICAR) in
-!          ground heat flux, temperature and melt calculation.
+! !REVISIONS:
+!  01/2023, Hua Yuan: account for snow layer absorption (SNICAR) in
+!           ground heat flux, temperature and melt calculation.
 !=======================================================================
 
    USE MOD_Precision
@@ -870,13 +869,13 @@ CONTAINS
 
 
 
-   SUBROUTINE GLACIER_WATER ( nl_ice,maxsnl,deltim,&
-                      z_icesno    ,dz_icesno   ,zi_icesno ,t_icesno,&
-                      wliq_icesno ,wice_icesno ,pg_rain   ,pg_snow ,&
-                      sm          ,scv         ,snowdp    ,imelt   ,&
-                      fiold       ,snl         ,qseva     ,qsdew   ,&
-                      qsubl       ,qfros       ,gwat      ,         &
-                      ssi         ,wimp        ,forc_us   ,forc_vs )
+   SUBROUTINE GLACIER_WATER (      nl_ice      ,maxsnl    ,deltim    ,&
+                      z_icesno    ,dz_icesno   ,zi_icesno ,t_icesno  ,&
+                      wliq_icesno ,wice_icesno ,pg_rain   ,pg_snow   ,&
+                      sm          ,scv         ,snowdp    ,imelt     ,&
+                      fiold       ,snl         ,qseva     ,qsdew     ,&
+                      qsubl       ,qfros       ,gwat      ,ssi       ,&
+                      wimp        ,forc_us     ,forc_vs               )
 
 !=======================================================================
    USE MOD_Precision
@@ -991,17 +990,17 @@ CONTAINS
    END SUBROUTINE GLACIER_WATER
 
 
-   SUBROUTINE GLACIER_WATER_snicar ( nl_ice,maxsnl,deltim,&
-                      z_icesno    ,dz_icesno   ,zi_icesno ,t_icesno,&
-                      wliq_icesno ,wice_icesno ,pg_rain   ,pg_snow ,&
-                      sm          ,scv         ,snowdp    ,imelt   ,&
-                      fiold       ,snl         ,qseva     ,qsdew   ,&
-                      qsubl       ,qfros       ,gwat      ,         &
-                      ssi         ,wimp        ,forc_us   ,forc_vs ,&
+   SUBROUTINE GLACIER_WATER_snicar ( nl_ice    ,maxsnl    ,deltim    ,&
+                      z_icesno    ,dz_icesno   ,zi_icesno ,t_icesno  ,&
+                      wliq_icesno ,wice_icesno ,pg_rain   ,pg_snow   ,&
+                      sm          ,scv         ,snowdp    ,imelt     ,&
+                      fiold       ,snl         ,qseva     ,qsdew     ,&
+                      qsubl       ,qfros       ,gwat      ,ssi       ,&
+                      wimp        ,forc_us     ,forc_vs              ,&
                       ! SNICAR
                       forc_aer    ,&
-                      mss_bcpho   ,mss_bcphi   ,mss_ocpho,mss_ocphi,&
-                      mss_dst1    ,mss_dst2    ,mss_dst3  ,mss_dst4 )
+                      mss_bcpho   ,mss_bcphi   ,mss_ocpho ,mss_ocphi ,&
+                      mss_dst1    ,mss_dst2    ,mss_dst3  ,mss_dst4   )
 
 !=======================================================================
    USE MOD_Precision

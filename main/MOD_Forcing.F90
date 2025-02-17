@@ -3,19 +3,19 @@
 !-----------------------------------------------------------------------
 MODULE MOD_Forcing
 
-! DESCRIPTION:
-! read in the atmospheric forcing using user defined interpolation method
-! or downscaling forcing
+! !DESCRIPTION:
+!  read in the atmospheric forcing using user defined interpolation method or
+!  downscaling forcing
 !
-! REVISIONS:
-! Yongjiu Dai and Hua Yuan, 04/2014: initial code from CoLM2014 (metdata.F90,
-!                                    GETMET.F90 and rd_forcing.F90
+! !REVISIONS:
+!  Yongjiu Dai and Hua Yuan, 04/2014: initial code from CoLM2014 (metdata.F90,
+!                                     GETMET.F90 and rd_forcing.F90
 !
-! Shupeng Zhang, 05/2023: 1) porting codes to MPI parallel version
-!                         2) codes for dealing with missing forcing value
-!                         3) interface for downscaling
+!  Shupeng Zhang, 05/2023: 1) porting codes to MPI parallel version
+!                          2) codes for dealing with missing forcing value
+!                          3) interface for downscaling
 !
-! TODO...(need complement)
+! !TODO...(need complement)
 
    USE MOD_Precision
    USE MOD_Namelist
@@ -25,7 +25,7 @@ MODULE MOD_Forcing
    USE MOD_TimeManager
    USE MOD_SPMD_Task
    USE MOD_MonthlyinSituCO2MaunaLoa
-   USE MOD_Vars_Global, only : pi
+   USE MOD_Vars_Global, only: pi
    USE MOD_OrbCoszen
    USE MOD_UserDefFun
 
@@ -932,15 +932,16 @@ CONTAINS
    END SUBROUTINE read_forcing
 
 
-   ! ------------------------------------------------------------
-   !
-   ! !DESCRIPTION:
-   !    read lower and upper boundary forcing data, a major interface of
-   !    this MODULE
-   !
-   ! REVISIONS:
-   ! Hua Yuan, 04/2014: initial code
-   ! ------------------------------------------------------------
+! ------------------------------------------------------------
+!
+! !DESCRIPTION:
+!  read lower and upper boundary forcing data, a major interface of this
+!  MODULE
+!
+! !REVISIONS:
+!  Hua Yuan, 04/2014: initial code
+!
+! ------------------------------------------------------------
    SUBROUTINE metreadLBUB (idate, dir_forcing)
 
    USE MOD_UserSpecifiedForcing
@@ -1269,8 +1270,8 @@ CONTAINS
 !    o leap year
 !    o required data just beyond the first record
 !
-! REVISIONS:
-! Hua Yuan, 04/2014: initial code
+! !REVISIONS:
+!  Hua Yuan, 04/2014: initial code
 ! ------------------------------------------------------------
    SUBROUTINE setstampLB(mtstamp, var_i, year, month, mday, time_i)
 
@@ -1497,8 +1498,8 @@ CONTAINS
 !    set the upper boundary time stamp and record information,
 !    a KEY FUNCTION of this MODULE
 !
-! REVISIONS:
-! Hua Yuan, 04/2014: initial code
+! !REVISIONS:
+!  Hua Yuan, 04/2014: initial code
 ! ------------------------------------------------------------
    SUBROUTINE setstampUB(var_i, year, month, mday, time_i)
 
@@ -1653,10 +1654,10 @@ CONTAINS
 
 ! ------------------------------------------------------------
 ! !DESCRIPTION:
-! calculate time average coszen value between [LB, UB]
+!  calculate time average coszen value between [LB, UB]
 !
-! REVISIONS:
-! 04/2014, yuan: this method is adapted from CLM
+! !REVISIONS:
+!  04/2014, yuan: this method is adapted from CLM
 ! ------------------------------------------------------------
    SUBROUTINE calavgcos(idate)
 

@@ -27,7 +27,7 @@ CONTAINS
 
 !-----------------------------------------------------------------------
 
-   SUBROUTINE albland (ipatch, patchtype, deltim,&
+   SUBROUTINE albland (ipatch,patchtype,deltim,&
                       soil_s_v_alb,soil_d_v_alb,soil_s_n_alb,soil_d_n_alb,&
                       chil,rho,tau,fveg,green,lai,sai,fwet_snow,coszen,&
                       wt,fsno,scv,scvold,sag,ssw,pg_snow,forc_t,t_grnd,t_soisno,dz_soisno,&
@@ -287,13 +287,12 @@ IF (DEF_USE_SNICAR) THEN
 ! microphysics and albedo evolution, JGR, and Brun (1989), Investigation of
 ! wet-snow metamorphism in respect of liquid-water content, Ann. Glacial.
 
-      CALL SnowAge_grain(   deltim ,snl    ,dz_soisno(:1)  ,&
-           pg_snow         ,snwcp_ice      ,snofrz         ,&
+      CALL SnowAge_grain(  deltim ,snl    ,dz_soisno(:1)  ,&
+           pg_snow        ,snwcp_ice      ,snofrz         ,&
 
-           do_capsnow      ,fsno           ,scv            ,&
-           wliq_soisno (:0),wice_soisno(:0),&
-           t_soisno    (:1),t_grnd         ,&
-           forc_t          ,snw_rds         )
+           do_capsnow     ,fsno           ,scv            ,&
+           wliq_soisno(:0),wice_soisno(:0),t_soisno(:1)   ,&
+           t_grnd         ,forc_t         ,snw_rds         )
 ENDIF
 ! ----------------------------------------------------------------------
 
@@ -471,10 +470,10 @@ ENDIF
 
 !-----------------------------------------------------------------------
 !
-!     calculation of canopy albedos via two stream approximation (direct
-!     and diffuse ) and partition of incident solar
+!  calculation of canopy albedos via two stream approximation (direct
+!  and diffuse ) and partition of incident solar
 !
-! Original author: Yongjiu Dai, June 11, 2001
+!  Original author: Yongjiu Dai, June 11, 2001
 !
 !-----------------------------------------------------------------------
 
@@ -801,14 +800,15 @@ ENDIF
 ! !DESCRIPTION:
 !     An improved two stream approximation
 !
-! Original author: Yongjiu Dai, June 11, 2001
+!  Original author: Yongjiu Dai, June 11, 2001
 !                  Hua Yuan, 03/2020
 !
-! REFERENCES:
-! 1) Yuan, H., Dai, Y., Dickinson, R. E., Pinty, B., Shangguan, W., Zhang, S.,
-! et al. (2017). Reexamination and further development of two-stream canopy
-! radiative transfer models for global land modeling. Journal of Advances in
-! Modeling Earth Systems, 9(1), 113–129. https://doi.org/10.1002/2016MS000773
+! !REFERENCES:
+!  1) Yuan, H., Dai, Y., Dickinson, R. E., Pinty, B., Shangguan, W.,
+!  Zhang, S., et al. (2017). Reexamination and further development of
+!  two-stream canopy radiative transfer models for global land modeling.
+!  Journal of Advances in Modeling Earth Systems, 9(1), 113–129.
+!  https://doi.org/10.1002/2016MS000773
 !
 !-----------------------------------------------------------------------
 
@@ -1186,9 +1186,9 @@ ENDIF
 !-----------------------------------------------------------------------
 !
 ! !DESCRIPTION:
-! A Wrap subroutine to calculate PFT radiation using two-stream model
+!  A Wrap subroutine to calculate PFT radiation using two-stream model
 !
-! Created by Hua Yuan, 03/2020
+!  Created by Hua Yuan, 03/2020
 !
 !-----------------------------------------------------------------------
    USE MOD_Precision

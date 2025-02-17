@@ -3,19 +3,19 @@
 MODULE MOD_Lake
 
 !-----------------------------------------------------------------------
-! DESCRIPTION:
-! Simulating energy balance processes of land water body
+! !DESCRIPTION:
+!  Simulating energy balance processes of land water body
 !
-! REFERENCE:
-! Dai et al, 2018, The lake scheme of the common land model and its performance evaluation.
-! Chinese Science Bulletin, 63(28-29), 3002–3021, https://doi.org/10.1360/N972018-00609
+! !REFERENCES:
+!  Dai et al, 2018, The lake scheme of the common land model and its performance evaluation.
+!  Chinese Science Bulletin, 63(28-29), 3002–3021, https://doi.org/10.1360/N972018-00609
 !
-! Original author: Yongjiu Dai 04/2014/
+!  Original author: Yongjiu Dai 04/2014/
 !
-! Revisions:
-! Nan Wei,  01/2018: interaction btw prec and lake surface including phase change of prec and water body
-! Nan Wei,  06/2018: update heat conductivity of water body and soil below and snow hydrology
-! Hua Yuan, 01/2023: added snow layer absorption in melting calculation
+! !REVISIONS:
+!  Nan Wei,  01/2018: interaction btw prec and lake surface including phase change of prec and water body
+!  Nan Wei,  06/2018: update heat conductivity of water body and soil below and snow hydrology
+!  Hua Yuan, 01/2023: added snow layer absorption in melting calculation
 !-----------------------------------------------------------------------
 
    USE MOD_Precision
@@ -49,19 +49,20 @@ CONTAINS
 
             ! "inout" arguments
             ! ------------------
-            t_lake    , zi_soisno , z_soisno ,&
+            t_lake    , zi_soisno , z_soisno    ,&
             dz_soisno , t_soisno  , wliq_soisno , wice_soisno ,&
             fiold     , snl       , sag         , scv         ,&
             snowdp    , lake_icefrac )
 
 !-----------------------------------------------------------------------
-! DESCRIPTION:
-! Add new snow nodes and interaction btw prec and lake surface including phase change of prec and water body
+! !DESCRIPTION:
+!  Add new snow nodes and interaction btw prec and lake surface including phase
+!  change of prec and water body
 !
-! Original author : Yongjiu Dai, 04/2014
+!  Original author : Yongjiu Dai, 04/2014
 !
-! Revisions:
-! Nan Wei,  01/2018: update interaction btw prec and lake surface
+! !REVISIONS:
+!  Nan Wei,  01/2018: update interaction btw prec and lake surface
 !-----------------------------------------------------------------------
 
    USE MOD_Precision
@@ -1903,14 +1904,14 @@ CONTAINS
                              cur,ustar,z0mg,z0hg,z0qg)
 
 !-----------------------------------------------------------------------
-! DESCRIPTION:
-! Calculate lake surface roughness
+! !DESCRIPTION:
+!  Calculate lake surface roughness
 !
-! Original:
-! The Community Land Model version 4.5 (CLM4.5)
+!  Original:
+!  The Community Land Model version 4.5 (CLM4.5)
 !
-! Revisions:
-! Yongjiu Dai, Nan Wei, 01/2018
+! !REVISIONS:
+!  Yongjiu Dai, Nan Wei, 01/2018
 !-----------------------------------------------------------------------
 
    USE MOD_Precision
