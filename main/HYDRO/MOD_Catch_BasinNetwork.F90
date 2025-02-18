@@ -31,7 +31,6 @@ MODULE MOD_Catch_BasinNetwork
       integer, allocatable :: paddr (:)
       integer, allocatable :: ndata (:)
       integer, allocatable :: ipush (:)
-      integer, allocatable :: isdrv (:)
    CONTAINS
       final :: basin_pushdata_free_mem
    END type basin_pushdata_type
@@ -1017,7 +1016,6 @@ CONTAINS
       IF (allocated(this%paddr)) deallocate(this%paddr)
       IF (allocated(this%ndata)) deallocate(this%ndata)
       IF (allocated(this%ipush)) deallocate(this%ipush)
-      IF (allocated(this%isdrv)) deallocate(this%isdrv)
 
    END SUBROUTINE basin_pushdata_free_mem
 
