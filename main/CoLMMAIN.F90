@@ -933,7 +933,7 @@ SUBROUTINE CoLMMAIN ( &
 
 !======================================================================
 
-      ELSE IF(patchtype == 3)THEN   ! <=== is LAND ICE (glacier/ice sheet) (patchtype = 3)
+      ELSEIF (patchtype == 3) THEN   ! <=== is LAND ICE (glacier/ice sheet) (patchtype = 3)
 
 !======================================================================
                             ! initial set
@@ -1108,7 +1108,7 @@ SUBROUTINE CoLMMAIN ( &
 
 !======================================================================
 
-      ELSE IF(patchtype == 4) THEN   ! <=== is LAND WATER BODIES (lake, reservoir and river) (patchtype = 4)
+      ELSEIF (patchtype == 4) THEN   ! <=== is LAND WATER BODIES (lake, reservoir and river) (patchtype = 4)
 
 !======================================================================
 

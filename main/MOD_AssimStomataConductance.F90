@@ -215,7 +215,7 @@ CONTAINS
             pco2i_c = pco2i
             pco2i_e = pco2i
          ELSE
-            call WUE_solver(gammas, lambda, co2a, ei, ea, psrf, pco2i_c, pco2i_e)
+            CALL WUE_solver(gammas, lambda, co2a, ei, ea, psrf, pco2i_c, pco2i_e)
          ENDIF
 
 !-----------------------------------------------------------------------

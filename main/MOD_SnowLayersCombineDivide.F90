@@ -363,7 +363,7 @@ CONTAINS
                      neibor = i + 1
 
 ! If the bottom neighbor is not snow, combine with the top neighbor
-                  ELSE IF(i == 0)THEN
+                  ELSEIF(i == 0)THEN
                      neibor = i - 1
 
 ! If NONE of the above special cases apply, combine with the thinnest neighbor
@@ -674,7 +674,7 @@ CONTAINS
       hc = h + h2
       IF(hc < 0.)THEN
          tc = tfrz + hc/(cpice*wicec+cpliq*wliqc)
-      ELSE IF(hc.le.hfus*wliqc)THEN
+      ELSEIF(hc.le.hfus*wliqc)THEN
          tc = tfrz
       ELSE
          tc = tfrz + (hc - hfus*wliqc)/(cpice*wicec+cpliq*wliqc)
@@ -873,7 +873,7 @@ CONTAINS
                      neibor = i + 1
 
 ! If the bottom neighbor is not snow, combine with the top neighbor
-                  ELSE IF(i == 0)THEN
+                  ELSEIF(i == 0)THEN
                      neibor = i - 1
 
 ! If NONE of the above special cases apply, combine with the thinnest neighbor

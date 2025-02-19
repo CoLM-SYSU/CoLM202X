@@ -417,7 +417,7 @@ CONTAINS
    type(timestamp) :: mtstamp
    integer  :: dtLB, dtUB
    real(r8) :: cosz, coszen(numpatch), cosa, cosazi(numpatch), balb
-   INTEGER  :: year, month, mday
+   integer  :: year, month, mday
    logical  :: has_u,has_v
    real solar, frl, prcp, tm, us, vs, pres, qm
    real(r8) :: pco2m

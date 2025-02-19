@@ -120,7 +120,7 @@ CONTAINS
             DO j = 1,plsice
                tssub(j) = tssea
             ENDDO
-         ELSE IF(nint(oro).eq.0 .and. tssea.le.tsice) THEN
+         ELSEIF(nint(oro).eq.0 .and. tssea.le.tsice) THEN
             oro = 2.0         ! new sea ice formed
             snowh = snsice
             scv = snowh*1000.
@@ -144,7 +144,7 @@ CONTAINS
          olrg = stefnc*emisw*tssea**4 + (1.-emisw)*frl
          emis = emisw
 
-      ELSE IF(nint(oro).eq.2)THEN        ! sea ice
+      ELSEIF(nint(oro).eq.2)THEN        ! sea ice
          lfevpa = fevpa*hsub
 
        ! net surface flux and derivate at current surface temperature
@@ -329,7 +329,7 @@ CONTAINS
             ustar=vonkar*um/log(zldis/z0mg)
          ENDDO
 
-      ELSE IF(nint(oro).eq.2)THEN     ! sea ice
+      ELSEIF(nint(oro).eq.2)THEN     ! sea ice
          z0mg = zsice
          z0qg = z0mg
          z0hg = z0mg
@@ -619,7 +619,7 @@ CONTAINS
          rhs(1) = diag(1)*tin(1) + fnt*rztop - fbt*rztop + htsrc(1)
 
 ! more than one layer: top layer first
-      ELSE IF (plsice.gt.1) THEN
+      ELSEIF (plsice.gt.1) THEN
 
          crt       = cmass(1)*rho(1)*rdtime
          ztop      = z(1) - z(0)

@@ -82,7 +82,7 @@ CONTAINS
 
          IF(t_precip - tfrz > 3.0)THEN
             flfall = 1.0      ! fraction of liquid water within falling precip
-         ELSE IF (t_precip - tfrz >= -2.0)THEN
+         ELSEIF (t_precip - tfrz >= -2.0)THEN
             flfall = max(0.0, 1.0 - 1.0/(1.0+5.00e-5*exp(2.0*(t_precip-tfrz+4.))))   !Figure 5c of Behrangi et al. (2018)
             !* flfall = max(0.0, 1.0 - 1.0/(1.0+6.99e-5*exp(2.0*(t_precip-tfrz+3.97)))) !Equation 1 of Wang et al. (2019)
          ELSE
@@ -117,7 +117,7 @@ CONTAINS
 
          IF(t_hydro > 3.0)THEN
             flfall = 1.0      ! fraction of liquid water within falling precip
-         ELSE IF ((t_hydro >= -3.0).and.(t_hydro <= 3.0))THEN
+         ELSEIF ((t_hydro >= -3.0).and.(t_hydro <= 3.0))THEN
             flfall = max(0.0, 1.0/(1.0+2.50286*0.125006**t_hydro))
          ELSE
             flfall = 0.0
@@ -182,7 +182,7 @@ CONTAINS
 
       IF (forc_t > tfrz + 2.0) THEN
          bifall = 50.0 + 1.7*(17.0)**1.5
-      ELSE IF (forc_t > tfrz - 15.0) THEN
+      ELSEIF (forc_t > tfrz - 15.0) THEN
          bifall = 50.0 + 1.7*(forc_t - tfrz + 15.0)**1.5
       ELSE
          ! Andrew Slater: A temp of about -15C gives the nicest
@@ -295,7 +295,7 @@ CONTAINS
 
          zfdiff = 1 + zd * zl / zlambda * rho_vast_diff
          zt = ztint - zf / zfdiff
-         IF (ABS(zt - ztint) .LT. 0.01) EXIT
+         IF (ABS(zt - ztint) .lt. 0.01) EXIT
       ENDDO
 
       pti = zt

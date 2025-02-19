@@ -361,7 +361,7 @@ CONTAINS
          ! Limiting the scope of proportionality adjustments
          IF (scale_factor>1.5) THEN
              scale_factor = 1.5
-         ELSE IF (scale_factor<-1.5) THEN
+         ELSEIF (scale_factor<-1.5) THEN
              scale_factor = -1.5
          ENDIF
          ws_c_type(i) = ws_g *scale_factor*area_type_c(i)
@@ -582,7 +582,7 @@ CONTAINS
 
       IF (zen_rad <= zenith_segment) THEN
          sf_c = 1.
-      ELSE IF (a1<=1e-10) THEN
+      ELSEIF (a1<=1e-10) THEN
          sf_c = 1.
       ELSE
          sf_c = exp(-1*exp(min(a1*zen_rad+a2,3.5)))

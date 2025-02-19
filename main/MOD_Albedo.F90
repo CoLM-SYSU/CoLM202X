@@ -314,12 +314,12 @@ ENDIF
          albg(:,2) = albg(:,1)           !diffused albedos setting
 
 ! 2.2 albedos for permanent ice sheet.
-      ELSE IF(patchtype == 3) THEN       !permanent ice sheet
+      ELSEIF (patchtype == 3) THEN       !permanent ice sheet
          albg(1,:) = 0.8
          albg(2,:) = 0.55
 
 ! 2.3 albedo for inland water
-      ELSE IF(patchtype >= 4) THEN
+      ELSEIF (patchtype >= 4) THEN
          albg0 = 0.05/(czen+0.15)
          albg(:,1) = albg0
          albg(:,2) = 0.1                 !Subin (2012)
@@ -588,9 +588,9 @@ ENDIF
 
       IF (abs(phi1).gt.1.e-6 .and. abs(phi2).gt.1.e-6) THEN
          zmu = 1. / phi2 * ( 1. - phi1 / phi2 * log ( ( phi1 + phi2 ) / phi1 ) )
-      ELSE IF (abs(phi1).le.1.e-6) THEN
+      ELSEIF (abs(phi1).le.1.e-6) THEN
          zmu = 1./0.877
-      ELSE IF (abs(phi2).le.1.e-6) THEN
+      ELSEIF (abs(phi2).le.1.e-6) THEN
          zmu = 1./(2.*phi1)
       ENDIF
       zmu2 = zmu * zmu
@@ -925,9 +925,9 @@ ENDIF
 
       IF (abs(phi1).gt.1.e-6 .and. abs(phi2).gt.1.e-6) THEN
          zmu = 1. / phi2 * ( 1. - phi1 / phi2 * log ( ( phi1 + phi2 ) / phi1 ) )
-      ELSE IF (abs(phi1).le.1.e-6) THEN
+      ELSEIF (abs(phi1).le.1.e-6) THEN
          zmu = 1./0.877
-      ELSE IF (abs(phi2).le.1.e-6) THEN
+      ELSEIF (abs(phi2).le.1.e-6) THEN
          zmu = 1./(2.*phi1)
       ENDIF
       zmu2 = zmu * zmu
@@ -1315,7 +1315,7 @@ ENDIF
 !
 ! Over Antarctica
 !
-      ELSE IF (scv > 800.) THEN
+      ELSEIF (scv > 800.) THEN
          sag = 0.
 !
 ! Away from Antarctica
@@ -1935,7 +1935,7 @@ ENDIF
                           ((1.-frac_sno)*(1-albsod(ib))*(flx_absd_snw(i,ib)/(1.-albsnd(ib))))
                      flx_absiv(i) = flx_absi_snw(i,ib)*frac_sno + &
                           ((1.-frac_sno)*(1-albsoi(ib))*(flx_absi_snw(i,ib)/(1.-albsni(ib))))
-                  elseif (ib == 2) THEN
+                  ELSEIF (ib == 2) THEN
                      flx_absdn(i) = flx_absd_snw(i,ib)*frac_sno + &
                           ((1.-frac_sno)*(1-albsod(ib))*(flx_absd_snw(i,ib)/(1.-albsnd(ib))))
                      flx_absin(i) = flx_absi_snw(i,ib)*frac_sno + &
@@ -1945,7 +1945,7 @@ ENDIF
                   IF (ib == 1) THEN
                      flx_absdv(i) = flx_absd_snw(i,ib)!*(1.-albsnd(ib))
                      flx_absiv(i) = flx_absi_snw(i,ib)!*(1.-albsni(ib))
-                  elseif (ib == 2) THEN
+                  ELSEIF (ib == 2) THEN
                      flx_absdn(i) = flx_absd_snw(i,ib)!*(1.-albsnd(ib))
                      flx_absin(i) = flx_absi_snw(i,ib)!*(1.-albsni(ib))
                   ENDIF

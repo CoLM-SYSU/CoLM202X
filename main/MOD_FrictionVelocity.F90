@@ -77,10 +77,10 @@ CONTAINS
          fm    = log(-zetam*obu/z0m) - psi(1,-zetam) &
                + psi(1,z0m/obu) + 1.14*((-zeta)**0.333-(zetam)**0.333)
          ustar = vonkar*um / fm
-      ELSE IF(zeta < 0.)THEN          ! -1 <= zeta < 0
+      ELSEIF (zeta < 0.)THEN          ! -1 <= zeta < 0
          fm    = log(zldis/z0m) - psi(1,zeta) + psi(1,z0m/obu)
          ustar = vonkar*um / fm
-      ELSE IF(zeta <= 1.)THEN         !  0 <= zeta <= 1
+      ELSEIF (zeta <= 1.)THEN         !  0 <= zeta <= 1
          fm    = log(zldis/z0m) + 5.*zeta - 5.*z0m/obu
          ustar = vonkar*um / fm
       ELSE                            !  1 < zeta, phi=5+zeta
@@ -95,9 +95,9 @@ CONTAINS
       IF(zeta < -zetam)THEN           ! zeta < -1
          fm10m  = log(-zetam*obu/z0m) - psi(1,-zetam) &
                 + psi(1,z0m/obu) + 1.14*((-zeta)**0.333-(zetam)**0.333)
-      ELSE IF(zeta < 0.)THEN          ! -1 <= zeta < 0
+      ELSEIF (zeta < 0.)THEN          ! -1 <= zeta < 0
          fm10m  = log(zldis/z0m) - psi(1,zeta) + psi(1,z0m/obu)
-      ELSE IF(zeta <= 1.)THEN         !  0 <= zeta <= 1
+      ELSEIF (zeta <= 1.)THEN         !  0 <= zeta <= 1
          fm10m  = log(zldis/z0m) + 5.*zeta - 5.*z0m/obu
       ELSE                            !  1 < zeta, phi=5+zeta
          fm10m  = log(obu/z0m) + 5. - 5.*z0m/obu + (5.*log(zeta)+zeta-1.)
@@ -110,9 +110,9 @@ CONTAINS
       IF(zeta < -zetat)THEN           ! zeta < -1
          fh    = log(-zetat*obu/z0h)-psi(2,-zetat) &
                + psi(2,z0h/obu) + 0.8*((zetat)**(-0.333)-(-zeta)**(-0.333))
-      ELSE IF(zeta < 0.)THEN          ! -1 <= zeta < 0
+      ELSEIF (zeta < 0.)THEN          ! -1 <= zeta < 0
          fh    = log(zldis/z0h) - psi(2,zeta) + psi(2,z0h/obu)
-      ELSE IF(zeta <= 1.)THEN         !  0 <= zeta <= 1
+      ELSEIF (zeta <= 1.)THEN         !  0 <= zeta <= 1
          fh    = log(zldis/z0h) + 5.*zeta - 5.*z0h/obu
       ELSE                            !  1 < zeta, phi=5+zeta
          fh    = log(obu/z0h) + 5. - 5.*z0h/obu + (5.*log(zeta)+zeta-1.)
@@ -125,9 +125,9 @@ CONTAINS
       IF(zeta < -zetat)THEN           ! zeta < -1
          fh2m = log(-zetat*obu/z0h)-psi(2,-zetat) &
               + psi(2,z0h/obu) + 0.8*((zetat)**(-0.333)-(-zeta)**(-0.333))
-      ELSE IF(zeta < 0.)THEN          ! -1 <= zeta < 0
+      ELSEIF (zeta < 0.)THEN          ! -1 <= zeta < 0
          fh2m = log(zldis/z0h) - psi(2,zeta) + psi(2,z0h/obu)
-      ELSE IF(zeta <= 1.)THEN         !  0 <= zeta <= 1
+      ELSEIF (zeta <= 1.)THEN         !  0 <= zeta <= 1
          fh2m = log(zldis/z0h) + 5.*zeta - 5.*z0h/obu
       ELSE                            !  1 < zeta, phi=5+zeta
          fh2m = log(obu/z0h) + 5. - 5.*z0h/obu + (5.*log(zeta)+zeta-1.)
@@ -140,9 +140,9 @@ CONTAINS
       IF(zeta < -zetat)THEN           ! zeta < -1
          fq    = log(-zetat*obu/z0q) - psi(2,-zetat) &
                + psi(2,z0q/obu) + 0.8*((zetat)**(-0.333)-(-zeta)**(-0.333))
-      ELSE IF(zeta < 0.)THEN          ! -1 <= zeta < 0
+      ELSEIF (zeta < 0.)THEN          ! -1 <= zeta < 0
          fq    = log(zldis/z0q) - psi(2,zeta) + psi(2,z0q/obu)
-      ELSE IF(zeta <= 1.)THEN         !  0 <= zeta <= 1
+      ELSEIF (zeta <= 1.)THEN         !  0 <= zeta <= 1
          fq    = log(zldis/z0q) + 5.*zeta - 5.*z0q/obu
       ELSE                            !  1 < zeta, phi=5+zeta
          fq    = log(obu/z0q) + 5. - 5.*z0q/obu + (5.*log(zeta)+zeta-1.)
@@ -157,7 +157,7 @@ CONTAINS
                + psi(2,z0q/obu) + 0.8*((zetat)**(-0.333)-(-zeta)**(-0.333))
       ELSEIF (zeta < 0.) THEN         ! -1 <= zeta < 0
          fq2m = log(zldis/z0q)-psi(2,zeta)+psi(2,z0q/obu)
-      ELSE IF (zeta <= 1.) THEN       !  0 <= zeta <= 1
+      ELSEIF (zeta <= 1.) THEN        !  0 <= zeta <= 1
          fq2m = log(zldis/z0q)+5.*zeta-5.*z0q/obu
       ELSE                            ! 1 < zeta, phi=5+zeta
          fq2m = log(obu/z0q)+5.-5.*z0q/obu+(5.*log(zeta)+zeta-1.)
@@ -236,10 +236,10 @@ CONTAINS
          fm    = log(-zetam*obu/z0m) - psi(1,-zetam) &
                + psi(1,z0m/obu) + 1.14*((-zeta)**0.333-(zetam)**0.333)
          ustar = vonkar*um / fm
-      ELSE IF(zeta < 0.)THEN          ! -1 <= zeta < 0
+      ELSEIF (zeta < 0.)THEN          ! -1 <= zeta < 0
          fm    = log(zldis/z0m) - psi(1,zeta) + psi(1,z0m/obu)
          ustar = vonkar*um / fm
-      ELSE IF(zeta <= 1.)THEN         !  0 <= zeta <= 1
+      ELSEIF (zeta <= 1.)THEN         !  0 <= zeta <= 1
          fm    = log(zldis/z0m) + 5.*zeta - 5.*z0m/obu
          ustar = vonkar*um / fm
       ELSE                            !  1 < zeta, phi=5+zeta
@@ -255,9 +255,9 @@ CONTAINS
       IF(zeta < -zetam)THEN           ! zeta < -1
          fmtop  = log(-zetam*obu/z0m) - psi(1,-zetam) &
                 + psi(1,z0m/obu) + 1.14*((-zeta)**0.333-(zetam)**0.333)
-      ELSE IF(zeta < 0.)THEN          ! -1 <= zeta < 0
+      ELSEIF (zeta < 0.)THEN          ! -1 <= zeta < 0
          fmtop  = log(zldis/z0m) - psi(1,zeta) + psi(1,z0m/obu)
-      ELSE IF(zeta <= 1.)THEN         !  0 <= zeta <= 1
+      ELSEIF (zeta <= 1.)THEN         !  0 <= zeta <= 1
          fmtop  = log(zldis/z0m) + 5.*zeta - 5.*z0m/obu
       ELSE                            !  1 < zeta, phi=5+zeta
          fmtop  = log(obu/z0m) + 5. - 5.*z0m/obu + (5.*log(zeta)+zeta-1.)
@@ -270,9 +270,9 @@ CONTAINS
       IF(zeta < -zetat)THEN           ! zeta < -1
          fh    = log(-zetat*obu/z0h)-psi(2,-zetat) &
                + psi(2,z0h/obu) + 0.8*((zetat)**(-0.333)-(-zeta)**(-0.333))
-      ELSE IF(zeta < 0.)THEN          ! -1 <= zeta < 0
+      ELSEIF (zeta < 0.)THEN          ! -1 <= zeta < 0
          fh    = log(zldis/z0h) - psi(2,zeta) + psi(2,z0h/obu)
-      ELSE IF(zeta <= 1.)THEN         !  0 <= zeta <= 1
+      ELSEIF (zeta <= 1.)THEN         !  0 <= zeta <= 1
          fh    = log(zldis/z0h) + 5.*zeta - 5.*z0h/obu
       ELSE                            !  1 < zeta, phi=5+zeta
          fh    = log(obu/z0h) + 5. - 5.*z0h/obu + (5.*log(zeta)+zeta-1.)
@@ -285,9 +285,9 @@ CONTAINS
       IF(zeta < -zetat)THEN           ! zeta < -1
          fh2m = log(-zetat*obu/z0h)-psi(2,-zetat) &
               + psi(2,z0h/obu) + 0.8*((zetat)**(-0.333)-(-zeta)**(-0.333))
-      ELSE IF(zeta < 0.)THEN          ! -1 <= zeta < 0
+      ELSEIF (zeta < 0.)THEN          ! -1 <= zeta < 0
          fh2m = log(zldis/z0h) - psi(2,zeta) + psi(2,z0h/obu)
-      ELSE IF(zeta <= 1.)THEN         !  0 <= zeta <= 1
+      ELSEIF (zeta <= 1.)THEN         !  0 <= zeta <= 1
          fh2m = log(zldis/z0h) + 5.*zeta - 5.*z0h/obu
       ELSE                            !  1 < zeta, phi=5+zeta
          fh2m = log(obu/z0h) + 5. - 5.*z0h/obu + (5.*log(zeta)+zeta-1.)
@@ -300,9 +300,9 @@ CONTAINS
       IF(zeta < -zetat)THEN           ! zeta < -1
          fht = log(-zetat*obu/z0h)-psi(2,-zetat) &
              + psi(2,z0h/obu) + 0.8*((zetat)**(-0.333)-(-zeta)**(-0.333))
-      ELSE IF(zeta < 0.)THEN          ! -1 <= zeta < 0
+      ELSEIF (zeta < 0.)THEN          ! -1 <= zeta < 0
          fht = log(zldis/z0h) - psi(2,zeta) + psi(2,z0h/obu)
-      ELSE IF(zeta <= 1.)THEN         !  0 <= zeta <= 1
+      ELSEIF (zeta <= 1.)THEN         !  0 <= zeta <= 1
          fht = log(zldis/z0h) + 5.*zeta - 5.*z0h/obu
       ELSE                            !  1 < zeta, phi=5+zeta
          fht = log(obu/z0h) + 5. - 5.*z0h/obu + (5.*log(zeta)+zeta-1.)
@@ -315,9 +315,9 @@ CONTAINS
       zetat=0.465
       IF(zeta < -zetat)THEN           ! zeta < -1
          phih = 0.9*vonkar**(1.333)*(-zeta)**(-0.333)
-      ELSE IF(zeta < 0.)THEN          ! -1 <= zeta < 0
+      ELSEIF (zeta < 0.)THEN          ! -1 <= zeta < 0
          phih = (1. - 16.*zeta)**(-0.5)
-      ELSE IF(zeta <= 1.)THEN         !  0 <= zeta <= 1
+      ELSEIF (zeta <= 1.)THEN         !  0 <= zeta <= 1
          phih = 1. + 5.*zeta
       ELSE                            !  1 < zeta, phi=5+zeta
          phih = 5. + zeta
@@ -330,9 +330,9 @@ CONTAINS
       IF(zeta < -zetat)THEN           ! zeta < -1
          fq    = log(-zetat*obu/z0q) - psi(2,-zetat) &
                + psi(2,z0q/obu) + 0.8*((zetat)**(-0.333)-(-zeta)**(-0.333))
-      ELSE IF(zeta < 0.)THEN          ! -1 <= zeta < 0
+      ELSEIF (zeta < 0.)THEN          ! -1 <= zeta < 0
          fq    = log(zldis/z0q) - psi(2,zeta) + psi(2,z0q/obu)
-      ELSE IF(zeta <= 1.)THEN         !  0 <= zeta <= 1
+      ELSEIF (zeta <= 1.)THEN         !  0 <= zeta <= 1
          fq    = log(zldis/z0q) + 5.*zeta - 5.*z0q/obu
       ELSE                            !  1 < zeta, phi=5+zeta
          fq    = log(obu/z0q) + 5. - 5.*z0q/obu + (5.*log(zeta)+zeta-1.)
@@ -347,7 +347,7 @@ CONTAINS
                + psi(2,z0q/obu) + 0.8*((zetat)**(-0.333)-(-zeta)**(-0.333))
       ELSEIF (zeta < 0.) THEN         ! -1 <= zeta < 0
          fq2m = log(zldis/z0q)-psi(2,zeta)+psi(2,z0q/obu)
-      ELSE IF (zeta <= 1.) THEN       !  0 <= zeta <= 1
+      ELSEIF (zeta <= 1.) THEN        !  0 <= zeta <= 1
          fq2m = log(zldis/z0q)+5.*zeta-5.*z0q/obu
       ELSE                            ! 1 < zeta, phi=5+zeta
          fq2m = log(obu/z0q)+5.-5.*z0q/obu+(5.*log(zeta)+zeta-1.)
@@ -362,7 +362,7 @@ CONTAINS
                + psi(2,z0q/obu) + 0.8*((zetat)**(-0.333)-(-zeta)**(-0.333))
       ELSEIF (zeta < 0.) THEN         ! -1 <= zeta < 0
          fqt = log(zldis/z0q)-psi(2,zeta)+psi(2,z0q/obu)
-      ELSE IF (zeta <= 1.) THEN       !  0 <= zeta <= 1
+      ELSEIF (zeta <= 1.) THEN        !  0 <= zeta <= 1
          fqt = log(zldis/z0q)+5.*zeta-5.*z0q/obu
       ELSE                            ! 1 < zeta, phi=5+zeta
          fqt = log(obu/z0q)+5.-5.*z0q/obu+(5.*log(zeta)+zeta-1.)
@@ -410,9 +410,9 @@ CONTAINS
       zetat=0.465
       IF(zeta < -zetat)THEN           ! zeta < -1
          phih = 0.9*vonkar**(1.333)*(-zeta)**(-0.333)
-      ELSE IF(zeta < 0.)THEN          ! -1 <= zeta < 0
+      ELSEIF (zeta < 0.)THEN          ! -1 <= zeta < 0
          phih = (1. - 16.*zeta)**(-0.5)
-      ELSE IF(zeta <= 1.)THEN         !  0 <= zeta <= 1
+      ELSEIF (zeta <= 1.)THEN         !  0 <= zeta <= 1
          phih = 1. + 5.*zeta
       ELSE                            !  1 < zeta, phi=5+zeta
          phih = 5. + zeta
@@ -461,9 +461,9 @@ CONTAINS
       IF(zeta < -zetat)THEN           ! zeta < -1
          fh_top = log(-zetat*obu/z0h)-psi(2,-zetat) &
                 + psi(2,z0h/obu) + 0.8*((zetat)**(-0.333)-(-zeta)**(-0.333))
-      ELSE IF(zeta < 0.)THEN          ! -1 <= zeta < 0
+      ELSEIF (zeta < 0.)THEN          ! -1 <= zeta < 0
          fh_top = log(zldis/z0h) - psi(2,zeta) + psi(2,z0h/obu)
-      ELSE IF(zeta <= 1.)THEN         !  0 <= zeta <= 1
+      ELSEIF (zeta <= 1.)THEN         !  0 <= zeta <= 1
          fh_top = log(zldis/z0h) + 5.*zeta - 5.*z0h/obu
       ELSE                            !  1 < zeta, phi=5+zeta
          fh_top = log(obu/z0h) + 5. - 5.*z0h/obu + (5.*log(zeta)+zeta-1.)
@@ -475,9 +475,9 @@ CONTAINS
       IF(zeta < -zetat)THEN           ! zeta < -1
          fh_bot = log(-zetat*obu/z0h)-psi(2,-zetat) &
                 + psi(2,z0h/obu) + 0.8*((zetat)**(-0.333)-(-zeta)**(-0.333))
-      ELSE IF(zeta < 0.)THEN          ! -1 <= zeta < 0
+      ELSEIF (zeta < 0.)THEN          ! -1 <= zeta < 0
          fh_bot = log(zldis/z0h) - psi(2,zeta) + psi(2,z0h/obu)
-      ELSE IF(zeta <= 1.)THEN         !  0 <= zeta <= 1
+      ELSEIF (zeta <= 1.)THEN         !  0 <= zeta <= 1
          fh_bot = log(zldis/z0h) + 5.*zeta - 5.*z0h/obu
       ELSE                            !  1 < zeta, phi=5+zeta
          fh_bot = log(obu/z0h) + 5. - 5.*z0h/obu + (5.*log(zeta)+zeta-1.)

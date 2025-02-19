@@ -47,7 +47,7 @@ CONTAINS
    USE MOD_LandPatch, only: numpatch, landpatch
    IMPLICIT NONE
 
-      IF (.not. DEF_CheckEquilibrium) return
+      IF (.not. DEF_CheckEquilibrium) RETURN
 
       numcheck = -1
 
@@ -77,7 +77,7 @@ CONTAINS
 
    IMPLICIT NONE
 
-      IF (.not. DEF_CheckEquilibrium) return
+      IF (.not. DEF_CheckEquilibrium) RETURN
 
       IF (allocated(tws_last)) deallocate(tws_last)
       IF (allocated(tws_this)) deallocate(tws_this)
@@ -115,7 +115,7 @@ CONTAINS
    type(block_data_real8_2d) :: sumarea
 
 
-      IF (.not. DEF_CheckEquilibrium) return
+      IF (.not. DEF_CheckEquilibrium) RETURN
 
       IF (p_is_worker) THEN
          IF (numpatch > 0) THEN
