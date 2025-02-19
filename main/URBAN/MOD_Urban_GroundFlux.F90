@@ -17,6 +17,7 @@ CONTAINS
                                z0m, z0hg, zol, ustar, qstar, tstar, fm, fh, fq)
 
 !=======================================================================
+!
 ! !DESCRIPTION:
 !  This is the main subroutine to execute the calculation
 !  of bare ground fluxes
@@ -24,7 +25,6 @@ CONTAINS
 !  Created by Hua Yuan, 09/2021
 !
 ! !REVISIONS:
-!
 !  07/2022, Hua Yuan: Urban 2m T/q -> above bare ground 2m.
 !
 !=======================================================================

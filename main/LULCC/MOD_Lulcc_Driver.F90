@@ -28,6 +28,9 @@ MODULE MOD_Lulcc_Driver
 !  08/2023, Wanyi Lin: add interface for Mass&Energy conserved scheme.
 !
 !-----------------------------------------------------------------------
+!
+!                  ***** For Development *****
+!
 !  Extra processes when adding a new variable and #define LULCC:
 !
 !  1. Save a copy of new variable (if called "var", save it to "var_")

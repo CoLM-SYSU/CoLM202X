@@ -1057,9 +1057,9 @@
          pg_rain            ,pgper_rain         ,pgimp_rain         ,pg_snow            ,&
          pg_rain_lake       ,pg_snow_lake                                               ,&
          froof              ,fgper              ,flake              ,bsw                ,&
-         porsl              ,psi0               ,hksati                                 ,&
-         pondmx             ,ssi                ,wimp               ,smpmin             ,&
-         theta_r            ,fsatmax,fsatdcf    ,topostd            ,BVIC               ,&
+         porsl              ,psi0               ,hksati             ,pondmx             ,&
+         ssi                ,wimp               ,smpmin             ,theta_r            ,&
+         fsatmax            ,fsatdcf            ,topostd            ,BVIC               ,&
          rootr,rootflux     ,etrgper            ,fseng              ,fgrnd              ,&
          t_gpersno(lbp:)    ,t_lakesno(:)       ,t_lake             ,dz_lake            ,&
          z_gpersno(lbp:)    ,z_lakesno(:)       ,zi_gpersno(lbp-1:) ,zi_lakesno(:)      ,&
