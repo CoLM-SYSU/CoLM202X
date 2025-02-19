@@ -5,7 +5,7 @@ PROGRAM CoLM
 ! Description:
 !   This is the main program for the Common Land Model (CoLM)
 !
-!   @Copyright Yongjiu Dai Land Modeling Group at the School of Atmospheric Sciences
+!   Copyright © Yongjiu Dai Land Modeling Group at the School of Atmospheric Sciences
 !   of the Sun Yat-sen University, Guangdong, CHINA.
 !   All rights reserved.
 !
