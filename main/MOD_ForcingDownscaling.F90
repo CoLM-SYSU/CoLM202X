@@ -290,17 +290,17 @@ CONTAINS
          delta_prl_c = forc_prl_g *1.0*0.27*(forc_topo_c - forc_topo_g) &
             /(1.0 - 0.27*(forc_topo_c - forc_topo_g))
          forc_prl_c = forc_prl_g + delta_prl_c   ! large scale precipitation [mm/s]
-      END IF
+      ENDIF
 
       IF (forc_prl_c < 0) THEN
          write(*,*) 'negative prl', forc_prl_g, forc_maxelv_g, forc_topo_c, forc_topo_g
          forc_prl_c = 0.
-      END IF
+      ENDIF
 
       IF (forc_prc_c < 0) THEN
          write(*,*) 'negative prc', forc_prc_g, forc_maxelv_g, forc_topo_c, forc_topo_g
          forc_prc_c = 0.
-      END IF
+      ENDIF
 
    END SUBROUTINE downscale_forcings
 

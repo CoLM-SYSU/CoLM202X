@@ -40,7 +40,7 @@ program bin_to_hdf5
    open (iunit, file=trim(lndname), access='direct', recl=length, form='unformatted', status='old')
    do irow = 1, nlat
       read (iunit, rec=irow) a_chr1 (:,irow)
-   end do
+   enddo
    close (iunit)
 
    allocate (a_int8 (nlon, nlat))
@@ -65,7 +65,7 @@ program bin_to_hdf5
    open (iunit, file=trim(lndname), access='direct', recl=length, form='unformatted', status='old')
    do irow = 1, nlat
       read (iunit, rec=irow) a_int16 (:,irow)
-   end do
+   enddo
    close (iunit)
 
    lndname = trim(h5dir) // 'glacier.h5'
@@ -95,7 +95,7 @@ program bin_to_hdf5
       open (iunit, file=trim(lndname), access='direct', recl=length, form='unformatted', status='old')
       do irow = 1, nlat
          read (iunit, rec=irow) a_chr1 (:,irow)
-      end do
+      enddo
       close (iunit)
 
       a_int8 = ichar(a_chr1)
@@ -106,7 +106,7 @@ program bin_to_hdf5
          compress, chunk = (/ nlon/nxblk, nlat/nyblk /))
 
       write(*,*) 'lai ' // trim(c) // ' done'
-   end do
+   enddo
 
    deallocate (a_chr1)
    deallocate (a_int8)
@@ -120,7 +120,7 @@ program bin_to_hdf5
    open (iunit, file=trim(lndname), access='direct', recl=length, form='unformatted', status='old')
    do irow = 1, nlat
       read (iunit, rec=irow) a_int16 (:,irow)
-   end do
+   enddo
    close (iunit)
 
    lndname = trim(h5dir) // 'lake_depth.h5'
@@ -141,7 +141,7 @@ program bin_to_hdf5
    open (iunit, file=trim(lndname), access='direct', recl=length, form='unformatted', status='old')
    do irow = 1, nlat
       read (iunit, rec=irow) a_chr1 (:,irow)
-   end do
+   enddo
    close (iunit)
 
    allocate (a_int8 (nlon, nlat))
@@ -166,7 +166,7 @@ program bin_to_hdf5
    open (iunit, file=trim(lndname), access='direct', recl=length, form='unformatted', status='old')
    do irow = 1, nlat
       read (iunit, rec=irow) a_chr1 (:,irow)
-   end do
+   enddo
    close (iunit)
 
    allocate (a_int8 (nlon, nlat))
@@ -191,7 +191,7 @@ program bin_to_hdf5
    open (iunit, file=trim(lndname), access='direct', recl=length, form='unformatted', status='old')
    do irow = 1, nlat
       read (iunit, rec=irow) a_chr1 (:,irow)
-   end do
+   enddo
    close (iunit)
 
    allocate (a_int8 (nlon, nlat))
@@ -244,7 +244,7 @@ program bin_to_hdf5
       open (iunit, file=trim(lndname), access='direct', recl=length, form='unformatted', status='old')
       do irow = 1, nlat
          read (iunit, rec=irow) a_real8 (:,irow)
-      end do
+      enddo
       close (iunit)
 
       lndname = trim(h5dir) // 'soil/theta_s.h5'
@@ -261,7 +261,7 @@ program bin_to_hdf5
       open (iunit, file=trim(lndname), access='direct', recl=length, form='unformatted', status='old')
       do irow = 1, nlat
          read (iunit, rec=irow) a_real8 (:,irow)
-      end do
+      enddo
       close (iunit)
 
       lndname = trim(h5dir) // 'soil/psi_s.h5'
@@ -278,7 +278,7 @@ program bin_to_hdf5
       open (iunit, file=trim(lndname), access='direct', recl=length, form='unformatted', status='old')
       do irow = 1, nlat
          read (iunit, rec=irow) a_real8 (:,irow)
-      end do
+      enddo
       close (iunit)
 
       lndname = trim(h5dir) // 'soil/lambda.h5'
@@ -295,7 +295,7 @@ program bin_to_hdf5
       open (iunit, file=trim(lndname), access='direct', recl=length, form='unformatted', status='old')
       do irow = 1, nlat
          read (iunit, rec=irow) a_real8 (:,irow)
-      end do
+      enddo
       close (iunit)
 
       lndname = trim(h5dir) // 'soil/k_s.h5'
@@ -312,7 +312,7 @@ program bin_to_hdf5
       open (iunit, file=trim(lndname), access='direct', recl=length, form='unformatted', status='old')
       do irow = 1, nlat
          read (iunit, rec=irow) a_real8 (:,irow)
-      end do
+      enddo
       close (iunit)
 
       lndname = trim(h5dir) // 'soil/csol.h5'
@@ -329,7 +329,7 @@ program bin_to_hdf5
       open (iunit, file=trim(lndname), access='direct', recl=length, form='unformatted', status='old')
       do irow = 1, nlat
          read (iunit, rec=irow) a_real8 (:,irow)
-      end do
+      enddo
       close (iunit)
 
       lndname = trim(h5dir) // 'soil/tksatu.h5'
@@ -346,7 +346,7 @@ program bin_to_hdf5
       open (iunit, file=trim(lndname), access='direct', recl=length, form='unformatted', status='old')
       do irow = 1, nlat
          read (iunit, rec=irow) a_real8 (:,irow)
-      end do
+      enddo
       close (iunit)
 
       lndname = trim(h5dir) // 'soil/tkdry.h5'
@@ -355,7 +355,7 @@ program bin_to_hdf5
 
       write(*,*) 'tkdry_l' // trim(c) // ' done'
 
-   end do
+   enddo
 
    deallocate (a_real8)
 

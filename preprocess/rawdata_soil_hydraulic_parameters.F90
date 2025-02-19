@@ -312,11 +312,11 @@ external SW_CB_dist
          if(lambda(i) > 1. .or. lambda(i) <= 0.) then
             lambda(i)=-1.0e36
             ydatc(i,:)=-1.0e36
-         end if
+         endif
          if(psi(i) < -300. .or. psi(i) >= 0.) then
             psi(i)=-1.0e36
             ydatc(i,:)=-1.0e36
-         end if
+         endif
       enddo
 
       m = 0
@@ -324,7 +324,7 @@ external SW_CB_dist
          if(abs(ydatc(i,1)) < 1.0e10) then
             m = m+1
             ydatc(m,:) = ydatc(i,:)
-         end if
+         endif
       enddo
 
       ldfjac = npoint
@@ -355,7 +355,7 @@ external SW_CB_dist
       if( x(1) >= -300. .and. x(1) < 0.0 .and. x(2) > 0.0 .and. x(2) <= 1.0 .and. isiter == 1)then
          psi_s    = x(1)
          lambda_s = x(2)
-      end if
+      endif
 
       deallocate(fjac)
       deallocate(fvec)
@@ -605,7 +605,7 @@ ydatv(4,:) = theta_r(4)+(phi - theta_r(4))*(1+(alpha(4)*xdat)**n(4))**(1.0/n(4)-
           ydatv(6,:) = -1.0e36
       else
           ydatv(6,:) = theta_r(6)+(phi - theta_r(6))*(1+(alpha(6)*xdat)**n(6))**(1.0/n(6)-1)
-      end if
+      endif
 
 ! ------------------------------------------
 ! 7) Gupta, S.C., and W.E. Larson. 1979. Estimating soil water retention characteristics from
@@ -689,15 +689,15 @@ ydatv(4,:) = theta_r(4)+(phi - theta_r(4))*(1+(alpha(4)*xdat)**n(4))**(1.0/n(4)-
          if(theta_r(i) > phi .or. theta_r(i) < 0.0) then
             theta_r(i)=-1.0e36
             ydatv(i,:)=-1.0e36
-         end if
+         endif
          if(alpha(i) < 1.0e-5 .or. alpha(i) > 1.0) then
             alpha(i)  =-1.0e36
             ydatv(i,:)=-1.0e36
-         end if
+         endif
          if(n(i) < 1.1 .or. n(i) > 10.0) then
             n(i)      =-1.0e36
             ydatv(i,:)=-1.0e36
-         end if
+         endif
       enddo
 
       m = 0
@@ -705,7 +705,7 @@ ydatv(4,:) = theta_r(4)+(phi - theta_r(4))*(1+(alpha(4)*xdat)**n(4))**(1.0/n(4)-
          if(abs(ydatv(i,1)) < 1.0e10) then
             m = m+1
             ydatv(m,:) = ydatv(i,:)
-         end if
+         endif
       enddo
 
       ldfjac = npoint
@@ -741,7 +741,7 @@ ydatv(4,:) = theta_r(4)+(phi - theta_r(4))*(1+(alpha(4)*xdat)**n(4))**(1.0/n(4)-
           theta_r_l = x(1)
           alpha_l   = x(2)
           n_l       = x(3)
-      end if
+      endif
 
       deallocate(fjac)
       deallocate(fvec)
@@ -1547,7 +1547,7 @@ real(r8) Silt,X1,X2
 	   End select
 	   Theta(i)=(b(1,i)+b(2,i)*X1+b(3,i)*X2+b(4,i)*X1*X2+b(5,i)*X1*X1 &
       	            +b(6,i)*X2*X2)/100.
-	end do
+	enddo
 END SUBROUTINE Rajkai
 
 SUBROUTINE Rawls82(Clay,Silt,Sand,OC,Theta)
@@ -1835,7 +1835,7 @@ integer i
       if(b(4) .lt. 1.1) b(4) = 1.1
       do i = 1,nob
          y(i)=b(1)+(b(2)-b(1))/(1+(b(3)*x(i))**b(4))**(1.-1/b(4))
-      end do
+      enddo
 END SUBROUTINE model
 
 
@@ -1865,27 +1865,27 @@ subroutine SW_CB_dist ( m, n, x, fvec, fjac, ldfjac, iflag, xdat, npoint, ydatc,
          if (x(1) >= 0.0) then
              isiter = 0
              return
-         end if
+         endif
 
          do i = 1, m
             fvec(i) = sum(((-1.0*xdat(i)/x(1))**(-1.0*x(2)) * phi - ydatc(:,i))**2)
-         end do
+         enddo
 
       else if ( iflag == 2 ) then
 
          if (x(1) >= 0.0) then
              isiter = 0
              return
-         end if
+         endif
 
          do i = 1, m
             fjac(i,1) = sum(2.0*((-1.0*xdat(i)/x(1))**(-1.0*x(2)) * phi - ydatc(:,i))*&
                         phi * x(2) * (-1.0*xdat(i)/x(1))**(-1.0*x(2)) / x(1))
             fjac(i,2) = sum(-2.0*((-1.0*xdat(i)/x(1))**(-1.0*x(2)) * phi - ydatc(:,i))*&
                         phi * (-1.0*xdat(i)/x(1))**(-1.0*x(2)) * log(-1.0*xdat(i)/x(1)))
-         end do
+         enddo
 
-      end if
+      endif
 
 end subroutine SW_CB_dist
 
@@ -1915,18 +1915,18 @@ subroutine SW_VG_dist ( m, n, x, fvec, fjac, ldfjac, iflag, xdat, npoint, ydatv,
          if (x(2) <= 0.0 .or. x(3) <= 0.1) then
              isiter = 0
              return
-         end if
+         endif
 
          do i = 1, m
             fvec(i) = sum((x(1) + (phi - x(1))*(1+(x(2)*xdat(i))**x(3))**(1.0/x(3)-1) - ydatv(:,i))**2)
-         end do
+         enddo
 
       else if ( iflag == 2 ) then
 
          if (x(2) <= 0.0 .or. x(3) <= 0.1) then
              isiter = 0
              return
-         end if
+         endif
 
          do i = 1, m
             fjac(i,1) = sum(2*(x(1) + (phi - x(1))*(1+(x(2)*xdat(i))**x(3))**(1.0/x(3)-1) - ydatv(:,i))*&
@@ -1937,8 +1937,8 @@ subroutine SW_VG_dist ( m, n, x, fvec, fjac, ldfjac, iflag, xdat, npoint, ydatv,
                         (phi - x(1)) * (1+(x(2)*xdat(i))**x(3))**(1.0/x(3)-1) *&
                      ((1.0-x(3))*(x(2)*xdat(i))**x(3)*log(x(2)*xdat(i))/(x(3)*(1+(x(2)*xdat(i))**x(3))) &
                         - log(1+(x(2)*xdat(i))**x(3))/x(3)**2))
-         end do
+         enddo
 
-      end if
+      endif
 
 end subroutine SW_VG_dist

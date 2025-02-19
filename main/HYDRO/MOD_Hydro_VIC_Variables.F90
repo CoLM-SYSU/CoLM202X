@@ -128,7 +128,7 @@ contains
                    soil_con%frost_fract(k) = soil_con%frost_fract(k) / 2.0
                endif
             endif
-         end do
+         enddo
       endif
 
       call CoLM2VIC(wliq_soisno, soil_tmp)
@@ -226,13 +226,13 @@ contains
          if (i_vic == 1) then
             do i_colm = 1, colm2vic_lay(i_vic)
                vic_water(i_vic) = vic_water(i_vic) + colm_water(i_colm)
-            end do
+            enddo
          else
             do i_colm = colm2vic_lay(i_vic-1)+1, colm2vic_lay(i_vic)
                vic_water(i_vic) = vic_water(i_vic) + colm_water(i_colm)
-            end do
+            enddo
          endif
-      end do
+      enddo
 
    end subroutine CoLM2VIC
 
@@ -253,15 +253,15 @@ contains
          if (i_vic == 1) then
             do i_colm = 1, colm2vic_lay(i_vic)
                vic_water(i_vic) = vic_water(i_vic) + colm_water(i_colm)*dz_soi(i_colm)
-            end do
+            enddo
             vic_water(i_vic) = vic_water(i_vic)/sum(dz_soi(1:colm2vic_lay(i_vic)))
          else
             do i_colm = colm2vic_lay(i_vic-1)+1, colm2vic_lay(i_vic)
                vic_water(i_vic) = vic_water(i_vic) + colm_water(i_colm)*dz_soi(i_colm)
-            end do
+            enddo
             vic_water(i_vic) = vic_water(i_vic)/sum(dz_soi(colm2vic_lay(i_vic-1)+1:colm2vic_lay(i_vic)))
          endif
-      end do
+      enddo
 
    end subroutine CoLM2VIC_weight
 
@@ -281,13 +281,13 @@ contains
          if (i_vic == 1) then
             do i_colm = 1, colm2vic_lay(i_vic)
                colm_water(i_colm) = vic_water(i_vic)*(dz_soi(i_colm)/sum(dz_soi(1:colm2vic_lay(i_vic))))
-            end do
+            enddo
          else
             do i_colm = colm2vic_lay(i_vic-1)+1, colm2vic_lay(i_vic)
                colm_water(i_colm) = vic_water(i_vic)*(dz_soi(i_colm)/sum(dz_soi(colm2vic_lay(i_vic-1)+1:colm2vic_lay(i_vic))))
-            end do
+            enddo
          endif
-      end do
+      enddo
 
    end subroutine VIC2CoLM
 

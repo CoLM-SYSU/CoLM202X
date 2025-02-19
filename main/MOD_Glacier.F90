@@ -789,7 +789,7 @@ CONTAINS
          bt(j) = 1.+ (1.-cnfac)*fact(j)*(tk(j)/dzp + tk(j-1)/dzm)
          ct(j) =   - (1.-cnfac)*fact(j)* tk(j)/dzp
          rt(j) = t_icesno(j) + cnfac*fact(j)*( fn(j) - fn(j-1) )
-      END DO
+      ENDDO
 
       j     =  nl_ice
       dzm   = (z_icesno(j)-z_icesno(j-1))

@@ -255,7 +255,7 @@ CONTAINS
 
       ELSE
          zl = 1000.0 * (2501.0 - (2.361 * pta))
-      END IF
+      ENDIF
 
       ! 4. Compute density of dry air [kg m^-3]
       zrhoda = ppa / (287.04 * (pta + 273.15))
@@ -265,7 +265,7 @@ CONTAINS
          evsat = 611.0 * EXP(17.27 * pta / (pta + 237.3))
       ELSE
          evsat = 611.0 * EXP(21.87 * pta / (pta + 265.5))
-      END IF
+      ENDIF
 
       ! 6. Solve iteratively to get Ti in Harder and Pomeroy (2013) using a Newton-Raphson approach
       ! Set the first guess to pta
@@ -279,7 +279,7 @@ CONTAINS
             esat = 611.0 * EXP(17.27 * zt / (zt + 237.3))
          ELSE
             esat = 611.0 * EXP(21.87 * zt / (zt + 265.5))
-         END IF
+         ENDIF
 
          rho_vast = esat / (461.5 * (zt + 273.15)) ! Saturated water vapour density
 
@@ -291,12 +291,12 @@ CONTAINS
          ELSE
             rho_vast_diff = 611.0 / (461.5 * (zt + 273.15)) * EXP(21.87 * zt / (zt + 265.5)) * &
                             (-1 / (zt + 273.15) + 21.87 * 265.5 / ((zt + 265.5) ** 2.))
-         END IF
+         ENDIF
 
          zfdiff = 1 + zd * zl / zlambda * rho_vast_diff
          zt = ztint - zf / zfdiff
          IF (ABS(zt - ztint) .LT. 0.01) EXIT
-      END DO
+      ENDDO
 
       pti = zt
 

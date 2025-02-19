@@ -602,7 +602,7 @@ CONTAINS
                            cloud = 0.
                         ELSE
                            cloud = (1160.*sunang-a)/(963.*sunang)
-                        END IF
+                        ENDIF
                         cloud = max(cloud,0.)
                         cloud = min(cloud,1.)
                         cloud = max(0.58,cloud)

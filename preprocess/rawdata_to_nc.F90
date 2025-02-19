@@ -56,7 +56,7 @@ program rawdata_to_nc
    open (iunit, file=trim(lndname), access='direct', recl=length, form='unformatted', status='old')
    do irow = 1, nlat
       read (iunit, rec=irow) a_chr1 (:,irow)
-   end do
+   enddo
    close (iunit)
 
    allocate (a_int8 (nlon, nlat))
@@ -84,7 +84,7 @@ program rawdata_to_nc
    open (iunit, file=trim(lndname), access='direct', recl=length, form='unformatted', status='old')
    do irow = 1, nlat
       read (iunit, rec=irow) a_int16 (:,irow)
-   end do
+   enddo
    close (iunit)
 
    lndname = trim(ncdir) // '/glacier.nc'
@@ -116,7 +116,7 @@ program rawdata_to_nc
       open (iunit, file=trim(lndname), access='direct', recl=length, form='unformatted', status='old')
       do irow = 1, nlat
          read (iunit, rec=irow) a_chr1 (:,irow)
-      end do
+      enddo
       close (iunit)
 
       a_int8 = ichar(a_chr1)
@@ -129,7 +129,7 @@ program rawdata_to_nc
          'longitude', 'latitude', compress)
 
       write(*,*) 'lai ' // trim(c) // ' done'
-   end do
+   enddo
 
    deallocate (a_chr1)
    deallocate (a_int8)
@@ -143,7 +143,7 @@ program rawdata_to_nc
    open (iunit, file=trim(lndname), access='direct', recl=length, form='unformatted', status='old')
    do irow = 1, nlat
       read (iunit, rec=irow) a_int16 (:,irow)
-   end do
+   enddo
    close (iunit)
 
    lndname = trim(ncdir) // '/lake_depth.nc'
@@ -166,7 +166,7 @@ program rawdata_to_nc
    open (iunit, file=trim(lndname), access='direct', recl=length, form='unformatted', status='old')
    do irow = 1, nlat
       read (iunit, rec=irow) a_chr1 (:,irow)
-   end do
+   enddo
    close (iunit)
 
    allocate (a_int8 (nlon, nlat))
@@ -193,7 +193,7 @@ program rawdata_to_nc
    open (iunit, file=trim(lndname), access='direct', recl=length, form='unformatted', status='old')
    do irow = 1, nlat
       read (iunit, rec=irow) a_chr1 (:,irow)
-   end do
+   enddo
    close (iunit)
 
    allocate (a_int8 (nlon, nlat))
@@ -220,7 +220,7 @@ program rawdata_to_nc
    open (iunit, file=trim(lndname), access='direct', recl=length, form='unformatted', status='old')
    do irow = 1, nlat
       read (iunit, rec=irow) a_chr1 (:,irow)
-   end do
+   enddo
    close (iunit)
 
    allocate (a_int8 (nlon, nlat))
@@ -289,7 +289,7 @@ program rawdata_to_nc
       open (iunit, file=trim(lndname), access='direct', recl=length, form='unformatted', status='old')
       do irow = 1, nlat
          read (iunit, rec=irow) a_real8 (:,irow)
-      end do
+      enddo
       close (iunit)
 
       lndname = trim(ncdir) // '/soil/theta_s.nc'
@@ -306,7 +306,7 @@ program rawdata_to_nc
       open (iunit, file=trim(lndname), access='direct', recl=length, form='unformatted', status='old')
       do irow = 1, nlat
          read (iunit, rec=irow) a_real8 (:,irow)
-      end do
+      enddo
       close (iunit)
 
       lndname = trim(ncdir) // '/soil/psi_s.nc'
@@ -323,7 +323,7 @@ program rawdata_to_nc
       open (iunit, file=trim(lndname), access='direct', recl=length, form='unformatted', status='old')
       do irow = 1, nlat
          read (iunit, rec=irow) a_real8 (:,irow)
-      end do
+      enddo
       close (iunit)
 
       lndname = trim(ncdir) // '/soil/lambda.nc'
@@ -340,7 +340,7 @@ program rawdata_to_nc
       open (iunit, file=trim(lndname), access='direct', recl=length, form='unformatted', status='old')
       do irow = 1, nlat
          read (iunit, rec=irow) a_real8 (:,irow)
-      end do
+      enddo
       close (iunit)
 
       lndname = trim(ncdir) // '/soil/k_s.nc'
@@ -357,7 +357,7 @@ program rawdata_to_nc
       open (iunit, file=trim(lndname), access='direct', recl=length, form='unformatted', status='old')
       do irow = 1, nlat
          read (iunit, rec=irow) a_real8 (:,irow)
-      end do
+      enddo
       close (iunit)
 
       lndname = trim(ncdir) // '/soil/csol.nc'
@@ -374,7 +374,7 @@ program rawdata_to_nc
       open (iunit, file=trim(lndname), access='direct', recl=length, form='unformatted', status='old')
       do irow = 1, nlat
          read (iunit, rec=irow) a_real8 (:,irow)
-      end do
+      enddo
       close (iunit)
 
       lndname = trim(ncdir) // '/soil/tksatu.nc'
@@ -391,7 +391,7 @@ program rawdata_to_nc
       open (iunit, file=trim(lndname), access='direct', recl=length, form='unformatted', status='old')
       do irow = 1, nlat
          read (iunit, rec=irow) a_real8 (:,irow)
-      end do
+      enddo
       close (iunit)
 
       lndname = trim(ncdir) // '/soil/tkdry.nc'
@@ -400,7 +400,7 @@ program rawdata_to_nc
 
       write(*,*) 'tkdry_l' // trim(c) // ' done'
 
-   end do
+   enddo
 
    deallocate (a_real8)
 
