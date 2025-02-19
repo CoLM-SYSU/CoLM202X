@@ -56,7 +56,7 @@ CONTAINS
 !
 !  Phase change (see meltf.F90)
 !
-!  Original author : Yongjiu Dai, 09/15/1999; 08/30/2002; 05/2018
+!  Original author: Yongjiu Dai, 09/15/1999; 08/30/2002; 05/2018
 !
 ! !REVISIONS:
 !  07/2017, Nan Wei: interaction btw prec and land surface

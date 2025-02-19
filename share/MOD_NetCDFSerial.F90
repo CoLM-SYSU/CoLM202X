@@ -2304,7 +2304,7 @@ CONTAINS
    !----------------------
    SUBROUTINE ncio_write_colm_dimension (filename)
 
-   USE MOD_Vars_Global, only : nl_soil, maxsnl, nl_lake, nvegwcs
+   USE MOD_Vars_Global, only: nl_soil, maxsnl, nl_lake, nvegwcs
    IMPLICIT NONE
 
    character(len=*), intent(in) :: filename

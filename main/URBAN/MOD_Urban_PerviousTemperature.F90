@@ -63,7 +63,7 @@ CONTAINS
 !
 ! Phase change (see MOD_PhaseChange.F90)
 !
-! Original author : Yongjiu Dai, 09/15/1999; 08/30/2002; 05/2020
+! Original author: Yongjiu Dai, 09/15/1999; 08/30/2002; 05/2020
 !=======================================================================
 
    USE MOD_Precision

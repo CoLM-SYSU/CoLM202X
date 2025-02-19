@@ -1,8 +1,8 @@
 #include <define.h>
 
-!-----------------------------------------------------------------------
 MODULE MOD_Forcing
 
+!-----------------------------------------------------------------------
 ! !DESCRIPTION:
 !  read in the atmospheric forcing using user defined interpolation method or
 !  downscaling forcing
@@ -16,6 +16,7 @@ MODULE MOD_Forcing
 !                          3) interface for downscaling
 !
 ! !TODO...(need complement)
+!-----------------------------------------------------------------------
 
    USE MOD_Precision
    USE MOD_Namelist
@@ -101,7 +102,7 @@ MODULE MOD_Forcing
 
 CONTAINS
 
-   !--------------------------------
+!-----------------------------------------------------------------------
    SUBROUTINE forcing_init (dir_forcing, deltatime, ststamp, lc_year, etstamp, lulcc_call)
 
    USE MOD_SPMD_Task
@@ -321,7 +322,7 @@ CONTAINS
    ! ---- forcing finalize ----
    SUBROUTINE forcing_final ()
 
-   USE MOD_LandPatch, only : numpatch
+   USE MOD_LandPatch, only: numpatch
    IMPLICIT NONE
 
       IF (allocated(forcmask_pch)) deallocate(forcmask_pch)
@@ -376,7 +377,8 @@ CONTAINS
 
    END SUBROUTINE forcing_reset
 
-   !--------------------------------
+
+!-----------------------------------------------------------------------
    SUBROUTINE read_forcing (idate, dir_forcing)
    USE MOD_OrbCosazi
    USE MOD_Precision
@@ -393,7 +395,7 @@ CONTAINS
    USE MOD_LandPatch
    USE MOD_RangeCheck
    USE MOD_UserSpecifiedForcing
-   USE MOD_ForcingDownscaling, only : rair, cpair, downscale_forcings, downscale_wind
+   USE MOD_ForcingDownscaling, only: rair, cpair, downscale_forcings, downscale_wind
    USE MOD_NetCDFVector
 
    IMPLICIT NONE
@@ -932,16 +934,15 @@ CONTAINS
    END SUBROUTINE read_forcing
 
 
-! ------------------------------------------------------------
-!
+!-----------------------------------------------------------------------
 ! !DESCRIPTION:
 !  read lower and upper boundary forcing data, a major interface of this
 !  MODULE
 !
 ! !REVISIONS:
-!  Hua Yuan, 04/2014: initial code
+!  04/2014, Hua Yuan: initial code
 !
-! ------------------------------------------------------------
+!-----------------------------------------------------------------------
    SUBROUTINE metreadLBUB (idate, dir_forcing)
 
    USE MOD_UserSpecifiedForcing
@@ -1074,7 +1075,7 @@ CONTAINS
    END SUBROUTINE metreadLBUB
 
 
-   !-------------------------------------------------
+!-----------------------------------------------------------------------
    SUBROUTINE metread_latlon (dir_forcing, idate)
 
    USE MOD_SPMD_Task
@@ -1138,7 +1139,7 @@ CONTAINS
 
    END SUBROUTINE metread_latlon
 
-   !-------------------------------------------------
+!-----------------------------------------------------------------------
    SUBROUTINE metread_time (dir_forcing, ststamp, etstamp, deltime)
 
    USE MOD_SPMD_Task
@@ -1257,8 +1258,7 @@ CONTAINS
 
    END SUBROUTINE metread_time
 
-! ------------------------------------------------------------
-!
+!-----------------------------------------------------------------------
 ! !DESCRIPTION:
 !    set the lower boundary time stamp and record information,
 !    a KEY FUNCTION of this MODULE
@@ -1271,8 +1271,9 @@ CONTAINS
 !    o required data just beyond the first record
 !
 ! !REVISIONS:
-!  Hua Yuan, 04/2014: initial code
-! ------------------------------------------------------------
+!  04/2014, Hua Yuan: initial code
+!
+!-----------------------------------------------------------------------
    SUBROUTINE setstampLB(mtstamp, var_i, year, month, mday, time_i)
 
    IMPLICIT NONE
@@ -1403,7 +1404,7 @@ CONTAINS
          ENDIF
 
          ! set record info (year, month, time_i)
-         IF ( sec<0 .or. (sec==0 .and. offset(var_i).NE.0) ) THEN
+         IF ( sec<0 .or. (sec==0 .and. offset(var_i).ne.0) ) THEN
 
             ! IF just behind the first record -> set to first record
             IF ( year==startyr .and. month==startmo .and. mday==1 ) THEN
@@ -1492,15 +1493,15 @@ CONTAINS
 
    END SUBROUTINE setstampLB
 
-! ------------------------------------------------------------
-!
+!-----------------------------------------------------------------------
 ! !DESCRIPTION:
 !    set the upper boundary time stamp and record information,
 !    a KEY FUNCTION of this MODULE
 !
 ! !REVISIONS:
-!  Hua Yuan, 04/2014: initial code
-! ------------------------------------------------------------
+!  04/2014, Hua Yuan: initial code
+!
+!-----------------------------------------------------------------------
    SUBROUTINE setstampUB(var_i, year, month, mday, time_i)
 
    IMPLICIT NONE
@@ -1652,13 +1653,14 @@ CONTAINS
 
    END SUBROUTINE setstampUB
 
-! ------------------------------------------------------------
+!-----------------------------------------------------------------------
 ! !DESCRIPTION:
 !  calculate time average coszen value between [LB, UB]
 !
 ! !REVISIONS:
-!  04/2014, yuan: this method is adapted from CLM
-! ------------------------------------------------------------
+!  04/2014, Hua Yuan: this method is adapted from CLM
+!
+!-----------------------------------------------------------------------
    SUBROUTINE calavgcos(idate)
 
    USE MOD_Block

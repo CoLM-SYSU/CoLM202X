@@ -522,7 +522,7 @@ CONTAINS
    !
    ! !USES:
    ! calls getqflx
-   USE MOD_Const_Physical, only : tfrz
+   USE MOD_Const_Physical, only: tfrz
    IMPLICIT NONE
    !
    ! !ARGUMENTS:

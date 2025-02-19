@@ -24,12 +24,12 @@ CONTAINS
               prc_rain,prc_snow,prl_rain,prl_snow,t_precip,bifall)
 
 !=======================================================================
-! define the rate of rainfall and snowfall and precipitation water temp
-! Original author : Yongjiu Dai, 09/1999; 08/31/2002, 04/2014, 01/2023
+!  define the rate of rainfall and snowfall and precipitation water temp
+!  Original author: Yongjiu Dai, 09/1999; 08/31/2002, 04/2014, 01/2023
 !=======================================================================
 !
    USE MOD_Precision
-   USE MOD_Const_Physical, only : tfrz
+   USE MOD_Const_Physical, only: tfrz
    USE MOD_WetBulb
 
    IMPLICIT NONE
@@ -162,12 +162,12 @@ CONTAINS
 
 
    SUBROUTINE NewSnowBulkDensity(forc_t,forc_us,forc_vs,bifall)
-   !=======================================================================
-   ! Scheme for bulk density of newly fallen dry snow
-   !=======================================================================
-   !
+!=======================================================================
+!  Scheme for bulk density of newly fallen dry snow
+!=======================================================================
+
    USE MOD_Precision
-   USE MOD_Const_Physical, only : tfrz
+   USE MOD_Const_Physical, only: tfrz
 
    real(r8), intent(in) :: forc_t     ! temperature at agcm reference height [kelvin]
    real(r8), intent(in) :: forc_us    ! wind speed in eastward direction [m/s]
@@ -209,26 +209,24 @@ CONTAINS
 
    !!==============================================
 
-   !-----------------------------------------------------------------------------
    SUBROUTINE hydromet_temp(ppa, pta, pqa, pti)
-      ! DESCRIPTION
-      ! ===========
-      ! Computes the temperature of a falling hydrometeor based on Harder, P., Pomeroy, J. (2013).
+!-----------------------------------------------------------------------------
+! !DESCRIPTION
+!  Computes the temperature of a falling hydrometeor based on Harder, P., Pomeroy, J. (2013).
+!
+!  Original Author:
+!  ----------------
+!  V. Vionnet (11/2020)
+!
+! !REFERENCES:
+!  Harder, P., Pomeroy, J. (2013).
+!  Estimating precipitation phase using a psychrometric energy balance method
+!  Hydrological Processes 27(13), 1901-1914. https://dx.doi.org/10.1002/hyp.9799
 
-      ! Original Author:
-      ! ----------------
-      ! V. Vionnet (11/2020)
-
-
-      ! References:
-      ! -----------
-      ! Harder, P., Pomeroy, J. (2013).
-      ! Estimating precipitation phase using a psychrometric energy balance method
-      ! Hydrological Processes 27(13), 1901-1914. https://dx.doi.org/10.1002/hyp.9799
-
-      ! REVISION HISTORY
-      ! ----------------
-      ! 2023.07.30 Aobo Tan & Zhongwang Wei @ SYSU
+! !REVISIONS:
+!  2023.07.30 Aobo Tan & Zhongwang Wei @ SYSU
+!
+!-----------------------------------------------------------------------------
 
       real(r8), intent(in)   :: ppa          ! Air pressure (Pa)
       real(r8), intent(in)   :: pta          ! Air temperature (deg C)

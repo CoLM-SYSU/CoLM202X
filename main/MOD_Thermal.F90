@@ -75,31 +75,31 @@ CONTAINS
                        qintr_snow    ,snofrz        ,sabg_snow_lyr                 )
 
 !=======================================================================
-! this is the main subroutine to execute the calculation
-! of thermal processes and surface fluxes
+!  this is the main subroutine to execute the calculation
+!  of thermal processes and surface fluxes
 !
-! Original author : Yongjiu Dai, 09/15/1999; 08/30/2002
+!  Original author: Yongjiu Dai, 09/15/1999; 08/30/2002
 !
-! FLOW DIAGRAM FOR THERMAL.F90
+!  FLOW DIAGRAM FOR THERMAL.F90
 !
-! THERMAL ===> qsadv
-!              GroundFluxes
-!              eroot                             |dewfraction
-!              LeafTemperature   |               |qsadv
-!              LeafTemperaturePC |  ---------->  |moninobukini
-!                                                |moninobuk
-!                                                |MOD_AssimStomataConductance
+!  THERMAL ===> qsadv
+!               GroundFluxes
+!               eroot                             |dewfraction
+!               LeafTemperature   |               |qsadv
+!               LeafTemperaturePC |  ---------->  |moninobukini
+!                                                 |moninobuk
+!                                                 |MOD_AssimStomataConductance
 !
-!              GroundTemperature    ---------->   meltf
+!               GroundTemperature    ---------->   meltf
 !
 !
-! REVISIONS:
-! 08/2019, Hua Yuan: added initial codes for PFT and Plant Community
-!          (PC) vegetation classification processes
+! !REVISIONS:
+!  08/2019, Hua Yuan: added initial codes for PFT and Plant Community
+!           (PC) vegetation classification processes
 !
-! 01/2021, Nan Wei: added variables passing of plant hydraulics and
-!          precipitation sensible heat with canopy and ground for PFT
-!          and Plant Community (PC)
+!  01/2021, Nan Wei: added variables passing of plant hydraulics and
+!           precipitation sensible heat with canopy and ground for PFT
+!           and Plant Community (PC)
 !=======================================================================
 
    USE MOD_Precision

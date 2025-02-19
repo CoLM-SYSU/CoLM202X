@@ -487,7 +487,7 @@ CONTAINS
          IF ( lsai(ip)>1.e-6_r8 .and. fcover(ip)>D0 ) THEN
 
             soilveg(ip) = .true.
-            nsoilveg = nsoilveg + 1
+            nsoilveg  = nsoilveg + 1
 
             clev      = canlay(ip)
             fc0(clev) = fc0(clev) + fcover(ip)

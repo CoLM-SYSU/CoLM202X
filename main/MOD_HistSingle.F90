@@ -14,7 +14,7 @@ module MOD_HistSingle
 !----------------------------------------------------------------------------
    USE MOD_Precision
    USE MOD_NetCDFSerial
-   USE MOD_Namelist, only : USE_SITE_HistWriteBack
+   USE MOD_Namelist, only: USE_SITE_HistWriteBack
    USE MOD_SPMD_Task
 
    logical :: memory_to_disk
@@ -115,9 +115,9 @@ contains
       USE MOD_TimeManager
       USE MOD_SingleSrfData
       USE MOD_NetCDFSerial
-      USE MOD_Landpatch, only : numpatch
+      USE MOD_Landpatch, only: numpatch
 #ifdef URBAN_MODEL
-      USE MOD_Landurban, only : numurban
+      USE MOD_Landurban, only: numurban
 #endif
       implicit none
 
@@ -192,8 +192,8 @@ contains
    SUBROUTINE single_write_2d ( &
          acc_vec, file_hist, varname, itime_in_file, longname, units)
 
-      USE MOD_Vars_1DAccFluxes, only : nac
-      use MOD_Vars_Global,      only : spval
+      USE MOD_Vars_1DAccFluxes, only: nac
+      use MOD_Vars_Global,      only: spval
       implicit none
 
       real(r8),         intent(inout) :: acc_vec(:)
@@ -250,8 +250,8 @@ contains
    SUBROUTINE single_write_urb_2d ( &
          acc_vec, file_hist, varname, itime_in_file, longname, units)
 
-      USE MOD_Vars_1DAccFluxes, only : nac
-      use MOD_Vars_Global,      only : spval
+      USE MOD_Vars_1DAccFluxes, only: nac
+      use MOD_Vars_Global,      only: spval
       implicit none
 
       real(r8),         intent(inout) :: acc_vec(:)
@@ -308,8 +308,8 @@ contains
    SUBROUTINE single_write_ln ( &
          acc_vec, file_hist, varname, itime_in_file, longname, units)
 
-      USE MOD_Vars_1DAccFluxes, only : nac_ln
-      use MOD_Vars_Global,      only : spval
+      USE MOD_Vars_1DAccFluxes, only: nac_ln
+      use MOD_Vars_Global,      only: spval
       implicit none
 
       real(r8),         intent(inout) :: acc_vec(:)
@@ -368,8 +368,8 @@ contains
    SUBROUTINE single_write_3d ( &
          acc_vec, file_hist, varname, itime_in_file, dim1name, ndim1, longname, units)
 
-      USE MOD_Vars_1DAccFluxes, only : nac
-      use MOD_Vars_Global,      only : spval
+      USE MOD_Vars_1DAccFluxes, only: nac
+      use MOD_Vars_Global,      only: spval
       implicit none
 
       real(r8),         intent(inout) :: acc_vec(:,:)
@@ -431,8 +431,8 @@ contains
          acc_vec, file_hist, varname, itime_in_file, &
          dim1name, ndim1, dim2name, ndim2, longname, units)
 
-      USE MOD_Vars_1DAccFluxes, only : nac
-      use MOD_Vars_Global,      only : spval
+      USE MOD_Vars_1DAccFluxes, only: nac
+      use MOD_Vars_Global,      only: spval
       implicit none
 
       real(r8),         intent(inout) :: acc_vec(:,:,:)

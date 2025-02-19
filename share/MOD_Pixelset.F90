@@ -177,7 +177,7 @@ CONTAINS
    FUNCTION get_pixelset_rlat (npxl, ilat, area) result(rlat)
 
    USE MOD_Precision
-   USE MOD_Vars_Global, only : pi
+   USE MOD_Vars_Global, only: pi
    USE MOD_Pixel
    IMPLICIT NONE
 
@@ -203,7 +203,7 @@ CONTAINS
 
    USE MOD_Precision
    USE MOD_Utils
-   USE MOD_Vars_Global, only : pi
+   USE MOD_Vars_Global, only: pi
    USE MOD_Pixel
    IMPLICIT NONE
 

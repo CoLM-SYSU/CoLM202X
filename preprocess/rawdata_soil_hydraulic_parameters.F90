@@ -4,37 +4,39 @@ SUBROUTINE soil_hydraulic_parameters(BD,SAND,CLAY,SOC,SOILDEPTH,&
            VGM_theta_r_Rose,VGM_alpha_Rose,VGM_n_Rose,k_s_Rose)
 
 !-----------------------------------------------------------------------
-! DESCRIPTION:
-! Calculate soil hydraulic parameters of soil water retension models (Brooks and Corey, 1964 & van Genuchten, 1980)
-! and soil saturated hydraulic conductivity with multiple soil Pedotransfer functions by using the rawdata soil properties.
+! !DESCRIPTION:
+!  Calculate soil hydraulic parameters of soil water retension models
+!  (Brooks and Corey, 1964 & van Genuchten, 1980) and soil saturated
+!  hydraulic conductivity with multiple soil Pedotransfer functions by
+!  using the rawdata soil properties.
 !
-! REFERENCES:
-! (1) Dai et al.,2013: Development of a China Dataset of Soil
-!     Hydraulic Parameters Using Pedotransfer Functions for Land Surface Modeling.
-!     J. of Hydrometeorology, 14: 869-887. DOI: 10.1175/JHM-D-12-0149.1
-! (2) Dai et al.,2019: A Global High-Resolution Data Set of Soil Hydraulic and Thermal Properties
-!     for Land Surface Modeling. J. of Advances in Modeling Earth Systems, DOI: 10.1029/2019MS001784
+! !REFERENCES:
+!  (1) Dai et al.,2013: Development of a China Dataset of Soil
+!      Hydraulic Parameters Using Pedotransfer Functions for Land Surface Modeling.
+!      J. of Hydrometeorology, 14: 869-887. DOI: 10.1175/JHM-D-12-0149.1
+!  (2) Dai et al.,2019: A Global High-Resolution Data Set of Soil Hydraulic and Thermal Properties
+!      for Land Surface Modeling. J. of Advances in Modeling Earth Systems, DOI: 10.1029/2019MS001784
 !
-! Original author: Yongjiu Dai, Wei Shangguan, 12/2013/
+!  Original author: Yongjiu Dai, Wei Shangguan, 12/2013/
 !
-! Revisions:
-! Yongjiu Dai, Nan Wei and Yonggen Zhang,
-!          06/2018: add more highly cited or newly developed soil Pedotransfer functions.
-! Nan Wei, 01/2019: add algorithms for fitting soil hydraulic parameters by multiple soil Pedotransfer functions.
-! Yongjiu Dai and Nan Wei,
-!          06/2019: consider the gravel effects on soil hydraulic parameters
+! !REVISIONS:
+!  Yongjiu Dai, Nan Wei and Yonggen Zhang,
+!           06/2018: add more highly cited or newly developed soil Pedotransfer functions.
+!  Nan Wei, 01/2019: add algorithms for fitting soil hydraulic parameters by multiple soil Pedotransfer functions.
+!  Yongjiu Dai and Nan Wei,
+!           06/2019: consider the gravel effects on soil hydraulic parameters
 ! ----------------------------------------------------------------------
 use MOD_Precision
 
 IMPLICIT NONE
 
-real(r8), intent(in) :: SAND ! percent sand particle-size distribution (%, weight)
-real(r8), intent(in) :: CLAY ! percent clay particle-size distribution (%, weight)
-real(r8), intent(in) :: SOC  ! soil organic carbon concentration (%, weight)
-real(r8), intent(in) :: BD   ! bulk density (g cm-3)
-real(r8), intent(in) :: SOILDEPTH ! soil depth (cm)
-real(r8), intent(in) :: vf_gravels_ss! volumetric fraction of gravels
-real(r8), intent(in) :: phi          ! saturated water content (cm3/cm3)
+real(r8), intent(in) :: SAND             ! percent sand particle-size distribution (%, weight)
+real(r8), intent(in) :: CLAY             ! percent clay particle-size distribution (%, weight)
+real(r8), intent(in) :: SOC              ! soil organic carbon concentration (%, weight)
+real(r8), intent(in) :: BD               ! bulk density (g cm-3)
+real(r8), intent(in) :: SOILDEPTH        ! soil depth (cm)
+real(r8), intent(in) :: vf_gravels_ss    ! volumetric fraction of gravels
+real(r8), intent(in) :: phi              ! saturated water content (cm3/cm3)
 real(r8), intent(in) :: VGM_theta_r_Rose ! residual moisture content by Rosetta H3
 real(r8), intent(in) :: VGM_alpha_Rose   ! a parameter corresponding approximately to the inverse of the air-entry value by Rosetta H3
 real(r8), intent(in) :: VGM_n_Rose       ! a shape parameter by Rosetta H3
@@ -43,12 +45,12 @@ real(r8), intent(in) :: k_s_Rose         ! saturated hydraulic conductivity (cm/
 real(r8), intent(out) :: CampBC_psi_s    ! matric potential at saturation (cm)
 real(r8), intent(out) :: CampBC_lambda_s ! pore size distribution index (dimensionless)
 
-real(r8), intent(out) :: k_s      ! saturated hydraulic conductivity (cm/day)
+real(r8), intent(out) :: k_s             ! saturated hydraulic conductivity (cm/day)
 
-real(r8), intent(out) :: VGM_theta_r ! residual moisture content
-real(r8), intent(out) :: VGM_alpha   ! a parameter corresponding approximately to the inverse of the air-entry value
-real(r8), intent(out) :: VGM_n       ! a shape parameter
-real(r8), intent(out) :: VGM_L       ! pore-connectivity parameter
+real(r8), intent(out) :: VGM_theta_r     ! residual moisture content
+real(r8), intent(out) :: VGM_alpha       ! a parameter corresponding approximately to the inverse of the air-entry value
+real(r8), intent(out) :: VGM_n           ! a shape parameter
+real(r8), intent(out) :: VGM_L           ! pore-connectivity parameter
 
 real(r8) SOM, TOPSOIL, BD_om, BD_minerals,a,vf_gravels_s
 

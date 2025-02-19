@@ -23,11 +23,11 @@ CONTAINS
    SUBROUTINE lakedepth_readin (dir_landdata, lc_year)
 
    USE MOD_Precision
-   USE MOD_Vars_Global, only : nl_lake
+   USE MOD_Vars_Global, only: nl_lake
    USE MOD_SPMD_Task
    USE MOD_LandPatch
    USE MOD_NetCDFVector
-   USE MOD_Vars_TimeInvariants, only : lakedepth, dz_lake
+   USE MOD_Vars_TimeInvariants, only: lakedepth, dz_lake
 #ifdef SinglePoint
    USE MOD_SingleSrfdata
 #endif

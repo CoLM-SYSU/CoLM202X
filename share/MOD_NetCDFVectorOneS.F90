@@ -38,7 +38,7 @@ MODULE MOD_NetCDFVector
    USE MOD_SPMD_Task
    USE MOD_Block
    USE MOD_Pixelset
-   USE MOD_NetCDFSerial, only : nccheck
+   USE MOD_NetCDFSerial, only: nccheck
    IMPLICIT NONE
 
    ! PUBLIC subroutines
@@ -924,7 +924,7 @@ CONTAINS
    !---------------------------------------------------------
    SUBROUTINE ncio_create_file_vector (filename, pixelset)
 
-   USE MOD_NetCDFSerial, only : get_time_now
+   USE MOD_NetCDFSerial, only: get_time_now
    IMPLICIT NONE
 
    character(len=*),    intent(in) :: filename

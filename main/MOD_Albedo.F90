@@ -57,7 +57,7 @@ CONTAINS
 !     linear combination of albedos for snow, canopy and bare soil (or
 !     lake, wetland, glacier).
 !
-! Original author : Yongjiu Dai, 09/15/1999; 08/30/2002, 03/2014
+! Original author: Yongjiu Dai, 09/15/1999; 08/30/2002, 03/2014
 !
 ! !REVISIONS:
 ! 12/2019, Hua Yuan: added a wrap FUNCTION for PFT calculation, details
@@ -1170,7 +1170,7 @@ ENDIF
 
       ENDDO !ic
 
-      End DO !iw
+      ENDDO !iw
 
       ! restore extkb
       extkb = extkbd
@@ -1287,7 +1287,7 @@ ENDIF
 !=======================================================================
 
    USE MOD_Precision
-   USE MOD_Const_Physical, only : tfrz
+   USE MOD_Const_Physical, only: tfrz
    IMPLICIT NONE
 
 !-------------------------- Dummy Arguments ----------------------------

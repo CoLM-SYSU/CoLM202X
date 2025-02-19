@@ -24,8 +24,8 @@
 
 
    USE MOD_Precision
-   USE MOD_Namelist, only : DEF_USE_SASU, DEF_USE_DiagMatrix, DEF_USE_NITRIF, DEF_USE_CNSOYFIXN, DEF_USE_FIRE, DEF_USE_IRRIGATION
-   USE MOD_Const_Physical, only : tfrz, denh2o, denice
+   USE MOD_Namelist, only: DEF_USE_SASU, DEF_USE_DiagMatrix, DEF_USE_NITRIF, DEF_USE_CNSOYFIXN, DEF_USE_FIRE, DEF_USE_IRRIGATION
+   USE MOD_Const_Physical, only: tfrz, denh2o, denice
    USE MOD_Vars_PFTimeInvariants, only: pftfrac
    USE MOD_LandPFT, only: patch_pft_s, patch_pft_e
    USE MOD_BGC_Vars_1DFluxes, only: plant_ndemand, ndep_to_sminn

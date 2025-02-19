@@ -15,8 +15,8 @@ MODULE MOD_CheckEquilibrium
    USE netcdf
    USE MOD_NetCDFSerial
    USE MOD_SpatialMapping
-   USE MOD_Vars_Global, only : spval
-   USE MOD_Namelist,    only : DEF_CheckEquilibrium
+   USE MOD_Vars_Global, only: spval
+   USE MOD_Namelist,    only: DEF_CheckEquilibrium
 
    ! ----- Variables -----
    integer :: numcheck
@@ -43,8 +43,8 @@ CONTAINS
    !---------------------------------------
    SUBROUTINE CheckEqb_init ()
 
-   USE MOD_Forcing,   only : gforc
-   USE MOD_LandPatch, only : numpatch, landpatch
+   USE MOD_Forcing,   only: gforc
+   USE MOD_LandPatch, only: numpatch, landpatch
    IMPLICIT NONE
 
       IF (.not. DEF_CheckEquilibrium) return
@@ -93,8 +93,8 @@ CONTAINS
    USE MOD_TimeManager
    USE MOD_DataType
    USE MOD_LandPatch
-   USE MOD_Vars_1DForcing,     only : forc_prc, forc_prl
-   USE MOD_Vars_TimeVariables, only : wa, wat, wdsrf
+   USE MOD_Vars_1DForcing,     only: forc_prc, forc_prl
+   USE MOD_Vars_TimeVariables, only: wa, wat, wdsrf
 
    IMPLICIT NONE
 

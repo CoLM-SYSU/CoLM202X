@@ -60,24 +60,24 @@ CONTAINS
               mss_dst1    ,mss_dst2    ,mss_dst3    ,mss_dst4                  )
 
 !=======================================================================
-! this is the main SUBROUTINE to execute the calculation of
-! hydrological processes
+!  this is the main SUBROUTINE to execute the calculation of
+!  hydrological processes
 !
-! Original author : Yongjiu Dai, /09/1999/, /08/2002/, /04/2014/
+!  Original author: Yongjiu Dai, /09/1999/, /08/2002/, /04/2014/
 !
-! FLOW DIAGRAM FOR WATER_2014.F90
+!  FLOW DIAGRAM FOR WATER_2014.F90
 !
-! WATER_2014 ===> snowwater
-!                 SurfaceRunoff_SIMTOP
-!                 soilwater
-!                 SubsurfaceRunoff_SIMTOP
+!  WATER_2014 ===> snowwater
+!                  SurfaceRunoff_SIMTOP
+!                  soilwater
+!                  SubsurfaceRunoff_SIMTOP
 !
 !=======================================================================
 
    USE MOD_Precision
-   USE MOD_Const_Physical,      only : denice, denh2o, tfrz
-   USE MOD_Vars_TimeInvariants, only : vic_b_infilt, vic_Dsmax, vic_Ds, vic_Ws, vic_c
-   USE MOD_Vars_1DFluxes,       only : fevpg
+   USE MOD_Const_Physical,      only: denice, denh2o, tfrz
+   USE MOD_Vars_TimeInvariants, only: vic_b_infilt, vic_Dsmax, vic_Ds, vic_Ws, vic_c
+   USE MOD_Vars_1DFluxes,       only: fevpg
 
    IMPLICIT NONE
 
@@ -505,27 +505,27 @@ ENDIF
               mss_dst1    ,mss_dst2    ,mss_dst3    ,mss_dst4                  )
 
 !===================================================================================
-! this is the main SUBROUTINE to execute the calculation of soil water processes
+!  this is the main SUBROUTINE to execute the calculation of soil water processes
 !
-! Original author : Yongjiu Dai, /09/1999/, /08/2002/, /04/2014/
+!  Original author: Yongjiu Dai, /09/1999/, /08/2002/, /04/2014/
 !
-! Modified by Shupeng Zhang /07/2023/ to USE Variably Saturated Flow algorithm
-!    Reference :
-!    Dai, Y., Zhang, S., Yuan, H., & Wei, N. (2019).
-!    Modeling Variably Saturated Flow in Stratified Soils
-!      With Explicit Tracking of Wetting Front and Water Table Locations.
-!    Water Resources Research. doi:10.1029/2019wr025368
+!  Modified by Shupeng Zhang /07/2023/ to USE Variably Saturated Flow algorithm
+!     Reference :
+!     Dai, Y., Zhang, S., Yuan, H., & Wei, N. (2019).
+!     Modeling Variably Saturated Flow in Stratified Soils
+!       With Explicit Tracking of Wetting Front and Water Table Locations.
+!     Water Resources Research. doi:10.1029/2019wr025368
 !
 !===================================================================================
 
    USE MOD_Precision
    USE MOD_Hydro_SoilWater
-   USE MOD_Vars_TimeInvariants, only : wetwatmax
-   USE MOD_Const_Physical,      only : denice, denh2o, tfrz
-   USE MOD_Vars_TimeInvariants, only : vic_b_infilt, vic_Dsmax, vic_Ds, vic_Ws, vic_c
-   USE MOD_Vars_1DFluxes,       only : fevpg
+   USE MOD_Vars_TimeInvariants, only: wetwatmax
+   USE MOD_Const_Physical,      only: denice, denh2o, tfrz
+   USE MOD_Vars_TimeInvariants, only: vic_b_infilt, vic_Dsmax, vic_Ds, vic_Ws, vic_c
+   USE MOD_Vars_1DFluxes,       only: fevpg
 #ifdef DataAssimilation
-   USE MOD_DA_GRACE, only : fslp_k
+   USE MOD_DA_GRACE, only: fslp_k
 #endif
 
    IMPLICIT NONE
@@ -1139,20 +1139,20 @@ ENDIF
                         dz_soisno,wice_soisno,wliq_soisno,qout_snowb)
 
 !-----------------------------------------------------------------------
-! Original author : Yongjiu Dai, /09/1999; /04/2014
+!  Original author: Yongjiu Dai, /09/1999; /04/2014
 !
-! Water flow within snow is computed by an explicit and non-physical based
-! scheme, which permits a part of liquid water over the holding capacity (a
-! tentative value is used, i.e., equal to 0.033*porosity) to percolate into the
-! underlying layer, except the case of that the porosity of one of the two
-! neighboring layers is less than 0.05, the zero flow is assumed. The water
-! flow out of the bottom snow pack will participate as the input of the soil
-! water and runoff.
+!  Water flow within snow is computed by an explicit and non-physical based
+!  scheme, which permits a part of liquid water over the holding capacity (a
+!  tentative value is used, i.e., equal to 0.033*porosity) to percolate into the
+!  underlying layer, except the case of that the porosity of one of the two
+!  neighboring layers is less than 0.05, the zero flow is assumed. The water
+!  flow out of the bottom snow pack will participate as the input of the soil
+!  water and runoff.
 !
 !-----------------------------------------------------------------------
 
    USE MOD_Precision
-   USE MOD_Const_Physical, only : denice, denh2o  ! physical constant
+   USE MOD_Const_Physical, only: denice, denh2o  ! physical constant
    IMPLICIT NONE
 
 !-------------------------- Dummy Arguments ----------------------------
@@ -1262,18 +1262,18 @@ ENDIF
 
 
 !-----------------------------------------------------------------------
-! Original author : Yongjiu Dai, /09/1999, /04/2014, /01/2023/
+!  Original author: Yongjiu Dai, /09/1999, /04/2014, /01/2023/
 !
-! Water flow within snow is computed by an explicit and non-physical based
-! scheme, which permits a part of liquid water over the holding capacity (a
-! tentative value is used, i.e., equal to 0.033*porosity) to percolate into the
-! underlying layer, except the case of that the porosity of one of the two
-! neighboring layers is less than 0.05, the zero flow is assumed. The water
-! flow out of the bottom snow pack will participate as the input of the soil
-! water and runoff.
+!  Water flow within snow is computed by an explicit and non-physical based
+!  scheme, which permits a part of liquid water over the holding capacity (a
+!  tentative value is used, i.e., equal to 0.033*porosity) to percolate into the
+!  underlying layer, except the case of that the porosity of one of the two
+!  neighboring layers is less than 0.05, the zero flow is assumed. The water
+!  flow out of the bottom snow pack will participate as the input of the soil
+!  water and runoff.
 !
-! REVISIONS:
-! Yongjiu Dai, 01/2023: added Aerosol fluxes from SNICAR model
+! !REVISIONS:
+!  Yongjiu Dai, 01/2023: added Aerosol fluxes from SNICAR model
 !-----------------------------------------------------------------------
 
    IMPLICIT NONE
@@ -1700,68 +1700,68 @@ ENDIF
                         zwt,dwat,qcharge)
 
 !-----------------------------------------------------------------------
-! Original author : Yongjiu Dai, 09/1999, 04/2014, 07/2014
+!  Original author: Yongjiu Dai, 09/1999, 04/2014, 07/2014
 !
-! some new parameterization are added, which are based on CLM4.5
+!  some new parameterization are added, which are based on CLM4.5
 !
-! Soil moisture is predicted from a 10-layer model (as with soil
-! temperature), in which the vertical soil moisture transport is governed
-! by infiltration, runoff, gradient diffusion, gravity, and root
-! extraction through canopy transpiration. The net water applied to the
-! surface layer is the snowmelt plus precipitation plus the throughfall
-! of canopy dew minus surface runoff and evaporation.
+!  Soil moisture is predicted from a 10-layer model (as with soil
+!  temperature), in which the vertical soil moisture transport is governed
+!  by infiltration, runoff, gradient diffusion, gravity, and root
+!  extraction through canopy transpiration. The net water applied to the
+!  surface layer is the snowmelt plus precipitation plus the throughfall
+!  of canopy dew minus surface runoff and evaporation.
 !
-! The vertical water flow in an unsaturated porous media is described by
-! Darcy's law, and the hydraulic conductivity and the soil negative
-! potential vary with soil water content and soil texture based on the work
-! of Clapp and Hornberger (1978) and Cosby et al. (1984). The equation is
-! integrated over the layer thickness, in which the time rate of change in
-! water mass must equal the net flow across the bounding interface, plus the
-! rate of internal source or sink. The terms of water flow across the layer
-! interfaces are linearly expanded by using first-order Taylor expansion.
-! The equations result in a tridiagonal system equation.
+!  The vertical water flow in an unsaturated porous media is described by
+!  Darcy's law, and the hydraulic conductivity and the soil negative
+!  potential vary with soil water content and soil texture based on the work
+!  of Clapp and Hornberger (1978) and Cosby et al. (1984). The equation is
+!  integrated over the layer thickness, in which the time rate of change in
+!  water mass must equal the net flow across the bounding interface, plus the
+!  rate of internal source or sink. The terms of water flow across the layer
+!  interfaces are linearly expanded by using first-order Taylor expansion.
+!  The equations result in a tridiagonal system equation.
 !
-! Note: length units here are all millimeter
-! (in temperature SUBROUTINE uses same soil layer
-! structure required but lengths are m)
+!  Note: length units here are all millimeter
+!  (in temperature SUBROUTINE uses same soil layer
+!  structure required but lengths are m)
 !
-! Richards equation:
+!  Richards equation:
 !
-! d wat     d     d psi
-! ----- =  -- [ k(----- - 1) ] + S
-!   dt     dz       dz
+!  d wat     d     d psi
+!  ----- =  -- [ k(----- - 1) ] + S
+!    dt     dz       dz
 !
-! where: wat = volume of water per volume of soil (mm**3/mm**3)
-! psi = soil matrix potential (mm)
-! dt  = time step (s)
-! z   = depth (mm) (positive downward)
-! dz  = thickness (mm)
-! qin = inflow at top (mm h2o /s)
-! qout= outflow at bottom (mm h2o /s)
-! s   = source/sink flux (mm h2o /s)
-! k   = hydraulic conductivity (mm h2o /s)
+!  where: wat = volume of water per volume of soil (mm**3/mm**3)
+!  psi = soil matrix potential (mm)
+!  dt  = time step (s)
+!  z   = depth (mm) (positive downward)
+!  dz  = thickness (mm)
+!  qin = inflow at top (mm h2o /s)
+!  qout= outflow at bottom (mm h2o /s)
+!  s   = source/sink flux (mm h2o /s)
+!  k   = hydraulic conductivity (mm h2o /s)
 !
-!                       d qin                  d qin
-! qin[n+1] = qin[n] +  --------  d wat(j-1) + --------- d wat(j)
-!                       d wat(j-1)             d wat(j)
-!                ==================|=================
-!                                  < qin
+!                        d qin                  d qin
+!  qin[n+1] = qin[n] +  --------  d wat(j-1) + --------- d wat(j)
+!                        d wat(j-1)             d wat(j)
+!                 ==================|=================
+!                                   < qin
 !
-!                 d wat(j)/dt * dz = qin[n+1] - qout[n+1] + S(j)
+!                  d wat(j)/dt * dz = qin[n+1] - qout[n+1] + S(j)
 !
-!                                  > qout
-!                ==================|=================
-!                        d qout               d qout
-! qout[n+1] = qout[n] + --------- d wat(j) + --------- d wat(j+1)
-!                        d wat(j)             d wat(j+1)
-!
-!
-! Solution: linearize k and psi about d wat and use tridiagonal
-! system of equations to solve for d wat,
-! where for layer j
+!                                   > qout
+!                 ==================|=================
+!                         d qout               d qout
+!  qout[n+1] = qout[n] + --------- d wat(j) + --------- d wat(j+1)
+!                         d wat(j)             d wat(j+1)
 !
 !
-! r_j = a_j [d wat_j-1] + b_j [d wat_j] + c_j [d wat_j+1]
+!  Solution: linearize k and psi about d wat and use tridiagonal
+!  system of equations to solve for d wat,
+!  where for layer j
+!
+!
+!  r_j = a_j [d wat_j-1] + b_j [d wat_j] + c_j [d wat_j+1]
 !
 !-----------------------------------------------------------------------
    USE MOD_Precision
@@ -2066,7 +2066,7 @@ ENDIF
 
 
    USE MOD_Precision
-   USE MOD_Const_Physical, only : tfrz
+   USE MOD_Const_Physical, only: tfrz
    IMPLICIT NONE
 
 !-------------------------- Dummy Arguments ----------------------------

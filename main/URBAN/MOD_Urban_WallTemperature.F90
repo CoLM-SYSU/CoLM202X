@@ -58,7 +58,7 @@ CONTAINS
 !
 ! o no Phase change
 !
-! Original author : Yongjiu Dai, 05/2020
+! Original author: Yongjiu Dai, 05/2020
 !=======================================================================
 
    USE MOD_Precision

@@ -29,7 +29,7 @@ CONTAINS
 !  This is the main SUBROUTINE to execute the calculation of thermal
 !  processes and surface fluxes
 !
-!  Original author : Yongjiu Dai, 09/15/1999; 08/30/2002
+!  Original author: Yongjiu Dai, 09/15/1999; 08/30/2002
 !
 ! !REVISIONS:
 !  09/2019, Hua Yuan: removed sigf to be consistent with PFT runs, removed
@@ -174,7 +174,7 @@ CONTAINS
       !----------------------------------------------------------------
          displax = 0.
          IF (DEF_USE_CBL_HEIGHT) THEN
-           CALL moninobuk_leddy(hu,ht,hq,displax,z0mg,z0hg,z0qg,obu,um, hpbl, &
+           CALL moninobuk_leddy(hu,ht,hq,displax,z0mg,z0hg,z0qg,obu,um,hpbl, &
                                 ustar,fh2m,fq2m,fm10m,fm,fh,fq)
          ELSE
            CALL moninobuk(hu,ht,hq,displax,z0mg,z0hg,z0qg,obu,um,&

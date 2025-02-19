@@ -662,7 +662,7 @@ CONTAINS
    USE MOD_Precision
    USE MOD_Block
    USE MOD_SPMD_Task
-   USE MOD_Vars_Global, only : spval
+   USE MOD_Vars_Global, only: spval
    IMPLICIT NONE
 
    type(block_data_real8_2d), intent(inout) :: gdata

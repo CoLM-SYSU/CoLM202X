@@ -27,24 +27,23 @@ CONTAINS
 
 
 !-----------------------------------------------------------------------
-! Original author : Yongjiu Dai, September 15, 1999
+!  Original author: Yongjiu Dai, September 15, 1999
 !
-! calculation of heat capacities of snow / soil layers the volumetric
-! heat capacity is calculated as a linear combination in terms of the
-! volumetric fraction of the constituent phases.  Only used in urban
-! model. TODO: merge with SUBROUTINE soil_hcap_cond
+!  calculation of heat capacities of snow / soil layers the volumetric
+!  heat capacity is calculated as a linear combination in terms of the
+!  volumetric fraction of the constituent phases.  Only used in urban
+!  model. TODO: merge with SUBROUTINE soil_hcap_cond
 !
-! ________________
-! REVISION HISTORY:
-! 07/19/2014, Yongjiu Dai: treat the wetland as soil column instead of
-!             water body.
-! 08/16/2014, Nan Wei: recalculate the heat capacity of soil layers
-!             underneath the lake
+! !REVISIONS:
+!  07/19/2014, Yongjiu Dai: treat the wetland as soil column instead of
+!              water body.
+!  08/16/2014, Nan Wei: recalculate the heat capacity of soil layers
+!              underneath the lake
 !
 !-----------------------------------------------------------------------
 
    USE MOD_Precision
-   USE MOD_Const_Physical, only : cpice,cpliq
+   USE MOD_Const_Physical, only: cpice,cpliq
    IMPLICIT NONE
 
    integer, intent(in) :: lb                       ! lower bound of array
@@ -80,29 +79,29 @@ CONTAINS
                              dkdry,dksatu,porsl,dz_soisno,z_soisno,zi_soisno,t_soisno,wice_soisno,wliq_soisno,tk,tktopsoil)
 
 !-----------------------------------------------------------------------
-! Original author : Yongjiu Dai, September 15, 1999
+!  Original author: Yongjiu Dai, September 15, 1999
 !
-! calculation of thermal conductivities of snow / soil layers The
-! thermal conductivity of soil is computed from the algorithm of
-! Johansen (as reported by Farouki 1981), and of snow is from the
-! formulation used in SNTHERM (Jordan 1991).
+!  calculation of thermal conductivities of snow / soil layers The
+!  thermal conductivity of soil is computed from the algorithm of
+!  Johansen (as reported by Farouki 1981), and of snow is from the
+!  formulation used in SNTHERM (Jordan 1991).
 !
-! The thermal conductivities at the interfaces between two neighbor
-! layers (j, j+1) are derived from an assumption that the flux across
-! the interface is equal to that from the node j to the interface and
-! the flux from the interface to the node j+1.
+!  The thermal conductivities at the interfaces between two neighbor
+!  layers (j, j+1) are derived from an assumption that the flux across
+!  the interface is equal to that from the node j to the interface and
+!  the flux from the interface to the node j+1.
 !
-! Only used in urban model. TODO: merge with subroutine soil_hcap_cond
-! ________________
-! REVISION HISTORY:
-! 07/19/2014, Yongjiu Dai: treat the wetland as soil column instead of
-!             water body.
-! 08/16/2014, Nan Wei: recalculate the heat conductivity of soil layers
-!             underneath the lake
+!  Only used in urban model. TODO: merge with subroutine soil_hcap_cond
+!
+! !REVISIONS:
+!  07/19/2014, Yongjiu Dai: treat the wetland as soil column instead of
+!              water body.
+!  08/16/2014, Nan Wei: recalculate the heat conductivity of soil layers
+!              underneath the lake
 !-----------------------------------------------------------------------
 
    USE MOD_Precision
-   USE MOD_Const_Physical, only : denh2o,denice,tfrz,tkwat,tkice,tkair
+   USE MOD_Const_Physical, only: denh2o,denice,tfrz,tkwat,tkice,tkair
    IMPLICIT NONE
 
    integer, intent(in) :: lb                         ! lower bound of array

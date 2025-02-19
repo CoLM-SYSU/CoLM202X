@@ -6,7 +6,7 @@ program rawdata_to_nc
 
    integer, parameter :: nlat = 21600
    integer, parameter :: nlon = 43200
-   
+
    integer, parameter :: nxblk = 5
    integer, parameter :: nyblk = 5
 
@@ -27,14 +27,14 @@ program rawdata_to_nc
    character(len=256) :: c
 
    integer, parameter :: compress = 1
-      
+
    INTEGER  :: ilat, ilon
    REAL(r8) :: del_lat, del_lon
    REAL(r8) :: lat_s(nlat), lat_n(nlat), lon_w(nlon), lon_e(nlon)
 
    call getarg (1, bindir)
    call getarg (2, ncdir)
-      
+
    del_lat = 180.0_r8 / nlat
    DO ilat = 1, nlat
       lat_s(ilat) = 90.0_r8 - del_lat * ilat
@@ -53,7 +53,7 @@ program rawdata_to_nc
    allocate (a_chr1 (nlon,nlat))
    iunit = 100
    inquire (iolength=length) a_chr1 (:,1)
-   open (iunit, file=trim(lndname), access='direct', recl=length, form='unformatted', status='old') 
+   open (iunit, file=trim(lndname), access='direct', recl=length, form='unformatted', status='old')
    do irow = 1, nlat
       read (iunit, rec=irow) a_chr1 (:,irow)
    end do
@@ -74,14 +74,14 @@ program rawdata_to_nc
 
    deallocate (a_chr1)
    deallocate (a_int8)
-   
+
    !-------------------------------
    lndname = trim(bindir) // '/glacier/glacier.bin'
 
    allocate (a_int16 (nlon,nlat))
    iunit = 100
    inquire (iolength=length) a_int16 (:,1)
-   open (iunit, file=trim(lndname), access='direct', recl=length, form='unformatted', status='old') 
+   open (iunit, file=trim(lndname), access='direct', recl=length, form='unformatted', status='old')
    do irow = 1, nlat
       read (iunit, rec=irow) a_int16 (:,irow)
    end do
@@ -91,15 +91,15 @@ program rawdata_to_nc
    call ncio_create_file (lndname)
    CALL ncio_define_dimension (lndname, 'latitude',  nlat)
    CALL ncio_define_dimension (lndname, 'longitude', nlon)
-   call ncio_write_serial (lndname, 'glacier', a_int16, & 
+   call ncio_write_serial (lndname, 'glacier', a_int16, &
       'longitude', 'latitude', compress)
 
    write(*,*) 'Glacier done'
 
    deallocate (a_int16)
-  
+
    !-------------------------------
-   
+
    allocate (a_chr1 (nlon,nlat))
    allocate (a_int8 (nlon, nlat))
 
@@ -113,7 +113,7 @@ program rawdata_to_nc
 
       iunit = 100
       inquire (iolength=length) a_chr1 (:,1)
-      open (iunit, file=trim(lndname), access='direct', recl=length, form='unformatted', status='old') 
+      open (iunit, file=trim(lndname), access='direct', recl=length, form='unformatted', status='old')
       do irow = 1, nlat
          read (iunit, rec=irow) a_chr1 (:,irow)
       end do
@@ -140,7 +140,7 @@ program rawdata_to_nc
    allocate (a_int16 (nlon,nlat))
    iunit = 100
       inquire (iolength=length) a_int16 (:,1)
-   open (iunit, file=trim(lndname), access='direct', recl=length, form='unformatted', status='old') 
+   open (iunit, file=trim(lndname), access='direct', recl=length, form='unformatted', status='old')
    do irow = 1, nlat
       read (iunit, rec=irow) a_int16 (:,irow)
    end do
@@ -163,7 +163,7 @@ program rawdata_to_nc
    allocate (a_chr1 (nlon,nlat))
    iunit = 100
       inquire (iolength=length) a_chr1 (:,1)
-   open (iunit, file=trim(lndname), access='direct', recl=length, form='unformatted', status='old') 
+   open (iunit, file=trim(lndname), access='direct', recl=length, form='unformatted', status='old')
    do irow = 1, nlat
       read (iunit, rec=irow) a_chr1 (:,irow)
    end do
@@ -176,21 +176,21 @@ program rawdata_to_nc
    call ncio_create_file (lndname)
    CALL ncio_define_dimension (lndname, 'latitude',  nlat)
    CALL ncio_define_dimension (lndname, 'longitude', nlon)
-   call ncio_write_serial (lndname, 'lake_wetland', a_int8, &  
+   call ncio_write_serial (lndname, 'lake_wetland', a_int8, &
       'longitude', 'latitude', compress)
 
    write(*,*) 'Lake wetland done'
 
    deallocate (a_chr1)
    deallocate (a_int8)
-  
+
    !-------------------------------
    lndname = trim(bindir) // '/RAW_DATA_updated/landtypes_usgs_update.bin'
 
    allocate (a_chr1 (nlon,nlat))
    iunit = 100
       inquire (iolength=length) a_chr1 (:,1)
-   open (iunit, file=trim(lndname), access='direct', recl=length, form='unformatted', status='old') 
+   open (iunit, file=trim(lndname), access='direct', recl=length, form='unformatted', status='old')
    do irow = 1, nlat
       read (iunit, rec=irow) a_chr1 (:,irow)
    end do
@@ -210,14 +210,14 @@ program rawdata_to_nc
 
    deallocate (a_chr1)
    deallocate (a_int8)
-  
+
    !-------------------------------
    lndname = trim(bindir) // '/soil_brightness/soilcol_clm_30s.bin'
 
    allocate (a_chr1 (nlon,nlat))
    iunit = 100
       inquire (iolength=length) a_chr1 (:,1)
-   open (iunit, file=trim(lndname), access='direct', recl=length, form='unformatted', status='old') 
+   open (iunit, file=trim(lndname), access='direct', recl=length, form='unformatted', status='old')
    do irow = 1, nlat
       read (iunit, rec=irow) a_chr1 (:,irow)
    end do
@@ -230,17 +230,17 @@ program rawdata_to_nc
    call ncio_create_file (lndname)
    CALL ncio_define_dimension (lndname, 'latitude',  nlat)
    CALL ncio_define_dimension (lndname, 'longitude', nlon)
-   call ncio_write_serial (lndname, 'soil_brightness', a_int8, &  
+   call ncio_write_serial (lndname, 'soil_brightness', a_int8, &
       'longitude', 'latitude', compress)
 
    write(*,*) 'Soil brightness done'
 
    deallocate (a_chr1)
    deallocate (a_int8)
-   
+
    !-------------------------------
    allocate (a_real8 (nlon,nlat))
-   
+
    call execute_command_line ('mkdir -p ' // trim(ncdir) // '/soil')
 
    lndname = trim(ncdir) // '/soil/theta_s.nc'
@@ -252,7 +252,7 @@ program rawdata_to_nc
    call ncio_create_file (lndname)
    CALL ncio_define_dimension (lndname, 'latitude',  nlat)
    CALL ncio_define_dimension (lndname, 'longitude', nlon)
-   
+
    lndname = trim(ncdir) // '/soil/lambda.nc'
    call ncio_create_file (lndname)
    CALL ncio_define_dimension (lndname, 'latitude',  nlat)
@@ -282,11 +282,11 @@ program rawdata_to_nc
       write(c,'(i1)') n8
 
       ! (1) Read in the saturated water content [cm3/cm3]
-      lndname = trim(bindir) // '/RAW_DATA_updated/theta_s_l'//trim(c) 
+      lndname = trim(bindir) // '/RAW_DATA_updated/theta_s_l'//trim(c)
 
       iunit = 100
       inquire (iolength=length) a_real8 (:,1)
-      open (iunit, file=trim(lndname), access='direct', recl=length, form='unformatted', status='old') 
+      open (iunit, file=trim(lndname), access='direct', recl=length, form='unformatted', status='old')
       do irow = 1, nlat
          read (iunit, rec=irow) a_real8 (:,irow)
       end do
@@ -299,28 +299,28 @@ program rawdata_to_nc
       write(*,*) 'Theta_s_l' // trim(c) // ' done'
 
       ! (2) Read in the matric potential at saturation [cm]
-      lndname = trim(bindir) // '/RAW_DATA_updated/psi_s_l'//trim(c) 
+      lndname = trim(bindir) // '/RAW_DATA_updated/psi_s_l'//trim(c)
 
       iunit = 100
       inquire (iolength=length) a_real8 (:,1)
-      open (iunit, file=trim(lndname), access='direct', recl=length, form='unformatted', status='old') 
+      open (iunit, file=trim(lndname), access='direct', recl=length, form='unformatted', status='old')
       do irow = 1, nlat
          read (iunit, rec=irow) a_real8 (:,irow)
       end do
       close (iunit)
 
       lndname = trim(ncdir) // '/soil/psi_s.nc'
-      call ncio_write_serial (lndname, 'psi_s_l'//trim(c), a_real8, &  
+      call ncio_write_serial (lndname, 'psi_s_l'//trim(c), a_real8, &
          'longitude', 'latitude', compress)
 
       write(*,*) 'psi_s_l' // trim(c) // ' done'
 
       ! (3) Read in the pore size distribution index [dimensionless]
-      lndname = trim(bindir) // '/RAW_DATA_updated/lambda_l'//trim(c) 
+      lndname = trim(bindir) // '/RAW_DATA_updated/lambda_l'//trim(c)
 
       iunit = 100
       inquire (iolength=length) a_real8 (:,1)
-      open (iunit, file=trim(lndname), access='direct', recl=length, form='unformatted', status='old') 
+      open (iunit, file=trim(lndname), access='direct', recl=length, form='unformatted', status='old')
       do irow = 1, nlat
          read (iunit, rec=irow) a_real8 (:,irow)
       end do
@@ -333,11 +333,11 @@ program rawdata_to_nc
       write(*,*) 'lambda_l' // trim(c) // ' done'
 
       ! (4) Read in the saturated hydraulic conductivity [cm/day]
-      lndname = trim(bindir) // '/RAW_DATA_updated/k_s_l'//trim(c) 
+      lndname = trim(bindir) // '/RAW_DATA_updated/k_s_l'//trim(c)
 
       iunit = 100
       inquire (iolength=length) a_real8 (:,1)
-      open (iunit, file=trim(lndname), access='direct', recl=length, form='unformatted', status='old') 
+      open (iunit, file=trim(lndname), access='direct', recl=length, form='unformatted', status='old')
       do irow = 1, nlat
          read (iunit, rec=irow) a_real8 (:,irow)
       end do
@@ -350,11 +350,11 @@ program rawdata_to_nc
       write(*,*) 'k_s_l' // trim(c) // ' done'
 
       ! (5) Read in the heat capacity of soil solids [J/(m3 K)]
-      lndname = trim(bindir) // '/RAW_DATA_updated/csol_l'//trim(c) 
+      lndname = trim(bindir) // '/RAW_DATA_updated/csol_l'//trim(c)
 
       iunit = 100
       inquire (iolength=length) a_real8 (:,1)
-      open (iunit, file=trim(lndname), access='direct', recl=length, form='unformatted', status='old') 
+      open (iunit, file=trim(lndname), access='direct', recl=length, form='unformatted', status='old')
       do irow = 1, nlat
          read (iunit, rec=irow) a_real8 (:,irow)
       end do
@@ -367,11 +367,11 @@ program rawdata_to_nc
       write(*,*) 'csol_l' // trim(c) // ' done'
 
       ! (6) Read in the thermal conductivity of saturated soil [W/m-K]
-      lndname = trim(bindir) // '/RAW_DATA_updated/tksatu_l'//trim(c) 
+      lndname = trim(bindir) // '/RAW_DATA_updated/tksatu_l'//trim(c)
 
       iunit = 100
       inquire (iolength=length) a_real8 (:,1)
-      open (iunit, file=trim(lndname), access='direct', recl=length, form='unformatted', status='old') 
+      open (iunit, file=trim(lndname), access='direct', recl=length, form='unformatted', status='old')
       do irow = 1, nlat
          read (iunit, rec=irow) a_real8 (:,irow)
       end do
@@ -384,11 +384,11 @@ program rawdata_to_nc
       write(*,*) 'tksatu_l' // trim(c) // ' done'
 
       ! (7) Read in the thermal conductivity for dry soil [W/(m-K)]
-      lndname = trim(bindir) // '/RAW_DATA_updated/tkdry_l'//trim(c) 
+      lndname = trim(bindir) // '/RAW_DATA_updated/tkdry_l'//trim(c)
 
       iunit = 100
       inquire (iolength=length) a_real8 (:,1)
-      open (iunit, file=trim(lndname), access='direct', recl=length, form='unformatted', status='old') 
+      open (iunit, file=trim(lndname), access='direct', recl=length, form='unformatted', status='old')
       do irow = 1, nlat
          read (iunit, rec=irow) a_real8 (:,irow)
       end do
@@ -400,7 +400,7 @@ program rawdata_to_nc
 
       write(*,*) 'tkdry_l' // trim(c) // ' done'
 
-   end do 
+   end do
 
    deallocate (a_real8)
 

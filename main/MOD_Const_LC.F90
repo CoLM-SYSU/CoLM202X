@@ -16,7 +16,7 @@ MODULE MOD_Const_LC
 ! !USES:
    USE MOD_Precision
    USE MOD_Vars_Global
-   USE MOD_Namelist, only : DEF_USE_PLANTHYDRAULICS
+   USE MOD_Namelist, only: DEF_USE_PLANTHYDRAULICS
 
    IMPLICIT NONE
    SAVE

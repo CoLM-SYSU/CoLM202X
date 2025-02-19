@@ -32,35 +32,36 @@ CONTAINS
               t_soisno,wliq_soisno,wice_soisno,forc_us,forc_vs,dz_soisno)
 
 !=======================================================================
-! Original author: Yongjiu Dai, September 15, 1999
-! Revision: Yongjiu Dai, /07/31/2023
+!  Original author: Yongjiu Dai, September 15, 1999
+!  Revision: Yongjiu Dai, /07/31/2023
 !
-! Four of metamorphisms of changing snow characteristics are implemented, i.e.,
-! destructive, overburden, melt and wind drift. The treatments of the
-! destructive compaction was from SNTHERM.89 and SNTHERM.99 (1991, 1999). The
-! contribution due to melt metamorphism is simply taken as a ratio of snow ice
-! fraction after the melting versus before the melting. The treatments of the
-! overburden compaction and the drifting compaction were borrowed from CLM5.0
-! which based on Vionnet et al. (2012) and van Kampenhout et al (2017).
+!  Four of metamorphisms of changing snow characteristics are
+!  implemented, i.e., destructive, overburden, melt and wind drift. The
+!  treatments of the destructive compaction was from SNTHERM.89 and
+!  SNTHERM.99 (1991, 1999). The contribution due to melt metamorphism is
+!  simply taken as a ratio of snow ice fraction after the melting versus
+!  before the melting. The treatments of the overburden compaction and
+!  the drifting compaction were borrowed from CLM5.0 which based on
+!  Vionnet et al. (2012) and van Kampenhout et al (2017).
 !
 !=======================================================================
 
    USE MOD_Precision
-   USE MOD_Const_Physical, only : denice, denh2o, tfrz
+   USE MOD_Const_Physical, only: denice, denh2o, tfrz
    IMPLICIT NONE
 
 !-------------------------- Dummy Arguments ----------------------------
 
-   integer,  intent(in) :: lb          ! lower bound of array
-   real(r8), intent(in) :: deltim      ! seconds i a time step [second]
-   integer,  intent(in) :: imelt(lb:0) ! signifies IF node in melting (imelt = 1)
-   real(r8), intent(in) :: fiold(lb:0) ! fraction of ice relative to the total water content
-                                       ! at the previous time step
-   real(r8), intent(in) :: t_soisno(lb:0)    ! nodal temperature [K]
-   real(r8), intent(in) :: wice_soisno(lb:0) ! ice lens [kg/m2]
-   real(r8), intent(in) :: wliq_soisno(lb:0) ! liquid water [kg/m2]
-   real(r8), intent(in) :: forc_us ! wind speed in eastward direction [m/s]
-   real(r8), intent(in) :: forc_vs ! wind speed in northward direction [m/s]
+   integer,  intent(in) :: lb                 ! lower bound of array
+   real(r8), intent(in) :: deltim             ! seconds i a time step [second]
+   integer,  intent(in) :: imelt(lb:0)        ! signifies IF node in melting (imelt = 1)
+   real(r8), intent(in) :: fiold(lb:0)        ! fraction of ice relative to the total water content
+                                              ! at the previous time step
+   real(r8), intent(in) :: t_soisno(lb:0)     ! nodal temperature [K]
+   real(r8), intent(in) :: wice_soisno(lb:0)  ! ice lens [kg/m2]
+   real(r8), intent(in) :: wliq_soisno(lb:0)  ! liquid water [kg/m2]
+   real(r8), intent(in) :: forc_us            ! wind speed in eastward direction [m/s]
+   real(r8), intent(in) :: forc_vs            ! wind speed in northward direction [m/s]
 
    real(r8), intent(inout) :: dz_soisno(lb:0) ! layer thickness [m]
 
@@ -171,18 +172,20 @@ CONTAINS
    SUBROUTINE winddriftcompaction(bi,forc_wind,dz,zpseudo,mobile,compaction_rate)
 
 !=======================================================================
-! Original author: Yongjiu Dai, September 15, 1999
-! Revision: Yongjiu Dai, /07/31/2023
+!  Original author: Yongjiu Dai, September 15, 1999
 !
-! Compute wind drift compaction for a single column and level.  Also updates
-! zpseudo and mobile for this column. However, zpseudo remains unchanged IF
-! mobile is already false or becomes false within this SUBROUTINE.
+!  Compute wind drift compaction for a single column and level.  Also
+!  updates zpseudo and mobile for this column. However, zpseudo remains
+!  unchanged IF mobile is already false or becomes false within this
+!  SUBROUTINE.
 !
-! The structure of the updates done here for zpseudo and mobile requires that
-! this SUBROUTINE be called first for the top layer of snow, THEN for the 2nd
-! layer down, etc. - and finally for the bottom layer. Before beginning the
-! loops over layers, mobile should be initialized to .true. and zpseudo should
-! be initialized to 0.
+!  The structure of the updates done here for zpseudo and mobile
+!  requires that this SUBROUTINE be called first for the top layer of
+!  snow, THEN for the 2nd layer down, etc. - and finally for the bottom
+!  layer. Before beginning the loops over layers, mobile should be
+!  initialized to .true. and zpseudo should be initialized to 0.
+!
+! !REVISIONS: Yongjiu Dai, /07/31/2023
 !
 ! !USES:
    USE MOD_Precision
@@ -245,12 +248,13 @@ CONTAINS
               z_soisno,dz_soisno,zi_soisno,wliq_soisno,wice_soisno,t_soisno,scv,snowdp)
 
 !=======================================================================
-! Original author : Yongjiu Dai, September 15, 1999
+!  Original author: Yongjiu Dai, September 15, 1999
 !
-! checks for elements which are below prescribed minimum for thickness or mass.
-! If snow element thickness or mass is less than a prescribed minimum,
-! it is combined with neighboring element to be best combine with,
-! and executes the combination of mass and energy in clm_combo.f90
+!  checks for elements which are below prescribed minimum for thickness
+!  or mass.  If snow element thickness or mass is less than a prescribed
+!  minimum, it is combined with neighboring element to be best combine
+!  with, and executes the combination of mass and energy in
+!  clm_combo.f90
 !
 !=======================================================================
 
@@ -258,7 +262,7 @@ CONTAINS
    IMPLICIT NONE
 
 !-------------------------- Dummy Arguments ----------------------------
-   integer, intent(in) :: lb               ! lower bound of array
+   integer, intent(in) :: lb                      ! lower bound of array
 
 ! numbering from 1 (bottom) mss (surface)
    real(r8), intent(inout) :: wice_soisno(lb:1)   ! ice lens [kg/m2]
@@ -267,9 +271,9 @@ CONTAINS
    real(r8), intent(inout) :: dz_soisno  (lb:1)   ! layer thickness [m]
    real(r8), intent(inout) :: z_soisno   (lb:1)   ! node depth [m]
    real(r8), intent(inout) :: zi_soisno  (lb-1:1) ! depth of layer interface [m]
-   real(r8), intent(inout) :: snowdp       ! snow depth [m]
-   real(r8), intent(inout) :: scv          ! snow mass - water equivalent [kg/m2]
-   integer, intent(inout) :: snl           ! Number of snow
+   real(r8), intent(inout) :: snowdp              ! snow depth [m]
+   real(r8), intent(inout) :: scv                 ! snow mass - water equivalent [kg/m2]
+   integer, intent(inout) :: snl                  ! Number of snow
 
 !-------------------------- Local Variables ----------------------------
    real(r8) :: drr           ! thickness of the combined [m]
@@ -423,9 +427,9 @@ CONTAINS
    SUBROUTINE snowlayersdivide (lb,snl,z_soisno,dz_soisno,zi_soisno,wliq_soisno,wice_soisno,t_soisno)
 
 !=======================================================================
-! Original author : Yongjiu Dai, September 15, 1999
+!  Original author: Yongjiu Dai, September 15, 1999
 !
-! subdivides snow layer when its thickness exceed the prescribed maximum
+!  subdivides snow layer when its thickness exceed the prescribed maximum
 !=======================================================================
 
    USE MOD_Precision
@@ -624,17 +628,17 @@ CONTAINS
                      dz2, wliq2, wice2, t2 )
 
 !=======================================================================
-! Original author: Yongjiu Dai, September 15, 1999
+!  Original author: Yongjiu Dai, September 15, 1999
 !
-! combines two elements and returns the following combined
-! variabless: dz_soisno, t, wliq_soisno, wice_soisno.
-! the combined temperature is based on the equation:
-! the sum of the enthalpies of the two elements = that of the combined element.
+!  combines two elements and returns the following combined
+!  variabless: dz_soisno, t, wliq_soisno, wice_soisno.
+!  the combined temperature is based on the equation:
+!  the sum of the enthalpies of the two elements = that of the combined element.
 !
 !=======================================================================
 
    USE MOD_Precision
-   USE MOD_Const_Physical, only : cpice, cpliq, hfus, tfrz
+   USE MOD_Const_Physical, only: cpice, cpliq, hfus, tfrz
    IMPLICIT NONE
 
 !-------------------------- Dummy Arguments ----------------------------
@@ -694,15 +698,15 @@ CONTAINS
 
 
 !=======================================================================
-! Original author : Yongjiu Dai, September 15, 1999; January 07, 2023
+!  Original author: Yongjiu Dai, September 15, 1999; January 07, 2023
 !
-! checks for elements which are below prescribed minimum for thickness or mass.
-! If snow element thickness or mass is less than a prescribed minimum,
-! it is combined with neighboring element to be best combine with,
-! and executes the combination of mass and energy in clm_combo.f90
+!  checks for elements which are below prescribed minimum for thickness or mass.
+!  If snow element thickness or mass is less than a prescribed minimum,
+!  it is combined with neighboring element to be best combine with,
+!  and executes the combination of mass and energy in clm_combo.f90
 !
-! REVISIONS:
-! Yongjiu Dai, 01/2023: added Aerosol fluxes from SNICAR model
+! !REVISIONS:
+!  Yongjiu Dai, 01/2023: added Aerosol fluxes from SNICAR model
 !=======================================================================
 
    IMPLICIT NONE
@@ -963,12 +967,12 @@ CONTAINS
 
 
 !=======================================================================
-! Original author : Yongjiu Dai, September 15, 1999, January 07, 2023
+!  Original author: Yongjiu Dai, September 15, 1999, January 07, 2023
 !
-! subdivides snow layer when its thickness exceed the prescribed maximum
+!  subdivides snow layer when its thickness exceed the prescribed maximum
 !
-! REVISIONS:
-! Yongjiu Dai, 01/2023: added Aerosol fluxes from SNICAR model
+! !REVISIONS:
+!  Yongjiu Dai, 01/2023: added Aerosol fluxes from SNICAR model
 !=======================================================================
 
    IMPLICIT NONE

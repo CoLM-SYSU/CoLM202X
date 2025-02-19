@@ -239,7 +239,7 @@ CONTAINS
    ! --------------------------------
    SUBROUTINE pixel_assimilate_gblock (this)
 
-   USE MOD_Block, only : gblock
+   USE MOD_Block, only: gblock
    IMPLICIT NONE
    class(pixel_type) :: this
 

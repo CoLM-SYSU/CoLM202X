@@ -27,7 +27,7 @@ SUBROUTINE Aggregation_Topography ( &
    USE MOD_Utils
 
 #ifdef SrfdataDiag
-   USE MOD_Mesh, only : numelm
+   USE MOD_Mesh, only: numelm
    USE MOD_LandElm
    USE MOD_SrfdataDiag
 #endif

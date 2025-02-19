@@ -11,7 +11,7 @@ MODULE MOD_NitrifData
 
    USE MOD_Grid
    USE MOD_SpatialMapping
-   USE MOD_BGC_Vars_TimeVariables, only : tCONC_O2_UNSAT, tO2_DECOMP_DEPTH_UNSAT
+   USE MOD_BGC_Vars_TimeVariables, only: tCONC_O2_UNSAT, tO2_DECOMP_DEPTH_UNSAT
    IMPLICIT NONE
 
    type(grid_type) :: grid_nitrif

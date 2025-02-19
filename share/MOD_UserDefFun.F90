@@ -19,7 +19,7 @@ CONTAINS
    ! ----------
    logical FUNCTION isnan_ud_r8 (a)
 
-   USE MOD_Precision, only : r8
+   USE MOD_Precision, only: r8
 
    IMPLICIT NONE
    real(r8), intent(in) :: a

@@ -138,7 +138,7 @@ CONTAINS
    USE MOD_NetCDFSerial
    USE MOD_Namelist
    USE MOD_Utils
-   USE MOD_Vars_Global, only : PI
+   USE MOD_Vars_Global, only: PI
    IMPLICIT NONE
 
    character(len=*), intent(in) :: fsrfdata

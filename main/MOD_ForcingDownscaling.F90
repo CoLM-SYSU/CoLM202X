@@ -110,16 +110,17 @@ CONTAINS
                   forc_us_c   ,forc_vs_c)
 
 !-----------------------------------------------------------------------------
-! DESCRIPTION:
-! Downscale atmospheric forcing fields.
+! !DESCRIPTION:
+!  Downscale atmospheric forcing fields.
 !
-! Downscaling is done based on the difference between each land model column's elevation and
-! the atmosphere's surface elevation (which is the elevation at which the atmospheric
-! forcings are valid).
+!  Downscaling is done based on the difference between each land model
+!  column's elevation and the atmosphere's surface elevation (which is
+!  the elevation at which the atmospheric forcings are valid).
 !
-! Note that the downscaling procedure can result in changes in grid cell mean values
-! compared to what was provided by the atmosphere. We conserve fluxes of mass and
-! energy, but allow states such as temperature to differ.
+!  Note that the downscaling procedure can result in changes in grid
+!  cell mean values compared to what was provided by the atmosphere. We
+!  conserve fluxes of mass and energy, but allow states such as
+!  temperature to differ.
 !-----------------------------------------------------------------------------
 
    IMPLICIT NONE
@@ -309,11 +310,12 @@ CONTAINS
                              slp_type_c, asp_type_c, area_type_c, cur_c)
 
 !-----------------------------------------------------------------------------
-! DESCRIPTION:
-! Downscale wind speed
+! !DESCRIPTION:
+!  Downscale wind speed
 !
-! Liston, G. E. and Elder, K.: A meteorological distribution system
-! for high-resolution terrestrial modeling (MicroMet), J. Hydrometeorol., 7, 217-234, 2006.
+!  Liston, G. E. and Elder, K.: A meteorological distribution system for
+!  high-resolution terrestrial modeling (MicroMet), J. Hydrometeorol.,
+!  7, 217-234, 2006.
 !-----------------------------------------------------------------------------
 
    IMPLICIT NONE
@@ -379,8 +381,8 @@ CONTAINS
       forc_topo_c, forc_t_c, forc_q_c, forc_pbot_c, forc_lwrad_c)
 
 !-----------------------------------------------------------------------------
-! DESCRIPTION:
-! Downscale longwave radiation
+! !DESCRIPTION:
+!  Downscale longwave radiation
 !-----------------------------------------------------------------------------
 
    IMPLICIT NONE
@@ -485,17 +487,18 @@ CONTAINS
                         area_type_c)
 
 !-----------------------------------------------------------------------------
-! DESCRIPTION:
+! !DESCRIPTION:
 !
-! Rouf, T., Mei, Y., Maggioni, V., Houser, P., & Noonan, M. (2020). A Physically Based
-!     Atmospheric Variables Downscaling Technique. Journal of Hydrometeorology,
-!     21(1), 93–108. https://doi.org/10.1175/JHM-D-19-0109.1
+!  Rouf, T., Mei, Y., Maggioni, V., Houser, P., & Noonan, M. (2020). A
+!  Physically Based Atmospheric Variables Downscaling Technique. Journal
+!  of Hydrometeorology, 21(1), 93–108.
+!  https://doi.org/10.1175/JHM-D-19-0109.1
 !
-! Sisi Chen, Lu Li, Yongjiu Dai, et al. Exploring Topography Downscaling Methods for
-!     Hyper-Resolution Land Surface Modeling. Authorea. April 25, 2024.
-!     DOI: 10.22541/au.171403656.68476353/v1
+!  Sisi Chen, Lu Li, Yongjiu Dai, et al. Exploring Topography
+!  Downscaling Methods for Hyper-Resolution Land Surface Modeling.
+!  Authorea. April 25, 2024.  DOI: 10.22541/au.171403656.68476353/v1
 !
-! Must be done after downscaling of surface pressure
+!  Must be done after downscaling of surface pressure
 !-----------------------------------------------------------------------------
 
    IMPLICIT NONE

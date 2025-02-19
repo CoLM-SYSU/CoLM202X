@@ -80,7 +80,7 @@ CONTAINS
    ! -----
    SUBROUTINE hist_writeback_daemon ()
 
-   USE MOD_Namelist, only : DEF_HIST_FREQ
+   USE MOD_Namelist, only: DEF_HIST_FREQ
    USE MOD_Vars_Global, only: spval
    IMPLICIT NONE
 

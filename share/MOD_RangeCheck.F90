@@ -15,7 +15,7 @@ MODULE MOD_RangeCheck
 !-----------------------------------------------------------------------
 
 #ifdef RangeCheck
-   USE MOD_UserDefFun, only : isnan_ud
+   USE MOD_UserDefFun, only: isnan_ud
    IMPLICIT NONE
 
    INTERFACE check_block_data
@@ -39,7 +39,7 @@ CONTAINS
    USE MOD_SPMD_Task
    USE MOD_Block
    USE MOD_DataType
-   USE MOD_Vars_Global, only : spval
+   USE MOD_Vars_Global, only: spval
    IMPLICIT NONE
 
    character(len=*), intent(in)   :: varname
@@ -165,7 +165,7 @@ CONTAINS
 
    USE MOD_Precision
    USE MOD_SPMD_Task
-   USE MOD_Vars_Global, only : spval
+   USE MOD_Vars_Global, only: spval
    IMPLICIT NONE
 
    character(len=*),      intent(in) :: varname
@@ -272,7 +272,7 @@ CONTAINS
 
    USE MOD_Precision
    USE MOD_SPMD_Task
-   USE MOD_Vars_Global, only : spval
+   USE MOD_Vars_Global, only: spval
    IMPLICIT NONE
 
    character(len=*),      intent(in) :: varname
@@ -381,7 +381,7 @@ CONTAINS
 
    USE MOD_Precision
    USE MOD_SPMD_Task
-   USE MOD_Vars_Global, only : spval
+   USE MOD_Vars_Global, only: spval
    IMPLICIT NONE
 
    character(len=*),      intent(in) :: varname
@@ -493,7 +493,7 @@ CONTAINS
 
    USE MOD_Precision
    USE MOD_SPMD_Task
-   USE MOD_Vars_Global, only : spval
+   USE MOD_Vars_Global, only: spval
    IMPLICIT NONE
 
    character(len=*),      intent(in) :: varname

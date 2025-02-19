@@ -13,7 +13,7 @@ MODULE MOD_SpatialMapping
    USE MOD_Precision
    USE MOD_Grid
    USE MOD_DataType
-   USE MOD_Vars_Global, only : spval
+   USE MOD_Vars_Global, only: spval
    IMPLICIT NONE
 
    ! ------
@@ -1499,7 +1499,7 @@ CONTAINS
    USE MOD_Grid
    USE MOD_DataType
    USE MOD_SPMD_Task
-   USE MOD_Vars_Global, only : spval
+   USE MOD_Vars_Global, only: spval
    IMPLICIT NONE
 
    class (spatial_mapping_type) :: this
@@ -1861,7 +1861,7 @@ CONTAINS
    USE MOD_Pixelset
    USE MOD_DataType
    USE MOD_SPMD_Task
-   USE MOD_Vars_Global, only : spval
+   USE MOD_Vars_Global, only: spval
    IMPLICIT NONE
 
    class (spatial_mapping_type) :: this
@@ -1968,7 +1968,7 @@ CONTAINS
    USE MOD_Pixelset
    USE MOD_DataType
    USE MOD_SPMD_Task
-   USE MOD_Vars_Global, only : spval
+   USE MOD_Vars_Global, only: spval
    IMPLICIT NONE
 
    class (spatial_mapping_type) :: this
@@ -2077,7 +2077,7 @@ CONTAINS
    USE MOD_Pixelset
    USE MOD_DataType
    USE MOD_SPMD_Task
-   USE MOD_Vars_Global, only : spval
+   USE MOD_Vars_Global, only: spval
    IMPLICIT NONE
 
    class (spatial_mapping_type) :: this
@@ -2174,7 +2174,7 @@ CONTAINS
    USE MOD_Pixelset
    USE MOD_DataType
    USE MOD_SPMD_Task
-   USE MOD_Vars_Global, only : spval
+   USE MOD_Vars_Global, only: spval
    IMPLICIT NONE
 
    class (spatial_mapping_type) :: this
@@ -2383,7 +2383,7 @@ CONTAINS
    USE MOD_Pixelset
    USE MOD_DataType
    USE MOD_SPMD_Task
-   USE MOD_Vars_Global, only : spval
+   USE MOD_Vars_Global, only: spval
    IMPLICIT NONE
 
    class (spatial_mapping_type) :: this
@@ -2443,7 +2443,7 @@ CONTAINS
    USE MOD_Grid
    USE MOD_DataType
    USE MOD_SPMD_Task
-   USE MOD_Vars_Global, only : spval
+   USE MOD_Vars_Global, only: spval
    IMPLICIT NONE
 
    class (spatial_mapping_type) :: this

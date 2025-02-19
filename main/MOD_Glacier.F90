@@ -58,7 +58,7 @@ CONTAINS
 ! this is the main SUBROUTINE to execute the calculation of thermal processes
 ! and surface fluxes of the land ice (glacier and ice sheet)
 !
-! Original author : Yongjiu Dai and Nan Wei, /05/2014/
+! Original author: Yongjiu Dai and Nan Wei, /05/2014/
 ! Modified by Nan Wei, 07/2017/  interaction btw prec and land ice
 ! FLOW DIAGRAM FOR GLACIER_TEMP.F90
 !
@@ -346,7 +346,7 @@ CONTAINS
 !  this is the main SUBROUTINE to execute the calculation of thermal processes
 !  and surface fluxes of land ice (glacier and ice sheet)
 !
-!  Original author : Yongjiu Dai and Nan Wei, /05/2014/
+!  Original author: Yongjiu Dai and Nan Wei, /05/2014/
 !
 ! !REVISIONS:
 !  05/2023, Shaofeng Liu: add option to CALL moninobuk_leddy, the LargeEddy
@@ -354,7 +354,7 @@ CONTAINS
 !=======================================================================
 
    USE MOD_Precision
-   USE MOD_Const_Physical, only : cpair,vonkar,grav
+   USE MOD_Const_Physical, only: cpair,vonkar,grav
    USE MOD_FrictionVelocity
    USE MOD_Namelist, only: DEF_USE_CBL_HEIGHT
    USE MOD_TurbulenceLEddy
@@ -587,7 +587,7 @@ CONTAINS
 !
 !  Phase change (see meltf.F90)
 !
-!  Original author : Yongjiu Dai, /05/2014/
+!  Original author: Yongjiu Dai, /05/2014/
 !
 ! !REVISIONS:
 !  01/2023, Hua Yuan: account for snow layer absorption (SNICAR) in
@@ -596,7 +596,7 @@ CONTAINS
 
    USE MOD_Precision
    USE MOD_Namelist, only: DEF_USE_SNICAR
-   USE MOD_Const_Physical, only : stefnc,cpice,cpliq,denh2o,denice,tfrz,tkwat,tkice,tkair
+   USE MOD_Const_Physical, only: stefnc,cpice,cpliq,denh2o,denice,tfrz,tkwat,tkice,tkair
    USE MOD_PhaseChange
    USE MOD_Utils
 
@@ -879,7 +879,7 @@ CONTAINS
 
 !=======================================================================
    USE MOD_Precision
-   USE MOD_Const_Physical, only : denice, denh2o, tfrz
+   USE MOD_Const_Physical, only: denice, denh2o, tfrz
    USE MOD_SnowLayersCombineDivide
    USE MOD_SoilSnowHydrology
 
@@ -916,8 +916,8 @@ CONTAINS
        t_icesno   (maxsnl+1:nl_ice) , &! snow/ice skin temperature (K)
        wice_icesno(maxsnl+1:nl_ice) , &! ice lens (kg/m2)
        wliq_icesno(maxsnl+1:nl_ice) , &! liquid water (kg/m2)
-       scv       , &! snow mass (kg/m2)
-       snowdp       ! snow depth (m)
+       scv                          , &! snow mass (kg/m2)
+       snowdp                          ! snow depth (m)
 
    real(r8), intent(out) :: &
        gwat   ! net water input from top (mm/s)
@@ -1004,7 +1004,7 @@ CONTAINS
 
 !=======================================================================
    USE MOD_Precision
-   USE MOD_Const_Physical, only : denice, denh2o, tfrz
+   USE MOD_Const_Physical, only: denice, denh2o, tfrz
    USE MOD_SnowLayersCombineDivide
    USE MOD_SoilSnowHydrology
 
@@ -1037,11 +1037,11 @@ CONTAINS
        t_icesno   (maxsnl+1:nl_ice) , &! snow/ice skin temperature (K)
        wice_icesno(maxsnl+1:nl_ice) , &! ice lens (kg/m2)
        wliq_icesno(maxsnl+1:nl_ice) , &! liquid water (kg/m2)
-       scv       , &! snow mass (kg/m2)
-       snowdp       ! snow depth (m)
+       scv                          , &! snow mass (kg/m2)
+       snowdp                          ! snow depth (m)
 
    real(r8), intent(out) :: &
-       gwat   ! net water input from top (mm/s)
+       gwat                            ! net water input from top (mm/s)
 
    real(r8), intent(in) :: forc_us
    real(r8), intent(in) :: forc_vs
@@ -1065,16 +1065,16 @@ CONTAINS
    integer lb, j
 
 !=======================================================================
-! [1] update the liquid water within snow layer and the water onto the
-! ice surface
+!  [1] update the liquid water within snow layer and the water onto the
+!  ice surface
 !
-! Snow melting is treated in a realistic fashion, with meltwater
-! percolating downward through snow layers as long as the snow is
-! unsaturated.  Once the underlying snow is saturated, any additional
-! meltwater runs off.  When glacier ice melts, however, the meltwater is
-! assumed to remain in place until it refreezes.  In warm parts of the
-! ice sheet, the meltwater does not refreeze, but stays in place
-! indefinitely.
+!  Snow melting is treated in a realistic fashion, with meltwater
+!  percolating downward through snow layers as long as the snow is
+!  unsaturated.  Once the underlying snow is saturated, any additional
+!  meltwater runs off.  When glacier ice melts, however, the meltwater is
+!  assumed to remain in place until it refreezes.  In warm parts of the
+!  ice sheet, the meltwater does not refreeze, but stays in place
+!  indefinitely.
 !=======================================================================
 
       lb = snl + 1
@@ -1090,7 +1090,7 @@ CONTAINS
       ENDIF
 
 !=======================================================================
-! [2] surface runoff and infiltration
+!  [2] surface runoff and infiltration
 !=======================================================================
 
       IF(snl<0)THEN

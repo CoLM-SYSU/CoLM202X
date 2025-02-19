@@ -5,19 +5,19 @@ SUBROUTINE soil_solids_fractions(BD,gravels,SOC,SAND,CLAY,&
            vf_quartz_mineral_s,BD_mineral_s,OM_density,BD_ave)
 
 !-------------------------------------------------------------------------------
-! DESCRIPTION:
-! Calculate soil porocity and The volumetric fractions of soil solids needed for soil parameter estimations.
-! Theta = 1 - BD/PD
+! !DESCRIPTION:
+!  Calculate soil porocity and The volumetric fractions of soil solids needed for soil parameter estimations.
+!  Theta = 1 - BD/PD
 !
-! REFERENCE:
-! Dai et al.,2019: A Global High-Resolution Data Set of Soil Hydraulic and Thermal Properties
-! for Land Surface Modeling. J. of Advances in Modeling Earth Systems, DOI: 10.1029/2019MS001784
+! !REFERENCE:
+!  Dai et al.,2019: A Global High-Resolution Data Set of Soil Hydraulic and Thermal Properties
+!  for Land Surface Modeling. J. of Advances in Modeling Earth Systems, DOI: 10.1029/2019MS001784
 !
-! Original author: Yongjiu Dai, 01/2018
+!  Original author: Yongjiu Dai, 01/2018
 !
-! Revisions:
-! Nan Wei, 06/2018: add to CoLM/mksrfdata
-! Nan Wei, 01/2020: update paticle size of soil solids and gravel porosity
+! !REVISIONS:
+!  Nan Wei, 06/2018: add to CoLM/mksrfdata
+!  Nan Wei, 01/2020: update paticle size of soil solids and gravel porosity
 !-------------------------------------------------------------------------------
 use MOD_Precision
 

@@ -690,7 +690,7 @@ SUBROUTINE CoLMMAIN ( &
 !----------------------------------------------------------------------
 ! [4] Energy and Water balance
 !----------------------------------------------------------------------
-         lb  = snl + 1           !lower bound of array
+         lb   = snl + 1           !lower bound of array
          lbsn = min(lb,0)
 
          CALL THERMAL (ipatch,patchtype,is_dry_lake,lb                ,deltim            ,&
@@ -775,7 +775,7 @@ SUBROUTINE CoLMMAIN ( &
                  mss_dst1(lbsn:0)  ,mss_dst2(lbsn:0)  ,mss_dst3(lbsn:0)  ,mss_dst4(lbsn:0)   )
          ELSE
 
-            CALL WATER_VSF (ipatch,  patchtype,is_dry_lake,  lb          ,nl_soil           ,&
+            CALL WATER_VSF (ipatch ,patchtype,is_dry_lake,   lb          ,nl_soil           ,&
                  deltim            ,z_soisno(lb:)     ,dz_soisno(lb:)    ,zi_soisno(lb-1:)  ,&
                  bsw               ,theta_r           ,fsatmax           ,fsatdcf           ,&
                  topostd           ,BVIC              ,&
@@ -1002,7 +1002,7 @@ SUBROUTINE CoLMMAIN ( &
          !----------------------------------------------------------------
          ! Energy and Water balance
          !----------------------------------------------------------------
-         lb  = snl + 1            !lower bound of array
+         lb   = snl + 1            !lower bound of array
          lbsn = min(lb,0)
 
          CALL GLACIER_TEMP (patchtype,lb       ,nl_soil    ,deltim      ,&
@@ -1044,7 +1044,7 @@ SUBROUTINE CoLMMAIN ( &
                       sm          ,scv         ,snowdp     ,imelt       ,&
                       fiold       ,snl         ,qseva      ,qsdew       ,&
                       qsubl       ,qfros       ,gwat       ,ssi         ,&
-                      wimp        ,forc_us    ,forc_vs                   )
+                      wimp        ,forc_us     ,forc_vs                  )
          ENDIF
 
          IF (.not. DEF_USE_VariablySaturatedFlow) THEN
@@ -1357,7 +1357,7 @@ SUBROUTINE CoLMMAIN ( &
 
       IF (patchtype <= 5) THEN   !LAND
 #if(defined DYN_PHENOLOGY)
-      ! need to update lai and sai, fveg, green, they are done once in a day only
+         ! need to update lai and sai, fveg, green, they are done once in a day only
          IF (dolai) THEN
             CALL LAI_empirical(patchclass,nl_soil,rootfr,t_soisno(1:),lai,sai,fveg,green)
          ENDIF
@@ -1425,7 +1425,7 @@ SUBROUTINE CoLMMAIN ( &
          dz_soisno_(:1) = dz_soisno(:1)
          t_soisno_ (:1) = t_soisno (:1)
 
-         IF ((patchtype == 4) .and. (.not. is_dry_lake))  THEN
+         IF ((patchtype == 4) .and. (.not. is_dry_lake)) THEN
             dz_soisno_(1) = dz_lake(1)
             t_soisno_ (1) = t_lake (1)
          ENDIF

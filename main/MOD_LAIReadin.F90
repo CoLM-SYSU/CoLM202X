@@ -20,10 +20,10 @@ CONTAINS
 
    SUBROUTINE LAI_readin (year, time, dir_landdata)
 ! ===========================================================
-! Read in the LAI, the LAI dataset was created by Yuan et al. (2011)
-! http://globalchange.bnu.edu.cn
+!  Read in the LAI, the LAI dataset was created by Yuan et al. (2011)
+!  http://globalchange.bnu.edu.cn
 !
-! Created by Yongjiu Dai, March, 2014
+!  Created by Yongjiu Dai, March, 2014
 ! ===========================================================
 
    USE MOD_Precision

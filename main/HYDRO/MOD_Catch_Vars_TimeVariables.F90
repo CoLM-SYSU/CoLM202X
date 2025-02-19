@@ -45,8 +45,8 @@ CONTAINS
    SUBROUTINE allocate_CatchTimeVariables
 
    USE MOD_SPMD_Task
-   USE MOD_Mesh,    only : numelm
-   USE MOD_LandHRU, only : numhru
+   USE MOD_Mesh,    only: numelm
+   USE MOD_LandHRU, only: numhru
    IMPLICIT NONE
 
       IF (p_is_worker) THEN

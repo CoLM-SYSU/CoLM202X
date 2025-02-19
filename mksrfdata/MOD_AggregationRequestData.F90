@@ -665,7 +665,7 @@ CONTAINS
    SUBROUTINE fillnan (vec, fill, defval)
 
    USE MOD_Precision
-   USE MOD_UserDefFun, only : isnan_ud
+   USE MOD_UserDefFun, only: isnan_ud
    IMPLICIT NONE
 
    real(r8), intent(inout) :: vec(:)

@@ -25,7 +25,7 @@ MODULE MOD_5x5DataReadin
    ! Created by Shupeng Zhang, May 2023
    !-----------------------------------------------------------------------
 
-   USE MOD_NetCDFSerial, only : nccheck
+   USE MOD_NetCDFSerial, only: nccheck
    IMPLICIT NONE
 
    integer, parameter :: N_PFT_modis = 16

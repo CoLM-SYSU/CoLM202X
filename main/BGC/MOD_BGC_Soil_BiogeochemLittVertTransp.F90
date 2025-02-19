@@ -24,7 +24,7 @@ MODULE MOD_BGC_Soil_BiogeochemLittVertTransp
 !                   2) Record accumulated organic CN vertical transfer rates for semi-analytic spin-up.
 
    USE MOD_Precision
-   USE MOD_Namelist, only : DEF_USE_SASU, DEF_USE_DiagMatrix
+   USE MOD_Namelist, only: DEF_USE_SASU, DEF_USE_DiagMatrix
    USE MOD_BGC_Vars_TimeInvariants, only: &
        is_cwd, som_adv_flux, som_diffus, cryoturb_diffusion_k, max_altdepth_cryoturbation, max_depth_cryoturb
    USE MOD_BGC_Vars_TimeVariables, only: &

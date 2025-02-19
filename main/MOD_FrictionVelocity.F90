@@ -24,7 +24,7 @@ CONTAINS
                         ustar,fh2m,fq2m,fm10m,fm,fh,fq)
 
 ! ======================================================================
-! Original author : Yongjiu Dai, September 15, 1999
+! Original author: Yongjiu Dai, September 15, 1999
 !
 ! calculation of friction velocity, relation for potential temperature
 ! and humidity profiles of surface boundary layer.
@@ -35,7 +35,7 @@ CONTAINS
 ! ======================================================================
 
    USE MOD_Precision
-   USE MOD_Const_Physical, only : vonkar
+   USE MOD_Const_Physical, only: vonkar
    IMPLICIT NONE
 
 !-------------------------- Dummy Arguments ----------------------------
@@ -173,7 +173,7 @@ CONTAINS
 !
 ! !DESCRIPTION:
 !
-!  Original author : Yongjiu Dai, September 15, 1999
+!  Original author: Yongjiu Dai, September 15, 1999
 !
 !  calculation of friction velocity, relation for potential temperature
 !  and humidity profiles of surface boundary layer.  the scheme is based
@@ -188,7 +188,7 @@ CONTAINS
 ! ======================================================================
 
    USE MOD_Precision
-   USE MOD_Const_Physical, only : vonkar
+   USE MOD_Const_Physical, only: vonkar
    IMPLICIT NONE
 
 !-------------------------- Dummy Arguments ----------------------------
@@ -379,7 +379,7 @@ CONTAINS
 !
 !-----------------------------------------------------------------------
    USE MOD_Precision
-   USE MOD_Const_Physical, only : vonkar
+   USE MOD_Const_Physical, only: vonkar
    IMPLICIT NONE
 
 !-------------------------- Dummy Arguments ----------------------------
@@ -432,7 +432,7 @@ CONTAINS
 !-----------------------------------------------------------------------
 
    USE MOD_Precision
-   USE MOD_Const_Physical, only : vonkar
+   USE MOD_Const_Physical, only: vonkar
    IMPLICIT NONE
 
 !-------------------------- Dummy Arguments ----------------------------
@@ -491,7 +491,7 @@ CONTAINS
    SUBROUTINE moninobukini(ur,th,thm,thv,dth,dqh,dthv,zldis,z0m,um,obu)
 
 ! ======================================================================
-! Original author : Yongjiu Dai, September 15, 1999
+! Original author: Yongjiu Dai, September 15, 1999
 !
 ! initialization of Monin-Obukhov length,
 ! the scheme is based on the work of Zeng et al. (1998):
@@ -501,7 +501,7 @@ CONTAINS
 ! ======================================================================
 
    USE MOD_Precision
-   USE MOD_Const_Physical, only : grav, vonkar
+   USE MOD_Const_Physical, only: grav, vonkar
    IMPLICIT NONE
 
 !-------------------------- Dummy Arguments ----------------------------

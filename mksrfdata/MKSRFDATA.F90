@@ -72,7 +72,7 @@ PROGRAM MKSRFDATA
 #endif
    USE MOD_RegionClip
 #ifdef SrfdataDiag
-   USE MOD_SrfdataDiag, only : gdiag, srfdata_diag_init
+   USE MOD_SrfdataDiag, only: gdiag, srfdata_diag_init
 #endif
 
    USE MOD_RegionClip
