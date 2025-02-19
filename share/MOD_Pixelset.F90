@@ -3,7 +3,7 @@
 MODULE MOD_Pixelset
 
 !------------------------------------------------------------------------------------
-! DESCRIPTION:
+! !DESCRIPTION:
 !
 !    Pixelset refers to a set of pixels in CoLM.
 !
@@ -38,7 +38,7 @@ MODULE MOD_Pixelset
 !    To read,  vector is first loaded from files by IO and then scattered from IO to worker.
 !    To write, vector is first gathered from worker to IO and then saved to files by IO.
 !
-! Created by Shupeng Zhang, May 2023
+!  Created by Shupeng Zhang, May 2023
 !------------------------------------------------------------------------------------
 
    USE MOD_Precision
@@ -71,7 +71,7 @@ MODULE MOD_Pixelset
 
       integer*8, allocatable :: eindex(:)  ! global index of element to which pixelset belongs
 
-      integer, allocatable :: ipxstt(:)    ! start local index of pixel in the element 
+      integer, allocatable :: ipxstt(:)    ! start local index of pixel in the element
       integer, allocatable :: ipxend(:)    ! end   local index of pixel in the element
       integer, allocatable :: settyp(:)    ! type of pixelset
 
@@ -536,7 +536,7 @@ CONTAINS
                deallocate (this%ipxend)
                deallocate (this%settyp)
                deallocate (this%ielm  )
-               
+
                IF (this%has_shared) THEN
                   allocate   (pctshared_(this%nset))
                   pctshared_ = this%pctshared
@@ -579,7 +579,7 @@ CONTAINS
                            this%pctshared(s:e) = this%pctshared(s:e)/sum(this%pctshared(s:e))
                         ENDIF
 
-                        s = e + 1                        
+                        s = e + 1
                      ENDDO
 
                   ENDIF

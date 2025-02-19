@@ -3,7 +3,7 @@
 MODULE MOD_DataType
 
 !-----------------------------------------------------------------------
-! DESCRIPTION:
+! !DESCRIPTION:
 !
 !    Definitions of data types used in CoLM.
 !
@@ -20,7 +20,7 @@ MODULE MOD_DataType
 !    3. copy data;
 !    4. do linear transformation and interpolations.
 !
-! Created by Shupeng Zhang, May 2023
+!  Created by Shupeng Zhang, May 2023
 !-----------------------------------------------------------------------
 
    USE MOD_Precision

@@ -1,18 +1,18 @@
 MODULE MOD_UserDefFun
 
 !-----------------------------------------------------------------------------------------
-! DESCRIPTION:
+! !DESCRIPTION:
 !
 !    This MODULE contains user defined functions to replace non-standard functions.
 !
-! Created by Shupeng Zhang, April 2024
+!  Created by Shupeng Zhang, April 2024
 !-----------------------------------------------------------------------------------------
-   
+
    ! ---- PUBLIC subroutines ----
 
    INTERFACE isnan_ud
       MODULE procedure isnan_ud_r8
-   END INTERFACE isnan_ud 
+   END INTERFACE isnan_ud
 
 CONTAINS
 

@@ -3,7 +3,7 @@
 MODULE MOD_RangeCheck
 
 !-----------------------------------------------------------------------
-! DESCRIPTION:
+! !DESCRIPTION:
 !
 !    Subroutines show the range of values in block data or vector data.
 !
@@ -11,7 +11,7 @@ MODULE MOD_RangeCheck
 !    1. "check_block_data"  can only be called by IO     processes.
 !    2. "check_vector_data" can only be called by worker processes.
 !
-! Created by Shupeng Zhang, May 2023
+!  Created by Shupeng Zhang, May 2023
 !-----------------------------------------------------------------------
 
 #ifdef RangeCheck
@@ -279,7 +279,7 @@ CONTAINS
    real(r8), allocatable, intent(in) :: vdata(:,:)
 
    real(r8), intent(in), optional :: spv_in
-   real(r8), intent(in), optional :: limits(2) 
+   real(r8), intent(in), optional :: limits(2)
 
    ! Local variables
    real(r8) :: vmin, vmax, spv
@@ -386,9 +386,9 @@ CONTAINS
 
    character(len=*),      intent(in) :: varname
    real(r8), allocatable, intent(in) :: vdata(:,:,:)
-   
+
    real(r8), intent(in), optional :: spv_in
-   real(r8), intent(in), optional :: limits(2) 
+   real(r8), intent(in), optional :: limits(2)
 
    ! Local variables
    real(r8) :: vmin, vmax, spv
@@ -500,7 +500,7 @@ CONTAINS
    real(r8), allocatable, intent(in) :: vdata(:,:,:,:)
 
    real(r8), intent(in), optional :: spv_in
-   real(r8), intent(in), optional :: limits(2) 
+   real(r8), intent(in), optional :: limits(2)
 
    ! Local variables
    real(r8) :: vmin, vmax, spv

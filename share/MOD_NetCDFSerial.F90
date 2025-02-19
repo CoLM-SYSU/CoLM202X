@@ -3,7 +3,7 @@
 MODULE MOD_NetCDFSerial
 
 !----------------------------------------------------------------------------------
-! DESCRIPTION:
+! !DESCRIPTION:
 !
 !    High-level Subroutines to read and write variables in files with netCDF format.
 !
@@ -14,10 +14,10 @@ MODULE MOD_NetCDFSerial
 !               Notice: each file CONTAINS vector data in one block.
 !    3. Block : read blocked data by IO
 !               Notice: input file is a single file.
-!    
+!
 !    This MODULE CONTAINS subroutines of "1. Serial".
 !
-! Created by Shupeng Zhang, May 2023
+!  Created by Shupeng Zhang, May 2023
 !----------------------------------------------------------------------------------
 
    USE netcdf
@@ -119,7 +119,7 @@ MODULE MOD_NetCDFSerial
       MODULE procedure ncio_write_serial_real8_4d_time
    END INTERFACE ncio_write_serial_time
 
-   PUBLIC :: get_time_now   
+   PUBLIC :: get_time_now
 
    PUBLIC :: ncio_write_colm_dimension
 
@@ -127,9 +127,9 @@ CONTAINS
 
    ! ----
    SUBROUTINE nccheck (status, trace)
-      
+
    USE MOD_SPMD_Task
-   IMPLICIT NONE 
+   IMPLICIT NONE
 
    integer, intent(in) :: status
    character(len=*), intent(in), optional :: trace
@@ -166,15 +166,15 @@ CONTAINS
 
    ! ----
    character(len=27) FUNCTION get_time_now ()
-      
+
    IMPLICIT NONE
    character(len=8)  :: date
    character(len=10) :: time
    character(len=5)  :: zone
 
       CALL date_and_time(date, time, zone)
-      get_time_now = date(1:8)//'-'//time(1:2)//':'//time(3:4)//':'//time(5:6) & 
-                     //' UTC'//zone(1:3)//':'//zone(4:5) 
+      get_time_now = date(1:8)//'-'//time(1:2)//':'//time(3:4)//':'//time(5:6) &
+                     //' UTC'//zone(1:3)//':'//zone(4:5)
 
    END FUNCTION get_time_now
 
@@ -1097,7 +1097,7 @@ CONTAINS
    integer, allocatable :: varsize(:)
 
       CALL check_ncfile_exist (filename)
-   
+
       CALL ncio_inquire_varsize (filename, dataname, varsize)
 
       allocate (rdata (varsize(1), varsize(2), timestt:timeend) )
@@ -1946,7 +1946,7 @@ CONTAINS
    integer :: timelen, minutes
 
       minutes = minutes_since_1900 (time_component(1), time_component(2), time_component(3))
-      
+
       IF (present(adjust)) THEN
          SELECTCASE (trim(adjustl(adjust)))
          CASE ('HOURLY')
@@ -1957,7 +1957,7 @@ CONTAINS
             minutes = minutes - 21600
          CASE ('YEARLY')
             minutes = minutes - 262800
-         ENDSELECT 
+         ENDSELECT
       ENDIF
 
       CALL nccheck( nf90_open(trim(filename), NF90_WRITE, ncid) )
@@ -2008,7 +2008,7 @@ CONTAINS
    IMPLICIT NONE
 
    character (len=*), intent(in) :: filename
-   character (len=*), intent(in) :: lastname 
+   character (len=*), intent(in) :: lastname
    integer, intent(in)  :: lastvalue
    integer, intent(out) :: ilast
 
@@ -2017,7 +2017,7 @@ CONTAINS
    integer, allocatable :: lastvalue_f(:)
 
       CALL nccheck( nf90_open(trim(filename), NF90_WRITE, ncid) )
-      
+
       status = nf90_inq_varid(ncid, trim(lastname), varid)
 
       IF (status == NF90_NOERR) THEN
@@ -2052,7 +2052,7 @@ CONTAINS
       ENDIF
 
       CALL nccheck( nf90_put_var(ncid, varid, lastvalue, (/ilast/)) )
-      
+
       CALL nccheck( nf90_close(ncid) )
 
    END SUBROUTINE ncio_write_lastdim
@@ -2331,7 +2331,7 @@ CONTAINS
       CALL ncio_define_dimension (filename, 'lake', nl_lake)
       CALL ncio_write_serial (filename, 'lake', lakelayers, 'lake')
       CALL ncio_put_attr_str (filename, 'lake', 'long_name', 'vertical lake layers')
-      
+
       vegnodes = (/(i, i = 1,nvegwcs)/)
       CALL ncio_define_dimension (filename, 'vegnodes', nvegwcs)
       CALL ncio_write_serial (filename, 'vegnodes', vegnodes, 'vegnodes')
@@ -2345,6 +2345,6 @@ CONTAINS
       CALL ncio_write_serial (filename, 'rtyp', (/1,2/), 'rtyp')
       CALL ncio_put_attr_str (filename, 'rtyp', 'long_name', '1 = direct; 2 = diffuse')
 
-   END SUBROUTINE ncio_write_colm_dimension 
+   END SUBROUTINE ncio_write_colm_dimension
 
 END MODULE MOD_NetCDFSerial

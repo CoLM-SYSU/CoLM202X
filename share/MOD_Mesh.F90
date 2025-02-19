@@ -3,10 +3,10 @@
 MODULE MOD_Mesh
 
 !------------------------------------------------------------------------------------
-! DESCRIPTION:
+! !DESCRIPTION:
 !
 !    MESH refers to the set of largest elements in CoLM.
-! 
+!
 !    In CoLM, the global/regional area is divided into a hierarchical structure:
 !    1. If GRIDBASED or UNSTRUCTURED is defined, it is
 !       ELEMENT >>> PATCH
@@ -15,21 +15,21 @@ MODULE MOD_Mesh
 !    If Plant Function Type classification is used, PATCH is further divided into PFT.
 !    If Plant Community classification is used,     PATCH is further divided into PC.
 !
-!    To represent ELEMENT in CoLM, the land surface is first divided into pixels, 
+!    To represent ELEMENT in CoLM, the land surface is first divided into pixels,
 !    which are rasterized points defined by fine-resolution data.
-! 
-!    ELEMENT in MESH is set of pixels:
-!    1. If GRIDBASED,    ELEMENT is set of pixels in a longitude-latitude rectangle. 
-!    2. If UNSTRUCTURED, ELEMENT is set of pixels in an irregular area (usually polygon). 
-!    3. If CATCHMENT,    ELEMENT is set of pixels in a catchment whose area is less than
-!       a predefined value. 
 !
-!    If GRIDBASED is defined, MESH is built by using input files containing mask of 
+!    ELEMENT in MESH is set of pixels:
+!    1. If GRIDBASED,    ELEMENT is set of pixels in a longitude-latitude rectangle.
+!    2. If UNSTRUCTURED, ELEMENT is set of pixels in an irregular area (usually polygon).
+!    3. If CATCHMENT,    ELEMENT is set of pixels in a catchment whose area is less than
+!       a predefined value.
+!
+!    If GRIDBASED is defined, MESH is built by using input files containing mask of
 !    land area or by defining the resolution of longitude-latitude grid.
-!    If CATCHMENT or UNSTRUCTURED is defined, MESH is built by using input files 
+!    If CATCHMENT or UNSTRUCTURED is defined, MESH is built by using input files
 !    containing index of elements.
 !
-! Created by Shupeng Zhang, May 2023
+!  Created by Shupeng Zhang, May 2023
 !------------------------------------------------------------------------------------
 
    USE MOD_Precision
@@ -412,7 +412,7 @@ CONTAINS
 
                   xlist2(ixloc,iyloc) = ix
                   ylist2(ixloc,iyloc) = iy
-                  elist2(ixloc,iyloc) = elmid 
+                  elist2(ixloc,iyloc) = elmid
 
                   IF (dlonp < 1.0e-6_r8) THEN
                      elist2(ixloc,iyloc) = 0
@@ -575,7 +575,7 @@ CONTAINS
                         ENDIF
                         iaddr(iloc) = nelm
 
-                        meshtmp(iaddr(iloc))%indx = elmid 
+                        meshtmp(iaddr(iloc))%indx = elmid
                         meshtmp(iaddr(iloc))%npxl = npxl
                      ELSE
                         meshtmp(iaddr(iloc))%npxl = meshtmp(iaddr(iloc))%npxl + npxl
@@ -729,7 +729,7 @@ CONTAINS
                xblk   = rmesg(3)
                yblk   = rmesg(4)
                npxl   = rmesg(5)
-            
+
                CALL mpi_recv (elmid, 1, MPI_INTEGER8, isrc, elmtag, p_comm_glb, p_stat, p_err)
 
                blkcnt(xblk,yblk) = blkcnt(xblk,yblk) + 1
