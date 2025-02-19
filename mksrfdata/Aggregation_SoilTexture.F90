@@ -3,17 +3,17 @@
 SUBROUTINE Aggregation_SoilTexture ( &
       gland, dir_rawdata, dir_model_landdata, lc_year)
 
-! ----------------------------------------------------------------------
-! DESCRIPTION:
-! Aggregate soil texture class within a patch.
+!-----------------------------------------------------------------------
+! !DESCRIPTION:
+!  Aggregate soil texture class within a patch.
 !
-! Use the USDA soil texture triangle (using the amount of sand, clay, and
-! silt contents) to identify the soil texture in fine grid resolution and
-! then finding the major soil type in a patch by counting number of fine
-! grids with each type of soil and adopting the major one.
+!  Use the USDA soil texture triangle (using the amount of sand, clay, and
+!  silt contents) to identify the soil texture in fine grid resolution and
+!  then finding the major soil type in a patch by counting number of fine
+!  grids with each type of soil and adopting the major one.
 !
-! Created by Shupeng Zhang, 01/2025
-! ----------------------------------------------------------------------
+!  Created by Shupeng Zhang, 01/2025
+!-----------------------------------------------------------------------
 
    USE MOD_Precision
    USE MOD_Namelist

@@ -2,8 +2,8 @@
 
 MODULE MOD_LandElm
 
-!------------------------------------------------------------------------------------
-! DESCRIPTION:
+!-----------------------------------------------------------------------
+! !DESCRIPTION:
 !
 !    Build pixelset "landelm".
 !
@@ -14,11 +14,11 @@ MODULE MOD_LandElm
 !       ELEMENT >>> HRU >>> PATCH
 !    If Plant Function Type classification is used, PATCH is further divided into PFT.
 !    If Plant Community classification is used,     PATCH is further divided into PC.
-! 
+!
 !    "landelm" refers to pixelset ELEMENT.
 !
-! Created by Shupeng Zhang, May 2023
-!------------------------------------------------------------------------------------
+!  Created by Shupeng Zhang, May 2023
+!-----------------------------------------------------------------------
 
    USE MOD_Pixelset
    IMPLICIT NONE

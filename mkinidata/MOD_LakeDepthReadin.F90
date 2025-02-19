@@ -3,10 +3,10 @@
 MODULE MOD_LakeDepthReadin
 
 !------------------------------------------------------------------------------------------
-! DESCRIPTION:
-! Read in lakedepth and assign lake thickness of each layer.
+! !DESCRIPTION:
+!  Read in lakedepth and assign lake thickness of each layer.
 !
-! Original author: Yongjiu Dai, 03/2018
+!  Original author: Yongjiu Dai, 03/2018
 !------------------------------------------------------------------------------------------
 
    USE MOD_Precision

@@ -3,16 +3,13 @@
 !-----------------------------------------------------------------------
 !
 ! !DESCRIPTION:
-!
 !  Aggregate/screen high-resolution urban dataset to a lower
 !  resolution/subset data, suitable for running regional or point
 !  cases.
 !
 !  Original authors: Hua Yuan and Wenzong Dong, 2021, OpenMP version.
 !
-!
 ! !REVISIONS:
-!
 !  05/2023, Wenzong Dong, Hua Yuan, Shupeng Zhang: porting codes to MPI
 !           parallel version.
 !
