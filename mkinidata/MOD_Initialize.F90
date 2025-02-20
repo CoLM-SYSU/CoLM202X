@@ -13,14 +13,14 @@ CONTAINS
    SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
          idate, lc_year, greenwich, lulcc_call)
 
-! ======================================================================
-! initialization routine for land surface model.
+!=======================================================================
+!  initialization routine for land surface model.
 !
-! Created by Yongjiu Dai, 09/15/1999
-! Revised by Yongjiu Dai, 08/30/2002
-! Revised by Yongjiu Dai, 03/2014
+!  Created by Yongjiu Dai, 09/15/1999
+!  Revised by Yongjiu Dai, 08/30/2002
+!  Revised by Yongjiu Dai, 03/2014
 !
-! ======================================================================
+!=======================================================================
    USE MOD_Precision
    USE MOD_Vars_Global
    USE MOD_Namelist
@@ -1442,7 +1442,7 @@ CONTAINS
                dz_lake(:,i) = 0.
             ENDIF
          ENDDO
-      
+
          CALL check_vector_data ('Basin Water Depth   [m]  ', wdsrf_bsn)
          CALL check_vector_data ('HRU Water Depth     [m]  ', wdsrf_bsnhru)
 

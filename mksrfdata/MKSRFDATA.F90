@@ -18,9 +18,12 @@ PROGRAM MKSRFDATA
 !                  the western edge of the longitude grid starts at the dateline
 !
 !  Land characteristics at the 30 arc-seconds grid resolution (RAW DATA):
-!               1. Global Terrain Dataset (elevation height, topography-based factors)
-!               2. Global Land Cover Characteristics (land cover type, plant leaf area index, Forest Height, ...)
-!               3. Global Lakes and Wetlands Characteristics (lake and wetlands types, lake coverage and lake depth)
+!               1. Global Terrain Dataset (elevation height, topography-based
+!                  factors)
+!               2. Global Land Cover Characteristics (land cover type, plant
+!                  leaf area index, Forest Height, ...)
+!               3. Global Lakes and Wetlands Characteristics (lake and wetlands
+!                  types, lake coverage and lake depth)
 !               4. Global Glacier Characteristics
 !               5. Global Urban Characteristics (urban extent, ...)
 !               6. Global Soil Characteristics (...)

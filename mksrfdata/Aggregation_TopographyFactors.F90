@@ -2,11 +2,11 @@
 
 SUBROUTINE Aggregation_TopographyFactors ( &
       grid_topo_factor , dir_topodata, dir_model_landdata, lc_year)
-! ----------------------------------------------------------------------
+!-----------------------------------------------------------------------
 !  Global topography-based factors data
 !
 !  Created by Sisi Chen, Lu Li, 06/2024
-! ----------------------------------------------------------------------
+!-----------------------------------------------------------------------
    USE MOD_Precision
    USE MOD_Namelist
    USE MOD_SPMD_Task
