@@ -44,36 +44,36 @@ MODULE MOD_UserSpecifiedForcing
 
    character(len=256) :: dataset
 
-   logical  :: solarin_all_band   ! whether solar radiation in all bands is available
+   logical  :: solarin_all_band      ! whether solar radiation in all bands is available
 
    character(len=256) :: HEIGHT_mode ! observation height mode
-   real(r8) :: HEIGHT_V           ! observation height of wind speed
-   real(r8) :: HEIGHT_T           ! observation height of air temperature
-   real(r8) :: HEIGHT_Q           ! observation height of specific humidity
+   real(r8) :: HEIGHT_V              ! observation height of wind speed
+   real(r8) :: HEIGHT_T              ! observation height of air temperature
+   real(r8) :: HEIGHT_Q              ! observation height of specific humidity
 
-   integer  :: NVAR      ! variable number of forcing data
-   integer  :: startyr   ! start year of forcing data        <MARK #1>
-   integer  :: startmo   ! start month of forcing data
-   integer  :: endyr     ! END year of forcing data
-   integer  :: endmo     ! END month of forcing data
+   integer  :: NVAR                  ! variable number of forcing data
+   integer  :: startyr               ! start year of forcing data
+   integer  :: startmo               ! start month of forcing data
+   integer  :: endyr                 ! END year of forcing data
+   integer  :: endmo                 ! END month of forcing data
 
-   integer, allocatable :: dtime(:)          ! time interval of forcing data
-   integer, allocatable :: offset(:)         ! offset of forcing data
+   integer, allocatable :: dtime(:)  ! time interval of forcing data
+   integer, allocatable :: offset(:) ! offset of forcing data
 
-   logical :: leapyear   ! leapyear calendar
-   logical :: data2d     ! data in 2 dimension (lon, lat)
-   logical :: hightdim   ! have "z" dimension
-   logical :: dim2d      ! lat/lon value in 2 dimension (lon, lat)
+   logical :: leapyear               ! leapyear calendar
+   logical :: data2d                 ! data in 2 dimension (lon, lat)
+   logical :: hightdim               ! have "z" dimension
+   logical :: dim2d                  ! lat/lon value in 2 dimension (lon, lat)
 
-   character(len=256) :: latname                   ! dimension name of latitude
-   character(len=256) :: lonname                   ! dimension name of longitude
+   character(len=256) :: latname                  ! dimension name of latitude
+   character(len=256) :: lonname                  ! dimension name of longitude
 
-   character(len=256) :: groupby                   ! file grouped by year/month
+   character(len=256) :: groupby                  ! file grouped by year/month
 
-   character(len=256), allocatable :: fprefix(:)   ! file prefix
-   character(len=256), allocatable :: vname(:)     ! variable name
-   character(len=256), allocatable :: timelog(:)   ! variable time log info
-   character(len=256), allocatable :: tintalgo(:)  ! interpolation algorithm
+   character(len=256), allocatable :: fprefix(:)  ! file prefix
+   character(len=256), allocatable :: vname(:)    ! variable name
+   character(len=256), allocatable :: timelog(:)  ! variable time log info
+   character(len=256), allocatable :: tintalgo(:) ! interpolation algorithm
 
    ! ----- public subroutines -----
    PUBLIC :: init_user_specified_forcing ! initialization of the selected forcing dataset
@@ -868,4 +868,4 @@ CONTAINS
    END SUBROUTINE metpreprocess
 
 END MODULE MOD_UserSpecifiedForcing
-! ----------- EOP ---------------
+! ---------- EOP ------------

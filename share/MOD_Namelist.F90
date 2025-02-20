@@ -5,7 +5,7 @@ MODULE MOD_Namelist
 !-----------------------------------------------------------------------
 ! DESCRIPTION:
 !
-!    Variables in namelist files and subrroutines to read namelist files.
+!    Variables in namelist files and subroutines to read namelist files.
 !
 ! Initial Authors: Shupeng Zhang, Zhongwang Wei, Xingjie Lu, Nan Wei,
 !                  Hua Yuan, Wenzong Dong et al., May 2023
@@ -233,7 +233,7 @@ MODULE MOD_Namelist
    logical :: DEF_USE_CANYON_HWR    = .true.
 
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-! ----- Part 11: parameteration schemes -----
+! ----- Part 11: parameterization schemes -----
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
    integer :: DEF_Interception_scheme = 1  !1:CoLM；2:CLM4.5; 3:CLM5; 4:Noah-MP; 5:MATSIRO; 6:VIC; 7:JULES
@@ -269,14 +269,14 @@ MODULE MOD_Namelist
    integer :: DEF_Runoff_SCHEME = 3
    character(len=256) :: DEF_file_VIC_para = 'null'
 
-   ! ----- Treat exposed soil and snow surface separatly -----
+   ! ----- Treat exposed soil and snow surface separately -----
    ! including solar absorption, sensible/latent heat, ground temperature,
-   ! ground heat flux and groud evp/dew/subl/fros. Corresponding vars are
+   ! ground heat flux and ground evp/dew/subl/fros. Corresponding vars are
    ! named as ***_soil, ***_snow.
    logical :: DEF_SPLIT_SOILSNOW = .false.
 
    ! ----- Account for vegetation snow process -----
-   ! NOTE: This option will be activated in the new release, accompained by
+   ! NOTE: This option will be activated in the new release, accompanied by
    !       a new set of canopy structure data, include the snow-free LAI.
    logical :: DEF_VEG_SNOW = .false.
 
@@ -408,8 +408,8 @@ MODULE MOD_Namelist
          'TBOT    ','QBOT    ','PSRF    ','PRECTmms', &
          'NULL    ','WIND    ','FSDS    ','FLDS    ' /)
       character(len=256) :: timelog(8)         = (/ &
-         'instant ','instant ','instant ','foreward', &
-         'NULL    ','instant ','forward ','foreward' /)
+         'instant ','instant ','instant ','forward ', &
+         'NULL    ','instant ','forward ','forward ' /)
       character(len=256) :: tintalgo(8)        = (/ &
          'linear ','linear ','linear ','nearest', &
          'NULL   ','linear ','coszen ','linear ' /)

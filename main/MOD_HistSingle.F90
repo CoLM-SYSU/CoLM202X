@@ -3,15 +3,15 @@
 #ifdef SinglePoint
 module MOD_HistSingle
 
-   !----------------------------------------------------------------------------
-   ! DESCRIPTION:
-   ! 
-   !     Write out model results at sites to history files.
-   !
-   ! Created by Shupeng Zhang, July 2023
-   !
-   ! TODO...(need complement)
-   !----------------------------------------------------------------------------
+!----------------------------------------------------------------------------
+! DESCRIPTION:
+!
+!     Write out model results at sites to history files.
+!
+! Created by Shupeng Zhang, July 2023
+!
+! TODO...(need complement)
+!----------------------------------------------------------------------------
    USE MOD_Precision
    USE MOD_NetCDFSerial
    USE MOD_Namelist, only : USE_SITE_HistWriteBack
@@ -40,7 +40,7 @@ contains
 
    ! -- initialize history IO --
    SUBROUTINE hist_single_init ()
-      
+
       USE MOD_Namelist
       IMPLICIT NONE
 
@@ -87,11 +87,11 @@ contains
 
    ! -- finalize history IO --
    SUBROUTINE hist_single_final ()
-      
+
       IMPLICIT NONE
 
       IF (USE_SITE_HistWriteBack) THEN
-            
+
          thisvar => hist_memory%next
          DO WHILE (associated(thisvar))
             nextvar => thisvar%next
@@ -156,9 +156,9 @@ contains
       endif
 
       IF (USE_SITE_HistWriteBack) THEN
-      
+
          minutes = minutes_since_1900 (time(1), time(2), time(3))
-      
+
          select case (trim(adjustl(DEF_HIST_FREQ)))
          case ('HOURLY')
             minutes = minutes - 30
@@ -168,8 +168,8 @@ contains
             minutes = minutes - 21600
          case ('YEARLY')
             minutes = minutes - 262800
-         END select 
-         
+         END select
+
          itime_mem = itime_mem + 1
          time_memory(itime_mem) = minutes
 
@@ -186,12 +186,12 @@ contains
          call ncio_write_time (filename, dataname, time, itime, DEF_HIST_FREQ)
       ENDIF
 
-   END SUBROUTINE hist_single_write_time 
+   END SUBROUTINE hist_single_write_time
 
    ! -- write 2D data --
    SUBROUTINE single_write_2d ( &
          acc_vec, file_hist, varname, itime_in_file, longname, units)
-         
+
       USE MOD_Vars_1DAccFluxes, only : nac
       use MOD_Vars_Global,      only : spval
       implicit none
@@ -204,7 +204,7 @@ contains
       character(len=*), intent(in)    :: units
 
       where (acc_vec /= spval)  acc_vec = acc_vec / nac
-      
+
       IF (USE_SITE_HistWriteBack) THEN
 
          IF (.not. associated(thisvar%next)) THEN
@@ -217,13 +217,13 @@ contains
          ELSE
             thisvar => thisvar%next
          ENDIF
-         
+
          IF (thisvar%varname /= varname) THEN
             write(*,*) 'Warning: history variable in memory is wrong: ' &
-               // trim(thisvar%varname) // ' should be ' // trim(varname) 
+               // trim(thisvar%varname) // ' should be ' // trim(varname)
             CALL CoLM_stop ()
          ENDIF
-         
+
          thisvar%v2d(:,itime_mem) = acc_vec(:)
 
          IF (memory_to_disk) THEN
@@ -249,7 +249,7 @@ contains
    ! -- write urban 2D data --
    SUBROUTINE single_write_urb_2d ( &
          acc_vec, file_hist, varname, itime_in_file, longname, units)
-         
+
       USE MOD_Vars_1DAccFluxes, only : nac
       use MOD_Vars_Global,      only : spval
       implicit none
@@ -262,26 +262,26 @@ contains
       character(len=*), intent(in)    :: units
 
       where (acc_vec /= spval)  acc_vec = acc_vec / nac
-      
+
       IF (USE_SITE_HistWriteBack) THEN
 
          IF (.not. associated(thisvar%next)) THEN
             allocate (thisvar%next)
             thisvar => thisvar%next
-         
+
             thisvar%next    => null()
             thisvar%varname = varname
             allocate(thisvar%v2d (size(acc_vec),ntime_mem))
          ELSE
             thisvar => thisvar%next
          ENDIF
-         
+
          IF (thisvar%varname /= varname) THEN
             write(*,*) 'Warning: history variable in memory is wrong: ' &
-               // trim(thisvar%varname) // ' should be ' // trim(varname) 
+               // trim(thisvar%varname) // ' should be ' // trim(varname)
             CALL CoLM_stop ()
          ENDIF
-         
+
          thisvar%v2d(:,itime_mem) = acc_vec
 
          IF (memory_to_disk) THEN
@@ -307,7 +307,7 @@ contains
    ! -- write local noon 2D data --
    SUBROUTINE single_write_ln ( &
          acc_vec, file_hist, varname, itime_in_file, longname, units)
-         
+
       USE MOD_Vars_1DAccFluxes, only : nac_ln
       use MOD_Vars_Global,      only : spval
       implicit none
@@ -322,7 +322,7 @@ contains
       where ((acc_vec /= spval) .and. (nac_ln > 0))
          acc_vec = acc_vec / nac_ln
       END WHERE
-      
+
       IF (USE_SITE_HistWriteBack) THEN
 
          IF (.not. associated(thisvar%next)) THEN
@@ -335,14 +335,14 @@ contains
          ELSE
             thisvar => thisvar%next
          ENDIF
-         
-         
+
+
          IF (thisvar%varname /= varname) THEN
             write(*,*) 'Warning: history variable in memory is wrong: ' &
-               // trim(thisvar%varname) // ' should be ' // trim(varname) 
+               // trim(thisvar%varname) // ' should be ' // trim(varname)
             CALL CoLM_stop ()
          ENDIF
-         
+
          thisvar%v2d(:,itime_mem) = acc_vec
 
          IF (memory_to_disk) THEN
@@ -367,7 +367,7 @@ contains
    ! -- write 3D data --
    SUBROUTINE single_write_3d ( &
          acc_vec, file_hist, varname, itime_in_file, dim1name, ndim1, longname, units)
-         
+
       USE MOD_Vars_1DAccFluxes, only : nac
       use MOD_Vars_Global,      only : spval
       implicit none
@@ -382,26 +382,26 @@ contains
       character(len=*), intent(in)    :: units
 
       where (acc_vec /= spval)  acc_vec = acc_vec / nac
-      
+
       IF (USE_SITE_HistWriteBack) THEN
 
          IF (.not. associated(thisvar%next)) THEN
             allocate (thisvar%next)
             thisvar => thisvar%next
-         
+
             thisvar%next    => null()
             thisvar%varname = varname
             allocate(thisvar%v3d (ndim1,size(acc_vec,2),ntime_mem))
          ELSE
             thisvar => thisvar%next
          ENDIF
-         
+
          IF (thisvar%varname /= varname) THEN
             write(*,*) 'Warning: history variable in memory is wrong: ' &
-               // trim(thisvar%varname) // ' should be ' // trim(varname) 
+               // trim(thisvar%varname) // ' should be ' // trim(varname)
             CALL CoLM_stop ()
          ENDIF
-         
+
          thisvar%v3d(:,:,itime_mem) = acc_vec
 
          IF (memory_to_disk) THEN
@@ -430,7 +430,7 @@ contains
    SUBROUTINE single_write_4d ( &
          acc_vec, file_hist, varname, itime_in_file, &
          dim1name, ndim1, dim2name, ndim2, longname, units)
-         
+
       USE MOD_Vars_1DAccFluxes, only : nac
       use MOD_Vars_Global,      only : spval
       implicit none
@@ -447,26 +447,26 @@ contains
       character(len=*), intent(in)    :: units
 
       where (acc_vec /= spval)  acc_vec = acc_vec / nac
-      
+
       IF (USE_SITE_HistWriteBack) THEN
 
          IF (.not. associated(thisvar%next)) THEN
             allocate (thisvar%next)
             thisvar => thisvar%next
-         
+
             thisvar%next    => null()
             thisvar%varname = varname
             allocate(thisvar%v4d (ndim1,ndim2,size(acc_vec,3),ntime_mem))
          ELSE
             thisvar => thisvar%next
          ENDIF
-         
+
          IF (thisvar%varname /= varname) THEN
             write(*,*) 'Warning: history variable in memory is wrong: ' &
-               // trim(thisvar%varname) // ' should be ' // trim(varname) 
+               // trim(thisvar%varname) // ' should be ' // trim(varname)
             CALL CoLM_stop ()
          ENDIF
-         
+
          thisvar%v4d(:,:,:,itime_mem) = acc_vec
 
          IF (memory_to_disk) THEN

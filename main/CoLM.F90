@@ -5,7 +5,7 @@ PROGRAM CoLM
 ! Description:
 !   This is the main program for the Common Land Model (CoLM)
 !
-!   @Copyright Yongjiu Dai Land Modeling Grop at the School of Atmospheric Sciences
+!   @Copyright Yongjiu Dai Land Modeling Group at the School of Atmospheric Sciences
 !   of the Sun Yat-sen University, Guangdong, CHINA.
 !   All rights reserved.
 !
@@ -60,8 +60,8 @@ PROGRAM CoLM
 #ifdef SinglePoint
    USE MOD_SingleSrfdata
 #endif
-
 #if (defined CatchLateralFlow)
+   USE MOD_Catch_BasinNetwork
    USE MOD_Catch_LateralFlow
 #endif
 
@@ -107,7 +107,7 @@ PROGRAM CoLM
    character(len=256) :: dir_restart
    character(len=256) :: fsrfdata
 
-   real(r8) :: deltim       ! time step (senconds)
+   real(r8) :: deltim       ! time step (seconds)
    integer  :: sdate(3)     ! calendar (year, julian day, seconds)
    integer  :: idate(3)     ! calendar (year, julian day, seconds)
    integer  :: edate(3)     ! calendar (year, julian day, seconds)
@@ -116,7 +116,7 @@ PROGRAM CoLM
    logical  :: greenwich    ! greenwich time
 
    logical :: doalb         ! true => start up the surface albedo calculation
-   logical :: dolai         ! true => start up the time-varying vegetation paramter
+   logical :: dolai         ! true => start up the time-varying vegetation parameter
    logical :: dosst         ! true => update sst/ice/snow
 
    integer :: Julian_1day_p, Julian_1day
@@ -131,6 +131,7 @@ PROGRAM CoLM
    type(timestamp) :: ststamp, itstamp, etstamp, ptstamp
 
    integer*8 :: start_time, end_time, c_per_sec, time_used
+!-----------------------------------------------------------------------
 
 #ifdef USEMPI
 #ifdef USESplitAI
@@ -234,8 +235,15 @@ PROGRAM CoLM
       CALL pixelset_load_from_file (dir_landdata, 'landpatch', landpatch, numpatch, lc_year)
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
+#ifdef SinglePoint
+      IF (patchtypes(SITE_landtype) == 0) THEN
+         CALL pixelset_load_from_file (dir_landdata, 'landpft', landpft , numpft  , lc_year)
+         CALL map_patch_to_pft
+      ENDIF
+#else
       CALL pixelset_load_from_file (dir_landdata, 'landpft'  , landpft  , numpft  , lc_year)
       CALL map_patch_to_pft
+#endif
 #endif
 
 #ifdef URBAN_MODEL
@@ -248,6 +256,10 @@ PROGRAM CoLM
 #ifdef CATCHMENT
       CALL hru_vector_init ()
 #endif
+#endif
+
+#ifdef CatchLateralFlow
+      CALL build_basin_network ()
 #endif
 
       CALL adj2end(sdate)
@@ -490,8 +502,8 @@ PROGRAM CoLM
          ! Hua Yuan, 06/2023: change namelist DEF_LAI_CLIM to DEF_LAI_MONTHLY
          ! and add DEF_LAI_CHANGE_YEARLY for monthly LAI data
          !
-         ! NOTES: Should be caution for setting DEF_LAI_CHANGE_YEARLY to ture in non-LULCC
-         ! case, that means the LAI changes without condisderation of land cover change.
+         ! NOTES: Should be caution for setting DEF_LAI_CHANGE_YEARLY to true in non-LULCC
+         ! case, that means the LAI changes without consideration of land cover change.
 
          IF (DEF_LAI_CHANGE_YEARLY) THEN
             lai_year = jdate(1)
@@ -511,7 +523,7 @@ PROGRAM CoLM
             Julian_8day = int(calendarday(jdate)-1)/8*8 + 1
             IF ((itstamp < etstamp) .and. (Julian_8day /= Julian_8day_p)) THEN
                CALL LAI_readin (jdate(1), Julian_8day, dir_landdata)
-               ! 06/2023, yuan: or depend on DEF_LAI_CHANGE_YEARLY nanemlist
+               ! 06/2023, yuan: or depend on DEF_LAI_CHANGE_YEARLY namelist
                !CALL LAI_readin (lai_year, Julian_8day, dir_landdata)
             ENDIF
          ENDIF

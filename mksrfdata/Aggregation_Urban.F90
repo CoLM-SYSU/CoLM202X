@@ -4,8 +4,8 @@
 !
 ! !DESCRIPTION:
 !
-!  Aggreate/screen high-resolution urban dataset to a lower
-!  resolutioin/subset data, suitable for running regional or point
+!  Aggregate/screen high-resolution urban dataset to a lower
+!  resolution/subset data, suitable for running regional or point
 !  cases.
 !
 !  Original authors: Hua Yuan and Wenzong Dong, 2021, OpenMP version.
@@ -205,12 +205,12 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
          LUCY_rid (:) = 0
 
          ! loop for each urban patch to get the LUCY id of all fine grid
-         ! of iurban patch, then assign the most frequence id to this urban patch
+         ! of iurban patch, then assign the most frequency id to this urban patch
          DO iurban = 1, numurban
 
             CALL aggregation_request_data (landurban, iurban, grid_urban_5km, zip = USE_zip_for_aggregation, &
                data_i4_2d_in1 = LUCY_reg, data_i4_2d_out1 = LUCY_reg_one)
-            ! the most frequence id to this urban patch
+            ! the most frequency id to this urban patch
             LUCY_rid(iurban) = num_max_frequency (LUCY_reg_one)
          ENDDO
 #ifdef USEMPI
@@ -254,7 +254,7 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
          landdir = TRIM(dir_rawdata)//'/urban/'
          suffix  = 'URBSRF'//trim(c5year)
 
-         ! populaiton data is year by year,
+         ! population data is year by year,
          ! so pop_i is calculated to determine the dimension of POP data reads
          IF (mod(lc_year,5) == 0) THEN
             pop_i = 1
@@ -449,7 +449,7 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
             WHERE (gl30_wt_one < 0)
                area_one = 0
             END WHERE
-            ! only caculate when urban patch have water cover
+            ! only calculate when urban patch have water cover
             IF (sum(area_one) > 0) THEN
                pct_urbwt(iurban) = sum(gl30_wt_one * area_one) / sum(area_one)
             ENDIF
@@ -498,7 +498,7 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
          CALL ncio_read_bcast_serial (landname,  "HT_ROOF"            , ncar_ht )
       ENDIF
 
-      ! allocate and read grided building hegight and cover raw data
+      ! allocate and read grided building height and cover raw data
       IF (p_is_io) THEN
          CALL allocate_block_data (grid_urban_500m, reg_typid)
          CALL allocate_block_data (grid_urban_500m, wtrf)

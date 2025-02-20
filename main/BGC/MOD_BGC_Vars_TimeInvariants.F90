@@ -5,7 +5,7 @@ MODULE MOD_BGC_Vars_TimeInvariants
 ! --------------------------------------------------------------------
 
 ! !DESCRIPTION
-! Define, allocate, and deallocate biogeochmeical constant at patch level.
+! Define, allocate, and deallocate biogeochemical constant at patch level.
 ! Read and write biogeochemical constant at patch level from/to restart files.
 
 ! !ORIGINAL:
@@ -150,7 +150,7 @@ CONTAINS
       IF (p_is_worker) THEN
 
          IF (numpatch > 0) THEN
-    ! bgc varaibles
+    ! bgc variables
             allocate (donor_pool        (ndecomp_transitions))                  ; donor_pool         (:) = spval_i4
             allocate (receiver_pool     (ndecomp_transitions))                  ; receiver_pool      (:) = spval_i4
             allocate (floating_cn_ratio (ndecomp_pools))                        ; floating_cn_ratio  (:) = .false.

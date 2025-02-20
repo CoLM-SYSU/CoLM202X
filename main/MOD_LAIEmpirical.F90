@@ -28,8 +28,9 @@ CONTAINS
    USE MOD_Precision
    IMPLICIT NONE
 
-   integer, intent(in)  :: ivt      !land cover type
-   integer, intent(in)  :: nl_soil  !number of soil layers
+!-------------------------- Dummy Arguments ----------------------------
+   integer,  intent(in)  :: ivt     !land cover type
+   integer,  intent(in)  :: nl_soil !number of soil layers
 
    real(r8), intent(in)  :: rootfr(1:nl_soil)  !root fraction
    real(r8), intent(in)  :: t(1:nl_soil)  !soil temperature
@@ -38,7 +39,7 @@ CONTAINS
    real(r8), intent(out) :: fveg    !fractional cover of vegetation
    real(r8), intent(out) :: green   !greenness
 
-!local variable
+!-------------------------- Local Variables ----------------------------
    real(r8) f      !
    real(r8) roota  !accumulates root fraction
    integer jrt     !number of soil layers with 90% root fraction
@@ -52,7 +53,7 @@ CONTAINS
           1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, &
           1.0, 1.0, 0.0, 1.0, 1.0, 1.0, 0.0, 0.0 /)
 ! Maximum leaf area index, the numbers are based on the data of
-! "worldwide histrorical estimates of leaf area index, 1932-2000" :
+! "worldwide historical estimates of leaf area index, 1932-2000" :
 ! http://www.daac.ornl.gov/global_vegetation/HistoricalLai/data"
    real(r8), dimension(24), parameter :: &
    xla=(/1.50, 3.29, 4.18, 3.50, 2.50, 3.60, 2.02, 1.53, &

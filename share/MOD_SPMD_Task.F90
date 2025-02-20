@@ -103,6 +103,7 @@ MODULE MOD_SPMD_Task
    integer, PUBLIC, parameter :: mpi_tag_data = 3 
 
    integer  :: MPI_INULL_P(1)
+   logical  :: MPI_LNULL_P(1)
    real(r8) :: MPI_RNULL_P(1)
 
    integer, parameter :: MesgMaxSize = 4194304 ! 4MB 

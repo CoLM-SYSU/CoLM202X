@@ -69,7 +69,12 @@ CONTAINS
 
 #ifdef SinglePoint
 #ifndef URBAN_MODEL
-      iyear = findloc_ud(SITE_LAI_year == min(DEF_LAI_END_YEAR, max(DEF_LAI_START_YEAR,year)))
+      IF (USE_SITE_LAI) THEN
+         iyear = findloc_ud(SITE_LAI_year == year)
+      ELSE
+         iyear = findloc_ud(SITE_LAI_year == min(DEF_LAI_END_YEAR, max(DEF_LAI_START_YEAR,year)))
+      ENDIF
+
       IF (.not. DEF_LAI_MONTHLY) THEN
          itime = (time-1)/8 + 1
       ENDIF
@@ -191,6 +196,13 @@ CONTAINS
                !TODO@yuan: may need to revise patch LAI/SAI
                green(npatch) = 1.
                fveg (npatch) = fveg0(m)
+
+               IF (m == WATERBODY) THEN
+                  fveg(npatch)  = 0.
+                  tlai(npatch)  = 0.
+                  tsai(npatch)  = 0.
+                  green(npatch) = 0.
+               ENDIF
 
             ENDDO
          ENDIF

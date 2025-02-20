@@ -32,7 +32,7 @@ MODULE MOD_LandHRU
    type(grid_type)     :: ghru
    type(pixelset_type) :: landhru
    
-   type(subset_type) :: basin_hru
+   type(subset_type) :: elm_hru
 
 CONTAINS
 
