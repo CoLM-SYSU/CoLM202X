@@ -108,8 +108,8 @@ SUBROUTINE Aggregation_Topography ( &
                topostd_patches(ipatch) = sqrt(topostd_patches(ipatch))
 
             ELSE
-               topography_patches (ipatch) = -1.0e36
-               topostd_patches    (ipatch) = -1.0e36
+               topography_patches (ipatch) = 0.
+               topostd_patches    (ipatch) = 0.
             ENDIF
          ENDDO
 
