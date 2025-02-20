@@ -13,10 +13,10 @@ MODULE MOD_LeafTemperature
 
    SAVE
 
-   ! PUBLIC MEMBER FUNCTIONS:
+! PUBLIC MEMBER FUNCTIONS:
    PUBLIC :: LeafTemperature
 
-   ! PRIVATE MEMBER FUNCTIONS:
+! PRIVATE MEMBER FUNCTIONS:
    PRIVATE :: dewfraction
 !-----------------------------------------------------------------------
 

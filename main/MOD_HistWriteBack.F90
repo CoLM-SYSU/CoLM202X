@@ -77,7 +77,6 @@ MODULE MOD_HistWriteBack
 
 CONTAINS
 
-   ! -----
    SUBROUTINE hist_writeback_daemon ()
 
    USE MOD_Namelist, only: DEF_HIST_FREQ

@@ -25,7 +25,7 @@ MODULE MOD_Const_LC
 #ifdef LULC_USGS
 
 ! GLCC USGS Land Use/Land Cover System Legend
-!---------------------------
+!-----------------------------------------------------------------------
 ! 0  Ocean
 ! 1  Urban and Built-Up Land
 ! 2  Dryland Cropland and Pasture
@@ -329,7 +329,7 @@ MODULE MOD_Const_LC
 #else
 
 ! MODIS IGBP Land Use/Land Cover System Legend
-!---------------------------
+!-----------------------------------------------------------------------
 ! 0  Ocean
 ! 1  Evergreen Needleleaf Forests
 ! 2  Evergreen Broadleaf Forests

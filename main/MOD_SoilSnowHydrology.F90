@@ -21,7 +21,7 @@ MODULE MOD_SoilSnowHydrology
    IMPLICIT NONE
    SAVE
 
-!  PUBLIC MEMBER FUNCTIONS:
+! PUBLIC MEMBER FUNCTIONS:
    PUBLIC :: WATER_2014
    PUBLIC :: WATER_VSF
    PUBLIC :: snowwater
@@ -29,7 +29,7 @@ MODULE MOD_SoilSnowHydrology
    PUBLIC :: snowwater_snicar
 
 
-!  PRIVATE MEMBER FUNCTIONS:
+! PRIVATE MEMBER FUNCTIONS:
    PRIVATE :: groundwater
 
 

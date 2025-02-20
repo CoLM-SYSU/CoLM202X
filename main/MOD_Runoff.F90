@@ -7,7 +7,7 @@ MODULE MOD_Runoff
    IMPLICIT NONE
    SAVE
 
-!  PUBLIC MEMBER FUNCTIONS:
+! PUBLIC MEMBER FUNCTIONS:
    PUBLIC :: SurfaceRunoff_SIMTOP
    PUBLIC :: SubsurfaceRunoff_SIMTOP
    PUBLIC :: Runoff_XinAnJiang

@@ -23,7 +23,7 @@ MODULE MOD_Const_PFT
    SAVE
 
 ! Plant Functional Type classification
-!---------------------------
+!-----------------------------------------------------------------------
 ! 0  not vegetated
 ! 1  needleleaf evergreen temperate tree
 ! 2  needleleaf evergreen boreal tree

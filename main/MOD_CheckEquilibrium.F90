@@ -33,14 +33,13 @@ MODULE MOD_CheckEquilibrium
    integer :: check_data_id = 0
 #endif
 
-   ! ----- Subroutines -----
    PUBLIC :: CheckEqb_init
    PUBLIC :: CheckEquilibrium
    PUBLIC :: CheckEqb_final
 
 CONTAINS
 
-   !---------------------------------------
+!-----------------------------------------------------------------------
    SUBROUTINE CheckEqb_init ()
 
    USE MOD_Forcing,   only: gforc
@@ -72,7 +71,7 @@ CONTAINS
 
    END SUBROUTINE CheckEqb_init
 
-   !--------------------------------------
+!-----------------------------------------------------------------------
    SUBROUTINE CheckEqb_final ()
 
    IMPLICIT NONE
@@ -85,7 +84,7 @@ CONTAINS
 
    END SUBROUTINE CheckEqb_final
 
-   !---------------------------------------
+!-----------------------------------------------------------------------
    SUBROUTINE CheckEquilibrium (idate, deltim, itstamp, dir_out, casename)
 
    USE MOD_Precision
@@ -242,7 +241,7 @@ CONTAINS
 
    END SUBROUTINE CheckEquilibrium
 
-   !---------------------------------------
+!-----------------------------------------------------------------------
 #ifndef SinglePoint
    SUBROUTINE map_and_write_check_var ( &
          vector, filename, varname, itime_in_file, sumarea, filter, &
@@ -401,7 +400,7 @@ CONTAINS
    END SUBROUTINE map_and_write_check_var
 #endif
 
-   !------
+!-----------------------------------------------------------------------
    SUBROUTINE add_spv (var, s, dt)
 
    USE MOD_Precision

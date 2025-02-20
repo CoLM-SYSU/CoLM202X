@@ -31,7 +31,6 @@ MODULE MOD_HistVector
 #endif
 
 CONTAINS
-! ----- subroutines ------
 
    ! -- write history time --
    SUBROUTINE hist_vector_write_time (filename, dataname, time, itime_in_file)
@@ -80,7 +79,7 @@ CONTAINS
 
    END SUBROUTINE hist_vector_write_time
 
-   ! -------
+
    SUBROUTINE aggregate_to_vector_and_write_2d ( &
          acc_vec_patch, file_hist, varname, itime_in_file, filter, &
          longname, units)
@@ -233,7 +232,7 @@ CONTAINS
 
    END SUBROUTINE aggregate_to_vector_and_write_2d
 
-   ! -------
+
    SUBROUTINE aggregate_to_vector_and_write_3d ( &
          acc_vec_patch, file_hist, varname, itime_in_file, dim1name, lb1, ndim1, filter, &
          longname, units)
@@ -402,7 +401,7 @@ CONTAINS
 
    END SUBROUTINE aggregate_to_vector_and_write_3d
 
-   ! -------
+
    SUBROUTINE aggregate_to_vector_and_write_4d ( &
          acc_vec_patch, file_hist, varname, itime_in_file,   &
          dim1name, lb1, ndim1, dim2name, lb2, ndim2, filter, &
@@ -579,7 +578,7 @@ CONTAINS
 
    END SUBROUTINE aggregate_to_vector_and_write_4d
 
-   ! -------
+
    SUBROUTINE aggregate_to_vector_and_write_ln ( &
          acc_vec_patch, file_hist, varname, itime_in_file, filter, &
          longname, units)

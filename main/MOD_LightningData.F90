@@ -25,13 +25,13 @@ MODULE MOD_LightningData
 
 CONTAINS
 
-   ! ----------
    SUBROUTINE init_lightning_data (idate)
 
-   !----------------------
-   ! DESCTIPTION:
-   ! open lightning netcdf file from DEF_dir_rawdata, read latitude and longitude info.
-   ! Initialize lightning data read in.
+!-----------------------------------------------------------------------
+! !DESCTIPTION:
+!  open lightning netcdf file from DEF_dir_rawdata, read latitude and longitude info.
+!  Initialize lightning data read in.
+!-----------------------------------------------------------------------
 
    USE MOD_SPMD_Task
    USE MOD_Namelist
@@ -70,12 +70,13 @@ CONTAINS
 
    END SUBROUTINE init_lightning_data
 
-   ! ----------
+
    SUBROUTINE update_lightning_data (time, deltim)
 
-   !----------------------
-   ! DESCRIPTION:
-   ! read lightning data during simulation
+!-----------------------------------------------------------------------
+! !DESCRIPTION:
+!  read lightning data during simulation
+!-----------------------------------------------------------------------
 
    USE MOD_TimeManager
    USE MOD_NetCDFBlock

@@ -20,13 +20,13 @@ MODULE MOD_NitrifData
 
 CONTAINS
 
-   ! ----------
    SUBROUTINE init_nitrif_data (idate)
 
-   !----------------------
-   ! DESCRIPTION:
-   ! open nitrif netcdf file from DEF_dir_runtime, read latitude and longitude info.
-   ! Initialize nitrif data read in.
+!-----------------------------------------------------------------------
+! !DESCRIPTION:
+!  open nitrif netcdf file from DEF_dir_runtime, read latitude and
+!  longitude info.  Initialize nitrif data read in.
+!-----------------------------------------------------------------------
 
    USE MOD_TimeManager
    USE MOD_Namelist

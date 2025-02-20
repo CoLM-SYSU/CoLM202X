@@ -27,7 +27,7 @@ CONTAINS
 !  define the rate of rainfall and snowfall and precipitation water temp
 !  Original author: Yongjiu Dai, 09/1999; 08/31/2002, 04/2014, 01/2023
 !=======================================================================
-!
+
    USE MOD_Precision
    USE MOD_Const_Physical, only: tfrz
    USE MOD_WetBulb

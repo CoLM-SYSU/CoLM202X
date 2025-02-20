@@ -4,10 +4,11 @@
 MODULE MOD_NdepData
 !-----------------------------------------------------------------------
 ! !DESCRIPTION:
-! This module read in ndep data.
+!  This module read in ndep data.
 !
 ! !ORIGINAL:
-! Lu Xingjie and Zhang Shupeng, 2023, prepare the original version of the ndep data module.
+!  Lu Xingjie and Zhang Shupeng, 2023, prepare the original version of
+!  the ndep data module.
 !-----------------------------------------------------------------------
 
    USE MOD_Grid
@@ -23,13 +24,13 @@ MODULE MOD_NdepData
 
 CONTAINS
 
-   ! ----------
    SUBROUTINE init_ndep_data_annually (YY)
 
-   !----------------------
-   ! DESCRIPTION:
-   ! open ndep netcdf file from DEF_dir_runtime, read latitude and longitude info.
-   ! Initialize ndep data read in.
+!-----------------------------------------------------------------------
+! !DESCRIPTION:
+!  open ndep netcdf file from DEF_dir_runtime, read latitude and longitude info.
+!  Initialize ndep data read in.
+!-----------------------------------------------------------------------
 
    USE MOD_TimeManager
    USE MOD_Namelist
@@ -59,13 +60,13 @@ CONTAINS
 
    END SUBROUTINE init_ndep_data_annually
 
-      ! ----------
    SUBROUTINE init_ndep_data_monthly (YY,MM)  !sf_add
 
-   !----------------------
-   ! DESCRIPTION:
-   ! open ndep netcdf file from DEF_dir_runtime, read latitude and longitude info.
-   ! Initialize ndep data read in.
+!-----------------------------------------------------------------------
+! !DESCRIPTION:
+!  open ndep netcdf file from DEF_dir_runtime, read latitude and
+!  longitude info.  Initialize ndep data read in.
+!-----------------------------------------------------------------------
 
    USE MOD_TimeManager
    USE MOD_Namelist
@@ -95,19 +96,19 @@ CONTAINS
 
    END SUBROUTINE init_ndep_data_monthly
 
-   ! ----------
    SUBROUTINE update_ndep_data_annually (YY, iswrite)
-! ===========================================================
+!-----------------------------------------------------------------------
 !
 ! !DESCRIPTION:
-! Read in the Nitrogen deposition data from CLM5.
+!  Read in the Nitrogen deposition data from CLM5.
 !
 ! !REFERENCES:
-! Galloway, J.N., et al. 2004. Nitrogen cycles: past, present, and future. Biogeochem. 70:153-226.
+!  Galloway, J.N., et al. 2004. Nitrogen cycles: past, present, and
+!  future. Biogeochem. 70:153-226.
 !
 ! !ORIGINAL:
-! Created by Xingjie Lu and Shupeng Zhang, 2022
-! ===========================================================
+!  Created by Xingjie Lu and Shupeng Zhang, 2022
+!-----------------------------------------------------------------------
 
    USE MOD_SPMD_Task
    USE MOD_Namelist, only: DEF_USE_PN
@@ -158,20 +159,20 @@ CONTAINS
 
    END SUBROUTINE update_ndep_data_annually
 
-   ! ----------
    SUBROUTINE update_ndep_data_monthly (YY, MM, iswrite) !sf_add
-! ===========================================================
+!-----------------------------------------------------------------------
 !
 ! !DESCRIPTION:
-! Read in the Nitrogen deposition data from CLM5.
+!  Read in the Nitrogen deposition data from CLM5.
 !
 ! !REFERENCES:
-! Galloway, J.N., et al. 2004. Nitrogen cycles: past, present, and future. Biogeochem. 70:153-226.
+!  Galloway, J.N., et al. 2004. Nitrogen cycles: past, present, and
+!  future. Biogeochem. 70:153-226.
 !
 ! !ORIGINAL:
-! Created by Xingjie Lu and Shupeng Zhang, 2022
-! ===========================================================
-
+!  Created by Xingjie Lu and Shupeng Zhang, 2022
+!
+!-----------------------------------------------------------------------
    USE MOD_SPMD_Task
    USE MOD_Namelist, only: DEF_USE_PN
    USE MOD_DataType
