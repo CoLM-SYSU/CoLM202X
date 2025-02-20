@@ -4,37 +4,39 @@ SUBROUTINE soil_hydraulic_parameters(BD,SAND,CLAY,SOC,SOILDEPTH,&
            VGM_theta_r_Rose,VGM_alpha_Rose,VGM_n_Rose,k_s_Rose)
 
 !-----------------------------------------------------------------------
-! DESCRIPTION:
-! Calculate soil hydraulic parameters of soil water retension models (Brooks and Corey, 1964 & van Genuchten, 1980)
-! and soil saturated hydraulic conductivity with multiple soil Pedotransfer functions by using the rawdata soil properties.
+! !DESCRIPTION:
+!  Calculate soil hydraulic parameters of soil water retension models
+!  (Brooks and Corey, 1964 & van Genuchten, 1980) and soil saturated
+!  hydraulic conductivity with multiple soil Pedotransfer functions by
+!  using the rawdata soil properties.
 !
-! REFERENCES:
-! (1) Dai et al.,2013: Development of a China Dataset of Soil
-!     Hydraulic Parameters Using Pedotransfer Functions for Land Surface Modeling.
-!     J. of Hydrometeorology, 14: 869-887. DOI: 10.1175/JHM-D-12-0149.1
-! (2) Dai et al.,2019: A Global High-Resolution Data Set of Soil Hydraulic and Thermal Properties
-!     for Land Surface Modeling. J. of Advances in Modeling Earth Systems, DOI: 10.1029/2019MS001784
+! !REFERENCES:
+!  (1) Dai et al.,2013: Development of a China Dataset of Soil
+!      Hydraulic Parameters Using Pedotransfer Functions for Land Surface Modeling.
+!      J. of Hydrometeorology, 14: 869-887. DOI: 10.1175/JHM-D-12-0149.1
+!  (2) Dai et al.,2019: A Global High-Resolution Data Set of Soil Hydraulic and Thermal Properties
+!      for Land Surface Modeling. J. of Advances in Modeling Earth Systems, DOI: 10.1029/2019MS001784
 !
-! Original author: Yongjiu Dai, Wei Shangguan, 12/2013/
+!  Original author: Yongjiu Dai, Wei Shangguan, 12/2013/
 !
-! Revisions:
-! Yongjiu Dai, Nan Wei and Yonggen Zhang,
-!          06/2018: add more highly cited or newly developed soil Pedotransfer functions.
-! Nan Wei, 01/2019: add algorithms for fitting soil hydraulic parameters by multiple soil Pedotransfer functions.
-! Yongjiu Dai and Nan Wei,
-!          06/2019: consider the gravel effects on soil hydraulic parameters
+! !REVISIONS:
+!  Yongjiu Dai, Nan Wei and Yonggen Zhang,
+!           06/2018: add more highly cited or newly developed soil Pedotransfer functions.
+!  Nan Wei, 01/2019: add algorithms for fitting soil hydraulic parameters by multiple soil Pedotransfer functions.
+!  Yongjiu Dai and Nan Wei,
+!           06/2019: consider the gravel effects on soil hydraulic parameters
 ! ----------------------------------------------------------------------
 use MOD_Precision
 
 IMPLICIT NONE
 
-real(r8), intent(in) :: SAND ! percent sand particle-size distribution (%, weight)
-real(r8), intent(in) :: CLAY ! percent clay particle-size distribution (%, weight)
-real(r8), intent(in) :: SOC  ! soil organic carbon concentration (%, weight)
-real(r8), intent(in) :: BD   ! bulk density (g cm-3)
-real(r8), intent(in) :: SOILDEPTH ! soil depth (cm)
-real(r8), intent(in) :: vf_gravels_ss! volumetric fraction of gravels
-real(r8), intent(in) :: phi          ! saturated water content (cm3/cm3)
+real(r8), intent(in) :: SAND             ! percent sand particle-size distribution (%, weight)
+real(r8), intent(in) :: CLAY             ! percent clay particle-size distribution (%, weight)
+real(r8), intent(in) :: SOC              ! soil organic carbon concentration (%, weight)
+real(r8), intent(in) :: BD               ! bulk density (g cm-3)
+real(r8), intent(in) :: SOILDEPTH        ! soil depth (cm)
+real(r8), intent(in) :: vf_gravels_ss    ! volumetric fraction of gravels
+real(r8), intent(in) :: phi              ! saturated water content (cm3/cm3)
 real(r8), intent(in) :: VGM_theta_r_Rose ! residual moisture content by Rosetta H3
 real(r8), intent(in) :: VGM_alpha_Rose   ! a parameter corresponding approximately to the inverse of the air-entry value by Rosetta H3
 real(r8), intent(in) :: VGM_n_Rose       ! a shape parameter by Rosetta H3
@@ -43,12 +45,12 @@ real(r8), intent(in) :: k_s_Rose         ! saturated hydraulic conductivity (cm/
 real(r8), intent(out) :: CampBC_psi_s    ! matric potential at saturation (cm)
 real(r8), intent(out) :: CampBC_lambda_s ! pore size distribution index (dimensionless)
 
-real(r8), intent(out) :: k_s      ! saturated hydraulic conductivity (cm/day)
+real(r8), intent(out) :: k_s             ! saturated hydraulic conductivity (cm/day)
 
-real(r8), intent(out) :: VGM_theta_r ! residual moisture content
-real(r8), intent(out) :: VGM_alpha   ! a parameter corresponding approximately to the inverse of the air-entry value
-real(r8), intent(out) :: VGM_n       ! a shape parameter
-real(r8), intent(out) :: VGM_L       ! pore-connectivity parameter
+real(r8), intent(out) :: VGM_theta_r     ! residual moisture content
+real(r8), intent(out) :: VGM_alpha       ! a parameter corresponding approximately to the inverse of the air-entry value
+real(r8), intent(out) :: VGM_n           ! a shape parameter
+real(r8), intent(out) :: VGM_L           ! pore-connectivity parameter
 
 real(r8) SOM, TOPSOIL, BD_om, BD_minerals,a,vf_gravels_s
 
@@ -310,11 +312,11 @@ external SW_CB_dist
          if(lambda(i) > 1. .or. lambda(i) <= 0.) then
             lambda(i)=-1.0e36
             ydatc(i,:)=-1.0e36
-         end if
+         endif
          if(psi(i) < -300. .or. psi(i) >= 0.) then
             psi(i)=-1.0e36
             ydatc(i,:)=-1.0e36
-         end if
+         endif
       enddo
 
       m = 0
@@ -322,7 +324,7 @@ external SW_CB_dist
          if(abs(ydatc(i,1)) < 1.0e10) then
             m = m+1
             ydatc(m,:) = ydatc(i,:)
-         end if
+         endif
       enddo
 
       ldfjac = npoint
@@ -353,7 +355,7 @@ external SW_CB_dist
       if( x(1) >= -300. .and. x(1) < 0.0 .and. x(2) > 0.0 .and. x(2) <= 1.0 .and. isiter == 1)then
          psi_s    = x(1)
          lambda_s = x(2)
-      end if
+      endif
 
       deallocate(fjac)
       deallocate(fvec)
@@ -603,7 +605,7 @@ ydatv(4,:) = theta_r(4)+(phi - theta_r(4))*(1+(alpha(4)*xdat)**n(4))**(1.0/n(4)-
           ydatv(6,:) = -1.0e36
       else
           ydatv(6,:) = theta_r(6)+(phi - theta_r(6))*(1+(alpha(6)*xdat)**n(6))**(1.0/n(6)-1)
-      end if
+      endif
 
 ! ------------------------------------------
 ! 7) Gupta, S.C., and W.E. Larson. 1979. Estimating soil water retention characteristics from
@@ -687,15 +689,15 @@ ydatv(4,:) = theta_r(4)+(phi - theta_r(4))*(1+(alpha(4)*xdat)**n(4))**(1.0/n(4)-
          if(theta_r(i) > phi .or. theta_r(i) < 0.0) then
             theta_r(i)=-1.0e36
             ydatv(i,:)=-1.0e36
-         end if
+         endif
          if(alpha(i) < 1.0e-5 .or. alpha(i) > 1.0) then
             alpha(i)  =-1.0e36
             ydatv(i,:)=-1.0e36
-         end if
+         endif
          if(n(i) < 1.1 .or. n(i) > 10.0) then
             n(i)      =-1.0e36
             ydatv(i,:)=-1.0e36
-         end if
+         endif
       enddo
 
       m = 0
@@ -703,7 +705,7 @@ ydatv(4,:) = theta_r(4)+(phi - theta_r(4))*(1+(alpha(4)*xdat)**n(4))**(1.0/n(4)-
          if(abs(ydatv(i,1)) < 1.0e10) then
             m = m+1
             ydatv(m,:) = ydatv(i,:)
-         end if
+         endif
       enddo
 
       ldfjac = npoint
@@ -739,7 +741,7 @@ ydatv(4,:) = theta_r(4)+(phi - theta_r(4))*(1+(alpha(4)*xdat)**n(4))**(1.0/n(4)-
           theta_r_l = x(1)
           alpha_l   = x(2)
           n_l       = x(3)
-      end if
+      endif
 
       deallocate(fjac)
       deallocate(fvec)
@@ -1545,7 +1547,7 @@ real(r8) Silt,X1,X2
 	   End select
 	   Theta(i)=(b(1,i)+b(2,i)*X1+b(3,i)*X2+b(4,i)*X1*X2+b(5,i)*X1*X1 &
       	            +b(6,i)*X2*X2)/100.
-	end do
+	enddo
 END SUBROUTINE Rajkai
 
 SUBROUTINE Rawls82(Clay,Silt,Sand,OC,Theta)
@@ -1833,7 +1835,7 @@ integer i
       if(b(4) .lt. 1.1) b(4) = 1.1
       do i = 1,nob
          y(i)=b(1)+(b(2)-b(1))/(1+(b(3)*x(i))**b(4))**(1.-1/b(4))
-      end do
+      enddo
 END SUBROUTINE model
 
 
@@ -1863,27 +1865,27 @@ subroutine SW_CB_dist ( m, n, x, fvec, fjac, ldfjac, iflag, xdat, npoint, ydatc,
          if (x(1) >= 0.0) then
              isiter = 0
              return
-         end if
+         endif
 
          do i = 1, m
             fvec(i) = sum(((-1.0*xdat(i)/x(1))**(-1.0*x(2)) * phi - ydatc(:,i))**2)
-         end do
+         enddo
 
       else if ( iflag == 2 ) then
 
          if (x(1) >= 0.0) then
              isiter = 0
              return
-         end if
+         endif
 
          do i = 1, m
             fjac(i,1) = sum(2.0*((-1.0*xdat(i)/x(1))**(-1.0*x(2)) * phi - ydatc(:,i))*&
                         phi * x(2) * (-1.0*xdat(i)/x(1))**(-1.0*x(2)) / x(1))
             fjac(i,2) = sum(-2.0*((-1.0*xdat(i)/x(1))**(-1.0*x(2)) * phi - ydatc(:,i))*&
                         phi * (-1.0*xdat(i)/x(1))**(-1.0*x(2)) * log(-1.0*xdat(i)/x(1)))
-         end do
+         enddo
 
-      end if
+      endif
 
 end subroutine SW_CB_dist
 
@@ -1913,18 +1915,18 @@ subroutine SW_VG_dist ( m, n, x, fvec, fjac, ldfjac, iflag, xdat, npoint, ydatv,
          if (x(2) <= 0.0 .or. x(3) <= 0.1) then
              isiter = 0
              return
-         end if
+         endif
 
          do i = 1, m
             fvec(i) = sum((x(1) + (phi - x(1))*(1+(x(2)*xdat(i))**x(3))**(1.0/x(3)-1) - ydatv(:,i))**2)
-         end do
+         enddo
 
       else if ( iflag == 2 ) then
 
          if (x(2) <= 0.0 .or. x(3) <= 0.1) then
              isiter = 0
              return
-         end if
+         endif
 
          do i = 1, m
             fjac(i,1) = sum(2*(x(1) + (phi - x(1))*(1+(x(2)*xdat(i))**x(3))**(1.0/x(3)-1) - ydatv(:,i))*&
@@ -1935,8 +1937,8 @@ subroutine SW_VG_dist ( m, n, x, fvec, fjac, ldfjac, iflag, xdat, npoint, ydatv,
                         (phi - x(1)) * (1+(x(2)*xdat(i))**x(3))**(1.0/x(3)-1) *&
                      ((1.0-x(3))*(x(2)*xdat(i))**x(3)*log(x(2)*xdat(i))/(x(3)*(1+(x(2)*xdat(i))**x(3))) &
                         - log(1+(x(2)*xdat(i))**x(3))/x(3)**2))
-         end do
+         enddo
 
-      end if
+      endif
 
 end subroutine SW_VG_dist

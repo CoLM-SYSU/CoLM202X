@@ -4,19 +4,19 @@ MODULE MOD_Const_LC
 
 !-----------------------------------------------------------------------
 ! !DESCRIPTION:
-! Constant values set for land cover types
+!  Constant values set for land cover types
 !
-! Created by Hua Yuan, 08/2019
+!  Created by Hua Yuan, 08/2019
 !
 ! !REVISIONS:
-! 08/2019, Hua Yuan: initial version adapted from IniTimeConst.F90 of CoLM2014
-! 08/2019, Hua Yuan: added constants values for IGBP land cover types
-! 05/2023, Xingjie Lu: added Plant Hydraulics Parameters
+!  08/2019, Hua Yuan: initial version adapted from IniTimeConst.F90 of CoLM2014
+!  08/2019, Hua Yuan: added constants values for IGBP land cover types
+!  05/2023, Xingjie Lu: added Plant Hydraulics Parameters
 !
 ! !USES:
    USE MOD_Precision
    USE MOD_Vars_Global
-   USE MOD_Namelist, only : DEF_USE_PLANTHYDRAULICS
+   USE MOD_Namelist, only: DEF_USE_PLANTHYDRAULICS
 
    IMPLICIT NONE
    SAVE

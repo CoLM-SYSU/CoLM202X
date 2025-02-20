@@ -27,7 +27,7 @@ CONTAINS
 
 !-----------------------------------------------------------------------
 
-   SUBROUTINE albland (ipatch, patchtype, deltim,&
+   SUBROUTINE albland (ipatch,patchtype,deltim,&
                       soil_s_v_alb,soil_d_v_alb,soil_s_n_alb,soil_d_n_alb,&
                       chil,rho,tau,fveg,green,lai,sai,fwet_snow,coszen,&
                       wt,fsno,scv,scvold,sag,ssw,pg_snow,forc_t,t_grnd,t_soisno,dz_soisno,&
@@ -57,7 +57,7 @@ CONTAINS
 !     linear combination of albedos for snow, canopy and bare soil (or
 !     lake, wetland, glacier).
 !
-! Original author : Yongjiu Dai, 09/15/1999; 08/30/2002, 03/2014
+! Original author: Yongjiu Dai, 09/15/1999; 08/30/2002, 03/2014
 !
 ! !REVISIONS:
 ! 12/2019, Hua Yuan: added a wrap FUNCTION for PFT calculation, details
@@ -287,13 +287,12 @@ IF (DEF_USE_SNICAR) THEN
 ! microphysics and albedo evolution, JGR, and Brun (1989), Investigation of
 ! wet-snow metamorphism in respect of liquid-water content, Ann. Glacial.
 
-      CALL SnowAge_grain(   deltim ,snl    ,dz_soisno(:1)  ,&
-           pg_snow         ,snwcp_ice      ,snofrz         ,&
+      CALL SnowAge_grain(  deltim ,snl    ,dz_soisno(:1)  ,&
+           pg_snow        ,snwcp_ice      ,snofrz         ,&
 
-           do_capsnow      ,fsno           ,scv            ,&
-           wliq_soisno (:0),wice_soisno(:0),&
-           t_soisno    (:1),t_grnd         ,&
-           forc_t          ,snw_rds         )
+           do_capsnow     ,fsno           ,scv            ,&
+           wliq_soisno(:0),wice_soisno(:0),t_soisno(:1)   ,&
+           t_grnd         ,forc_t         ,snw_rds         )
 ENDIF
 ! ----------------------------------------------------------------------
 
@@ -315,12 +314,12 @@ ENDIF
          albg(:,2) = albg(:,1)           !diffused albedos setting
 
 ! 2.2 albedos for permanent ice sheet.
-      ELSE IF(patchtype == 3) THEN       !permanent ice sheet
+      ELSEIF (patchtype == 3) THEN       !permanent ice sheet
          albg(1,:) = 0.8
          albg(2,:) = 0.55
 
 ! 2.3 albedo for inland water
-      ELSE IF(patchtype >= 4) THEN
+      ELSEIF (patchtype >= 4) THEN
          albg0 = 0.05/(czen+0.15)
          albg(:,1) = albg0
          albg(:,2) = 0.1                 !Subin (2012)
@@ -471,10 +470,10 @@ ENDIF
 
 !-----------------------------------------------------------------------
 !
-!     calculation of canopy albedos via two stream approximation (direct
-!     and diffuse ) and partition of incident solar
+!  calculation of canopy albedos via two stream approximation (direct
+!  and diffuse ) and partition of incident solar
 !
-! Original author: Yongjiu Dai, June 11, 2001
+!  Original author: Yongjiu Dai, June 11, 2001
 !
 !-----------------------------------------------------------------------
 
@@ -589,9 +588,9 @@ ENDIF
 
       IF (abs(phi1).gt.1.e-6 .and. abs(phi2).gt.1.e-6) THEN
          zmu = 1. / phi2 * ( 1. - phi1 / phi2 * log ( ( phi1 + phi2 ) / phi1 ) )
-      ELSE IF (abs(phi1).le.1.e-6) THEN
+      ELSEIF (abs(phi1).le.1.e-6) THEN
          zmu = 1./0.877
-      ELSE IF (abs(phi2).le.1.e-6) THEN
+      ELSEIF (abs(phi2).le.1.e-6) THEN
          zmu = 1./(2.*phi1)
       ENDIF
       zmu2 = zmu * zmu
@@ -801,14 +800,15 @@ ENDIF
 ! !DESCRIPTION:
 !     An improved two stream approximation
 !
-! Original author: Yongjiu Dai, June 11, 2001
+!  Original author: Yongjiu Dai, June 11, 2001
 !                  Hua Yuan, 03/2020
 !
-! REFERENCES:
-! 1) Yuan, H., Dai, Y., Dickinson, R. E., Pinty, B., Shangguan, W., Zhang, S.,
-! et al. (2017). Reexamination and further development of two-stream canopy
-! radiative transfer models for global land modeling. Journal of Advances in
-! Modeling Earth Systems, 9(1), 113–129. https://doi.org/10.1002/2016MS000773
+! !REFERENCES:
+!  1) Yuan, H., Dai, Y., Dickinson, R. E., Pinty, B., Shangguan, W.,
+!  Zhang, S., et al. (2017). Reexamination and further development of
+!  two-stream canopy radiative transfer models for global land modeling.
+!  Journal of Advances in Modeling Earth Systems, 9(1), 113–129.
+!  https://doi.org/10.1002/2016MS000773
 !
 !-----------------------------------------------------------------------
 
@@ -925,9 +925,9 @@ ENDIF
 
       IF (abs(phi1).gt.1.e-6 .and. abs(phi2).gt.1.e-6) THEN
          zmu = 1. / phi2 * ( 1. - phi1 / phi2 * log ( ( phi1 + phi2 ) / phi1 ) )
-      ELSE IF (abs(phi1).le.1.e-6) THEN
+      ELSEIF (abs(phi1).le.1.e-6) THEN
          zmu = 1./0.877
-      ELSE IF (abs(phi2).le.1.e-6) THEN
+      ELSEIF (abs(phi2).le.1.e-6) THEN
          zmu = 1./(2.*phi1)
       ENDIF
       zmu2 = zmu * zmu
@@ -1170,7 +1170,7 @@ ENDIF
 
       ENDDO !ic
 
-      End DO !iw
+      ENDDO !iw
 
       ! restore extkb
       extkb = extkbd
@@ -1186,9 +1186,9 @@ ENDIF
 !-----------------------------------------------------------------------
 !
 ! !DESCRIPTION:
-! A Wrap subroutine to calculate PFT radiation using two-stream model
+!  A Wrap subroutine to calculate PFT radiation using two-stream model
 !
-! Created by Hua Yuan, 03/2020
+!  Created by Hua Yuan, 03/2020
 !
 !-----------------------------------------------------------------------
    USE MOD_Precision
@@ -1287,7 +1287,7 @@ ENDIF
 !=======================================================================
 
    USE MOD_Precision
-   USE MOD_Const_Physical, only : tfrz
+   USE MOD_Const_Physical, only: tfrz
    IMPLICIT NONE
 
 !-------------------------- Dummy Arguments ----------------------------
@@ -1315,7 +1315,7 @@ ENDIF
 !
 ! Over Antarctica
 !
-      ELSE IF (scv > 800.) THEN
+      ELSEIF (scv > 800.) THEN
          sag = 0.
 !
 ! Away from Antarctica
@@ -1935,7 +1935,7 @@ ENDIF
                           ((1.-frac_sno)*(1-albsod(ib))*(flx_absd_snw(i,ib)/(1.-albsnd(ib))))
                      flx_absiv(i) = flx_absi_snw(i,ib)*frac_sno + &
                           ((1.-frac_sno)*(1-albsoi(ib))*(flx_absi_snw(i,ib)/(1.-albsni(ib))))
-                  elseif (ib == 2) THEN
+                  ELSEIF (ib == 2) THEN
                      flx_absdn(i) = flx_absd_snw(i,ib)*frac_sno + &
                           ((1.-frac_sno)*(1-albsod(ib))*(flx_absd_snw(i,ib)/(1.-albsnd(ib))))
                      flx_absin(i) = flx_absi_snw(i,ib)*frac_sno + &
@@ -1945,7 +1945,7 @@ ENDIF
                   IF (ib == 1) THEN
                      flx_absdv(i) = flx_absd_snw(i,ib)!*(1.-albsnd(ib))
                      flx_absiv(i) = flx_absi_snw(i,ib)!*(1.-albsni(ib))
-                  elseif (ib == 2) THEN
+                  ELSEIF (ib == 2) THEN
                      flx_absdn(i) = flx_absd_snw(i,ib)!*(1.-albsnd(ib))
                      flx_absin(i) = flx_absi_snw(i,ib)!*(1.-albsni(ib))
                   ENDIF

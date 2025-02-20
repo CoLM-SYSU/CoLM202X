@@ -1,14 +1,14 @@
 MODULE MOD_Utils
 
 !-----------------------------------------------------------------------------------------
-! DESCRIPTION:
+! !DESCRIPTION:
 !
 !    This MODULE CONTAINS utilities.
 !
-! History:
+! !REVISIONS:
 !    Subroutines lmder, enorm, tridia and polint are moved from other files.
 !
-! Created by Shupeng Zhang, May 2023
+!  Created by Shupeng Zhang, May 2023
 !-----------------------------------------------------------------------------------------
 
    ! ---- PUBLIC subroutines ----

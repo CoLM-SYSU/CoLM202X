@@ -17,7 +17,7 @@ MODULE MOD_BGC_CNCStateUpdate2
 !                   2) Record the accumulated gap-mortality-associated C transfers for veg and soil C semi-analytic spinup
 
    USE MOD_Precision
-   USE MOD_Namelist, only : DEF_USE_SASU, DEF_USE_DiagMatrix
+   USE MOD_Namelist, only: DEF_USE_SASU, DEF_USE_DiagMatrix
    USE MOD_Vars_TimeInvariants, only: &
             i_met_lit,i_cel_lit,i_lig_lit ,i_cwd
    USE MOD_Vars_TimeVariables, only: &

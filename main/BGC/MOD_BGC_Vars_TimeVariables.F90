@@ -11,7 +11,7 @@ MODULE MOD_BGC_Vars_TimeVariables
 ! Xingjie Lu, 2022, created the original version
 
    USE MOD_Precision
-   USE MOD_Namelist, only : DEF_USE_SASU, DEF_USE_DiagMatrix
+   USE MOD_Namelist, only: DEF_USE_SASU, DEF_USE_DiagMatrix
    USE MOD_TimeManager
    IMPLICIT NONE
    SAVE
@@ -317,7 +317,7 @@ CONTAINS
    USE MOD_Precision
    USE MOD_Vars_Global
    USE MOD_SPMD_Task
-   USE MOD_LandPatch, only : numpatch
+   USE MOD_LandPatch, only: numpatch
    IMPLICIT NONE
 
 
@@ -608,7 +608,7 @@ CONTAINS
    SUBROUTINE deallocate_BGCTimeVariables ()
 
    USE MOD_SPMD_Task
-   USE MOD_LandPatch, only : numpatch
+   USE MOD_LandPatch, only: numpatch
    IMPLICIT NONE
 
 ! --------------------------------------------------
@@ -904,7 +904,7 @@ CONTAINS
 ! Original version: Yongjiu Dai, September 15, 1999, 03/2014
 !=======================================================================
 
-   USE MOD_Namelist, only : DEF_REST_CompressLevel, DEF_USE_NITRIF
+   USE MOD_Namelist, only: DEF_REST_CompressLevel, DEF_USE_NITRIF
    USE MOD_LandPatch
    USE MOD_NetCDFVector
    USE MOD_Vars_Global
@@ -1232,7 +1232,7 @@ CONTAINS
 
    USE MOD_SPMD_Task
    USE MOD_RangeCheck
-   USE MOD_Namelist, only : DEF_USE_NITRIF, DEF_USE_SASU, DEF_USE_DiagMatrix
+   USE MOD_Namelist, only: DEF_USE_NITRIF, DEF_USE_SASU, DEF_USE_DiagMatrix
 
    IMPLICIT NONE
 

@@ -6,7 +6,7 @@ MODULE MOD_BGC_Veg_CNGResp
 ! !DESCRIPTION:
 ! This module calculate growth respiration rate.
 !
-! !REFERENCE:
+! !REFERENCES:
 ! Atkin, O.K., Bahar, N.H., Bloomfield, K.J., Griffin, K.L., Heskel, M.A., Huntingford, C., de la Torre, A.M.
 ! and Turnbull, M.H., 2017. Leaf respiration in terrestrial biosphere models. Plant respiration: metabolic
 ! fluxes and carbon balance, pp.107-142.

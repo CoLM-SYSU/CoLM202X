@@ -788,8 +788,8 @@ CONTAINS
    SUBROUTINE deallocate_acc_fluxes ()
 
    USE MOD_SPMD_Task
-   USE MOD_LandPatch, only : numpatch
-   USE MOD_LandUrban, only : numurban
+   USE MOD_LandPatch, only: numpatch
+   USE MOD_LandUrban, only: numurban
    IMPLICIT NONE
 
       IF (p_is_worker) THEN
@@ -1180,9 +1180,9 @@ CONTAINS
    SUBROUTINE FLUSH_acc_fluxes ()
 
       USE MOD_SPMD_Task
-      USE MOD_LandPatch, only : numpatch
-      USE MOD_LandUrban, only : numurban
-      USE MOD_Vars_Global, only : spval
+      USE MOD_LandPatch, only: numpatch
+      USE MOD_LandUrban, only: numurban
+      USE MOD_Vars_Global, only: spval
       IMPLICIT NONE
 
       IF (p_is_worker) THEN
@@ -1192,81 +1192,81 @@ CONTAINS
          IF (numpatch > 0) THEN
 
             ! flush the Fluxes for accumulation
-            a_us     (:) = spval
-            a_vs     (:) = spval
-            a_t      (:) = spval
-            a_q      (:) = spval
-            a_prc    (:) = spval
-            a_prl    (:) = spval
-            a_pbot   (:) = spval
-            a_frl    (:) = spval
-            a_solarin(:) = spval
-            a_hpbl   (:) = spval
+            a_us        (:) = spval
+            a_vs        (:) = spval
+            a_t         (:) = spval
+            a_q         (:) = spval
+            a_prc       (:) = spval
+            a_prl       (:) = spval
+            a_pbot      (:) = spval
+            a_frl       (:) = spval
+            a_solarin   (:) = spval
+            a_hpbl      (:) = spval
 
-            a_taux    (:) = spval
-            a_tauy    (:) = spval
-            a_fsena   (:) = spval
-            a_lfevpa  (:) = spval
-            a_fevpa   (:) = spval
-            a_fsenl   (:) = spval
-            a_fevpl   (:) = spval
-            a_etr     (:) = spval
-            a_fseng   (:) = spval
-            a_fevpg   (:) = spval
-            a_fgrnd   (:) = spval
-            a_sabvsun (:) = spval
-            a_sabvsha (:) = spval
-            a_sabg    (:) = spval
-            a_olrg    (:) = spval
-            a_rnet    (:) = spval
-            a_xerr    (:) = spval
-            a_zerr    (:) = spval
-            a_rsur    (:) = spval
-            a_rsur_se (:) = spval
-            a_rsur_ie (:) = spval
-            a_rsub    (:) = spval
-            a_rnof    (:) = spval
+            a_taux      (:) = spval
+            a_tauy      (:) = spval
+            a_fsena     (:) = spval
+            a_lfevpa    (:) = spval
+            a_fevpa     (:) = spval
+            a_fsenl     (:) = spval
+            a_fevpl     (:) = spval
+            a_etr       (:) = spval
+            a_fseng     (:) = spval
+            a_fevpg     (:) = spval
+            a_fgrnd     (:) = spval
+            a_sabvsun   (:) = spval
+            a_sabvsha   (:) = spval
+            a_sabg      (:) = spval
+            a_olrg      (:) = spval
+            a_rnet      (:) = spval
+            a_xerr      (:) = spval
+            a_zerr      (:) = spval
+            a_rsur      (:) = spval
+            a_rsur_se   (:) = spval
+            a_rsur_ie   (:) = spval
+            a_rsub      (:) = spval
+            a_rnof      (:) = spval
 #ifdef CatchLateralFlow
-            a_xwsur   (:) = spval
-            a_xwsub   (:) = spval
+            a_xwsur     (:) = spval
+            a_xwsub     (:) = spval
 #endif
-            a_qintr   (:) = spval
-            a_qinfl   (:) = spval
-            a_qdrip   (:) = spval
-            a_rstfacsun(:) = spval
-            a_rstfacsha(:) = spval
-            a_gssun   (:) = spval
-            a_gssha   (:) = spval
-            a_rss     (:) = spval
+            a_qintr     (:) = spval
+            a_qinfl     (:) = spval
+            a_qdrip     (:) = spval
+            a_rstfacsun (:) = spval
+            a_rstfacsha (:) = spval
+            a_gssun     (:) = spval
+            a_gssha     (:) = spval
+            a_rss       (:) = spval
 
-            a_wdsrf   (:) = spval
-            a_zwt     (:) = spval
-            a_wa      (:) = spval
-            a_wat     (:) = spval
-            a_wetwat  (:) = spval
-            a_assim   (:) = spval
-            a_respc   (:) = spval
-            a_assimsun(:) = spval !1
-            a_assimsha(:) = spval !1
-            a_etrsun  (:) = spval !1
-            a_etrsha  (:) = spval !1
+            a_wdsrf     (:) = spval
+            a_zwt       (:) = spval
+            a_wa        (:) = spval
+            a_wat       (:) = spval
+            a_wetwat    (:) = spval
+            a_assim     (:) = spval
+            a_respc     (:) = spval
+            a_assimsun  (:) = spval
+            a_assimsha  (:) = spval
+            a_etrsun    (:) = spval
+            a_etrsha    (:) = spval
 
-            a_qcharge (:) = spval
+            a_qcharge   (:) = spval
 
-            a_t_grnd  (:) = spval
-            a_tleaf   (:) = spval
-            a_ldew_rain(:) = spval
-            a_ldew_snow(:) = spval
-            a_ldew    (:) = spval
-            a_scv     (:) = spval
-            a_snowdp  (:) = spval
-            a_fsno    (:) = spval
-            a_sigf    (:) = spval
-            a_green   (:) = spval
-            a_lai     (:) = spval
-            a_laisun  (:) = spval
-            a_laisha  (:) = spval
-            a_sai     (:) = spval
+            a_t_grnd    (:) = spval
+            a_tleaf     (:) = spval
+            a_ldew_rain (:) = spval
+            a_ldew_snow (:) = spval
+            a_ldew      (:) = spval
+            a_scv       (:) = spval
+            a_snowdp    (:) = spval
+            a_fsno      (:) = spval
+            a_sigf      (:) = spval
+            a_green     (:) = spval
+            a_lai       (:) = spval
+            a_laisun    (:) = spval
+            a_laisha    (:) = spval
+            a_sai       (:) = spval
 
             a_alb   (:,:,:) = spval
 
@@ -1477,7 +1477,7 @@ CONTAINS
             a_deadcrootn_storageCap(:) = spval
             a_deadcrootn_xferCap   (:) = spval
 #endif
-            a_ozone              (:) = spval
+            a_ozone                (:) = spval
 
             a_t_soisno     (:,:) = spval
             a_wliq_soisno  (:,:) = spval
@@ -1572,12 +1572,12 @@ CONTAINS
    END SUBROUTINE FLUSH_acc_fluxes
 
    SUBROUTINE accumulate_fluxes
-   ! ----------------------------------------------------------------------
-   ! perfrom the grid average mapping: average a subgrid input 1d vector
-   ! of length numpatch to a output 2d array of length [ghist%xcnt,ghist%ycnt]
-   !
-   ! Created by Yongjiu Dai, 03/2014
-   !---------------------------------------------------------------------
+! ----------------------------------------------------------------------
+!  perfrom the grid average mapping: average a subgrid input 1d vector
+!  of length numpatch to a output 2d array of length [ghist%xcnt,ghist%ycnt]
+!
+!  Created by Yongjiu Dai, 03/2014
+!---------------------------------------------------------------------
 
    USE MOD_Precision
    USE MOD_SPMD_Task
@@ -1914,10 +1914,10 @@ CONTAINS
             CALL acc1d (grainc_to_seed     ,   a_grainc_to_seed     )
             CALL acc1d (fert_to_sminn      ,   a_fert_to_sminn      )
 
-            ! CALL acc1d (irrig_rate         ,   a_irrig_rate         )
-            ! CALL acc1d (deficit_irrig      ,   a_deficit_irrig      )
-            ! CALL acc1d (sum_irrig          ,   a_sum_irrig          )
-            ! CALL acc1d (sum_irrig_count    ,   a_sum_irrig_count    )
+           !CALL acc1d (irrig_rate         ,   a_irrig_rate         )
+           !CALL acc1d (deficit_irrig      ,   a_deficit_irrig      )
+           !CALL acc1d (sum_irrig          ,   a_sum_irrig          )
+           !CALL acc1d (sum_irrig_count    ,   a_sum_irrig_count    )
             CALL acc1d (irrig_rate         ,   a_irrig_rate         )
             CALL acc1d (deficit_irrig      ,   a_deficit_irrig      )
             a_sum_irrig = sum_irrig

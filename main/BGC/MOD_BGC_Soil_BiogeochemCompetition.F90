@@ -14,7 +14,7 @@ MODULE MOD_BGC_Soil_BiogeochemCompetition
 ! Xingjie Lu, 2022, modify original CLM5 to be compatible with CoLM code structure.
 
    USE MOD_Precision
-   USE MOD_Namelist, only : DEF_USE_NITRIF
+   USE MOD_Namelist, only: DEF_USE_NITRIF
    USE MOD_BGC_Vars_1DFluxes, only: &
        pot_f_nit_vr, potential_immob_vr, sminn_to_plant_vr, sminn_to_denit_excess_vr, plant_ndemand, &
        actual_immob_vr, sminn_to_plant, pot_f_nit_vr, actual_immob_nh4_vr, f_nit_vr, &

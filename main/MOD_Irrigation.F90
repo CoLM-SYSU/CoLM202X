@@ -17,7 +17,7 @@ MODULE MOD_Irrigation
        theta_r, alpha_vgm, n_vgm, L_vgm, fc_vgm, sc_vgm,&
 #endif
        porsl, psi0, bsw
-   USE MOD_Vars_TimeVariables, only : tref, t_soisno, wliq_soisno, irrig_rate, deficit_irrig, sum_irrig, sum_irrig_count, n_irrig_steps_left, &
+   USE MOD_Vars_TimeVariables, only: tref, t_soisno, wliq_soisno, irrig_rate, deficit_irrig, sum_irrig, sum_irrig_count, n_irrig_steps_left, &
        tairday, usday, vsday, pairday, rnetday, fgrndday, potential_evapotranspiration
    USE MOD_Vars_PFTimeInvariants, only: pftclass
    USE MOD_Vars_PFTimeVariables, only: irrig_method_p

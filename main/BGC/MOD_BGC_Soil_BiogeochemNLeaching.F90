@@ -15,7 +15,7 @@ MODULE MOD_BGC_Soil_BiogeochemNLeaching
 ! Xingjie Lu, 2021, revised original CLM5 code to be compatible with CoLM code structure.
 
    USE MOD_Precision
-   USE MOD_Namelist, only : DEF_USE_NITRIF
+   USE MOD_Namelist, only: DEF_USE_NITRIF
    USE MOD_BGC_Vars_TimeInvariants, only: sf, sf_no3
    USE MOD_Vars_TimeVariables, only: wliq_soisno
    USE MOD_BGC_Vars_TimeVariables,   only: sminn_vr, smin_no3_vr

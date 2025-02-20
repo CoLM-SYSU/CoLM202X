@@ -34,29 +34,29 @@ CONTAINS
                             imelt_roof,sm_roof,xmf_roof,fact,tkdz_roof)
 
 !=======================================================================
-! Snow and roof temperatures
-! o The volumetric heat capacity is calculated as a linear combination
-!   in terms of the volumetric fraction of the constituent phases.
-! o The thermal conductivity of roof is given by LOOK-UP table, and of
-!   snow is from the formulation used in SNTHERM (Jordan 1991).
-! o Boundary conditions:
-!   F = Rnet - Hg - LEg (top),
-!   For urban sunwall, shadewall, and roof columns, there is a non-zero
-!   heat flux across the bottom "building inner surface" layer and the
-!   equations are derived assuming a prescribed or adjusted internal
-!   building temperature.  T = T_roof_inner (at the roof inner surface).
-! o Roof / snow temperature is predicted from heat conduction
-!   in N roof layers and up to 5 snow layers.  The thermal
-!   conductivities at the interfaces between two neighbor layers (j,
-!   j+1) are derived from an assumption that the flux across the
-!   interface is equal to that from the node j to the interface and the
-!   flux from the interface to the node j+1. The equation is solved
-!   using the Crank-Nicholson method and resulted in a tridiagonal
-!   system equation.
+!  Snow and roof temperatures
+!  o The volumetric heat capacity is calculated as a linear combination
+!    in terms of the volumetric fraction of the constituent phases.
+!  o The thermal conductivity of roof is given by LOOK-UP table, and of
+!    snow is from the formulation used in SNTHERM (Jordan 1991).
+!  o Boundary conditions:
+!    F = Rnet - Hg - LEg (top),
+!    For urban sunwall, shadewall, and roof columns, there is a non-zero
+!    heat flux across the bottom "building inner surface" layer and the
+!    equations are derived assuming a prescribed or adjusted internal
+!    building temperature.  T = T_roof_inner (at the roof inner surface).
+!  o Roof / snow temperature is predicted from heat conduction
+!    in N roof layers and up to 5 snow layers.  The thermal
+!    conductivities at the interfaces between two neighbor layers (j,
+!    j+1) are derived from an assumption that the flux across the
+!    interface is equal to that from the node j to the interface and the
+!    flux from the interface to the node j+1. The equation is solved
+!    using the Crank-Nicholson method and resulted in a tridiagonal
+!    system equation.
 !
-! Phase change (see MOD_PhaseChange.F90)
+!  Phase change (see MOD_PhaseChange.F90)
 !
-! Original author : Yongjiu Dai, 05/2020
+!  Original author: Yongjiu Dai, 05/2020
 !=======================================================================
 
    USE MOD_Precision

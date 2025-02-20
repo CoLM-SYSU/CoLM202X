@@ -4,17 +4,17 @@ SUBROUTINE Aggregation_ForestHeight ( &
       gland, dir_rawdata, dir_model_landdata, lc_year)
 
 ! ----------------------------------------------------------------------
-! Global Forest Height
-!    (http://lidarradar.jpl.nasa.gov/)
-!     Simard, M., N. Pinto, J. B. Fisher, and A. Baccini, 2011: Mapping
-!     forest canopy height globally with spaceborne lidar.
-!     J. Geophys. Res., 116, G04021.
+!  Global Forest Height
+!     (http://lidarradar.jpl.nasa.gov/)
+!      Simard, M., N. Pinto, J. B. Fisher, and A. Baccini, 2011: Mapping
+!      forest canopy height globally with spaceborne lidar.
+!      J. Geophys. Res., 116, G04021.
 !
-! Created by Yongjiu Dai, 02/2014
+!  Created by Yongjiu Dai, 02/2014
 !
-! REVISIONS:
-! Hua Yuan,      ?/2020 : for land cover land use classifications
-! Shupeng Zhang, 01/2022: porting codes to MPI parallel version
+! !REVISIONS:
+!  Hua Yuan,      ?/2020 : for land cover land use classifications
+!  Shupeng Zhang, 01/2022: porting codes to MPI parallel version
 ! ----------------------------------------------------------------------
 
    USE MOD_Precision

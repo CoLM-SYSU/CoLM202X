@@ -19,8 +19,8 @@ CONTAINS
    USE MOD_UserDefFun
    USE MOD_LandPatch
    USE MOD_NetCDFVector
-   USE MOD_Vars_Global, only : nl_soil, dz_soi
-   USE MOD_Vars_TimeInvariants, only : dbedrock, ibedrock
+   USE MOD_Vars_Global, only: nl_soil, dz_soi
+   USE MOD_Vars_TimeInvariants, only: dbedrock, ibedrock
 #ifdef SinglePoint
    USE MOD_SingleSrfdata
 #endif
@@ -68,4 +68,3 @@ CONTAINS
    END SUBROUTINE dbedrock_readin
 
 END MODULE MOD_DBedrockReadin
-

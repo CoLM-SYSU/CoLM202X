@@ -28,7 +28,7 @@ MODULE MOD_BGC_Veg_CNVegStructUpdate
 #endif
    USE MOD_Vars_PFTimeInvariants, only: pftclass, pftfrac
    USE MOD_BGC_Vars_TimeVariables, only: farea_burned
-   USE MOD_Const_PFT, only : dsladlai, slatop, laimx, woody
+   USE MOD_Const_PFT, only: dsladlai, slatop, laimx, woody
    !CLM5
    PUBLIC :: CNVegStructUpdate
   !-----------------------------------------------------------------------

@@ -72,9 +72,9 @@ CONTAINS
    USE MOD_Const_Physical, only: tfrz, denh2o, denice
    USE MOD_Vars_TimeVariables, only: tlai, tsai
    USE MOD_Const_PFT, only: isevg, woody, leafcn, frootcn, livewdcn, deadwdcn, slatop
-   USE MOD_Vars_TimeInvariants, only : ibedrock, dbedrock
+   USE MOD_Vars_TimeInvariants, only: ibedrock, dbedrock
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
-   USE MOD_LandPFT, only : patch_pft_s, patch_pft_e
+   USE MOD_LandPFT, only: patch_pft_s, patch_pft_e
    USE MOD_Vars_PFTimeInvariants
    USE MOD_Vars_PFTimeVariables
 #endif
@@ -176,7 +176,7 @@ CONTAINS
    real(r8), intent(inout) ::    &!
          zwt                      ! the depth to water table [m]
 
-   real(r8), intent(out) ::      &!
+   real(r8), intent(out) ::       &!
          snw_rds  ( maxsnl+1:0 ), &! effective grain radius (col,lyr) [microns, m-6]
          mss_bcphi( maxsnl+1:0 ), &! mass concentration of hydrophilic BC (col,lyr) [kg/kg]
          mss_bcpho( maxsnl+1:0 ), &! mass concentration of hydrophobic BC (col,lyr) [kg/kg]
@@ -655,7 +655,7 @@ CONTAINS
          col_soilendnb                   = 0.0
          col_soilbegnb                   = 0.0
          IF(.not. use_cnini)THEN
-            decomp_cpools_vr          (:,:) = 0.0
+            decomp_cpools_vr       (:,:) = 0.0
          ENDIF
          decomp_cpools             (:)   = 0.0
          ctrunc_vr                 (:)   = 0.0
@@ -666,16 +666,16 @@ CONTAINS
          altmax_lastyear_indx            = 10
          lag_npp                         = 0.0
          IF(.not. use_cnini)THEN
-            decomp_npools_vr          (:,:) = 0.0
+            decomp_npools_vr       (:,:) = 0.0
          ENDIF
          decomp_npools             (:)   = 0.0
          ntrunc_vr                 (:)   = 0.0
          ntrunc_veg                      = 0.0
          ntrunc_soil                     = 0.0
          IF(.not. use_cnini)THEN
-            smin_no3_vr               (:)   = 5.0
-            smin_nh4_vr               (:)   = 5.0
-            sminn_vr                  (:)   = 10.0
+            smin_no3_vr            (:)   = 5.0
+            smin_nh4_vr            (:)   = 5.0
+            sminn_vr               (:)   = 10.0
          ENDIF
          sminn                           = 0.0
          DO j = 1, nl_soil
@@ -816,8 +816,8 @@ CONTAINS
                !            totvegn = totvegn + (leafn_p(m) + leafn_storage_p(m) + deadstemn_p(m))* pftfrac(m)
             ENDDO
             IF(DEF_USE_OZONESTRESS)THEN
-               o3uptakesun_p            (ps:pe) = 0._r8
-               o3uptakesha_p            (ps:pe) = 0._r8
+               o3uptakesun_p         (ps:pe) = 0._r8
+               o3uptakesha_p         (ps:pe) = 0._r8
             ENDIF
             leafc_xfer_p             (ps:pe) = 0.0
             frootc_xfer_p            (ps:pe) = 0.0
@@ -1201,9 +1201,9 @@ CONTAINS
    USE MOD_Precision
    IMPLICIT NONE
 
-   integer,  intent(in) :: maxsnl    !maximum of snow layers
-   integer,  intent(in) :: patchtype !index for land cover type [-]
-   real(r8), intent(in) :: snowdp    !snow depth [m]
+   integer,  intent(in)  :: maxsnl    !maximum of snow layers
+   integer,  intent(in)  :: patchtype !index for land cover type [-]
+   real(r8), intent(in)  :: snowdp    !snow depth [m]
    real(r8), intent(out) :: z_soisno (maxsnl+1:0) !node depth [m]
    real(r8), intent(out) :: dz_soisno(maxsnl+1:0) !layer thickness [m]
    integer,  intent(out) :: snl                   !number of snow layer

@@ -12,7 +12,6 @@ MODULE MOD_UrbanReadin
 !  Created by Hua Yuan, 11/26/2021
 !
 ! !REVISIONS:
-!
 !  05/2023, Wenzong Dong, Hua Yuan: porting codes to MPI parallel version.
 !-----------------------------------------------------------------------
 

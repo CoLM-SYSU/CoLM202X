@@ -15,7 +15,7 @@ MODULE MOD_BGC_Vars_PFTimeVariables
 #ifdef BGC
 
    USE MOD_Precision
-   USE MOD_Namelist, only : DEF_USE_SASU, DEF_USE_DiagMatrix
+   USE MOD_Namelist, only: DEF_USE_SASU, DEF_USE_DiagMatrix
    USE MOD_TimeManager
 
    IMPLICIT NONE
@@ -1245,7 +1245,7 @@ CONTAINS
 
    SUBROUTINE WRITE_BGCPFTimeVariables (file_restart)
 
-   USE MOD_Namelist, only : DEF_REST_CompressLevel
+   USE MOD_Namelist, only: DEF_REST_CompressLevel
    USE MOD_LandPFT
    USE MOD_NetCDFVector
    USE MOD_Vars_Global

@@ -4,10 +4,10 @@
 MODULE MOD_LightningData
 !-----------------------------------------------------------------------
 ! !DESCRIPTION:
-! This module read in lightning data for fire subroutine
+!  This module read in lightning data for fire subroutine
 !
 ! !ORIGINAL:
-! Zhang Shupeng, 2022, prepare the original version of the lightning data module.
+!  Zhang Shupeng, 2022, prepare the original version of the lightning data module.
 
 
    USE MOD_Grid

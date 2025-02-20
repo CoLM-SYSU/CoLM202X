@@ -304,7 +304,7 @@ CONTAINS
 
    SUBROUTINE WRITE_UrbanTimeVariables (file_restart)
 
-   USE MOD_Namelist, only : DEF_REST_CompressLevel
+   USE MOD_Namelist, only: DEF_REST_CompressLevel
    USE MOD_LandUrban
    USE MOD_NetCDFVector
    USE MOD_Vars_Global

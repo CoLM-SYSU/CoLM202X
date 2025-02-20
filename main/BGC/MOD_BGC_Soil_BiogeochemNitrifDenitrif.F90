@@ -6,7 +6,7 @@ MODULE MOD_BGC_Soil_BiogeochemNitrifDenitrif
 ! !DESCRIPTION:
 ! Calculate the potential nitrification and dentrification rate.
 !
-! !REFERENCE:
+! !REFERENCES:
 ! Parton, W. et al. 1996. Generalized model for N2 and N2O production from nitrification and
 ! denitrification. Global Biogeochemical Cycles 10(3):401-412.
 ! Parton, W.J. et al. 2001. Generalized model for NOx and N2O emissions from soils. J. Geophys. Res.
@@ -19,8 +19,8 @@ MODULE MOD_BGC_Soil_BiogeochemNitrifDenitrif
 ! Xingjie Lu, 2021, revised original CLM5 code to be compatible with CoLM code structure.
 
    USE MOD_Precision
-   USE MOD_Const_Physical, only : denice, denh2o, tfrz
-   USE MOD_Vars_TimeVariables, only : t_soisno, wliq_soisno, wice_soisno, t_scalar, w_scalar, smp
+   USE MOD_Const_Physical, only: denice, denh2o, tfrz
+   USE MOD_Vars_TimeVariables, only: t_soisno, wliq_soisno, wice_soisno, t_scalar, w_scalar, smp
    USE MOD_Vars_TimeInvariants, only: &
        porsl, wfc, bsw, BD_all, OM_density
      

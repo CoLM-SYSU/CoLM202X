@@ -11,7 +11,7 @@ MODULE MOD_BGC_Soil_BiogeochemPotential
 ! transfer (p_decomp_cpool_loss * cn_decomp_pools(donor))
 ! p_decomp_cpool_loss and pmnf_decomp are THEN used in bgc_soil_SoilBiogeochemDecompMod.F90
 !
-! !REFERENCE:
+! !REFERENCES:
 ! Thornton, P.E., Law, B.E., Gholz, H.L., Clark, K.L., Falge, E., Ellsworth, D.S., Goldstein, A.H., Monson,
 ! R.K., Hollinger, D., Falk, M. and Chen, J., 2002. Modeling and measuring the effects of disturbance
 ! history and climate on carbon and water budgets in evergreen needleleaf forests.

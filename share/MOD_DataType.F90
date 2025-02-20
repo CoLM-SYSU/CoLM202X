@@ -3,7 +3,7 @@
 MODULE MOD_DataType
 
 !-----------------------------------------------------------------------
-! DESCRIPTION:
+! !DESCRIPTION:
 !
 !    Definitions of data types used in CoLM.
 !
@@ -20,7 +20,7 @@ MODULE MOD_DataType
 !    3. copy data;
 !    4. do linear transformation and interpolations.
 !
-! Created by Shupeng Zhang, May 2023
+!  Created by Shupeng Zhang, May 2023
 !-----------------------------------------------------------------------
 
    USE MOD_Precision
@@ -662,7 +662,7 @@ CONTAINS
    USE MOD_Precision
    USE MOD_Block
    USE MOD_SPMD_Task
-   USE MOD_Vars_Global, only : spval
+   USE MOD_Vars_Global, only: spval
    IMPLICIT NONE
 
    type(block_data_real8_2d), intent(inout) :: gdata

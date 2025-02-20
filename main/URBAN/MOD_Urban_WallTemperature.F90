@@ -40,25 +40,25 @@ CONTAINS
                             twall_inner,lwall,clwall,sabwall,fsenwall,cwalls,tkdz_wall)
 
 !=======================================================================
-! Wall temperatures
-! o Boundary conditions:
-!   F = Rnet - Hg - LEg (top),
-!   For urban sunwall, shadewall, and wall columns, there is a non-zero
-!   heat flux across the bottom "building inner surface" layer and the
-!   equations are derived assuming a prescribed or adjusted internal
-!   building temperature.  T = T_wall_inner (at the wall inner surface).
+!  Wall temperatures
+!  o Boundary conditions:
+!    F = Rnet - Hg - LEg (top),
+!    For urban sunwall, shadewall, and wall columns, there is a non-zero
+!    heat flux across the bottom "building inner surface" layer and the
+!    equations are derived assuming a prescribed or adjusted internal
+!    building temperature.  T = T_wall_inner (at the wall inner surface).
 !
-! o Wall temperature is predicted from heat conduction in N wall layers
-!   and up to 5 snow layers. The thermal conductivities at the
-!   interfaces between two neighbor layers (j, j+1) are derived from an
-!   assumption that the flux across the interface is equal to that from
-!   the node j to the interface and the flux from the interface to the
-!   node j+1. The equation is solved using the Crank-Nicholson method
-!   and resulted in a tridiagonal system equation.
+!  o Wall temperature is predicted from heat conduction in N wall layers
+!    and up to 5 snow layers. The thermal conductivities at the
+!    interfaces between two neighbor layers (j, j+1) are derived from an
+!    assumption that the flux across the interface is equal to that from
+!    the node j to the interface and the flux from the interface to the
+!    node j+1. The equation is solved using the Crank-Nicholson method
+!    and resulted in a tridiagonal system equation.
 !
-! o no Phase change
+!  o no Phase change
 !
-! Original author : Yongjiu Dai, 05/2020
+!  Original author: Yongjiu Dai, 05/2020
 !=======================================================================
 
    USE MOD_Precision

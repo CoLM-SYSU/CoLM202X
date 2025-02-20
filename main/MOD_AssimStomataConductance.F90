@@ -26,52 +26,53 @@ CONTAINS
 
    SUBROUTINE stomata (vmax25,effcon,slti,hlti,shti, &
                        hhti,trda,trdm,trop,g1,g0,gradm,binter,tm, &
-                       psrf,po2m,pco2m,pco2a,ea,ei,tlef,par &
+                       psrf,po2m,pco2m,pco2a,ea,ei,tlef,par, &
 !Ozone stress variables
-                       ,o3coefv,o3coefg &
+                       o3coefv,o3coefg, &
 !End ozone stress variables
 !WUE stomata model parameter
-                       ,lambda &
+                       lambda, &
 !End WUE stomata model parameter
-                       ,rb,ra,rstfac,cint,assim,respc,rst &
-                               )
+                       rb,ra,rstfac,cint,assim,respc,rst )
 
 !=======================================================================
 !
-!  ! DESCRIPTION:
-!     calculation of canopy photosynthetic rate using the integrated
-!     model relating assimilation and stomatal conductance.
+! !DESCRIPTION:
+!  calculation of canopy photosynthetic rate using the integrated
+!  model relating assimilation and stomatal conductance.
 !
-!     Original author: Yongjiu Dai, 08/11/2001
+!  Original author: Yongjiu Dai, 08/11/2001
 !
-!     Revision author: Xingjie Lu, 2021
+! !REFERENCES:
+!  Dai et al., 2004: A two-big-leaf model for canopy temperature,
+!  photosynthesis and stomatal conductance. J. Climate, 17: 2281-2299.
 !
-!     Reference: Dai et al., 2004: A two-big-leaf model for canopy temperature,
-!         photosynthesis and stomatal conductance. J. Climate, 17: 2281-2299.
 !
+!  units are converted from mks to biological units in this routine.
 !
-!     units are converted from mks to biological units in this routine.
+!                       units
+!                      -------
 !
-!                          units
-!                         -------
+!     pco2m, pco2a, pco2i, po2m             : pascals
+!     co2a, co2s, co2i, h2oa, h2os, h2oa    : mol mol-1
+!     vmax25, respcp, assim, gs, gb, ga     : mol m-2 s-1
+!     effcon                                : mol co2 mol quanta-1
+!     1/rb, 1/ra, 1/rst                     : m s-1
 !
-!      pco2m, pco2a, pco2i, po2m                : pascals
-!      co2a, co2s, co2i, h2oa, h2os, h2oa       : mol mol-1
-!      vmax25, respcp, assim, gs, gb, ga        : mol m-2 s-1
-!      effcon                                   : mol co2 mol quanta-1
-!      1/rb, 1/ra, 1/rst                        : m s-1
+!                    conversions
+!                   -------------
 !
-!                       conversions
-!                      -------------
+!     1 mol h2o           = 0.018 kg
+!     1 mol co2           = 0.044 kg
+!     h2o (mol mol-1)     = ea / psrf ( pa pa-1 )
+!     h2o (mol mol-1)     = q*mm/(q*mm + 1)
+!     gs  (co2)           = gs (h2o) * 1./1.6
+!     gs  (mol m-2 s-1 )  = gs (m s-1) * 44.6*tf/t*p/po
+!     par (mol m-2 s-1 )  = par(w m-2) * 4.6*1.e-6
+!     mm  (molair/molh2o) = 1.611
 !
-!      1 mol h2o           = 0.018 kg
-!      1 mol co2           = 0.044 kg
-!      h2o (mol mol-1)     = ea / psrf ( pa pa-1 )
-!      h2o (mol mol-1)     = q*mm/(q*mm + 1)
-!      gs  (co2)           = gs (h2o) * 1./1.6
-!      gs  (mol m-2 s-1 )  = gs (m s-1) * 44.6*tf/t*p/po
-!      par (mol m-2 s-1 )  = par(w m-2) * 4.6*1.e-6
-!      mm  (molair/molh2o) = 1.611
+! !REVISIONS:
+!  2021, Xingjie Lu: Add ozone stree and WUE model
 !
 !----------------------------------------------------------------------
 
@@ -214,7 +215,7 @@ CONTAINS
             pco2i_c = pco2i
             pco2i_e = pco2i
          ELSE
-            call WUE_solver(gammas, lambda, co2a, ei, ea, psrf, pco2i_c, pco2i_e)
+            CALL WUE_solver(gammas, lambda, co2a, ei, ea, psrf, pco2i_c, pco2i_e)
          ENDIF
 
 !-----------------------------------------------------------------------

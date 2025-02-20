@@ -11,7 +11,7 @@ MODULE MOD_NdepData
 
    USE MOD_Grid
    USE MOD_SpatialMapping
-   USE MOD_BGC_Vars_TimeVariables, only : ndep
+   USE MOD_BGC_Vars_TimeVariables, only: ndep
    USE MOD_BGC_Vars_1DFluxes, only: ndep_to_sminn
    IMPLICIT NONE
 
@@ -101,7 +101,7 @@ CONTAINS
 ! !DESCRIPTION:
 ! Read in the Nitrogen deposition data from CLM5.
 !
-! !REFERENCE:
+! !REFERENCES:
 ! Galloway, J.N., et al. 2004. Nitrogen cycles: past, present, and future. Biogeochem. 70:153-226.
 !
 ! !ORIGINAL:
@@ -109,7 +109,7 @@ CONTAINS
 ! ===========================================================
 
    USE MOD_SPMD_Task
-   USE MOD_Namelist, only : DEF_USE_PN
+   USE MOD_Namelist, only: DEF_USE_PN
    USE MOD_DataType
    USE MOD_NetCDFBlock
    USE MOD_LandPatch
@@ -164,7 +164,7 @@ CONTAINS
 ! !DESCRIPTION:
 ! Read in the Nitrogen deposition data from CLM5.
 !
-! !REFERENCE:
+! !REFERENCES:
 ! Galloway, J.N., et al. 2004. Nitrogen cycles: past, present, and future. Biogeochem. 70:153-226.
 !
 ! !ORIGINAL:
@@ -172,7 +172,7 @@ CONTAINS
 ! ===========================================================
 
    USE MOD_SPMD_Task
-   USE MOD_Namelist, only : DEF_USE_PN
+   USE MOD_Namelist, only: DEF_USE_PN
    USE MOD_DataType
    USE MOD_NetCDFBlock
    USE MOD_LandPatch

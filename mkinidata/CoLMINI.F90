@@ -5,7 +5,7 @@ PROGRAM CoLMINI
 ! ======================================================================
 ! Initialization of Land Characteristic Parameters and Initial State Variables
 !
-! Reference:
+! References:
 !     [1] Dai et al., 2003: The Common Land Model (CoLM).
 !         Bull. of Amer. Meter. Soc., 84: 1013-1023
 !     [2] Dai et al., 2004: A two-big-leaf model for canopy temperature,
@@ -52,7 +52,7 @@ PROGRAM CoLMINI
    USE MOD_SnowSnicar, only: SnowAge_init, SnowOptics_init
    IMPLICIT NONE
 
-   ! ----------------local variables ---------------------------------
+!-------------------------- Local Variables ----------------------------
    character(len=256) :: nlfile
    character(len=256) :: casename ! case name
    character(len=256) :: dir_landdata

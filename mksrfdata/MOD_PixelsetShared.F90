@@ -1,13 +1,13 @@
 #include <define.h>
 
 MODULE MOD_PixelsetShared
-!----------------------------------------------------------------------------------------
-! DESCRIPTION:
+!-----------------------------------------------------------------------
+! !DESCRIPTION:
 !
 !    Shared pixelset refer to two or more pixelsets sharing the same geographic area.
-! 
+!
 !    For example, for patch of crops, multiple crops can be planted on a piece of land.
-!    When planting these crops, different irrigation schemes may be used. Thus the water 
+!    When planting these crops, different irrigation schemes may be used. Thus the water
 !    and energy processes have difference in crops and should be modeled independently.
 !    By using shared pixelset, crop patch is splitted to two or more shared patches.
 !    Each shared patch is assigned with a percentage of area and has its own states.
@@ -15,13 +15,13 @@ MODULE MOD_PixelsetShared
 !                Example of shared pixelsets
 !        |<------------------- ELEMENT ------------------>| <-- level 1
 !        |   subset 1  |       subset 2        | subset 3 | <-- level 2
-!                      | subset 2 shared 1 50% |            
+!                      | subset 2 shared 1 50% |
 !                      | subset 2 shared 2 20% |            <-- subset 2 shares
-!                      | subset 2 shared 3 30% |            
+!                      | subset 2 shared 3 30% |
 !
 !
-! Created by Shupeng Zhang, May 2023
-!----------------------------------------------------------------------------------------
+!  Created by Shupeng Zhang, May 2023
+!-----------------------------------------------------------------------
 
    IMPLICIT NONE
 
@@ -61,13 +61,13 @@ CONTAINS
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
-         
+
 #ifdef USEMPI
       IF (p_is_io) THEN
          CALL aggregation_data_daemon (gshared, data_r8_3d_in1 = datashared, n1_r8_3d_in1 = nmaxshared)
       ENDIF
 #endif
-         
+
       IF (p_is_worker) THEN
 
          nsetshared = 0
@@ -80,7 +80,7 @@ CONTAINS
                ie     = pixelset%ielm  (ipset)
                ipxstt = pixelset%ipxstt(ipset)
                ipxend = pixelset%ipxend(ipset)
-      
+
                allocate (datashared1d (nmaxshared, ipxstt:ipxend))
 
                CALL aggregation_request_data (pixelset, ipset, gshared, zip = .false., &
@@ -111,7 +111,7 @@ CONTAINS
             ELSE
                nsetshared = nsetshared + 1
             ENDIF
-             
+
          ENDDO
 
 #ifdef USEMPI
@@ -120,7 +120,7 @@ CONTAINS
       ENDIF
 
       IF (p_is_worker) THEN
-         
+
          IF (pixelset%nset > 0) THEN
 
             allocate (eindex1(pixelset%nset))
@@ -205,7 +205,7 @@ CONTAINS
          ENDIF
 
       ENDIF
-         
+
       CALL pixelset%set_vecgs
 
    END SUBROUTINE pixelsetshared_build

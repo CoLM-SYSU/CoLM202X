@@ -2,30 +2,30 @@
 
 MODULE MOD_5x5DataReadin
 
-   !-----------------------------------------------------------------------
-   ! DESCRIPTION:
-   !
-   !    Reading data in netCDF files by 5 degree blocks.   
-   !
-   !    The file name gives the boundaries of the block. 
-   !    For example, file "RG_65_75_60_80.URB2010.nc" stores data in region 
-   !    from 65N to 60N and 75E to 80E. 
-   !
-   !    Notice that:
-   !    1. Subroutines loop over all 5 degree blocks in simulation region.
-   !    2. Latitude in files is from north to south. 
-   !    3. "read_5x5_data_pft" reads data with dimension "pft" and permute 
-   !       dimension (lon,lat,pft) in files to (pft,lon,lat) in variables.
-   !    4. "read_5x5_data_time" reads data with dimension "time" 
-   !       at given time.
-   !    5. "read_5x5_data_pft_time" reads data with dimension "pft" and "time" 
-   !       at given time and permute dimension (lon,lat,pft) in files 
-   !       to (pft,lon,lat) in variables.
-   ! 
-   ! Created by Shupeng Zhang, May 2023
-   !-----------------------------------------------------------------------
+!-----------------------------------------------------------------------
+! !DESCRIPTION:
+!
+!    Reading data in netCDF files by 5 degree blocks.
+!
+!    The file name gives the boundaries of the block.
+!    For example, file "RG_65_75_60_80.URB2010.nc" stores data in region
+!    from 65N to 60N and 75E to 80E.
+!
+!    Notice that:
+!    1. Subroutines loop over all 5 degree blocks in simulation region.
+!    2. Latitude in files is from north to south.
+!    3. "read_5x5_data_pft" reads data with dimension "pft" and permute
+!       dimension (lon,lat,pft) in files to (pft,lon,lat) in variables.
+!    4. "read_5x5_data_time" reads data with dimension "time"
+!       at given time.
+!    5. "read_5x5_data_pft_time" reads data with dimension "pft" and "time"
+!       at given time and permute dimension (lon,lat,pft) in files
+!       to (pft,lon,lat) in variables.
+!
+!  Created by Shupeng Zhang, May 2023
+!-----------------------------------------------------------------------
 
-   USE MOD_NetCDFSerial, only : nccheck
+   USE MOD_NetCDFSerial, only: nccheck
    IMPLICIT NONE
 
    integer, parameter :: N_PFT_modis = 16

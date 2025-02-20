@@ -14,13 +14,14 @@ MODULE MOD_CropReadin
 CONTAINS
 
    SUBROUTINE CROP_readin ()
-   ! ===========================================================
-   ! ! DESCRIPTION:
-   ! Read in crop planting date from data, and fertilization from data.
-   ! Save these data in patch vector.
-   !
-   ! Original: Shupeng Zhang, Zhongwang Wei, and Xingjie Lu, 2022
-   ! ===========================================================
+!-----------------------------------------------------------------------
+! !DESCRIPTION:
+!  Read in crop planting date from data, and fertilization from data.
+!  Save these data in patch vector.
+!
+!  Original: Shupeng Zhang, Zhongwang Wei, and Xingjie Lu, 2022
+!
+!-----------------------------------------------------------------------
 
    USE MOD_Precision
    USE MOD_Namelist
@@ -185,7 +186,7 @@ CONTAINS
 #endif
 
       ! (4) Read in irrigation method
-!      file_irrig = trim(DEF_dir_runtime) // '/crop/surfdata_irrigation_method.nc'
+      !file_irrig = trim(DEF_dir_runtime) // '/crop/surfdata_irrigation_method.nc'
       file_irrig = trim(DEF_dir_runtime) // '/crop/surfdata_irrigation_method_96x144.nc'
 
       CALL ncio_read_bcast_serial (file_irrig, 'lat', lat)

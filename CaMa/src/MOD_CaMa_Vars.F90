@@ -131,7 +131,7 @@ CONTAINS
 
 
    USE MOD_SPMD_Task !spmd_task
-   USE MOD_LandPatch, only : numpatch
+   USE MOD_LandPatch, only: numpatch
    USE MOD_Vars_Global
 
    IMPLICIT NONE
@@ -160,7 +160,7 @@ CONTAINS
    ! 2020.10.21  Zhongwang Wei @ SYSU
 
    USE MOD_SPMD_Task
-   USE MOD_LandPatch, only : numpatch
+   USE MOD_LandPatch, only: numpatch
 
    IMPLICIT NONE
 
@@ -220,8 +220,8 @@ CONTAINS
 
    USE MOD_Precision
    USE MOD_SPMD_Task
-   USE MOD_Vars_1DFluxes, only : rnof
-   USE MOD_LandPatch, only : numpatch
+   USE MOD_Vars_1DFluxes, only: rnof
+   USE MOD_LandPatch, only: numpatch
 
    IMPLICIT NONE
 
@@ -564,8 +564,8 @@ CONTAINS
    USE MOD_Block
    USE MOD_DataType
    USE MOD_LandPatch
-   USE MOD_Vars_TimeInvariants, only : patchtype
-   USE MOD_Forcing, only : forcmask_pch
+   USE MOD_Vars_TimeInvariants, only: patchtype
+   USE MOD_Forcing, only: forcmask_pch
 
    IMPLICIT NONE
 
@@ -706,7 +706,7 @@ CONTAINS
    USE MOD_Block
    USE MOD_DataType
    USE MOD_LandPatch
-   USE MOD_Vars_TimeInvariants, only : patchtype
+   USE MOD_Vars_TimeInvariants, only: patchtype
    USE MOD_Grid
 
    IMPLICIT NONE

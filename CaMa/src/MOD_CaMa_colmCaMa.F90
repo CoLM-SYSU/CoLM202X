@@ -453,7 +453,7 @@ CONTAINS
    ! 2002.08.30  Yongjiu Dai   @ BNU
    ! 1999.09.15  Yongjiu Dai   @ BNU
    USE MOD_Precision
-   USE MOD_Const_Physical, only : cpair,rgas,vonkar,grav
+   USE MOD_Const_Physical, only: cpair,rgas,vonkar,grav
    USE MOD_FrictionVelocity
    USE MOD_TurbulenceLEddy
    IMPLICIT NONE

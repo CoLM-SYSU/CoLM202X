@@ -2,13 +2,14 @@
 
 #ifdef SinglePoint
 MODULE MOD_SingleSrfdata
-!-----------------------------------------------------------------------------------------
-! DESCRIPTION:
+!-----------------------------------------------------------------------
+! !DESCRIPTION:
 !
-!    This module includes subroutines to read or write surface data for "SinglePoint".
+!    This module includes subroutines to read or write surface data for
+!    "SinglePoint".
 !
-! Created by Shupeng Zhang, May 2023
-!-----------------------------------------------------------------------------------------
+!  Created by Shupeng Zhang, May 2023
+!-----------------------------------------------------------------------
 
    USE MOD_Precision, only: r8
    USE MOD_Vars_Global
@@ -138,7 +139,7 @@ CONTAINS
    USE MOD_NetCDFSerial
    USE MOD_Namelist
    USE MOD_Utils
-   USE MOD_Vars_Global, only : PI
+   USE MOD_Vars_Global, only: PI
    IMPLICIT NONE
 
    character(len=*), intent(in) :: fsrfdata

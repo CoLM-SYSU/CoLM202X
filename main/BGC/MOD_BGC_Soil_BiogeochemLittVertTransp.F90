@@ -7,7 +7,7 @@ MODULE MOD_BGC_Soil_BiogeochemLittVertTransp
 ! Simulate the soil and litter CN vertical mixing (diffusion and advection) processes. Solve the dynamics
 ! of soil and litter vertical profile with a tridiagonal matrix.
 !
-! !REFERENCE:
+! !REFERENCES:
 ! Koven, C.D., Riley, W.J., Subin, Z.M., Tang, J.Y., Torn, M.S., Collins, W.D., Bonan, G.B., Lawrence,
 ! D.M. and Swenson, S.C., 2013. The effect of vertically resolved soil biogeochemistry and alternate
 ! soil C and N models on C dynamics of CLM4. Biogeosciences, 10(11), 7109-7131.
@@ -24,7 +24,7 @@ MODULE MOD_BGC_Soil_BiogeochemLittVertTransp
 !                   2) Record accumulated organic CN vertical transfer rates for semi-analytic spin-up.
 
    USE MOD_Precision
-   USE MOD_Namelist, only : DEF_USE_SASU, DEF_USE_DiagMatrix
+   USE MOD_Namelist, only: DEF_USE_SASU, DEF_USE_DiagMatrix
    USE MOD_BGC_Vars_TimeInvariants, only: &
        is_cwd, som_adv_flux, som_diffus, cryoturb_diffusion_k, max_altdepth_cryoturbation, max_depth_cryoturb
    USE MOD_BGC_Vars_TimeVariables, only: &

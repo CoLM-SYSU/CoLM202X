@@ -7,7 +7,7 @@ MODULE MOD_BGC_Veg_CNNDynamics
 ! This MODULE simulates the plant biological fixation (Cleveland et al., 1999),
 ! crop fertilisation (Lawrence et al., 2016, and soy nitrogen fixation (Neitsch et al., 2005).
 !
-! !REFERENCE:
+! !REFERENCES:
 ! Cleveland, C.C., Townsend, A.R., Schimel, D.S., Fisher, H., Howarth, R.W., Hedin, L.O., Perakis, S.S., Latty, E.F.,
 ! Von Fischer, J.C., Elseroad, A., and Wasson, M.F. 1999. Global patterns of terrestrial biological nitrogen (N2) fixation
 ! in natural ecosystems. Global Biogeochem. Cycles 13:623-645.

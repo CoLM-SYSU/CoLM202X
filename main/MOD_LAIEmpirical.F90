@@ -21,23 +21,23 @@ CONTAINS
    SUBROUTINE LAI_empirical(ivt,nl_soil,rootfr,t,lai,sai,fveg,green)
 
 !-----------------------------------------------------------------------
-! provides leaf and stem area parameters
-! Original author : Yongjiu Dai, 08/31/2002
+!  provides leaf and stem area parameters
+!  Original author: Yongjiu Dai, 08/31/2002
 !-----------------------------------------------------------------------
 
    USE MOD_Precision
    IMPLICIT NONE
 
 !-------------------------- Dummy Arguments ----------------------------
-   integer,  intent(in)  :: ivt     !land cover type
-   integer,  intent(in)  :: nl_soil !number of soil layers
+   integer,  intent(in)  :: ivt               !land cover type
+   integer,  intent(in)  :: nl_soil           !number of soil layers
 
-   real(r8), intent(in)  :: rootfr(1:nl_soil)  !root fraction
-   real(r8), intent(in)  :: t(1:nl_soil)  !soil temperature
-   real(r8), intent(out) :: lai     !leaf area index
-   real(r8), intent(out) :: sai     !Stem area index
-   real(r8), intent(out) :: fveg    !fractional cover of vegetation
-   real(r8), intent(out) :: green   !greenness
+   real(r8), intent(in)  :: rootfr(1:nl_soil) !root fraction
+   real(r8), intent(in)  :: t(1:nl_soil)      !soil temperature
+   real(r8), intent(out) :: lai               !leaf area index
+   real(r8), intent(out) :: sai               !Stem area index
+   real(r8), intent(out) :: fveg              !fractional cover of vegetation
+   real(r8), intent(out) :: green             !greenness
 
 !-------------------------- Local Variables ----------------------------
    real(r8) f      !
@@ -73,7 +73,7 @@ CONTAINS
    real(r8), dimension(11), parameter :: &
    vegc=(/1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0/)
    real(r8), dimension(11), parameter :: &
-   xla=(/4.8, 3.9, 5.6, 5.5, 4.6, 1.7, 1.3, 2.1, 3.6, 0.0, 0.0/)
+   xla =(/4.8, 3.9, 5.6, 5.5, 4.6, 1.7, 1.3, 2.1, 3.6, 0.0, 0.0/)
    real(r8), dimension(11), parameter :: &
    xla0=(/4.0, 0.6, 0.5, 5.0, 0.5, 0.3, 0.6, 0.4, 0.2, 0.0, 0.0/)
    real(r8), dimension(11), parameter :: &
@@ -83,8 +83,8 @@ CONTAINS
    vegc=(/1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 1.0, 1.0,&
           1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0/)
    real(r8), dimension(19), parameter :: &
-   xla=(/5.1, 1.6, 4.8, 4.8, 4.8, 5.4, 4.8, 0.0, 3.6, 4.8,&
-         0.6, 0.0, 4.8, 0.0, 0.0, 4.8, 4.8, 4.8, 4.8/)
+   xla =(/5.1, 1.6, 4.8, 4.8, 4.8, 5.4, 4.8, 0.0, 3.6, 4.8,&
+          0.6, 0.0, 4.8, 0.0, 0.0, 4.8, 4.8, 4.8, 4.8/)
    real(r8), dimension(19), parameter :: &
    xla0=(/0.425, 0.4, 4.0, 0.8, 0.8, 4.5, 0.4, 0.0, 0.3, 0.4,&
           0.05, 0.0, 0.4, 0.0, 0.0, 4.0, 0.8, 2.4, 2.4/)
@@ -99,8 +99,8 @@ CONTAINS
    vegc=(/1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,&
           1.0, 1.0, 1.0, 1.0, 0.0, 1.0, 0.0/)
    real(r8), dimension(17), parameter :: &
-   xla=(/4.8, 5.4, 4.8, 4.8, 4.7, 4.7, 1.6, 4.7, 4.8, 1.7,&
-         4.6, 4.9, 3.8, 4.8, 0.0, 0.06, 0.0/)
+   xla =(/4.8, 5.4, 4.8, 4.8, 4.7, 4.7, 1.6, 4.7, 4.8, 1.7,&
+          4.6, 4.9, 3.8, 4.8, 0.0, 0.06, 0.0/)
    real(r8), dimension(17), parameter :: &
    xla0=(/4.0, 4.5, 0.8, 0.8, 2.2, 1.6, 0.15, 1.8, 0.9, 0.4,&
           0.4, 0.4, 0.9, 2.0, 0.0, 0.006, 0.0/)

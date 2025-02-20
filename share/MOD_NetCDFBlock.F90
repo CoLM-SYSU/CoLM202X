@@ -3,7 +3,7 @@
 MODULE MOD_NetCDFBlock
 
 !----------------------------------------------------------------------------------
-! DESCRIPTION:
+! !DESCRIPTION:
 !
 !    High-level Subroutines to read and write variables in files with netCDF format.
 !
@@ -17,7 +17,7 @@ MODULE MOD_NetCDFBlock
 !
 !    This MODULE contains subroutines of "3. Block".
 !
-! Created by Shupeng Zhang, May 2023
+!  Created by Shupeng Zhang, May 2023
 !----------------------------------------------------------------------------------
 
    USE netcdf

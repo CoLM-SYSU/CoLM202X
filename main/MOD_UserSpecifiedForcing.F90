@@ -139,7 +139,7 @@ CONTAINS
          vname   (ivar) = DEF_forcing%vname(ivar)     ! variable name
          timelog (ivar) = DEF_forcing%timelog(ivar)   ! variable name
          tintalgo(ivar) = DEF_forcing%tintalgo(ivar)  ! interpolation algorithm
-      END DO
+      ENDDO
       IF (DEF_USE_CBL_HEIGHT) THEN
          fprefix (NVAR) = DEF_forcing%CBL_fprefix
          vname   (NVAR) = DEF_forcing%CBL_vname
@@ -860,10 +860,10 @@ CONTAINS
                      IF (forcn(4)%blk(ib,jb)%val(i,j) < 0.0)   forcn(4)%blk(ib,jb)%val(i,j) = 0.0
                   END select
 
-               END DO
-            END DO
-         END DO
-      END IF
+               ENDDO
+            ENDDO
+         ENDDO
+      ENDIF
 
    END SUBROUTINE metpreprocess
 

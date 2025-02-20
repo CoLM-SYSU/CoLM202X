@@ -19,7 +19,7 @@ MODULE MOD_BGC_CNSASU
 ! !ORIGINAL:
 ! The Community Land Model version 5.1 (CLM5.1) unreleased version developed by Xingjie Lu
 !
-! !REFERENCE:
+! !REFERENCES:
 ! Lu, X., Du, Z., Huang, Y., Lawrence, D., Kluzek, E., Collier, N., Lombardozzi, D., Sobhani, N., Schuur, E.A. and Luo, Y., 2020. 
 ! Full implementation of matrix approach to biogeochemistry MODULE of CLM5. Journal of Advances in Modeling Earth Systems, 12(11), e2020MS002105.  
 ! Liao, C., Lu, X., Huang Y., Tao F., Lawrence, D., Koven C., Oleson, K., Wieder, W., Kluzek, E., Huang, X., Luo, Y. (in submission)
@@ -30,7 +30,7 @@ MODULE MOD_BGC_CNSASU
 !                   USE accumulated transfer fluxes to calculate the matrix.
 
    USE MOD_Precision
-   USE MOD_Namelist, only : DEF_USE_SASU, DEF_USE_DiagMatrix
+   USE MOD_Namelist, only: DEF_USE_SASU, DEF_USE_DiagMatrix
    USE MOD_BGC_Vars_TimeInvariants, only: &
        i_met_lit, i_cel_lit, i_lig_lit, i_cwd, i_soil1, i_soil2, i_soil3, floating_cn_ratio
  

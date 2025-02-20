@@ -260,7 +260,7 @@ IMPLICIT NONE
           call mpi_reduce (ii,   0, 1, MPI_INTEGER, MPI_SUM, 0, p_comm_slave, p_err)
           call mpi_reduce (int_min, 0, 1, MPI_INTEGER, MPI_MIN, 0, p_comm_slave, p_err)
           call mpi_reduce (int_max, 0, 1, MPI_INTEGER, MPI_MAX, 0, p_comm_slave, p_err)
-      end if
+      endif
 #endif
       if (p_master) print*,int_min,int_max
       if (p_master) print*,'ii=', ii
@@ -339,7 +339,7 @@ IMPLICIT NONE
           call mpi_reduce (jjj,  0, 1, MPI_INTEGER, MPI_SUM, 0, p_comm_slave, p_err)
           call mpi_reduce (int_min, 0, 1, MPI_INTEGER,   MPI_MIN, 0, p_comm_slave, p_err)
           call mpi_reduce (int_max, 0, 1, MPI_INTEGER,   MPI_MAX, 0, p_comm_slave, p_err)
-      end if
+      endif
 #endif
 
       if (p_master) print*, int_min, int_max
@@ -415,7 +415,7 @@ IMPLICIT NONE
           call mpi_reduce (jjj,  0, 1, MPI_INTEGER, MPI_SUM, 0, p_comm_slave, p_err)
           call mpi_reduce (int_min, 0, 1, MPI_INTEGER,   MPI_MIN, 0, p_comm_slave, p_err)
           call mpi_reduce (int_max, 0, 1, MPI_INTEGER,   MPI_MAX, 0, p_comm_slave, p_err)
-      end if
+      endif
 #endif
 
       if (p_master) print*, int_min, int_max
@@ -497,7 +497,7 @@ IMPLICIT NONE
           call mpi_reduce (iii,  0, 1, MPI_INTEGER, MPI_SUM, 0, p_comm_slave, p_err)
           call mpi_reduce (int_min, 0, 1, MPI_INTEGER,   MPI_MIN, 0, p_comm_slave, p_err)
           call mpi_reduce (int_max, 0, 1, MPI_INTEGER,   MPI_MAX, 0, p_comm_slave, p_err)
-      end if
+      endif
 #endif
 
       if (p_master) print*,int_min, int_max
@@ -592,7 +592,7 @@ IMPLICIT NONE
           call mpi_reduce (ii,   0, 1, MPI_INTEGER, MPI_SUM, 0, p_comm_slave, p_err)
           call mpi_reduce (r8_min, 0, 1, MPI_INTEGER,   MPI_MIN, 0, p_comm_slave, p_err)
           call mpi_reduce (r8_max, 0, 1, MPI_INTEGER,   MPI_MAX, 0, p_comm_slave, p_err)
-      end if
+      endif
 #endif
 
       if (p_master) print*, r8_min, r8_max
@@ -657,7 +657,7 @@ IMPLICIT NONE
           call mpi_reduce (ii,   0, 1, MPI_INTEGER, MPI_SUM, 0, p_comm_slave, p_err)
           call mpi_reduce (int_min, 0, 1, MPI_INTEGER,   MPI_MIN, 0, p_comm_slave, p_err)
           call mpi_reduce (int_max, 0, 1, MPI_INTEGER,   MPI_MAX, 0, p_comm_slave, p_err)
-      end if
+      endif
 #endif
 
       if (p_master) print*, int_min, int_max
@@ -700,7 +700,7 @@ IMPLICIT NONE
           call mpi_reduce (iii, 0, 1, MPI_INTEGER, MPI_SUM, 0, p_comm_slave, p_err)
           call mpi_reduce (iiii,0, 1, MPI_INTEGER, MPI_SUM, 0, p_comm_slave, p_err)
           call mpi_reduce (jjj, 0, 1, MPI_INTEGER, MPI_SUM, 0, p_comm_slave, p_err)
-      end if
+      endif
 #endif
       if (p_master) print*,' SECOND USGS GLCC land cover '
       if (p_master) print*,'land water points =', ii, 'wetland points=', iii, 'glacier points=', iiii, 'urban points=', jjj
@@ -741,7 +741,7 @@ IMPLICIT NONE
           call mpi_reduce (iii, 0, 1, MPI_INTEGER, MPI_SUM, 0, p_comm_slave, p_err)
           call mpi_reduce (iiii,0, 1, MPI_INTEGER, MPI_SUM, 0, p_comm_slave, p_err)
           call mpi_reduce (jjj, 0, 1, MPI_INTEGER, MPI_SUM, 0, p_comm_slave, p_err)
-      end if
+      endif
 #endif
       if (p_master) print*,' SECOND MODIS IGBP land cover '
       if (p_master) print*,'land water points =', ii, 'wetland points=', iii, 'glacier points=', iiii, 'urban points=', jjj
@@ -794,7 +794,7 @@ IMPLICIT NONE
 !          call mpi_reduce (MPI_IN_PLACE, iii,  1, MPI_INTEGER, MPI_SUM, 0, p_comm_slave, p_err)
 !      else
 !          call mpi_reduce (iii, 0, 1, MPI_INTEGER, MPI_SUM, 0, p_comm_slave, p_err)
-!      end if
+!      endif
 !#endif
 !      if (p_master) print*, 'GLCC WATER BODIES','iii=',iii
 !#endif
@@ -830,7 +830,7 @@ IMPLICIT NONE
 !          call mpi_reduce (MPI_IN_PLACE, iii,  1, MPI_INTEGER, MPI_SUM, 0, p_comm_slave, p_err)
 !      else
 !          call mpi_reduce (iii, 0, 1, MPI_INTEGER, MPI_SUM, 0, p_comm_slave, p_err)
-!      end if
+!      endif
 !#endif
 !      if (p_master) print*, 'MODIS IGBP WATER BODIES','iii=',iii
 !#endif
@@ -853,7 +853,7 @@ IMPLICIT NONE
 !          call mpi_reduce (MPI_IN_PLACE, iiii,  1, MPI_INTEGER, MPI_SUM, 0, p_comm_slave, p_err)
 !      else
 !          call mpi_reduce (iiii, 0, 1, MPI_INTEGER, MPI_SUM, 0, p_comm_slave, p_err)
-!      end if
+!      endif
 !#endif
 !      if (p_master) print*, 'GLCC WATER BODIES','iiii=',iiii
 !#endif
@@ -874,7 +874,7 @@ IMPLICIT NONE
 !          call mpi_reduce (MPI_IN_PLACE, iiii,  1, MPI_INTEGER, MPI_SUM, 0, p_comm_slave, p_err)
 !      else
 !          call mpi_reduce (iiii, 0, 1, MPI_INTEGER, MPI_SUM, 0, p_comm_slave, p_err)
-!      end if
+!      endif
 !#endif
 !      if (p_master) print*, 'MODIS IGBP WATER BODIES','iiii=',iiii
 !#endif
@@ -914,7 +914,7 @@ IMPLICIT NONE
 !          call mpi_reduce (MPI_IN_PLACE, iii,  1, MPI_INTEGER, MPI_SUM, 0, p_comm_slave, p_err)
 !      else
 !          call mpi_reduce (iii, 0, 1, MPI_INTEGER, MPI_SUM, 0, p_comm_slave, p_err)
-!      end if
+!      endif
 !#endif
 !      if (p_master) print*, 'GLCC WETLAND','iii=',iii
 !#endif
@@ -947,7 +947,7 @@ IMPLICIT NONE
 !          call mpi_reduce (MPI_IN_PLACE, iii,  1, MPI_INTEGER, MPI_SUM, 0, p_comm_slave, p_err)
 !      else
 !          call mpi_reduce (iii, 0, 1, MPI_INTEGER, MPI_SUM, 0, p_comm_slave, p_err)
-!      end if
+!      endif
 !#endif
 !      if (p_master) print*, 'MODIS IGBP WETLAND','iii=',iii
 !#endif
@@ -970,7 +970,7 @@ IMPLICIT NONE
 !          call mpi_reduce (MPI_IN_PLACE, iiii,  1, MPI_INTEGER, MPI_SUM, 0, p_comm_slave, p_err)
 !      else
 !          call mpi_reduce (iiii, 0, 1, MPI_INTEGER, MPI_SUM, 0, p_comm_slave, p_err)
-!      end if
+!      endif
 !#endif
 !      if (p_master) print*, 'GLCC WETLAND', 'iiii=',iiii
 !#endif
@@ -991,7 +991,7 @@ IMPLICIT NONE
 !          call mpi_reduce (MPI_IN_PLACE, iiii,  1, MPI_INTEGER, MPI_SUM, 0, p_comm_slave, p_err)
 !      else
 !          call mpi_reduce (iiii, 0, 1, MPI_INTEGER, MPI_SUM, 0, p_comm_slave, p_err)
-!      end if
+!      endif
 !#endif
 !      if (p_master) print*, 'MODIS IGBP WETLAND', 'iiii=',iiii
 !#endif
@@ -1030,7 +1030,7 @@ IMPLICIT NONE
           call mpi_reduce (MPI_IN_PLACE, iii,  1, MPI_INTEGER, MPI_SUM, 0, p_comm_slave, p_err)
       else
           call mpi_reduce (iii, 0, 1, MPI_INTEGER, MPI_SUM, 0, p_comm_slave, p_err)
-      end if
+      endif
 #endif
       if (p_master) print*, 'GLCC GLACIER/ICESHEET','iii=',iii
 #endif
@@ -1065,7 +1065,7 @@ IMPLICIT NONE
           call mpi_reduce (MPI_IN_PLACE, iii,  1, MPI_INTEGER, MPI_SUM, 0, p_comm_slave, p_err)
       else
           call mpi_reduce (iii, 0, 1, MPI_INTEGER, MPI_SUM, 0, p_comm_slave, p_err)
-      end if
+      endif
 #endif
       if (p_master) print*, 'MODIS IGBP GLACIER/ICESHEET','iii=',iii
 #endif
@@ -1088,7 +1088,7 @@ IMPLICIT NONE
           call mpi_reduce (MPI_IN_PLACE, iiii,  1, MPI_INTEGER, MPI_SUM, 0, p_comm_slave, p_err)
       else
           call mpi_reduce (iiii, 0, 1, MPI_INTEGER, MPI_SUM, 0, p_comm_slave, p_err)
-      end if
+      endif
 #endif
       if (p_master) print*, 'GLCC GLACIER/ICESHEET', 'iiii=',iiii
 #endif
@@ -1109,7 +1109,7 @@ IMPLICIT NONE
           call mpi_reduce (MPI_IN_PLACE, iiii,  1, MPI_INTEGER, MPI_SUM, 0, p_comm_slave, p_err)
       else
           call mpi_reduce (iiii, 0, 1, MPI_INTEGER, MPI_SUM, 0, p_comm_slave, p_err)
-      end if
+      endif
 #endif
       if (p_master) print*, 'MODIS IGBP GLACIER/ICESHEET', 'iiii=',iiii
 #endif
@@ -1148,7 +1148,7 @@ IMPLICIT NONE
           call mpi_reduce (MPI_IN_PLACE, iii,  1, MPI_INTEGER, MPI_SUM, 0, p_comm_slave, p_err)
       else
           call mpi_reduce (iii, 0, 1, MPI_INTEGER, MPI_SUM, 0, p_comm_slave, p_err)
-      end if
+      endif
 #endif
       if (p_master) print*, 'GLCC URBAN and BUILT-UP LAND','iii=',iii
 #endif
@@ -1184,7 +1184,7 @@ IMPLICIT NONE
           call mpi_reduce (MPI_IN_PLACE, iii,  1, MPI_INTEGER, MPI_SUM, 0, p_comm_slave, p_err)
       else
           call mpi_reduce (iii, 0, 1, MPI_INTEGER, MPI_SUM, 0, p_comm_slave, p_err)
-      end if
+      endif
 #endif
       if (p_master) print*, 'MODIS IGBP URBAN and BUILT-UP LAND','iii=',iii
 #endif
@@ -1207,7 +1207,7 @@ IMPLICIT NONE
           call mpi_reduce (MPI_IN_PLACE, iiii,  1, MPI_INTEGER, MPI_SUM, 0, p_comm_slave, p_err)
       else
           call mpi_reduce (iiii, 0, 1, MPI_INTEGER, MPI_SUM, 0, p_comm_slave, p_err)
-      end if
+      endif
 #endif
       if (p_master) print*, 'GLCC URBAN and BUILT-UP LAND', 'iiii=',iiii
 #endif
@@ -1228,7 +1228,7 @@ IMPLICIT NONE
           call mpi_reduce (MPI_IN_PLACE, iiii,  1, MPI_INTEGER, MPI_SUM, 0, p_comm_slave, p_err)
       else
           call mpi_reduce (iiii, 0, 1, MPI_INTEGER, MPI_SUM, 0, p_comm_slave, p_err)
-      end if
+      endif
 #endif
       if (p_master) print*, 'MODIS IGBP URBAN and BUILT-UP LAND', 'iiii=',iiii
 #endif
@@ -1273,7 +1273,7 @@ IMPLICIT NONE
           call mpi_reduce (iii,  0, 1, MPI_INTEGER, MPI_SUM, 0, p_comm_slave, p_err)
           call mpi_reduce (iiii, 0, 1, MPI_INTEGER, MPI_SUM, 0, p_comm_slave, p_err)
           call mpi_reduce (jjj,  0, 1, MPI_INTEGER, MPI_SUM, 0, p_comm_slave, p_err)
-      end if
+      endif
 #endif
       if (p_master) print*,' FINAL USGS GLCC land cover '
       if (p_master) print*,'land water points =', ii, 'wetland points=', iii, 'glacier points=', iiii, 'urban points=', jjj
@@ -1316,7 +1316,7 @@ IMPLICIT NONE
           call mpi_reduce (iii,  0, 1, MPI_INTEGER, MPI_SUM, 0, p_comm_slave, p_err)
           call mpi_reduce (iiii, 0, 1, MPI_INTEGER, MPI_SUM, 0, p_comm_slave, p_err)
           call mpi_reduce (jjj,  0, 1, MPI_INTEGER, MPI_SUM, 0, p_comm_slave, p_err)
-      end if
+      endif
 #endif
       if (p_master) print*,' FINAL MODIS IGBP land cover '
       if (p_master) print*,'land water points =', ii, 'wetland points=', iii, 'glacier points=', iiii, 'urban points=', jjj
@@ -1446,7 +1446,7 @@ INTEGER FUNCTION ia(chr,n,ispval)
              nbit = (m-1)*8
              jj = ishft(bit_2,nbit)
              ia = ieor(jj,ia)
-          end do
+          enddo
         endif
 
 !   .. get the byte from chr:
@@ -1457,7 +1457,7 @@ INTEGER FUNCTION ia(chr,n,ispval)
            ia2   = ishft(ii2,mshft)
 !   .. the abs(integer):
            ia = ieor(ia,ia2)
-         end do
+         enddo
 
       if (ia.lt.0) ia = ispval
 
@@ -1505,8 +1505,8 @@ IMPLICIT NONE
                if(a(i2,j2) > 0)then
                   num(a(i2,j2)) = num(a(i2,j2)) + 1
                endif
-            end do
-         end do
+            enddo
+         enddo
 
          msk = .true.
          msk(c(1:np)) = .false.
@@ -1523,7 +1523,7 @@ IMPLICIT NONE
             L = loc1(1)
             exit
          endif
-      end do
+      enddo
 
 !     if(r.eq.(rmax+1))then
 !        print*, 'failed to find suitable type in 100 grid cells' radius'
@@ -1572,7 +1572,7 @@ SUBROUTINE update_buff (buff, nlon, nlat, buff_lb, nrow_start, nrow_end, buff_ub
         lat_disp(0) = 0
         do iproc = 1, p_nslaves-1
             lat_disp(iproc) = sum(nlat_proc(0:iproc-1))
-        end do
+        enddo
 
         allocate (cbuff_g (nlon, nlat))
         call mpi_gatherv (cbuff(:,nrow_start:nrow_end), nlon*(nrow_end-nrow_start+1), MPI_CHARACTER, &
@@ -1585,7 +1585,7 @@ SUBROUTINE update_buff (buff, nlon, nlat, buff_lb, nrow_start, nrow_end, buff_ub
             bub = min(lat_disp(iproc)+nlat_proc(iproc)+rmax, nlat)
             call mpi_isend (cbuff_g(:,blb:bub), nlon*(bub-blb+1), MPI_CHARACTER, &
                             iproc, iproc, p_comm_slave, reqs(iproc), p_err)
-        end do
+        enddo
         call mpi_waitall (p_nslaves-1, reqs(1:p_nslaves-1), MPI_STATUSES_IGNORE, p_err)
     else
         call mpi_gather  (nrow_end-nrow_start+1, 1, MPI_INTEGER, 0, 1, MPI_INTEGER, &
@@ -1594,7 +1594,7 @@ SUBROUTINE update_buff (buff, nlon, nlat, buff_lb, nrow_start, nrow_end, buff_ub
                           0, 0, 0, MPI_CHARACTER, 0, p_comm_slave, p_err)
         call mpi_recv (cbuff, nlon*(buff_ub-buff_lb+1), MPI_CHARACTER, 0, p_iam_slave, &
                        p_comm_slave, p_stat, p_err)
-    end if
+    endif
 
     buff = ichar(cbuff)
 
@@ -1604,7 +1604,7 @@ SUBROUTINE update_buff (buff, nlon, nlat, buff_lb, nrow_start, nrow_end, buff_ub
         deallocate (nlat_proc)
         deallocate (lat_disp )
         deallocate (cbuff_g)
-    end if
+    endif
 
 END SUBROUTINE update_buff
 #endif

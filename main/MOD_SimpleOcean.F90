@@ -28,15 +28,15 @@ CONTAINS
               taux,tauy,fsena,fevpa,lfevpa,fseng,fevpg,tref,qref,&
               z0m,zol,rib,ustar,qstar,tstar,fm,fh,fq,emis,olrg)
 !-----------------------------------------------------------------------
-!           Simple Ocean Model
-! 1. calculate sea surface fluxes, based on CLM
-! 2. calculate sea surface albedos and seaice/snow temperatures
-!                as in NCAR CCM3.6.16
-! Original authors : Yongjiu Dai and Xin-Zhong Liang (08/30/2001)
+!            Simple Ocean Model
+!  1. calculate sea surface fluxes, based on CLM
+!  2. calculate sea surface albedos and seaice/snow temperatures
+!                 as in NCAR CCM3.6.16
+!  Original authors : Yongjiu Dai and Xin-Zhong Liang (08/30/2001)
 !-----------------------------------------------------------------------
 
    USE MOD_Precision
-   USE MOD_Const_Physical, only : tfrz, hvap, hsub, stefnc, vonkar
+   USE MOD_Const_Physical, only: tfrz, hvap, hsub, stefnc, vonkar
    IMPLICIT NONE
 
 !-------------------------- Dummy Arguments ----------------------------
@@ -120,7 +120,7 @@ CONTAINS
             DO j = 1,plsice
                tssub(j) = tssea
             ENDDO
-         ELSE IF(nint(oro).eq.0 .and. tssea.le.tsice) THEN
+         ELSEIF(nint(oro).eq.0 .and. tssea.le.tsice) THEN
             oro = 2.0         ! new sea ice formed
             snowh = snsice
             scv = snowh*1000.
@@ -144,7 +144,7 @@ CONTAINS
          olrg = stefnc*emisw*tssea**4 + (1.-emisw)*frl
          emis = emisw
 
-      ELSE IF(nint(oro).eq.2)THEN        ! sea ice
+      ELSEIF(nint(oro).eq.2)THEN        ! sea ice
          lfevpa = fevpa*hsub
 
        ! net surface flux and derivate at current surface temperature
@@ -187,14 +187,14 @@ CONTAINS
                          z0m,zol,rib,ustar,qstar,tstar,fm,fh,fq,cgrndl,cgrnds)
 
 !=======================================================================
-! this is the main SUBROUTINE to execute the calculation of thermal processes
-! and surface fluxes
+!  this is the main SUBROUTINE to execute the calculation of thermal processes
+!  and surface fluxes
 !
-! Original author : Yongjiu Dai, 09/15/1999; 08/30/2002
+!  Original author: Yongjiu Dai, 09/15/1999; 08/30/2002
 !=======================================================================
 
    USE MOD_Precision
-   USE MOD_Const_Physical, only : cpair,rgas,vonkar,grav
+   USE MOD_Const_Physical, only: cpair,rgas,vonkar,grav
    USE MOD_FrictionVelocity
    USE MOD_Qsadv
    IMPLICIT NONE
@@ -329,7 +329,7 @@ CONTAINS
             ustar=vonkar*um/log(zldis/z0mg)
          ENDDO
 
-      ELSE IF(nint(oro).eq.2)THEN     ! sea ice
+      ELSEIF(nint(oro).eq.2)THEN     ! sea ice
          z0mg = zsice
          z0qg = z0mg
          z0hg = z0mg
@@ -419,19 +419,19 @@ CONTAINS
    SUBROUTINE srftsb(isrfty,deltim,fnt,dfntdt,snowh,tsbsf)
 
 !-----------------------------------------------------------------------
-! Compute surface and subsurface temperatures over sea-ice surfaces.
+!  Compute surface and subsurface temperatures over sea-ice surfaces.
 !
-! Sea ice temperatures are specified in 'plsice' layers of fixed
-! thickness and thermal properties.  The forecast temperatures are
-! determined from a backward/IMPLICIT diffusion calculation using
-! linearized sensible/latent heat fluxes. The bottom ocean temperature
-! is fixed at -2C, allowing heat flux exchange with underlying ocean.
+!  Sea ice temperatures are specified in 'plsice' layers of fixed
+!  thickness and thermal properties.  The forecast temperatures are
+!  determined from a backward/IMPLICIT diffusion calculation using
+!  linearized sensible/latent heat fluxes. The bottom ocean temperature
+!  is fixed at -2C, allowing heat flux exchange with underlying ocean.
 !
-! Sub-surface layers are indexed 1 at the surface, increasing downwards
-! to plsice.  Layers have mid-points and interfaces between layers.
+!  Sub-surface layers are indexed 1 at the surface, increasing downwards
+!  to plsice.  Layers have mid-points and interfaces between layers.
 !
-! Temperatures are defined at mid-points, WHILE fluxes between layers
-! and the top/bottom media are defined at layer interfaces.
+!  Temperatures are defined at mid-points, WHILE fluxes between layers
+!  and the top/bottom media are defined at layer interfaces.
 !
 !-----------------------------------------------------------------------
 
@@ -619,7 +619,7 @@ CONTAINS
          rhs(1) = diag(1)*tin(1) + fnt*rztop - fbt*rztop + htsrc(1)
 
 ! more than one layer: top layer first
-      ELSE IF (plsice.gt.1) THEN
+      ELSEIF (plsice.gt.1) THEN
 
          crt       = cmass(1)*rho(1)*rdtime
          ztop      = z(1) - z(0)

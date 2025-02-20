@@ -2,8 +2,8 @@
 
 MODULE MOD_LandPatch
 
-!------------------------------------------------------------------------------------
-! DESCRIPTION:
+!-----------------------------------------------------------------------
+! !DESCRIPTION:
 !
 !    Build pixelset "landpatch".
 !
@@ -17,9 +17,9 @@ MODULE MOD_LandPatch
 !
 !    "landpatch" refers to pixelset PATCH.
 !
-! Created by Shupeng Zhang, May 2023
+!  Created by Shupeng Zhang, May 2023
 !    porting codes from Hua Yuan's OpenMP version to MPI parallel version.
-!------------------------------------------------------------------------------------
+!-----------------------------------------------------------------------
 
    USE MOD_Precision
    USE MOD_Grid
@@ -178,7 +178,7 @@ CONTAINS
             deallocate (ibuff)
 
 #ifdef SinglePoint
-            SITE_landtype = types(1) 
+            SITE_landtype = types(1)
 #endif
 
 #ifdef CATCHMENT

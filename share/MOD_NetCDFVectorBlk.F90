@@ -1,7 +1,7 @@
 #include <define.h>
 
 !----------------------------------------------------------------------------------
-! DESCRIPTION:
+! !DESCRIPTION:
 !
 !    High-level Subroutines to read and write variables in files with netCDF format.
 !
@@ -25,7 +25,7 @@
 !       READ/WRITE may be slow in this way.
 !       CHOOSE this implementation by "#define VectorInOneFile" in include/define.h
 !
-! Created by Shupeng Zhang, May 2023
+!  Created by Shupeng Zhang, May 2023
 !----------------------------------------------------------------------------------
 
 ! Put vector in separated files.

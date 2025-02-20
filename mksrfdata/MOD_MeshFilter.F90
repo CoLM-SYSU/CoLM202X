@@ -2,14 +2,14 @@
 
 MODULE MOD_MeshFilter
 
-!------------------------------------------------------------------------------------
-! DESCRIPTION:
+!-----------------------------------------------------------------------
+! !DESCRIPTION:
 !
 !    Mesh filter.
 !    Mesh filter can be used to mask part of region or globe as needed.
 !
-! Created by Shupeng Zhang, May 2023
-!------------------------------------------------------------------------------------
+!  Created by Shupeng Zhang, May 2023
+!-----------------------------------------------------------------------
 
    USE MOD_Grid
    IMPLICIT NONE

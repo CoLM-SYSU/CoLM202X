@@ -18,7 +18,7 @@ MODULE MOD_Hydro_SoilWater
    USE MOD_Precision
    USE MOD_Hydro_SoilFunction
    USE MOD_Namelist, only: DEF_USE_PLANTHYDRAULICS
-   USE MOD_UserDefFun, only : findloc_ud
+   USE MOD_UserDefFun, only: findloc_ud
 
    IMPLICIT NONE
 
@@ -171,7 +171,7 @@ CONTAINS
    ! soil water movement
    !=======================================================================
 
-   USE MOD_Const_Physical, only : tfrz
+   USE MOD_Const_Physical, only: tfrz
 
    IMPLICIT NONE
 

@@ -3,7 +3,7 @@
 MODULE MOD_RangeCheck
 
 !-----------------------------------------------------------------------
-! DESCRIPTION:
+! !DESCRIPTION:
 !
 !    Subroutines show the range of values in block data or vector data.
 !
@@ -11,11 +11,11 @@ MODULE MOD_RangeCheck
 !    1. "check_block_data"  can only be called by IO     processes.
 !    2. "check_vector_data" can only be called by worker processes.
 !
-! Created by Shupeng Zhang, May 2023
+!  Created by Shupeng Zhang, May 2023
 !-----------------------------------------------------------------------
 
 #ifdef RangeCheck
-   USE MOD_UserDefFun, only : isnan_ud
+   USE MOD_UserDefFun, only: isnan_ud
    IMPLICIT NONE
 
    INTERFACE check_block_data
@@ -39,7 +39,7 @@ CONTAINS
    USE MOD_SPMD_Task
    USE MOD_Block
    USE MOD_DataType
-   USE MOD_Vars_Global, only : spval
+   USE MOD_Vars_Global, only: spval
    IMPLICIT NONE
 
    character(len=*), intent(in)   :: varname
@@ -165,7 +165,7 @@ CONTAINS
 
    USE MOD_Precision
    USE MOD_SPMD_Task
-   USE MOD_Vars_Global, only : spval
+   USE MOD_Vars_Global, only: spval
    IMPLICIT NONE
 
    character(len=*),      intent(in) :: varname
@@ -272,14 +272,14 @@ CONTAINS
 
    USE MOD_Precision
    USE MOD_SPMD_Task
-   USE MOD_Vars_Global, only : spval
+   USE MOD_Vars_Global, only: spval
    IMPLICIT NONE
 
    character(len=*),      intent(in) :: varname
    real(r8), allocatable, intent(in) :: vdata(:,:)
 
    real(r8), intent(in), optional :: spv_in
-   real(r8), intent(in), optional :: limits(2) 
+   real(r8), intent(in), optional :: limits(2)
 
    ! Local variables
    real(r8) :: vmin, vmax, spv
@@ -381,14 +381,14 @@ CONTAINS
 
    USE MOD_Precision
    USE MOD_SPMD_Task
-   USE MOD_Vars_Global, only : spval
+   USE MOD_Vars_Global, only: spval
    IMPLICIT NONE
 
    character(len=*),      intent(in) :: varname
    real(r8), allocatable, intent(in) :: vdata(:,:,:)
-   
+
    real(r8), intent(in), optional :: spv_in
-   real(r8), intent(in), optional :: limits(2) 
+   real(r8), intent(in), optional :: limits(2)
 
    ! Local variables
    real(r8) :: vmin, vmax, spv
@@ -493,14 +493,14 @@ CONTAINS
 
    USE MOD_Precision
    USE MOD_SPMD_Task
-   USE MOD_Vars_Global, only : spval
+   USE MOD_Vars_Global, only: spval
    IMPLICIT NONE
 
    character(len=*),      intent(in) :: varname
    real(r8), allocatable, intent(in) :: vdata(:,:,:,:)
 
    real(r8), intent(in), optional :: spv_in
-   real(r8), intent(in), optional :: limits(2) 
+   real(r8), intent(in), optional :: limits(2)
 
    ! Local variables
    real(r8) :: vmin, vmax, spv

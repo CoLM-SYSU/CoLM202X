@@ -4,13 +4,13 @@ SUBROUTINE Aggregation_DBedrock ( &
       gland, dir_rawdata, dir_model_landdata)
 
 ! ---------------------------------------------------------------------------
-! Depth to bedrock
+!  Depth to bedrock
 !
 !    Shangguan, W., Hengl, T., Mendes de Jesus, J., Yuan, H., Dai, Y. (2017).
 !    Mapping the global depth to bedrock for land surface modeling.
 !    Journal of Advances in Modeling Earth Systems, 9(1), 65–88.
 !
-! Created by Shupeng Zhang, 05/2023
+!  Created by Shupeng Zhang, 05/2023
 ! ----------------------------------------------------------------------
 
    USE MOD_Precision
@@ -126,4 +126,3 @@ SUBROUTINE Aggregation_DBedrock ( &
       ENDIF
 
 END SUBROUTINE Aggregation_DBedrock
-

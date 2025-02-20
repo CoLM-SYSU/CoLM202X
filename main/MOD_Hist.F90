@@ -3,20 +3,20 @@
 MODULE MOD_Hist
 
 !----------------------------------------------------------------------------
-! DESCRIPTION:
+! !DESCRIPTION:
 !
 !     Write out gridded model results to history files.
 !
-! Original version: Yongjiu Dai, September 15, 1999, 03/2014
+!  Original version: Yongjiu Dai, September 15, 1999, 03/2014
 !
-! REVISIONS:
-! Shupeng Zhang, 05/2023: 1) porting codes to MPI parallel version
+! !REVISIONS:
+!  Shupeng Zhang, 05/2023: 1) porting codes to MPI parallel version
 !
-! TODO...(need complement)
+!  TODO...(need complement)
 !----------------------------------------------------------------------------
 
    USE MOD_Vars_1DAccFluxes
-   USE MOD_Vars_Global, only : spval
+   USE MOD_Vars_Global, only: spval
    USE MOD_NetCDFSerial
 
    USE MOD_HistGridded
@@ -99,17 +99,17 @@ CONTAINS
    SUBROUTINE hist_out (idate, deltim, itstamp, etstamp, ptstamp, &
          dir_hist, site)
 
-      !=======================================================================
-      ! Original version: Yongjiu Dai, September 15, 1999, 03/2014
-      !=======================================================================
+!=======================================================================
+!  Original version: Yongjiu Dai, September 15, 1999, 03/2014
+!=======================================================================
 
       USE MOD_Precision
       USE MOD_Namelist
       USE MOD_TimeManager
       USE MOD_SPMD_Task
       USE MOD_Vars_1DAccFluxes
-      USE MOD_Vars_1DFluxes, only : nsensor
-      USE MOD_Vars_TimeVariables, only : wa, wat, wetwat, wdsrf
+      USE MOD_Vars_1DFluxes, only: nsensor
+      USE MOD_Vars_TimeVariables, only: wa, wat, wetwat, wdsrf
       USE MOD_Block
       USE MOD_DataType
       USE MOD_LandPatch
@@ -127,7 +127,7 @@ CONTAINS
 #endif
       USE MOD_Forcing, only: forcmask_pch
 #ifdef DataAssimilation
-      USE MOD_DA_GRACE, only : fslp_k_mon
+      USE MOD_DA_GRACE, only: fslp_k_mon
 #endif
 
       IMPLICIT NONE

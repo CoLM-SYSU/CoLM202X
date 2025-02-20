@@ -6,7 +6,7 @@ MODULE MOD_BGC_Veg_CNMResp
 ! !DESCRIPTION:
 ! This module calculates plant maintenance respiration
 !
-! !REFERENCE:
+! !REFERENCES:
 ! Atkin OK, Bloomfield KJ, Reich PB, Tjoelker MG, Asner GP, Bonal D et al (2015) Global variability in leaf respiration
 ! in relation to climate, plant functional types and leaf traits. New Phytologist 206:614–636
 !

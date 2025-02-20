@@ -43,27 +43,27 @@ CONTAINS
                                 imelt,sm,xmf,fact)
 
 !=======================================================================
-! Snow and pervious road temperatures
-! o The volumetric heat capacity is calculated as a linear combination
-!   in terms of the volumetric fraction of the constituent phases.
-! o The thermal conductivity of road soil is computed from
-!   the algorithm of Johansen (as reported by Farouki 1981), impervious
-!   and perivious from LOOK-UP table and of snow is from the formulation
-!   used in SNTHERM (Jordan 1991).
-! o Boundary conditions:
-!   F = Rnet - Hg - LEg (top),  F = 0 (base of the soil column).
-! o Soil / snow temperature is predicted from heat conduction
-!   in 10 soil layers and up to 5 snow layers.  The thermal
-!   conductivities at the interfaces between two neighbor layers
-!   (j,j+1) are derived from an assumption that the flux across the
-!   interface is equal to that from the node j to the interface and the
-!   flux from the interface to the node j+1. The equation is solved
-!   using the Crank-Nicholson method and resulted in a tridiagonal
-!   system equation.
+!  Snow and pervious road temperatures
+!  o The volumetric heat capacity is calculated as a linear combination
+!    in terms of the volumetric fraction of the constituent phases.
+!  o The thermal conductivity of road soil is computed from
+!    the algorithm of Johansen (as reported by Farouki 1981), impervious
+!    and perivious from LOOK-UP table and of snow is from the formulation
+!    used in SNTHERM (Jordan 1991).
+!  o Boundary conditions:
+!    F = Rnet - Hg - LEg (top),  F = 0 (base of the soil column).
+!  o Soil / snow temperature is predicted from heat conduction
+!    in 10 soil layers and up to 5 snow layers.  The thermal
+!    conductivities at the interfaces between two neighbor layers
+!    (j,j+1) are derived from an assumption that the flux across the
+!    interface is equal to that from the node j to the interface and the
+!    flux from the interface to the node j+1. The equation is solved
+!    using the Crank-Nicholson method and resulted in a tridiagonal
+!    system equation.
 !
-! Phase change (see MOD_PhaseChange.F90)
+!  Phase change (see MOD_PhaseChange.F90)
 !
-! Original author : Yongjiu Dai, 09/15/1999; 08/30/2002; 05/2020
+!  Original author: Yongjiu Dai, 09/15/1999; 08/30/2002; 05/2020
 !=======================================================================
 
    USE MOD_Precision

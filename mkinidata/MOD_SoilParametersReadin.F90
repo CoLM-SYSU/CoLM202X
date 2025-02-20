@@ -3,15 +3,15 @@
 MODULE MOD_SoilParametersReadin
 
 !------------------------------------------------------------------------------------------
-! DESCRIPTION:
-! Read in soil parameters; make unit conversion for soil physical process modeling;
-! soil parameters 8 layers => 10 layers
+! !DESCRIPTION:
+!  Read in soil parameters; make unit conversion for soil physical process modeling;
+!  soil parameters 8 layers => 10 layers
 !
-! Original author: Yongjiu Dai, 03/2014
+!  Original author: Yongjiu Dai, 03/2014
 !
-! Revisions:
-! Nan Wei, 01/2019: read more parameters from mksrfdata results
-! Shupeng Zhang and Nan Wei, 01/2022: porting codes to parallel version
+! !REVISIONS:
+!  Nan Wei, 01/2019: read more parameters from mksrfdata results
+!  Shupeng Zhang and Nan Wei, 01/2022: porting codes to parallel version
 !------------------------------------------------------------------------------------------
 
    USE MOD_Precision

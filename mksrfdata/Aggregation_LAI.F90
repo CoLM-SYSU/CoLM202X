@@ -2,18 +2,18 @@
 
 SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
 ! ----------------------------------------------------------------------
-! 1. Global Plant Leaf Area Index
-!    (http://globalchange.bnu.edu.cn)
-!    Yuan H., et al., 2011:
-!    Reprocessing the MODIS Leaf Area Index products for land surface
-!    and climate modelling. Remote Sensing of Environment, 115: 1171-1187.
+!  1. Global Plant Leaf Area Index
+!     (http://globalchange.bnu.edu.cn)
+!     Yuan H., et al., 2011:
+!     Reprocessing the MODIS Leaf Area Index products for land surface
+!     and climate modelling. Remote Sensing of Environment, 115: 1171-1187.
 !
-! Created by Yongjiu Dai, 02/2014
+!  Created by Yongjiu Dai, 02/2014
 !
-! REVISIONS:
-! Hua Yuan,      ?/2020 : for land cover land use classifications
-! Shupeng Zhang, 01/2022: porting codes to MPI parallel version
-! Hua Yuan,      05/2023: TODO
+! !REVISIONS:
+!  Hua Yuan,      ?/2020 : for land cover land use classifications
+!  Shupeng Zhang, 01/2022: porting codes to MPI parallel version
+!  Hua Yuan,      05/2023: TODO
 ! ----------------------------------------------------------------------
 
    USE MOD_Precision
@@ -428,7 +428,7 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
          write(cyear,'(i4.4)') iy
          suffix  = 'MOD'//trim(cyear)
          CALL system('mkdir -p ' // trim(landdir) // trim(cyear))
-               
+
          IF (p_is_master) THEN
             write(*,'(A,I4)') 'Aggregate LAI : ', iy
          ENDIF
