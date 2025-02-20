@@ -8,7 +8,7 @@ MODULE MOD_LightningData
 !
 ! !ORIGINAL:
 !  Zhang Shupeng, 2022, prepare the original version of the lightning data module.
-
+!-----------------------------------------------------------------------
 
    USE MOD_Grid
    USE MOD_DataType

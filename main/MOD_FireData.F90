@@ -8,6 +8,7 @@ MODULE MOD_FireData
 !
 !  Original:
 !  Lu Xingjie and Zhang Shupeng, 2023, prepare the original version of the fire data module.
+!-----------------------------------------------------------------------
 
    USE MOD_Grid
    USE MOD_SpatialMapping

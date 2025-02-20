@@ -1,17 +1,17 @@
 #include <define.h>
 
 MODULE MOD_Vars_2DForcing
-   ! -------------------------------
-   ! Meteorogical Forcing
-   !
-   ! Created by Yongjiu Dai, 03/2014
-   ! -------------------------------
+!-----------------------------------------------------------------------
+!  Meteorogical Forcing
+!
+!  Created by Yongjiu Dai, 03/2014
+!-----------------------------------------------------------------------
 
    USE MOD_DataType
    IMPLICIT NONE
    SAVE
 
-   ! -----------------------------------------------------------------
+!-----------------------------------------------------------------------
    type(block_data_real8_2d) :: forc_xy_pco2m  ! CO2 concentration in atmos. (pascals)
    type(block_data_real8_2d) :: forc_xy_po2m   ! O2 concentration in atmos. (pascals)
    type(block_data_real8_2d) :: forc_xy_us     ! wind in eastward direction [m/s]
@@ -38,7 +38,7 @@ MODULE MOD_Vars_2DForcing
 
 CONTAINS
 
-   !-----------------------------------------------------------------------
+!-----------------------------------------------------------------------
 
    SUBROUTINE allocate_2D_Forcing (grid)
    ! ------------------------------------------------

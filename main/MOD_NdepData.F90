@@ -2,12 +2,13 @@
 
 #ifdef BGC
 MODULE MOD_NdepData
- !-----------------------------------------------------------------------
- ! !DESCRIPTION:
- ! This module read in ndep data.
- !
- ! !ORIGINAL:
- ! Lu Xingjie and Zhang Shupeng, 2023, prepare the original version of the ndep data module.
+!-----------------------------------------------------------------------
+! !DESCRIPTION:
+! This module read in ndep data.
+!
+! !ORIGINAL:
+! Lu Xingjie and Zhang Shupeng, 2023, prepare the original version of the ndep data module.
+!-----------------------------------------------------------------------
 
    USE MOD_Grid
    USE MOD_SpatialMapping

@@ -3,12 +3,12 @@
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
 
 MODULE MOD_Vars_1DPFTFluxes
-! -----------------------------------------------------------------
+!-----------------------------------------------------------------------
 ! !DESCRIPTION:
 !  Define PFT flux variables
 !
 !  Created by Hua Yuan, 08/2019
-! -----------------------------------------------------------------
+!-----------------------------------------------------------------------
 
    USE MOD_Precision
 #ifdef BGC
@@ -17,9 +17,9 @@ MODULE MOD_Vars_1DPFTFluxes
    IMPLICIT NONE
    SAVE
 
-! -----------------------------------------------------------------
+!-----------------------------------------------------------------------
 ! Fluxes
-! -----------------------------------------------------------------
+!-----------------------------------------------------------------------
    real(r8), allocatable :: taux_p   (:)    !wind stress: E-W [kg/m/s2]
    real(r8), allocatable :: tauy_p   (:)    !wind stress: N-S [kg/m/s2]
    real(r8), allocatable :: fsenl_p  (:)    !sensible heat from leaves [W/m2]

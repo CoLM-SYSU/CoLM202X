@@ -13,6 +13,7 @@ MODULE MOD_Const_LC
 !  08/2019, Hua Yuan: added constants values for IGBP land cover types
 !  05/2023, Xingjie Lu: added Plant Hydraulics Parameters
 !
+!-----------------------------------------------------------------------
 ! !USES:
    USE MOD_Precision
    USE MOD_Vars_Global
