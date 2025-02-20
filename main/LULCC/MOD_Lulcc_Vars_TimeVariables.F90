@@ -11,8 +11,8 @@ MODULE MOD_Lulcc_Vars_TimeVariables
 !
 !  07/2023, Wenzong Dong: porting to MPI version
 !  08/2023, Hua Yuan: unified PFT and PC process
-!  10/2023, Wanyi Lin: check with MOD_Vars_TimeVariables.F90, add variables,
-!           and remove unnecessary variables
+!  10/2023, Wanyi Lin: check with MOD_Vars_TimeVariables.F90, add
+!           variables, and remove unnecessary variables
 !
 !-----------------------------------------------------------------------
 
@@ -21,7 +21,7 @@ MODULE MOD_Lulcc_Vars_TimeVariables
    IMPLICIT NONE
    SAVE
 ! ----------------------------------------------------------------------
-! Time-varying state variables which reaquired by restart run
+! Time-varying state variables which required by restart run
    !TODO: need to check with MOD_Vars_TimeVariables.F90 whether
    !      there are any variables missing. - DONE
    real(r8), allocatable :: z_sno_         (:,:)  !node depth [m]
@@ -48,14 +48,14 @@ MODULE MOD_Lulcc_Vars_TimeVariables
    real(r8), allocatable :: wdsrf_           (:)  !depth of surface water [mm]
    real(r8), allocatable :: rss_             (:)  !soil surface resistance [s/m]
 
-   real(r8), allocatable :: t_lake_        (:,:)  !lake layer teperature [K]
+   real(r8), allocatable :: t_lake_        (:,:)  !lake layer temperature [K]
    real(r8), allocatable :: lake_icefrac_  (:,:)  !lake mass fraction of lake layer that is frozen
    real(r8), allocatable :: savedtke1_       (:)  !top level eddy conductivity (W/m K)
 
    !Plant Hydraulic variables
    real(r8), allocatable :: vegwp_         (:,:)  !vegetation water potential [mm]
    real(r8), allocatable :: gs0sun_          (:)  !working copy of sunlit stomata conductance
-   real(r8), allocatable :: gs0sha_          (:)  !working copy of shalit stomata conductance
+   real(r8), allocatable :: gs0sha_          (:)  !working copy of shaded stomata conductance
    !END plant hydraulic variables
 
    !Ozone stress variables
@@ -75,7 +75,7 @@ MODULE MOD_Lulcc_Vars_TimeVariables
    real(r8), allocatable :: mss_dst4_      (:,:)  !mass of dust species 4 in snow  (col,lyr) [kg]
    real(r8), allocatable :: ssno_lyr_  (:,:,:,:)  !snow layer absorption [-]
 
-   ! Additional variables required by reginal model (such as WRF ) RSM)
+   ! Additional variables required by regional model (such as WRF ) RSM)
    real(r8), allocatable :: trad_            (:)  !radiative temperature of surface [K]
    real(r8), allocatable :: tref_            (:)  !2 m height air temperature [kelvin]
    real(r8), allocatable :: qref_            (:)  !2 m height air specific humidity
@@ -112,7 +112,7 @@ MODULE MOD_Lulcc_Vars_TimeVariables
    ! Plant Hydraulic variables
    real(r8), allocatable :: vegwp_p_       (:,:)  !vegetation water potential [mm]
    real(r8), allocatable :: gs0sun_p_        (:)  !working copy of sunlit stomata conductance
-   real(r8), allocatable :: gs0sha_p_        (:)  !working copy of shalit stomata conductance
+   real(r8), allocatable :: gs0sha_p_        (:)  !working copy of shaded stomata conductance
    ! end plant hydraulic variables
 
    ! Ozone Stress Variables
@@ -126,12 +126,12 @@ MODULE MOD_Lulcc_Vars_TimeVariables
    real(r8), allocatable :: dfwsun_          (:)  !change of sunlit fraction of walls [-]
 
    ! shortwave absorption
-   real(r8), allocatable :: sroof_       (:,:,:)  !roof aborption [-]
+   real(r8), allocatable :: sroof_       (:,:,:)  !roof absorption [-]
    real(r8), allocatable :: swsun_       (:,:,:)  !sunlit wall absorption [-]
    real(r8), allocatable :: swsha_       (:,:,:)  !shaded wall absorption [-]
-   real(r8), allocatable :: sgimp_       (:,:,:)  !impervious absorptioin [-]
-   real(r8), allocatable :: sgper_       (:,:,:)  !pervious absorptioin [-]
-   real(r8), allocatable :: slake_       (:,:,:)  !urban lake absorptioin [-]
+   real(r8), allocatable :: sgimp_       (:,:,:)  !impervious absorption [-]
+   real(r8), allocatable :: sgper_       (:,:,:)  !pervious absorption [-]
+   real(r8), allocatable :: slake_       (:,:,:)  !urban lake absorption [-]
 
    ! net longwave radiation for last time temperature change
    real(r8), allocatable :: lwsun_           (:)  !net longwave of sunlit wall [W/m2]
@@ -190,10 +190,10 @@ MODULE MOD_Lulcc_Vars_TimeVariables
    real(r8), allocatable :: snowdp_gper_     (:)  !pervious ground snow depth [m]
    real(r8), allocatable :: snowdp_lake_     (:)  !urban lake snow depth [m]
 
-   !TODO: condsider renaming the below variables
+   !TODO: consider renaming the below variables
    real(r8), allocatable :: Fhac_            (:)  !sensible flux from heat or cool AC [W/m2]
    real(r8), allocatable :: Fwst_            (:)  !waste heat flux from heat or cool AC [W/m2]
-   real(r8), allocatable :: Fach_            (:)  !flux from inner and outter air exchange [W/m2]
+   real(r8), allocatable :: Fach_            (:)  !flux from inner and outer air exchange [W/m2]
    real(r8), allocatable :: Fahe_            (:)  !flux from metabolism and vehicle [W/m2]
    real(r8), allocatable :: Fhah_            (:)  !sensible heat flux from heating [W/m2]
    real(r8), allocatable :: vehc_            (:)  !flux from vehicle [W/m2]

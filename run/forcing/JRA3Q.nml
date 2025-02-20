@@ -40,7 +40,7 @@
 
 
    DEF_forcing%vname    = 'tmp2m-hgt-fc-gauss' 'spfh2m-hgt-fc-gauss' 'pres-sfc-fc-gauss' 'tprate1have-sfc-fc-gauss' 'ugrd10m-hgt-fc-gauss' 'vgrd10m-hgt-fc-gauss' 'dswrf1have-sfc-fc-gauss' 'dlwrf1have-sfc-fc-gauss'
-   DEF_forcing%timelog  = 'instant' 'instant' 'instant' 'foreward' 'instant' 'instant' 'foreward' 'foreward'
+   DEF_forcing%timelog  = 'instant' 'instant' 'instant' 'forward' 'instant' 'instant' 'forward' 'forward'
    DEF_forcing%tintalgo = 'linear' 'linear' 'linear' 'linear' 'linear' 'linear' 'coszen' 'linear'
 
 

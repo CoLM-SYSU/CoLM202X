@@ -81,6 +81,8 @@ PROGRAM CoLMINI
       CALL getarg (1, nlfile)
       CALL read_namelist (nlfile)
 
+      DEF_PIO_groupsize = 2
+
       casename     = DEF_CASE_NAME
       dir_landdata = DEF_dir_landdata
       dir_restart  = DEF_dir_restart
@@ -126,8 +128,15 @@ PROGRAM CoLMINI
       CALL pixelset_load_from_file (dir_landdata, 'landpatch', landpatch, numpatch, lc_year)
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
+#ifdef SinglePoint
+      IF (patchtypes(SITE_landtype) == 0) THEN
+         CALL pixelset_load_from_file (dir_landdata, 'landpft', landpft, numpft, lc_year)
+         CALL map_patch_to_pft
+      ENDIF
+#else
       CALL pixelset_load_from_file (dir_landdata, 'landpft', landpft, numpft, lc_year)
       CALL map_patch_to_pft
+#endif
 #endif
 
 #ifdef URBAN_MODEL

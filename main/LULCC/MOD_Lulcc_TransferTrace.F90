@@ -87,8 +87,7 @@ CONTAINS
 
    integer, intent(in) :: lc_year
 
-   ! local variables:
-   ! ---------------------------------------------------------------
+!-------------------------- Local Variables ----------------------------
    character(len=256) :: dir_5x5, suffix, lastyr, thisyr, dir_landdata, lndname
    integer :: i,ipatch,ipxl,ipxstt,ipxend,numpxl,ilc
    integer, allocatable, dimension(:) :: locpxl
@@ -101,6 +100,7 @@ CONTAINS
 #ifdef SrfdataDiag
    integer  :: ityp
    integer, allocatable, dimension(:) :: typindex
+!-----------------------------------------------------------------------
 
       allocate( typindex(N_land_classification+1) )
 #endif

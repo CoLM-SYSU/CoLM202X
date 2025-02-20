@@ -51,7 +51,6 @@ CONTAINS
               qseva_snow  ,qsdew_snow  ,qsubl_snow  ,qfros_snow  ,fsno        ,&
               rsur        ,rnof        ,qinfl       ,pondmx      ,ssi         ,&
               wimp        ,smpmin      ,zwt         ,wa          ,qcharge     ,&
-              errw_rsub   ,&
 #if(defined CaMa_Flood)
               flddepth    ,fldfrc      ,qinfl_fld                             ,&
 #endif
@@ -82,22 +81,22 @@ CONTAINS
 
    IMPLICIT NONE
 
-!-----------------------Argument---------- ------------------------------
+!-------------------------- Dummy Arguments ----------------------------
    integer, intent(in) :: &
-        ipatch                  ,& ! patch index
-        patchtype                  ! land patch type (0=soil, 1=urban or built-up, 2=wetland,
-                                   ! 3=land ice, 4=land water bodies, 99=ocean
+        ipatch                  ,&! patch index
+        patchtype                 ! land patch type (0=soil, 1=urban or built-up, 2=wetland,
+                                  ! 3=land ice, 4=land water bodies, 99=ocean
 
    integer, intent(in) :: &
-        lb                      ,& ! lower bound of array
-        nl_soil                    ! upper bound of array
+        lb                      ,&! lower bound of array
+        nl_soil                   ! upper bound of array
 
    real(r8), intent(in) :: &
         deltim                  ,&! time step (s)
         ! wtfact                ,&! (updated to gridded 'fsatmax' data) fraction of model area with high water table
         pondmx                  ,&! ponding depth (mm)
         ssi                     ,&! irreducible water saturation of snow
-        wimp                    ,&! water impremeable if porosity less than wimp
+        wimp                    ,&! water impermeable if porosity less than wimp
         smpmin                  ,&! restriction for min of soil poten. (mm)
         topostd                 ,&! standard deviation of elevation (m)
         BVIC                    ,&!
@@ -111,9 +110,9 @@ CONTAINS
         psi0(1:nl_soil)         ,&! saturated soil suction (mm) (NEGATIVE)
         hksati(1:nl_soil)       ,&! hydraulic conductivity at saturation (mm h2o/s)
         theta_r(1:nl_soil)      ,&! residual moisture content [-]
-        fsatmax                 ,&! maximum saturated area fraction [-]                         
-        fsatdcf                 ,&! decay factor in calucation of saturated area fraction [1/m] 
-        rootr(1:nl_soil)        ,&! water uptake farction from different layers, all layers add to 1.0
+        fsatmax                 ,&! maximum saturated area fraction [-]
+        fsatdcf                 ,&! decay factor in calculation of saturated area fraction [1/m]
+        rootr(1:nl_soil)        ,&! water uptake fraction from different layers, all layers add to 1.0
         rootflux(1:nl_soil)     ,&! root uptake from different layer, all layers add to transpiration
 
         t_soisno(lb:nl_soil)    ,&! soil/snow skin temperature (K)
@@ -146,7 +145,7 @@ CONTAINS
    real(r8), intent(out) :: &
         smp(1:nl_soil)          ,&! soil matrix potential [mm]
         hk (1:nl_soil)            ! hydraulic conductivity [mm h2o/m]
-   
+
    real(r8), intent(inout) :: &
         zwt                     ,&! the depth from ground (soil) surface to water table [m]
         wa                        ! water storage in aquifer [mm]
@@ -155,8 +154,7 @@ CONTAINS
         rsur                    ,&! surface runoff (mm h2o/s)
         rnof                    ,&! total runoff (mm h2o/s)
         qinfl                   ,&! infiltration rate (mm h2o/s)
-        qcharge                 ,&! groundwater recharge (positive to aquifer) [mm/s]
-        errw_rsub
+        qcharge                   ! groundwater recharge (positive to aquifer) [mm/s]
 
 ! SNICAR model variables
 ! Aerosol Fluxes (Jan. 07, 2023)
@@ -174,8 +172,8 @@ CONTAINS
 ! Aerosol Fluxes (Jan. 07, 2023)
 ! END SNICAR model variables
 
-!-----------------------Local Variables------------------------------
-!
+!-------------------------- Local Variables ----------------------------
+
    integer j                      ! loop counter
 
    real(r8) :: &
@@ -183,8 +181,8 @@ CONTAINS
        dwat(1:nl_soil)          ,&! change in soil water
        gwat                     ,&! net water input from top (mm/s)
        rsubst                   ,&! subsurface runoff (mm h2o/s)
-       vol_liq(1:nl_soil)       ,&! partitial volume of liquid water in layer
-       vol_ice(1:nl_soil)       ,&! partitial volume of ice lens in layer
+       vol_liq(1:nl_soil)       ,&! partial volume of liquid water in layer
+       vol_ice(1:nl_soil)       ,&! partial volume of ice lens in layer
        icefrac(1:nl_soil)       ,&! ice fraction (-)
        zmm (1:nl_soil)          ,&! layer depth (mm)
        dzmm(1:nl_soil)          ,&! layer thickness (mm)
@@ -197,14 +195,13 @@ CONTAINS
 
 #ifdef CROP
    integer  :: ps, pe
-   integer  :: irrig_flag  ! 1 IF sprinker, 2 IF others
+   integer  :: irrig_flag  ! 1 IF sprinkler, 2 IF others
    real(r8) :: qflx_irrig_drip
    real(r8) :: qflx_irrig_sprinkler
    real(r8) :: qflx_irrig_flood
    real(r8) :: qflx_irrig_paddy
 #endif
 
-   ! **
    real(r8) :: wliq_soisno_tmp(1:nl_soil)
 
 !=======================================================================
@@ -269,10 +266,10 @@ ENDIF
 
 IF(patchtype<=1)THEN   ! soil ground only
 
-      ! For water balance check, the sum of water in soil column before the calcultion
+      ! For water balance check, the sum of water in soil column before the calculation
       w_sum = sum(wliq_soisno(1:)) + sum(wice_soisno(1:)) + wa
 
-      ! porosity of soil, partitial volume of ice and liquid
+      ! porosity of soil, partial volume of ice and liquid
       DO j = 1, nl_soil
          vol_ice(j) = min(porsl(j), wice_soisno(j)/(dz_soisno(j)*denice))
          eff_porosity(j) =  max(0.01, porsl(j)-vol_ice(j))
@@ -284,7 +281,7 @@ IF(patchtype<=1)THEN   ! soil ground only
          ENDIF
       ENDDO
 
-      ! surface runoff including water table and surface staturated area
+      ! surface runoff including water table and surface saturated area
 
       rsur   = 0.
       rsubst = 0.
@@ -331,7 +328,7 @@ IF(patchtype<=1)THEN   ! soil ground only
 #if(defined CaMa_Flood)
       IF (LWINFILT) THEN
          !  re-infiltration [mm/s] calculation.
-         ! IF surface runoff is ocurred (rsur != 0.), flood depth <1.e-6  and flood frction <0.05,
+         ! IF surface runoff is occurred (rsur != 0.), flood depth <1.e-6  and flood fraction <0.05,
          ! the re-infiltration will not be calculated.
          IF ((flddepth .gt. 1.e-6).and.(fldfrc .gt. 0.05) .and. (patchtype == 0) ) THEN
             gfld=flddepth/deltim ! [mm/s]
@@ -339,7 +336,7 @@ IF(patchtype<=1)THEN   ! soil ground only
             ! otherwise, the surface runoff will be double counted.
             ! only the re-infiltration is added to water balance calculation.
             IF (DEF_Runoff_SCHEME  == 0) THEN
-          
+
                CALL SurfaceRunoff_SIMTOP (nl_soil,wimp,porsl,psi0,hksati,1.0,fsatdcf,&
                         z_soisno(1:),dz_soisno(1:),zi_soisno(0:),&
                         eff_porosity,icefrac,zwt,gfld,rsur_fld)
@@ -360,7 +357,7 @@ IF(patchtype<=1)THEN   ! soil ground only
                   BVIC, gfld, deltim, rsur_fld, rsubst)
             ENDIF
             ! infiltration into surface soil layer
-            qinfl_fld_subgrid = gfld - rsur_fld !assume the re-infiltration is occured in whole patch area.
+            qinfl_fld_subgrid = gfld - rsur_fld !assume the re-infiltration is occurred in whole patch area.
          ELSE
             qinfl_fld_subgrid=0.0d0
             gfld=0.0d0
@@ -402,7 +399,7 @@ IF(patchtype<=1)THEN   ! soil ground only
                         eff_porosity,icefrac,dz_soisno(1:),zi_soisno(0:),&
                         wice_soisno(1:),wliq_soisno(1:),&
                         porsl,psi0,bsw,zwt,wa,&
-                        qcharge,rsubst,errw_rsub)
+                        qcharge,rsubst)
 
       ! total runoff (mm/s)
       rnof = rsubst + rsur
@@ -416,7 +413,7 @@ IF ((.not.DEF_SPLIT_SOILSNOW) .or. (patchtype==1 .and. DEF_URBAN_RUN)) THEN
       ENDIF
 
       err_solver = (sum(wliq_soisno(1:))+sum(wice_soisno(1:))+wa) - w_sum &
-                 - (gwat-etr-rnof-errw_rsub)*deltim
+                 - (gwat-etr-rnof)*deltim
 
       IF(lb >= 1)THEN
          err_solver = err_solver-(qsdew+qfros-qsubl)*deltim
@@ -427,7 +424,7 @@ ELSE
       wice_soisno(1) = max(0., wice_soisno(1) + (qfros_soil-qsubl_soil) * deltim)
 
       err_solver = (sum(wliq_soisno(1:))+sum(wice_soisno(1:))+wa) - w_sum &
-                 - (gwat-etr-rnof-errw_rsub)*deltim
+                 - (gwat-etr-rnof)*deltim
 
       err_solver = err_solver-(qsdew_soil+qfros_soil-qsubl_soil)*deltim
 ENDIF
@@ -479,7 +476,6 @@ ELSE
       wa = 4800.
       zwt = 0.
       qcharge = 0.
-      errw_rsub = 0.
 
 ENDIF
 
@@ -537,7 +533,7 @@ ENDIF
 
    IMPLICIT NONE
 
-!-----------------------Argument---------- ------------------------------
+!-------------------------- Dummy Arguments ----------------------------
    integer, intent(in) :: &
         ipatch           ,& ! patch index
         patchtype           ! land patch type (0=soil, 1=urban or built-up, 2=wetland,
@@ -546,23 +542,23 @@ ENDIF
 
    integer, intent(in) :: &
         lb               , &! lower bound of array
-        nl_soil            ! upper bound of array
+        nl_soil             ! upper bound of array
 
    real(r8), intent(in) :: &
         deltim           , &! time step (s)
         ! wtfact         , &! (updated to gridded 'fsatmax' data) fraction of model area with high water table
         ssi              , &! irreducible water saturation of snow
         pondmx           , &! ponding depth (mm)
-        wimp             , &! water impremeable IF porosity less than wimp
+        wimp             , &! water impermeable IF porosity less than wimp
         topostd          , &! standard deviation of elevation (m)
-        BVIC            , &!
+        BVIC             , &!
         z_soisno (lb:nl_soil)   , &! layer depth (m)
         dz_soisno(lb:nl_soil)   , &! layer thickness (m)
         zi_soisno(lb-1:nl_soil) , &! interface level below a "z" level (m)
-        bsw      (1:nl_soil), &! clapp and hornbereger "b" parameter [-]
+        bsw      (1:nl_soil), & ! clapp and hornberger "b" parameter [-]
         theta_r  (1:nl_soil), & ! residual moisture content [-]
-        fsatmax             , & ! maximum saturated area fraction [-]                         
-        fsatdcf             , & ! decay factor in calucation of saturated area fraction [1/m] 
+        fsatmax             , & ! maximum saturated area fraction [-]
+        fsatdcf             , & ! decay factor in calculation of saturated area fraction [1/m]
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
         alpha_vgm(1:nl_soil), & ! a parameter corresponding approximately to the inverse of the air-entry value
         n_vgm    (1:nl_soil), & ! a shape parameter [dimensionless]
@@ -573,7 +569,7 @@ ENDIF
         porsl(1:nl_soil) , &! saturated volumetric soil water content(porosity)
         psi0(1:nl_soil)  , &! saturated soil suction (mm) (NEGATIVE)
         hksati(1:nl_soil), &! hydraulic conductivity at saturation (mm h2o/s)
-        rootr(1:nl_soil) , &! water uptake farction from different layers, all layers add to 1.0
+        rootr(1:nl_soil) , &! water uptake fraction from different layers, all layers add to 1.0
         rootflux(1:nl_soil),&! root uptake from different layer, all layers add to transpiration
 
         t_soisno(lb:nl_soil), &! soil/snow skin temperature (K)
@@ -637,8 +633,8 @@ ENDIF
 ! Aerosol Fluxes (Jan. 07, 2023)
 ! END SNICAR model variables
 
-!-----------------------Local Variables------------------------------
-!
+!-------------------------- Local Variables ----------------------------
+
    integer j                 ! loop counter
 
    real(r8) :: &
@@ -662,7 +658,7 @@ ENDIF
 
 #ifdef CROP
    integer  :: ps, pe
-   integer  :: irrig_flag  ! 1 if sprinker, 2 if others
+   integer  :: irrig_flag  ! 1 if sprinkler, 2 if others
    real(r8) :: qflx_irrig_drip
    real(r8) :: qflx_irrig_sprinkler
    real(r8) :: qflx_irrig_flood
@@ -749,7 +745,7 @@ ENDIF
 
 IF((patchtype<=1) .or. is_dry_lake)THEN   ! soil ground only
 
-      ! For water balance check, the sum of water in soil column before the calcultion
+      ! For water balance check, the sum of water in soil column before the calculation
       w_sum = sum(wliq_soisno(1:nl_soil)) + sum(wice_soisno(1:nl_soil)) + wa + wdsrf
 
       ! Due to the increase in volume after freezing, the total volume of water and
@@ -757,7 +753,7 @@ IF((patchtype<=1) .or. is_dry_lake)THEN   ! soil ground only
       ! stored in "wresi". After calculating the movement of soil water, "wresi"
       ! is added back to "wliq_soisno".
       wresi(1:nl_soil) = 0.
-      ! porosity of soil, partitial volume of ice and liquid
+      ! porosity of soil, partial volume of ice and liquid
       DO j = 1, nl_soil
          vol_ice(j) = min(porsl(j), wice_soisno(j)/(dz_soisno(j)*denice))
          IF(porsl(j) < 1.e-6)THEN
@@ -777,7 +773,7 @@ IF((patchtype<=1) .or. is_dry_lake)THEN   ! soil ground only
          ENDIF
       ENDDO
 
-      ! surface runoff including water table and surface staturated area
+      ! surface runoff including water table and surface saturated area
 
       rsur    = 0.
       rsubst  = 0.
@@ -853,7 +849,7 @@ IF((patchtype<=1) .or. is_dry_lake)THEN   ! soil ground only
 #if(defined CaMa_Flood)
       IF (LWINFILT) THEN
          !  re-infiltration [mm/s] calculation.
-         ! IF surface runoff is ocurred (rsur != 0.), flood depth <1.e-6  and flood frction <0.05,
+         ! IF surface runoff is occurred (rsur != 0.), flood depth <1.e-6  and flood fraction <0.05,
          ! the re-infiltration will not be calculated.
          IF ((flddepth .gt. 1.e-6).and.(fldfrc .gt. 0.05) .and. (patchtype == 0) ) THEN
             gfld=flddepth/deltim ! [mm/s]
@@ -861,7 +857,7 @@ IF((patchtype<=1) .or. is_dry_lake)THEN   ! soil ground only
             ! otherwise, the surface runoff will be double counted.
             ! only the re-infiltration is added to water balance calculation.
             IF (DEF_Runoff_SCHEME  == 0) THEN
-          
+
                CALL SurfaceRunoff_SIMTOP (nl_soil,wimp,porsl,psi0,hksati,1.0,fsatdcf,&
                         z_soisno(1:),dz_soisno(1:),zi_soisno(0:),&
                         eff_porosity,icefrac,zwt,gfld,rsur_fld)
@@ -882,7 +878,7 @@ IF((patchtype<=1) .or. is_dry_lake)THEN   ! soil ground only
                   BVIC, gfld, deltim, rsur_fld, rsubst)
             ENDIF
             ! infiltration into surface soil layer
-            qinfl_fld_subgrid = gfld - rsur_fld !assume the re-infiltration is occured in whole patch area.
+            qinfl_fld_subgrid = gfld - rsur_fld !assume the re-infiltration is occurred in whole patch area.
          ELSE
             qinfl_fld_subgrid=0.0d0
             gfld=0.0d0
@@ -904,7 +900,7 @@ IF((patchtype<=1) .or. is_dry_lake)THEN   ! soil ground only
       sp_zc(1:nl_soil) = z_soisno (1:nl_soil) * 1000.0   ! from meter to mm
       sp_zi(0:nl_soil) = zi_soisno(0:nl_soil) * 1000.0   ! from meter to mm
 
-      ! check consistancy between water table location and liquid water content
+      ! check consistency between water table location and liquid water content
       DO j = 1, nl_soil
          IF ((vol_liq(j) < eff_porosity(j)-1.e-8) .and. (zwtmm <= sp_zi(j-1))) THEN
             zwtmm = sp_zi(j)
@@ -1072,7 +1068,7 @@ ENDIF
 
 #if(defined CoLMDEBUG)
       IF(abs(err_solver) > 1.e-3)THEN
-         write(6,'(A,E20.5,A,I0)') 'Warning (WATER_VSF): water balance violation', err_solver, & 
+         write(6,'(A,E20.5,A,I0)') 'Warning (WATER_VSF): water balance violation', err_solver, &
             ' in element ', landpatch%eindex(ipatch)
       ENDIF
       IF (any(wliq_soisno < -1.e-3)) THEN
@@ -1148,12 +1144,13 @@ ENDIF
 !-----------------------------------------------------------------------
 ! Original author : Yongjiu Dai, /09/1999; /04/2014
 !
-! Water flow wihtin snow is computed by an explicit and non-physical based scheme,
-! which permits a part of liquid water over the holding capacity (a tentative value
-! is used, i.e., equal to 0.033*porosity) to percolate into the underlying layer,
-! except the case of that the porosity of one of the two neighboring layers is
-! less than 0.05, the zero flow is assumed. The water flow out of the bottom
-! snow pack will participate as the input of the soil water and runoff.
+! Water flow within snow is computed by an explicit and non-physical based
+! scheme, which permits a part of liquid water over the holding capacity (a
+! tentative value is used, i.e., equal to 0.033*porosity) to percolate into the
+! underlying layer, except the case of that the porosity of one of the two
+! neighboring layers is less than 0.05, the zero flow is assumed. The water
+! flow out of the bottom snow pack will participate as the input of the soil
+! water and runoff.
 !
 !-----------------------------------------------------------------------
 
@@ -1161,14 +1158,14 @@ ENDIF
    USE MOD_Const_Physical, only : denice, denh2o  ! physical constant
    IMPLICIT NONE
 
-!----------------------- dummy argument --------------------------------
+!-------------------------- Dummy Arguments ----------------------------
    integer, intent(in) :: &
         lb          ! lower bound of array
 
    real(r8), intent(in) :: &
         deltim,    &! seconds in a time step (s)
         ssi,       &! irreducible water saturation of snow
-        wimp,      &! water impremeable if porosity less than wimp
+        wimp,      &! water impermeable if porosity less than wimp
         dz_soisno(lb:0),  &! layer thickness (m)
 
         pg_rain,   &! rainfall after removal of interception (mm h2o/s)
@@ -1184,21 +1181,21 @@ ENDIF
    real(r8), intent(out) :: &
         qout_snowb  ! rate of water out of snow bottom (mm/s)
 
-!----------------------- local variables --------------------------------
-   integer j         ! k do loop/array indices
+!-------------------------- Local Variables ----------------------------
+   integer j           ! k do loop/array indices
 
    real(r8) :: &
-       qin,           &! water flow into the elmement (mm/s)
-       qout,          &! water flow out of the elmement (mm/s)
+       qin,           &! water flow into the element (mm/s)
+       qout,          &! water flow out of the element (mm/s)
        zwice,         &! the sum of ice mass of snow cover (kg/m2)
        wgdif,         &! ice mass after minus sublimation
-       vol_liq(lb:0), &! partitial volume of liquid water in layer
-       vol_ice(lb:0), &! partitial volume of ice lens in layer
+       vol_liq(lb:0), &! partial volume of liquid water in layer
+       vol_ice(lb:0), &! partial volume of ice lens in layer
        eff_porosity(lb:0) ! effective porosity = porosity - vol_ice
 
 !=======================================================================
-! renew the mass of ice lens (wice_soisno) and liquid (wliq_soisno) in the surface snow layer,
-! resulted by sublimation (frost) / evaporation (condense)
+! renew the mass of ice lens (wice_soisno) and liquid (wliq_soisno) in the
+! surface snow layer, resulted by sublimation (frost) / evaporation (condense)
 
       wgdif = wice_soisno(lb) + (qfros - qsubl)*deltim
       wice_soisno(lb) = wgdif
@@ -1213,20 +1210,20 @@ ENDIF
          wliq_soisno(lb) = 0.
       ENDIF
 
-! Porosity and partitial volume
+! Porosity and partial volume
       DO j = lb, 0
          vol_ice(j) = min(1., wice_soisno(j)/(dz_soisno(j)*denice))
          eff_porosity(j) = max(0.01, 1. - vol_ice(j))
          vol_liq(j) = min(eff_porosity(j), wliq_soisno(j)/(dz_soisno(j)*denh2o))
       ENDDO
 
-! Capillary force within snow could be two or more orders of magnitude
-! less than those of gravity, this term may be ignored.
-! Here we could keep the garavity term only. The genernal expression
-! for water flow is "K * ss**3", however, no effective paramterization
-! for "K". Thus, a very simple treatment (not physical based) is introduced:
-! when the liquid water of layer exceeds the layer's holding
-! capacity, the excess meltwater adds to the underlying neighbor layer.
+! Capillary force within snow could be two or more orders of magnitude less
+! than those of gravity, this term may be ignored.  Here we could keep the
+! gravity term only. The general expression for water flow is "K * ss**3",
+! however, no effective parameterization for "K". Thus, a very simple treatment
+! (not physical based) is introduced: when the liquid water of layer exceeds
+! the layer's holding capacity, the excess meltwater adds to the underlying
+! neighbor layer.
 
       qin = 0.
       DO j= lb, 0
@@ -1270,12 +1267,13 @@ ENDIF
 !-----------------------------------------------------------------------
 ! Original author : Yongjiu Dai, /09/1999, /04/2014, /01/2023/
 !
-! Water flow wihtin snow is computed by an explicit and non-physical based scheme,
-! which permits a part of liquid water over the holding capacity (a tentative value
-! is used, i.e., equal to 0.033*porosity) to percolate into the underlying layer,
-! except the case of that the porosity of one of the two neighboring layers is
-! less than 0.05, the zero flow is assumed. The water flow out of the bottom
-! snow pack will participate as the input of the soil water and runoff.
+! Water flow within snow is computed by an explicit and non-physical based
+! scheme, which permits a part of liquid water over the holding capacity (a
+! tentative value is used, i.e., equal to 0.033*porosity) to percolate into the
+! underlying layer, except the case of that the porosity of one of the two
+! neighboring layers is less than 0.05, the zero flow is assumed. The water
+! flow out of the bottom snow pack will participate as the input of the soil
+! water and runoff.
 !
 ! REVISIONS:
 ! Yongjiu Dai, 01/2023: added Aerosol fluxes from SNICAR model
@@ -1286,14 +1284,14 @@ ENDIF
    real(r8), parameter :: denice = 917.0_r8  ! density of ice [kg/m3]
    real(r8), parameter :: denh2o = 1000.0_r8 ! density of liquid water [kg/m3]
 
-!----------------------- dummy argument --------------------------------
+!-------------------------- Dummy Arguments ----------------------------
    integer, intent(in) :: &
         lb          ! lower bound of array
 
    real(r8), intent(in) :: &
         deltim,    &! seconds in a time step (s)
         ssi,       &! irreducible water saturation of snow
-        wimp,      &! water impremeable if porosity less than wimp
+        wimp,      &! water impermeable if porosity less than wimp
         dz_soisno(lb:0),  &! layer thickness (m)
 
         pg_rain,   &! rainfall after removal of interception (mm h2o/s)
@@ -1323,16 +1321,16 @@ ENDIF
         mss_dst4  (lb:0)   ! mass of dust species 4 in snow  (col,lyr) [kg]
 !  Aerosol Fluxes (Jan. 07, 2023)
 
-!----------------------- local variables --------------------------------
+!-------------------------- Local Variables ----------------------------
    integer j         ! do loop/array indices
 
    real(r8) :: &
-       qin,               &! water flow into the elmement (mm/s)
-       qout,              &! water flow out of the elmement (mm/s)
+       qin,               &! water flow into the element (mm/s)
+       qout,              &! water flow out of the element (mm/s)
        zwice,             &! the sum of ice mass of snow cover (kg/m2)
        wgdif,             &! ice mass after minus sublimation
-       vol_liq(lb:0),     &! partitial volume of liquid water in layer
-       vol_ice(lb:0),     &! partitial volume of ice lens in layer
+       vol_liq(lb:0),     &! partial volume of liquid water in layer
+       vol_ice(lb:0),     &! partial volume of ice lens in layer
        eff_porosity(lb:0)  ! effective porosity = porosity - vol_ice
 
 ! Aerosol Fluxes (Jan. 07, 2023)
@@ -1411,20 +1409,20 @@ ENDIF
       wliq_soisno(lb) = wliq_soisno(lb) + (pg_rain + qsdew - qseva)*deltim
       wliq_soisno(lb) = max(0., wliq_soisno(lb))
 
-! Porosity and partitial volume
+! Porosity and partial volume
       DO j = lb, 0
          vol_ice(j) = min(1., wice_soisno(j)/(dz_soisno(j)*denice))
          eff_porosity(j) = max(0.01, 1. - vol_ice(j))
          vol_liq(j) = min(eff_porosity(j), wliq_soisno(j)/(dz_soisno(j)*denh2o))
       ENDDO
 
-! Capillary force within snow could be two or more orders of magnitude
-! less than those of gravity, this term may be ignored.
-! Here we could keep the garavity term only. The genernal expression
-! for water flow is "K * ss**3", however, no effective paramterization
-! for "K". Thus, a very simple treatment (not physical based) is introduced:
-! when the liquid water of layer exceeds the layer's holding
-! capacity, the excess meltwater adds to the underlying neighbor layer.
+! Capillary force within snow could be two or more orders of magnitude less
+! than those of gravity, this term may be ignored.  Here we could keep the
+! gravity term only. The general expression for water flow is "K * ss**3",
+! however, no effective parameterization for "K". Thus, a very simple treatment
+! (not physical based) is introduced: when the liquid water of layer exceeds
+! the layer's holding capacity, the excess meltwater adds to the underlying
+! neighbor layer.
 
 ! Aerosol Fluxes (Jan. 07, 2023)
 ! Also compute aerosol fluxes through snowpack in this loop:
@@ -1770,15 +1768,16 @@ ENDIF
 !
 !-----------------------------------------------------------------------
    USE MOD_Precision
-   USE MOD_Const_Physical , only : grav,hfus,tfrz,denh2o,denice
+   USE MOD_Const_Physical, only: grav,hfus,tfrz,denh2o,denice
    USE MOD_Utils
 
    IMPLICIT NONE
 
+!-------------------------- Dummy Arguments ----------------------------
    integer , intent(in) :: patchtype ! land patch type
    integer , intent(in) :: nl_soil   ! number of soil layers
    real(r8), intent(in) :: deltim    ! land model time step (sec)
-   real(r8), intent(in) :: wimp      ! water impremeable if porosity less than wimp
+   real(r8), intent(in) :: wimp      ! water impermeable if porosity less than wimp
    real(r8), intent(in) :: smpmin    ! restriction for min of soil potential (mm)
 
    real(r8), intent(in) :: qinfl     ! infiltration (mm H2O /s)
@@ -1807,9 +1806,8 @@ ENDIF
    real(r8), intent(out) :: smp(1:nl_soil)    ! soil matrix potential [mm]
    real(r8), intent(out) :: hk (1:nl_soil)    ! hydraulic conductivity [mm h2o/s]
 
-!
-! local arguments
-!
+!-------------------------- Local Variables ----------------------------
+
    integer  :: j                 ! do loop indices
    real(r8) :: amx(1:nl_soil)    ! "a" left off diagonal of tridiagonal matrix
    real(r8) :: bmx(1:nl_soil)    ! "b" diagonal column for tridiagonal matrix
@@ -2065,43 +2063,38 @@ ENDIF
                            eff_porosity,icefrac,&
                            dz_soisno,zi_soisno,wice_soisno,wliq_soisno,&
                            porsl,psi0,bsw,zwt,wa,&
-                           qcharge,rsubst,errw_rsub)
+                           qcharge,rsubst)
 
 ! -------------------------------------------------------------------------
 
 
    USE MOD_Precision
    USE MOD_Const_Physical, only : tfrz
-!
-! ARGUMENTS:
    IMPLICIT NONE
 
-   integer, intent(in) :: nl_soil       !
+!-------------------------- Dummy Arguments ----------------------------
+   integer , intent(in) :: nl_soil      !
    real(r8), intent(in) :: deltim       ! land model time step (sec)
    real(r8), intent(in) :: pondmx       !
 
-   real(r8), intent(in) :: eff_porosity(1:nl_soil) ! effective porosity = porosity - vol_ice
-   real(r8), intent(in) :: icefrac(1:nl_soil)      ! ice fraction (-)
+   real(r8), intent(in) :: eff_porosity(1:nl_soil)   ! effective porosity = porosity - vol_ice
+   real(r8), intent(in) :: icefrac(1:nl_soil)        ! ice fraction (-)
 
-   real(r8), intent(in) :: dz_soisno  (1:nl_soil)  ! layer depth (m)
-   real(r8), intent(in) :: zi_soisno  (0:nl_soil)  ! interface level below a "z" level (m)
-   real(r8), intent(inout) :: wice_soisno(1:nl_soil)  ! ice lens (kg/m2)
-   real(r8), intent(inout) :: wliq_soisno(1:nl_soil)  ! liquid water (kg/m2)
+   real(r8), intent(in) :: dz_soisno  (1:nl_soil)    ! layer depth (m)
+   real(r8), intent(in) :: zi_soisno  (0:nl_soil)    ! interface level below a "z" level (m)
+   real(r8), intent(inout) :: wice_soisno(1:nl_soil) ! ice lens (kg/m2)
+   real(r8), intent(inout) :: wliq_soisno(1:nl_soil) ! liquid water (kg/m2)
 
-   real(r8), intent(in) :: porsl(1:nl_soil)        ! volumetric soil water at saturation (porosity)
-   real(r8), intent(in) :: psi0(1:nl_soil)         ! minimum soil suction (mm) [-]
-   real(r8), intent(in) :: bsw(1:nl_soil)          ! Clapp and Hornberger "b"
+   real(r8), intent(in) :: porsl(1:nl_soil)          ! volumetric soil water at saturation (porosity)
+   real(r8), intent(in) :: psi0(1:nl_soil)           ! minimum soil suction (mm) [-]
+   real(r8), intent(in) :: bsw(1:nl_soil)            ! Clapp and Hornberger "b"
 
    real(r8), intent(inout) :: zwt       ! the depth from ground (soil) surface to water table [m]
    real(r8), intent(inout) :: wa        ! water in the unconfined aquifer (mm)
    real(r8), intent(in)    :: qcharge   ! aquifer recharge rate (positive to aquifer) (mm/s)
    real(r8), intent(inout) :: rsubst    ! subsurface runoff (positive = out of soil column) (mm H2O /s)
-   real(r8), intent(out)   :: errw_rsub ! the possible subsurface runoff dificit after PHS is included
 
-!
-! LOCAL ARGUMENTS
-!
-
+!-------------------------- Local Variables ----------------------------
    integer  :: j                ! indices
    integer  :: jwt              ! index of the soil layer right above the water table (-)
    real(r8) :: xs               ! water needed to bring soil moisture to watmin (mm)
@@ -2128,15 +2121,14 @@ ENDIF
    real(r8) :: imped
 
 
-   real(r8), parameter :: watmin = 0.01  ! Limit irreduciable wrapping liquid water
-                                          ! a tunable constant
+   real(r8), parameter :: watmin = 0.01  ! Limit irreducible wrapping liquid water
+                                         ! a tunable constant
    real(r8), parameter :: rsbmx  = 5.0   ! baseflow coefficient [mm/s]
    real(r8), parameter :: timean = 10.5  ! global mean topographic index
 
-
 ! -------------------------------------------------------------------------
 
-!   ! Convert layer thicknesses from m to mm
+!     ! Convert layer thicknesses from m to mm
 
       DO j = 1,nl_soil
          dzmm(j) = dz_soisno(j)*1000.
@@ -2278,7 +2270,7 @@ ENDIF
 
 
       ! Correction [1]
-      ! NON-physically based corection on wliq_soisno
+      ! NON-physically based correction on wliq_soisno
       ! excessive water above saturation added to the above unsaturated layer like a bucket
       ! IF column over saturated, excess water goes to runoff
 
@@ -2302,7 +2294,7 @@ ENDIF
 
 
       ! Correction [2]
-      ! NON-physically based corection on wliq_soisno
+      ! NON-physically based correction on wliq_soisno
       ! Limit wliq_soisno to be greater than or equal to watmin.
       ! Get water needed to bring wliq_soisno equal watmin from lower layer.
       ! If insufficient water in soil layers, get from aquifer water
@@ -2316,9 +2308,11 @@ ENDIF
       ENDDO
 
       ! Sub-surface runoff and drainage
-      errw_rsub = min(0., rsubst + xs/deltim)
-      rsubst = max(0., rsubst + xs/deltim)
-
+      rsubst = rsubst + xs/deltim
+      IF (rsubst < 0.) THEN
+         wa = wa + rsubst*deltim
+         rsubst = 0.
+      ENDIF
 
 !     DO j = 1, nl_soil-1
 !        IF (wice_soisno(j)*wice_soisno(j+1) < 1.e-6)THEN
@@ -2366,4 +2360,4 @@ ENDIF
 
 
 END MODULE MOD_SoilSnowHydrology
-! --------- EOP ----------
+! ---------- EOP ------------

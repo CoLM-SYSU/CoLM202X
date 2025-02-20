@@ -26,7 +26,7 @@ CONTAINS
    SUBROUTINE init_ndep_data_annually (YY)
 
    !----------------------
-   ! DESCTIPTION:
+   ! DESCRIPTION:
    ! open ndep netcdf file from DEF_dir_runtime, read latitude and longitude info.
    ! Initialize ndep data read in.
 
@@ -62,7 +62,7 @@ CONTAINS
    SUBROUTINE init_ndep_data_monthly (YY,MM)  !sf_add
 
    !----------------------
-   ! DESCTIPTION:
+   ! DESCRIPTION:
    ! open ndep netcdf file from DEF_dir_runtime, read latitude and longitude info.
    ! Initialize ndep data read in.
 

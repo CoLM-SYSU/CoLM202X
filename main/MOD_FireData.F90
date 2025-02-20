@@ -26,7 +26,7 @@ CONTAINS
    SUBROUTINE init_fire_data (YY)
 
    !----------------------
-   ! DESCTIPTION:
+   ! DESCRIPTION:
    ! open fire netcdf file from DEF_dir_runtime, read latitude and longitude info.
    ! Initialize fire data read in.
 

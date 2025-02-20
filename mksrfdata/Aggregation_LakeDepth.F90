@@ -19,8 +19,9 @@ SUBROUTINE Aggregation_LakeDepth ( &
 ! 4       this is the river pixel according to our map, set the default value of 3 m
 !
 ! REFERENCE:
-! Kourzeneva, E., H. Asensio, E. Martin, and S. Faroux, 2012: Global gridded dataset of lake coverage and lake depth
-! for USE in numerical weather prediction and climate modelling. Tellus A, 64, 15640.
+! Kourzeneva, E., H. Asensio, E. Martin, and S. Faroux, 2012: Global gridded
+! dataset of lake coverage and lake depth for USE in numerical weather
+! prediction and climate modelling. Tellus A, 64, 15640.
 !
 ! Created by Yongjiu Dai, 02/2014
 !
