@@ -11,6 +11,7 @@ Help()
    echo 'Syntax: ./create_namelist -p $CasePath -n CaseName [ -t $startyr ] [ -e $endyr ]'
    echo '        [ -d $RAWDATA ] [ -r $RUNTIME ] [ -a $reslat ] [ -o $reslat ] [ -f $Forcing ]'
    echo '        [ -S $EDGES ] [ -N $EDGEN ] [ -E $EDGEE ] [ -W $EDGEW ]'
+   echo '        [ -x $NX_BLOCK ] [ -y $NY_BLOCK ] [ -g $NGROUP ]'
    echo '!--------------------------------------------------------------------------'
    echo options:
    echo '  -p The path of the destimation case, which you want to create '
@@ -57,6 +58,12 @@ Help()
    echo
    echo '  -i|--sasuspinup (optional) if present, sasu spinup is used.'
    echo
+   echo '  -y|--nyblock (optional) number of latitudinal block.'
+   echo
+   echo '  -x|--nxblock (optional) number of longittudinal block.'
+   echo
+   echo '  -g|--ngroup (optional)  size of each mpi group.'
+   echo
    echo -h display command information
 }
 
@@ -78,6 +85,9 @@ CreateNamelist()
    EDGEN=${14}
    EDGEW=${15}
    EDGEE=${16}
+   NX_BLOCK=${17}
+   NY_BLOCK=${18}
+   NGROUP=${19}
 
    if [ $ISUSESASU == False ];then
       ISUSESASU=""
@@ -98,9 +108,9 @@ cat>${CASEPATH}/${CASENAME}/${NMLNAME}<<EOF
    DEF_domain%edgew = $EDGEW
    DEF_domain%edgee = $EDGEE
 
-   DEF_nx_blocks = 18
-   DEF_ny_blocks = 9
-   DEF_PIO_groupsize = 12
+   DEF_nx_blocks = ${NX_BLOCK}
+   DEF_ny_blocks = ${NY_BLOCK}
+   DEF_PIO_groupsize = ${NGROUP}
 
    DEF_simulation_time%greenwich    = .TRUE.
    DEF_simulation_time%start_year   = $startyr
@@ -164,7 +174,7 @@ EOF
 
 }
 
-while getopts ":hip:n:t:e:d:r:a:o:f:l:S:N:W:E:" options ;
+while getopts ":hip:n:t:e:d:r:a:o:f:l:S:N:W:E:x:y:g:" options ;
 do
     case $options in
       p) CASENAMEPATH="$OPTARG" ;;
@@ -182,6 +192,9 @@ do
       N) EDGEN="$OPTARG"     ;;
       W) EDGEW="$OPTARG"     ;;
       E) EDGEE="$OPTARG"     ;;
+      x) NX_BLOCK="$OPTARG"  ;;
+      y) NY_BLOCK="$OPTARG"  ;;
+      g) NGROUP="$OPTARG"    ;;
       h) Help; exit;;
       *) echo "invalid option: $option";exit ;;
     esac
@@ -299,5 +312,26 @@ if [ -z "${LandMask}" ];then
    LandMask=False
 fi
 
-CreateNamelist $CASEPATH $CASENAME $NMLNAME $startyr $endyr $RAWDATA $RUNTIME $reslon $reslat $Forcing $ISUSESASU $LandMask $EDGES $EDGEN $EDGEW $EDGEE
+if [ -z "${NX_BLOCK}" ];then
+   echo
+   echo "Note: -x option is absent, DEF_nx_block = 18"
+   echo
+   NX_BLOCK=18
+fi
+
+if [ -z "${NY_BLOCK}" ];then
+   echo
+   echo "Note: -y option is absent, DEF_ny_block = 9"
+   echo
+   NY_BLOCK=9
+fi
+
+if [ -z "${NGROUP}" ];then
+   echo
+   echo "Note: -g option is absent, DEF_PIO_groupsize = 9"
+   echo
+   NGROUP=24
+fi
+
+CreateNamelist $CASEPATH $CASENAME $NMLNAME $startyr $endyr $RAWDATA $RUNTIME $reslon $reslat $Forcing $ISUSESASU $LandMask $EDGES $EDGEN $EDGEW $EDGEE $NX_BLOCK $NY_BLOCK $NGROUP
 
