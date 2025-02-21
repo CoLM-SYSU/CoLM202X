@@ -27,35 +27,46 @@ Help()
 
 submitall()
 {
-   JobSubmit=$1
+   BatchSystem=$1
    Mode=$2
-   if [ ${JobSubmit: -1} == "<" ];then
-      if [ "$Mode" == "RunNoMkSrf" ];then
-	 job1_id=`${JobSubmit: 0: -1}<wait.bash| awk '{print $2}' | cut -d'<' -f2 | cut -d'>' -f1`
-      else
-         job1_id=`${JobSubmit: 0: -1}<mksrf.submit| awk '{print $2}' | cut -d'<' -f2 | cut -d'>' -f1`
-      fi
-      job2_id=`${JobSubmit: 0: -1} -w "ended($job1_id)"<init.submit| awk '{print $2}' | cut -d'<' -f2 | cut -d'>' -f1`
-      job3_id=`${JobSubmit: 0: -1} -w "ended($job2_id)"<case.submit| awk '{print $2}' | cut -d'<' -f2 | cut -d'>' -f1`
-      if [ ! "$Mode" == "RunNoMkSrf" ];then
-         job4_id=`${JobSubmit: 0: -1} -w "ended($job1_id)"<check_mksrf.submit`
-      fi
-      job5_id=`${JobSubmit: 0: -1} -w "ended($job2_id)"<check_init.submit`
-      job6_id=`${JobSubmit: 0: -1} -w "ended($job3_id)"<check_case.submit`
-   else
-      if [ "$Mode" == "RunNoMkSrf" ];then
-	 job1_id=`$JobSubmit wait.bash| awk '{print $2}' | cut -d'<' -f2 | cut -d'>' -f1`
-      else
-         job1_id=`$JobSubmit mksrf.submit| awk '{print $2}' | cut -d'<' -f2 | cut -d'>' -f1`
-      fi
-      job2_id=`${JobSubmit} -w "ended($job1_id)"<init.submit| awk '{print $2}' | cut -d'<' -f2 | cut -d'>' -f1`
-      job3_id=`${JobSubmit} -w "ended($job2_id)"<case.submit| awk '{print $2}' | cut -d'<' -f2 | cut -d'>' -f1`
-      if [ ! "$Mode" == "RunNoMkSrf" ];then
-         job4_id=`${JobSubmit} -w "ended($job1_id)"<check_mksrf.submit`
-      fi
-      job5_id=`${JobSubmit} -w "ended($job2_id)"<check_init.submit`
-      job6_id=`${JobSubmit} -w "ended($job3_id)"<check_case.submit`
-   fi
+   Queue=`awk '/Queue_case/ {print $2}' machine.config
+#   Dependency=`awk '/Dependency/ {print $2}' machine.config`
+#   Dependency=`echo $Dependency|sed 's|JOBID|$jobid_1|g'`
+   case $BatchSystem in
+	   LSF) 
+		   JobSubmit="bsub"
+		   if [ "$Mode" == "RunNoMkSrf" ];then
+		      job1_id=`${JobSubmit}<wait.bash -q $Queue| grep -o '[0-9]*'`
+		   else
+		      job1_id=`${JobSubmit}<mksrf.submit| grep -o '[0-9]*'`
+		   fi
+		   job2_id=`${Jobsubmit} -w "done($job1_id)"<case.submit| grep -o '[0-9]'`
+                   job3_id=`${JobSubmit} -w "ended($job2_id)"<check_all.submit`
+		   ;;
+	   SLURM) 
+		   JobSubmit="sbatch"
+                   if [ "$Mode" == "RunNoMkSrf" ];then
+                      job1_id=`$JobSubmit -p $QUEUE wait.bash| grep -o '[0-9]*'`
+                   else
+                      job1_id=`$JobSubmit mksrf.submit| grep -o '[0-9]*'`
+                   fi
+                   job2_id=`${JobSubmit} --dependency=afterok:${job1_id} case.submit| grep -o '[0-9]*'`
+                   job3_id=`${JobSubmit} --dependency=afterany:${job2_id} check_all.submit`
+		   ;;
+	   PBS)
+		   JobSubmit="qsub"
+		   if [ "$Mode" == "RunNoMkSrf" ];then
+		      job1_id=`${JobSubmit} -q $Queue wait.bash| grep -o '[0-9]*'`
+		   else
+		      job1_id=`${JobSubmit} mksrf.submit| grep -o '[0-9]*'`
+		   fi
+		   job2_id=`${Jobsubmit} -W depend=afterok:${job1_id} case.submit| grep -o '[0-9]'`
+                   job3_id=`${JobSubmit} -W depend=afterany:${job2_id} check_all.submit`
+		   ;;
+	   *)
+	   	   echo BatchSystem in machine.config is invalid or missing
+		   exit
+   esac
 }
 
 CompileCheck()
@@ -85,17 +96,21 @@ CreateTest()
    TestCaseList=$2
    Mode=$3
    ROOT=`awk '/ROOT/ {print $2}' machine.config`
-   JobSubmit=`awk '/JobSubmit/ {print $2}' machine.config`
+   BatchSystem=`awk '/BatchSystem/ {print $2}' machine.config`
+   Queue=`awk '/Queue_case/ {print $2}' machine.config`
 
+   echo BatchSystem is $BatchSystem
+   case $BatchSystem in 
+        LSF)   Partition='#BSUB -q '$Queue;;
+	SLURM) Partition='#SBATCH -p '$Queue;;
+	PBS)   Partition='#PBS -q '$Queue;;
+	*)echo BatchSystem $BatchSystem in machine.config is not supported or missing, only LSF,SLURM and PBS is supported;exit;;
+   esac
    if [ -z $ROOT ];then
       echo Error in reading ROOT from machine.config
       exit
    fi
 
-   if [ -z $JobSubmit ];then
-      echo Error in reading JobSubmit from machine.config
-      exit
-   fi
    cd $ROOT/run/scripts
    mkdir -p $TestPath/$TestName/
    if [ "$Mode" == "Create" -o "$Mode" == "CreateNoComp" -o "$Mode" == "CreateNoMkSrf" ];then
@@ -282,65 +297,50 @@ CreateTest()
 	    exit
          fi
 	 echo "CreateCase			PEND">$TestPath/$TestName/$CaseName/TestStatus
+	 sed -i "/cd/a `grep yhrun $TestPath/$TestName/$CaseName/init.submit`" $TestPath/$TestName/$CaseName/case.submit
+	 rm $TestPath/$TestName/$CaseName/init.submit
 
-	 LanddataPath=`awk '/RUNTIME/ {print $2}' machine.config`../CoLMlanddata/CoLM2024-release
 	 if [ "$Mode" == "CreateNoMkSrf" ];then
+	    LanddataPath=`awk '/RUNTIME/ {print $2}' machine.config`../CoLMlanddata/CoLM2024-release
             rm -rf $TestPath/$TestName/$CaseName/landdata
 	    ln -sf $LanddataPath/$LanddataFolder/ $TestPath/$TestName/$CaseName/landdata
 	 fi
 	 Success='"$Success"'
-	 tailfile='`tail '$TestPath/$TestName/$CaseName/logmksrfdata'|grep'" 'Successful in surface data making'\`"
-	 cat>$TestPath/$TestName/$CaseName/check_mksrf.submit<<EOF
-#BSUB -J CheckMksrf
-#BSUB -q normal
-#BSUB -n 1
+	 tailfilemksrf='`tail '$TestPath/$TestName/$CaseName/logmksrfdata'|grep'" 'Successful in surface data making'\`"
+	 tailfileinit='`tail '$TestPath/$TestName/$CaseName/logini'|grep'" 'CoLM Initialization Execution Completed'\`"
+         tailfilecase='`tail '$TestPath/$TestName/$CaseName/log'|grep'" 'CoLM Execution Completed'\`"
+	 cat>$TestPath/$TestName/$CaseName/check_all.submit<<EOF
+#!/bin/bash
+$Partition
 
-Success=$tailfile
+Success=$tailfilemksrf
 
 if [ -z $Success ];then
    sed -i "s/Submit_Mksrfdata			PEND/Submit_Mksrfdata			FAIL/g" TestStatus
    sed -i "s/Submit_Mksrfdata			PASS/Submit_Mksrfdata			FAIL/g" TestStatus
-   echo FAIL comilation.
 else
    sed -i "s/Submit_Mksrfdata			FAIL/Submit_Mksrfdata			PASS/g" TestStatus
    sed -i "s/Submit_Mksrfdata			PEND/Submit_Mksrfdata			PASS/g" TestStatus
-   echo PASS comilation.
 fi
-EOF
-	 tailfile='`tail '$TestPath/$TestName/$CaseName/logini'|grep'" 'CoLM Initialization Execution Completed'\`"
-	 cat>$TestPath/$TestName/$CaseName/check_init.submit<<EOF
-#BSUB -J CheckInit
-#BSUB -q normal
-#BSUB -n 1
 
-Success=$tailfile
+Success=$tailfileinit
 
 if [ -z $Success ];then
    sed -i "s/Submit_Mkinidata			PEND/Submit_Mkinidata			FAIL/g" TestStatus
    sed -i "s/Submit_Mkinidata			PASS/Submit_Mkinidata			FAIL/g" TestStatus
-   echo FAIL comilation.
 else
    sed -i "s/Submit_Mkinidata			FAIL/Submit_Mkinidata			PASS/g" TestStatus
    sed -i "s/Submit_Mkinidata			PEND/Submit_Mkinidata			PASS/g" TestStatus
-   echo PASS comilation.
 fi
-EOF
-         tailfile='`tail '$TestPath/$TestName/$CaseName/log'|grep'" 'CoLM Execution Completed'\`"
-	 cat>$TestPath/$TestName/$CaseName/check_case.submit<<EOF
-#BSUB -J CheckCase
-#BSUB -q normal
-#BSUB -n 1
 
-Success=$tailfile
+Success=$tailfilecase
 
 if [ -z $Success ];then
    sed -i "s/Submit_Case			PEND/Submit_Case			FAIL/g" TestStatus
    sed -i "s/Submit_Case			PASS/Submit_Case			FAIL/g" TestStatus
-   echo FAIL comilation.
 else
    sed -i "s/Submit_Case			FAIL/Submit_Case			PASS/g" TestStatus
    sed -i "s/Submit_Case			PEND/Submit_Case			PASS/g" TestStatus
-   echo PASS comilation.
 fi
 EOF
 
@@ -369,10 +369,6 @@ EOF
 	 if [ ! -f $TestPath/$TestName/$CaseName/mksrf.submit ];then
             echo "CreateCase			FAIL">$TestPath/$TestName/$CaseName/TestStatus
 	    echo "mksrf.submit is missing">>$TestPath/$TestName/$CaseName/Testlog
-         fi
-	 if [ ! -f $TestPath/$TestName/$CaseName/init.submit ];then
-            echo "CreateCase			FAIL">$TestPath/$TestName/$CaseName/TestStatus
-	    echo "init.submit is missing">>$TestPath/$TestName/$CaseName/Testlog
          fi
 	 if [ ! -f $TestPath/$TestName/$CaseName/case.submit ];then
             echo "CreateCase			FAIL">$TestPath/$TestName/$CaseName/TestStatus
@@ -416,7 +412,7 @@ EOF
       do
          cd $TestPath/$TestName/$CaseName/
          if [ -n "`grep Compile TestStatus|grep PASS`" ];then
-            submitall $JobSubmit $Mode
+            submitall $BatchSystem $Mode
 	    if [ ! "$Mode" == "RunNoMkSrf" ];then
                echo "Submit_Mksrfdata			PEND">>$TestPath/$TestName/$CaseName/TestStatus
 	    fi
