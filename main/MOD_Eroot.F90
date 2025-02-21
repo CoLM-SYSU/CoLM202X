@@ -31,17 +31,17 @@ CONTAINS
 ! !DESCRIPTION:
 !  effective root fraction and maximum possible transpiration rate
 !
-!  Original author : Yongjiu Dai, 08/30/2002
+!  Original author: Yongjiu Dai, 08/30/2002
 !
-! !HISTORY:
+! !REVISIONS:
 !  09/2021, Shupeng Zhang and Xingjie Lu: add vanGenuchten scheme to
 !           calculate soil water potential.
 !=======================================================================
 
    USE MOD_Precision
-   USE MOD_Const_Physical, only : tfrz
+   USE MOD_Const_Physical, only: tfrz
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
-   USE MOD_Hydro_SoilFunction, only : soil_psi_from_vliq
+   USE MOD_Hydro_SoilFunction, only: soil_psi_from_vliq
 #endif
    IMPLICIT NONE
 

@@ -13,11 +13,11 @@ MODULE MOD_Catch_Hist
    USE MOD_Precision
    USE MOD_SPMD_Task
    USE MOD_NetCDFSerial
-   USE MOD_Vars_Global, only : spval
+   USE MOD_Vars_Global, only: spval
 
-   USE MOD_Mesh,    only : numelm
-   USE MOD_LandHRU, only : numhru
-   USE MOD_Catch_BasinNetwork, only : numbasin, numbsnhru
+   USE MOD_Mesh,    only: numelm
+   USE MOD_LandHRU, only: numhru
+   USE MOD_Catch_BasinNetwork, only: numbasin, numbsnhru
    USE MOD_Catch_Vars_1DFluxes
    USE MOD_Catch_IO
 
@@ -272,9 +272,9 @@ CONTAINS
    SUBROUTINE FLUSH_acc_fluxes_basin ()
 
    USE MOD_SPMD_Task
-   USE MOD_Mesh,    only : numelm
-   USE MOD_LandHRU, only : numhru
-   USE MOD_Vars_Global,  only : spval
+   USE MOD_Mesh,    only: numelm
+   USE MOD_LandHRU, only: numhru
+   USE MOD_Vars_Global,  only: spval
    IMPLICIT NONE
 
       IF (p_is_worker) THEN

@@ -6,21 +6,21 @@ SUBROUTINE soil_thermal_parameters(wf_gravels_s,wf_sand_s,wf_clay_s,&
            csol,kdry,ksat_u,ksat_f)
 
 !------------------------------------------------------------------------------------------
-! DESCRIPTION:
-! Calculate volumetric soil heat capacity and soil thermal conductivity with 8 optional schemes by using the rawdata soil properties.
-! The default soil thermal conductivity scheme is the fourth one (Balland V. and P. A. Arp, 2005)
+! !DESCRIPTION:
+!  Calculate volumetric soil heat capacity and soil thermal conductivity with 8 optional schemes by using the rawdata soil properties.
+!  The default soil thermal conductivity scheme is the fourth one (Balland V. and P. A. Arp, 2005)
 !
-! REFERENCE:
-! Dai et al.,2019: Evaluation of Soil Thermal Conductivity Schemes for Use in Land Surface Modeling.
-! J. of Advances in Modeling Earth Systems, DOI: 10.1029/2019MS001723
+! !REFERENCE:
+!  Dai et al.,2019: Evaluation of Soil Thermal Conductivity Schemes for Use in Land Surface Modeling.
+!  J. of Advances in Modeling Earth Systems, DOI: 10.1029/2019MS001723
 !
-! Original author: Yongjiu Dai, 02/2018/
+!  Original author: Yongjiu Dai, 02/2018/
 !
-! Revisions:
-! Nan Wei, 06/2018: add to CoLM/mksrfdata
-! Nan Wei, 01/2020: update thermal conductivity of gravels
-! Nan Wei, 09/2022: add soil thermal conductivity of Hailong He (Yan & He et al., 2019)
-! -----------------------------------------------------------------------------------------
+! !REVISIONS:
+!  Nan Wei, 06/2018: add to CoLM/mksrfdata
+!  Nan Wei, 01/2020: update thermal conductivity of gravels
+!  Nan Wei, 09/2022: add soil thermal conductivity of Hailong He (Yan & He et al., 2019)
+!------------------------------------------------------------------------------------------
 
 use MOD_Precision
 USE MOD_Namelist

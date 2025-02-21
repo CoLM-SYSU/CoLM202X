@@ -11,7 +11,7 @@ MODULE MOD_Catch_RiverLakeNetwork
 !--------------------------------------------------------------------------------
 
    USE MOD_Precision
-   USE MOD_Vars_Global, only : spval
+   USE MOD_Vars_Global, only: spval
    USE MOD_Pixelset
    USE MOD_Catch_BasinNetwork
    USE MOD_Catch_HillslopeNetwork
@@ -109,7 +109,7 @@ CONTAINS
    USE MOD_DataType
    USE MOD_Utils
    USE MOD_UserDefFun
-   USE MOD_Vars_TimeInvariants, only : lakedepth
+   USE MOD_Vars_TimeInvariants, only: lakedepth
    IMPLICIT NONE
 
    ! Local Variables

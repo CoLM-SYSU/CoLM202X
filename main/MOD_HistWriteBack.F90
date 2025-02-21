@@ -3,11 +3,11 @@
 #ifdef USEMPI
 MODULE MOD_HistWriteBack
 !----------------------------------------------------------------------------
-! DESCRIPTION:
+! !DESCRIPTION:
 !
 !     Write out data to history files by a dedicated process.
 !
-! Author: Shupeng Zhang, 11/2023
+!  Author: Shupeng Zhang, 11/2023
 !----------------------------------------------------------------------------
 
    USE MOD_Precision
@@ -80,7 +80,7 @@ CONTAINS
    ! -----
    SUBROUTINE hist_writeback_daemon ()
 
-   USE MOD_Namelist, only : DEF_HIST_FREQ
+   USE MOD_Namelist, only: DEF_HIST_FREQ
    USE MOD_Vars_Global, only: spval
    IMPLICIT NONE
 

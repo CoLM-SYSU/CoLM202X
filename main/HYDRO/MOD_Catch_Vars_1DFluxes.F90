@@ -41,11 +41,11 @@ CONTAINS
    SUBROUTINE allocate_1D_CatchFluxes
 
    USE MOD_SPMD_Task
-   USE MOD_Vars_Global, only : spval
-   USE MOD_Mesh,        only : numelm
-   USE MOD_LandHRU,     only : numhru
-   USE MOD_LandPatch,   only : numpatch
-   USE MOD_Catch_BasinNetwork, only : numbasin, numbsnhru
+   USE MOD_Vars_Global, only: spval
+   USE MOD_Mesh,        only: numelm
+   USE MOD_LandHRU,     only: numhru
+   USE MOD_LandPatch,   only: numpatch
+   USE MOD_Catch_BasinNetwork, only: numbasin, numbsnhru
    IMPLICIT NONE
 
       IF (p_is_worker) THEN

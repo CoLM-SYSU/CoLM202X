@@ -19,7 +19,7 @@ MODULE MOD_BGC_CNCStateUpdate1
 !                   3) Record the accumulated decomposition-associated C transfer for soil C semi-analytic spinup
 
    USE MOD_Precision
-   USE MOD_Namelist, only : DEF_USE_SASU, DEF_USE_DiagMatrix
+   USE MOD_Namelist, only: DEF_USE_SASU, DEF_USE_DiagMatrix
    USE MOD_Vars_PFTimeInvariants, only: pftclass, pftfrac
    USE MOD_Const_PFT, only: woody
    USE MOD_BGC_Vars_TimeInvariants, only: &

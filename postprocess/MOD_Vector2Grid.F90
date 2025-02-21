@@ -6,7 +6,7 @@ MODULE mod_vector2grid
    USE MOD_Precision
    USE MOD_NetCDFSerial
    USE netcdf
-   USE MOD_Vars_Global, only : spval
+   USE MOD_Vars_Global, only: spval
    IMPLICIT NONE
 
    integer :: ndim1out, ndim2out

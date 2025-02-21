@@ -541,7 +541,7 @@ CONTAINS
 
    USE MOD_Precision
    USE MOD_SPMD_Task
-   USE MOD_Mesh, only : numelm
+   USE MOD_Mesh, only: numelm
    IMPLICIT NONE
 
    real(r8), intent(inout) :: vec_in (:)
@@ -638,7 +638,7 @@ CONTAINS
    ! ---
    SUBROUTINE allocate_neighbour_data_real8 (nbdata)
       
-   USE MOD_Mesh, only : numelm
+   USE MOD_Mesh, only: numelm
    IMPLICIT NONE
 
    type(pointer_real8_1d), allocatable :: nbdata(:)
@@ -658,7 +658,7 @@ CONTAINS
    ! ---
    SUBROUTINE allocate_neighbour_data_logic (nbdata)
       
-   USE MOD_Mesh, only : numelm
+   USE MOD_Mesh, only: numelm
    IMPLICIT NONE
 
    type(pointer_logic_1d), allocatable :: nbdata(:)

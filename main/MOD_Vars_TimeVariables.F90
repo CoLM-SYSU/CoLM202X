@@ -8,9 +8,9 @@
 MODULE MOD_Vars_PFTimeVariables
 ! -----------------------------------------------------------------
 ! !DESCRIPTION:
-! Define PFT time variables
+!  Define PFT time variables
 !
-! Added by Hua Yuan, 08/2019
+!  Added by Hua Yuan, 08/2019
 ! -----------------------------------------------------------------
 
    USE MOD_Precision
@@ -197,8 +197,8 @@ ENDIF
 
    SUBROUTINE WRITE_PFTimeVariables (file_restart)
 
-   USE MOD_Namelist, only : DEF_REST_CompressLevel, DEF_USE_PLANTHYDRAULICS, DEF_USE_OZONESTRESS, &
-                            DEF_USE_IRRIGATION
+   USE MOD_Namelist, only: DEF_REST_CompressLevel, DEF_USE_PLANTHYDRAULICS, DEF_USE_OZONESTRESS, &
+                           DEF_USE_IRRIGATION
    USE MOD_LandPFT
    USE MOD_NetCDFVector
    USE MOD_Vars_Global
@@ -321,7 +321,7 @@ ENDIF
    SUBROUTINE check_PFTimeVariables
 
    USE MOD_RangeCheck
-   USE MOD_Namelist, only : DEF_USE_PLANTHYDRAULICS, DEF_USE_OZONESTRESS, DEF_USE_IRRIGATION
+   USE MOD_Namelist, only: DEF_USE_PLANTHYDRAULICS, DEF_USE_OZONESTRESS, DEF_USE_IRRIGATION
 
    IMPLICIT NONE
 
@@ -899,12 +899,12 @@ CONTAINS
    !=======================================================================
 
    USE MOD_SPMD_Task
-   USE MOD_Namelist, only : DEF_REST_CompressLevel, DEF_USE_PLANTHYDRAULICS, DEF_USE_OZONESTRESS, &
-                            DEF_USE_IRRIGATION, DEF_USE_Dynamic_Lake, SITE_landtype
+   USE MOD_Namelist, only: DEF_REST_CompressLevel, DEF_USE_PLANTHYDRAULICS, DEF_USE_OZONESTRESS, &
+                           DEF_USE_IRRIGATION, DEF_USE_Dynamic_Lake, SITE_landtype
    USE MOD_LandPatch
    USE MOD_NetCDFVector
    USE MOD_Vars_Global
-   USE MOD_Vars_TimeInvariants, only : dz_lake
+   USE MOD_Vars_TimeInvariants, only: dz_lake
    USE MOD_Const_LC, only: patchtypes
    IMPLICIT NONE
 
@@ -1101,7 +1101,7 @@ ENDIF
 #endif
    USE MOD_LandPatch
    USE MOD_Vars_Global
-   USE MOD_Vars_TimeInvariants, only : dz_lake
+   USE MOD_Vars_TimeInvariants, only: dz_lake
    USE MOD_Const_LC, only: patchtypes
 
    IMPLICIT NONE
@@ -1282,7 +1282,7 @@ ENDIF
    USE MOD_RangeCheck
    USE MOD_Namelist, only: DEF_USE_PLANTHYDRAULICS, DEF_USE_OZONESTRESS, DEF_USE_IRRIGATION, &
                            DEF_USE_SNICAR, DEF_USE_Dynamic_Lake
-   USE MOD_Vars_TimeInvariants, only : dz_lake
+   USE MOD_Vars_TimeInvariants, only: dz_lake
 
    IMPLICIT NONE
 

@@ -4,8 +4,8 @@
 
 MODULE MOD_LandPFT
 
-!------------------------------------------------------------------------------------
-! DESCRIPTION:
+!-----------------------------------------------------------------------
+! !DESCRIPTION:
 !
 !    Build pixelset "landpft" (Plant Function Type).
 !
@@ -19,9 +19,9 @@ MODULE MOD_LandPFT
 !
 !    "landpft" refers to pixelset PFT.
 !
-! Created by Shupeng Zhang, May 2023
+!  Created by Shupeng Zhang, May 2023
 !    porting codes from Hua Yuan's OpenMP version to MPI parallel version.
-!------------------------------------------------------------------------------------
+!-----------------------------------------------------------------------
 
    USE MOD_Namelist
    USE MOD_Pixelset

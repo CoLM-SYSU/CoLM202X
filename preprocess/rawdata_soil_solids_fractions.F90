@@ -5,19 +5,19 @@ SUBROUTINE soil_solids_fractions(BD,gravels,SOC,SAND,CLAY,&
            vf_quartz_mineral_s,BD_mineral_s,OM_density,BD_ave)
 
 !-------------------------------------------------------------------------------
-! DESCRIPTION:
-! Calculate soil porocity and The volumetric fractions of soil solids needed for soil parameter estimations.
-! Theta = 1 - BD/PD
+! !DESCRIPTION:
+!  Calculate soil porocity and The volumetric fractions of soil solids needed for soil parameter estimations.
+!  Theta = 1 - BD/PD
 !
-! REFERENCE:
-! Dai et al.,2019: A Global High-Resolution Data Set of Soil Hydraulic and Thermal Properties
-! for Land Surface Modeling. J. of Advances in Modeling Earth Systems, DOI: 10.1029/2019MS001784
+! !REFERENCE:
+!  Dai et al.,2019: A Global High-Resolution Data Set of Soil Hydraulic and Thermal Properties
+!  for Land Surface Modeling. J. of Advances in Modeling Earth Systems, DOI: 10.1029/2019MS001784
 !
-! Original author: Yongjiu Dai, 01/2018
+!  Original author: Yongjiu Dai, 01/2018
 !
-! Revisions:
-! Nan Wei, 06/2018: add to CoLM/mksrfdata
-! Nan Wei, 01/2020: update paticle size of soil solids and gravel porosity
+! !REVISIONS:
+!  Nan Wei, 06/2018: add to CoLM/mksrfdata
+!  Nan Wei, 01/2020: update paticle size of soil solids and gravel porosity
 !-------------------------------------------------------------------------------
 use MOD_Precision
 
@@ -109,7 +109,7 @@ IMPLICIT NONE
       if(vf_pores_s <= 0.0) then
          write(6,*)"Error: negative soil porosity. BD, PD = ",BD_ave,BD_particle
          stop
-      end if
+      endif
 
 ! Bulk density of mineral soil
       BD_mineral_s = (BD_ave - vf_om_s*BD_om - vf_gravels_s*BD_gravels) &
@@ -181,7 +181,7 @@ IMPLICIT NONE
       if(sand<0. .or. silt<0. .or. clay<0.)then
          print*,'Each of the 3 variables should be >= 0: check the data'
          call abort
-      end if
+      endif
 
       CALL USDA_soil_classes(silt,clay,c)
 
@@ -268,10 +268,10 @@ IMPLICIT NONE
       do j = 1, PONUM(i)
          xpol(j) = xpos(points(i,j))
          ypol(j) = ypos(points(i,j))
-      end do
+      enddo
 
       call pointinpolygon(x,y,xpol(1:PONUM(i)),ypol(1:PONUM(i)),PONUM(i),c(i))
-   end do
+   enddo
 
 END SUBROUTINE USDA_soil_classes
 
@@ -312,7 +312,7 @@ IMPLICIT NONE
       if(( xpol(i) - xp )==0 .AND. ( ypol(i) - yp )==0 )then
            c2 = 'v'
            exit
-      end if
+      endif
       i1 = mod(( i-2 + ponum ), ponum) + 1
 
 ! if e "straddles" the x-axis...
@@ -323,8 +323,8 @@ IMPLICIT NONE
           ! crosses ray if strictly positive intersection.
           if(x > 0)then
              Rcross=Rcross+1
-          end if
-      end if
+          endif
+      endif
 
 ! if e straddles the x-axis when reversed...
       if( (( ypol(i) - yp ) < 0 ) .NEQV. (( ypol(i1) - yp ) < 0 ) )then
@@ -334,10 +334,10 @@ IMPLICIT NONE
     ! crosses ray if strictly positive intersection.
           if(x < 0)then
              Lcross=Lcross+1
-          end if
-      end if
+          endif
+      endif
 
-   end do
+   enddo
 
     ! q on the edge if left and right cross are not the same parity /
     if(c2=='v')then
@@ -352,6 +352,6 @@ IMPLICIT NONE
     else
        c = .false.
        c2 = 'o'
-    end if
+    endif
 
 END SUBROUTINE pointinpolygon

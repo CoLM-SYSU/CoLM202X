@@ -5,12 +5,12 @@ MODULE MOD_Const_PFT
 !-----------------------------------------------------------------------
 !
 ! !DESCRIPTION:
-! Set constants for plant functional types (PFTs)
+!  Set constants for plant functional types (PFTs)
 !
-! Created by Hua Yuan, 08/2019
+!  Created by Hua Yuan, 08/2019
 !
-! REVISIONS:
-! 10/2021, Xingjie Lu: added for crop PFTs
+! !REVISIONS:
+!  10/2021, Xingjie Lu: added for crop PFTs
 !
 ! !USES:
    USE MOD_Precision

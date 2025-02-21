@@ -69,7 +69,7 @@ CONTAINS
 !  ground is linked by the equations:
 !                       Ha = Hf + Hg and Ea = Ef + Eg
 !
-!  Original author : Yongjiu Dai, August 15, 2001
+!  Original author: Yongjiu Dai, August 15, 2001
 !
 ! !REVISIONS:
 !
@@ -112,7 +112,7 @@ CONTAINS
    USE MOD_UserSpecifiedForcing, only: HEIGHT_mode
    USE MOD_Vars_TimeInvariants, only: patchclass
    USE MOD_Const_LC, only: z0mr, displar
-   USE MOD_PlantHydraulic, only :PlantHydraulicStress_twoleaf, getvegwp_twoleaf
+   USE MOD_PlantHydraulic, only:PlantHydraulicStress_twoleaf, getvegwp_twoleaf
    USE MOD_Ozone, only: CalcOzoneStress
    USE MOD_Qsadv
 

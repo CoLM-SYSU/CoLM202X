@@ -1,6 +1,6 @@
 MODULE MOD_Precision
 !-------------------------------------------------------------------------------
-! Purpose:
+! !Purpose:
 !       Define the precision to use for floating point and integer operations
 !       throughout the model.
 !-------------------------------------------------------------------------------

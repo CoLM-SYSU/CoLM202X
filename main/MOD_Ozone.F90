@@ -8,13 +8,12 @@ Module MOD_Ozone
 !  including vcmax response and stomata response.  Ozone concentration
 !  can be either readin through Mod_OzoneData module or set to constant.
 !
-! !ORIGINAL:
+!  Original:
 !  The Community Land Model version 5.0 (CLM5.0)
 !
-! !REVISION:
+! !REVISIONS:
 !  Xingjie Lu 2022, revised the CLM5 code to be compatible with CoLM code structure.
-
-
+!-----------------------------------------------------------------------
 
    USE MOD_Precision
    USE MOD_Const_Physical, only: rgas

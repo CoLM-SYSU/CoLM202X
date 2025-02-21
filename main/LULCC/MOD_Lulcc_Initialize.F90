@@ -47,7 +47,7 @@ CONTAINS
    USE MOD_Vars_TimeVariables
    USE MOD_Initialize
 #ifdef SrfdataDiag
-   USE MOD_SrfdataDiag, only : gdiag, srfdata_diag_init
+   USE MOD_SrfdataDiag, only: gdiag, srfdata_diag_init
 #endif
 
    IMPLICIT NONE
