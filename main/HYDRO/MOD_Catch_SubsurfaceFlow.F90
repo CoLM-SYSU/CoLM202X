@@ -254,8 +254,6 @@ CONTAINS
 
          xwsub(:) = 0. ! total recharge/discharge from subsurface lateral flow
 
-         bdamp = 4.8
-
          IF (numelm > 0) THEN
             allocate (theta_a_elm (numelm));  theta_a_elm = 0.
             allocate (zwt_elm     (numelm));  zwt_elm     = 0.
@@ -263,6 +261,8 @@ CONTAINS
          ENDIF
 
          DO ielm = 1, numelm
+
+            bdamp = 4.8
 
             hrus => hillslope_element(ielm)
 
