@@ -262,8 +262,6 @@ CONTAINS
 
          DO ielm = 1, numelm
 
-            bdamp = 4.8
-
             hrus => hillslope_element(ielm)
 
             nhru = hrus%nhru
@@ -462,6 +460,8 @@ CONTAINS
                ! Inside hydrological units
                IF (hrus%agwt(i) > 0) THEN
                
+                  bdamp = 4.8
+
                   IF (zwt_h(i) > 1.5) THEN
                      ! from Fan et al., JGR 112(D10125)
                      Kl_in = Kl_h(i) * bdamp * exp(-(zwt_h(i)-1.5)/bdamp)
