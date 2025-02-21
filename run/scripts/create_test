@@ -29,7 +29,7 @@ submitall()
 {
    BatchSystem=$1
    Mode=$2
-   Queue=`awk '/Queue_case/ {print $2}' machine.config
+   Queue=$3
 #   Dependency=`awk '/Dependency/ {print $2}' machine.config`
 #   Dependency=`echo $Dependency|sed 's|JOBID|$jobid_1|g'`
    case $BatchSystem in
@@ -40,7 +40,7 @@ submitall()
 		   else
 		      job1_id=`${JobSubmit}<mksrf.submit| grep -o '[0-9]*'`
 		   fi
-		   job2_id=`${Jobsubmit} -w "done($job1_id)"<case.submit| grep -o '[0-9]'`
+		   job2_id=`${JobSubmit} -w "done($job1_id)"<case.submit| grep -o '[0-9]'`
                    job3_id=`${JobSubmit} -w "ended($job2_id)"<check_all.submit`
 		   ;;
 	   SLURM) 
@@ -297,7 +297,8 @@ CreateTest()
 	    exit
          fi
 	 echo "CreateCase			PEND">$TestPath/$TestName/$CaseName/TestStatus
-	 sed -i "/cd/a `grep yhrun $TestPath/$TestName/$CaseName/init.submit`" $TestPath/$TestName/$CaseName/case.submit
+	 Exe_command=`awk '/Exe_command/ {print $2}' machine.config`
+	 sed -i "/cd/a `grep $Exe_command $TestPath/$TestName/$CaseName/init.submit`" $TestPath/$TestName/$CaseName/"case.submit"
 	 rm $TestPath/$TestName/$CaseName/init.submit
 
 	 if [ "$Mode" == "CreateNoMkSrf" ];then
@@ -412,7 +413,7 @@ EOF
       do
          cd $TestPath/$TestName/$CaseName/
          if [ -n "`grep Compile TestStatus|grep PASS`" ];then
-            submitall $BatchSystem $Mode
+            submitall $BatchSystem $Mode $Queue
 	    if [ ! "$Mode" == "RunNoMkSrf" ];then
                echo "Submit_Mksrfdata			PEND">>$TestPath/$TestName/$CaseName/TestStatus
 	    fi
@@ -444,7 +445,7 @@ if [ -z "${TestName}" ]; then
    Help
    exit
 else 
-   if [ -z $TestCaseList ];then
+   if [ -z "${TestCaseList}" ];then
       TestCaseList="TestLists"
    fi
    if [ -z $Mode ];then
