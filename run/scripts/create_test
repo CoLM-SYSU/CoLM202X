@@ -46,7 +46,7 @@ submitall()
 	   SLURM) 
 		   JobSubmit="sbatch"
                    if [ "$Mode" == "RunNoMkSrf" ];then
-                      job1_id=`$JobSubmit -p $QUEUE wait.bash| grep -o '[0-9]*'`
+                      job1_id=`$JobSubmit -p $Queue wait.bash| grep -o '[0-9]*'`
                    else
                       job1_id=`$JobSubmit mksrf.submit| grep -o '[0-9]*'`
                    fi
