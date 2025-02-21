@@ -132,8 +132,8 @@ CONTAINS
 
       IF (p_is_worker) THEN
          IF (numpatch > 0) THEN
-            CALL copy_pixelset(landpatch, landpatch_)
-            CALL copy_pixelset(landelm  , landelm_  )
+            CALL copy_pixelset (landpatch, landpatch_ )
+            CALL copy_pixelset (landelm  , landelm_   )
             numpatch_             = numpatch
             numelm_               = numelm
             patchclass_       (:) = patchclass       (:)

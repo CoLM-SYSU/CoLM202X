@@ -1,7 +1,7 @@
 #include <define.h>
 
 !----------------------------------------------------------------------------------
-! DESCRIPTION:
+! !DESCRIPTION:
 !
 !    High-level Subroutines to read and write variables in files with netCDF format.
 !
@@ -11,21 +11,21 @@
 !               2) gather from workers to IO and write vectors by IO
 !    3. Block : read blocked data by IO
 !               Notice: input file is a single file.
-!    
+!
 !    This MODULE CONTAINS subroutines of "2. Vector".
-!    
+!
 !    Two implementations can be used,
-!    1) "MOD_NetCDFVectorBlk.F90": 
-!       A vector is saved in separated files, each associated with a block. 
+!    1) "MOD_NetCDFVectorBlk.F90":
+!       A vector is saved in separated files, each associated with a block.
 !       READ/WRITE are fast in this way and compression can be used.
-!       However, there may be too many files, especially when blocks are small. 
+!       However, there may be too many files, especially when blocks are small.
 !       CHOOSE this implementation by "#undef VectorInOneFile" in include/define.h
-!    2) "MOD_NetCDFVectorOne.F90": 
-!       A vector is saved in one file. 
+!    2) "MOD_NetCDFVectorOne.F90":
+!       A vector is saved in one file.
 !       READ/WRITE may be slow in this way.
 !       CHOOSE this implementation by "#define VectorInOneFileS" in include/define.h
 !
-! Created by Shupeng Zhang, May 2023
+!  Created by Shupeng Zhang, May 2023
 !----------------------------------------------------------------------------------
 
 ! Put vector in one file.
@@ -38,39 +38,39 @@ MODULE MOD_NetCDFVector
    USE MOD_SPMD_Task
    USE MOD_Block
    USE MOD_Pixelset
-   USE MOD_NetCDFSerial, only : nccheck
+   USE MOD_NetCDFSerial, only: nccheck
    IMPLICIT NONE
 
    ! PUBLIC subroutines
 
-   PUBLIC :: ncio_create_file_vector 
-   PUBLIC :: ncio_define_dimension_vector 
+   PUBLIC :: ncio_create_file_vector
+   PUBLIC :: ncio_define_dimension_vector
 
    INTERFACE ncio_read_vector
-      MODULE procedure ncio_read_vector_logical_1d 
-      MODULE procedure ncio_read_vector_int32_1d 
-      MODULE procedure ncio_read_vector_int64_1d 
-      MODULE procedure ncio_read_vector_real8_1d 
-      MODULE procedure ncio_read_vector_real8_2d 
-      MODULE procedure ncio_read_vector_real8_3d 
-      MODULE procedure ncio_read_vector_real8_4d 
+      MODULE procedure ncio_read_vector_logical_1d
+      MODULE procedure ncio_read_vector_int32_1d
+      MODULE procedure ncio_read_vector_int64_1d
+      MODULE procedure ncio_read_vector_real8_1d
+      MODULE procedure ncio_read_vector_real8_2d
+      MODULE procedure ncio_read_vector_real8_3d
+      MODULE procedure ncio_read_vector_real8_4d
    END INTERFACE ncio_read_vector
 
    INTERFACE ncio_write_vector
       MODULE procedure ncio_write_vector_logical_1d
-      MODULE procedure ncio_write_vector_int32_1d 
-      MODULE procedure ncio_write_vector_int64_1d 
-      MODULE procedure ncio_write_vector_real8_1d 
-      MODULE procedure ncio_write_vector_real8_2d 
-      MODULE procedure ncio_write_vector_real8_3d 
-      MODULE procedure ncio_write_vector_real8_4d 
+      MODULE procedure ncio_write_vector_int32_1d
+      MODULE procedure ncio_write_vector_int64_1d
+      MODULE procedure ncio_write_vector_real8_1d
+      MODULE procedure ncio_write_vector_real8_2d
+      MODULE procedure ncio_write_vector_real8_3d
+      MODULE procedure ncio_write_vector_real8_4d
    END INTERFACE ncio_write_vector
 
 CONTAINS
 
    ! -----
    SUBROUTINE ncio_open_vector (filename, dataname, exit_on_err, ncid, grpid, vecname, noerr)
-      
+
    IMPLICIT NONE
 
    character(len=*), intent(in) :: filename
@@ -80,7 +80,7 @@ CONTAINS
    integer, intent(out) :: ncid, grpid
    logical, intent(out) :: noerr
    character(len=*), intent(out) :: vecname
-      
+
       noerr = (nf90_open(trim(filename), NF90_NOWRITE, ncid) == NF90_NOERR)
       IF (.not. noerr) write(*,*) 'Warning: '//trim(filename)//' not found.'
 
@@ -91,12 +91,12 @@ CONTAINS
       IF (.not. noerr) write(*,*) 'Warning: '//trim(vecname)//' in '//trim(filename)//' not found.'
 
       IF ((.not. noerr) .and. (exit_on_err)) THEN
-         write(*,'(A)') 'Netcdf error in reading ' // trim(dataname) // ' from ' // trim(filename) 
+         write(*,'(A)') 'Netcdf error in reading ' // trim(dataname) // ' from ' // trim(filename)
          CALL CoLM_Stop ()
       ENDIF
 
    END SUBROUTINE ncio_open_vector
-   
+
    !---------------------------------------------------------
    SUBROUTINE ncio_inquire_length_grp (filename, dataname, blkname, length)
 
@@ -204,9 +204,9 @@ CONTAINS
             ENDIF
 
             IF (.not. ok) THEN
-               IF (.not. present(defval)) THEN 
+               IF (.not. present(defval)) THEN
                   write(*,'(A)') 'Netcdf error in reading ' &
-                     // trim(varname) // ' from ' // trim(filename) 
+                     // trim(varname) // ' from ' // trim(filename)
                   CALL CoLM_Stop ()
                ELSE
                   sbuff = defval
@@ -228,18 +228,18 @@ CONTAINS
             deallocate (sbuff)
 
          ENDDO
-      
+
          IF (noerr) CALL nccheck( nf90_close(ncid), trim(filename) // ' close failed' )
 
       ENDIF
 
 #ifdef USEMPI
       IF (p_is_worker) THEN
-         
+
          DO iblkgrp = 1, pixelset%nblkgrp
             iblk = pixelset%xblkgrp(iblkgrp)
             jblk = pixelset%yblkgrp(iblkgrp)
-                     
+
             IF (pixelset%vecgs%vlen(iblk,jblk) > 0) THEN
                allocate (rbuff (pixelset%vecgs%vlen(iblk,jblk)))
             ELSE
@@ -312,9 +312,9 @@ CONTAINS
             ENDIF
 
             IF (.not. ok) THEN
-               IF (.not. present(defval)) THEN 
+               IF (.not. present(defval)) THEN
                   write(*,'(A)') 'Netcdf error in reading ' &
-                     // trim(varname) // ' from ' // trim(filename) 
+                     // trim(varname) // ' from ' // trim(filename)
                   CALL CoLM_Stop ()
                ELSE
                   sbuff = defval
@@ -343,11 +343,11 @@ CONTAINS
 
 #ifdef USEMPI
       IF (p_is_worker) THEN
-         
+
          DO iblkgrp = 1, pixelset%nblkgrp
             iblk = pixelset%xblkgrp(iblkgrp)
             jblk = pixelset%yblkgrp(iblkgrp)
-                     
+
             IF (pixelset%vecgs%vlen(iblk,jblk) > 0) THEN
                allocate (rbuff (pixelset%vecgs%vlen(iblk,jblk)))
             ELSE
@@ -420,9 +420,9 @@ CONTAINS
             ENDIF
 
             IF (.not. ok) THEN
-               IF (.not. present(defval)) THEN 
+               IF (.not. present(defval)) THEN
                   write(*,'(A)') 'Netcdf error in reading ' &
-                     // trim(varname) // ' from ' // trim(filename) 
+                     // trim(varname) // ' from ' // trim(filename)
                   CALL CoLM_Stop ()
                ELSE
                   IF (defval) THEN
@@ -450,7 +450,7 @@ CONTAINS
          ENDDO
 
          IF (noerr) CALL nccheck( nf90_close(ncid), trim(filename) // ' close failed' )
-      
+
       ENDIF
 
 #ifdef USEMPI
@@ -504,13 +504,13 @@ CONTAINS
    character(len=256) :: blockname, varname, vecname
    real(r8), allocatable :: sbuff(:), rbuff(:)
    logical :: noerr, ok
-         
+
       IF (p_is_worker) THEN
          IF ((pixelset%nset > 0) .and. (.not. allocated(rdata))) THEN
             allocate (rdata (pixelset%nset))
          ENDIF
       ENDIF
-      
+
       IF (p_is_io) THEN
 
          CALL ncio_open_vector (filename, dataname, .not. present(defval), &
@@ -532,9 +532,9 @@ CONTAINS
             ENDIF
 
             IF (.not. ok) THEN
-               IF (.not. present(defval)) THEN 
+               IF (.not. present(defval)) THEN
                   write(*,'(A)') 'Netcdf error in reading ' &
-                     // trim(varname) // ' from ' // trim(filename) 
+                     // trim(varname) // ' from ' // trim(filename)
                   CALL CoLM_Stop ()
                ELSE
                   sbuff = defval
@@ -558,12 +558,12 @@ CONTAINS
          ENDDO
 
          IF (noerr) CALL nccheck( nf90_close(ncid), trim(filename) // ' close failed' )
-      
+
       ENDIF
 
 #ifdef USEMPI
       IF (p_is_worker) THEN
-         
+
          DO iblkgrp = 1, pixelset%nblkgrp
             iblk = pixelset%xblkgrp(iblkgrp)
             jblk = pixelset%yblkgrp(iblkgrp)
@@ -630,7 +630,7 @@ CONTAINS
             jblk = pixelset%yblkgrp(iblkgrp)
 
             allocate (sbuff (ndim1, pixelset%vecgs%vlen(iblk,jblk)))
-            
+
             IF (noerr) THEN
                CALL get_blockname (iblk, jblk, blockname)
                varname = trim(vecname)//'_'//trim(blockname)
@@ -641,9 +641,9 @@ CONTAINS
             ENDIF
 
             IF (.not. ok) THEN
-               IF (.not. present(defval)) THEN 
+               IF (.not. present(defval)) THEN
                   write(*,'(A)') 'Netcdf error in reading ' &
-                     // trim(varname) // ' from ' // trim(filename) 
+                     // trim(varname) // ' from ' // trim(filename)
                   CALL CoLM_Stop ()
                ELSE
                   sbuff = defval
@@ -672,7 +672,7 @@ CONTAINS
 
 #ifdef USEMPI
       IF (p_is_worker) THEN
-         
+
          DO iblkgrp = 1, pixelset%nblkgrp
             iblk = pixelset%xblkgrp(iblkgrp)
             jblk = pixelset%yblkgrp(iblkgrp)
@@ -750,9 +750,9 @@ CONTAINS
             ENDIF
 
             IF (.not. ok) THEN
-               IF (.not. present(defval)) THEN 
+               IF (.not. present(defval)) THEN
                   write(*,'(A)') 'Netcdf error in reading ' &
-                     // trim(varname) // ' from ' // trim(filename) 
+                     // trim(varname) // ' from ' // trim(filename)
                   CALL CoLM_Stop ()
                ELSE
                   sbuff = defval
@@ -774,7 +774,7 @@ CONTAINS
             deallocate (sbuff)
 
          ENDDO
-         
+
          IF (noerr) CALL nccheck( nf90_close(ncid), trim(filename) // ' close failed' )
 
       ENDIF
@@ -811,7 +811,7 @@ CONTAINS
 #endif
 
    END SUBROUTINE ncio_read_vector_real8_3d
-   
+
    !---------------------------------------------------------
    SUBROUTINE ncio_read_vector_real8_4d ( &
          filename, dataname, ndim1, ndim2, ndim3, pixelset, rdata, defval)
@@ -859,9 +859,9 @@ CONTAINS
             ENDIF
 
             IF (.not. ok) THEN
-               IF (.not. present(defval)) THEN 
+               IF (.not. present(defval)) THEN
                   write(*,'(A)') 'Netcdf error in reading ' &
-                     // trim(varname) // ' from ' // trim(filename) 
+                     // trim(varname) // ' from ' // trim(filename)
                   CALL CoLM_Stop ()
                ELSE
                   sbuff = defval
@@ -890,7 +890,7 @@ CONTAINS
 
 #ifdef USEMPI
       IF (p_is_worker) THEN
-         
+
          DO iblkgrp = 1, pixelset%nblkgrp
             iblk = pixelset%xblkgrp(iblkgrp)
             jblk = pixelset%yblkgrp(iblkgrp)
@@ -920,11 +920,11 @@ CONTAINS
 #endif
 
    END SUBROUTINE ncio_read_vector_real8_4d
-   
+
    !---------------------------------------------------------
    SUBROUTINE ncio_create_file_vector (filename, pixelset)
 
-   USE MOD_NetCDFSerial, only : get_time_now
+   USE MOD_NetCDFSerial, only: get_time_now
    IMPLICIT NONE
 
    character(len=*),    intent(in) :: filename
@@ -934,7 +934,7 @@ CONTAINS
    integer :: ncid, mode
 
       IF (p_is_master) THEN
-      
+
          mode = ior(NF90_NETCDF4,NF90_CLOBBER)
          CALL nccheck( nf90_create(trim(filename), mode, ncid) )
 
@@ -964,8 +964,8 @@ CONTAINS
       character(len=8) :: blockname
 
       IF (p_is_io) THEN
-         
-         IF (p_iam_io == 0) THEN 
+
+         IF (p_iam_io == 0) THEN
 
             CALL nccheck( nf90_open (trim(filename), ior(NF90_WRITE,NF90_NETCDF4), ncid) )
 
@@ -1002,7 +1002,7 @@ CONTAINS
          CALL mpi_barrier (p_comm_io, p_err)
 #endif
       ENDIF
-               
+
    END SUBROUTINE ncio_define_dimension_vector
 
    !---------------------------------------------------------
@@ -1074,7 +1074,7 @@ CONTAINS
 
          deallocate (dimids)
 
-      ENDIF 
+      ENDIF
 
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_io, p_err)
@@ -1121,7 +1121,7 @@ CONTAINS
          ELSE
             CALL ncio_define_variable_vector (filename, pixelset, vecname, dataname, NF90_INT)
          ENDIF
-         
+
          allocate(rbuff(pixelset%nblkgrp))
 
          DO iblkgrp = 1, pixelset%nblkgrp
@@ -1153,7 +1153,7 @@ CONTAINS
             jblk = pixelset%yblkgrp(iblkgrp)
 
             CALL get_blockname (iblk, jblk, blockname)
-            CALL nccheck( nf90_inq_varid(grpid, trim(vecname)//'_'//trim(blockname), varid) ) 
+            CALL nccheck( nf90_inq_varid(grpid, trim(vecname)//'_'//trim(blockname), varid) )
             CALL nccheck( nf90_put_var  (grpid, varid, rbuff(iblkgrp)%val) )
 
             deallocate (rbuff(iblkgrp)%val)
@@ -1166,7 +1166,7 @@ CONTAINS
          CALL mpi_send (lock, 1, MPI_INTEGER, p_address_master, mpi_tag_mesg, p_comm_glb, p_err)
 #endif
       ENDIF
-               
+
 #ifdef USEMPI
       IF (p_is_worker) THEN
 
@@ -1240,7 +1240,7 @@ CONTAINS
          ELSE
             CALL ncio_define_variable_vector (filename, pixelset, vecname, dataname, NF90_BYTE)
          ENDIF
-         
+
          allocate(rbuff(pixelset%nblkgrp))
 
          DO iblkgrp = 1, pixelset%nblkgrp
@@ -1276,14 +1276,14 @@ CONTAINS
          DO iblkgrp = 1, pixelset%nblkgrp
             iblk = pixelset%xblkgrp(iblkgrp)
             jblk = pixelset%yblkgrp(iblkgrp)
-         
+
             CALL get_blockname (iblk, jblk, blockname)
             CALL nccheck( nf90_inq_varid(grpid, trim(vecname)//'_'//trim(blockname), varid))
             CALL nccheck( nf90_put_var  (grpid, varid, rbuff(iblkgrp)%val) )
-            
+
             deallocate (rbuff(iblkgrp)%val)
          ENDDO
-            
+
          deallocate (rbuff)
          CALL nccheck( nf90_sync (ncid) )
          CALL nccheck( nf90_close(ncid) )
@@ -1291,7 +1291,7 @@ CONTAINS
          CALL mpi_send (lock, 1, MPI_INTEGER, p_address_master, mpi_tag_mesg, p_comm_glb, p_err)
 #endif
       ENDIF
-               
+
 #ifdef USEMPI
       IF (p_is_worker) THEN
 
@@ -1371,7 +1371,7 @@ CONTAINS
          ELSE
             CALL ncio_define_variable_vector (filename, pixelset, vecname, dataname, NF90_INT64)
          ENDIF
-         
+
          allocate(rbuff(pixelset%nblkgrp))
 
          DO iblkgrp = 1, pixelset%nblkgrp
@@ -1405,7 +1405,7 @@ CONTAINS
             CALL get_blockname (iblk, jblk, blockname)
             CALL nccheck( nf90_inq_varid(grpid, trim(vecname)//'_'//trim(blockname), varid))
             CALL nccheck( nf90_put_var  (grpid, varid, rbuff(iblkgrp)%val) )
-            
+
             deallocate (rbuff(iblkgrp)%val)
          ENDDO
 
@@ -1416,7 +1416,7 @@ CONTAINS
          CALL mpi_send (lock, 1, MPI_INTEGER, p_address_master, mpi_tag_mesg, p_comm_glb, p_err)
 #endif
       ENDIF
-               
+
 #ifdef USEMPI
       IF (p_is_worker) THEN
 
@@ -1462,7 +1462,7 @@ CONTAINS
    character(len=*), intent(in) :: vecname
    type(pixelset_type), intent(in) :: pixelset
    real(r8), intent(in) :: wdata (:)
-   
+
    integer, intent(in), optional :: compress_level
 
    ! Local variables
@@ -1483,7 +1483,7 @@ CONTAINS
 #endif
 
       IF (p_is_io) THEN
-         
+
          IF (present(compress_level)) THEN
             CALL ncio_define_variable_vector (filename, pixelset, vecname, dataname, NF90_DOUBLE, &
                compress = compress_level)
@@ -1524,7 +1524,7 @@ CONTAINS
             CALL get_blockname (iblk, jblk, blockname)
             CALL nccheck( nf90_inq_varid(grpid, trim(vecname)//'_'//trim(blockname), varid))
             CALL nccheck( nf90_put_var  (grpid, varid, rbuff(iblkgrp)%val) )
-            
+
             deallocate (rbuff(iblkgrp)%val)
          ENDDO
 
@@ -1535,7 +1535,7 @@ CONTAINS
          CALL mpi_send (lock, 1, MPI_INTEGER, p_address_master, mpi_tag_mesg, p_comm_glb, p_err)
 #endif
       ENDIF
-               
+
 #ifdef USEMPI
       IF (p_is_worker) THEN
 
@@ -1612,7 +1612,7 @@ CONTAINS
             CALL ncio_define_variable_vector (filename, pixelset, vecname, dataname, NF90_DOUBLE, &
                dim1name = dim1name)
          ENDIF
-         
+
          allocate(rbuff(pixelset%nblkgrp))
 
          DO iblkgrp = 1, pixelset%nblkgrp
@@ -1646,7 +1646,7 @@ CONTAINS
             CALL get_blockname (iblk, jblk, blockname)
             CALL nccheck( nf90_inq_varid(grpid, trim(vecname)//'_'//trim(blockname), varid))
             CALL nccheck( nf90_put_var  (grpid, varid, rbuff(iblkgrp)%val) )
-            
+
             deallocate (rbuff(iblkgrp)%val)
          ENDDO
 
@@ -1657,7 +1657,7 @@ CONTAINS
          CALL mpi_send (lock, 1, MPI_INTEGER, p_address_master, mpi_tag_mesg, p_comm_glb, p_err)
 #endif
       ENDIF
-               
+
 #ifdef USEMPI
       IF (p_is_worker) THEN
 
@@ -1705,7 +1705,7 @@ CONTAINS
    type(pixelset_type), intent(in) :: pixelset
    integer,  intent(in) :: ndim1, ndim2
    real(r8), intent(in) :: wdata (:,:,:)
-   
+
    integer,  intent(in), optional :: compress_level
 
    ! Local variables
@@ -1734,7 +1734,7 @@ CONTAINS
             CALL ncio_define_variable_vector (filename, pixelset, vecname, dataname, NF90_DOUBLE, &
                dim1name = dim1name, dim2name = dim2name)
          ENDIF
-         
+
          allocate(rbuff(pixelset%nblkgrp))
 
          DO iblkgrp = 1, pixelset%nblkgrp
@@ -1768,10 +1768,10 @@ CONTAINS
             CALL get_blockname (iblk, jblk, blockname)
             CALL nccheck( nf90_inq_varid(grpid, trim(vecname)//'_'//trim(blockname), varid))
             CALL nccheck( nf90_put_var  (grpid, varid, rbuff(iblkgrp)%val) )
-            
+
             deallocate (rbuff(iblkgrp)%val)
          ENDDO
-         
+
          deallocate (rbuff)
          CALL nccheck( nf90_sync (ncid) )
          CALL nccheck( nf90_close(ncid) )
@@ -1779,7 +1779,7 @@ CONTAINS
          CALL mpi_send (lock, 1, MPI_INTEGER, p_address_master, mpi_tag_mesg, p_comm_glb, p_err)
 #endif
       ENDIF
-               
+
 #ifdef USEMPI
       IF (p_is_worker) THEN
 
@@ -1827,7 +1827,7 @@ CONTAINS
    integer,  intent(in) :: ndim1, ndim2, ndim3
    type(pixelset_type), intent(in) :: pixelset
    real(r8), intent(in) :: wdata (:,:,:,:)
-   
+
    integer,  intent(in), optional :: compress_level
 
    ! Local variables
@@ -1857,7 +1857,7 @@ CONTAINS
             CALL ncio_define_variable_vector (filename, pixelset, vecname, dataname, NF90_DOUBLE, &
                dim1name = dim1name, dim2name = dim2name, dim3name = dim3name)
          ENDIF
-         
+
          allocate(rbuff(pixelset%nblkgrp))
 
          DO iblkgrp = 1, pixelset%nblkgrp
@@ -1891,7 +1891,7 @@ CONTAINS
             CALL get_blockname (iblk, jblk, blockname)
             CALL nccheck( nf90_inq_varid(grpid, trim(vecname)//'_'//trim(blockname), varid))
             CALL nccheck( nf90_put_var  (grpid, varid, rbuff(iblkgrp)%val) )
-            
+
             deallocate (rbuff(iblkgrp)%val)
          ENDDO
 
@@ -1902,7 +1902,7 @@ CONTAINS
          CALL mpi_send (lock, 1, MPI_INTEGER, p_address_master, mpi_tag_mesg, p_comm_glb, p_err)
 #endif
       ENDIF
-               
+
 #ifdef USEMPI
       IF (p_is_worker) THEN
 

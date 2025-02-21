@@ -6,7 +6,7 @@ MODULE MOD_BGC_Soil_BiogeochemDecompCascadeBGC
 ! !DESCRIPTION:
 ! Calculate the soil decomposition rate according to soil temperature, soil matric potential, and depth
 !
-! !REFERENCE:
+! !REFERENCES:
 ! Koven, C.D., Riley, W.J., Subin, Z.M., Tang, J.Y., Torn, M.S., Collins, W.D., Bonan, G.B., Lawrence,
 ! D.M. and Swenson, S.C., 2013. The effect of vertically resolved soil biogeochemistry and alternate
 ! soil C and N models on C dynamics of CLM4. Biogeosciences, 10(11), 7109-7131.

@@ -2,11 +2,11 @@
 
 SUBROUTINE Aggregation_TopographyFactors ( &
       grid_topo_factor , dir_topodata, dir_model_landdata, lc_year)
-   ! ----------------------------------------------------------------------
-   ! Global topography-based factors data
-   !
-   ! Created by Sisi Chen, Lu Li, 06/2024
-   ! ----------------------------------------------------------------------
+! ----------------------------------------------------------------------
+!  Global topography-based factors data
+!
+!  Created by Sisi Chen, Lu Li, 06/2024
+! ----------------------------------------------------------------------
    USE MOD_Precision
    USE MOD_Namelist
    USE MOD_SPMD_Task
@@ -20,7 +20,7 @@ SUBROUTINE Aggregation_TopographyFactors ( &
    USE MOD_AggregationRequestData
    USE MOD_Utils
 #ifdef SrfdataDiag
-   USE MOD_Mesh, only : numelm
+   USE MOD_Mesh, only: numelm
    USE MOD_LandElm
    USE MOD_SrfdataDiag
 #endif
@@ -309,13 +309,13 @@ SUBROUTINE Aggregation_TopographyFactors ( &
                  type = 4
             ELSE ! missing value=-9999
                  cycle
-            END IF
+            ENDIF
 
             IF ((area_one(i)>0).and.(area_one(i)<=sum_area_one)) THEN      ! quality control
                   area_type_one(type,i) = area_one(i)
                   asp_type_one (type,i) = asp_one(i)*area_one(i)
                   slp_type_one (type,i) = slp_one(i)*area_one(i)
-            END IF
+            ENDIF
          ENDDO
 
          ! assign value to four types at patches

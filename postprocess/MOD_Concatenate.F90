@@ -7,7 +7,7 @@ MODULE mod_concatenate
    USE MOD_Block
    USE MOD_NetCDFSerial
    USE netcdf
-   USE MOD_Vars_Global, only : spval
+   USE MOD_Vars_Global, only: spval
    IMPLICIT NONE
 
    type :: segment_type

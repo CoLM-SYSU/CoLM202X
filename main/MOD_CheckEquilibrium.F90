@@ -15,8 +15,8 @@ MODULE MOD_CheckEquilibrium
    USE netcdf
    USE MOD_NetCDFSerial
    USE MOD_SpatialMapping
-   USE MOD_Vars_Global, only : spval
-   USE MOD_Namelist,    only : DEF_CheckEquilibrium
+   USE MOD_Vars_Global, only: spval
+   USE MOD_Namelist,    only: DEF_CheckEquilibrium
 
    ! ----- Variables -----
    integer :: numcheck
@@ -43,14 +43,14 @@ CONTAINS
    !---------------------------------------
    SUBROUTINE CheckEqb_init ()
 
-   USE MOD_Forcing,   only : gforc
-   USE MOD_LandPatch, only : numpatch, landpatch
+   USE MOD_Forcing,   only: gforc
+   USE MOD_LandPatch, only: numpatch, landpatch
    IMPLICIT NONE
 
-      IF (.not. DEF_CheckEquilibrium) return
+      IF (.not. DEF_CheckEquilibrium) RETURN
 
       numcheck = -1
-      
+
       IF (p_is_worker) THEN
          IF (numpatch > 0) THEN
 
@@ -77,7 +77,7 @@ CONTAINS
 
    IMPLICIT NONE
 
-      IF (.not. DEF_CheckEquilibrium) return
+      IF (.not. DEF_CheckEquilibrium) RETURN
 
       IF (allocated(tws_last)) deallocate(tws_last)
       IF (allocated(tws_this)) deallocate(tws_this)
@@ -93,8 +93,8 @@ CONTAINS
    USE MOD_TimeManager
    USE MOD_DataType
    USE MOD_LandPatch
-   USE MOD_Vars_1DForcing,     only : forc_prc, forc_prl
-   USE MOD_Vars_TimeVariables, only : wa, wat, wdsrf
+   USE MOD_Vars_1DForcing,     only: forc_prc, forc_prl
+   USE MOD_Vars_TimeVariables, only: wa, wat, wdsrf
 
    IMPLICIT NONE
 
@@ -115,7 +115,7 @@ CONTAINS
    type(block_data_real8_2d) :: sumarea
 
 
-      IF (.not. DEF_CheckEquilibrium) return
+      IF (.not. DEF_CheckEquilibrium) RETURN
 
       IF (p_is_worker) THEN
          IF (numpatch > 0) THEN
@@ -123,27 +123,27 @@ CONTAINS
             CALL add_spv (forc_prl, prcp_acc, deltim)
          ENDIF
       ENDIF
-      
+
       docheck = isendofyear (idate, deltim)
 
       IF (docheck) THEN
 
          IF ((p_is_worker) .and. (numpatch > 0)) THEN
 
-            tws_this = wat 
+            tws_this = wat
             CALL add_spv (wdsrf, tws_this)
             IF (DEF_USE_VariablySaturatedFlow) THEN
                CALL add_spv (wa, tws_this)
             ENDIF
 
          ENDIF
-            
+
          numcheck = numcheck + 1
 
          IF (numcheck >= 1) THEN
-         
+
             IF ((p_is_worker) .and. (numpatch > 0)) THEN
-               
+
                allocate (filter (numpatch))
                filter(:) = (tws_last /= spval) .and. (tws_this /= spval) .and. (prcp_acc > 0.)
 
@@ -152,18 +152,18 @@ CONTAINS
                   pct_dtws = (tws_this - tws_last) / prcp_acc
                ELSEWHERE
                   pct_dtws = spval
-               END WHERE 
+               END WHERE
 
             ENDIF
-         
+
             IF (p_is_master) THEN
-                  
+
                filename = trim(dir_out) // '/' // trim(casename) //'_check_equilibrium.nc'
 
                IF (numcheck == 1) THEN
 
                   CALL ncio_create_file (trim(filename))
-                  
+
                   CALL ncio_define_dimension(filename, 'year', 0)
                   CALL nccheck( nf90_open(trim(filename), NF90_WRITE, ncid) )
                   CALL nccheck( nf90_inq_dimid(ncid, 'year', time_id) )
@@ -218,7 +218,7 @@ CONTAINS
                CALL ncio_put_attr (filename, 'relative_tws_change', 'units', '-')
                CALL ncio_put_attr (filename, 'relative_tws_change', 'missing_value', spval)
             ENDIF
-            
+
             CALL ncio_write_serial_time (filename, 'total_precipitation', numcheck, prcp_acc, 'patch', 'year')
             IF (numcheck == 1) THEN
                CALL ncio_put_attr (filename, 'total_precipitation', 'long_name', &
@@ -227,7 +227,7 @@ CONTAINS
                CALL ncio_put_attr (filename, 'total_precipitation', 'missing_value', spval)
             ENDIF
 #endif
-         
+
          ENDIF
 
          IF ((p_is_worker) .and. (numpatch > 0)) THEN
@@ -398,7 +398,7 @@ CONTAINS
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-   END SUBROUTINE map_and_write_check_var 
+   END SUBROUTINE map_and_write_check_var
 #endif
 
    !------

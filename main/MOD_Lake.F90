@@ -3,19 +3,19 @@
 MODULE MOD_Lake
 
 !-----------------------------------------------------------------------
-! DESCRIPTION:
-! Simulating energy balance processes of land water body
+! !DESCRIPTION:
+!  Simulating energy balance processes of land water body
 !
-! REFERENCE:
-! Dai et al, 2018, The lake scheme of the common land model and its performance evaluation.
-! Chinese Science Bulletin, 63(28-29), 3002–3021, https://doi.org/10.1360/N972018-00609
+! !REFERENCES:
+!  Dai et al, 2018, The lake scheme of the common land model and its performance evaluation.
+!  Chinese Science Bulletin, 63(28-29), 3002–3021, https://doi.org/10.1360/N972018-00609
 !
-! Original author: Yongjiu Dai 04/2014/
+!  Original author: Yongjiu Dai 04/2014/
 !
-! Revisions:
-! Nan Wei,  01/2018: interaction btw prec and lake surface including phase change of prec and water body
-! Nan Wei,  06/2018: update heat conductivity of water body and soil below and snow hydrology
-! Hua Yuan, 01/2023: added snow layer absorption in melting calculation
+! !REVISIONS:
+!  Nan Wei,  01/2018: interaction btw prec and lake surface including phase change of prec and water body
+!  Nan Wei,  06/2018: update heat conductivity of water body and soil below and snow hydrology
+!  Hua Yuan, 01/2023: added snow layer absorption in melting calculation
 !-----------------------------------------------------------------------
 
    USE MOD_Precision
@@ -49,23 +49,24 @@ CONTAINS
 
             ! "inout" arguments
             ! ------------------
-            t_lake    , zi_soisno , z_soisno ,&
+            t_lake    , zi_soisno , z_soisno    ,&
             dz_soisno , t_soisno  , wliq_soisno , wice_soisno ,&
             fiold     , snl       , sag         , scv         ,&
             snowdp    , lake_icefrac )
 
 !-----------------------------------------------------------------------
-! DESCRIPTION:
-! Add new snow nodes and interaction btw prec and lake surface including phase change of prec and water body
+! !DESCRIPTION:
+!  Add new snow nodes and interaction btw prec and lake surface including phase
+!  change of prec and water body
 !
-! Original author : Yongjiu Dai, 04/2014
+!  Original author: Yongjiu Dai, 04/2014
 !
-! Revisions:
-! Nan Wei,  01/2018: update interaction btw prec and lake surface
+! !REVISIONS:
+!  Nan Wei,  01/2018: update interaction btw prec and lake surface
 !-----------------------------------------------------------------------
 
    USE MOD_Precision
-   USE MOD_Const_Physical, only : tfrz, denh2o, cpliq, cpice, hfus
+   USE MOD_Const_Physical, only: tfrz, denh2o, cpliq, cpice, hfus
    IMPLICIT NONE
 
 !-------------------------- Dummy Arguments ----------------------------
@@ -87,10 +88,10 @@ CONTAINS
    real(r8), intent(inout) :: wliq_soisno(maxsnl+1:0) ! snow layer liquid water (kg/m2)
    real(r8), intent(inout) :: wice_soisno(maxsnl+1:0) ! snow layer ice lens (kg/m2)
    real(r8), intent(inout) ::       fiold(maxsnl+1:0) ! fraction of ice relative to the total water
-   integer,  intent(inout) :: snl     ! number of snow layers
-   real(r8), intent(inout) :: sag     ! non dimensional snow age [-]
-   real(r8), intent(inout) :: scv     ! snow mass (kg/m2)
-   real(r8), intent(inout) :: snowdp  ! snow depth (m)
+   integer,  intent(inout) :: snl                     ! number of snow layers
+   real(r8), intent(inout) :: sag                     ! non dimensional snow age [-]
+   real(r8), intent(inout) :: scv                     ! snow mass (kg/m2)
+   real(r8), intent(inout) :: snowdp                  ! snow depth (m)
    real(r8), intent(inout) :: lake_icefrac(1:nl_lake) ! mass fraction of lake layer that is frozen
    real(r8), intent(inout) :: t_lake(1:nl_lake)       ! lake layer temperature (m)
 
@@ -309,63 +310,64 @@ CONTAINS
            urban_call)
 
 ! ------------------------ code history ---------------------------
-! purpose: lake temperature and snow on frozen lake
-! initial  Yongjiu Dai, 2000
-!          Zack Subin, 2009
-!          Yongjiu Dai, /12/2012/, /04/2014/, 06/2018
-!          Nan Wei, /06/2018/
+!  purpose: lake temperature and snow on frozen lake
+!  initial  Yongjiu Dai, 2000
+!           Zack Subin, 2009
+!           Yongjiu Dai, /12/2012/, /04/2014/, 06/2018
+!           Nan Wei, /06/2018/
 !
 ! ------------------------ notes ----------------------------------
-! Lakes have variable depth, possible snow layers above, freezing & thawing of lake water,
-! and soil layers with active temperature and gas diffusion below.
+!  Lakes have variable depth, possible snow layers above, freezing &
+!  thawing of lake water, and soil layers with active temperature and
+!  gas diffusion below.
 !
-! Calculates temperatures in the 25-30 layer column of (possible) snow,
-! lake water, soil, and bedrock beneath lake.
-! Snow and soil temperatures are determined as in SoilTemperature, except
-! for appropriate boundary conditions at the top of the snow (the flux is fixed
-! to be the ground heat flux), the bottom of the snow (adjacent to top lake layer),
-! and the top of the soil (adjacent to the bottom lake layer).
-! Also, the soil is kept fully saturated.
-! The whole column is solved simultaneously as one tridiagonal matrix.
+!  Calculates temperatures in the 25-30 layer column of (possible) snow,
+!  lake water, soil, and bedrock beneath lake.  Snow and soil
+!  temperatures are determined as in SoilTemperature, except for
+!  appropriate boundary conditions at the top of the snow (the flux is
+!  fixed to be the ground heat flux), the bottom of the snow (adjacent
+!  to top lake layer), and the top of the soil (adjacent to the bottom
+!  lake layer).  Also, the soil is kept fully saturated.  The whole
+!  column is solved simultaneously as one tridiagonal matrix.
 !
-! calculate lake temperatures from one-dimensional thermal
-! stratification model based on eddy diffusion concepts to
-! represent vertical mixing of heat
+!  calculate lake temperatures from one-dimensional thermal
+!  stratification model based on eddy diffusion concepts to represent
+!  vertical mixing of heat
 !
-! d ts    d            d ts     1 ds
-! ---- = -- [(km + ke) ----] + -- --
-!  dt    dz             dz     cw dz
-! where: ts = temperature (kelvin)
-!         t = time (s)
-!         z = depth (m)
-!        km = molecular diffusion coefficient (m**2/s)
-!        ke = eddy diffusion coefficient (m**2/s)
-!        cw = heat capacity (j/m**3/kelvin)
-!         s = heat source term (w/m**2)
+!  d ts    d            d ts     1 ds
+!  ---- = -- [(km + ke) ----] + -- --
+!   dt    dz             dz     cw dz
+!  where: ts = temperature (kelvin)
+!          t = time (s)
+!          z = depth (m)
+!         km = molecular diffusion coefficient (m**2/s)
+!         ke = eddy diffusion coefficient (m**2/s)
+!         cw = heat capacity (j/m**3/kelvin)
+!          s = heat source term (w/m**2)
 !
-! use crank-nicholson method to set up tridiagonal system of equations to
-! solve for ts at time n+1, where the temperature equation for layer i is
-! r_i = a_i [ts_i-1] n+1 + b_i [ts_i] n+1 + c_i [ts_i+1] n+1
-! the solution conserves energy as
-! cw*([ts(  1)] n+1 - [ts(  1)] n)*dz(  1)/dt + ... +
-! cw*([ts(nl_lake)] n+1 - [ts(nl_lake)] n)*dz(nl_lake)/dt = fin
-! where
-! [ts] n   = old temperature (kelvin)
-! [ts] n+1 = new temperature (kelvin)
-! fin      = heat flux into lake (w/m**2)
-!          = beta*sabg_snow_lyr(1)+forc_frl-olrg-fsena-lfevpa-hm + phi(1) + ... + phi(nl_lake)
+!  use crank-nicholson method to set up tridiagonal system of equations to
+!  solve for ts at time n+1, where the temperature equation for layer i is
+!  r_i = a_i [ts_i-1] n+1 + b_i [ts_i] n+1 + c_i [ts_i+1] n+1
+!  the solution conserves energy as
+!  cw*([ts(  1)] n+1 - [ts(  1)] n)*dz(  1)/dt + ... +
+!  cw*([ts(nl_lake)] n+1 - [ts(nl_lake)] n)*dz(nl_lake)/dt = fin
+!  where
+!  [ts] n   = old temperature (kelvin)
+!  [ts] n+1 = new temperature (kelvin)
+!  fin      = heat flux into lake (w/m**2)
+!           = beta*sabg_snow_lyr(1)+forc_frl-olrg-fsena-lfevpa-hm + phi(1) + ... + phi(nl_lake)
 !
-! REVISIONS:
-! Yongjiu Dai and Hua Yuan, 01/2023: added SNICAR for layer solar absorption, ground heat
-!                                    flux, temperature and freezing mass calculations
-! Shaofeng Liu, 05/2023: add option to call moninobuk_leddy, the LargeEddy
-!                        surface turbulence scheme (LZD2022);
-!                        make a proper update of um.
+! !REVISIONS:
+!  Yongjiu Dai and Hua Yuan, 01/2023: added SNICAR for layer solar absorption, ground heat
+!                                     flux, temperature and freezing mass calculations
+!  Shaofeng Liu, 05/2023: add option to call moninobuk_leddy, the LargeEddy
+!                         surface turbulence scheme (LZD2022);
+!                         make a proper update of um.
 !
 ! -----------------------------------------------------------------
    USE MOD_Precision
-   USE MOD_Const_Physical, only : tfrz,hvap,hfus,hsub,tkwat,tkice,tkair,stefnc,&
-                                   vonkar,grav,cpliq,cpice,cpair,denh2o,denice,rgas
+   USE MOD_Const_Physical, only: tfrz,hvap,hfus,hsub,tkwat,tkice,tkair,stefnc,&
+                                 vonkar,grav,cpliq,cpice,cpair,denh2o,denice,rgas
    USE MOD_FrictionVelocity
    USE MOD_Namelist, only: DEF_USE_CBL_HEIGHT, DEF_USE_SNICAR
    USE MOD_TurbulenceLEddy
@@ -568,8 +570,8 @@ CONTAINS
    real(r8) tk_lake(1:nl_lake)          ! thermal conductivity at layer node [W/(m K)]
    real(r8) cv_soisno(maxsnl+1:nl_soil) ! heat capacity of soil/snow [J/(m2 K)]
    real(r8) tk_soisno(maxsnl+1:nl_soil) ! thermal conductivity of soil/snow [W/(m K)] (at interface below, except for j=0)
-   real(r8) hcap(1:nl_soil)           ! J/(m3 K)
-   real(r8) thk(maxsnl+1:nl_soil)     ! W/(m K)
+   real(r8) hcap(1:nl_soil)             ! J/(m3 K)
+   real(r8) thk(maxsnl+1:nl_soil)       ! W/(m K)
    real(r8) tktopsoil                   ! thermal conductivity of the top soil layer [W/(m K)]
 
    real(r8) t_soisno_bef(maxsnl+1:nl_soil) ! beginning soil/snow temp for E cons. check [K]
@@ -629,8 +631,8 @@ CONTAINS
    real(r8) tmp       !
    real(r8) h_fin     !
    real(r8) h_finDT   !
-   real(r8) del_T_grnd   !
-!   real(r8) savedtke1
+   real(r8) del_T_grnd!
+   !real(r8) savedtke1
 
    integer iter       ! iteration index
    integer convernum  ! number of time when del_T_grnd < 0.01
@@ -1569,26 +1571,27 @@ CONTAINS
              urban_call  )
 
 !-----------------------------------------------------------------------------------------------
-! Calculation of Lake Hydrology. Lake water mass is kept constant. The soil is simply maintained at
-! volumetric saturation if ice melting frees up pore space.
+!  Calculation of Lake Hydrology. Lake water mass is kept constant. The
+!  soil is simply maintained at volumetric saturation if ice melting
+!  frees up pore space.
 !
-! Called:
-!    -> snowwater:                  change of snow mass and snow water onto soil
-!    -> snowcompaction:             compaction of snow layers
-!    -> combinesnowlayers:          combine snow layers that are thinner than minimum
-!    -> dividesnowlayers:           subdivide snow layers that are thicker than maximum
+!  Called:
+!     -> snowwater:                  change of snow mass and snow water onto soil
+!     -> snowcompaction:             compaction of snow layers
+!     -> combinesnowlayers:          combine snow layers that are thinner than minimum
+!     -> dividesnowlayers:           subdivide snow layers that are thicker than maximum
 !
-! Initial: Yongjiu Dai, December, 2012
-!                          April, 2014
-! REVISIONS:
-! Nan Wei, 06/2018: update snow hydrology above lake
-! Yongjiu Dai, 01/2023: added for SNICAR model effects for snowwater,
-! combinesnowlayers, dividesnowlayers processes by calling snowwater_snicar(),
-! SnowLayersCombine_snicar, SnowLayersDivide_snicar()
+!  Initial: Yongjiu Dai, December, 2012
+!                           April, 2014
+! !REVISIONS:
+!  Nan Wei, 06/2018: update snow hydrology above lake
+!  Yongjiu Dai, 01/2023: added for SNICAR model effects for snowwater,
+!  combinesnowlayers, dividesnowlayers processes by calling snowwater_snicar(),
+!  SnowLayersCombine_snicar, SnowLayersDivide_snicar()
 !-----------------------------------------------------------------------------------------------
 
    USE MOD_Precision
-   USE MOD_Const_Physical, only : denh2o, denice, hfus, tfrz, cpliq, cpice
+   USE MOD_Const_Physical, only: denh2o, denice, hfus, tfrz, cpliq, cpice
    USE MOD_SoilSnowHydrology
    USE MOD_SnowLayersCombineDivide
 
@@ -1624,9 +1627,9 @@ CONTAINS
    real(r8), intent(inout) :: t_soisno   (maxsnl+1:nl_soil) ! snow temperature (Kelvin)
    real(r8), intent(inout) :: wice_soisno(maxsnl+1:nl_soil) ! ice lens (kg/m2)
    real(r8), intent(inout) :: wliq_soisno(maxsnl+1:nl_soil) ! liquid water (kg/m2)
-   real(r8), intent(inout) :: t_lake      (1:nl_lake) ! lake temperature (Kelvin)
-   real(r8), intent(inout) :: lake_icefrac(1:nl_lake) ! mass fraction of lake layer that is frozen
-   real(r8), intent(inout) :: qout_snowb ! rate of water out of snow bottom (mm/s)
+   real(r8), intent(inout) :: t_lake      (1:nl_lake)       ! lake temperature (Kelvin)
+   real(r8), intent(inout) :: lake_icefrac(1:nl_lake)       ! mass fraction of lake layer that is frozen
+   real(r8), intent(inout) :: qout_snowb                    ! rate of water out of snow bottom (mm/s)
 
    real(r8), intent(inout) :: fseng  ! total sensible heat flux (W/m**2) [+ to atm]
    real(r8), intent(inout) :: fgrnd  ! heat flux into snow / lake (W/m**2) [+ = into soil]
@@ -1783,7 +1786,7 @@ CONTAINS
             sumsnowice = sumsnowice + wice_soisno(j)
             sumsnowliq = sumsnowliq + wliq_soisno(j)
             heatsum = heatsum + wice_soisno(j)*cpice*(tfrz-t_soisno(j)) &
-                             + wliq_soisno(j)*cpliq*(tfrz-t_soisno(j))
+                              + wliq_soisno(j)*cpliq*(tfrz-t_soisno(j))
          ENDIF
       ENDDO
 
@@ -1903,41 +1906,41 @@ CONTAINS
                              cur,ustar,z0mg,z0hg,z0qg)
 
 !-----------------------------------------------------------------------
-! DESCRIPTION:
-! Calculate lake surface roughness
+! !DESCRIPTION:
+!  Calculate lake surface roughness
 !
-! Original:
-! The Community Land Model version 4.5 (CLM4.5)
+!  Original:
+!  The Community Land Model version 4.5 (CLM4.5)
 !
-! Revisions:
-! Yongjiu Dai, Nan Wei, 01/2018
+! !REVISIONS:
+!  Yongjiu Dai, Nan Wei, 01/2018
 !-----------------------------------------------------------------------
 
    USE MOD_Precision
-   USE MOD_Const_Physical, only : tfrz,vonkar,grav
+   USE MOD_Const_Physical, only: tfrz,vonkar,grav
 
    IMPLICIT NONE
 
-   integer,  intent(in) :: snl       ! number of snow layers
-   real(r8), intent(in) :: t_grnd    ! ground temperature
-   real(r8), intent(in) :: t_lake(1) ! surface lake layer temperature [K]
+   integer,  intent(in) :: snl             ! number of snow layers
+   real(r8), intent(in) :: t_grnd          ! ground temperature
+   real(r8), intent(in) :: t_lake(1)       ! surface lake layer temperature [K]
    real(r8), intent(in) :: lake_icefrac(1) ! surface lake layer ice mass fraction [0-1]
-   real(r8), intent(in) :: forc_psrf ! atmosphere pressure at the surface [pa]
+   real(r8), intent(in) :: forc_psrf       ! atmosphere pressure at the surface [pa]
 
-   real(r8), intent(in) :: cur       ! Charnock parameter (-)
-   real(r8), intent(in) :: ustar     ! u* in similarity theory [m/s]
+   real(r8), intent(in) :: cur             ! Charnock parameter (-)
+   real(r8), intent(in) :: ustar           ! u* in similarity theory [m/s]
 
-   real(r8), intent(out) :: z0mg     ! roughness length over ground, momentum [m]
-   real(r8), intent(out) :: z0hg     ! roughness length over ground, sensible heat [m]
-   real(r8), intent(out) :: z0qg     ! roughness length over ground, latent heat [m]
+   real(r8), intent(out) :: z0mg           ! roughness length over ground, momentum [m]
+   real(r8), intent(out) :: z0hg           ! roughness length over ground, sensible heat [m]
+   real(r8), intent(out) :: z0qg           ! roughness length over ground, latent heat [m]
 
-   real(r8), parameter :: cus = 0.1       ! empirical constant for roughness under smooth flow
-   real(r8), parameter :: kva0 = 1.51e-5  ! kinematic viscosity of air (m^2/s) at 20C and 1.013e5 Pa
-   real(r8), parameter :: prn = 0.713     ! Prandtl # for air at neutral stability
-   real(r8), parameter :: sch = 0.66      ! Schmidt # for water in air at neutral stability
+   real(r8), parameter :: cus = 0.1        ! empirical constant for roughness under smooth flow
+   real(r8), parameter :: kva0 = 1.51e-5   ! kinematic viscosity of air (m^2/s) at 20C and 1.013e5 Pa
+   real(r8), parameter :: prn = 0.713      ! Prandtl # for air at neutral stability
+   real(r8), parameter :: sch = 0.66       ! Schmidt # for water in air at neutral stability
 
-   real(r8) kva    ! kinematic viscosity of air at ground temperature and forcing pressure
-   real(r8) sqre0  ! root of roughness Reynolds number
+   real(r8) kva                            ! kinematic viscosity of air at ground temperature and forcing pressure
+   real(r8) sqre0                          ! root of roughness Reynolds number
 !-----------------------------------------------------------------------
 
       IF (t_grnd > tfrz .and. t_lake(1) > tfrz .and. snl == 0) THEN
@@ -1972,8 +1975,8 @@ CONTAINS
 ! -------------------------------------------------------------------------
 
    USE MOD_Precision
-   USE MOD_Const_Physical, only : tfrz,tkwat,tkice,tkair,&
-                                  vonkar,grav,cpliq,cpice,cpair,denh2o,denice
+   USE MOD_Const_Physical, only: tfrz,tkwat,tkice,tkair,&
+                                 vonkar,grav,cpliq,cpice,cpair,denh2o,denice
 
    IMPLICIT NONE
 

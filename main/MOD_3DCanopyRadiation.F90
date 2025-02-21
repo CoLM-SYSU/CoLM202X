@@ -52,7 +52,7 @@ CONTAINS
 !
 !  Created by Hua Yuan, 08/2019
 !
-! !REFERENCE:
+! !REFERENCES:
 !  Yuan, H., R. E. Dickinson, Y. Dai, M. J. Shaikh, L. Zhou, W. Shangguan,
 !  and D. Ji, 2014: A 3D canopy radiative transfer model for global climate
 !  modeling: Description, validation, and application. Journal of Climate,
@@ -280,7 +280,7 @@ CONTAINS
 !  Before 2013: Robert E. Dickinson proposed the initial idea. Dickinson and
 !               Muhammad J. Shake contributed to the code writing.
 !
-! !REFERENCE:
+! !REFERENCES:
 !  Yuan, H., R. E. Dickinson, Y. Dai, M. J. Shaikh, L. Zhou, W. Shangguan,
 !  and D. Ji, 2014: A 3D canopy radiative transfer model for global climate
 !  modeling: Description, validation, and application. Journal of Climate,
@@ -487,7 +487,7 @@ CONTAINS
          IF ( lsai(ip)>1.e-6_r8 .and. fcover(ip)>D0 ) THEN
 
             soilveg(ip) = .true.
-            nsoilveg = nsoilveg + 1
+            nsoilveg  = nsoilveg + 1
 
             clev      = canlay(ip)
             fc0(clev) = fc0(clev) + fcover(ip)

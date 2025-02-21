@@ -4,19 +4,19 @@
 MODULE MOD_HistVector
 
 !----------------------------------------------------------------------------
-! DESCRIPTION:
+! !DESCRIPTION:
 !
 !     Write out vectorized model results to history files.
 !
-! Created by Shupeng Zhang, May 2023
+!  Created by Shupeng Zhang, May 2023
 !
-! TODO...(need complement)
+!  TODO...(need complement)
 !----------------------------------------------------------------------------
 
    USE MOD_Precision
    USE MOD_SPMD_Task
    USE MOD_Namelist
-   USE MOD_Vars_Global, only : spval
+   USE MOD_Vars_Global, only: spval
    USE MOD_Mesh
    USE MOD_LandElm
 #ifdef CATCHMENT

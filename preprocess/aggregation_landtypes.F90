@@ -8,15 +8,15 @@ SUBROUTINE aggregation_landtypes ( dir_rawdata,dir_model_landdata, &
                                    sinn,sins,lonw_rad,lone_rad,sinn_i,sins_i,lonw_rad_i,lone_rad_i,&
                                    READ_row_UB,READ_row_LB,READ_col_UB,READ_col_LB)
 ! ----------------------------------------------------------------------
-! Creates land model surface dataset from original "raw" data files -
+!  Creates land model surface dataset from original "raw" data files -
 !     data with 30 arc seconds resolution
 !
-! Created by Yongjiu Dai, 02/2014
-! ________________
-! REVISION HISTORY:
-!   /07/2014, Siguang Zhu & Xiangxiang Zhang: weight average considering
-!               partial overlap between fine grid and model grid for a user
-!               defined domain file.
+!  Created by Yongjiu Dai, 02/2014
+!
+! !REVISIONS:
+!  /07/2014, Siguang Zhu & Xiangxiang Zhang: weight average considering
+!            partial overlap between fine grid and model grid for a user
+!            defined domain file.
 !
 ! ----------------------------------------------------------------------
 use MOD_Precision
