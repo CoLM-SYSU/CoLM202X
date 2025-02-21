@@ -388,14 +388,17 @@ CONTAINS
 #ifdef USEMPI
          IF (nblink_all > 0) THEN
             DO ibasin = 1, numbasin
-               IF (riverdown(ibasin) > 0) THEN
-                  iloc = find_in_sorted_list1 (riverdown(ibasin), nblink_all, linkbindex_all)
-                  IF (iloc > 0) THEN
-                     IF (riversystem == -1) THEN
-                        riversystem = linkrivmth_all(iloc)
-                     ELSEIF (riversystem /= linkrivmth_all(iloc)) THEN
-                        write(*,*) 'Warning: river system allocation error!'
-                     ENDIF
+
+               iloc = find_in_sorted_list1 (riverdown(ibasin), nblink_all, linkbindex_all)
+               IF (iloc <= 0) THEN
+                  iloc = find_in_sorted_list1 (basinindex(ibasin), nblink_all, linkbindex_all)
+               ENDIF
+
+               IF (iloc > 0) THEN
+                  IF (riversystem == -1) THEN
+                     riversystem = linkrivmth_all(iloc)
+                  ELSEIF (riversystem /= linkrivmth_all(iloc)) THEN
+                     write(*,*) 'Warning: river system allocation error!'
                   ENDIF
                ENDIF
             ENDDO
@@ -789,13 +792,13 @@ CONTAINS
 
    IMPLICIT NONE 
 
-      real(kind=16), intent(in)    :: datain   (:)
-      real(kind=16), intent(inout) :: dataout  (:)
-      logical,  intent(in)    :: bsnfilter(:)
+      real(r16), intent(in)    :: datain   (:)
+      real(r16), intent(inout) :: dataout  (:)
+      logical,   intent(in)    :: bsnfilter(:)
 
       ! local variables
       integer :: i, ibasin
-      real(kind=16), allocatable :: datalink(:)
+      real(r16), allocatable :: datalink(:)
 
 
       IF (p_is_worker) THEN

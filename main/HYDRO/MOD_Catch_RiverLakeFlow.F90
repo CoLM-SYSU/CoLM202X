@@ -51,24 +51,24 @@ CONTAINS
    integer  :: hs, he, i, j
    real(r8) :: dt_this
    
-   real(r8), allocatable :: wdsrf_bsn_ds(:)
-   real(r8), allocatable :: veloc_riv_ds(:)
-   real(r8), allocatable :: momen_riv_ds(:)
+   real(r8),  allocatable :: wdsrf_bsn_ds(:)
+   real(r8),  allocatable :: veloc_riv_ds(:)
+   real(r8),  allocatable :: momen_riv_ds(:)
 
-   real(kind=16), allocatable :: hflux_fc(:)
-   real(kind=16), allocatable :: mflux_fc(:)
-   real(kind=16), allocatable :: zgrad_dn(:)
+   real(r16), allocatable :: hflux_fc(:)
+   real(r16), allocatable :: mflux_fc(:)
+   real(r16), allocatable :: zgrad_dn(:)
    
-   real(kind=16), allocatable :: sum_hflux_riv(:)
-   real(kind=16), allocatable :: sum_mflux_riv(:)
-   real(kind=16), allocatable :: sum_zgrad_riv(:)
+   real(r16), allocatable :: sum_hflux_riv(:)
+   real(r16), allocatable :: sum_mflux_riv(:)
+   real(r16), allocatable :: sum_zgrad_riv(:)
    
    real(r8) :: veloct_fc, height_fc, momen_fc, zsurf_fc
    real(r8) :: bedelv_fc, height_up, height_dn
    real(r8) :: vwave_up, vwave_dn, hflux_up, hflux_dn, mflux_up, mflux_dn
    real(r8) :: totalvolume, loss, friction, dvol, nextl, nexta, nextv, ddep
-   real(r8), allocatable :: dt_res(:), dt_all(:), dt_tmp(:)
-   logical,  allocatable :: hmask(:), bsnfilter(:)
+   real(r8),  allocatable :: dt_res(:), dt_all(:), dt_tmp(:)
+   logical,   allocatable :: hmask(:), bsnfilter(:)
 
       
       IF (p_is_worker) THEN
