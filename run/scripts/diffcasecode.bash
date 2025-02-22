@@ -1,4 +1,4 @@
-ROOT=/share/home/dq010/CoLM202X-pre-release/
+ROOT=`awk '/ROOT/ {print $2}' machine.config`
 if [ $# -eq 2 ];then
    if [ "${1:0:1}" == '/' ];then
       CASENAME1=`echo "${1##*/}"`

@@ -703,6 +703,12 @@ IF ( patchtype==0.and.DEF_USE_LCT .or. patchtype>0 ) THEN
          ldew          = 0.
          rstfacsun_out = 0.
          rstfacsha_out = 0.
+         assimsun_out  = 0.
+         assimsha_out  = 0.
+         etrsun_out    = 0.
+         etrsha_out    = 0.
+         gssun_out     = 0.
+         gssha_out     = 0.
          IF (DEF_USE_PLANTHYDRAULICS) THEN
             vegwp = -2.5e4
          ENDIF
@@ -894,6 +900,14 @@ IF (DEF_USE_PC .and. patchclass(ipatch)/=CROPLAND) THEN
       fevpl_p (ps:pe) = 0.
       etr_p   (ps:pe) = 0.
       hprl_p  (ps:pe) = 0.
+      assimsun_p (ps:pe) = 0.
+      assimsha_p (ps:pe) = 0.
+      etrsun_p   (ps:pe) = 0.
+      etrsha_p   (ps:pe) = 0.
+      gssun_p    (ps:pe) = 0.
+      gssha_p    (ps:pe) = 0.
+      rstfacsun_p(ps:pe) = 0.
+      rstfacsha_p(ps:pe) = 0.
       z0m_p   (ps:pe) = (1.-fsno)*zlnd + fsno*zsno
       z0m             = sum( z0m_p (ps:pe)*pftfrac(ps:pe) )
 
