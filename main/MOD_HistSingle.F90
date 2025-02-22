@@ -36,7 +36,6 @@ MODULE MOD_HistSingle
    type(hist_memory_type), pointer :: thisvar, nextvar
 
 CONTAINS
-! ----- subroutines ------
 
    ! -- initialize history IO --
    SUBROUTINE hist_single_init ()

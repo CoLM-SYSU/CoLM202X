@@ -39,13 +39,12 @@ MODULE MOD_Hist
 !--------------------------------------------------------------------------
 CONTAINS
 
-   !---------------------------------------
    SUBROUTINE hist_init (dir_hist, lulcc_call)
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      character(len=*) , intent(in) :: dir_hist
-      logical, optional, intent(in) :: lulcc_call
+   character(len=*) , intent(in) :: dir_hist
+   logical, optional, intent(in) :: lulcc_call
 
       CALL allocate_acc_fluxes ()
       CALL FLUSH_acc_fluxes ()
@@ -78,10 +77,10 @@ CONTAINS
 
    END SUBROUTINE hist_init
 
-   !--------------------------------------
+
    SUBROUTINE hist_final ()
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
       CALL deallocate_acc_fluxes ()
 
@@ -95,7 +94,7 @@ CONTAINS
 
    END SUBROUTINE hist_final
 
-   !---------------------------------------
+
    SUBROUTINE hist_out (idate, deltim, itstamp, etstamp, ptstamp, &
          dir_hist, site)
 
@@ -103,64 +102,64 @@ CONTAINS
 !  Original version: Yongjiu Dai, September 15, 1999, 03/2014
 !=======================================================================
 
-      USE MOD_Precision
-      USE MOD_Namelist
-      USE MOD_TimeManager
-      USE MOD_SPMD_Task
-      USE MOD_Vars_1DAccFluxes
-      USE MOD_Vars_1DFluxes, only: nsensor
-      USE MOD_Vars_TimeVariables, only: wa, wat, wetwat, wdsrf
-      USE MOD_Block
-      USE MOD_DataType
-      USE MOD_LandPatch
-      USE MOD_SpatialMapping
-      USE MOD_Vars_TimeInvariants, only: patchtype, patchclass, patchmask
+   USE MOD_Precision
+   USE MOD_Namelist
+   USE MOD_TimeManager
+   USE MOD_SPMD_Task
+   USE MOD_Vars_1DAccFluxes
+   USE MOD_Vars_1DFluxes, only: nsensor
+   USE MOD_Vars_TimeVariables, only: wa, wat, wetwat, wdsrf
+   USE MOD_Block
+   USE MOD_DataType
+   USE MOD_LandPatch
+   USE MOD_SpatialMapping
+   USE MOD_Vars_TimeInvariants, only: patchtype, patchclass, patchmask
 #ifdef URBAN_MODEL
-      USE MOD_LandUrban
+   USE MOD_LandUrban
 #endif
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
-      USE MOD_Vars_PFTimeInvariants, only: pftclass
-      USE MOD_LandPFT, only: patch_pft_s
+   USE MOD_Vars_PFTimeInvariants, only: pftclass
+   USE MOD_LandPFT, only: patch_pft_s
 #endif
 #if(defined CaMa_Flood)
-      USE MOD_CaMa_Vars !definition of CaMa variables
+   USE MOD_CaMa_Vars !definition of CaMa variables
 #endif
-      USE MOD_Forcing, only: forcmask_pch
+   USE MOD_Forcing, only: forcmask_pch
 #ifdef DataAssimilation
-      USE MOD_DA_GRACE, only: fslp_k_mon
+   USE MOD_DA_GRACE, only: fslp_k_mon
 #endif
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      integer,  intent(in) :: idate(3)
-      real(r8), intent(in) :: deltim
-      type(timestamp), intent(in) :: itstamp
-      type(timestamp), intent(in) :: etstamp
-      type(timestamp), intent(in) :: ptstamp
+   integer,  intent(in) :: idate(3)
+   real(r8), intent(in) :: deltim
+   type(timestamp), intent(in) :: itstamp
+   type(timestamp), intent(in) :: etstamp
+   type(timestamp), intent(in) :: ptstamp
 
-      character(len=*), intent(in) :: dir_hist
-      character(len=*), intent(in) :: site
+   character(len=*), intent(in) :: dir_hist
+   character(len=*), intent(in) :: site
 
-      ! Local variables
-      logical :: lwrite
-      character(len=256) :: file_hist
-      integer :: itime_in_file
+   ! Local variables
+   logical :: lwrite
+   character(len=256) :: file_hist
+   integer :: itime_in_file
 #if(defined CaMa_Flood)
-      character(len=256) :: file_hist_cama
-      integer :: itime_in_file_cama
+   character(len=256) :: file_hist_cama
+   integer :: itime_in_file_cama
 #endif
-      integer :: month, day
-      integer :: days_month(1:12)
-      character(len=10) :: cdate
+   integer :: month, day
+   integer :: days_month(1:12)
+   character(len=10) :: cdate
 
-      type(block_data_real8_2d) :: sumarea
-      type(block_data_real8_2d) :: sumarea_urb
-      real(r8), allocatable ::  vecacc (:)
-      logical,  allocatable ::  filter (:)
+   type(block_data_real8_2d) :: sumarea
+   type(block_data_real8_2d) :: sumarea_urb
+   real(r8), allocatable ::  vecacc (:)
+   logical,  allocatable ::  filter (:)
 
-      integer i, u
+   integer i, u
 #ifdef URBAN_MODEL
-      logical,  allocatable ::  filter_urb (:)
+   logical,  allocatable ::  filter_urb (:)
 #endif
 
       IF (itstamp <= ptstamp) THEN
@@ -3901,24 +3900,24 @@ CONTAINS
 
    END SUBROUTINE hist_out
 
-   ! -------
+
    SUBROUTINE write_history_variable_2d ( is_hist, &
          acc_vec, file_hist, varname, itime_in_file, sumarea, filter, &
          longname, units)
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      logical, intent(in) :: is_hist
+   logical, intent(in) :: is_hist
 
-      real(r8),         intent(inout) :: acc_vec(:)
-      character(len=*), intent(in)    :: file_hist
-      character(len=*), intent(in)    :: varname
-      integer,          intent(in)    :: itime_in_file
-      character(len=*), intent(in)    :: longname
-      character(len=*), intent(in)    :: units
+   real(r8),         intent(inout) :: acc_vec(:)
+   character(len=*), intent(in)    :: file_hist
+   character(len=*), intent(in)    :: varname
+   integer,          intent(in)    :: itime_in_file
+   character(len=*), intent(in)    :: longname
+   character(len=*), intent(in)    :: units
 
-      type(block_data_real8_2d), intent(in) :: sumarea
-      logical, intent(in) :: filter(:)
+   type(block_data_real8_2d), intent(in) :: sumarea
+   logical, intent(in) :: filter(:)
 
       IF (.not. is_hist) RETURN
 
@@ -3940,25 +3939,25 @@ CONTAINS
 
    END SUBROUTINE write_history_variable_2d
 
-   ! -------
+
 #ifdef URBAN_MODEL
    SUBROUTINE write_history_variable_urb_2d ( is_hist, &
          acc_vec, file_hist, varname, itime_in_file, sumarea, filter, &
          longname, units)
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      logical, intent(in) :: is_hist
+   logical, intent(in) :: is_hist
 
-      real(r8), intent(inout) :: acc_vec(:)
-      character(len=*), intent(in) :: file_hist
-      character(len=*), intent(in) :: varname
-      integer,          intent(in) :: itime_in_file
-      character(len=*), intent(in) :: longname
-      character(len=*), intent(in) :: units
+   real(r8), intent(inout) :: acc_vec(:)
+   character(len=*), intent(in) :: file_hist
+   character(len=*), intent(in) :: varname
+   integer,          intent(in) :: itime_in_file
+   character(len=*), intent(in) :: longname
+   character(len=*), intent(in) :: units
 
-      type(block_data_real8_2d), intent(in) :: sumarea
-      logical, intent(in) :: filter(:)
+   type(block_data_real8_2d), intent(in) :: sumarea
+   logical, intent(in) :: filter(:)
 
       IF (.not. is_hist) RETURN
 
@@ -3981,30 +3980,30 @@ CONTAINS
    END SUBROUTINE write_history_variable_urb_2d
 #endif
 
-   ! -------
+
    SUBROUTINE write_history_variable_3d ( is_hist, &
          acc_vec, file_hist, varname, itime_in_file, dim1name, lb1, ndim1, &
          sumarea, filter, longname, units)
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      logical, intent(in) :: is_hist
+   logical, intent(in) :: is_hist
 
-      real(r8), intent(inout) :: acc_vec(:,:)
-      character(len=*), intent(in) :: file_hist
-      character(len=*), intent(in) :: varname
-      integer, intent(in) :: itime_in_file
-      character(len=*), intent(in) :: dim1name
-      integer, intent(in) :: lb1, ndim1
+   real(r8), intent(inout) :: acc_vec(:,:)
+   character(len=*), intent(in) :: file_hist
+   character(len=*), intent(in) :: varname
+   integer, intent(in) :: itime_in_file
+   character(len=*), intent(in) :: dim1name
+   integer, intent(in) :: lb1, ndim1
 
-      type(block_data_real8_2d), intent(in) :: sumarea
-      logical, intent(in) :: filter(:)
-      character (len=*), intent(in) :: longname
-      character (len=*), intent(in) :: units
+   type(block_data_real8_2d), intent(in) :: sumarea
+   logical, intent(in) :: filter(:)
+   character (len=*), intent(in) :: longname
+   character (len=*), intent(in) :: units
 
-      ! Local variables
-      integer :: iblkme, xblk, yblk, xloc, yloc, i1
-      integer :: compress
+   ! Local variables
+   integer :: iblkme, xblk, yblk, xloc, yloc, i1
+   integer :: compress
 
       IF (.not. is_hist) RETURN
 
@@ -4028,27 +4027,27 @@ CONTAINS
 
    END SUBROUTINE write_history_variable_3d
 
-   ! -------
+
    SUBROUTINE write_history_variable_4d ( is_hist,   &
          acc_vec, file_hist, varname, itime_in_file, &
          dim1name, lb1, ndim1, dim2name, lb2, ndim2, &
          sumarea, filter, longname, units)
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      logical, intent(in) :: is_hist
+   logical, intent(in) :: is_hist
 
-      real(r8), intent(inout) :: acc_vec(:,:,:)
-      character(len=*), intent(in) :: file_hist
-      character(len=*), intent(in) :: varname
-      integer, intent(in) :: itime_in_file
-      character(len=*), intent(in) :: dim1name, dim2name
-      integer, intent(in) :: lb1, ndim1, lb2, ndim2
+   real(r8), intent(inout) :: acc_vec(:,:,:)
+   character(len=*), intent(in) :: file_hist
+   character(len=*), intent(in) :: varname
+   integer, intent(in) :: itime_in_file
+   character(len=*), intent(in) :: dim1name, dim2name
+   integer, intent(in) :: lb1, ndim1, lb2, ndim2
 
-      type(block_data_real8_2d), intent(in) :: sumarea
-      logical, intent(in) :: filter(:)
-      character (len=*), intent(in) :: longname
-      character (len=*), intent(in) :: units
+   type(block_data_real8_2d), intent(in) :: sumarea
+   logical, intent(in) :: filter(:)
+   character (len=*), intent(in) :: longname
+   character (len=*), intent(in) :: units
 
       IF (.not. is_hist) RETURN
 
@@ -4072,24 +4071,24 @@ CONTAINS
 
    END SUBROUTINE write_history_variable_4d
 
-   ! -------
+
    SUBROUTINE write_history_variable_ln ( is_hist, &
          acc_vec, file_hist, varname, itime_in_file, sumarea, filter, &
          longname, units)
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      logical, intent(in) :: is_hist
+   logical, intent(in) :: is_hist
 
-      real(r8), intent(inout) :: acc_vec(:)
-      character(len=*), intent(in) :: file_hist
-      character(len=*), intent(in) :: varname
-      integer, intent(in) :: itime_in_file
+   real(r8), intent(inout) :: acc_vec(:)
+   character(len=*), intent(in) :: file_hist
+   character(len=*), intent(in) :: varname
+   integer, intent(in) :: itime_in_file
 
-      type(block_data_real8_2d), intent(in) :: sumarea
-      logical,  intent(in) :: filter(:)
-      character (len=*), intent(in), optional :: longname
-      character (len=*), intent(in), optional :: units
+   type(block_data_real8_2d), intent(in) :: sumarea
+   logical,  intent(in) :: filter(:)
+   character (len=*), intent(in), optional :: longname
+   character (len=*), intent(in), optional :: units
 
       IF (.not. is_hist) RETURN
 
@@ -4110,15 +4109,15 @@ CONTAINS
 
    END SUBROUTINE write_history_variable_ln
 
-   !------------------------------
+
    SUBROUTINE hist_write_time (filename, dataname, time, itime)
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      character (len=*), intent(in) :: filename
-      character (len=*), intent(in) :: dataname
-      integer, intent(in)  :: time(3)
-      integer, intent(out) :: itime
+   character (len=*), intent(in) :: filename
+   character (len=*), intent(in) :: dataname
+   integer, intent(in)  :: time(3)
+   integer, intent(out) :: itime
 
       select CASE (HistForm)
       CASE ('Gridded')

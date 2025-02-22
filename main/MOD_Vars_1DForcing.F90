@@ -1,18 +1,18 @@
 #include <define.h>
 
 MODULE MOD_Vars_1DForcing
-! -------------------------------
-! Meteorological Forcing
+!-----------------------------------------------------------------------
+!  Meteorological Forcing
 !
-! Created by Yongjiu Dai, 03/2014
-! -------------------------------
+!  Created by Yongjiu Dai, 03/2014
+!-----------------------------------------------------------------------
 
    USE MOD_Precision
    USE MOD_Namelist
    IMPLICIT NONE
    SAVE
 
-! -----------------------------------------------------------------
+!-----------------------------------------------------------------------
    real(r8), allocatable :: forc_pco2m (:)   ! CO2 concentration in atmos. (pascals)
    real(r8), allocatable :: forc_po2m  (:)   ! O2 concentration in atmos. (pascals)
    real(r8), allocatable :: forc_us    (:)   ! wind in eastward direction [m/s]
@@ -43,7 +43,7 @@ MODULE MOD_Vars_1DForcing
    real(r8), allocatable :: forc_aerdep(:,:) ! atmospheric aerosol deposition data [kg/m/s]
 
 
-   ! PUBLIC MEMBER FUNCTIONS:
+! PUBLIC MEMBER FUNCTIONS:
    PUBLIC :: allocate_1D_Forcing
    PUBLIC :: deallocate_1D_Forcing
 
@@ -54,9 +54,9 @@ CONTAINS
 !-----------------------------------------------------------------------
 
    SUBROUTINE allocate_1D_Forcing
-! ------------------------------------------------
-! Allocates memory for CoLM 1d [numpatch] variables
-! ------------------------------------------------
+   ! -------------------------------------------------------------------
+   ! Allocates memory for CoLM 1d [numpatch] variables
+   ! -------------------------------------------------------------------
    USE MOD_SPMD_Task
    USE MOD_Mesh
    USE MOD_LandPatch

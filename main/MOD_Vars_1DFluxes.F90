@@ -1,9 +1,9 @@
 #include <define.h>
 
 MODULE MOD_Vars_1DFluxes
-! -------------------------------
-! Created by Yongjiu Dai, 03/2014
-! -------------------------------
+!-----------------------------------------------------------------------
+!  Created by Yongjiu Dai, 03/2014
+!-----------------------------------------------------------------------
 
    USE MOD_Precision
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
@@ -21,9 +21,9 @@ MODULE MOD_Vars_1DFluxes
    IMPLICIT NONE
    SAVE
 
-! -----------------------------------------------------------------
-! Fluxes
-! -----------------------------------------------------------------
+!-----------------------------------------------------------------------
+!  Fluxes
+!-----------------------------------------------------------------------
    real(r8), allocatable :: taux   (:) !wind stress: E-W [kg/m/s2]
    real(r8), allocatable :: tauy   (:) !wind stress: N-S [kg/m/s2]
    real(r8), allocatable :: fsena  (:) !sensible heat from canopy height to atmosphere [W/m2]
@@ -90,9 +90,9 @@ CONTAINS
 !-----------------------------------------------------------------------
 
    SUBROUTINE allocate_1D_Fluxes
-   ! --------------------------------------------------------------------
+   ! -------------------------------------------------------------------
    ! Allocates memory for CoLM 1d [numpatch] variables
-   ! --------------------------------------------------------------------
+   ! -------------------------------------------------------------------
    USE MOD_Precision
    USE MOD_Vars_Global
    USE MOD_SPMD_Task

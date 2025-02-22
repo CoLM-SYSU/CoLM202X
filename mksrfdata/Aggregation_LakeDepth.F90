@@ -4,7 +4,7 @@ SUBROUTINE Aggregation_LakeDepth ( &
       gland, dir_rawdata, dir_model_landdata, lc_year)
 
 !-----------------------------------------------------------------------
-!  DESCRIPTION:
+! !DESCRIPTION:
 !  Aggregate lake depth of multiple pixels within a lake patch based on
 !  Global land cover types (updated with the specific dataset)
 !
@@ -12,11 +12,11 @@ SUBROUTINE Aggregation_LakeDepth ( &
 !    (http://nwpi.krc.karelia.run/flake/)
 !     Lake depth data legend
 !     Value   Description
-!  0       no lake indicated in this pixel
-!  1       no any information about this lake and set the default value of 10 m
-!  2       no information about depth for this lake and set the default value of 10 m
-!  3       have the information about lake depth in this pixel
-!  4       this is the river pixel according to our map, set the default value of 3 m
+!     0       no lake indicated in this pixel
+!     1       no any information about this lake and set the default value of 10 m
+!     2       no information about depth for this lake and set the default value of 10 m
+!     3       have the information about lake depth in this pixel
+!     4       this is the river pixel according to our map, set the default value of 3 m
 !
 ! !REFERENCES:
 !  Kourzeneva, E., H. Asensio, E. Martin, and S. Faroux, 2012: Global gridded

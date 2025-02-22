@@ -54,7 +54,7 @@ CONTAINS
                       fm          ,fh         ,fq          ,pg_rain     ,&
                       pg_snow     ,t_precip   ,snofrz      ,sabg_snow_lyr)
 
-!=======================================================================
+!-----------------------------------------------------------------------
 ! this is the main SUBROUTINE to execute the calculation of thermal processes
 ! and surface fluxes of the land ice (glacier and ice sheet)
 !
@@ -68,7 +68,7 @@ CONTAINS
 !
 !                   groundTem    | --------->  |meltf
 !
-!=======================================================================
+!-----------------------------------------------------------------------
 
    USE MOD_Precision
    USE MOD_Const_Physical, only: hvap,hsub,rgas,cpair,stefnc,tfrz,cpliq,cpice

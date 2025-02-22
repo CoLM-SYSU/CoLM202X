@@ -12,7 +12,8 @@ Module MOD_Ozone
 !  The Community Land Model version 5.0 (CLM5.0)
 !
 ! !REVISIONS:
-!  Xingjie Lu 2022, revised the CLM5 code to be compatible with CoLM code structure.
+!  2022, Xingjie Lu: revised the CLM5 code to be compatible with CoLM
+!        code structure.
 !-----------------------------------------------------------------------
 
    USE MOD_Precision
@@ -43,11 +44,12 @@ CONTAINS
 
    SUBROUTINE CalcOzoneStress (o3coefv,o3coefg, forc_ozone, forc_psrf, th, ram, &
                               rs, rb, lai, lai_old, ivt, o3uptake, deltim)
-   !-------------------------------------------------
-   ! DESCRIPTION:
-   ! Calculate Ozone Stress on both vcmax and stomata conductance.
-   !
-   ! convert o3 from mol/mol to nmol m^-3
+!-----------------------------------------------------------------------
+! !DESCRIPTION:
+!  Calculate Ozone Stress on both vcmax and stomata conductance.
+!
+!  convert o3 from mol/mol to nmol m^-3
+!-----------------------------------------------------------------------
    real(r8), intent(out)   :: o3coefv
    real(r8), intent(out)   :: o3coefg
    real(r8), intent(inout) :: forc_ozone
@@ -184,10 +186,11 @@ CONTAINS
 
    SUBROUTINE init_ozone_data (idate)
 
-   !----------------------
-   ! DESCRIPTION:
-   ! open ozone netcdf file from DEF_dir_rawdata, read latitude and longitude info.
-   ! Initialize Ozone data read in.
+!-----------------------------------------------------------------------
+! !DESCRIPTION:
+!  open ozone netcdf file from DEF_dir_rawdata, read latitude and
+!  longitude info.  Initialize Ozone data read in.
+!-----------------------------------------------------------------------
 
    USE MOD_SPMD_Task
    USE MOD_Namelist
@@ -233,12 +236,12 @@ CONTAINS
 
    END SUBROUTINE init_ozone_data
 
-   ! ----------
    SUBROUTINE update_ozone_data (time, deltim)
 
-   !----------------------
-   ! DESCRIPTION:
-   ! read ozone data during simulation
+!-----------------------------------------------------------------------
+! !DESCRIPTION:
+!  read ozone data during simulation
+!-----------------------------------------------------------------------
 
    USE MOD_TimeManager
    USE MOD_Namelist

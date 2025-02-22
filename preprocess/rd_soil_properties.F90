@@ -3,10 +3,10 @@ SUBROUTINE rd_soil_properties(dir_rawdata)
 
 !-----------------------------------------------------------------------
 ! !DESCRIPTION:
-!  Read in soil characteristic dataset GSDE with 30 arc seconds resolution,
-!  fill the missing data, and estimate soil porosity and
-!  soil hydraulic and thermal parameters at the resolution of 30 arc seconds.
-!  The data format are binary.
+!  Read in soil characteristic dataset GSDE with 30 arc seconds
+!  resolution, fill the missing data, and estimate soil porosity and
+!  soil hydraulic and thermal parameters at the resolution of 30 arc
+!  seconds.  The data format are binary.
 !
 !  The Global Soil Characteristics dataset GSDE
 !     (http://globalchange.bnu.edu.cn/research/soilw)
@@ -16,26 +16,35 @@ SUBROUTINE rd_soil_properties(dir_rawdata)
 !  4 organic Carbon (SOC) (fine earth)                    (% weight)
 !  5 bulk density (BD)    (fine earth)                    (g/cm3)
 !  6 ...
-
+!
 !  The calling sequence is:
-!  -> soil_solids_fractions:     soil porosity and soil fractions which are needed to estimate
-!                                soil hydraulic and thermal parameters
-!  -> soil_thermal_parameters:   soil solid heat capacity and (dry and saturated) soil thermal conductivity
-!  -> soil_hydraulic_parameters: soil water retension curves and saturated hydraulic conductivity
+!  -> soil_solids_fractions: soil porosity and soil fractions which are
+!     needed to estimate soil hydraulic and thermal parameters
+!
+!  -> soil_thermal_parameters: soil solid heat capacity and (dry and
+!     saturated) soil thermal conductivity
+!
+!  -> soil_hydraulic_parameters: soil water retension curves and
+!     saturated hydraulic conductivity
 !
 ! !REFERENCES:
-!  (1) Shangguan et al., 2014: A global soil data set for earth system modeling.
-!      J. of Advances in Modeling Earth Systems, DOI: 10.1002/2013MS000293
-!  (2) Dai et al.,2019: A Global High-Resolution Data Set of Soil Hydraulic and Thermal Properties
-!      for Land Surface Modeling. J. of Advances in Modeling Earth Systems, DOI: 10.1029/2019MS001784
+!  (1) Shangguan et al., 2014: A global soil data set for earth system
+!  modeling.  J. of Advances in Modeling Earth Systems, DOI:
+!  10.1002/2013MS000293
+!  (2) Dai et al.,2019: A Global High-Resolution Data Set of Soil
+!  Hydraulic and Thermal Properties for Land Surface Modeling. J. of
+!  Advances in Modeling Earth Systems, DOI: 10.1029/2019MS001784
 !
 !  Original author: Yongjiu Dai, 12/2013/
 !
 ! !REVISIONS:
-!  Hua Yuan, 06/2016: add OPENMP parallel function.
-!  Yongjiu Dai and Nan Wei,
-!            06/2018: update a new version of soil hydraulic and thermal parameters
-!  Nan Wei,  12/2022: output more parameters for BGC parts
+!  06/2016, Hua Yuan: add OPENMP parallel function.
+!
+!  06/2018, Yongjiu Dai and Nan Wei:
+!           update a new version of soil hydraulic and thermal parameters
+!
+!  12/2022, Nan Wei: output more parameters for BGC parts
+!
 !-----------------------------------------------------------------------
 USE MOD_Precision
 IMPLICIT NONE

@@ -25,7 +25,7 @@ CONTAINS
                             fevpg, fevpg_soil, fevpg_snow, tref, qref, &
                             z0m, z0hg, zol, rib, ustar, qstar, tstar, fm, fh, fq)
 
-!=======================================================================
+!-----------------------------------------------------------------------
 !  This is the main SUBROUTINE to execute the calculation of thermal
 !  processes and surface fluxes
 !
@@ -38,7 +38,7 @@ CONTAINS
 !  05/2023, Shaofeng Liu: add option to call moninobuk_leddy, the LargeEddy
 !           surface turbulence scheme (LZD2022); make a proper update of um.
 !
-!=======================================================================
+!-----------------------------------------------------------------------
 
    USE MOD_Precision
    USE MOD_Const_Physical, only: cpair,vonkar,grav

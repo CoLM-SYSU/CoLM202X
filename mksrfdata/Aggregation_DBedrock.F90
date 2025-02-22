@@ -3,7 +3,7 @@
 SUBROUTINE Aggregation_DBedrock ( &
       gland, dir_rawdata, dir_model_landdata)
 
-! ---------------------------------------------------------------------------
+!-----------------------------------------------------------------------
 !  Depth to bedrock
 !
 !    Shangguan, W., Hengl, T., Mendes de Jesus, J., Yuan, H., Dai, Y. (2017).
@@ -11,7 +11,7 @@ SUBROUTINE Aggregation_DBedrock ( &
 !    Journal of Advances in Modeling Earth Systems, 9(1), 65–88.
 !
 !  Created by Shupeng Zhang, 05/2023
-! ----------------------------------------------------------------------
+!-----------------------------------------------------------------------
 
    USE MOD_Precision
    USE MOD_Namelist

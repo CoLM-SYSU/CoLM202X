@@ -1,8 +1,8 @@
-program bin_to_hdf5
+PROGRAM bin_to_hdf5
 
-   use MOD_Precision
-   use colm_io_serial
-   implicit none
+   USE MOD_Precision
+   USE colm_io_serial
+   IMPLICIT NONE
 
    integer, parameter :: nlat = 21600
    integer, parameter :: nlon = 43200
@@ -28,8 +28,8 @@ program bin_to_hdf5
 
    integer, parameter :: compress = 1
 
-   call getarg (1, bindir)
-   call getarg (2, h5dir)
+   CALL getarg (1, bindir)
+   CALL getarg (2, h5dir)
 
    !-------------------------------
    lndname = trim(bindir) // 'forest_height/Forest_Height.bin'
@@ -38,17 +38,17 @@ program bin_to_hdf5
    iunit = 100
    inquire (iolength=length) a_chr1 (:,1)
    open (iunit, file=trim(lndname), access='direct', recl=length, form='unformatted', status='old')
-   do irow = 1, nlat
+   DO irow = 1, nlat
       read (iunit, rec=irow) a_chr1 (:,irow)
-   enddo
+   ENDDO
    close (iunit)
 
    allocate (a_int8 (nlon, nlat))
    a_int8 = ichar(a_chr1)
 
    lndname = trim(h5dir) // 'Forest_Height.h5'
-   call colm_create_file (lndname)
-   call colm_write_serial (lndname, '/forest_height', a_int8, &
+   CALL colm_create_file (lndname)
+   CALL colm_write_serial (lndname, '/forest_height', a_int8, &
       compress, chunk = (/ nlon/nxblk, nlat/nyblk /))
 
    write(*,*) 'Forest height done'
@@ -63,14 +63,14 @@ program bin_to_hdf5
    iunit = 100
    inquire (iolength=length) a_int16 (:,1)
    open (iunit, file=trim(lndname), access='direct', recl=length, form='unformatted', status='old')
-   do irow = 1, nlat
+   DO irow = 1, nlat
       read (iunit, rec=irow) a_int16 (:,irow)
-   enddo
+   ENDDO
    close (iunit)
 
    lndname = trim(h5dir) // 'glacier.h5'
-   call colm_create_file (lndname)
-   call colm_write_serial (lndname, '/glacier', a_int16, &
+   CALL colm_create_file (lndname)
+   CALL colm_write_serial (lndname, '/glacier', a_int16, &
       compress, chunk = (/ nlon/nxblk, nlat/nyblk /))
 
    write(*,*) 'Glacier done'
@@ -82,9 +82,9 @@ program bin_to_hdf5
    allocate (a_chr1 (nlon,nlat))
    allocate (a_int8 (nlon, nlat))
 
-   call execute_command_line ('mkdir -p ' // trim(h5dir) // '/lai/global_30s_10_year_avg')
+   CALL execute_command_line ('mkdir -p ' // trim(h5dir) // '/lai/global_30s_10_year_avg')
 
-   do n8 = 1, 46
+   DO n8 = 1, 46
       Julian_day = 1 + (N8-1)*8
       write(c,'(i3.3)') Julian_day
 
@@ -93,20 +93,20 @@ program bin_to_hdf5
       iunit = 100
       inquire (iolength=length) a_chr1 (:,1)
       open (iunit, file=trim(lndname), access='direct', recl=length, form='unformatted', status='old')
-      do irow = 1, nlat
+      DO irow = 1, nlat
          read (iunit, rec=irow) a_chr1 (:,irow)
-      enddo
+      ENDDO
       close (iunit)
 
       a_int8 = ichar(a_chr1)
 
       lndname = trim(h5dir) // 'lai/global_30s_10_year_avg/LAI_BNU_' // trim(c) // '.h5'
-      call colm_create_file (lndname)
-      call colm_write_serial (lndname, '/lai', a_int8, &
+      CALL colm_create_file (lndname)
+      CALL colm_write_serial (lndname, '/lai', a_int8, &
          compress, chunk = (/ nlon/nxblk, nlat/nyblk /))
 
       write(*,*) 'lai ' // trim(c) // ' done'
-   enddo
+   ENDDO
 
    deallocate (a_chr1)
    deallocate (a_int8)
@@ -118,14 +118,14 @@ program bin_to_hdf5
    iunit = 100
       inquire (iolength=length) a_int16 (:,1)
    open (iunit, file=trim(lndname), access='direct', recl=length, form='unformatted', status='old')
-   do irow = 1, nlat
+   DO irow = 1, nlat
       read (iunit, rec=irow) a_int16 (:,irow)
-   enddo
+   ENDDO
    close (iunit)
 
    lndname = trim(h5dir) // 'lake_depth.h5'
-   call colm_create_file (lndname)
-   call colm_write_serial (lndname, '/lake_depth', a_int16, &
+   CALL colm_create_file (lndname)
+   CALL colm_write_serial (lndname, '/lake_depth', a_int16, &
       compress, chunk = (/ nlon/nxblk, nlat/nyblk /))
 
    write(*,*) 'Lake depth done'
@@ -139,17 +139,17 @@ program bin_to_hdf5
    iunit = 100
       inquire (iolength=length) a_chr1 (:,1)
    open (iunit, file=trim(lndname), access='direct', recl=length, form='unformatted', status='old')
-   do irow = 1, nlat
+   DO irow = 1, nlat
       read (iunit, rec=irow) a_chr1 (:,irow)
-   enddo
+   ENDDO
    close (iunit)
 
    allocate (a_int8 (nlon, nlat))
    a_int8 = ichar(a_chr1)
 
    lndname = trim(h5dir) // 'lake_wetland.h5'
-   call colm_create_file (lndname)
-   call colm_write_serial (lndname, '/lake_wetland', a_int8, &
+   CALL colm_create_file (lndname)
+   CALL colm_write_serial (lndname, '/lake_wetland', a_int8, &
       compress, chunk = (/ nlon/nxblk, nlat/nyblk /))
 
    write(*,*) 'Lake wetland done'
@@ -164,17 +164,17 @@ program bin_to_hdf5
    iunit = 100
       inquire (iolength=length) a_chr1 (:,1)
    open (iunit, file=trim(lndname), access='direct', recl=length, form='unformatted', status='old')
-   do irow = 1, nlat
+   DO irow = 1, nlat
       read (iunit, rec=irow) a_chr1 (:,irow)
-   enddo
+   ENDDO
    close (iunit)
 
    allocate (a_int8 (nlon, nlat))
    a_int8 = ichar(a_chr1)
 
    lndname = trim(h5dir) // 'landtype_usgs_update.h5'
-   call colm_create_file (lndname)
-   call colm_write_serial (lndname, '/landtype', a_int8, &
+   CALL colm_create_file (lndname)
+   CALL colm_write_serial (lndname, '/landtype', a_int8, &
       compress, chunk = (/ nlon/nxblk, nlat/nyblk /))
 
    write(*,*) 'Landtype done'
@@ -189,17 +189,17 @@ program bin_to_hdf5
    iunit = 100
       inquire (iolength=length) a_chr1 (:,1)
    open (iunit, file=trim(lndname), access='direct', recl=length, form='unformatted', status='old')
-   do irow = 1, nlat
+   DO irow = 1, nlat
       read (iunit, rec=irow) a_chr1 (:,irow)
-   enddo
+   ENDDO
    close (iunit)
 
    allocate (a_int8 (nlon, nlat))
    a_int8 = ichar(a_chr1)
 
    lndname = trim(h5dir) // 'soil_brightness.h5'
-   call colm_create_file (lndname)
-   call colm_write_serial (lndname, '/soil_brightness', a_int8, &
+   CALL colm_create_file (lndname)
+   CALL colm_write_serial (lndname, '/soil_brightness', a_int8, &
       compress, chunk = (/ nlon/nxblk, nlat/nyblk /))
 
    write(*,*) 'Soil brightness done'
@@ -210,30 +210,30 @@ program bin_to_hdf5
    !-------------------------------
    allocate (a_real8 (nlon,nlat))
 
-   call execute_command_line ('mkdir -p ' // trim(h5dir) // '/soil')
+   CALL execute_command_line ('mkdir -p ' // trim(h5dir) // '/soil')
 
    lndname = trim(h5dir) // 'soil/theta_s.h5'
-   call colm_create_file (lndname)
+   CALL colm_create_file (lndname)
 
    lndname = trim(h5dir) // 'soil/psi_s.h5'
-   call colm_create_file (lndname)
+   CALL colm_create_file (lndname)
 
    lndname = trim(h5dir) // 'soil/lambda.h5'
-   call colm_create_file (lndname)
+   CALL colm_create_file (lndname)
 
    lndname = trim(h5dir) // 'soil/k_s.h5'
-   call colm_create_file (lndname)
+   CALL colm_create_file (lndname)
 
    lndname = trim(h5dir) // 'soil/csol.h5'
-   call colm_create_file (lndname)
+   CALL colm_create_file (lndname)
 
    lndname = trim(h5dir) // 'soil/tksatu.h5'
-   call colm_create_file (lndname)
+   CALL colm_create_file (lndname)
 
    lndname = trim(h5dir) // 'soil/tkdry.h5'
-   call colm_create_file (lndname)
+   CALL colm_create_file (lndname)
 
-   do n8 = 1, 8
+   DO n8 = 1, 8
       write(c,'(i1)') n8
 
       ! (1) Read in the saturated water content [cm3/cm3]
@@ -242,13 +242,13 @@ program bin_to_hdf5
       iunit = 100
       inquire (iolength=length) a_real8 (:,1)
       open (iunit, file=trim(lndname), access='direct', recl=length, form='unformatted', status='old')
-      do irow = 1, nlat
+      DO irow = 1, nlat
          read (iunit, rec=irow) a_real8 (:,irow)
-      enddo
+      ENDDO
       close (iunit)
 
       lndname = trim(h5dir) // 'soil/theta_s.h5'
-      call colm_write_serial (lndname, '/theta_s_l'//trim(c), a_real8, &
+      CALL colm_write_serial (lndname, '/theta_s_l'//trim(c), a_real8, &
          compress, chunk = (/ nlon/nxblk, nlat/nyblk /))
 
       write(*,*) 'Theta_s_l' // trim(c) // ' done'
@@ -259,13 +259,13 @@ program bin_to_hdf5
       iunit = 100
       inquire (iolength=length) a_real8 (:,1)
       open (iunit, file=trim(lndname), access='direct', recl=length, form='unformatted', status='old')
-      do irow = 1, nlat
+      DO irow = 1, nlat
          read (iunit, rec=irow) a_real8 (:,irow)
-      enddo
+      ENDDO
       close (iunit)
 
       lndname = trim(h5dir) // 'soil/psi_s.h5'
-      call colm_write_serial (lndname, 'psi_s_l'//trim(c), a_real8, &
+      CALL colm_write_serial (lndname, 'psi_s_l'//trim(c), a_real8, &
          compress, chunk = (/ nlon/nxblk, nlat/nyblk /))
 
       write(*,*) 'psi_s_l' // trim(c) // ' done'
@@ -276,13 +276,13 @@ program bin_to_hdf5
       iunit = 100
       inquire (iolength=length) a_real8 (:,1)
       open (iunit, file=trim(lndname), access='direct', recl=length, form='unformatted', status='old')
-      do irow = 1, nlat
+      DO irow = 1, nlat
          read (iunit, rec=irow) a_real8 (:,irow)
-      enddo
+      ENDDO
       close (iunit)
 
       lndname = trim(h5dir) // 'soil/lambda.h5'
-      call colm_write_serial (lndname, 'lambda_l'//trim(c), a_real8, &
+      CALL colm_write_serial (lndname, 'lambda_l'//trim(c), a_real8, &
          compress, chunk = (/ nlon/nxblk, nlat/nyblk /))
 
       write(*,*) 'lambda_l' // trim(c) // ' done'
@@ -293,13 +293,13 @@ program bin_to_hdf5
       iunit = 100
       inquire (iolength=length) a_real8 (:,1)
       open (iunit, file=trim(lndname), access='direct', recl=length, form='unformatted', status='old')
-      do irow = 1, nlat
+      DO irow = 1, nlat
          read (iunit, rec=irow) a_real8 (:,irow)
-      enddo
+      ENDDO
       close (iunit)
 
       lndname = trim(h5dir) // 'soil/k_s.h5'
-      call colm_write_serial (lndname, 'k_s_l'//trim(c), a_real8, &
+      CALL colm_write_serial (lndname, 'k_s_l'//trim(c), a_real8, &
          compress, chunk = (/ nlon/nxblk, nlat/nyblk /))
 
       write(*,*) 'k_s_l' // trim(c) // ' done'
@@ -310,13 +310,13 @@ program bin_to_hdf5
       iunit = 100
       inquire (iolength=length) a_real8 (:,1)
       open (iunit, file=trim(lndname), access='direct', recl=length, form='unformatted', status='old')
-      do irow = 1, nlat
+      DO irow = 1, nlat
          read (iunit, rec=irow) a_real8 (:,irow)
-      enddo
+      ENDDO
       close (iunit)
 
       lndname = trim(h5dir) // 'soil/csol.h5'
-      call colm_write_serial (lndname, 'csol_l'//trim(c), a_real8, &
+      CALL colm_write_serial (lndname, 'csol_l'//trim(c), a_real8, &
          compress, chunk = (/ nlon/nxblk, nlat/nyblk /))
 
       write(*,*) 'csol_l' // trim(c) // ' done'
@@ -327,13 +327,13 @@ program bin_to_hdf5
       iunit = 100
       inquire (iolength=length) a_real8 (:,1)
       open (iunit, file=trim(lndname), access='direct', recl=length, form='unformatted', status='old')
-      do irow = 1, nlat
+      DO irow = 1, nlat
          read (iunit, rec=irow) a_real8 (:,irow)
-      enddo
+      ENDDO
       close (iunit)
 
       lndname = trim(h5dir) // 'soil/tksatu.h5'
-      call colm_write_serial (lndname, 'tksatu_l'//trim(c), a_real8, &
+      CALL colm_write_serial (lndname, 'tksatu_l'//trim(c), a_real8, &
          compress, chunk = (/ nlon/nxblk, nlat/nyblk /))
 
       write(*,*) 'tksatu_l' // trim(c) // ' done'
@@ -344,19 +344,19 @@ program bin_to_hdf5
       iunit = 100
       inquire (iolength=length) a_real8 (:,1)
       open (iunit, file=trim(lndname), access='direct', recl=length, form='unformatted', status='old')
-      do irow = 1, nlat
+      DO irow = 1, nlat
          read (iunit, rec=irow) a_real8 (:,irow)
-      enddo
+      ENDDO
       close (iunit)
 
       lndname = trim(h5dir) // 'soil/tkdry.h5'
-      call colm_write_serial (lndname, 'tkdry_l'//trim(c), a_real8, &
+      CALL colm_write_serial (lndname, 'tkdry_l'//trim(c), a_real8, &
          compress, chunk = (/ nlon/nxblk, nlat/nyblk /))
 
       write(*,*) 'tkdry_l' // trim(c) // ' done'
 
-   enddo
+   ENDDO
 
    deallocate (a_real8)
 
-end program bin_to_hdf5
+END PROGRAM bin_to_hdf5

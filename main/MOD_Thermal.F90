@@ -893,13 +893,13 @@ ENDIF
 IF (DEF_USE_PC .and. patchclass(ipatch)/=CROPLAND) THEN
 
       ! initialization
-      rst_p   (ps:pe) = 2.0e4
-      assim_p (ps:pe) = 0.
-      respc_p (ps:pe) = 0.
-      fsenl_p (ps:pe) = 0.
-      fevpl_p (ps:pe) = 0.
-      etr_p   (ps:pe) = 0.
-      hprl_p  (ps:pe) = 0.
+      rst_p      (ps:pe) = 2.0e4
+      assim_p    (ps:pe) = 0.
+      respc_p    (ps:pe) = 0.
+      fsenl_p    (ps:pe) = 0.
+      fevpl_p    (ps:pe) = 0.
+      etr_p      (ps:pe) = 0.
+      hprl_p     (ps:pe) = 0.
       assimsun_p (ps:pe) = 0.
       assimsha_p (ps:pe) = 0.
       etrsun_p   (ps:pe) = 0.
@@ -908,8 +908,8 @@ IF (DEF_USE_PC .and. patchclass(ipatch)/=CROPLAND) THEN
       gssha_p    (ps:pe) = 0.
       rstfacsun_p(ps:pe) = 0.
       rstfacsha_p(ps:pe) = 0.
-      z0m_p   (ps:pe) = (1.-fsno)*zlnd + fsno*zsno
-      z0m             = sum( z0m_p (ps:pe)*pftfrac(ps:pe) )
+      z0m_p      (ps:pe) = (1.-fsno)*zlnd + fsno*zsno
+      z0m                = sum( z0m_p (ps:pe)*pftfrac(ps:pe) )
 
       IF (DEF_USE_PLANTHYDRAULICS) THEN
          vegwp_p (:,ps:pe) = -2.5e4

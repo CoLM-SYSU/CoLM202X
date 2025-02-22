@@ -37,43 +37,43 @@ CONTAINS
                       alb,ssun,ssha,ssoi,ssno,ssno_lyr,thermk,extkb,extkd)
 
 !=======================================================================
-! Calculates fragmented albedos (direct and diffuse) in
-! wavelength regions split at 0.7um.
+!  Calculates fragmented albedos (direct and diffuse) in
+!  wavelength regions split at 0.7um.
 !
-! (1) soil albedos: as in BATS formulations, which are the function of
-!     soil color and moisture in the surface soil layer
-! (2) snow albedos: as in BATS formulations, which are inferred from
-!     the calculations of Wiscombe and Warren (1980) and the snow model
-!     and data of Anderson(1976), and the function of snow age, grain
-!     size, solar zenith angle, pollution, the amount of the fresh snow
-! (3) canopy albedo: two-stream approximation model
-! (4) glacier albedos: as in BATS, which are set to constants (0.8 for
-!     visible beam, 0.55 for near-infrared)
-! (5) lake and wetland albedos: as in BATS, which depend on cosine solar
-!     zenith angle, based on data in Henderson-Sellers (1986). The
-!     frozen lake and wetland albedos are set to constants (0.6 for
-!     visible beam, 0.4 for near-infrared)
-! (6) over the snow covered tile, the surface albedo is estimated by a
-!     linear combination of albedos for snow, canopy and bare soil (or
-!     lake, wetland, glacier).
+!  (1) soil albedos: as in BATS formulations, which are the function of
+!      soil color and moisture in the surface soil layer
+!  (2) snow albedos: as in BATS formulations, which are inferred from
+!      the calculations of Wiscombe and Warren (1980) and the snow model
+!      and data of Anderson(1976), and the function of snow age, grain
+!      size, solar zenith angle, pollution, the amount of the fresh snow
+!  (3) canopy albedo: two-stream approximation model
+!  (4) glacier albedos: as in BATS, which are set to constants (0.8 for
+!      visible beam, 0.55 for near-infrared)
+!  (5) lake and wetland albedos: as in BATS, which depend on cosine solar
+!      zenith angle, based on data in Henderson-Sellers (1986). The
+!      frozen lake and wetland albedos are set to constants (0.6 for
+!      visible beam, 0.4 for near-infrared)
+!  (6) over the snow covered tile, the surface albedo is estimated by a
+!      linear combination of albedos for snow, canopy and bare soil (or
+!      lake, wetland, glacier).
 !
-! Original author: Yongjiu Dai, 09/15/1999; 08/30/2002, 03/2014
+!  Original author: Yongjiu Dai, 09/15/1999; 08/30/2002, 03/2014
 !
 ! !REVISIONS:
-! 12/2019, Hua Yuan: added a wrap FUNCTION for PFT calculation, details
-!          see twostream_wrap() added a wrap FUNCTION for PC (3D)
-!          calculation, details see ThreeDCanopy_wrap()
+!  12/2019, Hua Yuan: added a wrap FUNCTION for PFT calculation, details
+!           see twostream_wrap() added a wrap FUNCTION for PC (3D)
+!           calculation, details see ThreeDCanopy_wrap()
 !
-! 03/2020, Hua Yuan: added an improved two-stream model, details see
-!          twostream_mod()
+!  03/2020, Hua Yuan: added an improved two-stream model, details see
+!           twostream_mod()
 !
-! 08/2020, Hua Yuan: account for stem optical property effects in
-!          twostream model
+!  08/2020, Hua Yuan: account for stem optical property effects in
+!           twostream model
 !
-! 01/2023, Hua Yuan: CALL SNICAR model to calculate snow
-!          albedo&absorption, added SNICAR related variables
+!  01/2023, Hua Yuan: CALL SNICAR model to calculate snow
+!           albedo&absorption, added SNICAR related variables
 !
-! 04/2024, Hua Yuan: add option to account for vegetation snow process
+!  04/2024, Hua Yuan: add option to account for vegetation snow process
 !
 !=======================================================================
 

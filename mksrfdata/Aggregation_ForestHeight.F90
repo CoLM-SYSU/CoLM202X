@@ -3,7 +3,7 @@
 SUBROUTINE Aggregation_ForestHeight ( &
       gland, dir_rawdata, dir_model_landdata, lc_year)
 
-! ----------------------------------------------------------------------
+!-----------------------------------------------------------------------
 !  Global Forest Height
 !     (http://lidarradar.jpl.nasa.gov/)
 !      Simard, M., N. Pinto, J. B. Fisher, and A. Baccini, 2011: Mapping
@@ -15,7 +15,7 @@ SUBROUTINE Aggregation_ForestHeight ( &
 ! !REVISIONS:
 !  Hua Yuan,      ?/2020 : for land cover land use classifications
 !  Shupeng Zhang, 01/2022: porting codes to MPI parallel version
-! ----------------------------------------------------------------------
+!-----------------------------------------------------------------------
 
    USE MOD_Precision
    USE MOD_Namelist

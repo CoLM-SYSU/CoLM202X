@@ -1,17 +1,17 @@
 #include <define.h>
 
-! -------------------------------
+!-----------------------------------------------------------------------
 ! Created by Yongjiu Dai, 03/2014
-! -------------------------------
+!-----------------------------------------------------------------------
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
 MODULE MOD_Vars_PFTimeVariables
-! -----------------------------------------------------------------
+!-----------------------------------------------------------------------
 ! !DESCRIPTION:
 !  Define PFT time variables
 !
 !  Added by Hua Yuan, 08/2019
-! -----------------------------------------------------------------
+!-----------------------------------------------------------------------
 
    USE MOD_Precision
    USE MOD_TimeManager
@@ -21,7 +21,7 @@ MODULE MOD_Vars_PFTimeVariables
 
    IMPLICIT NONE
    SAVE
-! -----------------------------------------------------------------
+!-----------------------------------------------------------------------
 ! Time-varying state variables which required by restart run
 
    ! for LULC_IGBP_PFT or LULC_IGBP_PC
@@ -84,9 +84,9 @@ CONTAINS
 !-----------------------------------------------------------------------
 
    SUBROUTINE allocate_PFTimeVariables ()
-! ------------------------------------------------------
-! Allocates memory for CoLM 1d [numpft] variables
-! ------------------------------------------------------
+   !--------------------------------------------------------------------
+   ! Allocates memory for CoLM 1d [numpft] variables
+   !--------------------------------------------------------------------
    USE MOD_Precision
    USE MOD_SPMD_Task
    USE MOD_LandPFT
@@ -263,9 +263,9 @@ ENDIF
 
 
    SUBROUTINE deallocate_PFTimeVariables
-! --------------------------------------------------
-! Deallocates memory for CoLM 1d [numpft/numpc] variables
-! --------------------------------------------------
+   !--------------------------------------------------------------------
+   ! Deallocates memory for CoLM 1d [numpft/numpc] variables
+   !--------------------------------------------------------------------
    USE MOD_SPMD_Task
    USE MOD_LandPFT
 
@@ -538,9 +538,9 @@ CONTAINS
 !-----------------------------------------------------------------------
 
    SUBROUTINE allocate_TimeVariables
-! --------------------------------------------------------------------
-! Allocates memory for CoLM 1d [numpatch] variables
-! ------------------------------------------------------
+   !--------------------------------------------------------------------
+   ! Allocates memory for CoLM 1d [numpatch] variables
+   !--------------------------------------------------------------------
 
    USE MOD_Precision
    USE MOD_Vars_Global
@@ -703,9 +703,9 @@ CONTAINS
    USE MOD_LandPatch, only: numpatch
    IMPLICIT NONE
 
-      ! --------------------------------------------------
-      ! Deallocates memory for CoLM 1d [numpatch] variables
-      ! --------------------------------------------------
+   !--------------------------------------------------------------------
+   ! Deallocates memory for CoLM 1d [numpatch] variables
+   !--------------------------------------------------------------------
 
       IF (p_is_worker) THEN
 
@@ -891,12 +891,12 @@ CONTAINS
 
    END FUNCTION save_to_restart
 
-   !---------------------------------------
+
    SUBROUTINE WRITE_TimeVariables (idate, lc_year, site, dir_restart)
 
-   !=======================================================================
+   !====================================================================
    ! Original version: Yongjiu Dai, September 15, 1999, 03/2014
-   !=======================================================================
+   !====================================================================
 
    USE MOD_SPMD_Task
    USE MOD_Namelist, only: DEF_REST_CompressLevel, DEF_USE_PLANTHYDRAULICS, DEF_USE_OZONESTRESS, &
@@ -1086,12 +1086,12 @@ ENDIF
 #endif
    END SUBROUTINE WRITE_TimeVariables
 
-   !---------------------------------------
+
    SUBROUTINE READ_TimeVariables (idate, lc_year, site, dir_restart)
 
-   !=======================================================================
+   !====================================================================
    ! Original version: Yongjiu Dai, September 15, 1999, 03/2014
-   !=======================================================================
+   !====================================================================
 
    USE MOD_Namelist
    USE MOD_SPMD_Task
@@ -1274,7 +1274,7 @@ ENDIF
 
    END SUBROUTINE READ_TimeVariables
 
-  !---------------------------------------
+
 #ifdef RangeCheck
    SUBROUTINE check_TimeVariables ()
 

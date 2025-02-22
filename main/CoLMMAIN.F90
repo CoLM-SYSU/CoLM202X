@@ -105,37 +105,37 @@ SUBROUTINE CoLMMAIN ( &
 
 !=======================================================================
 !
-! Main subroutine, advance time information
+!  Main subroutine, advance time information
 !
-! Initial : Yongjiu Dai, 1999-2014
-! Revised : Hua Yuan, Shupeng Zhang, Nan Wei, Xingjie Lu, Zhongwang Wei, Yongjiu Dai
-!           2014-2024
+!  Initial : Yongjiu Dai, 1999-2014
+!  Revised : Hua Yuan, Shupeng Zhang, Nan Wei, Xingjie Lu, Zhongwang Wei, Yongjiu Dai
+!            2014-2024
 !
-!    FLOW DIAGRAM FOR CoLMMAIN
+!     FLOW DIAGRAM FOR CoLMMAIN
 !
-!    CoLMMAIN ===>netsolar                 |> all surface
-!                 rain_snow_temp           !> all surface
+!     CoLMMAIN ===>netsolar                 |> all surface
+!                  rain_snow_temp           !> all surface
 !
-!                 LEAF_interception        |]
-!                 newsnow                  |] patchtype = 0 (soil ground)
-!                 THERMAL                  |]           = 1 (urban & built-up)
-!                 WATER                    |]           = 2 (wetland)
-!                 snowcompaction           |]           = 3 (land ice)
-!                 snowlayerscombine        |]           = 4 (lake)
-!                 snowlayersdivide         |]
-!                 snowage                  |]
+!                  LEAF_interception        |]
+!                  newsnow                  |] patchtype = 0 (soil ground)
+!                  THERMAL                  |]           = 1 (urban & built-up)
+!                  WATER                    |]           = 2 (wetland)
+!                  snowcompaction           |]           = 3 (land ice)
+!                  snowlayerscombine        |]           = 4 (lake)
+!                  snowlayersdivide         |]
+!                  snowage                  |]
 !
-!                 newsnow_lake             |]
-!                 laketem                  |] lake scheme
-!                 snowwater_lake           |]
+!                  newsnow_lake             |]
+!                  laketem                  |] lake scheme
+!                  snowwater_lake           |]
 !
-!                 SOCEAN                   |> ocean and sea ice
+!                  SOCEAN                   |> ocean and sea ice
 !
-!                 orb_coszen               |> all surface
-!                 EcoModel (LAI_empirical) |> land
-!                 snowfraction             |> land
-!                 albland                  |> land
-!                 albocean                 |> ocean & sea ice
+!                  orb_coszen               |> all surface
+!                  EcoModel (LAI_empirical) |> land
+!                  snowfraction             |> land
+!                  albland                  |> land
+!                  albocean                 |> ocean & sea ice
 !
 !=======================================================================
 
@@ -191,8 +191,7 @@ SUBROUTINE CoLMMAIN ( &
         patchclass  ,&! land patch class of USGS classification or others
         patchtype     ! land patch type (0=soil, 1=urban and built-up,
                       ! 2=wetland, 3=land ice, 4=land water bodies, 99 = ocean)
-! Parameters
-! ----------------------
+
    real(r8), intent(in)    :: lakedepth         ! lake depth (m)
    real(r8), intent(inout) :: dz_lake(nl_lake)  ! lake layer thickness (m)
 
@@ -283,7 +282,7 @@ SUBROUTINE CoLMMAIN ( &
         tcrit         ! critical temp. to determine rain or snow
 
 ! Forcing
-! ----------------------
+!-----------------------------------------------------------------------
    real(r8), intent(in) :: &
         forc_pco2m  ,&! partial pressure of CO2 at observational height [pa]
         forc_po2m   ,&! partial pressure of O2 at observational height [pa]
@@ -314,7 +313,7 @@ SUBROUTINE CoLMMAIN ( &
    real(r8), intent(out)   :: qinfl_fld !effective re-infiltration from inundation [mm/s]
 #endif
 ! Variables required for restart run
-! ----------------------------------------------------------------------
+!-----------------------------------------------------------------------
    integer, intent(in) :: &
         idate(3)      ! next time-step /year/julian day/second in a day/
 
@@ -406,7 +405,7 @@ SUBROUTINE CoLMMAIN ( &
         assimsha_out,&
         etrsha_out
 ! Fluxes
-! ----------------------------------------------------------------------
+!-----------------------------------------------------------------------
    real(r8), intent(out) :: &
         taux        ,&! wind stress: E-W [kg/m/s**2]
         tauy        ,&! wind stress: N-S [kg/m/s**2]
