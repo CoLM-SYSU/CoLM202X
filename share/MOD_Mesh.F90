@@ -850,8 +850,6 @@ CONTAINS
 
       IF (p_is_io) THEN
 
-         write(*,'(I19,A,I6)') numelm, ' elements on IO ', p_iam_glb
-
          CALL mpi_reduce (numelm, nelm_glb, 1, MPI_INTEGER, MPI_SUM, p_root, p_comm_io, p_err)
          IF (p_iam_io == p_root) THEN
             write(*,'(A,I12,A)') 'Total   : ', nelm_glb, ' elements.'
@@ -862,6 +860,15 @@ CONTAINS
          IF (p_iam_io == p_root) THEN
             write(*,'(A,I12,A)') 'Maximum : ', nelm_max_blk, &
                ' elements in one block (More than 3600 is recommended).'
+            write(*,'(/,A)') '   -----------------------------------------------------------------'
+            write(*,'(A)')   '   |  Examples for setting of blocks and processor groupsize:      |'
+            write(*,'(A)')   '   |  Resolution  DEF_nx_blocks  DEF_ny_blocks  DEF_PIO_groupsize  |' 
+            write(*,'(A)')   '   |         2x2             18              9                 15  |'
+            write(*,'(A)')   '   |         1x1             18              9                 24  |'
+            write(*,'(A)')   '   |     0.5x0.5             18              9                 36  |'
+            write(*,'(A)')   '   |   0.25x0.25             30             15                 45  |'
+            write(*,'(A)')   '   |     0.1x0.1             72             36                 64  |'
+            write(*,'(A,/)') '   -----------------------------------------------------------------'
          ENDIF
 
       ENDIF
@@ -908,11 +915,11 @@ CONTAINS
             ENDDO
          ENDDO
 
-         write(wfmt,'(A,I0,A)') '(A,I6,A,', p_np_group-1, '(X,I0))'
-         write(*,wfmt) 'Numbers of elements by workers in group ', p_iam_glb, ' are ', nelm_worker
          IF (any(nelm_worker == 0)) THEN
             write(*,'(A,/,A)') 'Warning: there are idle workers, please use less processors ' // &
                'OR larger working group ', '  (set by DEF_PIO_groupsize in CoLM namelist).'
+            write(wfmt,'(A,I0,A)') '(A,I6,A,', p_np_group-1, '(X,I0))'
+            write(*,wfmt) 'Numbers of elements by workers in group ', p_iam_glb, ' are ', nelm_worker
          ENDIF
 
          DO iproc = 1, p_np_group-1

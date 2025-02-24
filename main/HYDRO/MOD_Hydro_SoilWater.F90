@@ -432,9 +432,10 @@ CONTAINS
 
       IF (abs(wblc) > tolerance) THEN
          write(*,*) 'soil_water_vertical_movement balance error: ', wblc, ' in mm.'
-         write(*,*) 'qtop: ', qgtop, 'etr: ', etr, 'rsubst: ', rsubst, 'surf dep: ', ss_dp
+         write(*,*) 'qtop: ', qgtop, 'etr: ', sum(etroot)+etrdef, 'rsubst: ', rsubst, 'surf dep: ', ss_dp
          write(*,*) 'permeable (1-10): ', is_permeable
-         write(*,*) 'vliq (1-10): ', ss_vliq
+         write(*,*) 'vliq  (1-10): ', ss_vliq
+         write(*,*) 'porsl (1-10): ', porsl
       ENDIF
 
       DO ilev = 1, nlev

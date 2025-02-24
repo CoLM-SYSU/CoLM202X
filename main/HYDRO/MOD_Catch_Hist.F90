@@ -40,6 +40,8 @@ MODULE MOD_Catch_Hist
 
    real(r8), allocatable :: a_xsubs_elm (:)
    real(r8), allocatable :: a_xsubs_hru (:)
+   
+   real(r8), allocatable :: ntacc_elm   (:)
 
    ! -- PUBLIC SUBROUTINEs --
    PUBLIC :: hist_basin_init
@@ -154,6 +156,7 @@ CONTAINS
             allocate (a_wdsrf_elm (numelm))
             allocate (a_veloc_elm (numelm))
             allocate (a_dschg_elm (numelm))
+            allocate (ntacc_elm   (numelm))
          ENDIF
       ENDIF
 
@@ -195,6 +198,13 @@ CONTAINS
       CALL vector_write_basin (&
          file_hist_basin, a_dschg_elm, numelm, totalnumelm, 'discharge', 'basin', elm_data_address, &
          DEF_hist_vars%discharge, itime_in_file, 'River Discharge', 'm^3/s')
+
+      ! ----- number of time steps for each basin ----- 
+      CALL worker_push_data (iam_bsn, iam_elm, ntacc_bsn, ntacc_elm)
+
+      CALL vector_write_basin (&
+         file_hist_basin, ntacc_elm, numelm, totalnumelm, 'timesteps', 'basin', elm_data_address, &
+         .true., itime_in_file, 'Number of accumulated timesteps for each basin', '-')
 
       ! ----- water depth in hydro unit ----- 
       IF ((p_is_worker) .and. allocated(a_wdsrf_bsnhru)) THEN
@@ -253,6 +263,8 @@ CONTAINS
       IF (allocated(a_wdsrf_elm)) deallocate(a_wdsrf_elm)
       IF (allocated(a_veloc_elm)) deallocate(a_veloc_elm)
       IF (allocated(a_dschg_elm)) deallocate(a_dschg_elm)
+      IF (allocated(ntacc_elm  )) deallocate(ntacc_elm  )
+
 
    END SUBROUTINE hist_basin_out
 
@@ -283,6 +295,8 @@ CONTAINS
          ENDIF
             
          IF (numhru > 0) a_xsubs_hru(:) = spval
+         
+         IF (numbasin > 0) ntacc_bsn(:) = 0.
 
       ENDIF
 

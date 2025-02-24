@@ -29,7 +29,8 @@ MODULE MOD_Catch_Vars_1DFluxes
   
    real(r8), allocatable :: xwsur (:) ! surface water exchange [mm h2o/s]
    real(r8), allocatable :: xwsub (:) ! subsurface water exchange [mm h2o/s]
-   
+
+   real(r8), allocatable :: ntacc_bsn (:)   
    
    ! PUBLIC MEMBER FUNCTIONS:
    PUBLIC :: allocate_1D_CatchFluxes
@@ -76,6 +77,8 @@ CONTAINS
             allocate (veloc_bsnhru_ta (numbsnhru)) ; veloc_bsnhru_ta (:) = spval
          ENDIF
 
+         IF (numbasin > 0) allocate (ntacc_bsn (numbasin))
+
       ENDIF
 
    END SUBROUTINE allocate_1D_CatchFluxes
@@ -99,6 +102,8 @@ CONTAINS
       
       IF (allocated(xwsur)) deallocate(xwsur)
       IF (allocated(xwsub)) deallocate(xwsub)
+
+      IF (allocated(ntacc_bsn)) deallocate(ntacc_bsn)
 
    END SUBROUTINE deallocate_1D_CatchFluxes
 

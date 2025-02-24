@@ -254,8 +254,6 @@ CONTAINS
 
          xwsub(:) = 0. ! total recharge/discharge from subsurface lateral flow
 
-         bdamp = 4.8
-
          IF (numelm > 0) THEN
             allocate (theta_a_elm (numelm));  theta_a_elm = 0.
             allocate (zwt_elm     (numelm));  zwt_elm     = 0.
@@ -462,6 +460,8 @@ CONTAINS
                ! Inside hydrological units
                IF (hrus%agwt(i) > 0) THEN
                
+                  bdamp = 4.8
+
                   IF (zwt_h(i) > 1.5) THEN
                      ! from Fan et al., JGR 112(D10125)
                      Kl_in = Kl_h(i) * bdamp * exp(-(zwt_h(i)-1.5)/bdamp)
