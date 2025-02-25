@@ -307,9 +307,9 @@ CreateTest()
 	    ln -sf $LanddataPath/$LanddataFolder/ $TestPath/$TestName/$CaseName/landdata
 	 fi
 	 Success='"$Success"'
-	 tailfilemksrf='`tail '$TestPath/$TestName/$CaseName/logmksrfdata'|grep'" 'Successful in surface data making'\`"
-	 tailfileinit='`tail '$TestPath/$TestName/$CaseName/logini'|grep'" 'CoLM Initialization Execution Completed'\`"
-         tailfilecase='`tail '$TestPath/$TestName/$CaseName/log'|grep'" 'CoLM Execution Completed'\`"
+	 tailfilemksrf='`tail -n 100 '$TestPath/$TestName/$CaseName/logmksrfdata'|grep'" 'Successful in surface data making'\`"
+	 tailfileinit='`tail -n 100 '$TestPath/$TestName/$CaseName/logini'|grep'" 'CoLM Initialization Execution Completed'\`"
+         tailfilecase='`tail -n 100 '$TestPath/$TestName/$CaseName/log'|grep'" 'CoLM Execution Completed'\`"
 	 cat>$TestPath/$TestName/$CaseName/check_all.submit<<EOF
 #!/bin/bash
 $Partition
