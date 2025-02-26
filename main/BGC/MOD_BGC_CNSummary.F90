@@ -16,9 +16,9 @@ MODULE MOD_BGC_CNSummary
 ! Xingjie Lu, 2022, modify original CLM5 to be compatible with CoLM code structure. 
 
    USE MOD_Precision
-   USE MOD_Namelist, only : DEF_USE_NITRIF, DEF_USE_DiagMatrix
+   USE MOD_Namelist, only: DEF_USE_NITRIF, DEF_USE_DiagMatrix
    USE MOD_Vars_PFTimeInvariants, only: pftclass
-   USE MOD_Vars_PFTimeVariables, only :irrig_method_p
+   USE MOD_Vars_PFTimeVariables, only:irrig_method_p
    USE MOD_BGC_Vars_TimeVariables, only: &
        totlitc, totsomc, totcwdc, decomp_cpools, decomp_cpools_vr, ctrunc_soil,ctrunc_veg, ctrunc_vr, &
        totlitn, totsomn, totcwdn, decomp_npools, decomp_npools_vr, ntrunc_soil,ntrunc_veg, ntrunc_vr, &
@@ -114,8 +114,8 @@ MODULE MOD_BGC_CNSummary
    USE MOD_Vars_TimeVariables, only: &
        irrig_method_corn  , irrig_method_swheat, irrig_method_wwheat, irrig_method_soybean  , &
        irrig_method_cotton, irrig_method_rice1 , irrig_method_rice2 , irrig_method_sugarcane
-   USE MOD_Vars_TimeInvariants, only : patchclass
-   USE MOD_Vars_Global, only : spval
+   USE MOD_Vars_TimeInvariants, only: patchclass
+   USE MOD_Vars_Global, only: spval
    USE MOD_SPMD_Task
      
    IMPLICIT NONE

@@ -2,49 +2,52 @@
 
 PROGRAM MKSRFDATA
 
-! ======================================================================
-! Surface grid edges:
-! The model domain was defined with the north, east, south, west edges:
-!          edgen: northern edge of grid : > -90 and <= 90 (degrees)
-!          edgee: eastern edge of grid  : > western edge and <= 180
-!          edges: southern edge of grid : >= -90  and <  90
-!          edgew: western edge of grid  : >= -180 and < 180
+!=======================================================================
+!  Surface grid edges:
+!  The model domain was defined with the north, east, south, west edges:
+!           edgen: northern edge of grid : > -90 and <= 90 (degrees)
+!           edgee: eastern edge of grid  : > western edge and <= 180
+!           edges: southern edge of grid : >= -90  and <  90
+!           edgew: western edge of grid  : >= -180 and < 180
 !
-! Region (global) latitude grid goes from:
-!                 NORTHERN edge (POLE) to SOUTHERN edge (POLE)
-! Region (global) longitude grid starts at:
-!                 WESTERN edge (DATELINE with western edge)
-!                 West of Greenwich defined negative for global grids,
-!                 the western edge of the longitude grid starts at the dateline
+!  Region (global) latitude grid goes from:
+!                  NORTHERN edge (POLE) to SOUTHERN edge (POLE)
+!  Region (global) longitude grid starts at:
+!                  WESTERN edge (DATELINE with western edge)
+!                  West of Greenwich defined negative for global grids,
+!                  the western edge of the longitude grid starts at the dateline
 !
-! Land characteristics at the 30 arc-seconds grid resolution (RAW DATA):
-!              1. Global Terrain Dataset (elevation height, topography-based factors)
-!              2. Global Land Cover Characteristics (land cover type, plant leaf area index, Forest Height, ...)
-!              3. Global Lakes and Wetlands Characteristics (lake and wetlands types, lake coverage and lake depth)
-!              4. Global Glacier Characteristics
-!              5. Global Urban Characteristics (urban extent, ...)
-!              6. Global Soil Characteristics (...)
-!              7. Global Cultural Characteristics (ON-GONG PROJECT)
+!  Land characteristics at the 30 arc-seconds grid resolution (RAW DATA):
+!               1. Global Terrain Dataset (elevation height, topography-based
+!                  factors)
+!               2. Global Land Cover Characteristics (land cover type, plant
+!                  leaf area index, Forest Height, ...)
+!               3. Global Lakes and Wetlands Characteristics (lake and wetlands
+!                  types, lake coverage and lake depth)
+!               4. Global Glacier Characteristics
+!               5. Global Urban Characteristics (urban extent, ...)
+!               6. Global Soil Characteristics (...)
+!               7. Global Cultural Characteristics (ON-GONG PROJECT)
 !
-! Land characteristics at the model grid resolution (CREATED):
-!              1. Model grid (longitude, latitude)
-!              2. Fraction (area) of patches of grid (0-1)
-!                 2.1 Fraction of land water bodies (lake, reservoir, river)
-!                 2.2 Fraction of wetland
-!                 2.3 Fraction of glacier
-!                 2.4 Fraction of urban and built-up
-!                 ......
-!              3. Plant leaf area index
-!              4. Tree height
-!              5. Lake depth
-!              6. Soil thermal and hydraulic parameters
+!  Land characteristics at the model grid resolution (CREATED):
+!               1. Model grid (longitude, latitude)
+!               2. Fraction (area) of patches of grid (0-1)
+!                  2.1 Fraction of land water bodies (lake, reservoir, river)
+!                  2.2 Fraction of wetland
+!                  2.3 Fraction of glacier
+!                  2.4 Fraction of urban and built-up
+!                  ......
+!               3. Plant leaf area index
+!               4. Tree height
+!               5. Lake depth
+!               6. Soil thermal and hydraulic parameters
 !
-! Created by Yongjiu Dai, 02/2014
+!  Created by Yongjiu Dai, 02/2014
 !
-! REVISIONS:
-! Shupeng Zhang, 01/2022: porting codes to MPI parallel version
+! !REVISIONS:
+!  Shupeng Zhang, 01/2022: porting codes to MPI parallel version
 !
-! ======================================================================
+!=======================================================================
 
    USE MOD_Precision
    USE MOD_SPMD_Task
@@ -72,7 +75,7 @@ PROGRAM MKSRFDATA
 #endif
    USE MOD_RegionClip
 #ifdef SrfdataDiag
-   USE MOD_SrfdataDiag, only : gdiag, srfdata_diag_init
+   USE MOD_SrfdataDiag, only: gdiag, srfdata_diag_init
 #endif
 
    USE MOD_RegionClip

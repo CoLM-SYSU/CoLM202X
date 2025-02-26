@@ -4,14 +4,12 @@ MODULE MOD_LandUrban
 !-----------------------------------------------------------------------
 !
 ! !DESCRIPTION:
-!
 !  Build pixelset "landurban".
 !
 !  Original authors: Hua Yuan and Wenzong Dong, 2021, OpenMP version.
 !
 !
 ! !REVISIONS:
-!
 !  05/2023, Wenzong Dong, Hua Yuan, Shupeng Zhang: porting codes to MPI
 !           parallel version.
 !

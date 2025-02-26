@@ -2522,16 +2522,15 @@ ENDIF
 
    SUBROUTINE dewfraction (sigf,lai,sai,dewmx,ldew,ldew_rain,ldew_snow,fwet,fdry)
 !=======================================================================
-! Original author: Yongjiu Dai, September 15, 1999
+!  Original author: Yongjiu Dai, September 15, 1999
 !
-! determine fraction of foliage covered by water and
-! fraction of foliage that is dry and transpiring
+!  determine fraction of foliage covered by water and
+!  fraction of foliage that is dry and transpiring
 !
+! !REVISIONS:
 !
-! REVISIONS:
-!
-! 2024.04.16   Hua Yuan: add option to account for vegetation snow process
-! 2018.06      Hua Yuan: remove sigf, to compatible with PFT
+!  2024.04.16, Hua Yuan: add option to account for vegetation snow process
+!  2018.06   , Hua Yuan: remove sigf, to compatible with PFT
 !=======================================================================
 
    USE MOD_Precision

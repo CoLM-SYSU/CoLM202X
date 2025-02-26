@@ -5,13 +5,14 @@ MODULE MOD_Const_PFT
 !-----------------------------------------------------------------------
 !
 ! !DESCRIPTION:
-! Set constants for plant functional types (PFTs)
+!  Set constants for plant functional types (PFTs)
 !
-! Created by Hua Yuan, 08/2019
+!  Created by Hua Yuan, 08/2019
 !
-! REVISIONS:
-! 10/2021, Xingjie Lu: added for crop PFTs
+! !REVISIONS:
+!  10/2021, Xingjie Lu: added for crop PFTs
 !
+!-----------------------------------------------------------------------
 ! !USES:
    USE MOD_Precision
    USE MOD_Vars_Global
@@ -22,7 +23,7 @@ MODULE MOD_Const_PFT
    SAVE
 
 ! Plant Functional Type classification
-!---------------------------
+!-----------------------------------------------------------------------
 ! 0  not vegetated
 ! 1  needleleaf evergreen temperate tree
 ! 2  needleleaf evergreen boreal tree

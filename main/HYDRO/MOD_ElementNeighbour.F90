@@ -481,6 +481,7 @@ CONTAINS
                   elementneighbour(ielm)%dist(inb) = 1.0e3 * arclen ( &
                      rlat_b (ielm),          rlon_b (ielm), &
                      rlat_nb(ielm)%val(inb), rlon_nb(ielm)%val(inb))
+                  elementneighbour(ielm)%dist(inb) = max(elementneighbour(ielm)%dist(inb), 90.)
                ENDIF
             ENDDO
          ENDDO
@@ -499,7 +500,7 @@ CONTAINS
                istt = elm_patch%substt(ielm)
                iend = elm_patch%subend(ielm)
                elva_b(ielm) = sum(topo_patches(istt:iend) * elm_patch%subfrc(istt:iend))
-               
+
                elementneighbour(ielm)%myarea = area_b(ielm)
                elementneighbour(ielm)%myelva = elva_b(ielm)
             ENDDO
@@ -540,7 +541,7 @@ CONTAINS
 
    USE MOD_Precision
    USE MOD_SPMD_Task
-   USE MOD_Mesh, only : numelm
+   USE MOD_Mesh, only: numelm
    IMPLICIT NONE
 
    real(r8), intent(inout) :: vec_in (:)
@@ -637,7 +638,7 @@ CONTAINS
    ! ---
    SUBROUTINE allocate_neighbour_data_real8 (nbdata)
       
-   USE MOD_Mesh, only : numelm
+   USE MOD_Mesh, only: numelm
    IMPLICIT NONE
 
    type(pointer_real8_1d), allocatable :: nbdata(:)
@@ -657,7 +658,7 @@ CONTAINS
    ! ---
    SUBROUTINE allocate_neighbour_data_logic (nbdata)
       
-   USE MOD_Mesh, only : numelm
+   USE MOD_Mesh, only: numelm
    IMPLICIT NONE
 
    type(pointer_logic_1d), allocatable :: nbdata(:)

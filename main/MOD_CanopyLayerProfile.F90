@@ -358,7 +358,7 @@ CONTAINS
             ENDIF
             roots(rootn) = zmid
          ENDIF
-      ELSE IF (udiff_ub*udiff_lb < 0) THEN
+      ELSEIF (udiff_ub*udiff_lb < 0) THEN
          IF (ztop-zmid < 0.01) THEN
             rootn = rootn + 1 !root found
             IF (rootn > 2) THEN
@@ -384,7 +384,7 @@ CONTAINS
             ENDIF
             roots(rootn) = zmid
          ENDIF
-      ELSE IF (udiff_ub*udiff_lb < 0) THEN
+      ELSEIF (udiff_ub*udiff_lb < 0) THEN
          IF (zmid-zbot < 0.01) THEN
             rootn = rootn + 1 !root found
             IF (rootn > 2) THEN
@@ -596,7 +596,7 @@ CONTAINS
             ENDIF
             roots(rootn) = zmid
          ENDIF
-      ELSE IF (kdiff_ub*kdiff_lb < 0) THEN
+      ELSEIF (kdiff_ub*kdiff_lb < 0) THEN
          IF (ztop-zmid < 0.01) THEN
             rootn = rootn + 1 !root found
             IF (rootn > 2) THEN
@@ -622,7 +622,7 @@ CONTAINS
             ENDIF
             roots(rootn) = zmid
          ENDIF
-      ELSE IF (kdiff_ub*kdiff_lb < 0) THEN
+      ELSEIF (kdiff_ub*kdiff_lb < 0) THEN
          IF (zmid-zbot < 0.01) THEN
             rootn = rootn + 1 !root found
             IF (rootn > 2) THEN

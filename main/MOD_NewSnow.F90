@@ -21,13 +21,13 @@ CONTAINS
                        wliq_soisno,wice_soisno,fiold,snl,sag,scv,snowdp,fsno,wetwat)
 
 !=======================================================================
-! add new snow nodes.
-! Original author : Yongjiu Dai, 09/15/1999; 08/31/2002, 07/2013, 04/2014
+!  add new snow nodes.
+!  Original author: Yongjiu Dai, 09/15/1999; 08/31/2002, 07/2013, 04/2014
 !=======================================================================
-!
+
    USE MOD_Precision
-   USE MOD_Namelist, only : DEF_USE_VariablySaturatedFlow
-   USE MOD_Const_Physical, only : tfrz, cpliq, cpice
+   USE MOD_Namelist, only: DEF_USE_VariablySaturatedFlow
+   USE MOD_Const_Physical, only: tfrz, cpliq, cpice
 
    IMPLICIT NONE
 
@@ -49,14 +49,14 @@ CONTAINS
    real(r8), intent(inout) ::    t_soisno(maxsnl+1:0) ! soil + snow layer temperature [K]
    real(r8), intent(inout) :: wliq_soisno(maxsnl+1:0) ! liquid water (kg/m2)
    real(r8), intent(inout) :: wice_soisno(maxsnl+1:0) ! ice lens (kg/m2)
-   real(r8), intent(inout) :: fiold(maxsnl+1:0) ! fraction of ice relative to the total water
-   integer , intent(inout) :: snl               ! number of snow layers
-   real(r8), intent(inout) :: sag               ! non dimensional snow age [-]
-   real(r8), intent(inout) :: scv               ! snow mass (kg/m2)
-   real(r8), intent(inout) :: snowdp            ! snow depth (m)
-   real(r8), intent(inout) :: fsno              ! fraction of soil covered by snow [-]
+   real(r8), intent(inout) :: fiold(maxsnl+1:0)       ! fraction of ice relative to the total water
+   integer , intent(inout) :: snl                     ! number of snow layers
+   real(r8), intent(inout) :: sag                     ! non dimensional snow age [-]
+   real(r8), intent(inout) :: scv                     ! snow mass (kg/m2)
+   real(r8), intent(inout) :: snowdp                  ! snow depth (m)
+   real(r8), intent(inout) :: fsno                    ! fraction of soil covered by snow [-]
 
-   real(r8), intent(inout), optional :: wetwat  ! wetland water [mm]
+   real(r8), intent(inout), optional :: wetwat        ! wetland water [mm]
 
 !-------------------------- Local Variables ----------------------------
 

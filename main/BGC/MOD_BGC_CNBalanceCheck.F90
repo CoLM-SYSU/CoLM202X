@@ -15,7 +15,7 @@ MODULE MOD_BGC_CNBalanceCheck
 ! Xingjie Lu, 2022, modify original CLM5 to be compatible with CoLM code structure.
 
    USE MOD_Precision
-   USE MOD_Namelist, only : DEF_USE_NITRIF
+   USE MOD_Namelist, only: DEF_USE_NITRIF
    USE MOD_BGC_Vars_TimeVariables, only: &
        sminn, col_endcb, col_begcb, totcolc, col_endnb, col_begnb, totcoln, &
        col_vegbegcb, totvegc, ctrunc_veg, col_vegbegnb, totvegn, ntrunc_veg, &

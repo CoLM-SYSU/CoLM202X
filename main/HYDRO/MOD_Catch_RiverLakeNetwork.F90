@@ -11,7 +11,7 @@ MODULE MOD_Catch_RiverLakeNetwork
 !--------------------------------------------------------------------------------
 
    USE MOD_Precision
-   USE MOD_Vars_Global, only : spval
+   USE MOD_Vars_Global, only: spval
    USE MOD_Pixelset
    USE MOD_Catch_BasinNetwork
    USE MOD_Catch_HillslopeNetwork
@@ -44,16 +44,20 @@ MODULE MOD_Catch_RiverLakeNetwork
    
    real(r8), allocatable :: outletwth (:)
 
-   integer :: numbsnlink
+   integer :: riversystem
+   
+   integer :: numrivsys
+   integer, allocatable :: irivsys (:)
+
 #ifdef USEMPI
-   integer,  allocatable :: linkbindex (:)
-   integer,  allocatable :: linkrivmth (:)
+   integer :: p_comm_rivsys
+
+   integer :: numbsnlink
+   integer, allocatable :: linkbindex (:)
 
    integer :: nlink_me
-   integer,  allocatable :: linkpush (:)
-   integer,  allocatable :: linkpull (:)
-   
-   logical, allocatable :: riv_multi_proc (:)
+   integer, allocatable :: linkpush (:)
+   integer, allocatable :: linkpull (:)
 #endif
 
    ! -- lake data type --
@@ -105,18 +109,27 @@ CONTAINS
    USE MOD_DataType
    USE MOD_Utils
    USE MOD_UserDefFun
-   USE MOD_Vars_TimeInvariants, only : lakedepth
+   USE MOD_Vars_TimeInvariants, only: lakedepth
    IMPLICIT NONE
 
    ! Local Variables
    character(len=256) :: river_file, rivdpt_file
    logical :: use_calc_rivdpt
 
-   integer :: totalnumbasin, ibasin, inb, iloc, ielm, i, j, ilink
+   integer :: totalnumbasin, ibasin, jbasin, inb, iloc, ielm, i, j, ilink
    integer :: iworker, mesg(2), isrc, idest, nrecv
    
+#ifdef USEMPI
+   integer :: nblink_all
+   integer,  allocatable :: linkbindex_all (:)
+   integer,  allocatable :: linkrivmth_all (:)
+#endif
+
    logical , allocatable :: is_link    (:)
    logical , allocatable :: link_on_me (:)
+
+   integer :: nnode
+   integer, allocatable :: route(:)
 
    integer , allocatable :: icache (:)
    real(r8), allocatable :: rcache (:)
@@ -125,8 +138,8 @@ CONTAINS
    integer, allocatable :: bindex(:), addrbasin(:), addrdown(:)
    integer, allocatable :: basin_sorted(:), basin_order(:), order (:)
    
-   logical, allocatable :: bsnfilter(:), linkfilter(:)
-
+   logical, allocatable :: bsnfilter(:)
+   
    ! for lakes
    integer :: ps, pe, nsublake, hs, he, ihru, ipxl
    integer,  allocatable :: lake_id_elm (:)
@@ -334,31 +347,29 @@ CONTAINS
             ENDIF
          ENDDO
          
-         numbsnlink = count(is_link)
+         nblink_all = count(is_link)
 
-         IF (numbsnlink > 0) THEN
-            allocate (linkbindex (numbsnlink))
-            allocate (linkrivmth (numbsnlink))
-            linkbindex = pack((/(ibasin, ibasin = 1, totalnumbasin)/), mask = is_link)
-            linkrivmth = pack(rivermouth, mask = is_link)
+         IF (nblink_all > 0) THEN
+            allocate (linkbindex_all (nblink_all))
+            allocate (linkrivmth_all (nblink_all))
+            linkbindex_all = pack((/(ibasin, ibasin = 1, totalnumbasin)/), mask = is_link)
+            linkrivmth_all = pack(rivermouth, mask = is_link)
          ENDIF
 
          deallocate (addrdown)
          deallocate (is_link )
 
-         write(*,'(/,A,I5,A,/)') 'There are ', numbsnlink, ' links between processors.'
+         write(*,'(/,A,I5,A,/)') 'There are ', nblink_all, ' links between processors.'
 
       ENDIF
 
-      CALL mpi_bcast (numbsnlink, 1, MPI_INTEGER, p_address_master, p_comm_glb, p_err)
-      IF (numbsnlink > 0) THEN
-         IF (.not. allocated(linkbindex))  allocate (linkbindex (numbsnlink))
-         IF (.not. allocated(linkrivmth))  allocate (linkrivmth (numbsnlink))
-         CALL mpi_bcast (linkbindex, numbsnlink, MPI_INTEGER, p_address_master, p_comm_glb, p_err)
-         CALL mpi_bcast (linkrivmth, numbsnlink, MPI_INTEGER, p_address_master, p_comm_glb, p_err)
+      CALL mpi_bcast (nblink_all, 1, MPI_INTEGER, p_address_master, p_comm_glb, p_err)
+      IF (nblink_all > 0) THEN
+         IF (.not. allocated(linkbindex_all))  allocate (linkbindex_all (nblink_all))
+         IF (.not. allocated(linkrivmth_all))  allocate (linkrivmth_all (nblink_all))
+         CALL mpi_bcast (linkbindex_all, nblink_all, MPI_INTEGER, p_address_master, p_comm_glb, p_err)
+         CALL mpi_bcast (linkrivmth_all, nblink_all, MPI_INTEGER, p_address_master, p_comm_glb, p_err)
       ENDIF
-#else
-      numbsnlink = 0
 #endif
 
       IF (p_is_worker) THEN
@@ -371,29 +382,33 @@ CONTAINS
 
             CALL quicksort (numbasin, basin_sorted, basin_order)
          ENDIF
+         
+         riversystem = -1
 
-         IF (numbasin > 0) THEN
-
-            allocate (ilocdown (numbasin)); ilocdown(:) = 0
-            
-            DO ibasin = 1, numbasin
-               IF (riverdown(ibasin) > 0) THEN
-                  iloc = find_in_sorted_list1 (riverdown(ibasin), numbasin, basin_sorted)
-                  IF (iloc > 0) THEN
-                     ilocdown(ibasin) = basin_order(iloc)
 #ifdef USEMPI
-                  ELSE
-                     iloc = find_in_sorted_list1 (riverdown(ibasin), numbsnlink, linkbindex)
-                     ilocdown(ibasin) = - iloc
-#endif
+         IF (nblink_all > 0) THEN
+            DO ibasin = 1, numbasin
+
+               iloc = find_in_sorted_list1 (riverdown(ibasin), nblink_all, linkbindex_all)
+               IF (iloc <= 0) THEN
+                  iloc = find_in_sorted_list1 (basinindex(ibasin), nblink_all, linkbindex_all)
+               ENDIF
+
+               IF (iloc > 0) THEN
+                  IF (riversystem == -1) THEN
+                     riversystem = linkrivmth_all(iloc)
+                  ELSEIF (riversystem /= linkrivmth_all(iloc)) THEN
+                     write(*,*) 'Warning: river system allocation error!'
                   ENDIF
                ENDIF
             ENDDO
          ENDIF
-
-#ifdef USEMPI
-         IF ((numbsnlink > 0) .and. (numbasin > 0)) THEN
-
+         
+         IF (riversystem /= -1) THEN
+            numbsnlink = count(linkrivmth_all == riversystem)
+            allocate (linkbindex (numbsnlink))
+            linkbindex = pack(linkbindex_all, linkrivmth_all == riversystem)
+            
             allocate (link_on_me (numbsnlink)); link_on_me = .false.
 
             DO ibasin = 1, numbsnlink
@@ -420,12 +435,76 @@ CONTAINS
             ENDIF
 
             deallocate (link_on_me)
+         ENDIF
 
+         IF (riversystem /= -1) THEN
+            CALL mpi_comm_split (p_comm_worker, riversystem, p_iam_worker, p_comm_rivsys, p_err)
          ELSE
-            nlink_me = 0
+            CALL mpi_comm_split (p_comm_worker, MPI_UNDEFINED, p_iam_worker, p_comm_rivsys, p_err)
          ENDIF
 #endif
+
+
+         IF (numbasin > 0) THEN
+
+            allocate (ilocdown (numbasin)); ilocdown(:) = 0
+            
+            DO ibasin = 1, numbasin
+               IF (riverdown(ibasin) > 0) THEN
+                  iloc = find_in_sorted_list1 (riverdown(ibasin), numbasin, basin_sorted)
+                  IF (iloc > 0) THEN
+                     ilocdown(ibasin) = basin_order(iloc)
+#ifdef USEMPI
+                  ELSE
+                     iloc = find_in_sorted_list1 (riverdown(ibasin), numbsnlink, linkbindex)
+                     ilocdown(ibasin) = - iloc
+#endif
+                  ENDIF
+               ENDIF
+            ENDDO
+         ENDIF
+
+
+         IF (numbasin > 0) allocate (irivsys (numbasin))
+         IF (numbasin > 0) allocate (route   (numbasin))
+
+         IF (riversystem == -1) THEN
+            irivsys(:) = -1
+            numrivsys = 0
+            DO ibasin = 1, numbasin
+               IF (irivsys(ibasin) == -1) THEN
+
+                  jbasin = ibasin
+                  nnode = 1
+                  route(nnode) = jbasin
+                  DO WHILE ((riverdown(jbasin) > 0) .and. (irivsys(jbasin) == -1))
+                     nnode = nnode + 1
+                     route(nnode) = jbasin
+                     jbasin = ilocdown(jbasin) 
+                  ENDDO
+
+                  IF (irivsys(jbasin) == -1) THEN
+                     numrivsys = numrivsys + 1
+                     irivsys(jbasin) = numrivsys
+                  ENDIF
+
+                  irivsys(route(1:nnode)) = irivsys(jbasin)
+
+               ENDIF
+            ENDDO
+         ELSE
+            numrivsys  = 1
+            irivsys(:) = 1
+         ENDIF
+         
+         IF (numbasin > 0) deallocate (route)
+
       ENDIF
+
+#ifdef USEMPI
+      IF (allocated (linkbindex_all)) deallocate (linkbindex_all)
+      IF (allocated (linkrivmth_all)) deallocate (linkrivmth_all)
+#endif
       
 
       CALL hillslope_network_init (numbasin, basinindex, hillslope_basin)
@@ -598,16 +677,14 @@ CONTAINS
             ENDDO
          ENDIF
 
-         IF (numbasin   > 0) allocate(bsnfilter (numbasin  )); bsnfilter(:)  = .true.
-         IF (numbsnlink > 0) allocate(linkfilter(numbsnlink)); linkfilter(:) = .true.
+         IF (numbasin > 0) allocate(bsnfilter (numbasin)); bsnfilter(:) = .true.
 
-         CALL pull_from_downstream (riverlen, riverlen_ds, bsnfilter, linkfilter)
-         CALL pull_from_downstream (wtsrfelv, wtsrfelv_ds, bsnfilter, linkfilter)
-         CALL pull_from_downstream (riverwth, riverwth_ds, bsnfilter, linkfilter)
-         CALL pull_from_downstream (bedelv  , bedelv_ds  , bsnfilter, linkfilter)
-
-         IF (allocated(bsnfilter )) deallocate(bsnfilter )
-         IF (allocated(linkfilter)) deallocate(linkfilter)
+         CALL pull_from_downstream (riverlen, riverlen_ds, bsnfilter)
+         CALL pull_from_downstream (wtsrfelv, wtsrfelv_ds, bsnfilter)
+         CALL pull_from_downstream (riverwth, riverwth_ds, bsnfilter)
+         CALL pull_from_downstream (bedelv  , bedelv_ds  , bsnfilter)
+         
+         IF (allocated(bsnfilter)) deallocate(bsnfilter)
 
          DO ibasin = 1, numbasin
             IF (lake_id(ibasin) < 0) THEN
@@ -649,28 +726,6 @@ CONTAINS
       IF (allocated (lakeoutlet_bsn  )) deallocate (lakeoutlet_bsn  )
       IF (allocated (lakearea_bsnhru )) deallocate (lakearea_bsnhru )
 
-
-      IF (p_is_worker) THEN
-         
-         allocate (riv_multi_proc (numrivmth))
-
-         riv_multi_proc(:) = .false.
-
-         DO ibasin = 1, numbasin
-            j = riverdown(ibasin)
-            IF (j > 0) THEN
-               iloc = find_in_sorted_list1 (j, numbasin, basin_sorted)
-               IF (iloc <= 0) THEN
-                  riv_multi_proc(rivermouth(ibasin)) = .true. 
-               ENDIF
-            ENDIF
-         ENDDO
-
-         CALL mpi_allreduce (MPI_IN_PLACE, riv_multi_proc, numrivmth, &
-            MPI_LOGICAL, MPI_LOR, p_comm_worker, p_err)
-
-      ENDIF
-      
       IF (allocated(basin_sorted  )) deallocate(basin_sorted  )
       IF (allocated(basin_order   )) deallocate(basin_order   )
 
@@ -683,48 +738,29 @@ CONTAINS
    END SUBROUTINE river_lake_network_init
 
    ! ----- pull data from downstream basin -----
-   SUBROUTINE pull_from_downstream (datain, dataout, bsnfilter, linkfilter)
+   SUBROUTINE pull_from_downstream (datain, dataout, bsnfilter)
 
    USE MOD_SPMD_Task
 
    IMPLICIT NONE 
 
-      real(r8), intent(in)    :: datain (:)
-      real(r8), intent(inout) :: dataout(:)
-
-      logical,  intent(in)    :: bsnfilter  (:)
-      logical,  intent(in)    :: linkfilter (:)
+      real(r8), intent(in)    :: datain   (:)
+      real(r8), intent(inout) :: dataout  (:)
+      logical,  intent(in)    :: bsnfilter(:)
 
       ! local variables
-      integer :: ndata, i, idata, ibasin
-      real(r8), allocatable :: xdata   (:)
-      real(r8), allocatable :: datalink(:), fill(:)
+      integer :: i, ibasin
+      real(r8), allocatable :: datalink(:)
 
       IF (p_is_worker) THEN
 
 #ifdef USEMPI
-         IF (numbsnlink > 0) THEN
-            IF (any(linkfilter)) THEN
-
-               ndata = count(linkfilter)
-               allocate (xdata (ndata)); xdata(:) = 0.
-               DO i = 1, nlink_me
-                  IF (linkfilter(linkpull(i))) THEN
-                     idata = count(linkfilter(1:linkpull(i)))
-                     xdata(idata) = datain(linkpush(i))
-                  ENDIF
-               ENDDO
-
-               CALL mpi_allreduce (MPI_IN_PLACE, xdata, ndata, MPI_REAL8, MPI_SUM, p_comm_worker, p_err)
-
-               allocate (datalink (numbsnlink))
-               allocate (fill     (numbsnlink)); fill(:) = 0.
-               datalink = unpack(xdata, linkfilter, fill)
-               
-               deallocate (xdata)
-               deallocate (fill )
-
-            ENDIF
+         IF (riversystem /= -1) THEN
+            allocate (datalink (numbsnlink));  datalink(:) = 0.
+            DO i = 1, nlink_me
+               datalink(linkpull(i)) = datain(linkpush(i))
+            ENDDO
+            CALL mpi_allreduce (MPI_IN_PLACE, datalink, numbsnlink, MPI_REAL8, MPI_SUM, p_comm_rivsys, p_err)
          ENDIF
 #endif
          
@@ -743,37 +779,33 @@ CONTAINS
          ENDDO
 
 #ifdef USEMPI
-         if (allocated(datalink)) deallocate (datalink)
+         IF (allocated(datalink)) deallocate (datalink)
 #endif
       ENDIF
 
    END SUBROUTINE pull_from_downstream 
 
    ! ----- push data to downstream basin -----
-   SUBROUTINE push_to_downstream (datain, dataout, bsnfilter, linkfilter)
+   SUBROUTINE push_to_downstream (datain, dataout, bsnfilter)
 
    USE MOD_SPMD_Task
 
    IMPLICIT NONE 
 
-      real(r8), intent(in)    :: datain (:)
-      real(r8), intent(inout) :: dataout(:)
-
-      logical,  intent(in)    :: bsnfilter  (:)
-      logical,  intent(in)    :: linkfilter (:)
+      real(r16), intent(in)    :: datain   (:)
+      real(r16), intent(inout) :: dataout  (:)
+      logical,   intent(in)    :: bsnfilter(:)
 
       ! local variables
-      integer :: ndata, i, idata, ibasin
-      real(r8), allocatable :: xdata   (:)
-      real(r8), allocatable :: datalink(:), fill(:)
+      integer :: i, ibasin
+      real(r16), allocatable :: datalink(:)
 
 
       IF (p_is_worker) THEN
 
 #ifdef USEMPI
          IF (numbsnlink > 0) THEN
-            allocate (datalink (numbsnlink))
-            datalink(:) = 0.
+            allocate (datalink (numbsnlink));  datalink(:) = 0.
          ENDIF
 #endif
 
@@ -792,30 +824,15 @@ CONTAINS
          ENDDO
 
 #ifdef USEMPI
-         IF (numbsnlink > 0) THEN
-            IF (any(linkfilter)) THEN
+         IF (riversystem /= -1) THEN
 
-               ndata = count(linkfilter)
-               allocate (xdata (ndata))
-               xdata(:) = pack(datalink, linkfilter)
+            CALL mpi_allreduce (MPI_IN_PLACE, datalink, numbsnlink, MPI_REAL16, MPI_SUM, p_comm_rivsys, p_err)
 
-               CALL mpi_allreduce (MPI_IN_PLACE, xdata, ndata, MPI_REAL8, MPI_SUM, p_comm_worker, p_err)
+            DO i = 1, nlink_me
+               dataout(linkpush(i)) = dataout(linkpush(i)) + datalink(linkpull(i))
+            ENDDO
 
-               allocate (fill (numbsnlink)); fill(:) = 0.
-               datalink = unpack(xdata, linkfilter, fill)
-
-               DO i = 1, nlink_me
-                  IF (linkfilter(linkpull(i))) THEN
-                     idata = count(linkfilter(1:linkpull(i)))
-                     dataout(linkpush(i)) = dataout(linkpush(i)) + xdata(idata)
-                  ENDIF
-               ENDDO
-
-               deallocate (datalink)
-               deallocate (xdata   )
-               deallocate (fill    )
-
-            ENDIF
+            deallocate (datalink)
          ENDIF
 #endif
       ENDIF
@@ -1101,12 +1118,11 @@ CONTAINS
       IF (allocated (riverwth_ds    ))  deallocate(riverwth_ds    )
       IF (allocated (bedelv_ds      ))  deallocate(bedelv_ds      )
       IF (allocated (outletwth      ))  deallocate(outletwth      )
+      IF (allocated (irivsys        ))  deallocate(irivsys        )
 #ifdef USEMPI
       IF (allocated (linkbindex     ))  deallocate(linkbindex     )
-      IF (allocated (linkrivmth     ))  deallocate(linkrivmth     )
       IF (allocated (linkpush       ))  deallocate(linkpush       )
       IF (allocated (linkpull       ))  deallocate(linkpull       )
-      IF (allocated (riv_multi_proc ))  deallocate(riv_multi_proc )
 #endif
       IF (allocated (lake_id        ))  deallocate(lake_id        )
       IF (allocated (lakeinfo       ))  deallocate(lakeinfo       )

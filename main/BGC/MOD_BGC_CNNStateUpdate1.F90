@@ -20,7 +20,7 @@ MODULE MOD_BGC_CNNStateUpdate1
    USE MOD_Precision
    USE MOD_Vars_PFTimeInvariants, only: pftclass
    USE MOD_Const_PFT, only: woody
-   USE MOD_Namelist, only : DEF_USE_SASU
+   USE MOD_Namelist, only: DEF_USE_SASU
    USE MOD_BGC_Vars_TimeInvariants, only: &
    ! bgc constants
             donor_pool, receiver_pool, i_met_lit, i_cel_lit, i_lig_lit, i_cwd, i_soil1, i_soil2, i_soil3

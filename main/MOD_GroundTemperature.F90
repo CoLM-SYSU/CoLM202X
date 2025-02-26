@@ -37,33 +37,34 @@ CONTAINS
                          imelt,snofrz,sm,xmf,fact,pg_rain,pg_snow,t_precip)
 
 !=======================================================================
-! Snow and soil temperatures
-! o The volumetric heat capacity is calculated as a linear combination
-!   in terms of the volumetric fraction of the constituent phases.
-! o The thermal conductivity of soil is computed from
-!   the algorithm of Johansen (as reported by Farouki 1981), and of snow
-!   is from the formulation used in SNTHERM (Jordan 1991).
-! o Boundary conditions:
-!   F = Rnet - Hg - LEg + Hpr(top),  F= 0 (base of the soil column).
-! o Soil / snow temperature is predicted from heat conduction
-!   in 10 soil layers and up to 5 snow layers.  The thermal
-!   conductivities at the interfaces between two neighbor layers (j,
-!   j+1) are derived from an assumption that the flux across the
-!   interface is equal to that from the node j to the interface and the
-!   flux from the interface to the node j+1.  The equation is solved
-!   using the Crank-Nicholson method and resulted in a tridiagonal
-!   system equation.
+!  Snow and soil temperatures
+!  o The volumetric heat capacity is calculated as a linear combination
+!    in terms of the volumetric fraction of the constituent phases.
+!  o The thermal conductivity of soil is computed from
+!    the algorithm of Johansen (as reported by Farouki 1981), and of snow
+!    is from the formulation used in SNTHERM (Jordan 1991).
+!  o Boundary conditions:
+!    F = Rnet - Hg - LEg + Hpr(top),  F= 0 (base of the soil column).
+!  o Soil / snow temperature is predicted from heat conduction
+!    in 10 soil layers and up to 5 snow layers.  The thermal
+!    conductivities at the interfaces between two neighbor layers (j,
+!    j+1) are derived from an assumption that the flux across the
+!    interface is equal to that from the node j to the interface and the
+!    flux from the interface to the node j+1.  The equation is solved
+!    using the Crank-Nicholson method and resulted in a tridiagonal
+!    system equation.
 !
-! Phase change (see meltf.F90)
+!  Phase change (see meltf.F90)
 !
-! Original author : Yongjiu Dai, 09/15/1999; 08/30/2002; 05/2018
+!  Original author: Yongjiu Dai, 09/15/1999; 08/30/2002; 05/2018
 !
-! REVISIONS:
-! 07/2017, Nan Wei: interaction btw prec and land surface
-! 01/2019, Nan Wei: USE the new version of soil thermal parameters to
-!          calculate soil temperature
-! 01/2023, Hua Yuan: modified ground heat flux, temperature and meltf
-!          calculation for SNICAR model
+! !REVISIONS:
+!  07/2017, Nan Wei: interaction btw prec and land surface
+!  01/2019, Nan Wei: USE the new version of soil thermal parameters to
+!           calculate soil temperature
+!  01/2023, Hua Yuan: modified ground heat flux, temperature and meltf
+!           calculation for SNICAR model
+!
 !=======================================================================
 
    USE MOD_Precision

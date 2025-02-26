@@ -5,8 +5,7 @@ MODULE MOD_Urban_LUCY
 ! !DESCRIPTION:
 !  Anthropogenic model to calculate anthropogenic heat flux for the rest
 !
-! !ORIGINAL:
-!  Wenzong Dong, May, 2022
+!  Original: Wenzong Dong, May, 2022
 !
 ! -----------------------------------------------------------------------
 ! !USE
@@ -22,11 +21,11 @@ MODULE MOD_Urban_LUCY
 
 CONTAINS
 
-! -----------------------------------------------------------------------
    SUBROUTINE LUCY( idate       , deltim  , patchlonr, fix_holiday, &
                     week_holiday, hum_prof, wdh_prof , weh_prof   , pop_den, &
                     vehicle     , Fahe    , vehc     , meta        )
 
+! -----------------------------------------------------------------------
 ! !DESCRIPTION:
 !  Anthropogenic heat fluxes other than building heat were calculated
 !

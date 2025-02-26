@@ -46,10 +46,9 @@ CONTAINS
         pg_rain_lake   ,pg_snow_lake                                   ,&
         ! surface parameters or status
         froof          ,fgper          ,flake          ,bsw            ,&
-        porsl          ,psi0           ,hksati                         ,&
-        pondmx         ,ssi            ,wimp           ,smpmin         ,&
-        theta_r        ,fsatmax        ,fsatdcf        ,topostd        ,&
-        BVIC           ,&
+        porsl          ,psi0           ,hksati         ,pondmx         ,&
+        ssi            ,wimp           ,smpmin         ,theta_r        ,&
+        fsatmax        ,fsatdcf        ,topostd        ,BVIC           ,&
         rootr,rootflux ,etr            ,fseng          ,fgrnd          ,&
         t_gpersno      ,t_lakesno      ,t_lake         ,dz_lake        ,&
         z_gpersno      ,z_lakesno      ,zi_gpersno     ,zi_lakesno     ,&
@@ -271,9 +270,8 @@ CONTAINS
              qseva_gper  ,qsdew_gper  ,qsubl_gper  ,qfros_gper               ,&
              qseva_gper  ,qsdew_gper  ,qsubl_gper  ,qfros_gper               ,&
              0.          ,& ! fsno, not active
-             rsur_gper   ,rnof_gper   ,qinfl                                 ,&
-             pondmx      ,ssi         ,wimp        ,smpmin                   ,&
-             zwt         ,wa          ,qcharge                               ,&
+             rsur_gper   ,rnof_gper   ,qinfl       ,pondmx      ,ssi         ,&
+             wimp        ,smpmin      ,zwt         ,wa          ,qcharge     ,&
 #if(defined CaMa_Flood)
              flddepth    ,fldfrc      ,qinfl_fld                             ,&
 #endif

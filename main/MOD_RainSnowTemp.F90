@@ -24,12 +24,12 @@ CONTAINS
               prc_rain,prc_snow,prl_rain,prl_snow,t_precip,bifall)
 
 !=======================================================================
-! define the rate of rainfall and snowfall and precipitation water temp
-! Original author : Yongjiu Dai, 09/1999; 08/31/2002, 04/2014, 01/2023
+!  define the rate of rainfall and snowfall and precipitation water temp
+!  Original author: Yongjiu Dai, 09/1999; 08/31/2002, 04/2014, 01/2023
 !=======================================================================
-!
+
    USE MOD_Precision
-   USE MOD_Const_Physical, only : tfrz
+   USE MOD_Const_Physical, only: tfrz
    USE MOD_WetBulb
 
    IMPLICIT NONE
@@ -82,7 +82,7 @@ CONTAINS
 
          IF(t_precip - tfrz > 3.0)THEN
             flfall = 1.0      ! fraction of liquid water within falling precip
-         ELSE IF (t_precip - tfrz >= -2.0)THEN
+         ELSEIF (t_precip - tfrz >= -2.0)THEN
             flfall = max(0.0, 1.0 - 1.0/(1.0+5.00e-5*exp(2.0*(t_precip-tfrz+4.))))   !Figure 5c of Behrangi et al. (2018)
             !* flfall = max(0.0, 1.0 - 1.0/(1.0+6.99e-5*exp(2.0*(t_precip-tfrz+3.97)))) !Equation 1 of Wang et al. (2019)
          ELSE
@@ -117,7 +117,7 @@ CONTAINS
 
          IF(t_hydro > 3.0)THEN
             flfall = 1.0      ! fraction of liquid water within falling precip
-         ELSE IF ((t_hydro >= -3.0).and.(t_hydro <= 3.0))THEN
+         ELSEIF ((t_hydro >= -3.0).and.(t_hydro <= 3.0))THEN
             flfall = max(0.0, 1.0/(1.0+2.50286*0.125006**t_hydro))
          ELSE
             flfall = 0.0
@@ -162,12 +162,12 @@ CONTAINS
 
 
    SUBROUTINE NewSnowBulkDensity(forc_t,forc_us,forc_vs,bifall)
-   !=======================================================================
-   ! Scheme for bulk density of newly fallen dry snow
-   !=======================================================================
-   !
+!=======================================================================
+!  Scheme for bulk density of newly fallen dry snow
+!=======================================================================
+
    USE MOD_Precision
-   USE MOD_Const_Physical, only : tfrz
+   USE MOD_Const_Physical, only: tfrz
 
    real(r8), intent(in) :: forc_t     ! temperature at agcm reference height [kelvin]
    real(r8), intent(in) :: forc_us    ! wind speed in eastward direction [m/s]
@@ -182,7 +182,7 @@ CONTAINS
 
       IF (forc_t > tfrz + 2.0) THEN
          bifall = 50.0 + 1.7*(17.0)**1.5
-      ELSE IF (forc_t > tfrz - 15.0) THEN
+      ELSEIF (forc_t > tfrz - 15.0) THEN
          bifall = 50.0 + 1.7*(forc_t - tfrz + 15.0)**1.5
       ELSE
          ! Andrew Slater: A temp of about -15C gives the nicest
@@ -209,26 +209,24 @@ CONTAINS
 
    !!==============================================
 
-   !-----------------------------------------------------------------------------
    SUBROUTINE hydromet_temp(ppa, pta, pqa, pti)
-      ! DESCRIPTION
-      ! ===========
-      ! Computes the temperature of a falling hydrometeor based on Harder, P., Pomeroy, J. (2013).
+!-----------------------------------------------------------------------------
+! !DESCRIPTION
+!  Computes the temperature of a falling hydrometeor based on Harder, P., Pomeroy, J. (2013).
+!
+!  Original Author:
+!  ----------------
+!  V. Vionnet (11/2020)
+!
+! !REFERENCES:
+!  Harder, P., Pomeroy, J. (2013).
+!  Estimating precipitation phase using a psychrometric energy balance method
+!  Hydrological Processes 27(13), 1901-1914. https://dx.doi.org/10.1002/hyp.9799
 
-      ! Original Author:
-      ! ----------------
-      ! V. Vionnet (11/2020)
-
-
-      ! References:
-      ! -----------
-      ! Harder, P., Pomeroy, J. (2013).
-      ! Estimating precipitation phase using a psychrometric energy balance method
-      ! Hydrological Processes 27(13), 1901-1914. https://dx.doi.org/10.1002/hyp.9799
-
-      ! REVISION HISTORY
-      ! ----------------
-      ! 2023.07.30 Aobo Tan & Zhongwang Wei @ SYSU
+! !REVISIONS:
+!  2023.07.30 Aobo Tan & Zhongwang Wei @ SYSU
+!
+!-----------------------------------------------------------------------------
 
       real(r8), intent(in)   :: ppa          ! Air pressure (Pa)
       real(r8), intent(in)   :: pta          ! Air temperature (deg C)
@@ -257,7 +255,7 @@ CONTAINS
 
       ELSE
          zl = 1000.0 * (2501.0 - (2.361 * pta))
-      END IF
+      ENDIF
 
       ! 4. Compute density of dry air [kg m^-3]
       zrhoda = ppa / (287.04 * (pta + 273.15))
@@ -267,7 +265,7 @@ CONTAINS
          evsat = 611.0 * EXP(17.27 * pta / (pta + 237.3))
       ELSE
          evsat = 611.0 * EXP(21.87 * pta / (pta + 265.5))
-      END IF
+      ENDIF
 
       ! 6. Solve iteratively to get Ti in Harder and Pomeroy (2013) using a Newton-Raphson approach
       ! Set the first guess to pta
@@ -281,7 +279,7 @@ CONTAINS
             esat = 611.0 * EXP(17.27 * zt / (zt + 237.3))
          ELSE
             esat = 611.0 * EXP(21.87 * zt / (zt + 265.5))
-         END IF
+         ENDIF
 
          rho_vast = esat / (461.5 * (zt + 273.15)) ! Saturated water vapour density
 
@@ -293,12 +291,12 @@ CONTAINS
          ELSE
             rho_vast_diff = 611.0 / (461.5 * (zt + 273.15)) * EXP(21.87 * zt / (zt + 265.5)) * &
                             (-1 / (zt + 273.15) + 21.87 * 265.5 / ((zt + 265.5) ** 2.))
-         END IF
+         ENDIF
 
          zfdiff = 1 + zd * zl / zlambda * rho_vast_diff
          zt = ztint - zf / zfdiff
-         IF (ABS(zt - ztint) .LT. 0.01) EXIT
-      END DO
+         IF (ABS(zt - ztint) .lt. 0.01) EXIT
+      ENDDO
 
       pti = zt
 

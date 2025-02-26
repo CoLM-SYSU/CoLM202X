@@ -3,17 +3,17 @@
 MODULE MOD_Glacier
 
 !-----------------------------------------------------------------------
-! Energy and Mass Balance Model of LAND ICE (GLACIER / ICE SHEET)
+!  Energy and Mass Balance Model of LAND ICE (GLACIER / ICE SHEET)
 !
-! Original author: Yongjiu Dai, /05/2014/
+!  Original author: Yongjiu Dai, /05/2014/
 !
-! REVISIONS:
-! 01/2023, Hua Yuan: added GLACIER_WATER_snicar() to account for SNICAR
-!          model effects on snow water [see snowwater_snicar()], snow
-!          layers combine [see snowlayerscombine_snicar()], snow layers
-!          divide [see snowlayersdivide_snicar()]
+! !REVISIONS:
+!  01/2023, Hua Yuan: added GLACIER_WATER_snicar() to account for SNICAR
+!           model effects on snow water [see snowwater_snicar()], snow
+!           layers combine [see snowlayerscombine_snicar()], snow layers
+!           divide [see snowlayersdivide_snicar()]
 !
-! 01/2023, Hua Yuan: added snow layer absorption in GLACIER_TEMP()
+!  01/2023, Hua Yuan: added snow layer absorption in GLACIER_TEMP()
 !-----------------------------------------------------------------------
    USE MOD_Precision
    IMPLICIT NONE
@@ -37,11 +37,10 @@ CONTAINS
 !-----------------------------------------------------------------------
 
 
-   SUBROUTINE GLACIER_TEMP (patchtype,   lb   ,nl_ice      ,deltim      ,&
+   SUBROUTINE GLACIER_TEMP (patchtype,lb      ,nl_ice      ,deltim      ,&
                       zlnd        ,zsno       ,capr        ,cnfac       ,&
-                      forc_hgt_u ,forc_hgt_t  ,forc_hgt_q  ,&
-                      forc_us     ,forc_vs    ,forc_t      ,forc_q      ,&
-                      forc_hpbl                                         ,&
+                      forc_hgt_u  ,forc_hgt_t ,forc_hgt_q  ,forc_us     ,&
+                      forc_vs     ,forc_t     ,forc_q      ,forc_hpbl   ,&
                       forc_rhoair ,forc_psrf  ,coszen      ,sabg        ,&
                       forc_frl    ,fsno       ,dz_icesno   ,z_icesno    ,&
                       zi_icesno   ,t_icesno   ,wice_icesno ,wliq_icesno ,&
@@ -55,11 +54,11 @@ CONTAINS
                       fm          ,fh         ,fq          ,pg_rain     ,&
                       pg_snow     ,t_precip   ,snofrz      ,sabg_snow_lyr)
 
-!=======================================================================
+!-----------------------------------------------------------------------
 ! this is the main SUBROUTINE to execute the calculation of thermal processes
 ! and surface fluxes of the land ice (glacier and ice sheet)
 !
-! Original author : Yongjiu Dai and Nan Wei, /05/2014/
+! Original author: Yongjiu Dai and Nan Wei, /05/2014/
 ! Modified by Nan Wei, 07/2017/  interaction btw prec and land ice
 ! FLOW DIAGRAM FOR GLACIER_TEMP.F90
 !
@@ -69,7 +68,7 @@ CONTAINS
 !
 !                   groundTem    | --------->  |meltf
 !
-!=======================================================================
+!-----------------------------------------------------------------------
 
    USE MOD_Precision
    USE MOD_Const_Physical, only: hvap,hsub,rgas,cpair,stefnc,tfrz,cpliq,cpice
@@ -344,18 +343,18 @@ CONTAINS
                                     z0m,zol,rib,ustar,qstar,tstar,fm,fh,fq)
 
 !=======================================================================
-! this is the main SUBROUTINE to execute the calculation of thermal processes
-! and surface fluxes of land ice (glacier and ice sheet)
+!  this is the main SUBROUTINE to execute the calculation of thermal processes
+!  and surface fluxes of land ice (glacier and ice sheet)
 !
-! Original author : Yongjiu Dai and Nan Wei, /05/2014/
+!  Original author: Yongjiu Dai and Nan Wei, /05/2014/
 !
-! REVISIONS:
-! 05/2023, Shaofeng Liu: add option to CALL moninobuk_leddy, the LargeEddy
-!          surface turbulence scheme (LZD2022); make a proper update of um.
+! !REVISIONS:
+!  05/2023, Shaofeng Liu: add option to CALL moninobuk_leddy, the LargeEddy
+!           surface turbulence scheme (LZD2022); make a proper update of um.
 !=======================================================================
 
    USE MOD_Precision
-   USE MOD_Const_Physical, only : cpair,vonkar,grav
+   USE MOD_Const_Physical, only: cpair,vonkar,grav
    USE MOD_FrictionVelocity
    USE MOD_Namelist, only: DEF_USE_CBL_HEIGHT
    USE MOD_TurbulenceLEddy
@@ -570,34 +569,34 @@ CONTAINS
                         imelt,snofrz,sm,xmf,fact,pg_rain,pg_snow,t_precip)
 
 !=======================================================================
-! SNOW and LAND ICE temperatures
-! o The volumetric heat capacity is calculated as a linear combination
-!   in terms of the volumetric fraction of the constituent phases.
-! o The thermal conductivity of snow/ice is computed from the
-!   formulation used in SNTHERM (Jordan 1991) and Yen (1981),
-!   respectively.
-! o Boundary conditions:
-!   F = Rnet - Hg - LEg (top) + HPR, F= 0 (base of the land ice column).
-! o Ice/snow temperature is predicted from heat conduction in 10 ice
-!   layers and up to 5 snow layers.  The thermal conductivities at the
-!   interfaces between two neighbor layers (j, j+1) are derived from an
-!   assumption that the flux across the interface is equal to that from
-!   the node j to the interface and the flux from the interface to the
-!   node j+1. The equation is solved using the Crank-Nicholson method
-!   and resulted in a tridiagonal system equation.
+!  SNOW and LAND ICE temperatures
+!  o The volumetric heat capacity is calculated as a linear combination
+!    in terms of the volumetric fraction of the constituent phases.
+!  o The thermal conductivity of snow/ice is computed from the
+!    formulation used in SNTHERM (Jordan 1991) and Yen (1981),
+!    respectively.
+!  o Boundary conditions:
+!    F = Rnet - Hg - LEg (top) + HPR, F= 0 (base of the land ice column).
+!  o Ice/snow temperature is predicted from heat conduction in 10 ice
+!    layers and up to 5 snow layers.  The thermal conductivities at the
+!    interfaces between two neighbor layers (j, j+1) are derived from an
+!    assumption that the flux across the interface is equal to that from
+!    the node j to the interface and the flux from the interface to the
+!    node j+1. The equation is solved using the Crank-Nicholson method
+!    and resulted in a tridiagonal system equation.
 !
-! Phase change (see meltf.F90)
+!  Phase change (see meltf.F90)
 !
-! Original author : Yongjiu Dai, /05/2014/
+!  Original author: Yongjiu Dai, /05/2014/
 !
-! REVISIONS:
-! 01/2023, Hua Yuan: account for snow layer absorption (SNICAR) in
-!          ground heat flux, temperature and melt calculation.
+! !REVISIONS:
+!  01/2023, Hua Yuan: account for snow layer absorption (SNICAR) in
+!           ground heat flux, temperature and melt calculation.
 !=======================================================================
 
    USE MOD_Precision
    USE MOD_Namelist, only: DEF_USE_SNICAR
-   USE MOD_Const_Physical, only : stefnc,cpice,cpliq,denh2o,denice,tfrz,tkwat,tkice,tkair
+   USE MOD_Const_Physical, only: stefnc,cpice,cpliq,denh2o,denice,tfrz,tkwat,tkice,tkair
    USE MOD_PhaseChange
    USE MOD_Utils
 
@@ -790,7 +789,7 @@ CONTAINS
          bt(j) = 1.+ (1.-cnfac)*fact(j)*(tk(j)/dzp + tk(j-1)/dzm)
          ct(j) =   - (1.-cnfac)*fact(j)* tk(j)/dzp
          rt(j) = t_icesno(j) + cnfac*fact(j)*( fn(j) - fn(j-1) )
-      END DO
+      ENDDO
 
       j     =  nl_ice
       dzm   = (z_icesno(j)-z_icesno(j-1))
@@ -870,17 +869,17 @@ CONTAINS
 
 
 
-   SUBROUTINE GLACIER_WATER ( nl_ice,maxsnl,deltim,&
-                      z_icesno    ,dz_icesno   ,zi_icesno ,t_icesno,&
-                      wliq_icesno ,wice_icesno ,pg_rain   ,pg_snow ,&
-                      sm          ,scv         ,snowdp    ,imelt   ,&
-                      fiold       ,snl         ,qseva     ,qsdew   ,&
-                      qsubl       ,qfros       ,gwat      ,         &
-                      ssi         ,wimp        ,forc_us   ,forc_vs )
+   SUBROUTINE GLACIER_WATER (      nl_ice      ,maxsnl    ,deltim    ,&
+                      z_icesno    ,dz_icesno   ,zi_icesno ,t_icesno  ,&
+                      wliq_icesno ,wice_icesno ,pg_rain   ,pg_snow   ,&
+                      sm          ,scv         ,snowdp    ,imelt     ,&
+                      fiold       ,snl         ,qseva     ,qsdew     ,&
+                      qsubl       ,qfros       ,gwat      ,ssi       ,&
+                      wimp        ,forc_us     ,forc_vs               )
 
 !=======================================================================
    USE MOD_Precision
-   USE MOD_Const_Physical, only : denice, denh2o, tfrz
+   USE MOD_Const_Physical, only: denice, denh2o, tfrz
    USE MOD_SnowLayersCombineDivide
    USE MOD_SoilSnowHydrology
 
@@ -917,8 +916,8 @@ CONTAINS
        t_icesno   (maxsnl+1:nl_ice) , &! snow/ice skin temperature (K)
        wice_icesno(maxsnl+1:nl_ice) , &! ice lens (kg/m2)
        wliq_icesno(maxsnl+1:nl_ice) , &! liquid water (kg/m2)
-       scv       , &! snow mass (kg/m2)
-       snowdp       ! snow depth (m)
+       scv                          , &! snow mass (kg/m2)
+       snowdp                          ! snow depth (m)
 
    real(r8), intent(out) :: &
        gwat   ! net water input from top (mm/s)
@@ -991,21 +990,21 @@ CONTAINS
    END SUBROUTINE GLACIER_WATER
 
 
-   SUBROUTINE GLACIER_WATER_snicar ( nl_ice,maxsnl,deltim,&
-                      z_icesno    ,dz_icesno   ,zi_icesno ,t_icesno,&
-                      wliq_icesno ,wice_icesno ,pg_rain   ,pg_snow ,&
-                      sm          ,scv         ,snowdp    ,imelt   ,&
-                      fiold       ,snl         ,qseva     ,qsdew   ,&
-                      qsubl       ,qfros       ,gwat      ,         &
-                      ssi         ,wimp        ,forc_us   ,forc_vs ,&
+   SUBROUTINE GLACIER_WATER_snicar ( nl_ice    ,maxsnl    ,deltim    ,&
+                      z_icesno    ,dz_icesno   ,zi_icesno ,t_icesno  ,&
+                      wliq_icesno ,wice_icesno ,pg_rain   ,pg_snow   ,&
+                      sm          ,scv         ,snowdp    ,imelt     ,&
+                      fiold       ,snl         ,qseva     ,qsdew     ,&
+                      qsubl       ,qfros       ,gwat      ,ssi       ,&
+                      wimp        ,forc_us     ,forc_vs              ,&
                       ! SNICAR
                       forc_aer    ,&
-                      mss_bcpho   ,mss_bcphi   ,mss_ocpho,mss_ocphi,&
-                      mss_dst1    ,mss_dst2    ,mss_dst3  ,mss_dst4 )
+                      mss_bcpho   ,mss_bcphi   ,mss_ocpho ,mss_ocphi ,&
+                      mss_dst1    ,mss_dst2    ,mss_dst3  ,mss_dst4   )
 
 !=======================================================================
    USE MOD_Precision
-   USE MOD_Const_Physical, only : denice, denh2o, tfrz
+   USE MOD_Const_Physical, only: denice, denh2o, tfrz
    USE MOD_SnowLayersCombineDivide
    USE MOD_SoilSnowHydrology
 
@@ -1038,11 +1037,11 @@ CONTAINS
        t_icesno   (maxsnl+1:nl_ice) , &! snow/ice skin temperature (K)
        wice_icesno(maxsnl+1:nl_ice) , &! ice lens (kg/m2)
        wliq_icesno(maxsnl+1:nl_ice) , &! liquid water (kg/m2)
-       scv       , &! snow mass (kg/m2)
-       snowdp       ! snow depth (m)
+       scv                          , &! snow mass (kg/m2)
+       snowdp                          ! snow depth (m)
 
    real(r8), intent(out) :: &
-       gwat   ! net water input from top (mm/s)
+       gwat                            ! net water input from top (mm/s)
 
    real(r8), intent(in) :: forc_us
    real(r8), intent(in) :: forc_vs
@@ -1066,16 +1065,16 @@ CONTAINS
    integer lb, j
 
 !=======================================================================
-! [1] update the liquid water within snow layer and the water onto the
-! ice surface
+!  [1] update the liquid water within snow layer and the water onto the
+!  ice surface
 !
-! Snow melting is treated in a realistic fashion, with meltwater
-! percolating downward through snow layers as long as the snow is
-! unsaturated.  Once the underlying snow is saturated, any additional
-! meltwater runs off.  When glacier ice melts, however, the meltwater is
-! assumed to remain in place until it refreezes.  In warm parts of the
-! ice sheet, the meltwater does not refreeze, but stays in place
-! indefinitely.
+!  Snow melting is treated in a realistic fashion, with meltwater
+!  percolating downward through snow layers as long as the snow is
+!  unsaturated.  Once the underlying snow is saturated, any additional
+!  meltwater runs off.  When glacier ice melts, however, the meltwater is
+!  assumed to remain in place until it refreezes.  In warm parts of the
+!  ice sheet, the meltwater does not refreeze, but stays in place
+!  indefinitely.
 !=======================================================================
 
       lb = snl + 1
@@ -1091,7 +1090,7 @@ CONTAINS
       ENDIF
 
 !=======================================================================
-! [2] surface runoff and infiltration
+!  [2] surface runoff and infiltration
 !=======================================================================
 
       IF(snl<0)THEN

@@ -19,7 +19,7 @@ CONTAINS
    USE MOD_UserDefFun
    USE MOD_LandPatch
    USE MOD_NetCDFVector
-   USE MOD_Vars_TimeInvariants, only : soiltext
+   USE MOD_Vars_TimeInvariants, only: soiltext
 #ifdef SinglePoint
    USE MOD_SingleSrfdata
 #endif

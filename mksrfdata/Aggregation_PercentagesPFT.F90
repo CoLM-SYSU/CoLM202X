@@ -2,15 +2,15 @@
 
 SUBROUTINE Aggregation_PercentagesPFT (gland, dir_rawdata, dir_model_landdata, lc_year)
 
-! ----------------------------------------------------------------------
-! Percentage of Plant Function Types
+!-----------------------------------------------------------------------
+!  Percentage of Plant Function Types
 !
-! Original from Hua Yuan's OpenMP version.
+!  Original from Hua Yuan's OpenMP version.
 !
-! REVISIONS:
-! Hua Yuan,      ?/2020 : for land cover land use classifications
-! Shupeng Zhang, 01/2022: porting codes to MPI parallel version
-! ----------------------------------------------------------------------
+! !REVISIONS:
+!  Hua Yuan,      ?/2020 : for land cover land use classifications
+!  Shupeng Zhang, 01/2022: porting codes to MPI parallel version
+!-----------------------------------------------------------------------
 
    USE MOD_Precision
    USE MOD_Vars_Global

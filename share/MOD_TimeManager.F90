@@ -1,19 +1,18 @@
 #include <define.h>
 
-! --------------------------------------------------------
 MODULE MOD_TimeManager
 
+! --------------------------------------------------------
 !
 ! !DESCRIPTION:
-! Time manager module: to provide some basic operations for time stamp
+!  Time manager module: to provide some basic operations for time stamp
 !
-! Created by Hua Yuan, 04/2014
+!  Created by Hua Yuan, 04/2014
 !
-! REVISIONS:
-! 06/28/2017, Hua Yuan: added issame() and monthday2julian()
-! TODO...
+! !REVISIONS:
+!  06/28/2017, Hua Yuan: added issame() and monthday2julian()
+!  TODO...
 ! --------------------------------------------------------
-
 
    USE MOD_Precision
    IMPLICIT NONE
@@ -188,7 +187,7 @@ CONTAINS
 
       idate1 = (/tstamp1%year, tstamp1%day, tstamp1%sec/)
       idate2 = (/tstamp2%year, tstamp2%day, tstamp2%sec/)
-      
+
       CALL adj2end(idate1)
       CALL adj2end(idate2)
 
@@ -619,7 +618,7 @@ CONTAINS
             ENDIF
          ENDIF
 
-      ELSE IF (ldate(3) > 86400) THEN
+      ELSEIF (ldate(3) > 86400) THEN
 
          ldate(3) = ldate(3) - 86400
          ldate(2) = idate(2) + 1

@@ -2,15 +2,15 @@
 
 SUBROUTINE Aggregation_SoilBrightness ( &
       gland, dir_rawdata, dir_model_landdata, lc_year)
-! ----------------------------------------------------------------------
-! Creates land model surface dataset from original "raw" data files -
-!     data with 30 arc seconds resolution
+!-----------------------------------------------------------------------
+!  Creates land model surface dataset from original "raw" data files -
+!      data with 30 arc seconds resolution
 !
-! Created by Yongjiu Dai, 03/2014
+!  Created by Yongjiu Dai, 03/2014
 !
-! REVISIONS:
-! Shupeng Zhang, 01/2022: porting codes to MPI parallel version.
-! ----------------------------------------------------------------------
+! !REVISIONS:
+!  Shupeng Zhang, 01/2022: porting codes to MPI parallel version.
+!-----------------------------------------------------------------------
 
    USE MOD_Precision
    USE MOD_Namelist

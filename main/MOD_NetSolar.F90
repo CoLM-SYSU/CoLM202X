@@ -20,25 +20,25 @@ CONTAINS
 
    SUBROUTINE netsolar (ipatch,idate,deltim,dlon,patchtype,&
                         forc_sols,forc_soll,forc_solsd,forc_solld,&
-                        alb,ssun,ssha,lai,sai,rho,tau,ssoi,ssno,ssno_lyr,&
-                        parsun,parsha,sabvsun,sabvsha,sabg,sabg_soil,sabg_snow,fsno,sabg_snow_lyr,sr,&
-                        solvd,solvi,solnd,solni,srvd,srvi,srnd,srni,&
+                        alb,ssun,ssha,lai,sai,rho,tau,ssoi,ssno,ssno_lyr,fsno,&
+                        parsun,parsha,sabvsun,sabvsha,sabg,sabg_soil,sabg_snow,sabg_snow_lyr,&
+                        sr,solvd,solvi,solnd,solni,srvd,srvi,srnd,srni,&
                         solvdln,solviln,solndln,solniln,srvdln,srviln,srndln,srniln)
 
 !-----------------------------------------------------------------------
 ! !DESCRIPTION:
-! Net solar absorbed by surface
+!  Net solar absorbed by surface
 !
-! Original author : Yongjiu Dai, 09/15/1999; 09/11/2001
+!  Original author: Yongjiu Dai, 09/15/1999; 09/11/2001
 !
-! REVISIONS:
-! Hua Yuan, 05/2014: added for solar radiation output [vars: so*, sr*]
+! !REVISIONS:
+!  05/2014, Hua Yuan: added for solar radiation output [vars: so*, sr*]
 !
-! Hua Yuan, 08/2014: added for local noon calculation
+!  08/2014, Hua Yuan: added for local noon calculation
 !
-! Hua Yuan, 08/2020: added for PFT and PC calculation
+!  08/2020, Hua Yuan: added for PFT and PC calculation
 !
-! Hua Yuan, 12/2022: calculated snow layer absorption by SNICAR model
+!  12/2022, Hua Yuan: calculated snow layer absorption by SNICAR model
 !
 !-----------------------------------------------------------------------
 ! !USES:
@@ -87,6 +87,9 @@ CONTAINS
          rho(2,2),   &! leaf reflectance (iw=iband, il=life and dead)
          tau(2,2)     ! leaf transmittance (iw=iband, il=life and dead)
 
+   real(r8), intent(in) :: &
+         fsno         ! snow fractional cover
+
    real(r8), intent(out) :: &
          parsun,     &! PAR absorbed by sunlit vegetation [W/m2]
          parsha,     &! PAR absorbed by shaded vegetation [W/m2]
@@ -96,7 +99,6 @@ CONTAINS
 ! 03/06/2020, yuan:
          sabg_soil,  &! solar absorbed by ground soil [W/m2]
          sabg_snow,  &! solar absorbed by ground snow [W/m2]
-         fsno,       &! snow fractional cover
          sr,         &! total reflected solar radiation (W/m2)
          solvd,      &! incident direct beam vis solar radiation (W/m2)
          solvi,      &! incident diffuse beam vis solar radiation (W/m2)
