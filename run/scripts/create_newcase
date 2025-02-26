@@ -234,11 +234,11 @@ FORCINGPATH=`awk '/FORCINGPATH/ {print $2}' $CONFIG`
 #FORCINGPATH=/share/home/dq010/CoLM/data/inputdata/atm/GSWP3/
 HEADER=$ROOT/run/scripts/batch.config
 
-echo ROOT is $ROOT
-echo RAWDATA is $RAWDATA
-echo RUNTIME is $RUNTIME
-echo MAKEOPTION is $MAKEOPTION
-echo FORCINGPATH is $FORCINGPATH
+#echo ROOT is $ROOT
+#echo RAWDATA is $RAWDATA
+#echo RUNTIME is $RUNTIME
+#echo MAKEOPTION is $MAKEOPTION
+#echo FORCINGPATH is $FORCINGPATH
 
 #machine = earthlab
 #ROOT=/data/sysu_daiyj_01/luxj/CoLM202X/
@@ -284,17 +284,17 @@ if [ -z "$Name" ];then
 fi
 
 if [ -z "${Forcing}" ];then
-   echo "Forcing is not specified, use GSWP3 as the default forcing"
+   #echo "Forcing is not specified, use GSWP3 as the default forcing"
    Forcing=CRUJRA
 fi
 
 if [ -z "${SpinupScheme}" ];then
-   echo no Spinup Scheme is selected, simulation will be run only once.
+   #echo no Spinup Scheme is selected, simulation will be run only once.
    SpinupScheme=none
 fi
 
 if [ -z "${startyr}" ];then
-   echo "-t option is missing, set startyr=1980 as default"
+   #echo "-t option is missing, set startyr=1980 as default"
    startyr=1980
 fi
 
@@ -923,18 +923,8 @@ if [ -z "${endyr}" ];then
    endyr=2000
 fi
 
-if [ "${Name:0:1}" == '/' ];then
-   CASENAME=`echo "${Name##*/}"`
-   CASEPATH=`echo "${Name%/*}"`
-   echo $CASEPATH
-   echo $CASENAME
-else
-   CASEPATHNAME=$PWD/$Name
-   CASENAME=`echo "${CASEPATHNAME##*/}"`
-   CASEPATH=`echo "${CASEPATHNAME%/*}"`
-   echo $CASEPATH
-   echo $CASENAME
-fi
+CASENAME=$(basename "${Name}")
+CASEPATH=$(dirname "${Name}")
 mkdir -p $CASEPATH/$CASENAME
 
 cd $CASEPATH/$CASENAME
@@ -942,7 +932,7 @@ mkdir -p history
 mkdir -p restart
 mkdir -p landdata
 ENDYEAR=`expr $endyr + 1`
-echo startyr is $startyr
+#echo startyr is $startyr
 FORCINGDIR=${FORCINGPATH}/${FORCINGPATHNAME}
 
 ${ROOT}/run/scripts/create_namelist -p $CASEPATH/${CASENAME} -n input_${CASENAME}.nml -t $startyr -e $ENDYEAR -d $RAWDATA \
@@ -963,10 +953,10 @@ mkdir -p $CASEPATH/$CASENAME/bld/run
 sed "s/DEF_dir_forcing.*/DEF_dir_forcing = '${FORCINGDIR//\//\\/}'/g" ${ROOT}/run/forcing/${Forcing}.nml>$CASEPATH/$CASENAME/bld/run/${Forcing}.nml
 
 if [ ! -z "SpinupScheme" ];then
-   echo "${ROOT}/run/scripts/create_scripts -p $CASEPATH/${CASENAME} -t $startyr -e $ENDYEAR -f $HEADER -c $CONFIG -i ${SpinupScheme}"
+   #echo "${ROOT}/run/scripts/create_scripts -p $CASEPATH/${CASENAME} -t $startyr -e $ENDYEAR -f $HEADER -c $CONFIG -i ${SpinupScheme}"
    ${ROOT}/run/scripts/create_scripts -p $CASEPATH/${CASENAME} -t $startyr -e $ENDYEAR -f $HEADER -c $CONFIG -i ${SpinupScheme}
 else 
-   echo "${ROOT}/run/scripts/create_scripts -p $CASEPATH/${CASENAME} -t $startyr -e $ENDYEAR -f $HEADER -c $CONFIG"
+   #echo "${ROOT}/run/scripts/create_scripts -p $CASEPATH/${CASENAME} -t $startyr -e $ENDYEAR -f $HEADER -c $CONFIG"
    ${ROOT}/run/scripts/create_scripts -p $CASEPATH/${CASENAME} -t $startyr -e $ENDYEAR -f $HEADER -c $CONFIG
 fi
 

@@ -34,9 +34,11 @@ SummaryTest()
    fi
 
 TestCaseLists=$2
+TestType=$4
 nfile=`cat $TestCaseLists|wc -l`
-for CaseName in `awk '{print $1}' $TestCaseLists`
+for ListCase in `awk '{print $1}' $TestCaseLists`
 do
+   CaseName=${TestType}_${ListCase}
    echo $CaseName
    for Var in $Varlist
    do
@@ -79,12 +81,13 @@ done
 }
 
 
-while getopts ":hn:f:i:" options ;
+while getopts ":hn:f:i:t:" options ;
 do
     case $options in
       n) TestName="$OPTARG" ;;
       f) TestCaseList="$OPTARG"  ;;
       i) Varlist="$OPTARG" ;;
+      t) TestType="$OPTARG" ;;
       h) Help; exit;;
       *) echo "invalid option: $@";exit ;;
     esac
@@ -102,6 +105,18 @@ else
    fi
 fi
 
+if [ -z "${TestType}" ]; then
+   echo
+   echo Error: TestType '(-t)' is missing
+   exit
+else
+   case $TestType in
+      SMS);;
+      RES);;
+      *)echo Error: TestType $TestType is invalid
+   esac
+fi
+
 if [ -z "$Varlist" ];then
    Varlist="All"
 else
@@ -111,8 +126,10 @@ else
       Submit_Mksrfdata);;
       Submit_Mkinidata);;
       Submit_Case);;
+      Submit_Restart);;
+      RestartMatch);;
       *) echo "invalid Var option: $Varlist"; exit;;
    esac
 fi
 
-SummaryTest $TestName $TestCaseList $Varlist
+SummaryTest $TestName $TestCaseList $Varlist $TestType
