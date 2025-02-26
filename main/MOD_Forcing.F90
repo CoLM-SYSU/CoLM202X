@@ -1351,7 +1351,7 @@ CONTAINS
                day = day - 1
                IF (day == 0) THEN
                   year = year - 1
-                  IF ( isleapyear(year) .and. leapyear) THEN
+                  IF ( isleapyear(year) ) THEN
                      day = 366
                   ELSE
                      day = 365
