@@ -18,7 +18,7 @@ CONTAINS
 
    SUBROUTINE qsadv(T,p,es,esdT,qs,qsdT)
 
-!=======================================================================
+!-----------------------------------------------------------------------
 !  Original author: Yongjiu Dai, September 15, 1999
 !
 !      Description: computes saturation mixing ratio and change in saturation

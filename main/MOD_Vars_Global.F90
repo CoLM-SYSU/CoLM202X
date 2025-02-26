@@ -10,6 +10,7 @@ MODULE MOD_Vars_Global
 !  Hua Yuan, 08/2019: initial version partly adapted from CoLM2014
 !  TODO ...
 !
+!-----------------------------------------------------------------------
 ! !USES:
    USE MOD_Precision
    USE MOD_Namelist

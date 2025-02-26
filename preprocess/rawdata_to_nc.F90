@@ -1,8 +1,8 @@
-program rawdata_to_nc
+PROGRAM rawdata_to_nc
 
-   use MOD_Precision
-   use MOD_NetCDFSerial
-   implicit none
+   USE MOD_Precision
+   USE MOD_NetCDFSerial
+   IMPLICIT NONE
 
    integer, parameter :: nlat = 21600
    integer, parameter :: nlon = 43200
@@ -28,12 +28,12 @@ program rawdata_to_nc
 
    integer, parameter :: compress = 1
 
-   INTEGER  :: ilat, ilon
-   REAL(r8) :: del_lat, del_lon
-   REAL(r8) :: lat_s(nlat), lat_n(nlat), lon_w(nlon), lon_e(nlon)
+   integer  :: ilat, ilon
+   real(r8) :: del_lat, del_lon
+   real(r8) :: lat_s(nlat), lat_n(nlat), lon_w(nlon), lon_e(nlon)
 
-   call getarg (1, bindir)
-   call getarg (2, ncdir)
+   CALL getarg (1, bindir)
+   CALL getarg (2, ncdir)
 
    del_lat = 180.0_r8 / nlat
    DO ilat = 1, nlat
@@ -54,9 +54,9 @@ program rawdata_to_nc
    iunit = 100
    inquire (iolength=length) a_chr1 (:,1)
    open (iunit, file=trim(lndname), access='direct', recl=length, form='unformatted', status='old')
-   do irow = 1, nlat
+   DO irow = 1, nlat
       read (iunit, rec=irow) a_chr1 (:,irow)
-   enddo
+   ENDDO
    close (iunit)
 
    allocate (a_int8 (nlon, nlat))
@@ -64,10 +64,10 @@ program rawdata_to_nc
 
    lndname = trim(ncdir) // '/Forest_Height.nc'
    write(*,*) trim(lndname)
-   call ncio_create_file (lndname)
+   CALL ncio_create_file (lndname)
    CALL ncio_define_dimension (lndname, 'latitude',  nlat)
    CALL ncio_define_dimension (lndname, 'longitude', nlon)
-   call ncio_write_serial (lndname, 'forest_height', a_int8, &
+   CALL ncio_write_serial (lndname, 'forest_height', a_int8, &
       'longitude', 'latitude', compress)
 
    write(*,*) 'Forest height done'
@@ -82,16 +82,16 @@ program rawdata_to_nc
    iunit = 100
    inquire (iolength=length) a_int16 (:,1)
    open (iunit, file=trim(lndname), access='direct', recl=length, form='unformatted', status='old')
-   do irow = 1, nlat
+   DO irow = 1, nlat
       read (iunit, rec=irow) a_int16 (:,irow)
-   enddo
+   ENDDO
    close (iunit)
 
    lndname = trim(ncdir) // '/glacier.nc'
-   call ncio_create_file (lndname)
+   CALL ncio_create_file (lndname)
    CALL ncio_define_dimension (lndname, 'latitude',  nlat)
    CALL ncio_define_dimension (lndname, 'longitude', nlon)
-   call ncio_write_serial (lndname, 'glacier', a_int16, &
+   CALL ncio_write_serial (lndname, 'glacier', a_int16, &
       'longitude', 'latitude', compress)
 
    write(*,*) 'Glacier done'
@@ -103,9 +103,9 @@ program rawdata_to_nc
    allocate (a_chr1 (nlon,nlat))
    allocate (a_int8 (nlon, nlat))
 
-   call execute_command_line ('mkdir -p ' // trim(ncdir) // '/lai/global_30s_10_year_avg')
+   CALL execute_command_line ('mkdir -p ' // trim(ncdir) // '/lai/global_30s_10_year_avg')
 
-   do n8 = 1, 46
+   DO n8 = 1, 46
       Julian_day = 1 + (N8-1)*8
       write(c,'(i3.3)') Julian_day
 
@@ -114,22 +114,22 @@ program rawdata_to_nc
       iunit = 100
       inquire (iolength=length) a_chr1 (:,1)
       open (iunit, file=trim(lndname), access='direct', recl=length, form='unformatted', status='old')
-      do irow = 1, nlat
+      DO irow = 1, nlat
          read (iunit, rec=irow) a_chr1 (:,irow)
-      enddo
+      ENDDO
       close (iunit)
 
       a_int8 = ichar(a_chr1)
 
       lndname = trim(ncdir) // '/lai/global_30s_10_year_avg/LAI_BNU_' // trim(c) // '.nc'
-      call ncio_create_file (lndname)
+      CALL ncio_create_file (lndname)
       CALL ncio_define_dimension (lndname, 'latitude',  nlat)
       CALL ncio_define_dimension (lndname, 'longitude', nlon)
-      call ncio_write_serial (lndname, 'lai', a_int8, &
+      CALL ncio_write_serial (lndname, 'lai', a_int8, &
          'longitude', 'latitude', compress)
 
       write(*,*) 'lai ' // trim(c) // ' done'
-   enddo
+   ENDDO
 
    deallocate (a_chr1)
    deallocate (a_int8)
@@ -141,16 +141,16 @@ program rawdata_to_nc
    iunit = 100
       inquire (iolength=length) a_int16 (:,1)
    open (iunit, file=trim(lndname), access='direct', recl=length, form='unformatted', status='old')
-   do irow = 1, nlat
+   DO irow = 1, nlat
       read (iunit, rec=irow) a_int16 (:,irow)
-   enddo
+   ENDDO
    close (iunit)
 
    lndname = trim(ncdir) // '/lake_depth.nc'
-   call ncio_create_file (lndname)
+   CALL ncio_create_file (lndname)
    CALL ncio_define_dimension (lndname, 'latitude',  nlat)
    CALL ncio_define_dimension (lndname, 'longitude', nlon)
-   call ncio_write_serial (lndname, 'lake_depth', a_int16, &
+   CALL ncio_write_serial (lndname, 'lake_depth', a_int16, &
       'longitude', 'latitude', compress)
 
    write(*,*) 'Lake depth done'
@@ -164,19 +164,19 @@ program rawdata_to_nc
    iunit = 100
       inquire (iolength=length) a_chr1 (:,1)
    open (iunit, file=trim(lndname), access='direct', recl=length, form='unformatted', status='old')
-   do irow = 1, nlat
+   DO irow = 1, nlat
       read (iunit, rec=irow) a_chr1 (:,irow)
-   enddo
+   ENDDO
    close (iunit)
 
    allocate (a_int8 (nlon, nlat))
    a_int8 = ichar(a_chr1)
 
    lndname = trim(ncdir) // '/lake_wetland.nc'
-   call ncio_create_file (lndname)
+   CALL ncio_create_file (lndname)
    CALL ncio_define_dimension (lndname, 'latitude',  nlat)
    CALL ncio_define_dimension (lndname, 'longitude', nlon)
-   call ncio_write_serial (lndname, 'lake_wetland', a_int8, &
+   CALL ncio_write_serial (lndname, 'lake_wetland', a_int8, &
       'longitude', 'latitude', compress)
 
    write(*,*) 'Lake wetland done'
@@ -191,19 +191,19 @@ program rawdata_to_nc
    iunit = 100
       inquire (iolength=length) a_chr1 (:,1)
    open (iunit, file=trim(lndname), access='direct', recl=length, form='unformatted', status='old')
-   do irow = 1, nlat
+   DO irow = 1, nlat
       read (iunit, rec=irow) a_chr1 (:,irow)
-   enddo
+   ENDDO
    close (iunit)
 
    allocate (a_int8 (nlon, nlat))
    a_int8 = ichar(a_chr1)
 
    lndname = trim(ncdir) // '/landtype_usgs_update.nc'
-   call ncio_create_file (lndname)
+   CALL ncio_create_file (lndname)
    CALL ncio_define_dimension (lndname, 'latitude',  nlat)
    CALL ncio_define_dimension (lndname, 'longitude', nlon)
-   call ncio_write_serial (lndname, 'landtype', a_int8, &
+   CALL ncio_write_serial (lndname, 'landtype', a_int8, &
       'longitude', 'latitude', compress)
 
    write(*,*) 'Landtype done'
@@ -218,19 +218,19 @@ program rawdata_to_nc
    iunit = 100
       inquire (iolength=length) a_chr1 (:,1)
    open (iunit, file=trim(lndname), access='direct', recl=length, form='unformatted', status='old')
-   do irow = 1, nlat
+   DO irow = 1, nlat
       read (iunit, rec=irow) a_chr1 (:,irow)
-   enddo
+   ENDDO
    close (iunit)
 
    allocate (a_int8 (nlon, nlat))
    a_int8 = ichar(a_chr1)
 
    lndname = trim(ncdir) // '/soil_brightness.nc'
-   call ncio_create_file (lndname)
+   CALL ncio_create_file (lndname)
    CALL ncio_define_dimension (lndname, 'latitude',  nlat)
    CALL ncio_define_dimension (lndname, 'longitude', nlon)
-   call ncio_write_serial (lndname, 'soil_brightness', a_int8, &
+   CALL ncio_write_serial (lndname, 'soil_brightness', a_int8, &
       'longitude', 'latitude', compress)
 
    write(*,*) 'Soil brightness done'
@@ -241,44 +241,44 @@ program rawdata_to_nc
    !-------------------------------
    allocate (a_real8 (nlon,nlat))
 
-   call execute_command_line ('mkdir -p ' // trim(ncdir) // '/soil')
+   CALL execute_command_line ('mkdir -p ' // trim(ncdir) // '/soil')
 
    lndname = trim(ncdir) // '/soil/theta_s.nc'
-   call ncio_create_file (lndname)
+   CALL ncio_create_file (lndname)
    CALL ncio_define_dimension (lndname, 'latitude',  nlat)
    CALL ncio_define_dimension (lndname, 'longitude', nlon)
 
    lndname = trim(ncdir) // '/soil/psi_s.nc'
-   call ncio_create_file (lndname)
+   CALL ncio_create_file (lndname)
    CALL ncio_define_dimension (lndname, 'latitude',  nlat)
    CALL ncio_define_dimension (lndname, 'longitude', nlon)
 
    lndname = trim(ncdir) // '/soil/lambda.nc'
-   call ncio_create_file (lndname)
+   CALL ncio_create_file (lndname)
    CALL ncio_define_dimension (lndname, 'latitude',  nlat)
    CALL ncio_define_dimension (lndname, 'longitude', nlon)
 
    lndname = trim(ncdir) // '/soil/k_s.nc'
-   call ncio_create_file (lndname)
+   CALL ncio_create_file (lndname)
    CALL ncio_define_dimension (lndname, 'latitude',  nlat)
    CALL ncio_define_dimension (lndname, 'longitude', nlon)
 
    lndname = trim(ncdir) // '/soil/csol.nc'
-   call ncio_create_file (lndname)
+   CALL ncio_create_file (lndname)
    CALL ncio_define_dimension (lndname, 'latitude',  nlat)
    CALL ncio_define_dimension (lndname, 'longitude', nlon)
 
    lndname = trim(ncdir) // '/soil/tksatu.nc'
-   call ncio_create_file (lndname)
+   CALL ncio_create_file (lndname)
    CALL ncio_define_dimension (lndname, 'latitude',  nlat)
    CALL ncio_define_dimension (lndname, 'longitude', nlon)
 
    lndname = trim(ncdir) // '/soil/tkdry.nc'
-   call ncio_create_file (lndname)
+   CALL ncio_create_file (lndname)
    CALL ncio_define_dimension (lndname, 'latitude',  nlat)
    CALL ncio_define_dimension (lndname, 'longitude', nlon)
 
-   do n8 = 1, 8
+   DO n8 = 1, 8
       write(c,'(i1)') n8
 
       ! (1) Read in the saturated water content [cm3/cm3]
@@ -287,13 +287,13 @@ program rawdata_to_nc
       iunit = 100
       inquire (iolength=length) a_real8 (:,1)
       open (iunit, file=trim(lndname), access='direct', recl=length, form='unformatted', status='old')
-      do irow = 1, nlat
+      DO irow = 1, nlat
          read (iunit, rec=irow) a_real8 (:,irow)
-      enddo
+      ENDDO
       close (iunit)
 
       lndname = trim(ncdir) // '/soil/theta_s.nc'
-      call ncio_write_serial (lndname, 'theta_s_l'//trim(c), a_real8, &
+      CALL ncio_write_serial (lndname, 'theta_s_l'//trim(c), a_real8, &
          'longitude', 'latitude', compress)
 
       write(*,*) 'Theta_s_l' // trim(c) // ' done'
@@ -304,13 +304,13 @@ program rawdata_to_nc
       iunit = 100
       inquire (iolength=length) a_real8 (:,1)
       open (iunit, file=trim(lndname), access='direct', recl=length, form='unformatted', status='old')
-      do irow = 1, nlat
+      DO irow = 1, nlat
          read (iunit, rec=irow) a_real8 (:,irow)
-      enddo
+      ENDDO
       close (iunit)
 
       lndname = trim(ncdir) // '/soil/psi_s.nc'
-      call ncio_write_serial (lndname, 'psi_s_l'//trim(c), a_real8, &
+      CALL ncio_write_serial (lndname, 'psi_s_l'//trim(c), a_real8, &
          'longitude', 'latitude', compress)
 
       write(*,*) 'psi_s_l' // trim(c) // ' done'
@@ -321,13 +321,13 @@ program rawdata_to_nc
       iunit = 100
       inquire (iolength=length) a_real8 (:,1)
       open (iunit, file=trim(lndname), access='direct', recl=length, form='unformatted', status='old')
-      do irow = 1, nlat
+      DO irow = 1, nlat
          read (iunit, rec=irow) a_real8 (:,irow)
-      enddo
+      ENDDO
       close (iunit)
 
       lndname = trim(ncdir) // '/soil/lambda.nc'
-      call ncio_write_serial (lndname, 'lambda_l'//trim(c), a_real8, &
+      CALL ncio_write_serial (lndname, 'lambda_l'//trim(c), a_real8, &
          'longitude', 'latitude', compress)
 
       write(*,*) 'lambda_l' // trim(c) // ' done'
@@ -338,13 +338,13 @@ program rawdata_to_nc
       iunit = 100
       inquire (iolength=length) a_real8 (:,1)
       open (iunit, file=trim(lndname), access='direct', recl=length, form='unformatted', status='old')
-      do irow = 1, nlat
+      DO irow = 1, nlat
          read (iunit, rec=irow) a_real8 (:,irow)
-      enddo
+      ENDDO
       close (iunit)
 
       lndname = trim(ncdir) // '/soil/k_s.nc'
-      call ncio_write_serial (lndname, 'k_s_l'//trim(c), a_real8, &
+      CALL ncio_write_serial (lndname, 'k_s_l'//trim(c), a_real8, &
          'longitude', 'latitude', compress)
 
       write(*,*) 'k_s_l' // trim(c) // ' done'
@@ -355,13 +355,13 @@ program rawdata_to_nc
       iunit = 100
       inquire (iolength=length) a_real8 (:,1)
       open (iunit, file=trim(lndname), access='direct', recl=length, form='unformatted', status='old')
-      do irow = 1, nlat
+      DO irow = 1, nlat
          read (iunit, rec=irow) a_real8 (:,irow)
-      enddo
+      ENDDO
       close (iunit)
 
       lndname = trim(ncdir) // '/soil/csol.nc'
-      call ncio_write_serial (lndname, 'csol_l'//trim(c), a_real8, &
+      CALL ncio_write_serial (lndname, 'csol_l'//trim(c), a_real8, &
          'longitude', 'latitude', compress)
 
       write(*,*) 'csol_l' // trim(c) // ' done'
@@ -372,13 +372,13 @@ program rawdata_to_nc
       iunit = 100
       inquire (iolength=length) a_real8 (:,1)
       open (iunit, file=trim(lndname), access='direct', recl=length, form='unformatted', status='old')
-      do irow = 1, nlat
+      DO irow = 1, nlat
          read (iunit, rec=irow) a_real8 (:,irow)
-      enddo
+      ENDDO
       close (iunit)
 
       lndname = trim(ncdir) // '/soil/tksatu.nc'
-      call ncio_write_serial (lndname, 'tksatu_l'//trim(c), a_real8, &
+      CALL ncio_write_serial (lndname, 'tksatu_l'//trim(c), a_real8, &
          'longitude', 'latitude', compress)
 
       write(*,*) 'tksatu_l' // trim(c) // ' done'
@@ -389,19 +389,19 @@ program rawdata_to_nc
       iunit = 100
       inquire (iolength=length) a_real8 (:,1)
       open (iunit, file=trim(lndname), access='direct', recl=length, form='unformatted', status='old')
-      do irow = 1, nlat
+      DO irow = 1, nlat
          read (iunit, rec=irow) a_real8 (:,irow)
-      enddo
+      ENDDO
       close (iunit)
 
       lndname = trim(ncdir) // '/soil/tkdry.nc'
-      call ncio_write_serial (lndname, 'tkdry_l'//trim(c), a_real8, &
+      CALL ncio_write_serial (lndname, 'tkdry_l'//trim(c), a_real8, &
          'longitude', 'latitude', compress)
 
       write(*,*) 'tkdry_l' // trim(c) // ' done'
 
-   enddo
+   ENDDO
 
    deallocate (a_real8)
 
-end program rawdata_to_nc
+END PROGRAM rawdata_to_nc

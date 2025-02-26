@@ -23,16 +23,16 @@ CONTAINS
    SUBROUTINE moninobuk(hu,ht,hq,displa,z0m,z0h,z0q,obu,um,&
                         ustar,fh2m,fq2m,fm10m,fm,fh,fq)
 
-! ======================================================================
-! Original author: Yongjiu Dai, September 15, 1999
+!-----------------------------------------------------------------------
+!  Original author: Yongjiu Dai, September 15, 1999
 !
-! calculation of friction velocity, relation for potential temperature
-! and humidity profiles of surface boundary layer.
-! the scheme is based on the work of Zeng et al. (1998):
-! Intercomparison of bulk aerodynamic algorithms for the computation of
-! sea surface fluxes using TOGA CORE and TAO data.  J. Climate, Vol. 11:
-! 2628-2644
-! ======================================================================
+!  calculation of friction velocity, relation for potential temperature
+!  and humidity profiles of surface boundary layer.
+!  the scheme is based on the work of Zeng et al. (1998):
+!  Intercomparison of bulk aerodynamic algorithms for the computation of
+!  sea surface fluxes using TOGA CORE and TAO data.  J. Climate, Vol.
+!  11: 2628-2644
+!-----------------------------------------------------------------------
 
    USE MOD_Precision
    USE MOD_Const_Physical, only: vonkar
@@ -169,7 +169,7 @@ CONTAINS
    SUBROUTINE moninobukm(hu,ht,hq,displa,z0m,z0h,z0q,obu,um,displat,z0mt,&
                          ustar,fh2m,fq2m,htop,fmtop,fm,fh,fq,fht,fqt,phih)
 
-! ======================================================================
+!-----------------------------------------------------------------------
 !
 ! !DESCRIPTION:
 !
@@ -185,8 +185,8 @@ CONTAINS
 !  09/2017, Hua Yuan: adapted from moninobuk FUNCTION to calculate canopy
 !           top fm, fq and phih for roughness sublayer u/k profile
 !           calculation.
-! ======================================================================
-
+!
+!-----------------------------------------------------------------------
    USE MOD_Precision
    USE MOD_Const_Physical, only: vonkar
    IMPLICIT NONE

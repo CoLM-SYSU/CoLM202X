@@ -385,18 +385,19 @@ CONTAINS
    SUBROUTINE spacAF_twoleaf(x,nvegwcs,dx,nl_soil,qflx_sun,qflx_sha,laisun,laisha,sai,htop,&
                    qeroot,dqeroot,kmax_sun,kmax_sha,kmax_xyl,kmax_root,&
                    psi50_sun,psi50_sha,psi50_xyl,psi50_root,ck)
-   !
-   ! DESCRIPTION
-   !  Returns invA, the inverse matrix relating delta(vegwp) to f
-   !   d(vegwp)=invA*f
-   !   evaluated at vegwp(p)
-   !
-   ! The methodology is currently hardcoded for linear algebra assuming the
-   ! number of vegetation segments is four. Thus the matrix A and it's inverse
-   ! invA are both 4x4 matrices. A more general method could be done using for
-   ! example a LINPACK linear algebra solver.
-   !
-   ! !ARGUMENTS:
+!-----------------------------------------------------------------------
+! !DESCRIPTION
+!  Returns invA, the inverse matrix relating delta(vegwp) to f
+!   d(vegwp)=invA*f
+!   evaluated at vegwp(p)
+!
+!  The methodology is currently hardcoded for linear algebra assuming the
+!  number of vegetation segments is four. Thus the matrix A and it's inverse
+!  invA are both 4x4 matrices. A more general method could be done using for
+!  example a LINPACK linear algebra solver.
+!
+!-----------------------------------------------------------------------
+! !ARGUMENTS:
    integer , intent(in)  :: nvegwcs
    real(r8), intent(in)  :: x(nvegwcs)  ! working copy of veg water potential for patch p [mm H2O]
    real(r8), intent(out) :: dx(nvegwcs) ! matrix relating d(vegwp) and f: d(vegwp)=invA*f
@@ -512,16 +513,17 @@ CONTAINS
 
    END SUBROUTINE spacAF_twoleaf
 
-   !--------------------------------------------------------------------------------
    SUBROUTINE getvegwp_twoleaf(x, nvegwcs, nl_soil, z_soi, gb_mol, gs_mol_sun, gs_mol_sha, &
              qsatl, qaf,qg,qm,rhoair, psrf, fwet, laisun, laisha, htop, sai, tl, rss, &
              raw, rd, smp, k_soil_root, k_ax_root, kmax_xyl, kmax_root, rstfacsun, rstfacsha, &
              psi50_sun, psi50_sha, psi50_xyl, psi50_root, ck, rootflux, etrsun, etrsha)
-   ! !DESCRIPTION:
-   !  Calculates transpiration and returns corresponding vegwp in x
-   !
-   ! !USES:
-   ! calls getqflx
+!-----------------------------------------------------------------------
+! !DESCRIPTION:
+!  Calculates transpiration and returns corresponding vegwp in x
+!
+! !USES:
+!  calls getqflx
+!-----------------------------------------------------------------------
    USE MOD_Const_Physical, only: tfrz
    IMPLICIT NONE
    !
@@ -618,15 +620,15 @@ CONTAINS
 
    END SUBROUTINE getvegwp_twoleaf
 
-   !--------------------------------------------------------------------------------
    SUBROUTINE getqflx_gs2qflx_twoleaf(gb_mol,gs_mol_sun,gs_mol_sha,qflx_sun,qflx_sha,qsatl,qaf,&
                              rhoair,psrf,laisun,laisha,sai,fwet,tl,rss,raw,rd,qg,qm,rstfacsun,rstfacsha)
-   ! !DESCRIPTION:
-   !  calculate sunlit and shaded transpiration using gb_MOL and gs_MOL
-   ! !USES:
-   !
+!-----------------------------------------------------------------------
+! !DESCRIPTION:
+!  calculate sunlit and shaded transpiration using gb_MOL and gs_MOL
+!
+!-----------------------------------------------------------------------
    IMPLICIT NONE
-   !
+
    ! !ARGUMENTS:
    real(r8), intent(in)    :: gb_mol     ! leaf boundary layer conductance (mol H2O/m**2/s), leaf scale
    real(r8), intent(inout) :: gs_mol_sun ! Ball-Berry leaf conductance (mol H2O/m**2/s), leaf scale
@@ -713,12 +715,12 @@ CONTAINS
 
    SUBROUTINE getqflx_qflx2gs_twoleaf(gb_mol,gs_mol_sun,gs_mol_sha,qflx_sun,qflx_sha,qsatl,qaf, &
                       rhoair,psrf,laisun,laisha,sai,fwet,tl,rss,raw,rd,qg,qm)
-   ! !DESCRIPTION:
-   !  calculate sunlit and shaded transpiration using gb_MOL and gs_MOL
-   ! !USES:
-   !
+!-----------------------------------------------------------------------
+! !DESCRIPTION:
+!  calculate sunlit and shaded transpiration using gb_MOL and gs_MOL
+!-----------------------------------------------------------------------
    IMPLICIT NONE
-   !
+
    ! !ARGUMENTS:
    real(r8), intent(in)     :: gb_mol     ! leaf boundary layer conductance (mol H2O/m**2/s), leaf scale
    real(r8), intent(inout)  :: gs_mol_sun ! Ball-Berry leaf conductance (mol H2O/m**2/s), leaf scale
@@ -811,9 +813,11 @@ CONTAINS
    SUBROUTINE getrootqflx_x2qe(nl_soil,smp,x_root_top,z_soisno,krad,kax,qeroot,dqeroot)
 
    USE MOD_Utils
-   ! DESCRIPTION
-   ! Return root water potential at top soil node. Return soil-root water flux.
-   !
+!-----------------------------------------------------------------------
+! !DESCRIPTION
+!  Return root water potential at top soil node. Return soil-root water flux.
+!
+!-----------------------------------------------------------------------
 
    integer , intent(in)    :: nl_soil
    real(r8), intent(in)    :: smp      (nl_soil)
@@ -904,9 +908,10 @@ CONTAINS
    SUBROUTINE getrootqflx_qe2x(nl_soil,smp,z_soisno,krad,kax,qeroot,xroot,x_root_top)
 
    USE MOD_Utils
-   ! DESCRIPTION
-   ! Return root water potential at top soil node. Return soil-root water flux.
-   !
+!-----------------------------------------------------------------------
+! !DESCRIPTION
+!  Return root water potential at top soil node. Return soil-root water flux.
+!-----------------------------------------------------------------------
 
    integer,  intent(in)  :: nl_soil
    real(r8), intent(in)  :: smp      (nl_soil)
@@ -967,12 +972,14 @@ CONTAINS
 
    END SUBROUTINE getrootqflx_qe2x
 
-   !--------------------------------------------------------------------------------
    FUNCTION plc(x,psi50,ck)
-   ! !DESCRIPTION
-   ! Return value of vulnerability curve at x
-   !
-   ! !ARGUMENTS
+!-----------------------------------------------------------------------
+! !DESCRIPTION
+!  Return value of vulnerability curve at x
+!
+!-----------------------------------------------------------------------
+
+! !ARGUMENTS
    real(r8) , intent(in)  :: x             ! water potential input
 !   integer  , intent(in)  :: level         ! veg segment lvl (1:nvegwcs)
 !   integer  , intent(in)  :: plc_method    !
@@ -1027,12 +1034,13 @@ CONTAINS
    END FUNCTION plc
    !--------------------------------------------------------------------------------
 
-   !--------------------------------------------------------------------------------
    FUNCTION d1plc(x,psi50,ck)
-   ! !DESCRIPTION
-   ! Return 1st derivative of vulnerability curve at x
-   !
-   ! !ARGUMENTS
+!-----------------------------------------------------------------------
+! !DESCRIPTION
+!  Return 1st derivative of vulnerability curve at x
+!-----------------------------------------------------------------------
+
+! !ARGUMENTS
    real(r8) , intent(in) :: x                ! water potential input
 !   integer  , intent(in) :: level            ! veg segment lvl (1:nvegwcs)
 !   integer  , intent(in) :: plc_method       ! 0 for vegetation, 1 for soil

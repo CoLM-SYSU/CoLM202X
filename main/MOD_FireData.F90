@@ -7,7 +7,9 @@ MODULE MOD_FireData
 !  This module read in fire data.
 !
 !  Original:
-!  Lu Xingjie and Zhang Shupeng, 2023, prepare the original version of the fire data module.
+!  2023, Lu Xingjie and Zhang Shupeng: prepare the original version of
+!        the fire data module.
+!-----------------------------------------------------------------------
 
    USE MOD_Grid
    USE MOD_SpatialMapping
@@ -22,13 +24,13 @@ MODULE MOD_FireData
 
 CONTAINS
 
-   ! ----------
    SUBROUTINE init_fire_data (YY)
 
-!----------------------
+!-----------------------------------------------------------------------
 ! !DESCRIPTION:
-!  open fire netcdf file from DEF_dir_runtime, read latitude and longitude info.
-!  Initialize fire data read in.
+!  open fire netcdf file from DEF_dir_runtime, read latitude and
+!  longitude info.  Initialize fire data read in.
+!-----------------------------------------------------------------------
 
    USE MOD_SPMD_Task
    USE MOD_Namelist
@@ -93,14 +95,14 @@ CONTAINS
    END SUBROUTINE init_fire_data
 
    SUBROUTINE update_hdm_data (YY)
-! ======================================================================================================
+!-----------------------------------------------------------------------
 !
 ! !DESCRIPTION:
-!  Read in the Fire data from CLM5 dataset (month when crop fire peak (abm), GDP, peatland fraction (peatf),
-!  and population density
+!  Read in the Fire data from CLM5 dataset (month when crop fire peak
+!  (abm), GDP, peatland fraction (peatf), and population density
 !
 !  Original: Xingjie Lu and Shupeng Zhang, 2022
-! ======================================================================================================
+!-----------------------------------------------------------------------
 
    USE MOD_SPMD_Task
    USE MOD_DataType

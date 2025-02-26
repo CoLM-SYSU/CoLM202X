@@ -23,16 +23,17 @@ CONTAINS
 
    SUBROUTINE snowfraction (lai,sai,z0m,zlnd,scv,snowdp,wt,sigf,fsno)
 
-!=======================================================================
-!
+!-----------------------------------------------------------------------
 ! !DESCRIPTION:
 !  Provide snow cover fraction
 !
 !  Original author: Yongjiu Dai, /09/1999/, /04/2014/
 !
 ! !REVISIONS:
-!  10/2019, Hua Yuan: removed fveg to be compatible with PFT classification
-!=======================================================================
+!  10/2019, Hua Yuan: removed fveg to be compatible with PFT
+!           classification
+!
+!-----------------------------------------------------------------------
 
    USE MOD_Precision
    IMPLICIT NONE
@@ -84,17 +85,19 @@ CONTAINS
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
    SUBROUTINE snowfraction_pftwrap (ipatch,zlnd,scv,snowdp,wt,sigf,fsno)
 
-!=======================================================================
-!
+!-----------------------------------------------------------------------
 ! !DESCRIPTION:
 !  A wrap SUBROUTINE to calculate snow cover fraction for PFT|PC run
 !
 ! !REVISIONS:
 !
-!  06/2019, Hua Yuan: initial code adapted from snowfraction() by Yongjiu Dai
+!  06/2019, Hua Yuan: initial code adapted from snowfraction() by
+!           Yongjiu Dai
 !
-!  08/2019, Hua Yuan: removed fveg to be compatible with PFT classification
-!=======================================================================
+!  08/2019, Hua Yuan: removed fveg to be compatible with PFT
+!           classification
+!
+!-----------------------------------------------------------------------
 
    USE MOD_Precision
    USE MOD_LandPFT

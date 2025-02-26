@@ -7,13 +7,13 @@ MODULE MOD_SoilThermalParameters
    IMPLICIT NONE
    SAVE
 
-!  PUBLIC MEMBER FUNCTIONS:
+! PUBLIC MEMBER FUNCTIONS:
    PUBLIC :: hCapacity
    PUBLIC :: hConductivity
    PUBLIC :: soil_hcap_cond
 
 
-!  PRIVATE MEMBER FUNCTIONS:
+! PRIVATE MEMBER FUNCTIONS:
 
 
 !-----------------------------------------------------------------------

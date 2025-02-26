@@ -13,6 +13,7 @@ MODULE MOD_Const_LC
 !  08/2019, Hua Yuan: added constants values for IGBP land cover types
 !  05/2023, Xingjie Lu: added Plant Hydraulics Parameters
 !
+!-----------------------------------------------------------------------
 ! !USES:
    USE MOD_Precision
    USE MOD_Vars_Global
@@ -24,7 +25,7 @@ MODULE MOD_Const_LC
 #ifdef LULC_USGS
 
 ! GLCC USGS Land Use/Land Cover System Legend
-!---------------------------
+!-----------------------------------------------------------------------
 ! 0  Ocean
 ! 1  Urban and Built-Up Land
 ! 2  Dryland Cropland and Pasture
@@ -328,7 +329,7 @@ MODULE MOD_Const_LC
 #else
 
 ! MODIS IGBP Land Use/Land Cover System Legend
-!---------------------------
+!-----------------------------------------------------------------------
 ! 0  Ocean
 ! 1  Evergreen Needleleaf Forests
 ! 2  Evergreen Broadleaf Forests

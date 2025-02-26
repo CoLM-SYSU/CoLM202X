@@ -2,19 +2,20 @@
 
 PROGRAM CoLMINI
 
-! ======================================================================
-! Initialization of Land Characteristic Parameters and Initial State Variables
+!=======================================================================
+!  Initialization of Land Characteristic Parameters and Initial State
+!  Variables
 !
-! References:
+! !REFERENCES:
 !     [1] Dai et al., 2003: The Common Land Model (CoLM).
 !         Bull. of Amer. Meter. Soc., 84: 1013-1023
 !     [2] Dai et al., 2004: A two-big-leaf model for canopy temperature,
 !         photosynthesis and stomatal conductance. Journal of Climate
 !     [3] Dai et al., 2014: The Terrestrial Modeling System (TMS).
 !
-!     Created by Yongjiu Dai Februay 2004
-!     Revised by Yongjiu Dai Februay 2014
-! ======================================================================
+!  Created by Yongjiu Dai Februay 2004
+!  Revised by Yongjiu Dai Februay 2014
+!=======================================================================
 
    USE MOD_Precision
    USE MOD_Namelist

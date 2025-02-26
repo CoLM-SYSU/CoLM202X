@@ -1970,9 +1970,9 @@ CONTAINS
                                 z_lake,t_lake,lake_icefrac,rhow,&
                                 dlat,ustar,z0mg,lakedepth,depthcrit,tk_lake, savedtke1)
 
-! -------------------------------------------------------------------------
-! Diffusivity and implied thermal "conductivity" = diffusivity * cwat
-! -------------------------------------------------------------------------
+!-----------------------------------------------------------------------
+!  Diffusivity and implied thermal "conductivity" = diffusivity * cwat
+!-----------------------------------------------------------------------
 
    USE MOD_Precision
    USE MOD_Const_Physical, only: tfrz,tkwat,tkice,tkair,&
