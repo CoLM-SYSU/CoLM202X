@@ -18,31 +18,15 @@ Help()
 CreateClone()
 {
 
-   if [ "${1:0:1}" == '/' ];then
-      SourceName=`echo "${1##*/}"`
-      SourcePath=`echo "${1%/*}"`
-      echo $SourceName
-      echo $SourcePath
-   else
-      TMPPATHNAME=$PWD/$1
-      SourceName=`echo "${TMPPATHNAME##*/}"`
-      SourcePath=`echo "${TMPPATHNAME%/*}"`
-      echo $SourcePath
-      echo $SourceName
-   fi
-   if [ "${2:0:1}" == '/' ];then
-      DestName=`echo "${2##*/}"`
-      DestPath=`echo "${2%/*}"`
-      echo $DestName
-      echo $DestPath
-   else
-      TMPPATHNAME=$PWD/$2
-      DestName=`echo "${TMPPATHNAME##*/}"`
-      DestPath=`echo "${TMPPATHNAME%/*}"`
-      echo $DestPath
-      echo $DestName
-   fi
+   SourceName=$(basename "$1")
+   SourcePath=$(dirname "$1")
+   DestName=$(basename "$2")
+   DestPath=$(dirname "$2")
 
+   echo SourcePath is $SourcePath
+   echo SourceName is $SourceName
+   echo DestPath is $DestPath
+   echo DestName is $DestName
    mkdir -p $DestPath/$DestName
    cd $DestPath/$DestName
    mkdir -p history
@@ -50,13 +34,17 @@ CreateClone()
    ln -sf $SourcePath/$SourceName/landdata ./
    echo copy scripts and namelist
    cp -p $SourcePath/$SourceName/mksrf.submit ./
-   sed -i "s/$SourceName/$DestName/g" ./mksrf.submit
+   sed -i "s|$SourceName|$DestName|g" ./mksrf.submit
+   sed -i "s|$SourcePath|$DestPath|g" ./mksrf.submit
    cp -p $SourcePath/$SourceName/init.submit ./
-   sed -i "s/$SourceName/$DestName/g" ./init.submit
-   cp -p $SourcePath/$SourceName/case.submit ./
-   sed -i "s/$SourceName/$DestName/g" ./case.submit
+   sed -i "s|$SourceName|$DestName|g" ./init.submit
+   sed -i "s|$SourcePath|$DestName|g" ./init.submit
+   cp -p $SourcePath/$SourceName/"case.submit" ./
+   sed -i "s|$SourceName|$DestName|g" "./case.submit"
+   sed -i "s|$SourcePath|$DestPath|g" "./case.submit"
    cp -p $SourcePath/$SourceName/input_$SourceName.nml ./input_$DestName.nml
-   sed -i "s/$SourceName/$DestName/g" ./input_$DestName.nml
+   sed -i "s|$SourceName|$DestName|g" ./input_$DestName.nml
+   sed -i "s|$SourcePath|$DestPath|g" ./input_$DestName.nml
    
    echo copy source files 
    cd $SourcePath/$SourceName/bld/

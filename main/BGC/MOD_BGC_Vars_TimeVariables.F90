@@ -154,6 +154,7 @@ MODULE MOD_BGC_Vars_TimeVariables
    real(r8), allocatable :: decomp_npools_vr         (:,:,:)  ! vertical resolved: soil decomposition (litter, cwd, soil) nitrogen (gN m-3)
    real(r8), allocatable :: decomp_npools            (:,:)    ! soil decomposition (litter, cwd, soil) nitrogen (gN m-2)
    real(r8), allocatable :: decomp_npools_vr_Cap     (:,:,:)  ! vertical resolved: soil decomposition (litter, cwd, soil organic matter) carbon Capacity (gC m-3)
+   real(r8), allocatable :: totsoiln_vr              (:,:)  ! vertical resolved: total soil nitrogen (%: gN/gSoil*100)
    real(r8), allocatable :: ntrunc_vr                (:,:)    ! currently not used
    real(r8), allocatable :: ntrunc_veg               (:)      ! currently not used
    real(r8), allocatable :: ntrunc_soil              (:)      ! currently not used
@@ -462,6 +463,7 @@ CONTAINS
             allocate (decomp_npools_vr             (nl_soil_full,ndecomp_pools,numpatch)) ; decomp_npools_vr  (:,:,:) = spval
             allocate (decomp_npools                (ndecomp_pools,numpatch))              ; decomp_npools       (:,:) = spval
             allocate (decomp_npools_vr_Cap         (nl_soil_full,ndecomp_pools,numpatch)) ; decomp_npools_vr_Cap(:,:,:) = spval
+            allocate (totsoiln_vr                  (nl_soil,numpatch))                    ; totsoiln_vr         (:,:) = spval
             allocate (ntrunc_vr                    (nl_soil,numpatch))                    ; ntrunc_vr           (:,:) = spval
             allocate (ntrunc_veg                   (numpatch))                            ; ntrunc_veg            (:) = spval
             allocate (ntrunc_soil                  (numpatch))                            ; ntrunc_soil           (:) = spval
@@ -756,6 +758,7 @@ CONTAINS
             deallocate (decomp_npools_vr             )
             deallocate (decomp_npools                )
             deallocate (decomp_npools_vr_Cap         )
+            deallocate (totsoiln_vr                  )
             deallocate (ntrunc_vr                    )
             deallocate (ntrunc_veg                   )
             deallocate (ntrunc_soil                  )
@@ -955,7 +958,8 @@ CONTAINS
       CALL ncio_write_vector (file_restart, 'altmax_lastyear_indx ', 'patch', landpatch, altmax_lastyear_indx )
 
       CALL ncio_write_vector (file_restart, 'decomp_npools_vr     ', 'soil_full', nl_soil_full, 'ndecomp_pools', ndecomp_pools, &
-                                                                     'patch', landpatch,     decomp_npools_vr)
+                                                                     'patch', landpatch,      decomp_npools_vr)
+      CALL ncio_write_vector (file_restart, 'totsoiln_vr          ', 'soil' ,   nl_soil, 'patch', landpatch, totsoiln_vr )
       IF(DEF_USE_DiagMatrix)THEN
          CALL ncio_write_vector (file_restart, 'decomp_npools_vr_Cap ', 'soil_full', nl_soil_full, 'ndecomp_pools', ndecomp_pools, &
                                                                      'patch', landpatch,     decomp_npools_vr_Cap)
@@ -1118,15 +1122,16 @@ CONTAINS
       CALL ncio_read_vector (file_restart, 'altmax_lastyear_indx ', landpatch, altmax_lastyear_indx )
 
       CALL ncio_read_vector (file_restart, 'decomp_npools_vr     ',   nl_soil_full, ndecomp_pools, landpatch, decomp_npools_vr)
+      CALL ncio_read_vector (file_restart, 'totsoiln_vr          ',   nl_soil, landpatch, totsoiln_vr, defval = 1._r8)
       IF(DEF_USE_DiagMatrix)THEN
-         CALL ncio_read_vector (file_restart, 'decomp_npools_vr_Cap ',   nl_soil_full, ndecomp_pools, landpatch, decomp_npools_vr_Cap, defval = 1._r8)
+         CALL ncio_read_vector (file_restart, 'decomp_npools_vr_Cap ',nl_soil_full, ndecomp_pools, landpatch, decomp_npools_vr_Cap, defval = 1._r8)
       ENDIF
-      CALL ncio_read_vector (file_restart, 'ntrunc_vr            ',   nl_soil, landpatch, ntrunc_vr            )
-      CALL ncio_read_vector (file_restart, 'ntrunc_veg           ', landpatch, ntrunc_veg           )
-      CALL ncio_read_vector (file_restart, 'ntrunc_soil          ', landpatch, ntrunc_soil          )
-      CALL ncio_read_vector (file_restart, 'sminn_vr             ',   nl_soil, landpatch, sminn_vr             )
-      CALL ncio_read_vector (file_restart, 'smin_no3_vr          ',   nl_soil, landpatch, smin_no3_vr          )
-      CALL ncio_read_vector (file_restart, 'smin_nh4_vr          ',   nl_soil, landpatch, smin_nh4_vr          )
+      CALL ncio_read_vector (file_restart, 'ntrunc_vr            ',   nl_soil, landpatch, ntrunc_vr  )
+      CALL ncio_read_vector (file_restart, 'ntrunc_veg           ', landpatch, ntrunc_veg            )
+      CALL ncio_read_vector (file_restart, 'ntrunc_soil          ', landpatch, ntrunc_soil           )
+      CALL ncio_read_vector (file_restart, 'sminn_vr             ',   nl_soil, landpatch, sminn_vr   )
+      CALL ncio_read_vector (file_restart, 'smin_no3_vr          ',   nl_soil, landpatch, smin_no3_vr)
+      CALL ncio_read_vector (file_restart, 'smin_nh4_vr          ',   nl_soil, landpatch, smin_nh4_vr)
 
       IF(DEF_USE_NITRIF)THEN
          CALL ncio_read_vector (file_restart, 'tCONC_O2_UNSAT       ',   nl_soil, landpatch, tconc_o2_unsat         )
@@ -1379,8 +1384,9 @@ CONTAINS
 
       CALL check_vector_data ('decomp_npools_vr         ', decomp_npools_vr         )
       CALL check_vector_data ('decomp_npools            ', decomp_npools            )
+      CALL check_vector_data ('totsoiln_vr              ', totsoiln_vr              )
       IF(DEF_USE_DiagMatrix)THEN
-         CALL check_vector_data ('decomp_npools_vr_Cap',decomp_npools_vr_Cap)
+         CALL check_vector_data ('decomp_npools_vr_Cap  ',decomp_npools_vr_Cap      )
       ENDIF
       CALL check_vector_data ('ntrunc_vr                ', ntrunc_vr                )
       CALL check_vector_data ('ntrunc_veg               ', ntrunc_veg               )
@@ -1391,8 +1397,8 @@ CONTAINS
       CALL check_vector_data ('smin_nh4_vr              ', smin_nh4_vr              )
 
       IF(DEF_USE_NITRIF)THEN
-         CALL check_vector_data ('tCONC_O2_UNSAT           ', tconc_o2_unsat )
-         CALL check_vector_data ('tO2_DECOMP_DEPTH_UNSAT   ', to2_decomp_depth_unsat   )
+         CALL check_vector_data ('tCONC_O2_UNSAT           ', tconc_o2_unsat        )
+         CALL check_vector_data ('tO2_DECOMP_DEPTH_UNSAT   ', to2_decomp_depth_unsat)
       ENDIF
 
       CALL check_vector_data ('sminn                    ', sminn                    )

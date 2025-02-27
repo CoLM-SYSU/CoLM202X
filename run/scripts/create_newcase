@@ -234,11 +234,11 @@ FORCINGPATH=`awk '/FORCINGPATH/ {print $2}' $CONFIG`
 #FORCINGPATH=/share/home/dq010/CoLM/data/inputdata/atm/GSWP3/
 HEADER=$ROOT/run/scripts/batch.config
 
-echo ROOT is $ROOT
-echo RAWDATA is $RAWDATA
-echo RUNTIME is $RUNTIME
-echo MAKEOPTION is $MAKEOPTION
-echo FORCINGPATH is $FORCINGPATH
+#echo ROOT is $ROOT
+#echo RAWDATA is $RAWDATA
+#echo RUNTIME is $RUNTIME
+#echo MAKEOPTION is $MAKEOPTION
+#echo FORCINGPATH is $FORCINGPATH
 
 #machine = earthlab
 #ROOT=/data/sysu_daiyj_01/luxj/CoLM202X/
@@ -284,17 +284,17 @@ if [ -z "$Name" ];then
 fi
 
 if [ -z "${Forcing}" ];then
-   echo "Forcing is not specified, use GSWP3 as the default forcing"
+   #echo "Forcing is not specified, use GSWP3 as the default forcing"
    Forcing=CRUJRA
 fi
 
 if [ -z "${SpinupScheme}" ];then
-   echo no Spinup Scheme is selected, simulation will be run only once.
+   #echo no Spinup Scheme is selected, simulation will be run only once.
    SpinupScheme=none
 fi
 
 if [ -z "${startyr}" ];then
-   echo "-t option is missing, set startyr=1980 as default"
+   #echo "-t option is missing, set startyr=1980 as default"
    startyr=1980
 fi
 
@@ -351,6 +351,9 @@ if [ ! -z "$ConfigName" ]; then
 	 IsDefCB="#undef"
 	 LandMask=False
 	 SpinupScheme=none
+	 nx_block=18
+	 ny_block=9
+	 nGroup=36
 	 ;;
       Global_Grid_50km_USGS_VG)
 	 IsDefBGC="#undef"
@@ -376,6 +379,9 @@ if [ ! -z "$ConfigName" ]; then
 	 IsDefCB="#undef"
 	 LandMask=False
 	 SpinupScheme=none
+  	 nx_block=18
+	 ny_block=9
+	 nGroup=54
 	 ;;
       Global_Grid_50km_IGBP_VG)
 	 IsDefBGC="#undef"
@@ -401,6 +407,9 @@ if [ ! -z "$ConfigName" ]; then
 	 IsDefCB="#undef"
 	 LandMask=False
 	 SpinupScheme=none
+  	 nx_block=18
+	 ny_block=9
+	 nGroup=54
 	 ;;
       Global_Grid_2x2_PFT_VG_BGC)
 	 IsDefBGC="#define"
@@ -427,6 +436,9 @@ if [ ! -z "$ConfigName" ]; then
 	 BGC=True
 	 LandMask=False
 	 SpinupScheme=none
+	 nx_block=18
+	 ny_block=9
+	 nGroup=15
 	 ;;
       Global_Grid_2x2_PFT_VG_BGC-spinup)
 	 IsDefBGC="#define"
@@ -455,6 +467,9 @@ if [ ! -z "$ConfigName" ]; then
 	 SpinupScheme=sasund
 	 startyr=1850
 	 endyr=1850
+	 nx_block=18
+	 ny_block=9
+	 nGroup=15
 	 ;;
       Global_Grid_2x2_PC_VG_BGC)
 	 IsDefBGC="#define"
@@ -480,6 +495,9 @@ if [ ! -z "$ConfigName" ]; then
 	 IsDefCB="#undef"
 	 LandMask=False
 	 SpinupScheme=none
+	 nx_block=18
+	 ny_block=9
+	 nGroup=15
 	 ;;
       Global_Grid_2x2_PFT_VG_BGC_CROP)
 	 IsDefBGC="#define"
@@ -506,6 +524,9 @@ if [ ! -z "$ConfigName" ]; then
 	 BGC=True
 	 LandMask=False
 	 SpinupScheme=none
+  	 nx_block=18
+	 ny_block=9
+	 nGroup=24
 	 ;;
       Global_Grid_50km_PFT_VG_CaMa)
 	 IsDefBGC="#undef"
@@ -532,6 +553,9 @@ if [ ! -z "$ConfigName" ]; then
 	 LandMask=False
 	 BGC=True
 	 SpinupScheme=none
+	 nx_block=18
+	 ny_block=9
+	 nGroup=36
 	 ;;
       RegGuangdong_Grid_10km_PFT_VG_BGC_CROP)
 	 IsDefBGC="#define"
@@ -558,6 +582,9 @@ if [ ! -z "$ConfigName" ]; then
 	 LandMask="DEF_file_mesh='$RAWDATA/landdata/landmask_igbp_10km_Guangdong-extended.nc'"
          BGC=True
 	 SpinupScheme=none
+  	 nx_block=72
+	 ny_block=36
+	 nGroup=63
 	 ;;
       *)
          echo "Error: the argument for the -c|--config option is incorret."
@@ -896,18 +923,8 @@ if [ -z "${endyr}" ];then
    endyr=2000
 fi
 
-if [ "${Name:0:1}" == '/' ];then
-   CASENAME=`echo "${Name##*/}"`
-   CASEPATH=`echo "${Name%/*}"`
-   echo $CASEPATH
-   echo $CASENAME
-else
-   CASEPATHNAME=$PWD/$Name
-   CASENAME=`echo "${CASEPATHNAME##*/}"`
-   CASEPATH=`echo "${CASEPATHNAME%/*}"`
-   echo $CASEPATH
-   echo $CASENAME
-fi
+CASENAME=$(basename "${Name}")
+CASEPATH=$(dirname "${Name}")
 mkdir -p $CASEPATH/$CASENAME
 
 cd $CASEPATH/$CASENAME
@@ -915,7 +932,7 @@ mkdir -p history
 mkdir -p restart
 mkdir -p landdata
 ENDYEAR=`expr $endyr + 1`
-echo startyr is $startyr
+#echo startyr is $startyr
 FORCINGDIR=${FORCINGPATH}/${FORCINGPATHNAME}
 
 ${ROOT}/run/scripts/create_namelist -p $CASEPATH/${CASENAME} -n input_${CASENAME}.nml -t $startyr -e $ENDYEAR -d $RAWDATA \
@@ -926,7 +943,7 @@ if [ ! -z "$SpinupScheme" ];then
    if [ $SpinupScheme == "sasund" ];then
       ${ROOT}/run/scripts/create_namelist -p $CASEPATH/${CASENAME} -n input_${CASENAME}-SASU.nml -t $startyr -e $ENDYEAR -d $RAWDATA \
 	                          -r $RUNTIME -o ${RESLON} -a ${RESLAT} -f ${Forcing} -l $LandMask -i \
-			          -S $EDGES -N $EDGEN -W $EDGEW -E $EDGEE  -y ${ny_block} -g ${nGroup}
+			          -S $EDGES -N $EDGEN -W $EDGEW -E $EDGEE -x ${nx_block} -y ${ny_block} -g ${nGroup}
    fi
 fi
 
@@ -936,10 +953,10 @@ mkdir -p $CASEPATH/$CASENAME/bld/run
 sed "s/DEF_dir_forcing.*/DEF_dir_forcing = '${FORCINGDIR//\//\\/}'/g" ${ROOT}/run/forcing/${Forcing}.nml>$CASEPATH/$CASENAME/bld/run/${Forcing}.nml
 
 if [ ! -z "SpinupScheme" ];then
-   echo "${ROOT}/run/scripts/create_scripts -p $CASEPATH/${CASENAME} -t $startyr -e $ENDYEAR -f $HEADER -c $CONFIG -i ${SpinupScheme}"
+   #echo "${ROOT}/run/scripts/create_scripts -p $CASEPATH/${CASENAME} -t $startyr -e $ENDYEAR -f $HEADER -c $CONFIG -i ${SpinupScheme}"
    ${ROOT}/run/scripts/create_scripts -p $CASEPATH/${CASENAME} -t $startyr -e $ENDYEAR -f $HEADER -c $CONFIG -i ${SpinupScheme}
 else 
-   echo "${ROOT}/run/scripts/create_scripts -p $CASEPATH/${CASENAME} -t $startyr -e $ENDYEAR -f $HEADER -c $CONFIG"
+   #echo "${ROOT}/run/scripts/create_scripts -p $CASEPATH/${CASENAME} -t $startyr -e $ENDYEAR -f $HEADER -c $CONFIG"
    ${ROOT}/run/scripts/create_scripts -p $CASEPATH/${CASENAME} -t $startyr -e $ENDYEAR -f $HEADER -c $CONFIG
 fi
 
