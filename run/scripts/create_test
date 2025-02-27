@@ -196,6 +196,8 @@ CreateTest()
 
    cd $ROOT/run/scripts
    mkdir -p $TestPath/$TestName/
+   echo `date` >> $TestPath/$TestName/createlog
+   echo CreateTest TestName=$TestName TestCaseList=$TestCaseList Mode=$Mode TestType=$TestType RestTime=$RestTime >> $TestPath/$TestName/createlog
    if [ "$Mode" == "Create" -o "$Mode" == "CreateNoComp" -o "$Mode" == "CreateNoMkSrf" ];then
       for ListCase in `awk '{print $1}' $TestCaseList`
       do
@@ -454,7 +456,9 @@ EOF
             YY=$(date -d "$RestTime" +%Y)
             MM=$(date -d "$RestTime" +%m)
             DD=$(date -d "$RestTime" +%d)
-	    RestartCompare='`cdo diffn '$TestPath/$TestName/$CaseName/Res$YY-$MM-$DD/history/Res${YY}-${MM}-${DD}_hist_${YY}-${MM}-${DD}'.nc '$TestPath/$TestName/$CaseName/history/${CaseName}_hist_${YY}-${MM}-${DD}'.nc`'
+	    File1=$TestPath/$TestName/$CaseName/Res$YY-$MM-$DD/history/Res${YY}-${MM}-${DD}_hist_${YY}-${MM}-${DD}.nc
+	    File2=$TestPath/$TestName/$CaseName/history/${CaseName}_hist_${YY}-${MM}-${DD}.nc
+	    RestartCompare='`if [ -f '$File1' -a -f '$File2' ];then cdo diffn '$File1' '$File2';else echo file does not exist;fi`'
 	    cat>>$TestPath/$TestName/$CaseName/check_all.submit<<EOF
 Success=$RestartCompare
 if [ ! -z $Success ];then
