@@ -109,7 +109,7 @@ CONTAINS
 
    !---Lawrence, D.M., Thornton, P.E., Oleson, K.W. and Bonan, G.B., 2007.  The
    !   partitioning of evapotranspiration into transpiration, soil evaporation,
-   !   and canopy evaporation in a GCM: Impacts on land–atmosphere interaction.
+   !   and canopy evaporation in a GCM: Impacts on land-atmosphere interaction.
    !   Journal of Hydrometeorology, 8(4), pp.862-880.
 
    !---Oleson, K., Dai, Y., Bonan, B., BosiloVIChm, M., Dickinson, R.,
@@ -563,7 +563,7 @@ CONTAINS
 !-------------------
    !---Lawrence, D.M., Thornton, P.E., Oleson, K.W. and Bonan, G.B., 2007.
    !   The partitioning of evapotranspiration into transpiration, soil evaporation,
-   !   and canopy evaporation in a GCM: Impacts on land–atmosphere interaction. Journal of Hydrometeorology, 8(4), pp.862-880.
+   !   and canopy evaporation in a GCM: Impacts on land-atmosphere interaction. Journal of Hydrometeorology, 8(4), pp.862-880.
 
 !ANCILLARY FUNCTIONS AND SUBROUTINES
 !-------------------
@@ -721,7 +721,7 @@ CONTAINS
 !-------------------
    !---Lawrence, D.M., Thornton, P.E., Oleson, K.W. and Bonan, G.B., 2007.
    !   The partitioning of evapotranspiration into transpiration, soil evaporation,
-   !   and canopy evaporation in a GCM: Impacts on land–atmosphere interaction. Journal of Hydrometeorology, 8(4), pp.862-880.
+   !   and canopy evaporation in a GCM: Impacts on land-atmosphere interaction. Journal of Hydrometeorology, 8(4), pp.862-880.
    !---Lawrence, D.M., Fisher, R.A., Koven, C.D., Oleson, K.W., Swenson, S.C., Bonan, G., Collier, N., Ghimire, B.,
    !   van Kampenhout, L., Kennedy, D. and Kluzek, E., 2019. The Community Land Model version 5:
    !   Description of new features, benchmarking, and impact of forcing uncertainty.
@@ -1571,10 +1571,10 @@ CONTAINS
 
    !References:
    !-------------------
-      !---Best et al. (2011): The Joint UK Land Environment Simulator (JULES), model description –
-      !   Part 1: Energy and water fluxes. Geosci. Model Dev. 4:677–699.
-      !---Clark et al. (2011): The Joint UK Land Environment Simulator (JULES), model description –
-      !   Part 2: Carbon fluxes and vegetation dynamics. Geosci. Model Dev. 4:701–722.
+      !---Best et al. (2011): The Joint UK Land Environment Simulator (JULES), model description -
+      !   Part 1: Energy and water fluxes. Geosci. Model Dev. 4:677-699.
+      !---Clark et al. (2011): The Joint UK Land Environment Simulator (JULES), model description -
+      !   Part 2: Carbon fluxes and vegetation dynamics. Geosci. Model Dev. 4:701-722.
 
    !ANCILLARY FUNCTIONS AND SUBROUTINES
    !-------------------

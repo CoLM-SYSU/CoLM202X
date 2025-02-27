@@ -12,10 +12,10 @@ MODULE MOD_Catch_RiverLakeFlow
 !      Chichester: John Wiley & Sons; 2001.
 !   [2] Liang, Q., Borthwick, A. G. L. (2009). Adaptive quadtree simulation of shallow 
 !      flows with wet-dry fronts over complex topography. 
-!      Computers and Fluids, 38(2), 221–234.
+!      Computers and Fluids, 38(2), 221-234.
 !   [3] Audusse, E., Bouchut, F., Bristeau, M.-O., Klein, R., Perthame, B. (2004). 
 !      A Fast and Stable Well-Balanced Scheme with Hydrostatic Reconstruction for 
-!      Shallow Water Flows. SIAM Journal on Scientific Computing, 25(6), 2050–2065.
+!      Shallow Water Flows. SIAM Journal on Scientific Computing, 25(6), 2050-2065.
 !
 ! Created by Shupeng Zhang, May 2023
 !-------------------------------------------------------------------------------------

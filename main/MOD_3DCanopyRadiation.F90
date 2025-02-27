@@ -56,7 +56,7 @@ CONTAINS
 !  Yuan, H., R. E. Dickinson, Y. Dai, M. J. Shaikh, L. Zhou, W. Shangguan,
 !  and D. Ji, 2014: A 3D canopy radiative transfer model for global climate
 !  modeling: Description, validation, and application. Journal of Climate,
-!  27, 1168–1192, https://doi.org/10.1175/JCLI-D-13-00155.1.
+!  27, 1168-1192, https://doi.org/10.1175/JCLI-D-13-00155.1.
 !
 ! !REVISIONS:
 !
@@ -284,7 +284,7 @@ CONTAINS
 !  Yuan, H., R. E. Dickinson, Y. Dai, M. J. Shaikh, L. Zhou, W. Shangguan,
 !  and D. Ji, 2014: A 3D canopy radiative transfer model for global climate
 !  modeling: Description, validation, and application. Journal of Climate,
-!  27, 1168–1192, https://doi.org/10.1175/JCLI-D-13-00155.1.
+!  27, 1168-1192, https://doi.org/10.1175/JCLI-D-13-00155.1.
 !
 ! !REVISIONS:
 !

@@ -111,7 +111,7 @@ CONTAINS
       ELSEIF (trim(DEF_precip_phase_discrimination_scheme) == 'III') THEN
       ! Phillip Harder and John Pomeroy (2013)
       ! Estimating precipitation phase using a psychrometric energy
-      ! balance method . Hydrol Process, 27, 1901–1914
+      ! balance method . Hydrol Process, 27, 1901-1914
       ! Hydromet_Temp [K]
          CALL hydromet_temp(forc_psrf,(forc_t-273.15),forc_q,t_hydro)
 

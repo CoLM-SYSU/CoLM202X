@@ -226,7 +226,7 @@ external SW_CB_dist
 ! 4) Rawls and Brakenssiek (1989):
 ! Rawls, W. J., & Brakensiek, D. L. (1989). Estimation of soil water retention and hydraulic properties.
 ! In H. J. Morel‐Seytoux (Ed.), Unsaturated flow in hydrologic modeling, NATO ASI Series
-! (Series C: Mathematical and Physical Sciences) (Vol. 275, pp. 275–300).
+! (Series C: Mathematical and Physical Sciences) (Vol. 275, pp. 275-300).
 !
 ! PTFs were developed from about 18,000 samples from the national soil characterization
 ! database that the clay activity ratio along with texture to characterized
@@ -477,7 +477,7 @@ silt=100.-sand-clay
 ! 1) Rawls and Brakenssiek (1989):
 ! Rawls, W. J., & Brakensiek, D. L. (1989). Estimation of soil water retention and hydraulic properties.
 ! In H. J. Morel‐Seytoux (Ed.), Unsaturated flow in hydrologic modeling, NATO ASI Series
-! (Series C: Mathematical and Physical Sciences) (Vol. 275, pp. 275–300).
+! (Series C: Mathematical and Physical Sciences) (Vol. 275, pp. 275-300).
 !
 ! 12,000 samples from the National Soil Characterization database
 ! the PTF is applicable for soil:
@@ -628,7 +628,7 @@ ydatv(4,:) = theta_r(4)+(phi - theta_r(4))*(1+(alpha(4)*xdat)**n(4))**(1.0/n(4)-
 
 ! ------------------------------------------
 ! 8) Carsel and Parrish 1988. Developing joint probability distributions of soil water
-!    retention characteristics. Water Resources Research, 24(5), 755–769.
+!    retention characteristics. Water Resources Research, 24(5), 755-769.
 ! ------------------------------------------
       CALL USDA_soil_classes(SILT,CLAY,c)
 
