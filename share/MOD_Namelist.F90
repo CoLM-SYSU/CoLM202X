@@ -604,6 +604,17 @@ MODULE MOD_Namelist
       logical :: hr                               = .true.
       logical :: fpg                              = .true.
       logical :: fpi                              = .true.
+      logical :: totvegc                          = .true.
+      logical :: totlitc                          = .true.
+      logical :: totcwdc                          = .true.
+      logical :: totsomc                          = .true.
+      logical :: totcolc                          = .true.
+      logical :: totvegn                          = .true.
+      logical :: totlitn                          = .true.
+      logical :: totcwdn                          = .true.
+      logical :: totsomn                          = .true.
+      logical :: totcoln                          = .true.
+      logical :: totsoiln_vr                      = .true.
       logical :: gpp_enftemp                      = .false. !1
       logical :: gpp_enfboreal                    = .false. !2
       logical :: gpp_dnfboreal                    = .false. !3
@@ -1820,6 +1831,17 @@ CONTAINS
       CALL sync_hist_vars_one (DEF_hist_vars%hr                 , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%fpg                , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%fpi                , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%totvegc            , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%totlitc            , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%totcwdc            , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%totsomc            , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%totcolc            , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%totvegn            , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%totlitn            , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%totcwdn            , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%totsomn            , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%totcoln            , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%totsoiln_vr        , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%gpp_enftemp        , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%gpp_enfboreal      , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%gpp_dnfboreal      , set_defaults)
