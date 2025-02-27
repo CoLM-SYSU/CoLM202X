@@ -172,6 +172,16 @@ MODULE MOD_Vars_1DAccFluxes
    real(r8), allocatable :: a_hr                 (:)
    real(r8), allocatable :: a_fpg                (:)
    real(r8), allocatable :: a_fpi                (:)
+   real(r8), allocatable :: a_totvegc            (:)
+   real(r8), allocatable :: a_totlitc            (:)
+   real(r8), allocatable :: a_totcwdc            (:)
+   real(r8), allocatable :: a_totsomc            (:)
+   real(r8), allocatable :: a_totcolc            (:)
+   real(r8), allocatable :: a_totvegn            (:)
+   real(r8), allocatable :: a_totlitn            (:)
+   real(r8), allocatable :: a_totcwdn            (:)
+   real(r8), allocatable :: a_totsomn            (:)
+   real(r8), allocatable :: a_totcoln            (:)
    real(r8), allocatable :: a_gpp_enftemp        (:) !1
    real(r8), allocatable :: a_gpp_enfboreal      (:) !2
    real(r8), allocatable :: a_gpp_dnfboreal      (:) !3
@@ -323,6 +333,7 @@ MODULE MOD_Vars_1DAccFluxes
    real(r8), allocatable :: a_soil2n_vr   (:,:)
    real(r8), allocatable :: a_soil3n_vr   (:,:)
    real(r8), allocatable :: a_cwdn_vr     (:,:)
+   real(r8), allocatable :: a_totsoiln_vr (:,:)
    real(r8), allocatable :: a_litr1cCap_vr(:,:)
    real(r8), allocatable :: a_litr2cCap_vr(:,:)
    real(r8), allocatable :: a_litr3cCap_vr(:,:)
@@ -566,6 +577,16 @@ CONTAINS
             allocate (a_hr                 (numpatch))
             allocate (a_fpg                (numpatch))
             allocate (a_fpi                (numpatch))
+            allocate (a_totvegc            (numpatch))
+            allocate (a_totlitc            (numpatch))
+            allocate (a_totcwdc            (numpatch))
+            allocate (a_totsomc            (numpatch))
+            allocate (a_totcolc            (numpatch))
+            allocate (a_totvegn            (numpatch))
+            allocate (a_totlitn            (numpatch))
+            allocate (a_totcwdn            (numpatch))
+            allocate (a_totsomn            (numpatch))
+            allocate (a_totcoln            (numpatch))
             allocate (a_gpp_enftemp        (numpatch)) !1
             allocate (a_gpp_enfboreal      (numpatch)) !2
             allocate (a_gpp_dnfboreal      (numpatch)) !3
@@ -719,6 +740,7 @@ CONTAINS
             allocate (a_soil2n_vr   (1:nl_soil,       numpatch))
             allocate (a_soil3n_vr   (1:nl_soil,       numpatch))
             allocate (a_cwdn_vr     (1:nl_soil,       numpatch))
+            allocate (a_totsoiln_vr (1:nl_soil,       numpatch))
             allocate (a_sminn_vr    (1:nl_soil,       numpatch))
             allocate (decomp_vr_tmp (1:nl_soil,       numpatch))
 
@@ -962,6 +984,16 @@ CONTAINS
             deallocate (a_hr                 )
             deallocate (a_fpg                )
             deallocate (a_fpi                )
+            deallocate (a_totvegc            )
+            deallocate (a_totlitc            )
+            deallocate (a_totcwdc            )
+            deallocate (a_totsomc            )
+            deallocate (a_totcolc            )
+            deallocate (a_totvegn            )
+            deallocate (a_totlitn            )
+            deallocate (a_totcwdn            )
+            deallocate (a_totsomn            )
+            deallocate (a_totcoln            )
             deallocate (a_gpp_enftemp        ) !1
             deallocate (a_gpp_enfboreal      ) !2
             deallocate (a_gpp_dnfboreal      ) !3
@@ -1115,6 +1147,7 @@ CONTAINS
             deallocate (a_soil2n_vr   )
             deallocate (a_soil3n_vr   )
             deallocate (a_cwdn_vr     )
+            deallocate (a_totsoiln_vr )
             deallocate (a_sminn_vr    )
             deallocate (decomp_vr_tmp )
             deallocate (a_litr1cCap_vr)
@@ -1359,6 +1392,16 @@ CONTAINS
             a_hr                 (:) = spval
             a_fpg                (:) = spval
             a_fpi                (:) = spval
+            a_totvegc            (:) = spval
+            a_totlitc            (:) = spval
+            a_totcwdc            (:) = spval
+            a_totsomc            (:) = spval
+            a_totcolc            (:) = spval
+            a_totvegn            (:) = spval
+            a_totlitn            (:) = spval
+            a_totcwdn            (:) = spval
+            a_totsomn            (:) = spval
+            a_totcoln            (:) = spval
             a_gpp_enftemp        (:) = spval
             a_gpp_enfboreal      (:) = spval
             a_gpp_dnfboreal      (:) = spval
@@ -1508,6 +1551,7 @@ CONTAINS
             a_soil2n_vr    (:,:) = spval
             a_soil3n_vr    (:,:) = spval
             a_cwdn_vr      (:,:) = spval
+            a_totsoiln_vr  (:,:) = spval
 
             a_litr1cCap_vr (:,:) = spval
             a_litr2cCap_vr (:,:) = spval
@@ -1844,6 +1888,16 @@ CONTAINS
             CALL acc1d (decomp_hr          , a_hr                  )
             CALL acc1d (fpg                , a_fpg                 )
             CALL acc1d (fpi                , a_fpi                 )
+            CALL acc1d (totvegc            , a_totvegc             )
+            CALL acc1d (totlitc            , a_totlitc             )
+            CALL acc1d (totcwdc            , a_totcwdc             )
+            CALL acc1d (totsomc            , a_totsomc             )
+            CALL acc1d (totcolc            , a_totcolc             )
+            CALL acc1d (totvegn            , a_totvegn             )
+            CALL acc1d (totlitn            , a_totlitn             )
+            CALL acc1d (totcwdn            , a_totcwdn             )
+            CALL acc1d (totsomn            , a_totsomn             )
+            CALL acc1d (totcoln            , a_totcoln             )
             CALL acc1d (gpp_enftemp        , a_gpp_enftemp         )
             CALL acc1d (gpp_enfboreal      , a_gpp_enfboreal       )
             CALL acc1d (gpp_dnfboreal      , a_gpp_dnfboreal       )
@@ -2077,6 +2131,7 @@ CONTAINS
                ENDDO
             ENDDO
             CALL acc2d (decomp_vr_tmp, a_cwdn_vr     )
+            CALL acc2d (totsoiln_vr  , a_totsoiln_vr )
 
             DO i = 1, numpatch
                DO j = 1, nl_soil
