@@ -801,7 +801,7 @@ ENDIF
 !     An improved two stream approximation
 !
 !  Original author: Yongjiu Dai, June 11, 2001
-!                  Hua Yuan, 03/2020
+!                   Hua Yuan, 03/2020
 !
 ! !REFERENCES:
 !  1) Yuan, H., Dai, Y., Dickinson, R. E., Pinty, B., Shangguan, W.,
