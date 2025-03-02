@@ -127,6 +127,19 @@ CONTAINS
             addsec%day = 1
          ENDIF
       ENDIF
+      IF (addsec%sec <= 0)THEN
+         addsec%sec = addsec%sec + 86400
+         IF( isleapyear(addsec%year-1) )THEN
+            maxday = 366
+         ELSE
+            maxday = 365
+         ENDIF
+         addsec%day = addsec%day - 1
+         IF(addsec%day <= 0) THEN
+            addsec%year = addsec%year - 1
+            addsec%day = maxday
+         ENDIF
+      ENDIF
       RETURN
 
    END FUNCTION addsec

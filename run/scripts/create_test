@@ -8,6 +8,7 @@ Help()
 
    echo "!-----------------------------------------------------------------------!"
    echo 'Syntax: ./create_test -n $TestPath/$TestName [-f $TestLists][-m $Mode]'
+   echo '        [-t $TestType]'
    echo "!-----------------------------------------------------------------------!"
    echo options:
    echo "-n The Path and Name of the test working folder"
@@ -22,6 +23,9 @@ Help()
    echo '      $TestPath/$TestName '
    echo '   4) RunNoMkSrf: create_test will follow $TestLists to run without make'
    echo '      surface data for all test cases under $TestPath/$TestName '
+   echo '-t (Optional) Type of the test: '
+   echo '   1) SMS: Smoke test, normally run model under different configuration'
+   echo '   2) RES: Restart test, run model from restart file to check their consistency'
    echo '-h display command information'
 }
 
