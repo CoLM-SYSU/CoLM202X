@@ -114,7 +114,7 @@ CONTAINS
 
       addsec = tstamp
       addsec%sec = addsec%sec + sec
-      IF (addsec%sec > 86400) THEN
+      DO WHILE (addsec%sec > 86400) 
          addsec%sec = addsec%sec - 86400
          IF( isleapyear(addsec%year) ) THEN
             maxday = 366
@@ -126,8 +126,8 @@ CONTAINS
             addsec%year = addsec%year + 1
             addsec%day = 1
          ENDIF
-      ENDIF
-      IF (addsec%sec <= 0)THEN
+      ENDDO
+      DO WHILE (addsec%sec <= 0)
          addsec%sec = addsec%sec + 86400
          IF( isleapyear(addsec%year-1) )THEN
             maxday = 366
@@ -139,7 +139,7 @@ CONTAINS
             addsec%year = addsec%year - 1
             addsec%day = maxday
          ENDIF
-      ENDIF
+      ENDDO
       RETURN
 
    END FUNCTION addsec
