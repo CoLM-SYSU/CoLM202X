@@ -20,7 +20,7 @@ MODULE MOD_NitrifData
 
 CONTAINS
 
-   SUBROUTINE init_nitrif_data (idate)
+   SUBROUTINE init_nitrif_data (time)
 
 !-----------------------------------------------------------------------
 ! !DESCRIPTION:
@@ -35,7 +35,7 @@ CONTAINS
    USE MOD_LandPatch
    IMPLICIT NONE
 
-   integer, intent(in) :: idate(3)
+   type(timestamp), intent(in) :: time
 
    ! Local Variables
    character(len=256) :: file_nitrif
@@ -54,7 +54,7 @@ CONTAINS
       IF (allocated(lon)) deallocate(lon)
       IF (allocated(lat)) deallocate(lat)
 
-      CALL julian2monthday (idate(1), idate(2), month, mday)
+      CALL julian2monthday (time%year, time%day, month, mday)
 
       CALL update_nitrif_data (month)
 
