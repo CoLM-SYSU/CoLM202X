@@ -8,6 +8,7 @@ Help()
 
    echo "!----------------------------------------------------------------------------!"
    echo 'Syntax: ./SummaryTest.bash -n $TestPath/$TestName [-f $TestLists][-i $Varlist]'
+   echo '        [-t $TestType]'
    echo "!----------------------------------------------------------------------------!"
    echo options:
    echo "-n The Path and Name of the test working folder"
@@ -15,7 +16,7 @@ Help()
    echo '   is absent, use $ROOT/run/script/TestLists as the default test list. '
    echo '-i Specify the summary item of the test restuls:' 
    echo '   1)CreateCase;	2)Compile;	3)Submit_Mksrfdata;'
-   echo '   4)Submit_Mkinidata;	5)Submit_Case'
+   echo '   4)Submit_Mkinidata;	5)Submit_Case;  6)Sugmit_Restart;   7)RestartMatch'
    echo '-h display command information'
 }
 
@@ -30,13 +31,15 @@ SummaryTest()
       exit
    fi
    if [ "$3" == "All" ];then
-      Varlist="CreateCase Compile Submit_Mksrfdata Submit_Mkinidata Submit_Case"
+      Varlist="CreateCase Compile Submit_Mksrfdata Submit_Mkinidata Submit_Case Submit_Restart RestartMatch"
    fi
 
 TestCaseLists=$2
+TestType=$4
 nfile=`cat $TestCaseLists|wc -l`
-for CaseName in `awk '{print $1}' $TestCaseLists`
+for ListCase in `awk '{print $1}' $TestCaseLists`
 do
+   CaseName=${TestType}_${ListCase}
    echo $CaseName
    for Var in $Varlist
    do
@@ -79,12 +82,13 @@ done
 }
 
 
-while getopts ":hn:f:i:" options ;
+while getopts ":hn:f:i:t:" options ;
 do
     case $options in
       n) TestName="$OPTARG" ;;
       f) TestCaseList="$OPTARG"  ;;
       i) Varlist="$OPTARG" ;;
+      t) TestType="$OPTARG" ;;
       h) Help; exit;;
       *) echo "invalid option: $@";exit ;;
     esac
@@ -102,6 +106,18 @@ else
    fi
 fi
 
+if [ -z "${TestType}" ]; then
+   echo
+   echo Error: TestType '(-t)' is missing
+   exit
+else
+   case $TestType in
+      SMS);;
+      RES);;
+      *)echo Error: TestType $TestType is invalid
+   esac
+fi
+
 if [ -z "$Varlist" ];then
    Varlist="All"
 else
@@ -111,8 +127,10 @@ else
       Submit_Mksrfdata);;
       Submit_Mkinidata);;
       Submit_Case);;
+      Submit_Restart);;
+      RestartMatch);;
       *) echo "invalid Var option: $Varlist"; exit;;
    esac
 fi
 
-SummaryTest $TestName $TestCaseList $Varlist
+SummaryTest $TestName $TestCaseList $Varlist $TestType

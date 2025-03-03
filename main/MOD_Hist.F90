@@ -1088,6 +1088,46 @@ CONTAINS
              a_fpi, file_hist, 'f_fpi', itime_in_file, sumarea, filter, &
              'fraction of immobalization','unitless')
 
+         CALL write_history_variable_2d ( DEF_hist_vars%totvegc, &
+             a_totvegc, file_hist, 'f_totvegc', itime_in_file, sumarea, filter, &
+             'total vegetation carbon','gC m-2')
+
+         CALL write_history_variable_2d ( DEF_hist_vars%totlitc, &
+             a_totlitc, file_hist, 'f_totlitc', itime_in_file, sumarea, filter, &
+             'total litter carbon','gC m-2')
+
+         CALL write_history_variable_2d ( DEF_hist_vars%totsomc, &
+             a_totsomc, file_hist, 'f_totsomc', itime_in_file, sumarea, filter, &
+             'total soil organic carbon','gC m-2')
+
+         CALL write_history_variable_2d ( DEF_hist_vars%totcwdc, &
+             a_totcwdc, file_hist, 'f_totcwdc', itime_in_file, sumarea, filter, &
+             'total coarse woody debris carbon','gC m-2')
+
+         CALL write_history_variable_2d ( DEF_hist_vars%totcolc, &
+             a_totcolc, file_hist, 'f_totcolc', itime_in_file, sumarea, filter, &
+             'total ecosystem carbon','gC m-2')
+
+         CALL write_history_variable_2d ( DEF_hist_vars%totvegn, &
+             a_totvegn, file_hist, 'f_totvegn', itime_in_file, sumarea, filter, &
+             'total vegetation nitrogen','gN m-2')
+
+         CALL write_history_variable_2d ( DEF_hist_vars%totlitn, &
+             a_totlitn, file_hist, 'f_totlitn', itime_in_file, sumarea, filter, &
+             'total litter nitrogen','gN m-2')
+
+         CALL write_history_variable_2d ( DEF_hist_vars%totsomn, &
+             a_totsomn, file_hist, 'f_totsomn', itime_in_file, sumarea, filter, &
+             'total soil organic nitrogen','gN m-2')
+
+         CALL write_history_variable_2d ( DEF_hist_vars%totcwdn, &
+             a_totcwdn, file_hist, 'f_totcwdn', itime_in_file, sumarea, filter, &
+             'total coarse woody debris nitrogen','gN m-2')
+
+         CALL write_history_variable_2d ( DEF_hist_vars%totcoln, &
+             a_totcoln, file_hist, 'f_totcoln', itime_in_file, sumarea, filter, &
+             'total ecosystem nitrogen','gN m-2')
+
          ! autotrophic respiration
          CALL write_history_variable_2d ( DEF_hist_vars%ar , &
              a_ar, file_hist, 'f_ar', itime_in_file, sumarea, filter, &
@@ -1463,6 +1503,11 @@ CONTAINS
          CALL write_history_variable_3d ( DEF_hist_vars%sminn_vr, &
             a_sminn_vr, file_hist, 'f_sminn_vr', itime_in_file, 'soil', 1, nl_soil, &
             sumarea, filter,'mineral nitrogen density in soil layers','gN/m3')
+
+         ! total nitrogen percentage in soil layers
+         CALL write_history_variable_3d ( DEF_hist_vars%totsoiln_vr, &
+            a_totsoiln_vr, file_hist, 'f_totsoiln_vr', itime_in_file, 'soil', 1, nl_soil, &
+            sumarea, filter,'Total nitrogen in soil layers, percentage of total soil nitrogen mass in total soil mass','%')
 
          ! bulk density in soil layers
          CALL write_history_variable_3d ( DEF_hist_vars%BD_all, &

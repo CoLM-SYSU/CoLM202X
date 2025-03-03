@@ -108,16 +108,16 @@ CreateHeader()
          exit
          ;;
       esac     
-      echo NP after read $NP
-      echo SCRIPTNAME $SCRIPTNAME
-      echo HEADER $HEADER
-      echo CONFIG $CONFIG
-      echo EXEC $EXEC
-      echo EXEO $EXEO
+      #echo NP after read $NP
+      #echo SCRIPTNAME $SCRIPTNAME
+      #echo HEADER $HEADER
+      #echo CONFIG $CONFIG
+      #echo EXEC $EXEC
+      #echo EXEO $EXEO
       if [ $NP -gt 0 ] 2>/dev/null;then
-         echo Number of processes is assigned from $CONFIG
+#         echo Number of processes is assigned from $CONFIG
+	 echo>/dev/null
       else
-         echo herehere NProcesses $NP is not a number in $CONFIG
          case ${SCRIPTNAME} in
             mksrf.submit) NP=240;;
             init.submit)  NP=24;;
@@ -126,9 +126,10 @@ CreateHeader()
          esac
       fi
       if [ $NN -gt 0 ] 2>/dev/null;then
-         echo Number of nodes is assigned from $CONFIG
+         #echo Number of nodes is assigned from $CONFIG
+	 echo>/dev/null
       else
-         echo NNodes $NN is not a number in $CONFIG
+         #echo NNodes $NN is not a number in $CONFIG
          case ${SCRIPTNAME} in
             mksrf.submit) NN=10;;
             init.submit)  NN=1;;
@@ -137,9 +138,10 @@ CreateHeader()
          esac
       fi
       if [ $NTPN -gt 0 ] 2>/dev/null;then
-         echo Number of tasks per node is assigned from $CONFIG
+         #echo Number of tasks per node is assigned from $CONFIG
+	 echo>/dev/null
       else
-         echo NTasksPerNode $NTPN is not a number in $CONFIG
+         #echo NTasksPerNode $NTPN is not a number in $CONFIG
          case ${SCRIPTNAME} in
             mksrf.submit) NP=24;;
             init.submit)  NP=24;;
@@ -148,7 +150,7 @@ CreateHeader()
          esac
       fi
    else
-      echo Configure file $CONFIG does not exist, resolve configuration from default
+      #echo Configure file $CONFIG does not exist, resolve configuration from default
       case ${SCRIPTNAME} in
       mksrf.submit)
          NP=240
@@ -192,7 +194,7 @@ CreateHeader()
 
 
       
-echo NP before create header $NP
+#echo NP before create header $NP
 
      sed "s/<CASENAME>/${CASENAME}/g" ${HEADER} |sed "s/<QUEUE>/${QUEUE}/g" \
    | sed "s/<OUTPUTFILE>/${OUTPUT}.out/g"|sed "s/<ERRORFILE>/${OUTPUT}.err/g" |sed "s/<MEMORY>/${MEM}/g" \
@@ -223,9 +225,9 @@ CreateScripts()
    MODILOOP10='`expr $iloop % 10`'
    RESETTIME='${files} ../'${STARTYR}'-001-00000/${files/'${RESTENDYR}'-001/'${STARTYR}'-001}'
 
-   echo ${STARTYR} $SEQYR
+   #echo ${STARTYR} $SEQYR
    if [ $HEADER == none ];then
-      echo no header for mksrf.submit
+      #echo no header for mksrf.submit
       echo "#!/bin/bash">mksrf.submit
       NP=240  
    else
@@ -233,13 +235,14 @@ CreateScripts()
       if [ ! -z $CONFIG ];then
          NP=`awk '/NProcesses_mksrf/ {print $2}' $CONFIG`
          if [ $NP -gt 0 ] 2>/dev/null;then
-            echo number of processes for mksrf.submit '$NP=' $NP is assigned from $CONFIG
+            #echo number of processes for mksrf.submit '$NP=' $NP is assigned from $CONFIG
+	    echo>/dev/null
          else
-            echo number of processes '$NP' for mksrf.submit is not configured in $CONFIG, set to 240
+            #echo number of processes '$NP' for mksrf.submit is not configured in $CONFIG, set to 240
             NP=240
          fi
       else
-         echo $CONFIG does not exist, set number of processes '$NP' to 240
+         #echo $CONFIG does not exist, set number of processes '$NP' to 240
          NP=240
       fi
    fi
@@ -250,7 +253,7 @@ ${EXEC} ${EXEO} $NP ./mksrfdata.x ../../input_${CASENAME}.nml > ../../logmksrfda
 EOF
    
    if [ $HEADER == none ];then
-      echo no header for init.submit
+      #echo no header for init.submit
       echo "#!/bin/bash">init.submit
       NP=24
    else
@@ -259,9 +262,10 @@ EOF
       if [ ! -z $CONFIG ];then
          NP=`awk '/NProcesses_mkini/ {print $2}' $CONFIG`
          if [ $NP -gt 0 ] 2>/dev/null;then
-            echo The number of processes for init.submit '$NP=' $NP is assigned from $CONFIG
+            echo>/dev/null
+      #      echo The number of processes for init.submit '$NP=' $NP is assigned from $CONFIG
          else
-            echo The number of processes for init.submit '$NP' is not configured in $CONFIG, set to 24
+       #     echo The number of processes for init.submit '$NP' is not configured in $CONFIG, set to 24
             NP=24
          fi
       else
@@ -276,7 +280,7 @@ ${EXEC} ${EXEO} $NP ./mkinidata.x ../../input_${CASENAME}.nml > ../../logini
 EOF
 
    if [ $HEADER == none ];then
-      echo no header for case.submit
+     # echo no header for case.submit
       echo "#!/bin/bash">case.submit
       NP=120
    else
@@ -285,13 +289,14 @@ EOF
       if [ ! -z $CONFIG ];then
          NP=`awk '/NProcesses_case/ {print $2}' $CONFIG`
          if [ $NP -gt 0 ] 2>/dev/null;then
-            echo The number of processes for case.submit '$NP=' $NP is assigned from $CONFIG
+            echo>/dev/null
+      #      echo The number of processes for case.submit '$NP=' $NP is assigned from $CONFIG
          else
-            echo The number of processes for case.submit '$NP' is not configured in $CONFIG, set to 120
+       #     echo The number of processes for case.submit '$NP' is not configured in $CONFIG, set to 120
             NP=120
          fi
       else
-         echo $CONFIG does not exist, set the number of processes '$NP' to 120
+       #  echo $CONFIG does not exist, set the number of processes '$NP' to 120
          NP=120
       fi
    fi
