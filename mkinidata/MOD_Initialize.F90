@@ -77,6 +77,10 @@ CONTAINS
    USE MOD_PercentagesPFTReadin
    USE MOD_SoilParametersReadin
    USE MOD_SoilTextureReadin
+#ifdef EXTERNAL_LAKE
+   USE MOD_Lake_TimeVars
+   USE MOD_Lake_Namelist, only: DEF_External_Lake
+#endif
 
    IMPLICIT NONE
 
@@ -258,6 +262,9 @@ CONTAINS
 
       CALL allocate_TimeInvariants
       CALL allocate_TimeVariables
+#ifdef EXTERNAL_LAKE
+      CALL allocate_LakeTimeVars
+#endif
 
 ! ---------------------------------------------------------------
 ! 1. INITIALIZE TIME INVARIANT VARIABLES
@@ -1208,7 +1215,13 @@ CONTAINS
          t_lake      (:,:) = 285.
          lake_icefrac(:,:) = 0.
          savedtke1   (:)   = tkwat
-
+#ifdef EXTERNAL_LAKE
+         DO i = 1, numpatch
+            IF(patchtype(i) == 4) THEN
+               CALL InitLakeTimeVars(i, lakedepth(i))
+            ENDIF
+         ENDDO
+#endif
       ENDIF
       ! ------------------------------------------
 
@@ -1300,6 +1313,12 @@ CONTAINS
                ,use_soilini, nl_soil_ini, soil_z, soil_t(1:,i), soil_w(1:,i), use_snowini, snow_d(i) &
                ! for SOIL Water INIT by using water table depth
                ,use_wtd, zwtmm, zc_soimm, zi_soimm, vliq_r, nprms, prms)
+               
+#ifdef EXTERNAL_LAKE
+            IF(patchtype(i) == 4) THEN
+               z0m(i) = DEF_External_Lake%DEF_LAKE_Z0M
+            ENDIF
+#endif
 
 #ifdef URBAN_MODEL
             IF (m == URBAN) THEN
@@ -1457,9 +1476,16 @@ CONTAINS
       CALL check_TimeVariables ()
 #endif
 
+#if (defined RangeCheck) && (defined EXTERNAL_LAKE)
+      CALL CHECK_LakeTimeVars()
+#endif
+
       IF ( .not. present(lulcc_call) ) THEN
          ! only be called in running MKINI, LULCC will be executed later
          CALL WRITE_TimeVariables (idate, lc_year, casename, dir_restart)
+#ifdef EXTERNAL_LAKE
+         CALL WRITE_LakeTimeVars (idate, lc_year, casename, dir_restart)
+#endif
       ENDIF
 
 #ifdef USEMPI
@@ -1476,6 +1502,9 @@ CONTAINS
          ! only be called in running MKINI, LULCC will be executed later
          CALL deallocate_TimeInvariants
          CALL deallocate_TimeVariables
+#ifdef EXTERNAL_LAKE
+         CALL deallocate_LakeTimeVars
+#endif
       ENDIF
 
       IF (allocated(z_soisno )) deallocate (z_soisno )

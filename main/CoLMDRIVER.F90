@@ -32,6 +32,11 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
    USE MOD_CaMa_Vars, only: flddepth_cama,fldfrc_cama,fevpg_fld,finfg_fld
 #endif
 
+#ifdef EXTERNAL_LAKE
+   USE MOD_Lake_TimeVars
+   USE MOD_Lake_Const, only: nlice
+#endif
+
    IMPLICIT NONE
 
    integer,  intent(in) :: idate(3) ! model calendar for next time step (year, julian day, seconds)
@@ -174,6 +179,19 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
                capr,            cnfac,           ssi,             wimp,            &
                pondmx,          smpmax,          smpmin,          trsmx0,          &
                tcrit,           &
+
+#ifdef EXTERNAL_LAKE
+              ! additional variables required by new lake driver
+                zlake(:,i),      dzlake(:,i),      zilak(:,i),      dplak(i),       &
+                ziarea(:,i),     uwatv(:,i),      vwatv(:,i),      lksal(:,i),     &
+                tke(:,i),        eps(:,i),        num(:,i),        nuh(:,i),       &
+                lkz0m(i),        lkz0h(i),        lkz0q(i),        felak(i),       &
+                gamma(i),        etal(i),         btpri(i),        tmsno(i),       &
+                tmice(i),        tmmnw(i),        tmwml(i),        tmbot(i),       &
+                tmups(i),        mldp(i),         upsdp(i),        icedp(i),       &
+                bicedp(i),       wicedp(i),       CTfrac(i),       frlak(i),       &
+                etke(i),         rhosnw(i),       lkrho(:,i),     &
+#endif
 
              ! additional variables required by coupling with WRF model
                emis(i),         z0m(i),          zol(i),          rib(i),          &

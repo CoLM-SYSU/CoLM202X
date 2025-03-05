@@ -29,6 +29,9 @@ MODULE MOD_Hist
 #ifdef CatchLateralFlow
    USE MOD_Catch_Hist
 #endif
+#ifdef EXTERNAL_LAKE
+   USE MOD_Lake_1DAccVars
+#endif
 
    PUBLIC :: hist_init
    PUBLIC :: hist_out
@@ -48,6 +51,10 @@ CONTAINS
 
       CALL allocate_acc_fluxes ()
       CALL FLUSH_acc_fluxes ()
+#ifdef EXTERNAL_LAKE
+      CALL allocate_LakeAccVars ()
+      CALL Flush_LakeAccVars ()
+#endif
 
       HistForm = 'Gridded'
 #if (defined UNSTRUCTURED || defined CATCHMENT)
@@ -83,6 +90,10 @@ CONTAINS
    IMPLICIT NONE
 
       CALL deallocate_acc_fluxes ()
+
+#ifdef EXTERNAL_LAKE
+      CALL deallocate_LakeAccVars ()
+#endif
 
 #ifdef SinglePoint
       CALL hist_single_final ()
@@ -164,9 +175,15 @@ CONTAINS
 
       IF (itstamp <= ptstamp) THEN
          CALL FLUSH_acc_fluxes ()
+#ifdef EXTERNAL_LAKE
+         CALL Flush_LakeAccVars ()
+#endif
          RETURN
       ELSE
          CALL accumulate_fluxes ()
+#ifdef EXTERNAL_LAKE
+         CALL AccLakeTimeVars ()
+#endif
       ENDIF
 
       select CASE (trim(adjustl(DEF_HIST_FREQ)))
@@ -3722,7 +3739,9 @@ CONTAINS
          CALL write_history_variable_3d ( DEF_hist_vars%lake_icefrac, &
             a_lake_icefrac, file_hist, 'f_lake_icefrac', itime_in_file, 'lake', 1, nl_lake, &
             sumarea, filter, 'lake ice fraction cover','0-1')
-
+#ifdef EXTERNAL_LAKE
+         CALL LakeVarsSaveHist (nl_lake, file_hist, HistForm, itime_in_file, sumarea, filter)
+#endif
          ! --------------------------------
          ! Retrieve through averaged fluxes
          ! --------------------------------
@@ -3934,6 +3953,9 @@ CONTAINS
 #endif
 
          CALL FLUSH_acc_fluxes ()
+#ifdef EXTERNAL_LAKE
+         CALL Flush_LakeAccVars ()
+#endif
 
 #ifdef SinglePoint
          IF (USE_SITE_HistWriteBack .and. memory_to_disk) THEN

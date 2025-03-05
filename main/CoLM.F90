@@ -97,6 +97,11 @@ PROGRAM CoLM
    USE MOD_HistWriteBack
 #endif
 
+#ifdef EXTERNAL_LAKE
+   USE MOD_Lake_TimeVars
+   USE MOD_Lake_Namelist
+#endif
+
    IMPLICIT NONE
 
    character(len=256) :: nlfile
@@ -155,6 +160,10 @@ PROGRAM CoLM
       CALL getarg (1, nlfile)
 
       CALL read_namelist (nlfile)
+
+#ifdef EXTERNAL_LAKE
+      CALL read_lake_namelist (nlfile)
+#endif
 
 #ifdef USEMPI
       IF (DEF_HIST_WriteBack) THEN
@@ -288,6 +297,11 @@ PROGRAM CoLM
       ! Read in the model time varying data (model state variables)
       CALL allocate_TimeVariables  ()
       CALL READ_TimeVariables (jdate, lc_year, casename, dir_restart)
+
+#ifdef EXTERNAL_LAKE
+      CALL allocate_LakeTimeVars ()
+      CALL READ_LakeTimeVars (jdate, lc_year, casename, dir_restart)
+#endif
 
       ! Read in SNICAR optical and aging parameters
       IF (DEF_USE_SNICAR) THEN
@@ -537,6 +551,15 @@ PROGRAM CoLM
 #else
             CALL WRITE_TimeVariables (jdate, lc_year,  casename, dir_restart)
 #endif
+
+#ifdef EXTERNAL_LAKE
+#ifdef LULCC
+            CALL WRITE_LakeTimeVars (jdate, jdate(1), casename, dir_restart)
+#else
+            CALL WRITE_LakeTimeVars (jdate, lc_year, casename, dir_restart)
+#endif
+#endif
+
 #if(defined CaMa_Flood)
             IF (p_is_master) THEN
                CALL colm_cama_write_restart (jdate, lc_year,  casename, dir_restart)
@@ -546,6 +569,10 @@ PROGRAM CoLM
 
 #ifdef RangeCheck
          CALL check_TimeVariables ()
+#endif
+
+#if (defined RangeCheck) && (defined EXTERNAL_LAKE)
+         CALL CHECK_LakeTimeVars()
 #endif
 
 #ifdef USEMPI
@@ -587,6 +614,10 @@ PROGRAM CoLM
       CALL deallocate_TimeVariables  ()
       CALL deallocate_1D_Forcing     ()
       CALL deallocate_1D_Fluxes      ()
+
+#ifdef EXTERNAL_LAKE
+      CALL deallocate_LakeTimeVars ()
+#endif
 
 #if (defined CatchLateralFlow)
       CALL lateral_flow_final ()

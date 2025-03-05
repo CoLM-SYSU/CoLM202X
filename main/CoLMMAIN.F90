@@ -98,6 +98,19 @@ SUBROUTINE CoLMMAIN ( &
            pondmx,       smpmax,       smpmin,       trsmx0,       &
            tcrit,        &
 
+#ifdef EXTERNAL_LAKE
+         ! additional variables required by external lake model
+           zlake,        dzlake,        zilak,        dplak,         &
+           ziarea,       uwatv,        vwatv,        lksal,         &
+           tke,          eps,          num,          nuh,           &
+           lkz0m,        lkz0h,        lkz0q,        felak,         &
+           gamma,        etal,         btpri,        tmsno,         &
+           tmice,        tmmnw,        tmwml,        tmbot,         &
+           tmups,        mldp,         upsdp,        icedp,         &
+           bicedp,       wicedp,       CTfrac,       frlak,         &
+           etke,         rhosnw,       lkrho,       &
+#endif
+
          ! additional variables required by coupling with WRF model
            emis,         z0m,          zol,          rib,          &
            ustar,        qstar,        tstar,        fm,           &
@@ -171,6 +184,11 @@ SUBROUTINE CoLMMAIN ( &
    USE YOS_CMF_INPUT, only: LWINFILT,LWEVAP
 #endif
    USE MOD_SPMD_Task
+
+#ifdef EXTERNAL_LAKE
+   USE MOD_Lake_Driver, only: Lake_Driver
+   USE MOD_Lake_Const, only: nlice
+#endif
 
    IMPLICIT NONE
 
@@ -472,6 +490,45 @@ SUBROUTINE CoLMMAIN ( &
         fm          ,&! integral of profile function for momentum
         fh          ,&! integral of profile function for heat
         fq            ! integral of profile function for moisture
+
+#ifdef EXTERNAL_LAKE
+   real(r8), intent(inout) :: &
+      dplak                  ,&! lake depth (m)
+      zlake(nl_lake)         ,&! lake layer depth [m]
+      dzlake(nl_lake)         ,&! lake layer thickness [m]
+      zilak(nl_lake+1)       ,&! lake layer interface depth [m]
+      ziarea(nl_lake+1)      ,&! lake layer interface area [m2]
+      uwatv(nl_lake)         ,&! water velocity [m/s]
+      vwatv(nl_lake)         ,&! water velocity [m/s]
+      lksal(nl_lake)         ,&! Salinity [‰]    
+      tke(nl_lake+1)         ,&! Turbulent kinetic energy (TKE) [J/kg]
+      eps(nl_lake+1)         ,&! TKE dissipation rate [W/kg]
+      num(nl_lake+1)         ,&! Turbulent viscosity (momentum)
+      nuh(nl_lake+1)         ,&! Turbulent diffusivity (heat)
+      lkrho(nl_lake)         ,&! Water density [kg/m3]
+      lkz0m                  ,&! effective roughness [m]
+      lkz0h                  ,&! roughness length for sensible heat [m]
+      lkz0q                  ,&! roughness length for latent heat [m]
+      felak                  ,&! lake fetch length [m]
+      gamma                  ,&! enhancement factor [-]
+      etal                   ,&! light extinction coefficient [m-1]
+      btpri                  ,&! betaprime [-]
+      tmsno                  ,&! snow temperature [K]
+      tmice                  ,&! Temperature at the snow-ice or air-ice interface [K]
+      tmmnw                  ,&! Mean temperature of the water column [K]
+      tmwml                  ,&! Mixed-layer temperature [K]
+      tmbot                  ,&! Temperature at the water-bottom sediment interface [K]
+      tmups                  ,&! Temperature at the bottom of the upper layer of the sediments [K]
+      mldp                   ,&! mixed layer depth [m]
+      upsdp                  ,&! bottom of the upper layer of the sediments [m]
+      icedp                  ,&! ice depth [m]
+      bicedp                 ,&! black snow depth (m)
+      wicedp                 ,&! white snow depth (m)
+      CTfrac                 ,&! Shape factor (thermocline)
+      frlak                  ,&! lake fraction [-]
+      etke                   ,&! Seiche energy [J]
+      rhosnw                   ! Snow density [kg/m3]
+#endif
 
 !-------------------------- Local Variables ----------------------------
    logical  :: is_dry_lake
@@ -1145,6 +1202,7 @@ SUBROUTINE CoLMMAIN ( &
          pg_rain = prc_rain + prl_rain
          pg_snow = prc_snow + prl_snow
 
+#ifndef EXTERNAL_LAKE
          CALL newsnow_lake ( DEF_USE_Dynamic_Lake, &
               ! "in" arguments
               ! ---------------
@@ -1214,6 +1272,54 @@ SUBROUTINE CoLMMAIN ( &
               mss_bcpho    ,mss_bcphi    ,mss_ocpho       ,mss_ocphi       ,&
               mss_dst1     ,mss_dst2     ,mss_dst3        ,mss_dst4         )
 
+#else
+         CALL Lake_Driver( &
+               ! "in" arguments    
+               ! -------------------
+               nl_lake     ,-maxsnl       ,nl_soil        ,nlice         ,& 
+               deltim      ,patchlatr     ,patchlonr      ,& 
+               forc_hgt_u  ,forc_hgt_t    ,forc_hgt_q     ,forc_us       ,&
+               forc_vs     ,forc_t        ,forc_q         ,forc_rhoair   ,&
+               forc_psrf   ,forc_frl      ,sabg           ,1000.         ,& 
+               prc_rain    ,prl_rain      ,prc_snow       ,prl_snow      ,&
+               forc_hpbl   ,vf_quartz     ,vf_gravels     ,vf_om         ,&
+               vf_sand     ,wf_gravels    ,wf_sand        ,porsl         ,&
+               csol        ,k_solids      ,dksatf         ,dkdry         ,&
+               dksatu      ,BA_alpha      ,BA_beta        ,t_precip      ,&
+               forc_sols   ,forc_soll     ,forc_solsd     ,forc_solld    ,&
+               ipatch      ,bifall        ,&
+               ! "inout" arguments
+               ! -------------------
+               t_grnd      ,t_lake        ,t_soisno       ,&
+               zlake       ,zilak         ,dzlake          ,dplak         ,&
+               z_soisno    ,zi_soisno     ,dz_soisno      ,&
+               savedtke1   ,scv           ,sag            ,&
+               snowdp      ,wliq_soisno   ,wice_soisno    ,lkz0m         ,&
+               lkz0h       ,lkz0q         ,felak          ,gamma         ,&
+               etal        ,btpri         ,lake_icefrac   ,snl           ,&
+               tmsno       ,tmice         ,tmmnw          ,tmwml         ,&
+               tmbot       ,tmups         ,icedp          ,mldp          ,&
+               upsdp       ,CTfrac        ,frlak          ,ziarea        ,&
+               uwatv       ,vwatv         ,lksal          ,tke           ,&
+               eps         ,etke          ,num            ,nuh           ,&
+               bicedp      ,wicedp        ,lkrho          ,rhosnw        ,&
+               gwat        ,&
+! SNICAR model variables
+               forc_aer    ,sabg_snow_lyr ,snofrz         ,&
+               mss_bcpho   ,mss_bcphi     ,mss_ocpho      ,mss_ocphi     ,&
+               mss_dst1    ,mss_dst2      ,mss_dst3       ,mss_dst4      ,&
+! END SNICAR model variables
+               ! "out" arguments
+               ! -------------------
+               fsena       ,fevpa         ,lfevpa         ,fseng         ,&
+               fevpg       ,olrg          ,fgrnd          ,trad          ,&
+               qseva       ,qsubl         ,qsdew          ,qfros         ,&
+               taux        ,tauy          ,ustar          ,qstar         ,&
+               tstar       ,emis          ,sm             ,zol           ,&
+               tref        ,qref          ,fm             ,fq            ,&
+               rib         ,fh            )
+         z0m = lkz0m
+#endif
 
          IF (.not. DEF_USE_Dynamic_Lake) THEN
             ! We assume the land water bodies have zero extra liquid water capacity
