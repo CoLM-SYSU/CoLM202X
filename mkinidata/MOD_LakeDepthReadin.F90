@@ -2,12 +2,12 @@
 
 MODULE MOD_LakeDepthReadin
 
-!------------------------------------------------------------------------------------------
-! DESCRIPTION:
-! Read in lakedepth and assign lake thickness of each layer.
+!-----------------------------------------------------------------------
+! !DESCRIPTION:
+!  Read in lakedepth and assign lake thickness of each layer.
 !
-! Original author: Yongjiu Dai, 03/2018
-!------------------------------------------------------------------------------------------
+!  Original author: Yongjiu Dai, 03/2018
+!-----------------------------------------------------------------------
 
    USE MOD_Precision
    IMPLICIT NONE
@@ -23,11 +23,11 @@ CONTAINS
    SUBROUTINE lakedepth_readin (dir_landdata, lc_year)
 
    USE MOD_Precision
-   USE MOD_Vars_Global, only : nl_lake
+   USE MOD_Vars_Global, only: nl_lake
    USE MOD_SPMD_Task
    USE MOD_LandPatch
    USE MOD_NetCDFVector
-   USE MOD_Vars_TimeInvariants, only : lakedepth, dz_lake
+   USE MOD_Vars_TimeInvariants, only: lakedepth, dz_lake
 #ifdef SinglePoint
    USE MOD_SingleSrfdata
 #endif

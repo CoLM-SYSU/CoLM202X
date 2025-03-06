@@ -3,16 +3,16 @@
 MODULE MOD_HistGridded
 
 !----------------------------------------------------------------------------
-! DESCRIPTION:
+! !DESCRIPTION:
 !
 !     Write out gridded model results to history files.
 !
-! Original version: Yongjiu Dai, September 15, 1999, 03/2014
+!  Original version: Yongjiu Dai, September 15, 1999, 03/2014
 !
-! REVISIONS:
-! Shupeng Zhang, 05/2023: 1) porting codes to MPI parallel version
+! !REVISIONS:
+!  Shupeng Zhang, 05/2023: 1) porting codes to MPI parallel version
 !
-! TODO...(need complement)
+!  TODO...(need complement)
 !----------------------------------------------------------------------------
 
    USE MOD_Precision
@@ -40,7 +40,6 @@ MODULE MOD_HistGridded
 !--------------------------------------------------------------------------
 CONTAINS
 
-   !---------------------------------------
    SUBROUTINE hist_gridded_init (dir_hist, lulcc_call)
 
    USE MOD_SPMD_Task
@@ -51,7 +50,7 @@ CONTAINS
    USE MOD_LandUrban
 #endif
    USE MOD_Vars_1DAccFluxes
-   USE MOD_Forcing, only : gforc
+   USE MOD_Forcing, only: gforc
 #ifdef SinglePoint
    USE MOD_SingleSrfData
 #endif
@@ -112,7 +111,7 @@ CONTAINS
 
    END SUBROUTINE hist_gridded_init
 
-   ! -------
+
    SUBROUTINE flux_map_and_write_2d ( &
          acc_vec, file_hist, varname, itime_in_file, sumarea, filter, &
          longname, units)
@@ -172,7 +171,7 @@ CONTAINS
 
    END SUBROUTINE flux_map_and_write_2d
 
-   ! -------
+
    SUBROUTINE flux_map_and_write_urb_2d ( &
          acc_vec, file_hist, varname, itime_in_file, sumarea, filter, &
          longname, units)
@@ -232,7 +231,7 @@ CONTAINS
 
    END SUBROUTINE flux_map_and_write_urb_2d
 
-   ! -------
+
    SUBROUTINE flux_map_and_write_3d ( &
          acc_vec, file_hist, varname, itime_in_file, dim1name, lb1, ndim1, sumarea, filter, &
          longname, units)
@@ -300,7 +299,7 @@ CONTAINS
 
    END SUBROUTINE flux_map_and_write_3d
 
-   ! -------
+
    SUBROUTINE flux_map_and_write_4d ( &
          acc_vec, file_hist, varname, itime_in_file, &
          dim1name, lb1, ndim1, dim2name, lb2, ndim2, &
@@ -371,7 +370,7 @@ CONTAINS
 
    END SUBROUTINE flux_map_and_write_4d
 
-   ! -------
+
    SUBROUTINE flux_map_and_write_ln ( &
          acc_vec, file_hist, varname, itime_in_file, sumarea, filter, &
          longname, units)
@@ -439,7 +438,7 @@ CONTAINS
 
    END SUBROUTINE flux_map_and_write_ln
 
-   !------------------------------
+
    SUBROUTINE hist_gridded_write_time ( &
          filename, dataname, time, itime)
 
@@ -535,7 +534,7 @@ CONTAINS
 
    END SUBROUTINE hist_gridded_write_time
 
-   !----------------------------------------------------------------------------
+
    SUBROUTINE hist_write_var_real8_2d ( &
          filename, dataname, grid, itime, wdata, compress, longname, units)
 
@@ -715,7 +714,7 @@ CONTAINS
 
    END SUBROUTINE hist_write_var_real8_2d
 
-   !----------------------------------------------------------------------------
+
    SUBROUTINE hist_write_var_real8_3d ( &
          filename, dataname, dim1name, grid, itime, wdata, compress, longname, units)
 
@@ -891,7 +890,7 @@ CONTAINS
 
    END SUBROUTINE hist_write_var_real8_3d
 
-   !----------------------------------------------------------------------------
+
    SUBROUTINE hist_write_var_real8_4d ( &
          filename, dataname, dim1name, dim2name, grid, itime, wdata, compress, longname, units)
 
@@ -1071,7 +1070,7 @@ CONTAINS
 
    END SUBROUTINE hist_write_var_real8_4d
 
-   !------------------
+
    SUBROUTINE hist_write_grid_info (fileblock, grid, iblk, jblk)
 
    USE MOD_Block

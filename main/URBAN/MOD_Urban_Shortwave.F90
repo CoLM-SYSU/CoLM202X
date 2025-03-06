@@ -42,6 +42,7 @@ CONTAINS
 !                   |++++++|  impervious/pervious ground
 !         __________|++++++|____________________________________
 !
+!
 ! !DESCRIPTION:
 !
 !  Calculate the ground shadow area, the area of the sunny and shady
@@ -51,7 +52,6 @@ CONTAINS
 !  surface, considering multiple scattering processes, and establish
 !  the radiation transfer balance equation for both incident direct
 !  and diffuse radiation cases for solving.
-!
 !
 !  Created by Hua Yuan, 09/2021
 !
@@ -279,6 +279,7 @@ CONTAINS
 !                   |[]++[]|          |      |++++++|
 !                   |++++++|  impervious/pervious ground
 !         __________|++++++|____________________________________
+!
 !
 ! !DESCRIPTION:
 !

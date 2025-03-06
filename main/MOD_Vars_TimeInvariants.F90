@@ -1,17 +1,17 @@
 #include <define.h>
 
-! -------------------------------
+!-----------------------------------------------------------------------
 ! Created by Yongjiu Dai, 03/2014
-! -------------------------------
+!-----------------------------------------------------------------------
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
 MODULE MOD_Vars_PFTimeInvariants
-! -----------------------------------------------------------------
+!-----------------------------------------------------------------------
 ! !DESCRIPTION:
-! Define PFT time invariables
+!  Define PFT time invariables
 !
-! Added by Hua Yuan, 08/2019
-! -----------------------------------------------------------------
+!  Added by Hua Yuan, 08/2019
+!-----------------------------------------------------------------------
 
    USE MOD_Precision
    USE MOD_Vars_Global
@@ -45,13 +45,13 @@ CONTAINS
 !-----------------------------------------------------------------------
 
    SUBROUTINE allocate_PFTimeInvariants
-   ! --------------------------------------------------------------------
+   ! -------------------------------------------------------------------
    ! Allocates memory for CoLM PFT 1d [numpft] variables
-   ! --------------------------------------------------------------------
+   ! -------------------------------------------------------------------
 
    USE MOD_SPMD_Task
-   USE MOD_LandPatch, only : numpatch
-   USE MOD_LandPFT,   only : numpft
+   USE MOD_LandPatch, only: numpatch
+   USE MOD_LandPFT,   only: numpft
    USE MOD_Precision
    IMPLICIT NONE
 
@@ -119,9 +119,9 @@ CONTAINS
    END SUBROUTINE WRITE_PFTimeInvariants
 
    SUBROUTINE deallocate_PFTimeInvariants
-! --------------------------------------------------
-! Deallocates memory for CoLM PFT 1d [numpft] variables
-! --------------------------------------------------
+   ! -------------------------------------------------------------------
+   ! Deallocates memory for CoLM PFT 1d [numpft] variables
+   ! -------------------------------------------------------------------
    USE MOD_SPMD_Task
    USE MOD_LandPFT
 
@@ -288,9 +288,9 @@ CONTAINS
 !-----------------------------------------------------------------------
 
    SUBROUTINE allocate_TimeInvariants ()
-   ! --------------------------------------------------------------------
+   ! -------------------------------------------------------------------
    ! Allocates memory for CoLM 1d [numpatch] variables
-   ! --------------------------------------------------------------------
+   ! -------------------------------------------------------------------
 
    USE MOD_Precision
    USE MOD_Vars_Global
@@ -399,9 +399,9 @@ CONTAINS
    !---------------------------------------
    SUBROUTINE READ_TimeInvariants (lc_year, casename, dir_restart)
 
-   !=======================================================================
+   !====================================================================
    ! Original version: Yongjiu Dai, September 15, 1999, 03/2014
-   !=======================================================================
+   !====================================================================
 
    USE MOD_Namelist
    USE MOD_SPMD_Task
@@ -564,11 +564,11 @@ CONTAINS
    !---------------------------------------
    SUBROUTINE WRITE_TimeInvariants (lc_year, casename, dir_restart)
 
-   !=======================================================================
+   !====================================================================
    ! Original version: Yongjiu Dai, September 15, 1999, 03/2014
-   !=======================================================================
+   !====================================================================
 
-   USE MOD_Namelist, only : DEF_REST_CompressLevel, DEF_USE_BEDROCK
+   USE MOD_Namelist, only: DEF_REST_CompressLevel, DEF_USE_BEDROCK
    USE MOD_SPMD_Task
    USE MOD_NetCDFSerial
    USE MOD_NetCDFVector
@@ -726,7 +726,7 @@ CONTAINS
          CALL ncio_write_serial (file_restart, 'tcrit ', tcrit )       ! critical temp. to determine rain or snow
          CALL ncio_write_serial (file_restart, 'wetwatmax', wetwatmax) ! maximum wetland water (mm)
 
-      END if
+      ENDIF
 
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
@@ -861,12 +861,11 @@ CONTAINS
    END SUBROUTINE deallocate_TimeInvariants
 
 #ifdef RangeCheck
-   !---------------------------------------
    SUBROUTINE check_TimeInvariants ()
 
    USE MOD_SPMD_Task
    USE MOD_RangeCheck
-   USE MOD_Namelist, only : DEF_USE_BEDROCK, DEF_USE_Forcing_Downscaling
+   USE MOD_Namelist, only: DEF_USE_BEDROCK, DEF_USE_Forcing_Downscaling
 
    IMPLICIT NONE
 
@@ -940,14 +939,14 @@ CONTAINS
          CALL check_vector_data ('sf_lut       [-]     ', sf_lut_patches   ) ! shadow mask
 #else
          IF (allocated(sf_curve_patches)) allocate(tmpcheck(size(sf_curve_patches,1),size(sf_curve_patches,3)))
-         
+
          IF (allocated(sf_curve_patches)) tmpcheck = sf_curve_patches(:,1,:)
          CALL check_vector_data ('1 sf_curve p [-]     ', tmpcheck) ! shadow mask
          IF (allocated(sf_curve_patches)) tmpcheck = sf_curve_patches(:,2,:)
          CALL check_vector_data ('2 sf_curve p [-]     ', tmpcheck) ! shadow mask
          IF (allocated(sf_curve_patches)) tmpcheck = sf_curve_patches(:,3,:)
          CALL check_vector_data ('3 sf_curve p [-]     ', tmpcheck) ! shadow mask
-         
+
          IF (allocated(tmpcheck)) deallocate(tmpcheck)
 #endif
       ENDIF

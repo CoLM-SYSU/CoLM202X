@@ -14,7 +14,7 @@ MODULE MOD_BGC_CNZeroFluxes
 ! Xingjie Lu, 2022, modify original CLM5 to be compatible with CoLM code structure. 
 
    USE MOD_Precision
-   USE MOD_Namelist, only : DEF_USE_NITRIF
+   USE MOD_Namelist, only: DEF_USE_NITRIF
  
    USE MOD_BGC_Vars_1DPFTFluxes, only:        &
        m_leafc_to_litter_p                  , &

@@ -18,7 +18,7 @@ MODULE MOD_Hydro_SoilWater
    USE MOD_Precision
    USE MOD_Hydro_SoilFunction
    USE MOD_Namelist, only: DEF_USE_PLANTHYDRAULICS
-   USE MOD_UserDefFun, only : findloc_ud
+   USE MOD_UserDefFun, only: findloc_ud
 
    IMPLICIT NONE
 
@@ -171,7 +171,7 @@ CONTAINS
    ! soil water movement
    !=======================================================================
 
-   USE MOD_Const_Physical, only : tfrz
+   USE MOD_Const_Physical, only: tfrz
 
    IMPLICIT NONE
 
@@ -432,9 +432,10 @@ CONTAINS
 
       IF (abs(wblc) > tolerance) THEN
          write(*,*) 'soil_water_vertical_movement balance error: ', wblc, ' in mm.'
-         write(*,*) 'qtop: ', qgtop, 'etr: ', etr, 'rsubst: ', rsubst, 'surf dep: ', ss_dp
+         write(*,*) 'qtop: ', qgtop, 'etr: ', sum(etroot)+etrdef, 'rsubst: ', rsubst, 'surf dep: ', ss_dp
          write(*,*) 'permeable (1-10): ', is_permeable
-         write(*,*) 'vliq (1-10): ', ss_vliq
+         write(*,*) 'vliq  (1-10): ', ss_vliq
+         write(*,*) 'porsl (1-10): ', porsl
       ENDIF
 
       DO ilev = 1, nlev

@@ -234,11 +234,11 @@ FORCINGPATH=`awk '/FORCINGPATH/ {print $2}' $CONFIG`
 #FORCINGPATH=/share/home/dq010/CoLM/data/inputdata/atm/GSWP3/
 HEADER=$ROOT/run/scripts/batch.config
 
-echo ROOT is $ROOT
-echo RAWDATA is $RAWDATA
-echo RUNTIME is $RUNTIME
-echo MAKEOPTION is $MAKEOPTION
-echo FORCINGPATH is $FORCINGPATH
+#echo ROOT is $ROOT
+#echo RAWDATA is $RAWDATA
+#echo RUNTIME is $RUNTIME
+#echo MAKEOPTION is $MAKEOPTION
+#echo FORCINGPATH is $FORCINGPATH
 
 #machine = earthlab
 #ROOT=/data/sysu_daiyj_01/luxj/CoLM202X/
@@ -249,7 +249,7 @@ echo FORCINGPATH is $FORCINGPATH
 #HEADER=$ROOT/run/scripts/jobs.config
 #CONFIG=$ROOT/run/scripts/machine.config
 
-while getopts ":hbprlun:i:t:e:c:g:s:m:" options ;
+while getopts ":hbprlun:i:t:e:c:g:s:f:m:" options ;
 do
     case $options in
       b) BGC=True ;;
@@ -284,17 +284,17 @@ if [ -z "$Name" ];then
 fi
 
 if [ -z "${Forcing}" ];then
-   echo "Forcing is not specified, use GSWP3 as the default forcing"
+   #echo "Forcing is not specified, use GSWP3 as the default forcing"
    Forcing=CRUJRA
 fi
 
 if [ -z "${SpinupScheme}" ];then
-   echo no Spinup Scheme is selected, simulation will be run only once.
+   #echo no Spinup Scheme is selected, simulation will be run only once.
    SpinupScheme=none
 fi
 
 if [ -z "${startyr}" ];then
-   echo "-t option is missing, set startyr=1980 as default"
+   #echo "-t option is missing, set startyr=1980 as default"
    startyr=1980
 fi
 
@@ -351,6 +351,9 @@ if [ ! -z "$ConfigName" ]; then
 	 IsDefCB="#undef"
 	 LandMask=False
 	 SpinupScheme=none
+	 nx_block=18
+	 ny_block=9
+	 nGroup=36
 	 ;;
       Global_Grid_50km_USGS_VG)
 	 IsDefBGC="#undef"
@@ -376,6 +379,9 @@ if [ ! -z "$ConfigName" ]; then
 	 IsDefCB="#undef"
 	 LandMask=False
 	 SpinupScheme=none
+  	 nx_block=18
+	 ny_block=9
+	 nGroup=54
 	 ;;
       Global_Grid_50km_IGBP_VG)
 	 IsDefBGC="#undef"
@@ -401,6 +407,9 @@ if [ ! -z "$ConfigName" ]; then
 	 IsDefCB="#undef"
 	 LandMask=False
 	 SpinupScheme=none
+  	 nx_block=18
+	 ny_block=9
+	 nGroup=54
 	 ;;
       Global_Grid_2x2_PFT_VG_BGC)
 	 IsDefBGC="#define"
@@ -427,6 +436,9 @@ if [ ! -z "$ConfigName" ]; then
 	 BGC=True
 	 LandMask=False
 	 SpinupScheme=none
+	 nx_block=18
+	 ny_block=9
+	 nGroup=15
 	 ;;
       Global_Grid_2x2_PFT_VG_BGC-spinup)
 	 IsDefBGC="#define"
@@ -455,6 +467,9 @@ if [ ! -z "$ConfigName" ]; then
 	 SpinupScheme=sasund
 	 startyr=1850
 	 endyr=1850
+	 nx_block=18
+	 ny_block=9
+	 nGroup=15
 	 ;;
       Global_Grid_2x2_PC_VG_BGC)
 	 IsDefBGC="#define"
@@ -480,6 +495,9 @@ if [ ! -z "$ConfigName" ]; then
 	 IsDefCB="#undef"
 	 LandMask=False
 	 SpinupScheme=none
+	 nx_block=18
+	 ny_block=9
+	 nGroup=15
 	 ;;
       Global_Grid_2x2_PFT_VG_BGC_CROP)
 	 IsDefBGC="#define"
@@ -506,6 +524,9 @@ if [ ! -z "$ConfigName" ]; then
 	 BGC=True
 	 LandMask=False
 	 SpinupScheme=none
+  	 nx_block=18
+	 ny_block=9
+	 nGroup=24
 	 ;;
       Global_Grid_50km_PFT_VG_CaMa)
 	 IsDefBGC="#undef"
@@ -532,6 +553,9 @@ if [ ! -z "$ConfigName" ]; then
 	 LandMask=False
 	 BGC=True
 	 SpinupScheme=none
+	 nx_block=18
+	 ny_block=9
+	 nGroup=36
 	 ;;
       RegGuangdong_Grid_10km_PFT_VG_BGC_CROP)
 	 IsDefBGC="#define"
@@ -558,6 +582,9 @@ if [ ! -z "$ConfigName" ]; then
 	 LandMask="DEF_file_mesh='$RAWDATA/landdata/landmask_igbp_10km_Guangdong-extended.nc'"
          BGC=True
 	 SpinupScheme=none
+  	 nx_block=72
+	 ny_block=36
+	 nGroup=63
 	 ;;
       *)
          echo "Error: the argument for the -c|--config option is incorret."
@@ -567,7 +594,7 @@ if [ ! -z "$ConfigName" ]; then
    esac      
 
 else
-   if [ $BGC == True ];then
+   if [ "$BGC" == True ];then
       IsDefBGC="#define"
    else
       if [ -z "$BGC" ];then
@@ -577,7 +604,7 @@ else
 	 exit
       fi
    fi
-   if [ $Crop == True ];then
+   if [ "$Crop" == True ];then
       IsDefCrop="#define"
    else
       if [ -z "$Crop" ];then
@@ -619,8 +646,67 @@ else
 	 exit
       fi
    fi
+   if [ ! -z "$SubgridName" ];then
+      case $SubgridName in
+	 usgs)
+   	    IsDefUSGS="#define"
+   	    IsDefIGBP="#undef"
+   	    IsDefPFT="#undef"
+   	    IsDefPC="#undef"
+	    ;;
+	 igbp)
+   	    IsDefUSGS="#undef"
+   	    IsDefIGBP="#define"
+   	    IsDefPFT="#undef"
+   	    IsDefPC="#undef"
+	    ;;
+	 pft)
+   	    IsDefUSGS="#undef"
+   	    IsDefIGBP="#undef"
+   	    IsDefPFT="#define"
+   	    IsDefPC="#undef"
+	    ;;
+	 pc)
+   	    IsDefUSGS="#undef"
+   	    IsDefIGBP="#undef"
+   	    IsDefPFT="#undef"
+   	    IsDefPC="#define"
+	    ;;
+	 *)
+            echo "Error: the argument for the -s|--subgridtype option is incorret."
+	    echo "The argument -g $SubgridName is unknown. Check available option by -h|--help"
+	    exit
+	    ;;
+      esac
+   else
+      IsDefUSGS="#undef"
+      IsDefIGBP="#undef"
+      IsDefPFT="#define"
+      IsDefPC="#undef"
+   fi
    if [ ! -z "$GridName" ];then
       case $GridName in
+	 grid_g1440x720) 
+            IsDefGrid="#define"
+	    IsDefCatch="#undef"
+	    IsDefUnstr="#undef"
+	    IsDefSingl="#undef"
+	    EDGES=-90
+	    EDGEN=90
+	    EDGEE=180
+	    EDGEW=-180
+	    RESLAT=0.25
+	    RESLON=0.25
+	    if [ "$SubgridName" == "igbp" ];then
+  	       nx_block=36
+	       ny_block=18
+	       nGroup=63
+	    else
+	       nx_block=30
+	       ny_block=15
+	       nGroup=45
+            fi
+	    ;;
 	 grid_g720x360) 
             IsDefGrid="#define"
 	    IsDefCatch="#undef"
@@ -632,6 +718,15 @@ else
 	    EDGEW=-180
 	    RESLAT=0.5
 	    RESLON=0.5
+	    if [ "$SubgridName" == "igbp" ];then
+  	       nx_block=18
+	       ny_block=9
+	       nGroup=54
+	    else
+	       nx_block=18
+	       ny_block=9
+	       nGroup=36
+            fi
 	    ;;
 	 grid_g360x180)
             IsDefGrid="#define"
@@ -644,6 +739,15 @@ else
 	    EDGEW=-180
             RESLAT=1.0
             RESLON=1.0
+	    if [ "$SubgridName" == "igbp" ];then
+  	       nx_block=18
+	       ny_block=9
+	       nGroup=36
+	    else
+	       nx_block=18
+	       ny_block=9
+	       nGroup=24
+            fi
 	    ;;
 	 grid_g144x96)
             IsDefGrid="#define"
@@ -656,6 +760,15 @@ else
 	    EDGEW=-180
             RESLAT=1.875
             RESLON=2.5
+	    if [ "$SubgridName" == "igbp" ];then
+  	       nx_block=18
+	       ny_block=9
+	       nGroup=24
+	    else
+	       nx_block=18
+	       ny_block=9
+	       nGroup=15
+            fi
 	    ;;
 	 grid_g3600x1800)
             IsDefGrid="#define"
@@ -668,6 +781,15 @@ else
 	    EDGEW=-180
             RESLAT=0.1
             RESLON=0.1
+	    if [ "$SubgridName" == "igbp" ];then
+  	       nx_block=72
+	       ny_block=36
+	       nGroup=63
+	    else
+	       nx_block=72
+	       ny_block=36
+	       nGroup=54
+            fi
 	    ;;
 	 grid_rGuangDong)
             IsDefGrid="#define"
@@ -713,44 +835,6 @@ else
 	    ;;
       esac
    fi
-   if [ ! -z "$SubgridName" ];then
-      case $SubgridName in
-	 usgs)
-   	    IsDefUSGS="#define"
-   	    IsDefIGBP="#undef"
-   	    IsDefPFT="#undef"
-   	    IsDefPC="#undef"
-	    ;;
-	 igbp)
-   	    IsDefUSGS="#undef"
-   	    IsDefIGBP="#define"
-   	    IsDefPFT="#undef"
-   	    IsDefPC="#undef"
-	    ;;
-	 pft)
-   	    IsDefUSGS="#undef"
-   	    IsDefIGBP="#undef"
-   	    IsDefPFT="#define"
-   	    IsDefPC="#undef"
-	    ;;
-	 pc)
-   	    IsDefUSGS="#undef"
-   	    IsDefIGBP="#undef"
-   	    IsDefPFT="#undef"
-   	    IsDefPC="#define"
-	    ;;
-	 *)
-            echo "Error: the argument for the -s|--subgridtype option is incorret."
-	    echo "The argument -g $SubgridName is unknown. Check available option by -h|--help"
-	    exit
-	    ;;
-      esac
-   else
-      IsDefUSGS="#undef"
-      IsDefIGBP="#undef"
-      IsDefPFT="#define"
-      IsDefPC="#undef"
-   fi
 
    if [ ! -z "$SoilModel" ];then
       case $SoilModel in
@@ -764,7 +848,7 @@ else
 	    ;;
 	 *)
             echo "Error: the argument for the -m|--soilmodel option is incorret."
-	    echo "The argument -g $SoilModel is unknown. Check available option by -h|--help"
+	    echo "The argument -m $SoilModel is unknown. Check available option by -h|--help"
 	    exit
 	    ;;
       esac	    
@@ -774,6 +858,43 @@ else
    fi
 fi
 
+if [ ! -z "$Forcing" ];then
+   case $Forcing in
+      GSWP3)
+         FORCINGPATHNAME="GSWP3"
+         ;;
+      CRUJRA)
+	 FORCINGPATHNAME="crujra_v2.5"
+	 ;;
+      CLDAS)
+	 FORCINGPATHNAME="CLDAS"
+	 ;;
+      CMFD)
+	 FORCINGPATHNAME="CMFD"
+	 ;;
+      CRUNCEPV4)
+	 FORCINGPATHNAME="cruncep_v4/cruncep"
+	 ;;
+      CRUNCEPV7)
+	 FORCINGPATHNAME="cruncep_v7"
+	 ;;
+      ERA5)
+	 FORCINGPATHNAME="ERA5"
+	 ;;
+      ERA5LAND)
+	 FORCINGPATHNAME="ERA5LAND/ERA5LAND"
+	 ;;
+      *)
+	 echo "Error: the argument for -f|--forcing option is invalid."
+	 echo "The argument -f $Forcing is unsupported. Check available option by -h"
+	 exit
+	 ;;
+    esac
+else
+   echo "Error: Forcing is missing"
+   exit
+fi
+      
 
 if [ -z "${BGC}" ] && [ ! -z "${Crop}" ];then
    echo " Error: -p|--crop option is set up without turn on the bgc (-b|--bgc)"
@@ -802,18 +923,8 @@ if [ -z "${endyr}" ];then
    endyr=2000
 fi
 
-if [ "${Name:0:1}" == '/' ];then
-   CASENAME=`echo "${Name##*/}"`
-   CASEPATH=`echo "${Name%/*}"`
-   echo $CASEPATH
-   echo $CASENAME
-else
-   CASEPATHNAME=$PWD/$Name
-   CASENAME=`echo "${CASEPATHNAME##*/}"`
-   CASEPATH=`echo "${CASEPATHNAME%/*}"`
-   echo $CASEPATH
-   echo $CASENAME
-fi
+CASENAME=$(basename "${Name}")
+CASEPATH=$(dirname "${Name}")
 mkdir -p $CASEPATH/$CASENAME
 
 cd $CASEPATH/$CASENAME
@@ -821,30 +932,31 @@ mkdir -p history
 mkdir -p restart
 mkdir -p landdata
 ENDYEAR=`expr $endyr + 1`
-echo startyr is $startyr
+#echo startyr is $startyr
+FORCINGDIR=${FORCINGPATH}/${FORCINGPATHNAME}
 
 ${ROOT}/run/scripts/create_namelist -p $CASEPATH/${CASENAME} -n input_${CASENAME}.nml -t $startyr -e $ENDYEAR -d $RAWDATA \
 	                    -r $RUNTIME -o ${RESLON} -a ${RESLAT} -f ${Forcing} -l $LandMask \
-			    -S $EDGES -N $EDGEN -W $EDGEW -E $EDGEE
+			    -S $EDGES -N $EDGEN -W $EDGEW -E $EDGEE -x ${nx_block} -y ${ny_block} -g ${nGroup}
 
 if [ ! -z "$SpinupScheme" ];then
    if [ $SpinupScheme == "sasund" ];then
       ${ROOT}/run/scripts/create_namelist -p $CASEPATH/${CASENAME} -n input_${CASENAME}-SASU.nml -t $startyr -e $ENDYEAR -d $RAWDATA \
 	                          -r $RUNTIME -o ${RESLON} -a ${RESLAT} -f ${Forcing} -l $LandMask -i \
-			          -S $EDGES -N $EDGEN -W $EDGEW -E $EDGEE 
+			          -S $EDGES -N $EDGEN -W $EDGEW -E $EDGEE -x ${nx_block} -y ${ny_block} -g ${nGroup}
    fi
 fi
 
 
-#Generate forcing namelist file, and replace specific forcing path $FORCINGPATH
+#Generate forcing namelist file, and replace specific forcing path $FORCINGDIR
 mkdir -p $CASEPATH/$CASENAME/bld/run
-sed "s/DEF_dir_forcing.*/DEF_dir_forcing = '${FORCINGPATH//\//\\/}'/g" ${ROOT}/run/forcing/${Forcing}.nml>$CASEPATH/$CASENAME/bld/run/${Forcing}.nml
+sed "s/DEF_dir_forcing.*/DEF_dir_forcing = '${FORCINGDIR//\//\\/}'/g" ${ROOT}/run/forcing/${Forcing}.nml>$CASEPATH/$CASENAME/bld/run/${Forcing}.nml
 
 if [ ! -z "SpinupScheme" ];then
-   echo "${ROOT}/run/scripts/create_scripts -p $CASEPATH/${CASENAME} -t $startyr -e $ENDYEAR -f $HEADER -c $CONFIG -i ${SpinupScheme}"
+   #echo "${ROOT}/run/scripts/create_scripts -p $CASEPATH/${CASENAME} -t $startyr -e $ENDYEAR -f $HEADER -c $CONFIG -i ${SpinupScheme}"
    ${ROOT}/run/scripts/create_scripts -p $CASEPATH/${CASENAME} -t $startyr -e $ENDYEAR -f $HEADER -c $CONFIG -i ${SpinupScheme}
 else 
-   echo "${ROOT}/run/scripts/create_scripts -p $CASEPATH/${CASENAME} -t $startyr -e $ENDYEAR -f $HEADER -c $CONFIG"
+   #echo "${ROOT}/run/scripts/create_scripts -p $CASEPATH/${CASENAME} -t $startyr -e $ENDYEAR -f $HEADER -c $CONFIG"
    ${ROOT}/run/scripts/create_scripts -p $CASEPATH/${CASENAME} -t $startyr -e $ENDYEAR -f $HEADER -c $CONFIG
 fi
 

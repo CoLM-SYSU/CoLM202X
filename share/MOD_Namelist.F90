@@ -3,12 +3,12 @@
 MODULE MOD_Namelist
 
 !-----------------------------------------------------------------------
-! DESCRIPTION:
+! !DESCRIPTION:
 !
 !    Variables in namelist files and subroutines to read namelist files.
 !
-! Initial Authors: Shupeng Zhang, Zhongwang Wei, Xingjie Lu, Nan Wei,
-!                  Hua Yuan, Wenzong Dong et al., May 2023
+!  Initial Authors: Shupeng Zhang, Zhongwang Wei, Xingjie Lu, Nan Wei,
+!                   Hua Yuan, Wenzong Dong et al., May 2023
 !-----------------------------------------------------------------------
 
    USE MOD_Precision, only: r8
@@ -604,6 +604,17 @@ MODULE MOD_Namelist
       logical :: hr                               = .true.
       logical :: fpg                              = .true.
       logical :: fpi                              = .true.
+      logical :: totvegc                          = .true.
+      logical :: totlitc                          = .true.
+      logical :: totcwdc                          = .true.
+      logical :: totsomc                          = .true.
+      logical :: totcolc                          = .true.
+      logical :: totvegn                          = .true.
+      logical :: totlitn                          = .true.
+      logical :: totcwdn                          = .true.
+      logical :: totsomn                          = .true.
+      logical :: totcoln                          = .true.
+      logical :: totsoiln_vr                      = .true.
       logical :: gpp_enftemp                      = .false. !1
       logical :: gpp_enfboreal                    = .false. !2
       logical :: gpp_dnfboreal                    = .false. !3
@@ -716,13 +727,13 @@ MODULE MOD_Namelist
       logical :: sum_irrig_count                  = .true.
 
       logical :: ndep_to_sminn                    = .true.
-      logical :: CONC_O2_UNSAT                    = .true.
-      logical :: O2_DECOMP_DEPTH_UNSAT            = .true.
-      logical :: abm                              = .true.
-      logical :: gdp                              = .true.
-      logical :: peatf                            = .true.
-      logical :: hdm                              = .true.
-      logical :: lnfm                             = .true.
+      logical :: CONC_O2_UNSAT                    = .false.
+      logical :: O2_DECOMP_DEPTH_UNSAT            = .false.
+      logical :: abm                              = .false.
+      logical :: gdp                              = .false.
+      logical :: peatf                            = .false.
+      logical :: hdm                              = .false.
+      logical :: lnfm                             = .false.
 
       logical :: leafcCap                         = .false.
       logical :: leafc_storageCap                 = .false.
@@ -1820,6 +1831,17 @@ CONTAINS
       CALL sync_hist_vars_one (DEF_hist_vars%hr                 , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%fpg                , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%fpi                , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%totvegc            , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%totlitc            , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%totcwdc            , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%totsomc            , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%totcolc            , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%totvegn            , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%totlitn            , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%totcwdn            , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%totsomn            , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%totcoln            , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%totsoiln_vr        , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%gpp_enftemp        , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%gpp_enfboreal      , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%gpp_dnfboreal      , set_defaults)
@@ -1906,6 +1928,10 @@ CONTAINS
       ENDIF
 #endif
       CALL sync_hist_vars_one (DEF_hist_vars%ndep_to_sminn                   , set_defaults)
+      IF(DEF_USE_NITRIF)THEN
+         CALL sync_hist_vars_one (DEF_hist_vars%CONC_O2_UNSAT                , set_defaults)
+         CALL sync_hist_vars_one (DEF_hist_vars%O2_DECOMP_DEPTH_UNSAT        , set_defaults)
+      ENDIF
       IF(DEF_USE_FIRE)THEN
          CALL sync_hist_vars_one (DEF_hist_vars%abm                          , set_defaults)
          CALL sync_hist_vars_one (DEF_hist_vars%gdp                          , set_defaults)

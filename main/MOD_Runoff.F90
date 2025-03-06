@@ -7,7 +7,7 @@ MODULE MOD_Runoff
    IMPLICIT NONE
    SAVE
 
-!  PUBLIC MEMBER FUNCTIONS:
+! PUBLIC MEMBER FUNCTIONS:
    PUBLIC :: SurfaceRunoff_SIMTOP
    PUBLIC :: SubsurfaceRunoff_SIMTOP
    PUBLIC :: Runoff_XinAnJiang
@@ -24,14 +24,14 @@ CONTAINS
                                     rsur,rsur_se,rsur_ie)
 
 !=======================================================================
-! the original code was provide by Robert E. Dickinson based on
-! following clues: a water table level determination level added
-! including highland and lowland levels and fractional area of wetland
-! (water table above the surface.  Runoff is parametrized from the
-! lowlands in terms of precip incident on wet areas and a base flow,
-! where these are estimated using ideas from TOPMODEL.
+!  the original code was provide by Robert E. Dickinson based on
+!  following clues: a water table level determination level added
+!  including highland and lowland levels and fractional area of wetland
+!  (water table above the surface.  Runoff is parametrized from the
+!  lowlands in terms of precip incident on wet areas and a base flow,
+!  where these are estimated using ideas from TOPMODEL.
 !
-! Author : Yongjiu Dai, 07/29/2002, Guoyue Niu, 06/2012
+!  Author : Yongjiu Dai, 07/29/2002, Guoyue Niu, 06/2012
 !=======================================================================
 
    IMPLICIT NONE

@@ -3,24 +3,33 @@
 SUBROUTINE Aggregation_SoilParameters ( &
       gland, dir_rawdata, dir_model_landdata, lc_year)
 
-!--------------------------------------------------------------------------------------------------------------------------------------
-! DESCRIPTION:
-! Create soil hydraulic and thermal parameters for the modeling reolustion
+!-----------------------------------------------------------------------
+! !DESCRIPTION:
+!  Create soil hydraulic and thermal parameters for the modeling reolustion
 !
-! REFERENCES:
-! 1)Dai, Y., Q. Xin, N. Wei, Y. Zhang, W. Shangguan, H. Yuan, S. Zhang, S. Liu, X. Lu, 2019. A global high-resolution dataset of
-!          soil hydraulic and thermal properties for land surface modeling. Journal of Advances in Modeling Earth Systems,11, 2996-3023.
-! 2)Dai, Y., N. Wei, H. Yuan, S. Zhang, W. Shangguan, S. Liu, and X. Lu, 2019. Evaluation of soil thermal conductivity schemes
-!          for use in land surface modelling, Journal of Advances in Modeling Earth Systems, 11, 3454-3473.
-! 3)Dai, Y., W. Shangguan, Q. Duan, B. Liu, S. Fu, and G. Niu, 2013. Development of a China dataset of soil hydraulic parameters
-!         using pedotransfer functions for land surface modeling. Journal of Hydrometeorology 14, 869–887
+! !REFERENCES:
+!  1) Dai, Y., Q. Xin, N. Wei, Y. Zhang, W. Shangguan, H. Yuan, S. Zhang, S.
+!  Liu, X. Lu, 2019. A global high-resolution dataset of soil hydraulic and
+!  thermal properties for land surface modeling. Journal of Advances in
+!  Modeling Earth Systems,11, 2996-3023.
 !
-! Original author: Yongjiu Dai and Wei Shangguan, 02/2014
+!  2) Dai, Y., N. Wei, H. Yuan, S. Zhang, W. Shangguan, S. Liu, and X. Lu, 2019.
+!  Evaluation of soil thermal conductivity schemes for use in land surface
+!  modelling, Journal of Advances in Modeling Earth Systems, 11, 3454-3473.
 !
-! REVISIONS:
-! Nan Wei, 06/2019: add algorithms of fitting soil water retention curves to aggregate soil hydraulic parameters from pixels to a patch.
-! Shupeng Zhang and Nan Wei, 01/2022: porting codes to MPI parallel version
-! -------------------------------------------------------------------------------------------------------------------------------------
+!  3) Dai, Y., W. Shangguan, Q. Duan, B. Liu, S. Fu, and G. Niu, 2013.
+!  Development of a China dataset of soil hydraulic parameters using
+!  pedotransfer functions for land surface modeling. Journal of
+!  Hydrometeorology 14, 869–887
+!
+!  Original author: Yongjiu Dai and Wei Shangguan, 02/2014
+!
+! !REVISIONS:
+!  06/2019, Nan Wei: add algorithms of fitting soil water retention curves to
+!                    aggregate soil hydraulic parameters from pixels to a patch.
+!
+!  01/2022, Shupeng Zhang and Nan Wei: porting codes to MPI parallel version.
+!-----------------------------------------------------------------------
 
    USE MOD_Precision
    USE MOD_Vars_Global

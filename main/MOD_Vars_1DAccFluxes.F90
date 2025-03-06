@@ -172,6 +172,16 @@ MODULE MOD_Vars_1DAccFluxes
    real(r8), allocatable :: a_hr                 (:)
    real(r8), allocatable :: a_fpg                (:)
    real(r8), allocatable :: a_fpi                (:)
+   real(r8), allocatable :: a_totvegc            (:)
+   real(r8), allocatable :: a_totlitc            (:)
+   real(r8), allocatable :: a_totcwdc            (:)
+   real(r8), allocatable :: a_totsomc            (:)
+   real(r8), allocatable :: a_totcolc            (:)
+   real(r8), allocatable :: a_totvegn            (:)
+   real(r8), allocatable :: a_totlitn            (:)
+   real(r8), allocatable :: a_totcwdn            (:)
+   real(r8), allocatable :: a_totsomn            (:)
+   real(r8), allocatable :: a_totcoln            (:)
    real(r8), allocatable :: a_gpp_enftemp        (:) !1
    real(r8), allocatable :: a_gpp_enfboreal      (:) !2
    real(r8), allocatable :: a_gpp_dnfboreal      (:) !3
@@ -323,6 +333,7 @@ MODULE MOD_Vars_1DAccFluxes
    real(r8), allocatable :: a_soil2n_vr   (:,:)
    real(r8), allocatable :: a_soil3n_vr   (:,:)
    real(r8), allocatable :: a_cwdn_vr     (:,:)
+   real(r8), allocatable :: a_totsoiln_vr (:,:)
    real(r8), allocatable :: a_litr1cCap_vr(:,:)
    real(r8), allocatable :: a_litr2cCap_vr(:,:)
    real(r8), allocatable :: a_litr3cCap_vr(:,:)
@@ -566,6 +577,16 @@ CONTAINS
             allocate (a_hr                 (numpatch))
             allocate (a_fpg                (numpatch))
             allocate (a_fpi                (numpatch))
+            allocate (a_totvegc            (numpatch))
+            allocate (a_totlitc            (numpatch))
+            allocate (a_totcwdc            (numpatch))
+            allocate (a_totsomc            (numpatch))
+            allocate (a_totcolc            (numpatch))
+            allocate (a_totvegn            (numpatch))
+            allocate (a_totlitn            (numpatch))
+            allocate (a_totcwdn            (numpatch))
+            allocate (a_totsomn            (numpatch))
+            allocate (a_totcoln            (numpatch))
             allocate (a_gpp_enftemp        (numpatch)) !1
             allocate (a_gpp_enfboreal      (numpatch)) !2
             allocate (a_gpp_dnfboreal      (numpatch)) !3
@@ -719,6 +740,7 @@ CONTAINS
             allocate (a_soil2n_vr   (1:nl_soil,       numpatch))
             allocate (a_soil3n_vr   (1:nl_soil,       numpatch))
             allocate (a_cwdn_vr     (1:nl_soil,       numpatch))
+            allocate (a_totsoiln_vr (1:nl_soil,       numpatch))
             allocate (a_sminn_vr    (1:nl_soil,       numpatch))
             allocate (decomp_vr_tmp (1:nl_soil,       numpatch))
 
@@ -788,8 +810,8 @@ CONTAINS
    SUBROUTINE deallocate_acc_fluxes ()
 
    USE MOD_SPMD_Task
-   USE MOD_LandPatch, only : numpatch
-   USE MOD_LandUrban, only : numurban
+   USE MOD_LandPatch, only: numpatch
+   USE MOD_LandUrban, only: numurban
    IMPLICIT NONE
 
       IF (p_is_worker) THEN
@@ -962,6 +984,16 @@ CONTAINS
             deallocate (a_hr                 )
             deallocate (a_fpg                )
             deallocate (a_fpi                )
+            deallocate (a_totvegc            )
+            deallocate (a_totlitc            )
+            deallocate (a_totcwdc            )
+            deallocate (a_totsomc            )
+            deallocate (a_totcolc            )
+            deallocate (a_totvegn            )
+            deallocate (a_totlitn            )
+            deallocate (a_totcwdn            )
+            deallocate (a_totsomn            )
+            deallocate (a_totcoln            )
             deallocate (a_gpp_enftemp        ) !1
             deallocate (a_gpp_enfboreal      ) !2
             deallocate (a_gpp_dnfboreal      ) !3
@@ -1115,6 +1147,7 @@ CONTAINS
             deallocate (a_soil2n_vr   )
             deallocate (a_soil3n_vr   )
             deallocate (a_cwdn_vr     )
+            deallocate (a_totsoiln_vr )
             deallocate (a_sminn_vr    )
             deallocate (decomp_vr_tmp )
             deallocate (a_litr1cCap_vr)
@@ -1180,9 +1213,9 @@ CONTAINS
    SUBROUTINE FLUSH_acc_fluxes ()
 
       USE MOD_SPMD_Task
-      USE MOD_LandPatch, only : numpatch
-      USE MOD_LandUrban, only : numurban
-      USE MOD_Vars_Global, only : spval
+      USE MOD_LandPatch, only: numpatch
+      USE MOD_LandUrban, only: numurban
+      USE MOD_Vars_Global, only: spval
       IMPLICIT NONE
 
       IF (p_is_worker) THEN
@@ -1192,81 +1225,81 @@ CONTAINS
          IF (numpatch > 0) THEN
 
             ! flush the Fluxes for accumulation
-            a_us     (:) = spval
-            a_vs     (:) = spval
-            a_t      (:) = spval
-            a_q      (:) = spval
-            a_prc    (:) = spval
-            a_prl    (:) = spval
-            a_pbot   (:) = spval
-            a_frl    (:) = spval
-            a_solarin(:) = spval
-            a_hpbl   (:) = spval
+            a_us        (:) = spval
+            a_vs        (:) = spval
+            a_t         (:) = spval
+            a_q         (:) = spval
+            a_prc       (:) = spval
+            a_prl       (:) = spval
+            a_pbot      (:) = spval
+            a_frl       (:) = spval
+            a_solarin   (:) = spval
+            a_hpbl      (:) = spval
 
-            a_taux    (:) = spval
-            a_tauy    (:) = spval
-            a_fsena   (:) = spval
-            a_lfevpa  (:) = spval
-            a_fevpa   (:) = spval
-            a_fsenl   (:) = spval
-            a_fevpl   (:) = spval
-            a_etr     (:) = spval
-            a_fseng   (:) = spval
-            a_fevpg   (:) = spval
-            a_fgrnd   (:) = spval
-            a_sabvsun (:) = spval
-            a_sabvsha (:) = spval
-            a_sabg    (:) = spval
-            a_olrg    (:) = spval
-            a_rnet    (:) = spval
-            a_xerr    (:) = spval
-            a_zerr    (:) = spval
-            a_rsur    (:) = spval
-            a_rsur_se (:) = spval
-            a_rsur_ie (:) = spval
-            a_rsub    (:) = spval
-            a_rnof    (:) = spval
+            a_taux      (:) = spval
+            a_tauy      (:) = spval
+            a_fsena     (:) = spval
+            a_lfevpa    (:) = spval
+            a_fevpa     (:) = spval
+            a_fsenl     (:) = spval
+            a_fevpl     (:) = spval
+            a_etr       (:) = spval
+            a_fseng     (:) = spval
+            a_fevpg     (:) = spval
+            a_fgrnd     (:) = spval
+            a_sabvsun   (:) = spval
+            a_sabvsha   (:) = spval
+            a_sabg      (:) = spval
+            a_olrg      (:) = spval
+            a_rnet      (:) = spval
+            a_xerr      (:) = spval
+            a_zerr      (:) = spval
+            a_rsur      (:) = spval
+            a_rsur_se   (:) = spval
+            a_rsur_ie   (:) = spval
+            a_rsub      (:) = spval
+            a_rnof      (:) = spval
 #ifdef CatchLateralFlow
-            a_xwsur   (:) = spval
-            a_xwsub   (:) = spval
+            a_xwsur     (:) = spval
+            a_xwsub     (:) = spval
 #endif
-            a_qintr   (:) = spval
-            a_qinfl   (:) = spval
-            a_qdrip   (:) = spval
-            a_rstfacsun(:) = spval
-            a_rstfacsha(:) = spval
-            a_gssun   (:) = spval
-            a_gssha   (:) = spval
-            a_rss     (:) = spval
+            a_qintr     (:) = spval
+            a_qinfl     (:) = spval
+            a_qdrip     (:) = spval
+            a_rstfacsun (:) = spval
+            a_rstfacsha (:) = spval
+            a_gssun     (:) = spval
+            a_gssha     (:) = spval
+            a_rss       (:) = spval
 
-            a_wdsrf   (:) = spval
-            a_zwt     (:) = spval
-            a_wa      (:) = spval
-            a_wat     (:) = spval
-            a_wetwat  (:) = spval
-            a_assim   (:) = spval
-            a_respc   (:) = spval
-            a_assimsun(:) = spval !1
-            a_assimsha(:) = spval !1
-            a_etrsun  (:) = spval !1
-            a_etrsha  (:) = spval !1
+            a_wdsrf     (:) = spval
+            a_zwt       (:) = spval
+            a_wa        (:) = spval
+            a_wat       (:) = spval
+            a_wetwat    (:) = spval
+            a_assim     (:) = spval
+            a_respc     (:) = spval
+            a_assimsun  (:) = spval
+            a_assimsha  (:) = spval
+            a_etrsun    (:) = spval
+            a_etrsha    (:) = spval
 
-            a_qcharge (:) = spval
+            a_qcharge   (:) = spval
 
-            a_t_grnd  (:) = spval
-            a_tleaf   (:) = spval
-            a_ldew_rain(:) = spval
-            a_ldew_snow(:) = spval
-            a_ldew    (:) = spval
-            a_scv     (:) = spval
-            a_snowdp  (:) = spval
-            a_fsno    (:) = spval
-            a_sigf    (:) = spval
-            a_green   (:) = spval
-            a_lai     (:) = spval
-            a_laisun  (:) = spval
-            a_laisha  (:) = spval
-            a_sai     (:) = spval
+            a_t_grnd    (:) = spval
+            a_tleaf     (:) = spval
+            a_ldew_rain (:) = spval
+            a_ldew_snow (:) = spval
+            a_ldew      (:) = spval
+            a_scv       (:) = spval
+            a_snowdp    (:) = spval
+            a_fsno      (:) = spval
+            a_sigf      (:) = spval
+            a_green     (:) = spval
+            a_lai       (:) = spval
+            a_laisun    (:) = spval
+            a_laisha    (:) = spval
+            a_sai       (:) = spval
 
             a_alb   (:,:,:) = spval
 
@@ -1359,6 +1392,16 @@ CONTAINS
             a_hr                 (:) = spval
             a_fpg                (:) = spval
             a_fpi                (:) = spval
+            a_totvegc            (:) = spval
+            a_totlitc            (:) = spval
+            a_totcwdc            (:) = spval
+            a_totsomc            (:) = spval
+            a_totcolc            (:) = spval
+            a_totvegn            (:) = spval
+            a_totlitn            (:) = spval
+            a_totcwdn            (:) = spval
+            a_totsomn            (:) = spval
+            a_totcoln            (:) = spval
             a_gpp_enftemp        (:) = spval
             a_gpp_enfboreal      (:) = spval
             a_gpp_dnfboreal      (:) = spval
@@ -1477,7 +1520,7 @@ CONTAINS
             a_deadcrootn_storageCap(:) = spval
             a_deadcrootn_xferCap   (:) = spval
 #endif
-            a_ozone              (:) = spval
+            a_ozone                (:) = spval
 
             a_t_soisno     (:,:) = spval
             a_wliq_soisno  (:,:) = spval
@@ -1508,6 +1551,7 @@ CONTAINS
             a_soil2n_vr    (:,:) = spval
             a_soil3n_vr    (:,:) = spval
             a_cwdn_vr      (:,:) = spval
+            a_totsoiln_vr  (:,:) = spval
 
             a_litr1cCap_vr (:,:) = spval
             a_litr2cCap_vr (:,:) = spval
@@ -1572,12 +1616,12 @@ CONTAINS
    END SUBROUTINE FLUSH_acc_fluxes
 
    SUBROUTINE accumulate_fluxes
-   ! ----------------------------------------------------------------------
-   ! perfrom the grid average mapping: average a subgrid input 1d vector
-   ! of length numpatch to a output 2d array of length [ghist%xcnt,ghist%ycnt]
-   !
-   ! Created by Yongjiu Dai, 03/2014
-   !---------------------------------------------------------------------
+! ----------------------------------------------------------------------
+!  perfrom the grid average mapping: average a subgrid input 1d vector
+!  of length numpatch to a output 2d array of length [ghist%xcnt,ghist%ycnt]
+!
+!  Created by Yongjiu Dai, 03/2014
+!---------------------------------------------------------------------
 
    USE MOD_Precision
    USE MOD_SPMD_Task
@@ -1844,6 +1888,16 @@ CONTAINS
             CALL acc1d (decomp_hr          , a_hr                  )
             CALL acc1d (fpg                , a_fpg                 )
             CALL acc1d (fpi                , a_fpi                 )
+            CALL acc1d (totvegc            , a_totvegc             )
+            CALL acc1d (totlitc            , a_totlitc             )
+            CALL acc1d (totcwdc            , a_totcwdc             )
+            CALL acc1d (totsomc            , a_totsomc             )
+            CALL acc1d (totcolc            , a_totcolc             )
+            CALL acc1d (totvegn            , a_totvegn             )
+            CALL acc1d (totlitn            , a_totlitn             )
+            CALL acc1d (totcwdn            , a_totcwdn             )
+            CALL acc1d (totsomn            , a_totsomn             )
+            CALL acc1d (totcoln            , a_totcoln             )
             CALL acc1d (gpp_enftemp        , a_gpp_enftemp         )
             CALL acc1d (gpp_enfboreal      , a_gpp_enfboreal       )
             CALL acc1d (gpp_dnfboreal      , a_gpp_dnfboreal       )
@@ -1914,10 +1968,10 @@ CONTAINS
             CALL acc1d (grainc_to_seed     ,   a_grainc_to_seed     )
             CALL acc1d (fert_to_sminn      ,   a_fert_to_sminn      )
 
-            ! CALL acc1d (irrig_rate         ,   a_irrig_rate         )
-            ! CALL acc1d (deficit_irrig      ,   a_deficit_irrig      )
-            ! CALL acc1d (sum_irrig          ,   a_sum_irrig          )
-            ! CALL acc1d (sum_irrig_count    ,   a_sum_irrig_count    )
+           !CALL acc1d (irrig_rate         ,   a_irrig_rate         )
+           !CALL acc1d (deficit_irrig      ,   a_deficit_irrig      )
+           !CALL acc1d (sum_irrig          ,   a_sum_irrig          )
+           !CALL acc1d (sum_irrig_count    ,   a_sum_irrig_count    )
             CALL acc1d (irrig_rate         ,   a_irrig_rate         )
             CALL acc1d (deficit_irrig      ,   a_deficit_irrig      )
             a_sum_irrig = sum_irrig
@@ -2077,6 +2131,7 @@ CONTAINS
                ENDDO
             ENDDO
             CALL acc2d (decomp_vr_tmp, a_cwdn_vr     )
+            CALL acc2d (totsoiln_vr  , a_totsoiln_vr )
 
             DO i = 1, numpatch
                DO j = 1, nl_soil

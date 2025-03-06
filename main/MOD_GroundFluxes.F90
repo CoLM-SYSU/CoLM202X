@@ -25,20 +25,20 @@ CONTAINS
                             fevpg, fevpg_soil, fevpg_snow, tref, qref, &
                             z0m, z0hg, zol, rib, ustar, qstar, tstar, fm, fh, fq)
 
-!=======================================================================
-! This is the main SUBROUTINE to execute the calculation of thermal
-! processes and surface fluxes
+!-----------------------------------------------------------------------
+!  This is the main SUBROUTINE to execute the calculation of thermal
+!  processes and surface fluxes
 !
-! Original author : Yongjiu Dai, 09/15/1999; 08/30/2002
+!  Original author: Yongjiu Dai, 09/15/1999; 08/30/2002
 !
-! REVISIONS:
-! 09/2019, Hua Yuan: removed sigf to be consistent with PFT runs, removed
-!          fsena, fevpa, renamed z0ma to z0m.
+! !REVISIONS:
+!  09/2019, Hua Yuan: removed sigf to be consistent with PFT runs, removed
+!           fsena, fevpa, renamed z0ma to z0m.
 !
-! 05/2023, Shaofeng Liu: add option to call moninobuk_leddy, the LargeEddy
-!          surface turbulence scheme (LZD2022); make a proper update of um.
+!  05/2023, Shaofeng Liu: add option to call moninobuk_leddy, the LargeEddy
+!           surface turbulence scheme (LZD2022); make a proper update of um.
 !
-!=======================================================================
+!-----------------------------------------------------------------------
 
    USE MOD_Precision
    USE MOD_Const_Physical, only: cpair,vonkar,grav
@@ -174,7 +174,7 @@ CONTAINS
       !----------------------------------------------------------------
          displax = 0.
          IF (DEF_USE_CBL_HEIGHT) THEN
-           CALL moninobuk_leddy(hu,ht,hq,displax,z0mg,z0hg,z0qg,obu,um, hpbl, &
+           CALL moninobuk_leddy(hu,ht,hq,displax,z0mg,z0hg,z0qg,obu,um,hpbl, &
                                 ustar,fh2m,fq2m,fm10m,fm,fh,fq)
          ELSE
            CALL moninobuk(hu,ht,hq,displax,z0mg,z0hg,z0qg,obu,um,&

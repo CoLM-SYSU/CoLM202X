@@ -16,13 +16,14 @@ MODULE MOD_BGC_CNSummary
 ! Xingjie Lu, 2022, modify original CLM5 to be compatible with CoLM code structure. 
 
    USE MOD_Precision
-   USE MOD_Namelist, only : DEF_USE_NITRIF, DEF_USE_DiagMatrix
+   USE MOD_Namelist, only: DEF_USE_NITRIF, DEF_USE_DiagMatrix
    USE MOD_Vars_PFTimeInvariants, only: pftclass
-   USE MOD_Vars_PFTimeVariables, only :irrig_method_p
+   USE MOD_Vars_PFTimeVariables, only:irrig_method_p
+   USE MOD_Vars_TimeInvariants, only: BD_all
    USE MOD_BGC_Vars_TimeVariables, only: &
        totlitc, totsomc, totcwdc, decomp_cpools, decomp_cpools_vr, ctrunc_soil,ctrunc_veg, ctrunc_vr, &
        totlitn, totsomn, totcwdn, decomp_npools, decomp_npools_vr, ntrunc_soil,ntrunc_veg, ntrunc_vr, &
-       totvegc, totvegn, totcolc, totcoln, sminn, sminn_vr, &
+       totvegc, totvegn, totcolc, totcoln, sminn, sminn_vr, totsoiln_vr, &
        leafc, frootc, livestemc, deadstemc, livecrootc, deadcrootc, leafc_storage, frootc_storage, livestemc_storage, &
        deadstemc_storage, livecrootc_storage, deadcrootc_storage, leafc_xfer, frootc_xfer, livestemc_xfer, &
        deadstemc_xfer, livecrootc_xfer, deadcrootc_xfer, xsmrpool, &
@@ -114,8 +115,8 @@ MODULE MOD_BGC_CNSummary
    USE MOD_Vars_TimeVariables, only: &
        irrig_method_corn  , irrig_method_swheat, irrig_method_wwheat, irrig_method_soybean  , &
        irrig_method_cotton, irrig_method_rice1 , irrig_method_rice2 , irrig_method_sugarcane
-   USE MOD_Vars_TimeInvariants, only : patchclass
-   USE MOD_Vars_Global, only : spval
+   USE MOD_Vars_TimeInvariants, only: patchclass
+   USE MOD_Vars_Global, only: spval
    USE MOD_SPMD_Task
      
    IMPLICIT NONE
@@ -262,16 +263,19 @@ CONTAINS
       totcwdn(i) = 0._r8
       sminn(i)   = 0._r8
       ntrunc_soil(i)  = 0._r8
+      totsoiln_vr(1:nl_soil,i) = 0 ! soil total nitrogen (gN/gsoil * 100%)
   
       DO l = 1, ndecomp_pools
          decomp_npools(l,i) = 0._r8
          DO j = 1, nl_soil
             decomp_npools(l,i) = decomp_npools(l,i) + decomp_npools_vr(j,l,i) * dz_soi(j)
+            totsoiln_vr(j,i)   = totsoiln_vr(j,i) + decomp_npools_vr(j,l,i) / (BD_all(j,i) * 1000) * 100 !(unit %)
          ENDDO
       ENDDO
      
       DO j = 1, nl_soil
          sminn(i) = sminn(i) + sminn_vr(j,i) * dz_soi(j)
+         totsoiln_vr(j,i) = totsoiln_vr(j,i) + sminn_vr(j,i) / (BD_all(j,i) * 1000) * 100 !(unit %)
       ENDDO
   
       DO l = 1, ndecomp_pools
