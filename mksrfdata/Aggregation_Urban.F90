@@ -406,7 +406,6 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
       ENDIF
 
       IF ((.not. USE_SITE_urban_ecology) .or. (.not.ncio_var_exist(SITE_fsitedata,'tree_mean_height'))) THEN
-         SITE_fveg_urb(:) = pct_tree
          SITE_htop_urb(:) = htop_urb
       ENDIF
 #endif
