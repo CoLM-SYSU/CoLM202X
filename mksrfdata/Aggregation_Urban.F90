@@ -306,7 +306,7 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
          -1.0e36_r8, landname, 'POP_DEN_'//trim(cyear), compress = 0, write_mode = 'one')
 #endif
 #else
-      IF ((.not. USE_SITE_urban_humanities) .or. (.not.ncio_var_exist(SITE_fsitedata,'resident_population_density'))) THEN
+      IF ((.not. USE_SITE_urban_human) .or. (.not.ncio_var_exist(SITE_fsitedata,'resident_population_density'))) THEN
          SITE_popden(:) = pop_den
       ENDIF
 #endif
@@ -1101,7 +1101,7 @@ ENDIF
 
 #ifdef SinglePoint
       IF (DEF_URBAN_type_scheme == 2) THEN
-         
+
          urb_typidx = landurban%settyp(1)
 
          IF (.not. ncio_var_exist(SITE_fsitedata,'EM_ROOF')) SITE_em_roof(:) = emroof_lcz   (urb_typidx)

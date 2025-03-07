@@ -78,7 +78,7 @@ MODULE MOD_Namelist
    logical  :: USE_SITE_urban_ecology    = .false.
    logical  :: USE_SITE_urban_radiation  = .false.
    logical  :: USE_SITE_urban_thermal    = .false.
-   logical  :: USE_SITE_urban_humanities = .false.
+   logical  :: USE_SITE_urban_human      = .false.
    logical  :: USE_SITE_HistWriteBack    = .true.
    logical  :: USE_SITE_ForcingReadAhead = .true.
 
@@ -915,7 +915,7 @@ CONTAINS
       USE_SITE_urban_ecology,                 &
       USE_SITE_urban_radiation,               &
       USE_SITE_urban_thermal,                 &
-      USE_SITE_urban_humanities,              &
+      USE_SITE_urban_human,                   &
 
       DEF_BlockInfoFile,                      &
       DEF_AverageElementSize,                 &

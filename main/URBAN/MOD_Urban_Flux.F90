@@ -1690,7 +1690,7 @@ CONTAINS
             clev = canlev(i)
             rb(i) = rhoair * cpair / ( 11.8 + 4.2*ueff_lay(clev) )
 
-            ! Cole & Sturrock (1977) Building and Environment, 12, 207–214.
+            ! Cole & Sturrock (1977) Building and Environment, 12, 207-214.
             ! rb(i) = rhoair * cpair / ( 5.8 + 4.1*ueff_lay(clev) )
             ! IF (ueff_lay(clev) > 5.) THEN
             !    rb(i) = rhoair * cpair / (7.51*ueff_lay(clev)**0.78)
