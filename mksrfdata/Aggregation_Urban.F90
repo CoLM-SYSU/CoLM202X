@@ -718,9 +718,9 @@ ENDIF
          CALL system('mkdir -p ' // trim(adjustl(landsrfdir)))
 
          ! allocate and read grided LSAI raw data
-         ! landdir = trim(dir_rawdata)//'/urban_lai_500m/'
-         landdir = '/tera10/yuanhua/dongwz/RF_LAI/MOD_LAI/WClim2.1/urban_lai_5x5/'
+         landdir = trim(dir_rawdata)//'/urban_lai_500m/'
          suffix  = 'URBLAI_'//trim(iyear)
+
          ! loop for month
          DO imonth = 1, 12
 
