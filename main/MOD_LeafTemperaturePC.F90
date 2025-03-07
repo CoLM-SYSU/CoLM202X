@@ -89,7 +89,7 @@ CONTAINS
 !  1) Dai, Y., Yuan, H., Xin, Q., Wang, D., Shangguan, W., Zhang, S., et
 !  al.  (2019).  Different representations of canopy structure—A large
 !  source of uncertainty in global land surface modeling. Agricultural
-!  and Forest Meteorology, 269–270, 119–135.
+!  and Forest Meteorology, 269-270, 119-135.
 !  https://doi.org/10.1016/j.agrformet.2019.02.006
 !
 ! !REVISIONS:

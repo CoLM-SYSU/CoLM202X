@@ -201,7 +201,7 @@ CONTAINS
       !-------------------
          !---Dirmeyer, P. A., Gao, X., Zhao, M., Guo, Z., Oki, T. and Hanasaki, N. (2006) GSWP-2:
          !   Multimodel Analysis and Implications for Our Perception of the Land Surface. Bulletin
-         !   of the American Meteorological Society, 87(10), 1381–98.
+         !   of the American Meteorological Society, 87(10), 1381-98.
 
       !REVISION HISTORY
       !----------------
@@ -519,7 +519,7 @@ CONTAINS
       !-------------------
          !---Xia, Y.L.; Hao, Z.C.; Shi, C.X.; Li, Y.H.; Meng, J.; Xu, T.R.; Wu, X.Y.; Zhang, B.Q.
          !    Regional and global land data assimilation systems: Innovations, challenges, and
-         !    prospects. J. Meteorol. Res. 2019, 33, 159–189.
+         !    prospects. J. Meteorol. Res. 2019, 33, 159-189.
 
       !REVISION HISTORY
       !----------------
@@ -570,7 +570,7 @@ CONTAINS
       CASE ('CRA40')
          !DESCRIPTION
          !===========
-            !---CMA’s first-generation global atmospheric reanalysis (RA) covering 1979–2018 (CRA-40)
+            !---CMA’s first-generation global atmospheric reanalysis (RA) covering 1979-2018 (CRA-40)
 
          !data source:
          !-------------------
@@ -578,8 +578,8 @@ CONTAINS
 
          !References:
          !-------------------
-            !---Liu, Z., Jiang, L., Shi, C. et al. CRA-40/Atmosphere—The First-Generation Chinese Atmospheric Reanalysis (1979–2018):
-            !   System Description and Performance Evaluation. J Meteorol Res 37, 1–19 (2023). https://doi.org/10.1007/s13351-023-2086-x
+            !---Liu, Z., Jiang, L., Shi, C. et al. CRA-40/Atmosphere—The First-Generation Chinese Atmospheric Reanalysis (1979-2018):
+            !   System Description and Performance Evaluation. J Meteorol Res 37, 1-19 (2023). https://doi.org/10.1007/s13351-023-2086-x
 
 
 

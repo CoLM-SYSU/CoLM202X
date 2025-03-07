@@ -81,7 +81,7 @@ CONTAINS
 !           Shangguan, W., Zhang, S., et al. (2019). Different
 !           representations of canopy structure—A large source of
 !           uncertainty in global land surface modeling. Agricultural
-!           and Forest Meteorology, 269–270, 119–135.
+!           and Forest Meteorology, 269-270, 119-135.
 !           https://doi.org/10.1016/j.agrformet.2019.02.006
 !
 !  10/2019, Hua Yuan: change only the leaf temperature from two-leaf
