@@ -990,24 +990,22 @@ CONTAINS
                   CALL ncio_read_site_time (filename, vname(ivar), time_i, metdata)
                ENDIF
 #else
-               IF (trim(vname(ivar)) == 'Rainf') THEN
-                  CALL ncio_read_site_time (filename, 'Rainf', time_i, rainf)
-                  CALL ncio_read_site_time (filename, 'Snowf', time_i, snowf)
-
-                  DO iblkme = 1, gblock%nblkme
-                     ib = gblock%xblkme(iblkme)
-                     jb = gblock%yblkme(iblkme)
-
-                     metdata%blk(ib,jb)%val(1,1) = rainf%blk(ib,jb)%val(1,1) + snowf%blk(ib,jb)%val(1,1)
-                     !DO j = 1, gforc%ycnt(jb)
-                     !   DO i = 1, gforc%xcnt(ib)
-                     !      metdata%blk(ib,jb)%val(i,j) = rainf%blk(ib,jb)%val(i,j) &
-                     !                                    +  snowf%blk(ib,jb)%val(i,j)
-                     !   ENDDO
-                     !ENDDO
-                  ENDDO
+               IF (forcing_read_ahead) THEN
+                  metdata%blk(gblock%xblkme(1),gblock%yblkme(1))%val = forc_disk(time_i,ivar)
                ELSE
-                  CALL ncio_read_site_time (filename, vname(ivar), time_i, metdata)
+                  IF (trim(vname(ivar)) == 'Rainf') THEN
+                     CALL ncio_read_site_time (filename, 'Rainf', time_i, rainf)
+                     CALL ncio_read_site_time (filename, 'Snowf', time_i, snowf)
+
+                     DO iblkme = 1, gblock%nblkme
+                        ib = gblock%xblkme(iblkme)
+                        jb = gblock%yblkme(iblkme)
+
+                        metdata%blk(ib,jb)%val(1,1) = rainf%blk(ib,jb)%val(1,1) + snowf%blk(ib,jb)%val(1,1)
+                     ENDDO
+                  ELSE
+                     CALL ncio_read_site_time (filename, vname(ivar), time_i, metdata)
+                  ENDIF
                ENDIF
 #endif
             ELSE
@@ -1036,24 +1034,22 @@ CONTAINS
                      CALL ncio_read_site_time (filename, vname(ivar), time_i, metdata)
                   ENDIF
 #else
-                  IF (trim(vname(ivar)) == 'Rainf') THEN
-                     CALL ncio_read_site_time (filename, 'Rainf', time_i, rainf)
-                     CALL ncio_read_site_time (filename, 'Snowf', time_i, snowf)
-
-                     DO iblkme = 1, gblock%nblkme
-                        ib = gblock%xblkme(iblkme)
-                        jb = gblock%yblkme(iblkme)
-
-                        metdata%blk(ib,jb)%val(1,1) = rainf%blk(ib,jb)%val(1,1) + snowf%blk(ib,jb)%val(1,1)
-                        !DO j = 1, gforc%ycnt(jb)
-                        !   DO i = 1, gforc%xcnt(ib)
-                        !      metdata%blk(ib,jb)%val(i,j) = rainf%blk(ib,jb)%val(i,j) &
-                        !                                    +  snowf%blk(ib,jb)%val(i,j)
-                        !   ENDDO
-                        !ENDDO
-                     ENDDO
+                  IF (forcing_read_ahead) THEN
+                     metdata%blk(gblock%xblkme(1),gblock%yblkme(1))%val = forc_disk(time_i,ivar)
                   ELSE
-                     CALL ncio_read_site_time (filename, vname(ivar), time_i, metdata)
+                     IF (trim(vname(ivar)) == 'Rainf') THEN
+                        CALL ncio_read_site_time (filename, 'Rainf', time_i, rainf)
+                        CALL ncio_read_site_time (filename, 'Snowf', time_i, snowf)
+
+                        DO iblkme = 1, gblock%nblkme
+                           ib = gblock%xblkme(iblkme)
+                           jb = gblock%yblkme(iblkme)
+
+                           metdata%blk(ib,jb)%val(1,1) = rainf%blk(ib,jb)%val(1,1) + snowf%blk(ib,jb)%val(1,1)
+                        ENDDO
+                     ELSE
+                        CALL ncio_read_site_time (filename, vname(ivar), time_i, metdata)
+                     ENDIF
                   ENDIF
 #endif
                ELSE
@@ -1248,8 +1244,21 @@ CONTAINS
          filename = trim(dir_forcing)//trim(metfilename(-1,-1,-1,-1))
          DO ivar = 1, NVAR
             IF (trim(vname(ivar)) /= 'NULL') THEN
+#ifndef URBAN_MODEL
                CALL ncio_read_period_serial (filename, vname(ivar), its, ite, metcache)
                forc_disk(:,ivar) = metcache(1,1,:)
+#else
+               IF (trim(vname(ivar)) == 'Rainf') THEN
+                  CALL ncio_read_period_serial (filename, 'Rainf', its, ite, metcache)
+                  forc_disk(:,ivar) = metcache(1,1,:)
+
+                  CALL ncio_read_period_serial (filename, 'Snowf', its, ite, metcache)
+                  forc_disk(:,ivar) = forc_disk(:,ivar) + metcache(1,1,:)
+               ELSE
+                  CALL ncio_read_period_serial (filename, vname(ivar), its, ite, metcache)
+                  forc_disk(:,ivar) = metcache(1,1,:)
+               ENDIF
+#endif
             ENDIF
          ENDDO
 

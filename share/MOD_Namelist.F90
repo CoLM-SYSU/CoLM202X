@@ -74,9 +74,11 @@ MODULE MOD_Namelist
    logical  :: USE_SITE_soilparameters   = .true.
    logical  :: USE_SITE_dbedrock         = .true.
    logical  :: USE_SITE_topography       = .true.
-   logical  :: USE_SITE_urban_paras      = .true.
-   logical  :: USE_SITE_thermal_paras    = .false.
-   logical  :: USE_SITE_urban_LAI        = .false.
+   logical  :: USE_SITE_urban_geometry   = .true.
+   logical  :: USE_SITE_urban_ecology    = .false.
+   logical  :: USE_SITE_urban_radiation  = .false.
+   logical  :: USE_SITE_urban_thermal    = .false.
+   logical  :: USE_SITE_urban_humanities = .false.
    logical  :: USE_SITE_HistWriteBack    = .true.
    logical  :: USE_SITE_ForcingReadAhead = .true.
 
@@ -909,9 +911,11 @@ CONTAINS
       USE_SITE_topography,                    &
       USE_SITE_HistWriteBack,                 &
       USE_SITE_ForcingReadAhead,              &
-      USE_SITE_urban_paras,                   &
-      USE_SITE_thermal_paras,                 &
-      USE_SITE_urban_LAI,                     &
+      USE_SITE_urban_geometry,                &
+      USE_SITE_urban_ecology,                 &
+      USE_SITE_urban_radiation,               &
+      USE_SITE_urban_thermal,                 &
+      USE_SITE_urban_humanities,              &
 
       DEF_BlockInfoFile,                      &
       DEF_AverageElementSize,                 &

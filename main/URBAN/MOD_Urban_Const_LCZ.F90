@@ -68,7 +68,7 @@ MODULE MOD_Urban_Const_LCZ
 
    ! albedo of pervious road [-]
    real(r8), parameter, dimension(10)  :: albperroad_lcz &
-      = (/0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25/)
+      = (/0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15/)
 
    ! emissivity of roof [-]
    real(r8), parameter, dimension(10)  :: emroof_lcz &

@@ -343,39 +343,39 @@ ENDIF
       allocate  ( SITE_urbtyp    (numurban) )
       allocate  ( SITE_lucyid    (numurban) )
 
-IF (.not. USE_SITE_urban_paras) THEN
-      allocate  ( SITE_fveg_urb  (numurban) )
-      allocate  ( SITE_htop_urb  (numurban) )
-      allocate  ( SITE_flake_urb (numurban) )
+      IF (.not.allocated(SITE_froof)) allocate  ( SITE_froof     (numurban) )
+      IF (.not.allocated(SITE_hroof)) allocate  ( SITE_hroof     (numurban) )
+      IF (.not.allocated(SITE_hlr  )) allocate  ( SITE_hlr       (numurban) )
+      IF (.not.allocated(SITE_fgper)) allocate  ( SITE_fgper     (numurban) )
+      IF (.not.allocated(SITE_fgimp)) allocate  ( SITE_fgimp     (numurban) )
 
-      allocate  ( SITE_popden    (numurban) )
-      allocate  ( SITE_froof     (numurban) )
-      allocate  ( SITE_hroof     (numurban) )
-      allocate  ( SITE_hlr       (numurban) )
-      allocate  ( SITE_fgper     (numurban) )
-      allocate  ( SITE_fgimp     (numurban) )
-ENDIF
+      IF (.not.allocated(SITE_fveg_urb )) allocate  ( SITE_fveg_urb  (numurban) )
+      IF (.not.allocated(SITE_htop_urb )) allocate  ( SITE_htop_urb  (numurban) )
+      IF (.not.allocated(SITE_flake_urb)) allocate  ( SITE_flake_urb (numurban) )
 
-      allocate  ( SITE_em_roof   (numurban) )
-      allocate  ( SITE_em_wall   (numurban) )
-      allocate  ( SITE_em_gimp   (numurban) )
-      allocate  ( SITE_em_gper   (numurban) )
-      allocate  ( SITE_t_roommax (numurban) )
-      allocate  ( SITE_t_roommin (numurban) )
-      allocate  ( SITE_thickroof (numurban) )
-      allocate  ( SITE_thickwall (numurban) )
+      IF (.not.allocated(SITE_popden)) allocate  ( SITE_popden    (numurban) )
 
-      allocate  ( SITE_cv_roof   (nl_roof)  )
-      allocate  ( SITE_cv_wall   (nl_wall)  )
-      allocate  ( SITE_cv_gimp   (nl_soil)  )
-      allocate  ( SITE_tk_roof   (nl_roof)  )
-      allocate  ( SITE_tk_wall   (nl_wall)  )
-      allocate  ( SITE_tk_gimp   (nl_soil)  )
+      IF (.not.allocated(SITE_em_roof)) allocate  ( SITE_em_roof   (numurban) )
+      IF (.not.allocated(SITE_em_wall)) allocate  ( SITE_em_wall   (numurban) )
+      IF (.not.allocated(SITE_em_gimp)) allocate  ( SITE_em_gimp   (numurban) )
+      IF (.not.allocated(SITE_em_gper)) allocate  ( SITE_em_gper   (numurban) )
 
-      allocate  ( SITE_alb_roof  (2, 2)     )
-      allocate  ( SITE_alb_wall  (2, 2)     )
-      allocate  ( SITE_alb_gimp  (2, 2)     )
-      allocate  ( SITE_alb_gper  (2, 2)     )
+      IF (.not.allocated(SITE_alb_roof)) allocate  ( SITE_alb_roof  (2, 2)     )
+      IF (.not.allocated(SITE_alb_wall)) allocate  ( SITE_alb_wall  (2, 2)     )
+      IF (.not.allocated(SITE_alb_gimp)) allocate  ( SITE_alb_gimp  (2, 2)     )
+      IF (.not.allocated(SITE_alb_gper)) allocate  ( SITE_alb_gper  (2, 2)     )
+
+      IF (.not.allocated(SITE_t_roommax)) allocate  ( SITE_t_roommax (numurban) )
+      IF (.not.allocated(SITE_t_roommin)) allocate  ( SITE_t_roommin (numurban) )
+      IF (.not.allocated(SITE_thickroof)) allocate  ( SITE_thickroof (numurban) )
+      IF (.not.allocated(SITE_thickwall)) allocate  ( SITE_thickwall (numurban) )
+
+      IF (.not.allocated(SITE_cv_roof)) allocate  ( SITE_cv_roof   (nl_roof)  )
+      IF (.not.allocated(SITE_cv_wall)) allocate  ( SITE_cv_wall   (nl_wall)  )
+      IF (.not.allocated(SITE_cv_gimp)) allocate  ( SITE_cv_gimp   (nl_soil)  )
+      IF (.not.allocated(SITE_tk_roof)) allocate  ( SITE_tk_roof   (nl_roof)  )
+      IF (.not.allocated(SITE_tk_wall)) allocate  ( SITE_tk_wall   (nl_wall)  )
+      IF (.not.allocated(SITE_tk_gimp)) allocate  ( SITE_tk_gimp   (nl_soil)  )
 
       SITE_urbtyp(:) = landurban%settyp
 #endif
