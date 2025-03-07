@@ -1054,13 +1054,11 @@ ENDIF
          IF (.not. ncio_var_exist(SITE_fsitedata,'EM_GIMP')) SITE_em_gimp(:) = em_imrd
          IF (.not. ncio_var_exist(SITE_fsitedata,'EM_GPER')) SITE_em_gper(:) = em_perd
 
+         IF (.not. ncio_var_exist(SITE_fsitedata,'T_BUILDING_MAX') ) SITE_t_roommax (:) = tb_max
+         IF (.not. ncio_var_exist(SITE_fsitedata,'T_BUILDING_MIN') ) SITE_t_roommin (:) = tb_min
 
-         SITE_t_roommax (:)   = tb_max
-         SITE_t_roommin (:)   = tb_min
-
-         SITE_thickroof(:) = th_roof
-         SITE_thickwall(:) = th_wall
-
+         IF (.not. ncio_var_exist(SITE_fsitedata,'THICK_ROOF') ) SITE_thickroof(:) = th_roof
+         IF (.not. ncio_var_exist(SITE_fsitedata,'THICK_WALL') ) SITE_thickwall(:) = th_wall
 
          IF (.not. ncio_var_exist(SITE_fsitedata,'CV_ROOF')) SITE_cv_roof(:) = cv_roof(:,1)
          IF (.not. ncio_var_exist(SITE_fsitedata,'CV_GIMP')) SITE_cv_gimp(:) = cv_imrd(:,1)
@@ -1120,11 +1118,11 @@ ENDIF
          IF (.not. ncio_var_exist(SITE_fsitedata,'EM_GPER')) SITE_em_gper(:) = emperroad_lcz(lcz_typid_one(1))
 
 
-         SITE_t_roommax (:)   = 297.65
-         SITE_t_roommin (:)   = 290.65
+         IF (.not. ncio_var_exist(SITE_fsitedata,'T_BUILDING_MAX') ) SITE_t_roommax (:) = 297.65
+         IF (.not. ncio_var_exist(SITE_fsitedata,'T_BUILDING_MIN') ) SITE_t_roommin (:) = 290.65
 
-         SITE_thickroof(:) = thickroof_lcz(lcz_typid_one(1))
-         SITE_thickwall(:) = thickwall_lcz(lcz_typid_one(1))
+         IF (.not. ncio_var_exist(SITE_fsitedata,'THICK_ROOF') ) SITE_thickroof(:) = thickroof_lcz(lcz_typid_one(1))
+         IF (.not. ncio_var_exist(SITE_fsitedata,'THICK_WALL') ) SITE_thickwall(:) = thickwall_lcz(lcz_typid_one(1))
 
 
          IF (.not. ncio_var_exist(SITE_fsitedata,'CV_ROOF')) SITE_cv_roof(:) = cvroof_lcz   (lcz_typid_one(1))
