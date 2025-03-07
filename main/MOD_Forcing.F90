@@ -1002,8 +1002,8 @@ CONTAINS
                   ELSE
                      CALL ncio_read_site_time (filename, vname(ivar), time_i, metdata)
                   ENDIF
-               ENDIF
 #endif
+               ENDIF
             ELSE
                CALL ncio_read_block_time (filename, vname(ivar), gforc, time_i, metdata)
             ENDIF
@@ -1042,8 +1042,8 @@ CONTAINS
                      ELSE
                         CALL ncio_read_site_time (filename, vname(ivar), time_i, metdata)
                      ENDIF
-                  ENDIF
 #endif
+                  ENDIF
                ELSE
                   CALL ncio_read_block_time (filename, vname(ivar), gforc, time_i, metdata)
                ENDIF
