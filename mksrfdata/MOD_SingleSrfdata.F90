@@ -130,6 +130,15 @@ MODULE MOD_SingleSrfdata
    real(r8), allocatable :: SITE_alb_gimp (:,:)
    real(r8), allocatable :: SITE_alb_gper (:,:)
 
+   logical :: use_site_froof, use_site_hroof, use_site_fgper  , use_site_hlr, &
+              use_site_fveg , use_site_htopu, use_site_flake  , use_site_urblai, use_site_urbsai, &
+              use_site_albr , use_site_albw , use_site_albgimp, use_site_albgper, &
+              use_site_emr  , use_site_emw  , use_site_emgimp , use_site_emgper, &
+              use_site_cvr  , use_site_cvw  , use_site_cvgimp , & 
+              use_site_tkr  , use_site_tkw  , use_site_tkgimp , &
+              use_site_pop  , use_site_tbmax, use_site_tbmin  , use_site_thickr, use_site_thickw
+              
+
 CONTAINS
 
    ! -----
@@ -367,26 +376,164 @@ CONTAINS
       ENDIF
 
       IF (.not. present(mkrun)) THEN
-         IF ((.not. mksrfdata) .or. USE_SITE_urban_paras) THEN
+         IF ( USE_SITE_urban_geometry ) THEN
 
-            CALL ncio_read_serial (fsrfdata, 'tree_area_fraction'         , SITE_fveg_urb  )
-            CALL ncio_read_serial (fsrfdata, 'tree_mean_height'           , SITE_htop_urb  )
-            CALL ncio_read_serial (fsrfdata, 'water_area_fraction'        , SITE_flake_urb )
-            CALL ncio_read_serial (fsrfdata, 'roof_area_fraction'         , SITE_froof     )
-            CALL ncio_read_serial (fsrfdata, 'building_mean_height'       , SITE_hroof     )
-            CALL ncio_read_serial (fsrfdata, 'impervious_area_fraction'   , SITE_fgimp     )
-            CALL ncio_read_serial (fsrfdata, 'wall_to_plan_area_ratio'    , SITE_lambdaw   )
-            CALL ncio_read_serial (fsrfdata, 'resident_population_density', SITE_popden    )
+            IF ( ncio_var_exist(fsrfdata,'building_mean_height') ) THEN
+               CALL ncio_read_serial (fsrfdata, 'building_mean_height', SITE_hroof  )
+               use_site_hroof = .true.
+            ENDIF
+
+            IF ( ncio_var_exist(fsrfdata,'roof_area_fraction') ) THEN
+               CALL ncio_read_serial (fsrfdata, 'roof_area_fraction', SITE_froof  )
+               use_site_froof = .true.
+            ENDIF
+
+            IF ( ncio_var_exist(fsrfdata,'impervious_area_fraction') ) THEN
+               CALL ncio_read_serial (fsrfdata, 'impervious_area_fraction', SITE_fgimp  )
+               use_site_fgper = .true.
+            ENDIF
+
+            IF ( ncio_var_exist(fsrfdata,'THICK_ROOF') ) THEN
+               CALL ncio_read_serial (fsrfdata, 'THICK_ROOF', SITE_thickroof  )
+               use_site_thickr = .true.
+            ENDIF
+
+            IF ( ncio_var_exist(fsrfdata,'THICK_WALL') ) THEN
+               CALL ncio_read_serial (fsrfdata, 'THICK_WALL', SITE_thickwall  )
+               use_site_thickw = .true.
+            ENDIF
+
 IF (DEF_USE_CANYON_HWR) THEN
-            CALL ncio_read_serial (fsrfdata, 'canyon_height_width_ratio'  , SITE_hlr       )
+            IF ( ncio_var_exist(fsrfdata,'canyon_height_width_ratio') ) THEN
+               CALL ncio_read_serial (fsrfdata, 'canyon_height_width_ratio', SITE_hlr  )
+               use_site_hlr = .true.
+            ENDIF
 ELSE
-            CALL ncio_read_serial (fsrfdata, 'wall_to_plan_area_ratio'    , SITE_lambdaw   )
-            SITE_hlr       = SITE_lambdaw/4/SITE_froof
+            IF ( ncio_var_exist(fsrfdata,'wall_to_plan_area_ratio') ) THEN
+               CALL ncio_read_serial (fsrfdata, 'wall_to_plan_area_ratio', SITE_lambdaw)
+               SITE_hlr     = SITE_lambdaw/4/SITE_froof
+               use_site_hlr = .true.
+            ENDIF
 ENDIF
-            SITE_fgper     = 1 - (SITE_fgimp-SITE_froof)/(1-SITE_froof-SITE_flake_urb)
-            SITE_froof     = SITE_froof/(1-SITE_flake_urb)
-            SITE_fveg_urb  = SITE_fveg_urb  * 100
-            SITE_flake_urb = SITE_flake_urb * 100
+         ENDIF
+
+
+         IF ( USE_SITE_urban_ecology ) THEN
+            IF ( ncio_var_exist(fsrfdata,'tree_mean_height') ) THEN
+               CALL ncio_read_serial (fsrfdata, 'tree_mean_height', SITE_htop_urb  )
+               use_site_htopu = .true.
+            ENDIF
+
+            IF ( ncio_var_exist(fsrfdata,'water_area_fraction') ) THEN
+               CALL ncio_read_serial (fsrfdata, 'water_area_fraction', SITE_flake_urb  )
+               use_site_flake = .true.
+            ENDIF
+
+            IF ( ncio_var_exist(fsrfdata,'tree_area_fraction') ) THEN
+               CALL ncio_read_serial (fsrfdata, 'tree_area_fraction', SITE_fveg_urb  )
+               use_site_fveg = .true.
+            ENDIF
+
+            IF ( ncio_var_exist(fsrfdata,'TREE_LAI') ) THEN
+               CALL ncio_read_serial (fsrfdata, 'TREE_LAI', SITE_LAI_monthly  )
+               use_site_urblai = .true.
+            ENDIF
+
+            IF ( ncio_var_exist(fsrfdata,'TREE_SAI') ) THEN
+               CALL ncio_read_serial (fsrfdata, 'TREE_SAI', SITE_SAI_monthly  )
+               use_site_urbsai = .true.
+            ENDIF
+         ENDIF
+
+         IF ( USE_SITE_urban_radiation  ) THEN
+            IF ( ncio_var_exist(fsrfdata,'ALB_ROOF') ) THEN
+               CALL ncio_read_serial (fsrfdata, 'ALB_ROOF', SITE_alb_roof  )
+               use_site_albr = .true.
+            ENDIF
+
+            IF ( ncio_var_exist(fsrfdata,'ALB_WALL') ) THEN
+               CALL ncio_read_serial (fsrfdata, 'ALB_WALL', SITE_alb_wall  )
+               use_site_albw = .true.
+            ENDIF
+
+            IF ( ncio_var_exist(fsrfdata,'ALB_GPER') ) THEN
+               CALL ncio_read_serial (fsrfdata, 'ALB_GPER', SITE_alb_gper  )
+               use_site_albgimp = .true.
+            ENDIF
+
+            IF ( ncio_var_exist(fsrfdata,'ALB_GIMP') ) THEN
+               CALL ncio_read_serial (fsrfdata, 'ALB_GIMP', SITE_alb_gimp  )
+               use_site_albgper = .true.
+            ENDIF
+
+            IF ( ncio_var_exist(fsrfdata,'EM_ROOF') ) THEN
+               CALL ncio_read_serial (fsrfdata, 'EM_ROOF', SITE_em_roof  )
+               use_site_emr = .true.
+            ENDIF
+
+            IF ( ncio_var_exist(fsrfdata,'EM_WALL') ) THEN
+               CALL ncio_read_serial (fsrfdata, 'EM_WALL', SITE_em_wall  )
+               use_site_emw = .true.
+            ENDIF
+
+            IF ( ncio_var_exist(fsrfdata,'EM_GPER') ) THEN
+               CALL ncio_read_serial (fsrfdata, 'EM_GPER', SITE_em_gper  )
+               use_site_emgper = .true.
+            ENDIF
+
+            IF ( ncio_var_exist(fsrfdata,'EM_GIMP') ) THEN
+               CALL ncio_read_serial (fsrfdata, 'EM_GIMP', SITE_em_gimp  )
+               use_site_emgimp = .true.
+            ENDIF
+         ENDIF
+
+         IF ( USE_SITE_urban_thermal  ) THEN
+            IF ( ncio_var_exist(fsrfdata,'CV_ROOF') ) THEN
+               CALL ncio_read_serial (fsrfdata, 'CV_ROOF', SITE_cv_roof  )
+               use_site_cvr = .true.
+            ENDIF
+
+            IF ( ncio_var_exist(fsrfdata,'CV_WALL') ) THEN
+               CALL ncio_read_serial (fsrfdata, 'CV_WALL', SITE_cv_wall  )
+               use_site_cvw = .true.
+            ENDIF
+
+            IF ( ncio_var_exist(fsrfdata,'CV_GIMP') ) THEN
+               CALL ncio_read_serial (fsrfdata, 'CV_GIMP', SITE_cv_gimp  )
+               use_site_cvgimp = .true.
+            ENDIF
+
+            IF ( ncio_var_exist(fsrfdata,'TK_ROOF') ) THEN
+               CALL ncio_read_serial (fsrfdata, 'TK_ROOF', SITE_TK_roof  )
+               use_site_tkr = .true.
+            ENDIF
+
+            IF ( ncio_var_exist(fsrfdata,'TK_WALL') ) THEN
+               CALL ncio_read_serial (fsrfdata, 'TK_WALL', SITE_tk_wall  )
+               use_site_albw = .true.
+            ENDIF
+
+            IF ( ncio_var_exist(fsrfdata,'TK_GIMP') ) THEN
+               CALL ncio_read_serial (fsrfdata, 'TK_GIMP', SITE_tk_gimp  )
+               use_site_albgimp = .true.
+            ENDIF
+         ENDIF
+
+         IF ( USE_SITE_urban_humanities  ) THEN
+            IF ( ncio_var_exist(fsrfdata,'resident_population_density') ) THEN
+               CALL ncio_read_serial (fsrfdata, 'resident_population_density', SITE_popden  )
+               use_site_pop = .true.
+            ENDIF
+
+            IF ( ncio_var_exist(fsrfdata,'T_BUILDING_MAX') ) THEN
+               CALL ncio_read_serial (fsrfdata, 'T_BUILDING_MAX', SITE_t_roommax  )
+               use_site_tbmax = .true.
+            ENDIF
+
+            IF ( ncio_var_exist(fsrfdata,'T_BUILDING_MIN') ) THEN
+               CALL ncio_read_serial (fsrfdata, 'T_BUILDING_MIN', SITE_t_roommin  )
+               use_site_tbmin = .true.
+            ENDIF
          ENDIF
       ELSE
          CALL ncio_read_serial (fsrfdata, 'LAI_year'      , SITE_LAI_year   )
@@ -700,6 +847,11 @@ ENDIF
 
       fsrfdata = trim(DEF_dir_landdata) // '/srfdata.nc'
 
+      SITE_fgper     = 1 - (SITE_fgimp-SITE_froof)/(1-SITE_froof-SITE_flake_urb)
+      SITE_froof     = SITE_froof/(1-SITE_flake_urb)
+      SITE_fveg_urb  = SITE_fveg_urb  * 100
+      SITE_flake_urb = SITE_flake_urb * 100
+
       CALL ncio_create_file (fsrfdata)
 
       CALL ncio_define_dimension (fsrfdata, 'soil',  nl_soil )
@@ -717,15 +869,14 @@ ENDIF
       CALL ncio_define_dimension (fsrfdata, 'numsolar', 2 )
       CALL ncio_define_dimension (fsrfdata, 'numrad'  , 2 )
 
-      CALL ncio_write_serial (fsrfdata, 'latitude',  SITE_lat_location)
+      CALL ncio_write_serial (fsrfdata, 'latitude' , SITE_lat_location)
       CALL ncio_write_serial (fsrfdata, 'longitude', SITE_lon_location)
 
-      source = datasource(USE_SITE_urban_LAI)
       CALL ncio_write_serial (fsrfdata, 'LAI_year', SITE_LAI_year, 'LAI_year')
       CALL ncio_write_serial (fsrfdata, 'TREE_LAI', SITE_LAI_monthly, 'month', 'LAI_year')
       CALL ncio_write_serial (fsrfdata, 'TREE_SAI', SITE_SAI_monthly, 'month', 'LAI_year')
-      CALL ncio_put_attr     (fsrfdata, 'TREE_LAI', 'source', source)
-      CALL ncio_put_attr     (fsrfdata, 'TREE_SAI', 'source', source)
+      CALL ncio_put_attr     (fsrfdata, 'TREE_LAI', 'source', datasource(use_site_urblai))
+      CALL ncio_put_attr     (fsrfdata, 'TREE_SAI', 'source', datasource(use_site_urbsai))
 
       CALL ncio_write_serial (fsrfdata, 'lakedepth', SITE_lakedepth)
       CALL ncio_put_attr     (fsrfdata, 'lakedepth', 'source', datasource(USE_SITE_lakedepth))
@@ -733,7 +884,7 @@ ENDIF
       CALL ncio_write_serial (fsrfdata, 'URBAN_TYPE'    , SITE_urbtyp     , 'patch')
       CALL ncio_write_serial (fsrfdata, 'LUCY_id'       , SITE_lucyid     , 'patch')
       !CALL ncio_put_attr    (fsrfdata, 'LUCY_id'       , 'source', source)
-      source = datasource(USE_SITE_urban_paras)
+      ! source = datasource(USE_SITE_urban_paras)
       CALL ncio_write_serial (fsrfdata, 'PCT_Tree'      , SITE_fveg_urb   , 'patch')
       CALL ncio_write_serial (fsrfdata, 'URBAN_TREE_TOP', SITE_htop_urb   , 'patch')
       CALL ncio_write_serial (fsrfdata, 'PCT_Water'     , SITE_flake_urb  , 'patch')
@@ -743,16 +894,16 @@ ENDIF
       CALL ncio_write_serial (fsrfdata, 'BUILDING_HLR'  , SITE_hlr        , 'patch')
       CALL ncio_write_serial (fsrfdata, 'POP_DEN'       , SITE_popden     , 'patch')
 
-      CALL ncio_put_attr     (fsrfdata, 'PCT_Tree'      , 'source', source)
-      CALL ncio_put_attr     (fsrfdata, 'URBAN_TREE_TOP', 'source', source)
-      CALL ncio_put_attr     (fsrfdata, 'PCT_Water'     , 'source', source)
-      CALL ncio_put_attr     (fsrfdata, 'WT_ROOF'       , 'source', source)
-      CALL ncio_put_attr     (fsrfdata, 'HT_ROOF'       , 'source', source)
-      CALL ncio_put_attr     (fsrfdata, 'WTROAD_PERV'   , 'source', source)
-      CALL ncio_put_attr     (fsrfdata, 'BUILDING_HLR'  , 'source', source)
-      CALL ncio_put_attr     (fsrfdata, 'POP_DEN'       , 'source', source)
+      CALL ncio_put_attr     (fsrfdata, 'PCT_Tree'      , 'source', datasource(use_site_fveg ))
+      CALL ncio_put_attr     (fsrfdata, 'URBAN_TREE_TOP', 'source', datasource(use_site_htopu))
+      CALL ncio_put_attr     (fsrfdata, 'PCT_Water'     , 'source', datasource(use_site_flake))
+      CALL ncio_put_attr     (fsrfdata, 'WT_ROOF'       , 'source', datasource(use_site_froof))
+      CALL ncio_put_attr     (fsrfdata, 'HT_ROOF'       , 'source', datasource(use_site_hroof))
+      CALL ncio_put_attr     (fsrfdata, 'WTROAD_PERV'   , 'source', datasource(use_site_fgper))
+      CALL ncio_put_attr     (fsrfdata, 'BUILDING_HLR'  , 'source', datasource(use_site_hlr  ))
+      CALL ncio_put_attr     (fsrfdata, 'POP_DEN'       , 'source', datasource(use_site_pop  ))
 
-      source = datasource(USE_SITE_thermal_paras)
+      ! source = datasource(USE_SITE_thermal_paras)
       CALL ncio_write_serial (fsrfdata, 'EM_ROOF'       , SITE_em_roof   , 'patch')
       CALL ncio_write_serial (fsrfdata, 'EM_WALL'       , SITE_em_wall   , 'patch')
       CALL ncio_write_serial (fsrfdata, 'EM_IMPROAD'    , SITE_em_gimp   , 'patch')
@@ -762,24 +913,24 @@ ENDIF
       CALL ncio_write_serial (fsrfdata, 'THICK_ROOF'    , SITE_thickroof , 'patch')
       CALL ncio_write_serial (fsrfdata, 'THICK_WALL'    , SITE_thickwall , 'patch')
 
-      CALL ncio_put_attr     (fsrfdata, 'EM_ROOF'       , 'source', source)
-      CALL ncio_put_attr     (fsrfdata, 'EM_WALL'       , 'source', source)
-      CALL ncio_put_attr     (fsrfdata, 'EM_IMPROAD'    , 'source', source)
-      CALL ncio_put_attr     (fsrfdata, 'EM_PERROAD'    , 'source', source)
-      CALL ncio_put_attr     (fsrfdata, 'T_BUILDING_MAX', 'source', source)
-      CALL ncio_put_attr     (fsrfdata, 'T_BUILDING_MIN', 'source', source)
-      CALL ncio_put_attr     (fsrfdata, 'THICK_ROOF'    , 'source', source)
-      CALL ncio_put_attr     (fsrfdata, 'THICK_WALL'    , 'source', source)
+      CALL ncio_put_attr     (fsrfdata, 'EM_ROOF'       , 'source', datasource(use_site_emr   ))
+      CALL ncio_put_attr     (fsrfdata, 'EM_WALL'       , 'source', datasource(use_site_emw   ))
+      CALL ncio_put_attr     (fsrfdata, 'EM_IMPROAD'    , 'source', datasource(use_site_emgimp))
+      CALL ncio_put_attr     (fsrfdata, 'EM_PERROAD'    , 'source', datasource(use_site_emgper))
+      CALL ncio_put_attr     (fsrfdata, 'T_BUILDING_MAX', 'source', datasource(use_site_tbmax ))
+      CALL ncio_put_attr     (fsrfdata, 'T_BUILDING_MIN', 'source', datasource(use_site_tbmin ))
+      CALL ncio_put_attr     (fsrfdata, 'THICK_ROOF'    , 'source', datasource(use_site_thickr))
+      CALL ncio_put_attr     (fsrfdata, 'THICK_WALL'    , 'source', datasource(use_site_thickw))
 
       CALL ncio_write_serial (fsrfdata, 'ALB_ROOF'      , SITE_alb_roof   , 'numrad', 'numsolar')
       CALL ncio_write_serial (fsrfdata, 'ALB_WALL'      , SITE_alb_wall   , 'numrad', 'numsolar')
       CALL ncio_write_serial (fsrfdata, 'ALB_IMPROAD'   , SITE_alb_gimp   , 'numrad', 'numsolar')
       CALL ncio_write_serial (fsrfdata, 'ALB_PERROAD'   , SITE_alb_gper   , 'numrad', 'numsolar')
 
-      CALL ncio_put_attr     (fsrfdata, 'ALB_ROOF'      , 'source', source)
-      CALL ncio_put_attr     (fsrfdata, 'ALB_WALL'      , 'source', source)
-      CALL ncio_put_attr     (fsrfdata, 'ALB_IMPROAD'   , 'source', source)
-      CALL ncio_put_attr     (fsrfdata, 'ALB_PERROAD'   , 'source', source)
+      CALL ncio_put_attr     (fsrfdata, 'ALB_ROOF'      , 'source', datasource(use_site_albr   ))
+      CALL ncio_put_attr     (fsrfdata, 'ALB_WALL'      , 'source', datasource(use_site_albw   ))
+      CALL ncio_put_attr     (fsrfdata, 'ALB_IMPROAD'   , 'source', datasource(use_site_albgimp))
+      CALL ncio_put_attr     (fsrfdata, 'ALB_PERROAD'   , 'source', datasource(use_site_albgper))
 
       CALL ncio_write_serial (fsrfdata, 'CV_ROOF'       , SITE_cv_roof    , 'ulev')
       CALL ncio_write_serial (fsrfdata, 'CV_WALL'       , SITE_cv_wall    , 'ulev')
@@ -787,12 +938,13 @@ ENDIF
       CALL ncio_write_serial (fsrfdata, 'TK_ROOF'       , SITE_tk_roof    , 'ulev')
       CALL ncio_write_serial (fsrfdata, 'TK_WALL'       , SITE_tk_wall    , 'ulev')
       CALL ncio_write_serial (fsrfdata, 'TK_IMPROAD'    , SITE_tk_gimp    , 'ulev')
-      CALL ncio_put_attr     (fsrfdata, 'CV_ROOF'       , 'source', source)
-      CALL ncio_put_attr     (fsrfdata, 'CV_WALL'       , 'source', source)
-      CALL ncio_put_attr     (fsrfdata, 'CV_IMPROAD'    , 'source', source)
-      CALL ncio_put_attr     (fsrfdata, 'TK_ROOF'       , 'source', source)
-      CALL ncio_put_attr     (fsrfdata, 'TK_WALL'       , 'source', source)
-      CALL ncio_put_attr     (fsrfdata, 'TK_IMPROAD'    , 'source', source)
+
+      CALL ncio_put_attr     (fsrfdata, 'CV_ROOF'       , 'source', datasource(use_site_cvr   ))
+      CALL ncio_put_attr     (fsrfdata, 'CV_WALL'       , 'source', datasource(use_site_cvw   ))
+      CALL ncio_put_attr     (fsrfdata, 'CV_IMPROAD'    , 'source', datasource(use_site_cvgimp))
+      CALL ncio_put_attr     (fsrfdata, 'TK_ROOF'       , 'source', datasource(use_site_tkr   ))
+      CALL ncio_put_attr     (fsrfdata, 'TK_WALL'       , 'source', datasource(use_site_tkw   ))
+      CALL ncio_put_attr     (fsrfdata, 'TK_IMPROAD'    , 'source', datasource(use_site_tkgimp))
 
 
       source = datasource(USE_SITE_soilreflectance)
