@@ -983,16 +983,12 @@ CONTAINS
             filename = trim(dir_forcing)//trim(metfilename(year, month, day, ivar))
             IF (trim(DEF_forcing%dataset) == 'POINT') THEN
 
+               IF (forcing_read_ahead) THEN
+                  metdata%blk(gblock%xblkme(1),gblock%yblkme(1))%val = forc_disk(time_i,ivar)
+               ELSE
 #ifndef URBAN_MODEL
-               IF (forcing_read_ahead) THEN
-                  metdata%blk(gblock%xblkme(1),gblock%yblkme(1))%val = forc_disk(time_i,ivar)
-               ELSE
                   CALL ncio_read_site_time (filename, vname(ivar), time_i, metdata)
-               ENDIF
 #else
-               IF (forcing_read_ahead) THEN
-                  metdata%blk(gblock%xblkme(1),gblock%yblkme(1))%val = forc_disk(time_i,ivar)
-               ELSE
                   IF (trim(vname(ivar)) == 'Rainf') THEN
                      CALL ncio_read_site_time (filename, 'Rainf', time_i, rainf)
                      CALL ncio_read_site_time (filename, 'Snowf', time_i, snowf)
@@ -1027,16 +1023,12 @@ CONTAINS
                filename = trim(dir_forcing)//trim(metfilename(year, month, day, ivar))
                IF (trim(DEF_forcing%dataset) == 'POINT') THEN
 
+                  IF (forcing_read_ahead) THEN
+                     metdata%blk(gblock%xblkme(1),gblock%yblkme(1))%val = forc_disk(time_i,ivar)
+                  ELSE
 #ifndef URBAN_MODEL
-                  IF (forcing_read_ahead) THEN
-                     metdata%blk(gblock%xblkme(1),gblock%yblkme(1))%val = forc_disk(time_i,ivar)
-                  ELSE
                      CALL ncio_read_site_time (filename, vname(ivar), time_i, metdata)
-                  ENDIF
 #else
-                  IF (forcing_read_ahead) THEN
-                     metdata%blk(gblock%xblkme(1),gblock%yblkme(1))%val = forc_disk(time_i,ivar)
-                  ELSE
                      IF (trim(vname(ivar)) == 'Rainf') THEN
                         CALL ncio_read_site_time (filename, 'Rainf', time_i, rainf)
                         CALL ncio_read_site_time (filename, 'Snowf', time_i, snowf)
@@ -1186,7 +1178,7 @@ CONTAINS
 
       !forctime(1)%year = year
       !forctime(1)%day  = get_calday(month*100+day, isleapyear(year))
-      !forctime(1)%sec = hour*3600 + minute*60 + second + forctime_sec(1)
+      !forctime(1)%sec  = hour*3600 + minute*60 + second + forctime_sec(1)
 
       !id(:) = (/forctime(1)%year, forctime(1)%day, forctime(1)%sec/)
       CALL adj2end(id)

@@ -134,10 +134,10 @@ MODULE MOD_SingleSrfdata
               use_site_fveg , use_site_htopu, use_site_flake  , use_site_urblai, use_site_urbsai, &
               use_site_albr , use_site_albw , use_site_albgimp, use_site_albgper, &
               use_site_emr  , use_site_emw  , use_site_emgimp , use_site_emgper, &
-              use_site_cvr  , use_site_cvw  , use_site_cvgimp , & 
+              use_site_cvr  , use_site_cvw  , use_site_cvgimp , &
               use_site_tkr  , use_site_tkw  , use_site_tkgimp , &
               use_site_pop  , use_site_tbmax, use_site_tbmin  , use_site_thickr, use_site_thickw
-              
+
 
 CONTAINS
 
@@ -519,7 +519,7 @@ ENDIF
             ENDIF
          ENDIF
 
-         IF ( USE_SITE_urban_humanities  ) THEN
+         IF ( USE_SITE_urban_human ) THEN
             IF ( ncio_var_exist(fsrfdata,'resident_population_density') ) THEN
                CALL ncio_read_serial (fsrfdata, 'resident_population_density', SITE_popden  )
                use_site_pop = .true.

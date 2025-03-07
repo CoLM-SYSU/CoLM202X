@@ -80,10 +80,10 @@ CONTAINS
 #ifdef SinglePoint
       lucyid(:) = SITE_lucyid
 
-      froof(:) = SITE_froof
-      hroof(:) = SITE_hroof
-      hlr  (:) = SITE_hlr
-      fgper(:) = SITE_fgper
+      froof (:) = SITE_froof
+      hroof (:) = SITE_hroof
+      hlr   (:) = SITE_hlr
+      fgper (:) = SITE_fgper
 
       flake   (:) = SITE_flake_urb
       fveg_urb(:) = SITE_fveg_urb
