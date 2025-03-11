@@ -172,6 +172,10 @@ SUBROUTINE CoLMMAIN ( &
 #endif
    USE MOD_SPMD_Task
 
+#ifdef EXTERNAL_LAKE
+   USE MOD_Lake_Driver, only: Lake_Interface
+#endif
+
    IMPLICIT NONE
 
 !-------------------------- Dummy Arguments ----------------------------
@@ -1145,6 +1149,7 @@ SUBROUTINE CoLMMAIN ( &
          pg_rain = prc_rain + prl_rain
          pg_snow = prc_snow + prl_snow
 
+#ifndef EXTERNAL_LAKE
          CALL newsnow_lake ( DEF_USE_Dynamic_Lake, &
               ! "in" arguments
               ! ---------------
@@ -1214,6 +1219,38 @@ SUBROUTINE CoLMMAIN ( &
               mss_bcpho    ,mss_bcphi    ,mss_ocpho       ,mss_ocphi       ,&
               mss_dst1     ,mss_dst2     ,mss_dst3        ,mss_dst4         )
 
+#else
+         CALL Lake_Interface( &
+               ! "in" arguments    
+               ! -------------------
+               deltim      ,patchlatr     ,patchlonr      ,bifall        ,& 
+               forc_hgt_u  ,forc_hgt_t    ,forc_hgt_q     ,forc_us       ,&
+               forc_vs     ,forc_t        ,forc_q         ,forc_rhoair   ,&
+               forc_psrf   ,forc_frl      ,sabg           ,forc_hpbl     ,& 
+               forc_sols   ,forc_soll     ,forc_solsd     ,forc_solld    ,&
+               prc_rain    ,prl_rain      ,prc_snow       ,prl_snow      ,&
+               t_precip    ,ipatch        ,&
+               ! "inout" arguments
+               ! -------------------
+               t_grnd      ,t_lake        ,t_soisno       ,snl           ,&
+               z_soisno    ,zi_soisno     ,dz_soisno      ,scv           ,&
+               savedtke1   ,sag           ,snowdp         ,lake_icefrac  ,&
+               wliq_soisno ,wice_soisno   ,gwat           ,&
+! SNICAR model variables
+               forc_aer    ,sabg_snow_lyr ,snofrz         ,&
+               mss_bcpho   ,mss_bcphi     ,mss_ocpho      ,mss_ocphi     ,&
+               mss_dst1    ,mss_dst2      ,mss_dst3       ,mss_dst4      ,&
+! END SNICAR model variables
+               ! "out" arguments
+               ! -------------------
+               fsena       ,fevpa         ,lfevpa         ,fseng         ,&
+               fevpg       ,olrg          ,fgrnd          ,trad          ,&
+               qseva       ,qsubl         ,qsdew          ,qfros         ,&
+               taux        ,tauy          ,ustar          ,qstar         ,&
+               tstar       ,emis          ,sm             ,zol           ,&
+               tref        ,qref          ,fm             ,fq            ,&
+               rib         ,fh            ,z0m            )
+#endif
 
          IF (.not. DEF_USE_Dynamic_Lake) THEN
             ! We assume the land water bodies have zero extra liquid water capacity
