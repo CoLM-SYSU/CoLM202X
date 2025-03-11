@@ -1220,7 +1220,7 @@ SUBROUTINE CoLMMAIN ( &
               mss_dst1     ,mss_dst2     ,mss_dst3        ,mss_dst4         )
 
 #else
-         CALL Lake_Interface( &
+         CALL external_lake( &
                ! "in" arguments    
                ! -------------------
                deltim      ,patchlatr     ,patchlonr      ,bifall        ,& 
