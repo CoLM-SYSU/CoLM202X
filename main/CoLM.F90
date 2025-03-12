@@ -97,6 +97,10 @@ PROGRAM CoLM
    USE MOD_HistWriteBack
 #endif
 
+#ifdef EXTERNAL_LAKE
+   USE MOD_Lake_Namelist
+#endif
+
    IMPLICIT NONE
 
    character(len=256) :: nlfile
@@ -155,6 +159,10 @@ PROGRAM CoLM
       CALL getarg (1, nlfile)
 
       CALL read_namelist (nlfile)
+
+#ifdef EXTERNAL_LAKE
+      CALL read_lake_namelist (nlfile)
+#endif
 
 #ifdef USEMPI
       IF (DEF_HIST_WriteBack) THEN

@@ -77,6 +77,10 @@ CONTAINS
    USE MOD_PercentagesPFTReadin
    USE MOD_SoilParametersReadin
    USE MOD_SoilTextureReadin
+#ifdef EXTERNAL_LAKE
+   USE MOD_Lake_TimeVars
+   USE MOD_Lake_Namelist, only: DEF_External_Lake
+#endif
 
    IMPLICIT NONE
 
@@ -1208,7 +1212,13 @@ CONTAINS
          t_lake      (:,:) = 285.
          lake_icefrac(:,:) = 0.
          savedtke1   (:)   = tkwat
-
+#ifdef EXTERNAL_LAKE
+         DO i = 1, numpatch
+            IF(patchtype(i) == 4) THEN
+               CALL InitLakeTimeVars(i, lakedepth(i), t_lake(:,i), lake_icefrac(:,i), savedtke1(i))
+            ENDIF
+         ENDDO
+#endif
       ENDIF
       ! ------------------------------------------
 
@@ -1300,6 +1310,12 @@ CONTAINS
                ,use_soilini, nl_soil_ini, soil_z, soil_t(1:,i), soil_w(1:,i), use_snowini, snow_d(i) &
                ! for SOIL Water INIT by using water table depth
                ,use_wtd, zwtmm, zc_soimm, zi_soimm, vliq_r, nprms, prms)
+               
+#ifdef EXTERNAL_LAKE
+            IF(patchtype(i) == 4) THEN
+               z0m(i) = DEF_External_Lake%DEF_LAKE_Z0M
+            ENDIF
+#endif
 
 #ifdef URBAN_MODEL
             IF (m == URBAN) THEN

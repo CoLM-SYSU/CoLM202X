@@ -395,6 +395,9 @@ MODULE MOD_Vars_TimeVariables
 #ifdef URBAN_MODEL
    USE MOD_Urban_Vars_TimeVariables
 #endif
+#ifdef EXTERNAL_LAKE
+   USE MOD_Lake_TimeVars
+#endif
 
    IMPLICIT NONE
    SAVE
@@ -693,6 +696,10 @@ CONTAINS
       CALL allocate_UrbanTimeVariables
 #endif
 
+#ifdef EXTERNAL_LAKE
+      CALL allocate_LakeTimeVars
+#endif
+
    END SUBROUTINE allocate_TimeVariables
 
 
@@ -849,6 +856,10 @@ CONTAINS
 
 #if (defined URBAN_MODEL)
       CALL deallocate_UrbanTimeVariables
+#endif
+
+#ifdef EXTERNAL_LAKE
+      CALL deallocate_LakeTimeVars
 #endif
 
    END SUBROUTINE deallocate_TimeVariables
@@ -1084,6 +1095,11 @@ ENDIF
       file_restart = trim(dir_restart)// '/'//trim(cdate)//'/' // trim(site) //'_restart_urban_'//trim(cdate)//'_lc'//trim(cyear)//'.nc'
       CALL WRITE_UrbanTimeVariables (file_restart)
 #endif
+
+#ifdef EXTERNAL_LAKE
+      CALL WRITE_LakeTimeVars (idate, lc_year, site, dir_restart) 
+#endif
+
    END SUBROUTINE WRITE_TimeVariables
 
 
@@ -1264,6 +1280,10 @@ ENDIF
       CALL READ_UrbanTimeVariables (file_restart)
 #endif
 
+#ifdef EXTERNAL_LAKE
+      CALL READ_LakeTimeVars(idate, lc_year, site, dir_restart)
+#endif
+
 #ifdef RangeCheck
       CALL check_TimeVariables
 #endif
@@ -1395,6 +1415,10 @@ ENDIF
 
 #if (defined BGC)
       CALL check_BGCTimeVariables
+#endif
+
+#ifdef EXTERNAL_LAKE
+      CALL CHECK_LakeTimeVars
 #endif
 
 #ifdef USEMPI

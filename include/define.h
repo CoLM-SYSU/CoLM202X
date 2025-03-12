@@ -85,3 +85,6 @@
 #endif
 
 #undef USESplitAI
+
+! 11. External lake models.
+#undef EXTERNAL_LAKE 
