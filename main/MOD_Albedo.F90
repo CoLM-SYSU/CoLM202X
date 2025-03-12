@@ -801,13 +801,13 @@ ENDIF
 !     An improved two stream approximation
 !
 !  Original author: Yongjiu Dai, June 11, 2001
-!                  Hua Yuan, 03/2020
+!                   Hua Yuan, 03/2020
 !
 ! !REFERENCES:
 !  1) Yuan, H., Dai, Y., Dickinson, R. E., Pinty, B., Shangguan, W.,
 !  Zhang, S., et al. (2017). Reexamination and further development of
 !  two-stream canopy radiative transfer models for global land modeling.
-!  Journal of Advances in Modeling Earth Systems, 9(1), 113–129.
+!  Journal of Advances in Modeling Earth Systems, 9(1), 113-129.
 !  https://doi.org/10.1002/2016MS000773
 !
 !-----------------------------------------------------------------------
@@ -1362,10 +1362,10 @@ ENDIF
    !
    ! REFERENCES:
    ! 1) Flanner et al, 2021, SNICAR-ADv3: a community tool for modeling spectral snow albedo.
-   ! Geosci. Model Dev., 14, 7673–7704, https://doi.org/10.5194/gmd-14-7673-2021
+   ! Geosci. Model Dev., 14, 7673-7704, https://doi.org/10.5194/gmd-14-7673-2021
    ! 2) Hao et al., 2023, Improving snow albedo modeling in the E3SM land model (version 2.0)
    ! and assessing its impacts on snow and surface fluxes over the Tibetan Plateau.
-   ! Geosci. Model Dev., 16, 75–94, https://doi.org/10.5194/gmd-16-75-2023
+   ! Geosci. Model Dev., 16, 75-94, https://doi.org/10.5194/gmd-16-75-2023
    !
    ! REVISIONS:
    ! Yongjiu Dai, and Hua Yuan, December, 2022 : ASSEMBLING and FITTING

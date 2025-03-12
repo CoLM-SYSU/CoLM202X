@@ -74,16 +74,22 @@ CONTAINS
       write(cyear,'(i4.4)') lc_year
 
       allocate (lucyid    (numurban))
-
-IF (DEF_URBAN_type_scheme == 1) THEN
-
       allocate (thickroof (numurban))
       allocate (thickwall (numurban))
 
 #ifdef SinglePoint
       lucyid(:) = SITE_lucyid
+
+      froof (:) = SITE_froof
+      hroof (:) = SITE_hroof
       hlr   (:) = SITE_hlr
       fgper (:) = SITE_fgper
+
+      flake   (:) = SITE_flake_urb
+      fveg_urb(:) = SITE_fveg_urb
+      htop_urb(:) = SITE_htop_urb
+
+      pop_den(:) = SITE_popden
 
       em_roof(:) = SITE_em_roof
       em_wall(:) = SITE_em_wall
@@ -106,8 +112,9 @@ IF (DEF_URBAN_type_scheme == 1) THEN
       tk_roof(:,1) = SITE_tk_roof
       tk_wall(:,1) = SITE_tk_wall
       tk_gimp(:,1) = SITE_tk_gimp
-
 #else
+IF (DEF_URBAN_type_scheme == 1) THEN
+
       ! READ in urban data
       lndname = trim(dir_landdata)//'/urban/'//trim(cyear)//'/urban.nc'
 
@@ -134,18 +141,8 @@ IF (DEF_URBAN_type_scheme == 1) THEN
       CALL ncio_read_vector (lndname, 'TK_ROOF'       , nl_roof, landurban, tk_roof) ! thermal conductivity of roof [W/m-K]
       CALL ncio_read_vector (lndname, 'TK_WALL'       , nl_wall, landurban, tk_wall) ! thermal conductivity of wall [W/m-K]
       CALL ncio_read_vector (lndname, 'TK_IMPROAD'    , nl_soil, landurban, tk_gimp) ! thermal conductivity of impervious road [W/m-K]
-#endif
 ENDIF
 
-#ifdef SinglePoint
-      pop_den  = SITE_popden
-      lucyid   = SITE_lucyid
-      froof    = SITE_froof
-      hroof    = SITE_hroof
-      flake    = SITE_flake_urb
-      fveg_urb = SITE_fveg_urb
-      htop_urb = SITE_htop_urb
-#else
       !TODO: Variables distinguish between time-varying and time-invariant variables
       lndname = trim(dir_landdata)//'/urban/'//trim(cyear)//'/POP.nc'
       CALL ncio_read_vector (lndname, 'POP_DEN'       , landurban, pop_den )
@@ -168,7 +165,6 @@ ENDIF
       lndname = trim(dir_landdata)//'/urban/'//trim(cyear)//'/htop_urb.nc'
       CALL ncio_read_vector (lndname, 'URBAN_TREE_TOP', landurban, htop_urb)
 #endif
-
       dir_runtime = DEF_dir_runtime
       lndname = trim(dir_runtime)//'/urban/'//'/LUCY_rawdata.nc'
 
@@ -219,15 +215,11 @@ IF (DEF_URBAN_type_scheme == 1) THEN
             ENDIF
 ELSEIF (DEF_URBAN_type_scheme == 2) THEN
             ! read in LCZ constants
-#ifdef SinglePoint
-            hlr  (:) = SITE_hlr
-            fgper(:) = SITE_fgper
-#else
+#ifndef SinglePoint
             hlr  (u) = canyonhwr_lcz (landurban%settyp(u))  !average building height to their distance
             fgper(u) = wtperroad_lcz (landurban%settyp(u)) &
                      / (1-wtroof_lcz (landurban%settyp(u)))!pervious fraction to ground area
             fgper(u) = min(fgper(u), 1.)
-#endif
 
             DO ns = 1,2
                DO nr = 1,2
@@ -258,8 +250,8 @@ ELSEIF (DEF_URBAN_type_scheme == 2) THEN
                tk_gimp(:,u) = tkimproad_lcz (landurban%settyp(u)) !thermal conductivity of impervious [W/m-K]
             ENDDO
 
-            thick_roof = thickroof_lcz (landurban%settyp(u)) !thickness of roof [m]
-            thick_wall = thickwall_lcz (landurban%settyp(u)) !thickness of wall [m]
+            thickroof(u) = thickroof_lcz (landurban%settyp(u)) !thickness of roof [m]
+            thickwall(u) = thickwall_lcz (landurban%settyp(u)) !thickness of wall [m]
 
             IF (DEF_URBAN_BEM) THEN
                t_roommax(u) = 297.65 !tbuildingmax  (landurban%settyp(u)) !maximum temperature of inner room [K]
@@ -268,6 +260,7 @@ ELSEIF (DEF_URBAN_type_scheme == 2) THEN
                t_roommax(u) = 373.16 !maximum temperature of inner room [K]
                t_roommin(u) = 180.00 !minimum temperature of inner room [K]
             ENDIF
+#endif
 ENDIF
 
             IF (DEF_URBAN_WATER) THEN
@@ -306,11 +299,11 @@ ENDIF
 
             ! roof and wall layer node depth
             DO l=1, nl_roof
-               z_roof(l,u) = (l-0.5)*(thick_roof/nl_roof)
+               z_roof(l,u) = (l-0.5)*(thickroof(u)/nl_roof)
             ENDDO
 
             DO l=1, nl_wall
-               z_wall(l,u) = (l-0.5)*(thick_wall/nl_wall)
+               z_wall(l,u) = (l-0.5)*(thickwall(u)/nl_wall)
             ENDDO
 
             ! roof and wall layer depth

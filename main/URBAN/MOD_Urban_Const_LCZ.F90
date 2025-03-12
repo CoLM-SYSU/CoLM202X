@@ -14,7 +14,7 @@ MODULE MOD_Urban_Const_LCZ
 ! !REFERENCES:
 !  1) Stewart, I. D., Oke, T. R., & Krayenhoff, E. S. (2014). Evaluation of
 !  the 'local climate zone' scheme using temperature observations and model
-!  simulations. International Journal of Climatology, 34(4), 1062–1080.
+!  simulations. International Journal of Climatology, 34(4), 1062-1080.
 !  https://doi.org/10.1002/joc.3746
 !
 !  2) The URBPARM_LCZ.TBL of WRF, https://github.com/wrf-model/WRF/
@@ -68,7 +68,7 @@ MODULE MOD_Urban_Const_LCZ
 
    ! albedo of pervious road [-]
    real(r8), parameter, dimension(10)  :: albperroad_lcz &
-      = (/0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25/)
+      = (/0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15/)
 
    ! emissivity of roof [-]
    real(r8), parameter, dimension(10)  :: emroof_lcz &
