@@ -8,7 +8,7 @@ MODULE MOD_Lake
 !
 ! !REFERENCES:
 !  Dai et al, 2018, The lake scheme of the common land model and its performance evaluation.
-!  Chinese Science Bulletin, 63(28-29), 3002–3021, https://doi.org/10.1360/N972018-00609
+!  Chinese Science Bulletin, 63(28-29), 3002-3021, https://doi.org/10.1360/N972018-00609
 !
 !  Original author: Yongjiu Dai 04/2014/
 !

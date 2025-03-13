@@ -491,7 +491,7 @@ CONTAINS
 !
 !  Rouf, T., Mei, Y., Maggioni, V., Houser, P., & Noonan, M. (2020). A
 !  Physically Based Atmospheric Variables Downscaling Technique. Journal
-!  of Hydrometeorology, 21(1), 93–108.
+!  of Hydrometeorology, 21(1), 93-108.
 !  https://doi.org/10.1175/JHM-D-19-0109.1
 !
 !  Sisi Chen, Lu Li, Yongjiu Dai, et al. Exploring Topography
@@ -607,7 +607,7 @@ CONTAINS
       ! calculate diffuse weight
       ! Ruiz-Arias, J. A., Alsamamra, H., Tovar-Pescador, J., & Pozo-Vázquez, D. (2010).
       ! Proposal of a regressive model for the hourly diffuse solar radiation under all sky
-      ! conditions. Energy Conversion and Management, 51(5), 881–893.
+      ! conditions. Energy Conversion and Management, 51(5), 881-893.
       ! https://doi.org/10.1016/j.enconman.2009.11.024
       diff_wgt = 0.952-1.041*exp(-1*exp(min(2.3-4.702*clr_idx,3.5)))
       IF (diff_wgt>1) diff_wgt = 1

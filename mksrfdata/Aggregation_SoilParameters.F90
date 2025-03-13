@@ -20,7 +20,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
 !  3) Dai, Y., W. Shangguan, Q. Duan, B. Liu, S. Fu, and G. Niu, 2013.
 !  Development of a China dataset of soil hydraulic parameters using
 !  pedotransfer functions for land surface modeling. Journal of
-!  Hydrometeorology 14, 869–887
+!  Hydrometeorology 14, 869-887
 !
 !  Original author: Yongjiu Dai and Wei Shangguan, 02/2014
 !
@@ -146,7 +146,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
    real(r8), allocatable :: BA_alpha_one  (:)
    real(r8), allocatable :: BA_beta_one  (:)
 
-! local variables for estimating the upscaled soil parameters using the Levenberg–Marquardt fitting method
+! local variables for estimating the upscaled soil parameters using the Levenberg-Marquardt fitting method
 ! ---------------------------------------------------------------
    integer, parameter   :: npointw  = 24
    integer, parameter   :: npointb  = 20
@@ -170,7 +170,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
                                           ! (theta_r, alpha and n)
    integer, parameter   :: nb = 2         ! the number of fitted parameters in Ke-Sr relationship (alpha and beta)
 
-! Variables needed for Levenberg–Marquardt algorithm in MINPACK library
+! Variables needed for Levenberg-Marquardt algorithm in MINPACK library
    real(r8),parameter   :: factor = 0.1
    real(r8),parameter   :: ftol = 1.0e-5
    real(r8),parameter   :: xtol = 1.0e-4
@@ -770,7 +770,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
                         allocate ( ydatv  (1:np,npointw) )
                         allocate ( ydatvks(1:np,npointw) )
                         allocate ( THETA  (     npointw) )
-! the jacobian matrix required in Levenberg–Marquardt fitting method
+! the jacobian matrix required in Levenberg-Marquardt fitting method
                         allocate ( fjacv  (npointw,nv) )           ! calculated in SW_VG_dist
 ! the values of objective functions to be fitted
                         allocate ( fvecv  (npointw)    )           ! calculated in SW_VG_dist
@@ -1034,7 +1034,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
                      IF( np > 1 ) THEN
                         allocate ( ydatc  (1:np,npointw-7) )
                         allocate ( ydatcks(1:np,npointw-7) )
-! the jacobian matrix required in Levenberg–Marquardt fitting method
+! the jacobian matrix required in Levenberg-Marquardt fitting method
                         allocate ( fjacc  (npointw-7,nc) )           ! calculated in SW_CB_dist
 ! the values of objective functions to be fitted
                         allocate ( fvecc  (npointw-7)    )           ! calculated in SW_CB_dist

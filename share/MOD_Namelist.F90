@@ -74,9 +74,11 @@ MODULE MOD_Namelist
    logical  :: USE_SITE_soilparameters   = .true.
    logical  :: USE_SITE_dbedrock         = .true.
    logical  :: USE_SITE_topography       = .true.
-   logical  :: USE_SITE_urban_paras      = .true.
-   logical  :: USE_SITE_thermal_paras    = .false.
-   logical  :: USE_SITE_urban_LAI        = .false.
+   logical  :: USE_SITE_urban_geometry   = .true.
+   logical  :: USE_SITE_urban_ecology    = .false.
+   logical  :: USE_SITE_urban_radiation  = .false.
+   logical  :: USE_SITE_urban_thermal    = .false.
+   logical  :: USE_SITE_urban_human      = .false.
    logical  :: USE_SITE_HistWriteBack    = .true.
    logical  :: USE_SITE_ForcingReadAhead = .true.
 
@@ -727,13 +729,13 @@ MODULE MOD_Namelist
       logical :: sum_irrig_count                  = .true.
 
       logical :: ndep_to_sminn                    = .true.
-      logical :: CONC_O2_UNSAT                    = .true.
-      logical :: O2_DECOMP_DEPTH_UNSAT            = .true.
-      logical :: abm                              = .true.
-      logical :: gdp                              = .true.
-      logical :: peatf                            = .true.
-      logical :: hdm                              = .true.
-      logical :: lnfm                             = .true.
+      logical :: CONC_O2_UNSAT                    = .false.
+      logical :: O2_DECOMP_DEPTH_UNSAT            = .false.
+      logical :: abm                              = .false.
+      logical :: gdp                              = .false.
+      logical :: peatf                            = .false.
+      logical :: hdm                              = .false.
+      logical :: lnfm                             = .false.
 
       logical :: leafcCap                         = .false.
       logical :: leafc_storageCap                 = .false.
@@ -909,9 +911,11 @@ CONTAINS
       USE_SITE_topography,                    &
       USE_SITE_HistWriteBack,                 &
       USE_SITE_ForcingReadAhead,              &
-      USE_SITE_urban_paras,                   &
-      USE_SITE_thermal_paras,                 &
-      USE_SITE_urban_LAI,                     &
+      USE_SITE_urban_geometry,                &
+      USE_SITE_urban_ecology,                 &
+      USE_SITE_urban_radiation,               &
+      USE_SITE_urban_thermal,                 &
+      USE_SITE_urban_human,                   &
 
       DEF_BlockInfoFile,                      &
       DEF_AverageElementSize,                 &
@@ -1928,6 +1932,10 @@ CONTAINS
       ENDIF
 #endif
       CALL sync_hist_vars_one (DEF_hist_vars%ndep_to_sminn                   , set_defaults)
+      IF(DEF_USE_NITRIF)THEN
+         CALL sync_hist_vars_one (DEF_hist_vars%CONC_O2_UNSAT                , set_defaults)
+         CALL sync_hist_vars_one (DEF_hist_vars%O2_DECOMP_DEPTH_UNSAT        , set_defaults)
+      ENDIF
       IF(DEF_USE_FIRE)THEN
          CALL sync_hist_vars_one (DEF_hist_vars%abm                          , set_defaults)
          CALL sync_hist_vars_one (DEF_hist_vars%gdp                          , set_defaults)

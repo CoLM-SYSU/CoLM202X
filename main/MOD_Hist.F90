@@ -29,6 +29,9 @@ MODULE MOD_Hist
 #ifdef CatchLateralFlow
    USE MOD_Catch_Hist
 #endif
+#ifdef EXTERNAL_LAKE
+   USE MOD_Lake_Hist
+#endif
 
    PUBLIC :: hist_init
    PUBLIC :: hist_out
@@ -3722,6 +3725,10 @@ CONTAINS
          CALL write_history_variable_3d ( DEF_hist_vars%lake_icefrac, &
             a_lake_icefrac, file_hist, 'f_lake_icefrac', itime_in_file, 'lake', 1, nl_lake, &
             sumarea, filter, 'lake ice fraction cover','0-1')
+
+#ifdef EXTERNAL_LAKE
+         CALL LakeVarsSaveHist (nl_lake, file_hist, HistForm, itime_in_file, sumarea, filter)
+#endif
 
          ! --------------------------------
          ! Retrieve through averaged fluxes

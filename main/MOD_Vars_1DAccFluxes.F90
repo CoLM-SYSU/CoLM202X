@@ -3,6 +3,9 @@
 MODULE MOD_Vars_1DAccFluxes
 
    USE MOD_Precision
+#ifdef EXTERNAL_LAKE
+   USE MOD_Lake_1DAccVars
+#endif
 
    real(r8) :: nac ! number of accumulation
    real(r8), allocatable :: nac_ln      (:)
@@ -801,6 +804,10 @@ CONTAINS
          ENDIF
       ENDIF
 
+#ifdef EXTERNAL_LAKE
+      CALL allocate_LakeAccVars
+#endif
+
       IF (p_is_worker) THEN
          CALL elm_patch%build (landelm, landpatch, use_frac = .true.)
       ENDIF
@@ -1207,6 +1214,10 @@ CONTAINS
          ENDIF
       ENDIF
 
+#ifdef EXTERNAL_LAKE
+      CALL deallocate_LakeAccVars
+#endif
+
    END SUBROUTINE deallocate_acc_fluxes
 
    !-----------------------
@@ -1612,6 +1623,10 @@ CONTAINS
 
          ENDIF
       ENDIF
+
+#ifdef EXTERNAL_LAKE
+      CALL Flush_LakeAccVars
+#endif
 
    END SUBROUTINE FLUSH_acc_fluxes
 
@@ -2415,6 +2430,10 @@ CONTAINS
 
 #ifdef CatchLateralFlow
       CALL accumulate_fluxes_basin ()
+#endif
+
+#ifdef EXTERNAL_LAKE
+      CALL accumulate_LakeTimeVars
 #endif
 
    END SUBROUTINE accumulate_fluxes

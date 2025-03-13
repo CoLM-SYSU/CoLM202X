@@ -970,6 +970,7 @@ CONTAINS
       CALL ncio_write_vector (file_restart, 'sminn_vr             ', 'soil' ,   nl_soil, 'patch', landpatch, sminn_vr    )
       CALL ncio_write_vector (file_restart, 'smin_no3_vr          ', 'soil' ,   nl_soil, 'patch', landpatch, smin_no3_vr )
       CALL ncio_write_vector (file_restart, 'smin_nh4_vr          ', 'soil' ,   nl_soil, 'patch', landpatch, smin_nh4_vr )
+      CALL ncio_write_vector (file_restart, 'lag_npp              ', 'patch', landpatch, lag_npp              )
 
       IF(DEF_USE_NITRIF)THEN
          CALL ncio_write_vector (file_restart, 'tCONC_O2_UNSAT       ', 'soil'  ,   nl_soil, 'patch', landpatch, tconc_o2_unsat)
@@ -1132,6 +1133,7 @@ CONTAINS
       CALL ncio_read_vector (file_restart, 'sminn_vr             ',   nl_soil, landpatch, sminn_vr   )
       CALL ncio_read_vector (file_restart, 'smin_no3_vr          ',   nl_soil, landpatch, smin_no3_vr)
       CALL ncio_read_vector (file_restart, 'smin_nh4_vr          ',   nl_soil, landpatch, smin_nh4_vr)
+      CALL ncio_read_vector (file_restart, 'lag_npp              ', landpatch, lag_npp, defval =1.0  )
 
       IF(DEF_USE_NITRIF)THEN
          CALL ncio_read_vector (file_restart, 'tCONC_O2_UNSAT       ',   nl_soil, landpatch, tconc_o2_unsat         )
