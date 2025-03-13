@@ -205,6 +205,8 @@ CONTAINS
       CALL vector_write_basin (&
          file_hist_basin, ntacc_elm, numelm, totalnumelm, 'timesteps', 'basin', elm_data_address, &
          .true., itime_in_file, 'Number of accumulated timesteps for each basin', '-')
+         
+      IF (p_is_worker .and. (numbasin > 0)) ntacc_bsn(:) = 0.
 
       ! ----- water depth in hydro unit ----- 
       IF ((p_is_worker) .and. allocated(a_wdsrf_bsnhru)) THEN
@@ -296,8 +298,6 @@ CONTAINS
             
          IF (numhru > 0) a_xsubs_hru(:) = spval
          
-         IF (numbasin > 0) ntacc_bsn(:) = 0.
-
       ENDIF
 
    END SUBROUTINE FLUSH_acc_fluxes_basin

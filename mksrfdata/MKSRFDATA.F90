@@ -114,7 +114,19 @@ PROGRAM MKSRFDATA
 
 #ifdef SinglePoint
 #ifndef URBAN_MODEL
+
    CALL read_surface_data_single (SITE_fsitedata, mksrfdata=.true.)
+
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
+   CALL write_surface_data_single (numpatch, numpft)
+#else
+   CALL write_surface_data_single (numpatch)
+#endif
+
+   CALL single_srfdata_final ()
+   write(*,*)  'Successful in surface data making.'
+   RETURN
+
 #else
    CALL read_urban_surface_data_single (SITE_fsitedata, mksrfdata=.true.)
 #endif
@@ -403,16 +415,10 @@ PROGRAM MKSRFDATA
 ! ................................................................
 
 #ifdef SinglePoint
-#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
-   CALL write_surface_data_single (numpatch, numpft)
-#else
-#ifndef URBAN_MODEL
-   CALL write_surface_data_single (numpatch)
-#else
+#ifdef URBAN_MODEL
    CALL write_urban_surface_data_single (numurban)
-#endif
-#endif
    CALL single_srfdata_final ()
+#endif
 #endif
 
 #ifdef USEMPI

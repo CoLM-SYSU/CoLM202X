@@ -30,15 +30,17 @@ OBJS_SHARED =    \
 				  MOD_Vars_Global.o            \
 				  MOD_Const_Physical.o         \
 				  MOD_Const_LC.o               \
+				  MOD_Const_PFT.o              \
 				  MOD_Utils.o                  \
 				  MOD_UserDefFun.o             \
 				  MOD_TimeManager.o            \
 				  MOD_NetCDFSerial.o           \
-				  MOD_SingleSrfdata.o          \
 				  MOD_Block.o                  \
 				  MOD_Grid.o                   \
 				  MOD_Pixel.o                  \
 				  MOD_DataType.o               \
+				  MOD_NetCDFPoint.o            \
+				  MOD_SingleSrfdata.o          \
 				  MOD_NetCDFBlock.o            \
 				  MOD_CatchmentDataReadin.o    \
 				  MOD_5x5DataReadin.o          \
@@ -113,7 +115,6 @@ OBJS_BASIC =    \
 				 MOD_Urban_Vars_1DFluxes.o      \
 				 MOD_Urban_Vars_TimeVariables.o \
 				 MOD_Urban_Vars_TimeInvariants.o\
-				 MOD_Const_PFT.o                \
 				 MOD_Vars_TimeInvariants.o      \
 				 MOD_Vars_TimeVariables.o       \
 				 MOD_Vars_1DPFTFluxes.o         \

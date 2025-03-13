@@ -88,10 +88,10 @@ MODULE MOD_SingleSrfdata
    ! topography factors used for downscaling
    real(r8) :: SITE_svf = 0.
    real(r8) :: SITE_cur = 0.
-   real(r8), allocatable :: SITE_slp_type(:)
-   real(r8), allocatable :: SITE_asp_type(:)
+   real(r8), allocatable :: SITE_slp_type (:)
+   real(r8), allocatable :: SITE_asp_type (:)
    real(r8), allocatable :: SITE_area_type(:)
-   real(r8), allocatable :: SITE_sf_lut(:,:)
+   real(r8), allocatable :: SITE_sf_lut (:,:)
 
 
    integer , allocatable :: SITE_urbtyp   (:)
@@ -130,16 +130,48 @@ MODULE MOD_SingleSrfdata
    real(r8), allocatable :: SITE_alb_gimp (:,:)
    real(r8), allocatable :: SITE_alb_gper (:,:)
 
+   logical :: use_site_froof, use_site_hroof, use_site_fgper  , use_site_hlr, &
+              use_site_fveg , use_site_htopu, use_site_flake  , use_site_urblai, use_site_urbsai, &
+              use_site_albr , use_site_albw , use_site_albgimp, use_site_albgper, &
+              use_site_emr  , use_site_emw  , use_site_emgimp , use_site_emgper, &
+              use_site_cvr  , use_site_cvw  , use_site_cvgimp , &
+              use_site_tkr  , use_site_tkw  , use_site_tkgimp , &
+              use_site_pop  , use_site_tbmax, use_site_tbmin  , use_site_thickr, use_site_thickw
+
+   ! -----------------------------------------------------------------------------------
+   ! The soil color and reflectance is from the work:
+   ! Peter J. Lawrence and Thomas N. Chase, 2007:
+   ! Representing a MODIS consistent land surface in the Community Land Model (CLM 3.0):
+   ! Part 1 generating MODIS consistent land surface parameters
+   ! -----------------------------------------------------------------------------------
+   real(r8), parameter :: soil_s_v_refl(20) = &  ! Saturated visible soil reflectance
+      (/ 0.26, 0.24, 0.22, 0.20, 0.19, 0.18, 0.17, 0.16, 0.15, 0.14, &
+         0.13, 0.12, 0.11, 0.10, 0.09, 0.08, 0.07, 0.06, 0.05, 0.04 /)
+   real(r8), parameter :: soil_d_v_refl(20) = &  ! Dry visible soil reflectance
+      (/ 0.37, 0.35, 0.33, 0.31, 0.30, 0.29, 0.28, 0.27, 0.26, 0.25, &
+         0.24, 0.23, 0.22, 0.21, 0.20, 0.19, 0.18, 0.17, 0.16, 0.15 /)
+   real(r8), parameter :: soil_s_n_refl(20) = &  ! Saturated near infrared soil reflectance
+      (/ 0.52, 0.48, 0.44, 0.40, 0.38, 0.36, 0.34, 0.32, 0.30, 0.28, &
+         0.26, 0.24, 0.22, 0.20, 0.18, 0.16, 0.14, 0.12, 0.10, 0.08 /)
+   real(r8), parameter :: soil_d_n_refl(20) = &  ! Dry near infrared soil reflectance
+      (/ 0.63, 0.59, 0.55, 0.51, 0.49, 0.47, 0.45, 0.43, 0.41, 0.39, &
+         0.37, 0.35, 0.33, 0.31, 0.29, 0.27, 0.25, 0.23, 0.21, 0.19 /)
+
 CONTAINS
 
    ! -----
    SUBROUTINE read_surface_data_single (fsrfdata, mksrfdata)
 
    USE MOD_TimeManager
+   USE MOD_Grid
    USE MOD_NetCDFSerial
+   USE MOD_NetCDFPoint
    USE MOD_Namelist
    USE MOD_Utils
    USE MOD_Vars_Global, only: PI
+   USE MOD_Const_LC
+   USE MOD_Const_PFT
+   USE MOD_SPMD_Task
    IMPLICIT NONE
 
    character(len=*), intent(in) :: fsrfdata
@@ -147,7 +179,24 @@ CONTAINS
 
    ! Local Variables
    real(r8) :: lat_in, lon_in
-   integer  :: iyear, itime
+   real(r8) :: LAI, lakedepth, slp, asp, zenith_angle 
+   integer  :: i, isc, nsl, typ, a, z
+   integer  :: iyear, idate(3), simulation_lai_year_start, simulation_lai_year_end 
+   integer  :: start_year, end_year, ntime, itime
+   integer  :: numpatch, numpft
+
+   character(len=256) :: filename, dir_5x5
+   character(len=4)   :: cyear, c
+   
+   type(grid_type) :: gridpatch,  gridcrop, gridpft,  gridhtop, gridlai, gridlake,  &
+                      gridbright, gridsoil, gridrock, gridtopo, grid_topo_factor
+   
+   integer,  allocatable :: croptyp(:), pfttyp (:)
+   real(r8), allocatable :: pctcrop(:), pctpfts(:), pftLAI(:), pftSAI(:), tea_f(:), tea_b(:)
+
+   integer, parameter :: N_PFT_modis = 16
+
+
 
       IF (ncio_var_exist(fsrfdata, 'latitude')) THEN
          CALL ncio_read_serial (fsrfdata, 'latitude',  lat_in)
@@ -169,60 +218,161 @@ CONTAINS
 
       CALL normalize_longitude (SITE_lon_location)
 
-      IF (USE_SITE_landtype .or. .not.mksrfdata) THEN
-         IF (trim(fsrfdata) /= 'null') THEN
-#ifdef LULC_USGS
-            CALL ncio_read_serial (fsrfdata, 'USGS_classification', SITE_landtype)
-#else
-            CALL ncio_read_serial (fsrfdata, 'IGBP_classification', SITE_landtype)
-#endif
-         ENDIF
-
-         IF (SITE_landtype < 0) THEN
-            write(*,*) 'Error! Please set namelist SITE_landtype first!'
-            CALL CoLM_stop()
-         ENDIF
-      ENDIF
-
-      DEF_domain%edges = floor(SITE_lat_location)
-      DEF_domain%edgen = DEF_domain%edges + 1.0
-      DEF_domain%edgew = floor(SITE_lon_location)
-      DEF_domain%edgee = DEF_domain%edgew + 1.0
-
       IF (.not. isgreenwich) THEN
          LocalLongitude = SITE_lon_location
       ENDIF
 
-#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
-      IF ((.not. mksrfdata) .or. USE_SITE_pctpfts) THEN
-         CALL ncio_read_serial (fsrfdata, 'pfttyp', SITE_pfttyp )
-         ! otherwise, retrieve from database by MOD_LandPFT.F90
+
+      ! (1) build/read "land patch" by using land cover type data
+      numpatch = 1
+      SITE_landtype = -1
+      IF (USE_SITE_landtype .or. .not.mksrfdata) THEN
+#ifdef LULC_USGS
+         IF (ncio_var_exist(fsrfdata,'USGS_classification')) THEN
+            CALL ncio_read_serial (fsrfdata, 'USGS_classification', SITE_landtype)
+         ENDIF
+#else
+         IF (ncio_var_exist(fsrfdata,'IGBP_classification')) THEN
+            CALL ncio_read_serial (fsrfdata, 'IGBP_classification', SITE_landtype)
+         ENDIF
+#endif
+      ELSE
+#ifdef LULC_USGS
+         CALL gridpatch%define_by_name ('colm_1km')
+         filename = trim(DEF_dir_rawdata)//'/landtypes/landtype-usgs-update.nc'
+#else
+         CALL gridpatch%define_by_name ('colm_500m')
+         write(cyear,'(i4.4)') DEF_LC_YEAR
+         filename = trim(DEF_dir_rawdata)//'landtypes/landtype-igbp-modis-'//trim(cyear)//'.nc'
+#endif
+         CALL read_point_var_2d_int32 (gridpatch, filename, 'landtype', &
+            SITE_lon_location, SITE_lat_location, SITE_landtype)
+      ENDIF
+         
+      IF (SITE_landtype < 0) THEN
+         write(*,*) 'Error! Please set SITE_landtype!'
+         CALL CoLM_stop()
+      ELSE
+         write(*,*) 'Single Point land cover type : ', SITE_landtype
+      ENDIF
+
+
+      ! (2) build/read "land crop" by using crop data
+#ifdef CROP
+      IF (SITE_landtype == CROPLAND) THEN
+         IF ((.not. mksrfdata) .or. USE_SITE_pctcrop) THEN
+            CALL ncio_read_serial (fsrfdata, 'croptyp', croptyp)
+            CALL ncio_read_serial (fsrfdata, 'pctcrop', pctcrop)
+         ELSE
+            allocate (croptyp (N_CFT))
+            croptyp = (/(i, i = 1, N_CFT)/)
+
+            filename = trim(DEF_dir_rawdata) // '/global_CFT_surface_data.nc'
+            CALL gridcrop%define_from_file (filename, 'lat', 'lon')
+            CALL read_point_var_3d_real8 (gridcrop, filename, 'PCT_CFT', &
+               SITE_lon_location, SITE_lat_location, N_CFT, pctcrop)
+         ENDIF
+
+         numpatch = count(pctcrop > 0.)
+
+         IF (numpatch == 0) THEN
+            write(*,*) 'There is no crop at this point!'
+            CALL CoLM_stop()
+         ENDIF
+
+         allocate (SITE_croptyp (numpatch))
+         allocate (SITE_pctcrop (numpatch))
+
+         SITE_croptyp = pack(croptyp, pctcrop > 0.)
+         SITE_pctcrop = pack(pctcrop, pctcrop > 0.) / sum(pctcrop)
+      
+         write(*,*) 'Single Point crop type : ', SITE_croptyp
+
       ENDIF
 #endif
+
+
+      ! (3) build/read "land pft" or "land pc" by using plant function type data
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
-      IF ((.not. mksrfdata) .or. USE_SITE_pctpfts) THEN
-         CALL ncio_read_serial (fsrfdata, 'pctpfts', SITE_pctpfts)
-         ! otherwise, retrieve from database by Aggregation_PercentagesPFT.F90
-      ENDIF
+#ifndef CROP
+      IF (patchtypes(SITE_landtype) == 0) THEN
+#else
+      IF (patchtypes(SITE_landtype) == 0 .and. SITE_landtype /= CROPLAND) THEN
 #endif
+         IF ((.not. mksrfdata) .or. USE_SITE_pctpfts) THEN
+            CALL ncio_read_serial (fsrfdata, 'pfttyp',  pfttyp )
+            CALL ncio_read_serial (fsrfdata, 'pctpfts', pctpfts)
+         ELSE
+            allocate (pfttyp (N_PFT_modis))
+            pfttyp = (/(i, i = 0, N_PFT_modis-1)/)
+         
+            CALL gridpft%define_by_name ('colm_500m')
+
+            dir_5x5 = trim(DEF_dir_rawdata) // '/plant_15s'
+            write(cyear,'(i4.4)') DEF_LC_YEAR
+            CALL read_point_5x5_var_3d_real8 (gridpft, dir_5x5, 'MOD'//trim(cyear), 'PCT_PFT', &
+               SITE_lon_location, SITE_lat_location, N_PFT_modis, pctpfts)
+         ENDIF
+
+         numpft = count(pctpfts > 0.)
+
+         allocate (SITE_pfttyp  (numpft))
+         allocate (SITE_pctpfts (numpft))
+
+         SITE_pfttyp  = pack(pfttyp,  pctpfts > 0.)
+         SITE_pctpfts = pack(pctpfts, pctpfts > 0.) / sum(pctpfts)
 
 #ifdef CROP
-      IF ((.not. mksrfdata) .or. USE_SITE_pctcrop) THEN
-         CALL ncio_read_serial (fsrfdata, 'croptyp', SITE_croptyp)
-         CALL ncio_read_serial (fsrfdata, 'pctcrop', SITE_pctcrop)
-         ! otherwise, retrieve from database by MOD_LandPatch.F90
+      ELSEIF (SITE_landtype == CROPLAND) THEN
+         numpft = numpatch
+         allocate (SITE_pfttyp  (numpft))
+         allocate (SITE_pctpfts (numpft))
+         SITE_pfttyp  = SITE_croptyp + N_PFT - 1
+         SITE_pctpfts = 1.
+#endif
+      ELSE
+         write(*,*) 'There is no plant function type at this point!'
+         CALL CoLM_stop()
       ENDIF
+
+      write(*,*) 'Single Point plant function type : ', SITE_pfttyp
+
 #endif
 
+
+      ! (4) forest height
       IF ((.not. mksrfdata) .or. USE_SITE_htop) THEN
-         ! otherwise, retrieve from database by Aggregation_ForestHeight.F90
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
          CALL ncio_read_serial (fsrfdata, 'canopy_height_pfts', SITE_htop_pfts)
 #else
          CALL ncio_read_serial (fsrfdata, 'canopy_height', SITE_htop)
 #endif
+      ELSE
+#ifdef LULC_USGS
+         CALL gridhtop%define_by_name ('colm_1km')
+         filename = trim(DEF_dir_rawdata)//'/Forest_Height.nc'
+         CALL read_point_var_2d_real8 (gridhtop, filename, 'forest_height', &
+            SITE_lon_location, SITE_lat_location, SITE_htop)
+#else
+
+         CALL gridhtop%define_by_name ('colm_500m')
+
+         dir_5x5 = trim(DEF_dir_rawdata) // '/plant_15s'
+         write(cyear,'(i4.4)') DEF_LC_YEAR
+         CALL read_point_5x5_var_2d_real8 (gridhtop, dir_5x5, 'MOD'//trim(cyear), 'HTOP', &
+            SITE_lon_location, SITE_lat_location, SITE_htop)
+
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
+         allocate (SITE_htop_pfts (numpft))
+         SITE_htop_pfts(:) = SITE_htop
+#endif
+#endif
       ENDIF
 
+      write(*,*) 'Single Point forest height : ', SITE_htop
+
+
+      ! (5) LAI
       IF ((.not. mksrfdata) .or. USE_SITE_LAI) THEN
          ! otherwise, retrieve from database by Aggregation_LAI.F90
          CALL ncio_read_serial (fsrfdata, 'LAI_year', SITE_LAI_year)
@@ -239,23 +389,169 @@ CONTAINS
             CALL ncio_read_serial (fsrfdata, 'LAI_8day', SITE_LAI_8day)
          ENDIF
 #endif
+      ELSE
+
+         idate(1) = DEF_simulation_time%start_year
+         IF (.not. isgreenwich) THEN
+            idate(3) = DEF_simulation_time%start_sec
+            CALL monthday2julian (idate(1), &
+               DEF_simulation_time%start_month, DEF_simulation_time%start_day, idate(2))
+            CALL localtime2gmt(idate)
+         ENDIF
+
+         simulation_lai_year_start = idate(1)
+
+         idate(1) = DEF_simulation_time%end_year
+         IF (.not. isgreenwich) THEN
+            idate(3) = DEF_simulation_time%end_sec
+            CALL monthday2julian (idate(1), &
+               DEF_simulation_time%end_month, DEF_simulation_time%end_day, idate(2))
+            CALL localtime2gmt(idate)
+         ENDIF
+
+         simulation_lai_year_end = idate(1)
+
+         IF (DEF_LAI_CHANGE_YEARLY) THEN
+            start_year = max(simulation_lai_year_start, DEF_LAI_START_YEAR)
+            end_year   = min(simulation_lai_year_end,   DEF_LAI_END_YEAR  )
+         ELSE
+            start_year = DEF_LC_YEAR
+            end_year   = DEF_LC_YEAR
+         ENDIF
+
+         allocate (SITE_LAI_year (start_year:end_year))
+         SITE_LAI_year = (/(iyear, iyear = start_year, end_year)/)
+
+         IF (DEF_LAI_MONTHLY) THEN
+            ntime = 12
+            allocate (SITE_LAI_monthly (12,start_year:end_year))
+         ELSE
+            ntime = 46
+            allocate (SITE_LAI_8day    (46,start_year:end_year))
+         ENDIF
+
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
+         allocate (SITE_LAI_pfts_monthly (numpft,12,start_year:end_year))
+         allocate (SITE_SAI_pfts_monthly (numpft,12,start_year:end_year))
+#endif
+         
+         CALL gridlai%define_by_name ('colm_500m')
+
+         DO iyear = start_year, end_year
+            
+            write(cyear,'(i4.4)') iyear
+
+            DO itime = 1, ntime
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
+      
+               dir_5x5 = trim(DEF_dir_rawdata) // '/plant_15s'
+               CALL read_point_5x5_var_3d_real8 (gridlai, dir_5x5, 'MOD'//trim(cyear), 'PCT_PFT', &
+                  SITE_lon_location, SITE_lat_location, N_PFT_modis, pctpfts)
+               CALL read_point_5x5_var_3d_time_real8 (gridlai, dir_5x5, 'MOD'//trim(cyear), 'MONTHLY_PFT_LAI', &
+                  SITE_lon_location, SITE_lat_location, N_PFT_modis, itime, pftLAI)
+               CALL read_point_5x5_var_3d_time_real8 (gridlai, dir_5x5, 'MOD'//trim(cyear), 'MONTHLY_PFT_SAI', &
+                  SITE_lon_location, SITE_lat_location, N_PFT_modis, itime, pftSAI)
+
+#ifndef CROP
+               IF (patchtypes(SITE_landtype) == 0) THEN
+#else
+               IF (patchtypes(SITE_landtype) == 0 .and. SITE_landtype /= CROPLAND) THEN
+#endif
+                  SITE_LAI_pfts_monthly(:,itime,iyear) = pack(pftLAI, pctpfts > 0.)
+                  SITE_SAI_pfts_monthly(:,itime,iyear) = pack(pftSAI, pctpfts > 0.)
+               ELSE
+                  SITE_LAI_pfts_monthly(:,itime,iyear) = sum(pftLAI * pctpfts) / sum(pctpfts)
+                  SITE_SAI_pfts_monthly(:,itime,iyear) = sum(pftSAI * pctpfts) / sum(pctpfts)
+               ENDIF 
+
+#else
+               IF (DEF_LAI_MONTHLY) THEN
+                  dir_5x5 = trim(DEF_dir_rawdata) // '/plant_15s'
+                  CALL read_point_5x5_var_2d_time_real8 (gridlai, dir_5x5, 'MOD'//trim(cyear), &
+                     'MONTHLY_LC_LAI', SITE_lon_location, SITE_lat_location, itime, &
+                     SITE_LAI_monthly(itime,iyear))
+                  CALL read_point_5x5_var_2d_time_real8 (gridlai, dir_5x5, 'MOD'//trim(cyear), &
+                     'MONTHLY_LC_SAI', SITE_lon_location, SITE_lat_location, itime, &
+                     SITE_SAI_monthly(itime,iyear))
+               ELSE
+                  filename = trim(DEF_dir_rawdata)//'/lai_15s_8day/lai_8-day_15s_'//trim(cyear)//'.nc'
+                  CALL read_point_var_2d_time_real8 (gridlai, filename, 'lai', &
+                     SITE_lon_location, SITE_lat_location, itime, LAI)
+                  SITE_LAI_8day(itime,iyear) = LAI * 0.1
+               ENDIF
+#endif
+            ENDDO
+         ENDDO
       ENDIF
 
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
+      write(*,*) 'Single Point LAI : ', minval(SITE_LAI_pfts_monthly), ' (min),', &
+         maxval(SITE_LAI_pfts_monthly), ' (max)'
+      write(*,*) 'Single Point SAI : ', minval(SITE_SAI_pfts_monthly), ' (min),', &
+         maxval(SITE_SAI_pfts_monthly), ' (max)'
+#else
+      IF (DEF_LAI_MONTHLY) THEN
+         write(*,*) 'Single Point LAI : ', minval(SITE_LAI_monthly), ' (min),', maxval(SITE_LAI_monthly), ' (max)'
+         write(*,*) 'Single Point SAI : ', minval(SITE_SAI_monthly), ' (min),', maxval(SITE_SAI_monthly), ' (max)'
+      ELSE
+         write(*,*) 'Single Point LAI : ', minval(SITE_LAI_8day),    ' (min),', maxval(SITE_LAI_8day),    ' (max)'
+      ENDIF
+#endif
+
+
+      ! (6) lake depth
       IF ((.not. mksrfdata) .or. USE_SITE_lakedepth) THEN
-         ! otherwise, retrieve from database by Aggregation_LakeDepth.F90
          CALL ncio_read_serial (fsrfdata, 'lakedepth', SITE_lakedepth)
+      ELSE
+         CALL gridlake%define_by_name ('colm_500m')
+         filename = trim(DEF_dir_rawdata)//'/lake_depth.nc'
+         CALL read_point_var_2d_real8 (gridlake, filename, 'lake_depth', &
+            SITE_lon_location, SITE_lat_location, lakedepth)
+         SITE_lakedepth = lakedepth * 0.1
       ENDIF
 
+      write(*,*) 'Single Point lake depth : ', SITE_lakedepth
+
+
+      ! (7) soil brightness parameters
       IF ((.not. mksrfdata) .or. USE_SITE_soilreflectance) THEN
-         ! otherwise, retrieve from database by Aggregation_SoilBrightness.F90
          CALL ncio_read_serial (fsrfdata, 'soil_s_v_alb', SITE_soil_s_v_alb)
          CALL ncio_read_serial (fsrfdata, 'soil_d_v_alb', SITE_soil_d_v_alb)
          CALL ncio_read_serial (fsrfdata, 'soil_s_n_alb', SITE_soil_s_n_alb)
          CALL ncio_read_serial (fsrfdata, 'soil_d_n_alb', SITE_soil_d_n_alb)
+      ELSE
+         SITE_soil_s_v_alb = spval
+         SITE_soil_d_v_alb = spval
+         SITE_soil_s_n_alb = spval
+         SITE_soil_d_n_alb = spval
+
+         CALL gridbright%define_by_name ('colm_500m')
+         filename = trim(DEF_dir_rawdata)//'/soil_brightness.nc'
+         CALL read_point_var_2d_int32 (gridbright, filename, 'soil_brightness', &
+            SITE_lon_location, SITE_lat_location, isc)
+
+#ifdef LULC_USGS
+         IF(SITE_landtype /= 16 .and. SITE_landtype /= 24)THEN  ! NOT WATER BODIES(16)/GLACIER and ICESHEET(24)
+#else
+         IF(SITE_landtype /= 17 .and. SITE_landtype /= 15)THEN  ! NOT WATER BODIES(17)/GLACIER and ICE SHEET(15)
+#endif
+            IF ((isc >= 1) .and. (isc <= 20)) THEN
+               SITE_soil_s_v_alb = soil_s_v_refl( isc )
+               SITE_soil_d_v_alb = soil_d_v_refl( isc )
+               SITE_soil_s_n_alb = soil_s_n_refl( isc )
+               SITE_soil_d_n_alb = soil_d_n_refl( isc )
+            ENDIF
+         ENDIF
       ENDIF
 
+      write(*,*) 'Single Point soil brightness s_v : ', SITE_soil_s_v_alb
+      write(*,*) 'Single Point soil brightness d_v : ', SITE_soil_d_v_alb
+      write(*,*) 'Single Point soil brightness s_n : ', SITE_soil_s_n_alb
+      write(*,*) 'Single Point soil brightness d_n : ', SITE_soil_d_n_alb
+
+
+      ! (8) soil parameters
       IF ((.not. mksrfdata) .or. USE_SITE_soilparameters) THEN
-         ! otherwise, retrieve from database by Aggregation_SoilParameters.F90
          CALL ncio_read_serial (fsrfdata, 'soil_vf_quartz_mineral', SITE_soil_vf_quartz_mineral)
          CALL ncio_read_serial (fsrfdata, 'soil_vf_gravels       ', SITE_soil_vf_gravels       )
          CALL ncio_read_serial (fsrfdata, 'soil_vf_sand          ', SITE_soil_vf_sand          )
@@ -284,20 +580,206 @@ CONTAINS
          CALL ncio_read_serial (fsrfdata, 'soil_BA_beta          ', SITE_soil_BA_beta          )
 
          IF (DEF_Runoff_SCHEME == 3) THEN ! for Simple VIC
-            ! reading from global dataset currently
-            !CALL ncio_read_serial (fsrfdata, 'soil_texture       ', SITE_soil_texture          )
+            CALL ncio_read_serial (fsrfdata, 'soil_texture       ', SITE_soil_texture          )
          ENDIF
+      ELSE
+
+         allocate (SITE_soil_vf_quartz_mineral (8))
+         allocate (SITE_soil_vf_gravels        (8))
+         allocate (SITE_soil_vf_sand           (8))
+         allocate (SITE_soil_vf_clay           (8))
+         allocate (SITE_soil_vf_om             (8))
+         allocate (SITE_soil_wf_gravels        (8))
+         allocate (SITE_soil_wf_sand           (8))
+         allocate (SITE_soil_OM_density        (8))
+         allocate (SITE_soil_BD_all            (8))
+         allocate (SITE_soil_theta_s           (8))
+         allocate (SITE_soil_k_s               (8))
+         allocate (SITE_soil_csol              (8))
+         allocate (SITE_soil_tksatu            (8))
+         allocate (SITE_soil_tksatf            (8))
+         allocate (SITE_soil_tkdry             (8))
+         allocate (SITE_soil_k_solids          (8))
+         allocate (SITE_soil_psi_s             (8))
+         allocate (SITE_soil_lambda            (8))
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
+         allocate (SITE_soil_theta_r           (8))
+         allocate (SITE_soil_alpha_vgm         (8))
+         allocate (SITE_soil_L_vgm             (8))
+         allocate (SITE_soil_n_vgm             (8))
+#endif
+         allocate (SITE_soil_BA_alpha          (8))
+         allocate (SITE_soil_BA_beta           (8))
+
+                                              
+         CALL gridsoil%define_by_name ('colm_500m')
+                   
+         DO nsl = 1, 8
+         
+            write(c,'(i1)') nsl
+            
+            filename = trim(DEF_dir_rawdata)//'/soil/vf_quartz_mineral_s.nc'
+            CALL read_point_var_2d_real8 (gridsoil, filename, 'vf_quartz_mineral_s_l'//trim(c), &
+               SITE_lon_location, SITE_lat_location, SITE_soil_vf_quartz_mineral(nsl))
+
+            filename = trim(DEF_dir_rawdata)//'/soil/vf_gravels_s.nc'
+            CALL read_point_var_2d_real8 (gridsoil, filename, 'vf_gravels_s_l'//trim(c), &
+               SITE_lon_location, SITE_lat_location, SITE_soil_vf_gravels(nsl))
+
+            filename = trim(DEF_dir_rawdata)//'/soil/vf_sand_s.nc'
+            CALL read_point_var_2d_real8 (gridsoil, filename, 'vf_sand_s_l'//trim(c), &
+               SITE_lon_location, SITE_lat_location, SITE_soil_vf_sand(nsl))
+
+            filename = trim(DEF_dir_rawdata)//'/soil/vf_clay_s.nc'
+            CALL read_point_var_2d_real8 (gridsoil, filename, 'vf_clay_s_l'//trim(c), &
+               SITE_lon_location, SITE_lat_location, SITE_soil_vf_clay(nsl))
+
+            filename = trim(DEF_dir_rawdata)//'/soil/vf_om_s.nc'
+            CALL read_point_var_2d_real8 (gridsoil, filename, 'vf_om_s_l'//trim(c), &
+               SITE_lon_location, SITE_lat_location, SITE_soil_vf_om(nsl))
+
+            filename = trim(DEF_dir_rawdata)//'/soil/wf_gravels_s.nc'
+            CALL read_point_var_2d_real8 (gridsoil, filename, 'wf_gravels_s_l'//trim(c), &
+               SITE_lon_location, SITE_lat_location, SITE_soil_wf_gravels(nsl))
+
+            filename = trim(DEF_dir_rawdata)//'/soil/wf_sand_s.nc'
+            CALL read_point_var_2d_real8 (gridsoil, filename, 'wf_sand_s_l'//trim(c), &
+               SITE_lon_location, SITE_lat_location, SITE_soil_wf_sand(nsl))
+
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
+            filename = trim(DEF_dir_rawdata)//'/soil/VGM_L.nc'
+            CALL read_point_var_2d_real8 (gridsoil, filename, 'VGM_L_l'//trim(c), &
+               SITE_lon_location, SITE_lat_location, SITE_soil_L_vgm(nsl))
+
+            filename = trim(DEF_dir_rawdata)//'/soil/VGM_theta_r.nc'
+            CALL read_point_var_2d_real8 (gridsoil, filename, 'VGM_theta_r_l'//trim(c), &
+               SITE_lon_location, SITE_lat_location, SITE_soil_theta_r(nsl))
+
+            filename = trim(DEF_dir_rawdata)//'/soil/VGM_alpha.nc'
+            CALL read_point_var_2d_real8 (gridsoil, filename, 'VGM_alpha_l'//trim(c), &
+               SITE_lon_location, SITE_lat_location, SITE_soil_alpha_vgm(nsl))
+
+            filename = trim(DEF_dir_rawdata)//'/soil/VGM_n.nc'
+            CALL read_point_var_2d_real8 (gridsoil, filename, 'VGM_n_l'//trim(c), &
+               SITE_lon_location, SITE_lat_location, SITE_soil_n_vgm(nsl))
+#endif
+
+            filename = trim(DEF_dir_rawdata)//'/soil/theta_s.nc'
+            CALL read_point_var_2d_real8 (gridsoil, filename, 'theta_s_l'//trim(c), &
+               SITE_lon_location, SITE_lat_location, SITE_soil_theta_s(nsl))
+
+            filename = trim(DEF_dir_rawdata)//'/soil/k_s.nc'
+            CALL read_point_var_2d_real8 (gridsoil, filename, 'k_s_l'//trim(c), &
+               SITE_lon_location, SITE_lat_location, SITE_soil_k_s(nsl))
+
+            filename = trim(DEF_dir_rawdata)//'/soil/psi_s.nc'
+            CALL read_point_var_2d_real8 (gridsoil, filename, 'psi_s_l'//trim(c), &
+               SITE_lon_location, SITE_lat_location, SITE_soil_psi_s(nsl))
+
+            filename = trim(DEF_dir_rawdata)//'/soil/lambda.nc'
+            CALL read_point_var_2d_real8 (gridsoil, filename, 'lambda_l'//trim(c), &
+               SITE_lon_location, SITE_lat_location, SITE_soil_lambda(nsl))
+
+            filename = trim(DEF_dir_rawdata)//'/soil/csol.nc'
+            CALL read_point_var_2d_real8 (gridsoil, filename, 'csol_l'//trim(c), &
+               SITE_lon_location, SITE_lat_location, SITE_soil_csol(nsl))
+
+            filename = trim(DEF_dir_rawdata)//'/soil/tksatu.nc'
+            CALL read_point_var_2d_real8 (gridsoil, filename, 'tksatu_l'//trim(c), &
+               SITE_lon_location, SITE_lat_location, SITE_soil_tksatu(nsl))
+
+            filename = trim(DEF_dir_rawdata)//'/soil/tksatf.nc'
+            CALL read_point_var_2d_real8 (gridsoil, filename, 'tksatf_l'//trim(c), &
+               SITE_lon_location, SITE_lat_location, SITE_soil_tksatf(nsl))
+
+            filename = trim(DEF_dir_rawdata)//'/soil/tkdry.nc'
+            CALL read_point_var_2d_real8 (gridsoil, filename, 'tkdry_l'//trim(c), &
+               SITE_lon_location, SITE_lat_location, SITE_soil_tkdry(nsl))
+
+            filename = trim(DEF_dir_rawdata)//'/soil/k_solids.nc'
+            CALL read_point_var_2d_real8 (gridsoil, filename, 'k_solids_l'//trim(c), &
+               SITE_lon_location, SITE_lat_location, SITE_soil_k_solids(nsl))
+
+            filename = trim(DEF_dir_rawdata)//'/soil/OM_density_s.nc'
+            CALL read_point_var_2d_real8 (gridsoil, filename, 'OM_density_s_l'//trim(c), &
+               SITE_lon_location, SITE_lat_location, SITE_soil_OM_density(nsl))
+
+            filename = trim(DEF_dir_rawdata)//'/soil/BD_all_s.nc'
+            CALL read_point_var_2d_real8 (gridsoil, filename, 'BD_all_s_l'//trim(c), &
+               SITE_lon_location, SITE_lat_location, SITE_soil_BD_all(nsl))
+
+
+            IF (SITE_soil_vf_gravels(nsl) + SITE_soil_vf_sand(nsl) > 0.4) THEN
+               SITE_soil_BA_alpha(nsl) = 0.38
+               SITE_soil_BA_beta (nsl) = 35.0
+            ELSEIF (SITE_soil_vf_gravels(nsl) + SITE_soil_vf_sand(nsl) > 0.25) THEN
+               SITE_soil_BA_alpha(nsl) = 0.24
+               SITE_soil_BA_beta (nsl) = 26.0
+            ELSE
+               SITE_soil_BA_alpha(nsl) = 0.20
+               SITE_soil_BA_beta (nsl) = 10.0
+            ENDIF
+
+         ENDDO
+
+         IF (DEF_Runoff_SCHEME == 3) THEN ! for Simple VIC
+            filename = trim(DEF_dir_rawdata)//'/soil/soiltexture_0cm-60cm_mean.nc'
+            CALL read_point_var_2d_int32 (gridsoil, filename, 'soiltexture', &
+               SITE_lon_location, SITE_lat_location, SITE_soil_texture)
+         ENDIF
+
       ENDIF
 
-      IF (DEF_USE_BEDROCK) THEN
+      write(*,*) 'Single Point : soil_vf_quartz_mineral', SITE_soil_vf_quartz_mineral
+      write(*,*) 'Single Point : soil_vf_gravels       ', SITE_soil_vf_gravels       
+      write(*,*) 'Single Point : soil_vf_sand          ', SITE_soil_vf_sand          
+      write(*,*) 'Single Point : soil_vf_clay          ', SITE_soil_vf_clay          
+      write(*,*) 'Single Point : soil_vf_om            ', SITE_soil_vf_om            
+      write(*,*) 'Single Point : soil_wf_gravels       ', SITE_soil_wf_gravels       
+      write(*,*) 'Single Point : soil_wf_sand          ', SITE_soil_wf_sand          
+      write(*,*) 'Single Point : soil_OM_density       ', SITE_soil_OM_density       
+      write(*,*) 'Single Point : soil_BD_all           ', SITE_soil_BD_all           
+      write(*,*) 'Single Point : soil_theta_s          ', SITE_soil_theta_s          
+      write(*,*) 'Single Point : soil_k_s              ', SITE_soil_k_s              
+      write(*,*) 'Single Point : soil_csol             ', SITE_soil_csol             
+      write(*,*) 'Single Point : soil_tksatu           ', SITE_soil_tksatu           
+      write(*,*) 'Single Point : soil_tksatf           ', SITE_soil_tksatf           
+      write(*,*) 'Single Point : soil_tkdry            ', SITE_soil_tkdry            
+      write(*,*) 'Single Point : soil_k_solids         ', SITE_soil_k_solids         
+      write(*,*) 'Single Point : soil_psi_s            ', SITE_soil_psi_s            
+      write(*,*) 'Single Point : soil_lambda           ', SITE_soil_lambda           
+#ifdef vanGenuchten_Mualem_SOIL_MODEL                                                
+      write(*,*) 'Single Point : soil_theta_r          ', SITE_soil_theta_r          
+      write(*,*) 'Single Point : soil_alpha_vgm        ', SITE_soil_alpha_vgm        
+      write(*,*) 'Single Point : soil_L_vgm            ', SITE_soil_L_vgm            
+      write(*,*) 'Single Point : soil_n_vgm            ', SITE_soil_n_vgm            
+#endif                                                                               
+      write(*,*) 'Single Point : soil_BA_alpha         ', SITE_soil_BA_alpha         
+      write(*,*) 'Single Point : soil_BA_beta          ', SITE_soil_BA_beta          
+         
+      IF (DEF_Runoff_SCHEME == 3) THEN ! for Simple VIC
+         write(*,*) 'Single Point : soil texture ', SITE_soil_texture
+      ENDIF
+                                 
+                                 
+      ! (9) depth to bedrock     
+      IF (DEF_USE_BEDROCK) THEN  
          IF ((.not. mksrfdata) .or. USE_SITE_dbedrock) THEN
-            ! otherwise, retrieve from database by Aggregation_DBedrock.F90
             CALL ncio_read_serial (fsrfdata, 'depth_to_bedrock', SITE_dbedrock)
+         ELSE
+            CALL gridrock%define_by_name ('colm_500m')
+            filename = trim(DEF_dir_rawdata)//'/bedrock.nc'
+            CALL read_point_var_2d_real8 (gridrock, filename, 'dbedrock', &
+               SITE_lon_location, SITE_lat_location, SITE_dbedrock)
          ENDIF
+         
+         write(*,*) 'Single Point depth to bedrock : ', SITE_dbedrock
+
       ENDIF
 
+      ! (10) topography
       IF ((.not. mksrfdata) .or. USE_SITE_topography) THEN
-         ! otherwise, retrieve from database by Aggregation_Topography.F90
+         
          CALL ncio_read_serial (fsrfdata, 'elevation', SITE_topography)
          CALL ncio_read_serial (fsrfdata, 'elvstd   ', SITE_topostd   )
 
@@ -309,6 +791,105 @@ CONTAINS
             CALL ncio_read_serial (fsrfdata, 'SITE_area_type', SITE_area_type )
             CALL ncio_read_serial (fsrfdata, 'SITE_sf_lut'   , SITE_sf_lut    )
          ENDIF
+      ELSE
+   
+         CALL gridtopo%define_by_name ('colm_500m')
+
+         filename = trim(DEF_dir_rawdata)//'/elevation.nc'
+         CALL read_point_var_2d_real8 (gridtopo, filename, 'elevation', &
+            SITE_lon_location, SITE_lat_location, SITE_topography)
+
+         SITE_topostd = 0.
+
+         IF (DEF_USE_Forcing_Downscaling) THEN
+            
+            filename = trim(DEF_DS_HiresTopographyDataDir)//"/slope.nc"
+            CALL grid_topo_factor%define_from_file (filename, "lat", "lon")
+
+            filename = trim(DEF_DS_HiresTopographyDataDir)//"/sky_view_factor.nc"
+            CALL read_point_var_2d_real8 (grid_topo_factor, filename, 'svf', &
+               SITE_lon_location, SITE_lat_location, SITE_svf)
+
+            filename = trim(DEF_DS_HiresTopographyDataDir)//"/curvature.nc"
+            CALL read_point_var_2d_real8 (grid_topo_factor, filename, 'curvature', &
+               SITE_lon_location, SITE_lat_location, SITE_cur)
+
+            filename = trim(DEF_DS_HiresTopographyDataDir)//"/slope.nc"
+            CALL read_point_var_2d_real8 (grid_topo_factor, filename, 'slope', &
+               SITE_lon_location, SITE_lat_location, slp)
+
+            filename = trim(DEF_DS_HiresTopographyDataDir)//"/aspect.nc"
+            CALL read_point_var_2d_real8 (grid_topo_factor, filename, 'aspect', &
+               SITE_lon_location, SITE_lat_location, asp)
+
+            allocate (SITE_slp_type  (num_slope_type)); SITE_slp_type (:) = 0.
+            allocate (SITE_asp_type  (num_slope_type)); SITE_asp_type (:) = 0.
+            allocate (SITE_area_type (num_slope_type)); SITE_area_type(:) = 0.
+            
+            IF ((asp.ge.0 .and. asp.le.90*pi/180) .or. (asp.ge.270*pi/180 .and. asp.le.360*pi/180)) THEN
+               IF ((slp.ge.15*pi/180)) THEN  ! north abrupt slope
+                  typ = 1
+               ELSE                          ! north gentle slope
+                  typ = 2
+               ENDIF
+            ELSE
+               IF ((slp.ge.15*pi/180)) THEN  ! south abrupt slope
+                  typ = 3
+               ELSE                          ! south gentle slope
+                  typ = 4
+               ENDIF
+            ENDIF
+
+            SITE_slp_type (typ) = slp
+            SITE_asp_type (typ) = asp
+            SITE_area_type(typ) = 1.
+
+
+            filename = trim(DEF_DS_HiresTopographyDataDir)//"/terrain_elev_angle_front.nc"
+            CALL read_point_var_3d_first_real8 (grid_topo_factor, filename, 'tea_front', &
+               SITE_lon_location, SITE_lat_location, num_azimuth, tea_f)
+
+            filename = trim(DEF_DS_HiresTopographyDataDir)//"/terrain_elev_angle_back.nc"
+            CALL read_point_var_3d_first_real8 (grid_topo_factor, filename, 'tea_back', &
+               SITE_lon_location, SITE_lat_location, num_azimuth, tea_b)
+
+            allocate (SITE_sf_lut (num_azimuth, num_zenith))
+      
+            DO a = 1, num_azimuth
+               
+               tea_f(a) = asin(max(min(tea_f(a),1.),-1.))
+               tea_b(a) = asin(max(min(tea_b(a),1.),-1.))
+
+               IF (tea_f(a) <= tea_b(a)) tea_f(a) = tea_b(a) + 0.001
+
+               DO z = 1, num_zenith
+                  zenith_angle = pi/(2*num_zenith)*(z-1)
+
+                  IF (pi*0.5 - zenith_angle < tea_b(a)) THEN
+                     SITE_sf_lut(a,z) = 0
+                  ELSE IF (pi*0.5 - zenith_angle > tea_f(a)) THEN
+                     SITE_sf_lut(a,z) = 1
+                  ELSE
+                     SITE_sf_lut(a,z) = (0.5*pi - zenith_angle - tea_b(a))/(tea_f(a) - tea_b(a))
+                  ENDIF
+
+               ENDDO
+            ENDDO
+
+         ENDIF
+
+      ENDIF
+
+      write(*,*) 'Single Point elevation     : ', SITE_topography
+      write(*,*) 'Single Point elevation std : ', SITE_topostd
+
+      IF (DEF_USE_Forcing_Downscaling) THEN
+         write(*,*) 'Single Point sky view factor : ', SITE_svf           
+         write(*,*) 'Single Point curvature       : ', SITE_cur           
+         write(*,*) 'Single Point slope type      : ', SITE_slp_type 
+         write(*,*) 'Single Point aspect type     : ', SITE_asp_type 
+         write(*,*) 'Single Point slope type area : ', SITE_area_type
+         write(*,*) 'Single Point shadow table    : ', SITE_sf_lut   
       ENDIF
 
    END SUBROUTINE read_surface_data_single
@@ -367,26 +948,164 @@ CONTAINS
       ENDIF
 
       IF (.not. present(mkrun)) THEN
-         IF ((.not. mksrfdata) .or. USE_SITE_urban_paras) THEN
+         IF ( USE_SITE_urban_geometry ) THEN
 
-            CALL ncio_read_serial (fsrfdata, 'tree_area_fraction'         , SITE_fveg_urb  )
-            CALL ncio_read_serial (fsrfdata, 'tree_mean_height'           , SITE_htop_urb  )
-            CALL ncio_read_serial (fsrfdata, 'water_area_fraction'        , SITE_flake_urb )
-            CALL ncio_read_serial (fsrfdata, 'roof_area_fraction'         , SITE_froof     )
-            CALL ncio_read_serial (fsrfdata, 'building_mean_height'       , SITE_hroof     )
-            CALL ncio_read_serial (fsrfdata, 'impervious_area_fraction'   , SITE_fgimp     )
-            CALL ncio_read_serial (fsrfdata, 'wall_to_plan_area_ratio'    , SITE_lambdaw   )
-            CALL ncio_read_serial (fsrfdata, 'resident_population_density', SITE_popden    )
+            IF ( ncio_var_exist(fsrfdata,'building_mean_height') ) THEN
+               CALL ncio_read_serial (fsrfdata, 'building_mean_height', SITE_hroof  )
+               use_site_hroof = .true.
+            ENDIF
+
+            IF ( ncio_var_exist(fsrfdata,'roof_area_fraction') ) THEN
+               CALL ncio_read_serial (fsrfdata, 'roof_area_fraction', SITE_froof  )
+               use_site_froof = .true.
+            ENDIF
+
+            IF ( ncio_var_exist(fsrfdata,'impervious_area_fraction') ) THEN
+               CALL ncio_read_serial (fsrfdata, 'impervious_area_fraction', SITE_fgimp  )
+               use_site_fgper = .true.
+            ENDIF
+
+            IF ( ncio_var_exist(fsrfdata,'THICK_ROOF') ) THEN
+               CALL ncio_read_serial (fsrfdata, 'THICK_ROOF', SITE_thickroof  )
+               use_site_thickr = .true.
+            ENDIF
+
+            IF ( ncio_var_exist(fsrfdata,'THICK_WALL') ) THEN
+               CALL ncio_read_serial (fsrfdata, 'THICK_WALL', SITE_thickwall  )
+               use_site_thickw = .true.
+            ENDIF
+
 IF (DEF_USE_CANYON_HWR) THEN
-            CALL ncio_read_serial (fsrfdata, 'canyon_height_width_ratio'  , SITE_hlr       )
+            IF ( ncio_var_exist(fsrfdata,'canyon_height_width_ratio') ) THEN
+               CALL ncio_read_serial (fsrfdata, 'canyon_height_width_ratio', SITE_hlr  )
+               use_site_hlr = .true.
+            ENDIF
 ELSE
-            CALL ncio_read_serial (fsrfdata, 'wall_to_plan_area_ratio'    , SITE_lambdaw   )
-            SITE_hlr       = SITE_lambdaw/4/SITE_froof
+            IF ( ncio_var_exist(fsrfdata,'wall_to_plan_area_ratio') ) THEN
+               CALL ncio_read_serial (fsrfdata, 'wall_to_plan_area_ratio', SITE_lambdaw)
+               SITE_hlr     = SITE_lambdaw/4/SITE_froof
+               use_site_hlr = .true.
+            ENDIF
 ENDIF
-            SITE_fgper     = 1 - (SITE_fgimp-SITE_froof)/(1-SITE_froof-SITE_flake_urb)
-            SITE_froof     = SITE_froof/(1-SITE_flake_urb)
-            SITE_fveg_urb  = SITE_fveg_urb  * 100
-            SITE_flake_urb = SITE_flake_urb * 100
+         ENDIF
+
+
+         IF ( USE_SITE_urban_ecology ) THEN
+            IF ( ncio_var_exist(fsrfdata,'tree_mean_height') ) THEN
+               CALL ncio_read_serial (fsrfdata, 'tree_mean_height', SITE_htop_urb  )
+               use_site_htopu = .true.
+            ENDIF
+
+            IF ( ncio_var_exist(fsrfdata,'water_area_fraction') ) THEN
+               CALL ncio_read_serial (fsrfdata, 'water_area_fraction', SITE_flake_urb  )
+               use_site_flake = .true.
+            ENDIF
+
+            IF ( ncio_var_exist(fsrfdata,'tree_area_fraction') ) THEN
+               CALL ncio_read_serial (fsrfdata, 'tree_area_fraction', SITE_fveg_urb  )
+               use_site_fveg = .true.
+            ENDIF
+
+            IF ( ncio_var_exist(fsrfdata,'TREE_LAI') ) THEN
+               CALL ncio_read_serial (fsrfdata, 'TREE_LAI', SITE_LAI_monthly  )
+               use_site_urblai = .true.
+            ENDIF
+
+            IF ( ncio_var_exist(fsrfdata,'TREE_SAI') ) THEN
+               CALL ncio_read_serial (fsrfdata, 'TREE_SAI', SITE_SAI_monthly  )
+               use_site_urbsai = .true.
+            ENDIF
+         ENDIF
+
+         IF ( USE_SITE_urban_radiation  ) THEN
+            IF ( ncio_var_exist(fsrfdata,'ALB_ROOF') ) THEN
+               CALL ncio_read_serial (fsrfdata, 'ALB_ROOF', SITE_alb_roof  )
+               use_site_albr = .true.
+            ENDIF
+
+            IF ( ncio_var_exist(fsrfdata,'ALB_WALL') ) THEN
+               CALL ncio_read_serial (fsrfdata, 'ALB_WALL', SITE_alb_wall  )
+               use_site_albw = .true.
+            ENDIF
+
+            IF ( ncio_var_exist(fsrfdata,'ALB_GPER') ) THEN
+               CALL ncio_read_serial (fsrfdata, 'ALB_GPER', SITE_alb_gper  )
+               use_site_albgimp = .true.
+            ENDIF
+
+            IF ( ncio_var_exist(fsrfdata,'ALB_GIMP') ) THEN
+               CALL ncio_read_serial (fsrfdata, 'ALB_GIMP', SITE_alb_gimp  )
+               use_site_albgper = .true.
+            ENDIF
+
+            IF ( ncio_var_exist(fsrfdata,'EM_ROOF') ) THEN
+               CALL ncio_read_serial (fsrfdata, 'EM_ROOF', SITE_em_roof  )
+               use_site_emr = .true.
+            ENDIF
+
+            IF ( ncio_var_exist(fsrfdata,'EM_WALL') ) THEN
+               CALL ncio_read_serial (fsrfdata, 'EM_WALL', SITE_em_wall  )
+               use_site_emw = .true.
+            ENDIF
+
+            IF ( ncio_var_exist(fsrfdata,'EM_GPER') ) THEN
+               CALL ncio_read_serial (fsrfdata, 'EM_GPER', SITE_em_gper  )
+               use_site_emgper = .true.
+            ENDIF
+
+            IF ( ncio_var_exist(fsrfdata,'EM_GIMP') ) THEN
+               CALL ncio_read_serial (fsrfdata, 'EM_GIMP', SITE_em_gimp  )
+               use_site_emgimp = .true.
+            ENDIF
+         ENDIF
+
+         IF ( USE_SITE_urban_thermal  ) THEN
+            IF ( ncio_var_exist(fsrfdata,'CV_ROOF') ) THEN
+               CALL ncio_read_serial (fsrfdata, 'CV_ROOF', SITE_cv_roof  )
+               use_site_cvr = .true.
+            ENDIF
+
+            IF ( ncio_var_exist(fsrfdata,'CV_WALL') ) THEN
+               CALL ncio_read_serial (fsrfdata, 'CV_WALL', SITE_cv_wall  )
+               use_site_cvw = .true.
+            ENDIF
+
+            IF ( ncio_var_exist(fsrfdata,'CV_GIMP') ) THEN
+               CALL ncio_read_serial (fsrfdata, 'CV_GIMP', SITE_cv_gimp  )
+               use_site_cvgimp = .true.
+            ENDIF
+
+            IF ( ncio_var_exist(fsrfdata,'TK_ROOF') ) THEN
+               CALL ncio_read_serial (fsrfdata, 'TK_ROOF', SITE_TK_roof  )
+               use_site_tkr = .true.
+            ENDIF
+
+            IF ( ncio_var_exist(fsrfdata,'TK_WALL') ) THEN
+               CALL ncio_read_serial (fsrfdata, 'TK_WALL', SITE_tk_wall  )
+               use_site_albw = .true.
+            ENDIF
+
+            IF ( ncio_var_exist(fsrfdata,'TK_GIMP') ) THEN
+               CALL ncio_read_serial (fsrfdata, 'TK_GIMP', SITE_tk_gimp  )
+               use_site_albgimp = .true.
+            ENDIF
+         ENDIF
+
+         IF ( USE_SITE_urban_human ) THEN
+            IF ( ncio_var_exist(fsrfdata,'resident_population_density') ) THEN
+               CALL ncio_read_serial (fsrfdata, 'resident_population_density', SITE_popden  )
+               use_site_pop = .true.
+            ENDIF
+
+            IF ( ncio_var_exist(fsrfdata,'T_BUILDING_MAX') ) THEN
+               CALL ncio_read_serial (fsrfdata, 'T_BUILDING_MAX', SITE_t_roommax  )
+               use_site_tbmax = .true.
+            ENDIF
+
+            IF ( ncio_var_exist(fsrfdata,'T_BUILDING_MIN') ) THEN
+               CALL ncio_read_serial (fsrfdata, 'T_BUILDING_MIN', SITE_t_roommin  )
+               use_site_tbmin = .true.
+            ENDIF
          ENDIF
       ELSE
          CALL ncio_read_serial (fsrfdata, 'LAI_year'      , SITE_LAI_year   )
@@ -700,6 +1419,11 @@ ENDIF
 
       fsrfdata = trim(DEF_dir_landdata) // '/srfdata.nc'
 
+      SITE_fgper     = 1 - (SITE_fgimp-SITE_froof)/(1-SITE_froof-SITE_flake_urb)
+      SITE_froof     = SITE_froof/(1-SITE_flake_urb)
+      SITE_fveg_urb  = SITE_fveg_urb  * 100
+      SITE_flake_urb = SITE_flake_urb * 100
+
       CALL ncio_create_file (fsrfdata)
 
       CALL ncio_define_dimension (fsrfdata, 'soil',  nl_soil )
@@ -717,15 +1441,14 @@ ENDIF
       CALL ncio_define_dimension (fsrfdata, 'numsolar', 2 )
       CALL ncio_define_dimension (fsrfdata, 'numrad'  , 2 )
 
-      CALL ncio_write_serial (fsrfdata, 'latitude',  SITE_lat_location)
+      CALL ncio_write_serial (fsrfdata, 'latitude' , SITE_lat_location)
       CALL ncio_write_serial (fsrfdata, 'longitude', SITE_lon_location)
 
-      source = datasource(USE_SITE_urban_LAI)
       CALL ncio_write_serial (fsrfdata, 'LAI_year', SITE_LAI_year, 'LAI_year')
       CALL ncio_write_serial (fsrfdata, 'TREE_LAI', SITE_LAI_monthly, 'month', 'LAI_year')
       CALL ncio_write_serial (fsrfdata, 'TREE_SAI', SITE_SAI_monthly, 'month', 'LAI_year')
-      CALL ncio_put_attr     (fsrfdata, 'TREE_LAI', 'source', source)
-      CALL ncio_put_attr     (fsrfdata, 'TREE_SAI', 'source', source)
+      CALL ncio_put_attr     (fsrfdata, 'TREE_LAI', 'source', datasource(use_site_urblai))
+      CALL ncio_put_attr     (fsrfdata, 'TREE_SAI', 'source', datasource(use_site_urbsai))
 
       CALL ncio_write_serial (fsrfdata, 'lakedepth', SITE_lakedepth)
       CALL ncio_put_attr     (fsrfdata, 'lakedepth', 'source', datasource(USE_SITE_lakedepth))
@@ -733,7 +1456,7 @@ ENDIF
       CALL ncio_write_serial (fsrfdata, 'URBAN_TYPE'    , SITE_urbtyp     , 'patch')
       CALL ncio_write_serial (fsrfdata, 'LUCY_id'       , SITE_lucyid     , 'patch')
       !CALL ncio_put_attr    (fsrfdata, 'LUCY_id'       , 'source', source)
-      source = datasource(USE_SITE_urban_paras)
+      ! source = datasource(USE_SITE_urban_paras)
       CALL ncio_write_serial (fsrfdata, 'PCT_Tree'      , SITE_fveg_urb   , 'patch')
       CALL ncio_write_serial (fsrfdata, 'URBAN_TREE_TOP', SITE_htop_urb   , 'patch')
       CALL ncio_write_serial (fsrfdata, 'PCT_Water'     , SITE_flake_urb  , 'patch')
@@ -743,16 +1466,16 @@ ENDIF
       CALL ncio_write_serial (fsrfdata, 'BUILDING_HLR'  , SITE_hlr        , 'patch')
       CALL ncio_write_serial (fsrfdata, 'POP_DEN'       , SITE_popden     , 'patch')
 
-      CALL ncio_put_attr     (fsrfdata, 'PCT_Tree'      , 'source', source)
-      CALL ncio_put_attr     (fsrfdata, 'URBAN_TREE_TOP', 'source', source)
-      CALL ncio_put_attr     (fsrfdata, 'PCT_Water'     , 'source', source)
-      CALL ncio_put_attr     (fsrfdata, 'WT_ROOF'       , 'source', source)
-      CALL ncio_put_attr     (fsrfdata, 'HT_ROOF'       , 'source', source)
-      CALL ncio_put_attr     (fsrfdata, 'WTROAD_PERV'   , 'source', source)
-      CALL ncio_put_attr     (fsrfdata, 'BUILDING_HLR'  , 'source', source)
-      CALL ncio_put_attr     (fsrfdata, 'POP_DEN'       , 'source', source)
+      CALL ncio_put_attr     (fsrfdata, 'PCT_Tree'      , 'source', datasource(use_site_fveg ))
+      CALL ncio_put_attr     (fsrfdata, 'URBAN_TREE_TOP', 'source', datasource(use_site_htopu))
+      CALL ncio_put_attr     (fsrfdata, 'PCT_Water'     , 'source', datasource(use_site_flake))
+      CALL ncio_put_attr     (fsrfdata, 'WT_ROOF'       , 'source', datasource(use_site_froof))
+      CALL ncio_put_attr     (fsrfdata, 'HT_ROOF'       , 'source', datasource(use_site_hroof))
+      CALL ncio_put_attr     (fsrfdata, 'WTROAD_PERV'   , 'source', datasource(use_site_fgper))
+      CALL ncio_put_attr     (fsrfdata, 'BUILDING_HLR'  , 'source', datasource(use_site_hlr  ))
+      CALL ncio_put_attr     (fsrfdata, 'POP_DEN'       , 'source', datasource(use_site_pop  ))
 
-      source = datasource(USE_SITE_thermal_paras)
+      ! source = datasource(USE_SITE_thermal_paras)
       CALL ncio_write_serial (fsrfdata, 'EM_ROOF'       , SITE_em_roof   , 'patch')
       CALL ncio_write_serial (fsrfdata, 'EM_WALL'       , SITE_em_wall   , 'patch')
       CALL ncio_write_serial (fsrfdata, 'EM_IMPROAD'    , SITE_em_gimp   , 'patch')
@@ -762,24 +1485,24 @@ ENDIF
       CALL ncio_write_serial (fsrfdata, 'THICK_ROOF'    , SITE_thickroof , 'patch')
       CALL ncio_write_serial (fsrfdata, 'THICK_WALL'    , SITE_thickwall , 'patch')
 
-      CALL ncio_put_attr     (fsrfdata, 'EM_ROOF'       , 'source', source)
-      CALL ncio_put_attr     (fsrfdata, 'EM_WALL'       , 'source', source)
-      CALL ncio_put_attr     (fsrfdata, 'EM_IMPROAD'    , 'source', source)
-      CALL ncio_put_attr     (fsrfdata, 'EM_PERROAD'    , 'source', source)
-      CALL ncio_put_attr     (fsrfdata, 'T_BUILDING_MAX', 'source', source)
-      CALL ncio_put_attr     (fsrfdata, 'T_BUILDING_MIN', 'source', source)
-      CALL ncio_put_attr     (fsrfdata, 'THICK_ROOF'    , 'source', source)
-      CALL ncio_put_attr     (fsrfdata, 'THICK_WALL'    , 'source', source)
+      CALL ncio_put_attr     (fsrfdata, 'EM_ROOF'       , 'source', datasource(use_site_emr   ))
+      CALL ncio_put_attr     (fsrfdata, 'EM_WALL'       , 'source', datasource(use_site_emw   ))
+      CALL ncio_put_attr     (fsrfdata, 'EM_IMPROAD'    , 'source', datasource(use_site_emgimp))
+      CALL ncio_put_attr     (fsrfdata, 'EM_PERROAD'    , 'source', datasource(use_site_emgper))
+      CALL ncio_put_attr     (fsrfdata, 'T_BUILDING_MAX', 'source', datasource(use_site_tbmax ))
+      CALL ncio_put_attr     (fsrfdata, 'T_BUILDING_MIN', 'source', datasource(use_site_tbmin ))
+      CALL ncio_put_attr     (fsrfdata, 'THICK_ROOF'    , 'source', datasource(use_site_thickr))
+      CALL ncio_put_attr     (fsrfdata, 'THICK_WALL'    , 'source', datasource(use_site_thickw))
 
       CALL ncio_write_serial (fsrfdata, 'ALB_ROOF'      , SITE_alb_roof   , 'numrad', 'numsolar')
       CALL ncio_write_serial (fsrfdata, 'ALB_WALL'      , SITE_alb_wall   , 'numrad', 'numsolar')
       CALL ncio_write_serial (fsrfdata, 'ALB_IMPROAD'   , SITE_alb_gimp   , 'numrad', 'numsolar')
       CALL ncio_write_serial (fsrfdata, 'ALB_PERROAD'   , SITE_alb_gper   , 'numrad', 'numsolar')
 
-      CALL ncio_put_attr     (fsrfdata, 'ALB_ROOF'      , 'source', source)
-      CALL ncio_put_attr     (fsrfdata, 'ALB_WALL'      , 'source', source)
-      CALL ncio_put_attr     (fsrfdata, 'ALB_IMPROAD'   , 'source', source)
-      CALL ncio_put_attr     (fsrfdata, 'ALB_PERROAD'   , 'source', source)
+      CALL ncio_put_attr     (fsrfdata, 'ALB_ROOF'      , 'source', datasource(use_site_albr   ))
+      CALL ncio_put_attr     (fsrfdata, 'ALB_WALL'      , 'source', datasource(use_site_albw   ))
+      CALL ncio_put_attr     (fsrfdata, 'ALB_IMPROAD'   , 'source', datasource(use_site_albgimp))
+      CALL ncio_put_attr     (fsrfdata, 'ALB_PERROAD'   , 'source', datasource(use_site_albgper))
 
       CALL ncio_write_serial (fsrfdata, 'CV_ROOF'       , SITE_cv_roof    , 'ulev')
       CALL ncio_write_serial (fsrfdata, 'CV_WALL'       , SITE_cv_wall    , 'ulev')
@@ -787,12 +1510,13 @@ ENDIF
       CALL ncio_write_serial (fsrfdata, 'TK_ROOF'       , SITE_tk_roof    , 'ulev')
       CALL ncio_write_serial (fsrfdata, 'TK_WALL'       , SITE_tk_wall    , 'ulev')
       CALL ncio_write_serial (fsrfdata, 'TK_IMPROAD'    , SITE_tk_gimp    , 'ulev')
-      CALL ncio_put_attr     (fsrfdata, 'CV_ROOF'       , 'source', source)
-      CALL ncio_put_attr     (fsrfdata, 'CV_WALL'       , 'source', source)
-      CALL ncio_put_attr     (fsrfdata, 'CV_IMPROAD'    , 'source', source)
-      CALL ncio_put_attr     (fsrfdata, 'TK_ROOF'       , 'source', source)
-      CALL ncio_put_attr     (fsrfdata, 'TK_WALL'       , 'source', source)
-      CALL ncio_put_attr     (fsrfdata, 'TK_IMPROAD'    , 'source', source)
+
+      CALL ncio_put_attr     (fsrfdata, 'CV_ROOF'       , 'source', datasource(use_site_cvr   ))
+      CALL ncio_put_attr     (fsrfdata, 'CV_WALL'       , 'source', datasource(use_site_cvw   ))
+      CALL ncio_put_attr     (fsrfdata, 'CV_IMPROAD'    , 'source', datasource(use_site_cvgimp))
+      CALL ncio_put_attr     (fsrfdata, 'TK_ROOF'       , 'source', datasource(use_site_tkr   ))
+      CALL ncio_put_attr     (fsrfdata, 'TK_WALL'       , 'source', datasource(use_site_tkw   ))
+      CALL ncio_put_attr     (fsrfdata, 'TK_IMPROAD'    , 'source', datasource(use_site_tkgimp))
 
 
       source = datasource(USE_SITE_soilreflectance)

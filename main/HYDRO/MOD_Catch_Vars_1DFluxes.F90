@@ -78,6 +78,7 @@ CONTAINS
          ENDIF
 
          IF (numbasin > 0) allocate (ntacc_bsn (numbasin))
+         IF (numbasin > 0) ntacc_bsn(:) = 0.
 
       ENDIF
 

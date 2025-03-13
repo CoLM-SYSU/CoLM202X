@@ -316,7 +316,7 @@ CONTAINS
    USE MOD_Namelist
    USE MOD_Utils
 #ifdef SinglePoint
-   USE MOD_SingleSrfdata
+   ! USE MOD_SingleSrfdata
 #endif
    IMPLICIT NONE
 
@@ -392,14 +392,14 @@ CONTAINS
          ENDIF
       ENDIF
 #else
-      this%nblkme = 1
-      allocate(this%xblkme(1))
-      allocate(this%yblkme(1))
+      ! this%nblkme = 1
+      ! allocate(this%xblkme(1))
+      ! allocate(this%yblkme(1))
 
-      CALL normalize_longitude (SITE_lon_location)
-      this%xblkme(1) = find_nearest_west  (SITE_lon_location, this%nxblk, this%lon_w)
+      ! CALL normalize_longitude (SITE_lon_location)
+      ! this%xblkme(1) = find_nearest_west  (SITE_lon_location, this%nxblk, this%lon_w)
 
-      this%yblkme(1) = find_nearest_south (SITE_lat_location, this%nyblk, this%lat_s)
+      ! this%yblkme(1) = find_nearest_south (SITE_lat_location, this%nyblk, this%lat_s)
 #endif
 
    END SUBROUTINE block_init_pio
@@ -541,18 +541,18 @@ CONTAINS
          ENDIF
       ENDIF
 #else
-      this%nblkme = 1
-      allocate(this%xblkme(1))
-      allocate(this%yblkme(1))
+      ! this%nblkme = 1
+      ! allocate(this%xblkme(1))
+      ! allocate(this%yblkme(1))
 
-      DO jblk = 1, this%nyblk
-         DO iblk = 1, this%nxblk
-            IF (nelmblk(iblk,jblk) > 0) THEN
-               this%xblkme(1) = iblk
-               this%yblkme(1) = jblk
-            ENDIF
-         ENDDO
-      ENDDO
+      ! DO jblk = 1, this%nyblk
+      !    DO iblk = 1, this%nxblk
+      !       IF (nelmblk(iblk,jblk) > 0) THEN
+      !          this%xblkme(1) = iblk
+      !          this%yblkme(1) = jblk
+      !       ENDIF
+      !    ENDDO
+      ! ENDDO
 #endif
 
       IF (allocated(nelmblk)) deallocate (nelmblk)
