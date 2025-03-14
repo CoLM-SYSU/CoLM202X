@@ -1129,7 +1129,7 @@ ENDIF
 
          IF (.not. use_site_albr   ) SITE_alb_roof(:,:) = albroof_lcz   (urb_typidx)
          IF (.not. use_site_albw   ) SITE_alb_wall(:,:) = albwall_lcz   (urb_typidx)
-         IF (.not. use_site_albgper) SITE_alb_gimp(:,:) = albimproad_lcz(urb_typidx)
+         IF (.not. use_site_albgimp) SITE_alb_gimp(:,:) = albimproad_lcz(urb_typidx)
          IF (.not. use_site_albgper) SITE_alb_gper(:,:) = albperroad_lcz(urb_typidx)
 
 
