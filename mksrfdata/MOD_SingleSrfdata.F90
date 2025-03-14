@@ -88,6 +88,7 @@ MODULE MOD_SingleSrfdata
    ! topography factors used for downscaling
    real(r8) :: SITE_svf = 0.
    real(r8) :: SITE_cur = 0.
+
    real(r8), allocatable :: SITE_slp_type  (:)
    real(r8), allocatable :: SITE_asp_type  (:)
    real(r8), allocatable :: SITE_area_type (:)
@@ -129,6 +130,7 @@ MODULE MOD_SingleSrfdata
    real(r8), allocatable :: SITE_alb_gimp  (:,:)
    real(r8), allocatable :: SITE_alb_gper  (:,:)
 
+   logical :: use_site_soiltexture
    logical :: use_site_froof, use_site_hroof, use_site_fgper  , use_site_hlr    , &
               use_site_fveg , use_site_htopu, use_site_urblai , use_site_urbsai , &
               use_site_flake, &
@@ -156,6 +158,8 @@ CONTAINS
    ! Local Variables
    real(r8) :: lat_in, lon_in
    integer  :: iyear, itime
+
+      use_site_soiltexture = .false.
 
       IF (ncio_var_exist(fsrfdata, 'latitude')) THEN
          CALL ncio_read_serial (fsrfdata, 'latitude',  lat_in)
@@ -293,7 +297,10 @@ CONTAINS
 
          IF (DEF_Runoff_SCHEME == 3) THEN ! for Simple VIC
             ! reading from global dataset currently
-            CALL ncio_read_serial (fsrfdata, 'soil_texture       ', SITE_soil_texture          )
+            IF ( ncio_var_exist(fsrfdata,'soil_texture') ) THEN
+               CALL ncio_read_serial (fsrfdata, 'soil_texture    ', SITE_soil_texture          )
+               use_site_soiltexture = .true.
+            ENDIF
          ENDIF
       ENDIF
 
@@ -630,7 +637,11 @@ ENDIF
          CALL ncio_read_serial (fsrfdata, 'soil_BA_beta          ', SITE_soil_BA_beta          )
 
          IF (DEF_Runoff_SCHEME == 3) THEN ! for Simple VIC
-            CALL ncio_read_serial (fsrfdata, 'soil_texture       ', SITE_soil_texture          )
+            ! reading from global dataset currently
+            IF ( ncio_var_exist(fsrfdata,'soil_texture') ) THEN
+               CALL ncio_read_serial (fsrfdata, 'soil_texture    ', SITE_soil_texture          )
+               use_site_soiltexture = .true.
+            ENDIF
          ENDIF
       ENDIF
 
