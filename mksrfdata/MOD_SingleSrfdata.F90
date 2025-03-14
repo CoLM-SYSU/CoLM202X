@@ -130,6 +130,7 @@ MODULE MOD_SingleSrfdata
    real(r8), allocatable :: SITE_alb_gimp (:,:)
    real(r8), allocatable :: SITE_alb_gper (:,:)
 
+   logical :: use_site_soiltexture
    logical :: use_site_froof, use_site_hroof, use_site_fgper  , use_site_hlr, &
               use_site_fveg , use_site_htopu, use_site_flake  , use_site_urblai, use_site_urbsai, &
               use_site_albr , use_site_albw , use_site_albgimp, use_site_albgper, &
@@ -156,6 +157,8 @@ CONTAINS
    real(r8) :: lat_in, lon_in
    integer  :: iyear, itime
 
+      use_site_soiltexture = .false.
+      
       IF (ncio_var_exist(fsrfdata, 'latitude')) THEN
          CALL ncio_read_serial (fsrfdata, 'latitude',  lat_in)
          IF (lat_in /= SITE_lat_location) THEN
@@ -292,7 +295,10 @@ CONTAINS
 
          IF (DEF_Runoff_SCHEME == 3) THEN ! for Simple VIC
             ! reading from global dataset currently
-            CALL ncio_read_serial (fsrfdata, 'soil_texture       ', SITE_soil_texture          )
+            IF ( ncio_var_exist(fsrfdata,'soil_texture') ) THEN
+               CALL ncio_read_serial (fsrfdata, 'soil_texture    ', SITE_soil_texture          )
+               use_site_soiltexture = .true.
+            ENDIF
          ENDIF
       ENDIF
 
@@ -337,11 +343,12 @@ CONTAINS
    ! Local Variables
    real(r8) :: lat_in, lon_in
 
+      use_site_soiltexture = .false.
       use_site_froof= .false.; use_site_hroof= .false.; use_site_fgper  = .false.; use_site_hlr    = .false.
       use_site_fveg = .false.; use_site_htopu= .false.; use_site_flake  = .false.; use_site_urblai = .false.; use_site_urbsai = .false.
       use_site_albr = .false.; use_site_albw = .false.; use_site_albgimp= .false.; use_site_albgper= .false.
       use_site_emr  = .false.; use_site_emw  = .false.; use_site_emgimp = .false.; use_site_emgper = .false.;
-      use_site_cvr  = .false.; use_site_cvw  = .false.; use_site_cvgimp = .false.; 
+      use_site_cvr  = .false.; use_site_cvw  = .false.; use_site_cvgimp = .false.;
       use_site_tkr  = .false.; use_site_tkw  = .false.; use_site_tkgimp = .false.;
       use_site_pop  = .false.; use_site_tbmax= .false.; use_site_tbmin  = .false.; use_site_thickr= .false.; use_site_thickw  = .false.
 
@@ -624,7 +631,11 @@ ENDIF
          CALL ncio_read_serial (fsrfdata, 'soil_BA_beta          ', SITE_soil_BA_beta          )
 
          IF (DEF_Runoff_SCHEME == 3) THEN ! for Simple VIC
-            CALL ncio_read_serial (fsrfdata, 'soil_texture       ', SITE_soil_texture          )
+            ! reading from global dataset currently
+            IF ( ncio_var_exist(fsrfdata,'soil_texture') ) THEN
+               CALL ncio_read_serial (fsrfdata, 'soil_texture    ', SITE_soil_texture          )
+               use_site_soiltexture = .true.
+            ENDIF
          ENDIF
       ENDIF
 

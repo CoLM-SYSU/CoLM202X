@@ -71,6 +71,10 @@ SUBROUTINE Aggregation_SoilTexture ( &
 #endif
 
 #ifdef SinglePoint
+      IF (use_site_soiltexture) THEN
+         RETURN
+      ENDIF
+
       IF (USE_SITE_soilparameters .or. (DEF_Runoff_SCHEME /= 3)) THEN
          ! Since the site soil texture is not available now, temporally
          !RETURN
