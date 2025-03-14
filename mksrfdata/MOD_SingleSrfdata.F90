@@ -130,6 +130,7 @@ MODULE MOD_SingleSrfdata
    real(r8), allocatable :: SITE_alb_gimp  (:,:)
    real(r8), allocatable :: SITE_alb_gper  (:,:)
 
+   logical :: use_site_soiltexture
    logical :: use_site_froof, use_site_hroof, use_site_fgper  , use_site_hlr    , &
               use_site_fveg , use_site_htopu, use_site_urblai , use_site_urbsai , &
               use_site_flake, &
@@ -159,7 +160,7 @@ CONTAINS
    integer  :: iyear, itime
 
       use_site_soiltexture = .false.
-      
+
       IF (ncio_var_exist(fsrfdata, 'latitude')) THEN
          CALL ncio_read_serial (fsrfdata, 'latitude',  lat_in)
          IF (lat_in /= SITE_lat_location) THEN
