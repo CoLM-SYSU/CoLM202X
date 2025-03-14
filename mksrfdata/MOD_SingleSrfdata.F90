@@ -137,8 +137,6 @@ MODULE MOD_SingleSrfdata
               use_site_cvr  , use_site_cvw  , use_site_cvgimp , &
               use_site_tkr  , use_site_tkw  , use_site_tkgimp , &
               use_site_pop  , use_site_tbmax, use_site_tbmin  , use_site_thickr, use_site_thickw
-
-
 CONTAINS
 
    ! -----
@@ -294,7 +292,7 @@ CONTAINS
 
          IF (DEF_Runoff_SCHEME == 3) THEN ! for Simple VIC
             ! reading from global dataset currently
-            !CALL ncio_read_serial (fsrfdata, 'soil_texture       ', SITE_soil_texture          )
+            CALL ncio_read_serial (fsrfdata, 'soil_texture       ', SITE_soil_texture          )
          ENDIF
       ENDIF
 
@@ -338,6 +336,14 @@ CONTAINS
 
    ! Local Variables
    real(r8) :: lat_in, lon_in
+
+      use_site_froof= .false.; use_site_hroof= .false.; use_site_fgper  = .false.; use_site_hlr    = .false.
+      use_site_fveg = .false.; use_site_htopu= .false.; use_site_flake  = .false.; use_site_urblai = .false.; use_site_urbsai = .false.
+      use_site_albr = .false.; use_site_albw = .false.; use_site_albgimp= .false.; use_site_albgper= .false.
+      use_site_emr  = .false.; use_site_emw  = .false.; use_site_emgimp = .false.; use_site_emgper = .false.;
+      use_site_cvr  = .false.; use_site_cvw  = .false.; use_site_cvgimp = .false.; 
+      use_site_tkr  = .false.; use_site_tkw  = .false.; use_site_tkgimp = .false.;
+      use_site_pop  = .false.; use_site_tbmax= .false.; use_site_tbmin  = .false.; use_site_thickr= .false.; use_site_thickw  = .false.
 
       IF (ncio_var_exist(fsrfdata, 'latitude')) THEN
          CALL ncio_read_serial (fsrfdata, 'latitude',  lat_in)
