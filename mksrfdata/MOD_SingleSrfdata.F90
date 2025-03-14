@@ -88,55 +88,56 @@ MODULE MOD_SingleSrfdata
    ! topography factors used for downscaling
    real(r8) :: SITE_svf = 0.
    real(r8) :: SITE_cur = 0.
-   real(r8), allocatable :: SITE_slp_type(:)
-   real(r8), allocatable :: SITE_asp_type(:)
-   real(r8), allocatable :: SITE_area_type(:)
-   real(r8), allocatable :: SITE_sf_lut(:,:)
+   real(r8), allocatable :: SITE_slp_type  (:)
+   real(r8), allocatable :: SITE_asp_type  (:)
+   real(r8), allocatable :: SITE_area_type (:)
+   real(r8), allocatable :: SITE_sf_lut  (:,:)
 
+   integer , allocatable :: SITE_urbtyp    (:)
 
-   integer , allocatable :: SITE_urbtyp   (:)
+   real(r8), allocatable :: SITE_lucyid    (:)
 
-   real(r8), allocatable :: SITE_lucyid   (:)
+   real(r8), allocatable :: SITE_fveg_urb  (:)
+   real(r8), allocatable :: SITE_htop_urb  (:)
+   real(r8), allocatable :: SITE_flake_urb (:)
+   real(r8), allocatable :: SITE_froof     (:)
+   real(r8), allocatable :: SITE_hroof     (:)
+   real(r8), allocatable :: SITE_fgimp     (:)
+   real(r8), allocatable :: SITE_fgper     (:)
+   real(r8), allocatable :: SITE_hlr       (:)
+   real(r8), allocatable :: SITE_lambdaw   (:)
+   real(r8), allocatable :: SITE_popden    (:)
 
-   real(r8), allocatable :: SITE_fveg_urb (:)
-   real(r8), allocatable :: SITE_htop_urb (:)
-   real(r8), allocatable :: SITE_flake_urb(:)
-   real(r8), allocatable :: SITE_froof    (:)
-   real(r8), allocatable :: SITE_hroof    (:)
-   real(r8), allocatable :: SITE_fgimp    (:)
-   real(r8), allocatable :: SITE_fgper    (:)
-   real(r8), allocatable :: SITE_hlr      (:)
-   real(r8), allocatable :: SITE_lambdaw  (:)
-   real(r8), allocatable :: SITE_popden   (:)
+   real(r8), allocatable :: SITE_em_roof   (:)
+   real(r8), allocatable :: SITE_em_wall   (:)
+   real(r8), allocatable :: SITE_em_gimp   (:)
+   real(r8), allocatable :: SITE_em_gper   (:)
+   real(r8), allocatable :: SITE_t_roommax (:)
+   real(r8), allocatable :: SITE_t_roommin (:)
+   real(r8), allocatable :: SITE_thickroof (:)
+   real(r8), allocatable :: SITE_thickwall (:)
 
-   real(r8), allocatable :: SITE_em_roof  (:)
-   real(r8), allocatable :: SITE_em_wall  (:)
-   real(r8), allocatable :: SITE_em_gimp  (:)
-   real(r8), allocatable :: SITE_em_gper  (:)
-   real(r8), allocatable :: SITE_t_roommax(:)
-   real(r8), allocatable :: SITE_t_roommin(:)
-   real(r8), allocatable :: SITE_thickroof(:)
-   real(r8), allocatable :: SITE_thickwall(:)
+   real(r8), allocatable :: SITE_cv_roof   (:)
+   real(r8), allocatable :: SITE_cv_wall   (:)
+   real(r8), allocatable :: SITE_cv_gimp   (:)
+   real(r8), allocatable :: SITE_tk_roof   (:)
+   real(r8), allocatable :: SITE_tk_wall   (:)
+   real(r8), allocatable :: SITE_tk_gimp   (:)
 
-   real(r8), allocatable :: SITE_cv_roof  (:)
-   real(r8), allocatable :: SITE_cv_wall  (:)
-   real(r8), allocatable :: SITE_cv_gimp  (:)
-   real(r8), allocatable :: SITE_tk_roof  (:)
-   real(r8), allocatable :: SITE_tk_wall  (:)
-   real(r8), allocatable :: SITE_tk_gimp  (:)
+   real(r8), allocatable :: SITE_alb_roof  (:,:)
+   real(r8), allocatable :: SITE_alb_wall  (:,:)
+   real(r8), allocatable :: SITE_alb_gimp  (:,:)
+   real(r8), allocatable :: SITE_alb_gper  (:,:)
 
-   real(r8), allocatable :: SITE_alb_roof (:,:)
-   real(r8), allocatable :: SITE_alb_wall (:,:)
-   real(r8), allocatable :: SITE_alb_gimp (:,:)
-   real(r8), allocatable :: SITE_alb_gper (:,:)
-
-   logical :: use_site_froof, use_site_hroof, use_site_fgper  , use_site_hlr, &
-              use_site_fveg , use_site_htopu, use_site_flake  , use_site_urblai, use_site_urbsai, &
+   logical :: use_site_froof, use_site_hroof, use_site_fgper  , use_site_hlr    , &
+              use_site_fveg , use_site_htopu, use_site_urblai , use_site_urbsai , &
+              use_site_flake, &
               use_site_albr , use_site_albw , use_site_albgimp, use_site_albgper, &
-              use_site_emr  , use_site_emw  , use_site_emgimp , use_site_emgper, &
+              use_site_emr  , use_site_emw  , use_site_emgimp , use_site_emgper , &
               use_site_cvr  , use_site_cvw  , use_site_cvgimp , &
               use_site_tkr  , use_site_tkw  , use_site_tkgimp , &
-              use_site_pop  , use_site_tbmax, use_site_tbmin  , use_site_thickr, use_site_thickw
+              use_site_tbmax, use_site_tbmin, use_site_thickr , use_site_thickw , &
+              use_site_pop
 CONTAINS
 
    ! -----
@@ -337,13 +338,18 @@ CONTAINS
    ! Local Variables
    real(r8) :: lat_in, lon_in
 
-      use_site_froof= .false.; use_site_hroof= .false.; use_site_fgper  = .false.; use_site_hlr    = .false.
-      use_site_fveg = .false.; use_site_htopu= .false.; use_site_flake  = .false.; use_site_urblai = .false.; use_site_urbsai = .false.
-      use_site_albr = .false.; use_site_albw = .false.; use_site_albgimp= .false.; use_site_albgper= .false.
-      use_site_emr  = .false.; use_site_emw  = .false.; use_site_emgimp = .false.; use_site_emgper = .false.;
-      use_site_cvr  = .false.; use_site_cvw  = .false.; use_site_cvgimp = .false.; 
-      use_site_tkr  = .false.; use_site_tkw  = .false.; use_site_tkgimp = .false.;
-      use_site_pop  = .false.; use_site_tbmax= .false.; use_site_tbmin  = .false.; use_site_thickr= .false.; use_site_thickw  = .false.
+      use_site_froof = .false.; use_site_hroof = .false.; use_site_fgper   = .false.; use_site_hlr     = .false.;
+      use_site_fveg  = .false.; use_site_htopu = .false.; use_site_urblai  = .false.; use_site_urbsai  = .false.;
+      use_site_flake = .false.;
+
+      use_site_albr  = .false.; use_site_albw  = .false.; use_site_albgimp = .false.; use_site_albgper = .false.;
+      use_site_emr   = .false.; use_site_emw   = .false.; use_site_emgimp  = .false.; use_site_emgper  = .false.;
+
+      use_site_cvr   = .false.; use_site_cvw   = .false.; use_site_cvgimp  = .false.;
+      use_site_tkr   = .false.; use_site_tkw   = .false.; use_site_tkgimp  = .false.;
+
+      use_site_tbmax = .false.; use_site_tbmin = .false.; use_site_thickr  = .false.; use_site_thickw  = .false.;
+      use_site_pop   = .false.;
 
       IF (ncio_var_exist(fsrfdata, 'latitude')) THEN
          CALL ncio_read_serial (fsrfdata, 'latitude',  lat_in)
