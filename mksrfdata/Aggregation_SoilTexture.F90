@@ -75,11 +75,8 @@ SUBROUTINE Aggregation_SoilTexture ( &
          RETURN
       ENDIF
 
-      IF (USE_SITE_soilparameters .or. (DEF_Runoff_SCHEME /= 3)) THEN
-         ! Since the site soil texture is not available now, temporally
-         !RETURN
-         write(*,'(/, A)') 'Reading from global dataset ...'
-      ENDIF
+      ! If the site soil texture is not available now, temporally
+      write(*,'(/, A)') 'Reading soil texture from global dataset ...'
 #endif
 
       lndname = trim(dir_rawdata)//'/soil/soiltexture_0cm-60cm_mean.nc'
