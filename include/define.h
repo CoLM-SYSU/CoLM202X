@@ -1,16 +1,16 @@
 ! 1. Spatial structure:
 !    Select one of the following options.
-#undef GRIDBASED
+#define GRIDBASED
 #undef CATCHMENT
 #undef UNSTRUCTURED
-#define SinglePoint
+#undef SinglePoint
 
 ! 2. Land subgrid type classification:
 !    Select one of the following options.
 #undef LULC_USGS
-#undef LULC_IGBP
+#define LULC_IGBP
 #undef LULC_IGBP_PFT
-#define LULC_IGBP_PC
+#undef LULC_IGBP_PC
 
 ! 2.1 3D Urban model (put it temporarily here):
 #undef URBAN_MODEL
@@ -26,12 +26,12 @@
 ! 3. If defined, debug information is output.
 #define CoLMDEBUG
 ! 3.1 If defined, range of variables is checked.
-#undef RangeCheck
+#define RangeCheck
 ! 3.1 If defined, surface data in vector is mapped to gridded data for checking.
 #undef SrfdataDiag
 
 ! 4. If defined, MPI parallelization is enabled.
-#undef USEMPI
+#define USEMPI
 !    Conflict: not used when defined SingPoint.
 #if (defined SinglePoint)
 #undef USEMPI
