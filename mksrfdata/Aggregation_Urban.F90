@@ -306,7 +306,7 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
          -1.0e36_r8, landname, 'POP_DEN_'//trim(cyear), compress = 0, write_mode = 'one')
 #endif
 #else
-      IF ((.not. USE_SITE_urban_human) .or. (.not.ncio_var_exist(SITE_fsitedata,'resident_population_density'))) THEN
+      IF ((.not. USE_SITE_urban_human) .or. (.not. use_site_pop)) THEN
          SITE_popden(:) = pop_den
       ENDIF
 #endif
@@ -401,11 +401,11 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
          -1.0e36_r8, landname, 'URBAN_TREE_TOP_'//trim(cyear), compress = 0, write_mode = 'one')
 #endif
 #else
-      IF ((.not. USE_SITE_urban_ecology) .or. (.not.ncio_var_exist(SITE_fsitedata,'tree_area_fraction'))) THEN
+      IF ((.not. USE_SITE_urban_ecology) .or. (.not. use_site_fveg)) THEN
          SITE_fveg_urb(:) = pct_tree
       ENDIF
 
-      IF ((.not. USE_SITE_urban_ecology) .or. (.not.ncio_var_exist(SITE_fsitedata,'tree_mean_height'))) THEN
+      IF ((.not. USE_SITE_urban_ecology) .or. (.not. use_site_htopu)) THEN
          SITE_htop_urb(:) = htop_urb
       ENDIF
 #endif
@@ -472,7 +472,7 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
          -1.0e36_r8, landname, 'PCT_Water_'//trim(cyear), compress = 0, write_mode = 'one')
 #endif
 #else
-      IF ((.not.USE_SITE_urban_ecology) .or. (.not.ncio_var_exist(SITE_fsitedata,'water_area_fraction'))) THEN
+      IF ((.not.USE_SITE_urban_ecology) .or. (.not. use_site_flake)) THEN
          SITE_flake_urb(:) = pct_urbwt
       ENDIF
 #endif
@@ -642,11 +642,11 @@ ENDIF
       -1.0e36_r8, landname, 'URBAN_PATCH_FRAC', compress = 0, write_mode = 'one')
 #endif
 #else
-      IF ((.not.USE_SITE_urban_geometry) .or. (.not.ncio_var_exist(SITE_fsitedata,'roof_area_fraction'))) THEN
+      IF ((.not.USE_SITE_urban_geometry) .or. (.not. use_site_froof)) THEN
          SITE_froof(:) = wt_roof
       ENDIF
 
-      IF ((.not.USE_SITE_urban_geometry) .or. (.not.ncio_var_exist(SITE_fsitedata,'building_mean_height'))) THEN
+      IF ((.not.USE_SITE_urban_geometry) .or. (.not. use_site_hroof)) THEN
          SITE_hroof(:) = ht_roof
       ENDIF
 #endif
@@ -781,8 +781,13 @@ ENDIF
                -1.0e36_r8, landname, 'TREE_SAI_'//trim(cmonth), compress = 0, write_mode = 'one')
 #endif
 #else
-            SITE_LAI_monthly(imonth,iy) = lai_urb(1)
-            SITE_SAI_monthly(imonth,iy) = sai_urb(1)
+            IF ((.not. USE_SITE_urban_ecology) .or. (.not. use_site_urblai)) THEN
+               SITE_LAI_monthly(imonth,iy) = lai_urb(1)
+            ENDIF
+
+            IF ((.not. USE_SITE_urban_ecology) .or. (.not. use_site_urblai)) THEN
+               SITE_SAI_monthly(imonth,iy) = sai_urb(1)
+            ENDIF
 #endif
 
 #ifdef USEMPI
@@ -1038,34 +1043,32 @@ ENDIF
 #endif
 #else
 
-         IF (.not. ncio_var_exist(SITE_fsitedata,'EM_ROOF')) SITE_em_roof(:) = em_roof
-         IF (.not. ncio_var_exist(SITE_fsitedata,'EM_WALL')) SITE_em_wall(:) = em_wall
-         IF (.not. ncio_var_exist(SITE_fsitedata,'EM_GIMP')) SITE_em_gimp(:) = em_imrd
-         IF (.not. ncio_var_exist(SITE_fsitedata,'EM_GPER')) SITE_em_gper(:) = em_perd
+         IF (.not. use_site_emr   ) SITE_em_roof(:) = em_roof
+         IF (.not. use_site_emw   ) SITE_em_wall(:) = em_wall
+         IF (.not. use_site_emgimp) SITE_em_gimp(:) = em_imrd
+         IF (.not. use_site_emgper) SITE_em_gper(:) = em_perd
 
-         IF (.not. ncio_var_exist(SITE_fsitedata,'T_BUILDING_MAX') ) SITE_t_roommax (:) = tb_max
-         IF (.not. ncio_var_exist(SITE_fsitedata,'T_BUILDING_MIN') ) SITE_t_roommin (:) = tb_min
+         IF (.not. use_site_tbmax) SITE_t_roommax(:) = tb_max
+         IF (.not. use_site_tbmin) SITE_t_roommin(:) = tb_min
 
-         IF (.not. ncio_var_exist(SITE_fsitedata,'THICK_ROOF') ) SITE_thickroof(:) = th_roof
-         IF (.not. ncio_var_exist(SITE_fsitedata,'THICK_WALL') ) SITE_thickwall(:) = th_wall
+         IF (.not. use_site_thickr) SITE_thickroof(:) = th_roof
+         IF (.not. use_site_thickw) SITE_thickwall(:) = th_wall
 
-         IF (.not. ncio_var_exist(SITE_fsitedata,'CV_ROOF')) SITE_cv_roof(:) = cv_roof(:,1)
-         IF (.not. ncio_var_exist(SITE_fsitedata,'CV_GIMP')) SITE_cv_gimp(:) = cv_imrd(:,1)
-         IF (.not. ncio_var_exist(SITE_fsitedata,'CV_WALL')) SITE_cv_wall(:) = cv_wall(:,1)
+         IF (.not. use_site_cvr   ) SITE_cv_roof(:) = cv_roof(:,1)
+         IF (.not. use_site_cvgimp) SITE_cv_gimp(:) = cv_imrd(:,1)
+         IF (.not. use_site_cvw   ) SITE_cv_wall(:) = cv_wall(:,1)
 
-         IF (.not. ncio_var_exist(SITE_fsitedata,'TK_ROOF')) SITE_tk_roof(:) = tk_roof(:,1)
-         IF (.not. ncio_var_exist(SITE_fsitedata,'TK_GIMP')) SITE_tk_gimp(:) = tk_imrd(:,1)
-         IF (.not. ncio_var_exist(SITE_fsitedata,'TK_WALL')) SITE_tk_wall(:) = tk_wall(:,1)
+         IF (.not. use_site_tkr   ) SITE_tk_roof(:) = tk_roof(:,1)
+         IF (.not. use_site_tkgimp) SITE_tk_gimp(:) = tk_imrd(:,1)
+         IF (.not. use_site_tkw   ) SITE_tk_wall(:) = tk_wall(:,1)
 
-         IF (.not. ncio_var_exist(SITE_fsitedata,'ALB_ROOF')) SITE_alb_roof(:,:) = alb_roof(:,:,1)
-         IF (.not. ncio_var_exist(SITE_fsitedata,'ALB_WALL')) SITE_alb_wall(:,:) = alb_wall(:,:,1)
-         IF (.not. ncio_var_exist(SITE_fsitedata,'ALB_GIMP')) SITE_alb_gimp(:,:) = alb_imrd(:,:,1)
-         IF (.not. ncio_var_exist(SITE_fsitedata,'ALB_GPER')) SITE_alb_gper(:,:) = alb_perd(:,:,1)
+         IF (.not. use_site_albr   ) SITE_alb_roof(:,:) = alb_roof(:,:,1)
+         IF (.not. use_site_albw   ) SITE_alb_wall(:,:) = alb_wall(:,:,1)
+         IF (.not. use_site_albgimp) SITE_alb_gimp(:,:) = alb_imrd(:,:,1)
+         IF (.not. use_site_albgper) SITE_alb_gper(:,:) = alb_perd(:,:,1)
 
-
-         IF (.not. ncio_var_exist(SITE_fsitedata,'canyon_height_width_ratio') ) SITE_hlr (:) = hlr_bld
-
-         IF (.not. ncio_var_exist(SITE_fsitedata,'impervious_area_fraction')) SITE_fgimp (:) = 1-wt_rd
+         IF (.not. use_site_hlr  ) SITE_hlr  (:) = hlr_bld
+         IF (.not. use_site_fgper) SITE_fgimp(:) = 1-wt_rd
 
 #endif
 
@@ -1103,36 +1106,35 @@ ENDIF
 
          urb_typidx = landurban%settyp(1)
 
-         IF (.not. ncio_var_exist(SITE_fsitedata,'EM_ROOF')) SITE_em_roof(:) = emroof_lcz   (urb_typidx)
-         IF (.not. ncio_var_exist(SITE_fsitedata,'EM_WALL')) SITE_em_wall(:) = emwall_lcz   (urb_typidx)
-         IF (.not. ncio_var_exist(SITE_fsitedata,'EM_GIMP')) SITE_em_gimp(:) = emimproad_lcz(urb_typidx)
-         IF (.not. ncio_var_exist(SITE_fsitedata,'EM_GPER')) SITE_em_gper(:) = emperroad_lcz(urb_typidx)
+         IF (.not. use_site_emr   ) SITE_em_roof(:) = emroof_lcz   (urb_typidx)
+         IF (.not. use_site_emw   ) SITE_em_wall(:) = emwall_lcz   (urb_typidx)
+         IF (.not. use_site_emgimp) SITE_em_gimp(:) = emimproad_lcz(urb_typidx)
+         IF (.not. use_site_emgper) SITE_em_gper(:) = emperroad_lcz(urb_typidx)
 
 
-         IF (.not. ncio_var_exist(SITE_fsitedata,'T_BUILDING_MAX') ) SITE_t_roommax (:) = 297.65
-         IF (.not. ncio_var_exist(SITE_fsitedata,'T_BUILDING_MIN') ) SITE_t_roommin (:) = 290.65
+         IF (.not. use_site_tbmax) SITE_t_roommax(:) = 297.65
+         IF (.not. use_site_tbmin) SITE_t_roommin(:) = 290.65
 
-         IF (.not. ncio_var_exist(SITE_fsitedata,'THICK_ROOF') ) SITE_thickroof(:) = thickroof_lcz(urb_typidx)
-         IF (.not. ncio_var_exist(SITE_fsitedata,'THICK_WALL') ) SITE_thickwall(:) = thickwall_lcz(urb_typidx)
-
-
-         IF (.not. ncio_var_exist(SITE_fsitedata,'CV_ROOF')) SITE_cv_roof(:) = cvroof_lcz   (urb_typidx)
-         IF (.not. ncio_var_exist(SITE_fsitedata,'CV_GIMP')) SITE_cv_gimp(:) = cvimproad_lcz(urb_typidx)
-         IF (.not. ncio_var_exist(SITE_fsitedata,'CV_WALL')) SITE_cv_wall(:) = cvwall_lcz   (urb_typidx)
-
-         IF (.not. ncio_var_exist(SITE_fsitedata,'TK_ROOF')) SITE_tk_roof(:) = tkroof_lcz   (urb_typidx)
-         IF (.not. ncio_var_exist(SITE_fsitedata,'TK_GIMP')) SITE_tk_gimp(:) = tkimproad_lcz(urb_typidx)
-         IF (.not. ncio_var_exist(SITE_fsitedata,'TK_WALL')) SITE_tk_wall(:) = tkwall_lcz   (urb_typidx)
-
-         IF (.not. ncio_var_exist(SITE_fsitedata,'ALB_ROOF')) SITE_alb_roof(:,:) = albroof_lcz   (urb_typidx)
-         IF (.not. ncio_var_exist(SITE_fsitedata,'ALB_WALL')) SITE_alb_wall(:,:) = albwall_lcz   (urb_typidx)
-         IF (.not. ncio_var_exist(SITE_fsitedata,'ALB_GIMP')) SITE_alb_gimp(:,:) = albimproad_lcz(urb_typidx)
-         IF (.not. ncio_var_exist(SITE_fsitedata,'ALB_GPER')) SITE_alb_gper(:,:) = albperroad_lcz(urb_typidx)
+         IF (.not. use_site_thickr) SITE_thickroof(:) = thickroof_lcz(urb_typidx)
+         IF (.not. use_site_thickw) SITE_thickwall(:) = thickwall_lcz(urb_typidx)
 
 
-         IF (.not. ncio_var_exist(SITE_fsitedata,'canyon_height_width_ratio') ) SITE_hlr (:) = canyonhwr_lcz(urb_typidx)
+         IF (.not. use_site_cvr   ) SITE_cv_roof(:) = cvroof_lcz   (urb_typidx)
+         IF (.not. use_site_cvgimp) SITE_cv_gimp(:) = cvimproad_lcz(urb_typidx)
+         IF (.not. use_site_cvw   ) SITE_cv_wall(:) = cvwall_lcz   (urb_typidx)
 
-         IF (.not. ncio_var_exist(SITE_fsitedata,'impervious_area_fraction')) SITE_fgimp (:) = 1-wtperroad_lcz(urb_typidx)/(1-SITE_froof)
+         IF (.not. use_site_tkr   ) SITE_tk_roof(:) = tkroof_lcz   (urb_typidx)
+         IF (.not. use_site_tkgimp) SITE_tk_gimp(:) = tkimproad_lcz(urb_typidx)
+         IF (.not. use_site_tkw   ) SITE_tk_wall(:) = tkwall_lcz   (urb_typidx)
+
+         IF (.not. use_site_albr   ) SITE_alb_roof(:,:) = albroof_lcz   (urb_typidx)
+         IF (.not. use_site_albw   ) SITE_alb_wall(:,:) = albwall_lcz   (urb_typidx)
+         IF (.not. use_site_albgimp) SITE_alb_gimp(:,:) = albimproad_lcz(urb_typidx)
+         IF (.not. use_site_albgper) SITE_alb_gper(:,:) = albperroad_lcz(urb_typidx)
+
+
+         IF (.not. use_site_hlr  ) SITE_hlr  (:) = canyonhwr_lcz(urb_typidx)
+         IF (.not. use_site_fgper) SITE_fgimp(:) = 1-wtperroad_lcz(urb_typidx)/(1-SITE_froof)
       ENDIF
 #endif
 

@@ -152,8 +152,10 @@ PROGRAM CoLMINI
 #endif
 
       ! Read in SNICAR optical and aging parameters
-      CALL SnowOptics_init( DEF_file_snowoptics ) ! SNICAR optical parameters
-      CALL SnowAge_init( DEF_file_snowaging )     ! SNICAR aging   parameters
+      IF (DEF_USE_SNICAR) THEN
+         CALL SnowOptics_init( DEF_file_snowoptics ) ! SNICAR optical parameters
+         CALL SnowAge_init( DEF_file_snowaging )     ! SNICAR aging   parameters
+      ENDIF
 
       CALL initialize (casename, dir_landdata, dir_restart, idate, lc_year, greenwich)
 

@@ -128,7 +128,7 @@ CONTAINS
          soil_vf_gravels_s_l        (:) = SITE_soil_vf_gravels        (nsl)
          soil_vf_om_s_l             (:) = SITE_soil_vf_om             (nsl)
          soil_vf_sand_s_l           (:) = SITE_soil_vf_sand           (nsl)
-         soil_vf_clay_s_l           (:) = SITE_soil_vf_clay           (nsl)
+        !soil_vf_clay_s_l           (:) = SITE_soil_vf_clay           (nsl)
          soil_wf_gravels_s_l        (:) = SITE_soil_wf_gravels        (nsl)
          soil_wf_sand_s_l           (:) = SITE_soil_wf_sand           (nsl)
          soil_OM_density_s_l        (:) = SITE_soil_OM_density        (nsl)
@@ -250,7 +250,7 @@ CONTAINS
 
          ! (24) read in the volumetric fraction of clay
          lndname = trim(landdir)//'/vf_clay_s_l'//trim(c)//'_patches.nc'
-         CALL ncio_read_vector (lndname, 'vf_clay_s_l'//trim(c)//'_patches', landpatch, soil_vf_clay_s_l, defval = 0.1)
+        !CALL ncio_read_vector (lndname, 'vf_clay_s_l'//trim(c)//'_patches', landpatch, soil_vf_clay_s_l, defval = 0.1)
 
 #endif
 
@@ -291,7 +291,7 @@ CONTAINS
                   vf_gravels (nsl,ipatch) = soil_vf_gravels_s_l       (ipatch)
                   vf_om      (nsl,ipatch) = soil_vf_om_s_l            (ipatch)
                   vf_sand    (nsl,ipatch) = soil_vf_sand_s_l          (ipatch)
-                  vf_clay    (nsl,ipatch) = soil_vf_clay_s_l          (ipatch)
+                 !vf_clay    (nsl,ipatch) = soil_vf_clay_s_l          (ipatch)
                   wf_gravels (nsl,ipatch) = soil_wf_gravels_s_l       (ipatch)
                   wf_sand    (nsl,ipatch) = soil_wf_sand_s_l          (ipatch)
                   OM_density (nsl,ipatch) = soil_OM_density_s_l       (ipatch)
@@ -373,7 +373,7 @@ CONTAINS
                vf_gravels (nsl,:) = vf_gravels(nsl-1,:)
                vf_om      (nsl,:) = vf_om     (nsl-1,:)
                vf_sand    (nsl,:) = vf_sand   (nsl-1,:)
-               vf_clay    (nsl,:) = vf_clay   (nsl-1,:)
+              !vf_clay    (nsl,:) = vf_clay   (nsl-1,:)
                wf_gravels (nsl,:) = wf_gravels(nsl-1,:)
                wf_sand    (nsl,:) = wf_sand   (nsl-1,:)
                OM_density (nsl,:) = OM_density(nsl-1,:)
@@ -403,7 +403,7 @@ CONTAINS
                vf_gravels (nsl,:) = vf_gravels(9,:)
                vf_om      (nsl,:) = vf_om     (9,:)
                vf_sand    (nsl,:) = vf_sand   (9,:)
-               vf_clay    (nsl,:) = vf_clay   (9,:)
+              !vf_clay    (nsl,:) = vf_clay   (9,:)
                wf_gravels (nsl,:) = wf_gravels(9,:)
                wf_sand    (nsl,:) = wf_sand   (9,:)
                OM_density (nsl,:) = OM_density(9,:)
