@@ -1000,7 +1000,7 @@ ENDIF
       CALL ncio_put_attr     (fsrfdata, 'soil_vf_quartz_mineral', 'source', source)
       CALL ncio_put_attr     (fsrfdata, 'soil_vf_gravels       ', 'source', source)
       CALL ncio_put_attr     (fsrfdata, 'soil_vf_sand          ', 'source', source)
-      CALL ncio_put_attr     (fsrfdata, 'soil_vf_clay          ', 'source', source)
+     !CALL ncio_put_attr     (fsrfdata, 'soil_vf_clay          ', 'source', source)
       CALL ncio_put_attr     (fsrfdata, 'soil_vf_om            ', 'source', source)
       CALL ncio_put_attr     (fsrfdata, 'soil_wf_gravels       ', 'source', source)
       CALL ncio_put_attr     (fsrfdata, 'soil_wf_sand          ', 'source', source)
