@@ -52,7 +52,7 @@ CONTAINS
    character(len=256) :: lndname
    character(len=256) :: cyear
 
-   integer :: i, u, m, l, lucy_id, ns, nr, ulev
+   integer :: i, u, m, l, lucy_id, ns, nr
 
    real(r8) :: thick_roof, thick_wall
 
@@ -218,7 +218,7 @@ ELSEIF (DEF_URBAN_type_scheme == 2) THEN
 #ifndef SinglePoint
             hlr  (u) = canyonhwr_lcz (landurban%settyp(u))  !average building height to their distance
             fgper(u) = wtperroad_lcz (landurban%settyp(u)) &
-                     / (1-wtroof_lcz (landurban%settyp(u)))!pervious fraction to ground area
+                     / (1-wtroof_lcz (landurban%settyp(u))) !pervious fraction to ground area
             fgper(u) = min(fgper(u), 1.)
 
             DO ns = 1,2
@@ -230,25 +230,19 @@ ELSEIF (DEF_URBAN_type_scheme == 2) THEN
                ENDDO
             ENDDO
 
-            em_roof(u) = emroof_lcz    (landurban%settyp(u)) !emissivity of roof
-            em_wall(u) = emwall_lcz    (landurban%settyp(u)) !emissivity of wall
-            em_gimp(u) = emimproad_lcz (landurban%settyp(u)) !emissivity of impervious
-            em_gper(u) = emperroad_lcz (landurban%settyp(u)) !emissivity of pervious
+            em_roof(u)   = emroof_lcz    (landurban%settyp(u)) !emissivity of roof
+            em_wall(u)   = emwall_lcz    (landurban%settyp(u)) !emissivity of wall
+            em_gimp(u)   = emimproad_lcz (landurban%settyp(u)) !emissivity of impervious
+            em_gper(u)   = emperroad_lcz (landurban%settyp(u)) !emissivity of pervious
 
-            DO ulev = 1, nl_roof
-               cv_roof(:,u) = cvroof_lcz (landurban%settyp(u)) !heat capacity of roof [J/(m2 K)]
-               tk_roof(:,u) = tkroof_lcz (landurban%settyp(u)) !thermal conductivity of roof [W/m-K]
-            ENDDO
+            cv_roof(:,u) = cvroof_lcz    (landurban%settyp(u)) !heat capacity of roof [J/(m2 K)]
+            tk_roof(:,u) = tkroof_lcz    (landurban%settyp(u)) !thermal conductivity of roof [W/m-K]
 
-            DO ulev = 1, nl_wall
-               cv_wall(:,u) = cvwall_lcz (landurban%settyp(u)) !heat capacity of wall [J/(m2 K)]
-               tk_wall(:,u) = tkwall_lcz (landurban%settyp(u)) !thermal conductivity of wall [W/m-K]
-            ENDDO
+            cv_wall(:,u) = cvwall_lcz    (landurban%settyp(u)) !heat capacity of wall [J/(m2 K)]
+            tk_wall(:,u) = tkwall_lcz    (landurban%settyp(u)) !thermal conductivity of wall [W/m-K]
 
-            DO ulev = 1, nl_soil
-               cv_gimp(:,u) = cvimproad_lcz (landurban%settyp(u)) !heat capacity of impervious [J/(m2 K)]
-               tk_gimp(:,u) = tkimproad_lcz (landurban%settyp(u)) !thermal conductivity of impervious [W/m-K]
-            ENDDO
+            cv_gimp(:,u) = cvimproad_lcz (landurban%settyp(u)) !heat capacity of impervious [J/(m2 K)]
+            tk_gimp(:,u) = tkimproad_lcz (landurban%settyp(u)) !thermal conductivity of impervious [W/m-K]
 
             thickroof(u) = thickroof_lcz (landurban%settyp(u)) !thickness of roof [m]
             thickwall(u) = thickwall_lcz (landurban%settyp(u)) !thickness of wall [m]
