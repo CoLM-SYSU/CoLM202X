@@ -116,6 +116,8 @@ PROGRAM CoLMINI
       CALL Init_LC_Const
       CALL Init_PFT_Const
 
+#ifndef SinglePoint
+
       CALL pixel%load_from_file  (dir_landdata)
       CALL gblock%load_from_file (dir_landdata)
       CALL mesh_load_from_file   (dir_landdata, lc_year)
@@ -129,15 +131,8 @@ PROGRAM CoLMINI
       CALL pixelset_load_from_file (dir_landdata, 'landpatch', landpatch, numpatch, lc_year)
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
-#ifdef SinglePoint
-      IF (patchtypes(SITE_landtype) == 0) THEN
-         CALL pixelset_load_from_file (dir_landdata, 'landpft', landpft, numpft, lc_year)
-         CALL map_patch_to_pft
-      ENDIF
-#else
       CALL pixelset_load_from_file (dir_landdata, 'landpft', landpft, numpft, lc_year)
       CALL map_patch_to_pft
-#endif
 #endif
 
 #ifdef URBAN_MODEL
@@ -149,6 +144,8 @@ PROGRAM CoLMINI
 #ifdef CATCHMENT
       CALL hru_vector_init ()
 #endif
+#endif
+
 #endif
 
       ! Read in SNICAR optical and aging parameters

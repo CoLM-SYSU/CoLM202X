@@ -1342,6 +1342,11 @@ CONTAINS
          write(*,*) 'Surface data diagnose is closed in SinglePoint case.'
 #undef SrfdataDiag
 #endif
+         IF (trim(DEF_Forcing_Interp_Method) == 'bilinear') THEN
+            DEF_Forcing_Interp_Method = 'arealweight'
+            write(*,*) '                  *****                  '
+            write(*,*) 'Bilinear interpolation is not supported in SinglePoint case.'
+         ENDIF
 #endif
 
 ! ----- Soil water and temperature Initialization ----- Namelist conflicts

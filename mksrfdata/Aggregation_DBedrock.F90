@@ -22,9 +22,6 @@ SUBROUTINE Aggregation_DBedrock ( &
    USE MOD_NetCDFBlock
    USE MOD_RangeCheck
    USE MOD_AggregationRequestData
-#ifdef SinglePoint
-   USE MOD_SingleSrfdata
-#endif
 
 #ifdef SrfdataDiag
    USE MOD_SrfdataDiag
@@ -60,12 +57,6 @@ SUBROUTINE Aggregation_DBedrock ( &
       ENDIF
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
-#endif
-
-#ifdef SinglePoint
-      IF (USE_SITE_dbedrock) THEN
-         RETURN
-      ENDIF
 #endif
 
       IF (p_is_io) THEN
@@ -104,7 +95,6 @@ SUBROUTINE Aggregation_DBedrock ( &
 #endif
 
       ! Write-out the depth of the pacth in the gridcell
-#ifndef SinglePoint
       lndname = trim(landdir)//'/dbedrock_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
       CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
@@ -115,10 +105,6 @@ SUBROUTINE Aggregation_DBedrock ( &
       lndname  = trim(dir_model_landdata) // '/diag/dbedrock_patch.nc'
       CALL srfdata_map_and_write (dbedrock_patches, landpatch%settyp, typpatch, m_patch2diag, &
          -1.0e36_r8, lndname, 'dbedrock', compress = 1, write_mode = 'one')
-#endif
-
-#else
-      SITE_dbedrock = dbedrock_patches(1)
 #endif
 
       IF (p_is_worker) THEN

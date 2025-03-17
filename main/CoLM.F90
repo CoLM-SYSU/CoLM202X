@@ -232,6 +232,7 @@ PROGRAM CoLM
       lc_year = DEF_LC_YEAR
 #endif
 
+#ifndef SinglePoint
       CALL mesh_load_from_file (dir_landdata, lc_year)
 
       CALL pixelset_load_from_file (dir_landdata, 'landelm'  , landelm  , numelm  , lc_year)
@@ -243,15 +244,8 @@ PROGRAM CoLM
       CALL pixelset_load_from_file (dir_landdata, 'landpatch', landpatch, numpatch, lc_year)
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
-#ifdef SinglePoint
-      IF (patchtypes(SITE_landtype) == 0) THEN
-         CALL pixelset_load_from_file (dir_landdata, 'landpft', landpft , numpft  , lc_year)
-         CALL map_patch_to_pft
-      ENDIF
-#else
       CALL pixelset_load_from_file (dir_landdata, 'landpft'  , landpft  , numpft  , lc_year)
       CALL map_patch_to_pft
-#endif
 #endif
 
 #ifdef URBAN_MODEL
@@ -268,6 +262,7 @@ PROGRAM CoLM
 
 #ifdef CatchLateralFlow
       CALL build_basin_network ()
+#endif
 #endif
 
       CALL adj2end(sdate)

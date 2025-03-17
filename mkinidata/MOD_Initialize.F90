@@ -77,6 +77,9 @@ CONTAINS
    USE MOD_PercentagesPFTReadin
    USE MOD_SoilParametersReadin
    USE MOD_SoilTextureReadin
+#ifdef SinglePoint
+   USE MOD_SingleSrfdata
+#endif
 #ifdef EXTERNAL_LAKE
    USE MOD_Lake_TimeVars
    USE MOD_Lake_Namelist, only: DEF_External_Lake
@@ -289,7 +292,12 @@ CONTAINS
 
          ENDDO
 
+#ifndef SinglePoint
          CALL landpatch%get_lonlat_radian (patchlonr, patchlatr)
+#else
+         patchlonr(:) = SITE_lon_location * pi/180. 
+         patchlatr(:) = SITE_lat_location * pi/180. 
+#endif
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
          IF (numpft > 0) pftclass = landpft%settyp
@@ -378,8 +386,8 @@ CONTAINS
 ! 1.5 Initialize topography data
 ! ................................
 #ifdef SinglePoint
-      topoelv(:) = SITE_topography
-      topostd(:) = SITE_topostd
+      topoelv(:) = SITE_elevation
+      topostd(:) = SITE_elvstd
 #else
       write(cyear,'(i4.4)') lc_year
       ftopo = trim(dir_landdata)//'/topography/'//trim(cyear)//'/topography_patches.nc'

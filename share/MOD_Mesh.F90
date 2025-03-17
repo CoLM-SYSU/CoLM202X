@@ -120,9 +120,6 @@ CONTAINS
    USE MOD_Utils
    USE MOD_DataType
    USE MOD_CatchmentDataReadin
-#ifdef SinglePoint
-   USE MOD_SingleSrfdata
-#endif
 
    IMPLICIT NONE
 
@@ -163,30 +160,6 @@ CONTAINS
 
    integer, allocatable :: elmindx(:), order(:)
 
-#ifdef SinglePoint
-
-      numelm = 1
-      allocate (mesh(1))
-      mesh(1)%indx = 1
-
-      mesh(1)%npxl = 1
-
-      allocate(mesh(1)%ilat(1))
-      mesh(1)%ilat(1) = find_nearest_south (SITE_lat_location, pixel%nlat, pixel%lat_s)
-
-      allocate(mesh(1)%ilon(1))
-      CALL normalize_longitude (SITE_lon_location)
-      mesh(1)%ilon(1) = find_nearest_west  (SITE_lon_location, pixel%nlon, pixel%lon_w)
-
-      mesh(1)%xblk = find_nearest_west  (pixel%lon_w(mesh(1)%ilon(1)), gblock%nxblk, gblock%lon_w)
-      mesh(1)%yblk = find_nearest_south (pixel%lat_s(mesh(1)%ilat(1)), gblock%nyblk, gblock%lat_s)
-
-      allocate(nelm_blk(gblock%nxblk,gblock%nyblk))
-      nelm_blk(:,:) = 0
-      nelm_blk(mesh(1)%xblk,mesh(1)%yblk) = 1
-
-      RETURN
-#endif
 
       IF (p_is_io) THEN
          CALL allocate_block_data (gridmesh, datamesh)

@@ -77,6 +77,9 @@ PROGRAM MKSRFDATA
 #ifdef SrfdataDiag
    USE MOD_SrfdataDiag, only: gdiag, srfdata_diag_init
 #endif
+#ifdef SinglePoint
+   USE MOD_SingleSrfdata
+#endif
 
    USE MOD_RegionClip
 
@@ -92,7 +95,7 @@ PROGRAM MKSRFDATA
    real(r8) :: edges  ! southern edge of grid (degrees)
    real(r8) :: edgew  ! western edge of grid (degrees)
 
-   type (grid_type) :: gsoil, gridlai, gtopo, grid_topo_factor
+   type (grid_type) :: grid_500m, grid_htop, grid_soil, grid_lai, grid_topo, grid_topo_factor
    type (grid_type) :: grid_urban_5km, grid_urban_500m
 
    integer   :: lc_year
@@ -115,7 +118,7 @@ PROGRAM MKSRFDATA
 #ifdef SinglePoint
 #ifndef URBAN_MODEL
 
-   CALL read_surface_data_single (SITE_fsitedata, mksrfdata=.true.)
+   CALL read_surface_data_single (SITE_fsitedata, mksrfdata = .true.)
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
    CALL write_surface_data_single (numpatch, numpft)
@@ -198,43 +201,51 @@ PROGRAM MKSRFDATA
 
    ! define grid coordinates of hydro units in catchment
 #ifdef CATCHMENT
-   CALL ghru%define_by_name ('merit_90m')
+   CALL grid_hru%define_by_name ('merit_90m')
 #endif
+
+   CALL grid_500m%define_by_name ('colm_500m')
 
    ! define grid coordinates of land types
 #ifdef LULC_USGS
-   CALL gpatch%define_by_name ('colm_1km')
+   CALL grid_patch%define_by_name ('colm_1km')
 #endif
 #ifdef LULC_IGBP
-   CALL gpatch%define_by_name ('colm_500m')
+   CALL grid_patch%define_by_name ('colm_500m')
 #endif
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
-   CALL gpatch%define_by_name ('colm_500m')
+   CALL grid_patch%define_by_name ('colm_500m')
 #endif
 #if (defined CROP)
    ! define grid for crop parameters
-   CALL gcrop%define_from_file (trim(DEF_dir_rawdata)//'/global_CFT_surface_data.nc', 'lat', 'lon')
+   CALL grid_crop%define_from_file (trim(DEF_dir_rawdata)//'/global_CFT_surface_data.nc', 'lat', 'lon')
+#endif
+
+   ! define grid for forest height
+#ifdef LULC_USGS
+   CALL grid_htop%define_by_name ('colm_1km')
+#else
+   CALL grid_htop%define_by_name ('colm_500m')
 #endif
 
    ! define grid for soil parameters raw data
-   CALL gsoil%define_by_name ('colm_500m')
+   CALL grid_soil%define_by_name ('colm_500m')
 
    ! define grid for LAI raw data
-   CALL gridlai%define_by_name ('colm_500m')
+   CALL grid_lai%define_by_name ('colm_500m')
 
    ! define grid for topography
-   CALL gtopo%define_by_name ('colm_500m')
+   CALL grid_topo%define_by_name ('colm_500m')
 
    ! define grid for topography factors
    IF (DEF_USE_Forcing_Downscaling) THEN
-      !CALL grid_topo_factor%define_by_name ('merit_90m')
       lndname = trim(DEF_DS_HiresTopographyDataDir) // '/slope.nc'
       CALL grid_topo_factor%define_from_file (lndname,"lat","lon")
    ENDIF
 
    ! add by dong, only test for making urban data
 #ifdef URBAN_MODEL
-   CALL gurban%define_by_name          ('colm_500m')
+   CALL grid_urban%define_by_name      ('colm_500m')
    CALL grid_urban_500m%define_by_name ('colm_500m')
    CALL grid_urban_5km%define_by_name  ('colm_5km' )
 #endif
@@ -247,26 +258,27 @@ PROGRAM MKSRFDATA
       CALL pixel%assimilate_grid (grid_filter)
    ENDIF
 #ifdef CATCHMENT
-   CALL pixel%assimilate_grid (ghru)
+   CALL pixel%assimilate_grid (grid_hru  )
 #endif
-   CALL pixel%assimilate_grid (gpatch)
-   CALL pixel%assimilate_grid (gsoil)
-   CALL pixel%assimilate_grid (gridlai)
-
-#ifdef URBAN_MODEL
-   CALL pixel%assimilate_grid (gurban         )
-   CALL pixel%assimilate_grid (grid_urban_500m)
-   CALL pixel%assimilate_grid (grid_urban_5km )
-#endif
+   CALL pixel%assimilate_grid (grid_500m )
+   CALL pixel%assimilate_grid (grid_patch)
 #if (defined CROP)
-   CALL pixel%assimilate_grid (gcrop )
+   CALL pixel%assimilate_grid (grid_crop )
 #endif
-
-   CALL pixel%assimilate_grid (gtopo)
+   CALL pixel%assimilate_grid (grid_htop )
+   CALL pixel%assimilate_grid (grid_soil )
+   CALL pixel%assimilate_grid (grid_lai  )
+   CALL pixel%assimilate_grid (grid_topo )
 
    IF (DEF_USE_Forcing_Downscaling) THEN
       CALL pixel%assimilate_grid (grid_topo_factor)
    ENDIF
+
+#ifdef URBAN_MODEL
+   CALL pixel%assimilate_grid (grid_urban     )
+   CALL pixel%assimilate_grid (grid_urban_500m)
+   CALL pixel%assimilate_grid (grid_urban_5km )
+#endif
 
    ! map pixels to grid coordinates
 #ifndef SinglePoint
@@ -276,26 +288,28 @@ PROGRAM MKSRFDATA
       CALL pixel%map_to_grid (grid_filter)
    ENDIF
 #ifdef CATCHMENT
-   CALL pixel%map_to_grid (ghru)
+   CALL pixel%map_to_grid (grid_hru  )
 #endif
-   CALL pixel%map_to_grid (gpatch)
-   CALL pixel%map_to_grid (gsoil)
-   CALL pixel%map_to_grid (gridlai)
-
-#ifdef URBAN_MODEL
-   CALL pixel%map_to_grid (gurban         )
-   CALL pixel%map_to_grid (grid_urban_500m)
-   CALL pixel%map_to_grid (grid_urban_5km )
-#endif
+   CALL pixel%map_to_grid (grid_500m )
+   CALL pixel%map_to_grid (grid_patch)
 #if (defined CROP)
-   CALL pixel%map_to_grid (gcrop )
+   CALL pixel%map_to_grid (grid_crop )
 #endif
-
-   CALL pixel%map_to_grid (gtopo)
+   CALL pixel%map_to_grid (grid_htop )
+   CALL pixel%map_to_grid (grid_soil )
+   CALL pixel%map_to_grid (grid_lai  )
+   CALL pixel%map_to_grid (grid_topo )
 
    IF (DEF_USE_Forcing_Downscaling) THEN
       CALL pixel%map_to_grid (grid_topo_factor)
    ENDIF
+
+#ifdef URBAN_MODEL
+   CALL pixel%map_to_grid (grid_urban     )
+   CALL pixel%map_to_grid (grid_urban_500m)
+   CALL pixel%map_to_grid (grid_urban_5km )
+#endif
+
 
    ! build land elms
    CALL mesh_build ()
@@ -310,7 +324,7 @@ PROGRAM MKSRFDATA
 #else
       lndname = trim(DEF_dir_rawdata)//'/landtypes/landtype-usgs-update.nc'
 #endif
-      CALL mesh_filter (gpatch, lndname, 'landtype')
+      CALL mesh_filter (grid_patch, lndname, 'landtype')
    ENDIF
 #endif
 
@@ -380,23 +394,23 @@ PROGRAM MKSRFDATA
 
    !TODO: for lulcc, need to run for each year and SAVE to different subdirs
 
-   CALL Aggregation_PercentagesPFT  (gpatch , dir_rawdata, dir_landdata, lc_year)
+   CALL Aggregation_PercentagesPFT  (grid_500m, dir_rawdata, dir_landdata, lc_year)
 
-   CALL Aggregation_LakeDepth       (gpatch , dir_rawdata, dir_landdata, lc_year)
+   CALL Aggregation_LakeDepth       (grid_500m, dir_rawdata, dir_landdata, lc_year)
 
-   CALL Aggregation_SoilParameters  (gsoil,   dir_rawdata, dir_landdata, lc_year)
+   CALL Aggregation_SoilParameters  (grid_soil, dir_rawdata, dir_landdata, lc_year)
 
-   CALL Aggregation_SoilBrightness  (gpatch , dir_rawdata, dir_landdata, lc_year)
+   CALL Aggregation_SoilBrightness  (grid_500m, dir_rawdata, dir_landdata, lc_year)
 
    IF (DEF_USE_BEDROCK) THEN
-      CALL Aggregation_DBedrock     (gpatch , dir_rawdata, dir_landdata)
+      CALL Aggregation_DBedrock     (grid_500m, dir_rawdata, dir_landdata)
    ENDIF
 
-   CALL Aggregation_LAI             (gridlai, dir_rawdata, dir_landdata, lc_year)
+   CALL Aggregation_LAI             (grid_lai,  dir_rawdata, dir_landdata, lc_year)
 
-   CALL Aggregation_ForestHeight    (gpatch , dir_rawdata, dir_landdata, lc_year)
+   CALL Aggregation_ForestHeight    (grid_htop, dir_rawdata, dir_landdata, lc_year)
 
-   CALL Aggregation_Topography      (gtopo  , dir_rawdata, dir_landdata, lc_year)
+   CALL Aggregation_Topography      (grid_topo, dir_rawdata, dir_landdata, lc_year)
 
    IF (DEF_USE_Forcing_Downscaling) THEN
       CALL Aggregation_TopographyFactors (grid_topo_factor, &
@@ -408,7 +422,7 @@ PROGRAM MKSRFDATA
                            grid_urban_5km, grid_urban_500m)
 #endif
 
-   CALL Aggregation_SoilTexture (gsoil, dir_rawdata, dir_landdata, lc_year)
+   CALL Aggregation_SoilTexture     (grid_soil, dir_rawdata, dir_landdata, lc_year)
 
 ! ................................................................
 ! 4. Free memories.

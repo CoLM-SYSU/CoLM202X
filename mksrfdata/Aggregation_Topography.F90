@@ -65,12 +65,6 @@ SUBROUTINE Aggregation_Topography ( &
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-#ifdef SinglePoint
-      IF (USE_SITE_topography) THEN
-         RETURN
-      ENDIF
-#endif
-
       lndname = trim(dir_rawdata)//'/elevation.nc'
 
       IF (p_is_io) THEN
@@ -127,7 +121,6 @@ SUBROUTINE Aggregation_Topography ( &
       CALL check_vector_data ('topostd_patches    ', topostd_patches   )
 #endif
 
-#ifndef SinglePoint
       lndname = trim(landdir)//'/topography_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
       CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
@@ -180,10 +173,6 @@ SUBROUTINE Aggregation_Topography ( &
          -1.0e36_r8, lndname, 'topostd_elm', compress = 1, write_mode = 'one')
 
       IF (allocated(topostd_elm)) deallocate(topostd_elm)
-#endif
-#else
-      SITE_topography = topography_patches(1)
-      SITE_topostd    = topostd_patches   (1)
 #endif
 
       IF (p_is_worker) THEN

@@ -39,14 +39,8 @@ SUBROUTINE Aggregation_LakeDepth ( &
 #ifdef RangeCheck
    USE MOD_RangeCheck
 #endif
-
    USE MOD_AggregationRequestData
-
    USE MOD_Utils
-#ifdef SinglePoint
-   USE MOD_SingleSrfdata
-#endif
-
 #ifdef SrfdataDiag
    USE MOD_SrfdataDiag
 #endif
@@ -82,12 +76,6 @@ SUBROUTINE Aggregation_LakeDepth ( &
       ENDIF
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
-#endif
-
-#ifdef SinglePoint
-      IF (USE_SITE_lakedepth) THEN
-         RETURN
-      ENDIF
 #endif
 
 ! ................................................
@@ -137,7 +125,6 @@ SUBROUTINE Aggregation_LakeDepth ( &
       CALL check_vector_data ('lakedepth_patches ', lakedepth_patches)
 #endif
 
-#ifndef SinglePoint
       lndname = trim(landdir)//'/lakedepth_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
       CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
@@ -148,10 +135,6 @@ SUBROUTINE Aggregation_LakeDepth ( &
       CALL srfdata_map_and_write (lakedepth_patches, landpatch%settyp, typlake, m_patch2diag, &
          -1.0e36_r8, lndname, 'lakedepth', compress = 1, write_mode = 'one')
 #endif
-#else
-      SITE_lakedepth = lakedepth_patches(1)
-#endif
-
 
       IF (p_is_worker) THEN
          deallocate ( lakedepth_patches )

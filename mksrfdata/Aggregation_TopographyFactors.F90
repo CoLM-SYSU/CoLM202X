@@ -116,17 +116,6 @@ SUBROUTINE Aggregation_TopographyFactors ( &
    CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-#ifdef SinglePoint
-   IF (USE_SITE_topography) THEN
-      RETURN
-   ELSE
-      allocate (SITE_slp_type  (num_slope_type))
-      allocate (SITE_asp_type  (num_slope_type))
-      allocate (SITE_area_type (num_slope_type))
-      allocate (SITE_sf_lut    (num_azimuth, num_zenith))
-   ENDIF
-#endif
-
    ! -------------------------------------------------------------------
    ! read topography-based factor data
    ! -------------------------------------------------------------------
@@ -366,7 +355,6 @@ SUBROUTINE Aggregation_TopographyFactors ( &
    CALL check_vector_data ('sf_lut_patches    ', sf_lut_patches   )
 #endif
 
-#ifndef SinglePoint
 ! Reduce the dimension of the shadow factor array
 ! Construct a new array with dimensions of sf_curve_patches(azimuth, shadow factor parameters, patches)
    allocate(sf_curve_patches(num_azimuth,num_zenith_parameter,numpatch))
@@ -430,9 +418,7 @@ SUBROUTINE Aggregation_TopographyFactors ( &
       ENDDO
    ENDDO
 
-#endif
 
-#ifndef SinglePoint
    lndname = trim(landdir)//'/svf_patches.nc'
    CALL ncio_create_file_vector (lndname, landpatch)
    CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
@@ -506,20 +492,6 @@ SUBROUTINE Aggregation_TopographyFactors ( &
       ENDDO
    ENDDO
 #endif
-#else
-   ! factors for site
-   allocate ( SITE_slp_type  (num_slope_type) )
-   allocate ( SITE_asp_type  (num_slope_type) )
-   allocate ( SITE_area_type (num_slope_type) )
-   allocate ( SITE_sf_lut    (num_azimuth, num_zenith) )
-   SITE_svf       = svf_patches(1)
-   SITE_cur       = cur_patches(1)
-   SITE_slp_type  = slp_type_patches (:,1)
-   SITE_asp_type  = asp_type_patches (:,1)
-   SITE_area_type = area_type_patches(:,1)
-   SITE_sf_lut    = sf_lut_patches (:,:,1)
-#endif
-
 
    IF (p_is_worker) THEN
       IF (allocated(slp_type_patches)) deallocate ( slp_type_patches )

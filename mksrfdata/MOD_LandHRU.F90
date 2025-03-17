@@ -29,7 +29,7 @@ MODULE MOD_LandHRU
 
    ! ---- Instance ----
    integer :: numhru
-   type(grid_type)     :: ghru
+   type(grid_type)     :: grid_hru
    type(pixelset_type) :: landhru
 
    type(subset_type) :: elm_hru
@@ -122,12 +122,12 @@ CONTAINS
          IF (allocated(numhru_all_g)) deallocate(numhru_all_g)
       ENDIF
 
-      IF (p_is_io) CALL allocate_block_data (ghru, hrudata)
-      CALL catchment_data_read (DEF_CatchmentMesh_data, 'ihydrounit2d', ghru, hrudata)
+      IF (p_is_io) CALL allocate_block_data (grid_hru, hrudata)
+      CALL catchment_data_read (DEF_CatchmentMesh_data, 'ihydrounit2d', grid_hru, hrudata)
 
 #ifdef USEMPI
       IF (p_is_io) THEN
-         CALL aggregation_data_daemon (ghru, data_i4_2d_in1 = hrudata)
+         CALL aggregation_data_daemon (grid_hru, data_i4_2d_in1 = hrudata)
       ENDIF
 #endif
 
@@ -155,7 +155,7 @@ CONTAINS
 
             allocate (types (1:npxl))
 
-            CALL aggregation_request_data (landelm, ie, ghru, zip = .false., &
+            CALL aggregation_request_data (landelm, ie, grid_hru, zip = .false., &
                data_i4_2d_in1 = hrudata, data_i4_2d_out1 = ibuff)
 
             types = ibuff
