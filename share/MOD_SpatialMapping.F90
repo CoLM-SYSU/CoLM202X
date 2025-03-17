@@ -147,13 +147,22 @@ CONTAINS
 
       ENDIF
 
+      allocate (this%grid%xblk (size(fgrid%xblk)));  this%grid%xblk = fgrid%xblk
+      allocate (this%grid%yblk (size(fgrid%yblk)));  this%grid%yblk = fgrid%yblk
+      allocate (this%grid%xloc (size(fgrid%xloc)));  this%grid%xloc = fgrid%xloc
+      allocate (this%grid%yloc (size(fgrid%yloc)));  this%grid%yloc = fgrid%yloc
+      allocate (this%grid%xcnt (size(fgrid%xcnt)));  this%grid%xcnt = fgrid%xcnt
+      allocate (this%grid%ycnt (size(fgrid%ycnt)));  this%grid%ycnt = fgrid%ycnt
 
 #ifdef SinglePoint
       allocate (this%glist (0:0))
       allocate (this%glist(0)%ilat (1))
       allocate (this%glist(0)%ilon (1))
-      allocate (this%npart (pixelset%nset))
+
+      allocate (this%npart   (pixelset%nset))
       allocate (this%address (pixelset%nset))
+      allocate (this%areapset(pixelset%nset))
+      allocate (this%areapart(pixelset%nset))
       DO iset = 1, pixelset%nset
          allocate (this%address(iset)%val (2,1))
          allocate (this%areapart(iset)%val  (1))
@@ -164,7 +173,8 @@ CONTAINS
       this%glist(0)%ilon(1) = find_nearest_west  (SITE_lon_location, fgrid%nlon, fgrid%lon_w)
 
       this%npset = pixelset%nset
-      this%npart(:) = 1
+      this%npart   (:) = 1
+      this%areapset(:) = 1.
       
       DO iset = 1, pixelset%nset
          this%address(iset)%val  = reshape((/0,1/), (/2,1/))
@@ -181,13 +191,6 @@ CONTAINS
       RETURN
 #endif
 
-
-      allocate (this%grid%xblk (size(fgrid%xblk)));  this%grid%xblk = fgrid%xblk
-      allocate (this%grid%yblk (size(fgrid%yblk)));  this%grid%yblk = fgrid%yblk
-      allocate (this%grid%xloc (size(fgrid%xloc)));  this%grid%xloc = fgrid%xloc
-      allocate (this%grid%yloc (size(fgrid%yloc)));  this%grid%yloc = fgrid%yloc
-      allocate (this%grid%xcnt (size(fgrid%xcnt)));  this%grid%xcnt = fgrid%xcnt
-      allocate (this%grid%ycnt (size(fgrid%ycnt)));  this%grid%ycnt = fgrid%ycnt
 
       IF (p_is_worker) THEN
 

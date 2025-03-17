@@ -501,9 +501,6 @@ CONTAINS
    integer  :: ilat, ilon, iblk, jblk, ilon_e
    real(r8) :: edges, edgen, edgew, edgee
 
-#ifdef SinglePoint
-      RETURN
-#endif
 
       IF (allocated(this%xcnt)) deallocate(this%xcnt)
       IF (allocated(this%xdsp)) deallocate(this%xdsp)

@@ -223,9 +223,6 @@ PROGRAM CoLM
       CALL Init_LC_Const
       CALL Init_PFT_Const
 
-      CALL pixel%load_from_file    (dir_landdata)
-      CALL gblock%load_from_file   (dir_landdata)
-
 #ifdef LULCC
       lc_year = s_year
 #else
@@ -233,6 +230,9 @@ PROGRAM CoLM
 #endif
 
 #ifndef SinglePoint
+      CALL pixel%load_from_file    (dir_landdata)
+      CALL gblock%load_from_file   (dir_landdata)
+
       CALL mesh_load_from_file (dir_landdata, lc_year)
 
       CALL pixelset_load_from_file (dir_landdata, 'landelm'  , landelm  , numelm  , lc_year)
