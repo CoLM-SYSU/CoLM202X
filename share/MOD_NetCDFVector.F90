@@ -28,9 +28,6 @@
 !  Created by Shupeng Zhang, May 2023
 !----------------------------------------------------------------------------------
 
-! Put vector in separated files.
-#if (!defined(VectorInOneFileS) && !defined(VectorInOneFileP))
-
 MODULE MOD_NetCDFVector
 
 
@@ -1610,5 +1607,3 @@ CONTAINS
    END SUBROUTINE ncio_write_vector_real8_4d
 
 END MODULE MOD_NetCDFVector
-
-#endif

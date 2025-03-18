@@ -32,9 +32,10 @@ MODULE MOD_HistWriteBack
    ! type of times
    type :: timenodetype
       character(len=256) :: filename
+      character(len=256) :: filelast
       character(len=256) :: timename
       integer :: time(3)
-      integer :: req (3)
+      integer :: req (4)
       type(timenodetype), pointer :: next
    END type timenodetype
 
@@ -92,7 +93,7 @@ CONTAINS
    character(len=256)    :: recvchar (9)
    real(r8), allocatable :: datathis (:)
 
-   character(len=256)    :: filename, dataname, longname, units
+   character(len=256)    :: filename, filelast, dataname, longname, units
    character(len=256)    :: dim1name, dim2name, dim3name, dim4name, dim5name
    logical               :: fexists
 
@@ -111,6 +112,9 @@ CONTAINS
          ELSEIF (dataid == 0) THEN
 
             CALL mpi_recv (filename, 256, MPI_CHARACTER, &
+               MPI_ANY_SOURCE, tag_time, p_comm_glb_plus, p_stat, p_err)
+
+            CALL mpi_recv (filelast, 256, MPI_CHARACTER, &
                MPI_ANY_SOURCE, tag_time, p_comm_glb_plus, p_stat, p_err)
 
             CALL mpi_recv (dataname, 256, MPI_CHARACTER, &
@@ -182,7 +186,7 @@ CONTAINS
             ENDIF
 
             inquire (file=filename, exist=fexists)
-            IF (.not. fexists) THEN
+            IF ((.not. fexists) .or. (trim(filename) /= trim(filelast))) THEN
 
                CALL ncio_create_file (trim(filename))
 
@@ -371,13 +375,14 @@ CONTAINS
    END SUBROUTINE hist_writeback_daemon
 
    ! -----
-   SUBROUTINE hist_writeback_latlon_time (filename, timename, time, HistConcat)
+   SUBROUTINE hist_writeback_latlon_time (filename, filelast, timename, time, HistConcat)
 
    USE MOD_Namelist
    USE MOD_Grid
    IMPLICIT NONE
 
    character (len=*), intent(in) :: filename
+   character (len=*), intent(in) :: filelast
    character (len=*), intent(in) :: timename
    integer, intent(in)  :: time(3)
    type(grid_concat_type), intent(in) :: HistConcat
@@ -385,7 +390,7 @@ CONTAINS
    ! Local Variables
    integer :: i
 
-      CALL hist_writeback_append_timenodes (filename, timename, time)
+      CALL hist_writeback_append_timenodes (filename, filelast, timename, time)
 
       CALL mpi_isend (dataid_zero, 1, MPI_INTEGER, &
          p_address_writeback, tag_next, p_comm_glb_plus, req_zero, p_err)
@@ -393,11 +398,14 @@ CONTAINS
       CALL mpi_isend (lasttime%filename, 256, MPI_CHARACTER, &
          p_address_writeback, tag_time, p_comm_glb_plus, lasttime%req(1), p_err)
 
-      CALL mpi_isend (lasttime%timename, 256, MPI_CHARACTER, &
+      CALL mpi_isend (lasttime%filelast, 256, MPI_CHARACTER, &
          p_address_writeback, tag_time, p_comm_glb_plus, lasttime%req(2), p_err)
 
-      CALL mpi_isend (lasttime%time, 3, MPI_INTEGER, &
+      CALL mpi_isend (lasttime%timename, 256, MPI_CHARACTER, &
          p_address_writeback, tag_time, p_comm_glb_plus, lasttime%req(3), p_err)
+
+      CALL mpi_isend (lasttime%time, 3, MPI_INTEGER, &
+         p_address_writeback, tag_time, p_comm_glb_plus, lasttime%req(4), p_err)
 
 
       IF (.not. SDimInited) THEN
@@ -460,11 +468,12 @@ CONTAINS
    END SUBROUTINE hist_writeback_latlon_time
 
    ! -----
-   SUBROUTINE hist_writeback_append_timenodes (filename, timename, time)
+   SUBROUTINE hist_writeback_append_timenodes (filename, filelast, timename, time)
 
    IMPLICIT NONE
 
    character (len=*), intent(in) :: filename
+   character (len=*), intent(in) :: filelast
    character (len=*), intent(in) :: timename
    integer, intent(in)  :: time(3)
 
@@ -477,6 +486,7 @@ CONTAINS
       ENDIF
 
       lasttime%filename = filename
+      lasttime%filelast = filelast
       lasttime%timename = timename
       lasttime%time = time
       lasttime%next => null()
@@ -496,7 +506,7 @@ CONTAINS
 
       DO WHILE (associated(timenodes%next))
 
-         CALL MPI_TestAll (3, timenodes%req, senddone, stat, p_err)
+         CALL MPI_TestAll (4, timenodes%req, senddone, stat, p_err)
 
          IF (senddone) THEN
             tempnode  => timenodes
@@ -686,7 +696,7 @@ CONTAINS
       lasttime => null()
       DO WHILE (associated(timenodes))
 
-         CALL MPI_WaitAll (3, timenodes%req, p_stat, p_err)
+         CALL MPI_WaitAll (4, timenodes%req, p_stat, p_err)
 
          tempnode  => timenodes
          timenodes => timenodes%next

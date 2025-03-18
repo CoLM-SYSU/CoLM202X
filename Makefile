@@ -33,20 +33,19 @@ OBJS_SHARED =    \
 				  MOD_Utils.o                  \
 				  MOD_UserDefFun.o             \
 				  MOD_TimeManager.o            \
+				  MOD_Const_PFT.o              \
 				  MOD_NetCDFSerial.o           \
-				  MOD_SingleSrfdata.o          \
 				  MOD_Block.o                  \
 				  MOD_Grid.o                   \
 				  MOD_Pixel.o                  \
 				  MOD_DataType.o               \
+				  MOD_NetCDFPoint.o            \
 				  MOD_NetCDFBlock.o            \
 				  MOD_CatchmentDataReadin.o    \
 				  MOD_5x5DataReadin.o          \
 				  MOD_Mesh.o                   \
 				  MOD_Pixelset.o               \
-				  MOD_NetCDFVectorBlk.o        \
-				  MOD_NetCDFVectorOneS.o       \
-				  MOD_NetCDFVectorOneP.o       \
+				  MOD_NetCDFVector.o           \
 				  MOD_RangeCheck.o             \
 				  MOD_SpatialMapping.o         \
 				  MOD_AggregationRequestData.o \
@@ -54,9 +53,10 @@ OBJS_SHARED =    \
 				  MOD_LandElm.o                \
 				  MOD_LandHRU.o                \
 				  MOD_LandPatch.o              \
-				  MOD_LandUrban.o              \
 				  MOD_LandCrop.o               \
 				  MOD_LandPFT.o                \
+				  MOD_SingleSrfdata.o          \
+				  MOD_LandUrban.o              \
 				  MOD_SrfdataDiag.o            \
 				  MOD_SrfdataRestart.o         \
 				  MOD_ElmVector.o              \
@@ -113,7 +113,6 @@ OBJS_BASIC =    \
 				 MOD_Urban_Vars_1DFluxes.o      \
 				 MOD_Urban_Vars_TimeVariables.o \
 				 MOD_Urban_Vars_TimeInvariants.o\
-				 MOD_Const_PFT.o                \
 				 MOD_Vars_TimeInvariants.o      \
 				 MOD_Vars_TimeVariables.o       \
 				 MOD_Vars_1DPFTFluxes.o         \

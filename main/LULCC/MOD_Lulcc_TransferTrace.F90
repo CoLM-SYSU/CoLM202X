@@ -112,19 +112,19 @@ CONTAINS
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-      CALL gpatch%define_by_name ('colm_500m')
-      CALL pixel%assimilate_grid (gpatch)
-      CALL pixel%map_to_grid (gpatch)
+      CALL grid_patch%define_by_name ('colm_500m')
+      CALL pixel%assimilate_grid (grid_patch)
+      CALL pixel%map_to_grid (grid_patch)
 
       IF (p_is_io) THEN
-         CALL allocate_block_data (gpatch, lcdatafr)
+         CALL allocate_block_data (grid_patch, lcdatafr)
          dir_5x5 = trim(DEF_dir_rawdata) // '/plant_15s'
          suffix  = 'MOD'//trim(lastyr)
          ! read the previous year land cover data
-         CALL read_5x5_data (dir_5x5, suffix, gpatch, 'LC', lcdatafr)
+         CALL read_5x5_data (dir_5x5, suffix, grid_patch, 'LC', lcdatafr)
 
 #ifdef USEMPI
-         CALL aggregation_data_daemon (gpatch, data_i4_2d_in1 = lcdatafr)
+         CALL aggregation_data_daemon (grid_patch, data_i4_2d_in1 = lcdatafr)
 #endif
       ENDIF
 
@@ -168,7 +168,7 @@ CONTAINS
                ENDIF
 
                ! using this year patch mapping to aggregate the previous year land cover data
-               CALL aggregation_request_data (landpatch, ipatch, gpatch, zip = .true., area = area_one, &
+               CALL aggregation_request_data (landpatch, ipatch, grid_patch, zip = .true., area = area_one, &
                                               data_i4_2d_in1 = lcdatafr, data_i4_2d_out1 = lcdatafr_one)
 
                ipxstt = landpatch%ipxstt(ipatch)

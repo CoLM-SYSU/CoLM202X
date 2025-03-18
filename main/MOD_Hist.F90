@@ -39,6 +39,8 @@ MODULE MOD_Hist
 
    character(len=10) :: HistForm ! 'Gridded', 'Vector', 'Single'
 
+   character(len=256) :: file_last = 'null'
+
 !--------------------------------------------------------------------------
 CONTAINS
 
@@ -231,7 +233,9 @@ CONTAINS
 
          file_hist = trim(dir_hist) // '/' // trim(site) //'_hist_'//trim(cdate)//'.nc'
 
-         CALL hist_write_time (file_hist, 'time', idate, itime_in_file)
+         CALL hist_write_time (file_hist, file_last, 'time', idate, itime_in_file)
+
+         file_last = file_hist
 
          IF (p_is_worker) THEN
             IF (numpatch > 0) THEN
@@ -4162,25 +4166,26 @@ CONTAINS
    END SUBROUTINE write_history_variable_ln
 
 
-   SUBROUTINE hist_write_time (filename, dataname, time, itime)
+   SUBROUTINE hist_write_time (filename, filelast, dataname, time, itime)
 
    IMPLICIT NONE
 
    character (len=*), intent(in) :: filename
+   character (len=*), intent(in) :: filelast
    character (len=*), intent(in) :: dataname
    integer, intent(in)  :: time(3)
    integer, intent(out) :: itime
 
       select CASE (HistForm)
       CASE ('Gridded')
-         CALL hist_gridded_write_time (filename, dataname, time, itime)
+         CALL hist_gridded_write_time (filename, filelast, dataname, time, itime)
 #if (defined UNSTRUCTURED || defined CATCHMENT)
       CASE ('Vector')
-         CALL hist_vector_write_time  (filename, dataname, time, itime)
+         CALL hist_vector_write_time  (filename, filelast, dataname, time, itime)
 #endif
 #ifdef SinglePoint
       CASE ('Single')
-         CALL hist_single_write_time  (filename, dataname, time, itime)
+         CALL hist_single_write_time  (filename, filelast, dataname, time, itime)
 #endif
       END select
 

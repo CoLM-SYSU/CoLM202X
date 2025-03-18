@@ -52,6 +52,22 @@ MODULE MOD_Const_LC
 !23  Bare Ground Tundra
 !24  Snow or Ice
 
+   character(len=256) :: patchclassname (0:N_land_classification) = &
+      (/'0 Ocean                                       ', '1  Urban and Built-Up Land                    ', &
+        '2 Dryland Cropland and Pasture                ', '3 Irrigated Cropland and Pasture              ', &
+        '4 Mixed Dryland/Irrigated Cropland and Pasture', '5 Cropland/Grassland Mosaic                   ', &
+        '6 Cropland/Woodland Mosaic                    ', '7 Grassland                                   ', &
+        '8 Shrubland                                   ', '9 Mixed Shrubland/Grassland                   ', &
+        '10 Savanna                                    ', '11 Deciduous Broadleaf Forest                 ', &
+        '12 Deciduous Needleleaf Forest                ', '13 Evergreen Broadleaf Forest                 ', &
+        '14 Evergreen Needleleaf Forest                ', '15 Mixed Forest                               ', &
+        '16 Inland Water                               ', '17 Herbaceous Wetland                         ', &
+        '18 Wooded Wetland                             ', '19 Barren or Sparsely Vegetated               ', &
+        '20 Herbaceous Tundra                          ', '21 Wooded Tundra                              ', &
+        '22 Mixed Tundra                               ', '23 Bare Ground Tundra                         ', &
+        '24 Snow or Ice                                '/)
+
+
    ! land patch types
    ! 0: soil, 1: urban, 2: wetland, 3: ice, 4: lake
    integer , parameter, dimension(N_land_classification) :: patchtypes_usgs &
@@ -348,6 +364,17 @@ MODULE MOD_Const_LC
 !15  Permanent Snow and Ice
 !16  Barren
 !17  Water Bodies
+
+   character(len=256) :: patchclassname (0:N_land_classification) = &
+      (/'0 Ocean                               ', '1 Evergreen Needleleaf Forests        ', &
+        '2 Evergreen Broadleaf Forests         ', '3 Deciduous Needleleaf Forests        ', &
+        '4 Deciduous Broadleaf Forests         ', '5 Mixed Forests                       ', &
+        '6 Closed Shrublands                   ', '7 Open Shrublands                     ', &
+        '8 Woody Savannas                      ', '9 Savannas                            ', &
+        '10 Grasslands                         ', '11 Permanent Wetlands                 ', &
+        '12 Croplands                          ', '13 Urban and Built-up Lands           ', &
+        '14 Cropland/Natural Vegetation Mosaics', '15 Permanent Snow and Ice             ', &
+        '16 Barren                             ', '17 Water Bodies                       ' /)
 
    ! land patch types
    ! 0: soil, 1: urban, 2: wetland, 3: ice, 4: lake

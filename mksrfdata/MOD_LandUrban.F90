@@ -25,7 +25,7 @@ MODULE MOD_LandUrban
    IMPLICIT NONE
 
    ! ---- Instance ----
-   type(grid_type) :: gurban
+   type(grid_type) :: grid_urban
 
    integer :: numurban
    type(pixelset_type) :: landurban
@@ -106,19 +106,19 @@ CONTAINS
 
          dir_urban = trim(DEF_dir_rawdata) // '/urban_type'
 
-         CALL allocate_block_data (gurban, data_urb_class)
+         CALL allocate_block_data (grid_urban, data_urb_class)
          CALL flush_block_data (data_urb_class, 0)
 
          ! read urban type data
          suffix = 'URBTYP'
 IF (DEF_URBAN_type_scheme == 1) THEN
-         CALL read_5x5_data (dir_urban, suffix, gurban, 'URBAN_DENSITY_CLASS', data_urb_class)
+         CALL read_5x5_data (dir_urban, suffix, grid_urban, 'URBAN_DENSITY_CLASS', data_urb_class)
 ELSE IF (DEF_URBAN_type_scheme == 2) THEN
-         CALL read_5x5_data (dir_urban, suffix, gurban, 'LCZ_DOM', data_urb_class)
+         CALL read_5x5_data (dir_urban, suffix, grid_urban, 'LCZ_DOM', data_urb_class)
 ENDIF
 
 #ifdef USEMPI
-         CALL aggregation_data_daemon (gurban, data_i4_2d_in1 = data_urb_class)
+         CALL aggregation_data_daemon (grid_urban, data_i4_2d_in1 = data_urb_class)
 #endif
       ENDIF
 
@@ -152,7 +152,7 @@ ENDIF
                ipxstt = landpatch%ipxstt(ipatch)
                ipxend = landpatch%ipxend(ipatch)
 
-               CALL aggregation_request_data (landpatch, ipatch, gurban, zip = .false., area = area_one, &
+               CALL aggregation_request_data (landpatch, ipatch, grid_urban, zip = .false., area = area_one, &
                   data_i4_2d_in1 = data_urb_class, data_i4_2d_out1 = ibuff)
 
                ! when there is missing urban types

@@ -330,7 +330,7 @@ CONTAINS
          ncio_var_exist = .false.
       ENDIF
 
-      IF (.not. ncio_var_exist) THEN
+      IF ((.not. ncio_var_exist) .and. trim(filename) /= 'null') THEN
          write(*,*) 'Warning: ', trim(dataname), ' not found in ', trim(filename)
       ENDIF
 

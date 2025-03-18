@@ -108,7 +108,7 @@ CONTAINS
    END SUBROUTINE hist_single_final
 
    ! -- write history time --
-   SUBROUTINE hist_single_write_time (filename, dataname, time, itime)
+   SUBROUTINE hist_single_write_time (filename, filelast, dataname, time, itime)
 
       USE MOD_Namelist
       USE MOD_TimeManager
@@ -121,6 +121,7 @@ CONTAINS
       IMPLICIT NONE
 
       character (len=*), intent(in) :: filename
+      character (len=*), intent(in) :: filelast
       character (len=*), intent(in) :: dataname
 
       integer, intent(in)  :: time(3)
@@ -131,7 +132,7 @@ CONTAINS
       logical :: fexists
 
       inquire (file=filename, exist=fexists)
-      IF (.not. fexists) THEN
+      IF ((.not. fexists) .or. (trim(filename) /= trim(filelast))) THEN
          CALL ncio_create_file (trim(filename))
          CALL ncio_define_dimension(filename, 'patch', numpatch)
 #ifdef URBAN_MODEL
