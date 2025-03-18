@@ -440,12 +440,13 @@ CONTAINS
 
 
    SUBROUTINE hist_gridded_write_time ( &
-         filename, dataname, time, itime)
+         filename, filelast, dataname, time, itime)
 
    USE MOD_Block
    IMPLICIT NONE
 
    character (len=*), intent(in) :: filename
+   character (len=*), intent(in) :: filelast
    character (len=*), intent(in) :: dataname
 
    integer, intent(in)  :: time(3)
@@ -460,12 +461,12 @@ CONTAINS
          IF (p_is_master) THEN
 #ifdef USEMPI
             IF (DEF_HIST_WriteBack) THEN
-               CALL hist_writeback_latlon_time (filename, dataname, time, hist_concat)
+               CALL hist_writeback_latlon_time (filename, filelast, dataname, time, hist_concat)
                itime = 1
             ELSE
 #endif
             inquire (file=filename, exist=fexists)
-            IF (.not. fexists) THEN
+            IF ((.not. fexists) .or. (trim(filename) /= trim(filelast))) THEN
 
                CALL ncio_create_file (trim(filename))
                CALL ncio_define_dimension(filename, 'time', 0)
@@ -515,7 +516,7 @@ CONTAINS
                CALL get_filename_block (filename, iblk, jblk, fileblock)
 
                inquire (file=fileblock, exist=fexists)
-               IF (.not. fexists) THEN
+               IF ((.not. fexists) .or. (trim(filename) /= trim(filelast))) THEN
                   CALL ncio_create_file (trim(fileblock))
                   CALL ncio_define_dimension (fileblock, 'time', 0)
                   CALL hist_write_grid_info  (fileblock, ghist, iblk, jblk)

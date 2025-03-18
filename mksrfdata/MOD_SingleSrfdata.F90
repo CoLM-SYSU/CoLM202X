@@ -250,25 +250,25 @@ CONTAINS
       ENDIF
 
 
-      IF (.not. mksrfdata) THEN
+      DEF_domain%edges = floor(SITE_lat_location)
+      DEF_domain%edgen = floor(SITE_lat_location) + 1.
+      DEF_domain%edgew = floor(SITE_lon_location)
+      DEF_domain%edgee = floor(SITE_lon_location) + 1.
+
+      CALL gblock%set ()
+      gblock%nblkme = 1
+      allocate(gblock%xblkme(1))
+      allocate(gblock%yblkme(1))
+      gblock%xblkme(1) = find_nearest_west  (SITE_lon_location, gblock%nxblk, gblock%lon_w)
+      gblock%yblkme(1) = find_nearest_south (SITE_lat_location, gblock%nyblk, gblock%lat_s)
       
-         DEF_domain%edges = floor(SITE_lat_location)
-         DEF_domain%edgen = floor(SITE_lat_location) + 1.
-         DEF_domain%edgew = floor(SITE_lon_location)
-         DEF_domain%edgee = floor(SITE_lon_location) + 1.
-
-         CALL gblock%set ()
-
-      ENDIF
-
 
       ! (1) build/read "land patch" by using land cover type data
       numpatch = 1
-      SITE_landtype = -1
 
 #ifdef LULC_USGS
-      u_site_landtype = (USE_SITE_landtype .or. .not. mksrfdata) &
-         .and. (ncio_var_exist(fsrfdata,'USGS_classification') .or. (SITE_landtype >= 0))
+      u_site_landtype = (SITE_landtype >= 0) &
+         .or. ((USE_SITE_landtype .or. .not. mksrfdata) .and. ncio_var_exist(fsrfdata,'USGS_classification')) 
 
       IF (u_site_landtype) THEN
          IF (SITE_landtype == -1) THEN
@@ -281,8 +281,8 @@ CONTAINS
             SITE_lon_location, SITE_lat_location, SITE_landtype)
       ENDIF
 #else
-      u_site_landtype = (USE_SITE_landtype .or. .not.mksrfdata) &
-         .and. (ncio_var_exist(fsrfdata,'IGBP_classification') .or. (SITE_landtype >= 0))
+      u_site_landtype = (SITE_landtype >= 0) &
+         .or. ((USE_SITE_landtype .or. .not.mksrfdata) .and. ncio_var_exist(fsrfdata,'IGBP_classification')) 
 
       IF (u_site_landtype)  THEN
          IF (SITE_landtype == -1) THEN
@@ -298,9 +298,16 @@ CONTAINS
 #endif
          
       IF (SITE_landtype < 0) THEN
-         write(*,*) 'Error! Please set land cover type!'
+         write(*,*) 'Error! Please set SITE_landtype in namelist file !'
          CALL CoLM_stop()
       ENDIF
+
+#ifdef URBAN_MODEL
+      IF (SITE_landtype /= URBAN) THEN
+         write(*,*) 'Error! Please set SITE_landtype to URBAN in namelist file !'
+         CALL CoLM_stop()
+      ENDIF
+#endif
          
       IF (mksrfdata) THEN
          write(*,'(A,A,3A)') 'Land cover type : ', trim(patchclassname(SITE_landtype)), &
@@ -323,7 +330,7 @@ CONTAINS
 
             filename = trim(DEF_dir_rawdata) // '/global_CFT_surface_data.nc'
             CALL gridcrop%define_from_file (filename, 'lat', 'lon')
-            CALL read_point_var_3d_real8 (gridcrop, filename, 'PCT_CFT', &
+            CALL read_point_var_3d_first_real8 (gridcrop, filename, 'PCT_CFT', &
                SITE_lon_location, SITE_lat_location, N_CFT, pctcrop)
          ENDIF
 
@@ -393,7 +400,9 @@ CONTAINS
          SITE_pctpfts = 1.
 #endif
       ELSE
-         write(*,*) 'There is no plant functional type at this point!'
+         write(*,*) 'Warning : There is no plant functional type at this site !    '
+         write(*,*) 'For single point with urban / wetland / ice / lake patch type,'
+         write(*,*) 'please #define LULC_USGS or #define LULC_IGBP in define.h     '
          CALL CoLM_stop()
       ENDIF
 
@@ -511,6 +520,7 @@ CONTAINS
          IF (DEF_LAI_MONTHLY) THEN
             ntime = 12
             allocate (SITE_LAI_monthly (12,start_year:end_year))
+            allocate (SITE_SAI_monthly (12,start_year:end_year))
          ELSE
             ntime = 46
             allocate (SITE_LAI_8day    (46,start_year:end_year))
@@ -589,12 +599,12 @@ CONTAINS
 #else
             IF (DEF_LAI_MONTHLY) THEN
                write(*,'(A,I4,A,'//trim(c)//'F8.2,4A)') 'LAI (year ', SITE_LAI_year(iyear), ') : ', &
-                  SITE_LAI_monthly, ' (from ',datasource(u_site_lai),')'
+                  SITE_LAI_monthly(:,iyear), ' (from ',datasource(u_site_lai),')'
                write(*,'(A,I4,A,'//trim(c)//'F8.2,4A)') 'SAI (year ', SITE_LAI_year(iyear), ') : ', &
-                  SITE_SAI_monthly, ' (from ',datasource(u_site_lai),')'
+                  SITE_SAI_monthly(:,iyear), ' (from ',datasource(u_site_lai),')'
             ELSE
                write(*,'(A,I4,A,'//trim(c)//'F8.2,4A)') 'LAI (year ', SITE_LAI_year(iyear), ') : ', &
-                  SITE_LAI_8day, ' (from ',datasource(u_site_lai),')'
+                  SITE_LAI_8day(:,iyear), ' (from ',datasource(u_site_lai),')'
             ENDIF
 #endif
          ENDDO

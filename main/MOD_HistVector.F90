@@ -33,11 +33,12 @@ MODULE MOD_HistVector
 CONTAINS
 
    ! -- write history time --
-   SUBROUTINE hist_vector_write_time (filename, dataname, time, itime_in_file)
+   SUBROUTINE hist_vector_write_time (filename, filelast, dataname, time, itime_in_file)
 
       IMPLICIT NONE
 
       character (len=*), intent(in) :: filename
+      character (len=*), intent(in) :: filelast
       character (len=*), intent(in) :: dataname
       integer, intent(in)  :: time(3)
       integer, intent(out) :: itime_in_file
@@ -48,7 +49,7 @@ CONTAINS
       IF (p_is_master) THEN
 
          inquire (file=filename, exist=fexists)
-         IF (.not. fexists) THEN
+         IF ((.not. fexists) .or. (trim(filename) /= trim(filelast))) THEN
             CALL ncio_create_file (trim(filename))
             CALL ncio_define_dimension(filename, 'time', 0)
 
