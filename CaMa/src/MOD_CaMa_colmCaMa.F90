@@ -181,6 +181,8 @@ CONTAINS
                ELSE
                   DEF_hist_cama_vars%winfilt=.false.
                ENDIF
+            CASE ('outflw_ocean') ! discharge to ocean [m3/s]
+               DEF_hist_cama_vars%outflw_ocean=.true.
             CASE DEFAULT
                STOP
             END SELECT

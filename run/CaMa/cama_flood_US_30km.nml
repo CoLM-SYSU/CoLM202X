@@ -100,7 +100,7 @@ DROFUNIT  = 1.0                 ! runoff unit conversion
 &NOUTPUT
 COUTDIR  = "../../cases/"                ! OUTPUT DIRECTORY
 !CVARSOUT="wevap,winfilt,rivout,rivsto,rivdph,rivvel,fldout,fldsto,flddph,fldfrc,fldare,sfcelv,outflw,storge,pthflw,pthout,maxsto,maxflw,maxdph" # list output variable (comma separated)
-CVARSOUT = "outflw,fldout,flddph,fldfrc,fldare,runoff"               ! Comma-separated list of output variables to save 
+CVARSOUT = "outflw,fldout,flddph,fldfrc,fldare,runoff,outflw_ocean"               ! Comma-separated list of output variables to save 
 COUTTAG  = "test"                ! Output Tag Name for each experiment
 LOUTVEC  = .FALSE                      ! TRUE FOR VECTORIAL OUTPUT, FALSE FOR NX,NY OUTPUT
 LOUTCDF  = .TRUE.                  ! * true for netcdf outptu false for binary
