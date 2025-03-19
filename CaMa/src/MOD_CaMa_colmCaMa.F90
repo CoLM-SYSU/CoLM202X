@@ -351,6 +351,8 @@ CONTAINS
    END SUBROUTINE colm_cama_drv
 
    SUBROUTINE colm_cama_exit
+   USE YOS_CMF_MAP, only: I2NEXTX,I2NEXTY,I2REGION
+
    IMPLICIT NONE
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
@@ -363,6 +365,7 @@ CONTAINS
          deallocate (runoff_2d)
          deallocate (fevpg_2d)
          deallocate (finfg_2d)
+         deallocate( I2NEXTX,I2NEXTY,I2REGION )
       ENDIF
       IF (p_is_worker) THEN
          deallocate (flddepth_cama)

@@ -540,8 +540,8 @@ CONTAINS
             CALL vecP2mapR(var_in,R2OUT)
             do j = 1,NY
                do i = 1,NX
-                  if (I2NEXTX(i,j) /= -9) then
-                     R2OUT(i,j) = spval
+                  if (I2NEXTX(i,j) .NE. -9) then
+                     R2OUT(i,j) = real(real(spval,kind=JPRM),kind=8)
                   endif
                enddo
             enddo
