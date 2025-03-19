@@ -533,7 +533,7 @@ CONTAINS
          character (len=*), intent(in),optional :: units
       
          real(KIND=JPRM)             :: R2OUT(NX,NY)
-      
+         integer  :: i,j
          integer  :: compress
       
             IF (.not. is_hist) RETURN
@@ -594,7 +594,6 @@ CONTAINS
    real(KIND=JPRM)             :: R2OUT(NX,NY)
 
    integer  :: compress
-   integer  :: i,j
 
       IF (.not. is_hist) RETURN
 
