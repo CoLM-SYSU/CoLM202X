@@ -59,8 +59,8 @@ MODULE MOD_Namelist
 
    character(len=256) :: SITE_fsitedata = 'null'
 
-   real(r8) :: SITE_lon_location = 113.5897
-   real(r8) :: SITE_lat_location = 22.3507
+   real(r8) :: SITE_lon_location = -1.e36_r8
+   real(r8) :: SITE_lat_location = -1.e36_r8
 
    integer  :: SITE_landtype             = -1
 

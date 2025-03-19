@@ -107,8 +107,6 @@ CONTAINS
       CALL pixelsetshared_build (landpatch, grid_crop, cropdata, N_CFT, cropfilter, &
          pctshrpch, cropclass, fracin = pctshared)
 
-      cropclass = cropclass + N_PFT - 1
-
       numpatch = landpatch%nset
 
       landpatch%has_shared = .true.
