@@ -587,13 +587,14 @@ CONTAINS
    character(len=*), intent(in) :: file_hist
    character(len=*), intent(in) :: varname
    integer, intent(in)          :: itime_in_file
-
+   
    character (len=*), intent(in),optional :: longname
    character (len=*), intent(in),optional :: units
 
    real(KIND=JPRM)             :: R2OUT(NX,NY)
 
    integer  :: compress
+   integer  :: i,j
 
       IF (.not. is_hist) RETURN
 
