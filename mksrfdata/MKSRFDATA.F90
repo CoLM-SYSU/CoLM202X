@@ -57,6 +57,7 @@ PROGRAM MKSRFDATA
    USE MOD_Grid
    USE MOD_Mesh
    USE MOD_MeshFilter
+   USE MOD_TimeManager
    USE MOD_LandElm
 #ifdef CATCHMENT
    USE MOD_LandHRU
@@ -115,6 +116,7 @@ PROGRAM MKSRFDATA
 
    CALL read_namelist (nlfile)
 
+   CALL initimetype (DEF_simulation_time%greenwich)
 #ifdef SinglePoint
 #ifndef URBAN_MODEL
 
@@ -132,6 +134,11 @@ PROGRAM MKSRFDATA
 
 #else
    CALL read_urban_surface_data_single (SITE_fsitedata, mksrfdata=.true.)
+   CALL write_urban_surface_data_single(numurban)
+
+   CALL single_srfdata_final ()
+   write(*,*)  'Successful in surface data making.'
+   RETURN
 #endif
 #endif
 
@@ -427,13 +434,6 @@ PROGRAM MKSRFDATA
 ! ................................................................
 ! 4. Free memories.
 ! ................................................................
-
-#ifdef SinglePoint
-#ifdef URBAN_MODEL
-   CALL write_urban_surface_data_single (numurban)
-   CALL single_srfdata_final ()
-#endif
-#endif
 
 #ifdef USEMPI
    CALL mpi_barrier (p_comm_glb, p_err)
