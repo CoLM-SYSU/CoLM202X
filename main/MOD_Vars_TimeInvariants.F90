@@ -61,10 +61,13 @@ CONTAINS
             allocate (pftfrac       (numpft))
             allocate (htop_p        (numpft))
             allocate (hbot_p        (numpft))
-#ifdef CROP
-            allocate (cropfrac    (numpatch))
-#endif
          ENDIF
+
+#ifdef CROP
+         IF (numpatch > 0) THEN
+            allocate (cropfrac (numpatch))
+         ENDIF
+#endif
       ENDIF
 
    END SUBROUTINE allocate_PFTimeInvariants
