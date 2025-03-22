@@ -128,7 +128,7 @@ CONTAINS
 
       ! (2) Read in plant date.
       IF (p_is_worker) THEN
-         plantdate_p(:) = -99999999._r8
+         IF (numpft > 0) plantdate_p(:) = -99999999._r8
       ENDIF
 
       file_crop = trim(DEF_dir_runtime) // '/crop/plantdt-colm-64cfts-rice2_fillcoast.nc'
@@ -157,7 +157,7 @@ CONTAINS
 #endif
 
       IF (p_is_worker) THEN
-         fertnitro_p(:) = -99999999._r8
+         IF (numpft > 0) fertnitro_p(:) = -99999999._r8
       ENDIF
 
       file_crop = trim(DEF_dir_runtime) // '/crop/fertnitro_fillcoast.nc'
@@ -204,7 +204,7 @@ CONTAINS
       IF (allocated(lat)) deallocate(lat)
 
       IF (p_is_worker) THEN
-         irrig_method_p(:) = -99999999
+         IF (numpft > 0) irrig_method_p(:) = -99999999
       ENDIF
 
       DO cft = 1, N_CFT

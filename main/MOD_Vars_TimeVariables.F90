@@ -1070,8 +1070,15 @@ IF (DEF_USE_IRRIGATION) THEN
 ENDIF
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
+#ifdef SinglePoint
+      IF (patchtypes(SITE_landtype) == 0) THEN
+         file_restart = trim(dir_restart)// '/'//trim(cdate)//'/' // trim(site) //'_restart_pft_'//trim(cdate)//'_lc'//trim(cyear)//'.nc'
+         CALL WRITE_PFTimeVariables (file_restart)
+      ENDIF
+#else
       file_restart = trim(dir_restart)// '/'//trim(cdate)//'/' // trim(site) //'_restart_pft_'//trim(cdate)//'_lc'//trim(cyear)//'.nc'
       CALL WRITE_PFTimeVariables (file_restart)
+#endif
 #endif
 
 #if (defined BGC)
@@ -1247,8 +1254,15 @@ IF (DEF_USE_IRRIGATION) THEN
 ENDIF
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
+#ifdef SinglePoint
+      IF (patchtypes(SITE_landtype) == 0) THEN
+         file_restart = trim(dir_restart)// '/'//trim(cdate)//'/' // trim(site) //'_restart_pft_'//trim(cdate)//'_lc'//trim(cyear)//'.nc'
+         CALL READ_PFTimeVariables (file_restart)
+      ENDIF
+#else
       file_restart = trim(dir_restart)// '/'//trim(cdate)//'/' // trim(site) //'_restart_pft_'//trim(cdate)//'_lc'//trim(cyear)//'.nc'
       CALL READ_PFTimeVariables (file_restart)
+#endif
 #endif
 
 #if (defined BGC)
