@@ -57,9 +57,9 @@ MODULE YOS_CMF_DIAG
    real(KIND=JPRB),ALLOCATABLE,TARGET          :: D2WEVAPEX_AVG(:,:)      !! average extracted water evaporation
    real(KIND=JPRB),ALLOCATABLE,TARGET          :: D2WINFILTEX_AVG(:,:)      !! average extracted water evaporation
 
-REAL(KIND=JPRB)                 :: NADD                    !! sum DT to calculate average
-!*** Average diagnostics (1D)
-REAL(KIND=JPRB),ALLOCATABLE  :: D1PTHFLW_AVG(:,:)          !! bifurcation channel flow (1D, not 2D variable)
+    REAL(KIND=JPRB)                 :: NADD                    !! sum DT to calculate average
+    !*** Average diagnostics (1D)
+    REAL(KIND=JPRB),ALLOCATABLE  :: D1PTHFLW_AVG(:,:)          !! bifurcation channel flow (1D, not 2D variable)
 
    !================================================
    !*** Daily max diagnostics 
@@ -67,7 +67,6 @@ REAL(KIND=JPRB),ALLOCATABLE  :: D1PTHFLW_AVG(:,:)          !! bifurcation channe
    real(KIND=JPRB),ALLOCATABLE,TARGET          :: D2OUTFLW_MAX(:,:)       !! max total outflow       [m3/s] (rivout + fldout)
    real(KIND=JPRB),ALLOCATABLE,TARGET          :: D2STORGE_MAX(:,:)       !! max total outflow       [m3/s] (rivout + fldout)
    real(KIND=JPRB),ALLOCATABLE,TARGET          :: D2RIVDPH_MAX(:,:)       !! max total outflow       [m3/s] (rivout + fldout)
-
 
    !================================================
    !*** Global total

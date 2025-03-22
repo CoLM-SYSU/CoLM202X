@@ -311,6 +311,10 @@ CONTAINS
                VAROUT(JF)%CVNAME=CVNAMES(JF)
                VAROUT(JF)%CVLNAME='instantaneous discharge'
                VAROUT(JF)%CVUNITS='m3/s' 
+            CASE ('outflw_ocean')
+               VAROUT(JF)%CVNAME=CVNAMES(JF)
+               VAROUT(JF)%CVLNAME='discharge to ocean'
+               VAROUT(JF)%CVUNITS='m3/s'
             CASE DEFAULT
          write(LOGNAM,*) trim(CVNAMES(JF)), ' Not defined in CMF_CREATE_OUTCDF_MOD'
 
