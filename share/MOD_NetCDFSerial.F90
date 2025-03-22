@@ -310,16 +310,18 @@ CONTAINS
    END SUBROUTINE ncio_inquire_varsize
 
    !---------------------------------------------------------
-   logical FUNCTION ncio_var_exist (filename, dataname)
+   logical FUNCTION ncio_var_exist (filename, dataname, readflag)
 
    USE netcdf
    IMPLICIT NONE
 
    character(len=*), intent(in) :: filename
    character(len=*), intent(in) :: dataname
+   logical, optional,intent(in) :: readflag
 
    ! Local variables
    integer :: ncid, varid, status
+   logical :: readflag_
 
       status = nf90_open(trim(filename), NF90_NOWRITE, ncid)
       IF (status == nf90_noerr) THEN
@@ -330,7 +332,13 @@ CONTAINS
          ncio_var_exist = .false.
       ENDIF
 
-      IF ((.not. ncio_var_exist) .and. trim(filename) /= 'null') THEN
+      IF (present(readflag)) THEN
+         readflag_ = readflag
+      ELSE
+         readflag_ = .true.
+      ENDIF
+
+      IF ((.not. ncio_var_exist) .and. trim(filename) /= 'null' .and. readflag_) THEN
          write(*,*) 'Warning: ', trim(dataname), ' not found in ', trim(filename)
       ENDIF
 

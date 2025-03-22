@@ -56,14 +56,14 @@ OBJS_SHARED =    \
 				  MOD_LandCrop.o               \
 				  MOD_LandPFT.o                \
 				  MOD_LandUrban.o              \
+				  MOD_Urban_Const_LCZ.o        \
 				  MOD_SingleSrfdata.o          \
 				  MOD_SrfdataDiag.o            \
 				  MOD_SrfdataRestart.o         \
 				  MOD_ElmVector.o              \
 				  MOD_HRUVector.o              \
 				  MOD_MeshFilter.o             \
-				  MOD_RegionClip.o             \
-				  MOD_Urban_Const_LCZ.o
+				  MOD_RegionClip.o
 
 ${OBJS_SHARED} : %.o : %.F90 ${HEADER}
 	${FF} -c ${FOPTS} $(INCLUDE_DIR) -o .bld/$@ $< ${MOD_CMD}.bld

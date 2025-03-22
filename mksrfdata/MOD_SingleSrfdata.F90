@@ -216,6 +216,7 @@ CONTAINS
    real(r8), allocatable :: pctcrop(:), pctpfts(:), pftLAI(:), pftSAI(:), tea_f(:), tea_b(:)
 
    integer, parameter :: N_PFT_modis = 16
+   logical            :: readflag
 
 
       IF (mksrfdata) THEN
@@ -321,8 +322,9 @@ CONTAINS
 #ifdef CROP
       IF (SITE_landtype == CROPLAND) THEN
 
-         u_site_crop = ((.not. mksrfdata) .or. USE_SITE_pctcrop) &
-            .and. ncio_var_exist(fsrfdata,'croptyp') .and. ncio_var_exist(fsrfdata,'pctcrop')
+         readflag = ((.not. mksrfdata) .or. USE_SITE_pctcrop)
+         u_site_crop = readflag &
+            .and. ncio_var_exist(fsrfdata,'croptyp',readflag) .and. ncio_var_exist(fsrfdata,'pctcrop',readflag)
 
          IF (u_site_crop) THEN
             CALL ncio_read_serial (fsrfdata, 'croptyp', croptyp)
@@ -367,8 +369,9 @@ CONTAINS
 #else
       IF (patchtypes(SITE_landtype) == 0 .and. SITE_landtype /= CROPLAND) THEN
 #endif
-         u_site_pfts = ((.not. mksrfdata) .or. USE_SITE_pctpfts) &
-            .and. ncio_var_exist(fsrfdata,'pfttyp') .and. ncio_var_exist(fsrfdata,'pctpfts')
+         readflag = ((.not. mksrfdata) .or. USE_SITE_pctpfts)
+         u_site_pfts = readflag &
+            .and. ncio_var_exist(fsrfdata,'pfttyp',readflag) .and. ncio_var_exist(fsrfdata,'pctpfts',readflag)
 
          IF (u_site_pfts) THEN
             CALL ncio_read_serial (fsrfdata, 'pfttyp',  pfttyp )
@@ -424,15 +427,15 @@ CONTAINS
 
 
       ! (4) forest height
-      u_site_htop = (.not. mksrfdata) .or. USE_SITE_htop
+      readflag = (.not. mksrfdata) .or. USE_SITE_htop
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
       IF (patchtypes(SITE_landtype) == 0) THEN
-         u_site_htop = u_site_htop .and. ncio_var_exist(fsrfdata,'canopy_height_pfts')
+         u_site_htop = readflag .and. ncio_var_exist(fsrfdata,'canopy_height_pfts',readflag)
       ELSE
-         u_site_htop = u_site_htop .and. ncio_var_exist(fsrfdata,'canopy_height')
+         u_site_htop = readflag .and. ncio_var_exist(fsrfdata,'canopy_height',readflag)
       ENDIF
 #else
-      u_site_htop = u_site_htop .and. ncio_var_exist(fsrfdata,'canopy_height')
+      u_site_htop = readflag .and. ncio_var_exist(fsrfdata,'canopy_height',readflag)
 #endif
 
       IF (u_site_htop) THEN
@@ -481,21 +484,22 @@ CONTAINS
 
 
       ! (5) LAI
-      u_site_lai = ((.not. mksrfdata) .or. USE_SITE_LAI) .and. ncio_var_exist(fsrfdata,'LAI_year')
+      readflag = ((.not. mksrfdata) .or. USE_SITE_LAI)
+      readflag = readflag .and. ncio_var_exist(fsrfdata,'LAI_year',readflag)
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
       IF (patchtypes(SITE_landtype) == 0) THEN
-         u_site_lai = u_site_lai .and. ncio_var_exist(fsrfdata,'LAI_pfts_monthly') &
-            .and. ncio_var_exist(fsrfdata,'SAI_pfts_monthly')
+         u_site_lai = readflag .and. ncio_var_exist(fsrfdata,'LAI_pfts_monthly',readflag) &
+            .and. ncio_var_exist(fsrfdata,'SAI_pfts_monthly',readflag)
       ELSE
-         u_site_lai = u_site_lai .and. ncio_var_exist(fsrfdata,'LAI_monthly') &
-            .and. ncio_var_exist(fsrfdata,'SAI_monthly')
+         u_site_lai = readflag .and. ncio_var_exist(fsrfdata,'LAI_monthly',readflag) &
+            .and. ncio_var_exist(fsrfdata,'SAI_monthly',readflag)
       ENDIF
 #else
       IF (DEF_LAI_MONTHLY) THEN
-         u_site_lai = u_site_lai .and. ncio_var_exist(fsrfdata,'LAI_monthly') &
-            .and. ncio_var_exist(fsrfdata,'SAI_monthly')
+         u_site_lai = readflag .and. ncio_var_exist(fsrfdata,'LAI_monthly',readflag) &
+            .and. ncio_var_exist(fsrfdata,'SAI_monthly',readflag)
       ELSE
-         u_site_lai = u_site_lai .and. ncio_var_exist(fsrfdata,'LAI_8day')
+         u_site_lai = readflag .and. ncio_var_exist(fsrfdata,'LAI_8day',readflag)
       ENDIF
 #endif
 
@@ -670,7 +674,8 @@ CONTAINS
 
 
       ! (6) lake depth
-      u_site_lakedepth = ((.not. mksrfdata) .or. USE_SITE_lakedepth) .and. ncio_var_exist(fsrfdata,'lakedepth')
+      readflag = ((.not. mksrfdata) .or. USE_SITE_lakedepth)
+      u_site_lakedepth = readflag .and. ncio_var_exist(fsrfdata,'lakedepth',readflag)
 
       IF (u_site_lakedepth) THEN
          CALL ncio_read_serial (fsrfdata, 'lakedepth', SITE_lakedepth)
@@ -688,9 +693,12 @@ CONTAINS
 
 
       ! (7) soil brightness parameters
-      u_site_soil_bright = ((.not. mksrfdata) .or. USE_SITE_soilreflectance) &
-         .and. ncio_var_exist(fsrfdata,'soil_s_v_alb') .and. ncio_var_exist(fsrfdata,'soil_d_v_alb') &
-         .and. ncio_var_exist(fsrfdata,'soil_s_n_alb') .and. ncio_var_exist(fsrfdata,'soil_d_n_alb')
+      readflag = ((.not. mksrfdata) .or. USE_SITE_soilreflectance)
+      u_site_soil_bright = readflag &
+         .and. ncio_var_exist(fsrfdata,'soil_s_v_alb',readflag) &
+         .and. ncio_var_exist(fsrfdata,'soil_d_v_alb',readflag) &
+         .and. ncio_var_exist(fsrfdata,'soil_s_n_alb',readflag) &
+         .and. ncio_var_exist(fsrfdata,'soil_d_n_alb',readflag)
 
       IF (u_site_soil_bright) THEN
          CALL ncio_read_serial (fsrfdata, 'soil_s_v_alb', SITE_soil_s_v_alb)
@@ -734,8 +742,9 @@ CONTAINS
 
       CALL gridsoil%define_by_name ('colm_500m')
 
-      u_site_vf_quartz_mineral = ((.not. mksrfdata) .or. USE_SITE_soilparameters) &
-         .and. ncio_var_exist(fsrfdata,'soil_vf_quartz_mineral')
+      readflag = ((.not. mksrfdata) .or. USE_SITE_soilparameters)
+      u_site_vf_quartz_mineral = readflag &
+         .and. ncio_var_exist(fsrfdata,'soil_vf_quartz_mineral',readflag)
       IF (u_site_vf_quartz_mineral) THEN
          CALL ncio_read_serial (fsrfdata, 'soil_vf_quartz_mineral', SITE_soil_vf_quartz_mineral)
       ELSE
@@ -748,8 +757,8 @@ CONTAINS
          ENDDO
       ENDIF
 
-      u_site_vf_gravels = ((.not. mksrfdata) .or. USE_SITE_soilparameters) &
-         .and. ncio_var_exist(fsrfdata,'soil_vf_gravels')
+      u_site_vf_gravels = readflag &
+         .and. ncio_var_exist(fsrfdata,'soil_vf_gravels',readflag)
       IF (u_site_vf_gravels) THEN
          CALL ncio_read_serial (fsrfdata, 'soil_vf_gravels', SITE_soil_vf_gravels)
       ELSE
@@ -762,8 +771,8 @@ CONTAINS
          ENDDO
       ENDIF
 
-      u_site_vf_sand = ((.not. mksrfdata) .or. USE_SITE_soilparameters) &
-         .and. ncio_var_exist(fsrfdata,'soil_vf_sand')
+      u_site_vf_sand = readflag &
+         .and. ncio_var_exist(fsrfdata,'soil_vf_sand',readflag)
       IF (u_site_vf_sand) THEN
          CALL ncio_read_serial (fsrfdata, 'soil_vf_sand', SITE_soil_vf_sand)
       ELSE
@@ -776,8 +785,8 @@ CONTAINS
          ENDDO
       ENDIF
 
-      u_site_vf_clay = ((.not. mksrfdata) .or. USE_SITE_soilparameters) &
-         .and. ncio_var_exist(fsrfdata,'soil_vf_clay')
+      u_site_vf_clay = readflag &
+         .and. ncio_var_exist(fsrfdata,'soil_vf_clay',readflag)
       IF (u_site_vf_clay) THEN
          CALL ncio_read_serial (fsrfdata, 'soil_vf_clay', SITE_soil_vf_clay)
       ELSE
@@ -790,8 +799,8 @@ CONTAINS
          ENDDO
       ENDIF
 
-      u_site_vf_om = ((.not. mksrfdata) .or. USE_SITE_soilparameters) &
-         .and. ncio_var_exist(fsrfdata,'soil_vf_om')
+      u_site_vf_om = readflag &
+         .and. ncio_var_exist(fsrfdata,'soil_vf_om',readflag)
       IF (u_site_vf_om) THEN
          CALL ncio_read_serial (fsrfdata, 'soil_vf_om', SITE_soil_vf_om)
       ELSE
@@ -804,8 +813,8 @@ CONTAINS
          ENDDO
       ENDIF
 
-      u_site_wf_gravels = ((.not. mksrfdata) .or. USE_SITE_soilparameters) &
-         .and. ncio_var_exist(fsrfdata,'soil_wf_gravels')
+      u_site_wf_gravels = readflag &
+         .and. ncio_var_exist(fsrfdata,'soil_wf_gravels',readflag)
       IF (u_site_wf_gravels) THEN
          CALL ncio_read_serial (fsrfdata, 'soil_wf_gravels', SITE_soil_wf_gravels)
       ELSE
@@ -818,8 +827,8 @@ CONTAINS
          ENDDO
       ENDIF
 
-      u_site_wf_sand = ((.not. mksrfdata) .or. USE_SITE_soilparameters) &
-         .and. ncio_var_exist(fsrfdata,'soil_wf_sand')
+      u_site_wf_sand = readflag &
+         .and. ncio_var_exist(fsrfdata,'soil_wf_sand',readflag)
       IF (u_site_wf_sand) THEN
          CALL ncio_read_serial (fsrfdata, 'soil_wf_sand', SITE_soil_wf_sand)
       ELSE
@@ -832,8 +841,8 @@ CONTAINS
          ENDDO
       ENDIF
 
-      u_site_OM_density = ((.not. mksrfdata) .or. USE_SITE_soilparameters) &
-         .and. ncio_var_exist(fsrfdata,'soil_OM_density')
+      u_site_OM_density = readflag &
+         .and. ncio_var_exist(fsrfdata,'soil_OM_density',readflag)
       IF (u_site_OM_density) THEN
          CALL ncio_read_serial (fsrfdata, 'soil_OM_density', SITE_soil_OM_density)
       ELSE
@@ -846,8 +855,8 @@ CONTAINS
          ENDDO
       ENDIF
 
-      u_site_BD_all = ((.not. mksrfdata) .or. USE_SITE_soilparameters) &
-         .and. ncio_var_exist(fsrfdata,'soil_BD_all')
+      u_site_BD_all = readflag &
+         .and. ncio_var_exist(fsrfdata,'soil_BD_all',readflag)
       IF (u_site_BD_all) THEN
          CALL ncio_read_serial (fsrfdata, 'soil_BD_all', SITE_soil_BD_all)
       ELSE
@@ -860,8 +869,8 @@ CONTAINS
          ENDDO
       ENDIF
 
-      u_site_theta_s = ((.not. mksrfdata) .or. USE_SITE_soilparameters) &
-         .and. ncio_var_exist(fsrfdata,'soil_theta_s')
+      u_site_theta_s = readflag &
+         .and. ncio_var_exist(fsrfdata,'soil_theta_s',readflag)
       IF (u_site_theta_s) THEN
          CALL ncio_read_serial (fsrfdata, 'soil_theta_s', SITE_soil_theta_s)
       ELSE
@@ -874,8 +883,8 @@ CONTAINS
          ENDDO
       ENDIF
 
-      u_site_k_s = ((.not. mksrfdata) .or. USE_SITE_soilparameters) &
-         .and. ncio_var_exist(fsrfdata,'soil_k_s')
+      u_site_k_s = readflag &
+         .and. ncio_var_exist(fsrfdata,'soil_k_s',readflag)
       IF (u_site_k_s) THEN
          CALL ncio_read_serial (fsrfdata, 'soil_k_s', SITE_soil_k_s)
       ELSE
@@ -888,8 +897,8 @@ CONTAINS
          ENDDO
       ENDIF
 
-      u_site_csol = ((.not. mksrfdata) .or. USE_SITE_soilparameters) &
-         .and. ncio_var_exist(fsrfdata,'soil_csol')
+      u_site_csol = readflag &
+         .and. ncio_var_exist(fsrfdata,'soil_csol',readflag)
       IF (u_site_csol) THEN
          CALL ncio_read_serial (fsrfdata, 'soil_csol', SITE_soil_csol)
       ELSE
@@ -902,8 +911,8 @@ CONTAINS
          ENDDO
       ENDIF
 
-      u_site_tksatu = ((.not. mksrfdata) .or. USE_SITE_soilparameters) &
-         .and. ncio_var_exist(fsrfdata,'soil_tksatu')
+      u_site_tksatu = readflag &
+         .and. ncio_var_exist(fsrfdata,'soil_tksatu',readflag)
       IF (u_site_tksatu) THEN
          CALL ncio_read_serial (fsrfdata, 'soil_tksatu', SITE_soil_tksatu)
       ELSE
@@ -916,8 +925,8 @@ CONTAINS
          ENDDO
       ENDIF
 
-      u_site_tksatf = ((.not. mksrfdata) .or. USE_SITE_soilparameters) &
-         .and. ncio_var_exist(fsrfdata,'soil_tksatf')
+      u_site_tksatf = readflag &
+         .and. ncio_var_exist(fsrfdata,'soil_tksatf',readflag)
       IF (u_site_tksatf) THEN
          CALL ncio_read_serial (fsrfdata, 'soil_tksatf', SITE_soil_tksatf)
       ELSE
@@ -930,8 +939,8 @@ CONTAINS
          ENDDO
       ENDIF
 
-      u_site_tkdry = ((.not. mksrfdata) .or. USE_SITE_soilparameters) &
-         .and. ncio_var_exist(fsrfdata,'soil_tkdry')
+      u_site_tkdry = readflag &
+         .and. ncio_var_exist(fsrfdata,'soil_tkdry',readflag)
       IF (u_site_tkdry) THEN
          CALL ncio_read_serial (fsrfdata, 'soil_tkdry', SITE_soil_tkdry)
       ELSE
@@ -944,8 +953,8 @@ CONTAINS
          ENDDO
       ENDIF
 
-      u_site_k_solids = ((.not. mksrfdata) .or. USE_SITE_soilparameters) &
-         .and. ncio_var_exist(fsrfdata,'soil_k_solids')
+      u_site_k_solids = readflag &
+         .and. ncio_var_exist(fsrfdata,'soil_k_solids',readflag)
       IF (u_site_k_solids) THEN
          CALL ncio_read_serial (fsrfdata, 'soil_k_solids', SITE_soil_k_solids)
       ELSE
@@ -958,8 +967,8 @@ CONTAINS
          ENDDO
       ENDIF
 
-      u_site_psi_s = ((.not. mksrfdata) .or. USE_SITE_soilparameters) &
-         .and. ncio_var_exist(fsrfdata,'soil_psi_s')
+      u_site_psi_s = readflag &
+         .and. ncio_var_exist(fsrfdata,'soil_psi_s',readflag)
       IF (u_site_psi_s) THEN
          CALL ncio_read_serial (fsrfdata, 'soil_psi_s', SITE_soil_psi_s)
       ELSE
@@ -972,8 +981,8 @@ CONTAINS
          ENDDO
       ENDIF
 
-      u_site_lambda = ((.not. mksrfdata) .or. USE_SITE_soilparameters) &
-         .and. ncio_var_exist(fsrfdata,'soil_lambda')
+      u_site_lambda = readflag &
+         .and. ncio_var_exist(fsrfdata,'soil_lambda',readflag)
       IF (u_site_lambda) THEN
          CALL ncio_read_serial (fsrfdata, 'soil_lambda', SITE_soil_lambda)
       ELSE
@@ -987,8 +996,8 @@ CONTAINS
       ENDIF
 
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
-      u_site_theta_r = ((.not. mksrfdata) .or. USE_SITE_soilparameters) &
-         .and. ncio_var_exist(fsrfdata,'soil_theta_r')
+      u_site_theta_r = readflag &
+         .and. ncio_var_exist(fsrfdata,'soil_theta_r',readflag)
       IF (u_site_theta_r) THEN
          CALL ncio_read_serial (fsrfdata, 'soil_theta_r', SITE_soil_theta_r)
       ELSE
@@ -1001,8 +1010,8 @@ CONTAINS
          ENDDO
       ENDIF
 
-      u_site_alpha_vgm = ((.not. mksrfdata) .or. USE_SITE_soilparameters) &
-         .and. ncio_var_exist(fsrfdata,'soil_alpha_vgm')
+      u_site_alpha_vgm = readflag &
+         .and. ncio_var_exist(fsrfdata,'soil_alpha_vgm',readflag)
       IF (u_site_alpha_vgm) THEN
          CALL ncio_read_serial (fsrfdata, 'soil_alpha_vgm', SITE_soil_alpha_vgm)
       ELSE
@@ -1015,8 +1024,8 @@ CONTAINS
          ENDDO
       ENDIF
 
-      u_site_L_vgm = ((.not. mksrfdata) .or. USE_SITE_soilparameters) &
-         .and. ncio_var_exist(fsrfdata,'soil_L_vgm')
+      u_site_L_vgm = readflag &
+         .and. ncio_var_exist(fsrfdata,'soil_L_vgm',readflag)
       IF (u_site_L_vgm) THEN
          CALL ncio_read_serial (fsrfdata, 'soil_L_vgm', SITE_soil_L_vgm)
       ELSE
@@ -1029,8 +1038,8 @@ CONTAINS
          ENDDO
       ENDIF
 
-      u_site_n_vgm = ((.not. mksrfdata) .or. USE_SITE_soilparameters) &
-         .and. ncio_var_exist(fsrfdata,'soil_n_vgm')
+      u_site_n_vgm = readflag &
+         .and. ncio_var_exist(fsrfdata,'soil_n_vgm',readflag)
       IF (u_site_n_vgm) THEN
          CALL ncio_read_serial (fsrfdata, 'soil_n_vgm', SITE_soil_n_vgm)
       ELSE
@@ -1063,8 +1072,8 @@ CONTAINS
 
 
       IF (DEF_Runoff_SCHEME == 3) THEN ! for Simple VIC
-         u_site_soil_texture = ((.not. mksrfdata) .or. USE_SITE_soilparameters) &
-            .and. ncio_var_exist(fsrfdata,'soil_texture')
+         u_site_soil_texture = readflag &
+            .and. ncio_var_exist(fsrfdata,'soil_texture',readflag)
          IF (u_site_soil_texture) THEN
             CALL ncio_read_serial (fsrfdata, 'soil_texture', SITE_soil_texture)
          ELSE
@@ -1110,8 +1119,9 @@ CONTAINS
 
       ! (9) depth to bedrock
       IF (DEF_USE_BEDROCK) THEN
-         u_site_dbedrock = ((.not. mksrfdata) .or. USE_SITE_dbedrock) &
-            .and. ncio_var_exist (fsrfdata, 'depth_to_bedrock')
+         readflag = ((.not. mksrfdata) .or. USE_SITE_dbedrock)
+         u_site_dbedrock = readflag &
+            .and. ncio_var_exist (fsrfdata, 'depth_to_bedrock',readflag)
          IF (u_site_dbedrock) THEN
             CALL ncio_read_serial (fsrfdata, 'depth_to_bedrock', SITE_dbedrock)
          ELSE
@@ -1128,8 +1138,9 @@ CONTAINS
       ENDIF
 
       ! (10) topography
-      u_site_elevation = ((.not. mksrfdata) .or. USE_SITE_topography) &
-         .and. ncio_var_exist (fsrfdata, 'elevation')
+      readflag = ((.not. mksrfdata) .or. USE_SITE_topography)
+      u_site_elevation = readflag &
+         .and. ncio_var_exist (fsrfdata, 'elevation',readflag)
       IF (u_site_elevation) THEN
          CALL ncio_read_serial (fsrfdata, 'elevation', SITE_elevation)
       ELSE
@@ -1139,8 +1150,8 @@ CONTAINS
             SITE_lon_location, SITE_lat_location, SITE_elevation)
       ENDIF
 
-      u_site_elvstd = ((.not. mksrfdata) .or. USE_SITE_topography) &
-         .and. ncio_var_exist (fsrfdata, 'elvstd')
+      u_site_elvstd = readflag &
+         .and. ncio_var_exist (fsrfdata, 'elvstd',readflag)
       IF (u_site_elvstd) THEN
          CALL ncio_read_serial (fsrfdata, 'elvstd', SITE_elvstd)
       ELSE
@@ -1154,8 +1165,8 @@ CONTAINS
             CALL grid_topo_factor%define_from_file (filename, "lat", "lon")
          ENDIF
 
-         u_site_svf = ((.not. mksrfdata) .or. USE_SITE_topography) &
-            .and. ncio_var_exist (fsrfdata, 'SITE_svf')
+         u_site_svf = readflag &
+            .and. ncio_var_exist (fsrfdata, 'SITE_svf',readflag)
          IF (u_site_svf) THEN
             CALL ncio_read_serial (fsrfdata, 'SITE_svf' , SITE_svf)
          ELSE
@@ -1164,8 +1175,8 @@ CONTAINS
                SITE_lon_location, SITE_lat_location, SITE_svf)
          ENDIF
 
-         u_site_cur = ((.not. mksrfdata) .or. USE_SITE_topography) &
-            .and. ncio_var_exist (fsrfdata, 'SITE_cur')
+         u_site_cur = readflag &
+            .and. ncio_var_exist (fsrfdata, 'SITE_cur',readflag)
          IF (u_site_cur) THEN
             CALL ncio_read_serial (fsrfdata, 'SITE_cur' , SITE_cur)
          ELSE
@@ -1174,10 +1185,10 @@ CONTAINS
                SITE_lon_location, SITE_lat_location, SITE_cur)
          ENDIF
 
-         u_site_slp_type = ((.not. mksrfdata) .or. USE_SITE_topography) &
-            .and. ncio_var_exist (fsrfdata, 'SITE_slp_type') &
-            .and. ncio_var_exist (fsrfdata, 'SITE_asp_type') &
-            .and. ncio_var_exist (fsrfdata, 'SITE_area_type')
+         u_site_slp_type = readflag &
+            .and. ncio_var_exist (fsrfdata, 'SITE_slp_type', readflag) &
+            .and. ncio_var_exist (fsrfdata, 'SITE_asp_type', readflag) &
+            .and. ncio_var_exist (fsrfdata, 'SITE_area_type',readflag)
          u_site_asp_type  = u_site_slp_type
          u_site_area_type = u_site_slp_type
 
@@ -1218,8 +1229,8 @@ CONTAINS
 
          ENDIF
 
-         u_site_sf_lut = ((.not. mksrfdata) .or. USE_SITE_topography) &
-            .and. ncio_var_exist (fsrfdata, 'SITE_sf_lut')
+         u_site_sf_lut = readflag &
+            .and. ncio_var_exist (fsrfdata, 'SITE_sf_lut',readflag)
          IF (u_site_sf_lut) THEN
             CALL ncio_read_serial (fsrfdata, 'SITE_sf_lut', SITE_sf_lut)
          ELSE
@@ -1448,7 +1459,7 @@ CONTAINS
       u_site_landtype = (SITE_landtype >= 0)
       IF (mksrfdata) THEN
          write(*,'(A,A,3A)') 'Land cover type : ', trim(patchclassname(SITE_landtype)), &
-            ' (from ',datasource(u_site_landtype),')'
+            ' (from ',trim(datasource(u_site_landtype)),')'
       ENDIF
 
       IF (mksrfdata) THEN
@@ -1470,7 +1481,7 @@ IF (DEF_URBAN_type_scheme == 1) THEN
                SITE_lon_location, SITE_lat_location, SITE_urbtyp)
 
             write(*,'(A,I0,A,I0,3A)') 'Urban type : NCAR ', SITE_urbtyp, ' of Region ', SITE_ncar_rid, &
-               ' (from ',datasource(u_site_utype),')'
+               ' (from ',trim(datasource(u_site_utype)),')'
          ENDIF
 ELSE
          u_site_utype = ncio_var_exist(fsrfdata,'LCZ_DOM')
@@ -1484,12 +1495,12 @@ ELSE
                SITE_lon_location, SITE_lat_location, SITE_urbtyp)
          ENDIF
          write(*,'(A,I0,3A)') 'Urban type : LCZ ', SITE_urbtyp, &
-            ' (from ',datasource(u_site_utype),')'
+            ' (from ',trim(datasource(u_site_utype)),')'
 ENDIF
 
 
          ! (4) urban geometry
-         u_site_hroof = (USE_SITE_urban_geometry) .and. ncio_var_exist(fsrfdata,'building_mean_height')
+         u_site_hroof = (USE_SITE_urban_geometry) .and. ncio_var_exist(fsrfdata,'building_mean_height',USE_SITE_urban_geometry)
          IF ( u_site_hroof ) THEN
             CALL ncio_read_serial (fsrfdata, 'building_mean_height', SITE_hroof  )
          ELSE
@@ -1506,7 +1517,7 @@ ELSE
 ENDIF
          ENDIF
 
-         u_site_froof = (USE_SITE_urban_geometry) .and. ncio_var_exist(fsrfdata,'roof_area_fraction')
+         u_site_froof = (USE_SITE_urban_geometry) .and. ncio_var_exist(fsrfdata,'roof_area_fraction',USE_SITE_urban_geometry)
          IF ( u_site_froof ) THEN
             CALL ncio_read_serial (fsrfdata, 'roof_area_fraction', SITE_froof  )
          ELSE
@@ -1522,35 +1533,35 @@ ELSE
 ENDIF
          ENDIF
 
-         u_site_fgper  = (USE_SITE_urban_geometry) .and. ncio_var_exist(fsrfdata,'impervious_area_fraction')
+         u_site_fgper  = (USE_SITE_urban_geometry) .and. ncio_var_exist(fsrfdata,'impervious_area_fraction',USE_SITE_urban_geometry)
          IF ( u_site_fgper ) THEN
             CALL ncio_read_serial (fsrfdata, 'impervious_area_fraction', SITE_fgimp  )
          ENDIF
 
-         u_site_thickr  = (USE_SITE_urban_geometry) .and. ncio_var_exist(fsrfdata,'THICK_ROOF')
+         u_site_thickr  = (USE_SITE_urban_geometry) .and. ncio_var_exist(fsrfdata,'THICK_ROOF',USE_SITE_urban_geometry)
          IF ( u_site_thickr ) THEN
             CALL ncio_read_serial (fsrfdata, 'THICK_ROOF', SITE_thickroof  )
          ENDIF
 
-         u_site_thickw  = (USE_SITE_urban_geometry) .and. ncio_var_exist(fsrfdata,'THICK_WALL')
+         u_site_thickw  = (USE_SITE_urban_geometry) .and. ncio_var_exist(fsrfdata,'THICK_WALL',USE_SITE_urban_geometry)
          IF ( u_site_thickw ) THEN
             CALL ncio_read_serial (fsrfdata, 'THICK_WALL', SITE_thickwall  )
          ENDIF
 
 IF (DEF_USE_CANYON_HWR) THEN
-         u_site_hlr  = (USE_SITE_urban_geometry) .and. ncio_var_exist(fsrfdata,'canyon_height_width_ratio')
+         u_site_hlr  = (USE_SITE_urban_geometry) .and. ncio_var_exist(fsrfdata,'canyon_height_width_ratio',USE_SITE_urban_geometry)
          IF ( u_site_hlr ) THEN
             CALL ncio_read_serial (fsrfdata, 'canyon_height_width_ratio', SITE_hlr  )
          ENDIF
 ELSE
-         u_site_hlr  = (USE_SITE_urban_geometry) .and. ncio_var_exist(fsrfdata,'wall_to_plan_area_ratio')
+         u_site_hlr  = (USE_SITE_urban_geometry) .and. ncio_var_exist(fsrfdata,'wall_to_plan_area_ratio',USE_SITE_urban_geometry)
          IF ( u_site_hlr ) THEN
             CALL ncio_read_serial (fsrfdata, 'wall_to_plan_area_ratio', SITE_lambdaw  )
             SITE_hlr     = SITE_lambdaw/4/SITE_froof
          ENDIF
 ENDIF
          ! (5) urban ecology
-         u_site_htopu  = (USE_SITE_urban_ecology) .and. ncio_var_exist(fsrfdata,'tree_mean_height')
+         u_site_htopu  = (USE_SITE_urban_ecology) .and. ncio_var_exist(fsrfdata,'tree_mean_height',USE_SITE_urban_ecology)
          IF ( u_site_htopu ) THEN
             CALL ncio_read_serial (fsrfdata, 'tree_mean_height', SITE_htop_urb  )
          ELSE
@@ -1562,7 +1573,7 @@ ENDIF
                SITE_lon_location, SITE_lat_location, SITE_htop_urb)
          ENDIF
 
-         u_site_flake  = (USE_SITE_urban_ecology) .and. ncio_var_exist(fsrfdata,'water_area_fraction')
+         u_site_flake  = (USE_SITE_urban_ecology) .and. ncio_var_exist(fsrfdata,'water_area_fraction',USE_SITE_urban_ecology)
          IF ( u_site_flake ) THEN
             CALL ncio_read_serial (fsrfdata, 'water_area_fraction', SITE_flake_urb  )
          ELSE
@@ -1574,7 +1585,7 @@ ENDIF
                SITE_lon_location, SITE_lat_location, SITE_flake_urb)
          ENDIF
 
-         u_site_fveg = (USE_SITE_urban_ecology) .and. ncio_var_exist(fsrfdata,'tree_area_fraction')
+         u_site_fveg = (USE_SITE_urban_ecology) .and. ncio_var_exist(fsrfdata,'tree_area_fraction',USE_SITE_urban_ecology)
          IF ( u_site_fveg ) THEN
             CALL ncio_read_serial (fsrfdata, 'tree_area_fraction', SITE_fveg_urb  )
          ELSE
@@ -1586,7 +1597,7 @@ ENDIF
                SITE_lon_location, SITE_lat_location, SITE_fveg_urb)
          ENDIF
 
-         u_site_urblai = (USE_SITE_urban_ecology) .and. ncio_var_exist(fsrfdata,'TREE_LAI')
+         u_site_urblai = (USE_SITE_urban_ecology) .and. ncio_var_exist(fsrfdata,'TREE_LAI',USE_SITE_urban_ecology)
          IF ( u_site_urblai) THEN
             CALL ncio_read_serial (fsrfdata, 'TREE_LAI', SITE_LAI_monthly  )
             CALL ncio_read_serial (fsrfdata, 'TREE_SAI', SITE_SAI_monthly  )
@@ -1643,79 +1654,79 @@ ENDIF
          ENDIF
 
          ! (6) urban radiation
-         u_site_albr = (USE_SITE_urban_radiation) .and. ncio_var_exist(fsrfdata,'ALB_ROOF')
+         u_site_albr = (USE_SITE_urban_radiation) .and. ncio_var_exist(fsrfdata,'ALB_ROOF',USE_SITE_urban_radiation)
          IF ( u_site_albr ) THEN
             CALL ncio_read_serial (fsrfdata, 'ALB_ROOF', SITE_alb_roof  )
          ENDIF
 
-         u_site_albw = (USE_SITE_urban_radiation) .and. ncio_var_exist(fsrfdata,'ALB_WALL')
+         u_site_albw = (USE_SITE_urban_radiation) .and. ncio_var_exist(fsrfdata,'ALB_WALL',USE_SITE_urban_radiation)
          IF ( u_site_albw ) THEN
             CALL ncio_read_serial (fsrfdata, 'ALB_WALL', SITE_alb_wall  )
          ENDIF
 
-         u_site_albgper = (USE_SITE_urban_radiation) .and. ncio_var_exist(fsrfdata,'ALB_GPER')
+         u_site_albgper = (USE_SITE_urban_radiation) .and. ncio_var_exist(fsrfdata,'ALB_GPER',USE_SITE_urban_radiation)
          IF ( u_site_albgper ) THEN
             CALL ncio_read_serial (fsrfdata, 'ALB_GPER', SITE_alb_gper  )
          ENDIF
 
-         u_site_albgimp = (USE_SITE_urban_radiation) .and. ncio_var_exist(fsrfdata,'ALB_GIMP')
+         u_site_albgimp = (USE_SITE_urban_radiation) .and. ncio_var_exist(fsrfdata,'ALB_GIMP',USE_SITE_urban_radiation)
          IF ( u_site_albgimp ) THEN
             CALL ncio_read_serial (fsrfdata, 'ALB_GIMP', SITE_alb_gimp  )
          ENDIF
 
-         u_site_emr = (USE_SITE_urban_radiation) .and. ncio_var_exist(fsrfdata,'EM_ROOF')
+         u_site_emr = (USE_SITE_urban_radiation) .and. ncio_var_exist(fsrfdata,'EM_ROOF',USE_SITE_urban_radiation)
          IF ( u_site_emr ) THEN
             CALL ncio_read_serial (fsrfdata, 'EM_ROOF', SITE_em_roof  )
          ENDIF
 
-         u_site_emw = (USE_SITE_urban_radiation) .and. ncio_var_exist(fsrfdata,'EM_WALL')
+         u_site_emw = (USE_SITE_urban_radiation) .and. ncio_var_exist(fsrfdata,'EM_WALL',USE_SITE_urban_radiation)
          IF ( u_site_emw ) THEN
             CALL ncio_read_serial (fsrfdata, 'EM_WALL', SITE_em_wall  )
          ENDIF
 
-         u_site_emgper = (USE_SITE_urban_radiation) .and. ncio_var_exist(fsrfdata,'EM_GPER')
+         u_site_emgper = (USE_SITE_urban_radiation) .and. ncio_var_exist(fsrfdata,'EM_GPER',USE_SITE_urban_radiation)
          IF ( u_site_emgper ) THEN
             CALL ncio_read_serial (fsrfdata, 'EM_GPER', SITE_em_gper  )
          ENDIF
 
-         u_site_emgimp = (USE_SITE_urban_radiation) .and. ncio_var_exist(fsrfdata,'EM_GIMP')
+         u_site_emgimp = (USE_SITE_urban_radiation) .and. ncio_var_exist(fsrfdata,'EM_GIMP',USE_SITE_urban_radiation)
          IF ( u_site_emgimp ) THEN
             CALL ncio_read_serial (fsrfdata, 'EM_GIMP', SITE_em_gimp  )
          ENDIF
 
          ! (6) urban thermal
-         u_site_cvr = (USE_SITE_urban_thermal) .and. ncio_var_exist(fsrfdata,'CV_ROOF')
+         u_site_cvr = (USE_SITE_urban_thermal) .and. ncio_var_exist(fsrfdata,'CV_ROOF',USE_SITE_urban_thermal)
          IF ( u_site_cvr ) THEN
             CALL ncio_read_serial (fsrfdata, 'CV_ROOF', SITE_cv_roof  )
          ENDIF
 
-         u_site_cvw = (USE_SITE_urban_thermal) .and. ncio_var_exist(fsrfdata,'CV_WALL')
+         u_site_cvw = (USE_SITE_urban_thermal) .and. ncio_var_exist(fsrfdata,'CV_WALL',USE_SITE_urban_thermal)
          IF ( u_site_cvw ) THEN
             CALL ncio_read_serial (fsrfdata, 'CV_WALL', SITE_cv_wall  )
          ENDIF
 
-         u_site_cvgimp = (USE_SITE_urban_thermal) .and. ncio_var_exist(fsrfdata,'CV_GIMP')
+         u_site_cvgimp = (USE_SITE_urban_thermal) .and. ncio_var_exist(fsrfdata,'CV_GIMP',USE_SITE_urban_thermal)
          IF ( u_site_cvgimp ) THEN
             CALL ncio_read_serial (fsrfdata, 'CV_GIMP', SITE_cv_gimp  )
          ENDIF
 
-         u_site_tkr = (USE_SITE_urban_thermal) .and. ncio_var_exist(fsrfdata,'TK_ROOF')
+         u_site_tkr = (USE_SITE_urban_thermal) .and. ncio_var_exist(fsrfdata,'TK_ROOF',USE_SITE_urban_thermal)
          IF ( u_site_tkr ) THEN
             CALL ncio_read_serial (fsrfdata, 'TK_ROOF', SITE_tk_roof  )
          ENDIF
 
-         u_site_tkw = (USE_SITE_urban_thermal) .and. ncio_var_exist(fsrfdata,'TK_WALL')
+         u_site_tkw = (USE_SITE_urban_thermal) .and. ncio_var_exist(fsrfdata,'TK_WALL',USE_SITE_urban_thermal)
          IF ( u_site_tkw ) THEN
             CALL ncio_read_serial (fsrfdata, 'TK_WALL', SITE_tk_wall  )
          ENDIF
 
-         u_site_tkgimp = (USE_SITE_urban_thermal) .and. ncio_var_exist(fsrfdata,'TK_GIMP')
+         u_site_tkgimp = (USE_SITE_urban_thermal) .and. ncio_var_exist(fsrfdata,'TK_GIMP',USE_SITE_urban_thermal)
          IF ( u_site_tkgimp ) THEN
             CALL ncio_read_serial (fsrfdata, 'TK_GIMP', SITE_tk_gimp  )
          ENDIF
 
          ! (6) urban human
-         u_site_pop= (USE_SITE_urban_human) .and. ncio_var_exist(fsrfdata,'resident_population_density')
+         u_site_pop= (USE_SITE_urban_human) .and. ncio_var_exist(fsrfdata,'resident_population_density',USE_SITE_urban_human)
          IF ( u_site_pop) THEN
             CALL ncio_read_serial (fsrfdata, 'resident_population_density', SITE_popden  )
          ELSE
@@ -1734,7 +1745,7 @@ ENDIF
                   SITE_popden)
          ENDIF
 
-         u_site_lucy= (USE_SITE_urban_human) .and. ncio_var_exist(fsrfdata,'LUCY_ID')
+         u_site_lucy= (USE_SITE_urban_human) .and. ncio_var_exist(fsrfdata,'LUCY_ID',USE_SITE_urban_human)
          IF ( u_site_lucy) THEN
             CALL ncio_read_serial (fsrfdata, 'LUCY_ID', SITE_lucyid )
          ELSE
@@ -1745,12 +1756,12 @@ ENDIF
                SITE_lon_location, SITE_lat_location, SITE_lucyid)
          ENDIF
 
-         u_site_tbmax= (USE_SITE_urban_human) .and. ncio_var_exist(fsrfdata,'T_BUILDING_MAX')
+         u_site_tbmax= (USE_SITE_urban_human) .and. ncio_var_exist(fsrfdata,'T_BUILDING_MAX',USE_SITE_urban_human)
          IF ( u_site_tbmax) THEN
             CALL ncio_read_serial (fsrfdata, 'T_BUILDING_MAX', SITE_t_roommax  )
          ENDIF
 
-         u_site_tbmin= (USE_SITE_urban_human) .and. ncio_var_exist(fsrfdata,'T_BUILDING_MIN')
+         u_site_tbmin= (USE_SITE_urban_human) .and. ncio_var_exist(fsrfdata,'T_BUILDING_MIN',USE_SITE_urban_human)
          IF ( u_site_tbmin) THEN
             CALL ncio_read_serial (fsrfdata, 'T_BUILDING_MIN', SITE_t_roommin  )
          ENDIF
@@ -1914,7 +1925,7 @@ ELSE
          IF (.not. u_site_fgper) SITE_fgimp = 1-wtperroad_lcz(utyp)/(1-SITE_froof)
 ENDIF
          ! (6) lake depth
-         u_site_lakedepth = (USE_SITE_lakedepth) .and. ncio_var_exist(fsrfdata,'lakedepth')
+         u_site_lakedepth = (USE_SITE_lakedepth) .and. ncio_var_exist(fsrfdata,'lakedepth',USE_SITE_lakedepth)
          IF (u_site_lakedepth) THEN
             CALL ncio_read_serial (fsrfdata, 'lakedepth', SITE_lakedepth)
          ELSE
@@ -1929,8 +1940,10 @@ ENDIF
 
          ! (7) soil brightness parameters
          u_site_soil_bright = (USE_SITE_soilreflectance) &
-            .and. ncio_var_exist(fsrfdata,'soil_s_v_alb') .and. ncio_var_exist(fsrfdata,'soil_d_v_alb') &
-            .and. ncio_var_exist(fsrfdata,'soil_s_n_alb') .and. ncio_var_exist(fsrfdata,'soil_d_n_alb')
+            .and. ncio_var_exist(fsrfdata,'soil_s_v_alb',USE_SITE_soilreflectance) &
+            .and. ncio_var_exist(fsrfdata,'soil_d_v_alb',USE_SITE_soilreflectance) &
+            .and. ncio_var_exist(fsrfdata,'soil_s_n_alb',USE_SITE_soilreflectance) &
+            .and. ncio_var_exist(fsrfdata,'soil_d_n_alb',USE_SITE_soilreflectance)
 
          IF (u_site_soil_bright) THEN
             CALL ncio_read_serial (fsrfdata, 'soil_s_v_alb', SITE_soil_s_v_alb)
@@ -1970,7 +1983,7 @@ ENDIF
          ! (8) soil parameters
          CALL gridsoil%define_by_name ('colm_500m')
 
-         u_site_vf_quartz_mineral = (USE_SITE_soilparameters) .and. ncio_var_exist(fsrfdata,'soil_vf_quartz_mineral')
+         u_site_vf_quartz_mineral = (USE_SITE_soilparameters) .and. ncio_var_exist(fsrfdata,'soil_vf_quartz_mineral',USE_SITE_soilparameters)
          IF (u_site_vf_quartz_mineral) THEN
             CALL ncio_read_serial (fsrfdata, 'soil_vf_quartz_mineral', SITE_soil_vf_quartz_mineral)
          ELSE
@@ -1983,7 +1996,7 @@ ENDIF
             ENDDO
          ENDIF
 
-         u_site_vf_gravels = (USE_SITE_soilparameters) .and. ncio_var_exist(fsrfdata,'soil_vf_gravels')
+         u_site_vf_gravels = (USE_SITE_soilparameters) .and. ncio_var_exist(fsrfdata,'soil_vf_gravels',USE_SITE_soilparameters)
          IF (u_site_vf_gravels) THEN
             CALL ncio_read_serial (fsrfdata, 'soil_vf_gravels', SITE_soil_vf_gravels)
          ELSE
@@ -1996,7 +2009,7 @@ ENDIF
             ENDDO
          ENDIF
 
-         u_site_vf_sand = (USE_SITE_soilparameters) .and. ncio_var_exist(fsrfdata,'soil_vf_sand')
+         u_site_vf_sand = (USE_SITE_soilparameters) .and. ncio_var_exist(fsrfdata,'soil_vf_sand',USE_SITE_soilparameters)
          IF (u_site_vf_sand) THEN
             CALL ncio_read_serial (fsrfdata, 'soil_vf_sand', SITE_soil_vf_sand)
          ELSE
@@ -2009,7 +2022,7 @@ ENDIF
             ENDDO
          ENDIF
 
-         u_site_vf_clay = (USE_SITE_soilparameters) .and. ncio_var_exist(fsrfdata,'soil_vf_clay')
+         u_site_vf_clay = (USE_SITE_soilparameters) .and. ncio_var_exist(fsrfdata,'soil_vf_clay',USE_SITE_soilparameters)
          IF (u_site_vf_clay) THEN
             CALL ncio_read_serial (fsrfdata, 'soil_vf_clay', SITE_soil_vf_clay)
          ELSE
@@ -2022,7 +2035,7 @@ ENDIF
             ENDDO
          ENDIF
 
-         u_site_vf_om = (USE_SITE_soilparameters) .and. ncio_var_exist(fsrfdata,'soil_vf_om')
+         u_site_vf_om = (USE_SITE_soilparameters) .and. ncio_var_exist(fsrfdata,'soil_vf_om',USE_SITE_soilparameters)
          IF (u_site_vf_om) THEN
             CALL ncio_read_serial (fsrfdata, 'soil_vf_om', SITE_soil_vf_om)
          ELSE
@@ -2035,7 +2048,7 @@ ENDIF
             ENDDO
          ENDIF
 
-         u_site_wf_gravels = (USE_SITE_soilparameters) .and. ncio_var_exist(fsrfdata,'soil_wf_gravels')
+         u_site_wf_gravels = (USE_SITE_soilparameters) .and. ncio_var_exist(fsrfdata,'soil_wf_gravels',USE_SITE_soilparameters)
          IF (u_site_wf_gravels) THEN
             CALL ncio_read_serial (fsrfdata, 'soil_wf_gravels', SITE_soil_wf_gravels)
          ELSE
@@ -2048,7 +2061,7 @@ ENDIF
             ENDDO
          ENDIF
 
-         u_site_wf_sand = (USE_SITE_soilparameters) .and. ncio_var_exist(fsrfdata,'soil_wf_sand')
+         u_site_wf_sand = (USE_SITE_soilparameters) .and. ncio_var_exist(fsrfdata,'soil_wf_sand',USE_SITE_soilparameters)
          IF (u_site_wf_sand) THEN
             CALL ncio_read_serial (fsrfdata, 'soil_wf_sand', SITE_soil_wf_sand)
          ELSE
@@ -2061,7 +2074,7 @@ ENDIF
             ENDDO
          ENDIF
 
-         u_site_OM_density = (USE_SITE_soilparameters) .and. ncio_var_exist(fsrfdata,'soil_OM_density')
+         u_site_OM_density = (USE_SITE_soilparameters) .and. ncio_var_exist(fsrfdata,'soil_OM_density',USE_SITE_soilparameters)
          IF (u_site_OM_density) THEN
             CALL ncio_read_serial (fsrfdata, 'soil_OM_density', SITE_soil_OM_density)
          ELSE
@@ -2074,7 +2087,7 @@ ENDIF
             ENDDO
          ENDIF
 
-         u_site_BD_all = (USE_SITE_soilparameters) .and. ncio_var_exist(fsrfdata,'soil_BD_all')
+         u_site_BD_all = (USE_SITE_soilparameters) .and. ncio_var_exist(fsrfdata,'soil_BD_all',USE_SITE_soilparameters)
          IF (u_site_BD_all) THEN
             CALL ncio_read_serial (fsrfdata, 'soil_BD_all', SITE_soil_BD_all)
          ELSE
@@ -2087,7 +2100,7 @@ ENDIF
             ENDDO
          ENDIF
 
-         u_site_theta_s = (USE_SITE_soilparameters) .and. ncio_var_exist(fsrfdata,'soil_theta_s')
+         u_site_theta_s = (USE_SITE_soilparameters) .and. ncio_var_exist(fsrfdata,'soil_theta_s',USE_SITE_soilparameters)
          IF (u_site_theta_s) THEN
             CALL ncio_read_serial (fsrfdata, 'soil_theta_s', SITE_soil_theta_s)
          ELSE
@@ -2100,7 +2113,7 @@ ENDIF
             ENDDO
          ENDIF
 
-         u_site_k_s = (USE_SITE_soilparameters) .and. ncio_var_exist(fsrfdata,'soil_k_s')
+         u_site_k_s = (USE_SITE_soilparameters) .and. ncio_var_exist(fsrfdata,'soil_k_s',USE_SITE_soilparameters)
          IF (u_site_k_s) THEN
             CALL ncio_read_serial (fsrfdata, 'soil_k_s', SITE_soil_k_s)
          ELSE
@@ -2113,7 +2126,7 @@ ENDIF
             ENDDO
          ENDIF
 
-         u_site_csol = (USE_SITE_soilparameters) .and. ncio_var_exist(fsrfdata,'soil_csol')
+         u_site_csol = (USE_SITE_soilparameters) .and. ncio_var_exist(fsrfdata,'soil_csol',USE_SITE_soilparameters)
          IF (u_site_csol) THEN
             CALL ncio_read_serial (fsrfdata, 'soil_csol', SITE_soil_csol)
          ELSE
@@ -2126,7 +2139,7 @@ ENDIF
             ENDDO
          ENDIF
 
-         u_site_tksatu = (USE_SITE_soilparameters) .and. ncio_var_exist(fsrfdata,'soil_tksatu')
+         u_site_tksatu = (USE_SITE_soilparameters) .and. ncio_var_exist(fsrfdata,'soil_tksatu',USE_SITE_soilparameters)
          IF (u_site_tksatu) THEN
             CALL ncio_read_serial (fsrfdata, 'soil_tksatu', SITE_soil_tksatu)
          ELSE
@@ -2139,7 +2152,7 @@ ENDIF
             ENDDO
          ENDIF
 
-         u_site_tksatf = (USE_SITE_soilparameters) .and. ncio_var_exist(fsrfdata,'soil_tksatf')
+         u_site_tksatf = (USE_SITE_soilparameters) .and. ncio_var_exist(fsrfdata,'soil_tksatf',USE_SITE_soilparameters)
          IF (u_site_tksatf) THEN
             CALL ncio_read_serial (fsrfdata, 'soil_tksatf', SITE_soil_tksatf)
          ELSE
@@ -2152,7 +2165,7 @@ ENDIF
             ENDDO
          ENDIF
 
-         u_site_tkdry = (USE_SITE_soilparameters) .and. ncio_var_exist(fsrfdata,'soil_tkdry')
+         u_site_tkdry = (USE_SITE_soilparameters) .and. ncio_var_exist(fsrfdata,'soil_tkdry',USE_SITE_soilparameters)
          IF (u_site_tkdry) THEN
             CALL ncio_read_serial (fsrfdata, 'soil_tkdry', SITE_soil_tkdry)
          ELSE
@@ -2165,7 +2178,7 @@ ENDIF
             ENDDO
          ENDIF
 
-         u_site_k_solids = (USE_SITE_soilparameters) .and. ncio_var_exist(fsrfdata,'soil_k_solids')
+         u_site_k_solids = (USE_SITE_soilparameters) .and. ncio_var_exist(fsrfdata,'soil_k_solids',USE_SITE_soilparameters)
          IF (u_site_k_solids) THEN
             CALL ncio_read_serial (fsrfdata, 'soil_k_solids', SITE_soil_k_solids)
          ELSE
@@ -2178,7 +2191,7 @@ ENDIF
             ENDDO
          ENDIF
 
-         u_site_psi_s = (USE_SITE_soilparameters) .and. ncio_var_exist(fsrfdata,'soil_psi_s')
+         u_site_psi_s = (USE_SITE_soilparameters) .and. ncio_var_exist(fsrfdata,'soil_psi_s',USE_SITE_soilparameters)
          IF (u_site_psi_s) THEN
             CALL ncio_read_serial (fsrfdata, 'soil_psi_s', SITE_soil_psi_s)
          ELSE
@@ -2191,7 +2204,7 @@ ENDIF
             ENDDO
          ENDIF
 
-         u_site_lambda = (USE_SITE_soilparameters) .and. ncio_var_exist(fsrfdata,'soil_lambda')
+         u_site_lambda = (USE_SITE_soilparameters) .and. ncio_var_exist(fsrfdata,'soil_lambda',USE_SITE_soilparameters)
          IF (u_site_lambda) THEN
             CALL ncio_read_serial (fsrfdata, 'soil_lambda', SITE_soil_lambda)
          ELSE
@@ -2205,7 +2218,7 @@ ENDIF
          ENDIF
 
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
-         u_site_theta_r = (USE_SITE_soilparameters) .and. ncio_var_exist(fsrfdata,'soil_theta_r')
+         u_site_theta_r = (USE_SITE_soilparameters) .and. ncio_var_exist(fsrfdata,'soil_theta_r',USE_SITE_soilparameters)
          IF (u_site_theta_r) THEN
             CALL ncio_read_serial (fsrfdata, 'soil_theta_r', SITE_soil_theta_r)
          ELSE
@@ -2218,7 +2231,7 @@ ENDIF
             ENDDO
          ENDIF
 
-         u_site_alpha_vgm = (USE_SITE_soilparameters) .and. ncio_var_exist(fsrfdata,'soil_alpha_vgm')
+         u_site_alpha_vgm = (USE_SITE_soilparameters) .and. ncio_var_exist(fsrfdata,'soil_alpha_vgm',USE_SITE_soilparameters)
          IF (u_site_alpha_vgm) THEN
             CALL ncio_read_serial (fsrfdata, 'soil_alpha_vgm', SITE_soil_alpha_vgm)
          ELSE
@@ -2231,7 +2244,7 @@ ENDIF
             ENDDO
          ENDIF
 
-         u_site_L_vgm = (USE_SITE_soilparameters) .and. ncio_var_exist(fsrfdata,'soil_L_vgm')
+         u_site_L_vgm = (USE_SITE_soilparameters) .and. ncio_var_exist(fsrfdata,'soil_L_vgm',USE_SITE_soilparameters)
          IF (u_site_L_vgm) THEN
             CALL ncio_read_serial (fsrfdata, 'soil_L_vgm', SITE_soil_L_vgm)
          ELSE
@@ -2244,7 +2257,7 @@ ENDIF
             ENDDO
          ENDIF
 
-         u_site_n_vgm = (USE_SITE_soilparameters) .and. ncio_var_exist(fsrfdata,'soil_n_vgm')
+         u_site_n_vgm = (USE_SITE_soilparameters) .and. ncio_var_exist(fsrfdata,'soil_n_vgm',USE_SITE_soilparameters)
          IF (u_site_n_vgm) THEN
             CALL ncio_read_serial (fsrfdata, 'soil_n_vgm', SITE_soil_n_vgm)
          ELSE
@@ -2276,7 +2289,7 @@ ENDIF
          ENDDO
 
          IF (DEF_Runoff_SCHEME == 3) THEN ! for Simple VIC
-            u_site_soil_texture = (USE_SITE_soilparameters) .and. ncio_var_exist(fsrfdata,'soil_texture')
+            u_site_soil_texture = (USE_SITE_soilparameters) .and. ncio_var_exist(fsrfdata,'soil_texture',USE_SITE_soilparameters)
             IF (u_site_soil_texture) THEN
                CALL ncio_read_serial (fsrfdata, 'soil_texture', SITE_soil_texture)
             ELSE
@@ -2319,7 +2332,7 @@ ENDIF
 
          ! (9) depth to bedrock
          IF (DEF_USE_BEDROCK) THEN
-            u_site_dbedrock = (USE_SITE_dbedrock) .and. ncio_var_exist (fsrfdata, 'depth_to_bedrock')
+            u_site_dbedrock = (USE_SITE_dbedrock) .and. ncio_var_exist (fsrfdata, 'depth_to_bedrock',USE_SITE_dbedrock)
             IF (u_site_dbedrock) THEN
                CALL ncio_read_serial (fsrfdata, 'depth_to_bedrock', SITE_dbedrock)
             ELSE
@@ -2333,7 +2346,7 @@ ENDIF
          ENDIF
 
          ! (10) topography
-         u_site_elevation = (USE_SITE_topography) .and. ncio_var_exist (fsrfdata, 'elevation')
+         u_site_elevation = (USE_SITE_topography) .and. ncio_var_exist (fsrfdata, 'elevation',USE_SITE_topography)
          IF (u_site_elevation) THEN
             CALL ncio_read_serial (fsrfdata, 'elevation', SITE_elevation)
          ELSE
@@ -2343,7 +2356,7 @@ ENDIF
                SITE_lon_location, SITE_lat_location, SITE_elevation)
          ENDIF
 
-         u_site_elvstd = (USE_SITE_topography) .and. ncio_var_exist (fsrfdata, 'elvstd')
+         u_site_elvstd = (USE_SITE_topography) .and. ncio_var_exist (fsrfdata, 'elvstd',USE_SITE_topography)
          IF (u_site_elvstd) THEN
             CALL ncio_read_serial (fsrfdata, 'elvstd', SITE_elvstd)
          ELSE
@@ -2357,7 +2370,7 @@ ENDIF
                CALL grid_topo_factor%define_from_file (filename, "lat", "lon")
             ENDIF
 
-            u_site_svf = (USE_SITE_topography) .and. ncio_var_exist (fsrfdata, 'SITE_svf')
+            u_site_svf = (USE_SITE_topography) .and. ncio_var_exist (fsrfdata, 'SITE_svf',USE_SITE_topography)
             IF (u_site_svf) THEN
                CALL ncio_read_serial (fsrfdata, 'SITE_svf' , SITE_svf)
             ELSE
@@ -2366,7 +2379,7 @@ ENDIF
                   SITE_lon_location, SITE_lat_location, SITE_svf)
             ENDIF
 
-            u_site_cur = (USE_SITE_topography) .and. ncio_var_exist (fsrfdata, 'SITE_cur')
+            u_site_cur = (USE_SITE_topography) .and. ncio_var_exist (fsrfdata, 'SITE_cur',USE_SITE_topography)
             IF (u_site_cur) THEN
                CALL ncio_read_serial (fsrfdata, 'SITE_cur' , SITE_cur)
             ELSE
@@ -2376,9 +2389,9 @@ ENDIF
             ENDIF
 
             u_site_slp_type = (USE_SITE_topography) &
-               .and. ncio_var_exist (fsrfdata, 'SITE_slp_type') &
-               .and. ncio_var_exist (fsrfdata, 'SITE_asp_type') &
-               .and. ncio_var_exist (fsrfdata, 'SITE_area_type')
+               .and. ncio_var_exist (fsrfdata, 'SITE_slp_type' ,USE_SITE_topography) &
+               .and. ncio_var_exist (fsrfdata, 'SITE_asp_type' ,USE_SITE_topography) &
+               .and. ncio_var_exist (fsrfdata, 'SITE_area_type',USE_SITE_topography)
             u_site_asp_type  = u_site_slp_type
             u_site_area_type = u_site_slp_type
 
@@ -2419,7 +2432,7 @@ ENDIF
 
             ENDIF
 
-            u_site_sf_lut = (USE_SITE_topography) .and. ncio_var_exist (fsrfdata, 'SITE_sf_lut')
+            u_site_sf_lut = (USE_SITE_topography) .and. ncio_var_exist (fsrfdata, 'SITE_sf_lut',USE_SITE_topography)
             IF (u_site_sf_lut) THEN
                CALL ncio_read_serial (fsrfdata, 'SITE_sf_lut', SITE_sf_lut)
             ELSE
@@ -2636,7 +2649,7 @@ ENDIF
          CALL ncio_define_dimension (fsrfdata, 'J8day', 46)
       ENDIF
 
-      CALL ncio_define_dimension (fsrfdata, 'soil', nl_soil)
+      CALL ncio_define_dimension (fsrfdata, 'soil', 8)
 
       IF (DEF_USE_Forcing_Downscaling) THEN
          CALL ncio_define_dimension (fsrfdata, 'slope_type', num_slope_type)
@@ -2936,7 +2949,7 @@ ENDIF
 
       CALL ncio_create_file (fsrfdata)
 
-      CALL ncio_define_dimension (fsrfdata, 'soil',  nl_soil )
+      CALL ncio_define_dimension (fsrfdata, 'soil', 8)
 
       CALL ncio_define_dimension (fsrfdata, 'azi', num_azimuth)
       CALL ncio_define_dimension (fsrfdata, 'zen', num_zenith)
