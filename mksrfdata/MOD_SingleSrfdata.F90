@@ -218,6 +218,8 @@ CONTAINS
    integer, parameter :: N_PFT_modis = 16
    logical            :: readflag
 
+      CALL Init_GlobalVars
+      CALL Init_LC_Const
 
       IF (mksrfdata) THEN
          write(*,*)
@@ -474,9 +476,13 @@ CONTAINS
 
       IF (mksrfdata) THEN
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
-         arraysize = size(SITE_htop_pfts)
-         write(fmt_str, '("(A,", I0, "F8.2,3A)")') arraysize
-         write(*,fmt_str) 'Forest height : ', SITE_htop_pfts, ' (from ',trim(datasource(u_site_htop)),')'
+         IF (patchtypes(SITE_landtype) == 0) THEN
+            arraysize = size(SITE_htop_pfts)
+            write(fmt_str, '("(A,", I0, "F8.2,3A)")') arraysize
+            write(*,fmt_str) 'Forest height : ', SITE_htop_pfts, ' (from ',trim(datasource(u_site_htop)),')'
+         ELSE
+            write(*,'(A,F8.2,3A)') 'Forest height : ', SITE_htop, ' (from ',trim(datasource(u_site_htop)),')'
+         ENDIF
 #else
          write(*,'(A,F8.2,3A)') 'Forest height : ', SITE_htop, ' (from ',trim(datasource(u_site_htop)),')'
 #endif
