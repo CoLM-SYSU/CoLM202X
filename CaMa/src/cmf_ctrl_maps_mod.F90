@@ -213,7 +213,7 @@ CONTAINS
          CALL READ_BIFPARAM
       ENDIF
 
-      deallocate( I2NEXTX,I2NEXTY,I2REGION )
+      deallocate(I2NEXTY,I2REGION )
 
       write(LOGNAM,*) 'CMF::RIVMAP_INIT: end'
 

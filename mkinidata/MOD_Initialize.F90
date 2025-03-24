@@ -1467,10 +1467,11 @@ CONTAINS
             ENDIF
          ENDDO
 
-         CALL check_vector_data ('Basin Water Depth   [m]  ', wdsrf_bsn)
-         CALL check_vector_data ('HRU Water Depth     [m]  ', wdsrf_bsnhru)
-
       ENDIF
+
+      CALL check_vector_data ('Basin Water Depth   [m]  ', wdsrf_bsn)
+      CALL check_vector_data ('HRU Water Depth     [m]  ', wdsrf_bsnhru)
+
 #endif
 
 ! ...............................................................

@@ -65,11 +65,10 @@ CONTAINS
    character(len=256) :: dir_5x5, suffix, cyear
    type (block_data_real8_3d) :: pctpft
    real(r8), allocatable :: pctpft_patch(:,:), pctpft_one(:,:)
-   real(r8), allocatable :: area_one(:)
-   integer  :: ipatch, ipft, npatch, npft
+   real(r8), allocatable :: area_one  (:)
+   logical,  allocatable :: patchmask (:)
+   integer  :: ipatch, ipft, npatch, npft, npft_glb
    real(r8) :: sumarea
-   logical, allocatable :: patchmask (:)
-   integer  :: npft_glb
 
       IF (p_is_master) THEN
          write(*,'(A)') 'Making land plant function type tiles :'
@@ -200,7 +199,7 @@ CONTAINS
                      landpft%eindex(npft) = landpatch%eindex(ipatch)
                      landpft%ipxstt(npft) = landpatch%ipxstt(ipatch)
                      landpft%ipxend(npft) = landpatch%ipxend(ipatch)
-                     landpft%settyp(npft) = cropclass(ipatch)
+                     landpft%settyp(npft) = cropclass(ipatch) + N_PFT - 1
 
                      landpft%pctshared(npft) = landpatch%pctshared(ipatch)
 

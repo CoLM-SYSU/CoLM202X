@@ -153,16 +153,21 @@ CONTAINS
       !TODO-done@wenzong: need to add for urban model CASE like IGBP/USGS above?
 #ifndef URBAN_MODEL
       IF (.not. DEF_USE_LAIFEEDBACK)THEN
-         IF (DEF_LAI_MONTHLY) THEN
+         IF (patchtypes(SITE_landtype) == 0) THEN
             tlai_p(:) = pack(SITE_LAI_pfts_monthly(:,time,iyear), SITE_pctpfts > 0.)
             tsai_p(:) = pack(SITE_SAI_pfts_monthly(:,time,iyear), SITE_pctpfts > 0.)
             tlai(:)   = sum (SITE_LAI_pfts_monthly(:,time,iyear) * SITE_pctpfts)
             tsai(:)   = sum (SITE_SAI_pfts_monthly(:,time,iyear) * SITE_pctpfts)
+         ELSE
+            tlai(:) = SITE_LAI_monthly(time,iyear)
+            tsai(:) = SITE_SAI_monthly(time,iyear)
          ENDIF
       ELSE
-         IF (DEF_LAI_MONTHLY) THEN
+         IF (patchtypes(SITE_landtype) == 0) THEN
             tsai_p(:) = pack(SITE_SAI_pfts_monthly(:,time,iyear), SITE_pctpfts > 0.)
             tsai(:)   = sum (SITE_SAI_pfts_monthly(:,time,iyear) * SITE_pctpfts)
+         ELSE
+            tsai(:) = SITE_SAI_monthly(time,iyear)
          ENDIF
       ENDIF
 #endif
