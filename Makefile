@@ -225,6 +225,7 @@ OBJS_MAIN = \
 				MOD_Catch_SubsurfaceFlow.o                \
 				MOD_Catch_RiverLakeFlow.o                 \
 				MOD_Catch_Hist.o                          \
+				MOD_Catch_WriteParameters.o               \
 				MOD_BGC_CNCStateUpdate1.o                 \
 				MOD_BGC_CNCStateUpdate2.o                 \
 				MOD_BGC_CNCStateUpdate3.o                 \

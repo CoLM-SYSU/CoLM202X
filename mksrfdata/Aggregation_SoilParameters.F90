@@ -70,6 +70,8 @@ SUBROUTINE Aggregation_SoilParameters ( &
    type (block_data_real8_2d) :: vf_clay_s_grid
    type (block_data_real8_2d) :: wf_gravels_s_grid
    type (block_data_real8_2d) :: wf_sand_s_grid
+   type (block_data_real8_2d) :: wf_om_s_grid
+   type (block_data_real8_2d) :: wf_clay_s_grid
    type (block_data_real8_2d) :: OM_density_s_grid
    type (block_data_real8_2d) :: BD_all_s_grid
    type (block_data_real8_2d) :: theta_s_grid
@@ -95,6 +97,8 @@ SUBROUTINE Aggregation_SoilParameters ( &
    real(r8), allocatable :: vf_clay_s_patches (:)
    real(r8), allocatable :: wf_gravels_s_patches (:)
    real(r8), allocatable :: wf_sand_s_patches (:)
+   real(r8), allocatable :: wf_om_s_patches (:)
+   real(r8), allocatable :: wf_clay_s_patches (:)
    real(r8), allocatable :: OM_density_s_patches (:)
    real(r8), allocatable :: BD_all_s_patches (:)
    real(r8), allocatable :: theta_s_patches (:)
@@ -122,6 +126,8 @@ SUBROUTINE Aggregation_SoilParameters ( &
    real(r8), allocatable :: vf_clay_s_one (:)
    real(r8), allocatable :: wf_gravels_s_one (:)
    real(r8), allocatable :: wf_sand_s_one (:)
+   real(r8), allocatable :: wf_om_s_one (:)
+   real(r8), allocatable :: wf_clay_s_one (:)
    real(r8), allocatable :: OM_density_s_one (:)
    real(r8), allocatable :: BD_all_s_one (:)
    real(r8), allocatable :: theta_s_one (:)
@@ -187,6 +193,8 @@ SUBROUTINE Aggregation_SoilParameters ( &
    real(r8), parameter :: vf_om_fill_water(8)             = 0.102
    real(r8), parameter :: wf_gravels_fill_water(8)        = 0.0
    real(r8), parameter :: wf_sand_fill_water(8)           = 0.1
+   real(r8), parameter :: wf_om_fill_water(8)             = 0.1
+   real(r8), parameter :: wf_clay_fill_water(8)           = 0.2
    real(r8), parameter :: theta_r_fill_water(8)           = 0.116
    real(r8), parameter :: alpha_vgm_fill_water(8)         = 0.01
    real(r8), parameter :: n_vgm_fill_water(8)             = 1.352
@@ -240,6 +248,8 @@ SUBROUTINE Aggregation_SoilParameters ( &
          allocate ( vf_clay_s_patches          (numpatch) )
          allocate ( wf_gravels_s_patches       (numpatch) )
          allocate ( wf_sand_s_patches          (numpatch) )
+         allocate ( wf_om_s_patches            (numpatch) )
+         allocate ( wf_clay_s_patches          (numpatch) )
          allocate ( OM_density_s_patches       (numpatch) )
          allocate ( BD_all_s_patches           (numpatch) )
          allocate ( theta_s_patches            (numpatch) )
@@ -1537,6 +1547,123 @@ SUBROUTINE Aggregation_SoilParameters ( &
             -1.0e36_r8, lndname, 'vf_clay_s_l'//trim(c), compress = 1, write_mode = 'one')
 #endif
 
+
+         ! (23) gravimetric fraction of om
+         IF (p_is_io) THEN
+
+            CALL allocate_block_data (gland, wf_om_s_grid)
+            lndname = trim(dir_rawdata)//'/soil/wf_om_s.nc'
+            CALL ncio_read_block (lndname, 'wf_om_s_l'//trim(c), gland, wf_om_s_grid)
+#ifdef USEMPI
+            CALL aggregation_data_daemon (gland, data_r8_2d_in1 = wf_om_s_grid)
+#endif
+         ENDIF
+
+         IF (p_is_worker) THEN
+
+            DO ipatch = 1, numpatch
+               L = landpatch%settyp(ipatch)
+
+               IF (L /= 0) THEN
+                  CALL aggregation_request_data (landpatch, ipatch, gland, zip = USE_zip_for_aggregation, area = area_one, &
+                     data_r8_2d_in1 = wf_om_s_grid, data_r8_2d_out1 = wf_om_s_one)
+                  CALL fillnan (wf_om_s_one, L == WATERBODY, wf_om_fill_water(nsl))
+                  wf_om_s_patches (ipatch) = sum (wf_om_s_one * (area_one/sum(area_one)))
+               ELSE
+                  wf_om_s_patches (ipatch) = -1.0e36_r8
+               ENDIF
+
+               IF (isnan_ud(wf_om_s_patches(ipatch))) THEN
+                  write(*,*) "Warning: NAN appears in wf_om_s_patches."
+                  write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
+               ENDIF
+
+            ENDDO
+
+#ifdef USEMPI
+            CALL aggregation_worker_done ()
+#endif
+         ENDIF
+
+#ifdef USEMPI
+         CALL mpi_barrier (p_comm_glb, p_err)
+#endif
+
+#ifdef RangeCheck
+         CALL check_vector_data ('wf_om_s lev '//trim(c), wf_om_s_patches)
+#endif
+
+         lndname = trim(landdir)//'/wf_om_s_l'//trim(c)//'_patches.nc'
+         CALL ncio_create_file_vector (lndname, landpatch)
+         CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
+         CALL ncio_write_vector (lndname, 'wf_om_s_l'//trim(c)//'_patches', 'patch',&
+                                 landpatch, wf_om_s_patches, DEF_Srfdata_CompressLevel)
+
+#ifdef SrfdataDiag
+         typpatch = (/(ityp, ityp = 0, N_land_classification)/)
+         lndname  = trim(dir_model_landdata) // '/diag/soil_parameters_' // trim(cyear) // '.nc'
+         CALL srfdata_map_and_write (wf_om_s_patches, landpatch%settyp, typpatch, m_patch2diag, &
+            -1.0e36_r8, lndname, 'wf_om_s_l'//trim(c), compress = 1, write_mode = 'one')
+#endif
+
+
+         ! (24) gravimetric fraction of clay
+         IF (p_is_io) THEN
+
+            CALL allocate_block_data (gland, wf_clay_s_grid)
+            lndname = trim(dir_rawdata)//'/soil/wf_clay_s.nc'
+            CALL ncio_read_block (lndname, 'wf_clay_s_l'//trim(c), gland, wf_clay_s_grid)
+#ifdef USEMPI
+            CALL aggregation_data_daemon (gland, data_r8_2d_in1 = wf_clay_s_grid)
+#endif
+         ENDIF
+
+         IF (p_is_worker) THEN
+
+            DO ipatch = 1, numpatch
+               L = landpatch%settyp(ipatch)
+
+               IF (L /= 0) THEN
+                  CALL aggregation_request_data (landpatch, ipatch, gland, zip = USE_zip_for_aggregation, area = area_one, &
+                     data_r8_2d_in1 = wf_clay_s_grid, data_r8_2d_out1 = wf_clay_s_one)
+                  CALL fillnan (wf_clay_s_one, L == WATERBODY, wf_clay_fill_water(nsl))
+                  wf_clay_s_patches (ipatch) = sum (wf_clay_s_one * (area_one/sum(area_one)))
+               ELSE
+                  wf_clay_s_patches (ipatch) = -1.0e36_r8
+               ENDIF
+
+               IF (isnan_ud(wf_clay_s_patches(ipatch))) THEN
+                  write(*,*) "Warning: NAN appears in wf_clay_s_patches."
+                  write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
+               ENDIF
+
+            ENDDO
+
+#ifdef USEMPI
+            CALL aggregation_worker_done ()
+#endif
+         ENDIF
+
+#ifdef USEMPI
+         CALL mpi_barrier (p_comm_glb, p_err)
+#endif
+
+#ifdef RangeCheck
+         CALL check_vector_data ('wf_clay_s lev '//trim(c), wf_clay_s_patches)
+#endif
+
+         lndname = trim(landdir)//'/wf_clay_s_l'//trim(c)//'_patches.nc'
+         CALL ncio_create_file_vector (lndname, landpatch)
+         CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
+         CALL ncio_write_vector (lndname, 'wf_clay_s_l'//trim(c)//'_patches', 'patch',&
+                                 landpatch, wf_clay_s_patches, DEF_Srfdata_CompressLevel)
+
+#ifdef SrfdataDiag
+         typpatch = (/(ityp, ityp = 0, N_land_classification)/)
+         lndname  = trim(dir_model_landdata) // '/diag/soil_parameters_' // trim(cyear) // '.nc'
+         CALL srfdata_map_and_write (wf_clay_s_patches, landpatch%settyp, typpatch, m_patch2diag, &
+            -1.0e36_r8, lndname, 'wf_clay_s_l'//trim(c), compress = 1, write_mode = 'one')
+#endif
       ENDDO
 
 
@@ -1552,6 +1679,8 @@ SUBROUTINE Aggregation_SoilParameters ( &
          deallocate ( vf_clay_s_patches )
          deallocate ( wf_gravels_s_patches )
          deallocate ( wf_sand_s_patches )
+         deallocate ( wf_om_s_patches )
+         deallocate ( wf_clay_s_patches )
          deallocate ( OM_density_s_patches )
          deallocate ( BD_all_s_patches )
          deallocate ( theta_s_patches )
@@ -1579,6 +1708,8 @@ SUBROUTINE Aggregation_SoilParameters ( &
          IF (allocated(vf_clay_s_one))           deallocate (vf_clay_s_one)
          IF (allocated(wf_gravels_s_one))        deallocate (wf_gravels_s_one)
          IF (allocated(wf_sand_s_one))           deallocate (wf_sand_s_one)
+         IF (allocated(wf_om_s_one))             deallocate (wf_om_s_one)
+         IF (allocated(wf_clay_s_one))           deallocate (wf_clay_s_one)
          IF (allocated(OM_density_s_one))        deallocate (OM_density_s_one)
          IF (allocated(BD_all_s_one))            deallocate (BD_all_s_one)
          IF (allocated(theta_s_one))             deallocate (theta_s_one)

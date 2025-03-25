@@ -54,6 +54,7 @@ CONTAINS
    USE MOD_LandPatch
    USE MOD_Utils
 #endif
+   USE MOD_Catch_WriteParameters
    IMPLICIT NONE
       
    integer, intent(in) :: lc_year    ! which year of land cover data used
@@ -65,6 +66,8 @@ CONTAINS
       CALL element_neighbour_init  (lc_year)
       CALL river_lake_network_init ()
       CALL subsurface_network_init ()
+
+      CALL write_catch_parameters ()
 
 #ifdef CoLMDEBUG
       IF (p_is_worker) THEN

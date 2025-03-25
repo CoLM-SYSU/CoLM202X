@@ -279,10 +279,10 @@ CONTAINS
          ENDIF
 
          IF (HistForm == 'Gridded') THEN
-            IF (itime_in_file == 1) THEN
-               CALL hist_write_var_real8_2d (file_hist, 'landarea', ghist, 1, sumarea, &
+            IF (trim(file_hist) /= trim(file_last)) THEN
+               CALL hist_write_var_real8_2d (file_hist, 'landarea', ghist, -1, sumarea, &
                   compress = 1, longname = 'land area', units = 'km2')
-               CALL hist_write_var_real8_2d (file_hist, 'landfraction', ghist, 1, landfraction, &
+               CALL hist_write_var_real8_2d (file_hist, 'landfraction', ghist, -1, landfraction, &
                   compress = 1, longname = 'land fraction', units = '-')
             ENDIF
          ENDIF
@@ -653,6 +653,17 @@ CONTAINS
                ENDIF
 
                filter = filter .and. patchmask
+            ENDIF
+         ENDIF
+
+         IF (HistForm == 'Gridded') THEN
+            CALL mp2g_hist%get_sumarea (sumarea, filter)
+         ENDIF
+
+         IF (HistForm == 'Gridded') THEN
+            IF (trim(file_hist) /= trim(file_last)) THEN
+               CALL hist_write_var_real8_2d (file_hist, 'area_wetland', ghist, -1, sumarea, &
+                  compress = 1, longname = 'area of wetland', units = 'km2')
             ENDIF
          ENDIF
 
