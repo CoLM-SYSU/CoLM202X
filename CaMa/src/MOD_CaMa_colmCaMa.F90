@@ -181,6 +181,8 @@ CONTAINS
                ELSE
                   DEF_hist_cama_vars%winfilt=.false.
                ENDIF
+            CASE ('outflw_ocean') ! discharge to ocean [m3/s]
+               DEF_hist_cama_vars%outflw_ocean=.true.
             CASE DEFAULT
                STOP
             END SELECT
@@ -349,6 +351,8 @@ CONTAINS
    END SUBROUTINE colm_cama_drv
 
    SUBROUTINE colm_cama_exit
+   USE YOS_CMF_MAP, only: I2NEXTX
+
    IMPLICIT NONE
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
@@ -358,9 +362,11 @@ CONTAINS
       IF(p_is_master)THEN
          ! finalize CaMa-Flood
          deallocate(ZBUFF)
+         deallocate(ZBUFF_2)
          deallocate (runoff_2d)
          deallocate (fevpg_2d)
          deallocate (finfg_2d)
+         deallocate( I2NEXTX )
       ENDIF
       IF (p_is_worker) THEN
          deallocate (flddepth_cama)
