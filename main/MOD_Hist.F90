@@ -235,8 +235,6 @@ CONTAINS
 
          CALL hist_write_time (file_hist, file_last, 'time', idate, itime_in_file)
 
-         file_last = file_hist
-
          IF (p_is_worker) THEN
             IF (numpatch > 0) THEN
                allocate (filter (numpatch))
@@ -3962,6 +3960,8 @@ CONTAINS
             itime_mem = 0
          ENDIF
 #endif
+
+         file_last = file_hist
 
       ENDIF
 
