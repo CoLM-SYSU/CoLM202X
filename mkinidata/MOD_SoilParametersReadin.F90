@@ -52,8 +52,8 @@ CONTAINS
    real(r8), allocatable :: soil_vf_clay_s_l           (:) ! volumetric fraction of clay
    real(r8), allocatable :: soil_wf_gravels_s_l        (:) ! gravimetric fraction of gravels
    real(r8), allocatable :: soil_wf_sand_s_l           (:) ! gravimetric fraction of sand
-   real(r8), allocatable :: soil_wf_om_s_l             (:) ! gravimetric fraction of om
    real(r8), allocatable :: soil_wf_clay_s_l           (:) ! gravimetric fraction of clay
+   real(r8), allocatable :: soil_wf_om_s_l             (:) ! gravimetric fraction of om
    real(r8), allocatable :: soil_OM_density_s_l        (:) ! OM_density (kg/m3)
    real(r8), allocatable :: soil_BD_all_s_l            (:) ! bulk density of soil (GRAVELS + OM + mineral soils, kg/m3)
    real(r8), allocatable :: soil_theta_s_l             (:) ! saturated water content (cm3/cm3)
@@ -96,8 +96,8 @@ CONTAINS
             allocate ( soil_vf_clay_s_l           (numpatch) )
             allocate ( soil_wf_gravels_s_l        (numpatch) )
             allocate ( soil_wf_sand_s_l           (numpatch) )
-            allocate ( soil_wf_om_s_l             (numpatch) )
             allocate ( soil_wf_clay_s_l           (numpatch) )
+            allocate ( soil_wf_om_s_l             (numpatch) )
             allocate ( soil_OM_density_s_l        (numpatch) )
             allocate ( soil_BD_all_s_l            (numpatch) )
             allocate ( soil_theta_s_l             (numpatch) )
@@ -135,8 +135,8 @@ CONTAINS
          soil_vf_clay_s_l           (:) = SITE_soil_vf_clay           (nsl)
          soil_wf_gravels_s_l        (:) = SITE_soil_wf_gravels        (nsl)
          soil_wf_sand_s_l           (:) = SITE_soil_wf_sand           (nsl)
-         soil_wf_om_s_l             (:) = SITE_soil_wf_om             (nsl)
          soil_wf_clay_s_l           (:) = SITE_soil_wf_clay           (nsl)
+         soil_wf_om_s_l             (:) = SITE_soil_wf_om             (nsl)
          soil_OM_density_s_l        (:) = SITE_soil_OM_density        (nsl)
          soil_BD_all_s_l            (:) = SITE_soil_BD_all            (nsl)
          soil_theta_s_l             (:) = SITE_soil_theta_s           (nsl)
@@ -258,13 +258,13 @@ CONTAINS
          lndname = trim(landdir)//'/vf_clay_s_l'//trim(c)//'_patches.nc'
          CALL ncio_read_vector (lndname, 'vf_clay_s_l'//trim(c)//'_patches', landpatch, soil_vf_clay_s_l, defval = 0.1)
 
-         ! (25) read in the gravimetric fraction of om
-         lndname = trim(landdir)//'/wf_om_s_l'//trim(c)//'_patches.nc'
-         CALL ncio_read_vector (lndname, 'wf_om_s_l'//trim(c)//'_patches', landpatch, soil_wf_om_s_l)
-
-         ! (26) read in the gravimetric fraction of clay
+         ! (25) read in the gravimetric fraction of clay
          lndname = trim(landdir)//'/wf_clay_s_l'//trim(c)//'_patches.nc'
          CALL ncio_read_vector (lndname, 'wf_clay_s_l'//trim(c)//'_patches', landpatch, soil_wf_clay_s_l)
+
+         ! (26) read in the gravimetric fraction of om
+         lndname = trim(landdir)//'/wf_om_s_l'//trim(c)//'_patches.nc'
+         CALL ncio_read_vector (lndname, 'wf_om_s_l'//trim(c)//'_patches', landpatch, soil_wf_om_s_l)
 
 #endif
 
@@ -280,8 +280,8 @@ CONTAINS
                   vf_clay   (nsl,ipatch) = -1.e36
                   wf_gravels(nsl,ipatch) = -1.e36
                   wf_sand   (nsl,ipatch) = -1.e36
-                  wf_om     (nsl,ipatch) = -1.e36
                   wf_clay   (nsl,ipatch) = -1.e36
+                  wf_om     (nsl,ipatch) = -1.e36
                   OM_density(nsl,ipatch) = -1.e36
                   BD_all    (nsl,ipatch) = -1.e36
                   wfc       (nsl,ipatch) = -1.e36
@@ -310,8 +310,8 @@ CONTAINS
                   vf_clay    (nsl,ipatch) = soil_vf_clay_s_l          (ipatch)
                   wf_gravels (nsl,ipatch) = soil_wf_gravels_s_l       (ipatch)
                   wf_sand    (nsl,ipatch) = soil_wf_sand_s_l          (ipatch)
-                  wf_om      (nsl,ipatch) = soil_wf_om_s_l            (ipatch)
                   wf_clay    (nsl,ipatch) = soil_wf_clay_s_l          (ipatch)
+                  wf_om      (nsl,ipatch) = soil_wf_om_s_l            (ipatch)
                   OM_density (nsl,ipatch) = soil_OM_density_s_l       (ipatch)
                   BD_all     (nsl,ipatch) = soil_BD_all_s_l           (ipatch)
                   porsl      (nsl,ipatch) = soil_theta_s_l            (ipatch)        ! cm/cm
@@ -355,8 +355,8 @@ CONTAINS
             deallocate ( soil_vf_clay_s_l           )
             deallocate ( soil_wf_gravels_s_l        )
             deallocate ( soil_wf_sand_s_l           )
-            deallocate ( soil_wf_om_s_l             )
             deallocate ( soil_wf_clay_s_l           )
+            deallocate ( soil_wf_om_s_l             )
             deallocate ( soil_OM_density_s_l        )
             deallocate ( soil_BD_all_s_l            )
             deallocate ( soil_theta_s_l             )
@@ -396,8 +396,8 @@ CONTAINS
                vf_clay    (nsl,:) = vf_clay   (nsl-1,:)
                wf_gravels (nsl,:) = wf_gravels(nsl-1,:)
                wf_sand    (nsl,:) = wf_sand   (nsl-1,:)
-               wf_om      (nsl,:) = wf_om     (nsl-1,:)
                wf_clay    (nsl,:) = wf_clay   (nsl-1,:)
+               wf_om      (nsl,:) = wf_om     (nsl-1,:)
                OM_density (nsl,:) = OM_density(nsl-1,:)
                BD_all     (nsl,:) = BD_all    (nsl-1,:)
                wfc        (nsl,:) = wfc       (nsl-1,:)
@@ -428,8 +428,8 @@ CONTAINS
                vf_clay    (nsl,:) = vf_clay   (9,:)
                wf_gravels (nsl,:) = wf_gravels(9,:)
                wf_sand    (nsl,:) = wf_sand   (9,:)
-               wf_om      (nsl,:) = wf_om     (9,:)
                wf_clay    (nsl,:) = wf_clay   (9,:)
+               wf_om      (nsl,:) = wf_om     (9,:)
                OM_density (nsl,:) = OM_density(9,:)
                BD_all     (nsl,:) = BD_all    (9,:)
                wfc        (nsl,:) = wfc       (9,:)
