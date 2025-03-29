@@ -57,9 +57,7 @@ MODULE MOD_HistWriteBack
    real(r8), allocatable :: lon_c(:), lon_w(:), lon_e(:)
 
    ! Memory limits
-   integer*8, parameter :: MaxHistMemSize  = 8589934592_8 ! 8*1024^3
-   integer*8, parameter :: MaxHistMesgSize = 8388608_8    ! 8*1024^2
-
+   integer*8, parameter :: MaxHistMemSize = 1073741824_8 ! 1024^3
    integer*8 :: TotalMemSize = 0
 
    integer :: itime_in_file
@@ -358,6 +356,7 @@ CONTAINS
    ! Local Variables
    integer :: i
    logical :: senddone
+   integer :: sendstat(MPI_STATUS_SIZE,4)
    type(timenodetype), pointer :: tempnode
 
       IF (.not. associated(timenodes)) THEN
@@ -444,7 +443,7 @@ CONTAINS
 
       DO WHILE (associated(timenodes%next))
 
-         CALL MPI_TestAll (4, timenodes%req, senddone, p_stat, p_err)
+         CALL MPI_TestAll (4, timenodes%req, senddone, sendstat(:,1:4), p_err)
 
          IF (senddone) THEN
             tempnode  => timenodes
@@ -490,7 +489,7 @@ CONTAINS
       ! clean sending buffer and free memory
       DO WHILE (associated(HistSendBuffer%next))
 
-         CALL MPI_Testall (3, HistSendBuffer%sendreqs, senddone, sendstat, p_err)
+         CALL MPI_Testall (3, HistSendBuffer%sendreqs, senddone, sendstat(:,1:3), p_err)
 
          IF (senddone) THEN
 
@@ -547,6 +546,8 @@ CONTAINS
 
    ! Local Variables
    integer :: totalsize, ndim1, ndim2
+   logical :: senddone
+   integer :: sendstat(MPI_STATUS_SIZE,2)
    type(HistSendBufferType), pointer :: TempSendBuffer
 
       ! append sending buffer
@@ -559,12 +560,17 @@ CONTAINS
          LastSendBuffer => LastSendBuffer%next
       ENDIF
 
-      LastSendBuffer%next   => null()
+      LastSendBuffer%next => null()
 
       ! clean sending buffer and free memory
-      DO WHILE ((TotalMemSize > MaxHistMemSize) .and. associated(HistSendBuffer%next))
+      DO WHILE (associated(HistSendBuffer%next))
 
-         CALL MPI_Waitall (2, HistSendBuffer%sendreqs(1:2), p_stat, p_err)
+         IF (TotalMemSize > MaxHistMemSize) THEN
+            CALL MPI_Waitall (2, HistSendBuffer%sendreqs(1:2), sendstat(:,1:2), p_err)
+         ELSE
+            CALL MPI_Testall (2, HistSendBuffer%sendreqs(1:2), senddone, sendstat(:,1:2), p_err)
+            IF (.not. senddone) EXIT
+         ENDIF
 
          TotalMemSize = TotalMemSize - size(HistSendBuffer%senddata)
 
@@ -622,13 +628,14 @@ CONTAINS
 
    ! Local Variables
    integer :: dataid, nreq
+   integer :: sendstat(MPI_STATUS_SIZE,4)
    type(timenodetype),       pointer :: tempnode
    type(HistSendBufferType), pointer :: TempSendBuffer
 
       lasttime => null()
       DO WHILE (associated(timenodes))
 
-         CALL MPI_WaitAll (4, timenodes%req, p_stat, p_err)
+         CALL MPI_WaitAll (4, timenodes%req, sendstat(:,1:4), p_err)
 
          tempnode  => timenodes
          timenodes => timenodes%next
@@ -639,10 +646,10 @@ CONTAINS
       DO WHILE (associated(HistSendBuffer))
 
          IF (allocated(HistSendBuffer%senddata)) THEN
-            CALL MPI_Waitall (2, HistSendBuffer%sendreqs(1:2), p_stat, p_err)
+            CALL MPI_Waitall (2, HistSendBuffer%sendreqs(1:2), sendstat(:,1:2), p_err)
             deallocate(HistSendBuffer%senddata)
          ELSE
-            CALL MPI_Waitall (3, HistSendBuffer%sendreqs(1:3), p_stat, p_err)
+            CALL MPI_Waitall (3, HistSendBuffer%sendreqs(1:3), sendstat(:,1:3), p_err)
          ENDIF
 
          TempSendBuffer => HistSendBuffer
