@@ -198,6 +198,7 @@ CONTAINS
          ! update surface water depth on patches
          CALL worker_push_subset_data (iam_bsn, iam_elm, basin_hru, elm_hru, wdsrf_bsnhru, wdsrf_hru)
          DO i = 1, numhru
+            wdsrf_hru(i) = max(0., wdsrf_hru(i))
             ps = hru_patch%substt(i)
             pe = hru_patch%subend(i)
             wdsrf(ps:pe) = wdsrf_hru(i) * 1.0e3 ! m to mm
@@ -254,9 +255,6 @@ CONTAINS
                      IF (s == nfldstep) THEN
                         fldarea(ps:pe) = 1.0
                      ELSEIF (s == 0) THEN
-                        IF (hillslope_element(i)%fldprof(1,j) <= 0) THEN
-                           write(*,*) 'check check ', hillslope_element(i)%fldprof(1,j)
-                        ENDIF
                         fldarea(ps:pe) = sqrt(wdsrf_hru(h)/hillslope_element(i)%fldprof(1,j) * 1./nfldstep**2)
                      ELSE
                         fldarea(ps:pe) = sqrt( (wdsrf_hru(h)-hillslope_element(i)%fldprof(s,j))            &
