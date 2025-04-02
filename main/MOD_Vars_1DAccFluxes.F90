@@ -47,6 +47,7 @@ MODULE MOD_Vars_1DAccFluxes
 #ifdef CatchLateralFlow
    real(r8), allocatable :: a_xwsur     (:)
    real(r8), allocatable :: a_xwsub     (:)
+   real(r8), allocatable :: a_fldarea   (:)
 #endif
    real(r8), allocatable :: a_qintr     (:)
    real(r8), allocatable :: a_qinfl     (:)
@@ -451,6 +452,7 @@ CONTAINS
 #ifdef CatchLateralFlow
             allocate (a_xwsur     (numpatch))
             allocate (a_xwsub     (numpatch))
+            allocate (a_fldarea   (numpatch))
 #endif
             allocate (a_qintr     (numpatch))
             allocate (a_qinfl     (numpatch))
@@ -861,6 +863,7 @@ CONTAINS
 #ifdef CatchLateralFlow
             deallocate (a_xwsur     )
             deallocate (a_xwsub     )
+            deallocate (a_fldarea   )
 #endif
             deallocate (a_qintr     )
             deallocate (a_qinfl     )
@@ -1273,6 +1276,7 @@ CONTAINS
 #ifdef CatchLateralFlow
             a_xwsur     (:) = spval
             a_xwsub     (:) = spval
+            a_fldarea   (:) = spval
 #endif
             a_qintr     (:) = spval
             a_qinfl     (:) = spval
@@ -1758,6 +1762,7 @@ CONTAINS
 #ifdef CatchLateralFlow
             CALL acc1d (xwsur   , a_xwsur  )
             CALL acc1d (xwsub   , a_xwsub  )
+            CALL acc1d (fldarea , a_fldarea)
 #endif
             CALL acc1d (qintr   , a_qintr  )
             CALL acc1d (qinfl   , a_qinfl  )
