@@ -595,8 +595,13 @@ CONTAINS
                ENDDO
 
             ELSE
-               CALL hist_writeback_var_header (hist_data_id, filename, dataname, &
-                  2, 'lon', 'lat', 'time', '', '', compress, longname, units)
+               IF (itime == -1) THEN
+                  CALL hist_writeback_var_header (hist_data_id, filename, dataname, &
+                     2, 'lon', 'lat', '', '', '', compress, longname, units)
+               ELSE
+                  CALL hist_writeback_var_header (hist_data_id, filename, dataname, &
+                     3, 'lon', 'lat', 'time', '', '', compress, longname, units)
+               ENDIF
             ENDIF
 #else
             allocate (vdata (hist_concat%ginfo%nlon, hist_concat%ginfo%nlat))
@@ -624,17 +629,16 @@ CONTAINS
 #ifdef USEMPI
             IF (.not. DEF_HIST_WriteBack) THEN
 #endif
-               IF (.not. &
-                  ((trim(dataname) == 'landarea') .or. (trim(dataname) == 'landfraction'))) THEN
+               IF (itime >= 1) THEN
 
                   CALL ncio_write_serial_time (filename, dataname, itime, vdata, &
                      'lon', 'lat', 'time', compress)
 
-               ELSEIF (itime == 1) THEN
+               ELSEIF (itime == -1) THEN
                   CALL ncio_write_serial (filename, dataname, vdata, 'lon', 'lat', compress)
                ENDIF
 
-               IF (itime == 1) THEN
+               IF (itime <= 1) THEN
                   CALL ncio_put_attr (filename, dataname, 'long_name', longname)
                   CALL ncio_put_attr (filename, dataname, 'units', units)
                   CALL ncio_put_attr (filename, dataname, 'missing_value', spval)
@@ -697,13 +701,12 @@ CONTAINS
 
                CALL get_filename_block (filename, iblk, jblk, fileblock)
 
-               IF (.not. &
-                  ((trim(dataname) == 'landarea') .or. (trim(dataname) == 'landfraction'))) THEN
+               IF (itime >= 1) THEN
 
                   CALL ncio_write_serial_time (fileblock, dataname, itime, &
                      wdata%blk(iblk,jblk)%val, 'lon', 'lat', 'time', compress)
 
-               ELSEIF (itime == 1) THEN
+               ELSEIF (itime == -1) THEN
                   CALL ncio_write_serial (fileblock, dataname, &
                      wdata%blk(iblk,jblk)%val, 'lon', 'lat', compress)
                ENDIF
@@ -781,7 +784,7 @@ CONTAINS
 
             ELSE
                CALL hist_writeback_var_header (hist_data_id, filename, dataname, &
-                  3, dim1name, 'lon', 'lat', 'time', '', compress, longname, units)
+                  4, dim1name, 'lon', 'lat', 'time', '', compress, longname, units)
             ENDIF
 #else
             ndim1 = wdata%ub1 - wdata%lb1 + 1
@@ -958,7 +961,7 @@ CONTAINS
 
             ELSE
                CALL hist_writeback_var_header (hist_data_id, filename, dataname, &
-                  4, dim1name, dim2name, 'lon', 'lat', 'time', compress, longname, units)
+                  5, dim1name, dim2name, 'lon', 'lat', 'time', compress, longname, units)
             ENDIF
 #else
             ndim1 = wdata%ub1 - wdata%lb1 + 1

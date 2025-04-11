@@ -58,6 +58,8 @@ MODULE MOD_SingleSrfdata
    real(r8), allocatable :: SITE_soil_vf_om             (:)
    real(r8), allocatable :: SITE_soil_wf_gravels        (:)
    real(r8), allocatable :: SITE_soil_wf_sand           (:)
+   real(r8), allocatable :: SITE_soil_wf_clay           (:)
+   real(r8), allocatable :: SITE_soil_wf_om             (:)
    real(r8), allocatable :: SITE_soil_OM_density        (:)
    real(r8), allocatable :: SITE_soil_BD_all            (:)
    real(r8), allocatable :: SITE_soil_theta_s           (:)
@@ -93,17 +95,17 @@ MODULE MOD_SingleSrfdata
    real(r8), allocatable :: SITE_area_type(:)
    real(r8), allocatable :: SITE_sf_lut (:,:)
 
-   logical :: u_site_landtype,   u_site_htop,       u_site_lai,         u_site_crop,              &
-              u_site_pfts,       u_site_lakedepth,  u_site_soil_bright, u_site_vf_quartz_mineral, &
-              u_site_vf_gravels, u_site_vf_sand,    u_site_vf_clay,     u_site_vf_om,             &
-              u_site_wf_gravels, u_site_wf_sand,    u_site_OM_density,  u_site_BD_all,            &
-              u_site_theta_s,    u_site_k_s,        u_site_csol,        u_site_tksatu,            &
-              u_site_tksatf,     u_site_tkdry,      u_site_k_solids,    u_site_psi_s,             &
-              u_site_lambda,     u_site_theta_r,    u_site_alpha_vgm,   u_site_L_vgm,             &
-              u_site_n_vgm,      u_site_BA_alpha,   u_site_BA_beta,     u_site_soil_texture,      &
-              u_site_dbedrock,   u_site_elevation,  u_site_elvstd,      u_site_svf,               &
-              u_site_cur,        u_site_slp_type,   u_site_asp_type,    u_site_area_type,         &
-              u_site_sf_lut
+   logical :: u_site_landtype,   u_site_crop,         u_site_pfts,        u_site_htop,              &
+              u_site_lai,        u_site_lakedepth,    u_site_soil_bright, u_site_vf_quartz_mineral, &
+              u_site_vf_gravels, u_site_vf_sand,      u_site_vf_clay,     u_site_vf_om,             &
+              u_site_wf_gravels, u_site_wf_sand,      u_site_wf_clay,     u_site_wf_om,             &
+              u_site_OM_density, u_site_BD_all,       u_site_theta_s,     u_site_k_s,               &
+              u_site_csol,       u_site_tksatu,       u_site_tksatf,      u_site_tkdry,             &
+              u_site_k_solids,   u_site_psi_s,        u_site_lambda,      u_site_theta_r,           &
+              u_site_alpha_vgm,  u_site_L_vgm,        u_site_n_vgm,       u_site_BA_alpha,          &
+              u_site_BA_beta,    u_site_soil_texture, u_site_dbedrock,    u_site_elevation,         &
+              u_site_elvstd,     u_site_svf,          u_site_cur,         u_site_slp_type,          &
+              u_site_asp_type,   u_site_area_type,    u_site_sf_lut
 
 
    integer  :: SITE_ncar_rid
@@ -847,6 +849,34 @@ CONTAINS
          ENDDO
       ENDIF
 
+      u_site_wf_clay = readflag &
+         .and. ncio_var_exist(fsrfdata,'soil_wf_clay',readflag)
+      IF (u_site_wf_clay) THEN
+         CALL ncio_read_serial (fsrfdata, 'soil_wf_clay', SITE_soil_wf_clay)
+      ELSE
+         allocate (SITE_soil_wf_clay (8))
+         DO nsl = 1, 8
+            write(c,'(i1)') nsl
+            filename = trim(DEF_dir_rawdata)//'/soil/wf_clay_s.nc'
+            CALL read_point_var_2d_real8 (gridsoil, filename, 'wf_clay_s_l'//trim(c), &
+               SITE_lon_location, SITE_lat_location, SITE_soil_wf_clay(nsl))
+         ENDDO
+      ENDIF
+
+      u_site_wf_om = readflag &
+         .and. ncio_var_exist(fsrfdata,'soil_wf_om',readflag)
+      IF (u_site_wf_om) THEN
+         CALL ncio_read_serial (fsrfdata, 'soil_wf_om', SITE_soil_wf_om)
+      ELSE
+         allocate (SITE_soil_wf_om (8))
+         DO nsl = 1, 8
+            write(c,'(i1)') nsl
+            filename = trim(DEF_dir_rawdata)//'/soil/wf_om_s.nc'
+            CALL read_point_var_2d_real8 (gridsoil, filename, 'wf_om_s_l'//trim(c), &
+               SITE_lon_location, SITE_lat_location, SITE_soil_wf_om(nsl))
+         ENDDO
+      ENDIF
+
       u_site_OM_density = readflag &
          .and. ncio_var_exist(fsrfdata,'soil_OM_density',readflag)
       IF (u_site_OM_density) THEN
@@ -1097,6 +1127,8 @@ CONTAINS
          write(*,'(A,8ES10.2,3A)') 'soil_vf_om             : ', SITE_soil_vf_om            (1:8), ' (from ',trim(datasource(u_site_vf_om            )),')'
          write(*,'(A,8ES10.2,3A)') 'soil_wf_gravels        : ', SITE_soil_wf_gravels       (1:8), ' (from ',trim(datasource(u_site_wf_gravels       )),')'
          write(*,'(A,8ES10.2,3A)') 'soil_wf_sand           : ', SITE_soil_wf_sand          (1:8), ' (from ',trim(datasource(u_site_wf_sand          )),')'
+         write(*,'(A,8ES10.2,3A)') 'soil_wf_clay           : ', SITE_soil_wf_clay          (1:8), ' (from ',trim(datasource(u_site_wf_clay          )),')'
+         write(*,'(A,8ES10.2,3A)') 'soil_wf_om             : ', SITE_soil_wf_om            (1:8), ' (from ',trim(datasource(u_site_wf_om            )),')'
          write(*,'(A,8ES10.2,3A)') 'soil_OM_density        : ', SITE_soil_OM_density       (1:8), ' (from ',trim(datasource(u_site_OM_density       )),')'
          write(*,'(A,8ES10.2,3A)') 'soil_BD_all            : ', SITE_soil_BD_all           (1:8), ' (from ',trim(datasource(u_site_BD_all           )),')'
          write(*,'(A,8ES10.2,3A)') 'soil_theta_s           : ', SITE_soil_theta_s          (1:8), ' (from ',trim(datasource(u_site_theta_s          )),')'
@@ -2801,6 +2833,14 @@ ENDIF
       CALL ncio_put_attr     (fsrfdata, 'soil_wf_sand', 'source', trim(datasource(u_site_wf_sand)))
       CALL ncio_put_attr     (fsrfdata, 'soil_wf_sand', 'long_name', 'gravimetric fraction of sand')
 
+      CALL ncio_write_serial (fsrfdata, 'soil_wf_clay', SITE_soil_wf_clay(1:8), 'soil')
+      CALL ncio_put_attr     (fsrfdata, 'soil_wf_clay', 'source', trim(datasource(u_site_wf_clay)))
+      CALL ncio_put_attr     (fsrfdata, 'soil_wf_clay', 'long_name', 'gravimetric fraction of clay')
+
+      CALL ncio_write_serial (fsrfdata, 'soil_wf_om', SITE_soil_wf_om(1:8), 'soil')
+      CALL ncio_put_attr     (fsrfdata, 'soil_wf_om', 'source', trim(datasource(u_site_wf_om)))
+      CALL ncio_put_attr     (fsrfdata, 'soil_wf_om', 'long_name', 'gravimetric fraction of om')
+
       CALL ncio_write_serial (fsrfdata, 'soil_OM_density', SITE_soil_OM_density(1:8), 'soil')
       CALL ncio_put_attr     (fsrfdata, 'soil_OM_density', 'source', trim(datasource(u_site_OM_density)))
       CALL ncio_put_attr     (fsrfdata, 'soil_OM_density', 'long_name', 'OM density')
@@ -3271,6 +3311,8 @@ ENDIF
       IF (allocated(SITE_soil_vf_om            )) deallocate(SITE_soil_vf_om            )
       IF (allocated(SITE_soil_wf_gravels       )) deallocate(SITE_soil_wf_gravels       )
       IF (allocated(SITE_soil_wf_sand          )) deallocate(SITE_soil_wf_sand          )
+      IF (allocated(SITE_soil_wf_clay          )) deallocate(SITE_soil_wf_clay          )
+      IF (allocated(SITE_soil_wf_om            )) deallocate(SITE_soil_wf_om            )
       IF (allocated(SITE_soil_OM_density       )) deallocate(SITE_soil_OM_density       )
       IF (allocated(SITE_soil_BD_all           )) deallocate(SITE_soil_BD_all           )
       IF (allocated(SITE_soil_theta_s          )) deallocate(SITE_soil_theta_s          )
