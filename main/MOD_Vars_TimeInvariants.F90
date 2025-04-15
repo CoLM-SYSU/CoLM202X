@@ -1,17 +1,17 @@
 #include <define.h>
 
-! -------------------------------
+!-----------------------------------------------------------------------
 ! Created by Yongjiu Dai, 03/2014
-! -------------------------------
+!-----------------------------------------------------------------------
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
 MODULE MOD_Vars_PFTimeInvariants
-! -----------------------------------------------------------------
+!-----------------------------------------------------------------------
 ! !DESCRIPTION:
-! Define PFT time invariables
+!  Define PFT time invariables
 !
-! Added by Hua Yuan, 08/2019
-! -----------------------------------------------------------------
+!  Added by Hua Yuan, 08/2019
+!-----------------------------------------------------------------------
 
    USE MOD_Precision
    USE MOD_Vars_Global
@@ -45,13 +45,13 @@ CONTAINS
 !-----------------------------------------------------------------------
 
    SUBROUTINE allocate_PFTimeInvariants
-   ! --------------------------------------------------------------------
+   ! -------------------------------------------------------------------
    ! Allocates memory for CoLM PFT 1d [numpft] variables
-   ! --------------------------------------------------------------------
+   ! -------------------------------------------------------------------
 
    USE MOD_SPMD_Task
-   USE MOD_LandPatch, only : numpatch
-   USE MOD_LandPFT,   only : numpft
+   USE MOD_LandPatch, only: numpatch
+   USE MOD_LandPFT,   only: numpft
    USE MOD_Precision
    IMPLICIT NONE
 
@@ -61,10 +61,13 @@ CONTAINS
             allocate (pftfrac       (numpft))
             allocate (htop_p        (numpft))
             allocate (hbot_p        (numpft))
-#ifdef CROP
-            allocate (cropfrac    (numpatch))
-#endif
          ENDIF
+
+#ifdef CROP
+         IF (numpatch > 0) THEN
+            allocate (cropfrac (numpatch))
+         ENDIF
+#endif
       ENDIF
 
    END SUBROUTINE allocate_PFTimeInvariants
@@ -119,9 +122,9 @@ CONTAINS
    END SUBROUTINE WRITE_PFTimeInvariants
 
    SUBROUTINE deallocate_PFTimeInvariants
-! --------------------------------------------------
-! Deallocates memory for CoLM PFT 1d [numpft] variables
-! --------------------------------------------------
+   ! -------------------------------------------------------------------
+   ! Deallocates memory for CoLM PFT 1d [numpft] variables
+   ! -------------------------------------------------------------------
    USE MOD_SPMD_Task
    USE MOD_LandPFT
 
@@ -200,6 +203,8 @@ MODULE MOD_Vars_TimeInvariants
    real(r8), allocatable :: vf_clay      (:,:)  !volumetric fraction of clay
    real(r8), allocatable :: wf_gravels   (:,:)  !gravimetric fraction of gravels
    real(r8), allocatable :: wf_sand      (:,:)  !gravimetric fraction of sand
+   real(r8), allocatable :: wf_clay      (:,:)  !gravimetric fraction of clay
+   real(r8), allocatable :: wf_om        (:,:)  !gravimetric fraction of om
    real(r8), allocatable :: OM_density   (:,:)  !OM density (kg/m3)
    real(r8), allocatable :: BD_all       (:,:)  !bulk density of soil (GRAVELS + ORGANIC MATTER + Mineral Soils,kg/m3)
 
@@ -288,9 +293,9 @@ CONTAINS
 !-----------------------------------------------------------------------
 
    SUBROUTINE allocate_TimeInvariants ()
-   ! --------------------------------------------------------------------
+   ! -------------------------------------------------------------------
    ! Allocates memory for CoLM 1d [numpatch] variables
-   ! --------------------------------------------------------------------
+   ! -------------------------------------------------------------------
 
    USE MOD_Precision
    USE MOD_Vars_Global
@@ -324,6 +329,8 @@ CONTAINS
             allocate (vf_clay      (nl_soil,numpatch))
             allocate (wf_gravels   (nl_soil,numpatch))
             allocate (wf_sand      (nl_soil,numpatch))
+            allocate (wf_clay      (nl_soil,numpatch))
+            allocate (wf_om        (nl_soil,numpatch))
             allocate (OM_density   (nl_soil,numpatch))
             allocate (BD_all       (nl_soil,numpatch))
             allocate (wfc          (nl_soil,numpatch))
@@ -399,9 +406,9 @@ CONTAINS
    !---------------------------------------
    SUBROUTINE READ_TimeInvariants (lc_year, casename, dir_restart)
 
-   !=======================================================================
+   !====================================================================
    ! Original version: Yongjiu Dai, September 15, 1999, 03/2014
-   !=======================================================================
+   !====================================================================
 
    USE MOD_Namelist
    USE MOD_SPMD_Task
@@ -448,6 +455,8 @@ CONTAINS
       CALL ncio_read_vector (file_restart, 'vf_clay   ',   nl_soil, landpatch, vf_clay  ,defval = 0.1 ) ! volumetric fraction of clay
       CALL ncio_read_vector (file_restart, 'wf_gravels',   nl_soil, landpatch, wf_gravels) ! gravimetric fraction of gravels
       CALL ncio_read_vector (file_restart, 'wf_sand   ',   nl_soil, landpatch, wf_sand   ) ! gravimetric fraction of sand
+      CALL ncio_read_vector (file_restart, 'wf_clay   ',   nl_soil, landpatch, wf_clay   ) ! gravimetric fraction of clay
+      CALL ncio_read_vector (file_restart, 'wf_om     ',   nl_soil, landpatch, wf_om     ) ! gravimetric fraction of om
       CALL ncio_read_vector (file_restart, 'OM_density',   nl_soil, landpatch, OM_density) ! OM density
       CALL ncio_read_vector (file_restart, 'BD_all    ',   nl_soil, landpatch, BD_all    ) ! bulk density of soil
       CALL ncio_read_vector (file_restart, 'wfc       ',   nl_soil, landpatch, wfc       ) ! field capacity
@@ -564,11 +573,11 @@ CONTAINS
    !---------------------------------------
    SUBROUTINE WRITE_TimeInvariants (lc_year, casename, dir_restart)
 
-   !=======================================================================
+   !====================================================================
    ! Original version: Yongjiu Dai, September 15, 1999, 03/2014
-   !=======================================================================
+   !====================================================================
 
-   USE MOD_Namelist, only : DEF_REST_CompressLevel, DEF_USE_BEDROCK
+   USE MOD_Namelist, only: DEF_REST_CompressLevel, DEF_USE_BEDROCK
    USE MOD_SPMD_Task
    USE MOD_NetCDFSerial
    USE MOD_NetCDFVector
@@ -637,6 +646,8 @@ CONTAINS
       CALL ncio_write_vector (file_restart, 'vf_clay   ', 'soil', nl_soil, 'patch', landpatch, vf_clay   , compress) ! volumetric fraction of clay
       CALL ncio_write_vector (file_restart, 'wf_gravels', 'soil', nl_soil, 'patch', landpatch, wf_gravels, compress) ! gravimetric fraction of gravels
       CALL ncio_write_vector (file_restart, 'wf_sand   ', 'soil', nl_soil, 'patch', landpatch, wf_sand   , compress) ! gravimetric fraction of sand
+      CALL ncio_write_vector (file_restart, 'wf_clay   ', 'soil', nl_soil, 'patch', landpatch, wf_clay   , compress) ! gravimetric fraction of clay
+      CALL ncio_write_vector (file_restart, 'wf_om     ', 'soil', nl_soil, 'patch', landpatch, wf_om     , compress) ! gravimetric fraction of om 
       CALL ncio_write_vector (file_restart, 'OM_density', 'soil', nl_soil, 'patch', landpatch, OM_density, compress) ! OM_density
       CALL ncio_write_vector (file_restart, 'BD_all    ', 'soil', nl_soil, 'patch', landpatch, BD_all    , compress) ! bulk density of soil
       CALL ncio_write_vector (file_restart, 'wfc       ', 'soil', nl_soil, 'patch', landpatch, wfc       , compress) ! field capacity
@@ -726,7 +737,7 @@ CONTAINS
          CALL ncio_write_serial (file_restart, 'tcrit ', tcrit )       ! critical temp. to determine rain or snow
          CALL ncio_write_serial (file_restart, 'wetwatmax', wetwatmax) ! maximum wetland water (mm)
 
-      END if
+      ENDIF
 
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
@@ -787,6 +798,8 @@ CONTAINS
             deallocate (vf_clay        )
             deallocate (wf_gravels     )
             deallocate (wf_sand        )
+            deallocate (wf_clay        )
+            deallocate (wf_om          )
             deallocate (OM_density     )
             deallocate (BD_all         )
             deallocate (wfc            )
@@ -861,12 +874,11 @@ CONTAINS
    END SUBROUTINE deallocate_TimeInvariants
 
 #ifdef RangeCheck
-   !---------------------------------------
    SUBROUTINE check_TimeInvariants ()
 
    USE MOD_SPMD_Task
    USE MOD_RangeCheck
-   USE MOD_Namelist, only : DEF_USE_BEDROCK, DEF_USE_Forcing_Downscaling
+   USE MOD_Namelist, only: DEF_USE_BEDROCK, DEF_USE_Forcing_Downscaling
 
    IMPLICIT NONE
 
@@ -889,11 +901,13 @@ CONTAINS
       CALL check_vector_data ('soil_d_n_alb [-]     ', soil_d_n_alb) ! albedo of near infrared of the dry soil
       CALL check_vector_data ('vf_quartz    [m3/m3] ', vf_quartz   ) ! volumetric fraction of quartz within mineral soil
       CALL check_vector_data ('vf_gravels   [m3/m3] ', vf_gravels  ) ! volumetric fraction of gravels
-      CALL check_vector_data ('vf_om        [m3/m3] ', vf_om       ) ! volumetric fraction of organic matter
       CALL check_vector_data ('vf_sand      [m3/m3] ', vf_sand     ) ! volumetric fraction of sand
       CALL check_vector_data ('vf_clay      [m3/m3] ', vf_clay     ) ! volumetric fraction of clay
+      CALL check_vector_data ('vf_om        [m3/m3] ', vf_om       ) ! volumetric fraction of organic matter
       CALL check_vector_data ('wf_gravels   [kg/kg] ', wf_gravels  ) ! gravimetric fraction of gravels
       CALL check_vector_data ('wf_sand      [kg/kg] ', wf_sand     ) ! gravimetric fraction of sand
+      CALL check_vector_data ('wf_clay      [kg/kg] ', wf_clay     ) ! gravimetric fraction of clay
+      CALL check_vector_data ('wf_om        [kg/kg] ', wf_om       ) ! gravimetric fraction of om
       CALL check_vector_data ('OM_density   [kg/m3] ', OM_density  ) ! OM density
       CALL check_vector_data ('BD_all       [kg/m3] ', BD_all      ) ! bulk density of soils
       CALL check_vector_data ('wfc          [m3/m3] ', wfc         ) ! field capacity
@@ -940,14 +954,14 @@ CONTAINS
          CALL check_vector_data ('sf_lut       [-]     ', sf_lut_patches   ) ! shadow mask
 #else
          IF (allocated(sf_curve_patches)) allocate(tmpcheck(size(sf_curve_patches,1),size(sf_curve_patches,3)))
-         
+
          IF (allocated(sf_curve_patches)) tmpcheck = sf_curve_patches(:,1,:)
          CALL check_vector_data ('1 sf_curve p [-]     ', tmpcheck) ! shadow mask
          IF (allocated(sf_curve_patches)) tmpcheck = sf_curve_patches(:,2,:)
          CALL check_vector_data ('2 sf_curve p [-]     ', tmpcheck) ! shadow mask
          IF (allocated(sf_curve_patches)) tmpcheck = sf_curve_patches(:,3,:)
          CALL check_vector_data ('3 sf_curve p [-]     ', tmpcheck) ! shadow mask
-         
+
          IF (allocated(tmpcheck)) deallocate(tmpcheck)
 #endif
       ENDIF

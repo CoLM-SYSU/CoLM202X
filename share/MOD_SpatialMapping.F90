@@ -2,18 +2,18 @@
 
 MODULE MOD_SpatialMapping
 
-!--------------------------------------------------------------------------------!
-! DESCRIPTION:                                                                   !
-!                                                                                !
-!    Spatial Mapping module.                                                     !
-!                                                                                !
-! Created by Shupeng Zhang, May 2024                                             !
-!--------------------------------------------------------------------------------!
+!--------------------------------------------------------------------------------
+! !DESCRIPTION:
+!
+!    Spatial Mapping module.
+!
+!  Created by Shupeng Zhang, May 2024
+!--------------------------------------------------------------------------------
 
    USE MOD_Precision
    USE MOD_Grid
    USE MOD_DataType
-   USE MOD_Vars_Global, only : spval
+   USE MOD_Vars_Global, only: spval
    IMPLICIT NONE
 
    ! ------
@@ -108,7 +108,7 @@ CONTAINS
    integer,  allocatable :: ipt(:)
    logical,  allocatable :: msk(:)
 
-   integer  :: ie, iset
+   integer  :: ie, iset, iblkme
    integer  :: ng, ig, ng_all, iloc
    integer  :: npxl, ipxl, ilat, ilon
    integer  :: iworker, iproc, idest, isrc, nrecv
@@ -153,6 +153,44 @@ CONTAINS
       allocate (this%grid%yloc (size(fgrid%yloc)));  this%grid%yloc = fgrid%yloc
       allocate (this%grid%xcnt (size(fgrid%xcnt)));  this%grid%xcnt = fgrid%xcnt
       allocate (this%grid%ycnt (size(fgrid%ycnt)));  this%grid%ycnt = fgrid%ycnt
+
+#ifdef SinglePoint
+      allocate (this%glist (0:0))
+      allocate (this%glist(0)%ilat (1))
+      allocate (this%glist(0)%ilon (1))
+
+      allocate (this%npart   (pixelset%nset))
+      allocate (this%address (pixelset%nset))
+      allocate (this%areapset(pixelset%nset))
+      allocate (this%areapart(pixelset%nset))
+      DO iset = 1, pixelset%nset
+         allocate (this%address(iset)%val (2,1))
+         allocate (this%areapart(iset)%val  (1))
+      ENDDO
+      
+      this%glist(0)%ng = 1
+      this%glist(0)%ilat(1) = find_nearest_south (SITE_lat_location, fgrid%nlat, fgrid%lat_s)
+      this%glist(0)%ilon(1) = find_nearest_west  (SITE_lon_location, fgrid%nlon, fgrid%lon_w)
+
+      this%npset = pixelset%nset
+      this%npart   (:) = 1
+      this%areapset(:) = 1.
+      
+      DO iset = 1, pixelset%nset
+         this%address(iset)%val  = reshape((/0,1/), (/2,1/))
+         this%areapart(iset)%val = 1.
+      ENDDO
+      
+      CALL allocate_block_data (fgrid, this%areagrid)
+      DO iblkme = 1, gblock%nblkme
+         xblk = gblock%xblkme(iblkme)
+         yblk = gblock%yblkme(iblkme)
+         this%areagrid%blk(xblk,yblk)%val = 1.
+      ENDDO
+
+      RETURN
+#endif
+
 
       IF (p_is_worker) THEN
 
@@ -1499,7 +1537,7 @@ CONTAINS
    USE MOD_Grid
    USE MOD_DataType
    USE MOD_SPMD_Task
-   USE MOD_Vars_Global, only : spval
+   USE MOD_Vars_Global, only: spval
    IMPLICIT NONE
 
    class (spatial_mapping_type) :: this
@@ -1861,7 +1899,7 @@ CONTAINS
    USE MOD_Pixelset
    USE MOD_DataType
    USE MOD_SPMD_Task
-   USE MOD_Vars_Global, only : spval
+   USE MOD_Vars_Global, only: spval
    IMPLICIT NONE
 
    class (spatial_mapping_type) :: this
@@ -1968,7 +2006,7 @@ CONTAINS
    USE MOD_Pixelset
    USE MOD_DataType
    USE MOD_SPMD_Task
-   USE MOD_Vars_Global, only : spval
+   USE MOD_Vars_Global, only: spval
    IMPLICIT NONE
 
    class (spatial_mapping_type) :: this
@@ -2077,7 +2115,7 @@ CONTAINS
    USE MOD_Pixelset
    USE MOD_DataType
    USE MOD_SPMD_Task
-   USE MOD_Vars_Global, only : spval
+   USE MOD_Vars_Global, only: spval
    IMPLICIT NONE
 
    class (spatial_mapping_type) :: this
@@ -2174,7 +2212,7 @@ CONTAINS
    USE MOD_Pixelset
    USE MOD_DataType
    USE MOD_SPMD_Task
-   USE MOD_Vars_Global, only : spval
+   USE MOD_Vars_Global, only: spval
    IMPLICIT NONE
 
    class (spatial_mapping_type) :: this
@@ -2383,7 +2421,7 @@ CONTAINS
    USE MOD_Pixelset
    USE MOD_DataType
    USE MOD_SPMD_Task
-   USE MOD_Vars_Global, only : spval
+   USE MOD_Vars_Global, only: spval
    IMPLICIT NONE
 
    class (spatial_mapping_type) :: this
@@ -2443,7 +2481,7 @@ CONTAINS
    USE MOD_Grid
    USE MOD_DataType
    USE MOD_SPMD_Task
-   USE MOD_Vars_Global, only : spval
+   USE MOD_Vars_Global, only: spval
    IMPLICIT NONE
 
    class (spatial_mapping_type) :: this

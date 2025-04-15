@@ -1,21 +1,22 @@
 #include <define.h>
 
-!-----------------------------------------------------------------------
 MODULE MOD_Forcing
 
-! DESCRIPTION:
-! read in the atmospheric forcing using user defined interpolation method
-! or downscaling forcing
+!-----------------------------------------------------------------------
+! !DESCRIPTION:
+!  read in the atmospheric forcing using user defined interpolation method or
+!  downscaling forcing
 !
-! REVISIONS:
-! Yongjiu Dai and Hua Yuan, 04/2014: initial code from CoLM2014 (metdata.F90,
-!                                    GETMET.F90 and rd_forcing.F90
+! !REVISIONS:
+!  Yongjiu Dai and Hua Yuan, 04/2014: initial code from CoLM2014 (metdata.F90,
+!                                     GETMET.F90 and rd_forcing.F90
 !
-! Shupeng Zhang, 05/2023: 1) porting codes to MPI parallel version
-!                         2) codes for dealing with missing forcing value
-!                         3) interface for downscaling
+!  Shupeng Zhang, 05/2023: 1) porting codes to MPI parallel version
+!                          2) codes for dealing with missing forcing value
+!                          3) interface for downscaling
 !
-! TODO...(need complement)
+! !TODO...(need complement)
+!-----------------------------------------------------------------------
 
    USE MOD_Precision
    USE MOD_Namelist
@@ -25,7 +26,7 @@ MODULE MOD_Forcing
    USE MOD_TimeManager
    USE MOD_SPMD_Task
    USE MOD_MonthlyinSituCO2MaunaLoa
-   USE MOD_Vars_Global, only : pi
+   USE MOD_Vars_Global, only: pi
    USE MOD_OrbCoszen
    USE MOD_UserDefFun
 
@@ -101,7 +102,7 @@ MODULE MOD_Forcing
 
 CONTAINS
 
-   !--------------------------------
+!-----------------------------------------------------------------------
    SUBROUTINE forcing_init (dir_forcing, deltatime, ststamp, lc_year, etstamp, lulcc_call)
 
    USE MOD_SPMD_Task
@@ -321,7 +322,7 @@ CONTAINS
    ! ---- forcing finalize ----
    SUBROUTINE forcing_final ()
 
-   USE MOD_LandPatch, only : numpatch
+   USE MOD_LandPatch, only: numpatch
    IMPLICIT NONE
 
       IF (allocated(forcmask_pch)) deallocate(forcmask_pch)
@@ -376,7 +377,8 @@ CONTAINS
 
    END SUBROUTINE forcing_reset
 
-   !--------------------------------
+
+!-----------------------------------------------------------------------
    SUBROUTINE read_forcing (idate, dir_forcing)
    USE MOD_OrbCosazi
    USE MOD_Precision
@@ -393,7 +395,7 @@ CONTAINS
    USE MOD_LandPatch
    USE MOD_RangeCheck
    USE MOD_UserSpecifiedForcing
-   USE MOD_ForcingDownscaling, only : rair, cpair, downscale_forcings, downscale_wind
+   USE MOD_ForcingDownscaling, only: rair, cpair, downscale_forcings, downscale_wind
    USE MOD_NetCDFVector
 
    IMPLICIT NONE
@@ -415,7 +417,7 @@ CONTAINS
    type(timestamp) :: mtstamp
    integer  :: dtLB, dtUB
    real(r8) :: cosz, coszen(numpatch), cosa, cosazi(numpatch), balb
-   INTEGER  :: year, month, mday
+   integer  :: year, month, mday
    logical  :: has_u,has_v
    real solar, frl, prcp, tm, us, vs, pres, qm
    real(r8) :: pco2m
@@ -600,7 +602,7 @@ CONTAINS
                            cloud = 0.
                         ELSE
                            cloud = (1160.*sunang-a)/(963.*sunang)
-                        END IF
+                        ENDIF
                         cloud = max(cloud,0.)
                         cloud = min(cloud,1.)
                         cloud = max(0.58,cloud)
@@ -932,15 +934,15 @@ CONTAINS
    END SUBROUTINE read_forcing
 
 
-   ! ------------------------------------------------------------
-   !
-   ! !DESCRIPTION:
-   !    read lower and upper boundary forcing data, a major interface of
-   !    this MODULE
-   !
-   ! REVISIONS:
-   ! Hua Yuan, 04/2014: initial code
-   ! ------------------------------------------------------------
+!-----------------------------------------------------------------------
+! !DESCRIPTION:
+!  read lower and upper boundary forcing data, a major interface of this
+!  MODULE
+!
+! !REVISIONS:
+!  04/2014, Hua Yuan: initial code
+!
+!-----------------------------------------------------------------------
    SUBROUTINE metreadLBUB (idate, dir_forcing)
 
    USE MOD_UserSpecifiedForcing
@@ -981,33 +983,27 @@ CONTAINS
             filename = trim(dir_forcing)//trim(metfilename(year, month, day, ivar))
             IF (trim(DEF_forcing%dataset) == 'POINT') THEN
 
-#ifndef URBAN_MODEL
                IF (forcing_read_ahead) THEN
                   metdata%blk(gblock%xblkme(1),gblock%yblkme(1))%val = forc_disk(time_i,ivar)
                ELSE
+#ifndef URBAN_MODEL
                   CALL ncio_read_site_time (filename, vname(ivar), time_i, metdata)
-               ENDIF
 #else
-               IF (trim(vname(ivar)) == 'Rainf') THEN
-                  CALL ncio_read_site_time (filename, 'Rainf', time_i, rainf)
-                  CALL ncio_read_site_time (filename, 'Snowf', time_i, snowf)
+                  IF (trim(vname(ivar)) == 'Rainf') THEN
+                     CALL ncio_read_site_time (filename, 'Rainf', time_i, rainf)
+                     CALL ncio_read_site_time (filename, 'Snowf', time_i, snowf)
 
-                  DO iblkme = 1, gblock%nblkme
-                     ib = gblock%xblkme(iblkme)
-                     jb = gblock%yblkme(iblkme)
+                     DO iblkme = 1, gblock%nblkme
+                        ib = gblock%xblkme(iblkme)
+                        jb = gblock%yblkme(iblkme)
 
-                     metdata%blk(ib,jb)%val(1,1) = rainf%blk(ib,jb)%val(1,1) + snowf%blk(ib,jb)%val(1,1)
-                     !DO j = 1, gforc%ycnt(jb)
-                     !   DO i = 1, gforc%xcnt(ib)
-                     !      metdata%blk(ib,jb)%val(i,j) = rainf%blk(ib,jb)%val(i,j) &
-                     !                                    +  snowf%blk(ib,jb)%val(i,j)
-                     !   ENDDO
-                     !ENDDO
-                  ENDDO
-               ELSE
-                  CALL ncio_read_site_time (filename, vname(ivar), time_i, metdata)
-               ENDIF
+                        metdata%blk(ib,jb)%val(1,1) = rainf%blk(ib,jb)%val(1,1) + snowf%blk(ib,jb)%val(1,1)
+                     ENDDO
+                  ELSE
+                     CALL ncio_read_site_time (filename, vname(ivar), time_i, metdata)
+                  ENDIF
 #endif
+               ENDIF
             ELSE
                CALL ncio_read_block_time (filename, vname(ivar), gforc, time_i, metdata)
             ENDIF
@@ -1027,33 +1023,27 @@ CONTAINS
                filename = trim(dir_forcing)//trim(metfilename(year, month, day, ivar))
                IF (trim(DEF_forcing%dataset) == 'POINT') THEN
 
-#ifndef URBAN_MODEL
                   IF (forcing_read_ahead) THEN
                      metdata%blk(gblock%xblkme(1),gblock%yblkme(1))%val = forc_disk(time_i,ivar)
                   ELSE
+#ifndef URBAN_MODEL
                      CALL ncio_read_site_time (filename, vname(ivar), time_i, metdata)
-                  ENDIF
 #else
-                  IF (trim(vname(ivar)) == 'Rainf') THEN
-                     CALL ncio_read_site_time (filename, 'Rainf', time_i, rainf)
-                     CALL ncio_read_site_time (filename, 'Snowf', time_i, snowf)
+                     IF (trim(vname(ivar)) == 'Rainf') THEN
+                        CALL ncio_read_site_time (filename, 'Rainf', time_i, rainf)
+                        CALL ncio_read_site_time (filename, 'Snowf', time_i, snowf)
 
-                     DO iblkme = 1, gblock%nblkme
-                        ib = gblock%xblkme(iblkme)
-                        jb = gblock%yblkme(iblkme)
+                        DO iblkme = 1, gblock%nblkme
+                           ib = gblock%xblkme(iblkme)
+                           jb = gblock%yblkme(iblkme)
 
-                        metdata%blk(ib,jb)%val(1,1) = rainf%blk(ib,jb)%val(1,1) + snowf%blk(ib,jb)%val(1,1)
-                        !DO j = 1, gforc%ycnt(jb)
-                        !   DO i = 1, gforc%xcnt(ib)
-                        !      metdata%blk(ib,jb)%val(i,j) = rainf%blk(ib,jb)%val(i,j) &
-                        !                                    +  snowf%blk(ib,jb)%val(i,j)
-                        !   ENDDO
-                        !ENDDO
-                     ENDDO
-                  ELSE
-                     CALL ncio_read_site_time (filename, vname(ivar), time_i, metdata)
-                  ENDIF
+                           metdata%blk(ib,jb)%val(1,1) = rainf%blk(ib,jb)%val(1,1) + snowf%blk(ib,jb)%val(1,1)
+                        ENDDO
+                     ELSE
+                        CALL ncio_read_site_time (filename, vname(ivar), time_i, metdata)
+                     ENDIF
 #endif
+                  ENDIF
                ELSE
                   CALL ncio_read_block_time (filename, vname(ivar), gforc, time_i, metdata)
                ENDIF
@@ -1073,7 +1063,7 @@ CONTAINS
    END SUBROUTINE metreadLBUB
 
 
-   !-------------------------------------------------
+!-----------------------------------------------------------------------
    SUBROUTINE metread_latlon (dir_forcing, idate)
 
    USE MOD_SPMD_Task
@@ -1137,7 +1127,7 @@ CONTAINS
 
    END SUBROUTINE metread_latlon
 
-   !-------------------------------------------------
+!-----------------------------------------------------------------------
    SUBROUTINE metread_time (dir_forcing, ststamp, etstamp, deltime)
 
    USE MOD_SPMD_Task
@@ -1188,7 +1178,7 @@ CONTAINS
 
       !forctime(1)%year = year
       !forctime(1)%day  = get_calday(month*100+day, isleapyear(year))
-      !forctime(1)%sec = hour*3600 + minute*60 + second + forctime_sec(1)
+      !forctime(1)%sec  = hour*3600 + minute*60 + second + forctime_sec(1)
 
       !id(:) = (/forctime(1)%year, forctime(1)%day, forctime(1)%sec/)
       CALL adj2end(id)
@@ -1246,8 +1236,21 @@ CONTAINS
          filename = trim(dir_forcing)//trim(metfilename(-1,-1,-1,-1))
          DO ivar = 1, NVAR
             IF (trim(vname(ivar)) /= 'NULL') THEN
+#ifndef URBAN_MODEL
                CALL ncio_read_period_serial (filename, vname(ivar), its, ite, metcache)
                forc_disk(:,ivar) = metcache(1,1,:)
+#else
+               IF (trim(vname(ivar)) == 'Rainf') THEN
+                  CALL ncio_read_period_serial (filename, 'Rainf', its, ite, metcache)
+                  forc_disk(:,ivar) = metcache(1,1,:)
+
+                  CALL ncio_read_period_serial (filename, 'Snowf', its, ite, metcache)
+                  forc_disk(:,ivar) = forc_disk(:,ivar) + metcache(1,1,:)
+               ELSE
+                  CALL ncio_read_period_serial (filename, vname(ivar), its, ite, metcache)
+                  forc_disk(:,ivar) = metcache(1,1,:)
+               ENDIF
+#endif
             ENDIF
          ENDDO
 
@@ -1256,8 +1259,7 @@ CONTAINS
 
    END SUBROUTINE metread_time
 
-! ------------------------------------------------------------
-!
+!-----------------------------------------------------------------------
 ! !DESCRIPTION:
 !    set the lower boundary time stamp and record information,
 !    a KEY FUNCTION of this MODULE
@@ -1269,9 +1271,10 @@ CONTAINS
 !    o leap year
 !    o required data just beyond the first record
 !
-! REVISIONS:
-! Hua Yuan, 04/2014: initial code
-! ------------------------------------------------------------
+! !REVISIONS:
+!  04/2014, Hua Yuan: initial code
+!
+!-----------------------------------------------------------------------
    SUBROUTINE setstampLB(mtstamp, var_i, year, month, mday, time_i)
 
    IMPLICIT NONE
@@ -1349,7 +1352,7 @@ CONTAINS
                day = day - 1
                IF (day == 0) THEN
                   year = year - 1
-                  IF ( isleapyear(year) .and. leapyear) THEN
+                  IF ( isleapyear(year) ) THEN
                      day = 366
                   ELSE
                      day = 365
@@ -1402,7 +1405,7 @@ CONTAINS
          ENDIF
 
          ! set record info (year, month, time_i)
-         IF ( sec<0 .or. (sec==0 .and. offset(var_i).NE.0) ) THEN
+         IF ( sec<0 .or. (sec==0 .and. offset(var_i).ne.0) ) THEN
 
             ! IF just behind the first record -> set to first record
             IF ( year==startyr .and. month==startmo .and. mday==1 ) THEN
@@ -1491,15 +1494,15 @@ CONTAINS
 
    END SUBROUTINE setstampLB
 
-! ------------------------------------------------------------
-!
+!-----------------------------------------------------------------------
 ! !DESCRIPTION:
 !    set the upper boundary time stamp and record information,
 !    a KEY FUNCTION of this MODULE
 !
-! REVISIONS:
-! Hua Yuan, 04/2014: initial code
-! ------------------------------------------------------------
+! !REVISIONS:
+!  04/2014, Hua Yuan: initial code
+!
+!-----------------------------------------------------------------------
    SUBROUTINE setstampUB(var_i, year, month, mday, time_i)
 
    IMPLICIT NONE
@@ -1651,13 +1654,14 @@ CONTAINS
 
    END SUBROUTINE setstampUB
 
-! ------------------------------------------------------------
+!-----------------------------------------------------------------------
 ! !DESCRIPTION:
-! calculate time average coszen value between [LB, UB]
+!  calculate time average coszen value between [LB, UB]
 !
-! REVISIONS:
-! 04/2014, yuan: this method is adapted from CLM
-! ------------------------------------------------------------
+! !REVISIONS:
+!  04/2014, Hua Yuan: this method is adapted from CLM
+!
+!-----------------------------------------------------------------------
    SUBROUTINE calavgcos(idate)
 
    USE MOD_Block

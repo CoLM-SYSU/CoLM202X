@@ -149,8 +149,9 @@ CONTAINS
          IF (gpp_p(m) > 0.0_r8) THEN
             downreg_p(m) = excess_cflux_p(m)/gpp_p(m)
             psn_to_cpool_p(m) = psn_to_cpool_p(m) * (1._r8 - downreg_p(m))
-
-	 ENDIF
+         ELSE
+            downreg_p(m) = 0._r8
+         ENDIF
 
          ! calculate the amount of new leaf C dictated by these allocation
          ! decisions, and calculate the daily fluxes of C and N to current

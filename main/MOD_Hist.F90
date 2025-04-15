@@ -3,20 +3,20 @@
 MODULE MOD_Hist
 
 !----------------------------------------------------------------------------
-! DESCRIPTION:
+! !DESCRIPTION:
 !
 !     Write out gridded model results to history files.
 !
-! Original version: Yongjiu Dai, September 15, 1999, 03/2014
+!  Original version: Yongjiu Dai, September 15, 1999, 03/2014
 !
-! REVISIONS:
-! Shupeng Zhang, 05/2023: 1) porting codes to MPI parallel version
+! !REVISIONS:
+!  Shupeng Zhang, 05/2023: 1) porting codes to MPI parallel version
 !
-! TODO...(need complement)
+!  TODO...(need complement)
 !----------------------------------------------------------------------------
 
    USE MOD_Vars_1DAccFluxes
-   USE MOD_Vars_Global, only : spval
+   USE MOD_Vars_Global, only: spval
    USE MOD_NetCDFSerial
 
    USE MOD_HistGridded
@@ -29,6 +29,9 @@ MODULE MOD_Hist
 #ifdef CatchLateralFlow
    USE MOD_Catch_Hist
 #endif
+#ifdef EXTERNAL_LAKE
+   USE MOD_Lake_Hist
+#endif
 
    PUBLIC :: hist_init
    PUBLIC :: hist_out
@@ -36,16 +39,17 @@ MODULE MOD_Hist
 
    character(len=10) :: HistForm ! 'Gridded', 'Vector', 'Single'
 
+   character(len=256) :: file_last = 'null'
+
 !--------------------------------------------------------------------------
 CONTAINS
 
-   !---------------------------------------
    SUBROUTINE hist_init (dir_hist, lulcc_call)
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      character(len=*) , intent(in) :: dir_hist
-      logical, optional, intent(in) :: lulcc_call
+   character(len=*) , intent(in) :: dir_hist
+   logical, optional, intent(in) :: lulcc_call
 
       CALL allocate_acc_fluxes ()
       CALL FLUSH_acc_fluxes ()
@@ -78,10 +82,10 @@ CONTAINS
 
    END SUBROUTINE hist_init
 
-   !--------------------------------------
+
    SUBROUTINE hist_final ()
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
       CALL deallocate_acc_fluxes ()
 
@@ -95,72 +99,72 @@ CONTAINS
 
    END SUBROUTINE hist_final
 
-   !---------------------------------------
+
    SUBROUTINE hist_out (idate, deltim, itstamp, etstamp, ptstamp, &
          dir_hist, site)
 
-      !=======================================================================
-      ! Original version: Yongjiu Dai, September 15, 1999, 03/2014
-      !=======================================================================
+!=======================================================================
+!  Original version: Yongjiu Dai, September 15, 1999, 03/2014
+!=======================================================================
 
-      USE MOD_Precision
-      USE MOD_Namelist
-      USE MOD_TimeManager
-      USE MOD_SPMD_Task
-      USE MOD_Vars_1DAccFluxes
-      USE MOD_Vars_1DFluxes, only : nsensor
-      USE MOD_Vars_TimeVariables, only : wa, wat, wetwat, wdsrf
-      USE MOD_Block
-      USE MOD_DataType
-      USE MOD_LandPatch
-      USE MOD_SpatialMapping
-      USE MOD_Vars_TimeInvariants, only: patchtype, patchclass, patchmask
+   USE MOD_Precision
+   USE MOD_Namelist
+   USE MOD_TimeManager
+   USE MOD_SPMD_Task
+   USE MOD_Vars_1DAccFluxes
+   USE MOD_Vars_1DFluxes, only: nsensor
+   USE MOD_Vars_TimeVariables, only: wa, wat, wetwat, wdsrf
+   USE MOD_Block
+   USE MOD_DataType
+   USE MOD_LandPatch
+   USE MOD_SpatialMapping
+   USE MOD_Vars_TimeInvariants, only: patchtype, patchclass, patchmask
 #ifdef URBAN_MODEL
-      USE MOD_LandUrban
+   USE MOD_LandUrban
 #endif
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
-      USE MOD_Vars_PFTimeInvariants, only: pftclass
-      USE MOD_LandPFT, only: patch_pft_s
+   USE MOD_Vars_PFTimeInvariants, only: pftclass
+   USE MOD_LandPFT, only: patch_pft_s
 #endif
 #if(defined CaMa_Flood)
-      USE MOD_CaMa_Vars !definition of CaMa variables
+   USE MOD_CaMa_Vars !definition of CaMa variables
 #endif
-      USE MOD_Forcing, only: forcmask_pch
+   USE MOD_Forcing, only: forcmask_pch
 #ifdef DataAssimilation
-      USE MOD_DA_GRACE, only : fslp_k_mon
+   USE MOD_DA_GRACE, only: fslp_k_mon
 #endif
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      integer,  intent(in) :: idate(3)
-      real(r8), intent(in) :: deltim
-      type(timestamp), intent(in) :: itstamp
-      type(timestamp), intent(in) :: etstamp
-      type(timestamp), intent(in) :: ptstamp
+   integer,  intent(in) :: idate(3)
+   real(r8), intent(in) :: deltim
+   type(timestamp), intent(in) :: itstamp
+   type(timestamp), intent(in) :: etstamp
+   type(timestamp), intent(in) :: ptstamp
 
-      character(len=*), intent(in) :: dir_hist
-      character(len=*), intent(in) :: site
+   character(len=*), intent(in) :: dir_hist
+   character(len=*), intent(in) :: site
 
-      ! Local variables
-      logical :: lwrite
-      character(len=256) :: file_hist
-      integer :: itime_in_file
+   ! Local variables
+   logical :: lwrite
+   character(len=256) :: file_hist
+   integer :: itime_in_file
 #if(defined CaMa_Flood)
-      character(len=256) :: file_hist_cama
-      integer :: itime_in_file_cama
+   character(len=256) :: file_hist_cama
+   integer :: itime_in_file_cama
 #endif
-      integer :: month, day
-      integer :: days_month(1:12)
-      character(len=10) :: cdate
+   integer :: month, day
+   integer :: days_month(1:12)
+   character(len=10) :: cdate
 
-      type(block_data_real8_2d) :: sumarea
-      type(block_data_real8_2d) :: sumarea_urb
-      real(r8), allocatable ::  vecacc (:)
-      logical,  allocatable ::  filter (:)
+   type(block_data_real8_2d) :: sumarea
+   type(block_data_real8_2d) :: sumarea_urb
+   real(r8), allocatable ::  vecacc (:)
+   logical,  allocatable ::  filter (:)
 
-      integer i, u
+   integer i, u
 #ifdef URBAN_MODEL
-      logical,  allocatable ::  filter_urb (:)
+   logical,  allocatable ::  filter_urb (:)
 #endif
 
       IF (itstamp <= ptstamp) THEN
@@ -229,7 +233,7 @@ CONTAINS
 
          file_hist = trim(dir_hist) // '/' // trim(site) //'_hist_'//trim(cdate)//'.nc'
 
-         CALL hist_write_time (file_hist, 'time', idate, itime_in_file)
+         CALL hist_write_time (file_hist, file_last, 'time', idate, itime_in_file)
 
          IF (p_is_worker) THEN
             IF (numpatch > 0) THEN
@@ -273,10 +277,10 @@ CONTAINS
          ENDIF
 
          IF (HistForm == 'Gridded') THEN
-            IF (itime_in_file == 1) THEN
-               CALL hist_write_var_real8_2d (file_hist, 'landarea', ghist, 1, sumarea, &
+            IF (trim(file_hist) /= trim(file_last)) THEN
+               CALL hist_write_var_real8_2d (file_hist, 'landarea', ghist, -1, sumarea, &
                   compress = 1, longname = 'land area', units = 'km2')
-               CALL hist_write_var_real8_2d (file_hist, 'landfraction', ghist, 1, landfraction, &
+               CALL hist_write_var_real8_2d (file_hist, 'landfraction', ghist, -1, landfraction, &
                   compress = 1, longname = 'land fraction', units = '-')
             ENDIF
          ENDIF
@@ -453,12 +457,12 @@ CONTAINS
             a_zerr, file_hist, 'f_zerr', itime_in_file, sumarea, filter, &
             'the error of energy balance','W/m2')
 
-#ifndef CatchLateralFlow
          ! surface runoff [mm/s]
          CALL write_history_variable_2d ( DEF_hist_vars%rsur, &
             a_rsur, file_hist, 'f_rsur', itime_in_file, sumarea, filter, &
             'surface runoff','mm/s')
 
+#ifndef CatchLateralFlow
          ! saturation excess surface runoff [mm/s]
          CALL write_history_variable_2d ( DEF_hist_vars%rsur_se, &
             a_rsur_se, file_hist, 'f_rsur_se', itime_in_file, sumarea, filter, &
@@ -468,6 +472,7 @@ CONTAINS
          CALL write_history_variable_2d ( DEF_hist_vars%rsur_ie, &
             a_rsur_ie, file_hist, 'f_rsur_ie', itime_in_file, sumarea, filter, &
             'infiltration excess surface runoff','mm/s')
+#endif
 
          ! subsurface runoff [mm/s]
          CALL write_history_variable_2d ( DEF_hist_vars%rsub, &
@@ -478,7 +483,6 @@ CONTAINS
          CALL write_history_variable_2d ( DEF_hist_vars%rnof, &
             a_rnof, file_hist, 'f_rnof', itime_in_file, sumarea, filter, &
             'total runoff','mm/s')
-#endif
 
 #ifdef DataAssimilation
          ! slope factors for runoff [-]
@@ -501,6 +505,11 @@ CONTAINS
          CALL write_history_variable_2d ( DEF_hist_vars%xwsub, &
             a_xwsub, file_hist, 'f_xwsub', itime_in_file, sumarea, filter, &
             'rate of ground water change','mm/s')
+
+         ! fraction of flooded area [-]
+         CALL write_history_variable_2d ( DEF_hist_vars%fldarea, &
+            a_fldarea, file_hist, 'f_fldarea', itime_in_file, sumarea, filter, &
+            'fraction of flooded area','-')
 #endif
 
          ! interception [mm/s]
@@ -647,6 +656,17 @@ CONTAINS
                ENDIF
 
                filter = filter .and. patchmask
+            ENDIF
+         ENDIF
+
+         IF (HistForm == 'Gridded') THEN
+            CALL mp2g_hist%get_sumarea (sumarea, filter)
+         ENDIF
+
+         IF (HistForm == 'Gridded') THEN
+            IF (trim(file_hist) /= trim(file_last)) THEN
+               CALL hist_write_var_real8_2d (file_hist, 'area_wetland', ghist, -1, sumarea, &
+                  compress = 1, longname = 'area of wetland', units = 'km2')
             ENDIF
          ENDIF
 
@@ -1089,6 +1109,46 @@ CONTAINS
              a_fpi, file_hist, 'f_fpi', itime_in_file, sumarea, filter, &
              'fraction of immobalization','unitless')
 
+         CALL write_history_variable_2d ( DEF_hist_vars%totvegc, &
+             a_totvegc, file_hist, 'f_totvegc', itime_in_file, sumarea, filter, &
+             'total vegetation carbon','gC m-2')
+
+         CALL write_history_variable_2d ( DEF_hist_vars%totlitc, &
+             a_totlitc, file_hist, 'f_totlitc', itime_in_file, sumarea, filter, &
+             'total litter carbon','gC m-2')
+
+         CALL write_history_variable_2d ( DEF_hist_vars%totsomc, &
+             a_totsomc, file_hist, 'f_totsomc', itime_in_file, sumarea, filter, &
+             'total soil organic carbon','gC m-2')
+
+         CALL write_history_variable_2d ( DEF_hist_vars%totcwdc, &
+             a_totcwdc, file_hist, 'f_totcwdc', itime_in_file, sumarea, filter, &
+             'total coarse woody debris carbon','gC m-2')
+
+         CALL write_history_variable_2d ( DEF_hist_vars%totcolc, &
+             a_totcolc, file_hist, 'f_totcolc', itime_in_file, sumarea, filter, &
+             'total ecosystem carbon','gC m-2')
+
+         CALL write_history_variable_2d ( DEF_hist_vars%totvegn, &
+             a_totvegn, file_hist, 'f_totvegn', itime_in_file, sumarea, filter, &
+             'total vegetation nitrogen','gN m-2')
+
+         CALL write_history_variable_2d ( DEF_hist_vars%totlitn, &
+             a_totlitn, file_hist, 'f_totlitn', itime_in_file, sumarea, filter, &
+             'total litter nitrogen','gN m-2')
+
+         CALL write_history_variable_2d ( DEF_hist_vars%totsomn, &
+             a_totsomn, file_hist, 'f_totsomn', itime_in_file, sumarea, filter, &
+             'total soil organic nitrogen','gN m-2')
+
+         CALL write_history_variable_2d ( DEF_hist_vars%totcwdn, &
+             a_totcwdn, file_hist, 'f_totcwdn', itime_in_file, sumarea, filter, &
+             'total coarse woody debris nitrogen','gN m-2')
+
+         CALL write_history_variable_2d ( DEF_hist_vars%totcoln, &
+             a_totcoln, file_hist, 'f_totcoln', itime_in_file, sumarea, filter, &
+             'total ecosystem nitrogen','gN m-2')
+
          ! autotrophic respiration
          CALL write_history_variable_2d ( DEF_hist_vars%ar , &
              a_ar, file_hist, 'f_ar', itime_in_file, sumarea, filter, &
@@ -1464,6 +1524,11 @@ CONTAINS
          CALL write_history_variable_3d ( DEF_hist_vars%sminn_vr, &
             a_sminn_vr, file_hist, 'f_sminn_vr', itime_in_file, 'soil', 1, nl_soil, &
             sumarea, filter,'mineral nitrogen density in soil layers','gN/m3')
+
+         ! total nitrogen percentage in soil layers
+         CALL write_history_variable_3d ( DEF_hist_vars%totsoiln_vr, &
+            a_totsoiln_vr, file_hist, 'f_totsoiln_vr', itime_in_file, 'soil', 1, nl_soil, &
+            sumarea, filter,'Total nitrogen in soil layers, percentage of total soil nitrogen mass in total soil mass','%')
 
          ! bulk density in soil layers
          CALL write_history_variable_3d ( DEF_hist_vars%BD_all, &
@@ -3679,6 +3744,10 @@ CONTAINS
             a_lake_icefrac, file_hist, 'f_lake_icefrac', itime_in_file, 'lake', 1, nl_lake, &
             sumarea, filter, 'lake ice fraction cover','0-1')
 
+#ifdef EXTERNAL_LAKE
+         CALL LakeVarsSaveHist (nl_lake, file_hist, HistForm, itime_in_file, sumarea, filter)
+#endif
+
          ! --------------------------------
          ! Retrieve through averaged fluxes
          ! --------------------------------
@@ -3868,7 +3937,7 @@ CONTAINS
          ENDIF
 
          CALL write_history_variable_3d ( DEF_hist_vars%sensors, &
-            a_sensors, file_hist, 'sensors', itime_in_file, 'sensor', 1, nsensor, &
+            a_sensors, file_hist, 'f_sensors', itime_in_file, 'sensor', 1, nsensor, &
             sumarea, filter, 'variable sensors','user defined')
 
 #if(defined CaMa_Flood)
@@ -3897,28 +3966,30 @@ CONTAINS
          ENDIF
 #endif
 
+         file_last = file_hist
+
       ENDIF
 
    END SUBROUTINE hist_out
 
-   ! -------
+
    SUBROUTINE write_history_variable_2d ( is_hist, &
          acc_vec, file_hist, varname, itime_in_file, sumarea, filter, &
          longname, units)
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      logical, intent(in) :: is_hist
+   logical, intent(in) :: is_hist
 
-      real(r8),         intent(inout) :: acc_vec(:)
-      character(len=*), intent(in)    :: file_hist
-      character(len=*), intent(in)    :: varname
-      integer,          intent(in)    :: itime_in_file
-      character(len=*), intent(in)    :: longname
-      character(len=*), intent(in)    :: units
+   real(r8),         intent(inout) :: acc_vec(:)
+   character(len=*), intent(in)    :: file_hist
+   character(len=*), intent(in)    :: varname
+   integer,          intent(in)    :: itime_in_file
+   character(len=*), intent(in)    :: longname
+   character(len=*), intent(in)    :: units
 
-      type(block_data_real8_2d), intent(in) :: sumarea
-      logical, intent(in) :: filter(:)
+   type(block_data_real8_2d), intent(in) :: sumarea
+   logical, intent(in) :: filter(:)
 
       IF (.not. is_hist) RETURN
 
@@ -3940,25 +4011,25 @@ CONTAINS
 
    END SUBROUTINE write_history_variable_2d
 
-   ! -------
+
 #ifdef URBAN_MODEL
    SUBROUTINE write_history_variable_urb_2d ( is_hist, &
          acc_vec, file_hist, varname, itime_in_file, sumarea, filter, &
          longname, units)
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      logical, intent(in) :: is_hist
+   logical, intent(in) :: is_hist
 
-      real(r8), intent(inout) :: acc_vec(:)
-      character(len=*), intent(in) :: file_hist
-      character(len=*), intent(in) :: varname
-      integer,          intent(in) :: itime_in_file
-      character(len=*), intent(in) :: longname
-      character(len=*), intent(in) :: units
+   real(r8), intent(inout) :: acc_vec(:)
+   character(len=*), intent(in) :: file_hist
+   character(len=*), intent(in) :: varname
+   integer,          intent(in) :: itime_in_file
+   character(len=*), intent(in) :: longname
+   character(len=*), intent(in) :: units
 
-      type(block_data_real8_2d), intent(in) :: sumarea
-      logical, intent(in) :: filter(:)
+   type(block_data_real8_2d), intent(in) :: sumarea
+   logical, intent(in) :: filter(:)
 
       IF (.not. is_hist) RETURN
 
@@ -3981,30 +4052,30 @@ CONTAINS
    END SUBROUTINE write_history_variable_urb_2d
 #endif
 
-   ! -------
+
    SUBROUTINE write_history_variable_3d ( is_hist, &
          acc_vec, file_hist, varname, itime_in_file, dim1name, lb1, ndim1, &
          sumarea, filter, longname, units)
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      logical, intent(in) :: is_hist
+   logical, intent(in) :: is_hist
 
-      real(r8), intent(inout) :: acc_vec(:,:)
-      character(len=*), intent(in) :: file_hist
-      character(len=*), intent(in) :: varname
-      integer, intent(in) :: itime_in_file
-      character(len=*), intent(in) :: dim1name
-      integer, intent(in) :: lb1, ndim1
+   real(r8), intent(inout) :: acc_vec(:,:)
+   character(len=*), intent(in) :: file_hist
+   character(len=*), intent(in) :: varname
+   integer, intent(in) :: itime_in_file
+   character(len=*), intent(in) :: dim1name
+   integer, intent(in) :: lb1, ndim1
 
-      type(block_data_real8_2d), intent(in) :: sumarea
-      logical, intent(in) :: filter(:)
-      character (len=*), intent(in) :: longname
-      character (len=*), intent(in) :: units
+   type(block_data_real8_2d), intent(in) :: sumarea
+   logical, intent(in) :: filter(:)
+   character (len=*), intent(in) :: longname
+   character (len=*), intent(in) :: units
 
-      ! Local variables
-      integer :: iblkme, xblk, yblk, xloc, yloc, i1
-      integer :: compress
+   ! Local variables
+   integer :: iblkme, xblk, yblk, xloc, yloc, i1
+   integer :: compress
 
       IF (.not. is_hist) RETURN
 
@@ -4028,27 +4099,27 @@ CONTAINS
 
    END SUBROUTINE write_history_variable_3d
 
-   ! -------
+
    SUBROUTINE write_history_variable_4d ( is_hist,   &
          acc_vec, file_hist, varname, itime_in_file, &
          dim1name, lb1, ndim1, dim2name, lb2, ndim2, &
          sumarea, filter, longname, units)
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      logical, intent(in) :: is_hist
+   logical, intent(in) :: is_hist
 
-      real(r8), intent(inout) :: acc_vec(:,:,:)
-      character(len=*), intent(in) :: file_hist
-      character(len=*), intent(in) :: varname
-      integer, intent(in) :: itime_in_file
-      character(len=*), intent(in) :: dim1name, dim2name
-      integer, intent(in) :: lb1, ndim1, lb2, ndim2
+   real(r8), intent(inout) :: acc_vec(:,:,:)
+   character(len=*), intent(in) :: file_hist
+   character(len=*), intent(in) :: varname
+   integer, intent(in) :: itime_in_file
+   character(len=*), intent(in) :: dim1name, dim2name
+   integer, intent(in) :: lb1, ndim1, lb2, ndim2
 
-      type(block_data_real8_2d), intent(in) :: sumarea
-      logical, intent(in) :: filter(:)
-      character (len=*), intent(in) :: longname
-      character (len=*), intent(in) :: units
+   type(block_data_real8_2d), intent(in) :: sumarea
+   logical, intent(in) :: filter(:)
+   character (len=*), intent(in) :: longname
+   character (len=*), intent(in) :: units
 
       IF (.not. is_hist) RETURN
 
@@ -4072,24 +4143,24 @@ CONTAINS
 
    END SUBROUTINE write_history_variable_4d
 
-   ! -------
+
    SUBROUTINE write_history_variable_ln ( is_hist, &
          acc_vec, file_hist, varname, itime_in_file, sumarea, filter, &
          longname, units)
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      logical, intent(in) :: is_hist
+   logical, intent(in) :: is_hist
 
-      real(r8), intent(inout) :: acc_vec(:)
-      character(len=*), intent(in) :: file_hist
-      character(len=*), intent(in) :: varname
-      integer, intent(in) :: itime_in_file
+   real(r8), intent(inout) :: acc_vec(:)
+   character(len=*), intent(in) :: file_hist
+   character(len=*), intent(in) :: varname
+   integer, intent(in) :: itime_in_file
 
-      type(block_data_real8_2d), intent(in) :: sumarea
-      logical,  intent(in) :: filter(:)
-      character (len=*), intent(in), optional :: longname
-      character (len=*), intent(in), optional :: units
+   type(block_data_real8_2d), intent(in) :: sumarea
+   logical,  intent(in) :: filter(:)
+   character (len=*), intent(in), optional :: longname
+   character (len=*), intent(in), optional :: units
 
       IF (.not. is_hist) RETURN
 
@@ -4110,26 +4181,27 @@ CONTAINS
 
    END SUBROUTINE write_history_variable_ln
 
-   !------------------------------
-   SUBROUTINE hist_write_time (filename, dataname, time, itime)
 
-      IMPLICIT NONE
+   SUBROUTINE hist_write_time (filename, filelast, dataname, time, itime)
 
-      character (len=*), intent(in) :: filename
-      character (len=*), intent(in) :: dataname
-      integer, intent(in)  :: time(3)
-      integer, intent(out) :: itime
+   IMPLICIT NONE
+
+   character (len=*), intent(in) :: filename
+   character (len=*), intent(in) :: filelast
+   character (len=*), intent(in) :: dataname
+   integer, intent(in)  :: time(3)
+   integer, intent(out) :: itime
 
       select CASE (HistForm)
       CASE ('Gridded')
-         CALL hist_gridded_write_time (filename, dataname, time, itime)
+         CALL hist_gridded_write_time (filename, filelast, dataname, time, itime)
 #if (defined UNSTRUCTURED || defined CATCHMENT)
       CASE ('Vector')
-         CALL hist_vector_write_time  (filename, dataname, time, itime)
+         CALL hist_vector_write_time  (filename, filelast, dataname, time, itime)
 #endif
 #ifdef SinglePoint
       CASE ('Single')
-         CALL hist_single_write_time  (filename, dataname, time, itime)
+         CALL hist_single_write_time  (filename, filelast, dataname, time, itime)
 #endif
       END select
 

@@ -125,7 +125,7 @@ CONTAINS
    USE MOD_Urban_LUCY, only: LUCY
    USE MOD_Eroot, only: eroot
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
-   USE MOD_Hydro_SoilFunction, only : soil_psi_from_vliq
+   USE MOD_Hydro_SoilFunction, only: soil_psi_from_vliq
 #endif
 
    IMPLICIT NONE
@@ -1080,46 +1080,19 @@ CONTAINS
 ! during the timestep.  this energy is later added to the sensible heat flux.
 
       ! --- for pervious ground ---
-      ! update of snow
-      IF (lbp < 1) THEN
-         egsmax = (wice_gpersno(lbp)+wliq_gpersno(lbp)) / deltim
-         egidif = max( 0., fevpgper - egsmax )
-         fevpgper = min ( fevpgper, egsmax )
-         fsengper = fsengper + htvp_gper*egidif
-      ENDIF
-
-      ! update of soil
-      egsmax = (wice_gpersno(1)+wliq_gpersno(1)) / deltim
+      egsmax = (wice_gpersno(lbp)+wliq_gpersno(lbp)) / deltim
       egidif = max( 0., fevpgper - egsmax )
       fevpgper = min ( fevpgper, egsmax )
       fsengper = fsengper + htvp_gper*egidif
 
       ! --- for impervious ground ---
-      ! update of snow
-      IF (lbi < 1) THEN
-         egsmax = (wice_gimpsno(lbi)+wliq_gimpsno(lbi)) / deltim
-         egidif = max( 0., fevpgimp - egsmax )
-         fevpgimp = min ( fevpgimp, egsmax )
-         fsengimp = fsengimp + htvp_gimp*egidif
-      ENDIF
-
-      ! update of soil
-      egsmax = (wice_gimpsno(1)+wliq_gimpsno(1)) / deltim
+      egsmax = (wice_gimpsno(lbi)+wliq_gimpsno(lbi)) / deltim
       egidif = max( 0., fevpgimp - egsmax )
       fevpgimp = min ( fevpgimp, egsmax )
       fsengimp = fsengimp + htvp_gimp*egidif
 
       ! --- for roof ---
-      ! update of snow
-      IF (lbr < 1) THEN
-         egsmax = (wice_roofsno(lbr)+wliq_roofsno(lbr)) / deltim
-         egidif = max( 0., fevproof - egsmax )
-         fevproof = min ( fevproof, egsmax )
-         fsenroof = fsenroof + htvp_roof*egidif
-      ENDIF
-
-      ! update of soil
-      egsmax = (wice_roofsno(1)+wliq_roofsno(1)) / deltim
+      egsmax = (wice_roofsno(lbr)+wliq_roofsno(lbr)) / deltim
       egidif = max( 0., fevproof - egsmax )
       fevproof = min ( fevproof, egsmax )
       fsenroof = fsenroof + htvp_roof*egidif

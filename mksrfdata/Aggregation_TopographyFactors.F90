@@ -2,11 +2,11 @@
 
 SUBROUTINE Aggregation_TopographyFactors ( &
       grid_topo_factor , dir_topodata, dir_model_landdata, lc_year)
-   ! ----------------------------------------------------------------------
-   ! Global topography-based factors data
-   !
-   ! Created by Sisi Chen, Lu Li, 06/2024
-   ! ----------------------------------------------------------------------
+!-----------------------------------------------------------------------
+!  Global topography-based factors data
+!
+!  Created by Sisi Chen, Lu Li, 06/2024
+!-----------------------------------------------------------------------
    USE MOD_Precision
    USE MOD_Namelist
    USE MOD_SPMD_Task
@@ -20,7 +20,7 @@ SUBROUTINE Aggregation_TopographyFactors ( &
    USE MOD_AggregationRequestData
    USE MOD_Utils
 #ifdef SrfdataDiag
-   USE MOD_Mesh, only : numelm
+   USE MOD_Mesh, only: numelm
    USE MOD_LandElm
    USE MOD_SrfdataDiag
 #endif
@@ -29,78 +29,78 @@ SUBROUTINE Aggregation_TopographyFactors ( &
 
    ! arguments:
    ! ---------------------------------------------------------------
-   INTEGER, intent(in) :: lc_year
-   TYPE(grid_type),  intent(in) :: grid_topo_factor    ! Grid structure for high resolution topography factors
-   CHARACTER(len=*), intent(in) :: dir_topodata        ! Direct of Rawdata
-   CHARACTER(len=*), intent(in) :: dir_model_landdata
+   integer, intent(in) :: lc_year
+   type(grid_type),  intent(in) :: grid_topo_factor    ! Grid structure for high resolution topography factors
+   character(len=*), intent(in) :: dir_topodata        ! Direct of Rawdata
+   character(len=*), intent(in) :: dir_model_landdata
 
    ! local variables:
    ! ---------------------------------------------------------------
-   CHARACTER(len=256) :: landdir, lndname, cyear
-   CHARACTER(len=3)   :: sdir, sdir1
+   character(len=256) :: landdir, lndname, cyear
+   character(len=3)   :: sdir, sdir1
 
-   TYPE (block_data_real8_2d) :: slp_grid    ! slope
-   TYPE (block_data_real8_2d) :: asp_grid    ! aspect
-   TYPE (block_data_real8_2d) :: svf_grid    ! sky view factor
-   TYPE (block_data_real8_2d) :: cur_grid    ! curvature
-   TYPE (block_data_real8_3d) :: tea_f_grid  ! sine of terrain elevation angle at front of grid
-   TYPE (block_data_real8_3d) :: tea_b_grid  ! sine of terrain elevation angle at back of grid
+   type (block_data_real8_2d) :: slp_grid    ! slope
+   type (block_data_real8_2d) :: asp_grid    ! aspect
+   type (block_data_real8_2d) :: svf_grid    ! sky view factor
+   type (block_data_real8_2d) :: cur_grid    ! curvature
+   type (block_data_real8_3d) :: tea_f_grid  ! sine of terrain elevation angle at front of grid
+   type (block_data_real8_3d) :: tea_b_grid  ! sine of terrain elevation angle at back of grid
 
    ! patch
-   REAL(r8), allocatable :: svf_patches (:)
-   REAL(r8), allocatable :: cur_patches (:)
-   REAL(r8), allocatable :: tea_f_azi_patches (:,:) ! shape as (azimuth, patches)
-   REAL(r8), allocatable :: tea_b_azi_patches (:,:)
-   REAL(r8), allocatable :: sf_lut_patches  (:,:,:) ! shape as (azimuth, zenith, patches)
-   REAL(r8), allocatable :: sf_curve_patches(:,:,:) ! shape as (azimuth, parameters, patches)
+   real(r8), allocatable :: svf_patches (:)
+   real(r8), allocatable :: cur_patches (:)
+   real(r8), allocatable :: tea_f_azi_patches (:,:) ! shape as (azimuth, patches)
+   real(r8), allocatable :: tea_b_azi_patches (:,:)
+   real(r8), allocatable :: sf_lut_patches  (:,:,:) ! shape as (azimuth, zenith, patches)
+   real(r8), allocatable :: sf_curve_patches(:,:,:) ! shape as (azimuth, parameters, patches)
 
    ! four defined types at all patches
-   REAL(r8), allocatable :: asp_type_patches (:,:)  ! shape as (type, patches)
-   REAL(r8), allocatable :: slp_type_patches (:,:)
-   REAL(r8), allocatable :: area_type_patches (:,:)
+   real(r8), allocatable :: asp_type_patches  (:,:) ! shape as (type, patches)
+   real(r8), allocatable :: slp_type_patches  (:,:)
+   real(r8), allocatable :: area_type_patches (:,:)
 
    ! pixelsets
-   REAL(r8), allocatable :: slp_one (:)
-   REAL(r8), allocatable :: asp_one (:)
-   REAL(r8), allocatable :: svf_one (:)
-   REAL(r8), allocatable :: cur_one (:)
-   REAL(r8), allocatable :: area_one (:)
-   REAL(r8), allocatable :: sf_one (:)
-   REAL(r8), allocatable :: tea_f_azi_one (:,:)
-   REAL(r8), allocatable :: tea_b_azi_one (:,:)
-   REAL(r8), allocatable :: tea_f_one (:)
-   REAL(r8), allocatable :: tea_b_one (:)
-   LOGICAL , allocatable :: sf_mask_one (:)
-   LOGICAL , allocatable :: asp_mask_one (:)
-   LOGICAL , allocatable :: area_mask_one (:)
-   LOGICAL , allocatable :: slp_mask_one  (:)
+   real(r8), allocatable :: slp_one         (:)
+   real(r8), allocatable :: asp_one         (:)
+   real(r8), allocatable :: svf_one         (:)
+   real(r8), allocatable :: cur_one         (:)
+   real(r8), allocatable :: area_one        (:)
+   real(r8), allocatable :: sf_one          (:)
+   real(r8), allocatable :: tea_f_azi_one (:,:)
+   real(r8), allocatable :: tea_b_azi_one (:,:)
+   real(r8), allocatable :: tea_f_one       (:)
+   real(r8), allocatable :: tea_b_one       (:)
+   logical , allocatable :: sf_mask_one     (:)
+   logical , allocatable :: asp_mask_one    (:)
+   logical , allocatable :: area_mask_one   (:)
+   logical , allocatable :: slp_mask_one    (:)
 
    ! pixelsets of four defined types at each patch
-   REAL(r8), allocatable :: asp_type_one (:,:)
-   REAL(r8), allocatable :: slp_type_one (:,:)
-   REAL(r8), allocatable :: area_type_one (:,:)
+   real(r8), allocatable :: asp_type_one  (:,:)
+   real(r8), allocatable :: slp_type_one  (:,:)
+   real(r8), allocatable :: area_type_one (:,:)
 
-   REAL(r8) :: sum_area_one                ! sum of pixel area of a patch
-   REAL(r8) :: zenith_angle(num_zenith)    ! sine of sun zenith angle (divided by num_zenith part)
+   real(r8) :: sum_area_one                ! sum of pixel area of a patch
+   real(r8) :: zenith_angle(num_zenith)    ! sine of sun zenith angle (divided by num_zenith part)
 
    ! Intermediate variables used in reducing the dimensionality of masking factors
-   REAL(r8) :: x2_sum
-   REAL(r8) :: x_sum
-   REAL(r8) :: y_sum
-   REAL(r8) :: xy_sum
-   REAL(r8) :: a1                          ! Function Parameters
-   REAL(r8) :: a2                          ! Function Parameters
-   REAL(r8) :: y(num_zenith)               ! shadow factor under a single azimuth and single patch
-   REAL(r8) :: x(num_zenith)               ! Solar zenith angle used as a predictor
-   REAL(r8), allocatable :: y_train(:)        ! The part of y used to fit the function
-   REAL(r8), allocatable :: x_train(:)        ! The part of x used to fit the function
-   REAL(r8), allocatable :: y_train_transform(:)  ! The transform function of y_train
+   real(r8) :: x2_sum
+   real(r8) :: x_sum
+   real(r8) :: y_sum
+   real(r8) :: xy_sum
+   real(r8) :: a1                          ! Function Parameters
+   real(r8) :: a2                          ! Function Parameters
+   real(r8) :: y(num_zenith)               ! shadow factor under a single azimuth and single patch
+   real(r8) :: x(num_zenith)               ! Solar zenith angle used as a predictor
+   real(r8), allocatable :: y_train(:)     ! The part of y used to fit the function
+   real(r8), allocatable :: x_train(:)     ! The part of x used to fit the function
+   real(r8), allocatable :: y_train_transform(:)       ! The transform function of y_train
 
    ! local variables
-   INTEGER :: ipatch, i, ps, pe, type, a, z, count_pixels, num_pixels, j, index, n
+   integer :: ipatch, i, ps, pe, type, a, z, count_pixels, num_pixels, j, index, n
 
 #ifdef SrfdataDiag
-   INTEGER :: typpatch(N_land_classification+1), ityp  ! number of land classification
+   integer :: typpatch(N_land_classification+1), ityp  ! number of land classification
 #endif
    write(cyear,'(i4.4)') lc_year
    landdir = trim(dir_model_landdata) // '/topography/' // trim(cyear)
@@ -114,17 +114,6 @@ SUBROUTINE Aggregation_TopographyFactors ( &
    ENDIF
 #ifdef USEMPI
    CALL mpi_barrier (p_comm_glb, p_err)
-#endif
-
-#ifdef SinglePoint
-   IF (USE_SITE_topography) THEN
-      RETURN
-   ELSE
-      allocate (SITE_slp_type  (num_slope_type))
-      allocate (SITE_asp_type  (num_slope_type))
-      allocate (SITE_area_type (num_slope_type))
-      allocate (SITE_sf_lut    (num_azimuth, num_zenith))
-   ENDIF
 #endif
 
    ! -------------------------------------------------------------------
@@ -259,7 +248,7 @@ SUBROUTINE Aggregation_TopographyFactors ( &
 
                         IF (pi*0.5 - zenith_angle(z) < tea_b_one(i)) THEN
                            sf_one(i) = 0
-                        ELSE IF (pi*0.5 - zenith_angle(z) > tea_f_one(i)) THEN
+                        ELSEIF (pi*0.5 - zenith_angle(z) > tea_f_one(i)) THEN
                            sf_one(i) = 1
                         ELSE
                            IF (tea_f_one(i).eq.tea_b_one(i)) tea_f_one(i) = tea_b_one(i)+0.001
@@ -299,23 +288,27 @@ SUBROUTINE Aggregation_TopographyFactors ( &
 
          DO i = 1, num_pixels
             ! Define the south slope, north slope, abrupt slope and gentle lope of target pixel
-            IF ((asp_one(i).ge.0 .and. asp_one(i).le.90*pi/180) .or. (asp_one(i).ge.270*pi/180 .and. asp_one(i).le.360*pi/180).and.(slp_one(i).ge.15*pi/180)) THEN  ! north abrupt slope
+            IF ((asp_one(i).ge.0 .and. asp_one(i).le.90*pi/180) .or. (asp_one(i).ge.270*pi/180 .and. &
+                 asp_one(i).le.360*pi/180).and.(slp_one(i).ge.15*pi/180)) THEN    ! north abrupt slope
                  type = 1
-            ELSE IF ((asp_one(i).ge.0 .and. asp_one(i).le.90*pi/180) .or. (asp_one(i).ge.270*pi/180 .and. asp_one(i).le.360*pi/180).and.(slp_one(i)<15*pi/180)) THEN  ! north gentle slope
+            ELSEIF ((asp_one(i).ge.0 .and. asp_one(i).le.90*pi/180) .or. (asp_one(i).ge.270*pi/180 .and. &
+                      asp_one(i).le.360*pi/180).and.(slp_one(i)<15*pi/180)) THEN  ! north gentle slope
                  type = 2
-            ELSE IF ((asp_one(i).gt.90*pi/180) .and. (asp_one(i).lt.270*pi/180) .and. (slp_one(i).ge.15*pi/180)) THEN  ! south abrupt slope
+            ELSEIF ((asp_one(i).gt.90*pi/180) .and. (asp_one(i).lt.270*pi/180) .and. &
+                     (slp_one(i).ge.15*pi/180)) THEN  ! south abrupt slope
                  type = 3
-            ELSE IF ((asp_one(i).gt.90*pi/180) .and. (asp_one(i).lt.270*pi/180) .and. (slp_one(i).lt.15*pi/180)) THEN  ! south gentle slope
+            ELSEIF ((asp_one(i).gt.90*pi/180) .and. (asp_one(i).lt.270*pi/180) .and. &
+                     (slp_one(i).lt.15*pi/180)) THEN  ! south gentle slope
                  type = 4
             ELSE ! missing value=-9999
-                 cycle
-            END IF
+                 CYCLE
+            ENDIF
 
             IF ((area_one(i)>0).and.(area_one(i)<=sum_area_one)) THEN      ! quality control
                   area_type_one(type,i) = area_one(i)
                   asp_type_one (type,i) = asp_one(i)*area_one(i)
                   slp_type_one (type,i) = slp_one(i)*area_one(i)
-            END IF
+            ENDIF
          ENDDO
 
          ! assign value to four types at patches
@@ -362,7 +355,6 @@ SUBROUTINE Aggregation_TopographyFactors ( &
    CALL check_vector_data ('sf_lut_patches    ', sf_lut_patches   )
 #endif
 
-#ifndef SinglePoint
 ! Reduce the dimension of the shadow factor array
 ! Construct a new array with dimensions of sf_curve_patches(azimuth, shadow factor parameters, patches)
    allocate(sf_curve_patches(num_azimuth,num_zenith_parameter,numpatch))
@@ -384,7 +376,8 @@ SUBROUTINE Aggregation_TopographyFactors ( &
          allocate(x_train(n))
          allocate(y_train_transform(n))
 
-         ! Obtain the predicted value y_train and prediction factor x_train for fitting, the form of the fitting function is
+         ! Obtain the predicted value y_train and prediction factor x_train for fitting,
+         ! the form of the fitting function is
          ! ln(-ln(y_train)) = a1*x_train+a2
          y_train(:) = y(index:)
          x_train(:) = x(index:)
@@ -425,9 +418,7 @@ SUBROUTINE Aggregation_TopographyFactors ( &
       ENDDO
    ENDDO
 
-#endif
 
-#ifndef SinglePoint
    lndname = trim(landdir)//'/svf_patches.nc'
    CALL ncio_create_file_vector (lndname, landpatch)
    CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
@@ -461,7 +452,8 @@ SUBROUTINE Aggregation_TopographyFactors ( &
    CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
    CALL ncio_define_dimension_vector (lndname, landpatch, 'azimuth', num_azimuth)
    CALL ncio_define_dimension_vector (lndname, landpatch, 'zenith_p', num_zenith_parameter)
-   CALL ncio_write_vector (lndname, 'sf_curve_patches', 'azimuth', num_azimuth, 'zenith_p', num_zenith_parameter, 'patch', landpatch, sf_curve_patches, 1)
+   CALL ncio_write_vector (lndname, 'sf_curve_patches', 'azimuth', num_azimuth, 'zenith_p', num_zenith_parameter, 'patch', &
+                           landpatch, sf_curve_patches, 1)
 
 #ifdef SrfdataDiag
    typpatch = (/(ityp, ityp = 0, N_land_classification)/)
@@ -500,20 +492,6 @@ SUBROUTINE Aggregation_TopographyFactors ( &
       ENDDO
    ENDDO
 #endif
-#else
-   ! factors for site
-   allocate ( SITE_slp_type  (num_slope_type) )
-   allocate ( SITE_asp_type  (num_slope_type) )
-   allocate ( SITE_area_type (num_slope_type) )
-   allocate ( SITE_sf_lut    (num_azimuth, num_zenith) )
-   SITE_svf       = svf_patches(1)
-   SITE_cur       = cur_patches(1)
-   SITE_slp_type  = slp_type_patches (:,1)
-   SITE_asp_type  = asp_type_patches (:,1)
-   SITE_area_type = area_type_patches(:,1)
-   SITE_sf_lut    = sf_lut_patches (:,:,1)
-#endif
-
 
    IF (p_is_worker) THEN
       IF (allocated(slp_type_patches)) deallocate ( slp_type_patches )

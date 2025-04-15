@@ -3,7 +3,7 @@
 MODULE MOD_Pixelset
 
 !------------------------------------------------------------------------------------
-! DESCRIPTION:
+! !DESCRIPTION:
 !
 !    Pixelset refers to a set of pixels in CoLM.
 !
@@ -38,7 +38,7 @@ MODULE MOD_Pixelset
 !    To read,  vector is first loaded from files by IO and then scattered from IO to worker.
 !    To write, vector is first gathered from worker to IO and then saved to files by IO.
 !
-! Created by Shupeng Zhang, May 2023
+!  Created by Shupeng Zhang, May 2023
 !------------------------------------------------------------------------------------
 
    USE MOD_Precision
@@ -71,7 +71,7 @@ MODULE MOD_Pixelset
 
       integer*8, allocatable :: eindex(:)  ! global index of element to which pixelset belongs
 
-      integer, allocatable :: ipxstt(:)    ! start local index of pixel in the element 
+      integer, allocatable :: ipxstt(:)    ! start local index of pixel in the element
       integer, allocatable :: ipxend(:)    ! end   local index of pixel in the element
       integer, allocatable :: settyp(:)    ! type of pixelset
 
@@ -81,16 +81,9 @@ MODULE MOD_Pixelset
       integer, allocatable :: xblkgrp (:)  ! block index in longitude for this process's group
       integer, allocatable :: yblkgrp (:)  ! block index in latitude  for this process's group
 
-      integer :: nblkall                   ! only for IO: number of blocks with nonzero pixelsets
-      integer, allocatable :: xblkall (:)  ! only for IO: block index in longitude
-      integer, allocatable :: yblkall (:)  ! only for IO: block index in latitude
-
       type(vec_gather_scatter_type) :: vecgs ! for vector gathering and scattering
 
-      integer, allocatable :: vlenall(:,:)
-
       logical :: has_shared = .false.
-
       real(r8), allocatable :: pctshared (:)
 
    CONTAINS
@@ -177,7 +170,7 @@ CONTAINS
    FUNCTION get_pixelset_rlat (npxl, ilat, area) result(rlat)
 
    USE MOD_Precision
-   USE MOD_Vars_Global, only : pi
+   USE MOD_Vars_Global, only: pi
    USE MOD_Pixel
    IMPLICIT NONE
 
@@ -203,7 +196,7 @@ CONTAINS
 
    USE MOD_Precision
    USE MOD_Utils
-   USE MOD_Vars_Global, only : pi
+   USE MOD_Vars_Global, only: pi
    USE MOD_Pixel
    IMPLICIT NONE
 
@@ -264,11 +257,6 @@ CONTAINS
       IF (allocated(this%xblkgrp)) deallocate(this%xblkgrp)
       IF (allocated(this%yblkgrp)) deallocate(this%yblkgrp)
 
-      IF (allocated(this%xblkall)) deallocate(this%xblkall)
-      IF (allocated(this%yblkall)) deallocate(this%yblkall)
-
-      IF (allocated(this%vlenall)) deallocate(this%vlenall)
-
       IF (allocated(this%pctshared)) deallocate(this%pctshared)
 
    END SUBROUTINE pixelset_free_mem
@@ -289,11 +277,6 @@ CONTAINS
 
       IF (allocated(this%xblkgrp)) deallocate(this%xblkgrp)
       IF (allocated(this%yblkgrp)) deallocate(this%yblkgrp)
-
-      IF (allocated(this%xblkall)) deallocate(this%xblkall)
-      IF (allocated(this%yblkall)) deallocate(this%yblkall)
-
-      IF (allocated(this%vlenall)) deallocate(this%vlenall)
 
       IF (allocated(this%pctshared)) deallocate(this%pctshared)
 
@@ -317,13 +300,6 @@ CONTAINS
       pixel_to%nblkgrp = pixel_from%nblkgrp
       pixel_to%xblkgrp = pixel_from%xblkgrp
       pixel_to%yblkgrp = pixel_from%yblkgrp
-
-      ! These arrays will be assigned in the set_vecgs
-      ! pixel_to%nblkall = pixel_from%nblkall
-      ! pixel_to%xblkall = pixel_from%xblkall
-      ! pixel_to%yblkall = pixel_from%yblkall
-
-      ! pixel_to%vlenall = pixel_from%vlenall
 
       IF (pixel_from%has_shared) THEN
          pixel_to%pctshared = pixel_from%pctshared
@@ -460,40 +436,6 @@ CONTAINS
          deallocate(nonzero)
       ENDIF
 
-      IF (p_is_io) THEN
-
-         IF (.not. allocated(this%vlenall)) THEN
-            allocate (this%vlenall(gblock%nxblk,gblock%nyblk))
-         ENDIF
-
-         this%vlenall = this%vecgs%vlen
-#ifdef USEMPI
-         CALL mpi_allreduce (MPI_IN_PLACE, this%vlenall, gblock%nxblk * gblock%nyblk, &
-            MPI_INTEGER, MPI_SUM, p_comm_io, p_err)
-#endif
-
-
-         this%nblkall = count(this%vlenall > 0)
-
-         IF (allocated(this%xblkall)) deallocate(this%xblkall)
-         IF (allocated(this%yblkall)) deallocate(this%yblkall)
-
-         allocate (this%xblkall (this%nblkall))
-         allocate (this%yblkall (this%nblkall))
-
-         iblkall = 0
-         DO jblk = 1, gblock%nyblk
-            DO iblk = 1, gblock%nxblk
-               IF (this%vlenall(iblk,jblk) > 0) THEN
-                  iblkall = iblkall + 1
-                  this%xblkall(iblkall) = iblk
-                  this%yblkall(iblkall) = jblk
-               ENDIF
-            ENDDO
-         ENDDO
-
-      ENDIF
-
    END SUBROUTINE vec_gather_scatter_set
 
    ! --------------------------------
@@ -536,7 +478,7 @@ CONTAINS
                deallocate (this%ipxend)
                deallocate (this%settyp)
                deallocate (this%ielm  )
-               
+
                IF (this%has_shared) THEN
                   allocate   (pctshared_(this%nset))
                   pctshared_ = this%pctshared
@@ -579,7 +521,7 @@ CONTAINS
                            this%pctshared(s:e) = this%pctshared(s:e)/sum(this%pctshared(s:e))
                         ENDIF
 
-                        s = e + 1                        
+                        s = e + 1
                      ENDDO
 
                   ENDIF

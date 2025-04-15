@@ -1,7 +1,7 @@
 #include <define.h>
 
 !----------------------------------------------------------------------------------
-! DESCRIPTION:
+! !DESCRIPTION:
 !
 !    High-level Subroutines to read and write variables in files with netCDF format.
 !
@@ -25,11 +25,8 @@
 !       READ/WRITE may be slow in this way.
 !       CHOOSE this implementation by "#define VectorInOneFile" in include/define.h
 !
-! Created by Shupeng Zhang, May 2023
+!  Created by Shupeng Zhang, May 2023
 !----------------------------------------------------------------------------------
-
-! Put vector in separated files.
-#if (!defined(VectorInOneFileS) && !defined(VectorInOneFileP))
 
 MODULE MOD_NetCDFVector
 
@@ -1610,5 +1607,3 @@ CONTAINS
    END SUBROUTINE ncio_write_vector_real8_4d
 
 END MODULE MOD_NetCDFVector
-
-#endif

@@ -14,13 +14,14 @@ MODULE MOD_CropReadin
 CONTAINS
 
    SUBROUTINE CROP_readin ()
-   ! ===========================================================
-   ! ! DESCRIPTION:
-   ! Read in crop planting date from data, and fertilization from data.
-   ! Save these data in patch vector.
-   !
-   ! Original: Shupeng Zhang, Zhongwang Wei, and Xingjie Lu, 2022
-   ! ===========================================================
+!-----------------------------------------------------------------------
+! !DESCRIPTION:
+!  Read in crop planting date from data, and fertilization from data.
+!  Save these data in patch vector.
+!
+!  Original: Shupeng Zhang, Zhongwang Wei, and Xingjie Lu, 2022
+!
+!-----------------------------------------------------------------------
 
    USE MOD_Precision
    USE MOD_Namelist
@@ -127,7 +128,7 @@ CONTAINS
 
       ! (2) Read in plant date.
       IF (p_is_worker) THEN
-         plantdate_p(:) = -99999999._r8
+         IF (numpft > 0) plantdate_p(:) = -99999999._r8
       ENDIF
 
       file_crop = trim(DEF_dir_runtime) // '/crop/plantdt-colm-64cfts-rice2_fillcoast.nc'
@@ -156,7 +157,7 @@ CONTAINS
 #endif
 
       IF (p_is_worker) THEN
-         fertnitro_p(:) = -99999999._r8
+         IF (numpft > 0) fertnitro_p(:) = -99999999._r8
       ENDIF
 
       file_crop = trim(DEF_dir_runtime) // '/crop/fertnitro_fillcoast.nc'
@@ -185,7 +186,7 @@ CONTAINS
 #endif
 
       ! (4) Read in irrigation method
-!      file_irrig = trim(DEF_dir_runtime) // '/crop/surfdata_irrigation_method.nc'
+      !file_irrig = trim(DEF_dir_runtime) // '/crop/surfdata_irrigation_method.nc'
       file_irrig = trim(DEF_dir_runtime) // '/crop/surfdata_irrigation_method_96x144.nc'
 
       CALL ncio_read_bcast_serial (file_irrig, 'lat', lat)
@@ -203,7 +204,7 @@ CONTAINS
       IF (allocated(lat)) deallocate(lat)
 
       IF (p_is_worker) THEN
-         irrig_method_p(:) = -99999999
+         IF (numpft > 0) irrig_method_p(:) = -99999999
       ENDIF
 
       DO cft = 1, N_CFT

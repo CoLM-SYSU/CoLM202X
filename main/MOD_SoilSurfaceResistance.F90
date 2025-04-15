@@ -1,16 +1,16 @@
 #include <define.h>
 
 MODULE MOD_SoilSurfaceResistance
-! -----------------------------------------------------------------------
+!-----------------------------------------------------------------------
 ! !DESCRIPTION:
-! Calculate the soil surface resistance with multiple parameterization
-! schemes
+!  Calculate the soil surface resistance with multiple parameterization
+!  schemes
 !
-! Created by Zhuo Liu and Hua Yuan, 06/2023
+!  Created by Zhuo Liu and Hua Yuan, 06/2023
 !
 ! !REVISIONS:
 !
-! -----------------------------------------------------------------------
+!-----------------------------------------------------------------------
 ! !USE
 
    USE MOD_Precision

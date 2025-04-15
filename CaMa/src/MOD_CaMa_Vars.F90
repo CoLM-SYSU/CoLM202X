@@ -101,6 +101,7 @@ MODULE MOD_CaMa_Vars
       logical :: winfilt      = .false.
       logical :: levsto       = .false.
       logical :: levdph       = .false.
+      logical :: outflw_ocean = .false.
    END type history_var_cama_type
 
    type (history_var_cama_type) :: DEF_hist_cama_vars
@@ -131,7 +132,7 @@ CONTAINS
 
 
    USE MOD_SPMD_Task !spmd_task
-   USE MOD_LandPatch, only : numpatch
+   USE MOD_LandPatch, only: numpatch
    USE MOD_Vars_Global
 
    IMPLICIT NONE
@@ -160,7 +161,7 @@ CONTAINS
    ! 2020.10.21  Zhongwang Wei @ SYSU
 
    USE MOD_SPMD_Task
-   USE MOD_LandPatch, only : numpatch
+   USE MOD_LandPatch, only: numpatch
 
    IMPLICIT NONE
 
@@ -220,8 +221,8 @@ CONTAINS
 
    USE MOD_Precision
    USE MOD_SPMD_Task
-   USE MOD_Vars_1DFluxes, only : rnof
-   USE MOD_LandPatch, only : numpatch
+   USE MOD_Vars_1DFluxes, only: rnof
+   USE MOD_LandPatch, only: numpatch
 
    IMPLICIT NONE
 
@@ -439,11 +440,17 @@ CONTAINS
       CALL flux_map_and_write_2d_cama(DEF_hist_cama_vars%levdph, &
       real(D2LEVDPH), file_hist, 'levdph', itime_in_file,'protected area depth','m')
       ENDIF
+
+      IF (DEF_hist_cama_vars%outflw_ocean) THEN
+      CALL flux_map_and_write_2d_cama_ocean(DEF_hist_cama_vars%outflw_ocean, &
+      real(D2OUTFLW_AVG), file_hist, 'outflw_ocean', itime_in_file,'discharge to ocean','m3/s')
+      ENDIF
       
       !*** reset variable
       CALL CMF_DIAG_RESET
 
    END SUBROUTINE hist_out_cama
+
 
    SUBROUTINE hist_write_cama_time (filename, dataname, time, itime)
 !DESCRIPTION
@@ -492,6 +499,64 @@ CONTAINS
 
    END SUBROUTINE hist_write_cama_time
 
+   SUBROUTINE flux_map_and_write_2d_cama_ocean (is_hist, &
+         var_in, file_hist, varname, itime_in_file,longname,units)
+         !DESCRIPTION
+         !===========
+            ! This subrountine is used for mapping cama-flood output using netcdf format.
+
+         !ANCILLARY FUNCTIONS AND SUBROUTINES
+         !-------------------
+            !* :SUBROUTINE:"ncio_put_attr"                      :  write netcdf attribute, see ncio_serial.F90
+            !* :SUBROUTINE:"vecP2mapR"                          :  convert 1D vector data -> 2D map data (real*4), CAMA/cmf_utils_mod.F90
+            !* :SUBROUTINE:"ncio_write_serial_time"             :  define dimension of netcdf file, see ncio_serial.F90
+
+         !REVISION HISTORY
+         !----------------
+            ! 2023.02.23  Zhongwang Wei @ SYSU
+
+         USE MOD_Namelist
+         USE YOS_CMF_INPUT,  only: NX, NY
+         USE YOS_CMF_MAP,    only: NSEQALL
+         USE PARKIND1,       only: JPRM
+         USE CMF_UTILS_MOD,  only: vecP2mapR
+         USE MOD_NetCDFSerial,    only: ncio_write_serial_time, ncio_put_attr
+         USE YOS_CMF_MAP,        only: I2NEXTX, I2NEXTY
+         IMPLICIT NONE
+         logical, intent(in)          :: is_hist
+         real(r8), intent(in)         ::  var_in (NSEQALL, 1)
+         character(len=*), intent(in) :: file_hist
+         character(len=*), intent(in) :: varname
+         integer, intent(in)          :: itime_in_file
+      
+         character (len=*), intent(in),optional :: longname
+         character (len=*), intent(in),optional :: units
+      
+         real(KIND=JPRM)             :: R2OUT(NX,NY)
+         integer  :: i,j
+         integer  :: compress
+      
+            IF (.not. is_hist) RETURN
+            CALL vecP2mapR(var_in,R2OUT)
+            do j = 1,NY
+               do i = 1,NX
+                  if (I2NEXTX(i,j) .NE. -9) then
+                     R2OUT(i,j) = real(real(spval,kind=JPRM),kind=8)
+                  endif
+               enddo
+            enddo
+ 
+            compress = DEF_HIST_CompressLevel
+            CALL ncio_write_serial_time (file_hist, varname,  &
+               itime_in_file, real(R2OUT,kind=8), 'lon_cama', 'lat_cama', 'time',compress)
+            IF (itime_in_file == 1) THEN
+               CALL ncio_put_attr (file_hist, varname, 'long_name', longname)
+               CALL ncio_put_attr (file_hist, varname, 'units', units)
+               CALL ncio_put_attr (file_hist, varname, 'missing_value',real(real(spval,kind=JPRM),kind=8))
+            ENDIF
+   end subroutine flux_map_and_write_2d_cama_ocean
+
+
    SUBROUTINE flux_map_and_write_2d_cama (is_hist, &
          var_in, file_hist, varname, itime_in_file,longname,units)
 
@@ -522,7 +587,7 @@ CONTAINS
    character(len=*), intent(in) :: file_hist
    character(len=*), intent(in) :: varname
    integer, intent(in)          :: itime_in_file
-
+   
    character (len=*), intent(in),optional :: longname
    character (len=*), intent(in),optional :: units
 
@@ -564,8 +629,8 @@ CONTAINS
    USE MOD_Block
    USE MOD_DataType
    USE MOD_LandPatch
-   USE MOD_Vars_TimeInvariants, only : patchtype
-   USE MOD_Forcing, only : forcmask_pch
+   USE MOD_Vars_TimeInvariants, only: patchtype
+   USE MOD_Forcing, only: forcmask_pch
 
    IMPLICIT NONE
 
@@ -706,7 +771,7 @@ CONTAINS
    USE MOD_Block
    USE MOD_DataType
    USE MOD_LandPatch
-   USE MOD_Vars_TimeInvariants, only : patchtype
+   USE MOD_Vars_TimeInvariants, only: patchtype
    USE MOD_Grid
 
    IMPLICIT NONE

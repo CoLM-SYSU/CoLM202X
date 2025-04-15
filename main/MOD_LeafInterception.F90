@@ -109,7 +109,7 @@ CONTAINS
 
    !---Lawrence, D.M., Thornton, P.E., Oleson, K.W. and Bonan, G.B., 2007.  The
    !   partitioning of evapotranspiration into transpiration, soil evaporation,
-   !   and canopy evaporation in a GCM: Impacts on land–atmosphere interaction.
+   !   and canopy evaporation in a GCM: Impacts on land-atmosphere interaction.
    !   Journal of Hydrometeorology, 8(4), pp.862-880.
 
    !---Oleson, K., Dai, Y., Bonan, B., BosiloVIChm, M., Dickinson, R.,
@@ -563,7 +563,7 @@ CONTAINS
 !-------------------
    !---Lawrence, D.M., Thornton, P.E., Oleson, K.W. and Bonan, G.B., 2007.
    !   The partitioning of evapotranspiration into transpiration, soil evaporation,
-   !   and canopy evaporation in a GCM: Impacts on land–atmosphere interaction. Journal of Hydrometeorology, 8(4), pp.862-880.
+   !   and canopy evaporation in a GCM: Impacts on land-atmosphere interaction. Journal of Hydrometeorology, 8(4), pp.862-880.
 
 !ANCILLARY FUNCTIONS AND SUBROUTINES
 !-------------------
@@ -721,7 +721,7 @@ CONTAINS
 !-------------------
    !---Lawrence, D.M., Thornton, P.E., Oleson, K.W. and Bonan, G.B., 2007.
    !   The partitioning of evapotranspiration into transpiration, soil evaporation,
-   !   and canopy evaporation in a GCM: Impacts on land–atmosphere interaction. Journal of Hydrometeorology, 8(4), pp.862-880.
+   !   and canopy evaporation in a GCM: Impacts on land-atmosphere interaction. Journal of Hydrometeorology, 8(4), pp.862-880.
    !---Lawrence, D.M., Fisher, R.A., Koven, C.D., Oleson, K.W., Swenson, S.C., Bonan, G., Collier, N., Ghimire, B.,
    !   van Kampenhout, L., Kennedy, D. and Kluzek, E., 2019. The Community Land Model version 5:
    !   Description of new features, benchmarking, and impact of forcing uncertainty.
@@ -1394,7 +1394,7 @@ CONTAINS
          MaxInt=0.1*lsai
          IF (tair>-272.15) THEN
             Lr=4.0
-         ELSE IF (tair<=-272.15 .and. tair>=-270.15) THEN
+         ELSEIF (tair<=-272.15 .and. tair>=-270.15) THEN
             Lr=1.5*(tair-273.15)+5.5
          ELSE
             Lr=1.0
@@ -1571,10 +1571,10 @@ CONTAINS
 
    !References:
    !-------------------
-      !---Best et al. (2011): The Joint UK Land Environment Simulator (JULES), model description –
-      !   Part 1: Energy and water fluxes. Geosci. Model Dev. 4:677–699.
-      !---Clark et al. (2011): The Joint UK Land Environment Simulator (JULES), model description –
-      !   Part 2: Carbon fluxes and vegetation dynamics. Geosci. Model Dev. 4:701–722.
+      !---Best et al. (2011): The Joint UK Land Environment Simulator (JULES), model description -
+      !   Part 1: Energy and water fluxes. Geosci. Model Dev. 4:677-699.
+      !---Clark et al. (2011): The Joint UK Land Environment Simulator (JULES), model description -
+      !   Part 2: Carbon fluxes and vegetation dynamics. Geosci. Model Dev. 4:701-722.
 
    !ANCILLARY FUNCTIONS AND SUBROUTINES
    !-------------------
@@ -1924,7 +1924,7 @@ CONTAINS
             pg_rain_tmp = pg_rain_tmp + pg_rain*pftfrac(i)
             pg_snow_tmp = pg_snow_tmp + pg_snow*pftfrac(i)
          ENDDO
-      ELSE IF (DEF_Interception_scheme==2) THEN
+      ELSEIF (DEF_Interception_scheme==2) THEN
          DO i = ps, pe
             p = pftclass(i)
             CALL LEAF_interception_clm4 (deltim,dewmx,forc_us,forc_vs,chil_p(p),sigf_p(i),lai_p(i),sai_p(i),forc_t,tleaf_p(i),&
@@ -1933,7 +1933,7 @@ CONTAINS
             pg_rain_tmp = pg_rain_tmp + pg_rain*pftfrac(i)
             pg_snow_tmp = pg_snow_tmp + pg_snow*pftfrac(i)
          ENDDO
-      ELSE IF (DEF_Interception_scheme==3) THEN
+      ELSEIF (DEF_Interception_scheme==3) THEN
          DO i = ps, pe
             p = pftclass(i)
             CALL LEAF_interception_clm5 (deltim,dewmx,forc_us,forc_vs,chil_p(p),sigf_p(i),lai_p(i),sai_p(i),forc_t,tleaf_p(i),&
@@ -1942,7 +1942,7 @@ CONTAINS
             pg_rain_tmp = pg_rain_tmp + pg_rain*pftfrac(i)
             pg_snow_tmp = pg_snow_tmp + pg_snow*pftfrac(i)
          ENDDO
-      ELSE IF (DEF_Interception_scheme==4) THEN
+      ELSEIF (DEF_Interception_scheme==4) THEN
          DO i = ps, pe
             p = pftclass(i)
             CALL LEAF_interception_clm5 (deltim,dewmx,forc_us,forc_vs,chil_p(p),sigf_p(i),lai_p(i),sai_p(i),forc_t,tleaf_p(i),&
@@ -1951,7 +1951,7 @@ CONTAINS
             pg_rain_tmp = pg_rain_tmp + pg_rain*pftfrac(i)
             pg_snow_tmp = pg_snow_tmp + pg_snow*pftfrac(i)
          ENDDO
-      ELSE IF (DEF_Interception_scheme==5) THEN
+      ELSEIF (DEF_Interception_scheme==5) THEN
          DO i = ps, pe
             p = pftclass(i)
             CALL LEAF_interception_MATSIRO (deltim,dewmx,forc_us,forc_vs,chil_p(p),sigf_p(i),lai_p(i),sai_p(i),forc_t,tleaf_p(i),&
@@ -1960,7 +1960,7 @@ CONTAINS
             pg_rain_tmp = pg_rain_tmp + pg_rain*pftfrac(i)
             pg_snow_tmp = pg_snow_tmp + pg_snow*pftfrac(i)
          ENDDO
-      ELSE IF (DEF_Interception_scheme==6) THEN
+      ELSEIF (DEF_Interception_scheme==6) THEN
          DO i = ps, pe
             p = pftclass(i)
             CALL LEAF_interception_VIC (deltim,dewmx,forc_us,forc_vs,chil_p(p),sigf_p(i),lai_p(i),sai_p(i),forc_t,tleaf_p(i),&
@@ -1969,7 +1969,7 @@ CONTAINS
             pg_rain_tmp = pg_rain_tmp + pg_rain*pftfrac(i)
             pg_snow_tmp = pg_snow_tmp + pg_snow*pftfrac(i)
          ENDDO
-      ELSE IF (DEF_Interception_scheme==7) THEN
+      ELSEIF (DEF_Interception_scheme==7) THEN
          DO i = ps, pe
             p = pftclass(i)
             CALL LEAF_interception_JULES (deltim,dewmx,forc_us,forc_vs,chil_p(p),sigf_p(i),lai_p(i),sai_p(i),forc_t,tleaf_p(i),&
@@ -1978,7 +1978,7 @@ CONTAINS
             pg_rain_tmp = pg_rain_tmp + pg_rain*pftfrac(i)
             pg_snow_tmp = pg_snow_tmp + pg_snow*pftfrac(i)
          ENDDO
-      ELSE IF (DEF_Interception_scheme==8) THEN
+      ELSEIF (DEF_Interception_scheme==8) THEN
          DO i = ps, pe
             p = pftclass(i)
             CALL LEAF_interception_CoLM202x (deltim,dewmx,forc_us,forc_vs,chil_p(p),sigf_p(i),lai_p(i),sai_p(i),forc_t,tleaf_p(i),&

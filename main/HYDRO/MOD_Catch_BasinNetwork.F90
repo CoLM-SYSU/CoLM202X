@@ -14,9 +14,12 @@ MODULE MOD_Catch_BasinNetwork
    ! -- instances --
    integer :: numbasin
    integer, allocatable :: basinindex(:)
-   
+
    integer :: numbsnhru
    type(subset_type) :: basin_hru
+   
+   integer :: numrivmth
+   integer, allocatable :: rivermouth(:)
 
    ! -- communications --
    type :: basin_pushdata_type
@@ -59,14 +62,19 @@ CONTAINS
    ! Local Variables
    character(len=256)   :: basin_file
    integer, allocatable :: basindown(:), nhru_all(:), nhru_in_bsn(:)
-
-   integer :: totalnumbasin, ibasin, nbasin
-   integer :: iworker, mesg(2), isrc, nrecv, idata, ndatall
-   integer :: ip, iloc, ielm, i, j, ithis, nave, nups
    
-   integer, allocatable :: eindex  (:), bindex  (:), addrelm (:), addrbasin(:), orderbsn(:)
-   integer, allocatable :: nups_nst(:), iups_nst(:), nups_all(:), b_up2down(:)
-   integer, allocatable :: nelm_wrk(:), paddr   (:), icache  (:)
+   integer, allocatable :: nups_nst(:), iups_nst(:), nups_all(:), b_up2down(:), orderbsn(:)
+   
+   integer , allocatable :: nb_rs(:), iwrk_rs(:), nwrk_rs(:), nave_rs(:), nb_wrk(:)
+   real(r8), allocatable :: wtbsn(:), wt_rs  (:), wt_wrk (:)
+
+   integer  :: totalnumbasin, ibasin, nbasin, iriv
+   integer  :: iworker, iwrkdsp, mesg(2), isrc, nrecv, idata, ndatall
+   integer  :: ip, iloc, ielm, i, j, ithis
+   real(r8) :: sumwt
+   
+   integer, allocatable :: eindex(:), bindex(:), addrelm(:), addrbasin(:)
+   integer, allocatable :: paddr (:), icache(:)
 
    integer, allocatable :: basin_sorted(:), element_sorted(:)
    integer, allocatable :: basin_order (:), element_order (:)
@@ -129,6 +137,12 @@ CONTAINS
 
       ! 3-2: divide basins into groups and assign to workers
       IF (p_is_master) THEN
+         
+         IF (ncio_var_exist(basin_file, 'weightbasin')) THEN
+            CALL ncio_read_serial (basin_file, 'weightbasin', wtbsn)
+         ELSE
+            allocate (wtbsn (totalnumbasin));  wtbsn(:) = 1.
+         ENDIF
 
          ! sort basins from up to down, recorded by "b_up2down"
 
@@ -169,6 +183,46 @@ CONTAINS
          deallocate (nups_nst)
          deallocate (iups_nst)
 
+         allocate (rivermouth (totalnumbasin))
+         numrivmth = 0
+         DO i = totalnumbasin, 1, -1
+            j = basindown(b_up2down(i))
+            IF (j <= 0) THEN
+               numrivmth = numrivmth + 1
+               rivermouth(b_up2down(i)) = numrivmth
+            ELSE
+               rivermouth(b_up2down(i)) = rivermouth(j)
+            ENDIF
+         ENDDO
+
+         allocate (nb_rs (numrivmth)); nb_rs(:) = 0
+         allocate (wt_rs (numrivmth)); wt_rs(:) = 0
+         DO i = 1, totalnumbasin
+            nb_rs(rivermouth(i)) = nb_rs(rivermouth(i)) + 1 
+            wt_rs(rivermouth(i)) = wt_rs(rivermouth(i)) + wtbsn(i)
+         ENDDO
+         
+         sumwt = sum(wt_rs)
+
+         allocate (iwrk_rs (numrivmth))
+         allocate (nwrk_rs (numrivmth))
+         allocate (nave_rs (numrivmth))
+
+         iwrkdsp = -1
+         DO i = 1, numrivmth
+            nwrk_rs(i) = floor(wt_rs(i)/sumwt * p_np_worker)
+            IF (nwrk_rs(i) > 1) THEN
+               
+               nave_rs(i) = nb_rs(i) / nwrk_rs(i)
+               IF (mod(nb_rs(i), nwrk_rs(i)) /= 0) THEN
+                  nave_rs(i) = nave_rs(i) + 1
+               ENDIF
+
+               iwrk_rs(i) = iwrkdsp + 1
+               iwrkdsp = iwrkdsp + nwrk_rs(i)
+            ENDIF
+         ENDDO
+
          allocate (nups_all (totalnumbasin));  nups_all(:) = 1
 
          DO i = 1, totalnumbasin
@@ -178,21 +232,15 @@ CONTAINS
             ENDIF
          ENDDO
 
-         nave = totalnumbasin / p_np_worker
-         IF (mod(totalnumbasin, p_np_worker) /= 0) THEN
-            nave = nave + 1
-         ENDIF
+         allocate (addrbasin (totalnumbasin));  addrbasin(:) = -1
+            
+         allocate (wt_wrk (0:p_np_worker-1));  wt_wrk(:) = 0
+         allocate (nb_wrk (0:p_np_worker-1));  nb_wrk(:) = 0
 
          allocate (orderbsn(totalnumbasin))
          orderbsn(b_up2down) = (/(i, i = 1, totalnumbasin)/)
 
-         allocate (nelm_wrk (0:p_np_worker-1));  nelm_wrk(:) = 0
-
-         allocate (addrbasin (totalnumbasin))
-         addrbasin(:) = -1
-         
-         ithis   = totalnumbasin
-         iworker = p_np_worker-1
+         ithis = totalnumbasin
          DO WHILE (ithis > 0)
 
             i = b_up2down(ithis)
@@ -211,32 +259,56 @@ CONTAINS
                ENDIF
             ENDIF
 
-            IF (nups_all(i) <= nave-nelm_wrk(iworker)) THEN
-                  
-               addrbasin(i) = p_address_worker(iworker)
-               nelm_wrk(iworker) = nelm_wrk(iworker) + nups_all(i)
+            iriv = rivermouth(i)
+            IF (nwrk_rs(iriv) > 1) THEN
+               iworker = iwrk_rs(iriv)
+               IF (nups_all(i) <= nave_rs(iriv)-nb_wrk(iworker)) THEN
 
-               IF (nelm_wrk(iworker) == nave) THEN
-                  iworker = iworker - 1
+                  addrbasin(i) = p_address_worker(iworker)
+
+                  nb_wrk(iworker) = nb_wrk(iworker) + nups_all(i)
+                  IF (nb_wrk(iworker) == nave_rs(iriv)) THEN
+                     iwrk_rs(iriv) = iwrk_rs(iriv) + 1
+                  ENDIF
+               
+                  j = basindown(i)
+                  IF (j > 0) THEN
+                     DO WHILE (j > 0) 
+                        nups_all(j) = nups_all(j) - nups_all(i)
+                        ithis = orderbsn(j)
+                        j = basindown(j)
+                     ENDDO
+                  ELSE
+                     ithis = ithis - 1
+                  ENDIF 
+               ELSE
+                  ithis = ithis - 1
                ENDIF
-
-               j = basindown(i)
-               DO WHILE (j > 0) 
-                  nups_all(j) = nups_all(j) - nups_all(i)
-                  ithis = orderbsn(j)
-                  j = basindown(j)
-               ENDDO
             ELSE
+               iworker = minloc(wt_wrk(iwrkdsp+1:p_np_worker-1), dim=1) + iwrkdsp
+
+               addrbasin(i) = p_address_worker(iworker)
+
+               wt_wrk(iworker) = wt_wrk(iworker) + wt_rs(iriv)
                ithis = ithis - 1
-            ENDIF 
+            ENDIF
+
          ENDDO
 
+         deallocate (wtbsn    )
          deallocate (b_up2down)
          deallocate (nups_all )
          deallocate (orderbsn )
-         deallocate (nelm_wrk )
+         deallocate (nb_rs    )
+         deallocate (wt_rs    )
+         deallocate (iwrk_rs  )
+         deallocate (nwrk_rs  )
+         deallocate (nave_rs  )
+         deallocate (wt_wrk   )
+         deallocate (nb_wrk   )
 
       ENDIF
+
 
       ! 3-3: send basin index to workers
       IF (p_is_master) THEN
@@ -592,7 +664,7 @@ CONTAINS
 
    
    ! ----------
-   SUBROUTINE worker_push_data_real8 (send_pointer, recv_pointer, accum, vec_send, vec_recv)
+   SUBROUTINE worker_push_data_real8 (send_pointer, recv_pointer, vec_send, vec_recv)
 
    USE MOD_Precision
    USE MOD_SPMD_Task
@@ -600,7 +672,6 @@ CONTAINS
 
    type(basin_pushdata_type) :: send_pointer
    type(basin_pushdata_type) :: recv_pointer
-   logical, intent(in) :: accum
 
    real(r8), intent(in)    :: vec_send(:)
    real(r8), intent(inout) :: vec_recv(:)
@@ -619,14 +690,7 @@ CONTAINS
       IF (p_is_worker) THEN
 
          IF (send_pointer%nself > 0) THEN
-            IF (.not. accum) THEN
-               vec_recv(recv_pointer%iself) = vec_send(send_pointer%iself)
-            ELSE
-               DO i = 1, send_pointer%nself
-                  vec_recv(recv_pointer%iself(i)) = &
-                     vec_recv(recv_pointer%iself(i)) + vec_send(send_pointer%iself(i))
-               ENDDO
-            ENDIF
+            vec_recv(recv_pointer%iself) = vec_send(send_pointer%iself)
          ENDIF
 
 #ifdef USEMPI
@@ -675,17 +739,8 @@ CONTAINS
          ENDIF
 
          IF (recv_pointer%nproc > 0) THEN
-
             CALL mpi_waitall(recv_pointer%nproc, req_recv, MPI_STATUSES_IGNORE, p_err)
-
-            IF (accum) THEN
-               DO i = 1, ndatarecv
-                  vec_recv(recv_pointer%ipush(i)) = &
-                     vec_recv(recv_pointer%ipush(i)) + recvcache(i)
-               ENDDO
-            ELSE
-               vec_recv(recv_pointer%ipush) = recvcache
-            ENDIF
+            vec_recv(recv_pointer%ipush) = recvcache
          ENDIF
 
          IF (send_pointer%nproc > 0) THEN
@@ -705,7 +760,7 @@ CONTAINS
    END SUBROUTINE worker_push_data_real8
 
    ! ----------
-   SUBROUTINE worker_push_data_int32 (send_pointer, recv_pointer, accum, vec_send, vec_recv)
+   SUBROUTINE worker_push_data_int32 (send_pointer, recv_pointer, vec_send, vec_recv)
 
    USE MOD_Precision
    USE MOD_SPMD_Task
@@ -713,7 +768,6 @@ CONTAINS
 
    type(basin_pushdata_type) :: send_pointer
    type(basin_pushdata_type) :: recv_pointer
-   logical, intent(in) :: accum
 
    integer, intent(in)    :: vec_send(:)
    integer, intent(inout) :: vec_recv(:)
@@ -732,14 +786,7 @@ CONTAINS
       IF (p_is_worker) THEN
 
          IF (send_pointer%nself > 0) THEN
-            IF (.not. accum) THEN
-               vec_recv(recv_pointer%iself) = vec_send(send_pointer%iself)
-            ELSE
-               DO i = 1, send_pointer%nself
-                  vec_recv(recv_pointer%iself(i)) = &
-                     vec_recv(recv_pointer%iself(i)) + vec_send(send_pointer%iself(i))
-               ENDDO
-            ENDIF
+            vec_recv(recv_pointer%iself) = vec_send(send_pointer%iself)
          ENDIF
 
 #ifdef USEMPI
@@ -788,17 +835,8 @@ CONTAINS
          ENDIF
 
          IF (recv_pointer%nproc > 0) THEN
-
             CALL mpi_waitall(recv_pointer%nproc, req_recv, MPI_STATUSES_IGNORE, p_err)
-
-            IF (accum) THEN
-               DO i = 1, ndatarecv
-                  vec_recv(recv_pointer%ipush(i)) = &
-                     vec_recv(recv_pointer%ipush(i)) + recvcache(i)
-               ENDDO
-            ELSE
-               vec_recv(recv_pointer%ipush) = recvcache
-            ENDIF
+            vec_recv(recv_pointer%ipush) = recvcache
          ENDIF
 
          IF (send_pointer%nproc > 0) THEN
@@ -1002,6 +1040,16 @@ CONTAINS
       ENDIF
 
    END SUBROUTINE worker_push_subset_data
+
+   ! ---------
+   SUBROUTINE basin_network_final ()
+
+   IMPLICIT NONE 
+
+      IF (allocated(basinindex)) deallocate(basinindex)
+      IF (allocated(rivermouth)) deallocate(rivermouth)
+
+   END SUBROUTINE basin_network_final
 
    ! ---------
    SUBROUTINE basin_pushdata_free_mem (this)

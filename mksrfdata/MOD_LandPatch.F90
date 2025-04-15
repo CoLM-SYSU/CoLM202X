@@ -2,8 +2,8 @@
 
 MODULE MOD_LandPatch
 
-!------------------------------------------------------------------------------------
-! DESCRIPTION:
+!-----------------------------------------------------------------------
+! !DESCRIPTION:
 !
 !    Build pixelset "landpatch".
 !
@@ -17,23 +17,20 @@ MODULE MOD_LandPatch
 !
 !    "landpatch" refers to pixelset PATCH.
 !
-! Created by Shupeng Zhang, May 2023
+!  Created by Shupeng Zhang, May 2023
 !    porting codes from Hua Yuan's OpenMP version to MPI parallel version.
-!------------------------------------------------------------------------------------
+!-----------------------------------------------------------------------
 
    USE MOD_Precision
    USE MOD_Grid
    USE MOD_Pixelset
    USE MOD_Vars_Global
    USE MOD_Const_LC
-#ifdef SinglePoint
-   USE MOD_SingleSrfdata
-#endif
    IMPLICIT NONE
 
    ! ---- Instance ----
    integer :: numpatch
-   type(grid_type)     :: gpatch
+   type(grid_type)     :: grid_patch
    type(pixelset_type) :: landpatch
 
    type(subset_type)   :: elm_patch
@@ -87,37 +84,13 @@ CONTAINS
          write(*,'(A)') 'Making land patches :'
       ENDIF
 
-#ifdef SinglePoint
-      IF (USE_SITE_landtype) THEN
-
-         numpatch = 1
-
-         allocate (landpatch%eindex (numpatch))
-         allocate (landpatch%ipxstt (numpatch))
-         allocate (landpatch%ipxend (numpatch))
-         allocate (landpatch%settyp (numpatch))
-         allocate (landpatch%ielm   (numpatch))
-
-         landpatch%eindex(:) = 1
-         landpatch%ielm  (:) = 1
-         landpatch%ipxstt(:) = 1
-         landpatch%ipxend(:) = 1
-         landpatch%settyp(:) = SITE_landtype
-
-         landpatch%nset = numpatch
-         CALL landpatch%set_vecgs
-
-         RETURN
-
-      ENDIF
-#endif
-
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
       IF (p_is_io) THEN
-         CALL allocate_block_data (gpatch, patchdata)
+
+         CALL allocate_block_data (grid_patch, patchdata)
 
 #ifndef LULC_USGS
          ! add parameter input for time year
@@ -126,10 +99,10 @@ CONTAINS
          !TODO: need usgs land cover type data
          file_patch = trim(DEF_dir_rawdata) //'/landtypes/landtype-usgs-update.nc'
 #endif
-         CALL ncio_read_block (file_patch, 'landtype', gpatch, patchdata)
+         CALL ncio_read_block (file_patch, 'landtype', grid_patch, patchdata)
 
 #ifdef USEMPI
-         CALL aggregation_data_daemon (gpatch, data_i4_2d_in1 = patchdata)
+         CALL aggregation_data_daemon (grid_patch, data_i4_2d_in1 = patchdata)
 #endif
       ENDIF
 
@@ -167,19 +140,15 @@ CONTAINS
             allocate (types (ipxstt:ipxend))
 
 #ifdef CATCHMENT
-            CALL aggregation_request_data (landhru, iset, gpatch, zip = .false., &
+            CALL aggregation_request_data (landhru, iset, grid_patch, zip = .false., &
 #else
-            CALL aggregation_request_data (landelm, iset, gpatch, zip = .false., &
+            CALL aggregation_request_data (landelm, iset, grid_patch, zip = .false., &
 #endif
                data_i4_2d_in1 = patchdata, data_i4_2d_out1 = ibuff)
 
 
             types(:) = ibuff
             deallocate (ibuff)
-
-#ifdef SinglePoint
-            SITE_landtype = types(1) 
-#endif
 
 #ifdef CATCHMENT
             IF (landhru%settyp(iset) <= 0) THEN

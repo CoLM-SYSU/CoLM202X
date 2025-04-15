@@ -2,16 +2,16 @@
 
 SUBROUTINE Aggregation_Topography ( &
       gtopo, dir_rawdata, dir_model_landdata, lc_year)
-! ----------------------------------------------------------------------
-! Global Topography data
+!-----------------------------------------------------------------------
+!  Global Topography data
 !
 !   Yamazaki, D., Ikeshima, D., Sosa, J.,Bates, P. D., Allen, G. H.,
 !   Pavelsky, T. M. (2019).
 !   MERIT Hydro: ahigh‐resolution global hydrographymap based on
-!   latest topography dataset.Water Resources Research, 55, 5053–5073.
+!   latest topography dataset.Water Resources Research, 55, 5053-5073.
 !
-! Created by Shupeng Zhang, 05/2023
-! ----------------------------------------------------------------------
+!  Created by Shupeng Zhang, 05/2023
+!-----------------------------------------------------------------------
 
    USE MOD_Precision
    USE MOD_Namelist
@@ -27,7 +27,7 @@ SUBROUTINE Aggregation_Topography ( &
    USE MOD_Utils
 
 #ifdef SrfdataDiag
-   USE MOD_Mesh, only : numelm
+   USE MOD_Mesh, only: numelm
    USE MOD_LandElm
    USE MOD_SrfdataDiag
 #endif
@@ -63,12 +63,6 @@ SUBROUTINE Aggregation_Topography ( &
       ENDIF
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
-#endif
-
-#ifdef SinglePoint
-      IF (USE_SITE_topography) THEN
-         RETURN
-      ENDIF
 #endif
 
       lndname = trim(dir_rawdata)//'/elevation.nc'
@@ -108,8 +102,8 @@ SUBROUTINE Aggregation_Topography ( &
                topostd_patches(ipatch) = sqrt(topostd_patches(ipatch))
 
             ELSE
-               topography_patches (ipatch) = -1.0e36
-               topostd_patches    (ipatch) = -1.0e36
+               topography_patches (ipatch) = 0.
+               topostd_patches    (ipatch) = 0.
             ENDIF
          ENDDO
 
@@ -127,7 +121,6 @@ SUBROUTINE Aggregation_Topography ( &
       CALL check_vector_data ('topostd_patches    ', topostd_patches   )
 #endif
 
-#ifndef SinglePoint
       lndname = trim(landdir)//'/topography_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
       CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
@@ -180,10 +173,6 @@ SUBROUTINE Aggregation_Topography ( &
          -1.0e36_r8, lndname, 'topostd_elm', compress = 1, write_mode = 'one')
 
       IF (allocated(topostd_elm)) deallocate(topostd_elm)
-#endif
-#else
-      SITE_topography = topography_patches(1)
-      SITE_topostd    = topostd_patches   (1)
 #endif
 
       IF (p_is_worker) THEN

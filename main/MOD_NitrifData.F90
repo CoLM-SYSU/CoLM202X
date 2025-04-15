@@ -4,14 +4,15 @@
 MODULE MOD_NitrifData
 !-----------------------------------------------------------------------
 ! !DESCRIPTION:
-! This module read in nitrif data.
+!  This module read in nitrif data.
 !
 ! !ORIGINAL:
-! Lu Xingjie and Zhang Shupeng, 2023, prepare the original version of the nitrif data module.
+!  Lu Xingjie and Zhang Shupeng, 2023, prepare the original version of the nitrif data module.
+!-----------------------------------------------------------------------
 
    USE MOD_Grid
    USE MOD_SpatialMapping
-   USE MOD_BGC_Vars_TimeVariables, only : tCONC_O2_UNSAT, tO2_DECOMP_DEPTH_UNSAT
+   USE MOD_BGC_Vars_TimeVariables, only: tCONC_O2_UNSAT, tO2_DECOMP_DEPTH_UNSAT
    IMPLICIT NONE
 
    type(grid_type) :: grid_nitrif
@@ -19,13 +20,13 @@ MODULE MOD_NitrifData
 
 CONTAINS
 
-   ! ----------
-   SUBROUTINE init_nitrif_data (idate)
+   SUBROUTINE init_nitrif_data (time)
 
-   !----------------------
-   ! DESCRIPTION:
-   ! open nitrif netcdf file from DEF_dir_runtime, read latitude and longitude info.
-   ! Initialize nitrif data read in.
+!-----------------------------------------------------------------------
+! !DESCRIPTION:
+!  open nitrif netcdf file from DEF_dir_runtime, read latitude and
+!  longitude info.  Initialize nitrif data read in.
+!-----------------------------------------------------------------------
 
    USE MOD_TimeManager
    USE MOD_Namelist
@@ -34,7 +35,7 @@ CONTAINS
    USE MOD_LandPatch
    IMPLICIT NONE
 
-   integer, intent(in) :: idate(3)
+   type(timestamp), intent(in) :: time
 
    ! Local Variables
    character(len=256) :: file_nitrif
@@ -53,7 +54,7 @@ CONTAINS
       IF (allocated(lon)) deallocate(lon)
       IF (allocated(lat)) deallocate(lat)
 
-      CALL julian2monthday (idate(1), idate(2), month, mday)
+      CALL julian2monthday (time%year, time%day, month, mday)
 
       CALL update_nitrif_data (month)
 

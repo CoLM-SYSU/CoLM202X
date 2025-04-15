@@ -2,23 +2,25 @@
 
 #ifdef SrfdataDiag
 MODULE MOD_SrfdataDiag
-!-----------------------------------------------------------------------------------------
-! DESCRIPTION:
+!-----------------------------------------------------------------------
+! !DESCRIPTION:
 !
-!    This module includes subroutines for checking the results of making surface data.
+!    This module includes subroutines for checking the results of making
+!    surface data.
 !
-!    The surface data in vector form is mapped to gridded data with last
-!    three dimensions of [type,longitude,latitude], which can be viewed by other softwares.
+!    The surface data in vector form is mapped to gridded data with last three
+!    dimensions of [type,longitude,latitude], which can be viewed by other
+!    softwares.
 !
-!    In GRIDBASED, the grid of gridded data is just the grid of the mesh.
-!    In UNSTRUCTURED or CATCHMENT, the grid is user defined and the mapping uses area
-!    weighted scheme.
+!    In GRIDBASED, the grid of gridded data is just the grid of the mesh.  In
+!    UNSTRUCTURED or CATCHMENT, the grid is user defined and the mapping uses
+!    area weighted scheme.
 !
-! Created by Shupeng Zhang, May 2023
+!  Created by Shupeng Zhang, May 2023
 !
-! Revisions:
+! !REVISIONS:
 ! TODO
-!-----------------------------------------------------------------------------------------
+!-----------------------------------------------------------------------
 
    USE MOD_Grid
    USE MOD_SpatialMapping
@@ -27,7 +29,7 @@ MODULE MOD_SrfdataDiag
 
    ! PUBLIC variables and subroutines
    type(grid_type) :: gdiag
-   
+
    type(spatial_mapping_type) :: m_elm2diag
 
    type(spatial_mapping_type) :: m_patch2diag
@@ -79,7 +81,7 @@ CONTAINS
       ENDIF
 
       CALL srf_concat%set (gdiag)
-      
+
       CALL m_elm2diag%build_arealweighted (gdiag, landelm)
 
       CALL m_patch2diag%build_arealweighted (gdiag, landpatch)
@@ -101,7 +103,7 @@ CONTAINS
       landname = trim(dir_landdata)//'/diag/element.nc'
       CALL srfdata_map_and_write (elmid_r8, landelm%settyp, (/0/), m_elm2diag, &
          -1.0e36_r8, landname, 'element', compress = 1, write_mode = 'one')
-      
+
       IF (p_is_worker) deallocate (elmid_r8)
 
       typindex = (/(ityp, ityp = 0, N_land_classification)/)

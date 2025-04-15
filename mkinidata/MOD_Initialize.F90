@@ -13,14 +13,14 @@ CONTAINS
    SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
          idate, lc_year, greenwich, lulcc_call)
 
-! ======================================================================
-! initialization routine for land surface model.
+!=======================================================================
+!  initialization routine for land surface model.
 !
-! Created by Yongjiu Dai, 09/15/1999
-! Revised by Yongjiu Dai, 08/30/2002
-! Revised by Yongjiu Dai, 03/2014
+!  Created by Yongjiu Dai, 09/15/1999
+!  Revised by Yongjiu Dai, 08/30/2002
+!  Revised by Yongjiu Dai, 03/2014
 !
-! ======================================================================
+!=======================================================================
    USE MOD_Precision
    USE MOD_Vars_Global
    USE MOD_Namelist
@@ -77,6 +77,13 @@ CONTAINS
    USE MOD_PercentagesPFTReadin
    USE MOD_SoilParametersReadin
    USE MOD_SoilTextureReadin
+#ifdef SinglePoint
+   USE MOD_SingleSrfdata
+#endif
+#ifdef EXTERNAL_LAKE
+   USE MOD_Lake_TimeVars
+   USE MOD_Lake_Namelist, only: DEF_External_Lake
+#endif
 
    IMPLICIT NONE
 
@@ -285,7 +292,12 @@ CONTAINS
 
          ENDDO
 
+#ifndef SinglePoint
          CALL landpatch%get_lonlat_radian (patchlonr, patchlatr)
+#else
+         patchlonr(:) = SITE_lon_location * pi/180. 
+         patchlatr(:) = SITE_lat_location * pi/180. 
+#endif
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
          IF (numpft > 0) pftclass = landpft%settyp
@@ -374,8 +386,8 @@ CONTAINS
 ! 1.5 Initialize topography data
 ! ................................
 #ifdef SinglePoint
-      topoelv(:) = SITE_topography
-      topostd(:) = SITE_topostd
+      topoelv(:) = SITE_elevation
+      topostd(:) = SITE_elvstd
 #else
       write(cyear,'(i4.4)') lc_year
       ftopo = trim(dir_landdata)//'/topography/'//trim(cyear)//'/topography_patches.nc'
@@ -1208,7 +1220,13 @@ CONTAINS
          t_lake      (:,:) = 285.
          lake_icefrac(:,:) = 0.
          savedtke1   (:)   = tkwat
-
+#ifdef EXTERNAL_LAKE
+         DO i = 1, numpatch
+            IF(patchtype(i) == 4) THEN
+               CALL InitLakeTimeVars(i, lakedepth(i), t_lake(:,i), lake_icefrac(:,i), savedtke1(i))
+            ENDIF
+         ENDDO
+#endif
       ENDIF
       ! ------------------------------------------
 
@@ -1300,6 +1318,12 @@ CONTAINS
                ,use_soilini, nl_soil_ini, soil_z, soil_t(1:,i), soil_w(1:,i), use_snowini, snow_d(i) &
                ! for SOIL Water INIT by using water table depth
                ,use_wtd, zwtmm, zc_soimm, zi_soimm, vliq_r, nprms, prms)
+               
+#ifdef EXTERNAL_LAKE
+            IF(patchtype(i) == 4) THEN
+               z0m(i) = DEF_External_Lake%DEF_LAKE_Z0M
+            ENDIF
+#endif
 
 #ifdef URBAN_MODEL
             IF (m == URBAN) THEN
@@ -1407,7 +1431,7 @@ CONTAINS
             hs = basin_hru%substt(i)
             he = basin_hru%subend(i)
             IF (lake_id(i) <= 0) THEN
-               wdsrf_bsn(i) = minval(hillslope_basin(i)%hand + wdsrf_bsnhru(hs:he))
+               wdsrf_bsn(i) = minval(hillslope_basin(i)%hand + wdsrf_bsnhru(hs:he)) - handmin(i)
             ELSE
                ! lake
                totalvolume  = sum(wdsrf_bsnhru(hs:he) * lakeinfo(i)%area0)
@@ -1444,6 +1468,10 @@ CONTAINS
          ENDDO
 
       ENDIF
+
+      CALL check_vector_data ('Basin Water Depth   [m]  ', wdsrf_bsn)
+      CALL check_vector_data ('HRU Water Depth     [m]  ', wdsrf_bsnhru)
+
 #endif
 
 ! ...............................................................

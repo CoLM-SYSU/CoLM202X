@@ -13,10 +13,10 @@ MODULE MOD_LeafTemperature
 
    SAVE
 
-   ! PUBLIC MEMBER FUNCTIONS:
+! PUBLIC MEMBER FUNCTIONS:
    PUBLIC :: LeafTemperature
 
-   ! PRIVATE MEMBER FUNCTIONS:
+! PRIVATE MEMBER FUNCTIONS:
    PRIVATE :: dewfraction
 !-----------------------------------------------------------------------
 
@@ -69,7 +69,7 @@ CONTAINS
 !  ground is linked by the equations:
 !                       Ha = Hf + Hg and Ea = Ef + Eg
 !
-!  Original author : Yongjiu Dai, August 15, 2001
+!  Original author: Yongjiu Dai, August 15, 2001
 !
 ! !REVISIONS:
 !
@@ -81,7 +81,7 @@ CONTAINS
 !           Shangguan, W., Zhang, S., et al. (2019). Different
 !           representations of canopy structure—A large source of
 !           uncertainty in global land surface modeling. Agricultural
-!           and Forest Meteorology, 269–270, 119–135.
+!           and Forest Meteorology, 269-270, 119-135.
 !           https://doi.org/10.1016/j.agrformet.2019.02.006
 !
 !  10/2019, Hua Yuan: change only the leaf temperature from two-leaf
@@ -112,7 +112,7 @@ CONTAINS
    USE MOD_UserSpecifiedForcing, only: HEIGHT_mode
    USE MOD_Vars_TimeInvariants, only: patchclass
    USE MOD_Const_LC, only: z0mr, displar
-   USE MOD_PlantHydraulic, only :PlantHydraulicStress_twoleaf, getvegwp_twoleaf
+   USE MOD_PlantHydraulic, only:PlantHydraulicStress_twoleaf, getvegwp_twoleaf
    USE MOD_Ozone, only: CalcOzoneStress
    USE MOD_Qsadv
 

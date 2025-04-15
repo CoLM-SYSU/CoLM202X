@@ -3,16 +3,16 @@
 MODULE MOD_ForcingDownscaling
 
 !-----------------------------------------------------------------------------
-! DESCRIPTION:
-! Downscaling meteorological forcings
+! !DESCRIPTION:
+!  Downscaling meteorological forcings
 !
-! INITIAL:
-! The Community Land Model version 5.0 (CLM5.0)
+! !INITIAL:
+!  The Community Land Model version 5.0 (CLM5.0)
 !
-! REVISIONS:
-! Updated by Yongjiu Dai, January 16, 2023
-! Revised by Lu Li, January 24, 2024
-! Revised by Sisi Chen, Lu Li, June, 2024
+! !REVISIONS:
+!  Updated by Yongjiu Dai, January 16, 2023
+!  Revised by Lu Li, January 24, 2024
+!  Revised by Sisi Chen, Lu Li, June, 2024
 !-----------------------------------------------------------------------------
 
    USE MOD_Precision
@@ -110,16 +110,17 @@ CONTAINS
                   forc_us_c   ,forc_vs_c)
 
 !-----------------------------------------------------------------------------
-! DESCRIPTION:
-! Downscale atmospheric forcing fields.
+! !DESCRIPTION:
+!  Downscale atmospheric forcing fields.
 !
-! Downscaling is done based on the difference between each land model column's elevation and
-! the atmosphere's surface elevation (which is the elevation at which the atmospheric
-! forcings are valid).
+!  Downscaling is done based on the difference between each land model
+!  column's elevation and the atmosphere's surface elevation (which is
+!  the elevation at which the atmospheric forcings are valid).
 !
-! Note that the downscaling procedure can result in changes in grid cell mean values
-! compared to what was provided by the atmosphere. We conserve fluxes of mass and
-! energy, but allow states such as temperature to differ.
+!  Note that the downscaling procedure can result in changes in grid
+!  cell mean values compared to what was provided by the atmosphere. We
+!  conserve fluxes of mass and energy, but allow states such as
+!  temperature to differ.
 !-----------------------------------------------------------------------------
 
    IMPLICIT NONE
@@ -289,17 +290,17 @@ CONTAINS
          delta_prl_c = forc_prl_g *1.0*0.27*(forc_topo_c - forc_topo_g) &
             /(1.0 - 0.27*(forc_topo_c - forc_topo_g))
          forc_prl_c = forc_prl_g + delta_prl_c   ! large scale precipitation [mm/s]
-      END IF
+      ENDIF
 
       IF (forc_prl_c < 0) THEN
          write(*,*) 'negative prl', forc_prl_g, forc_maxelv_g, forc_topo_c, forc_topo_g
          forc_prl_c = 0.
-      END IF
+      ENDIF
 
       IF (forc_prc_c < 0) THEN
          write(*,*) 'negative prc', forc_prc_g, forc_maxelv_g, forc_topo_c, forc_topo_g
          forc_prc_c = 0.
-      END IF
+      ENDIF
 
    END SUBROUTINE downscale_forcings
 
@@ -309,11 +310,12 @@ CONTAINS
                              slp_type_c, asp_type_c, area_type_c, cur_c)
 
 !-----------------------------------------------------------------------------
-! DESCRIPTION:
-! Downscale wind speed
+! !DESCRIPTION:
+!  Downscale wind speed
 !
-! Liston, G. E. and Elder, K.: A meteorological distribution system
-! for high-resolution terrestrial modeling (MicroMet), J. Hydrometeorol., 7, 217-234, 2006.
+!  Liston, G. E. and Elder, K.: A meteorological distribution system for
+!  high-resolution terrestrial modeling (MicroMet), J. Hydrometeorol.,
+!  7, 217-234, 2006.
 !-----------------------------------------------------------------------------
 
    IMPLICIT NONE
@@ -359,7 +361,7 @@ CONTAINS
          ! Limiting the scope of proportionality adjustments
          IF (scale_factor>1.5) THEN
              scale_factor = 1.5
-         ELSE IF (scale_factor<-1.5) THEN
+         ELSEIF (scale_factor<-1.5) THEN
              scale_factor = -1.5
          ENDIF
          ws_c_type(i) = ws_g *scale_factor*area_type_c(i)
@@ -379,8 +381,8 @@ CONTAINS
       forc_topo_c, forc_t_c, forc_q_c, forc_pbot_c, forc_lwrad_c)
 
 !-----------------------------------------------------------------------------
-! DESCRIPTION:
-! Downscale longwave radiation
+! !DESCRIPTION:
+!  Downscale longwave radiation
 !-----------------------------------------------------------------------------
 
    IMPLICIT NONE
@@ -485,17 +487,18 @@ CONTAINS
                         area_type_c)
 
 !-----------------------------------------------------------------------------
-! DESCRIPTION:
+! !DESCRIPTION:
 !
-! Rouf, T., Mei, Y., Maggioni, V., Houser, P., & Noonan, M. (2020). A Physically Based
-!     Atmospheric Variables Downscaling Technique. Journal of Hydrometeorology,
-!     21(1), 93–108. https://doi.org/10.1175/JHM-D-19-0109.1
+!  Rouf, T., Mei, Y., Maggioni, V., Houser, P., & Noonan, M. (2020). A
+!  Physically Based Atmospheric Variables Downscaling Technique. Journal
+!  of Hydrometeorology, 21(1), 93-108.
+!  https://doi.org/10.1175/JHM-D-19-0109.1
 !
-! Sisi Chen, Lu Li, Yongjiu Dai, et al. Exploring Topography Downscaling Methods for
-!     Hyper-Resolution Land Surface Modeling. Authorea. April 25, 2024.
-!     DOI: 10.22541/au.171403656.68476353/v1
+!  Sisi Chen, Lu Li, Yongjiu Dai, et al. Exploring Topography
+!  Downscaling Methods for Hyper-Resolution Land Surface Modeling.
+!  Authorea. April 25, 2024.  DOI: 10.22541/au.171403656.68476353/v1
 !
-! Must be done after downscaling of surface pressure
+!  Must be done after downscaling of surface pressure
 !-----------------------------------------------------------------------------
 
    IMPLICIT NONE
@@ -579,7 +582,7 @@ CONTAINS
 
       IF (zen_rad <= zenith_segment) THEN
          sf_c = 1.
-      ELSE IF (a1<=1e-10) THEN
+      ELSEIF (a1<=1e-10) THEN
          sf_c = 1.
       ELSE
          sf_c = exp(-1*exp(min(a1*zen_rad+a2,3.5)))
@@ -604,7 +607,7 @@ CONTAINS
       ! calculate diffuse weight
       ! Ruiz-Arias, J. A., Alsamamra, H., Tovar-Pescador, J., & Pozo-Vázquez, D. (2010).
       ! Proposal of a regressive model for the hourly diffuse solar radiation under all sky
-      ! conditions. Energy Conversion and Management, 51(5), 881–893.
+      ! conditions. Energy Conversion and Management, 51(5), 881-893.
       ! https://doi.org/10.1016/j.enconman.2009.11.024
       diff_wgt = 0.952-1.041*exp(-1*exp(min(2.3-4.702*clr_idx,3.5)))
       IF (diff_wgt>1) diff_wgt = 1

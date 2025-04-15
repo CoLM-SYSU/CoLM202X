@@ -49,6 +49,7 @@ CONTAINS
 ! !REVISIONS:
 !  08/2020, Hua Yuan: separate soil/snow heat flux, exclude glacier (3)
 !  04/2023, Nan Wei: supercooled soil water is included IF supercool is defined.
+!
 !-----------------------------------------------------------------------
 
    USE MOD_Precision
@@ -354,7 +355,7 @@ CONTAINS
    USE MOD_Precision
    USE MOD_SPMD_Task
    USE MOD_Hydro_SoilFunction
-   USE MOD_Const_Physical, only : tfrz, hfus, grav
+   USE MOD_Const_Physical, only: tfrz, hfus, grav
    USE MOD_Namelist
    IMPLICIT NONE
 
@@ -652,7 +653,7 @@ CONTAINS
 
    USE MOD_Precision
    USE MOD_SPMD_Task
-   USE MOD_Const_Physical, only : tfrz, hfus
+   USE MOD_Const_Physical, only: tfrz, hfus
    IMPLICIT NONE
 
 !-------------------------- Dummy Arguments ----------------------------

@@ -5,8 +5,7 @@ MODULE MOD_Urban_LUCY
 ! !DESCRIPTION:
 !  Anthropogenic model to calculate anthropogenic heat flux for the rest
 !
-! !ORIGINAL:
-!  Wenzong Dong, May, 2022
+!  Original: Wenzong Dong, May, 2022
 !
 ! -----------------------------------------------------------------------
 ! !USE
@@ -22,11 +21,11 @@ MODULE MOD_Urban_LUCY
 
 CONTAINS
 
-! -----------------------------------------------------------------------
    SUBROUTINE LUCY( idate       , deltim  , patchlonr, fix_holiday, &
                     week_holiday, hum_prof, wdh_prof , weh_prof   , pop_den, &
                     vehicle     , Fahe    , vehc     , meta        )
 
+! -----------------------------------------------------------------------
 ! !DESCRIPTION:
 !  Anthropogenic heat fluxes other than building heat were calculated
 !
@@ -34,11 +33,11 @@ CONTAINS
 !  1) Grimmond, C. S. B. (1992). The suburban energy balance:
 !  Methodological considerations and results for a mid-latitude west
 !  coast city under winter and spring conditions. International Journal
-!  of Climatology, 12(5), 481–497. https://doi.org/10.1002/joc.3370120506
+!  of Climatology, 12(5), 481-497. https://doi.org/10.1002/joc.3370120506
 !
 !  2) Allen, L., Lindberg, F., & Grimmond, C. S. B. (2011). Global to
 !  city scale urban anthropogenic heat flux: Model and variability.
-!  International Journal of Climatology, 31(13), 1990–2005.
+!  International Journal of Climatology, 31(13), 1990-2005.
 !  https://doi.org/10.1002/joc.2210
 !
 ! -----------------------------------------------------------------------

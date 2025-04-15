@@ -3,31 +3,31 @@
 SUBROUTINE Aggregation_LakeDepth ( &
       gland, dir_rawdata, dir_model_landdata, lc_year)
 
-! ----------------------------------------------------------------------
-! DESCRIPTION:
-! Aggregate lake depth of multiple pixels within a lake patch based on Global land cover types
-! (updated with the specific dataset)
+!-----------------------------------------------------------------------
+! !DESCRIPTION:
+!  Aggregate lake depth of multiple pixels within a lake patch based on
+!  Global land cover types (updated with the specific dataset)
 !
-! Global Lake Coverage and Lake Depth (1km resolution)
-!   (http://nwpi.krc.karelia.run/flake/)
-!    Lake depth data legend
-!    Value   Description
-! 0       no lake indicated in this pixel
-! 1       no any information about this lake and set the default value of 10 m
-! 2       no information about depth for this lake and set the default value of 10 m
-! 3       have the information about lake depth in this pixel
-! 4       this is the river pixel according to our map, set the default value of 3 m
+!  Global Lake Coverage and Lake Depth (1km resolution)
+!    (http://nwpi.krc.karelia.run/flake/)
+!     Lake depth data legend
+!     Value   Description
+!     0       no lake indicated in this pixel
+!     1       no any information about this lake and set the default value of 10 m
+!     2       no information about depth for this lake and set the default value of 10 m
+!     3       have the information about lake depth in this pixel
+!     4       this is the river pixel according to our map, set the default value of 3 m
 !
-! REFERENCE:
-! Kourzeneva, E., H. Asensio, E. Martin, and S. Faroux, 2012: Global gridded
-! dataset of lake coverage and lake depth for USE in numerical weather
-! prediction and climate modelling. Tellus A, 64, 15640.
+! !REFERENCES:
+!  Kourzeneva, E., H. Asensio, E. Martin, and S. Faroux, 2012: Global gridded
+!  dataset of lake coverage and lake depth for USE in numerical weather
+!  prediction and climate modelling. Tellus A, 64, 15640.
 !
-! Created by Yongjiu Dai, 02/2014
+!  Created by Yongjiu Dai, 02/2014
 !
-! REVISIONS:
-! Shupeng Zhang, 01/2022: porting codes to MPI parallel version
-! ----------------------------------------------------------------------
+! !REVISIONS:
+!  Shupeng Zhang, 01/2022: porting codes to MPI parallel version
+!-----------------------------------------------------------------------
 
    USE MOD_Precision
    USE MOD_Namelist
@@ -39,14 +39,8 @@ SUBROUTINE Aggregation_LakeDepth ( &
 #ifdef RangeCheck
    USE MOD_RangeCheck
 #endif
-
    USE MOD_AggregationRequestData
-
    USE MOD_Utils
-#ifdef SinglePoint
-   USE MOD_SingleSrfdata
-#endif
-
 #ifdef SrfdataDiag
    USE MOD_SrfdataDiag
 #endif
@@ -82,12 +76,6 @@ SUBROUTINE Aggregation_LakeDepth ( &
       ENDIF
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
-#endif
-
-#ifdef SinglePoint
-      IF (USE_SITE_lakedepth) THEN
-         RETURN
-      ENDIF
 #endif
 
 ! ................................................
@@ -137,7 +125,6 @@ SUBROUTINE Aggregation_LakeDepth ( &
       CALL check_vector_data ('lakedepth_patches ', lakedepth_patches)
 #endif
 
-#ifndef SinglePoint
       lndname = trim(landdir)//'/lakedepth_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
       CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
@@ -148,10 +135,6 @@ SUBROUTINE Aggregation_LakeDepth ( &
       CALL srfdata_map_and_write (lakedepth_patches, landpatch%settyp, typlake, m_patch2diag, &
          -1.0e36_r8, lndname, 'lakedepth', compress = 1, write_mode = 'one')
 #endif
-#else
-      SITE_lakedepth = lakedepth_patches(1)
-#endif
-
 
       IF (p_is_worker) THEN
          deallocate ( lakedepth_patches )

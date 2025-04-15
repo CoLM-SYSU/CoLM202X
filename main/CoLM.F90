@@ -2,16 +2,16 @@
 
 PROGRAM CoLM
 !-----------------------------------------------------------------------------
-! Description:
-!   This is the main program for the Common Land Model (CoLM)
+!  Description:
+!    This is the main program for the Common Land Model (CoLM)
 !
-!   @Copyright Yongjiu Dai Land Modeling Group at the School of Atmospheric Sciences
-!   of the Sun Yat-sen University, Guangdong, CHINA.
-!   All rights reserved.
+!    Copyright © Yongjiu Dai Land Modeling Group at the School of Atmospheric Sciences
+!    of the Sun Yat-sen University, Guangdong, CHINA.
+!    All rights reserved.
 !
-! Initial : Yongjiu Dai, 1998-2014
-! Revised : Hua Yuan, Shupeng Zhang, Nan Wei, Xingjie Lu, Zhongwang Wei, Yongjiu Dai
-!           2014-2024
+!  Initial : Yongjiu Dai, 1998-2014
+!  Revised : Hua Yuan, Shupeng Zhang, Nan Wei, Xingjie Lu, Zhongwang Wei, Yongjiu Dai
+!            2014-2024
 !-----------------------------------------------------------------------------
 
    USE MOD_Precision
@@ -97,6 +97,10 @@ PROGRAM CoLM
    USE MOD_HistWriteBack
 #endif
 
+#ifdef EXTERNAL_LAKE
+   USE MOD_Lake_Namelist
+#endif
+
    IMPLICIT NONE
 
    character(len=256) :: nlfile
@@ -125,10 +129,10 @@ PROGRAM CoLM
    integer :: e_year, e_month, e_day, e_seconds, e_julian
    integer :: p_year, p_month, p_day, p_seconds, p_julian
    integer :: lc_year, lai_year
-   integer :: month, mday, year_p, month_p, mday_p
+   integer :: month, mday, year_p, month_p, mday_p, month_prev, mday_prev
    integer :: spinup_repeat, istep
 
-   type(timestamp) :: ststamp, itstamp, etstamp, ptstamp
+   type(timestamp) :: ststamp, itstamp, etstamp, ptstamp, time_prev
 
    integer*8 :: start_time, end_time, c_per_sec, time_used
 !-----------------------------------------------------------------------
@@ -155,6 +159,10 @@ PROGRAM CoLM
       CALL getarg (1, nlfile)
 
       CALL read_namelist (nlfile)
+
+#ifdef EXTERNAL_LAKE
+      CALL read_lake_namelist (nlfile)
+#endif
 
 #ifdef USEMPI
       IF (DEF_HIST_WriteBack) THEN
@@ -212,17 +220,18 @@ PROGRAM CoLM
       pdate(1) = p_year; pdate(2) = p_julian; pdate(3) = p_seconds
 
       CALL Init_GlobalVars
-      CAll Init_LC_Const
-      CAll Init_PFT_Const
-
-      CALL pixel%load_from_file    (dir_landdata)
-      CALL gblock%load_from_file   (dir_landdata)
+      CALL Init_LC_Const
+      CALL Init_PFT_Const
 
 #ifdef LULCC
       lc_year = s_year
 #else
       lc_year = DEF_LC_YEAR
 #endif
+
+#ifndef SinglePoint
+      CALL pixel%load_from_file    (dir_landdata)
+      CALL gblock%load_from_file   (dir_landdata)
 
       CALL mesh_load_from_file (dir_landdata, lc_year)
 
@@ -235,15 +244,8 @@ PROGRAM CoLM
       CALL pixelset_load_from_file (dir_landdata, 'landpatch', landpatch, numpatch, lc_year)
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
-#ifdef SinglePoint
-      IF (patchtypes(SITE_landtype) == 0) THEN
-         CALL pixelset_load_from_file (dir_landdata, 'landpft', landpft , numpft  , lc_year)
-         CALL map_patch_to_pft
-      ENDIF
-#else
       CALL pixelset_load_from_file (dir_landdata, 'landpft'  , landpft  , numpft  , lc_year)
       CALL map_patch_to_pft
-#endif
 #endif
 
 #ifdef URBAN_MODEL
@@ -260,6 +262,7 @@ PROGRAM CoLM
 
 #ifdef CatchLateralFlow
       CALL build_basin_network ()
+#endif
 #endif
 
       CALL adj2end(sdate)
@@ -326,7 +329,7 @@ PROGRAM CoLM
 
 #ifdef BGC
       IF (DEF_USE_NITRIF) THEN
-         CALL init_nitrif_data (sdate)
+         CALL init_nitrif_data (ststamp)
       ENDIF
 
       IF (DEF_NDEP_FREQUENCY==1)THEN ! Initial annual ndep data readin
@@ -386,7 +389,15 @@ PROGRAM CoLM
          IF(DEF_USE_OZONEDATA)THEN
             CALL update_Ozone_data(itstamp, deltim)
          ENDIF
+
 #ifdef BGC
+         IF(DEF_USE_NITRIF) THEN
+            time_prev = itstamp + int(-deltim)
+            CALL julian2monthday(time_prev%year,time_prev%day,month_prev,mday_prev)
+            if(month_p /= month_prev)then
+               CALL update_nitrif_data (month_p)
+            end if
+         ENDIF
          IF(DEF_USE_FIRE)THEN
             CALL update_lightning_data (itstamp, deltim)
          ENDIF
@@ -407,11 +418,6 @@ PROGRAM CoLM
          CALL julian2monthday (jdate(1), jdate(2), month, mday)
 
 #ifdef BGC
-         IF(DEF_USE_NITRIF) THEN
-            IF (month /= month_p) THEN
-               CALL update_nitrif_data (month)
-            ENDIF
-         ENDIF
 
          IF (DEF_NDEP_FREQUENCY==1)THEN ! Read Annual Ndep data
             IF (jdate(1) /= year_p) THEN
@@ -435,7 +441,7 @@ PROGRAM CoLM
 #endif
 
 
-         ! Call colm driver
+         ! Call CoLM driver
          ! ----------------------------------------------------------------------
          IF (p_is_worker) THEN
             CALL CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oroflag)
@@ -460,7 +466,7 @@ PROGRAM CoLM
 
          CALL CheckEquilibrium (idate, deltim, itstamp, dir_hist, casename)
 
-         ! DO land USE and land cover change simulation
+         ! DO land use and land cover change simulation
          ! ----------------------------------------------------------------------
 #ifdef LULCC
          IF ( isendofyear(idate, deltim) ) THEN
@@ -472,8 +478,7 @@ PROGRAM CoLM
             CALL hist_final    ()
 
             ! Call LULCC driver
-            CALL LulccDriver (casename,dir_landdata,dir_restart,&
-                              idate,greenwich)
+            CALL LulccDriver (casename,dir_landdata,dir_restart,idate,greenwich)
 
             ! Allocate Forcing and Fluxes variable of next year
             CALL allocate_1D_Forcing
@@ -541,9 +546,11 @@ PROGRAM CoLM
             ENDIF
 #endif
          ENDIF
+
 #ifdef RangeCheck
          CALL check_TimeVariables ()
 #endif
+
 #ifdef USEMPI
          CALL mpi_barrier (p_comm_glb, p_err)
 #endif
@@ -553,7 +560,6 @@ PROGRAM CoLM
             CALL print_VSF_iteration_stat_info ()
          ENDIF
 #endif
-
 
          IF (p_is_master) THEN
             CALL system_clock (end_time, count_rate = c_per_sec)
