@@ -2112,6 +2112,32 @@ ENDIF
             ENDDO
          ENDIF
 
+         u_site_wf_clay = (USE_SITE_soilparameters) .and. ncio_var_exist(fsrfdata,'soil_wf_clay',USE_SITE_soilparameters)
+         IF (u_site_wf_clay) THEN
+            CALL ncio_read_serial (fsrfdata, 'soil_wf_clay', SITE_soil_wf_clay)
+         ELSE
+            allocate (SITE_soil_wf_clay (8))
+            DO nsl = 1, 8
+               write(c,'(i1)') nsl
+               filename = trim(DEF_dir_rawdata)//'/soil/wf_clay_s.nc'
+               CALL read_point_var_2d_real8 (gridsoil, filename, 'wf_clay_s_l'//trim(c), &
+                  SITE_lon_location, SITE_lat_location, SITE_soil_wf_clay(nsl))
+            ENDDO
+         ENDIF
+
+         u_site_wf_om = (USE_SITE_soilparameters) .and. ncio_var_exist(fsrfdata,'soil_wf_om',USE_SITE_soilparameters)
+         IF (u_site_wf_om) THEN
+            CALL ncio_read_serial (fsrfdata, 'soil_wf_om', SITE_soil_wf_om)
+         ELSE
+            allocate (SITE_soil_wf_om (8))
+            DO nsl = 1, 8
+               write(c,'(i1)') nsl
+               filename = trim(DEF_dir_rawdata)//'/soil/wf_om_s.nc'
+               CALL read_point_var_2d_real8 (gridsoil, filename, 'wf_om_s_l'//trim(c), &
+                  SITE_lon_location, SITE_lat_location, SITE_soil_wf_om(nsl))
+            ENDDO
+         ENDIF
+
          u_site_OM_density = (USE_SITE_soilparameters) .and. ncio_var_exist(fsrfdata,'soil_OM_density',USE_SITE_soilparameters)
          IF (u_site_OM_density) THEN
             CALL ncio_read_serial (fsrfdata, 'soil_OM_density', SITE_soil_OM_density)
@@ -2344,6 +2370,8 @@ ENDIF
          write(*,'(A,8ES10.2,3A)') 'soil_vf_om             : ', SITE_soil_vf_om            (1:8), ' (from ',trim(datasource(u_site_vf_om            )),')'
          write(*,'(A,8ES10.2,3A)') 'soil_wf_gravels        : ', SITE_soil_wf_gravels       (1:8), ' (from ',trim(datasource(u_site_wf_gravels       )),')'
          write(*,'(A,8ES10.2,3A)') 'soil_wf_sand           : ', SITE_soil_wf_sand          (1:8), ' (from ',trim(datasource(u_site_wf_sand          )),')'
+         write(*,'(A,8ES10.2,3A)') 'soil_wf_clay           : ', SITE_soil_wf_clay          (1:8), ' (from ',trim(datasource(u_site_wf_clay          )),')'
+         write(*,'(A,8ES10.2,3A)') 'soil_wf_om             : ', SITE_soil_wf_om            (1:8), ' (from ',trim(datasource(u_site_wf_om            )),')'
          write(*,'(A,8ES10.2,3A)') 'soil_OM_density        : ', SITE_soil_OM_density       (1:8), ' (from ',trim(datasource(u_site_OM_density       )),')'
          write(*,'(A,8ES10.2,3A)') 'soil_BD_all            : ', SITE_soil_BD_all           (1:8), ' (from ',trim(datasource(u_site_BD_all           )),')'
          write(*,'(A,8ES10.2,3A)') 'soil_theta_s           : ', SITE_soil_theta_s          (1:8), ' (from ',trim(datasource(u_site_theta_s          )),')'
@@ -2575,6 +2603,8 @@ ENDIF
          CALL ncio_read_serial (fsrfdata, 'soil_vf_om'            , SITE_soil_vf_om            )
          CALL ncio_read_serial (fsrfdata, 'soil_wf_gravels'       , SITE_soil_wf_gravels       )
          CALL ncio_read_serial (fsrfdata, 'soil_wf_sand'          , SITE_soil_wf_sand          )
+         CALL ncio_read_serial (fsrfdata, 'soil_wf_clay'          , SITE_soil_wf_clay          )
+         CALL ncio_read_serial (fsrfdata, 'soil_wf_om'            , SITE_soil_wf_om            )
 
          CALL ncio_read_serial (fsrfdata, 'soil_OM_density'       , SITE_soil_OM_density)
          CALL ncio_read_serial (fsrfdata, 'soil_BD_all'           , SITE_soil_BD_all    )
@@ -3129,6 +3159,14 @@ ENDIF
       CALL ncio_write_serial (fsrfdata, 'soil_wf_sand', SITE_soil_wf_sand(1:8), 'soil')
       CALL ncio_put_attr     (fsrfdata, 'soil_wf_sand', 'source', trim(datasource(u_site_wf_sand)))
       CALL ncio_put_attr     (fsrfdata, 'soil_wf_sand', 'long_name', 'gravimetric fraction of sand')
+
+      CALL ncio_write_serial (fsrfdata, 'soil_wf_clay', SITE_soil_wf_clay(1:8), 'soil')
+      CALL ncio_put_attr     (fsrfdata, 'soil_wf_clay', 'source', trim(datasource(u_site_wf_clay)))
+      CALL ncio_put_attr     (fsrfdata, 'soil_wf_clay', 'long_name', 'gravimetric fraction of clay')
+
+      CALL ncio_write_serial (fsrfdata, 'soil_wf_om', SITE_soil_wf_om(1:8), 'soil')
+      CALL ncio_put_attr     (fsrfdata, 'soil_wf_om', 'source', trim(datasource(u_site_wf_om)))
+      CALL ncio_put_attr     (fsrfdata, 'soil_wf_om', 'long_name', 'gravimetric fraction of om')
 
       CALL ncio_write_serial (fsrfdata, 'soil_OM_density', SITE_soil_OM_density(1:8), 'soil')
       CALL ncio_put_attr     (fsrfdata, 'soil_OM_density', 'source', trim(datasource(u_site_OM_density)))
