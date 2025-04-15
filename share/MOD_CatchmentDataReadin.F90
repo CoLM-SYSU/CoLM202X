@@ -75,8 +75,8 @@ CONTAINS
 
          file_mesh = file_meshdata_in
 
-         CALL ncio_read_bcast_serial (file_mesh, 'latitude',  latitude)
-         CALL ncio_read_bcast_serial (file_mesh, 'longitude', longitude)
+         CALL ncio_read_bcast_serial (file_mesh, 'lat', latitude)
+         CALL ncio_read_bcast_serial (file_mesh, 'lon', longitude)
 
          IF (p_is_io) THEN
 

@@ -260,11 +260,11 @@ CONTAINS
 
          ! (25) read in the gravimetric fraction of clay
          lndname = trim(landdir)//'/wf_clay_s_l'//trim(c)//'_patches.nc'
-         CALL ncio_read_vector (lndname, 'wf_clay_s_l'//trim(c)//'_patches', landpatch, soil_wf_clay_s_l)
+         CALL ncio_read_vector (lndname, 'wf_clay_s_l'//trim(c)//'_patches', landpatch, soil_wf_clay_s_l, defval = 0.1)
 
          ! (26) read in the gravimetric fraction of om
          lndname = trim(landdir)//'/wf_om_s_l'//trim(c)//'_patches.nc'
-         CALL ncio_read_vector (lndname, 'wf_om_s_l'//trim(c)//'_patches', landpatch, soil_wf_om_s_l)
+         CALL ncio_read_vector (lndname, 'wf_om_s_l'//trim(c)//'_patches', landpatch, soil_wf_om_s_l, defval = 0.01)
 
 #endif
 

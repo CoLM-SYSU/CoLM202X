@@ -25,10 +25,10 @@ use MOD_SPMD_Task
 IMPLICIT NONE
 
 ! arguments:
-#if(defined LULC_USGS)
+#if (defined LULC_USGS)
       integer, parameter :: N_land_classification = 24 ! GLCC USGS number of land cover category
 #endif
-#if(defined LULC_IGBP)
+#if (defined LULC_IGBP)
       integer, parameter :: N_land_classification = 17 ! MODIS IGBP number of land cover category
 #endif
       integer, parameter :: nlat = 21600  ! 180*(60*2)
@@ -102,12 +102,12 @@ IMPLICIT NONE
       integer(kind=MPI_OFFSET_KIND) :: fdlast
 #endif
 
-#if(defined USE_POINT_DATA)
+#if (defined USE_POINT_DATA)
 
    allocate (fraction_patches(0:N_land_classification,1:lon_points,1:lat_points))
    fraction_patches(:,:,:) = 0.0
 
-#if(defined LULC_USGS)
+#if (defined LULC_USGS)
    fraction_patches(LULC_USGS,:,:) = 1.0
 #else
    fraction_patches(LULC_IGBP,:,:) = 1.0
@@ -120,11 +120,11 @@ IMPLICIT NONE
 
       allocate (landtypes(nlon,nrow_start:nrow_end))
 
-#if(defined LULC_USGS)
+#if (defined LULC_USGS)
      ! GLCC USGS classification
       lndname = trim(dir_rawdata)//'RAW_DATA_updated/landtypes_usgs_update.bin'
 #endif
-#if(defined LULC_IGBP)
+#if (defined LULC_IGBP)
      ! MODIS IGBP classification
       lndname = trim(dir_rawdata)//'RAW_DATA_updated/landtypes_igbp_update.bin'
 #endif
@@ -197,7 +197,7 @@ print *, 'OPENMP enabled, threads num = ', OPENMP
 #endif
       do j = 1, lat_points
 !----------------------modified by zsg--------------------------------------
-#if(defined USER_GRID)
+#if (defined USER_GRID)
          j1 = READ_row_UB(j)   ! read upper boundary of latitude
          j2 = READ_row_LB(j)   ! read lower boundary of latitude
 #else
@@ -206,7 +206,7 @@ print *, 'OPENMP enabled, threads num = ', OPENMP
 #endif
          do i = 1, lon_points
 
-#if(defined USER_GRID)
+#if (defined USER_GRID)
             i1 = READ_col_UB(i)   ! read upper boundary of longitude
             i2 = READ_col_LB(i)   ! read lower boundary of longitude
 #else
@@ -223,7 +223,7 @@ print *, 'OPENMP enabled, threads num = ', OPENMP
                   ncol_mod = mod(ncol,nlon)
                   if(ncol_mod == 0) ncol_mod = nlon
 
-#if(defined USER_GRID)
+#if (defined USER_GRID)
                   !-------find out the minimum distance for area weighting--------
                   area_for_sum = find_min_area(lone_rad(i),lonw_rad(i),lone_rad_i(ncol_mod),&
                                  lonw_rad_i(ncol_mod),sinn(j),sins(j),sinn_i(nrow),sins_i(nrow))
@@ -235,10 +235,10 @@ print *, 'OPENMP enabled, threads num = ', OPENMP
                   area_patches(L) = area_patches(L) + area_for_sum
                   area_grids = area_grids + area_for_sum
 
-#if(defined LULC_USGS)
+#if (defined LULC_USGS)
                   if(L==24)then  ! GLACIER/ICE SHEET (24)
 #endif
-#if(defined LULC_IGBP)
+#if (defined LULC_IGBP)
                   if(L==15)then  ! GLACIER/ICE SHEET (15)
 #endif
                      g_patches = 100.
@@ -256,11 +256,11 @@ print *, 'OPENMP enabled, threads num = ', OPENMP
 
             f_glacier_patches = a_glacier_patches / area_grids
             if(f_glacier_patches > 0.001)then     ! 0.1/100
-#if(defined LULC_USGS)
+#if (defined LULC_USGS)
                err_f_glacier = fraction_patches(24,i,j) - f_glacier_patches
                fraction_patches(24,i,j) = f_glacier_patches  ! GLCC USGS GLACIER/ICE SHEET (24)
 #endif
-#if(defined LULC_IGBP)
+#if (defined LULC_IGBP)
                err_f_glacier = fraction_patches(15,i,j) - f_glacier_patches
                fraction_patches(15,i,j) = f_glacier_patches  ! MODIS IGBP GLACIER/ICE SHEET (15)
 #endif

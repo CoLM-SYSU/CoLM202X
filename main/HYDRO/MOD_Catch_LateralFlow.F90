@@ -4,13 +4,13 @@
 MODULE MOD_Catch_LateralFlow
 !-------------------------------------------------------------------------------------
 ! DESCRIPTION:
-!   
+!
 !   Lateral flow.
 !
 !   Lateral flows in CoLM include
-!   1. Surface flow over hillslopes; 
+!   1. Surface flow over hillslopes;
 !   2. Routing flow in rivers;
-!   3. Groundwater (subsurface) lateral flow. 
+!   3. Groundwater (subsurface) lateral flow.
 !
 !   Water exchanges between
 !   1. surface flow and rivers;
@@ -18,7 +18,7 @@ MODULE MOD_Catch_LateralFlow
 !
 ! Created by Shupeng Zhang, May 2023
 !-------------------------------------------------------------------------------------
-   
+
    USE MOD_Precision
    USE MOD_SPMD_Task
    USE MOD_Catch_Vars_TimeVariables
@@ -32,7 +32,7 @@ MODULE MOD_Catch_LateralFlow
    USE MOD_Vars_TimeVariables
    USE MOD_Vars_Global,    only: dz_soi
    USE MOD_Const_Physical, only: denice, denh2o
-   IMPLICIT NONE 
+   IMPLICIT NONE
 
    integer, parameter :: nsubstep = 20
    real(r8) :: dt_average
@@ -56,7 +56,7 @@ CONTAINS
 #endif
    USE MOD_Catch_WriteParameters
    IMPLICIT NONE
-      
+
    integer, intent(in) :: lc_year    ! which year of land cover data used
 
 #ifdef CoLMDEBUG
@@ -104,20 +104,23 @@ CONTAINS
    USE MOD_Const_Physical,      only: tfrz
    USE MOD_Vars_TimeVariables,  only: wdsrf, t_lake, lake_icefrac, t_soisno
    USE MOD_Vars_TimeInvariants, only: lakedepth, dz_lake
+   USE MOD_Vars_1DFluxes,       only: rsur, rsub, rnof
    USE MOD_Catch_Vars_1DFluxes
    USE MOD_Catch_Vars_TimeVariables
    USE MOD_Catch_RiverLakeNetwork
 
    USE MOD_Lake, only: adjust_lake_layer
 
+   USE MOD_UserDefFun, only : findloc_ud
    USE MOD_RangeCheck
    IMPLICIT NONE
 
    real(r8), intent(in) :: deltime
 
    ! Local Variables
-   integer  :: i, ps, pe, istep
-   real(r8), allocatable :: wdsrf_p (:)
+   integer  :: i, j, j0, h, ps, pe, istep, s
+   real(r8) :: rnofsrf, sumarea
+   real(r8), allocatable :: wdsrf_p (:), wdsrf_hru_p (:)
 #ifdef CoLMDEBUG
    real(r8) :: dtolw, toldis
 #endif
@@ -127,7 +130,7 @@ CONTAINS
          ! a) The smallest unit in surface lateral flow (including hillslope flow and river-lake flow)
          !    is HRU and the main prognostic variable is "wdsrf_bsnhru" (surface water depth).
          ! b) "wdsrf_bsnhru" is updated by aggregating water depths in patches.
-         ! c) Water surface in a basin ("wdsrf_bsn", defined as the lowest surface water in the basin) 
+         ! c) Water surface in a basin ("wdsrf_bsn", defined as the lowest surface water in the basin)
          !    is derived from "wdsrf_bsnhru".
          DO i = 1, numhru
             ps = hru_patch%substt(i)
@@ -135,6 +138,11 @@ CONTAINS
             wdsrf_hru(i) = sum(wdsrf(ps:pe) * hru_patch%subfrc(ps:pe))
             wdsrf_hru(i) = wdsrf_hru(i) / 1.0e3 ! mm to m
          ENDDO
+
+         IF (numhru > 0) THEN
+            allocate (wdsrf_hru_p (numhru))
+            wdsrf_hru_p = wdsrf_hru
+         ENDIF
 
          IF (numpatch > 0) THEN
             allocate (wdsrf_p (numpatch))
@@ -153,16 +161,16 @@ CONTAINS
 
          DO istep = 1, nsubstep
 
-            ! (1) Surface flow over hillslopes.
+            ! (1) ------------------- Surface flow over hillslopes. -------------------
             CALL hillslope_flow (deltime/nsubstep)
-         
-            ! (2) River and Lake flow.
+
+            ! (2) ----------------------- River and Lake flow. ------------------------
             CALL river_lake_flow (deltime/nsubstep)
-      
+
             dt_average = dt_average + deltime/nsubstep/ntimestep_riverlake
-         
+
          ENDDO
-         
+
          IF (numbasin > 0) THEN
             wdsrf_bsn_ta(:) = wdsrf_bsn_ta(:) / deltime
             momen_riv_ta(:) = momen_riv_ta(:) / deltime
@@ -172,7 +180,7 @@ CONTAINS
             ELSE WHERE
                veloc_riv_ta = 0
             END WHERE
-            
+
             discharge_ta = discharge_ta / deltime
          ENDIF
 
@@ -190,24 +198,89 @@ CONTAINS
          ! update surface water depth on patches
          CALL worker_push_subset_data (iam_bsn, iam_elm, basin_hru, elm_hru, wdsrf_bsnhru, wdsrf_hru)
          DO i = 1, numhru
+            wdsrf_hru(i) = max(0., wdsrf_hru(i))
             ps = hru_patch%substt(i)
             pe = hru_patch%subend(i)
             wdsrf(ps:pe) = wdsrf_hru(i) * 1.0e3 ! m to mm
          ENDDO
-            
+
          IF (numpatch > 0) THEN
             xwsur(:) = (wdsrf_p(:) - wdsrf(:)) / deltime
          ENDIF
 
-         ! (3) Subsurface lateral flow.
+         ! update surface runoff from hillslope to river
+         IF (numpatch > 0) rsur(:) = 0.
+         DO i = 1, numelm
+            IF (lake_id_elm(i) <= 0) THEN
+
+               rnofsrf = 0.
+               sumarea = 0.
+
+               IF (lake_id_elm(i) == 0) THEN
+                  j0 = 2 ! regular catchment with river
+               ELSE
+                  j0 = 1 ! catchment directly to lake
+               ENDIF
+
+               DO j = j0, hillslope_element(i)%nhru
+                  h = hillslope_element(i)%ihru(j)
+                  rnofsrf = rnofsrf + (wdsrf_hru_p(h) - wdsrf_hru(h)) * hillslope_element(i)%area(j)
+                  sumarea = sumarea + hillslope_element(i)%area(j)
+               ENDDO
+
+               IF (sumarea > 0.) THEN
+                  rnofsrf = rnofsrf / sumarea * 1.e3 / deltime ! unit: mm/s
+                  DO j = j0, hillslope_element(i)%nhru
+                     h  = hillslope_element(i)%ihru(j)
+                     ps = hru_patch%substt(h)
+                     pe = hru_patch%subend(h)
+                     rsur(ps:pe) = rnofsrf
+                  ENDDO
+               ENDIF
+            ENDIF
+         ENDDO
+
+         ! update fraction of flooded area
+         DO i = 1, numelm
+            IF (lake_id_elm(i) <= 0) THEN
+               DO j = 1, hillslope_element(i)%nhru
+                  h  = hillslope_element(i)%ihru(j)
+                  ps = hru_patch%substt(h)
+                  pe = hru_patch%subend(h)
+
+                  IF (hillslope_element(i)%indx(j) == 0) THEN
+                     fldarea(ps:pe) = 1.0 ! river
+                  ELSE
+                     s = findloc_ud(hillslope_element(i)%fldprof(:,j) <= wdsrf_hru(h), back = .true.)
+                     IF (s == nfldstep) THEN
+                        fldarea(ps:pe) = 1.0
+                     ELSEIF (s == 0) THEN
+                        fldarea(ps:pe) = sqrt(wdsrf_hru(h)/hillslope_element(i)%fldprof(1,j) * 1./nfldstep**2)
+                     ELSE
+                        fldarea(ps:pe) = sqrt( (wdsrf_hru(h)-hillslope_element(i)%fldprof(s,j))            &
+                           / (hillslope_element(i)%fldprof(s+1,j)-hillslope_element(i)%fldprof(s,j)) &
+                           * real(2*s+1) / nfldstep**2 + real(s**2)/nfldstep**2 )
+                     ENDIF
+                  ENDIF
+               ENDDO
+            ELSE
+               ps = elm_patch%substt(i)
+               pe = elm_patch%subend(i)
+               fldarea(ps:pe) = 1.0 ! lake
+            ENDIF
+         ENDDO
+
+         ! (3) ------------------- Subsurface lateral flow -------------------
          CALL subsurface_flow (deltime)
-         
+
          DO i = 1, numpatch
             h2osoi(:,i) = wliq_soisno(1:,i)/(dz_soi(1:)*denh2o) + wice_soisno(1:,i)/(dz_soi(1:)*denice)
             wat(i)      = sum(wice_soisno(1:,i)+wliq_soisno(1:,i)) + ldew(i) + scv(i) + wetwat(i)
          ENDDO
 
-         ! (4) vertical layers adjustment
+         IF (numpatch > 0) rnof = rsur + rsub
+
+         ! (4) ---------------- vertical layers adjustment ---------------------
          IF (DEF_USE_Dynamic_Lake) THEN
             DO i = 1, numpatch
                IF (wdsrf_p(i) >= 100.) THEN
@@ -223,14 +296,15 @@ CONTAINS
                      lake_icefrac(:,i) = 1.
                   ENDIF
                ENDIF
-                  
+
                IF (wdsrf(i) >= 100.) THEN
                   CALL adjust_lake_layer (nl_lake, dz_lake(:,i), t_lake(:,i), lake_icefrac(:,i))
                ENDIF
             ENDDO
          ENDIF
 
-         IF (allocated(wdsrf_p)) deallocate(wdsrf_p)
+         IF (allocated(wdsrf_p    )) deallocate(wdsrf_p    )
+         IF (allocated(wdsrf_hru_p)) deallocate(wdsrf_hru_p)
 
       ENDIF
 
@@ -251,10 +325,10 @@ CONTAINS
 
 #ifdef CoLMDEBUG
       IF (p_is_worker) THEN
-         
+
          dtolw  = 0
          toldis = 0
-        
+
          IF (numpatch > 0) THEN
             dtolw = sum(patcharea * xwsur) / 1.e3 * deltime
          ENDIF
@@ -269,7 +343,7 @@ CONTAINS
 #endif
          IF (p_iam_worker == 0) THEN
             write(*,'(A,F12.2,A,ES8.1,A,ES10.3,A)') 'Total surface water error: ', dtolw, &
-               '(m^3) in area ', landarea, '(m^2), discharge ', toldis, '(m^3)' 
+               '(m^3) in area ', landarea, '(m^2), discharge ', toldis, '(m^3)'
          ENDIF
 
          dtolw = 0

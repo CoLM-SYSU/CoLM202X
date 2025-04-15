@@ -499,6 +499,7 @@ MODULE MOD_Namelist
       logical :: rnof                             = .true.
       logical :: xwsur                            = .true.
       logical :: xwsub                            = .true.
+      logical :: fldarea                          = .true.
       logical :: qintr                            = .true.
       logical :: qinfl                            = .true.
       logical :: qdrip                            = .true.
@@ -1733,6 +1734,7 @@ CONTAINS
       CALL sync_hist_vars_one (DEF_hist_vars%rnof        , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%xwsur       , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%xwsub       , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%fldarea     , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%qintr       , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%qinfl       , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%qdrip       , set_defaults)

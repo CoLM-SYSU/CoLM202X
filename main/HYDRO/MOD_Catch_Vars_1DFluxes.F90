@@ -4,12 +4,12 @@
 MODULE MOD_Catch_Vars_1DFluxes
 !-------------------------------------------------------------------------------------
 ! DESCRIPTION:
-!   
+!
 !   1D fluxes in lateral hydrological processes.
 !
 ! Created by Shupeng Zhang, May 2023
 !-------------------------------------------------------------------------------------
-   
+
    USE MOD_Precision
    IMPLICIT NONE
 
@@ -26,17 +26,18 @@ MODULE MOD_Catch_Vars_1DFluxes
    real(r8), allocatable :: wdsrf_bsnhru_ta (:) ! time step average of surface water depth    [m]
    real(r8), allocatable :: momen_bsnhru_ta (:) ! time step average of surface water momentum [m^2/s]
    real(r8), allocatable :: veloc_bsnhru_ta (:) ! time step average of surface water veloctiy [m/s]
-  
-   real(r8), allocatable :: xwsur (:) ! surface water exchange [mm h2o/s]
-   real(r8), allocatable :: xwsub (:) ! subsurface water exchange [mm h2o/s]
 
-   real(r8), allocatable :: ntacc_bsn (:)   
-   
+   real(r8), allocatable :: xwsur   (:) ! surface water exchange [mm h2o/s]
+   real(r8), allocatable :: xwsub   (:) ! subsurface water exchange [mm h2o/s]
+   real(r8), allocatable :: fldarea (:) ! fraction of flooded area [-]
+
+   real(r8), allocatable :: ntacc_bsn (:)
+
    ! PUBLIC MEMBER FUNCTIONS:
    PUBLIC :: allocate_1D_CatchFluxes
    PUBLIC :: deallocate_1D_CatchFluxes
 
-CONTAINS 
+CONTAINS
 
    SUBROUTINE allocate_1D_CatchFluxes
 
@@ -54,6 +55,7 @@ CONTAINS
             allocate (xsubs_pch (numpatch)) ; xsubs_pch (:) = spval
             allocate (xwsur     (numpatch)) ; xwsur     (:) = spval
             allocate (xwsub     (numpatch)) ; xwsub     (:) = spval
+            allocate (fldarea   (numpatch)) ; fldarea   (:) = spval
          ENDIF
 
          IF (numelm > 0) THEN
@@ -91,18 +93,19 @@ CONTAINS
       IF (allocated(xsubs_elm)) deallocate(xsubs_elm)
       IF (allocated(xsubs_hru)) deallocate(xsubs_hru)
       IF (allocated(xsubs_pch)) deallocate(xsubs_pch)
-      
+
       IF (allocated(wdsrf_bsn_ta)) deallocate(wdsrf_bsn_ta)
       IF (allocated(momen_riv_ta)) deallocate(momen_riv_ta)
       IF (allocated(veloc_riv_ta)) deallocate(veloc_riv_ta)
       IF (allocated(discharge_ta)) deallocate(discharge_ta)
-      
+
       IF (allocated(wdsrf_bsnhru_ta)) deallocate(wdsrf_bsnhru_ta)
       IF (allocated(momen_bsnhru_ta)) deallocate(momen_bsnhru_ta)
       IF (allocated(veloc_bsnhru_ta)) deallocate(veloc_bsnhru_ta)
-      
-      IF (allocated(xwsur)) deallocate(xwsur)
-      IF (allocated(xwsub)) deallocate(xwsub)
+
+      IF (allocated(xwsur  )) deallocate(xwsur  )
+      IF (allocated(xwsub  )) deallocate(xwsub  )
+      IF (allocated(fldarea)) deallocate(fldarea)
 
       IF (allocated(ntacc_bsn)) deallocate(ntacc_bsn)
 

@@ -595,7 +595,7 @@ ENDIF
       ENDIF
       zmu2 = zmu * zmu
 
-#if(defined LULC_USGS)
+#if (defined LULC_USGS)
       ! yuan: to be consistent with CoLM2014, no stem considered
       ! for twostream and leaf optical property calculations
       sai_ = 0.

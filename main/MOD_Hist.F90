@@ -126,7 +126,7 @@ CONTAINS
    USE MOD_Vars_PFTimeInvariants, only: pftclass
    USE MOD_LandPFT, only: patch_pft_s
 #endif
-#if(defined CaMa_Flood)
+#if (defined CaMa_Flood)
    USE MOD_CaMa_Vars !definition of CaMa variables
 #endif
    USE MOD_Forcing, only: forcmask_pch
@@ -149,7 +149,7 @@ CONTAINS
    logical :: lwrite
    character(len=256) :: file_hist
    integer :: itime_in_file
-#if(defined CaMa_Flood)
+#if (defined CaMa_Flood)
    character(len=256) :: file_hist_cama
    integer :: itime_in_file_cama
 #endif
@@ -223,7 +223,7 @@ CONTAINS
             write(*,*) 'Warning : Please USE one of DAY/MONTH/YEAR for history group.'
          ENDIF
 
-#if(defined CaMa_Flood)
+#if (defined CaMa_Flood)
          ! add variables to write cama-flood output.
          ! file name of cama-flood output
          file_hist_cama = trim(dir_hist) // '/' // trim(site) //'_hist_cama_'//trim(cdate)//'.nc'
@@ -457,12 +457,12 @@ CONTAINS
             a_zerr, file_hist, 'f_zerr', itime_in_file, sumarea, filter, &
             'the error of energy balance','W/m2')
 
-#ifndef CatchLateralFlow
          ! surface runoff [mm/s]
          CALL write_history_variable_2d ( DEF_hist_vars%rsur, &
             a_rsur, file_hist, 'f_rsur', itime_in_file, sumarea, filter, &
             'surface runoff','mm/s')
 
+#ifndef CatchLateralFlow
          ! saturation excess surface runoff [mm/s]
          CALL write_history_variable_2d ( DEF_hist_vars%rsur_se, &
             a_rsur_se, file_hist, 'f_rsur_se', itime_in_file, sumarea, filter, &
@@ -472,6 +472,7 @@ CONTAINS
          CALL write_history_variable_2d ( DEF_hist_vars%rsur_ie, &
             a_rsur_ie, file_hist, 'f_rsur_ie', itime_in_file, sumarea, filter, &
             'infiltration excess surface runoff','mm/s')
+#endif
 
          ! subsurface runoff [mm/s]
          CALL write_history_variable_2d ( DEF_hist_vars%rsub, &
@@ -482,7 +483,6 @@ CONTAINS
          CALL write_history_variable_2d ( DEF_hist_vars%rnof, &
             a_rnof, file_hist, 'f_rnof', itime_in_file, sumarea, filter, &
             'total runoff','mm/s')
-#endif
 
 #ifdef DataAssimilation
          ! slope factors for runoff [-]
@@ -505,6 +505,11 @@ CONTAINS
          CALL write_history_variable_2d ( DEF_hist_vars%xwsub, &
             a_xwsub, file_hist, 'f_xwsub', itime_in_file, sumarea, filter, &
             'rate of ground water change','mm/s')
+
+         ! fraction of flooded area [-]
+         CALL write_history_variable_2d ( DEF_hist_vars%fldarea, &
+            a_fldarea, file_hist, 'f_fldarea', itime_in_file, sumarea, filter, &
+            'fraction of flooded area','-')
 #endif
 
          ! interception [mm/s]
@@ -3932,10 +3937,10 @@ CONTAINS
          ENDIF
 
          CALL write_history_variable_3d ( DEF_hist_vars%sensors, &
-            a_sensors, file_hist, 'sensors', itime_in_file, 'sensor', 1, nsensor, &
+            a_sensors, file_hist, 'f_sensors', itime_in_file, 'sensor', 1, nsensor, &
             sumarea, filter, 'variable sensors','user defined')
 
-#if(defined CaMa_Flood)
+#if (defined CaMa_Flood)
 #ifdef USEMPI
          CALL mpi_barrier (p_comm_glb, p_err)
 #endif
