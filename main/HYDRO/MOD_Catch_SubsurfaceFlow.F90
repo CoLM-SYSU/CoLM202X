@@ -254,6 +254,8 @@ CONTAINS
 
          xwsub(:) = 0. ! total recharge/discharge from subsurface lateral flow
 
+         IF (numpatch > 0) rsub(:) = 0.
+
          IF (numelm > 0) THEN
             allocate (theta_a_elm (numelm));  theta_a_elm = 0.
             allocate (zwt_elm     (numelm));  zwt_elm     = 0.
@@ -611,6 +613,16 @@ CONTAINS
                ENDIF
 
                xsubs_elm(ielm) = xsubs_elm(ielm) + xsubs_nb
+
+               IF (nb_is_lake) THEN
+                  ps = elm_patch%substt(ielm)
+                  pe = elm_patch%subend(ielm)
+                  DO ipatch = ps, pe
+                     IF (patchtype(ipatch) <= 2) THEN
+                        rsub(ipatch) = rsub(ipatch) + xsubs_nb * 1.e3
+                     ENDIF
+                  ENDDO
+               ENDIF
 
             ENDDO
 
