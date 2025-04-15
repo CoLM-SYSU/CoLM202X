@@ -7,7 +7,7 @@ MODULE MOD_SoilSnowHydrology
    USE MOD_Namelist, only: DEF_USE_PLANTHYDRAULICS, DEF_USE_SNICAR,     &
                            DEF_URBAN_RUN,           DEF_USE_IRRIGATION, &
                            DEF_SPLIT_SOILSNOW,      DEF_Runoff_SCHEME
-#if(defined CaMa_Flood)
+#if (defined CaMa_Flood)
    USE YOS_CMF_INPUT,      only: LWINFILT
 #endif
 #ifdef CROP
@@ -51,7 +51,7 @@ CONTAINS
               qseva_snow  ,qsdew_snow  ,qsubl_snow  ,qfros_snow  ,fsno        ,&
               rsur        ,rnof        ,qinfl       ,pondmx      ,ssi         ,&
               wimp        ,smpmin      ,zwt         ,wa          ,qcharge     ,&
-#if(defined CaMa_Flood)
+#if (defined CaMa_Flood)
               flddepth    ,fldfrc      ,qinfl_fld                             ,&
 #endif
 ! SNICAR model variables
@@ -133,7 +133,7 @@ CONTAINS
         qfros_snow              ,&! surface dew added to snow pack (mm h2o /s) [+]
         fsno                      ! snow fractional cover
 
-#if(defined CaMa_Flood)
+#if (defined CaMa_Flood)
    real(r8), intent(inout) :: flddepth  ! inundation water depth [mm]
    real(r8), intent(in)    :: fldfrc    ! inundation water depth   [0-1]
    real(r8), intent(out)   :: qinfl_fld ! grid averaged inundation water input from top (mm/s)
@@ -189,7 +189,7 @@ CONTAINS
        zimm(0:nl_soil)            ! interface level below a "z" level (mm)
 
    real(r8) :: err_solver, w_sum
-#if(defined CaMa_Flood)
+#if (defined CaMa_Flood)
    real(r8) ::gfld ,rsur_fld, qinfl_fld_subgrid ! inundation water input from top (mm/s)
 #endif
 
@@ -325,7 +325,7 @@ IF(patchtype<=1)THEN   ! soil ground only
       ! infiltration into surface soil layer
       qinfl = gwat - rsur
 
-#if(defined CaMa_Flood)
+#if (defined CaMa_Flood)
       IF (LWINFILT) THEN
          !  re-infiltration [mm/s] calculation.
          ! IF surface runoff is occurred (rsur != 0.), flood depth <1.e-6  and flood fraction <0.05,
@@ -429,14 +429,14 @@ ELSE
       err_solver = err_solver-(qsdew_soil+qfros_soil-qsubl_soil)*deltim
 ENDIF
 
-#if(defined CaMa_Flood)
+#if (defined CaMa_Flood)
       IF (LWINFILT) THEN
          err_solver = err_solver-(gfld-rsur_fld)*fldfrc*deltim
       ENDIF
 #endif
 
 
-#if(defined CoLMDEBUG)
+#if (defined CoLMDEBUG)
       IF(abs(err_solver) > 1.e-3)THEN
          write(6,*) 'Warning: water balance violation after all soilwater calculation', err_solver
       ENDIF
@@ -496,7 +496,7 @@ ENDIF
               fsno        ,rsur        ,rsur_se     ,rsur_ie     ,rnof        ,&
               qinfl       ,ssi         ,pondmx      ,wimp        ,zwt         ,&
               wdsrf       ,wa          ,wetwat      ,&
-#if(defined CaMa_Flood)
+#if (defined CaMa_Flood)
               flddepth    ,fldfrc      ,qinfl_fld                             ,&
 #endif
 ! SNICAR model variables
@@ -586,7 +586,7 @@ ENDIF
         qsubl_snow       , &! sublimation rate from snow pack (mm h2o /s) [+]
         qfros_snow       , &! surface dew added to snow pack (mm h2o /s) [+]
         fsno                ! snow fractional cover
-#if(defined CaMa_Flood)
+#if (defined CaMa_Flood)
    real(r8), intent(inout) :: flddepth  ! inundation water input from top (mm/s)
    real(r8), intent(in)    :: fldfrc    ! inundation water input from top (mm/s)
    real(r8), intent(out)   :: qinfl_fld ! inundation water input from top (mm/s)
@@ -669,7 +669,7 @@ ENDIF
    integer, parameter :: nprms = 5
 #endif
    real(r8) :: prms(nprms, 1:nl_soil)
-#if(defined CaMa_Flood)
+#if (defined CaMa_Flood)
    real(r8) :: gfld,qinfl_all,rsur_fld, qinfl_fld_subgrid! inundation water input from top (mm/s)
 #endif
 
@@ -843,7 +843,7 @@ IF((patchtype<=1) .or. is_dry_lake)THEN   ! soil ground only
       rsubst = 0
 #endif
 
-#if(defined CaMa_Flood)
+#if (defined CaMa_Flood)
       IF (LWINFILT) THEN
          !  re-infiltration [mm/s] calculation.
          ! IF surface runoff is occurred (rsur != 0.), flood depth <1.e-6  and flood fraction <0.05,
@@ -1057,13 +1057,13 @@ ELSE
       err_solver = err_solver-(qsdew_soil+qfros_soil-qsubl_soil)*deltim
 ENDIF
 
-#if(defined CaMa_Flood)
+#if (defined CaMa_Flood)
       IF (LWINFILT) THEN
          err_solver = err_solver-(gfld-rsur_fld)*fldfrc*deltim
       ENDIF
 #endif
 
-#if(defined CoLMDEBUG)
+#if (defined CoLMDEBUG)
       IF(abs(err_solver) > 1.e-3)THEN
          write(6,'(A,E20.5,A,I0)') 'Warning (WATER_VSF): water balance violation', err_solver, &
             ' in element ', landpatch%eindex(ipatch)
@@ -2033,7 +2033,7 @@ ENDIF
 
       CALL tridia (nl_soil, amx, bmx, cmx, rmx, dwat )
 
-#if(defined CoLMDEBUG)
+#if (defined CoLMDEBUG)
   ! The mass balance error (mm) for this time step is
       errorw = -deltim*(qin(1)-qout(nl_soil)-dqodw1(nl_soil)*dwat(nl_soil))
       DO j = 1, nl_soil
