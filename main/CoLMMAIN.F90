@@ -19,7 +19,7 @@ SUBROUTINE CoLMMAIN ( &
            hksati,       csol,         k_solids,     dksatu,       &
            dksatf,       dkdry,        BA_alpha,     BA_beta,      &
            rootfr,       lakedepth,    dz_lake,      topostd, BVIC,&
-#if(defined CaMa_Flood)
+#if (defined CaMa_Flood)
            ! add flood depth, flood fraction, flood evaporation and
            ! flood re-infiltration
            flddepth,     fldfrc,       fevpg_fld,    qinfl_fld,    &
@@ -165,7 +165,7 @@ SUBROUTINE CoLMMAIN ( &
    USE MOD_Namelist, only: DEF_Interception_scheme, DEF_USE_VariablySaturatedFlow, &
                            DEF_USE_PLANTHYDRAULICS, DEF_USE_IRRIGATION
    USE MOD_LeafInterception
-#if(defined CaMa_Flood)
+#if (defined CaMa_Flood)
    ! get flood depth [mm], flood fraction[0-1], flood evaporation [mm/s], flood inflow [mm/s]
    USE MOD_CaMa_colmCaMa, only: get_fldevp
    USE YOS_CMF_INPUT, only: LWINFILT,LWEVAP
@@ -310,7 +310,7 @@ SUBROUTINE CoLMMAIN ( &
         forc_hpbl   ,&! atmospheric boundary layer height [m]
         forc_aerdep(14)!atmospheric aerosol deposition data [kg/m/s]
 
-#if(defined CaMa_Flood)
+#if (defined CaMa_Flood)
    real(r8), intent(in)    :: fldfrc    !inundation fraction--> allow re-evaporation and infiltration![0-1]
    real(r8), intent(inout) :: flddepth  !inundation depth--> allow re-evaporation and infiltration![mm]
    real(r8), intent(out)   :: fevpg_fld !effective evaporation from inundation [mm/s]
@@ -547,7 +547,7 @@ SUBROUTINE CoLMMAIN ( &
    real(r8) :: wextra, t_rain, t_snow
    integer ps, pe, pc
 
-#if(defined CaMa_Flood)
+#if (defined CaMa_Flood)
    !add variables for flood evaporation [mm/s] and re-infiltration [mm/s] calculation.
    real(r8) :: kk
    real(r8) :: taux_fld    ! wind stress: E-W [kg/m/s**2]
@@ -660,7 +660,7 @@ SUBROUTINE CoLMMAIN ( &
 
          IF (patchtype == 0) THEN
 
-#if(defined LULC_USGS || defined LULC_IGBP)
+#if (defined LULC_USGS || defined LULC_IGBP)
             CALL LEAF_interception_wrap (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,forc_t, tleaf,&
                       prc_rain,prc_snow,prl_rain,prl_snow,bifall,&
                       ldew,ldew_rain,ldew_snow,z0m,forc_hgt_u,pg_rain,pg_snow,qintr,qintr_rain,qintr_snow)
@@ -768,7 +768,7 @@ SUBROUTINE CoLMMAIN ( &
                  ssi               ,wimp              ,smpmin            ,zwt               ,&
                  wa                ,qcharge           ,&
 
-#if(defined CaMa_Flood)
+#if (defined CaMa_Flood)
              !add variables for flood depth [mm], flood fraction [0-1] and re-infiltration [mm/s] calculation.
                  flddepth          ,fldfrc            ,qinfl_fld         ,&
 #endif
@@ -796,7 +796,7 @@ SUBROUTINE CoLMMAIN ( &
                  rsur_ie           ,rnof              ,qinfl             ,ssi               ,&
                  pondmx            ,wimp              ,zwt               ,wdsrf             ,&
                  wa                ,wetwat            ,&
-#if(defined CaMa_Flood)
+#if (defined CaMa_Flood)
              !add variables for flood depth [mm], flood fraction [0-1] and re-infiltration [mm/s] calculation.
                  flddepth          ,fldfrc            ,qinfl_fld         ,&
 #endif
@@ -877,7 +877,7 @@ SUBROUTINE CoLMMAIN ( &
          ! energy balance
          ! ----------------------------------------
          zerr=errore
-#if(defined CoLMDEBUG)
+#if (defined CoLMDEBUG)
          IF (abs(errore) > .5) THEN
             write(6,*) 'Warning: energy balance violation ',errore,patchclass
          ENDIF
@@ -894,7 +894,7 @@ SUBROUTINE CoLMMAIN ( &
                endwb = endwb + wetwat
             ENDIF
          ENDIF
-#if(defined CaMa_Flood)
+#if (defined CaMa_Flood)
          IF (LWINFILT) THEN
             IF (patchtype == 0) THEN
                endwb=endwb - qinfl_fld*deltim
@@ -919,7 +919,7 @@ SUBROUTINE CoLMMAIN ( &
 
          xerr=errorw/deltim
 
-#if(defined CoLMDEBUG)
+#if (defined CoLMDEBUG)
          IF (abs(errorw) > 1.e-3) THEN
             IF     (patchtype == 0) THEN
                write(6,*) 'Warning: water balance violation in CoLMMAIN (soil) ', errorw
@@ -1094,7 +1094,7 @@ SUBROUTINE CoLMMAIN ( &
          errorw=(endwb-totwb)-(pg_rain+pg_snow-fevpa)*deltim
 #endif
 
-#if(defined CoLMDEBUG)
+#if (defined CoLMDEBUG)
          IF (DEF_USE_VariablySaturatedFlow) THEN
             IF (abs(errorw) > 1.e-3) THEN
                write(6,*) 'Warning: water balance violation in CoLMMAIN (land ice) ', errorw
@@ -1221,12 +1221,12 @@ SUBROUTINE CoLMMAIN ( &
 
 #else
          CALL external_lake( &
-               ! "in" arguments    
+               ! "in" arguments
                ! -------------------
-               deltim      ,patchlatr     ,patchlonr      ,bifall        ,& 
+               deltim      ,patchlatr     ,patchlonr      ,bifall        ,&
                forc_hgt_u  ,forc_hgt_t    ,forc_hgt_q     ,forc_us       ,&
                forc_vs     ,forc_t        ,forc_q         ,forc_rhoair   ,&
-               forc_psrf   ,forc_frl      ,sabg           ,forc_hpbl     ,& 
+               forc_psrf   ,forc_frl      ,sabg           ,forc_hpbl     ,&
                forc_sols   ,forc_soll     ,forc_solsd     ,forc_solld    ,&
                prc_rain    ,prl_rain      ,prc_snow       ,prl_snow      ,&
                t_precip    ,ipatch        ,&
@@ -1289,7 +1289,7 @@ SUBROUTINE CoLMMAIN ( &
          errorw = errorw + rnof * deltim
 #endif
 
-#if(defined CoLMDEBUG)
+#if (defined CoLMDEBUG)
          IF (DEF_USE_Dynamic_Lake) THEN
             IF (abs(errorw) > 1.e-3) THEN
                write(*,*) 'Warning: water balance violation in CoLMMAIN (lake) ', errorw
@@ -1349,7 +1349,7 @@ SUBROUTINE CoLMMAIN ( &
 !======================================================================
       ENDIF
 
-#if(defined CaMa_Flood)
+#if (defined CaMa_Flood)
       IF (LWEVAP) THEN
          IF ((flddepth .gt. 1.e-6).and.(fldfrc .gt. 0.05).and.patchtype == 0)THEN
             CALL get_fldevp (forc_hgt_u,forc_hgt_t,forc_hgt_q,&
@@ -1392,7 +1392,7 @@ SUBROUTINE CoLMMAIN ( &
       coszen = orb_coszen(calday,patchlonr,patchlatr)
 
       IF (patchtype <= 5) THEN   !LAND
-#if(defined DYN_PHENOLOGY)
+#if (defined DYN_PHENOLOGY)
          ! need to update lai and sai, fveg, green, they are done once in a day only
          IF (dolai) THEN
             CALL LAI_empirical(patchclass,nl_soil,rootfr,t_soisno(1:),lai,sai,fveg,green)
@@ -1407,7 +1407,7 @@ SUBROUTINE CoLMMAIN ( &
 
          IF (patchtype == 0) THEN
 
-#if(defined LULC_USGS || defined LULC_IGBP)
+#if (defined LULC_USGS || defined LULC_IGBP)
             CALL snowfraction (tlai(ipatch),tsai(ipatch),z0m,zlnd,scv,snowdp,wt,sigf,fsno)
             lai = tlai(ipatch)
             sai = tsai(ipatch) * sigf

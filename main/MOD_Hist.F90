@@ -126,7 +126,7 @@ CONTAINS
    USE MOD_Vars_PFTimeInvariants, only: pftclass
    USE MOD_LandPFT, only: patch_pft_s
 #endif
-#if(defined CaMa_Flood)
+#if (defined CaMa_Flood)
    USE MOD_CaMa_Vars !definition of CaMa variables
 #endif
    USE MOD_Forcing, only: forcmask_pch
@@ -149,7 +149,7 @@ CONTAINS
    logical :: lwrite
    character(len=256) :: file_hist
    integer :: itime_in_file
-#if(defined CaMa_Flood)
+#if (defined CaMa_Flood)
    character(len=256) :: file_hist_cama
    integer :: itime_in_file_cama
 #endif
@@ -223,7 +223,7 @@ CONTAINS
             write(*,*) 'Warning : Please USE one of DAY/MONTH/YEAR for history group.'
          ENDIF
 
-#if(defined CaMa_Flood)
+#if (defined CaMa_Flood)
          ! add variables to write cama-flood output.
          ! file name of cama-flood output
          file_hist_cama = trim(dir_hist) // '/' // trim(site) //'_hist_cama_'//trim(cdate)//'.nc'
@@ -3940,7 +3940,7 @@ CONTAINS
             a_sensors, file_hist, 'f_sensors', itime_in_file, 'sensor', 1, nsensor, &
             sumarea, filter, 'variable sensors','user defined')
 
-#if(defined CaMa_Flood)
+#if (defined CaMa_Flood)
 #ifdef USEMPI
          CALL mpi_barrier (p_comm_glb, p_err)
 #endif

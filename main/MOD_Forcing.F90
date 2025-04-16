@@ -180,7 +180,7 @@ CONTAINS
          ! allocate memory for forcing data
          CALL allocate_block_data (gforc, metdata)  ! forcing data
          CALL allocate_block_data (gforc, avgcos )  ! time-average of cos(zenith)
-#if(defined URBAN_MODEL && defined SinglePoint)
+#if (defined URBAN_MODEL && defined SinglePoint)
          CALL allocate_block_data (gforc, rainf)
          CALL allocate_block_data (gforc, snowf)
 #endif

@@ -1936,7 +1936,7 @@ ENDIF
                 ! account for vegetation heat change
                 - dheatl(i)
 
-#if(defined CoLMDEBUG)
+#if (defined CoLMDEBUG)
             IF(abs(err) .gt. .2) &
                write(6,*) 'energy imbalance in LeafTemperaturePC.F90', &
                           i,it-1,err,sabv(i),irab(i),fsenl(i),hvap*fevpl(i),hprl(i),dheatl(i)

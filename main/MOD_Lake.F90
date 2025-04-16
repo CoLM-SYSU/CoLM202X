@@ -1304,7 +1304,7 @@ CONTAINS
       ENDIF
 
 
-#if(defined CoLMDEBUG)
+#if (defined CoLMDEBUG)
       ! sum energy content and total energy into lake for energy check. any errors will be from the
       !     tridiagonal solution.
       esum1 = 0.0

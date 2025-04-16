@@ -54,7 +54,7 @@ PROGRAM CoLM
 #ifdef CATCHMENT
    USE MOD_HRUVector
 #endif
-#if(defined CaMa_Flood)
+#if (defined CaMa_Flood)
    USE MOD_CaMa_colmCaMa ! whether cama-flood is used
 #endif
 #ifdef SinglePoint
@@ -314,7 +314,7 @@ PROGRAM CoLM
 
       CALL CheckEqb_init ()
 
-#if(defined CaMa_Flood)
+#if (defined CaMa_Flood)
       CALL colm_CaMa_init !initialize CaMa-Flood
 #endif
 
@@ -452,7 +452,7 @@ PROGRAM CoLM
          CALL lateral_flow (deltim)
 #endif
 
-#if(defined CaMa_Flood)
+#if (defined CaMa_Flood)
          CALL colm_CaMa_drv(idate(3)) ! run CaMa-Flood
 #endif
 
@@ -491,7 +491,7 @@ PROGRAM CoLM
 
          ! Get leaf area index
          ! ----------------------------------------------------------------------
-#if(defined DYN_PHENOLOGY)
+#if (defined DYN_PHENOLOGY)
          ! Update once a day
          dolai = .false.
          Julian_1day = int(calendarday(jdate)-1)/1*1 + 1
@@ -540,7 +540,7 @@ PROGRAM CoLM
 #else
             CALL WRITE_TimeVariables (jdate, lc_year,  casename, dir_restart)
 #endif
-#if(defined CaMa_Flood)
+#if (defined CaMa_Flood)
             IF (p_is_master) THEN
                CALL colm_cama_write_restart (jdate, lc_year,  casename, dir_restart)
             ENDIF
@@ -607,7 +607,7 @@ PROGRAM CoLM
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-#if(defined CaMa_Flood)
+#if (defined CaMa_Flood)
       CALL colm_cama_exit ! finalize CaMa-Flood
 #endif
 

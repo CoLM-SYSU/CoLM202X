@@ -166,7 +166,7 @@ CONTAINS
 
          write(*,'(A)') trim(str_print)
 
-#if(defined CoLMDEBUG)
+#if (defined CoLMDEBUG)
          IF (len_trim(exception) > 0) THEN
             CALL CoLM_stop ()
          ENDIF
@@ -290,7 +290,7 @@ CONTAINS
 
          write(*,'(A)') trim(str_print)
 
-#if(defined CoLMDEBUG)
+#if (defined CoLMDEBUG)
          IF (len_trim(exception) > 0) THEN
             CALL CoLM_stop ()
          ENDIF
@@ -415,7 +415,7 @@ CONTAINS
 
          write(*,'(A)') trim(str_print)
 
-#if(defined CoLMDEBUG)
+#if (defined CoLMDEBUG)
          IF (len_trim(exception) > 0) THEN
             CALL CoLM_stop ()
          ENDIF
@@ -532,7 +532,7 @@ CONTAINS
 #endif
          ENDIF
       ENDIF
-      
+
       IF (p_is_master) THEN
 #ifdef USEMPI
          CALL mpi_recv (exception, 256, MPI_CHARACTER, p_address_worker(p_root), &
@@ -543,7 +543,7 @@ CONTAINS
 
          write(*,'(A)') trim(str_print)
 
-#if(defined CoLMDEBUG)
+#if (defined CoLMDEBUG)
          IF (len_trim(exception) > 0) THEN
             CALL CoLM_stop ()
          ENDIF
@@ -662,7 +662,7 @@ CONTAINS
 #endif
          ENDIF
       ENDIF
-      
+
       IF (p_is_master) THEN
 #ifdef USEMPI
          CALL mpi_recv (exception, 256, MPI_CHARACTER, p_address_worker(p_root), &
@@ -673,7 +673,7 @@ CONTAINS
 
          write(*,'(A)') trim(str_print)
 
-#if(defined CoLMDEBUG)
+#if (defined CoLMDEBUG)
          IF (len_trim(exception) > 0) THEN
             CALL CoLM_stop ()
          ENDIF
@@ -757,7 +757,7 @@ CONTAINS
 #endif
          ENDIF
       ENDIF
-      
+
       IF (p_is_master) THEN
 #ifdef USEMPI
          CALL mpi_recv (str_print, 256, MPI_CHARACTER, p_address_worker(p_root), &
