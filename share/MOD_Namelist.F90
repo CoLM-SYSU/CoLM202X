@@ -75,10 +75,10 @@ MODULE MOD_Namelist
    logical  :: USE_SITE_dbedrock         = .true.
    logical  :: USE_SITE_topography       = .true.
    logical  :: USE_SITE_urban_geometry   = .true.
-   logical  :: USE_SITE_urban_ecology    = .false.
-   logical  :: USE_SITE_urban_radiation  = .false.
+   logical  :: USE_SITE_urban_ecology    = .true.
+   logical  :: USE_SITE_urban_radiation  = .true.
    logical  :: USE_SITE_urban_thermal    = .false.
-   logical  :: USE_SITE_urban_human      = .false.
+   logical  :: USE_SITE_urban_human      = .true.
    logical  :: USE_SITE_HistWriteBack    = .true.
    logical  :: USE_SITE_ForcingReadAhead = .true.
 
