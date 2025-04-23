@@ -44,6 +44,7 @@ MODULE MOD_Urban_Flux
 !
 !-----------------------------------------------------------------------
    USE MOD_Precision
+   USE MOD_SPMD_Task
    USE MOD_Namelist, only: DEF_RSS_SCHEME, DEF_VEG_SNOW
    USE MOD_Vars_Global
    USE MOD_Qsadv, only: qsadv
@@ -808,7 +809,7 @@ CONTAINS
       croof  = croofs + croofl*htvp_roof
 
 
-#if(defined CoLMDEBUG)
+#if (defined CoLMDEBUG)
 #endif
 
       tafu = taf(2)
@@ -2341,7 +2342,7 @@ ENDIF
       err = sabv + irab + dirab_dtl*dtl(it-1) &
           - fsenl - hvap*fevpl - dheatl
 
-#if(defined CLMDEBUG)
+#if (defined CoLMDEBUG)
       IF (abs(err) .gt. .2) THEN
          write(6,*) 'energy imbalance in UrbanVegFlux.F90', &
          i,it-1,err,sabv,irab,fsenl,hvap*fevpl,dheatl
