@@ -147,6 +147,13 @@ CONTAINS
 
       ENDIF
 
+      IF (allocated(this%grid%xblk)) deallocate(this%grid%xblk)
+      IF (allocated(this%grid%yblk)) deallocate(this%grid%yblk)
+      IF (allocated(this%grid%xloc)) deallocate(this%grid%xloc)
+      IF (allocated(this%grid%yloc)) deallocate(this%grid%yloc)
+      IF (allocated(this%grid%xcnt)) deallocate(this%grid%xcnt)
+      IF (allocated(this%grid%ycnt)) deallocate(this%grid%ycnt)
+
       allocate (this%grid%xblk (size(fgrid%xblk)));  this%grid%xblk = fgrid%xblk
       allocate (this%grid%yblk (size(fgrid%yblk)));  this%grid%yblk = fgrid%yblk
       allocate (this%grid%xloc (size(fgrid%xloc)));  this%grid%xloc = fgrid%xloc
@@ -352,6 +359,7 @@ CONTAINS
          ENDDO
 #endif
 
+         IF (allocated(this%glist)) deallocate(this%glist)
          allocate (this%glist (0:p_np_io-1))
          DO iproc = 0, p_np_io-1
 #ifdef USEMPI
@@ -382,6 +390,9 @@ CONTAINS
          deallocate (msk)
 #endif
 
+         IF (allocated(this%address )) deallocate(this%address )
+         IF (allocated(this%areapart)) deallocate(this%areapart)
+         IF (allocated(this%npart   )) deallocate(this%npart   )
          allocate (this%address  (pixelset%nset))
          allocate (this%areapart (pixelset%nset))
 
@@ -456,6 +467,7 @@ CONTAINS
 
       IF (p_is_io) THEN
 
+         IF (allocated(this%glist)) deallocate(this%glist)
          allocate (this%glist (0:p_np_worker-1))
 
          DO iworker = 0, p_np_worker-1
@@ -485,6 +497,7 @@ CONTAINS
 
       IF (p_is_worker) THEN
          IF (this%npset > 0) THEN
+            IF (allocated(this%areapset)) deallocate(this%areapset)
             allocate (this%areapset (this%npset))
             this%areapset(:) = 0.
          ENDIF
