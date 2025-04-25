@@ -138,7 +138,7 @@
            mss_bcpho    ,mss_bcphi    ,mss_ocpho    ,mss_ocphi    ,&
            mss_dst1     ,mss_dst2     ,mss_dst3     ,mss_dst4     ,&
 
-#if(defined CaMa_Flood)
+#if (defined CaMa_Flood)
            ! flood depth [mm], flood fraction[0-1],
            ! flood evaporation [mm/s], flood re-infiltration [mm/s]
            flddepth     ,fldfrc       ,fevpg_fld    ,qinfl_fld    ,&
@@ -345,7 +345,7 @@
         forc_hgt_q            ,&! observational height of humidity [m]
         forc_rhoair             ! density air [kg/m3]
 
-#if(defined CaMa_Flood)
+#if (defined CaMa_Flood)
    real(r8), intent(in)    :: fldfrc    !inundation fraction--> allow re-evaporation and infiltration![0-1]
    real(r8), intent(inout) :: flddepth  !inundation depth--> allow re-evaporation and infiltration![mm]
    real(r8), intent(out)   :: fevpg_fld !effective evaporation from inundation [mm/s]
@@ -1073,7 +1073,7 @@
          sm_roof            ,sm_gimp            ,sm_gper            ,sm_lake            ,&
          lake_icefrac       ,scv_lake           ,snowdp_lake        ,imeltl             ,&
          fioldl             ,w_old                                                      ,&
-#if(defined CaMa_Flood)
+#if (defined CaMa_Flood)
          flddepth           ,fldfrc             ,qinfl_fld                              ,&
 #endif
          forc_us            ,forc_vs                                                    ,&
@@ -1214,7 +1214,7 @@
       ! energy balance check
       ! ----------------------------------------
       zerr=errore
-#if(defined CoLMDEBUG)
+#if (defined CoLMDEBUG)
       IF(abs(errore)>.5)THEN
          write(6,*) 'Warning: energy balance violation ',errore,patchclass
       ENDIF
@@ -1244,7 +1244,7 @@
       errorw = (endwb - totwb) - (forc_prc + forc_prl + urb_irrig - fevpa - rnof)*deltim
       xerr   = errorw/deltim
 
-#if(defined CoLMDEBUG)
+#if (defined CoLMDEBUG)
       IF(abs(errorw)>1.e-3) THEN
          write(6,*) 'Warning: water balance violation', errorw, ipatch, patchclass
          !STOP

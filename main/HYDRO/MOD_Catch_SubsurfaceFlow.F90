@@ -652,7 +652,7 @@ CONTAINS
 
          DO ipatch = 1, numpatch
 
-#if(defined CoLMDEBUG)
+#if (defined CoLMDEBUG)
             ! For water balance check, the sum of water in soil column before the calcultion
             w_sum_before = sum(wliq_soisno(1:nl_soil,ipatch)) + sum(wice_soisno(1:nl_soil,ipatch)) &
                + wa(ipatch) + wdsrf(ipatch) + wetwat(ipatch)
@@ -779,7 +779,7 @@ CONTAINS
 
             ENDIF
 
-#if(defined CoLMDEBUG)
+#if (defined CoLMDEBUG)
             ! For water balance check, the sum of water in soil column after the calcultion
             w_sum_after = sum(wliq_soisno(1:nl_soil,ipatch)) + sum(wice_soisno(1:nl_soil,ipatch)) &
                + wa(ipatch) + wdsrf(ipatch) + wetwat(ipatch)

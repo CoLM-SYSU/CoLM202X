@@ -247,7 +247,7 @@ MODULE MOD_Const_PFT
          /)
 
    ! reflectance of green leaf in visible band
-#if(defined LULC_IGBP_PC)
+#if (defined LULC_IGBP_PC)
    ! Leaf optical properties adapted from measured data (Dong et al., 2021)
    real(r8), parameter :: rhol_vis_p(0:N_PFT+N_CFT-1) &
       = (/0.110,  0.070,  0.070,  0.070,  0.100,  0.110,  0.100,  0.100&
@@ -286,7 +286,7 @@ MODULE MOD_Const_PFT
          /)
 
    ! reflectance of green leaf in near infrared band
-#if(defined LULC_IGBP_PC)
+#if (defined LULC_IGBP_PC)
    ! Leaf optical properties adapted from measured data (Dong et al., 2021)
    real(r8), parameter :: rhol_nir_p(0:N_PFT+N_CFT-1) &
       = (/0.350,  0.360,  0.370,  0.360,  0.450,  0.460,  0.450,  0.420&
@@ -325,7 +325,7 @@ MODULE MOD_Const_PFT
          /)
 
    ! transmittance of green leaf in visible band
-#if(defined LULC_IGBP_PC)
+#if (defined LULC_IGBP_PC)
    ! Leaf optical properties adapted from measured data (Dong et al., 2021)
    real(r8), parameter :: taul_vis_p(0:N_PFT+N_CFT-1) &
       = (/0.050,  0.050,  0.050,  0.050,  0.050,  0.060,  0.050,  0.060&
@@ -364,7 +364,7 @@ MODULE MOD_Const_PFT
          /)
 
    ! transmittance of green leaf in near infrared band
-#if(defined LULC_IGBP_PC)
+#if (defined LULC_IGBP_PC)
    ! Leaf optical properties adapted from measured data (Dong et al., 2021)
    real(r8), parameter :: taul_nir_p(0:N_PFT+N_CFT-1) &
       = (/0.340,  0.280,  0.290,  0.380,  0.250,  0.330,  0.250,  0.430&
