@@ -126,7 +126,8 @@ CONTAINS
          CALL elm_patch%build (landelm, landpatch, use_frac = .true.)
       ENDIF
 
-      ! initialize for SrfdataDiag, it is needed in the MOD_Lulcc_TransferTrace for outputing transfer_matrix
+      ! initialize for SrfdataDiag, it is needed in the MOD_Lulcc_TransferTrace for outputing
+      ! transfer_matrix
 #ifdef SrfdataDiag
 #ifdef GRIDBASED
       CALL init_gridbased_mesh_grid ()

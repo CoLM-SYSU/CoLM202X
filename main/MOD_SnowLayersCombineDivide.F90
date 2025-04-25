@@ -75,7 +75,8 @@ CONTAINS
    real(r8), parameter ::  c5 = 2.0       !
    real(r8), parameter ::  c6 = 5.15e-7   !
    real(r8), parameter ::  c7 = 4.0       !
-   real(r8), parameter ::  dm = 100.0     ! Upper Limit on Destructive Metamorphism Compaction [kg/m3]
+   ! Upper Limit on Destructive Metamorphism Compaction [kg/m3]
+   real(r8), parameter ::  dm = 100.0
    real(r8), parameter ::  eta0 = 9.e5    ! The Viscosity Coefficient Eta0 [kg-s/m2]
 
    real(r8) :: burden  ! pressure of overlying snow [kg/m2]
@@ -194,9 +195,12 @@ CONTAINS
    real(r8) , intent(in)    :: bi              ! partial density of ice [kg/m3]
    real(r8) , intent(in)    :: forc_wind       ! atmospheric wind speed [m/s]
    real(r8) , intent(in)    :: dz              ! layer depth for this column and level [m]
-   real(r8) , intent(inout) :: zpseudo         ! wind drift compaction / pseudo depth for this column at this layer
-   logical  , intent(inout) :: mobile          ! whether this snow column is still mobile at this layer (i.e., susceptible to wind drift)
-   real(r8) , intent(out)   :: compaction_rate ! rate of compaction of snowpack due to wind drift, for the current column and layer
+   ! wind drift compaction / pseudo depth for this column at this layer
+   real(r8) , intent(inout) :: zpseudo
+   ! whether this snow column is still mobile at this layer (i.e., susceptible to wind drift)
+   logical  , intent(inout) :: mobile
+   ! rate of compaction of snowpack due to wind drift, for the current column and layer
+   real(r8) , intent(out)   :: compaction_rate
    !
    ! !LOCAL VARIABLES:
    real(r8) :: Frho        ! Mobility density factor [-]
@@ -207,7 +211,8 @@ CONTAINS
 
    real(r8), parameter :: rho_min = 50._r8      ! wind drift compaction / minimum density [kg/m3]
    real(r8), parameter :: rho_max = 350._r8     ! wind drift compaction / maximum density [kg/m3]
-   real(r8), parameter :: drift_gs = 0.35e-3_r8 ! wind drift compaction / grain size (fixed value for now)
+   ! wind drift compaction / grain size (fixed value for now)
+   real(r8), parameter :: drift_gs = 0.35e-3_r8
    real(r8), parameter :: drift_sph = 1.0_r8    ! wind drift compaction / sphericity
    real(r8), parameter :: tau_ref = 48._r8 * 3600._r8  ! wind drift compaction / reference time [s]
 
@@ -424,7 +429,7 @@ CONTAINS
 
 
 
-   SUBROUTINE snowlayersdivide (lb,snl,z_soisno,dz_soisno,zi_soisno,wliq_soisno,wice_soisno,t_soisno)
+   SUBROUTINE snowlayersdivide(lb,snl,z_soisno,dz_soisno,zi_soisno,wliq_soisno,wice_soisno,t_soisno)
 
 !=======================================================================
 !  Original author: Yongjiu Dai, September 15, 1999

@@ -737,11 +737,13 @@ CONTAINS
 
 ! net ground heat flux into the surface and its temperature derivative
       IF (DEF_USE_SNICAR) THEN
-         hs = sabg_snow_lyr(lb) + emg*forc_frl - emg*stefnc*t_icesno(lb)**4 - (fseng+fevpg*htvp) +&
-              cpliq * pg_rain * (t_precip - t_icesno(lb)) + cpice * pg_snow * (t_precip - t_icesno(lb))
+         hs = sabg_snow_lyr(lb) + emg*forc_frl - emg*stefnc*t_icesno(lb)**4 - (fseng+fevpg*htvp) &
+            + cpliq * pg_rain * (t_precip - t_icesno(lb)) &
+            + cpice * pg_snow * (t_precip - t_icesno(lb))
       ELSE
-         hs = sabg + emg*forc_frl - emg*stefnc*t_icesno(lb)**4 - (fseng+fevpg*htvp) +&
-              cpliq * pg_rain * (t_precip - t_icesno(lb)) + cpice * pg_snow * (t_precip - t_icesno(lb))
+         hs = sabg + emg*forc_frl - emg*stefnc*t_icesno(lb)**4 - (fseng+fevpg*htvp) &
+            + cpliq * pg_rain * (t_precip - t_icesno(lb)) &
+            + cpice * pg_snow * (t_precip - t_icesno(lb))
       ENDIF
 
       dhsdT = - cgrnd - 4.*emg * stefnc * t_icesno(lb)**3 - cpliq * pg_rain - cpice * pg_snow
@@ -906,7 +908,8 @@ CONTAINS
        forc_us,  &
        forc_vs
 
-   integer, intent(in) :: imelt(maxsnl+1:nl_ice)  ! flag for: melting=1, freezing=2, nothing happened=0
+   ! flag for: melting=1, freezing=2, nothing happened=0
+   integer, intent(in) :: imelt(maxsnl+1:nl_ice)
    integer, intent(inout) :: snl       ! lower bound of array
 
    real(r8), intent(inout) :: &
@@ -1027,7 +1030,8 @@ CONTAINS
        qfros     , &! surface dew added to snow pack (mm h2o /s) [+]
        fiold(maxsnl+1:nl_ice)  ! fraction of ice relative to the total water
 
-   integer, intent(in) :: imelt(maxsnl+1:nl_ice)  ! flag for: melting=1, freezing=2, nothing happened=0
+   ! flag for: melting=1, freezing=2, nothing happened=0
+   integer, intent(in) :: imelt(maxsnl+1:nl_ice)
    integer, intent(inout) :: snl       ! lower bound of array
 
    real(r8), intent(inout) :: &
@@ -1047,17 +1051,18 @@ CONTAINS
    real(r8), intent(in) :: forc_vs
 
 ! Aerosol Fluxes (Jan. 07, 2023)
-   real(r8), intent(in) :: forc_aer ( 14 )  ! aerosol deposition from atmosphere model (grd,aer) [kg m-1 s-1]
+   ! aerosol deposition from atmosphere model (grd,aer) [kg m-1 s-1]
+   real(r8), intent(in) :: forc_aer ( 14 )
 
    real(r8), intent(inout) :: &
-        mss_bcpho (maxsnl+1:0), &! mass of hydrophobic BC in snow  (col,lyr) [kg]
-        mss_bcphi (maxsnl+1:0), &! mass of hydrophillic BC in snow (col,lyr) [kg]
-        mss_ocpho (maxsnl+1:0), &! mass of hydrophobic OC in snow  (col,lyr) [kg]
-        mss_ocphi (maxsnl+1:0), &! mass of hydrophillic OC in snow (col,lyr) [kg]
-        mss_dst1  (maxsnl+1:0), &! mass of dust species 1 in snow  (col,lyr) [kg]
-        mss_dst2  (maxsnl+1:0), &! mass of dust species 2 in snow  (col,lyr) [kg]
-        mss_dst3  (maxsnl+1:0), &! mass of dust species 3 in snow  (col,lyr) [kg]
-        mss_dst4  (maxsnl+1:0)   ! mass of dust species 4 in snow  (col,lyr) [kg]
+        mss_bcpho (maxsnl+1:0), &! mass of hydrophobic BC in snow  (lyr) [kg]
+        mss_bcphi (maxsnl+1:0), &! mass of hydrophillic BC in snow (lyr) [kg]
+        mss_ocpho (maxsnl+1:0), &! mass of hydrophobic OC in snow  (lyr) [kg]
+        mss_ocphi (maxsnl+1:0), &! mass of hydrophillic OC in snow (lyr) [kg]
+        mss_dst1  (maxsnl+1:0), &! mass of dust species 1 in snow  (lyr) [kg]
+        mss_dst2  (maxsnl+1:0), &! mass of dust species 2 in snow  (lyr) [kg]
+        mss_dst3  (maxsnl+1:0), &! mass of dust species 3 in snow  (lyr) [kg]
+        mss_dst4  (maxsnl+1:0)   ! mass of dust species 4 in snow  (lyr) [kg]
 ! Aerosol Fluxes (Jan. 07, 2023)
 
 !-------------------------- Local Variables ----------------------------

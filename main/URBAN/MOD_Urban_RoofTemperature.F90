@@ -70,7 +70,7 @@ CONTAINS
 !-------------------------- Dummy Arguments ----------------------------
    integer , intent(in) :: lb                          !lower bound of array
    real(r8), intent(in) :: deltim                      !seconds in a time step [second]
-   real(r8), intent(in) :: capr                        !tuning factor to turn first layer T into surface T
+   real(r8), intent(in) :: capr                        !tuning factor: turn 1st layer T to surface T
    real(r8), intent(in) :: cnfac                       !Crank Nicholson factor between 0 and 1
 
    real(r8), intent(in) :: cv_roof(1:nl_roof)          !heat capacity of urban roof [J/m3/K]
@@ -81,13 +81,13 @@ CONTAINS
    real(r8), intent(in) :: zi_roofsno(lb-1:nl_roof)    !interface depth [m]
 
    real(r8), intent(in) :: troof_inner                 !temperature at the roof inner surface [K]
-   real(r8), intent(in) :: lroof                       !atmospheric infrared (longwave) radiation [W/m2]
-   real(r8), intent(in) :: clroof                      !atmospheric infrared (longwave) radiation [W/m2]
+   real(r8), intent(in) :: lroof                       !atmospheric longwave radiation [W/m2]
+   real(r8), intent(in) :: clroof                      !atmospheric longwave radiation [W/m2]
    real(r8), intent(in) :: sabroof                     !solar radiation absorbed by roof [W/m2]
    real(r8), intent(in) :: fsenroof                    !sensible heat flux from roof [W/m2]
    real(r8), intent(in) :: fevproof                    !evaporation heat flux from roof [mm/s]
-   real(r8), intent(in) :: croof                       !deriv. of roof energy flux wrt to roof temp [w/m2/k]
-   real(r8), intent(in) :: htvp                        !latent heat of vapor of water (or sublimation) [j/kg]
+   real(r8), intent(in) :: croof                       !deriv. of roof energy flux to T [w/m2/k]
+   real(r8), intent(in) :: htvp                        !latent heat of vapor (or sublimation) [j/kg]
 
    real(r8), intent(inout) :: t_roofsno   (lb:nl_roof) !roof layers' temperature [K]
    real(r8), intent(inout) :: wice_roofsno(lb:nl_roof) !ice lens [kg/m2]
@@ -96,7 +96,7 @@ CONTAINS
    real(r8), intent(inout) :: snowdp_roof              !snow depth [m]
 
    real(r8), intent(out) :: sm_roof                    !rate of snowmelt [kg/(m2 s)]
-   real(r8), intent(out) :: xmf_roof                   !total latent heat of phase change of roof residual water
+   real(r8), intent(out) :: xmf_roof                   !total latent heat of phase change of roof
    real(r8), intent(out) :: fact(lb:nl_roof)           !used in computing tridiagonal matrix
    real(r8), intent(out) :: tkdz_roof                  !heat diffusion with inner room space
    integer , intent(out) :: imelt_roof(lb:nl_roof)     !flag for melting or freezing [-]
@@ -242,7 +242,8 @@ CONTAINS
 
       CALL meltf_urban (lb,1,deltim, &
                   fact(lb:1),brr(lb:1),hs,dhsdT, &
-                  t_roofsno_bef(lb:1),t_roofsno(lb:1),wliq_roofsno(lb:1),wice_roofsno(lb:1),imelt_roof(lb:1), &
+                  t_roofsno_bef(lb:1),t_roofsno(lb:1), &
+                  wliq_roofsno(lb:1),wice_roofsno(lb:1),imelt_roof(lb:1), &
                   scv_roof,snowdp_roof,sm_roof,xmf_roof)
 
    END SUBROUTINE UrbanRoofTem

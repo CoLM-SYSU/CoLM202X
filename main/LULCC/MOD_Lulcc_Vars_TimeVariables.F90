@@ -39,8 +39,8 @@ MODULE MOD_Lulcc_Vars_TimeVariables
    real(r8), allocatable :: sag_             (:)  !non dimensional snow age [-]
    real(r8), allocatable :: scv_             (:)  !snow cover, water equivalent [mm]
    real(r8), allocatable :: snowdp_          (:)  !snow depth [meter]
-   real(r8), allocatable :: fsno_            (:)  !fraction of snow cover on ground
-   real(r8), allocatable :: sigf_            (:)  !fraction of veg cover, excluding snow-covered veg [-]
+   real(r8), allocatable :: fsno_            (:)  !frac of snow cover on ground
+   real(r8), allocatable :: sigf_            (:)  !frac of veg cover, excluding snow-covered veg [-]
    real(r8), allocatable :: zwt_             (:)  !the depth to water table [m]
    real(r8), allocatable :: wa_              (:)  !water storage in aquifer [mm]
    real(r8), allocatable :: wdsrf_           (:)  !depth of surface water [mm]
@@ -81,7 +81,7 @@ MODULE MOD_Lulcc_Vars_TimeVariables
    real(r8), allocatable :: emis_            (:)  !averaged bulk surface emissivity
    real(r8), allocatable :: z0m_             (:)  !effective roughness [m]
    real(r8), allocatable :: displa_          (:)  !zero displacement height [m]
-   real(r8), allocatable :: zol_             (:)  !dimensionless height (z/L) used in Monin-Obukhov theory
+   real(r8), allocatable :: zol_             (:)  !dimensionless height (z/L) used in M-O theory
    real(r8), allocatable :: rib_             (:)  !bulk Richardson number in surface layer
    real(r8), allocatable :: ustar_           (:)  !u* in similarity theory [m/s]
    real(r8), allocatable :: qstar_           (:)  !q* in similarity theory [kg/kg]
@@ -99,7 +99,7 @@ MODULE MOD_Lulcc_Vars_TimeVariables
    real(r8), allocatable :: ldew_rain_p_     (:)  !depth of rain on foliage [mm]
    real(r8), allocatable :: ldew_snow_p_     (:)  !depth of snow on foliage [mm]
    real(r8), allocatable :: fwet_snow_p_     (:)  !vegetation snow fractional cover [-]
-   real(r8), allocatable :: sigf_p_          (:)  !fraction of veg cover, excluding snow-covered veg [-]
+   real(r8), allocatable :: sigf_p_          (:)  !frac of veg cover, excluding snow-covered veg [-]
 
    !TODO@yuan: to check the below for PC whether they are needed
    real(r8), allocatable :: tref_p_          (:)  !2 m height air temperature [kelvin]
@@ -978,15 +978,20 @@ IF (patchclass(np)==URBAN .and. patchclass_(np_)==URBAN) THEN
 
                      wliq_soisno(: ,np) = 0.
                      wliq_soisno(:1,np) = wliq_roofsno(:1,u )*froof(u)
-                     wliq_soisno(: ,np) = wliq_soisno (: ,np)+wliq_gpersno(: ,u)*(1-froof(u))*fgper(u)
-                     wliq_soisno(:1,np) = wliq_soisno (:1,np)+wliq_gimpsno(:1,u)*(1-froof(u))*(1-fgper(u))
+                     wliq_soisno(: ,np) = wliq_soisno (: ,np) &
+                                        + wliq_gpersno(: ,u )*(1-froof(u))*fgper(u)
+                     wliq_soisno(:1,np) = wliq_soisno (:1,np) &
+                                        + wliq_gimpsno(:1,u )*(1-froof(u))*(1-fgper(u))
 
                      wice_soisno(: ,np) = 0.
                      wice_soisno(:1,np) = wice_roofsno(:1,u )*froof(u)
-                     wice_soisno(: ,np) = wice_soisno (: ,np)+wice_gpersno(: ,u)*(1-froof(u))*fgper(u)
-                     wice_soisno(:1,np) = wice_soisno (:1,np)+wice_gimpsno(:1,u)*(1-froof(u))*(1-fgper(u))
+                     wice_soisno(: ,np) = wice_soisno (: ,np) &
+                                        + wice_gpersno(: ,u )*(1-froof(u))*fgper(u)
+                     wice_soisno(:1,np) = wice_soisno (:1,np) &
+                                        + wice_gimpsno(:1,u )*(1-froof(u))*(1-fgper(u))
 
-                     scv(np) = scv_roof(u)*froof(u) + scv_gper(u)*(1-froof(u))*fgper(u) + scv_gimp(u)*(1-froof(u))*(1-fgper(u))
+                     scv(np) = scv_roof(u)*froof(u) + scv_gper(u)*(1-froof(u))*fgper(u) &
+                             + scv_gimp(u)*(1-froof(u))*(1-fgper(u))
 ENDIF
 #endif
                      np = np + 1

@@ -21,8 +21,9 @@ MODULE MOD_Aerosol
 !-----------------------------------------------------------------------
 
    logical,  parameter :: use_extrasnowlayers = .false.
-   real(r8), parameter :: snw_rds_min = 54.526_r8          ! minimum allowed snow effective radius (also "fresh snow" value) [microns]
-   real(r8), parameter :: fresh_snw_rds_max = 204.526_r8   ! maximum warm fresh snow effective radius [microns]
+   real(r8), parameter :: snw_rds_min = 54.526_r8         ! minimum allowed snow effective radius
+                                                          ! (also "fresh snow" value) [microns]
+   real(r8), parameter :: fresh_snw_rds_max = 204.526_r8  ! maximum warm fresh snow effective radius
 
    character(len=256)  :: file_aerosol
 
@@ -59,33 +60,34 @@ CONTAINS
 
    ! !ARGUMENTS:
    !
-   real(r8),intent(in)     ::  dtime            !  seconds in a time step [second]
-   integer, intent(in)     ::  snl              !  number of snow layers
+   real(r8),intent(in)     ::  dtime            ! seconds in a time step [second]
+   integer, intent(in)     ::  snl              ! number of snow layers
 
-   logical,  intent(in)    ::  do_capsnow       !  true => do snow capping
-   real(r8), intent(in)    ::  h2osno_ice    ( maxsnl+1:0 ) !  ice lens (kg/m2)
-   real(r8), intent(in)    ::  h2osno_liq    ( maxsnl+1:0 ) !  liquid water (kg/m2)
-   real(r8), intent(in)    ::  qflx_snwcp_ice   !  excess snowfall due to snow capping (mm H2O /s) [+]
+   logical,  intent(in)    ::  do_capsnow       ! true => do snow capping
+   real(r8), intent(in)    ::  h2osno_ice    ( maxsnl+1:0 ) ! ice lens (kg/m2)
+   real(r8), intent(in)    ::  h2osno_liq    ( maxsnl+1:0 ) ! liquid water (kg/m2)
+   real(r8), intent(in)    ::  qflx_snwcp_ice   ! excess snowfall due to snow capping (mm H2O /s)
 
-   real(r8), intent(inout) ::  snw_rds       ( maxsnl+1:0 ) !  effective snow grain radius (col,lyr) [microns, m^-6]
+   real(r8), intent(inout) ::  snw_rds       ( maxsnl+1:0 ) ! effective snow grain radius
+                                                            ! [microns, m^-6]
 
-   real(r8), intent(inout) ::  mss_bcpho     ( maxsnl+1:0 ) !  mass of hydrophobic BC in snow (col,lyr) [kg]
-   real(r8), intent(inout) ::  mss_bcphi     ( maxsnl+1:0 ) !  mass of hydrophillic BC in snow (col,lyr) [kg]
-   real(r8), intent(inout) ::  mss_ocpho     ( maxsnl+1:0 ) !  mass of hydrophobic OC in snow (col,lyr) [kg]
-   real(r8), intent(inout) ::  mss_ocphi     ( maxsnl+1:0 ) !  mass of hydrophillic OC in snow (col,lyr) [kg]
-   real(r8), intent(inout) ::  mss_dst1      ( maxsnl+1:0 ) !  mass of dust species 1 in snow (col,lyr) [kg]
-   real(r8), intent(inout) ::  mss_dst2      ( maxsnl+1:0 ) !  mass of dust species 2 in snow (col,lyr) [kg]
-   real(r8), intent(inout) ::  mss_dst3      ( maxsnl+1:0 ) !  mass of dust species 3 in snow (col,lyr) [kg]
-   real(r8), intent(inout) ::  mss_dst4      ( maxsnl+1:0 ) !  mass of dust species 4 in snow (col,lyr) [kg]
+   real(r8), intent(inout) ::  mss_bcpho     ( maxsnl+1:0 ) ! mass of hydrophobic BC in snow [kg]
+   real(r8), intent(inout) ::  mss_bcphi     ( maxsnl+1:0 ) ! mass of hydrophillic BC in snow [kg]
+   real(r8), intent(inout) ::  mss_ocpho     ( maxsnl+1:0 ) ! mass of hydrophobic OC in snow [kg]
+   real(r8), intent(inout) ::  mss_ocphi     ( maxsnl+1:0 ) ! mass of hydrophillic OC in snow [kg]
+   real(r8), intent(inout) ::  mss_dst1      ( maxsnl+1:0 ) ! mass of dust species 1 in snow [kg]
+   real(r8), intent(inout) ::  mss_dst2      ( maxsnl+1:0 ) ! mass of dust species 2 in snow [kg]
+   real(r8), intent(inout) ::  mss_dst3      ( maxsnl+1:0 ) ! mass of dust species 3 in snow [kg]
+   real(r8), intent(inout) ::  mss_dst4      ( maxsnl+1:0 ) ! mass of dust species 4 in snow [kg]
 
-   real(r8), intent(out)   ::  mss_cnc_bcphi ( maxsnl+1:0 ) !  mass concentration of BC species 1 (col,lyr) [kg/kg]
-   real(r8), intent(out)   ::  mss_cnc_bcpho ( maxsnl+1:0 ) !  mass concentration of BC species 2 (col,lyr) [kg/kg]
-   real(r8), intent(out)   ::  mss_cnc_ocphi ( maxsnl+1:0 ) !  mass concentration of OC species 1 (col,lyr) [kg/kg]
-   real(r8), intent(out)   ::  mss_cnc_ocpho ( maxsnl+1:0 ) !  mass concentration of OC species 2 (col,lyr) [kg/kg]
-   real(r8), intent(out)   ::  mss_cnc_dst1  ( maxsnl+1:0 ) !  mass concentration of dust species 1 (col,lyr) [kg/kg]
-   real(r8), intent(out)   ::  mss_cnc_dst2  ( maxsnl+1:0 ) !  mass concentration of dust species 2 (col,lyr) [kg/kg]
-   real(r8), intent(out)   ::  mss_cnc_dst3  ( maxsnl+1:0 ) !  mass concentration of dust species 3 (col,lyr) [kg/kg]
-   real(r8), intent(out)   ::  mss_cnc_dst4  ( maxsnl+1:0 ) !  mass concentration of dust species 4 (col,lyr) [kg/kg]
+   real(r8), intent(out)   ::  mss_cnc_bcphi ( maxsnl+1:0 ) ! mass concentration of BC 1 [kg/kg]
+   real(r8), intent(out)   ::  mss_cnc_bcpho ( maxsnl+1:0 ) ! mass concentration of BC 2 [kg/kg]
+   real(r8), intent(out)   ::  mss_cnc_ocphi ( maxsnl+1:0 ) ! mass concentration of OC 1 [kg/kg]
+   real(r8), intent(out)   ::  mss_cnc_ocpho ( maxsnl+1:0 ) ! mass concentration of OC 2 [kg/kg]
+   real(r8), intent(out)   ::  mss_cnc_dst1  ( maxsnl+1:0 ) ! mass concentration of dust 1 [kg/kg]
+   real(r8), intent(out)   ::  mss_cnc_dst2  ( maxsnl+1:0 ) ! mass concentration of dust 2 [kg/kg]
+   real(r8), intent(out)   ::  mss_cnc_dst3  ( maxsnl+1:0 ) ! mass concentration of dust 3 [kg/kg]
+   real(r8), intent(out)   ::  mss_cnc_dst4  ( maxsnl+1:0 ) ! mass concentration of dust 4 [kg/kg]
 
    ! !LOCAL VARIABLES:
    integer  :: c,j             ! indices
@@ -137,7 +139,6 @@ CONTAINS
 
          ELSE
             ! 01/10/2023, yuan: set empty snow layers to snw_rds_min
-            !snw_rds(j)       = 0._r8
             snw_rds(j)       = snw_rds_min
 
             mss_bcpho(j)     = 0._r8
@@ -181,16 +182,16 @@ CONTAINS
    real(r8),intent(in)  :: dtime           ! seconds in a time step [second]
    integer, intent(in)  :: snl             ! number of snow layers
 
-   real(r8), intent(in) :: forc_aer (14 )  ! aerosol deposition from atmosphere model (grd,aer) [kg m-1 s-1]
+   real(r8), intent(in) :: forc_aer (14 )  ! aerosol deposition from atmosphere [kg m-1 s-1]
 
-   real(r8), intent(inout) :: mss_bcphi  (maxsnl+1:0 )  ! hydrophillic BC mass in snow (col,lyr) [kg]
-   real(r8), intent(inout) :: mss_bcpho  (maxsnl+1:0 )  ! hydrophobic  BC mass in snow (col,lyr) [kg]
-   real(r8), intent(inout) :: mss_ocphi  (maxsnl+1:0 )  ! hydrophillic OC mass in snow (col,lyr) [kg]
-   real(r8), intent(inout) :: mss_ocpho  (maxsnl+1:0 )  ! hydrophobic  OC mass in snow (col,lyr) [kg]
-   real(r8), intent(inout) :: mss_dst1   (maxsnl+1:0 )  ! mass of dust species 1 in snow (col,lyr) [kg]
-   real(r8), intent(inout) :: mss_dst2   (maxsnl+1:0 )  ! mass of dust species 2 in snow (col,lyr) [kg]
-   real(r8), intent(inout) :: mss_dst3   (maxsnl+1:0 )  ! mass of dust species 3 in snow (col,lyr) [kg]
-   real(r8), intent(inout) :: mss_dst4   (maxsnl+1:0 )  ! mass of dust species 4 in snow (col,lyr) [kg]
+   real(r8), intent(inout) :: mss_bcphi  (maxsnl+1:0 )  ! hydrophillic BC mass in snow [kg]
+   real(r8), intent(inout) :: mss_bcpho  (maxsnl+1:0 )  ! hydrophobic  BC mass in snow [kg]
+   real(r8), intent(inout) :: mss_ocphi  (maxsnl+1:0 )  ! hydrophillic OC mass in snow [kg]
+   real(r8), intent(inout) :: mss_ocpho  (maxsnl+1:0 )  ! hydrophobic  OC mass in snow [kg]
+   real(r8), intent(inout) :: mss_dst1   (maxsnl+1:0 )  ! mass of dust species 1 in snow [kg]
+   real(r8), intent(inout) :: mss_dst2   (maxsnl+1:0 )  ! mass of dust species 2 in snow [kg]
+   real(r8), intent(inout) :: mss_dst3   (maxsnl+1:0 )  ! mass of dust species 3 in snow [kg]
+   real(r8), intent(inout) :: mss_dst4   (maxsnl+1:0 )  ! mass of dust species 4 in snow [kg]
 
    ! !LOCAL VARIABLES:
    real(r8) :: flx_bc_dep          ! total BC deposition (col) [kg m-2 s-1]
@@ -307,10 +308,12 @@ CONTAINS
 
       IF (DEF_Aerosol_Clim) THEN
          ! climatology data
-         file_aerosol = trim(DEF_dir_runtime) // '/aerosol/aerosoldep_monthly_2000_mean_0.9x1.25_c090529.nc'
+         file_aerosol = trim(DEF_dir_runtime) // &
+            '/aerosol/aerosoldep_monthly_2000_mean_0.9x1.25_c090529.nc'
       ELSE
          ! yearly change data
-         file_aerosol = trim(DEF_dir_runtime) // '/aerosol/aerosoldep_monthly_1849-2001_0.9x1.25_c090529.nc'
+         file_aerosol = trim(DEF_dir_runtime) // &
+            '/aerosol/aerosoldep_monthly_1849-2001_0.9x1.25_c090529.nc'
       ENDIF
 
       CALL ncio_read_bcast_serial (file_aerosol, 'lat', lat)

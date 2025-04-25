@@ -98,9 +98,9 @@ CONTAINS
       IF (allocated(lat)) deallocate(lat)
 
       IF (p_is_worker) THEN
-         IF (numpatch > 0)  allocate(pdrice2_tmp   (numpatch))
-         IF (numpft   > 0)  allocate(plantdate_tmp (numpft))
-         IF (numpft   > 0)  allocate(fertnitro_tmp (numpft))
+         IF (numpatch > 0)  allocate(pdrice2_tmp    (numpatch))
+         IF (numpft   > 0)  allocate(plantdate_tmp    (numpft))
+         IF (numpft   > 0)  allocate(fertnitro_tmp    (numpft))
          IF (numpft   > 0)  allocate(irrig_method_tmp (numpft))
       ENDIF
 
@@ -135,7 +135,8 @@ CONTAINS
       DO cft = 15, 78
          write(cx, '(i2.2)') cft
          IF (p_is_io) THEN
-            CALL ncio_read_block_time (file_crop, 'PLANTDATE_CFT_'//trim(cx), grid_crop, 1, f_xy_crop)
+            CALL ncio_read_block_time (file_crop, &
+               'PLANTDATE_CFT_'//trim(cx), grid_crop, 1, f_xy_crop)
          ENDIF
 
          CALL mg2pft_crop%grid2pset (f_xy_crop, plantdate_tmp)
@@ -164,7 +165,8 @@ CONTAINS
       DO cft = 15, 78
          write(cx, '(i2.2)') cft
          IF (p_is_io) THEN
-            CALL ncio_read_block_time (file_crop, 'CONST_FERTNITRO_CFT_'//trim(cx), grid_crop, 1, f_xy_crop)
+            CALL ncio_read_block_time (file_crop, &
+               'CONST_FERTNITRO_CFT_'//trim(cx), grid_crop, 1, f_xy_crop)
          ENDIF
 
          CALL mg2pft_crop%grid2pset (f_xy_crop, fertnitro_tmp)

@@ -83,8 +83,10 @@ CONTAINS
          IF(t_precip - tfrz > 3.0)THEN
             flfall = 1.0      ! fraction of liquid water within falling precip
          ELSEIF (t_precip - tfrz >= -2.0)THEN
-            flfall = max(0.0, 1.0 - 1.0/(1.0+5.00e-5*exp(2.0*(t_precip-tfrz+4.))))   !Figure 5c of Behrangi et al. (2018)
-            !* flfall = max(0.0, 1.0 - 1.0/(1.0+6.99e-5*exp(2.0*(t_precip-tfrz+3.97)))) !Equation 1 of Wang et al. (2019)
+            !Figure 5c of Behrangi et al. (2018)
+            flfall = max(0.0, 1.0 - 1.0/(1.0+5.00e-5*exp(2.0*(t_precip-tfrz+4.))))
+            !Equation 1 of Wang et al. (2019)
+            !* flfall = max(0.0, 1.0 - 1.0/(1.0+6.99e-5*exp(2.0*(t_precip-tfrz+3.97))))
          ELSE
             flfall = 0.0
          ENDIF
@@ -200,8 +202,9 @@ CONTAINS
 
       forc_wind = sqrt(forc_us**2 + forc_vs**2)
       IF (forc_wind > 0.1) THEN
-      ! Density offset for wind-driven compaction, initial ideas based on Liston et. al (2007) J. Glaciology,
-      ! 53(181), 241-255. Modified for a continuous wind impact and slightly more sensitive to wind - Andrew Slater, 2016
+      ! Density offset for wind-driven compaction, initial ideas based on Liston et. al (2007) J.
+      ! Glaciology, 53(181), 241-255. Modified for a continuous wind impact and slightly more
+      ! sensitive to wind - Andrew Slater, 2016
          bifall = bifall + (266.861 * ((1.0 + TANH(forc_wind/5.0))/2.0)**8.8)
       ENDIF
 
