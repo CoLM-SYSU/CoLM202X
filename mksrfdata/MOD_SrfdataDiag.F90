@@ -50,7 +50,7 @@ MODULE MOD_SrfdataDiag
 CONTAINS
 
    ! ------ SUBROUTINE ------
-   SUBROUTINE srfdata_diag_init (dir_landdata)
+   SUBROUTINE srfdata_diag_init (dir_landdata, lulcc_call)
 
    USE MOD_SPMD_Task
    USE MOD_LandElm
@@ -68,6 +68,7 @@ CONTAINS
    IMPLICIT NONE
 
    character(len=256), intent(in) :: dir_landdata
+   logical, optional , intent(in) :: lulcc_call   ! whether it is a lulcc CALL
 
    ! Local Variables
    character(len=256) :: landdir, landname
@@ -82,15 +83,19 @@ CONTAINS
 
       CALL srf_concat%set (gdiag)
 
+      IF ( present(lulcc_call) ) CALL m_elm2diag%forc_free_mem
       CALL m_elm2diag%build_arealweighted (gdiag, landelm)
 
+      IF ( present(lulcc_call) ) CALL m_patch2diag%forc_free_mem
       CALL m_patch2diag%build_arealweighted (gdiag, landpatch)
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
+      IF ( present(lulcc_call) ) CALL m_pft2diag%forc_free_mem
       CALL m_pft2diag%build_arealweighted (gdiag, landpft)
 #endif
 
 #ifdef URBAN_MODEL
+      IF ( present(lulcc_call) ) CALL m_urb2diag%forc_free_mem
       CALL m_urb2diag%build_arealweighted (gdiag, landurban)
 #endif
 

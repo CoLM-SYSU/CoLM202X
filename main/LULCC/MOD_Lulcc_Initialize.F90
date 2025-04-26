@@ -134,7 +134,7 @@ CONTAINS
 #else
       CALL gdiag%define_by_ndims(3600,1800)
 #endif
-      CALL srfdata_diag_init (dir_landdata)
+      CALL srfdata_diag_init (dir_landdata,lulcc_call=.true.)
 #endif
 
       ! --------------------------------------------------------------------
