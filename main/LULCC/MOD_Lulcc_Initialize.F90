@@ -73,8 +73,8 @@ CONTAINS
       jday = idate(2)
 
       CALL Init_GlobalVars
-      CAll Init_LC_Const
-      CAll Init_PFT_Const
+      CALL Init_LC_Const
+      CALL Init_PFT_Const
 
       ! deallocate pixelset and mesh data of previous year
       CALL mesh_free_mem
