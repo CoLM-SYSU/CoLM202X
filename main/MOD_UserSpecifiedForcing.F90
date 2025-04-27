@@ -848,7 +848,6 @@ CONTAINS
                      ENDIF
                   CASE ('CMFDv2') ! CMFDv2 forcing
 
-                     forcn(4)%blk(ib,jb)%val(i,j)=forcn(4)%blk(ib,jb)%val(i,j)/3600.
                      CALL qsadv (forcn(1)%blk(ib,jb)%val(i,j), forcn(3)%blk(ib,jb)%val(i,j), &
                         es,esdT,qsat_tmp,dqsat_tmpdT)
                      IF (qsat_tmp < forcn(2)%blk(ib,jb)%val(i,j)) THEN
