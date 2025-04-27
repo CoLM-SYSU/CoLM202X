@@ -478,7 +478,7 @@ PROGRAM CoLM
             CALL hist_final    ()
 
             ! Call LULCC driver
-            CALL LulccDriver (casename,dir_landdata,dir_restart,idate,greenwich)
+            CALL LulccDriver (casename, dir_landdata, dir_restart, idate, greenwich)
 
             ! Allocate Forcing and Fluxes variable of next year
             CALL allocate_1D_Forcing
