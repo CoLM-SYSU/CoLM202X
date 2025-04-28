@@ -162,109 +162,135 @@ CONTAINS
 
          ! (1) read in the volumetric fraction of quartz within mineral soil
          lndname = trim(landdir)//'/vf_quartz_mineral_s_l'//trim(c)//'_patches.nc'
-         CALL ncio_read_vector (lndname, 'vf_quartz_mineral_s_l'//trim(c)//'_patches', landpatch, soil_vf_quartz_mineral_s_l)
+         CALL ncio_read_vector (lndname, 'vf_quartz_mineral_s_l'//trim(c)//'_patches', &
+                                landpatch, soil_vf_quartz_mineral_s_l)
 
          ! (2) read in the volumetric fraction of gravels
          lndname = trim(landdir)//'/vf_gravels_s_l'//trim(c)//'_patches.nc'
-         CALL ncio_read_vector (lndname, 'vf_gravels_s_l'//trim(c)//'_patches', landpatch, soil_vf_gravels_s_l)
+         CALL ncio_read_vector (lndname, 'vf_gravels_s_l'//trim(c)//'_patches', &
+                                landpatch, soil_vf_gravels_s_l)
 
          ! (3) read in the volumetric fraction of organic matter
          lndname = trim(landdir)//'/vf_om_s_l'//trim(c)//'_patches.nc'
-         CALL ncio_read_vector (lndname, 'vf_om_s_l'//trim(c)//'_patches', landpatch, soil_vf_om_s_l)
+         CALL ncio_read_vector (lndname, 'vf_om_s_l'//trim(c)//'_patches', &
+                                landpatch, soil_vf_om_s_l)
 
          ! (4) read in the volumetric fraction of sand
          lndname = trim(landdir)//'/vf_sand_s_l'//trim(c)//'_patches.nc'
-         CALL ncio_read_vector (lndname, 'vf_sand_s_l'//trim(c)//'_patches', landpatch, soil_vf_sand_s_l)
+         CALL ncio_read_vector (lndname, 'vf_sand_s_l'//trim(c)//'_patches', &
+                                landpatch, soil_vf_sand_s_l)
 
          ! (5) read in the gravimetric fraction of gravels
          lndname = trim(landdir)//'/wf_gravels_s_l'//trim(c)//'_patches.nc'
-         CALL ncio_read_vector (lndname, 'wf_gravels_s_l'//trim(c)//'_patches', landpatch, soil_wf_gravels_s_l)
+         CALL ncio_read_vector (lndname, 'wf_gravels_s_l'//trim(c)//'_patches', &
+                                landpatch, soil_wf_gravels_s_l)
 
          ! (6) read in the gravimetric fraction of sand
          lndname = trim(landdir)//'/wf_sand_s_l'//trim(c)//'_patches.nc'
-         CALL ncio_read_vector (lndname, 'wf_sand_s_l'//trim(c)//'_patches', landpatch, soil_wf_sand_s_l)
+         CALL ncio_read_vector (lndname, 'wf_sand_s_l'//trim(c)//'_patches', &
+                                landpatch, soil_wf_sand_s_l)
 
          ! (7) read in the saturated water content [cm3/cm3]
          lndname = trim(landdir)//'/theta_s_l'//trim(c)//'_patches.nc'
-         CALL ncio_read_vector (lndname, 'theta_s_l'//trim(c)//'_patches', landpatch, soil_theta_s_l)
+         CALL ncio_read_vector (lndname, 'theta_s_l'//trim(c)//'_patches', &
+                                landpatch, soil_theta_s_l)
 
          ! (8) read in the matric potential at saturation [cm]
          lndname = trim(landdir)//'/psi_s_l'//trim(c)//'_patches.nc'
-         CALL ncio_read_vector (lndname, 'psi_s_l'//trim(c)//'_patches', landpatch, soil_psi_s_l)
+         CALL ncio_read_vector (lndname, 'psi_s_l'//trim(c)//'_patches', &
+                                landpatch, soil_psi_s_l)
 
          ! (9) read in the pore size distribution index [dimensionless]
          lndname = trim(landdir)//'/lambda_l'//trim(c)//'_patches.nc'
-         CALL ncio_read_vector (lndname, 'lambda_l'//trim(c)//'_patches', landpatch, soil_lambda_l)
+         CALL ncio_read_vector (lndname, 'lambda_l'//trim(c)//'_patches', &
+                                landpatch, soil_lambda_l)
 
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
          ! (10) read in residual water content [cm3/cm3]
          lndname = trim(landdir)//'/theta_r_l'//trim(c)//'_patches.nc'
-         CALL ncio_read_vector (lndname, 'theta_r_l'//trim(c)//'_patches', landpatch, soil_theta_r_l)
+         CALL ncio_read_vector (lndname, 'theta_r_l'//trim(c)//'_patches', &
+                                landpatch, soil_theta_r_l)
 
          ! (11) read in alpha in VGM model
          lndname = trim(landdir)//'/alpha_vgm_l'//trim(c)//'_patches.nc'
-         CALL ncio_read_vector (lndname, 'alpha_vgm_l'//trim(c)//'_patches', landpatch, soil_alpha_vgm_l)
+         CALL ncio_read_vector (lndname, 'alpha_vgm_l'//trim(c)//'_patches', &
+                                landpatch, soil_alpha_vgm_l)
 
          ! (12) read in L in VGM model
          lndname = trim(landdir)//'/L_vgm_l'//trim(c)//'_patches.nc'
-         CALL ncio_read_vector (lndname, 'L_vgm_l'//trim(c)//'_patches', landpatch, soil_L_vgm_l)
+         CALL ncio_read_vector (lndname, 'L_vgm_l'//trim(c)//'_patches', &
+                                landpatch, soil_L_vgm_l)
 
          ! (13) read in n in VGM model
          lndname = trim(landdir)//'/n_vgm_l'//trim(c)//'_patches.nc'
-         CALL ncio_read_vector (lndname, 'n_vgm_l'//trim(c)//'_patches', landpatch, soil_n_vgm_l)
+         CALL ncio_read_vector (lndname, 'n_vgm_l'//trim(c)//'_patches', &
+                                landpatch, soil_n_vgm_l)
 #endif
 
          ! (14) read in the saturated hydraulic conductivity [cm/day]
          lndname = trim(landdir)//'/k_s_l'//trim(c)//'_patches.nc'
-         CALL ncio_read_vector (lndname, 'k_s_l'//trim(c)//'_patches', landpatch, soil_k_s_l)
+         CALL ncio_read_vector (lndname, 'k_s_l'//trim(c)//'_patches', &
+                                landpatch, soil_k_s_l)
 
          ! (15) read in the heat capacity of soil solids [J/(m3 K)]
          lndname = trim(landdir)//'/csol_l'//trim(c)//'_patches.nc'
-         CALL ncio_read_vector (lndname, 'csol_l'//trim(c)//'_patches', landpatch, soil_csol_l)
+         CALL ncio_read_vector (lndname, 'csol_l'//trim(c)//'_patches', &
+                                landpatch, soil_csol_l)
 
          ! (16) read in the thermal conductivity of unfrozen saturated soil [W/m-K]
          lndname = trim(landdir)//'/tksatu_l'//trim(c)//'_patches.nc'
-         CALL ncio_read_vector (lndname, 'tksatu_l'//trim(c)//'_patches', landpatch, soil_tksatu_l)
+         CALL ncio_read_vector (lndname, 'tksatu_l'//trim(c)//'_patches', &
+                                landpatch, soil_tksatu_l)
 
          ! (17) read in the thermal conductivity of frozen saturated soil [W/m-K]
          lndname = trim(landdir)//'/tksatf_l'//trim(c)//'_patches.nc'
-         CALL ncio_read_vector (lndname, 'tksatf_l'//trim(c)//'_patches', landpatch, soil_tksatf_l)
+         CALL ncio_read_vector (lndname, 'tksatf_l'//trim(c)//'_patches', &
+                                landpatch, soil_tksatf_l)
 
          ! (18) read in the thermal conductivity for dry soil [W/(m-K)]
          lndname = trim(landdir)//'/tkdry_l'//trim(c)//'_patches.nc'
-         CALL ncio_read_vector (lndname, 'tkdry_l'//trim(c)//'_patches', landpatch, soil_tkdry_l)
+         CALL ncio_read_vector (lndname, 'tkdry_l'//trim(c)//'_patches', &
+                                landpatch, soil_tkdry_l)
 
          ! (19) read in the thermal conductivity of solid soil [W/m-K]
          lndname = trim(landdir)//'/k_solids_l'//trim(c)//'_patches.nc'
-         CALL ncio_read_vector (lndname, 'k_solids_l'//trim(c)//'_patches', landpatch, soil_k_solids_l)
+         CALL ncio_read_vector (lndname, 'k_solids_l'//trim(c)//'_patches', &
+                                landpatch, soil_k_solids_l)
 
          ! (20) read in the parameter alpha in the Balland V. and P. A. Arp (2005) model
          lndname = trim(landdir)//'/BA_alpha_l'//trim(c)//'_patches.nc'
-         CALL ncio_read_vector (lndname, 'BA_alpha_l'//trim(c)//'_patches', landpatch, soil_BA_alpha_l)
+         CALL ncio_read_vector (lndname, 'BA_alpha_l'//trim(c)//'_patches', &
+                                landpatch, soil_BA_alpha_l)
 
          ! (21) read in the parameter beta in the Balland V. and P. A. Arp (2005) model
          lndname = trim(landdir)//'/BA_beta_l'//trim(c)//'_patches.nc'
-         CALL ncio_read_vector (lndname, 'BA_beta_l'//trim(c)//'_patches', landpatch, soil_BA_beta_l)
+         CALL ncio_read_vector (lndname, 'BA_beta_l'//trim(c)//'_patches', &
+                                landpatch, soil_BA_beta_l)
 
          ! (22) read in the OM density (kg/m3)
          lndname = trim(landdir)//'/OM_density_s_l'//trim(c)//'_patches.nc'
-         CALL ncio_read_vector (lndname, 'OM_density_s_l'//trim(c)//'_patches', landpatch, soil_OM_density_s_l)
+         CALL ncio_read_vector (lndname, 'OM_density_s_l'//trim(c)//'_patches', &
+                                landpatch, soil_OM_density_s_l)
 
          ! (23) read in the bulk density of soil (kg/m3)
          lndname = trim(landdir)//'/BD_all_s_l'//trim(c)//'_patches.nc'
-         CALL ncio_read_vector (lndname, 'BD_all_s_l'//trim(c)//'_patches', landpatch, soil_BD_all_s_l)
+         CALL ncio_read_vector (lndname, 'BD_all_s_l'//trim(c)//'_patches', &
+                                landpatch, soil_BD_all_s_l)
 
          ! (24) read in the volumetric fraction of clay
          lndname = trim(landdir)//'/vf_clay_s_l'//trim(c)//'_patches.nc'
-         CALL ncio_read_vector (lndname, 'vf_clay_s_l'//trim(c)//'_patches', landpatch, soil_vf_clay_s_l, defval = 0.1)
+         CALL ncio_read_vector (lndname, 'vf_clay_s_l'//trim(c)//'_patches', &
+                                landpatch, soil_vf_clay_s_l, defval = 0.1)
 
          ! (25) read in the gravimetric fraction of clay
          lndname = trim(landdir)//'/wf_clay_s_l'//trim(c)//'_patches.nc'
-         CALL ncio_read_vector (lndname, 'wf_clay_s_l'//trim(c)//'_patches', landpatch, soil_wf_clay_s_l, defval = 0.1)
+         CALL ncio_read_vector (lndname, 'wf_clay_s_l'//trim(c)//'_patches', &
+                                landpatch, soil_wf_clay_s_l, defval = 0.1)
 
          ! (26) read in the gravimetric fraction of om
          lndname = trim(landdir)//'/wf_om_s_l'//trim(c)//'_patches.nc'
-         CALL ncio_read_vector (lndname, 'wf_om_s_l'//trim(c)//'_patches', landpatch, soil_wf_om_s_l, defval = 0.01)
+         CALL ncio_read_vector (lndname, 'wf_om_s_l'//trim(c)//'_patches', &
+                                landpatch, soil_wf_om_s_l, defval = 0.01)
 
 #endif
 
@@ -455,7 +481,8 @@ CONTAINS
          ENDIF
       ENDIF
 
-      ! Soil reflectance of broadband of visible(_v) and near-infrared(_n) of the saturated(_s) and dry(_d) soil
+      ! Soil reflectance of broadband of visible(_v) and near-infrared(_n) of
+      ! the saturated(_s) and dry(_d) soil
       ! SCHEME 1: Guessed soil color type according to land cover classes
       IF (DEF_SOIL_REFL_SCHEME .eq. 1) THEN
          IF (p_is_worker) THEN

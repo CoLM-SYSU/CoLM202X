@@ -111,7 +111,7 @@ CONTAINS
       allocate (timelog  (NVAR))
       allocate (tintalgo (NVAR))
 
-      solarin_all_band = DEF_forcing%solarin_all_band ! whether solar radiation in all bands is available
+      solarin_all_band = DEF_forcing%solarin_all_band ! whether solar radiation in all bands
       HEIGHT_mode      = DEF_forcing%HEIGHT_mode      ! observation height mode
       HEIGHT_V         = DEF_forcing%HEIGHT_V         ! observation height of wind speed
       HEIGHT_T         = DEF_forcing%HEIGHT_T         ! observation height of air temperature
@@ -127,7 +127,7 @@ CONTAINS
       leapyear         = DEF_forcing%leapyear         ! whether leapyear calendar
       data2d           = DEF_forcing%data2d           ! whether data in 2 dimension (lon, lat)
       hightdim         = DEF_forcing%hightdim         ! whether have "z" dimension (height)
-      dim2d            = DEF_forcing%dim2d            ! whether lat/lon value in 2 dimension (lon, lat)
+      dim2d            = DEF_forcing%dim2d            ! whether lat/lon in 2 dimension (lon,lat)
 
       latname          = DEF_forcing%latname          ! dimension name of latitude
       lonname          = DEF_forcing%lonname          ! dimension name of longitude
@@ -178,9 +178,9 @@ CONTAINS
 
       !References:
       !-------------------
-         !---Sheffield, J., G. Goteti, and E. F. Wood, 2006: Development of a 50-year high-resolution
-         !   global dataset of meteorological forcings for land surface modeling J. Climate, 19(13),
-         !   3088-3111.
+         !---Sheffield, J., G. Goteti, and E. F. Wood, 2006: Development of a 50-year
+         !   high-resolution global dataset of meteorological forcings for land surface modeling J.
+         !   Climate, 19(13), 3088-3111.
 
       !REVISION HISTORY
       !----------------
@@ -218,8 +218,8 @@ CONTAINS
 
       !References:
       !-------------------
-         !---Qian T., and co-authors, 2006: Simulation of Global Land Surface Conditions from 1948 to 2004.
-         !   Part I: Forcing Data and Evaluations. J. Hydrometeorol., 7, 953-975.
+         !---Qian T., and co-authors, 2006: Simulation of Global Land Surface Conditions from 1948
+         !   to 2004.  Part I: Forcing Data and Evaluations. J. Hydrometeorol., 7, 953-975.
 
       !REVISION HISTORY
       !----------------
@@ -279,14 +279,15 @@ CONTAINS
 
       !References:
       !-------------------
-         !---Muñoz-Sabater, J., Dutra, E., Agustí-Panareda, A., Albergel, C., Arduini, G., Balsamo, G., Boussetta, S.,
-         !   Choulga, M., Harrigan, S., Hersbach, H. and Martens, B., 2021. ERA5-Land:
-         !   A state-of-the-art global reanalysis dataset for land applications. Earth System
-         !   Science Data, 13(9), pp.4349-4383.
+         !---Muñoz-Sabater, J., Dutra, E., Agustí-Panareda, A., Albergel, C., Arduini, G., Balsamo,
+         !   G., Boussetta, S., Choulga, M., Harrigan, S., Hersbach, H. and Martens, B., 2021.
+         !   ERA5-Land: A state-of-the-art global reanalysis dataset for land applications. Earth
+         !   System Science Data, 13(9), pp.4349-4383.
 
       !REVISION HISTORY
       !----------------
-         !---2021.11.01   Zhongwang Wei @ SYSU: zip file to reduce the size of the data; remove offset and scale_factor
+         !---2021.11.01   Zhongwang Wei @ SYSU: zip file to reduce the size of the data;
+         !   remove offset and scale_factor
 
          metfilename = '/'//trim(fprefix(var_i))//'_'//trim(yearstr)//'_'//trim(monthstr)
          select CASE (var_i)
@@ -314,17 +315,20 @@ CONTAINS
 
       !data source:
       !-------------------
-         !---https://cds.climate.copernicus.eu/cdsapp#!/dataset/reanalysis-era5-single-levels?tab=overview
+         !---https://cds.climate.copernicus.eu/cdsapp#!
+         !   /dataset/reanalysis-era5-single-levels?tab=overview
 
       !References:
       !-------------------
          !---Hersbach, H., Bell, B., Berrisford, P., Hirahara, S., Horányi, A., Muñoz‐Sabater, J.,
-         !   Nicolas, J., Peubey, C., Radu, R., Schepers, D. and Simmons, A., 2020.
-         !   The ERA5 global reanalysis. Quarterly Journal of the Royal Meteorological Society, 146(730), pp.1999-2049.
+         !   Nicolas, J., Peubey, C., Radu, R., Schepers, D. and Simmons, A., 2020.  The ERA5 global
+         !   reanalysis. Quarterly Journal of the Royal Meteorological Society, 146(730),
+         !   pp.1999-2049.
 
       !REVISION HISTORY
       !----------------
-         !---2021.11.01   Zhongwang Wei @ SYSU: zip file to reduce the size of the data; remove offset and scale_factor
+         !---2021.11.01   Zhongwang Wei @ SYSU: zip file to reduce the size of the data; remove
+         !   offset and scale_factor
 
          metfilename = '/'//trim(fprefix(var_i))//'_'//trim(yearstr)//'_'//trim(monthstr)
          select CASE (var_i)
@@ -356,9 +360,10 @@ CONTAINS
 
       !References:
       !-------------------
-         !---Beck, H.E., van Dijk, A.I., Larraondo, P.R., McVicar, T.R., Pan, M., Dutra, E. and Miralles, D.G., 2022.
-         !   MSWX: Global 3-hourly 0.1 bias-corrected meteorological data including near-real-time
-         !   updates and forecast ensembles. Bulletin of the American Meteorological Society, 103(3), pp.E710-E732.
+         !---Beck, H.E., van Dijk, A.I., Larraondo, P.R., McVicar, T.R., Pan, M., Dutra, E. and
+         !   Miralles, D.G., 2022.  MSWX: Global 3-hourly 0.1 bias-corrected meteorological data
+         !   including near-real-time updates and forecast ensembles. Bulletin of the American
+         !   Meteorological Society, 103(3), pp.E710-E732.
 
       !REVISION HISTORY
       !----------------
@@ -382,7 +387,8 @@ CONTAINS
 
       !REVISION HISTORY
       !----------------
-         !---2021.11.01   Zhongwang Wei @ SYSU: zip file to reduce the size of the data; remove offset and scale_factor
+         !---2021.11.01   Zhongwang Wei @ SYSU: zip file to reduce the size of the data;
+         !   remove offset and scale_factor
 
          metfilename = '/'//trim(fprefix(var_i))//trim(yearstr)//trim(monthstr)//'_v2.1.nc'
       CASE ('CRUJRA')
@@ -405,7 +411,8 @@ CONTAINS
 
       !REVISION HISTORY
       !----------------
-         !---2021.11.01   Zhongwang Wei @ SYSU: zip file to reduce the size of the data; remove offset and scale_factor
+         !---2021.11.01   Zhongwang Wei @ SYSU: zip file to reduce the size of the data;
+         !   remove offset and scale_factor
 
          metfilename = '/'//trim(fprefix(var_i))//trim(yearstr)//'.365d.noc.nc'
 
@@ -427,7 +434,8 @@ CONTAINS
 
       !REVISION HISTORY
       !----------------
-         !---2021.11.01   Zhongwang Wei @ SYSU: zip file to reduce the size of the data; remove offset and scale_factor
+         !---2021.11.01   Zhongwang Wei @ SYSU: zip file to reduce the size of the data;
+         !   remove offset and scale_factor
 
          metfilename = '/'//trim(fprefix(var_i))//trim(yearstr)//'-'//trim(monthstr)//'.nc'
       CASE ('JRA3Q')
@@ -441,9 +449,10 @@ CONTAINS
 
       !References:
       !-------------------
-         !---Kosaka Y., S. Kobayashi, Y. Harada, C. Kobayashi, H. Naoe, K. Yoshimoto, M. Harada, N. Goto, J. Chiba, K. Miyaoka, R. Sekiguchi,
-         !   M. Deushi, H. Kamahori, T. Nakaegawa; T. Y.Tanaka, T. Tokuhiro, Y. Sato, Y. Matsushita, and K. Onogi, 2024:
-         !   The JRA-3Q reanalysis. J. Meteor. Soc. Japan, 102, https://doi.org/10.2151/jmsj.2024-004.
+         !---Kosaka Y., S. Kobayashi, Y. Harada, C. Kobayashi, H. Naoe, K. Yoshimoto, M. Harada, N.
+         !   Goto, J. Chiba, K. Miyaoka, R. Sekiguchi, M. Deushi, H. Kamahori, T. Nakaegawa; T.
+         !   Y.Tanaka, T. Tokuhiro, Y. Sato, Y. Matsushita, and K. Onogi, 2024: The JRA-3Q
+         !   reanalysis. J. Meteor. Soc. Japan, 102, https://doi.org/10.2151/jmsj.2024-004.
 
 
       !REVISION HISTORY
@@ -467,13 +476,14 @@ CONTAINS
             !   The JRA-55 Reanalysis: General specifications and basic characteristics.
             !   J. Meteor. Soc. Japan, 93, 5-48, doi:10.2151/jmsj.2015-001.
             !---Harada, Y., H. Kamahori, C. Kobayashi, H. Endo, S. Kobayashi, Y. Ota, H. Onoda,
-            !   K. Onogi, K. Miyaoka, and K. Takahashi, 2016: The JRA-55 Reanalysis:
-            !   Representation of atmospheric circulation and climate variability, J. Meteor. Soc. Japan,
-            !   94, 269-302, doi:10.2151/jmsj.2016-015.
+            !   K. Onogi, K. Miyaoka, and K. Takahashi, 2016: The JRA-55 Reanalysis: Representation
+            !   of atmospheric circulation and climate variability, J. Meteor. Soc. Japan, 94,
+            !   269-302, doi:10.2151/jmsj.2016-015.
 
          !REVISION HISTORY
          !----------------
-            !---2021.11.01   Zhongwang Wei @ SYSU: zip file to reduce the size of the data; remove offset and scale_factor
+            !---2021.11.01   Zhongwang Wei @ SYSU: zip file to reduce the size of the data;
+            !   remove offset and scale_factor
 
 
 
@@ -491,17 +501,19 @@ CONTAINS
 
       !References:
       !-------------------
-         !---Beaudoing, H. and M. Rodell, NASA/GSFC/HSL (2020), GLDAS Noah Land Surface Model L4 3 hourly 0.25 x 0.25
-         !   degree V2.1, Greenbelt, Maryland, USA, Goddard Earth Sciences Data and Information Services
-         !   Center (GES DISC), Accessed: [Data Access Date], 10.5067/E7TYRXPJKWOQ
-         !---Rodell, M., P.R. Houser, U. Jambor, J. Gottschalck, K. Mitchell, C. Meng, K. Arsenault, B. Cosgrove,
-         !   J. Radakovich, M. Bosilovich, J.K. Entin, J.P. Walker, D. Lohmann, and D. Toll, 2004:
-         !   The Global Land Data Assimilation System, Bull. Amer. Meteor. Soc., 85, 381-394,
-         !   doi:10.1175/BAMS-85-3-381
+         !---Beaudoing, H. and M. Rodell, NASA/GSFC/HSL (2020), GLDAS Noah Land Surface Model L4 3
+         !   hourly 0.25 x 0.25 degree V2.1, Greenbelt, Maryland, USA, Goddard Earth Sciences Data
+         !   and Information Services Center (GES DISC), Accessed: [Data Access Date],
+         !   10.5067/E7TYRXPJKWOQ
+         !---Rodell, M., P.R. Houser, U. Jambor, J. Gottschalck, K. Mitchell, C. Meng, K. Arsenault,
+         !   B. Cosgrove, J. Radakovich, M. Bosilovich, J.K. Entin, J.P. Walker, D. Lohmann, and D.
+         !   Toll, 2004: The Global Land Data Assimilation System, Bull. Amer. Meteor. Soc., 85,
+         !   381-394, doi:10.1175/BAMS-85-3-381
 
       !REVISION HISTORY
       !----------------
-         !---2021.11.01   Zhongwang Wei @ SYSU: merge the data into monthly file; zip file to reduce the size of the data; remove offset and scale_factor
+         !---2021.11.01   Zhongwang Wei @ SYSU: merge the data into monthly file;
+         !   zip file to reduce the size of the data; remove offset and scale_factor
 
          metfilename = '/'//trim(fprefix(var_i))//trim(yearstr)//trim(monthstr)//'.nc4'
       CASE ('CLDAS')
@@ -523,7 +535,8 @@ CONTAINS
 
       !REVISION HISTORY
       !----------------
-         !---2021.11.01   Zhongwang Wei @ SYSU: gap filling for the missing data; zip file to reduce the size of the data; remove offset and scale_factor
+         !---2021.11.01   Zhongwang Wei @ SYSU: gap filling for the missing data;
+         !   zip file to reduce the size of the data; remove offset and scale_factor
 
          metfilename = '/'//trim(fprefix(var_i))//'-'//trim(yearstr)//trim(monthstr)//'.nc'
       CASE ('CMFD')
@@ -570,7 +583,7 @@ CONTAINS
       CASE ('CRA40')
          !DESCRIPTION
          !===========
-            !---CMA’s first-generation global atmospheric reanalysis (RA) covering 1979-2018 (CRA-40)
+            !---CMA first-generation global atmospheric reanalysis (RA) covering 1979-2018 (CRA-40)
 
          !data source:
          !-------------------
@@ -578,8 +591,9 @@ CONTAINS
 
          !References:
          !-------------------
-            !---Liu, Z., Jiang, L., Shi, C. et al. CRA-40/Atmosphere—The First-Generation Chinese Atmospheric Reanalysis (1979-2018):
-            !   System Description and Performance Evaluation. J Meteorol Res 37, 1-19 (2023). https://doi.org/10.1007/s13351-023-2086-x
+            !---Liu, Z., Jiang, L., Shi, C. et al. CRA-40/Atmosphere—The First-Generation Chinese
+            !   Atmospheric Reanalysis (1979-2018): System Description and Performance Evaluation. J
+            !   Meteorol Res 37, 1-19 (2023). https://doi.org/10.1007/s13351-023-2086-x
 
 
 
@@ -619,7 +633,8 @@ CONTAINS
       IF (DEF_USE_CBL_HEIGHT) THEN
          select CASE (var_i)
          CASE (9)
-            metfilename = '/'//trim(fprefix(9))//'_'//trim(yearstr)//'_'//trim(monthstr)//'_boundary_layer_height.nc4'
+            metfilename = '/'//trim(fprefix(9))//'_'//trim(yearstr)//'_'//trim(monthstr)//&
+               '_boundary_layer_height.nc4'
          END select
       ENDIF
    END FUNCTION metfilename
@@ -701,7 +716,8 @@ CONTAINS
 
                      e  = forcn(3)%blk(ib,jb)%val(i,j) * forcn(2)%blk(ib,jb)%val(i,j) &
                         / (0.622_R8 + 0.378_R8 * forcn(2)%blk(ib,jb)%val(i,j))
-                     ea = 0.70_R8 + 5.95e-05_R8 * 0.01_R8 * e * exp(1500.0_R8/forcn(1)%blk(ib,jb)%val(i,j))
+                     ea = 0.70_R8 + 5.95e-05_R8 * 0.01_R8 * e &
+                        * exp(1500.0_R8/forcn(1)%blk(ib,jb)%val(i,j))
                      forcn(8)%blk(ib,jb)%val(i,j) = ea * stefnc * forcn(1)%blk(ib,jb)%val(i,j)**4
 
                   CASE ('CRUNCEPV4')
@@ -726,9 +742,9 @@ CONTAINS
                      IF (forcn(4)%blk(ib,jb)%val(i,j) < 0.0)   forcn(4)%blk(ib,jb)%val(i,j) = 0.0
                      IF (forcn(7)%blk(ib,jb)%val(i,j) < 0.0)   forcn(7)%blk(ib,jb)%val(i,j) = 0.0
                      ! 12th grade of Typhoon 32.7-36.9 m/s
-                     ! NOTE by Wenzong: This is a problem when running a GNU-compiled PROGRAM, because there is
-                     ! no data of forcn(5), temporarily comment the code below
-                     ! IF (abs(forcn(5)%blk(ib,jb)%val(i,j)) > 40.0) forcn(5)%blk(ib,jb)%val(i,j) = &
+                     ! NOTE by Wenzong: This is a problem when running a GNU-compiled PROGRAM,
+                     ! because there is no data of forcn(5), temporarily comment the code below
+                     ! IF (abs(forcn(5)%blk(ib,jb)%val(i,j))>40.0) forcn(5)%blk(ib,jb)%val(i,j) = &
                      !    40.0*forcn(5)%blk(ib,jb)%val(i,j)/abs(forcn(5)%blk(ib,jb)%val(i,j))
                      IF (abs(forcn(6)%blk(ib,jb)%val(i,j)) > 40.0) forcn(6)%blk(ib,jb)%val(i,j) = &
                         40.0*forcn(6)%blk(ib,jb)%val(i,j)/abs(forcn(6)%blk(ib,jb)%val(i,j))
@@ -767,7 +783,8 @@ CONTAINS
                      IF (qsat_tmp < forcn(2)%blk(ib,jb)%val(i,j)) THEN
                         forcn(2)%blk(ib,jb)%val(i,j) = qsat_tmp
                      ENDIF
-                     IF (forcn(2)%blk(ib,jb)%val(i,j)<0.5E-05) forcn(2)%blk(ib,jb)%val(i,j) = 0.5E-05
+                     IF (forcn(2)%blk(ib,jb)%val(i,j)<0.5E-05) &
+                        forcn(2)%blk(ib,jb)%val(i,j) = 0.5E-05
 
                   CASE ('WFDE5')
 
@@ -840,8 +857,8 @@ CONTAINS
 
                   CASE ('TPMFD') ! TPMFD forcing
 
-                     forcn(4)%blk(ib,jb)%val(i,j)=forcn(4)%blk(ib,jb)%val(i,j)/3600.! convert to mm/s
-                     forcn(3)%blk(ib,jb)%val(i,j)=forcn(3)%blk(ib,jb)%val(i,j)*100. ! convert to pa
+                     forcn(4)%blk(ib,jb)%val(i,j)=forcn(4)%blk(ib,jb)%val(i,j)/3600.!convert to mm/s
+                     forcn(3)%blk(ib,jb)%val(i,j)=forcn(3)%blk(ib,jb)%val(i,j)*100. !convert to pa
 
                      CALL qsadv (forcn(1)%blk(ib,jb)%val(i,j), forcn(3)%blk(ib,jb)%val(i,j), &
                         es,esdT,qsat_tmp,dqsat_tmpdT)

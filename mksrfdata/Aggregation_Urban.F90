@@ -200,7 +200,8 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
          ! of iurban patch, then assign the most frequency id to this urban patch
          DO iurban = 1, numurban
 
-            CALL aggregation_request_data (landurban, iurban, grid_urban_5km, zip = USE_zip_for_aggregation, &
+            CALL aggregation_request_data (landurban, iurban, grid_urban_5km, &
+               zip = USE_zip_for_aggregation, &
                data_i4_2d_in1 = LUCY_reg, data_i4_2d_out1 = LUCY_reg_one)
             ! the most frequency id to this urban patch
             LUCY_rid(iurban) = num_max_frequency (LUCY_reg_one)

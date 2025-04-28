@@ -65,7 +65,8 @@ CONTAINS
       !
       ! For lakes with depth d /= 50 m and d >= 1 m,
       !                       the top layer is kept at 10 cm and
-      !                       the other 9 layer thicknesses are adjusted to maintain fixed proportions.
+      !                       the other 9 layer thicknesses are adjusted to maintain fixed
+      !                       proportions.
       !
       ! For lakes with d < 1 m, all layers have equal thickness.
       ! -----------------------------------------------------------
@@ -91,7 +92,8 @@ CONTAINS
                depthratio = lakedepth(ipatch) / sum(dzlak(1:nl_lake))
                dz_lake(1,ipatch) = dzlak(1)
                dz_lake(2:nl_lake-1,ipatch) = dzlak(2:nl_lake-1)*depthratio
-               dz_lake(nl_lake,ipatch) = dzlak(nl_lake)*depthratio - (dz_lake(1,ipatch) - dzlak(1)*depthratio)
+               dz_lake(nl_lake,ipatch) = dzlak(nl_lake)*depthratio &
+                                       - (dz_lake(1,ipatch) - dzlak(1)*depthratio)
             ELSEIF(lakedepth(ipatch) > 0. .and. lakedepth(ipatch) <= 1.)THEN
                dz_lake(:,ipatch) = lakedepth(ipatch) / nl_lake
             ELSE   ! non land water bodies or missing value of the lake depth

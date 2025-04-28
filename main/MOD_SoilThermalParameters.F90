@@ -61,7 +61,8 @@ CONTAINS
 ! Soil heat capacity, which from de Vires (1963)
 
       IF(patchtype<=2 .or. patchtype==4)THEN ! soil ground and wetland and lake
-         cv(1:) = csol(1:)*(1.-porsl(1:))*dz_soisno(1:) + wice_soisno(1:)*cpice + wliq_soisno(1:)*cpliq
+         cv(1:) = csol(1:)*(1.-porsl(1:))*dz_soisno(1:) &
+                + wice_soisno(1:)*cpice + wliq_soisno(1:)*cpliq
       ELSE               ! glacier/ice sheet
          cv(1:) = wice_soisno(1:)*cpice + wliq_soisno(1:)*cpliq
       ENDIF
@@ -76,7 +77,8 @@ CONTAINS
 
 
    SUBROUTINE hConductivity (patchtype,lb,nl_soil,&
-                             dkdry,dksatu,porsl,dz_soisno,z_soisno,zi_soisno,t_soisno,wice_soisno,wliq_soisno,tk,tktopsoil)
+                             dkdry,dksatu,porsl,dz_soisno,z_soisno,zi_soisno,&
+                             t_soisno,wice_soisno,wliq_soisno,tk,tktopsoil)
 
 !-----------------------------------------------------------------------
 !  Original author: Yongjiu Dai, September 15, 1999
@@ -104,21 +106,21 @@ CONTAINS
    USE MOD_Const_Physical, only: denh2o,denice,tfrz,tkwat,tkice,tkair
    IMPLICIT NONE
 
-   integer, intent(in) :: lb                         ! lower bound of array
-   integer, intent(in) :: nl_soil                    ! upper bound of array
-   integer, intent(in) :: patchtype                  ! land patch type (0=soil, 1=urban, 2=wetland,
-                                                     ! 3=land ice, 4=deep lake, 5=shallow lake)
-   real(r8), intent(in) ::  dkdry(1:nl_soil)         ! thermal conductivity for dry soil [W/m-K]
-   real(r8), intent(in) :: dksatu(1:nl_soil)         ! Thermal conductivity of saturated soil [W/m-K]
-   real(r8), intent(in) ::  porsl(1:nl_soil)         ! fractional volume between soil grains=1.-dmvol
-   real(r8), intent(in) ::   dz_soisno(lb:nl_soil)   ! layer thickness [m]
-   real(r8), intent(in) ::    z_soisno(lb:nl_soil)   ! node depth [m]
-   real(r8), intent(in) ::   zi_soisno(lb-1:nl_soil) ! interface depth [m]
-   real(r8), intent(in) ::    t_soisno(lb:nl_soil)   ! Nodal temperature [K]
-   real(r8), intent(in) :: wice_soisno(lb:nl_soil)   ! ice lens [kg/m2]
-   real(r8), intent(in) :: wliq_soisno(lb:nl_soil)   ! liquid water [kg/m2]
+   integer, intent(in) :: lb                         !lower bound of array
+   integer, intent(in) :: nl_soil                    !upper bound of array
+   integer, intent(in) :: patchtype                  !land patch type (0=soil, 1=urban, 2=wetland,
+                                                     !3=land ice, 4=deep lake, 5=shallow lake)
+   real(r8), intent(in) ::  dkdry(1:nl_soil)         !thermal conductivity for dry soil [W/m-K]
+   real(r8), intent(in) :: dksatu(1:nl_soil)         !Thermal conductivity of saturated soil [W/m-K]
+   real(r8), intent(in) ::  porsl(1:nl_soil)         !fractional volume between soil grains=1.-dmvol
+   real(r8), intent(in) ::   dz_soisno(lb:nl_soil)   !layer thickness [m]
+   real(r8), intent(in) ::    z_soisno(lb:nl_soil)   !node depth [m]
+   real(r8), intent(in) ::   zi_soisno(lb-1:nl_soil) !interface depth [m]
+   real(r8), intent(in) ::    t_soisno(lb:nl_soil)   !Nodal temperature [K]
+   real(r8), intent(in) :: wice_soisno(lb:nl_soil)   !ice lens [kg/m2]
+   real(r8), intent(in) :: wliq_soisno(lb:nl_soil)   !liquid water [kg/m2]
 
-   real(r8), intent(out) :: tk(lb:nl_soil)           ! thermal conductivity [W/(m K)]
+   real(r8), intent(out) :: tk(lb:nl_soil)           !thermal conductivity [W/(m K)]
    real(r8), optional, intent(out) :: tktopsoil
 
 !  local
@@ -254,8 +256,8 @@ CONTAINS
    USE MOD_Namelist
 
    IMPLICIT NONE
-   real(r8), intent(in) :: vf_gravels_s ! volumetric fraction of gravels within the soil solids
-   real(r8), intent(in) :: vf_om_s      ! volumetric fraction of organic matter within the soil solids
+   real(r8), intent(in) :: vf_gravels_s ! volumetric fraction of gravels within soil solids
+   real(r8), intent(in) :: vf_om_s      ! volumetric fraction of organic matter within soil solids
    real(r8), intent(in) :: vf_sand_s    ! volumetric fraction of sand within soil soilds
    real(r8), intent(in) :: vf_pores_s   ! volumetric pore space of the soil
 
@@ -436,7 +438,8 @@ CONTAINS
 ! a fitting parameter of the soil solid uniform passage
          aa = 0.0237 - 0.0175*a**3
 
-! a fitting parameter of a minuscule portion of soil water (nw) plus a minuscule portion of soil air (na)
+! a fitting parameter of a minuscule portion of soil water (nw)
+! plus a minuscule portion of soil air (na)
          nwm = 0.088 - 0.037*a**3
 
 ! the degree of saturation of the minuscle pore space
@@ -478,15 +481,17 @@ CONTAINS
             aaa = (2.0/(1.0+(k_solids/k_water-1.0)*0.125) &    ! the shape factor
                 +  1.0/(1.0+(k_solids/k_water-1.0)*(1.0-2.0*0.125)))/3.0
 
-            thk = (sr*vf_pores_s*k_water + (1.-sr)*vf_pores_s*aa*k_air + (1.-vf_pores_s)*aaa*k_solids) &
-                    / (sr*vf_pores_s + (1.-sr)*vf_pores_s*aa + (1.-vf_pores_s)*aaa)
+            thk = (sr*vf_pores_s*k_water + (1.-sr)*vf_pores_s*aa*k_air + &
+                  (1.-vf_pores_s)*aaa*k_solids) &
+                / (sr*vf_pores_s + (1.-sr)*vf_pores_s*aa + (1.-vf_pores_s)*aaa)
          ELSE
             aa  = (2.0/(1.0+(k_air/k_ice-1.0)*ga) &    ! the shape factor
                 +  1.0/(1.0+(k_air/k_ice-1.0)*gc))/3.0
             aaa = (2.0/(1.0+(k_solids/k_ice-1.0)*0.125) &    ! the shape factor
                 +  1.0/(1.0+(k_solids/k_ice-1.0)*(1.0-2.0*0.125)))/3.0
 
-            thk = (sr*vf_pores_s*k_ice + (1.-sr)*vf_pores_s*aa*k_air + (1.-vf_pores_s)*aaa*k_solids) &
+            thk = (sr*vf_pores_s*k_ice + (1.-sr)*vf_pores_s*aa*k_air + &
+                  (1.-vf_pores_s)*aaa*k_solids) &
                 / (sr*vf_pores_s + (1.-sr)*vf_pores_s*aa + (1.-vf_pores_s)*aaa)
          ENDIF
       ENDIF
