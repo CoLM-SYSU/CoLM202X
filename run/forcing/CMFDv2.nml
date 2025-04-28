@@ -21,7 +21,7 @@
    DEF_forcing%endyr              = 2020    ! end year of forcing data
    DEF_forcing%endmo              = 12      ! end month of forcing data
    DEF_forcing%dtime              = 10800 10800 10800 10800 0 10800 10800 10800
-   DEF_forcing%offset             = 0 0 0 5400 0 0 5400 0
+   DEF_forcing%offset             = 0 0 0 0 0 0 5400 0
    DEF_forcing%nlands             = 1       ! land grid number in 1d
 
    DEF_forcing%leapyear           = .true.  ! leapyear calendar
@@ -45,7 +45,7 @@
 
 
    DEF_forcing%vname    = 'temp' 'shum' 'pres' 'prec' 'NULL' 'wind' 'srad' 'lrad'
-   DEF_forcing%timelog  = 'instant' 'instant' 'instant' 'instant' 'instant' 'instant' 'backward' 'instant'
-   DEF_forcing%tintalgo = 'linear' 'linear' 'linear' 'nearest' 'NULL' 'linear' 'coszen' 'linear'
+   DEF_forcing%timelog  = 'instant' 'instant' 'instant' 'backward' 'instant' 'instant' 'backward' 'instant'
+   DEF_forcing%tintalgo = 'linear' 'linear' 'linear' 'uniform' 'NULL' 'linear' 'coszen' 'linear'
 
 /
