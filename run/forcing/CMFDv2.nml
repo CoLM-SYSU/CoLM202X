@@ -3,7 +3,7 @@
   ! ----- forcing -----
    DEF_dir_forcing  = '/share/home/dq013/zhwei/colm/data/CoLM_Forcing/CMFDv2/Data_forcing_03hr_010deg'
 
-   DEF_forcing%dataset            = 'CMFD'
+   DEF_forcing%dataset            = 'CMFDv2'
    DEF_forcing%solarin_all_band   = .true.
    DEF_forcing%HEIGHT_V           = 50.0
    DEF_forcing%HEIGHT_T           = 40.0
@@ -37,7 +37,7 @@
    DEF_forcing%fprefix(1) = 'Temp/temp_CMFD_V0200_B-01_03hr_010deg_'
    DEF_forcing%fprefix(2) = 'SHum/shum_CMFD_V0200_B-01_03hr_010deg_'
    DEF_forcing%fprefix(3) = 'Pres/pres_CMFD_V0200_B-01_03hr_010deg_'
-   DEF_forcing%fprefix(4) = 'Prec_r/prec_CMFD_V0200_B-01_03hr_010deg_'
+   DEF_forcing%fprefix(4) = 'Prec/prec_CMFD_V0200_B-01_03hr_010deg_'
    DEF_forcing%fprefix(5) = 'NULL'
    DEF_forcing%fprefix(6) = 'Wind/wind_CMFD_V0200_B-01_03hr_010deg_'
    DEF_forcing%fprefix(7) = 'SRad/srad_CMFD_V0200_B-01_03hr_010deg_'

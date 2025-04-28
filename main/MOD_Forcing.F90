@@ -452,15 +452,6 @@ CONTAINS
             dtLB = mtstamp - tstamp_LB(ivar)
             dtUB = tstamp_UB(ivar) - mtstamp
 
-            ! nearest method, for precipitation
-            IF (tintalgo(ivar) == 'nearest') THEN
-               IF (dtLB <= dtUB) THEN
-                  CALL block_data_copy (forcn_LB(ivar), forcn(ivar))
-               ELSE
-                  CALL block_data_copy (forcn_UB(ivar), forcn(ivar))
-               ENDIF
-            ENDIF
-
             ! linear method, for T, Pres, Q, W, LW
             IF (tintalgo(ivar) == 'linear') THEN
                IF ( (dtLB+dtUB) > 0 ) THEN
@@ -470,6 +461,25 @@ CONTAINS
                      forcn(ivar))
                ELSE
                   CALL block_data_copy (forcn_LB(ivar), forcn(ivar))
+               ENDIF
+            ENDIF
+
+            ! for precipitation, two algorithms available
+            ! nearest method, for precipitation
+            IF (tintalgo(ivar) == 'nearest') THEN
+               IF (dtLB <= dtUB) THEN
+                  CALL block_data_copy (forcn_LB(ivar), forcn(ivar))
+               ELSE
+                  CALL block_data_copy (forcn_UB(ivar), forcn(ivar))
+               ENDIF
+            ENDIF
+
+            ! set all the same value, for precipitation
+            IF (tintalgo(ivar) == 'uniform') THEN
+               IF (trim(timelog(ivar)) == 'forward') THEN
+                  CALL block_data_copy (forcn_LB(ivar), forcn(ivar))
+               ELSE
+                  CALL block_data_copy (forcn_UB(ivar), forcn(ivar))
                ENDIF
             ENDIF
 
@@ -1053,6 +1063,7 @@ CONTAINS
                write(*,*) year, endyr
                print *, 'NOTE: reaching the END of forcing data, always reuse the last time step data!'
             ENDIF
+            !TODO: ivar -> coszen
             IF (ivar == 7) THEN  ! calculate time average coszen, for shortwave radiation
                CALL calavgcos(idate)
             ENDIF
