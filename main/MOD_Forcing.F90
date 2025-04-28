@@ -1035,7 +1035,7 @@ CONTAINS
             CALL setstampUB(ivar, year, month, day, time_i)
 
             ! when reaching the END of forcing data, show a Warning but still try to run
-            IF (year <= endyr) THEN
+            IF ( year>endyr .or. (month>endmo .and. year==endyr) ) THEN
                write(*,*) 'model year: ', year, 'forcing end year defined: ', endyr
                print *, 'Warning: reaching the END of forcing data defined!'
             ENDIF
