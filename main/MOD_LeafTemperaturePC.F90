@@ -455,11 +455,11 @@ CONTAINS
         hbot_lay,      &! canopy crown bottom for each layer
         fcover_lay,    &! vegetation fractional coverage for each layer
         lsai_lay,      &! (lai+sai) for each layer
-        a_lay,         &! exponential extinction factor for u/k decline within canopy
-        a_lay_i63,     &! exponential extinction factor for u/k decline within canopy (Inoue 1963)
-        a_lay_k71,     &! exponential extinction factor for u/k decline within canopy (Kondo 1971)
-        a_lay_g77,     &! exponential extinction factor for u/k decline within canopy (Groudrian 1977)
-        a_lay_m97,     &! exponential extinction factor for u/k decline within canopy (Massman 1997)
+        a_lay,         &! exp. extinction factor for u/k decline within canopy
+        a_lay_i63,     &! exp. extinction factor for u/k decline within canopy (Inoue 1963)
+        a_lay_k71,     &! exp. extinction factor for u/k decline within canopy (Kondo 1971)
+        a_lay_g77,     &! exp. extinction factor for u/k decline within canopy (Groudrian 1977)
+        a_lay_m97,     &! exp extinction factor for u/k decline within canopy (Massman 1997)
         utop_lay,      &! wind speed at layer top [m/s]
         ubot_lay,      &! wind speed at layer bottom [m/s]
         ueff_lay,      &! effective wind speed within canopy layer [m/s]
@@ -620,7 +620,8 @@ CONTAINS
          ENDIF
 
          IF (fcover(i)>0 .and. lsai(i)>1.e-6) THEN
-            CALL dewfraction (sigf(i),lai(i),sai(i),dewmx,ldew(i),ldew_rain(i),ldew_snow(i),fwet(i),fdry(i))
+            CALL dewfraction (sigf(i),lai(i),sai(i),dewmx,&
+                              ldew(i),ldew_rain(i),ldew_snow(i),fwet(i),fdry(i))
             CALL qsadv(tl(i),psrf,ei(i),deiDT(i),qsatl(i),qsatlDT(i))
          ENDIF
       ENDDO
@@ -860,7 +861,8 @@ CONTAINS
 !-----------------------------------------------------------------------
       dLvpar(1) = 1.
       dLvpar(2) = ( (1-fshade_lay(1)) + thermk_lay(1)*fshade_lay(1) )**2
-      dLvpar(3) = ( tdn(3,0) + thermk_lay(2)*fshade_lay(2)*(1-fshade_lay(1)+thermk_lay(1)*fshade_lay(1)) &
+      dLvpar(3) = ( tdn(3,0) &
+                + thermk_lay(2)*fshade_lay(2)*(1-fshade_lay(1)+thermk_lay(1)*fshade_lay(1)) &
                 + (1-fshade_lay(2))*thermk_lay(1)*fshade_lay(1) )**2
 
 !-----------------------------------------------------------------------
@@ -1044,9 +1046,11 @@ CONTAINS
                                 hbot_lay(upplay), htop_lay(i), obug, ustarg, htop_lay(i))
 
                   ! areodynamic resistance between this layer top and above layer bottom
-                  ! 03/15/2020, yuan: vertical gaps between layers, fc = fcover_lays(upplay) or just 0?
+                  ! 03/15/2020, yuan: vertical gaps between layers
+                  ! fc = fcover_lays(upplay) or just 0?
                   rd(upplay) = rd(upplay) + frd(kbot_lay(upplay), hbot_lay(upplay), htop_lay(i), &
-                               hbot_lay(upplay), htop_lay(i), displa_lays(toplay)/htop_lay(toplay), &
+                               hbot_lay(upplay), htop_lay(i), &
+                               displa_lays(toplay)/htop_lay(toplay), &
                                z0h_g, obug, ustarg, z0mg, 0., bee, fcover_lays(upplay))
 
                ENDIF
@@ -1073,7 +1077,8 @@ CONTAINS
                ! of this layer to the top of this layer
                IF (upplay > 0) THEN
                   rd(upplay) = rd(upplay) + frd(ktop_lay(i), htop_lay(i), hbot_lay(i), &
-                               htop_lay(i), displa_lay(i)+z0m_lay(i), displa_lays(toplay)/htop_lay(toplay), &
+                               htop_lay(i), displa_lay(i)+z0m_lay(i), &
+                               displa_lays(toplay)/htop_lay(toplay), &
                                z0h_g, obug, ustarg, z0mg, a_lay(i), bee, fcover_lay(i))
                ENDIF
 
@@ -1113,7 +1118,7 @@ CONTAINS
             ENDIF
          ENDDO
 
-         ! 10/01/2017, back to 1D case, for test only
+         ! 10/01/2017, back to 1D case
          IF (rb_opt == 1) THEN
             uaf   = ustar
             cf    = 0.01*sqrtdi(2)/sqrt(uaf)
@@ -1125,7 +1130,7 @@ CONTAINS
 !        csoilc = ( 1.-w + w*um/uaf)/rah      ! "rah" here is the resistance over
 !        rd = 1./(csoilc*uaf)                 ! bare ground fraction
 
-         ! 10/01/2017, back to 1D case, for test only
+         ! 10/01/2017, back to 1D case
          IF (rd_opt == 1 ) THEN
 ! modified by Xubin Zeng's suggestion at 08-07-2002
             uaf   = ustar
@@ -1201,13 +1206,13 @@ CONTAINS
                   gssun(i) = gssun(i) * laisun(i)
                   gssha(i) = gssha(i) * laisha(i)
 
-                  CALL update_photosyn(tl(i), po2m, pco2m, pco2a, parsun(i), psrf, rstfacsun(i), rb(i), gssun(i), &
-                                     effcon(i), vmax25(i), gradm(i), trop(i), slti(i), hlti(i), shti(i), hhti(i), &
-                                     trda(i), trdm(i), cintsun(:,i), assimsun(i), respcsun(i))
+                  CALL update_photosyn(tl(i), po2m, pco2m, pco2a, parsun(i), psrf, rstfacsun(i), &
+                     rb(i), gssun(i), effcon(i), vmax25(i), gradm(i), trop(i), slti(i), hlti(i), &
+                     shti(i), hhti(i), trda(i), trdm(i), cintsun(:,i), assimsun(i), respcsun(i))
 
-                  CALL update_photosyn(tl(i), po2m, pco2m, pco2a, parsha(i), psrf, rstfacsha(i), rb(i), gssha(i), &
-                                     effcon(i), vmax25(i), gradm(i), trop(i), slti(i), hlti(i), shti(i), hhti(i), &
-                                     trda(i), trdm(i), cintsha(:,i), assimsha(i), respcsha(i))
+                  CALL update_photosyn(tl(i), po2m, pco2m, pco2a, parsha(i), psrf, rstfacsha(i), &
+                     rb(i), gssha(i), effcon(i), vmax25(i), gradm(i), trop(i), slti(i), hlti(i), &
+                     shti(i), hhti(i), trda(i), trdm(i), cintsha(:,i), assimsha(i), respcsha(i))
 
                   ! leaf scale stomata resistance
                   rssun(i) = tprcor / tl(i) * 1.e6 /gssun(i)
@@ -1558,7 +1563,8 @@ ENDIF
 !-----------------------------------------------------------------------
 
                dtl(it,i) = (sabv(i) + irab(i) - fsenl(i) - hvap*fevpl(i) &
-                         + cpliq*qintr_rain(i)*(t_precip-tl(i)) + cpice*qintr_snow(i)*(t_precip-tl(i))) &
+                         + cpliq*qintr_rain(i)*(t_precip-tl(i)) &
+                         + cpice*qintr_snow(i)*(t_precip-tl(i))) &
                          / (clai(i)/deltim - dirab_dtl(i) + fsenl_dtl(i) + hvap*fevpl_dtl(i) &
                          + cpliq*qintr_rain(i) + cpice*qintr_snow(i))
 
@@ -1762,7 +1768,8 @@ ENDIF
             fsenl(i) = fsenl(i) + fsenl_dtl(i)*dtl(it-1,i) &
                      ! add the imbalanced energy below due to T adjustment to sensible heat
                      + (dtl_noadj(i)-dtl(it-1,i)) * (clai(i)/deltim - dirab_dtl(i) &
-                     + fsenl_dtl(i) + hvap*fevpl_dtl(i) + cpliq*qintr_rain(i) + cpice*qintr_snow(i)) &
+                     + fsenl_dtl(i) + hvap*fevpl_dtl(i) &
+                     + cpliq*qintr_rain(i) + cpice*qintr_snow(i)) &
                      ! add the imbalanced energy below due to q adjustment to sensible heat
                      + hvap*erre(i)
 

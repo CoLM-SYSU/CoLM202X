@@ -273,10 +273,12 @@ CONTAINS
       IF(imonth_next /= imonth)THEN
          write(syear,"(I4.4)")  iyear
          write(smonth,"(I2.2)") month
-         file_ozone = trim(DEF_dir_runtime) // '/Ozone/China/'//trim(syear)//trim(smonth)//'_O3_v2.nc'
+         file_ozone = trim(DEF_dir_runtime) // &
+            '/Ozone/China/'//trim(syear)//trim(smonth)//'_O3_v2.nc'
       ENDIF
 
-      IF (iday_next /= iday .and. .not.(month .eq. 2 .and. iday_next .eq. 29 .and. .not.(isleapyear(iyear)))) THEN
+      IF (iday_next /= iday .and. &
+         .not.(month.eq.2 .and. iday_next.eq.29 .and. .not.(isleapyear(iyear)))) THEN
          CALL ncio_read_block_time (file_ozone, 'O3', grid_ozone, iday_next, f_ozone)
 #ifdef RangeCheck
          CALL check_block_data ('Ozone', f_ozone)

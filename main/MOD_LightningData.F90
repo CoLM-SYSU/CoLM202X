@@ -49,7 +49,8 @@ CONTAINS
    real(r8), allocatable :: lat(:), lon(:)
    integer :: itime
 
-      file_lightning = trim(DEF_dir_runtime) // '/fire/clmforc.Li_2012_climo1995-2011.T62.lnfm_Total_c140423.nc'
+      file_lightning = trim(DEF_dir_runtime) // &
+         '/fire/clmforc.Li_2012_climo1995-2011.T62.lnfm_Total_c140423.nc'
 
       CALL ncio_read_bcast_serial (file_lightning, 'lat', lat)
       CALL ncio_read_bcast_serial (file_lightning, 'lon', lon)

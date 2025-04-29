@@ -24,24 +24,27 @@ MODULE MOD_ForcingDownscaling
 
    IMPLICIT NONE
 
-   real(r8), parameter :: SHR_CONST_MWDAIR = 28.966_r8                         ! molecular weight dry air [kg/kmole]
-   real(r8), parameter :: SHR_CONST_MWWV   = 18.016_r8                         ! molecular weight water vapor
-   real(r8), parameter :: SHR_CONST_AVOGAD = 6.02214e26_r8                     ! Avogadro's number [molecules/kmole]
-   real(r8), parameter :: SHR_CONST_BOLTZ  = 1.38065e-23_r8                    ! Boltzmann's constant [J/K/molecule]
-   real(r8), parameter :: SHR_CONST_RGAS   = SHR_CONST_AVOGAD*SHR_CONST_BOLTZ  ! Universal gas constant [J/K/kmole]
-   real(r8), parameter :: rair             = SHR_CONST_RGAS/SHR_CONST_MWDAIR   ! Dry air gas constant [J/K/kg]
+   real(r8), parameter :: SHR_CONST_MWDAIR = 28.966_r8       ! molecular weight dry air [kg/kmole]
+   real(r8), parameter :: SHR_CONST_MWWV   = 18.016_r8       ! molecular weight water vapor
+   real(r8), parameter :: SHR_CONST_AVOGAD = 6.02214e26_r8   ! Avogadro's number [molecules/kmole]
+   real(r8), parameter :: SHR_CONST_BOLTZ  = 1.38065e-23_r8  ! Boltzmann's constant [J/K/molecule]
+   ! Universal gas constant [J/K/kmole]
+   real(r8), parameter :: SHR_CONST_RGAS   = SHR_CONST_AVOGAD*SHR_CONST_BOLTZ
+   ! Dry air gas constant [J/K/kg]
+   real(r8), parameter :: rair             = SHR_CONST_RGAS/SHR_CONST_MWDAIR
 
-   ! On the windward side of the range, annual mean lapse rates of 3.9-5.2 (deg km-1),
-   ! substantially smaller than the often-assumed 6.5 (deg km-1).
-   ! The data sets show similar seasonal and diurnal variability, with lapse rates smallest
-   ! (2.5-3.5 deg km-1) in late-summer minimum temperatures, and largest (6.5-7.5 deg km-1)
-   ! in spring maximum temperatures. Geographic (windward versus lee side) differences in
-   ! lapse rates are substantial. [Minder et al., 2010, Surface temperature lapse rates over complex terrain:
-   ! Lessons from the Cascade Mountains. JGR, 115, doi:10.1029/2009JD013493]
+   ! On the windward side of the range, annual mean lapse rates of 3.9-5.2 (deg km-1), substantially
+   ! smaller than the often-assumed 6.5 (deg km-1).  The data sets show similar seasonal and diurnal
+   ! variability, with lapse rates smallest (2.5-3.5 deg km-1) in late-summer minimum temperatures,
+   ! and largest (6.5-7.5 deg km-1) in spring maximum temperatures. Geographic (windward versus lee
+   ! side) differences in lapse rates are substantial. [Minder et al., 2010, Surface temperature
+   ! lapse rates over complex terrain: Lessons from the Cascade Mountains. JGR, 115,
+   ! doi:10.1029/2009JD013493]
    !
-   ! Kunkel, K. E., 1989: Simple procedures for extrapolation of humidity variables in the mountainous western United States.
-   ! J. Climate, 2, 656-669. lapse_rate = /Jan - Dec/4.4,5.9,7.1,7.8,8.1,8.2,8.1,8.1,7.7,6.8,5.5,4.7/ (deg km-1)
-   real(r8), parameter :: lapse_rate = 0.006_r8                                 ! surface temperature lapse rate (deg m-1)
+   ! Kunkel, K. E., 1989: Simple procedures for extrapolation of humidity variables in the
+   ! mountainous western United States.  J. Climate, 2, 656-669. lapse_rate = /Jan -
+   ! Dec/4.4,5.9,7.1,7.8,8.1,8.2,8.1,8.1,7.7,6.8,5.5,4.7/ (deg km-1)
+   real(r8), parameter :: lapse_rate = 0.006_r8         ! surface temperature lapse rate (deg m-1)
 
    SAVE
 
@@ -74,7 +77,7 @@ CONTAINS
 
    ! LOCAL VARIABLES:
    real(r8) :: egcm
-   real(r8) :: wv_to_dair_weight_ratio  ! ratio of molecular weight of water vapor to that of dry air [-]
+   real(r8) :: wv_to_dair_weight_ratio ! ratio of molecular weight of water vapor to dry air [-]
 
       wv_to_dair_weight_ratio = SHR_CONST_MWWV/SHR_CONST_MWDAIR
 
@@ -136,16 +139,21 @@ CONTAINS
    real(r8), intent(in) :: alb                 ! blue sky albedo
 
    ! topography-based factor
-   real(r8), intent(in) :: svf_c                                    ! sky view factor
-   real(r8), intent(in) :: cur_c                                    ! curvature
+   real(r8), intent(in) :: svf_c               ! sky view factor
+   real(r8), intent(in) :: cur_c               ! curvature
 #ifdef SinglePoint
-   real(r8), intent(in) :: sf_lut_c   (1:num_azimuth,1:num_zenith)  ! look up table of shadow mask of a patch
+   ! look up table of shadow mask of a patch
+   real(r8), intent(in) :: sf_lut_c   (1:num_azimuth,1:num_zenith)
 #else
-   real(r8), intent(in) :: sf_curve_c (1:num_azimuth,1:num_zenith_parameter)  ! curve of shadow mask of a patch
+   ! curve of shadow mask of a patch
+   real(r8), intent(in) :: sf_curve_c (1:num_azimuth,1:num_zenith_parameter)
 #endif
-   real(r8), intent(in) :: asp_type_c (1:num_slope_type)            ! topographic aspect of each type of one patch(rad)
-   real(r8), intent(in) :: slp_type_c (1:num_slope_type)            ! topographic slope of each character of one patch
-   real(r8), intent(in) :: area_type_c(1:num_slope_type)            ! area percentage of each character of one patch
+   ! topographic aspect of each type of one patch(rad)
+   real(r8), intent(in) :: asp_type_c (1:num_slope_type)
+   ! topographic slope of each character of one patch
+   real(r8), intent(in) :: slp_type_c (1:num_slope_type)
+   ! area percentage of each character of one patch
+   real(r8), intent(in) :: area_type_c(1:num_slope_type)
 
    ! non-downscaled fields:
    real(r8), intent(in) :: forc_topo_g   ! atmospheric surface height [m]
@@ -185,8 +193,8 @@ CONTAINS
    real(r8) :: rhos_c_estimate, rhos_g_estimate
    real(r8) :: dum1, dum2
    real(r8) :: max_elev_c    ! the maximum column level elevation value within the grid
-   real(r8) :: delta_prc_c   ! deviation of the column convective precipitation from the grid level precipitation
-   real(r8) :: delta_prl_c   ! deviation of the column large-scale precipitation from the grid level precipitation
+   real(r8) :: delta_prc_c   ! deviation of the column convective prec. from the grid level prec.
+   real(r8) :: delta_prl_c   ! deviation of the column large-scale prec. from the grid level prec.
 
 !-----------------------------------------------------------------------------
 
@@ -221,7 +229,8 @@ CONTAINS
       !         = tbot_c * exp((zbot/Hbot) * (rair/cpair))
 
       ! But we want everything expressed in delta form, resulting in:
-      thbot_c = thbot_g + (tbot_c - tbot_g)*exp((zbot/Hbot)*(rair/cpair)) ! adjust [pot temp] for column
+      ! adjust [pot temp] for column
+      thbot_c = thbot_g + (tbot_c - tbot_g)*exp((zbot/Hbot)*(rair/cpair))
 
       CALL Qsadv(tbot_g,pbot_g,es_g,dum1,qs_g,dum2) ! es, qs for gridcell
       CALL Qsadv(tbot_c,pbot_c,es_c,dum1,qs_c,dum2) ! es, qs for column
@@ -321,21 +330,24 @@ CONTAINS
    IMPLICIT NONE
 
    ! ARGUMENTS:
-   real(r8), intent(inout)  :: forc_us_g                             ! eastward wind (m/s)
-   real(r8), intent(inout)  :: forc_vs_g                             ! northward wind (m/s)
+   real(r8), intent(inout)  :: forc_us_g         ! eastward wind (m/s)
+   real(r8), intent(inout)  :: forc_vs_g         ! northward wind (m/s)
 
-   real(r8), intent(in) :: cur_c                                     ! curvature
-   real(r8), intent(in) :: asp_type_c        (1:num_slope_type)      ! topographic aspect of each character of one patch
-   real(r8), intent(in) :: slp_type_c        (1:num_slope_type)      ! topographic slope of each character of one patch
-   real(r8), intent(in) :: area_type_c       (1:num_slope_type)      ! area percentage of each character of one patch
+   real(r8), intent(in) :: cur_c                 ! curvature
+   ! topographic aspect of each character of one patch
+   real(r8), intent(in) :: asp_type_c  (1:num_slope_type)
+   ! topographic slope of each character of one patch
+   real(r8), intent(in) :: slp_type_c  (1:num_slope_type)
+   ! area percentage of each character of one patch
+   real(r8), intent(in) :: area_type_c (1:num_slope_type)
 
    ! local variables
-   real(r8) :: wind_dir                                              ! wind direction
-   real(r8) :: ws_g                                                  ! non-downscaled wind speed
-   real(r8) :: wind_dir_slp (1:num_slope_type)                       ! the slope in the direction of the wind
-   real(r8) :: ws_c_type(1:num_slope_type)                           ! downscaled wind speed of each type in each patch
-   real(r8) :: ws_c                                                  ! downscaled wind speed
-   real(r8) :: scale_factor                                          ! Combined scaling factor for regulating wind speed
+   real(r8) :: wind_dir                          ! wind direction
+   real(r8) :: ws_g                              ! non-downscaled wind speed
+   real(r8) :: wind_dir_slp (1:num_slope_type)   ! the slope in the direction of the wind
+   real(r8) :: ws_c_type(1:num_slope_type)       ! downscaled wind speed of each type in each patch
+   real(r8) :: ws_c                              ! downscaled wind speed
+   real(r8) :: scale_factor                      ! Combined scaling factor for regulating wind speed
    integer :: g, c, i
 
 !-----------------------------------------------------------------------------
@@ -413,8 +425,9 @@ CONTAINS
    real(r8) :: emissivity_allsky_g   ! all-sky emissivity at grid cell
    real(r8) :: es_g, es_c, dum1, dum2, dum3
 
-   real(r8), parameter :: lapse_rate_longwave = 0.032_r8  ! longwave radiation lapse rate (W m-2 m-1)
-   real(r8), parameter :: longwave_downscaling_limit = 0.5_r8  ! relative limit for how much longwave downscaling can be done (unitless)
+   real(r8), parameter :: lapse_rate_longwave = 0.032_r8 ! longwave radiation lapse rate (W m-2 m-1)
+   ! relative limit for how much longwave downscaling can be done (unitless)
+   real(r8), parameter :: longwave_downscaling_limit = 0.5_r8
 
 !--------------------------------------------------------------------------
 
@@ -424,10 +437,10 @@ CONTAINS
       hsurf_c = forc_topo_c
 
       IF (trim(DEF_DS_longwave_adjust_scheme) == 'I') THEN
-         ! Fiddes and Gruber, 2014, TopoSCALE v.1.0: downscaling gridded climate data in
-         ! complex terrain. Geosci. Model Dev., 7, 387-405. doi:10.5194/gmd-7-387-2014.
-         ! Equation (1) (2) (3); here, the empirical parameters x1 and x2 are different from
-         ! Konzelmann et al. (1994) where x1 = 0.443 and x2 = 8 (optimal for measurements on the Greenland ice sheet)
+         ! Fiddes and Gruber, 2014, TopoSCALE v.1.0: downscaling gridded climate data in complex
+         ! terrain. Geosci. Model Dev., 7, 387-405. doi:10.5194/gmd-7-387-2014.  Equation (1) (2)
+         ! (3); here, the empirical parameters x1 and x2 are different from Konzelmann et al. (1994)
+         ! where x1 = 0.443 and x2 = 8 (optimal for measurements on the Greenland ice sheet)
 
          CALL Qsadv(forc_t_g, forc_pbot_g, es_g,dum1,dum2,dum3)
          CALL Qsadv(forc_t_c, forc_pbot_c, es_c,dum1,dum2,dum3)
@@ -442,10 +455,10 @@ CONTAINS
             (emissivity_clearsky_c + (emissivity_allsky_g - emissivity_clearsky_g)) &
             * 5.67e-8_r8*forc_t_c**4
       ELSE
-         ! Longwave radiation is downscaled by assuming a linear decrease in downwelling longwave radiation
-         ! with increasing elevation (0.032 W m-2 m-1, limited to 0.5 - 1.5 times the gridcell mean value,
-         ! then normalized to conserve gridcell total energy) (Van Tricht et al., 2016, TC) Figure 6,
-         ! doi:10.5194/tc-10-2379-2016
+         ! Longwave radiation is downscaled by assuming a linear decrease in downwelling longwave
+         ! radiation with increasing elevation (0.032 W m-2 m-1, limited to 0.5 - 1.5 times the
+         ! gridcell mean value, then normalized to conserve gridcell total energy) (Van Tricht et
+         ! al., 2016, TC) Figure 6, doi:10.5194/tc-10-2379-2016
 
          IF (glaciers) THEN
             forc_lwrad_c = forc_lwrad_g - lapse_rate_longwave * (hsurf_c-hsurf_g)
@@ -505,7 +518,8 @@ CONTAINS
 
    integer,  parameter :: S = 1370                               ! solar constant (W/m**2)
    real(r8), parameter :: thr = 85*PI/180                        ! threshold of zenith
-   real(r8), parameter :: shortwave_downscaling_limit = 0.5_r8   ! relative limit for how much shortwave downscaling can be done (unitless)
+   ! relative limit for how much shortwave downscaling can be done (unitless)
+   real(r8), parameter :: shortwave_downscaling_limit = 0.5_r8
 
    ! ARGUMENTS:
    real(r8), intent(in) :: julian_day          ! day of year
@@ -513,45 +527,54 @@ CONTAINS
    real(r8), intent(in) :: cosazi              ! azimuth angle at an hour
    real(r8), intent(in) :: alb                 ! blue sky albedo
 
-   real(r8), intent(in) :: forc_topo_g                                       ! atmospheric surface height (m)
-   real(r8), intent(in) :: forc_pbot_g                                       ! atmospheric pressure [Pa]
-   real(r8), intent(in) :: forc_swrad_g                                      ! downward shortwave (W/m**2)
+   real(r8), intent(in) :: forc_topo_g         ! atmospheric surface height (m)
+   real(r8), intent(in) :: forc_pbot_g         ! atmospheric pressure [Pa]
+   real(r8), intent(in) :: forc_swrad_g        ! downward shortwave (W/m**2)
 
-   real(r8), intent(in) :: forc_topo_c                                       ! column surface height (m)
-   real(r8), intent(in) :: forc_pbot_c                                       ! atmospheric pressure [Pa]
-   real(r8), intent(out):: forc_swrad_c                                      ! downward shortwave (W/m**2)
+   real(r8), intent(in) :: forc_topo_c         ! column surface height (m)
+   real(r8), intent(in) :: forc_pbot_c         ! atmospheric pressure [Pa]
+   real(r8), intent(out):: forc_swrad_c        ! downward shortwave (W/m**2)
 
-   real(r8), intent(in) :: svf_c                                             ! sky view factor
+   real(r8), intent(in) :: svf_c               ! sky view factor
 # ifdef SinglePoint
-   real(r8), intent(in) :: sf_lut_c   (1:num_azimuth,1:num_zenith)           ! look up table of shadow mask of a patch
+   ! look up table of shadow mask of a patch
+   real(r8), intent(in) :: sf_lut_c   (1:num_azimuth,1:num_zenith)
 # else
-   real(r8), intent(in) :: sf_curve_c (1:num_azimuth,1:num_zenith_parameter) ! curve of shadow mask of a patch
+   ! curve of shadow mask of a patch
+   real(r8), intent(in) :: sf_curve_c (1:num_azimuth,1:num_zenith_parameter)
 # endif
-   real(r8), intent(in) :: asp_type_c (1:num_slope_type)                     ! topographic aspect of each character of one patch (°)
-   real(r8), intent(in) :: slp_type_c (1:num_slope_type)                     ! topographic slope of each character of one patch
-   real(r8), intent(in) :: area_type_c(1:num_slope_type)                     ! area percentage of each character of one patch
+   ! topographic aspect of each character of one patch (°)
+   real(r8), intent(in) :: asp_type_c (1:num_slope_type)
+   ! topographic slope of each character of one patch
+   real(r8), intent(in) :: slp_type_c (1:num_slope_type)
+   ! area percentage of each character of one patch
+   real(r8), intent(in) :: area_type_c(1:num_slope_type)
 
    ! LOCAL VARIABLES:
-   real(r8) :: zen_rad, zen_deg, azi_rad, azi_deg      ! rad and deg of sun zenith and azimuth angles
-   integer  :: idx_azi, idx_zen                        ! index used to cal shadow factor from look up table
-   real(r8) :: sf_c                                    ! shadow factor
-   real(r8) :: rt_R                                    ! The ratio of the current distance between the sun and the earth                                                                                     ! to the average distance between the sun and the earth
-   real(r8) :: toa_swrad                               ! top of atmosphere shortwave radiation
-   real(r8) :: clr_idx                                 ! atmospheric transparency
-   real(r8) :: diff_wgt                                ! diffuse weight
-   real(r8) :: k_c                                     ! column broadband attenuation coefficient [Pa^-1]
-   real(r8) :: opt_factor                              ! optical length factor
+   real(r8) :: zen_rad, zen_deg, azi_rad, azi_deg ! rad and deg of sun zenith and azimuth angle
+   integer  :: idx_azi, idx_zen                   ! index used to cal shadow factor from
+                                                  ! look up table
+   real(r8) :: sf_c                               ! shadow factor
+   real(r8) :: rt_R                               ! The ratio of the current distance between
+                                                  ! the sun and the earth
+   real(r8) :: toa_swrad                          ! top of atmosphere shortwave radiation
+   real(r8) :: clr_idx                            ! atmospheric transparency
+   real(r8) :: diff_wgt                           ! diffuse weight
+   real(r8) :: k_c                                ! column broadband attenuation coefficient [Pa^-1]
+   real(r8) :: opt_factor                         ! optical length factor
    real(r8) :: a_p
    real(r8) :: svf, balb
 
    real(r8) :: diff_swrad_g, beam_swrad_g              ! diffuse and beam radiation
-   real(r8) :: diff_swrad_c, beam_swrad_c, refl_swrad_c! downscaled diffuse, beam radiation and reflect radiation
+   real(r8) :: diff_swrad_c, beam_swrad_c, refl_swrad_c! downscaled diffuse, beam radiation
+                                                       ! and reflect radiation
    real(r8) :: beam_swrad_type (1:num_slope_type)      ! beam radiation of one characterized patch
-   real(r8) :: refl_swrad_type (1:num_slope_type)      ! reflect radiation of one characterized patch
+   real(r8) :: refl_swrad_type (1:num_slope_type)      ! refl. radiation of one characterized patch
    real(r8) :: tcf_type        (1:num_slope_type)      ! terrain configure factor
    real(r8) :: cosill_type     (1:num_slope_type)      ! illumination angle (cos) at defined types
 
-   real(r8) :: zenith_segment, a1, a2                  ! Segmented function segmentation points (rad), parameter1, parameter2
+   real(r8) :: zenith_segment, a1, a2                  ! Segmented function segmentation
+                                                       ! points (rad), parameter1, parameter2
 
    integer  :: i
 
@@ -570,15 +593,16 @@ CONTAINS
       zen_deg = zen_rad*180/PI ! turn deg
       idx_zen = INT(zen_deg*num_zenith/90)
       IF (idx_zen==0) idx_zen = 1
-      IF (idx_zen>num_zenith) idx_zen = num_zenith !constrain the upper boundary of zenith angle to 90 deg
+      !constrain the upper boundary of zenith angle to 90 deg
+      IF (idx_zen>num_zenith) idx_zen = num_zenith
 
       sf_c = sf_lut_c(idx_azi, idx_zen)
 #else
       ! Constructing a shadow factor function from zenith angle parameters
       ! shadow factor = exp(-1*exp(a1*zenith+a2))
-      zenith_segment = sf_curve_c(idx_azi, 1)               ! Segmented function segmentation points (rad)
-      a1 = sf_curve_c(idx_azi, 2)                           ! parameter of function
-      a2 = sf_curve_c(idx_azi, 3)                           ! parameter of function
+      zenith_segment = sf_curve_c(idx_azi, 1)       ! Segmented function segmentation points (rad)
+      a1 = sf_curve_c(idx_azi, 2)                   ! parameter of function
+      a2 = sf_curve_c(idx_azi, 3)                   ! parameter of function
 
       IF (zen_rad <= zenith_segment) THEN
          sf_c = 1.
@@ -624,7 +648,8 @@ CONTAINS
          k_c = log(clr_idx)/forc_pbot_c
       ENDIF
 
-      ! calculate factor to account for the difference of optical path length due to pressure difference
+      ! calculate factor to account for the difference of optical path length
+      ! due to pressure difference
       opt_factor = exp(k_c*(forc_pbot_g-forc_pbot_c))
       ! Control the boundary of optical path length
       IF ((opt_factor>10000).or.(opt_factor<-10000)) opt_factor = 0

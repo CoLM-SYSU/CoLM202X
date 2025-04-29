@@ -9,6 +9,9 @@ MODULE MOD_NdepData
 ! !ORIGINAL:
 !  Lu Xingjie and Zhang Shupeng, 2023, prepare the original version of
 !  the ndep data module.
+!
+! !REVISIONS:
+!  08/2023, Shang Fang: add year and month input for reading Nitrogen deposition
 !-----------------------------------------------------------------------
 
    USE MOD_Grid
@@ -44,7 +47,8 @@ CONTAINS
    ! Local Variables
    real(r8), allocatable :: lat(:), lon(:)
 
-      file_ndep = trim(DEF_dir_runtime) // '/ndep/fndep_colm_hist_simyr1849-2006_1.9x2.5_c100428.nc'
+      file_ndep = trim(DEF_dir_runtime) // &
+                  '/ndep/fndep_colm_hist_simyr1849-2006_1.9x2.5_c100428.nc'
 
       CALL ncio_read_bcast_serial (file_ndep, 'lat', lat)
       CALL ncio_read_bcast_serial (file_ndep, 'lon', lon)
@@ -60,7 +64,7 @@ CONTAINS
 
    END SUBROUTINE init_ndep_data_annually
 
-   SUBROUTINE init_ndep_data_monthly (YY,MM)  !sf_add
+   SUBROUTINE init_ndep_data_monthly (YY,MM)
 
 !-----------------------------------------------------------------------
 ! !DESCRIPTION:
@@ -75,12 +79,12 @@ CONTAINS
    USE MOD_LandPatch
    IMPLICIT NONE
 
-   integer, intent(in) :: YY,MM  !sf_add
+   integer, intent(in) :: YY,MM
 
    ! Local Variables
    real(r8), allocatable :: lat(:), lon(:)
 
-      file_ndep = trim(DEF_dir_runtime) // '/ndep/fndep_colm_monthly.nc' !sf_add
+      file_ndep = trim(DEF_dir_runtime) // '/ndep/fndep_colm_monthly.nc'
 
       CALL ncio_read_bcast_serial (file_ndep, 'lat', lat)
       CALL ncio_read_bcast_serial (file_ndep, 'lon', lon)
@@ -92,7 +96,7 @@ CONTAINS
       IF (allocated(lon)) deallocate(lon)
       IF (allocated(lat)) deallocate(lat)
 
-      CALL update_ndep_data_monthly (YY, MM ,iswrite = .true.) !sf_add
+      CALL update_ndep_data_monthly (YY, MM ,iswrite = .true.)
 
    END SUBROUTINE init_ndep_data_monthly
 
@@ -159,7 +163,7 @@ CONTAINS
 
    END SUBROUTINE update_ndep_data_annually
 
-   SUBROUTINE update_ndep_data_monthly (YY, MM, iswrite) !sf_add
+   SUBROUTINE update_ndep_data_monthly (YY, MM, iswrite)
 !-----------------------------------------------------------------------
 !
 ! !DESCRIPTION:
@@ -182,21 +186,18 @@ CONTAINS
    USE MOD_RangeCheck
    IMPLICIT NONE
 
-   integer, intent(in) :: YY,MM  ! sf_add
+   integer, intent(in) :: YY,MM
    logical, intent(in) :: iswrite
 
    ! Local Variables
    type(block_data_real8_2d) :: f_xy_ndep
    integer :: itime, npatch, m
 
-      itime = (max(min(YY,2006),1849) - 1849)*12 + MM ! sf_add
-!      print*,"YY=",YY        ! sf_add
-!      print*,"MM=",MM        ! sf_add
-!      print*,"itime=",itime  ! sf_add
+      itime = (max(min(YY,2006),1849) - 1849)*12 + MM
 
       IF (p_is_io) THEN
          CALL allocate_block_data  (grid_ndep, f_xy_ndep)
-         CALL ncio_read_block_time (file_ndep, 'NDEP_month', grid_ndep, itime, f_xy_ndep) ! sf_add
+         CALL ncio_read_block_time (file_ndep, 'NDEP_month', grid_ndep, itime, f_xy_ndep)
       ENDIF
 
       CALL mg2p_ndep%grid2pset (f_xy_ndep, ndep)

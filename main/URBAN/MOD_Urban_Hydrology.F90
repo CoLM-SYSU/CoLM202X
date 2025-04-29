@@ -114,7 +114,8 @@ CONTAINS
         froof              ,&! roof fractional cover [-]
         fgper              ,&! weight of impervious ground [-]
         flake              ,&! lake fractional cover [-]
-        ! wtfact           ,&! (updated to gridded 'fsatmax' data) fraction of model area with high water table
+        ! wtfact           ,&! fraction of model area with high water table
+                             ! (updated to gridded 'fsatmax' data)
         pondmx             ,&! ponding depth (mm)
         ssi                ,&! irreducible water saturation of snow
         wimp               ,&! water impermeable IF porosity less than wimp
@@ -167,7 +168,8 @@ CONTAINS
 
 ! SNICAR model variables
 ! Aerosol Fluxes (Jan. 07, 2023)
-   real(r8), intent(in) :: forc_aer (14)! aerosol deposition from atmosphere model (grd,aer) [kg m-1 s-1]
+   ! aerosol deposition from atmosphere model (grd,aer) [kg m-1 s-1]
+   real(r8), intent(in) :: forc_aer (14)
 
    real(r8), intent(inout) :: &
         mss_bcpho (lbp:0)             ,&! mass of hydrophobic BC in snow  (col,lyr) [kg]

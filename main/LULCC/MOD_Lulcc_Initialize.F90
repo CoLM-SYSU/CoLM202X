@@ -73,8 +73,8 @@ CONTAINS
       jday = idate(2)
 
       CALL Init_GlobalVars
-      CAll Init_LC_Const
-      CAll Init_PFT_Const
+      CALL Init_LC_Const
+      CALL Init_PFT_Const
 
       ! deallocate pixelset and mesh data of previous year
       CALL mesh_free_mem
@@ -126,7 +126,8 @@ CONTAINS
          CALL elm_patch%build (landelm, landpatch, use_frac = .true.)
       ENDIF
 
-      ! initialize for SrfdataDiag, it is needed in the MOD_Lulcc_TransferTrace for outputing transfer_matrix
+      ! initialize for SrfdataDiag, it is needed in the MOD_Lulcc_TransferTrace for outputing
+      ! transfer_matrix
 #ifdef SrfdataDiag
 #ifdef GRIDBASED
       CALL init_gridbased_mesh_grid ()

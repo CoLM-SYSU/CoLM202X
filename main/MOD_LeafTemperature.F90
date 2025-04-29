@@ -724,12 +724,12 @@ CONTAINS
                gssha = gssha * laisha
 
                CALL update_photosyn(tl, po2m, pco2m, pco2a, parsun, psrf, rstfacsun, rb, gssun, &
-                                    effcon, vmax25, gradm, trop, slti, hlti, shti, hhti, trda, trdm, cintsun, &
-                                    assimsun, respcsun)
+                                    effcon, vmax25, gradm, trop, slti, hlti, shti, hhti, trda, &
+                                    trdm, cintsun, assimsun, respcsun)
 
                CALL update_photosyn(tl, po2m, pco2m, pco2a, parsha, psrf, rstfacsha, rb, gssha, &
-                                    effcon, vmax25, gradm, trop, slti, hlti, shti, hhti, trda, trdm, cintsha, &
-                                    assimsha, respcsha)
+                                    effcon, vmax25, gradm, trop, slti, hlti, shti, hhti, trda, &
+                                    trdm, cintsha, assimsha, respcsha)
 
                rssun = tprcor/tl * 1.e6 / gssun
                rssha = tprcor/tl * 1.e6 / gssha
@@ -1123,7 +1123,8 @@ ENDIF
 
 #if (defined CoLMDEBUG)
       IF(abs(err) .gt. .2) &
-      write(6,*) 'energy imbalance in LeafTemperature.F90',it-1,err,sabv,irab,fsenl,hvap*fevpl,hprl,dheatl
+      write(6,*) 'energy imbalance in LeafTemperature.F90',it-1,&
+         err,sabv,irab,fsenl,hvap*fevpl,hprl,dheatl
 #endif
 
 !-----------------------------------------------------------------------
@@ -1287,9 +1288,9 @@ ENDIF
 
    !References:
    !-------------------
-      !---Dai, Y., Zeng, X., Dickinson, R.E., Baker, I., Bonan, G.B., BosiloVICh, M.G., Denning, A.S.,
-      !   Dirmeyer, P.A., Houser, P.R., Niu, G. and Oleson, K.W., 2003.
-      !   The common land model. Bulletin of the American Meteorological Society, 84(8), pp.1013-1024.
+      !---Dai, Y., Zeng, X., Dickinson, R.E., Baker, I., Bonan, G.B., BosiloVICh, M.G., Denning,
+      !   A.S., Dirmeyer, P.A., Houser, P.R., Niu, G. and Oleson, K.W., 2003.  The common land
+      !   model. Bulletin of the American Meteorological Society, 84(8), pp.1013-1024.
 
    !ANCILLARY FUNCTIONS AND SUBROUTINES
    !-------------------
