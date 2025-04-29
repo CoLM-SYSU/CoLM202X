@@ -559,6 +559,27 @@ CONTAINS
          !---
 
          metfilename = '/'//trim(fprefix(var_i))//trim(yearstr)//trim(monthstr)//'.nc4'
+      CASE ('CMFDv2')
+         !DESCRIPTION
+         !===========
+            !--- The China Meteorological Forcing Dataset version 2.0
+   
+         !data source:
+         !-------------------
+            !--https://data.tpdc.ac.cn/en/data/e60dfd96-5fd8-493f-beae-e8e5d24dece4
+   
+         !References:
+         !-------------------
+            !---He, J., Yang, K., Li, X., Tang, W., Shao, C., Jiang, Y., Ding, B. 2024.
+            !   The China Meteorological Forcing Dataset (CMFD) version 2.0.
+            !   National Tibetan Plateau/Third Pole Environment Data Center,
+            !   https://doi.org/10.11888/Atmos.tpdc.300398. https://cstr.cn/18406.11.Atmos.tpdc.300398.
+   
+            !REVISION HISTORY
+         !----------------
+            !---
+   
+            metfilename = '/'//trim(fprefix(var_i))//trim(yearstr)//trim(monthstr)//'.nc'
       CASE ('CMIP6')
       !DESCRIPTION
       !===========
@@ -627,6 +648,29 @@ CONTAINS
          !   zip file to reduce the size of the data; remove offset and scale_factor
 
          metfilename = '/'//trim(fprefix(var_i))//trim(yearstr)//trim(monthstr)//'.nc'
+      CASE ('IsoGSM')
+         !DESCRIPTION
+         !===========
+            !--- Isotopes-incorporated Global Spectral Model (IsoGSM)
+   
+         !data source:
+         !-------------------
+            !---https://isotope.iis.u-tokyo.ac.jp/about-our-lab?lang=en
+   
+         !References:
+         !-------------------
+            !---Bong, H., Cauquoin, A., Okazaki, A., Chang, E.-C., Werner, M., Wei, Z., et al. (2024). 
+            !   Process-based intercomparison of water isotope-enabled models and reanalysis nudging effects. 
+            !   Journal of Geophysical Research: Atmospheres, 129, e2023JD038719. 
+            !   https://doi.org/10.1029/2023JD038719
+   
+         !REVISION HISTORY
+         !----------------
+            !---2025.03.23   Zhongwang Wei @ SYSU: add the isotope forcing data
+   
+            metfilename = '/'//trim(fprefix(var_i))//'_'//trim(yearstr)//'.nc'
+
+      
       CASE ('POINT')
          metfilename = '/'//trim(fprefix(1))
       END select
@@ -819,6 +863,13 @@ CONTAINS
                      IF (qsat_tmp < forcn(2)%blk(ib,jb)%val(i,j)) THEN
                         forcn(2)%blk(ib,jb)%val(i,j) = qsat_tmp
                      ENDIF
+                  CASE ('CMFDv2') ! CMFDv2 forcing
+
+                     CALL qsadv (forcn(1)%blk(ib,jb)%val(i,j), forcn(3)%blk(ib,jb)%val(i,j), &
+                        es,esdT,qsat_tmp,dqsat_tmpdT)
+                     IF (qsat_tmp < forcn(2)%blk(ib,jb)%val(i,j)) THEN
+                        forcn(2)%blk(ib,jb)%val(i,j) = qsat_tmp
+                     ENDIF
 
                   CASE ('CRUJRA') ! CRUJRA forcing
                      forcn(4)%blk(ib,jb)%val(i,j)=forcn(4)%blk(ib,jb)%val(i,j)/21600.
@@ -875,6 +926,14 @@ CONTAINS
                         forcn(2)%blk(ib,jb)%val(i,j) = qsat_tmp
                      ENDIF
                      IF (forcn(4)%blk(ib,jb)%val(i,j) < 0.0)   forcn(4)%blk(ib,jb)%val(i,j) = 0.0
+
+                  CASE ('IsoGSM') ! IsoGSM forcing
+                     CALL qsadv (forcn(1)%blk(ib,jb)%val(i,j), forcn(3)%blk(ib,jb)%val(i,j), &
+                        es,esdT,qsat_tmp,dqsat_tmpdT)
+                     IF (qsat_tmp < forcn(2)%blk(ib,jb)%val(i,j)) THEN
+                        forcn(2)%blk(ib,jb)%val(i,j) = qsat_tmp
+                     ENDIF
+
                   END select
 
                ENDDO
