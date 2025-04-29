@@ -169,7 +169,8 @@ CONTAINS
                   CALL nccheck( nf90_redef(ncid) )
                   CALL nccheck( nf90_def_var(ncid, 'year', NF90_INT, (/time_id/), varid) )
                   CALL nccheck( nf90_put_att(ncid, varid, 'long_name', 'year') )
-                  CALL nccheck( nf90_put_att(ncid, varid, 'description', 'repeated value for spinup') )
+                  CALL nccheck( nf90_put_att(ncid, varid, 'description', &
+                                             'repeated value for spinup') )
                   CALL nccheck( nf90_enddef(ncid) )
                   CALL nccheck( nf90_close(ncid) )
 
@@ -210,7 +211,8 @@ CONTAINS
                prcp_acc, filename, 'total_precipitation', numcheck, sumarea, filter, &
                'total precipitation in a year', 'mm')
 #else
-            CALL ncio_write_serial_time (filename, 'relative_tws_change', numcheck, pct_dtws, 'patch', 'year')
+            CALL ncio_write_serial_time (filename, 'relative_tws_change', &
+                                         numcheck, pct_dtws, 'patch', 'year')
             IF (numcheck == 1) THEN
                CALL ncio_put_attr (filename, 'relative_tws_change', 'long_name', &
                   'The ratio of changes in terrestrial water storage to total precipitation')
@@ -218,7 +220,8 @@ CONTAINS
                CALL ncio_put_attr (filename, 'relative_tws_change', 'missing_value', spval)
             ENDIF
 
-            CALL ncio_write_serial_time (filename, 'total_precipitation', numcheck, prcp_acc, 'patch', 'year')
+            CALL ncio_write_serial_time (filename, 'total_precipitation', &
+                                         numcheck, prcp_acc, 'patch', 'year')
             IF (numcheck == 1) THEN
                CALL ncio_put_attr (filename, 'total_precipitation', 'long_name', &
                   'total precipitation in a year')

@@ -76,7 +76,8 @@ SUBROUTINE Aggregation_DBedrock ( &
          allocate (dbedrock_patches (numpatch))
 
          DO ipatch = 1, numpatch
-            CALL aggregation_request_data (landpatch, ipatch, gland, zip = USE_zip_for_aggregation, area = area_one, &
+            CALL aggregation_request_data (landpatch, ipatch, gland, &
+               zip = USE_zip_for_aggregation, area = area_one, &
                data_r8_2d_in1 = dbedrock, data_r8_2d_out1 = dbedrock_one)
             dbedrock_patches (ipatch) = sum(dbedrock_one * area_one) / sum(area_one)
          ENDDO
@@ -98,7 +99,8 @@ SUBROUTINE Aggregation_DBedrock ( &
       lndname = trim(landdir)//'/dbedrock_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
       CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
-      CALL ncio_write_vector (lndname, 'dbedrock_patches', 'patch', landpatch, dbedrock_patches, DEF_Srfdata_CompressLevel)
+      CALL ncio_write_vector (lndname, 'dbedrock_patches', 'patch', &
+           landpatch, dbedrock_patches, DEF_Srfdata_CompressLevel)
 
 #ifdef SrfdataDiag
       typpatch = (/(ityp, ityp = 0, N_land_classification)/)

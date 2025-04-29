@@ -77,30 +77,31 @@ CONTAINS
 
 !-------------------------- Dummy Arguments ----------------------------
    integer, intent(in)  :: lb                          !lower bound of array
-   integer, intent(in)  :: patchtype                   !land patch type (0=soil,1=urban or built-up,2=wetland,
+   integer, intent(in)  :: patchtype                   !land patch type
+                                                       !(0=soil,1=urban or built-up,2=wetland,
                                                        !3=land ice, 4=deep lake, 5=shallow lake)
    real(r8), intent(in) :: deltim                      !seconds in a time step [second]
-   real(r8), intent(in) :: capr                        !tuning factor to turn first layer T into surface T
+   real(r8), intent(in) :: capr                        !tuning factor: turn 1st layer T to surface T
    real(r8), intent(in) :: cnfac                       !Crank Nicholson factor between 0 and 1
 
    real(r8), intent(in) :: csol      (1:nl_soil)       !heat capacity of soil solids [J/(m3 K)]
-   real(r8), intent(in) :: k_solids  (1:nl_soil)       !thermal conductivity of minerals soil [W/m-K]
+   real(r8), intent(in) :: k_solids  (1:nl_soil)       !thermal cond. of minerals soil [W/m-K]
    real(r8), intent(in) :: porsl     (1:nl_soil)       !soil porosity [-]
    real(r8), intent(in) :: psi0      (1:nl_soil)       !soil water suction, negative potential [mm]
 
-   real(r8), intent(in) :: dkdry     (1:nl_soil)       !thermal conductivity of dry soil [W/m-K]
-   real(r8), intent(in) :: dksatu    (1:nl_soil)       !thermal conductivity of saturated soil [W/m-K]
-   real(r8), intent(in) :: dksatf    (1:nl_soil)       !thermal conductivity of saturated frozen soil [W/m-K]
+   real(r8), intent(in) :: dkdry     (1:nl_soil)       !thermal cond. of dry soil [W/m-K]
+   real(r8), intent(in) :: dksatu    (1:nl_soil)       !thermal cond. of sat soil [W/m-K]
+   real(r8), intent(in) :: dksatf    (1:nl_soil)       !thermal cond. of sat frozen soil [W/m-K]
 
-   real(r8), intent(in) :: vf_quartz (1:nl_soil)       !volumetric fraction of quartz within mineral soil
-   real(r8), intent(in) :: vf_gravels(1:nl_soil)       !volumetric fraction of gravels
-   real(r8), intent(in) :: vf_om     (1:nl_soil)       !volumetric fraction of organic matter
-   real(r8), intent(in) :: vf_sand   (1:nl_soil)       !volumetric fraction of sand
-   real(r8), intent(in) :: wf_gravels(1:nl_soil)       !gravimetric fraction of gravels
-   real(r8), intent(in) :: wf_sand   (1:nl_soil)       !gravimetric fraction of sand
+   real(r8), intent(in) :: vf_quartz (1:nl_soil)       !volumetric frac of quartz in mineral soil
+   real(r8), intent(in) :: vf_gravels(1:nl_soil)       !volumetric frac of gravels
+   real(r8), intent(in) :: vf_om     (1:nl_soil)       !volumetric frac of organic matter
+   real(r8), intent(in) :: vf_sand   (1:nl_soil)       !volumetric frac of sand
+   real(r8), intent(in) :: wf_gravels(1:nl_soil)       !gravimetric frac of gravels
+   real(r8), intent(in) :: wf_sand   (1:nl_soil)       !gravimetric frac of sand
 
-   real(r8), intent(in) :: BA_alpha  (1:nl_soil)       !alpha in Balland and Arp(2005) thermal conductivity scheme
-   real(r8), intent(in) :: BA_beta   (1:nl_soil)       !beta in Balland and Arp(2005) thermal conductivity scheme
+   real(r8), intent(in) :: BA_alpha  (1:nl_soil)       !alpha in Balland and Arp(2005) thermal cond.
+   real(r8), intent(in) :: BA_beta   (1:nl_soil)       !beta in Balland and Arp(2005) thermal cond.
 
 #ifdef Campbell_SOIL_MODEL
    real(r8), intent(in) :: bsw       (1:nl_soil)       !clapp and hornberger "b" parameter [-]
@@ -119,12 +120,12 @@ CONTAINS
    real(r8), intent(in) :: zi_gpersno(lb-1:nl_soil)    !interface depth [m]
 
    real(r8), intent(in) :: sabgper                     !solar radiation absorbed by ground [W/m2]
-   real(r8), intent(in) :: lgper                       !atmospheric infrared (longwave) radiation [W/m2]
+   real(r8), intent(in) :: lgper                       !atmospheric longwave radiation [W/m2]
    real(r8), intent(in) :: clgper                      !deriv. of longwave wrt to soil temp [w/m2/k]
    real(r8), intent(in) :: fsengper                    !sensible heat flux from ground [W/m2]
    real(r8), intent(in) :: fevpgper                    !evaporation heat flux from ground [mm/s]
-   real(r8), intent(in) :: cgper                       !deriv. of soil energy flux wrt to soil temp [w/m2/k]
-   real(r8), intent(in) :: htvp                        !latent heat of vapor of water (or sublimation) [j/kg]
+   real(r8), intent(in) :: cgper                       !deriv. of soil energy flux to T [w/m2/k]
+   real(r8), intent(in) :: htvp                        !latent heat of vapor (or sublimation) [j/kg]
 
    real(r8), intent(inout) :: t_gpersno   (lb:nl_soil) !soil temperature [K]
    real(r8), intent(inout) :: wice_gpersno(lb:nl_soil) !ice lens [kg/m2]
@@ -133,7 +134,7 @@ CONTAINS
    real(r8), intent(inout) :: snowdp_gper              !snow depth [m]
 
    real(r8), intent(out) :: sm                         !rate of snowmelt [kg/(m2 s)]
-   real(r8), intent(out) :: xmf                        !total latent heat of phase change of ground water
+   real(r8), intent(out) :: xmf                        !total latent heat of phase change in soil
    real(r8), intent(out) :: fact (lb:nl_soil)          !used in computing tridiagonal matrix
    integer,  intent(out) :: imelt(lb:nl_soil)          !flag for melting or freezing [-]
 
@@ -233,8 +234,8 @@ CONTAINS
       t_gpersno_bef(lb:) = t_gpersno(lb:)
 
       j       = lb
-      fact(j) = deltim / cv(j) &
-              * dz_gpersno(j) / (0.5*(z_gpersno(j)-zi_gpersno(j-1)+capr*(z_gpersno(j+1)-zi_gpersno(j-1))))
+      fact(j) = deltim / cv(j) * dz_gpersno(j) &
+              / (0.5*(z_gpersno(j)-zi_gpersno(j-1)+capr*(z_gpersno(j+1)-zi_gpersno(j-1))))
 
       DO j = lb + 1, nl_soil
          fact(j) = deltim/cv(j)
@@ -290,12 +291,13 @@ CONTAINS
          brr(j) = cnfac*(fn(j)-fn(j-1)) + (1.-cnfac)*(fn1(j)-fn1(j-1))
       ENDDO
 
-      CALL meltf (patchtype,.false.,lb,nl_soil,deltim, &
+      CALL meltf (patchtype,.false.,lb,nl_soil,deltim,&
                   !NOTE: compatibility settings for splitting soil&snow
                   ! temporal input, as urban mode doesn't support split soil&snow
                   ! hs_soil=hs, hs_snow=hs, fsno=0.
-                  fact(lb:),brr(lb:),hs,hs,hs,0.,dhsdT, &
-                  t_gpersno_bef(lb:),t_gpersno(lb:),wliq_gpersno(lb:),wice_gpersno(lb:),imelt(lb:), &
+                  fact(lb:),brr(lb:),hs,hs,hs,0.,dhsdT,&
+                  t_gpersno_bef(lb:),t_gpersno(lb:),&
+                  wliq_gpersno(lb:),wice_gpersno(lb:),imelt(lb:),&
                   scv_gper,snowdp_gper,sm,xmf,porsl,psi0,&
 #ifdef Campbell_SOIL_MODEL
                   bsw,&

@@ -112,7 +112,7 @@ CONTAINS
    real(r8) :: dz, z, u
 
       ! 09/26/2017: change fixed n -> fixed dz
-      dz = 0.001 !fordebug only
+      dz = 0.001
       n  = int( (htop-hbot) / dz ) + 1
 
       uintegral = 0.
@@ -135,8 +135,6 @@ CONTAINS
          !directly for u, In this way, there is no need to square
          uintegral = uintegral + u*dz / (htop-hbot)
       ENDDO
-
-      !uintegral = uintegral * uintegral
 
       RETURN
    END FUNCTION uintegral
@@ -162,7 +160,7 @@ CONTAINS
    real(r8) :: dz, z, u
 
       ! 09/26/2017: change fixed n -> fixed dz
-      dz = 0.001 !fordebug only
+      dz = 0.001
       n  = int( (ztop-zbot) / dz ) + 1
 
       uintegralz = 0.
@@ -185,8 +183,6 @@ CONTAINS
          !directly for u, In this way, there is no need to square
          uintegralz = uintegralz + u*dz / (ztop-zbot)
       ENDDO
-
-      !uintegralz = uintegralz * uintegralz
 
       RETURN
    END FUNCTION uintegralz
@@ -410,7 +406,6 @@ CONTAINS
 
    real(r8) :: uexp, ulog
 
-      ! yuan, 12/28/2020:
       uexp = utop*exp(-alpha*(htop-z)/(htop-hbot))
       ulog = utop*log(z/z0mg)/log(htop/z0mg)
 
@@ -448,7 +443,7 @@ CONTAINS
       ENDIF
 
       ! 09/26/2017: change fixed n -> fixed dz
-      dz = 0.001 ! fordebug only
+      dz = 0.001
       n  = int( (ztop-zbot) / dz ) + 1
 
       DO i = 1, n
@@ -583,7 +578,7 @@ CONTAINS
    ! local variables
    real(r8) :: kdiff_ub, kdiff_lb
 
-      !print *, "*** CALL recursive SUBROUTINE kfindroots!!"
+      ! CALL recursive SUBROUTINE kfindroots
       kdiff_ub = kdiff(ztop,ktop,htop,hbot,obu,ustar,fac,alpha)
       kdiff_lb = kdiff(zmid,ktop,htop,hbot,obu,ustar,fac,alpha)
 

@@ -223,7 +223,8 @@ PROGRAM MKSRFDATA
 #endif
 #if (defined CROP)
    ! define grid for crop parameters
-   CALL grid_crop%define_from_file (trim(DEF_dir_rawdata)//'/global_CFT_surface_data.nc', 'lat', 'lon')
+   CALL grid_crop%define_from_file (trim(DEF_dir_rawdata)//&
+      '/global_CFT_surface_data.nc', 'lat', 'lon')
 #endif
 
    ! define grid for forest height

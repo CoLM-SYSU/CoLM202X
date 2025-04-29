@@ -247,7 +247,7 @@ MODULE MOD_Const_PFT
          /)
 
    ! reflectance of green leaf in visible band
-#if(defined LULC_IGBP_PC)
+#if (defined LULC_IGBP_PC)
    ! Leaf optical properties adapted from measured data (Dong et al., 2021)
    real(r8), parameter :: rhol_vis_p(0:N_PFT+N_CFT-1) &
       = (/0.110,  0.070,  0.070,  0.070,  0.100,  0.110,  0.100,  0.100&
@@ -286,7 +286,7 @@ MODULE MOD_Const_PFT
          /)
 
    ! reflectance of green leaf in near infrared band
-#if(defined LULC_IGBP_PC)
+#if (defined LULC_IGBP_PC)
    ! Leaf optical properties adapted from measured data (Dong et al., 2021)
    real(r8), parameter :: rhol_nir_p(0:N_PFT+N_CFT-1) &
       = (/0.350,  0.360,  0.370,  0.360,  0.450,  0.460,  0.450,  0.420&
@@ -325,7 +325,7 @@ MODULE MOD_Const_PFT
          /)
 
    ! transmittance of green leaf in visible band
-#if(defined LULC_IGBP_PC)
+#if (defined LULC_IGBP_PC)
    ! Leaf optical properties adapted from measured data (Dong et al., 2021)
    real(r8), parameter :: taul_vis_p(0:N_PFT+N_CFT-1) &
       = (/0.050,  0.050,  0.050,  0.050,  0.050,  0.060,  0.050,  0.060&
@@ -364,7 +364,7 @@ MODULE MOD_Const_PFT
          /)
 
    ! transmittance of green leaf in near infrared band
-#if(defined LULC_IGBP_PC)
+#if (defined LULC_IGBP_PC)
    ! Leaf optical properties adapted from measured data (Dong et al., 2021)
    real(r8), parameter :: taul_nir_p(0:N_PFT+N_CFT-1) &
       = (/0.340,  0.280,  0.290,  0.380,  0.250,  0.330,  0.250,  0.430&
@@ -727,7 +727,8 @@ MODULE MOD_Const_PFT
 #endif
          /)
 
-   logical , parameter, dimension(0:N_PFT+N_CFT-1) :: isbetr  & ! True => is tropical broadleaf evergreen tree
+   ! True => is tropical broadleaf evergreen tree
+   logical , parameter, dimension(0:N_PFT+N_CFT-1) :: isbetr  &
       =(/.False., .False., .False., .False., .True.,  .False., .False., .False. &
        , .False., .False., .False., .False., .False., .False., .False., .False. &
 #ifdef CROP
@@ -742,7 +743,8 @@ MODULE MOD_Const_PFT
 #endif
          /)
 
-   logical , parameter, dimension(0:N_PFT+N_CFT-1) :: isbdtr  & ! True => is a broadleaf deciduous tree
+   ! True => is a broadleaf deciduous tree
+   logical , parameter, dimension(0:N_PFT+N_CFT-1) :: isbdtr  &
       =(/.False., .False., .False., .False., .False., .False., .True.,  .False. &
        , .False., .False., .False., .False., .False., .False., .False., .False. &
 #ifdef CROP
@@ -772,7 +774,8 @@ MODULE MOD_Const_PFT
 #endif
          /)
 
-   logical , parameter, dimension(0:N_PFT+N_CFT-1) :: issed   & ! True => is a seasonal deciduous tree
+   ! True => is a seasonal deciduous tree
+   logical , parameter, dimension(0:N_PFT+N_CFT-1) :: issed   &
       =(/.False., .False., .False., .True.,  .False., .False., .False., .True.  &
        , .True.,  .False., .False., .True.,  .True.,  .False., .False., .False. &
 #ifdef CROP
@@ -1257,8 +1260,8 @@ MODULE MOD_Const_PFT
 #endif
          /)
 !--- crop variables ---
-
-   real(r8),parameter, dimension(0:N_PFT+N_CFT-1) :: manunitro  &   ! Max fertilizer to be applied in total (kg N/m2)
+   ! Max fertilizer to be applied in total (kg N/m2)
+   real(r8),parameter, dimension(0:N_PFT+N_CFT-1) :: manunitro  &
       = (/  0.,     0.,     0.,     0.,     0.,     0.,     0.,     0. &
       ,     0.,     0.,     0.,     0.,     0.,     0.,     0.,     0. &
 #ifdef CROP
@@ -1697,8 +1700,8 @@ MODULE MOD_Const_PFT
 #endif
          /)
 #endif
-      ! irrigation parameter for irrigated crop
-   logical , parameter :: irrig_crop(0:N_PFT+N_CFT-1)  & ! True => is tropical broadleaf evergreen tree
+   ! irrigation parameter for irrigated crop
+   logical , parameter :: irrig_crop(0:N_PFT+N_CFT-1)  &
            =(/.False., .False., .False., .False., .False., .False., .False., .False. &
             , .False., .False., .False., .False., .False., .False., .False., .False. &
 #ifdef CROP
