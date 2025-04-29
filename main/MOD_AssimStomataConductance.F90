@@ -245,7 +245,7 @@ CONTAINS
             sqrtin= max( 0., ( (omp+oms)**2 - 4.*btheta*omp*oms ) )
             assim = max( 0., ( ( oms+omp ) - sqrt( sqrtin ) ) / ( 2.*btheta ))
          ELSE
-            assim = min(omc, ome)
+            assim = max( 0., min(omc, ome))
          ENDIF
          !print*,'assimn',assim,omc,ome
          assimn= ( assim - respc)                         ! mol m-2 s-1
@@ -704,12 +704,16 @@ CONTAINS
 
          omc = vm   * ( pco2i-gammas ) / ( pco2i + rrkk ) * c3 + vm * c4
          ome = epar * ( pco2i-gammas ) / ( pco2i+2.*gammas ) * c3 + epar * c4
-         oms = omss * c3 + omss*pco2i * c4
+         IF(.not. DEF_USE_WUEST .or. abs(c4 - 1) .lt. 0.001)THEN
+            oms = omss * c3 + omss*pco2i * c4
 
-         sqrtin= max( 0., ( (ome+omc)**2 - 4.*atheta*ome*omc ) )
-         omp   = ( ( ome+omc ) - sqrt( sqrtin ) ) / ( 2.*atheta )
-         sqrtin= max( 0., ( (omp+oms)**2 - 4.*btheta*omp*oms ) )
-         assim = max( 0., ( ( oms+omp ) - sqrt( sqrtin ) ) / ( 2.*btheta ))
+            sqrtin= max( 0., ( (ome+omc)**2 - 4.*atheta*ome*omc ) )
+            omp   = ( ( ome+omc ) - sqrt( sqrtin ) ) / ( 2.*atheta )
+            sqrtin= max( 0., ( (omp+oms)**2 - 4.*btheta*omp*oms ) )
+            assim = max( 0., ( ( oms+omp ) - sqrt( sqrtin ) ) / ( 2.*btheta ))
+         ELSE
+            assim = max( 0., min(omc, ome))
+         ENDIF
 
          assimn= ( assim - respc)                         ! mol m-2 s-1
 

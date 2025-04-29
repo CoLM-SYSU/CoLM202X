@@ -341,9 +341,9 @@ while [ ${ILOOP} -le 130 ]
 do
    cd ${CASEPATH}/${CASENAME}/bld/run/
    if [ ${ILOOP} -le 100 ];then
-      ${EXEC} ${EXEO} 240 ./colm.x ../../input_${CASENAME}-SASU.nml > ../../log-${ILOOP}
+      ${EXEC} ${EXEO} $NP ./colm.x ../../input_${CASENAME}-SASU.nml > ../../log-${ILOOP}
    else
-      ${EXEC} ${EXEO} 240 ./colm.x ../../input_${CASENAME}.nml > ../../log-${ILOOP}
+      ${EXEC} ${EXEO} $NP ./colm.x ../../input_${CASENAME}.nml > ../../log-${ILOOP}
    fi
    mkdir -p ${CASEPATH}/${CASENAME}/restart/loop-${ILOOP}
    mkdir -p ${CASEPATH}/${CASENAME}/history/loop-${ILOOP}

@@ -38,7 +38,7 @@ CreateClone()
    sed -i "s|$SourcePath|$DestPath|g" ./mksrf.submit
    cp -p $SourcePath/$SourceName/init.submit ./
    sed -i "s|$SourceName|$DestName|g" ./init.submit
-   sed -i "s|$SourcePath|$DestName|g" ./init.submit
+   sed -i "s|$SourcePath|$DestPath|g" ./init.submit
    cp -p $SourcePath/$SourceName/"case.submit" ./
    sed -i "s|$SourceName|$DestName|g" "./case.submit"
    sed -i "s|$SourcePath|$DestPath|g" "./case.submit"
