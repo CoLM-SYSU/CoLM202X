@@ -1,0 +1,51 @@
+&nl_colm_forcing
+
+  ! ----- forcing -----
+   DEF_dir_forcing  = '/share/home/dq013/zhwei/colm/data/CoLM_Forcing/CMFDv2/Data_forcing_03hr_010deg'
+
+   DEF_forcing%dataset            = 'CMFDv2'
+   DEF_forcing%solarin_all_band   = .true.
+   DEF_forcing%HEIGHT_V           = 50.0
+   DEF_forcing%HEIGHT_T           = 40.0
+   DEF_forcing%HEIGHT_Q           = 40.0
+
+   DEF_forcing%regional           = .true.
+   DEF_forcing%regbnd             = 15.0 55.0 70.0 140.0
+   DEF_forcing%has_missing_value  = .true.
+   DEF_forcing%missing_value_name = 'missing_value'
+
+
+   DEF_forcing%NVAR               = 8       ! variable number of forcing data
+   DEF_forcing%startyr            = 1951    ! start year of forcing data
+   DEF_forcing%startmo            = 1       ! start month of forcing data
+   DEF_forcing%endyr              = 2020    ! end year of forcing data
+   DEF_forcing%endmo              = 12      ! end month of forcing data
+   DEF_forcing%dtime              = 10800 10800 10800 10800 0 10800 10800 10800
+   DEF_forcing%offset             = 0 0 0 0 0 0 5400 0
+   DEF_forcing%nlands             = 1       ! land grid number in 1d
+
+   DEF_forcing%leapyear           = .true.  ! leapyear calendar
+   DEF_forcing%data2d             = .true.  ! data in 2 dimension (lon, lat)
+   DEF_forcing%hightdim           = .false. ! have "z" dimension
+   DEF_forcing%dim2d              = .false. ! lat/lon value in 2 dimension (lon, lat)
+
+   DEF_forcing%latname            = 'lat'   ! dimension name of latitude
+   DEF_forcing%lonname            = 'lon'   ! dimension name of longitude
+
+   DEF_forcing%groupby            = 'month' ! file grouped by year/month
+
+   DEF_forcing%fprefix(1) = 'Temp/temp_CMFD_V0200_B-01_03hr_010deg_'
+   DEF_forcing%fprefix(2) = 'SHum/shum_CMFD_V0200_B-01_03hr_010deg_'
+   DEF_forcing%fprefix(3) = 'Pres/pres_CMFD_V0200_B-01_03hr_010deg_'
+   DEF_forcing%fprefix(4) = 'Prec/prec_CMFD_V0200_B-01_03hr_010deg_'
+   DEF_forcing%fprefix(5) = 'NULL'
+   DEF_forcing%fprefix(6) = 'Wind/wind_CMFD_V0200_B-01_03hr_010deg_'
+   DEF_forcing%fprefix(7) = 'SRad/srad_CMFD_V0200_B-01_03hr_010deg_'
+   DEF_forcing%fprefix(8) = 'LRad/lrad_CMFD_V0200_B-01_03hr_010deg_'
+
+
+   DEF_forcing%vname    = 'temp' 'shum' 'pres' 'prec' 'NULL' 'wind' 'srad' 'lrad'
+   DEF_forcing%timelog  = 'instant' 'instant' 'instant' 'backward' 'instant' 'instant' 'backward' 'instant'
+   DEF_forcing%tintalgo = 'linear' 'linear' 'linear' 'uniform' 'NULL' 'linear' 'coszen' 'linear'
+
+/
