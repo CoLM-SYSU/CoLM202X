@@ -576,11 +576,20 @@ CONTAINS
       ! Calculate radiation transfer matrix
       !   AX = B
       !-------------------------------------------------
-      A(1,:) = (/1-Fww_*fwsun*awall,  -Fww_*fwsun*awall, -Fgw_*fwsun*awall, -Fgw_*fwsun*awall, -Fvw*fwsun*awall/)
-      A(2,:) = (/ -Fww_*fwsha*awall, 1-Fww_*fwsha*awall, -Fgw_*fwsha*awall, -Fgw_*fwsha*awall, -Fvw*fwsha*awall/)
-      A(3,:) = (/ -Fwg_*fgimp*agimp,  -Fwg_*fgimp*agimp,             1._r8,             0._r8, -Fvg*fgimp*agimp/)
-      A(4,:) = (/ -Fwg_*fgper*agper,  -Fwg_*fgper*agper,             0._r8,             1._r8, -Fvg*fgper*agper/)
-      A(5,:) = (/ -Fwv*av          ,  -Fwv*av          , -Fgv*av          , -Fgv*av          ,            1._r8/)
+      A(1,:) = (/1-Fww_*fwsun*awall,  -Fww_*fwsun*awall, &
+                  -Fgw_*fwsun*awall,  -Fgw_*fwsun*awall, -Fvw*fwsun*awall/)
+
+      A(2,:) = (/ -Fww_*fwsha*awall, 1-Fww_*fwsha*awall, &
+                  -Fgw_*fwsha*awall,  -Fgw_*fwsha*awall, -Fvw*fwsha*awall/)
+
+      A(3,:) = (/ -Fwg_*fgimp*agimp,  -Fwg_*fgimp*agimp, &
+                              1._r8,              0._r8, -Fvg*fgimp*agimp/)
+
+      A(4,:) = (/ -Fwg_*fgper*agper,  -Fwg_*fgper*agper, &
+                              0._r8,              1._r8, -Fvg*fgper*agper/)
+
+      A(5,:) = (/ -Fwv*av          ,  -Fwv*av          , &
+                  -Fgv*av          ,  -Fgv*av          ,            1._r8/)
 
       ! Inverse of matrix A
       Ainv = MatrixInverse(A)

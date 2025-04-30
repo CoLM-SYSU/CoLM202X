@@ -165,9 +165,12 @@ CONTAINS
                   0.5*hcv_roof + 0.5*hcv_wall*f_wsun + 0.5*hcv_wall*f_wsha +&
                   H*rhoair*cpair/deltim + (ACH/3600.)*H*rhoair*cpair /)
 
-      B(1) = -0.5*hcv_roof*(troof_inner-troom) + 0.5*tkdz_roof*(troof_nl_bef-troof_inner) + 0.5*tkdz_roof*troof_nl
-      B(2) = -0.5*hcv_wall*(twsun_inner-troom) + 0.5*tkdz_wsun*(twsun_nl_bef-twsun_inner) + 0.5*tkdz_wsun*twsun_nl
-      B(3) = -0.5*hcv_wall*(twsha_inner-troom) + 0.5*tkdz_wsha*(twsha_nl_bef-twsha_inner) + 0.5*tkdz_wsha*twsha_nl
+      B(1) = -0.5*hcv_roof*(troof_inner-troom) + 0.5*tkdz_roof*(troof_nl_bef-troof_inner) &
+                                               + 0.5*tkdz_roof*troof_nl
+      B(2) = -0.5*hcv_wall*(twsun_inner-troom) + 0.5*tkdz_wsun*(twsun_nl_bef-twsun_inner) &
+                                               + 0.5*tkdz_wsun*twsun_nl
+      B(3) = -0.5*hcv_wall*(twsha_inner-troom) + 0.5*tkdz_wsha*(twsha_nl_bef-twsha_inner) &
+                                               + 0.5*tkdz_wsha*twsha_nl
 
       B(4) = H*rhoair*cpair*troom/deltim + (ACH/3600.)*H*rhoair*cpair*taf &
            + 0.5*hcv_roof*(troof_inner-troom) &
@@ -228,9 +231,13 @@ CONTAINS
          twsun_inner = (B(2)-A(2,4)*troom)/A(2,2)
          twsha_inner = (B(3)-A(3,4)*troom)/A(3,3)
 
-         Fhac = 0.5*hcv_roof*(troof_inner_bef-troom_bef)        + 0.5*hcv_roof*(troof_inner-troom)
-         Fhac = 0.5*hcv_wall*(twsun_inner_bef-troom_bef)*f_wsun + 0.5*hcv_wall*(twsun_inner-troom)*f_wsun + Fhac
-         Fhac = 0.5*hcv_wall*(twsha_inner_bef-troom_bef)*f_wsha + 0.5*hcv_wall*(twsha_inner-troom)*f_wsha + Fhac
+         Fhac = 0.5*hcv_roof*(troof_inner_bef-troom_bef) &
+              + 0.5*hcv_roof*(troof_inner-troom)
+         Fhac = 0.5*hcv_wall*(twsun_inner_bef-troom_bef)*f_wsun &
+              + 0.5*hcv_wall*(twsun_inner-troom)*f_wsun + Fhac
+         Fhac = 0.5*hcv_wall*(twsha_inner_bef-troom_bef)*f_wsha &
+              + 0.5*hcv_wall*(twsha_inner-troom)*f_wsha + Fhac
+
          IF ( heating ) Fhah = abs(Fhac)
          Fhac = abs(Fhac) + abs(Fach)
          Fwst = Fhac*waste_coef

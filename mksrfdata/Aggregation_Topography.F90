@@ -87,7 +87,8 @@ SUBROUTINE Aggregation_Topography ( &
 
          DO ipatch = 1, numpatch
 
-            CALL aggregation_request_data (landpatch, ipatch, gtopo, zip = USE_zip_for_aggregation, area = area_one, &
+            CALL aggregation_request_data (landpatch, ipatch, gtopo, &
+               zip = USE_zip_for_aggregation, area = area_one, &
                data_r8_2d_in1 = topography, data_r8_2d_out1 = topography_one)
 
             IF (any(topography_one /= -9999.0)) THEN
@@ -97,7 +98,8 @@ SUBROUTINE Aggregation_Topography ( &
                   / sum(area_one, mask = topography_one /= -9999.0)
 
                topostd_patches(ipatch) = &
-                  sum((topography_one - topography_patches(ipatch))**2 * area_one, mask = topography_one /= -9999.0) &
+                  sum((topography_one - topography_patches(ipatch))**2 * area_one, &
+                  mask = topography_one /= -9999.0) &
                   / sum(area_one, mask = topography_one /= -9999.0)
                topostd_patches(ipatch) = sqrt(topostd_patches(ipatch))
 

@@ -45,30 +45,30 @@ MODULE MOD_Forcing
    type(pointer_real8_1d), allocatable :: forc_topo_grid   (:)
    type(pointer_real8_1d), allocatable :: forc_maxelv_grid (:)
 
-   type(pointer_real8_1d), allocatable :: forc_t_grid    (:)
-   type(pointer_real8_1d), allocatable :: forc_th_grid   (:)
-   type(pointer_real8_1d), allocatable :: forc_q_grid    (:)
-   type(pointer_real8_1d), allocatable :: forc_pbot_grid (:)
-   type(pointer_real8_1d), allocatable :: forc_rho_grid  (:)
-   type(pointer_real8_1d), allocatable :: forc_prc_grid  (:)
-   type(pointer_real8_1d), allocatable :: forc_prl_grid  (:)
-   type(pointer_real8_1d), allocatable :: forc_lwrad_grid(:)
-   type(pointer_real8_1d), allocatable :: forc_swrad_grid(:)
-   type(pointer_real8_1d), allocatable :: forc_hgt_grid  (:)
-   type(pointer_real8_1d), allocatable :: forc_us_grid   (:)
-   type(pointer_real8_1d), allocatable :: forc_vs_grid   (:)
+   type(pointer_real8_1d), allocatable :: forc_t_grid      (:)
+   type(pointer_real8_1d), allocatable :: forc_th_grid     (:)
+   type(pointer_real8_1d), allocatable :: forc_q_grid      (:)
+   type(pointer_real8_1d), allocatable :: forc_pbot_grid   (:)
+   type(pointer_real8_1d), allocatable :: forc_rho_grid    (:)
+   type(pointer_real8_1d), allocatable :: forc_prc_grid    (:)
+   type(pointer_real8_1d), allocatable :: forc_prl_grid    (:)
+   type(pointer_real8_1d), allocatable :: forc_lwrad_grid  (:)
+   type(pointer_real8_1d), allocatable :: forc_swrad_grid  (:)
+   type(pointer_real8_1d), allocatable :: forc_hgt_grid    (:)
+   type(pointer_real8_1d), allocatable :: forc_us_grid     (:)
+   type(pointer_real8_1d), allocatable :: forc_vs_grid     (:)
 
-   type(pointer_real8_1d), allocatable :: forc_t_part     (:)
-   type(pointer_real8_1d), allocatable :: forc_th_part    (:)
-   type(pointer_real8_1d), allocatable :: forc_q_part     (:)
-   type(pointer_real8_1d), allocatable :: forc_pbot_part  (:)
-   type(pointer_real8_1d), allocatable :: forc_rhoair_part(:)
-   type(pointer_real8_1d), allocatable :: forc_prc_part   (:)
-   type(pointer_real8_1d), allocatable :: forc_prl_part   (:)
-   type(pointer_real8_1d), allocatable :: forc_frl_part   (:)
-   type(pointer_real8_1d), allocatable :: forc_swrad_part (:)
-   type(pointer_real8_1d), allocatable :: forc_us_part    (:)
-   type(pointer_real8_1d), allocatable :: forc_vs_part    (:)
+   type(pointer_real8_1d), allocatable :: forc_t_part      (:)
+   type(pointer_real8_1d), allocatable :: forc_th_part     (:)
+   type(pointer_real8_1d), allocatable :: forc_q_part      (:)
+   type(pointer_real8_1d), allocatable :: forc_pbot_part   (:)
+   type(pointer_real8_1d), allocatable :: forc_rhoair_part (:)
+   type(pointer_real8_1d), allocatable :: forc_prc_part    (:)
+   type(pointer_real8_1d), allocatable :: forc_prl_part    (:)
+   type(pointer_real8_1d), allocatable :: forc_frl_part    (:)
+   type(pointer_real8_1d), allocatable :: forc_swrad_part  (:)
+   type(pointer_real8_1d), allocatable :: forc_us_part     (:)
+   type(pointer_real8_1d), allocatable :: forc_vs_part     (:)
 
    logical, allocatable :: glacierss (:)
 
@@ -201,7 +201,8 @@ CONTAINS
          tstamp_LB(1) = timestamp(-1, -1, -1)
 
          IF (p_is_master) THEN
-            CALL ncio_get_attr (filename, vname(1), trim(DEF_forcing%missing_value_name), missing_value)
+            CALL ncio_get_attr (filename, vname(1), trim(DEF_forcing%missing_value_name), &
+                                missing_value)
          ENDIF
 #ifdef USEMPI
          CALL mpi_bcast (missing_value, 1, MPI_REAL8, p_address_master, p_comm_glb, p_err)
@@ -406,7 +407,7 @@ CONTAINS
    ! local variables:
    integer  :: ivar, istt, iend, id(3)
    integer  :: iblkme, ib, jb, i, j, ilon, ilat, np, ipart, ne
-   real(r8) :: calday                                             ! Julian cal day (1.xx to 365.xx)
+   real(r8) :: calday                             ! Julian cal day (1.xx to 365.xx)
    real(r8) :: sunang, cloud, difrat, vnrat
    real(r8) :: a, hsolar, ratio_rvrf
    type(block_data_real8_2d) :: forc_xy_solarin
@@ -452,15 +453,6 @@ CONTAINS
             dtLB = mtstamp - tstamp_LB(ivar)
             dtUB = tstamp_UB(ivar) - mtstamp
 
-            ! nearest method, for precipitation
-            IF (tintalgo(ivar) == 'nearest') THEN
-               IF (dtLB <= dtUB) THEN
-                  CALL block_data_copy (forcn_LB(ivar), forcn(ivar))
-               ELSE
-                  CALL block_data_copy (forcn_UB(ivar), forcn(ivar))
-               ENDIF
-            ENDIF
-
             ! linear method, for T, Pres, Q, W, LW
             IF (tintalgo(ivar) == 'linear') THEN
                IF ( (dtLB+dtUB) > 0 ) THEN
@@ -470,6 +462,25 @@ CONTAINS
                      forcn(ivar))
                ELSE
                   CALL block_data_copy (forcn_LB(ivar), forcn(ivar))
+               ENDIF
+            ENDIF
+
+            ! for precipitation, two algorithms available
+            ! nearest method, for precipitation
+            IF (tintalgo(ivar) == 'nearest') THEN
+               IF (dtLB <= dtUB) THEN
+                  CALL block_data_copy (forcn_LB(ivar), forcn(ivar))
+               ELSE
+                  CALL block_data_copy (forcn_UB(ivar), forcn(ivar))
+               ENDIF
+            ENDIF
+
+            ! set all the same value, for precipitation
+            IF (tintalgo(ivar) == 'uniform') THEN
+               IF (trim(timelog(ivar)) == 'forward') THEN
+                  CALL block_data_copy (forcn_LB(ivar), forcn(ivar))
+               ELSE
+                  CALL block_data_copy (forcn_UB(ivar), forcn(ivar))
                ENDIF
             ENDIF
 
@@ -822,7 +833,8 @@ CONTAINS
 #ifndef SinglePoint
          IF (trim(DEF_DS_precipitation_adjust_scheme) == 'III') THEN
             ! Sisi Chen, Lu Li, Yongjiu Dai et al., 2024, JGR
-            ! Using MPI to pass the forcing variable field to Python to accomplish precipitation downscaling
+            ! Using MPI to pass the forcing variable field to Python to
+            ! accomplish precipitation downscaling
             IF (p_is_worker) THEN
                spaceship(1,1:numpatch) = forc_topo
                spaceship(2,1:numpatch) = forc_t
@@ -838,7 +850,8 @@ CONTAINS
 
                target_server = p_iam_glb/5+p_np_glb
                CALL MPI_SEND(spaceship,12*numpatch,MPI_REAL8,target_server,0,MPI_COMM_WORLD,ierr)
-               CALL MPI_RECV(forc_prc,numpatch,MPI_REAL8,target_server,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE,ierr)
+               CALL MPI_RECV(forc_prc,numpatch,MPI_REAL8,target_server,0,MPI_COMM_WORLD,&
+                             MPI_STATUS_IGNORE,ierr)
 
                forc_prl = forc_prc/3600*2/3._r8
                forc_prc = forc_prc/3600*1/3._r8
@@ -997,7 +1010,8 @@ CONTAINS
                         ib = gblock%xblkme(iblkme)
                         jb = gblock%yblkme(iblkme)
 
-                        metdata%blk(ib,jb)%val(1,1) = rainf%blk(ib,jb)%val(1,1) + snowf%blk(ib,jb)%val(1,1)
+                        metdata%blk(ib,jb)%val(1,1) = rainf%blk(ib,jb)%val(1,1) &
+                                                    + snowf%blk(ib,jb)%val(1,1)
                      ENDDO
                   ELSE
                      CALL ncio_read_site_time (filename, vname(ivar), time_i, metdata)
@@ -1037,7 +1051,8 @@ CONTAINS
                            ib = gblock%xblkme(iblkme)
                            jb = gblock%yblkme(iblkme)
 
-                           metdata%blk(ib,jb)%val(1,1) = rainf%blk(ib,jb)%val(1,1) + snowf%blk(ib,jb)%val(1,1)
+                           metdata%blk(ib,jb)%val(1,1) = rainf%blk(ib,jb)%val(1,1) &
+                                                       + snowf%blk(ib,jb)%val(1,1)
                         ENDDO
                      ELSE
                         CALL ncio_read_site_time (filename, vname(ivar), time_i, metdata)
@@ -1051,8 +1066,10 @@ CONTAINS
                CALL block_data_copy (metdata, forcn_UB(ivar))
             ELSE
                write(*,*) year, endyr
-               print *, 'NOTE: reaching the END of forcing data, always reuse the last time step data!'
+               print *, 'NOTE: reaching the END of forcing data, &
+                         always reuse the last time step data!'
             ENDIF
+            !TODO: ivar -> coszen
             IF (ivar == 7) THEN  ! calculate time average coszen, for shortwave radiation
                CALL calavgcos(idate)
             ENDIF

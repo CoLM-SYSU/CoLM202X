@@ -47,12 +47,12 @@ CONTAINS
 
 !-------------------------- Dummy Arguments ----------------------------
 
-   integer, intent(in) :: nl_soil                  ! upper bound of array
+   integer, intent(in) :: nl_soil                 ! upper bound of array
 
-   real(r8), intent(in) :: trsmx0                  ! max transpiration for moist soil+100% veg.[mm/s]
-   real(r8), intent(in) :: porsl(1:nl_soil)        ! soil porosity [-]
+   real(r8), intent(in) :: trsmx0                 ! max transpiration for moist soil+100% veg.[mm/s]
+   real(r8), intent(in) :: porsl(1:nl_soil)       ! soil porosity [-]
 #ifdef Campbell_SOIL_MODEL
-   real(r8), intent(in) :: bsw(1:nl_soil)          ! Clapp-Hornberger "B"
+   real(r8), intent(in) :: bsw(1:nl_soil)         ! Clapp-Hornberger "B"
 #endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
    real(r8), intent(in) :: theta_r  (1:nl_soil)
@@ -62,15 +62,15 @@ CONTAINS
    real(r8), intent(in) :: sc_vgm   (1:nl_soil)
    real(r8), intent(in) :: fc_vgm   (1:nl_soil)
 #endif
-   real(r8), intent(in) :: psi0(1:nl_soil)         ! saturated soil suction (mm) (NEGATIVE)
-   real(r8), intent(in) :: rootfr(1:nl_soil)       ! fraction of roots in a layer,
-   real(r8), intent(in) :: dz_soisno(1:nl_soil)    ! layer thickness (m)
-   real(r8), intent(in) :: t_soisno(1:nl_soil)     ! soil/snow skin temperature (K)
-   real(r8), intent(in) :: wliq_soisno(1:nl_soil)  ! liquid water (kg/m2)
+   real(r8), intent(in) :: psi0(1:nl_soil)        ! saturated soil suction (mm) (NEGATIVE)
+   real(r8), intent(in) :: rootfr(1:nl_soil)      ! fraction of roots in a layer,
+   real(r8), intent(in) :: dz_soisno(1:nl_soil)   ! layer thickness (m)
+   real(r8), intent(in) :: t_soisno(1:nl_soil)    ! soil/snow skin temperature (K)
+   real(r8), intent(in) :: wliq_soisno(1:nl_soil) ! liquid water (kg/m2)
 
-   real(r8), intent(out) :: rootr(1:nl_soil)       ! root resistance of a layer, all layers add to 1
-   real(r8), intent(out) :: etrc                   ! maximum possible transpiration rate (mm h2o/s)
-   real(r8), intent(out) :: rstfac                 ! factor of soil water stress for photosynthesis
+   real(r8), intent(out) :: rootr(1:nl_soil)      ! root resistance of a layer, all layers add to 1
+   real(r8), intent(out) :: etrc                  ! maximum possible transpiration rate (mm h2o/s)
+   real(r8), intent(out) :: rstfac                ! factor of soil water stress for photosynthesis
 
 !-------------------------- Local Variables ----------------------------
 

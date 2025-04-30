@@ -216,19 +216,20 @@ CONTAINS
 #endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
         theta_r   (1:nl_soil)          ,&! residual water content (cm3/cm3)
-        alpha_vgm (1:nl_soil)          ,&! the parameter corresponding approximately to the inverse of the air-entry value
-        n_vgm     (1:nl_soil)          ,&! a shape parameter
-        L_vgm     (1:nl_soil)          ,&! pore-connectivity parameter
-        sc_vgm    (1:nl_soil)          ,&! saturation at the air entry value in the classical vanGenuchten model [-]
-        fc_vgm    (1:nl_soil)          ,&! a scaling factor by using air entry value in the Mualem model [-]
+
+        alpha_vgm (1:nl_soil)  ,&! parameter correspond approximately to inverse of air-entry value
+        n_vgm     (1:nl_soil)  ,&! a shape parameter
+        L_vgm     (1:nl_soil)  ,&! pore-connectivity parameter
+        sc_vgm    (1:nl_soil)  ,&! saturation at air entry value in classical vanGenuchten model [-]
+        fc_vgm    (1:nl_soil)  ,&! a scaling factor by using air entry value in the Mualem model [-]
 #endif
         k_solids  (1:nl_soil)          ,&! thermal conductivity of minerals soil [W/m-K]
         dkdry     (1:nl_soil)          ,&! thermal conductivity of dry soil [W/m-K]
         dksatu    (1:nl_soil)          ,&! thermal conductivity of saturated unfrozen soil [W/m-K]
         dksatf    (1:nl_soil)          ,&! thermal conductivity of saturated frozen soil [W/m-K]
 
-        BA_alpha  (1:nl_soil)          ,&! alpha in Balland and Arp(2005) thermal conductivity scheme
-        BA_beta   (1:nl_soil)          ,&! beta in Balland and Arp(2005) thermal conductivity scheme
+        BA_alpha  (1:nl_soil)          ,&! alpha in Balland and Arp(2005) thermal cond. scheme
+        BA_beta   (1:nl_soil)          ,&! beta in Balland and Arp(2005) thermal cond. scheme
         cv_roof   (1:nl_roof)          ,&! heat capacity of roof [J/(m2 K)]
         cv_wall   (1:nl_wall)          ,&! heat capacity of wall [J/(m2 K)]
         cv_gimp   (1:nl_soil)          ,&! heat capacity of impervious [J/(m2 K)]
@@ -260,21 +261,21 @@ CONTAINS
         sqrtdi                         ,&! inverse sqrt of leaf dimension [m**-0.5]
         rootfr    (1:nl_soil)          ,&! root fraction
 
-        effcon                         ,&! quantum efficiency of RuBP regeneration (mol CO2/mol quanta)
-        vmax25                         ,&! maximum carboxylation rate at 25 C at canopy top
-        slti                           ,&! slope of low temperature inhibition function      [s3]
-        hlti                           ,&! 1/2 point of low temperature inhibition function  [s4]
-        shti                           ,&! slope of high temperature inhibition function     [s1]
-        hhti                           ,&! 1/2 point of high temperature inhibition function [s2]
-        trda                           ,&! temperature coefficient in gs-a model             [s5]
-        trdm                           ,&! temperature coefficient in gs-a model             [s6]
-        trop                           ,&! temperature coefficient in gs-a model
-        g1                             ,&! conductance-photosynthesis slope parameter for medlyn model
-        g0                             ,&! conductance-photosynthesis intercept for medlyn model
-        gradm                          ,&! conductance-photosynthesis slope parameter
-        binter                         ,&! conductance-photosynthesis intercept
-        lambda                         ,&! marginal water cost of carbon gain
-        extkn                            ! coefficient of leaf nitrogen allocation
+        effcon              ,&! quantum efficiency of RuBP regeneration (mol CO2/mol quanta)
+        vmax25              ,&! maximum carboxylation rate at 25 C at canopy top
+        slti                ,&! slope of low temperature inhibition function      [s3]
+        hlti                ,&! 1/2 point of low temperature inhibition function  [s4]
+        shti                ,&! slope of high temperature inhibition function     [s1]
+        hhti                ,&! 1/2 point of high temperature inhibition function [s2]
+        trda                ,&! temperature coefficient in gs-a model             [s5]
+        trdm                ,&! temperature coefficient in gs-a model             [s6]
+        trop                ,&! temperature coefficient in gs-a model
+        g1                  ,&! conductance-photosynthesis slope parameter for medlyn model
+        g0                  ,&! conductance-photosynthesis intercept for medlyn model
+        gradm               ,&! conductance-photosynthesis slope parameter
+        binter              ,&! conductance-photosynthesis intercept
+        lambda              ,&! marginal water cost of carbon gain
+        extkn                ! coefficient of leaf nitrogen allocation
 
    real(r8), intent(in) :: &
         fsno_roof                      ,&! fraction of ground covered by snow
@@ -347,9 +348,9 @@ CONTAINS
    real(r8), intent(out) :: &
         taux                           ,&! wind stress: E-W [kg/m/s**2]
         tauy                           ,&! wind stress: N-S [kg/m/s**2]
-        fsena                          ,&! sensible heat from canopy height to atmosphere [W/m2]
-        fevpa                          ,&! evapotranspiration from canopy height to atmosphere [mm/s]
-        lfevpa                         ,&! latent heat flux from canopy height to atmosphere [W/m2]
+        fsena                          ,&! sensible heat from canopy height to atm [W/m2]
+        fevpa                          ,&! evapotranspiration from canopy height to atm [mm/s]
+        lfevpa                         ,&! latent heat flux from canopy height to atm [W/m2]
         fsenl                          ,&! sensible heat from leaves [W/m2]
         fevpl                          ,&! evaporation+transpiration from leaves [mm/s]
         etr                            ,&! transpiration rate [mm/s]
@@ -708,12 +709,12 @@ CONTAINS
          IF (lbp == 1) THEN !no snow layer exist
 
             ! calculate soil resistance for evaporation
-            wx   = (sum(wliq_gpersno(1:2))/denh2o + sum(wice_gpersno(1:2))/denice)/sum(dz_gpersno(1:2))
+            wx = (sum(wliq_gpersno(1:2))/denh2o+sum(wice_gpersno(1:2))/denice)/sum(dz_gpersno(1:2))
             IF (sum(porsl(1:2)) < 1.e-6) THEN     !bed rock
-               fac  = 0.001
+               fac = 0.001
             ELSE
-               fac  = min(1.,sum(dz_gpersno(1:2))*wx/(dz_gpersno(1)*porsl(1)+dz_gpersno(2)*porsl(2)))
-               fac  = max( fac, 0.001 )
+               fac = min(1.,sum(dz_gpersno(1:2))*wx/(dz_gpersno(1)*porsl(1)+dz_gpersno(2)*porsl(2)))
+               fac = max( fac, 0.001 )
             ENDIF
 
             ! Sellers et al., 1992
