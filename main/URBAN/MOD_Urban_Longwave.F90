@@ -162,10 +162,17 @@ CONTAINS
       ! o B: incident radiation on each surface
       ! o X: radiation emit from each surface
       !-------------------------------------------------
-      A(1,:) = (/1-Fww*fwsun*(1-ewall),  -Fww*fwsun*(1-ewall), -Fgw*fwsun*(1-ewall), -Fgw*fwsun*(1-ewall)/)
-      A(2,:) = (/ -Fww*fwsha*(1-ewall), 1-Fww*fwsha*(1-ewall), -Fgw*fwsha*(1-ewall), -Fgw*fwsha*(1-ewall)/)
-      A(3,:) = (/ -Fwg*fgimp*(1-egimp),  -Fwg*fgimp*(1-egimp),                1._r8,                0._r8/)
-      A(4,:) = (/ -Fwg*fgper*(1-egper),  -Fwg*fgper*(1-egper),                0._r8,                1._r8/)
+      A(1,:) = (/1-Fww*fwsun*(1-ewall),  -Fww*fwsun*(1-ewall), &
+                  -Fgw*fwsun*(1-ewall),  -Fgw*fwsun*(1-ewall) /)
+
+      A(2,:) = (/ -Fww*fwsha*(1-ewall), 1-Fww*fwsha*(1-ewall), &
+                  -Fgw*fwsha*(1-ewall),  -Fgw*fwsha*(1-ewall) /)
+
+      A(3,:) = (/ -Fwg*fgimp*(1-egimp),  -Fwg*fgimp*(1-egimp), &
+                                 1._r8,                 0._r8 /)
+
+      A(4,:) = (/ -Fwg*fgper*(1-egper),  -Fwg*fgper*(1-egper), &
+                                 0._r8,                 1._r8 /)
 
       ! Inverse of matrix A
       Ainv = MatrixInverse(A)
@@ -535,15 +542,19 @@ CONTAINS
       !   AX = B
       !-------------------------------------------------
       A(1,:) = (/1-Fww_*fwsun*(1-ewall),  -Fww_*fwsun*(1-ewall), -Fgw_*fwsun*(1-ewall), &
-                                          -Fgw_*fwsun*(1-ewall), -Fvw *fwsun*(1-ewall)/)
+                  -Fgw_*fwsun*(1-ewall),  -Fvw *fwsun*(1-ewall) /)
+
       A(2,:) = (/ -Fww_*fwsha*(1-ewall), 1-Fww_*fwsha*(1-ewall), -Fgw_*fwsha*(1-ewall), &
-                                          -Fgw_*fwsha*(1-ewall), -Fvw *fwsha*(1-ewall)/)
+                  -Fgw_*fwsha*(1-ewall),  -Fvw *fwsha*(1-ewall) /)
+
       A(3,:) = (/ -Fwg_*fgimp*(1-egimp),  -Fwg_*fgimp*(1-egimp),                 1._r8, &
-                                                          0._r8, -Fvg *fgimp*(1-egimp)/)
+                                  0._r8,  -Fvg *fgimp*(1-egimp) /)
+
       A(4,:) = (/ -Fwg_*fgper*(1-egper),  -Fwg_*fgper*(1-egper),                 0._r8, &
-                                                          1._r8, -Fvg *fgper*(1-egper)/)
+                                  1._r8,  -Fvg *fgper*(1-egper) /)
+
       A(5,:) = (/                 0._r8,                  0._r8,                 0._r8, &
-                                                          0._r8,                 1._r8/)
+                                  0._r8,                  1._r8 /)
 
       ! Inverse of matrix A
       Ainv = MatrixInverse(A)

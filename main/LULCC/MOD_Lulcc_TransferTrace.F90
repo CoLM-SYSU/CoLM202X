@@ -19,8 +19,8 @@ MODULE MOD_Lulcc_TransferTrace
    IMPLICIT NONE
    SAVE
 
-   real(r8), allocatable, dimension(:,:) :: lccpct_patches(:,:) !Percent area of source patches in a patch
-   real(r8), allocatable, dimension(:,:) :: lccpct_matrix (:,:) !Percent area of source patches in a grid
+   real(r8), allocatable, dimension(:,:) :: lccpct_patches(:,:) !frac of source patches in a patch
+   real(r8), allocatable, dimension(:,:) :: lccpct_matrix (:,:) !frac of source patches in a grid
 
    ! PUBLIC MEMBER FUNCTIONS:
    PUBLIC :: allocate_LulccTransferTrace
@@ -168,8 +168,8 @@ CONTAINS
                ENDIF
 
                ! using this year patch mapping to aggregate the previous year land cover data
-               CALL aggregation_request_data (landpatch, ipatch, grid_patch, zip = .true., area = area_one, &
-                                              data_i4_2d_in1 = lcdatafr, data_i4_2d_out1 = lcdatafr_one)
+               CALL aggregation_request_data (landpatch, ipatch, grid_patch, zip = .true., &
+                  area = area_one, data_i4_2d_in1 = lcdatafr, data_i4_2d_out1 = lcdatafr_one)
 
                ipxstt = landpatch%ipxstt(ipatch)
                ipxend = landpatch%ipxend(ipatch)
@@ -185,14 +185,17 @@ CONTAINS
                sum_areabuff = sum(areabuff)
                DO ipxl = ipxstt, ipxend
                   ! Transfer trace - the key codes to count for the source land cover types of LULCC
-                  lccpct_patches(ipatch, lcfrbuff(ipxl)) = lccpct_patches(ipatch, lcfrbuff(ipxl)) + areabuff(ipxl) / sum_areabuff
-                  lccpct_matrix (ipatch, lcfrbuff(ipxl)) = lccpct_matrix (ipatch, lcfrbuff(ipxl)) + areabuff(ipxl)
+                  lccpct_patches(ipatch, lcfrbuff(ipxl)) = lccpct_patches(ipatch, lcfrbuff(ipxl)) &
+                                                         + areabuff(ipxl) / sum_areabuff
+                  lccpct_matrix (ipatch, lcfrbuff(ipxl)) = lccpct_matrix (ipatch, lcfrbuff(ipxl)) &
+                                                         + areabuff(ipxl)
                ENDDO
                gridarea = gridarea + sum_areabuff
                ipatch = ipatch + 1
             ENDDO
 
-            lccpct_matrix(grid_patch_s(i):grid_patch_e(i), :) = lccpct_matrix (grid_patch_s(i):grid_patch_e(i), :) / gridarea
+            lccpct_matrix(grid_patch_s(i):grid_patch_e(i), :) = &
+               lccpct_matrix (grid_patch_s(i):grid_patch_e(i), :) / gridarea
 
          ENDDO
 
@@ -204,10 +207,12 @@ CONTAINS
 #ifdef SrfdataDiag
       dir_landdata = DEF_dir_landdata
       typindex = (/(ityp, ityp = 0, N_land_classification)/)
-      lndname  = trim(dir_landdata) // '/diag/transfer_matrix'// trim(lastyr)//'-'// trim(thisyr) // '.nc'
+      lndname  = trim(dir_landdata) // &
+                 '/diag/transfer_matrix'// trim(lastyr)//'-'// trim(thisyr) // '.nc'
       DO ilc = 0, N_land_classification
-         CALL srfdata_map_and_write (lccpct_matrix(:,ilc), landpatch%settyp, typindex, m_patch2diag, &
-         -1.0e36_r8, lndname, 'TRANSFER_MATRIX', compress = 0, write_mode = 'one', lastdimname = 'source_patch', lastdimvalue = ilc)
+         CALL srfdata_map_and_write (lccpct_matrix(:,ilc), landpatch%settyp, typindex, &
+            m_patch2diag, -1.0e36_r8, lndname, 'TRANSFER_MATRIX', compress = 0, &
+            write_mode = 'one', lastdimname = 'source_patch', lastdimvalue = ilc)
       ENDDO
       deallocate(typindex)
 #endif

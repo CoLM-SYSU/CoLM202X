@@ -61,7 +61,8 @@ CONTAINS
 
 !-------------------------- Dummy Arguments ----------------------------
 
-    integer, intent(in) :: patchtype                   !land patch type (0=soil,1=urban or built-up,2=wetland,
+    integer, intent(in) :: patchtype                   !land patch type
+                                                       !(0=soil,1=urban or built-up,2=wetland,
                                                        !3=land ice, 4=deep lake, 5=shallow lake)
     logical, intent(in) :: is_dry_lake
     integer, intent(in) :: nl_soil                     !upper bound of array (i.e., soil layers)
@@ -101,13 +102,13 @@ CONTAINS
     integer, intent(out) :: imelt(lb:nl_soil)          !flag for melting or freezing [-]
 
 !-------------------------- Local Variables ----------------------------
-   real(r8) :: hm(lb:nl_soil)                          !energy residual [W/m2]
-   real(r8) :: xm(lb:nl_soil)                          !melting or freezing within a time step [kg/m2]
-   real(r8) :: heatr                                   !energy residual or loss after melting or freezing
-   real(r8) :: temp1                                   !temporary variables [kg/m2]
-   real(r8) :: temp2                                   !temporary variables [kg/m2]
+   real(r8) :: hm(lb:nl_soil)        !energy residual [W/m2]
+   real(r8) :: xm(lb:nl_soil)        !melting or freezing within a time step [kg/m2]
+   real(r8) :: heatr                 !energy residual or loss after melting or freezing
+   real(r8) :: temp1                 !temporary variables [kg/m2]
+   real(r8) :: temp2                 !temporary variables [kg/m2]
    real(r8) :: smp
-   real(r8) :: supercool(1:nl_soil)                    !the maximum liquid water when the soil temperature is below the freezing point [mm3/mm3]
+   real(r8) :: supercool(1:nl_soil)  !the maximum liquid water when soil T below the tfrz [mm3/mm3]
    real(r8), dimension(lb:nl_soil) :: wmass0, wice0, wliq0
    real(r8) :: propor, tinc, we, scvold
    integer j
@@ -361,7 +362,8 @@ CONTAINS
 
 !-------------------------- Dummy Arguments ----------------------------
 
-    integer, intent(in) :: patchtype                   !land patch type (0=soil,1=urban or built-up,2=wetland,
+    integer, intent(in) :: patchtype                   !land patch type
+                                                       !(0=soil,1=urban or built-up,2=wetland,
                                                        !3=land ice, 4=deep lake, 5=shallow lake)
     logical, intent(in) :: is_dry_lake
     integer, intent(in) :: nl_soil                     !upper bound of array (i.e., soil layers)
@@ -402,13 +404,13 @@ CONTAINS
     integer, intent(out) :: imelt(lb:nl_soil)          !flag for melting or freezing [-]
 
 !-------------------------- Local Variables ----------------------------
-   real(r8) :: hm(lb:nl_soil)                          !energy residual [W/m2]
-   real(r8) :: xm(lb:nl_soil)                          !melting or freezing within a time step [kg/m2]
-   real(r8) :: heatr                                   !energy residual or loss after melting or freezing
-   real(r8) :: temp1                                   !temporary variables [kg/m2]
-   real(r8) :: temp2                                   !temporary variables [kg/m2]
+   real(r8) :: hm(lb:nl_soil)        !energy residual [W/m2]
+   real(r8) :: xm(lb:nl_soil)        !melting or freezing within a time step [kg/m2]
+   real(r8) :: heatr                 !energy residual or loss after melting or freezing
+   real(r8) :: temp1                 !temporary variables [kg/m2]
+   real(r8) :: temp2                 !temporary variables [kg/m2]
    real(r8) :: smp
-   real(r8) :: supercool(1:nl_soil)                    !the maximum liquid water when the soil temperature is below the   freezing point [mm3/mm3]
+   real(r8) :: supercool(1:nl_soil)  !the maximum liquid water when soil T below the tfrz [mm3/mm3]
    real(r8), dimension(lb:nl_soil) :: wmass0, wice0, wliq0
    real(r8) :: propor, tinc, we, scvold
    integer j
@@ -678,11 +680,11 @@ CONTAINS
    integer,  intent(out) :: imelt(lb:nl_soil)          !flag for melting or freezing [-]
 
 !-------------------------- Local Variables ----------------------------
-   real(r8) :: hm(lb:nl_soil)                          !energy residual [W/m2]
-   real(r8) :: xm(lb:nl_soil)                          !melting or freezing within a time step [kg/m2]
-   real(r8) :: heatr                                   !energy residual or loss after melting or freezing
-   real(r8) :: temp1                                   !temporary variables [kg/m2]
-   real(r8) :: temp2                                   !temporary variables [kg/m2]
+   real(r8) :: hm(lb:nl_soil)  !energy residual [W/m2]
+   real(r8) :: xm(lb:nl_soil)  !melting or freezing within a time step [kg/m2]
+   real(r8) :: heatr           !energy residual or loss after melting or freezing
+   real(r8) :: temp1           !temporary variables [kg/m2]
+   real(r8) :: temp2           !temporary variables [kg/m2]
 
    real(r8), dimension(lb:nl_soil) :: wmass0, wice0, wliq0
    real(r8) :: propor, tinc, we, scvold

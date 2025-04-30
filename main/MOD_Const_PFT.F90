@@ -727,7 +727,8 @@ MODULE MOD_Const_PFT
 #endif
          /)
 
-   logical , parameter, dimension(0:N_PFT+N_CFT-1) :: isbetr  & ! True => is tropical broadleaf evergreen tree
+   ! True => is tropical broadleaf evergreen tree
+   logical , parameter, dimension(0:N_PFT+N_CFT-1) :: isbetr  &
       =(/.False., .False., .False., .False., .True.,  .False., .False., .False. &
        , .False., .False., .False., .False., .False., .False., .False., .False. &
 #ifdef CROP
@@ -742,7 +743,8 @@ MODULE MOD_Const_PFT
 #endif
          /)
 
-   logical , parameter, dimension(0:N_PFT+N_CFT-1) :: isbdtr  & ! True => is a broadleaf deciduous tree
+   ! True => is a broadleaf deciduous tree
+   logical , parameter, dimension(0:N_PFT+N_CFT-1) :: isbdtr  &
       =(/.False., .False., .False., .False., .False., .False., .True.,  .False. &
        , .False., .False., .False., .False., .False., .False., .False., .False. &
 #ifdef CROP
@@ -772,7 +774,8 @@ MODULE MOD_Const_PFT
 #endif
          /)
 
-   logical , parameter, dimension(0:N_PFT+N_CFT-1) :: issed   & ! True => is a seasonal deciduous tree
+   ! True => is a seasonal deciduous tree
+   logical , parameter, dimension(0:N_PFT+N_CFT-1) :: issed   &
       =(/.False., .False., .False., .True.,  .False., .False., .False., .True.  &
        , .True.,  .False., .False., .True.,  .True.,  .False., .False., .False. &
 #ifdef CROP
@@ -1257,8 +1260,8 @@ MODULE MOD_Const_PFT
 #endif
          /)
 !--- crop variables ---
-
-   real(r8),parameter, dimension(0:N_PFT+N_CFT-1) :: manunitro  &   ! Max fertilizer to be applied in total (kg N/m2)
+   ! Max fertilizer to be applied in total (kg N/m2)
+   real(r8),parameter, dimension(0:N_PFT+N_CFT-1) :: manunitro  &
       = (/  0.,     0.,     0.,     0.,     0.,     0.,     0.,     0. &
       ,     0.,     0.,     0.,     0.,     0.,     0.,     0.,     0. &
 #ifdef CROP
@@ -1697,8 +1700,8 @@ MODULE MOD_Const_PFT
 #endif
          /)
 #endif
-      ! irrigation parameter for irrigated crop
-   logical , parameter :: irrig_crop(0:N_PFT+N_CFT-1)  & ! True => is tropical broadleaf evergreen tree
+   ! irrigation parameter for irrigated crop
+   logical , parameter :: irrig_crop(0:N_PFT+N_CFT-1)  &
            =(/.False., .False., .False., .False., .False., .False., .False., .False. &
             , .False., .False., .False., .False., .False., .False., .False., .False. &
 #ifdef CROP

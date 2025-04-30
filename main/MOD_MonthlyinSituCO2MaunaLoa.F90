@@ -48,7 +48,8 @@ MODULE MOD_MonthlyinSituCO2MaunaLoa
 !  Created by Hua Yuan, 05/2022
 !
 ! !REVISIONS:
-!  !---2023.02.23  Zhongwang Wei @ SYSU: Added CO2 data (TODO:details?@zhongwang) in init_monthly_co2_mlo()
+!  !---2023.02.23  Zhongwang Wei @ SYSU: Added CO2 data (TODO:details?@zhongwang)
+!                                        in init_monthly_co2_mlo()
 !  !---2022.12.12  Zhongwang Wei @ SYSU: Added history and SSP CO2 data in init_monthly_co2_mlo()
 ! -------------------------------
 
@@ -85,17 +86,19 @@ CONTAINS
 
    !References:
    !-------------------
-      !---1850-1957 obtained from https://data.isimip.org/datasets/0497b2a7-fd37-4fe0-8d05-ea3057272731/
-      ! Matthias Büchner, Christopher Reyer (2022): ISIMIP3b atmospheric composition input data (v1.1). ISIMIP Repository.
-      ! https://doi.org/10.48364/ISIMIP.482153.1
+      !---1850-1957 obtained from
+      !   https://data.isimip.org/datasets/0497b2a7-fd37-4fe0-8d05-ea3057272731/ Matthias Büchner,
+      !   Christopher Reyer (2022): ISIMIP3b atmospheric composition input data (v1.1). ISIMIP
+      !   Repository.  https://doi.org/10.48364/ISIMIP.482153.1
       !---1958-2022 obtained from https://www.esrl.noaa.gov/gmd/ccgg/trends/data.html
-      !---!May 2022  ~ Dec 2022 data obtained from https://gml.noaa.gov/webdata/ccgg/trends/co2/co2_mm_mlo.txt (Mauna Loa, Hawaii)
-      !---Due to the eruption of the Mauna Loa Volcano, measurements from Mauna Loa Observatory were suspended as of Nov. 29. 2022
-      !   New Observations starting in December 2022 are from a site at the Maunakea Observatories,
-      !   approximately 21 miles north of the Mauna Loa Observatory.
+      !---!May 2022  ~ Dec 2022 data obtained from
+      !   https://gml.noaa.gov/webdata/ccgg/trends/co2/co2_mm_mlo.txt (Mauna Loa, Hawaii)
+      !---Due to the eruption of the Mauna Loa Volcano, measurements from Mauna Loa Observatory were
+      !   suspended as of Nov. 29. 2022 New Observations starting in December 2022 are from a site
+      !   at the Maunakea Observatories, approximately 21 miles north of the Mauna Loa Observatory.
       !---CMIP6 co2 data is obtainted from :
-      !   Matthias Büchner, Christopher Reyer (2022): ISIMIP3b atmospheric composition input data (v1.1). ISIMIP Repository.
-      !   https://doi.org/10.48364/ISIMIP.482153.1
+      !   Matthias Büchner, Christopher Reyer (2022): ISIMIP3b atmospheric composition input data
+      !   (v1.1). ISIMIP Repository.  https://doi.org/10.48364/ISIMIP.482153.1
 
    !REVISION HISTORY
    !----------------
@@ -107,9 +110,10 @@ CONTAINS
 
       ! fillvalue
       co2mlo(:,:) = -99.99 !monthly mean CO2 concentration in ppm
-      !1850-1957 obtained from https://data.isimip.org/datasets/0497b2a7-fd37-4fe0-8d05-ea3057272731/
-      ! Matthias Büchner, Christopher Reyer (2022): ISIMIP3b atmospheric composition input data (v1.1). ISIMIP Repository.
-      ! https://doi.org/10.48364/ISIMIP.482153.1
+      !1850-1957 obtained from
+      !https://data.isimip.org/datasets/0497b2a7-fd37-4fe0-8d05-ea3057272731/ Matthias Büchner,
+      !Christopher Reyer (2022): ISIMIP3b atmospheric composition input data (v1.1). ISIMIP
+      !Repository.  https://doi.org/10.48364/ISIMIP.482153.1
       !added by Zhongwang Wei @ SYSU 2022.12.12
       co2mlo( 1849 ,:) = (/ 284.73 , 284.73 , 284.73 , 284.73 , 284.73 , 284.73 , 284.73 , 284.73 , 284.73 , 284.73 , 284.73 , 284.73 /)
       co2mlo( 1850 ,:) = (/ 284.73 , 284.73 , 284.73 , 284.73 , 284.73 , 284.73 , 284.73 , 284.73 , 284.73 , 284.73 , 284.73 , 284.73 /)
@@ -345,13 +349,14 @@ CONTAINS
       co2mlo(2021,:) = (/ 415.15, 416.47, 417.16, 418.24, 418.95, 418.70, 416.65, 414.34, 412.90, 413.55, 414.82, 416.43 /)
       co2mlo(2022,:) = (/ 418.01, 418.99, 418.45, 420.02, 420.99, 420.99, 418.90, 417.19, 415.95, 415.78, 417.51, 418.95 /)
       !noted by Zhongwang Wei
-      !May 2022  ~ Dec 2022 data obtained from https://gml.noaa.gov/webdata/ccgg/trends/co2/co2_mm_mlo.txt (Mauna Loa, Hawaii)
-      !Due to the eruption of the Mauna Loa Volcano, measurements from Mauna Loa Observatory were suspended as of Nov. 29. 2022
-      !New Observations starting in December 2022 are from a site at the Maunakea Observatories,
-      !approximately 21 miles north of the Mauna Loa Observatory.
+      !May 2022  ~ Dec 2022 data obtained from
+      !https://gml.noaa.gov/webdata/ccgg/trends/co2/co2_mm_mlo.txt (Mauna Loa, Hawaii) Due to the
+      !eruption of the Mauna Loa Volcano, measurements from Mauna Loa Observatory were suspended as
+      !of Nov. 29. 2022 New Observations starting in December 2022 are from a site at the Maunakea
+      !Observatories, approximately 21 miles north of the Mauna Loa Observatory.
       !CMIP6 co2 data is obtainted from :
-      !Matthias Büchner, Christopher Reyer (2022): ISIMIP3b atmospheric composition input data (v1.1). ISIMIP Repository.
-      !https://doi.org/10.48364/ISIMIP.482153.1
+      !Matthias Büchner, Christopher Reyer (2022): ISIMIP3b atmospheric composition input data
+      !(v1.1). ISIMIP Repository.  https://doi.org/10.48364/ISIMIP.482153.1
       !added by Zhongwang Wei @ SYSU 2022.12.12
       select CASE (trim(DEF_SSP))
       CASE ('126')

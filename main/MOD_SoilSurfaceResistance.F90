@@ -79,11 +79,14 @@ CONTAINS
 #endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
         theta_r     (1:nl_soil),     &! residual moisture content [-]
-        alpha_vgm   (1:nl_soil),     &! a parameter corresponding approximately to the inverse of the air-entry value
+        ! a parameter corresponding approximately to the inverse of the air-entry value
+        alpha_vgm   (1:nl_soil),     &
         n_vgm       (1:nl_soil),     &! pore-connectivity parameter [dimensionless]
         L_vgm       (1:nl_soil),     &! a shape parameter [dimensionless]
-        sc_vgm      (1:nl_soil),     &! saturation at the air entry value in the classical vanGenuchten model [-]
-        fc_vgm      (1:nl_soil),     &! a scaling factor by using air entry value in the Mualem model [-]
+        ! saturation at the air entry value in the classical vanGenuchten model [-]
+        sc_vgm      (1:nl_soil),     &
+        ! a scaling factor by using air entry value in the Mualem model [-]
+        fc_vgm      (1:nl_soil),     &
 #endif
         dz_soisno   (1:nl_soil),     &! layer thickness [m]
         t_soisno    (1:nl_soil),     &! soil/snow skin temperature [K]
@@ -233,8 +236,6 @@ CONTAINS
          dsl = min(dsl,0.2_r8)
 
          rss = dsl/dg
-         !fordebug only
-         !write(*,*) dsl, dg, aird, vol_liq/porsl(1), eff_porosity, wice_soisno(1),vol_liq, rss
 
 !-----------------------------------------------------------------------
       ! calculate rss by SZ09
@@ -264,13 +265,13 @@ CONTAINS
          fac = max(fac , 0.001_r8)
 #ifdef Campbell_SOIL_MODEL
          wfc = porsl(1)*(0.1/(86400.*hksati(1)))**(1./(2.*bsw(1)+3.))
-         !NOTE: CoLM wfc = (-339.9/soil_psi_s_l(ipatch))**(-1.0*soil_lambda_l(ipatch)) * soil_theta_s_l(ipatch)
+         !NOTE: CoLM wfc = (-339.9/soil_psi_s_l(ipatch))**(-1.0*soil_lambda_l(ipatch))
+         !               * soil_theta_s_l(ipatch)
          !wfc = porsl(1)*(-3399._r8/psi0(1))**(-1./bsw(1))
 #endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
          wfc = theta_r(1)+(porsl(1)-theta_r(1))*(1+(alpha_vgm(1)*339.9)**n_vgm(1))**(1.0/n_vgm(1)-1)
 #endif
-         !write(*,*) wfc  !fordebug only
 
          ! Lee and Pielke 1992 beta
          IF (wx < wfc ) THEN  !when water content of ths top layer is less than that at F.C.
