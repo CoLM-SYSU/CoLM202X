@@ -1073,7 +1073,7 @@ CONTAINS
             CALL block_data_copy (metdata, forcn_UB(ivar))
 
             ! calculate time average coszen, for shortwave radiation
-            IF (tintalgo(ivar) == 'coszen') THEN
+            IF (ivar == 7) THEN
                CALL calavgcos(idate)
             ENDIF
          ENDIF

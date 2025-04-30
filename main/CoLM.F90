@@ -460,7 +460,7 @@ PROGRAM CoLM
          CALL do_DataAssimilation (idate, deltim)
 #endif
 
-         ! Write out the model variables for restart run and the histroy file
+         ! Write out the model histroy file
          ! ----------------------------------------------------------------------
          CALL hist_out (idate, deltim, itstamp, etstamp, ptstamp, dir_hist, casename)
 
@@ -526,6 +526,8 @@ PROGRAM CoLM
          ENDIF
 #endif
 
+         ! Write out the model state variables for restart run
+         ! ----------------------------------------------------------------------
          IF (save_to_restart (idate, deltim, itstamp, ptstamp)) THEN
 #ifdef LULCC
             CALL WRITE_TimeVariables (jdate, jdate(1), casename, dir_restart)
