@@ -1027,50 +1027,53 @@ CONTAINS
 
          ! set upper boundary time stamp and get data
          IF (tstamp_UB(ivar) == 'NULL' .or. tstamp_UB(ivar) <= mtstamp) THEN
+
             IF ( .not. (tstamp_UB(ivar) == 'NULL') ) THEN
                CALL block_data_copy (forcn_UB(ivar), forcn_LB(ivar))
             ENDIF
+
             CALL setstampUB(ivar, year, month, day, time_i)
-            ! when reaching the END of forcing data, always reuse the last time step data
-            IF (year <= endyr) THEN
-               ! read forcing data
-               filename = trim(dir_forcing)//trim(metfilename(year, month, day, ivar))
-               IF (trim(DEF_forcing%dataset) == 'POINT') THEN
 
-                  IF (forcing_read_ahead) THEN
-                     metdata%blk(gblock%xblkme(1),gblock%yblkme(1))%val = forc_disk(time_i,ivar)
-                  ELSE
-#ifndef URBAN_MODEL
-                     CALL ncio_read_site_time (filename, vname(ivar), time_i, metdata)
-#else
-                     IF (trim(vname(ivar)) == 'Rainf') THEN
-                        CALL ncio_read_site_time (filename, 'Rainf', time_i, rainf)
-                        CALL ncio_read_site_time (filename, 'Snowf', time_i, snowf)
-
-                        DO iblkme = 1, gblock%nblkme
-                           ib = gblock%xblkme(iblkme)
-                           jb = gblock%yblkme(iblkme)
-
-                           metdata%blk(ib,jb)%val(1,1) = rainf%blk(ib,jb)%val(1,1) &
-                                                       + snowf%blk(ib,jb)%val(1,1)
-                        ENDDO
-                     ELSE
-                        CALL ncio_read_site_time (filename, vname(ivar), time_i, metdata)
-                     ENDIF
-#endif
-                  ENDIF
-               ELSE
-                  CALL ncio_read_block_time (filename, vname(ivar), gforc, time_i, metdata)
-               ENDIF
-
-               CALL block_data_copy (metdata, forcn_UB(ivar))
-            ELSE
-               write(*,*) year, endyr
-               print *, 'NOTE: reaching the END of forcing data, &
-                         always reuse the last time step data!'
+            ! when reaching the END of forcing data, show a Warning but still try to run
+            IF ( year>endyr .or. (month>endmo .and. year==endyr) ) THEN
+               write(*,*) 'model year: ', year, 'forcing end year defined: ', endyr
+               print *, 'Warning: reaching the END of forcing data defined!'
             ENDIF
-            !TODO: ivar -> coszen
-            IF (ivar == 7) THEN  ! calculate time average coszen, for shortwave radiation
+
+            ! read forcing data
+            filename = trim(dir_forcing)//trim(metfilename(year, month, day, ivar))
+            IF (trim(DEF_forcing%dataset) == 'POINT') THEN
+
+               IF (forcing_read_ahead) THEN
+                  metdata%blk(gblock%xblkme(1),gblock%yblkme(1))%val = forc_disk(time_i,ivar)
+               ELSE
+#ifndef URBAN_MODEL
+                  CALL ncio_read_site_time (filename, vname(ivar), time_i, metdata)
+#else
+                  IF (trim(vname(ivar)) == 'Rainf') THEN
+                     CALL ncio_read_site_time (filename, 'Rainf', time_i, rainf)
+                     CALL ncio_read_site_time (filename, 'Snowf', time_i, snowf)
+
+                     DO iblkme = 1, gblock%nblkme
+                        ib = gblock%xblkme(iblkme)
+                        jb = gblock%yblkme(iblkme)
+
+                        metdata%blk(ib,jb)%val(1,1) = rainf%blk(ib,jb)%val(1,1) &
+                                                    + snowf%blk(ib,jb)%val(1,1)
+                     ENDDO
+                  ELSE
+                     CALL ncio_read_site_time (filename, vname(ivar), time_i, metdata)
+                  ENDIF
+#endif
+               ENDIF
+            ELSE
+               CALL ncio_read_block_time (filename, vname(ivar), gforc, time_i, metdata)
+            ENDIF
+
+            CALL block_data_copy (metdata, forcn_UB(ivar))
+
+            ! calculate time average coszen, for shortwave radiation
+            IF (ivar == 7) THEN
                CALL calavgcos(idate)
             ENDIF
          ENDIF
