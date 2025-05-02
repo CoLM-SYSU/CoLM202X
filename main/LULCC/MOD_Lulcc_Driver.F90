@@ -13,8 +13,8 @@ MODULE MOD_Lulcc_Driver
  CONTAINS
 
 
-   SUBROUTINE LulccDriver (casename,dir_landdata,dir_restart,&
-                           idate,greenwich)
+   SUBROUTINE LulccDriver (casename, dir_landdata, dir_restart, &
+                           idate, greenwich)
 
 !-----------------------------------------------------------------------
 !
@@ -117,8 +117,8 @@ MODULE MOD_Lulcc_Driver
          print *, ">>> LULCC: initializing..."
       ENDIF
 
-      CALL LulccInitialize (casename,dir_landdata,dir_restart,&
-                            idate,greenwich)
+      CALL LulccInitialize (casename, dir_landdata, dir_restart, &
+                            idate, greenwich)
 
 
       ! =============================================================
