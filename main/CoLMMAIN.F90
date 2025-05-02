@@ -123,7 +123,9 @@ SUBROUTINE CoLMMAIN ( &
 !                  snowcompaction           |]           = 3 (land ice)
 !                  snowlayerscombine        |]           = 4 (lake)
 !                  snowlayersdivide         |]
-!                  snowage                  |]
+!
+!                  GLACIER_TEMP             |] glacier model
+!                  GLACIER_WATER            |]
 !
 !                  newsnow_lake             |]
 !                  laketem                  |] lake scheme
@@ -132,7 +134,7 @@ SUBROUTINE CoLMMAIN ( &
 !                  SOCEAN                   |> ocean and sea ice
 !
 !                  orb_coszen               |> all surface
-!                  EcoModel (LAI_empirical) |> land
+!                  EcoModel (LAI_empirical) |> land - not actived
 !                  snowfraction             |> land
 !                  albland                  |> land
 !                  albocean                 |> ocean & sea ice

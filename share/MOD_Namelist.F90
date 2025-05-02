@@ -1883,15 +1883,14 @@ CONTAINS
       CALL sync_hist_vars_one (DEF_hist_vars%leafc_c4grass      , set_defaults)
 #ifdef CROP
       CALL sync_hist_vars_one (DEF_hist_vars%cphase                          , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gddmaturity                     , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gddplant                        , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%vf                              , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%hui                             , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%cropprod1c                      , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%cropprod1c_loss                 , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%cropseedc_deficit               , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%grainc_to_cropprodc             , set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%grainc_to_seed                  , set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%hui                             , set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%vf                              , set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%gddmaturity                     , set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%gddplant                        , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%plantdate_rainfed_temp_corn     , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%plantdate_irrigated_temp_corn   , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%plantdate_rainfed_spwheat       , set_defaults)
@@ -1930,7 +1929,10 @@ CONTAINS
       CALL sync_hist_vars_one (DEF_hist_vars%cropprodc_rainfed_trop_soybean  , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%cropprodc_irrigated_trop_soybean, set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%cropprodc_unmanagedcrop         , set_defaults)
+
+      CALL sync_hist_vars_one (DEF_hist_vars%grainc_to_seed                  , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%fert_to_sminn                   , set_defaults)
+
       IF(DEF_USE_IRRIGATION)THEN
          CALL sync_hist_vars_one (DEF_hist_vars%irrig_rate                   , set_defaults)
          CALL sync_hist_vars_one (DEF_hist_vars%deficit_irrig                , set_defaults)
