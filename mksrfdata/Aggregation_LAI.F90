@@ -143,8 +143,10 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
          ntime      = 12
 #else
          IF (DEF_LAI_CHANGE_YEARLY) THEN
-            start_year = max(simulation_lai_year_start, DEF_LAI_START_YEAR)
-            end_year   = min(simulation_lai_year_end,   DEF_LAI_END_YEAR  )
+            start_year = max(simulation_lai_year_start, DEF_LAI_START_YEAR )
+            start_year = min(start_year,                DEF_LAI_END_YEAR   )
+            end_year   = min(simulation_lai_year_end,   DEF_LAI_END_YEAR   )
+            end_year   = max(end_year,                  DEF_LAI_START_YEAR )
             ntime      = 12
          ELSE
             start_year = lc_year
@@ -361,8 +363,10 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
          ntime      = 12
 #else
       IF (DEF_LAI_CHANGE_YEARLY) THEN
-         start_year = max(simulation_lai_year_start, DEF_LAI_START_YEAR)
-         end_year   = min(simulation_lai_year_end,   DEF_LAI_END_YEAR  )
+         start_year = max(simulation_lai_year_start, DEF_LAI_START_YEAR )
+         start_year = min(start_year,                DEF_LAI_END_YEAR   )
+         end_year   = min(simulation_lai_year_end,   DEF_LAI_END_YEAR   )
+         end_year   = max(end_year,                  DEF_LAI_START_YEAR )
          ntime      = 12
       ELSE
          start_year = lc_year
