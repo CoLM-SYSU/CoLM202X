@@ -1,17 +1,17 @@
 #include <define.h>
 
 MODULE MOD_Vars_2DForcing
-   ! -------------------------------
-   ! Meteorogical Forcing
-   !
-   ! Created by Yongjiu Dai, 03/2014
-   ! -------------------------------
+!-----------------------------------------------------------------------
+!  Meteorogical Forcing
+!
+!  Created by Yongjiu Dai, 03/2014
+!-----------------------------------------------------------------------
 
    USE MOD_DataType
    IMPLICIT NONE
    SAVE
 
-   ! -----------------------------------------------------------------
+!-----------------------------------------------------------------------
    type(block_data_real8_2d) :: forc_xy_pco2m  ! CO2 concentration in atmos. (pascals)
    type(block_data_real8_2d) :: forc_xy_po2m   ! O2 concentration in atmos. (pascals)
    type(block_data_real8_2d) :: forc_xy_us     ! wind in eastward direction [m/s]
@@ -38,12 +38,12 @@ MODULE MOD_Vars_2DForcing
 
 CONTAINS
 
-   !-----------------------------------------------------------------------
+!-----------------------------------------------------------------------
 
    SUBROUTINE allocate_2D_Forcing (grid)
-   ! ------------------------------------------------
+   ! -------------------------------------------------------------------
    ! Allocates memory for CoLM 2d [lon_points,lat_points] variables
-   ! ------------------------------------------------
+   ! -------------------------------------------------------------------
    USE MOD_SPMD_Task
    USE MOD_Grid
    USE MOD_DataType
@@ -78,4 +78,4 @@ CONTAINS
    END SUBROUTINE allocate_2D_Forcing
 
 END MODULE MOD_Vars_2DForcing
-! ------ EOP --------
+! ---------- EOP ------------

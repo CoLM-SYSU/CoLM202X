@@ -1,7 +1,7 @@
 &nl_colm_forcing
 
   ! ----- forcing -----
-   DEF_dir_forcing  = '/shr03/CoLM_Forcing/crujra/'
+   DEF_dir_forcing  = '/shr03/CoLM_Forcing/crujra_v2.5/'
 
    DEF_forcing%dataset            = 'CRUJRA'
    DEF_forcing%solarin_all_band   = .true.
@@ -31,18 +31,18 @@
 
    DEF_forcing%groupby            = 'year'  ! file grouped by year/month
 
-   DEF_forcing%fprefix(1) = 'tmp/crujra.v2.4.5d.tmp.'
-   DEF_forcing%fprefix(2) = 'spfh/crujra.v2.4.5d.spfh.'
-   DEF_forcing%fprefix(3) = 'pres/crujra.v2.4.5d.pres.'
-   DEF_forcing%fprefix(4) = 'pre/crujra.v2.4.5d.pre.'
-   DEF_forcing%fprefix(5) = 'ugrd/crujra.v2.4.5d.ugrd.'
-   DEF_forcing%fprefix(6) = 'vgrd/crujra.v2.4.5d.vgrd.'
-   DEF_forcing%fprefix(7) = 'dswrf/crujra.v2.4.5d.dswrf.'
-   DEF_forcing%fprefix(8) = 'dlwrf/crujra.v2.4.5d.dlwrf.'
+   DEF_forcing%fprefix(1) = 'tmp/crujra.v2.5.5d.tmp.'
+   DEF_forcing%fprefix(2) = 'spfh/crujra.v2.5.5d.spfh.'
+   DEF_forcing%fprefix(3) = 'pres/crujra.v2.5.5d.pres.'
+   DEF_forcing%fprefix(4) = 'pre/crujra.v2.5.5d.pre.'
+   DEF_forcing%fprefix(5) = 'ugrd/crujra.v2.5.5d.ugrd.'
+   DEF_forcing%fprefix(6) = 'vgrd/crujra.v2.5.5d.vgrd.'
+   DEF_forcing%fprefix(7) = 'dswrf/crujra.v2.5.5d.dswrf.'
+   DEF_forcing%fprefix(8) = 'dlwrf/crujra.v2.5.5d.dlwrf.'
 
 
    DEF_forcing%vname    = 'tmp' 'spfh' 'pres' 'pre' 'ugrd' 'vgrd' 'dswrf' 'dlwrf'
-   DEF_forcing%timelog  = 'instant' 'instant' 'instant' 'foreward' 'instant' 'instant' 'foreward' 'foreward'
+   DEF_forcing%timelog  = 'instant' 'instant' 'instant' 'forward' 'instant' 'instant' 'forward' 'forward'
    DEF_forcing%tintalgo = 'linear' 'linear' 'linear' 'nearest' 'linear' 'linear' 'coszen' 'linear'
 
 /

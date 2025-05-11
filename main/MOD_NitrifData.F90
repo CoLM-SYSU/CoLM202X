@@ -2,16 +2,17 @@
 
 #ifdef BGC
 MODULE MOD_NitrifData
- !-----------------------------------------------------------------------
- ! !DESCRIPTION:
- ! This module read in nitrif data.
- !
- ! !ORIGINAL:
- ! Lu Xingjie and Zhang Shupeng, 2023, prepare the original version of the nitrif data module.
+!-----------------------------------------------------------------------
+! !DESCRIPTION:
+!  This module read in nitrif data.
+!
+! !ORIGINAL:
+!  Lu Xingjie and Zhang Shupeng, 2023, prepare the original version of the nitrif data module.
+!-----------------------------------------------------------------------
 
    USE MOD_Grid
    USE MOD_SpatialMapping
-   USE MOD_BGC_Vars_TimeVariables, only : tCONC_O2_UNSAT, tO2_DECOMP_DEPTH_UNSAT
+   USE MOD_BGC_Vars_TimeVariables, only: tCONC_O2_UNSAT, tO2_DECOMP_DEPTH_UNSAT
    IMPLICIT NONE
 
    type(grid_type) :: grid_nitrif
@@ -19,13 +20,13 @@ MODULE MOD_NitrifData
 
 CONTAINS
 
-   ! ----------
-   SUBROUTINE init_nitrif_data (idate)
+   SUBROUTINE init_nitrif_data (time)
 
-   !----------------------
-   ! DESCTIPTION:
-   ! open nitrif netcdf file from DEF_dir_runtime, read latitude and longitude info.
-   ! Initialize nitrif data read in.
+!-----------------------------------------------------------------------
+! !DESCRIPTION:
+!  open nitrif netcdf file from DEF_dir_runtime, read latitude and
+!  longitude info.  Initialize nitrif data read in.
+!-----------------------------------------------------------------------
 
    USE MOD_TimeManager
    USE MOD_Namelist
@@ -34,7 +35,7 @@ CONTAINS
    USE MOD_LandPatch
    IMPLICIT NONE
 
-   integer, intent(in) :: idate(3)
+   type(timestamp), intent(in) :: time
 
    ! Local Variables
    character(len=256) :: file_nitrif
@@ -53,7 +54,7 @@ CONTAINS
       IF (allocated(lon)) deallocate(lon)
       IF (allocated(lat)) deallocate(lat)
 
-      CALL julian2monthday (idate(1), idate(2), month, mday)
+      CALL julian2monthday (time%year, time%day, month, mday)
 
       CALL update_nitrif_data (month)
 
@@ -94,9 +95,11 @@ CONTAINS
       DO nsl = 1, nl_soil
 
          write(cx,'(i2.2)') nsl
-         file_nitrif = trim(DEF_dir_runtime)//'/nitrif/CONC_O2_UNSAT/CONC_O2_UNSAT_l'//trim(cx)//'.nc'
+         file_nitrif = trim(DEF_dir_runtime)//&
+            '/nitrif/CONC_O2_UNSAT/CONC_O2_UNSAT_l'//trim(cx)//'.nc'
          IF (p_is_io) THEN
-            CALL ncio_read_block_time (file_nitrif, 'CONC_O2_UNSAT', grid_nitrif, month, f_xy_nitrif)
+            CALL ncio_read_block_time (file_nitrif, &
+               'CONC_O2_UNSAT', grid_nitrif, month, f_xy_nitrif)
          ENDIF
 
          CALL mg2p_nitrif%grid2pset (f_xy_nitrif, tCONC_O2_UNSAT_tmp)
@@ -126,9 +129,11 @@ CONTAINS
       DO nsl = 1, nl_soil
 
          write(cx,'(i2.2)') nsl
-         file_nitrif = trim(DEF_dir_runtime)//'/nitrif/O2_DECOMP_DEPTH_UNSAT/O2_DECOMP_DEPTH_UNSAT_l'//trim(cx)//'.nc'
+         file_nitrif = trim(DEF_dir_runtime)//&
+            '/nitrif/O2_DECOMP_DEPTH_UNSAT/O2_DECOMP_DEPTH_UNSAT_l'//trim(cx)//'.nc'
          IF (p_is_io) THEN
-            CALL ncio_read_block_time (file_nitrif, 'O2_DECOMP_DEPTH_UNSAT', grid_nitrif, month, f_xy_nitrif)
+            CALL ncio_read_block_time (file_nitrif, &
+               'O2_DECOMP_DEPTH_UNSAT', grid_nitrif, month, f_xy_nitrif)
          ENDIF
 
          CALL mg2p_nitrif%grid2pset (f_xy_nitrif, tO2_DECOMP_DEPTH_UNSAT_tmp)

@@ -3,15 +3,15 @@
 SUBROUTINE Aggregation_DBedrock ( &
       gland, dir_rawdata, dir_model_landdata)
 
-! ---------------------------------------------------------------------------
-! Depth to bedrock
+!-----------------------------------------------------------------------
+!  Depth to bedrock
 !
 !    Shangguan, W., Hengl, T., Mendes de Jesus, J., Yuan, H., Dai, Y. (2017).
 !    Mapping the global depth to bedrock for land surface modeling.
-!    Journal of Advances in Modeling Earth Systems, 9(1), 65–88.
+!    Journal of Advances in Modeling Earth Systems, 9(1), 65-88.
 !
-! Created by Shupeng Zhang, 05/2023
-! ----------------------------------------------------------------------
+!  Created by Shupeng Zhang, 05/2023
+!-----------------------------------------------------------------------
 
    USE MOD_Precision
    USE MOD_Namelist
@@ -22,9 +22,6 @@ SUBROUTINE Aggregation_DBedrock ( &
    USE MOD_NetCDFBlock
    USE MOD_RangeCheck
    USE MOD_AggregationRequestData
-#ifdef SinglePoint
-   USE MOD_SingleSrfdata
-#endif
 
 #ifdef SrfdataDiag
    USE MOD_SrfdataDiag
@@ -62,12 +59,6 @@ SUBROUTINE Aggregation_DBedrock ( &
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-#ifdef SinglePoint
-      IF (USE_SITE_dbedrock) THEN
-         RETURN
-      ENDIF
-#endif
-
       IF (p_is_io) THEN
 
          CALL allocate_block_data (gland, dbedrock)
@@ -85,7 +76,8 @@ SUBROUTINE Aggregation_DBedrock ( &
          allocate (dbedrock_patches (numpatch))
 
          DO ipatch = 1, numpatch
-            CALL aggregation_request_data (landpatch, ipatch, gland, zip = USE_zip_for_aggregation, area = area_one, &
+            CALL aggregation_request_data (landpatch, ipatch, gland, &
+               zip = USE_zip_for_aggregation, area = area_one, &
                data_r8_2d_in1 = dbedrock, data_r8_2d_out1 = dbedrock_one)
             dbedrock_patches (ipatch) = sum(dbedrock_one * area_one) / sum(area_one)
          ENDDO
@@ -104,11 +96,11 @@ SUBROUTINE Aggregation_DBedrock ( &
 #endif
 
       ! Write-out the depth of the pacth in the gridcell
-#ifndef SinglePoint
       lndname = trim(landdir)//'/dbedrock_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
       CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
-      CALL ncio_write_vector (lndname, 'dbedrock_patches', 'patch', landpatch, dbedrock_patches, DEF_Srfdata_CompressLevel)
+      CALL ncio_write_vector (lndname, 'dbedrock_patches', 'patch', &
+           landpatch, dbedrock_patches, DEF_Srfdata_CompressLevel)
 
 #ifdef SrfdataDiag
       typpatch = (/(ityp, ityp = 0, N_land_classification)/)
@@ -117,13 +109,8 @@ SUBROUTINE Aggregation_DBedrock ( &
          -1.0e36_r8, lndname, 'dbedrock', compress = 1, write_mode = 'one')
 #endif
 
-#else
-      SITE_dbedrock = dbedrock_patches(1)
-#endif
-
       IF (p_is_worker) THEN
          deallocate ( dbedrock_patches )
       ENDIF
 
 END SUBROUTINE Aggregation_DBedrock
-

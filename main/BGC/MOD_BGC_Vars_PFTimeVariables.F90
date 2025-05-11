@@ -6,7 +6,7 @@ MODULE MOD_BGC_Vars_PFTimeVariables
 
 !---------------------------------------------------------------------------------------------------------
 ! !DESCRIPTION
-! Define, allocate, and deallocate biogeochmeical state variables at pft level.
+! Define, allocate, and deallocate biogeochemical state variables at pft level.
 ! Read and write biogeochemical state variables at pft level from/to restart files.
 
 ! !ORIGINAL:
@@ -15,13 +15,13 @@ MODULE MOD_BGC_Vars_PFTimeVariables
 #ifdef BGC
 
    USE MOD_Precision
-   USE MOD_Namelist, only : DEF_USE_SASU
+   USE MOD_Namelist, only: DEF_USE_SASU, DEF_USE_DiagMatrix
    USE MOD_TimeManager
 
    IMPLICIT NONE
    SAVE
 ! -----------------------------------------------------------------
-! Time-varying state variables which reaquired by restart run
+! Time-varying state variables which required by restart run
 !--------------------- bgc variables ---------------------------------------
    real(r8), allocatable :: leafc_p                  (:)     ! leaf display C (gC m-2)
    real(r8), allocatable :: leafc_storage_p          (:)     ! leaf storage C (gC m-2)
@@ -46,7 +46,7 @@ MODULE MOD_BGC_Vars_PFTimeVariables
    real(r8), allocatable :: grainc_xfer_p            (:)     ! grain transfer C (gC m-2)
    real(r8), allocatable :: cropseedc_deficit_p      (:)     ! crop seed deficit C (gC m-2)
    real(r8), allocatable :: cropprod1c_p             (:)     ! product C (gC m-2)
-   real(r8), allocatable :: xsmrpool_p               (:)     !! maintenance respiration storage C (gC m-2)
+   real(r8), allocatable :: xsmrpool_p               (:)     ! maintenance respiration storage C (gC m-2)
    real(r8), allocatable :: gresp_storage_p          (:)     ! growth respiration storage C (gC m-2)
    real(r8), allocatable :: gresp_xfer_p             (:)     ! growth respiration transfer C (gC m-2)
    real(r8), allocatable :: cpool_p                  (:)     ! available C (gC m-2)
@@ -167,6 +167,44 @@ MODULE MOD_BGC_Vars_PFTimeVariables
 ! --------------------- END CROP variables -------------------------
 
 ! --------------------- SASU variables -----------------------------
+   real(r8), allocatable :: leafcCap_p                  (:)     ! leaf display C (gC m-2)
+   real(r8), allocatable :: leafc_storageCap_p          (:)     ! leaf storage C (gC m-2)
+   real(r8), allocatable :: leafc_xferCap_p             (:)     ! leaf transfer C (gC m-2)
+   real(r8), allocatable :: frootcCap_p                 (:)     ! fine root display C (gC m-2)
+   real(r8), allocatable :: frootc_storageCap_p         (:)     ! fine root storage C (gC m-2)
+   real(r8), allocatable :: frootc_xferCap_p            (:)     ! fine root transfer C (gC m-2)
+   real(r8), allocatable :: livestemcCap_p              (:)     ! live stem display C (gC m-2)
+   real(r8), allocatable :: livestemc_storageCap_p      (:)     ! live stem storage C (gC m-2)
+   real(r8), allocatable :: livestemc_xferCap_p         (:)     ! live stem transfer C (gC m-2)
+   real(r8), allocatable :: deadstemcCap_p              (:)     ! dead stem display C (gC m-2)
+   real(r8), allocatable :: deadstemc_storageCap_p      (:)     ! dead stem storage C (gC m-2)
+   real(r8), allocatable :: deadstemc_xferCap_p         (:)     ! dead stem transfer C (gC m-2)
+   real(r8), allocatable :: livecrootcCap_p             (:)     ! live coarse root display C (gC m-2)
+   real(r8), allocatable :: livecrootc_storageCap_p     (:)     ! live coarse root storage C (gC m-2)
+   real(r8), allocatable :: livecrootc_xferCap_p        (:)     ! live coarse root transfer C (gC m-2)
+   real(r8), allocatable :: deadcrootcCap_p             (:)     ! dead coarse root display C (gC m-2)
+   real(r8), allocatable :: deadcrootc_storageCap_p     (:)     ! dead coarse root storage C (gC m-2)
+   real(r8), allocatable :: deadcrootc_xferCap_p        (:)     ! dead coarse root transfer C (gC m-2)
+
+   real(r8), allocatable :: leafnCap_p                  (:)     ! leaf display C (gC m-2)
+   real(r8), allocatable :: leafn_storageCap_p          (:)     ! leaf storage C (gC m-2)
+   real(r8), allocatable :: leafn_xferCap_p             (:)     ! leaf transfer C (gC m-2)
+   real(r8), allocatable :: frootnCap_p                 (:)     ! fine root display C (gC m-2)
+   real(r8), allocatable :: frootn_storageCap_p         (:)     ! fine root storage C (gC m-2)
+   real(r8), allocatable :: frootn_xferCap_p            (:)     ! fine root transfer C (gC m-2)
+   real(r8), allocatable :: livestemnCap_p              (:)     ! live stem display C (gC m-2)
+   real(r8), allocatable :: livestemn_storageCap_p      (:)     ! live stem storage C (gC m-2)
+   real(r8), allocatable :: livestemn_xferCap_p         (:)     ! live stem transfer C (gC m-2)
+   real(r8), allocatable :: deadstemnCap_p              (:)     ! dead stem display C (gC m-2)
+   real(r8), allocatable :: deadstemn_storageCap_p      (:)     ! dead stem storage C (gC m-2)
+   real(r8), allocatable :: deadstemn_xferCap_p         (:)     ! dead stem transfer C (gC m-2)
+   real(r8), allocatable :: livecrootnCap_p             (:)     ! live coarse root display C (gC m-2)
+   real(r8), allocatable :: livecrootn_storageCap_p     (:)     ! live coarse root storage C (gC m-2)
+   real(r8), allocatable :: livecrootn_xferCap_p        (:)     ! live coarse root transfer C (gC m-2)
+   real(r8), allocatable :: deadcrootnCap_p             (:)     ! dead coarse root display C (gC m-2)
+   real(r8), allocatable :: deadcrootn_storageCap_p     (:)     ! dead coarse root storage C (gC m-2)
+   real(r8), allocatable :: deadcrootn_xferCap_p        (:)     ! dead coarse root transfer C (gC m-2)
+
    real(r8), allocatable :: leafc0_p                 (:) ! SASU spinup initial value: leaf display C (gC m-2)
    real(r8), allocatable :: leafc0_storage_p         (:) ! SASU spinup initial value: leaf storage C (gC m-2)
    real(r8), allocatable :: leafc0_xfer_p            (:) ! SASU spinup initial value: leaf transfer C (gC m-2)
@@ -522,6 +560,44 @@ CONTAINS
 #endif
 
 ! SASU variables
+            allocate (leafcCap_p               (numpft)); leafcCap_p               (:) = spval
+            allocate (leafc_storageCap_p       (numpft)); leafc_storageCap_p       (:) = spval
+            allocate (leafc_xferCap_p          (numpft)); leafc_xferCap_p          (:) = spval
+            allocate (frootcCap_p              (numpft)); frootcCap_p              (:) = spval
+            allocate (frootc_storageCap_p      (numpft)); frootc_storageCap_p      (:) = spval
+            allocate (frootc_xferCap_p         (numpft)); frootc_xferCap_p         (:) = spval
+            allocate (livestemcCap_p           (numpft)); livestemcCap_p           (:) = spval
+            allocate (livestemc_storageCap_p   (numpft)); livestemc_storageCap_p   (:) = spval
+            allocate (livestemc_xferCap_p      (numpft)); livestemc_xferCap_p      (:) = spval
+            allocate (deadstemcCap_p           (numpft)); deadstemcCap_p           (:) = spval
+            allocate (deadstemc_storageCap_p   (numpft)); deadstemc_storageCap_p   (:) = spval
+            allocate (deadstemc_xferCap_p      (numpft)); deadstemc_xferCap_p      (:) = spval
+            allocate (livecrootcCap_p          (numpft)); livecrootcCap_p          (:) = spval
+            allocate (livecrootc_storageCap_p  (numpft)); livecrootc_storageCap_p  (:) = spval
+            allocate (livecrootc_xferCap_p     (numpft)); livecrootc_xferCap_p     (:) = spval
+            allocate (deadcrootcCap_p          (numpft)); deadcrootcCap_p          (:) = spval
+            allocate (deadcrootc_storageCap_p  (numpft)); deadcrootc_storageCap_p  (:) = spval
+            allocate (deadcrootc_xferCap_p     (numpft)); deadcrootc_xferCap_p     (:) = spval
+
+            allocate (leafnCap_p               (numpft)); leafnCap_p               (:) = spval
+            allocate (leafn_storageCap_p       (numpft)); leafn_storageCap_p       (:) = spval
+            allocate (leafn_xferCap_p          (numpft)); leafn_xferCap_p          (:) = spval
+            allocate (frootnCap_p              (numpft)); frootnCap_p              (:) = spval
+            allocate (frootn_storageCap_p      (numpft)); frootn_storageCap_p      (:) = spval
+            allocate (frootn_xferCap_p         (numpft)); frootn_xferCap_p         (:) = spval
+            allocate (livestemnCap_p           (numpft)); livestemnCap_p           (:) = spval
+            allocate (livestemn_storageCap_p   (numpft)); livestemn_storageCap_p   (:) = spval
+            allocate (livestemn_xferCap_p      (numpft)); livestemn_xferCap_p      (:) = spval
+            allocate (deadstemnCap_p           (numpft)); deadstemnCap_p           (:) = spval
+            allocate (deadstemn_storageCap_p   (numpft)); deadstemn_storageCap_p   (:) = spval
+            allocate (deadstemn_xferCap_p      (numpft)); deadstemn_xferCap_p      (:) = spval
+            allocate (livecrootnCap_p          (numpft)); livecrootnCap_p          (:) = spval
+            allocate (livecrootn_storageCap_p  (numpft)); livecrootn_storageCap_p  (:) = spval
+            allocate (livecrootn_xferCap_p     (numpft)); livecrootn_xferCap_p     (:) = spval
+            allocate (deadcrootnCap_p          (numpft)); deadcrootnCap_p          (:) = spval
+            allocate (deadcrootn_storageCap_p  (numpft)); deadcrootn_storageCap_p  (:) = spval
+            allocate (deadcrootn_xferCap_p     (numpft)); deadcrootn_xferCap_p     (:) = spval
+
             allocate (leafc0_p                 (numpft)); leafc0_p                 (:) = spval
             allocate (leafc0_storage_p         (numpft)); leafc0_storage_p         (:) = spval
             allocate (leafc0_xfer_p            (numpft)); leafc0_xfer_p            (:) = spval
@@ -849,8 +925,48 @@ CONTAINS
       CALL ncio_read_vector (file_restart, 'plantdate_p            ', landpft, plantdate_p           )
 #endif
 
-      IF(DEF_USE_SASU)THEN
+      IF(DEF_USE_DiagMatrix)THEN
 ! SASU variables
+         CALL ncio_read_vector (file_restart, 'leafcCap_p             ', landpft, leafcCap_p             , defval = 1._r8)
+         CALL ncio_read_vector (file_restart, 'leafc_storageCap_p     ', landpft, leafc_storageCap_p     , defval = 1._r8)
+         CALL ncio_read_vector (file_restart, 'leafc_xferCap_p        ', landpft, leafc_xferCap_p        , defval = 1._r8)
+         CALL ncio_read_vector (file_restart, 'frootcCap_p            ', landpft, frootcCap_p            , defval = 1._r8)
+         CALL ncio_read_vector (file_restart, 'frootc_storageCap_p    ', landpft, frootc_storageCap_p    , defval = 1._r8)
+         CALL ncio_read_vector (file_restart, 'frootc_xferCap_p       ', landpft, frootc_xferCap_p       , defval = 1._r8)
+         CALL ncio_read_vector (file_restart, 'livestemcCap_p         ', landpft, livestemcCap_p         , defval = 1._r8)
+         CALL ncio_read_vector (file_restart, 'livestemc_storageCap_p ', landpft, livestemc_storageCap_p , defval = 1._r8)
+         CALL ncio_read_vector (file_restart, 'livestemc_xferCap_p    ', landpft, livestemc_xferCap_p    , defval = 1._r8)
+         CALL ncio_read_vector (file_restart, 'deadstemcCap_p         ', landpft, deadstemcCap_p         , defval = 1._r8)
+         CALL ncio_read_vector (file_restart, 'deadstemc_storageCap_p ', landpft, deadstemc_storageCap_p , defval = 1._r8)
+         CALL ncio_read_vector (file_restart, 'deadstemc_xferCap_p    ', landpft, deadstemc_xferCap_p    , defval = 1._r8)
+         CALL ncio_read_vector (file_restart, 'livecrootcCap_p        ', landpft, livecrootcCap_p        , defval = 1._r8)
+         CALL ncio_read_vector (file_restart, 'livecrootc_storageCap_p', landpft, livecrootc_storageCap_p, defval = 1._r8)
+         CALL ncio_read_vector (file_restart, 'livecrootc_xferCap_p   ', landpft, livecrootc_xferCap_p   , defval = 1._r8)
+         CALL ncio_read_vector (file_restart, 'deadcrootcCap_p        ', landpft, deadcrootcCap_p        , defval = 1._r8)
+         CALL ncio_read_vector (file_restart, 'deadcrootc_storageCap_p', landpft, deadcrootc_storageCap_p, defval = 1._r8)
+         CALL ncio_read_vector (file_restart, 'deadcrootc_xferCap_p   ', landpft, deadcrootc_xferCap_p   , defval = 1._r8)
+
+         CALL ncio_read_vector (file_restart, 'leafnCap_p             ', landpft, leafnCap_p             , defval = 1._r8)
+         CALL ncio_read_vector (file_restart, 'leafn_storageCap_p     ', landpft, leafn_storageCap_p     , defval = 1._r8)
+         CALL ncio_read_vector (file_restart, 'leafn_xferCap_p        ', landpft, leafn_xferCap_p        , defval = 1._r8)
+         CALL ncio_read_vector (file_restart, 'frootnCap_p            ', landpft, frootnCap_p            , defval = 1._r8)
+         CALL ncio_read_vector (file_restart, 'frootn_storageCap_p    ', landpft, frootn_storageCap_p    , defval = 1._r8)
+         CALL ncio_read_vector (file_restart, 'frootn_xferCap_p       ', landpft, frootn_xferCap_p       , defval = 1._r8)
+         CALL ncio_read_vector (file_restart, 'livestemnCap_p         ', landpft, livestemnCap_p         , defval = 1._r8)
+         CALL ncio_read_vector (file_restart, 'livestemn_storageCap_p ', landpft, livestemn_storageCap_p , defval = 1._r8)
+         CALL ncio_read_vector (file_restart, 'livestemn_xferCap_p    ', landpft, livestemn_xferCap_p    , defval = 1._r8)
+         CALL ncio_read_vector (file_restart, 'deadstemnCap_p         ', landpft, deadstemnCap_p         , defval = 1._r8)
+         CALL ncio_read_vector (file_restart, 'deadstemn_storageCap_p ', landpft, deadstemn_storageCap_p , defval = 1._r8)
+         CALL ncio_read_vector (file_restart, 'deadstemn_xferCap_p    ', landpft, deadstemn_xferCap_p    , defval = 1._r8)
+         CALL ncio_read_vector (file_restart, 'livecrootnCap_p        ', landpft, livecrootnCap_p        , defval = 1._r8)
+         CALL ncio_read_vector (file_restart, 'livecrootn_storageCap_p', landpft, livecrootn_storageCap_p, defval = 1._r8)
+         CALL ncio_read_vector (file_restart, 'livecrootn_xferCap_p   ', landpft, livecrootn_xferCap_p   , defval = 1._r8)
+         CALL ncio_read_vector (file_restart, 'deadcrootnCap_p        ', landpft, deadcrootnCap_p        , defval = 1._r8)
+         CALL ncio_read_vector (file_restart, 'deadcrootn_storageCap_p', landpft, deadcrootn_storageCap_p, defval = 1._r8)
+         CALL ncio_read_vector (file_restart, 'deadcrootn_xferCap_p   ', landpft, deadcrootn_xferCap_p   , defval = 1._r8)
+      ENDIF
+
+      IF(DEF_USE_SASU .or. DEF_USE_DiagMatrix)THEN
          CALL ncio_read_vector (file_restart, 'leafc0_p               ', landpft, leafc0_p              , defval = 1._r8)
          CALL ncio_read_vector (file_restart, 'leafc0_storage_p       ', landpft, leafc0_storage_p      , defval = 1._r8)
          CALL ncio_read_vector (file_restart, 'leafc0_xfer_p          ', landpft, leafc0_xfer_p         , defval = 1._r8)
@@ -1129,7 +1245,7 @@ CONTAINS
 
    SUBROUTINE WRITE_BGCPFTimeVariables (file_restart)
 
-   USE MOD_Namelist, only : DEF_REST_CompressLevel
+   USE MOD_Namelist, only: DEF_REST_CompressLevel
    USE MOD_LandPFT
    USE MOD_NetCDFVector
    USE MOD_Vars_Global
@@ -1395,8 +1511,84 @@ CONTAINS
       plantdate_p           , compress)
 #endif
 
-      IF(DEF_USE_SASU)THEN
+      IF(DEF_USE_DiagMatrix)THEN
 ! SASU variables
+         CALL ncio_write_vector (file_restart, 'leafcCap_p                ', 'pft', landpft, &
+         leafcCap_p               , compress)
+         CALL ncio_write_vector (file_restart, 'leafc_storageCap_p        ', 'pft', landpft, &
+         leafc_storageCap_p       , compress)
+         CALL ncio_write_vector (file_restart, 'leafc_xferCap_p           ', 'pft', landpft, &
+         leafc_xferCap_p          , compress)
+         CALL ncio_write_vector (file_restart, 'frootcCap_p               ', 'pft', landpft, &
+         frootcCap_p              , compress)
+         CALL ncio_write_vector (file_restart, 'frootc_storageCap_p       ', 'pft', landpft, &
+         frootc_storageCap_p      , compress)
+         CALL ncio_write_vector (file_restart, 'frootc_xferCap_p          ', 'pft', landpft, &
+         frootc_xferCap_p         , compress)
+         CALL ncio_write_vector (file_restart, 'livestemcCap_p            ', 'pft', landpft, &
+         livestemcCap_p           , compress)
+         CALL ncio_write_vector (file_restart, 'livestemc_storageCap_p    ', 'pft', landpft, &
+         livestemc_storageCap_p   , compress)
+         CALL ncio_write_vector (file_restart, 'livestemc_xferCap_p       ', 'pft', landpft, &
+         livestemc_xferCap_p      , compress)
+         CALL ncio_write_vector (file_restart, 'deadstemcCap_p            ', 'pft', landpft, &
+         deadstemcCap_p           , compress)
+         CALL ncio_write_vector (file_restart, 'deadstemc_storageCap_p    ', 'pft', landpft, &
+         deadstemc_storageCap_p   , compress)
+         CALL ncio_write_vector (file_restart, 'deadstemc_xferCap_p       ', 'pft', landpft, &
+         deadstemc_xferCap_p      , compress)
+         CALL ncio_write_vector (file_restart, 'livecrootcCap_p           ', 'pft', landpft, &
+         livecrootcCap_p          , compress)
+         CALL ncio_write_vector (file_restart, 'livecrootc_storageCap_p   ', 'pft', landpft, &
+         livecrootc_storageCap_p  , compress)
+         CALL ncio_write_vector (file_restart, 'livecrootc_xferCap_p      ', 'pft', landpft, &
+         livecrootc_xferCap_p     , compress)
+         CALL ncio_write_vector (file_restart, 'deadcrootcCap_p           ', 'pft', landpft, &
+         deadcrootcCap_p          , compress)
+         CALL ncio_write_vector (file_restart, 'deadcrootc_storageCap_p   ', 'pft', landpft, &
+         deadcrootc_storageCap_p  , compress)
+         CALL ncio_write_vector (file_restart, 'deadcrootc_xferCap_p      ', 'pft', landpft, &
+         deadcrootc_xferCap_p     , compress)
+
+         CALL ncio_write_vector (file_restart, 'leafnCap_p                ', 'pft', landpft, &
+         leafcCap_p               , compress)
+         CALL ncio_write_vector (file_restart, 'leafn_storageCap_p        ', 'pft', landpft, &
+         leafc_storageCap_p       , compress)
+         CALL ncio_write_vector (file_restart, 'leafn_xferCap_p           ', 'pft', landpft, &
+         leafc_xferCap_p          , compress)
+         CALL ncio_write_vector (file_restart, 'frootnCap_p               ', 'pft', landpft, &
+         frootcCap_p              , compress)
+         CALL ncio_write_vector (file_restart, 'frootn_storageCap_p       ', 'pft', landpft, &
+         frootc_storageCap_p      , compress)
+         CALL ncio_write_vector (file_restart, 'frootn_xferCap_p          ', 'pft', landpft, &
+         frootc_xferCap_p         , compress)
+         CALL ncio_write_vector (file_restart, 'livestemnCap_p            ', 'pft', landpft, &
+         livestemnCap_p           , compress)
+         CALL ncio_write_vector (file_restart, 'livestemn_storageCap_p    ', 'pft', landpft, &
+         livestemn_storageCap_p   , compress)
+         CALL ncio_write_vector (file_restart, 'livestemn_xferCap_p       ', 'pft', landpft, &
+         livestemn_xferCap_p      , compress)
+         CALL ncio_write_vector (file_restart, 'deadstemnCap_p            ', 'pft', landpft, &
+         deadstemnCap_p           , compress)
+         CALL ncio_write_vector (file_restart, 'deadstemn_storageCap_p    ', 'pft', landpft, &
+         deadstemn_storageCap_p   , compress)
+         CALL ncio_write_vector (file_restart, 'deadstemn_xferCap_p       ', 'pft', landpft, &
+         deadstemn_xferCap_p      , compress)
+         CALL ncio_write_vector (file_restart, 'livecrootnCap_p           ', 'pft', landpft, &
+         livecrootnCap_p          , compress)
+         CALL ncio_write_vector (file_restart, 'livecrootn_storageCap_p   ', 'pft', landpft, &
+         livecrootn_storageCap_p  , compress)
+         CALL ncio_write_vector (file_restart, 'livecrootn_xferCap_p      ', 'pft', landpft, &
+         livecrootn_xferCap_p     , compress)
+         CALL ncio_write_vector (file_restart, 'deadcrootnCap_p           ', 'pft', landpft, &
+         deadcrootnCap_p          , compress)
+         CALL ncio_write_vector (file_restart, 'deadcrootn_storageCap_p   ', 'pft', landpft, &
+         deadcrootn_storageCap_p  , compress)
+         CALL ncio_write_vector (file_restart, 'deadcrootn_xferCap_p      ', 'pft', landpft, &
+         deadcrootn_xferCap_p     , compress)
+      ENDIF
+
+      IF(DEF_USE_SASU .or. DEF_USE_DiagMatrix)THEN
          CALL ncio_write_vector (file_restart, 'leafc0_p               ', 'pft', landpft, &
          leafc0_p              , compress)
          CALL ncio_write_vector (file_restart, 'leafc0_storage_p       ', 'pft', landpft, &
@@ -1899,6 +2091,44 @@ CONTAINS
 #endif
 
 ! SASU variables
+            deallocate (leafcCap_p                  )
+            deallocate (leafc_storageCap_p          )
+            deallocate (leafc_xferCap_p             )
+            deallocate (frootcCap_p                 )
+            deallocate (frootc_storageCap_p         )
+            deallocate (frootc_xferCap_p            )
+            deallocate (livestemcCap_p              )
+            deallocate (livestemc_storageCap_p      )
+            deallocate (livestemc_xferCap_p         )
+            deallocate (deadstemcCap_p              )
+            deallocate (deadstemc_storageCap_p      )
+            deallocate (deadstemc_xferCap_p         )
+            deallocate (livecrootcCap_p             )
+            deallocate (livecrootc_storageCap_p     )
+            deallocate (livecrootc_xferCap_p        )
+            deallocate (deadcrootcCap_p             )
+            deallocate (deadcrootc_storageCap_p     )
+            deallocate (deadcrootc_xferCap_p        )
+
+            deallocate (leafnCap_p                  )
+            deallocate (leafn_storageCap_p          )
+            deallocate (leafn_xferCap_p             )
+            deallocate (frootnCap_p                 )
+            deallocate (frootn_storageCap_p         )
+            deallocate (frootn_xferCap_p            )
+            deallocate (livestemnCap_p              )
+            deallocate (livestemn_storageCap_p      )
+            deallocate (livestemn_xferCap_p         )
+            deallocate (deadstemnCap_p              )
+            deallocate (deadstemn_storageCap_p      )
+            deallocate (deadstemn_xferCap_p         )
+            deallocate (livecrootnCap_p             )
+            deallocate (livecrootn_storageCap_p     )
+            deallocate (livecrootn_xferCap_p        )
+            deallocate (deadcrootnCap_p             )
+            deallocate (deadcrootn_storageCap_p     )
+            deallocate (deadcrootn_xferCap_p        )
+
             deallocate (leafc0_p                 )
             deallocate (leafc0_storage_p         )
             deallocate (leafc0_xfer_p            )
@@ -2229,8 +2459,48 @@ CONTAINS
       CALL check_vector_data ('plantdate_p            ', plantdate_p            )
 #endif
 
-      IF(DEF_USE_SASU)THEN
+      IF(DEF_USE_DiagMatrix)THEN
 ! SASU variables
+         CALL check_vector_data ('leafcCap_p                ', leafcCap_p                )
+         CALL check_vector_data ('leafc_storageCap_p        ', leafc_storageCap_p        )
+         CALL check_vector_data ('leafc_xferCap_p           ', leafc_xferCap_p           )
+         CALL check_vector_data ('frootcCap_p               ', frootcCap_p               )
+         CALL check_vector_data ('frootc_storageCap_p       ', frootc_storageCap_p       )
+         CALL check_vector_data ('frootc_xferCap_p          ', frootc_xferCap_p          )
+         CALL check_vector_data ('livestemcCap_p            ', livestemcCap_p            )
+         CALL check_vector_data ('livestemc_storageCap_p    ', livestemc_storageCap_p    )
+         CALL check_vector_data ('livestemc_xferCap_p       ', livestemc_xferCap_p       )
+         CALL check_vector_data ('deadstemcCap_p            ', deadstemcCap_p            )
+         CALL check_vector_data ('deadstemc_storageCap_p    ', deadstemc_storageCap_p    )
+         CALL check_vector_data ('deadstemc_xferCap_p       ', deadstemc_xferCap_p       )
+         CALL check_vector_data ('livecrootcCap_p           ', livecrootcCap_p           )
+         CALL check_vector_data ('livecrootc_storageCap_p   ', livecrootc_storageCap_p   )
+         CALL check_vector_data ('livecrootc_xferCap_p      ', livecrootc_xferCap_p      )
+         CALL check_vector_data ('deadcrootcCap_p           ', deadcrootcCap_p           )
+         CALL check_vector_data ('deadcrootc_storageCap_p   ', deadcrootc_storageCap_p   )
+         CALL check_vector_data ('deadcrootc_xferCap_p      ', deadcrootc_xferCap_p      )
+
+         CALL check_vector_data ('leafnCap_p                ', leafnCap_p                )
+         CALL check_vector_data ('leafn_storageCap_p        ', leafn_storageCap_p        )
+         CALL check_vector_data ('leafn_xferCap_p           ', leafn_xferCap_p           )
+         CALL check_vector_data ('frootnCap_p               ', frootnCap_p               )
+         CALL check_vector_data ('frootn_storageCap_p       ', frootn_storageCap_p       )
+         CALL check_vector_data ('frootn_xferCap_p          ', frootn_xferCap_p          )
+         CALL check_vector_data ('livestemnCap_p            ', livestemnCap_p            )
+         CALL check_vector_data ('livestemn_storageCap_p    ', livestemn_storageCap_p    )
+         CALL check_vector_data ('livestemn_xferCap_p       ', livestemn_xferCap_p       )
+         CALL check_vector_data ('deadstemnCap_p            ', deadstemnCap_p            )
+         CALL check_vector_data ('deadstemn_storageCap_p    ', deadstemn_storageCap_p    )
+         CALL check_vector_data ('deadstemn_xferCap_p       ', deadstemn_xferCap_p       )
+         CALL check_vector_data ('livecrootnCap_p           ', livecrootnCap_p           )
+         CALL check_vector_data ('livecrootn_storageCap_p   ', livecrootn_storageCap_p   )
+         CALL check_vector_data ('livecrootn_xferCap_p      ', livecrootn_xferCap_p      )
+         CALL check_vector_data ('deadcrootnCap_p           ', deadcrootnCap_p           )
+         CALL check_vector_data ('deadcrootn_storageCap_p   ', deadcrootn_storageCap_p   )
+         CALL check_vector_data ('deadcrootn_xferCap_p      ', deadcrootn_xferCap_p      )
+      ENDIF
+
+      IF(DEF_USE_SASU .or. DEF_USE_DiagMatrix)THEN
          CALL check_vector_data ('leafc0_p               ', leafc0_p               )
          CALL check_vector_data ('leafc0_storage_p       ', leafc0_storage_p       )
          CALL check_vector_data ('leafc0_xfer_p          ', leafc0_xfer_p          )

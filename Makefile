@@ -6,7 +6,7 @@ HEADER = include/define.h
 INCLUDE_DIR = -Iinclude -I.bld/ -I${NETCDF_INC}
 VPATH = include : share : mksrfdata : mkinidata \
 	: main : main/HYDRO : main/BGC : main/URBAN : main/LULCC : main/DA \
-	: CaMa/src : postprocess : .bld
+	: extends/CaMa/src : postprocess : .bld
 
 # ********** Targets ALL **********
 .PHONY: all
@@ -33,20 +33,19 @@ OBJS_SHARED =    \
 				  MOD_Utils.o                  \
 				  MOD_UserDefFun.o             \
 				  MOD_TimeManager.o            \
+				  MOD_Const_PFT.o              \
 				  MOD_NetCDFSerial.o           \
-				  MOD_SingleSrfdata.o          \
 				  MOD_Block.o                  \
 				  MOD_Grid.o                   \
 				  MOD_Pixel.o                  \
 				  MOD_DataType.o               \
+				  MOD_NetCDFPoint.o            \
 				  MOD_NetCDFBlock.o            \
 				  MOD_CatchmentDataReadin.o    \
 				  MOD_5x5DataReadin.o          \
 				  MOD_Mesh.o                   \
 				  MOD_Pixelset.o               \
-				  MOD_NetCDFVectorBlk.o        \
-				  MOD_NetCDFVectorOneS.o       \
-				  MOD_NetCDFVectorOneP.o       \
+				  MOD_NetCDFVector.o           \
 				  MOD_RangeCheck.o             \
 				  MOD_SpatialMapping.o         \
 				  MOD_AggregationRequestData.o \
@@ -54,14 +53,17 @@ OBJS_SHARED =    \
 				  MOD_LandElm.o                \
 				  MOD_LandHRU.o                \
 				  MOD_LandPatch.o              \
-				  MOD_LandUrban.o              \
 				  MOD_LandCrop.o               \
 				  MOD_LandPFT.o                \
+				  MOD_LandUrban.o              \
+				  MOD_Urban_Const_LCZ.o        \
+				  MOD_SingleSrfdata.o          \
 				  MOD_SrfdataDiag.o            \
 				  MOD_SrfdataRestart.o         \
 				  MOD_ElmVector.o              \
 				  MOD_HRUVector.o              \
-				  MOD_Urban_Const_LCZ.o
+				  MOD_MeshFilter.o             \
+				  MOD_RegionClip.o
 
 ${OBJS_SHARED} : %.o : %.F90 ${HEADER}
 	${FF} -c ${FOPTS} $(INCLUDE_DIR) -o .bld/$@ $< ${MOD_CMD}.bld
@@ -79,8 +81,7 @@ OBJS_MKSRFDATA = \
 				  Aggregation_Topography.o          \
 				  Aggregation_TopographyFactors.o   \
 				  Aggregation_Urban.o               \
-				  MOD_MeshFilter.o                  \
-				  MOD_RegionClip.o                  \
+				  Aggregation_SoilTexture.o         \
 				  MKSRFDATA.o
 
 $(OBJS_MKSRFDATA) : %.o : %.F90 ${HEADER} ${OBJS_SHARED}
@@ -100,9 +101,10 @@ mksrfdata.x : mkdir_build ${HEADER} ${OBJS_SHARED} ${OBJS_MKSRFDATA}
 # ----- End of Target 1 mksrfdata ----
 
 OBJS_BASIC =    \
-				 MOD_Hydro_IO.o                 \
-				 MOD_Hydro_Vars_TimeVariables.o \
-				 MOD_Hydro_Vars_1DFluxes.o      \
+				 MOD_Catch_BasinNetwork.o       \
+				 MOD_Catch_IO.o                 \
+				 MOD_Catch_Vars_TimeVariables.o \
+				 MOD_Catch_Vars_1DFluxes.o      \
 				 MOD_BGC_Vars_1DFluxes.o        \
 				 MOD_BGC_Vars_1DPFTFluxes.o     \
 				 MOD_BGC_Vars_PFTimeVariables.o \
@@ -111,7 +113,6 @@ OBJS_BASIC =    \
 				 MOD_Urban_Vars_1DFluxes.o      \
 				 MOD_Urban_Vars_TimeVariables.o \
 				 MOD_Urban_Vars_TimeInvariants.o\
-				 MOD_Const_PFT.o                \
 				 MOD_Vars_TimeInvariants.o      \
 				 MOD_Vars_TimeVariables.o       \
 				 MOD_Vars_1DPFTFluxes.o         \
@@ -143,6 +144,7 @@ OBJS_BASIC =    \
 				 MOD_DBedrockReadin.o           \
 				 MOD_SoilColorRefl.o            \
 				 MOD_SoilParametersReadin.o     \
+				 MOD_SoilTextureReadin.o        \
 				 MOD_HtopReadin.o               \
 				 MOD_UrbanReadin.o              \
 				 MOD_BGC_CNSummary.o            \
@@ -154,7 +156,7 @@ OBJS_BASIC =    \
 				 MOD_Initialize.o
 
 
-$(OBJS_BASIC) : %.o : %.F90 ${HEADER}
+$(OBJS_BASIC) : %.o : %.F90 ${HEADER} ${OBJS_SHARED}
 	${FF} -c ${FOPTS} $(INCLUDE_DIR) -o .bld/$@ $< ${MOD_CMD}.bld
 
 OBJS_BASIC_T = $(addprefix .bld/,${OBJS_BASIC})
@@ -222,7 +224,8 @@ OBJS_MAIN = \
 				MOD_Catch_HillslopeFlow.o                 \
 				MOD_Catch_SubsurfaceFlow.o                \
 				MOD_Catch_RiverLakeFlow.o                 \
-				MOD_Hydro_Hist.o                          \
+				MOD_Catch_Hist.o                          \
+				MOD_Catch_WriteParameters.o               \
 				MOD_BGC_CNCStateUpdate1.o                 \
 				MOD_BGC_CNCStateUpdate2.o                 \
 				MOD_BGC_CNCStateUpdate3.o                 \

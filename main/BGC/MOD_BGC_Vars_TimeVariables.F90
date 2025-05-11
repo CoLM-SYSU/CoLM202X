@@ -4,20 +4,21 @@ MODULE MOD_BGC_Vars_TimeVariables
 #ifdef BGC
 !---------------------------------------------------------------------------------------------------------
 ! !DESCRIPTION
-! Define, allocate, and deallocate biogeochmeical state variables at patch level.
+! Define, allocate, and deallocate biogeochemical state variables at patch level.
 ! Read and write biogeochemical state variables at patch level from/to restart files.
 
 ! !ORIGINAL:
 ! Xingjie Lu, 2022, created the original version
 
    USE MOD_Precision
-   USE MOD_Namelist, only : DEF_USE_SASU
+   USE MOD_Namelist, only: DEF_USE_SASU, DEF_USE_DiagMatrix
    USE MOD_TimeManager
    IMPLICIT NONE
    SAVE
 !------------------------- BGC variables -------------------------------
    real(r8), allocatable :: decomp_cpools_vr  (:,:,:)         ! vertical resolved: soil decomposition (litter, cwd, soil organic matter) carbon pools (gC m-3)
    real(r8), allocatable :: decomp_cpools     (:,:)           ! soil decomposition (litter, cwd, soil) carbon pools (gC m-2)
+   real(r8), allocatable :: decomp_cpools_vr_Cap  (:,:,:)     ! vertical resolved: soil decomposition (litter, cwd, soil organic matter) carbon Capacity (gC m-3)
    real(r8), allocatable :: decomp_k          (:,:,:)         ! soil decomposition rate (s-1)
    real(r8), allocatable :: ctrunc_vr         (:,:)           ! currently not used
    real(r8), allocatable :: ctrunc_veg        (:)             ! currently not used
@@ -112,8 +113,48 @@ MODULE MOD_BGC_Vars_TimeVariables
    real(r8), allocatable :: grainn_xfer              (:)      ! grain transfer N (gN m-2)
    real(r8), allocatable :: retransn                 (:)      ! retranslocated N (gN m-2)
 
+   real(r8), allocatable :: leafcCap                 (:)      ! leaf display C capacity (gC m-2)
+   real(r8), allocatable :: leafc_storageCap         (:)      ! leaf storage C capacity (gC m-2)
+   real(r8), allocatable :: leafc_xferCap            (:)      ! leaf transfer C capacity (gC m-2)
+   real(r8), allocatable :: frootcCap                (:)      ! fine root display C capacity (gC m-2)
+   real(r8), allocatable :: frootc_storageCap        (:)      ! fine root storage C capacity (gC m-2)
+   real(r8), allocatable :: frootc_xferCap           (:)      ! fine root transfer C capacity (gC m-2)
+   real(r8), allocatable :: livestemcCap             (:)      ! live stem display C capacity (gC m-2)
+   real(r8), allocatable :: livestemc_storageCap     (:)      ! live stem storage C capacity (gC m-2)
+   real(r8), allocatable :: livestemc_xferCap        (:)      ! live stem transfer C capacity (gC m-2)
+   real(r8), allocatable :: deadstemcCap             (:)      ! dead stem display C capacity (gC m-2)
+   real(r8), allocatable :: deadstemc_storageCap     (:)      ! dead stem storage C capacity (gC m-2)
+   real(r8), allocatable :: deadstemc_xferCap        (:)      ! dead stem transfer C capacity (gC m-2)
+   real(r8), allocatable :: livecrootcCap            (:)      ! live coarse root display C capacity (gC m-2)
+   real(r8), allocatable :: livecrootc_storageCap    (:)      ! live coarse root storage C capacity (gC m-2)
+   real(r8), allocatable :: livecrootc_xferCap       (:)      ! live coarse root transfer C capacity (gC m-2)
+   real(r8), allocatable :: deadcrootcCap            (:)      ! dead coarse root display C capacity (gC m-2)
+   real(r8), allocatable :: deadcrootc_storageCap    (:)      ! dead coarse root storage C capacity (gC m-2)
+   real(r8), allocatable :: deadcrootc_xferCap       (:)      ! dead coarse root transfer C capacity (gC m-2)
+
+   real(r8), allocatable :: leafnCap                 (:)      ! leaf display N capacity (gN m-2)
+   real(r8), allocatable :: leafn_storageCap         (:)      ! leaf storage N capacity (gN m-2)
+   real(r8), allocatable :: leafn_xferCap            (:)      ! leaf transfer N capacity (gN m-2)
+   real(r8), allocatable :: frootnCap                (:)      ! fine root display N capacity (gN m-2)
+   real(r8), allocatable :: frootn_storageCap        (:)      ! fine root storage N capacity (gN m-2)
+   real(r8), allocatable :: frootn_xferCap           (:)      ! fine root transfer N capacity (gN m-2)
+   real(r8), allocatable :: livestemnCap             (:)      ! live stem display N capacity (gN m-2)
+   real(r8), allocatable :: livestemn_storageCap     (:)      ! live stem storage N capacity (gN m-2)
+   real(r8), allocatable :: livestemn_xferCap        (:)      ! live stem transfer N capacity (gN m-2)
+   real(r8), allocatable :: deadstemnCap             (:)      ! dead stem display N capacity (gN m-2)
+   real(r8), allocatable :: deadstemn_storageCap     (:)      ! dead stem storage N capacity (gN m-2)
+   real(r8), allocatable :: deadstemn_xferCap        (:)      ! dead stem transfer N capacity (gN m-2)
+   real(r8), allocatable :: livecrootnCap            (:)      ! live coarse root display N capacity (gN m-2)
+   real(r8), allocatable :: livecrootn_storageCap    (:)      ! live coarse root storage N capacity (gN m-2)
+   real(r8), allocatable :: livecrootn_xferCap       (:)      ! live coarse root transfer N capacity (gN m-2)
+   real(r8), allocatable :: deadcrootnCap            (:)      ! dead coarse root display N capacity (gN m-2)
+   real(r8), allocatable :: deadcrootn_storageCap    (:)      ! dead coarse root storage N capacity (gN m-2)
+   real(r8), allocatable :: deadcrootn_xferCap       (:)      ! dead coarse root transfer N capacity (gN m-2)
+
    real(r8), allocatable :: decomp_npools_vr         (:,:,:)  ! vertical resolved: soil decomposition (litter, cwd, soil) nitrogen (gN m-3)
    real(r8), allocatable :: decomp_npools            (:,:)    ! soil decomposition (litter, cwd, soil) nitrogen (gN m-2)
+   real(r8), allocatable :: decomp_npools_vr_Cap     (:,:,:)  ! vertical resolved: soil decomposition (litter, cwd, soil organic matter) carbon Capacity (gC m-3)
+   real(r8), allocatable :: totsoiln_vr              (:,:)  ! vertical resolved: total soil nitrogen (%: gN/gSoil*100)
    real(r8), allocatable :: ntrunc_vr                (:,:)    ! currently not used
    real(r8), allocatable :: ntrunc_veg               (:)      ! currently not used
    real(r8), allocatable :: ntrunc_soil              (:)      ! currently not used
@@ -277,7 +318,7 @@ CONTAINS
    USE MOD_Precision
    USE MOD_Vars_Global
    USE MOD_SPMD_Task
-   USE MOD_LandPatch, only : numpatch
+   USE MOD_LandPatch, only: numpatch
    IMPLICIT NONE
 
 
@@ -288,6 +329,7 @@ CONTAINS
     ! bgc variables
             allocate (decomp_cpools_vr             (nl_soil_full,ndecomp_pools,numpatch)) ; decomp_cpools_vr  (:,:,:) = spval
             allocate (decomp_cpools                (ndecomp_pools,numpatch))              ; decomp_cpools       (:,:) = spval
+            allocate (decomp_cpools_vr_Cap         (nl_soil_full,ndecomp_pools,numpatch)) ; decomp_cpools_vr_Cap(:,:,:) = spval
             allocate (ctrunc_vr                    (nl_soil,numpatch))                    ; ctrunc_vr           (:,:) = spval
             allocate (ctrunc_veg                   (numpatch))                            ; ctrunc_veg            (:) = spval
             allocate (ctrunc_soil                  (numpatch))                            ; ctrunc_soil           (:) = spval
@@ -380,8 +422,48 @@ CONTAINS
             allocate (grainn_xfer                  (numpatch))                            ; grainn_xfer           (:) = spval
             allocate (retransn                     (numpatch))                            ; retransn              (:) = spval
 
+            allocate (leafcCap                     (numpatch))                            ; leafcCap              (:) = spval
+            allocate (leafc_storageCap             (numpatch))                            ; leafc_storageCap      (:) = spval
+            allocate (leafc_xferCap                (numpatch))                            ; leafc_xferCap         (:) = spval
+            allocate (frootcCap                    (numpatch))                            ; frootcCap             (:) = spval
+            allocate (frootc_storageCap            (numpatch))                            ; frootc_storageCap     (:) = spval
+            allocate (frootc_xferCap               (numpatch))                            ; frootc_xferCap        (:) = spval
+            allocate (livestemcCap                 (numpatch))                            ; livestemcCap          (:) = spval
+            allocate (livestemc_storageCap         (numpatch))                            ; livestemc_storageCap  (:) = spval
+            allocate (livestemc_xferCap            (numpatch))                            ; livestemc_xferCap     (:) = spval
+            allocate (deadstemcCap                 (numpatch))                            ; deadstemcCap          (:) = spval
+            allocate (deadstemc_storageCap         (numpatch))                            ; deadstemc_storageCap  (:) = spval
+            allocate (deadstemc_xferCap            (numpatch))                            ; deadstemc_xferCap     (:) = spval
+            allocate (livecrootcCap                (numpatch))                            ; livecrootcCap         (:) = spval
+            allocate (livecrootc_storageCap        (numpatch))                            ; livecrootc_storageCap (:) = spval
+            allocate (livecrootc_xferCap           (numpatch))                            ; livecrootc_xferCap    (:) = spval
+            allocate (deadcrootcCap                (numpatch))                            ; deadcrootcCap         (:) = spval
+            allocate (deadcrootc_storageCap        (numpatch))                            ; deadcrootc_storageCap (:) = spval
+            allocate (deadcrootc_xferCap           (numpatch))                            ; deadcrootc_xferCap    (:) = spval
+
+            allocate (leafnCap                     (numpatch))                            ; leafnCap              (:) = spval
+            allocate (leafn_storageCap             (numpatch))                            ; leafn_storageCap      (:) = spval
+            allocate (leafn_xferCap                (numpatch))                            ; leafn_xferCap         (:) = spval
+            allocate (frootnCap                    (numpatch))                            ; frootnCap             (:) = spval
+            allocate (frootn_storageCap            (numpatch))                            ; frootn_storageCap     (:) = spval
+            allocate (frootn_xferCap               (numpatch))                            ; frootn_xferCap        (:) = spval
+            allocate (livestemnCap                 (numpatch))                            ; livestemnCap          (:) = spval
+            allocate (livestemn_storageCap         (numpatch))                            ; livestemn_storageCap  (:) = spval
+            allocate (livestemn_xferCap            (numpatch))                            ; livestemn_xferCap     (:) = spval
+            allocate (deadstemnCap                 (numpatch))                            ; deadstemnCap          (:) = spval
+            allocate (deadstemn_storageCap         (numpatch))                            ; deadstemn_storageCap  (:) = spval
+            allocate (deadstemn_xferCap            (numpatch))                            ; deadstemn_xferCap     (:) = spval
+            allocate (livecrootnCap                (numpatch))                            ; livecrootnCap         (:) = spval
+            allocate (livecrootn_storageCap        (numpatch))                            ; livecrootn_storageCap (:) = spval
+            allocate (livecrootn_xferCap           (numpatch))                            ; livecrootn_xferCap    (:) = spval
+            allocate (deadcrootnCap                (numpatch))                            ; deadcrootnCap         (:) = spval
+            allocate (deadcrootn_storageCap        (numpatch))                            ; deadcrootn_storageCap (:) = spval
+            allocate (deadcrootn_xferCap           (numpatch))                            ; deadcrootn_xferCap    (:) = spval
+
             allocate (decomp_npools_vr             (nl_soil_full,ndecomp_pools,numpatch)) ; decomp_npools_vr  (:,:,:) = spval
             allocate (decomp_npools                (ndecomp_pools,numpatch))              ; decomp_npools       (:,:) = spval
+            allocate (decomp_npools_vr_Cap         (nl_soil_full,ndecomp_pools,numpatch)) ; decomp_npools_vr_Cap(:,:,:) = spval
+            allocate (totsoiln_vr                  (nl_soil,numpatch))                    ; totsoiln_vr         (:,:) = spval
             allocate (ntrunc_vr                    (nl_soil,numpatch))                    ; ntrunc_vr           (:,:) = spval
             allocate (ntrunc_veg                   (numpatch))                            ; ntrunc_veg            (:) = spval
             allocate (ntrunc_soil                  (numpatch))                            ; ntrunc_soil           (:) = spval
@@ -528,7 +610,7 @@ CONTAINS
    SUBROUTINE deallocate_BGCTimeVariables ()
 
    USE MOD_SPMD_Task
-   USE MOD_LandPatch, only : numpatch
+   USE MOD_LandPatch, only: numpatch
    IMPLICIT NONE
 
 ! --------------------------------------------------
@@ -542,6 +624,7 @@ CONTAINS
  ! bgc variables
             deallocate (decomp_cpools_vr             )
             deallocate (decomp_cpools                )
+            deallocate (decomp_cpools_vr_Cap         )
             deallocate (ctrunc_vr                    )
             deallocate (ctrunc_veg                   )
             deallocate (ctrunc_soil                  )
@@ -634,8 +717,48 @@ CONTAINS
             deallocate (grainn_xfer                  )
             deallocate (retransn                     )
 
+            deallocate (leafcCap                     )
+            deallocate (leafc_storageCap             )
+            deallocate (leafc_xferCap                )
+            deallocate (frootcCap                    )
+            deallocate (frootc_storageCap            )
+            deallocate (frootc_xferCap               )
+            deallocate (livestemcCap                 )
+            deallocate (livestemc_storageCap         )
+            deallocate (livestemc_xferCap            )
+            deallocate (deadstemcCap                 )
+            deallocate (deadstemc_storageCap         )
+            deallocate (deadstemc_xferCap            )
+            deallocate (livecrootcCap                )
+            deallocate (livecrootc_storageCap        )
+            deallocate (livecrootc_xferCap           )
+            deallocate (deadcrootcCap                )
+            deallocate (deadcrootc_storageCap        )
+            deallocate (deadcrootc_xferCap           )
+
+            deallocate (leafnCap                     )
+            deallocate (leafn_storageCap             )
+            deallocate (leafn_xferCap                )
+            deallocate (frootnCap                    )
+            deallocate (frootn_storageCap            )
+            deallocate (frootn_xferCap               )
+            deallocate (livestemnCap                 )
+            deallocate (livestemn_storageCap         )
+            deallocate (livestemn_xferCap            )
+            deallocate (deadstemnCap                 )
+            deallocate (deadstemn_storageCap         )
+            deallocate (deadstemn_xferCap            )
+            deallocate (livecrootnCap                )
+            deallocate (livecrootn_storageCap        )
+            deallocate (livecrootn_xferCap           )
+            deallocate (deadcrootnCap                )
+            deallocate (deadcrootn_storageCap        )
+            deallocate (deadcrootn_xferCap           )
+
             deallocate (decomp_npools_vr             )
             deallocate (decomp_npools                )
+            deallocate (decomp_npools_vr_Cap         )
+            deallocate (totsoiln_vr                  )
             deallocate (ntrunc_vr                    )
             deallocate (ntrunc_veg                   )
             deallocate (ntrunc_soil                  )
@@ -784,7 +907,7 @@ CONTAINS
 ! Original version: Yongjiu Dai, September 15, 1999, 03/2014
 !=======================================================================
 
-   USE MOD_Namelist, only : DEF_REST_CompressLevel, DEF_USE_NITRIF
+   USE MOD_Namelist, only: DEF_REST_CompressLevel, DEF_USE_NITRIF
    USE MOD_LandPatch
    USE MOD_NetCDFVector
    USE MOD_Vars_Global
@@ -822,6 +945,10 @@ CONTAINS
 
       CALL ncio_write_vector (file_restart, 'decomp_cpools_vr     ', 'soil_full', nl_soil_full, 'ndecomp_pools', ndecomp_pools, &
                                                                      'patch', landpatch,     decomp_cpools_vr)
+      IF(DEF_USE_DiagMatrix)THEN
+         CALL ncio_write_vector (file_restart, 'decomp_cpools_vr_Cap ', 'soil_full', nl_soil_full, 'ndecomp_pools', ndecomp_pools, &
+                                                                     'patch', landpatch,     decomp_cpools_vr_Cap)
+      ENDIF
       CALL ncio_write_vector (file_restart, 'ctrunc_vr            ', 'soil' ,   nl_soil, 'patch', landpatch, ctrunc_vr)
       CALL ncio_write_vector (file_restart, 'ctrunc_veg           ', 'patch', landpatch, ctrunc_veg           )
       CALL ncio_write_vector (file_restart, 'ctrunc_soil          ', 'patch', landpatch, ctrunc_soil          )
@@ -831,13 +958,19 @@ CONTAINS
       CALL ncio_write_vector (file_restart, 'altmax_lastyear_indx ', 'patch', landpatch, altmax_lastyear_indx )
 
       CALL ncio_write_vector (file_restart, 'decomp_npools_vr     ', 'soil_full', nl_soil_full, 'ndecomp_pools', ndecomp_pools, &
-                                                                     'patch', landpatch,     decomp_npools_vr)
+                                                                     'patch', landpatch,      decomp_npools_vr)
+      CALL ncio_write_vector (file_restart, 'totsoiln_vr          ', 'soil' ,   nl_soil, 'patch', landpatch, totsoiln_vr )
+      IF(DEF_USE_DiagMatrix)THEN
+         CALL ncio_write_vector (file_restart, 'decomp_npools_vr_Cap ', 'soil_full', nl_soil_full, 'ndecomp_pools', ndecomp_pools, &
+                                                                     'patch', landpatch,     decomp_npools_vr_Cap)
+      ENDIF
       CALL ncio_write_vector (file_restart, 'ntrunc_vr            ', 'soil' ,   nl_soil, 'patch', landpatch, ntrunc_vr   )
       CALL ncio_write_vector (file_restart, 'ntrunc_veg           ', 'patch', landpatch, ntrunc_veg           )
       CALL ncio_write_vector (file_restart, 'ntrunc_soil          ', 'patch', landpatch, ntrunc_soil          )
       CALL ncio_write_vector (file_restart, 'sminn_vr             ', 'soil' ,   nl_soil, 'patch', landpatch, sminn_vr    )
       CALL ncio_write_vector (file_restart, 'smin_no3_vr          ', 'soil' ,   nl_soil, 'patch', landpatch, smin_no3_vr )
       CALL ncio_write_vector (file_restart, 'smin_nh4_vr          ', 'soil' ,   nl_soil, 'patch', landpatch, smin_nh4_vr )
+      CALL ncio_write_vector (file_restart, 'lag_npp              ', 'patch', landpatch, lag_npp              )
 
       IF(DEF_USE_NITRIF)THEN
          CALL ncio_write_vector (file_restart, 'tCONC_O2_UNSAT       ', 'soil'  ,   nl_soil, 'patch', landpatch, tconc_o2_unsat)
@@ -853,7 +986,7 @@ CONTAINS
       CALL ncio_write_vector (file_restart, 'rh30                 ', 'patch', landpatch, rh30                 )
       CALL ncio_write_vector (file_restart, 'accumnstep           ', 'patch', landpatch, accumnstep           )
 
-      IF(DEF_USE_SASU)THEN
+      IF(DEF_USE_SASU .or. DEF_USE_DiagMatrix)THEN
  !---------------SASU variables-----------------------
          CALL ncio_write_vector (file_restart, 'decomp0_cpools_vr            ', 'soil'  ,   nl_soil, 'ndecomp_pools', ndecomp_pools, &
                                                                                 'patch', landpatch, decomp0_cpools_vr            )
@@ -978,6 +1111,9 @@ CONTAINS
       CALL ncio_read_vector (file_restart, 'ndep                 ', landpatch, ndep                 )
 
       CALL ncio_read_vector (file_restart, 'decomp_cpools_vr     ',   nl_soil_full, ndecomp_pools, landpatch, decomp_cpools_vr)
+      IF(DEF_USE_DiagMatrix)THEN
+         CALL ncio_read_vector (file_restart, 'decomp_cpools_vr_Cap ',   nl_soil_full, ndecomp_pools, landpatch, decomp_cpools_vr_Cap, defval = 1._r8)
+      ENDIF
       CALL ncio_read_vector (file_restart, 'ctrunc_vr            ',   nl_soil, landpatch, ctrunc_vr            )
       CALL ncio_read_vector (file_restart, 'ctrunc_veg           ', landpatch, ctrunc_veg           )
       CALL ncio_read_vector (file_restart, 'ctrunc_soil          ', landpatch, ctrunc_soil          )
@@ -987,12 +1123,17 @@ CONTAINS
       CALL ncio_read_vector (file_restart, 'altmax_lastyear_indx ', landpatch, altmax_lastyear_indx )
 
       CALL ncio_read_vector (file_restart, 'decomp_npools_vr     ',   nl_soil_full, ndecomp_pools, landpatch, decomp_npools_vr)
-      CALL ncio_read_vector (file_restart, 'ntrunc_vr            ',   nl_soil, landpatch, ntrunc_vr            )
-      CALL ncio_read_vector (file_restart, 'ntrunc_veg           ', landpatch, ntrunc_veg           )
-      CALL ncio_read_vector (file_restart, 'ntrunc_soil          ', landpatch, ntrunc_soil          )
-      CALL ncio_read_vector (file_restart, 'sminn_vr             ',   nl_soil, landpatch, sminn_vr             )
-      CALL ncio_read_vector (file_restart, 'smin_no3_vr          ',   nl_soil, landpatch, smin_no3_vr          )
-      CALL ncio_read_vector (file_restart, 'smin_nh4_vr          ',   nl_soil, landpatch, smin_nh4_vr          )
+      CALL ncio_read_vector (file_restart, 'totsoiln_vr          ',   nl_soil, landpatch, totsoiln_vr, defval = 1._r8)
+      IF(DEF_USE_DiagMatrix)THEN
+         CALL ncio_read_vector (file_restart, 'decomp_npools_vr_Cap ',nl_soil_full, ndecomp_pools, landpatch, decomp_npools_vr_Cap, defval = 1._r8)
+      ENDIF
+      CALL ncio_read_vector (file_restart, 'ntrunc_vr            ',   nl_soil, landpatch, ntrunc_vr  )
+      CALL ncio_read_vector (file_restart, 'ntrunc_veg           ', landpatch, ntrunc_veg            )
+      CALL ncio_read_vector (file_restart, 'ntrunc_soil          ', landpatch, ntrunc_soil           )
+      CALL ncio_read_vector (file_restart, 'sminn_vr             ',   nl_soil, landpatch, sminn_vr   )
+      CALL ncio_read_vector (file_restart, 'smin_no3_vr          ',   nl_soil, landpatch, smin_no3_vr)
+      CALL ncio_read_vector (file_restart, 'smin_nh4_vr          ',   nl_soil, landpatch, smin_nh4_vr)
+      CALL ncio_read_vector (file_restart, 'lag_npp              ', landpatch, lag_npp, defval =1.0  )
 
       IF(DEF_USE_NITRIF)THEN
          CALL ncio_read_vector (file_restart, 'tCONC_O2_UNSAT       ',   nl_soil, landpatch, tconc_o2_unsat         )
@@ -1008,7 +1149,7 @@ CONTAINS
       CALL ncio_read_vector (file_restart, 'rh30                 ', landpatch, rh30                 )
       CALL ncio_read_vector (file_restart, 'accumnstep           ', landpatch, accumnstep           )
 
-      IF(DEF_USE_SASU)THEN
+      IF(DEF_USE_SASU .or. DEF_USE_DiagMatrix)THEN
  !---------------SASU variables-----------------------
          CALL ncio_read_vector (file_restart, 'decomp0_cpools_vr            ',   nl_soil, ndecomp_pools, landpatch, decomp0_cpools_vr, defval = 1._r8)
          CALL ncio_read_vector (file_restart, 'I_met_c_vr_acc               ',   nl_soil, landpatch, I_met_c_vr_acc, defval = 0._r8               )
@@ -1098,13 +1239,16 @@ CONTAINS
 
    USE MOD_SPMD_Task
    USE MOD_RangeCheck
-   USE MOD_Namelist, only : DEF_USE_NITRIF, DEF_USE_SASU
+   USE MOD_Namelist, only: DEF_USE_NITRIF, DEF_USE_SASU, DEF_USE_DiagMatrix
 
    IMPLICIT NONE
 
 ! bgc variables
       CALL check_vector_data ('decomp_cpools_vr  ', decomp_cpools_vr  )
       CALL check_vector_data ('decomp_cpools     ', decomp_cpools     )
+      IF(DEF_USE_DiagMatrix)THEN
+         CALL check_vector_data ('decomp_cpools_vr_Cap',decomp_cpools_vr_Cap)
+      ENDIF
       CALL check_vector_data ('decomp_k          ', decomp_k          )
       CALL check_vector_data ('ctrunc_vr         ', ctrunc_vr         )
       CALL check_vector_data ('ctrunc_veg        ', ctrunc_veg        )
@@ -1199,8 +1343,53 @@ CONTAINS
       CALL check_vector_data ('grainn_xfer              ', grainn_xfer              )
       CALL check_vector_data ('retransn                 ', retransn                 )
 
+      IF(DEF_USE_DiagMatrix)THEN
+         CALL check_vector_data ('leafcCap              ', leafcCap                 )
+         CALL check_vector_data ('leafc_storageCap      ', leafc_storageCap         )
+         CALL check_vector_data ('leafc_xferCap         ', leafc_xferCap            )
+         CALL check_vector_data ('frootcCap             ', frootcCap                )
+         CALL check_vector_data ('frootc_storageCap     ', frootc_storageCap        )
+         CALL check_vector_data ('frootc_xferCap        ', frootc_xferCap           )
+         CALL check_vector_data ('livestemcCap          ', livestemcCap             )
+         CALL check_vector_data ('livestemc_storageCap  ', livestemc_storageCap     )
+         CALL check_vector_data ('livestemc_xferCap     ', livestemc_xferCap        )
+         CALL check_vector_data ('deadstemcCap          ', deadstemcCap             )
+         CALL check_vector_data ('deadstemc_storageCap  ', deadstemc_storageCap     )
+         CALL check_vector_data ('deadstemc_xferCap     ', deadstemc_xferCap        )
+         CALL check_vector_data ('livecrootcCap         ', livecrootcCap            )
+         CALL check_vector_data ('livecrootc_storageCap ', livecrootc_storageCap    )
+         CALL check_vector_data ('livecrootc_xferCap    ', livecrootc_xferCap       )
+         CALL check_vector_data ('deadcrootcCap         ', deadcrootcCap            )
+         CALL check_vector_data ('deadcrootc_storageCap ', deadcrootc_storageCap    )
+         CALL check_vector_data ('deadcrootc_xferCap    ', deadcrootc_xferCap       )
+
+         CALL check_vector_data ('leafnCap              ', leafnCap                 )
+         CALL check_vector_data ('leafn_storageCap      ', leafn_storageCap         )
+         CALL check_vector_data ('leafn_xferCap         ', leafn_xferCap            )
+         CALL check_vector_data ('frootnCap             ', frootnCap                )
+         CALL check_vector_data ('frootn_storageCap     ', frootn_storageCap        )
+         CALL check_vector_data ('frootn_xferCap        ', frootn_xferCap           )
+         CALL check_vector_data ('livestemnCap          ', livestemnCap             )
+         CALL check_vector_data ('livestemn_storageCap  ', livestemn_storageCap     )
+         CALL check_vector_data ('livestemn_xferCap     ', livestemn_xferCap        )
+         CALL check_vector_data ('deadstemnCap          ', deadstemnCap             )
+         CALL check_vector_data ('deadstemn_storageCap  ', deadstemn_storageCap     )
+         CALL check_vector_data ('deadstemn_xferCap     ', deadstemn_xferCap        )
+         CALL check_vector_data ('livecrootnCap         ', livecrootnCap            )
+         CALL check_vector_data ('livecrootn_storageCap ', livecrootn_storageCap    )
+         CALL check_vector_data ('livecrootn_xferCap    ', livecrootn_xferCap       )
+         CALL check_vector_data ('deadcrootnCap         ', deadcrootnCap            )
+         CALL check_vector_data ('deadcrootn_storageCap ', deadcrootn_storageCap    )
+         CALL check_vector_data ('deadcrootn_xferCap    ', deadcrootn_xferCap       )
+
+      ENDIF
+
       CALL check_vector_data ('decomp_npools_vr         ', decomp_npools_vr         )
       CALL check_vector_data ('decomp_npools            ', decomp_npools            )
+      CALL check_vector_data ('totsoiln_vr              ', totsoiln_vr              )
+      IF(DEF_USE_DiagMatrix)THEN
+         CALL check_vector_data ('decomp_npools_vr_Cap  ',decomp_npools_vr_Cap      )
+      ENDIF
       CALL check_vector_data ('ntrunc_vr                ', ntrunc_vr                )
       CALL check_vector_data ('ntrunc_veg               ', ntrunc_veg               )
       CALL check_vector_data ('ntrunc_soil              ', ntrunc_soil              )
@@ -1210,8 +1399,8 @@ CONTAINS
       CALL check_vector_data ('smin_nh4_vr              ', smin_nh4_vr              )
 
       IF(DEF_USE_NITRIF)THEN
-         CALL check_vector_data ('tCONC_O2_UNSAT           ', tconc_o2_unsat )
-         CALL check_vector_data ('tO2_DECOMP_DEPTH_UNSAT   ', to2_decomp_depth_unsat   )
+         CALL check_vector_data ('tCONC_O2_UNSAT           ', tconc_o2_unsat        )
+         CALL check_vector_data ('tO2_DECOMP_DEPTH_UNSAT   ', to2_decomp_depth_unsat)
       ENDIF
 
       CALL check_vector_data ('sminn                    ', sminn                    )
@@ -1258,7 +1447,7 @@ CONTAINS
       CALL check_vector_data ('dayl                     ', dayl                     )
       CALL check_vector_data ('prev_dayl                ', prev_dayl                )
 
-      IF(DEF_USE_SASU)THEN
+      IF(DEF_USE_SASU .or. DEF_USE_DiagMatrix)THEN
  !--------------SASU variables---------------------------
          CALL check_vector_data ('decomp0_cpools_vr           ', decomp0_cpools_vr           )
          CALL check_vector_data ('I_met_c_vr_acc              ', I_met_c_vr_acc              )

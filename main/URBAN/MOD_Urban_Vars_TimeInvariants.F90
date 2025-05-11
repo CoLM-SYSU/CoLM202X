@@ -160,25 +160,25 @@ CONTAINS
       CALL ncio_read_vector (file_restart, 'PCT_Water'     , landurban, flake    )
 
       ! LUCY paras !TODO: variable name can be optimized
-      CALL ncio_read_vector (file_restart, 'POP_DEN'     ,      landurban, pop_den     )
-      CALL ncio_read_vector (file_restart, 'VEHC_NUM'    , 3  , landurban, vehicle     )
-      CALL ncio_read_vector (file_restart, 'week_holiday', 7  , landurban, week_holiday)
-      CALL ncio_read_vector (file_restart, 'weekendhour' , 24 , landurban, weh_prof    )
-      CALL ncio_read_vector (file_restart, 'weekdayhour' , 24 , landurban, wdh_prof    )
-      CALL ncio_read_vector (file_restart, 'metabolism'  , 24 , landurban, hum_prof    )
-      CALL ncio_read_vector (file_restart, 'holiday'     , 365, landurban, fix_holiday )
+      CALL ncio_read_vector (file_restart, 'POP_DEN'     ,      landurban, pop_den      )
+      CALL ncio_read_vector (file_restart, 'VEHC_NUM'    , 3  , landurban, vehicle      )
+      CALL ncio_read_vector (file_restart, 'week_holiday', 7  , landurban, week_holiday )
+      CALL ncio_read_vector (file_restart, 'weekendhour' , 24 , landurban, weh_prof     )
+      CALL ncio_read_vector (file_restart, 'weekdayhour' , 24 , landurban, wdh_prof     )
+      CALL ncio_read_vector (file_restart, 'metabolism'  , 24 , landurban, hum_prof     )
+      CALL ncio_read_vector (file_restart, 'holiday'     , 365, landurban, fix_holiday  )
 
       ! morphological paras
-      CALL ncio_read_vector (file_restart, 'WT_ROOF'       , landurban, froof    )
-      CALL ncio_read_vector (file_restart, 'HT_ROOF'       , landurban, hroof    )
-      CALL ncio_read_vector (file_restart, 'BUILDING_HLR'  , landurban, hlr      )
-      CALL ncio_read_vector (file_restart, 'WTROAD_PERV'   , landurban, fgper    )
-      CALL ncio_read_vector (file_restart, 'EM_ROOF'       , landurban, em_roof  )
-      CALL ncio_read_vector (file_restart, 'EM_WALL'       , landurban, em_wall  )
-      CALL ncio_read_vector (file_restart, 'EM_IMPROAD'    , landurban, em_gimp  )
-      CALL ncio_read_vector (file_restart, 'EM_PERROAD'    , landurban, em_gper  )
-      CALL ncio_read_vector (file_restart, 'T_BUILDING_MIN', landurban, t_roommin)
-      CALL ncio_read_vector (file_restart, 'T_BUILDING_MAX', landurban, t_roommax)
+      CALL ncio_read_vector (file_restart, 'WT_ROOF'       , landurban, froof     )
+      CALL ncio_read_vector (file_restart, 'HT_ROOF'       , landurban, hroof     )
+      CALL ncio_read_vector (file_restart, 'BUILDING_HLR'  , landurban, hlr       )
+      CALL ncio_read_vector (file_restart, 'WTROAD_PERV'   , landurban, fgper     )
+      CALL ncio_read_vector (file_restart, 'EM_ROOF'       , landurban, em_roof   )
+      CALL ncio_read_vector (file_restart, 'EM_WALL'       , landurban, em_wall   )
+      CALL ncio_read_vector (file_restart, 'EM_IMPROAD'    , landurban, em_gimp   )
+      CALL ncio_read_vector (file_restart, 'EM_PERROAD'    , landurban, em_gper   )
+      CALL ncio_read_vector (file_restart, 'T_BUILDING_MIN', landurban, t_roommin )
+      CALL ncio_read_vector (file_restart, 'T_BUILDING_MAX', landurban, t_roommax )
 
       CALL ncio_read_vector (file_restart, 'ROOF_DEPTH_L'  , ulev, landurban, z_roof  )
       CALL ncio_read_vector (file_restart, 'ROOF_THICK_L'  , ulev, landurban, dz_roof )
@@ -186,12 +186,12 @@ CONTAINS
       CALL ncio_read_vector (file_restart, 'WALL_THICK_L'  , ulev, landurban, dz_wall )
 
       ! thermal paras
-      CALL ncio_read_vector (file_restart, 'CV_ROOF'   , ulev, landurban, cv_roof)
-      CALL ncio_read_vector (file_restart, 'CV_WALL'   , ulev, landurban, cv_wall)
-      CALL ncio_read_vector (file_restart, 'TK_ROOF'   , ulev, landurban, tk_roof)
-      CALL ncio_read_vector (file_restart, 'TK_WALL'   , ulev, landurban, tk_wall)
-      CALL ncio_read_vector (file_restart, 'TK_IMPROAD', ulev, landurban, tk_gimp)
-      CALL ncio_read_vector (file_restart, 'CV_IMPROAD', ulev, landurban, cv_gimp)
+      CALL ncio_read_vector (file_restart, 'CV_ROOF'   , ulev, landurban, cv_roof )
+      CALL ncio_read_vector (file_restart, 'CV_WALL'   , ulev, landurban, cv_wall )
+      CALL ncio_read_vector (file_restart, 'TK_ROOF'   , ulev, landurban, tk_roof )
+      CALL ncio_read_vector (file_restart, 'TK_WALL'   , ulev, landurban, tk_wall )
+      CALL ncio_read_vector (file_restart, 'TK_IMPROAD', ulev, landurban, tk_gimp )
+      CALL ncio_read_vector (file_restart, 'CV_IMPROAD', ulev, landurban, cv_gimp )
 
       CALL ncio_read_vector (file_restart, 'ALB_ROOF'   , ns, nr, landurban, alb_roof )
       CALL ncio_read_vector (file_restart, 'ALB_WALL'   , ns, nr, landurban, alb_wall )
@@ -338,4 +338,3 @@ CONTAINS
 END MODULE MOD_Urban_Vars_TimeInvariants
 #endif
 ! ---------- EOP ------------
-

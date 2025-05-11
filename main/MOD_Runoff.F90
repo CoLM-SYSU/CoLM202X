@@ -7,7 +7,7 @@ MODULE MOD_Runoff
    IMPLICIT NONE
    SAVE
 
-!  PUBLIC MEMBER FUNCTIONS:
+! PUBLIC MEMBER FUNCTIONS:
    PUBLIC :: SurfaceRunoff_SIMTOP
    PUBLIC :: SubsurfaceRunoff_SIMTOP
    PUBLIC :: Runoff_XinAnJiang
@@ -24,28 +24,30 @@ CONTAINS
                                     rsur,rsur_se,rsur_ie)
 
 !=======================================================================
-! the original code was provide by Robert E. Dickinson based on following clues:
-! a water table level determination level added including highland and
-! lowland levels and fractional area of wetland (water table above the surface.
-! Runoff is parametrized from the lowlands in terms of precip incident on
-! wet areas and a base flow, where these are estimated using ideas from TOPMODEL.
+!  the original code was provide by Robert E. Dickinson based on
+!  following clues: a water table level determination level added
+!  including highland and lowland levels and fractional area of wetland
+!  (water table above the surface.  Runoff is parametrized from the
+!  lowlands in terms of precip incident on wet areas and a base flow,
+!  where these are estimated using ideas from TOPMODEL.
 !
-! Author : Yongjiu Dai, 07/29/2002, Guoyue Niu, 06/2012
+!  Author : Yongjiu Dai, 07/29/2002, Guoyue Niu, 06/2012
 !=======================================================================
 
    IMPLICIT NONE
 
-!-----------------------Arguments---------------------------------------
+!-------------------------- Dummy Arguments ----------------------------
 
    integer, intent(in) :: nl_soil   ! number of soil layers
    real(r8), intent(in) :: &
-        ! wtfact,                 &! (updated to gridded 'fsatmax' data) fraction of model area with high water table
-        wimp,                     &! water impremeable if porosity less than wimp
+        ! wtfact,                 &! (updated to gridded 'fsatmax' data)
+                                   ! fraction of model area with high water table
+        wimp,                     &! water impermeable if porosity less than wimp
         porsl(1:nl_soil),         &! saturated volumetric soil water content(porosity)
         psi0(1:nl_soil),          &! saturated soil suction (mm) (NEGATIVE)
         hksati(1:nl_soil),        &! hydraulic conductivity at saturation (mm h2o/s)
-        fsatmax,                  &! maximum fraction of saturation area [-] 
-        fsatdcf,                  &! decay factor in calucation of fraction of saturation area [1/m] 
+        fsatmax,                  &! maximum fraction of saturation area [-]
+        fsatdcf,                  &! decay factor in calc of fraction of saturation area [1/m]
         z_soisno(1:nl_soil),      &! layer depth (m)
         dz_soisno(1:nl_soil),     &! layer thickness (m)
         zi_soisno(0:nl_soil),     &! interface level below a "z" level (m)
@@ -58,7 +60,7 @@ CONTAINS
    real(r8), intent(out), optional :: rsur_se! saturation excess surface runoff (mm h2o/s)
    real(r8), intent(out), optional :: rsur_ie! infiltration excess surface runoff (mm h2o/s)
 
-!-----------------------Local Variables---------------------------------
+!-------------------------- Local Variables ----------------------------
 
    real(r8) qinmax       ! maximum infiltration capability
    real(r8) fsat         ! fractional area with water table at surface
@@ -66,7 +68,7 @@ CONTAINS
    ! updated to gridded 'fsatdcf' (by Shupeng Zhang)
    ! real(r8), parameter :: fff = 0.5   ! runoff decay factor (m-1)
 
-!-----------------------END Variable List-------------------------------
+!-----------------------------------------------------------------------
 
 !  fraction of saturated area (updated to gridded 'fsatmax' and 'fsatdcf')
       !fsat = wtfact*min(1.0,exp(-0.5*fff*zwt))
@@ -92,10 +94,10 @@ CONTAINS
 ! -------------------------------------------------------------------------
    SUBROUTINE SubsurfaceRunoff_SIMTOP (nl_soil, icefrac, dz_soisno, zi_soisno, zwt, rsubst)
 
-! ARGUMENTS:
    IMPLICIT NONE
 
-   integer,  intent(in) :: nl_soil       !
+!-------------------------- Dummy Arguments ----------------------------
+   integer,  intent(in) :: nl_soil                 !
    real(r8), intent(in) :: icefrac(1:nl_soil)      ! ice fraction (-)
 
    real(r8), intent(in) :: dz_soisno  (1:nl_soil)  ! layer depth (m)
@@ -104,7 +106,7 @@ CONTAINS
    real(r8), intent(in)  :: zwt    ! the depth from ground (soil) surface to water table [m]
    real(r8), intent(out) :: rsubst ! subsurface runoff (positive = out of soil column) (mm H2O /s)
 
-! LOCAL ARGUMENTS
+!-------------------------- Local Variables ----------------------------
 
    integer  :: j                ! indices
    integer  :: jwt              ! index of the soil layer right above the water table (-)
@@ -114,6 +116,7 @@ CONTAINS
    real(r8) :: icefracsum
    real(r8) :: fracice_rsub
    real(r8) :: imped
+!-----------------------------------------------------------------------
 
       DO j = 1,nl_soil
          dzmm(j) = dz_soisno(j)*1000.
@@ -138,7 +141,7 @@ CONTAINS
       ! add ice impedance factor to baseflow
       fracice_rsub = max(0.,exp(-3.*(1.-(icefracsum/dzsum)))-exp(-3.))/(1.0-exp(-3.))
       imped = max(0.,1.-fracice_rsub)
-      rsubst = imped * 5.5e-3 * exp(-2.5*zwt)  
+      rsubst = imped * 5.5e-3 * exp(-2.5*zwt)
 
    END SUBROUTINE SubsurfaceRunoff_SIMTOP
 
@@ -188,7 +191,7 @@ CONTAINS
 
          infil = min(infil, watin)
 
-         rsur   = (watin - infil) * 1000. / deltim 
+         rsur   = (watin - infil) * 1000. / deltim
          rsubst = 0.
 
       ENDIF
@@ -207,12 +210,12 @@ CONTAINS
    integer,  intent(in) :: nl_soil ! number of soil layers
 
    real(r8), intent(in) :: &
-      dz_soisno   (1:nl_soil),  & ! layer thickness (m)
-      eff_porosity(1:nl_soil),  & ! effective porosity = porosity - vol_ice
-      vol_liq     (1:nl_soil),  & ! partial volume of liquid water in layer
-      BVIC,                     & ! VIC infiltration parameter
-      gwat,                     & ! net water input from top
-      deltim                      ! time step (s)
+      dz_soisno   (1:nl_soil),  &  ! layer thickness (m)
+      eff_porosity(1:nl_soil),  &  ! effective porosity = porosity - vol_ice
+      vol_liq     (1:nl_soil),  &  ! partial volume of liquid water in layer
+      BVIC,                     &  ! VIC infiltration parameter
+      gwat,                     &  ! net water input from top
+      deltim                       ! time step (s)
 
    real(r8), intent(out) :: rsur   ! surface runoff (mm h2o/s)
    real(r8), intent(out) :: rsubst ! subsurface runoff (mm h2o/s)
@@ -221,7 +224,7 @@ CONTAINS
    real(r8) :: btopo, watin, w_int, wsat_int, wtmp, infil
    real(r8) :: InfilExpFac, WaterDepthMax, WaterDepthInit, RunoffSurface, InfilVarTmp
    real(r8) :: SoilSaturateFrac
-      
+
       watin = gwat * deltim / 1000. ! convert mm/s to m
 
       IF (watin <= 0.) THEN
@@ -235,17 +238,17 @@ CONTAINS
          SoilSaturateFrac = 1.0 - (max(0.0, (1.0-(w_int/wsat_int))))**InfilExpFac
          SoilSaturateFrac = max(0.0, SoilSaturateFrac)
          SoilSaturateFrac = min(1.0, SoilSaturateFrac)
-         
+
          ! Infiltration for the previous time-step soil moisture based on SoilSaturateFrac
          WaterDepthMax  = (1.0 + BVIC) * wsat_int
          WaterDepthInit = WaterDepthMax * (1.0 - (1.0 - SoilSaturateFrac)**(1.0/BVIC))
-         
+
          ! Solve for surface runoff
          if ( WaterDepthMax <= 0.0 ) then
             RunoffSurface = watin
          ELSEIF   ( (WaterDepthInit + watin) > WaterDepthMax ) then
             !RunoffSurface = (WaterDepthInit + w_int) - WaterDepthMax
-            RunoffSurface = watin - wsat_int + w_int 
+            RunoffSurface = watin - wsat_int + w_int
          ELSE
             InfilVarTmp  = 1.0 - ((WaterDepthInit +watin ) / WaterDepthMax)
             RunoffSurface =watin - wsat_int + w_int + wsat_int * (InfilVarTmp**(1.0+BVIC))
@@ -253,7 +256,7 @@ CONTAINS
 
          IF ( RunoffSurface < 0.0 ) RunoffSurface = 0.0
          IF ( RunoffSurface > watin) RunoffSurface = watin
-     
+
          infil = watin - RunoffSurface
          rsur= RunoffSurface * 1000. / deltim
          rsubst = 0.
@@ -262,4 +265,4 @@ CONTAINS
    END SUBROUTINE Runoff_SimpleVIC
 
 END MODULE MOD_Runoff
-! --------- EOP ----------
+! ---------- EOP ------------

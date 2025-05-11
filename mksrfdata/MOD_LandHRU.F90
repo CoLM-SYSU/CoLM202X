@@ -1,11 +1,11 @@
 #include <define.h>
 
-#ifdef CATCHMENT 
+#ifdef CATCHMENT
 
 MODULE MOD_LandHRU
 
-!------------------------------------------------------------------------------------
-! DESCRIPTION:
+!-----------------------------------------------------------------------
+! !DESCRIPTION:
 !
 !    Build pixelset "landhru".
 !
@@ -16,11 +16,11 @@ MODULE MOD_LandHRU
 !       ELEMENT >>> HRU >>> PATCH
 !    If Plant Function Type classification is used, PATCH is further divided into PFT.
 !    If Plant Community classification is used,     PATCH is further divided into PC.
-! 
+!
 !    "landhru" refers to pixelset HRU.
 !
-! Created by Shupeng Zhang, May 2023
-!------------------------------------------------------------------------------------
+!  Created by Shupeng Zhang, May 2023
+!-----------------------------------------------------------------------
 
    USE MOD_Precision
    USE MOD_Pixelset
@@ -29,10 +29,10 @@ MODULE MOD_LandHRU
 
    ! ---- Instance ----
    integer :: numhru
-   type(grid_type)     :: ghru
+   type(grid_type)     :: grid_hru
    type(pixelset_type) :: landhru
-   
-   type(subset_type) :: basin_hru
+
+   type(subset_type) :: elm_hru
 
 CONTAINS
 
@@ -69,7 +69,7 @@ CONTAINS
       IF (p_is_master) THEN
          write(*,'(A)') 'Making land hydro units :'
       ENDIF
-      
+
       IF (p_is_master) THEN
          CALL ncio_read_serial (DEF_CatchmentMesh_data, 'basin_numhru', numhru_all_g)
          CALL ncio_read_serial (DEF_CatchmentMesh_data, 'lake_id', lakeid)
@@ -91,11 +91,11 @@ CONTAINS
 
                nhru = sum(numhru_all_g(catnum))
                CALL mpi_send (nhru, 1, MPI_INTEGER4, &
-                  p_address_worker(iwork), mpi_tag_size, p_comm_glb, p_err) 
+                  p_address_worker(iwork), mpi_tag_size, p_comm_glb, p_err)
 
                ibuff = lakeid(catnum)
                CALL mpi_send (ibuff, ncat, MPI_INTEGER4, &
-                  p_address_worker(iwork), mpi_tag_data, p_comm_glb, p_err) 
+                  p_address_worker(iwork), mpi_tag_data, p_comm_glb, p_err)
 
                deallocate(catnum)
                deallocate(ibuff )
@@ -104,12 +104,14 @@ CONTAINS
       ENDIF
 
       IF (p_is_worker) THEN
-         CALL mpi_send (numelm, 1, MPI_INTEGER4, p_address_master, mpi_tag_size, p_comm_glb, p_err) 
+         CALL mpi_send (numelm, 1, MPI_INTEGER4, p_address_master, mpi_tag_size, p_comm_glb, p_err)
          IF (numelm > 0) THEN
             allocate (lakeid (numelm))
-            CALL mpi_send (landelm%eindex, numelm, MPI_INTEGER8, p_address_master, mpi_tag_data, p_comm_glb, p_err) 
+            CALL mpi_send (landelm%eindex, numelm, MPI_INTEGER8, p_address_master, mpi_tag_data, p_comm_glb, p_err)
             CALL mpi_recv (numhru, 1,      MPI_INTEGER4, p_address_master, mpi_tag_size, p_comm_glb, p_stat, p_err)
             CALL mpi_recv (lakeid, numelm, MPI_INTEGER4, p_address_master, mpi_tag_data, p_comm_glb, p_stat, p_err)
+         ELSE
+            numhru = 0
          ENDIF
       ENDIF
 #else
@@ -120,22 +122,24 @@ CONTAINS
          IF (allocated(numhru_all_g)) deallocate(numhru_all_g)
       ENDIF
 
-      IF (p_is_io) CALL allocate_block_data (ghru, hrudata)
-      CALL catchment_data_read (DEF_CatchmentMesh_data, 'ihydrounit2d', ghru, hrudata)
+      IF (p_is_io) CALL allocate_block_data (grid_hru, hrudata)
+      CALL catchment_data_read (DEF_CatchmentMesh_data, 'ihydrounit2d', grid_hru, hrudata)
 
 #ifdef USEMPI
       IF (p_is_io) THEN
-         CALL aggregation_data_daemon (ghru, data_i4_2d_in1 = hrudata)
+         CALL aggregation_data_daemon (grid_hru, data_i4_2d_in1 = hrudata)
       ENDIF
 #endif
 
       IF (p_is_worker) THEN
 
-         allocate (landhru%eindex (numhru))
-         allocate (landhru%settyp (numhru))
-         allocate (landhru%ipxstt (numhru))
-         allocate (landhru%ipxend (numhru))
-         allocate (landhru%ielm   (numhru))
+         IF (numhru > 0) THEN
+            allocate (landhru%eindex (numhru))
+            allocate (landhru%settyp (numhru))
+            allocate (landhru%ipxstt (numhru))
+            allocate (landhru%ipxend (numhru))
+            allocate (landhru%ielm   (numhru))
+         ENDIF
 
          numhru = 0
 
@@ -147,26 +151,26 @@ CONTAINS
                typsgn = 1
             ENDIF
 
-            npxl = mesh(ie)%npxl 
-            
+            npxl = mesh(ie)%npxl
+
             allocate (types (1:npxl))
 
-            CALL aggregation_request_data (landelm, ie, ghru, zip = .false., &
+            CALL aggregation_request_data (landelm, ie, grid_hru, zip = .false., &
                data_i4_2d_in1 = hrudata, data_i4_2d_out1 = ibuff)
 
             types = ibuff
-               
+
             allocate (order (1:npxl))
             order = (/ (ipxl, ipxl = 1, npxl) /)
 
             CALL quicksort (npxl, types, order)
-               
+
             mesh(ie)%ilon(1:npxl) = mesh(ie)%ilon(order)
             mesh(ie)%ilat(1:npxl) = mesh(ie)%ilat(order)
-            
+
             DO ipxl = 1, npxl
                IF (ipxl == 1) THEN
-                  numhru = numhru + 1 
+                  numhru = numhru + 1
                   landhru%eindex (numhru) = mesh(ie)%indx
                   landhru%settyp (numhru) = types(ipxl) * typsgn
                   landhru%ipxstt (numhru) = ipxl
@@ -182,7 +186,7 @@ CONTAINS
                ENDIF
             ENDDO
             landhru%ipxend(numhru) = npxl
-            
+
             deallocate (ibuff)
             deallocate (types)
             deallocate (order)
@@ -195,8 +199,8 @@ CONTAINS
       ENDIF
 
       landhru%nset = numhru
-      CALL landhru%set_vecgs 
-         
+      CALL landhru%set_vecgs
+
 #ifdef USEMPI
       IF (p_is_worker) THEN
          CALL mpi_reduce (numhru, nhru_glb, 1, MPI_INTEGER, MPI_SUM, p_root, p_comm_worker, p_err)
@@ -213,6 +217,6 @@ CONTAINS
       IF (allocated(lakeid)) deallocate(lakeid)
 
    END SUBROUTINE landhru_build
-   
+
 END MODULE MOD_LandHRU
 #endif

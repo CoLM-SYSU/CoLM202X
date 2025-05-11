@@ -3,6 +3,9 @@
 MODULE MOD_Vars_1DAccFluxes
 
    USE MOD_Precision
+#ifdef EXTERNAL_LAKE
+   USE MOD_Lake_1DAccVars
+#endif
 
    real(r8) :: nac ! number of accumulation
    real(r8), allocatable :: nac_ln      (:)
@@ -44,6 +47,7 @@ MODULE MOD_Vars_1DAccFluxes
 #ifdef CatchLateralFlow
    real(r8), allocatable :: a_xwsur     (:)
    real(r8), allocatable :: a_xwsub     (:)
+   real(r8), allocatable :: a_fldarea   (:)
 #endif
    real(r8), allocatable :: a_qintr     (:)
    real(r8), allocatable :: a_qinfl     (:)
@@ -100,7 +104,7 @@ MODULE MOD_Vars_1DAccFluxes
    real(r8), allocatable :: a_tafu      (:) !temperature of outer building [K]
    real(r8), allocatable :: a_fhac      (:) !sensible flux from heat or cool AC [W/m2]
    real(r8), allocatable :: a_fwst      (:) !waste heat flux from heat or cool AC [W/m2]
-   real(r8), allocatable :: a_fach      (:) !flux from inner and outter air exchange [W/m2]
+   real(r8), allocatable :: a_fach      (:) !flux from inner and outer air exchange [W/m2]
    real(r8), allocatable :: a_fahe      (:) !flux from metabolic and vehicle [W/m2]
    real(r8), allocatable :: a_fhah      (:) !sensible flux from heating [W/m2]
    real(r8), allocatable :: a_vehc      (:) !flux from vehicle [W/m2]
@@ -175,6 +179,16 @@ MODULE MOD_Vars_1DAccFluxes
    real(r8), allocatable :: a_hr                 (:)
    real(r8), allocatable :: a_fpg                (:)
    real(r8), allocatable :: a_fpi                (:)
+   real(r8), allocatable :: a_totvegc            (:)
+   real(r8), allocatable :: a_totlitc            (:)
+   real(r8), allocatable :: a_totcwdc            (:)
+   real(r8), allocatable :: a_totsomc            (:)
+   real(r8), allocatable :: a_totcolc            (:)
+   real(r8), allocatable :: a_totvegn            (:)
+   real(r8), allocatable :: a_totlitn            (:)
+   real(r8), allocatable :: a_totcwdn            (:)
+   real(r8), allocatable :: a_totsomn            (:)
+   real(r8), allocatable :: a_totcoln            (:)
    real(r8), allocatable :: a_gpp_enftemp        (:) !1
    real(r8), allocatable :: a_gpp_enfboreal      (:) !2
    real(r8), allocatable :: a_gpp_dnfboreal      (:) !3
@@ -232,32 +246,68 @@ MODULE MOD_Vars_1DAccFluxes
    real(r8), allocatable :: a_irrig_method_rice2    (:)
    real(r8), allocatable :: a_irrig_method_sugarcane(:)
 
-   real(r8), allocatable :: a_cphase             (:)
-   real(r8), allocatable :: a_gddplant           (:)
-   real(r8), allocatable :: a_gddmaturity        (:)
-   real(r8), allocatable :: a_vf                 (:)
-   real(r8), allocatable :: a_hui                (:)
-   real(r8), allocatable :: a_cropprod1c         (:)
-   real(r8), allocatable :: a_cropprod1c_loss    (:)
-   real(r8), allocatable :: a_cropseedc_deficit  (:)
-   real(r8), allocatable :: a_grainc_to_cropprodc(:)
-   real(r8), allocatable :: a_grainc_to_seed     (:)
-   real(r8), allocatable :: a_fert_to_sminn      (:)
+   real(r8), allocatable :: a_cphase                (:)
+   real(r8), allocatable :: a_gddplant              (:)
+   real(r8), allocatable :: a_gddmaturity           (:)
+   real(r8), allocatable :: a_vf                    (:)
+   real(r8), allocatable :: a_hui                   (:)
+   real(r8), allocatable :: a_cropprod1c            (:)
+   real(r8), allocatable :: a_cropprod1c_loss       (:)
+   real(r8), allocatable :: a_cropseedc_deficit     (:)
+   real(r8), allocatable :: a_grainc_to_cropprodc   (:)
+   real(r8), allocatable :: a_grainc_to_seed        (:)
+   real(r8), allocatable :: a_fert_to_sminn         (:)
 
-   real(r8), allocatable :: a_irrig_rate         (:)
-   real(r8), allocatable :: a_deficit_irrig      (:)
-   real(r8), allocatable :: a_sum_irrig          (:)
-   real(r8), allocatable :: a_sum_irrig_count    (:)
+   real(r8), allocatable :: a_irrig_rate            (:)
+   real(r8), allocatable :: a_deficit_irrig         (:)
+   real(r8), allocatable :: a_sum_irrig             (:)
+   real(r8), allocatable :: a_sum_irrig_count       (:)
 #endif
-   real(r8), allocatable :: a_ndep_to_sminn      (:)
-   real(r8), allocatable :: a_abm                (:)
-   real(r8), allocatable :: a_gdp                (:)
-   real(r8), allocatable :: a_peatf              (:)
-   real(r8), allocatable :: a_hdm                (:)
-   real(r8), allocatable :: a_lnfm               (:)
+   real(r8), allocatable :: a_ndep_to_sminn         (:)
+   real(r8), allocatable :: a_abm                   (:)
+   real(r8), allocatable :: a_gdp                   (:)
+   real(r8), allocatable :: a_peatf                 (:)
+   real(r8), allocatable :: a_hdm                   (:)
+   real(r8), allocatable :: a_lnfm                  (:)
+   real(r8), allocatable :: a_leafcCap              (:)
+   real(r8), allocatable :: a_leafc_storageCap      (:)
+   real(r8), allocatable :: a_leafc_xferCap         (:)
+   real(r8), allocatable :: a_frootcCap             (:)
+   real(r8), allocatable :: a_frootc_storageCap     (:)
+   real(r8), allocatable :: a_frootc_xferCap        (:)
+   real(r8), allocatable :: a_livestemcCap          (:)
+   real(r8), allocatable :: a_livestemc_storageCap  (:)
+   real(r8), allocatable :: a_livestemc_xferCap     (:)
+   real(r8), allocatable :: a_deadstemcCap          (:)
+   real(r8), allocatable :: a_deadstemc_storageCap  (:)
+   real(r8), allocatable :: a_deadstemc_xferCap     (:)
+   real(r8), allocatable :: a_livecrootcCap         (:)
+   real(r8), allocatable :: a_livecrootc_storageCap (:)
+   real(r8), allocatable :: a_livecrootc_xferCap    (:)
+   real(r8), allocatable :: a_deadcrootcCap         (:)
+   real(r8), allocatable :: a_deadcrootc_storageCap (:)
+   real(r8), allocatable :: a_deadcrootc_xferCap    (:)
+   real(r8), allocatable :: a_leafnCap              (:)
+   real(r8), allocatable :: a_leafn_storageCap      (:)
+   real(r8), allocatable :: a_leafn_xferCap         (:)
+   real(r8), allocatable :: a_frootnCap             (:)
+   real(r8), allocatable :: a_frootn_storageCap     (:)
+   real(r8), allocatable :: a_frootn_xferCap        (:)
+   real(r8), allocatable :: a_livestemnCap          (:)
+   real(r8), allocatable :: a_livestemn_storageCap  (:)
+   real(r8), allocatable :: a_livestemn_xferCap     (:)
+   real(r8), allocatable :: a_deadstemnCap          (:)
+   real(r8), allocatable :: a_deadstemn_storageCap  (:)
+   real(r8), allocatable :: a_deadstemn_xferCap     (:)
+   real(r8), allocatable :: a_livecrootnCap         (:)
+   real(r8), allocatable :: a_livecrootn_storageCap (:)
+   real(r8), allocatable :: a_livecrootn_xferCap    (:)
+   real(r8), allocatable :: a_deadcrootnCap         (:)
+   real(r8), allocatable :: a_deadcrootn_storageCap (:)
+   real(r8), allocatable :: a_deadcrootn_xferCap    (:)
 #endif
 ! Ozone stress variables
-   real(r8), allocatable :: a_ozone              (:)
+   real(r8), allocatable :: a_ozone                 (:)
 ! End ozone stress variables
 
    real(r8), allocatable :: a_t_soisno    (:,:)
@@ -290,6 +340,23 @@ MODULE MOD_Vars_1DAccFluxes
    real(r8), allocatable :: a_soil2n_vr   (:,:)
    real(r8), allocatable :: a_soil3n_vr   (:,:)
    real(r8), allocatable :: a_cwdn_vr     (:,:)
+   real(r8), allocatable :: a_totsoiln_vr (:,:)
+   real(r8), allocatable :: a_litr1cCap_vr(:,:)
+   real(r8), allocatable :: a_litr2cCap_vr(:,:)
+   real(r8), allocatable :: a_litr3cCap_vr(:,:)
+   real(r8), allocatable :: a_soil1cCap_vr(:,:)
+   real(r8), allocatable :: a_soil2cCap_vr(:,:)
+   real(r8), allocatable :: a_soil3cCap_vr(:,:)
+   real(r8), allocatable :: a_cwdcCap_vr  (:,:)
+   real(r8), allocatable :: a_litr1nCap_vr(:,:)
+   real(r8), allocatable :: a_litr2nCap_vr(:,:)
+   real(r8), allocatable :: a_litr3nCap_vr(:,:)
+   real(r8), allocatable :: a_soil1nCap_vr(:,:)
+   real(r8), allocatable :: a_soil2nCap_vr(:,:)
+   real(r8), allocatable :: a_soil3nCap_vr(:,:)
+   real(r8), allocatable :: a_cwdnCap_vr  (:,:)
+   real(r8), allocatable :: a_t_scalar    (:,:)
+   real(r8), allocatable :: a_w_scalar    (:,:)
    real(r8), allocatable :: a_sminn_vr    (:,:)
    real(r8), allocatable :: decomp_vr_tmp (:,:)
 #endif
@@ -388,6 +455,7 @@ CONTAINS
 #ifdef CatchLateralFlow
             allocate (a_xwsur     (numpatch))
             allocate (a_xwsub     (numpatch))
+            allocate (a_fldarea   (numpatch))
 #endif
             allocate (a_qintr     (numpatch))
             allocate (a_qinfl     (numpatch))
@@ -521,6 +589,16 @@ CONTAINS
             allocate (a_hr                 (numpatch))
             allocate (a_fpg                (numpatch))
             allocate (a_fpi                (numpatch))
+            allocate (a_totvegc            (numpatch))
+            allocate (a_totlitc            (numpatch))
+            allocate (a_totcwdc            (numpatch))
+            allocate (a_totsomc            (numpatch))
+            allocate (a_totcolc            (numpatch))
+            allocate (a_totvegn            (numpatch))
+            allocate (a_totlitn            (numpatch))
+            allocate (a_totcwdn            (numpatch))
+            allocate (a_totsomn            (numpatch))
+            allocate (a_totcoln            (numpatch))
             allocate (a_gpp_enftemp        (numpatch)) !1
             allocate (a_gpp_enfboreal      (numpatch)) !2
             allocate (a_gpp_dnfboreal      (numpatch)) !3
@@ -604,6 +682,42 @@ CONTAINS
             allocate (a_hdm                (numpatch))
             allocate (a_lnfm               (numpatch))
 
+            allocate (a_leafcCap              (numpatch))
+            allocate (a_leafc_storageCap      (numpatch))
+            allocate (a_leafc_xferCap         (numpatch))
+            allocate (a_frootcCap             (numpatch))
+            allocate (a_frootc_storageCap     (numpatch))
+            allocate (a_frootc_xferCap        (numpatch))
+            allocate (a_livestemcCap          (numpatch))
+            allocate (a_livestemc_storageCap  (numpatch))
+            allocate (a_livestemc_xferCap     (numpatch))
+            allocate (a_deadstemcCap          (numpatch))
+            allocate (a_deadstemc_storageCap  (numpatch))
+            allocate (a_deadstemc_xferCap     (numpatch))
+            allocate (a_livecrootcCap         (numpatch))
+            allocate (a_livecrootc_storageCap (numpatch))
+            allocate (a_livecrootc_xferCap    (numpatch))
+            allocate (a_deadcrootcCap         (numpatch))
+            allocate (a_deadcrootc_storageCap (numpatch))
+            allocate (a_deadcrootc_xferCap    (numpatch))
+            allocate (a_leafnCap              (numpatch))
+            allocate (a_leafn_storageCap      (numpatch))
+            allocate (a_leafn_xferCap         (numpatch))
+            allocate (a_frootnCap             (numpatch))
+            allocate (a_frootn_storageCap     (numpatch))
+            allocate (a_frootn_xferCap        (numpatch))
+            allocate (a_livestemnCap          (numpatch))
+            allocate (a_livestemn_storageCap  (numpatch))
+            allocate (a_livestemn_xferCap     (numpatch))
+            allocate (a_deadstemnCap          (numpatch))
+            allocate (a_deadstemn_storageCap  (numpatch))
+            allocate (a_deadstemn_xferCap     (numpatch))
+            allocate (a_livecrootnCap         (numpatch))
+            allocate (a_livecrootn_storageCap (numpatch))
+            allocate (a_livecrootn_xferCap    (numpatch))
+            allocate (a_deadcrootnCap         (numpatch))
+            allocate (a_deadcrootn_storageCap (numpatch))
+            allocate (a_deadcrootn_xferCap    (numpatch))
 #endif
 ! Ozone stress variables
             allocate (a_ozone              (numpatch))
@@ -638,8 +752,26 @@ CONTAINS
             allocate (a_soil2n_vr   (1:nl_soil,       numpatch))
             allocate (a_soil3n_vr   (1:nl_soil,       numpatch))
             allocate (a_cwdn_vr     (1:nl_soil,       numpatch))
+            allocate (a_totsoiln_vr (1:nl_soil,       numpatch))
             allocate (a_sminn_vr    (1:nl_soil,       numpatch))
             allocate (decomp_vr_tmp (1:nl_soil,       numpatch))
+
+            allocate (a_litr1cCap_vr(1:nl_soil,       numpatch))
+            allocate (a_litr2cCap_vr(1:nl_soil,       numpatch))
+            allocate (a_litr3cCap_vr(1:nl_soil,       numpatch))
+            allocate (a_soil1cCap_vr(1:nl_soil,       numpatch))
+            allocate (a_soil2cCap_vr(1:nl_soil,       numpatch))
+            allocate (a_soil3cCap_vr(1:nl_soil,       numpatch))
+            allocate (a_cwdcCap_vr  (1:nl_soil,       numpatch))
+            allocate (a_litr1nCap_vr(1:nl_soil,       numpatch))
+            allocate (a_litr2nCap_vr(1:nl_soil,       numpatch))
+            allocate (a_litr3nCap_vr(1:nl_soil,       numpatch))
+            allocate (a_soil1nCap_vr(1:nl_soil,       numpatch))
+            allocate (a_soil2nCap_vr(1:nl_soil,       numpatch))
+            allocate (a_soil3nCap_vr(1:nl_soil,       numpatch))
+            allocate (a_cwdnCap_vr  (1:nl_soil,       numpatch))
+            allocate (a_t_scalar    (1:nl_soil,       numpatch))
+            allocate (a_w_scalar    (1:nl_soil,       numpatch))
 #endif
 
             allocate (a_ustar     (numpatch))
@@ -673,13 +805,17 @@ CONTAINS
             allocate (a_srviln    (numpatch))
             allocate (a_srndln    (numpatch))
             allocate (a_srniln    (numpatch))
-            
+
             allocate (a_sensors (nsensor,numpatch))
 
             allocate (nac_ln      (numpatch))
 
          ENDIF
       ENDIF
+
+#ifdef EXTERNAL_LAKE
+      CALL allocate_LakeAccVars
+#endif
 
       IF (p_is_worker) THEN
          CALL elm_patch%build (landelm, landpatch, use_frac = .true.)
@@ -690,8 +826,8 @@ CONTAINS
    SUBROUTINE deallocate_acc_fluxes ()
 
    USE MOD_SPMD_Task
-   USE MOD_LandPatch, only : numpatch
-   USE MOD_LandUrban, only : numurban
+   USE MOD_LandPatch, only: numpatch
+   USE MOD_LandUrban, only: numurban
    IMPLICIT NONE
 
       IF (p_is_worker) THEN
@@ -734,6 +870,7 @@ CONTAINS
 #ifdef CatchLateralFlow
             deallocate (a_xwsur     )
             deallocate (a_xwsub     )
+            deallocate (a_fldarea   )
 #endif
             deallocate (a_qintr     )
             deallocate (a_qinfl     )
@@ -867,6 +1004,16 @@ CONTAINS
             deallocate (a_hr                 )
             deallocate (a_fpg                )
             deallocate (a_fpi                )
+            deallocate (a_totvegc            )
+            deallocate (a_totlitc            )
+            deallocate (a_totcwdc            )
+            deallocate (a_totsomc            )
+            deallocate (a_totcolc            )
+            deallocate (a_totvegn            )
+            deallocate (a_totlitn            )
+            deallocate (a_totcwdn            )
+            deallocate (a_totsomn            )
+            deallocate (a_totcoln            )
             deallocate (a_gpp_enftemp        ) !1
             deallocate (a_gpp_enfboreal      ) !2
             deallocate (a_gpp_dnfboreal      ) !3
@@ -950,6 +1097,42 @@ CONTAINS
             deallocate (a_hdm                )
             deallocate (a_lnfm               )
 
+            deallocate (a_leafcCap             )
+            deallocate (a_leafc_storageCap     )
+            deallocate (a_leafc_xferCap        )
+            deallocate (a_frootcCap            )
+            deallocate (a_frootc_storageCap    )
+            deallocate (a_frootc_xferCap       )
+            deallocate (a_livestemcCap         )
+            deallocate (a_livestemc_storageCap )
+            deallocate (a_livestemc_xferCap    )
+            deallocate (a_deadstemcCap         )
+            deallocate (a_deadstemc_storageCap )
+            deallocate (a_deadstemc_xferCap    )
+            deallocate (a_livecrootcCap        )
+            deallocate (a_livecrootc_storageCap)
+            deallocate (a_livecrootc_xferCap   )
+            deallocate (a_deadcrootcCap        )
+            deallocate (a_deadcrootc_storageCap)
+            deallocate (a_deadcrootc_xferCap   )
+            deallocate (a_leafnCap             )
+            deallocate (a_leafn_storageCap     )
+            deallocate (a_leafn_xferCap        )
+            deallocate (a_frootnCap            )
+            deallocate (a_frootn_storageCap    )
+            deallocate (a_frootn_xferCap       )
+            deallocate (a_livestemnCap         )
+            deallocate (a_livestemn_storageCap )
+            deallocate (a_livestemn_xferCap    )
+            deallocate (a_deadstemnCap         )
+            deallocate (a_deadstemn_storageCap )
+            deallocate (a_deadstemn_xferCap    )
+            deallocate (a_livecrootnCap        )
+            deallocate (a_livecrootn_storageCap)
+            deallocate (a_livecrootn_xferCap   )
+            deallocate (a_deadcrootnCap        )
+            deallocate (a_deadcrootn_storageCap)
+            deallocate (a_deadcrootn_xferCap   )
 #endif
 ! Ozone stress variables
             deallocate (a_ozone              )
@@ -984,8 +1167,25 @@ CONTAINS
             deallocate (a_soil2n_vr   )
             deallocate (a_soil3n_vr   )
             deallocate (a_cwdn_vr     )
+            deallocate (a_totsoiln_vr )
             deallocate (a_sminn_vr    )
             deallocate (decomp_vr_tmp )
+            deallocate (a_litr1cCap_vr)
+            deallocate (a_litr2cCap_vr)
+            deallocate (a_litr3cCap_vr)
+            deallocate (a_soil1cCap_vr)
+            deallocate (a_soil2cCap_vr)
+            deallocate (a_soil3cCap_vr)
+            deallocate (a_cwdcCap_vr  )
+            deallocate (a_litr1nCap_vr)
+            deallocate (a_litr2nCap_vr)
+            deallocate (a_litr3nCap_vr)
+            deallocate (a_soil1nCap_vr)
+            deallocate (a_soil2nCap_vr)
+            deallocate (a_soil3nCap_vr)
+            deallocate (a_cwdnCap_vr  )
+            deallocate (a_t_scalar    )
+            deallocate (a_w_scalar    )
 #endif
 
             deallocate (a_ustar     )
@@ -1027,15 +1227,19 @@ CONTAINS
          ENDIF
       ENDIF
 
+#ifdef EXTERNAL_LAKE
+      CALL deallocate_LakeAccVars
+#endif
+
    END SUBROUTINE deallocate_acc_fluxes
 
    !-----------------------
    SUBROUTINE FLUSH_acc_fluxes ()
 
       USE MOD_SPMD_Task
-      USE MOD_LandPatch, only : numpatch
-      USE MOD_LandUrban, only : numurban
-      USE MOD_Vars_Global, only : spval
+      USE MOD_LandPatch, only: numpatch
+      USE MOD_LandUrban, only: numurban
+      USE MOD_Vars_Global, only: spval
       IMPLICIT NONE
 
       IF (p_is_worker) THEN
@@ -1045,81 +1249,82 @@ CONTAINS
          IF (numpatch > 0) THEN
 
             ! flush the Fluxes for accumulation
-            a_us     (:) = spval
-            a_vs     (:) = spval
-            a_t      (:) = spval
-            a_q      (:) = spval
-            a_prc    (:) = spval
-            a_prl    (:) = spval
-            a_pbot   (:) = spval
-            a_frl    (:) = spval
-            a_solarin(:) = spval
-            a_hpbl   (:) = spval
+            a_us        (:) = spval
+            a_vs        (:) = spval
+            a_t         (:) = spval
+            a_q         (:) = spval
+            a_prc       (:) = spval
+            a_prl       (:) = spval
+            a_pbot      (:) = spval
+            a_frl       (:) = spval
+            a_solarin   (:) = spval
+            a_hpbl      (:) = spval
 
-            a_taux    (:) = spval
-            a_tauy    (:) = spval
-            a_fsena   (:) = spval
-            a_lfevpa  (:) = spval
-            a_fevpa   (:) = spval
-            a_fsenl   (:) = spval
-            a_fevpl   (:) = spval
-            a_etr     (:) = spval
-            a_fseng   (:) = spval
-            a_fevpg   (:) = spval
-            a_fgrnd   (:) = spval
-            a_sabvsun (:) = spval
-            a_sabvsha (:) = spval
-            a_sabg    (:) = spval
-            a_olrg    (:) = spval
-            a_rnet    (:) = spval
-            a_xerr    (:) = spval
-            a_zerr    (:) = spval
-            a_rsur    (:) = spval
-            a_rsur_se (:) = spval
-            a_rsur_ie (:) = spval
-            a_rsub    (:) = spval
-            a_rnof    (:) = spval
+            a_taux      (:) = spval
+            a_tauy      (:) = spval
+            a_fsena     (:) = spval
+            a_lfevpa    (:) = spval
+            a_fevpa     (:) = spval
+            a_fsenl     (:) = spval
+            a_fevpl     (:) = spval
+            a_etr       (:) = spval
+            a_fseng     (:) = spval
+            a_fevpg     (:) = spval
+            a_fgrnd     (:) = spval
+            a_sabvsun   (:) = spval
+            a_sabvsha   (:) = spval
+            a_sabg      (:) = spval
+            a_olrg      (:) = spval
+            a_rnet      (:) = spval
+            a_xerr      (:) = spval
+            a_zerr      (:) = spval
+            a_rsur      (:) = spval
+            a_rsur_se   (:) = spval
+            a_rsur_ie   (:) = spval
+            a_rsub      (:) = spval
+            a_rnof      (:) = spval
 #ifdef CatchLateralFlow
-            a_xwsur   (:) = spval
-            a_xwsub   (:) = spval
+            a_xwsur     (:) = spval
+            a_xwsub     (:) = spval
+            a_fldarea   (:) = spval
 #endif
-            a_qintr   (:) = spval
-            a_qinfl   (:) = spval
-            a_qdrip   (:) = spval
-            a_rstfacsun(:) = spval
-            a_rstfacsha(:) = spval
-            a_gssun   (:) = spval
-            a_gssha   (:) = spval
-            a_rss     (:) = spval
+            a_qintr     (:) = spval
+            a_qinfl     (:) = spval
+            a_qdrip     (:) = spval
+            a_rstfacsun (:) = spval
+            a_rstfacsha (:) = spval
+            a_gssun     (:) = spval
+            a_gssha     (:) = spval
+            a_rss       (:) = spval
 
-            a_wdsrf   (:) = spval
-            a_zwt     (:) = spval
-            a_wa      (:) = spval
-            a_wat     (:) = spval
-            a_wetwat  (:) = spval
-            a_assim   (:) = spval
-            a_respc   (:) = spval
-            a_assimsun(:) = spval !1
-            a_assimsha(:) = spval !1
-            a_etrsun  (:) = spval !1
-            a_etrsha  (:) = spval !1
+            a_wdsrf     (:) = spval
+            a_zwt       (:) = spval
+            a_wa        (:) = spval
+            a_wat       (:) = spval
+            a_wetwat    (:) = spval
+            a_assim     (:) = spval
+            a_respc     (:) = spval
+            a_assimsun  (:) = spval
+            a_assimsha  (:) = spval
+            a_etrsun    (:) = spval
+            a_etrsha    (:) = spval
 
-            a_qcharge (:) = spval
+            a_qcharge   (:) = spval
 
-            a_t_grnd  (:) = spval
-            a_tleaf   (:) = spval
-            a_ldew_rain(:) = spval
-            a_ldew_snow(:) = spval
-            a_ldew    (:) = spval
-            a_scv     (:) = spval
-            a_snowdp  (:) = spval
-            a_fsno    (:) = spval
-            a_sigf    (:) = spval
-            a_green   (:) = spval
-            a_lai     (:) = spval
-            a_laisun  (:) = spval
-            a_laisha  (:) = spval
-            a_sai     (:) = spval
+            a_t_grnd    (:) = spval
+            a_tleaf     (:) = spval
+            a_ldew_rain (:) = spval
+            a_ldew_snow (:) = spval
+            a_ldew      (:) = spval
+            a_scv       (:) = spval
+            a_snowdp    (:) = spval
+            a_fsno      (:) = spval
+            a_sigf      (:) = spval
+            a_green     (:) = spval
+            a_lai       (:) = spval
+            a_laisun    (:) = spval
+            a_laisha    (:) = spval
+            a_sai       (:) = spval
 
             a_alb   (:,:,:) = spval
 
@@ -1215,6 +1420,16 @@ CONTAINS
             a_hr                 (:) = spval
             a_fpg                (:) = spval
             a_fpi                (:) = spval
+            a_totvegc            (:) = spval
+            a_totlitc            (:) = spval
+            a_totcwdc            (:) = spval
+            a_totsomc            (:) = spval
+            a_totcolc            (:) = spval
+            a_totvegn            (:) = spval
+            a_totlitn            (:) = spval
+            a_totcwdn            (:) = spval
+            a_totsomn            (:) = spval
+            a_totcoln            (:) = spval
             a_gpp_enftemp        (:) = spval
             a_gpp_enfboreal      (:) = spval
             a_gpp_dnfboreal      (:) = spval
@@ -1296,8 +1511,44 @@ CONTAINS
             a_hdm                (:) = spval
             a_lnfm               (:) = spval
 
+            a_leafcCap             (:) = spval
+            a_leafc_storageCap     (:) = spval
+            a_leafc_xferCap        (:) = spval
+            a_frootcCap            (:) = spval
+            a_frootc_storageCap    (:) = spval
+            a_frootc_xferCap       (:) = spval
+            a_livestemcCap         (:) = spval
+            a_livestemc_storageCap (:) = spval
+            a_livestemc_xferCap    (:) = spval
+            a_deadstemcCap         (:) = spval
+            a_deadstemc_storageCap (:) = spval
+            a_deadstemc_xferCap    (:) = spval
+            a_livecrootcCap        (:) = spval
+            a_livecrootc_storageCap(:) = spval
+            a_livecrootc_xferCap   (:) = spval
+            a_deadcrootcCap        (:) = spval
+            a_deadcrootc_storageCap(:) = spval
+            a_deadcrootc_xferCap   (:) = spval
+            a_leafnCap             (:) = spval
+            a_leafn_storageCap     (:) = spval
+            a_leafn_xferCap        (:) = spval
+            a_frootnCap            (:) = spval
+            a_frootn_storageCap    (:) = spval
+            a_frootn_xferCap       (:) = spval
+            a_livestemnCap         (:) = spval
+            a_livestemn_storageCap (:) = spval
+            a_livestemn_xferCap    (:) = spval
+            a_deadstemnCap         (:) = spval
+            a_deadstemn_storageCap (:) = spval
+            a_deadstemn_xferCap    (:) = spval
+            a_livecrootnCap        (:) = spval
+            a_livecrootn_storageCap(:) = spval
+            a_livecrootn_xferCap   (:) = spval
+            a_deadcrootnCap        (:) = spval
+            a_deadcrootn_storageCap(:) = spval
+            a_deadcrootn_xferCap   (:) = spval
 #endif
-            a_ozone              (:) = spval
+            a_ozone                (:) = spval
 
             a_t_soisno     (:,:) = spval
             a_wliq_soisno  (:,:) = spval
@@ -1328,6 +1579,26 @@ CONTAINS
             a_soil2n_vr    (:,:) = spval
             a_soil3n_vr    (:,:) = spval
             a_cwdn_vr      (:,:) = spval
+            a_totsoiln_vr  (:,:) = spval
+
+            a_litr1cCap_vr (:,:) = spval
+            a_litr2cCap_vr (:,:) = spval
+            a_litr3cCap_vr (:,:) = spval
+            a_soil1cCap_vr (:,:) = spval
+            a_soil2cCap_vr (:,:) = spval
+            a_soil3cCap_vr (:,:) = spval
+            a_cwdcCap_vr   (:,:) = spval
+            a_litr1nCap_vr (:,:) = spval
+            a_litr2nCap_vr (:,:) = spval
+            a_litr3nCap_vr (:,:) = spval
+            a_soil1nCap_vr (:,:) = spval
+            a_soil2nCap_vr (:,:) = spval
+            a_soil3nCap_vr (:,:) = spval
+            a_cwdnCap_vr   (:,:) = spval
+
+            a_t_scalar     (:,:) = spval
+            a_w_scalar     (:,:) = spval
+
             a_sminn_vr     (:,:) = spval
 #endif
 
@@ -1370,15 +1641,19 @@ CONTAINS
          ENDIF
       ENDIF
 
+#ifdef EXTERNAL_LAKE
+      CALL Flush_LakeAccVars
+#endif
+
    END SUBROUTINE FLUSH_acc_fluxes
 
    SUBROUTINE accumulate_fluxes
-   ! ----------------------------------------------------------------------
-   ! perfrom the grid average mapping: average a subgrid input 1d vector
-   ! of length numpatch to a output 2d array of length [ghist%xcnt,ghist%ycnt]
-   !
-   ! Created by Yongjiu Dai, 03/2014
-   !---------------------------------------------------------------------
+! ----------------------------------------------------------------------
+!  perfrom the grid average mapping: average a subgrid input 1d vector
+!  of length numpatch to a output 2d array of length [ghist%xcnt,ghist%ycnt]
+!
+!  Created by Yongjiu Dai, 03/2014
+!---------------------------------------------------------------------
 
    USE MOD_Precision
    USE MOD_SPMD_Task
@@ -1397,8 +1672,8 @@ CONTAINS
    USE MOD_TurbulenceLEddy
    USE MOD_Vars_Global
 #ifdef CatchLateralFlow
-   USE MOD_Hydro_Vars_1DFluxes
-   USE MOD_Hydro_Hist, only: accumulate_fluxes_basin
+   USE MOD_Catch_Vars_1DFluxes
+   USE MOD_Catch_Hist, only: accumulate_fluxes_basin
 #endif
 
    IMPLICIT NONE
@@ -1500,6 +1775,7 @@ CONTAINS
 #ifdef CatchLateralFlow
             CALL acc1d (xwsur   , a_xwsur  )
             CALL acc1d (xwsub   , a_xwsub  )
+            CALL acc1d (fldarea , a_fldarea)
 #endif
             CALL acc1d (qintr   , a_qintr  )
             CALL acc1d (qinfl   , a_qinfl  )
@@ -1650,6 +1926,16 @@ CONTAINS
             CALL acc1d (decomp_hr          , a_hr                  )
             CALL acc1d (fpg                , a_fpg                 )
             CALL acc1d (fpi                , a_fpi                 )
+            CALL acc1d (totvegc            , a_totvegc             )
+            CALL acc1d (totlitc            , a_totlitc             )
+            CALL acc1d (totcwdc            , a_totcwdc             )
+            CALL acc1d (totsomc            , a_totsomc             )
+            CALL acc1d (totcolc            , a_totcolc             )
+            CALL acc1d (totvegn            , a_totvegn             )
+            CALL acc1d (totlitn            , a_totlitn             )
+            CALL acc1d (totcwdn            , a_totcwdn             )
+            CALL acc1d (totsomn            , a_totsomn             )
+            CALL acc1d (totcoln            , a_totcoln             )
             CALL acc1d (gpp_enftemp        , a_gpp_enftemp         )
             CALL acc1d (gpp_enfboreal      , a_gpp_enfboreal       )
             CALL acc1d (gpp_dnfboreal      , a_gpp_dnfboreal       )
@@ -1720,10 +2006,10 @@ CONTAINS
             CALL acc1d (grainc_to_seed     ,   a_grainc_to_seed     )
             CALL acc1d (fert_to_sminn      ,   a_fert_to_sminn      )
 
-            ! CALL acc1d (irrig_rate         ,   a_irrig_rate         )
-            ! CALL acc1d (deficit_irrig      ,   a_deficit_irrig      )
-            ! CALL acc1d (sum_irrig          ,   a_sum_irrig          )
-            ! CALL acc1d (sum_irrig_count    ,   a_sum_irrig_count    )
+           !CALL acc1d (irrig_rate         ,   a_irrig_rate         )
+           !CALL acc1d (deficit_irrig      ,   a_deficit_irrig      )
+           !CALL acc1d (sum_irrig          ,   a_sum_irrig          )
+           !CALL acc1d (sum_irrig_count    ,   a_sum_irrig_count    )
             CALL acc1d (irrig_rate         ,   a_irrig_rate         )
             CALL acc1d (deficit_irrig      ,   a_deficit_irrig      )
             a_sum_irrig = sum_irrig
@@ -1737,6 +2023,44 @@ CONTAINS
                CALL acc1d (peatf_lf        ,   a_peatf              )
                CALL acc1d (hdm_lf          ,   a_hdm                )
                CALL acc1d (lnfm            ,   a_lnfm               )
+            ENDIF
+            IF(DEF_USE_DiagMatrix)THEN
+               CALL acc1d (leafcCap             ,a_leafcCap             )
+               CALL acc1d (leafc_storageCap     ,a_leafc_storageCap     )
+               CALL acc1d (leafc_xferCap        ,a_leafc_xferCap        )
+               CALL acc1d (frootcCap            ,a_frootcCap            )
+               CALL acc1d (frootc_storageCap    ,a_frootc_storageCap    )
+               CALL acc1d (frootc_xferCap       ,a_frootc_xferCap       )
+               CALL acc1d (livestemcCap         ,a_livestemcCap         )
+               CALL acc1d (livestemc_storageCap ,a_livestemc_storageCap )
+               CALL acc1d (livestemc_xferCap    ,a_livestemc_xferCap    )
+               CALL acc1d (deadstemcCap         ,a_deadstemcCap         )
+               CALL acc1d (deadstemc_storageCap ,a_deadstemc_storageCap )
+               CALL acc1d (deadstemc_xferCap    ,a_deadstemc_xferCap    )
+               CALL acc1d (livecrootcCap        ,a_livecrootcCap        )
+               CALL acc1d (livecrootc_storageCap,a_livecrootc_storageCap)
+               CALL acc1d (livecrootc_xferCap   ,a_livecrootc_xferCap   )
+               CALL acc1d (deadcrootcCap        ,a_deadcrootcCap        )
+               CALL acc1d (deadcrootc_storageCap,a_deadcrootc_storageCap)
+               CALL acc1d (deadcrootc_xferCap   ,a_deadcrootc_xferCap   )
+               CALL acc1d (leafnCap             ,a_leafnCap             )
+               CALL acc1d (leafn_storageCap     ,a_leafn_storageCap     )
+               CALL acc1d (leafn_xferCap        ,a_leafn_xferCap        )
+               CALL acc1d (frootnCap            ,a_frootnCap            )
+               CALL acc1d (frootn_storageCap    ,a_frootn_storageCap    )
+               CALL acc1d (frootn_xferCap       ,a_frootn_xferCap       )
+               CALL acc1d (livestemnCap         ,a_livestemnCap         )
+               CALL acc1d (livestemn_storageCap ,a_livestemn_storageCap )
+               CALL acc1d (livestemn_xferCap    ,a_livestemn_xferCap    )
+               CALL acc1d (deadstemnCap         ,a_deadstemnCap         )
+               CALL acc1d (deadstemn_storageCap ,a_deadstemn_storageCap )
+               CALL acc1d (deadstemn_xferCap    ,a_deadstemn_xferCap    )
+               CALL acc1d (livecrootnCap        ,a_livecrootnCap        )
+               CALL acc1d (livecrootn_storageCap,a_livecrootn_storageCap)
+               CALL acc1d (livecrootn_xferCap   ,a_livecrootn_xferCap   )
+               CALL acc1d (deadcrootnCap        ,a_deadcrootnCap        )
+               CALL acc1d (deadcrootn_storageCap,a_deadcrootn_storageCap)
+               CALL acc1d (deadcrootn_xferCap   ,a_deadcrootn_xferCap   )
             ENDIF
 #endif
             IF(DEF_USE_OZONESTRESS)THEN
@@ -1845,7 +2169,96 @@ CONTAINS
                ENDDO
             ENDDO
             CALL acc2d (decomp_vr_tmp, a_cwdn_vr     )
+            CALL acc2d (totsoiln_vr  , a_totsoiln_vr )
+
+            DO i = 1, numpatch
+               DO j = 1, nl_soil
+                  decomp_vr_tmp(j,i)  = decomp_cpools_vr_Cap(j,i_met_lit,i)
+               ENDDO
+            ENDDO
+            CALL acc2d (decomp_vr_tmp, a_litr1cCap_vr   )
+            DO i = 1, numpatch
+               DO j = 1, nl_soil
+                  decomp_vr_tmp(j,i)  = decomp_cpools_vr_Cap(j,i_cel_lit,i)
+               ENDDO
+            ENDDO
+            CALL acc2d (decomp_vr_tmp, a_litr2cCap_vr   )
+            DO i = 1, numpatch
+               DO j = 1, nl_soil
+                  decomp_vr_tmp(j,i)  = decomp_cpools_vr_Cap(j,i_lig_lit,i)
+               ENDDO
+            ENDDO
+            CALL acc2d (decomp_vr_tmp, a_litr3cCap_vr   )
+            DO i = 1, numpatch
+               DO j = 1, nl_soil
+                  decomp_vr_tmp(j,i)  = decomp_cpools_vr_Cap(j,i_soil1,i)
+               ENDDO
+            ENDDO
+            CALL acc2d (decomp_vr_tmp, a_soil1cCap_vr   )
+            DO i = 1, numpatch
+               DO j = 1, nl_soil
+                  decomp_vr_tmp(j,i)  = decomp_cpools_vr_Cap(j,i_soil2,i)
+               ENDDO
+            ENDDO
+            CALL acc2d (decomp_vr_tmp, a_soil2cCap_vr   )
+            DO i = 1, numpatch
+               DO j = 1, nl_soil
+                  decomp_vr_tmp(j,i)  = decomp_cpools_vr_Cap(j,i_soil3,i)
+               ENDDO
+            ENDDO
+            CALL acc2d (decomp_vr_tmp, a_soil3cCap_vr   )
+            DO i = 1, numpatch
+               DO j = 1, nl_soil
+                  decomp_vr_tmp(j,i)  = decomp_cpools_vr_Cap(j,i_cwd,i)
+               ENDDO
+            ENDDO
+            CALL acc2d (decomp_vr_tmp, a_cwdcCap_vr     )
+            DO i = 1, numpatch
+               DO j = 1, nl_soil
+                  decomp_vr_tmp(j,i)  = decomp_npools_vr_Cap(j,i_met_lit,i)
+               ENDDO
+            ENDDO
+            CALL acc2d (decomp_vr_tmp, a_litr1nCap_vr   )
+            DO i = 1, numpatch
+               DO j = 1, nl_soil
+                  decomp_vr_tmp(j,i)  = decomp_npools_vr_Cap(j,i_cel_lit,i)
+               ENDDO
+            ENDDO
+            CALL acc2d (decomp_vr_tmp, a_litr2nCap_vr   )
+            DO i = 1, numpatch
+               DO j = 1, nl_soil
+                  decomp_vr_tmp(j,i)  = decomp_npools_vr_Cap(j,i_lig_lit,i)
+               ENDDO
+            ENDDO
+            CALL acc2d (decomp_vr_tmp, a_litr3nCap_vr   )
+            DO i = 1, numpatch
+               DO j = 1, nl_soil
+                  decomp_vr_tmp(j,i)  = decomp_npools_vr_Cap(j,i_soil1,i)
+               ENDDO
+            ENDDO
+            CALL acc2d (decomp_vr_tmp, a_soil1nCap_vr   )
+            DO i = 1, numpatch
+               DO j = 1, nl_soil
+                  decomp_vr_tmp(j,i)  = decomp_npools_vr_Cap(j,i_soil2,i)
+               ENDDO
+            ENDDO
+            CALL acc2d (decomp_vr_tmp, a_soil2nCap_vr   )
+            DO i = 1, numpatch
+               DO j = 1, nl_soil
+                  decomp_vr_tmp(j,i)  = decomp_npools_vr_Cap(j,i_soil3,i)
+               ENDDO
+            ENDDO
+            CALL acc2d (decomp_vr_tmp, a_soil3nCap_vr   )
+            DO i = 1, numpatch
+               DO j = 1, nl_soil
+                  decomp_vr_tmp(j,i)  = decomp_npools_vr_Cap(j,i_cwd,i)
+               ENDDO
+            ENDDO
+            CALL acc2d (decomp_vr_tmp, a_cwdnCap_vr     )
             CALL acc2d (sminn_vr     , a_sminn_vr    )
+
+            CALL acc2d (t_scalar             ,a_t_scalar             )
+            CALL acc2d (w_scalar             ,a_w_scalar             )
 #endif
             allocate (r_ustar  (numpatch));  r_ustar (:) = spval
             allocate (r_ustar2 (numpatch));  r_ustar2(:) = spval !Shaofeng, 2023.05.20
@@ -2026,7 +2439,7 @@ CONTAINS
             CALL acc1d (srviln , a_srviln )
             CALL acc1d (srndln , a_srndln )
             CALL acc1d (srniln , a_srniln )
-            
+
             CALL acc2d (sensors, a_sensors)
 
             DO i = 1, numpatch
@@ -2040,6 +2453,10 @@ CONTAINS
 
 #ifdef CatchLateralFlow
       CALL accumulate_fluxes_basin ()
+#endif
+
+#ifdef EXTERNAL_LAKE
+      CALL accumulate_LakeTimeVars
 #endif
 
    END SUBROUTINE accumulate_fluxes
@@ -2127,4 +2544,4 @@ CONTAINS
    END SUBROUTINE acc3d
 
 END MODULE MOD_Vars_1DAccFluxes
-! ----- EOP ---------
+! ---------- EOP ------------

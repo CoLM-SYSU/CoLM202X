@@ -7,8 +7,8 @@ MODULE MOD_BGC_Veg_CNFireLi2016
 ! This module calculate burned area of each fire. The burned area is used to calculate fire induced CN loss rates
 ! in bgc_veg_CNFireBaseMod.F90
 !
-! !REFERENCE:
-! Li, F., Levis, S., and Ward, D. S. 2013a. Quantifying the role of fire in the Earth system – Part 1: Improved global fire
+! !REFERENCES:
+! Li, F., Levis, S., and Ward, D. S. 2013a. Quantifying the role of fire in the Earth system - Part 1: Improved global fire
 ! modeling in the Community Earth System Model (CESM1). Biogeosciences 10:2293-2314.
 ! Li, F., and Lawrence, D. 2017. Role of fire in the global land water budget during the 20th century through changing
 ! ecosystems. J. Clim. 30: 1894-1908.
@@ -17,7 +17,7 @@ MODULE MOD_BGC_Veg_CNFireLi2016
 ! The Community Land Model version 5.0 (CLM5)
 !
 ! !REVISION:
-! Xingjie Lu, 2021, revised the CLM5 code to be compatible with CoLM code sturcture.
+! Xingjie Lu, 2021, revised the CLM5 code to be compatible with CoLM code structure.
 
    USE MOD_Precision
    USE MOD_TimeManager
@@ -47,9 +47,9 @@ MODULE MOD_BGC_Veg_CNFireLi2016
                                        livecrootc_p, livecrootc_storage_p, livecrootc_xfer_p
    USE MOD_Eroot, only: eroot
    USE MOD_Qsadv
- 
+
    IMPLICIT NONE
- 
+
    PUBLIC CNFireArea
 
 CONTAINS
@@ -102,14 +102,14 @@ CONTAINS
       wf2    = 0.5        ! Temporarily set up, need to revise later.
       fsat   = 0          ! Temporarily set up, need to revise later.
       rh30   = 0          ! Temporarily set up, need to revise later.
-   
+
       CALL julian2monthday(idate(1),idate(2),kmo,kda)
-   
+
       DO m = ps, pe
          CALL eroot(nl_soil,0._r8,porsl(1:,i),&
-#ifdef Campbell_SOIL_MODEL               
+#ifdef Campbell_SOIL_MODEL
                     bsw(1:,i),&
-#endif                       
+#endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
                     theta_r(1:,i), alpha_vgm(1:,i), n_vgm(1:,i), L_vgm(1:,i), sc_vgm(1:,i), fc_vgm(1:,i), &
 #endif
@@ -123,7 +123,7 @@ CONTAINS
     !
       cropf(i) = 0._r8
       lfwt (i) = 0._r8
-  
+
       ! For crop veg types
       DO m = ps, pe
          IF( iscrop(pftclass(m)) )THEN
@@ -134,12 +134,12 @@ CONTAINS
             lfwt (i) = lfwt(i) + pftfrac(m)
          ENDIF
       ENDDO
-  
+
       !
       ! Calculate crop fuel
       !
       fuelc_crop(i)=0._r8
-  
+
       ! For crop PFTs, fuel load includes leaf and litter; only
       ! column-level litter carbon
       ! is available, so we use leaf carbon to estimate the
@@ -162,31 +162,31 @@ CONTAINS
       wtlf  (i) = 0._r8
       trotr1(i) = 0._r8
       trotr2(i) = 0._r8
-  
+
       ! Warning : ivt is not initialized.
       ! For non-crop -- natural vegetation and bare-soil
       IF( isnatveg(ivt) .or. isbare(ivt) )THEN
          IF (btran2  <=  1._r8 ) THEN
             wtlf(i)      = 1._r8
          ENDIF
-  
+
          IF( isbetr(ivt) )THEN
             trotr1(i)=1._r8
          ENDIF
          IF( isbdtr(ivt) .and. abs(dlat) .lt. troplat)THEN
             trotr2(i)=1._r8
          ENDIF
-  
+
          rootc(i) = rootc(i) + sum((frootc_p(ps:pe) + frootc_storage_p(ps:pe) + &
                           frootc_xfer_p(ps:pe) + deadcrootc_p(ps:pe) +                &
                           deadcrootc_storage_p(ps:pe) + deadcrootc_xfer_p(ps:pe) +    &
                           livecrootc_p(ps:pe)+livecrootc_storage_p(ps:pe) +           &
                           livecrootc_xfer_p(ps:pe)) * pftfrac(ps:pe))
-  
+
          fsr(i) = fsr_pft(ivt)
-  
+
          ! all these constants are in Li et al. BG (2012a,b;2013)
-  
+
          IF( hdm_lf(i)  >  0.1_r8 )THEN
             ! For not bare-soil
             IF(.not. isbare(ivt) )THEN
@@ -224,34 +224,34 @@ CONTAINS
             lgdp1(i) = lgdp1(i) + 1._r8/(1._r8-cropf(i))
             lpop(i)  = lpop(i)  + 1._r8/(1._r8-cropf(i))
          ENDIF
-  
+
          fd(i) = fd_pft(ivt) * secsphr / (1.0_r8-cropf(i))
       ENDIF
       !
       ! calculate burned area fraction in cropland
       !
       baf_crop(i)=0._r8
-  
+
       DO m = ps, pe
          IF( kmo == 1 .and. kda == 1 .and. idate(3) == 0 )THEN
             burndate_p(m) = 10000 ! init. value; actual range [0 365]
          ENDIF
       ENDDO
-  
+
       ! For crop
       DO m = ps, pe
          IF( forc_t(i)  >=  tfrz .and. iscrop(ivt) .and.  &
             kmo == abm_lf(i) .and. burndate_p(m) >= 999)THEN ! catch  crop burn time
-  
+
          ! calculate human density impact on ag. fire
             fhd = 0.04_r8+0.96_r8*exp(-1._r8*PI*(hdm_lf(i)/350._r8)**0.5_r8)
-  
+
          ! calculate impact of GDP on ag. fire
             fgdp = 0.01_r8+0.99_r8*exp(-1._r8*PI*(gdp_lf(i)/10._r8))
-  
+
          ! calculate burned area
             fb   = max(0.0_r8,min(1.0_r8,(fuelc_crop(i)-lfuel)/(ufuel-lfuel)))
-  
+
          ! crop fire only for generic crop types at this time
          ! managed crops are treated as grasses IF crop model is turned on
             baf_crop(i) = baf_crop(i) + cropfire_a1/secsphr*fhd*fgdp
@@ -260,7 +260,7 @@ CONTAINS
             ENDIF
          ENDIF
       ENDDO
-  
+
       !
       ! calculate peatland fire
       !
@@ -276,10 +276,10 @@ CONTAINS
       !
       ! calculate other fires
       !
-  
+
       CALL qsadv(forc_t(i),forc_psrf(i),eq,deqdT,qsatq,qsatqdT)
       forc_rh = forc_q(i) / eq
-  
+
       IF( cropf(i)  <  1._r8 )THEN
          fuelc(i) = totlitc(i)+totvegc(i)-rootc(i)-fuelc_crop(i)*cropf(i)
          DO j = 1, nl_soil

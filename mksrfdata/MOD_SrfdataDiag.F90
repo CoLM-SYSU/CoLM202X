@@ -2,23 +2,25 @@
 
 #ifdef SrfdataDiag
 MODULE MOD_SrfdataDiag
-!-----------------------------------------------------------------------------------------
-! DESCRIPTION:
+!-----------------------------------------------------------------------
+! !DESCRIPTION:
 !
-!    This module includes subroutines for checking the results of making surface data.
+!    This module includes subroutines for checking the results of making
+!    surface data.
 !
-!    The surface data in vector form is mapped to gridded data with last
-!    three dimensions of [type,longitude,latitude], which can be viewed by other softwares.
+!    The surface data in vector form is mapped to gridded data with last three
+!    dimensions of [type,longitude,latitude], which can be viewed by other
+!    softwares.
 !
-!    In GRIDBASED, the grid of gridded data is just the grid of the mesh.
-!    In UNSTRUCTURED or CATCHMENT, the grid is user defined and the mapping uses area
-!    weighted scheme.
+!    In GRIDBASED, the grid of gridded data is just the grid of the mesh.  In
+!    UNSTRUCTURED or CATCHMENT, the grid is user defined and the mapping uses
+!    area weighted scheme.
 !
-! Created by Shupeng Zhang, May 2023
+!  Created by Shupeng Zhang, May 2023
 !
-! Revisions:
+! !REVISIONS:
 ! TODO
-!-----------------------------------------------------------------------------------------
+!-----------------------------------------------------------------------
 
    USE MOD_Grid
    USE MOD_SpatialMapping
@@ -27,7 +29,7 @@ MODULE MOD_SrfdataDiag
 
    ! PUBLIC variables and subroutines
    type(grid_type) :: gdiag
-   
+
    type(spatial_mapping_type) :: m_elm2diag
 
    type(spatial_mapping_type) :: m_patch2diag
@@ -48,7 +50,7 @@ MODULE MOD_SrfdataDiag
 CONTAINS
 
    ! ------ SUBROUTINE ------
-   SUBROUTINE srfdata_diag_init (dir_landdata)
+   SUBROUTINE srfdata_diag_init (dir_landdata, lulcc_call)
 
    USE MOD_SPMD_Task
    USE MOD_LandElm
@@ -66,6 +68,7 @@ CONTAINS
    IMPLICIT NONE
 
    character(len=256), intent(in) :: dir_landdata
+   logical, optional , intent(in) :: lulcc_call   ! whether it is a lulcc CALL
 
    ! Local Variables
    character(len=256) :: landdir, landname
@@ -79,16 +82,20 @@ CONTAINS
       ENDIF
 
       CALL srf_concat%set (gdiag)
-      
+
+      IF ( present(lulcc_call) ) CALL m_elm2diag%forc_free_mem
       CALL m_elm2diag%build_arealweighted (gdiag, landelm)
 
+      IF ( present(lulcc_call) ) CALL m_patch2diag%forc_free_mem
       CALL m_patch2diag%build_arealweighted (gdiag, landpatch)
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
+      IF ( present(lulcc_call) ) CALL m_pft2diag%forc_free_mem
       CALL m_pft2diag%build_arealweighted (gdiag, landpft)
 #endif
 
 #ifdef URBAN_MODEL
+      IF ( present(lulcc_call) ) CALL m_urb2diag%forc_free_mem
       CALL m_urb2diag%build_arealweighted (gdiag, landurban)
 #endif
 
@@ -101,7 +108,7 @@ CONTAINS
       landname = trim(dir_landdata)//'/diag/element.nc'
       CALL srfdata_map_and_write (elmid_r8, landelm%settyp, (/0/), m_elm2diag, &
          -1.0e36_r8, landname, 'element', compress = 1, write_mode = 'one')
-      
+
       IF (p_is_worker) deallocate (elmid_r8)
 
       typindex = (/(ityp, ityp = 0, N_land_classification)/)

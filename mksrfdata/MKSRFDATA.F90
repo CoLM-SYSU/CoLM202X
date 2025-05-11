@@ -2,49 +2,52 @@
 
 PROGRAM MKSRFDATA
 
-! ======================================================================
-! Surface grid edges:
-! The model domain was defined with the north, east, south, west edges:
-!          edgen: northern edge of grid : > -90 and <= 90 (degrees)
-!          edgee: eastern edge of grid  : > western edge and <= 180
-!          edges: southern edge of grid : >= -90  and <  90
-!          edgew: western edge of grid  : >= -180 and < 180
+!=======================================================================
+!  Surface grid edges:
+!  The model domain was defined with the north, east, south, west edges:
+!           edgen: northern edge of grid : > -90 and <= 90 (degrees)
+!           edgee: eastern edge of grid  : > western edge and <= 180
+!           edges: southern edge of grid : >= -90  and <  90
+!           edgew: western edge of grid  : >= -180 and < 180
 !
-! Region (global) latitude grid goes from:
-!                 NORTHERN edge (POLE) to SOUTHERN edge (POLE)
-! Region (global) longitude grid starts at:
-!                 WESTERN edge (DATELINE with western edge)
-!                 West of Greenwich defined negative for global grids,
-!                 the western edge of the longitude grid starts at the dateline
+!  Region (global) latitude grid goes from:
+!                  NORTHERN edge (POLE) to SOUTHERN edge (POLE)
+!  Region (global) longitude grid starts at:
+!                  WESTERN edge (DATELINE with western edge)
+!                  West of Greenwich defined negative for global grids,
+!                  the western edge of the longitude grid starts at the dateline
 !
-! Land characteristics at the 30 arc-seconds grid resolution (RAW DATA):
-!              1. Global Terrain Dataset (elevation height, topography-based factors)
-!              2. Global Land Cover Characteristics (land cover type, plant leaf area index, Forest Height, ...)
-!              3. Global Lakes and Wetlands Characteristics (lake and wetlands types, lake coverage and lake depth)
-!              4. Global Glacier Characteristics
-!              5. Global Urban Characteristics (urban extent, ...)
-!              6. Global Soil Characteristics (...)
-!              7. Global Cultural Characteristics (ON-GONG PROJECT)
+!  Land characteristics at the 30 arc-seconds grid resolution (RAW DATA):
+!               1. Global Terrain Dataset (elevation height, topography-based
+!                  factors)
+!               2. Global Land Cover Characteristics (land cover type, plant
+!                  leaf area index, Forest Height, ...)
+!               3. Global Lakes and Wetlands Characteristics (lake and wetlands
+!                  types, lake coverage and lake depth)
+!               4. Global Glacier Characteristics
+!               5. Global Urban Characteristics (urban extent, ...)
+!               6. Global Soil Characteristics (...)
+!               7. Global Cultural Characteristics (ON-GONG PROJECT)
 !
-! Land charateristics at the model grid resolution (CREATED):
-!              1. Model grid (longitude, latitude)
-!              2. Fraction (area) of patches of grid (0-1)
-!                 2.1 Fraction of land water bodies (lake, reservoir, river)
-!                 2.2 Fraction of wetland
-!                 2.3 Fraction of glacier
-!                 2.4 Fraction of urban and built-up
-!                 ......
-!              3. Plant leaf area index
-!              4. Tree height
-!              5. Lake depth
-!              6. Soil thermal and hydraulic parameters
+!  Land characteristics at the model grid resolution (CREATED):
+!               1. Model grid (longitude, latitude)
+!               2. Fraction (area) of patches of grid (0-1)
+!                  2.1 Fraction of land water bodies (lake, reservoir, river)
+!                  2.2 Fraction of wetland
+!                  2.3 Fraction of glacier
+!                  2.4 Fraction of urban and built-up
+!                  ......
+!               3. Plant leaf area index
+!               4. Tree height
+!               5. Lake depth
+!               6. Soil thermal and hydraulic parameters
 !
-! Created by Yongjiu Dai, 02/2014
+!  Created by Yongjiu Dai, 02/2014
 !
-! REVISIONS:
-! Shupeng Zhang, 01/2022: porting codes to MPI parallel version
+! !REVISIONS:
+!  Shupeng Zhang, 01/2022: porting codes to MPI parallel version
 !
-! ======================================================================
+!=======================================================================
 
    USE MOD_Precision
    USE MOD_SPMD_Task
@@ -54,6 +57,7 @@ PROGRAM MKSRFDATA
    USE MOD_Grid
    USE MOD_Mesh
    USE MOD_MeshFilter
+   USE MOD_TimeManager
    USE MOD_LandElm
 #ifdef CATCHMENT
    USE MOD_LandHRU
@@ -72,7 +76,10 @@ PROGRAM MKSRFDATA
 #endif
    USE MOD_RegionClip
 #ifdef SrfdataDiag
-   USE MOD_SrfdataDiag, only : gdiag, srfdata_diag_init
+   USE MOD_SrfdataDiag, only: gdiag, srfdata_diag_init
+#endif
+#ifdef SinglePoint
+   USE MOD_SingleSrfdata
 #endif
 
    USE MOD_RegionClip
@@ -89,10 +96,11 @@ PROGRAM MKSRFDATA
    real(r8) :: edges  ! southern edge of grid (degrees)
    real(r8) :: edgew  ! western edge of grid (degrees)
 
-   type (grid_type) :: gsoil, gridlai, gtopo, grid_topo_factor
+   type (grid_type) :: grid_500m, grid_htop, grid_soil, grid_lai, grid_topo, grid_topo_factor
    type (grid_type) :: grid_urban_5km, grid_urban_500m
 
    integer   :: lc_year
+   character(len=4) :: cyear
    integer*8 :: start_time, end_time, c_per_sec, time_used
 
 
@@ -108,12 +116,28 @@ PROGRAM MKSRFDATA
 
    CALL read_namelist (nlfile)
 
+   CALL initimetype (DEF_simulation_time%greenwich)
+
 #ifdef SinglePoint
 #ifndef URBAN_MODEL
-   CALL read_surface_data_single (SITE_fsrfdata, mksrfdata=.true.)
+
+   CALL read_surface_data_single (SITE_fsitedata, mksrfdata = .true.)
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
+   CALL write_surface_data_single (numpatch, numpft)
 #else
-   CALL read_urban_surface_data_single (SITE_fsrfdata, mksrfdata=.true.)
+   CALL write_surface_data_single (numpatch)
 #endif
+
+#else
+
+   CALL read_urban_surface_data_single (SITE_fsitedata, mksrfdata=.true.)
+   CALL write_urban_surface_data_single(numurban)
+
+#endif
+
+   CALL single_srfdata_final ()
+   write(*,*)  'Successful in surface data making.'
+   CALL CoLM_stop()
 #endif
 
    IF (USE_srfdata_from_larger_region) THEN
@@ -182,43 +206,52 @@ PROGRAM MKSRFDATA
 
    ! define grid coordinates of hydro units in catchment
 #ifdef CATCHMENT
-   CALL ghru%define_by_name ('merit_90m')
+   CALL grid_hru%define_by_name ('merit_90m')
 #endif
+
+   CALL grid_500m%define_by_name ('colm_500m')
 
    ! define grid coordinates of land types
 #ifdef LULC_USGS
-   CALL gpatch%define_by_name ('colm_1km')
+   CALL grid_patch%define_by_name ('colm_1km')
 #endif
 #ifdef LULC_IGBP
-   CALL gpatch%define_by_name ('colm_500m')
+   CALL grid_patch%define_by_name ('colm_500m')
 #endif
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
-   CALL gpatch%define_by_name ('colm_500m')
+   CALL grid_patch%define_by_name ('colm_500m')
 #endif
 #if (defined CROP)
    ! define grid for crop parameters
-   CALL gcrop%define_from_file (trim(DEF_dir_rawdata)//'/global_CFT_surface_data.nc', 'lat', 'lon')
+   CALL grid_crop%define_from_file (trim(DEF_dir_rawdata)//&
+      '/global_CFT_surface_data.nc', 'lat', 'lon')
+#endif
+
+   ! define grid for forest height
+#ifdef LULC_USGS
+   CALL grid_htop%define_by_name ('colm_1km')
+#else
+   CALL grid_htop%define_by_name ('colm_500m')
 #endif
 
    ! define grid for soil parameters raw data
-   CALL gsoil%define_by_name ('colm_500m')
+   CALL grid_soil%define_by_name ('colm_500m')
 
    ! define grid for LAI raw data
-   CALL gridlai%define_by_name ('colm_500m')
+   CALL grid_lai%define_by_name ('colm_500m')
 
    ! define grid for topography
-   CALL gtopo%define_by_name ('colm_500m')
+   CALL grid_topo%define_by_name ('colm_500m')
 
    ! define grid for topography factors
    IF (DEF_USE_Forcing_Downscaling) THEN
-      !CALL grid_topo_factor%define_by_name ('merit_90m')
-      lndname = trim(dir_rawdata)//"slope.nc"
+      lndname = trim(DEF_DS_HiresTopographyDataDir) // '/slope.nc'
       CALL grid_topo_factor%define_from_file (lndname,"lat","lon")
    ENDIF
 
    ! add by dong, only test for making urban data
 #ifdef URBAN_MODEL
-   CALL gurban%define_by_name          ('colm_500m')
+   CALL grid_urban%define_by_name      ('colm_500m')
    CALL grid_urban_500m%define_by_name ('colm_500m')
    CALL grid_urban_5km%define_by_name  ('colm_5km' )
 #endif
@@ -231,26 +264,27 @@ PROGRAM MKSRFDATA
       CALL pixel%assimilate_grid (grid_filter)
    ENDIF
 #ifdef CATCHMENT
-   CALL pixel%assimilate_grid (ghru)
+   CALL pixel%assimilate_grid (grid_hru  )
 #endif
-   CALL pixel%assimilate_grid (gpatch)
-   CALL pixel%assimilate_grid (gsoil)
-   CALL pixel%assimilate_grid (gridlai)
-
-#ifdef URBAN_MODEL
-   CALL pixel%assimilate_grid (gurban         )
-   CALL pixel%assimilate_grid (grid_urban_500m)
-   CALL pixel%assimilate_grid (grid_urban_5km )
-#endif
+   CALL pixel%assimilate_grid (grid_500m )
+   CALL pixel%assimilate_grid (grid_patch)
 #if (defined CROP)
-   CALL pixel%assimilate_grid (gcrop )
+   CALL pixel%assimilate_grid (grid_crop )
 #endif
-
-   CALL pixel%assimilate_grid (gtopo)
+   CALL pixel%assimilate_grid (grid_htop )
+   CALL pixel%assimilate_grid (grid_soil )
+   CALL pixel%assimilate_grid (grid_lai  )
+   CALL pixel%assimilate_grid (grid_topo )
 
    IF (DEF_USE_Forcing_Downscaling) THEN
       CALL pixel%assimilate_grid (grid_topo_factor)
    ENDIF
+
+#ifdef URBAN_MODEL
+   CALL pixel%assimilate_grid (grid_urban     )
+   CALL pixel%assimilate_grid (grid_urban_500m)
+   CALL pixel%assimilate_grid (grid_urban_5km )
+#endif
 
    ! map pixels to grid coordinates
 #ifndef SinglePoint
@@ -260,39 +294,43 @@ PROGRAM MKSRFDATA
       CALL pixel%map_to_grid (grid_filter)
    ENDIF
 #ifdef CATCHMENT
-   CALL pixel%map_to_grid (ghru)
+   CALL pixel%map_to_grid (grid_hru  )
 #endif
-   CALL pixel%map_to_grid (gpatch)
-   CALL pixel%map_to_grid (gsoil)
-   CALL pixel%map_to_grid (gridlai)
-
-#ifdef URBAN_MODEL
-   CALL pixel%map_to_grid (gurban         )
-   CALL pixel%map_to_grid (grid_urban_500m)
-   CALL pixel%map_to_grid (grid_urban_5km )
-#endif
+   CALL pixel%map_to_grid (grid_500m )
+   CALL pixel%map_to_grid (grid_patch)
 #if (defined CROP)
-   CALL pixel%map_to_grid (gcrop )
+   CALL pixel%map_to_grid (grid_crop )
 #endif
-
-   CALL pixel%map_to_grid (gtopo)
+   CALL pixel%map_to_grid (grid_htop )
+   CALL pixel%map_to_grid (grid_soil )
+   CALL pixel%map_to_grid (grid_lai  )
+   CALL pixel%map_to_grid (grid_topo )
 
    IF (DEF_USE_Forcing_Downscaling) THEN
       CALL pixel%map_to_grid (grid_topo_factor)
    ENDIF
 
+#ifdef URBAN_MODEL
+   CALL pixel%map_to_grid (grid_urban     )
+   CALL pixel%map_to_grid (grid_urban_500m)
+   CALL pixel%map_to_grid (grid_urban_5km )
+#endif
+
+
    ! build land elms
    CALL mesh_build ()
    CALL landelm_build
 
-#ifdef GRIDBASED
-   IF (.not. read_mesh_from_file) THEN
+#if (defined GRIDBASED || defined UNSTRUCTURED)
+   IF (DEF_LANDONLY) THEN
       !TODO: distinguish USGS and IGBP land cover
 #ifndef LULC_USGS
-      CALL mesh_filter (gpatch, trim(DEF_dir_rawdata)//'/landtype_update.nc', 'landtype')
+      write(cyear,'(i4.4)') lc_year
+      lndname = trim(DEF_dir_rawdata)//'/landtypes/landtype-igbp-modis-'//trim(cyear)//'.nc'
 #else
-      CALL mesh_filter (gpatch, trim(DEF_dir_rawdata)//'/landtypes/landtype-usgs-update.nc', 'landtype')
+      lndname = trim(DEF_dir_rawdata)//'/landtypes/landtype-usgs-update.nc'
 #endif
+      CALL mesh_filter (grid_patch, lndname, 'landtype')
    ENDIF
 #endif
 
@@ -362,49 +400,39 @@ PROGRAM MKSRFDATA
 
    !TODO: for lulcc, need to run for each year and SAVE to different subdirs
 
-   CALL Aggregation_PercentagesPFT  (gpatch , dir_rawdata, dir_landdata, lc_year)
+   CALL Aggregation_PercentagesPFT  (grid_500m, dir_rawdata, dir_landdata, lc_year)
 
-   CALL Aggregation_LakeDepth       (gpatch , dir_rawdata, dir_landdata, lc_year)
+   CALL Aggregation_LakeDepth       (grid_500m, dir_rawdata, dir_landdata, lc_year)
 
-   CALL Aggregation_SoilParameters  (gsoil,   dir_rawdata, dir_landdata, lc_year)
+   CALL Aggregation_SoilParameters  (grid_soil, dir_rawdata, dir_landdata, lc_year)
 
-   CALL Aggregation_SoilBrightness  (gpatch , dir_rawdata, dir_landdata, lc_year)
+   CALL Aggregation_SoilBrightness  (grid_500m, dir_rawdata, dir_landdata, lc_year)
 
    IF (DEF_USE_BEDROCK) THEN
-      CALL Aggregation_DBedrock     (gpatch , dir_rawdata, dir_landdata)
+      CALL Aggregation_DBedrock     (grid_500m, dir_rawdata, dir_landdata)
    ENDIF
 
-   CALL Aggregation_LAI             (gridlai, dir_rawdata, dir_landdata, lc_year)
+   CALL Aggregation_LAI             (grid_lai,  dir_rawdata, dir_landdata, lc_year)
 
-   CALL Aggregation_ForestHeight    (gpatch , dir_rawdata, dir_landdata, lc_year)
+   CALL Aggregation_ForestHeight    (grid_htop, dir_rawdata, dir_landdata, lc_year)
 
-   CALL Aggregation_Topography      (gtopo  , dir_rawdata, dir_landdata, lc_year)
+   CALL Aggregation_Topography      (grid_topo, dir_rawdata, dir_landdata, lc_year)
 
-   IF (DEF_USE_Forcing_Downscaling) THEN   
-      CALL Aggregation_TopographyFactors (grid_topo_factor, dir_rawdata, dir_landdata, lc_year)
+   IF (DEF_USE_Forcing_Downscaling) THEN
+      CALL Aggregation_TopographyFactors (grid_topo_factor, &
+         trim(DEF_DS_HiresTopographyDataDir), dir_landdata, lc_year)
    ENDIF
-   
+
 #ifdef URBAN_MODEL
    CALL Aggregation_urban (dir_rawdata, dir_landdata, lc_year, &
                            grid_urban_5km, grid_urban_500m)
 #endif
 
+   CALL Aggregation_SoilTexture     (grid_soil, dir_rawdata, dir_landdata, lc_year)
+
 ! ................................................................
 ! 4. Free memories.
 ! ................................................................
-
-#ifdef SinglePoint
-#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
-   CALL write_surface_data_single (numpatch, numpft)
-#else
-#ifndef URBAN_MODEL
-   CALL write_surface_data_single (numpatch)
-#else
-   CALL write_urban_surface_data_single (numurban)
-#endif
-#endif
-   CALL single_srfdata_final ()
-#endif
 
 #ifdef USEMPI
    CALL mpi_barrier (p_comm_glb, p_err)

@@ -1,15 +1,16 @@
 #include <define.h>
 
 MODULE MOD_Vars_Global
-!-------------------------------------------------------------------------------
+!-----------------------------------------------------------------------
 !
 ! !DESCRIPTION:
-! Define some global variables
+!  Define some global variables
 !
-! REVISIONS:
-! Hua Yuan, 08/2019: initial version partly adapted from CoLM2014
-! TODO ...
+! !REVISIONS:
+!  Hua Yuan, 08/2019: initial version partly adapted from CoLM2014
+!  TODO ...
 !
+!-----------------------------------------------------------------------
 ! !USES:
    USE MOD_Precision
    USE MOD_Namelist
@@ -57,9 +58,10 @@ MODULE MOD_Vars_Global
    integer, parameter :: nvegwcs   = 4  ! number of vegetation water potential nodes
 
    ! used for downscaling
-   integer, parameter :: num_type    = 4
-   integer, parameter :: num_zenith  = 51
-   integer, parameter :: num_azimuth = 36
+   integer, parameter :: num_slope_type       = 4
+   integer, parameter :: num_zenith           = 101
+   integer, parameter :: num_zenith_parameter = 3
+   integer, parameter :: num_azimuth          = 16
 
    ! bgc variables
    integer, parameter :: ndecomp_pools        = 7

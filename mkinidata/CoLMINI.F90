@@ -2,19 +2,20 @@
 
 PROGRAM CoLMINI
 
-! ======================================================================
-! Initialization of Land Characteristic Parameters and Initial State Variables
+!=======================================================================
+!  Initialization of Land Characteristic Parameters and Initial State
+!  Variables
 !
-! Reference:
+! !REFERENCES:
 !     [1] Dai et al., 2003: The Common Land Model (CoLM).
 !         Bull. of Amer. Meter. Soc., 84: 1013-1023
 !     [2] Dai et al., 2004: A two-big-leaf model for canopy temperature,
 !         photosynthesis and stomatal conductance. Journal of Climate
 !     [3] Dai et al., 2014: The Terrestrial Modeling System (TMS).
 !
-!     Created by Yongjiu Dai Februay 2004
-!     Revised by Yongjiu Dai Februay 2014
-! ======================================================================
+!  Created by Yongjiu Dai Februay 2004
+!  Revised by Yongjiu Dai Februay 2014
+!=======================================================================
 
    USE MOD_Precision
    USE MOD_Namelist
@@ -52,7 +53,7 @@ PROGRAM CoLMINI
    USE MOD_SnowSnicar, only: SnowAge_init, SnowOptics_init
    IMPLICIT NONE
 
-   ! ----------------local variables ---------------------------------
+!-------------------------- Local Variables ----------------------------
    character(len=256) :: nlfile
    character(len=256) :: casename ! case name
    character(len=256) :: dir_landdata
@@ -80,6 +81,8 @@ PROGRAM CoLMINI
       ! ----------------------------------------------------------------------
       CALL getarg (1, nlfile)
       CALL read_namelist (nlfile)
+
+      DEF_PIO_groupsize = 2
 
       casename     = DEF_CASE_NAME
       dir_landdata = DEF_dir_landdata
@@ -113,6 +116,8 @@ PROGRAM CoLMINI
       CALL Init_LC_Const
       CALL Init_PFT_Const
 
+#ifndef SinglePoint
+
       CALL pixel%load_from_file  (dir_landdata)
       CALL gblock%load_from_file (dir_landdata)
       CALL mesh_load_from_file   (dir_landdata, lc_year)
@@ -141,9 +146,13 @@ PROGRAM CoLMINI
 #endif
 #endif
 
+#endif
+
       ! Read in SNICAR optical and aging parameters
-      CALL SnowOptics_init( DEF_file_snowoptics ) ! SNICAR optical parameters
-      CALL SnowAge_init( DEF_file_snowaging )     ! SNICAR aging   parameters
+      IF (DEF_USE_SNICAR) THEN
+         CALL SnowOptics_init( DEF_file_snowoptics ) ! SNICAR optical parameters
+         CALL SnowAge_init( DEF_file_snowaging )     ! SNICAR aging   parameters
+      ENDIF
 
       CALL initialize (casename, dir_landdata, dir_restart, idate, lc_year, greenwich)
 

@@ -2,18 +2,21 @@
 
 Module MOD_Ozone
 
- !-----------------------------------------------------------------------
- ! !DESCRIPTION:
- ! This module hold the plant physiological response to the ozone, including photosynthetic response and stomata response.
- ! Ozone concentration can be either readin through Mod_OzoneData module or set to constant.
- !
- ! !ORIGINAL:
- ! The Community Land Model version 5.0 (CLM5.0)
- !
- ! !REVISION:
- ! Xingjie Lu 2022, revised the CLM5 code to be compatible with CoLM code structure.
- ! Fang Li 2024 used the new ozone stress parameterization scheme based on Li et
- ! al. (2024; GMD)  
+!-----------------------------------------------------------------------
+! !DESCRIPTION:
+!  This module hold the plant physiological response to the ozone,
+!  including vcmax response and stomata response.  Ozone concentration
+!  can be either readin through Mod_OzoneData module or set to constant.
+!
+!  Original:
+!  The Community Land Model version 5.0 (CLM5.0)
+!
+! !REVISIONS:
+!  2022, Xingjie Lu: revised the CLM5 code to be compatible with CoLM
+!        code structure.
+!  2024, Fang Li : used the new ozone stress parameterization scheme 
+!        based on Li et al. (2024; GMD)  
+!-----------------------------------------------------------------------
 
    USE MOD_Precision
    USE MOD_Const_Physical, only: rgas
@@ -43,11 +46,12 @@ CONTAINS
 
    SUBROUTINE CalcOzoneStress (o3coefv,o3coefg, forc_ozone, forc_psrf, th, ram, &
                               rs, rb, lai, lai_old, ivt, o3uptake, sabv, deltim)
-   !-------------------------------------------------
-   ! DESCRIPTION:
-   ! Calculate Ozone Stress on both photosynthesis and stomata conductance.
-   !
-   ! convert o3 from mol/mol to nmol m^-3
+!-----------------------------------------------------------------------
+! !DESCRIPTION:
+!  Calculate Ozone Stress on both vcmax and stomata conductance.
+!
+!  convert o3 from mol/mol to nmol m^-3
+!-----------------------------------------------------------------------
    real(r8), intent(out)   :: o3coefv
    real(r8), intent(out)   :: o3coefg
    real(r8), intent(inout) :: forc_ozone !ozone concentration (ppbv)
@@ -176,10 +180,11 @@ CONTAINS
 
    SUBROUTINE init_ozone_data (idate)
 
-   !----------------------
-   ! DESCTIPTION:
-   ! open ozone netcdf file from DEF_dir_rawdata, read latitude and longitude info.
-   ! Initialize Ozone data read in.
+!-----------------------------------------------------------------------
+! !DESCRIPTION:
+!  open ozone netcdf file from DEF_dir_rawdata, read latitude and
+!  longitude info.  Initialize Ozone data read in.
+!-----------------------------------------------------------------------
 
    USE MOD_SPMD_Task
    USE MOD_Namelist
@@ -205,7 +210,8 @@ CONTAINS
 !     IF(idate(1) .gt. 2021)iyear = 2021
 !     write(syear,"(I4.4)")  iyear
 !     write(smonth,"(I2.2)") month
-      file_ozone = trim(DEF_dir_runtime) // '/Ozone//Global/OZONE-setgrid.nc'
+!      file_ozone = trim(DEF_dir_runtime) // '/Ozone//Global/OZONE-setgrid.nc'
+      file_ozone = '/share/home/dq010/CoLM/data/rawdata/CROP-NITRIF/CoLMruntime/Ozone//Global/OZONE-setgrid.nc'
 
       CALL ncio_read_bcast_serial (file_ozone, 'lat', lat)
       CALL ncio_read_bcast_serial (file_ozone, 'lon', lon)
@@ -226,12 +232,12 @@ CONTAINS
 
    END SUBROUTINE init_ozone_data
 
-   ! ----------
    SUBROUTINE update_ozone_data (time, deltim)
 
-   !----------------------
-   ! DESCTIPTION:
-   ! read ozone data during simulation
+!-----------------------------------------------------------------------
+! !DESCRIPTION:
+!  read ozone data during simulation
+!-----------------------------------------------------------------------
 
    USE MOD_TimeManager
    USE MOD_Namelist
@@ -245,30 +251,13 @@ CONTAINS
    ! Local Variables
    type(timestamp) :: time_next
    integer :: month, mday
-   integer :: iyear, imonth, imonth_next, iday, iday_next, itime
+   integer :: iyear, itime
    character(len=8) :: syear, smonth
 
-!      CALL julian2monthday(time%year,time%day,month,mday)
-!      imonth = month
-!      iday   = mday
-!
-!      time_next = time + int(deltim)
-!      CALL julian2monthday(time_next%year,time_next%day,month,mday)
-!      imonth_next = month
-!      iday_next   = mday
-!
-!      iyear = time_next%year
-!      IF(time_next%year .lt. 2013)iyear=2013
-!      IF(time_next%year .gt. 2021)iyear=2021
-!      IF(imonth_next /= imonth)THEN
-!         write(syear,"(I4.4)")  iyear
-!         write(smonth,"(I2.2)") month
-         file_ozone = trim(DEF_dir_runtime) // '/Ozone/Global/OZONE-setgrid.nc'
-!      ENDIF
-
-!      IF (iday_next /= iday .and. .not.(month .eq. 2 .and. iday_next .eq. 29 .and. .not.(isleapyear(iyear)))) THEN
+!      file_ozone = trim(DEF_dir_runtime) // '/Ozone/Global/OZONE-setgrid.nc'
+      file_ozone = '/share/home/dq010/CoLM/data/rawdata/CROP-NITRIF/CoLMruntime/Ozone/Global/OZONE-setgrid.nc'
       IF(time%sec/10800 .ne. (time%sec+int(deltim))/10800)then
-         itime = (time%sec - int(deltim)) / 10800 + (time%day - 1) * 8 + 1
+         itime = (time%sec - int(deltim)) / 10800 + (amin1(time%day,365) - 1) * 8 + 1
          CALL ncio_read_block_time (file_ozone, 'OZONE', grid_ozone, itime, f_ozone)
 #ifdef RangeCheck
          CALL check_block_data ('Ozone', f_ozone)
@@ -284,3 +273,4 @@ CONTAINS
    END SUBROUTINE update_ozone_data
 
 END MODULE MOD_Ozone
+! ---------- EOP ------------

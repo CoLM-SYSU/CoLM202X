@@ -4,14 +4,12 @@ MODULE MOD_LandUrban
 !-----------------------------------------------------------------------
 !
 ! !DESCRIPTION:
-!
 !  Build pixelset "landurban".
 !
 !  Original authors: Hua Yuan and Wenzong Dong, 2021, OpenMP version.
 !
 !
 ! !REVISIONS:
-!
 !  05/2023, Wenzong Dong, Hua Yuan, Shupeng Zhang: porting codes to MPI
 !           parallel version.
 !
@@ -20,14 +18,11 @@ MODULE MOD_LandUrban
    USE MOD_Grid
    USE MOD_Pixelset
    USE MOD_Vars_Global, only: N_URB, URBAN
-#ifdef SinglePoint
-   USE MOD_SingleSrfdata
-#endif
 
    IMPLICIT NONE
 
    ! ---- Instance ----
-   type(grid_type) :: gurban
+   type(grid_type) :: grid_urban
 
    integer :: numurban
    type(pixelset_type) :: landurban
@@ -108,19 +103,19 @@ CONTAINS
 
          dir_urban = trim(DEF_dir_rawdata) // '/urban_type'
 
-         CALL allocate_block_data (gurban, data_urb_class)
+         CALL allocate_block_data (grid_urban, data_urb_class)
          CALL flush_block_data (data_urb_class, 0)
 
          ! read urban type data
          suffix = 'URBTYP'
 IF (DEF_URBAN_type_scheme == 1) THEN
-         CALL read_5x5_data (dir_urban, suffix, gurban, 'URBAN_DENSITY_CLASS', data_urb_class)
+         CALL read_5x5_data (dir_urban, suffix, grid_urban, 'URBAN_DENSITY_CLASS', data_urb_class)
 ELSE IF (DEF_URBAN_type_scheme == 2) THEN
-         CALL read_5x5_data (dir_urban, suffix, gurban, 'LCZ_DOM', data_urb_class)
+         CALL read_5x5_data (dir_urban, suffix, grid_urban, 'LCZ_DOM', data_urb_class)
 ENDIF
 
 #ifdef USEMPI
-         CALL aggregation_data_daemon (gurban, data_i4_2d_in1 = data_urb_class)
+         CALL aggregation_data_daemon (grid_urban, data_i4_2d_in1 = data_urb_class)
 #endif
       ENDIF
 
@@ -154,15 +149,15 @@ ENDIF
                ipxstt = landpatch%ipxstt(ipatch)
                ipxend = landpatch%ipxend(ipatch)
 
-               CALL aggregation_request_data (landpatch, ipatch, gurban, zip = .false., area = area_one, &
+               CALL aggregation_request_data (landpatch, ipatch, grid_urban, zip = .false., area = area_one, &
                   data_i4_2d_in1 = data_urb_class, data_i4_2d_out1 = ibuff)
 
                ! when there is missing urban types
-               !NOTE@tungwz: need duoble check below and add appropriate annotations
+               !NOTE@tungwz: need double check below and add appropriate annotations
                ! check if there is urban pixel without URBAN ID
                imiss = count(ibuff<1 .or. ibuff>N_URB)
                IF (imiss > 0) THEN
-                  ! Calculate the relative ratio of each urban types by excluding urban pixels withoht URBAN ID
+                  ! Calculate the relative ratio of each urban types by excluding urban pixels without URBAN ID
                   WHERE (ibuff<1 .or. ibuff>N_URB)
                      area_one = 0
                   END WHERE
@@ -338,48 +333,6 @@ ENDIF
       CALL mpi_barrier (p_comm_glb, p_err)
 #else
       write(*,'(A,I12,A)') 'Total: ', numurban, ' urban tiles.'
-#endif
-
-#ifdef SinglePoint
-
-      allocate  ( SITE_urbtyp    (numurban) )
-      allocate  ( SITE_lucyid    (numurban) )
-
-IF (.not. USE_SITE_urban_paras) THEN
-      allocate  ( SITE_fveg_urb  (numurban) )
-      allocate  ( SITE_htop_urb  (numurban) )
-      allocate  ( SITE_flake_urb (numurban) )
-
-      allocate  ( SITE_popden    (numurban) )
-      allocate  ( SITE_froof     (numurban) )
-      allocate  ( SITE_hroof     (numurban) )
-      allocate  ( SITE_hlr       (numurban) )
-      allocate  ( SITE_fgper     (numurban) )
-      allocate  ( SITE_fgimp     (numurban) )
-ENDIF
-
-      allocate  ( SITE_em_roof   (numurban) )
-      allocate  ( SITE_em_wall   (numurban) )
-      allocate  ( SITE_em_gimp   (numurban) )
-      allocate  ( SITE_em_gper   (numurban) )
-      allocate  ( SITE_t_roommax (numurban) )
-      allocate  ( SITE_t_roommin (numurban) )
-      allocate  ( SITE_thickroof (numurban) )
-      allocate  ( SITE_thickwall (numurban) )
-
-      allocate  ( SITE_cv_roof   (nl_roof)  )
-      allocate  ( SITE_cv_wall   (nl_wall)  )
-      allocate  ( SITE_cv_gimp   (nl_soil)  )
-      allocate  ( SITE_tk_roof   (nl_roof)  )
-      allocate  ( SITE_tk_wall   (nl_wall)  )
-      allocate  ( SITE_tk_gimp   (nl_soil)  )
-
-      allocate  ( SITE_alb_roof  (2, 2)     )
-      allocate  ( SITE_alb_wall  (2, 2)     )
-      allocate  ( SITE_alb_gimp  (2, 2)     )
-      allocate  ( SITE_alb_gper  (2, 2)     )
-
-      SITE_urbtyp(:) = landurban%settyp
 #endif
 
 #ifndef CROP

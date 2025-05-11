@@ -2,15 +2,15 @@
 
 SUBROUTINE Aggregation_PercentagesPFT (gland, dir_rawdata, dir_model_landdata, lc_year)
 
-! ----------------------------------------------------------------------
-! Percentage of Plant Function Types
+!-----------------------------------------------------------------------
+!  Percentage of Plant Function Types
 !
-! Original from Hua Yuan's OpenMP version.
+!  Original from Hua Yuan's OpenMP version.
 !
-! REVISIONS:
-! Hua Yuan,      ?/2020 : for land cover land use classifications
-! Shupeng Zhang, 01/2022: porting codes to MPI parallel version
-! ----------------------------------------------------------------------
+! !REVISIONS:
+!  Hua Yuan,      ?/2020 : for land cover land use classifications
+!  Shupeng Zhang, 01/2022: porting codes to MPI parallel version
+!-----------------------------------------------------------------------
 
    USE MOD_Precision
    USE MOD_Vars_Global
@@ -34,10 +34,6 @@ SUBROUTINE Aggregation_PercentagesPFT (gland, dir_rawdata, dir_model_landdata, l
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
    USE MOD_LandPFT
 #endif
-#ifdef SinglePoint
-   USE MOD_SingleSrfdata
-#endif
-
 #ifdef SrfdataDiag
    USE MOD_SrfdataDiag
 #endif
@@ -92,12 +88,6 @@ SUBROUTINE Aggregation_PercentagesPFT (gland, dir_rawdata, dir_model_landdata, l
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
 
-#ifdef SinglePoint
-      IF (USE_SITE_pctpfts) THEN
-         RETURN
-      ENDIF
-#endif
-
       dir_5x5 = trim(dir_rawdata) // '/plant_15s'
       ! add parameter input for time year
       !write(cyear,'(i4.4)') lc_year
@@ -120,10 +110,13 @@ SUBROUTINE Aggregation_PercentagesPFT (gland, dir_rawdata, dir_model_landdata, l
 #ifndef CROP
             IF (patchtypes(landpatch%settyp(ipatch)) == 0) THEN
 #else
-            IF (patchtypes(landpatch%settyp(ipatch)) == 0 .and. landpatch%settyp(ipatch)/=CROPLAND) THEN
+            IF (patchtypes(landpatch%settyp(ipatch)) == 0 &
+               .and. landpatch%settyp(ipatch)/=CROPLAND) THEN
 #endif
-               CALL aggregation_request_data (landpatch, ipatch, gland, zip = USE_zip_for_aggregation, area = area_one, &
-                  data_r8_3d_in1 = pftPCT, data_r8_3d_out1 = pct_pft_one, n1_r8_3d_in1 = N_PFT_modis, lb1_r8_3d_in1 = 0)
+               CALL aggregation_request_data (landpatch, ipatch, gland, &
+                  zip = USE_zip_for_aggregation, area = area_one, &
+                  data_r8_3d_in1 = pftPCT, data_r8_3d_out1 = pct_pft_one, &
+                  n1_r8_3d_in1 = N_PFT_modis, lb1_r8_3d_in1 = 0)
 
 #ifdef CROP
                pct_pft_one(N_PFT_modis-1,:) = 0.
@@ -162,11 +155,11 @@ SUBROUTINE Aggregation_PercentagesPFT (gland, dir_rawdata, dir_model_landdata, l
       CALL check_vector_data ('PCT_PFTs ', pct_pfts)
 #endif
 
-#ifndef SinglePoint
       lndname = trim(landdir)//'/pct_pfts.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
       CALL ncio_define_dimension_vector (lndname, landpft, 'pft')
-      CALL ncio_write_vector (lndname, 'pct_pfts', 'pft', landpft, pct_pfts, DEF_Srfdata_CompressLevel)
+      CALL ncio_write_vector (lndname, 'pct_pfts', 'pft', &
+         landpft, pct_pfts, DEF_Srfdata_CompressLevel)
 #ifdef SrfdataDiag
 #ifdef CROP
       typpft = (/(ipft, ipft = 0, N_PFT+N_CFT-1)/)
@@ -177,10 +170,6 @@ SUBROUTINE Aggregation_PercentagesPFT (gland, dir_rawdata, dir_model_landdata, l
       CALL srfdata_map_and_write (pct_pfts, landpft%settyp, typpft, m_pft2diag, &
          -1.0e36_r8, lndname, 'pctpfts', compress = 1, write_mode = 'one')
 #endif
-#else
-      allocate (SITE_pctpfts(numpft))
-      SITE_pctpfts = pct_pfts
-#endif
 
       IF (p_is_worker) THEN
          IF (allocated(pct_pfts   )) deallocate(pct_pfts   )
@@ -190,23 +179,17 @@ SUBROUTINE Aggregation_PercentagesPFT (gland, dir_rawdata, dir_model_landdata, l
       ENDIF
 
 #if (defined CROP)
-#ifndef SinglePoint
       lndname = trim(landdir)//'/pct_crops.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
       CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
-      CALL ncio_write_vector (lndname, 'pct_crops', 'patch', landpatch, pctshrpch, DEF_Srfdata_CompressLevel)
+      CALL ncio_write_vector (lndname, 'pct_crops', 'patch', &
+         landpatch, pctshrpch, DEF_Srfdata_CompressLevel)
 
 #ifdef SrfdataDiag
       typcrop = (/(ityp, ityp = 1, N_CFT)/)
       lndname = trim(dir_model_landdata) // '/diag/pct_crop_patch_' // trim(cyear) // '.nc'
       CALL srfdata_map_and_write (pctshrpch, cropclass, typcrop, m_patch2diag, &
          -1.0e36_r8, lndname, 'pct_crop_patch', compress = 1, write_mode = 'one')
-#endif
-#else
-      allocate (SITE_croptyp(numpatch))
-      allocate (SITE_pctcrop(numpatch))
-      SITE_croptyp = cropclass
-      SITE_pctcrop = pctshrpch
 #endif
 #endif
 

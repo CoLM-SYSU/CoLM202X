@@ -1,17 +1,17 @@
 #include <define.h>
 
-! -------------------------------
+!-----------------------------------------------------------------------
 ! Created by Yongjiu Dai, 03/2014
-! -------------------------------
+!-----------------------------------------------------------------------
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
 MODULE MOD_Vars_PFTimeInvariants
-! -----------------------------------------------------------------
+!-----------------------------------------------------------------------
 ! !DESCRIPTION:
-! Define PFT time invariables
+!  Define PFT time invariables
 !
-! Added by Hua Yuan, 08/2019
-! -----------------------------------------------------------------
+!  Added by Hua Yuan, 08/2019
+!-----------------------------------------------------------------------
 
    USE MOD_Precision
    USE MOD_Vars_Global
@@ -19,12 +19,12 @@ MODULE MOD_Vars_PFTimeInvariants
    SAVE
 
    ! for LULC_IGBP_PFT and LULC_IGBP_PC
-   integer , allocatable :: pftclass    (:)    !PFT type
-   real(r8), allocatable :: pftfrac     (:)    !PFT fractional cover
-   real(r8), allocatable :: htop_p      (:)    !canopy top height [m]
-   real(r8), allocatable :: hbot_p      (:)    !canopy bottom height [m]
+   integer , allocatable :: pftclass    (:) !PFT type
+   real(r8), allocatable :: pftfrac     (:) !PFT fractional cover
+   real(r8), allocatable :: htop_p      (:) !canopy top height [m]
+   real(r8), allocatable :: hbot_p      (:) !canopy bottom height [m]
 #ifdef CROP
-   real(r8), allocatable :: cropfrac    (:)    !Crop fractional cover
+   real(r8), allocatable :: cropfrac    (:) !Crop fractional cover
 #endif
 
 ! PUBLIC MEMBER FUNCTIONS:
@@ -45,13 +45,13 @@ CONTAINS
 !-----------------------------------------------------------------------
 
    SUBROUTINE allocate_PFTimeInvariants
-   ! --------------------------------------------------------------------
+   ! -------------------------------------------------------------------
    ! Allocates memory for CoLM PFT 1d [numpft] variables
-   ! --------------------------------------------------------------------
+   ! -------------------------------------------------------------------
 
    USE MOD_SPMD_Task
-   USE MOD_LandPatch, only : numpatch
-   USE MOD_LandPFT,   only : numpft
+   USE MOD_LandPatch, only: numpatch
+   USE MOD_LandPFT,   only: numpft
    USE MOD_Precision
    IMPLICIT NONE
 
@@ -61,10 +61,13 @@ CONTAINS
             allocate (pftfrac       (numpft))
             allocate (htop_p        (numpft))
             allocate (hbot_p        (numpft))
-#ifdef CROP
-            allocate (cropfrac    (numpatch))
-#endif
          ENDIF
+
+#ifdef CROP
+         IF (numpatch > 0) THEN
+            allocate (cropfrac (numpatch))
+         ENDIF
+#endif
       ENDIF
 
    END SUBROUTINE allocate_PFTimeInvariants
@@ -119,9 +122,9 @@ CONTAINS
    END SUBROUTINE WRITE_PFTimeInvariants
 
    SUBROUTINE deallocate_PFTimeInvariants
-! --------------------------------------------------
-! Deallocates memory for CoLM PFT 1d [numpft] variables
-! --------------------------------------------------
+   ! -------------------------------------------------------------------
+   ! Deallocates memory for CoLM PFT 1d [numpft] variables
+   ! -------------------------------------------------------------------
    USE MOD_SPMD_Task
    USE MOD_LandPFT
 
@@ -197,17 +200,20 @@ MODULE MOD_Vars_TimeInvariants
    real(r8), allocatable :: vf_gravels   (:,:)  !volumetric fraction of gravels
    real(r8), allocatable :: vf_om        (:,:)  !volumetric fraction of organic matter
    real(r8), allocatable :: vf_sand      (:,:)  !volumetric fraction of sand
+   real(r8), allocatable :: vf_clay      (:,:)  !volumetric fraction of clay
    real(r8), allocatable :: wf_gravels   (:,:)  !gravimetric fraction of gravels
    real(r8), allocatable :: wf_sand      (:,:)  !gravimetric fraction of sand
+   real(r8), allocatable :: wf_clay      (:,:)  !gravimetric fraction of clay
+   real(r8), allocatable :: wf_om        (:,:)  !gravimetric fraction of om
    real(r8), allocatable :: OM_density   (:,:)  !OM density (kg/m3)
    real(r8), allocatable :: BD_all       (:,:)  !bulk density of soil (GRAVELS + ORGANIC MATTER + Mineral Soils,kg/m3)
 
    real(r8), allocatable :: wfc          (:,:)  !field capacity
    real(r8), allocatable :: porsl        (:,:)  !fraction of soil that is voids [-]
    real(r8), allocatable :: psi0         (:,:)  !minimum soil suction [mm] (NOTE: "-" valued)
-   real(r8), allocatable :: bsw          (:,:)  !clapp and hornbereger "b" parameter [-]
+   real(r8), allocatable :: bsw          (:,:)  !clapp and hornberger "b" parameter [-]
    real(r8), allocatable :: theta_r      (:,:)  !residual moisture content [-]
-   real(r8), allocatable :: BVIC         (:,:)  !b parameter in Fraction of saturated soil in a grid calculated by VIC
+   real(r8), allocatable :: BVIC         (:)    !b parameter in Fraction of saturated soil in a grid calculated by VIC
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
    real(r8), allocatable :: alpha_vgm    (:,:)  !a parameter corresponding approximately to the inverse of the air-entry value
    real(r8), allocatable :: L_vgm        (:,:)  !pore-connectivity parameter [dimensionless]
@@ -216,14 +222,16 @@ MODULE MOD_Vars_TimeInvariants
    real(r8), allocatable :: fc_vgm       (:,:)  !a scaling factor by using air entry value in the Mualem model [-]
 #endif
 
-   real(r8), allocatable :: fsatmax (:)  ! maximum saturated area fraction [-]                         
-   real(r8), allocatable :: fsatdcf (:)  ! decay factor in calucation of saturated area fraction [1/m] 
+   integer,  allocatable :: soiltext       (:)  !USDA soil texture class
 
-   real(r8), allocatable :: vic_b_infilt (:)
-   real(r8), allocatable :: vic_Dsmax    (:)
-   real(r8), allocatable :: vic_Ds       (:)
-   real(r8), allocatable :: vic_Ws       (:)
-   real(r8), allocatable :: vic_c        (:)
+   real(r8), allocatable :: fsatmax        (:)  !maximum saturated area fraction [-]
+   real(r8), allocatable :: fsatdcf        (:)  !decay factor in calculation of saturated area fraction [1/m]
+
+   real(r8), allocatable :: vic_b_infilt   (:)
+   real(r8), allocatable :: vic_Dsmax      (:)
+   real(r8), allocatable :: vic_Ds         (:)
+   real(r8), allocatable :: vic_Ws         (:)
+   real(r8), allocatable :: vic_c          (:)
 
    real(r8), allocatable :: hksati       (:,:)  !hydraulic conductivity at saturation [mm h2o/s]
    real(r8), allocatable :: csol         (:,:)  !heat capacity of soil solids [J/(m3 K)]
@@ -239,22 +247,24 @@ MODULE MOD_Vars_TimeInvariants
    real(r8), allocatable :: dbedrock       (:)  !depth to bedrock
    integer , allocatable :: ibedrock       (:)  !bedrock level
 
-   real(r8), allocatable :: topoelv (:)  !elevation above sea level [m]
-   real(r8), allocatable :: topostd (:)  !standard deviation of elevation [m]
+   real(r8), allocatable :: topoelv        (:)  !elevation above sea level [m]
+   real(r8), allocatable :: topostd        (:)  !standard deviation of elevation [m]
 
    real(r8) :: zlnd                             !roughness length for soil [m]
    real(r8) :: zsno                             !roughness length for snow [m]
    real(r8) :: csoilc                           !drag coefficient for soil under canopy [-]
    real(r8) :: dewmx                            !maximum dew
-   ! 'wtfact' is updated to gridded 'fsatmax' data. 
+   ! 'wtfact' is updated to gridded 'fsatmax' data.
    ! real(r8) :: wtfact                         !fraction of model area with high water table
    real(r8) :: capr                             !tuning factor to turn first layer T into surface T
    real(r8) :: cnfac                            !Crank Nicholson factor between 0 and 1
    real(r8) :: ssi                              !irreducible water saturation of snow
-   real(r8) :: wimp                             !water impremeable IF porosity less than wimp
+   real(r8) :: wimp                             !water impermeable IF porosity less than wimp
    real(r8) :: pondmx                           !ponding depth (mm)
    real(r8) :: smpmax                           !wilting point potential in mm
    real(r8) :: smpmin                           !restriction for min of soil poten. (mm)
+   real(r8) :: smpmax_hr                        !wilting point potential in mm for heterotrophic respiration
+   real(r8) :: smpmin_hr                        !restriction for min of soil poten for heterotrophic respiration. (mm)
    real(r8) :: trsmx0                           !max transpiration for moist soil+100% veg.  [mm/s]
    real(r8) :: tcrit                            !critical temp. to determine rain or snow
    real(r8) :: wetwatmax                        !maximum wetland water (mm)
@@ -263,6 +273,7 @@ MODULE MOD_Vars_TimeInvariants
    real(r8), allocatable    :: svf_patches (:)         !sky view factor
    real(r8), allocatable    :: cur_patches (:)         !curvature
    real(r8), allocatable    :: sf_lut_patches  (:,:,:) !look up table of shadow factor of a patch
+   real(r8), allocatable    :: sf_curve_patches(:,:,:) !curve parameters of shadow factor of a patch
    real(r8), allocatable    :: asp_type_patches  (:,:) !topographic aspect of each character of one patch
    real(r8), allocatable    :: slp_type_patches  (:,:) !topographic slope of each character of one patch
    real(r8), allocatable    :: area_type_patches (:,:) !area percentage of each character of one patch
@@ -282,9 +293,9 @@ CONTAINS
 !-----------------------------------------------------------------------
 
    SUBROUTINE allocate_TimeInvariants ()
-   ! --------------------------------------------------------------------
+   ! -------------------------------------------------------------------
    ! Allocates memory for CoLM 1d [numpatch] variables
-   ! --------------------------------------------------------------------
+   ! -------------------------------------------------------------------
 
    USE MOD_Precision
    USE MOD_Vars_Global
@@ -315,8 +326,11 @@ CONTAINS
             allocate (vf_gravels   (nl_soil,numpatch))
             allocate (vf_om        (nl_soil,numpatch))
             allocate (vf_sand      (nl_soil,numpatch))
+            allocate (vf_clay      (nl_soil,numpatch))
             allocate (wf_gravels   (nl_soil,numpatch))
             allocate (wf_sand      (nl_soil,numpatch))
+            allocate (wf_clay      (nl_soil,numpatch))
+            allocate (wf_om        (nl_soil,numpatch))
             allocate (OM_density   (nl_soil,numpatch))
             allocate (BD_all       (nl_soil,numpatch))
             allocate (wfc          (nl_soil,numpatch))
@@ -324,7 +338,7 @@ CONTAINS
             allocate (psi0         (nl_soil,numpatch))
             allocate (bsw          (nl_soil,numpatch))
             allocate (theta_r      (nl_soil,numpatch))
-            allocate (BVIC         (nl_soil,numpatch))
+            allocate (BVIC                 (numpatch))
 
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
             allocate (alpha_vgm    (nl_soil,numpatch))
@@ -333,15 +347,16 @@ CONTAINS
             allocate (sc_vgm       (nl_soil,numpatch))
             allocate (fc_vgm       (nl_soil,numpatch))
 #endif
+            allocate (soiltext             (numpatch))
 
-            allocate (fsatmax (numpatch))
-            allocate (fsatdcf (numpatch))
+            allocate (fsatmax              (numpatch))
+            allocate (fsatdcf              (numpatch))
 
-            allocate (vic_b_infilt (numpatch))
-            allocate (vic_Dsmax    (numpatch))
-            allocate (vic_Ds       (numpatch))
-            allocate (vic_Ws       (numpatch))
-            allocate (vic_c        (numpatch))
+            allocate (vic_b_infilt         (numpatch))
+            allocate (vic_Dsmax            (numpatch))
+            allocate (vic_Ds               (numpatch))
+            allocate (vic_Ws               (numpatch))
+            allocate (vic_c                (numpatch))
 
             allocate (hksati       (nl_soil,numpatch))
             allocate (csol         (nl_soil,numpatch))
@@ -358,13 +373,20 @@ CONTAINS
             allocate (topoelv              (numpatch))
             allocate (topostd              (numpatch))
 
-            ! Used for downscaling
-            allocate (svf_patches                              (numpatch))
-            allocate (asp_type_patches                (num_type,numpatch))
-            allocate (slp_type_patches                (num_type,numpatch))
-            allocate (area_type_patches               (num_type,numpatch))
-            allocate (sf_lut_patches    (num_azimuth,num_zenith,numpatch))
-            allocate (cur_patches                              (numpatch))
+            IF (DEF_USE_Forcing_Downscaling) THEN
+               ! Used for downscaling
+               allocate (svf_patches                      (numpatch))
+               allocate (asp_type_patches  (num_slope_type,numpatch))
+               allocate (slp_type_patches  (num_slope_type,numpatch))
+               allocate (area_type_patches (num_slope_type,numpatch))
+               allocate (cur_patches                      (numpatch))
+#ifdef SinglePoint
+               allocate (sf_lut_patches   (num_azimuth,num_zenith,numpatch))
+#else
+               allocate (sf_curve_patches (num_azimuth,num_zenith_parameter,numpatch))
+#endif
+            ENDIF
+         ENDIF
       ENDIF
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
@@ -379,16 +401,14 @@ CONTAINS
       CALL allocate_UrbanTimeInvariants
 #endif
 
-   ENDIF
-
    END SUBROUTINE allocate_TimeInvariants
 
    !---------------------------------------
    SUBROUTINE READ_TimeInvariants (lc_year, casename, dir_restart)
 
-   !=======================================================================
+   !====================================================================
    ! Original version: Yongjiu Dai, September 15, 1999, 03/2014
-   !=======================================================================
+   !====================================================================
 
    USE MOD_Namelist
    USE MOD_SPMD_Task
@@ -399,6 +419,7 @@ CONTAINS
 #endif
    USE MOD_LandPatch
    USE MOD_Vars_Global
+   USE MOD_Const_LC, only: patchtypes
 
    IMPLICIT NONE
 
@@ -431,16 +452,19 @@ CONTAINS
       CALL ncio_read_vector (file_restart, 'vf_gravels',   nl_soil, landpatch, vf_gravels) ! volumetric fraction of gravels
       CALL ncio_read_vector (file_restart, 'vf_om     ',   nl_soil, landpatch, vf_om     ) ! volumetric fraction of organic matter
       CALL ncio_read_vector (file_restart, 'vf_sand   ',   nl_soil, landpatch, vf_sand   ) ! volumetric fraction of sand
+      CALL ncio_read_vector (file_restart, 'vf_clay   ',   nl_soil, landpatch, vf_clay  ,defval = 0.1 ) ! volumetric fraction of clay
       CALL ncio_read_vector (file_restart, 'wf_gravels',   nl_soil, landpatch, wf_gravels) ! gravimetric fraction of gravels
       CALL ncio_read_vector (file_restart, 'wf_sand   ',   nl_soil, landpatch, wf_sand   ) ! gravimetric fraction of sand
+      CALL ncio_read_vector (file_restart, 'wf_clay   ',   nl_soil, landpatch, wf_clay   ) ! gravimetric fraction of clay
+      CALL ncio_read_vector (file_restart, 'wf_om     ',   nl_soil, landpatch, wf_om     ) ! gravimetric fraction of om
       CALL ncio_read_vector (file_restart, 'OM_density',   nl_soil, landpatch, OM_density) ! OM density
       CALL ncio_read_vector (file_restart, 'BD_all    ',   nl_soil, landpatch, BD_all    ) ! bulk density of soil
       CALL ncio_read_vector (file_restart, 'wfc       ',   nl_soil, landpatch, wfc       ) ! field capacity
       CALL ncio_read_vector (file_restart, 'porsl  ' ,     nl_soil, landpatch, porsl     ) ! fraction of soil that is voids [-]
       CALL ncio_read_vector (file_restart, 'psi0   ' ,     nl_soil, landpatch, psi0      ) ! minimum soil suction [mm] (NOTE: "-" valued)
-      CALL ncio_read_vector (file_restart, 'bsw    ' ,     nl_soil, landpatch, bsw       ) ! clapp and hornbereger "b" parameter [-]
+      CALL ncio_read_vector (file_restart, 'bsw    ' ,     nl_soil, landpatch, bsw       ) ! clapp and hornberger "b" parameter [-]
       CALL ncio_read_vector (file_restart, 'theta_r  ' ,   nl_soil, landpatch, theta_r   ) ! residual moisture content [-]
-      CALL ncio_read_vector (file_restart, 'BVIC  ' ,      nl_soil, landpatch, BVIC   )    ! b parameter in Fraction of saturated soil in a grid calculated by VIC
+      CALL ncio_read_vector (file_restart, 'BVIC  ' ,      landpatch, BVIC   )             ! b parameter in Fraction of saturated soil in a grid calculated by VIC
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
       CALL ncio_read_vector (file_restart, 'alpha_vgm' ,   nl_soil, landpatch, alpha_vgm ) ! a parameter corresponding approximately to the inverse of the air-entry value
       CALL ncio_read_vector (file_restart, 'L_vgm    ' ,   nl_soil, landpatch, L_vgm     ) ! pore-connectivity parameter [dimensionless]
@@ -448,6 +472,8 @@ CONTAINS
       CALL ncio_read_vector (file_restart, 'sc_vgm   ' ,   nl_soil, landpatch, sc_vgm    ) ! saturation at the air entry value in the classical vanGenuchten model [-]
       CALL ncio_read_vector (file_restart, 'fc_vgm   ' ,   nl_soil, landpatch, fc_vgm    ) ! a scaling factor by using air entry value in the Mualem model [-]
 #endif
+
+      CALL ncio_read_vector (file_restart, 'soiltext', landpatch, soiltext, defval = 0  )
 
       CALL ncio_read_vector (file_restart, 'fsatmax', landpatch, fsatmax, defval = 0.38 )
       CALL ncio_read_vector (file_restart, 'fsatdcf', landpatch, fsatdcf, defval = 0.125)
@@ -485,26 +511,39 @@ CONTAINS
       CALL ncio_read_bcast_serial (file_restart, 'capr  ', capr  ) ! tuning factor to turn first layer T into surface T
       CALL ncio_read_bcast_serial (file_restart, 'cnfac ', cnfac ) ! Crank Nicholson factor between 0 and 1
       CALL ncio_read_bcast_serial (file_restart, 'ssi   ', ssi   ) ! irreducible water saturation of snow
-      CALL ncio_read_bcast_serial (file_restart, 'wimp  ', wimp  ) ! water impremeable IF porosity less than wimp
+      CALL ncio_read_bcast_serial (file_restart, 'wimp  ', wimp  ) ! water impermeable IF porosity less than wimp
       CALL ncio_read_bcast_serial (file_restart, 'pondmx', pondmx) ! ponding depth (mm)
       CALL ncio_read_bcast_serial (file_restart, 'smpmax', smpmax) ! wilting point potential in mm
       CALL ncio_read_bcast_serial (file_restart, 'smpmin', smpmin) ! restriction for min of soil poten. (mm)
+      CALL ncio_read_bcast_serial (file_restart, 'smpmax_hr', smpmax_hr) ! wilting point potential in mm
+      CALL ncio_read_bcast_serial (file_restart, 'smpmin_hr', smpmin_hr) ! restriction for min of soil poten. (mm)
       CALL ncio_read_bcast_serial (file_restart, 'trsmx0', trsmx0) ! max transpiration for moist soil+100% veg.  [mm/s]
       CALL ncio_read_bcast_serial (file_restart, 'tcrit ', tcrit ) ! critical temp. to determine rain or snow
       CALL ncio_read_bcast_serial (file_restart, 'wetwatmax', wetwatmax) ! maximum wetland water (mm)
 
       IF (DEF_USE_Forcing_Downscaling) THEN
-         CALL ncio_read_vector (file_restart, 'slp_type_patches' , num_type    , landpatch  , slp_type_patches)
-         CALL ncio_read_vector (file_restart, 'svf_patches'      , landpatch   , svf_patches )
-         CALL ncio_read_vector (file_restart, 'asp_type_patches' , num_type    , landpatch  , asp_type_patches)
-         CALL ncio_read_vector (file_restart, 'area_type_patches', num_type    , landpatch  , area_type_patches)
-         CALL ncio_read_vector (file_restart, 'sf_lut_patches'   , num_azimuth , num_zenith , landpatch, sf_lut_patches)
-         CALL ncio_read_vector (file_restart, 'cur_patches'      , landpatch   , cur_patches )
-       ENDIF
+         CALL ncio_read_vector (file_restart, 'slp_type_patches' , num_slope_type, landpatch, slp_type_patches)
+         CALL ncio_read_vector (file_restart, 'svf_patches'      ,                 landpatch, svf_patches     )
+         CALL ncio_read_vector (file_restart, 'asp_type_patches' , num_slope_type, landpatch, asp_type_patches)
+         CALL ncio_read_vector (file_restart, 'area_type_patches', num_slope_type, landpatch, area_type_patches)
+         CALL ncio_read_vector (file_restart, 'cur_patches'      ,                 landpatch, cur_patches )
+#ifdef SinglePoint
+         CALL ncio_read_vector (file_restart, 'sf_lut_patches'   , num_azimuth , num_zenith, landpatch, sf_lut_patches)
+#else
+         CALL ncio_read_vector (file_restart, 'sf_curve_patches' , num_azimuth , num_zenith_parameter, landpatch, sf_curve_patches)
+#endif
+      ENDIF
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
+#ifdef SinglePoint
+      IF (patchtypes(SITE_landtype) == 0) THEN
+         file_restart = trim(dir_restart) // '/const/' // trim(casename) //'_restart_pft_const' // '_lc' // trim(cyear) // '.nc'
+         CALL READ_PFTimeInvariants (file_restart)
+      ENDIF
+#else
       file_restart = trim(dir_restart) // '/const/' // trim(casename) //'_restart_pft_const' // '_lc' // trim(cyear) // '.nc'
       CALL READ_PFTimeInvariants (file_restart)
+#endif
 #endif
 
 #if (defined BGC)
@@ -534,11 +573,11 @@ CONTAINS
    !---------------------------------------
    SUBROUTINE WRITE_TimeInvariants (lc_year, casename, dir_restart)
 
-   !=======================================================================
+   !====================================================================
    ! Original version: Yongjiu Dai, September 15, 1999, 03/2014
-   !=======================================================================
+   !====================================================================
 
-   USE MOD_Namelist, only : DEF_REST_CompressLevel, DEF_USE_BEDROCK
+   USE MOD_Namelist, only: DEF_REST_CompressLevel, DEF_USE_BEDROCK
    USE MOD_SPMD_Task
    USE MOD_NetCDFSerial
    USE MOD_NetCDFVector
@@ -580,9 +619,10 @@ CONTAINS
       CALL ncio_define_dimension_vector (file_restart, landpatch, 'soilsnow', nl_soil-maxsnl)
       CALL ncio_define_dimension_vector (file_restart, landpatch, 'soil',     nl_soil)
       CALL ncio_define_dimension_vector (file_restart, landpatch, 'lake',     nl_lake)
-      CALL ncio_define_dimension_vector (file_restart, landpatch, 'type',     num_type)
+      CALL ncio_define_dimension_vector (file_restart, landpatch, 'type',     num_slope_type)
       CALL ncio_define_dimension_vector (file_restart, landpatch, 'azi',      num_azimuth)
       CALL ncio_define_dimension_vector (file_restart, landpatch, 'zen',      num_zenith)
+      CALL ncio_define_dimension_vector (file_restart, landpatch, 'zen_p',    num_zenith_parameter)
 
       CALL ncio_write_vector (file_restart, 'patchclass', 'patch', landpatch, patchclass)                            !
       CALL ncio_write_vector (file_restart, 'patchtype' , 'patch', landpatch, patchtype )                            !
@@ -603,16 +643,19 @@ CONTAINS
       CALL ncio_write_vector (file_restart, 'vf_gravels', 'soil', nl_soil, 'patch', landpatch, vf_gravels, compress) ! volumetric fraction of gravels
       CALL ncio_write_vector (file_restart, 'vf_om     ', 'soil', nl_soil, 'patch', landpatch, vf_om     , compress) ! volumetric fraction of organic matter
       CALL ncio_write_vector (file_restart, 'vf_sand   ', 'soil', nl_soil, 'patch', landpatch, vf_sand   , compress) ! volumetric fraction of sand
+      CALL ncio_write_vector (file_restart, 'vf_clay   ', 'soil', nl_soil, 'patch', landpatch, vf_clay   , compress) ! volumetric fraction of clay
       CALL ncio_write_vector (file_restart, 'wf_gravels', 'soil', nl_soil, 'patch', landpatch, wf_gravels, compress) ! gravimetric fraction of gravels
       CALL ncio_write_vector (file_restart, 'wf_sand   ', 'soil', nl_soil, 'patch', landpatch, wf_sand   , compress) ! gravimetric fraction of sand
+      CALL ncio_write_vector (file_restart, 'wf_clay   ', 'soil', nl_soil, 'patch', landpatch, wf_clay   , compress) ! gravimetric fraction of clay
+      CALL ncio_write_vector (file_restart, 'wf_om     ', 'soil', nl_soil, 'patch', landpatch, wf_om     , compress) ! gravimetric fraction of om 
       CALL ncio_write_vector (file_restart, 'OM_density', 'soil', nl_soil, 'patch', landpatch, OM_density, compress) ! OM_density
       CALL ncio_write_vector (file_restart, 'BD_all    ', 'soil', nl_soil, 'patch', landpatch, BD_all    , compress) ! bulk density of soil
       CALL ncio_write_vector (file_restart, 'wfc       ', 'soil', nl_soil, 'patch', landpatch, wfc       , compress) ! field capacity
       CALL ncio_write_vector (file_restart, 'porsl     ', 'soil', nl_soil, 'patch', landpatch, porsl     , compress) ! fraction of soil that is voids [-]
       CALL ncio_write_vector (file_restart, 'psi0      ', 'soil', nl_soil, 'patch', landpatch, psi0      , compress) ! minimum soil suction [mm] (NOTE: "-" valued)
-      CALL ncio_write_vector (file_restart, 'bsw       ', 'soil', nl_soil, 'patch', landpatch, bsw       , compress) ! clapp and hornbereger "b" parameter [-]
+      CALL ncio_write_vector (file_restart, 'bsw       ', 'soil', nl_soil, 'patch', landpatch, bsw       , compress) ! clapp and hornberger "b" parameter [-]
       CALL ncio_write_vector (file_restart, 'theta_r  ' , 'soil', nl_soil, 'patch', landpatch, theta_r   , compress) ! residual moisture content [-]
-      CALL ncio_write_vector (file_restart, 'BVIC    '  , 'soil', nl_soil, 'patch', landpatch, BVIC      , compress) ! b parameter in Fraction of saturated soil in a grid calculated by VIC
+      CALL ncio_write_vector (file_restart, 'BVIC    '  , 'patch', landpatch, BVIC, compress) ! b parameter in Fraction of saturated soil in a grid calculated by VIC
 
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
       CALL ncio_write_vector (file_restart, 'alpha_vgm' , 'soil', nl_soil, 'patch', landpatch, alpha_vgm , compress) ! a parameter corresponding approximately to the inverse of the air-entry value
@@ -622,9 +665,11 @@ CONTAINS
       CALL ncio_write_vector (file_restart, 'fc_vgm   ' , 'soil', nl_soil, 'patch', landpatch, fc_vgm    , compress) ! a scaling factor by using air entry value in the Mualem model [-]
 #endif
 
+      CALL ncio_write_vector (file_restart, 'soiltext', 'patch', landpatch, soiltext)
+
       CALL ncio_write_vector (file_restart, 'fsatmax', 'patch', landpatch, fsatmax)
       CALL ncio_write_vector (file_restart, 'fsatdcf', 'patch', landpatch, fsatdcf)
-      
+
       CALL ncio_write_vector (file_restart, 'vic_b_infilt', 'patch', landpatch, vic_b_infilt)
       CALL ncio_write_vector (file_restart, 'vic_Dsmax'   , 'patch', landpatch, vic_Dsmax   )
       CALL ncio_write_vector (file_restart, 'vic_Ds'      , 'patch', landpatch, vic_Ds      )
@@ -654,10 +699,14 @@ CONTAINS
       IF (DEF_USE_Forcing_Downscaling) THEN
          CALL ncio_write_vector (file_restart, 'svf_patches', 'patch', landpatch, svf_patches)
          CALL ncio_write_vector (file_restart, 'cur_patches', 'patch', landpatch, cur_patches)
-         CALL ncio_write_vector (file_restart, 'slp_type_patches',  'type', num_type, 'patch', landpatch, slp_type_patches)
-         CALL ncio_write_vector (file_restart, 'asp_type_patches',  'type', num_type, 'patch', landpatch, asp_type_patches)
-         CALL ncio_write_vector (file_restart, 'area_type_patches', 'type', num_type, 'patch', landpatch, area_type_patches)
+         CALL ncio_write_vector (file_restart, 'slp_type_patches',  'type', num_slope_type, 'patch', landpatch, slp_type_patches)
+         CALL ncio_write_vector (file_restart, 'asp_type_patches',  'type', num_slope_type, 'patch', landpatch, asp_type_patches)
+         CALL ncio_write_vector (file_restart, 'area_type_patches', 'type', num_slope_type, 'patch', landpatch, area_type_patches)
+#ifdef SinglePoint
          CALL ncio_write_vector (file_restart, 'sf_lut_patches',    'azi' , num_azimuth,'zen', num_zenith, 'patch', landpatch, sf_lut_patches)
+#else
+         CALL ncio_write_vector (file_restart, 'sf_curve_patches',  'azi' , num_azimuth,'zen_p', num_zenith_parameter, 'patch', landpatch, sf_curve_patches)
+#endif
       ENDIF
 
 #ifdef USEMPI
@@ -670,23 +719,25 @@ CONTAINS
          CALL ncio_create_file (file_restart)
 #endif
 
-         CALL ncio_write_serial (file_restart, 'zlnd  ', zlnd  ) ! roughness length for soil [m]
-         CALL ncio_write_serial (file_restart, 'zsno  ', zsno  ) ! roughness length for snow [m]
-         CALL ncio_write_serial (file_restart, 'csoilc', csoilc) ! drag coefficient for soil under canopy [-]
-         CALL ncio_write_serial (file_restart, 'dewmx ', dewmx ) ! maximum dew
-         ! CALL ncio_write_serial (file_restart, 'wtfact', wtfact) ! fraction of model area with high water table
-         CALL ncio_write_serial (file_restart, 'capr  ', capr  ) ! tuning factor to turn first layer T into surface T
-         CALL ncio_write_serial (file_restart, 'cnfac ', cnfac ) ! Crank Nicholson factor between 0 and 1
-         CALL ncio_write_serial (file_restart, 'ssi   ', ssi   ) ! irreducible water saturation of snow
-         CALL ncio_write_serial (file_restart, 'wimp  ', wimp  ) ! water impremeable if porosity less than wimp
-         CALL ncio_write_serial (file_restart, 'pondmx', pondmx) ! ponding depth (mm)
-         CALL ncio_write_serial (file_restart, 'smpmax', smpmax) ! wilting point potential in mm
-         CALL ncio_write_serial (file_restart, 'smpmin', smpmin) ! restriction for min of soil poten. (mm)
-         CALL ncio_write_serial (file_restart, 'trsmx0', trsmx0) ! max transpiration for moist soil+100% veg.  [mm/s]
-         CALL ncio_write_serial (file_restart, 'tcrit ', tcrit ) ! critical temp. to determine rain or snow
+         CALL ncio_write_serial (file_restart, 'zlnd  ', zlnd  )       ! roughness length for soil [m]
+         CALL ncio_write_serial (file_restart, 'zsno  ', zsno  )       ! roughness length for snow [m]
+         CALL ncio_write_serial (file_restart, 'csoilc', csoilc)       ! drag coefficient for soil under canopy [-]
+         CALL ncio_write_serial (file_restart, 'dewmx ', dewmx )       ! maximum dew
+       ! CALL ncio_write_serial (file_restart, 'wtfact', wtfact)       ! fraction of model area with high water table
+         CALL ncio_write_serial (file_restart, 'capr  ', capr  )       ! tuning factor to turn first layer T into surface T
+         CALL ncio_write_serial (file_restart, 'cnfac ', cnfac )       ! Crank Nicholson factor between 0 and 1
+         CALL ncio_write_serial (file_restart, 'ssi   ', ssi   )       ! irreducible water saturation of snow
+         CALL ncio_write_serial (file_restart, 'wimp  ', wimp  )       ! water impermeable if porosity less than wimp
+         CALL ncio_write_serial (file_restart, 'pondmx', pondmx)       ! ponding depth (mm)
+         CALL ncio_write_serial (file_restart, 'smpmax', smpmax)       ! wilting point potential in mm
+         CALL ncio_write_serial (file_restart, 'smpmin', smpmin)       ! restriction for min of soil poten. (mm)
+         CALL ncio_write_serial (file_restart, 'smpmax_hr', smpmax_hr) ! wilting point potential in mm
+         CALL ncio_write_serial (file_restart, 'smpmin_hr', smpmin_hr) ! restriction for min of soil poten. (mm)
+         CALL ncio_write_serial (file_restart, 'trsmx0', trsmx0)       ! max transpiration for moist soil+100% veg.  [mm/s]
+         CALL ncio_write_serial (file_restart, 'tcrit ', tcrit )       ! critical temp. to determine rain or snow
          CALL ncio_write_serial (file_restart, 'wetwatmax', wetwatmax) ! maximum wetland water (mm)
 
-      END if
+      ENDIF
 
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
@@ -744,8 +795,11 @@ CONTAINS
             deallocate (vf_gravels     )
             deallocate (vf_om          )
             deallocate (vf_sand        )
+            deallocate (vf_clay        )
             deallocate (wf_gravels     )
             deallocate (wf_sand        )
+            deallocate (wf_clay        )
+            deallocate (wf_om          )
             deallocate (OM_density     )
             deallocate (BD_all         )
             deallocate (wfc            )
@@ -762,6 +816,7 @@ CONTAINS
             deallocate (sc_vgm         )
             deallocate (fc_vgm         )
 #endif
+            deallocate (soiltext       )
             deallocate (fsatmax        )
             deallocate (fsatdcf        )
 
@@ -794,7 +849,11 @@ CONTAINS
                deallocate(svf_patches       )
                deallocate(asp_type_patches  )
                deallocate(area_type_patches )
+#ifdef SinglePoint
                deallocate(sf_lut_patches    )
+#else
+               deallocate(sf_curve_patches  )
+#endif
                deallocate(cur_patches       )
             ENDIF
 
@@ -815,14 +874,15 @@ CONTAINS
    END SUBROUTINE deallocate_TimeInvariants
 
 #ifdef RangeCheck
-   !---------------------------------------
    SUBROUTINE check_TimeInvariants ()
 
    USE MOD_SPMD_Task
    USE MOD_RangeCheck
-   USE MOD_Namelist, only : DEF_USE_BEDROCK, DEF_USE_Forcing_Downscaling
+   USE MOD_Namelist, only: DEF_USE_BEDROCK, DEF_USE_Forcing_Downscaling
 
    IMPLICIT NONE
+
+      real(r8), allocatable :: tmpcheck(:,:)
 
       IF (p_is_master) THEN
          write(*,'(/,A29)') 'Checking Time Invariants ...'
@@ -841,16 +901,19 @@ CONTAINS
       CALL check_vector_data ('soil_d_n_alb [-]     ', soil_d_n_alb) ! albedo of near infrared of the dry soil
       CALL check_vector_data ('vf_quartz    [m3/m3] ', vf_quartz   ) ! volumetric fraction of quartz within mineral soil
       CALL check_vector_data ('vf_gravels   [m3/m3] ', vf_gravels  ) ! volumetric fraction of gravels
-      CALL check_vector_data ('vf_om        [m3/m3] ', vf_om       ) ! volumetric fraction of organic matter
       CALL check_vector_data ('vf_sand      [m3/m3] ', vf_sand     ) ! volumetric fraction of sand
+      CALL check_vector_data ('vf_clay      [m3/m3] ', vf_clay     ) ! volumetric fraction of clay
+      CALL check_vector_data ('vf_om        [m3/m3] ', vf_om       ) ! volumetric fraction of organic matter
       CALL check_vector_data ('wf_gravels   [kg/kg] ', wf_gravels  ) ! gravimetric fraction of gravels
       CALL check_vector_data ('wf_sand      [kg/kg] ', wf_sand     ) ! gravimetric fraction of sand
+      CALL check_vector_data ('wf_clay      [kg/kg] ', wf_clay     ) ! gravimetric fraction of clay
+      CALL check_vector_data ('wf_om        [kg/kg] ', wf_om       ) ! gravimetric fraction of om
       CALL check_vector_data ('OM_density   [kg/m3] ', OM_density  ) ! OM density
       CALL check_vector_data ('BD_all       [kg/m3] ', BD_all      ) ! bulk density of soils
       CALL check_vector_data ('wfc          [m3/m3] ', wfc         ) ! field capacity
       CALL check_vector_data ('porsl        [m3/m3] ', porsl       ) ! fraction of soil that is voids [-]
       CALL check_vector_data ('psi0         [mm]    ', psi0        ) ! minimum soil suction [mm] (NOTE: "-" valued)
-      CALL check_vector_data ('bsw          [-]     ', bsw         ) ! clapp and hornbereger "b" parameter [-]
+      CALL check_vector_data ('bsw          [-]     ', bsw         ) ! clapp and hornberger "b" parameter [-]
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
       CALL check_vector_data ('theta_r      [m3/m3] ', theta_r     ) ! residual moisture content [-]
       CALL check_vector_data ('alpha_vgm    [-]     ', alpha_vgm   ) ! a parameter corresponding approximately to the inverse of the air-entry value
@@ -868,24 +931,39 @@ CONTAINS
       CALL check_vector_data ('BA_alpha     [-]     ', BA_alpha    ) ! alpha in Balland and Arp(2005) thermal conductivity scheme
       CALL check_vector_data ('BA_beta      [-]     ', BA_beta     ) ! beta in Balland and Arp(2005) thermal conductivity scheme
 
+      CALL check_vector_data ('soiltexture  [-]     ', soiltext, -1) !
+
       CALL check_vector_data ('htop         [m]     ', htop        )
       CALL check_vector_data ('hbot         [m]     ', hbot        )
 
       IF(DEF_USE_BEDROCK)THEN
-         CALL check_vector_data ('dbedrock     [m]     ', dbedrock    ) !
+         CALL check_vector_data ('dbedrock     [m]     ', dbedrock ) !
       ENDIF
 
       CALL check_vector_data ('topoelv      [m]     ', topoelv     ) !
       CALL check_vector_data ('topostd      [m]     ', topostd     ) !
-      CALL check_vector_data ('BVIC        [-]      ', BVIC        ) !
+      CALL check_vector_data ('BVIC         [-]     ', BVIC        ) !
 
       IF (DEF_USE_Forcing_Downscaling) THEN
-         CALL check_vector_data ('slp_type_patches     [rad] ' , slp_type_patches)      ! slope
-         CALL check_vector_data ('svf_patches          [-] '   , svf_patches)           ! sky view factor
-         CALL check_vector_data ('asp_type_patches     [rad] ' , asp_type_patches)      ! aspect
-         CALL check_vector_data ('area_type_patches    [-] '   , area_type_patches)     ! area percent
-         CALL check_vector_data ('cur_patches          [-]'    , cur_patches )
-         CALL check_vector_data ('sf_lut_patches       [-] '   , sf_lut_patches)        ! shadow mask
+         CALL check_vector_data ('slp_type     [rad]   ', slp_type_patches ) ! slope
+         CALL check_vector_data ('svf          [-]     ', svf_patches      ) ! sky view factor
+         CALL check_vector_data ('asp_type     [rad]   ', asp_type_patches ) ! aspect
+         CALL check_vector_data ('area_type    [-]     ', area_type_patches) ! area percent
+         CALL check_vector_data ('cur          [-]     ', cur_patches      )
+#ifdef SinglePoint
+         CALL check_vector_data ('sf_lut       [-]     ', sf_lut_patches   ) ! shadow mask
+#else
+         IF (allocated(sf_curve_patches)) allocate(tmpcheck(size(sf_curve_patches,1),size(sf_curve_patches,3)))
+
+         IF (allocated(sf_curve_patches)) tmpcheck = sf_curve_patches(:,1,:)
+         CALL check_vector_data ('1 sf_curve p [-]     ', tmpcheck) ! shadow mask
+         IF (allocated(sf_curve_patches)) tmpcheck = sf_curve_patches(:,2,:)
+         CALL check_vector_data ('2 sf_curve p [-]     ', tmpcheck) ! shadow mask
+         IF (allocated(sf_curve_patches)) tmpcheck = sf_curve_patches(:,3,:)
+         CALL check_vector_data ('3 sf_curve p [-]     ', tmpcheck) ! shadow mask
+
+         IF (allocated(tmpcheck)) deallocate(tmpcheck)
+#endif
       ENDIF
 
 #ifdef USEMPI
@@ -894,20 +972,22 @@ CONTAINS
 
       IF (p_is_master) THEN
          write(*,'(/,A)') 'Checking Constants ...'
-         write(*,'(A,E20.10)') 'zlnd   [m]    ', zlnd   ! roughness length for soil [m]
-         write(*,'(A,E20.10)') 'zsno   [m]    ', zsno   ! roughness length for snow [m]
-         write(*,'(A,E20.10)') 'csoilc [-]    ', csoilc ! drag coefficient for soil under canopy [-]
-         write(*,'(A,E20.10)') 'dewmx  [mm]   ', dewmx  ! maximum dew
-         ! write(*,'(A,E20.10)') 'wtfact [-]    ', wtfact ! fraction of model area with high water table
-         write(*,'(A,E20.10)') 'capr   [-]    ', capr   ! tuning factor to turn first layer T into surface T
-         write(*,'(A,E20.10)') 'cnfac  [-]    ', cnfac  ! Crank Nicholson factor between 0 and 1
-         write(*,'(A,E20.10)') 'ssi    [-]    ', ssi    ! irreducible water saturation of snow
-         write(*,'(A,E20.10)') 'wimp   [m3/m3]', wimp   ! water impremeable IF porosity less than wimp
-         write(*,'(A,E20.10)') 'pondmx [mm]   ', pondmx ! ponding depth (mm)
-         write(*,'(A,E20.10)') 'smpmax [mm]   ', smpmax ! wilting point potential in mm
-         write(*,'(A,E20.10)') 'smpmin [mm]   ', smpmin ! restriction for min of soil poten. (mm)
-         write(*,'(A,E20.10)') 'trsmx0 [mm/s] ', trsmx0 ! max transpiration for moist soil+100% veg.  [mm/s]
-         write(*,'(A,E20.10)') 'tcrit  [K]    ', tcrit  ! critical temp. to determine rain or snow
+         write(*,'(A,E20.10)') 'zlnd   [m]    ', zlnd      ! roughness length for soil [m]
+         write(*,'(A,E20.10)') 'zsno   [m]    ', zsno      ! roughness length for snow [m]
+         write(*,'(A,E20.10)') 'csoilc [-]    ', csoilc    ! drag coefficient for soil under canopy [-]
+         write(*,'(A,E20.10)') 'dewmx  [mm]   ', dewmx     ! maximum dew
+       ! write(*,'(A,E20.10)') 'wtfact [-]    ', wtfact    ! fraction of model area with high water table
+         write(*,'(A,E20.10)') 'capr   [-]    ', capr      ! tuning factor to turn first layer T into surface T
+         write(*,'(A,E20.10)') 'cnfac  [-]    ', cnfac     ! Crank Nicholson factor between 0 and 1
+         write(*,'(A,E20.10)') 'ssi    [-]    ', ssi       ! irreducible water saturation of snow
+         write(*,'(A,E20.10)') 'wimp   [m3/m3]', wimp      ! water impermeable IF porosity less than wimp
+         write(*,'(A,E20.10)') 'pondmx [mm]   ', pondmx    ! ponding depth (mm)
+         write(*,'(A,E20.10)') 'smpmax [mm]   ', smpmax    ! wilting point potential in mm
+         write(*,'(A,E20.10)') 'smpmin [mm]   ', smpmin    ! restriction for min of soil poten. (mm)
+         write(*,'(A,E20.10)') 'smpmax_hr [mm]', smpmax_hr ! wilting point potential in mm
+         write(*,'(A,E20.10)') 'smpmin_hr [mm]', smpmin_hr ! restriction for min of soil poten. (mm)
+         write(*,'(A,E20.10)') 'trsmx0 [mm/s] ', trsmx0    ! max transpiration for moist soil+100% veg.  [mm/s]
+         write(*,'(A,E20.10)') 'tcrit  [K]    ', tcrit     ! critical temp. to determine rain or snow
          write(*,'(A,E20.10)') 'wetwatmax [mm]', wetwatmax ! maximum wetland water (mm)
       ENDIF
 

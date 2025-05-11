@@ -16,16 +16,20 @@ MODULE MOD_BGC_CNSummary
 ! Xingjie Lu, 2022, modify original CLM5 to be compatible with CoLM code structure. 
 
    USE MOD_Precision
-   USE MOD_Namelist, only : DEF_USE_NITRIF
+   USE MOD_Namelist, only: DEF_USE_NITRIF, DEF_USE_DiagMatrix
    USE MOD_Vars_PFTimeInvariants, only: pftclass
-   USE MOD_Vars_PFTimeVariables, only :irrig_method_p
+   USE MOD_Vars_PFTimeVariables, only:irrig_method_p
+   USE MOD_Vars_TimeInvariants, only: BD_all
    USE MOD_BGC_Vars_TimeVariables, only: &
        totlitc, totsomc, totcwdc, decomp_cpools, decomp_cpools_vr, ctrunc_soil,ctrunc_veg, ctrunc_vr, &
        totlitn, totsomn, totcwdn, decomp_npools, decomp_npools_vr, ntrunc_soil,ntrunc_veg, ntrunc_vr, &
-       totvegc, totvegn, totcolc, totcoln, sminn, sminn_vr, &
+       totvegc, totvegn, totcolc, totcoln, sminn, sminn_vr, totsoiln_vr, &
        leafc, frootc, livestemc, deadstemc, livecrootc, deadcrootc, leafc_storage, frootc_storage, livestemc_storage, &
        deadstemc_storage, livecrootc_storage, deadcrootc_storage, leafc_xfer, frootc_xfer, livestemc_xfer, &
        deadstemc_xfer, livecrootc_xfer, deadcrootc_xfer, xsmrpool, &
+       leafcCap, frootcCap, livestemcCap, deadstemcCap, livecrootcCap, deadcrootcCap, leafc_storageCap, frootc_storageCap, &
+       livestemc_storageCap, deadstemc_storageCap, livecrootc_storageCap, deadcrootc_storageCap, leafc_xferCap, &
+       frootc_xferCap, livestemc_xferCap, deadstemc_xferCap, livecrootc_xferCap, deadcrootc_xferCap, &
 #ifdef CROP
        grainc, grainc_storage, grainc_xfer, &
        cropseedc_deficit, cropprod1c, cphase, hui, vf, gddplant, gddmaturity, & 
@@ -35,7 +39,10 @@ MODULE MOD_BGC_CNSummary
 #endif
        leafn, frootn, livestemn, deadstemn, livecrootn, deadcrootn, leafn_storage, frootn_storage, livestemn_storage, &
        deadstemn_storage, livecrootn_storage, deadcrootn_storage, leafn_xfer, frootn_xfer, livestemn_xfer, &
-       deadstemn_xfer, livecrootn_xfer, deadcrootn_xfer, retransn, downreg, lag_npp
+       deadstemn_xfer, livecrootn_xfer, deadcrootn_xfer, retransn, downreg, lag_npp, &
+       leafnCap, frootnCap, livestemnCap, deadstemnCap, livecrootnCap, deadcrootnCap, leafn_storageCap, frootn_storageCap, &
+       livestemn_storageCap, deadstemn_storageCap, livecrootn_storageCap, deadcrootn_storageCap, leafn_xferCap, &
+       frootn_xferCap, livestemn_xferCap, deadstemn_xferCap, livecrootn_xferCap, deadcrootn_xferCap
    USE MOD_BGC_Vars_TimeInvariants, only: &
        is_litter, is_soil, is_cwd, nfix_timeconst
    USE MOD_BGC_Vars_PFTimeVariables, only: &
@@ -44,6 +51,11 @@ MODULE MOD_BGC_CNSummary
        deadstemc_storage_p, livecrootc_storage_p, deadcrootc_storage_p, gresp_storage_p, &
        leafc_xfer_p, frootc_xfer_p, livestemc_xfer_p, &
        deadstemc_xfer_p, livecrootc_xfer_p, deadcrootc_xfer_p, gresp_xfer_p, xsmrpool_p, &
+       leafcCap_p, frootcCap_p, livestemcCap_p, deadstemcCap_p, livecrootcCap_p, deadcrootcCap_p, &
+       leafc_storageCap_p, frootc_storageCap_p, livestemc_storageCap_p, &
+       deadstemc_storageCap_p, livecrootc_storageCap_p, deadcrootc_storageCap_p, &
+       leafc_xferCap_p, frootc_xferCap_p, livestemc_xferCap_p, &
+       deadstemc_xferCap_p, livecrootc_xferCap_p, deadcrootc_xferCap_p, &
 #ifdef CROP
        grainc_p, grainc_storage_p, grainc_xfer_p, &
 #endif
@@ -58,6 +70,11 @@ MODULE MOD_BGC_CNSummary
        deadstemn_storage_p, livecrootn_storage_p, deadcrootn_storage_p, &
        leafn_xfer_p, frootn_xfer_p, livestemn_xfer_p, &
        deadstemn_xfer_p, livecrootn_xfer_p, deadcrootn_xfer_p, retransn_p, npool_p, &
+       leafnCap_p, frootnCap_p, livestemnCap_p, deadstemnCap_p, livecrootnCap_p, deadcrootnCap_p, &
+       leafn_storageCap_p, frootn_storageCap_p, livestemn_storageCap_p, &
+       deadstemn_storageCap_p, livecrootn_storageCap_p, deadcrootn_storageCap_p, &
+       leafn_xferCap_p, frootn_xferCap_p, livestemn_xferCap_p, &
+       deadstemn_xferCap_p, livecrootn_xferCap_p, deadcrootn_xferCap_p, &
        ntrunc_p, totvegn_p, downreg_p
    USE MOD_Vars_PFTimeInvariants,  only: pftfrac
    USE MOD_BGC_Vars_1DFluxes, only: &
@@ -98,8 +115,8 @@ MODULE MOD_BGC_CNSummary
    USE MOD_Vars_TimeVariables, only: &
        irrig_method_corn  , irrig_method_swheat, irrig_method_wwheat, irrig_method_soybean  , &
        irrig_method_cotton, irrig_method_rice1 , irrig_method_rice2 , irrig_method_sugarcane
-   USE MOD_Vars_TimeInvariants, only : patchclass
-   USE MOD_Vars_Global, only : spval
+   USE MOD_Vars_TimeInvariants, only: patchclass
+   USE MOD_Vars_Global, only: spval
    USE MOD_SPMD_Task
      
    IMPLICIT NONE
@@ -246,16 +263,19 @@ CONTAINS
       totcwdn(i) = 0._r8
       sminn(i)   = 0._r8
       ntrunc_soil(i)  = 0._r8
+      totsoiln_vr(1:nl_soil,i) = 0 ! soil total nitrogen (gN/gsoil * 100%)
   
       DO l = 1, ndecomp_pools
          decomp_npools(l,i) = 0._r8
          DO j = 1, nl_soil
             decomp_npools(l,i) = decomp_npools(l,i) + decomp_npools_vr(j,l,i) * dz_soi(j)
+            totsoiln_vr(j,i)   = totsoiln_vr(j,i) + decomp_npools_vr(j,l,i) / (BD_all(j,i) * 1000) * 100 !(unit %)
          ENDDO
       ENDDO
      
       DO j = 1, nl_soil
          sminn(i) = sminn(i) + sminn_vr(j,i) * dz_soi(j)
+         totsoiln_vr(j,i) = totsoiln_vr(j,i) + sminn_vr(j,i) / (BD_all(j,i) * 1000) * 100 !(unit %)
       ENDDO
   
       DO l = 1, ndecomp_pools
@@ -334,6 +354,26 @@ CONTAINS
       fertnitro_rice2(i) = 0._r8
       fertnitro_sugarcane(i) = 0._r8
 #endif
+      IF(DEF_USE_DiagMatrix)THEN
+         leafcCap(i)              = sum(leafcCap_p(ps:pe)              * pftfrac(ps:pe))
+         leafc_storageCap(i)      = sum(leafc_storageCap_p(ps:pe)      * pftfrac(ps:pe))
+         leafc_xferCap(i)         = sum(leafc_xferCap_p(ps:pe)         * pftfrac(ps:pe))
+         frootcCap(i)             = sum(frootcCap_p(ps:pe)             * pftfrac(ps:pe))
+         frootc_storageCap(i)     = sum(frootc_storageCap_p(ps:pe)     * pftfrac(ps:pe))
+         frootc_xferCap(i)        = sum(frootc_xferCap_p(ps:pe)        * pftfrac(ps:pe))
+         livestemcCap(i)          = sum(livestemcCap_p(ps:pe)          * pftfrac(ps:pe))
+         livestemc_storageCap(i)  = sum(livestemc_storageCap_p(ps:pe)  * pftfrac(ps:pe))
+         livestemc_xferCap(i)     = sum(livestemc_xferCap_p(ps:pe)     * pftfrac(ps:pe))
+         deadstemcCap(i)          = sum(deadstemcCap_p(ps:pe)          * pftfrac(ps:pe))
+         deadstemc_storageCap(i)  = sum(deadstemc_storageCap_p(ps:pe)  * pftfrac(ps:pe))
+         deadstemc_xferCap(i)     = sum(deadstemc_xferCap_p(ps:pe)     * pftfrac(ps:pe))
+         livecrootcCap(i)         = sum(livecrootcCap_p(ps:pe)         * pftfrac(ps:pe))
+         livecrootc_storageCap(i) = sum(livecrootc_storageCap_p(ps:pe) * pftfrac(ps:pe))
+         livecrootc_xferCap(i)    = sum(livecrootc_xferCap_p(ps:pe)    * pftfrac(ps:pe))
+         deadcrootcCap(i)         = sum(deadcrootcCap_p(ps:pe)         * pftfrac(ps:pe))
+         deadcrootc_storageCap(i) = sum(deadcrootc_storageCap_p(ps:pe) * pftfrac(ps:pe))
+         deadcrootc_xferCap(i)    = sum(deadcrootc_xferCap_p(ps:pe)    * pftfrac(ps:pe))
+      ENDIF
       DO m = ps, pe
          totvegc_p(m) = leafc_p(m)             + frootc_p(m)             + livestemc_p(m) &
                       + deadstemc_p(m)         + livecrootc_p(m)         + deadcrootc_p(m) &
@@ -471,6 +511,26 @@ CONTAINS
 #endif
       retransn(i)           = sum(retransn_p(ps:pe)           * pftfrac(ps:pe))
   
+      IF(DEF_USE_DiagMatrix)THEN
+         leafnCap(i)              = sum(leafnCap_p(ps:pe)              * pftfrac(ps:pe))
+         leafn_storageCap(i)      = sum(leafn_storageCap_p(ps:pe)      * pftfrac(ps:pe))
+         leafn_xferCap(i)         = sum(leafn_xferCap_p(ps:pe)         * pftfrac(ps:pe))
+         frootnCap(i)             = sum(frootnCap_p(ps:pe)             * pftfrac(ps:pe))
+         frootn_storageCap(i)     = sum(frootn_storageCap_p(ps:pe)     * pftfrac(ps:pe))
+         frootn_xferCap(i)        = sum(frootn_xferCap_p(ps:pe)        * pftfrac(ps:pe))
+         livestemnCap(i)          = sum(livestemnCap_p(ps:pe)          * pftfrac(ps:pe))
+         livestemn_storageCap(i)  = sum(livestemn_storageCap_p(ps:pe)  * pftfrac(ps:pe))
+         livestemn_xferCap(i)     = sum(livestemn_xferCap_p(ps:pe)     * pftfrac(ps:pe))
+         deadstemnCap(i)          = sum(deadstemnCap_p(ps:pe)          * pftfrac(ps:pe))
+         deadstemn_storageCap(i)  = sum(deadstemn_storageCap_p(ps:pe)  * pftfrac(ps:pe))
+         deadstemn_xferCap(i)     = sum(deadstemn_xferCap_p(ps:pe)     * pftfrac(ps:pe))
+         livecrootnCap(i)         = sum(livecrootnCap_p(ps:pe)         * pftfrac(ps:pe))
+         livecrootn_storageCap(i) = sum(livecrootn_storageCap_p(ps:pe) * pftfrac(ps:pe))
+         livecrootn_xferCap(i)    = sum(livecrootn_xferCap_p(ps:pe)    * pftfrac(ps:pe))
+         deadcrootnCap(i)         = sum(deadcrootnCap_p(ps:pe)         * pftfrac(ps:pe))
+         deadcrootn_storageCap(i) = sum(deadcrootn_storageCap_p(ps:pe) * pftfrac(ps:pe))
+         deadcrootn_xferCap(i)    = sum(deadcrootn_xferCap_p(ps:pe)    * pftfrac(ps:pe))
+      ENDIF
       DO m = ps, pe
          totvegn_p(m) = leafn_p(m)             + frootn_p(m)             + livestemn_p(m) &
                       + deadstemn_p(m)         + livecrootn_p(m)         + deadcrootn_p(m) &

@@ -6,7 +6,7 @@ MODULE MOD_Urban_Albedo
 !
 !  Calculate the total urban albedo. Prepare albedo values over water,
 !  roof, ground with snow cover. Then CALL 3D urban radiation transfer
-!  model. Finally calculate the total albedo weightd by the urban and
+!  model. Finally calculate the total albedo weighted by the urban and
 !  water fractional cover.
 !
 !  Created by Hua Yuan, 09/2021
@@ -15,9 +15,11 @@ MODULE MOD_Urban_Albedo
 ! !REVISIONS:
 !
 !  07/2023, Hua Yuan: Fix low zenith angle problem for urban radiation
-!           calculation and urban display height problem when considering
-!           vegetations. modify limitation for conzen value (0.001->0.01)
-!           for urban.
+!           calculation and urban display height problem when
+!           considering vegetations. modify limitation for conzen value
+!           (0.001->0.01) for urban.
+!
+!  05/2024, Hua Yuan: Account for vegetation snow optical properties.
 !
 !-----------------------------------------------------------------------
    USE MOD_Precision
@@ -47,13 +49,15 @@ CONTAINS
 !
 ! (1) snow albedos: as in BATS formulations, which are inferred from
 !     the calculations of Wiscombe and Warren (1980) and the snow model
-!     and data of Anderson(1976), and the function of snow age, grain size,
-!     solar zenith angle, pollution, the amount of the fresh snow
-! (2) lake and wetland albedos: as in BATS, which depend on cosine solar zenith angle,
-!     based on data in Henderson-Sellers (1986). The frozen lake and wetland albedos
-!     are set to constants (0.6 for visible beam, 0.4 for near-infrared)
-! (3) over the snow covered surface, the surface albedo is estimated by a linear
-!     combination of albedos for snow, roof, impervious and pervious ground
+!     and data of Anderson(1976), and the function of snow age, grain
+!     size, solar zenith angle, pollution, the amount of the fresh snow
+! (2) lake and wetland albedos: as in BATS, which depend on cosine solar
+!     zenith angle, based on data in Henderson-Sellers (1986). The
+!     frozen lake and wetland albedos are set to constants (0.6 for
+!     visible beam, 0.4 for near-infrared)
+! (3) over the snow covered surface, the surface albedo is estimated by
+!     a linear combination of albedos for snow, roof, impervious and
+!     pervious ground
 !
 !=======================================================================
 
@@ -64,7 +68,7 @@ CONTAINS
 
    IMPLICIT NONE
 
-!------------------------- Dummy Arguments -----------------------------
+!-------------------------- Dummy Arguments ----------------------------
 ! ground cover index
    integer, intent(in) :: &
       ipatch          ! patch index
@@ -121,7 +125,7 @@ CONTAINS
       sgper(2,2),    &! pervious ground absorption for solar radiation,
       slake(2,2)      ! lake absorption for solar radiation,
 
-!-------------------------- Local variables ----------------------------
+!-------------------------- Local Variables ----------------------------
    real(r8) :: &
       age,           &! factor to reduce visible snow alb due to snow age [-]
       albg0,         &! temporary varaiable [-]
@@ -153,8 +157,8 @@ CONTAINS
 
    ! vegetation snow optical properties, 1:vis, 2:nir
    real(r8) :: rho_sno(2), tau_sno(2)
-   data rho_sno(1), rho_sno(2) /0.6, 0.3/
-   data tau_sno(1), tau_sno(2) /0.2, 0.1/
+   data rho_sno(1), rho_sno(2) /0.5, 0.2/
+   data tau_sno(1), tau_sno(2) /0.3, 0.2/
 
 ! ----------------------------------------------------------------------
 ! 1. Initial set
@@ -364,4 +368,4 @@ CONTAINS
    END SUBROUTINE alburban
 
 END MODULE MOD_Urban_Albedo
-! --------- EOP ----------
+! ---------- EOP ------------

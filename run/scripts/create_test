@@ -1,0 +1,648 @@
+#!/bin/bash
+
+Help()
+{
+#DISPLAY help
+   echo "!----------------------- Usage -----------------------------------------!"
+   echo "Descripion:create or run test cases from CoLM source code"
+
+   echo "!-----------------------------------------------------------------------!"
+   echo 'Syntax: ./create_test -n $TestPath/$TestName [-f $TestLists][-m $Mode]'
+   echo '        [-t $TestType]'
+   echo "!-----------------------------------------------------------------------!"
+   echo options:
+   echo "-n The Path and Name of the test working folder"
+   echo '-f (Optional) The list of switches of all test cases, if $TestLists '
+   echo '   is absent, use $ROOT/run/script/TestLists as the default test list. '
+   echo '-m (Optional) Mode to run create_test: '
+   echo '   1) Create: create_test will follow $TestLists to create test cases '
+   echo '      under $TestPath/$TestName and compile the code one by one'
+   echo '   2) CreateNoMkSrf: create_test will follow $TestLists to create test '
+   echo '      cases under $TestPath/$TestName and link the existing landdata.'
+   echo '   3) Run: create_test will follow $TestLists to run all test cases under'
+   echo '      $TestPath/$TestName '
+   echo '   4) RunNoMkSrf: create_test will follow $TestLists to run without make'
+   echo '      surface data for all test cases under $TestPath/$TestName '
+   echo '-t (Optional) Type of the test: '
+   echo '   1) SMS: Smoke test, normally run model under different configuration'
+   echo '   2) RES: Restart test, run model from restart file to check their consistency'
+   echo '-h display command information'
+}
+
+submitall()
+{
+   ROOT=$1
+   CaseName=$(basename "$2")
+   CasePath=$(dirname "$2")
+   BatchSystem=$3
+   Mode=$4
+   Queue=$5
+   TestType=$6
+   RestTime=$7
+   if [ "$TestType" == "RES" ];then
+      YY=$(date -d "$RestTime" +%Y)
+      MM=$(date -d "$RestTime" +%m)
+      DD=$(date -d "$RestTime" +%d)
+   fi
+#   Dependency=`awk '/Dependency/ {print $2}' machine.config`
+#   Dependency=`echo $Dependency|sed 's|JOBID|$jobid_1|g'`
+   case $BatchSystem in
+      LSF) 
+         JobSubmit="bsub"
+	 if [ "$Mode" == "RunNoMkSrf" ];then
+	    job1_id=`${JobSubmit}<wait.bash -q $Queue| grep -o '[0-9]*'`
+	 else
+	    job1_id=`${JobSubmit}<mksrf.submit| grep -o '[0-9]*'`
+	 fi
+	 job2_id=`${JobSubmit} -w "done($job1_id)"<case.submit| grep -o '[0-9]*'`
+	 if [ "$TestType" == "RES" ];then
+            cd $CasePath/$CaseName/Res$YY-$MM-$DD
+	    job2_rest_id=`${JobSubmit} -w "done($job2_id)"<case.submit| grep -o '[0-9]*'`
+            job3_id=`${JobSubmit} -w "ended($job2_rest_id)"<check_all.submit`
+	    cd -
+	 else
+            job3_id=`${JobSubmit} -w "ended($job2_id)"<check_all.submit`
+	 fi
+         ;;
+      SLURM) 
+   	 JobSubmit="sbatch"
+         if [ "$Mode" == "RunNoMkSrf" ];then
+            job1_id=`$JobSubmit -p $Queue wait.bash| grep -o '[0-9]*'`
+         else
+            job1_id=`$JobSubmit mksrf.submit| grep -o '[0-9]*'`
+         fi
+         job2_id=`${JobSubmit} --dependency=afterok:${job1_id} case.submit| grep -o '[0-9]*'`
+	 if [ "$TestType" == "RES" ];then
+            cd $CasePath/$CaseName/Res$YY-$MM-$DD
+	    job2_rest_id=`${JobSubmit} --dependency=afterany:${job2_id} case.submit| grep -o '[0-9]*'`
+	    cd -
+            job3_id=`${JobSubmit} --dependency=afterany:${job2_rest_id} check_all.submit`
+	 else
+            job3_id=`${JobSubmit} --dependency=afterany:${job2_id} check_all.submit`
+	 fi
+	 ;;
+      PBS)
+         JobSubmit="qsub"
+         if [ "$Mode" == "RunNoMkSrf" ];then
+            job1_id=`${JobSubmit} -q $Queue wait.bash| grep -o '[0-9]*'`
+         else
+            job1_id=`${JobSubmit} mksrf.submit| grep -o '[0-9]*'`
+         fi
+         job2_id=`${Jobsubmit} -W depend=afterok:${job1_id} case.submit| grep -o '[0-9]*'`
+         if [ "$TestType" == "RES" ];then
+            $ROOT/run/scripts/copy_restart -s $CasePath/$CaseName \
+                    -d $CasePath/$CaseName/Res$YY-$MM-$DD -o $YY-$MM-$DD
+         cd $CasePath/$CaseName/Res$YY-$MM-$DD
+            job2_rest_id=`${JobSubmit} -W depend=afterany:${job2_id} case.submit| grep -o '[0-9]*'`
+            job3_id=`${JobSubmit} -W depend=afterany:${job2_rest_id} check_all.submit`
+            cd -
+         else
+            job3_id=`${JobSubmit} -W depend=afterany:${job2_id} check_all.submit`
+         fi
+         ;;
+      *)
+         echo BatchSystem in machine.config is invalid or missing
+         exit
+   esac
+}
+
+CompileCheck()
+{
+   Mode=$1
+   case $Mode in
+      Base)
+      TestStatus=../TestStatus
+      ;;
+      Restart)
+      TestStatus=../../TestStatus
+      ;;
+      *)
+      echo Error: CompileCheck Mode $Mode is invalid
+      exit
+   esac
+	
+   if [ -n "`grep CreateCase ${TestStatus} |grep PASS`" ];then
+      make clean >& log.compile
+      echo -e "Compile${Mode}			PEND">>${TestStatus}
+      make >& log.compile 
+      ISCOMPILED=`grep "Making all CoLM programs successfully" log.compile`
+      if [ -z "$ISCOMPILED" ];then
+         echo -e "Compile${Mode}			FAIL">>${TestStatus}
+         echo FAIL comilation.
+      else
+         sed -i "s/Compile${Mode}			FAIL/Compile${Mode}			PASS/g" ${TestStatus}
+         sed -i "s/Compile${Mode}			PEND/Compile${Mode}			PASS/g" ${TestStatus}
+         echo PASS comilation.
+      fi
+   else
+      echo "Create case is failed">>${TestStatus/TestStatus/Testlog}
+   fi
+}
+
+CreateRestSubmit()
+{
+   CaseName=$(basename "$1")
+   CasePath=$(dirname "$1")
+
+   RestTime=$2
+   YY=$(date -d "$RestTime 2 days ago" +%Y)
+   MM=$(date -d "$RestTime 2 days ago" +%m)
+   DD=$(date -d "$RestTime 2 days ago" +%d)
+   sed -i "s/\(start_year\s*=\s*\)[0-9]\+/\1$YY/" $CasePath/$CaseName/input_${CaseName}.nml
+   sed -i "s/\(start_month\s*=\s*\)[0-9]\+/\1$MM/" $CasePath/$CaseName/input_${CaseName}.nml
+   sed -i "s/\(start_day\s*=\s*\)[0-9]\+/\1$DD/" $CasePath/$CaseName/input_${CaseName}.nml
+   YY=$(date -d "$RestTime 2 days" +%Y)
+   MM=$(date -d "$RestTime 2 days" +%m)
+   DD=$(date -d "$RestTime 2 days" +%d)
+   sed -i "s/\(end_year\s*=\s*\)[0-9]\+/\1$YY/" $CasePath/$CaseName/input_${CaseName}.nml
+   sed -i "s/\(end_month\s*=\s*\)[0-9]\+/\1$MM/" $CasePath/$CaseName/input_${CaseName}.nml
+   sed -i "s/\(end_day\s*=\s*\)[0-9]\+/\1$DD/" $CasePath/$CaseName/input_${CaseName}.nml
+
+   sed -i "s/\(DEF_WRST_FREQ\s*=\s*['\"]\).*\(['\"]\)/\1DAILY\2/" $CasePath/$CaseName/input_${CaseName}.nml
+   sed -i "s/\(DEF_HIST_FREQ\s*=\s*['\"]\).*\(['\"]\)/\1DAILY\2/" $CasePath/$CaseName/input_${CaseName}.nml
+   sed -i "s/\(DEF_HIST_groupby\s*=\s*['\"]\).*\(['\"]\)/\1DAY\2/" $CasePath/$CaseName/input_${CaseName}.nml
+
+   YY=$(date -d "$RestTime" +%Y)
+   MM=$(date -d "$RestTime" +%m)
+   DD=$(date -d "$RestTime" +%d)
+   ./create_clone -s $CasePath/$CaseName -d $CasePath/$CaseName/Res$YY-$MM-$DD
+   sed -i "s/\(start_year\s*=\s*\)[0-9]\+/\1$YY/" $CasePath/$CaseName/Res$YY-$MM-$DD/input_Res$YY-$MM-$DD.nml
+   sed -i "s/\(start_month\s*=\s*\)[0-9]\+/\1$MM/" $CasePath/$CaseName/Res$YY-$MM-$DD/input_Res$YY-$MM-$DD.nml
+   sed -i "s/\(start_day\s*=\s*\)[0-9]\+/\1$DD/" $CasePath/$CaseName/Res$YY-$MM-$DD/input_Res$YY-$MM-$DD.nml
+
+   sed -i "/cd/a $ROOT/run/scripts/copy_restart -s $CasePath/$CaseName -d $CasePath/$CaseName/Res$YY-$MM-$DD -o $YY-$MM-$DD" $CasePath/$CaseName/Res$YY-$MM-$DD/"case.submit"
+            
+}
+
+CreateTest()
+{
+   TestName=$(basename "$1")
+   TestPath=$(dirname "$1")
+   TestCaseList=$2
+   Mode=$3
+   TestType=$4
+   RestTime=$5
+   ROOT=`awk '/ROOT/ {print $2}' machine.config`
+   BatchSystem=`awk '/BatchSystem/ {print $2}' machine.config`
+   Queue=`awk '/Queue_case/ {print $2}' machine.config`
+
+   echo BatchSystem is $BatchSystem
+   case $BatchSystem in 
+        LSF)   Partition='#BSUB -q '$Queue;;
+	SLURM) Partition='#SBATCH -p '$Queue;;
+	PBS)   Partition='#PBS -q '$Queue;;
+	*)echo BatchSystem $BatchSystem in machine.config is not supported or missing, only LSF,SLURM and PBS is supported;exit;;
+   esac
+   if [ -z $ROOT ];then
+      echo Error in reading ROOT from machine.config
+      exit
+   fi
+
+   cd $ROOT/run/scripts
+   mkdir -p $TestPath/$TestName/
+   echo `date` >> $TestPath/$TestName/createlog
+   echo CreateTest TestName=$TestName TestCaseList=$TestCaseList Mode=$Mode TestType=$TestType RestTime=$RestTime >> $TestPath/$TestName/createlog
+   if [ "$Mode" == "Create" -o "$Mode" == "CreateNoComp" -o "$Mode" == "CreateNoMkSrf" ];then
+      for ListCase in `awk '{print $1}' $TestCaseList`
+      do
+	 CaseName=${TestType}_${ListCase}
+	 echo Create newcase $TestPath/$TestName/$CaseName
+  	 Startyr=`grep "$ListCase " $TestCaseList|awk '{print $2}'`
+	 Endyr=`grep "$ListCase " $TestCaseList|awk '{print $3}'`
+	 GridRes=`grep "$ListCase " $TestCaseList|awk '{print $4}'`
+	 SubGrid=`grep "$ListCase " $TestCaseList|awk '{print $5}'`
+	 fastPC=`grep "$ListCase " $TestCaseList|awk '{print $6}'`
+	 SoilModel=`grep "$ListCase " $TestCaseList|awk '{print $7}'`
+	 BGC=`grep "$ListCase " $TestCaseList|awk '{print $8}'`
+	 CROP=`grep "$ListCase " $TestCaseList|awk '{print $9}'`
+	 Forcing=`grep "$ListCase " $TestCaseList|awk '{print $10}'`
+	 if [[ ! $Startyr =~ ^[0-9]+$ ]]; then
+            echo Error: Startyr $Startyr is not a number in Case $CaseName
+	    exit
+         fi
+	 if [[ ! $Endyr =~ ^[0-9]+$ ]]; then
+            echo Error: Endyr $Endyr is not a number in Case $CaseName
+	    exit
+         fi
+	 if [ $Startyr -gt $Endyr ];then
+            echo Error: Startyr is greater than Endyr in Case $CaseName
+	    exit
+         fi
+	 if [[ (! "$SubGrid" == "pc") && (! "$SubGrid" == "pft") \
+            && (! "$SubGrid" == "igbp") && (! "$SubGrid" == "usgs") ]];then
+	    echo Error: SubGrid option $SubGrid is invalid in Case $CaseName
+	    exit
+	 fi
+	 if [[ (! "$SoilModel" == "vg") && (! "$SoilModel" == "cb") ]];then
+            echo "Error: Soil model option $SoilModel is invalid in Case $CaseName"
+	    exit
+	 fi
+	 if [[ (! "$fastPC" == "fastpc") && (! "$fastPC" == "nofastpc") ]];then
+            echo "Error: fastPC switch $fastPC is invalid in Case $CaseName"
+	    exit
+	 fi 
+	 if [ "$BGC" == "BGCON" ];then
+	    BGCSwitch="-b"
+	 else
+            if [ "$BGC" == "BGCOFF" ];then
+               BGCSwitch=""
+            else
+	       echo Error: BGC option $BGC is invalid in Case $CaseName
+	       exit
+	    fi
+	 fi
+         case $Forcing in
+           GSWP3) ;;
+           CRUJRA) ;;
+           CLDAS) ;;
+           CMFD) ;;
+           CRUNCEPV4)  ;;
+           CRUNCEPV7)  ;;
+           ERA5)  ;;
+           ERA5LAND)  ;;
+           *) echo "invalid Forcing option: $Forcing in Case $CaseName";exit ;;
+         esac
+         case $GridRes in
+           grid_g3600x1800) 
+		case $SubGrid in
+		   usgs)
+   		      LanddataFolder="Global_0.1x0.1/Global_Grid_10km_USGS_VG-72x36"
+		      ;;
+		   igbp)
+   		      LanddataFolder="Global_0.1x0.1/Global_Grid_10km_IGBP_VG-72x36"
+		      ;;
+	           pft)
+   		      LanddataFolder="Global_0.1x0.1/Global_Grid_10km_PFT_VG-72x36"
+		      ;;
+	           pc)
+	              if [ "$fastPC" == "fastpc" ];then
+     		         LanddataFolder="Global_0.1x0.1/Global_Grid_10km_PFT_VG-72x36"
+		      else
+			 LanddataFolder="Global_0.1x0.1/Global_Grid_10km_PC_VG-72x36"
+	              fi
+		      ;;
+		esac
+		;;
+           grid_g1440x720) 
+		case $SubGrid in
+		   usgs)
+   		      LanddataFolder="Global_0.25x0.25/Global_Grid_25km_USGS_VG-36x18"
+		      ;;
+		   igbp)
+   		      LanddataFolder="Global_0.25x0.25/Global_Grid_25km_IGBP_VG-36x18"
+		      ;;
+	           pft)
+   		      LanddataFolder="Global_0.25x0.25/Global_Grid_25km_PFT_VG-30x15"
+		      ;;
+	           pc)
+	              if [ "$fastPC" == "fastpc" ];then
+     		         LanddataFolder="Global_0.25x0.25/Global_Grid_25km_PFT_VG-30x15"
+		      else
+			 LanddataFolder="Global_0.25x0.25/Global_Grid_25km_PC_VG-30x15"
+	              fi
+		      ;;
+		esac
+		;;
+           grid_g720x360)
+		case $SubGrid in
+		   usgs)
+   		      LanddataFolder="Global_0.5x0.5/Global_Grid_50km_USGS_VG-18x9"
+		      ;;
+		   igbp)
+   		      LanddataFolder="Global_0.5x0.5/Global_Grid_50km_IGBP_VG-18x9"
+		      ;;
+	           pft)
+   		      LanddataFolder="Global_0.5x0.5/Global_Grid_50km_PFT_VG-18x9"
+		      ;;
+	           pc)
+	              if [ "$fastPC" == "fastpc" ];then
+     		         LanddataFolder="Global_0.5x0.5/Global_Grid_50km_PFT_VG-18x9"
+		      else
+			 LanddataFolder="Global_0.5x0.5/Global_Grid_50km_PC_VG-18x9"
+	              fi
+		      ;;
+		esac
+		;;
+           grid_g360x180) 
+		case $SubGrid in
+		   usgs)
+   		      LanddataFolder="Global_1.0x1.0/Global_Grid_100km_USGS_VG-18x9"
+		      ;;
+		   igbp)
+   		      LanddataFolder="Global_1.0x1.0/Global_Grid_100km_IGBP_VG-18x9"
+		      ;;
+	           pft)
+   		      LanddataFolder="Global_1.0x1.0/Global_Grid_100km_PFT_VG-18x9"
+		      ;;
+	           pc)
+	              if [ "$fastPC" == "fastpc" ];then
+     		         LanddataFolder="Global_1.0x1.0/Global_Grid_100km_PFT_VG-18x9"
+		      else
+			 LanddataFolder="Global_1.0x1.0/Global_Grid_100km_PC_VG-18x9"
+	              fi
+		      ;;
+		esac
+		;;
+           grid_g144x96)
+		case $SubGrid in
+		   usgs)
+   		      LanddataFolder="Global_2.5x1.875/Global_Grid_2x2_USGS_VG-18x9"
+		      ;;
+		   igbp)
+   		      LanddataFolder="Global_2.5x1.875/Global_Grid_2x2_IGBP_VG-18x9"
+		      ;;
+	           pft)
+   		      LanddataFolder="Global_2.5x1.875/Global_Grid_2x2_PFT_VG-18x9"
+		      ;;
+	           pc)
+	              if [ "$fastPC" == "fastpc" ];then
+     		         LanddataFolder="Global_2.5x1.875/Global_Grid_2x2_PFT_VG-18x9"
+		      else
+			 LanddataFolder="Global_2.5x1.875/Global_Grid_2x2_PC_VG-18x9"
+	              fi
+		      ;;
+		esac
+		;;
+           *) echo "invalid grid resolution option: $GridRes in Case $CaseName";exit ;;
+         esac
+	 if [ "$CROP" == "CROPON" ];then
+            if [ "$BGC" == "BGCON" ];then
+   	       CROPSwitch="-p"
+	    else
+	       echo "Error: Crop is on when BGC is off in Case $CaseName"
+	       exit
+	    fi
+         else
+            if [ "$CROP" == "CROPOFF" ];then
+               CROPSwtich=""
+	    else
+	       echo "Error: Crop option $CROP is invald in Case $CaseName"
+               exit
+	    fi
+         fi	    
+	 echo ./create_newcase -n $TestPath/$TestName/$CaseName -t $Startyr -e $Endyr \
+		 -f $Forcing -g $GridRes -s $SubGrid -m $SoilModel $BGCSwitch $CropSwitch
+         ./create_newcase -n $TestPath/$TestName/$CaseName -t $Startyr -e $Endyr \
+		 -f $Forcing -g $GridRes -s $SubGrid -m $SoilModel $BGCSwitch $CropSwitch
+	 if [ ! -d $TestPath/$TestName/$CaseName/ ];then
+            echo $TestPath/$TestName/$CaseName/ does not exist
+	    exit
+         fi
+	 if [ "$TestType" == "RES" ];then
+	    CreateRestSubmit "$TestPath/$TestName/$CaseName/" "$RestTime"
+	 fi
+	 echo "CreateCase			PEND">$TestPath/$TestName/$CaseName/TestStatus
+	 Exe_command=`awk '/Exe_command/ {print $2}' machine.config`
+	 sed -i "/cd/a `grep $Exe_command $TestPath/$TestName/$CaseName/init.submit`" \
+		 $TestPath/$TestName/$CaseName/"case.submit"
+	 rm $TestPath/$TestName/$CaseName/init.submit
+
+	 if [ "$Mode" == "CreateNoMkSrf" ];then
+	    LanddataPath=`awk '/RUNTIME/ {print $2}' machine.config`../CoLMlanddata/CoLM2024-release
+            rm -rf $TestPath/$TestName/$CaseName/landdata
+	    ln -sf $LanddataPath/$LanddataFolder/ $TestPath/$TestName/$CaseName/landdata
+	 fi
+	 Success='"$Success"'
+	 tailfilemksrf='`tail -n 100 '$TestPath/$TestName/$CaseName/logmksrfdata'|grep'" 'Successful in surface data making'\`"
+	 tailfileinit='`tail -n 100 '$TestPath/$TestName/$CaseName/logini'|grep'" 'CoLM Initialization Execution Completed'\`"
+         tailfilecase='`tail -n 100 '$TestPath/$TestName/$CaseName/log'|grep'" 'CoLM Execution Completed'\`"
+	 if [ "$TestType" == "RES" ];then
+            YY=$(date -d "$RestTime" +%Y)
+            MM=$(date -d "$RestTime" +%m)
+            DD=$(date -d "$RestTime" +%d)
+            tailfilerestart='`tail -n 100 '$TestPath/$TestName/$CaseName/Res$YY-$MM-$DD/log'|grep'" 'CoLM Execution Completed'\`"
+	 fi
+	 cat>$TestPath/$TestName/$CaseName/check_all.submit<<EOF
+#!/bin/bash
+$Partition
+
+Success=$tailfilemksrf
+
+if [ -z $Success ];then
+   sed -i "s/Submit_Mksrfdata			PEND/Submit_Mksrfdata			FAIL/g" TestStatus
+   sed -i "s/Submit_Mksrfdata			PASS/Submit_Mksrfdata			FAIL/g" TestStatus
+else
+   sed -i "s/Submit_Mksrfdata			FAIL/Submit_Mksrfdata			PASS/g" TestStatus
+   sed -i "s/Submit_Mksrfdata			PEND/Submit_Mksrfdata			PASS/g" TestStatus
+fi
+
+Success=$tailfileinit
+
+if [ -z $Success ];then
+   sed -i "s/Submit_Mkinidata			PEND/Submit_Mkinidata			FAIL/g" TestStatus
+   sed -i "s/Submit_Mkinidata			PASS/Submit_Mkinidata			FAIL/g" TestStatus
+else
+   sed -i "s/Submit_Mkinidata			FAIL/Submit_Mkinidata			PASS/g" TestStatus
+   sed -i "s/Submit_Mkinidata			PEND/Submit_Mkinidata			PASS/g" TestStatus
+fi
+
+Success=$tailfilecase
+
+if [ -z $Success ];then
+   sed -i "s/Submit_Case			PEND/Submit_Case			FAIL/g" TestStatus
+   sed -i "s/Submit_Case			PASS/Submit_Case			FAIL/g" TestStatus
+else
+   sed -i "s/Submit_Case			FAIL/Submit_Case			PASS/g" TestStatus
+   sed -i "s/Submit_Case			PEND/Submit_Case			PASS/g" TestStatus
+fi
+
+Success=$tailfilerestart
+if [ -z $Success ];then
+   sed -i "s/Submit_Restart			PEND/Submit_Restart			FAIL/g" TestStatus
+   sed -i "s/Submit_Restart			PASS/Submit_Restart			FAIL/g" TestStatus
+else
+   sed -i "s/Submit_Restart			FAIL/Submit_Restart			PASS/g" TestStatus
+   sed -i "s/Submit_Restart			PEND/Submit_Restart			PASS/g" TestStatus
+fi
+EOF
+
+	 if [ "$TestType" == "RES" ];then
+            YY=$(date -d "$RestTime" +%Y)
+            MM=$(date -d "$RestTime" +%m)
+            DD=$(date -d "$RestTime" +%d)
+	    File1=$TestPath/$TestName/$CaseName/Res$YY-$MM-$DD/history/Res${YY}-${MM}-${DD}_hist_${YY}-${MM}-${DD}.nc
+	    File2=$TestPath/$TestName/$CaseName/history/${CaseName}_hist_${YY}-${MM}-${DD}.nc
+	    RestartCompare='`if [ -f '$File1' -a -f '$File2' ];then cdo diffn '$File1' '$File2';else echo file does not exist;fi`'
+	    cat>>$TestPath/$TestName/$CaseName/check_all.submit<<EOF
+Success=$RestartCompare
+if [ ! -z $Success ];then
+   sed -i "s/RestartMatch			PEND/RestartMatch			FAIL/g" TestStatus
+   sed -i "s/RestartMatch			PASS/RestartMatch			FAIL/g" TestStatus
+else
+   sed -i "s/RestartMatch			FAIL/RestartMatch			PASS/g" TestStatus
+   sed -i "s/RestartMatch			PEND/RestartMatch			PASS/g" TestStatus
+fi
+EOF
+	 fi
+
+         cp -p $ROOT/run/scripts/wait.bash $TestPath/$TestName/$CaseName/
+	 if [ "$fastPC" == "fastpc" ];then
+            if [ "$SubGrid" == "pc" ];then
+	       sed -i '40 i\DEF_FAST_PC = .true.' $TestPath/$TestName/$CaseName/input_${CaseName}.nml
+	    else
+	       echo "Error: fastPC is on when SubGrid does not use PC in Case $CaseName"
+	       exit
+	    fi
+	 fi
+	 rm -f $TestPath/$TestName/$CaseName/Testlog
+         Diff=`./diffcasecode.bash $TestPath/$TestName/$CaseName|grep 'file differs !!!!!!!!!!'`
+	 echo 'file differs'>$TestPath/$TestName/$CaseName/FileDiffer
+	 if [ ! -z $Diff ];then
+            echo "CreateCase			FAIL">$TestPath/$TestName/$CaseName/TestStatus
+	    echo "Code differ from root">>$TestPath/$TestName/$CaseName/Testlog
+	 else
+            rm $TestPath/$TestName/$CaseName/FileDiffer
+	 fi
+	 if [ ! -f $TestPath/$TestName/$CaseName/input_${CaseName}.nml ];then
+            echo "CreateCase			FAIL">$TestPath/$TestName/$CaseName/TestStatus
+	    echo "input_${CaseName}.nml is missing">>$TestPath/$TestName/$CaseName/Testlog
+         fi
+	 if [ ! -f $TestPath/$TestName/$CaseName/mksrf.submit ];then
+            echo "CreateCase			FAIL">$TestPath/$TestName/$CaseName/TestStatus
+	    echo "mksrf.submit is missing">>$TestPath/$TestName/$CaseName/Testlog
+         fi
+	 if [ ! -f $TestPath/$TestName/$CaseName/case.submit ];then
+            echo "CreateCase			FAIL">$TestPath/$TestName/$CaseName/TestStatus
+	    echo "case.submit is missing">>$TestPath/$TestName/$CaseName/Testlog
+         fi
+	 if [ ! -f $TestPath/$TestName/$CaseName/wait.bash ];then
+	    echo "CreateCase			FAIL">$TestPath/$TestName/$CaseName/TestStatus
+	    echo "No wait.bash">>$TestPath/$TestName/$CaseName/Testlog
+	 fi
+	 if [ "$TestType" == "RES" ];then
+	    if [ ! -f $TestPath/$TestName/$CaseName/Res$YY-$MM-$DD/input_Res$YY-$MM-$DD.nml ];then
+               echo "CreateCase			FAIL">$TestPath/$TestName/$CaseName/TestStatus
+	       echo "restart input_${CaseName}.nml is missing">>$TestPath/$TestName/$CaseName/Testlog
+            fi
+	    if [ ! -f $TestPath/$TestName/$CaseName/Res$YY-$MM-$DD/case.submit ];then
+               echo "CreateCase			FAIL">$TestPath/$TestName/$CaseName/TestStatus
+	       echo "restart case.submit is missing">>$TestPath/$TestName/$CaseName/Testlog
+            fi
+	 fi
+	
+
+	 if [ -f $TestPath/$TestName/$CaseName/TestStatus ];then
+            ISFAIL=`grep CreateCase $TestPath/$TestName/$CaseName/TestStatus|grep FAIL`
+	 else
+            ISFAIL=""
+	 fi
+         if [ ! -n "$ISFAIL" ];then
+            echo "CreateCase			PASS">$TestPath/$TestName/$CaseName/TestStatus
+         else
+            echo "CreateCase			FAIL">$TestPath/$TestName/$CaseName/TestStatus
+         fi
+      done
+
+      echo Create TestCase Complete!
+
+      echo Mode is $Mode
+      if [ ! "$Mode" == "CreateNoComp" ];then
+         echo Start Compilation.
+         cd $ROOT/run/scripts/
+         for ListCase in `awk '{print $1}' $TestCaseList`
+         do
+	    CaseName=${TestType}_${ListCase}
+            echo $CaseName
+            cd $TestPath/$TestName/$CaseName/bld
+	    CompileCheck Base &
+	    if [ "$TestType" == "RES" ];then
+   	       cd $TestPath/$TestName/$CaseName/Res$YY-$MM-$DD/bld
+	       CompileCheck Restart &
+	    fi
+         done
+      fi
+   fi
+
+   if [ "$Mode" == "Run" -o "$Mode" == "RunNoMkSrf" ];then
+      echo running Case $CaseName
+      cd $ROOT/run/scripts/
+      for ListCase in `awk '{print $1}' $TestCaseList`
+      do
+	 CaseName=${TestType}_${ListCase}
+         cd $TestPath/$TestName/$CaseName/
+         if [ -n "`grep Compile TestStatus|grep PASS`" ];then
+            submitall "$ROOT" "$TestPath/$TestName/$CaseName" $BatchSystem $Mode $Queue $TestType $RestTime
+	    if [ ! "$Mode" == "RunNoMkSrf" ];then
+               echo "Submit_Mksrfdata			PEND">>$TestPath/$TestName/$CaseName/TestStatus
+	    fi
+            echo "Submit_Mkinidata			PEND">>$TestPath/$TestName/$CaseName/TestStatus
+            echo "Submit_Case			PEND">>$TestPath/$TestName/$CaseName/TestStatus
+	    if [ "$TestType" == "RES" ];then
+	       echo "Submit_Restart			PEND">>$TestPath/$TestName/$CaseName/TestStatus
+	       echo "RestartMatch			PEND">>$TestPath/$TestName/$CaseName/TestStatus
+	    fi
+	 else
+            echo "Compilation has not passed yet">>$TestPath/$TestName/$CaseName/Testlog
+         fi
+      done
+   fi
+}
+    
+while getopts ":hn:f:m:t:r:" options ;
+do
+    case $options in
+      n) TestName="$OPTARG" ;;
+      f) TestCaseList="$OPTARG"  ;;
+      m) Mode="$OPTARG" ;;
+      t) TestType="$OPTARG" ;;
+      r) RestTime="$OPTARG" ;;
+      h) Help; exit;;
+      *) echo "invalid option: $@";exit ;;
+    esac
+done
+
+
+if [ -z "${TestName}" ]; then
+   echo
+   echo 'Error: "-n" is missing, test name is absent' 
+   echo
+   Help
+   exit
+else 
+   if [ -z "${TestCaseList}" ];then
+      TestCaseList="TestLists"
+   fi
+   if [ -z $Mode ];then
+      Mode="Create"
+   else
+      case $Mode in
+	Create) ;;
+	CreateNoComp) ;;
+	CreateNoMkSrf) ;;
+        Run) ;;
+        RunNoMkSrf) ;;
+        *) echo invalid Mode option: $Mode;exit ;;	
+      esac
+   fi
+   echo TestType is $TestType
+   if [ -z $TestType ];then
+      TestType="SMS"  #if -t is absent, "Smoke test (SMS)" will be the default TestType.
+   fi
+   case $TestType in
+      SMS) 
+         if [ ! -z $RestTime ];then
+            echo Error: Restart time is set while Test Type is SMS
+            exit
+	 else
+ 	    RestTime="SmokeTestNoRestTime"
+         fi
+         ;;
+      RES) 
+         if [ -z $RestTime ];then
+            RestTime="2005-01-01"
+            echo Warning: Restart time is absent. Set "2005-01-01" as default
+         fi
+         ;;
+      *) 
+	 echo invalid Test type option: $TestType
+	 exit 
+	 ;;
+   esac
+   
+   echo TestName is $TestName
+   echo TestCaseList is $TestCaseList
+   echo Mode is $Mode
+   echo TestType is $TestType
+   CreateTest $TestName $TestCaseList $Mode $TestType $RestTime
+fi
+

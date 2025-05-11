@@ -2,18 +2,18 @@
 
 MODULE MOD_AggregationRequestData
 
-!-------------------------------------------------------------
-! DESCRIPTION:
+!-----------------------------------------------------------------------
+! !DESCRIPTION:
 !
 !    Aggregation Utilities.
-!    
-!    On IO processes, a data daemon is running to provide data 
-!       at fine resolutions for worker processes.
-!    On worker processes, request is sent to IO processes and 
-!       data is returned from IO processes. 
 !
-! Created by Shupeng Zhang, May 2023
-!-------------------------------------------------------------
+!    On IO processes, a data daemon is running to provide data
+!       at fine resolutions for worker processes.
+!    On worker processes, request is sent to IO processes and
+!       data is returned from IO processes.
+!
+!  Created by Shupeng Zhang, May 2023
+!-----------------------------------------------------------------------
 
    IMPLICIT NONE
 
@@ -26,7 +26,7 @@ MODULE MOD_AggregationRequestData
 
 ! ---- subroutines ----
 CONTAINS
-   
+
 #ifdef USEMPI
    SUBROUTINE aggregation_data_daemon (grid_in, &
          data_r8_2d_in1, data_r8_2d_in2, data_r8_2d_in3, data_r8_2d_in4, &
@@ -42,7 +42,7 @@ CONTAINS
    IMPLICIT NONE
 
    type (grid_type), intent(in) :: grid_in
-   
+
    ! 2D REAL data
    type (block_data_real8_2d), intent(in), optional :: data_r8_2d_in1
    type (block_data_real8_2d), intent(in), optional :: data_r8_2d_in2
@@ -54,14 +54,14 @@ CONTAINS
    ! 3D REAL data
    integer, intent(in), optional :: n1_r8_3d_in1
    type (block_data_real8_3d), intent(in), optional :: data_r8_3d_in1
-   
+
    integer, intent(in), optional :: n1_r8_3d_in2
    type (block_data_real8_3d), intent(in), optional :: data_r8_3d_in2
-   
+
    ! 2D INTEGER data
    type (block_data_int32_2d), intent(in), optional :: data_i4_2d_in1
    type (block_data_int32_2d), intent(in), optional :: data_i4_2d_in2
-   
+
    ! Local Variables
    integer :: nreq, ireq, rmesg(2), isrc, idest
    integer :: xblk, yblk, xloc, yloc
@@ -73,7 +73,7 @@ CONTAINS
    logical,  allocatable :: worker_done (:)
 
       IF (p_is_io) THEN
-         
+
          allocate (worker_done (0:p_np_worker-1))
 
          worker_done(:) = .false.
@@ -94,9 +94,9 @@ CONTAINS
                   isrc, mpi_tag_data, p_comm_glb, p_stat, p_err)
                CALL mpi_recv (ylist, nreq, MPI_INTEGER, &
                   isrc, mpi_tag_data, p_comm_glb, p_stat, p_err)
-               
+
                idest = isrc
-               
+
                allocate (sbuf_r8_1d (nreq))
 
                IF (present(data_r8_2d_in1)) THEN
@@ -154,7 +154,7 @@ CONTAINS
                   CALL mpi_send (sbuf_r8_1d, nreq, MPI_REAL8, &
                      idest, mpi_tag_data, p_comm_glb, p_err)
                ENDIF
-               
+
                IF (present(data_r8_2d_in5)) THEN
                   DO ireq = 1, nreq
                      xblk = grid_in%xblk(xlist(ireq))
@@ -265,7 +265,7 @@ CONTAINS
 
          deallocate (worker_done)
 
-      ENDIF 
+      ENDIF
 
    END SUBROUTINE aggregation_data_daemon
 
@@ -303,7 +303,7 @@ CONTAINS
 
    type (grid_type), intent(in) :: grid_in
    logical, intent(in) :: zip
-   
+
    real(r8), allocatable, intent(out), optional :: area(:)
 
    type (block_data_real8_2d), intent(in),  optional :: data_r8_2d_in1
@@ -331,7 +331,7 @@ CONTAINS
    integer, intent(in), optional :: n1_r8_3d_in2, lb1_r8_3d_in2
    type (block_data_real8_3d), intent(in),  optional :: data_r8_3d_in2
    real(r8), allocatable,      intent(out), optional :: data_r8_3d_out2 (:,:)
-   
+
    type (block_data_int32_2d), intent(in),  optional :: data_i4_2d_in1
    integer, allocatable,       intent(out), optional :: data_i4_2d_out1 (:)
 
@@ -366,10 +366,10 @@ CONTAINS
             ygrdthis = grid_in%ygrd(mesh(ie)%ilat(ipxl))
             CALL insert_into_sorted_list1 (xgrdthis, nx, xsorted, iloc)
             CALL insert_into_sorted_list1 (ygrdthis, ny, ysorted, iloc)
-         ENDDO  
+         ENDDO
 
          allocate (xy2d (nx,ny));     xy2d(:,:) = 0
-         
+
          IF (present(area)) THEN
             allocate(area2d(nx,ny));  area2d(:,:) = 0.
          ENDIF
@@ -377,7 +377,7 @@ CONTAINS
          DO ipxl = ipxstt, ipxend
             xgrdthis = grid_in%xgrd(mesh(ie)%ilon(ipxl))
             ygrdthis = grid_in%ygrd(mesh(ie)%ilat(ipxl))
-            
+
             ix = find_in_sorted_list1(xgrdthis, nx, xsorted)
             iy = find_in_sorted_list1(ygrdthis, ny, ysorted)
 
@@ -396,7 +396,7 @@ CONTAINS
          allocate (ylist (totalreq))
 
          IF (present(area)) allocate(area(totalreq))
-      
+
          ig = 0
          DO ix = 1, nx
             DO iy = 1, ny
@@ -413,12 +413,12 @@ CONTAINS
          IF (present(area)) deallocate (area2d)
 
       ELSE
-      
+
          allocate(xlist (npxl))
          allocate(ylist (npxl))
 
          IF (present(area)) allocate (area (npxl))
-         
+
          totalreq = npxl
          DO ipxl = ipxstt, ipxend
             xlist(ipxl-ipxstt+1) = grid_in%xgrd(mesh(ie)%ilon(ipxl))
@@ -430,7 +430,7 @@ CONTAINS
             ENDIF
          ENDDO
 
-      ENDIF 
+      ENDIF
 
       IF (present(data_r8_2d_in1) .and. present(data_r8_2d_out1))  allocate (data_r8_2d_out1 (totalreq))
       IF (present(data_r8_2d_in2) .and. present(data_r8_2d_out2))  allocate (data_r8_2d_out2 (totalreq))
@@ -503,7 +503,7 @@ CONTAINS
             CALL mpi_send (ibuf, nreq, MPI_INTEGER, idest, mpi_tag_data, p_comm_glb, p_err)
 
             isrc = idest
-            
+
             allocate (rbuf_r8_1d (nreq))
 
             IF (present(data_r8_2d_in1) .and. present(data_r8_2d_out1)) THEN
@@ -529,19 +529,19 @@ CONTAINS
                   isrc, mpi_tag_data, p_comm_glb, p_stat, p_err)
                CALL unpack_inplace (rbuf_r8_1d, msk, data_r8_2d_out4)
             ENDIF
-            
+
             IF (present(data_r8_2d_in5) .and. present(data_r8_2d_out5)) THEN
                CALL mpi_recv (rbuf_r8_1d, nreq, MPI_REAL8, &
                   isrc, mpi_tag_data, p_comm_glb, p_stat, p_err)
                CALL unpack_inplace (rbuf_r8_1d, msk, data_r8_2d_out5)
             ENDIF
-            
+
             IF (present(data_r8_2d_in6) .and. present(data_r8_2d_out6)) THEN
                CALL mpi_recv (rbuf_r8_1d, nreq, MPI_REAL8, &
                   isrc, mpi_tag_data, p_comm_glb, p_stat, p_err)
                CALL unpack_inplace (rbuf_r8_1d, msk, data_r8_2d_out6)
             ENDIF
-            
+
             deallocate (rbuf_r8_1d)
 
             IF (present(data_r8_3d_in1) .and. present(data_r8_3d_out1) .and. present(n1_r8_3d_in1)) THEN
@@ -585,7 +585,7 @@ CONTAINS
       deallocate (msk  )
 
 #else
-      
+
       DO ireq = 1, totalreq
 
          xblk = grid_in%xblk(xlist(ireq))
@@ -634,7 +634,7 @@ CONTAINS
          ENDIF
 
       ENDDO
-      
+
 #endif
 
    END SUBROUTINE aggregation_request_data
@@ -645,11 +645,11 @@ CONTAINS
 
    USE MOD_SPMD_Task
 
-   IMPLICIT NONE 
+   IMPLICIT NONE
 
    integer :: smesg(2), iproc, idest
-   
-      IF (p_is_worker) THEN 
+
+      IF (p_is_worker) THEN
          DO iproc = 0, p_np_io-1
             smesg = (/p_iam_glb, -1/)
             idest = p_address_io(iproc)
@@ -660,5 +660,42 @@ CONTAINS
    END SUBROUTINE aggregation_worker_done
 
 #endif
+
+
+   SUBROUTINE fillnan (vec, fill, defval)
+
+   USE MOD_Precision
+   USE MOD_UserDefFun, only: isnan_ud
+   IMPLICIT NONE
+
+   real(r8), intent(inout) :: vec(:)
+   logical,  intent(in)    :: fill
+   real(r8), intent(in)    :: defval
+
+   ! local variables
+   integer  :: i, n
+   real(r8) :: s
+
+      n = 0
+      s = 0.
+      DO i = lbound(vec,1), ubound(vec,1)
+         IF (.not. isnan_ud(vec(i))) THEN
+            n = n + 1
+            s = s + vec(i)
+         ENDIF
+      ENDDO
+
+      IF ((n > 0) .and. (n < size(vec))) THEN
+         s = s/n
+         DO i = lbound(vec,1), ubound(vec,1)
+            IF (isnan_ud(vec(i))) vec(i) = s
+         ENDDO
+      ENDIF
+
+      IF ((n == 0) .and. fill) THEN
+         vec(:) = defval
+      ENDIF
+
+   END SUBROUTINE fillnan
 
 END MODULE MOD_AggregationRequestData

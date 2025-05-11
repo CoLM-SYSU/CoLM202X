@@ -1,9 +1,9 @@
 #include <define.h>
 
 MODULE MOD_Vars_1DFluxes
-! -------------------------------
-! Created by Yongjiu Dai, 03/2014
-! -------------------------------
+!-----------------------------------------------------------------------
+!  Created by Yongjiu Dai, 03/2014
+!-----------------------------------------------------------------------
 
    USE MOD_Precision
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
@@ -13,7 +13,7 @@ MODULE MOD_Vars_1DFluxes
    USE MOD_BGC_Vars_1DFluxes
 #endif
 #ifdef CatchLateralFlow
-   USE MOD_Hydro_Vars_1DFluxes
+   USE MOD_Catch_Vars_1DFluxes
 #endif
 #ifdef URBAN_MODEL
    USE MOD_Urban_Vars_1DFluxes
@@ -21,9 +21,9 @@ MODULE MOD_Vars_1DFluxes
    IMPLICIT NONE
    SAVE
 
-! -----------------------------------------------------------------
-! Fluxes
-! -----------------------------------------------------------------
+!-----------------------------------------------------------------------
+!  Fluxes
+!-----------------------------------------------------------------------
    real(r8), allocatable :: taux   (:) !wind stress: E-W [kg/m/s2]
    real(r8), allocatable :: tauy   (:) !wind stress: N-S [kg/m/s2]
    real(r8), allocatable :: fsena  (:) !sensible heat from canopy height to atmosphere [W/m2]
@@ -57,7 +57,7 @@ MODULE MOD_Vars_1DFluxes
    real(r8), allocatable :: srniln (:) !reflected diffuse beam nir solar radiation at local noon (W/m2)
    real(r8), allocatable :: olrg   (:) !outgoing long-wave radiation from ground+canopy [W/m2]
    real(r8), allocatable :: rnet   (:) !net radiation by surface [W/m2]
-   real(r8), allocatable :: xerr   (:) !the error of water banace [mm/s]
+   real(r8), allocatable :: xerr   (:) !the error of water balance [mm/s]
    real(r8), allocatable :: zerr   (:) !the error of energy balance [W/m2]
    real(r8), allocatable :: rsur   (:) !surface runoff (mm h2o/s)
    real(r8), allocatable :: rsur_se(:) !saturation excess surface runoff (mm h2o/s)
@@ -65,17 +65,17 @@ MODULE MOD_Vars_1DFluxes
    real(r8), allocatable :: rsub   (:) !subsurface runoff (mm h2o/s)
    real(r8), allocatable :: rnof   (:) !total runoff (mm h2o/s)
    real(r8), allocatable :: qintr  (:) !interception (mm h2o/s)
-   real(r8), allocatable :: qinfl  (:) !inflitration (mm h2o/s)
+   real(r8), allocatable :: qinfl  (:) !infiltration (mm h2o/s)
    real(r8), allocatable :: qdrip  (:) !throughfall (mm h2o/s)
    real(r8), allocatable :: assim  (:) !canopy assimilation rate (mol m-2 s-1)
    real(r8), allocatable :: respc  (:) !canopy respiration (mol m-2 s-1)
 
    real(r8), allocatable :: qcharge(:) !groundwater recharge [mm/s]
 
-   integer,  allocatable :: oroflag(:) 
-   
+   real(r8), allocatable :: oroflag(:) !/ocean(0)/seaice(2) flag
+
    integer, parameter :: nsensor = 1
-   real(r8), allocatable :: sensors(:,:) 
+   real(r8), allocatable :: sensors(:,:)
 
 ! PUBLIC MEMBER FUNCTIONS:
    PUBLIC :: allocate_1D_Fluxes
@@ -90,9 +90,9 @@ CONTAINS
 !-----------------------------------------------------------------------
 
    SUBROUTINE allocate_1D_Fluxes
-   ! --------------------------------------------------------------------
+   ! -------------------------------------------------------------------
    ! Allocates memory for CoLM 1d [numpatch] variables
-   ! --------------------------------------------------------------------
+   ! -------------------------------------------------------------------
    USE MOD_Precision
    USE MOD_Vars_Global
    USE MOD_SPMD_Task
@@ -136,7 +136,7 @@ CONTAINS
             allocate ( srniln (numpatch) )  ; srniln (:) = spval ! reflected diffuse beam nir solar radiation at local noon(W/m2)
             allocate ( olrg   (numpatch) )  ; olrg   (:) = spval ! outgoing long-wave radiation from ground+canopy [W/m2]
             allocate ( rnet   (numpatch) )  ; rnet   (:) = spval ! net radiation by surface [W/m2]
-            allocate ( xerr   (numpatch) )  ; xerr   (:) = spval ! the error of water banace [mm/s]
+            allocate ( xerr   (numpatch) )  ; xerr   (:) = spval ! the error of water balance [mm/s]
             allocate ( zerr   (numpatch) )  ; zerr   (:) = spval ! the error of energy balance [W/m2]
 
             allocate ( rsur   (numpatch) )  ; rsur   (:) = spval ! surface runoff (mm h2o/s)
@@ -145,15 +145,15 @@ CONTAINS
             allocate ( rsub   (numpatch) )  ; rsub   (:) = spval ! subsurface runoff (mm h2o/s)
             allocate ( rnof   (numpatch) )  ; rnof   (:) = spval ! total runoff (mm h2o/s)
             allocate ( qintr  (numpatch) )  ; qintr  (:) = spval ! interception (mm h2o/s)
-            allocate ( qinfl  (numpatch) )  ; qinfl  (:) = spval ! inflitration (mm h2o/s)
+            allocate ( qinfl  (numpatch) )  ; qinfl  (:) = spval ! infiltration (mm h2o/s)
             allocate ( qdrip  (numpatch) )  ; qdrip  (:) = spval ! throughfall (mm h2o/s)
             allocate ( assim  (numpatch) )  ; assim  (:) = spval ! canopy assimilation rate (mol m-2 s-1)
             allocate ( respc  (numpatch) )  ; respc  (:) = spval ! canopy respiration (mol m-2 s-1)
 
             allocate ( qcharge(numpatch) )  ; qcharge(:) = spval ! groundwater recharge [mm/s]
 
-            allocate ( oroflag(numpatch) )  ; oroflag(:) = spval_i4 !
-            
+            allocate ( oroflag(numpatch) )  ; oroflag(:) = 1.0   ! /ocean(0)/seaice(2) flag
+
             allocate ( sensors(nsensor,numpatch) ); sensors(:,:) = spval !
 
          ENDIF
@@ -168,7 +168,7 @@ CONTAINS
 #endif
 
 #ifdef CatchLateralFlow
-      CALL allocate_1D_HydroFluxes
+      CALL allocate_1D_CatchFluxes
 #endif
 
 #ifdef URBAN_MODEL
@@ -221,7 +221,7 @@ CONTAINS
             deallocate ( srniln  )  ! reflected diffuse beam nir solar radiation at local noon(W/m2)
             deallocate ( olrg    )  ! outgoing long-wave radiation from ground+canopy [W/m2]
             deallocate ( rnet    )  ! net radiation by surface [W/m2]
-            deallocate ( xerr    )  ! the error of water banace [mm/s]
+            deallocate ( xerr    )  ! the error of water balance [mm/s]
             deallocate ( zerr    )  ! the error of energy balance [W/m2]
             deallocate ( rsur    )  ! surface runoff (mm h2o/s)
             deallocate ( rsur_se )  ! saturation excess surface runoff (mm h2o/s)
@@ -229,7 +229,7 @@ CONTAINS
             deallocate ( rsub    )  ! subsurface runoff (mm h2o/s)
             deallocate ( rnof    )  ! total runoff (mm h2o/s)
             deallocate ( qintr   )  ! interception (mm h2o/s)
-            deallocate ( qinfl   )  ! inflitration (mm h2o/s)
+            deallocate ( qinfl   )  ! infiltration (mm h2o/s)
             deallocate ( qdrip   )  ! throughfall (mm h2o/s)
             deallocate ( assim   )  ! canopy assimilation rate (mol m-2 s-1)
             deallocate ( respc   )  ! canopy respiration (mol m-2 s-1)
@@ -237,7 +237,7 @@ CONTAINS
             deallocate ( qcharge )  ! groundwater recharge [mm/s]
 
             deallocate ( oroflag )  !
-            
+
             deallocate ( sensors )  !
 
          ENDIF
@@ -252,7 +252,7 @@ CONTAINS
 #endif
 
 #ifdef CatchLateralFlow
-      CALL deallocate_1D_HydroFluxes
+      CALL deallocate_1D_CatchFluxes
 #endif
 
 #ifdef URBAN_MODEL

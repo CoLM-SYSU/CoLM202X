@@ -5,7 +5,7 @@ MODULE MOD_BGC_Vars_TimeInvariants
 ! --------------------------------------------------------------------
 
 ! !DESCRIPTION
-! Define, allocate, and deallocate biogeochmeical constant at patch level.
+! Define, allocate, and deallocate biogeochemical constant at patch level.
 ! Read and write biogeochemical constant at patch level from/to restart files.
 
 ! !ORIGINAL:
@@ -144,13 +144,13 @@ CONTAINS
    USE MOD_Precision
    USE MOD_Vars_Global, only: nl_soil, ndecomp_transitions, ndecomp_pools, spval_i4, spval
    USE MOD_SPMD_Task
-   USE MOD_LandPatch, only : numpatch
+   USE MOD_LandPatch, only: numpatch
    IMPLICIT NONE
 
       IF (p_is_worker) THEN
 
          IF (numpatch > 0) THEN
-    ! bgc varaibles
+    ! bgc variables
             allocate (donor_pool        (ndecomp_transitions))                  ; donor_pool         (:) = spval_i4
             allocate (receiver_pool     (ndecomp_transitions))                  ; receiver_pool      (:) = spval_i4
             allocate (floating_cn_ratio (ndecomp_pools))                        ; floating_cn_ratio  (:) = .false.
@@ -311,7 +311,7 @@ CONTAINS
      ! Original version: Yongjiu Dai, September 15, 1999, 03/2014
      !=======================================================================
 
-   USE MOD_Namelist, only : DEF_REST_CompressLevel
+   USE MOD_Namelist, only: DEF_REST_CompressLevel
    USE MOD_SPMD_Task
    USE MOD_NetCDFSerial
    USE MOD_NetCDFVector
@@ -457,7 +457,7 @@ CONTAINS
    SUBROUTINE deallocate_BGCTimeInvariants ()
 
    USE MOD_SPMD_Task
-   USE MOD_LandPatch, only : numpatch
+   USE MOD_LandPatch, only: numpatch
    IMPLICIT NONE
 
      ! --------------------------------------------------

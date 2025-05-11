@@ -2,22 +2,22 @@
 
 MODULE MOD_CatchmentDataReadin
 
-   !--------------------------------------------------------------------------------------
-   ! DESCRIPTION:
-   !
-   !    Reading preprocessed MERIT Hydro data and generated catchment data in netcdf files.
-   !
-   !    1. If "in_one_file" is false, then the data is orgnized by 5 degree blocks.   
-   !    The file name gives the southwest corner of the block. 
-   !    For example, file "n60e075.nc" stores data in region from 65N to 60N and 75E to 80E, 
-   !    Subroutines loop over all 5 degree blocks in simulation region.
-   ! 
-   !    2. Data is saved in variables with types of "block_data_xxxxx_xd".
-   ! 
-   !    3. Latitude in files is from north to south. 
-   ! 
-   ! Created by Shupeng Zhang, May 2023
-   !--------------------------------------------------------------------------------------
+!--------------------------------------------------------------------------------------
+! !DESCRIPTION:
+!
+!    Reading preprocessed MERIT Hydro data and generated catchment data in netcdf files.
+!
+!    1. If "in_one_file" is false, then the data is orgnized by 5 degree blocks.
+!    The file name gives the southwest corner of the block.
+!    For example, file "n60e075.nc" stores data in region from 65N to 60N and 75E to 80E,
+!    Subroutines loop over all 5 degree blocks in simulation region.
+!
+!    2. Data is saved in variables with types of "block_data_xxxxx_xd".
+!
+!    3. Latitude in files is from north to south.
+!
+!  Created by Shupeng Zhang, May 2023
+!--------------------------------------------------------------------------------------
 
    IMPLICIT NONE
 
@@ -62,20 +62,25 @@ CONTAINS
          IF (grid%yinc == 1) THEN
             write(*,*) 'Warning: latitude in catchment data should be from north to south.'
          ENDIF
-      ENDIF 
+      ENDIF
 
-      in_one_file = ncio_var_exist (file_meshdata_in, dataname)
+      IF (p_is_master) THEN
+         in_one_file = ncio_var_exist (file_meshdata_in, dataname)
+      ENDIF
+#ifdef USEMPI
+      CALL mpi_bcast (in_one_file, 1, mpi_logical, p_address_master, p_comm_glb, p_err)
+#endif
 
       IF (in_one_file) THEN
 
          file_mesh = file_meshdata_in
 
-         CALL ncio_read_bcast_serial (file_mesh, 'latitude',  latitude)
-         CALL ncio_read_bcast_serial (file_mesh, 'longitude', longitude)
+         CALL ncio_read_bcast_serial (file_mesh, 'lat', latitude)
+         CALL ncio_read_bcast_serial (file_mesh, 'lon', longitude)
 
          IF (p_is_io) THEN
 
-            nlat = size(latitude ) 
+            nlat = size(latitude )
             nlon = size(longitude)
 
             isouth = find_nearest_south (latitude(nlat), grid%nlat, grid%lat_s)
@@ -88,7 +93,7 @@ CONTAINS
             iwest = find_nearest_west (longitude(1),    grid%nlon, grid%lon_w)
             ieast = find_nearest_east (longitude(nlon), grid%nlon, grid%lon_e)
 
-            DO iblkme = 1, gblock%nblkme 
+            DO iblkme = 1, gblock%nblkme
                iblk = gblock%xblkme(iblkme)
                jblk = gblock%yblkme(iblkme)
 
@@ -113,7 +118,7 @@ CONTAINS
                i0min = grid%xdsp(iblk) + 1
                i1max = grid%xdsp(iblk) + grid%xcnt(iblk)
                IF (i1max > grid%nlon) i1max = i1max - grid%nlon
-               
+
                DO WHILE ((i0min /= i1max) .and. (.not. (lon_between_floor(grid%lon_w(i0min), &
                      grid%lon_w(iwest), grid%lon_e(ieast)))))
                   i0min = i0min + 1; IF (i0min > grid%nlon) i0min = 1
@@ -164,7 +169,7 @@ CONTAINS
 
             ENDDO
          ENDIF
-                     
+
       ELSE
 
          IF (p_is_io) THEN
@@ -172,7 +177,7 @@ CONTAINS
             ! remove suffix ".nc"
             path_mesh = file_meshdata_in(1:len_trim(file_meshdata_in)-3)
 
-            DO iblkme = 1, gblock%nblkme 
+            DO iblkme = 1, gblock%nblkme
                iblk = gblock%xblkme(iblkme)
                jblk = gblock%yblkme(iblkme)
 
@@ -222,7 +227,7 @@ CONTAINS
                   ENDIF
 
                   IF (jbox <= 18) THEN
-                     write (pre1,'(A1,I2.2)') 'n', (18-jbox)*5     
+                     write (pre1,'(A1,I2.2)') 'n', (18-jbox)*5
                   ELSE
                      write (pre1,'(A1,I2.2)') 's', (jbox-18)*5
                   ENDIF
@@ -242,8 +247,8 @@ CONTAINS
                      rdata%blk(iblk,jblk)%val(il0:il1,jl0:jl1) = dcache
                   ENDIF
 
-                  IF ((ieast >= xdsp + 1) .and. (ieast <= xdsp + nxhbox)) THEN 
-                     IF (isouth <= ydsp + nyhbox) THEN 
+                  IF ((ieast >= xdsp + 1) .and. (ieast <= xdsp + nxhbox)) THEN
+                     IF (isouth <= ydsp + nyhbox) THEN
                         EXIT
                      ELSE
                         ibox = grid%xdsp(iblk)/nxhbox + 1

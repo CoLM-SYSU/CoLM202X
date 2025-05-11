@@ -21,17 +21,17 @@ CONTAINS
                        wliq_soisno,wice_soisno,fiold,snl,sag,scv,snowdp,fsno,wetwat)
 
 !=======================================================================
-! add new snow nodes.
-! Original author : Yongjiu Dai, 09/15/1999; 08/31/2002, 07/2013, 04/2014
+!  add new snow nodes.
+!  Original author: Yongjiu Dai, 09/15/1999; 08/31/2002, 07/2013, 04/2014
 !=======================================================================
-!
+
    USE MOD_Precision
-   USE MOD_Namelist, only : DEF_USE_VariablySaturatedFlow
-   USE MOD_Const_Physical, only : tfrz, cpliq, cpice
+   USE MOD_Namelist, only: DEF_USE_VariablySaturatedFlow
+   USE MOD_Const_Physical, only: tfrz, cpliq, cpice
 
    IMPLICIT NONE
 
-! ------------------------ Dummy Argument ------------------------------
+!-------------------------- Dummy Arguments ----------------------------
 
    integer, intent(in) :: maxsnl     ! maximum number of snow layers
    integer, intent(in) :: patchtype  ! land patch type (0=soil, 1=urban and built-up,
@@ -49,27 +49,28 @@ CONTAINS
    real(r8), intent(inout) ::    t_soisno(maxsnl+1:0) ! soil + snow layer temperature [K]
    real(r8), intent(inout) :: wliq_soisno(maxsnl+1:0) ! liquid water (kg/m2)
    real(r8), intent(inout) :: wice_soisno(maxsnl+1:0) ! ice lens (kg/m2)
-   real(r8), intent(inout) :: fiold(maxsnl+1:0) ! fraction of ice relative to the total water
-   integer , intent(inout) :: snl               ! number of snow layers
-   real(r8), intent(inout) :: sag               ! non dimensional snow age [-]
-   real(r8), intent(inout) :: scv               ! snow mass (kg/m2)
-   real(r8), intent(inout) :: snowdp            ! snow depth (m)
-   real(r8), intent(inout) :: fsno              ! fraction of soil covered by snow [-]
+   real(r8), intent(inout) :: fiold(maxsnl+1:0)       ! fraction of ice relative to the total water
+   integer , intent(inout) :: snl                     ! number of snow layers
+   real(r8), intent(inout) :: sag                     ! non dimensional snow age [-]
+   real(r8), intent(inout) :: scv                     ! snow mass (kg/m2)
+   real(r8), intent(inout) :: snowdp                  ! snow depth (m)
+   real(r8), intent(inout) :: fsno                    ! fraction of soil covered by snow [-]
 
-   real(r8), intent(inout), optional :: wetwat  ! wetland water [mm]
+   real(r8), intent(inout), optional :: wetwat        ! wetland water [mm]
 
-! ----------------------- Local  Variables -----------------------------
+!-------------------------- Local Variables ----------------------------
 
    real(r8) dz_snowf  ! layer thickness rate change due to precipitation [mm/s]
    integer newnode    ! signification when new snow node is set, (1=yes, 0=no)
    integer lb
 
 !-----------------------------------------------------------------------
+
       newnode = 0
 
       dz_snowf = pg_snow/bifall
       snowdp = snowdp + dz_snowf*deltim
-      scv = scv + pg_snow*deltim            ! snow water equivalent (mm)
+      scv = scv + pg_snow*deltim              ! snow water equivalent (mm)
 
       IF(patchtype==2 .and. t_grnd>tfrz)THEN  ! snowfall on warmer wetland
          IF (present(wetwat) .and. DEF_USE_VariablySaturatedFlow) THEN
@@ -121,3 +122,4 @@ CONTAINS
    END SUBROUTINE newsnow
 
 END MODULE MOD_NewSnow
+! ---------- EOP ------------

@@ -12,10 +12,10 @@ MODULE MOD_Catch_HillslopeFlow
 !      Chichester: John Wiley & Sons; 2001.
 !   [2] Liang, Q., Borthwick, A. G. L. (2009). Adaptive quadtree simulation of shallow 
 !      flows with wet-dry fronts over complex topography. 
-!      Computers and Fluids, 38(2), 221–234.
+!      Computers and Fluids, 38(2), 221-234.
 !   [3] Audusse, E., Bouchut, F., Bristeau, M.-O., Klein, R., Perthame, B. (2004). 
 !      A Fast and Stable Well-Balanced Scheme with Hydrostatic Reconstruction for 
-!      Shallow Water Flows. SIAM Journal on Scientific Computing, 25(6), 2050–2065.
+!      Shallow Water Flows. SIAM Journal on Scientific Computing, 25(6), 2050-2065.
 !
 ! Created by Shupeng Zhang, May 2023
 !-------------------------------------------------------------------------------------
@@ -33,26 +33,21 @@ CONTAINS
    SUBROUTINE hillslope_flow (dt)
 
    USE MOD_SPMD_Task
-   USE MOD_Mesh
-   USE MOD_LandElm
-   USE MOD_LandHRU
-   USE MOD_LandPatch
-   USE MOD_Vars_TimeVariables
-   USE MOD_Vars_1DFluxes
-   USE MOD_Hydro_Vars_TimeVariables
-   USE MOD_Hydro_Vars_1DFluxes
+   USE MOD_Catch_BasinNetwork
    USE MOD_Catch_HillslopeNetwork
    USE MOD_Catch_RiverLakeNetwork
-   USE MOD_Const_Physical, only : grav
+   USE MOD_Catch_Vars_TimeVariables
+   USE MOD_Catch_Vars_1DFluxes
+   USE MOD_Const_Physical, only: grav
 
    IMPLICIT NONE
    
    real(r8), intent(in) :: dt
 
    ! Local Variables
-   integer :: numbasin, nhru, hs, he, ibasin, i, j, ps, pe
+   integer :: nhru, hs, he, ibasin, i, j
 
-   type(hillslope_network_info_type), pointer :: hillslope
+   type(hillslope_network_type), pointer :: hillslope
 
    real(r8), allocatable :: wdsrf_h (:) ! [m]
    real(r8), allocatable :: momen_h (:) ! [m^2/s]
@@ -76,25 +71,23 @@ CONTAINS
 
       IF (p_is_worker) THEN
 
-         numbasin = numelm
-
          DO ibasin = 1, numbasin
 
             hs = basin_hru%substt(ibasin)
             he = basin_hru%subend(ibasin)
 
             IF (lake_id(ibasin) > 0) THEN
-               veloc_hru(hs:he) = 0
-               momen_hru(hs:he) = 0
+               veloc_bsnhru(hs:he) = 0
+               momen_bsnhru(hs:he) = 0
                CYCLE ! skip lakes
             ELSE
                DO i = hs, he
                   ! momentum is less or equal than the momentum at last time step.
-                  momen_hru(i) = min(wdsrf_hru_prev(i), wdsrf_hru(i)) * veloc_hru(i)
+                  momen_bsnhru(i) = min(wdsrf_bsnhru_prev(i), wdsrf_bsnhru(i)) * veloc_bsnhru(i)
                ENDDO
             ENDIF
 
-            hillslope => hillslope_network(ibasin)
+            hillslope => hillslope_basin(ibasin)
 
             nhru = hillslope%nhru
 
@@ -109,8 +102,8 @@ CONTAINS
             allocate (xsurf_h (nhru))
 
             DO i = 1, nhru
-               wdsrf_h(i) = wdsrf_hru(hillslope%ihru(i)) 
-               momen_h(i) = momen_hru(hillslope%ihru(i)) 
+               wdsrf_h(i) = wdsrf_bsnhru(hillslope%ihru(i)) 
+               momen_h(i) = momen_bsnhru(hillslope%ihru(i)) 
                IF (wdsrf_h(i) > 0.) THEN
                   veloc_h(i) = momen_h(i) / wdsrf_h(i)
                ELSE
@@ -281,16 +274,9 @@ CONTAINS
                      veloc_h(i) = momen_h(i) / wdsrf_h(i)
                   ENDIF
 
-                  wdsrf_hru_ta(hillslope%ihru(i)) = wdsrf_hru_ta(hillslope%ihru(i)) + wdsrf_h(i) * dt_this
-                  momen_hru_ta(hillslope%ihru(i)) = momen_hru_ta(hillslope%ihru(i)) + momen_h(i) * dt_this
+                  wdsrf_bsnhru_ta(hillslope%ihru(i)) = wdsrf_bsnhru_ta(hillslope%ihru(i)) + wdsrf_h(i) * dt_this
+                  momen_bsnhru_ta(hillslope%ihru(i)) = momen_bsnhru_ta(hillslope%ihru(i)) + momen_h(i) * dt_this
                ENDDO
-
-               IF (hillslope%indx(1) == 0) THEN
-                  ps = elm_patch%substt(ibasin)
-                  pe = elm_patch%subend(ibasin)
-                  ! m/s to mm/s
-                  rsur(ps:pe) = rsur(ps:pe) - sum_hflux_h(1) * dt_this / sum(hillslope%area) * 1.0e3
-               ENDIF
 
                dt_res = dt_res - dt_this
 
@@ -298,8 +284,8 @@ CONTAINS
             
             ! SAVE depth of surface water
             DO i = 1, nhru
-               wdsrf_hru(hillslope%ihru(i)) = wdsrf_h(i)
-               veloc_hru(hillslope%ihru(i)) = veloc_h(i)
+               wdsrf_bsnhru(hillslope%ihru(i)) = wdsrf_h(i)
+               veloc_bsnhru(hillslope%ihru(i)) = veloc_h(i)
             ENDDO
 
             deallocate (wdsrf_h)
@@ -314,7 +300,7 @@ CONTAINS
 
          ENDDO
 
-         wdsrf_hru_prev(:) = wdsrf_hru(:)
+         IF (numbsnhru > 0) wdsrf_bsnhru_prev(:) = wdsrf_bsnhru(:)
 
       ENDIF
 

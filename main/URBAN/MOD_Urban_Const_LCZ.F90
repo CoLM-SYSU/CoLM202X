@@ -4,7 +4,7 @@ MODULE MOD_Urban_Const_LCZ
 ! -----------------------------------------------------------------------
 ! !DESCRIPTION:
 !  look-up-table for LCZ morphology and thermal parameters
-!  !NOTE!!!!!!!!!!!!!!!
+!                             - NOTE -
 !  Each city may have different values for the parameters in this table.
 !  The default values may not suit any specific city.
 !  Users could adjust these values based on the city they are working with.
@@ -14,8 +14,9 @@ MODULE MOD_Urban_Const_LCZ
 ! !REFERENCES:
 !  1) Stewart, I. D., Oke, T. R., & Krayenhoff, E. S. (2014). Evaluation of
 !  the 'local climate zone' scheme using temperature observations and model
-!  simulations. International Journal of Climatology, 34(4), 1062–1080.
+!  simulations. International Journal of Climatology, 34(4), 1062-1080.
 !  https://doi.org/10.1002/joc.3746
+!
 !  2) The URBPARM_LCZ.TBL of WRF, https://github.com/wrf-model/WRF/
 !
 ! -----------------------------------------------------------------------
@@ -53,21 +54,21 @@ MODULE MOD_Urban_Const_LCZ
    real(r8), parameter, dimension(10)  :: thickroad_lcz &
       = (/0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25/)
 
-   ! albeodo of roof [-]
+   ! albedo of roof [-]
    real(r8), parameter, dimension(10)  :: albroof_lcz &
       = (/0.13, 0.18, 0.15, 0.13, 0.13, 0.13, 0.15, 0.18, 0.13, 0.1 /)
 
-   ! albeodo of wall [-]
+   ! albedo of wall [-]
    real(r8), parameter, dimension(10)  :: albwall_lcz &
       = (/0.25, 0.2 , 0.2 , 0.25, 0.25, 0.25, 0.2 , 0.25, 0.25, 0.2 /)
 
-   ! albeodo of impervious road [-]
+   ! albedo of impervious road [-]
    real(r8), parameter, dimension(10)  :: albimproad_lcz &
       = (/0.14, 0.14, 0.14, 0.14, 0.14, 0.14, 0.18, 0.14, 0.14, 0.14/)
 
-   ! albeodo of pervious road [-]
+   ! albedo of pervious road [-]
    real(r8), parameter, dimension(10)  :: albperroad_lcz &
-      = (/0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25/)
+      = (/0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15/)
 
    ! emissivity of roof [-]
    real(r8), parameter, dimension(10)  :: emroof_lcz &
@@ -114,3 +115,4 @@ MODULE MOD_Urban_Const_LCZ
    !TODO:AHE coding
 
 END MODULE MOD_Urban_Const_LCZ
+! ---------- EOP ------------

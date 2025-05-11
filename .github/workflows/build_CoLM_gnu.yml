@@ -13,7 +13,13 @@ on:
   push:
     branches:
       - master
-
+    paths-ignore:
+      - 'postprocess/**'
+      - 'preprocess/**'
+      - 'run/**'
+      - 'README.md'
+      - '.gitignore'
+      - '**/**.sh'
   workflow_dispatch:
 
 jobs:
@@ -22,9 +28,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, ubuntu-20.04]
+        os: [ubuntu-latest, ubuntu-22.04]
         mpi: ['mpich', 'openmpi', 'intelmpi']
         toolchain:
+          - {compiler: gcc, version: 14}
           - {compiler: gcc, version: 13}
           - {compiler: gcc, version: 12}
           - {compiler: gcc, version: 11}
@@ -34,10 +41,17 @@ jobs:
        #   - os: ubuntu-latest
        #     toolchain: {compiler: gcc, version: 12}
         exclude:
-          - os: ubuntu-20.04
-            toolchain: {compiler: gcc, version: 12}
+          - os: ubuntu-22.04
+            toolchain: {compiler: gcc, version: 14}
+          - mpi: 'mpich'
+            toolchain: {compiler: gcc, version: 9}
+            # mpich compiling FCFLAG has --fallow-type-mismatch, and will cause gfortran 9 failing
           - os: ubuntu-latest
             toolchain: {compiler: gcc, version: 9}
+          - os: ubuntu-latest
+            toolchain: {compiler: gcc, version: 10}
+          - os: ubuntu-latest
+            toolchain: {compiler: gcc, version: 11}
 
     steps:
      - uses: actions/checkout@v4
@@ -49,9 +63,9 @@ jobs:
        with:
           compiler: ${{ matrix.toolchain.compiler }}
           version: ${{ matrix.toolchain.version }} 
-     - name: Install netcdf-fortran library
+     - name: Install netcdf-fortran and blas library
        shell: bash -l {0}
-       run: sudo apt update && sudo apt install -y netcdf-bin libnetcdf-dev libnetcdff-dev
+       run: sudo apt update && sudo apt install -y netcdf-bin libnetcdf-dev libnetcdff-dev "liblapack*" "libblas*"
      - name: Test mpi
        #run: mpif90 -v
        run: which mpif90

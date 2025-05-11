@@ -47,8 +47,9 @@ CONTAINS
 !  Original author: Yongjiu Dai, /09/1999/, /03/2014/
 !
 ! !REVISIONS:
-!  08/2020, Hua Yuan: seperate soil/snow heat flux, exclude glacier (3)
+!  08/2020, Hua Yuan: separate soil/snow heat flux, exclude glacier (3)
 !  04/2023, Nan Wei: supercooled soil water is included IF supercool is defined.
+!
 !-----------------------------------------------------------------------
 
    USE MOD_Precision
@@ -58,9 +59,10 @@ CONTAINS
    USE MOD_Namelist
    IMPLICIT NONE
 
-!-----------------------------------------------------------------------
+!-------------------------- Dummy Arguments ----------------------------
 
-    integer, intent(in) :: patchtype                   !land patch type (0=soil,1=urban or built-up,2=wetland,
+    integer, intent(in) :: patchtype                   !land patch type
+                                                       !(0=soil,1=urban or built-up,2=wetland,
                                                        !3=land ice, 4=deep lake, 5=shallow lake)
     logical, intent(in) :: is_dry_lake
     integer, intent(in) :: nl_soil                     !upper bound of array (i.e., soil layers)
@@ -77,7 +79,7 @@ CONTAINS
    real(r8), intent(in) :: porsl(1:nl_soil)            !soil porosity [-]
    real(r8), intent(in) :: psi0 (1:nl_soil)            !soil water suction, negative potential [mm]
 #ifdef Campbell_SOIL_MODEL
-   real(r8), intent(in) :: bsw(1:nl_soil)              !clapp and hornbereger "b" parameter [-]
+   real(r8), intent(in) :: bsw(1:nl_soil)              !clapp and hornberger "b" parameter [-]
 #endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
    real(r8), intent(in) :: theta_r  (1:nl_soil), &
@@ -87,7 +89,7 @@ CONTAINS
                            sc_vgm   (1:nl_soil), &
                            fc_vgm   (1:nl_soil)
 #endif
-   real(r8), intent(in) :: dz(1:nl_soil)               !soil layer thickiness [m]
+   real(r8), intent(in) :: dz(1:nl_soil)               !soil layer thickness [m]
 
    real(r8), intent(inout) :: t_soisno   (lb:nl_soil)  !temperature at current time step [K]
    real(r8), intent(inout) :: wice_soisno(lb:nl_soil)  !ice lens [kg/m2]
@@ -99,14 +101,14 @@ CONTAINS
    real(r8), intent(out) :: xmf                        !total latent heat of phase change
     integer, intent(out) :: imelt(lb:nl_soil)          !flag for melting or freezing [-]
 
-! Local
-   real(r8) :: hm(lb:nl_soil)                          !energy residual [W/m2]
-   real(r8) :: xm(lb:nl_soil)                          !metling or freezing within a time step [kg/m2]
-   real(r8) :: heatr                                   !energy residual or loss after melting or freezing
-   real(r8) :: temp1                                   !temporary variables [kg/m2]
-   real(r8) :: temp2                                   !temporary variables [kg/m2]
+!-------------------------- Local Variables ----------------------------
+   real(r8) :: hm(lb:nl_soil)        !energy residual [W/m2]
+   real(r8) :: xm(lb:nl_soil)        !melting or freezing within a time step [kg/m2]
+   real(r8) :: heatr                 !energy residual or loss after melting or freezing
+   real(r8) :: temp1                 !temporary variables [kg/m2]
+   real(r8) :: temp2                 !temporary variables [kg/m2]
    real(r8) :: smp
-   real(r8) :: supercool(1:nl_soil)                    !the maximum liquid water when the soil temperature is below the freezing point [mm3/mm3]
+   real(r8) :: supercool(1:nl_soil)  !the maximum liquid water when soil T below the tfrz [mm3/mm3]
    real(r8), dimension(lb:nl_soil) :: wmass0, wice0, wliq0
    real(r8) :: propor, tinc, we, scvold
    integer j
@@ -194,7 +196,7 @@ CONTAINS
             IF(j > lb)THEN             ! => not the top layer
                IF (j==1 .and. DEF_SPLIT_SOILSNOW .and. ((patchtype<3) .or. is_dry_lake)) THEN
                                        ! -> interface soil layer
-                  ! 03/08/2020, yuan: seperate soil/snow heat flux, exclude glacier(3)
+                  ! 03/08/2020, yuan: separate soil/snow heat flux, exclude glacier(3)
                   hm(j) = hs_soil + (1.-fsno)*dhsdT*tinc + brr(j) - tinc/fact(j)
                ELSE                    ! -> internal layers other than the interface soil layer
                   hm(j) = brr(j) - tinc/fact(j)
@@ -204,7 +206,7 @@ CONTAINS
                                        ! -> soil layer
                   hm(j) = hs + dhsdT*tinc + brr(j) - tinc/fact(j)
                ELSE                    ! -> snow cover
-                  ! 03/08/2020, yuan: seperate soil/snow heat flux, exclude glacier(3)
+                  ! 03/08/2020, yuan: separate soil/snow heat flux, exclude glacier(3)
                   hm(j) = hs_snow + fsno*dhsdT*tinc + brr(j) - tinc/fact(j)
                ENDIF
             ENDIF
@@ -217,7 +219,7 @@ CONTAINS
            hm(j) = 0.
            imelt(j) = 0
          ENDIF
-! this error was checked carefully, it results from the the computed error
+! this error was checked carefully, it results from the computed error
 ! of "Tridiagonal-Matrix" in SUBROUTINE "thermal".
          IF(imelt(j) == 2 .and. hm(j) > 0.) THEN
            hm(j) = 0.
@@ -346,7 +348,7 @@ CONTAINS
 !  Original author: Yongjiu Dai, /09/1999/, /03/2014/
 !
 ! !REVISIONS:
-!  08/2020, Hua Yuan: seperate soil/snow heat flux, exclude glacier (3)
+!  08/2020, Hua Yuan: separate soil/snow heat flux, exclude glacier (3)
 !  01/2023, Hua Yuan: added snow layer absorption in melting calculation
 !  04/2023, Nan Wei: supercooled soil water is included IF supercool is defined.
 !-----------------------------------------------------------------------
@@ -354,13 +356,14 @@ CONTAINS
    USE MOD_Precision
    USE MOD_SPMD_Task
    USE MOD_Hydro_SoilFunction
-   USE MOD_Const_Physical, only : tfrz, hfus, grav
+   USE MOD_Const_Physical, only: tfrz, hfus, grav
    USE MOD_Namelist
    IMPLICIT NONE
 
-!-----------------------------------------------------------------------
+!-------------------------- Dummy Arguments ----------------------------
 
-    integer, intent(in) :: patchtype                   !land patch type (0=soil,1=urban or built-up,2=wetland,
+    integer, intent(in) :: patchtype                   !land patch type
+                                                       !(0=soil,1=urban or built-up,2=wetland,
                                                        !3=land ice, 4=deep lake, 5=shallow lake)
     logical, intent(in) :: is_dry_lake
     integer, intent(in) :: nl_soil                     !upper bound of array (i.e., soil layers)
@@ -378,7 +381,7 @@ CONTAINS
    real(r8), intent(in) :: porsl(1:nl_soil)            !soil porosity [-]
    real(r8), intent(in) :: psi0 (1:nl_soil)            !soil water suction, negative potential [mm]
 #ifdef Campbell_SOIL_MODEL
-   real(r8), intent(in) :: bsw(1:nl_soil)              !clapp and hornbereger "b" parameter [-]
+   real(r8), intent(in) :: bsw(1:nl_soil)              !clapp and hornberger "b" parameter [-]
 #endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
    real(r8), intent(in) :: theta_r  (1:nl_soil), &
@@ -388,7 +391,7 @@ CONTAINS
                            sc_vgm   (1:nl_soil), &
                            fc_vgm   (1:nl_soil)
 #endif
-   real(r8), intent(in) :: dz(1:nl_soil)               !soil layer thickiness [m]
+   real(r8), intent(in) :: dz(1:nl_soil)               !soil layer thickness [m]
 
    real(r8), intent(inout) :: t_soisno (lb:nl_soil)    !temperature at current time step [K]
    real(r8), intent(inout) :: wice_soisno(lb:nl_soil)  !ice lens [kg/m2]
@@ -400,14 +403,14 @@ CONTAINS
    real(r8), intent(out) :: xmf                        !total latent heat of phase change
     integer, intent(out) :: imelt(lb:nl_soil)          !flag for melting or freezing [-]
 
-! Local
-   real(r8) :: hm(lb:nl_soil)                          !energy residual [W/m2]
-   real(r8) :: xm(lb:nl_soil)                          !metling or freezing within a time step [kg/m2]
-   real(r8) :: heatr                                   !energy residual or loss after melting or freezing
-   real(r8) :: temp1                                   !temporary variables [kg/m2]
-   real(r8) :: temp2                                   !temporary variables [kg/m2]
+!-------------------------- Local Variables ----------------------------
+   real(r8) :: hm(lb:nl_soil)        !energy residual [W/m2]
+   real(r8) :: xm(lb:nl_soil)        !melting or freezing within a time step [kg/m2]
+   real(r8) :: heatr                 !energy residual or loss after melting or freezing
+   real(r8) :: temp1                 !temporary variables [kg/m2]
+   real(r8) :: temp2                 !temporary variables [kg/m2]
    real(r8) :: smp
-   real(r8) :: supercool(1:nl_soil)                    !the maximum liquid water when the soil temperature is below the   freezing point [mm3/mm3]
+   real(r8) :: supercool(1:nl_soil)  !the maximum liquid water when soil T below the tfrz [mm3/mm3]
    real(r8), dimension(lb:nl_soil) :: wmass0, wice0, wliq0
    real(r8) :: propor, tinc, we, scvold
    integer j
@@ -497,7 +500,7 @@ CONTAINS
             IF(j > lb)THEN             ! => not the top layer
                IF (j==1 .and. DEF_SPLIT_SOILSNOW .and. ((patchtype<3).or.is_dry_lake)) THEN
                                        ! -> interface soil layer
-                  ! 03/08/2020, yuan: seperate soil/snow heat flux, exclude glacier(3)
+                  ! 03/08/2020, yuan: separate soil/snow heat flux, exclude glacier(3)
                   hm(j) = hs_soil + (1.-fsno)*dhsdT*tinc + brr(j) - tinc/fact(j)
                ELSE                    ! -> internal layers other than the interface soil layer
                   IF (j<1 .or. (j==1 .and. patchtype==3)) THEN
@@ -511,7 +514,7 @@ CONTAINS
                                        ! -> soil layer
                   hm(j) = hs + dhsdT*tinc + brr(j) - tinc/fact(j)
                ELSE                    ! -> snow cover
-                  ! 03/08/2020, yuan: seperate soil/snow heat flux, exclude glacier(3)
+                  ! 03/08/2020, yuan: separate soil/snow heat flux, exclude glacier(3)
                   hm(j) = hs_snow + fsno*dhsdT*tinc + brr(j) - tinc/fact(j)
                ENDIF
             ENDIF
@@ -524,7 +527,7 @@ CONTAINS
            hm(j) = 0.
            imelt(j) = 0
          ENDIF
-! this error was checked carefully, it results from the the computed error
+! this error was checked carefully, it results from the computed error
 ! of "Tridiagonal-Matrix" in SUBROUTINE "thermal".
          IF(imelt(j) == 2 .and. hm(j) > 0.) THEN
            hm(j) = 0.
@@ -652,10 +655,10 @@ CONTAINS
 
    USE MOD_Precision
    USE MOD_SPMD_Task
-   USE MOD_Const_Physical, only : tfrz, hfus
+   USE MOD_Const_Physical, only: tfrz, hfus
    IMPLICIT NONE
 
-!-----------------------------------------------------------------------
+!-------------------------- Dummy Arguments ----------------------------
 
     integer, intent(in) :: nl_soil                     !upper bound of array (i.e., soil layers)
     integer, intent(in) :: lb                          !lower bound of array (i.e., snl +1)
@@ -674,14 +677,14 @@ CONTAINS
 
    real(r8), intent(out) :: sm                         !rate of snowmelt [mm/s, kg/(m2 s)]
    real(r8), intent(out) :: xmf                        !total latent heat of phase change
-   integer, intent(out) :: imelt(lb:nl_soil)           !flag for melting or freezing [-]
+   integer,  intent(out) :: imelt(lb:nl_soil)          !flag for melting or freezing [-]
 
-! Local
-   real(r8) :: hm(lb:nl_soil)                          !energy residual [W/m2]
-   real(r8) :: xm(lb:nl_soil)                          !metling or freezing within a time step [kg/m2]
-   real(r8) :: heatr                                   !energy residual or loss after melting or freezing
-   real(r8) :: temp1                                   !temporary variables [kg/m2]
-   real(r8) :: temp2                                   !temporary variables [kg/m2]
+!-------------------------- Local Variables ----------------------------
+   real(r8) :: hm(lb:nl_soil)  !energy residual [W/m2]
+   real(r8) :: xm(lb:nl_soil)  !melting or freezing within a time step [kg/m2]
+   real(r8) :: heatr           !energy residual or loss after melting or freezing
+   real(r8) :: temp1           !temporary variables [kg/m2]
+   real(r8) :: temp2           !temporary variables [kg/m2]
 
    real(r8), dimension(lb:nl_soil) :: wmass0, wice0, wliq0
    real(r8) :: propor, tinc, we, scvold
@@ -745,7 +748,7 @@ CONTAINS
             hm(j) = 0.
             imelt(j) = 0
          ENDIF
-! this error was checked carefully, it results from the the computed error
+! this error was checked carefully, it results from the computed error
 ! of "Tridiagonal-Matrix" in SUBROUTINE "thermal".
          IF(imelt(j) == 2 .and. hm(j) > 0.) THEN
             hm(j) = 0.
@@ -817,3 +820,4 @@ CONTAINS
    END SUBROUTINE meltf_urban
 
 END MODULE MOD_PhaseChange
+! ---------- EOP ------------

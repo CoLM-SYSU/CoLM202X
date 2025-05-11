@@ -1,13 +1,13 @@
 #include <define.h>
 
 MODULE MOD_SrfdataRestart
-!------------------------------------------------------------------------------------
-! DESCRIPTION:
+!-----------------------------------------------------------------------
+! !DESCRIPTION:
 !
 !    This module includes subroutines to read/write data of mesh and pixelsets.
-! 
-! Created by Shupeng Zhang, May 2023
-!------------------------------------------------------------------------------------
+!
+!  Created by Shupeng Zhang, May 2023
+!-----------------------------------------------------------------------
 
    IMPLICIT NONE
 
@@ -41,7 +41,7 @@ CONTAINS
    integer,   allocatable :: npxlall(:)
    integer,   allocatable :: elmpixels(:,:)
    real(r8),  allocatable :: lon(:), lat(:)
-   
+
    integer :: nsend, nrecv, ndone, ndsp
 
       ! add parameter input for time year
@@ -117,7 +117,7 @@ CONTAINS
                      CALL mpi_send (elmpixels(:,ndone+1:ndone+nsend), 2*nsend, &
                         MPI_INTEGER, p_root, mpi_tag_data, p_comm_group, p_err)
                      ndone = ndone + nsend
-                  ENDDO 
+                  ENDDO
                ENDIF
             ENDIF
 #endif
@@ -159,7 +159,7 @@ CONTAINS
                      tothis = ndone + sum(npxlall(ndsp+1:ndsp+nelm_worker(iworker)))
 
                      DO WHILE (ndone < tothis)
-                     
+
                         CALL mpi_recv (nrecv, 1, &
                            MPI_INTEGER, iworker, mpi_tag_size, p_comm_group, p_stat, p_err)
                         CALL mpi_recv (elmpixels(:,ndone+1:ndone+nrecv), 2*nrecv, &
@@ -615,7 +615,7 @@ CONTAINS
       ENDIF
 
       numset = pixelset%nset
-      
+
       pixelset%has_shared = .false.
       IF (p_is_worker) THEN
          DO iset = 1, pixelset%nset-1

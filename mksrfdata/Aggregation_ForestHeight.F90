@@ -3,19 +3,19 @@
 SUBROUTINE Aggregation_ForestHeight ( &
       gland, dir_rawdata, dir_model_landdata, lc_year)
 
-! ----------------------------------------------------------------------
-! Global Forest Height
-!    (http://lidarradar.jpl.nasa.gov/)
-!     Simard, M., N. Pinto, J. B. Fisher, and A. Baccini, 2011: Mapping
-!     forest canopy height globally with spaceborne lidar.
-!     J. Geophys. Res., 116, G04021.
+!-----------------------------------------------------------------------
+!  Global Forest Height
+!     (http://lidarradar.jpl.nasa.gov/)
+!      Simard, M., N. Pinto, J. B. Fisher, and A. Baccini, 2011: Mapping
+!      forest canopy height globally with spaceborne lidar.
+!      J. Geophys. Res., 116, G04021.
 !
-! Created by Yongjiu Dai, 02/2014
+!  Created by Yongjiu Dai, 02/2014
 !
-! REVISIONS:
-! Hua Yuan,      ?/2020 : for land cover land use classifications
-! Shupeng Zhang, 01/2022: porting codes to MPI parallel version
-! ----------------------------------------------------------------------
+! !REVISIONS:
+!  Hua Yuan,      ?/2020 : for land cover land use classifications
+!  Shupeng Zhang, 01/2022: porting codes to MPI parallel version
+!-----------------------------------------------------------------------
 
    USE MOD_Precision
    USE MOD_Namelist
@@ -34,9 +34,6 @@ SUBROUTINE Aggregation_ForestHeight ( &
    USE MOD_5x5DataReadin
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
    USE MOD_LandPFT
-#endif
-#ifdef SinglePoint
-   USE MOD_SingleSrfdata
 #endif
 
 #ifdef SrfdataDiag
@@ -92,12 +89,6 @@ SUBROUTINE Aggregation_ForestHeight ( &
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-#ifdef SinglePoint
-      IF (USE_SITE_htop) THEN
-         RETURN
-      ENDIF
-#endif
-
 #ifdef LULC_USGS
       lndname = trim(dir_rawdata)//'/Forest_Height.nc'
 
@@ -139,7 +130,6 @@ SUBROUTINE Aggregation_ForestHeight ( &
       CALL check_vector_data ('htop_patches ', tree_height_patches)
 #endif
 
-#ifndef SinglePoint
       lndname = trim(landdir)//'/htop_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
       CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
@@ -150,10 +140,6 @@ SUBROUTINE Aggregation_ForestHeight ( &
       lndname  = trim(dir_model_landdata) // '/diag/htop_patch_' // trim(cyear) // '.nc'
       CALL srfdata_map_and_write (tree_height_patches, landpatch%settyp, typpatch, m_patch2diag, &
          -1.0e36_r8, lndname, 'htop', compress = 1, write_mode = 'one')
-#endif
-
-#else
-      SITE_htop = tree_height_patches(1)
 #endif
 
       IF (p_is_worker) THEN
@@ -203,7 +189,6 @@ SUBROUTINE Aggregation_ForestHeight ( &
       CALL check_vector_data ('HTOP_patches ', htop_patches)
 #endif
 
-#ifndef SinglePoint
       lndname = trim(landdir)//'/htop_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
       CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
@@ -214,10 +199,6 @@ SUBROUTINE Aggregation_ForestHeight ( &
       lndname  = trim(dir_model_landdata) // '/diag/htop_patch_' // trim(cyear) // '.nc'
       CALL srfdata_map_and_write (htop_patches, landpatch%settyp, typpatch, m_patch2diag, &
          -1.0e36_r8, lndname, 'htop', compress = 1, write_mode = 'one')
-#endif
-
-#else
-      SITE_htop = htop_patches(1)
 #endif
 
       IF (p_is_worker) THEN
@@ -294,7 +275,6 @@ SUBROUTINE Aggregation_ForestHeight ( &
       CALL check_vector_data ('HTOP_pfts    ', htop_pfts   )
 #endif
 
-#ifndef SinglePoint
       lndname = trim(landdir)//'/htop_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
       CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
@@ -321,11 +301,6 @@ SUBROUTINE Aggregation_ForestHeight ( &
       lndname = trim(dir_model_landdata) // '/diag/htop_pft_' // trim(cyear) // '.nc'
       CALL srfdata_map_and_write (htop_pfts, landpft%settyp, typpft, m_pft2diag, &
          -1.0e36_r8, lndname, 'htop', compress = 1, write_mode = 'one')
-#endif
-
-#else
-      allocate (SITE_htop_pfts(numpft))
-      SITE_htop_pfts(:) = htop_pfts(:)
 #endif
 
       IF (p_is_worker) THEN

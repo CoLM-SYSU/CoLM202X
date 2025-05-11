@@ -4,7 +4,7 @@ MODULE MOD_BGC_CNCStateUpdate3
 
 !-------------------------------------------------------------------------------------------------------
 ! !DESCRIPTION
-! First updates in vegetation and soil carbon. Thre major updates are included in bgc_CNCStateUpdate1Mod
+! First updates in vegetation and soil carbon. The major updates are included in bgc_CNCStateUpdate1Mod
 !  1. Update fire-associated veg and soil(litter) C pool size changes
 !  2. Record the accumulated C transfers associated to fire for semi-analytic spinup
 
@@ -12,21 +12,21 @@ MODULE MOD_BGC_CNCStateUpdate3
 ! The Community Land Model version 5.0 (CLM5.0)
 
 ! !REVISION:
-! Xingjie Lu, 2022, 1) modify original CLM5 to be compatible with CoLM code structure. 
+! Xingjie Lu, 2022, 1) modify original CLM5 to be compatible with CoLM code structure.
 !                   2) Record accumulated fire-associated C transfers for veg and soil C semi-analytic spinup
 
    USE MOD_Precision
    USE MOD_BGC_Vars_TimeInvariants, only: &
-            i_met_lit,i_cel_lit,i_lig_lit ,i_cwd 
+            i_met_lit,i_cel_lit,i_lig_lit ,i_cwd
    USE MOD_BGC_Vars_TimeVariables, only: &
      ! decomposition pools & fluxes variables (inout)
-            decomp_cpools_vr 
- 
+            decomp_cpools_vr
+
    USE MOD_BGC_Vars_1DFluxes, only: &
             m_decomp_cpools_to_fire_vr, &
             fire_mortality_to_met_c, fire_mortality_to_cel_c, &
             fire_mortality_to_lig_c, fire_mortality_to_cwdc
- 
+
    USE MOD_BGC_Vars_PFTimeVariables, only: &
      ! vegetation carbon state variables (inout)
             leafc_p            , leafc_storage_p     , leafc_xfer_p     , &
@@ -35,8 +35,8 @@ MODULE MOD_BGC_CNCStateUpdate3
             deadstemc_p        , deadstemc_storage_p , deadstemc_xfer_p , &
             livecrootc_p       , livecrootc_storage_p, livecrootc_xfer_p, &
             deadcrootc_p       , deadcrootc_storage_p, deadcrootc_xfer_p, &
-            gresp_storage_p    , gresp_xfer_p      
- 
+            gresp_storage_p    , gresp_xfer_p
+
    USE MOD_BGC_Vars_1DPFTFluxes, only: &
      ! vegetation carbon flux variables
             m_leafc_to_fire_p        , m_leafc_storage_to_fire_p     , m_leafc_xfer_to_fire_p     , &
@@ -47,17 +47,17 @@ MODULE MOD_BGC_CNCStateUpdate3
             m_deadcrootc_to_fire_p   , m_deadcrootc_storage_to_fire_p, m_deadcrootc_xfer_to_fire_p, &
             m_livestemc_to_deadstemc_fire_p , m_livecrootc_to_deadcrootc_fire_p , &
             m_gresp_storage_to_fire_p       , m_gresp_xfer_to_fire_p            , &
- 
+
             m_leafc_to_litter_fire_p        , m_leafc_storage_to_litter_fire_p     , m_leafc_xfer_to_litter_fire_p     , &
             m_frootc_to_litter_fire_p       , m_frootc_storage_to_litter_fire_p    , m_frootc_xfer_to_litter_fire_p    , &
             m_livestemc_to_litter_fire_p    , m_livestemc_storage_to_litter_fire_p , m_livestemc_xfer_to_litter_fire_p , &
             m_deadstemc_to_litter_fire_p    , m_deadstemc_storage_to_litter_fire_p , m_deadstemc_xfer_to_litter_fire_p , &
             m_livecrootc_to_litter_fire_p   , m_livecrootc_storage_to_litter_fire_p, m_livecrootc_xfer_to_litter_fire_p, &
             m_deadcrootc_to_litter_fire_p   , m_deadcrootc_storage_to_litter_fire_p, m_deadcrootc_xfer_to_litter_fire_p, &
-            m_gresp_storage_to_litter_fire_p, m_gresp_xfer_to_litter_fire_p        
-            
+            m_gresp_storage_to_litter_fire_p, m_gresp_xfer_to_litter_fire_p
+
    IMPLICIT NONE
- 
+
    PUBLIC CStateUpdate3
 
 CONTAINS
@@ -77,7 +77,7 @@ CONTAINS
          ! patch-level wood to column-level CWD (uncombusted wood)
          decomp_cpools_vr(j,i_cwd,i)     = decomp_cpools_vr(j,i_cwd,i)     &
                                          + fire_mortality_to_cwdc (j,i) * deltim
-  
+
          ! patch-level wood to column-level litter (uncombusted wood)
          decomp_cpools_vr(j,i_met_lit,i) = decomp_cpools_vr(j,i_met_lit,i) &
                                          + fire_mortality_to_met_c(j,i) * deltim
@@ -86,7 +86,7 @@ CONTAINS
          decomp_cpools_vr(j,i_lig_lit,i) = decomp_cpools_vr(j,i_lig_lit,i) &
                                          + fire_mortality_to_lig_c(j,i) * deltim
       ENDDO
-  
+
          ! litter and CWD losses to fire
       DO l = 1, ndecomp_pools
          DO j = 1, nl_soil
@@ -94,7 +94,7 @@ CONTAINS
                                     - m_decomp_cpools_to_fire_vr(j,l,i) * deltim
          ENDDO
       ENDDO
-  
+
          ! patch-level carbon fluxes from fire
       DO m = ps , pe
          gresp_storage_p     (m) = gresp_storage_p     (m) &
@@ -134,7 +134,7 @@ CONTAINS
          deadcrootc_p        (m) = deadcrootc_p        (m) &
                                  - m_deadcrootc_to_litter_fire_p        (m) * deltim &
                                  + m_livecrootc_to_deadcrootc_fire_p    (m) * deltim
-  
+
        ! storage pools
          leafc_storage_p     (m) = leafc_storage_p     (m) &
                                  - m_leafc_storage_to_fire_p            (m) * deltim
@@ -160,7 +160,7 @@ CONTAINS
                                  - m_deadcrootc_storage_to_fire_p       (m) * deltim
          deadcrootc_storage_p(m) = deadcrootc_storage_p(m) &
                                  - m_deadcrootc_storage_to_litter_fire_p(m) * deltim
-  
+
       ! transfer pools
          leafc_xfer_p        (m) = leafc_xfer_p        (m) &
                                  - m_leafc_xfer_to_fire_p               (m) * deltim

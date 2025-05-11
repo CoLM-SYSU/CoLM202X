@@ -46,10 +46,9 @@ CONTAINS
         pg_rain_lake   ,pg_snow_lake                                   ,&
         ! surface parameters or status
         froof          ,fgper          ,flake          ,bsw            ,&
-        porsl          ,psi0           ,hksati                         ,&
-        pondmx         ,ssi            ,wimp           ,smpmin         ,&
-        theta_r        ,fsatmax        ,fsatdcf        ,topostd        ,&
-        BVIC           ,&
+        porsl          ,psi0           ,hksati         ,pondmx         ,&
+        ssi            ,wimp           ,smpmin         ,theta_r        ,&
+        fsatmax        ,fsatdcf        ,topostd        ,BVIC           ,&
         rootr,rootflux ,etr            ,fseng          ,fgrnd          ,&
         t_gpersno      ,t_lakesno      ,t_lake         ,dz_lake        ,&
         z_gpersno      ,z_lakesno      ,zi_gpersno     ,zi_lakesno     ,&
@@ -63,7 +62,7 @@ CONTAINS
         sm_roof        ,sm_gimp        ,sm_gper        ,sm_lake        ,&
         lake_icefrac   ,scv_lake       ,snowdp_lake    ,imelt_lake     ,&
         fioldl         ,w_old                                          ,&
-#if(defined CaMa_Flood)
+#if (defined CaMa_Flood)
         flddepth       ,fldfrc         ,qinfl_fld                      ,&
 #endif
         forc_us        ,forc_vs                                        ,&
@@ -75,8 +74,7 @@ CONTAINS
 
         ! output
         rsur           ,rnof           ,qinfl          ,zwt            ,&
-        wa             ,qcharge        ,smp            ,hk             ,&
-        errw_rsub      )
+        wa             ,qcharge        ,smp            ,hk             )
 
 !=======================================================================
 ! this is the main SUBROUTINE to execute the calculation of URBAN
@@ -92,7 +90,7 @@ CONTAINS
 
    IMPLICIT NONE
 
-!-----------------------Argument----------------------------------------
+!-------------------------- Dummy Arguments ----------------------------
    integer, intent(in) :: &
         ipatch             ,&! patch index
         patchtype          ,&! land patch type (0=soil, 1=urban or built-up, 2=wetland,
@@ -114,12 +112,13 @@ CONTAINS
         pg_rain_lake       ,&! rainfall onto lake (mm h2o/s)
         pg_snow_lake       ,&! snowfall onto lake (mm h2o/s)
         froof              ,&! roof fractional cover [-]
-        fgper              ,&! weith of impervious ground [-]
+        fgper              ,&! weight of impervious ground [-]
         flake              ,&! lake fractional cover [-]
-        ! wtfact           ,&! (updated to gridded 'fsatmax' data) fraction of model area with high water table
+        ! wtfact           ,&! fraction of model area with high water table
+                             ! (updated to gridded 'fsatmax' data)
         pondmx             ,&! ponding depth (mm)
         ssi                ,&! irreducible water saturation of snow
-        wimp               ,&! water impremeable IF porosity less than wimp
+        wimp               ,&! water impermeable IF porosity less than wimp
         smpmin             ,&! restriction for min of soil poten. (mm)
 
         topostd            ,&! standard deviation of elevation [m]
@@ -130,8 +129,8 @@ CONTAINS
         psi0  (1:nl_soil)  ,&! saturated soil suction (mm) (NEGATIVE)
         hksati(1:nl_soil)  ,&! hydraulic conductivity at saturation (mm h2o/s)
         theta_r(1:nl_soil) ,&! residual moisture content [-]
-        fsatmax            ,&! maximum saturated area fraction [-] 
-        fsatdcf            ,&! decay factor in calucation of saturated area fraction [1/m] 
+        fsatmax            ,&! maximum saturated area fraction [-]
+        fsatdcf            ,&! decay factor in calculation of saturated area fraction [1/m]
         rootr (1:nl_soil)  ,&! root resistance of a layer, all layers add to 1.0
 
         etr                ,&! vegetation transpiration
@@ -158,7 +157,7 @@ CONTAINS
 
    real(r8), intent(inout) :: rootflux(1:nl_soil)
 
-#if(defined CaMa_Flood)
+#if (defined CaMa_Flood)
    real(r8), intent(inout) :: flddepth  ! inundation water depth [mm]
    real(r8), intent(in)    :: fldfrc    ! inundation water depth [0-1]
    real(r8), intent(out)   :: qinfl_fld ! grid averaged inundation water input from top (mm/s)
@@ -169,7 +168,8 @@ CONTAINS
 
 ! SNICAR model variables
 ! Aerosol Fluxes (Jan. 07, 2023)
-   real(r8), intent(in) :: forc_aer (14)! aerosol deposition from atmosphere model (grd,aer) [kg m-1 s-1]
+   ! aerosol deposition from atmosphere model (grd,aer) [kg m-1 s-1]
+   real(r8), intent(in) :: forc_aer (14)
 
    real(r8), intent(inout) :: &
         mss_bcpho (lbp:0)             ,&! mass of hydrophobic BC in snow  (col,lyr) [kg]
@@ -227,11 +227,10 @@ CONTAINS
 
    real(r8), intent(out) :: &
         smp(1:nl_soil)   ,&! soil matrix potential [mm]
-        hk (1:nl_soil)   ,&! hydraulic conductivity [mm h2o/m]
-        errw_rsub          ! the possible subsurface runoff deficit after PHS is included
-!
-!-----------------------Local Variables------------------------------
-!
+        hk (1:nl_soil)     ! hydraulic conductivity [mm h2o/m]
+
+!-------------------------- Local Variables ----------------------------
+
    real(r8) :: &
         fg               ,&! ground fractional cover [-]
         gwat             ,&! net water input from top (mm/s)
@@ -247,6 +246,8 @@ CONTAINS
         dfgrnd             ! change of lake ground heat flux [W/m2]
 
    real(r8) :: a, aa, xs1
+
+!-----------------------------------------------------------------------
 
       fg = 1 - froof
       dfseng = 0.
@@ -271,10 +272,9 @@ CONTAINS
              qseva_gper  ,qsdew_gper  ,qsubl_gper  ,qfros_gper               ,&
              qseva_gper  ,qsdew_gper  ,qsubl_gper  ,qfros_gper               ,&
              0.          ,& ! fsno, not active
-             rsur_gper   ,rnof_gper   ,qinfl                                 ,&
-             pondmx      ,ssi         ,wimp        ,smpmin                   ,&
-             zwt         ,wa          ,qcharge     ,errw_rsub                ,&
-#if(defined CaMa_Flood)
+             rsur_gper   ,rnof_gper   ,qinfl       ,pondmx      ,ssi         ,&
+             wimp        ,smpmin      ,zwt         ,wa          ,qcharge     ,&
+#if (defined CaMa_Flood)
              flddepth    ,fldfrc      ,qinfl_fld                             ,&
 #endif
 ! SNICAR model variables

@@ -20,25 +20,27 @@ CONTAINS
 
    SUBROUTINE netsolar (ipatch,idate,deltim,dlon,patchtype,&
                         forc_sols,forc_soll,forc_solsd,forc_solld,&
-                        alb,ssun,ssha,lai,sai,rho,tau,ssoi,ssno,ssno_lyr,&
-                        parsun,parsha,sabvsun,sabvsha,sabg,sabg_soil,sabg_snow,fsno,sabg_snow_lyr,sr,&
-                        solvd,solvi,solnd,solni,srvd,srvi,srnd,srni,&
+                        alb,ssun,ssha,lai,sai,rho,tau,ssoi,ssno,ssno_lyr,fsno,&
+                        parsun,parsha,sabvsun,sabvsha,sabg,sabg_soil,sabg_snow,sabg_snow_lyr,&
+                        sr,solvd,solvi,solnd,solni,srvd,srvi,srnd,srni,&
                         solvdln,solviln,solndln,solniln,srvdln,srviln,srndln,srniln)
-!
+
+!-----------------------------------------------------------------------
 ! !DESCRIPTION:
-! Net solar absorbed by surface
+!  Net solar absorbed by surface
 !
-! Original author : Yongjiu Dai, 09/15/1999; 09/11/2001
+!  Original author: Yongjiu Dai, 09/15/1999; 09/11/2001
 !
-! REVISIONS:
-! Hua Yuan, 05/2014: added for solar radiation output [vars: so*, sr*]
+! !REVISIONS:
+!  05/2014, Hua Yuan: added for solar radiation output [vars: so*, sr*]
 !
-! Hua Yuan, 08/2014: added for local noon calculation
+!  08/2014, Hua Yuan: added for local noon calculation
 !
-! Hua Yuan, 08/2020: added for PFT and PC calculation
+!  08/2020, Hua Yuan: added for PFT and PC calculation
 !
-! Hua Yuan, 12/2022: calculated snow layer absorption by SNICAR model
+!  12/2022, Hua Yuan: calculated snow layer absorption by SNICAR model
 !
+!-----------------------------------------------------------------------
 ! !USES:
    USE MOD_Precision
    USE MOD_Vars_Global
@@ -53,12 +55,12 @@ CONTAINS
 
    IMPLICIT NONE
 
-! Dummy argument
+!-------------------------- Dummy Arguments ----------------------------
    integer,  intent(in) :: ipatch     !patch index
    integer,  intent(in) :: idate(3)   !model time
    integer,  intent(in) :: patchtype  !land patch type (99-sea)
 
-   real(r8), intent(in) :: dlon       !logitude in radians
+   real(r8), intent(in) :: dlon       !longitude in radians
    real(r8), intent(in) :: deltim     !seconds in a time step [second]
 
    real(r8), intent(in) :: &
@@ -85,6 +87,9 @@ CONTAINS
          rho(2,2),   &! leaf reflectance (iw=iband, il=life and dead)
          tau(2,2)     ! leaf transmittance (iw=iband, il=life and dead)
 
+   real(r8), intent(in) :: &
+         fsno         ! snow fractional cover
+
    real(r8), intent(out) :: &
          parsun,     &! PAR absorbed by sunlit vegetation [W/m2]
          parsha,     &! PAR absorbed by shaded vegetation [W/m2]
@@ -94,7 +99,6 @@ CONTAINS
 ! 03/06/2020, yuan:
          sabg_soil,  &! solar absorbed by ground soil [W/m2]
          sabg_snow,  &! solar absorbed by ground snow [W/m2]
-         fsno,       &! snow fractional cover
          sr,         &! total reflected solar radiation (W/m2)
          solvd,      &! incident direct beam vis solar radiation (W/m2)
          solvi,      &! incident diffuse beam vis solar radiation (W/m2)
@@ -116,13 +120,13 @@ CONTAINS
    real(r8), intent(out) :: &
          sabg_snow_lyr(maxsnl+1:1)   ! solar absorbed by snow layers [W/m2]
 
-! ----------------local variables ---------------------------------
+!-------------------------- Local Variables ----------------------------
    integer  :: local_secs
    real(r8) :: radpsec, sabvg, sabg_noadj
 
    integer ps, pe, p
 
-!=======================================================================
+!-----------------------------------------------------------------------
 
       sabvsun = 0.
       sabvsha = 0.
@@ -210,8 +214,10 @@ CONTAINS
          sabg_snow = sabg_snow * fsno
 
          ! balance check and adjustment for soil and snow absorption
-         IF (abs(sabg_soil+sabg_snow-sabg)>1.e-6) THEN ! this could happen when there is adjustment to ssun,ssha
-            print *, "MOD_NetSolar.F90: NOTE imbalance in spliting soil and snow surface!", sabg_soil+sabg_snow-sabg
+         ! this could happen when there is adjustment to ssun,ssha
+         IF (abs(sabg_soil+sabg_snow-sabg)>1.e-6) THEN
+            print *, "MOD_NetSolar.F90: NOTE imbalance in spliting soil and snow surface!", &
+                      sabg_soil+sabg_snow-sabg
             print *, "Patchtype = ", patchtype
             print *, "sabg:", sabg, "sabg_soil:", sabg_soil, "sabg_snow", sabg_snow
             print *, "sabg_soil+sabg_snow:", sabg_soil+sabg_snow, "fsno:", fsno
@@ -257,7 +263,7 @@ CONTAINS
             sabg_snow_lyr(:) = forc_sols*ssno_lyr(1,1,:) + forc_solsd*ssno_lyr(1,2,:) &
                              + forc_soll*ssno_lyr(2,1,:) + forc_solld*ssno_lyr(2,2,:)
 
-            ! convert to the whole area producted by snow fractional cover
+            ! convert to the whole area multiplied by snow fractional cover
             sabg_snow_lyr(:) = sabg_snow_lyr(:)*fsno
 
             ! attribute the first layer absorption to soil absorption
@@ -312,3 +318,4 @@ CONTAINS
    END SUBROUTINE netsolar
 
 END MODULE MOD_NetSolar
+! ---------- EOP ------------

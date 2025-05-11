@@ -2,18 +2,18 @@
 
 MODULE MOD_HistGridded
 
-   !----------------------------------------------------------------------------
-   ! DESCRIPTION:
-   !
-   !     Write out gridded model results to history files.
-   !
-   ! Original version: Yongjiu Dai, September 15, 1999, 03/2014
-   !
-   ! REVISIONS:
-   ! Shupeng Zhang, 05/2023: 1) porting codes to MPI parallel version
-   !
-   ! TODO...(need complement)
-   !----------------------------------------------------------------------------
+!----------------------------------------------------------------------------
+! !DESCRIPTION:
+!
+!     Write out gridded model results to history files.
+!
+!  Original version: Yongjiu Dai, September 15, 1999, 03/2014
+!
+! !REVISIONS:
+!  Shupeng Zhang, 05/2023: 1) porting codes to MPI parallel version
+!
+!  TODO...(need complement)
+!----------------------------------------------------------------------------
 
    USE MOD_Precision
    USE MOD_SPMD_Task
@@ -40,7 +40,6 @@ MODULE MOD_HistGridded
 !--------------------------------------------------------------------------
 CONTAINS
 
-   !---------------------------------------
    SUBROUTINE hist_gridded_init (dir_hist, lulcc_call)
 
    USE MOD_SPMD_Task
@@ -51,7 +50,7 @@ CONTAINS
    USE MOD_LandUrban
 #endif
    USE MOD_Vars_1DAccFluxes
-   USE MOD_Forcing, only : gforc
+   USE MOD_Forcing, only: gforc
 #ifdef SinglePoint
    USE MOD_SingleSrfData
 #endif
@@ -112,7 +111,7 @@ CONTAINS
 
    END SUBROUTINE hist_gridded_init
 
-   ! -------
+
    SUBROUTINE flux_map_and_write_2d ( &
          acc_vec, file_hist, varname, itime_in_file, sumarea, filter, &
          longname, units)
@@ -172,7 +171,7 @@ CONTAINS
 
    END SUBROUTINE flux_map_and_write_2d
 
-   ! -------
+
    SUBROUTINE flux_map_and_write_urb_2d ( &
          acc_vec, file_hist, varname, itime_in_file, sumarea, filter, &
          longname, units)
@@ -232,7 +231,7 @@ CONTAINS
 
    END SUBROUTINE flux_map_and_write_urb_2d
 
-   ! -------
+
    SUBROUTINE flux_map_and_write_3d ( &
          acc_vec, file_hist, varname, itime_in_file, dim1name, lb1, ndim1, sumarea, filter, &
          longname, units)
@@ -300,7 +299,7 @@ CONTAINS
 
    END SUBROUTINE flux_map_and_write_3d
 
-   ! -------
+
    SUBROUTINE flux_map_and_write_4d ( &
          acc_vec, file_hist, varname, itime_in_file, &
          dim1name, lb1, ndim1, dim2name, lb2, ndim2, &
@@ -371,7 +370,7 @@ CONTAINS
 
    END SUBROUTINE flux_map_and_write_4d
 
-   ! -------
+
    SUBROUTINE flux_map_and_write_ln ( &
          acc_vec, file_hist, varname, itime_in_file, sumarea, filter, &
          longname, units)
@@ -439,14 +438,15 @@ CONTAINS
 
    END SUBROUTINE flux_map_and_write_ln
 
-   !------------------------------
+
    SUBROUTINE hist_gridded_write_time ( &
-         filename, dataname, time, itime)
+         filename, filelast, dataname, time, itime)
 
    USE MOD_Block
    IMPLICIT NONE
 
    character (len=*), intent(in) :: filename
+   character (len=*), intent(in) :: filelast
    character (len=*), intent(in) :: dataname
 
    integer, intent(in)  :: time(3)
@@ -461,12 +461,12 @@ CONTAINS
          IF (p_is_master) THEN
 #ifdef USEMPI
             IF (DEF_HIST_WriteBack) THEN
-               CALL hist_writeback_latlon_time (filename, dataname, time, hist_concat)
+               CALL hist_writeback_latlon_time (filename, filelast, dataname, time, hist_concat)
                itime = 1
             ELSE
 #endif
             inquire (file=filename, exist=fexists)
-            IF (.not. fexists) THEN
+            IF ((.not. fexists) .or. (trim(filename) /= trim(filelast))) THEN
 
                CALL ncio_create_file (trim(filename))
                CALL ncio_define_dimension(filename, 'time', 0)
@@ -516,7 +516,7 @@ CONTAINS
                CALL get_filename_block (filename, iblk, jblk, fileblock)
 
                inquire (file=fileblock, exist=fexists)
-               IF (.not. fexists) THEN
+               IF ((.not. fexists) .or. (trim(filename) /= trim(filelast))) THEN
                   CALL ncio_create_file (trim(fileblock))
                   CALL ncio_define_dimension (fileblock, 'time', 0)
                   CALL hist_write_grid_info  (fileblock, ghist, iblk, jblk)
@@ -535,7 +535,7 @@ CONTAINS
 
    END SUBROUTINE hist_gridded_write_time
 
-   !----------------------------------------------------------------------------
+
    SUBROUTINE hist_write_var_real8_2d ( &
          filename, dataname, grid, itime, wdata, compress, longname, units)
 
@@ -595,8 +595,13 @@ CONTAINS
                ENDDO
 
             ELSE
-               CALL hist_writeback_var_header (hist_data_id, filename, dataname, &
-                  2, 'lon', 'lat', 'time', '', '', compress, longname, units)
+               IF (itime == -1) THEN
+                  CALL hist_writeback_var_header (hist_data_id, filename, dataname, &
+                     2, 'lon', 'lat', '', '', '', compress, longname, units)
+               ELSE
+                  CALL hist_writeback_var_header (hist_data_id, filename, dataname, &
+                     3, 'lon', 'lat', 'time', '', '', compress, longname, units)
+               ENDIF
             ENDIF
 #else
             allocate (vdata (hist_concat%ginfo%nlon, hist_concat%ginfo%nlat))
@@ -624,17 +629,16 @@ CONTAINS
 #ifdef USEMPI
             IF (.not. DEF_HIST_WriteBack) THEN
 #endif
-               IF (.not. &
-                  ((trim(dataname) == 'landarea') .or. (trim(dataname) == 'landfraction'))) THEN
+               IF (itime >= 1) THEN
 
                   CALL ncio_write_serial_time (filename, dataname, itime, vdata, &
                      'lon', 'lat', 'time', compress)
 
-               ELSEIF (itime == 1) THEN
+               ELSEIF (itime == -1) THEN
                   CALL ncio_write_serial (filename, dataname, vdata, 'lon', 'lat', compress)
                ENDIF
 
-               IF (itime == 1) THEN
+               IF (itime <= 1) THEN
                   CALL ncio_put_attr (filename, dataname, 'long_name', longname)
                   CALL ncio_put_attr (filename, dataname, 'units', units)
                   CALL ncio_put_attr (filename, dataname, 'missing_value', spval)
@@ -697,13 +701,12 @@ CONTAINS
 
                CALL get_filename_block (filename, iblk, jblk, fileblock)
 
-               IF (.not. &
-                  ((trim(dataname) == 'landarea') .or. (trim(dataname) == 'landfraction'))) THEN
+               IF (itime >= 1) THEN
 
                   CALL ncio_write_serial_time (fileblock, dataname, itime, &
                      wdata%blk(iblk,jblk)%val, 'lon', 'lat', 'time', compress)
 
-               ELSEIF (itime == 1) THEN
+               ELSEIF (itime == -1) THEN
                   CALL ncio_write_serial (fileblock, dataname, &
                      wdata%blk(iblk,jblk)%val, 'lon', 'lat', compress)
                ENDIF
@@ -715,7 +718,7 @@ CONTAINS
 
    END SUBROUTINE hist_write_var_real8_2d
 
-   !----------------------------------------------------------------------------
+
    SUBROUTINE hist_write_var_real8_3d ( &
          filename, dataname, dim1name, grid, itime, wdata, compress, longname, units)
 
@@ -781,7 +784,7 @@ CONTAINS
 
             ELSE
                CALL hist_writeback_var_header (hist_data_id, filename, dataname, &
-                  3, dim1name, 'lon', 'lat', 'time', '', compress, longname, units)
+                  4, dim1name, 'lon', 'lat', 'time', '', compress, longname, units)
             ENDIF
 #else
             ndim1 = wdata%ub1 - wdata%lb1 + 1
@@ -891,7 +894,7 @@ CONTAINS
 
    END SUBROUTINE hist_write_var_real8_3d
 
-   !----------------------------------------------------------------------------
+
    SUBROUTINE hist_write_var_real8_4d ( &
          filename, dataname, dim1name, dim2name, grid, itime, wdata, compress, longname, units)
 
@@ -958,7 +961,7 @@ CONTAINS
 
             ELSE
                CALL hist_writeback_var_header (hist_data_id, filename, dataname, &
-                  4, dim1name, dim2name, 'lon', 'lat', 'time', compress, longname, units)
+                  5, dim1name, dim2name, 'lon', 'lat', 'time', compress, longname, units)
             ENDIF
 #else
             ndim1 = wdata%ub1 - wdata%lb1 + 1
@@ -1071,7 +1074,7 @@ CONTAINS
 
    END SUBROUTINE hist_write_var_real8_4d
 
-   !------------------
+
    SUBROUTINE hist_write_grid_info (fileblock, grid, iblk, jblk)
 
    USE MOD_Block

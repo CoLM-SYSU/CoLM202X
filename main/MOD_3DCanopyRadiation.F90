@@ -42,9 +42,9 @@ CONTAINS
 
 #ifdef LULC_IGBP_PC
 
-!-----------------------------------------------------------------------
    SUBROUTINE ThreeDCanopy_wrap (ipatch, czen, albg, albv, tran, ssun, ssha)
 
+!-----------------------------------------------------------------------
 !
 ! !DESCRIPTION:
 !  This is a wrap SUBROUTINE to CALL 3D canopy radiative model below
@@ -52,14 +52,15 @@ CONTAINS
 !
 !  Created by Hua Yuan, 08/2019
 !
-! !REFERENCE:
+! !REFERENCES:
 !  Yuan, H., R. E. Dickinson, Y. Dai, M. J. Shaikh, L. Zhou, W. Shangguan,
 !  and D. Ji, 2014: A 3D canopy radiative transfer model for global climate
 !  modeling: Description, validation, and application. Journal of Climate,
-!  27, 1168–1192, https://doi.org/10.1175/JCLI-D-13-00155.1.
+!  27, 1168-1192, https://doi.org/10.1175/JCLI-D-13-00155.1.
 !
 ! !REVISIONS:
 !
+!-----------------------------------------------------------------------
 
    USE MOD_Precision
    USE MOD_Namelist, only: DEF_VEG_SNOW
@@ -71,6 +72,7 @@ CONTAINS
 
    IMPLICIT NONE
 
+!-------------------------- Dummy Arguments ----------------------------
    integer,  intent(in)  :: ipatch
    real(r8), intent(in)  :: czen
    real(r8), intent(in)  :: albg(2,2)
@@ -79,13 +81,13 @@ CONTAINS
    real(r8), intent(out) :: ssun(2,2)
    real(r8), intent(out) :: ssha(2,2)
 
-   ! local variables
+!-------------------------- Local Variables ----------------------------
    integer :: i, p, ps, pe;
 
    ! sunlit absorption fraction calculation mode
    ! .true. USE 3D model, otherwise USE 1D case
    ! NOTE: The 3D version will be activated in the new release,
-   !       accompained by a new set of canopy structure data.
+   !       accompanied by a new set of canopy structure data.
    logical, parameter :: fsun3D = .false.
 
    ! define allocatable variables
@@ -100,8 +102,9 @@ CONTAINS
 
    ! vegetation snow optical properties, 1:vis, 2:nir
    real(r8) :: rho_sno(2), tau_sno(2)
-   data rho_sno(1), rho_sno(2) /0.6, 0.3/
-   data tau_sno(1), tau_sno(2) /0.2, 0.1/
+   data rho_sno(1), rho_sno(2) /0.5, 0.2/
+   data tau_sno(1), tau_sno(2) /0.3, 0.2/
+!-----------------------------------------------------------------------
 
       ! get patch PFT index
       ps = patch_pft_s(ipatch)
@@ -264,7 +267,7 @@ CONTAINS
                            lsai, rho, tau, albgrd, albgri, albd, albi, &
                            fabd, fabi, ftdd, ftid, ftii, fadd, psun, &
                            fsun_id, fsun_ii, thermk, fshade)
-!
+!-----------------------------------------------------------------------
 ! !DESCRIPTION:
 !  ThreeDCanopy based on Dickinson (2008) using three canopy layer
 !  to calculate fluxes absorbed by vegetation, reflected by vegetation,
@@ -274,28 +277,30 @@ CONTAINS
 !  Created by Hua Yuan, 08/2019
 !
 ! !HISTORY:
-!  Before 2013: Robert E. Dickinson proposed the inital idea. Dickinson and
+!  Before 2013: Robert E. Dickinson proposed the initial idea. Dickinson and
 !               Muhammad J. Shake contributed to the code writing.
 !
-! !REFERENCE:
+! !REFERENCES:
 !  Yuan, H., R. E. Dickinson, Y. Dai, M. J. Shaikh, L. Zhou, W. Shangguan,
 !  and D. Ji, 2014: A 3D canopy radiative transfer model for global climate
 !  modeling: Description, validation, and application. Journal of Climate,
-!  27, 1168–1192, https://doi.org/10.1175/JCLI-D-13-00155.1.
-
+!  27, 1168-1192, https://doi.org/10.1175/JCLI-D-13-00155.1.
 !
-! !ARGUMENTS:
+! !REVISIONS:
+!
+!-----------------------------------------------------------------------
+
    IMPLICIT NONE
 
    integer, parameter :: numrad = 2
 
-! !ARGUMENTS:
+!-------------------------- Dummy Arguments ----------------------------
    integer , intent(in)  :: ps, pe               !pft index bounds
    integer , intent(in)  :: canlay(ps:pe)        !canopy level for current pft
    real(r8), intent(in)  :: fcover(ps:pe)        !fractional cover of pft within a patch
    real(r8), intent(in)  :: csiz  (ps:pe)        !crown size of vegetation
    real(r8), intent(in)  :: chgt  (ps:pe)        !central height of crown
-   ! NOTE: The 'cdcw' parameter will be activated in the new release, accompained by
+   ! NOTE: The 'cdcw' parameter will be activated in the new release, accompanied by
    !       a new set of canopy structure data. Currently we set cdcw = 1, i.e., sphere
    real(r8)              :: cdcw  (ps:pe)        !crown depth to crown width
    real(r8), intent(in)  :: chil  (ps:pe)        !leaf angle distribution parameter
@@ -321,7 +326,7 @@ CONTAINS
    real(r8), intent(out) :: thermk  (ps:pe)      !direct transmittance of diffuse radiation
    real(r8), intent(out) :: fshade  (ps:pe)      !shadow in diffuse case of vegetation
 
-! !OTHER LOCAL VARIABLES:
+!-------------------------- Local Variables ----------------------------
    real(r8), parameter :: mpe = 1.0e-06_r8       !prevents overflow for division by zero
    integer , parameter :: nlay=3                 !number of canopy layers
    real(r8), parameter :: D0=0.0_r8              !double accuracy real number
@@ -354,7 +359,7 @@ CONTAINS
 
    real(r8) :: albd_col(numrad)          !surface reflection (direct) for column
    real(r8) :: albi_col(numrad)          !surface reflection (diffuse) for column
-   real(r8) :: hbot_lay(nlay)            !avergae canopy bottom in layer
+   real(r8) :: hbot_lay(nlay)            !average canopy bottom in layer
    real(r8) :: chgt_lay(nlay)            !average canopy height in layer
    real(r8) :: csiz_lay(nlay)            !average canopy size in layer
    real(r8) :: cdcw_lay(nlay)            !crown depth to crown width for layers
@@ -373,9 +378,12 @@ CONTAINS
    real(r8) :: fabi_lay(nlay,numrad)     !layer absorption for diffuse beam
    real(r8) :: fabs_lay(0:4,numrad)      !layer absorption for all five layers
    real(r8) :: fabs_leq(0:4,numrad)      !layer absorption for all five layers
-   real(r8) :: A(6,6)                    !three-layer radiation transfer eqation (EQ. 19, Yuan et al., 2014)
-   real(r8) :: B(6,2)                    !three-layer radiation transfer eqation (EQ. 19, Yuan et al., 2014)
-   real(r8) :: X(6,2)                    !three-layer radiation transfer eqation (EQ. 19, Yuan et al., 2014)
+   real(r8) :: A(6,6)                    !three-layer radiation transfer equation
+                                         !(EQ. 19, Yuan et al., 2014)
+   real(r8) :: B(6,2)                    !three-layer radiation transfer equation
+                                         !(EQ. 19, Yuan et al., 2014)
+   real(r8) :: X(6,2)                    !three-layer radiation transfer equation
+                                         !(EQ. 19, Yuan et al., 2014)
    real(r8) :: fabsm                     !pft absorption for multiple reflections
    real(r8) :: faid_lay(nlay)            !layer diffused absorption for direct beam
    real(r8) :: faid_p                    !pft absorption direct beam
@@ -387,30 +395,32 @@ CONTAINS
    real(r8) :: frii_lay(nlay)            !layer reflection for indirect beam
    real(r8) :: ftdd_lay(nlay)            !unscattered layer transmission for direct beam
    real(r8) :: ftdi_lay(nlay)            !unscattered layer transmission for indirect beam
-   real(r8) :: ftdd_lay_orig(nlay)       !unscattered layer transmission for direct beam without lad/crown_shape calibration
-   real(r8) :: ftdi_lay_orig(nlay)       !unscattered layer transmission for indirect beam without lad/crown_shape calibratioin
+   real(r8) :: ftdd_lay_orig(nlay)       !unscattered layer transmission for direct beam
+                                         !without lad/crown_shape calibration
+   real(r8) :: ftdi_lay_orig(nlay)       !unscattered layer transmission for indirect beam
+                                         !without lad/crown_shape calibration
    real(r8) :: psun_lay(nlay)            !percent sunlit vegetation cover for layers
-   real(r8) :: fsun_id_lay(nlay)         !frac of dif rad abs. by sunlit leaves incident dir for layers
-   real(r8) :: fsun_ii_lay(nlay)         !frac of dif rad abs. by sunlit leaves incident dif for layers
-   real(r8) :: fsun_dd_lay(nlay)         !frac of dif rad abs. by sunlit leaves incident downward dir for layers
-   real(r8) :: fsun_dw_lay(nlay)         !frac of dif rad abs. by sunlit leaves incident downward dif for layers
-   real(r8) :: fsun_up_lay(nlay)         !frac of dif rad abs. by sunlit leaves incident upward dif for layers
+   real(r8) :: fsun_id_lay(nlay)         !frac of dif rad abs. by sunlit leaf incident dir
+   real(r8) :: fsun_ii_lay(nlay)         !frac of dif rad abs. by sunlit leaf incident dif
+   real(r8) :: fsun_dd_lay(nlay)         !frac of dif rad abs. by sunlit leaf incident downward dir
+   real(r8) :: fsun_dw_lay(nlay)         !frac of dif rad abs. by sunlit leaf incident downward dif
+   real(r8) :: fsun_up_lay(nlay)         !frac of dif rad abs. by sunlit leaf incident upward dif
    real(r8) :: ftid_lay(nlay)            !diffused layer transmission for direct beam
    real(r8) :: ftii_lay(nlay)            !diffused layer transmission for diffuse beam
    real(r8) :: ftran                     !pft transmittance
-   real(r8) :: gee=0.5_r8                !Ross factor geometric blocking
-   real(r8) :: gdir(ps:pe)               !Ross G factor considering LAD for incident direct radiation
-   real(r8) :: gdif(ps:pe)               !Ross G factor considering LAD for incident diffuse radiation
-   real(r8) :: gdir_lay(nlay)            !Ross G factor considering LAD for incident direct radiation
-   real(r8) :: gdif_lay(nlay)            !Ross G factor considering LAD for incident diffuse radiation
+   real(r8) :: gee=0.5_r8                !Ross G factor geometric blocking
+   real(r8) :: gdir(ps:pe)               !G factor considering LAD for incident direct radiation
+   real(r8) :: gdif(ps:pe)               !G factor considering LAD for incident diffuse radiation
+   real(r8) :: gdir_lay(nlay)            !G factor considering LAD for incident direct radiation
+   real(r8) :: gdif_lay(nlay)            !G factor considering LAD for incident diffuse radiation
    real(r8) :: fcad(ps:pe)               !calibration factor for LAD for direct radiation
    real(r8) :: fcai(ps:pe)               !calibration factor for LAD for diffuse radiation
    real(r8) :: fcad_lay(nlay)            !calibration factor for LAD for direct radiation
    real(r8) :: fcai_lay(nlay)            !calibration factor for LAD for diffuse radiation
-   real(r8) :: pad                       !probabilty function for absorption after two scat
-   real(r8) :: pai                       !probabilty of asborption for diffuse incident beam
+   real(r8) :: pad                       !probability function for absorption after two scat
+   real(r8) :: pai                       !probability of absorption for diffuse incident beam
    real(r8) :: pfc                       !contribution of current pft in layer
-   real(r8) :: probm                     !prob photon reflect diffusly from grnd reach canopy
+   real(r8) :: probm                     !prob photon reflect diffusely from ground reach canopy
    real(r8) :: ref(0:nlay+1,0:nlay+1)    !radiation reflected between five layers
    real(r8) :: fadd_lay(nlay,numrad)     !layer absorbed flux in direct mode per unit direct flux
    real(r8) :: shad_oa(nlay,nlay)        !shadow overlaps (direct beam)
@@ -438,15 +448,16 @@ CONTAINS
    real(r8) :: shadow_sky(ps:pe)         !sky shadow area
    real(r8) :: taud(ps:pe)               !transmission to direct beam
    real(r8) :: taui(ps:pe)               !transmission to diffuse beam
-   real(r8) :: omega(ps:pe,numrad)       !leaf/stem transmitance weighted by frac veg
-   real(r8) :: ftdi(ps:pe,numrad)        !leaf/stem transmitance weighted by frac veg
-   real(r8) :: ftdd_orig(ps:pe,numrad)   !leaf/stem transmitance weighted by frac veg
-   real(r8) :: ftdi_orig(ps:pe,numrad)   !leaf/stem transmitance weighted by frac veg
+   real(r8) :: omega(ps:pe,numrad)       !leaf/stem transmittance weighted by frac veg
+   real(r8) :: ftdi(ps:pe,numrad)        !leaf/stem transmittance weighted by frac veg
+   real(r8) :: ftdd_orig(ps:pe,numrad)   !leaf/stem transmittance weighted by frac veg
+   real(r8) :: ftdi_orig(ps:pe,numrad)   !leaf/stem transmittance weighted by frac veg
    real(r8) :: cosz(ps:pe)               !0.001 <= coszen <= 1.000
    real(r8) :: cosd(ps:pe)               !0.001 <= coszen <= 1.000
    logical  :: soilveg(ps:pe)            !true if pft over soil with veg and cosz > 0
 
    real(r8) :: phi1(ps:pe), phi2(ps:pe)
+!-----------------------------------------------------------------------
 
       ! 11/07/2018: calculate gee FUNCTION consider LAD
       phi1 = 0.5 - 0.633 * chil - 0.33 * chil * chil
@@ -481,7 +492,7 @@ CONTAINS
          IF ( lsai(ip)>1.e-6_r8 .and. fcover(ip)>D0 ) THEN
 
             soilveg(ip) = .true.
-            nsoilveg = nsoilveg + 1
+            nsoilveg  = nsoilveg + 1
 
             clev      = canlay(ip)
             fc0(clev) = fc0(clev) + fcover(ip)
@@ -630,11 +641,6 @@ CONTAINS
       shad_oa(3,1) = fc0(3)*OverlapArea(csiz_lay(3),chgt_lay(3)-hbot_lay(1), zenith)
       zenith = acos(cosz_lay(2))
       shad_oa(2,1) = fc0(2)*OverlapArea(csiz_lay(2),chgt_lay(2)-hbot_lay(1), zenith)
-
-      ! for test
-      !shad_oa(3,2) = D0
-      !shad_oa(3,1) = D0
-      !shad_oa(2,1) = D0
 
 !=============================================================
 ! unscattered direct sunlight available at  each layer
@@ -817,18 +823,30 @@ CONTAINS
          ! Calculate the coefficients matrix A
          A(1,1) = 1.0; A(1,3) = -shadow_i(3)*ftii_lay(3) + shadow_i(3) - 1.0;
          A(2,2) = 1.0; A(2,3) = -shadow_i(3)*frii_lay(3);
-         A(3,3) = 1.0; A(3,2) = -shadow_i(2)*frii_lay(2);   A(3,5) = -shadow_i(2)*ftii_lay(2) + shadow_i(2) - 1.0;
-         A(4,4) = 1.0; A(4,5) = -shadow_i(2)*frii_lay(2);   A(4,2) = -shadow_i(2)*ftii_lay(2) + shadow_i(2) - 1.0;
-         A(5,5) = 1.0; A(5,4) = -shadow_i(1)*frii_lay(1);   A(5,6) =(-shadow_i(1)*ftii_lay(1) + shadow_i(1) - 1.0) * albgri(ib);
-         A(6,6) = 1.0 - albgri(ib)*shadow_i(1)*frii_lay(1); A(6,4) = -shadow_i(1)*ftii_lay(1) + shadow_i(1) - 1.0;
+         A(3,3) = 1.0; A(3,2) = -shadow_i(2)*frii_lay(2);
+         A(3,5) = -shadow_i(2)*ftii_lay(2) + shadow_i(2) - 1.0;
+
+         A(4,4) = 1.0; A(4,5) = -shadow_i(2)*frii_lay(2);
+         A(4,2) = -shadow_i(2)*ftii_lay(2) + shadow_i(2) - 1.0;
+
+         A(5,5) = 1.0; A(5,4) = -shadow_i(1)*frii_lay(1);
+         A(5,6) =(-shadow_i(1)*ftii_lay(1) + shadow_i(1) - 1.0) * albgri(ib);
+
+         A(6,6) = 1.0 - albgri(ib)*shadow_i(1)*frii_lay(1);
+         A(6,4) = -shadow_i(1)*ftii_lay(1) + shadow_i(1) - 1.0;
 
          ! The constant vector B at right side
          B(1,1) = tt(4,3)*frid_lay(3); B(1,2) = shadow_i(3)*frii_lay(3);
          B(2,1) = tt(4,3)*ftid_lay(3); B(2,2) = shadow_i(3)*ftii_lay(3) - shadow_i(3) + 1.0;
          B(3,1) = tt(3,2)*frid_lay(2); B(3,2) = 0.0;
          B(4,1) = tt(3,2)*ftid_lay(2); B(4,2) = 0.0;
-         B(5,1) = tt(2,1)*frid_lay(1) + tt(1,0)*albgrd(ib)*(shadow_i(1)*ftii_lay(1) - shadow_i(1) + 1.0); B(5,2) = 0.0;
-         B(6,1) = tt(2,1)*ftid_lay(1) + tt(1,0)*albgrd(ib)*shadow_i(1)*frii_lay(1);                       B(6,2) = 0.0;
+
+         B(5,1) = tt(2,1)*frid_lay(1) &
+                + tt(1,0)*albgrd(ib)*(shadow_i(1)*ftii_lay(1) - shadow_i(1) + 1.0);
+         B(5,2) = 0.0;
+
+         B(6,1) = tt(2,1)*ftid_lay(1) + tt(1,0)*albgrd(ib)*shadow_i(1)*frii_lay(1);
+         B(6,2) = 0.0;
 
          ! Get the resolution
          CALL mGauss(A, B, X)
@@ -841,9 +859,12 @@ CONTAINS
          fabs_leq(4,:) = X(1,:)
 
          ! Three layers' absorption for incident direct radiation
-         fabs_leq(3,1) = tt(4,3)*faid_lay(3) + X(3,1)                                           *shadow_i(3)*faii_lay(3)
-         fabs_leq(2,1) = tt(3,2)*faid_lay(2) + (X(2,1) + X(5,1))                                *shadow_i(2)*faii_lay(2)
-         fabs_leq(1,1) = tt(2,1)*faid_lay(1) + (X(4,1) + X(6,1)*albgri(ib) + tt(1,0)*albgrd(ib))*shadow_i(1)*faii_lay(1)
+         fabs_leq(3,1) = tt(4,3)*faid_lay(3) &
+                       + X(3,1)                                           *shadow_i(3)*faii_lay(3)
+         fabs_leq(2,1) = tt(3,2)*faid_lay(2) &
+                       + (X(2,1) + X(5,1))                                *shadow_i(2)*faii_lay(2)
+         fabs_leq(1,1) = tt(2,1)*faid_lay(1) &
+                       + (X(4,1) + X(6,1)*albgri(ib) + tt(1,0)*albgrd(ib))*shadow_i(1)*faii_lay(1)
 
          ! Ground absorption
          fabs_leq(0,1) = tt(1,0)*(1.0 - albgrd(ib)) + X(6,1)*(1.0 - albgri(ib))
@@ -871,7 +892,7 @@ CONTAINS
          albd_col(ib) = fabs_lay(4,1)
          albi_col(ib) = fabs_lay(4,2)
 
-         ! calculation for sunlit fraction and sunlit absorptioin for each layer
+         ! calculation for sunlit fraction and sunlit absorption for each layer
          IF (ib == 1) THEN !visible band only
 
             psun_lay(:)    = D0
@@ -896,7 +917,8 @@ CONTAINS
                psun_lay(2) = tt(3,2)/shadow_d(2)
                ! absorption fraction in sunlit leaves in diffuse radiation format
                ! PART II
-               fsun_id_lay(2) = (psun_lay(2)*fsun_dd_lay(2) + X(2,1)*fsun_dw_lay(2) + X(5,1)*fsun_up_lay(2)) &
+               fsun_id_lay(2) = (psun_lay(2)*fsun_dd_lay(2) + X(2,1)*fsun_dw_lay(2) &
+                                                            + X(5,1)*fsun_up_lay(2)) &
                               / (psun_lay(2) + X(2,1) + X(5,1))
                fsun_ii_lay(2) = (X(2,2)*fsun_dw_lay(2) + X(5,2)*fsun_up_lay(2)) &
                               / (X(2,2) + X(5,2))
@@ -927,7 +949,7 @@ CONTAINS
          ENDIF
 
       !====================================================
-      ! Calculate individule PFT absorption
+      ! Calculate individual PFT absorption
       !====================================================
 
          sum_fabd = D0
@@ -1064,9 +1086,9 @@ CONTAINS
 
    END SUBROUTINE ThreeDCanopy
 
-!=====================
+!-----------------------------------------------------------------------
 ! FUNCTION tee
-!=====================
+!-----------------------------------------------------------------------
 
    real(selected_real_kind(12)) FUNCTION tee(tau)
 
@@ -1081,9 +1103,9 @@ CONTAINS
 
    END FUNCTION tee
 
-!===========================================
+!-----------------------------------------------------------------------
 ! FUNCTION overlapArea
-!===========================================
+!-----------------------------------------------------------------------
 
    real(selected_real_kind(12)) FUNCTION OverlapArea(radius, hgt, zenith)
 
@@ -1113,17 +1135,17 @@ CONTAINS
       RETURN
    END FUNCTION OverlapArea
 
-!=========================================================
+!-----------------------------------------------------------------------
 ! FUNCTION to calculate scattering, absorption, reflection and
 ! transmittance for unit input radiation
-!=========================================================
+!-----------------------------------------------------------------------
 
    SUBROUTINE CanopyRad(tau_d, tau_i, ftdd, ftdi, cosz, cosd, &
                         shadow_d, shadow_i, fc, omg, lsai, tau_p, rho_p, &
                         ftid, ftii, frid, frii, faid, faii)
    IMPLICIT NONE
 
-   ! input variables
+!-------------------------- Dummy Arguments ----------------------------
    real(r8) :: cosz      !0.001 <= coszen <= 1.000
    real(r8) :: cosd      !0.001 <= coszen <= 1.000
    real(r8) :: faid      !direct absorption
@@ -1146,7 +1168,7 @@ CONTAINS
    real(r8) :: lsai      !elai+esai
 
    ! output variables
-   real(r8) :: phi_dif_d !differnce of rad scattered forward-backward per direct beam
+   real(r8) :: phi_dif_d !difference of rad scattered forward-backward per direct beam
    real(r8) :: phi_dif_i !difference of rad scattered forward-backward per direct beam
    real(r8) :: phi_tot_d !total rad scattered in all direction per direct beam
    real(r8) :: phi_tot_i !total rad scattered in all direction per diffuse beam
@@ -1154,7 +1176,7 @@ CONTAINS
    real(r8) :: phi_dif_o !total rad scattered in all direction per diffuse beam
    real(r8) :: pa2       !total rad scattered in all direction per direct beam
 
-   ! local variables
+!-------------------------- Local Variables ----------------------------
    logical  :: runmode = .true.
    real(r8) :: tau
    real(r8) :: muv       !forward frac of 3D scat rad in all direction for diffuse
@@ -1178,6 +1200,7 @@ CONTAINS
    real(r16), parameter :: DD1 = 1.0_r16    !128-bit real number
 
    real(r8) , parameter :: pi  = 3.14159265358979323846_R8  !pi
+!-----------------------------------------------------------------------
 
       tau = D3/D4*gee*lsai
 
@@ -1267,17 +1290,17 @@ CONTAINS
    ! input variables
    logical  :: runmode
    real(r8) :: omg       !frac of intercepted rad that is scattered
-   real(r8) :: rho_p     !leaf/stem reflectance weighted by fract of LAI and SAI
+   real(r8) :: rho_p     !leaf/stem reflectance weighted by frac of LAI and SAI
    real(r8) :: tau       !radial optical depth for direct beam
    real(r8) :: tau_p     !leaf/stem transmission weighted by frac of LAI & SAI
 
    ! output variables
-   real(r8) :: phi_dif   !differnce of rad scattered forward-backward
+   real(r8) :: phi_dif   !difference of rad scattered forward-backward
    real(r8) :: phi_tot   !total rad scattered in all direction
    real(r8) :: pa2       !total rad scattered in all direction
 
    ! local variables
-   real(r8) :: pac       !probablity of absorption after two scatterings
+   real(r8) :: pac       !probability of absorption after two scatterings
    real(r8) :: phi_1b    !backward single scattered radiation
    real(r8) :: phi_1f    !forward single scattered radiation
    real(r8) :: phi_2a    !average second-order scattered radiation
@@ -1312,7 +1335,7 @@ CONTAINS
       phi_1b = DDH*(DD1 - tee(DD2*tau))
 
 !----------------------------------------------------------------------
-! sphere double scattering terms (RED 2008 Eq 19,20)
+! sphere double scattering terms (RED 2008 Eqs. 19,20)
 !----------------------------------------------------------------------
 
       IF (.not. runmode) THEN
@@ -1338,19 +1361,18 @@ CONTAINS
                   DD1/(bb+DD1)/(bb+DD1)*tee(DD1*(bb+DD2)*tau) )
       ENDIF
 
-      ! second order avaerage scattering
+      ! second order average scattering
       phi_2a = DDH*(phi_2b + phi_2f)
 
 !----------------------------------------------------------------------
-! probabilty of absorption after two scattering
+! probability of absorption after two scattering
 !----------------------------------------------------------------------
 
-      ! probabilty of absorption for diffuse beam
-      ! corrected probabilty of absorption for direct beam
+      ! probability of absorption for diffuse beam
+      ! corrected probability of absorption for direct beam
       pac = DD1-phi_2a / &
             (DD1 - tee(DD1*tau) - (rho_p*phi_1b + tau_p*phi_1f)/(tau_p+rho_p))
 
-      ! NOTE: for test only
       pac = max(min(pac,D1),D0)
       pa2 = pac
 

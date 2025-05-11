@@ -6,13 +6,11 @@ MODULE MOD_Lulcc_Vars_TimeVariables
 !
 !  Created by Hua Yuan, 04/2022
 !
-!
 ! !REVISIONS:
-!
 !  07/2023, Wenzong Dong: porting to MPI version
 !  08/2023, Hua Yuan: unified PFT and PC process
-!  10/2023, Wanyi Lin: check with MOD_Vars_TimeVariables.F90, add variables,
-!           and remove unnecessary variables
+!  10/2023, Wanyi Lin: check with MOD_Vars_TimeVariables.F90, add
+!           variables, and remove unnecessary variables
 !
 !-----------------------------------------------------------------------
 
@@ -21,7 +19,7 @@ MODULE MOD_Lulcc_Vars_TimeVariables
    IMPLICIT NONE
    SAVE
 ! ----------------------------------------------------------------------
-! Time-varying state variables which reaquired by restart run
+! Time-varying state variables which required by restart run
    !TODO: need to check with MOD_Vars_TimeVariables.F90 whether
    !      there are any variables missing. - DONE
    real(r8), allocatable :: z_sno_         (:,:)  !node depth [m]
@@ -41,21 +39,21 @@ MODULE MOD_Lulcc_Vars_TimeVariables
    real(r8), allocatable :: sag_             (:)  !non dimensional snow age [-]
    real(r8), allocatable :: scv_             (:)  !snow cover, water equivalent [mm]
    real(r8), allocatable :: snowdp_          (:)  !snow depth [meter]
-   real(r8), allocatable :: fsno_            (:)  !fraction of snow cover on ground
-   real(r8), allocatable :: sigf_            (:)  !fraction of veg cover, excluding snow-covered veg [-]
+   real(r8), allocatable :: fsno_            (:)  !frac of snow cover on ground
+   real(r8), allocatable :: sigf_            (:)  !frac of veg cover, excluding snow-covered veg [-]
    real(r8), allocatable :: zwt_             (:)  !the depth to water table [m]
    real(r8), allocatable :: wa_              (:)  !water storage in aquifer [mm]
    real(r8), allocatable :: wdsrf_           (:)  !depth of surface water [mm]
    real(r8), allocatable :: rss_             (:)  !soil surface resistance [s/m]
 
-   real(r8), allocatable :: t_lake_        (:,:)  !lake layer teperature [K]
+   real(r8), allocatable :: t_lake_        (:,:)  !lake layer temperature [K]
    real(r8), allocatable :: lake_icefrac_  (:,:)  !lake mass fraction of lake layer that is frozen
    real(r8), allocatable :: savedtke1_       (:)  !top level eddy conductivity (W/m K)
 
    !Plant Hydraulic variables
    real(r8), allocatable :: vegwp_         (:,:)  !vegetation water potential [mm]
    real(r8), allocatable :: gs0sun_          (:)  !working copy of sunlit stomata conductance
-   real(r8), allocatable :: gs0sha_          (:)  !working copy of shalit stomata conductance
+   real(r8), allocatable :: gs0sha_          (:)  !working copy of shaded stomata conductance
    !END plant hydraulic variables
 
    !Ozone stress variables
@@ -75,7 +73,7 @@ MODULE MOD_Lulcc_Vars_TimeVariables
    real(r8), allocatable :: mss_dst4_      (:,:)  !mass of dust species 4 in snow  (col,lyr) [kg]
    real(r8), allocatable :: ssno_lyr_  (:,:,:,:)  !snow layer absorption [-]
 
-   ! Additional variables required by reginal model (such as WRF ) RSM)
+   ! Additional variables required by regional model (such as WRF ) RSM)
    real(r8), allocatable :: trad_            (:)  !radiative temperature of surface [K]
    real(r8), allocatable :: tref_            (:)  !2 m height air temperature [kelvin]
    real(r8), allocatable :: qref_            (:)  !2 m height air specific humidity
@@ -83,7 +81,7 @@ MODULE MOD_Lulcc_Vars_TimeVariables
    real(r8), allocatable :: emis_            (:)  !averaged bulk surface emissivity
    real(r8), allocatable :: z0m_             (:)  !effective roughness [m]
    real(r8), allocatable :: displa_          (:)  !zero displacement height [m]
-   real(r8), allocatable :: zol_             (:)  !dimensionless height (z/L) used in Monin-Obukhov theory
+   real(r8), allocatable :: zol_             (:)  !dimensionless height (z/L) used in M-O theory
    real(r8), allocatable :: rib_             (:)  !bulk Richardson number in surface layer
    real(r8), allocatable :: ustar_           (:)  !u* in similarity theory [m/s]
    real(r8), allocatable :: qstar_           (:)  !q* in similarity theory [kg/kg]
@@ -101,7 +99,7 @@ MODULE MOD_Lulcc_Vars_TimeVariables
    real(r8), allocatable :: ldew_rain_p_     (:)  !depth of rain on foliage [mm]
    real(r8), allocatable :: ldew_snow_p_     (:)  !depth of snow on foliage [mm]
    real(r8), allocatable :: fwet_snow_p_     (:)  !vegetation snow fractional cover [-]
-   real(r8), allocatable :: sigf_p_          (:)  !fraction of veg cover, excluding snow-covered veg [-]
+   real(r8), allocatable :: sigf_p_          (:)  !frac of veg cover, excluding snow-covered veg [-]
 
    !TODO@yuan: to check the below for PC whether they are needed
    real(r8), allocatable :: tref_p_          (:)  !2 m height air temperature [kelvin]
@@ -112,7 +110,7 @@ MODULE MOD_Lulcc_Vars_TimeVariables
    ! Plant Hydraulic variables
    real(r8), allocatable :: vegwp_p_       (:,:)  !vegetation water potential [mm]
    real(r8), allocatable :: gs0sun_p_        (:)  !working copy of sunlit stomata conductance
-   real(r8), allocatable :: gs0sha_p_        (:)  !working copy of shalit stomata conductance
+   real(r8), allocatable :: gs0sha_p_        (:)  !working copy of shaded stomata conductance
    ! end plant hydraulic variables
 
    ! Ozone Stress Variables
@@ -126,12 +124,12 @@ MODULE MOD_Lulcc_Vars_TimeVariables
    real(r8), allocatable :: dfwsun_          (:)  !change of sunlit fraction of walls [-]
 
    ! shortwave absorption
-   real(r8), allocatable :: sroof_       (:,:,:)  !roof aborption [-]
+   real(r8), allocatable :: sroof_       (:,:,:)  !roof absorption [-]
    real(r8), allocatable :: swsun_       (:,:,:)  !sunlit wall absorption [-]
    real(r8), allocatable :: swsha_       (:,:,:)  !shaded wall absorption [-]
-   real(r8), allocatable :: sgimp_       (:,:,:)  !impervious absorptioin [-]
-   real(r8), allocatable :: sgper_       (:,:,:)  !pervious absorptioin [-]
-   real(r8), allocatable :: slake_       (:,:,:)  !urban lake absorptioin [-]
+   real(r8), allocatable :: sgimp_       (:,:,:)  !impervious absorption [-]
+   real(r8), allocatable :: sgper_       (:,:,:)  !pervious absorption [-]
+   real(r8), allocatable :: slake_       (:,:,:)  !urban lake absorption [-]
 
    ! net longwave radiation for last time temperature change
    real(r8), allocatable :: lwsun_           (:)  !net longwave of sunlit wall [W/m2]
@@ -190,10 +188,10 @@ MODULE MOD_Lulcc_Vars_TimeVariables
    real(r8), allocatable :: snowdp_gper_     (:)  !pervious ground snow depth [m]
    real(r8), allocatable :: snowdp_lake_     (:)  !urban lake snow depth [m]
 
-   !TODO: condsider renaming the below variables
+   !TODO: consider renaming the below variables
    real(r8), allocatable :: Fhac_            (:)  !sensible flux from heat or cool AC [W/m2]
    real(r8), allocatable :: Fwst_            (:)  !waste heat flux from heat or cool AC [W/m2]
-   real(r8), allocatable :: Fach_            (:)  !flux from inner and outter air exchange [W/m2]
+   real(r8), allocatable :: Fach_            (:)  !flux from inner and outer air exchange [W/m2]
    real(r8), allocatable :: Fahe_            (:)  !flux from metabolism and vehicle [W/m2]
    real(r8), allocatable :: Fhah_            (:)  !sensible heat flux from heating [W/m2]
    real(r8), allocatable :: vehc_            (:)  !flux from vehicle [W/m2]
@@ -980,15 +978,20 @@ IF (patchclass(np)==URBAN .and. patchclass_(np_)==URBAN) THEN
 
                      wliq_soisno(: ,np) = 0.
                      wliq_soisno(:1,np) = wliq_roofsno(:1,u )*froof(u)
-                     wliq_soisno(: ,np) = wliq_soisno (: ,np)+wliq_gpersno(: ,u)*(1-froof(u))*fgper(u)
-                     wliq_soisno(:1,np) = wliq_soisno (:1,np)+wliq_gimpsno(:1,u)*(1-froof(u))*(1-fgper(u))
+                     wliq_soisno(: ,np) = wliq_soisno (: ,np) &
+                                        + wliq_gpersno(: ,u )*(1-froof(u))*fgper(u)
+                     wliq_soisno(:1,np) = wliq_soisno (:1,np) &
+                                        + wliq_gimpsno(:1,u )*(1-froof(u))*(1-fgper(u))
 
                      wice_soisno(: ,np) = 0.
                      wice_soisno(:1,np) = wice_roofsno(:1,u )*froof(u)
-                     wice_soisno(: ,np) = wice_soisno (: ,np)+wice_gpersno(: ,u)*(1-froof(u))*fgper(u)
-                     wice_soisno(:1,np) = wice_soisno (:1,np)+wice_gimpsno(:1,u)*(1-froof(u))*(1-fgper(u))
+                     wice_soisno(: ,np) = wice_soisno (: ,np) &
+                                        + wice_gpersno(: ,u )*(1-froof(u))*fgper(u)
+                     wice_soisno(:1,np) = wice_soisno (:1,np) &
+                                        + wice_gimpsno(:1,u )*(1-froof(u))*(1-fgper(u))
 
-                     scv(np) = scv_roof(u)*froof(u) + scv_gper(u)*(1-froof(u))*fgper(u) + scv_gimp(u)*(1-froof(u))*(1-fgper(u))
+                     scv(np) = scv_roof(u)*froof(u) + scv_gper(u)*(1-froof(u))*fgper(u) &
+                             + scv_gimp(u)*(1-froof(u))*(1-fgper(u))
 ENDIF
 #endif
                      np = np + 1
@@ -1000,11 +1003,11 @@ ENDIF
       ENDIF
 
       IF (p_is_worker) THEN
-         IF (allocated(grid_patch_s )) deallocate(grid_patch_s )
-         IF (allocated(grid_patch_e )) deallocate(grid_patch_e )
-         IF (allocated(grid_patch_s_)) deallocate(grid_patch_s_)
-         IF (allocated(grid_patch_e_)) deallocate(grid_patch_e_)
-         IF (allocated(locpxl       )) deallocate(locpxl       )
+         IF (allocated(grid_patch_s )) deallocate (grid_patch_s  )
+         IF (allocated(grid_patch_e )) deallocate (grid_patch_e  )
+         IF (allocated(grid_patch_s_)) deallocate (grid_patch_s_ )
+         IF (allocated(grid_patch_e_)) deallocate (grid_patch_e_ )
+         IF (allocated(locpxl       )) deallocate (locpxl        )
       ENDIF
    END SUBROUTINE REST_LulccTimeVariables
 
@@ -1019,180 +1022,180 @@ ENDIF
 ! --------------------------------------------------
       IF (p_is_worker) THEN
          IF (numpatch_ > 0) THEN
-            deallocate (z_sno_        )
-            deallocate (dz_sno_       )
-            deallocate (t_soisno_     )
-            deallocate (wliq_soisno_  )
-            deallocate (wice_soisno_  )
-            deallocate (smp_          )
-            deallocate (hk_           )
-            deallocate (t_grnd_       )
-            deallocate (tleaf_        )
-            deallocate (ldew_         )
-            deallocate (ldew_rain_    )
-            deallocate (ldew_snow_    )
-            deallocate (fwet_snow_    )
-            deallocate (sag_          )
-            deallocate (scv_          )
-            deallocate (snowdp_       )
-            deallocate (fsno_         )
-            deallocate (sigf_         )
-            deallocate (zwt_          )
-            deallocate (wa_           )
-            deallocate (wdsrf_        )
-            deallocate (rss_          )
+            deallocate (z_sno_           )
+            deallocate (dz_sno_          )
+            deallocate (t_soisno_        )
+            deallocate (wliq_soisno_     )
+            deallocate (wice_soisno_     )
+            deallocate (smp_             )
+            deallocate (hk_              )
+            deallocate (t_grnd_          )
+            deallocate (tleaf_           )
+            deallocate (ldew_            )
+            deallocate (ldew_rain_       )
+            deallocate (ldew_snow_       )
+            deallocate (fwet_snow_       )
+            deallocate (sag_             )
+            deallocate (scv_             )
+            deallocate (snowdp_          )
+            deallocate (fsno_            )
+            deallocate (sigf_            )
+            deallocate (zwt_             )
+            deallocate (wa_              )
+            deallocate (wdsrf_           )
+            deallocate (rss_             )
 
-            deallocate (t_lake_       )
-            deallocate (lake_icefrac_ )
-            deallocate (savedtke1_    )
+            deallocate (t_lake_          )
+            deallocate (lake_icefrac_    )
+            deallocate (savedtke1_       )
 
             !Plant Hydraulic variables
-            deallocate (vegwp_        )
-            deallocate (gs0sun_       )
-            deallocate (gs0sha_       )
+            deallocate (vegwp_           )
+            deallocate (gs0sun_          )
+            deallocate (gs0sha_          )
             !END plant hydraulic variables
 
             !Ozone Stress variables
-            deallocate (lai_old_      )
-            deallocate (o3uptakesun_  )
-            deallocate (o3uptakesha_  )
+            deallocate (lai_old_         )
+            deallocate (o3uptakesun_     )
+            deallocate (o3uptakesha_     )
             !End ozone stress variables
 
-            deallocate (snw_rds_      )
-            deallocate (mss_bcpho_    )
-            deallocate (mss_bcphi_    )
-            deallocate (mss_ocpho_    )
-            deallocate (mss_ocphi_    )
-            deallocate (mss_dst1_     )
-            deallocate (mss_dst2_     )
-            deallocate (mss_dst3_     )
-            deallocate (mss_dst4_     )
-            deallocate (ssno_lyr_     )
+            deallocate (snw_rds_         )
+            deallocate (mss_bcpho_       )
+            deallocate (mss_bcphi_       )
+            deallocate (mss_ocpho_       )
+            deallocate (mss_ocphi_       )
+            deallocate (mss_dst1_        )
+            deallocate (mss_dst2_        )
+            deallocate (mss_dst3_        )
+            deallocate (mss_dst4_        )
+            deallocate (ssno_lyr_        )
 
-            deallocate (trad_         )
-            deallocate (tref_         )
-            deallocate (qref_         )
-            deallocate (rst_          )
-            deallocate (emis_         )
-            deallocate (z0m_          )
-            deallocate (zol_          )
-            deallocate (rib_          )
-            deallocate (ustar_        )
-            deallocate (qstar_        )
-            deallocate (tstar_        )
-            deallocate (fm_           )
-            deallocate (fh_           )
-            deallocate (fq_           )
+            deallocate (trad_            )
+            deallocate (tref_            )
+            deallocate (qref_            )
+            deallocate (rst_             )
+            deallocate (emis_            )
+            deallocate (z0m_             )
+            deallocate (zol_             )
+            deallocate (rib_             )
+            deallocate (ustar_           )
+            deallocate (qstar_           )
+            deallocate (tstar_           )
+            deallocate (fm_              )
+            deallocate (fh_              )
+            deallocate (fq_              )
 
-            deallocate (sum_irrig_      )
-            deallocate (sum_irrig_count_)
+            deallocate (sum_irrig_       )
+            deallocate (sum_irrig_count_ )
 
          ENDIF
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
          IF (numpft_ > 0) THEN
-            deallocate (tleaf_p_      )
-            deallocate (ldew_p_       )
-            deallocate (ldew_rain_p_  )
-            deallocate (ldew_snow_p_  )
-            deallocate (fwet_snow_p_  )
-            deallocate (sigf_p_       )
-            deallocate (tref_p_       )
-            deallocate (qref_p_       )
-            deallocate (rst_p_        )
-            deallocate (z0m_p_        )
+            deallocate (tleaf_p_         )
+            deallocate (ldew_p_          )
+            deallocate (ldew_rain_p_     )
+            deallocate (ldew_snow_p_     )
+            deallocate (fwet_snow_p_     )
+            deallocate (sigf_p_          )
+            deallocate (tref_p_          )
+            deallocate (qref_p_          )
+            deallocate (rst_p_           )
+            deallocate (z0m_p_           )
 
             ! Plant Hydraulic variables
-            deallocate (vegwp_p_      )
-            deallocate (gs0sun_p_     )
-            deallocate (gs0sha_p_     )
+            deallocate (vegwp_p_         )
+            deallocate (gs0sun_p_        )
+            deallocate (gs0sha_p_        )
             ! end plant hydraulic variables
 
             ! Allocate Ozone Stress Variables
-            deallocate (lai_old_p_    )
-            deallocate (o3uptakesun_p_)
-            deallocate (o3uptakesha_p_)
+            deallocate (lai_old_p_       )
+            deallocate (o3uptakesun_p_   )
+            deallocate (o3uptakesha_p_   )
             ! End allocate Ozone Stress Variables
          ENDIF
 #endif
 
 #ifdef URBAN_MODEL
          IF (numurban_ > 0) THEN
-            deallocate (fwsun_        )
-            deallocate (dfwsun_       )
+            deallocate (fwsun_           )
+            deallocate (dfwsun_          )
 
-            deallocate (sroof_        )
-            deallocate (swsun_        )
-            deallocate (swsha_        )
-            deallocate (sgimp_        )
-            deallocate (sgper_        )
-            deallocate (slake_        )
+            deallocate (sroof_           )
+            deallocate (swsun_           )
+            deallocate (swsha_           )
+            deallocate (sgimp_           )
+            deallocate (sgper_           )
+            deallocate (slake_           )
 
-            deallocate (lwsun_        )
-            deallocate (lwsha_        )
-            deallocate (lgimp_        )
-            deallocate (lgper_        )
-            deallocate (lveg_         )
+            deallocate (lwsun_           )
+            deallocate (lwsha_           )
+            deallocate (lgimp_           )
+            deallocate (lgper_           )
+            deallocate (lveg_            )
 
-            deallocate (z_sno_roof_   )
-            deallocate (z_sno_gimp_   )
-            deallocate (z_sno_gper_   )
-            deallocate (z_sno_lake_   )
+            deallocate (z_sno_roof_      )
+            deallocate (z_sno_gimp_      )
+            deallocate (z_sno_gper_      )
+            deallocate (z_sno_lake_      )
 
-            deallocate (dz_sno_roof_  )
-            deallocate (dz_sno_gimp_  )
-            deallocate (dz_sno_gper_  )
-            deallocate (dz_sno_lake_  )
+            deallocate (dz_sno_roof_     )
+            deallocate (dz_sno_gimp_     )
+            deallocate (dz_sno_gper_     )
+            deallocate (dz_sno_lake_     )
 
-            deallocate (t_roofsno_    )
-            deallocate (t_wallsun_    )
-            deallocate (t_wallsha_    )
-            deallocate (t_gimpsno_    )
-            deallocate (t_gpersno_    )
-            deallocate (t_lakesno_    )
+            deallocate (t_roofsno_       )
+            deallocate (t_wallsun_       )
+            deallocate (t_wallsha_       )
+            deallocate (t_gimpsno_       )
+            deallocate (t_gpersno_       )
+            deallocate (t_lakesno_       )
 
-            deallocate (troof_inner_  )
-            deallocate (twsun_inner_  )
-            deallocate (twsha_inner_  )
+            deallocate (troof_inner_     )
+            deallocate (twsun_inner_     )
+            deallocate (twsha_inner_     )
 
-            deallocate (wliq_roofsno_ )
-            deallocate (wice_roofsno_ )
-            deallocate (wliq_gimpsno_ )
-            deallocate (wice_gimpsno_ )
-            deallocate (wliq_gpersno_ )
-            deallocate (wice_gpersno_ )
-            deallocate (wliq_lakesno_ )
-            deallocate (wice_lakesno_ )
+            deallocate (wliq_roofsno_    )
+            deallocate (wice_roofsno_    )
+            deallocate (wliq_gimpsno_    )
+            deallocate (wice_gimpsno_    )
+            deallocate (wliq_gpersno_    )
+            deallocate (wice_gpersno_    )
+            deallocate (wliq_lakesno_    )
+            deallocate (wice_lakesno_    )
 
-            deallocate (sag_roof_     )
-            deallocate (sag_gimp_     )
-            deallocate (sag_gper_     )
-            deallocate (sag_lake_     )
-            deallocate (scv_roof_     )
-            deallocate (scv_gimp_     )
-            deallocate (scv_gper_     )
-            deallocate (scv_lake_     )
-            deallocate (fsno_roof_    )
-            deallocate (fsno_gimp_    )
-            deallocate (fsno_gper_    )
-            deallocate (fsno_lake_    )
-            deallocate (snowdp_roof_  )
-            deallocate (snowdp_gimp_  )
-            deallocate (snowdp_gper_  )
-            deallocate (snowdp_lake_  )
+            deallocate (sag_roof_        )
+            deallocate (sag_gimp_        )
+            deallocate (sag_gper_        )
+            deallocate (sag_lake_        )
+            deallocate (scv_roof_        )
+            deallocate (scv_gimp_        )
+            deallocate (scv_gper_        )
+            deallocate (scv_lake_        )
+            deallocate (fsno_roof_       )
+            deallocate (fsno_gimp_       )
+            deallocate (fsno_gper_       )
+            deallocate (fsno_lake_       )
+            deallocate (snowdp_roof_     )
+            deallocate (snowdp_gimp_     )
+            deallocate (snowdp_gper_     )
+            deallocate (snowdp_lake_     )
 
-            deallocate (Fhac_         )
-            deallocate (Fwst_         )
-            deallocate (Fach_         )
-            deallocate (Fahe_         )
-            deallocate (Fhah_         )
-            deallocate (vehc_         )
-            deallocate (meta_         )
-            deallocate (t_room_       )
-            deallocate (t_roof_       )
-            deallocate (t_wall_       )
-            deallocate (tafu_         )
-            deallocate (urb_green_    )
+            deallocate (Fhac_            )
+            deallocate (Fwst_            )
+            deallocate (Fach_            )
+            deallocate (Fahe_            )
+            deallocate (Fhah_            )
+            deallocate (vehc_            )
+            deallocate (meta_            )
+            deallocate (t_room_          )
+            deallocate (t_roof_          )
+            deallocate (t_wall_          )
+            deallocate (tafu_            )
+            deallocate (urb_green_       )
          ENDIF
 #endif
       ENDIF

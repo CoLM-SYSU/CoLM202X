@@ -1,16 +1,17 @@
 #include <define.h>
 
 MODULE MOD_RegionClip
-!-----------------------------------------------------------------------------------------
-! DESCRIPTION:
+!-----------------------------------------------------------------------
+! !DESCRIPTION:
 !
-!    This module includes subroutines to clip surface data from an existing data
-!    in a larger region.
+!    This module includes subroutines to clip surface data from an existing
+!    data in a larger region.
 !
-!    Please use namelist variable "USE_srfdata_from_larger_region" to call these subroutines.
+!    Please use namelist variable "USE_srfdata_from_larger_region" to call
+!    these subroutines.
 !
-! Created by Shupeng Zhang, May 2023
-!-----------------------------------------------------------------------------------------
+!  Created by Shupeng Zhang, May 2023
+!-----------------------------------------------------------------------
 
 CONTAINS
 
@@ -495,6 +496,12 @@ CONTAINS
                   CALL clip_vector (file_in, file_out, iblk, jblk, &
                      'BD_all_s_l'//trim(c1)//'_patches', patchmask)
 
+                  ! (22) volumetric fraction of clay
+                  file_in  = trim(dir_landdata_in)  // '/soil/vf_clay_s_l'//trim(c1)//'_patches.nc'
+                  file_out = trim(dir_landdata_out) // '/soil/vf_clay_s_l'//trim(c1)//'_patches.nc'
+                  CALL clip_vector (file_in, file_out, iblk, jblk, &
+                     'vf_clay_s_l'//trim(c1)//'_patches', patchmask)
+
                ENDDO
 
                ! topography
@@ -621,7 +628,7 @@ CONTAINS
    integer, allocatable :: data_i4_out1 (:)
    integer, allocatable :: data_i4_out2 (:,:)
    integer, allocatable :: data_i4_out3 (:,:,:)
-   
+
    integer*8, allocatable :: data_i8_in1  (:)
    integer*8, allocatable :: data_i8_out1 (:)
 
