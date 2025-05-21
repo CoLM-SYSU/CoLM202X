@@ -1097,7 +1097,7 @@ ENDIF
 #endif
 
 #ifdef EXTERNAL_LAKE
-      CALL WRITE_LakeTimeVars (idate, lc_year, site, dir_restart) 
+      CALL WRITE_LakeTimeVars (idate, lc_year, site, dir_restart)
 #endif
 
    END SUBROUTINE WRITE_TimeVariables
@@ -1289,7 +1289,7 @@ ENDIF
 #endif
 
       IF (p_is_master) THEN
-         write(*,*) 'Loading Time Variables done.'
+         write(*,'(A29)') 'Loading Time Variables done.'
       ENDIF
 
    END SUBROUTINE READ_TimeVariables
