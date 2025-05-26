@@ -82,8 +82,8 @@ PROGRAM MKSRFDATA
    USE MOD_SingleSrfdata
 #endif
 
+   USE MOD_Lulcc_TransferTrace
    USE MOD_RegionClip
-
 
    IMPLICIT NONE
 
@@ -99,9 +99,10 @@ PROGRAM MKSRFDATA
    type (grid_type) :: grid_500m, grid_htop, grid_soil, grid_lai, grid_topo, grid_topo_factor
    type (grid_type) :: grid_urban_5km, grid_urban_500m
 
-   integer   :: lc_year
+   integer   :: lc_year, lai_year
    character(len=4) :: cyear
    integer*8 :: start_time, end_time, c_per_sec, time_used
+   logical   :: skip_rest
 
 
 #ifdef USEMPI
@@ -170,6 +171,15 @@ PROGRAM MKSRFDATA
    edgew = DEF_domain%edgew
    edgee = DEF_domain%edgee
    lc_year = DEF_LC_YEAR
+
+   lai_year = lc_year
+   skip_rest = .FALSE.
+
+#ifdef LULCC
+      IF ( lc_year < 2000 ) THEN
+         lc_year = MAX(1985, (lc_year / 5) * 5)
+      ENDIF
+#endif
 
    ! define blocks
    CALL gblock%set ()
@@ -395,10 +405,21 @@ PROGRAM MKSRFDATA
    CALL gdiag%define_by_ndims(3600,1800)
 #endif
 
-   CALL srfdata_diag_init (dir_landdata)
+   CALL srfdata_diag_init (dir_landdata, lc_year)
 #endif
 
    !TODO: for lulcc, need to run for each year and SAVE to different subdirs
+
+#ifdef LULCC
+   IF (lai_year<2000 .and. MOD(lai_year,5) /= 0) THEN
+      CALL Aggregation_LAI          (grid_lai,  dir_rawdata, dir_landdata, lai_year)
+      skip_rest = .TRUE.
+   ELSE
+      CALL MAKE_LulccTransferTrace  (lc_year)
+   ENDIF
+#endif
+
+IF (.not. (skip_rest)) THEN
 
    CALL Aggregation_PercentagesPFT  (grid_500m, dir_rawdata, dir_landdata, lc_year)
 
@@ -429,6 +450,8 @@ PROGRAM MKSRFDATA
 #endif
 
    CALL Aggregation_SoilTexture     (grid_soil, dir_rawdata, dir_landdata, lc_year)
+
+ENDIF
 
 ! ................................................................
 ! 4. Free memories.
