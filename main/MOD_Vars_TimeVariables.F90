@@ -1136,7 +1136,7 @@ ENDIF
 #endif
 
       IF (p_is_master) THEN
-         write(*,'(/,A26)') 'Loading Time Variables ...'
+         write(*,*) 'Loading Time Variables ...'
       ENDIF
 
       ! land cover type year
@@ -1289,7 +1289,7 @@ ENDIF
 #endif
 
       IF (p_is_master) THEN
-         write(*,'(A29)') 'Loading Time Variables done.'
+         write(*,*) 'Loading Time Variables done.'
       ENDIF
 
    END SUBROUTINE READ_TimeVariables
