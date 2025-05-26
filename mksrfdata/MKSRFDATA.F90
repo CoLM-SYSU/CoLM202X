@@ -430,7 +430,7 @@ IF (.not. (skip_rest)) THEN
    CALL Aggregation_SoilBrightness  (grid_500m, dir_rawdata, dir_landdata, lc_year)
 
    IF (DEF_USE_BEDROCK) THEN
-      CALL Aggregation_DBedrock     (grid_500m, dir_rawdata, dir_landdata)
+      CALL Aggregation_DBedrock     (grid_500m, dir_rawdata, dir_landdata, lc_year)
    ENDIF
 
    CALL Aggregation_LAI             (grid_lai,  dir_rawdata, dir_landdata, lc_year)
