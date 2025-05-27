@@ -533,9 +533,9 @@ PROGRAM CoLM
          IF (save_to_restart (idate, deltim, itstamp, ptstamp)) THEN
 #ifdef LULCC
             IF (jdate(1) >= 2000) THEN
-            CALL WRITE_TimeVariables (jdate, jdate(1), casename, dir_restart)
+               CALL WRITE_TimeVariables (jdate, jdate(1), casename, dir_restart)
             ELSE
-              CALL WRITE_TimeVariables (jdate, (jdate(1)/5)*5, casename, dir_restart)
+               CALL WRITE_TimeVariables (jdate, (jdate(1)/5)*5, casename, dir_restart)
             ENDIF
 #else
             CALL WRITE_TimeVariables (jdate, lc_year,  casename, dir_restart)
