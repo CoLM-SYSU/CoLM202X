@@ -175,7 +175,7 @@ SUBROUTINE CoLMMAIN ( &
    USE MOD_SPMD_Task
 
 #ifdef EXTERNAL_LAKE
-   USE MOD_Lake_Driver, only: Lake_Interface
+   USE MOD_Lake_Driver, only: external_lake
 #endif
 
    IMPLICIT NONE
