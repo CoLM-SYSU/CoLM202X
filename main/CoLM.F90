@@ -530,7 +530,7 @@ PROGRAM CoLM
 
          ! Write out the model state variables for restart run
          ! ----------------------------------------------------------------------
-         IF (save_to_restart (idate, deltim, itstamp, ptstamp)) THEN
+         IF (save_to_restart (idate, deltim, itstamp, ptstamp, etstamp)) THEN
 #ifdef LULCC
             IF (jdate(1) >= 2000) THEN
                CALL WRITE_TimeVariables (jdate, jdate(1), casename, dir_restart)
