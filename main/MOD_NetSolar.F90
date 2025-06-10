@@ -45,7 +45,7 @@ CONTAINS
    USE MOD_Precision
    USE MOD_Vars_Global
    USE MOD_Namelist, only: DEF_USE_SNICAR
-   USE MOD_TimeManager
+   USE MOD_TimeManager, only: isgreenwich
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
    USE MOD_LandPFT, only: patch_pft_s, patch_pft_e
    USE MOD_Vars_PFTimeInvariants
