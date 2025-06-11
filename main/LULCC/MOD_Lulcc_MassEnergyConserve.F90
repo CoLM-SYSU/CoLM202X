@@ -209,7 +209,8 @@ ENDIF
                                  inp_ = inp_ + 1
                               ENDDO
                               IF (.not.(FOUND)) THEN
-                                 PRINT*, 'source patch not found, np', np, 'patchclass_', patchclass_(grid_patch_s_(j):grid_patch_e_(j))
+                                 PRINT*, 'source patch not found, np', np, 'patchclass_', &
+                                    patchclass_(grid_patch_s_(j):grid_patch_e_(j))
                               ENDIF
                            ELSE
                              CYCLE
