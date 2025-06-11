@@ -51,7 +51,7 @@ CONTAINS
    USE MOD_Vars_TimeVariables
    USE MOD_Lulcc_Vars_TimeInvariants
    USE MOD_Lulcc_Vars_TimeVariables
-   USE MOD_Lulcc_TransferTrace
+   USE MOD_Lulcc_TransferTraceReadin
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
    USE MOD_LandPFT
    USE MOD_Vars_PFTimeInvariants
@@ -103,7 +103,7 @@ CONTAINS
    real(r8):: wt                        !fraction of vegetation covered with snow [-]
    real(r8), parameter :: m = 1.0       !the value of m used in CLM4.5 is 1.0.
    ! real(r8) :: deltim = 1800.         !time step (seconds) TODO: be intent in
-   logical :: FROM_SOIL
+   logical :: FROM_SOIL, FOUND
 !-----------------------------------------------------------------------
 
       IF (p_is_worker) THEN
@@ -170,6 +170,7 @@ IF (DEF_USE_PFT .or. DEF_FAST_PC) THEN
                      lccpct_np(URBAN  )   = lccpct_patches(np,URBAN  )
                      lccpct_np(WETLAND)   = lccpct_patches(np,WETLAND)
                      lccpct_np(WATERBODY) = lccpct_patches(np,WATERBODY)
+                     lccpct_np(GLACIERS)  = lccpct_patches(np,GLACIERS)
 ELSE
                      lccpct_np(:) = lccpct_patches(np,1:nlc)
 ENDIF
@@ -188,6 +189,7 @@ ENDIF
                         DO ilc = 1, nlc
 
                            IF (lccpct_np(ilc) .gt. 0) THEN
+                              FOUND = .FALSE.
                               k = k + 1
                               inp_ = np_
 
@@ -201,11 +203,15 @@ ENDIF
 
                                  IF (patchclass_(inp_) .eq. ilc) THEN
                                     frnp_(k) = inp_
+                                    FOUND = .TRUE.
                                     EXIT
                                  ENDIF
                                  inp_ = inp_ + 1
                               ENDDO
-
+                              IF (.not.(FOUND)) THEN
+                                 PRINT*, 'source patch not found, np', np, 'patchclass_', &
+                                    patchclass_(grid_patch_s_(j):grid_patch_e_(j))
+                              ENDIF
                            ELSE
                              CYCLE
                            ENDIF
@@ -606,52 +612,52 @@ ENDIF
                                                 * lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
 
                            ! TODO: or use same type assignment
-                           smp       (:,np) = smp    (:,np) + smp_   (:,frnp_(k))
+                           smp       (:,np) = smp    (:,np) + smp_   (:,frnp_(k)) &
                                             * lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
-                           hk        (:,np) = hk     (:,np) + hk_    (:,frnp_(k))
+                           hk        (:,np) = hk     (:,np) + hk_    (:,frnp_(k)) &
                                             * lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
 
                            IF(DEF_USE_PLANTHYDRAULICS)THEN
-                              vegwp  (:,np) = vegwp  (:,np) + vegwp_ (:,frnp_(k))
+                              vegwp  (:,np) = vegwp  (:,np) + vegwp_ (:,frnp_(k)) &
                                             * lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
-                              gs0sun   (np) = gs0sun   (np) + gs0sun_  (frnp_(k))
+                              gs0sun   (np) = gs0sun   (np) + gs0sun_  (frnp_(k)) &
                                             * lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
-                              gs0sha   (np) = gs0sha   (np) + gs0sha_  (frnp_(k))
+                              gs0sha   (np) = gs0sha   (np) + gs0sha_  (frnp_(k)) &
                                             * lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
                            ENDIF
 
                            IF(DEF_USE_OZONESTRESS)THEN
-                              lai_old  (np) = lai_old  (np) + lai_old_ (frnp_(k))
+                              lai_old  (np) = lai_old  (np) + lai_old_ (frnp_(k)) &
                                             * lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
                            ENDIF
 
-                           trad        (np) = trad     (np) + trad_    (frnp_(k))
+                           trad        (np) = trad     (np) + trad_    (frnp_(k)) &
                                             * lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
-                           tref        (np) = tref     (np) + tref_    (frnp_(k))
+                           tref        (np) = tref     (np) + tref_    (frnp_(k)) &
                                             * lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
-                           qref        (np) = qref     (np) + qref_    (frnp_(k))
+                           qref        (np) = qref     (np) + qref_    (frnp_(k)) &
                                             * lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
-                           rst         (np) = rst      (np) + rst_     (frnp_(k))
+                           rst         (np) = rst      (np) + rst_     (frnp_(k)) &
                                             * lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
-                           emis        (np) = emis     (np) + emis_    (frnp_(k))
+                           emis        (np) = emis     (np) + emis_    (frnp_(k)) &
                                             * lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
-                           z0m         (np) = z0m      (np) + z0m_     (frnp_(k))
+                           z0m         (np) = z0m      (np) + z0m_     (frnp_(k)) &
                                             * lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
-                           zol         (np) = zol      (np) + zol_     (frnp_(k))
+                           zol         (np) = zol      (np) + zol_     (frnp_(k)) &
                                             * lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
-                           rib         (np) = rib      (np) + rib_     (frnp_(k))
+                           rib         (np) = rib      (np) + rib_     (frnp_(k)) &
                                             * lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
-                           ustar       (np) = ustar    (np) + ustar_   (frnp_(k))
+                           ustar       (np) = ustar    (np) + ustar_   (frnp_(k)) &
                                             * lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
-                           qstar       (np) = qstar    (np) + qstar_   (frnp_(k))
+                           qstar       (np) = qstar    (np) + qstar_   (frnp_(k)) &
                                             * lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
-                           tstar       (np) = tstar    (np) + tstar_   (frnp_(k))
+                           tstar       (np) = tstar    (np) + tstar_   (frnp_(k)) &
                                             * lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
-                           fm          (np) = fm       (np) + fm_      (frnp_(k))
+                           fm          (np) = fm       (np) + fm_      (frnp_(k)) &
                                             * lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
-                           fh          (np) = fh       (np) + fh_      (frnp_(k))
+                           fh          (np) = fh       (np) + fh_      (frnp_(k)) &
                                             * lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
-                           fq          (np) = fq       (np) + fq_      (frnp_(k))
+                           fq          (np) = fq       (np) + fq_      (frnp_(k)) &
                                             * lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
                         ENDDO
 
@@ -659,15 +665,15 @@ ENDIF
                         wbef = 0
                         wpre = 0
                         DO k = 1, num
-                           wbef = wbef + ldew_(frnp_(k))
+                           wbef = wbef + ldew_(frnp_(k)) &
                                        * lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
-                           wbef = wbef + scv_ (frnp_(k))
+                           wbef = wbef + scv_ (frnp_(k)) &
                                        * lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
-                           wbef = wbef + wa_  (frnp_(k))
+                           wbef = wbef + wa_  (frnp_(k)) &
                                        * lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
-                           wbef = wbef + sum(wliq_soisno_(maxsnl+1:nl_soil,frnp_(k)))
+                           wbef = wbef + sum(wliq_soisno_(maxsnl+1:nl_soil,frnp_(k))) &
                                        * lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
-                           wbef = wbef + sum(wice_soisno_(maxsnl+1:nl_soil,frnp_(k)))
+                           wbef = wbef + sum(wice_soisno_(maxsnl+1:nl_soil,frnp_(k))) &
                                        * lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
                         ENDDO
 

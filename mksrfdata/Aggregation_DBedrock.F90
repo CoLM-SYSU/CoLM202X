@@ -1,7 +1,7 @@
 #include <define.h>
 
 SUBROUTINE Aggregation_DBedrock ( &
-      gland, dir_rawdata, dir_model_landdata)
+      gland, dir_rawdata, dir_model_landdata, lc_year)
 
 !-----------------------------------------------------------------------
 !  Depth to bedrock
@@ -30,12 +30,13 @@ SUBROUTINE Aggregation_DBedrock ( &
    IMPLICIT NONE
 
    ! arguments:
+   integer, intent(in) :: lc_year
    type(grid_type),  intent(in) :: gland
    character(len=*), intent(in) :: dir_rawdata
    character(len=*), intent(in) :: dir_model_landdata
 
    ! local variables:
-   character(len=256) :: landdir, lndname
+   character(len=256) :: landdir, lndname, cyear
 
    type (block_data_real8_2d) :: dbedrock
    real(r8), allocatable :: dbedrock_patches(:)
@@ -46,7 +47,8 @@ SUBROUTINE Aggregation_DBedrock ( &
    integer :: typpatch(N_land_classification+1), ityp
 #endif
 
-      landdir = trim(dir_model_landdata) // '/dbedrock/'
+      write(cyear,'(i4.4)') lc_year
+      landdir = trim(dir_model_landdata) // '/dbedrock/' //trim(cyear)
 
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
@@ -104,7 +106,7 @@ SUBROUTINE Aggregation_DBedrock ( &
 
 #ifdef SrfdataDiag
       typpatch = (/(ityp, ityp = 0, N_land_classification)/)
-      lndname  = trim(dir_model_landdata) // '/diag/dbedrock_patch.nc'
+      lndname  = trim(dir_model_landdata) // '/diag/dbedrock_patch_' // trim(cyear) // '.nc'
       CALL srfdata_map_and_write (dbedrock_patches, landpatch%settyp, typpatch, m_patch2diag, &
          -1.0e36_r8, lndname, 'dbedrock', compress = 1, write_mode = 'one')
 #endif

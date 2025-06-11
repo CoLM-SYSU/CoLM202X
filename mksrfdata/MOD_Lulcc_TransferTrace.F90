@@ -12,6 +12,11 @@ MODULE MOD_Lulcc_TransferTrace
 !  type of each patch was derived.
 !
 !  Created by Wanyi Lin, Shupeng Zhang and Hua Yuan, 07/2023
+!
+! !HISTORY:
+!  05/2025, Wanyi Lin and Hua Yuan: code moved from main/LULCC/, now generate
+!           the transfer matrix and patch tracing vector when making surface
+!           data and SAVE it to a type (lulcc) of surface data.
 !------------------------------------------------------------------------
 
    USE MOD_Precision
@@ -89,6 +94,7 @@ CONTAINS
 
 !-------------------------- Local Variables ----------------------------
    character(len=256) :: dir_5x5, suffix, lastyr, thisyr, dir_landdata, lndname
+   character(len=4)   :: c2
    integer :: i,ipatch,ipxl,ipxstt,ipxend,numpxl,ilc
    integer, allocatable, dimension(:) :: locpxl
    type (block_data_int32_2d)         :: lcdatafr !land cover data of last year
@@ -100,13 +106,22 @@ CONTAINS
 #ifdef SrfdataDiag
    integer  :: ityp
    integer, allocatable, dimension(:) :: typindex
+#endif
 !-----------------------------------------------------------------------
+      IF ( (lc_year < 1990) .or. (lc_year < 2000 .and. MOD(lc_year, 5) /= 0) ) RETURN
 
+      write(thisyr,'(i4.4)') lc_year
+      IF (lc_year <= 2000 .and. MOD(lc_year, 5) == 0) THEN
+         write(lastyr,'(i4.4)') MAX(1985, lc_year-5)
+      ELSE
+         write(lastyr,'(i4.4)') MAX(1985, lc_year-1)
+      ENDIF
+
+#ifdef SrfdataDiag
       allocate( typindex(N_land_classification+1) )
 #endif
 
-      write(thisyr,'(i4.4)') lc_year
-      write(lastyr,'(i4.4)') lc_year-1
+      CALL allocate_LulccTransferTrace
 
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
@@ -121,7 +136,12 @@ CONTAINS
          dir_5x5 = trim(DEF_dir_rawdata) // '/plant_15s'
          suffix  = 'MOD'//trim(lastyr)
          ! read the previous year land cover data
+         ! TODO: Add IF statement for using different LC products
+         ! IF use MODIS data THEN
          CALL read_5x5_data (dir_5x5, suffix, grid_patch, 'LC', lcdatafr)
+         ! ELSE
+         ! 'LC_GLC' is not recomended for IGBP
+         !CALL read_5x5_data (dir_5x5, suffix, grid_patch, 'LC_GLC', lcdatafr)
 
 #ifdef USEMPI
          CALL aggregation_data_daemon (grid_patch, data_i4_2d_in1 = lcdatafr)
@@ -163,9 +183,7 @@ CONTAINS
 
             DO WHILE (ipatch.le.grid_patch_e(i))
 
-               IF (ipatch.le.0) THEN
-                  CYCLE
-               ENDIF
+               IF (ipatch.le.0) CYCLE
 
                ! using this year patch mapping to aggregate the previous year land cover data
                CALL aggregation_request_data (landpatch, ipatch, grid_patch, zip = .true., &
@@ -204,14 +222,25 @@ CONTAINS
 #endif
       ENDIF
 
-#ifdef SrfdataDiag
       dir_landdata = DEF_dir_landdata
+      CALL system('mkdir -p ' // trim(dir_landdata) // '/lulcc/' // trim(thisyr))
+      DO ilc = 0, N_land_classification
+         write(c2, '(i2.2)') ilc
+         lndname = trim(dir_landdata)//'/lulcc/'//trim(thisyr)//&
+            '/lccpct_patches_lc'//trim(c2)//'.nc'
+         CALL ncio_create_file_vector (lndname, landpatch)
+         CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
+         CALL ncio_write_vector (lndname, 'lccpct_patches', 'patch', &
+            landpatch, lccpct_patches(:,ilc), DEF_Srfdata_CompressLevel)
+      ENDDO
+
+#ifdef SrfdataDiag
       typindex = (/(ityp, ityp = 0, N_land_classification)/)
       lndname  = trim(dir_landdata) // &
-                 '/diag/transfer_matrix'// trim(lastyr)//'-'// trim(thisyr) // '.nc'
+                 '/diag/lccpct_matrix_' // trim(thisyr) // '.nc'
       DO ilc = 0, N_land_classification
          CALL srfdata_map_and_write (lccpct_matrix(:,ilc), landpatch%settyp, typindex, &
-            m_patch2diag, -1.0e36_r8, lndname, 'TRANSFER_MATRIX', compress = 0, &
+            m_patch2diag, -1.0e36_r8, lndname, 'lccpct_matrix', compress = 0, &
             write_mode = 'one', lastdimname = 'source_patch', lastdimvalue = ilc)
       ENDDO
       deallocate(typindex)
@@ -230,7 +259,10 @@ CONTAINS
          IF (allocated(area_one))    deallocate (area_one)
       ENDIF
 
+      CALL deallocate_LulccTransferTrace
+
    END SUBROUTINE MAKE_LulccTransferTrace
+
 
 
    SUBROUTINE deallocate_LulccTransferTrace
