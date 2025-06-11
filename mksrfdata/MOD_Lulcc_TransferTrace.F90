@@ -12,6 +12,11 @@ MODULE MOD_Lulcc_TransferTrace
 !  type of each patch was derived.
 !
 !  Created by Wanyi Lin, Shupeng Zhang and Hua Yuan, 07/2023
+!
+! !HISTORY:
+!  05/2025, Wanyi Lin and Hua Yuan: code moved from main/LULCC/, now generate
+!           the transfer matrix and patch tracing vector when making surface
+!           data and SAVE it to a type (lulcc) of surface data.
 !------------------------------------------------------------------------
 
    USE MOD_Precision
@@ -221,10 +226,12 @@ CONTAINS
       CALL system('mkdir -p ' // trim(dir_landdata) // '/lulcc/' // trim(thisyr))
       DO ilc = 0, N_land_classification
          write(c2, '(i2.2)') ilc
-         lndname = trim(dir_landdata)//'/lulcc/'//trim(thisyr)//'/lccpct_patches_lc'//trim(c2)//'.nc'
+         lndname = trim(dir_landdata)//'/lulcc/'//trim(thisyr)//&
+            '/lccpct_patches_lc'//trim(c2)//'.nc'
          CALL ncio_create_file_vector (lndname, landpatch)
          CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
-         CALL ncio_write_vector (lndname, 'lccpct_patches', 'patch', landpatch, lccpct_patches(:,ilc), DEF_Srfdata_CompressLevel)
+         CALL ncio_write_vector (lndname, 'lccpct_patches', 'patch', &
+            landpatch, lccpct_patches(:,ilc), DEF_Srfdata_CompressLevel)
       ENDDO
 
 #ifdef SrfdataDiag

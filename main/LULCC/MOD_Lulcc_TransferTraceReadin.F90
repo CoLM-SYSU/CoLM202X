@@ -12,6 +12,12 @@ MODULE MOD_Lulcc_TransferTraceReadin
 !  type of each patch was derived.
 !
 !  Created by Wanyi Lin, Shupeng Zhang and Hua Yuan, 07/2023
+!
+! !HISTORY:
+!  05/2025, Wanyi Lin and Hua Yuan: change to reading the lulcc transfer
+!           tracing vector from data files which are produced in the making
+!           surface data stage. See mksrfdata/MOD_Lulcc_TransferTrace.F90.
+!
 !------------------------------------------------------------------------
 
    USE MOD_Precision
@@ -19,7 +25,8 @@ MODULE MOD_Lulcc_TransferTraceReadin
    IMPLICIT NONE
    SAVE
 
-   real(r8), allocatable, dimension(:,:) :: lccpct_patches(:,:) !frac of source patches in a patch
+   !frac of source patches in a patch
+   real(r8), allocatable, dimension(:,:) :: lccpct_patches(:,:)
 
    ! PUBLIC MEMBER FUNCTIONS:
    PUBLIC :: allocate_LulccTransferTrace
@@ -91,22 +98,23 @@ CONTAINS
    real(r8), allocatable :: tmpvec(:)
 
 
-   IF (p_is_worker) THEN
-      IF (allocated(tmpvec)) deallocate (tmpvec)
-      allocate (tmpvec(numpatch))
-   ENDIF
-
-   write(thisyr,'(i4.4)') lc_year
-   dir_landdata = DEF_dir_landdata
-   DO ilc = 0, N_land_classification
-      write(c2, '(i2.2)') ilc
-      lndname = trim(dir_landdata)//'/lulcc/'//trim(thisyr)//'/lccpct_patches_lc'//trim(c2)//'.nc'
-      CALL ncio_read_vector(lndname, 'lccpct_patches', landpatch, tmpvec)
-
       IF (p_is_worker) THEN
-         lccpct_patches(:,ilc) = tmpvec
+         IF (allocated(tmpvec)) deallocate (tmpvec)
+         allocate (tmpvec(numpatch))
       ENDIF
-   ENDDO
+
+      write(thisyr,'(i4.4)') lc_year
+      dir_landdata = DEF_dir_landdata
+      DO ilc = 0, N_land_classification
+         write(c2, '(i2.2)') ilc
+         lndname = trim(dir_landdata)//'/lulcc/'//trim(thisyr)//&
+            '/lccpct_patches_lc'//trim(c2)//'.nc'
+         CALL ncio_read_vector(lndname, 'lccpct_patches', landpatch, tmpvec)
+
+         IF (p_is_worker) THEN
+            lccpct_patches(:,ilc) = tmpvec
+         ENDIF
+      ENDDO
 
 
    END SUBROUTINE LulccTransferTraceReadin
