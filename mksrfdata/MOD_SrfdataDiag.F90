@@ -107,20 +107,20 @@ CONTAINS
 
       landname = trim(dir_landdata)//'/diag/element.nc'
       CALL srfdata_map_and_write (elmid_r8, landelm%settyp, (/0/), m_elm2diag, &
-         -1.0e36_r8, landname, 'element', compress = 1, write_mode = 'one')
+         -1.0e36_r8, landname, 'element', compress = 1, write_mode = 'half')
 
       IF (p_is_worker) deallocate (elmid_r8)
 
       typindex = (/(ityp, ityp = 0, N_land_classification)/)
       landname = trim(dir_landdata)//'/diag/patchfrac_elm.nc'
       CALL srfdata_map_and_write (elm_patch%subfrc, landpatch%settyp, typindex, m_patch2diag, &
-         -1.0e36_r8, landname, 'patchfrac_elm', compress = 1, write_mode = 'one')
+         -1.0e36_r8, landname, 'patchfrac_elm', compress = 1, write_mode = 'half')
 
 #ifdef CATCHMENT
       typindex = (/(ityp, ityp = 0, N_land_classification)/)
       landname = trim(dir_landdata)//'/diag/patchfrac_hru.nc'
       CALL srfdata_map_and_write (hru_patch%subfrc, landpatch%settyp, typindex, m_patch2diag, &
-         -1.0e36_r8, landname, 'patchfrac_hru', compress = 1, write_mode = 'one')
+         -1.0e36_r8, landname, 'patchfrac_hru', compress = 1, write_mode = 'half')
 #endif
 
    END SUBROUTINE srfdata_diag_init
@@ -156,7 +156,8 @@ CONTAINS
    integer, intent(in), optional :: lastdimvalue
 
    ! Local variables
-   type(block_data_real8_3d) :: wdata, sumwt
+   type(block_data_real8_3d) :: wdata, wtone
+   type(block_data_real8_2d) :: wdsum, wtsum
    real(r8), allocatable :: vecone (:)
 
    character(len=10) :: wmode
@@ -164,7 +165,7 @@ CONTAINS
    integer :: ntyps, xcnt, ycnt, xbdsp, ybdsp, xgdsp, ygdsp
    integer :: rmesg(3), smesg(3), isrc
    character(len=256) :: fileblock
-   real(r8), allocatable :: rbuf(:,:,:), sbuf(:,:,:), vdata(:,:,:)
+   real(r8), allocatable :: rbuf(:,:,:), sbuf(:,:,:), vdata(:,:,:), vdsum(:,:)
    logical :: fexists
    integer :: ilastdim
 
@@ -177,8 +178,10 @@ CONTAINS
       ntyps = size(typindex)
 
       IF (p_is_io) THEN
-         CALL allocate_block_data (gdiag, sumwt, ntyps)
+         CALL allocate_block_data (gdiag, wtone, ntyps)
          CALL allocate_block_data (gdiag, wdata, ntyps)
+         CALL allocate_block_data (gdiag, wdsum)
+         CALL allocate_block_data (gdiag, wtsum)
       ENDIF
 
       IF (p_is_worker) THEN
@@ -188,7 +191,7 @@ CONTAINS
          ENDIF
       ENDIF
 
-      CALL m_srf%pset2grid_split (vecone  , settyp, typindex, sumwt, spv)
+      CALL m_srf%pset2grid_split (vecone  , settyp, typindex, wtone, spv)
       CALL m_srf%pset2grid_split (vsrfdata, settyp, typindex, wdata, spv)
 
       IF (p_is_io) THEN
@@ -196,20 +199,34 @@ CONTAINS
             ib = gblock%xblkme(iblkme)
             jb = gblock%yblkme(iblkme)
 
-            WHERE ((sumwt%blk(ib,jb)%val > 0.) .and. (wdata%blk(ib,jb)%val /= spv))
-               wdata%blk(ib,jb)%val = wdata%blk(ib,jb)%val / sumwt%blk(ib,jb)%val
-            elsewhere
+            wdsum%blk(ib,jb)%val = sum(wdata%blk(ib,jb)%val, &
+               mask = (wtone%blk(ib,jb)%val > 0.) .and. (wdata%blk(ib,jb)%val /= spv), dim = 1)
+            wtsum%blk(ib,jb)%val = sum(wtone%blk(ib,jb)%val, &
+               mask = (wtone%blk(ib,jb)%val > 0.) .and. (wdata%blk(ib,jb)%val /= spv), dim = 1)
+
+            WHERE (wtsum%blk(ib,jb)%val > 0.)
+               wdsum%blk(ib,jb)%val = wdsum%blk(ib,jb)%val / wtsum%blk(ib,jb)%val
+            ELSEWHERE
+               wdsum%blk(ib,jb)%val = spv
+            END WHERE
+
+            WHERE ((wtone%blk(ib,jb)%val > 0.) .and. (wdata%blk(ib,jb)%val /= spv))
+               wdata%blk(ib,jb)%val = wdata%blk(ib,jb)%val / wtone%blk(ib,jb)%val
+            ELSEWHERE
                wdata%blk(ib,jb)%val = spv
             END WHERE
          ENDDO
       ENDIF
 
-      IF (trim(wmode) == 'one') THEN
+      IF ((trim(wmode) == 'one') .or. (trim(wmode) == 'half')) THEN
 
          IF (p_is_master) THEN
 
             allocate (vdata (ntyps, srf_concat%ginfo%nlon, srf_concat%ginfo%nlat))
             vdata(:,:,:) = spv
+
+            allocate (vdsum (srf_concat%ginfo%nlon, srf_concat%ginfo%nlat))
+            vdsum(:,:) = spv
 
 #ifdef USEMPI
             DO idata = 1, srf_concat%ndatablk
@@ -233,6 +250,11 @@ CONTAINS
 
                vdata (:,xgdsp+1:xgdsp+xcnt,ygdsp+1:ygdsp+ycnt) = rbuf
 
+               CALL mpi_recv (rbuf(1,:,:), xcnt * ycnt, MPI_DOUBLE, &
+                  isrc, srf_data_id, p_comm_glb, p_stat, p_err)
+
+               vdsum (xgdsp+1:xgdsp+xcnt,ygdsp+1:ygdsp+ycnt) = rbuf(1,:,:)
+
                deallocate (rbuf)
             ENDDO
 #else
@@ -249,6 +271,9 @@ CONTAINS
 
                   vdata (:,xgdsp+1:xgdsp+xcnt, ygdsp+1:ygdsp+ycnt) = &
                      wdata%blk(iblk,jblk)%val(:,xbdsp+1:xbdsp+xcnt,ybdsp+1:ybdsp+ycnt)
+
+                  vdsum (xgdsp+1:xgdsp+xcnt, ygdsp+1:ygdsp+ycnt) = &
+                     wdsum%blk(iblk,jblk)%val(xbdsp+1:xbdsp+xcnt,ybdsp+1:ybdsp+ycnt)
                ENDDO
             ENDDO
 #endif
@@ -293,16 +318,34 @@ CONTAINS
             ENDIF
 
             IF (present(lastdimname) .and. present(lastdimvalue)) THEN
+
                CALL ncio_write_lastdim (filename, lastdimname, lastdimvalue, ilastdim)
                CALL ncio_write_serial_time (filename, dataname, ilastdim, vdata, &
                   'TypeIndex', 'lon', 'lat', trim(lastdimname), compress)
+
+               IF (trim(wmode) == 'one') THEN
+                  CALL ncio_write_serial_time (filename, trim(dataname)//'_grid', ilastdim, vdsum, &
+                     'lon', 'lat', trim(lastdimname), compress)
+               ENDIF
+
             ELSE
+
                CALL ncio_write_serial (filename, dataname, vdata, 'TypeIndex', 'lon', 'lat', compress)
+
+               IF (trim(wmode) == 'one') THEN
+                  CALL ncio_write_serial (filename, trim(dataname)//'_grid', vdsum, 'lon', 'lat', compress)
+               ENDIF
+
             ENDIF
 
             CALL ncio_put_attr (filename, dataname, 'missing_value', spv)
 
+            IF (trim(wmode) == 'one') THEN
+               CALL ncio_put_attr (filename, trim(dataname)//'_grid', 'missing_value', spv)
+            ENDIF
+
             deallocate (vdata)
+            deallocate (vdsum)
 
          ENDIF
 
@@ -322,13 +365,18 @@ CONTAINS
                      xcnt  = srf_concat%xsegs(ixseg)%cnt
                      ycnt  = srf_concat%ysegs(iyseg)%cnt
 
-                     allocate (sbuf (ntyps,xcnt,ycnt))
-                     sbuf = wdata%blk(iblk,jblk)%val(:,xbdsp+1:xbdsp+xcnt,ybdsp+1:ybdsp+ycnt)
-
                      smesg = (/p_iam_glb, ixseg, iyseg/)
                      CALL mpi_send (smesg, 3, MPI_INTEGER, &
                         p_address_master, srf_data_id, p_comm_glb, p_err)
+
+                     allocate (sbuf (ntyps,xcnt,ycnt))
+
+                     sbuf = wdata%blk(iblk,jblk)%val(:,xbdsp+1:xbdsp+xcnt,ybdsp+1:ybdsp+ycnt)
                      CALL mpi_send (sbuf, ntyps*xcnt*ycnt, MPI_DOUBLE, &
+                        p_address_master, srf_data_id, p_comm_glb, p_err)
+
+                     sbuf(1,:,:) = wdsum%blk(iblk,jblk)%val(xbdsp+1:xbdsp+xcnt,ybdsp+1:ybdsp+ycnt)
+                     CALL mpi_send (sbuf(1,:,:), xcnt*ycnt, MPI_DOUBLE, &
                         p_address_master, srf_data_id, p_comm_glb, p_err)
 
                      deallocate (sbuf)

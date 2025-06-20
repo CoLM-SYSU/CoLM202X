@@ -168,7 +168,7 @@ SUBROUTINE Aggregation_PercentagesPFT (gland, dir_rawdata, dir_model_landdata, l
 #endif
       lndname = trim(dir_model_landdata)//'/diag/pct_pfts_'//trim(cyear)//'.nc'
       CALL srfdata_map_and_write (pct_pfts, landpft%settyp, typpft, m_pft2diag, &
-         -1.0e36_r8, lndname, 'pctpfts', compress = 1, write_mode = 'one')
+         -1.0e36_r8, lndname, 'pctpfts', compress = 1, write_mode = 'half')
 #endif
 
       IF (p_is_worker) THEN
@@ -189,7 +189,7 @@ SUBROUTINE Aggregation_PercentagesPFT (gland, dir_rawdata, dir_model_landdata, l
       typcrop = (/(ityp, ityp = 1, N_CFT)/)
       lndname = trim(dir_model_landdata) // '/diag/pct_crop_patch_' // trim(cyear) // '.nc'
       CALL srfdata_map_and_write (pctshrpch, cropclass, typcrop, m_patch2diag, &
-         -1.0e36_r8, lndname, 'pct_crop_patch', compress = 1, write_mode = 'one')
+         -1.0e36_r8, lndname, 'pct_crop_patch', compress = 1, write_mode = 'half')
 #endif
 #endif
 
