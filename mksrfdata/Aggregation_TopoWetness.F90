@@ -17,6 +17,8 @@ SUBROUTINE Aggregation_TopoWetness ( &
    USE MOD_Namelist
    USE MOD_SPMD_Task
    USE MOD_Grid
+   USE MOD_Mesh
+   USE MOD_LandElm
    USE MOD_LandPatch
    USE MOD_NetCDFVector
    USE MOD_NetCDFBlock
@@ -40,8 +42,8 @@ SUBROUTINE Aggregation_TopoWetness ( &
    ! local variables:
    ! ---------------------------------------------------------------
    character(len=256) :: landdir, lndname, cyear
-   integer  :: ipatch, npxl, i, im
-   real(r8) :: mean, sigma, skew
+   integer  :: ipatch, npxl, i, im, ielm, istt, iend
+   real(r8) :: mean_twi, sigma_twi, skew_twi, fsatmax, fsatdcf, alp_twi, chi_twi, mu_twi
 
    type (block_data_real8_2d) :: twi
 
@@ -89,13 +91,12 @@ SUBROUTINE Aggregation_TopoWetness ( &
 
       IF (p_is_worker) THEN
 
-         ! default value is set as global (mean+median)/2 at 0.1 degree resolution
-         allocate (mean_twi_patches (numpatch));  mean_twi_patches(:) = 9.35
-         allocate (fsatmax_patches  (numpatch));  fsatmax_patches (:) = 0.43
-         allocate (fsatdcf_patches  (numpatch));  fsatdcf_patches (:) = 0.82
-         allocate (alp_twi_patches  (numpatch));  alp_twi_patches (:) = 7.0
-         allocate (chi_twi_patches  (numpatch));  chi_twi_patches (:) = 0.57
-         allocate (mu_twi_patches   (numpatch));  mu_twi_patches  (:) = 5.5
+         allocate (mean_twi_patches (numpatch));  mean_twi_patches(:) = spval
+         allocate (fsatmax_patches  (numpatch));  fsatmax_patches (:) = spval
+         allocate (fsatdcf_patches  (numpatch));  fsatdcf_patches (:) = spval
+         allocate (alp_twi_patches  (numpatch));  alp_twi_patches (:) = spval
+         allocate (chi_twi_patches  (numpatch));  chi_twi_patches (:) = spval
+         allocate (mu_twi_patches   (numpatch));  mu_twi_patches  (:) = spval
 
          DO ipatch = 1, numpatch
 
@@ -133,15 +134,15 @@ SUBROUTINE Aggregation_TopoWetness ( &
 
                fsatdcf_patches(ipatch) = sum(xx*yy)/sum(xx**2) / 2.
 
-               mean = mean_twi_patches(ipatch)
-               sigma = sqrt(sum((twi_sort-mean)**2) / (npxl-1))
+               mean_twi = mean_twi_patches(ipatch)
+               sigma_twi = sqrt(sum((twi_sort-mean_twi)**2) / (npxl-1))
 
-               IF (sigma > 0) THEN
-                  skew  = real(npxl)/((npxl-1)*(npxl-2)) * sum((twi_sort-mean)**3) / sigma**3
-                  IF (skew > 0) THEN
-                     alp_twi_patches(ipatch) = (2./skew)**2
-                     chi_twi_patches(ipatch) = sigma*skew/2
-                     mu_twi_patches (ipatch) = mean - 2.*sigma/skew
+               IF (sigma_twi > 0) THEN
+                  skew_twi  = real(npxl)/((npxl-1)*(npxl-2)) * sum((twi_sort-mean_twi)**3) / sigma_twi**3
+                  IF (skew_twi > 0) THEN
+                     alp_twi_patches(ipatch) = (2./skew_twi)**2
+                     chi_twi_patches(ipatch) = sigma_twi*skew_twi/2
+                     mu_twi_patches (ipatch) = mean_twi - 2.*sigma_twi/skew_twi
                   ENDIF
                ENDIF
 
@@ -161,6 +162,89 @@ SUBROUTINE Aggregation_TopoWetness ( &
             deallocate (mask)
 
          ENDDO
+
+         DO ielm = 1, numelm
+
+            ! default value is set as global (mean+median)/2 at 0.1 degree resolution
+            mean_twi = 9.35
+            fsatmax  = 0.43
+            fsatdcf  = 0.82
+            alp_twi  = 7.
+            chi_twi  = 0.57
+            mu_twi   = 5.5
+
+            CALL aggregation_request_data ( landelm, ielm, gridtwi,                          &
+               zip = USE_zip_for_aggregation, data_r8_2d_in1 = twi, data_r8_2d_out1 = twi_one)
+
+            allocate (mask (size(twi_one)))
+            mask = twi_one > -1.e3
+            npxl = count(mask)
+
+            IF (npxl > 200) THEN
+
+               allocate (twi_sort (npxl))
+               allocate (order    (npxl))
+
+               twi_sort = pack(twi_one, mask)
+
+               CALL quicksort (npxl, twi_sort, order)
+
+               mean_twi = sum(twi_sort) / npxl
+
+               im = 1
+               DO WHILE ((twi_sort(im) < mean_twi) .and. (im < npxl-1))
+                  im = im + 1
+               ENDDO
+
+               fsatmax = 1 - real(im-1)/npxl
+
+               allocate (xx (npxl-im))
+               allocate (yy (npxl-im))
+
+               xx = -(twi_sort(im:(npxl-1)) - mean_twi)
+               yy = (/(log((1-real(i)/npxl)/fsatmax), i = im, npxl-1)/)
+
+               fsatdcf = sum(xx*yy)/sum(xx**2) / 2.
+
+               sigma_twi = sqrt(sum((twi_sort-mean_twi)**2) / (npxl-1))
+
+               IF (sigma_twi > 0) THEN
+                  skew_twi  = real(npxl)/((npxl-1)*(npxl-2)) * sum((twi_sort-mean_twi)**3) / sigma_twi**3
+                  IF (skew_twi > 0) THEN
+                     alp_twi = (2./skew_twi)**2
+                     chi_twi = sigma_twi*skew_twi/2
+                     mu_twi  = mean_twi - 2.*sigma_twi/skew_twi
+                  ENDIF
+               ENDIF
+
+               fsatmax = min(max(fsatmax,  0.3), 0.7)
+               fsatdcf = min(max(fsatdcf,  0.2), 1.4)
+               alp_twi = min(max(alp_twi,  0.1), 60.)
+               chi_twi = min(max(chi_twi, 0.01), 1.5)
+               mu_twi  = min(max(mu_twi ,  -5.), 12.)
+
+               deallocate (twi_sort)
+               deallocate (order   )
+               deallocate (xx      )
+               deallocate (yy      )
+
+            ENDIF
+
+            istt = elm_patch%substt(ielm)
+            iend = elm_patch%subend(ielm)
+            DO ipatch = istt, iend
+               IF (mean_twi_patches(ipatch) == spval)   mean_twi_patches(ipatch) = mean_twi
+               IF (fsatmax_patches (ipatch) == spval)   fsatmax_patches (ipatch) = fsatmax
+               IF (fsatdcf_patches (ipatch) == spval)   fsatdcf_patches (ipatch) = fsatdcf
+               IF (alp_twi_patches (ipatch) == spval)   alp_twi_patches (ipatch) = alp_twi
+               IF (chi_twi_patches (ipatch) == spval)   chi_twi_patches (ipatch) = chi_twi
+               IF (mu_twi_patches  (ipatch) == spval)   mu_twi_patches  (ipatch) = mu_twi
+            ENDDO
+
+            deallocate (mask)
+
+         ENDDO
+
 
 #ifdef USEMPI
          CALL aggregation_worker_done ()

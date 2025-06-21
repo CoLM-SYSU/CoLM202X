@@ -487,9 +487,9 @@ CONTAINS
       CALL ncio_read_vector (file_restart, 'soiltext', landpatch, soiltext, defval = 0    )
 
       IF (DEF_Runoff_SCHEME == 0) THEN
+         CALL ncio_read_vector (file_restart, 'topoweti', landpatch, topoweti, defval = 9.35 )
          CALL ncio_read_vector (file_restart, 'fsatmax ', landpatch, fsatmax , defval = 0.43 )
          CALL ncio_read_vector (file_restart, 'fsatdcf ', landpatch, fsatdcf , defval = 0.82 )
-         CALL ncio_read_vector (file_restart, 'topoweti', landpatch, topoweti, defval = 9.35 )
          CALL ncio_read_vector (file_restart, 'alp_twi ', landpatch, alp_twi , defval = 7.   )
          CALL ncio_read_vector (file_restart, 'chi_twi ', landpatch, chi_twi , defval = 0.57 )
          CALL ncio_read_vector (file_restart, 'mu_twi  ', landpatch, mu_twi  , defval = 5.5  )
@@ -686,9 +686,9 @@ CONTAINS
       CALL ncio_write_vector (file_restart, 'soiltext', 'patch', landpatch, soiltext)
 
       IF (DEF_Runoff_SCHEME == 0) THEN
+         CALL ncio_write_vector (file_restart, 'topoweti', 'patch', landpatch, topoweti)
          CALL ncio_write_vector (file_restart, 'fsatmax ', 'patch', landpatch, fsatmax )
          CALL ncio_write_vector (file_restart, 'fsatdcf ', 'patch', landpatch, fsatdcf )
-         CALL ncio_write_vector (file_restart, 'topoweti', 'patch', landpatch, topoweti)
          CALL ncio_write_vector (file_restart, 'alp_twi ', 'patch', landpatch, alp_twi )
          CALL ncio_write_vector (file_restart, 'chi_twi ', 'patch', landpatch, chi_twi )
          CALL ncio_write_vector (file_restart, 'mu_twi  ', 'patch', landpatch, mu_twi  )
@@ -787,7 +787,7 @@ CONTAINS
 
    SUBROUTINE deallocate_TimeInvariants ()
 
-   USE MOD_Namelist, only: DEF_Runoff_SCHEME, DEF_USE_Forcing_Downscaling
+   USE MOD_Namelist, only: DEF_USE_Forcing_Downscaling
    USE MOD_SPMD_Task
    USE MOD_LandPatch, only: numpatch
 
@@ -989,7 +989,10 @@ CONTAINS
       CALL check_vector_data ('elvmean      [m]     ', elvmean     ) !
       CALL check_vector_data ('elvstd       [m]     ', elvstd      ) !
       CALL check_vector_data ('slpratio     [-]     ', slpratio    ) !
-      CALL check_vector_data ('BVIC         [-]     ', BVIC        ) !
+
+      IF (DEF_Runoff_SCHEME == 3) THEN
+         CALL check_vector_data ('BVIC         [-]     ', BVIC        ) !
+      ENDIF
 
       IF (DEF_USE_Forcing_Downscaling) THEN
          CALL check_vector_data ('slp_type     [rad]   ', slp_type_patches ) ! slope

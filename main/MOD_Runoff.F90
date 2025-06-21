@@ -74,9 +74,8 @@ CONTAINS
    real(r8) qinmax       ! maximum infiltration capability
    real(r8) fsat         ! fractional area with water table at surface
 
-   real(r8) eta, pgr0, pgr1, qgr, eta0, tol
-   integer  ind, nstep
-   character(len=5) :: pid
+   real(r8) eta, pgr0, pgr1, qgr, gfun
+   integer  ind, niter
 
    ! updated to gridded 'fsatdcf' (by Shupeng Zhang)
    ! real(r8), parameter :: fff = 0.5   ! runoff decay factor (m-1)
@@ -98,22 +97,22 @@ CONTAINS
          ELSE
 
             eta = topoweti
-            tol = 1.
-            nstep = 1
-            DO WHILE ((tol > 1.e-6) .and. (nstep < 20))
+            niter = 0
+            DO WHILE (niter < 20)
+               niter = niter + 1
                CALL GRATIO (alp_twi+1, (eta-mu_twi)/chi_twi, pgr1, qgr, ind)
                CALL GRATIO (alp_twi,   (eta-mu_twi)/chi_twi, pgr0, qgr, ind)
-               eta0 = eta
-               eta  = mu_twi + (chi_twi * alp_twi * pgr1 + 2.*zwt) / pgr0
-               tol  = abs(eta-eta0)
-               nstep = nstep + 1
+               gfun = ((eta-mu_twi)*pgr0 - chi_twi*alp_twi*pgr1)/2. - zwt
+
+               IF (abs(gfun) > 1.e-6) THEN
+                  eta = mu_twi + (chi_twi * alp_twi * pgr1 + 2.*zwt) / pgr0
+               ELSE
+                  EXIT
+               ENDIF
             ENDDO
 
-            IF (abs(((eta-mu_twi)*pgr0-chi_twi*alp_twi*pgr1)/2.-zwt) > 1.e-4) THEN
-               write(pid,'(I0)') p_iam_worker
-               open(101, file='gauss_'//trim(pid)//'.txt', position='append')
-               write(101,*) alp_twi,mu_twi,chi_twi,topoweti,zwt
-               close(101)
+            IF (abs(gfun) > 1.e-6) THEN
+               write(*,*) 'Fail to converge in TOPModel runoff calculation.'
             ENDIF
 
             CALL GRATIO (alp_twi, (eta-mu_twi)/chi_twi, pgr0, qgr, ind)
@@ -149,6 +148,7 @@ CONTAINS
    SUBROUTINE SubsurfaceRunoff_SIMTOP (nl_soil, icefrac, dz_soisno, zi_soisno, zwt, rsubst, &
          hksati, topoweti)
 
+   USE MOD_Namelist, only: DEF_SimTOP_method
    IMPLICIT NONE
 
 !-------------------------- Dummy Arguments ----------------------------
@@ -200,7 +200,7 @@ CONTAINS
       fracice_rsub = max(0.,exp(-3.*(1.-(icefracsum/dzsum)))-exp(-3.))/(1.0-exp(-3.))
       imped = max(0.,1.-fracice_rsub)
 
-      IF (present(hksati) .and. present(topoweti)) THEN
+      IF ((DEF_SimTOP_method /= 0) .and. present(hksati) .and. present(topoweti)) THEN
          rsubst = imped * sum(hksati(1:nl_soil))/nl_soil / 2.0 * exp(-topoweti) * exp(-2.*zwt)
       ELSE
          rsubst = imped * 5.5e-3 * exp(-2.5*zwt)

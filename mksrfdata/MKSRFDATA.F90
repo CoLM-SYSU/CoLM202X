@@ -402,7 +402,6 @@ PROGRAM MKSRFDATA
 ! 3. Mapping land characteristic parameters to the model grids
 ! ................................................................
 #ifdef SrfdataDiag
-   CALL elm_patch%build (landelm, landpatch, use_frac = .true.)
 #ifdef GRIDBASED
    CALL gdiag%define_by_copy (gridmesh)
 #else
