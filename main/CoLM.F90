@@ -513,7 +513,7 @@ PROGRAM CoLM
          ENDIF
 
          IF (DEF_LAI_MONTHLY) THEN
-            IF ((itstamp < etstamp) .and. (month /= month_p)) THEN
+            IF (month /= month_p) THEN
                CALL LAI_readin (lai_year, month, dir_landdata)
 #ifdef URBAN_MODEL
                CALL UrbanLAI_readin(lai_year, month, dir_landdata)
@@ -522,7 +522,7 @@ PROGRAM CoLM
          ELSE
             ! Update every 8 days (time interval of the MODIS LAI data)
             Julian_8day = int(calendarday(jdate)-1)/8*8 + 1
-            IF ((itstamp < etstamp) .and. (Julian_8day /= Julian_8day_p)) THEN
+            IF (Julian_8day /= Julian_8day_p) THEN
                CALL LAI_readin (jdate(1), Julian_8day, dir_landdata)
             ENDIF
          ENDIF
