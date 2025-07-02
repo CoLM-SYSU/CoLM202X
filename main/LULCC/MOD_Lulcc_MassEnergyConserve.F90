@@ -839,7 +839,7 @@ ENDIF
 
                         ! account for vegetation snow
                         IF ( DEF_VEG_SNOW ) THEN
-                           lai_p(np) = tlai_p(np) * sigf_p(np)
+                           lai_p(ps:pe) = tlai_p(ps:pe) * sigf_p(ps:pe)
                            lai(np) = sum(lai_p(ps:pe)*pftfrac(ps:pe))
                         ENDIF
 
