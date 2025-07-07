@@ -40,7 +40,6 @@ MODULE MOD_Forcing
 
    ! for Forcing_Downscaling
    type(block_data_real8_2d) :: topo_grid, maxelv_grid
-   type(block_data_real8_2d) :: sumarea_grid
 
    type(pointer_real8_1d), allocatable :: forc_topo_grid   (:)
    type(pointer_real8_1d), allocatable :: forc_maxelv_grid (:)
@@ -234,10 +233,7 @@ CONTAINS
          IF (p_is_io) CALL allocate_block_data (gforc, topo_grid)
          CALL mg2p_forc%pset2grid (forc_topo, topo_grid)
 
-         IF (p_is_io) CALL allocate_block_data (gforc, sumarea_grid)
-         CALL mg2p_forc%get_sumarea (sumarea_grid)
-
-         CALL block_data_division (topo_grid, sumarea_grid)
+         CALL block_data_division (topo_grid, mg2p_forc%areagrid)
 
          IF (p_is_io) CALL allocate_block_data (gforc, maxelv_grid)
          CALL mg2p_forc%pset2grid_max (forc_topo, maxelv_grid)
@@ -338,29 +334,33 @@ CONTAINS
          IF (p_is_worker) THEN
             IF (numpatch > 0) THEN
 
-               deallocate (forc_topo_grid  )
-               deallocate (forc_maxelv_grid)
+               CALL mg2p_forc%deallocate_part (forc_topo_grid  )
+               CALL mg2p_forc%deallocate_part (forc_maxelv_grid)
 
-               deallocate (forc_t_grid     )
-               deallocate (forc_th_grid    )
-               deallocate (forc_q_grid     )
-               deallocate (forc_pbot_grid  )
-               deallocate (forc_rho_grid   )
-               deallocate (forc_prc_grid   )
-               deallocate (forc_prl_grid   )
-               deallocate (forc_lwrad_grid )
-               deallocate (forc_swrad_grid )
-               deallocate (forc_hgt_grid   )
+               CALL mg2p_forc%deallocate_part (forc_t_grid     )
+               CALL mg2p_forc%deallocate_part (forc_th_grid    )
+               CALL mg2p_forc%deallocate_part (forc_q_grid     )
+               CALL mg2p_forc%deallocate_part (forc_pbot_grid  )
+               CALL mg2p_forc%deallocate_part (forc_rho_grid   )
+               CALL mg2p_forc%deallocate_part (forc_prc_grid   )
+               CALL mg2p_forc%deallocate_part (forc_prl_grid   )
+               CALL mg2p_forc%deallocate_part (forc_lwrad_grid )
+               CALL mg2p_forc%deallocate_part (forc_swrad_grid )
+               CALL mg2p_forc%deallocate_part (forc_hgt_grid   )
+               CALL mg2p_forc%deallocate_part (forc_us_grid    )
+               CALL mg2p_forc%deallocate_part (forc_vs_grid    )
 
-               deallocate (forc_t_part     )
-               deallocate (forc_th_part    )
-               deallocate (forc_q_part     )
-               deallocate (forc_pbot_part  )
-               deallocate (forc_rhoair_part)
-               deallocate (forc_prc_part   )
-               deallocate (forc_prl_part   )
-               deallocate (forc_frl_part   )
-               deallocate (forc_swrad_part )
+               CALL mg2p_forc%deallocate_part (forc_t_part     )
+               CALL mg2p_forc%deallocate_part (forc_th_part    )
+               CALL mg2p_forc%deallocate_part (forc_q_part     )
+               CALL mg2p_forc%deallocate_part (forc_pbot_part  )
+               CALL mg2p_forc%deallocate_part (forc_rhoair_part)
+               CALL mg2p_forc%deallocate_part (forc_prc_part   )
+               CALL mg2p_forc%deallocate_part (forc_prl_part   )
+               CALL mg2p_forc%deallocate_part (forc_frl_part   )
+               CALL mg2p_forc%deallocate_part (forc_swrad_part )
+               CALL mg2p_forc%deallocate_part (forc_us_part    )
+               CALL mg2p_forc%deallocate_part (forc_vs_part    )
 
             ENDIF
          ENDIF
@@ -715,6 +715,10 @@ CONTAINS
          CALL mg2p_forc%grid2pset (forc_xy_hgt_t,   forc_hgt_t)
          CALL mg2p_forc%grid2pset (forc_xy_hgt_u,   forc_hgt_u)
          CALL mg2p_forc%grid2pset (forc_xy_hgt_q,   forc_hgt_q)
+         CALL mg2p_forc%grid2pset (forc_xy_t    ,   forc_t    )
+         CALL mg2p_forc%grid2pset (forc_xy_pbot ,   forc_pbot )
+         CALL mg2p_forc%grid2pset (forc_xy_q    ,   forc_q    )
+         CALL mg2p_forc%grid2pset (forc_xy_frl  ,   forc_frl  )
 
          IF (DEF_USE_CBL_HEIGHT) THEN
             CALL mg2p_forc%grid2pset (forc_xy_hpbl, forc_hpbl)
@@ -740,7 +744,7 @@ CONTAINS
             DO np = 1, numpatch ! patches
 
                ! calculate albedo of each patches
-               IF (forc_sols(np)+forc_solsd(np)+forc_soll(np)+forc_solld(np) == 0) THEN
+               IF (forc_sols(np)+forc_solsd(np)+forc_soll(np)+forc_solld(np) == 0.) THEN
                   balb = 0
                ELSE
                   balb = ( alb(1,1,np)*forc_sols (np) + alb(1,2,np)*forc_solsd(np)   &

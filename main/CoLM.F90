@@ -584,6 +584,7 @@ PROGRAM CoLM
       CALL deallocate_TimeVariables  ()
       CALL deallocate_1D_Forcing     ()
       CALL deallocate_1D_Fluxes      ()
+      CALL mesh_free_mem             ()
 
 #if (defined CatchLateralFlow)
       CALL lateral_flow_final ()
