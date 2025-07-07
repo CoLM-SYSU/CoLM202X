@@ -820,6 +820,7 @@ CONTAINS
          CALL mg2p_forc%part2pset (forc_swrad_part,  forc_swrad )
          CALL mg2p_forc%part2pset (forc_us_part,     forc_us    )
          CALL mg2p_forc%part2pset (forc_vs_part,     forc_vs    )
+         forc_psrf = forc_pbot
 
          ! wind downscaling
          IF (p_is_worker) THEN
@@ -856,28 +857,28 @@ CONTAINS
                forc_prl = forc_prc/3600*2/3._r8
                forc_prc = forc_prc/3600*1/3._r8
             ENDIF
-
-            ! mapping forc_prl to forc_prl_part, forc_prc to forc_prc_part
-            IF (p_is_worker) THEN
-               DO np = 1, numpatch ! patches
-                  DO ipart = 1, mg2p_forc%npart(np) ! part loop of each patch
-                     IF (mg2p_forc%areapart(np)%val(ipart) == 0.) CYCLE
-
-                     forc_prl_part(np)%val(ipart) = forc_prl(np)
-                     forc_prc_part(np)%val(ipart) = forc_prc(np)
-
-                  ENDDO
-               ENDDO
-            ENDIF
-
-            ! Conservation of convective and large scale precipitation in the grid of forcing
-            CALL mg2p_forc%normalize (forc_xy_prc, forc_prc_part)
-            CALL mg2p_forc%normalize (forc_xy_prl, forc_prl_part)
-
-            ! mapping parts to patches
-            CALL mg2p_forc%part2pset (forc_prc_part, forc_prc)
-            CALL mg2p_forc%part2pset (forc_prl_part, forc_prl)
          ENDIF
+
+         ! mapping forc_prl to forc_prl_part, forc_prc to forc_prc_part
+         IF (p_is_worker) THEN
+            DO np = 1, numpatch ! patches
+               DO ipart = 1, mg2p_forc%npart(np) ! part loop of each patch
+                  IF (mg2p_forc%areapart(np)%val(ipart) == 0.) CYCLE
+
+                  forc_prl_part(np)%val(ipart) = forc_prl(np)
+                  forc_prc_part(np)%val(ipart) = forc_prc(np)
+
+               ENDDO
+            ENDDO
+         ENDIF
+
+         ! Conservation of convective and large scale precipitation in the grid of forcing
+         CALL mg2p_forc%normalize (forc_xy_prc, forc_prc_part)
+         CALL mg2p_forc%normalize (forc_xy_prl, forc_prl_part)
+
+         ! mapping parts to patches
+         CALL mg2p_forc%part2pset (forc_prc_part, forc_prc)
+         CALL mg2p_forc%part2pset (forc_prl_part, forc_prl)
 
          ! Conservation of short- and long- waves radiation in the grid of forcing
          CALL mg2p_forc%normalize (forc_xy_solarin, forc_swrad_part)
