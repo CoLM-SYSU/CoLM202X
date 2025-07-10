@@ -45,15 +45,16 @@ SUBROUTINE Aggregation_TopoWetness ( &
    integer  :: ipatch, npxl, i, im, ielm, istt, iend
    real(r8) :: mean_twi, sigma_twi, skew_twi, fsatmax, fsatdcf, alp_twi, chi_twi, mu_twi
 
-   type (block_data_real8_2d) :: twi
+   type (block_data_real8_3d) :: twi
 
-   real(r8), allocatable :: twi_one (:)
+   real(r8), allocatable :: twi_one (:,:)
+   logical,  allocatable :: mask    (:,:)
+
    real(r8), allocatable :: mean_twi_patches(:)
    real(r8), allocatable :: fsatmax_patches (:), fsatdcf_patches (:)
    real(r8), allocatable :: alp_twi_patches (:), chi_twi_patches (:), mu_twi_patches (:)
 
    real(r8), allocatable :: twi_sort(:), xx(:), yy(:)
-   logical,  allocatable :: mask    (:)
    integer,  allocatable :: order   (:)
 
 #ifdef SrfdataDiag
@@ -78,14 +79,14 @@ SUBROUTINE Aggregation_TopoWetness ( &
 !   aggregate the topographic index from the resolution of raw data to modelling resolution
 ! -----------------------------------------------------------------------------------------
 
-      lndname = trim(dir_rawdata)//'/TWI.nc'
-
       IF (p_is_io) THEN
-         CALL allocate_block_data (gridtwi, twi)
-         CALL catchment_data_read (lndname, 'twi', gridtwi, twi)
+
+         lndname = trim(dir_rawdata)//'/TWI.nc'
+         CALL allocate_block_data (gridtwi, twi, 25)
+         CALL ncio_read_block (lndname, 'twi', gridtwi, 25, twi)
 
 #ifdef USEMPI
-         CALL aggregation_data_daemon (gridtwi, data_r8_2d_in1 = twi)
+         CALL aggregation_data_daemon (gridtwi, data_r8_3d_in1 = twi, n1_r8_3d_in1 = 25)
 #endif
       ENDIF
 
@@ -100,12 +101,11 @@ SUBROUTINE Aggregation_TopoWetness ( &
 
          DO ipatch = 1, numpatch
 
-            CALL aggregation_request_data (                               &
-               landpatch, ipatch, gridtwi, zip = USE_zip_for_aggregation, &
-               data_r8_2d_in1 = twi, data_r8_2d_out1 = twi_one            )
+            CALL aggregation_request_data (landpatch, ipatch, gridtwi, zip = USE_zip_for_aggregation, &
+               data_r8_3d_in1 = twi, data_r8_3d_out1 = twi_one, n1_r8_3d_in1 = 25, lb1_r8_3d_in1 = 1  )
 
-            allocate (mask (size(twi_one)))
-            mask = twi_one > -1.e3
+            allocate (mask (size(twi_one,1),size(twi_one,2)))
+            mask = (twi_one > -1.e3)
             npxl = count(mask)
 
             IF (npxl > 200) THEN
@@ -132,7 +132,7 @@ SUBROUTINE Aggregation_TopoWetness ( &
                xx = -(twi_sort(im:(npxl-1)) - mean_twi_patches(ipatch))
                yy = (/(log((1-real(i)/npxl)/fsatmax_patches(ipatch)), i = im, npxl-1)/)
 
-               fsatdcf_patches(ipatch) = sum(xx*yy)/sum(xx**2) / 2.
+               fsatdcf_patches(ipatch) = sum(xx*yy)/sum(xx**2)
 
                mean_twi = mean_twi_patches(ipatch)
                sigma_twi = sqrt(sum((twi_sort-mean_twi)**2) / (npxl-1))
@@ -146,11 +146,11 @@ SUBROUTINE Aggregation_TopoWetness ( &
                   ENDIF
                ENDIF
 
-               fsatmax_patches(ipatch) = min(max(fsatmax_patches(ipatch),  0.3), 0.7)
-               fsatdcf_patches(ipatch) = min(max(fsatdcf_patches(ipatch),  0.2), 1.4)
-               alp_twi_patches(ipatch) = min(max(alp_twi_patches(ipatch),  0.1), 60.)
-               chi_twi_patches(ipatch) = min(max(chi_twi_patches(ipatch), 0.01), 1.5)
-               mu_twi_patches (ipatch) = min(max(mu_twi_patches (ipatch),  -5.), 12.)
+               fsatmax_patches(ipatch) = min(max(fsatmax_patches(ipatch),  0.1), 1.0)
+               fsatdcf_patches(ipatch) = min(max(fsatdcf_patches(ipatch),  0.2), 2.0)
+               alp_twi_patches(ipatch) = min(max(alp_twi_patches(ipatch),  0.1), 50.)
+               chi_twi_patches(ipatch) = min(max(chi_twi_patches(ipatch), 0.01), 4.0)
+               mu_twi_patches (ipatch) = min(max(mu_twi_patches (ipatch),   0.), 12.)
 
                deallocate (twi_sort)
                deallocate (order   )
@@ -165,19 +165,19 @@ SUBROUTINE Aggregation_TopoWetness ( &
 
          DO ielm = 1, numelm
 
-            ! default value is set as global (mean+median)/2 at 0.1 degree resolution
-            mean_twi = 9.35
-            fsatmax  = 0.43
-            fsatdcf  = 0.82
-            alp_twi  = 7.
-            chi_twi  = 0.57
-            mu_twi   = 5.5
+            ! default value is set as global median at 0.1 degree resolution
+            mean_twi = 9.27
+            fsatmax  = 0.38
+            fsatdcf  = 0.55
+            alp_twi  = 1.34
+            chi_twi  = 1.61
+            mu_twi   = 6.95
 
-            CALL aggregation_request_data ( landelm, ielm, gridtwi,                          &
-               zip = USE_zip_for_aggregation, data_r8_2d_in1 = twi, data_r8_2d_out1 = twi_one)
+            CALL aggregation_request_data (landelm, ielm, gridtwi, zip = USE_zip_for_aggregation,     &
+               data_r8_3d_in1 = twi, data_r8_3d_out1 = twi_one, n1_r8_3d_in1 = 25, lb1_r8_3d_in1 = 1  )
 
-            allocate (mask (size(twi_one)))
-            mask = twi_one > -1.e3
+            allocate (mask (size(twi_one,1),size(twi_one,2)))
+            mask = (twi_one > -1.e3)
             npxl = count(mask)
 
             IF (npxl > 200) THEN
@@ -204,7 +204,7 @@ SUBROUTINE Aggregation_TopoWetness ( &
                xx = -(twi_sort(im:(npxl-1)) - mean_twi)
                yy = (/(log((1-real(i)/npxl)/fsatmax), i = im, npxl-1)/)
 
-               fsatdcf = sum(xx*yy)/sum(xx**2) / 2.
+               fsatdcf = sum(xx*yy)/sum(xx**2)
 
                sigma_twi = sqrt(sum((twi_sort-mean_twi)**2) / (npxl-1))
 
@@ -217,11 +217,11 @@ SUBROUTINE Aggregation_TopoWetness ( &
                   ENDIF
                ENDIF
 
-               fsatmax = min(max(fsatmax,  0.3), 0.7)
-               fsatdcf = min(max(fsatdcf,  0.2), 1.4)
-               alp_twi = min(max(alp_twi,  0.1), 60.)
-               chi_twi = min(max(chi_twi, 0.01), 1.5)
-               mu_twi  = min(max(mu_twi ,  -5.), 12.)
+               fsatmax = min(max(fsatmax,  0.1), 1.0)
+               fsatdcf = min(max(fsatdcf,  0.2), 2.0)
+               alp_twi = min(max(alp_twi,  0.1), 50.)
+               chi_twi = min(max(chi_twi, 0.01), 4.0)
+               mu_twi  = min(max(mu_twi ,   0.), 12.)
 
                deallocate (twi_sort)
                deallocate (order   )

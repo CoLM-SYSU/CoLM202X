@@ -487,12 +487,12 @@ CONTAINS
       CALL ncio_read_vector (file_restart, 'soiltext', landpatch, soiltext, defval = 0    )
 
       IF (DEF_Runoff_SCHEME == 0) THEN
-         CALL ncio_read_vector (file_restart, 'topoweti', landpatch, topoweti, defval = 9.35 )
-         CALL ncio_read_vector (file_restart, 'fsatmax ', landpatch, fsatmax , defval = 0.43 )
-         CALL ncio_read_vector (file_restart, 'fsatdcf ', landpatch, fsatdcf , defval = 0.82 )
-         CALL ncio_read_vector (file_restart, 'alp_twi ', landpatch, alp_twi , defval = 7.   )
-         CALL ncio_read_vector (file_restart, 'chi_twi ', landpatch, chi_twi , defval = 0.57 )
-         CALL ncio_read_vector (file_restart, 'mu_twi  ', landpatch, mu_twi  , defval = 5.5  )
+         CALL ncio_read_vector (file_restart, 'topoweti', landpatch, topoweti, defval = 9.27 )
+         CALL ncio_read_vector (file_restart, 'fsatmax ', landpatch, fsatmax , defval = 0.38 )
+         CALL ncio_read_vector (file_restart, 'fsatdcf ', landpatch, fsatdcf , defval = 0.55 )
+         CALL ncio_read_vector (file_restart, 'alp_twi ', landpatch, alp_twi , defval = 1.34 )
+         CALL ncio_read_vector (file_restart, 'chi_twi ', landpatch, chi_twi , defval = 1.61 )
+         CALL ncio_read_vector (file_restart, 'mu_twi  ', landpatch, mu_twi  , defval = 6.95 )
       ENDIF
 
       CALL ncio_read_vector (file_restart, 'vic_b_infilt', landpatch, vic_b_infilt)

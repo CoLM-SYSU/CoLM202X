@@ -246,7 +246,7 @@ PROGRAM MKSRFDATA
 
    ! define grid for topographic wetness index
    IF (DEF_Runoff_SCHEME == 0) THEN
-      CALL grid_twi%define_by_name ('merit_90m')
+      CALL grid_twi%define_by_name ('colm_500m')
    ENDIF
 
    ! define grid for topography factors

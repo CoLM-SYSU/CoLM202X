@@ -23,7 +23,7 @@ CONTAINS
                                     z_soisno,dz_soisno,zi_soisno,&
                                     eff_porosity,icefrac,zwt,gwat,&
                                     rsur,rsur_se,rsur_ie,&
-                                    topoweti,alp_twi,chi_twi,mu_twi,fsat_out)
+                                    topoweti,alp_twi,chi_twi,mu_twi,fsat_out,eta_out)
 
 !=======================================================================
 !  the original code was provide by Robert E. Dickinson based on
@@ -68,14 +68,17 @@ CONTAINS
    real(r8), intent(in),  optional :: topoweti
    real(r8), intent(in),  optional :: alp_twi, chi_twi, mu_twi
    real(r8), intent(out), optional :: fsat_out
+   real(r8), intent(out), optional :: eta_out
 
 !-------------------------- Local Variables ----------------------------
+
+   real(r8), parameter :: vdcf = 2.0
 
    real(r8) qinmax       ! maximum infiltration capability
    real(r8) fsat         ! fractional area with water table at surface
 
    real(r8) eta, pgr0, pgr1, qgr, gfun
-   integer  ind, niter
+   integer  niter
 
    ! updated to gridded 'fsatdcf' (by Shupeng Zhang)
    ! real(r8), parameter :: fff = 0.5   ! runoff decay factor (m-1)
@@ -86,13 +89,14 @@ CONTAINS
       !fsat = wtfact*min(1.0,exp(-0.5*fff*zwt))
       IF ((DEF_SimTOP_method == 0) .or. (DEF_SimTOP_method == 1)) THEN
 
-         fsat = fsatmax * exp(-2.0*fsatdcf*zwt)
+         fsat = fsatmax * exp(- fsatdcf * vdcf * zwt)
 
       ELSE
 
          IF (zwt <= 0.) THEN
 
             fsat = 1.
+            eta  = mu_twi
 
          ELSE
 
@@ -100,25 +104,30 @@ CONTAINS
             niter = 0
             DO WHILE (niter < 20)
                niter = niter + 1
-               CALL GRATIO (alp_twi+1, (eta-mu_twi)/chi_twi, pgr1, qgr, ind)
-               CALL GRATIO (alp_twi,   (eta-mu_twi)/chi_twi, pgr0, qgr, ind)
-               gfun = ((eta-mu_twi)*pgr0 - chi_twi*alp_twi*pgr1)/2. - zwt
+               CALL GRATIO (alp_twi+1, (eta-mu_twi)/chi_twi, pgr1, qgr, 0)
+               CALL GRATIO (alp_twi,   (eta-mu_twi)/chi_twi, pgr0, qgr, 0)
+               gfun = ((eta-mu_twi)*pgr0 - chi_twi*alp_twi*pgr1)/vdcf - zwt
 
                IF (abs(gfun) > 1.e-6) THEN
-                  eta = mu_twi + (chi_twi * alp_twi * pgr1 + 2.*zwt) / pgr0
+                  eta = mu_twi + (chi_twi * alp_twi * pgr1 + vdcf*zwt) / pgr0
                ELSE
                   EXIT
                ENDIF
             ENDDO
 
             IF (abs(gfun) > 1.e-6) THEN
-               write(*,*) 'Fail to converge in TOPModel runoff calculation.'
+               write(*,*) 'Fail to converge in TOPModel: (alp,chi,mu,twi,zwt,gfun) = ', &
+                  alp_twi, chi_twi, mu_twi, topoweti, zwt, gfun
             ENDIF
 
-            CALL GRATIO (alp_twi, (eta-mu_twi)/chi_twi, pgr0, qgr, ind)
+            CALL GRATIO (alp_twi, (eta-mu_twi)/chi_twi, pgr0, qgr, 0)
 
             fsat = qgr
 
+         ENDIF
+
+         IF (present(eta_out)) THEN
+            eta_out = eta
          ENDIF
 
       ENDIF
@@ -146,7 +155,7 @@ CONTAINS
 
 ! -------------------------------------------------------------------------
    SUBROUTINE SubsurfaceRunoff_SIMTOP (nl_soil, icefrac, dz_soisno, zi_soisno, zwt, rsubst, &
-         hksati, topoweti)
+         hksati, topoweti, eta)
 
    USE MOD_Namelist, only: DEF_SimTOP_method
    IMPLICIT NONE
@@ -163,8 +172,11 @@ CONTAINS
 
    real(r8), intent(in), optional :: hksati (1:nl_soil)
    real(r8), intent(in), optional :: topoweti
+   real(r8), intent(in), optional :: eta
 
 !-------------------------- Local Variables ----------------------------
+
+   real(r8), parameter :: vdcf = 2.0
 
    integer  :: j                ! indices
    integer  :: jwt              ! index of the soil layer right above the water table (-)
@@ -200,8 +212,10 @@ CONTAINS
       fracice_rsub = max(0.,exp(-3.*(1.-(icefracsum/dzsum)))-exp(-3.))/(1.0-exp(-3.))
       imped = max(0.,1.-fracice_rsub)
 
-      IF ((DEF_SimTOP_method /= 0) .and. present(hksati) .and. present(topoweti)) THEN
-         rsubst = imped * sum(hksati(1:nl_soil))/nl_soil / 2.0 * exp(-topoweti) * exp(-2.*zwt)
+      IF ((DEF_SimTOP_method == 1) .and. present(hksati) .and. present(topoweti)) THEN
+         rsubst = imped * 3.e4 * sum(hksati(1:nl_soil))/nl_soil / vdcf * exp(-topoweti) * exp(-vdcf*zwt)
+      ELSEIF ((DEF_SimTOP_method == 2) .and. present(hksati) .and. present(eta)) THEN
+         rsubst = imped * 3.e3 * sum(hksati(1:nl_soil))/nl_soil / vdcf * exp(-eta)
       ELSE
          rsubst = imped * 5.5e-3 * exp(-2.5*zwt)
       ENDIF

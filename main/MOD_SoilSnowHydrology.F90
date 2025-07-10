@@ -650,6 +650,8 @@ ENDIF
        vol_ice(1:nl_soil), &! partial volume of ice lens in layer
        icefrac(1:nl_soil)   ! ice fraction (-)
 
+   real(r8) :: eta
+
    real(r8) :: err_solver, w_sum, wresi(1:nl_soil)
    real(r8) :: qgtop
 
@@ -791,10 +793,10 @@ IF((patchtype<=1) .or. is_dry_lake)THEN   ! soil ground only
 
             CALL SurfaceRunoff_SIMTOP (nl_soil,wimp,porsl,psi0,hksati,fsatmax,fsatdcf,&
                z_soisno(1:),dz_soisno(1:),zi_soisno(0:),&
-               eff_porosity,icefrac,zwt,gwat,rsur,rsur_se,rsur_ie,topoweti,alp_twi,chi_twi,mu_twi,fsat)
+               eff_porosity,icefrac,zwt,gwat,rsur,rsur_se,rsur_ie,topoweti,alp_twi,chi_twi,mu_twi,fsat,eta)
 
             CALL SubsurfaceRunoff_SIMTOP (nl_soil, icefrac, dz_soisno(1:), zi_soisno(0:), &
-               zwt, rsubst, hksati, topoweti)
+               zwt, rsubst, hksati, topoweti, eta)
 
          ELSEIF (DEF_Runoff_SCHEME  == 1) THEN
             ! 1: runoff scheme from VIC model
