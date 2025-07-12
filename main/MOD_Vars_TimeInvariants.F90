@@ -565,7 +565,7 @@ CONTAINS
 #endif
 
       IF (p_is_master) THEN
-         write(*,'(A29)') 'Loading Time Invariants done.'
+         write(*,*) 'Loading Time Invariants done.'
       ENDIF
 
    END SUBROUTINE READ_TimeInvariants
@@ -647,7 +647,7 @@ CONTAINS
       CALL ncio_write_vector (file_restart, 'wf_gravels', 'soil', nl_soil, 'patch', landpatch, wf_gravels, compress) ! gravimetric fraction of gravels
       CALL ncio_write_vector (file_restart, 'wf_sand   ', 'soil', nl_soil, 'patch', landpatch, wf_sand   , compress) ! gravimetric fraction of sand
       CALL ncio_write_vector (file_restart, 'wf_clay   ', 'soil', nl_soil, 'patch', landpatch, wf_clay   , compress) ! gravimetric fraction of clay
-      CALL ncio_write_vector (file_restart, 'wf_om     ', 'soil', nl_soil, 'patch', landpatch, wf_om     , compress) ! gravimetric fraction of om 
+      CALL ncio_write_vector (file_restart, 'wf_om     ', 'soil', nl_soil, 'patch', landpatch, wf_om     , compress) ! gravimetric fraction of om
       CALL ncio_write_vector (file_restart, 'OM_density', 'soil', nl_soil, 'patch', landpatch, OM_density, compress) ! OM_density
       CALL ncio_write_vector (file_restart, 'BD_all    ', 'soil', nl_soil, 'patch', landpatch, BD_all    , compress) ! bulk density of soil
       CALL ncio_write_vector (file_restart, 'wfc       ', 'soil', nl_soil, 'patch', landpatch, wfc       , compress) ! field capacity

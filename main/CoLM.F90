@@ -469,7 +469,9 @@ PROGRAM CoLM
          ! DO land use and land cover change simulation
          ! ----------------------------------------------------------------------
 #ifdef LULCC
-         IF ( isendofyear(idate, deltim) ) THEN
+         IF ( isendofyear(idate, deltim) .and. &
+            ( jdate(1)>=2000 .or. (jdate(1)>1985 .and. MOD(jdate(1),5)==0) ) ) THEN
+
             ! Deallocate all Forcing and Fluxes variable of last year
             CALL deallocate_1D_Forcing
             CALL deallocate_1D_Fluxes
@@ -478,7 +480,7 @@ PROGRAM CoLM
             CALL hist_final    ()
 
             ! Call LULCC driver
-            CALL LulccDriver (casename, dir_landdata, dir_restart, idate, greenwich)
+            CALL LulccDriver (casename, dir_landdata, dir_restart, jdate, greenwich)
 
             ! Allocate Forcing and Fluxes variable of next year
             CALL allocate_1D_Forcing
@@ -528,9 +530,13 @@ PROGRAM CoLM
 
          ! Write out the model state variables for restart run
          ! ----------------------------------------------------------------------
-         IF (save_to_restart (idate, deltim, itstamp, ptstamp)) THEN
+         IF (save_to_restart (idate, deltim, itstamp, ptstamp, etstamp)) THEN
 #ifdef LULCC
-            CALL WRITE_TimeVariables (jdate, jdate(1), casename, dir_restart)
+            IF (jdate(1) >= 2000) THEN
+               CALL WRITE_TimeVariables (jdate, jdate(1), casename, dir_restart)
+            ELSE
+               CALL WRITE_TimeVariables (jdate, (jdate(1)/5)*5, casename, dir_restart)
+            ENDIF
 #else
             CALL WRITE_TimeVariables (jdate, lc_year,  casename, dir_restart)
 #endif

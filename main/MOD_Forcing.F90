@@ -1036,7 +1036,8 @@ CONTAINS
 
             ! when reaching the END of forcing data, show a Warning but still try to run
             IF ( year>endyr .or. (month>endmo .and. year==endyr) ) THEN
-               write(*,*) 'model year: ', year, 'forcing end year defined: ', endyr
+               write(*,*) 'model year/month:               ', year,  month
+               write(*,*) 'forcing end year/month defined: ', endyr, endmo
                print *, 'Warning: reaching the END of forcing data defined!'
             ENDIF
 
@@ -1546,6 +1547,10 @@ CONTAINS
 
          time_i = iforctime(var_i)+1
          year = tstamp_UB(var_i)%year
+         day  = tstamp_UB(var_i)%day
+
+         CALL julian2monthday(year, day, month, mday)
+
          RETURN
       ENDIF
 
