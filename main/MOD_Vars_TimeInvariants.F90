@@ -583,7 +583,7 @@ CONTAINS
 #endif
 
       IF (p_is_master) THEN
-         write(*,'(A29)') 'Loading Time Invariants done.'
+         write(*,*) 'Loading Time Invariants done.'
       ENDIF
 
    END SUBROUTINE READ_TimeInvariants

@@ -12,7 +12,7 @@ MODULE MOD_Lulcc_Initialize
 CONTAINS
 
    SUBROUTINE LulccInitialize (casename, dir_landdata, dir_restart, &
-                               idate, greenwich)
+                               jdate, greenwich)
 
 !-----------------------------------------------------------------------
 !
@@ -46,9 +46,6 @@ CONTAINS
    USE MOD_Vars_TimeInvariants
    USE MOD_Vars_TimeVariables
    USE MOD_Initialize
-#ifdef SrfdataDiag
-   USE MOD_SrfdataDiag, only: gdiag, srfdata_diag_init
-#endif
 
    IMPLICIT NONE
 
@@ -57,7 +54,7 @@ CONTAINS
    character(len=*), intent(in) :: dir_landdata
    character(len=*), intent(in) :: dir_restart
 
-   integer, intent(inout) :: idate(3)   ! year, julian day, seconds of the starting time
+   integer, intent(inout) :: jdate(3)   ! year, julian day, seconds of the starting time
    logical, intent(in)    :: greenwich  ! true: greenwich time, false: local time
 
 !-------------------------- Local Variables ----------------------------
@@ -66,10 +63,8 @@ CONTAINS
 !-----------------------------------------------------------------------
 
       ! initial time of model run and consts
-      CALL adj2begin(idate)
-
-      year = idate(1)
-      jday = idate(2)
+      year = jdate(1)
+      jday = jdate(2)
 
       CALL Init_GlobalVars
       CALL Init_LC_Const
@@ -125,17 +120,6 @@ CONTAINS
          CALL elm_patch%build (landelm, landpatch, use_frac = .true.)
       ENDIF
 
-      ! initialize for SrfdataDiag, it is needed in the MOD_Lulcc_TransferTrace for outputing
-      ! transfer_matrix
-#ifdef SrfdataDiag
-#ifdef GRIDBASED
-      CALL init_gridbased_mesh_grid ()
-      CALL gdiag%define_by_copy (gridmesh)
-#else
-      CALL gdiag%define_by_ndims (3600,1800)
-#endif
-      CALL srfdata_diag_init (dir_landdata, lulcc_call=.true.)
-#endif
 
       ! --------------------------------------------------------------------
       ! Deallocates memory for CoLM 1d [numpatch] variables
@@ -145,7 +129,7 @@ CONTAINS
 
       ! initialize all state variables of next year
       CALL initialize (casename, dir_landdata, dir_restart,&
-                       idate, year, greenwich, lulcc_call=.true.)
+                       jdate, year, greenwich, lulcc_call=.true.)
 
    END SUBROUTINE LulccInitialize
 

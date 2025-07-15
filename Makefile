@@ -84,6 +84,7 @@ OBJS_MKSRFDATA = \
 				  Aggregation_TopographyFactors.o   \
 				  Aggregation_Urban.o               \
 				  Aggregation_SoilTexture.o         \
+				  MOD_Lulcc_TransferTrace.o         \
 				  MKSRFDATA.o
 
 $(OBJS_MKSRFDATA) : %.o : %.F90 ${HEADER} ${OBJS_SHARED}
@@ -319,9 +320,9 @@ OBJS_MAIN = \
 				CoLMMAIN_Urban.o                          \
 				MOD_Lulcc_Vars_TimeInvariants.o           \
 				MOD_Lulcc_Vars_TimeVariables.o            \
-				MOD_Lulcc_Initialize.o                    \
-				MOD_Lulcc_TransferTrace.o                 \
+				MOD_Lulcc_TransferTraceReadin.o           \
 				MOD_Lulcc_MassEnergyConserve.o            \
+				MOD_Lulcc_Initialize.o                    \
 				MOD_Lulcc_Driver.o                        \
 				CoLMDRIVER.o                              \
 				CoLMMAIN.o                                \
