@@ -285,7 +285,11 @@ CONTAINS
 
                CALL ncio_create_file (filename)
 
-               CALL ncio_define_dimension (filename, 'TypeIndex', ntyps)
+               IF (ntyps > 1) THEN
+                  CALL ncio_define_dimension (filename, 'TypeIndex', ntyps)
+                  CALL ncio_write_serial (filename, 'TypeIndex', typindex, 'TypeIndex')
+               ENDIF
+
                CALL ncio_define_dimension (filename, 'lon' , srf_concat%ginfo%nlon)
                CALL ncio_define_dimension (filename, 'lat' , srf_concat%ginfo%nlat)
 
@@ -313,15 +317,19 @@ CONTAINS
                CALL ncio_put_attr (filename, 'lon_e', 'long_name', 'eastern longitude boundary')
                CALL ncio_put_attr (filename, 'lon_e', 'units', 'degrees_east')
 
-               CALL ncio_write_serial (filename, 'TypeIndex', typindex, 'TypeIndex')
-
             ENDIF
 
             IF (present(lastdimname) .and. present(lastdimvalue)) THEN
 
                CALL ncio_write_lastdim (filename, lastdimname, lastdimvalue, ilastdim)
-               CALL ncio_write_serial_time (filename, dataname, ilastdim, vdata, &
-                  'TypeIndex', 'lon', 'lat', trim(lastdimname), compress)
+
+               IF (ntyps > 1) THEN
+                  CALL ncio_write_serial_time (filename, dataname, ilastdim, vdata, &
+                     'TypeIndex', 'lon', 'lat', trim(lastdimname), compress)
+               ELSE
+                  CALL ncio_write_serial_time (filename, dataname, ilastdim, vdata(1,:,:), &
+                     'lon', 'lat', trim(lastdimname), compress)
+               ENDIF
 
                IF (trim(wmode) == 'one') THEN
                   CALL ncio_write_serial_time (filename, trim(dataname)//'_grid', ilastdim, vdsum, &
@@ -330,7 +338,11 @@ CONTAINS
 
             ELSE
 
-               CALL ncio_write_serial (filename, dataname, vdata, 'TypeIndex', 'lon', 'lat', compress)
+               IF (ntyps > 1) THEN
+                  CALL ncio_write_serial (filename, dataname, vdata, 'TypeIndex', 'lon', 'lat', compress)
+               ELSE
+                  CALL ncio_write_serial (filename, dataname, vdata(1,:,:), 'lon', 'lat', compress)
+               ENDIF
 
                IF (trim(wmode) == 'one') THEN
                   CALL ncio_write_serial (filename, trim(dataname)//'_grid', vdsum, 'lon', 'lat', compress)
