@@ -1280,6 +1280,8 @@ SUBROUTINE CoLMMAIN ( &
             aa = qseva+qsubl-qsdew-qfros
             rsur = max(0., pg_rain + pg_snow - aa - a)
             rnof = rsur
+            rsur_se = rsur
+            rsur_ie = 0.
          ELSE
 
             wdsrf = sum(dz_lake) * 1.e3
