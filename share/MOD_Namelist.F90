@@ -59,8 +59,8 @@ MODULE MOD_Namelist
 
    character(len=256) :: SITE_fsitedata = 'null'
 
-   real(r8) :: SITE_lon_location = 113.5897
-   real(r8) :: SITE_lat_location = 22.3507
+   real(r8) :: SITE_lon_location = -1.e36_r8
+   real(r8) :: SITE_lat_location = -1.e36_r8
 
    integer  :: SITE_landtype             = -1
 
@@ -75,10 +75,10 @@ MODULE MOD_Namelist
    logical  :: USE_SITE_dbedrock         = .true.
    logical  :: USE_SITE_topography       = .true.
    logical  :: USE_SITE_urban_geometry   = .true.
-   logical  :: USE_SITE_urban_ecology    = .false.
-   logical  :: USE_SITE_urban_radiation  = .false.
+   logical  :: USE_SITE_urban_ecology    = .true.
+   logical  :: USE_SITE_urban_radiation  = .true.
    logical  :: USE_SITE_urban_thermal    = .false.
-   logical  :: USE_SITE_urban_human      = .false.
+   logical  :: USE_SITE_urban_human      = .true.
    logical  :: USE_SITE_HistWriteBack    = .true.
    logical  :: USE_SITE_ForcingReadAhead = .true.
 
@@ -499,6 +499,7 @@ MODULE MOD_Namelist
       logical :: rnof                             = .true.
       logical :: xwsur                            = .true.
       logical :: xwsub                            = .true.
+      logical :: fldarea                          = .true.
       logical :: qintr                            = .true.
       logical :: qinfl                            = .true.
       logical :: qdrip                            = .true.
@@ -698,14 +699,14 @@ MODULE MOD_Namelist
       logical :: fert_to_sminn                    = .true.
 
       logical :: huiswheat                        = .true.
-      logical :: pdcorn                           = .true.
-      logical :: pdswheat                         = .true.
-      logical :: pdwwheat                         = .true.
-      logical :: pdsoybean                        = .true.
-      logical :: pdcotton                         = .true.
-      logical :: pdrice1                          = .true.
-      logical :: pdrice2                          = .true.
-      logical :: pdsugarcane                      = .true.
+      logical :: pdcorn                           = .false.
+      logical :: pdswheat                         = .false.
+      logical :: pdwwheat                         = .false.
+      logical :: pdsoybean                        = .false.
+      logical :: pdcotton                         = .false.
+      logical :: pdrice1                          = .false.
+      logical :: pdrice2                          = .false.
+      logical :: pdsugarcane                      = .false.
       logical :: fertnitro_corn                   = .true.
       logical :: fertnitro_swheat                 = .true.
       logical :: fertnitro_wwheat                 = .true.
@@ -1733,6 +1734,7 @@ CONTAINS
       CALL sync_hist_vars_one (DEF_hist_vars%rnof        , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%xwsur       , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%xwsub       , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%fldarea     , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%qintr       , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%qinfl       , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%qdrip       , set_defaults)
@@ -1881,15 +1883,14 @@ CONTAINS
       CALL sync_hist_vars_one (DEF_hist_vars%leafc_c4grass      , set_defaults)
 #ifdef CROP
       CALL sync_hist_vars_one (DEF_hist_vars%cphase                          , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gddmaturity                     , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gddplant                        , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%vf                              , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%hui                             , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%cropprod1c                      , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%cropprod1c_loss                 , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%cropseedc_deficit               , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%grainc_to_cropprodc             , set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%grainc_to_seed                  , set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%hui                             , set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%vf                              , set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%gddmaturity                     , set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%gddplant                        , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%plantdate_rainfed_temp_corn     , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%plantdate_irrigated_temp_corn   , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%plantdate_rainfed_spwheat       , set_defaults)
@@ -1928,7 +1929,10 @@ CONTAINS
       CALL sync_hist_vars_one (DEF_hist_vars%cropprodc_rainfed_trop_soybean  , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%cropprodc_irrigated_trop_soybean, set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%cropprodc_unmanagedcrop         , set_defaults)
+
+      CALL sync_hist_vars_one (DEF_hist_vars%grainc_to_seed                  , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%fert_to_sminn                   , set_defaults)
+
       IF(DEF_USE_IRRIGATION)THEN
          CALL sync_hist_vars_one (DEF_hist_vars%irrig_rate                   , set_defaults)
          CALL sync_hist_vars_one (DEF_hist_vars%deficit_irrig                , set_defaults)

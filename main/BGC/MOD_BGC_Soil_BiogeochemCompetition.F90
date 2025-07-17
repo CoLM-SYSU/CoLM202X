@@ -256,11 +256,11 @@ CONTAINS
                ENDIF
 
             ENDIF
-               sum_no3_demand(j) = (plant_ndemand(i)*nuptake_prof(j)-smin_nh4_to_plant_vr(j,i)) &
-                                 + (potential_immob_vr(j,i)-actual_immob_nh4_vr(j,i)) + pot_f_denit_vr(j,i)
-               sum_no3_demand_scaled(j) = (plant_ndemand(i)*nuptake_prof(j) &
-                                        - smin_nh4_to_plant_vr(j,i))*compet_plant_no3 &
-                                        + (potential_immob_vr(j,i)-actual_immob_nh4_vr(j,i))*compet_decomp_no3 + pot_f_denit_vr(j,i)*compet_denit
+            sum_no3_demand(j) = (plant_ndemand(i)*nuptake_prof(j)-smin_nh4_to_plant_vr(j,i)) &
+                              + (potential_immob_vr(j,i)-actual_immob_nh4_vr(j,i)) + pot_f_denit_vr(j,i)
+            sum_no3_demand_scaled(j) = (plant_ndemand(i)*nuptake_prof(j) &
+                                     - smin_nh4_to_plant_vr(j,i))*compet_plant_no3 &
+                                     + (potential_immob_vr(j,i)-actual_immob_nh4_vr(j,i))*compet_decomp_no3 + pot_f_denit_vr(j,i)*compet_denit
 
             IF (sum_no3_demand(j)*deltim < smin_no3_vr(j,i)) THEN
 
@@ -344,7 +344,11 @@ CONTAINS
                ELSE
                   residual_smin_nh4_vr(j)  = 0._r8
                ENDIF
+            ENDIF
+         ENDDO
 
+         DO j = 1, nl_soil
+            IF (residual_plant_ndemand  >  0._r8 ) THEN
                IF ( residual_smin_nh4 > 0._r8 .and. nlimit_nh4(j) .eq. 0 ) THEN
                   smin_nh4_to_plant_vr(j,i) = smin_nh4_to_plant_vr(j,i) + residual_smin_nh4_vr(j) * &
                        min(( residual_plant_ndemand *  deltim ) / residual_smin_nh4, 1._r8) / deltim
@@ -373,7 +377,11 @@ CONTAINS
                ELSE
                   residual_smin_no3_vr(j)  = 0._r8
                ENDIF
+            ENDIF
+         ENDDO
 
+         DO j = 1, nl_soil
+            IF (residual_plant_ndemand > 0._r8 ) THEN
                IF ( residual_smin_no3 > 0._r8 .and. nlimit_no3(j) .eq. 0) THEN
                   smin_no3_to_plant_vr(j,i) = smin_no3_to_plant_vr(j,i) + residual_smin_no3_vr(j) * &
                     min(( residual_plant_ndemand *  deltim ) / residual_smin_no3, 1._r8) / deltim

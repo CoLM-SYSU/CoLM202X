@@ -23,7 +23,7 @@ MODULE MOD_BGC_Soil_BiogeochemDecompCascadeBGC
 
    USE MOD_Precision
    USE MOD_Vars_TimeInvariants, only: &
-       Q10, smpmax, smpmin, tau_l1, tau_l2_l3, tau_s1, tau_s2, tau_s3, tau_cwd, froz_q10, &
+       Q10, smpmax_hr, smpmin_hr, tau_l1, tau_l2_l3, tau_s1, tau_s2, tau_s3, tau_cwd, froz_q10, &
        i_met_lit,i_cel_lit,i_lig_lit ,i_cwd,i_soil1,i_soil2,i_soil3
    USE MOD_Vars_TimeVariables, only: &
        smp, t_soisno, t_scalar, w_scalar, o_scalar, depth_scalar, decomp_k
@@ -80,10 +80,10 @@ CONTAINS
       ! and soil moisture. Soil Biol. Biochem., 15(4):447-453.
 
       DO j = 1,nl_soil
-         psi = min(smp(j,i),smpmax)
+         psi = min(smp(j,i),smpmax_hr)
          ! decomp only IF soilpsi is higher than minpsi
-         IF (psi > smpmin) THEN
-            w_scalar(j,i) = (log(smpmin/psi)/log(smpmin/smpmax))
+         IF (psi > smpmin_hr) THEN
+            w_scalar(j,i) = (log(smpmin_hr/psi)/log(smpmin_hr/smpmax_hr))
          ELSE
             w_scalar(j,i) = 0._r8
          ENDIF

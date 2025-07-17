@@ -40,13 +40,14 @@ CONTAINS
 
    integer, intent(in) :: nl_soil   ! number of soil layers
    real(r8), intent(in) :: &
-        ! wtfact,                 &! (updated to gridded 'fsatmax' data) fraction of model area with high water table
+        ! wtfact,                 &! (updated to gridded 'fsatmax' data)
+                                   ! fraction of model area with high water table
         wimp,                     &! water impermeable if porosity less than wimp
         porsl(1:nl_soil),         &! saturated volumetric soil water content(porosity)
         psi0(1:nl_soil),          &! saturated soil suction (mm) (NEGATIVE)
         hksati(1:nl_soil),        &! hydraulic conductivity at saturation (mm h2o/s)
         fsatmax,                  &! maximum fraction of saturation area [-]
-        fsatdcf,                  &! decay factor in calculation of fraction of saturation area [1/m]
+        fsatdcf,                  &! decay factor in calc of fraction of saturation area [1/m]
         z_soisno(1:nl_soil),      &! layer depth (m)
         dz_soisno(1:nl_soil),     &! layer thickness (m)
         zi_soisno(0:nl_soil),     &! interface level below a "z" level (m)

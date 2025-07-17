@@ -1070,8 +1070,15 @@ IF (DEF_USE_IRRIGATION) THEN
 ENDIF
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
+#ifdef SinglePoint
+      IF (patchtypes(SITE_landtype) == 0) THEN
+         file_restart = trim(dir_restart)// '/'//trim(cdate)//'/' // trim(site) //'_restart_pft_'//trim(cdate)//'_lc'//trim(cyear)//'.nc'
+         CALL WRITE_PFTimeVariables (file_restart)
+      ENDIF
+#else
       file_restart = trim(dir_restart)// '/'//trim(cdate)//'/' // trim(site) //'_restart_pft_'//trim(cdate)//'_lc'//trim(cyear)//'.nc'
       CALL WRITE_PFTimeVariables (file_restart)
+#endif
 #endif
 
 #if (defined BGC)
@@ -1090,7 +1097,7 @@ ENDIF
 #endif
 
 #ifdef EXTERNAL_LAKE
-      CALL WRITE_LakeTimeVars (idate, lc_year, site, dir_restart) 
+      CALL WRITE_LakeTimeVars (idate, lc_year, site, dir_restart)
 #endif
 
    END SUBROUTINE WRITE_TimeVariables
@@ -1247,8 +1254,15 @@ IF (DEF_USE_IRRIGATION) THEN
 ENDIF
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
+#ifdef SinglePoint
+      IF (patchtypes(SITE_landtype) == 0) THEN
+         file_restart = trim(dir_restart)// '/'//trim(cdate)//'/' // trim(site) //'_restart_pft_'//trim(cdate)//'_lc'//trim(cyear)//'.nc'
+         CALL READ_PFTimeVariables (file_restart)
+      ENDIF
+#else
       file_restart = trim(dir_restart)// '/'//trim(cdate)//'/' // trim(site) //'_restart_pft_'//trim(cdate)//'_lc'//trim(cyear)//'.nc'
       CALL READ_PFTimeVariables (file_restart)
+#endif
 #endif
 
 #if (defined BGC)
@@ -1275,7 +1289,7 @@ ENDIF
 #endif
 
       IF (p_is_master) THEN
-         write(*,*) 'Loading Time Variables done.'
+         write(*,'(A29)') 'Loading Time Variables done.'
       ENDIF
 
    END SUBROUTINE READ_TimeVariables

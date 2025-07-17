@@ -11,8 +11,8 @@ MODULE MOD_Lulcc_Initialize
 
 CONTAINS
 
-   SUBROUTINE LulccInitialize (casename,dir_landdata,dir_restart,&
-                               idate,greenwich)
+   SUBROUTINE LulccInitialize (casename, dir_landdata, dir_restart, &
+                               idate, greenwich)
 
 !-----------------------------------------------------------------------
 !
@@ -65,16 +65,15 @@ CONTAINS
 
 !-----------------------------------------------------------------------
 
-      ! initial time of model run
-      ! ............................
+      ! initial time of model run and consts
       CALL adj2begin(idate)
 
       year = idate(1)
       jday = idate(2)
 
       CALL Init_GlobalVars
-      CAll Init_LC_Const
-      CAll Init_PFT_Const
+      CALL Init_LC_Const
+      CALL Init_PFT_Const
 
       ! deallocate pixelset and mesh data of previous year
       CALL mesh_free_mem
@@ -126,15 +125,16 @@ CONTAINS
          CALL elm_patch%build (landelm, landpatch, use_frac = .true.)
       ENDIF
 
-      ! initialize for SrfdataDiag, it is needed in the MOD_Lulcc_TransferTrace for outputing transfer_matrix
+      ! initialize for SrfdataDiag, it is needed in the MOD_Lulcc_TransferTrace for outputing
+      ! transfer_matrix
 #ifdef SrfdataDiag
 #ifdef GRIDBASED
       CALL init_gridbased_mesh_grid ()
       CALL gdiag%define_by_copy (gridmesh)
 #else
-      CALL gdiag%define_by_ndims(3600,1800)
+      CALL gdiag%define_by_ndims (3600,1800)
 #endif
-      CALL srfdata_diag_init (dir_landdata)
+      CALL srfdata_diag_init (dir_landdata, lulcc_call=.true.)
 #endif
 
       ! --------------------------------------------------------------------
@@ -144,8 +144,8 @@ CONTAINS
       CALL deallocate_TimeVariables
 
       ! initialize all state variables of next year
-      CALL initialize (casename,dir_landdata,dir_restart,&
-                       idate,year,greenwich,lulcc_call=.true.)
+      CALL initialize (casename, dir_landdata, dir_restart,&
+                       idate, year, greenwich, lulcc_call=.true.)
 
    END SUBROUTINE LulccInitialize
 

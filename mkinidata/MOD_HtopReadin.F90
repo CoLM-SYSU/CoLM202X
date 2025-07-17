@@ -99,8 +99,10 @@ CONTAINS
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
 #ifdef SinglePoint
-      allocate(htoppft(numpft))
-      htoppft = pack(SITE_htop_pfts, SITE_pctpfts > 0.)
+      IF (numpft > 0) THEN
+         allocate(htoppft(numpft))
+         htoppft = pack(SITE_htop_pfts, SITE_pctpfts > 0.)
+      ENDIF
 #else
       lndname = trim(landdir)//'/htop_pfts.nc'
       CALL ncio_read_vector (lndname, 'htop_pfts', landpft,   htoppft)

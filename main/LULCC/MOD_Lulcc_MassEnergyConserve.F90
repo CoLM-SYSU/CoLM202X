@@ -193,7 +193,8 @@ ENDIF
 
                               DO WHILE (inp_ .le. grid_patch_e_(j))
 
-                                 ! Get the index of source patch that has the same LC, and stored as selfnp_
+                                 ! Get the index of source patch that has the
+                                 ! same LC, and stored as selfnp_
                                  IF (patchclass_(inp_) .eq. patchclass(np)) THEN
                                     selfnp_ = inp_
                                  ENDIF
@@ -211,62 +212,62 @@ ENDIF
                         ENDDO
 
                         ! Initialize
-                        wliq_soisno (:,np)                = 0  !liquid water in layers [kg/m2]
-                        wice_soisno (:,np)                = 0  !ice lens in layers [kg/m2]
-                        t_soisno    (:,np)                = 0  !soil + snow layer temperature [K]
-                        z_sno       (:,np)                = 0  !node depth [m]
-                        dz_sno      (:,np)                = 0  !interface depth [m]
-                        t_grnd        (np)                = 0  !ground surface temperature [K]
-                        tleaf         (np)                = 0  !leaf temperature [K]
-                        ldew          (np)                = 0  !depth of water on foliage [mm]
-                        ldew_rain     (np)                = 0  !depth of rain on foliage [mm]
-                        ldew_snow     (np)                = 0  !depth of snow on foliage [mm]
-                        sag           (np)                = 0  !non dimensional snow age [-]
-                        scv           (np)                = 0  !snow cover, water equivalent [mm]
-                        snowdp        (np)                = 0  !snow depth [meter]
-                        fsno          (np)                = 0  !fraction of snow cover on ground
-                        sigf          (np)                = 0  !fraction of veg cover, excluding snow-covered veg [-]
-                        zwt           (np)                = 0  !the depth to water table [m]
-                        wa            (np)                = 0  !water storage in aquifer [mm]
-                        wdsrf         (np)                = 0  !depth of surface water [mm]
-                        smp         (:,np)                = 0  !soil matrix potential [mm]
-                        hk          (:,np)                = 0  !hydraulic conductivity [mm h2o/s]
+                        wliq_soisno (:,np)    = 0  !liquid water in layers [kg/m2]
+                        wice_soisno (:,np)    = 0  !ice lens in layers [kg/m2]
+                        t_soisno    (:,np)    = 0  !soil + snow layer temperature [K]
+                        z_sno       (:,np)    = 0  !node depth [m]
+                        dz_sno      (:,np)    = 0  !interface depth [m]
+                        t_grnd        (np)    = 0  !ground surface temperature [K]
+                        tleaf         (np)    = 0  !leaf temperature [K]
+                        ldew          (np)    = 0  !depth of water on foliage [mm]
+                        ldew_rain     (np)    = 0  !depth of rain on foliage [mm]
+                        ldew_snow     (np)    = 0  !depth of snow on foliage [mm]
+                        sag           (np)    = 0  !non dimensional snow age [-]
+                        scv           (np)    = 0  !snow cover, water equivalent [mm]
+                        snowdp        (np)    = 0  !snow depth [meter]
+                        fsno          (np)    = 0  !frac of snow cover on ground
+                        sigf          (np)    = 0  !frac of veg cover, exclud snow-covered veg [-]
+                        zwt           (np)    = 0  !the depth to water table [m]
+                        wa            (np)    = 0  !water storage in aquifer [mm]
+                        wdsrf         (np)    = 0  !depth of surface water [mm]
+                        smp         (:,np)    = 0  !soil matrix potential [mm]
+                        hk          (:,np)    = 0  !hydraulic conductivity [mm h2o/s]
 
                         IF(DEF_USE_PLANTHYDRAULICS)THEN
-                           vegwp    (:,np)                = 0  !vegetation water potential [mm]
-                           gs0sun     (np)                = 0  !working copy of sunlit stomata conductance
-                           gs0sha     (np)                = 0  !working copy of shaded stomata conductance
+                           vegwp    (:,np)    = 0  !vegetation water potential [mm]
+                           gs0sun     (np)    = 0  !working copy of sunlit stomata conductance
+                           gs0sha     (np)    = 0  !working copy of shaded stomata conductance
                         ENDIF
 
                         IF(DEF_USE_OZONESTRESS)THEN
-                           lai_old    (np)                = 0  !lai in last time step
+                           lai_old    (np)    = 0  !lai in last time step
                         ENDIF
 
-                        snw_rds     (:,np)                = 0  !effective grain radius (col,lyr) [microns, m-6]
-                        mss_bcpho   (:,np)                = 0  !mass of hydrophobic BC in snow  (col,lyr) [kg]
-                        mss_bcphi   (:,np)                = 0  !mass of hydrophillic BC in snow (col,lyr) [kg]
-                        mss_ocpho   (:,np)                = 0  !mass of hydrophobic OC in snow  (col,lyr) [kg]
-                        mss_ocphi   (:,np)                = 0  !mass of hydrophillic OC in snow (col,lyr) [kg]
-                        mss_dst1    (:,np)                = 0  !mass of dust species 1 in snow  (col,lyr) [kg]
-                        mss_dst2    (:,np)                = 0  !mass of dust species 2 in snow  (col,lyr) [kg]
-                        mss_dst3    (:,np)                = 0  !mass of dust species 3 in snow  (col,lyr) [kg]
-                        mss_dst4    (:,np)                = 0  !mass of dust species 4 in snow  (col,lyr) [kg]
-                        ssno_lyr(:,:,:,np)                = 0  !snow layer absorption [-]
+                        snw_rds     (:,np)    = 0  !effective grain radius (col,lyr) [microns, m-6]
+                        mss_bcpho   (:,np)    = 0  !mass of hydrophobic BC in snow  (col,lyr) [kg]
+                        mss_bcphi   (:,np)    = 0  !mass of hydrophillic BC in snow (col,lyr) [kg]
+                        mss_ocpho   (:,np)    = 0  !mass of hydrophobic OC in snow  (col,lyr) [kg]
+                        mss_ocphi   (:,np)    = 0  !mass of hydrophillic OC in snow (col,lyr) [kg]
+                        mss_dst1    (:,np)    = 0  !mass of dust species 1 in snow  (col,lyr) [kg]
+                        mss_dst2    (:,np)    = 0  !mass of dust species 2 in snow  (col,lyr) [kg]
+                        mss_dst3    (:,np)    = 0  !mass of dust species 3 in snow  (col,lyr) [kg]
+                        mss_dst4    (:,np)    = 0  !mass of dust species 4 in snow  (col,lyr) [kg]
+                        ssno_lyr(:,:,:,np)    = 0  !snow layer absorption [-]
 
-                        trad          (np)                = 0  !radiative temperature of surface [K]
-                        tref          (np)                = 0  !2 m height air temperature [kelvin]
-                        qref          (np)                = 0  !2 m height air specific humidity
-                        rst           (np)                = 0  !canopy stomatal resistance (s/m)
-                        emis          (np)                = 0  !averaged bulk surface emissivity
-                        z0m           (np)                = 0  !effective roughness [m]
-                        zol           (np)                = 0  !dimensionless height (z/L) used in Monin-Obukhov theory
-                        rib           (np)                = 0  !bulk Richardson number in surface layer
-                        ustar         (np)                = 0  !u* in similarity theory [m/s]
-                        qstar         (np)                = 0  !q* in similarity theory [kg/kg]
-                        tstar         (np)                = 0  !t* in similarity theory [K]
-                        fm            (np)                = 0  !integral of profile function for momentum
-                        fh            (np)                = 0  !integral of profile function for heat
-                        fq            (np)                = 0  !integral of profile function for moisture
+                        trad          (np)    = 0  !radiative temperature of surface [K]
+                        tref          (np)    = 0  !2 m height air temperature [kelvin]
+                        qref          (np)    = 0  !2 m height air specific humidity
+                        rst           (np)    = 0  !canopy stomatal resistance (s/m)
+                        emis          (np)    = 0  !averaged bulk surface emissivity
+                        z0m           (np)    = 0  !effective roughness [m]
+                        zol           (np)    = 0  !dimensionless height (z/L) used in M-O theory
+                        rib           (np)    = 0  !bulk Richardson number in surface layer
+                        ustar         (np)    = 0  !u* in similarity theory [m/s]
+                        qstar         (np)    = 0  !q* in similarity theory [kg/kg]
+                        tstar         (np)    = 0  !t* in similarity theory [K]
+                        fm            (np)    = 0  !integral of profile function for momentum
+                        fh            (np)    = 0  !integral of profile function for heat
+                        fq            (np)    = 0  !integral of profile function for moisture
 
 
                         ! =============================================================
@@ -298,21 +299,26 @@ ENDIF
 
                            ! Snow heat capacity
                            IF( z_sno_(0,frnp_(k)) < 0 ) THEN
-                              cvsoil_(:0,k) = cpliq*wliq_soisno_(:0,frnp_(k)) + cpice*wice_soisno_(:0,frnp_(k))
-                              h_(:0,k)      = (cpliq*wliq_soisno_(:0,frnp_(k)) + cpice*wice_soisno_(:0,frnp_(k))) &
-                                            * (t_soisno_(:0,frnp_(k)) - tfrz) + hfus*wliq_soisno_(:0,frnp_(k))
+                              cvsoil_(:0,k) = cpliq*wliq_soisno_(:0,frnp_(k)) &
+                                            + cpice*wice_soisno_(:0,frnp_(k))
+                              h_(:0,k)      = (cpliq*wliq_soisno_(:0,frnp_(k)) + &
+                                               cpice*wice_soisno_(:0,frnp_(k))) &
+                                            * (t_soisno_(:0,frnp_(k)) - tfrz) &
+                                            + hfus*wliq_soisno_(:0,frnp_(k))
                            ENDIF
 
                            wgt(maxsnl+1:nl_soil) = wgt(maxsnl+1:nl_soil) &
-                                                 + cvsoil_(maxsnl+1:nl_soil,k) * lccpct_np(patchclass_(frnp_(k)))
-                           hc(:0) = hc(:0) + h_(:0,k) * lccpct_np(patchclass_(frnp_(k))) / sum_lccpct_np
+                              + cvsoil_(maxsnl+1:nl_soil,k) * lccpct_np(patchclass_(frnp_(k)))
+                           hc(:0) = hc(:0) &
+                                  + h_(:0,k) * lccpct_np(patchclass_(frnp_(k))) / sum_lccpct_np
                         ENDDO
 
                         ! Get the maximum lccpct for snow layers assignment
                         inp_ = frnp_(1)
                         k    = 2
                         DO WHILE (k .le. num)
-                           IF ( lccpct_np(patchclass_(frnp_(k))) .gt. lccpct_np(patchclass_(inp_)) ) THEN
+                           IF ( lccpct_np(patchclass_(frnp_(k))) &
+                                .gt. lccpct_np(patchclass_(inp_)) ) THEN
                               inp_ = frnp_(k)
                            ENDIF
                            k = k + 1
@@ -337,22 +343,28 @@ ENDIF
                            DO k = 1, num
 
                               t_soisno (-nsl+1:0,np) = t_soisno (-nsl+1:0,np) &
-                                 + t_soisno_(-nsl+1:0,frnp_(k))*cvsoil_(-nsl+1:0,k)*lccpct_np(patchclass_(frnp_(k)))/wgt(-nsl+1:0)
+                                 + t_soisno_(-nsl+1:0,frnp_(k))*cvsoil_(-nsl+1:0,k) &
+                                 * lccpct_np(patchclass_(frnp_(k)))/wgt(-nsl+1:0)
                               wliq_soisno (-nsl+1:0,np) = wliq_soisno (-nsl+1:0,np) &
-                                 + wliq_soisno_(-nsl+1:0,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                                 + wliq_soisno_(-nsl+1:0,frnp_(k)) &
+                                 * lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
                               wice_soisno (-nsl+1:0,np) = wice_soisno (-nsl+1:0,np) &
-                                 + wice_soisno_(-nsl+1:0,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                                 + wice_soisno_(-nsl+1:0,frnp_(k)) &
+                                 * lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
 
                               l = 1
                               DO WHILE ( (l .le. nsl) .and. (dz_sno_(-l+1,frnp_(k)) .gt. 0) )
                                  ! denh2o_np (-l+1) = denh2o_np(-l+1) &
-                                 !    + wliq_soisno_(-l+1,frnp_(k))/dz_sno_(-l+1,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                                 !    + wliq_soisno_(-l+1,frnp_(k))/dz_sno_(-l+1,frnp_(k)) &
+                                 !    * lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
                                  ! denice_np (-l+1) = denice_np(-l+1) &
-                                 !    + wice_soisno_(-l+1,frnp_(k))/dz_sno_(-l+1,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                                 !    + wice_soisno_(-l+1,frnp_(k))/dz_sno_(-l+1,frnp_(k)) &
+                                 !    * lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
 
                                  ! Reference: MOD_GroundTemperature.F90 Line205
                                  rhosnow_np  (-l+1) = rhosnow_np(-l+1) &
-                                    + (wliq_soisno_(-l+1,frnp_(k)) + wice_soisno_(-l+1,frnp_(k))) / dz_sno_(-l+1,frnp_(k)) &
+                                    + (wliq_soisno_(-l+1,frnp_(k)) + wice_soisno_(-l+1,frnp_(k))) &
+                                    / dz_sno_(-l+1,frnp_(k)) &
                                     * (lccpct_np(patchclass_(frnp_(k))) / sum_lccpct_np)
                                  l = l + 1
                                  IF (l .gt. -maxsnl) EXIT
@@ -364,19 +376,25 @@ ENDIF
                                  DO WHILE ( (l .le. -maxsnl) .and. (dz_sno_(-l+1,frnp_(k)) .gt. 0) )
 
                                     wliq_soisno(-nsl+1,np) = wliq_soisno (-nsl+1,np) &
-                                       + wliq_soisno_(-l+1,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                                       + wliq_soisno_(-l+1,frnp_(k)) &
+                                       * lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
                                     wice_soisno(-nsl+1,np) = wice_soisno (-nsl+1,np) &
-                                       + wice_soisno_(-l+1,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                                       + wice_soisno_(-l+1,frnp_(k)) &
+                                       * lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
 
                                     t_soisno (-nsl+1,np) = t_soisno (-nsl+1,np) &
-                                       + t_soisno_(-l+1,frnp_(k))*cvsoil_(-l+1,k)*lccpct_np(patchclass_(frnp_(k)))/wgt(-nsl+1)
+                                       + t_soisno_(-l+1,frnp_(k))*cvsoil_(-l+1,k) &
+                                       * lccpct_np(patchclass_(frnp_(k)))/wgt(-nsl+1)
 
                                     ! denh2o_np (-nsl+1) = denh2o_np(-nsl+1) &
-                                    !    + wliq_soisno_(-l+1,frnp_(k))/dz_sno_(-l+1,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                                    !    + wliq_soisno_(-l+1,frnp_(k))/dz_sno_(-l+1,frnp_(k)) &
+                                    !    * lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
                                     ! denice_np (-nsl+1) = denice_np(-nsl+1) &
-                                    !    + wice_soisno_(-l+1,frnp_(k))/dz_sno_(-l+1,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                                    !    + wice_soisno_(-l+1,frnp_(k))/dz_sno_(-l+1,frnp_(k)) &
+                                    !    * lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
                                     rhosnow_np  (-nsl+1) = rhosnow_np(-nsl+1) &
-                                       + (wliq_soisno_(-l+1,frnp_(k)) + wice_soisno_(-l+1,frnp_(k))) / dz_sno_(-l+1,frnp_(k)) &
+                                       + (wliq_soisno_(-l+1,frnp_(k))+wice_soisno_(-l+1,frnp_(k))) &
+                                       / dz_sno_(-l+1,frnp_(k)) &
                                        * (lccpct_np(patchclass_(frnp_(k))) / sum_lccpct_np)
                                     l = l + 1
                                     IF (l .gt. -maxsnl) EXIT
@@ -391,24 +409,28 @@ ENDIF
                            DO l = 0, -nsl+1, -1
 
                               ! IF (denice_np(l)>0 .and. denh2o_np(l)>0) THEN
-                              !    dz_sno (l,np) = wice_soisno(l,np)/denice_np(l) + wliq_soisno(l,np)/denh2o_np(l)
+                              !    dz_sno (l,np) = wice_soisno(l,np)/denice_np(l) &
+                              !                  + wliq_soisno(l,np)/denh2o_np(l)
 
                               ! ELSEIF (denice_np(l)==0 .and. denh2o_np(l)>0) THEN
                               !    dz_sno (l,np) = wliq_soisno(l,np)/denh2o_np(l)
-                              !    ! print*, 'denice=0! np=',np,'igbp=',patchclass(np),'nsl=',nsl,'frnp_=',frnp_
+                              !    ! print*, 'denice=0! np=',np,'igbp=',patchclass(np),&
+                              !              'nsl=',nsl,'frnp_=',frnp_
                               !    ! DO k = 1,num
                               !    !    print*,'frnp_=',frnp_(k),'wice=',wice_soisno(:0,frnp_(k))
                               !    ! ENDDO
 
                               ! ELSEIF (denh2o_np(l)==0 .and. denice_np(l)>0) THEN
                               !    dz_sno (l,np) = wice_soisno(l,np)/denice_np(l)
-                              !    ! print*, 'denh2o=0! np=',np,'igbp=',patchclass(np),'nsl=',nsl,'frnp_=',frnp_
+                              !    ! print*, 'denh2o=0! np=',np,'igbp=',patchclass(np),&
+                              !              'nsl=',nsl,'frnp_=',frnp_
                               !    ! DO k = 1,num
                               !    !    print*,'frnp_=',frnp_(k),'wliq=',wliq_soisno(:0,frnp_(k))
                               !    ! ENDDO
 
                               ! ELSE
-                              !    print*, 'denh2o and denice == 0! np=',np,'igbp=',patchclass(np),'nsl=',nsl,'frnp_=',frnp_
+                              !    print*, 'denh2o and denice == 0! np=',np,'igbp=',patchclass(np),&
+                              !            'nsl=',nsl,'frnp_=',frnp_
                               !    DO k = 1,num
                               !       print*,'frnp_=',frnp_(k),'wliq=',wliq_soisno(:0,frnp_(k))
                               !       print*,'frnp_=',frnp_(k),'wice=',wice_soisno(:0,frnp_(k))
@@ -419,11 +441,13 @@ ENDIF
 
                               ! Reference: MOD_SnowLayersCombineDivide.F90's subroutine combo
                               IF (hc(l) < 0.) THEN
-                                 t_soisno (l,np) = tfrz + hc(l) / (cpice*wice_soisno(l,np) + cpliq*wliq_soisno(l,np))
+                                 t_soisno (l,np) = tfrz + hc(l) / (cpice*wice_soisno(l,np) &
+                                                 + cpliq*wliq_soisno(l,np))
                               ELSEIF (hc(l) .le. hfus*wliq_soisno(l,np)) THEN
                                  t_soisno (l,np) = tfrz
                               ELSE
-                                 t_soisno (l,np) = tfrz + (hc(l) - hfus*wliq_soisno(l,np))/(cpice*wice_soisno(l,np)+cpliq*wliq_soisno(l,np))
+                                 t_soisno (l,np) = tfrz + (hc(l) - hfus*wliq_soisno(l,np)) &
+                                                 / (cpice*wice_soisno(l,np)+cpliq*wliq_soisno(l,np))
                               ENDIF
 
 
@@ -449,19 +473,25 @@ ENDIF
                               DO k = 1, num
 
                                  wliq_soisno(0,np) = wliq_soisno(0,np) &
-                                    + wliq_soisno_(l,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                                    + wliq_soisno_(l,frnp_(k)) &
+                                    * lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
                                  wice_soisno(0,np) = wice_soisno(0,np) &
-                                    + wice_soisno_(l,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                                    + wice_soisno_(l,frnp_(k)) &
+                                    * lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
                                  t_soisno   (0,np) = t_soisno   (0,np) &
-                                    + t_soisno_(l,frnp_(k))*cvsoil_(l,k)*lccpct_np(patchclass_(frnp_(k)))/wgt(0)
+                                    + t_soisno_(l,frnp_(k))*cvsoil_(l,k) &
+                                    * lccpct_np(patchclass_(frnp_(k)))/wgt(0)
 
                                  IF (dz_sno_(l,frnp_(k)) .gt. 0) THEN
                                     ! denh2o_np(0) = denh2o_np(0) &
-                                    !    + wliq_soisno_(l,frnp_(k))/dz_sno_(l,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                                    !    + wliq_soisno_(l,frnp_(k))/dz_sno_(l,frnp_(k)) &
+                                    !    * lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
                                     ! denice_np(0) = denice_np(0) &
-                                    !    + wice_soisno_(l,frnp_(k))/dz_sno_(l,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                                    !    + wice_soisno_(l,frnp_(k))/dz_sno_(l,frnp_(k)) &
+                                    !    * lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
                                     rhosnow_np(0) = rhosnow_np(0) &
-                                       + (wliq_soisno_(l,frnp_(k)) + wice_soisno_(l,frnp_(k))) / dz_sno_(l,frnp_(k)) &
+                                       + (wliq_soisno_(l,frnp_(k)) + wice_soisno_(l,frnp_(k))) &
+                                       / dz_sno_(l,frnp_(k)) &
                                        * (lccpct_np(patchclass_(frnp_(k))) / sum_lccpct_np)
                                  ENDIF
                               ENDDO
@@ -472,23 +502,28 @@ ENDIF
 
                            IF (wgt(0) .gt. 0) THEN
 
-                              ! snow layer node and depth calculation according to new mass and density
+                              ! snow layer node and depth calculation according to
+                              ! new mass and density
                               ! IF (denh2o_np(0)>0 .and. denh2o_np(0)>0) THEN
-                              !    dz_sno (0,np) = wice_soisno(0,np)/denice_np(0) + wliq_soisno(0,np)/denh2o_np(0)
+                              !    dz_sno (0,np) = wice_soisno(0,np)/denice_np(0) &
+                              !                  + wliq_soisno(0,np)/denh2o_np(0)
                               ! ELSEIF (denice_np(0)==0 .and. denh2o_np(0)>0) THEN
                               !    dz_sno (0,np) = wliq_soisno(0,np)/denh2o_np(0)
-                              !    ! print*, 'denice=0! stop! np=',np,'igbp=',patchclass(np),'nsl=',nsl,'frnp_=',frnp_
+                              !    ! print*, 'denice=0! stop! np=',np,'igbp=',patchclass(np),&
+                              !              'nsl=',nsl,'frnp_=',frnp_
                               !    ! DO k = 1,num
                               !    !    print*,'frnp_=',frnp_(k),'wice=',wice_soisno(:0,frnp_(k))
                               !    ! ENDDO
                               ! ELSEIF (denice_np(0)>0 .and. denh2o_np(0)==0) THEN
                               !    dz_sno (0,np) = wice_soisno(0,np)/denice_np(0)
-                              !    ! print*, 'denh2o=0! stop! np=',np,'igbp=',patchclass(np),'nsl=',nsl,'frnp_=',frnp_
+                              !    ! print*, 'denh2o=0! stop! np=',np,'igbp=',patchclass(np),&
+                              !              'nsl=',nsl,'frnp_=',frnp_
                               !    ! DO k = 1,num
                               !    !    print*,'frnp_=',frnp_(k),'wliq=',wliq_soisno(:0,frnp_(k))
                               !    ! ENDDO
                               ! ELSE
-                              !    print*, 'denh2o and denice == 0! np=',np,'igbp=',patchclass(np),'nsl=',nsl,'frnp_=',frnp_
+                              !    print*, 'denh2o and denice == 0! np=',np,'igbp=',patchclass(np),&
+                              !            'nsl=',nsl,'frnp_=',frnp_
                               !    DO k = 1,num
                               !       print*,'frnp_=',frnp_(k),'wliq=',wliq_soisno(:0,frnp_(k))
                               !       print*,'frnp_=',frnp_(k),'wice=',wice_soisno(:0,frnp_(k))
@@ -499,11 +534,13 @@ ENDIF
 
                               ! Reference: MOD_SnowLayersCombineDivide.F90's subroutine combo
                               IF (hc(0) < 0.) THEN
-                                 t_soisno (0,np) = tfrz + hc(0) / (cpice*wice_soisno(0,np) + cpliq*wliq_soisno(0,np))
+                                 t_soisno (0,np) = tfrz &
+                                    + hc(0) / (cpice*wice_soisno(0,np) + cpliq*wliq_soisno(0,np))
                               ELSEIF (hc(0) .le. hfus*wliq_soisno(0,np)) THEN
                                  t_soisno (0,np) = tfrz
                               ELSE
-                                 t_soisno (0,np) = tfrz + (hc(0) - hfus*wliq_soisno(0,np))/(cpice*wice_soisno(0,np)+cpliq*wliq_soisno(0,np))
+                                 t_soisno (0,np) = tfrz + (hc(0) - hfus*wliq_soisno(0,np)) &
+                                                 / (cpice*wice_soisno(0,np)+cpliq*wliq_soisno(0,np))
                               ENDIF
 
                               dz_sno (0,np) = (wice_soisno(0,np) + wliq_soisno(0,np))/rhosnow_np(0)
@@ -519,78 +556,123 @@ ENDIF
                         DO k = 1, num
 
                            wliq_soisno (1:nl_soil,np) = wliq_soisno (1:nl_soil,np) &
-                              + wliq_soisno_(1:nl_soil,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                              + wliq_soisno_(1:nl_soil,frnp_(k)) &
+                              * lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
                            wice_soisno (1:nl_soil,np) = wice_soisno (1:nl_soil,np) &
-                              + wice_soisno_(1:nl_soil,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                              + wice_soisno_(1:nl_soil,frnp_(k)) &
+                              * lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
                            t_soisno (1:nl_soil,np) = t_soisno (1:nl_soil,np) &
-                              + t_soisno_(1:nl_soil,frnp_(k))*cvsoil_(1:nl_soil,k)*lccpct_np(patchclass_(frnp_(k)))/wgt(1:nl_soil)
+                              + t_soisno_(1:nl_soil,frnp_(k))*cvsoil_(1:nl_soil,k) &
+                              * lccpct_np(patchclass_(frnp_(k)))/wgt(1:nl_soil)
 
-                           tleaf     (np) = tleaf     (np) + tleaf_     (frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
-                           ldew      (np) = ldew      (np) + ldew_      (frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
-                           ldew_rain (np) = ldew_rain (np) + ldew_rain_ (frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
-                           ldew_snow (np) = ldew_snow (np) + ldew_snow_ (frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
-                           sag       (np) = sag       (np) + sag_       (frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                           tleaf     (np) = tleaf     (np) + tleaf_     (frnp_(k)) &
+                                          * lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                           ldew      (np) = ldew      (np) + ldew_      (frnp_(k)) &
+                                          * lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                           ldew_rain (np) = ldew_rain (np) + ldew_rain_ (frnp_(k)) &
+                                          * lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                           ldew_snow (np) = ldew_snow (np) + ldew_snow_ (frnp_(k)) &
+                                          * lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                           sag       (np) = sag       (np) + sag_       (frnp_(k)) &
+                                          * lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
 
                            ! TODO: use MOD_SnowFraction.F90 to calculate sigf later - DONE
-                           ! sigf    (np) = sigf      (np) + sigf_      (frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
-                           wa        (np) = wa        (np) + wa_        (frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
-                           wdsrf     (np) = wdsrf     (np) + wdsrf_     (frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                           ! sigf    (np) = sigf      (np) + sigf_      (frnp_(k)) &
+                           !              * lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                           wa        (np) = wa        (np) + wa_        (frnp_(k)) &
+                                          * lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                           wdsrf     (np) = wdsrf     (np) + wdsrf_     (frnp_(k)) &
+                                          * lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
 
-                           snw_rds   (:,np) = snw_rds   (:,np) + snw_rds_   (:,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
-                           mss_bcpho (:,np) = mss_bcpho (:,np) + mss_bcpho_ (:,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
-                           mss_bcphi (:,np) = mss_bcphi (:,np) + mss_bcphi_ (:,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
-                           mss_ocpho (:,np) = mss_ocpho (:,np) + mss_ocpho_ (:,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
-                           mss_ocphi (:,np) = mss_ocphi (:,np) + mss_ocphi_ (:,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
-                           mss_dst1  (:,np) = mss_dst1  (:,np) + mss_dst1_  (:,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
-                           mss_dst2  (:,np) = mss_dst2  (:,np) + mss_dst2_  (:,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
-                           mss_dst3  (:,np) = mss_dst3  (:,np) + mss_dst3_  (:,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
-                           mss_dst4  (:,np) = mss_dst4  (:,np) + mss_dst4_  (:,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
-                           ssno_lyr  (:,:,:,np) = ssno_lyr (:,:,:,np) + ssno_lyr_ (:,:,:,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                           snw_rds   (:,np) = snw_rds   (:,np) + snw_rds_   (:,frnp_(k)) &
+                                            * lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                           mss_bcpho (:,np) = mss_bcpho (:,np) + mss_bcpho_ (:,frnp_(k)) &
+                                            * lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                           mss_bcphi (:,np) = mss_bcphi (:,np) + mss_bcphi_ (:,frnp_(k)) &
+                                            * lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                           mss_ocpho (:,np) = mss_ocpho (:,np) + mss_ocpho_ (:,frnp_(k)) &
+                                            * lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                           mss_ocphi (:,np) = mss_ocphi (:,np) + mss_ocphi_ (:,frnp_(k)) &
+                                            * lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                           mss_dst1  (:,np) = mss_dst1  (:,np) + mss_dst1_  (:,frnp_(k)) &
+                                            * lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                           mss_dst2  (:,np) = mss_dst2  (:,np) + mss_dst2_  (:,frnp_(k)) &
+                                            * lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                           mss_dst3  (:,np) = mss_dst3  (:,np) + mss_dst3_  (:,frnp_(k)) &
+                                            * lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                           mss_dst4  (:,np) = mss_dst4  (:,np) + mss_dst4_  (:,frnp_(k)) &
+                                            * lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                           ssno_lyr  (:,:,:,np) = ssno_lyr (:,:,:,np) + ssno_lyr_ (:,:,:,frnp_(k)) &
+                                                * lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
 
                            ! TODO: or use same type assignment
-                           smp       (:,np) = smp    (:,np) + smp_   (:,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
-                           hk        (:,np) = hk     (:,np) + hk_    (:,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                           smp       (:,np) = smp    (:,np) + smp_   (:,frnp_(k))
+                                            * lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                           hk        (:,np) = hk     (:,np) + hk_    (:,frnp_(k))
+                                            * lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
 
                            IF(DEF_USE_PLANTHYDRAULICS)THEN
-                              vegwp  (:,np) = vegwp  (:,np) + vegwp_ (:,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
-                              gs0sun   (np) = gs0sun   (np) + gs0sun_  (frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
-                              gs0sha   (np) = gs0sha   (np) + gs0sha_  (frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                              vegwp  (:,np) = vegwp  (:,np) + vegwp_ (:,frnp_(k))
+                                            * lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                              gs0sun   (np) = gs0sun   (np) + gs0sun_  (frnp_(k))
+                                            * lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                              gs0sha   (np) = gs0sha   (np) + gs0sha_  (frnp_(k))
+                                            * lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
                            ENDIF
 
-                           !TODO@Wanyi: check the related namelist, DEF_USE_OZONESTRESS or some other?
-                           ! - checked. Line 1109 of MOD_Vars_TimeVariables.F90
                            IF(DEF_USE_OZONESTRESS)THEN
-                              lai_old  (np) = lai_old  (np) + lai_old_ (frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                              lai_old  (np) = lai_old  (np) + lai_old_ (frnp_(k))
+                                            * lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
                            ENDIF
 
-                           trad        (np) = trad     (np) + trad_    (frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
-                           tref        (np) = tref     (np) + tref_    (frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
-                           qref        (np) = qref     (np) + qref_    (frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
-                           rst         (np) = rst      (np) + rst_     (frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
-                           emis        (np) = emis     (np) + emis_    (frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
-                           z0m         (np) = z0m      (np) + z0m_     (frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
-                           zol         (np) = zol      (np) + zol_     (frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
-                           rib         (np) = rib      (np) + rib_     (frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
-                           ustar       (np) = ustar    (np) + ustar_   (frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
-                           qstar       (np) = qstar    (np) + qstar_   (frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
-                           tstar       (np) = tstar    (np) + tstar_   (frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
-                           fm          (np) = fm       (np) + fm_      (frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
-                           fh          (np) = fh       (np) + fh_      (frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
-                           fq          (np) = fq       (np) + fq_      (frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                           trad        (np) = trad     (np) + trad_    (frnp_(k))
+                                            * lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                           tref        (np) = tref     (np) + tref_    (frnp_(k))
+                                            * lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                           qref        (np) = qref     (np) + qref_    (frnp_(k))
+                                            * lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                           rst         (np) = rst      (np) + rst_     (frnp_(k))
+                                            * lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                           emis        (np) = emis     (np) + emis_    (frnp_(k))
+                                            * lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                           z0m         (np) = z0m      (np) + z0m_     (frnp_(k))
+                                            * lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                           zol         (np) = zol      (np) + zol_     (frnp_(k))
+                                            * lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                           rib         (np) = rib      (np) + rib_     (frnp_(k))
+                                            * lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                           ustar       (np) = ustar    (np) + ustar_   (frnp_(k))
+                                            * lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                           qstar       (np) = qstar    (np) + qstar_   (frnp_(k))
+                                            * lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                           tstar       (np) = tstar    (np) + tstar_   (frnp_(k))
+                                            * lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                           fm          (np) = fm       (np) + fm_      (frnp_(k))
+                                            * lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                           fh          (np) = fh       (np) + fh_      (frnp_(k))
+                                            * lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                           fq          (np) = fq       (np) + fq_      (frnp_(k))
+                                            * lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
                         ENDDO
 
                         ! water balance check
                         wbef = 0
                         wpre = 0
                         DO k = 1, num
-                           wbef = wbef + ldew_(frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
-                           wbef = wbef + scv_ (frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
-                           wbef = wbef + wa_  (frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
-                           wbef = wbef + sum(wliq_soisno_(maxsnl+1:nl_soil,frnp_(k)))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
-                           wbef = wbef + sum(wice_soisno_(maxsnl+1:nl_soil,frnp_(k)))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                           wbef = wbef + ldew_(frnp_(k))
+                                       * lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                           wbef = wbef + scv_ (frnp_(k))
+                                       * lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                           wbef = wbef + wa_  (frnp_(k))
+                                       * lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                           wbef = wbef + sum(wliq_soisno_(maxsnl+1:nl_soil,frnp_(k)))
+                                       * lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                           wbef = wbef + sum(wice_soisno_(maxsnl+1:nl_soil,frnp_(k)))
+                                       * lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
                         ENDDO
 
-                        wpre = ldew(np) + scv(np) + wa(np) + sum(wliq_soisno(maxsnl+1:nl_soil,np)) + sum(wice_soisno(maxsnl+1:nl_soil,np))
+                        wpre = ldew(np) + scv(np) + wa(np) + sum(wliq_soisno(maxsnl+1:nl_soil,np)) &
+                             + sum(wice_soisno(maxsnl+1:nl_soil,np))
                         IF (wpre-wbef > 1.e-6) THEN
                            print*,'np=',np,'total err=',wpre-wbef
                         ENDIF
@@ -598,11 +680,14 @@ ENDIF
                         wbef = 0
                         wpre = 0
                         DO k = 1, num
-                           wbef = wbef + sum(wliq_soisno_(maxsnl+1:nl_soil,frnp_(k)))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
-                           wbef = wbef + sum(wice_soisno_(maxsnl+1:nl_soil,frnp_(k)))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                           wbef = wbef + sum(wliq_soisno_(maxsnl+1:nl_soil,frnp_(k))) &
+                                       * lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                           wbef = wbef + sum(wice_soisno_(maxsnl+1:nl_soil,frnp_(k))) &
+                                       * lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
                         ENDDO
 
-                        wpre = sum(wliq_soisno(maxsnl+1:nl_soil,np)) + sum(wice_soisno(maxsnl+1:nl_soil,np))
+                        wpre = sum(wliq_soisno(maxsnl+1:nl_soil,np)) &
+                             + sum(wice_soisno(maxsnl+1:nl_soil,np))
                         IF (wpre-wbef > 1.e-6) THEN
                            print*,'np=',np,'wice+wliq err=',wpre-wbef
                         ENDIF
@@ -619,7 +704,8 @@ ENDIF
                            ENDIF
                         ENDDO
 
-                        ! ! Use restart value from the same type of source patch or remain initialized
+                        ! Use restart value from the same type of
+                        ! source patch or remain initialized
                         ! IF (lccpct_np(patchclass(np)) .gt. 0) THEN
                         !    tleaf         (np) = tleaf_         (selfnp_)
                         !    lake_icefrac(:,np) = lake_icefrac_(:,selfnp_)
@@ -635,7 +721,8 @@ ENDIF
                         ! ENDIF
 
                         ! Sigf, fsno
-                        CALL snowfraction (tlai(np),tsai(np),z0m(np),zlnd,scv(np),snowdp(np),wt,sigf(np),fsno(np))
+                        CALL snowfraction (tlai(np),tsai(np),z0m(np),zlnd,&
+                                           scv(np),snowdp(np),wt,sigf(np),fsno(np))
                         sai(np) = tsai(np) * sigf(np)
 
                         ! account for vegetation snow
@@ -643,7 +730,8 @@ ENDIF
                            lai(np) = tlai(np) * sigf(np)
                         ENDIF
 
-                        ! ! In case lai+sai come into existence this year, set sigf to 1; Update: won't happen if CALL snowfraction
+                        ! ! In case lai+sai come into existence this year, set sigf to 1;
+                        ! Update: won't happen if CALL snowfraction
                         ! IF ( (lai(np) + sai(np)).gt.0 .and. sigf(np).eq.0 ) THEN
                         !    sigf(np) = 1
                         ! ENDIF
@@ -660,7 +748,8 @@ ENDIF
                            ENDDO
                         ENDIF
 
-                        ! Get the lowest zwt from source patches and assign to np suggested by Shupeng Zhang
+                        ! Get the lowest zwt from source patches and
+                        ! assign to np suggested by Shupeng Zhang
                         zwt(np) = zwt_(frnp_(1))
                         k = 2
                         DO WHILE (k .le. num)
@@ -669,7 +758,8 @@ ENDIF
                         ENDDO
 
                      ! ELSE
-                     ! ! Patch area stay unchanged or decrease, use restart value or remain initialized
+                     ! ! Patch area stay unchanged or decrease,
+                     !   use restart value or remain initialized
                      ! ! TODO: CALL REST - DONE
                      !    inp_ = np_
                      !    DO WHILE (inp_ .le. grid_patch_e_(j))
@@ -704,7 +794,8 @@ ENDIF
                      ENDIF
 
 ! ELSEIF (patchtype(np)==3) THEN !glacier patch
-!                    ! Used restart value for GLACIERS patches if patchclass exists last year, or remain initialized
+!                    ! Used restart value for GLACIERS patches if patchclass exists last year,
+                     ! or remain initialized
 !                    ! TODO: CALL REST - DONE
 !                    inp_ = np_
 !                    DO WHILE (inp_ .le. grid_patch_e_(j))
@@ -748,7 +839,7 @@ ENDIF
 
                         ! account for vegetation snow
                         IF ( DEF_VEG_SNOW ) THEN
-                           lai_p(np) = tlai_p(np) * sigf_p(np)
+                           lai_p(ps:pe) = tlai_p(ps:pe) * sigf_p(ps:pe)
                            lai(np) = sum(lai_p(ps:pe)*pftfrac(ps:pe))
                         ENDIF
 
@@ -757,7 +848,8 @@ ENDIF
                      ! ! TODO: CALL REST - DONE
                      ! IF (patchtype(np)==0 .and. lccpct_np(patchclass(np)) .gt. 0) THEN
                      !    ! Used restart value of the same pftclass for pft-specific variables
-                     !    ! Note: For ip-specific variables, remain initialized value for new soil patch or pftclass
+                     !    ! Note: For ip-specific variables, remain initialized value
+                     !      for new soil patch or pftclass
                      !    ip = ps
                      !    ip_= ps_
                      !
@@ -799,16 +891,18 @@ ENDIF
 #ifdef URBAN_MODEL
                      IF (patchclass(np)==URBAN) THEN
 
-                        ! If there isn't any urban patch in last year's grid,initialized value was remained.
-                        ! Though the first source soil patch would be used for pervious ground related variables.
+                        ! If there isn't any urban patch in last year's grid,initialized value was
+                        ! remained.  Though the first source soil patch would be used for pervious
+                        ! ground related variables.
                         u = patch2urban (np)
                         nurb = count( patchclass_(grid_patch_s_(j):grid_patch_e_(j)) == URBAN )
 
-                        ! Get the index of urban patches in last year's grid, and index of urban patch with the same urbclass
+                        ! Get the index of urban patches in last year's grid, and index of urban
+                        ! patch with the same urbclass
                         IF (nurb > 0) THEN
 
-                           allocate(gu_(nurb)) ! index of urban patches in last year's grid
-                           selfu_   = -1       ! index of urban patch with the same urbclass in last year's grid
+                           allocate(gu_(nurb)) ! ind of urban patches in last year's grid
+                           selfu_   = -1       ! ind of urban patch with same class in last year
                            inp_     = np_      ! for loop to record the index of urban patch
                            iu       = 0
 
@@ -824,7 +918,8 @@ ENDIF
                            ENDDO
                         ENDIF
 
-                        ! Index of the same urbclass or the nearest class would be used for new year's assignment
+                        ! Index of the same urbclass or the nearest class would be used for new
+                        ! year's assignment
                         IF (selfu_ > 0) THEN
                            u_ = selfu_
 
@@ -944,27 +1039,38 @@ ENDIF
                         !TODO: need to recalculate wliq_soisno, wice_soisno and scv value - DONE
                         wliq_soisno(: ,np) = 0.
                         wliq_soisno(:1,np) = wliq_roofsno(:1,u )*froof(u)
-                        wliq_soisno(: ,np) = wliq_soisno (: ,np)+wliq_gpersno(: ,u)*(1-froof(u))*fgper(u)
-                        wliq_soisno(:1,np) = wliq_soisno (:1,np)+wliq_gimpsno(:1,u)*(1-froof(u))*(1-fgper(u))
+                        wliq_soisno(: ,np) = wliq_soisno (: ,np) &
+                                           + wliq_gpersno(: ,u )*(1-froof(u))*fgper(u)
+                        wliq_soisno(:1,np) = wliq_soisno (:1,np) &
+                                           + wliq_gimpsno(:1,u )*(1-froof(u))*(1-fgper(u))
 
                         wice_soisno(: ,np) = 0.
                         wice_soisno(:1,np) = wice_roofsno(:1,u )*froof(u)
-                        wice_soisno(: ,np) = wice_soisno (: ,np)+wice_gpersno(: ,u)*(1-froof(u))*fgper(u)
-                        wice_soisno(:1,np) = wice_soisno (:1,np)+wice_gimpsno(:1,u)*(1-froof(u))*(1-fgper(u))
+                        wice_soisno(: ,np) = wice_soisno (: ,np) &
+                                           + wice_gpersno(: ,u )*(1-froof(u))*fgper(u)
+                        wice_soisno(:1,np) = wice_soisno (:1,np) &
+                                           + wice_gimpsno(:1,u )*(1-froof(u))*(1-fgper(u))
 
-                        scv(np) = scv_roof(u)*froof(u) + scv_gper(u)*(1-froof(u))*fgper(u) + scv_gimp(u)*(1-froof(u))*(1-fgper(u))
+                        scv(np) = scv_roof(u)*froof(u) + scv_gper(u)*(1-froof(u))*fgper(u) &
+                                + scv_gimp(u)*(1-froof(u))*(1-fgper(u))
 
                      ENDIF
 #endif
 
                      ! CALL albland (np, patchtype(np),deltim,&
-                     !      soil_s_v_alb(np),soil_d_v_alb(np),soil_s_n_alb(np),soil_d_n_alb(np),&
-                     !      chil(patchclass(np)),rho(1:,1:,patchclass(np)),tau(1:,1:,patchclass(np)),fveg(np),green(np),lai(np),sai(np),coszen(np),&
-                     !      wt,fsno(np),scv(np),scvold(np),sag(np),ssw,pg_snow(np),forc_t(np),t_grnd(np),t_soisno_(maxsnl+1:,np),&
-                     !      dz_soisno_(maxsnl+1:,np),snl,wliq_soisno(maxsnl+1:,np),wice_soisno(maxsnl+1:,np),snw_rds(maxsnl+1:0,np),snofrz,&
-                     !      mss_bcpho(maxsnl+1:0,np),mss_bcphi(maxsnl+1:0,np),mss_ocpho(maxsnl+1:0,np),mss_ocphi(maxsnl+1:0,np),&
-                     !      mss_dst1(maxsnl+1:0,np),mss_dst2(maxsnl+1:0,np),mss_dst3(maxsnl+1:0,np),mss_dst4(maxsnl+1:0,np),&
-                     !      alb(1:,1:,np),ssun(1:,1:,np),ssha(1:,1:,np),ssno(:,:,:,np),thermk(np),extkb(np),extkd(np))
+                     !    soil_s_v_alb(np),soil_d_v_alb(np),soil_s_n_alb(np),soil_d_n_alb(np),&
+                     !    chil(patchclass(np)),rho(1:,1:,patchclass(np)),tau(1:,1:,patchclass(np)),&
+                     !    fveg(np),green(np),lai(np),sai(np),coszen(np),&
+                     !    wt,fsno(np),scv(np),scvold(np),sag(np),ssw,pg_snow(np),&
+                     !    forc_t(np),t_grnd(np),t_soisno_(maxsnl+1:,np),&
+                     !    dz_soisno_(maxsnl+1:,np),snl,wliq_soisno(maxsnl+1:,np),&
+                     !    wice_soisno(maxsnl+1:,np),snw_rds(maxsnl+1:0,np),snofrz,&
+                     !    mss_bcpho(maxsnl+1:0,np),mss_bcphi(maxsnl+1:0,np),&
+                     !    mss_ocpho(maxsnl+1:0,np),mss_ocphi(maxsnl+1:0,np),&
+                     !    mss_dst1(maxsnl+1:0,np),mss_dst2(maxsnl+1:0,np),&
+                     !    mss_dst3(maxsnl+1:0,np),mss_dst4(maxsnl+1:0,np),&
+                     !    alb(1:,1:,np),ssun(1:,1:,np),ssha(1:,1:,np),ssno(:,:,:,np),&
+                     !    thermk(np),extkb(np),extkd(np))
 
 
                      IF (allocated(frnp_  )) deallocate(frnp_  )

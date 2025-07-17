@@ -61,10 +61,13 @@ CONTAINS
             allocate (pftfrac       (numpft))
             allocate (htop_p        (numpft))
             allocate (hbot_p        (numpft))
-#ifdef CROP
-            allocate (cropfrac    (numpatch))
-#endif
          ENDIF
+
+#ifdef CROP
+         IF (numpatch > 0) THEN
+            allocate (cropfrac (numpatch))
+         ENDIF
+#endif
       ENDIF
 
    END SUBROUTINE allocate_PFTimeInvariants
@@ -200,6 +203,8 @@ MODULE MOD_Vars_TimeInvariants
    real(r8), allocatable :: vf_clay      (:,:)  !volumetric fraction of clay
    real(r8), allocatable :: wf_gravels   (:,:)  !gravimetric fraction of gravels
    real(r8), allocatable :: wf_sand      (:,:)  !gravimetric fraction of sand
+   real(r8), allocatable :: wf_clay      (:,:)  !gravimetric fraction of clay
+   real(r8), allocatable :: wf_om        (:,:)  !gravimetric fraction of om
    real(r8), allocatable :: OM_density   (:,:)  !OM density (kg/m3)
    real(r8), allocatable :: BD_all       (:,:)  !bulk density of soil (GRAVELS + ORGANIC MATTER + Mineral Soils,kg/m3)
 
@@ -324,6 +329,8 @@ CONTAINS
             allocate (vf_clay      (nl_soil,numpatch))
             allocate (wf_gravels   (nl_soil,numpatch))
             allocate (wf_sand      (nl_soil,numpatch))
+            allocate (wf_clay      (nl_soil,numpatch))
+            allocate (wf_om        (nl_soil,numpatch))
             allocate (OM_density   (nl_soil,numpatch))
             allocate (BD_all       (nl_soil,numpatch))
             allocate (wfc          (nl_soil,numpatch))
@@ -448,6 +455,8 @@ CONTAINS
       CALL ncio_read_vector (file_restart, 'vf_clay   ',   nl_soil, landpatch, vf_clay  ,defval = 0.1 ) ! volumetric fraction of clay
       CALL ncio_read_vector (file_restart, 'wf_gravels',   nl_soil, landpatch, wf_gravels) ! gravimetric fraction of gravels
       CALL ncio_read_vector (file_restart, 'wf_sand   ',   nl_soil, landpatch, wf_sand   ) ! gravimetric fraction of sand
+      CALL ncio_read_vector (file_restart, 'wf_clay   ',   nl_soil, landpatch, wf_clay   ) ! gravimetric fraction of clay
+      CALL ncio_read_vector (file_restart, 'wf_om     ',   nl_soil, landpatch, wf_om     ) ! gravimetric fraction of om
       CALL ncio_read_vector (file_restart, 'OM_density',   nl_soil, landpatch, OM_density) ! OM density
       CALL ncio_read_vector (file_restart, 'BD_all    ',   nl_soil, landpatch, BD_all    ) ! bulk density of soil
       CALL ncio_read_vector (file_restart, 'wfc       ',   nl_soil, landpatch, wfc       ) ! field capacity
@@ -637,6 +646,8 @@ CONTAINS
       CALL ncio_write_vector (file_restart, 'vf_clay   ', 'soil', nl_soil, 'patch', landpatch, vf_clay   , compress) ! volumetric fraction of clay
       CALL ncio_write_vector (file_restart, 'wf_gravels', 'soil', nl_soil, 'patch', landpatch, wf_gravels, compress) ! gravimetric fraction of gravels
       CALL ncio_write_vector (file_restart, 'wf_sand   ', 'soil', nl_soil, 'patch', landpatch, wf_sand   , compress) ! gravimetric fraction of sand
+      CALL ncio_write_vector (file_restart, 'wf_clay   ', 'soil', nl_soil, 'patch', landpatch, wf_clay   , compress) ! gravimetric fraction of clay
+      CALL ncio_write_vector (file_restart, 'wf_om     ', 'soil', nl_soil, 'patch', landpatch, wf_om     , compress) ! gravimetric fraction of om 
       CALL ncio_write_vector (file_restart, 'OM_density', 'soil', nl_soil, 'patch', landpatch, OM_density, compress) ! OM_density
       CALL ncio_write_vector (file_restart, 'BD_all    ', 'soil', nl_soil, 'patch', landpatch, BD_all    , compress) ! bulk density of soil
       CALL ncio_write_vector (file_restart, 'wfc       ', 'soil', nl_soil, 'patch', landpatch, wfc       , compress) ! field capacity
@@ -787,6 +798,8 @@ CONTAINS
             deallocate (vf_clay        )
             deallocate (wf_gravels     )
             deallocate (wf_sand        )
+            deallocate (wf_clay        )
+            deallocate (wf_om          )
             deallocate (OM_density     )
             deallocate (BD_all         )
             deallocate (wfc            )
@@ -888,11 +901,13 @@ CONTAINS
       CALL check_vector_data ('soil_d_n_alb [-]     ', soil_d_n_alb) ! albedo of near infrared of the dry soil
       CALL check_vector_data ('vf_quartz    [m3/m3] ', vf_quartz   ) ! volumetric fraction of quartz within mineral soil
       CALL check_vector_data ('vf_gravels   [m3/m3] ', vf_gravels  ) ! volumetric fraction of gravels
-      CALL check_vector_data ('vf_om        [m3/m3] ', vf_om       ) ! volumetric fraction of organic matter
       CALL check_vector_data ('vf_sand      [m3/m3] ', vf_sand     ) ! volumetric fraction of sand
       CALL check_vector_data ('vf_clay      [m3/m3] ', vf_clay     ) ! volumetric fraction of clay
+      CALL check_vector_data ('vf_om        [m3/m3] ', vf_om       ) ! volumetric fraction of organic matter
       CALL check_vector_data ('wf_gravels   [kg/kg] ', wf_gravels  ) ! gravimetric fraction of gravels
       CALL check_vector_data ('wf_sand      [kg/kg] ', wf_sand     ) ! gravimetric fraction of sand
+      CALL check_vector_data ('wf_clay      [kg/kg] ', wf_clay     ) ! gravimetric fraction of clay
+      CALL check_vector_data ('wf_om        [kg/kg] ', wf_om       ) ! gravimetric fraction of om
       CALL check_vector_data ('OM_density   [kg/m3] ', OM_density  ) ! OM density
       CALL check_vector_data ('BD_all       [kg/m3] ', BD_all      ) ! bulk density of soils
       CALL check_vector_data ('wfc          [m3/m3] ', wfc         ) ! field capacity

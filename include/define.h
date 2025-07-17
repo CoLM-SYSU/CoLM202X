@@ -73,18 +73,8 @@
 ! 9. If defined, data assimilation is used.
 #undef DataAssimilation
 
-! 10. Vector write model.
-!     1) "VectorInOneFileP" : write vector data in one file in parallel mode;
-!     2) "VectorInOneFileS" : write vector data in one file in serial mode;
-!     3) Neither "VectorInOneFileS" nor "VectorInOneFileP" is defined :
-!        write vector data in separate files.
-#undef VectorInOneFileP
-!     Conflict
-#ifdef VectorInOneFileP
-#undef VectorInOneFileS
-#endif
-
+! 10. Interface to AI model.
 #undef USESplitAI
 
 ! 11. External lake models.
-#undef EXTERNAL_LAKE 
+#undef EXTERNAL_LAKE

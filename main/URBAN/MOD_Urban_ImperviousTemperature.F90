@@ -71,45 +71,46 @@ CONTAINS
 
 !-------------------------- Dummy Arguments ----------------------------
    integer, intent(in)  :: lb                          !lower bound of array
-   integer, intent(in)  :: patchtype                   !land patch type (0=soil,1=urban or built-up,2=wetland,
+   integer, intent(in)  :: patchtype                   !land patch type
+                                                       !(0=soil,1=urban or built-up,2=wetland,
                                                        !3=land ice, 4=deep lake, 5=shallow lake)
    real(r8), intent(in) :: deltim                      !seconds in a time step [second]
-   real(r8), intent(in) :: capr                        !tuning factor to turn first layer T into surface T
+   real(r8), intent(in) :: capr                        !tuning factor: turn 1st layer T to surface T
    real(r8), intent(in) :: cnfac                       !Crank Nicholson factor between 0 and 1
 
    real(r8), intent(in) :: csol      (1:nl_soil)       !heat capacity of soil solids [J/(m3 K)]
-   real(r8), intent(in) :: k_solids  (1:nl_soil)       !thermal conductivity of minerals soil [W/m-K]
+   real(r8), intent(in) :: k_solids  (1:nl_soil)       !thermal conductivity of minerals [W/m-K]
    real(r8), intent(in) :: porsl     (1:nl_soil)       !soil porosity [-]
    real(r8), intent(in) :: psi0      (1:nl_soil)       !soil water suction, negative potential [mm]
 
    real(r8), intent(in) :: dkdry     (1:nl_soil)       !thermal conductivity of dry soil [W/m-K]
-   real(r8), intent(in) :: dksatu    (1:nl_soil)       !thermal conductivity of saturated soil [W/m-K]
-   real(r8), intent(in) :: dksatf    (1:nl_soil)       !thermal conductivity of saturated frozen soil [W/m-K]
+   real(r8), intent(in) :: dksatu    (1:nl_soil)       !thermal conductivity of sat soil [W/m-K]
+   real(r8), intent(in) :: dksatf    (1:nl_soil)       !thermal cond. of sat frozen soil [W/m-K]
 
-   real(r8), intent(in) :: vf_quartz (1:nl_soil)       !volumetric fraction of quartz within mineral soil
-   real(r8), intent(in) :: vf_gravels(1:nl_soil)       !volumetric fraction of gravels
-   real(r8), intent(in) :: vf_om     (1:nl_soil)       !volumetric fraction of organic matter
-   real(r8), intent(in) :: vf_sand   (1:nl_soil)       !volumetric fraction of sand
-   real(r8), intent(in) :: wf_gravels(1:nl_soil)       !gravimetric fraction of gravels
-   real(r8), intent(in) :: wf_sand   (1:nl_soil)       !gravimetric fraction of sand
+   real(r8), intent(in) :: vf_quartz (1:nl_soil)       !volumetric frac of quartz in mineral soil
+   real(r8), intent(in) :: vf_gravels(1:nl_soil)       !volumetric frac of gravels
+   real(r8), intent(in) :: vf_om     (1:nl_soil)       !volumetric frac of organic matter
+   real(r8), intent(in) :: vf_sand   (1:nl_soil)       !volumetric frac of sand
+   real(r8), intent(in) :: wf_gravels(1:nl_soil)       !gravimetric frac of gravels
+   real(r8), intent(in) :: wf_sand   (1:nl_soil)       !gravimetric frac of sand
 
-   real(r8), intent(in) :: BA_alpha  (1:nl_soil)       !alpha in Balland and Arp(2005) thermal conductivity scheme
-   real(r8), intent(in) :: BA_beta   (1:nl_soil)       !beta in Balland and Arp(2005) thermal conductivity scheme
+   real(r8), intent(in) :: BA_alpha  (1:nl_soil)       !alpha in Balland and Arp(2005) thermal cond.
+   real(r8), intent(in) :: BA_beta   (1:nl_soil)       !beta in Balland and Arp(2005) thermal cond.
 
    real(r8), intent(in) :: cv_gimp   (1:nl_soil)       !heat capacity of urban impervious [J/m3/K]
-   real(r8), intent(in) :: tk_gimp   (1:nl_soil)       !thermal conductivity of urban impervious [W/m/K]
+   real(r8), intent(in) :: tk_gimp   (1:nl_soil)       !thermal cond. of urban impervious [W/m/K]
 
    real(r8), intent(in) :: dz_gimpsno(lb  :nl_soil)    !layer thickness [m]
    real(r8), intent(in) :: z_gimpsno (lb  :nl_soil)    !node depth [m]
    real(r8), intent(in) :: zi_gimpsno(lb-1:nl_soil)    !interface depth [m]
 
    real(r8), intent(in) :: sabgimp                     !solar radiation absorbed by ground [W/m2]
-   real(r8), intent(in) :: lgimp                       !atmospheric infrared (longwave) radiation [W/m2]
+   real(r8), intent(in) :: lgimp                       !atmospheric longwave radiation [W/m2]
    real(r8), intent(in) :: clgimp                      !deriv. of longwave wrt to soil temp [w/m2/k]
    real(r8), intent(in) :: fsengimp                    !sensible heat flux from ground [W/m2]
    real(r8), intent(in) :: fevpgimp                    !evaporation heat flux from ground [mm/s]
-   real(r8), intent(in) :: cgimp                       !deriv. of soil energy flux wrt to soil temp [w/m2/k]
-   real(r8), intent(in) :: htvp                        !latent heat of vapor of water (or sublimation) [j/kg]
+   real(r8), intent(in) :: cgimp                       !deriv. of gimp energy flux to T [w/m2/k]
+   real(r8), intent(in) :: htvp                        !latent heat of vapor (or sublimation) [j/kg]
 
    real(r8), intent(inout) :: t_gimpsno   (lb:nl_soil) !soil temperature [K]
    real(r8), intent(inout) :: wice_gimpsno(lb:nl_soil) !ice lens [kg/m2]
@@ -118,7 +119,7 @@ CONTAINS
    real(r8), intent(inout) :: snowdp_gimp              !snow depth [m]
 
    real(r8), intent(out) :: sm                         !rate of snowmelt [kg/(m2 s)]
-   real(r8), intent(out) :: xmf                        !total latent heat of phase change of ground water
+   real(r8), intent(out) :: xmf                        !total latent heat of phase change in soil
    real(r8), intent(out) :: fact (lb:nl_soil)          !used in computing tridiagonal matrix
    integer,  intent(out) :: imelt(lb:nl_soil)          !flag for melting or freezing [-]
 
@@ -234,8 +235,8 @@ CONTAINS
       t_gimpsno_bef(lb:) = t_gimpsno(lb:)
 
       j       = lb
-      fact(j) = deltim / cv(j) &
-              * dz_gimpsno(j) / (0.5*(z_gimpsno(j)-zi_gimpsno(j-1)+capr*(z_gimpsno(j+1)-zi_gimpsno(j-1))))
+      fact(j) = deltim / cv(j) * dz_gimpsno(j) &
+              / (0.5*(z_gimpsno(j)-zi_gimpsno(j-1)+capr*(z_gimpsno(j+1)-zi_gimpsno(j-1))))
 
       DO j = lb + 1, nl_soil
          fact(j) = deltim/cv(j)
@@ -293,7 +294,8 @@ CONTAINS
 
       CALL meltf_urban (lb,1,deltim, &
                   fact(lb:1),brr(lb:1),hs,dhsdT, &
-                  t_gimpsno_bef(lb:1),t_gimpsno(lb:1),wliq_gimpsno(lb:1),wice_gimpsno(lb:1),imelt(lb:1), &
+                  t_gimpsno_bef(lb:1),t_gimpsno(lb:1), &
+                  wliq_gimpsno(lb:1),wice_gimpsno(lb:1),imelt(lb:1), &
                   scv_gimp,snowdp_gimp,sm,xmf)
 
    END SUBROUTINE UrbanImperviousTem

@@ -295,8 +295,8 @@ CONTAINS
 #ifndef SinglePoint
          CALL landpatch%get_lonlat_radian (patchlonr, patchlatr)
 #else
-         patchlonr(:) = SITE_lon_location * pi/180. 
-         patchlatr(:) = SITE_lat_location * pi/180. 
+         patchlonr(:) = SITE_lon_location * pi/180.
+         patchlatr(:) = SITE_lat_location * pi/180.
 #endif
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
@@ -1125,7 +1125,7 @@ CONTAINS
 ! ...................
 ! 2.4 LEAF area index
 ! ...................
-#if(defined DYN_PHENOLOGY)
+#if (defined DYN_PHENOLOGY)
       ! CREATE fraction of vegetation cover, greenness, leaf area index, stem index
       IF (p_is_worker) THEN
 
@@ -1318,7 +1318,7 @@ CONTAINS
                ,use_soilini, nl_soil_ini, soil_z, soil_t(1:,i), soil_w(1:,i), use_snowini, snow_d(i) &
                ! for SOIL Water INIT by using water table depth
                ,use_wtd, zwtmm, zc_soimm, zi_soimm, vliq_r, nprms, prms)
-               
+
 #ifdef EXTERNAL_LAKE
             IF(patchtype(i) == 4) THEN
                z0m(i) = DEF_External_Lake%DEF_LAKE_Z0M
@@ -1467,10 +1467,11 @@ CONTAINS
             ENDIF
          ENDDO
 
-         CALL check_vector_data ('Basin Water Depth   [m]  ', wdsrf_bsn)
-         CALL check_vector_data ('HRU Water Depth     [m]  ', wdsrf_bsnhru)
-
       ENDIF
+
+      CALL check_vector_data ('Basin Water Depth   [m]  ', wdsrf_bsn)
+      CALL check_vector_data ('HRU Water Depth     [m]  ', wdsrf_bsnhru)
+
 #endif
 
 ! ...............................................................

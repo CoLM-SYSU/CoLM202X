@@ -6,7 +6,7 @@ HEADER = include/define.h
 INCLUDE_DIR = -Iinclude -I.bld/ -I${NETCDF_INC}
 VPATH = include : share : mksrfdata : mkinidata \
 	: main : main/HYDRO : main/BGC : main/URBAN : main/LULCC : main/DA \
-	: CaMa/src : postprocess : .bld
+	: extends/CaMa/src : postprocess : .bld
 
 # ********** Targets ALL **********
 .PHONY: all
@@ -55,15 +55,15 @@ OBJS_SHARED =    \
 				  MOD_LandPatch.o              \
 				  MOD_LandCrop.o               \
 				  MOD_LandPFT.o                \
-				  MOD_SingleSrfdata.o          \
 				  MOD_LandUrban.o              \
+				  MOD_Urban_Const_LCZ.o        \
+				  MOD_SingleSrfdata.o          \
 				  MOD_SrfdataDiag.o            \
 				  MOD_SrfdataRestart.o         \
 				  MOD_ElmVector.o              \
 				  MOD_HRUVector.o              \
 				  MOD_MeshFilter.o             \
-				  MOD_RegionClip.o             \
-				  MOD_Urban_Const_LCZ.o
+				  MOD_RegionClip.o
 
 ${OBJS_SHARED} : %.o : %.F90 ${HEADER}
 	${FF} -c ${FOPTS} $(INCLUDE_DIR) -o .bld/$@ $< ${MOD_CMD}.bld
@@ -225,6 +225,7 @@ OBJS_MAIN = \
 				MOD_Catch_SubsurfaceFlow.o                \
 				MOD_Catch_RiverLakeFlow.o                 \
 				MOD_Catch_Hist.o                          \
+				MOD_Catch_WriteParameters.o               \
 				MOD_BGC_CNCStateUpdate1.o                 \
 				MOD_BGC_CNCStateUpdate2.o                 \
 				MOD_BGC_CNCStateUpdate3.o                 \
