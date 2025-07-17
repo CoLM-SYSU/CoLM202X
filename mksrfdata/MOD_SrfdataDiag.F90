@@ -50,7 +50,7 @@ MODULE MOD_SrfdataDiag
 CONTAINS
 
    ! ------ SUBROUTINE ------
-   SUBROUTINE srfdata_diag_init (dir_landdata, lulcc_call)
+   SUBROUTINE srfdata_diag_init (dir_landdata, lc_year)
 
    USE MOD_SPMD_Task
    USE MOD_LandElm
@@ -68,13 +68,14 @@ CONTAINS
    IMPLICIT NONE
 
    character(len=256), intent(in) :: dir_landdata
-   logical, optional , intent(in) :: lulcc_call   ! whether it is a lulcc CALL
+   integer           , intent(in) :: lc_year
 
    ! Local Variables
    character(len=256) :: landdir, landname
    integer :: ityp
    integer :: typindex(N_land_classification+1)
    real(r8), allocatable :: elmid_r8(:)
+   character(len=4) :: cyear
 
       landdir = trim(dir_landdata) // '/diag/'
       IF (p_is_master) THEN
@@ -83,19 +84,15 @@ CONTAINS
 
       CALL srf_concat%set (gdiag)
 
-      IF ( present(lulcc_call) ) CALL m_elm2diag%forc_free_mem
       CALL m_elm2diag%build_arealweighted (gdiag, landelm)
 
-      IF ( present(lulcc_call) ) CALL m_patch2diag%forc_free_mem
       CALL m_patch2diag%build_arealweighted (gdiag, landpatch)
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
-      IF ( present(lulcc_call) ) CALL m_pft2diag%forc_free_mem
       CALL m_pft2diag%build_arealweighted (gdiag, landpft)
 #endif
 
 #ifdef URBAN_MODEL
-      IF ( present(lulcc_call) ) CALL m_urb2diag%forc_free_mem
       CALL m_urb2diag%build_arealweighted (gdiag, landurban)
 #endif
 
@@ -105,14 +102,15 @@ CONTAINS
          allocate (elmid_r8 (landelm%nset)); elmid_r8 = real(landelm%eindex, r8)
       ENDIF
 
-      landname = trim(dir_landdata)//'/diag/element.nc'
+      write(cyear,'(i4.4)') lc_year
+      landname = trim(dir_landdata)//'/diag/element_'//trim(cyear)//'.nc'
       CALL srfdata_map_and_write (elmid_r8, landelm%settyp, (/0/), m_elm2diag, &
          -1.0e36_r8, landname, 'element', compress = 1, write_mode = 'one')
 
       IF (p_is_worker) deallocate (elmid_r8)
 
       typindex = (/(ityp, ityp = 0, N_land_classification)/)
-      landname = trim(dir_landdata)//'/diag/patchfrac_elm.nc'
+      landname = trim(dir_landdata)//'/diag/patchfrac_elm_'//trim(cyear)//'.nc'
       CALL srfdata_map_and_write (elm_patch%subfrc, landpatch%settyp, typindex, m_patch2diag, &
          -1.0e36_r8, landname, 'patchfrac_elm', compress = 1, write_mode = 'one')
 

@@ -652,7 +652,7 @@ CONTAINS
             ENDIF
 
             wfmt = "('Check vector data:', A25, ' is in (', e20.10, ',', e20.10, ')', A)"
-            write(str_print,wfmt) varname, vmin, vmax, exception
+            write(str_print,wfmt) varname, vmin, vmax, trim(exception)
 
 #ifdef USEMPI
             CALL mpi_send (exception, 256, MPI_CHARACTER, p_address_master, &

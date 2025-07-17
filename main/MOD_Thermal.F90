@@ -906,8 +906,6 @@ IF (DEF_USE_PC .and. patchclass(ipatch)/=CROPLAND) THEN
       etrsha_p   (ps:pe) = 0.
       gssun_p    (ps:pe) = 0.
       gssha_p    (ps:pe) = 0.
-      rstfacsun_p(ps:pe) = 0.
-      rstfacsha_p(ps:pe) = 0.
       z0m_p      (ps:pe) = (1.-fsno)*zlnd + fsno*zsno
       z0m                = sum( z0m_p (ps:pe)*pftfrac(ps:pe) )
 

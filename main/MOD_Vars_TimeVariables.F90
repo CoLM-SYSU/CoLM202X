@@ -866,7 +866,7 @@ CONTAINS
 
 
    !---------------------------------------
-   FUNCTION save_to_restart (idate, deltim, itstamp, ptstamp) result(rwrite)
+   FUNCTION save_to_restart (idate, deltim, itstamp, ptstamp, etstamp) result(rwrite)
 
    USE MOD_Namelist
    IMPLICIT NONE
@@ -875,7 +875,7 @@ CONTAINS
 
    integer,  intent(in) :: idate(3)
    real(r8), intent(in) :: deltim
-   type(timestamp), intent(in) :: itstamp, ptstamp
+   type(timestamp), intent(in) :: itstamp, ptstamp, etstamp
 
 
       ! added by yuan, 08/31/2014
@@ -899,6 +899,8 @@ CONTAINS
       IF (rwrite) THEN
          rwrite = ((ptstamp <= itstamp) .or. isendofyear(idate,deltim))
       ENDIF
+
+      rwrite = rwrite .or. (.not. (itstamp < etstamp))
 
    END FUNCTION save_to_restart
 
@@ -1136,7 +1138,7 @@ ENDIF
 #endif
 
       IF (p_is_master) THEN
-         write(*,'(/,A26)') 'Loading Time Variables ...'
+         write(*,*) 'Loading Time Variables ...'
       ENDIF
 
       ! land cover type year
@@ -1289,7 +1291,7 @@ ENDIF
 #endif
 
       IF (p_is_master) THEN
-         write(*,'(A29)') 'Loading Time Variables done.'
+         write(*,*) 'Loading Time Variables done.'
       ENDIF
 
    END SUBROUTINE READ_TimeVariables
