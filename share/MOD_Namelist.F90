@@ -518,7 +518,7 @@ MODULE MOD_Namelist
       logical :: scv                              = .true.
       logical :: snowdp                           = .true.
       logical :: fsno                             = .true.
-      logical :: fsat                             = .true.
+      logical :: frcsat                           = .true.
       logical :: sigf                             = .true.
       logical :: green                            = .true.
       logical :: lai                              = .true.
@@ -1756,7 +1756,7 @@ CONTAINS
       CALL sync_hist_vars_one (DEF_hist_vars%scv         , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%snowdp      , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%fsno        , set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%fsat        , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%frcsat      , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%sigf        , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%green       , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%lai         , set_defaults)

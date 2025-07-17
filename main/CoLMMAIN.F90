@@ -82,7 +82,7 @@ SUBROUTINE CoLMMAIN ( &
            taux,         tauy,         fsena,        fevpa,        &
            lfevpa,       fsenl,        fevpl,        etr,          &
            fseng,        fevpg,        olrg,         fgrnd,        &
-           trad,         tref,         qref,         fsat,         &
+           trad,         tref,         qref,         frcsat,       &
            rsur,         &
            rsur_se,      rsur_ie,      rnof,         qintr,        &
            qinfl,        qdrip,        rst,          assim,        &
@@ -440,7 +440,7 @@ SUBROUTINE CoLMMAIN ( &
         tref        ,&! 2 m height air temperature [K]
         qref        ,&! 2 m height air specific humidity
         trad        ,&! radiative temperature [K]
-        fsat        ,&! fraction of saturation area
+        frcsat      ,&! fraction of saturation area
         rsur        ,&! surface runoff (mm h2o/s)
         rsur_se     ,&! saturation excess surface runoff (mm h2o/s)
         rsur_ie     ,&! infiltration excess surface runoff (mm h2o/s)
@@ -809,7 +809,7 @@ SUBROUTINE CoLMMAIN ( &
                  etr               ,qseva             ,qsdew             ,qsubl             ,&
                  qfros             ,qseva_soil        ,qsdew_soil        ,qsubl_soil        ,&
                  qfros_soil        ,qseva_snow        ,qsdew_snow        ,qsubl_snow        ,&
-                 qfros_snow        ,fsno              ,fsat              ,rsur              ,&
+                 qfros_snow        ,fsno              ,frcsat            ,rsur              ,&
                  rsur_se           ,&
                  rsur_ie           ,rnof              ,qinfl             ,ssi               ,&
                  pondmx            ,wimp              ,zwt               ,wdsrf             ,&
@@ -1542,7 +1542,7 @@ SUBROUTINE CoLMMAIN ( &
          qinfl         = 0.
          qdrip         = forc_rain + forc_snow
          qintr         = 0.
-         fsat          = 1.
+         frcsat        = 1.
          h2osoi        = 0.
          rstfacsun_out = 0.
          rstfacsha_out = 0.

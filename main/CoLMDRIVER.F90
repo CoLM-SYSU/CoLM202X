@@ -159,7 +159,7 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
                taux(i),         tauy(i),         fsena(i),        fevpa(i),        &
                lfevpa(i),       fsenl(i),        fevpl(i),        etr(i),          &
                fseng(i),        fevpg(i),        olrg(i),         fgrnd(i),        &
-               trad(i),         tref(i),         qref(i),         fsat(i),         &
+               trad(i),         tref(i),         qref(i),         frcsat(i),       &
                rsur(i),         &
                rsur_se(i),      rsur_ie(i),      rnof(i),         qintr(i),        &
                qinfl(i),        qdrip(i),        rst(i),          assim(i),        &

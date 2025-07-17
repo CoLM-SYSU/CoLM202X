@@ -590,8 +590,8 @@ CONTAINS
             'fraction of snow cover on ground','-')
 
          ! fraction of saturation area on ground
-         CALL write_history_variable_2d ( DEF_hist_vars%fsat, &
-            a_fsat, file_hist, 'f_fsat', itime_in_file, sumarea, filter, &
+         CALL write_history_variable_2d ( DEF_hist_vars%frcsat, &
+            a_frcsat, file_hist, 'f_frcsat', itime_in_file, sumarea, filter, &
             'fraction of saturation area on ground','-')
 
          ! fraction of veg cover, excluding snow-covered veg [-]
