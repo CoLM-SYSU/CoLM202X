@@ -68,7 +68,7 @@ MODULE MOD_SpatialMapping
       procedure, PUBLIC  :: part2pset => spatial_mapping_part2pset
 
       procedure, PUBLIC  :: allocate_part => spatial_mapping_allocate_part
-
+      procedure, PUBLIC  :: deallocate_part => spatial_mapping_deallocate_part
       procedure, PUBLIC  :: forc_free_mem => forc_free_mem_spatial_mapping
 
       final :: spatial_mapping_free_mem
@@ -2535,6 +2535,36 @@ CONTAINS
       ENDIF
 
    END SUBROUTINE spatial_mapping_allocate_part
+
+   !-----------------------------------------------------
+   SUBROUTINE spatial_mapping_deallocate_part (this, datapart)
+
+   USE MOD_SPMD_Task
+   USE MOD_DataType
+   IMPLICIT NONE
+
+   class (spatial_mapping_type) :: this
+
+   type(pointer_real8_1d), allocatable :: datapart (:)
+
+   ! Local variables
+   integer :: iset
+
+      IF (p_is_worker) THEN
+
+         DO iset = 1, this%npset
+            IF (this%npart(iset) > 0) THEN
+               deallocate (datapart(iset)%val)
+            ENDIF
+         ENDDO
+
+         IF (this%npset > 0) THEN
+            deallocate (datapart)
+         ENDIF
+
+      ENDIF
+
+   END SUBROUTINE spatial_mapping_deallocate_part
 
    !-----------------------------------------------------
    SUBROUTINE spatial_mapping_free_mem (this)
