@@ -50,7 +50,7 @@ CopyCode()
             mkdir -p $DestPathName/$files1
             cd $SourcePathName/$files1
             echo copy $files1
-            if [ $files1 = CaMa -o $files1 = include -o $files1 = run -o $files1 = preprocess ];then
+            if [ $files1 = extends -o $files1 = include -o $files1 = run -o $files1 = preprocess ];then
                cp -pr * $DestPathName/$files1/
             else
                if [ $files1 = cases ];then
