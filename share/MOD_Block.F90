@@ -291,7 +291,8 @@ CONTAINS
          iblk_east = find_nearest_east (edgee, this%nxblk, this%lon_e)
 
          IF (iblk_west == iblk_east) THEN
-            IF (lon_between_floor(edgee,this%lon_w(iblk_west),edgew)) THEN
+            IF ((lon_between_floor(edgee,this%lon_w(iblk_west),edgew)) &
+               .and. (this%lon_w(iblk_west) /= edgew)) THEN
                iblk_west = 1
                iblk_east = this%nxblk
             ENDIF

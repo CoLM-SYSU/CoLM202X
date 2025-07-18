@@ -19,7 +19,7 @@ MODULE MOD_LandCrop
    ! ---- Instance ----
    type(grid_type) :: grid_crop
    integer,  allocatable :: cropclass (:)
-   real(r8), allocatable :: pctshrpch (:)
+   real(r8), allocatable :: cropfrac  (:)
 
 CONTAINS
 
@@ -105,7 +105,7 @@ CONTAINS
       cropfilter = (/ CROPLAND /)
 
       CALL pixelsetshared_build (landpatch, grid_crop, cropdata, N_CFT, cropfilter, &
-         pctshrpch, cropclass, fracin = pctshared)
+         cropfrac, cropclass, fracin = pctshared)
 
       numpatch = landpatch%nset
 
@@ -117,7 +117,7 @@ CONTAINS
             ENDIF
 
             allocate(landpatch%pctshared(numpatch))
-            landpatch%pctshared = pctshrpch
+            landpatch%pctshared = cropfrac
          ENDIF
       ENDIF
 

@@ -44,7 +44,7 @@ CONTAINS
    SUBROUTINE WATER_2014 (ipatch,patchtype,lb       ,nl_soil     ,deltim      ,&
               z_soisno    ,dz_soisno   ,zi_soisno   ,bsw         ,porsl       ,&
               psi0        ,hksati      ,theta_r     ,fsatmax     ,fsatdcf     ,&
-              topostd     ,BVIC        ,rootr       ,rootflux    ,t_soisno    ,&
+              elvstd      ,BVIC        ,rootr       ,rootflux    ,t_soisno    ,&
               wliq_soisno ,wice_soisno ,smp         ,hk          ,pg_rain     ,&
               sm          ,etr         ,qseva       ,qsdew       ,qsubl       ,&
               qfros       ,qseva_soil  ,qsdew_soil  ,qsubl_soil  ,qfros_soil  ,&
@@ -98,7 +98,7 @@ CONTAINS
         ssi                     ,&! irreducible water saturation of snow
         wimp                    ,&! water impermeable if porosity less than wimp
         smpmin                  ,&! restriction for min of soil poten. (mm)
-        topostd                 ,&! standard deviation of elevation (m)
+        elvstd                  ,&! standard deviation of elevation (m)
         BVIC                    ,&!
 
         z_soisno (lb:nl_soil)   ,&! layer depth (m)
@@ -311,7 +311,7 @@ IF(patchtype<=1)THEN   ! soil ground only
 
          CALL Runoff_XinAnJiang (&
             nl_soil, dz_soisno(1:nl_soil), eff_porosity(1:nl_soil), vol_liq(1:nl_soil), &
-            topostd, gwat, deltim, rsur, rsubst)
+            elvstd, gwat, deltim, rsur, rsubst)
 
       ELSEIF (DEF_Runoff_SCHEME  == 3) THEN
          ! 3: runoff scheme from Simple VIC model
@@ -350,7 +350,7 @@ IF(patchtype<=1)THEN   ! soil ground only
             ELSEIF (DEF_Runoff_SCHEME  == 2) THEN
                CALL Runoff_XinAnJiang (&
                   nl_soil, dz_soisno(1:nl_soil), eff_porosity(1:nl_soil), vol_liq(1:nl_soil), &
-                  topostd, gfld, deltim, rsur_fld, rsubst)
+                  elvstd, gfld, deltim, rsur_fld, rsubst)
             ELSEIF (DEF_Runoff_SCHEME  == 3) THEN
                CALL Runoff_SimpleVIC (&
                   nl_soil, dz_soisno(1:nl_soil), eff_porosity(1:nl_soil), vol_liq(1:nl_soil), &
@@ -484,7 +484,8 @@ ENDIF
 !-----------------------------------------------------------------------
    SUBROUTINE WATER_VSF (ipatch, patchtype,is_dry_lake, lb, nl_soil, deltim   ,&
               z_soisno    ,dz_soisno   ,zi_soisno   ,bsw         ,theta_r     ,&
-              fsatmax     ,fsatdcf     ,topostd     ,BVIC                     ,&
+              fsatmax     ,fsatdcf     ,topoweti    ,alp_twi     ,chi_twi     ,&
+              mu_twi      ,elvstd      ,BVIC                                  ,&
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
               alpha_vgm   ,n_vgm       ,L_vgm       ,sc_vgm      ,fc_vgm      ,&
 #endif
@@ -493,7 +494,8 @@ ENDIF
               pg_rain     ,sm          ,etr         ,qseva       ,qsdew       ,&
               qsubl       ,qfros       ,qseva_soil  ,qsdew_soil  ,qsubl_soil  ,&
               qfros_soil  ,qseva_snow  ,qsdew_snow  ,qsubl_snow  ,qfros_snow  ,&
-              fsno        ,rsur        ,rsur_se     ,rsur_ie     ,rnof        ,&
+              fsno        ,frcsat      ,rsur        ,rsur_se     ,rsur_ie     ,&
+              rnof        ,&
               qinfl       ,ssi         ,pondmx      ,wimp        ,zwt         ,&
               wdsrf       ,wa          ,wetwat      ,&
 #if (defined CaMa_Flood)
@@ -547,7 +549,7 @@ ENDIF
         ssi              , &! irreducible water saturation of snow
         pondmx           , &! ponding depth (mm)
         wimp             , &! water impermeable IF porosity less than wimp
-        topostd          , &! standard deviation of elevation (m)
+        elvstd           , &! standard deviation of elevation (m)
         BVIC             , &!
         z_soisno (lb:nl_soil)   , &! layer depth (m)
         dz_soisno(lb:nl_soil)   , &! layer thickness (m)
@@ -556,6 +558,10 @@ ENDIF
         theta_r  (1:nl_soil), & ! residual moisture content [-]
         fsatmax             , & ! maximum saturated area fraction [-]
         fsatdcf             , & ! decay factor in calculation of saturated area fraction [1/m]
+        topoweti            , & ! mean topographic wetness index
+        alp_twi             , & ! alpha in three parameter gamma distribution of twi
+        chi_twi             , & ! chi   in three parameter gamma distribution of twi
+        mu_twi              , & ! mu    in three parameter gamma distribution of twi
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
         alpha_vgm(1:nl_soil), & ! a parameter corresponding approximately to the inverse of the air-entry value
         n_vgm    (1:nl_soil), & ! a shape parameter [dimensionless]
@@ -607,6 +613,7 @@ ENDIF
         wetwat              ! water storage in wetland [mm]
 
    real(r8), intent(out) :: &
+        frcsat           , &! fraction of saturation area
         rsur             , &! surface runoff (mm h2o/s)
         rsur_se          , &! saturation excess surface runoff (mm h2o/s)
         rsur_ie          , &! infiltration excess surface runoff (mm h2o/s)
@@ -642,6 +649,8 @@ ENDIF
        vol_liq(1:nl_soil), &! partial volume of liquid water in layer
        vol_ice(1:nl_soil), &! partial volume of ice lens in layer
        icefrac(1:nl_soil)   ! ice fraction (-)
+
+   real(r8) :: eta
 
    real(r8) :: err_solver, w_sum, wresi(1:nl_soil)
    real(r8) :: qgtop
@@ -782,16 +791,12 @@ IF((patchtype<=1) .or. is_dry_lake)THEN   ! soil ground only
 
          IF (DEF_Runoff_SCHEME  == 0) THEN
 
-            IF (gwat > 0.) THEN
-               CALL SurfaceRunoff_SIMTOP (nl_soil,wimp,porsl,psi0,hksati,fsatmax,fsatdcf,&
-                  z_soisno(1:),dz_soisno(1:),zi_soisno(0:),&
-                  eff_porosity,icefrac,zwt,gwat,rsur,rsur_se,rsur_ie)
-            ELSE
-               rsur = 0.
-            ENDIF
+            CALL SurfaceRunoff_SIMTOP (nl_soil,wimp,porsl,psi0,hksati,fsatmax,fsatdcf,&
+               z_soisno(1:),dz_soisno(1:),zi_soisno(0:),&
+               eff_porosity,icefrac,zwt,gwat,rsur,rsur_se,rsur_ie,topoweti,alp_twi,chi_twi,mu_twi,frcsat,eta)
 
             CALL SubsurfaceRunoff_SIMTOP (nl_soil, icefrac, dz_soisno(1:), zi_soisno(0:), &
-               zwt, rsubst)
+               zwt, rsubst, hksati, topoweti, eta)
 
          ELSEIF (DEF_Runoff_SCHEME  == 1) THEN
             ! 1: runoff scheme from VIC model
@@ -809,7 +814,7 @@ IF((patchtype<=1) .or. is_dry_lake)THEN   ! soil ground only
 
             CALL Runoff_XinAnJiang (&
                nl_soil, dz_soisno(1:nl_soil), eff_porosity(1:nl_soil), vol_liq(1:nl_soil), &
-               topostd, gwat, deltim, rsur, rsubst)
+               elvstd, gwat, deltim, rsur, rsubst, frcsat)
 
             rsur_se = rsur
             rsur_ie = 0.
@@ -819,7 +824,7 @@ IF((patchtype<=1) .or. is_dry_lake)THEN   ! soil ground only
 
             CALL Runoff_SimpleVIC (&
                nl_soil, dz_soisno(1:nl_soil), eff_porosity(1:nl_soil), vol_liq(1:nl_soil), &
-               BVIC, gwat, deltim, rsur, rsubst)
+               BVIC, gwat, deltim, rsur, rsubst, frcsat)
 
             rsur_se = rsur
             rsur_ie = 0.
@@ -868,7 +873,7 @@ IF((patchtype<=1) .or. is_dry_lake)THEN   ! soil ground only
             ELSEIF (DEF_Runoff_SCHEME  == 2) THEN
                CALL Runoff_XinAnJiang (&
                   nl_soil, dz_soisno(1:nl_soil), eff_porosity(1:nl_soil), vol_liq(1:nl_soil), &
-                  topostd, gfld, deltim, rsur_fld, rsubst)
+                  elvstd, gfld, deltim, rsur_fld, rsubst)
             ELSEIF (DEF_Runoff_SCHEME  == 3) THEN
                CALL Runoff_SimpleVIC (&
                   nl_soil, dz_soisno(1:nl_soil), eff_porosity(1:nl_soil), vol_liq(1:nl_soil), &
@@ -1115,6 +1120,8 @@ ELSE
             wdsrf = 0.
             wa    = 0.
          ENDIF
+
+         frcsat = 1.
 
 #ifndef CatchLateralFlow
          IF (wdsrf > pondmx) THEN

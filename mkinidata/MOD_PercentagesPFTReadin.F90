@@ -19,9 +19,6 @@ CONTAINS
    USE MOD_SPMD_Task
    USE MOD_NetCDFVector
    USE MOD_LandPatch
-#ifdef CROP
-   USE MOD_LandCrop
-#endif
 #ifdef RangeCheck
    USE MOD_RangeCheck
 #endif

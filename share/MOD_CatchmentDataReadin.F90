@@ -26,10 +26,64 @@ MODULE MOD_CatchmentDataReadin
    integer, parameter :: nxhglb = 432000
    integer, parameter :: nyhglb = 216000
 
+   INTERFACE catchment_data_read
+      MODULE procedure catchment_data_read_int32
+      MODULE procedure catchment_data_read_real8
+   END INTERFACE catchment_data_read
+
 CONTAINS
 
    ! -----
-   SUBROUTINE catchment_data_read (file_meshdata_in, dataname, grid, rdata, spv)
+   SUBROUTINE catchment_data_read_int32 (file_meshdata_in, dataname, grid, rdata_int32, spv_i4)
+
+   USE MOD_Grid
+   USE MOD_DataType
+   IMPLICIT NONE
+
+   character (len=*), intent(in) :: file_meshdata_in
+   character (len=*), intent(in) :: dataname
+   type (grid_type),  intent(in) :: grid
+
+   type (block_data_int32_2d), intent(inout) :: rdata_int32
+   integer,  intent(in), optional :: spv_i4
+
+      IF (present(spv_i4)) THEN
+         CALL catchment_data_read_general (file_meshdata_in, dataname, grid, &
+            rdata_int32 = rdata_int32, spv_i4 = spv_i4)
+      ELSE
+         CALL catchment_data_read_general (file_meshdata_in, dataname, grid, &
+            rdata_int32 = rdata_int32)
+      ENDIF
+
+   END SUBROUTINE catchment_data_read_int32
+
+   ! -----
+   SUBROUTINE catchment_data_read_real8 (file_meshdata_in, dataname, grid, rdata_real8, spv_r8)
+
+   USE MOD_Grid
+   USE MOD_DataType
+   IMPLICIT NONE
+
+   character (len=*), intent(in) :: file_meshdata_in
+   character (len=*), intent(in) :: dataname
+   type (grid_type),  intent(in) :: grid
+
+   type (block_data_real8_2d), intent(inout) :: rdata_real8
+   real(r8), intent(in), optional :: spv_r8
+
+      IF (present(spv_r8)) THEN
+         CALL catchment_data_read_general (file_meshdata_in, dataname, grid, &
+            rdata_real8 = rdata_real8, spv_r8 = spv_r8)
+      ELSE
+         CALL catchment_data_read_general (file_meshdata_in, dataname, grid, &
+            rdata_real8 = rdata_real8)
+      ENDIF
+
+   END SUBROUTINE catchment_data_read_real8
+
+   ! -----
+   SUBROUTINE catchment_data_read_general (file_meshdata_in, dataname, grid, &
+      rdata_int32, spv_i4, rdata_real8, spv_r8)
 
    USE MOD_SPMD_Task
    USE MOD_Block
@@ -42,8 +96,13 @@ CONTAINS
    character (len=*), intent(in) :: file_meshdata_in
    character (len=*), intent(in) :: dataname
    type (grid_type),  intent(in) :: grid
-   type (block_data_int32_2d), intent(inout) :: rdata
-   integer, intent(in), optional :: spv
+
+   type (block_data_int32_2d), intent(inout), optional :: rdata_int32
+   integer,  intent(in), optional :: spv_i4
+
+   type (block_data_real8_2d), intent(inout), optional :: rdata_real8
+   real(r8), intent(in), optional :: spv_r8
+
 
    ! Local Variables
    logical :: in_one_file
@@ -54,31 +113,32 @@ CONTAINS
    character(len=256) :: file_mesh, path_mesh
    character(len=3)   :: pre1
    character(len=4)   :: pre2
-   integer,  allocatable :: dcache(:,:)
+   integer,  allocatable :: dcache_i4(:,:)
+   real(r8), allocatable :: dcache_r8(:,:)
    real(r8), allocatable :: latitude(:), longitude(:)
    logical :: fexists
 
-      IF (p_is_master) THEN
-         IF (grid%yinc == 1) THEN
-            write(*,*) 'Warning: latitude in catchment data should be from north to south.'
-         ENDIF
-      ENDIF
+      IF (p_is_io) THEN
 
-      IF (p_is_master) THEN
-         in_one_file = ncio_var_exist (file_meshdata_in, dataname)
-      ENDIF
+         IF (p_iam_io == p_root) THEN
+            IF (grid%yinc == 1) THEN
+               write(*,*) 'Warning: latitude in catchment data should be from north to south.'
+            ENDIF
+         ENDIF
+
+         IF (p_iam_io == p_root) THEN
+            in_one_file = ncio_var_exist (file_meshdata_in, dataname)
+         ENDIF
 #ifdef USEMPI
-      CALL mpi_bcast (in_one_file, 1, mpi_logical, p_address_master, p_comm_glb, p_err)
+         CALL mpi_bcast (in_one_file, 1, mpi_logical, p_root, p_comm_io, p_err)
 #endif
 
-      IF (in_one_file) THEN
+         IF (in_one_file) THEN
 
-         file_mesh = file_meshdata_in
+            file_mesh = file_meshdata_in
 
-         CALL ncio_read_bcast_serial (file_mesh, 'lat', latitude)
-         CALL ncio_read_bcast_serial (file_mesh, 'lon', longitude)
-
-         IF (p_is_io) THEN
+            CALL ncio_read_serial (file_mesh, 'lat', latitude)
+            CALL ncio_read_serial (file_mesh, 'lon', longitude)
 
             nlat = size(latitude )
             nlon = size(longitude)
@@ -97,10 +157,20 @@ CONTAINS
                iblk = gblock%xblkme(iblkme)
                jblk = gblock%yblkme(iblkme)
 
-               IF (present(spv)) THEN
-                  rdata%blk(iblk,jblk)%val(:,:) = spv
-               ELSE
-                  rdata%blk(iblk,jblk)%val(:,:) = 0
+               IF (present(rdata_int32)) THEN
+                  IF (present(spv_i4)) THEN
+                     rdata_int32%blk(iblk,jblk)%val(:,:) = spv_i4
+                  ELSE
+                     rdata_int32%blk(iblk,jblk)%val(:,:) = 0
+                  ENDIF
+               ENDIF
+
+               IF (present(rdata_real8)) THEN
+                  IF (present(spv_r8)) THEN
+                     rdata_real8%blk(iblk,jblk)%val(:,:) = spv_r8
+                  ELSE
+                     rdata_real8%blk(iblk,jblk)%val(:,:) = -1.e36_r8
+                  ENDIF
                ENDIF
 
                IF ((inorth > grid%ydsp(jblk)+nyhbox) .or. (isouth < grid%ydsp(jblk)+1)) THEN
@@ -139,9 +209,20 @@ CONTAINS
                   il0 = i0 - grid%xdsp(iblk); IF (il0 <= 0) il0 = il0 + grid%nlon
                   il1 = i1 - grid%xdsp(iblk); IF (il1 <= 0) il1 = il1 + grid%nlon
 
-                  CALL ncio_read_part_serial (file_mesh, dataname, (/jf0,if0/), (/jf1,if1/), dcache)
-                  dcache = transpose(dcache)
-                  rdata%blk(iblk,jblk)%val(il0:il1,jl0:jl1) = dcache
+                  IF (present(rdata_int32)) THEN
+                     CALL ncio_read_part_serial (file_mesh, dataname, (/jf0,if0/), (/jf1,if1/), dcache_i4)
+                     dcache_i4 = transpose(dcache_i4)
+
+                     rdata_int32%blk(iblk,jblk)%val(il0:il1,jl0:jl1) = dcache_i4
+                  ENDIF
+
+                  IF (present(rdata_real8)) THEN
+                     CALL ncio_read_part_serial (file_mesh, dataname, (/jf0,if0/), (/jf1,if1/), dcache_r8)
+                     dcache_r8 = transpose(dcache_r8)
+
+                     rdata_real8%blk(iblk,jblk)%val(il0:il1,jl0:jl1) = dcache_r8
+                  ENDIF
+
                ENDIF
 
                IF (lon_between_ceil(grid%lon_e(i1max), grid%lon_w(iwest), grid%lon_e(ieast))) THEN
@@ -160,19 +241,25 @@ CONTAINS
                      il0 = i0 - grid%xdsp(iblk); IF (il0 <= 0) il0 = il0 + grid%nlon
                      il1 = i1 - grid%xdsp(iblk); IF (il1 <= 0) il1 = il1 + grid%nlon
 
-                     CALL ncio_read_part_serial (file_mesh, dataname, &
-                        (/jf0,if0/), (/jf1,if1/), dcache)
-                     dcache = transpose(dcache)
-                     rdata%blk(iblk,jblk)%val(il0:il1,jl0:jl1) = dcache
+                     IF (present(rdata_int32)) THEN
+                        CALL ncio_read_part_serial (file_mesh, dataname, (/jf0,if0/), (/jf1,if1/), dcache_i4)
+                        dcache_i4 = transpose(dcache_i4)
+
+                        rdata_int32%blk(iblk,jblk)%val(il0:il1,jl0:jl1) = dcache_i4
+                     ENDIF
+
+                     IF (present(rdata_real8)) THEN
+                        CALL ncio_read_part_serial (file_mesh, dataname, (/jf0,if0/), (/jf1,if1/), dcache_r8)
+                        dcache_r8 = transpose(dcache_r8)
+
+                        rdata_real8%blk(iblk,jblk)%val(il0:il1,jl0:jl1) = dcache_r8
+                     ENDIF
                   ENDIF
                ENDIF
 
             ENDDO
-         ENDIF
 
-      ELSE
-
-         IF (p_is_io) THEN
+         ELSE
 
             ! remove suffix ".nc"
             path_mesh = file_meshdata_in(1:len_trim(file_meshdata_in)-3)
@@ -181,10 +268,20 @@ CONTAINS
                iblk = gblock%xblkme(iblkme)
                jblk = gblock%yblkme(iblkme)
 
-               IF (present(spv)) THEN
-                  rdata%blk(iblk,jblk)%val(:,:) = spv
-               ELSE
-                  rdata%blk(iblk,jblk)%val(:,:) = 0
+               IF (present(rdata_int32)) THEN
+                  IF (present(spv_i4)) THEN
+                     rdata_int32%blk(iblk,jblk)%val(:,:) = spv_i4
+                  ELSE
+                     rdata_int32%blk(iblk,jblk)%val(:,:) = 0
+                  ENDIF
+               ENDIF
+
+               IF (present(rdata_real8)) THEN
+                  IF (present(spv_r8)) THEN
+                     rdata_real8%blk(iblk,jblk)%val(:,:) = spv_r8
+                  ELSE
+                     rdata_real8%blk(iblk,jblk)%val(:,:) = -1.e36_r8
+                  ENDIF
                ENDIF
 
                inorth = grid%ydsp(jblk) + 1
@@ -242,9 +339,19 @@ CONTAINS
 
                   inquire(file=file_mesh, exist=fexists)
                   IF (fexists) THEN
-                     CALL ncio_read_part_serial (file_mesh, dataname, (/j0,i0/), (/j1,i1/), dcache)
-                     dcache = transpose(dcache)
-                     rdata%blk(iblk,jblk)%val(il0:il1,jl0:jl1) = dcache
+                     IF (present(rdata_int32)) THEN
+                        CALL ncio_read_part_serial (file_mesh, dataname, (/j0,i0/), (/j1,i1/), dcache_i4)
+                        dcache_i4 = transpose(dcache_i4)
+
+                        rdata_int32%blk(iblk,jblk)%val(il0:il1,jl0:jl1) = dcache_i4
+                     ENDIF
+
+                     IF (present(rdata_real8)) THEN
+                        CALL ncio_read_part_serial (file_mesh, dataname, (/j0,i0/), (/j1,i1/), dcache_r8)
+                        dcache_r8 = transpose(dcache_r8)
+
+                        rdata_real8%blk(iblk,jblk)%val(il0:il1,jl0:jl1) = dcache_r8
+                     ENDIF
                   ENDIF
 
                   IF ((ieast >= xdsp + 1) .and. (ieast <= xdsp + nxhbox)) THEN
@@ -263,6 +370,6 @@ CONTAINS
          ENDIF
       ENDIF
 
-   END SUBROUTINE catchment_data_read
+   END SUBROUTINE catchment_data_read_general
 
 END MODULE MOD_CatchmentDataReadin

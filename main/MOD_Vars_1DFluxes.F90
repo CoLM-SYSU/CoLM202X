@@ -59,6 +59,7 @@ MODULE MOD_Vars_1DFluxes
    real(r8), allocatable :: rnet   (:) !net radiation by surface [W/m2]
    real(r8), allocatable :: xerr   (:) !the error of water balance [mm/s]
    real(r8), allocatable :: zerr   (:) !the error of energy balance [W/m2]
+   real(r8), allocatable :: frcsat (:) !fraction of saturation area [-]
    real(r8), allocatable :: rsur   (:) !surface runoff (mm h2o/s)
    real(r8), allocatable :: rsur_se(:) !saturation excess surface runoff (mm h2o/s)
    real(r8), allocatable :: rsur_ie(:) !infiltration excess surface runoff (mm h2o/s)
@@ -139,6 +140,7 @@ CONTAINS
             allocate ( xerr   (numpatch) )  ; xerr   (:) = spval ! the error of water balance [mm/s]
             allocate ( zerr   (numpatch) )  ; zerr   (:) = spval ! the error of energy balance [W/m2]
 
+            allocate ( frcsat (numpatch) )  ; frcsat (:) = spval ! fraction of saturation area [-]
             allocate ( rsur   (numpatch) )  ; rsur   (:) = spval ! surface runoff (mm h2o/s)
             allocate ( rsur_se(numpatch) )  ; rsur_se(:) = spval ! saturation excess surface runoff (mm h2o/s)
             allocate ( rsur_ie(numpatch) )  ; rsur_ie(:) = spval ! infiltration excess surface runoff (mm h2o/s)
@@ -223,6 +225,7 @@ CONTAINS
             deallocate ( rnet    )  ! net radiation by surface [W/m2]
             deallocate ( xerr    )  ! the error of water balance [mm/s]
             deallocate ( zerr    )  ! the error of energy balance [W/m2]
+            deallocate ( frcsat  )  ! fraction of saturation area [-]
             deallocate ( rsur    )  ! surface runoff (mm h2o/s)
             deallocate ( rsur_se )  ! saturation excess surface runoff (mm h2o/s)
             deallocate ( rsur_ie )  ! infiltration excess surface runoff (mm h2o/s)

@@ -79,6 +79,7 @@ MODULE MOD_Vars_1DAccFluxes
    real(r8), allocatable :: a_scv       (:)
    real(r8), allocatable :: a_snowdp    (:)
    real(r8), allocatable :: a_fsno      (:)
+   real(r8), allocatable :: a_frcsat    (:)
    real(r8), allocatable :: a_sigf      (:)
    real(r8), allocatable :: a_green     (:)
    real(r8), allocatable :: a_lai       (:)
@@ -486,6 +487,7 @@ CONTAINS
             allocate (a_scv       (numpatch))
             allocate (a_snowdp    (numpatch))
             allocate (a_fsno      (numpatch))
+            allocate (a_frcsat    (numpatch))
             allocate (a_sigf      (numpatch))
             allocate (a_green     (numpatch))
             allocate (a_lai       (numpatch))
@@ -897,6 +899,7 @@ CONTAINS
             deallocate (a_scv       )
             deallocate (a_snowdp    )
             deallocate (a_fsno      )
+            deallocate (a_frcsat    )
             deallocate (a_sigf      )
             deallocate (a_green     )
             deallocate (a_lai       )
@@ -1309,6 +1312,7 @@ CONTAINS
             a_scv       (:) = spval
             a_snowdp    (:) = spval
             a_fsno      (:) = spval
+            a_frcsat    (:) = spval
             a_sigf      (:) = spval
             a_green     (:) = spval
             a_lai       (:) = spval
@@ -1797,6 +1801,7 @@ CONTAINS
             CALL acc1d (scv    , a_scv    )
             CALL acc1d (snowdp , a_snowdp )
             CALL acc1d (fsno   , a_fsno   )
+            CALL acc1d (frcsat , a_frcsat )
             CALL acc1d (sigf   , a_sigf   )
             CALL acc1d (green  , a_green  )
             CALL acc1d (lai    , a_lai    )
