@@ -383,8 +383,8 @@ ENDIF
                  mss_cnc_bcphi  ,mss_cnc_bcpho  ,mss_cnc_ocphi  ,mss_cnc_ocpho  ,&
                  mss_cnc_dst1   ,mss_cnc_dst2   ,mss_cnc_dst3   ,mss_cnc_dst4   ,&
 
-                 albsno(:,1)    ,albsno(:,2)    ,albsno_pur(:,1),albsno_pur(:,2),&
-                 albsno_bc(:,1) ,albsno_bc(:,2) ,albsno_oc(:,1) ,albsno_oc(:,2) ,&
+                 albsno    (:,1),albsno    (:,2),albsno_pur(:,1),albsno_pur(:,2),&
+                 albsno_bc (:,1),albsno_bc (:,2),albsno_oc (:,1),albsno_oc (:,2),&
                  albsno_dst(:,1),albsno_dst(:,2),ssno_lyr(1,1,:),ssno_lyr(2,1,:),&
                  ssno_lyr(1,2,:),ssno_lyr(2,2,:))
 
