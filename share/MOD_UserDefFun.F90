@@ -17,7 +17,7 @@ MODULE MOD_UserDefFun
 CONTAINS
 
    ! ----------
-   logical FUNCTION isnan_ud_r8 (a)
+   elemental logical FUNCTION isnan_ud_r8 (a)
 
    USE MOD_Precision, only: r8
 

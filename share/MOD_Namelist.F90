@@ -271,6 +271,8 @@ MODULE MOD_Namelist
    integer :: DEF_Runoff_SCHEME = 3
    character(len=256) :: DEF_file_VIC_para = 'null'
 
+   integer :: DEF_SimTOP_method = 0
+
    ! ----- Treat exposed soil and snow surface separately -----
    ! including solar absorption, sensible/latent heat, ground temperature,
    ! ground heat flux and ground evp/dew/subl/fros. Corresponding vars are
@@ -516,6 +518,7 @@ MODULE MOD_Namelist
       logical :: scv                              = .true.
       logical :: snowdp                           = .true.
       logical :: fsno                             = .true.
+      logical :: frcsat                           = .true.
       logical :: sigf                             = .true.
       logical :: green                            = .true.
       logical :: lai                              = .true.
@@ -970,6 +973,7 @@ CONTAINS
       DEF_SOIL_REFL_SCHEME,                   &
       DEF_RSS_SCHEME,                         &
       DEF_Runoff_SCHEME,                      &
+      DEF_SimTOP_method,                      &
       DEF_SPLIT_SOILSNOW,                     &
       DEF_VEG_SNOW,                           &
       DEF_file_VIC_para,                      &
@@ -1113,6 +1117,12 @@ CONTAINS
          write(*,*) 'Note: DEF_USE_VariablySaturatedFlow is automaticlly set to .true.  '
          write(*,*) 'when defined CatchLateralFlow. '
          DEF_USE_VariablySaturatedFlow = .true.
+#endif
+#ifdef SinglePoint
+         IF (DEF_Runoff_SCHEME = 0) THEN
+            write(*,*) 'Note: DEF_SimTOP_method is set to 0 in SinglePoint.'
+            DEF_SimTOP_method = 0
+         ENDIF
 #endif
 
 
@@ -1490,6 +1500,7 @@ CONTAINS
       ! 02/2024, added by Shupeng Zhang
       CALL mpi_bcast (DEF_Runoff_SCHEME                      ,1   ,mpi_integer   ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_file_VIC_para                      ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_SimTOP_method                      ,1   ,mpi_integer   ,p_address_master ,p_comm_glb ,p_err)
       ! 08/2023, added by hua yuan
       CALL mpi_bcast (DEF_SPLIT_SOILSNOW                     ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_VEG_SNOW                           ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
@@ -1751,6 +1762,7 @@ CONTAINS
       CALL sync_hist_vars_one (DEF_hist_vars%scv         , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%snowdp      , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%fsno        , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%frcsat      , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%sigf        , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%green       , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%lai         , set_defaults)

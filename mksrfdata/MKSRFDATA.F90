@@ -98,6 +98,7 @@ PROGRAM MKSRFDATA
 
    type (grid_type) :: grid_500m, grid_htop, grid_soil, grid_lai, grid_topo, grid_topo_factor
    type (grid_type) :: grid_urban_5km, grid_urban_500m
+   type (grid_type) :: grid_twi
 
    integer   :: lc_year, lai_year
    character(len=4) :: cyear
@@ -253,6 +254,11 @@ PROGRAM MKSRFDATA
       ! define grid for topography
       CALL grid_topo%define_by_name ('colm_500m')
 
+      ! define grid for topographic wetness index
+      IF (DEF_Runoff_SCHEME == 0) THEN
+         CALL grid_twi%define_by_name ('colm_500m')
+      ENDIF
+
       ! define grid for topography factors
       IF (DEF_USE_Forcing_Downscaling) THEN
          lndname = trim(DEF_DS_HiresTopographyDataDir) // '/slope.nc'
@@ -286,6 +292,10 @@ PROGRAM MKSRFDATA
       CALL pixel%assimilate_grid (grid_lai  )
       CALL pixel%assimilate_grid (grid_topo )
 
+      IF (DEF_Runoff_SCHEME == 0) THEN
+         CALL pixel%assimilate_grid (grid_twi)
+      ENDIF
+
       IF (DEF_USE_Forcing_Downscaling) THEN
          CALL pixel%assimilate_grid (grid_topo_factor)
       ENDIF
@@ -315,6 +325,10 @@ PROGRAM MKSRFDATA
       CALL pixel%map_to_grid (grid_soil )
       CALL pixel%map_to_grid (grid_lai  )
       CALL pixel%map_to_grid (grid_topo )
+
+      IF (DEF_Runoff_SCHEME == 0) THEN
+         CALL pixel%map_to_grid (grid_twi)
+      ENDIF
 
       IF (DEF_USE_Forcing_Downscaling) THEN
          CALL pixel%map_to_grid (grid_topo_factor)
@@ -398,7 +412,6 @@ PROGRAM MKSRFDATA
 ! 3. Mapping land characteristic parameters to the model grids
 ! ................................................................
 #ifdef SrfdataDiag
-      CALL elm_patch%build (landelm, landpatch, use_frac = .true.)
 #ifdef GRIDBASED
       CALL gdiag%define_by_copy (gridmesh)
 #else
@@ -438,6 +451,10 @@ IF (.not. (skip_rest)) THEN
       CALL Aggregation_ForestHeight    (grid_htop, dir_rawdata, dir_landdata, lc_year)
 
       CALL Aggregation_Topography      (grid_topo, dir_rawdata, dir_landdata, lc_year)
+
+      IF (DEF_Runoff_SCHEME == 0) THEN
+         CALL Aggregation_TopoWetness  (grid_twi,  dir_rawdata, dir_landdata, lc_year)
+      ENDIF
 
       IF (DEF_USE_Forcing_Downscaling) THEN
          CALL Aggregation_TopographyFactors (grid_topo_factor, &

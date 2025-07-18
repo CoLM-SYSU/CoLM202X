@@ -12,13 +12,14 @@ SUBROUTINE CoLMMAIN ( &
            vf_quartz,    vf_gravels,   vf_om,        vf_sand,      &
            wf_gravels,   wf_sand,      porsl,        psi0,         &
            bsw,          theta_r,      fsatmax,      fsatdcf,      &
+           topoweti,     alp_twi,      chi_twi,      mu_twi,       &
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
            alpha_vgm,    n_vgm,        L_vgm,        &
            sc_vgm,       fc_vgm,       &
 #endif
            hksati,       csol,         k_solids,     dksatu,       &
            dksatf,       dkdry,        BA_alpha,     BA_beta,      &
-           rootfr,       lakedepth,    dz_lake,      topostd, BVIC,&
+           rootfr,       lakedepth,    dz_lake,      elvstd,  BVIC,&
 #if (defined CaMa_Flood)
            ! add flood depth, flood fraction, flood evaporation and
            ! flood re-infiltration
@@ -81,7 +82,8 @@ SUBROUTINE CoLMMAIN ( &
            taux,         tauy,         fsena,        fevpa,        &
            lfevpa,       fsenl,        fevpl,        etr,          &
            fseng,        fevpg,        olrg,         fgrnd,        &
-           trad,         tref,         qref,         rsur,         &
+           trad,         tref,         qref,         frcsat,       &
+           rsur,         &
            rsur_se,      rsur_ie,      rnof,         qintr,        &
            qinfl,        qdrip,        rst,          assim,        &
            respc,        sabvsun,      sabvsha,      sabg,         &
@@ -202,7 +204,7 @@ SUBROUTINE CoLMMAIN ( &
    real(r8), intent(inout) :: dz_lake(nl_lake)  ! lake layer thickness (m)
 
    real(r8), intent(in) :: &
-        topostd              ,&! standard deviation of elevation (m)
+        elvstd               ,&! standard deviation of elevation (m)
         BVIC                 ,&! vic model parameter b
 
         ! soil physical parameters and lake info
@@ -223,6 +225,10 @@ SUBROUTINE CoLMMAIN ( &
         theta_r  (1:nl_soil) ,&! residual water content (cm3/cm3)
         fsatmax              ,&! maximum saturated area fraction [-]
         fsatdcf              ,&! decay factor in calculation of saturated area fraction [1/m]
+        topoweti             ,&! mean topographic wetness index
+        alp_twi              ,&! alpha in three parameter gamma distribution of twi
+        chi_twi              ,&! chi   in three parameter gamma distribution of twi
+        mu_twi               ,&! mu    in three parameter gamma distribution of twi
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
         alpha_vgm(1:nl_soil) ,&! parameter corresponding approximately to inverse of air-entry value
         n_vgm    (1:nl_soil) ,&! a shape parameter
@@ -434,6 +440,7 @@ SUBROUTINE CoLMMAIN ( &
         tref        ,&! 2 m height air temperature [K]
         qref        ,&! 2 m height air specific humidity
         trad        ,&! radiative temperature [K]
+        frcsat      ,&! fraction of saturation area
         rsur        ,&! surface runoff (mm h2o/s)
         rsur_se     ,&! saturation excess surface runoff (mm h2o/s)
         rsur_ie     ,&! infiltration excess surface runoff (mm h2o/s)
@@ -765,7 +772,7 @@ SUBROUTINE CoLMMAIN ( &
             CALL WATER_2014 (ipatch,patchtype         ,lb                ,nl_soil           ,&
                  deltim            ,z_soisno(lb:)     ,dz_soisno(lb:)    ,zi_soisno(lb-1:)  ,&
                  bsw               ,porsl             ,psi0              ,hksati            ,&
-                 theta_r           ,fsatmax           ,fsatdcf           ,topostd           ,&
+                 theta_r           ,fsatmax           ,fsatdcf           ,elvstd            ,&
                  BVIC              ,rootr             ,rootflux          ,t_soisno(lb:)     ,&
                  wliq_soisno(lb:)  ,wice_soisno(lb:)  ,smp               ,hk                ,&
                  pg_rain           ,sm                ,etr               ,qseva             ,&
@@ -790,7 +797,8 @@ SUBROUTINE CoLMMAIN ( &
             CALL WATER_VSF (ipatch ,patchtype,is_dry_lake,   lb          ,nl_soil           ,&
                  deltim            ,z_soisno(lb:)     ,dz_soisno(lb:)    ,zi_soisno(lb-1:)  ,&
                  bsw               ,theta_r           ,fsatmax           ,fsatdcf           ,&
-                 topostd           ,BVIC              ,&
+                 topoweti          ,alp_twi           ,chi_twi           ,mu_twi            ,&
+                 elvstd            ,BVIC              ,&
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
                  alpha_vgm         ,n_vgm             ,L_vgm             ,sc_vgm            ,&
                  fc_vgm            ,&
@@ -801,7 +809,8 @@ SUBROUTINE CoLMMAIN ( &
                  etr               ,qseva             ,qsdew             ,qsubl             ,&
                  qfros             ,qseva_soil        ,qsdew_soil        ,qsubl_soil        ,&
                  qfros_soil        ,qseva_snow        ,qsdew_snow        ,qsubl_snow        ,&
-                 qfros_snow        ,fsno              ,rsur              ,rsur_se           ,&
+                 qfros_snow        ,fsno              ,frcsat            ,rsur              ,&
+                 rsur_se           ,&
                  rsur_ie           ,rnof              ,qinfl             ,ssi               ,&
                  pondmx            ,wimp              ,zwt               ,wdsrf             ,&
                  wa                ,wetwat            ,&
@@ -1271,6 +1280,8 @@ SUBROUTINE CoLMMAIN ( &
             aa = qseva+qsubl-qsdew-qfros
             rsur = max(0., pg_rain + pg_snow - aa - a)
             rnof = rsur
+            rsur_se = rsur
+            rsur_ie = 0.
          ELSE
 
             wdsrf = sum(dz_lake) * 1.e3
@@ -1531,6 +1542,7 @@ SUBROUTINE CoLMMAIN ( &
          qinfl         = 0.
          qdrip         = forc_rain + forc_snow
          qintr         = 0.
+         frcsat        = 1.
          h2osoi        = 0.
          rstfacsun_out = 0.
          rstfacsha_out = 0.
