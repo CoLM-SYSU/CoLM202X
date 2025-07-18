@@ -1118,6 +1118,12 @@ CONTAINS
          write(*,*) 'when defined CatchLateralFlow. '
          DEF_USE_VariablySaturatedFlow = .true.
 #endif
+#ifdef SinglePoint
+         IF (DEF_Runoff_SCHEME = 0) THEN
+            write(*,*) 'Note: DEF_SimTOP_method is set to 0 in SinglePoint.'
+            DEF_SimTOP_method = 0
+         ENDIF
+#endif
 
 
 ! ----- subgrid type related ------ Macros&Namelist conflicts and dependency management
