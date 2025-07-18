@@ -216,11 +216,13 @@ CONTAINS
          ! balance check and adjustment for soil and snow absorption
          ! this could happen when there is adjustment to ssun,ssha
          IF (abs(sabg_soil+sabg_snow-sabg)>1.e-6) THEN
-            print *, "MOD_NetSolar.F90: NOTE imbalance in spliting soil and snow surface!", &
-                      sabg_soil+sabg_snow-sabg
-            print *, "Patchtype = ", patchtype
-            print *, "sabg:", sabg, "sabg_soil:", sabg_soil, "sabg_snow", sabg_snow
-            print *, "sabg_soil+sabg_snow:", sabg_soil+sabg_snow, "fsno:", fsno
+            IF (.not. (idate(2)==1 .and. idate(3)==int(deltim))) THEN
+               print *, "MOD_NetSolar.F90: NOTE imbalance in spliting soil and snow surface!", &
+                         sabg_soil+sabg_snow-sabg
+               print *, "Patchtype = ", patchtype
+               print *, "sabg:", sabg, "sabg_soil:", sabg_soil, "sabg_snow", sabg_snow
+               print *, "sabg_soil+sabg_snow:", sabg_soil+sabg_snow, "fsno:", fsno
+            ENDIF
 
             sabg_noadj = sabg_soil + sabg_snow
 

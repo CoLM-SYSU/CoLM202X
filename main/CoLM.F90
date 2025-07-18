@@ -469,7 +469,9 @@ PROGRAM CoLM
          ! DO land use and land cover change simulation
          ! ----------------------------------------------------------------------
 #ifdef LULCC
-         IF ( isendofyear(idate, deltim) ) THEN
+         IF ( isendofyear(idate, deltim) .and. &
+            ( jdate(1)>=2000 .or. (jdate(1)>1985 .and. MOD(jdate(1),5)==0) ) ) THEN
+
             ! Deallocate all Forcing and Fluxes variable of last year
             CALL deallocate_1D_Forcing
             CALL deallocate_1D_Fluxes
@@ -478,7 +480,7 @@ PROGRAM CoLM
             CALL hist_final    ()
 
             ! Call LULCC driver
-            CALL LulccDriver (casename, dir_landdata, dir_restart, idate, greenwich)
+            CALL LulccDriver (casename, dir_landdata, dir_restart, jdate, greenwich)
 
             ! Allocate Forcing and Fluxes variable of next year
             CALL allocate_1D_Forcing
@@ -511,7 +513,7 @@ PROGRAM CoLM
          ENDIF
 
          IF (DEF_LAI_MONTHLY) THEN
-            IF ((itstamp < etstamp) .and. (month /= month_p)) THEN
+            IF (month /= month_p) THEN
                CALL LAI_readin (lai_year, month, dir_landdata)
 #ifdef URBAN_MODEL
                CALL UrbanLAI_readin(lai_year, month, dir_landdata)
@@ -520,7 +522,7 @@ PROGRAM CoLM
          ELSE
             ! Update every 8 days (time interval of the MODIS LAI data)
             Julian_8day = int(calendarday(jdate)-1)/8*8 + 1
-            IF ((itstamp < etstamp) .and. (Julian_8day /= Julian_8day_p)) THEN
+            IF (Julian_8day /= Julian_8day_p) THEN
                CALL LAI_readin (jdate(1), Julian_8day, dir_landdata)
             ENDIF
          ENDIF
@@ -528,9 +530,13 @@ PROGRAM CoLM
 
          ! Write out the model state variables for restart run
          ! ----------------------------------------------------------------------
-         IF (save_to_restart (idate, deltim, itstamp, ptstamp)) THEN
+         IF (save_to_restart (idate, deltim, itstamp, ptstamp, etstamp)) THEN
 #ifdef LULCC
-            CALL WRITE_TimeVariables (jdate, jdate(1), casename, dir_restart)
+            IF (jdate(1) >= 2000) THEN
+               CALL WRITE_TimeVariables (jdate, jdate(1), casename, dir_restart)
+            ELSE
+               CALL WRITE_TimeVariables (jdate, (jdate(1)/5)*5, casename, dir_restart)
+            ENDIF
 #else
             CALL WRITE_TimeVariables (jdate, lc_year,  casename, dir_restart)
 #endif
@@ -584,6 +590,7 @@ PROGRAM CoLM
       CALL deallocate_TimeVariables  ()
       CALL deallocate_1D_Forcing     ()
       CALL deallocate_1D_Fluxes      ()
+      CALL mesh_free_mem             ()
 
 #if (defined CatchLateralFlow)
       CALL lateral_flow_final ()
