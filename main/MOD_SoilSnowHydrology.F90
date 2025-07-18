@@ -494,7 +494,7 @@ ENDIF
               pg_rain     ,sm          ,etr         ,qseva       ,qsdew       ,&
               qsubl       ,qfros       ,qseva_soil  ,qsdew_soil  ,qsubl_soil  ,&
               qfros_soil  ,qseva_snow  ,qsdew_snow  ,qsubl_snow  ,qfros_snow  ,&
-              fsno        ,fsat        ,rsur        ,rsur_se     ,rsur_ie     ,&
+              fsno        ,frcsat      ,rsur        ,rsur_se     ,rsur_ie     ,&
               rnof        ,&
               qinfl       ,ssi         ,pondmx      ,wimp        ,zwt         ,&
               wdsrf       ,wa          ,wetwat      ,&
@@ -613,7 +613,7 @@ ENDIF
         wetwat              ! water storage in wetland [mm]
 
    real(r8), intent(out) :: &
-        fsat             , &! fraction of saturation area
+        frcsat           , &! fraction of saturation area
         rsur             , &! surface runoff (mm h2o/s)
         rsur_se          , &! saturation excess surface runoff (mm h2o/s)
         rsur_ie          , &! infiltration excess surface runoff (mm h2o/s)
@@ -793,7 +793,7 @@ IF((patchtype<=1) .or. is_dry_lake)THEN   ! soil ground only
 
             CALL SurfaceRunoff_SIMTOP (nl_soil,wimp,porsl,psi0,hksati,fsatmax,fsatdcf,&
                z_soisno(1:),dz_soisno(1:),zi_soisno(0:),&
-               eff_porosity,icefrac,zwt,gwat,rsur,rsur_se,rsur_ie,topoweti,alp_twi,chi_twi,mu_twi,fsat,eta)
+               eff_porosity,icefrac,zwt,gwat,rsur,rsur_se,rsur_ie,topoweti,alp_twi,chi_twi,mu_twi,frcsat,eta)
 
             CALL SubsurfaceRunoff_SIMTOP (nl_soil, icefrac, dz_soisno(1:), zi_soisno(0:), &
                zwt, rsubst, hksati, topoweti, eta)
@@ -814,7 +814,7 @@ IF((patchtype<=1) .or. is_dry_lake)THEN   ! soil ground only
 
             CALL Runoff_XinAnJiang (&
                nl_soil, dz_soisno(1:nl_soil), eff_porosity(1:nl_soil), vol_liq(1:nl_soil), &
-               elvstd, gwat, deltim, rsur, rsubst)
+               elvstd, gwat, deltim, rsur, rsubst, frcsat)
 
             rsur_se = rsur
             rsur_ie = 0.
@@ -824,7 +824,7 @@ IF((patchtype<=1) .or. is_dry_lake)THEN   ! soil ground only
 
             CALL Runoff_SimpleVIC (&
                nl_soil, dz_soisno(1:nl_soil), eff_porosity(1:nl_soil), vol_liq(1:nl_soil), &
-               BVIC, gwat, deltim, rsur, rsubst)
+               BVIC, gwat, deltim, rsur, rsubst, frcsat)
 
             rsur_se = rsur
             rsur_ie = 0.
@@ -1121,7 +1121,7 @@ ELSE
             wa    = 0.
          ENDIF
 
-         fsat = 1.
+         frcsat = 1.
 
 #ifndef CatchLateralFlow
          IF (wdsrf > pondmx) THEN

@@ -23,7 +23,7 @@ CONTAINS
                                     z_soisno,dz_soisno,zi_soisno,&
                                     eff_porosity,icefrac,zwt,gwat,&
                                     rsur,rsur_se,rsur_ie,&
-                                    topoweti,alp_twi,chi_twi,mu_twi,fsat_out,eta_out)
+                                    topoweti,alp_twi,chi_twi,mu_twi,frcsat,eta_out)
 
 !=======================================================================
 !  the original code was provide by Robert E. Dickinson based on
@@ -67,7 +67,7 @@ CONTAINS
 
    real(r8), intent(in),  optional :: topoweti
    real(r8), intent(in),  optional :: alp_twi, chi_twi, mu_twi
-   real(r8), intent(out), optional :: fsat_out
+   real(r8), intent(out), optional :: frcsat
    real(r8), intent(out), optional :: eta_out
 
 !-------------------------- Local Variables ----------------------------
@@ -132,8 +132,8 @@ CONTAINS
 
       ENDIF
 
-      IF (present(fsat_out)) THEN
-         fsat_out = fsat
+      IF (present(frcsat)) THEN
+         frcsat = fsat
       ENDIF
 
 ! Maximum infiltration capacity
@@ -225,7 +225,7 @@ CONTAINS
 ! -------------------------------------------------------------------------
    SUBROUTINE Runoff_XinAnJiang ( &
          nl_soil, dz_soisno, eff_porosity, vol_liq, elvstd, gwat, deltim, &
-         rsur, rsubst)
+         rsur, rsubst, frcsat)
 
    USE MOD_Precision
    IMPLICIT NONE
@@ -243,6 +243,8 @@ CONTAINS
    real(r8), intent(out) :: rsur   ! surface runoff (mm h2o/s)
    real(r8), intent(out) :: rsubst ! subsurface runoff (mm h2o/s)
 
+   real(r8), intent(out), optional :: frcsat
+
    ! Local Variables
    real(r8) :: btopo, watin, w_int, wsat_int, wtmp, infil
    real(r8), parameter :: sigmin = 100.
@@ -250,18 +252,24 @@ CONTAINS
 
       watin = gwat * deltim / 1000.
 
+      btopo = (elvstd - sigmin) / (elvstd + sigmax)
+      btopo = min(max(btopo, 0.01), 0.5)
+
+      w_int    = sum(vol_liq     (1:6) * dz_soisno(1:6))
+      wsat_int = sum(eff_porosity(1:6) * dz_soisno(1:6))
+
+      w_int = max(min(w_int, wsat_int), 0.)
+
+      IF (present(frcsat)) THEN
+         frcsat = 1.-(1.-w_int/wsat_int)**(btopo/(1.+btopo))
+      ENDIF
+
       IF (watin <= 0.) THEN
 
          rsur   = 0.
          rsubst = 0.
 
       ELSE
-
-         btopo = (elvstd - sigmin) / (elvstd + sigmax)
-         btopo = min(max(btopo, 0.01), 0.5)
-
-         w_int    = sum(vol_liq     (1:6) * dz_soisno(1:6))
-         wsat_int = sum(eff_porosity(1:6) * dz_soisno(1:6))
 
          wtmp  = (1-w_int/wsat_int)**(1/(btopo+1)) - watin/((btopo+1)*wsat_int)
          infil = wsat_int - w_int - wsat_int * (max(0., wtmp))**(btopo+1)
@@ -279,7 +287,7 @@ CONTAINS
    ! -------------------------------------------------------------------------
    SUBROUTINE Runoff_SimpleVIC ( &
       nl_soil, dz_soisno, eff_porosity, vol_liq, BVIC, gwat, deltim, &
-      rsur, rsubst)
+      rsur, rsubst, frcsat)
 
    USE MOD_Precision
    IMPLICIT NONE
@@ -297,6 +305,8 @@ CONTAINS
    real(r8), intent(out) :: rsur   ! surface runoff (mm h2o/s)
    real(r8), intent(out) :: rsubst ! subsurface runoff (mm h2o/s)
 
+   real(r8), intent(out), optional :: frcsat
+
    ! Local Variables
    real(r8) :: btopo, watin, w_int, wsat_int, wtmp, infil
    real(r8) :: InfilExpFac, WaterDepthMax, WaterDepthInit, RunoffSurface, InfilVarTmp
@@ -304,14 +314,22 @@ CONTAINS
 
       watin = gwat * deltim / 1000. ! convert mm/s to m
 
+      w_int    = sum(vol_liq     (1:6) * dz_soisno(1:6))
+      wsat_int = sum(eff_porosity(1:6) * dz_soisno(1:6))
+
+      w_int = max(min(w_int, wsat_int), 0.)
+
+      InfilExpFac = BVIC / ( 1.0 + BVIC )
+
+      IF (present(frcsat)) THEN
+         frcsat = 1.-(1.-w_int/wsat_int)**InfilExpFac
+      ENDIF
+
       IF (watin <= 0.) THEN
          rsur   = 0.
          rsubst = 0.
       ELSE
-         w_int    = sum(vol_liq     (1:6) * dz_soisno(1:6))
-         wsat_int = sum(eff_porosity(1:6) * dz_soisno(1:6))
          ! fractional saturated area from soil moisture
-         InfilExpFac            = BVIC / ( 1.0 + BVIC )
          SoilSaturateFrac = 1.0 - (max(0.0, (1.0-(w_int/wsat_int))))**InfilExpFac
          SoilSaturateFrac = max(0.0, SoilSaturateFrac)
          SoilSaturateFrac = min(1.0, SoilSaturateFrac)
