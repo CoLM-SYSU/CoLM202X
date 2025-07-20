@@ -171,6 +171,13 @@ IF (DEF_USE_PFT .or. DEF_FAST_PC) THEN
                      lccpct_np(WETLAND)   = lccpct_patches(np,WETLAND)
                      lccpct_np(WATERBODY) = lccpct_patches(np,WATERBODY)
                      lccpct_np(GLACIERS)  = lccpct_patches(np,GLACIERS)
+
+                     !TODO: treat cropland separately for FAST_PC
+                     IF ( DEF_FAST_PC ) THEN
+                        lccpct_np(CROPLAND) = lccpct_patches(np,CROPLAND) &
+                                            + lccpct_patches(np,14)
+                        lccpct_np(1) = lccpct_np(1) - lccpct_np(CROPLAND)
+                     ENDIF
 ELSE
                      lccpct_np(:) = lccpct_patches(np,1:nlc)
 ENDIF
