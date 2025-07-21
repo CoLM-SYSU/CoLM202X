@@ -313,7 +313,7 @@ CONTAINS
 ! 1.1 Ponding water
 ! ------------------------------------------
       IF(DEF_USE_BEDROCK)THEN
-         CALL dbedrock_readin (dir_landdata)
+         CALL dbedrock_readin (dir_landdata, lc_year)
       ENDIF
 
       IF (p_is_worker) THEN
