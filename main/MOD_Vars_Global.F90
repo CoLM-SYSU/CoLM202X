@@ -24,6 +24,7 @@ MODULE MOD_Vars_Global
    integer, parameter :: URBAN     = 1
    integer, parameter :: WATERBODY = 16
    integer, parameter :: WETLAND   = 17
+   integer, parameter :: CROPLAND  = 7
 #else
    ! MODIS IGBP number of land cover category
    integer, parameter :: N_land_classification = 17
