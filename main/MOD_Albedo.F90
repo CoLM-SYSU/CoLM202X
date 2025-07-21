@@ -238,11 +238,11 @@ CONTAINS
       extkb     = 1.
       extkd     = 0.718
 
-      albsno    (:,:) = 0. !set initial snow albedo
-      albsno_pur(:,:) = 0. !set initial pure snow albedo
-      albsno_bc (:,:) = 0. !set initial BC   snow albedo
-      albsno_oc (:,:) = 0. !set initial OC   snow albedo
-      albsno_dst(:,:) = 0. !set initial dust snow albedo
+      albsno    (:,:) = 1. !set initial snow albedo
+      albsno_pur(:,:) = 1. !set initial pure snow albedo
+      albsno_bc (:,:) = 1. !set initial BC   snow albedo
+      albsno_oc (:,:) = 1. !set initial OC   snow albedo
+      albsno_dst(:,:) = 1. !set initial dust snow albedo
 
       ! soil and snow absorption
       ssoi      (:,:) = 0. !set initial soil absorption
@@ -376,15 +376,15 @@ ENDIF
                                       !  first estimate clean-snow albedo
             use_snicar_ad  = .true.   !  use true: use SNICAR_AD_RT, false: use SNICAR_RT
 
-            CALL SnowAlbedo(     use_snicar_frc ,use_snicar_ad  ,coszen         ,&
+            CALL SnowAlbedo(     use_snicar_frc ,use_snicar_ad  ,czen           ,&
                  albg(:,1)      ,albg(:,2)      ,snl            ,fsno           ,&
                  scv            ,wliq_soisno    ,wice_soisno    ,snw_rds        ,&
 
                  mss_cnc_bcphi  ,mss_cnc_bcpho  ,mss_cnc_ocphi  ,mss_cnc_ocpho  ,&
                  mss_cnc_dst1   ,mss_cnc_dst2   ,mss_cnc_dst3   ,mss_cnc_dst4   ,&
 
-                 albsno(:,1)    ,albsno(:,2)    ,albsno_pur(:,1),albsno_pur(:,2),&
-                 albsno_bc(:,1) ,albsno_bc(:,2) ,albsno_oc(:,1) ,albsno_oc(:,2) ,&
+                 albsno    (:,1),albsno    (:,2),albsno_pur(:,1),albsno_pur(:,2),&
+                 albsno_bc (:,1),albsno_bc (:,2),albsno_oc (:,1),albsno_oc (:,2),&
                  albsno_dst(:,1),albsno_dst(:,2),ssno_lyr(1,1,:),ssno_lyr(2,1,:),&
                  ssno_lyr(1,2,:),ssno_lyr(2,2,:))
 
@@ -1472,16 +1472,16 @@ ENDIF
       ! Initialize output because solar radiation only done IF coszen > 0
 
       DO ib = 1, numrad
-         albgrd(ib)     = 0._r8
-         albgri(ib)     = 0._r8
-         albgrd_pur(ib) = 0._r8
-         albgri_pur(ib) = 0._r8
-         albgrd_bc(ib)  = 0._r8
-         albgri_bc(ib)  = 0._r8
-         albgrd_oc(ib)  = 0._r8
-         albgri_oc(ib)  = 0._r8
-         albgrd_dst(ib) = 0._r8
-         albgri_dst(ib) = 0._r8
+         albgrd(ib)     = 1._r8
+         albgri(ib)     = 1._r8
+         albgrd_pur(ib) = 1._r8
+         albgri_pur(ib) = 1._r8
+         albgrd_bc(ib)  = 1._r8
+         albgri_bc(ib)  = 1._r8
+         albgrd_oc(ib)  = 1._r8
+         albgri_oc(ib)  = 1._r8
+         albgrd_dst(ib) = 1._r8
+         albgri_dst(ib) = 1._r8
          DO i=maxsnl+1,1,1
             flx_absdv(i) = 0._r8
             flx_absdn(i) = 0._r8

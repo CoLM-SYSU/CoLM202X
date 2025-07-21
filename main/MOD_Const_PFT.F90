@@ -1717,7 +1717,7 @@ MODULE MOD_Const_PFT
             /)
 
 
-   ! scheme 1: Zeng 2001, 2: Schenk and Jackson, 2002
+   ! scheme 1: Schenk and Jackson, 2002, 2: Zeng 2001
    integer, PRIVATE :: ROOTFR_SCHEME = 1
 
    !fraction of roots in each soil layer
