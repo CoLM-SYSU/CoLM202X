@@ -70,7 +70,7 @@ CONTAINS
 #ifdef SinglePoint
 #ifndef URBAN_MODEL
       IF (USE_SITE_LAI) THEN
-         iyear = findloc_ud(SITE_LAI_year == year)
+         iyear = minloc(abs(SITE_LAI_year-year), dim=1)
       ELSE
          iyear = findloc_ud(SITE_LAI_year == min(DEF_LAI_END_YEAR, max(DEF_LAI_START_YEAR,year)))
       ENDIF

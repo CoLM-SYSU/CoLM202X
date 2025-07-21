@@ -61,7 +61,7 @@ CreateClone()
                mkdir $DestPath/$DestName/bld/$files1
             fi
             cd $SourcePath/$SourceName/bld/$files1
-            if [ $files1 = CaMa -o $files1 = include -o $files1 = run -o $files1 = preprocess ];then
+            if [ $files1 = extends -o $files1 = include -o $files1 = run -o $files1 = preprocess ];then
                cp -pr * $DestPath/$DestName/bld/$files1/
             else
                if [ $files1 = postprocess ];then
