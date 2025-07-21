@@ -852,7 +852,6 @@ CONTAINS
             cropprod1c_p             (ps:pe) = 0.0
 
             leafn_xfer_p             (ps:pe) = 0.0
-            frootn_storage_p         (ps:pe) = 0.0
             frootn_xfer_p            (ps:pe) = 0.0
             livestemn_storage_p      (ps:pe) = 0.0
             livestemn_xfer_p         (ps:pe) = 0.0
