@@ -225,6 +225,7 @@ PROGRAM CoLM
 
 #ifdef LULCC
       lc_year = s_year
+      DEF_LC_YEAR = lc_year
 #else
       lc_year = DEF_LC_YEAR
 #endif
