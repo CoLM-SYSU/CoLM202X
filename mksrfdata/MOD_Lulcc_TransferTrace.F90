@@ -138,10 +138,10 @@ CONTAINS
          ! read the previous year land cover data
          ! TODO: Add IF statement for using different LC products
          ! IF use MODIS data THEN
-         CALL read_5x5_data (dir_5x5, suffix, grid_patch, 'LC', lcdatafr)
+         !CALL read_5x5_data (dir_5x5, suffix, grid_patch, 'LC', lcdatafr)
          ! ELSE
          ! 'LC_GLC' is not recomended for IGBP
-         !CALL read_5x5_data (dir_5x5, suffix, grid_patch, 'LC_GLC', lcdatafr)
+         CALL read_5x5_data (dir_5x5, suffix, grid_patch, 'LC_GLC', lcdatafr)
 
 #ifdef USEMPI
          CALL aggregation_data_daemon (grid_patch, data_i4_2d_in1 = lcdatafr)
@@ -241,7 +241,7 @@ CONTAINS
       DO ilc = 0, N_land_classification
          CALL srfdata_map_and_write (lccpct_matrix(:,ilc), landpatch%settyp, typindex, &
             m_patch2diag, -1.0e36_r8, lndname, 'lccpct_matrix', compress = 0, &
-            write_mode = 'one', lastdimname = 'source_patch', lastdimvalue = ilc)
+            write_mode = 'one', defval=0._r8, lastdimname = 'source_patch', lastdimvalue = ilc)
       ENDDO
       deallocate(typindex)
 #endif
