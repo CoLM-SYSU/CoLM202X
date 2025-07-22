@@ -257,7 +257,7 @@ CONTAINS
 !      file_ozone = trim(DEF_dir_runtime) // '/Ozone/Global/OZONE-setgrid.nc'
       file_ozone = '/share/home/dq010/CoLM/data/rawdata/CROP-NITRIF/CoLMruntime/Ozone/Global/OZONE-setgrid.nc'
       IF(time%sec/10800 .ne. (time%sec+int(deltim))/10800)then
-         itime = (time%sec - int(deltim)) / 10800 + (amin1(time%day,365) - 1) * 8 + 1
+         itime = (time%sec - int(deltim)) / 10800 + (min(time%day,365) - 1) * 8 + 1
          CALL ncio_read_block_time (file_ozone, 'OZONE', grid_ozone, itime, f_ozone)
 #ifdef RangeCheck
          CALL check_block_data ('Ozone', f_ozone)
