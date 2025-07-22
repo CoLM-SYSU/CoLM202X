@@ -97,6 +97,9 @@ MODULE MOD_Vars_1DAccFluxes
    real(r8), allocatable :: a_rain      (:)
    real(r8), allocatable :: a_snow      (:)
 
+   real(r8), allocatable :: a_o3uptakesun(:)
+   real(r8), allocatable :: a_o3uptakesha(:)
+
 #ifdef URBAN_MODEL
    real(r8), allocatable :: a_t_room    (:) !temperature of inner building [K]
    real(r8), allocatable :: a_tafu      (:) !temperature of outer building [K]
@@ -504,6 +507,10 @@ CONTAINS
             allocate (a_qref      (numpatch))
             allocate (a_rain      (numpatch))
             allocate (a_snow      (numpatch))
+
+            allocate (a_o3uptakesun(numpatch))
+            allocate (a_o3uptakesha(numpatch))
+
 #ifdef URBAN_MODEL
             IF (numurban > 0) THEN
                allocate (a_t_room    (numurban))
@@ -916,6 +923,9 @@ CONTAINS
             deallocate (a_qref      )
             deallocate (a_rain      )
             deallocate (a_snow      )
+
+            deallocate (a_o3uptakesun)
+            deallocate (a_o3uptakesha)
 #ifdef URBAN_MODEL
             IF (numurban > 0) THEN
                deallocate (a_t_room    )
@@ -1329,6 +1339,9 @@ CONTAINS
             a_qref      (:) = spval
             a_rain      (:) = spval
             a_snow      (:) = spval
+
+            a_o3uptakesun(:) = spval
+            a_o3uptakesha(:) = spval
 
 #ifdef URBAN_MODEL
             IF (numurban > 0) THEN
@@ -1831,6 +1844,11 @@ CONTAINS
 
             CALL acc1d (forc_rain, a_rain )
             CALL acc1d (forc_snow, a_snow )
+
+            IF (DEF_USE_OZONESTRESS)THEN
+               CALL acc1d(o3uptakesun,a_o3uptakesun)
+               CALL acc1d(o3uptakesha,a_o3uptakesha)
+            ENDIF
 
 #ifdef URBAN_MODEL
             IF (numurban > 0) THEN

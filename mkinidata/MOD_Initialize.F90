@@ -1267,7 +1267,7 @@ CONTAINS
                ,vegwp(1:,i),gs0sun(i),gs0sha(i)&
 !END plant hydraulic variables
                ,t_grnd(i),tleaf(i),ldew(i),ldew_rain(i),ldew_snow(i),fwet_snow(i),sag(i),scv(i)&
-               ,snowdp(i),fveg(i),fsno(i),sigf(i),green(i),lai(i),sai(i),coszen(i)&
+               ,snowdp(i),fveg(i),fsno(i),sigf(i),green(i),lai(i),sai(i),lai_old(i),coszen(i)&
                ,snw_rds(:,i),mss_bcpho(:,i),mss_bcphi(:,i),mss_ocpho(:,i),mss_ocphi(:,i)&
                ,mss_dst1(:,i),mss_dst2(:,i),mss_dst3(:,i),mss_dst4(:,i)&
                ,alb(1:,1:,i),ssun(1:,1:,i),ssha(1:,1:,i)&

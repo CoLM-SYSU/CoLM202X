@@ -559,6 +559,9 @@ MODULE MOD_Namelist
       logical :: etrsun                           = .true.
       logical :: etrsha                           = .true.
 
+      logical :: o3uptakesun                      = .true.
+      logical :: o3uptakesha                      = .true.
+
       logical :: leafc                            = .true.
       logical :: leafc_storage                    = .true.
       logical :: leafc_xfer                       = .true.
@@ -2018,6 +2021,10 @@ CONTAINS
       CALL sync_hist_vars_one (DEF_hist_vars%soil3nCap_vr                    , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%cwdnCap_vr                      , set_defaults)
 #endif
+      IF(DEF_USE_OZONESTRESS)THEN
+         CALL sync_hist_vars_one (DEF_hist_vars%o3uptakesun                  , set_defaults)
+         CALL sync_hist_vars_one (DEF_hist_vars%o3uptakesha                  , set_defaults)
+      ENDIF
 
       CALL sync_hist_vars_one (DEF_hist_vars%t_soisno    , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%wliq_soisno , set_defaults)

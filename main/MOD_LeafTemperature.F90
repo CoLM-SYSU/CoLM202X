@@ -985,9 +985,9 @@ ENDIF
 
       IF(DEF_USE_OZONESTRESS)THEN
          CALL CalcOzoneStress(o3coefv_sun,o3coefg_sun,forc_ozone,psrf,th,ram,&
-                              rssun,rb,lai,lai_old,ivt,o3uptakesun,deltim)
+                              rssun,rb,lai,lai_old,ivt,o3uptakesun,sabv,deltim)
          CALL CalcOzoneStress(o3coefv_sha,o3coefg_sha,forc_ozone,psrf,th,ram,&
-                              rssha,rb,lai,lai_old,ivt,o3uptakesha,deltim)
+                              rssha,rb,lai,lai_old,ivt,o3uptakesha,sabv,deltim)
          lai_old  = lai
          assimsun = assimsun * o3coefv_sun
          assimsha = assimsha * o3coefv_sha
