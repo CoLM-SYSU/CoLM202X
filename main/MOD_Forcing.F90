@@ -226,7 +226,7 @@ CONTAINS
       IF (DEF_USE_Forcing_Downscaling) THEN
 
          IF (p_is_worker .and. (numpatch > 0)) THEN
-            forc_topo = topoelv
+            forc_topo = elvmean
             WHERE(forc_topo == spval) forc_topo = 0.
          ENDIF
 

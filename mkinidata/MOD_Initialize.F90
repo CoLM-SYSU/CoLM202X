@@ -313,7 +313,7 @@ CONTAINS
 ! 1.1 Ponding water
 ! ------------------------------------------
       IF(DEF_USE_BEDROCK)THEN
-         CALL dbedrock_readin (dir_landdata)
+         CALL dbedrock_readin (dir_landdata, lc_year)
       ENDIF
 
       IF (p_is_worker) THEN
@@ -343,9 +343,6 @@ CONTAINS
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
       IF (p_is_worker) THEN
          IF (numpatch > 0) THEN
-
-            psi0(:,:) = -1.0
-
             DO ipatch = 1, numpatch
                DO i = 1, nl_soil
                   CALL get_derived_parameters_vGM ( &
@@ -386,14 +383,17 @@ CONTAINS
 ! 1.5 Initialize topography data
 ! ................................
 #ifdef SinglePoint
-      topoelv(:) = SITE_elevation
-      topostd(:) = SITE_elvstd
+      elvmean(:)  = SITE_elevation
+      elvstd (:)  = SITE_elvstd
+      slpratio(:) = SITE_sloperatio
 #else
       write(cyear,'(i4.4)') lc_year
-      ftopo = trim(dir_landdata)//'/topography/'//trim(cyear)//'/topography_patches.nc'
-      CALL ncio_read_vector (ftopo, 'topography_patches', landpatch, topoelv)
-      ftopo = trim(dir_landdata)//'/topography/'//trim(cyear)//'/topostd_patches.nc'
-      CALL ncio_read_vector (ftopo, 'topostd_patches', landpatch, topostd)
+      ftopo = trim(dir_landdata)//'/topography/'//trim(cyear)//'/elevation_patches.nc'
+      CALL ncio_read_vector (ftopo, 'elevation_patches', landpatch, elvmean)
+      ftopo = trim(dir_landdata)//'/topography/'//trim(cyear)//'/elvstd_patches.nc'
+      CALL ncio_read_vector (ftopo, 'elvstd_patches', landpatch, elvstd)
+      ftopo = trim(dir_landdata)//'/topography/'//trim(cyear)//'/sloperatio_patches.nc'
+      CALL ncio_read_vector (ftopo, 'sloperatio_patches', landpatch, slpratio)
 #endif
 ! ......................................
 ! 1.5 Initialize topography factor data
@@ -449,54 +449,8 @@ CONTAINS
       ! (see Niu et al., 2005)
       IF (DEF_Runoff_SCHEME == 0) THEN
 
-         file_simtop_para = trim(DEF_dir_runtime) // '/SimTop_Parameters.nc'
+         IF (DEF_SimTOP_method == 0) THEN
 
-         IF (p_is_master) THEN
-            inquire (file=trim(file_simtop_para), exist=fexist)
-         ENDIF
-#ifdef USEMPI
-         CALL mpi_bcast (fexist, 1, MPI_LOGICAL, p_address_master, p_comm_glb, p_err)
-#endif
-
-         IF (fexist) THEN
-
-            CALL g_simtop_para%define_from_file (file_simtop_para, &
-               latname = 'latitude', lonname = 'longitude')
-
-            IF (p_is_io) THEN
-               CALL allocate_block_data (g_simtop_para, fsatmax_grid)
-               CALL allocate_block_data (g_simtop_para, fsatdcf_grid)
-               CALL ncio_read_block (file_simtop_para, 'fsatmax', g_simtop_para, fsatmax_grid)
-               CALL ncio_read_block (file_simtop_para, 'fsatdcf', g_simtop_para, fsatdcf_grid)
-            ENDIF
-
-            IF (p_is_master) THEN
-               CALL ncio_get_attr (file_simtop_para, 'fsatmax', '_FillValue', filval)
-            ENDIF
-#ifdef USEMPI
-            CALL mpi_bcast (filval, 1, MPI_REAL8, p_address_master, p_comm_glb, p_err)
-#endif
-
-            CALL map_simtop_para%build_arealweighted (g_simtop_para, landpatch)
-            CALL map_simtop_para%set_missing_value   (fsatmax_grid, filval)
-
-            CALL map_simtop_para%grid2pset (fsatmax_grid, fsatmax)
-            CALL map_simtop_para%grid2pset (fsatdcf_grid, fsatdcf)
-
-            IF (p_is_worker) THEN
-               IF (numpatch > 0) THEN
-                  WHERE (fsatmax <= 0) fsatmax = 0.4
-                  WHERE (fsatmax >= 1) fsatmax = 0.4
-                  WHERE (fsatdcf <= 0) fsatdcf = 0.53
-                  WHERE (fsatdcf >= 1) fsatdcf = 0.53
-               ENDIF
-            ENDIF
-
-#ifdef RangeCheck
-            CALL check_vector_data ('maximum saturated fraction', fsatmax)
-            CALL check_vector_data ('fsat decay factor         ', fsatdcf)
-#endif
-         ELSE
             IF (p_is_worker) THEN
                IF (numpatch > 0) THEN
                   ! equal to 'wtfact = 0.38' and 'fff = 0.5'
@@ -504,6 +458,43 @@ CONTAINS
                   fsatdcf(:) = 0.125
                ENDIF
             ENDIF
+
+         ELSEIF (DEF_SimTOP_method == 1) THEN
+
+            ftopo = trim(dir_landdata)//'/topography/'//trim(cyear)//'/fsatmax_patches.nc'
+            CALL ncio_read_vector (ftopo, 'fsatmax_patches', landpatch, fsatmax)
+
+            ftopo = trim(dir_landdata)//'/topography/'//trim(cyear)//'/fsatdcf_patches.nc'
+            CALL ncio_read_vector (ftopo, 'fsatdcf_patches', landpatch, fsatdcf)
+
+            ftopo = trim(dir_landdata)//'/topography/'//trim(cyear)//'/mean_twi_patches.nc'
+            CALL ncio_read_vector (ftopo, 'mean_twi_patches', landpatch, topoweti)
+
+#ifdef RangeCheck
+            CALL check_vector_data ('maximum saturated fraction', fsatmax )
+            CALL check_vector_data ('fsat decay factor         ', fsatdcf )
+            CALL check_vector_data ('topographic wetness index ', topoweti)
+#endif
+
+         ELSEIF (DEF_SimTOP_method == 2) THEN
+
+            ftopo = trim(dir_landdata)//'/topography/'//trim(cyear)//'/mean_twi_patches.nc'
+            CALL ncio_read_vector (ftopo, 'mean_twi_patches', landpatch, topoweti)
+
+            ftopo = trim(dir_landdata)//'/topography/'//trim(cyear)//'/alp_twi_patches.nc'
+            CALL ncio_read_vector (ftopo, 'alp_twi_patches', landpatch, alp_twi)
+
+            ftopo = trim(dir_landdata)//'/topography/'//trim(cyear)//'/chi_twi_patches.nc'
+            CALL ncio_read_vector (ftopo, 'chi_twi_patches', landpatch, chi_twi)
+
+            ftopo = trim(dir_landdata)//'/topography/'//trim(cyear)//'/mu_twi_patches.nc'
+            CALL ncio_read_vector (ftopo, 'mu_twi_patches', landpatch, mu_twi)
+
+            CALL check_vector_data ('topographic wetness index  ', topoweti)
+            CALL check_vector_data ('twi alpha in three gamma   ', alp_twi )
+            CALL check_vector_data ('twi chi   in three gamma   ', chi_twi )
+            CALL check_vector_data ('twi mu    in three gamma   ', mu_twi  )
+
          ENDIF
       ENDIF
 

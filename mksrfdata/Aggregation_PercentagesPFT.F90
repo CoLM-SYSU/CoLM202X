@@ -63,11 +63,9 @@ SUBROUTINE Aggregation_PercentagesPFT (gland, dir_rawdata, dir_model_landdata, l
    integer  :: ipatch, ipc, ipft, p
    real(r8) :: sumarea
 #ifdef SrfdataDiag
+   integer :: typpft(0:N_PFT-1)
 #ifdef CROP
    integer :: typcrop(N_CFT), ityp
-   integer :: typpft(0:N_PFT+N_CFT-1)
-#else
-   integer :: typpft(0:N_PFT-1)
 #endif
 #endif
 
@@ -160,15 +158,13 @@ SUBROUTINE Aggregation_PercentagesPFT (gland, dir_rawdata, dir_model_landdata, l
       CALL ncio_define_dimension_vector (lndname, landpft, 'pft')
       CALL ncio_write_vector (lndname, 'pct_pfts', 'pft', &
          landpft, pct_pfts, DEF_Srfdata_CompressLevel)
+
 #ifdef SrfdataDiag
-#ifdef CROP
-      typpft = (/(ipft, ipft = 0, N_PFT+N_CFT-1)/)
-#else
       typpft = (/(ipft, ipft = 0, N_PFT-1)/)
-#endif
-      lndname = trim(dir_model_landdata)//'/diag/pct_pfts_'//trim(cyear)//'.nc'
+      lndname = trim(dir_model_landdata)//'/diag/pftfrac_elm_'//trim(cyear)//'.nc'
       CALL srfdata_map_and_write (pct_pfts, landpft%settyp, typpft, m_pft2diag, &
-         -1.0e36_r8, lndname, 'pctpfts', compress = 1, write_mode = 'one')
+         -1.0e36_r8, lndname, 'pftfrac_elm', compress = 1, write_mode = 'one',  &
+         stat_mode = 'fraction', pctshared = landpft%pctshared)
 #endif
 
       IF (p_is_worker) THEN
@@ -183,13 +179,14 @@ SUBROUTINE Aggregation_PercentagesPFT (gland, dir_rawdata, dir_model_landdata, l
       CALL ncio_create_file_vector (lndname, landpatch)
       CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
       CALL ncio_write_vector (lndname, 'pct_crops', 'patch', &
-         landpatch, pctshrpch, DEF_Srfdata_CompressLevel)
+         landpatch, cropfrac, DEF_Srfdata_CompressLevel)
 
 #ifdef SrfdataDiag
       typcrop = (/(ityp, ityp = 1, N_CFT)/)
-      lndname = trim(dir_model_landdata) // '/diag/pct_crop_patch_' // trim(cyear) // '.nc'
-      CALL srfdata_map_and_write (pctshrpch, cropclass, typcrop, m_patch2diag, &
-         -1.0e36_r8, lndname, 'pct_crop_patch', compress = 1, write_mode = 'one')
+      lndname = trim(dir_model_landdata) // '/diag/cropfrac_elm_' // trim(cyear) // '.nc'
+      CALL srfdata_map_and_write (cropfrac, cropclass, typcrop, m_patch2diag,   &
+         -1.0e36_r8, lndname, 'cropfrac_elm', compress = 1, write_mode = 'one', &
+         stat_mode = 'fraction', pctshared = landpatch%pctshared)
 #endif
 #endif
 
