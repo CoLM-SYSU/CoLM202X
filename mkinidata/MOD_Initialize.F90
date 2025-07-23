@@ -42,6 +42,9 @@ CONTAINS
    USE MOD_Vars_PFTimeInvariants
    USE MOD_Vars_PFTimeVariables
 #endif
+#ifdef DataAssimilation
+   USE MOD_DA_Vars_TimeVariables
+#endif
    USE MOD_Const_LC
    USE MOD_Const_PFT
    USE MOD_TimeManager
@@ -265,6 +268,9 @@ CONTAINS
 
       CALL allocate_TimeInvariants
       CALL allocate_TimeVariables
+#ifdef DataAssimilation
+      CALL allocate_TimeVariables_ens
+#endif
 
 ! ---------------------------------------------------------------
 ! 1. INITIALIZE TIME INVARIANT VARIABLES
@@ -1465,17 +1471,105 @@ CONTAINS
 
 #endif
 
+#ifdef DataAssimilation
+      ! initialize the ensemble variables
+      IF (p_is_worker) THEN
+         DO i = 1, num_ens
+            z_sno_ens(:, i, :) = z_sno
+            dz_sno_ens(:, i, :) = dz_sno
+            t_soisno_ens(:, i, :) = t_soisno
+            wliq_soisno_ens(:, i, :) = wliq_soisno
+            wice_soisno_ens(:, i, :) = wice_soisno
+            smp_ens(:, i, :) = smp
+            hk_ens(:, i, :) = hk
+
+            vegwp_ens(:, i, :) = vegwp
+            gs0sun_ens(i, :) = gs0sun
+            gs0sha_ens(i, :) = gs0sha
+
+            t_grnd_ens(i, :) = t_grnd
+            tleaf_ens(i, :) = tleaf
+            ldew_ens(i, :) = ldew
+            ldew_rain_ens(i, :) = ldew_rain
+            ldew_snow_ens(i, :) = ldew_snow
+            fwet_snow_ens(i, :) = fwet_snow
+            sag_ens(i, :) = sag
+            scv_ens(i, :) = scv
+            snowdp_ens(i, :) = snowdp
+            fveg_ens(i, :) = fveg
+            fsno_ens(i, :) = fsno
+            sigf_ens(i, :) = sigf
+            green_ens(i, :) = green
+            lai_ens(i, :) = lai
+            tlai_ens(i, :) = tlai
+            sai_ens(i, :) = sai
+            tsai_ens(i, :) = tsai
+            coszen_ens(i, :) = coszen
+            alb_ens(:, :, i, :) = alb
+            ssun_ens(:, :, i, :) = ssun
+            ssha_ens(:, :, i, :) = ssha
+            ssoi_ens(:, :, i, :) = ssoi
+            ssno_ens(:, :, i, :) = ssno
+            thermk_ens(i, :) = thermk
+            extkb_ens(i, :) = extkb
+            extkd_ens(i, :) = extkd
+            zwt_ens(i, :) = zwt
+            wa_ens(i, :) = wa
+            wetwat_ens(i, :) = wetwat
+            wdsrf_ens(i, :) = wdsrf
+            rss_ens(i, :) = rss
+
+            t_lake_ens(:, i, :) = t_lake
+            lake_icefrac_ens(:, i, :) = lake_icefrac
+            savedtke1_ens(i, :) = savedtke1
+
+            snw_rds_ens(:, i, :) = snw_rds
+            mss_bcpho_ens(:, i, :) = mss_bcpho
+            mss_bcphi_ens(:, i, :) = mss_bcphi
+            mss_ocpho_ens(:, i, :) = mss_ocpho
+            mss_ocphi_ens(:, i, :) = mss_ocphi
+            mss_dst1_ens(:, i, :) = mss_dst1
+            mss_dst2_ens(:, i, :) = mss_dst2
+            mss_dst3_ens(:, i, :) = mss_dst3
+            mss_dst4_ens(:, i, :) = mss_dst4
+            ssno_lyr_ens(:, :, :, i, :) = ssno_lyr
+
+            trad_ens(i, :) = trad
+            tref_ens(i, :) = tref
+            qref_ens(i, :) = qref
+            rst_ens(i, :) = rst
+            emis_ens(i, :) = emis
+            z0m_ens(i, :) = z0m
+            zol_ens(i, :) = zol
+            rib_ens(i, :) = rib
+            ustar_ens(i, :) = ustar
+            qstar_ens(i, :) = qstar
+            tstar_ens(i, :) = tstar
+            fm_ens(i, :) = fm
+            fh_ens(i, :) = fh
+            fq_ens(i, :) = fq
+         END DO
+      END IF
+#endif
+
+
 ! ...............................................................
 ! 2.6 Write out the model variables for restart run [histTimeVar]
 ! ...............................................................
 
 #ifdef RangeCheck
       CALL check_TimeVariables ()
+#ifdef DataAssimilation
+      CALL check_TimeVariables_ens ()
+#endif
 #endif
 
       IF ( .not. present(lulcc_call) ) THEN
          ! only be called in running MKINI, LULCC will be executed later
          CALL WRITE_TimeVariables (idate, lc_year, casename, dir_restart)
+#ifdef DataAssimilation
+         CALL WRITE_TimeVariables_ens (idate, lc_year, casename, dir_restart)
+#endif
       ENDIF
 
 #ifdef USEMPI
@@ -1492,6 +1586,9 @@ CONTAINS
          ! only be called in running MKINI, LULCC will be executed later
          CALL deallocate_TimeInvariants
          CALL deallocate_TimeVariables
+#ifdef DataAssimilation
+         CALL deallocate_TimeVariables_ens
+#endif
       ENDIF
 
       IF (allocated(z_soisno )) deallocate (z_soisno )

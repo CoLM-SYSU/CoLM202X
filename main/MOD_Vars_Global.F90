@@ -117,6 +117,10 @@ MODULE MOD_Vars_Global
    real(r8), parameter :: irrig_max_cphase = 4._r8           ! crop phenology when end irrigation
    integer , parameter :: irrig_time_per_day = 14400         ! irrigation last time
 
+#ifdef DataAssimilation
+   integer, parameter :: num_ens = 20
+#endif
+
    ! PUBLIC MEMBER FUNCTIONS:
    PUBLIC :: Init_GlobalVars
 

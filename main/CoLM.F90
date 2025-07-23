@@ -89,8 +89,10 @@ PROGRAM CoLM
    USE MOD_SnowSnicar, only: SnowAge_init, SnowOptics_init
    USE MOD_Aerosol, only: AerosolDepInit, AerosolDepReadin
 
+   USE MOD_DA_ObsOperator, only: calc_brt_temp
 #ifdef DataAssimilation
-   USE MOD_DataAssimilation
+   USE MOD_DA_Main
+   USE MOD_DA_Vars_TimeVariables
 #endif
 
 #ifdef USEMPI
@@ -292,6 +294,12 @@ PROGRAM CoLM
       CALL allocate_TimeVariables  ()
       CALL READ_TimeVariables (jdate, lc_year, casename, dir_restart)
 
+      ! Read in the model time varying data (model state variables) for ensemble
+#ifdef DataAssimilation
+      CALL allocate_TimeVariables_ens()
+      CALL READ_TimeVariables_ens(jdate, lc_year, casename, dir_restart)
+#endif
+
       ! Read in SNICAR optical and aging parameters
       IF (DEF_USE_SNICAR) THEN
          CALL SnowOptics_init( DEF_file_snowoptics ) ! SNICAR optical parameters
@@ -353,7 +361,8 @@ PROGRAM CoLM
 #endif
 
 #ifdef DataAssimilation
-      CALL init_DataAssimilation ()
+      ! initialize data assimilation
+      CALL init_DA ()
 #endif
 
       ! ======================================================================
@@ -444,7 +453,11 @@ PROGRAM CoLM
          ! Call CoLM driver
          ! ----------------------------------------------------------------------
          IF (p_is_worker) THEN
+#ifdef DataAssimilation
+            CALL DADRIVER (idate, deltim, dolai, doalb, dosst, oroflag)
+#else
             CALL CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oroflag)
+#endif
          ENDIF
 
 
@@ -457,9 +470,11 @@ PROGRAM CoLM
 #endif
 
 #ifdef DataAssimilation
-         CALL do_DataAssimilation (idate, deltim)
+         CALL run_DA (idate, deltim)
 #endif
+         CALL calc_brt_temp ()
 
+         
          ! Write out the model histroy file
          ! ----------------------------------------------------------------------
          CALL hist_out (idate, deltim, itstamp, etstamp, ptstamp, dir_hist, casename)
@@ -540,6 +555,9 @@ PROGRAM CoLM
 #else
             CALL WRITE_TimeVariables (jdate, lc_year,  casename, dir_restart)
 #endif
+#ifdef DataAssimilation
+            CALL WRITE_TimeVariables_ens (jdate, lc_year, casename, dir_restart)
+#endif
 #if (defined CaMa_Flood)
             IF (p_is_master) THEN
                CALL colm_cama_write_restart (jdate, lc_year,  casename, dir_restart)
@@ -549,6 +567,9 @@ PROGRAM CoLM
 
 #ifdef RangeCheck
          CALL check_TimeVariables ()
+#ifdef DataAssimilation
+         CALL check_TimeVariables_ens()
+#endif
 #endif
 
 #ifdef USEMPI
@@ -588,6 +609,10 @@ PROGRAM CoLM
 
       CALL deallocate_TimeInvariants ()
       CALL deallocate_TimeVariables  ()
+#ifdef DataAssimilation
+      CALL deallocate_TimeVariables_ens()
+      CALL end_DA()
+#endif
       CALL deallocate_1D_Forcing     ()
       CALL deallocate_1D_Fluxes      ()
       CALL mesh_free_mem             ()
@@ -610,10 +635,6 @@ PROGRAM CoLM
 
 #if (defined CaMa_Flood)
       CALL colm_cama_exit ! finalize CaMa-Flood
-#endif
-
-#ifdef DataAssimilation
-      CALL final_DataAssimilation ()
 #endif
 
       IF (p_is_master) THEN
