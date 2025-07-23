@@ -1125,8 +1125,6 @@ CONTAINS
             Q = 0.35*(1.0 - exp(-0.6*rgh_surf**2*fghz))     !    [1](16)
          END IF
 
-         
-
          ! calculate rough surface reflectivity
          r_r(1) = (Q*r_s(2) + (1.-Q)*r_s(1))*exp(-hr*cos(theta)**nrh(patchclass))     !  [1](6)          !  hr has different value, see cmem_init.f90:314
          r_r(2) = (Q*r_s(1) + (1.-Q)*r_s(2))*exp(-hr*cos(theta)**nrv(patchclass))     !  [1](6)
