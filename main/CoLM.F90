@@ -89,10 +89,10 @@ PROGRAM CoLM
    USE MOD_SnowSnicar, only: SnowAge_init, SnowOptics_init
    USE MOD_Aerosol, only: AerosolDepInit, AerosolDepReadin
 
-   USE MOD_DA_ObsOperator, only: calc_brt_temp
 #ifdef DataAssimilation
    USE MOD_DA_Main
    USE MOD_DA_Vars_TimeVariables
+   USE MOD_DA_Vars_1DFluxes
 #endif
 
 #ifdef USEMPI
@@ -319,6 +319,9 @@ PROGRAM CoLM
       ! Initialize history data module
       CALL hist_init (dir_hist)
       CALL allocate_1D_Fluxes ()
+#ifdef DataAssimilation
+      CALL allocate_1D_Fluxes_ens ()
+#endif
 
       CALL CheckEqb_init ()
 
@@ -472,8 +475,6 @@ PROGRAM CoLM
 #ifdef DataAssimilation
          CALL run_DA (idate, deltim)
 #endif
-         CALL calc_brt_temp ()
-
          
          ! Write out the model histroy file
          ! ----------------------------------------------------------------------
@@ -490,6 +491,9 @@ PROGRAM CoLM
             ! Deallocate all Forcing and Fluxes variable of last year
             CALL deallocate_1D_Forcing
             CALL deallocate_1D_Fluxes
+#ifdef DataAssimilation
+            CALL deallocate_1D_Fluxes_ens
+#endif
 
             CALL forcing_final ()
             CALL hist_final    ()

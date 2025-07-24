@@ -1,7 +1,19 @@
 #include <define.h>
 
+#ifdef DataAssimilation
 MODULE MOD_DA_GRACE
-
+!-----------------------------------------------------------------------------
+! DESCRIPTION:
+!    Data assimilation of terrestrial water storge from GRACE satellite
+!
+! REFERENCES:
+!    [1] Su, Y.; Zhang, S. Optimizing Parameters in the Common Land Model 
+!        by Using Gravity Recovery and Climate Experiment Satellite Observations. 
+!        Land 2024, 13, 508.
+!
+! AUTHOR:
+!   Shupeng Zhang: Initial version
+!-----------------------------------------------------------------------------
    USE MOD_DataType
    USE MOD_SpatialMapping
 
@@ -430,3 +442,4 @@ CONTAINS
    END SUBROUTINE retrieve_yymm_from_days
 
 END MODULE MOD_DA_GRACE
+#endif

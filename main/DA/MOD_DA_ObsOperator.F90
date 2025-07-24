@@ -1,5 +1,6 @@
 #include <define.h>
 
+#ifdef DataAssimilation
 MODULE MOD_DA_ObsOperator
 !-----------------------------------------------------------------------
 ! DESCRIPTION:
@@ -18,7 +19,6 @@ MODULE MOD_DA_ObsOperator
    SAVE
 ! public functions
    PUBLIC   :: forward
-   PUBLIC   :: calc_brt_temp
 
 ! local variables
    real(r8) :: fghz
@@ -293,7 +293,7 @@ CONTAINS
       k = 2*pi/lam             ! wave number (rad/m)
       kcm = k*100.0           ! wave number (cm-1)
       kr = k*(0.5*1e-3)
-      hr = (2.0d0*kcm*ip_rgh_surf)**2.0d0
+      hr = (2.0d0*kcm*rgh_surf)**2.0d0
    END SUBROUTINE calc_parameters
 
 !-----------------------------------------------------------------------
@@ -1100,6 +1100,7 @@ CONTAINS
 !       Vol.86, 5277-5287
 !-----------------------------------------------------------------------
       USE MOD_Precision
+      USE MOD_DA_Const
       IMPLICIT NONE
 
 !------------------------ Dummy Argument ------------------------------
@@ -1109,7 +1110,6 @@ CONTAINS
       real(r8), intent(out) :: r_r(2)      ! reflectivities of rough surfaces for H and V polarizations
 
 !----------------------- Local Variables -------------------------------
-      real(r8) :: rgh_surf = 2.2         ! soil surface roughness (cm)
       real(r8) :: Q                      ! parameter for polarization mixing
       real(r8) :: hr
 
@@ -1135,47 +1135,6 @@ CONTAINS
 
    END SUBROUTINE rough_reflectivity
 
-
-
 !-----------------------------------------------------------------------
-
-   SUBROUTINE calc_brt_temp ()
-
-!-----------------------------------------------------------------------
-      USE MOD_Precision
-      USE MOD_Const_Physical
-      USE MOD_Vars_Global, only: nl_soil, nl_lake, maxsnl, spval
-      USE MOD_DA_Const
-      USE MOD_Vars_TimeVariables
-      USE MOD_Vars_TimeInvariants
-      USE MOD_LandPatch
-      IMPLICIT NONE
-
-      real(r8) :: theta, fghz
-      integer :: np
-!-----------------------------------------------------------------------
-      IF (DEF_DA_SMAP) THEN
-         theta = 40.0*pi/180.0_r8   
-         fghz = 1.4_r8              
-      ENDIF
-      IF (DEF_DA_FY3D) THEN
-         theta = 53.0*pi/180.0_r8   
-         fghz = 10.65              
-      ENDIF
-
-      DO np = 1, numpatch
-         CALL forward( &
-            patchtype(np), patchclass(np), dz_sno(:,np), &
-            forc_topo(np), htop(np), &
-            tref(np), t_soisno(:,np), tleaf(np), &
-            wliq_soisno(:,np), wice_soisno(:,np), h2osoi(:,np), &
-            snowdp(np), lai(np), sai(np), &
-            vf_clay(:,np), vf_sand(:,np), BD_all(:,np), porsl(:,np), &
-            theta, fghz, &
-            brt_temp(1,np), brt_temp(2,np))
-      ENDDO
-      
-   END SUBROUTINE calc_brt_temp
-
-
 END MODULE MOD_DA_ObsOperator
+#endif

@@ -443,6 +443,7 @@ MODULE MOD_Namelist
    logical            :: DEF_DA_SMAP    = .false.
    logical            :: DEF_DA_FY3D    = .false.
    logical            :: DEF_DA_SYNOP   = .false.
+   integer            :: DEF_DA_ENS     = 20
 
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ! ----- Part 14: history and restart -----
@@ -1046,6 +1047,7 @@ CONTAINS
       DEF_DA_SMAP,                            &
       DEF_DA_FY3D,                            &
       DEF_DA_SYNOP,                           &
+      DEF_DA_ENS,                             &
 
       DEF_forcing_namelist,                   &
 
@@ -1573,6 +1575,7 @@ CONTAINS
       CALL mpi_bcast (DEF_DA_SMAP                            ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_DA_FY3D                            ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_DA_SYNOP                           ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_DA_ENS                             ,1   ,mpi_integer   ,p_address_master ,p_comm_glb ,p_err)
 
       CALL mpi_bcast (DEF_Aerosol_Readin                     ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_Aerosol_Clim                       ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)

@@ -1472,9 +1472,8 @@ CONTAINS
 #endif
 
 #ifdef DataAssimilation
-      ! initialize the ensemble variables
       IF (p_is_worker) THEN
-         DO i = 1, num_ens
+         DO i = 1, DEF_DA_ENS
             z_sno_ens(:, i, :) = z_sno
             dz_sno_ens(:, i, :) = dz_sno
             t_soisno_ens(:, i, :) = t_soisno
@@ -1482,11 +1481,6 @@ CONTAINS
             wice_soisno_ens(:, i, :) = wice_soisno
             smp_ens(:, i, :) = smp
             hk_ens(:, i, :) = hk
-
-            vegwp_ens(:, i, :) = vegwp
-            gs0sun_ens(i, :) = gs0sun
-            gs0sha_ens(i, :) = gs0sha
-
             t_grnd_ens(i, :) = t_grnd
             tleaf_ens(i, :) = tleaf
             ldew_ens(i, :) = ldew
@@ -1500,11 +1494,10 @@ CONTAINS
             fsno_ens(i, :) = fsno
             sigf_ens(i, :) = sigf
             green_ens(i, :) = green
-            lai_ens(i, :) = lai
             tlai_ens(i, :) = tlai
+            lai_ens(i, :) = lai
             sai_ens(i, :) = sai
             tsai_ens(i, :) = tsai
-            coszen_ens(i, :) = coszen
             alb_ens(:, :, i, :) = alb
             ssun_ens(:, :, i, :) = ssun
             ssha_ens(:, :, i, :) = ssha
@@ -1514,42 +1507,14 @@ CONTAINS
             extkb_ens(i, :) = extkb
             extkd_ens(i, :) = extkd
             zwt_ens(i, :) = zwt
+            wdsrf_ens(i, :) = wdsrf
             wa_ens(i, :) = wa
             wetwat_ens(i, :) = wetwat
-            wdsrf_ens(i, :) = wdsrf
-            rss_ens(i, :) = rss
-
             t_lake_ens(:, i, :) = t_lake
             lake_icefrac_ens(:, i, :) = lake_icefrac
             savedtke1_ens(i, :) = savedtke1
-
-            snw_rds_ens(:, i, :) = snw_rds
-            mss_bcpho_ens(:, i, :) = mss_bcpho
-            mss_bcphi_ens(:, i, :) = mss_bcphi
-            mss_ocpho_ens(:, i, :) = mss_ocpho
-            mss_ocphi_ens(:, i, :) = mss_ocphi
-            mss_dst1_ens(:, i, :) = mss_dst1
-            mss_dst2_ens(:, i, :) = mss_dst2
-            mss_dst3_ens(:, i, :) = mss_dst3
-            mss_dst4_ens(:, i, :) = mss_dst4
-            ssno_lyr_ens(:, :, :, i, :) = ssno_lyr
-
-            trad_ens(i, :) = trad
-            tref_ens(i, :) = tref
-            qref_ens(i, :) = qref
-            rst_ens(i, :) = rst
-            emis_ens(i, :) = emis
-            z0m_ens(i, :) = z0m
-            zol_ens(i, :) = zol
-            rib_ens(i, :) = rib
-            ustar_ens(i, :) = ustar
-            qstar_ens(i, :) = qstar
-            tstar_ens(i, :) = tstar
-            fm_ens(i, :) = fm
-            fh_ens(i, :) = fh
-            fq_ens(i, :) = fq
-         END DO
-      END IF
+         ENDDO
+      ENDIF
 #endif
 
 

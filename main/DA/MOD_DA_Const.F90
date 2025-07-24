@@ -1,9 +1,11 @@
 #include <define.h>
 
+#ifdef DataAssimilation
 MODULE MOD_DA_Const
 !-----------------------------------------------------------------------
 ! DESCRIPTION:
-! Build look up table for constant used in radiative transfer model
+! 1. Define constants (do not rely on satellite parameters) used in DA.
+! 2. Build look up table for constant used in radiative transfer model
 ! Convert CoLM land classification to ECOCLIMAP land classification (from L-MEB)
 !
 ! REFERENCES:
@@ -45,8 +47,8 @@ MODULE MOD_DA_Const
    real(r8), parameter :: eps_0 = 8.854e-12     ! dielectric constant of free space (Klein and Swift 1977) [Farads/meter]
    real(r8), parameter :: rho_soil = 2.66       ! soil specific density (g/cm3)
    real(r8), parameter :: f0w = 9.              ! relaxation frequency of liquid water (GHz)
+   real(r8), parameter :: rgh_surf = 2.2d0      ! soil surface roughness (cm)
    complex(r8), parameter :: jj = (0., 1.)      ! imaginary unit for complex number
-   real(r8), parameter :: ip_rgh_surf = 2.2d0   ! use for the calculation of hr parameters
 
 
 !//TODO(Lu Li): support other land cover classification system
@@ -54,24 +56,24 @@ MODULE MOD_DA_Const
 
    ! MODIS IGBP Land Use/Land Cover System Legend
    !---------------------------
-   ! 0  Ocean                           !  海洋
-   ! 1  Evergreen Needleleaf Forests    !  常绿针叶林
-   ! 2  Evergreen Broadleaf Forests     !  常绿阔叶林
-   ! 3  Deciduous Needleleaf Forests    !  落叶针叶林
-   ! 4  Deciduous Broadleaf Forests     !  落叶阔叶林
-   ! 5  Mixed Forests                   !  混交林
-   ! 6  Closed Shrublands               !  密闭灌丛
-   ! 7  Open Shrublands                 !  稀疏灌丛
-   ! 8  Woody Savannas                  !  木本稀树草原
-   ! 9  Savannas                        !  稀树草原
-   !10  Grasslands                      !  草地
-   !11  Permanent Wetlands              !  永久性湿地
-   !12  Croplands                       !  农田
-   !13  Urban and Built-up Lands        !  城市与建成区
-   !14  Cropland/Natural Vegetation Mosaics     !  农田-自然植被镶嵌区
-   !15  Permanent Snow and Ice          !  永久冰雪
-   !16  Barren                          !  裸地
-   !17  Water Bodies                    !  水体
+   ! 0  Ocean                               !  海洋
+   ! 1  Evergreen Needleleaf Forests        !  常绿针叶林
+   ! 2  Evergreen Broadleaf Forests         !  常绿阔叶林
+   ! 3  Deciduous Needleleaf Forests        !  落叶针叶林
+   ! 4  Deciduous Broadleaf Forests         !  落叶阔叶林
+   ! 5  Mixed Forests                       !  混交林
+   ! 6  Closed Shrublands                   !  密闭灌丛
+   ! 7  Open Shrublands                     !  稀疏灌丛
+   ! 8  Woody Savannas                      !  木本稀树草原
+   ! 9  Savannas                            !  稀树草原
+   !10  Grasslands                          !  草地
+   !11  Permanent Wetlands                  !  永久性湿地
+   !12  Croplands                           !  农田
+   !13  Urban and Built-up Lands            !  城市与建成区
+   !14  Cropland/Natural Vegetation Mosaics !  农田-自然植被镶嵌区
+   !15  Permanent Snow and Ice              !  永久冰雪
+   !16  Barren                              !  裸地
+   !17  Water Bodies                        !  水体
 
    ! ECOCLIMAP Land Use/Land Cover System Legend
    !---------------------------
@@ -88,84 +90,50 @@ MODULE MOD_DA_Const
    integer, parameter, dimension(N_land_classification) :: igbp2eco &
       = (/2, 3, 2, 1, 1, 4, 4, 4, 4, 4, 0, 6, 0, 6, 0, 0, 0/)
 
-   ! b parameters for Wigneron vegetation model
-   !real(r8), parameter, dimension(N_land_classification) :: b1 &
-   !    = (/0.260, 0.226, 0.260, 0.226, 0.226, &
-   !        0.0375, 0.0375, 0.0375, 0.0375, 0.0375, &
-   !        0.0, 0.05, 0.0, 0.05, 0.0, 0.0, 0.0/)
-   !real(r8), parameter, dimension(N_land_classification) :: b2 &
-   !    = (/0.006, 0.001, 0.006, 0.001, 0.001, &
-   !        0.05, 0.05, 0.05, 0.05, 0.05, &
-   !        0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0/)
-   !real(r8), parameter, dimension(N_land_classification) :: b3 &
-   !    = (/0.69, 0.7, 0.69, 0.7, 0.7, &
-   !        0.0, 0.0, 0.0, 0.0, 0.0, &
-   !        0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0/)
-
-   real(r8), parameter, dimension(N_land_classification) :: b1 &  !  revised by fzl
+   ! b parameters for Wigneron vegetation model (//TODO:ref?)
+   real(r8), parameter, dimension(N_land_classification) :: b1 &  
       = (/0.260, 0.226, 0.260, 0.226, 0.226, &
       0.0375, 0.0375, 0.0375, 0.0375, 0.0375, &
       0.0, 0.05, 0.0, 0.05, 0.0, 0.0, 0.05/)
-   real(r8), parameter, dimension(N_land_classification) :: b2 &  !  revised by fzl
+   real(r8), parameter, dimension(N_land_classification) :: b2 &  
       = (/0.006, 0.001, 0.006, 0.001, 0.001, &
       0.05, 0.05, 0.05, 0.05, 0.05, &
       0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0/)
-   real(r8), parameter, dimension(N_land_classification) :: b3 &  !  revised by fzl
+   real(r8), parameter, dimension(N_land_classification) :: b3 &  
       = (/0.69, 0.7, 0.69, 0.7, 0.7, &
       0.0, 0.0, 0.0, 0.0, 0.0, &
       0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0/)
 
-   ! soil roughness parameters for H and V polarization
-   ! (NOTE): we follow SMAP L2 algorithm (all 2.0)
-   !real(r8), parameter, dimension(N_land_classification) :: nrh &
-   !    = (/2.00, 2.00, 2.00, 2.00, 2.00, &
-   !        2.00, 2.00, 2.00, 2.00, 2.00, &
-   !        2.00, 2.00, 2.00, 2.00, 2.00, &
-   !        2.00, 2.00/)
-   !real(r8), parameter, dimension(N_land_classification) :: nrv &
-   !    = (/2.00, 2.00, 2.00, 2.00, 2.00, &
-   !        2.00, 2.00, 2.00, 2.00, 2.00, &
-   !        2.00, 2.00, 2.00, 2.00, 2.00, &
-   !        2.00, 2.00/)
-   real(r8), parameter, dimension(N_land_classification) :: nrh &  !  revised by fzl
+   ! soil roughness parameters for H and V polarization (from CMEM)
+   real(r8), parameter, dimension(N_land_classification) :: nrh &  
       = (/0.00, 0.00, 0.00, 0.00, 0.00, &
       0.00, 0.00, 0.00, 0.00, 0.00, &
       0.00, 0.00, 0.00, 0.00, 0.00, &
-      0.00, 0.00/)           !   under the conditon CIRGHR = "CIRGHR", see cmem_init.f90:314
-   real(r8), parameter, dimension(N_land_classification) :: nrv &  !  revised by fzl
+      0.00, 0.00/)           
+   real(r8), parameter, dimension(N_land_classification) :: nrv &  
       = (/0.00, 0.00, 0.00, 0.00, 0.00, &
       0.00, 0.00, 0.00, 0.00, 0.00, &
       0.00, 0.00, 0.00, 0.00, 0.00, &
       0.00, 0.00/)
 
    ! empirical parameters to account for incidence angle
-   ! in vegetation opacity calculation for H polarization
-   ! (NOTE): from L-MEB model
-   !real(r8), parameter, dimension(N_land_classification) :: tth &
-   !    = (/0.8, 1.0, 0.8, 0.49, 0.49, &
-   !        1.0, 1.0, 1.0, 1.0, 1.0, &
-   !        1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0/)
-   !real(r8), parameter, dimension(N_land_classification) :: ttv &
-   !    = (/0.8, 1.0, 0.8, 0.46, 0.46, &
-   !        1.0, 1.0, 1.0, 1.0, 1.0, &
-   !        1.0, 2.0, 1.0, 2.0, 1.0, 1.0, 1.0/)
-   real(r8), parameter, dimension(N_land_classification) :: tth &  !  revised by fzl
+   ! in vegetation opacity calculation for H polarization (from L-MEB model)
+   real(r8), parameter, dimension(N_land_classification) :: tth &  
       = (/0.8, 1.0, 0.8, 0.49, 0.49, &
       1.0, 1.0, 1.0, 1.0, 1.0, &
       1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 2.0/)
-   real(r8), parameter, dimension(N_land_classification) :: ttv &  !  revised by fzl
+   real(r8), parameter, dimension(N_land_classification) :: ttv &  
       = (/0.8, 1.0, 0.8, 0.46, 0.46, &
       1.0, 1.0, 1.0, 1.0, 1.0, &
       1.0, 2.0, 1.0, 2.0, 1.0, 1.0, 1.0/)
 
    ! empirical roughness parameters (Table 2 in Wigneron et al. 2017)
+   ! (Note: CMEM uses a function based on satellite parameters)
    ! real(r8), parameter, dimension(N_land_classification) :: hr &
    !    = (/0.160, 0.160, 0.160, 0.160, 0.160, &
    !        0.110, 0.110, 0.125, 0.156, 0.156, &
    !        0.100, 0.108, 0.000, 0.130, 0.000, &
    !        0.150, 0.000/)
-   !real(r8), parameter, dimension(N_land_classification) :: hr &  !  revised by fzl
-   !   = (2.0d0*kcm*ip_rgh_surf)**2.0d0
 
    ! effective diffusion albedo (Table 3 in Wigneron et al. 2017)
    !real(r8), parameter, dimension(N_land_classification) :: w &
@@ -173,7 +141,7 @@ MODULE MOD_DA_Const
    !        0.050, 0.050, 0.050, 0.080, 0.050, &
    !        0.050, 0.000, 0.065, 0.000, 0.000, &
    !        0.000, 0.000/)
-   real(r8), parameter, dimension(N_land_classification) :: w &    !  revised by fzl
+   real(r8), parameter, dimension(N_land_classification) :: w &   !(from CMEM)
       = (/0.080, 0.095, 0.080, 0.070, 0.070, &
       0.050, 0.050, 0.050, 0.050, 0.050, &
       0.000, 0.000, 0.000, 0.000, 0.000, &
@@ -182,3 +150,4 @@ MODULE MOD_DA_Const
 
 END MODULE MOD_DA_Const
 !-----------------------------------------------------------------------------
+#endif

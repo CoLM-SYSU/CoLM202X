@@ -132,7 +132,7 @@ CONTAINS
    USE MOD_Forcing, only: forcmask_pch
 #ifdef DataAssimilation
    USE MOD_DA_GRACE, only: fslp_k_mon
-   USE MOD_Vars_Global, only: num_ens
+   USE MOD_Vars_Global
    USE MOD_DA_Vars_TimeVariables
 #endif
 
@@ -3687,11 +3687,11 @@ CONTAINS
 #ifdef DataAssimilation
          CALL write_history_variable_4d(.true., &
             a_wliq_soisno_ens, file_hist, 'f_wliq_soisno_ens', itime_in_file, 'soilsnow', maxsnl + 1, nl_soil - maxsnl, &
-            'ens', 1, num_ens, sumarea, filter, 'ensemble liquid water in soil layers', 'kg/m2')
+            'ens', 1, DEF_DA_ENS, sumarea, filter, 'ensemble liquid water in soil layers', 'kg/m2')
 
          CALL write_history_variable_4d(.true., &
             a_wice_soisno_ens, file_hist, 'f_wice_soisno_ens', itime_in_file, 'soilsnow', maxsnl + 1, nl_soil - maxsnl, &
-            'ens', 1, num_ens, sumarea, filter, 'ensemble ice lens in soil layers', 'kg/m2')
+            'ens', 1, DEF_DA_ENS, sumarea, filter, 'ensemble ice lens in soil layers', 'kg/m2')
 
          ! --------------------------------------------------------------------
          ! brightness temperature (excluding land ice, land water bodies and ocean patches)
@@ -3723,18 +3723,17 @@ CONTAINS
          END IF
 
          CALL write_history_variable_4d(.true., &
-            a_h2osoi_ens, file_hist, 'f_h2osoi_ens', itime_in_file, 'soil', 1, nl_soil, 'ens', 1, num_ens, &
+            a_h2osoi_ens, file_hist, 'f_h2osoi_ens', itime_in_file, 'soil', 1, nl_soil, 'ens', 1, DEF_DA_ENS, &
             sumarea, filter, 'ensemble volumetric water in soil layers', 'm3/m3')
 
          CALL write_history_variable_4d(.true., &
-            a_brt_temp_ens, file_hist, 'f_brt_temp_ens', itime_in_file, 'band', 1, 2, 'ens', 1, num_ens, &
+            a_t_brt_ens, file_hist, 'f_t_brt_ens', itime_in_file, 'band', 1, 2, 'ens', 1, DEF_DA_ENS, &
             sumarea, filter, 'ensemble H- & V- polarized brightness temperature', 'K')
 
-#endif
-         ! brightness temperature at satellite [K]
-         CALL write_history_variable_3d ( .true., &
-            a_brt_temp, file_hist, 'f_brt_temp', itime_in_file,'band', 1, 2, sumarea, filter, &
+         CALL write_history_variable_3d (.true., &
+            a_t_brt, file_hist, 'f_t_brt', itime_in_file,'band', 1, 2, sumarea, filter, &
             'H- & V- polarized brightness temperature','K')
+#endif
 
          ! --------------------------------------------------------------------
          ! additional diagnostic variables for output (vegetated land only <=2)

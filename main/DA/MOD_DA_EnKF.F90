@@ -1,14 +1,15 @@
 #include <define.h>
 
+#ifdef DataAssimilation
 MODULE MOD_DA_EnKF
-!-----------------------------------------------------------------------
+!-----------------------------------------------------------------------------
 ! DESCRIPTION:
 !    ensemble Kalman filter (EnKF)
 !
 ! AUTHOR:
 !   Lu Li, 12/2024: Initial version
 !   Zhilong Fan, Lu Li, 03/2024: Debug and clean codes
-!-----------------------------------------------------------------------
+!-----------------------------------------------------------------------------
     USE MOD_Precision
     IMPLICIT NONE
     SAVE
@@ -17,28 +18,28 @@ MODULE MOD_DA_EnKF
     PUBLIC :: letkf
 
 
-!-----------------------------------------------------------------------
+!-----------------------------------------------------------------------------
 
 CONTAINS
 
-!-----------------------------------------------------------------------
+!-----------------------------------------------------------------------------
 
     SUBROUTINE letkf ( &
         num_ens, num_obs, &
         HA, y, R, loc_d, loc_r, infl, &
         trans)
 
-!-----------------------------------------------------------------------
+!-----------------------------------------------------------------------------
 ! Description:
 !   local transform ensemble Kalman filter
 !
 ! Original author :
 !   Lu Li, 12/2024
-!-----------------------------------------------------------------------
+!-----------------------------------------------------------------------------
     USE MOD_Precision
     IMPLICIT NONE
 
-!------------------------------dummy arguments----------------------------
+!------------------------ Dummy Arguments ------------------------------------
     integer, intent(in)     :: num_ens                              ! ensemble size
     integer, intent(in)     :: num_obs                              ! number of observations
     real(r8), intent(in)    :: HA(num_obs, num_ens)                 ! ensemble predicted observation matrix
@@ -49,7 +50,7 @@ CONTAINS
     real(r8), intent(in)    :: infl                                 ! inflation factor
     real(r8), intent(out)   :: trans(num_ens, num_ens)              ! transform matrix (k x k)
 
-!------------------------------local variables----------------------------
+!------------------------ Local Variables ------------------------------------
     real(r8) :: HA_mean(num_obs)                    ! mean of ensemble predicted observation (l)
     real(r8) :: dHA(num_obs, num_ens)               ! HA - mean(HA) (l x k)
     real(r8) :: dHA_t(num_ens, num_obs)             ! transpose of dHA (k x l)
@@ -72,7 +73,7 @@ CONTAINS
     real(r8) :: one_div_ens(num_ens)                ! 1/num_ens
     integer  :: i, j
 
-!-----------------------------------------------------------------------
+!-----------------------------------------------------------------------------
 
         ! calculate observation space perturbation
         HA_mean = sum(HA, dim=2) / size(HA, dim=2)   !(lx1)
@@ -132,6 +133,6 @@ CONTAINS
 
     END SUBROUTINE letkf
 
-
-!-----------------------------------------------------------------------
+!-----------------------------------------------------------------------------
 END MODULE MOD_DA_EnKF
+#endif

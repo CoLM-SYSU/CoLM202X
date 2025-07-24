@@ -1,5 +1,6 @@
 #include <define.h>
 
+#ifdef DataAssimilation
 MODULE MOD_DA_Ensemble
 !-----------------------------------------------------------------------
 ! DESCRIPTION:
@@ -12,20 +13,17 @@ MODULE MOD_DA_Ensemble
 ! AUTHOR:
 !   Lu Li, 12/2024: Initial version
 !-----------------------------------------------------------------------
-   USE MOD_Vars_Global
    USE MOD_Precision
    IMPLICIT NONE
+   SAVE
 
-! public functions
+   ! public functions
    PUBLIC :: disturb_forc_ens
 
-   PRIVATE
-
-! local parameters
-   ! disturbance standard deviation from [1]
+   ! local parameters
    real(r8) :: std_sr = 0.3 ! multiplicative noise
    real(r8) :: std_ta = 2.5 ! additive noise
-   real(r8) :: std_p = 0.3 ! multiplicative noise, log-normal noise
+   real(r8) :: std_p  = 0.3 ! multiplicative noise, log-normal noise
 
 !-----------------------------------------------------------------------
 
@@ -53,8 +51,8 @@ CONTAINS
       real(r8) :: z(num_ens)
       real(r8) :: mean_z
       integer  :: i
-      INTEGER  :: seed_size
-      INTEGER, allocatable  ::  seed(:)
+      integer  :: seed_size
+      integer, allocatable :: seed(:)
 
 !-----------------------------------------------------------------------
 
@@ -104,8 +102,12 @@ CONTAINS
    SUBROUTINE disturb_forc_ens( &
       idate, &
       num_ens, &
-      forc_t, forc_prc, forc_prl, forc_sols, forc_soll, forc_solsd, forc_solld, &
-      forc_t_ens, forc_prc_ens, forc_prl_ens, forc_sols_ens, forc_soll_ens, forc_solsd_ens, forc_solld_ens)
+      forc_t, &
+      forc_prc, forc_prl, &
+      forc_sols, forc_soll, forc_solsd, forc_solld, &
+      forc_t_ens, &
+      forc_prc_ens, forc_prl_ens, &
+      forc_sols_ens, forc_soll_ens, forc_solsd_ens, forc_solld_ens)
 
 !-----------------------------------------------------------------------
       USE MOD_TimeManager, only: minutes_since_1900
@@ -152,3 +154,4 @@ CONTAINS
 
 !-----------------------------------------------------------------------
 END MODULE MOD_DA_Ensemble
+#endif

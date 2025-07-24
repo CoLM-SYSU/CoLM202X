@@ -525,7 +525,6 @@ MODULE MOD_Vars_TimeVariables
    integer , allocatable :: irrig_method_rice2     (:) ! irrigation method for rice2 (0-3)
    integer , allocatable :: irrig_method_sugarcane (:) ! irrigation method for sugarcane (0-3)
 
-   real(r8), allocatable :: brt_temp (:,:) ! microwave brightness temperature at satellite
    ! PUBLIC MEMBER FUNCTIONS:
    PUBLIC :: allocate_TimeVariables
    PUBLIC :: deallocate_TimeVariables
@@ -568,6 +567,7 @@ CONTAINS
             allocate (h2osoi            (1:nl_soil,numpatch)); h2osoi      (:,:) = spval
             allocate (rootr             (1:nl_soil,numpatch)); rootr       (:,:) = spval
             allocate (rootflux          (1:nl_soil,numpatch)); rootflux    (:,:) = spval
+            
 !Plant Hydraulic variables
             allocate (vegwp             (1:nvegwcs,numpatch)); vegwp       (:,:) = spval
             allocate (gs0sun                      (numpatch)); gs0sun        (:) = spval
@@ -678,8 +678,6 @@ CONTAINS
             allocate ( irrig_method_rice1         (numpatch)); irrig_method_rice1     (:) = spval_i4
             allocate ( irrig_method_rice2         (numpatch)); irrig_method_rice2     (:) = spval_i4
             allocate ( irrig_method_sugarcane     (numpatch)); irrig_method_sugarcane (:) = spval_i4
-
-            allocate ( brt_temp                (2, numpatch)); brt_temp          (:,:) = spval
 
          ENDIF
       ENDIF
@@ -844,7 +842,6 @@ CONTAINS
             deallocate (irrig_method_rice2     )
             deallocate (irrig_method_sugarcane )
 
-            deallocate (brt_temp               )
          ENDIF
       ENDIF
 
@@ -1077,8 +1074,6 @@ IF (DEF_USE_IRRIGATION) THEN
       CALL ncio_write_vector (file_restart, 'irrig_method_sugarcane' , 'patch',landpatch,irrig_method_sugarcane, compress)
 ENDIF
 
-      CALL ncio_write_vector (file_restart, 'brt_temp', 'band', 2, 'patch', landpatch, brt_temp, compress) ! microwave brightness temperature at satellite [K]
-
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
 #ifdef SinglePoint
       IF (patchtypes(SITE_landtype) == 0) THEN
@@ -1263,8 +1258,6 @@ IF (DEF_USE_IRRIGATION) THEN
       CALL ncio_read_vector (file_restart, 'irrig_method_sugarcane' , landpatch, irrig_method_sugarcane)
 ENDIF
 
-      CALL ncio_read_vector (file_restart, 'brt_temp', 2, landpatch, brt_temp) ! microwave brightness temperature at satellite [K]
-
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
 #ifdef SinglePoint
       IF (patchtypes(SITE_landtype) == 0) THEN
@@ -1420,8 +1413,6 @@ IF (DEF_USE_IRRIGATION) THEN
       CALL check_vector_data ('irrig_method_rice2    ' , irrig_method_rice2    )
       CALL check_vector_data ('irrig_method_sugarcane' , irrig_method_sugarcane)
 ENDIF
-
-      CALL check_vector_data ('brt_temp               ', brt_temp              )
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
       CALL check_PFTimeVariables

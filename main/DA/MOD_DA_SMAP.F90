@@ -1,5 +1,6 @@
 #include <define.h>
 
+#ifdef DataAssimilation
 MODULE MOD_DA_SMAP
 !-----------------------------------------------------------------------------
 ! DESCRIPTION:
@@ -8,15 +9,17 @@ MODULE MOD_DA_SMAP
 ! AUTHOR:
 !   Lu Li, 12/2024: Initial version, based on SMAP L1C TB data
 !   Zhilong Fan, Lu Li, 03/2024: Debug and clean codes
+!   Lu Li, 07/2025: reframe codes
 !-----------------------------------------------------------------------------
    USE MOD_DataType
    USE MOD_SpatialMapping
    USE MOD_DA_ObsOperator
    USE MOD_DA_EnKF
    USE MOD_DA_Vars_TimeVariables
-   USE MOD_Vars_Global, only: num_ens, pi, nl_soil
+   USE MOD_Vars_Global, only: pi, nl_soil
    USE MOD_LandPatch
    USE MOD_Block
+   USE MOD_Namelist,
    IMPLICIT NONE
    SAVE
 
@@ -61,8 +64,8 @@ MODULE MOD_DA_SMAP
    integer,  allocatable :: smap_jj(:)                       ! j-th lon grid in world map of all obs
 
    ! setting of SMAP satellite
-   real(r8), parameter :: smap_theta = 40.0*pi/180                ! incidence angle (rad)
-   real(r8), parameter :: smap_fghz = 1.4                         ! frequency (GHz), L-band
+   real(r8), parameter :: smap_theta = 40.0*pi/180           ! incidence angle (rad)
+   real(r8), parameter :: smap_fghz = 1.4                    ! frequency (GHz), L-band
 
    ! ensemble predicted observations (at patch)
    real(r8), allocatable :: pred_tb_h_pset_ens(:, :)         ! predicted H- polarized temp on patch
@@ -98,13 +101,13 @@ MODULE MOD_DA_SMAP
    real(r8), parameter   :: static_obs_err = 0.1             ! static observation error
 
    ! temporary variables for data assimilation
-   real(r8) :: trans(num_ens, num_ens)                       ! transform matrix on each patch
-   real(r8) :: eff_porsl                                     ! effective porosity of soil layer
+   real(r8), allocatable :: trans(:,:)                       ! transformation matrix on each patch
+   real(r8), allocatable :: wice_soi_ens(:,:)                ! soil ice content
+   real(r8), allocatable :: wice_soi_ens_da(:,:)             ! soil ice content after data assimilation
+   real(r8), allocatable :: wliq_soi_ens(:,:)                ! soil liquid water content
+   real(r8), allocatable :: wliq_soi_ens_da(:,:)             ! soil liquid water content after data assimilation
    logical, allocatable ::  filter(:)                        ! to mask the water
-   real(r8) :: wice_soi_ens(nl_soil, num_ens)                ! soil ice content
-   real(r8) :: wice_soi_ens_da(nl_soil, num_ens)             ! soil ice content after data assimilation
-   real(r8) :: wliq_soi_ens(nl_soil, num_ens)                ! soil liquid water content
-   real(r8) :: wliq_soi_ens_da(nl_soil, num_ens)             ! soil liquid water content after data assimilation
+   real(r8) :: eff_porsl                                     ! effective porosity of soil layer
 
 !-----------------------------------------------------------------------------
 
@@ -124,7 +127,7 @@ CONTAINS
       USE MOD_RangeCheck
       IMPLICIT NONE
 
-!-----------------------------------------------------------------------
+!-----------------------------------------------------------------------------
 
       ! grid file path of EASE v2.0, 36km world grid
       file_grid = trim(DEF_DA_obsdir)//'/NSIDC0772_LatLon_EASE2_M36km_v1.0_pre.nc'
@@ -161,87 +164,101 @@ CONTAINS
       USE MOD_Const_Physical, only: denice, denh2o
       IMPLICIT NONE
 
-!------------------------ Dummy Arguments ---------------------------------
+!------------------------ Dummy Arguments ------------------------------------
       integer, intent(in) :: idate(3)
       real(r8), intent(in) :: deltim
 
-!------------------------ Local Variables ------------------------------
+!------------------------ Local Variables ------------------------------------
       real(r8) :: lat_p_n, lat_p_s, lon_p_w, lon_p_e
       integer  :: ib, jb, il, jl, ip, iens, iobs, np, i, n, ndata, isrc
       integer  :: sdate(3), smesg(2), rmesg(2)
       integer, allocatable  :: iloc(:)               
       integer, allocatable  :: itemp(:)
       real(r8), allocatable :: dtemp(:,:)
+
 !-----------------------------------------------------------------------------
 
 !#############################################################################
 ! Identify if there are observations at this time step 
 !#############################################################################
-      ! covert local time to UTC for single point
-      sdate = idate
-      CALL adj2begin(sdate)
-#ifdef SinglePoint
-      IF (.not. DEF_simulation_time%greenwich) THEN
-         CALL localtime2gmt(sdate)
-      ENDIF
-#endif
-
-      ! calculate year/month/day/hour of current step
-      CALL julian2monthday(sdate(1), sdate(2), month, mday)
-      hour = int(sdate(3)/3600)
-
-      ! whether has file of SMAP at target day
-      write (yearstr, '(I4.4)') sdate(1)
-      write (monthstr, '(I2.2)') month
-      write (daystr, '(I2.2)') mday
-      write (hourstr, '(I2.2)') hour
-      file_smap = trim(DEF_DA_obsdir)//'/pre/'//'/SMAP_L1C_TB_D_'// &
-            trim(yearstr)//'_'//trim(monthstr)//'_'//trim(daystr)//'_'//trim(hourstr)//'.nc'
-      inquire (file=trim(file_smap), exist=has_file)
-
-      ! whether have obs at this time interval
-      has_obs = .false.
-      IF (has_file) THEN
-         CALL ncio_read_bcast_serial(file_smap, 'time', smap_time)
-         num_obs = size(smap_time)
-         idate_b = sdate(3)
-         idate_e = sdate(3) + deltim
-         allocate (dt_b(num_obs))
-         allocate (dt_e(num_obs))
-         dt_b = smap_time - idate_b
-         dt_e = smap_time - idate_e
-         IF (any(dt_b >= 0 .and. dt_e <= 0)) has_obs = .true.
-         deallocate (dt_b)
-         deallocate (dt_e)
-      ELSE
+      ! Do not perform DA, only calcuate predict BRT for diagnostic
+      IF (DEF_DA_ENS == 1) THEN
+         has_file = .false.
          has_obs = .false.
+      ELSE
+         ! covert local time to UTC for single point
+         sdate = idate
+         CALL adj2begin(sdate)
+#ifdef SinglePoint
+         IF (.not. DEF_simulation_time%greenwich) THEN
+            CALL localtime2gmt(sdate)
+         ENDIF
+#endif
+         ! calculate year/month/day/hour of current step
+         CALL julian2monthday(sdate(1), sdate(2), month, mday)
+         hour = int(sdate(3)/3600)
+
+         ! whether has file of SMAP at target day
+         write (yearstr, '(I4.4)') sdate(1)
+         write (monthstr, '(I2.2)') month
+         write (daystr, '(I2.2)') mday
+         write (hourstr, '(I2.2)') hour
+         file_smap = trim(DEF_DA_obsdir)//'/pre/'//'/SMAP_L1C_TB_D_'// &
+               trim(yearstr)//'_'//trim(monthstr)//'_'//trim(daystr)//'_'//trim(hourstr)//'.nc'
+         inquire (file=trim(file_smap), exist=has_file)
+
+         ! whether have obs at this time interval
+         has_obs = .false.
+         IF (has_file) THEN
+            CALL ncio_read_bcast_serial(file_smap, 'time', smap_time)
+            num_obs = size(smap_time)
+            idate_b = sdate(3)
+            idate_e = sdate(3) + deltim
+            allocate (dt_b(num_obs))
+            allocate (dt_e(num_obs))
+            dt_b = smap_time - idate_b
+            dt_e = smap_time - idate_e
+            IF (any(dt_b >= 0 .and. dt_e <= 0)) has_obs = .true.
+            deallocate (dt_b)
+            deallocate (dt_e)
+         ELSE
+            has_obs = .false.
+         ENDIF
       ENDIF
 
-      ! allocate memory if have observations
+
+!#############################################################################
+! Allocate memory for variables 
+!#############################################################################
+      ! allocate memory for ensemble predicted observations at patch (for DA or no DA)
       IF (p_is_worker) THEN
          IF (numpatch > 0) THEN
             IF (allocated(pred_tb_h_pset_ens)) deallocate (pred_tb_h_pset_ens)
             IF (allocated(pred_tb_v_pset_ens)) deallocate (pred_tb_v_pset_ens)
-            allocate (pred_tb_h_pset_ens(num_ens, numpatch))
-            allocate (pred_tb_v_pset_ens(num_ens, numpatch))
+            allocate (pred_tb_h_pset_ens(DEF_DA_ENS, numpatch))
+            allocate (pred_tb_v_pset_ens(DEF_DA_ENS, numpatch))
          ENDIF
       ENDIF
+
+      ! allocate memory for ensemble predicted observations in vectors (only for DA)
+      IF (has_obs) THEN
 #ifndef SinglePoint 
-      IF (allocated(pred_tb_h_ogrid_ens)) deallocate (pred_tb_h_ogrid_ens)
-      IF (allocated(pred_tb_v_ogrid_ens)) deallocate (pred_tb_v_ogrid_ens)
-      IF (allocated(area_pset)) deallocate (area_pset)
-      allocate (pred_tb_h_ogrid_ens(num_obs, num_ens))
-      allocate (pred_tb_v_ogrid_ens(num_obs, num_ens))
-      allocate (area_pset(numpatch))
+         IF (allocated(pred_tb_h_ogrid_ens)) deallocate (pred_tb_h_ogrid_ens)
+         IF (allocated(pred_tb_v_ogrid_ens)) deallocate (pred_tb_v_ogrid_ens)
+         IF (allocated(area_pset)) deallocate (area_pset)
+         allocate (pred_tb_h_ogrid_ens(num_obs, DEF_DA_ENS))
+         allocate (pred_tb_v_ogrid_ens(num_obs, DEF_DA_ENS))
+         allocate (area_pset(numpatch))
 #endif
+      ENDIF
 
 
 !#############################################################################
 ! Calculate predicted observations & mapping to world grid & read observations
 !#############################################################################
-      ! forward model
+      ! forward model (for DA or no DA)
       IF (p_is_worker) THEN
-         DO iens = 1, num_ens
+         DO iens = 1, DEF_DA_ENS
             DO np = 1, numpatch
                CALL forward( &
                   patchtype(np), patchclass(np), dz_sno_ens(:, iens, np), &
@@ -255,7 +272,10 @@ CONTAINS
             ENDDO
          ENDDO
       ENDIF
+      t_brt_ens(1,:,:) = pred_tb_h_pset_ens
+      t_brt_ens(2,:,:) = pred_tb_v_pset_ens
 
+      ! read observations data (only for DA)
       IF (has_obs) THEN
          CALL ncio_read_bcast_serial(file_smap, 'lat' , smap_lat )
          CALL ncio_read_bcast_serial(file_smap, 'lon' , smap_lon )
@@ -265,106 +285,110 @@ CONTAINS
          CALL ncio_read_bcast_serial(file_smap, 'tb_v', smap_tb_v)
       ENDIF
 
+      ! map predicted observation from patch to world grid & crop useful data (only for DA)
+      IF (has_obs) THEN
 #ifndef SinglePoint
-      ! mapping predicted observations from patch to world grid
-      IF (p_is_io) THEN
-         CALL allocate_block_data(grid_smap, pred_tb_h_wgrid_ens, num_ens)
-         CALL allocate_block_data(grid_smap, pred_tb_v_wgrid_ens, num_ens)
-      ENDIF
-      CALL mg2p_smap%pset2grid(pred_tb_h_pset_ens, pred_tb_h_wgrid_ens, spval)
-      CALL mg2p_smap%pset2grid(pred_tb_v_pset_ens, pred_tb_v_wgrid_ens, spval)
+         ! mapping predicted observations from patch to world grid
+         IF (p_is_io) THEN
+            CALL allocate_block_data(grid_smap, pred_tb_h_wgrid_ens, DEF_DA_ENS)
+            CALL allocate_block_data(grid_smap, pred_tb_v_wgrid_ens, DEF_DA_ENS)
+         ENDIF
+         CALL mg2p_smap%pset2grid(pred_tb_h_pset_ens, pred_tb_h_wgrid_ens, spval)
+         CALL mg2p_smap%pset2grid(pred_tb_v_pset_ens, pred_tb_v_wgrid_ens, spval)
 
-      ! calculate area of each patch across world grid
-      area_pset(:) = 1
-      allocate (filter(numpatch))
-      IF (p_is_worker) THEN
-         IF (numpatch > 0) THEN
-            filter(:) = patchtype <= 2   !  at io process, size(patchtype) = 1
-         END IF
-      END IF
-      IF (p_is_io) CALL allocate_block_data(grid_smap, area_wgrid)
-      CALL mg2p_smap%pset2grid(area_pset, area_wgrid, msk=filter)
-      deallocate (filter)
+         ! calculate area of each patch across world grid
+         area_pset(:) = 1
+         allocate (filter(numpatch))
+         IF (p_is_worker) THEN
+            IF (numpatch > 0) THEN
+               filter(:) = patchtype <= 2 
+            ENDIF
+         ENDIF
+         IF (p_is_io) CALL allocate_block_data(grid_smap, area_wgrid)
+         CALL mg2p_smap%pset2grid(area_pset, area_wgrid, msk=filter)
+         deallocate (filter)
 
-      ! crop the predicted observations from world grid to all obs grids
-      IF (p_is_io .and. has_obs) THEN
-         allocate (iloc(num_obs))
-         pred_tb_h_ogrid_ens = -9999.0
-         pred_tb_v_ogrid_ens = -9999.0
+         ! crop the predicted observations 
+         IF (p_is_io) THEN
+            allocate (iloc(num_obs))
+            pred_tb_h_ogrid_ens = -9999.0
+            pred_tb_v_ogrid_ens = -9999.0
 
-         ndata = 0
-         DO i = 1, num_obs
-            !//TODO: Lu Li: python index starts from 0
-            ib = grid_smap%xblk(smap_jj(i) + 1)
-            jb = grid_smap%yblk(smap_ii(i) + 1)
-            il = grid_smap%xloc(smap_jj(i) + 1)
-            jl = grid_smap%yloc(smap_ii(i) + 1)
-            IF (ib /= 0 .and. jb /= 0) THEN
-               !//TODO: Lu Li: add explainations
-               IF (gblock%pio(ib, jb) == p_iam_glb) THEN
-                  area_wgrid_obs = area_wgrid%blk(ib, jb)%val(il, jl)
-                  IF (area_wgrid_obs /= 0) THEN
-                     ndata = ndata + 1
-                     iloc(ndata) = i
-                     pred_tb_h_ogrid_ens(ndata, :) = (pred_tb_h_wgrid_ens%blk(ib, jb)%val(:, il, jl))/area_wgrid_obs
-                     pred_tb_v_ogrid_ens(ndata, :) = (pred_tb_v_wgrid_ens%blk(ib, jb)%val(:, il, jl))/area_wgrid_obs
+            ! crop obs from world grid to all obs grids
+            ndata = 0
+            DO i = 1, num_obs
+               !(Notes: Python index starts from 0)
+               ib = grid_smap%xblk(smap_jj(i) + 1)
+               jb = grid_smap%yblk(smap_ii(i) + 1)
+               il = grid_smap%xloc(smap_jj(i) + 1)
+               jl = grid_smap%yloc(smap_ii(i) + 1)
+               IF (ib /= 0 .and. jb /= 0) THEN
+                  IF (gblock%pio(ib, jb) == p_iam_glb) THEN
+                     area_wgrid_obs = area_wgrid%blk(ib, jb)%val(il, jl)
+                     IF (area_wgrid_obs /= 0) THEN
+                        ndata = ndata + 1
+                        iloc(ndata) = i
+                        pred_tb_h_ogrid_ens(ndata, :) = (pred_tb_h_wgrid_ens%blk(ib, jb)%val(:, il, jl))/area_wgrid_obs
+                        pred_tb_v_ogrid_ens(ndata, :) = (pred_tb_v_wgrid_ens%blk(ib, jb)%val(:, il, jl))/area_wgrid_obs
+                     ENDIF
                   ENDIF
                ENDIF
-            ENDIF
-         ENDDO
+            ENDDO
 
+            ! send data from io to masters
 #ifdef USEMPI
-         smesg = (/p_iam_glb, ndata/)
-         CALL mpi_send(smesg, 2, MPI_INTEGER, p_address_master, mpi_tag_mesg, p_comm_glb, p_err)
+            smesg = (/p_iam_glb, ndata/)
+            CALL mpi_send(smesg, 2, MPI_INTEGER, p_address_master, mpi_tag_mesg, p_comm_glb, p_err)
 
-         IF (ndata > 0) THEN
-            CALL mpi_send(iloc(1:ndata), ndata, MPI_INTEGER, p_address_master, mpi_tag_data, p_comm_glb, p_err)
-
-            allocate (dtemp(ndata, num_ens))
-            dtemp = pred_tb_h_ogrid_ens(1:ndata, :)
-            CALL mpi_send(dtemp, ndata*num_ens, MPI_DOUBLE, p_address_master, mpi_tag_data, p_comm_glb, p_err)
-            dtemp = pred_tb_v_ogrid_ens(1:ndata, :)
-            CALL mpi_send(dtemp, ndata*num_ens, MPI_DOUBLE, p_address_master, mpi_tag_data + 1, p_comm_glb, p_err)
-            deallocate (dtemp)
-         ENDIF
-#endif
-
-         deallocate (iloc)
-      ENDIF
-
-#ifdef USEMPI
-      IF (p_is_master .and. has_obs) THEN
-         pred_tb_h_ogrid_ens = -9999.0
-         pred_tb_v_ogrid_ens = -9999.0
-         DO ip = 0, p_np_io - 1
-            CALL mpi_recv(rmesg, 2, MPI_INTEGER, MPI_ANY_SOURCE, mpi_tag_mesg, p_comm_glb, p_stat, p_err)
-
-            ndata = rmesg(2)
             IF (ndata > 0) THEN
-               allocate (itemp(ndata))
-               allocate (dtemp(ndata, num_ens))
+               CALL mpi_send(iloc(1:ndata), ndata, MPI_INTEGER, p_address_master, mpi_tag_data, p_comm_glb, p_err)
 
-               isrc = rmesg(1)
-               CALL mpi_recv(itemp, ndata, MPI_INTEGER, isrc, mpi_tag_data, p_comm_glb, p_stat, p_err)
-               CALL mpi_recv(dtemp, ndata*num_ens, MPI_DOUBLE, isrc, mpi_tag_data, p_comm_glb, p_stat, p_err)
-               pred_tb_h_ogrid_ens(itemp, :) = dtemp
-               CALL mpi_recv(dtemp, ndata*num_ens, MPI_DOUBLE, isrc, mpi_tag_data + 1, p_comm_glb, p_stat, p_err)
-               pred_tb_v_ogrid_ens(itemp, :) = dtemp
-
-               deallocate (itemp)
+               allocate (dtemp(ndata, DEF_DA_ENS))
+               dtemp = pred_tb_h_ogrid_ens(1:ndata, :)
+               CALL mpi_send(dtemp, ndata*DEF_DA_ENS, MPI_DOUBLE, p_address_master, mpi_tag_data, p_comm_glb, p_err)
+               dtemp = pred_tb_v_ogrid_ens(1:ndata, :)
+               CALL mpi_send(dtemp, ndata*DEF_DA_ENS, MPI_DOUBLE, p_address_master, mpi_tag_data + 1, p_comm_glb, p_err)
                deallocate (dtemp)
-            END IF
-         END DO
-      END IF
-      CALL mpi_bcast(pred_tb_h_ogrid_ens, num_obs*num_ens, MPI_DOUBLE, p_address_master, p_comm_glb, p_err)
-      CALL mpi_bcast(pred_tb_v_ogrid_ens, num_obs*num_ens, MPI_DOUBLE, p_address_master, p_comm_glb, p_err)
+            ENDIF
+#endif
+            deallocate (iloc)
+         ENDIF
+
+         ! broadcast from master to all workers
+#ifdef USEMPI
+         IF (p_is_master) THEN
+            pred_tb_h_ogrid_ens = -9999.0
+            pred_tb_v_ogrid_ens = -9999.0
+            DO ip = 0, p_np_io - 1
+               CALL mpi_recv(rmesg, 2, MPI_INTEGER, MPI_ANY_SOURCE, mpi_tag_mesg, p_comm_glb, p_stat, p_err)
+
+               ndata = rmesg(2)
+               IF (ndata > 0) THEN
+                  allocate (itemp(ndata))
+                  allocate (dtemp(ndata, DEF_DA_ENS))
+
+                  isrc = rmesg(1)
+                  CALL mpi_recv(itemp, ndata, MPI_INTEGER, isrc, mpi_tag_data, p_comm_glb, p_stat, p_err)
+                  CALL mpi_recv(dtemp, ndata*DEF_DA_ENS, MPI_DOUBLE, isrc, mpi_tag_data, p_comm_glb, p_stat, p_err)
+                  pred_tb_h_ogrid_ens(itemp, :) = dtemp
+                  CALL mpi_recv(dtemp, ndata*DEF_DA_ENS, MPI_DOUBLE, isrc, mpi_tag_data + 1, p_comm_glb, p_stat, p_err)
+                  pred_tb_v_ogrid_ens(itemp, :) = dtemp
+
+                  deallocate (itemp)
+                  deallocate (dtemp)
+               ENDIF
+            ENDDO
+         ENDIF
+         CALL mpi_bcast(pred_tb_h_ogrid_ens, num_obs*DEF_DA_ENS, MPI_DOUBLE, p_address_master, p_comm_glb, p_err)
+         CALL mpi_bcast(pred_tb_v_ogrid_ens, num_obs*DEF_DA_ENS, MPI_DOUBLE, p_address_master, p_comm_glb, p_err)
 #endif
 
 #endif
+      ENDIF
 
 
 !#############################################################################
-! Run data assimilation
+! Run data assimilation (for only DA)
 !#############################################################################
       has_DA = .false.
       IF (has_obs) THEN
@@ -393,8 +417,13 @@ CONTAINS
                allocate (smap_lon_p     (num_obs_p         ))
                allocate (smap_tb_h_p    (num_obs_p         ))
                allocate (smap_tb_v_p    (num_obs_p         ))
-               allocate (pred_tb_h_p_ens(num_obs_p, num_ens))
-               allocate (pred_tb_v_p_ens(num_obs_p, num_ens))
+               allocate (pred_tb_h_p_ens(num_obs_p, DEF_DA_ENS))
+               allocate (pred_tb_v_p_ens(num_obs_p, DEF_DA_ENS))
+               allocate (trans          (DEF_DA_ENS,DEF_DA_ENS))
+               allocate (wice_soi_ens   (nl_soil,   DEF_DA_ENS))
+               allocate (wice_soi_ens_da(nl_soil,   DEF_DA_ENS))
+               allocate (wliq_soi_ens   (nl_soil,   DEF_DA_ENS))
+               allocate (wliq_soi_ens_da(nl_soil,   DEF_DA_ENS))
 
                ! index of observations around target patch
                index_p = (smap_lat(:) < lat_p_n .and. smap_lat(:) > lat_p_s .and. &
@@ -411,7 +440,7 @@ CONTAINS
                DO i = 1, num_obs_p
                   pred_tb_h_p_ens(i, :) = pred_tb_h_pset_ens(:, 1) ! only one patch
                   pred_tb_v_p_ens(i, :) = pred_tb_v_pset_ens(:, 1)
-               END DO
+               ENDDO
 
                ! calculate distance between observations and target patch
                d_p = 2*6.3781e3*asin(sqrt(sin((smap_lat_p*pi/180 - patchlatr(1))/2.0)**2 + &
@@ -421,7 +450,7 @@ CONTAINS
                obs_err(:) = static_obs_err 
 
                ! calculate transformation matrix
-               CALL letkf(num_ens, num_obs_p, &
+               CALL letkf(DEF_DA_ENS, num_obs_p, &
                   pred_tb_h_p_ens, smap_tb_h_p, obs_err, d_p, loc_r, infl, &
                   trans)
 
@@ -434,16 +463,16 @@ CONTAINS
                   wice_soi_ens = wice_soisno_ens(1:, :, 1)
 
                   ! analysis
-                  CALL dgemm('N', 'N', nl_soil, num_ens, num_ens, 1.0_8, wliq_soi_ens, &
-                     nl_soil, trans, num_ens, 0.0_8, wliq_soi_ens_da, nl_soil)
-                  CALL dgemm('N', 'N', nl_soil, num_ens, num_ens, 1.0_8, wice_soi_ens, &
-                     nl_soil, trans, num_ens, 0.0_8, wice_soi_ens_da, nl_soil)
+                  CALL dgemm('N', 'N', nl_soil, DEF_DA_ENS, DEF_DA_ENS, 1.0_8, wliq_soi_ens, &
+                     nl_soil, trans, DEF_DA_ENS, 0.0_8, wliq_soi_ens_da, nl_soil)
+                  CALL dgemm('N', 'N', nl_soil, DEF_DA_ENS, DEF_DA_ENS, 1.0_8, wice_soi_ens, &
+                     nl_soil, trans, DEF_DA_ENS, 0.0_8, wice_soi_ens_da, nl_soil)
                   wliq_soisno_ens(1:, :, 1) = wliq_soi_ens_da
                   wice_soisno_ens(1:, :, 1) = wice_soi_ens_da
 
                   ! limit the soil liquid and ice water in a reasonable range
                   DO i = 1, nl_soil
-                     DO iens = 1, num_ens
+                     DO iens = 1, DEF_DA_ENS
                         ! lower bound
                         wliq_soisno_ens(i, iens, 1) = max(0.0d0, wliq_soisno_ens(i, iens, 1))
                         wice_soisno_ens(i, iens, 1) = max(0.0d0, wice_soisno_ens(i, iens, 1))
@@ -466,21 +495,20 @@ CONTAINS
             ENDIF
 
             ! deallocate memory (cuz dimensions changes with patch)
-            IF (allocated(d_p            )) deallocate (d_p            )
-            IF (allocated(index_p        )) deallocate (index_p        )
-            IF (allocated(obs_err        )) deallocate (obs_err        )
-            IF (allocated(smap_ii        )) deallocate (smap_ii        )
-            IF (allocated(smap_jj        )) deallocate (smap_jj        )
-            IF (allocated(smap_lat       )) deallocate (smap_lat       )
-            IF (allocated(smap_lon       )) deallocate (smap_lon       )
-            IF (allocated(smap_tb_h      )) deallocate (smap_tb_h      )
-            IF (allocated(smap_tb_v      )) deallocate (smap_tb_v      )
-            IF (allocated(smap_lat_p     )) deallocate (smap_lat_p     )
-            IF (allocated(smap_lon_p     )) deallocate (smap_lon_p     )
-            IF (allocated(smap_tb_h_p    )) deallocate (smap_tb_h_p    )
-            IF (allocated(smap_tb_v_p    )) deallocate (smap_tb_v_p    )
-            IF (allocated(pred_tb_h_p_ens)) deallocate (pred_tb_h_p_ens)
-            IF (allocated(pred_tb_v_p_ens)) deallocate (pred_tb_v_p_ens)
+            IF (allocated(index_p         )) deallocate (index_p          )
+            IF (allocated(smap_lat_p      )) deallocate (smap_lat_p       )
+            IF (allocated(smap_lon_p      )) deallocate (smap_lon_p       )
+            IF (allocated(smap_tb_h_p     )) deallocate (smap_tb_h_p      )
+            IF (allocated(smap_tb_v_p     )) deallocate (smap_tb_v_p      )
+            IF (allocated(pred_tb_h_p_ens )) deallocate (pred_tb_h_p_ens  )
+            IF (allocated(pred_tb_v_p_ens )) deallocate (pred_tb_v_p_ens  )
+            IF (allocated(d_p             )) deallocate (d_p              )
+            IF (allocated(obs_err         )) deallocate (obs_err          )
+            IF (allocated(trans           )) deallocate (trans            )
+            IF (allocated(wice_soi_ens    )) deallocate (wice_soi_ens     )
+            IF (allocated(wice_soi_ens_da )) deallocate (wice_soi_ens_da  )
+            IF (allocated(wliq_soi_ens    )) deallocate (wliq_soi_ens     )
+            IF (allocated(wliq_soi_ens_da )) deallocate (wliq_soi_ens_da  )
          ENDIF
 #else
          ! for grid data assimilation
@@ -501,15 +529,20 @@ CONTAINS
 
                ! perform data assimilation if have observations
                IF (num_obs_p > 0) THEN
-                  allocate (index_p        (num_obs_p         ))
-                  allocate (smap_lat_p     (num_obs_p         ))
-                  allocate (smap_lon_p     (num_obs_p         ))
-                  allocate (smap_tb_h_p    (num_obs_p         ))
-                  allocate (smap_tb_v_p    (num_obs_p         ))
-                  allocate (pred_tb_h_p_ens(num_obs_p, num_ens))
-                  allocate (pred_tb_v_p_ens(num_obs_p, num_ens))
-                  allocate (d_p            (num_obs_p         ))
-                  allocate (obs_err        (num_obs_p         ))
+                  allocate (index_p        (num_obs_p            ))
+                  allocate (smap_lat_p     (num_obs_p            ))
+                  allocate (smap_lon_p     (num_obs_p            ))
+                  allocate (smap_tb_h_p    (num_obs_p            ))
+                  allocate (smap_tb_v_p    (num_obs_p            ))
+                  allocate (pred_tb_h_p_ens(num_obs_p, DEF_DA_ENS))
+                  allocate (pred_tb_v_p_ens(num_obs_p, DEF_DA_ENS))
+                  allocate (d_p            (num_obs_p            ))
+                  allocate (obs_err        (num_obs_p            ))
+                  allocate (trans          (DEF_DA_ENS,DEF_DA_ENS))
+                  allocate (wice_soi_ens   (nl_soil,   DEF_DA_ENS))
+                  allocate (wice_soi_ens_da(nl_soil,   DEF_DA_ENS))
+                  allocate (wliq_soi_ens   (nl_soil,   DEF_DA_ENS))
+                  allocate (wliq_soi_ens_da(nl_soil,   DEF_DA_ENS))
 
                   ! index of observations around target patch
                   index_p = (smap_lat(:) < lat_p_n .and. smap_lat(:) > lat_p_s .and. &
@@ -524,7 +557,7 @@ CONTAINS
                   smap_tb_v_p = pack(smap_tb_v, index_p)
 
                   ! predicted observations around target patch
-                  DO i = 1, num_ens
+                  DO i = 1, DEF_DA_ENS
                      pred_tb_h_p_ens(:, i) = pack(pred_tb_h_ogrid_ens(:, i), index_p)
                      pred_tb_v_p_ens(:, i) = pack(pred_tb_v_ogrid_ens(:, i), index_p)
                   ENDDO
@@ -537,7 +570,7 @@ CONTAINS
                   obs_err(:) = static_obs_err
 
                   ! calculate transformation matrix
-                  CALL letkf(num_ens, num_obs_p, &
+                  CALL letkf(DEF_DA_ENS, num_obs_p, &
                      pred_tb_h_p_ens, smap_tb_h_p, obs_err, d_p, loc_r, infl, &
                      trans)
 
@@ -546,25 +579,25 @@ CONTAINS
                      has_DA = .TRUE.
 
                      ! soil layer
-                     DO iens = 1, num_ens
+                     DO iens = 1, DEF_DA_ENS
                         wliq_soi_ens(:, iens) = wliq_soisno_ens(1:, iens, np)
                         wice_soi_ens(:, iens) = wice_soisno_ens(1:, iens, np)
-                     END DO
+                     ENDDO
 
                      ! analysis
-                     CALL dgemm('N', 'N', nl_soil, num_ens, num_ens, 1.0_8, wliq_soi_ens, &
-                        nl_soil, trans, num_ens, 0.0_8, wliq_soi_ens_da, nl_soil)
-                     CALL dgemm('N', 'N', nl_soil, num_ens, num_ens, 1.0_8, wice_soi_ens, &
-                        nl_soil, trans, num_ens, 0.0_8, wice_soi_ens_da, nl_soil)
+                     CALL dgemm('N', 'N', nl_soil, DEF_DA_ENS, DEF_DA_ENS, 1.0_8, wliq_soi_ens, &
+                        nl_soil, trans, DEF_DA_ENS, 0.0_8, wliq_soi_ens_da, nl_soil)
+                     CALL dgemm('N', 'N', nl_soil, DEF_DA_ENS, DEF_DA_ENS, 1.0_8, wice_soi_ens, &
+                        nl_soil, trans, DEF_DA_ENS, 0.0_8, wice_soi_ens_da, nl_soil)
 
-                     DO iens = 1, num_ens
+                     DO iens = 1, DEF_DA_ENS
                         wliq_soisno_ens(1:, iens, np) = wliq_soi_ens_da(1:, iens)
                         wice_soisno_ens(1:, iens, np) = wice_soi_ens_da(1:, iens)
-                     END DO
+                     ENDDO
 
                      ! limit the soil liquid and ice water in a reasonable range
                      DO i = 1, nl_soil
-                        DO iens = 1, num_ens
+                        DO iens = 1, DEF_DA_ENS
                            ! lower bound
                            wliq_soisno_ens(i, iens, np) = max(0.0d0, wliq_soisno_ens(i, iens, np))
                            wice_soisno_ens(i, iens, np) = max(0.0d0, wice_soisno_ens(i, iens, np))
@@ -603,6 +636,11 @@ CONTAINS
                IF (allocated(pred_tb_v_p_ens )) deallocate (pred_tb_v_p_ens  )
                IF (allocated(d_p             )) deallocate (d_p              )
                IF (allocated(obs_err         )) deallocate (obs_err          )
+               IF (allocated(trans           )) deallocate (trans            )
+               IF (allocated(wice_soi_ens    )) deallocate (wice_soi_ens     )
+               IF (allocated(wice_soi_ens_da )) deallocate (wice_soi_ens_da  )
+               IF (allocated(wliq_soi_ens    )) deallocate (wliq_soi_ens     )
+               IF (allocated(wliq_soi_ens_da )) deallocate (wliq_soi_ens_da  )
             ENDDO
          ENDIF
 #endif
@@ -612,20 +650,22 @@ CONTAINS
 !#############################################################################
 ! Calculate ensemble brightness temperature after DA for diagnostic
 !#############################################################################
-      IF (p_is_worker) THEN
-         DO iens = 1, num_ens
-            DO np = 1, numpatch
-               CALL forward( &
-                  patchtype(np), patchclass(np), dz_sno_ens(:, iens, np), &
-                  forc_topo(np), htop(np), &
-                  tref_ens(iens, np), t_soisno_ens(:, iens, np), tleaf_ens(iens, np), &
-                  wliq_soisno_ens(:, iens, np), wice_soisno_ens(:, iens, np), h2osoi_ens(:, iens, np), &
-                  snowdp_ens(iens, np), lai_ens(iens, np), sai_ens(iens, np), &
-                  vf_clay(:, np), vf_sand(:, np), BD_all(:, np), porsl(:, np), &
-                  smap_theta, smap_fghz, &
-                  brt_temp_ens(1, iens, np), brt_temp_ens(2, iens, np))
+      IF (has_obs) THEN
+         IF (p_is_worker) THEN
+            DO iens = 1, DEF_DA_ENS
+               DO np = 1, numpatch
+                  CALL forward( &
+                     patchtype(np), patchclass(np), dz_sno_ens(:, iens, np), &
+                     forc_topo(np), htop(np), &
+                     tref_ens(iens, np), t_soisno_ens(:, iens, np), tleaf_ens(iens, np), &
+                     wliq_soisno_ens(:, iens, np), wice_soisno_ens(:, iens, np), h2osoi_ens(:, iens, np), &
+                     snowdp_ens(iens, np), lai_ens(iens, np), sai_ens(iens, np), &
+                     vf_clay(:, np), vf_sand(:, np), BD_all(:, np), porsl(:, np), &
+                     smap_theta, smap_fghz, &
+                     t_brt_ens(1, iens, np), t_brt_ens(2, iens, np))
+               ENDDO
             ENDDO
-         ENDDO
+         ENDIF
       ENDIF
 
       ! deallocate memory (cuz dimensions changes with patch)
@@ -646,6 +686,12 @@ CONTAINS
       IF (allocated(smap_tb_v      )) deallocate (smap_tb_v      )
       IF (allocated(smap_ii        )) deallocate (smap_ii        )
       IF (allocated(smap_jj        )) deallocate (smap_jj        )
+      
+      IF (allocated(trans           )) deallocate (trans            )
+      IF (allocated(wice_soi_ens    )) deallocate (wice_soi_ens     )
+      IF (allocated(wice_soi_ens_da )) deallocate (wice_soi_ens_da  )
+      IF (allocated(wliq_soi_ens    )) deallocate (wliq_soi_ens     )
+      IF (allocated(wliq_soi_ens_da )) deallocate (wliq_soi_ens_da  )
 
    END SUBROUTINE run_DA_SMAP
 
@@ -656,6 +702,7 @@ CONTAINS
 !-----------------------------------------------------------------------------
       IMPLICIT NONE
 
+!-----------------------------------------------------------------------------
       IF (allocated(smap_time              )) deallocate (smap_time              )
       IF (allocated(dt_b                   )) deallocate (dt_b                   )
       IF (allocated(dt_e                   )) deallocate (dt_e                   )
@@ -679,9 +726,13 @@ CONTAINS
       IF (allocated(pred_tb_h_p_ens        )) deallocate (pred_tb_h_p_ens        )
       IF (allocated(pred_tb_v_p_ens        )) deallocate (pred_tb_v_p_ens        )
       IF (allocated(d_p                    )) deallocate (d_p                    )
-
+      IF (allocated(trans                  )) deallocate (trans                  )
+      IF (allocated(wice_soi_ens           )) deallocate (wice_soi_ens           )
+      IF (allocated(wice_soi_ens_da        )) deallocate (wice_soi_ens_da        )
+      IF (allocated(wliq_soi_ens           )) deallocate (wliq_soi_ens           )
+      IF (allocated(wliq_soi_ens_da        )) deallocate (wliq_soi_ens_da        )
    END SUBROUTINE end_DA_SMAP
-
 
 !-----------------------------------------------------------------------------
 END MODULE MOD_DA_SMAP
+#endif
