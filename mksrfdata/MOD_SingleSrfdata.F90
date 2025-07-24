@@ -84,8 +84,9 @@ MODULE MOD_SingleSrfdata
 
    real(r8) :: SITE_dbedrock  = 0.
 
-   real(r8) :: SITE_elevation = 0.
-   real(r8) :: SITE_elvstd    = 0.
+   real(r8) :: SITE_elevation  = 0.
+   real(r8) :: SITE_elvstd     = 0.
+   real(r8) :: SITE_sloperatio = 0.
 
    ! topography factors used for downscaling
    real(r8) :: SITE_svf = 0.
@@ -105,7 +106,7 @@ MODULE MOD_SingleSrfdata
               u_site_alpha_vgm,  u_site_L_vgm,        u_site_n_vgm,       u_site_BA_alpha,          &
               u_site_BA_beta,    u_site_soil_texture, u_site_dbedrock,    u_site_elevation,         &
               u_site_elvstd,     u_site_svf,          u_site_cur,         u_site_slp_type,          &
-              u_site_asp_type,   u_site_area_type,    u_site_sf_lut
+              u_site_asp_type,   u_site_area_type,    u_site_sf_lut,      u_site_sloperatio
 
 
    integer  :: SITE_ncar_rid
@@ -212,7 +213,7 @@ CONTAINS
    character(len=4)   :: cyear, c
 
    type(grid_type) :: gridpatch,  gridcrop, gridpft,  gridhtop, gridlai, gridlake,  &
-                      gridbright, gridsoil, gridrock, gridelv,  grid_topo_factor
+                      gridbright, gridsoil, gridrock, gridtopo, grid_topo_factor
 
    integer,  allocatable :: croptyp(:), pfttyp (:)
    real(r8), allocatable :: pctcrop(:), pctpfts(:), pftLAI(:), pftSAI(:), tea_f(:), tea_b(:)
@@ -275,8 +276,8 @@ CONTAINS
       numpatch = 1
 
 #ifdef LULC_USGS
-      u_site_landtype = (SITE_landtype >= 0) &
-         .or. ((USE_SITE_landtype .or. .not. mksrfdata) .and. ncio_var_exist(fsrfdata,'USGS_classification'))
+      u_site_landtype = (.not. mksrfdata) .or. (SITE_landtype >= 0) &
+         .or. (USE_SITE_landtype .and. ncio_var_exist(fsrfdata,'USGS_classification'))
 
       IF (u_site_landtype) THEN
          IF (SITE_landtype == -1) THEN
@@ -289,8 +290,8 @@ CONTAINS
             SITE_lon_location, SITE_lat_location, SITE_landtype)
       ENDIF
 #else
-      u_site_landtype = (SITE_landtype >= 0) &
-         .or. ((USE_SITE_landtype .or. .not.mksrfdata) .and. ncio_var_exist(fsrfdata,'IGBP_classification'))
+      u_site_landtype = (.not. mksrfdata) .or. (SITE_landtype >= 0) &
+         .or. (USE_SITE_landtype .and. ncio_var_exist(fsrfdata,'IGBP_classification'))
 
       IF (u_site_landtype)  THEN
          IF (SITE_landtype == -1) THEN
@@ -1179,14 +1180,15 @@ CONTAINS
 
       ! (10) topography
       readflag = ((.not. mksrfdata) .or. USE_SITE_topography)
+
       u_site_elevation = readflag &
          .and. ncio_var_exist (fsrfdata, 'elevation',readflag)
       IF (u_site_elevation) THEN
          CALL ncio_read_serial (fsrfdata, 'elevation', SITE_elevation)
       ELSE
-         CALL gridelv%define_by_name ('colm_500m')
-         filename = trim(DEF_dir_rawdata)//'/elevation.nc'
-         CALL read_point_var_2d_real8 (gridelv, filename, 'elevation', &
+         CALL gridtopo%define_by_name ('colm_500m')
+         filename = trim(DEF_dir_rawdata)//'/topography.nc'
+         CALL read_point_var_2d_real8 (gridtopo, filename, 'elevation', &
             SITE_lon_location, SITE_lat_location, SITE_elevation)
       ENDIF
 
@@ -1195,7 +1197,21 @@ CONTAINS
       IF (u_site_elvstd) THEN
          CALL ncio_read_serial (fsrfdata, 'elvstd', SITE_elvstd)
       ELSE
-         SITE_elvstd = 0.
+         CALL gridtopo%define_by_name ('colm_500m')
+         filename = trim(DEF_dir_rawdata)//'/topography.nc'
+         CALL read_point_var_2d_real8 (gridtopo, filename, 'elvstd', &
+            SITE_lon_location, SITE_lat_location, SITE_elvstd)
+      ENDIF
+
+      u_site_sloperatio = readflag &
+         .and. ncio_var_exist (fsrfdata, 'sloperatio',readflag)
+      IF (u_site_sloperatio) THEN
+         CALL ncio_read_serial (fsrfdata, 'sloperatio', SITE_sloperatio)
+      ELSE
+         CALL gridtopo%define_by_name ('colm_500m')
+         filename = trim(DEF_dir_rawdata)//'/topography.nc'
+         CALL read_point_var_2d_real8 (gridtopo, filename, 'slope', &
+            SITE_lon_location, SITE_lat_location, SITE_sloperatio)
       ENDIF
 
       IF (DEF_USE_Forcing_Downscaling) THEN
@@ -1309,8 +1325,9 @@ CONTAINS
       ENDIF
 
       IF (mksrfdata) THEN
-         write(*,'(A,F8.2,3A)') 'Elevation : ', SITE_elevation, ' (from ',trim(datasource(u_site_elevation)),')'
-         write(*,'(A,F8.2,3A)') 'Elv std   : ', SITE_elvstd,    ' (from ',trim(datasource(u_site_elvstd)),')'
+         write(*,'(A,F8.2,3A)') 'Elevation : ', SITE_elevation , ' (from ',trim(datasource(u_site_elevation)),')'
+         write(*,'(A,F8.2,3A)') 'Elv std   : ', SITE_elvstd    , ' (from ',trim(datasource(u_site_elvstd)),')'
+         write(*,'(A,F8.2,3A)') 'SlopeRatio: ', SITE_sloperatio, ' (from ',trim(datasource(u_site_sloperatio)),')'
 
          IF (DEF_USE_Forcing_Downscaling) THEN
             write(*,'(A,F8.2,3A)') 'Sky view factor : ', SITE_svf, ' (from ',trim(datasource(u_site_svf)),')'
@@ -1422,7 +1439,7 @@ CONTAINS
    character(len=4)   :: cyear, c, c5year
 
    type(grid_type) :: gridupatch, gridhroof, gridfroof , gridhtopu, gridfvegu, gridflakeu, gridlaiu, &
-                      gridpopu  , gridlucy , gridbright, gridsoil , gridrock , gridelv   , gridlake, &
+                      gridpopu  , gridlucy , gridbright, gridsoil , gridrock , gridtopo  , gridlake, &
                       grid_topo_factor
 
    real(r8), allocatable :: tea_f(:), tea_b(:)
@@ -2430,21 +2447,37 @@ ENDIF
 
          ! (10) topography
          readflag = USE_SITE_topography
+
          u_site_elevation = readflag .and. ncio_var_exist (fsrfdata, 'elevation',readflag)
          IF (u_site_elevation) THEN
             CALL ncio_read_serial (fsrfdata, 'elevation', SITE_elevation)
          ELSE
-            CALL gridelv%define_by_name ('colm_500m')
+            CALL gridtopo%define_by_name ('colm_500m')
             filename = trim(DEF_dir_rawdata)//'/elevation.nc'
-            CALL read_point_var_2d_real8 (gridelv, filename, 'elevation', &
+            CALL read_point_var_2d_real8 (gridtopo, filename, 'elevation', &
                SITE_lon_location, SITE_lat_location, SITE_elevation)
          ENDIF
 
-         u_site_elvstd = readflag .and. ncio_var_exist (fsrfdata, 'elvstd',readflag)
+         u_site_elvstd = readflag &
+            .and. ncio_var_exist (fsrfdata, 'elvstd',readflag)
          IF (u_site_elvstd) THEN
             CALL ncio_read_serial (fsrfdata, 'elvstd', SITE_elvstd)
          ELSE
-            SITE_elvstd = 0.
+            CALL gridtopo%define_by_name ('colm_500m')
+            filename = trim(DEF_dir_rawdata)//'/topography.nc'
+            CALL read_point_var_2d_real8 (gridtopo, filename, 'elvstd', &
+               SITE_lon_location, SITE_lat_location, SITE_elvstd)
+         ENDIF
+
+         u_site_sloperatio = readflag &
+            .and. ncio_var_exist (fsrfdata, 'sloperatio',readflag)
+         IF (u_site_sloperatio) THEN
+            CALL ncio_read_serial (fsrfdata, 'sloperatio', SITE_sloperatio)
+         ELSE
+            CALL gridtopo%define_by_name ('colm_500m')
+            filename = trim(DEF_dir_rawdata)//'/topography.nc'
+            CALL read_point_var_2d_real8 (gridtopo, filename, 'slope', &
+               SITE_lon_location, SITE_lat_location, SITE_sloperatio)
          ENDIF
 
          IF (DEF_USE_Forcing_Downscaling) THEN
@@ -2556,6 +2589,7 @@ ENDIF
 
          write(*,'(A,F8.2,3A)') 'Elevation : ', SITE_elevation, ' (from ',datasource(u_site_elevation),')'
          write(*,'(A,F8.2,3A)') 'Elv std   : ', SITE_elvstd,    ' (from ',datasource(u_site_elvstd),')'
+         write(*,'(A,F8.2,3A)') 'SlopeRatio: ', SITE_sloperatio,' (from ',datasource(u_site_sloperatio),')'
 
          IF (DEF_USE_Forcing_Downscaling) THEN
             write(*,'(A,F8.2,3A)') 'Sky view factor : ', SITE_svf, ' (from ',datasource(u_site_svf),')'
@@ -2654,8 +2688,9 @@ ENDIF
             CALL ncio_read_serial (fsrfdata, 'depth_to_bedrock', SITE_dbedrock)
          ENDIF
 
-         CALL ncio_read_serial (fsrfdata, 'elevation', SITE_elevation)
-         CALL ncio_read_serial (fsrfdata, 'elvstd'   , SITE_elvstd   )
+         CALL ncio_read_serial (fsrfdata, 'elevation' , SITE_elevation )
+         CALL ncio_read_serial (fsrfdata, 'elvstd'    , SITE_elvstd    )
+         CALL ncio_read_serial (fsrfdata, 'sloperatio', SITE_sloperatio)
 
          ! used for downscaling
          IF (DEF_USE_Forcing_Downscaling) THEN
@@ -2989,6 +3024,10 @@ ENDIF
       CALL ncio_put_attr     (fsrfdata, 'elvstd', 'source', trim(datasource(u_site_elvstd)))
       CALL ncio_put_attr     (fsrfdata, 'elvstd', 'long_name', 'standard deviation of elevation')
 
+      CALL ncio_write_serial (fsrfdata, 'sloperatio', SITE_sloperatio)
+      CALL ncio_put_attr     (fsrfdata, 'sloperatio', 'source', trim(datasource(u_site_sloperatio)))
+      CALL ncio_put_attr     (fsrfdata, 'sloperatio', 'long_name', 'slope ratio')
+
       ! used for downscaling
       IF (DEF_USE_Forcing_Downscaling) THEN
          CALL ncio_write_serial (fsrfdata, 'SITE_svf', SITE_svf)
@@ -3285,6 +3324,10 @@ ENDIF
       CALL ncio_write_serial (fsrfdata, 'elvstd', SITE_elvstd)
       CALL ncio_put_attr     (fsrfdata, 'elvstd', 'source', trim(datasource(u_site_elvstd)))
       CALL ncio_put_attr     (fsrfdata, 'elvstd', 'long_name', 'standard deviation of elevation')
+
+      CALL ncio_write_serial (fsrfdata, 'sloperatio', SITE_sloperatio)
+      CALL ncio_put_attr     (fsrfdata, 'sloperatio', 'source', trim(datasource(u_site_sloperatio)))
+      CALL ncio_put_attr     (fsrfdata, 'sloperatio', 'long_name', 'slope ratio')
 
       ! used for downscaling
       IF (DEF_USE_Forcing_Downscaling) THEN
