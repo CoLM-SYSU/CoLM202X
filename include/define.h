@@ -72,6 +72,12 @@
 
 ! 9. If defined, data assimilation is used.
 #undef DataAssimilation
+#if (defined DataAssimilation)
+#define LULC_IGBP
+#undef LULC_USGS
+#undef LULC_IGBP_PFT
+#undef LULC_IGBP_PC
+#endif
 
 ! 10. Interface to AI model.
 #undef USESplitAI

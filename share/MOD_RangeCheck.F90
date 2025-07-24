@@ -27,6 +27,7 @@ MODULE MOD_RangeCheck
       MODULE procedure check_vector_data_real8_2d
       MODULE procedure check_vector_data_real8_3d
       MODULE procedure check_vector_data_real8_4d
+      MODULE procedure check_vector_data_real8_5d
       MODULE procedure check_vector_data_int32_1d
    END INTERFACE check_vector_data
 
@@ -681,6 +682,118 @@ CONTAINS
       ENDIF
 
    END SUBROUTINE check_vector_data_real8_4d
+
+   
+   ! ----------
+   SUBROUTINE check_vector_data_real8_5d (varname, vdata, spv_in, limits)
+
+   USE MOD_Precision
+   USE MOD_SPMD_Task
+   USE MOD_Vars_Global, only : spval
+   IMPLICIT NONE
+
+   character(len=*), intent(in)   :: varname
+   real(r8), intent(in)           :: vdata(:,:,:,:,:)
+   real(r8), intent(in), optional :: spv_in
+   real(r8), intent(in), optional :: limits(2) 
+
+   ! Local variables
+   real(r8) :: vmin, vmax, spv
+   real(r8), allocatable :: vmin_all(:), vmax_all(:)
+   integer  :: i, j, k, l, m
+   logical  :: has_nan
+   character(len=256) :: wfmt, ss, info
+
+      IF (p_is_worker) THEN
+
+         IF (present(spv_in)) THEN
+            spv = spv_in
+         ELSE
+            spv = spval
+         ENDIF
+
+         IF (any(vdata /= spv)) THEN
+            vmin = minval(vdata, mask = vdata /= spv)
+            vmax = maxval(vdata, mask = vdata /= spv)
+         ELSE
+            vmin = spv
+            vmax = spv
+         ENDIF
+
+         has_nan = .false.
+         DO m = 1, size(vdata,5)
+            DO l = 1, size(vdata,4)
+               DO k = 1, size(vdata,3)
+                  DO j = 1, size(vdata,2)
+                     DO i = 1, size(vdata,1)
+                        has_nan = has_nan .or. isnan_ud(vdata(i,j,k,l,m))
+                     ENDDO
+                  ENDDO
+               ENDDO
+            ENDDO
+         ENDDO
+
+#ifdef USEMPI
+         IF (p_iam_worker == p_root) THEN
+            allocate (vmin_all (0:p_np_worker-1))
+            allocate (vmax_all (0:p_np_worker-1))
+            CALL mpi_gather (vmin, 1, MPI_REAL8, vmin_all, 1, MPI_REAL8, p_root, p_comm_worker, p_err)
+            CALL mpi_gather (vmax, 1, MPI_REAL8, vmax_all, 1, MPI_REAL8, p_root, p_comm_worker, p_err)
+         ELSE
+            CALL mpi_gather (vmin, 1, MPI_REAL8, MPI_RNULL_P, 1, MPI_REAL8, p_root, p_comm_worker, p_err)
+            CALL mpi_gather (vmax, 1, MPI_REAL8, MPI_RNULL_P, 1, MPI_REAL8, p_root, p_comm_worker, p_err)
+         ENDIF
+
+
+         CALL mpi_allreduce (MPI_IN_PLACE, has_nan, 1, MPI_LOGICAL, MPI_LOR, p_comm_worker, p_err)
+
+         IF (p_iam_worker == p_root) THEN
+            IF (any(vmin_all /= spv)) THEN
+               vmin = minval(vmin_all, mask = (vmin_all /= spv))
+            ELSE
+               vmin = spv
+            ENDIF
+
+            IF (any(vmax_all /= spv)) THEN
+               vmax = maxval(vmax_all, mask = (vmax_all /= spv))
+            ELSE
+               vmax = spv
+            ENDIF
+
+            deallocate (vmin_all)
+            deallocate (vmax_all)
+         ENDIF
+#endif
+
+         IF (p_iam_worker == p_root) THEN
+
+            info = ''
+
+            IF (has_nan) THEN
+               info = trim(info) // ' with NAN'
+            ENDIF
+
+            IF (present(limits)) THEN
+               IF ((vmin < limits(1)) .or. (vmax > limits(2))) THEN
+                  info = trim(info) // ' Out of Range!'
+               ENDIF
+            ENDIF
+
+            wfmt = "('Check vector data:', A25, ' is in (', e20.10, ',', e20.10, ')', A)"
+            write(*,wfmt) varname, vmin, vmax, info
+
+#if(defined CoLMDEBUG)
+            IF (len_trim(info) > 0) THEN
+               CALL CoLM_stop ()
+            ENDIF
+#endif
+
+         ENDIF
+
+      ENDIF
+
+   END SUBROUTINE check_vector_data_real8_5d
+   
 
    ! ----------
    SUBROUTINE check_vector_data_int32_1d (varname, vdata, spv_in)

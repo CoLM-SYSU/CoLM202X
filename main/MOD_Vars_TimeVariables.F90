@@ -524,6 +524,7 @@ MODULE MOD_Vars_TimeVariables
    integer , allocatable :: irrig_method_rice1     (:) ! irrigation method for rice1 (0-3)
    integer , allocatable :: irrig_method_rice2     (:) ! irrigation method for rice2 (0-3)
    integer , allocatable :: irrig_method_sugarcane (:) ! irrigation method for sugarcane (0-3)
+
    ! PUBLIC MEMBER FUNCTIONS:
    PUBLIC :: allocate_TimeVariables
    PUBLIC :: deallocate_TimeVariables
@@ -566,6 +567,7 @@ CONTAINS
             allocate (h2osoi            (1:nl_soil,numpatch)); h2osoi      (:,:) = spval
             allocate (rootr             (1:nl_soil,numpatch)); rootr       (:,:) = spval
             allocate (rootflux          (1:nl_soil,numpatch)); rootflux    (:,:) = spval
+            
 !Plant Hydraulic variables
             allocate (vegwp             (1:nvegwcs,numpatch)); vegwp       (:,:) = spval
             allocate (gs0sun                      (numpatch)); gs0sun        (:) = spval
@@ -839,6 +841,7 @@ CONTAINS
             deallocate (irrig_method_rice1     )
             deallocate (irrig_method_rice2     )
             deallocate (irrig_method_sugarcane )
+
          ENDIF
       ENDIF
 
