@@ -186,11 +186,7 @@ SUBROUTINE Aggregation_PercentagesPFT (gland, dir_rawdata, dir_model_landdata, l
       lndname = trim(dir_model_landdata) // '/diag/cropfrac_elm_' // trim(cyear) // '.nc'
       CALL srfdata_map_and_write (cropfrac, cropclass, typcrop, m_patch2diag,   &
          -1.0e36_r8, lndname, 'cropfrac_elm', compress = 1, write_mode = 'one', &
-<<<<<<< Updated upstream
-         stat_mode = 'fraction', pctshared = landpatch%pctshared)
-=======
-         sdefval=0._r8, tat_mode = 'fraction', pctshared = landpatch%pctshared)
->>>>>>> Stashed changes
+         defval=0._r8, tat_mode = 'fraction', pctshared = landpatch%pctshared)
 #endif
 #endif
 
