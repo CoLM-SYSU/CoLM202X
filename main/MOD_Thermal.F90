@@ -994,6 +994,10 @@ ENDIF
       etrsha_out    = sum( etrsha_p    (ps:pe)*pftfrac(ps:pe) )
       hprl          = sum( hprl_p      (ps:pe)*pftfrac(ps:pe) )
       dheatl        = sum( dheatl_p    (ps:pe)*pftfrac(ps:pe) )
+IF (DEF_USE_OZONESTRESS)THEN
+      o3uptakesun   = sum(o3uptakesun_p(ps:pe)*pftfrac(ps:pe) )
+      o3uptakesha   = sum(o3uptakesha_p(ps:pe)*pftfrac(ps:pe) )
+END IF
 
       IF(DEF_USE_PLANTHYDRAULICS)THEN
          DO j = 1, nvegwcs
