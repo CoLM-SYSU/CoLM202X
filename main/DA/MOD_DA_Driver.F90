@@ -64,13 +64,13 @@ SUBROUTINE DADRIVER(idate, deltim, dolai, doalb, dosst, oro)
    DO j = 1, DEF_DA_ENS
       DO i = 1, numpatch
          ! force the first ensemble member to be the same as the control run
-         forc_t_ens(1) = forc_t(i)
-         forc_prc_ens(1) = forc_prc(i)
-         forc_prl_ens(1) = forc_prl(i)
-         forc_sols_ens(1) = forc_sols(i)
-         forc_soll_ens(1) = forc_soll(i)
-         forc_solsd_ens(1) = forc_solsd(i)
-         forc_solld_ens(1) = forc_solld(i)
+         forc_t_ens    (DEF_DA_ENS) = forc_t(i)
+         forc_prc_ens  (DEF_DA_ENS) = forc_prc(i)
+         forc_prl_ens  (DEF_DA_ENS) = forc_prl(i)
+         forc_sols_ens (DEF_DA_ENS) = forc_sols(i)
+         forc_soll_ens (DEF_DA_ENS) = forc_soll(i)
+         forc_solsd_ens(DEF_DA_ENS) = forc_solsd(i)
+         forc_solld_ens(DEF_DA_ENS) = forc_solld(i)
 
          ! generate ensemble samples by forcing
          IF (DEF_DA_ENS > 1) THEN
@@ -80,10 +80,10 @@ SUBROUTINE DADRIVER(idate, deltim, dolai, doalb, dosst, oro)
                forc_t(i), &
                forc_prc(i), forc_prl(i), &
                forc_sols(i), forc_soll(i), forc_solsd(i), forc_solld(i), &
-               forc_t_ens(2:DEF_DA_ENS), &
-               forc_prc_ens(2:DEF_DA_ENS), forc_prl_ens(2:DEF_DA_ENS), &
-               forc_sols_ens(2:DEF_DA_ENS), forc_soll_ens(2:DEF_DA_ENS), &
-               forc_solsd_ens(2:DEF_DA_ENS), forc_solld_ens(2:DEF_DA_ENS))
+               forc_t_ens(1:DEF_DA_ENS-1), &
+               forc_prc_ens(1:DEF_DA_ENS-1), forc_prl_ens(1:DEF_DA_ENS-1), &
+               forc_sols_ens(1:DEF_DA_ENS-1), forc_soll_ens(1:DEF_DA_ENS-1), &
+               forc_solsd_ens(1:DEF_DA_ENS-1), forc_solld_ens(1:DEF_DA_ENS-1))
          ENDIF
 
          ! Apply forcing mask
@@ -118,6 +118,7 @@ SUBROUTINE DADRIVER(idate, deltim, dolai, doalb, dosst, oro)
                   vf_quartz(1:, i),  vf_gravels(1:, i), vf_om(1:, i),      vf_sand(1:, i), &
                   wf_gravels(1:, i), wf_sand(1:, i),    porsl(1:, i),      psi0(1:, i), &
                   bsw(1:, i),        theta_r(1:, i),    fsatmax(i),        fsatdcf(:), &
+                  topoweti(i),       alp_twi(i),        chi_twi(i),        mu_twi(i),  &
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
                   alpha_vgm(1:, i),  n_vgm(1:, i),      L_vgm(1:, i), &
                   sc_vgm(1:, i),     fc_vgm(1:, i), &
@@ -186,7 +187,7 @@ SUBROUTINE DADRIVER(idate, deltim, dolai, doalb, dosst, oro)
                   taux(i),           tauy(i),           fsena_ens(j, i),    fevpa_ens(j, i), &
                   lfevpa_ens(j, i),  fsenl(i),          fevpl(i),           etr(i), &
                   fseng(i),          fevpg(i),          olrg(i),            fgrnd(i), &
-                  trad_ens(j, i),    tref_ens(j, i),    qref_ens(j, i), &
+                  trad_ens(j, i),    tref_ens(j, i),    qref_ens(j, i),     frcsat(i), &
                   rsur_ens(j, i),    rsur_se(i),        rsur_ie(i),         rnof(i), &
                   qintr(i),          qinfl(i),          qdrip(i), &
                   rst(i),            assim(i),          respc(i),           sabvsun(i), &

@@ -121,6 +121,7 @@ OBJS_BASIC =    \
 				 MOD_Vars_1DPFTFluxes.o         \
 				 MOD_Vars_1DFluxes.o            \
 				 MOD_Vars_1DForcing.o           \
+				 MOD_DA_Vars_1DFluxes.o         \
 				 MOD_DA_Vars_TimeVariables.o    \
 				 MOD_Hydro_SoilFunction.o       \
 				 MOD_Hydro_SoilWater.o          \

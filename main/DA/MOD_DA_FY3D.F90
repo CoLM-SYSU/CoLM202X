@@ -17,7 +17,7 @@ MODULE MOD_DA_FY3D
    USE MOD_Vars_Global, only: pi, nl_soil
    USE MOD_LandPatch
    USE MOD_Block
-   USE MOD_Namelist, only: DEF_DA_ENS
+   USE MOD_Namelist
    IMPLICIT NONE
    SAVE
 
@@ -268,9 +268,9 @@ CONTAINS
                   pred_tb_h_pset_ens(iens, np), pred_tb_v_pset_ens(iens, np))
             ENDDO
          ENDDO
+         t_brt_ens(1,:,:) = pred_tb_h_pset_ens
+         t_brt_ens(2,:,:) = pred_tb_v_pset_ens
       ENDIF
-      t_brt_ens(1,:,:) = pred_tb_h_pset_ens
-      t_brt_ens(2,:,:) = pred_tb_v_pset_ens
 
       ! read observations data (only for DA)
       IF (has_obs) THEN
@@ -485,9 +485,11 @@ CONTAINS
                   wa_ens(:, 1) = wa_ens(:, 1) - sum(wliq_soisno_ens(1:, :, 1) + wice_soisno_ens(1:, :, 1) - wliq_soi_ens - wice_soi_ens, dim=1)
 
                   ! update volumetric water content for diagnostic
-                  h2osoi_ens(:,:,1) = wliq_soisno_ens(1:,:,1)/(dz_soi(i)*denh2o) + wice_soisno_ens(1:,:,1)/(dz_soi(i)*denice)
-                  h2osoi_ens(:, :, 1) = min(1.0d0, h2osoi_ens(:, :, 1))
-                  h2osoi_ens(:, :, 1) = max(0.0d0, h2osoi_ens(:, :, 1))
+                  DO iens = 1, DEF_DA_ENS
+                     h2osoi_ens(:, iens, 1) = wliq_soisno_ens(1:, iens, 1)/(dz_soi(:)*denh2o) + wice_soisno_ens(1:, iens, 1)/(dz_soi(:)*denice)
+                     h2osoi_ens(:, iens, 1) = min(1.0d0, h2osoi_ens(:, iens, 1))
+                     h2osoi_ens(:, iens, 1) = max(0.0d0, h2osoi_ens(:, iens, 1))
+                  ENDDO
                ENDIF
             ENDIF
 
@@ -617,9 +619,11 @@ CONTAINS
                      wa_ens(:, np) = wa_ens(:, np) - sum(wliq_soisno_ens(1:, :, np) + wice_soisno_ens(1:, :, np) - wliq_soi_ens - wice_soi_ens, dim=1)
 
                      ! update volumetric water content for diagnostic
-                     h2osoi_ens(:,:,np) = wliq_soisno_ens(1:,:,np)/(dz_soi(i)*denh2o) + wice_soisno_ens(1:,:,np)/(dz_soi(i)*denice)
-                     h2osoi_ens(:, :, np) = min(1.0d0, h2osoi_ens(:, :, np))
-                     h2osoi_ens(:, :, np) = max(0.0d0, h2osoi_ens(:, :, np))
+                     DO iens = 1, DEF_DA_ENS
+                        h2osoi_ens(:, iens, np) = wliq_soisno_ens(1:, iens, np)/(dz_soi(:)*denh2o) + wice_soisno_ens(1:, iens, np)/(dz_soi(:)*denice)
+                        h2osoi_ens(:, iens, np) = min(1.0d0, h2osoi_ens(:, iens, np))
+                        h2osoi_ens(:, iens, np) = max(0.0d0, h2osoi_ens(:, iens, np))
+                     ENDDO
                   ENDIF
                ENDIF
 

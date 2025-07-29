@@ -441,6 +441,7 @@ MODULE MOD_Namelist
    character(len=256) :: DEF_DA_obsdir  = 'null'
    logical            :: DEF_DA_GRACE   = .false.
    logical            :: DEF_DA_SMAP    = .false.
+   logical            :: DEF_DA_CMEM    = .false.    
    logical            :: DEF_DA_FY3D    = .false.
    logical            :: DEF_DA_SYNOP   = .false.
    integer            :: DEF_DA_ENS     = 20
@@ -1045,6 +1046,7 @@ CONTAINS
       DEF_DA_obsdir,                          &
       DEF_DA_GRACE,                           &
       DEF_DA_SMAP,                            &
+      DEF_DA_CMEM,                            &
       DEF_DA_FY3D,                            &
       DEF_DA_SYNOP,                           &
       DEF_DA_ENS,                             &
@@ -1573,6 +1575,7 @@ CONTAINS
       CALL mpi_bcast (DEF_DA_obsdir                          ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_DA_GRACE                           ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_DA_SMAP                            ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_DA_CMEM                            ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_DA_FY3D                            ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_DA_SYNOP                           ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_DA_ENS                             ,1   ,mpi_integer   ,p_address_master ,p_comm_glb ,p_err)

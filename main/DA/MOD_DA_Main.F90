@@ -73,18 +73,16 @@ CONTAINS
 !#############################################################################
 ! Perform data assimilation for different satellite products
 !#############################################################################
-      IF (DEF_DA_ENS > 1) THEN
-         IF (DEF_DA_GRACE) THEN
-            CALL run_DA_GRACE (idate, deltim)
-         ENDIF
+      IF (DEF_DA_GRACE) THEN
+         CALL run_DA_GRACE (idate, deltim)
+      ENDIF
 
-         IF (DEF_DA_SMAP) THEN
-            CALL run_DA_SMAP  (idate, deltim)
-         ENDIF
+      IF (DEF_DA_SMAP) THEN
+         CALL run_DA_SMAP  (idate, deltim)
+      ENDIF
 
-         IF (DEF_DA_FY3D) THEN
-            CALL run_DA_FY3D  (idate, deltim)
-         ENDIF
+      IF (DEF_DA_FY3D) THEN
+         CALL run_DA_FY3D  (idate, deltim)
       ENDIF
 
 !#############################################################################

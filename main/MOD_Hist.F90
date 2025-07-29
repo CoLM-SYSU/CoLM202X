@@ -3685,13 +3685,15 @@ CONTAINS
 
 
 #ifdef DataAssimilation
-         CALL write_history_variable_4d(.true., &
-            a_wliq_soisno_ens, file_hist, 'f_wliq_soisno_ens', itime_in_file, 'soilsnow', maxsnl + 1, nl_soil - maxsnl, &
-            'ens', 1, DEF_DA_ENS, sumarea, filter, 'ensemble liquid water in soil layers', 'kg/m2')
+         IF (DEF_DA_ENS > 1) THEN
+            CALL write_history_variable_4d(DEF_hist_vars%wliq_soisno, &
+               a_wliq_soisno_ens, file_hist, 'f_wliq_soisno_ens', itime_in_file, 'soilsnow', maxsnl + 1, nl_soil - maxsnl, &
+               'ens', 1, DEF_DA_ENS, sumarea, filter, 'ensemble liquid water in soil layers', 'kg/m2')
 
-         CALL write_history_variable_4d(.true., &
-            a_wice_soisno_ens, file_hist, 'f_wice_soisno_ens', itime_in_file, 'soilsnow', maxsnl + 1, nl_soil - maxsnl, &
-            'ens', 1, DEF_DA_ENS, sumarea, filter, 'ensemble ice lens in soil layers', 'kg/m2')
+            CALL write_history_variable_4d(DEF_hist_vars%wliq_soisno, &
+               a_wice_soisno_ens, file_hist, 'f_wice_soisno_ens', itime_in_file, 'soilsnow', maxsnl + 1, nl_soil - maxsnl, &
+               'ens', 1, DEF_DA_ENS, sumarea, filter, 'ensemble ice lens in soil layers', 'kg/m2')
+         END IF
 
          ! --------------------------------------------------------------------
          ! brightness temperature (excluding land ice, land water bodies and ocean patches)
@@ -3722,17 +3724,19 @@ CONTAINS
             CALL mp2g_hist%get_sumarea(sumarea, filter)
          END IF
 
-         CALL write_history_variable_4d(.true., &
-            a_h2osoi_ens, file_hist, 'f_h2osoi_ens', itime_in_file, 'soil', 1, nl_soil, 'ens', 1, DEF_DA_ENS, &
-            sumarea, filter, 'ensemble volumetric water in soil layers', 'm3/m3')
+         IF (DEF_DA_ENS > 1) THEN
+            CALL write_history_variable_4d(.true., &
+               a_h2osoi_ens, file_hist, 'f_h2osoi_ens', itime_in_file, 'soil', 1, nl_soil, 'ens', 1, DEF_DA_ENS, &
+               sumarea, filter, 'ensemble volumetric water in soil layers', 'm3/m3')
 
-         CALL write_history_variable_4d(.true., &
-            a_t_brt_ens, file_hist, 'f_t_brt_ens', itime_in_file, 'band', 1, 2, 'ens', 1, DEF_DA_ENS, &
-            sumarea, filter, 'ensemble H- & V- polarized brightness temperature', 'K')
+            CALL write_history_variable_4d(.true., &
+               a_t_brt_ens, file_hist, 'f_t_brt_ens', itime_in_file, 'band', 1, 2, 'ens', 1, DEF_DA_ENS, &
+               sumarea, filter, 'ensemble H- & V- polarized brightness temperature', 'K')
+         END IF
 
-         CALL write_history_variable_3d (.true., &
-            a_t_brt, file_hist, 'f_t_brt', itime_in_file,'band', 1, 2, sumarea, filter, &
-            'H- & V- polarized brightness temperature','K')
+         CALL write_history_variable_3d(.true., &
+            a_t_brt, file_hist, 'f_t_brt', itime_in_file, 'band', 1, 2, sumarea, filter, &
+            'H- & V- polarized brightness temperature', 'K')
 #endif
 
          ! --------------------------------------------------------------------

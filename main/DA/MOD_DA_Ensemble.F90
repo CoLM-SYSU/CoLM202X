@@ -115,7 +115,7 @@ CONTAINS
 
 !------------------------ Dummy Argument ------------------------------
       integer, intent(in) :: num_ens
-      integer, intent(in) :: idate(3)  !  add by fzl
+      integer, intent(in) :: idate(3)  
       real(r8), intent(in) :: &
          forc_t, &
          forc_prc, &

@@ -128,20 +128,21 @@ MODULE MOD_DA_Const
       1.0, 2.0, 1.0, 2.0, 1.0, 1.0, 1.0/)
 
    ! empirical roughness parameters (Table 2 in Wigneron et al. 2017)
-   ! (Note: CMEM uses a function based on satellite parameters)
-   ! real(r8), parameter, dimension(N_land_classification) :: hr &
-   !    = (/0.160, 0.160, 0.160, 0.160, 0.160, &
-   !        0.110, 0.110, 0.125, 0.156, 0.156, &
-   !        0.100, 0.108, 0.000, 0.130, 0.000, &
-   !        0.150, 0.000/)
+   ! (Note: CMEM uses a function based on satellite parameters,
+   !        see `hr` defined in MOD_DA_ObsOperator.F90)
+   real(r8), parameter, dimension(N_land_classification) :: hr_Wigneron &
+      = (/0.160, 0.160, 0.160, 0.160, 0.160, &
+          0.110, 0.110, 0.125, 0.156, 0.156, &
+          0.100, 0.108, 0.000, 0.130, 0.000, &
+          0.150, 0.000/)
 
    ! effective diffusion albedo (Table 3 in Wigneron et al. 2017)
-   !real(r8), parameter, dimension(N_land_classification) :: w &
-   !    = (/0.050, 0.050, 0.050, 0.050, 0.050, &
-   !        0.050, 0.050, 0.050, 0.080, 0.050, &
-   !        0.050, 0.000, 0.065, 0.000, 0.000, &
-   !        0.000, 0.000/)
-   real(r8), parameter, dimension(N_land_classification) :: w &   !(from CMEM)
+   real(r8), parameter, dimension(N_land_classification) :: w_Wigneron &
+      = (/0.050, 0.050, 0.050, 0.050, 0.050, &
+          0.050, 0.050, 0.050, 0.080, 0.050, &
+          0.050, 0.000, 0.065, 0.000, 0.000, &
+          0.000, 0.000/)
+   real(r8), parameter, dimension(N_land_classification) :: w_CMEM & 
       = (/0.080, 0.095, 0.080, 0.070, 0.070, &
       0.050, 0.050, 0.050, 0.050, 0.050, &
       0.000, 0.000, 0.000, 0.000, 0.000, &
