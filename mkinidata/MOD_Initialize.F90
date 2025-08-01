@@ -42,6 +42,9 @@ CONTAINS
    USE MOD_Vars_PFTimeInvariants
    USE MOD_Vars_PFTimeVariables
 #endif
+#ifdef DataAssimilation
+   USE MOD_DA_Vars_TimeVariables
+#endif
    USE MOD_Const_LC
    USE MOD_Const_PFT
    USE MOD_TimeManager
@@ -265,6 +268,9 @@ CONTAINS
 
       CALL allocate_TimeInvariants
       CALL allocate_TimeVariables
+#ifdef DataAssimilation
+      CALL allocate_TimeVariables_ens
+#endif
 
 ! ---------------------------------------------------------------
 ! 1. INITIALIZE TIME INVARIANT VARIABLES
@@ -1469,17 +1475,70 @@ CONTAINS
 
 #endif
 
+#ifdef DataAssimilation
+      IF (p_is_worker) THEN
+         DO i = 1, DEF_DA_ENS
+            z_sno_ens(:, i, :) = z_sno
+            dz_sno_ens(:, i, :) = dz_sno
+            t_soisno_ens(:, i, :) = t_soisno
+            wliq_soisno_ens(:, i, :) = wliq_soisno
+            wice_soisno_ens(:, i, :) = wice_soisno
+            smp_ens(:, i, :) = smp
+            hk_ens(:, i, :) = hk
+            t_grnd_ens(i, :) = t_grnd
+            tleaf_ens(i, :) = tleaf
+            ldew_ens(i, :) = ldew
+            ldew_rain_ens(i, :) = ldew_rain
+            ldew_snow_ens(i, :) = ldew_snow
+            fwet_snow_ens(i, :) = fwet_snow
+            sag_ens(i, :) = sag
+            scv_ens(i, :) = scv
+            snowdp_ens(i, :) = snowdp
+            fveg_ens(i, :) = fveg
+            fsno_ens(i, :) = fsno
+            sigf_ens(i, :) = sigf
+            green_ens(i, :) = green
+            tlai_ens(i, :) = tlai
+            lai_ens(i, :) = lai
+            sai_ens(i, :) = sai
+            tsai_ens(i, :) = tsai
+            alb_ens(:, :, i, :) = alb
+            ssun_ens(:, :, i, :) = ssun
+            ssha_ens(:, :, i, :) = ssha
+            ssoi_ens(:, :, i, :) = ssoi
+            ssno_ens(:, :, i, :) = ssno
+            thermk_ens(i, :) = thermk
+            extkb_ens(i, :) = extkb
+            extkd_ens(i, :) = extkd
+            zwt_ens(i, :) = zwt
+            wdsrf_ens(i, :) = wdsrf
+            wa_ens(i, :) = wa
+            wetwat_ens(i, :) = wetwat
+            t_lake_ens(:, i, :) = t_lake
+            lake_icefrac_ens(:, i, :) = lake_icefrac
+            savedtke1_ens(i, :) = savedtke1
+         ENDDO
+      ENDIF
+#endif
+
+
 ! ...............................................................
 ! 2.6 Write out the model variables for restart run [histTimeVar]
 ! ...............................................................
 
 #ifdef RangeCheck
       CALL check_TimeVariables ()
+#ifdef DataAssimilation
+      CALL check_TimeVariables_ens ()
+#endif
 #endif
 
       IF ( .not. present(lulcc_call) ) THEN
          ! only be called in running MKINI, LULCC will be executed later
          CALL WRITE_TimeVariables (idate, lc_year, casename, dir_restart)
+#ifdef DataAssimilation
+         CALL WRITE_TimeVariables_ens (idate, lc_year, casename, dir_restart)
+#endif
       ENDIF
 
 #ifdef USEMPI
@@ -1496,6 +1555,9 @@ CONTAINS
          ! only be called in running MKINI, LULCC will be executed later
          CALL deallocate_TimeInvariants
          CALL deallocate_TimeVariables
+#ifdef DataAssimilation
+         CALL deallocate_TimeVariables_ens
+#endif
       ENDIF
 
       IF (allocated(z_soisno )) deallocate (z_soisno )

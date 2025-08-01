@@ -3,6 +3,11 @@
 MODULE MOD_Vars_1DAccFluxes
 
    USE MOD_Precision
+#ifdef DataAssimilation
+   USE MOD_DA_Vars_TimeVariables
+   USE MOD_DA_Vars_1DFluxes
+   USE MOD_Namelist
+#endif
 #ifdef EXTERNAL_LAKE
    USE MOD_Lake_1DAccVars
 #endif
@@ -99,6 +104,14 @@ MODULE MOD_Vars_1DAccFluxes
 
    real(r8), allocatable :: a_o3uptakesun(:)
    real(r8), allocatable :: a_o3uptakesha(:)
+
+#ifdef DataAssimilation
+   real(r8), allocatable :: a_h2osoi_ens     (:,:,:)
+   real(r8), allocatable :: a_t_brt_ens      (:,:,:)
+   real(r8), allocatable :: a_t_brt            (:,:)
+   real(r8), allocatable :: a_wliq_soisno_ens(:,:,:)
+   real(r8), allocatable :: a_wice_soisno_ens(:,:,:)
+#endif
 
 #ifdef URBAN_MODEL
    real(r8), allocatable :: a_t_room    (:) !temperature of inner building [K]
@@ -510,6 +523,14 @@ CONTAINS
 
             allocate (a_o3uptakesun(numpatch))
             allocate (a_o3uptakesha(numpatch))
+
+#ifdef DataAssimilation
+            allocate (a_h2osoi_ens            (1:nl_soil,DEF_DA_ENS,numpatch))
+            allocate (a_t_brt_ens                     (2,DEF_DA_ENS,numpatch))
+            allocate (a_t_brt                                    (2,numpatch))
+            allocate (a_wliq_soisno_ens(maxsnl+1:nl_soil,DEF_DA_ENS,numpatch))
+            allocate (a_wice_soisno_ens(maxsnl+1:nl_soil,DEF_DA_ENS,numpatch))
+#endif
 
 #ifdef URBAN_MODEL
             IF (numurban > 0) THEN
@@ -926,6 +947,15 @@ CONTAINS
 
             deallocate (a_o3uptakesun)
             deallocate (a_o3uptakesha)
+            
+#ifdef DataAssimilation
+            deallocate (a_h2osoi_ens     )
+            deallocate (a_t_brt_ens      )
+            deallocate (a_t_brt          )
+            deallocate (a_wliq_soisno_ens)
+            deallocate (a_wice_soisno_ens)
+#endif
+
 #ifdef URBAN_MODEL
             IF (numurban > 0) THEN
                deallocate (a_t_room    )
@@ -1343,6 +1373,14 @@ CONTAINS
             a_o3uptakesun(:) = spval
             a_o3uptakesha(:) = spval
 
+#ifdef DataAssimilation
+            a_h2osoi_ens     (:,:,:) = spval
+            a_t_brt_ens      (:,:,:) = spval
+            a_t_brt            (:,:) = spval
+            a_wliq_soisno_ens(:,:,:) = spval
+            a_wice_soisno_ens(:,:,:) = spval
+#endif
+
 #ifdef URBAN_MODEL
             IF (numurban > 0) THEN
                a_t_room   (:) = spval
@@ -1653,7 +1691,7 @@ CONTAINS
 
    SUBROUTINE accumulate_fluxes
 ! ----------------------------------------------------------------------
-!  perfrom the grid average mapping: average a subgrid input 1d vector
+!  perform the grid average mapping: average a subgrid input 1d vector
 !  of length numpatch to a output 2d array of length [ghist%xcnt,ghist%ycnt]
 !
 !  Created by Yongjiu Dai, 03/2014
@@ -1849,6 +1887,14 @@ CONTAINS
                CALL acc1d(o3uptakesun,a_o3uptakesun)
                CALL acc1d(o3uptakesha,a_o3uptakesha)
             ENDIF
+
+#ifdef DataAssimilation
+            CALL acc3d (h2osoi_ens     , a_h2osoi_ens     )
+            CALL acc3d (t_brt_ens      , a_t_brt_ens      )
+            CALL acc2d (t_brt          , a_t_brt          )
+            CALL acc3d (wliq_soisno_ens, a_wliq_soisno_ens)
+            CALL acc3d (wice_soisno_ens, a_wice_soisno_ens)
+#endif
 
 #ifdef URBAN_MODEL
             IF (numurban > 0) THEN
