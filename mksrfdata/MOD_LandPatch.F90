@@ -170,10 +170,11 @@ CONTAINS
                   IF (types(ipxl) > 0) THEN
                      IF (patchtypes(types(ipxl)) == 0) THEN
                         ! Deal with cropland separately for fast PC
-                        IF (DEF_FAST_PC .and. types(ipxl)==CROPLAND) THEN
-                           types(ipxl)= CROPLAND
+                        IF (DEF_FAST_PC .and. &
+                           (types(ipxl)==CROPLAND .or. types(ipxl)==14)) THEN
+                           types(ipxl) = CROPLAND
                         ELSE
-                           types(ipxl)= 1
+                           types(ipxl) = 1
                         ENDIF
                      ENDIF
                   ENDIF

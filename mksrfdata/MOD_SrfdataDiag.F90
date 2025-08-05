@@ -122,7 +122,7 @@ CONTAINS
       ENDIF
 
       CALL srfdata_map_and_write (landpatch%pctshared, landpatch%settyp, typindex, m_patch2diag, &
-         -1.0e36_r8, landname, 'patchfrac_elm', compress = 1, write_mode = 'one',  &
+         -1.0e36_r8, landname, 'patchfrac_elm', compress = 1, write_mode = 'one', defval=0._r8, &
          stat_mode = 'fraction', pctshared = landpatch%pctshared)
 
    END SUBROUTINE srfdata_diag_init
