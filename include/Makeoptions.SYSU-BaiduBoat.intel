@@ -38,9 +38,10 @@ CP = /bin/cp
 #DMPI=-DUseMPI
 DCDF=-DUseCDF
 #DATM=-DNoAtom
-CFLAGS=$(DMPI) $(DCDF) $(DATM)
+DSINGLE=-DSinglePrec_CMF
+CFLAGS=$(DMPI) $(DCDF) $(DATM) $(DSINGLE)
 #----
 FCMP = ifort -qopenmp
-FC = ifort
+FC = ifort -qopenmp
 LFLAGS =
-FFLAGS = -O3 -warn all -fpp -free -assume byterecl -heap-arrays -nogen-interface -lpthread -static-intel
+FFLAGS = -O3 -warn all -fpp -free -assume byterecl -heap-arrays -nogen-interface -lpthread -static-intel -align array64byte
