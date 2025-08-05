@@ -69,9 +69,9 @@ CONTAINS
 !  FLOW DIAGRAM FOR WATER_2014.F90
 !
 !  WATER_2014 ===> snowwater
-!                  SurfaceRunoff_SIMTOP
+!                  SurfaceRunoff_TOPMOD
 !                  soilwater
-!                  SubsurfaceRunoff_SIMTOP
+!                  SubsurfaceRunoff_TOPMOD
 !
 !=======================================================================
 
@@ -291,7 +291,7 @@ IF(patchtype<=1)THEN   ! soil ground only
          ! 0: runoff scheme from TOPMODEL
 
          IF (gwat > 0.) THEN
-            CALL SurfaceRunoff_SIMTOP (nl_soil,wimp,porsl,psi0,hksati,fsatmax,fsatdcf,&
+            CALL SurfaceRunoff_TOPMOD (nl_soil,wimp,porsl,psi0,hksati,fsatmax,fsatdcf,&
                z_soisno(1:),dz_soisno(1:),zi_soisno(0:),&
                eff_porosity,icefrac,zwt,gwat,rsur)
          ELSE
@@ -338,7 +338,7 @@ IF(patchtype<=1)THEN   ! soil ground only
             ! only the re-infiltration is added to water balance calculation.
             IF (DEF_Runoff_SCHEME  == 0) THEN
 
-               CALL SurfaceRunoff_SIMTOP (nl_soil,wimp,porsl,psi0,hksati,1.0,fsatdcf,&
+               CALL SurfaceRunoff_TOPMOD (nl_soil,wimp,porsl,psi0,hksati,1.0,fsatdcf,&
                         z_soisno(1:),dz_soisno(1:),zi_soisno(0:),&
                         eff_porosity,icefrac,zwt,gfld,rsur_fld)
 
@@ -792,11 +792,11 @@ IF((patchtype<=1) .or. is_dry_lake)THEN   ! soil ground only
 
          IF (DEF_Runoff_SCHEME  == 0) THEN
 
-            CALL SurfaceRunoff_SIMTOP (nl_soil,wimp,porsl,psi0,hksati,fsatmax,fsatdcf,&
+            CALL SurfaceRunoff_TOPMOD (nl_soil,wimp,porsl,psi0,hksati,fsatmax,fsatdcf,&
                z_soisno(1:),dz_soisno(1:),zi_soisno(0:),&
                eff_porosity,icefrac,zwt,gwat,rsur,rsur_se,rsur_ie,topoweti,alp_twi,chi_twi,mu_twi,frcsat,eta)
 
-            CALL SubsurfaceRunoff_SIMTOP (nl_soil, icefrac, dz_soisno(1:), zi_soisno(0:), &
+            CALL SubsurfaceRunoff_TOPMOD (nl_soil, icefrac, dz_soisno(1:), zi_soisno(0:), &
                zwt, rsubst, hksati, topoweti, eta)
 
          ELSEIF (DEF_Runoff_SCHEME  == 1) THEN
@@ -863,7 +863,7 @@ IF((patchtype<=1) .or. is_dry_lake)THEN   ! soil ground only
             ! only the re-infiltration is added to water balance calculation.
             IF (DEF_Runoff_SCHEME  == 0) THEN
 
-               CALL SurfaceRunoff_SIMTOP (nl_soil,wimp,porsl,psi0,hksati,1.0,fsatdcf,&
+               CALL SurfaceRunoff_TOPMOD (nl_soil,wimp,porsl,psi0,hksati,1.0,fsatdcf,&
                         z_soisno(1:),dz_soisno(1:),zi_soisno(0:),&
                         eff_porosity,icefrac,zwt,gfld,rsur_fld)
 
@@ -2208,7 +2208,7 @@ ENDIF
 
 !-- Topographic runoff  ----------------------------------------------------------
       IF (DEF_Runoff_SCHEME == 0) THEN
-         CALL SubsurfaceRunoff_SIMTOP (nl_soil, icefrac, dz_soisno, zi_soisno, zwt, rsubst)
+         CALL SubsurfaceRunoff_TOPMOD (nl_soil, icefrac, dz_soisno, zi_soisno, zwt, rsubst)
       ENDIF
 
       drainage = rsubst

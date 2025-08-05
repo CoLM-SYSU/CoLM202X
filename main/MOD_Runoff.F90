@@ -8,8 +8,8 @@ MODULE MOD_Runoff
    SAVE
 
 ! PUBLIC MEMBER FUNCTIONS:
-   PUBLIC :: SurfaceRunoff_SIMTOP
-   PUBLIC :: SubsurfaceRunoff_SIMTOP
+   PUBLIC :: SurfaceRunoff_TOPMOD
+   PUBLIC :: SubsurfaceRunoff_TOPMOD
    PUBLIC :: Runoff_XinAnJiang
    PUBLIC :: Runoff_SimpleVIC
 
@@ -18,7 +18,7 @@ MODULE MOD_Runoff
 
 CONTAINS
 
-   SUBROUTINE SurfaceRunoff_SIMTOP (nl_soil,wimp,porsl,psi0,hksati,&
+   SUBROUTINE SurfaceRunoff_TOPMOD (nl_soil,wimp,porsl,psi0,hksati,&
                                     fsatmax,fsatdcf,&
                                     z_soisno,dz_soisno,zi_soisno,&
                                     eff_porosity,icefrac,zwt,gwat,&
@@ -36,7 +36,7 @@ CONTAINS
 !  Author : Yongjiu Dai, 07/29/2002, Guoyue Niu, 06/2012
 !=======================================================================
 
-   USE MOD_Namelist,        only: DEF_SimTOP_method
+   USE MOD_Namelist,        only: DEF_TOPMOD_method
    USE MOD_IncompleteGamma, only: GRATIO
    USE MOD_SPMD_Task
    IMPLICIT NONE
@@ -87,7 +87,7 @@ CONTAINS
 
 !  fraction of saturated area (updated to gridded 'fsatmax' and 'fsatdcf')
       !fsat = wtfact*min(1.0,exp(-0.5*fff*zwt))
-      IF ((DEF_SimTOP_method == 0) .or. (DEF_SimTOP_method == 1)) THEN
+      IF ((DEF_TOPMOD_method == 0) .or. (DEF_TOPMOD_method == 1)) THEN
 
          fsat = fsatmax * exp(- fsatdcf * vdcf * zwt)
 
@@ -151,13 +151,13 @@ CONTAINS
          rsur_ie = (1.-fsat)*max(0.,gwat-qinmax)
       ENDIF
 
-   END SUBROUTINE SurfaceRunoff_SIMTOP
+   END SUBROUTINE SurfaceRunoff_TOPMOD
 
 ! -------------------------------------------------------------------------
-   SUBROUTINE SubsurfaceRunoff_SIMTOP (nl_soil, icefrac, dz_soisno, zi_soisno, zwt, rsubst, &
+   SUBROUTINE SubsurfaceRunoff_TOPMOD (nl_soil, icefrac, dz_soisno, zi_soisno, zwt, rsubst, &
          hksati, topoweti, eta)
 
-   USE MOD_Namelist, only: DEF_SimTOP_method
+   USE MOD_Namelist, only: DEF_TOPMOD_method
    IMPLICIT NONE
 
 !-------------------------- Dummy Arguments ----------------------------
@@ -212,15 +212,15 @@ CONTAINS
       fracice_rsub = max(0.,exp(-3.*(1.-(icefracsum/dzsum)))-exp(-3.))/(1.0-exp(-3.))
       imped = max(0.,1.-fracice_rsub)
 
-      IF ((DEF_SimTOP_method == 1) .and. present(hksati) .and. present(topoweti)) THEN
+      IF ((DEF_TOPMOD_method == 1) .and. present(hksati) .and. present(topoweti)) THEN
          rsubst = imped * 3.e4 * sum(hksati(1:nl_soil))/nl_soil / vdcf * exp(-topoweti) * exp(-vdcf*zwt)
-      ELSEIF ((DEF_SimTOP_method == 2) .and. present(hksati) .and. present(eta)) THEN
+      ELSEIF ((DEF_TOPMOD_method == 2) .and. present(hksati) .and. present(eta)) THEN
          rsubst = imped * 3.e3 * sum(hksati(1:nl_soil))/nl_soil / vdcf * exp(-eta)
       ELSE
          rsubst = imped * 5.5e-3 * exp(-2.5*zwt)
       ENDIF
 
-   END SUBROUTINE SubsurfaceRunoff_SIMTOP
+   END SUBROUTINE SubsurfaceRunoff_TOPMOD
 
 ! -------------------------------------------------------------------------
    SUBROUTINE Runoff_XinAnJiang ( &

@@ -235,14 +235,6 @@ CONTAINS
    integer  :: txt_id
    real(r8) :: vic_b_infilt_, vic_Dsmax_, vic_Ds_, vic_Ws_, vic_c_
 
-   ! for SimTop model parameters
-   character(len=256) :: file_simtop_para
-   logical            :: fexist
-   type(grid_type)    :: g_simtop_para
-   real(r8)           :: filval
-   type(block_data_real8_2d)  :: fsatmax_grid, fsatdcf_grid
-   type(spatial_mapping_type) :: map_simtop_para
-
    logical :: use_soiltext
    ! for USDA soil texture class:
    ! 0: undefined
@@ -451,11 +443,11 @@ CONTAINS
       tcrit  = 2.5      !critical temp. to determine rain or snow
       wetwatmax = 200.0 !maximum wetland water (mm)
 
-      ! for SIMTOP model: read saturated fraction parameter data from files.
+      ! for TOPMODEL: read saturated fraction parameter data from files.
       ! (see Niu et al., 2005)
       IF (DEF_Runoff_SCHEME == 0) THEN
 
-         IF (DEF_SimTOP_method == 0) THEN
+         IF (DEF_TOPMOD_method == 0) THEN
 
             IF (p_is_worker) THEN
                IF (numpatch > 0) THEN
@@ -465,7 +457,7 @@ CONTAINS
                ENDIF
             ENDIF
 
-         ELSEIF (DEF_SimTOP_method == 1) THEN
+         ELSEIF (DEF_TOPMOD_method == 1) THEN
 
             ftopo = trim(dir_landdata)//'/topography/'//trim(cyear)//'/fsatmax_patches.nc'
             CALL ncio_read_vector (ftopo, 'fsatmax_patches', landpatch, fsatmax)
@@ -482,7 +474,7 @@ CONTAINS
             CALL check_vector_data ('topographic wetness index ', topoweti)
 #endif
 
-         ELSEIF (DEF_SimTOP_method == 2) THEN
+         ELSEIF (DEF_TOPMOD_method == 2) THEN
 
             ftopo = trim(dir_landdata)//'/topography/'//trim(cyear)//'/mean_twi_patches.nc'
             CALL ncio_read_vector (ftopo, 'mean_twi_patches', landpatch, topoweti)
