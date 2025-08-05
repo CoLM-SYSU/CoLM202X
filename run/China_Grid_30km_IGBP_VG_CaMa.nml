@@ -1,0 +1,73 @@
+&nl_colm
+
+! Author: Shupeng Zhang 
+! Description : include soil state init from data.
+
+   DEF_CASE_NAME = 'test-with-cama3'
+
+   DEF_domain%edges = 5.0
+   DEF_domain%edgen = 55.0
+   DEF_domain%edgew = 60.0
+   DEF_domain%edgee = 150.0
+   DEF_nx_blocks=30
+   DEF_ny_blocks=15
+   DEF_PIO_groupsize=45
+   DEF_simulation_time%greenwich    = .TRUE.
+   DEF_simulation_time%start_year   = 2010
+   DEF_simulation_time%start_month  = 1
+   DEF_simulation_time%start_day    = 1
+   DEF_simulation_time%start_sec    = 0
+   DEF_simulation_time%end_year     = 2015
+   DEF_simulation_time%end_month    = 12
+   DEF_simulation_time%end_day      = 31
+   DEF_simulation_time%end_sec      = 86400
+   DEF_simulation_time%spinup_year  = 0
+   DEF_simulation_time%spinup_month = 1
+   DEF_simulation_time%spinup_day   = 365
+   DEF_simulation_time%spinup_sec   = 86400
+   DEF_simulation_time%spinup_repeat = 0
+
+   DEF_simulation_time%timestep     = 1800.
+
+   DEF_dir_rawdata = '/share/home/dq013/zhwei/colm/data/CoLMrawdata/'
+   DEF_dir_runtime = '/share/home/dq013/zhwei/colm/data/CoLMruntime/'
+   DEF_dir_output  = '/share/home/dq013/zhwei/colm/cases/'
+
+   ! ----- land units and land sets -----
+   ! for GRIDBASED
+   DEF_GRIDBASED_lon_res = 0.25
+   DEF_GRIDBASED_lat_res = 0.25
+
+   ! soil state init
+   DEF_USE_SoilInit  = .true.
+   DEF_file_SoilInit = '/share/home/dq013/zhwei/colm/data/soilstate/soilstate.nc' 
+
+   ! LAI setting
+   DEF_LAI_MONTHLY = .true.
+   DEF_LAI_CHANGE_YEARLY = .false.
+
+   DEF_USE_PLANTHYDRAULICS = .false.
+
+   DEF_CaMa_Namelist='/share/home/dq013/zhwei/colm/script/CoLM202X/run/CaMa/cama_flood_China_30km_natural.nml'
+   ! ----- forcing -----
+   ! Options :
+   ! PRINCETON | GSWP3   | QIAN  | CRUNCEPV4 | CRUNCEPV7 | ERA5LAND | ERA5  | MSWX
+   ! WFDE5     | CRUJRA  | WFDEI | JRA55     | GDAS      | CMFD     | POINT | JRA3Q
+   DEF_forcing_namelist = '/share/home/dq013/zhwei/colm/script/CoLM202X_20250724/run/forcing/JRA3Q.nml'
+
+   ! ----- history -----
+  ! DEF_hist_grid_as_forcing = .true.
+   DEF_hist_lon_res = 0.25
+   DEF_hist_lat_res = 0.25       
+   DEF_WRST_FREQ = 'YEARLY' ! write restart file frequency: HOURLY/DAILY/MONTHLY/YEARLY
+   DEF_HIST_FREQ = 'DAILY' ! write history file frequency: HOURLY/DAILY/MONTHLY/YEARLY
+   DEF_HIST_groupby = 'DAY' ! history in one file: DAY/MONTH/YEAR
+   DEF_HIST_mode = 'one' ! history in one or block
+   DEF_REST_CompressLevel = 1
+   DEF_HIST_CompressLevel = 1
+
+   DEF_HIST_WriteBack = .false.
+
+   DEF_hist_vars_out_default = .true.
+
+/

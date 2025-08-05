@@ -43,8 +43,8 @@ MODULE MOD_CaMa_colmCaMa
    integer I,J
    integer(KIND=JPIM)              :: ISTEPX              ! total time step
    integer(KIND=JPIM)              :: ISTEPADV            ! time step to be advanced within DRV_ADVANCE
-   real(KIND=JPRB),ALLOCATABLE     :: ZBUFF(:,:,:)        ! Buffer to store forcing runoff
-   real(KIND=JPRB),ALLOCATABLE     :: ZBUFF_2(:,:,:)        ! Buffer to store forcing runoff
+   real(r8),ALLOCATABLE     :: ZBUFF(:,:,:)        ! Buffer to store forcing runoff
+   real(r8),ALLOCATABLE     :: ZBUFF_2(:,:,:)        ! Buffer to store forcing runoff
 
    INTERFACE colm_CaMa_init
       MODULE PROCEDURE colm_CaMa_init
@@ -200,24 +200,15 @@ CONTAINS
       IF (.not. allocated(D1LAT))  allocate (D1LAT(NY))
       IF (.not. allocated(D1LON))  allocate (D1LON(NX))
 
-#ifdef SinglePrec_CMF
-      CALL mpi_bcast (D1LAT, NY, MPI_REAL4, p_address_master, p_comm_glb, p_err) !
-      CALL mpi_bcast (D1LON, NX, MPI_REAL4, p_address_master, p_comm_glb, p_err) !
-      CALL mpi_bcast (SOUTH,  1, MPI_REAL4, p_address_master, p_comm_glb, p_err) !
-      CALL mpi_bcast (NORTH,  1, MPI_REAL4, p_address_master, p_comm_glb, p_err) !
-      CALL mpi_bcast (WEST ,  1, MPI_REAL4, p_address_master, p_comm_glb, p_err) !
-      CALL mpi_bcast (EAST ,  1, MPI_REAL4, p_address_master, p_comm_glb, p_err) !
-#else
       CALL mpi_bcast (D1LAT, NY, MPI_REAL8, p_address_master, p_comm_glb, p_err) !
       CALL mpi_bcast (D1LON, NX, MPI_REAL8, p_address_master, p_comm_glb, p_err) !
       CALL mpi_bcast (SOUTH,  1, MPI_REAL8, p_address_master, p_comm_glb, p_err) !
       CALL mpi_bcast (NORTH,  1, MPI_REAL8, p_address_master, p_comm_glb, p_err) !
       CALL mpi_bcast (WEST ,  1, MPI_REAL8, p_address_master, p_comm_glb, p_err) !
       CALL mpi_bcast (EAST ,  1, MPI_REAL8, p_address_master, p_comm_glb, p_err) !
-#endif
 
       !allocate the data structure for cama
-      CALL gcama%define_by_center (D1LAT,D1LON,real(SOUTH,kind=8), real(NORTH,kind=8), real(WEST,kind=8), real(EAST,kind=8)) !define the grid for cama
+      CALL gcama%define_by_center (D1LAT,D1LON,SOUTH, NORTH, WEST, EAST) !define the grid for cama
       CALL mp2g_cama%build_arealweighted (gcama, landpatch) !build the mapping between cama and mpi
       CALL mg2p_cama%build_arealweighted (gcama, landpatch)
       CALL cama_gather%set (gcama)
@@ -238,13 +229,13 @@ CONTAINS
          allocate (fldfrc_tmp(NX,NY))
          allocate (flddepth_tmp(NX,NY))
          !Initialize the data buffer for input forcing, flood fraction and flood depth
-         runoff_2d(:,:)    = 0.0D0 !runoff in master processor
-         fevpg_2d(:,:)     = 0.0D0 !evaporation in master processor
-         finfg_2d(:,:)     = 0.0D0 !re-infiltration in master processor
-         ZBUFF(:,:,:)      = 0.0D0 !input forcing in master processor
-         ZBUFF_2(:,:,:)    = 0.0D0 !input forcing in master processor
-         fldfrc_tmp(:,:)   = 0.0D0 !flood fraction in master processor
-         flddepth_tmp(:,:) = 0.0D0 !flood depth in master processor
+         runoff_2d(:,:)    = 0.0 !runoff in master processor
+         fevpg_2d(:,:)     = 0.0 !evaporation in master processor
+         finfg_2d(:,:)     = 0.0 !re-infiltration in master processor
+         ZBUFF(:,:,:)      = 0.0 !input forcing in master processor
+         ZBUFF_2(:,:,:)    = 0.0 !input forcing in master processor
+         fldfrc_tmp(:,:)   = 0.0 !flood fraction in master processor
+         flddepth_tmp(:,:) = 0.0 !flood depth in master processor
       ENDIF
       !allocate the cama-flood related variable in worker processors
       IF (p_is_worker) THEN
@@ -252,10 +243,10 @@ CONTAINS
          allocate (fldfrc_cama(numpatch))   !flood fraction in worker processors
          allocate (fevpg_fld(numpatch))     !evaporation in worker processors
          allocate (finfg_fld(numpatch))     !re-infiltration in worker processors
-         flddepth_cama(:)     =  0.0D0
-         fldfrc_cama(:)       =  0.0D0
-         fevpg_fld(:)         =  0.0D0
-         finfg_fld(:)         =  0.0D0
+         flddepth_cama(:)     =  0.0
+         fldfrc_cama(:)       =  0.0
+         fevpg_fld(:)         =  0.0
+         finfg_fld(:)         =  0.0
       ENDIF
    END SUBROUTINE colm_CaMa_init
 
@@ -267,26 +258,17 @@ CONTAINS
       CALL accumulate_cama_fluxes
       ! If the time is the same as the input time step of cama-flood
       IF  (MOD(idate_sec,3600*int(IFRQ_INP))==0) THEN
-#ifdef USEMPI
-         CALL mpi_barrier (p_comm_glb, p_err)
-#endif
          ! Prepare sending the accumulated runoff flux varilble to cama model (master processor to worker processors)
          CALL colm2cama_real8 (a_rnof_cama, f_rnof_cama, runoff_2d)
 
          ! Prepare sending the accumulated inundation evaporation flux to cama model (master processor to worker processors)
          ! only if the inundation evaporation is turned on
          IF (LWEVAP) THEN
-#ifdef USEMPI
-            CALL mpi_barrier (p_comm_glb, p_err)
-#endif
             CALL colm2cama_real8 (a_fevpg_fld, f_fevpg_fld, fevpg_2d)
          ENDIF
          ! Prepare sending the accumulated inundation re-infiltrition flux to cama model (master processor to worker processors)
          ! only if the inundation re-infiltrition is turned on
          IF (LWINFILT) THEN
-#ifdef USEMPI
-            CALL mpi_barrier (p_comm_glb, p_err)
-#endif
             CALL colm2cama_real8 (a_finfg_fld, f_finfg_fld, finfg_2d)
          ENDIF
 
@@ -300,22 +282,21 @@ CONTAINS
 #endif
          ! Initialize the variables unit for cama-flood input
          IF(p_is_master)THEN
-            DO i = 1,NX           ! cama_gather%ginfo%nlon
-               DO j = 1, NY       ! cama_gather%ginfo%nlat
-                  ZBUFF(i,j,1)=runoff_2d(i,j)/1000.0D0   ! mm/s -->m/s
-                  ZBUFF(i,j,2)=0.0D0
-                  IF (LWEVAP) THEN
-                     ZBUFF_2(i,j,1)=fevpg_2d(i,j)/1000.0D0 ! mm/s -->m/s
-                  ELSE
-                     ZBUFF_2(i,j,1)=0.0D0
-                  ENDIF
-                  IF (LWINFILT) THEN
-                     ZBUFF_2(i,j,2)=finfg_2d(i,j)/1000.0D0  !mm/s -->m/s
-                  ELSE
-                     ZBUFF_2(i,j,2)=0.0D0
-                  ENDIF
-               ENDDO
-            ENDDO
+            ! Use vectorized operations for better performance
+            ZBUFF(:,:,1) = runoff_2d(:,:) * 1.0D-3   ! mm/s -->m/s (avoid division)
+            ZBUFF(:,:,2) = 0.0D0
+            
+            IF (LWEVAP) THEN
+               ZBUFF_2(:,:,1) = fevpg_2d(:,:) * 1.0D-3 ! mm/s -->m/s
+            ELSE
+               ZBUFF_2(:,:,1) = 0.0D0
+            ENDIF
+            
+            IF (LWINFILT) THEN
+               ZBUFF_2(:,:,2) = finfg_2d(:,:) * 1.0D-3  !mm/s -->m/s
+            ELSE
+               ZBUFF_2(:,:,2) = 0.0D0
+            ENDIF
 
             ! Simulating the hydrodynamics in continental-scale rivers
             ! ----------------------------------------------------------------------
@@ -323,7 +304,7 @@ CONTAINS
             ! Get the time step of cama-flood simulation
             ISTEPADV=INT(DTIN/DT,JPIM)
             ! Interporlate variables & send to CaMa-Flood
-            CALL CMF_FORCING_PUT(ZBUFF,ZBUFF_2)
+            CALL CMF_FORCING_PUT(real(ZBUFF,kind=JPRB),real(ZBUFF_2,kind=JPRB))
             ! Advance CaMa-Flood model for ISTEPADV
             CALL CMF_DRV_ADVANCE(ISTEPADV)
             ! Get the flood depth and flood fraction from cama-flood model
@@ -333,13 +314,7 @@ CONTAINS
          ENDIF
          ! Send the flood depth and flood fraction from master processors to worker processors
          IF (LWINFILT .or. LWEVAP) THEN
-#ifdef USEMPI
-            CALL mpi_barrier (p_comm_glb, p_err)
-#endif
             CALL cama2colm_real8 (flddepth_tmp, f_flddepth_cama, flddepth_cama)! unit [m]
-#ifdef USEMPI
-            CALL mpi_barrier (p_comm_glb, p_err)
-#endif
             CALL cama2colm_real8 (fldfrc_tmp,   f_fldfrc_cama,   fldfrc_cama  ) ! unit [%]
 #ifdef USEMPI
             CALL mpi_barrier (p_comm_glb, p_err)
@@ -414,7 +389,7 @@ CONTAINS
 
    USE YOS_CMF_INPUT,      only:  NX, NY !grid number
    USE YOS_CMF_DIAG,       only:  D2FLDDPH,D2FLDFRC !1D vector data of flood depth and flood fraction
-   USE CMF_UTILS_MOD,      only:  vecD2mapD          !convert 1D vector data -> 2D map data (REAL*8)
+   USE CMF_UTILS_MOD,      only:  vecP2mapP          !convert 1D vector data -> 2D map data (REAL*8)
 
    IMPLICIT NONE
 
@@ -423,16 +398,13 @@ CONTAINS
 
       !================================================
       !! convert 1Dvector to 2Dmap
-      CALL vecD2mapD(D2FLDFRC,flddepth_tmp)             !! MPI node data is gathered by VEC2MAP
-      CALL vecD2mapD(D2FLDDPH,fldfrc_tmp)               !! MPI node data is gathered by VEC2MAP
+      CALL vecP2mapP(real(D2FLDDPH,kind=JPRD),flddepth_tmp)             !! MPI node data is gathered by VEC2MAP
+      CALL vecP2mapP(real(D2FLDFRC,kind=JPRD),fldfrc_tmp)               !! MPI node data is gathered by VEC2MAP
 
-      DO i    = 1, NX
-         DO j = 1, NY
-            IF (flddepth_tmp(i,j) .lt.    0.0)        flddepth_tmp(i,j) = 0.0
-            IF (fldfrc_tmp(i,j)   .lt.    0.0)        fldfrc_tmp(i,j)   = 0.0
-            IF (fldfrc_tmp(i,j)   .gt.    100.0)      fldfrc_tmp(i,j)   = 100.0    !!If fraction is larger than 100%, it is set to 100%.
-         ENDDO
-      ENDDO
+      ! Use vectorized operations with WHERE construct for better performance
+      WHERE (flddepth_tmp(:,:) < 0.0) flddepth_tmp(:,:) = 0.0
+      WHERE (fldfrc_tmp(:,:) < 0.0)   fldfrc_tmp(:,:)   = 0.0
+      WHERE (fldfrc_tmp(:,:) > 100.0) fldfrc_tmp(:,:)   = 100.0    !!If fraction is larger than 100%, it is set to 100%.
    END SUBROUTINE get_fldinfo
 
    SUBROUTINE get_fldevp (hu,ht,hq,us,vs,tm,qm,rhoair,psrf,tssea,&

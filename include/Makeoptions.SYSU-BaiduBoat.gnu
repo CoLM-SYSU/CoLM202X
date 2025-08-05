@@ -32,8 +32,10 @@ CP = /bin/cp
 #DMPI=-DUseMPI
 DCDF=-DUseCDF
 #DATM=-DNoAtom
-CFLAGS=$(DMPI) $(DCDF) $(DATM)
+DSINGLE=-DSinglePrec_CMF
+
+CFLAGS=$(DMPI) $(DCDF) $(DATM) $(DSINGLE)
 #----
 FCMP = gfortran -fopenmp
-FC   = gfortran 
-FFLAGS = -O3 -Wall -cpp -free -fimplicit-none -fbounds-check -fbacktrace 
+FC   = gfortran -fopenmp
+FFLAGS = -O3 -Wall -cpp -ffree-line-length-none -fimplicit-none -ftree-vectorize 
