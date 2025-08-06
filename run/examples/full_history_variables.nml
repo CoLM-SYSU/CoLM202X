@@ -238,6 +238,7 @@
    DEF_hist_vars%pdrice1                = .true.
    DEF_hist_vars%pdrice2                = .true.
    DEF_hist_vars%pdsugarcane            = .true.
+   DEF_hist_vars%manunitro              = .true.
    DEF_hist_vars%fertnitro_corn         = .true.
    DEF_hist_vars%fertnitro_swheat       = .true.
    DEF_hist_vars%fertnitro_wwheat       = .true.

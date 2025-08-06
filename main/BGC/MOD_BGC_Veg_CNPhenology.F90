@@ -21,7 +21,7 @@ MODULE MOD_BGC_Veg_CNPhenology
        lflitcn, lf_flab, lf_fcel, lf_flig  , fr_flab, fr_fcel, fr_flig, &
 
  ! crop variables
-        manunitro, lfemerg, mxmat, grnfill,  baset
+       lfemerg, mxmat, grnfill,  baset
 
    USE MOD_BGC_Vars_TimeInvariants, only: &
        ndays_on        , ndays_off      , fstor2tran, crit_dayl  , crit_onset_fdd, crit_onset_swi, &
@@ -73,11 +73,11 @@ MODULE MOD_BGC_Veg_CNPhenology
 ! crop variables
 #ifdef CROP
        cropplant_p       , idop_p              , a5tmin_p            , a10tmin_p        , t10_p          , &
-       cumvd_p           , vf_p                , cphase_p         , fert_counter_p , &
-       croplive_p        , gddplant_p          , harvdate_p          , gddmaturity_p  , &
+       cumvd_p           , vf_p                , cphase_p            , fert_counter_p   , &
+       croplive_p        , gddplant_p          , harvdate_p          , gddmaturity_p    , &
        hui_p             , peaklai_p           , &
-       tref_min_p        , tref_max_p          , tref_min_inst_p  , tref_max_inst_p, &
-       fertnitro_p       , plantdate_p         , fert_p           ,&! input from files
+       tref_min_p        , tref_max_p          , tref_min_inst_p     , tref_max_inst_p  , &
+       manunitro_p       , fertnitro_p         , plantdate_p         , fert_p           , &! input from files
 #endif
 
        leaf_prof_p        , froot_prof_p        , &
@@ -1136,7 +1136,7 @@ CONTAINS
                      fert_counter_p(m)  = ndays_on * 86400.
                      IF (ndays_on .gt. 0) THEN
                         IF(DEF_USE_FERT)THEN
-                           fert_p(m) = (manunitro(ivt) * 1000._r8 + fertnitro_p(m))/ fert_counter_p(m)
+                           fert_p(m) = (manunitro_p(m) + fertnitro_p(m))/ fert_counter_p(m)
                         ELSE
                            fert_p(m) = 0._r8
                         ENDIF

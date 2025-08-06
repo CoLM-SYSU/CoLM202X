@@ -1880,6 +1880,33 @@ CONTAINS
             IF (numpatch > 0) THEN
                DO i=1,numpatch
                   IF(patchclass(i) == 12)THEN
+                     filter(i) = .true.
+                  ELSE
+                     filter(i) = .false.
+                  ENDIF
+               ENDDO
+            ENDIF
+         ENDIF
+
+         IF (HistForm == 'Gridded') THEN
+            CALL mp2g_hist%get_sumarea (sumarea, filter)
+         ENDIF
+
+         IF (p_is_worker) THEN
+            IF (numpatch > 0) THEN
+               vecacc (:) = a_manunitro (:)
+            ENDIF
+         ENDIF
+
+         CALL write_history_variable_2d ( DEF_hist_vars%manunitro, &
+             vecacc, file_hist, 'f_manunitro', itime_in_file, sumarea, filter, &
+             'nitrogen in manure','gN/m2/yr')
+
+
+         IF (p_is_worker) THEN
+            IF (numpatch > 0) THEN
+               DO i=1,numpatch
+                  IF(patchclass(i) == 12)THEN
                       IF(pftclass(patch_pft_s(i)) .eq. 19 .or. pftclass(patch_pft_s(i)) .eq. 20)THEN
                         filter(i) = .true.
                      ELSE
