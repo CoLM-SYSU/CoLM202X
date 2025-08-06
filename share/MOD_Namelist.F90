@@ -149,7 +149,8 @@ MODULE MOD_Namelist
    logical :: DEF_USE_PFT  = .false.
    logical :: DEF_USE_PC   = .false.
    logical :: DEF_SOLO_PFT = .false.
-   logical :: DEF_FAST_PC  = .false.
+   logical :: DEF_FAST_PC  = .true.
+   logical :: DEF_PC_CROP_SPLIT = .true.
    character(len=256) :: DEF_SUBGRID_SCHEME = 'LCT'
 
    logical :: DEF_LANDONLY                  = .true.
@@ -952,6 +953,7 @@ CONTAINS
       DEF_USE_PFT,                            &
       DEF_USE_PC,                             &
       DEF_FAST_PC,                            &
+      DEF_PC_CROP_SPLIT,                      &
       DEF_SOLO_PFT,                           &
       DEF_SUBGRID_SCHEME,                     &
 
@@ -1480,6 +1482,7 @@ CONTAINS
       CALL mpi_bcast (DEF_USE_PFT                            ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_USE_PC                             ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_FAST_PC                            ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_PC_CROP_SPLIT                      ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_SOLO_PFT                           ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_SUBGRID_SCHEME                     ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
 

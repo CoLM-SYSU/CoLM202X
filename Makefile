@@ -204,6 +204,7 @@ OBJECTS_CAMA=\
 				  cmf_calc_stonxt_mod.o   \
 				  cmf_calc_diag_mod.o     \
 				  cmf_opt_outflw_mod.o    \
+				  cmf_ctrl_tracer_mod.o   \
 				  cmf_ctrl_mpi_mod.o      \
 				  cmf_ctrl_damout_mod.o   \
 				  cmf_ctrl_levee_mod.o    \

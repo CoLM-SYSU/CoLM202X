@@ -435,14 +435,13 @@ ENDIF
 #endif
 
 #ifdef LULC_IGBP_PC
-         !NOTE: if patchclass is CROPLAND, using twostream model
-         IF (patchclass(ipatch) == CROPLAND) THEN
-            CALL twostream_wrap (ipatch, czen, albg, albv, tran, ssun, ssha)
-            alb(:,:) = albv(:,:)
-         ELSE
-            CALL ThreeDCanopy_wrap (ipatch, czen, albg, albv, tran, ssun, ssha)
-            alb(:,:) = albv(:,:)
-         ENDIF
+         ! Only process nature PFTs using 3D model if set DEF_PC_CROP_SPLIT true
+         CALL ThreeDCanopy_wrap (ipatch, czen, albg, albv, tran, ssun, ssha)
+
+         ! Process crop PFTs using 1D model if set DEF_PC_CROP_SPLIT true
+         CALL twostream_wrap (ipatch, czen, albg, albv, tran, ssun, ssha)
+
+         alb(:,:) = albv(:,:)
 #endif
       ENDIF
 
@@ -1192,6 +1191,7 @@ ENDIF
    USE MOD_Const_PFT
    USE MOD_Vars_PFTimeInvariants
    USE MOD_Vars_PFTimeVariables
+   USE MOD_Namelist, only: DEF_USE_PC, DEF_PC_CROP_SPLIT
    IMPLICIT NONE
 
 !-------------------------- Dummy Arguments ----------------------------
@@ -1204,7 +1204,7 @@ ENDIF
          albg(2,2)       ! albedos of ground
 
    ! output
-   real(r8), intent(out) :: &
+   real(r8), intent(inout) :: &
          albv(2,2),     &! albedo, vegetation [-]
          tran(2,3),     &! canopy transmittances for solar radiation
          ssun(2,2),     &! sunlit canopy absorption for solar radiation
@@ -1226,6 +1226,15 @@ ENDIF
 
       DO i = ps, pe
          p = pftclass(i)
+
+         ! If defined DEF_PC_CROP_SPLIT, for crop PFTs, use 1D twostream model;
+         ! Otherwise, set their value to PC 3D model results.
+         IF ( DEF_USE_PC .and. (.not.DEF_PC_CROP_SPLIT .or. p.lt.15) ) THEN
+            albv_p(:,:,i) = albv(:,:)
+            tran_p(:,:,i) = tran(:,:)
+            CYCLE
+         ENDIF
+
          IF (lai_p(i)+sai_p(i) > 1.e-6) THEN
             CALL twostream_mod (chil_p(p),rho_p(:,:,p),tau_p(:,:,p),1.,lai_p(i),sai_p(i),&
                  fwet_snow_p(i),coszen,albg,albv_p(:,:,i),tran_p(:,:,i),thermk_p(i),&
@@ -1263,7 +1272,7 @@ ENDIF
       tran(2,3) = sum( tran_p(2,3,ps:pe)*pftfrac(ps:pe) )
 
       IF (ssun(1,1)<0 .or. ssun(1,2)<0 .or. ssun(2,1)<0 .or. ssun(2,2)<0) THEN
-         print *, 'Warning:negative albedo',ipatch
+         print *, 'Warning: negative ssun in albedo calculation!',ipatch
          print *, ssun
       ENDIF
 

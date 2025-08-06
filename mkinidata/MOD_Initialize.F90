@@ -488,10 +488,12 @@ CONTAINS
             ftopo = trim(dir_landdata)//'/topography/'//trim(cyear)//'/mu_twi_patches.nc'
             CALL ncio_read_vector (ftopo, 'mu_twi_patches', landpatch, mu_twi)
 
+#ifdef RangeCheck
             CALL check_vector_data ('topographic wetness index  ', topoweti)
             CALL check_vector_data ('twi alpha in three gamma   ', alp_twi )
             CALL check_vector_data ('twi chi   in three gamma   ', chi_twi )
             CALL check_vector_data ('twi mu    in three gamma   ', mu_twi  )
+#endif
 
          ENDIF
       ENDIF
@@ -1458,8 +1460,10 @@ CONTAINS
 
       ENDIF
 
+#ifdef RangeCheck
       CALL check_vector_data ('Basin Water Depth   [m]  ', wdsrf_bsn)
       CALL check_vector_data ('HRU Water Depth     [m]  ', wdsrf_bsnhru)
+#endif
 
 #endif
 
