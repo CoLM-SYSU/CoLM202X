@@ -342,6 +342,9 @@ MODULE MOD_Namelist
    !Fertilisation on crop
    logical            :: DEF_USE_FERT            = .true.
 
+   !Fertilisation data source
+   integer            :: DEF_FERT_SOURCE         = 1
+
    !Nitrification and denitrification switch
    logical            :: DEF_USE_NITRIF          = .true.
 
@@ -723,6 +726,7 @@ MODULE MOD_Namelist
       logical :: pdrice1                          = .false.
       logical :: pdrice2                          = .false.
       logical :: pdsugarcane                      = .false.
+      logical :: manunitro                        = .false.
       logical :: fertnitro_corn                   = .true.
       logical :: fertnitro_swheat                 = .true.
       logical :: fertnitro_wwheat                 = .true.
@@ -1006,6 +1010,7 @@ CONTAINS
       DEF_USE_DiagMatrix,                     & !add by Xingjie Lu @ sysu 2023/06/27
       DEF_USE_PN,                             & !add by Xingjie Lu @ sysu 2023/06/27
       DEF_USE_FERT,                           & !add by Xingjie Lu @ sysu 2023/06/27
+      DEF_FERT_SOURCE,                        & !add by Hongbin Liang @ sysu 
       DEF_USE_NITRIF,                         & !add by Xingjie Lu @ sysu 2023/06/27
       DEF_USE_CNSOYFIXN,                      & !add by Xingjie Lu @ sysu 2023/06/27
       DEF_USE_FIRE,                           & !add by Xingjie Lu @ sysu 2023/06/27
@@ -1254,6 +1259,12 @@ CONTAINS
             write(*,*) 'DEF_USE_IRRIGATION is set to false automatically when CROP is turned off.'
          ENDIF
 #endif
+
+         IF(.not.(DEF_FERT_SOURCE == 1 .or. DEF_FERT_SOURCE == 2))THEN
+            write(*,*) '                  *****                  '
+            write(*,'(A,I0,A)') 'ERROR: DEF_FERT_SOURCE is ',DEF_FERT_SOURCE,' , should only = 1 or 2'
+            CALL CoLM_stop ()
+         ENDIF
 
          IF(.not. DEF_USE_OZONESTRESS)THEN
             IF(DEF_USE_OZONEDATA)THEN
@@ -1539,6 +1550,7 @@ CONTAINS
       CALL mpi_bcast (DEF_USE_DiagMatrix                     ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_USE_PN                             ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_USE_FERT                           ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_FERT_SOURCE                        ,1   ,mpi_integer   ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_USE_NITRIF                         ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_USE_CNSOYFIXN                      ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_USE_FIRE                           ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
@@ -1971,6 +1983,18 @@ CONTAINS
 
       CALL sync_hist_vars_one (DEF_hist_vars%grainc_to_seed                  , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%fert_to_sminn                   , set_defaults)
+
+      IF(DEF_USE_FERT)THEN
+         CALL sync_hist_vars_one (DEF_hist_vars%manunitro                    , set_defaults)
+         CALL sync_hist_vars_one (DEF_hist_vars%fertnitro_corn               , set_defaults)
+         CALL sync_hist_vars_one (DEF_hist_vars%fertnitro_swheat             , set_defaults)
+         CALL sync_hist_vars_one (DEF_hist_vars%fertnitro_wwheat             , set_defaults)
+         CALL sync_hist_vars_one (DEF_hist_vars%fertnitro_soybean            , set_defaults)
+         CALL sync_hist_vars_one (DEF_hist_vars%fertnitro_cotton             , set_defaults)
+         CALL sync_hist_vars_one (DEF_hist_vars%fertnitro_rice1              , set_defaults)
+         CALL sync_hist_vars_one (DEF_hist_vars%fertnitro_rice2              , set_defaults)
+         CALL sync_hist_vars_one (DEF_hist_vars%fertnitro_sugarcane          , set_defaults)
+      ENDIF
 
       IF(DEF_USE_IRRIGATION)THEN
          CALL sync_hist_vars_one (DEF_hist_vars%irrig_rate                   , set_defaults)
