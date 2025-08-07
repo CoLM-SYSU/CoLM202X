@@ -63,6 +63,7 @@ PROGRAM MKSRFDATA
    USE MOD_LandHRU
 #endif
    USE MOD_LandPatch
+   USE MOD_Land2mWMO
    USE MOD_SrfdataRestart
    USE MOD_Const_LC
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
@@ -369,6 +370,9 @@ PROGRAM MKSRFDATA
 
       ! build land patches
       CALL landpatch_build(lc_year)
+      IF (DEF_USE_WMO) THEN
+         CALL land2mwmo_build(lc_year)
+      ENDIF
 
 #ifdef URBAN_MODEL
       CALL landurban_build(lc_year)

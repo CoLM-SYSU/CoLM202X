@@ -21,6 +21,9 @@ MODULE MOD_Namelist
 
    character(len=256) :: DEF_CASE_NAME = 'CASENAME'
 
+   !--------test-------------
+   logical :: DEF_USE_WMO
+
 
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~
 ! ----- Part 1: domain -----
@@ -896,6 +899,7 @@ CONTAINS
    integer :: ierr
 
    namelist /nl_colm/                         &
+      DEF_USE_WMO,                            &
       DEF_CASE_NAME,                          &
       DEF_domain,                             &
 
@@ -1398,6 +1402,7 @@ CONTAINS
 
 
 #ifdef USEMPI
+      CALL mpi_bcast (DEF_USE_WMO                            ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_CASE_NAME                          ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_domain%edges                       ,1   ,mpi_real8     ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_domain%edgen                       ,1   ,mpi_real8     ,p_address_master ,p_comm_glb ,p_err)

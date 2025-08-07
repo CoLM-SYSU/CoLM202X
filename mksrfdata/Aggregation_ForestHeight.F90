@@ -22,6 +22,7 @@ SUBROUTINE Aggregation_ForestHeight ( &
    USE MOD_SPMD_Task
    USE MOD_Grid
    USE MOD_LandPatch
+   USE MOD_Land2mWMO
    USE MOD_NetCDFVector
    USE MOD_NetCDFBlock
 #ifdef RangeCheck
@@ -52,6 +53,7 @@ SUBROUTINE Aggregation_ForestHeight ( &
    ! ---------------------------------------------------------------
    character(len=256) :: landdir, lndname, cyear
    integer :: L, ipatch, p
+   integer :: src_wmo
 
    type (block_data_real8_2d) :: tree_height
    real(r8), allocatable :: tree_height_patches(:), tree_height_one(:)
@@ -107,6 +109,15 @@ SUBROUTINE Aggregation_ForestHeight ( &
 
          DO ipatch = 1, numpatch
             L = landpatch%settyp(ipatch)
+
+            IF (ipatch == landelm%wmopth(landpatch%eindex(ipatch))) THEN
+               src_wmo = wmo_source (landpatch%eindex(ipatch))
+
+               tree_height_patches(ipatch) = tree_height_patches(src_wmo)
+
+               CYCLE
+            ENDIF
+
             IF(L/=0 .and. L/=1 .and. L/=16 .and. L/=24)THEN
                ! NOT OCEAN(0)/URBAN and BUILT-UP(1)/WATER BODIES(16)/ICE(24)
                CALL aggregation_request_data (landpatch, ipatch, gland, zip = USE_zip_for_aggregation, &

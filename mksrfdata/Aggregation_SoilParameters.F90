@@ -37,6 +37,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
    USE MOD_SPMD_Task
    USE MOD_Grid
    USE MOD_LandPatch
+   USE MOD_Land2mWMO
    USE MOD_NetCDFBlock
    USE MOD_NetCDFVector
    USE MOD_AggregationRequestData
@@ -62,6 +63,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
    character(len=256) :: landdir, lndname, cyear
    character(len=256) :: c
    integer :: nsl, ipatch, L, np, LL, ipxstt, ipxend
+   integer :: src_wmo
 
    type (block_data_real8_2d) :: vf_quartz_mineral_s_grid
    type (block_data_real8_2d) :: vf_gravels_s_grid
@@ -292,6 +294,13 @@ SUBROUTINE Aggregation_SoilParameters ( &
             DO ipatch = 1, numpatch
                L = landpatch%settyp(ipatch)
 
+               IF (ipatch == landelm%wmopth(landpatch%eindex(ipatch))) THEN
+                  src_wmo = wmo_source (landpatch%eindex(ipatch))
+                  vf_quartz_mineral_s_patches (ipatch) = vf_quartz_mineral_s_patches (src_wmo)
+
+                  CYCLE
+               ENDIF
+
                IF (L /= 0) THEN
                   CALL aggregation_request_data (landpatch, ipatch, gland, zip = USE_zip_for_aggregation, area = area_one, &
                      data_r8_2d_in1 = vf_quartz_mineral_s_grid, data_r8_2d_out1 = vf_quartz_mineral_s_one)
@@ -362,6 +371,16 @@ SUBROUTINE Aggregation_SoilParameters ( &
 
             DO ipatch = 1, numpatch
                L = landpatch%settyp(ipatch)
+
+               IF (ipatch == landelm%wmopth(landpatch%eindex(ipatch))) THEN
+                  src_wmo = wmo_source (landpatch%eindex(ipatch))
+
+                  vf_gravels_s_patches (ipatch) = vf_gravels_s_patches (src_wmo)
+                  vf_sand_s_patches (ipatch)    = vf_sand_s_patches (src_wmo)
+                  vf_om_s_patches (ipatch)      = vf_om_s_patches (src_wmo)
+
+                  CYCLE
+               ENDIF
 
                IF (L /= 0) THEN
                   CALL aggregation_request_data (landpatch, ipatch, gland, zip = USE_zip_for_aggregation, area = area_one, &
@@ -532,6 +551,14 @@ SUBROUTINE Aggregation_SoilParameters ( &
             DO ipatch = 1, numpatch
                L = landpatch%settyp(ipatch)
 
+               IF (ipatch == landelm%wmopth(landpatch%eindex(ipatch))) THEN
+                  src_wmo = wmo_source (landpatch%eindex(ipatch))
+
+                  wf_gravels_s_patches (ipatch) = wf_gravels_s_patches (src_wmo)
+
+                  CYCLE
+               ENDIF
+
                IF (L /= 0) THEN
                   CALL aggregation_request_data (landpatch, ipatch, gland, zip = USE_zip_for_aggregation, area = area_one, &
                      data_r8_2d_in1 = wf_gravels_s_grid, data_r8_2d_out1 = wf_gravels_s_one)
@@ -589,6 +616,14 @@ SUBROUTINE Aggregation_SoilParameters ( &
 
             DO ipatch = 1, numpatch
                L = landpatch%settyp(ipatch)
+
+               IF (ipatch == landelm%wmopth(landpatch%eindex(ipatch))) THEN
+                  src_wmo = wmo_source (landpatch%eindex(ipatch))
+
+                  wf_sand_s_patches (ipatch) = wf_sand_s_patches (src_wmo)
+
+                  CYCLE
+               ENDIF
 
                IF (L /= 0) THEN
                   CALL aggregation_request_data (landpatch, ipatch, gland, zip = USE_zip_for_aggregation, area = area_one, &
@@ -680,6 +715,19 @@ SUBROUTINE Aggregation_SoilParameters ( &
 
             DO ipatch = 1, numpatch
                L = landpatch%settyp(ipatch)
+
+               IF (ipatch == landelm%wmopth(landpatch%eindex(ipatch))) THEN
+                  src_wmo = wmo_source (landpatch%eindex(ipatch))
+
+                  theta_r_patches  (ipatch) = theta_r_patches  (src_wmo)
+                  alpha_vgm_patches(ipatch) = alpha_vgm_patches(src_wmo)
+                  n_vgm_patches    (ipatch) = n_vgm_patches    (src_wmo)
+                  theta_s_patches  (ipatch) = theta_s_patches  (src_wmo)
+                  k_s_patches      (ipatch) = k_s_patches      (src_wmo)
+                  L_vgm_patches    (ipatch) = L_vgm_patches    (src_wmo)
+
+                  CYCLE
+               ENDIF
 
                IF (L /= 0) THEN
                   CALL aggregation_request_data (landpatch, ipatch, gland, zip = USE_zip_for_aggregation, area = area_one, &
@@ -928,6 +976,17 @@ SUBROUTINE Aggregation_SoilParameters ( &
             DO ipatch = 1, numpatch
                L = landpatch%settyp(ipatch)
 
+               IF (ipatch == landelm%wmopth(landpatch%eindex(ipatch))) THEN
+                  src_wmo = wmo_source (landpatch%eindex(ipatch))
+
+                  theta_s_patches  (ipatch) = theta_s_patches  (src_wmo)
+                  k_s_patches      (ipatch) = k_s_patches      (src_wmo)
+                  psi_s_patches    (ipatch) = psi_s_patches    (src_wmo)
+                  lambda_patches   (ipatch) = lambda_patches   (src_wmo)
+
+                  CYCLE
+               ENDIF
+               
                IF (L /= 0) THEN
                   CALL aggregation_request_data (landpatch, ipatch, gland, zip = USE_zip_for_aggregation, area = area_one, &
                                data_r8_2d_in1 = theta_s_grid, data_r8_2d_out1 = theta_s_one, &
@@ -1103,6 +1162,14 @@ SUBROUTINE Aggregation_SoilParameters ( &
             DO ipatch = 1, numpatch
                L = landpatch%settyp(ipatch)
 
+               IF (ipatch == landelm%wmopth(landpatch%eindex(ipatch))) THEN
+                  src_wmo = wmo_source (landpatch%eindex(ipatch))
+
+                  csol_patches(ipatch) = csol_patches(src_wmo)
+
+                  CYCLE
+               ENDIF
+
                IF (L /= 0) THEN
                   CALL aggregation_request_data (landpatch, ipatch, gland, zip = USE_zip_for_aggregation, area = area_one, &
                      data_r8_2d_in1 = csol_grid, data_r8_2d_out1 = csol_one)
@@ -1159,6 +1226,14 @@ SUBROUTINE Aggregation_SoilParameters ( &
 
             DO ipatch = 1, numpatch
                L = landpatch%settyp(ipatch)
+
+               IF (ipatch == landelm%wmopth(landpatch%eindex(ipatch))) THEN
+                  src_wmo = wmo_source (landpatch%eindex(ipatch))
+
+                  tksatu_patches(ipatch) = tksatu_patches(src_wmo)
+
+                  CYCLE
+               ENDIF
 
                IF (L /= 0) THEN
                   CALL aggregation_request_data (landpatch, ipatch, gland, zip = USE_zip_for_aggregation, area = area_one, &
@@ -1217,6 +1292,14 @@ SUBROUTINE Aggregation_SoilParameters ( &
             DO ipatch = 1, numpatch
                L = landpatch%settyp(ipatch)
 
+               IF (ipatch == landelm%wmopth(landpatch%eindex(ipatch))) THEN
+                  src_wmo = wmo_source (landpatch%eindex(ipatch))
+
+                  tksatf_patches(ipatch) = tksatf_patches(src_wmo)
+
+                  CYCLE
+               ENDIF
+
                IF (L /= 0) THEN
                   CALL aggregation_request_data (landpatch, ipatch, gland, zip = USE_zip_for_aggregation, area = area_one, &
                      data_r8_2d_in1 = tksatf_grid, data_r8_2d_out1 = tksatf_one)
@@ -1274,6 +1357,14 @@ SUBROUTINE Aggregation_SoilParameters ( &
             DO ipatch = 1, numpatch
                L = landpatch%settyp(ipatch)
 
+               IF (ipatch == landelm%wmopth(landpatch%eindex(ipatch))) THEN
+                  src_wmo = wmo_source (landpatch%eindex(ipatch))
+
+                  tkdry_patches(ipatch) = tkdry_patches(src_wmo)
+
+                  CYCLE
+               ENDIF
+
                IF (L /= 0) THEN
                   CALL aggregation_request_data (landpatch, ipatch, gland, zip = USE_zip_for_aggregation, area = area_one, &
                      data_r8_2d_in1 = tkdry_grid, data_r8_2d_out1 = tkdry_one)
@@ -1330,6 +1421,14 @@ SUBROUTINE Aggregation_SoilParameters ( &
 
             DO ipatch = 1, numpatch
                L = landpatch%settyp(ipatch)
+
+               IF (ipatch == landelm%wmopth(landpatch%eindex(ipatch))) THEN
+                  src_wmo = wmo_source (landpatch%eindex(ipatch))
+
+                  k_solids_patches(ipatch) = k_solids_patches(src_wmo)
+
+                  CYCLE
+               ENDIF
 
                IF (L /= 0) THEN
                   CALL aggregation_request_data (landpatch, ipatch, gland, zip = USE_zip_for_aggregation, area = area_one, &
@@ -1389,6 +1488,14 @@ SUBROUTINE Aggregation_SoilParameters ( &
             DO ipatch = 1, numpatch
                L = landpatch%settyp(ipatch)
 
+               IF (ipatch == landelm%wmopth(landpatch%eindex(ipatch))) THEN
+                  src_wmo = wmo_source (landpatch%eindex(ipatch))
+
+                  OM_density_s_patches(ipatch) = OM_density_s_patches(src_wmo)
+
+                  CYCLE
+               ENDIF
+
                IF (L /= 0) THEN
                   CALL aggregation_request_data (landpatch, ipatch, gland, zip = USE_zip_for_aggregation, area = area_one, &
                      data_r8_2d_in1 = OM_density_s_grid, data_r8_2d_out1 = OM_density_s_one)
@@ -1446,6 +1553,15 @@ SUBROUTINE Aggregation_SoilParameters ( &
 
             DO ipatch = 1, numpatch
                L = landpatch%settyp(ipatch)
+
+               IF (ipatch == landelm%wmopth(landpatch%eindex(ipatch))) THEN
+                  src_wmo = wmo_source (landpatch%eindex(ipatch))
+
+                  BD_all_s_patches(ipatch) = BD_all_s_patches(src_wmo)
+
+                  CYCLE
+               ENDIF
+
 
                IF (L /= 0) THEN
                   CALL aggregation_request_data (landpatch, ipatch, gland, zip = USE_zip_for_aggregation, area = area_one, &
@@ -1505,6 +1621,14 @@ SUBROUTINE Aggregation_SoilParameters ( &
             DO ipatch = 1, numpatch
                L = landpatch%settyp(ipatch)
 
+               IF (ipatch == landelm%wmopth(landpatch%eindex(ipatch))) THEN
+                  src_wmo = wmo_source (landpatch%eindex(ipatch))
+
+                  vf_clay_s_patches(ipatch) = vf_clay_s_patches(src_wmo)
+
+                  CYCLE
+               ENDIF
+               
                IF (L /= 0) THEN
                   CALL aggregation_request_data (landpatch, ipatch, gland, zip = USE_zip_for_aggregation, area = area_one, &
                      data_r8_2d_in1 = vf_clay_s_grid, data_r8_2d_out1 = vf_clay_s_one)
@@ -1564,6 +1688,14 @@ SUBROUTINE Aggregation_SoilParameters ( &
             DO ipatch = 1, numpatch
                L = landpatch%settyp(ipatch)
 
+               IF (ipatch == landelm%wmopth(landpatch%eindex(ipatch))) THEN
+                  src_wmo = wmo_source (landpatch%eindex(ipatch))
+
+                  wf_om_s_patches(ipatch) = wf_om_s_patches(src_wmo)
+
+                  CYCLE
+               ENDIF
+
                IF (L /= 0) THEN
                   CALL aggregation_request_data (landpatch, ipatch, gland, zip = USE_zip_for_aggregation, area = area_one, &
                      data_r8_2d_in1 = wf_om_s_grid, data_r8_2d_out1 = wf_om_s_one)
@@ -1622,6 +1754,14 @@ SUBROUTINE Aggregation_SoilParameters ( &
 
             DO ipatch = 1, numpatch
                L = landpatch%settyp(ipatch)
+
+               IF (ipatch == landelm%wmopth(landpatch%eindex(ipatch))) THEN
+                  src_wmo = wmo_source (landpatch%eindex(ipatch))
+
+                  wf_clay_s_patches(ipatch) = wf_clay_s_patches(src_wmo)
+
+                  CYCLE
+               ENDIF
 
                IF (L /= 0) THEN
                   CALL aggregation_request_data (landpatch, ipatch, gland, zip = USE_zip_for_aggregation, area = area_one, &

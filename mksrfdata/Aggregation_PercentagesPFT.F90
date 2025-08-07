@@ -18,6 +18,7 @@ SUBROUTINE Aggregation_PercentagesPFT (gland, dir_rawdata, dir_model_landdata, l
    USE MOD_SPMD_Task
    USE MOD_Grid
    USE MOD_LandPatch
+   USE MOD_Land2mWMO
 #ifdef CROP
    USE MOD_LandCrop
 #endif
@@ -61,6 +62,7 @@ SUBROUTINE Aggregation_PercentagesPFT (gland, dir_rawdata, dir_model_landdata, l
    real(r8), allocatable :: pct_pfts(:)
 #endif
    integer  :: ipatch, ipc, ipft, p
+   integer  :: src_wmo
    real(r8) :: sumarea
 #ifdef SrfdataDiag
    integer :: typpft(0:N_PFT-1)
@@ -104,6 +106,15 @@ SUBROUTINE Aggregation_PercentagesPFT (gland, dir_rawdata, dir_model_landdata, l
          allocate(pct_pfts (numpft))
 
          DO ipatch = 1, numpatch
+
+            src_wmo = wmo_source (landpatch%eindex(ipatch))
+            IF (ipatch == src_wmo) THEN
+               ipft = patch_pft_s(ipatch)
+               p    = landpft%settyp(ipft)
+               pct_pfts(ipft) = 1.
+
+               CYCLE
+            ENDIF
 
 #ifndef CROP
             IF (patchtypes(landpatch%settyp(ipatch)) == 0) THEN
