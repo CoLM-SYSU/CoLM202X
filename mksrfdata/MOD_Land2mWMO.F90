@@ -76,7 +76,7 @@ CONTAINS
    integer*8, allocatable :: eindex_(:)
    integer,   allocatable :: settyp_(:), ipxstt_(:), ipxend_(:), ielm_(:)
    integer,   allocatable :: wmopth(:)
-   
+
    integer :: npatch_glb
    integer :: numwmo
 
@@ -95,12 +95,12 @@ CONTAINS
 
          allocate (wmo_source (numset))
          allocate (wmopth     (numset))
-         
+
          wmo_source = -1
          wmopth     = -1
 
          DO iset = 1, numset
-            
+
             numpth = count(landpatch%eindex==landelm%eindex(iset))
             IF (allocated(locpth)) deallocate(locpth)
             allocate(locpth(numpth))
@@ -194,7 +194,7 @@ CONTAINS
             landpatch%ipxend = ipxend_(1:numpatch_)
             landpatch%settyp = settyp_(1:numpatch_)
             landpatch%ielm   = ielm_  (1:numpatch_)
-            
+
             landelm%wmopth   = wmopth (1:numset   )
          ENDIF
       ENDIF
@@ -203,7 +203,6 @@ CONTAINS
 
       CALL landpatch%set_vecgs
 
-IF (DEF_USE_WMO) THEN
 #if (!defined(URBAN_MODEL) && !defined(CROP))
 #ifdef USEMPI
       IF (p_is_worker) THEN
@@ -225,7 +224,6 @@ IF (DEF_USE_WMO) THEN
 
       CALL write_patchfrac (DEF_dir_landdata, lc_year)
 #endif
-ENDIF
    END SUBROUTINE land2mwmo_build
 
 END MODULE MOD_Land2mWMO
