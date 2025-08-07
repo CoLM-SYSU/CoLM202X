@@ -1424,7 +1424,7 @@ CONTAINS
 
 ! ----- 2m WMO temperature ---- Macros&Namelist conflicts and dependency management
 
-#if !defined(GRIDBASED) && (defined  LULC_IGBP || defined LULC_USGS)
+#if !defined(GRIDBASED) || (defined  LULC_IGBP || defined LULC_USGS)
          IF (DEF_USE_2m_WMO) THEN
             DEF_USE_2m_WMO = .false.
             write(*,*) '                  *****                  '
