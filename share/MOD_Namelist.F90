@@ -534,6 +534,7 @@ MODULE MOD_Namelist
       logical :: trad                             = .true.
       logical :: rss                              = .true.
       logical :: tref                             = .true.
+      logical :: t2m_wmo                          = .true.
       logical :: qref                             = .true.
 
       logical :: fsen_roof                        = .true.
@@ -1780,6 +1781,7 @@ CONTAINS
       CALL sync_hist_vars_one (DEF_hist_vars%trad        , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%rss         , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%tref        , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%t2m_wmo     , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%qref        , set_defaults)
 #ifdef URBAN_MODEL
       CALL sync_hist_vars_one (DEF_hist_vars%fsen_roof   , set_defaults)

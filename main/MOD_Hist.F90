@@ -649,6 +649,13 @@ CONTAINS
             a_tref, file_hist, 'f_tref', itime_in_file, sumarea, filter, &
             '2 m height air temperature','kelvin')
 
+IF (DEF_USE_WMO) THEN
+         ! 2 m WMO air temperature [celsius]
+         CALL write_history_variable_2d ( DEF_hist_vars%t2m_wmo, &
+            a_t2m_wmo, file_hist, 'f_t2m_wmo', itime_in_file  , sumarea, filter, &
+            '2 m WMO air temperature','kelvin')
+ENDIF
+
          ! 2 m height air specific humidity [kg/kg]
          CALL write_history_variable_2d ( DEF_hist_vars%qref, &
             a_qref, file_hist, 'f_qref', itime_in_file, sumarea, filter, &
