@@ -4,21 +4,8 @@ MODULE MOD_Land2mWMO
 
 !-----------------------------------------------------------------------
 ! !DESCRIPTION:
+!  Build pixelset "landurban".
 !
-!    Build pixelset "landwmopatch".
-!
-!    In CoLM, the global/regional area is divided into a hierarchical structure:
-!    1. If GRIDBASED or UNSTRUCTURED is defined, it is
-!       ELEMENT >>> PATCH
-!    2. If CATCHMENT is defined, it is
-!       ELEMENT >>> HRU >>> PATCH
-!    If Plant Function Type classification is used, PATCH is further divided into PFT.
-!    If Plant Community classification is used,     PATCH is further divided into PC.
-!
-!    "landpatch" refers to pixelset PATCH.
-!
-!  Created by Shupeng Zhang, May 2023
-!    porting codes from Hua Yuan's OpenMP version to MPI parallel version.
 !-----------------------------------------------------------------------
 
    USE MOD_Precision
@@ -33,12 +20,6 @@ MODULE MOD_Land2mWMO
    ! ---- Instance ----
    integer, allocatable :: wmo_source (:)  !source patch of a wmo patch
 
-#ifdef CATCHMENT
-   type(subset_type)   :: hru_patch
-   type(superset_type) :: patch2hru
-#endif
-
-
 CONTAINS
 
    ! -------------------------------
@@ -52,30 +33,24 @@ CONTAINS
    USE MOD_DataType
    USE MOD_Mesh
    USE MOD_LandElm
-#ifdef CATCHMENT
-   USE MOD_LandHRU
-#endif
    USE MOD_Namelist
    USE MOD_NetCDFBlock
-   USE MOD_AggregationRequestData
 
    IMPLICIT NONE
 
    integer, intent(in) :: lc_year
    ! Local Variables
-   character(len=256) :: file_patch
    character(len=255) :: cyear
 
    integer :: numpatch_
    integer :: numset
-   integer :: ie, iset
-   integer,   allocatable :: types(:), locpth(:)
+   integer :: iset
    integer :: spatch, epatch, ipatch
    integer :: ipth, numpxl, numpth
-   integer :: src_pth, patchtype, maxpxl
+   integer :: src_pth, pthtype, maxpxl
    integer*8, allocatable :: eindex_(:)
    integer,   allocatable :: settyp_(:), ipxstt_(:), ipxend_(:), ielm_(:)
-   integer,   allocatable :: wmopth(:)
+   integer,   allocatable :: wmopth (:), locpth(:)
 
    integer :: npatch_glb
    integer :: numwmo
@@ -98,6 +73,7 @@ CONTAINS
 
          wmo_source = -1
          wmopth     = -1
+         numwmo     = 0
 
          DO iset = 1, numset
 
@@ -110,23 +86,23 @@ CONTAINS
             spatch = minval(locpth) ! elm_patch%substt(iset)
             epatch = maxval(locpth) ! elm_patch%subend(iset)
 
-            maxpxl    = 0
-            patchtype = patchtypes(landpatch%settyp(spatch))
+            maxpxl  = 0
+            pthtype = patchtypes(landpatch%settyp(spatch))
             IF (spatch /= epatch) THEN
                DO ipatch = spatch, epatch
                   numpxl = landpatch%ipxend(ipatch) - landpatch%ipxstt(ipatch) + 1
 
-                  IF (numpxl>maxpxl .and. patchtype==0) THEN
+                  IF (numpxl>maxpxl .and. pthtype==0) THEN
                      maxpxl  = numpth
                      src_pth = ipatch
                   ENDIF
                ENDDO
             ELSE
-               ! IF (patchtype == URBAN .or.  patchtype == CROPLAND .or. patchtype == GLACIERS .or. patchtype == WATERBODY) THEN
-               !    maxpatch = spatch
-               ! ELSE
+               IF (pthtype == 0) THEN
+                  src_pth = spatch
+               ELSE
                   src_pth = -1
-               ! ENDIF
+               ENDIF
             ENDIF
 
             IF (src_pth /= -1) numwmo = numwmo + 1
@@ -134,7 +110,7 @@ CONTAINS
          ENDDO
 
          IF (numpatch > 0) THEN
-            ! a temporary numpatch with max urban patch number
+            ! a numpatch with WMO patch number
             numpatch_ = numpatch + numwmo
 
             allocate (eindex_ (numpatch_ ))
@@ -218,9 +194,6 @@ CONTAINS
 #endif
 
       CALL elm_patch%build (landelm, landpatch, use_frac = .true.)
-#ifdef CATCHMENT
-      CALL hru_patch%build (landhru, landpatch, use_frac = .true.)
-#endif
 
       CALL write_patchfrac (DEF_dir_landdata, lc_year)
 #endif
