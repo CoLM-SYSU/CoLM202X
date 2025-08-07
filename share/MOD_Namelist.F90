@@ -121,8 +121,6 @@ MODULE MOD_Namelist
    character(len=256) :: DEF_dir_restart  = 'path/to/restart'
    character(len=256) :: DEF_dir_history  = 'path/to/history'
 
-   character(len=256) :: DEF_DA_obsdir    = 'null'
-
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ! ----- Part 6: make surface data -----
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -154,7 +152,8 @@ MODULE MOD_Namelist
    logical :: DEF_USE_PFT  = .false.
    logical :: DEF_USE_PC   = .false.
    logical :: DEF_SOLO_PFT = .false.
-   logical :: DEF_FAST_PC  = .false.
+   logical :: DEF_FAST_PC  = .true.
+   logical :: DEF_PC_CROP_SPLIT = .true.
    character(len=256) :: DEF_SUBGRID_SCHEME = 'LCT'
 
    logical :: DEF_LANDONLY                  = .true.
@@ -266,7 +265,7 @@ MODULE MOD_Namelist
    integer :: DEF_RSS_SCHEME = 1
 
    ! ----- Options for runoff parameterization schemes -----
-   ! 0: scheme from SIMTOP model, also used in CoLM2014
+   ! 0: scheme from TOPMODEL, also used in CoLM2014
    ! 1: scheme from VIC model
    ! 2: scheme from XinAnJiang model, also used in ECMWF model
    ! 3: scheme from Simple VIC, also used in NoahMP 5.0
@@ -274,7 +273,7 @@ MODULE MOD_Namelist
    integer :: DEF_Runoff_SCHEME = 3
    character(len=256) :: DEF_file_VIC_para = 'null'
 
-   integer :: DEF_SimTOP_method = 0
+   integer :: DEF_TOPMOD_method = 0
 
    ! ----- Treat exposed soil and snow surface separately -----
    ! including solar absorption, sensible/latent heat, ground temperature,
@@ -345,6 +344,9 @@ MODULE MOD_Namelist
 
    !Fertilisation on crop
    logical            :: DEF_USE_FERT            = .true.
+
+   !Fertilisation data source
+   integer            :: DEF_FERT_SOURCE         = 1
 
    !Nitrification and denitrification switch
    logical            :: DEF_USE_NITRIF          = .true.
@@ -440,8 +442,19 @@ MODULE MOD_Namelist
    character(len=5)  :: DEF_DS_precipitation_adjust_scheme = 'I'
    character(len=5)  :: DEF_DS_longwave_adjust_scheme      = 'II'
 
+! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+! ----- Part 13: data assimilation -----
+! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   character(len=256) :: DEF_DA_obsdir  = 'null'
+   logical            :: DEF_DA_GRACE   = .false.
+   logical            :: DEF_DA_SMAP    = .false.
+   logical            :: DEF_DA_CMEM    = .false.
+   logical            :: DEF_DA_FY3D    = .false.
+   logical            :: DEF_DA_SYNOP   = .false.
+   integer            :: DEF_DA_ENS     = 20
+
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-! ----- Part 13: history and restart -----
+! ----- Part 14: history and restart -----
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
    logical  :: DEF_HISTORY_IN_VECTOR            = .false.
@@ -562,6 +575,9 @@ MODULE MOD_Namelist
       logical :: assimsha                         = .true.
       logical :: etrsun                           = .true.
       logical :: etrsha                           = .true.
+
+      logical :: o3uptakesun                      = .true.
+      logical :: o3uptakesha                      = .true.
 
       logical :: leafc                            = .true.
       logical :: leafc_storage                    = .true.
@@ -714,6 +730,7 @@ MODULE MOD_Namelist
       logical :: pdrice1                          = .false.
       logical :: pdrice2                          = .false.
       logical :: pdsugarcane                      = .false.
+      logical :: manunitro                        = .false.
       logical :: fertnitro_corn                   = .true.
       logical :: fertnitro_swheat                 = .true.
       logical :: fertnitro_wwheat                 = .true.
@@ -945,6 +962,7 @@ CONTAINS
       DEF_USE_PFT,                            &
       DEF_USE_PC,                             &
       DEF_FAST_PC,                            &
+      DEF_PC_CROP_SPLIT,                      &
       DEF_SOLO_PFT,                           &
       DEF_SUBGRID_SCHEME,                     &
 
@@ -978,7 +996,7 @@ CONTAINS
       DEF_SOIL_REFL_SCHEME,                   &
       DEF_RSS_SCHEME,                         &
       DEF_Runoff_SCHEME,                      &
-      DEF_SimTOP_method,                      &
+      DEF_TOPMOD_method,                      &
       DEF_SPLIT_SOILSNOW,                     &
       DEF_VEG_SNOW,                           &
       DEF_file_VIC_para,                      &
@@ -997,6 +1015,7 @@ CONTAINS
       DEF_USE_DiagMatrix,                     & !add by Xingjie Lu @ sysu 2023/06/27
       DEF_USE_PN,                             & !add by Xingjie Lu @ sysu 2023/06/27
       DEF_USE_FERT,                           & !add by Xingjie Lu @ sysu 2023/06/27
+      DEF_FERT_SOURCE,                        & !add by Hongbin Liang @ sysu 
       DEF_USE_NITRIF,                         & !add by Xingjie Lu @ sysu 2023/06/27
       DEF_USE_CNSOYFIXN,                      & !add by Xingjie Lu @ sysu 2023/06/27
       DEF_USE_FIRE,                           & !add by Xingjie Lu @ sysu 2023/06/27
@@ -1037,6 +1056,12 @@ CONTAINS
       DEF_ElementNeighbour_file,              &
 
       DEF_DA_obsdir,                          &
+      DEF_DA_GRACE,                           &
+      DEF_DA_SMAP,                            &
+      DEF_DA_CMEM,                            &
+      DEF_DA_FY3D,                            &
+      DEF_DA_SYNOP,                           &
+      DEF_DA_ENS,                             &
 
       DEF_forcing_namelist,                   &
 
@@ -1125,8 +1150,8 @@ CONTAINS
 #endif
 #ifdef SinglePoint
          IF (DEF_Runoff_SCHEME = 0) THEN
-            write(*,*) 'Note: DEF_SimTOP_method is set to 0 in SinglePoint.'
-            DEF_SimTOP_method = 0
+            write(*,*) 'Note: DEF_TOPMOD_method is set to 0 in SinglePoint.'
+            DEF_TOPMOD_method = 0
          ENDIF
 #endif
 
@@ -1239,6 +1264,12 @@ CONTAINS
             write(*,*) 'DEF_USE_IRRIGATION is set to false automatically when CROP is turned off.'
          ENDIF
 #endif
+
+         IF(.not.(DEF_FERT_SOURCE == 1 .or. DEF_FERT_SOURCE == 2))THEN
+            write(*,*) '                  *****                  '
+            write(*,'(A,I0,A)') 'ERROR: DEF_FERT_SOURCE is ',DEF_FERT_SOURCE,' , should only = 1 or 2'
+            CALL CoLM_stop ()
+         ENDIF
 
          IF(.not. DEF_USE_OZONESTRESS)THEN
             IF(DEF_USE_OZONEDATA)THEN
@@ -1468,6 +1499,7 @@ CONTAINS
       CALL mpi_bcast (DEF_USE_PFT                            ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_USE_PC                             ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_FAST_PC                            ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_PC_CROP_SPLIT                      ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_SOLO_PFT                           ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_SUBGRID_SCHEME                     ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
 
@@ -1506,7 +1538,7 @@ CONTAINS
       ! 02/2024, added by Shupeng Zhang
       CALL mpi_bcast (DEF_Runoff_SCHEME                      ,1   ,mpi_integer   ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_file_VIC_para                      ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_SimTOP_method                      ,1   ,mpi_integer   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_TOPMOD_method                      ,1   ,mpi_integer   ,p_address_master ,p_comm_glb ,p_err)
       ! 08/2023, added by hua yuan
       CALL mpi_bcast (DEF_SPLIT_SOILSNOW                     ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_VEG_SNOW                           ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
@@ -1524,6 +1556,7 @@ CONTAINS
       CALL mpi_bcast (DEF_USE_DiagMatrix                     ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_USE_PN                             ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_USE_FERT                           ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_FERT_SOURCE                        ,1   ,mpi_integer   ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_USE_NITRIF                         ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_USE_CNSOYFIXN                      ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_USE_FIRE                           ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
@@ -1561,6 +1594,12 @@ CONTAINS
       CALL mpi_bcast (DEF_ElementNeighbour_file              ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
 
       CALL mpi_bcast (DEF_DA_obsdir                          ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_DA_GRACE                           ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_DA_SMAP                            ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_DA_CMEM                            ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_DA_FY3D                            ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_DA_SYNOP                           ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_DA_ENS                             ,1   ,mpi_integer   ,p_address_master ,p_comm_glb ,p_err)
 
       CALL mpi_bcast (DEF_Aerosol_Readin                     ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_Aerosol_Clim                       ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
@@ -1952,6 +1991,18 @@ CONTAINS
       CALL sync_hist_vars_one (DEF_hist_vars%grainc_to_seed                  , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%fert_to_sminn                   , set_defaults)
 
+      IF(DEF_USE_FERT)THEN
+         CALL sync_hist_vars_one (DEF_hist_vars%manunitro                    , set_defaults)
+         CALL sync_hist_vars_one (DEF_hist_vars%fertnitro_corn               , set_defaults)
+         CALL sync_hist_vars_one (DEF_hist_vars%fertnitro_swheat             , set_defaults)
+         CALL sync_hist_vars_one (DEF_hist_vars%fertnitro_wwheat             , set_defaults)
+         CALL sync_hist_vars_one (DEF_hist_vars%fertnitro_soybean            , set_defaults)
+         CALL sync_hist_vars_one (DEF_hist_vars%fertnitro_cotton             , set_defaults)
+         CALL sync_hist_vars_one (DEF_hist_vars%fertnitro_rice1              , set_defaults)
+         CALL sync_hist_vars_one (DEF_hist_vars%fertnitro_rice2              , set_defaults)
+         CALL sync_hist_vars_one (DEF_hist_vars%fertnitro_sugarcane          , set_defaults)
+      ENDIF
+
       IF(DEF_USE_IRRIGATION)THEN
          CALL sync_hist_vars_one (DEF_hist_vars%irrig_rate                   , set_defaults)
          CALL sync_hist_vars_one (DEF_hist_vars%deficit_irrig                , set_defaults)
@@ -2025,6 +2076,10 @@ CONTAINS
       CALL sync_hist_vars_one (DEF_hist_vars%soil3nCap_vr                    , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%cwdnCap_vr                      , set_defaults)
 #endif
+      IF(DEF_USE_OZONESTRESS)THEN
+         CALL sync_hist_vars_one (DEF_hist_vars%o3uptakesun                  , set_defaults)
+         CALL sync_hist_vars_one (DEF_hist_vars%o3uptakesha                  , set_defaults)
+      ENDIF
 
       CALL sync_hist_vars_one (DEF_hist_vars%t_soisno    , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%wliq_soisno , set_defaults)

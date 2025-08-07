@@ -909,7 +909,7 @@ CONTAINS
 
    USE MOD_SPMD_Task
    USE MOD_RangeCheck
-   USE MOD_Namelist, only: DEF_Runoff_SCHEME, DEF_SimTOP_method, DEF_USE_BEDROCK, &
+   USE MOD_Namelist, only: DEF_Runoff_SCHEME, DEF_TOPMOD_method, DEF_USE_BEDROCK, &
                            DEF_USE_Forcing_Downscaling
 
    IMPLICIT NONE
@@ -955,13 +955,13 @@ CONTAINS
       CALL check_vector_data ('fc_vgm       [-]     ', fc_vgm      ) ! a scaling factor by using air entry value in the Mualem model [-]
 #endif
 
-      IF ((DEF_Runoff_SCHEME == 0) .and. (DEF_SimTOP_method == 1)) THEN
+      IF ((DEF_Runoff_SCHEME == 0) .and. (DEF_TOPMOD_method == 1)) THEN
          CALL check_vector_data ('mean twi     [log m] ', topoweti) !
          CALL check_vector_data ('max sat frac area [-]', fsatmax ) !
          CALL check_vector_data ('sat frac area decay  ', fsatdcf ) !
       ENDIF
 
-      IF ((DEF_Runoff_SCHEME == 0) .and. (DEF_SimTOP_method == 2)) THEN
+      IF ((DEF_Runoff_SCHEME == 0) .and. (DEF_TOPMOD_method == 2)) THEN
          CALL check_vector_data ('mean twi     [log m] ', topoweti) !
          CALL check_vector_data ('twi alpha in 3-gamma ', alp_twi )
          CALL check_vector_data ('twi chi   in 3-gamma ', chi_twi )

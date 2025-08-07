@@ -24,7 +24,7 @@ CONTAINS
                      ,vegwp,gs0sun,gs0sha&
 !End plant hydraulic parameter
                      ,t_grnd,tleaf,ldew,ldew_rain,ldew_snow,fwet_snow,sag,scv&
-                     ,snowdp,fveg,fsno,sigf,green,lai,sai,coszen&
+                     ,snowdp,fveg,fsno,sigf,green,lai,sai,lai_old,coszen&
                      ,snw_rds,mss_bcpho,mss_bcphi,mss_ocpho,mss_ocphi&
                      ,mss_dst1,mss_dst2,mss_dst3,mss_dst4&
                      ,alb,ssun,ssha,ssoi,ssno,ssno_lyr,thermk,extkb,extkd&
@@ -71,7 +71,7 @@ CONTAINS
    USE MOD_Utils
    USE MOD_Const_Physical, only: tfrz, denh2o, denice
    USE MOD_Vars_TimeVariables, only: tlai, tsai
-   USE MOD_Const_PFT, only: isevg, woody, leafcn, frootcn, livewdcn, deadwdcn, slatop
+   USE MOD_Const_PFT, only: isevg, woody, leafcn, frootcn, livewdcn, deadwdcn, slatop, manure
    USE MOD_Vars_TimeInvariants, only: ibedrock, dbedrock
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
    USE MOD_LandPFT, only: patch_pft_s, patch_pft_e
@@ -163,6 +163,7 @@ CONTAINS
          sigf,                   &! fraction of veg cover, excluding snow-covered veg [-]
          lai,                    &! leaf area index
          sai,                    &! stem area index
+         lai_old,                &! leaf area index
 
          alb (2,2),              &! averaged albedo [-]
          ssun(2,2),              &! sunlit canopy absorption for solar radiation
@@ -599,6 +600,9 @@ CONTAINS
                sigf = fveg
                lai  = tlai(ipatch)
                sai  = tsai(ipatch) * sigf
+               IF(DEF_USE_OZONESTRESS)THEN
+                  lai_old = lai
+               ENDIF
 #endif
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
@@ -611,11 +615,18 @@ CONTAINS
                sigf  = 1.
                lai   = tlai(ipatch)
                sai   = sum(sai_p(ps:pe) * pftfrac(ps:pe))
+               IF(DEF_USE_OZONESTRESS)THEN
+                  lai_old = lai
+                  lai_old_p(ps:pe) = lai_p(ps:pe)
+               ENDIF
 #endif
             ELSE
                sigf  = fveg
                lai   = tlai(ipatch)
                sai   = tsai(ipatch) * sigf
+               IF(DEF_USE_OZONESTRESS)THEN
+                  lai_old = lai
+               ENDIF
             ENDIF
          ENDIF
 
@@ -841,7 +852,6 @@ CONTAINS
             cropprod1c_p             (ps:pe) = 0.0
 
             leafn_xfer_p             (ps:pe) = 0.0
-            frootn_storage_p         (ps:pe) = 0.0
             frootn_xfer_p            (ps:pe) = 0.0
             livestemn_storage_p      (ps:pe) = 0.0
             livestemn_xfer_p         (ps:pe) = 0.0
@@ -927,6 +937,9 @@ CONTAINS
             tref_max_inst_p          (ps:pe) = spval
             latbaset_p               (ps:pe) = spval
             fert_p                   (ps:pe) = 0._r8
+            IF(DEF_FERT_SOURCE == 1)THEN
+               manunitro_p              (ps:pe) = manure(pftclass(ps:pe)) * 1000
+            ENDIF
 #endif
 
             IF(DEF_USE_LAIFEEDBACK)THEN
@@ -934,6 +947,10 @@ CONTAINS
                tlai_p                (ps:pe) = max(0._r8, tlai_p(ps:pe))
                lai_p                 (ps:pe) = tlai_p(ps:pe)
                lai                           = sum(lai_p(ps:pe) * pftfrac(ps:pe))
+               IF(DEF_USE_OZONESTRESS)THEN
+                  lai_old                    = lai
+                  lai_old_p          (ps:pe) = lai_p(ps:pe)
+               ENDIF
             ENDIF
 
 #ifdef BGC

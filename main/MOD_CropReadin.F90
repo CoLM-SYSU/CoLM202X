@@ -51,10 +51,18 @@ CONTAINS
    type(block_data_int32_2d)  :: f_xy_irrig
    type(spatial_mapping_type) :: mg2pft_irrig
 
+   character(len=256) :: file_fert
+   type(grid_type)    :: grid_fert
+   type(block_data_real8_2d) :: f_xy_fert
+   type(spatial_mapping_type) :: mg2pft_fert
+
    real(r8),allocatable :: pdrice2_tmp      (:)
    real(r8),allocatable :: plantdate_tmp    (:)
    real(r8),allocatable :: fertnitro_tmp    (:)
    integer ,allocatable :: irrig_method_tmp (:)
+
+   real(r8),allocatable :: fertilizer_tmp   (:)
+   real(r8),allocatable :: manure_tmp       (:)
 
    ! Local variables
    real(r8), allocatable :: lat(:), lon(:)
@@ -157,31 +165,103 @@ CONTAINS
       CALL check_vector_data ('plantdate_pfts value ', plantdate_p)
 #endif
 
-      IF (p_is_worker) THEN
-         IF (numpft > 0) fertnitro_p(:) = -99999999._r8
-      ENDIF
-
-      file_crop = trim(DEF_dir_runtime) // '/crop/fertnitro_fillcoast.nc'
-      DO cft = 15, 78
-         write(cx, '(i2.2)') cft
-         IF (p_is_io) THEN
-            CALL ncio_read_block_time (file_crop, &
-               'CONST_FERTNITRO_CFT_'//trim(cx), grid_crop, 1, f_xy_crop)
+      ! (3) Read in fertlization
+      IF (DEF_FERT_SOURCE == 1) THEN
+         IF (p_is_worker) THEN
+            IF (numpft > 0) fertnitro_p(:) = -99999999._r8
          ENDIF
 
-         CALL mg2pft_crop%grid2pset (f_xy_crop, fertnitro_tmp)
+         file_fert = trim(DEF_dir_runtime) // '/crop/fertnitro_fillcoast.nc'
+         DO cft = 15, 78
+            write(cx, '(i2.2)') cft
+            IF (p_is_io) THEN
+               CALL ncio_read_block_time (file_fert, &
+                  'CONST_FERTNITRO_CFT_'//trim(cx), grid_crop, 1, f_xy_crop)
+            ENDIF
+
+            CALL mg2pft_crop%grid2pset (f_xy_crop, fertnitro_tmp)
+
+            IF (p_is_worker) THEN
+               DO ipft = 1, numpft
+                  IF(landpft%settyp(ipft) .eq. cft)THEN
+                     fertnitro_p(ipft) = fertnitro_tmp(ipft)
+                     IF(fertnitro_p(ipft) <= 0._r8) THEN
+                        fertnitro_p(ipft) = 0._r8
+                     ENDIF
+                  ENDIF
+               ENDDO
+            ENDIF
+         ENDDO
+
+      ELSEIF (DEF_FERT_SOURCE == 2)THEN
+         IF (p_is_worker) THEN
+            IF (numpft > 0) THEN
+               allocate(fertilizer_tmp(numpft))
+               allocate(manure_tmp(numpft))
+            ENDIF
+         ENDIF
+
+         file_fert = trim(DEF_dir_runtime) // '/crop/fertilizer_2015soc.nc'
+
+         CALL ncio_read_bcast_serial (file_fert, 'lat', lat)
+         CALL ncio_read_bcast_serial (file_fert, 'lon', lon)
+         CALL grid_fert%define_by_center (lat, lon)
+         
+         IF (p_is_io) THEN
+            CALL allocate_block_data (grid_fert, f_xy_fert)
+         ENDIF
+
+         CALL mg2pft_fert%build_arealweighted (grid_fert, landpft)
+
+         IF (allocated(lon)) deallocate(lon)
+         IF (allocated(lat)) deallocate(lat)
+
+         IF (p_is_worker) THEN
+            fertnitro_p(:) = -99999999._r8
+            manunitro_p(:) = -99999999._r8
+         ENDIF
+         
+         ! read manure
+         IF (p_is_io) THEN
+            CALL ncio_read_block (file_fert, 'manure', grid_fert, f_xy_fert)
+         ENDIF
+
+         CALL mg2pft_fert%grid2pset (f_xy_fert, manure_tmp)
 
          IF (p_is_worker) THEN
             DO ipft = 1, numpft
-               IF(landpft%settyp(ipft) .eq. cft)THEN
-                  fertnitro_p(ipft) = fertnitro_tmp(ipft)
-                  IF(fertnitro_p(ipft) <= 0._r8) THEN
-                     fertnitro_p(ipft) = 0._r8
+               IF (landpft%settyp(ipft) .ge. 15) THEN
+                  manunitro_p(ipft) = manure_tmp(ipft)
+                  IF (manunitro_p(ipft) < 0._r8) THEN
+                     manunitro_p(ipft) = 0._r8
                   ENDIF
                ENDIF
             ENDDO
          ENDIF
-      ENDDO
+
+         ! read fertilizer
+         DO cft = 1, 64
+            IF (p_is_io) THEN
+               CALL ncio_read_block_time (file_fert, 'fertilizer', grid_fert, cft, f_xy_fert)
+            ENDIF
+
+            CALL mg2pft_fert%grid2pset (f_xy_fert, fertilizer_tmp)
+
+            IF (p_is_worker) THEN
+               DO ipft = 1, numpft
+                  IF (landpft%settyp(ipft) .eq. cft+14) THEN
+                     fertnitro_p(ipft) = fertilizer_tmp(ipft)
+                     IF (fertnitro_p(ipft) < 0._r8) THEN
+                        fertnitro_p(ipft) = 0._r8
+                     ENDIF
+                  ENDIF
+               ENDDO
+            ENDIF
+         ENDDO
+
+         IF (allocated (fertilizer_tmp)) deallocate(fertilizer_tmp)
+         IF (allocated (manure_tmp))     deallocate(manure_tmp)
+      ENDIF
 
 #ifdef RangeCheck
       CALL check_vector_data ('fert nitro value ', fertnitro_p)

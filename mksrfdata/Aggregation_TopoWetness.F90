@@ -122,7 +122,7 @@ SUBROUTINE Aggregation_TopoWetness ( &
             mask = (twi_one > -1.e3)
             npxl = count(mask)
 
-            IF (npxl > 200) THEN
+            IF (npxl >= 25) THEN
 
                allocate (twi_sort (npxl))
                allocate (order    (npxl))
@@ -194,7 +194,7 @@ SUBROUTINE Aggregation_TopoWetness ( &
             mask = (twi_one > -1.e3)
             npxl = count(mask)
 
-            IF (npxl > 200) THEN
+            IF (npxl >= 25) THEN
 
                allocate (twi_sort (npxl))
                allocate (order    (npxl))

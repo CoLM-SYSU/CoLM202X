@@ -529,6 +529,7 @@ MODULE MOD_Vars_TimeVariables
    integer , allocatable :: irrig_method_rice1     (:) ! irrigation method for rice1 (0-3)
    integer , allocatable :: irrig_method_rice2     (:) ! irrigation method for rice2 (0-3)
    integer , allocatable :: irrig_method_sugarcane (:) ! irrigation method for sugarcane (0-3)
+
    ! PUBLIC MEMBER FUNCTIONS:
    PUBLIC :: allocate_TimeVariables
    PUBLIC :: deallocate_TimeVariables
@@ -571,6 +572,7 @@ CONTAINS
             allocate (h2osoi            (1:nl_soil,numpatch)); h2osoi      (:,:) = spval
             allocate (rootr             (1:nl_soil,numpatch)); rootr       (:,:) = spval
             allocate (rootflux          (1:nl_soil,numpatch)); rootflux    (:,:) = spval
+            
 !Plant Hydraulic variables
             allocate (vegwp             (1:nvegwcs,numpatch)); vegwp       (:,:) = spval
             allocate (gs0sun                      (numpatch)); gs0sun        (:) = spval
@@ -846,6 +848,7 @@ CONTAINS
             deallocate (irrig_method_rice1     )
             deallocate (irrig_method_rice2     )
             deallocate (irrig_method_sugarcane )
+
          ENDIF
       ENDIF
 
@@ -1167,11 +1170,6 @@ IF(DEF_USE_PLANTHYDRAULICS)THEN
       CALL ncio_read_vector (file_restart, 'gs0sun  ',    landpatch, gs0sun     ) ! working copy of sunlit stomata conductance
       CALL ncio_read_vector (file_restart, 'gs0sha  ',    landpatch, gs0sha     ) ! working copy of shaded stomata conductance
 ENDIF
-IF(DEF_USE_OZONESTRESS)THEN
-      CALL ncio_read_vector (file_restart, 'lai_old    ', landpatch, lai_old    )
-      CALL ncio_read_vector (file_restart, 'o3uptakesun', landpatch, o3uptakesun)
-      CALL ncio_read_vector (file_restart, 'o3uptakesha', landpatch, o3uptakesha)
-ENDIF
       CALL ncio_read_vector (file_restart, 't_grnd  '   , landpatch, t_grnd     ) ! ground surface temperature [K]
       CALL ncio_read_vector (file_restart, 'tleaf   '   , landpatch, tleaf      ) ! leaf temperature [K]
       CALL ncio_read_vector (file_restart, 'ldew    '   , landpatch, ldew       ) ! depth of water on foliage [mm]
@@ -1190,6 +1188,11 @@ ENDIF
       CALL ncio_read_vector (file_restart, 'sai     '   , landpatch, sai        ) ! stem area index
       CALL ncio_read_vector (file_restart, 'tsai    '   , landpatch, tsai       ) ! stem area index
       CALL ncio_read_vector (file_restart, 'coszen  '   , landpatch, coszen     ) ! cosine of solar zenith angle
+IF(DEF_USE_OZONESTRESS)THEN
+      CALL ncio_read_vector (file_restart, 'lai_old    ', landpatch, lai_old    )
+      CALL ncio_read_vector (file_restart, 'o3uptakesun', landpatch, o3uptakesun)
+      CALL ncio_read_vector (file_restart, 'o3uptakesha', landpatch, o3uptakesha)
+ENDIF
       CALL ncio_read_vector (file_restart, 'alb     '   , 2, 2, landpatch, alb  ) ! averaged albedo [-]
       CALL ncio_read_vector (file_restart, 'ssun    '   , 2, 2, landpatch, ssun ) ! sunlit canopy absorption for solar radiation (0-1)
       CALL ncio_read_vector (file_restart, 'ssha    '   , 2, 2, landpatch, ssha ) ! shaded canopy absorption for solar radiation (0-1)

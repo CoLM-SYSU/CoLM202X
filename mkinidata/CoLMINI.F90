@@ -108,6 +108,7 @@ PROGRAM CoLMINI
 
 #ifdef LULCC
       lc_year = idate(1)
+      DEF_LC_YEAR = lc_year
 #else
       lc_year = DEF_LC_YEAR
 #endif

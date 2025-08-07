@@ -34,7 +34,7 @@ MODULE MOD_CatchmentDataReadin
 CONTAINS
 
    ! -----
-   SUBROUTINE catchment_data_read_int32 (file_meshdata_in, dataname, grid, rdata_int32, spv_i4)
+   SUBROUTINE catchment_data_read_int32 (file_meshdata_in, dataname, grid, rdata_int32, spv)
 
    USE MOD_Grid
    USE MOD_DataType
@@ -45,11 +45,11 @@ CONTAINS
    type (grid_type),  intent(in) :: grid
 
    type (block_data_int32_2d), intent(inout) :: rdata_int32
-   integer,  intent(in), optional :: spv_i4
+   integer,  intent(in), optional :: spv
 
-      IF (present(spv_i4)) THEN
+      IF (present(spv)) THEN
          CALL catchment_data_read_general (file_meshdata_in, dataname, grid, &
-            rdata_int32 = rdata_int32, spv_i4 = spv_i4)
+            rdata_int32 = rdata_int32, spv_i4 = spv)
       ELSE
          CALL catchment_data_read_general (file_meshdata_in, dataname, grid, &
             rdata_int32 = rdata_int32)
@@ -58,7 +58,7 @@ CONTAINS
    END SUBROUTINE catchment_data_read_int32
 
    ! -----
-   SUBROUTINE catchment_data_read_real8 (file_meshdata_in, dataname, grid, rdata_real8, spv_r8)
+   SUBROUTINE catchment_data_read_real8 (file_meshdata_in, dataname, grid, rdata_real8, spv)
 
    USE MOD_Grid
    USE MOD_DataType
@@ -69,11 +69,11 @@ CONTAINS
    type (grid_type),  intent(in) :: grid
 
    type (block_data_real8_2d), intent(inout) :: rdata_real8
-   real(r8), intent(in), optional :: spv_r8
+   real(r8), intent(in), optional :: spv
 
-      IF (present(spv_r8)) THEN
+      IF (present(spv)) THEN
          CALL catchment_data_read_general (file_meshdata_in, dataname, grid, &
-            rdata_real8 = rdata_real8, spv_r8 = spv_r8)
+            rdata_real8 = rdata_real8, spv_r8 = spv)
       ELSE
          CALL catchment_data_read_general (file_meshdata_in, dataname, grid, &
             rdata_real8 = rdata_real8)
