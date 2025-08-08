@@ -4,7 +4,7 @@ MODULE MOD_Land2mWMO
 
 !-----------------------------------------------------------------------
 ! !DESCRIPTION:
-!  Build pixelset "landurban".
+!  Build pixelset "land2mWMO".
 !
 !-----------------------------------------------------------------------
 
@@ -151,7 +151,6 @@ CONTAINS
 
          IF (numpatch > 0) THEN
             ! update landpath with new patch number
-            ! all urban type patch are included
             IF (allocated (landpatch%eindex)) deallocate (landpatch%eindex)
             IF (allocated (landpatch%ipxstt)) deallocate (landpatch%ipxstt)
             IF (allocated (landpatch%ipxend)) deallocate (landpatch%ipxend)

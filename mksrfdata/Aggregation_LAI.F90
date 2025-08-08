@@ -601,20 +601,20 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
                      ip = patch_pft_s(ipatch)
                      p  = landpft%settyp(ip)
 
-                     LAI_patches(ipatch) = LAI_patches(src_wmo)
+                     SAI_patches(ipatch) = SAI_patches(src_wmo)
 
                      IF (p>=12 .and. p<=14) THEN
                         DO ip_ = patch_pft_s(src_wmo), patch_pft_e(src_wmo)
                            p_ = landpft%settyp(ip_)
-                           IF (p_ == p) LAI_pfts(ip) = LAI_pfts(ip_)
+                           IF (p_ == p) SAI_pfts(ip) = SAI_pfts(ip_)
                         ENDDO
                      ELSE
-                        LAI_pfts (ip) = 0
+                        SAI_pfts (ip) = 0
                      ENDIF
 
                      CYCLE
                   ENDIF
-                  
+
                   CALL aggregation_request_data (landpatch, ipatch, gridlai, &
                      zip = USE_zip_for_aggregation, area = area_one, &
                      data_r8_3d_in1 = pftPCT,  data_r8_3d_out1 = pct_pft_one, &
