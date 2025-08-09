@@ -243,6 +243,7 @@ MODULE MOD_Vars_1DAccFluxes
    real(r8), allocatable :: a_pdrice2               (:)
    real(r8), allocatable :: a_pdsugarcane           (:)
    real(r8), allocatable :: a_plantdate             (:)
+   real(r8), allocatable :: a_manunitro             (:)
    real(r8), allocatable :: a_fertnitro_corn        (:)
    real(r8), allocatable :: a_fertnitro_swheat      (:)
    real(r8), allocatable :: a_fertnitro_wwheat      (:)
@@ -664,6 +665,7 @@ CONTAINS
             allocate (a_pdrice2            (numpatch))
             allocate (a_pdsugarcane        (numpatch))
             allocate (a_plantdate          (numpatch))
+            allocate (a_manunitro          (numpatch))
             allocate (a_fertnitro_corn     (numpatch))
             allocate (a_fertnitro_swheat   (numpatch))
             allocate (a_fertnitro_wwheat   (numpatch))
@@ -1089,6 +1091,7 @@ CONTAINS
             deallocate (a_pdrice2            )
             deallocate (a_pdsugarcane        )
             deallocate (a_plantdate          )
+            deallocate (a_manunitro          )
             deallocate (a_fertnitro_corn     )
             deallocate (a_fertnitro_swheat   )
             deallocate (a_fertnitro_wwheat   )
@@ -1513,6 +1516,7 @@ CONTAINS
             a_pdrice2            (:) = spval
             a_pdsugarcane        (:) = spval
             a_plantdate          (:) = spval
+            a_manunitro          (:) = spval
             a_fertnitro_corn     (:) = spval
             a_fertnitro_swheat   (:) = spval
             a_fertnitro_wwheat   (:) = spval
@@ -2029,6 +2033,7 @@ CONTAINS
             CALL acc1d (pdrice2            ,   a_pdrice2            )
             CALL acc1d (pdsugarcane        ,   a_pdsugarcane        )
             CALL acc1d (plantdate          ,   a_plantdate          )
+            CALL acc1d (manunitro          ,   a_manunitro          )
             CALL acc1d (fertnitro_corn     ,   a_fertnitro_corn     )
             CALL acc1d (fertnitro_swheat   ,   a_fertnitro_swheat   )
             CALL acc1d (fertnitro_wwheat   ,   a_fertnitro_wwheat   )

@@ -1261,7 +1261,7 @@ MODULE MOD_Const_PFT
          /)
 !--- crop variables ---
    ! Max fertilizer to be applied in total (kg N/m2)
-   real(r8),parameter, dimension(0:N_PFT+N_CFT-1) :: manunitro  &
+   real(r8),parameter, dimension(0:N_PFT+N_CFT-1) :: manure  &
       = (/  0.,     0.,     0.,     0.,     0.,     0.,     0.,     0. &
       ,     0.,     0.,     0.,     0.,     0.,     0.,     0.,     0. &
 #ifdef CROP
