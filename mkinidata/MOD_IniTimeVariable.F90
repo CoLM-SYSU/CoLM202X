@@ -451,14 +451,19 @@ CONTAINS
                ENDIF
             ENDDO
 
-            IF (DEF_USE_VariablySaturatedFlow) THEN
-               wa  = 0.
-               zwt = zi_soimm(nl_soil)/1000.
+            IF (patchtype <= 1) THEN
+               IF (DEF_USE_VariablySaturatedFlow) THEN
+                  wa  = 0.
+                  zwt = zi_soimm(nl_soil)/1000.
+               ELSE
+                  ! water table depth (initially at 1.0 m below the model bottom; wa when zwt
+                  !                    is below the model bottom zi(nl_soil)
+                  wa  = 4800.                             !assuming aquifer capacity is 5000 mm
+                  zwt = (25. + z_soisno(nl_soil))+dz_soisno(nl_soil)/2. - wa/1000./0.2 !to result in zwt = zi(nl_soil) + 1.0 m
+               ENDIF
             ELSE
-               ! water table depth (initially at 1.0 m below the model bottom; wa when zwt
-               !                    is below the model bottom zi(nl_soil)
-               wa  = 4800.                             !assuming aquifer capacity is 5000 mm
-               zwt = (25. + z_soisno(nl_soil))+dz_soisno(nl_soil)/2. - wa/1000./0.2 !to result in zwt = zi(nl_soil) + 1.0 m
+               wa = 0.
+               zwt = 0.
             ENDIF
 
          ENDIF
