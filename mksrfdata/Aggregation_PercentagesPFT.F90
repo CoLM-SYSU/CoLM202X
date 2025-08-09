@@ -62,7 +62,7 @@ SUBROUTINE Aggregation_PercentagesPFT (gland, dir_rawdata, dir_model_landdata, l
    real(r8), allocatable :: pct_pfts(:)
 #endif
    integer  :: ipatch, ipc, ipft, p
-   integer  :: wmo_src
+   integer  :: wmo_pth
    real(r8) :: sumarea
 #ifdef SrfdataDiag
    integer :: typpft(0:N_PFT-1)
@@ -108,12 +108,10 @@ SUBROUTINE Aggregation_PercentagesPFT (gland, dir_rawdata, dir_model_landdata, l
 
          DO ipatch = 1, numpatch
 
-            !TODO@Wenzong: pls check the below codes
-            wmo_src = wmo_source (landpatch%eindex(ipatch))
-
-            IF (ipatch == wmo_src) THEN
+            wmo_pth = landelm%wmopth(landpatch%eindex(ipatch))
+            IF (ipatch == wmo_pth) THEN
                ipft = patch_pft_s(ipatch)
-               p    = landpft%settyp(ipft)
+
                pct_pfts(ipft) = 1.
 
                CYCLE
