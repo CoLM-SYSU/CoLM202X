@@ -98,6 +98,7 @@ MODULE MOD_Vars_1DAccFluxes
    real(r8), allocatable :: a_z0m       (:)
    real(r8), allocatable :: a_trad      (:)
    real(r8), allocatable :: a_tref      (:)
+   real(r8), allocatable :: a_t2m_wmo   (:)
    real(r8), allocatable :: a_qref      (:)
    real(r8), allocatable :: a_rain      (:)
    real(r8), allocatable :: a_snow      (:)
@@ -518,6 +519,7 @@ CONTAINS
             allocate (a_z0m       (numpatch))
             allocate (a_trad      (numpatch))
             allocate (a_tref      (numpatch))
+            allocate (a_t2m_wmo   (numpatch))
             allocate (a_qref      (numpatch))
             allocate (a_rain      (numpatch))
             allocate (a_snow      (numpatch))
@@ -943,6 +945,7 @@ CONTAINS
             deallocate (a_z0m       )
             deallocate (a_trad      )
             deallocate (a_tref      )
+            deallocate (a_t2m_wmo   )
             deallocate (a_qref      )
             deallocate (a_rain      )
             deallocate (a_snow      )
@@ -1369,6 +1372,7 @@ CONTAINS
             a_z0m       (:) = spval
             a_trad      (:) = spval
             a_tref      (:) = spval
+            a_t2m_wmo   (:) = spval
             a_qref      (:) = spval
             a_rain      (:) = spval
             a_snow      (:) = spval
@@ -1883,6 +1887,18 @@ CONTAINS
 
             CALL acc1d (tref   , a_tref   )
             CALL acc1d (qref   , a_qref   )
+
+            DO ielm = 1, numelm
+
+               IF (landelm%wmopth(ielm) == -1) THEN 
+                  istt = elm_patch%substt(ielm)
+                  iend = elm_patch%substt(ielm)
+
+                  t2m_wmo(istt:iend) = tref(istt:iend)
+               ENDIF
+            ENDDO
+            
+            CALL acc1d (t2m_wmo, a_t2m_wmo)
 
             CALL acc1d (forc_rain, a_rain )
             CALL acc1d (forc_snow, a_snow )

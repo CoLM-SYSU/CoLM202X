@@ -81,6 +81,8 @@ MODULE MOD_Pixelset
       integer, allocatable :: xblkgrp (:)  ! block index in longitude for this process's group
       integer, allocatable :: yblkgrp (:)  ! block index in latitude  for this process's group
 
+      integer, allocatable :: wmopth (:)
+
       type(vec_gather_scatter_type) :: vecgs ! for vector gathering and scattering
 
       logical :: has_shared = .false.

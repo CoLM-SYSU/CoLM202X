@@ -21,7 +21,6 @@ MODULE MOD_Namelist
 
    character(len=256) :: DEF_CASE_NAME = 'CASENAME'
 
-
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~
 ! ----- Part 1: domain -----
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -360,6 +359,9 @@ MODULE MOD_Namelist
    !
    logical            :: DEF_CheckEquilibrium    = .false.
 
+   !2m WMO temperature
+   logical            :: DEF_USE_2m_WMO          = .true.
+
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ! ----- Part 12: forcing -----
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -544,6 +546,7 @@ MODULE MOD_Namelist
       logical :: trad                             = .true.
       logical :: rss                              = .true.
       logical :: tref                             = .true.
+      logical :: t2m_wmo                          = .true.
       logical :: qref                             = .true.
 
       logical :: fsen_roof                        = .true.
@@ -1010,13 +1013,14 @@ CONTAINS
       DEF_USE_DiagMatrix,                     & !add by Xingjie Lu @ sysu 2023/06/27
       DEF_USE_PN,                             & !add by Xingjie Lu @ sysu 2023/06/27
       DEF_USE_FERT,                           & !add by Xingjie Lu @ sysu 2023/06/27
-      DEF_FERT_SOURCE,                        & !add by Hongbin Liang @ sysu 
+      DEF_FERT_SOURCE,                        & !add by Hongbin Liang @ sysu
       DEF_USE_NITRIF,                         & !add by Xingjie Lu @ sysu 2023/06/27
       DEF_USE_CNSOYFIXN,                      & !add by Xingjie Lu @ sysu 2023/06/27
       DEF_USE_FIRE,                           & !add by Xingjie Lu @ sysu 2023/06/27
 
       DEF_USE_Dynamic_Lake,                   & !add by Shupeng Zhang @ sysu 2024/09/12
       DEF_CheckEquilibrium,                   & !add by Shupeng Zhang @ sysu 2024/11/26
+      DEF_USE_2m_WMO,                         &
 
       DEF_LANDONLY,                           &
       DEF_USE_DOMINANT_PATCHTYPE,             &
@@ -1144,7 +1148,7 @@ CONTAINS
          DEF_USE_VariablySaturatedFlow = .true.
 #endif
 #ifdef SinglePoint
-         IF (DEF_Runoff_SCHEME = 0) THEN
+         IF (DEF_Runoff_SCHEME == 0) THEN
             write(*,*) 'Note: DEF_TOPMOD_method is set to 0 in SinglePoint.'
             DEF_TOPMOD_method = 0
          ENDIF
@@ -1418,6 +1422,17 @@ CONTAINS
          write(*,*) 'Warning: Dynamic Lake is used if CATCHMENT-based lateral flow used.'
 #endif
 
+! ----- 2m WMO temperature ---- Macros&Namelist conflicts and dependency management
+
+#if !defined(GRIDBASED) || (defined  LULC_IGBP || defined LULC_USGS)
+         IF (DEF_USE_2m_WMO) THEN
+            DEF_USE_2m_WMO = .false.
+            write(*,*) '                  *****                  '
+            write(*,*) 'Warning: 2m WMO temperature is not well supported for IGBP and USGS'
+            write(*,*) 'DEF_USE_2m_WMO will be set to false automatically.'
+         ENDIF
+#endif
+
 ! ----- [Complement IF needed] ----- Macros&Namelist conflicts and dependency management
 
 
@@ -1429,6 +1444,7 @@ CONTAINS
 
 
 #ifdef USEMPI
+      CALL mpi_bcast (DEF_USE_2m_WMO                         ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_CASE_NAME                          ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_domain%edges                       ,1   ,mpi_real8     ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_domain%edgen                       ,1   ,mpi_real8     ,p_address_master ,p_comm_glb ,p_err)
@@ -1814,6 +1830,7 @@ CONTAINS
       CALL sync_hist_vars_one (DEF_hist_vars%trad        , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%rss         , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%tref        , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%t2m_wmo     , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%qref        , set_defaults)
 #ifdef URBAN_MODEL
       CALL sync_hist_vars_one (DEF_hist_vars%fsen_roof   , set_defaults)
