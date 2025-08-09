@@ -56,7 +56,7 @@ SUBROUTINE Aggregation_SoilBrightness ( &
 
    integer :: ii, L
    integer :: ipatch, iblkme, iblk, jblk, ix, iy
-   integer :: src_wmo
+   integer :: wmo_src
    real(r8), allocatable :: soil_one(:)
 
 #ifdef SrfdataDiag
@@ -156,9 +156,9 @@ SUBROUTINE Aggregation_SoilBrightness ( &
             L = landpatch%settyp(ipatch)
 
             IF (ipatch == landelm%wmopth(landpatch%eindex(ipatch))) THEN
-               src_wmo = wmo_source (landpatch%eindex(ipatch))
+               wmo_src = wmo_source (landpatch%eindex(ipatch))
 
-               soil_s_v_alb(ipatch) = soil_s_v_alb(src_wmo)
+               soil_s_v_alb(ipatch) = soil_s_v_alb(wmo_src)
 
                CYCLE
             ENDIF
@@ -202,9 +202,9 @@ SUBROUTINE Aggregation_SoilBrightness ( &
             L = landpatch%settyp(ipatch)
 
             IF (ipatch == landelm%wmopth(landpatch%eindex(ipatch))) THEN
-               src_wmo = wmo_source (landpatch%eindex(ipatch))
+               wmo_src = wmo_source (landpatch%eindex(ipatch))
 
-               soil_d_v_alb(ipatch) = soil_d_v_alb(src_wmo)
+               soil_d_v_alb(ipatch) = soil_d_v_alb(wmo_src)
 
                CYCLE
             ENDIF
@@ -248,9 +248,9 @@ SUBROUTINE Aggregation_SoilBrightness ( &
             L = landpatch%settyp(ipatch)
 
             IF (ipatch == landelm%wmopth(landpatch%eindex(ipatch))) THEN
-               src_wmo = wmo_source (landpatch%eindex(ipatch))
+               wmo_src = wmo_source (landpatch%eindex(ipatch))
 
-               soil_s_n_alb(ipatch) = soil_s_n_alb(src_wmo)
+               soil_s_n_alb(ipatch) = soil_s_n_alb(wmo_src)
 
                CYCLE
             ENDIF
@@ -294,9 +294,9 @@ SUBROUTINE Aggregation_SoilBrightness ( &
             L = landpatch%settyp(ipatch)
 
             IF (ipatch == landelm%wmopth(landpatch%eindex(ipatch))) THEN
-               src_wmo = wmo_source (landpatch%eindex(ipatch))
+               wmo_src = wmo_source (landpatch%eindex(ipatch))
 
-               soil_d_n_alb(ipatch) = soil_d_n_alb(src_wmo)
+               soil_d_n_alb(ipatch) = soil_d_n_alb(wmo_src)
 
                CYCLE
             ENDIF

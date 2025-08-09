@@ -360,7 +360,7 @@ MODULE MOD_Namelist
    logical            :: DEF_CheckEquilibrium    = .false.
 
    !2m WMO temperature
-   logical            :: DEF_USE_2m_WMO          = .true.
+   logical            :: DEF_Output_2mWMO        = .true.
 
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ! ----- Part 12: forcing -----
@@ -1020,7 +1020,7 @@ CONTAINS
 
       DEF_USE_Dynamic_Lake,                   & !add by Shupeng Zhang @ sysu 2024/09/12
       DEF_CheckEquilibrium,                   & !add by Shupeng Zhang @ sysu 2024/11/26
-      DEF_USE_2m_WMO,                         &
+      DEF_Output_2mWMO,                       &
 
       DEF_LANDONLY,                           &
       DEF_USE_DOMINANT_PATCHTYPE,             &
@@ -1425,11 +1425,11 @@ CONTAINS
 ! ----- 2m WMO temperature ---- Macros&Namelist conflicts and dependency management
 
 #if !defined(GRIDBASED) || (defined  LULC_IGBP || defined LULC_USGS)
-         IF (DEF_USE_2m_WMO) THEN
-            DEF_USE_2m_WMO = .false.
+         IF (DEF_Output_2mWMO) THEN
+            DEF_Output_2mWMO = .false.
             write(*,*) '                  *****                  '
             write(*,*) 'Warning: 2m WMO temperature is not well supported for IGBP and USGS'
-            write(*,*) 'DEF_USE_2m_WMO will be set to false automatically.'
+            write(*,*) 'DEF_Output_2mWMO will be set to false automatically.'
          ENDIF
 #endif
 
@@ -1444,7 +1444,7 @@ CONTAINS
 
 
 #ifdef USEMPI
-      CALL mpi_bcast (DEF_USE_2m_WMO                         ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_Output_2mWMO                       ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_CASE_NAME                          ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_domain%edges                       ,1   ,mpi_real8     ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_domain%edgen                       ,1   ,mpi_real8     ,p_address_master ,p_comm_glb ,p_err)

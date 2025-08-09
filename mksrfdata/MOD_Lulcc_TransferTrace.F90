@@ -185,6 +185,9 @@ CONTAINS
 
                IF (ipatch.le.0) CYCLE
 
+               !TODO-done: need to skip the 2m WMO patches
+               IF (ipatch == landelm%wmopth(landpatch%eindex(ipatch)) ) CYCLE
+
                ! using this year patch mapping to aggregate the previous year land cover data
                CALL aggregation_request_data (landpatch, ipatch, grid_patch, zip = .true., &
                   area = area_one, data_i4_2d_in1 = lcdatafr, data_i4_2d_out1 = lcdatafr_one)

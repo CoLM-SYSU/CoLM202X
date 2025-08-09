@@ -44,7 +44,7 @@ SUBROUTINE Aggregation_TopoWetness ( &
    ! ---------------------------------------------------------------
    character(len=256) :: landdir, lndname, cyear
    integer  :: ipatch, npxl, i, im, ielm, istt, iend
-   integer  :: src_wmo
+   integer  :: wmo_src
    real(r8) :: mean_twi, sigma_twi, skew_twi, fsatmax, fsatdcf, alp_twi, chi_twi, mu_twi
 
    type (block_data_real8_3d) :: twi
@@ -104,13 +104,13 @@ SUBROUTINE Aggregation_TopoWetness ( &
          DO ipatch = 1, numpatch
 
             IF (ipatch == landelm%wmopth(landpatch%eindex(ipatch))) THEN
-               src_wmo = wmo_source (landpatch%eindex(ipatch))
+               wmo_src = wmo_source (landpatch%eindex(ipatch))
 
-               fsatmax_patches(ipatch) = fsatmax_patches(src_wmo)
-               fsatdcf_patches(ipatch) = fsatdcf_patches(src_wmo)
-               alp_twi_patches(ipatch) = alp_twi_patches(src_wmo)
-               chi_twi_patches(ipatch) = chi_twi_patches(src_wmo)
-               mu_twi_patches (ipatch) = mu_twi_patches (src_wmo)
+               fsatmax_patches(ipatch) = fsatmax_patches(wmo_src)
+               fsatdcf_patches(ipatch) = fsatdcf_patches(wmo_src)
+               alp_twi_patches(ipatch) = alp_twi_patches(wmo_src)
+               chi_twi_patches(ipatch) = chi_twi_patches(wmo_src)
+               mu_twi_patches (ipatch) = mu_twi_patches (wmo_src)
 
                CYCLE
             ENDIF

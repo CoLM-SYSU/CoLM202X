@@ -53,7 +53,7 @@ SUBROUTINE Aggregation_ForestHeight ( &
    ! ---------------------------------------------------------------
    character(len=256) :: landdir, lndname, cyear
    integer :: L, ipatch, p
-   integer :: src_wmo
+   integer :: wmo_src
 
    type (block_data_real8_2d) :: tree_height
    real(r8), allocatable :: tree_height_patches(:), tree_height_one(:)
@@ -111,9 +111,9 @@ SUBROUTINE Aggregation_ForestHeight ( &
             L = landpatch%settyp(ipatch)
 
             IF (ipatch == landelm%wmopth(landpatch%eindex(ipatch))) THEN
-               src_wmo = wmo_source (landpatch%eindex(ipatch))
+               wmo_src = wmo_source (landpatch%eindex(ipatch))
 
-               tree_height_patches(ipatch) = tree_height_patches(src_wmo)
+               tree_height_patches(ipatch) = tree_height_patches(wmo_src)
 
                CYCLE
             ENDIF

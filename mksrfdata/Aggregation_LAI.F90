@@ -81,7 +81,7 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
    real(r8), allocatable :: LAI_pfts(:), lai_pft_one(:,:)
    real(r8), allocatable :: SAI_pfts(:), sai_pft_one(:,:)
    integer  :: p, ip
-   integer  :: src_wmo, ip_, p_
+   integer  :: wmo_src, ip_, p_
    real(r8) :: sumarea
 
 #ifdef SrfdataDiag
@@ -453,20 +453,20 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
                   DO ipatch = 1, numpatch
 
                      IF (ipatch == landelm%wmopth(landpatch%eindex(ipatch))) THEN
-                        src_wmo = wmo_source (landpatch%eindex(ipatch))
+                        wmo_src = wmo_source (landpatch%eindex(ipatch))
 
                         ip = patch_pft_s(ipatch)
                         p  = landpft%settyp(ip)
 
-                        LAI_patches(ipatch) = LAI_patches(src_wmo)
+                        LAI_patches(ipatch) = LAI_patches(wmo_src)
 
                         IF (p>=12 .and. p<=14) THEN
-                           DO ip_ = patch_pft_s(src_wmo), patch_pft_e(src_wmo)
+                           DO ip_ = patch_pft_s(wmo_src), patch_pft_e(wmo_src)
                               p_ = landpft%settyp(ip_)
                               IF (p_ == p) LAI_pfts(ip) = LAI_pfts(ip_)
                            ENDDO
                         ELSE
-                           LAI_pfts(ip) = 0
+                           LAI_pfts(ip) = 0.
                         ENDIF
 
                         CYCLE
@@ -596,20 +596,20 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
                DO ipatch = 1, numpatch
 
                   IF (ipatch == landelm%wmopth(landpatch%eindex(ipatch))) THEN
-                     src_wmo = wmo_source (landpatch%eindex(ipatch))
+                     wmo_src = wmo_source (landpatch%eindex(ipatch))
 
                      ip = patch_pft_s(ipatch)
                      p  = landpft%settyp(ip)
 
-                     SAI_patches(ipatch) = SAI_patches(src_wmo)
+                     SAI_patches(ipatch) = SAI_patches(wmo_src)
 
                      IF (p>=12 .and. p<=14) THEN
-                        DO ip_ = patch_pft_s(src_wmo), patch_pft_e(src_wmo)
+                        DO ip_ = patch_pft_s(wmo_src), patch_pft_e(wmo_src)
                            p_ = landpft%settyp(ip_)
                            IF (p_ == p) SAI_pfts(ip) = SAI_pfts(ip_)
                         ENDDO
                      ELSE
-                        SAI_pfts (ip) = 0
+                        SAI_pfts (ip) = 0.
                      ENDIF
 
                      CYCLE

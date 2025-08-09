@@ -663,10 +663,10 @@ CONTAINS
             a_tref, file_hist, 'f_tref', itime_in_file, sumarea, filter, &
             '2 m height air temperature','kelvin')
 
-IF (DEF_USE_2m_WMO) THEN
-         ! 2 m WMO air temperature [celsius]
+IF (DEF_Output_2mWMO) THEN
+         ! 2 m WMO air temperature [kelvin]
          CALL write_history_variable_2d ( DEF_hist_vars%t2m_wmo, &
-            a_t2m_wmo, file_hist, 'f_t2m_wmo', itime_in_file  , sumarea, filter, &
+            a_t2m_wmo, file_hist, 'f_t2m_wmo', itime_in_file, sumarea, filter, &
             '2 m WMO air temperature','kelvin')
 ENDIF
 

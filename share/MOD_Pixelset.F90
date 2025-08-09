@@ -81,7 +81,7 @@ MODULE MOD_Pixelset
       integer, allocatable :: xblkgrp (:)  ! block index in longitude for this process's group
       integer, allocatable :: yblkgrp (:)  ! block index in latitude  for this process's group
 
-      integer, allocatable :: wmopth (:)
+      integer, allocatable :: wmopth (:)   ! virtual 2 m WMO patch
 
       type(vec_gather_scatter_type) :: vecgs ! for vector gathering and scattering
 

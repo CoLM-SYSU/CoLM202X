@@ -44,7 +44,7 @@ SUBROUTINE Aggregation_SoilTexture ( &
    ! ---------------------------------------------------------------
    character(len=256) :: landdir, lndname, cyear
    integer :: ipatch
-   integer :: src_wmo
+   integer :: wmo_src
 
    type(block_data_int32_2d) :: soiltext
    integer, allocatable :: soiltext_patches(:), soiltext_one(:)
@@ -85,9 +85,9 @@ SUBROUTINE Aggregation_SoilTexture ( &
          DO ipatch = 1, numpatch
 
             IF (ipatch == landelm%wmopth(landpatch%eindex(ipatch))) THEN
-               src_wmo = wmo_source (landpatch%eindex(ipatch))
+               wmo_src = wmo_source (landpatch%eindex(ipatch))
 
-               soiltext_patches(ipatch) = soiltext_patches(src_wmo)
+               soiltext_patches(ipatch) = soiltext_patches(wmo_src)
 
                CYCLE
             ENDIF

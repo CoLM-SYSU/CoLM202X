@@ -952,7 +952,7 @@ CONTAINS
 
             deallocate (a_o3uptakesun)
             deallocate (a_o3uptakesha)
-            
+
 #ifdef DataAssimilation
             deallocate (a_h2osoi_ens     )
             deallocate (a_t_brt_ens      )
@@ -1889,15 +1889,14 @@ CONTAINS
             CALL acc1d (qref   , a_qref   )
 
             DO ielm = 1, numelm
-
-               IF (landelm%wmopth(ielm) == -1) THEN 
+               IF (landelm%wmopth(ielm) == -1) THEN
                   istt = elm_patch%substt(ielm)
-                  iend = elm_patch%substt(ielm)
+                  iend = elm_patch%subend(ielm)
 
                   t2m_wmo(istt:iend) = tref(istt:iend)
                ENDIF
             ENDDO
-            
+
             CALL acc1d (t2m_wmo, a_t2m_wmo)
 
             CALL acc1d (forc_rain, a_rain )

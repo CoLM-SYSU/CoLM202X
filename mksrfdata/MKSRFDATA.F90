@@ -370,7 +370,7 @@ PROGRAM MKSRFDATA
 
       ! build land patches
       CALL landpatch_build(lc_year)
-      IF (DEF_USE_2m_WMO) THEN
+      IF (DEF_Output_2mWMO) THEN
          CALL land2mwmo_build(lc_year)
       ENDIF
 
