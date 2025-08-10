@@ -103,8 +103,8 @@ SUBROUTINE Aggregation_TopoWetness ( &
 
          DO ipatch = 1, numpatch
 
-            IF (ipatch == landelm%wmopth(landpatch%eindex(ipatch))) THEN
-               wmo_src = wmo_source (landpatch%eindex(ipatch))
+            IF (ipatch == landelm%wmopth(landpatch%ielm(ipatch))) THEN
+               wmo_src = wmo_source (landpatch%ielm(ipatch))
 
                fsatmax_patches(ipatch) = fsatmax_patches(wmo_src)
                fsatdcf_patches(ipatch) = fsatdcf_patches(wmo_src)

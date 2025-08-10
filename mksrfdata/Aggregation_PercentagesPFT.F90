@@ -108,7 +108,7 @@ SUBROUTINE Aggregation_PercentagesPFT (gland, dir_rawdata, dir_model_landdata, l
 
          DO ipatch = 1, numpatch
 
-            wmo_pth = landelm%wmopth(landpatch%eindex(ipatch))
+            wmo_pth = landelm%wmopth(landpatch%ielm(ipatch))
             IF (ipatch == wmo_pth) THEN
                ipft = patch_pft_s(ipatch)
 

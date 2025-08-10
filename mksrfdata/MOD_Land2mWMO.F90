@@ -46,7 +46,7 @@ CONTAINS
    integer :: numpatch_
    integer :: numset
    integer :: iset
-   integer :: spatch, epatch, ipatch
+   integer :: spatch, epatch, ipatch, jpatch
    integer :: ipth, numpxl, numpth
    integer :: src_pth, pthtype, maxpxl
    integer*8, allocatable :: eindex_(:)
@@ -75,6 +75,8 @@ CONTAINS
          wmo_source = -1
          wmopth     = -1
          numwmo     = 0
+         numpatch_  = 0
+         jpatch     = 0
 
          ! Count for 2 m WMO patches need to be set virtually
          DO iset = 1, numset
@@ -89,23 +91,18 @@ CONTAINS
             epatch = maxval(locpth) ! elm_patch%subend(iset)
 
             maxpxl  = 0
-            pthtype = patchtypes(landpatch%settyp(spatch))
-            IF (spatch /= epatch) THEN
-               DO ipatch = spatch, epatch
-                  numpxl = landpatch%ipxend(ipatch) - landpatch%ipxstt(ipatch) + 1
+            src_pth = -1
 
-                  IF (numpxl>maxpxl .and. pthtype==0) THEN
-                     maxpxl  = numpth
-                     src_pth = ipatch
-                  ENDIF
-               ENDDO
-            ELSE
-               IF (pthtype == 0) THEN
-                  src_pth = spatch
-               ELSE
-                  src_pth = -1
+            DO ipatch = spatch, epatch
+
+               pthtype = patchtypes(landpatch%settyp(ipatch))
+               numpxl  = landpatch%ipxend(ipatch) - landpatch%ipxstt(ipatch) + 1
+
+               IF (numpxl>maxpxl .and. pthtype==0) THEN
+                  maxpxl  = numpth
+                  src_pth = ipatch
                ENDIF
-            ENDIF
+            ENDDO
 
             IF (src_pth /= -1) numwmo = numwmo + 1
             wmo_source (iset) = src_pth
@@ -137,25 +134,33 @@ CONTAINS
             spatch = minval(locpth) ! elm_patch%substt(iset)
             epatch = maxval(locpth) ! elm_patch%subend(iset)
 
-            !TODO@Wenzong: there may be problem with ipatch index?
             DO ipatch = spatch, epatch
-               eindex_(ipatch) = landpatch%eindex(ipatch)
-               settyp_(ipatch) = landpatch%settyp(ipatch)
-               ipxstt_(ipatch) = landpatch%ipxstt(ipatch)
-               ipxend_(ipatch) = landpatch%ipxend(ipatch)
-               ielm_  (ipatch) = landpatch%ielm  (ipatch)
+               jpatch = jpatch + 1
+               eindex_(jpatch) = landpatch%eindex(ipatch)
+               settyp_(jpatch) = landpatch%settyp(ipatch)
+               ipxstt_(jpatch) = landpatch%ipxstt(ipatch)
+               ipxend_(jpatch) = landpatch%ipxend(ipatch)
+               ielm_  (jpatch) = landpatch%ielm  (ipatch)
             ENDDO
 
-            !TODO@Wenzong: there may be problem, set 2m wmo patch all the time?
             IF (wmo_source(iset) > 0) THEN
-               eindex_(epatch+1) = landpatch%eindex(epatch)
-               settyp_(epatch+1) = landpatch%settyp(wmo_source(iset))
-               ipxstt_(epatch+1) = -1
-               ipxend_(epatch+1) = -1
-               ielm_  (epatch+1) = landpatch%ielm  (epatch)
-               wmopth (iset)     = epatch+1
+               jpatch = jpatch + 1
+               eindex_(jpatch) = landpatch%eindex(epatch)
+               settyp_(jpatch) = landpatch%settyp(wmo_source(iset))
+               ipxstt_(jpatch) = -1
+               ipxend_(jpatch) = -1
+               ielm_  (jpatch) = landpatch%ielm  (epatch)
+               wmopth (iset)   = jpatch
             ENDIF
          ENDDO
+
+         ! 2m WMO patch number check
+         IF (jpatch .ne. numpatch_) THEN
+            write(*,'(A)') 'Count land 2 m wmo patches error! See MOD_Land2mWMO.F90.'
+         ENDIF
+
+         ! set the new patch number
+         numpatch = numpatch_
 
          ! allocate and save the new patches info
          IF (numpatch > 0) THEN
@@ -166,24 +171,24 @@ CONTAINS
             IF (allocated (landpatch%settyp)) deallocate (landpatch%settyp)
             IF (allocated (landpatch%ielm  )) deallocate (landpatch%ielm  )
 
-            allocate (landpatch%eindex (numpatch_))
-            allocate (landpatch%ipxstt (numpatch_))
-            allocate (landpatch%ipxend (numpatch_))
-            allocate (landpatch%settyp (numpatch_))
-            allocate (landpatch%ielm   (numpatch_))
+            allocate (landpatch%eindex (numpatch))
+            allocate (landpatch%ipxstt (numpatch))
+            allocate (landpatch%ipxend (numpatch))
+            allocate (landpatch%settyp (numpatch))
+            allocate (landpatch%ielm   (numpatch))
 
             ! update all information of landpatch
-            landpatch%eindex = eindex_(1:numpatch_)
-            landpatch%ipxstt = ipxstt_(1:numpatch_)
-            landpatch%ipxend = ipxend_(1:numpatch_)
-            landpatch%settyp = settyp_(1:numpatch_)
-            landpatch%ielm   = ielm_  (1:numpatch_)
+            landpatch%eindex = eindex_(1:numpatch)
+            landpatch%ipxstt = ipxstt_(1:numpatch)
+            landpatch%ipxend = ipxend_(1:numpatch)
+            landpatch%settyp = settyp_(1:numpatch)
+            landpatch%ielm   = ielm_  (1:numpatch)
 
             landelm%wmopth   = wmopth (1:numset   )
          ENDIF
       ENDIF
 
-      landpatch%nset = numpatch_
+      landpatch%nset = numpatch
 
       CALL landpatch%set_vecgs
 

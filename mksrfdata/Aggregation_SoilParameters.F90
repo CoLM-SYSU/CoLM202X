@@ -294,8 +294,8 @@ SUBROUTINE Aggregation_SoilParameters ( &
             DO ipatch = 1, numpatch
                L = landpatch%settyp(ipatch)
 
-               IF (ipatch == landelm%wmopth(landpatch%eindex(ipatch))) THEN
-                  wmo_src = wmo_source (landpatch%eindex(ipatch))
+               IF (ipatch == landelm%wmopth(landpatch%ielm(ipatch))) THEN
+                  wmo_src = wmo_source (landpatch%ielm(ipatch))
                   vf_quartz_mineral_s_patches (ipatch) = vf_quartz_mineral_s_patches (wmo_src)
 
                   CYCLE
@@ -372,8 +372,8 @@ SUBROUTINE Aggregation_SoilParameters ( &
             DO ipatch = 1, numpatch
                L = landpatch%settyp(ipatch)
 
-               IF (ipatch == landelm%wmopth(landpatch%eindex(ipatch))) THEN
-                  wmo_src = wmo_source (landpatch%eindex(ipatch))
+               IF (ipatch == landelm%wmopth(landpatch%ielm(ipatch))) THEN
+                  wmo_src = wmo_source (landpatch%ielm(ipatch))
 
                   vf_gravels_s_patches (ipatch) = vf_gravels_s_patches (wmo_src)
                   vf_sand_s_patches    (ipatch) = vf_sand_s_patches    (wmo_src)
@@ -551,8 +551,8 @@ SUBROUTINE Aggregation_SoilParameters ( &
             DO ipatch = 1, numpatch
                L = landpatch%settyp(ipatch)
 
-               IF (ipatch == landelm%wmopth(landpatch%eindex(ipatch))) THEN
-                  wmo_src = wmo_source (landpatch%eindex(ipatch))
+               IF (ipatch == landelm%wmopth(landpatch%ielm(ipatch))) THEN
+                  wmo_src = wmo_source (landpatch%ielm(ipatch))
 
                   wf_gravels_s_patches (ipatch) = wf_gravels_s_patches (wmo_src)
 
@@ -617,8 +617,8 @@ SUBROUTINE Aggregation_SoilParameters ( &
             DO ipatch = 1, numpatch
                L = landpatch%settyp(ipatch)
 
-               IF (ipatch == landelm%wmopth(landpatch%eindex(ipatch))) THEN
-                  wmo_src = wmo_source (landpatch%eindex(ipatch))
+               IF (ipatch == landelm%wmopth(landpatch%ielm(ipatch))) THEN
+                  wmo_src = wmo_source (landpatch%ielm(ipatch))
 
                   wf_sand_s_patches (ipatch) = wf_sand_s_patches (wmo_src)
 
@@ -716,8 +716,8 @@ SUBROUTINE Aggregation_SoilParameters ( &
             DO ipatch = 1, numpatch
                L = landpatch%settyp(ipatch)
 
-               IF (ipatch == landelm%wmopth(landpatch%eindex(ipatch))) THEN
-                  wmo_src = wmo_source (landpatch%eindex(ipatch))
+               IF (ipatch == landelm%wmopth(landpatch%ielm(ipatch))) THEN
+                  wmo_src = wmo_source (landpatch%ielm(ipatch))
 
                   theta_r_patches   (ipatch) = theta_r_patches   (wmo_src)
                   alpha_vgm_patches (ipatch) = alpha_vgm_patches (wmo_src)
@@ -976,8 +976,8 @@ SUBROUTINE Aggregation_SoilParameters ( &
             DO ipatch = 1, numpatch
                L = landpatch%settyp(ipatch)
 
-               IF (ipatch == landelm%wmopth(landpatch%eindex(ipatch))) THEN
-                  wmo_src = wmo_source (landpatch%eindex(ipatch))
+               IF (ipatch == landelm%wmopth(landpatch%ielm(ipatch))) THEN
+                  wmo_src = wmo_source (landpatch%ielm(ipatch))
 
                   theta_s_patches (ipatch) = theta_s_patches (wmo_src)
                   k_s_patches     (ipatch) = k_s_patches     (wmo_src)
@@ -1162,8 +1162,8 @@ SUBROUTINE Aggregation_SoilParameters ( &
             DO ipatch = 1, numpatch
                L = landpatch%settyp(ipatch)
 
-               IF (ipatch == landelm%wmopth(landpatch%eindex(ipatch))) THEN
-                  wmo_src = wmo_source (landpatch%eindex(ipatch))
+               IF (ipatch == landelm%wmopth(landpatch%ielm(ipatch))) THEN
+                  wmo_src = wmo_source (landpatch%ielm(ipatch))
 
                   csol_patches(ipatch) = csol_patches(wmo_src)
 
@@ -1227,8 +1227,8 @@ SUBROUTINE Aggregation_SoilParameters ( &
             DO ipatch = 1, numpatch
                L = landpatch%settyp(ipatch)
 
-               IF (ipatch == landelm%wmopth(landpatch%eindex(ipatch))) THEN
-                  wmo_src = wmo_source (landpatch%eindex(ipatch))
+               IF (ipatch == landelm%wmopth(landpatch%ielm(ipatch))) THEN
+                  wmo_src = wmo_source (landpatch%ielm(ipatch))
 
                   tksatu_patches(ipatch) = tksatu_patches(wmo_src)
 
@@ -1292,8 +1292,8 @@ SUBROUTINE Aggregation_SoilParameters ( &
             DO ipatch = 1, numpatch
                L = landpatch%settyp(ipatch)
 
-               IF (ipatch == landelm%wmopth(landpatch%eindex(ipatch))) THEN
-                  wmo_src = wmo_source (landpatch%eindex(ipatch))
+               IF (ipatch == landelm%wmopth(landpatch%ielm(ipatch))) THEN
+                  wmo_src = wmo_source (landpatch%ielm(ipatch))
 
                   tksatf_patches(ipatch) = tksatf_patches(wmo_src)
 
@@ -1357,8 +1357,8 @@ SUBROUTINE Aggregation_SoilParameters ( &
             DO ipatch = 1, numpatch
                L = landpatch%settyp(ipatch)
 
-               IF (ipatch == landelm%wmopth(landpatch%eindex(ipatch))) THEN
-                  wmo_src = wmo_source (landpatch%eindex(ipatch))
+               IF (ipatch == landelm%wmopth(landpatch%ielm(ipatch))) THEN
+                  wmo_src = wmo_source (landpatch%ielm(ipatch))
 
                   tkdry_patches(ipatch) = tkdry_patches(wmo_src)
 
@@ -1422,8 +1422,8 @@ SUBROUTINE Aggregation_SoilParameters ( &
             DO ipatch = 1, numpatch
                L = landpatch%settyp(ipatch)
 
-               IF (ipatch == landelm%wmopth(landpatch%eindex(ipatch))) THEN
-                  wmo_src = wmo_source (landpatch%eindex(ipatch))
+               IF (ipatch == landelm%wmopth(landpatch%ielm(ipatch))) THEN
+                  wmo_src = wmo_source (landpatch%ielm(ipatch))
 
                   k_solids_patches(ipatch) = k_solids_patches(wmo_src)
 
@@ -1488,8 +1488,8 @@ SUBROUTINE Aggregation_SoilParameters ( &
             DO ipatch = 1, numpatch
                L = landpatch%settyp(ipatch)
 
-               IF (ipatch == landelm%wmopth(landpatch%eindex(ipatch))) THEN
-                  wmo_src = wmo_source (landpatch%eindex(ipatch))
+               IF (ipatch == landelm%wmopth(landpatch%ielm(ipatch))) THEN
+                  wmo_src = wmo_source (landpatch%ielm(ipatch))
 
                   OM_density_s_patches(ipatch) = OM_density_s_patches(wmo_src)
 
@@ -1554,8 +1554,8 @@ SUBROUTINE Aggregation_SoilParameters ( &
             DO ipatch = 1, numpatch
                L = landpatch%settyp(ipatch)
 
-               IF (ipatch == landelm%wmopth(landpatch%eindex(ipatch))) THEN
-                  wmo_src = wmo_source (landpatch%eindex(ipatch))
+               IF (ipatch == landelm%wmopth(landpatch%ielm(ipatch))) THEN
+                  wmo_src = wmo_source (landpatch%ielm(ipatch))
 
                   BD_all_s_patches(ipatch) = BD_all_s_patches(wmo_src)
 
@@ -1621,8 +1621,8 @@ SUBROUTINE Aggregation_SoilParameters ( &
             DO ipatch = 1, numpatch
                L = landpatch%settyp(ipatch)
 
-               IF (ipatch == landelm%wmopth(landpatch%eindex(ipatch))) THEN
-                  wmo_src = wmo_source (landpatch%eindex(ipatch))
+               IF (ipatch == landelm%wmopth(landpatch%ielm(ipatch))) THEN
+                  wmo_src = wmo_source (landpatch%ielm(ipatch))
 
                   vf_clay_s_patches(ipatch) = vf_clay_s_patches(wmo_src)
 
@@ -1688,8 +1688,8 @@ SUBROUTINE Aggregation_SoilParameters ( &
             DO ipatch = 1, numpatch
                L = landpatch%settyp(ipatch)
 
-               IF (ipatch == landelm%wmopth(landpatch%eindex(ipatch))) THEN
-                  wmo_src = wmo_source (landpatch%eindex(ipatch))
+               IF (ipatch == landelm%wmopth(landpatch%ielm(ipatch))) THEN
+                  wmo_src = wmo_source (landpatch%ielm(ipatch))
 
                   wf_om_s_patches(ipatch) = wf_om_s_patches(wmo_src)
 
@@ -1755,8 +1755,8 @@ SUBROUTINE Aggregation_SoilParameters ( &
             DO ipatch = 1, numpatch
                L = landpatch%settyp(ipatch)
 
-               IF (ipatch == landelm%wmopth(landpatch%eindex(ipatch))) THEN
-                  wmo_src = wmo_source (landpatch%eindex(ipatch))
+               IF (ipatch == landelm%wmopth(landpatch%ielm(ipatch))) THEN
+                  wmo_src = wmo_source (landpatch%ielm(ipatch))
 
                   wf_clay_s_patches(ipatch) = wf_clay_s_patches(wmo_src)
 

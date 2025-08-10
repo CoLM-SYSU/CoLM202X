@@ -235,6 +235,8 @@ CONTAINS
             gfrom(iset)%ng = 0
             DO ipxl = pixelset%ipxstt(iset), pixelset%ipxend(iset)
 
+               IF (ipxl == -1) CYCLE
+
                ilat = mesh(ie)%ilat(ipxl)
                ilon = mesh(ie)%ilon(ipxl)
 

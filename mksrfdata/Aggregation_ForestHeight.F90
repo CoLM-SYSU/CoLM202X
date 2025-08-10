@@ -110,14 +110,6 @@ SUBROUTINE Aggregation_ForestHeight ( &
          DO ipatch = 1, numpatch
             L = landpatch%settyp(ipatch)
 
-            IF (ipatch == landelm%wmopth(landpatch%eindex(ipatch))) THEN
-               wmo_src = wmo_source (landpatch%eindex(ipatch))
-
-               tree_height_patches(ipatch) = tree_height_patches(wmo_src)
-
-               CYCLE
-            ENDIF
-
             IF(L/=0 .and. L/=1 .and. L/=16 .and. L/=24)THEN
                ! NOT OCEAN(0)/URBAN and BUILT-UP(1)/WATER BODIES(16)/ICE(24)
                CALL aggregation_request_data (landpatch, ipatch, gland, zip = USE_zip_for_aggregation, &
@@ -243,6 +235,14 @@ SUBROUTINE Aggregation_ForestHeight ( &
          allocate (htop_pfts    (numpft  ))
 
          DO ipatch = 1, numpatch
+
+            IF (ipatch == landelm%wmopth(landpatch%ielm(ipatch))) THEN
+               wmo_src = wmo_source (landpatch%ielm(ipatch))
+
+               htop_patches(ipatch) = htop_patches(wmo_src)
+
+               CYCLE
+            ENDIF
 
             CALL aggregation_request_data (landpatch, ipatch, gland, zip = USE_zip_for_aggregation, &
                area = area_one, data_r8_2d_in1 = htop,   data_r8_2d_out1 = htop_one, &

@@ -143,6 +143,7 @@ CONTAINS
          IF (allocated(landelm%ipxstt))   deallocate (landelm%ipxstt)
          IF (allocated(landelm%ipxend))   deallocate (landelm%ipxend)
          IF (allocated(landelm%settyp))   deallocate (landelm%settyp)
+         IF (allocated(landelm%wmopth))   deallocate (landelm%wmopth)
          IF (allocated(landelm%ielm  ))   deallocate (landelm%ielm  )
       ENDIF
 

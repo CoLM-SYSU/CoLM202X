@@ -109,8 +109,8 @@ SUBROUTINE Aggregation_Topography ( &
 
          DO ipatch = 1, numpatch
 
-            IF (ipatch == landelm%wmopth(landpatch%eindex(ipatch))) THEN
-               wmo_src = wmo_source (landpatch%eindex(ipatch))
+            IF (ipatch == landelm%wmopth(landpatch%ielm(ipatch))) THEN
+               wmo_src = wmo_source (landpatch%ielm(ipatch))
 
                elevation_patches (ipatch) = elevation_patches (wmo_src)
                elvstd_patches    (ipatch) = elvstd_patches    (wmo_src)

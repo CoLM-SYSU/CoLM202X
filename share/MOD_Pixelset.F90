@@ -259,6 +259,7 @@ CONTAINS
       IF (allocated(this%xblkgrp)) deallocate(this%xblkgrp)
       IF (allocated(this%yblkgrp)) deallocate(this%yblkgrp)
 
+      IF (allocated(this%wmopth )) deallocate(this%wmopth)
       IF (allocated(this%pctshared)) deallocate(this%pctshared)
 
    END SUBROUTINE pixelset_free_mem
@@ -280,6 +281,7 @@ CONTAINS
       IF (allocated(this%xblkgrp)) deallocate(this%xblkgrp)
       IF (allocated(this%yblkgrp)) deallocate(this%yblkgrp)
 
+      IF (allocated(this%wmopth )) deallocate(this%wmopth)
       IF (allocated(this%pctshared)) deallocate(this%pctshared)
 
    END SUBROUTINE pixelset_forc_free_mem
@@ -601,8 +603,10 @@ CONTAINS
       isubset   = 1
       DO WHILE (isubset <= subset%nset)
          IF (     (subset%eindex(isubset) == superset%eindex(isuperset)) &
-            .and. (subset%ipxstt(isubset) >= superset%ipxstt(isuperset)) &
-            .and. (subset%ipxend(isubset) <= superset%ipxend(isuperset))) THEN
+            .and. (subset%ipxstt(isubset) >= superset%ipxstt(isuperset) .or. &
+                   subset%ipxstt(isubset) == -1 ) &
+            .and. (subset%ipxend(isubset) <= superset%ipxend(isuperset) .or. &
+                   subset%ipxend(isubset) == -1 ) ) THEN
 
             IF (this%substt(isuperset) == 0) THEN
                this%substt(isuperset) = isubset
@@ -628,6 +632,7 @@ CONTAINS
             ielm = subset%ielm(isubset)
             this%subfrc(isubset) = 0
             DO ipxl = subset%ipxstt(isubset), subset%ipxend(isubset)
+               IF (ipxl == -1) CYCLE
                this%subfrc(isubset) = this%subfrc(isubset) &
                   + areaquad (&
                   pixel%lat_s(mesh(ielm)%ilat(ipxl)), &

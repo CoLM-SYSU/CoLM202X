@@ -111,9 +111,10 @@ CONTAINS
 
          DO ipatch = 1, numpatch
 
-            wmo_src = wmo_source(landpatch%eindex(ipatch))
-            IF (ipatch == wmo_src) THEN
-               maxgrass= maxval(pctpft_patch(12:14,wmo_src))
+            IF (ipatch == landelm%wmopth(landpatch%ielm(ipatch))) THEN
+
+               wmo_src  = wmo_source(landpatch%ielm(ipatch))
+               maxgrass = maxval(pctpft_patch(12:14,wmo_src))
 
                IF (maxgrass > 0) THEN
                   ipft_grass = maxloc(pctpft_patch(12:14,wmo_src), dim=1) + 11

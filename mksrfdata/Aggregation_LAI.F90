@@ -452,8 +452,8 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
                IF (p_is_worker) THEN
                   DO ipatch = 1, numpatch
 
-                     IF (ipatch == landelm%wmopth(landpatch%eindex(ipatch))) THEN
-                        wmo_src = wmo_source (landpatch%eindex(ipatch))
+                     IF (ipatch == landelm%wmopth(landpatch%ielm(ipatch))) THEN
+                        wmo_src = wmo_source (landpatch%ielm(ipatch))
 
                         ip = patch_pft_s(ipatch)
                         p  = landpft%settyp(ip)
@@ -595,8 +595,8 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
             IF (p_is_worker) THEN
                DO ipatch = 1, numpatch
 
-                  IF (ipatch == landelm%wmopth(landpatch%eindex(ipatch))) THEN
-                     wmo_src = wmo_source (landpatch%eindex(ipatch))
+                  IF (ipatch == landelm%wmopth(landpatch%ielm(ipatch))) THEN
+                     wmo_src = wmo_source (landpatch%ielm(ipatch))
 
                      ip = patch_pft_s(ipatch)
                      p  = landpft%settyp(ip)
