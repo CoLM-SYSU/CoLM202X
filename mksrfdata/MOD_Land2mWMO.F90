@@ -99,7 +99,7 @@ CONTAINS
                numpxl  = landpatch%ipxend(ipatch) - landpatch%ipxstt(ipatch) + 1
 
                IF (numpxl>maxpxl .and. pthtype==0) THEN
-                  maxpxl  = numpth
+                  maxpxl  = numpxl
                   src_pth = ipatch
                ENDIF
             ENDDO

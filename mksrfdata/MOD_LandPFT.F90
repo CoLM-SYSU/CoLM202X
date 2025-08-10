@@ -69,8 +69,8 @@ CONTAINS
    real(r8), allocatable :: area_one  (:)
    logical,  allocatable :: patchmask (:)
    integer  :: ipatch, ipft, npatch, npft, npft_glb
-   integer  :: wmo_src, maxgrass, ipft_grass
-   real(r8) :: sumarea
+   integer  :: wmo_src, ipft_grass
+   real(r8) :: sumarea, maxgrass
 
       IF (p_is_master) THEN
          write(*,'(A)') 'Making land plant function type tiles :'
@@ -119,9 +119,9 @@ CONTAINS
                IF (maxgrass > 0) THEN
                   ipft_grass = maxloc(pctpft_patch(12:14,wmo_src), dim=1) + 11
                   pctpft_patch(:,ipatch) = 0
-                  pctpft_patch(ipft_grass,ipatch) = 100
+                  pctpft_patch(ipft_grass,ipatch) = 1.
                ELSE
-                  pctpft_patch(0,ipatch) = 100
+                  pctpft_patch(0,ipatch) = 1.
                ENDIF
 
                CYCLE
