@@ -4,7 +4,9 @@ MODULE MOD_Land2mWMO
 
 !-----------------------------------------------------------------------
 ! !DESCRIPTION:
-!  Build pixelset "land2mWMO".
+!  Build a virtual patch "land2mWMO" for output 2 m WMO temperature.
+!
+!  Created by Wenzong Dong and Hua Yuan, 2025/08
 !
 !-----------------------------------------------------------------------
 
@@ -39,7 +41,6 @@ CONTAINS
    IMPLICIT NONE
 
    integer, intent(in) :: lc_year
-   ! Local Variables
    character(len=255) :: cyear
 
    integer :: numpatch_
@@ -57,7 +58,7 @@ CONTAINS
 
       write(cyear,'(i4.4)') lc_year
       IF (p_is_master) THEN
-         write(*,'(A)') 'Making land wmo patches :'
+         write(*,'(A)') 'Making land 2 m wmo patches :'
       ENDIF
 
 #ifdef USEMPI
@@ -75,6 +76,7 @@ CONTAINS
          wmopth     = -1
          numwmo     = 0
 
+         ! Count for 2 m WMO patches need to be set virtually
          DO iset = 1, numset
 
             numpth = count(landpatch%eindex==landelm%eindex(iset))
@@ -109,6 +111,7 @@ CONTAINS
             wmo_source (iset) = src_pth
          ENDDO
 
+         ! allocate new temporal patches memory
          IF (numpatch > 0) THEN
             ! a numpatch with WMO patch number
             numpatch_ = numpatch + numwmo
@@ -121,6 +124,7 @@ CONTAINS
 
          ENDIF
 
+         ! set for new 2 m WMO patch
          DO iset = 1, numset
             numpth = count(landpatch%eindex==landelm%eindex(iset))
 
@@ -133,6 +137,7 @@ CONTAINS
             spatch = minval(locpth) ! elm_patch%substt(iset)
             epatch = maxval(locpth) ! elm_patch%subend(iset)
 
+            !TODO@Wenzong: there may be problem with ipatch index?
             DO ipatch = spatch, epatch
                eindex_(ipatch) = landpatch%eindex(ipatch)
                settyp_(ipatch) = landpatch%settyp(ipatch)
@@ -141,14 +146,18 @@ CONTAINS
                ielm_  (ipatch) = landpatch%ielm  (ipatch)
             ENDDO
 
-            eindex_(epatch+1) = landpatch%eindex(ipatch)
-            settyp_(epatch+1) = landpatch%settyp(wmo_source(iset))
-            ipxstt_(epatch+1) = -1
-            ipxend_(epatch+1) = -1
-            ielm_  (epatch+1) = landpatch%ielm  (ipatch)
-            wmopth (iset)     = epatch+1
+            !TODO@Wenzong: there may be problem, set 2m wmo patch all the time?
+            IF (wmo_source(iset) > 0) THEN
+               eindex_(epatch+1) = landpatch%eindex(epatch)
+               settyp_(epatch+1) = landpatch%settyp(wmo_source(iset))
+               ipxstt_(epatch+1) = -1
+               ipxend_(epatch+1) = -1
+               ielm_  (epatch+1) = landpatch%ielm  (epatch)
+               wmopth (iset)     = epatch+1
+            ENDIF
          ENDDO
 
+         ! allocate and save the new patches info
          IF (numpatch > 0) THEN
             ! update landpath with new patch number
             IF (allocated (landpatch%eindex)) deallocate (landpatch%eindex)

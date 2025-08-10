@@ -69,7 +69,7 @@ CONTAINS
    real(r8), allocatable :: area_one  (:)
    logical,  allocatable :: patchmask (:)
    integer  :: ipatch, ipft, npatch, npft, npft_glb
-   integer  :: wmo_src, maxgrass, idx_grass
+   integer  :: wmo_src, maxgrass, ipft_grass
    real(r8) :: sumarea
 
       IF (p_is_master) THEN
@@ -116,9 +116,9 @@ CONTAINS
                maxgrass= maxval(pctpft_patch(12:14,wmo_src))
 
                IF (maxgrass > 0) THEN
-                  idx_grass = maxloc(pctpft_patch(12:14,wmo_src), dim=1) + 11
+                  ipft_grass = maxloc(pctpft_patch(12:14,wmo_src), dim=1) + 11
                   pctpft_patch(:,ipatch) = 0
-                  pctpft_patch(idx_grass,ipatch) = 100
+                  pctpft_patch(ipft_grass,ipatch) = 100
                ELSE
                   pctpft_patch(0,ipatch) = 100
                ENDIF
