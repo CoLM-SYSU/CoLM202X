@@ -458,8 +458,6 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
                         ip = patch_pft_s(ipatch)
                         p  = landpft%settyp(ip)
 
-                        LAI_patches(ipatch) = LAI_patches(wmo_src)
-
                         IF (p>=12 .and. p<=14) THEN
                            DO ip_ = patch_pft_s(wmo_src), patch_pft_e(wmo_src)
                               p_ = landpft%settyp(ip_)
@@ -468,6 +466,8 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
                         ELSE
                            LAI_pfts(ip) = 0.
                         ENDIF
+
+                        LAI_patches(ipatch) = LAI_pfts(ip)
 
                         CYCLE
                      ENDIF
@@ -601,8 +601,6 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
                      ip = patch_pft_s(ipatch)
                      p  = landpft%settyp(ip)
 
-                     SAI_patches(ipatch) = SAI_patches(wmo_src)
-
                      IF (p>=12 .and. p<=14) THEN
                         DO ip_ = patch_pft_s(wmo_src), patch_pft_e(wmo_src)
                            p_ = landpft%settyp(ip_)
@@ -611,6 +609,8 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
                      ELSE
                         SAI_pfts (ip) = 0.
                      ENDIF
+
+                     SAI_patches(ipatch) = SAI_pfts(ip)
 
                      CYCLE
                   ENDIF

@@ -104,8 +104,13 @@ CONTAINS
                ENDIF
             ENDDO
 
-            IF (src_pth /= -1) numwmo = numwmo + 1
-            wmo_source (iset) = src_pth
+            IF (src_pth /= -1) THEN
+               wmo_source (iset) = src_pth
+               numwmo = numwmo + 1
+            ELSE
+               wmo_source (iset) = -1
+            ENDIF
+
          ENDDO
 
          ! allocate new temporal patches memory
@@ -120,6 +125,8 @@ CONTAINS
             allocate (ielm_   (numpatch_ ))
 
          ENDIF
+
+         numwmo = 0
 
          ! set for new 2 m WMO patch
          DO iset = 1, numset
@@ -151,6 +158,10 @@ CONTAINS
                ipxend_(jpatch) = -1
                ielm_  (jpatch) = landpatch%ielm  (epatch)
                wmopth (iset)   = jpatch
+
+               ! update the newly 2m WMO source patch index
+               wmo_source(iset) = wmo_source(iset) + numwmo
+               numwmo           = numwmo + 1
             ENDIF
          ENDDO
 

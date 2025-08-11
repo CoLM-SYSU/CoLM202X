@@ -82,8 +82,8 @@ SUBROUTINE CoLMMAIN ( &
            taux,         tauy,         fsena,        fevpa,        &
            lfevpa,       fsenl,        fevpl,        etr,          &
            fseng,        fevpg,        olrg,         fgrnd,        &
-           trad,         tref,         qref,         frcsat,       &
-           rsur,         &
+           trad,         tref,         qref,         t2m_wmo,      &
+           frcsat,       rsur,         &
            rsur_se,      rsur_ie,      rnof,         qintr,        &
            qinfl,        qdrip,        rst,          assim,        &
            respc,        sabvsun,      sabvsha,      sabg,         &
@@ -149,6 +149,8 @@ SUBROUTINE CoLMMAIN ( &
    USE MOD_Vars_TimeVariables, only: tlai, tsai, irrig_rate
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
    USE MOD_LandPFT, only: patch_pft_s, patch_pft_e
+   USE MOD_LandPatch, only: landpatch
+   USE MOD_LandElm, only: landelm
    USE MOD_Vars_PFTimeInvariants
    USE MOD_Vars_PFTimeVariables
 #endif
@@ -439,6 +441,7 @@ SUBROUTINE CoLMMAIN ( &
 
         tref        ,&! 2 m height air temperature [K]
         qref        ,&! 2 m height air specific humidity
+        t2m_wmo     ,&! 2 m wmo std air temperature [K]
         trad        ,&! radiative temperature [K]
         frcsat      ,&! fraction of saturation area
         rsur        ,&! surface runoff (mm h2o/s)
@@ -557,7 +560,7 @@ SUBROUTINE CoLMMAIN ( &
 
    real(r8) :: a, aa, gwat
    real(r8) :: wextra, t_rain, t_snow
-   integer ps, pe, pc
+   integer ps, pe, pc, wmo_patch
 
 #if (defined CaMa_Flood)
    !add variables for flood evaporation [mm/s] and re-infiltration [mm/s] calculation.
@@ -1576,6 +1579,14 @@ SUBROUTINE CoLMMAIN ( &
 
       z_sno (maxsnl+1:0) = z_soisno (maxsnl+1:0)
       dz_sno(maxsnl+1:0) = dz_soisno(maxsnl+1:0)
+
+      ! 2 m WMO standard temperature setting.
+      ! IF the patch is the virtual 2 m WMO patch, or
+      ! there is no 2m WMO patch, set t2m_wmo = tref
+      wmo_patch = landelm%wmopth(landpatch%ielm(ipatch))
+      IF (ipatch==wmo_patch .or. wmo_patch==-1) THEN
+         t2m_wmo = tref
+      ENDIF
 
 END SUBROUTINE CoLMMAIN
 ! ---------- EOP ------------

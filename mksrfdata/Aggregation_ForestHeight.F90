@@ -239,7 +239,12 @@ SUBROUTINE Aggregation_ForestHeight ( &
             IF (ipatch == landelm%wmopth(landpatch%ielm(ipatch))) THEN
                wmo_src = wmo_source (landpatch%ielm(ipatch))
 
+               ! set patch htop
                htop_patches(ipatch) = htop_patches(wmo_src)
+
+               ! set pft htop at the same time
+               ip = patch_pft_s(ipatch)
+               htop_pfts(ip) = htop_patches(ipatch)
 
                CYCLE
             ENDIF
