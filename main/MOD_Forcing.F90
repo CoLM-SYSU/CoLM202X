@@ -223,12 +223,12 @@ CONTAINS
          CALL mg2p_forc%set_missing_value (metdata, missing_value, forcmask_pch)
       ENDIF
 
-      IF (DEF_USE_Forcing_Downscaling) THEN
+      IF (p_is_worker .and. (numpatch > 0)) THEN
+        forc_topo = elvmean
+        WHERE(forc_topo == spval) forc_topo = 0.
+      ENDIF
 
-         IF (p_is_worker .and. (numpatch > 0)) THEN
-            forc_topo = elvmean
-            WHERE(forc_topo == spval) forc_topo = 0.
-         ENDIF
+      IF (DEF_USE_Forcing_Downscaling) THEN
 
          IF (p_is_io) CALL allocate_block_data (gforc, topo_grid)
          CALL mg2p_forc%pset2grid (forc_topo, topo_grid)

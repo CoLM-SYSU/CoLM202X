@@ -127,7 +127,7 @@ CONTAINS
 #endif
    USE MOD_SPMD_Task
    USE MOD_Namelist, only: DEF_USE_PLANTHYDRAULICS, DEF_RSS_SCHEME, DEF_SPLIT_SOILSNOW, &
-                           DEF_USE_LCT,DEF_USE_PFT,DEF_USE_PC
+                           DEF_USE_LCT,DEF_USE_PFT,DEF_USE_PC,DEF_PC_CROP_SPLIT
 
    IMPLICIT NONE
 
@@ -423,7 +423,7 @@ CONTAINS
    real(r8) :: o3coefv_sun, o3coefv_sha, o3coefg_sun, o3coefg_sha
 !end ozone stress variables
 
-   integer p, ps, pe, pc
+   integer p, ps, pe, pn
 
    real(r8), allocatable :: rootr_p     (:,:)
    real(r8), allocatable :: rootflux_p  (:,:)
@@ -435,6 +435,7 @@ CONTAINS
    real(r8), allocatable :: gssha_p       (:)
    real(r8), allocatable :: fsun_p        (:)
    real(r8), allocatable :: sabv_p        (:)
+   real(r8), allocatable :: fcover        (:)
 
 ! 03/06/2020, yuan: added
    real(r8), allocatable :: fseng_soil_p  (:)
@@ -733,7 +734,8 @@ IF (patchtype == 0) THEN
       allocate ( gssha_p          (ps:pe) )
       allocate ( fsun_p           (ps:pe) )
       allocate ( sabv_p           (ps:pe) )
-IF (DEF_USE_PFT .or. patchclass(ipatch)==CROPLAND) THEN
+      allocate ( fcover           (ps:pe) )
+
       allocate ( fseng_soil_p     (ps:pe) )
       allocate ( fseng_snow_p     (ps:pe) )
       allocate ( fevpg_soil_p     (ps:pe) )
@@ -751,7 +753,7 @@ IF (DEF_USE_PFT .or. patchclass(ipatch)==CROPLAND) THEN
       allocate ( fm_p             (ps:pe) )
       allocate ( fh_p             (ps:pe) )
       allocate ( fq_p             (ps:pe) )
-ENDIF
+
       allocate ( hprl_p           (ps:pe) )
       allocate ( assimsun_p       (ps:pe) )
       allocate ( etrsun_p         (ps:pe) )
@@ -803,10 +805,16 @@ ENDIF
       ENDDO
 
 
-IF (DEF_USE_PFT .or. patchclass(ipatch)==CROPLAND) THEN
-
       DO i = ps, pe
          p = pftclass(i)
+
+         ! Dealing with PFTs for PC:
+         ! If defined DEF_PC_CROP_SPLIT, for crop PFTs, use 1D twostream model;
+         ! Otherwise, skip to run PC 3D model.
+         IF ( DEF_USE_PC .and. (.not.DEF_PC_CROP_SPLIT .or. p.lt.15) ) THEN
+            CYCLE
+         ENDIF
+
          IF (lai_p(i)+sai_p(i) > 1e-6) THEN
 
             CALL LeafTemperature(ipatch,p,deltim  ,csoilc          ,dewmx           ,htvp           ,&
@@ -887,10 +895,19 @@ ENDIF
          ENDIF
       ENDDO
 
-ENDIF
+      ! Calculate end index of natrue PFTs
+      DO i = ps, pe
+         pn = i
+         p = pftclass(i)
+         IF (DEF_PC_CROP_SPLIT .and. p.ge.15) THEN
+            pn = pn - 1
+            EXIT
+         ENDIF
+      ENDDO
 
+IF ( DEF_USE_PC .and. pn.ge.ps ) THEN
 
-IF (DEF_USE_PC .and. patchclass(ipatch)/=CROPLAND) THEN
+      pe = pn
 
       ! initialization
       rst_p      (ps:pe) = 2.0e4
@@ -906,6 +923,7 @@ IF (DEF_USE_PC .and. patchclass(ipatch)/=CROPLAND) THEN
       etrsha_p   (ps:pe) = 0.
       gssun_p    (ps:pe) = 0.
       gssha_p    (ps:pe) = 0.
+      fcover     (ps:pe) = pftfrac(ps:pe) / sum(pftfrac(ps:pe))
       z0m_p      (ps:pe) = (1.-fsno)*zlnd + fsno*zsno
       z0m                = sum( z0m_p (ps:pe)*pftfrac(ps:pe) )
 
@@ -914,7 +932,7 @@ IF (DEF_USE_PC .and. patchclass(ipatch)/=CROPLAND) THEN
       ENDIF
 
       CALL LeafTemperaturePC (ipatch,ps,pe    ,deltim            ,csoilc            ,dewmx             ,&
-         htvp              ,pftclass(ps:pe)   ,pftfrac(ps:pe)    ,htop_p(ps:pe)     ,hbot_p(ps:pe)     ,&
+         htvp              ,pftclass(ps:pe)   ,fcover(ps:pe)     ,htop_p(ps:pe)     ,hbot_p(ps:pe)     ,&
          lai_p(ps:pe)      ,sai_p(ps:pe)      ,extkb_p(ps:pe)    ,extkd_p(ps:pe)    ,forc_hgt_u        ,&
          forc_hgt_t        ,forc_hgt_q        ,forc_us           ,forc_vs           ,forc_t            ,&
          thm               ,th                ,thv               ,forc_q            ,forc_psrf         ,&
@@ -941,7 +959,34 @@ IF (DEF_USE_PC .and. patchclass(ipatch)/=CROPLAND) THEN
          qintr_rain_p(ps:pe)  ,qintr_snow_p(ps:pe)  ,t_precip             ,hprl_p(:)            ,&
          dheatl_p(ps:pe)      ,smp                  ,hk(1:)               ,hksati(1:)           ,&
          rootflux_p(:,:)       )
+
+      dlrad_p      (ps:pe) = dlrad
+      ulrad_p      (ps:pe) = ulrad
+      tref_p       (ps:pe) = tref
+      qref_p       (ps:pe) = qref
+      taux_p       (ps:pe) = taux
+      tauy_p       (ps:pe) = tauy
+      fseng_p      (ps:pe) = fseng
+      fseng_soil_p (ps:pe) = fseng_soil
+      fseng_snow_p (ps:pe) = fseng_snow
+      fevpg_p      (ps:pe) = fevpg
+      fevpg_soil_p (ps:pe) = fevpg_soil
+      fevpg_snow_p (ps:pe) = fevpg_snow
+      cgrnd_p      (ps:pe) = cgrnd
+      cgrndl_p     (ps:pe) = cgrndl
+      cgrnds_p     (ps:pe) = cgrnds
+      z0m_p        (ps:pe) = z0m
+      zol_p        (ps:pe) = zol
+      rib_p        (ps:pe) = rib
+      ustar_p      (ps:pe) = ustar
+      qstar_p      (ps:pe) = qstar
+      tstar_p      (ps:pe) = tstar
+      fm_p         (ps:pe) = fm
+      fh_p         (ps:pe) = fh
+      fq_p         (ps:pe) = fq
 ENDIF
+
+      pe = patch_pft_e(ipatch)
 
       ! aggregate PFTs to a patch
       laisun        = sum( laisun_p    (ps:pe)*pftfrac(ps:pe) )
@@ -958,7 +1003,7 @@ ENDIF
       fsenl         = sum( fsenl_p     (ps:pe)*pftfrac(ps:pe) )
       fevpl         = sum( fevpl_p     (ps:pe)*pftfrac(ps:pe) )
       etr           = sum( etr_p       (ps:pe)*pftfrac(ps:pe) )
-IF (DEF_USE_PFT .or. patchclass(ipatch)==CROPLAND) THEN
+
       dlrad         = sum( dlrad_p     (ps:pe)*pftfrac(ps:pe) )
       ulrad         = sum( ulrad_p     (ps:pe)*pftfrac(ps:pe) )
       tref          = sum( tref_p      (ps:pe)*pftfrac(ps:pe) )
@@ -983,7 +1028,7 @@ IF (DEF_USE_PFT .or. patchclass(ipatch)==CROPLAND) THEN
       fm            = sum( fm_p        (ps:pe)*pftfrac(ps:pe) )
       fh            = sum( fh_p        (ps:pe)*pftfrac(ps:pe) )
       fq            = sum( fq_p        (ps:pe)*pftfrac(ps:pe) )
-ENDIF
+
       rstfacsun_out = sum( rstfacsun_p (ps:pe)*pftfrac(ps:pe) )
       rstfacsha_out = sum( rstfacsha_p (ps:pe)*pftfrac(ps:pe) )
       gssun_out     = sum( gssun_p     (ps:pe)*pftfrac(ps:pe) )
@@ -1026,7 +1071,8 @@ END IF
       deallocate ( gssha_p     )
       deallocate ( fsun_p      )
       deallocate ( sabv_p      )
-IF (DEF_USE_PFT .or. patchclass(ipatch)==CROPLAND) THEN
+      deallocate ( fcover      )
+
       deallocate ( fseng_soil_p)
       deallocate ( fseng_snow_p)
       deallocate ( fevpg_soil_p)
@@ -1044,7 +1090,7 @@ IF (DEF_USE_PFT .or. patchclass(ipatch)==CROPLAND) THEN
       deallocate ( fm_p        )
       deallocate ( fh_p        )
       deallocate ( fq_p        )
-ENDIF
+
       deallocate ( hprl_p      )
       deallocate ( assimsun_p  )
       deallocate ( etrsun_p    )

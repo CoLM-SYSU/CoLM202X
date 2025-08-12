@@ -71,7 +71,7 @@ CONTAINS
    USE MOD_Utils
    USE MOD_Const_Physical, only: tfrz, denh2o, denice
    USE MOD_Vars_TimeVariables, only: tlai, tsai
-   USE MOD_Const_PFT, only: isevg, woody, leafcn, frootcn, livewdcn, deadwdcn, slatop
+   USE MOD_Const_PFT, only: isevg, woody, leafcn, frootcn, livewdcn, deadwdcn, slatop, manure
    USE MOD_Vars_TimeInvariants, only: ibedrock, dbedrock
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
    USE MOD_LandPFT, only: patch_pft_s, patch_pft_e
@@ -937,6 +937,9 @@ CONTAINS
             tref_max_inst_p          (ps:pe) = spval
             latbaset_p               (ps:pe) = spval
             fert_p                   (ps:pe) = 0._r8
+            IF(DEF_FERT_SOURCE == 1)THEN
+               manunitro_p              (ps:pe) = manure(pftclass(ps:pe)) * 1000
+            ENDIF
 #endif
 
             IF(DEF_USE_LAIFEEDBACK)THEN

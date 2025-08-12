@@ -121,6 +121,8 @@ OBJS_BASIC =    \
 				 MOD_Vars_1DPFTFluxes.o         \
 				 MOD_Vars_1DFluxes.o            \
 				 MOD_Vars_1DForcing.o           \
+				 MOD_DA_Vars_1DFluxes.o         \
+				 MOD_DA_Vars_TimeVariables.o    \
 				 MOD_Hydro_SoilFunction.o       \
 				 MOD_Hydro_SoilWater.o          \
 				 MOD_Eroot.o                    \
@@ -201,6 +203,7 @@ OBJECTS_CAMA=\
 				  cmf_calc_stonxt_mod.o   \
 				  cmf_calc_diag_mod.o     \
 				  cmf_opt_outflw_mod.o    \
+				  cmf_ctrl_tracer_mod.o   \
 				  cmf_ctrl_mpi_mod.o      \
 				  cmf_ctrl_damout_mod.o   \
 				  cmf_ctrl_levee_mod.o    \
@@ -265,7 +268,14 @@ OBJS_MAIN = \
 				MOD_ForcingDownscaling.o                  \
 				MOD_Forcing.o                             \
 				MOD_DA_GRACE.o                            \
-				MOD_DataAssimilation.o                    \
+				MOD_DA_Const.o                            \
+				MOD_DA_ObsOperator.o                      \
+				MOD_DA_EnKF.o                             \
+				MOD_DA_SMAP.o                             \
+				MOD_DA_FY3D.o                             \
+				MOD_DA_Main.o                        	  \
+				MOD_DA_Ensemble.o                         \
+				MOD_DA_Driver.o                           \
 				MOD_AssimStomataConductance.o             \
 				MOD_PlantHydraulic.o                      \
 				MOD_FrictionVelocity.o                    \
