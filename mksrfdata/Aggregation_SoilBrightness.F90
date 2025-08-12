@@ -155,7 +155,7 @@ SUBROUTINE Aggregation_SoilBrightness ( &
          DO ipatch = 1, numpatch
             L = landpatch%settyp(ipatch)
 
-            IF (ipatch == landelm%wmopth(landpatch%ielm(ipatch))) THEN
+            IF (ipatch == wmo_patch(landpatch%ielm(ipatch))) THEN
                wmo_src = wmo_source (landpatch%ielm(ipatch))
 
                soil_s_v_alb(ipatch) = soil_s_v_alb(wmo_src)
@@ -201,7 +201,7 @@ SUBROUTINE Aggregation_SoilBrightness ( &
          DO ipatch = 1, numpatch
             L = landpatch%settyp(ipatch)
 
-            IF (ipatch == landelm%wmopth(landpatch%ielm(ipatch))) THEN
+            IF (ipatch == wmo_patch(landpatch%ielm(ipatch))) THEN
                wmo_src = wmo_source (landpatch%ielm(ipatch))
 
                soil_d_v_alb(ipatch) = soil_d_v_alb(wmo_src)
@@ -247,7 +247,7 @@ SUBROUTINE Aggregation_SoilBrightness ( &
          DO ipatch = 1, numpatch
             L = landpatch%settyp(ipatch)
 
-            IF (ipatch == landelm%wmopth(landpatch%ielm(ipatch))) THEN
+            IF (ipatch == wmo_patch(landpatch%ielm(ipatch))) THEN
                wmo_src = wmo_source (landpatch%ielm(ipatch))
 
                soil_s_n_alb(ipatch) = soil_s_n_alb(wmo_src)
@@ -293,7 +293,7 @@ SUBROUTINE Aggregation_SoilBrightness ( &
          DO ipatch = 1, numpatch
             L = landpatch%settyp(ipatch)
 
-            IF (ipatch == landelm%wmopth(landpatch%ielm(ipatch))) THEN
+            IF (ipatch == wmo_patch(landpatch%ielm(ipatch))) THEN
                wmo_src = wmo_source (landpatch%ielm(ipatch))
 
                soil_d_n_alb(ipatch) = soil_d_n_alb(wmo_src)

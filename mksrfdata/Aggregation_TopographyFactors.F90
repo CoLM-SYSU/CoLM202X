@@ -176,7 +176,7 @@ SUBROUTINE Aggregation_TopographyFactors ( &
       ! aggregate loop
       DO ipatch = 1, numpatch
 
-         IF (ipatch == landelm%wmopth(landpatch%ielm(ipatch))) THEN
+         IF (ipatch == wmo_patch(landpatch%ielm(ipatch))) THEN
            wmo_src = wmo_source (landpatch%ielm(ipatch))
 
            svf_patches (ipatch) = svf_patches (wmo_src)

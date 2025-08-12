@@ -474,6 +474,10 @@ IF (.not. (skip_rest)) THEN
 
 ENDIF
 
+      ! deallocate 2m WMO log array
+      IF (allocated (wmo_patch )) deallocate (wmo_patch )
+      IF (allocated (wmo_source)) deallocate (wmo_source)
+
 ! ................................................................
 ! 4. Write out time info.
 ! ................................................................

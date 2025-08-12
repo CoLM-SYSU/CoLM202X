@@ -84,7 +84,7 @@ SUBROUTINE Aggregation_SoilTexture ( &
 
          DO ipatch = 1, numpatch
 
-            IF (ipatch == landelm%wmopth(landpatch%ielm(ipatch))) THEN
+            IF (ipatch == wmo_patch(landpatch%ielm(ipatch))) THEN
                wmo_src = wmo_source (landpatch%ielm(ipatch))
 
                soiltext_patches(ipatch) = soiltext_patches(wmo_src)

@@ -20,6 +20,7 @@ MODULE MOD_Land2mWMO
    IMPLICIT NONE
 
    ! ---- Instance ----
+   integer, allocatable :: wmo_patch  (:)  !2m wmo patch index
    integer, allocatable :: wmo_source (:)  !source patch of a wmo patch
 
 CONTAINS
@@ -51,7 +52,7 @@ CONTAINS
    integer :: src_pth, pthtype, maxpxl
    integer*8, allocatable :: eindex_(:)
    integer,   allocatable :: settyp_(:), ipxstt_(:), ipxend_(:), ielm_(:)
-   integer,   allocatable :: wmopth (:), locpth(:)
+   integer,   allocatable :: locpth(:)
 
    integer :: npatch_glb
    integer :: numwmo
@@ -69,11 +70,11 @@ CONTAINS
 
          numset = numelm
 
+         allocate (wmo_patch  (numset))
          allocate (wmo_source (numset))
-         allocate (wmopth     (numset))
 
+         wmo_patch  = -1
          wmo_source = -1
-         wmopth     = -1
          numwmo     = 0
          numpatch_  = 0
          jpatch     = 0
@@ -104,9 +105,11 @@ CONTAINS
                ENDIF
             ENDDO
 
+            ! a new 2m WMO patch
             IF (src_pth /= -1) THEN
                wmo_source (iset) = src_pth
                numwmo = numwmo + 1
+               landelm%settyp(iset) = 1
             ELSE
                wmo_source (iset) = -1
             ENDIF
@@ -157,9 +160,9 @@ CONTAINS
                ipxstt_(jpatch) = -1
                ipxend_(jpatch) = -1
                ielm_  (jpatch) = landpatch%ielm  (epatch)
-               wmopth (iset)   = jpatch
 
-               ! update the newly 2m WMO source patch index
+               ! update the newly 2m WMO source/patch index
+               wmo_patch (iset) = jpatch
                wmo_source(iset) = wmo_source(iset) + numwmo
                numwmo           = numwmo + 1
             ENDIF
@@ -167,7 +170,7 @@ CONTAINS
 
          ! 2m WMO patch number check
          IF (jpatch .ne. numpatch_) THEN
-            write(*,'(A)') 'Count land 2 m wmo patches error! See MOD_Land2mWMO.F90.'
+            write(*,'(A)') 'Count land 2 m WMO patches error! See MOD_Land2mWMO.F90.'
          ENDIF
 
          ! set the new patch number
@@ -195,13 +198,19 @@ CONTAINS
             landpatch%settyp = settyp_(1:numpatch)
             landpatch%ielm   = ielm_  (1:numpatch)
 
-            landelm%wmopth   = wmopth (1:numset   )
          ENDIF
       ENDIF
 
       landpatch%nset = numpatch
 
       CALL landpatch%set_vecgs
+
+      IF (allocated (eindex_ )) deallocate (eindex_ )
+      IF (allocated (settyp_ )) deallocate (settyp_ )
+      IF (allocated (ipxstt_ )) deallocate (ipxstt_ )
+      IF (allocated (ipxend_ )) deallocate (ipxend_ )
+      IF (allocated (ielm_   )) deallocate (ielm_   )
+      IF (allocated (locpth  )) deallocate (locpth  )
 
 #if (!defined(URBAN_MODEL) && !defined(CROP))
 #ifdef USEMPI

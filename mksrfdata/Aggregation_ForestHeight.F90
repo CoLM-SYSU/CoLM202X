@@ -236,7 +236,7 @@ SUBROUTINE Aggregation_ForestHeight ( &
 
          DO ipatch = 1, numpatch
 
-            IF (ipatch == landelm%wmopth(landpatch%ielm(ipatch))) THEN
+            IF (ipatch == wmo_patch(landpatch%ielm(ipatch))) THEN
                wmo_src = wmo_source (landpatch%ielm(ipatch))
 
                ! set patch htop

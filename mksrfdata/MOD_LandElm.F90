@@ -49,7 +49,6 @@ CONTAINS
          allocate (landelm%ipxstt (numelm))
          allocate (landelm%ipxend (numelm))
          allocate (landelm%settyp (numelm))
-         allocate (landelm%wmopth (numelm))
          allocate (landelm%ielm   (numelm))
 
          DO ielm = 1, numelm
@@ -57,7 +56,6 @@ CONTAINS
             landelm%ipxstt(ielm) = 1
             landelm%ipxend(ielm) = mesh(ielm)%npxl
             landelm%settyp(ielm) = 0
-            landelm%wmopth(ielm) = -1
             landelm%ielm  (ielm) = ielm
          ENDDO
 
