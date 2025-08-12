@@ -560,7 +560,7 @@ SUBROUTINE CoLMMAIN ( &
 
    real(r8) :: a, aa, gwat
    real(r8) :: wextra, t_rain, t_snow
-   integer ps, pe, pc, wmo_patch
+   integer ps, pe, pc
 
 #if (defined CaMa_Flood)
    !add variables for flood evaporation [mm/s] and re-infiltration [mm/s] calculation.
@@ -1580,13 +1580,8 @@ SUBROUTINE CoLMMAIN ( &
       z_sno (maxsnl+1:0) = z_soisno (maxsnl+1:0)
       dz_sno(maxsnl+1:0) = dz_soisno(maxsnl+1:0)
 
-      ! 2 m WMO standard temperature setting.
-      ! IF the patch is the virtual 2 m WMO patch, or
-      ! there is no 2m WMO patch, set t2m_wmo = tref
-      wmo_patch = landelm%wmopth(landpatch%ielm(ipatch))
-      IF (ipatch==wmo_patch .or. wmo_patch==-1) THEN
-         t2m_wmo = tref
-      ENDIF
+      ! IF the patch is a virtual 2 m WMO patch, set t2m_wmo = tref
+      IF (landpatch%ipxstt(ipatch) == -1) t2m_wmo = tref
 
 END SUBROUTINE CoLMMAIN
 ! ---------- EOP ------------

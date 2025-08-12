@@ -21,7 +21,7 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
    USE MOD_Vars_TimeVariables
    USE MOD_Vars_1DForcing
    USE MOD_Vars_1DFluxes
-   USE MOD_LandPatch, only: numpatch
+   USE MOD_LandPatch, only: numpatch,landpatch
    USE MOD_LandUrban, only: patch2urban
    USE MOD_Namelist, only: DEF_forcing, DEF_URBAN_RUN
    USE MOD_Forcing, only: forcmask_pch
@@ -62,8 +62,8 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
             IF (.not. forcmask_pch(i)) CYCLE
          ENDIF
 
-         ! Apply patch mask
-         IF (.not. patchmask(i)) CYCLE
+         ! Apply patch mask, but still run virtual 2m WMO patch (patch ipxstt=-1)
+         IF (.not. patchmask(i) .and. (landpatch%ipxstt(i)>0) ) CYCLE
 
          m = patchclass(i)
 

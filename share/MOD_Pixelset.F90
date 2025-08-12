@@ -81,8 +81,6 @@ MODULE MOD_Pixelset
       integer, allocatable :: xblkgrp (:)  ! block index in longitude for this process's group
       integer, allocatable :: yblkgrp (:)  ! block index in latitude  for this process's group
 
-      integer, allocatable :: wmopth (:)   ! virtual 2 m WMO patch
-
       type(vec_gather_scatter_type) :: vecgs ! for vector gathering and scattering
 
       logical :: has_shared = .false.
@@ -146,6 +144,12 @@ CONTAINS
 
          ipxstt = this%ipxstt (iset)
          ipxend = this%ipxend (iset)
+
+         ! for 2m WMO patch
+         IF (ipxstt == -1) THEN
+            ipxstt = mesh(ie)%npxl/2 + 1
+            ipxend = mesh(ie)%npxl/2 + 1
+         ENDIF
 
          allocate (area (ipxstt:ipxend))
          DO ipxl = ipxstt, ipxend
@@ -259,7 +263,6 @@ CONTAINS
       IF (allocated(this%xblkgrp)) deallocate(this%xblkgrp)
       IF (allocated(this%yblkgrp)) deallocate(this%yblkgrp)
 
-      IF (allocated(this%wmopth )) deallocate(this%wmopth)
       IF (allocated(this%pctshared)) deallocate(this%pctshared)
 
    END SUBROUTINE pixelset_free_mem
@@ -281,7 +284,6 @@ CONTAINS
       IF (allocated(this%xblkgrp)) deallocate(this%xblkgrp)
       IF (allocated(this%yblkgrp)) deallocate(this%yblkgrp)
 
-      IF (allocated(this%wmopth )) deallocate(this%wmopth)
       IF (allocated(this%pctshared)) deallocate(this%pctshared)
 
    END SUBROUTINE pixelset_forc_free_mem
