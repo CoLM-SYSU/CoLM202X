@@ -44,7 +44,7 @@ SUBROUTINE Aggregation_Topography ( &
    ! ---------------------------------------------------------------
    character(len=256) :: landdir, lndname, cyear
    integer  :: ipatch, i, ps, pe
-   integer  :: src_wmo
+   integer  :: wmo_src
    real(r8) :: sumarea
 
    type (block_data_real8_2d) :: landarea
@@ -109,12 +109,12 @@ SUBROUTINE Aggregation_Topography ( &
 
          DO ipatch = 1, numpatch
 
-            IF (ipatch == landelm%wmopth(landpatch%eindex(ipatch))) THEN
-               src_wmo = wmo_source (landpatch%eindex(ipatch))
+            IF (ipatch == wmo_patch(landpatch%ielm(ipatch))) THEN
+               wmo_src = wmo_source (landpatch%ielm(ipatch))
 
-               elevation_patches (ipatch) = elevation_patches (src_wmo)
-               elvstd_patches    (ipatch) = elvstd_patches    (src_wmo)
-               sloperatio_patches(ipatch) = sloperatio_patches(src_wmo)
+               elevation_patches (ipatch) = elevation_patches (wmo_src)
+               elvstd_patches    (ipatch) = elvstd_patches    (wmo_src)
+               sloperatio_patches(ipatch) = sloperatio_patches(wmo_src)
 
                CYCLE
             ENDIF

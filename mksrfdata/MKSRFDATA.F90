@@ -370,7 +370,7 @@ PROGRAM MKSRFDATA
 
       ! build land patches
       CALL landpatch_build(lc_year)
-      IF (DEF_USE_2m_WMO) THEN
+      IF (DEF_Output_2mWMO) THEN
          CALL land2mwmo_build(lc_year)
       ENDIF
 
@@ -473,6 +473,10 @@ IF (.not. (skip_rest)) THEN
       CALL Aggregation_SoilTexture     (grid_soil, dir_rawdata, dir_landdata, lc_year)
 
 ENDIF
+
+      ! deallocate 2m WMO log array
+      IF (allocated (wmo_patch )) deallocate (wmo_patch )
+      IF (allocated (wmo_source)) deallocate (wmo_source)
 
 ! ................................................................
 ! 4. Write out time info.

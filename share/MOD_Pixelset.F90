@@ -81,8 +81,6 @@ MODULE MOD_Pixelset
       integer, allocatable :: xblkgrp (:)  ! block index in longitude for this process's group
       integer, allocatable :: yblkgrp (:)  ! block index in latitude  for this process's group
 
-      integer, allocatable :: wmopth (:)
-
       type(vec_gather_scatter_type) :: vecgs ! for vector gathering and scattering
 
       logical :: has_shared = .false.
@@ -146,6 +144,12 @@ CONTAINS
 
          ipxstt = this%ipxstt (iset)
          ipxend = this%ipxend (iset)
+
+         ! for 2m WMO patch
+         IF (ipxstt == -1) THEN
+            ipxstt = mesh(ie)%npxl/2 + 1
+            ipxend = mesh(ie)%npxl/2 + 1
+         ENDIF
 
          allocate (area (ipxstt:ipxend))
          DO ipxl = ipxstt, ipxend
@@ -601,8 +605,10 @@ CONTAINS
       isubset   = 1
       DO WHILE (isubset <= subset%nset)
          IF (     (subset%eindex(isubset) == superset%eindex(isuperset)) &
-            .and. (subset%ipxstt(isubset) >= superset%ipxstt(isuperset)) &
-            .and. (subset%ipxend(isubset) <= superset%ipxend(isuperset))) THEN
+            .and. (subset%ipxstt(isubset) >= superset%ipxstt(isuperset) .or. &
+                   subset%ipxstt(isubset) == -1 ) &
+            .and. (subset%ipxend(isubset) <= superset%ipxend(isuperset) .or. &
+                   subset%ipxend(isubset) == -1 ) ) THEN
 
             IF (this%substt(isuperset) == 0) THEN
                this%substt(isuperset) = isubset
@@ -628,6 +634,7 @@ CONTAINS
             ielm = subset%ielm(isubset)
             this%subfrc(isubset) = 0
             DO ipxl = subset%ipxstt(isubset), subset%ipxend(isubset)
+               IF (ipxl == -1) CYCLE
                this%subfrc(isubset) = this%subfrc(isubset) &
                   + areaquad (&
                   pixel%lat_s(mesh(ielm)%ilat(ipxl)), &

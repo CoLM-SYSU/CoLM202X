@@ -952,7 +952,7 @@ CONTAINS
 
             deallocate (a_o3uptakesun)
             deallocate (a_o3uptakesha)
-            
+
 #ifdef DataAssimilation
             deallocate (a_h2osoi_ens     )
             deallocate (a_t_brt_ens      )
@@ -1888,16 +1888,23 @@ CONTAINS
             CALL acc1d (tref   , a_tref   )
             CALL acc1d (qref   , a_qref   )
 
+            ! set 2m WMO temperature
             DO ielm = 1, numelm
 
-               IF (landelm%wmopth(ielm) == -1) THEN 
-                  istt = elm_patch%substt(ielm)
-                  iend = elm_patch%substt(ielm)
+               istt = elm_patch%substt(ielm)
+               iend = elm_patch%subend(ielm)
 
+               ! landelm%settyp=1 means 2m WMO patch exist,
+               ! which is the last end patch in a element.
+               IF (landelm%settyp(ielm) == 1) THEN
+                  ! all set to the 2m WMO patch t2m_wmo
+                  t2m_wmo(istt:iend) = t2m_wmo(iend)
+               ELSE
+                  ! if no 2m WMO patch, keep t2m_wmo to tref
                   t2m_wmo(istt:iend) = tref(istt:iend)
                ENDIF
             ENDDO
-            
+
             CALL acc1d (t2m_wmo, a_t2m_wmo)
 
             CALL acc1d (forc_rain, a_rain )

@@ -12,6 +12,7 @@ SUBROUTINE Aggregation_TopographyFactors ( &
    USE MOD_SPMD_Task
    USE MOD_Grid
    USE MOD_LandPatch
+   USE MOD_Land2mWMO
    USE MOD_NetCDFVector
    USE MOD_NetCDFBlock
 #ifdef RangeCheck
@@ -98,6 +99,7 @@ SUBROUTINE Aggregation_TopographyFactors ( &
 
    ! local variables
    integer :: ipatch, i, ps, pe, type, a, z, count_pixels, num_pixels, j, index, n
+   integer :: wmo_src
 
 #ifdef SrfdataDiag
    integer :: typpatch(N_land_classification+1), ityp  ! number of land classification
@@ -173,6 +175,19 @@ SUBROUTINE Aggregation_TopographyFactors ( &
 
       ! aggregate loop
       DO ipatch = 1, numpatch
+
+         IF (ipatch == wmo_patch(landpatch%ielm(ipatch))) THEN
+           wmo_src = wmo_source (landpatch%ielm(ipatch))
+
+           svf_patches (ipatch) = svf_patches (wmo_src)
+           cur_patches (ipatch) = cur_patches (wmo_src)
+           asp_type_patches (:, ipatch) = asp_type_patches (:, wmo_src)
+           slp_type_patches (:, ipatch) = slp_type_patches (:, wmo_src)
+           area_type_patches(:, ipatch) = area_type_patches(:, wmo_src)
+           sf_lut_patches   (:, :, ipatch) = sf_lut_patches(:, :, wmo_src)
+           CYCLE
+         ENDIF
+
          CALL aggregation_request_data (landpatch, ipatch, grid_topo_factor, &
             zip = USE_zip_for_aggregation, area = area_one, &
             data_r8_2d_in1 = slp_grid,   data_r8_2d_out1 = slp_one, &
