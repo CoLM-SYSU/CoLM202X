@@ -939,7 +939,7 @@ CONTAINS
             deallocate (a_laisha    )
             deallocate (a_sai       )
 
-            deallocate (a_alb  )
+            deallocate (a_alb       )
 
             deallocate (a_emis      )
             deallocate (a_z0m       )
@@ -1834,8 +1834,8 @@ CONTAINS
             CALL acc1d (rstfacsun_out , a_rstfacsun )
             CALL acc1d (rstfacsha_out , a_rstfacsha )
 
-            CALL acc1d (gssun_out     , a_gssun )
-            CALL acc1d (gssha_out     , a_gssha )
+            CALL acc1d (gssun_out     , a_gssun     )
+            CALL acc1d (gssha_out     , a_gssha     )
 
             CALL acc1d (rss    , a_rss    )
             CALL acc1d (wdsrf  , a_wdsrf  )
@@ -1845,10 +1845,10 @@ CONTAINS
             CALL acc1d (wetwat , a_wetwat )
             CALL acc1d (assim  , a_assim  )
             CALL acc1d (respc  , a_respc  )
-            CALL acc1d (assimsun_out  , a_assimsun      )
-            CALL acc1d (assimsha_out  , a_assimsha      )
-            CALL acc1d (etrsun_out    , a_etrsun        )
-            CALL acc1d (etrsha_out    , a_etrsha        )
+            CALL acc1d (assimsun_out  , a_assimsun  )
+            CALL acc1d (assimsha_out  , a_assimsha  )
+            CALL acc1d (etrsun_out    , a_etrsun    )
+            CALL acc1d (etrsha_out    , a_etrsha    )
 
             CALL acc1d (qcharge, a_qcharge)
 
@@ -2334,10 +2334,10 @@ CONTAINS
                ENDDO
             ENDDO
             CALL acc2d (decomp_vr_tmp, a_cwdnCap_vr     )
-            CALL acc2d (sminn_vr     , a_sminn_vr    )
+            CALL acc2d (sminn_vr     , a_sminn_vr       )
 
-            CALL acc2d (t_scalar             ,a_t_scalar             )
-            CALL acc2d (w_scalar             ,a_w_scalar             )
+            CALL acc2d (t_scalar     , a_t_scalar       )
+            CALL acc2d (w_scalar     , a_w_scalar       )
 #endif
             allocate (r_ustar  (numpatch));  r_ustar (:) = spval
             allocate (r_ustar2 (numpatch));  r_ustar2(:) = spval !Shaofeng, 2023.05.20
