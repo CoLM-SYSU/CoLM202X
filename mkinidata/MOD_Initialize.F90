@@ -288,6 +288,12 @@ CONTAINS
                CYCLE
             ENDIF
 
+            ! 2m WMO virtual patch, modeling but not for aggregation
+            IF (landpatch%ipxstt(ipatch) == -1 ) THEN
+               patchmask(ipatch) = .false.
+               CYCLE
+            ENDIF
+
          ENDDO
 
 #ifndef SinglePoint

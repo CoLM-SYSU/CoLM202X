@@ -45,6 +45,7 @@ MODULE MOD_Vars_PFTimeVariables
    real(r8), allocatable :: extkd_p      (:) !diffuse and scattered diffuse PAR extinction coefficient
    !TODO@yuan: to check the below for PC whether they are needed
    real(r8), allocatable :: tref_p       (:) !2 m height air temperature [kelvin]
+   real(r8), allocatable :: t2m_wmo_p    (:) !2 m WMO air temperature [kelvin]
    real(r8), allocatable :: qref_p       (:) !2 m height air specific humidity
    real(r8), allocatable :: rst_p        (:) !canopy stomatal resistance (s/m)
    real(r8), allocatable :: z0m_p        (:) !effective roughness [m]
@@ -114,6 +115,7 @@ CONTAINS
             allocate (extkb_p      (numpft)) ; extkb_p      (:) = spval !(k, g(mu)/mu) direct solar extinction coefficient
             allocate (extkd_p      (numpft)) ; extkd_p      (:) = spval !diffuse and scattered diffuse PAR extinction coefficient
             allocate (tref_p       (numpft)) ; tref_p       (:) = spval !2 m height air temperature [kelvin]
+            allocate (t2m_wmo_p    (numpft)) ; t2m_wmo_p    (:) = spval !2 m WMO air temperature [kelvin]
             allocate (qref_p       (numpft)) ; qref_p       (:) = spval !2 m height air specific humidity
             allocate (rst_p        (numpft)) ; rst_p        (:) = spval !canopy stomatal resistance (s/m)
             allocate (z0m_p        (numpft)) ; z0m_p        (:) = spval !effective roughness [m]
@@ -290,6 +292,7 @@ ENDIF
             deallocate (extkb_p        )  ! (k, g(mu)/mu) direct solar extinction coefficient
             deallocate (extkd_p        )  ! diffuse and scattered diffuse PAR extinction coefficient
             deallocate (tref_p         )  ! 2 m height air temperature [kelvin]
+            deallocate (t2m_wmo_p      )  ! 2 m WMO air temperature [kelvin]
             deallocate (qref_p         )  ! 2 m height air specific humidity
             deallocate (rst_p          )  ! canopy stomatal resistance (s/m)
             deallocate (z0m_p          )  ! effective roughness [m]
@@ -344,6 +347,7 @@ ENDIF
       CALL check_vector_data ('       extkb_p', extkb_p        )
       CALL check_vector_data ('       extkd_p', extkd_p        )
       CALL check_vector_data ('        tref_p', tref_p         )
+      CALL check_vector_data ('     t2m_wmo_p', t2m_wmo_p      )
       CALL check_vector_data ('        qref_p', qref_p         )
       CALL check_vector_data ('         rst_p', rst_p          )
       CALL check_vector_data ('         z0m_p', z0m_p          )
@@ -489,6 +493,7 @@ MODULE MOD_Vars_TimeVariables
 
    real(r8), allocatable :: trad          (:) ! radiative temperature of surface [K]
    real(r8), allocatable :: tref          (:) ! 2 m height air temperature [kelvin]
+   real(r8), allocatable :: t2m_wmo       (:) ! 2 m WMO air temperature [kelvin]
    real(r8), allocatable :: qref          (:) ! 2 m height air specific humidity
    real(r8), allocatable :: rst           (:) ! canopy stomatal resistance (s/m)
    real(r8), allocatable :: emis          (:) ! averaged bulk surface emissivity
@@ -643,6 +648,7 @@ CONTAINS
 
             allocate (trad                        (numpatch)); trad          (:) = spval
             allocate (tref                        (numpatch)); tref          (:) = spval
+            allocate (t2m_wmo                     (numpatch)); t2m_wmo       (:) = spval
             allocate (qref                        (numpatch)); qref          (:) = spval
             allocate (rst                         (numpatch)); rst           (:) = spval
             allocate (emis                        (numpatch)); emis          (:) = spval
@@ -805,6 +811,7 @@ CONTAINS
 
             deallocate (trad                   )
             deallocate (tref                   )
+            deallocate (t2m_wmo                )
             deallocate (qref                   )
             deallocate (rst                    )
             deallocate (emis                   )

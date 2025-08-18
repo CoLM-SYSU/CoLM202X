@@ -52,6 +52,7 @@ CONTAINS
    USE MOD_Namelist
    USE MOD_5x5DataReadin
    USE MOD_LandPatch
+   USE MOD_Land2mWMO
    USE MOD_AggregationRequestData
    USE MOD_Const_LC
 #ifdef CROP
@@ -68,7 +69,8 @@ CONTAINS
    real(r8), allocatable :: area_one  (:)
    logical,  allocatable :: patchmask (:)
    integer  :: ipatch, ipft, npatch, npft, npft_glb
-   real(r8) :: sumarea
+   integer  :: wmo_src, ipft_grass
+   real(r8) :: sumarea, maxgrass
 
       IF (p_is_master) THEN
          write(*,'(A)') 'Making land plant function type tiles :'
@@ -108,6 +110,22 @@ CONTAINS
          ENDIF
 
          DO ipatch = 1, numpatch
+
+            IF (ipatch == wmo_patch(landpatch%ielm(ipatch))) THEN
+
+               wmo_src  = wmo_source(landpatch%ielm(ipatch))
+               maxgrass = maxval(pctpft_patch(12:14,wmo_src))
+
+               IF (maxgrass > 0) THEN
+                  ipft_grass = maxloc(pctpft_patch(12:14,wmo_src), dim=1) + 11
+                  pctpft_patch(:,ipatch) = 0
+                  pctpft_patch(ipft_grass,ipatch) = 1.
+               ELSE
+                  pctpft_patch(0,ipatch) = 1.
+               ENDIF
+
+               CYCLE
+            ENDIF
 #ifndef CROP
             IF (patchtypes(landpatch%settyp(ipatch)) == 0) THEN
 #else

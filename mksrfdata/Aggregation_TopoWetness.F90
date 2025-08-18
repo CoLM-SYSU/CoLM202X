@@ -20,6 +20,7 @@ SUBROUTINE Aggregation_TopoWetness ( &
    USE MOD_Mesh
    USE MOD_LandElm
    USE MOD_LandPatch
+   USE MOD_Land2mWMO
    USE MOD_NetCDFVector
    USE MOD_NetCDFBlock
    USE MOD_CatchmentDataReadin
@@ -43,6 +44,7 @@ SUBROUTINE Aggregation_TopoWetness ( &
    ! ---------------------------------------------------------------
    character(len=256) :: landdir, lndname, cyear
    integer  :: ipatch, npxl, i, im, ielm, istt, iend
+   integer  :: wmo_src
    real(r8) :: mean_twi, sigma_twi, skew_twi, fsatmax, fsatdcf, alp_twi, chi_twi, mu_twi
 
    type (block_data_real8_3d) :: twi
@@ -100,6 +102,18 @@ SUBROUTINE Aggregation_TopoWetness ( &
          allocate (mu_twi_patches   (numpatch));  mu_twi_patches  (:) = spval
 
          DO ipatch = 1, numpatch
+
+            IF (ipatch == wmo_patch(landpatch%ielm(ipatch))) THEN
+               wmo_src = wmo_source (landpatch%ielm(ipatch))
+
+               fsatmax_patches(ipatch) = fsatmax_patches(wmo_src)
+               fsatdcf_patches(ipatch) = fsatdcf_patches(wmo_src)
+               alp_twi_patches(ipatch) = alp_twi_patches(wmo_src)
+               chi_twi_patches(ipatch) = chi_twi_patches(wmo_src)
+               mu_twi_patches (ipatch) = mu_twi_patches (wmo_src)
+
+               CYCLE
+            ENDIF
 
             CALL aggregation_request_data (landpatch, ipatch, gridtwi, zip = USE_zip_for_aggregation, &
                data_r8_3d_in1 = twi, data_r8_3d_out1 = twi_one, n1_r8_3d_in1 = 25, lb1_r8_3d_in1 = 1  )

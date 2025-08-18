@@ -69,6 +69,7 @@ CONTAINS
    USE MOD_SPMD_Task
    USE MOD_Grid
    USE MOD_LandPatch
+   USE MOD_Land2mWMO
    USE MOD_NetCDFVector
    USE MOD_NetCDFBlock
    USE MOD_AggregationRequestData
@@ -184,6 +185,9 @@ CONTAINS
             DO WHILE (ipatch.le.grid_patch_e(i))
 
                IF (ipatch.le.0) CYCLE
+
+               !TODO-done: need to skip the 2m WMO patches
+               IF (ipatch == wmo_patch(landpatch%ielm(ipatch)) ) CYCLE
 
                ! using this year patch mapping to aggregate the previous year land cover data
                CALL aggregation_request_data (landpatch, ipatch, grid_patch, zip = .true., &

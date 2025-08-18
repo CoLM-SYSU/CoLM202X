@@ -18,6 +18,7 @@ SUBROUTINE Aggregation_Topography ( &
    USE MOD_SPMD_Task
    USE MOD_Grid
    USE MOD_LandPatch
+   USE MOD_Land2mWMO
    USE MOD_NetCDFVector
    USE MOD_NetCDFBlock
 #ifdef RangeCheck
@@ -43,6 +44,7 @@ SUBROUTINE Aggregation_Topography ( &
    ! ---------------------------------------------------------------
    character(len=256) :: landdir, lndname, cyear
    integer  :: ipatch, i, ps, pe
+   integer  :: wmo_src
    real(r8) :: sumarea
 
    type (block_data_real8_2d) :: landarea
@@ -106,6 +108,16 @@ SUBROUTINE Aggregation_Topography ( &
          allocate (sloperatio_patches (numpatch))
 
          DO ipatch = 1, numpatch
+
+            IF (ipatch == wmo_patch(landpatch%ielm(ipatch))) THEN
+               wmo_src = wmo_source (landpatch%ielm(ipatch))
+
+               elevation_patches (ipatch) = elevation_patches (wmo_src)
+               elvstd_patches    (ipatch) = elvstd_patches    (wmo_src)
+               sloperatio_patches(ipatch) = sloperatio_patches(wmo_src)
+
+               CYCLE
+            ENDIF
 
             CALL aggregation_request_data (landpatch, ipatch, gtopo,          &
                zip = USE_zip_for_aggregation,                                 &

@@ -29,6 +29,7 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
    USE MOD_TimeManager
    USE MOD_Grid
    USE MOD_LandPatch
+   USE MOD_Land2mWMO
    USE MOD_NetCDFBlock
    USE MOD_NetCDFVector
 #ifdef RangeCheck
@@ -80,6 +81,7 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
    real(r8), allocatable :: LAI_pfts(:), lai_pft_one(:,:)
    real(r8), allocatable :: SAI_pfts(:), sai_pft_one(:,:)
    integer  :: p, ip
+   integer  :: wmo_src, ip_, p_
    real(r8) :: sumarea
 
 #ifdef SrfdataDiag
@@ -449,6 +451,27 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
 
                IF (p_is_worker) THEN
                   DO ipatch = 1, numpatch
+
+                     IF (ipatch == wmo_patch(landpatch%ielm(ipatch))) THEN
+                        wmo_src = wmo_source (landpatch%ielm(ipatch))
+
+                        ip = patch_pft_s(ipatch)
+                        p  = landpft%settyp(ip)
+
+                        IF (p>=12 .and. p<=14) THEN
+                           DO ip_ = patch_pft_s(wmo_src), patch_pft_e(wmo_src)
+                              p_ = landpft%settyp(ip_)
+                              IF (p_ == p) LAI_pfts(ip) = LAI_pfts(ip_)
+                           ENDDO
+                        ELSE
+                           LAI_pfts(ip) = 0.
+                        ENDIF
+
+                        LAI_patches(ipatch) = LAI_pfts(ip)
+
+                        CYCLE
+                     ENDIF
+
                      CALL aggregation_request_data (landpatch, ipatch, gridlai, &
                         zip = USE_zip_for_aggregation, area = area_one, &
                         data_r8_3d_in1 = pftPCT,  data_r8_3d_out1 = pct_pft_one, &
@@ -571,6 +594,26 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
 
             IF (p_is_worker) THEN
                DO ipatch = 1, numpatch
+
+                  IF (ipatch == wmo_patch(landpatch%ielm(ipatch))) THEN
+                     wmo_src = wmo_source (landpatch%ielm(ipatch))
+
+                     ip = patch_pft_s(ipatch)
+                     p  = landpft%settyp(ip)
+
+                     IF (p>=12 .and. p<=14) THEN
+                        DO ip_ = patch_pft_s(wmo_src), patch_pft_e(wmo_src)
+                           p_ = landpft%settyp(ip_)
+                           IF (p_ == p) SAI_pfts(ip) = SAI_pfts(ip_)
+                        ENDDO
+                     ELSE
+                        SAI_pfts (ip) = 0.
+                     ENDIF
+
+                     SAI_patches(ipatch) = SAI_pfts(ip)
+
+                     CYCLE
+                  ENDIF
 
                   CALL aggregation_request_data (landpatch, ipatch, gridlai, &
                      zip = USE_zip_for_aggregation, area = area_one, &
