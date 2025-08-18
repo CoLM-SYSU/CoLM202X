@@ -117,7 +117,6 @@ CONTAINS
          longname, units)
 
    USE MOD_Block
-   USE MOD_Vars_1DAccFluxes,  only: nac
    USE MOD_Vars_Global, only: spval
    IMPLICIT NONE
 
@@ -136,7 +135,6 @@ CONTAINS
    integer :: iblkme, xblk, yblk, xloc, yloc
    integer :: compress
 
-      IF (p_is_worker)  WHERE (acc_vec /= spval)  acc_vec = acc_vec / nac
       IF (p_is_io)      CALL allocate_block_data (ghist, flux_xy_2d)
 
       CALL mp2g_hist%pset2grid (acc_vec, flux_xy_2d, spv = spval, msk = filter)
@@ -306,7 +304,6 @@ CONTAINS
          sumarea, filter, longname, units)
 
    USE MOD_Block
-   USE MOD_Vars_1DAccFluxes,  only: nac
    USE MOD_Vars_Global, only: spval
    IMPLICIT NONE
 
@@ -327,9 +324,6 @@ CONTAINS
    integer :: iblkme, xblk, yblk, xloc, yloc, i1, i2
    integer :: compress
 
-      IF (p_is_worker) THEN
-         WHERE(acc_vec /= spval)  acc_vec = acc_vec / nac
-      ENDIF
       IF (p_is_io) THEN
          CALL allocate_block_data (ghist, flux_xy_4d, ndim1, ndim2, lb1 = lb1, lb2 = lb2)
       ENDIF
@@ -369,74 +363,6 @@ CONTAINS
          ghist, itime_in_file, flux_xy_4d, compress, longname, units)
 
    END SUBROUTINE flux_map_and_write_4d
-
-
-   SUBROUTINE flux_map_and_write_ln ( &
-         acc_vec, file_hist, varname, itime_in_file, sumarea, filter, &
-         longname, units)
-
-   USE MOD_Block
-   USE MOD_Vars_1DAccFluxes,  only: nac_ln
-   USE MOD_Vars_Global, only: spval
-   IMPLICIT NONE
-
-   real(r8), intent(inout) :: acc_vec(:)
-   character(len=*), intent(in) :: file_hist
-   character(len=*), intent(in) :: varname
-   integer, intent(in) :: itime_in_file
-
-   type(block_data_real8_2d), intent(in) :: sumarea
-   logical,  intent(in) :: filter(:)
-   character (len=*), intent(in), optional :: longname
-   character (len=*), intent(in), optional :: units
-
-   ! Local variables
-   type(block_data_real8_2d) :: flux_xy_2d
-   integer :: i, iblkme, xblk, yblk, xloc, yloc
-   integer :: compress
-
-      IF (p_is_worker) THEN
-         DO i = lbound(acc_vec,1), ubound(acc_vec,1)
-            IF ((acc_vec(i) /= spval) .and. (nac_ln(i) > 0)) THEN
-               acc_vec(i) = acc_vec(i) / nac_ln(i)
-            ENDIF
-         ENDDO
-      ENDIF
-
-      IF (p_is_io) THEN
-         CALL allocate_block_data (ghist, flux_xy_2d)
-      ENDIF
-
-      CALL mp2g_hist%pset2grid (acc_vec, flux_xy_2d, spv = spval, msk = filter)
-
-      IF (p_is_io) THEN
-         DO iblkme = 1, gblock%nblkme
-            xblk = gblock%xblkme(iblkme)
-            yblk = gblock%yblkme(iblkme)
-
-            DO yloc = 1, ghist%ycnt(yblk)
-               DO xloc = 1, ghist%xcnt(xblk)
-
-                  IF ((sumarea%blk(xblk,yblk)%val(xloc,yloc) > 0.00001) &
-                     .and. (flux_xy_2d%blk(xblk,yblk)%val(xloc,yloc) /= spval)) THEN
-                     flux_xy_2d%blk(xblk,yblk)%val(xloc,yloc) &
-                        = flux_xy_2d%blk(xblk,yblk)%val(xloc,yloc) &
-                        / sumarea%blk(xblk,yblk)%val(xloc,yloc)
-                  ELSE
-                     flux_xy_2d%blk(xblk,yblk)%val(xloc,yloc) = spval
-                  ENDIF
-
-               ENDDO
-            ENDDO
-
-         ENDDO
-      ENDIF
-
-      compress = DEF_HIST_CompressLevel
-      CALL hist_write_var_real8_2d (file_hist, varname, ghist, itime_in_file, flux_xy_2d, &
-         compress, longname, units)
-
-   END SUBROUTINE flux_map_and_write_ln
 
 
    SUBROUTINE hist_gridded_write_time ( &
