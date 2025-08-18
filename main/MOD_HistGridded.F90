@@ -666,7 +666,7 @@ CONTAINS
 
    ! Local variables
    integer :: iblkme, iblk, jblk, idata, ixseg, iyseg
-   integer :: xcnt, ycnt, ndim1, xbdsp, ybdsp, xgdsp, ygdsp
+   integer :: xcnt, ycnt, ndim1, xbdsp, ybdsp, xgdsp, ygdsp, idim1
    integer :: rmesg(4), smesg(4), isrc
    character(len=256) :: fileblock
    real(r8), allocatable :: rbuf(:,:,:), sbuf(:,:,:), vdata(:,:,:)
@@ -693,28 +693,30 @@ CONTAINS
                   xcnt = hist_concat%xsegs(ixseg)%cnt
                   ycnt = hist_concat%ysegs(iyseg)%cnt
 
-                  allocate (rbuf (ndim1,xcnt,ycnt))
+                  allocate ( rbuf (ndim1, xcnt, ycnt))
 
                   CALL mpi_recv (rbuf, ndim1 * xcnt * ycnt, MPI_DOUBLE, &
                      isrc, hist_data_id, p_comm_glb, p_stat, p_err)
 
                   IF (idata == 1) THEN
-                     allocate (vdata (ndim1, hist_concat%ginfo%nlon, hist_concat%ginfo%nlat))
+                     allocate (vdata (hist_concat%ginfo%nlon, hist_concat%ginfo%nlat, ndim1))
                      vdata(:,:,:) = spval
                   ENDIF
 
-                  vdata (:,xgdsp+1:xgdsp+xcnt,ygdsp+1:ygdsp+ycnt) = rbuf
+                  DO idim1 = 1, ndim1
+                     vdata (xgdsp+1:xgdsp+xcnt, ygdsp+1:ygdsp+ycnt, idim1) = rbuf(idim1,:,:)
+                  ENDDO
 
                   deallocate (rbuf)
                ENDDO
 
             ELSE
                CALL hist_writeback_var_header (hist_data_id, filename, dataname, &
-                  4, dim1name, 'lon', 'lat', 'time', '', compress, longname, units)
+                  4, 'lon', 'lat', dim1name, 'time', '', compress, longname, units)
             ENDIF
 #else
             ndim1 = wdata%ub1 - wdata%lb1 + 1
-            allocate (vdata (ndim1, hist_concat%ginfo%nlon, hist_concat%ginfo%nlat))
+            allocate (vdata (hist_concat%ginfo%nlon, hist_concat%ginfo%nlat, ndim1))
             vdata(:,:,:) = spval
 
             DO iyseg = 1, hist_concat%nyseg
@@ -729,8 +731,10 @@ CONTAINS
                      xcnt = hist_concat%xsegs(ixseg)%cnt
                      ycnt = hist_concat%ysegs(iyseg)%cnt
 
-                     vdata (:,xgdsp+1:xgdsp+xcnt, ygdsp+1:ygdsp+ycnt) = &
-                        wdata%blk(iblk,jblk)%val(:,xbdsp+1:xbdsp+xcnt,ybdsp+1:ybdsp+ycnt)
+                     DO idim1 = 1, ndim1
+                        vdata (xgdsp+1:xgdsp+xcnt, ygdsp+1:ygdsp+ycnt,idim1) = &
+                           wdata%blk(iblk,jblk)%val(idim1,xbdsp+1:xbdsp+xcnt,ybdsp+1:ybdsp+ycnt)
+                     ENDDO
                   ENDIF
                ENDDO
             ENDDO
@@ -743,7 +747,7 @@ CONTAINS
                CALL ncio_define_dimension (filename, dim1name, ndim1)
 
                CALL ncio_write_serial_time (filename, dataname, itime, &
-                  vdata, dim1name, 'lon', 'lat', 'time', compress)
+                  vdata, 'lon', 'lat', dim1name, 'time', compress)
 
                IF (itime == 1) THEN
                   CALL ncio_put_attr (filename, dataname, 'long_name', longname)
@@ -775,7 +779,7 @@ CONTAINS
                      ndim1 = size(wdata%blk(iblk,jblk)%val,1)
 
                      allocate (sbuf (ndim1,xcnt,ycnt))
-                     sbuf = wdata%blk(iblk,jblk)%val(:,xbdsp+1:xbdsp+xcnt,ybdsp+1:ybdsp+ycnt)
+                     sbuf = wdata%blk(iblk,jblk)%val(:, xbdsp+1:xbdsp+xcnt, ybdsp+1:ybdsp+ycnt)
 
                      IF (.not. DEF_HIST_WriteBack) THEN
                         smesg = (/p_iam_glb, ixseg, iyseg, ndim1/)
@@ -842,7 +846,7 @@ CONTAINS
 
    ! Local variables
    integer :: iblkme, iblk, jblk, idata, ixseg, iyseg
-   integer :: xcnt, ycnt, ndim1, ndim2, xbdsp, ybdsp, xgdsp, ygdsp
+   integer :: xcnt, ycnt, ndim1, ndim2, xbdsp, ybdsp, xgdsp, ygdsp, idim1, idim2
    integer :: rmesg(5), smesg(5), isrc
    character(len=256) :: fileblock
    real(r8), allocatable :: rbuf(:,:,:,:), sbuf(:,:,:,:), vdata(:,:,:,:)
@@ -876,18 +880,22 @@ CONTAINS
                      isrc, hist_data_id, p_comm_glb, p_stat, p_err)
 
                   IF (idata == 1) THEN
-                     allocate (vdata (ndim1,ndim2,hist_concat%ginfo%nlon,hist_concat%ginfo%nlat))
+                     allocate (vdata (hist_concat%ginfo%nlon,hist_concat%ginfo%nlat,ndim1,ndim2))
                      vdata(:,:,:,:) = spval
                   ENDIF
 
-                  vdata (:,:,xgdsp+1:xgdsp+xcnt,ygdsp+1:ygdsp+ycnt) = rbuf
+                  DO idim1 = 1, ndim1
+                     DO idim2 = 1, ndim2
+                        vdata (xgdsp+1:xgdsp+xcnt, ygdsp+1:ygdsp+ycnt, idim1, idim2) = rbuf(idim1,idim2,:,:)
+                     ENDDO
+                  ENDDO
 
                   deallocate (rbuf)
                ENDDO
 
             ELSE
                CALL hist_writeback_var_header (hist_data_id, filename, dataname, &
-                  5, dim1name, dim2name, 'lon', 'lat', 'time', compress, longname, units)
+                  5, 'lon', 'lat', dim1name, dim2name, 'time', compress, longname, units)
             ENDIF
 #else
             ndim1 = wdata%ub1 - wdata%lb1 + 1
@@ -907,8 +915,12 @@ CONTAINS
                      xcnt = hist_concat%xsegs(ixseg)%cnt
                      ycnt = hist_concat%ysegs(iyseg)%cnt
 
-                     vdata (:,:,xgdsp+1:xgdsp+xcnt, ygdsp+1:ygdsp+ycnt) = &
-                        wdata%blk(iblk,jblk)%val(:,:,xbdsp+1:xbdsp+xcnt,ybdsp+1:ybdsp+ycnt)
+                     DO idim1 = 1, ndim1
+                        DO idim2 = 1, ndim2
+                           vdata (xgdsp+1:xgdsp+xcnt, ygdsp+1:ygdsp+ycnt, idim1, idim2) = &
+                              wdata%blk(iblk,jblk)%val(idim1,idim2,xbdsp+1:xbdsp+xcnt,ybdsp+1:ybdsp+ycnt)
+                        ENDDO
+                     ENDDO
                   ENDIF
                ENDDO
             ENDDO
@@ -922,7 +934,7 @@ CONTAINS
                CALL ncio_define_dimension (filename, dim2name, ndim2)
 
                CALL ncio_write_serial_time (filename, dataname, itime, vdata, &
-                  dim1name, dim2name, 'lon', 'lat', 'time', compress)
+                  'lon', 'lat', dim1name, dim2name, 'time', compress)
 
                IF (itime == 1) THEN
                   CALL ncio_put_attr (filename, dataname, 'long_name', longname)
