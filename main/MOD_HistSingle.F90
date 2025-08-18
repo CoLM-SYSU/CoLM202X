@@ -189,7 +189,6 @@ CONTAINS
    SUBROUTINE single_write_2d ( &
          acc_vec, file_hist, varname, itime_in_file, longname, units)
 
-      USE MOD_Vars_1DAccFluxes, only: nac
       USE MOD_Vars_Global,      only: spval
       IMPLICIT NONE
 
@@ -199,8 +198,6 @@ CONTAINS
       integer,          intent(in)    :: itime_in_file
       character(len=*), intent(in)    :: longname
       character(len=*), intent(in)    :: units
-
-      WHERE (acc_vec /= spval)  acc_vec = acc_vec / nac
 
       IF (USE_SITE_HistWriteBack) THEN
 
@@ -242,66 +239,6 @@ CONTAINS
       ENDIF
 
    END SUBROUTINE single_write_2d
-
-   ! -- write local noon 2D data --
-   SUBROUTINE single_write_ln ( &
-         acc_vec, file_hist, varname, itime_in_file, longname, units)
-
-      USE MOD_Vars_1DAccFluxes, only: nac_ln
-      USE MOD_Vars_Global,      only: spval
-      IMPLICIT NONE
-
-      real(r8),         intent(inout) :: acc_vec(:)
-      character(len=*), intent(in)    :: file_hist
-      character(len=*), intent(in)    :: varname
-      integer,          intent(in)    :: itime_in_file
-      character(len=*), intent(in)    :: longname
-      character(len=*), intent(in)    :: units
-
-      WHERE ((acc_vec /= spval) .and. (nac_ln > 0))
-         acc_vec = acc_vec / nac_ln
-      END WHERE
-
-      IF (USE_SITE_HistWriteBack) THEN
-
-         IF (.not. associated(thisvar%next)) THEN
-            allocate (thisvar%next)
-            thisvar => thisvar%next
-
-            thisvar%next    => null()
-            thisvar%varname = varname
-            allocate(thisvar%v2d (size(acc_vec),ntime_mem))
-         ELSE
-            thisvar => thisvar%next
-         ENDIF
-
-
-         IF (thisvar%varname /= varname) THEN
-            write(*,*) 'Warning: history variable in memory is wrong: ' &
-               // trim(thisvar%varname) // ' should be ' // trim(varname)
-            CALL CoLM_stop ()
-         ENDIF
-
-         thisvar%v2d(:,itime_mem) = acc_vec
-
-         IF (memory_to_disk) THEN
-            CALL ncio_write_serial (file_hist, varname, thisvar%v2d(:,1:itime_mem), 'patch', 'time')
-            CALL ncio_put_attr (file_hist, varname, 'long_name', longname)
-            CALL ncio_put_attr (file_hist, varname, 'units', units)
-            CALL ncio_put_attr (file_hist, varname, 'missing_value', spval)
-         ENDIF
-
-      ELSE
-         CALL ncio_write_serial_time (file_hist, varname, itime_in_file, acc_vec, &
-            'patch', 'time')
-         IF (itime_in_file == 1) THEN
-            CALL ncio_put_attr (file_hist, varname, 'long_name', longname)
-            CALL ncio_put_attr (file_hist, varname, 'units', units)
-            CALL ncio_put_attr (file_hist, varname, 'missing_value', spval)
-         ENDIF
-      ENDIF
-
-   END SUBROUTINE single_write_ln
 
    ! -- write 3D data --
    SUBROUTINE single_write_3d ( &
@@ -370,7 +307,6 @@ CONTAINS
          acc_vec, file_hist, varname, itime_in_file, &
          dim1name, ndim1, dim2name, ndim2, longname, units)
 
-      USE MOD_Vars_1DAccFluxes, only: nac
       USE MOD_Vars_Global,      only: spval
       IMPLICIT NONE
 
@@ -384,8 +320,6 @@ CONTAINS
       integer,          intent(in)    :: ndim2
       character(len=*), intent(in)    :: longname
       character(len=*), intent(in)    :: units
-
-      WHERE (acc_vec /= spval)  acc_vec = acc_vec / nac
 
       IF (USE_SITE_HistWriteBack) THEN
 

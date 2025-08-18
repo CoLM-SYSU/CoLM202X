@@ -145,10 +145,10 @@ CONTAINS
          ipxstt = this%ipxstt (iset)
          ipxend = this%ipxend (iset)
 
-         ! for 2m WMO patch
+         ! for 2m WMO patch, use all pixels
          IF (ipxstt == -1) THEN
-            ipxstt = mesh(ie)%npxl/2 + 1
-            ipxend = mesh(ie)%npxl/2 + 1
+            ipxstt = 1
+            ipxend = mesh(ie)%npxl
          ENDIF
 
          allocate (area (ipxstt:ipxend))
