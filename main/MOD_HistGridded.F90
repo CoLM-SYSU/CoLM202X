@@ -693,9 +693,9 @@ CONTAINS
                   xcnt = hist_concat%xsegs(ixseg)%cnt
                   ycnt = hist_concat%ysegs(iyseg)%cnt
 
-                  allocate ( rbuf (ndim1, xcnt, ycnt))
+                  allocate (rbuf (ndim1,xcnt,ycnt))
 
-                  CALL mpi_recv (rbuf, ndim1 * xcnt * ycnt, MPI_DOUBLE, &
+                  CALL mpi_recv (rbuf, ndim1*xcnt*ycnt, MPI_DOUBLE, &
                      isrc, hist_data_id, p_comm_glb, p_stat, p_err)
 
                   IF (idata == 1) THEN
