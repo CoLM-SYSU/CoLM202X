@@ -30,7 +30,6 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
    USE MOD_AggregationRequestData
    USE MOD_5x5DataReadin
    USE MOD_DataType
-   USE MOD_Namelist
    USE MOD_Utils, only: num_max_frequency
    USE MOD_LandUrban
    USE MOD_LandElm
@@ -738,13 +737,6 @@ ENDIF
             CALL srfdata_map_and_write (sai_urb, landurban%settyp, typindex, m_urb2diag, &
                   -1.0e36_r8, landname, 'Urban_Tree_SAI', compress = 0, write_mode = 'one',  &
                   lastdimname = 'Itime', lastdimvalue = imonth, defval=0._r8)
-            ! CALL srfdata_map_and_write (lai_urb, landurban%settyp, typindex, m_urb2diag, &
-            !    -1.0e36_r8, landname, 'Urban_Tree_LAI_'//trim(cmonth), compress = 0, write_mode = 'one')
-
-            ! typindex = (/(ityp, ityp = 1, N_URB)/)
-            ! landname  = trim(dir_srfdata) // '/diag/Urban_Tree_SAI_' // trim(iyear) // '.nc'
-            ! CALL srfdata_map_and_write (sai_urb, landurban%settyp, typindex, m_urb2diag, &
-            !    -1.0e36_r8, landname, 'TREE_SAI_'//trim(cmonth), compress = 0, write_mode = 'one')
 #endif
 
 #ifdef USEMPI
