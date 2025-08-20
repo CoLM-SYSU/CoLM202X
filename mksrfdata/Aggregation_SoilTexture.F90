@@ -126,7 +126,8 @@ SUBROUTINE Aggregation_SoilTexture ( &
       ENDIF
 
       CALL srfdata_map_and_write (soiltext_r8, landpatch%settyp, typpatch,  &
-         m_patch2diag, -1., lndname, 'soiltexture', compress = 1, write_mode = 'one')
+         m_patch2diag, -1., lndname, 'soiltexture', compress = 1, write_mode = 'one', &
+         create_mode=.true.)
 
       IF (allocated(soiltext_r8)) deallocate(soiltext_r8)
 #endif

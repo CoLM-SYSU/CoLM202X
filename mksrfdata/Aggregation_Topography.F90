@@ -184,7 +184,7 @@ SUBROUTINE Aggregation_Topography ( &
       typpatch = (/(ityp, ityp = 0, N_land_classification)/)
       lndname  = trim(dir_model_landdata) // '/diag/topography_' // trim(cyear) // '.nc'
       CALL srfdata_map_and_write (elevation_patches, landpatch%settyp, typpatch, m_patch2diag, &
-         -1.0e36_r8, lndname, 'elevation', compress = 1, write_mode = 'one')
+         -1.0e36_r8, lndname, 'elevation', compress = 1, write_mode = 'one', create_mode=.true.)
 
       typpatch = (/(ityp, ityp = 0, N_land_classification)/)
       lndname  = trim(dir_model_landdata) // '/diag/topography_' // trim(cyear) // '.nc'

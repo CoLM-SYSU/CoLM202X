@@ -105,7 +105,8 @@ CONTAINS
       write(cyear,'(i4.4)') lc_year
       landname = trim(dir_landdata)//'/diag/element_'//trim(cyear)//'.nc'
       CALL srfdata_map_and_write (elmid_r8, landelm%settyp, (/0,1/), m_elm2diag, &
-         -1.0e36_r8, landname, 'element', compress = 1, write_mode = 'one', defval=0._r8)
+         -1.0e36_r8, landname, 'element', compress = 1, write_mode = 'one', &
+         defval=0._r8, create_mode=.true.)
 
       IF (p_is_worker) deallocate (elmid_r8)
 
@@ -123,7 +124,7 @@ CONTAINS
 
       CALL srfdata_map_and_write (landpatch%pctshared, landpatch%settyp, typindex, m_patch2diag, &
          -1.0e36_r8, landname, 'patchfrac_elm', compress = 1, write_mode = 'one', defval=0._r8, &
-         stat_mode = 'fraction', pctshared = landpatch%pctshared)
+         stat_mode = 'fraction', pctshared = landpatch%pctshared, create_mode=.true.)
 
    END SUBROUTINE srfdata_diag_init
 
@@ -131,7 +132,7 @@ CONTAINS
    SUBROUTINE srfdata_map_and_write ( &
          vsrfdata,  settyp,   typindex,   m_srf,       spv,          filename, &
          dataname,  compress, write_mode, lastdimname, lastdimvalue, defval,   &
-         stat_mode, pctshared)
+         stat_mode, pctshared, create_mode)
 
    USE MOD_SPMD_Task
    USE MOD_Namelist
@@ -162,6 +163,7 @@ CONTAINS
 
    character (len=*), intent(in), optional :: stat_mode
    real(r8), intent(in), optional :: pctshared (:)
+   logical , intent(in), optional :: create_mode
 
    ! Local variables
    type(block_data_real8_3d) :: wdata, wtone
@@ -176,7 +178,7 @@ CONTAINS
    integer :: ntyps, ityp, xcnt, ycnt, xbdsp, ybdsp, xgdsp, ygdsp
    integer :: rmesg(3), smesg(3), isrc
    character(len=256) :: fileblock
-   logical :: fexists
+   logical :: fexists, cmode
    integer :: ilastdim
 
       IF (present(write_mode)) THEN
@@ -189,6 +191,12 @@ CONTAINS
          smode = trim(stat_mode)
       ELSE
          smode = 'mean'
+      ENDIF
+
+      IF (present(create_mode)) THEN
+         cmode = create_mode
+      ELSE
+         cmode = .false.
       ENDIF
 
       ntyps = size(typindex)
@@ -335,7 +343,7 @@ CONTAINS
             write(*,*) 'Please check gridded data < ', trim(dataname), ' > in ', trim(filename)
 
             inquire (file=trim(filename), exist=fexists)
-            IF (.not. fexists) THEN
+            IF (.not. fexists .or. cmode) THEN
 
                CALL ncio_create_file (filename)
 

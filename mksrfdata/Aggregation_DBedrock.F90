@@ -119,7 +119,7 @@ SUBROUTINE Aggregation_DBedrock ( &
       typpatch = (/(ityp, ityp = 0, N_land_classification)/)
       lndname  = trim(dir_model_landdata) // '/diag/dbedrock_patch_' // trim(cyear) // '.nc'
       CALL srfdata_map_and_write (dbedrock_patches, landpatch%settyp, typpatch, m_patch2diag, &
-         -1.0e36_r8, lndname, 'dbedrock', compress = 1, write_mode = 'one')
+         -1.0e36_r8, lndname, 'dbedrock', compress = 1, write_mode = 'one', create_mode=.true.)
 #endif
 
       IF (p_is_worker) THEN

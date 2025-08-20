@@ -142,7 +142,7 @@ SUBROUTINE Aggregation_ForestHeight ( &
       typpatch = (/(ityp, ityp = 0, N_land_classification)/)
       lndname  = trim(dir_model_landdata) // '/diag/htop_patch_' // trim(cyear) // '.nc'
       CALL srfdata_map_and_write (tree_height_patches, landpatch%settyp, typpatch, m_patch2diag, &
-         -1.0e36_r8, lndname, 'htop', compress = 1, write_mode = 'one', defval=0._r8)
+         -1.0e36_r8, lndname, 'htop', compress = 1, write_mode = 'one', defval=0._r8, create_mode=.true.)
 #endif
 
       IF (p_is_worker) THEN
@@ -201,7 +201,7 @@ SUBROUTINE Aggregation_ForestHeight ( &
       typpatch = (/(ityp, ityp = 0, N_land_classification)/)
       lndname  = trim(dir_model_landdata) // '/diag/htop_patch_' // trim(cyear) // '.nc'
       CALL srfdata_map_and_write (htop_patches, landpatch%settyp, typpatch, m_patch2diag, &
-         -1.0e36_r8, lndname, 'htop', compress = 1, write_mode = 'one', defval=0._r8)
+         -1.0e36_r8, lndname, 'htop', compress = 1, write_mode = 'one', defval=0._r8, create_mode=.true.)
 #endif
 
       IF (p_is_worker) THEN
@@ -300,7 +300,7 @@ SUBROUTINE Aggregation_ForestHeight ( &
       typpatch = (/(ityp, ityp = 0, N_land_classification)/)
       lndname  = trim(dir_model_landdata) // '/diag/htop_patch_' // trim(cyear) // '.nc'
       CALL srfdata_map_and_write (htop_patches, landpatch%settyp, typpatch, m_patch2diag, &
-         -1.0e36_r8, lndname, 'htop', compress = 1, write_mode = 'one', defval=0._r8)
+         -1.0e36_r8, lndname, 'htop', compress = 1, write_mode = 'one', defval=0._r8, create_mode=.true.)
 #endif
 
       lndname = trim(landdir)//'/htop_pfts.nc'
@@ -316,7 +316,7 @@ SUBROUTINE Aggregation_ForestHeight ( &
 #endif
       lndname = trim(dir_model_landdata) // '/diag/htop_pft_' // trim(cyear) // '.nc'
       CALL srfdata_map_and_write (htop_pfts, landpft%settyp, typpft, m_pft2diag, &
-         -1.0e36_r8, lndname, 'htop_pft', compress = 1, write_mode = 'one', defval=0._r8)
+         -1.0e36_r8, lndname, 'htop_pft', compress = 1, write_mode = 'one', defval=0._r8, create_mode=.true.)
 #endif
 
       IF (p_is_worker) THEN
