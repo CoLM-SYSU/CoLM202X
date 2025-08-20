@@ -29,6 +29,7 @@ MODULE MOD_Catch_LateralFlow
    USE MOD_Catch_HillslopeFlow
    USE MOD_Catch_SubsurfaceFlow
    USE MOD_Catch_RiverLakeFlow
+   USE MOD_Catch_Reservoir
    USE MOD_Vars_TimeVariables
    USE MOD_Vars_Global,    only: dz_soi
    USE MOD_Const_Physical, only: denice, denh2o
@@ -67,7 +68,9 @@ CONTAINS
       CALL river_lake_network_init ()
       CALL subsurface_network_init ()
 
-      CALL write_catch_parameters ()
+      CALL readin_reservoir_data   ()
+
+      CALL write_catch_parameters  ()
 
 #ifdef CoLMDEBUG
       IF (p_is_worker) THEN
