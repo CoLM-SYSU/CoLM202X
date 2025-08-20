@@ -733,7 +733,7 @@ CONTAINS
 
                      DO idim1 = 1, ndim1
                         vdata (xgdsp+1:xgdsp+xcnt, ygdsp+1:ygdsp+ycnt,idim1) = &
-                           wdata%blk(iblk,jblk)%val(idim1,xbdsp+1:xbdsp+xcnt,ybdsp+1:ybdsp+ycnt)
+                           wdata%blk(iblk,jblk)%val(wdata%lb1+idim1-1,xbdsp+1:xbdsp+xcnt,ybdsp+1:ybdsp+ycnt)
                      ENDDO
                   ENDIF
                ENDDO
@@ -900,7 +900,7 @@ CONTAINS
 #else
             ndim1 = wdata%ub1 - wdata%lb1 + 1
             ndim2 = wdata%ub2 - wdata%lb2 + 1
-            allocate (vdata (ndim1,ndim2,hist_concat%ginfo%nlon,hist_concat%ginfo%nlat))
+            allocate (vdata (hist_concat%ginfo%nlon,hist_concat%ginfo%nlat,ndim1,ndim2))
             vdata(:,:,:,:) = spval
 
             DO iyseg = 1, hist_concat%nyseg
