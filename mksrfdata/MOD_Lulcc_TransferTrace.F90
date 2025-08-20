@@ -109,6 +109,7 @@ CONTAINS
    integer, allocatable, dimension(:) :: typindex
 #endif
 !-----------------------------------------------------------------------
+
       IF ( (lc_year < 1990) .or. (lc_year < 2000 .and. MOD(lc_year, 5) /= 0) ) RETURN
 
       write(thisyr,'(i4.4)') lc_year
@@ -184,10 +185,11 @@ CONTAINS
 
             DO WHILE (ipatch.le.grid_patch_e(i))
 
-               IF (ipatch.le.0) CYCLE
-
                !TODO-done: need to skip the 2m WMO patches
-               IF (ipatch == wmo_patch(landpatch%ielm(ipatch)) ) CYCLE
+               IF (ipatch == wmo_patch(landpatch%ielm(ipatch)) ) THEN
+                  ipatch = ipatch + 1
+                  CYCLE
+               ENDIF
 
                ! using this year patch mapping to aggregate the previous year land cover data
                CALL aggregation_request_data (landpatch, ipatch, grid_patch, zip = .true., &

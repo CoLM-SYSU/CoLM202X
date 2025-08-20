@@ -1921,8 +1921,8 @@ CONTAINS
                ! landelm%settyp=1 means 2m WMO patch exist,
                ! which is the last end patch in a element.
                IF (landelm%settyp(ielm) == 1) THEN
-                  ! all set to the 2m WMO patch t2m_wmo
-                  t2m_wmo(istt:iend) = t2m_wmo(iend)
+                  ! all set to the 2m WMO patch tref
+                  t2m_wmo(istt:iend) = tref(iend)
                ELSE
                   ! if no 2m WMO patch, keep t2m_wmo to tref
                   t2m_wmo(istt:iend) = tref(istt:iend)

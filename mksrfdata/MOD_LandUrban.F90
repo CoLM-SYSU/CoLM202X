@@ -91,7 +91,7 @@ CONTAINS
    character(len=256) :: suffix, cyear
 
       IF (p_is_master) THEN
-         write(*,'(A)') 'Making urban type tiles :'
+         write(*,'(A)') 'Making urban type tiles:'
       ENDIF
 
 #ifdef USEMPI

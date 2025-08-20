@@ -104,8 +104,8 @@ CONTAINS
 
       write(cyear,'(i4.4)') lc_year
       landname = trim(dir_landdata)//'/diag/element_'//trim(cyear)//'.nc'
-      CALL srfdata_map_and_write (elmid_r8, landelm%settyp, (/0/), m_elm2diag, &
-         -1.0e36_r8, landname, 'element', compress = 1, write_mode = 'one')
+      CALL srfdata_map_and_write (elmid_r8, landelm%settyp, (/0,1/), m_elm2diag, &
+         -1.0e36_r8, landname, 'element', compress = 1, write_mode = 'one', defval=0._r8)
 
       IF (p_is_worker) deallocate (elmid_r8)
 

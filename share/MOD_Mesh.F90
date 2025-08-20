@@ -815,7 +815,7 @@ CONTAINS
 #endif
 
       IF (p_is_master) THEN
-         write(*,'(A)') 'Making mesh elements :'
+         write(*,'(A)') 'Making mesh elements:'
       ENDIF
 
 #ifdef USEMPI

@@ -32,7 +32,6 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
    USE MOD_AggregationRequestData
    USE MOD_5x5DataReadin
    USE MOD_DataType
-   USE MOD_Namelist
    USE MOD_Utils, only: num_max_frequency
    USE MOD_LandUrban
    USE MOD_LandElm

@@ -1580,8 +1580,5 @@ SUBROUTINE CoLMMAIN ( &
       z_sno (maxsnl+1:0) = z_soisno (maxsnl+1:0)
       dz_sno(maxsnl+1:0) = dz_soisno(maxsnl+1:0)
 
-      ! IF the patch is a virtual 2 m WMO patch, set t2m_wmo = tref
-      IF (landpatch%ipxstt(ipatch) == -1) t2m_wmo = tref
-
 END SUBROUTINE CoLMMAIN
 ! ---------- EOP ------------

@@ -67,7 +67,7 @@ CONTAINS
 #endif
 
       IF (p_is_master) THEN
-         write(*,'(A)') 'Making land hydro units :'
+         write(*,'(A)') 'Making land hydro units:'
       ENDIF
 
       IF (p_is_master) THEN

@@ -59,7 +59,7 @@ CONTAINS
 
       write(cyear,'(i4.4)') lc_year
       IF (p_is_master) THEN
-         write(*,'(A)') 'Making land 2 m wmo patches :'
+         write(*,'(A)') 'Making land 2 m wmo patches:'
       ENDIF
 
 #ifdef USEMPI
@@ -70,11 +70,6 @@ CONTAINS
 
          numset = numelm
 
-         allocate (wmo_patch  (numset))
-         allocate (wmo_source (numset))
-
-         wmo_patch  = -1
-         wmo_source = -1
          numwmo     = 0
          numpatch_  = 0
          jpatch     = 0
@@ -231,5 +226,25 @@ CONTAINS
       CALL write_patchfrac (DEF_dir_landdata, lc_year)
 #endif
    END SUBROUTINE land2mwmo_build
+
+   SUBROUTINE land2mwmo_init
+   USE MOD_Mesh
+   IMPLICIT NONE
+
+      allocate (wmo_patch  (numelm))
+      allocate (wmo_source (numelm))
+
+      wmo_patch  = -1
+      wmo_source = -1
+
+   END SUBROUTINE land2mwmo_init
+
+   SUBROUTINE land2mwmo_final
+   IMPLICIT NONE
+
+      IF (allocated (wmo_patch )) deallocate (wmo_patch )
+      IF (allocated (wmo_source)) deallocate (wmo_source)
+
+   END SUBROUTINE land2mwmo_final
 
 END MODULE MOD_Land2mWMO

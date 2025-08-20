@@ -56,7 +56,7 @@ CONTAINS
 
       write(cyear,'(i4.4)') lc_year
       IF (p_is_master) THEN
-         write(*,'(A)') 'Making patches (crop shared) :'
+         write(*,'(A)') 'Making patches (crop shared):'
       ENDIF
 
 #ifdef USEMPI
