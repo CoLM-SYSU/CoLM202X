@@ -344,7 +344,7 @@ SUBROUTINE Aggregation_SoilBrightness ( &
       typpatch = (/(ityp, ityp = 0, N_land_classification)/)
       lndname  = trim(dir_model_landdata) // '/diag/soil_brightness_patch_' // trim(cyear) // '.nc'
       CALL srfdata_map_and_write (soil_s_v_alb, landpatch%settyp, typpatch, m_patch2diag, &
-         -1.0e36_r8, lndname, 'soil_s_v_alb', compress = 1, write_mode = 'one')
+         -1.0e36_r8, lndname, 'soil_s_v_alb', compress = 1, write_mode = 'one', create_mode=.true.)
 #endif
 
       ! (2) Write-out the albedo of visible of the dry soil

@@ -135,7 +135,7 @@ SUBROUTINE Aggregation_LakeDepth ( &
 #ifdef SrfdataDiag
       lndname = trim(dir_model_landdata)//'/diag/lakedepth_'//trim(cyear)//'.nc'
       CALL srfdata_map_and_write (lakedepth_patches, landpatch%settyp, typlake, m_patch2diag, &
-         -1.0e36_r8, lndname, 'lakedepth', compress = 1, write_mode = 'one')
+         -1.0e36_r8, lndname, 'lakedepth', compress = 1, write_mode = 'one', create_mode=.true.)
 #endif
 
       IF (p_is_worker) THEN

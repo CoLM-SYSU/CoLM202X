@@ -227,7 +227,7 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
       ENDIF
 
       CALL srfdata_map_and_write (LUCY_rid_r8, landurban%settyp, typindex, m_urb2diag, &
-         -1.0e36_r8, landname, 'LUCY_id', compress = 0, write_mode = 'one', defval=0._r8)
+         -1.0e36_r8, landname, 'LUCY_id', compress = 0, write_mode = 'one', defval=0._r8, create_mode=.true.)
 #endif
 
 #ifdef USEMPI
@@ -301,7 +301,7 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
       typindex = (/(ityp, ityp = 1, N_URB)/)
       landname  = trim(dir_srfdata) // '/diag/population_urban_'//trim(cyear)//'.nc'
       CALL srfdata_map_and_write (pop_den, landurban%settyp, typindex, m_urb2diag, &
-         -1.0e36_r8, landname, 'POP_DEN', compress = 0, write_mode = 'one', defval=0._r8)
+         -1.0e36_r8, landname, 'POP_DEN', compress = 0, write_mode = 'one', defval=0._r8, create_mode=.true.)
 #endif
 
 #ifdef USEMPI
@@ -384,12 +384,12 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
       typindex = (/(ityp, ityp = 1, N_URB)/)
       landname  = trim(dir_srfdata) // '/diag/pct_urban_tree_'//trim(cyear)//'.nc'
       CALL srfdata_map_and_write (pct_tree, landurban%settyp, typindex, m_urb2diag, &
-         -1.0e36_r8, landname, 'PCT_Urban_Tree', compress = 0, write_mode = 'one', defval=0._r8)
+         -1.0e36_r8, landname, 'PCT_Urban_Tree', compress = 0, write_mode = 'one', defval=0._r8, create_mode=.true.)
 
       typindex = (/(ityp, ityp = 1, N_URB)/)
       landname  = trim(dir_srfdata) // '/diag/htop_urban_'//trim(cyear)//'.nc'
       CALL srfdata_map_and_write (htop_urb, landurban%settyp, typindex, m_urb2diag, &
-         -1.0e36_r8, landname, 'Urban_Tree_HTOP', compress = 0, write_mode = 'one', defval=0._r8)
+         -1.0e36_r8, landname, 'Urban_Tree_HTOP', compress = 0, write_mode = 'one', defval=0._r8, create_mode=.true.)
 #endif
 
 #ifdef USEMPI
@@ -450,7 +450,7 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
       typindex = (/(ityp, ityp = 1, N_URB)/)
       landname  = trim(dir_srfdata) // '/diag/pct_urban_water_'//trim(cyear)//'.nc'
       CALL srfdata_map_and_write (pct_urbwt, landurban%settyp, typindex, m_urb2diag, &
-         -1.0e36_r8, landname, 'PCT_Urban_Water', compress = 0, write_mode = 'one', defval=0._r8)
+         -1.0e36_r8, landname, 'PCT_Urban_Water', compress = 0, write_mode = 'one', defval=0._r8, create_mode=.true.)
 #endif
 
 #ifdef USEMPI
@@ -601,17 +601,18 @@ ENDIF
       typindex = (/(ityp, ityp = 1, N_URB)/)
       landname  = trim(dir_srfdata) // '/diag/ht_roof_'//trim(cyear)//'.nc'
       CALL srfdata_map_and_write (ht_roof, landurban%settyp, typindex, m_urb2diag, &
-         -1.0e36_r8, landname, 'HT_ROOF', compress = 0, write_mode = 'one', defval=0._r8)
+         -1.0e36_r8, landname, 'HT_ROOF', compress = 0, write_mode = 'one', defval=0._r8, create_mode=.true.)
 
       typindex = (/(ityp, ityp = 1, N_URB)/)
       landname  = trim(dir_srfdata) // '/diag/wt_roof_'//trim(cyear)//'.nc'
       CALL srfdata_map_and_write (wt_roof, landurban%settyp, typindex, m_urb2diag, &
-         -1.0e36_r8, landname, 'WT_ROOF', compress = 0, write_mode = 'one', defval=0._r8)
+         -1.0e36_r8, landname, 'WT_ROOF', compress = 0, write_mode = 'one', defval=0._r8, create_mode=.true.)
 
       typindex = (/(ityp, ityp = 1, N_URB)/)
       landname  = trim(dir_srfdata) // '/diag/pct_urban_'//trim(cyear)//'.nc'
       CALL srfdata_map_and_write (urb_pct, landurban%settyp, typindex, m_urb2diag, &
-      -1.0e36_r8, landname, 'URBAN_PCT', compress = 0, write_mode = 'one', stat_mode = 'fraction', defval=0._r8)
+         -1.0e36_r8, landname, 'URBAN_PCT', compress = 0, write_mode = 'one', stat_mode = 'fraction', &
+         defval=0._r8, create_mode=.true.)
 
       ! CALL srfdata_map_and_write (urb_frc(:), landurban%settyp, typindex, m_urb2diag, &
       ! -1.0e36_r8, landname, 'URBAN_PATCH_FRAC_'//trim(cyear), compress = 0, write_mode = 'one')
@@ -731,12 +732,12 @@ ENDIF
             landname  = trim(dir_srfdata) // '/diag/LAI_urban_'//trim(cyear)//'.nc'
             CALL srfdata_map_and_write (lai_urb, landurban%settyp, typindex, m_urb2diag, &
                   -1.0e36_r8, landname, 'Urban_Tree_LAI', compress = 0, write_mode = 'one',  &
-                  lastdimname = 'Itime', lastdimvalue = imonth, defval=0._r8)
+                  lastdimname = 'Itime', lastdimvalue = imonth, defval=0._r8, create_mode=.true.)
 
             landname  = trim(dir_srfdata) // '/diag/SAI_urban_'//trim(cyear)//'.nc'
             CALL srfdata_map_and_write (sai_urb, landurban%settyp, typindex, m_urb2diag, &
                   -1.0e36_r8, landname, 'Urban_Tree_SAI', compress = 0, write_mode = 'one',  &
-                  lastdimname = 'Itime', lastdimvalue = imonth, defval=0._r8)
+                  lastdimname = 'Itime', lastdimvalue = imonth, defval=0._r8, create_mode=.true.)
 #endif
 
 #ifdef USEMPI
