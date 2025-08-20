@@ -207,7 +207,6 @@ CONTAINS
       IF (allocated (ielm_   )) deallocate (ielm_   )
       IF (allocated (locpth  )) deallocate (locpth  )
 
-#if (!defined(URBAN_MODEL) && !defined(CROP))
 #ifdef USEMPI
       IF (p_is_worker) THEN
          CALL mpi_reduce (numpatch, npatch_glb, 1, MPI_INTEGER, MPI_SUM, p_root, p_comm_worker, p_err)
@@ -224,7 +223,7 @@ CONTAINS
       CALL elm_patch%build (landelm, landpatch, use_frac = .true.)
 
       CALL write_patchfrac (DEF_dir_landdata, lc_year)
-#endif
+
    END SUBROUTINE land2mwmo_build
 
    SUBROUTINE land2mwmo_init
