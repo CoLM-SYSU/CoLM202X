@@ -371,12 +371,6 @@ PROGRAM MKSRFDATA
       ! build land patches
       CALL landpatch_build(lc_year)
 
-      ! build land 2m WMO patches
-      CALL land2mwmo_init
-      IF (DEF_Output_2mWMO) THEN
-         CALL land2mwmo_build(lc_year)
-      ENDIF
-
 #ifdef URBAN_MODEL
       CALL landurban_build(lc_year)
 #endif
@@ -384,6 +378,12 @@ PROGRAM MKSRFDATA
 #ifdef CROP
       CALL landcrop_build (lc_year)
 #endif
+
+      ! build land 2m WMO patches
+      CALL land2mwmo_init
+      IF (DEF_Output_2mWMO) THEN
+         CALL land2mwmo_build(lc_year)
+      ENDIF
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
       CALL landpft_build  (lc_year)
