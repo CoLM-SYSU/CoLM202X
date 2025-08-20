@@ -63,7 +63,7 @@ SUBROUTINE Aggregation_PercentagesPFT (gland, dir_rawdata, dir_model_landdata, l
 #endif
    integer  :: ipatch, ipc, ipft, p
    integer  :: wmo_pth
-   real(r8) :: sumarea
+   real(r8) :: sumarea, sum_pct_pfts
 #ifdef SrfdataDiag
    integer :: typpft(0:N_PFT-1)
 #ifdef CROP
@@ -141,9 +141,17 @@ SUBROUTINE Aggregation_PercentagesPFT (gland, dir_rawdata, dir_model_landdata, l
                   pct_pfts(ipft) = sum(pct_pft_one(p,:) / pct_one * area_one) / sumarea
                ENDDO
 
-               pct_pfts(patch_pft_s(ipatch):patch_pft_e(ipatch)) =    &
-                  pct_pfts(patch_pft_s(ipatch):patch_pft_e(ipatch))   &
-                  / sum(pct_pfts(patch_pft_s(ipatch):patch_pft_e(ipatch)))
+               sum_pct_pfts = sum(pct_pfts(patch_pft_s(ipatch):patch_pft_e(ipatch)))
+
+               IF (sum_pct_pfts > 0) THEN
+                  pct_pfts(patch_pft_s(ipatch):patch_pft_e(ipatch)) = &
+                     pct_pfts(patch_pft_s(ipatch):patch_pft_e(ipatch)) / sum_pct_pfts
+               ELSE
+                  ! in case of no PFT exist, but there is a patch type:
+                  ! set bare soil 100%, be consistent with MOD_LandPFT.F90
+                  pct_pfts(patch_pft_s(ipatch)) = 1.
+               ENDIF
+
 #ifdef CROP
             ELSEIF (landpatch%settyp(ipatch) == CROPLAND) THEN
                pct_pfts(patch_pft_s(ipatch):patch_pft_e(ipatch)) = 1.

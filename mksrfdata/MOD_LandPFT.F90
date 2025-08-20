@@ -73,7 +73,7 @@ CONTAINS
    real(r8) :: sumarea, maxgrass
 
       IF (p_is_master) THEN
-         write(*,'(A)') 'Making land plant function type tiles :'
+         write(*,'(A)') 'Making land plant function type tiles:'
       ENDIF
 
 #ifdef USEMPI
@@ -136,8 +136,10 @@ CONTAINS
 
                sumarea = sum(area_one * sum(pctpft_one(0:N_PFT-1,:),dim=1))
 
+               ! in case of no PFT data, set to 100% bare when patchtype=0,
+               ! be consistent with Aggregation_PercentagesPFT.F90.
                IF (sumarea <= 0.0) THEN
-                  patchmask(ipatch) = .false.
+                  pctpft_patch(0,ipatch) = 1.
                ELSE
                   DO ipft = 0, N_PFT-1
                      pctpft_patch(ipft,ipatch) = sum(pctpft_one(ipft,:) * area_one) / sumarea

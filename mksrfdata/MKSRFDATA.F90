@@ -370,6 +370,9 @@ PROGRAM MKSRFDATA
 
       ! build land patches
       CALL landpatch_build(lc_year)
+
+      ! build land 2m WMO patches
+      CALL land2mwmo_init
       IF (DEF_Output_2mWMO) THEN
          CALL land2mwmo_build(lc_year)
       ENDIF
@@ -475,8 +478,7 @@ IF (.not. (skip_rest)) THEN
 ENDIF
 
       ! deallocate 2m WMO log array
-      IF (allocated (wmo_patch )) deallocate (wmo_patch )
-      IF (allocated (wmo_source)) deallocate (wmo_source)
+      CALL land2mwmo_final
 
 ! ................................................................
 ! 4. Write out time info.
