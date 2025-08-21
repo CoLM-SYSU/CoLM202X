@@ -231,7 +231,7 @@ CONTAINS
    integer  :: lbc_typ_sub
    real(r8) :: lbc_val_sub
 
-   real(r8) :: w_sum_before, w_sum_after
+   real(r8) :: w_sum_before, w_sum_after, vl_before(nlev), wt_before, wa_before, dp_before
 
    real(r8) :: tol_q, tol_z, tol_v, tol_p
 
@@ -263,6 +263,11 @@ CONTAINS
          ENDIF
       ENDDO
       w_sum_before = w_sum_before + wa
+
+      vl_before = ss_vliq
+      wt_before = zwt
+      wa_before = wa
+      dp_before = ss_dp
 
       ! transpiration
       IF(.not. DEF_USE_PLANTHYDRAULICS)THEN
@@ -432,10 +437,13 @@ CONTAINS
 
       IF (abs(wblc) > tolerance) THEN
          write(*,*) 'soil_water_vertical_movement balance error: ', wblc, ' in mm.'
-         write(*,*) 'qtop: ', qgtop, 'etr: ', sum(etroot)+etrdef, 'rsubst: ', rsubst, 'surf dep: ', ss_dp
+         write(*,*) 'qtop: ', qgtop, 'etr: ', sum(etroot)+etrdef, 'rsubst: ', rsubst
          write(*,*) 'permeable (1-10): ', is_permeable
-         write(*,*) 'vliq  (1-10): ', ss_vliq
-         write(*,*) 'porsl (1-10): ', porsl
+         write(*,*) 'porsl (1-10) : ', porsl
+         write(*,*) 'ponding depth: ', dp_before, '(before) to ', ss_dp, '(after)'
+         write(*,*) 'vliq  (1-10) : ', vl_before, '(before) to ', ss_vliq, '(after)'
+         write(*,*) 'water table  : ', wt_before, '(before) to ', zwt, '(after)'
+         write(*,*) 'aquifer      : ', wa_before, '(before) to ', wa, '(after)'
       ENDIF
 
       DO ilev = 1, nlev
