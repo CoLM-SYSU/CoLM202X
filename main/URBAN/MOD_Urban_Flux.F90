@@ -1933,7 +1933,7 @@ ENDIF
             etr_dtl = rhoair * (1.-fwet) * delta * lai/(rb(i)+rs) &
                     * ( 1. - fc(3)/(rv*(1/rd(2) + fg*fgimp*fwet_gimp/rd(1) + &
                                     fg*fgper/(rss_+rd(1)) + fc(3)/rv)) &
-                           - fc(3)*aQ*aQ/(rv*CQ*(1-aQ/(cQ*rd(2))-bQ/(cQ*rd(3)))) )
+                           - fc(3)*aQ*aQ/(rv*cQ*(1-aQ/(cQ*rd(2))-bQ/(cQ*rd(3)))) )
          ENDIF
 
 IF ( DEF_URBAN_Irrigation ) THEN

@@ -36,7 +36,7 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
    USE MOD_LandUrban
    USE MOD_LandElm
    USE MOD_Mesh
-   USE MOD_Vars_Global, only: N_URB
+   USE MOD_Vars_Global, only: N_URB, nl_roof, nl_wall, nl_soil
    USE MOD_Urban_Const_LCZ
 #ifdef RangeCheck
    USE MOD_RangeCheck
@@ -704,7 +704,7 @@ ENDIF
       ENDIF
 
       ! output
-      landname = trim(landsrfdir)//'/LUCY_region_id.nc'
+      landname = trim(dir_srfdata) // '/urban/'//trim(cyear)//'/LUCY_region_id.nc'
       CALL ncio_create_file_vector (landname, landurban)
       CALL ncio_define_dimension_vector (landname, landurban, 'urban')
       CALL ncio_write_vector (landname, 'LUCY_id', 'urban', landurban, LUCY_rid, DEF_Srfdata_CompressLevel)
