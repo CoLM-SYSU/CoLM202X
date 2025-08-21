@@ -14,7 +14,7 @@ MODULE MOD_UrbanReadin
 ! !REVISIONS:
 !  05/2023, Wenzong Dong, Hua Yuan: porting codes to MPI parallel version.
 !
-!  08/2025, Hua Yuan and Wenzong Dong: unifying the urban surface data
+!  08/2025, Wenzong Dong, Hua Yuan: unifying the urban surface data
 !           code for different urban type schemes.
 !
 !-----------------------------------------------------------------------
@@ -71,8 +71,8 @@ CONTAINS
    real(r8), allocatable :: lvehicle     (:,:) ! vehicle numbers per thousand people
 
    ! thickness of roof and wall
-   real(r8), allocatable :: thickroof     (:)  ! thickness of roof [m]
-   real(r8), allocatable :: thickwall     (:)  ! thickness of wall [m]
+   real(r8), allocatable :: thickroof(:)       ! thickness of roof [m]
+   real(r8), allocatable :: thickwall(:)       ! thickness of wall [m]
 
       write(cyear,'(i4.4)') lc_year
 
@@ -81,42 +81,68 @@ CONTAINS
       allocate (thickwall (numurban))
 
 #ifdef SinglePoint
-      lucyid(:) = SITE_lucyid
+      froof        (:) = SITE_froof
+      hroof        (:) = SITE_hroof
+      hlr          (:) = SITE_hlr
+      fgper        (:) = SITE_fgper
 
-      froof (:) = SITE_froof
-      hroof (:) = SITE_hroof
-      hlr   (:) = SITE_hlr
-      fgper (:) = SITE_fgper
+      flake        (:) = SITE_flake_urb
+      fveg_urb     (:) = SITE_fveg_urb
+      htop_urb     (:) = SITE_htop_urb
 
-      flake   (:) = SITE_flake_urb
-      fveg_urb(:) = SITE_fveg_urb
-      htop_urb(:) = SITE_htop_urb
+      em_roof      (:) = SITE_em_roof
+      em_wall      (:) = SITE_em_wall
+      em_gimp      (:) = SITE_em_gimp
+      em_gper      (:) = SITE_em_gper
 
-      pop_den(:) = SITE_popden
+      t_roommax    (:) = SITE_t_roommax
+      t_roommin    (:) = SITE_t_roommin
+      thickroof    (:) = SITE_thickroof
+      thickwall    (:) = SITE_thickwall
 
-      em_roof(:) = SITE_em_roof
-      em_wall(:) = SITE_em_wall
-      em_gimp(:) = SITE_em_gimp
-      em_gper(:) = SITE_em_gper
+      alb_roof (:,:,1) = SITE_alb_roof
+      alb_wall (:,:,1) = SITE_alb_wall
+      alb_gimp (:,:,1) = SITE_alb_gimp
+      alb_gper (:,:,1) = SITE_alb_gper
 
-      t_roommax(:) = SITE_t_roommax
-      t_roommin(:) = SITE_t_roommin
-      thickroof(:) = SITE_thickroof
-      thickwall(:) = SITE_thickwall
+      cv_roof    (:,1) = SITE_cv_roof
+      cv_wall    (:,1) = SITE_cv_wall
+      cv_gimp    (:,1) = SITE_cv_gimp
+      tk_roof    (:,1) = SITE_tk_roof
+      tk_wall    (:,1) = SITE_tk_wall
+      tk_gimp    (:,1) = SITE_tk_gimp
 
-      alb_roof(:,:,1) = SITE_alb_roof
-      alb_wall(:,:,1) = SITE_alb_wall
-      alb_gimp(:,:,1) = SITE_alb_gimp
-      alb_gper(:,:,1) = SITE_alb_gper
+      lucyid       (:) = SITE_lucyid
+      pop_den      (:) = SITE_popden
 
-      cv_roof(:,1) = SITE_cv_roof
-      cv_wall(:,1) = SITE_cv_wall
-      cv_gimp(:,1) = SITE_cv_gimp
-      tk_roof(:,1) = SITE_tk_roof
-      tk_wall(:,1) = SITE_tk_wall
-      tk_gimp(:,1) = SITE_tk_gimp
 #else
       ! READ in urban data
+      !-----------------------------------
+
+      lndname = trim(dir_landdata)//'/urban/'//trim(cyear)//'/WT_ROOF.nc'
+      CALL ncio_read_vector (lndname, 'WT_ROOF'       , landurban, froof   )
+
+      lndname = trim(dir_landdata)//'/urban/'//trim(cyear)//'/HT_ROOF.nc'
+      CALL ncio_read_vector (lndname, 'HT_ROOF'       , landurban, hroof   )
+
+      lndname = trim(dir_landdata)//'/urban/'//trim(cyear)//'/HLR_BLD.nc'
+      CALL ncio_read_vector (lndname, 'BUILDING_HLR'  , landurban, hlr    )
+
+      lndname = trim(dir_landdata)//'/urban/'//trim(cyear)//'/PCT_Tree.nc'
+      CALL ncio_read_vector (lndname, 'PCT_Tree'      , landurban, fveg_urb)
+
+      lndname = trim(dir_landdata)//'/urban/'//trim(cyear)//'/htop_urb.nc'
+      CALL ncio_read_vector (lndname, 'URBAN_TREE_TOP', landurban, htop_urb)
+
+      lndname = trim(dir_landdata)//'/urban/'//trim(cyear)//'/PCT_Water.nc'
+      CALL ncio_read_vector (lndname, 'PCT_Water'     , landurban, flake   )
+
+      lndname = trim(dir_landdata)//'/urban/'//trim(cyear)//'/LUCY_region_id.nc'
+      CALL ncio_read_vector (lndname, 'LUCY_id'       , landurban, lucyid  )
+
+      lndname = trim(dir_landdata)//'/urban/'//trim(cyear)//'/POP.nc'
+      CALL ncio_read_vector (lndname, 'POP_DEN'       , landurban, pop_den )
+
       lndname = trim(dir_landdata)//'/urban/'//trim(cyear)//'/urban.nc'
 
       ! pervious fraction to ground area
@@ -162,30 +188,6 @@ CONTAINS
       ! thermal conductivity of impervious road [W/m-K]
       CALL ncio_read_vector (lndname, 'TK_IMPROAD'    , nl_soil, landurban, tk_gimp)
 
-      !TODO: Variables distinguish between time-varying and time-invariant variables
-      lndname = trim(dir_landdata)//'/urban/'//trim(cyear)//'/POP.nc'
-      CALL ncio_read_vector (lndname, 'POP_DEN'       , landurban, pop_den )
-
-      lndname = trim(dir_landdata)//'/urban/'//trim(cyear)//'/LUCY_region_id.nc'
-      CALL ncio_read_vector (lndname, 'LUCY_id'       , landurban, lucyid  )
-
-      lndname = trim(dir_landdata)//'/urban/'//trim(cyear)//'/WT_ROOF.nc'
-      CALL ncio_read_vector (lndname, 'WT_ROOF'       , landurban, froof   )
-
-      lndname = trim(dir_landdata)//'/urban/'//trim(cyear)//'/HT_ROOF.nc'
-      CALL ncio_read_vector (lndname, 'HT_ROOF'       , landurban, hroof   )
-
-      lndname = trim(dir_landdata)//'/urban/'//trim(cyear)//'/HLR_BLD.nc'
-      CALL ncio_read_vector (lndname, 'BUILDING_HLR'  , landurban, hlr    )
-
-      lndname = trim(dir_landdata)//'/urban/'//trim(cyear)//'/PCT_Water.nc'
-      CALL ncio_read_vector (lndname, 'PCT_Water'     , landurban, flake   )
-
-      lndname = trim(dir_landdata)//'/urban/'//trim(cyear)//'/PCT_Tree.nc'
-      CALL ncio_read_vector (lndname, 'PCT_Tree'      , landurban, fveg_urb)
-
-      lndname = trim(dir_landdata)//'/urban/'//trim(cyear)//'/htop_urb.nc'
-      CALL ncio_read_vector (lndname, 'URBAN_TREE_TOP', landurban, htop_urb)
 #endif
 
       dir_runtime = DEF_dir_runtime
@@ -205,35 +207,8 @@ CONTAINS
             i       = urban2patch (u)
             lucy_id = lucyid      (u)
 
-            IF (DEF_URBAN_LUCY) THEN
-               IF (lucy_id > 0) THEN
-                  vehicle      (:,u) = lvehicle      (lucy_id,:)
-                  week_holiday (:,u) = lweek_holiday (lucy_id,:)
-                  weh_prof     (:,u) = lweh_prof     (lucy_id,:)
-                  wdh_prof     (:,u) = lwdh_prof     (lucy_id,:)
-                  hum_prof     (:,u) = lhum_prof     (lucy_id,:)
-                  fix_holiday  (:,u) = lfix_holiday  (lucy_id,:)
-               ENDIF
-            ELSE
-               pop_den        (u) = 0.
-               vehicle      (:,u) = 0.
-               week_holiday (:,u) = 0.
-               weh_prof     (:,u) = 0.
-               wdh_prof     (:,u) = 0.
-               hum_prof     (:,u) = 0.
-               fix_holiday  (:,u) = 0.
-            ENDIF
-
-            thick_roof = thickroof (u) !thickness of roof [m]
-            thick_wall = thickwall (u) !thickness of wall [m]
-
             IF (all(cv_gimp(:,u)==0)) THEN
                fgper(u) = 1.
-            ENDIF
-
-            IF ( .not. DEF_URBAN_BEM) THEN
-               t_roommax(u) = 373.16
-               t_roommin(u) = 180.00
             ENDIF
 
             IF (DEF_URBAN_WATER) THEN
@@ -270,6 +245,9 @@ CONTAINS
             htop    (i) = htop_urb (u)
             hbot    (i) = hbot_urb (u)
 
+            thick_roof = thickroof (u) !thickness of roof [m]
+            thick_wall = thickwall (u) !thickness of wall [m]
+
             ! roof and wall layer node depth
             DO l=1, nl_roof
                z_roof(l,u) = (l-0.5)*(thickroof(u)/nl_roof)
@@ -296,6 +274,30 @@ CONTAINS
             !NOTE: USE global lake depth right now, the below set to 1m
             !lakedepth(npatch) = 1.
             !dz_lake(:,npatch) = lakedepth(npatch) / nl_lake
+
+            IF ( .not. DEF_URBAN_BEM) THEN
+               t_roommax(u) = 373.16
+               t_roommin(u) = 180.00
+            ENDIF
+
+            IF (DEF_URBAN_LUCY) THEN
+               IF (lucy_id > 0) THEN
+                  vehicle      (:,u) = lvehicle      (lucy_id,:)
+                  week_holiday (:,u) = lweek_holiday (lucy_id,:)
+                  weh_prof     (:,u) = lweh_prof     (lucy_id,:)
+                  wdh_prof     (:,u) = lwdh_prof     (lucy_id,:)
+                  hum_prof     (:,u) = lhum_prof     (lucy_id,:)
+                  fix_holiday  (:,u) = lfix_holiday  (lucy_id,:)
+               ENDIF
+            ELSE
+               pop_den        (u) = 0.
+               vehicle      (:,u) = 0.
+               week_holiday (:,u) = 0.
+               weh_prof     (:,u) = 0.
+               wdh_prof     (:,u) = 0.
+               hum_prof     (:,u) = 0.
+               fix_holiday  (:,u) = 0.
+            ENDIF
 
          ENDDO
       ENDIF
