@@ -166,16 +166,17 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
    integer  :: ityp
    integer , allocatable, dimension(:) :: typindex
    real(r8), allocatable :: LUCY_rid_r8 (:)
-   logical  :: first_call_LSAI_urban
 #endif
+   logical  :: first_call_LSAI_urban
 
 #ifdef SrfdataDiag
       allocate( typindex(N_URB) )
-      first_call_LSAI_urban = .true.
 #endif
 
       write(cyear,'(i4.4)') lc_year
       landsrfdir = trim(dir_srfdata) // '/urban/' // trim(cyear)
+
+      first_call_LSAI_urban = .true.
 
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
