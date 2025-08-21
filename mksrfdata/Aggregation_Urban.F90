@@ -364,17 +364,17 @@ ENDIF
       typindex = (/(ityp, ityp = 1, N_URB)/)
       landname  = trim(dir_srfdata) // '/diag/ht_roof_'//trim(cyear)//'.nc'
       CALL srfdata_map_and_write (ht_roof, landurban%settyp, typindex, m_urb2diag, &
-         -1.0e36_r8, landname, 'HT_ROOF', compress = 0, write_mode = 'one', defval=0._r8, create_mode=.true.)
+         -1.0e36_r8, landname, 'HT_ROOF', compress = 0, write_mode = 'one', defval = 0._r8, create_mode = .true.)
 
       typindex = (/(ityp, ityp = 1, N_URB)/)
       landname  = trim(dir_srfdata) // '/diag/wt_roof_'//trim(cyear)//'.nc'
       CALL srfdata_map_and_write (wt_roof, landurban%settyp, typindex, m_urb2diag, &
-         -1.0e36_r8, landname, 'WT_ROOF', compress = 0, write_mode = 'one', defval=0._r8, create_mode=.true.)
+         -1.0e36_r8, landname, 'WT_ROOF', compress = 0, write_mode = 'one', defval = 0._r8, create_mode = .true.)
 
       typindex = (/(ityp, ityp = 1, N_URB)/)
       landname  = trim(dir_srfdata) // '/diag/hlr_bld_'//trim(cyear)//'.nc'
       CALL srfdata_map_and_write (wt_roof, landurban%settyp, typindex, m_urb2diag, &
-         -1.0e36_r8, landname, 'BUILDING_HLR', compress = 0, write_mode = 'one', defval=0._r8, create_mode=.true.)
+         -1.0e36_r8, landname, 'BUILDING_HLR', compress = 0, write_mode = 'one', defval=0._r8, create_mode = .true.)
 #endif
 
 #ifdef USEMPI
@@ -460,12 +460,12 @@ ENDIF
       typindex = (/(ityp, ityp = 1, N_URB)/)
       landname  = trim(dir_srfdata) // '/diag/pct_urban_tree_'//trim(cyear)//'.nc'
       CALL srfdata_map_and_write (pct_tree, landurban%settyp, typindex, m_urb2diag, &
-         -1.0e36_r8, landname, 'PCT_Urban_Tree', compress = 0, write_mode = 'one', defval=0._r8, create_mode=.true.)
+         -1.0e36_r8, landname, 'PCT_Urban_Tree', compress = 0, write_mode = 'one', defval = 0._r8, create_mode = .true.)
 
       typindex = (/(ityp, ityp = 1, N_URB)/)
       landname  = trim(dir_srfdata) // '/diag/htop_urban_'//trim(cyear)//'.nc'
       CALL srfdata_map_and_write (htop_urb, landurban%settyp, typindex, m_urb2diag, &
-         -1.0e36_r8, landname, 'Urban_Tree_HTOP', compress = 0, write_mode = 'one', defval=0._r8, create_mode=.true.)
+         -1.0e36_r8, landname, 'Urban_Tree_HTOP', compress = 0, write_mode = 'one', defval = 0._r8, create_mode = .true.)
 #endif
 
 #ifdef USEMPI
@@ -583,12 +583,12 @@ ENDIF
             landname  = trim(dir_srfdata) // '/diag/LAI_urban_'//trim(iyear)//'.nc'
             CALL srfdata_map_and_write (lai_urb, landurban%settyp, typindex, m_urb2diag, &
                   -1.0e36_r8, landname, 'Urban_Tree_LAI', compress = 0, write_mode = 'one',  &
-                  lastdimname = 'Itime', lastdimvalue = imonth, defval=0._r8, create_mode=first_call_LSAI_urban)
+                  lastdimname = 'Itime', lastdimvalue = imonth, defval = 0._r8, create_mode = first_call_LSAI_urban)
 
             landname  = trim(dir_srfdata) // '/diag/SAI_urban_'//trim(iyear)//'.nc'
             CALL srfdata_map_and_write (sai_urb, landurban%settyp, typindex, m_urb2diag, &
                   -1.0e36_r8, landname, 'Urban_Tree_SAI', compress = 0, write_mode = 'one',  &
-                  lastdimname = 'Itime', lastdimvalue = imonth, defval=0._r8, create_mode=first_call_LSAI_urban)
+                  lastdimname = 'Itime', lastdimvalue = imonth, defval = 0._r8, create_mode = first_call_LSAI_urban)
 
             IF (first_call_LSAI_urban) first_call_LSAI_urban = .false.
 #endif
@@ -657,7 +657,7 @@ ENDIF
       typindex = (/(ityp, ityp = 1, N_URB)/)
       landname  = trim(dir_srfdata) // '/diag/pct_urban_water_'//trim(cyear)//'.nc'
       CALL srfdata_map_and_write (pct_water, landurban%settyp, typindex, m_urb2diag, &
-         -1.0e36_r8, landname, 'PCT_Urban_Water', compress = 0, write_mode = 'one', defval=0._r8, create_mode=.true.)
+         -1.0e36_r8, landname, 'PCT_Urban_Water', compress = 0, write_mode = 'one', defval = 0._r8, create_mode = .true.)
 #endif
 
 #ifdef USEMPI
@@ -719,7 +719,7 @@ ENDIF
       ENDIF
 
       CALL srfdata_map_and_write (LUCY_rid_r8, landurban%settyp, typindex, m_urb2diag, &
-         -1.0e36_r8, landname, 'LUCY_id', compress = 0, write_mode = 'one', defval=0._r8, create_mode=.true.)
+         -1.0e36_r8, landname, 'LUCY_id', compress = 0, write_mode = 'one', defval = 0._r8, create_mode = .true.)
 #endif
 
 #ifdef USEMPI
@@ -794,7 +794,7 @@ ENDIF
       typindex = (/(ityp, ityp = 1, N_URB)/)
       landname  = trim(dir_srfdata) // '/diag/population_urban_'//trim(cyear)//'.nc'
       CALL srfdata_map_and_write (pop_den, landurban%settyp, typindex, m_urb2diag, &
-         -1.0e36_r8, landname, 'POP_DEN', compress = 0, write_mode = 'one', defval=0._r8, create_mode=.true.)
+         -1.0e36_r8, landname, 'POP_DEN', compress = 0, write_mode = 'one', defval = 0._r8, create_mode = .true.)
 #endif
 
 #ifdef USEMPI
@@ -1108,79 +1108,79 @@ ENDIF
       landname  = trim(dir_srfdata) // '/diag/pct_urban_'//trim(cyear)//'.nc'
       CALL srfdata_map_and_write (urb_pct, landurban%settyp, typindex, m_urb2diag, &
          -1.0e36_r8, landname, 'URBAN_PCT', compress = 0, write_mode = 'one', &
-         stat_mode = 'fraction', defval=0._r8, create_mode=.true.)
+         stat_mode = 'fraction', defval = 0._r8, pctshared = urb_pct, create_mode = .true.)
 
       typindex = (/(ityp, ityp = 1, N_URB)/)
       landname  = trim(dir_srfdata) // '/diag/urban_phyical_paras_'//trim(cyear)//'.nc'
       CALL srfdata_map_and_write (fgper, landurban%settyp, typindex, m_urb2diag, &
          -1.0e36_r8, landname, 'WTROAD_PERV', compress = 0, write_mode = 'one', &
-         stat_mode = 'fraction', defval=0._r8, create_mode=.true.)
+         stat_mode = 'fraction', defval = 0._r8, create_mode = .true.)
 
       CALL srfdata_map_and_write (em_roof, landurban%settyp, typindex, m_urb2diag, &
-         -1.0e36_r8, landname, 'EM_ROOF', compress = 0, write_mode = 'one', defval=0._r8)
+         -1.0e36_r8, landname, 'EM_ROOF', compress = 0, write_mode = 'one', defval = 0._r8)
 
       CALL srfdata_map_and_write (em_wall, landurban%settyp, typindex, m_urb2diag, &
-         -1.0e36_r8, landname, 'EM_WALL', compress = 0, write_mode = 'one', defval=0._r8)
+         -1.0e36_r8, landname, 'EM_WALL', compress = 0, write_mode = 'one', defval = 0._r8)
 
       CALL srfdata_map_and_write (em_gper, landurban%settyp, typindex, m_urb2diag, &
-         -1.0e36_r8, landname, 'EM_PERROAD', compress = 0, write_mode = 'one', defval=0._r8)
+         -1.0e36_r8, landname, 'EM_PERROAD', compress = 0, write_mode = 'one', defval = 0._r8)
 
       CALL srfdata_map_and_write (em_gimp, landurban%settyp, typindex, m_urb2diag, &
-         -1.0e36_r8, landname, 'EM_IMPROAD', compress = 0, write_mode = 'one', defval=0._r8)
+         -1.0e36_r8, landname, 'EM_IMPROAD', compress = 0, write_mode = 'one', defval = 0._r8)
 
       CALL srfdata_map_and_write (thk_roof, landurban%settyp, typindex, m_urb2diag, &
-         -1.0e36_r8, landname, 'THICK_ROOF', compress = 0, write_mode = 'one', defval=0._r8)
+         -1.0e36_r8, landname, 'THICK_ROOF', compress = 0, write_mode = 'one', defval = 0._r8)
 
       CALL srfdata_map_and_write (thk_wall, landurban%settyp, typindex, m_urb2diag, &
-         -1.0e36_r8, landname, 'THICK_WALL', compress = 0, write_mode = 'one', defval=0._r8)
+         -1.0e36_r8, landname, 'THICK_WALL', compress = 0, write_mode = 'one', defval = 0._r8)
 
       CALL srfdata_map_and_write (tbld_min, landurban%settyp, typindex, m_urb2diag, &
-         -1.0e36_r8, landname, 'T_BUILDING_MIN', compress = 0, write_mode = 'one', defval=0._r8)
+         -1.0e36_r8, landname, 'T_BUILDING_MIN', compress = 0, write_mode = 'one', defval = 0._r8)
 
       CALL srfdata_map_and_write (tbld_max, landurban%settyp, typindex, m_urb2diag, &
-         -1.0e36_r8, landname, 'T_BUILDING_MAX', compress = 0, write_mode = 'one', defval=0._r8)
+         -1.0e36_r8, landname, 'T_BUILDING_MAX', compress = 0, write_mode = 'one', defval = 0._r8)
 
       DO il = 1, nl_roof
          CALL srfdata_map_and_write (cv_roof(il,:), landurban%settyp, typindex, m_urb2diag, &
             -1.0e36_r8, landname, 'CV_ROOF', compress = 0, write_mode = 'one',    &
-            lastdimname = 'ulev', lastdimvalue = il, defval=0._r8)
+            lastdimname = 'ulev', lastdimvalue = il, defval = 0._r8)
 
          CALL srfdata_map_and_write (tk_roof(il,:), landurban%settyp, typindex, m_urb2diag, &
             -1.0e36_r8, landname, 'TK_ROOF', compress = 0, write_mode = 'one',    &
-            lastdimname = 'ulev', lastdimvalue = il, defval=0._r8)
+            lastdimname = 'ulev', lastdimvalue = il, defval = 0._r8)
       ENDDO
 
       DO il = 1, nl_wall
          CALL srfdata_map_and_write (cv_wall(il,:), landurban%settyp, typindex, m_urb2diag, &
             -1.0e36_r8, landname, 'CV_WALL', compress = 0, write_mode = 'one',    &
-            lastdimname = 'ulev', lastdimvalue = il, defval=0._r8)
+            lastdimname = 'ulev', lastdimvalue = il, defval = 0._r8)
 
          CALL srfdata_map_and_write (tk_wall(il,:), landurban%settyp, typindex, m_urb2diag, &
             -1.0e36_r8, landname, 'TK_WALL', compress = 0, write_mode = 'one',    &
-            lastdimname = 'ulev', lastdimvalue = il, defval=0._r8)
+            lastdimname = 'ulev', lastdimvalue = il, defval = 0._r8)
       ENDDO
 
       DO il = 1, nl_soil
          CALL srfdata_map_and_write (cv_gimp(il,:), landurban%settyp, typindex, m_urb2diag, &
             -1.0e36_r8, landname, 'CV_IMPROAD', compress = 0, write_mode = 'one',    &
-            lastdimname = 'ulev', lastdimvalue = il, defval=0._r8)
+            lastdimname = 'ulev', lastdimvalue = il, defval = 0._r8)
 
          CALL srfdata_map_and_write (tk_gimp(il,:), landurban%settyp, typindex, m_urb2diag, &
             -1.0e36_r8, landname, 'TK_IMPROAD', compress = 0, write_mode = 'one',    &
-            lastdimname = 'ulev', lastdimvalue = il, defval=0._r8)
+            lastdimname = 'ulev', lastdimvalue = il, defval = 0._r8)
       ENDDO
 
       CALL srfdata_map_and_write (alb_roof(1,1,:), landurban%settyp, typindex, m_urb2diag, &
-         -1.0e36_r8, landname, 'ALB_ROOF', compress = 0, write_mode = 'one', defval=0._r8)
+         -1.0e36_r8, landname, 'ALB_ROOF', compress = 0, write_mode = 'one', defval = 0._r8)
 
       CALL srfdata_map_and_write (alb_wall(1,1,:), landurban%settyp, typindex, m_urb2diag, &
-         -1.0e36_r8, landname, 'ALB_WALL', compress = 0, write_mode = 'one', defval=0._r8)
+         -1.0e36_r8, landname, 'ALB_WALL', compress = 0, write_mode = 'one', defval = 0._r8)
 
       CALL srfdata_map_and_write (alb_gper(1,1,:), landurban%settyp, typindex, m_urb2diag, &
-         -1.0e36_r8, landname, 'ALB_PERROAD', compress = 0, write_mode = 'one', defval=0._r8)
+         -1.0e36_r8, landname, 'ALB_PERROAD', compress = 0, write_mode = 'one', defval = 0._r8)
 
       CALL srfdata_map_and_write (alb_gimp(1,1,:), landurban%settyp, typindex, m_urb2diag, &
-         -1.0e36_r8, landname, 'ALB_IMPROAD', compress = 0, write_mode = 'one', defval=0._r8)
+         -1.0e36_r8, landname, 'ALB_IMPROAD', compress = 0, write_mode = 'one', defval = 0._r8)
 
       deallocate (typindex)
 #endif
