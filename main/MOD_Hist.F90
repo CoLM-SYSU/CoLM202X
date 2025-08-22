@@ -649,7 +649,7 @@ CONTAINS
          CALL write_history_variable_4d ( DEF_hist_vars%alb, &
             a_alb, file_hist, 'f_alb', itime_in_file, &
             'band', 1, 2, 'rtyp', 1, 2, sumarea_dt, filter_dt, &
-            'averaged albedo','%',nac_dt)
+            'averaged albedo','-',nac_dt)
 
          ! averaged bulk surface emissivity
          CALL write_history_variable_2d ( DEF_hist_vars%emis, &
