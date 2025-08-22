@@ -905,13 +905,6 @@ IF((patchtype<=1) .or. is_dry_lake)THEN   ! soil ground only
       sp_zc(1:nl_soil) = z_soisno (1:nl_soil) * 1000.0   ! from meter to mm
       sp_zi(0:nl_soil) = zi_soisno(0:nl_soil) * 1000.0   ! from meter to mm
 
-      ! check consistency between water table location and liquid water content
-      DO j = 1, nl_soil
-         IF ((vol_liq(j) < eff_porosity(j)-1.e-8) .and. (zwtmm <= sp_zi(j-1))) THEN
-            zwtmm = sp_zi(j)
-         ENDIF
-      ENDDO
-
 #ifdef Campbell_SOIL_MODEL
       prms(1,:) = bsw(1:nl_soil)
 #endif
@@ -922,6 +915,21 @@ IF((patchtype<=1) .or. is_dry_lake)THEN   ! soil ground only
       prms(4,1:nl_soil) = sc_vgm   (1:nl_soil)
       prms(5,1:nl_soil) = fc_vgm   (1:nl_soil)
 #endif
+
+      ! check consistency between water table location and liquid water content
+      IF (wa < 0.) THEN
+         IF (zwtmm <= sp_zi(nl_soil)) THEN
+            CALL get_zwt_from_wa ( &
+               porsl(nl_soil), theta_r(nl_soil), psi0(nl_soil), hksati(nl_soil), &
+               nprms, prms(:,nl_soil), 1.e-5, 1.e-8, wa, sp_zi(nl_soil), zwtmm)
+         ENDIF
+      ELSE
+         DO j = 1, nl_soil
+            IF ((vol_liq(j) < eff_porosity(j)-1.e-8) .and. (zwtmm <= sp_zi(j-1))) THEN
+               zwtmm = sp_zi(j)
+            ENDIF
+         ENDDO
+      ENDIF
 
       ! update "vol_liq" in the level containing water table
       ! "vol_liq" in this level refers to volume content in unsaturated part
