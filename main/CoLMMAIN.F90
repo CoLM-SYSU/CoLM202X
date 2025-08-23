@@ -149,8 +149,6 @@ SUBROUTINE CoLMMAIN ( &
    USE MOD_Vars_TimeVariables, only: tlai, tsai, irrig_rate
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
    USE MOD_LandPFT, only: patch_pft_s, patch_pft_e
-   USE MOD_LandPatch, only: landpatch
-   USE MOD_LandElm, only: landelm
    USE MOD_Vars_PFTimeInvariants
    USE MOD_Vars_PFTimeVariables
 #endif
