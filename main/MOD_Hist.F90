@@ -4329,7 +4329,7 @@ ENDIF
       ENDIF
 #else
       IF ( .not. present(acc_num) ) THEN
-         WHERE (acc_vec( /= spval)  acc_vec = acc_vec / nac
+         WHERE (acc_vec /= spval)  acc_vec = acc_vec / nac
       ELSE
          DO i1 = lbound(acc_vec,1), ubound(acc_vec,1)
             DO i2 = lbound(acc_vec,2), ubound(acc_vec,2)
