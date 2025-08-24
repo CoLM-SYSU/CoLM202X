@@ -72,8 +72,6 @@ REAL(KIND=JPRB),ALLOCATABLE,TARGET         :: D2ROFSUB_aAVG(:,:)       !! averag
 REAL(KIND=JPRB),ALLOCATABLE,TARGET         :: D2WEVAPEX_aAVG(:,:)      !! average extracted water evaporation
 real(KIND=JPRB),ALLOCATABLE,TARGET         :: D2WINFILTEX_aAVG(:,:)          !! Infiltration water extracted
 
-REAL(KIND=JPRB),ALLOCATABLE,TARGET         :: D2DAMINF_aAVG(:,:)       !! average reservoir inflow [m3/s]  !!!added
-
 !*** Average diagnostics (1D) for output
 REAL(KIND=JPRB),ALLOCATABLE                :: D1PTHFLW_aAVG(:,:)       !! bifurcation flow (1D, not 2D variable)
 REAL(KIND=JPRB),ALLOCATABLE                :: D1PTHFLWSUM_aAVG(:)      !! bifurcation flow (1D, not 2D variable), all layer sum
@@ -97,7 +95,7 @@ REAL(KIND=JPRB),ALLOCATABLE,TARGET         :: D2GDWRTN_oAVG(:,:)       !! averag
 REAL(KIND=JPRB),ALLOCATABLE,TARGET         :: D2RUNOFF_oAVG(:,:)       !! average input runoff
 REAL(KIND=JPRB),ALLOCATABLE,TARGET         :: D2ROFSUB_oAVG(:,:)       !! average input sub-surface runoff
 REAL(KIND=JPRB),ALLOCATABLE,TARGET         :: D2WEVAPEX_oAVG(:,:)      !! average extracted water evaporation
-REAL(KIND=JPRB),ALLOCATABLE,TARGET         :: D2WINFILTEX_oAVG(:,:)      !! average extracted water evaporation
+REAL(KIND=JPRB),ALLOCATABLE,TARGET         :: D2WINFILTEX_oAVG(:,:)    !! average extracted water evaporation
 REAL(KIND=JPRB),ALLOCATABLE,TARGET         :: D2DAMINF_oAVG(:,:)       !! average reservoir inflow [m3/s]  !!!added
 
 !*** Average diagnostics (1D) for output
@@ -125,10 +123,13 @@ REAL(KIND=JPRD)                 :: P0GLBRIVSTO              !! global river stor
 REAL(KIND=JPRD)                 :: P0GLBFLDSTO              !! global floodplain storage [m3]
 REAL(KIND=JPRD)                 :: P0GLBLEVSTO              !! global protected-side storage [m3] (levee scheme)
 REAL(KIND=JPRD)                 :: P0GLBFLDARE              !! global flooded area       [m2]
+!================================================
+!!!*** dam variable
+REAL(KIND=JPRB),ALLOCATABLE,TARGET         :: D2DAMINF_aAVG(:,:) !! average reservoir inflow [m3/s]
 
 !================================================
 !!!*** levee variables
-REAL(KIND=JPRB),ALLOCATABLE,TARGET         :: D2LEVDPH(:,:)  !! flood depth in protected side (water depth betwen river & levee)
+REAL(KIND=JPRB),ALLOCATABLE,TARGET         :: D2LEVDPH(:,:) !! flood depth in protected side (water depth betwen river & levee)
 
 
 

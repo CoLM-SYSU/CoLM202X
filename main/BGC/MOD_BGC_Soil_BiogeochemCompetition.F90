@@ -14,12 +14,15 @@ MODULE MOD_BGC_Soil_BiogeochemCompetition
 ! Xingjie Lu, 2022, modify original CLM5 to be compatible with CoLM code structure.
 
    USE MOD_Precision
-   USE MOD_Namelist, only: DEF_USE_NITRIF
+   USE MOD_Vars_Global, only: npcropmin
+   USE MOD_Namelist, only: DEF_USE_NITRIF, DEF_USE_NOSTRESSNITROGEN
+   USE MOD_LandPFT, only: patch_pft_s, patch_pft_e
+   USE MOD_Vars_PFTimeInvariants, only: pftclass
    USE MOD_BGC_Vars_1DFluxes, only: &
        pot_f_nit_vr, potential_immob_vr, sminn_to_plant_vr, sminn_to_denit_excess_vr, plant_ndemand, &
        actual_immob_vr, sminn_to_plant, pot_f_nit_vr, actual_immob_nh4_vr, f_nit_vr, &
        smin_nh4_to_plant_vr, pot_f_denit_vr, actual_immob_no3_vr, f_denit_vr, smin_no3_to_plant_vr, &
-       n2_n2o_ratio_denit_vr, f_n2o_nit_vr, f_n2o_denit_vr
+       n2_n2o_ratio_denit_vr, f_n2o_nit_vr, f_n2o_denit_vr, supplement_to_sminn_vr
    USE MOD_BGC_Vars_TimeVariables, only: &
        sminn_vr, smin_no3_vr, smin_nh4_vr, nfixation_prof, fpi_vr, fpi, fpg
    USE MOD_BGC_Vars_TimeInvariants,only: &
@@ -63,6 +66,7 @@ CONTAINS
    real(r8) :: sminn_to_plant_new
    real(r8) :: actual_immob = 0
    real(r8) :: potential_immob = 0
+   integer  :: ivt, ps, pe, m
    !-----------------------------------------------------------------------
 
       sminn_to_plant_new  =  0._r8
@@ -116,6 +120,21 @@ CONTAINS
                ENDIF
 
                sminn_to_plant_vr(j,i) = (sminn_vr(j,i)/deltim) - actual_immob_vr(j,i)
+            ENDIF
+
+            IF (DEF_USE_NOSTRESSNITROGEN) THEN
+               ps = patch_pft_s(i)      
+               pe = patch_pft_e(i)
+               DO m = ps, pe
+                  ivt = pftclass(m)
+                  IF (ivt >= npcropmin) THEN
+                     nlimit(j) = 1
+                     fpi_vr(j,i) = 1.0_r8
+                     actual_immob_vr(j,i) = potential_immob_vr(j,i)
+                     sminn_to_plant_vr(j,i) =  plant_ndemand(i) * nuptake_prof(j)
+                     supplement_to_sminn_vr(j,i) = sum_ndemand_vr(j) - (sminn_vr(j,i)/deltim)
+                  ENDIF 
+               ENDDO
             ENDIF
          ENDDO
 
@@ -318,7 +337,28 @@ CONTAINS
             ! benefit of keeping track of the N additions needed to
             ! eliminate N limitations, so there is still a diagnostic quantity
             ! that describes the degree of N limitation at steady-state.
-
+            IF (DEF_USE_NOSTRESSNITROGEN) THEN
+               ps = patch_pft_s(i)      
+               pe = patch_pft_e(i)
+               DO m = ps, pe
+                  ivt = pftclass(m)
+                  IF (ivt >= npcropmin) THEN
+                     IF (fpi_no3_vr(j) + fpi_nh4_vr(j) < 1._r8) THEN
+                        fpi_nh4_vr(j) = 1.0_r8 - fpi_no3_vr(j)
+                        supplement_to_sminn_vr(j,i) = (potential_immob_vr(j,i) &
+                                                      - actual_immob_no3_vr(j,i)) - actual_immob_nh4_vr(j,i)
+                        ! update to new values that satisfy demand
+                        actual_immob_nh4_vr(j,i) = potential_immob_vr(j,i) -  actual_immob_no3_vr(j,i)   
+                     ENDIF
+                     IF (smin_no3_to_plant_vr(j,i) + smin_nh4_to_plant_vr(j,i) < plant_ndemand(i)*nuptake_prof(j)) THEN
+                        supplement_to_sminn_vr(j,i) = supplement_to_sminn_vr(j,i) + &
+                              (plant_ndemand(i)*nuptake_prof(j) - smin_no3_to_plant_vr(j,i)) - smin_nh4_to_plant_vr(j,i)  ! use old values
+                        smin_nh4_to_plant_vr(j,i) = plant_ndemand(i)*nuptake_prof(j) - smin_no3_to_plant_vr(j,i)
+                     ENDIF
+                     sminn_to_plant_vr(j,i) = smin_no3_to_plant_vr(j,i) + smin_nh4_to_plant_vr(j,i)
+                  ENDIF
+               ENDDO
+            ENDIF
             ! sum up no3 and nh4 fluxes
             fpi_vr(j,i) = fpi_no3_vr(j) + fpi_nh4_vr(j)
             sminn_to_plant_vr(j,i) = smin_no3_to_plant_vr(j,i) + smin_nh4_to_plant_vr(j,i)

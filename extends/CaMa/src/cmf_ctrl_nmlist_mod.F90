@@ -34,7 +34,7 @@ CONTAINS
 SUBROUTINE CMF_CONFIG_NMLIST
 USE YOS_CMF_INPUT,      ONLY: TMPNAM,   NSETFILE,   CSETFILE
 ! run version
-USE YOS_CMF_INPUT,      ONLY: LADPSTP,  LFPLAIN,  LKINE,    LFLDOUT,  LPTHOUT,  LDAMOUT,  &
+USE YOS_CMF_INPUT,      ONLY: LADPSTP,  LFPLAIN,  LKINE,    LFLDOUT,  LPTHOUT,  LDAMOUT,  LDAMIRR,&
                             & LROSPLIT, LGDWDLY,  LSLPMIX,  LMEANSL,  LSEALEV,  LOUTPUT,  &
                             & LRESTART, LSTOONLY, LGRIDMAP, LLEAPYR,  LMAPEND,  LBITSAFE, &
                             & LSTG_ES,  LLEVEE,   LOUTINS,  LOUTINI,  LSEDOUT,  LTRACE,   &
@@ -50,11 +50,11 @@ IMPLICIT NONE
 !* local
 CHARACTER(LEN=8)              :: CREG                 !! 
 !
-NAMELIST/NRUNVER/  LADPSTP,  LFPLAIN,  LKINE,    LFLDOUT,  LPTHOUT,  LDAMOUT,      &
+NAMELIST/NRUNVER/  LADPSTP,  LFPLAIN,  LKINE,    LFLDOUT,  LPTHOUT,  LDAMOUT,  LDAMIRR,&
                    LROSPLIT, LGDWDLY,  LSLPMIX,  LMEANSL,  LSEALEV,  LOUTPUT,      &
                    LRESTART, LSTOONLY, LGRIDMAP, LLEAPYR,  LMAPEND,  LBITSAFE,     &
                    LSTG_ES,  LLEVEE,   LSEDOUT,  LTRACE,   LOUTINS,  LSLOPEMOUTH,  &
-                   LWEVAP,  LWINFILT,  LWEVAPFIX,LWINFILTFIX,LWEXTRACTRIV,       LOUTINI,  LSPAMAT
+                   LWEVAP,  LWINFILT,  LWEVAPFIX,LWINFILTFIX,LWEXTRACTRIV,  LOUTINI,  LSPAMAT
 
 NAMELIST/NDIMTIME/ CDIMINFO, DT, IFRQ_INP
 
@@ -79,12 +79,12 @@ LKINE    = .FALSE.           !! true: use kinematic wave
 LFLDOUT  = .TRUE.            !! true: floodplain flow (high-water channel flow) active
 LPTHOUT  = .FALSE.           !! true: activate bifurcation scheme
 LDAMOUT  = .FALSE.           !! true: activate dam operation
+LDAMIRR  = .FALSE.           !! true: activate water withdrawals for irrigation  (under development)
 LLEVEE   = .FALSE.           !! true: activate levee scheme  (under development)
 LSEDOUT  = .FALSE.           !! true: activate sediment transport (under development)
 LTRACE   = .FALSE.           !! true: activate tracer             (under development)
 LOUTINS  = .FALSE.           !! true: diagnose instantaneous discharge
 LSPAMAT  = .TRUE.            !! true: use quasi sparse matrix (fast but additional memory req)
-
 !!=== this part is used by ECMWF
 LROSPLIT = .FALSE.           !! true: input if surface (Qs) and sub-surface (Qsb) runoff
 LWEVAP   = .FALSE.           !! true: input evaporation to extract from river 
@@ -104,11 +104,11 @@ LSEALEV  = .FALSE.           !! true : boundary condition for variable sea level
 !! restaer & output
 LRESTART = .FALSE.           !! true: initial condition from restart file
 LSTOONLY = .FALSE.           !! true: storage only restart (mainly for data assimilation)
-LOUTPUT  = .FALSE.            !! true: use standard output (to file)
+LOUTPUT  = .FALSE.           !! true: use standard output (to file)
 LOUTINI  = .FALSE.           !! true: output initial storage (netCDF only)
 
 LGRIDMAP = .TRUE.            !! true: for standard XY gridded 2D map
-LLEAPYR  = .FALSE.            !! true: neglect leap year (Feb29 skipped)
+LLEAPYR  = .FALSE.           !! true: neglect leap year (Feb29 skipped)
 LMAPEND  = .FALSE.           !! true: for map data endian conversion
 LBITSAFE = .FALSE.           !! true: for Bit Identical (not used from v410, set in Mkinclude)
 LSTG_ES  = .FALSE.           !! true: for Vector Processor optimization (CMF_OPT_FLDSTG_ES) 
@@ -125,6 +125,7 @@ WRITE(LOGNAM,*) "LKINE   ",  LKINE
 WRITE(LOGNAM,*) "LFLDOUT ",  LFLDOUT
 WRITE(LOGNAM,*) "LPTHOUT ",  LPTHOUT
 WRITE(LOGNAM,*) "LDAMOUT ",  LDAMOUT
+WRITE(LOGNAM,*) "LDAMIRR ",  LDAMIRR
 WRITE(LOGNAM,*) "LLEVEE  ",  LLEVEE
 WRITE(LOGNAM,*) "LSEDOUT ",  LSEDOUT
 WRITE(LOGNAM,*) "LTRACE  ",  LTRACE
@@ -133,8 +134,8 @@ WRITE(LOGNAM,*) ""
 WRITE(LOGNAM,*) "LROSPLIT ", LROSPLIT
 WRITE(LOGNAM,*) "LWEVAP   ", LWEVAP
 WRITE(LOGNAM,*) "LWEVAPFIX", LWEVAPFIX
-write(LOGNAM,*) "LWINFILT   ", LWINFILT
-write(LOGNAM,*) "LWINFILTFIX", LWINFILTFIX
+WRITE(LOGNAM,*) "LWINFILT   ", LWINFILT
+WRITE(LOGNAM,*) "LWINFILTFIX", LWINFILTFIX
 WRITE(LOGNAM,*) "LWEXTRACTRIV", LWEXTRACTRIV
 WRITE(LOGNAM,*) "LGDWDLY  ", LGDWDLY
 WRITE(LOGNAM,*) "LSLPMIX  ", LSLPMIX
@@ -246,7 +247,7 @@ READ(NSETFILE,NML=NPARAM)
 WRITE(LOGNAM,*) ""
 WRITE(LOGNAM,*) "=== NAMELIST, NPARAM ==="
 WRITE(LOGNAM,*) "PMANRIV  ", PMANRIV
-WRITE(LOGNAM,*) "PMANRIV  ", PMANFLD
+WRITE(LOGNAM,*) "PMANFLD  ", PMANFLD
 WRITE(LOGNAM,*) "PGRV     ", PGRV
 WRITE(LOGNAM,*) "PDSTMTH  ", PDSTMTH
 WRITE(LOGNAM,*) "PCADP    ", PCADP

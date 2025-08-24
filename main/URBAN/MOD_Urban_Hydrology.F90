@@ -71,10 +71,11 @@ CONTAINS
         mss_bcpho      ,mss_bcphi      ,mss_ocpho      ,mss_ocphi      ,&
         mss_dst1       ,mss_dst2       ,mss_dst3       ,mss_dst4       ,&
 ! END SNICAR model variables
-
+!  irrigaiton 
+        qflx_irrig_drip,qflx_irrig_flood,qflx_irrig_paddy              ,&
         ! output
         rsur           ,rnof           ,qinfl          ,zwt            ,&
-        wa             ,qcharge        ,smp            ,hk             )
+        wdsrf          ,wa             ,qcharge        ,smp            ,hk)
 
 !=======================================================================
 ! this is the main SUBROUTINE to execute the calculation of URBAN
@@ -183,6 +184,13 @@ CONTAINS
 ! Aerosol Fluxes (Jan. 07, 2023)
 ! END SNICAR model variables
 
+!  For irrigation 
+   real(r8), intent(in) :: &
+        qflx_irrig_drip               ,&! drip irrigation rate [mm/s]
+        qflx_irrig_flood              ,&! flood irrigation rate [mm/s]
+        qflx_irrig_paddy                ! paddy irrigation rate [mm/s]
+!  END irrigation
+
    integer, intent(in) :: &
         imelt_lake(maxsnl+1:nl_soil)    ! lake flag for melting or freezing snow and soil layer [-]
 
@@ -217,6 +225,7 @@ CONTAINS
         fseng            ,&! sensible heat from ground
         fgrnd            ,&! ground heat flux
         zwt              ,&! the depth from ground (soil) surface to water table [m]
+        wdsrf            ,&! depth of surface water [mm]
         wa                 ! water storage in aquifer [mm]
 
    real(r8), intent(out) :: &
@@ -273,14 +282,16 @@ CONTAINS
              qseva_gper  ,qsdew_gper  ,qsubl_gper  ,qfros_gper               ,&
              0.          ,& ! fsno, not active
              rsur_gper   ,rnof_gper   ,qinfl       ,pondmx      ,ssi         ,&
-             wimp        ,smpmin      ,zwt         ,wa          ,qcharge     ,&
+             wimp        ,smpmin      ,zwt         ,wdsrf       ,wa          ,qcharge     ,&
 #if (defined CaMa_Flood)
              flddepth    ,fldfrc      ,qinfl_fld                             ,&
 #endif
 ! SNICAR model variables
              forc_aer                                                        ,&
              mss_bcpho   ,mss_bcphi   ,mss_ocpho   ,mss_ocphi                ,&
-             mss_dst1    ,mss_dst2    ,mss_dst3    ,mss_dst4                  )
+             mss_dst1    ,mss_dst2    ,mss_dst3    ,mss_dst4                 ,&
+!  irrigation variables
+             qflx_irrig_drip   ,qflx_irrig_flood  ,qflx_irrig_paddy            )
 
 !=======================================================================
 ! [2] for roof and impervious road

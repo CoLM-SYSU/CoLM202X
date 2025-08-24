@@ -58,6 +58,7 @@ MODULE MOD_SpatialMapping
       generic,   PUBLIC  :: grid2pset    => grid2pset_2d, grid2pset_3d
 
       procedure, PUBLIC  :: grid2pset_dominant => spatial_mapping_dominant_2d
+      procedure, PUBLIC  :: grid2pset_varvalue => spatial_mapping_varvalue_2d
 
       ! 3) between grid and intersections
       procedure, PUBLIC  :: grid2part => spatial_mapping_grid2part
@@ -2205,6 +2206,118 @@ CONTAINS
       ENDIF
 
    END SUBROUTINE spatial_mapping_dominant_2d
+
+   !-----------------------------------------------------
+   SUBROUTINE spatial_mapping_varvalue_2d (this, gdata, pdata)
+
+   USE MOD_Precision
+   USE MOD_Grid
+   USE MOD_Pixelset
+   USE MOD_DataType
+   USE MOD_SPMD_Task
+   USE MOD_Vars_Global, only: spval
+   IMPLICIT NONE
+
+   class (spatial_mapping_type) :: this
+
+   type(block_data_real8_2d), intent(in) :: gdata
+   real(r8), intent(inout) :: pdata(:)
+
+   ! Local variables
+   integer :: iproc, idest, isrc
+   integer :: ig, ilon, ilat, xblk, yblk, xloc, yloc, iloc, iset, ipart
+
+   real(r8), allocatable :: gbuff(:)
+   type(pointer_real8_1d), allocatable :: pbuff(:)
+   real(r8), allocatable :: pdata_tem(:)
+
+      IF (p_is_io) THEN
+
+         DO iproc = 0, p_np_worker-1
+            IF (this%glist(iproc)%ng > 0) THEN
+
+               allocate (gbuff (this%glist(iproc)%ng))
+
+               DO ig = 1, this%glist(iproc)%ng
+                  ilon = this%glist(iproc)%ilon(ig)
+                  ilat = this%glist(iproc)%ilat(ig)
+                  xblk = this%grid%xblk (ilon)
+                  yblk = this%grid%yblk (ilat)
+                  xloc = this%grid%xloc (ilon)
+                  yloc = this%grid%yloc (ilat)
+
+                  gbuff(ig) = gdata%blk(xblk,yblk)%val(xloc,yloc)
+
+               ENDDO
+
+#ifdef USEMPI
+               idest = p_address_worker(iproc)
+               CALL mpi_send (gbuff, this%glist(iproc)%ng, MPI_DOUBLE, &
+                  idest, mpi_tag_data, p_comm_glb, p_err)
+
+               deallocate (gbuff)
+#endif
+            ENDIF
+         ENDDO
+
+      ENDIF
+
+      IF (p_is_worker) THEN
+
+         allocate (pbuff (0:p_np_io-1))
+         allocate (pdata_tem (size(pdata)))
+
+         DO iproc = 0, p_np_io-1
+            IF (this%glist(iproc)%ng > 0) THEN
+
+               allocate (pbuff(iproc)%val (this%glist(iproc)%ng))
+
+#ifdef USEMPI
+               isrc = p_address_io(iproc)
+               CALL mpi_recv (pbuff(iproc)%val, this%glist(iproc)%ng, MPI_DOUBLE, &
+                  isrc, mpi_tag_data, p_comm_glb, p_stat, p_err)
+#else
+               pbuff(0)%val = gbuff
+               deallocate (gbuff)
+#endif
+            ENDIF
+         ENDDO
+
+         DO iset = 1, this%npset
+
+            IF (this%areapset(iset) > 0.) THEN
+
+               pdata_tem(iset) = 0._r8
+
+               DO ipart = 1, this%npart(iset)
+                  iproc = this%address(iset)%val(1,ipart)
+                  iloc  = this%address(iset)%val(2,ipart)
+
+                  pdata_tem(iset) = pdata_tem(iset) &
+                     + pdata(iset) * pbuff(iproc)%val(iloc) * this%areapart(iset)%val(ipart)
+               ENDDO
+
+               pdata_tem(iset) = pdata_tem(iset) / this%areapset(iset)
+
+            ELSE
+               pdata_tem(iset) = 0._r8
+            ENDIF
+
+         ENDDO
+
+         pdata = pdata_tem
+
+         DO iproc = 0, p_np_io-1
+            IF (this%glist(iproc)%ng > 0) THEN
+               deallocate (pbuff(iproc)%val)
+            ENDIF
+         ENDDO
+         deallocate (pbuff)
+         deallocate (pdata_tem)
+
+      ENDIF
+
+   END SUBROUTINE spatial_mapping_varvalue_2d
 
    !-----------------------------------------------------
    SUBROUTINE spatial_mapping_grid2part (this, gdata, sdata)

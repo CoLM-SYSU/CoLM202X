@@ -77,6 +77,10 @@ PROGRAM CoLM
    USE MOD_LightningData
 #endif
 
+#ifdef CROP
+   USE MOD_CropReadin
+#endif
+
 #ifdef LULCC
    USE MOD_Lulcc_Driver
 #endif
@@ -358,6 +362,10 @@ PROGRAM CoLM
          CALL init_fire_data (sdate(1))
          CALL init_lightning_data (sdate)
       ENDIF
+#endif
+
+#ifdef CROP
+   CALL CROP_readin ()
 #endif
 
 #if (defined CatchLateralFlow)
