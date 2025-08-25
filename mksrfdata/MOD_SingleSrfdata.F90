@@ -1933,8 +1933,8 @@ ELSE
          IF (.not. u_site_emgimp) SITE_em_gimp = emgimp_lcz(utyp)
          IF (.not. u_site_emgper) SITE_em_gper = emgper_lcz(utyp)
 
-         IF (.not. u_site_tbmax) SITE_t_roommax = 297.65
-         IF (.not. u_site_tbmin) SITE_t_roommin = 290.65
+         IF (.not. u_site_tbmax) SITE_t_roommax = tbldmax_lcz(utyp)
+         IF (.not. u_site_tbmin) SITE_t_roommin = tbldmin_lcz(utyp)
 
          IF (.not. u_site_thickr) SITE_thickroof = thkroof_lcz(utyp)
          IF (.not. u_site_thickw) SITE_thickwall = thkwall_lcz(utyp)
