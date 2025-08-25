@@ -360,7 +360,7 @@ MODULE MOD_Namelist
    logical            :: DEF_CheckEquilibrium    = .false.
 
    !2m WMO temperature
-   logical            :: DEF_Output_2mWMO        = .true.
+   logical            :: DEF_Output_2mWMO        = .false.
 
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ! ----- Part 12: forcing -----
