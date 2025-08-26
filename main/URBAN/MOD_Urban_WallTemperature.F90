@@ -85,7 +85,7 @@ CONTAINS
    real(r8), intent(in) :: clwall               !atmospheric infrared (longwave) radiation [W/m2]
    real(r8), intent(in) :: sabwall              !solar radiation absorbed by wall [W/m2]
    real(r8), intent(in) :: fsenwall             !sensible heat flux from wall [W/m2]
-   real(r8), intent(in) :: cwalls               !deriv. of wall energy flux wrt to wall temp [w/m2/k]
+   real(r8), intent(in) :: cwalls               !deriv. of wall energy flux to wall temp [w/m2/k]
 
    real(r8), intent(inout) :: t_wall(1:nl_wall) !wall layers' temperature [K]
    real(r8), intent(inout) :: tkdz_wall         !inner wall heat flux [w/m2/k]

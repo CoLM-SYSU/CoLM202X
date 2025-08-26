@@ -196,18 +196,19 @@ CONTAINS
 
    integer ps, pe
    logical do_capsnow      !true => DO snow capping
-   logical use_snicar_frc  !true: IF radiative forcing is being calculated, first estimate clean-snow albedo
+   logical use_snicar_frc  !true: IF radiative forcing is calculated,
+                           !first estimate clean-snow albedo
    logical use_snicar_ad   !true: use SNICAR_AD_RT, false: use SNICAR_RT
 
    real(r8) snwcp_ice                     !excess precipitation due to snow capping [kg m-2 s-1]
-   real(r8) mss_cnc_bcphi ( maxsnl+1:0 )  !mass concentration of hydrophilic BC (col,lyr) [kg/kg]
-   real(r8) mss_cnc_bcpho ( maxsnl+1:0 )  !mass concentration of hydrophobic BC (col,lyr) [kg/kg]
-   real(r8) mss_cnc_ocphi ( maxsnl+1:0 )  !mass concentration of hydrophilic OC (col,lyr) [kg/kg]
-   real(r8) mss_cnc_ocpho ( maxsnl+1:0 )  !mass concentration of hydrophobic OC (col,lyr) [kg/kg]
-   real(r8) mss_cnc_dst1  ( maxsnl+1:0 )  !mass concentration of dust aerosol species 1 (col,lyr) [kg/kg]
-   real(r8) mss_cnc_dst2  ( maxsnl+1:0 )  !mass concentration of dust aerosol species 2 (col,lyr) [kg/kg]
-   real(r8) mss_cnc_dst3  ( maxsnl+1:0 )  !mass concentration of dust aerosol species 3 (col,lyr) [kg/kg]
-   real(r8) mss_cnc_dst4  ( maxsnl+1:0 )  !mass concentration of dust aerosol species 4 (col,lyr) [kg/kg]
+   real(r8) mss_cnc_bcphi ( maxsnl+1:0 )  !mass concentration of hydrophilic BC [kg/kg]
+   real(r8) mss_cnc_bcpho ( maxsnl+1:0 )  !mass concentration of hydrophobic BC [kg/kg]
+   real(r8) mss_cnc_ocphi ( maxsnl+1:0 )  !mass concentration of hydrophilic OC [kg/kg]
+   real(r8) mss_cnc_ocpho ( maxsnl+1:0 )  !mass concentration of hydrophobic OC [kg/kg]
+   real(r8) mss_cnc_dst1  ( maxsnl+1:0 )  !mass concentration of dust aerosol species 1 [kg/kg]
+   real(r8) mss_cnc_dst2  ( maxsnl+1:0 )  !mass concentration of dust aerosol species 2 [kg/kg]
+   real(r8) mss_cnc_dst3  ( maxsnl+1:0 )  !mass concentration of dust aerosol species 3 [kg/kg]
+   real(r8) mss_cnc_dst4  ( maxsnl+1:0 )  !mass concentration of dust aerosol species 4 [kg/kg]
 
 ! ----------------------------------------------------------------------
 ! 1. Initial set
@@ -219,7 +220,6 @@ CONTAINS
 
 ! ----------------------------------------------------------------------
 ! set default soil and vegetation albedos and solar absorption
-      !TODO: need double check
       alb (:,:) = 1.       !averaged
       albg(:,:) = 1.       !ground
       albv(:,:) = 1.       !vegetation
@@ -229,7 +229,7 @@ CONTAINS
       tran(:,2) = 1.       !incident diffuse radiation diffuse transmittance
       tran(:,3) = 1.       !incident direct  radiation direct  transmittance
 
-      ! 07/06/2023, yuan: use the values of previous timestep.
+      ! 07/06/2023, yuan: use the values of previous timestep
       ! for nighttime longwave calculations.
       !thermk   = 1.e-3
       IF (lai+sai <= 1.e-6) THEN
@@ -238,11 +238,11 @@ CONTAINS
       extkb     = 1.
       extkd     = 0.718
 
-      albsno    (:,:) = 0. !set initial snow albedo
-      albsno_pur(:,:) = 0. !set initial pure snow albedo
-      albsno_bc (:,:) = 0. !set initial BC   snow albedo
-      albsno_oc (:,:) = 0. !set initial OC   snow albedo
-      albsno_dst(:,:) = 0. !set initial dust snow albedo
+      albsno    (:,:) = 1. !set initial snow albedo
+      albsno_pur(:,:) = 1. !set initial pure snow albedo
+      albsno_bc (:,:) = 1. !set initial BC   snow albedo
+      albsno_oc (:,:) = 1. !set initial OC   snow albedo
+      albsno_dst(:,:) = 1. !set initial dust snow albedo
 
       ! soil and snow absorption
       ssoi      (:,:) = 0. !set initial soil absorption
@@ -372,18 +372,19 @@ ENDIF
          ELSE
 
             ! 01/09/2023, yuan: CALL SNICAR for snow albedo
-            use_snicar_frc = .false.  !  true: IF radiative forcing is being calculated, first estimate clean-snow albedo
+            use_snicar_frc = .false.  !  true: IF radiative forcing is being calculated,
+                                      !  first estimate clean-snow albedo
             use_snicar_ad  = .true.   !  use true: use SNICAR_AD_RT, false: use SNICAR_RT
 
-            CALL SnowAlbedo(     use_snicar_frc ,use_snicar_ad  ,coszen         ,&
+            CALL SnowAlbedo(     use_snicar_frc ,use_snicar_ad  ,czen           ,&
                  albg(:,1)      ,albg(:,2)      ,snl            ,fsno           ,&
                  scv            ,wliq_soisno    ,wice_soisno    ,snw_rds        ,&
 
                  mss_cnc_bcphi  ,mss_cnc_bcpho  ,mss_cnc_ocphi  ,mss_cnc_ocpho  ,&
                  mss_cnc_dst1   ,mss_cnc_dst2   ,mss_cnc_dst3   ,mss_cnc_dst4   ,&
 
-                 albsno(:,1)    ,albsno(:,2)    ,albsno_pur(:,1),albsno_pur(:,2),&
-                 albsno_bc(:,1) ,albsno_bc(:,2) ,albsno_oc(:,1) ,albsno_oc(:,2) ,&
+                 albsno    (:,1),albsno    (:,2),albsno_pur(:,1),albsno_pur(:,2),&
+                 albsno_bc (:,1),albsno_bc (:,2),albsno_oc (:,1),albsno_oc (:,2),&
                  albsno_dst(:,1),albsno_dst(:,2),ssno_lyr(1,1,:),ssno_lyr(2,1,:),&
                  ssno_lyr(1,2,:),ssno_lyr(2,2,:))
 
@@ -414,8 +415,6 @@ ENDIF
                             czen,albg,albv,tran,thermk,extkb,extkd,ssun,ssha)
 
             ! 08/31/2023, yuan: to be consistent with PFT and PC
-            !albv(:,:) = (1.-  wt)*albv(:,:) + wt*albsno(:,:)
-            !alb (:,:) = (1.-fveg)*albg(:,:) + fveg*albv(:,:)
             alb(:,:) = albv(:,:)
 #endif
          ELSE  !other patchtypes (/=0)
@@ -423,8 +422,6 @@ ENDIF
                             czen,albg,albv,tran,thermk,extkb,extkd,ssun,ssha)
 
             ! 08/31/2023, yuan: to be consistent with PFT and PC
-            !albv(:,:) = (1.-  wt)*albv(:,:) + wt*albsno(:,:)
-            !alb (:,:) = (1.-fveg)*albg(:,:) + fveg*albv(:,:)
             alb(:,:) = albv(:,:)
 
          ENDIF
@@ -438,14 +435,13 @@ ENDIF
 #endif
 
 #ifdef LULC_IGBP_PC
-         !NOTE: if patchclass is CROPLAND, using twostream model
-         IF (patchclass(ipatch) == CROPLAND) THEN
-            CALL twostream_wrap (ipatch, czen, albg, albv, tran, ssun, ssha)
-            alb(:,:) = albv(:,:)
-         ELSE
-            CALL ThreeDCanopy_wrap (ipatch, czen, albg, albv, tran, ssun, ssha)
-            alb(:,:) = albv(:,:)
-         ENDIF
+         ! Only process nature PFTs using 3D model if set DEF_PC_CROP_SPLIT true
+         CALL ThreeDCanopy_wrap (ipatch, czen, albg, albv, tran, ssun, ssha)
+
+         ! Process crop PFTs using 1D model if set DEF_PC_CROP_SPLIT true
+         CALL twostream_wrap (ipatch, czen, albg, albv, tran, ssun, ssha)
+
+         alb(:,:) = albv(:,:)
 #endif
       ENDIF
 
@@ -595,7 +591,7 @@ ENDIF
       ENDIF
       zmu2 = zmu * zmu
 
-#if(defined LULC_USGS)
+#if (defined LULC_USGS)
       ! yuan: to be consistent with CoLM2014, no stem considered
       ! for twostream and leaf optical property calculations
       sai_ = 0.
@@ -627,7 +623,6 @@ ENDIF
                  log ( ( proj + coszen * phi2 + coszen * phi1 ) / ( coszen * phi1 ) ) )
 
 ! account for stem optical property effects
-      !TODO-done: betao -> beta0
       upscat = lai/lsai*tau(iw,1) + sai_/lsai*tau(iw,2)
       ! 09/12/2014, yuan: a bug, change 1. - chil -> 1. + chil
       upscat = 0.5 * ( scat + (scat - 2.*upscat) * ((1. + chil) / 2.) ** 2 )
@@ -783,9 +778,9 @@ ENDIF
 
       ENDDO           ! WAVE_BAND_LOOP
 
-! 03/06/2020, yuan: add direct transmittance (s2) to
-!                   tran for incident direct case
-! 03/14/2020, yuan: save direct T to 3rd position of tran
+      ! 03/06/2020, yuan: add direct transmittance (s2) to
+      !                   tran for incident direct case
+      ! 03/14/2020, yuan: save direct T to 3rd position of tran
       tran(:,3) = s2
 
    END SUBROUTINE twostream
@@ -1140,9 +1135,9 @@ ENDIF
          ! re-calculate the absorption, transmission and albedo
          ! for direct radiation
 
-! 03/06/2020, yuan: tran originally meant diffuse flow, now the direct
-!                   transmittance is also included
-! 03/14/2020, yuan: treat soil albedo in direct/diffuse cases
+         ! 03/06/2020, yuan: tran originally meant diffuse flow, now the direct
+         !                   transmittance is also included
+         ! 03/14/2020, yuan: treat soil albedo in direct/diffuse cases
          IF (ic == 1) THEN
             tran(iw,ic) = (s2d*albg(iw,1)*albv(iw,2) + tran(iw,ic)) / (1.-q)
             tran(:,3)   = s2d
@@ -1196,6 +1191,7 @@ ENDIF
    USE MOD_Const_PFT
    USE MOD_Vars_PFTimeInvariants
    USE MOD_Vars_PFTimeVariables
+   USE MOD_Namelist, only: DEF_USE_PC, DEF_PC_CROP_SPLIT
    IMPLICIT NONE
 
 !-------------------------- Dummy Arguments ----------------------------
@@ -1208,7 +1204,7 @@ ENDIF
          albg(2,2)       ! albedos of ground
 
    ! output
-   real(r8), intent(out) :: &
+   real(r8), intent(inout) :: &
          albv(2,2),     &! albedo, vegetation [-]
          tran(2,3),     &! canopy transmittances for solar radiation
          ssun(2,2),     &! sunlit canopy absorption for solar radiation
@@ -1230,6 +1226,15 @@ ENDIF
 
       DO i = ps, pe
          p = pftclass(i)
+
+         ! If defined DEF_PC_CROP_SPLIT, for crop PFTs, use 1D twostream model;
+         ! Otherwise, set their value to PC 3D model results.
+         IF ( DEF_USE_PC .and. (.not.DEF_PC_CROP_SPLIT .or. p.lt.15) ) THEN
+            albv_p(:,:,i) = albv(:,:)
+            tran_p(:,:,i) = tran(:,:)
+            CYCLE
+         ENDIF
+
          IF (lai_p(i)+sai_p(i) > 1.e-6) THEN
             CALL twostream_mod (chil_p(p),rho_p(:,:,p),tau_p(:,:,p),1.,lai_p(i),sai_p(i),&
                  fwet_snow_p(i),coszen,albg,albv_p(:,:,i),tran_p(:,:,i),thermk_p(i),&
@@ -1266,9 +1271,8 @@ ENDIF
       tran(2,2) = sum( tran_p(2,2,ps:pe)*pftfrac(ps:pe) )
       tran(2,3) = sum( tran_p(2,3,ps:pe)*pftfrac(ps:pe) )
 
-      !NOTE: fordebug only below
       IF (ssun(1,1)<0 .or. ssun(1,2)<0 .or. ssun(2,1)<0 .or. ssun(2,2)<0) THEN
-         print *, 'Warning:negative albedo',ipatch
+         print *, 'Warning: negative ssun in albedo calculation!',ipatch
          print *, ssun
       ENDIF
 
@@ -1347,31 +1351,32 @@ ENDIF
                           albgrd_dst    ,albgri_dst    ,flx_absdv     ,flx_absdn     ,&
                           flx_absiv     ,flx_absin      )
 
-   ! !DESCRIPTION:
-   ! The calling sequence is:
-   ! -> SNICAR_RT:   snow albedos: direct beam (SNICAR)
-   !    or
-   !    SNICAR_AD_RT: snow albedos: direct beam (SNICAR-AD)
-   ! -> SNICAR_RT:   snow albedos: diffuse (SNICAR)
-   !    or
-   !    SNICAR_AD_RT:   snow albedos: diffuse (SNICAR-AD)
-   !
-   ! ORIGINAL:
-   ! 1) The Community Land Model version5.0 (CLM5.0)
-   ! 2) Energy Exascale Earth System Model version 2.0 (E3SM v2.0) Land Model (ELM v2.0)
-   !
-   ! REFERENCES:
-   ! 1) Flanner et al, 2021, SNICAR-ADv3: a community tool for modeling spectral snow albedo.
-   ! Geosci. Model Dev., 14, 7673-7704, https://doi.org/10.5194/gmd-14-7673-2021
-   ! 2) Hao et al., 2023, Improving snow albedo modeling in the E3SM land model (version 2.0)
-   ! and assessing its impacts on snow and surface fluxes over the Tibetan Plateau.
-   ! Geosci. Model Dev., 16, 75-94, https://doi.org/10.5194/gmd-16-75-2023
-   !
-   ! REVISIONS:
-   ! Yongjiu Dai, and Hua Yuan, December, 2022 : ASSEMBLING and FITTING
-
-   !-----------------------------------------------------------------------
-   ! !USES:
+!-----------------------------------------------------------------------
+! !DESCRIPTION:
+!  The calling sequence is:
+!  -> SNICAR_RT:   snow albedos: direct beam (SNICAR)
+!     or
+!     SNICAR_AD_RT: snow albedos: direct beam (SNICAR-AD)
+!  -> SNICAR_RT:   snow albedos: diffuse (SNICAR)
+!     or
+!     SNICAR_AD_RT:   snow albedos: diffuse (SNICAR-AD)
+!
+! !ORIGINAL:
+!  1) The Community Land Model version5.0 (CLM5.0)
+!  2) Energy Exascale Earth System Model version 2.0 (E3SM v2.0) Land Model (ELM v2.0)
+!
+! !REFERENCES:
+!  1) Flanner et al, 2021, SNICAR-ADv3: a community tool for modeling spectral snow albedo.
+!  Geosci. Model Dev., 14, 7673-7704, https://doi.org/10.5194/gmd-14-7673-2021
+!  2) Hao et al., 2023, Improving snow albedo modeling in the E3SM land model (version 2.0)
+!  and assessing its impacts on snow and surface fluxes over the Tibetan Plateau.
+!  Geosci. Model Dev., 16, 75-94, https://doi.org/10.5194/gmd-16-75-2023
+!
+! !REVISIONS:
+!  Yongjiu Dai, and Hua Yuan, December, 2022 : ASSEMBLING and FITTING
+!
+!-----------------------------------------------------------------------
+! !USES:
    USE MOD_Vars_Global, only: maxsnl
    USE MOD_SnowSnicar, only: SNICAR_RT, SNICAR_AD_RT
 
@@ -1384,36 +1389,37 @@ ENDIF
 !-------------------------------------------------------------------------
 ! temporary setting
 
-   integer, parameter :: numrad  = 2            !  number of solar radiation bands: vis, nir
-   integer, parameter :: sno_nbr_aer = 8        !  number of aerosol species in snowpack
-   logical, parameter :: DO_SNO_OC   = .true.   !  parameter to include organic carbon (OC)
-   logical, parameter :: DO_SNO_AER  = .true.   !  parameter to include aerosols in snowpack radiative calculations
-   integer, parameter :: subgridflag = 1        !  = 0 USE subgrid fluxes, = 1 not USE subgrid fluxes
+   integer, parameter :: numrad  = 2            ! number of solar radiation bands: vis, nir
+   integer, parameter :: sno_nbr_aer = 8        ! number of aerosol species in snowpack
+   logical, parameter :: DO_SNO_OC   = .true.   ! to include organic carbon (OC)
+   logical, parameter :: DO_SNO_AER  = .true.   ! to include aerosols in snow radiative calculations
+   integer, parameter :: subgridflag = 1        ! = 0 USE subgrid fluxes, = 1 not USE subgrid fluxes
    !
    ! !ARGUMENTS:
    !
-   logical , intent(in) :: use_snicar_frc       !  true: IF radiative forcing is being calculated, first estimate clean-snow albedo
-   logical , intent(in) :: use_snicar_ad        !  true: USE SNICAR_AD_RT, false: USE SNICAR_RT
+   logical , intent(in) :: use_snicar_frc       ! true: IF radiative forcing is being calculated,
+                                                ! first estimate clean-snow albedo
+   logical , intent(in) :: use_snicar_ad        ! true: USE SNICAR_AD_RT, false: USE SNICAR_RT
 
    real(r8), intent(in) :: coszen_col                   ! cosine of solar zenith angle
    real(r8), intent(in) :: albsod        ( numrad )     ! direct-beam soil albedo (col,bnd) [frc]
    real(r8), intent(in) :: albsoi        ( numrad )     ! diffuse soil albedo (col,bnd) [frc]
 
    integer , intent(in) :: snl                          ! negative number of snow layers (col) [nbr]
-   real(r8), intent(in) :: frac_sno                     ! fraction of ground covered by snow (0 to 1)
+   real(r8), intent(in) :: frac_sno                     ! fraction of ground covered by snow (0-1)
    real(r8), intent(in) :: h2osno                       ! snow water equivalent (mm H2O)
    real(r8), intent(in) :: h2osno_liq    ( maxsnl+1:0 ) ! liquid water content (col,lyr) [kg/m2]
    real(r8), intent(in) :: h2osno_ice    ( maxsnl+1:0 ) ! ice lens content (col,lyr) [kg/m2]
    real(r8), intent(in) :: snw_rds       ( maxsnl+1:0 ) ! snow grain radius (col,lyr) [microns]
 
-   real(r8), intent(in) :: mss_cnc_bcphi ( maxsnl+1:0 ) ! mass concentration of hydrophilic BC (col,lyr) [kg/kg]
-   real(r8), intent(in) :: mss_cnc_bcpho ( maxsnl+1:0 ) ! mass concentration of hydrophobic BC (col,lyr) [kg/kg]
-   real(r8), intent(in) :: mss_cnc_ocphi ( maxsnl+1:0 ) ! mass concentration of hydrophilic OC (col,lyr) [kg/kg]
-   real(r8), intent(in) :: mss_cnc_ocpho ( maxsnl+1:0 ) ! mass concentration of hydrophobic OC (col,lyr) [kg/kg]
-   real(r8), intent(in) :: mss_cnc_dst1  ( maxsnl+1:0 ) ! mass concentration of dust aerosol species 1 (col,lyr) [kg/kg]
-   real(r8), intent(in) :: mss_cnc_dst2  ( maxsnl+1:0 ) ! mass concentration of dust aerosol species 2 (col,lyr) [kg/kg]
-   real(r8), intent(in) :: mss_cnc_dst3  ( maxsnl+1:0 ) ! mass concentration of dust aerosol species 3 (col,lyr) [kg/kg]
-   real(r8), intent(in) :: mss_cnc_dst4  ( maxsnl+1:0 ) ! mass concentration of dust aerosol species 4 (col,lyr) [kg/kg]
+   real(r8), intent(in) :: mss_cnc_bcphi ( maxsnl+1:0 ) ! mass conc. of hydrophilic BC [kg/kg]
+   real(r8), intent(in) :: mss_cnc_bcpho ( maxsnl+1:0 ) ! mass conc. of hydrophobic BC [kg/kg]
+   real(r8), intent(in) :: mss_cnc_ocphi ( maxsnl+1:0 ) ! mass conc. of hydrophilic OC [kg/kg]
+   real(r8), intent(in) :: mss_cnc_ocpho ( maxsnl+1:0 ) ! mass conc. of hydrophobic OC [kg/kg]
+   real(r8), intent(in) :: mss_cnc_dst1  ( maxsnl+1:0 ) ! mass conc. of dust aerosol 1 [kg/kg]
+   real(r8), intent(in) :: mss_cnc_dst2  ( maxsnl+1:0 ) ! mass conc. of dust aerosol 2 [kg/kg]
+   real(r8), intent(in) :: mss_cnc_dst3  ( maxsnl+1:0 ) ! mass conc. of dust aerosol 3 [kg/kg]
+   real(r8), intent(in) :: mss_cnc_dst4  ( maxsnl+1:0 ) ! mass conc. of dust aerosol 4 [kg/kg]
 
    real(r8), intent(out) :: albgrd       ( numrad )     ! ground albedo (direct)
    real(r8), intent(out) :: albgri       ( numrad )     ! ground albedo (diffuse)
@@ -1425,10 +1431,10 @@ ENDIF
    real(r8), intent(out) :: albgri_oc    ( numrad )     ! ground albedo without OC (diffuse)
    real(r8), intent(out) :: albgrd_dst   ( numrad )     ! ground albedo without dust (direct)
    real(r8), intent(out) :: albgri_dst   ( numrad )     ! ground albedo without dust (diffuse)
-   real(r8), intent(out) :: flx_absdv    ( maxsnl+1:1 ) ! direct flux absorption factor (col,lyr): VIS [frc]
-   real(r8), intent(out) :: flx_absdn    ( maxsnl+1:1 ) ! direct flux absorption factor (col,lyr): NIR [frc]
-   real(r8), intent(out) :: flx_absiv    ( maxsnl+1:1 ) ! diffuse flux absorption factor (col,lyr): VIS [frc]
-   real(r8), intent(out) :: flx_absin    ( maxsnl+1:1 ) ! diffuse flux absorption factor (col,lyr): NIR [frc]
+   real(r8), intent(out) :: flx_absdv    ( maxsnl+1:1 ) ! direct flux absorption factor  VIS [frc]
+   real(r8), intent(out) :: flx_absdn    ( maxsnl+1:1 ) ! direct flux absorption factor  NIR [frc]
+   real(r8), intent(out) :: flx_absiv    ( maxsnl+1:1 ) ! diffuse flux absorption factor VIS [frc]
+   real(r8), intent(out) :: flx_absin    ( maxsnl+1:1 ) ! diffuse flux absorption factor NIR [frc]
 
    !-----------------------------------------------------------------------
    !
@@ -1440,46 +1446,51 @@ ENDIF
    integer  :: flg_slr      ! flag for SNICAR (=1 IF direct, =2 IF diffuse)
    integer  :: flg_snw_ice  ! flag for SNICAR (=1 when called from ELM, =2 when called from sea-ice)
 
-   real(r8) :: mss_cnc_aer_in_frc_pur (maxsnl+1:0,sno_nbr_aer) ! mass concentration of aerosol species for forcing calculation (zero) (col,lyr,aer) [kg kg-1]
-   real(r8) :: mss_cnc_aer_in_frc_bc  (maxsnl+1:0,sno_nbr_aer) ! mass concentration of aerosol species for BC forcing (col,lyr,aer) [kg kg-1]
-   real(r8) :: mss_cnc_aer_in_frc_oc  (maxsnl+1:0,sno_nbr_aer) ! mass concentration of aerosol species for OC forcing (col,lyr,aer) [kg kg-1]
-   real(r8) :: mss_cnc_aer_in_frc_dst (maxsnl+1:0,sno_nbr_aer) ! mass concentration of aerosol species for dust forcing (col,lyr,aer) [kg kg-1]
-   real(r8) :: mss_cnc_aer_in_fdb     (maxsnl+1:0,sno_nbr_aer) ! mass concentration of all aerosol species for feedback calculation (col,lyr,aer) [kg kg-1]
+   ! mass concentration of aerosol species for forcing calculation (zero) (lyr,aer) [kg kg-1]
+   real(r8) :: mss_cnc_aer_in_frc_pur (maxsnl+1:0,sno_nbr_aer)
+   ! mass concentration of aerosol species for BC forcing (lyr,aer) [kg kg-1]
+   real(r8) :: mss_cnc_aer_in_frc_bc  (maxsnl+1:0,sno_nbr_aer)
+   ! mass concentration of aerosol species for OC forcing (lyr,aer) [kg kg-1]
+   real(r8) :: mss_cnc_aer_in_frc_oc  (maxsnl+1:0,sno_nbr_aer)
+   ! mass concentration of aerosol species for dust forcing (lyr,aer) [kg kg-1]
+   real(r8) :: mss_cnc_aer_in_frc_dst (maxsnl+1:0,sno_nbr_aer)
+   ! mass concentration of all aerosol species for feedback calculation (lyr,aer) [kg kg-1]
+   real(r8) :: mss_cnc_aer_in_fdb     (maxsnl+1:0,sno_nbr_aer)
 
-   real(r8) :: albsfc       (numrad)             ! albedo of surface underneath snow (col,bnd)
-   real(r8) :: albsnd       (numrad)             ! snow albedo (direct)
-   real(r8) :: albsni       (numrad)             ! snow albedo (diffuse)
-   real(r8) :: albsnd_pur   (numrad)             ! direct pure snow albedo (radiative forcing)
-   real(r8) :: albsni_pur   (numrad)             ! diffuse pure snow albedo (radiative forcing)
-   real(r8) :: albsnd_bc    (numrad)             ! direct snow albedo without BC (radiative forcing)
-   real(r8) :: albsni_bc    (numrad)             ! diffuse snow albedo without BC (radiative forcing)
-   real(r8) :: albsnd_oc    (numrad)             ! direct snow albedo without OC (radiative forcing)
-   real(r8) :: albsni_oc    (numrad)             ! diffuse snow albedo without OC (radiative forcing)
-   real(r8) :: albsnd_dst   (numrad)             ! direct snow albedo without dust (radiative forcing)
-   real(r8) :: albsni_dst   (numrad)             ! diffuse snow albedo without dust (radiative forcing)
-   real(r8) :: flx_absd_snw (maxsnl+1:1,numrad)  ! flux absorption factor for just snow (direct) [frc]
-   real(r8) :: flx_absi_snw (maxsnl+1:1,numrad)  ! flux absorption factor for just snow (diffuse) [frc]
-   real(r8) :: foo_snw      (maxsnl+1:1,numrad)  ! dummy array for forcing calls
+   real(r8) :: albsfc       (numrad)            ! albedo of surface underneath snow (col,bnd)
+   real(r8) :: albsnd       (numrad)            ! snow albedo (direct)
+   real(r8) :: albsni       (numrad)            ! snow albedo (diffuse)
+   real(r8) :: albsnd_pur   (numrad)            ! direct pure snow albedo
+   real(r8) :: albsni_pur   (numrad)            ! diffuse pure snow albedo
+   real(r8) :: albsnd_bc    (numrad)            ! direct snow albedo without BC
+   real(r8) :: albsni_bc    (numrad)            ! diffuse snow albedo without BC
+   real(r8) :: albsnd_oc    (numrad)            ! direct snow albedo without OC
+   real(r8) :: albsni_oc    (numrad)            ! diffuse snow albedo without OC
+   real(r8) :: albsnd_dst   (numrad)            ! direct snow albedo without dust
+   real(r8) :: albsni_dst   (numrad)            ! diffuse snow albedo without dust
+   real(r8) :: flx_absd_snw (maxsnl+1:1,numrad) ! flux absorption for just snow (direct) [frc]
+   real(r8) :: flx_absi_snw (maxsnl+1:1,numrad) ! flux absorption for just snow (diffuse) [frc]
+   real(r8) :: foo_snw      (maxsnl+1:1,numrad) ! dummy array for forcing calls
 
-   integer  :: snw_rds_in   (maxsnl+1:0)         ! snow grain size sent to SNICAR (col,lyr) [microns]
+   integer  :: snw_rds_in   (maxsnl+1:0)        ! snow grain size sent to SNICAR (col,lyr) [microns]
 
-   integer , parameter :: nband =numrad          ! number of solar radiation waveband classes
+   integer , parameter :: nband =numrad         ! number of solar radiation waveband classes
 
    !-----------------------------------------------------------------------
 
       ! Initialize output because solar radiation only done IF coszen > 0
 
       DO ib = 1, numrad
-         albgrd(ib)     = 0._r8
-         albgri(ib)     = 0._r8
-         albgrd_pur(ib) = 0._r8
-         albgri_pur(ib) = 0._r8
-         albgrd_bc(ib)  = 0._r8
-         albgri_bc(ib)  = 0._r8
-         albgrd_oc(ib)  = 0._r8
-         albgri_oc(ib)  = 0._r8
-         albgrd_dst(ib) = 0._r8
-         albgri_dst(ib) = 0._r8
+         albgrd(ib)     = 1._r8
+         albgri(ib)     = 1._r8
+         albgrd_pur(ib) = 1._r8
+         albgri_pur(ib) = 1._r8
+         albgrd_bc(ib)  = 1._r8
+         albgri_bc(ib)  = 1._r8
+         albgrd_oc(ib)  = 1._r8
+         albgri_oc(ib)  = 1._r8
+         albgrd_dst(ib) = 1._r8
+         albgri_dst(ib) = 1._r8
          DO i=maxsnl+1,1,1
             flx_absdv(i) = 0._r8
             flx_absdn(i) = 0._r8
@@ -1889,7 +1900,8 @@ ENDIF
       DO ib = 1, nband
          IF (coszen_col > 0._r8) THEN
             ! ground albedo was originally computed in SoilAlbedo, but is now computed here
-            ! because the order of SoilAlbedo and SNICAR_RT/SNICAR_AD_RT was switched for SNICAR/SNICAR_AD_RT.
+            ! because the order of SoilAlbedo and SNICAR_RT/SNICAR_AD_RT
+            ! was switched for SNICAR/SNICAR_AD_RT.
             ! 09/01/2023, yuan: change to only snow albedo, the same below
             !albgrd(ib) = albsod(ib)*(1._r8-frac_sno) + albsnd(ib)*frac_sno
             !albgri(ib) = albsoi(ib)*(1._r8-frac_sno) + albsni(ib)*frac_sno

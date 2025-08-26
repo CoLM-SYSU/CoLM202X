@@ -169,7 +169,13 @@ CONTAINS
                DO ipxl = ipxstt, ipxend
                   IF (types(ipxl) > 0) THEN
                      IF (patchtypes(types(ipxl)) == 0) THEN
-                        types(ipxl) = 1
+                        ! Deal with cropland separately for fast PC
+                        IF (DEF_FAST_PC .and. &
+                           (types(ipxl)==CROPLAND .or. types(ipxl)==14)) THEN
+                           types(ipxl) = CROPLAND
+                        ELSE
+                           types(ipxl) = 1
+                        ENDIF
                      ENDIF
                   ENDIF
                ENDDO

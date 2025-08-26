@@ -53,20 +53,31 @@ MODULE MOD_Const_LC
 !24  Snow or Ice
 
    character(len=256) :: patchclassname (0:N_land_classification) = &
-      (/'0 Ocean                                       ', '1  Urban and Built-Up Land                    ', &
-        '2 Dryland Cropland and Pasture                ', '3 Irrigated Cropland and Pasture              ', &
-        '4 Mixed Dryland/Irrigated Cropland and Pasture', '5 Cropland/Grassland Mosaic                   ', &
-        '6 Cropland/Woodland Mosaic                    ', '7 Grassland                                   ', &
-        '8 Shrubland                                   ', '9 Mixed Shrubland/Grassland                   ', &
-        '10 Savanna                                    ', '11 Deciduous Broadleaf Forest                 ', &
-        '12 Deciduous Needleleaf Forest                ', '13 Evergreen Broadleaf Forest                 ', &
-        '14 Evergreen Needleleaf Forest                ', '15 Mixed Forest                               ', &
-        '16 Inland Water                               ', '17 Herbaceous Wetland                         ', &
-        '18 Wooded Wetland                             ', '19 Barren or Sparsely Vegetated               ', &
-        '20 Herbaceous Tundra                          ', '21 Wooded Tundra                              ', &
-        '22 Mixed Tundra                               ', '23 Bare Ground Tundra                         ', &
+      (/'0 Ocean                                       ', &
+        '1 Urban and Built-Up Land                     ', &
+        '2 Dryland Cropland and Pasture                ', &
+        '3 Irrigated Cropland and Pasture              ', &
+        '4 Mixed Dryland/Irrigated Cropland and Pasture', &
+        '5 Cropland/Grassland Mosaic                   ', &
+        '6 Cropland/Woodland Mosaic                    ', &
+        '7 Grassland                                   ', &
+        '8 Shrubland                                   ', &
+        '9 Mixed Shrubland/Grassland                   ', &
+        '10 Savanna                                    ', &
+        '11 Deciduous Broadleaf Forest                 ', &
+        '12 Deciduous Needleleaf Forest                ', &
+        '13 Evergreen Broadleaf Forest                 ', &
+        '14 Evergreen Needleleaf Forest                ', &
+        '15 Mixed Forest                               ', &
+        '16 Inland Water                               ', &
+        '17 Herbaceous Wetland                         ', &
+        '18 Wooded Wetland                             ', &
+        '19 Barren or Sparsely Vegetated               ', &
+        '20 Herbaceous Tundra                          ', &
+        '21 Wooded Tundra                              ', &
+        '22 Mixed Tundra                               ', &
+        '23 Bare Ground Tundra                         ', &
         '24 Snow or Ice                                '/)
-
 
    ! land patch types
    ! 0: soil, 1: urban, 2: wetland, 3: ice, 4: lake
@@ -669,7 +680,7 @@ MODULE MOD_Const_LC
 
 ! Plant Hydraulic Parameters
    real(r8), dimension(N_land_classification) :: &
-      kmax_sun,   &! Plant Hydraulics Parameters (TODO@Xingjie Lu, please give more details and below)
+      kmax_sun,   &! Plant Hydraulics Parameters (TODO@Xingjie Lu, please give more details)
       kmax_sha,   &! Plant Hydraulics Parameters
       kmax_xyl,   &! Plant Hydraulics Parameters
       kmax_root,  &! Plant Hydraulics Parameters

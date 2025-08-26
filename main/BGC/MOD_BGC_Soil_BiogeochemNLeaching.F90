@@ -110,7 +110,11 @@ CONTAINS
             !
             ! calculate the N leaching flux as a FUNCTION of the dissolved
             ! concentration and the sub-surface drainage flux
-            smin_no3_leached_vr(j,i) = disn_conc * drain_tot * wliq_soisno(j,i) / ( tot_water * dz_soi(j) )
+            IF(tot_water > 0._r8)THEN
+               smin_no3_leached_vr(j,i) = disn_conc * drain_tot * wliq_soisno(j,i) / ( tot_water * dz_soi(j) )
+            ELSE
+               smin_no3_leached_vr(j,i) = 0._r8
+            ENDIF
             !
             ! ensure that leaching rate isn't larger than soil N pool
             smin_no3_leached_vr(j,i) = min(smin_no3_leached_vr(j,i), smin_no3_vr(j,i) / deltim )
@@ -121,12 +125,20 @@ CONTAINS
             !
             ! calculate the N loss from surface runoff, assuming a shallow mixing of surface waters into soil and removal based on runoff
             IF ( zi_soi(j) <= depth_runoff_Nloss )  THEN
-               smin_no3_runoff_vr(j,i) = disn_conc * rsur(i) * &
-                    wliq_soisno(j,i) / ( surface_water * dz_soi(j) )
-            elseif ( zi_soi(j-1) < depth_runoff_Nloss )  THEN
-               smin_no3_runoff_vr(j,i) = disn_conc * rsur(i) * &
-                    wliq_soisno(j,i) * ((depth_runoff_Nloss - zi_soi(j-1)) / &
-                    dz_soi(j)) / ( surface_water * (depth_runoff_Nloss-zi_soi(j-1) ))
+               IF(surface_water > 0._r8)THEN
+                  smin_no3_runoff_vr(j,i) = disn_conc * rsur(i) * &
+                       wliq_soisno(j,i) / ( surface_water * dz_soi(j) )
+               ELSE
+                  smin_no3_runoff_vr(j,i) = 0._r8
+               ENDIF
+            ELSEIF ( zi_soi(j-1) < depth_runoff_Nloss )  THEN
+               IF(surface_water > 0._r8)THEN
+                  smin_no3_runoff_vr(j,i) = disn_conc * rsur(i) * &
+                       wliq_soisno(j,i) * ((depth_runoff_Nloss - zi_soi(j-1)) / &
+                       dz_soi(j)) / ( surface_water * (depth_runoff_Nloss-zi_soi(j-1) ))
+               ELSE
+                  smin_no3_runoff_vr(j,i) = 0._r8
+               ENDIF
             ELSE
                smin_no3_runoff_vr(j,i) = 0._r8
             ENDIF

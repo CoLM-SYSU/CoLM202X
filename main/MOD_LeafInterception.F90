@@ -243,8 +243,10 @@ CONTAINS
             ! assume no fall down of the intercepted snowfall in a time step
             ! drainage
             tex_rain = (prc_rain+prl_rain+qflx_irrig_sprinkler)*deltim * fpi * (ap/bp*(1.-exp(-bp*xs))+cp*xs) &
-                     - (satcap-ldew) * xs
+                     - max(0., (satcap-ldew)) * xs
             tex_rain = max( tex_rain, 0. )
+            ! Ensure physical constraint: tex_rain + tti_rain <= total rain input
+            tex_rain = min( tex_rain, (prc_rain+prl_rain+qflx_irrig_sprinkler)*deltim - tti_rain )
             tex_snow = 0.
 
             ! 04/11/2024, yuan:
@@ -264,8 +266,10 @@ CONTAINS
                ENDIF
 
                tex_rain = (prc_rain+prl_rain+qflx_irrig_sprinkler)*deltim * fpi * (ap/bp*(1.-exp(-bp*xs))+cp*xs) &
-                        - (satcap_rain-ldew_rain) * xs
+                        - max(0., (satcap_rain-ldew_rain)) * xs
                tex_rain = max( tex_rain, 0. )
+               ! Ensure physical constraint: tex_rain + tti_rain <= total rain input
+               tex_rain = min( tex_rain, (prc_rain+prl_rain+qflx_irrig_sprinkler)*deltim - tti_rain )
 
                ! re-calculate the snow loading rate
 
@@ -288,9 +292,9 @@ CONTAINS
                tex_snow = tex_snow * deltim
             ENDIF
 
-#if(defined CoLMDEBUG)
+#if (defined CoLMDEBUG)
             IF (tex_rain+tex_snow+tti_rain+tti_snow-p0 > 1.e-10 .and. .not.DEF_VEG_SNOW) THEN
-               write(6,*) 'tex_ + tti_ > p0 in interception code : '
+               write(6,*) 'tex_ + tti_ > p0 in interception code : ',ldew,tex_rain,tex_snow,tti_rain,tti_snow,p0
             ENDIF
 #endif
 
@@ -325,7 +329,7 @@ CONTAINS
          qintr_rain = prc_rain + prl_rain + qflx_irrig_sprinkler - thru_rain / deltim
          qintr_snow = prc_snow + prl_snow - thru_snow / deltim
 
-#if(defined CoLMDEBUG)
+#if (defined CoLMDEBUG)
          w = w - ldew - (pg_rain+pg_snow)*deltim
          IF (abs(w) > 1.e-6) THEN
             write(6,*) 'something wrong in interception code: '
@@ -477,14 +481,14 @@ CONTAINS
             ENDIF
 
             ! assume no fall down of the intercepted snowfall in a time step drainage
-            tex_rain = (prc_rain+prl_rain+qflx_irrig_sprinkler)*deltim * fpi * (ap/bp*(1.-exp(-bp*xs))+cp*xs) - (satcap-ldew) * xs
-
-            !       tex_rain = (prc_rain+prl_rain)*deltim * fpi * (ap/bp*(1.-exp(-bp*xs))+cp*xs) &
-            !                - (satcap-ldew) * xs
+            tex_rain = (prc_rain+prl_rain+qflx_irrig_sprinkler)*deltim * fpi * (ap/bp*(1.-exp(-bp*xs))+cp*xs) &
+                     - max(0., (satcap-ldew)) * xs
             tex_rain = max( tex_rain, 0. )
+            ! Ensure physical constraint: tex_rain + tti_rain <= total rain input
+            tex_rain = min( tex_rain, (prc_rain+prl_rain+qflx_irrig_sprinkler)*deltim - tti_rain )
             tex_snow = 0.
 
-#if(defined CoLMDEBUG)
+#if (defined CoLMDEBUG)
             IF (tex_rain+tex_snow+tti_rain+tti_snow-p0 > 1.e-10) THEN
                write(6,*) 'tex_ + tti_ > p0 in interception code : '
             ENDIF
@@ -515,7 +519,7 @@ CONTAINS
          qintr_snow = prc_snow + prl_snow - thru_snow / deltim
 
 
-#if(defined CoLMDEBUG)
+#if (defined CoLMDEBUG)
          w = w - ldew - (pg_rain+pg_snow)*deltim
          IF (abs(w) > 1.e-6) THEN
             write(6,*) 'something wrong in interception code : '
@@ -637,11 +641,13 @@ CONTAINS
 
             ! assume no fall down of the intercepted snowfall in a time step
             ! drainage
-            tex_rain = (prc_rain+prl_rain)*deltim * fpi + ldew - satcap
+            tex_rain = (prc_rain+prl_rain+qflx_irrig_sprinkler)*deltim * fpi + max(0., ldew - satcap)
             tex_rain = max(tex_rain, 0. )
+            ! Ensure physical constraint: tex_rain + tti_rain <= total rain input
+            tex_rain = min( tex_rain, (prc_rain+prl_rain+qflx_irrig_sprinkler)*deltim - tti_rain )
             tex_snow = 0.
 
-#if(defined CoLMDEBUG)
+#if (defined CoLMDEBUG)
             IF (tex_rain+tex_snow+tti_rain+tti_snow-p0 > 1.e-10) THEN
                write(6,*) 'tex_ + tti_ > p0 in interception code : '
             ENDIF
@@ -671,7 +677,7 @@ CONTAINS
          qintr_snow = prc_snow + prl_snow - thru_snow / deltim
 
 
-#if(defined CoLMDEBUG)
+#if (defined CoLMDEBUG)
          w = w - ldew - (pg_rain+pg_snow)*deltim
          IF (abs(w) > 1.e-6) THEN
             write(6,*) 'something wrong in interception code : '
@@ -810,12 +816,13 @@ CONTAINS
             fpi_snow   = alpha_snow * ( 1.-exp(-0.5*lsai) )
             tti_rain   = (prc_rain+prl_rain+qflx_irrig_sprinkler)*deltim * ( 1.-fpi_rain )
             tti_snow   = (prc_snow+prl_snow)*deltim * ( 1.-fpi_snow )
-            tex_rain   = (prc_rain+prl_rain+qflx_irrig_sprinkler)*deltim * fpi_rain -satcap_rain         !*(prc_rain+prl_rain)/p0 !(satcap-ldew) * xs
-            tex_snow   = (prc_snow+prl_snow)*deltim * fpi_snow -satcap_snow         ! (ap/bp*(1.-exp(-bp*xs))+cp*xs) - (satcap-ldew) * xs
-            tex_rain   = max( tex_rain, 0. )
-            tex_snow   = max( tex_snow, 0. )
+            tex_rain   = max(0., (prc_rain+prl_rain+qflx_irrig_sprinkler)*deltim * fpi_rain - satcap_rain)
+            tex_snow   = max(0., (prc_snow+prl_snow)*deltim * fpi_snow - satcap_snow)
+            ! Ensure physical constraint
+            tex_rain   = min( tex_rain, (prc_rain+prl_rain+qflx_irrig_sprinkler)*deltim - tti_rain )
+            tex_snow   = min( tex_snow, (prc_snow+prl_snow)*deltim - tti_snow )
 
-#if(defined CoLMDEBUG)
+#if (defined CoLMDEBUG)
             IF (tex_rain+tex_snow+tti_rain+tti_snow-p0 > 1.e-10) THEN
                write(6,*) 'tex_ + tti_ > p0 in interception code : '
             ENDIF
@@ -846,7 +853,7 @@ CONTAINS
          qintr_rain = prc_rain + prl_rain + qflx_irrig_sprinkler - thru_rain / deltim
          qintr_snow = prc_snow + prl_snow - thru_snow / deltim
 
-#if(defined CoLMDEBUG)
+#if (defined CoLMDEBUG)
          w = w - ldew - (pg_rain+pg_snow)*deltim
          IF (abs(w) > 1.e-6) THEN
             write(6,*) 'something wrong in interception code : '
@@ -1011,7 +1018,7 @@ CONTAINS
 
             tex_rain = (prc_rain+prl_rain+qflx_irrig_sprinkler)*fvegc*deltim  - int_rain
             tex_snow = (prc_snow+prl_snow)*fvegc*deltim - int_snow
-#if(defined CoLMDEBUG)
+#if (defined CoLMDEBUG)
             IF (tex_rain+tex_snow+tti_rain+tti_snow-p0 > 1.e-10) THEN
                write(6,*) 'tex_ + tti_ > p0 in interception code : '
             ENDIF
@@ -1044,7 +1051,7 @@ CONTAINS
          qintr_snow = prc_snow + prl_snow - thru_snow / deltim
 
 
-#if(defined CoLMDEBUG)
+#if (defined CoLMDEBUG)
          w = w - ldew - (pg_rain+pg_snow)*deltim
          IF (abs(w) > 1.e-6) THEN
             write(6,*) 'something wrong in interception code : '
@@ -1253,7 +1260,7 @@ CONTAINS
             !-------------------------------------------------------------------------
 
 
-#if(defined CoLMDEBUG)
+#if (defined CoLMDEBUG)
             IF (tex_rain+tex_snow+tti_rain+tti_snow-p0 > 1.e-10) THEN
                write(6,*) 'tex_ + tti_ > p0 in interception code : '
             ENDIF
@@ -1286,7 +1293,7 @@ CONTAINS
 
          qintr_rain = prc_rain + prl_rain + qflx_irrig_sprinkler - thru_rain / deltim
          qintr_snow = prc_snow + prl_snow - thru_snow / deltim
-#if(defined CoLMDEBUG)
+#if (defined CoLMDEBUG)
          w = w - ldew - (pg_rain+pg_snow)*deltim
          IF (abs(w) > 1.e-6) THEN
             write(6,*) 'something wrong in interception code : '
@@ -1494,7 +1501,7 @@ CONTAINS
                tex_snow  = tex_snow  + Overload*IntSnowFract
             ENDIF
 
-#if(defined CoLMDEBUG)
+#if (defined CoLMDEBUG)
             IF (tex_rain+tex_snow+tti_rain+tti_snow-p0 > 1.e-10) THEN
                write(6,*) 'tex_ + tti_ > p0 in interception code : '
             ENDIF
@@ -1525,7 +1532,7 @@ CONTAINS
 
          qintr_rain = prc_rain + prl_rain - thru_rain / deltim
          qintr_snow = prc_snow + prl_snow - thru_snow / deltim
-#if(defined CoLMDEBUG)
+#if (defined CoLMDEBUG)
          w = w - ldew - (pg_rain+pg_snow)*deltim
          IF (abs(w) > 1.e-6) THEN
             write(6,*) 'something wrong in interception code : '
@@ -1690,7 +1697,7 @@ CONTAINS
 
             tex_rain = (prc_rain+prl_rain+qflx_irrig_sprinkler)*fvegc*deltim  - int_rain
             tex_snow = (prc_snow+prl_snow)*fvegc*deltim - int_snow
-#if(defined CoLMDEBUG)
+#if (defined CoLMDEBUG)
             IF (tex_rain+tex_snow+tti_rain+tti_snow-p0 > 1.e-10) THEN
                write(6,*) 'tex_ + tti_ > p0 in interception code : '
             ENDIF
@@ -1717,7 +1724,7 @@ CONTAINS
 
          qintr_rain = prc_rain + prl_rain + qflx_irrig_sprinkler - thru_rain / deltim
          qintr_snow = prc_snow + prl_snow - thru_snow / deltim
-#if(defined CoLMDEBUG)
+#if (defined CoLMDEBUG)
          w = w - ldew - (pg_rain+pg_snow)*deltim
          IF (abs(w) > 1.e-6) THEN
             write(6,*) 'something wrong in interception code : '

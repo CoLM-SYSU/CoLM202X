@@ -24,6 +24,7 @@ MODULE MOD_Vars_Global
    integer, parameter :: URBAN     = 1
    integer, parameter :: WATERBODY = 16
    integer, parameter :: WETLAND   = 17
+   integer, parameter :: CROPLAND  = 7
 #else
    ! MODIS IGBP number of land cover category
    integer, parameter :: N_land_classification = 17
@@ -116,7 +117,7 @@ MODULE MOD_Vars_Global
    real(r8), parameter :: irrig_max_cphase = 4._r8           ! crop phenology when end irrigation
    integer , parameter :: irrig_time_per_day = 14400         ! irrigation last time
 
-   ! PUBLIC MEMBER FUNCTIONS:
+! PUBLIC MEMBER FUNCTIONS:
    PUBLIC :: Init_GlobalVars
 
 CONTAINS

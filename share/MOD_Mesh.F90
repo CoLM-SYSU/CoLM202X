@@ -835,7 +835,7 @@ CONTAINS
                ' elements in one block (More than 3600 is recommended).'
             write(*,'(/,A)') '   -----------------------------------------------------------------'
             write(*,'(A)')   '   |  Examples for setting of blocks and processor groupsize:      |'
-            write(*,'(A)')   '   |  Resolution  DEF_nx_blocks  DEF_ny_blocks  DEF_PIO_groupsize  |' 
+            write(*,'(A)')   '   |  Resolution  DEF_nx_blocks  DEF_ny_blocks  DEF_PIO_groupsize  |'
             write(*,'(A)')   '   |         2x2             18              9                 15  |'
             write(*,'(A)')   '   |         1x1             18              9                 24  |'
             write(*,'(A)')   '   |     0.5x0.5             18              9                 36  |'

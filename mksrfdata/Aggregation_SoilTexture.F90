@@ -48,6 +48,7 @@ SUBROUTINE Aggregation_SoilTexture ( &
    integer, allocatable :: soiltext_patches(:), soiltext_one(:)
 #ifdef SrfdataDiag
    integer :: typpatch(N_land_classification+1), ityp
+   real(r8), allocatable :: soiltext_r8 (:)
 #endif
 
       write(cyear,'(i4.4)') lc_year
@@ -102,13 +103,21 @@ SUBROUTINE Aggregation_SoilTexture ( &
       lndname = trim(landdir)//'/soiltexture_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
       CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
-      CALL ncio_write_vector (lndname, 'soiltext_patches', 'patch', landpatch, soiltext_patches, DEF_Srfdata_CompressLevel)
+      CALL ncio_write_vector (lndname, 'soiltext_patches', 'patch', &
+         landpatch, soiltext_patches, DEF_Srfdata_CompressLevel)
 
 #ifdef SrfdataDiag
       typpatch = (/(ityp, ityp = 0, N_land_classification)/)
       lndname = trim(dir_model_landdata)//'/diag/soiltexture_'//trim(cyear)//'.nc'
-      CALL srfdata_map_and_write (real(soiltext_patches,r8), landpatch%settyp, typpatch,  &
+      IF (allocated(soiltext_patches)) THEN
+         allocate (soiltext_r8 (size(soiltext_patches)))
+         soiltext_r8 = real(soiltext_patches,r8)
+      ENDIF
+
+      CALL srfdata_map_and_write (soiltext_r8, landpatch%settyp, typpatch,  &
          m_patch2diag, -1., lndname, 'soiltexture', compress = 1, write_mode = 'one')
+
+      IF (allocated(soiltext_r8)) deallocate(soiltext_r8)
 #endif
 
       IF (p_is_worker) THEN

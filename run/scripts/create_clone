@@ -38,13 +38,18 @@ CreateClone()
    sed -i "s|$SourcePath|$DestPath|g" ./mksrf.submit
    cp -p $SourcePath/$SourceName/init.submit ./
    sed -i "s|$SourceName|$DestName|g" ./init.submit
-   sed -i "s|$SourcePath|$DestName|g" ./init.submit
+   sed -i "s|$SourcePath|$DestPath|g" ./init.submit
    cp -p $SourcePath/$SourceName/"case.submit" ./
    sed -i "s|$SourceName|$DestName|g" "./case.submit"
    sed -i "s|$SourcePath|$DestPath|g" "./case.submit"
    cp -p $SourcePath/$SourceName/input_$SourceName.nml ./input_$DestName.nml
    sed -i "s|$SourceName|$DestName|g" ./input_$DestName.nml
    sed -i "s|$SourcePath|$DestPath|g" ./input_$DestName.nml
+   if [ -f $SourcePath/$SourceName/input_${SourceName}-SASU.nml ];then
+      cp -p $SourcePath/$SourceName/input_${SourceName}-SASU.nml ./input_${DestName}-SASU.nml
+      sed -i "s|$SourceName|$DestName|g" ./input_${DestName}-SASU.nml
+      sed -i "s|$SourcePath|$DestPath|g" ./input_${DestName}-SASU.nml
+   fi
    
    echo copy source files 
    cd $SourcePath/$SourceName/bld/
@@ -61,7 +66,7 @@ CreateClone()
                mkdir $DestPath/$DestName/bld/$files1
             fi
             cd $SourcePath/$SourceName/bld/$files1
-            if [ $files1 = CaMa -o $files1 = include -o $files1 = run -o $files1 = preprocess ];then
+            if [ $files1 = extends -o $files1 = include -o $files1 = run -o $files1 = preprocess ];then
                cp -pr * $DestPath/$DestName/bld/$files1/
             else
                if [ $files1 = postprocess ];then

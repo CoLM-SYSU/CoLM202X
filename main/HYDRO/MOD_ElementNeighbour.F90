@@ -12,7 +12,7 @@ MODULE MOD_ElementNeighbour
    USE MOD_Precision
    USE MOD_DataType
    IMPLICIT NONE
-   
+
    ! -- neighbour parameters --
    type element_neighbour_type
 
@@ -23,7 +23,7 @@ MODULE MOD_ElementNeighbour
       integer*8, allocatable :: glbindex (:) ! neighbour global index
 
       ! data address: (1,:) refers to process, (2,:) refers to location
-      integer , allocatable :: addr (:,:) 
+      integer , allocatable :: addr (:,:)
 
       real(r8), allocatable :: dist   (:) ! distance between element centers [m]
       real(r8), allocatable :: lenbdr (:) ! length of boundary line [m]
@@ -51,7 +51,7 @@ MODULE MOD_ElementNeighbour
    END INTERFACE allocate_neighbour_data
 
 CONTAINS
-   
+
    ! ----------
    SUBROUTINE element_neighbour_init (lc_year)
 
@@ -65,7 +65,7 @@ CONTAINS
    USE MOD_LandPatch
    USE MOD_Utils
    IMPLICIT NONE
-   
+
    integer, intent(in) :: lc_year    ! which year of land cover data used
 
    ! Local Variables
@@ -76,7 +76,7 @@ CONTAINS
    integer :: nrecv, irecv
    integer :: iloc, iloc1, iloc2
    integer :: nnb, nnbinq, inb, ndata
-   
+
    integer :: maxnnb
    integer , allocatable :: nnball   (:)
    integer , allocatable :: idxnball (:,:)
@@ -98,12 +98,12 @@ CONTAINS
 
    real(r8), allocatable :: rlon_b(:), rlat_b(:)
    type(pointer_real8_1d), allocatable :: rlon_nb(:), rlat_nb(:)
-   
+
    real(r8), allocatable :: area_b(:)
    real(r8), allocatable :: elva_b(:)
 
    character(len=256) :: lndname, cyear
-   real(r8), allocatable :: topo_patches(:)
+   real(r8), allocatable :: elv_patches(:)
 
    type(pointer_real8_1d), allocatable :: area_nb (:)  ! m^2
    type(pointer_real8_1d), allocatable :: elva_nb (:)  ! m
@@ -143,7 +143,7 @@ CONTAINS
             nrecv = mesg(2)
 
             IF (nrecv > 0) THEN
-               
+
                allocate (eindex  (nrecv))
                allocate (icache1 (nrecv))
                allocate (icache2 (maxnnb,nrecv))
@@ -153,24 +153,24 @@ CONTAINS
                   isrc, mpi_tag_data, p_comm_glb, p_stat, p_err)
 
                addrelement(eindex) = isrc
-               
+
                idest = isrc
 
                icache1 = nnball(eindex)
                CALL mpi_send (icache1, nrecv, MPI_INTEGER, &
-                  idest, mpi_tag_data, p_comm_glb, p_err) 
+                  idest, mpi_tag_data, p_comm_glb, p_err)
 
                DO irecv = 1, nrecv
                   icache2(:,irecv) = idxnball(:,eindex(irecv))
                ENDDO
                CALL mpi_send (icache2, maxnnb*nrecv, MPI_INTEGER, &
-                  idest, mpi_tag_data, p_comm_glb, p_err) 
+                  idest, mpi_tag_data, p_comm_glb, p_err)
 
                DO irecv = 1, nrecv
                   rcache2(:,irecv) = lenbdall(:,eindex(irecv))
                ENDDO
                CALL mpi_send (rcache2, maxnnb*nrecv, MPI_REAL8, &
-                  idest, mpi_tag_data, p_comm_glb, p_err) 
+                  idest, mpi_tag_data, p_comm_glb, p_err)
 
                deallocate (eindex )
                deallocate (icache1)
@@ -183,19 +183,19 @@ CONTAINS
 #endif
 
       IF (p_is_worker) THEN
-               
+
          IF (numelm > 0) THEN
             allocate (eindex (numelm))
             eindex = landelm%eindex
-         ENDIF 
+         ENDIF
 
 #ifdef USEMPI
          mesg(1:2) = (/p_iam_glb, numelm/)
-         CALL mpi_send (mesg(1:2), 2, MPI_INTEGER, p_address_master, mpi_tag_mesg, p_comm_glb, p_err) 
+         CALL mpi_send (mesg(1:2), 2, MPI_INTEGER, p_address_master, mpi_tag_mesg, p_comm_glb, p_err)
 
          IF (numelm > 0) THEN
             CALL mpi_send (eindex, numelm, MPI_INTEGER8, &
-               p_address_master, mpi_tag_data, p_comm_glb, p_err) 
+               p_address_master, mpi_tag_data, p_comm_glb, p_err)
 
             allocate (nnball (numelm))
             CALL mpi_recv (nnball, numelm, MPI_INTEGER, &
@@ -214,7 +214,7 @@ CONTAINS
          allocate (icache2 (maxnnb,numelm))
          allocate (rcache2 (maxnnb,numelm))
 
-         icache1 = nnball  
+         icache1 = nnball
          icache2 = idxnball
          rcache2 = lenbdall
 
@@ -228,9 +228,9 @@ CONTAINS
 #endif
 
          IF (numelm > 0) THEN
-           
+
             allocate (elementneighbour (numelm))
-            
+
             DO ielm = 1, numelm
                nnb = nnball(ielm)
                elementneighbour(ielm)%nnb = nnb
@@ -239,7 +239,7 @@ CONTAINS
                   allocate (elementneighbour(ielm)%glbindex (nnb))
                   allocate (elementneighbour(ielm)%lenbdr (nnb))
                   allocate (elementneighbour(ielm)%addr (2,nnb))
-                  
+
                   elementneighbour(ielm)%glbindex = idxnball(1:nnb,ielm)
                   elementneighbour(ielm)%lenbdr = lenbdall(1:nnb,ielm)
                   elementneighbour(ielm)%addr(1,:) = -9999
@@ -247,7 +247,7 @@ CONTAINS
             ENDDO
          ENDIF
 
-      ENDIF 
+      ENDIF
 
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
@@ -265,7 +265,7 @@ CONTAINS
             IF (nrecv > 0) THEN
                allocate (eindex  (nrecv))
                allocate (icache1 (nrecv))
-               
+
                CALL mpi_recv (eindex, nrecv, MPI_INTEGER8, &
                   isrc, mpi_tag_data, p_comm_glb, p_stat, p_err)
 
@@ -273,12 +273,12 @@ CONTAINS
 
                idest = isrc
                CALL mpi_send (icache1, nrecv, MPI_INTEGER, &
-                  idest, mpi_tag_data, p_comm_glb, p_err) 
+                  idest, mpi_tag_data, p_comm_glb, p_err)
 
                deallocate(eindex, icache1)
             ENDIF
          ENDDO
-      ENDIF 
+      ENDIF
 #endif
 
       IF (p_is_worker) THEN
@@ -293,7 +293,7 @@ CONTAINS
             CALL quicksort (numelm, elm_sorted, order)
 
 #ifdef USEMPI
-            allocate(idxinq (numelm*maxnnb)) 
+            allocate(idxinq (numelm*maxnnb))
 #endif
 
             nnbinq = 0
@@ -315,16 +315,16 @@ CONTAINS
             ENDDO
          ELSE
             nnbinq = 0
-         ENDIF 
+         ENDIF
 
 #ifdef USEMPI
          mesg(1:2) = (/p_iam_glb, nnbinq/)
-         CALL mpi_send (mesg(1:2), 2, MPI_INTEGER, p_address_master, mpi_tag_mesg, p_comm_glb, p_err) 
+         CALL mpi_send (mesg(1:2), 2, MPI_INTEGER, p_address_master, mpi_tag_mesg, p_comm_glb, p_err)
 
          IF (nnbinq > 0) THEN
-            
+
             CALL mpi_send (idxinq(1:nnbinq), nnbinq, MPI_INTEGER8, &
-               p_address_master, mpi_tag_data, p_comm_glb, p_err) 
+               p_address_master, mpi_tag_data, p_comm_glb, p_err)
 
             allocate (addrinq (nnbinq))
             CALL mpi_recv (addrinq, nnbinq, MPI_INTEGER, &
@@ -341,7 +341,7 @@ CONTAINS
                ndata = count(mask)
             ELSE
                ndata = 0
-            ENDIF 
+            ENDIF
 
             recvaddr(iwork)%ndata = ndata
             IF (ndata > 0) THEN
@@ -351,7 +351,7 @@ CONTAINS
          ENDDO
 
          IF (nnbinq > 0) deallocate(mask)
-      
+
          DO ielm = 1, numelm
             DO inb = 1, elementneighbour(ielm)%nnb
                IF ((elementneighbour(ielm)%addr(1,inb) == -9999) &
@@ -363,7 +363,7 @@ CONTAINS
                   iwork = p_itis_worker(addrinq(iloc))
                   iloc1 = find_in_sorted_list1 (elementneighbour(ielm)%glbindex(inb), &
                      recvaddr(iwork)%ndata, recvaddr(iwork)%glbindex)
-                  
+
                   elementneighbour(ielm)%addr(1,inb) = iwork
                   elementneighbour(ielm)%addr(2,inb) = iloc1
                ENDIF
@@ -385,7 +385,7 @@ CONTAINS
          ENDDO
 
          DO iwork = 0, p_np_worker-1
-            IF (sendaddr(iwork)%ndata > 0) THEN 
+            IF (sendaddr(iwork)%ndata > 0) THEN
                allocate (sendaddr(iwork)%glbindex (sendaddr(iwork)%ndata))
                sendaddr(iwork)%ndata = 0
             ENDIF
@@ -400,9 +400,9 @@ CONTAINS
                ENDIF
             ENDDO
          ENDDO
-         
+
          DO iwork = 0, p_np_worker-1
-            IF (sendaddr(iwork)%ndata > 0) THEN 
+            IF (sendaddr(iwork)%ndata > 0) THEN
                IF (sendaddr(iwork)%ndata < size(sendaddr(iwork)%glbindex)) THEN
                   allocate (icache1 (sendaddr(iwork)%ndata))
                   icache1 = sendaddr(iwork)%glbindex(1:sendaddr(iwork)%ndata)
@@ -415,7 +415,7 @@ CONTAINS
                ENDIF
             ENDIF
          ENDDO
-         
+
          DO iwork = 0, p_np_worker-1
             IF (sendaddr(iwork)%ndata > 0) THEN
                allocate (sendaddr(iwork)%ielement (sendaddr(iwork)%ndata))
@@ -448,8 +448,8 @@ CONTAINS
 #endif
 
       write(cyear,'(i4.4)') lc_year
-      lndname = trim(DEF_dir_landdata) // '/topography/'//trim(cyear)//'/topography_patches.nc'
-      CALL ncio_read_vector (lndname, 'topography_patches', landpatch, topo_patches)
+      lndname = trim(DEF_dir_landdata) // '/topography/'//trim(cyear)//'/elevation_patches.nc'
+      CALL ncio_read_vector (lndname, 'elevation_patches', landpatch, elv_patches)
 
       IF (p_is_worker) THEN
 
@@ -474,7 +474,7 @@ CONTAINS
 
          CALL retrieve_neighbour_data (rlon_b, rlon_nb)
          CALL retrieve_neighbour_data (rlat_b, rlat_nb)
-         
+
          DO ielm = 1, numelm
             DO inb = 1, elementneighbour(ielm)%nnb
                IF (elementneighbour(ielm)%glbindex(inb) > 0) THEN ! skip ocean neighbour
@@ -485,7 +485,7 @@ CONTAINS
                ENDIF
             ENDDO
          ENDDO
-         
+
          IF (numelm > 0) THEN
             allocate (area_b(numelm))
             allocate (elva_b(numelm))
@@ -496,22 +496,22 @@ CONTAINS
                      pixel%lat_s(mesh(ielm)%ilat(ipxl)), pixel%lat_n(mesh(ielm)%ilat(ipxl)), &
                      pixel%lon_w(mesh(ielm)%ilon(ipxl)), pixel%lon_e(mesh(ielm)%ilon(ipxl)) )
                ENDDO
-              
+
                istt = elm_patch%substt(ielm)
                iend = elm_patch%subend(ielm)
-               elva_b(ielm) = sum(topo_patches(istt:iend) * elm_patch%subfrc(istt:iend))
+               elva_b(ielm) = sum(elv_patches(istt:iend) * elm_patch%subfrc(istt:iend))
 
                elementneighbour(ielm)%myarea = area_b(ielm)
                elementneighbour(ielm)%myelva = elva_b(ielm)
             ENDDO
          ENDIF
-         
+
          CALL allocate_neighbour_data (area_nb)
          CALL retrieve_neighbour_data (area_b, area_nb)
-         
+
          CALL allocate_neighbour_data (elva_nb)
          CALL retrieve_neighbour_data (elva_b, elva_nb)
-         
+
          DO ielm = 1, numelm
             DO inb = 1, elementneighbour(ielm)%nnb
                IF (elementneighbour(ielm)%glbindex(inb) > 0) THEN ! skip ocean neighbour
@@ -522,7 +522,7 @@ CONTAINS
                ENDIF
             ENDDO
          ENDDO
-         
+
          IF (allocated(rlon_b )) deallocate(rlon_b )
          IF (allocated(rlat_b )) deallocate(rlat_b )
          IF (allocated(elva_b )) deallocate(elva_b )
@@ -531,7 +531,7 @@ CONTAINS
          IF (allocated(rlat_nb)) deallocate(rlat_nb)
          IF (allocated(area_nb)) deallocate(area_nb)
          IF (allocated(elva_nb)) deallocate(elva_nb)
-         
+
       ENDIF
 
    END SUBROUTINE element_neighbour_init
@@ -554,7 +554,7 @@ CONTAINS
    integer :: iwork, ielm, inb, iloc
 
       IF (p_is_worker) THEN
-      
+
          DO ielm = 1, numelm
             DO inb = 1, elementneighbour(ielm)%nnb
                IF (elementneighbour(ielm)%addr(1,inb)== -1) THEN
@@ -583,7 +583,7 @@ CONTAINS
                   p_address_worker(iwork), 101, p_comm_glb, req_send(iwork), p_err)
             ENDIF
          ENDDO
-         
+
          allocate (rmask    (0:p_np_worker-1))
          allocate (req_recv (0:p_np_worker-1))
          allocate (rbuff    (0:p_np_worker-1))
@@ -621,10 +621,10 @@ CONTAINS
 
          IF (allocated(smask)) deallocate(smask)
          IF (allocated(rmask)) deallocate(rmask)
-         
+
          IF (allocated(req_send)) deallocate(req_send)
          IF (allocated(req_recv)) deallocate(req_recv)
-         
+
          IF (allocated(sbuff)) deallocate(sbuff)
          IF (allocated(rbuff)) deallocate(rbuff)
 
@@ -637,13 +637,13 @@ CONTAINS
 
    ! ---
    SUBROUTINE allocate_neighbour_data_real8 (nbdata)
-      
+
    USE MOD_Mesh, only: numelm
    IMPLICIT NONE
 
    type(pointer_real8_1d), allocatable :: nbdata(:)
    integer :: ielm
-            
+
       IF (numelm > 0) THEN
          allocate (nbdata(numelm))
          DO ielm = 1, numelm
@@ -651,19 +651,19 @@ CONTAINS
                allocate (nbdata(ielm)%val (elementneighbour(ielm)%nnb))
             ENDIF
          ENDDO
-      ENDIF 
+      ENDIF
 
    END SUBROUTINE allocate_neighbour_data_real8
 
    ! ---
    SUBROUTINE allocate_neighbour_data_logic (nbdata)
-      
+
    USE MOD_Mesh, only: numelm
    IMPLICIT NONE
 
    type(pointer_logic_1d), allocatable :: nbdata(:)
    integer :: ielm
-            
+
       IF (numelm > 0) THEN
          allocate (nbdata(numelm))
          DO ielm = 1, numelm
@@ -671,7 +671,7 @@ CONTAINS
                allocate (nbdata(ielm)%val (elementneighbour(ielm)%nnb))
             ENDIF
          ENDDO
-      ENDIF 
+      ENDIF
 
    END SUBROUTINE allocate_neighbour_data_logic
 
@@ -693,12 +693,12 @@ CONTAINS
          ENDDO
          deallocate(elementneighbour)
       ENDIF
-      
+
       IF (allocated(recvaddr)) THEN
          DO i = lbound(recvaddr,1), ubound(recvaddr,1)
             IF (allocated(recvaddr(i)%glbindex)) deallocate(recvaddr(i)%glbindex)
             IF (allocated(recvaddr(i)%ielement)) deallocate(recvaddr(i)%ielement)
-         ENDDO 
+         ENDDO
       ENDIF
 
       IF (allocated(sendaddr)) THEN
@@ -707,7 +707,7 @@ CONTAINS
             IF (allocated(sendaddr(i)%ielement)) deallocate(sendaddr(i)%ielement)
          ENDDO
       ENDIF
-         
+
       IF (allocated(recvaddr)) deallocate(recvaddr)
       IF (allocated(sendaddr)) deallocate(sendaddr)
 

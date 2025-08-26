@@ -2,13 +2,26 @@
 
 #ifdef DataAssimilation
 MODULE MOD_DA_GRACE
-
+!-----------------------------------------------------------------------------
+! DESCRIPTION:
+!    Data assimilation of terrestrial water storge from GRACE satellite
+!
+! REFERENCES:
+!    [1] Su, Y.; Zhang, S. Optimizing Parameters in the Common Land Model 
+!        by Using Gravity Recovery and Climate Experiment Satellite Observations. 
+!        Land 2024, 13, 508.
+!
+! AUTHOR:
+!   Shupeng Zhang: Initial version
+!-----------------------------------------------------------------------------
    USE MOD_DataType
+   USE MOD_SpatialMapping
+
    IMPLICIT NONE
 
    PUBLIC :: init_DA_GRACE
-   PUBLIC :: do_DA_GRACE
-   PUBLIC :: final_DA_GRACE 
+   PUBLIC :: run_DA_GRACE
+   PUBLIC :: end_DA_GRACE 
    
    real(r8), allocatable, PUBLIC :: fslp_k_mon (:,:) ! slope factor of runoff
    real(r8), allocatable, PUBLIC :: fslp_k (:) ! slope factor of runoff
@@ -58,18 +71,18 @@ CONTAINS
    SUBROUTINE init_DA_GRACE ()
       
    USE MOD_Spmd_Task
-   USE MOD_Namelist, only: DEF_DA_obsdir
+   USE MOD_Namelist, only : DEF_DA_obsdir
    USE MOD_Grid
    USE MOD_NetCDFSerial
-   USE MOD_Mesh,     only: numelm
-   USE MOD_LandElm,  only: landelm
+   USE MOD_Mesh,     only : numelm
+   USE MOD_LandElm,  only : landelm
    USE MOD_LandPatch
 #ifdef CROP 
    USE MOD_LandCrop
 #endif
    USE MOD_Pixelset
-   USE MOD_Vars_TimeInvariants, only: patchtype
-   USE MOD_Forcing, only: forcmask_pch
+   USE MOD_Vars_TimeInvariants, only : patchtype
+   USE MOD_Forcing, only : forcmask_pch
    USE MOD_RangeCheck
    IMPLICIT NONE
    
@@ -125,8 +138,8 @@ CONTAINS
             allocate (rnof_this_m     (numpatch))
             allocate (rnofmask        (numpatch))
             
-            allocate (fslp_k_mon (12,numpatch))
-            allocate (fslp_k (numpatch))
+            allocate (fslp_k_mon   (12,numpatch))
+            allocate (fslp_k          (numpatch))
          ENDIF
       ENDIF
       
@@ -163,7 +176,7 @@ CONTAINS
    END SUBROUTINE init_DA_GRACE 
 
    ! ----------
-   SUBROUTINE do_DA_GRACE (idate, deltim)
+   SUBROUTINE run_DA_GRACE (idate, deltim)
       
    USE MOD_Spmd_task
    USE MOD_TimeManager
@@ -171,8 +184,8 @@ CONTAINS
    USE MOD_Mesh
    USE MOD_LandElm
    USE MOD_LandPatch
-   USE MOD_Vars_1DFluxes,       only: rnof, rsur
-   USE MOD_Vars_TimeVariables,  only: wat, wa, wdsrf, zwt
+   USE MOD_Vars_1DFluxes,       only : rnof, rsur
+   USE MOD_Vars_TimeVariables,  only : wat, wa, wdsrf, zwt
    USE MOD_RangeCheck 
    USE MOD_UserDefFun
    IMPLICIT NONE
@@ -365,10 +378,10 @@ CONTAINS
       ENDIF
 
 
-   END SUBROUTINE do_DA_GRACE
+   END SUBROUTINE run_DA_GRACE
 
    ! ---------
-   SUBROUTINE final_DA_GRACE ()
+   SUBROUTINE end_DA_GRACE ()
 
    IMPLICIT NONE
 
@@ -391,7 +404,7 @@ CONTAINS
       IF (allocated(longrace)) deallocate(longrace)
       IF (allocated(latgrace)) deallocate(latgrace)
 
-   END SUBROUTINE final_DA_GRACE 
+   END SUBROUTINE end_DA_GRACE 
 
    ! ---------
    SUBROUTINE retrieve_yymm_from_days (days, yy, mm)

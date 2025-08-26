@@ -70,7 +70,7 @@ CONTAINS
 #ifdef SinglePoint
 #ifndef URBAN_MODEL
       IF (USE_SITE_LAI) THEN
-         iyear = findloc_ud(SITE_LAI_year == year)
+         iyear = minloc(abs(SITE_LAI_year-year), dim=1)
       ELSE
          iyear = findloc_ud(SITE_LAI_year == min(DEF_LAI_END_YEAR, max(DEF_LAI_START_YEAR,year)))
       ENDIF
@@ -83,7 +83,6 @@ CONTAINS
 
 #if (defined LULC_USGS || defined LULC_IGBP)
 
-!TODO-done: need to consider single point for urban model
 #ifdef SinglePoint
 #ifndef URBAN_MODEL
       IF (DEF_LAI_MONTHLY) THEN
@@ -125,15 +124,15 @@ CONTAINS
                   tsai(npatch)  = 0.
                   green(npatch) = 0.
                ELSE
-                  fveg(npatch)  = fveg0(m)           !fraction of veg. cover
+                  fveg(npatch)  = fveg0(m)     !fraction of veg. cover
                   IF (fveg0(m) > 0) THEN
-                     tlai(npatch)  = tlai(npatch)/fveg0(m) !leaf area index
+                     tlai(npatch)  = tlai(npatch)/fveg0(m)   !leaf area index
                      IF (DEF_LAI_MONTHLY) THEN
                         tsai(npatch) = tsai(npatch)/fveg0(m) !stem are index
                      ELSE
                         tsai(npatch) = sai0(m) !stem are index
                      ENDIF
-                     green(npatch) = 1.      !fraction of green leaf
+                     green(npatch) = 1.        !fraction of green leaf
                   ELSE
                      tlai(npatch)  = 0.
                      tsai(npatch)  = 0.
@@ -150,7 +149,7 @@ CONTAINS
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
 
 #ifdef SinglePoint
-      !TODO-done@wenzong: need to add for urban model CASE like IGBP/USGS above?
+
 #ifndef URBAN_MODEL
       IF (.not. DEF_USE_LAIFEEDBACK)THEN
          IF (patchtypes(SITE_landtype) == 0) THEN

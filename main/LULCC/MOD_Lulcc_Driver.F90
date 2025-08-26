@@ -13,8 +13,8 @@ MODULE MOD_Lulcc_Driver
  CONTAINS
 
 
-   SUBROUTINE LulccDriver (casename,dir_landdata,dir_restart,&
-                           idate,greenwich)
+   SUBROUTINE LulccDriver (casename, dir_landdata, dir_restart, &
+                           jdate, greenwich)
 
 !-----------------------------------------------------------------------
 !
@@ -87,7 +87,7 @@ MODULE MOD_Lulcc_Driver
    USE MOD_Lulcc_Vars_TimeVariables
    USE MOD_Lulcc_Initialize
    USE MOD_Vars_TimeVariables
-   USE MOD_Lulcc_TransferTrace
+   USE MOD_Lulcc_TransferTraceReadin
    USE MOD_Lulcc_MassEnergyConserve
    USE MOD_Namelist
 
@@ -98,7 +98,7 @@ MODULE MOD_Lulcc_Driver
    character(len=256), intent(in) :: dir_restart   !case restart data directory
 
    logical, intent(in)    :: greenwich   !true: greenwich time, false: local time
-   integer, intent(inout) :: idate(3)    !year, julian day, seconds of the starting time
+   integer, intent(inout) :: jdate(3)    !year, julian day, seconds of the starting time
 !-----------------------------------------------------------------------
 
       ! allocate Lulcc memory
@@ -117,8 +117,8 @@ MODULE MOD_Lulcc_Driver
          print *, ">>> LULCC: initializing..."
       ENDIF
 
-      CALL LulccInitialize (casename,dir_landdata,dir_restart,&
-                            idate,greenwich)
+      CALL LulccInitialize (casename, dir_landdata, dir_restart, &
+                            jdate, greenwich)
 
 
       ! =============================================================
@@ -143,7 +143,7 @@ MODULE MOD_Lulcc_Driver
          ENDIF
          CALL allocate_LulccTransferTrace()
          CALL REST_LulccTimeVariables
-         CALL MAKE_LulccTransferTrace(idate(1))
+         CALL LulccTransferTraceReadin(jdate(1))
          CALL LulccMassEnergyConserve()
       ENDIF
 

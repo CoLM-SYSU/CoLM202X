@@ -46,7 +46,7 @@ CONTAINS
    integer j       !number of soil layers
 
 !-----------------------------------------------------------------------
-#if(defined LULC_USGS)
+#if (defined LULC_USGS)
 ! Maximum fractional cover of vegetation [-]
    real(r8), dimension(24), parameter :: &
    vegc=(/1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, &

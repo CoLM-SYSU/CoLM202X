@@ -157,7 +157,8 @@ SUBROUTINE Aggregation_SoilBrightness ( &
 #else
             IF(L/=17 .and. L/=15)THEN  ! NOT OCEAN(0)/WATER BODIES(17)/GLACIER and ICE SHEET(15)
 #endif
-               CALL aggregation_request_data (landpatch, ipatch, gland, zip = USE_zip_for_aggregation, &
+               CALL aggregation_request_data (landpatch, ipatch, gland, &
+                  zip = USE_zip_for_aggregation, &
                   data_r8_2d_in1 = a_s_v_refl, data_r8_2d_out1 = soil_one)
                soil_s_v_alb (ipatch) = median (soil_one, size(soil_one))
 
@@ -193,7 +194,8 @@ SUBROUTINE Aggregation_SoilBrightness ( &
 #else
             IF(L/=17 .and. L/=15)THEN  ! NOT OCEAN(0)/WATER BODIES(17)/GLACIER and ICE SHEET(15)
 #endif
-               CALL aggregation_request_data (landpatch, ipatch, gland, zip = USE_zip_for_aggregation, &
+               CALL aggregation_request_data (landpatch, ipatch, gland, &
+                  zip = USE_zip_for_aggregation, &
                   data_r8_2d_in1 = a_d_v_refl, data_r8_2d_out1 = soil_one)
                soil_d_v_alb (ipatch) = median (soil_one, size(soil_one))
 
@@ -229,7 +231,8 @@ SUBROUTINE Aggregation_SoilBrightness ( &
 #else
             IF(L/=17 .and. L/=15)THEN  ! NOT OCEAN(0)/WATER BODIES(17)/GLACIER and ICE SHEET(15)
 #endif
-               CALL aggregation_request_data (landpatch, ipatch, gland, zip = USE_zip_for_aggregation, &
+               CALL aggregation_request_data (landpatch, ipatch, gland, &
+                  zip = USE_zip_for_aggregation, &
                   data_r8_2d_in1 = a_s_n_refl, data_r8_2d_out1 = soil_one)
                soil_s_n_alb (ipatch) = median (soil_one, size(soil_one))
 
@@ -265,7 +268,8 @@ SUBROUTINE Aggregation_SoilBrightness ( &
 #else
             IF(L/=17 .and. L/=15)THEN  ! NOT OCEAN(0)/WATER BODIES(17)/GLACIER and ICE SHEET(15)
 #endif
-               CALL aggregation_request_data (landpatch, ipatch, gland, zip = USE_zip_for_aggregation, &
+               CALL aggregation_request_data (landpatch, ipatch, gland, &
+                  zip = USE_zip_for_aggregation, &
                   data_r8_2d_in1 = a_d_n_refl, data_r8_2d_out1 = soil_one)
                soil_d_n_alb (ipatch) = median (soil_one, size(soil_one))
 
@@ -295,7 +299,8 @@ SUBROUTINE Aggregation_SoilBrightness ( &
       lndname = trim(landdir)//'/soil_s_v_alb_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
       CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
-      CALL ncio_write_vector (lndname, 'soil_s_v_alb', 'patch', landpatch, soil_s_v_alb, DEF_Srfdata_CompressLevel)
+      CALL ncio_write_vector (lndname, 'soil_s_v_alb', 'patch', &
+         landpatch, soil_s_v_alb, DEF_Srfdata_CompressLevel)
 
 #ifdef SrfdataDiag
       typpatch = (/(ityp, ityp = 0, N_land_classification)/)
@@ -308,7 +313,8 @@ SUBROUTINE Aggregation_SoilBrightness ( &
       lndname = trim(landdir)//'/soil_d_v_alb_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
       CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
-      CALL ncio_write_vector (lndname, 'soil_d_v_alb', 'patch', landpatch, soil_d_v_alb, DEF_Srfdata_CompressLevel)
+      CALL ncio_write_vector (lndname, 'soil_d_v_alb', 'patch', &
+         landpatch, soil_d_v_alb, DEF_Srfdata_CompressLevel)
 
 #ifdef SrfdataDiag
       typpatch = (/(ityp, ityp = 0, N_land_classification)/)
@@ -321,7 +327,8 @@ SUBROUTINE Aggregation_SoilBrightness ( &
       lndname = trim(landdir)//'/soil_s_n_alb_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
       CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
-      CALL ncio_write_vector (lndname, 'soil_s_n_alb', 'patch', landpatch, soil_s_n_alb, DEF_Srfdata_CompressLevel)
+      CALL ncio_write_vector (lndname, 'soil_s_n_alb', 'patch', &
+         landpatch, soil_s_n_alb, DEF_Srfdata_CompressLevel)
 
 #ifdef SrfdataDiag
       typpatch = (/(ityp, ityp = 0, N_land_classification)/)
@@ -334,7 +341,8 @@ SUBROUTINE Aggregation_SoilBrightness ( &
       lndname = trim(landdir)//'/soil_d_n_alb_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
       CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
-      CALL ncio_write_vector (lndname, 'soil_d_n_alb', 'patch', landpatch, soil_d_n_alb, DEF_Srfdata_CompressLevel)
+      CALL ncio_write_vector (lndname, 'soil_d_n_alb', 'patch', &
+         landpatch, soil_d_n_alb, DEF_Srfdata_CompressLevel)
 
 #ifdef SrfdataDiag
       typpatch = (/(ityp, ityp = 0, N_land_classification)/)
