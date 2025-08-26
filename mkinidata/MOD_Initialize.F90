@@ -289,10 +289,12 @@ CONTAINS
             ENDIF
 
             ! 2m WMO virtual patch, modeling but not for aggregation
-            IF (landpatch%ipxstt(ipatch) == -1 ) THEN
+IF (DEF_Output_2mWMO) THEN
+            IF (landpatch%ipxstt(ipatch) == -1) THEN
                patchmask(ipatch) = .false.
                CYCLE
             ENDIF
+ENDIF
 
          ENDDO
 
