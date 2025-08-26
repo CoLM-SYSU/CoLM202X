@@ -63,7 +63,11 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
          ENDIF
 
          ! Apply patch mask, but still run virtual 2m WMO patch (patch ipxstt=-1)
-         IF (.not. patchmask(i) .and. (landpatch%ipxstt(i)>0) ) CYCLE
+         IF (DEF_Output_2mWMO) THEN
+            IF (.not. patchmask(i) .and. (landpatch%ipxstt(i)>0) ) CYCLE
+         ELSE
+            IF (.not. patchmask(i)) CYCLE
+         ENDIF
 
          m = patchclass(i)
 
