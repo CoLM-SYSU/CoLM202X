@@ -649,7 +649,7 @@ CONTAINS
          CALL write_history_variable_4d ( DEF_hist_vars%alb, &
             a_alb, file_hist, 'f_alb', itime_in_file, &
             'band', 1, 2, 'rtyp', 1, 2, sumarea_dt, filter_dt, &
-            'averaged albedo','%',nac_dt)
+            'averaged albedo','-',nac_dt)
 
          ! averaged bulk surface emissivity
          CALL write_history_variable_2d ( DEF_hist_vars%emis, &
@@ -4329,7 +4329,7 @@ ENDIF
       ENDIF
 #else
       IF ( .not. present(acc_num) ) THEN
-         WHERE (acc_vec( /= spval)  acc_vec = acc_vec / nac
+         WHERE (acc_vec /= spval)  acc_vec = acc_vec / nac
       ELSE
          DO i1 = lbound(acc_vec,1), ubound(acc_vec,1)
             DO i2 = lbound(acc_vec,2), ubound(acc_vec,2)
