@@ -91,7 +91,7 @@ CONTAINS
    character(len=256) :: suffix, cyear
 
       IF (p_is_master) THEN
-         write(*,'(A)') 'Making urban type tiles :'
+         write(*,'(A)') 'Making urban type tiles:'
       ENDIF
 
 #ifdef USEMPI
@@ -349,11 +349,13 @@ ENDIF
       write(*,'(A,I12,A)') 'Total: ', numpatch, ' patches.'
 #endif
 
+IF ( .not. DEF_Output_2mWMO ) THEN
       CALL elm_patch%build (landelm, landpatch, use_frac = .true.)
 #ifdef CATCHMENT
       CALL hru_patch%build (landhru, landpatch, use_frac = .true.)
 #endif
       CALL write_patchfrac (DEF_dir_landdata, lc_year)
+ENDIF
 #endif
 
       IF (allocated (ibuff   )) deallocate (ibuff    )

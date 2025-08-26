@@ -31,7 +31,7 @@ MODULE MOD_Urban_Const_LCZ
       = (/0.5 , 0.5 , 0.55, 0.3 , 0.3, 0.3, 0.8 , 0.4 , 0.15, 0.25/)
 
    ! pervious fraction [-]
-   real(r8), parameter, dimension(10)  :: wtperroad_lcz &
+   real(r8), parameter, dimension(10)  :: fgper_lcz &
       = (/0.05, 0.1 , 0.15, 0.35, 0.3, 0.4, 0.15, 0.15, 0.7 , 0.45/)
 
    ! height of roof [m]
@@ -39,19 +39,19 @@ MODULE MOD_Urban_Const_LCZ
       = (/45., 15. , 5.  , 40., 15., 5. , 3. , 7. , 5.  , 8.5 /)
 
    ! H/W [-]
-   real(r8), parameter, dimension(10)  :: canyonhwr_lcz &
+   real(r8), parameter, dimension(10)  :: hwrbld_lcz &
       = (/2.5, 1.25, 1.25, 1. , 0.5, 0.5, 1.5, 0.2, 0.15, 0.35/)
 
    ! thickness of roof [m]
-   real(r8), parameter, dimension(10)  :: thickroof_lcz &
+   real(r8), parameter, dimension(10)  :: thkroof_lcz &
       = (/0.3 , 0.3 , 0.2 , 0.3 , 0.25, 0.15, 0.05, 0.12, 0.15, 0.05/)
 
    ! thickness of wall [m]
-   real(r8), parameter, dimension(10)  :: thickwall_lcz &
+   real(r8), parameter, dimension(10)  :: thkwall_lcz &
       = (/0.3 , 0.25, 0.2 , 0.2 , 0.2 , 0.2 , 0.1 , 0.2 , 0.2 , 0.05/)
 
    ! thickness of impervious road [m]
-   real(r8), parameter, dimension(10)  :: thickroad_lcz &
+   real(r8), parameter, dimension(10)  :: thkgimp_lcz &
       = (/0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25/)
 
    ! albedo of roof [-]
@@ -63,11 +63,11 @@ MODULE MOD_Urban_Const_LCZ
       = (/0.25, 0.2 , 0.2 , 0.25, 0.25, 0.25, 0.2 , 0.25, 0.25, 0.2 /)
 
    ! albedo of impervious road [-]
-   real(r8), parameter, dimension(10)  :: albimproad_lcz &
+   real(r8), parameter, dimension(10)  :: albgimp_lcz &
       = (/0.14, 0.14, 0.14, 0.14, 0.14, 0.14, 0.18, 0.14, 0.14, 0.14/)
 
    ! albedo of pervious road [-]
-   real(r8), parameter, dimension(10)  :: albperroad_lcz &
+   real(r8), parameter, dimension(10)  :: albgper_lcz &
       = (/0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15/)
 
    ! emissivity of roof [-]
@@ -79,11 +79,11 @@ MODULE MOD_Urban_Const_LCZ
       = (/0.90, 0.90, 0.90, 0.90, 0.90, 0.90, 0.90, 0.90, 0.90, 0.90/)
 
    ! emissivity of road [-]
-   real(r8), parameter, dimension(10)  :: emimproad_lcz &
+   real(r8), parameter, dimension(10)  :: emgimp_lcz &
       = (/0.95, 0.95, 0.95, 0.95, 0.95, 0.95, 0.92, 0.95, 0.95, 0.95/)
 
    ! emissivity of impervious road [-]
-   real(r8), parameter, dimension(10)  :: emperroad_lcz &
+   real(r8), parameter, dimension(10)  :: emgper_lcz &
       = (/0.95, 0.95, 0.95, 0.95, 0.95, 0.95, 0.95, 0.95, 0.95, 0.95/)
 
 
@@ -96,7 +96,7 @@ MODULE MOD_Urban_Const_LCZ
       = (/1.8E6 , 2.67E6, 2.05E6, 2.0E6 , 2.0E6 , 2.05E6, 0.72E6, 1.8E6 , 2.56E6, 1.69E6/)
 
    ! volumetric heat capacity of impervious road [J/m3*K]
-   real(r8), parameter, dimension(10)  :: cvimproad_lcz &
+   real(r8), parameter, dimension(10)  :: cvgimp_lcz &
       = (/1.75E6, 1.68E6, 1.63E6, 1.54E6, 1.50E6, 1.47E6, 1.67E6, 1.38E6, 1.37E6, 1.49E6/)
 
 
@@ -109,10 +109,17 @@ MODULE MOD_Urban_Const_LCZ
       = (/1.09, 1.5 , 1.25, 1.45, 1.45, 1.25, 0.5 , 1.25, 1.00, 1.33/)
 
    ! thermal conductivity of impervious road [W/m*K]
-   real(r8), parameter, dimension(10)  :: tkimproad_lcz &
+   real(r8), parameter, dimension(10)  :: tkgimp_lcz &
       = (/0.77, 0.73, 0.69, 0.64, 0.62, 0.60, 0.72, 0.51, 0.55, 0.61/)
 
    !TODO:AHE coding
+   ! maximum temperature of inner room [K]
+   real(r8), parameter, dimension(10)  :: tbldmax_lcz &
+      = (/297.65, 297.65, 297.65, 297.65, 297.65, 297.65, 297.65, 297.65, 297.65, 297.65/)
+
+   ! minimum temperature of inner room [K]
+   real(r8), parameter, dimension(10)  :: tbldmin_lcz &
+      = (/290.65, 290.65, 290.65, 290.65, 290.65, 290.65, 290.65, 290.65, 290.65, 290.65/)
 
 END MODULE MOD_Urban_Const_LCZ
 ! ---------- EOP ------------

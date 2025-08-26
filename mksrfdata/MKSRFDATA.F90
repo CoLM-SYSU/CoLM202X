@@ -63,6 +63,7 @@ PROGRAM MKSRFDATA
    USE MOD_LandHRU
 #endif
    USE MOD_LandPatch
+   USE MOD_Land2mWMO
    USE MOD_SrfdataRestart
    USE MOD_Const_LC
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
@@ -378,6 +379,12 @@ PROGRAM MKSRFDATA
       CALL landcrop_build (lc_year)
 #endif
 
+      ! build land 2m WMO patches
+      CALL land2mwmo_init
+      IF (DEF_Output_2mWMO) THEN
+         CALL land2mwmo_build(lc_year)
+      ENDIF
+
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
       CALL landpft_build  (lc_year)
 #endif
@@ -469,6 +476,9 @@ IF (.not. (skip_rest)) THEN
       CALL Aggregation_SoilTexture     (grid_soil, dir_rawdata, dir_landdata, lc_year)
 
 ENDIF
+
+      ! deallocate 2m WMO log array
+      CALL land2mwmo_final
 
 ! ................................................................
 ! 4. Write out time info.

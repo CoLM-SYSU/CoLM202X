@@ -56,7 +56,7 @@ CONTAINS
 
       write(cyear,'(i4.4)') lc_year
       IF (p_is_master) THEN
-         write(*,'(A)') 'Making patches (crop shared) :'
+         write(*,'(A)') 'Making patches (crop shared):'
       ENDIF
 
 #ifdef USEMPI
@@ -137,12 +137,14 @@ CONTAINS
       write(*,'(A,I12,A)') 'Total: ', numpatch, ' patches.'
 #endif
 
+IF ( .not. DEF_Output_2mWMO ) THEN
       CALL elm_patch%build (landelm, landpatch, use_frac = .true.)
 #ifdef CATCHMENT
       CALL hru_patch%build (landhru, landpatch, use_frac = .true.)
 #endif
 
       CALL write_patchfrac (DEF_dir_landdata, lc_year)
+ENDIF
 
    END SUBROUTINE landcrop_build
 

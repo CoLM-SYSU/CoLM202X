@@ -82,8 +82,8 @@ SUBROUTINE CoLMMAIN ( &
            taux,         tauy,         fsena,        fevpa,        &
            lfevpa,       fsenl,        fevpl,        etr,          &
            fseng,        fevpg,        olrg,         fgrnd,        &
-           trad,         tref,         qref,         frcsat,       &
-           rsur,         &
+           trad,         tref,         qref,         t2m_wmo,      &
+           frcsat,       rsur,         &
            rsur_se,      rsur_ie,      rnof,         qintr,        &
            qinfl,        qdrip,        rst,          assim,        &
            respc,        sabvsun,      sabvsha,      sabg,         &
@@ -439,6 +439,7 @@ SUBROUTINE CoLMMAIN ( &
 
         tref        ,&! 2 m height air temperature [K]
         qref        ,&! 2 m height air specific humidity
+        t2m_wmo     ,&! 2 m wmo std air temperature [K]
         trad        ,&! radiative temperature [K]
         frcsat      ,&! fraction of saturation area
         rsur        ,&! surface runoff (mm h2o/s)
