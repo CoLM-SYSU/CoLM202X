@@ -26,6 +26,8 @@ MODULE MOD_Hydro_SoilWater
    PUBLIC :: soil_water_vertical_movement
    PUBLIC :: get_water_equilibrium_state
    PUBLIC :: soilwater_aquifer_exchange
+   PUBLIC :: get_zwt_from_wa
+
 
    ! boundary condition:
    ! 1: fixed pressure head
@@ -45,7 +47,7 @@ MODULE MOD_Hydro_SoilWater
 
    integer,  parameter :: effective_hk_type  = type_weighted_geometric_mean
    integer,  parameter :: max_iters_richards = 10
-   real(r8), parameter :: tol_richards = 1.e-7
+   real(r8), parameter :: tol_richards = 8.e-8
 
 #ifdef CoLMDEBUG
    integer(8) :: count_implicit = 0
@@ -75,8 +77,6 @@ MODULE MOD_Hydro_SoilWater
    PRIVATE :: flux_top_transitive_interface
    PRIVATE :: flux_btm_transitive_interface
    PRIVATE :: flux_both_transitive_interface
-
-   PRIVATE :: get_zwt_from_wa
 
    PRIVATE :: solve_least_squares_problem
    PRIVATE :: secant_method_iteration
@@ -231,7 +231,7 @@ CONTAINS
    integer  :: lbc_typ_sub
    real(r8) :: lbc_val_sub
 
-   real(r8) :: w_sum_before, w_sum_after
+   real(r8) :: w_sum_before, w_sum_after, vl_before(nlev), wt_before, wa_before, dp_before
 
    real(r8) :: tol_q, tol_z, tol_v, tol_p
 
@@ -263,6 +263,11 @@ CONTAINS
          ENDIF
       ENDDO
       w_sum_before = w_sum_before + wa
+
+      vl_before = ss_vliq
+      wt_before = zwt
+      wa_before = wa
+      dp_before = ss_dp
 
       ! transpiration
       IF(.not. DEF_USE_PLANTHYDRAULICS)THEN
@@ -394,12 +399,10 @@ CONTAINS
             zwt = 0._r8
          ENDIF
       ELSE
-         IF (is_permeable(nlev)) THEN
-            CALL get_zwt_from_wa ( &
-               porsl_wa, vl_r(nlev), psi_s(nlev), hksat(nlev), &
-               nprm, prms(:,nlev), tol_v, tol_z, &
-               wa, sp_zi(nlev), zwt)
-         ENDIF
+         CALL get_zwt_from_wa ( &
+            porsl_wa, vl_r(nlev), psi_s(nlev), hksat(nlev), &
+            nprm, prms(:,nlev), tol_v, tol_z, &
+            wa, sp_zi(nlev), zwt)
       ENDIF
 
       izwt = findloc_ud(zwt >= sp_zi, back=.true.)
@@ -432,10 +435,15 @@ CONTAINS
 
       IF (abs(wblc) > tolerance) THEN
          write(*,*) 'soil_water_vertical_movement balance error: ', wblc, ' in mm.'
-         write(*,*) 'qtop: ', qgtop, 'etr: ', sum(etroot)+etrdef, 'rsubst: ', rsubst, 'surf dep: ', ss_dp
+         write(*,*) 'qtop: ', qgtop, 'etr: ', sum(etroot)+etrdef, 'rsubst: ', rsubst
          write(*,*) 'permeable (1-10): ', is_permeable
-         write(*,*) 'vliq  (1-10): ', ss_vliq
-         write(*,*) 'porsl (1-10): ', porsl
+         write(*,*) 'ponding depth: ', dp_before, '(before) to ', ss_dp, '(after)'
+         write(*,*) 'porsl (c1) and liquid volume before (c2) and after (c3) (1-10) : '
+         DO ilev = 1, nlev
+            write(*,*) porsl(ilev), vl_before(ilev), ss_vliq(ilev)
+         ENDDO
+         write(*,*) 'water table  : ', wt_before, '(before) to ', zwt, '(after)'
+         write(*,*) 'aquifer      : ', wa_before, '(before) to ', wa, '(after)'
       ENDIF
 
       DO ilev = 1, nlev

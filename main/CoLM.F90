@@ -476,7 +476,7 @@ PROGRAM CoLM
 #ifdef DataAssimilation
          CALL run_DA (idate, deltim)
 #endif
-         
+
          ! Write out the model histroy file
          ! ----------------------------------------------------------------------
          CALL hist_out (idate, deltim, itstamp, etstamp, ptstamp, dir_hist, casename)
