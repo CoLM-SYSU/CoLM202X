@@ -89,7 +89,7 @@
 
          ! vegetation information
            htop         ,hbot         ,sqrtdi       ,chil         ,&
-           effcon       ,vmax25       ,slti         ,hlti         ,&
+           effcon       ,vmax25       ,c3c4         ,slti         ,hlti,&
            shti         ,hhti         ,trda         ,trdm         ,&
            trop         ,g1           ,g0           ,gradm        ,&
            binter       ,extkn        ,rho          ,tau          ,&
@@ -130,7 +130,7 @@
            dfwsun       ,t_room       ,troof_inner  ,twsun_inner  ,&
            twsha_inner  ,t_roommax    ,t_roommin    ,tafu         ,&
 
-           zwt          ,wa                                       ,&
+           zwt          ,wdsrf         ,wa                        ,&
            t_lake       ,lake_icefrac ,savedtke1                  ,&
 
          ! SNICAR snow model related
@@ -321,6 +321,8 @@
         trsmx0                ,&! max transpiration for moist soil+100% veg.  [mm/s]
         tcrit                   ! critical temp. to determine rain or snow
 
+   integer,  intent(in) :: c3c4 ! 1 for C3, 0 for C4
+
    real(r8), intent(in) :: hpbl ! atmospheric boundary layer height [m]
 
    ! Forcing
@@ -426,6 +428,7 @@
         snowdp_gper           ,&! snow depth (m)
         snowdp_lake           ,&! snow depth (m)
         zwt                   ,&! the depth to water table [m]
+        wdsrf                 ,&! depth of surface water [mm]
         wa                    ,&! water storage in aquifer [mm]
 
         snw_rds   ( maxsnl+1:0 ) ,&! effective grain radius (col,lyr) [microns, m-6]
@@ -697,6 +700,13 @@
    real(r8) snofrz    (maxsnl+1:0)  !snow freezing rate (col,lyr) [kg m-2 s-1]
    real(r8) sabg_lyr  (maxsnl+1:1)  !snow layer absorption [W/m-2]
 
+   !irrigation
+   real(r8) :: &
+         qflx_irrig_drip      ,&! drip irrigation rate [mm/s]
+         qflx_irrig_sprinkler ,&! sprinkler irrigation rate [mm/s]
+         qflx_irrig_flood     ,&! flood irrigation rate [mm/s]
+         qflx_irrig_paddy       ! paddy irrigation rate [mm/s]
+
    ! A simple urban irrigation scheme accounts for soil water stress of trees
    ! a factor represents irrigation efficiency, '1' represents a 50% direct irrigation efficiency.
    real(r8), parameter :: wst_irrig = 1.0
@@ -863,10 +873,14 @@
 !----------------------------------------------------------------------
 ! [2] Canopy interception and precipitation onto ground surface
 !----------------------------------------------------------------------
+      qflx_irrig_drip = 0._r8
+      qflx_irrig_sprinkler = 0._r8
+      qflx_irrig_flood = 0._r8
+      qflx_irrig_paddy = 0._r8
 
       ! with vegetation canopy
       CALL LEAF_interception_CoLM2014 (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tref,tleaf,&
-                              prc_rain,prc_snow,prl_rain,prl_snow,bifall,&
+                              prc_rain,prc_snow,prl_rain,prl_snow,qflx_irrig_sprinkler,bifall,&
                               ldew,ldew_rain,ldew_snow,z0m,forc_hgt_u,pgper_rain,pgper_snow,&
                               qintr,qintr_rain,qintr_snow)
 
@@ -995,7 +1009,7 @@
          z_wall(:)          ,zi_roofsno(lbr-1:) ,zi_gimpsno(lbi-1:) ,zi_gpersno(lbp-1:) ,&
          zi_lakesno(:)      ,zi_wall(0:)        ,dz_lake(1:)        ,lakedepth          ,&
          dewmx              ,sqrtdi             ,rootfr(:)          ,effcon             ,&
-         vmax25             ,slti               ,hlti               ,shti               ,&
+         vmax25             ,c3c4               ,slti               ,hlti               ,shti,&
          hhti               ,trda               ,trdm               ,trop               ,&
          g1                 ,g0                 ,gradm              ,binter             ,&
          extkn              ,lambda                                                     ,&
@@ -1086,10 +1100,12 @@
          mss_bcpho(lbsn:0)  ,mss_bcphi(lbsn:0)  ,mss_ocpho(lbsn:0)  ,mss_ocphi(lbsn:0)  ,&
          mss_dst1 (lbsn:0)  ,mss_dst2 (lbsn:0)  ,mss_dst3 (lbsn:0)  ,mss_dst4 (lbsn:0)  ,&
 ! END SNICAR model variables
-
+!  irrigaiton 
+         qflx_irrig_drip    ,qflx_irrig_flood   ,qflx_irrig_paddy                       ,&
+!  end irrigation
          ! output
          rsur               ,rnof               ,qinfl              ,zwt                ,&
-         wa                 ,qcharge            ,smp                ,hk                 )
+         wdsrf              ,wa                 ,qcharge            ,smp                ,hk                 )
 
       ! roof
       !============================================================

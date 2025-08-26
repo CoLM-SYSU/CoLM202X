@@ -27,7 +27,7 @@ CONTAINS
    SUBROUTINE LeafTemperature ( &
               ipatch     ,ivt        ,deltim     ,csoilc     ,dewmx      ,htvp       ,&
               lai        ,sai        ,htop       ,hbot       ,sqrtdi     ,effcon     ,&
-              vmax25     ,slti       ,hlti       ,shti       ,hhti       ,trda       ,&
+              vmax25     ,c3c4       ,slti       ,hlti       ,shti       ,hhti       ,trda       ,&
               trdm       ,trop       ,g1         ,g0         ,gradm      ,binter     ,&
               extkn      ,extkb      ,extkd      ,hu         ,ht         ,hq         ,&
               us         ,vs         ,thm        ,th         ,thv        ,qm         ,&
@@ -153,6 +153,8 @@ CONTAINS
         lambda,     &! Marginal water cost of carbon gain ((mol h2o) (mol co2)-1)
 !End WUE stomata model parameter
         extkn        ! coefficient of leaf nitrogen allocation
+   integer , intent(in) :: &
+        c3c4 ! 1 for c3, 0 for c4
    real(r8), intent(in) :: & ! for plant hydraulic scheme
         kmax_sun,   &! Plant Hydraulics Parameters
         kmax_sha,   &! Plant Hydraulics Parameters
@@ -669,7 +671,7 @@ CONTAINS
             rbsha = rb / laisha
 
             ! Sunlit leaves
-            CALL stomata  (vmax25   ,effcon   ,slti     ,hlti     ,&
+            CALL stomata  (vmax25   ,effcon   ,c3c4     ,slti     ,hlti     ,&
                  shti     ,hhti     ,trda     ,trdm     ,trop     ,&
                  g1       ,g0       ,gradm    ,binter   ,thm      ,&
                  psrf     ,po2m     ,pco2m    ,pco2a    ,eah      ,&
@@ -684,7 +686,7 @@ CONTAINS
                  assimsun ,respcsun ,rssun    )
 
             ! Shaded leaves
-            CALL stomata  (vmax25   ,effcon   ,slti     ,hlti     ,&
+            CALL stomata  (vmax25   ,effcon   ,c3c4     ,slti     ,hlti     ,&
                  shti     ,hhti     ,trda     ,trdm     ,trop     ,&
                  g1       ,g0       ,gradm    ,binter   ,thm      ,&
                  psrf     ,po2m     ,pco2m    ,pco2a    ,eah      ,&
@@ -724,11 +726,11 @@ CONTAINS
                gssha = gssha * laisha
 
                CALL update_photosyn(tl, po2m, pco2m, pco2a, parsun, psrf, rstfacsun, rb, gssun, &
-                                    effcon, vmax25, gradm, trop, slti, hlti, shti, hhti, trda, &
+                                    effcon, vmax25, c3c4, gradm, trop, slti, hlti, shti, hhti, trda, &
                                     trdm, cintsun, assimsun, respcsun)
 
                CALL update_photosyn(tl, po2m, pco2m, pco2a, parsha, psrf, rstfacsha, rb, gssha, &
-                                    effcon, vmax25, gradm, trop, slti, hlti, shti, hhti, trda, &
+                                    effcon, vmax25, c3c4, gradm, trop, slti, hlti, shti, hhti, trda, &
                                     trdm, cintsha, assimsha, respcsha)
 
                rssun = tprcor/tl * 1.e6 / gssun

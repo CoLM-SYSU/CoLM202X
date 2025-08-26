@@ -39,14 +39,15 @@ LOGICAL                         :: LKINE                   !! true: use kinemati
 LOGICAL                         :: LFLDOUT                 !! true: floodplain flow (high-water channel flow) active
 LOGICAL                         :: LPTHOUT                 !! true: activate bifurcation scheme
 LOGICAL                         :: LDAMOUT                 !! true: activate dam operation (under development)
+LOGICAL                         :: LDAMIRR                 !! true: activate dam irrigation scheme
 LOGICAL                         :: LLEVEE                  !! true: activate levee scheme  (under development)
 
 !~~ used in ECMWF
 LOGICAL                         :: LROSPLIT                !! true: input if surface (Qs) and sub-surface (Qsb) runoff
 LOGICAL                         :: LWEVAP                  !! true: input water evaporation to extract from floodplain
 LOGICAL                         :: LWEVAPFIX               !! true: water balance closure extracting water from evap when available
-logical                         :: LWINFILT                !! true: input water infiltration to extract from floodplain
-logical                         :: LWINFILTFIX             !! true: water balance closure extracting water from Infiltration when available
+LOGICAL                         :: LWINFILT                !! true: input water infiltration to extract from floodplain
+LOGICAL                         :: LWINFILTFIX             !! true: water balance closure extracting water from Infiltration when available
 LOGICAL                         :: LWEXTRACTRIV            !! true: also extract water from rivers 
 LOGICAL                         :: LSLOPEMOUTH             !! true: prescribe water level slope == elevation slope on river month
 LOGICAL                         :: LGDWDLY                 !! true: Activate ground water reservoir and delay

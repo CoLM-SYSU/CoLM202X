@@ -24,7 +24,7 @@ CONTAINS
 
 !-----------------------------------------------------------------------
 
-   SUBROUTINE stomata (vmax25,effcon,slti,hlti,shti, &
+   SUBROUTINE stomata (vmax25,effcon,c3c4,slti,hlti,shti, &
                        hhti,trda,trdm,trop,g1,g0,gradm,binter,tm, &
                        psrf,po2m,pco2m,pco2a,ea,ei,tlef,par, &
 !Ozone stress variables
@@ -95,7 +95,8 @@ CONTAINS
       g0,           &! conductance-photosynthesis intercept for medlyn model
       gradm,        &! conductance-photosynthesis slope parameter
       binter         ! conductance-photosynthesis intercept
-
+   integer, intent(in) :: &
+      c3c4           ! 1 for c3, 0 for c4
    real(r8),intent(in) :: &
       tm,           &! atmospheric air temperature (K)
       psrf,         &! surface atmospheric pressure (pa)
@@ -183,7 +184,7 @@ CONTAINS
    integer ic
 !-----------------------------------------------------------------------
 
-      CALL calc_photo_params(tlef, po2m, par , psrf, rstfac, rb, effcon, vmax25, &
+      CALL calc_photo_params(tlef, po2m, par , psrf, rstfac, rb, effcon, vmax25, c3c4, &
                              trop, slti, hlti, shti, hhti, trda, trdm, cint, &
                              vm, epar, respc, omss, gbh2o, gammas, rrkk, c3, c4)
 
@@ -454,7 +455,7 @@ CONTAINS
 
    END SUBROUTINE sortin
 
-   SUBROUTINE calc_photo_params(tlef, po2m, par , psrf, rstfac, rb, effcon, vmax25, &
+   SUBROUTINE calc_photo_params(tlef, po2m, par , psrf, rstfac, rb, effcon, vmax25, c3c4, &
                                trop, slti, hlti, shti, hhti, trda, trdm, cint, &
                                vm, epar, respc, omss, gbh2o, gammas, rrkk, c3, c4)
 
@@ -480,6 +481,9 @@ CONTAINS
             trda,     &! temperature coefficient in gs-a model             (1.3)
             trdm,     &! temperature coefficient in gs-a model             (328.16)
             psrf       ! surface atmospheric pressure (pa)
+            
+   integer, intent(in) :: &
+            c3c4       ! 1 for c3, 0 for c4
 
    real(r8),intent(in), dimension(3) :: &
             cint       ! scaling up from leaf to canopy
@@ -511,7 +515,7 @@ CONTAINS
 !-----------------------------------------------------------------------
 
       c3 = 0.
-      IF( effcon .gt. 0.07 ) c3 = 1.
+      IF (c3c4.eq.1) c3 = 1.
       c4 = 1. - c3
 
 !-----------------------------------------------------------------------
@@ -591,7 +595,7 @@ CONTAINS
    END SUBROUTINE calc_photo_params
 
    SUBROUTINE update_photosyn(tlef, po2m, pco2m, pco2a, par, psrf, rstfac, rb, gsh2o,&
-                             effcon, vmax25, gradm, trop, slti, hlti, shti, hhti, trda, trdm, cint,&
+                             effcon, vmax25, c3c4, gradm, trop, slti, hlti, shti, hhti, trda, trdm, cint,&
                              assim, respc)
 
    USE MOD_Precision
@@ -620,6 +624,9 @@ CONTAINS
             hhti,     &! 1/2 point of high temperature inhibition function (313.16)
             trda,     &! temperature coefficient in gs-a model             (1.3)
             trdm       ! temperature coefficient in gs-a model             (328.16)
+
+   integer, intent(in) :: &
+            c3c4       ! 1 for c3, 0 for c4
 
    real(r8),intent(in), dimension(3) :: &
             cint       ! scaling up from leaf to canopy
@@ -669,7 +676,7 @@ CONTAINS
    integer ic
 !-----------------------------------------------------------------------
 
-      CALL calc_photo_params(tlef, po2m, par , psrf, rstfac, rb, effcon, vmax25, &
+      CALL calc_photo_params(tlef, po2m, par , psrf, rstfac, rb, effcon, vmax25, c3c4, &
                              trop, slti, hlti, shti, hhti, trda, trdm, cint, &
                              vm, epar, respc, omss, gbh2o, gammas, rrkk, c3, c4)
 
