@@ -96,9 +96,7 @@ CONTAINS
                allocate (forc_topo (numpatch))
             ENDIF
 
-            IF (DEF_Aerosol_Readin) THEN
-               allocate (forc_aerdep(14,numpatch) ) ! atmospheric aerosol deposition data [kg/m/s]
-            ENDIF
+            allocate (forc_aerdep(14,numpatch) ) ! atmospheric aerosol deposition data [kg/m/s]
 
          ENDIF
 
@@ -148,9 +146,7 @@ CONTAINS
                deallocate (forc_topo)
             ENDIF
 
-            IF (DEF_Aerosol_Readin) THEN
-               deallocate ( forc_aerdep ) ! atmospheric aerosol deposition data [kg/m/s]
-            ENDIF
+            deallocate ( forc_aerdep ) ! atmospheric aerosol deposition data [kg/m/s]
 
          ENDIF
 

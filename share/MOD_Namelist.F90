@@ -1010,7 +1010,7 @@ CONTAINS
       DEF_USE_DiagMatrix,                     & !add by Xingjie Lu @ sysu 2023/06/27
       DEF_USE_PN,                             & !add by Xingjie Lu @ sysu 2023/06/27
       DEF_USE_FERT,                           & !add by Xingjie Lu @ sysu 2023/06/27
-      DEF_FERT_SOURCE,                        & !add by Hongbin Liang @ sysu 
+      DEF_FERT_SOURCE,                        & !add by Hongbin Liang @ sysu
       DEF_USE_NITRIF,                         & !add by Xingjie Lu @ sysu 2023/06/27
       DEF_USE_CNSOYFIXN,                      & !add by Xingjie Lu @ sysu 2023/06/27
       DEF_USE_FIRE,                           & !add by Xingjie Lu @ sysu 2023/06/27
@@ -1144,7 +1144,7 @@ CONTAINS
          DEF_USE_VariablySaturatedFlow = .true.
 #endif
 #ifdef SinglePoint
-         IF (DEF_Runoff_SCHEME = 0) THEN
+         IF (DEF_Runoff_SCHEME == 0) THEN
             write(*,*) 'Note: DEF_TOPMOD_method is set to 0 in SinglePoint.'
             DEF_TOPMOD_method = 0
          ENDIF

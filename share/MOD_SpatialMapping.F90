@@ -1977,8 +1977,10 @@ CONTAINS
                   iproc = this%address(iset)%val(1,ipart)
                   iloc  = this%address(iset)%val(2,ipart)
 
-                  pdata(iset) = pdata(iset) &
-                     + pbuff(iproc)%val(iloc) * this%areapart(iset)%val(ipart)
+                  IF (this%areapart(iset)%val(ipart) > 0) THEN
+                     pdata(iset) = pdata(iset) &
+                        + pbuff(iproc)%val(iloc) * this%areapart(iset)%val(ipart)
+                  ENDIF
                ENDDO
 
                pdata(iset) = pdata(iset) / this%areapset(iset)
@@ -2086,8 +2088,10 @@ CONTAINS
                   iproc = this%address(iset)%val(1,ipart)
                   iloc  = this%address(iset)%val(2,ipart)
 
-                  pdata(:,iset) = pdata(:,iset) &
-                     + pbuff(iproc)%val(:,iloc) * this%areapart(iset)%val(ipart)
+                  IF (this%areapart(iset)%val(ipart) > 0) THEN
+                     pdata(:,iset) = pdata(:,iset) &
+                        + pbuff(iproc)%val(:,iloc) * this%areapart(iset)%val(ipart)
+                  ENDIF
                ENDDO
 
                pdata(:,iset) = pdata(:,iset) / this%areapset(iset)
