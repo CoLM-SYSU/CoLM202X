@@ -558,8 +558,10 @@ CONTAINS
          simulation_lai_year_end = idate(1)
 
          IF (DEF_LAI_CHANGE_YEARLY) THEN
-            start_year = max(simulation_lai_year_start, DEF_LAI_START_YEAR)
-            end_year   = min(simulation_lai_year_end,   DEF_LAI_END_YEAR  )
+            start_year = max(simulation_lai_year_start, DEF_LAI_START_YEAR )
+            start_year = min(start_year,                DEF_LAI_END_YEAR   )
+            end_year   = min(simulation_lai_year_end,   DEF_LAI_END_YEAR   )
+            end_year   = max(end_year,                  DEF_LAI_START_YEAR )
          ELSE
             start_year = DEF_LC_YEAR
             end_year   = DEF_LC_YEAR
@@ -1666,8 +1668,10 @@ ENDIF
             simulation_lai_year_end = idate(1)
 
             IF (DEF_LAI_CHANGE_YEARLY) THEN
-               start_year = max(simulation_lai_year_start, DEF_LAI_START_YEAR)
-               end_year   = min(simulation_lai_year_end,   DEF_LAI_END_YEAR  )
+               start_year = max(simulation_lai_year_start, DEF_LAI_START_YEAR )
+               start_year = min(start_year,                DEF_LAI_END_YEAR   )
+               end_year   = min(simulation_lai_year_end,   DEF_LAI_END_YEAR   )
+               end_year   = max(end_year,                  DEF_LAI_START_YEAR )
             ELSE
                start_year = DEF_LC_YEAR
                end_year   = DEF_LC_YEAR
