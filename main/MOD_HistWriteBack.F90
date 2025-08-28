@@ -78,7 +78,7 @@ CONTAINS
    ! Local Variables
    integer :: dataid, tag
    integer :: time(3), ndims, ndim1, ndim2, dimlens(4), compress
-   integer :: i, idata, isrc, ixseg, iyseg, xdsp, ydsp, xcnt, ycnt
+   integer :: i, idata, isrc, ixseg, iyseg, xdsp, ydsp, xcnt, ycnt, idim1, idim2
 
    integer               :: recvint4 (5)
    character(len=256)    :: recvchar (9)
@@ -89,6 +89,7 @@ CONTAINS
    logical               :: fexists
 
    real(r8), allocatable :: wdata1d(:),  wdata2d(:,:), wdata3d(:,:,:), wdata4d(:,:,:,:)
+   real(r8), allocatable :: tmp3d(:,:,:), tmp4d(:,:,:,:)
 
 
       DO WHILE (.true.)
@@ -264,30 +265,40 @@ CONTAINS
                   dimlens = (/ndim1, nlon, nlat, 0/)
 
                   IF (.not. allocated(wdata3d)) THEN
-                     allocate (wdata3d (ndim1,nlon,nlat))
+                     allocate (wdata3d (nlon,nlat,ndim1))
+                     allocate (tmp3d   (ndim1,nlon,nlat))
                   ENDIF
 
                   allocate (datathis(ndim1*xcnt*ycnt))
                   CALL mpi_recv (datathis, ndim1*xcnt*ycnt, MPI_REAL8, &
                      isrc, tag, p_comm_glb_plus, p_stat, p_err)
 
-                  wdata3d(:,xdsp+1:xdsp+xcnt, ydsp+1:ydsp+ycnt) = &
-                     reshape(datathis,(/ndim1,xcnt,ycnt/))
+                  tmp3d = reshape(datathis,(/ndim1,xcnt,ycnt/))
+                  DO idim1 = 1, ndim1
+                     wdata3d(xdsp+1:xdsp+xcnt, ydsp+1:ydsp+ycnt, idim1) = tmp3d(idim1, :, :)
+                  ENDDO
 
                CASE (5)
 
                   dimlens = (/ndim1, ndim2, nlon, nlat/)
 
                   IF (.not. allocated(wdata4d)) THEN
-                     allocate (wdata4d (ndim1,ndim2,nlon,nlat))
+                     allocate (wdata4d (nlon,nlat,ndim1,ndim2))
+                     allocate (tmp4d   (ndim1,ndim2,nlon,nlat))
                   ENDIF
 
                   allocate (datathis(ndim1*ndim2*xcnt*ycnt))
                   CALL mpi_recv (datathis, ndim1*ndim2*xcnt*ycnt, MPI_REAL8, &
                      isrc, tag, p_comm_glb_plus, p_stat, p_err)
 
-                  wdata4d(:,:,xdsp+1:xdsp+xcnt, ydsp+1:ydsp+ycnt) = &
-                     reshape(datathis,(/ndim1,ndim2,xcnt,ycnt/))
+                  tmp4d = reshape(datathis,(/ndim1, ndim2, xcnt, ycnt/))
+
+                  DO idim1 = 1, ndim1
+                     DO idim2 = 1, ndim2
+                        wdata4d(xdsp+1:xdsp+xcnt, ydsp+1:ydsp+ycnt, idim1, idim2) = &
+                           tmp4d(idim1, idim2, :, :)
+                     ENDDO
+                  ENDDO
 
                ENDSELECT
 
@@ -296,8 +307,8 @@ CONTAINS
             ENDDO
 
 
-            IF (ndims >= 4) CALL ncio_define_dimension (filename, dim1name, dimlens(1))
-            IF (ndims >= 5) CALL ncio_define_dimension (filename, dim2name, dimlens(2))
+            IF (ndims >= 4) CALL ncio_define_dimension (filename, dim3name, dimlens(1))
+            IF (ndims >= 5) CALL ncio_define_dimension (filename, dim4name, dimlens(2))
 
             SELECTCASE (ndims)
             CASE (2) ! for variables with [lon,lat]
@@ -311,17 +322,19 @@ CONTAINS
                   dim1name, dim2name, dim3name, compress)
 
                deallocate(wdata2d)
-            CASE (4) ! for variables with [dim1,lon,lat,time]
+            CASE (4) ! for variables with [lon,lat,dim3,time]
 
                CALL ncio_write_serial_time (filename, dataname, itime_in_file, wdata3d, &
                   dim1name, dim2name, dim3name, dim4name, compress)
 
+               deallocate(tmp3d  )
                deallocate(wdata3d)
-            CASE (5) ! for variables with [dim1,dim2,lon,lat,time]
+            CASE (5) ! for variables with [lon,lat,dim3,dim4,time]
 
                CALL ncio_write_serial_time (filename, dataname, itime_in_file, wdata4d, &
                   dim1name, dim2name, dim3name, dim4name, dim5name, compress)
 
+               deallocate(tmp4d  )
                deallocate(wdata4d)
             ENDSELECT
 

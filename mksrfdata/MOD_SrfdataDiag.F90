@@ -104,29 +104,35 @@ CONTAINS
 
       write(cyear,'(i4.4)') lc_year
       landname = trim(dir_landdata)//'/diag/element_'//trim(cyear)//'.nc'
-      CALL srfdata_map_and_write (elmid_r8, landelm%settyp, (/0/), m_elm2diag, &
-         -1.0e36_r8, landname, 'element', compress = 1, write_mode = 'one')
+      CALL srfdata_map_and_write (elmid_r8, landelm%settyp, (/0,1/), m_elm2diag, &
+         -1.0e36_r8, landname, 'element', compress = 1, write_mode = 'one', &
+         defval=0._r8, create_mode=.true.)
 
       IF (p_is_worker) deallocate (elmid_r8)
 
       typindex = (/(ityp, ityp = 0, N_land_classification)/)
       landname = trim(dir_landdata)//'/diag/patchfrac_elm_'//trim(cyear)//'.nc'
-      CALL srfdata_map_and_write (elm_patch%subfrc, landpatch%settyp, typindex, m_patch2diag, &
-         -1.0e36_r8, landname, 'patchfrac_elm', compress = 1, write_mode = 'one')
 
-#ifdef CATCHMENT
-      typindex = (/(ityp, ityp = 0, N_land_classification)/)
-      landname = trim(dir_landdata)//'/diag/patchfrac_hru.nc'
-      CALL srfdata_map_and_write (hru_patch%subfrc, landpatch%settyp, typindex, m_patch2diag, &
-         -1.0e36_r8, landname, 'patchfrac_hru', compress = 1, write_mode = 'one')
-#endif
+      IF (p_is_worker) THEN
+         IF (numpatch > 0) THEN
+            IF (.not. allocated(landpatch%pctshared)) THEN
+               allocate (landpatch%pctshared (numpatch))
+               landpatch%pctshared = 1.
+            ENDIF
+         ENDIF
+      ENDIF
+
+      CALL srfdata_map_and_write (landpatch%pctshared, landpatch%settyp, typindex, m_patch2diag, &
+         -1.0e36_r8, landname, 'patchfrac_elm', compress = 1, write_mode = 'one', defval=0._r8, &
+         stat_mode = 'fraction', pctshared = landpatch%pctshared, create_mode=.true.)
 
    END SUBROUTINE srfdata_diag_init
 
    ! ------ SUBROUTINE ------
    SUBROUTINE srfdata_map_and_write ( &
-         vsrfdata, settyp, typindex, m_srf, spv, filename, dataname, &
-         compress, write_mode, lastdimname, lastdimvalue)
+         vsrfdata,  settyp,   typindex,   m_srf,       spv,          filename, &
+         dataname,  compress, write_mode, lastdimname, lastdimvalue, defval,   &
+         stat_mode, pctshared, create_mode)
 
    USE MOD_SPMD_Task
    USE MOD_Namelist
@@ -151,19 +157,28 @@ CONTAINS
    character (len=*), intent(in), optional :: write_mode
 
    character (len=*), intent(in), optional :: lastdimname
-   integer, intent(in), optional :: lastdimvalue
+   integer,  intent(in), optional :: lastdimvalue
+
+   real(r8), intent(in), optional :: defval
+
+   character (len=*), intent(in), optional :: stat_mode
+   real(r8), intent(in), optional :: pctshared (:)
+   logical , intent(in), optional :: create_mode
 
    ! Local variables
-   type(block_data_real8_3d) :: wdata, sumwt
-   real(r8), allocatable :: vecone (:)
+   type(block_data_real8_3d) :: wdata, wtone
+   type(block_data_real8_2d) :: wdsum, wtsum
+   real(r8), allocatable :: vecone   (:)
+   real(r8), allocatable :: areafrac (:)
+   real(r8), allocatable :: vdata (:,:,:), vdsum (:,:)
+   real(r8), allocatable :: rbuf  (:,:,:), sbuf  (:,:,:)
 
-   character(len=10) :: wmode
+   character(len=10) :: wmode, smode
    integer :: iblkme, ib, jb, iblk, jblk, idata, ixseg, iyseg
-   integer :: ntyps, xcnt, ycnt, xbdsp, ybdsp, xgdsp, ygdsp
+   integer :: ntyps, ityp, xcnt, ycnt, xbdsp, ybdsp, xgdsp, ygdsp
    integer :: rmesg(3), smesg(3), isrc
    character(len=256) :: fileblock
-   real(r8), allocatable :: rbuf(:,:,:), sbuf(:,:,:), vdata(:,:,:)
-   logical :: fexists
+   logical :: fexists, cmode
    integer :: ilastdim
 
       IF (present(write_mode)) THEN
@@ -172,33 +187,87 @@ CONTAINS
          wmode = 'one'
       ENDIF
 
+      IF (present(stat_mode)) THEN
+         smode = trim(stat_mode)
+      ELSE
+         smode = 'mean'
+      ENDIF
+
+      IF (present(create_mode)) THEN
+         cmode = create_mode
+      ELSE
+         cmode = .false.
+      ENDIF
+
       ntyps = size(typindex)
 
       IF (p_is_io) THEN
-         CALL allocate_block_data (gdiag, sumwt, ntyps)
+         CALL allocate_block_data (gdiag, wtone, ntyps)
          CALL allocate_block_data (gdiag, wdata, ntyps)
+         CALL allocate_block_data (gdiag, wdsum)
+         CALL allocate_block_data (gdiag, wtsum)
       ENDIF
 
       IF (p_is_worker) THEN
-         IF (size(vsrfdata) > 0) THEN
-            allocate (vecone (size(vsrfdata)))
+         IF (m_srf%npset > 0) THEN
+            allocate (vecone (m_srf%npset))
             vecone(:) = 1.0
          ENDIF
       ENDIF
 
-      CALL m_srf%pset2grid_split (vecone  , settyp, typindex, sumwt, spv)
-      CALL m_srf%pset2grid_split (vsrfdata, settyp, typindex, wdata, spv)
+      CALL m_srf%pset2grid_split (vecone, settyp, typindex, wtone, spv)
+
+      IF (trim(smode) == 'mean') THEN
+         CALL m_srf%pset2grid_split (vsrfdata, settyp, typindex, wdata, spv)
+      ELSEIF (trim(smode) == 'fraction') THEN
+         IF (p_is_worker) THEN
+            IF (m_srf%npset > 0) THEN
+               allocate (areafrac (m_srf%npset))
+               areafrac = vsrfdata
+               IF (present(pctshared)) THEN
+                  WHERE (pctshared > 0.) areafrac = areafrac / pctshared
+               ENDIF
+            ENDIF
+         ENDIF
+         CALL m_srf%pset2grid_split (areafrac, settyp, typindex, wdata, spv)
+      ENDIF
 
       IF (p_is_io) THEN
          DO iblkme = 1, gblock%nblkme
             ib = gblock%xblkme(iblkme)
             jb = gblock%yblkme(iblkme)
 
-            WHERE ((sumwt%blk(ib,jb)%val > 0.) .and. (wdata%blk(ib,jb)%val /= spv))
-               wdata%blk(ib,jb)%val = wdata%blk(ib,jb)%val / sumwt%blk(ib,jb)%val
-            elsewhere
-               wdata%blk(ib,jb)%val = spv
+            wtsum%blk(ib,jb)%val = sum(wtone%blk(ib,jb)%val, &
+               mask = (wtone%blk(ib,jb)%val > 0.) .and. (wdata%blk(ib,jb)%val /= spv), dim = 1)
+            wdsum%blk(ib,jb)%val = sum(wdata%blk(ib,jb)%val, &
+               mask = (wtone%blk(ib,jb)%val > 0.) .and. (wdata%blk(ib,jb)%val /= spv), dim = 1)
+
+            IF (trim(smode) == 'mean') THEN
+
+               WHERE ((wtone%blk(ib,jb)%val > 0.) .and. (wdata%blk(ib,jb)%val /= spv))
+                  wdata%blk(ib,jb)%val = wdata%blk(ib,jb)%val / wtone%blk(ib,jb)%val
+               ELSEWHERE
+                  wdata%blk(ib,jb)%val = spv
+               END WHERE
+
+            ELSEIF (trim(smode) == 'fraction') THEN
+
+               DO ityp = 1, ntyps
+                  WHERE ((wtsum%blk(ib,jb)%val(:,:) > 0.) .and. (wtone%blk(ib,jb)%val(ityp,:,:) /= spv))
+                     wdata%blk(ib,jb)%val(ityp,:,:) = wtone%blk(ib,jb)%val(ityp,:,:) / wtsum%blk(ib,jb)%val
+                  ELSEWHERE
+                     wdata%blk(ib,jb)%val(ityp,:,:) = spv
+                  END WHERE
+               ENDDO
+
+            ENDIF
+
+            WHERE (wtsum%blk(ib,jb)%val > 0.)
+               wdsum%blk(ib,jb)%val = wdsum%blk(ib,jb)%val / wtsum%blk(ib,jb)%val
+            ELSEWHERE
+               wdsum%blk(ib,jb)%val = spv
             END WHERE
+
          ENDDO
       ENDIF
 
@@ -206,8 +275,11 @@ CONTAINS
 
          IF (p_is_master) THEN
 
-            allocate (vdata (ntyps, srf_concat%ginfo%nlon, srf_concat%ginfo%nlat))
+            allocate (vdata (srf_concat%ginfo%nlon, srf_concat%ginfo%nlat, ntyps))
             vdata(:,:,:) = spv
+
+            allocate (vdsum (srf_concat%ginfo%nlon, srf_concat%ginfo%nlat))
+            vdsum(:,:) = spv
 
 #ifdef USEMPI
             DO idata = 1, srf_concat%ndatablk
@@ -229,7 +301,14 @@ CONTAINS
                CALL mpi_recv (rbuf, ntyps * xcnt * ycnt, MPI_DOUBLE, &
                   isrc, srf_data_id, p_comm_glb, p_stat, p_err)
 
-               vdata (:,xgdsp+1:xgdsp+xcnt,ygdsp+1:ygdsp+ycnt) = rbuf
+               DO ityp = 1, ntyps
+                  vdata (xgdsp+1:xgdsp+xcnt,ygdsp+1:ygdsp+ycnt,ityp) = rbuf(ityp,:,:)
+               ENDDO
+
+               CALL mpi_recv (rbuf(1,:,:), xcnt * ycnt, MPI_DOUBLE, &
+                  isrc, srf_data_id, p_comm_glb, p_stat, p_err)
+
+               vdsum (xgdsp+1:xgdsp+xcnt,ygdsp+1:ygdsp+ycnt) = rbuf(1,:,:)
 
                deallocate (rbuf)
             ENDDO
@@ -245,20 +324,34 @@ CONTAINS
                   xcnt  = srf_concat%xsegs(ixseg)%cnt
                   ycnt  = srf_concat%ysegs(iyseg)%cnt
 
-                  vdata (:,xgdsp+1:xgdsp+xcnt, ygdsp+1:ygdsp+ycnt) = &
-                     wdata%blk(iblk,jblk)%val(:,xbdsp+1:xbdsp+xcnt,ybdsp+1:ybdsp+ycnt)
+                  DO ityp = 1, ntyps
+                     vdata (xgdsp+1:xgdsp+xcnt, ygdsp+1:ygdsp+ycnt,ityp) = &
+                        wdata%blk(iblk,jblk)%val(ityp,xbdsp+1:xbdsp+xcnt,ybdsp+1:ybdsp+ycnt)
+                  ENDDO
+
+                  vdsum (xgdsp+1:xgdsp+xcnt, ygdsp+1:ygdsp+ycnt) = &
+                     wdsum%blk(iblk,jblk)%val(xbdsp+1:xbdsp+xcnt,ybdsp+1:ybdsp+ycnt)
                ENDDO
             ENDDO
 #endif
 
+            IF (present(defval)) THEN
+               WHERE (vdata == spv)  vdata = defval
+               WHERE (vdsum == spv)  vdsum = defval
+            ENDIF
+
             write(*,*) 'Please check gridded data < ', trim(dataname), ' > in ', trim(filename)
 
             inquire (file=trim(filename), exist=fexists)
-            IF (.not. fexists) THEN
+            IF (.not. fexists .or. cmode) THEN
 
                CALL ncio_create_file (filename)
 
-               CALL ncio_define_dimension (filename, 'TypeIndex', ntyps)
+               IF (ntyps > 1) THEN
+                  CALL ncio_define_dimension (filename, 'TypeIndex', ntyps)
+                  CALL ncio_write_serial (filename, 'TypeIndex', typindex, 'TypeIndex')
+               ENDIF
+
                CALL ncio_define_dimension (filename, 'lon' , srf_concat%ginfo%nlon)
                CALL ncio_define_dimension (filename, 'lat' , srf_concat%ginfo%nlat)
 
@@ -286,21 +379,41 @@ CONTAINS
                CALL ncio_put_attr (filename, 'lon_e', 'long_name', 'eastern longitude boundary')
                CALL ncio_put_attr (filename, 'lon_e', 'units', 'degrees_east')
 
-               CALL ncio_write_serial (filename, 'TypeIndex', typindex, 'TypeIndex')
-
             ENDIF
 
             IF (present(lastdimname) .and. present(lastdimvalue)) THEN
+
                CALL ncio_write_lastdim (filename, lastdimname, lastdimvalue, ilastdim)
-               CALL ncio_write_serial_time (filename, dataname, ilastdim, vdata, &
-                  'TypeIndex', 'lon', 'lat', trim(lastdimname), compress)
+
+               IF (ntyps > 1) THEN
+                  CALL ncio_write_serial_time (filename, dataname, ilastdim, vdata, &
+                     'lon', 'lat', 'TypeIndex', trim(lastdimname), compress)
+                  CALL ncio_write_serial_time (filename, trim(dataname)//'_grid', ilastdim, vdsum, &
+                     'lon', 'lat', trim(lastdimname), compress)
+               ELSE
+                  CALL ncio_write_serial_time (filename, dataname, ilastdim, vdata(:,:,1), &
+                     'lon', 'lat', trim(lastdimname), compress)
+               ENDIF
+
             ELSE
-               CALL ncio_write_serial (filename, dataname, vdata, 'TypeIndex', 'lon', 'lat', compress)
+
+               IF (ntyps > 1) THEN
+                  CALL ncio_write_serial (filename, dataname, vdata, 'lon', 'lat', 'TypeIndex', compress)
+                  CALL ncio_write_serial (filename, trim(dataname)//'_grid', vdsum, 'lon', 'lat', compress)
+               ELSE
+                  CALL ncio_write_serial (filename, dataname, vdata(:,:,1), 'lon', 'lat', compress)
+               ENDIF
+
             ENDIF
 
             CALL ncio_put_attr (filename, dataname, 'missing_value', spv)
 
+            IF (ntyps > 1) THEN
+               CALL ncio_put_attr (filename, trim(dataname)//'_grid', 'missing_value', spv)
+            ENDIF
+
             deallocate (vdata)
+            deallocate (vdsum)
 
          ENDIF
 
@@ -320,13 +433,18 @@ CONTAINS
                      xcnt  = srf_concat%xsegs(ixseg)%cnt
                      ycnt  = srf_concat%ysegs(iyseg)%cnt
 
-                     allocate (sbuf (ntyps,xcnt,ycnt))
-                     sbuf = wdata%blk(iblk,jblk)%val(:,xbdsp+1:xbdsp+xcnt,ybdsp+1:ybdsp+ycnt)
-
                      smesg = (/p_iam_glb, ixseg, iyseg/)
                      CALL mpi_send (smesg, 3, MPI_INTEGER, &
                         p_address_master, srf_data_id, p_comm_glb, p_err)
+
+                     allocate (sbuf (ntyps,xcnt,ycnt))
+
+                     sbuf = wdata%blk(iblk,jblk)%val(:,xbdsp+1:xbdsp+xcnt,ybdsp+1:ybdsp+ycnt)
                      CALL mpi_send (sbuf, ntyps*xcnt*ycnt, MPI_DOUBLE, &
+                        p_address_master, srf_data_id, p_comm_glb, p_err)
+
+                     sbuf(1,:,:) = wdsum%blk(iblk,jblk)%val(xbdsp+1:xbdsp+xcnt,ybdsp+1:ybdsp+ycnt)
+                     CALL mpi_send (sbuf(1,:,:), xcnt*ycnt, MPI_DOUBLE, &
                         p_address_master, srf_data_id, p_comm_glb, p_err)
 
                      deallocate (sbuf)

@@ -63,7 +63,7 @@ CONTAINS
 !-----------------------------------------------------------------------
 
    USE MOD_Precision
-   USE MOD_Namelist, only: DEF_VEG_SNOW
+   USE MOD_Namelist, only: DEF_VEG_SNOW, DEF_PC_CROP_SPLIT
    USE MOD_LandPFT, only: patch_pft_s, patch_pft_e
    USE MOD_Vars_Global
    USE MOD_Const_PFT
@@ -82,7 +82,7 @@ CONTAINS
    real(r8), intent(out) :: ssha(2,2)
 
 !-------------------------- Local Variables ----------------------------
-   integer :: i, p, ps, pe;
+   integer :: i, p, ps, pe, pn;
 
    ! sunlit absorption fraction calculation mode
    ! .true. USE 3D model, otherwise USE 1D case
@@ -98,7 +98,7 @@ CONTAINS
    real(r8), allocatable :: rho (:,:), tau (:,:)
    real(r8), allocatable :: csiz(:), chgt(:), chil(:), lsai(:)
    real(r8), allocatable :: fsun_id(:), fsun_ii(:), psun(:)
-   real(r8), allocatable :: phi1(:), phi2(:), gdir(:)
+   real(r8), allocatable :: phi1(:), phi2(:), gdir(:), fcover(:)
 
    ! vegetation snow optical properties, 1:vis, 2:nir
    real(r8) :: rho_sno(2), tau_sno(2)
@@ -109,6 +109,24 @@ CONTAINS
       ! get patch PFT index
       ps = patch_pft_s(ipatch)
       pe = patch_pft_e(ipatch)
+
+      ! Calculate the end index of natrue PFT
+      DO i = ps, pe
+         pn = i
+         p = pftclass(i)
+         IF (DEF_PC_CROP_SPLIT .and. p.ge.15) THEN
+            pn = pn - 1
+            EXIT
+         ENDIF
+      ENDDO
+
+      ! If pn less than start index, there is no nature PFT
+      ! Otherwise, set the new end index
+      IF (pn.ge.ps) THEN
+         pe = pn
+      ELSE
+         RETURN
+      ENDIF
 
       ! allocate memory for defined variables
       allocate (albd   (ps:pe, 2) )
@@ -132,6 +150,7 @@ CONTAINS
       allocate (phi1   (ps:pe)    )
       allocate (phi2   (ps:pe)    )
       allocate (gdir   (ps:pe)    )
+      allocate (fcover (ps:pe)    )
 
       ! initialization
       albd=1.; albi=1.; fabd=0.; fabi=0.;
@@ -139,6 +158,7 @@ CONTAINS
       csiz(:) = (htop_p(ps:pe) - hbot_p(ps:pe)) / 2
       chgt(:) = (htop_p(ps:pe) + hbot_p(ps:pe)) / 2
       lsai(:) = lai_p(ps:pe) + sai_p(ps:pe)
+      fcover(ps:pe) = pftfrac(ps:pe) / sum(pftfrac(ps:pe))
 
       ! calculate weighted plant optical properties
       ! loop for each PFT
@@ -167,7 +187,7 @@ CONTAINS
       ENDDO
 
       ! CALL 3D canopy radiation transfer model
-      CALL ThreeDCanopy(ps, pe, canlay, pftfrac(ps:pe), csiz, chgt, chil, czen, &
+      CALL ThreeDCanopy(ps, pe, canlay, fcover(ps:pe), csiz, chgt, chil, czen, &
                         lsai, rho, tau, albg(:,1), albg(:,2), albd, albi, &
                         fabd, fabi, ftdd, ftid, ftii, fadd, psun, fsun_id, fsun_ii, &
                         thermk_p(ps:pe), fshade_p(ps:pe) )
@@ -204,7 +224,7 @@ CONTAINS
          ENDIF
       ENDDO
 
-      ! calculate albv, ssun, ssha
+      ! Calculate albv, ssun, ssha and tran for PFTs
       ! NOTE: CoLM (1/2,): vis/nir; (,1/2): dir/dif
       albv(1,1) = albd(ps,1); albv(1,2) = albi(ps,1)
       albv(2,1) = albd(ps,2); albv(2,2) = albi(ps,2)
@@ -258,6 +278,7 @@ CONTAINS
       deallocate (phi1    )
       deallocate (phi2    )
       deallocate (gdir    )
+      deallocate (fcover  )
 
    END SUBROUTINE ThreeDCanopy_wrap
 #endif

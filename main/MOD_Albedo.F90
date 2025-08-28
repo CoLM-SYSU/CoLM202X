@@ -238,11 +238,11 @@ CONTAINS
       extkb     = 1.
       extkd     = 0.718
 
-      albsno    (:,:) = 0. !set initial snow albedo
-      albsno_pur(:,:) = 0. !set initial pure snow albedo
-      albsno_bc (:,:) = 0. !set initial BC   snow albedo
-      albsno_oc (:,:) = 0. !set initial OC   snow albedo
-      albsno_dst(:,:) = 0. !set initial dust snow albedo
+      albsno    (:,:) = 1. !set initial snow albedo
+      albsno_pur(:,:) = 1. !set initial pure snow albedo
+      albsno_bc (:,:) = 1. !set initial BC   snow albedo
+      albsno_oc (:,:) = 1. !set initial OC   snow albedo
+      albsno_dst(:,:) = 1. !set initial dust snow albedo
 
       ! soil and snow absorption
       ssoi      (:,:) = 0. !set initial soil absorption
@@ -376,15 +376,15 @@ ENDIF
                                       !  first estimate clean-snow albedo
             use_snicar_ad  = .true.   !  use true: use SNICAR_AD_RT, false: use SNICAR_RT
 
-            CALL SnowAlbedo(     use_snicar_frc ,use_snicar_ad  ,coszen         ,&
+            CALL SnowAlbedo(     use_snicar_frc ,use_snicar_ad  ,czen           ,&
                  albg(:,1)      ,albg(:,2)      ,snl            ,fsno           ,&
                  scv            ,wliq_soisno    ,wice_soisno    ,snw_rds        ,&
 
                  mss_cnc_bcphi  ,mss_cnc_bcpho  ,mss_cnc_ocphi  ,mss_cnc_ocpho  ,&
                  mss_cnc_dst1   ,mss_cnc_dst2   ,mss_cnc_dst3   ,mss_cnc_dst4   ,&
 
-                 albsno(:,1)    ,albsno(:,2)    ,albsno_pur(:,1),albsno_pur(:,2),&
-                 albsno_bc(:,1) ,albsno_bc(:,2) ,albsno_oc(:,1) ,albsno_oc(:,2) ,&
+                 albsno    (:,1),albsno    (:,2),albsno_pur(:,1),albsno_pur(:,2),&
+                 albsno_bc (:,1),albsno_bc (:,2),albsno_oc (:,1),albsno_oc (:,2),&
                  albsno_dst(:,1),albsno_dst(:,2),ssno_lyr(1,1,:),ssno_lyr(2,1,:),&
                  ssno_lyr(1,2,:),ssno_lyr(2,2,:))
 
@@ -435,14 +435,13 @@ ENDIF
 #endif
 
 #ifdef LULC_IGBP_PC
-         !NOTE: if patchclass is CROPLAND, using twostream model
-         IF (patchclass(ipatch) == CROPLAND) THEN
-            CALL twostream_wrap (ipatch, czen, albg, albv, tran, ssun, ssha)
-            alb(:,:) = albv(:,:)
-         ELSE
-            CALL ThreeDCanopy_wrap (ipatch, czen, albg, albv, tran, ssun, ssha)
-            alb(:,:) = albv(:,:)
-         ENDIF
+         ! Only process nature PFTs using 3D model if set DEF_PC_CROP_SPLIT true
+         CALL ThreeDCanopy_wrap (ipatch, czen, albg, albv, tran, ssun, ssha)
+
+         ! Process crop PFTs using 1D model if set DEF_PC_CROP_SPLIT true
+         CALL twostream_wrap (ipatch, czen, albg, albv, tran, ssun, ssha)
+
+         alb(:,:) = albv(:,:)
 #endif
       ENDIF
 
@@ -1192,6 +1191,7 @@ ENDIF
    USE MOD_Const_PFT
    USE MOD_Vars_PFTimeInvariants
    USE MOD_Vars_PFTimeVariables
+   USE MOD_Namelist, only: DEF_USE_PC, DEF_PC_CROP_SPLIT
    IMPLICIT NONE
 
 !-------------------------- Dummy Arguments ----------------------------
@@ -1204,7 +1204,7 @@ ENDIF
          albg(2,2)       ! albedos of ground
 
    ! output
-   real(r8), intent(out) :: &
+   real(r8), intent(inout) :: &
          albv(2,2),     &! albedo, vegetation [-]
          tran(2,3),     &! canopy transmittances for solar radiation
          ssun(2,2),     &! sunlit canopy absorption for solar radiation
@@ -1226,6 +1226,15 @@ ENDIF
 
       DO i = ps, pe
          p = pftclass(i)
+
+         ! If defined DEF_PC_CROP_SPLIT, for crop PFTs, use 1D twostream model;
+         ! Otherwise, set their value to PC 3D model results.
+         IF ( DEF_USE_PC .and. (.not.DEF_PC_CROP_SPLIT .or. p.lt.15) ) THEN
+            albv_p(:,:,i) = albv(:,:)
+            tran_p(:,:,i) = tran(:,:)
+            CYCLE
+         ENDIF
+
          IF (lai_p(i)+sai_p(i) > 1.e-6) THEN
             CALL twostream_mod (chil_p(p),rho_p(:,:,p),tau_p(:,:,p),1.,lai_p(i),sai_p(i),&
                  fwet_snow_p(i),coszen,albg,albv_p(:,:,i),tran_p(:,:,i),thermk_p(i),&
@@ -1263,7 +1272,7 @@ ENDIF
       tran(2,3) = sum( tran_p(2,3,ps:pe)*pftfrac(ps:pe) )
 
       IF (ssun(1,1)<0 .or. ssun(1,2)<0 .or. ssun(2,1)<0 .or. ssun(2,2)<0) THEN
-         print *, 'Warning:negative albedo',ipatch
+         print *, 'Warning: negative ssun in albedo calculation!',ipatch
          print *, ssun
       ENDIF
 
@@ -1472,16 +1481,16 @@ ENDIF
       ! Initialize output because solar radiation only done IF coszen > 0
 
       DO ib = 1, numrad
-         albgrd(ib)     = 0._r8
-         albgri(ib)     = 0._r8
-         albgrd_pur(ib) = 0._r8
-         albgri_pur(ib) = 0._r8
-         albgrd_bc(ib)  = 0._r8
-         albgri_bc(ib)  = 0._r8
-         albgrd_oc(ib)  = 0._r8
-         albgri_oc(ib)  = 0._r8
-         albgrd_dst(ib) = 0._r8
-         albgri_dst(ib) = 0._r8
+         albgrd(ib)     = 1._r8
+         albgri(ib)     = 1._r8
+         albgrd_pur(ib) = 1._r8
+         albgri_pur(ib) = 1._r8
+         albgrd_bc(ib)  = 1._r8
+         albgri_bc(ib)  = 1._r8
+         albgrd_oc(ib)  = 1._r8
+         albgri_oc(ib)  = 1._r8
+         albgrd_dst(ib) = 1._r8
+         albgri_dst(ib) = 1._r8
          DO i=maxsnl+1,1,1
             flx_absdv(i) = 0._r8
             flx_absdn(i) = 0._r8

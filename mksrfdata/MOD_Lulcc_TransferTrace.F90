@@ -69,6 +69,7 @@ CONTAINS
    USE MOD_SPMD_Task
    USE MOD_Grid
    USE MOD_LandPatch
+   USE MOD_Land2mWMO
    USE MOD_NetCDFVector
    USE MOD_NetCDFBlock
    USE MOD_AggregationRequestData
@@ -102,12 +103,14 @@ CONTAINS
    real(r8),allocatable, dimension(:) :: area_one(:)    , areabuff(:)
    real(r8) :: sum_areabuff, gridarea
    integer, allocatable, dimension(:) :: grid_patch_s, grid_patch_e
+   logical :: first_call
 ! for surface data diag
 #ifdef SrfdataDiag
    integer  :: ityp
    integer, allocatable, dimension(:) :: typindex
 #endif
 !-----------------------------------------------------------------------
+
       IF ( (lc_year < 1990) .or. (lc_year < 2000 .and. MOD(lc_year, 5) /= 0) ) RETURN
 
       write(thisyr,'(i4.4)') lc_year
@@ -116,6 +119,8 @@ CONTAINS
       ELSE
          write(lastyr,'(i4.4)') MAX(1985, lc_year-1)
       ENDIF
+
+      first_call = .true.
 
 #ifdef SrfdataDiag
       allocate( typindex(N_land_classification+1) )
@@ -183,7 +188,11 @@ CONTAINS
 
             DO WHILE (ipatch.le.grid_patch_e(i))
 
-               IF (ipatch.le.0) CYCLE
+               !TODO-done: need to skip the 2m WMO patches
+               IF (ipatch == wmo_patch(landpatch%ielm(ipatch)) ) THEN
+                  ipatch = ipatch + 1
+                  CYCLE
+               ENDIF
 
                ! using this year patch mapping to aggregate the previous year land cover data
                CALL aggregation_request_data (landpatch, ipatch, grid_patch, zip = .true., &
@@ -241,7 +250,9 @@ CONTAINS
       DO ilc = 0, N_land_classification
          CALL srfdata_map_and_write (lccpct_matrix(:,ilc), landpatch%settyp, typindex, &
             m_patch2diag, -1.0e36_r8, lndname, 'lccpct_matrix', compress = 0, &
-            write_mode = 'one', lastdimname = 'source_patch', lastdimvalue = ilc)
+            write_mode = 'one', defval=0._r8, lastdimname = 'source_patch', lastdimvalue = ilc, &
+            create_mode=first_call)
+         IF ( first_call ) first_call = .false.
       ENDDO
       deallocate(typindex)
 #endif

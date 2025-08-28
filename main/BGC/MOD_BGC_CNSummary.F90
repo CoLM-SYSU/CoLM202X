@@ -33,7 +33,7 @@ MODULE MOD_BGC_CNSummary
 #ifdef CROP
        grainc, grainc_storage, grainc_xfer, &
        cropseedc_deficit, cropprod1c, cphase, hui, vf, gddplant, gddmaturity, & 
-       fertnitro_corn, fertnitro_swheat, fertnitro_wwheat, fertnitro_soybean, &
+       manunitro, fertnitro_corn, fertnitro_swheat, fertnitro_wwheat, fertnitro_soybean, &
        fertnitro_cotton, fertnitro_rice1, fertnitro_rice2, fertnitro_sugarcane, &
        grainn, grainn_storage, grainn_xfer, plantdate, &
 #endif
@@ -62,7 +62,7 @@ MODULE MOD_BGC_CNSummary
        ctrunc_p, totvegc_p, &
        cropseedc_deficit_p, cropprod1c_p, cpool_p, &
 #ifdef CROP
-       plantdate_p, cphase_p, fertnitro_p, hui_p, gddmaturity_p, gddplant_p, vf_p, &
+       plantdate_p, cphase_p, manunitro_p, fertnitro_p, hui_p, gddmaturity_p, gddplant_p, vf_p, &
        grainn_p, grainn_storage_p, grainn_xfer_p, cropseedn_deficit_p, & 
 #endif
        leafn_p, frootn_p, livestemn_p, deadstemn_p, livecrootn_p, deadcrootn_p, &
@@ -345,14 +345,17 @@ CONTAINS
       gddmaturity(i)        = sum(gddmaturity_p(ps:pe)        * pftfrac(ps:pe))
       vf(i)                 = sum(vf_p(ps:pe)             * pftfrac(ps:pe))
   
-      fertnitro_corn(i) = 0._r8
-      fertnitro_swheat(i) = 0._r8
-      fertnitro_wwheat(i) = 0._r8
-      fertnitro_soybean(i) = 0._r8
-      fertnitro_cotton(i) = 0._r8
-      fertnitro_rice1(i) = 0._r8
-      fertnitro_rice2(i) = 0._r8
-      fertnitro_sugarcane(i) = 0._r8
+      fertnitro_corn(i)     = 0._r8
+      fertnitro_swheat(i)   = 0._r8
+      fertnitro_wwheat(i)   = 0._r8
+      fertnitro_soybean(i)  = 0._r8
+      fertnitro_cotton(i)   = 0._r8
+      fertnitro_rice1(i)    = 0._r8
+      fertnitro_rice2(i)    = 0._r8
+      fertnitro_sugarcane(i)= 0._r8
+
+      manunitro(i)          = sum(manunitro_p(ps:pe)          * pftfrac(ps:pe))
+
 #endif
       IF(DEF_USE_DiagMatrix)THEN
          leafcCap(i)              = sum(leafcCap_p(ps:pe)              * pftfrac(ps:pe))

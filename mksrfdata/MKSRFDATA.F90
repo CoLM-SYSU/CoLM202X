@@ -63,6 +63,7 @@ PROGRAM MKSRFDATA
    USE MOD_LandHRU
 #endif
    USE MOD_LandPatch
+   USE MOD_Land2mWMO
    USE MOD_SrfdataRestart
    USE MOD_Const_LC
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
@@ -98,6 +99,7 @@ PROGRAM MKSRFDATA
 
    type (grid_type) :: grid_500m, grid_htop, grid_soil, grid_lai, grid_topo, grid_topo_factor
    type (grid_type) :: grid_urban_5km, grid_urban_500m
+   type (grid_type) :: grid_twi
 
    integer   :: lc_year, lai_year
    character(len=4) :: cyear
@@ -253,6 +255,11 @@ PROGRAM MKSRFDATA
       ! define grid for topography
       CALL grid_topo%define_by_name ('colm_500m')
 
+      ! define grid for topographic wetness index
+      IF (DEF_Runoff_SCHEME == 0) THEN
+         CALL grid_twi%define_by_name ('colm_500m')
+      ENDIF
+
       ! define grid for topography factors
       IF (DEF_USE_Forcing_Downscaling) THEN
          lndname = trim(DEF_DS_HiresTopographyDataDir) // '/slope.nc'
@@ -286,6 +293,10 @@ PROGRAM MKSRFDATA
       CALL pixel%assimilate_grid (grid_lai  )
       CALL pixel%assimilate_grid (grid_topo )
 
+      IF (DEF_Runoff_SCHEME == 0) THEN
+         CALL pixel%assimilate_grid (grid_twi)
+      ENDIF
+
       IF (DEF_USE_Forcing_Downscaling) THEN
          CALL pixel%assimilate_grid (grid_topo_factor)
       ENDIF
@@ -315,6 +326,10 @@ PROGRAM MKSRFDATA
       CALL pixel%map_to_grid (grid_soil )
       CALL pixel%map_to_grid (grid_lai  )
       CALL pixel%map_to_grid (grid_topo )
+
+      IF (DEF_Runoff_SCHEME == 0) THEN
+         CALL pixel%map_to_grid (grid_twi)
+      ENDIF
 
       IF (DEF_USE_Forcing_Downscaling) THEN
          CALL pixel%map_to_grid (grid_topo_factor)
@@ -364,6 +379,12 @@ PROGRAM MKSRFDATA
       CALL landcrop_build (lc_year)
 #endif
 
+      ! build land 2m WMO patches
+      CALL land2mwmo_init
+      IF (DEF_Output_2mWMO) THEN
+         CALL land2mwmo_build(lc_year)
+      ENDIF
+
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
       CALL landpft_build  (lc_year)
 #endif
@@ -398,7 +419,6 @@ PROGRAM MKSRFDATA
 ! 3. Mapping land characteristic parameters to the model grids
 ! ................................................................
 #ifdef SrfdataDiag
-      CALL elm_patch%build (landelm, landpatch, use_frac = .true.)
 #ifdef GRIDBASED
       CALL gdiag%define_by_copy (gridmesh)
 #else
@@ -439,6 +459,10 @@ IF (.not. (skip_rest)) THEN
 
       CALL Aggregation_Topography      (grid_topo, dir_rawdata, dir_landdata, lc_year)
 
+      IF (DEF_Runoff_SCHEME == 0) THEN
+         CALL Aggregation_TopoWetness  (grid_twi,  dir_rawdata, dir_landdata, lc_year)
+      ENDIF
+
       IF (DEF_USE_Forcing_Downscaling) THEN
          CALL Aggregation_TopographyFactors (grid_topo_factor, &
             trim(DEF_DS_HiresTopographyDataDir), dir_landdata, lc_year)
@@ -452,6 +476,9 @@ IF (.not. (skip_rest)) THEN
       CALL Aggregation_SoilTexture     (grid_soil, dir_rawdata, dir_landdata, lc_year)
 
 ENDIF
+
+      ! deallocate 2m WMO log array
+      CALL land2mwmo_final
 
 ! ................................................................
 ! 4. Write out time info.

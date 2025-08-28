@@ -9,21 +9,10 @@ MODULE MOD_CanopyLayerProfile
 
 ! PUBLIC MEMBER SUBROUTINE/FUNCTIONS:
 
-   PUBLIC :: uprofile
-   PUBLIC :: kprofile
-   PUBLIC :: uintegral
-   PUBLIC :: uintegralz
-   PUBLIC :: ueffect
-   PUBLIC :: ueffectz
-   PUBLIC :: fuint
-   PUBLIC :: udiff
-   PUBLIC :: kintegral
-   PUBLIC :: frd
-   PUBLIC :: fkint
-   PUBLIC :: kdiff
-
-   PUBLIC :: ufindroots
-   PUBLIC :: kfindroots
+   PUBLIC :: uprofile, kprofile
+   PUBLIC :: uintegral, uintegralz, kintegral
+   PUBLIC :: ueffect, ueffectz, fuint, fkint, frd
+   PUBLIC :: udiff, kdiff, ufindroots, kfindroots
 
    PUBLIC :: cal_z0_displa
 
@@ -48,8 +37,13 @@ CONTAINS
 
    real(r8) :: ulog,uexp
 
-      ! when canopy LAI->0, z0->zs, fac->1, u->umoninobuk
-      ! canopy LAI->large, fac->0 or=0, u->log profile
+      ! A simple version of wind profile based on Dai et al., 2019.
+      ! A combination of u of canopy area and bare soil wighted by
+      ! their fractional cover.
+      !
+      ! - Canopy area wind: min(uexp, ulog)  - bare soil: ulog
+      ! fc: vegetation fractional cover, bee: free parameter = 1.
+
       ulog = utop*log(z/z0mg)/log(htop/z0mg)
       uexp = utop*exp(-alpha*(1-(z-hbot)/(htop-hbot)))
 
@@ -59,6 +53,7 @@ CONTAINS
    END FUNCTION uprofile
 
 
+   ! Exchange coefficient K profile based on Dai et al., 2019.
    real(r8) FUNCTION kprofile(ktop, fc, bee, alpha, &
                      displah, htop, hbot, obu, ustar, z)
 
@@ -95,6 +90,7 @@ CONTAINS
    END FUNCTION kprofile
 
 
+   ! numerical solution for wind profile integration (not used now)
    real(r8) FUNCTION uintegral(utop, fc, bee, alpha, z0mg, htop, hbot)
 
    USE MOD_Precision
@@ -140,6 +136,7 @@ CONTAINS
    END FUNCTION uintegral
 
 
+   ! numerical solution for wind profile integration (not used now)
    real(r8) FUNCTION uintegralz(utop, fc, bee, alpha, z0mg, &
                     htop, hbot, ztop, zbot)
 
@@ -419,6 +416,7 @@ CONTAINS
    END FUNCTION udiff
 
 
+   ! numerical solution for K profile integration (not used now)
    real(r8) FUNCTION kintegral(ktop, fc, bee, alpha, z0mg, &
                      displah, htop, hbot, obu, ustar, ztop, zbot)
    USE MOD_Precision

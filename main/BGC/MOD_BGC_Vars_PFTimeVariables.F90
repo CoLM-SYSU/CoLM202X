@@ -160,6 +160,7 @@ MODULE MOD_BGC_Vars_PFTimeVariables
    real(r8),allocatable :: tref_min_inst_p           (:)     ! temporary daily min of average 2-m temperature (degree C)
    real(r8),allocatable :: tref_max_inst_p           (:)     ! temporary daily max of average 2-m temperature (degree C)
    real(r8),allocatable :: fertnitro_p               (:)     ! fertilizer nitrogen (gN m-2)
+   real(r8),allocatable :: manunitro_p               (:)     ! manure nitrogen (gN m-2)
    real(r8),allocatable :: fert_p                    (:)     ! fertilizer nitrogen (gN m-2) including manure
    real(r8),allocatable :: latbaset_p                (:)     ! latitude vary base temperature for gddplant (degree C)
    real(r8),allocatable :: plantdate_p               (:)     ! planting date (input)
@@ -554,6 +555,7 @@ CONTAINS
             allocate (tref_min_inst_p          (numpft)); tref_min_inst_p          (:) = spval
             allocate (tref_max_inst_p          (numpft)); tref_max_inst_p          (:) = spval
             allocate (fertnitro_p              (numpft)); fertnitro_p              (:) = spval
+            allocate (manunitro_p              (numpft)); manunitro_p              (:) = spval
             allocate (fert_p                   (numpft)); fert_p                   (:) = spval
             allocate (latbaset_p               (numpft)); latbaset_p               (:) = spval
             allocate (plantdate_p              (numpft)); plantdate_p              (:) = spval
@@ -920,6 +922,7 @@ CONTAINS
       CALL ncio_read_vector (file_restart, 'tref_min_inst_p        ', landpft, tref_min_inst_p       )
       CALL ncio_read_vector (file_restart, 'tref_max_inst_p        ', landpft, tref_max_inst_p       )
       CALL ncio_read_vector (file_restart, 'fertnitro_p            ', landpft, fertnitro_p           )
+      CALL ncio_read_vector (file_restart, 'manunitro_p            ', landpft, manunitro_p           )
       CALL ncio_read_vector (file_restart, 'fert_p                 ', landpft, fert_p                )
       CALL ncio_read_vector (file_restart, 'latbaset_p             ', landpft, latbaset_p            )
       CALL ncio_read_vector (file_restart, 'plantdate_p            ', landpft, plantdate_p           )
@@ -1503,6 +1506,8 @@ CONTAINS
       tref_max_inst_p       , compress)
       CALL ncio_write_vector (file_restart, 'fertnitro_p            ', 'pft', landpft, &
       fertnitro_p           , compress)
+      CALL ncio_write_vector (file_restart, 'manunitro_p            ', 'pft', landpft, &
+      manunitro_p           , compress)
       CALL ncio_write_vector (file_restart, 'fert_p                 ', 'pft', landpft, &
       fert_p                , compress)
       CALL ncio_write_vector (file_restart, 'latbaset_p             ', 'pft', landpft, &
@@ -2085,6 +2090,7 @@ CONTAINS
             deallocate (tref_min_inst_p          )
             deallocate (tref_max_inst_p          )
             deallocate (fertnitro_p              )
+            deallocate (manunitro_p              )
             deallocate (fert_p                   )
             deallocate (latbaset_p               )
             deallocate (plantdate_p              )
@@ -2454,6 +2460,7 @@ CONTAINS
       CALL check_vector_data ('tref_min_inst_p        ', tref_min_inst_p        )
       CALL check_vector_data ('tref_max_inst_p        ', tref_max_inst_p        )
       CALL check_vector_data ('fertnitro_p            ', fertnitro_p            )
+      CALL check_vector_data ('manunitro_p            ', manunitro_p            )
       CALL check_vector_data ('fert_p                 ', fert_p                 )
       CALL check_vector_data ('latbaset_p             ', latbaset_p             )
       CALL check_vector_data ('plantdate_p            ', plantdate_p            )

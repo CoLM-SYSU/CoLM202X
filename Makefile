@@ -31,6 +31,7 @@ OBJS_SHARED =    \
 				  MOD_Const_Physical.o         \
 				  MOD_Const_LC.o               \
 				  MOD_Utils.o                  \
+				  MOD_IncompleteGamma.o        \
 				  MOD_UserDefFun.o             \
 				  MOD_TimeManager.o            \
 				  MOD_Const_PFT.o              \
@@ -53,6 +54,7 @@ OBJS_SHARED =    \
 				  MOD_LandElm.o                \
 				  MOD_LandHRU.o                \
 				  MOD_LandPatch.o              \
+				  MOD_Land2mWMO.o              \
 				  MOD_LandCrop.o               \
 				  MOD_LandPFT.o                \
 				  MOD_LandUrban.o              \
@@ -79,6 +81,7 @@ OBJS_MKSRFDATA = \
 				  Aggregation_SoilParameters.o      \
 				  Aggregation_DBedrock.o            \
 				  Aggregation_Topography.o          \
+				  Aggregation_TopoWetness.o         \
 				  Aggregation_TopographyFactors.o   \
 				  Aggregation_Urban.o               \
 				  Aggregation_SoilTexture.o         \
@@ -119,6 +122,8 @@ OBJS_BASIC =    \
 				 MOD_Vars_1DPFTFluxes.o         \
 				 MOD_Vars_1DFluxes.o            \
 				 MOD_Vars_1DForcing.o           \
+				 MOD_DA_Vars_1DFluxes.o         \
+				 MOD_DA_Vars_TimeVariables.o    \
 				 MOD_Hydro_SoilFunction.o       \
 				 MOD_Hydro_SoilWater.o          \
 				 MOD_Eroot.o                    \
@@ -154,6 +159,7 @@ OBJS_BASIC =    \
 				 MOD_ElementNeighbour.o         \
 				 MOD_Catch_HillslopeNetwork.o   \
 				 MOD_Catch_RiverLakeNetwork.o   \
+				 MOD_Catch_Reservoir.o          \
 				 MOD_Initialize.o
 
 
@@ -199,6 +205,7 @@ OBJECTS_CAMA=\
 				  cmf_calc_stonxt_mod.o   \
 				  cmf_calc_diag_mod.o     \
 				  cmf_opt_outflw_mod.o    \
+				  cmf_ctrl_tracer_mod.o   \
 				  cmf_ctrl_mpi_mod.o      \
 				  cmf_ctrl_damout_mod.o   \
 				  cmf_ctrl_levee_mod.o    \
@@ -263,7 +270,14 @@ OBJS_MAIN = \
 				MOD_ForcingDownscaling.o                  \
 				MOD_Forcing.o                             \
 				MOD_DA_GRACE.o                            \
-				MOD_DataAssimilation.o                    \
+				MOD_DA_Const.o                            \
+				MOD_DA_ObsOperator.o                      \
+				MOD_DA_EnKF.o                             \
+				MOD_DA_SMAP.o                             \
+				MOD_DA_FY3D.o                             \
+				MOD_DA_Main.o                        	  \
+				MOD_DA_Ensemble.o                         \
+				MOD_DA_Driver.o                           \
 				MOD_AssimStomataConductance.o             \
 				MOD_PlantHydraulic.o                      \
 				MOD_FrictionVelocity.o                    \

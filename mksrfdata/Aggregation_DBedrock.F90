@@ -18,6 +18,7 @@ SUBROUTINE Aggregation_DBedrock ( &
    USE MOD_SPMD_Task
    USE MOD_Grid
    USE MOD_LandPatch
+   USE MOD_Land2mWMO
    USE MOD_NetCDFVector
    USE MOD_NetCDFBlock
    USE MOD_RangeCheck
@@ -42,6 +43,7 @@ SUBROUTINE Aggregation_DBedrock ( &
    real(r8), allocatable :: dbedrock_patches(:)
    real(r8), allocatable :: dbedrock_one(:), area_one(:)
    integer :: ipatch
+   integer :: wmo_src
 
 #ifdef SrfdataDiag
    integer :: typpatch(N_land_classification+1), ityp
@@ -78,6 +80,15 @@ SUBROUTINE Aggregation_DBedrock ( &
          allocate (dbedrock_patches (numpatch))
 
          DO ipatch = 1, numpatch
+
+            IF (ipatch == wmo_patch(landpatch%ielm(ipatch))) THEN
+               wmo_src = wmo_source (landpatch%ielm(ipatch))
+
+               dbedrock_patches (ipatch) = dbedrock_patches (wmo_src)
+
+               CYCLE
+            ENDIF
+
             CALL aggregation_request_data (landpatch, ipatch, gland, &
                zip = USE_zip_for_aggregation, area = area_one, &
                data_r8_2d_in1 = dbedrock, data_r8_2d_out1 = dbedrock_one)
@@ -108,7 +119,7 @@ SUBROUTINE Aggregation_DBedrock ( &
       typpatch = (/(ityp, ityp = 0, N_land_classification)/)
       lndname  = trim(dir_model_landdata) // '/diag/dbedrock_patch_' // trim(cyear) // '.nc'
       CALL srfdata_map_and_write (dbedrock_patches, landpatch%settyp, typpatch, m_patch2diag, &
-         -1.0e36_r8, lndname, 'dbedrock', compress = 1, write_mode = 'one')
+         -1.0e36_r8, lndname, 'dbedrock', compress = 1, write_mode = 'one', create_mode=.true.)
 #endif
 
       IF (p_is_worker) THEN

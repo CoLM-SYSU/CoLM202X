@@ -18,6 +18,7 @@ SUBROUTINE Aggregation_SoilBrightness ( &
    USE MOD_Block
    USE MOD_Grid
    USE MOD_LandPatch
+   USE MOD_Land2mWMO
    USE MOD_NetCDFBlock
    USE MOD_NetCDFVector
 #ifdef RangeCheck
@@ -55,6 +56,7 @@ SUBROUTINE Aggregation_SoilBrightness ( &
 
    integer :: ii, L
    integer :: ipatch, iblkme, iblk, jblk, ix, iy
+   integer :: wmo_src
    real(r8), allocatable :: soil_one(:)
 
 #ifdef SrfdataDiag
@@ -152,6 +154,15 @@ SUBROUTINE Aggregation_SoilBrightness ( &
 
          DO ipatch = 1, numpatch
             L = landpatch%settyp(ipatch)
+
+            IF (ipatch == wmo_patch(landpatch%ielm(ipatch))) THEN
+               wmo_src = wmo_source (landpatch%ielm(ipatch))
+
+               soil_s_v_alb(ipatch) = soil_s_v_alb(wmo_src)
+
+               CYCLE
+            ENDIF
+
 #ifdef LULC_USGS
             IF(L/=16 .and. L/=24)THEN  ! NOT OCEAN(0)/WATER BODIES(16)/GLACIER and ICESHEET(24)
 #else
@@ -189,6 +200,15 @@ SUBROUTINE Aggregation_SoilBrightness ( &
 
          DO ipatch = 1, numpatch
             L = landpatch%settyp(ipatch)
+
+            IF (ipatch == wmo_patch(landpatch%ielm(ipatch))) THEN
+               wmo_src = wmo_source (landpatch%ielm(ipatch))
+
+               soil_d_v_alb(ipatch) = soil_d_v_alb(wmo_src)
+
+               CYCLE
+            ENDIF
+
 #ifdef LULC_USGS
             IF(L/=16 .and. L/=24)THEN  ! NOT OCEAN(0)/WATER BODIES(16)/GLACIER and ICESHEET(24)
 #else
@@ -226,6 +246,15 @@ SUBROUTINE Aggregation_SoilBrightness ( &
 
          DO ipatch = 1, numpatch
             L = landpatch%settyp(ipatch)
+
+            IF (ipatch == wmo_patch(landpatch%ielm(ipatch))) THEN
+               wmo_src = wmo_source (landpatch%ielm(ipatch))
+
+               soil_s_n_alb(ipatch) = soil_s_n_alb(wmo_src)
+
+               CYCLE
+            ENDIF
+
 #ifdef LULC_USGS
             IF(L/=16 .and. L/=24)THEN  ! NOT OCEAN(0)/WATER BODIES(16)/GLACIER and ICESHEET(24)
 #else
@@ -263,6 +292,15 @@ SUBROUTINE Aggregation_SoilBrightness ( &
 
          DO ipatch = 1, numpatch
             L = landpatch%settyp(ipatch)
+
+            IF (ipatch == wmo_patch(landpatch%ielm(ipatch))) THEN
+               wmo_src = wmo_source (landpatch%ielm(ipatch))
+
+               soil_d_n_alb(ipatch) = soil_d_n_alb(wmo_src)
+
+               CYCLE
+            ENDIF
+
 #ifdef LULC_USGS
             IF(L/=16 .and. L/=24)THEN  ! NOT OCEAN(0)/WATER BODIES(16)/GLACIER and ICESHEET(24)
 #else
@@ -306,7 +344,7 @@ SUBROUTINE Aggregation_SoilBrightness ( &
       typpatch = (/(ityp, ityp = 0, N_land_classification)/)
       lndname  = trim(dir_model_landdata) // '/diag/soil_brightness_patch_' // trim(cyear) // '.nc'
       CALL srfdata_map_and_write (soil_s_v_alb, landpatch%settyp, typpatch, m_patch2diag, &
-         -1.0e36_r8, lndname, 'soil_s_v_alb', compress = 1, write_mode = 'one')
+         -1.0e36_r8, lndname, 'soil_s_v_alb', compress = 1, write_mode = 'one', create_mode=.true.)
 #endif
 
       ! (2) Write-out the albedo of visible of the dry soil

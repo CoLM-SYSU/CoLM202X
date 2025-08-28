@@ -1,0 +1,47 @@
+#!/bin/bash
+#BSUB -J China
+#BSUB -q normal
+##BSUB -cwd /share/home/dq013/cama
+#BSUB -o testcama-o.out
+#BSUB -e testcama-e.out
+#BSUB -n 720
+#BSUB -R rusage[mem=150G]
+#BSUB -R span[ptile=48]
+
+#export OMP_NUM_THREADS=45
+
+echo job start time is `date`
+echo `hostname`
+
+
+echo "start: ${SYEAR}" `date`  >> log.txt
+
+#mpirun  -np 720  ./mksrfdata.x China_Grid_30km_IGBP_VG_CaMa.nml  &> China_Grid_30km_IGBP_VG_CaMa_mksrf.log	
+#mpirun  -np 720  ./mkinidata.x China_Grid_30km_IGBP_VG_CaMa.nml  &> China_Grid_30km_IGBP_VG_CaMa_mkin.log
+#mpirun  -np 720  ./colm.x China_Grid_30km_IGBP_VG_CaMa.nml  &> China_Grid_30km_IGBP_VG_CaMa_colm.log
+mpirun  -np 1 ./colm.x China_Grid_30km_IGBP_VG_CaMa.nml : -np 671 ./colm.x China_Grid_30km_IGBP_VG_CaMa.nml &> China_Grid_30km_IGBP_VG_CaMa_colm.log
+
+#time ./${EXE}                  >> log.txt
+#ime mpirun -np $MPI_NP ./${EXE} >> log.txt
+#time mpiexec_mpt omplace ./${EXE} >> log.txt
+#time mpirun --hostfile /tera04/zhwei/cama/CaMa-Flood_v4.04-20220116/gosh/hosts -iface ibs6 ./${EXE} >> log.txt
+#time mpirun --hostfile /tera04/zhwei/cama/CaMa-Flood_v4.04-20220116/gosh/hosts -iface ibp4s0 ./${EXE} >> log.txt
+#time mpirun -np $MPI_NP ./${EXE} >> log.txt
+#mpiexec -genv OMP_NUM_THREADS 48 -genv I_MPI_PIN 1 -genv I_MPI_PIN_DOMAIN socket -genv I_MPI_PIN_ORDER scatter ./${EXE}
+#time mpirun -npernode 1  ./${EXE} >> log.txt
+echo "end:   ${SYEAR}" `date`  >> log.txt
+
+# mv ${LOGOUT} log_CaMa-${CYR}.txt
+
+#================================================
+# (6) manage spin up
+
+# if curent spinup time $ISP < required spinup time $NSP
+#   copy the restart file restart$(IYR+1) to restart${IYR}
+#   copy the outputs to directory "${IYR}-sp1"
+
+
+
+exit 0
+echo job end time is `date`
+

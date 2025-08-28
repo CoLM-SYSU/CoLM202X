@@ -280,6 +280,7 @@ MODULE MOD_BGC_Vars_TimeVariables
    real(r8), allocatable :: pdrice2             (:) ! planting date of rice2
    real(r8), allocatable :: pdsugarcane         (:) ! planting date of sugarcane
    real(r8), allocatable :: plantdate           (:) ! planting date
+   real(r8), allocatable :: manunitro           (:) ! nitrogen fertilizer for corn (gN m-2)
    real(r8), allocatable :: fertnitro_corn      (:) ! nitrogen fertilizer for corn (gN m-2)
    real(r8), allocatable :: fertnitro_swheat    (:) ! nitrogen fertilizer for spring wheat (gN m-2)
    real(r8), allocatable :: fertnitro_wwheat    (:) ! nitrogen fertilizer for winter wheat (gN m-2)
@@ -590,6 +591,7 @@ CONTAINS
             allocate (pdrice2                      (numpatch))                            ; pdrice2               (:) = spval
             allocate (plantdate                    (numpatch))                            ; plantdate             (:) = spval
             allocate (pdsugarcane                  (numpatch))                            ; pdsugarcane           (:) = spval
+            allocate (manunitro                    (numpatch))                            ; manunitro             (:) = spval
             allocate (fertnitro_corn               (numpatch))                            ; fertnitro_corn        (:) = spval
             allocate (fertnitro_swheat             (numpatch))                            ; fertnitro_swheat      (:) = spval
             allocate (fertnitro_wwheat             (numpatch))                            ; fertnitro_wwheat      (:) = spval
@@ -884,6 +886,7 @@ CONTAINS
             deallocate (pdrice2    )
             deallocate (plantdate  )
             deallocate (pdsugarcane)
+            deallocate (manunitro          )
             deallocate (fertnitro_corn     )
             deallocate (fertnitro_swheat   )
             deallocate (fertnitro_wwheat   )
@@ -1520,6 +1523,7 @@ CONTAINS
       CALL check_vector_data ('pdrice2    ' , pdrice2    )
       CALL check_vector_data ('plantdate  ' , plantdate  )
       CALL check_vector_data ('pdsugarcane' , pdsugarcane)
+      CALL check_vector_data ('manunitro          ' , manunitro          )
       CALL check_vector_data ('fertnitro_corn     ' , fertnitro_corn     )
       CALL check_vector_data ('fertnitro_swheat   ' , fertnitro_swheat   )
       CALL check_vector_data ('fertnitro_wwheat   ' , fertnitro_wwheat   )

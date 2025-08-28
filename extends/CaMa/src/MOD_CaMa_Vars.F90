@@ -28,6 +28,7 @@ MODULE MOD_CaMa_Vars
    USE MOD_Precision
    USE MOD_Grid
    USE MOD_DataType
+   USE PARKIND1,                  only: JPRB
 
    USE MOD_SpatialMapping
    USE YOS_CMF_INPUT,            only: RMIS, DMIS
@@ -40,7 +41,7 @@ MODULE MOD_CaMa_Vars
    real(r8), allocatable         :: runoff_2d (:,:)        ! on Master : total runoff [mm/s]
 
    real(r8), allocatable         :: flddepth_cama (:)      ! on worker : flddepth [m]
-   type(block_data_real8_2d)     :: f_flddepth_cama        ! on IO     : flddepth [m]
+   type(block_data_real8_2d)      :: f_flddepth_cama        ! on IO     : flddepth [m]
    real(r8), allocatable         :: flddepth_tmp(:,:)
 
    real(r8), allocatable         :: fldfrc_cama (:)        ! on worker : flddepth [m]
@@ -102,6 +103,7 @@ MODULE MOD_CaMa_Vars
       logical :: levsto       = .false.
       logical :: levdph       = .false.
       logical :: outflw_ocean = .false.
+      logical :: outins       = .false.
    END type history_var_cama_type
 
    type (history_var_cama_type) :: DEF_hist_cama_vars
@@ -257,17 +259,17 @@ CONTAINS
       real(r8), intent(in)    :: var(:) ! variable to be accumulated
       real(r8), intent(inout) :: s  (:) ! new added value
 !----------------------- Dummy argument --------------------------------
-      integer :: i
+      logical, dimension(size(var)) :: valid_var, valid_s
 
-      DO i = lbound(var,1), ubound(var,1)
-         IF (var(i) /= spval) THEN
-            IF (s(i) /= spval) THEN
-               s(i) = s(i) + var(i)
-            ELSE
-               s(i) = var(i)
-            ENDIF
-         ENDIF
-      ENDDO
+      ! Use vectorized operations for better performance
+      valid_var = (var /= spval)
+      valid_s   = (s /= spval)
+      
+      ! Initialize where s is invalid but var is valid
+      WHERE (valid_var .and. .not. valid_s) s = var
+      
+      ! Accumulate where both are valid
+      WHERE (valid_var .and. valid_s) s = s + var
 
    END SUBROUTINE acc1d_cama
 
@@ -310,23 +312,23 @@ CONTAINS
 
 !ANCILLARY FUNCTIONS AND SUBROUTINES
    !-------------------
-   !* :SUBROUTINE:"CMF_DIAG_AVERAGE"                      :  averaging the diagnostic variables of cama-flood
+   !* :SUBROUTINE:"CMF_DIAG_GETAVE_OUTPUT"                      :  averaging the diagnostic variables of cama-flood
    !* :SUBROUTINE:"flux_map_and_write_2d_cama"            :  map camaflood variables to colm block and write out
-   !* :SUBROUTINE:"CMF_DIAG_RESET"                        :  reset diagnostic variables of cama-flood
+   !* :SUBROUTINE:"CMF_DIAG_RESET_OUTPUT"                        :  reset diagnostic variables of cama-flood
 !REVISION HISTORY
    !----------------
    ! 2020.10.21  Zhongwang Wei @ SYSU
 
    USE MOD_SPMD_Task
-   USE CMF_CALC_DIAG_MOD,  only: CMF_DIAG_AVERAGE, CMF_DIAG_RESET
+   USE CMF_CALC_DIAG_MOD,  only: CMF_DIAG_GETAVE_OUTPUT, CMF_DIAG_RESET_OUTPUT
    USE YOS_CMF_PROG,       only: P2RIVSTO,     P2FLDSTO,     P2GDWSTO, &
          P2damsto,P2LEVSTO !!! added
    USE YOS_CMF_DIAG,       only: D2RIVDPH,     D2FLDDPH,     D2FLDFRC,     D2FLDARE,     &
          D2SFCELV,     D2STORGE,                                                         &
-         D2OUTFLW_AVG, D2RIVOUT_AVG, D2FLDOUT_AVG, D2PTHOUT_AVG, D1PTHFLW_AVG,           &
-         D2RIVVEL_AVG, D2GDWRTN_AVG, D2RUNOFF_AVG, D2ROFSUB_AVG,                         &
-         D2OUTFLW_MAX, D2STORGE_MAX, D2RIVDPH_MAX,                                       &
-         d2daminf_avg, D2WEVAPEX_AVG,D2WINFILTEX_AVG, D2LEVDPH !!! added
+         D2OUTFLW_oAVG, D2RIVOUT_oAVG, D2FLDOUT_oAVG, D2PTHOUT_oAVG, D1PTHFLW_oAVG,           &
+         D2RIVVEL_oAVG, D2GDWRTN_oAVG, D2RUNOFF_oAVG, D2ROFSUB_oAVG,                         &
+         D2OUTFLW_oMAX, D2STORGE_oMAX, D2RIVDPH_oMAX,                                       &
+         d2daminf_oavg, D2WEVAPEX_oAVG,D2WINFILTEX_oAVG, D2LEVDPH, D2OUTINS !!! added
  !      USE MOD_Vars_2DFluxes
 
    IMPLICIT NONE
@@ -336,11 +338,11 @@ CONTAINS
 
 
       !*** average variable
-      CALL CMF_DIAG_AVERAGE
+      CALL CMF_DIAG_GETAVE_OUTPUT
 
       !*** write output data
       CALL flux_map_and_write_2d_cama (DEF_hist_cama_vars%rivout, &
-      real(D2RIVOUT_AVG), file_hist, 'rivout', itime_in_file,'river discharge','m3/s')
+      real(D2RIVOUT_oAVG), file_hist, 'rivout', itime_in_file,'river discharge','m3/s')
 
       CALL flux_map_and_write_2d_cama (DEF_hist_cama_vars%rivsto, &
       real(P2RIVSTO), file_hist, 'rivsto', itime_in_file,'river storage','m3')
@@ -349,10 +351,10 @@ CONTAINS
       real(D2RIVDPH), file_hist, 'rivdph', itime_in_file,'river depth','m')
 
       CALL flux_map_and_write_2d_cama (DEF_hist_cama_vars%rivvel, &
-      real(D2RIVVEL_AVG), file_hist, 'rivvel', itime_in_file,'river velocity','m/s')
+      real(D2RIVVEL_oAVG), file_hist, 'rivvel', itime_in_file,'river velocity','m/s')
 
       CALL flux_map_and_write_2d_cama(DEF_hist_cama_vars%fldout, &
-      real(D2FLDOUT_AVG), file_hist, 'fldout', itime_in_file,'floodplain discharge','m3/s')
+      real(D2FLDOUT_oAVG), file_hist, 'fldout', itime_in_file,'floodplain discharge','m3/s')
 
       CALL flux_map_and_write_2d_cama(DEF_hist_cama_vars%fldsto, &
       real(P2FLDSTO), file_hist, 'fldsto', itime_in_file,'floodplain storage','m3')
@@ -370,10 +372,10 @@ CONTAINS
       real(D2SFCELV), file_hist, 'sfcelv', itime_in_file,'water surface elevation','m')
 
       CALL flux_map_and_write_2d_cama(DEF_hist_cama_vars%totout, &
-      real(D2OUTFLW_AVG), file_hist, 'totout', itime_in_file,'discharge (river+floodplain)','m3/s')
+      real(D2OUTFLW_oAVG), file_hist, 'totout', itime_in_file,'discharge (river+floodplain)','m3/s')
 
       CALL flux_map_and_write_2d_cama(DEF_hist_cama_vars%outflw, &
-      real(D2OUTFLW_AVG), file_hist, 'outflw', itime_in_file,'discharge (river+floodplain)','m3/s')
+      real(D2OUTFLW_oAVG), file_hist, 'outflw', itime_in_file,'discharge (river+floodplain)','m3/s')
 
       CALL flux_map_and_write_2d_cama(DEF_hist_cama_vars%totsto, &
       real(D2STORGE), file_hist, 'totsto', itime_in_file,'total storage (river+floodplain)','m3')
@@ -382,10 +384,10 @@ CONTAINS
       real(D2STORGE), file_hist, 'storge', itime_in_file,'total storage (river+floodplain)','m3')
 
       CALL flux_map_and_write_2d_cama(DEF_hist_cama_vars%pthflw, &
-      real(D1PTHFLW_AVG), file_hist, 'pthflw', itime_in_file,'bifurcation channel discharge ','m3/s')
+      real(D1PTHFLW_oAVG), file_hist, 'pthflw', itime_in_file,'bifurcation channel discharge ','m3/s')
 
       CALL flux_map_and_write_2d_cama(DEF_hist_cama_vars%pthout, &
-      real(D2PTHOUT_AVG), file_hist, 'pthout', itime_in_file,'net bifurcation discharge','m3/s')
+      real(D2PTHOUT_oAVG), file_hist, 'pthout', itime_in_file,'net bifurcation discharge','m3/s')
 
       CALL flux_map_and_write_2d_cama(DEF_hist_cama_vars%gdwsto, &
       real(P2GDWSTO), file_hist, 'gdwsto', itime_in_file,'ground water storage','m3')
@@ -394,41 +396,45 @@ CONTAINS
       real(P2GDWSTO), file_hist, 'gwsto', itime_in_file,'ground water storage','m3')
 
       CALL flux_map_and_write_2d_cama(DEF_hist_cama_vars%gwout, &
-      real(D2GDWRTN_AVG), file_hist, 'gwout', itime_in_file,'ground water discharge','m3/s')
+      real(D2GDWRTN_oAVG), file_hist, 'gwout', itime_in_file,'ground water discharge','m3/s')
 
       CALL flux_map_and_write_2d_cama(DEF_hist_cama_vars%runoff, &
-      real(D2RUNOFF_AVG), file_hist, 'runoff', itime_in_file,'Surface runoff','m3/s')
+      real(D2RUNOFF_oAVG), file_hist, 'runoff', itime_in_file,'Surface runoff','m3/s')
 
       CALL flux_map_and_write_2d_cama(DEF_hist_cama_vars%runoffsub, &
-      real(D2ROFSUB_AVG)  , file_hist, 'runoffsub', itime_in_file,'sub-surface runoff','m3/s')
+      real(D2ROFSUB_oAVG)  , file_hist, 'runoffsub', itime_in_file,'sub-surface runoff','m3/s')
 
       CALL flux_map_and_write_2d_cama(DEF_hist_cama_vars%maxsto, &
-      real(D2STORGE_MAX), file_hist, 'maxsto', itime_in_file,'daily maximum storage','m3')
+      real(D2STORGE_oMAX), file_hist, 'maxsto', itime_in_file,'daily maximum storage','m3')
 
       CALL flux_map_and_write_2d_cama(DEF_hist_cama_vars%maxflw, &
-      real(D2OUTFLW_MAX), file_hist, 'maxflw', itime_in_file,'daily maximum discharge','m3/s')
+      real(D2OUTFLW_oMAX), file_hist, 'maxflw', itime_in_file,'daily maximum discharge','m3/s')
 
       CALL flux_map_and_write_2d_cama(DEF_hist_cama_vars%maxdph, &
-      real(D2RIVDPH_MAX), file_hist, 'maxdph', itime_in_file,'daily maximum river depth','m')
+      real(D2RIVDPH_oMAX), file_hist, 'maxdph', itime_in_file,'daily maximum river depth','m')
 
       IF (DEF_hist_cama_vars%damsto) THEN
       CALL flux_map_and_write_2d_cama(DEF_hist_cama_vars%damsto, &
       real(p2damsto), file_hist, 'damsto', itime_in_file,'reservoir storage','m3')
       ENDIF
+      IF (DEF_hist_cama_vars%outins) THEN
+         CALL flux_map_and_write_2d_cama(DEF_hist_cama_vars%outins, &
+         real(D2OUTINS), file_hist, 'outins', itime_in_file,'instantaneous discharge','m3/s')
+      ENDIF
 
       IF (DEF_hist_cama_vars%daminf) THEN
       CALL flux_map_and_write_2d_cama(DEF_hist_cama_vars%daminf, &
-      real(d2daminf_avg), file_hist, 'daminf', itime_in_file,'reservoir inflow','m3/s')
+      real(d2daminf_oavg), file_hist, 'daminf', itime_in_file,'reservoir inflow','m3/s')
       ENDIF
 
       IF (DEF_hist_cama_vars%wevap) THEN
       CALL flux_map_and_write_2d_cama(DEF_hist_cama_vars%wevap, &
-      real(D2WEVAPEX_AVG), file_hist, 'wevap', itime_in_file,'inundation water evaporation','m/s')
+      real(D2WEVAPEX_oAVG), file_hist, 'wevap', itime_in_file,'inundation water evaporation','m/s')
       ENDIF
 
       IF (DEF_hist_cama_vars%winfilt) THEN
       CALL flux_map_and_write_2d_cama(DEF_hist_cama_vars%winfilt, &
-      real(D2WINFILTEX_AVG), file_hist, 'winfilt', itime_in_file,'inundation water infiltration','m/s')
+      real(D2WINFILTEX_oAVG), file_hist, 'winfilt', itime_in_file,'inundation water infiltration','m/s')
       ENDIF
 
       IF (DEF_hist_cama_vars%levsto) THEN
@@ -443,11 +449,12 @@ CONTAINS
 
       IF (DEF_hist_cama_vars%outflw_ocean) THEN
       CALL flux_map_and_write_2d_cama_ocean(DEF_hist_cama_vars%outflw_ocean, &
-      real(D2OUTFLW_AVG), file_hist, 'outflw_ocean', itime_in_file,'discharge to ocean','m3/s')
+      real(D2OUTFLW_oAVG), file_hist, 'outflw_ocean', itime_in_file,'discharge to ocean','m3/s')
       ENDIF
-      
+
+
       !*** reset variable
-      CALL CMF_DIAG_RESET
+      CALL CMF_DIAG_RESET_OUTPUT
 
    END SUBROUTINE hist_out_cama
 
@@ -516,6 +523,7 @@ CONTAINS
             ! 2023.02.23  Zhongwang Wei @ SYSU
 
          USE MOD_Namelist
+         USE MOD_Vars_Global, only: spval
          USE YOS_CMF_INPUT,  only: NX, NY
          USE YOS_CMF_MAP,    only: NSEQALL
          USE PARKIND1,       only: JPRM

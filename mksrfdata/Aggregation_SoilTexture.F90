@@ -20,6 +20,7 @@ SUBROUTINE Aggregation_SoilTexture ( &
    USE MOD_SPMD_Task
    USE MOD_Grid
    USE MOD_LandPatch
+   USE MOD_Land2mWMO
    USE MOD_NetCDFVector
    USE MOD_NetCDFBlock
 #ifdef RangeCheck
@@ -43,11 +44,13 @@ SUBROUTINE Aggregation_SoilTexture ( &
    ! ---------------------------------------------------------------
    character(len=256) :: landdir, lndname, cyear
    integer :: ipatch
+   integer :: wmo_src
 
    type(block_data_int32_2d) :: soiltext
    integer, allocatable :: soiltext_patches(:), soiltext_one(:)
 #ifdef SrfdataDiag
    integer :: typpatch(N_land_classification+1), ityp
+   real(r8), allocatable :: soiltext_r8 (:)
 #endif
 
       write(cyear,'(i4.4)') lc_year
@@ -80,6 +83,15 @@ SUBROUTINE Aggregation_SoilTexture ( &
          IF (numpatch > 0) allocate (soiltext_patches (numpatch))
 
          DO ipatch = 1, numpatch
+
+            IF (ipatch == wmo_patch(landpatch%ielm(ipatch))) THEN
+               wmo_src = wmo_source (landpatch%ielm(ipatch))
+
+               soiltext_patches(ipatch) = soiltext_patches(wmo_src)
+
+               CYCLE
+            ENDIF
+
             CALL aggregation_request_data (landpatch, ipatch, gland, &
                zip = USE_zip_for_aggregation, &
                data_i4_2d_in1 = soiltext, data_i4_2d_out1 = soiltext_one)
@@ -108,8 +120,16 @@ SUBROUTINE Aggregation_SoilTexture ( &
 #ifdef SrfdataDiag
       typpatch = (/(ityp, ityp = 0, N_land_classification)/)
       lndname = trim(dir_model_landdata)//'/diag/soiltexture_'//trim(cyear)//'.nc'
-      CALL srfdata_map_and_write (real(soiltext_patches,r8), landpatch%settyp, typpatch,  &
-         m_patch2diag, -1., lndname, 'soiltexture', compress = 1, write_mode = 'one')
+      IF (allocated(soiltext_patches)) THEN
+         allocate (soiltext_r8 (size(soiltext_patches)))
+         soiltext_r8 = real(soiltext_patches,r8)
+      ENDIF
+
+      CALL srfdata_map_and_write (soiltext_r8, landpatch%settyp, typpatch,  &
+         m_patch2diag, -1., lndname, 'soiltexture', compress = 1, write_mode = 'one', &
+         create_mode=.true.)
+
+      IF (allocated(soiltext_r8)) deallocate(soiltext_r8)
 #endif
 
       IF (p_is_worker) THEN
