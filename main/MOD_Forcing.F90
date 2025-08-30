@@ -228,7 +228,7 @@ CONTAINS
         WHERE(forc_topo == spval) forc_topo = 0.
       ENDIF
 
-      IF (DEF_USE_Forcing_Downscaling) THEN
+      IF ((DEF_USE_Forcing_Downscaling).or.(DEF_USE_Forcing_Downscaling_Simple)) THEN
 
          IF (p_is_io) CALL allocate_block_data (gforc, topo_grid)
          CALL mg2p_forc%pset2grid (forc_topo, topo_grid)
@@ -330,7 +330,7 @@ CONTAINS
       IF (allocated(tstamp_LB   )) deallocate(tstamp_LB   )
       IF (allocated(tstamp_UB   )) deallocate(tstamp_UB   )
 
-      IF (DEF_USE_Forcing_Downscaling) THEN
+      IF ((DEF_USE_Forcing_Downscaling).or.(DEF_USE_Forcing_Downscaling_Simple)) THEN
          IF (p_is_worker) THEN
             IF (numpatch > 0) THEN
 
@@ -396,7 +396,7 @@ CONTAINS
    USE MOD_LandPatch
    USE MOD_RangeCheck
    USE MOD_UserSpecifiedForcing
-   USE MOD_ForcingDownscaling, only: rair, cpair, downscale_forcings, downscale_wind
+   USE MOD_ForcingDownscaling, only: rair, cpair, downscale_forcings, downscale_wind, downscale_wind_simple
    USE MOD_NetCDFVector
 
    IMPLICIT NONE
@@ -644,7 +644,7 @@ CONTAINS
 
       ENDIF
 
-      IF (.not. DEF_USE_Forcing_Downscaling) THEN
+      IF ((.not. DEF_USE_Forcing_Downscaling).and.(.not. DEF_USE_Forcing_Downscaling_Simple)) THEN
 
          ! Mapping the 2d atmospheric fields [lon_points]x[lat_points]
          !     -> the 1d vector of subgrid points [numpatch]
@@ -777,38 +777,76 @@ CONTAINS
                   cosazi(np) = orb_cosazi(calday, patchlonr(np), patchlatr(np), coszen(np))
 
                   ! downscale forcing from grid to part
-                  CALL downscale_forcings ( &
-                     glacierss(np), &
+                  IF (DEF_USE_Forcing_Downscaling) THEN
+                     ! Complex downscaling with topographic effects
+                     CALL downscale_forcings ( &
+                        glacierss(np), &
 
-                     ! non-adjusted forcing
-                     forc_topo_grid(np)%val(ipart),  forc_maxelv_grid(np)%val(ipart), &
-                     forc_t_grid(np)%val(ipart),     forc_th_grid(np)%val(ipart),     &
-                     forc_q_grid(np)%val(ipart),     forc_pbot_grid(np)%val(ipart),   &
-                     forc_rho_grid(np)%val(ipart),   forc_prc_grid(np)%val(ipart),    &
-                     forc_prl_grid(np)%val(ipart),   forc_lwrad_grid(np)%val(ipart),  &
-                     forc_hgt_grid(np)%val(ipart),   forc_swrad_grid(np)%val(ipart),  &
-                     forc_us_grid(np)%val(ipart),    forc_vs_grid(np)%val(ipart),     &
+                        ! non-adjusted forcing
+                        forc_topo_grid(np)%val(ipart),  forc_maxelv_grid(np)%val(ipart), &
+                        forc_t_grid(np)%val(ipart),     forc_th_grid(np)%val(ipart),     &
+                        forc_q_grid(np)%val(ipart),     forc_pbot_grid(np)%val(ipart),   &
+                        forc_rho_grid(np)%val(ipart),   forc_prc_grid(np)%val(ipart),    &
+                        forc_prl_grid(np)%val(ipart),   forc_lwrad_grid(np)%val(ipart),  &
+                        forc_hgt_grid(np)%val(ipart),   forc_swrad_grid(np)%val(ipart),  &
+                        forc_us_grid(np)%val(ipart),    forc_vs_grid(np)%val(ipart),     &
 
-                     ! topography-based factor on patch
-                     slp_type_patches(:,np), asp_type_patches(:,np), area_type_patches(:,np), &
-                     svf_patches(np), cur_patches(np), &
+                        ! topography-based factor on patch
+                        slp_type_patches(:,np), asp_type_patches(:,np), cur_patches(np), &
+
+                        ! other factors
+                        calday, coszen(np), cosazi(np), &
+
+                        ! adjusted forcing
+                        forc_topo(np),                  forc_t_part(np)%val(ipart),      &
+                        forc_th_part(np)%val(ipart),    forc_q_part(np)%val(ipart),      &
+                        forc_pbot_part(np)%val(ipart),  forc_rhoair_part(np)%val(ipart), &
+                        forc_prc_part(np)%val(ipart),   forc_prl_part(np)%val(ipart),    &
+
+                        forc_frl_part(np)%val(ipart),   forc_swrad_part(np)%val(ipart),  &
+                        forc_us_part(np)%val(ipart),    forc_vs_part(np)%val(ipart), &
+
+                        ! optional factors for complex downscaling
+                        area_type_patches(:,np), svf_patches(np), balb, &
 #ifdef SinglePoint
-                     sf_lut_patches  (:,:,np), &
+                        sf_lut_patches  (:,:,np) &
 #else
-                     sf_curve_patches(:,:,np), &
+                        sf_curve_patches(:,:,np) &
 #endif
+                        )
 
-                     ! other factors
-                     calday, coszen(np), cosazi(np), balb, &
+                  ELSEIF (DEF_USE_Forcing_Downscaling_Simple) THEN
+                     ! Simple downscaling without optional parameters
+                     CALL downscale_forcings ( &
+                        glacierss(np), &
 
-                     ! adjusted forcing
-                     forc_topo(np),                  forc_t_part(np)%val(ipart),      &
-                     forc_th_part(np)%val(ipart),    forc_q_part(np)%val(ipart),      &
-                     forc_pbot_part(np)%val(ipart),  forc_rhoair_part(np)%val(ipart), &
-                     forc_prc_part(np)%val(ipart),   forc_prl_part(np)%val(ipart),    &
+                        ! non-adjusted forcing
+                        forc_topo_grid(np)%val(ipart),  forc_maxelv_grid(np)%val(ipart), &
+                        forc_t_grid(np)%val(ipart),     forc_th_grid(np)%val(ipart),     &
+                        forc_q_grid(np)%val(ipart),     forc_pbot_grid(np)%val(ipart),   &
+                        forc_rho_grid(np)%val(ipart),   forc_prc_grid(np)%val(ipart),    &
+                        forc_prl_grid(np)%val(ipart),   forc_lwrad_grid(np)%val(ipart),  &
+                        forc_hgt_grid(np)%val(ipart),   forc_swrad_grid(np)%val(ipart),  &
+                        forc_us_grid(np)%val(ipart),    forc_vs_grid(np)%val(ipart),     &
 
-                     forc_frl_part(np)%val(ipart),   forc_swrad_part(np)%val(ipart),  &
-                     forc_us_part(np)%val(ipart),    forc_vs_part(np)%val(ipart))
+                        ! topography-based factor on patch
+                        slp_type_patches(:,np), asp_type_patches(:,np), cur_patches(np), &
+
+                        ! other factors
+                        calday, coszen(np), cosazi(np), &
+
+                        ! adjusted forcing
+                        forc_topo(np),                  forc_t_part(np)%val(ipart),      &
+                        forc_th_part(np)%val(ipart),    forc_q_part(np)%val(ipart),      &
+                        forc_pbot_part(np)%val(ipart),  forc_rhoair_part(np)%val(ipart), &
+                        forc_prc_part(np)%val(ipart),   forc_prl_part(np)%val(ipart),    &
+
+                        forc_frl_part(np)%val(ipart),   forc_swrad_part(np)%val(ipart),  &
+                        forc_us_part(np)%val(ipart),    forc_vs_part(np)%val(ipart) &
+                        )
+
+                  ENDIF
+
                ENDDO
             ENDDO
          ENDIF
@@ -828,11 +866,21 @@ CONTAINS
 
          ! wind downscaling
          IF (p_is_worker) THEN
-            DO np = 1, numpatch
-               IF ((forc_us(np)==spval).or.(forc_vs(np)==spval)) cycle
-               CALL downscale_wind(forc_us(np), forc_vs(np), slp_type_patches(:,np), &
-                        asp_type_patches(:,np), area_type_patches(:,np), cur_patches(np))
-            ENDDO
+            IF (DEF_USE_Forcing_Downscaling) THEN
+               DO np = 1, numpatch
+                  IF ((forc_us(np)==spval).or.(forc_vs(np)==spval)) cycle
+                  CALL downscale_wind(forc_us(np), forc_vs(np), slp_type_patches(:,np), &
+                           asp_type_patches(:,np), area_type_patches(:,np), cur_patches(np))
+               ENDDO
+
+            ELSEIF (DEF_USE_Forcing_Downscaling_Simple) THEN
+               DO np = 1, numpatch
+                  IF ((forc_us(np)==spval).or.(forc_vs(np)==spval)) cycle
+                  CALL downscale_wind_simple(forc_us(np), forc_vs(np), slp_type_patches(:,np), &
+                           asp_type_patches(:,np), cur_patches(np))
+               ENDDO
+               
+            ENDIF
          ENDIF
 
 #ifndef SinglePoint

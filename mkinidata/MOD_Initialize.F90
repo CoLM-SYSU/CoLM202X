@@ -427,6 +427,16 @@ ENDIF
          CALL ncio_read_vector (lndname, 'cur_patches', landpatch, cur_patches)
 #endif
        ENDIF
+       
+      IF (DEF_USE_Forcing_Downscaling_Simple) THEN
+         lndname = trim(DEF_dir_landdata) // '/topography/'//trim(cyear)//'/slp_type_patches.nc'      ! slope
+         CALL ncio_read_vector (lndname, 'slp_type_patches', num_aspect_type, landpatch, slp_type_patches)
+         lndname = trim(DEF_dir_landdata) // '/topography/'//trim(cyear)//'/asp_type_patches.nc'      ! aspect
+         CALL ncio_read_vector (lndname, 'asp_type_patches', num_aspect_type, landpatch, asp_type_patches)
+         lndname = trim(DEF_dir_landdata) // '/topography/'//trim(cyear)//'/cur_patches.nc'           ! curvature
+         CALL ncio_read_vector (lndname, 'cur_patches', landpatch, cur_patches)
+      ENDIF
+
 ! ................................
 ! 1.6 Initialize TUNABLE constants
 ! ................................

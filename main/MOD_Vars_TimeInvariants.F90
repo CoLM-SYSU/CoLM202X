@@ -397,6 +397,14 @@ CONTAINS
                allocate (sf_curve_patches (num_azimuth,num_zenith_parameter,numpatch))
 #endif
             ENDIF
+
+            IF (DEF_USE_Forcing_Downscaling_Simple) THEN
+               ! Used for downscaling
+               allocate (asp_type_patches  (num_aspect_type,numpatch))
+               allocate (slp_type_patches  (num_aspect_type,numpatch))
+               allocate (cur_patches                       (numpatch))
+            ENDIF
+
          ENDIF
       ENDIF
 
@@ -552,6 +560,12 @@ CONTAINS
 #endif
       ENDIF
 
+      IF (DEF_USE_Forcing_Downscaling_Simple) THEN
+         CALL ncio_read_vector (file_restart, 'slp_type_patches' , num_aspect_type, landpatch, slp_type_patches)
+         CALL ncio_read_vector (file_restart, 'asp_type_patches' , num_aspect_type, landpatch, asp_type_patches)
+         CALL ncio_read_vector (file_restart, 'cur_patches'      ,                 landpatch, cur_patches )
+      ENDIF
+
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
 #ifdef SinglePoint
       IF (patchtypes(SITE_landtype) == 0) THEN
@@ -641,6 +655,7 @@ CONTAINS
       CALL ncio_define_dimension_vector (file_restart, landpatch, 'azi',      num_azimuth)
       CALL ncio_define_dimension_vector (file_restart, landpatch, 'zen',      num_zenith)
       CALL ncio_define_dimension_vector (file_restart, landpatch, 'zen_p',    num_zenith_parameter)
+      CALL ncio_define_dimension_vector (file_restart, landpatch, 'type_a',    num_aspect_type)
 
       CALL ncio_write_vector (file_restart, 'patchclass', 'patch', landpatch, patchclass)                            !
       CALL ncio_write_vector (file_restart, 'patchtype' , 'patch', landpatch, patchtype )                            !
@@ -734,6 +749,13 @@ CONTAINS
 #endif
       ENDIF
 
+      IF (DEF_USE_Forcing_Downscaling_Simple) THEN
+         CALL ncio_write_vector (file_restart, 'cur_patches', 'patch', landpatch, cur_patches)
+         CALL ncio_write_vector (file_restart, 'slp_type_patches',  'type_a', num_aspect_type, 'patch', landpatch, slp_type_patches)
+         CALL ncio_write_vector (file_restart, 'asp_type_patches',  'type_a', num_aspect_type, 'patch', landpatch, asp_type_patches)
+      ENDIF   
+
+
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
@@ -787,7 +809,7 @@ CONTAINS
 
    SUBROUTINE deallocate_TimeInvariants ()
 
-   USE MOD_Namelist, only: DEF_USE_Forcing_Downscaling
+   USE MOD_Namelist, only: DEF_USE_Forcing_Downscaling, DEF_USE_Forcing_Downscaling_Simple
    USE MOD_SPMD_Task
    USE MOD_LandPatch, only: numpatch
 
@@ -888,6 +910,12 @@ CONTAINS
                deallocate(cur_patches       )
             ENDIF
 
+            IF (DEF_USE_Forcing_Downscaling_Simple) THEN
+               deallocate(slp_type_patches  )
+               deallocate(asp_type_patches  )
+               deallocate(cur_patches       )
+            ENDIF
+
          ENDIF
       ENDIF
 
@@ -910,7 +938,7 @@ CONTAINS
    USE MOD_SPMD_Task
    USE MOD_RangeCheck
    USE MOD_Namelist, only: DEF_Runoff_SCHEME, DEF_TOPMOD_method, DEF_USE_BEDROCK, &
-                           DEF_USE_Forcing_Downscaling
+                           DEF_USE_Forcing_Downscaling, DEF_USE_Forcing_Downscaling_Simple
 
    IMPLICIT NONE
 
@@ -1014,6 +1042,12 @@ CONTAINS
 
          IF (allocated(tmpcheck)) deallocate(tmpcheck)
 #endif
+      ENDIF
+
+      IF (DEF_USE_Forcing_Downscaling_Simple) THEN
+         CALL check_vector_data ('slp_type     [rad]   ', slp_type_patches ) ! slope
+         CALL check_vector_data ('asp_type     [-]     ', asp_type_patches ) ! aspect fraction of direction of patches
+         CALL check_vector_data ('cur          [-]     ', cur_patches      )
       ENDIF
 
 #ifdef USEMPI

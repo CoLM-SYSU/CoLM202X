@@ -60,6 +60,7 @@ MODULE MOD_Vars_Global
 
    ! used for downscaling
    integer, parameter :: num_slope_type       = 4
+   integer, parameter :: num_aspect_type      = 9
    integer, parameter :: num_zenith           = 101
    integer, parameter :: num_zenith_parameter = 3
    integer, parameter :: num_azimuth          = 16
