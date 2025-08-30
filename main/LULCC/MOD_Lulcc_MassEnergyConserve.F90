@@ -67,6 +67,7 @@ CONTAINS
    USE MOD_SnowFraction
    USE MOD_Albedo
    USE MOD_Namelist
+   USE MOD_Hydro_SoilWater
 
    IMPLICIT NONE
 
@@ -104,6 +105,17 @@ CONTAINS
    real(r8), parameter :: m = 1.0       !the value of m used in CLM4.5 is 1.0.
    ! real(r8) :: deltim = 1800.         !time step (seconds) TODO: be intent in
    logical :: FROM_SOIL, FOUND
+
+   ! update for zwt, wa, ldew
+   real(r8) :: tolerance, tol_z, tol_v, zi_soisno(0:nl_soil), sp_zi(0:nl_soil), sp_dz(1:nl_soil)
+#ifdef Campbell_SOIL_MODEL
+   integer, parameter :: nprms = 1
+#endif
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
+   integer, parameter :: nprms = 5
+#endif
+   real(r8) :: prms(nprms, 1:nl_soil)
+   real(r8) :: ldew_tmp
 !-----------------------------------------------------------------------
 
       IF (p_is_worker) THEN
@@ -596,6 +608,10 @@ ENDIF
                                           * lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
                            wdsrf     (np) = wdsrf     (np) + wdsrf_     (frnp_(k)) &
                                           * lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                           IF (.not. DEF_USE_VariablySaturatedFlow) THEN
+                              zwt    (np) = zwt       (np) + zwt_       (frnp_(k)) &
+                                          * lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                           ENDIF
 
                            snw_rds   (:,np) = snw_rds   (:,np) + snw_rds_   (:,frnp_(k)) &
                                             * lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
@@ -761,14 +777,44 @@ ENDIF
                            ENDDO
                         ENDIF
 
-                        ! Get the lowest zwt from source patches and
-                        ! assign to np suggested by Shupeng Zhang
-                        zwt(np) = zwt_(frnp_(1))
-                        k = 2
-                        DO WHILE (k .le. num)
-                           IF ( zwt_(frnp_(k)) .lt. zwt(np) ) zwt(np) = zwt_(frnp_(k))
-                           k = k + 1
-                        ENDDO
+
+                        ! Zwt calculation suggested by Shupeng Zhang
+                        IF (DEF_USE_VariablySaturatedFlow) THEN
+                           IF (wa(np) >= 0) THEN
+                              DO l = nl_soil, 1, -1
+                                 vf_water = (wliq_soisno(l,np)/denh2o) / dz_soi(l)
+                                 vf_ice   = (wice_soisno(l,np)/denice) / dz_soi(l)
+                                 IF ((vf_water + vf_ice) < porsl(l,np)) THEN ! fraction of soil that is voids [-]
+                                    zwt(np) = zi_soi(l) ! interface depths (lower bound) of soil layers
+                                    EXIT
+                                 ELSEIF (l==1) THEN
+                                    zwt(np) = 0
+                                 ENDIF
+                              ENDDO
+                           ELSE
+                              PRINT*, 'Water table is below the soil column.'
+#ifdef Campbell_SOIL_MODEL
+                              prms(1,1:nl_soil) = bsw(1:nl_soil,np)
+#endif
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
+                              prms(1,1:nl_soil) = alpha_vgm(1:nl_soil,np)
+                              prms(2,1:nl_soil) = n_vgm    (1:nl_soil,np)
+                              prms(3,1:nl_soil) = L_vgm    (1:nl_soil,np)
+                              prms(4,1:nl_soil) = sc_vgm   (1:nl_soil,np)
+                              prms(5,1:nl_soil) = fc_vgm   (1:nl_soil,np)
+#endif
+
+                              tolerance = 1.e-3
+                              tol_z = tolerance / real(nl_soil,r8) /2.0
+                              zi_soisno = (/0., zi_soi/)
+                              sp_zi(0:nl_soil) = zi_soisno(0:nl_soil) * 1000.0   ! from meter to mm
+                              sp_dz(1:nl_soil) = sp_zi(1:nl_soil) - sp_zi(0:nl_soil-1)
+                              tol_v = tol_z / maxval(sp_dz)
+                              CALL get_zwt_from_wa(porsl(nl_soil,np), theta_r(nl_soil,np), psi0(nl_soil,np), hksati(nl_soil,np), &
+                                                   nprms, prms(:,nl_soil), tol_v, tol_z, wa(np), sp_zi(nl_soil), zwt(np)         )
+                           ENDIF
+                        ENDIF
+
 
                      ! ELSE
                      ! ! Patch area stay unchanged or decrease,
@@ -808,7 +854,7 @@ ENDIF
 
 ! ELSEIF (patchtype(np)==3) THEN !glacier patch
 !                    ! Used restart value for GLACIERS patches if patchclass exists last year,
-                     ! or remain initialized
+!                    ! or remain initialized
 !                    ! TODO: CALL REST - DONE
 !                    inp_ = np_
 !                    DO WHILE (inp_ .le. grid_patch_e_(j))
@@ -841,8 +887,15 @@ ENDIF
                         pe  = patch_pft_e(np)
                         ! ps_ = patch_pft_s_(selfnp_)
                         ! pe_ = patch_pft_e_(selfnp_)
+
                         ! if totally come from other types,ldew set to zero since ldew_p(:)=0
-                        ldew(np) = sum( ldew_p(ps:pe)*pftfrac(ps:pe) )
+                        ! using MEC replace STA
+                        ldew_tmp = sum( ldew_p(ps:pe)*pftfrac(ps:pe) )
+                        IF ((ldew_tmp) > 0) THEN
+                           ldew_p(ps:pe) = ldew_p(ps:pe) * (ldew(np) / ldew_tmp)
+                        ELSE
+                           ldew(np) = 0
+                        ENDIF
 
                         ! z0m_p was same-type assigned, then here we update sigf_p, sigf, fsno
                         CALL snowfraction_pftwrap (np,zlnd,scv(np),snowdp(np),wt,sigf(np),fsno(np))
