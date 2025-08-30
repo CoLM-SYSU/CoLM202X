@@ -781,7 +781,7 @@ ENDIF
                         ! Zwt calculation suggested by Shupeng Zhang
                         IF (DEF_USE_VariablySaturatedFlow) THEN
                            IF (wa(np) >= 0) THEN
-                              DO l = nl_soil, 1, -1 
+                              DO l = nl_soil, 1, -1
                                  vf_water = (wliq_soisno(l,np)/denh2o) / dz_soi(l)
                                  vf_ice   = (wice_soisno(l,np)/denice) / dz_soi(l)
                                  IF ((vf_water + vf_ice) < porsl(l,np)) THEN ! fraction of soil that is voids [-]
@@ -854,7 +854,7 @@ ENDIF
 
 ! ELSEIF (patchtype(np)==3) THEN !glacier patch
 !                    ! Used restart value for GLACIERS patches if patchclass exists last year,
-                     ! or remain initialized
+!                    ! or remain initialized
 !                    ! TODO: CALL REST - DONE
 !                    inp_ = np_
 !                    DO WHILE (inp_ .le. grid_patch_e_(j))
@@ -887,10 +887,9 @@ ENDIF
                         pe  = patch_pft_e(np)
                         ! ps_ = patch_pft_s_(selfnp_)
                         ! pe_ = patch_pft_e_(selfnp_)
-                        ! if totally come from other types,ldew set to zero since ldew_p(:)=0
-                        ! ldew(np) = sum( ldew_p(ps:pe)*pftfrac(ps:pe) )
 
-                        ! MEC replace STA
+                        ! if totally come from other types,ldew set to zero since ldew_p(:)=0
+                        ! using MEC replace STA
                         ldew_tmp = sum( ldew_p(ps:pe)*pftfrac(ps:pe) )
                         IF ((ldew_tmp) > 0) THEN
                            ldew_p(ps:pe) = ldew_p(ps:pe) * (ldew(np) / ldew_tmp)
