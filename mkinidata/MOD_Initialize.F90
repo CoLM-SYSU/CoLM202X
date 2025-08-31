@@ -80,6 +80,7 @@ CONTAINS
    USE MOD_PercentagesPFTReadin
    USE MOD_SoilParametersReadin
    USE MOD_SoilTextureReadin
+   USE MOD_VicParaReadin
 #ifdef SinglePoint
    USE MOD_SingleSrfdata
 #endif
@@ -507,6 +508,9 @@ ENDIF
       ENDIF
 
       IF (DEF_Runoff_SCHEME == 1) THEN
+         IF (DEF_VIC_OPT) THEN
+            CALL vicpara_readin ()
+         ELSE
          IF (p_is_master) THEN
             txt_id = 111
             open(txt_id, file=trim(DEF_file_VIC_para), status='old', form='formatted')
@@ -531,6 +535,7 @@ ENDIF
                vic_Ws       = vic_Ws_
                vic_c        = vic_c_
             ENDIF
+         ENDIF
          ENDIF
       ELSE
          IF (p_is_worker) THEN
