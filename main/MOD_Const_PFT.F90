@@ -5,13 +5,14 @@ MODULE MOD_Const_PFT
 !-----------------------------------------------------------------------
 !
 ! !DESCRIPTION:
-! Set constants for plant functional types (PFTs)
+!  Set constants for plant functional types (PFTs)
 !
-! Created by Hua Yuan, 08/2019
+!  Created by Hua Yuan, 08/2019
 !
-! REVISIONS:
-! Xingjie Lu, TODO:10/2021?: added for crop PFTs
+! !REVISIONS:
+!  10/2021, Xingjie Lu: added for crop PFTs
 !
+!-----------------------------------------------------------------------
 ! !USES:
    USE MOD_Precision
    USE MOD_Vars_Global
@@ -22,7 +23,7 @@ MODULE MOD_Const_PFT
    SAVE
 
 ! Plant Functional Type classification
-!---------------------------
+!-----------------------------------------------------------------------
 ! 0  not vegetated
 ! 1  needleleaf evergreen temperate tree
 ! 2  needleleaf evergreen boreal tree
@@ -103,6 +104,51 @@ MODULE MOD_Const_PFT
 !77  tropical_soybean
 !78  irrigated_tropical_soybean
 
+   character(len=256) :: pftclassname (0:N_PFT+N_CFT-1) = &
+      (/'0  not vegetated                       ', '1  needleleaf evergreen temperate tree ', &
+        '2  needleleaf evergreen boreal tree    ', '3  needleleaf deciduous boreal tree    ', &
+        '4  broadleaf evergreen tropical tree   ', '5  broadleaf evergreen temperate tree  ', &
+        '6  broadleaf deciduous tropical tree   ', '7  broadleaf deciduous temperate tree  ', &
+        '8  broadleaf deciduous boreal tree     ', '9  broadleaf evergreen shrub           ', &
+        '10  broadleaf deciduous temperate shrub', '11  broadleaf deciduous boreal shrub   ', &
+        '12  c3 arctic grass                    ', '13  c3 non-arctic grass                ', &
+        '14  c4 grass                           ', '15  c3 crop                            '  &
+#ifdef CROP
+       ,'16  c3_irrigated                       ', '17  temperate_corn                     ', &
+        '18  irrigated_temperate_corn           ', '19  spring_wheat                       ', &
+        '20  irrigated_spring_wheat             ', '21  winter_wheat                       ', &
+        '22  irrigated_winter_wheat             ', '23  temperate_soybean                  ', &
+        '24  irrigated_temperate_soybean        ', '25  barley                             ', &
+        '26  irrigated_barley                   ', '27  winter_barley                      ', &
+        '28  irrigated_winter_barley            ', '29  rye                                ', &
+        '30  irrigated_rye                      ', '31  winter_rye                         ', &
+        '32  irrigated_winter_rye               ', '33  cassava                            ', &
+        '34  irrigated_cassava                  ', '35  citrus                             ', &
+        '36  irrigated_citrus                   ', '37  cocoa                              ', &
+        '38  irrigated_cocoa                    ', '39  coffee                             ', &
+        '40  irrigated_coffee                   ', '41  cotton                             ', &
+        '42  irrigated_cotton                   ', '43  datepalm                           ', &
+        '44  irrigated_datepalm                 ', '45  foddergrass                        ', &
+        '46  irrigated_foddergrass              ', '47  grapes                             ', &
+        '48  irrigated_grapes                   ', '49  groundnuts                         ', &
+        '50  irrigated_groundnuts               ', '51  millet                             ', &
+        '52  irrigated_millet                   ', '53  oilpalm                            ', &
+        '54  irrigated_oilpalm                  ', '55  potatoes                           ', &
+        '56  irrigated_potatoes                 ', '57  pulses                             ', &
+        '58  irrigated_pulses                   ', '59  rapeseed                           ', &
+        '60  irrigated_rapeseed                 ', '61  rice                               ', &
+        '62  irrigated_rice                     ', '63  sorghum                            ', &
+        '64  irrigated_sorghum                  ', '65  sugarbeet                          ', &
+        '66  irrigated_sugarbeet                ', '67  sugarcane                          ', &
+        '68  irrigated_sugarcane                ', '69  sunflower                          ', &
+        '70  irrigated_sunflower                ', '71  miscanthus                         ', &
+        '72  irrigated_miscanthus               ', '73  switchgrass                        ', &
+        '74  irrigated_switchgrass              ', '75  tropical_corn                      ', &
+        '76  irrigated_tropical_corn            ', '77  tropical_soybean                   ', &
+        '78  irrigated_tropical_soybean         '  &
+#endif
+        /)
+
    ! canopy layer number
    integer , parameter :: canlay_p(0:N_PFT+N_CFT-1) &
       = (/0, 2, 2, 2, 2, 2, 2, 2 &
@@ -155,7 +201,7 @@ MODULE MOD_Const_PFT
 #endif
          /)
 
-   ! defulat vegetation fractional cover
+   ! default vegetation fractional cover
    real(r8), parameter :: fveg0_p(0:N_PFT+N_CFT-1) &
       = 1.0 !(/.../)
 
@@ -200,8 +246,8 @@ MODULE MOD_Const_PFT
 #endif
          /)
 
-   ! reflectance of green leaf in virsible band
-#if(defined LULC_IGBP_PC)
+   ! reflectance of green leaf in visible band
+#if (defined LULC_IGBP_PC)
    ! Leaf optical properties adapted from measured data (Dong et al., 2021)
    real(r8), parameter :: rhol_vis_p(0:N_PFT+N_CFT-1) &
       = (/0.110,  0.070,  0.070,  0.070,  0.100,  0.110,  0.100,  0.100&
@@ -223,7 +269,7 @@ MODULE MOD_Const_PFT
 #endif
          /)
 
-   ! reflectance of dead leaf in virsible band
+   ! reflectance of dead leaf in visible band
    real(r8), parameter :: rhos_vis_p(0:N_PFT+N_CFT-1) &
       = (/0.310,  0.160,  0.160,  0.160,  0.160,  0.160,  0.160,  0.160&
         , 0.160,  0.160,  0.160,  0.160,  0.310,  0.310,  0.310,  0.310&
@@ -240,7 +286,7 @@ MODULE MOD_Const_PFT
          /)
 
    ! reflectance of green leaf in near infrared band
-#if(defined LULC_IGBP_PC)
+#if (defined LULC_IGBP_PC)
    ! Leaf optical properties adapted from measured data (Dong et al., 2021)
    real(r8), parameter :: rhol_nir_p(0:N_PFT+N_CFT-1) &
       = (/0.350,  0.360,  0.370,  0.360,  0.450,  0.460,  0.450,  0.420&
@@ -279,8 +325,8 @@ MODULE MOD_Const_PFT
          /)
 
    ! transmittance of green leaf in visible band
-#if(defined LULC_IGBP_PC)
-   ! Leaf optical properties adpated from measured data (Dong et al., 2021)
+#if (defined LULC_IGBP_PC)
+   ! Leaf optical properties adapted from measured data (Dong et al., 2021)
    real(r8), parameter :: taul_vis_p(0:N_PFT+N_CFT-1) &
       = (/0.050,  0.050,  0.050,  0.050,  0.050,  0.060,  0.050,  0.060&
         , 0.050,  0.050,  0.050,  0.050,  0.050,  0.050,  0.050,  0.050&
@@ -318,7 +364,7 @@ MODULE MOD_Const_PFT
          /)
 
    ! transmittance of green leaf in near infrared band
-#if(defined LULC_IGBP_PC)
+#if (defined LULC_IGBP_PC)
    ! Leaf optical properties adapted from measured data (Dong et al., 2021)
    real(r8), parameter :: taul_nir_p(0:N_PFT+N_CFT-1) &
       = (/0.340,  0.280,  0.290,  0.380,  0.250,  0.330,  0.250,  0.430&
@@ -362,6 +408,23 @@ MODULE MOD_Const_PFT
   !   = (/ 52.0, 61.0, 54.0, 57.0, 72.0, 72.0, 52.0, 52.0&
   !      , 52.0, 72.0, 52.0, 52.0, 52.0, 52.0, 52.0, 57.0&
   ! /07/27/2022/ based on Bonan et al., 2011 (Table 2, VmaxF(N))
+  ! Temporarilly tune Vegetation parameter to match VGM model (soil too wet)
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
+   real(r8), parameter :: vmax25_p(0:N_PFT+N_CFT-1) &
+      = (/ 52.0, 55.0, 42.0, 29.0, 41.0, 51.0, 36.0, 30.0&
+         , 40.0, 36.0, 30.0, 19.0, 21.0, 26.0, 25.0, 57.0&
+#ifdef CROP
+         , 57.0, 57.0, 57.0, 57.0, 57.0, 57.0, 57.0, 57.0&
+         , 57.0, 57.0, 57.0, 57.0, 57.0, 57.0, 57.0, 57.0&
+         , 57.0, 57.0, 57.0, 57.0, 57.0, 57.0, 57.0, 57.0&
+         , 57.0, 57.0, 57.0, 57.0, 57.0, 57.0, 57.0, 57.0&
+         , 57.0, 57.0, 57.0, 57.0, 57.0, 57.0, 57.0, 57.0&
+         , 57.0, 57.0, 57.0, 57.0, 57.0, 57.0, 57.0, 57.0&
+         , 57.0, 57.0, 57.0, 57.0, 57.0, 57.0, 57.0, 57.0&
+         , 57.0, 57.0, 57.0, 57.0, 57.0, 57.0, 57.0  &
+#endif
+         /) * 1.e-6 * 0.7
+#else
    real(r8), parameter :: vmax25_p(0:N_PFT+N_CFT-1) &
       = (/ 52.0, 55.0, 42.0, 29.0, 41.0, 51.0, 36.0, 30.0&
          , 40.0, 36.0, 30.0, 19.0, 21.0, 26.0, 25.0, 57.0&
@@ -376,6 +439,7 @@ MODULE MOD_Const_PFT
          , 57.0, 57.0, 57.0, 57.0, 57.0, 57.0, 57.0  &
 #endif
          /) * 1.e-6
+#endif
 
    ! quantum efficiency
    real(r8), parameter :: effcon_p(0:N_PFT+N_CFT-1) &
@@ -663,7 +727,8 @@ MODULE MOD_Const_PFT
 #endif
          /)
 
-   logical , parameter, dimension(0:N_PFT+N_CFT-1) :: isbetr  & ! True => is tropical broadleaf evergreen tree
+   ! True => is tropical broadleaf evergreen tree
+   logical , parameter, dimension(0:N_PFT+N_CFT-1) :: isbetr  &
       =(/.False., .False., .False., .False., .True.,  .False., .False., .False. &
        , .False., .False., .False., .False., .False., .False., .False., .False. &
 #ifdef CROP
@@ -678,7 +743,8 @@ MODULE MOD_Const_PFT
 #endif
          /)
 
-   logical , parameter, dimension(0:N_PFT+N_CFT-1) :: isbdtr  & ! True => is a broadleaf deciduous tree
+   ! True => is a broadleaf deciduous tree
+   logical , parameter, dimension(0:N_PFT+N_CFT-1) :: isbdtr  &
       =(/.False., .False., .False., .False., .False., .False., .True.,  .False. &
        , .False., .False., .False., .False., .False., .False., .False., .False. &
 #ifdef CROP
@@ -708,7 +774,8 @@ MODULE MOD_Const_PFT
 #endif
          /)
 
-   logical , parameter, dimension(0:N_PFT+N_CFT-1) :: issed   & ! True => is a seasonal deciduous tree
+   ! True => is a seasonal deciduous tree
+   logical , parameter, dimension(0:N_PFT+N_CFT-1) :: issed   &
       =(/.False., .False., .False., .True.,  .False., .False., .False., .True.  &
        , .True.,  .False., .False., .True.,  .True.,  .False., .False., .False. &
 #ifdef CROP
@@ -1193,8 +1260,8 @@ MODULE MOD_Const_PFT
 #endif
          /)
 !--- crop variables ---
-
-   real(r8),parameter, dimension(0:N_PFT+N_CFT-1) :: manunitro  &   ! Max fertilizer to be applied in total (kg N/m2)
+   ! Max fertilizer to be applied in total (kg N/m2)
+   real(r8),parameter, dimension(0:N_PFT+N_CFT-1) :: manure  &
       = (/  0.,     0.,     0.,     0.,     0.,     0.,     0.,     0. &
       ,     0.,     0.,     0.,     0.,     0.,     0.,     0.,     0. &
 #ifdef CROP
@@ -1460,7 +1527,7 @@ MODULE MOD_Const_PFT
 #endif
 !   end bgc variables
 
-! Plant Hydraulics Paramters
+! Plant Hydraulics Parameters
    real(r8), parameter :: kmax_sun_p(0:N_PFT+N_CFT-1) &
       = (/     0.,1.e-007,1.e-007,1.e-007,1.e-007,1.e-007,1.e-007,1.e-007&
          ,1.e-007,1.e-007,1.e-007,1.e-007,1.e-007,1.e-007,1.e-007,1.e-007&
@@ -1586,7 +1653,7 @@ MODULE MOD_Const_PFT
 
    ! shape-fitting parameter for vulnerability curve (-)
    real(r8), parameter :: ck_p(0:N_PFT+N_CFT-1) &
-      = (/  0.,  3.95, 3.95,  3.95, 3.95,  3.95, 3.95, 3.95&
+      = (/3.95,  3.95, 3.95,  3.95, 3.95,  3.95, 3.95, 3.95&
          ,3.95,  3.95, 3.95,  3.95, 3.95,  3.95, 3.95, 3.95&
 #ifdef CROP
          ,3.95,  3.95, 3.95,  3.95, 3.95,  3.95, 3.95, 3.95&
@@ -1601,9 +1668,41 @@ MODULE MOD_Const_PFT
          /)
 !end plant hydraulic parameters
 
-      ! irrigation parameter for irrigated crop
-   logical , parameter :: irrig_crop(0:N_PFT+N_CFT-1)  & ! True => is tropical broadleaf evergreen tree
-            =(/.False., .False., .False., .False., .False., .False., .False., .False. &
+  ! Temporally tune Vegetation parameter to match VGM model (soil too wet)
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
+   real(r8), parameter :: lambda_p(0:N_PFT+N_CFT-1) &
+      = (/1000.,  1000., 1000.,  1000., 1000.,  1000., 1000., 1000.&
+         ,1000.,  1000., 1000.,  1000., 1000.,  1000., 1000., 1000.&
+#ifdef CROP
+         ,1000.,  1000., 1000.,  1000., 1000.,  1000., 1000., 1000.&
+         ,1000.,  1000., 1000.,  1000., 1000.,  1000., 1000., 1000.&
+         ,1000.,  1000., 1000.,  1000., 1000.,  1000., 1000., 1000.&
+         ,1000.,  1000., 1000.,  1000., 1000.,  1000., 1000., 1000.&
+         ,1000.,  1000., 1000.,  1000., 1000.,  1000., 1000., 1000.&
+         ,1000.,  1000., 1000.,  1000., 1000.,  1000., 1000., 1000.&
+         ,1000.,  1000., 1000.,  1000., 1000.,  1000., 1000., 1000.&
+         ,1000.,  1000., 1000.,  1000., 1000.,  1000., 1000.&
+#endif
+         /) * 3.5
+#else
+   real(r8), parameter :: lambda_p(0:N_PFT+N_CFT-1) &
+      = (/1000.,  1000., 1000.,  1000., 1000.,  1000., 1000., 1000.&
+         ,1000.,  1000., 1000.,  1000., 1000.,  1000., 1000., 1000.&
+#ifdef CROP
+         ,1000.,  1000., 1000.,  1000., 1000.,  1000., 1000., 1000.&
+         ,1000.,  1000., 1000.,  1000., 1000.,  1000., 1000., 1000.&
+         ,1000.,  1000., 1000.,  1000., 1000.,  1000., 1000., 1000.&
+         ,1000.,  1000., 1000.,  1000., 1000.,  1000., 1000., 1000.&
+         ,1000.,  1000., 1000.,  1000., 1000.,  1000., 1000., 1000.&
+         ,1000.,  1000., 1000.,  1000., 1000.,  1000., 1000., 1000.&
+         ,1000.,  1000., 1000.,  1000., 1000.,  1000., 1000., 1000.&
+         ,1000.,  1000., 1000.,  1000., 1000.,  1000., 1000.&
+#endif
+         /)
+#endif
+   ! irrigation parameter for irrigated crop
+   logical , parameter :: irrig_crop(0:N_PFT+N_CFT-1)  &
+           =(/.False., .False., .False., .False., .False., .False., .False., .False. &
             , .False., .False., .False., .False., .False., .False., .False., .False. &
 #ifdef CROP
             , .True., .False., .True., .False., .True., .False., .True., .False. &
@@ -1618,7 +1717,7 @@ MODULE MOD_Const_PFT
             /)
 
 
-   ! scheme 1: Zeng 2001, 2: Schenk and Jackson, 2002
+   ! scheme 1: Schenk and Jackson, 2002, 2: Zeng 2001
    integer, PRIVATE :: ROOTFR_SCHEME = 1
 
    !fraction of roots in each soil layer

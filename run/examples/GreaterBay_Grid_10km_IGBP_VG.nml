@@ -1,0 +1,73 @@
+&nl_colm
+
+! Author: Shupeng Zhang 
+! Description : include soil state init from data.
+
+   DEF_CASE_NAME = 'GreaterBay_Grid_10km_IGBP_VG'
+
+   DEF_domain%edges = 20.0
+   DEF_domain%edgen = 25.0
+   DEF_domain%edgew = 109.0
+   DEF_domain%edgee = 118.0
+
+   DEF_simulation_time%greenwich    = .TRUE.
+   DEF_simulation_time%start_year   = 2010
+   DEF_simulation_time%start_month  = 1
+   DEF_simulation_time%start_day    = 1
+   DEF_simulation_time%start_sec    = 0
+   DEF_simulation_time%end_year     = 2010
+   DEF_simulation_time%end_month    = 1
+   DEF_simulation_time%end_day      = 31
+   DEF_simulation_time%end_sec      = 86400
+   DEF_simulation_time%spinup_year  = 0
+   DEF_simulation_time%spinup_month = 1
+   DEF_simulation_time%spinup_day   = 365
+   DEF_simulation_time%spinup_sec   = 86400
+   DEF_simulation_time%spinup_repeat = 0
+
+   DEF_simulation_time%timestep     = 1800.
+
+   DEF_dir_rawdata = '/tera07/CoLMrawdata/'
+   DEF_dir_runtime = '/tera07/CoLMruntime/'
+   DEF_dir_output  = '/tera13/zhangsp/cases'
+
+   ! ----- land units and land sets -----
+   ! for GRIDBASED
+   DEF_GRIDBASED_lon_res = 0.05
+   DEF_GRIDBASED_lat_res = 0.05
+   DEF_file_mesh_filter  = '/tera13/zhangsp/landdata/filter/greaterbay_1km_filter.nc'
+
+   ! soil state init
+   DEF_USE_SoilInit  = .true.
+   DEF_file_SoilInit = '/tera13/zhangsp/landdata/soilstate/soilstate.nc' 
+
+   ! LAI setting
+   DEF_LAI_MONTHLY = .true.
+   DEF_LAI_CHANGE_YEARLY = .false.
+
+   DEF_USE_BEDROCK = .true.
+
+   ! ----- forcing -----
+   ! Options :
+   ! PRINCETON | GSWP3   | QIAN  | CRUNCEPV4 | CRUNCEPV7 | ERA5LAND | ERA5  |  MSWX
+   ! WFDE5     | CRUJRA  | WFDEI | JRA55     | GDAS      | CMFD     | POINT |  JRA3Q
+   DEF_forcing_namelist = '/tera13/zhangsp/work/CoLM2024/run/forcing/ERA5LAND.nml'
+   
+   DEF_Forcing_Interp_Method = 'arealweight' ! 'arealweight' (default) or 'bilinear'
+
+   ! ----- history -----
+   DEF_HIST_lon_res = 0.05
+   DEF_HIST_lat_res = 0.05
+   DEF_WRST_FREQ = 'MONTHLY' ! write restart file frequency: HOURLY/DAILY/MONTHLY/YEARLY
+   DEF_HIST_FREQ = 'DAILY' ! write history file frequency: HOURLY/DAILY/MONTHLY/YEARLY
+   DEF_HIST_groupby = 'MONTH' ! history in one file: DAY/MONTH/YEAR
+   DEF_HIST_mode = 'one' ! history in one or block
+   DEF_REST_CompressLevel = 1
+   DEF_HIST_CompressLevel = 1
+
+   DEF_HIST_WriteBack = .false.
+
+   DEF_hist_vars_out_default = .false.
+   DEF_hist_vars_namelist    = '/tera13/zhangsp/work/CoLM2024/run/history.nml'
+
+/

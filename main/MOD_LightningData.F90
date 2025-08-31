@@ -2,13 +2,13 @@
 
 #ifdef BGC
 MODULE MOD_LightningData
- !-----------------------------------------------------------------------
- ! !DESCRIPTION:
- ! This module read in lightning data for fire subroutine
- !
- ! !ORIGINAL:
- ! Zhang Shupeng, 2022, prepare the original version of the lightning data module.
-
+!-----------------------------------------------------------------------
+! !DESCRIPTION:
+!  This module read in lightning data for fire subroutine
+!
+! !ORIGINAL:
+!  Zhang Shupeng, 2022, prepare the original version of the lightning data module.
+!-----------------------------------------------------------------------
 
    USE MOD_Grid
    USE MOD_DataType
@@ -25,13 +25,13 @@ MODULE MOD_LightningData
 
 CONTAINS
 
-   ! ----------
    SUBROUTINE init_lightning_data (idate)
 
-   !----------------------
-   ! DESCTIPTION:
-   ! open lightning netcdf file from DEF_dir_rawdata, read latitude and longitude info.
-   ! Initialize lightning data read in.
+!-----------------------------------------------------------------------
+! !DESCTIPTION:
+!  open lightning netcdf file from DEF_dir_rawdata, read latitude and longitude info.
+!  Initialize lightning data read in.
+!-----------------------------------------------------------------------
 
    USE MOD_SPMD_Task
    USE MOD_Namelist
@@ -49,7 +49,8 @@ CONTAINS
    real(r8), allocatable :: lat(:), lon(:)
    integer :: itime
 
-      file_lightning = trim(DEF_dir_runtime) // '/fire/clmforc.Li_2012_climo1995-2011.T62.lnfm_Total_c140423.nc'
+      file_lightning = trim(DEF_dir_runtime) // &
+         '/fire/clmforc.Li_2012_climo1995-2011.T62.lnfm_Total_c140423.nc'
 
       CALL ncio_read_bcast_serial (file_lightning, 'lat', lat)
       CALL ncio_read_bcast_serial (file_lightning, 'lon', lon)
@@ -70,12 +71,13 @@ CONTAINS
 
    END SUBROUTINE init_lightning_data
 
-   ! ----------
+
    SUBROUTINE update_lightning_data (time, deltim)
 
-   !----------------------
-   ! DESCTIPTION:
-   ! read lightning data during simulation
+!-----------------------------------------------------------------------
+! !DESCRIPTION:
+!  read lightning data during simulation
+!-----------------------------------------------------------------------
 
    USE MOD_TimeManager
    USE MOD_NetCDFBlock

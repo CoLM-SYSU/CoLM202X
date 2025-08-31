@@ -1,33 +1,36 @@
 &nl_colm_forcing
-   
-  ! ----- forcing -----
-   DEF_dir_forcing  = '/tera06/zhwei/CoLM_Forcing/ERA5/' 
 
-   DEF_forcing%dataset           = 'ERA5' 
-   DEF_forcing%solarin_all_band  = .true.  
-   DEF_forcing%HEIGHT_V          = 50.0    
+  ! ----- forcing -----
+   DEF_dir_forcing  = '/shr03/CoLM_Forcing/ERA5/'
+
+   DEF_forcing%dataset           = 'ERA5'
+   DEF_forcing%solarin_all_band  = .true.
+   DEF_forcing%HEIGHT_mode       = 'absolute'  ! 'absolute' height to ground surface or
+                                               ! 'relative' height to tree/building top
+                                               ! if not speficied, default is absolute
+   DEF_forcing%HEIGHT_V          = 50.0
    DEF_forcing%HEIGHT_T          = 40.0
    DEF_forcing%HEIGHT_Q          = 40.0
-   
-   DEF_forcing%NVAR              = 8        ! variable number of forcing data
-   DEF_forcing%startyr           = 1979     ! start year of forcing data  
-   DEF_forcing%startmo           = 1        ! start month of forcing data
-   DEF_forcing%endyr             = 2021     ! end year of forcing data
-   DEF_forcing%endmo             = 12       ! end month of forcing data
+
+   DEF_forcing%NVAR              = 8           ! variable number of forcing data
+   DEF_forcing%startyr           = 1979        ! start year of forcing data
+   DEF_forcing%startmo           = 1           ! start month of forcing data
+   DEF_forcing%endyr             = 2024        ! end year of forcing data
+   DEF_forcing%endmo             = 12          ! end month of forcing data
    DEF_forcing%dtime             = 3600 3600 3600 3600 3600 3600 3600 3600
-   DEF_forcing%offset            = 3600 3600 3600 3600 3600 3600 3600 3600
-   DEF_forcing%nlands            = 1        ! land grid number in 1d
-   
-   DEF_forcing%leapyear          = .true.   ! leapyear calendar
-   DEF_forcing%data2d            = .true.   ! data in 2 dimension (lon, lat)
-   DEF_forcing%hightdim          = .false.  ! have "z" dimension
-   DEF_forcing%dim2d             = .false.  ! lat/lon value in 2 dimension (lon, lat)
-   
+   DEF_forcing%offset            = 1800 1800 1800 1800 1800 1800    0 1800
+   DEF_forcing%nlands            = 1           ! land grid number in 1d
+
+   DEF_forcing%leapyear          = .true.      ! leapyear calendar
+   DEF_forcing%data2d            = .true.      ! data in 2 dimension (lon, lat)
+   DEF_forcing%hightdim          = .false.     ! have "z" dimension
+   DEF_forcing%dim2d             = .false.     ! lat/lon value in 2 dimension (lon, lat)
+
    DEF_forcing%latname           = 'latitude'  ! dimension name of latitude
    DEF_forcing%lonname           = 'longitude' ! dimension name of longitude
-   
-   DEF_forcing%groupby           = 'month'  ! file grouped by year/month
-   
+
+   DEF_forcing%groupby           = 'month'     ! file grouped by year/month
+
    DEF_forcing%fprefix(1) = '2m_temperature/ERA5'
    DEF_forcing%fprefix(2) = 'Specific_Humdity/ERA5'
    DEF_forcing%fprefix(3) = 'surface_pressure/ERA5'
@@ -39,6 +42,7 @@
 
 
    DEF_forcing%vname    = 't2m' 'q' 'sp' 'mtpr' 'u10' 'v10' 'msdwswrf' 'msdwlwrf'
+   DEF_forcing%timelog  = 'instant' 'instant' 'instant' 'backward' 'instant' 'instant' 'backward' 'backward'
    DEF_forcing%tintalgo = 'linear' 'linear' 'linear' 'nearest' 'linear' 'linear' 'coszen' 'linear'
 
    DEF_forcing%CBL_fprefix        = 'boundary_layer_height/ERA5'

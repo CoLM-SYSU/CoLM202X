@@ -82,14 +82,12 @@ CONTAINS
             hbot(npatch) = hbot0(m)
 
             ! trees or woody savannas
-            IF ( m<6 .or. m==8) THEN
+            IF ( m<6 .or. m==8 ) THEN
                ! 01/06/2020, yuan: adjust htop reading
-               IF (htoplc(npatch) > 2.) THEN
-                  htop(npatch) = htoplc(npatch)
-                  hbot(npatch) = htoplc(npatch)*hbot0(m)/htop0(m)
-                  hbot(npatch) = max(1., hbot(npatch))
-                  !htop(npatch) = max(htop(npatch), hbot0(m)*1.2)
-               ENDIF
+               ! 11/15/2021, yuan: adjust htop setting
+               htop(npatch) = max(2., htoplc(npatch))
+               hbot(npatch) = htoplc(npatch)*hbot0(m)/htop0(m)
+               hbot(npatch) = max(1., hbot(npatch))
             ENDIF
 
          ENDDO
@@ -101,8 +99,10 @@ CONTAINS
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
 #ifdef SinglePoint
-      allocate(htoppft(numpft))
-      htoppft = pack(SITE_htop_pfts, SITE_pctpfts > 0.)
+      IF (numpft > 0) THEN
+         allocate(htoppft(numpft))
+         htoppft = pack(SITE_htop_pfts, SITE_pctpfts > 0.)
+      ENDIF
 #else
       lndname = trim(landdir)//'/htop_pfts.nc'
       CALL ncio_read_vector (lndname, 'htop_pfts', landpft,   htoppft)
@@ -125,8 +125,9 @@ CONTAINS
 
                   ! for trees
                   ! 01/06/2020, yuan: adjust htop reading
-                  IF ( n>0 .and. n<9 .and. htoppft(p)>2.) THEN
-                     htop_p(p) = htoppft(p)
+                  ! 11/15/2021, yuan: adjust htop setting
+                  IF ( n>0 .and. n<9 ) THEN
+                     htop_p(p) = max(2., htoppft(p))
                      hbot_p(p) = htoppft(p)*hbot0_p(n)/htop0_p(n)
                      hbot_p(p) = max(1., hbot_p(p))
                   ENDIF

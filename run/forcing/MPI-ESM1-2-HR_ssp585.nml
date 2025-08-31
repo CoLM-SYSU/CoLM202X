@@ -1,33 +1,33 @@
 &nl_colm_forcing
-   
-  ! ----- forcing -----
-   DEF_dir_forcing  = '/share/home/dq013/zhwei/colm/data/CoLM_Forcing/MPI-ESM1-2-HR/ssp585/' 
 
-   DEF_forcing%dataset           = 'CMIP6' 
-   DEF_forcing%solarin_all_band  = .true.  
-   DEF_forcing%HEIGHT_V          = 50.0    
+  ! ----- forcing -----
+   DEF_dir_forcing  = '/share/home/dq013/zhwei/colm/data/CoLM_Forcing/MPI-ESM1-2-HR/ssp585/'
+
+   DEF_forcing%dataset           = 'CMIP6'
+   DEF_forcing%solarin_all_band  = .true.
+   DEF_forcing%HEIGHT_V          = 50.0
    DEF_forcing%HEIGHT_T          = 40.0
    DEF_forcing%HEIGHT_Q          = 40.0
-   
-   DEF_forcing%NVAR              = 8        ! variable number of forcing data
-   DEF_forcing%startyr           = 2016     ! start year of forcing data  
-   DEF_forcing%startmo           = 1        ! start month of forcing data
-   DEF_forcing%endyr             = 2100     ! end year of forcing data
-   DEF_forcing%endmo             = 12       ! end month of forcing data
+
+   DEF_forcing%NVAR              = 8       ! variable number of forcing data
+   DEF_forcing%startyr           = 2016    ! start year of forcing data
+   DEF_forcing%startmo           = 1       ! start month of forcing data
+   DEF_forcing%endyr             = 2100    ! end year of forcing data
+   DEF_forcing%endmo             = 12      ! end month of forcing data
    DEF_forcing%dtime             = 10800 10800 10800 10800 10800 10800 10800 10800
-   DEF_forcing%offset            = 10800 10800 10800 10800 10800 10800 10800 10800
-   DEF_forcing%nlands            = 1        ! land grid number in 1d
-   
-   DEF_forcing%leapyear          = .true.   ! leapyear calendar
-   DEF_forcing%data2d            = .true.   ! data in 2 dimension (lon, lat)
-   DEF_forcing%hightdim          = .false.  ! have "z" dimension
-   DEF_forcing%dim2d             = .false.  ! lat/lon value in 2 dimension (lon, lat)
-   
-   DEF_forcing%latname           = 'lat'  ! dimension name of latitude
-   DEF_forcing%lonname           = 'lon' ! dimension name of longitude
-   
+   DEF_forcing%offset            =   0   0     0    5400    0     0     0    5400
+   DEF_forcing%nlands            = 1       ! land grid number in 1d
+
+   DEF_forcing%leapyear          = .true.  ! leapyear calendar
+   DEF_forcing%data2d            = .true.  ! data in 2 dimension (lon, lat)
+   DEF_forcing%hightdim          = .false. ! have "z" dimension
+   DEF_forcing%dim2d             = .false. ! lat/lon value in 2 dimension (lon, lat)
+
+   DEF_forcing%latname           = 'lat'   ! dimension name of latitude
+   DEF_forcing%lonname           = 'lon'   ! dimension name of longitude
+
    DEF_forcing%groupby           = 'year'  ! file grouped by year/month
-   
+
    DEF_forcing%fprefix(1) = 'tas/tas_1d'
    DEF_forcing%fprefix(2) = 'huss/huss_1d'
    DEF_forcing%fprefix(3) = 'ps/ps_1d'
@@ -39,6 +39,7 @@
 
 
    DEF_forcing%vname    = 'tas' 'huss' 'ps' 'pr' 'uas' 'vas' 'rsds' 'rlds'
+   DEF_forcing%timelog  = 'instant' 'instant' 'instant' 'forward' 'instant' 'instant' 'forward' 'forward'
    DEF_forcing%tintalgo = 'linear' 'linear' 'linear' 'nearest' 'linear' 'linear' 'coszen' 'linear'
 
 /

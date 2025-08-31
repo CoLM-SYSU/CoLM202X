@@ -1,0 +1,453 @@
+#!/bin/bash
+
+
+Help()
+{
+#DISPLAY help
+   echo "----------------------------- Usage ---------------------------------------"
+   echo "   Descripion: create CoLM simulation case scripts. i.e. mksrf.submit, "
+   echo "               init.submit, and case.submit"
+
+   echo '---------------------------------------------------------------------------'
+   echo 'Syntax: ./create_scripts -p $SourcePath -t $STARTYR -e $ENDYR -f $HEADER'
+   echo '        -c $CONFIG [ -i ${SPINUPSCHEME} ]'
+   echo '!--------------------------------------------------------------------------'
+   echo options:
+   echo '  -p|--pathname The path with case name, where you want to create your scripts'
+   echo '          (The path must includ case name but without ''/'' at end of case path)'
+   echo
+   echo '  -t|--startyr (optional) ${STARTYR} is the start year of the simulation:'
+   echo
+   echo '          ${startyr} (default: 1980)'
+   echo '          Parameter should be a positive integer number to indicate the '
+   echo '          start year of the simulation.'
+   echo
+   echo '  -e|--endyr (optional) ${ENDYR} is the end year of the simulation: '
+   echo '       (i.e. ${endyr}=${startyr} if the simulation period is only one year)'
+   echo
+   echo '          ${endyr} (default: 2000 or 1980 if "--spinup sasund" is set up)'
+   echo '          Parameter should be a positive integer number to indicate the'
+   echo '          end year of the simulation. if "--spinup sasund" is set up, '
+   echo '          ${startyr}=${endyr}'
+   echo
+   echo '  -f|--header (optional) ${HEADER} header template for the job schedule system:'
+   echo
+   echo '  -c|--config (optional) ${CONFIG} configuration for job schedule system'
+   echo 
+   echo '  -i|--spinup (optional) ${SPINUPSCHEME} specify the spinup scheme we used in'
+   echo '          case.submit. i.e. none, nd, or sasund'
+   echo
+   echo '  -h display command information'
+
+
+}
+
+NdaysofYear()
+{
+   year=$1
+   if [ $((year % 4)) == 0 ]; then
+      if [ $((year % 100)) != 0 ] || [ $((year % 400)) == 0 ]; then
+         echo 366
+      else
+         echo 365
+      fi
+   else
+      echo 365
+   fi
+}
+
+CreateHeader()
+{
+   CASENAME=$1
+   SCRIPTNAME=$2
+   HEADER=$3
+   CONFIG=$4
+
+   if [ ! -f $HEADER ];then
+      echo "ERROR: HEADER file $HEADER does not exist"
+      exit
+   fi
+
+   if [ -f $CONFIG ];then
+      case ${SCRIPTNAME} in
+      mksrf.submit)
+	 EXEC=`awk '/Exe_command/ {print $2}' $CONFIG`
+	 EXEO=`awk '/Exe_opt/ {print $2}' $CONFIG`
+         NP=`awk '/NProcesses_mksrf/ {print $2}' $CONFIG`
+         NN=`awk '/NNodes_mksrf/ {print $2}' $CONFIG`
+         NTPN=`awk '/NTasksPerNode_mksrf/ {print $2}' $CONFIG`
+         MEM=`awk '/Memory_mksrf/ {print $2}' $CONFIG`
+         WT=`awk '/Walltime_mksrf/ {print $2}' $CONFIG`
+         QUEUE=`awk '/Queue_mksrf/ {print $2}' $CONFIG`
+         OUTPUT='mksrf'
+         ;;
+      init.submit)
+	 EXEC=`awk '/Exe_command/ {print $2 $3}' $CONFIG`
+	 EXEO=`awk '/Exe_opt/ {print $2}' $CONFIG`
+         NP=`awk '/NProcesses_mkini/ {print $2}' $CONFIG`
+         NN=`awk '/NNodes_mkini/ {print $2}' $CONFIG`
+         NTPN=`awk '/NTasksPerNode_mkini/ {print $2}' $CONFIG`
+         MEM=`awk '/Memory_mkini/ {print $2}' $CONFIG`
+         WT=`awk '/Walltime_mkini/ {print $2}' $CONFIG`
+         QUEUE=`awk '/Queue_mkini/ {print $2}' $CONFIG`
+         OUTPUT='init'
+         ;;
+      case.submit)
+	 EXEC=`awk '/Exe_command/ {print $2 $3}' $CONFIG`
+	 EXEO=`awk '/Exe_opt/ {print $2}' $CONFIG`
+         NP=`awk '/NProcesses_case/ {print $2}' $CONFIG`
+         NN=`awk '/NNodes_case/ {print $2}' $CONFIG`
+         NTPN=`awk '/NTasksPerNode_case/ {print $2}' $CONFIG`
+         MEM=`awk '/Memory_case/ {print $2}' $CONFIG`
+         WT=`awk '/Walltime_case/ {print $2}' $CONFIG`
+         QUEUE=`awk '/Queue_case/ {print $2}' $CONFIG`
+         OUTPUT='case'
+         ;;
+      *)
+         echo "Error: Unknown Unknown script name: $SCRIPTNAME in CreateScripts"
+         exit
+         ;;
+      esac     
+      #echo NP after read $NP
+      #echo SCRIPTNAME $SCRIPTNAME
+      #echo HEADER $HEADER
+      #echo CONFIG $CONFIG
+      #echo EXEC $EXEC
+      #echo EXEO $EXEO
+      if [ $NP -gt 0 ] 2>/dev/null;then
+#         echo Number of processes is assigned from $CONFIG
+	 echo>/dev/null
+      else
+         case ${SCRIPTNAME} in
+            mksrf.submit) NP=240;;
+            init.submit)  NP=24;;
+            case.submit)  NP=120;;
+            *) echo  "Error: Unknown Unknown script name: $SCRIPTNAME in CreateScripts"; exit;;
+         esac
+      fi
+      if [ $NN -gt 0 ] 2>/dev/null;then
+         #echo Number of nodes is assigned from $CONFIG
+	 echo>/dev/null
+      else
+         #echo NNodes $NN is not a number in $CONFIG
+         case ${SCRIPTNAME} in
+            mksrf.submit) NN=10;;
+            init.submit)  NN=1;;
+            case.submit)  NN=5;;
+            *) echo  "Error: Unknown Unknown script name: $SCRIPTNAME in CreateScripts"; exit;;
+         esac
+      fi
+      if [ $NTPN -gt 0 ] 2>/dev/null;then
+         #echo Number of tasks per node is assigned from $CONFIG
+	 echo>/dev/null
+      else
+         #echo NTasksPerNode $NTPN is not a number in $CONFIG
+         case ${SCRIPTNAME} in
+            mksrf.submit) NP=24;;
+            init.submit)  NP=24;;
+            case.submit)  NP=24;;
+            *) echo  "Error: Unknown Unknown script name: $SCRIPTNAME in CreateScripts"; exit;;
+         esac
+      fi
+   else
+      #echo Configure file $CONFIG does not exist, resolve configuration from default
+      case ${SCRIPTNAME} in
+      mksrf.submit)
+         NP=240
+         NN=10
+         NTPN=24
+         MEM=150G
+         WT=24:00:00
+         QUEUE=normal
+         OUTPUT='mksrf'
+	 EXEC='mpirun'
+	 EXEO='-np'
+         ;;
+      init.submit)
+         NP=24
+         NN=1
+         NTPN=24
+         MEM=150G
+         WT=24:00:00
+         QUEUE=normal
+         OUTPUT='init'
+	 EXEC='mpirun'
+	 EXEO='-np'
+         ;;
+      case.submit)
+         NP=120
+         NN=5
+         NTPN=24
+         MEM=150G
+         WT=24:00:00
+         QUEUE=normal
+         OUTPUT='case'
+	 EXEC='mpirun'
+	 EXEO='-np'
+         ;;
+      *)
+         echo "Error: Unknown Unknown script name: $SCRIPTNAME in CreateScripts"
+         exit
+         ;;
+      esac
+   fi
+
+
+      
+#echo NP before create header $NP
+
+     sed "s/<CASENAME>/${CASENAME}/g" ${HEADER} |sed "s/<QUEUE>/${QUEUE}/g" \
+   | sed "s/<OUTPUTFILE>/${OUTPUT}.out/g"|sed "s/<ERRORFILE>/${OUTPUT}.err/g" |sed "s/<MEMORY>/${MEM}/g" \
+   | sed "s/<NNODES>/${NN}/g" | sed "s/<NTASKSPERNODE>/${NTPN}/g" | sed "s/<NPROCESSES>/${NP}/g" \
+   | sed "s/<WALLTIME>/${WT}/g" > ${SCRIPTNAME}
+         
+      
+}
+
+CreateScripts()
+{
+   CASEPATH=$1
+   CASENAME=$2
+   STARTYR=$3
+   ENDYR=$4
+   HEADER=$5
+   CONFIG=$6
+   SPINUPSCHEME=$7
+
+   RESTENDYR=`expr $ENDYR + 1`
+   ILOOP='$iloop'
+   LOOPPLUS='iloop=`expr $iloop + 1`'
+   SEQYR='`seq -w '${STARTYR}' '${ENDYR}'`'
+   SEQMO='`seq -w 1 12 `'
+   YEARMON='${iyr}-${i}'
+   NDAYSOFENDYR=`NdaysofYear ${endyr}`
+   NDAYSOFSTARTYR=`NdaysofYear ${STARTYR}`
+   MODILOOP10='`expr $iloop % 10`'
+   RESETTIME='${files} ../'${STARTYR}'-001-00000/${files/'${RESTENDYR}'-001/'${STARTYR}'-001}'
+
+   #echo ${STARTYR} $SEQYR
+   if [ $HEADER == none ];then
+      #echo no header for mksrf.submit
+      echo "#!/bin/bash">mksrf.submit
+      NP=240  
+   else
+      CreateHeader $CASENAME mksrf.submit $HEADER $CONFIG
+      if [ ! -z $CONFIG ];then
+         NP=`awk '/NProcesses_mksrf/ {print $2}' $CONFIG`
+         if [ $NP -gt 0 ] 2>/dev/null;then
+            #echo number of processes for mksrf.submit '$NP=' $NP is assigned from $CONFIG
+	    echo>/dev/null
+         else
+            #echo number of processes '$NP' for mksrf.submit is not configured in $CONFIG, set to 240
+            NP=240
+         fi
+      else
+         #echo $CONFIG does not exist, set number of processes '$NP' to 240
+         NP=240
+      fi
+   fi
+   cat>>mksrf.submit<<EOF
+cd ${CASEPATH}/${CASENAME}/bld/run/
+${EXEC} ${EXEO} $NP ./mksrfdata.x ../../input_${CASENAME}.nml > ../../logmksrfdata
+
+EOF
+   
+   if [ $HEADER == none ];then
+      #echo no header for init.submit
+      echo "#!/bin/bash">init.submit
+      NP=24
+   else
+      CreateHeader $CASENAME init.submit $HEADER $CONFIG
+      NP=`awk '/NProcesses_mkini/ {print $2}' $CONFIG`
+      if [ ! -z $CONFIG ];then
+         NP=`awk '/NProcesses_mkini/ {print $2}' $CONFIG`
+         if [ $NP -gt 0 ] 2>/dev/null;then
+            echo>/dev/null
+      #      echo The number of processes for init.submit '$NP=' $NP is assigned from $CONFIG
+         else
+       #     echo The number of processes for init.submit '$NP' is not configured in $CONFIG, set to 24
+            NP=24
+         fi
+      else
+         echo $CONFIG does not exist, set the number of processes '$NP' to 24
+         NP=24
+      fi
+   fi
+   cat>>init.submit<<EOF
+cd ${CASEPATH}/${CASENAME}/bld/run/
+${EXEC} ${EXEO} $NP ./mkinidata.x ../../input_${CASENAME}.nml > ../../logini
+
+EOF
+
+   if [ $HEADER == none ];then
+     # echo no header for case.submit
+      echo "#!/bin/bash">case.submit
+      NP=120
+   else
+      CreateHeader $CASENAME case.submit $HEADER $CONFIG
+      NP=`awk '/NProcesses_case/ {print $2}' $CONFIG`
+      if [ ! -z $CONFIG ];then
+         NP=`awk '/NProcesses_case/ {print $2}' $CONFIG`
+         if [ $NP -gt 0 ] 2>/dev/null;then
+            echo>/dev/null
+      #      echo The number of processes for case.submit '$NP=' $NP is assigned from $CONFIG
+         else
+       #     echo The number of processes for case.submit '$NP' is not configured in $CONFIG, set to 120
+            NP=120
+         fi
+      else
+       #  echo $CONFIG does not exist, set the number of processes '$NP' to 120
+         NP=120
+      fi
+   fi
+   case ${SPINUPSCHEME} in
+      none)
+         cat>>'case.submit'<<EOF
+cd ${CASEPATH}/${CASENAME}/bld/run/
+${EXEC} ${EXEO} $NP ./colm.x ../../input_${CASENAME}.nml > ../../log
+EOF
+         ;;
+      nd)
+         cat>>'case.submit'<<EOF
+iloop=1
+while [ ${ILOOP} -le 100 ]
+do
+   cd ${CASEPATH}/${CASENAME}/bld/run/
+   ${EXEC} ${EXEO} $NP ./colm.x ../../input_${CASENAME}.nml > ../../log-${ILOOP}
+   mkdir -p ${CASEPATH}/${CASENAME}/restart/loop-${ILOOP}
+   mkdir -p ${CASEPATH}/${CASENAME}/history/loop-${ILOOP}
+   cd ${CASEPATH}/${CASENAME}/restart
+   if [ $MODILOOP10 -eq 0 ];then
+      cp -p ${RESTENDYR}-001-00000/*nc loop-${ILOOP}/
+   fi
+   cd ${RESTENDYR}-001-00000/
+   for files in *nc
+   do
+      cp -p $RESETTIME
+   done
+   cd ../../history
+   for iyr in $SEQYR
+   do
+      mv ${CASENAME}_hist_${iyr}*nc loop-${ILOOP}/
+   done
+   ${LOOPPLUS}
+done
+EOF
+         ;; 
+      sasund)
+      cat>>'case.submit'<<EOF
+iloop=1
+while [ ${ILOOP} -le 130 ]
+do
+   cd ${CASEPATH}/${CASENAME}/bld/run/
+   if [ ${ILOOP} -le 100 ];then
+      ${EXEC} ${EXEO} $NP ./colm.x ../../input_${CASENAME}-SASU.nml > ../../log-${ILOOP}
+   else
+      ${EXEC} ${EXEO} $NP ./colm.x ../../input_${CASENAME}.nml > ../../log-${ILOOP}
+   fi
+   mkdir -p ${CASEPATH}/${CASENAME}/restart/loop-${ILOOP}
+   mkdir -p ${CASEPATH}/${CASENAME}/history/loop-${ILOOP}
+   cd ${CASEPATH}/${CASENAME}/restart
+   if [ $MODILOOP10 -eq 0 ];then
+      cp -p ${RESTENDYR}-001-00000/*nc loop-${ILOOP}/
+   fi
+   cd ${RESTENDYR}-001-00000/
+   for files in *nc
+   do
+      cp -p $RESETTIME
+   done
+   cd ../../history
+   for iyr in $SEQYR
+   do
+      mv ${CASENAME}_hist_${iyr}*nc loop-${ILOOP}/
+   done
+   ${LOOPPLUS}
+done
+EOF
+      ;;
+   *)
+      echo "Error: Unknown Spinup scheme $SpinupScheme set up by -i|--spinup option"
+      ;;
+esac
+
+}
+
+
+while getopts ":hi:p:t:e:f:c:" options ;
+do
+    case $options in
+      p) CASENAMEPATH="$OPTARG" ;;
+      t) STARTYR="$OPTARG"      ;;
+      e) ENDYR="$OPTARG"        ;;
+      f) HEADER="$OPTARG"       ;;
+      c) CONFIG="$OPTARG"       ;;
+      i) SPINUPSCHEME="$OPTARG" ;;
+      h) Help; exit;;
+      *) echo "invalid option: $options";exit ;;
+    esac
+done
+
+if [ -z "$SPINUPSCHEME" ];then
+   SPINUPSCHEME=none
+fi
+
+if [ -z "${CASENAMEPATH}" ];then
+   echo
+   echo 'Error: -s option is missing. See the syntax:'
+   Help
+   exit
+fi
+
+if [ -z "${STARTYR}" ];then
+   echo
+   echo "Note: -t option is absent, set startyr 1980 as the default."
+   echo
+   STARTYR=1980
+fi
+
+echo ENDYR before check ${ENDYR}
+
+if [ -z "${ENDYR}" ];then
+   echo
+   echo "Note: -e option is absent, set endyr 2000 as the default."
+   echo
+   ENDYR=2000
+else
+   ENDYR=`expr $ENDYR - 1`
+fi
+
+echo HEADER before check $HEADER
+
+if [ -z "${HEADER}" ];then
+   echo
+   echo "Note: -f option is absent, set none for configuration template"
+   echo
+   HEADER="none"
+fi
+
+echo CONFIG before check $CONFIG
+if [ -z "${CONFIG}" ];then
+   echo
+   echo "Note: -c option is absent, set none for configuration of job schedule system"
+   echo
+   CONFIG="none"
+fi
+
+if [ "${CASENAMEPATH:0:1}" == '/' ] || [ "${CASENAMEPATH:0:1}"=='~' ];then
+   CASENAME=`echo "${CASENAMEPATH##*/}"`
+   CASEPATH=`echo "${CASENAMEPATH%/*}"`
+   echo $CASENAME
+   echo $CASEPATH
+else
+   TMPPATHNAME=$PWD/$CASENAMEPATH
+   CASENAME=`echo "${TMPPATHNAME##*/}"`
+   CASEPATH=`echo "${TMPPATHNAME%/*}"`
+   echo $CASEPATH
+   echo $CASENAME
+fi
+
+mkdir -p $CASEPATH/$CASENAME
+cd $CASEPATH/$CASENAME
+echo CONFIG before createscript $CONFIG
+echo HEADER before createscript $HEADER
+CreateScripts $CASEPATH $CASENAME $STARTYR $ENDYR $HEADER $CONFIG $SPINUPSCHEME

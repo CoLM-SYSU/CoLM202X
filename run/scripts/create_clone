@@ -1,0 +1,126 @@
+#!/bin/bash
+
+Help()
+{
+#DISPLAY help
+   echo "-------------------- Usage --------------------------------"
+   echo "Descripion:clone CoLM simulation case from an existing case"
+
+   echo !---------------------------------------------------------
+   echo 'Syntax: ./create_clone -s $SourcePath -d $DestinationPath'
+   echo !---------------------------------------------------------
+   echo options:
+   echo -s The path of the source case, which your clone will be copied from '(including case name but without ''/'' at end of case path)'
+   echo -d The path of the destimation case, which you want to create '(including case name but without ''/'' at end of case path)'
+   echo -h display command information
+}
+
+CreateClone()
+{
+
+   SourceName=$(basename "$1")
+   SourcePath=$(dirname "$1")
+   DestName=$(basename "$2")
+   DestPath=$(dirname "$2")
+
+   echo SourcePath is $SourcePath
+   echo SourceName is $SourceName
+   echo DestPath is $DestPath
+   echo DestName is $DestName
+   mkdir -p $DestPath/$DestName
+   cd $DestPath/$DestName
+   mkdir -p history
+   mkdir -p restart
+   ln -sf $SourcePath/$SourceName/landdata ./
+   echo copy scripts and namelist
+   cp -p $SourcePath/$SourceName/mksrf.submit ./
+   sed -i "s|$SourceName|$DestName|g" ./mksrf.submit
+   sed -i "s|$SourcePath|$DestPath|g" ./mksrf.submit
+   cp -p $SourcePath/$SourceName/init.submit ./
+   sed -i "s|$SourceName|$DestName|g" ./init.submit
+   sed -i "s|$SourcePath|$DestPath|g" ./init.submit
+   cp -p $SourcePath/$SourceName/"case.submit" ./
+   sed -i "s|$SourceName|$DestName|g" "./case.submit"
+   sed -i "s|$SourcePath|$DestPath|g" "./case.submit"
+   cp -p $SourcePath/$SourceName/input_$SourceName.nml ./input_$DestName.nml
+   sed -i "s|$SourceName|$DestName|g" ./input_$DestName.nml
+   sed -i "s|$SourcePath|$DestPath|g" ./input_$DestName.nml
+   if [ -f $SourcePath/$SourceName/input_${SourceName}-SASU.nml ];then
+      cp -p $SourcePath/$SourceName/input_${SourceName}-SASU.nml ./input_${DestName}-SASU.nml
+      sed -i "s|$SourceName|$DestName|g" ./input_${DestName}-SASU.nml
+      sed -i "s|$SourcePath|$DestPath|g" ./input_${DestName}-SASU.nml
+   fi
+   
+   echo copy source files 
+   cd $SourcePath/$SourceName/bld/
+   if [ ! -d $DestPath/$DestName/bld/ ];then
+      mkdir $DestPath/$DestName/bld/
+   fi
+   for files1 in *
+   do
+      if [ -f $files1 ];then
+         cp -p $files1 $DestPath/$DestName/bld/
+      else
+         if [ -d $files1 ];then
+            if [ ! -d $DestPath/$DestName/bld/$files1 ];then
+               mkdir $DestPath/$DestName/bld/$files1
+            fi
+            cd $SourcePath/$SourceName/bld/$files1
+            if [ $files1 = extends -o $files1 = include -o $files1 = run -o $files1 = preprocess ];then
+               cp -pr * $DestPath/$DestName/bld/$files1/
+            else
+               if [ $files1 = postprocess ];then
+                  cp -p *F90 $DestPath/$DestName/bld/$files1/
+               else
+                  for files2 in *
+                  do 
+                     if [ -d $files2 ];then
+                        if [ ! -d $DestPath/$DestName/bld/$files1/$files2/ ];then
+                           mkdir $DestPath/$DestName/bld/$files1/$files2/
+                        fi
+                        cd $SourcePath/$SourceName/bld/$files1/$files2
+                        for files3 in *
+                        do
+                           if echo $files3 | grep -q -E '.F90$'
+                           then
+                              cp -p $files3 $DestPath/$DestName/bld/$files1/$files2/
+                           fi
+                        done
+                        cd ../
+                     else 
+                        if echo $files2 | grep -q -E '.F90$'
+                        then
+                           cp -p $files2 $DestPath/$DestName/bld/$files1/
+                        fi
+                     fi
+                  done
+               fi
+            fi
+            cd ..
+         fi
+      fi
+   done
+}
+
+
+while getopts ":hs:d:" options ;
+do
+    case $options in
+      s) Source="$OPTARG" ;;
+      d) Destination="$OPTARG"  ;;
+      h) Help; exit;;
+      *) echo "invalid option: $@";exit ;;
+    esac
+done
+
+if [ -z "${Source}" ] || [ -z "${Destination}" ]; then
+   echo
+   echo 'Error: either "-s" or "-d" is missing' 
+   echo
+   Help
+   exit
+else 
+   echo $Source,$Destination
+   CreateClone $Source $Destination
+fi
+

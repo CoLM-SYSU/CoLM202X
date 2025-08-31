@@ -28,18 +28,18 @@ CONTAINS
               taux,tauy,fsena,fevpa,lfevpa,fseng,fevpg,tref,qref,&
               z0m,zol,rib,ustar,qstar,tstar,fm,fh,fq,emis,olrg)
 !-----------------------------------------------------------------------
-!           Simple Ocean Model
-! 1. calculate sea surface fluxes, based on CLM
-! 2. calculate sea surface albedos and seaice/snow temperatures
-!                as in NCAR CCM3.6.16
-! Original authors : yongjiu dai and xin-zhong liang (08/30/2001)
+!            Simple Ocean Model
+!  1. calculate sea surface fluxes, based on CLM
+!  2. calculate sea surface albedos and seaice/snow temperatures
+!                 as in NCAR CCM3.6.16
+!  Original authors : Yongjiu Dai and Xin-Zhong Liang (08/30/2001)
 !-----------------------------------------------------------------------
 
    USE MOD_Precision
-   USE MOD_Const_Physical, only : tfrz, hvap, hsub, stefnc, vonkar
+   USE MOD_Const_Physical, only: tfrz, hvap, hsub, stefnc, vonkar
    IMPLICIT NONE
 
-!------------------------------Arguments--------------------------------
+!-------------------------- Dummy Arguments ----------------------------
 
    integer, parameter :: psrfty=7  ! Number of surface types
    integer, parameter :: plsice=4  ! number of seaice levels
@@ -66,8 +66,8 @@ CONTAINS
    real(r8), intent(out) :: taux   ! wind stress: E-W [kg/m/s**2]
    real(r8), intent(out) :: tauy   ! wind stress: N-S [kg/m/s**2]
    real(r8), intent(out) :: fsena  ! sensible heat from reference height to atmosphere [W/m2]
-   real(r8), intent(out) :: fevpa  ! evaporation from refence height to atmosphere [mm/s]
-   real(r8), intent(out) :: lfevpa ! laten heat from reference height to atmosphere [W/m2]
+   real(r8), intent(out) :: fevpa  ! evaporation from reference height to atmosphere [mm/s]
+   real(r8), intent(out) :: lfevpa ! latent heat from reference height to atmosphere [W/m2]
    real(r8), intent(out) :: fseng  ! sensible heat flux from ground [W/m2]
    real(r8), intent(out) :: fevpg  ! evaporation heat flux from ground [mm/s]
 
@@ -85,7 +85,7 @@ CONTAINS
    real(r8), intent(out) :: emis   ! averaged bulk surface emissivity
    real(r8), intent(out) :: olrg   ! longwave up flux at surface [W/m2]
 
-!-----------------------------------------------------------------------
+!-------------------------- Local Variables ----------------------------
    integer isrfty   ! surface type index (1-7)
    real(r8) cgrndl  ! deriv, of soil sensible heat flux wrt soil temp [w/m2/k]
    real(r8) cgrnds  ! deriv of soil latent heat flux wrt soil temp [w/m**2/k]
@@ -120,7 +120,7 @@ CONTAINS
             DO j = 1,plsice
                tssub(j) = tssea
             ENDDO
-         ELSE IF(nint(oro).eq.0 .and. tssea.le.tsice) THEN
+         ELSEIF(nint(oro).eq.0 .and. tssea.le.tsice) THEN
             oro = 2.0         ! new sea ice formed
             snowh = snsice
             scv = snowh*1000.
@@ -133,7 +133,7 @@ CONTAINS
 
       tssea = tssub(1)
 
-! compute surface fluxes, derviatives, and exchange coefficiants
+! compute surface fluxes, derivatives, and exchange coefficients
       CALL seafluxes (oro,hu,ht,hq,&
                       us,vs,tm,qm,rhoair,psrf,tssea,&
                       taux,tauy,fsena,fevpa,fseng,fevpg,tref,qref,&
@@ -144,7 +144,7 @@ CONTAINS
          olrg = stefnc*emisw*tssea**4 + (1.-emisw)*frl
          emis = emisw
 
-      ELSE IF(nint(oro).eq.2)THEN        ! sea ice
+      ELSEIF(nint(oro).eq.2)THEN        ! sea ice
          lfevpa = fevpa*hsub
 
        ! net surface flux and derivate at current surface temperature
@@ -187,19 +187,19 @@ CONTAINS
                          z0m,zol,rib,ustar,qstar,tstar,fm,fh,fq,cgrndl,cgrnds)
 
 !=======================================================================
-! this is the main SUBROUTINE to execute the calculation of thermal processes
-! and surface fluxes
+!  this is the main SUBROUTINE to execute the calculation of thermal processes
+!  and surface fluxes
 !
-! Original author : Yongjiu Dai, 09/15/1999; 08/30/2002
+!  Original author: Yongjiu Dai, 09/15/1999; 08/30/2002
 !=======================================================================
 
    USE MOD_Precision
-   USE MOD_Const_Physical, only : cpair,rgas,vonkar,grav
+   USE MOD_Const_Physical, only: cpair,rgas,vonkar,grav
    USE MOD_FrictionVelocity
    USE MOD_Qsadv
    IMPLICIT NONE
 
-!----------------------- Dummy argument --------------------------------
+!-------------------------- Dummy Arguments ----------------------------
 
    real(r8), intent(in) :: &
         oro,      &! ocean(0)/seaice(2)/ flag
@@ -239,14 +239,14 @@ CONTAINS
         cgrndl,   &! deriv, of soil sensible heat flux wrt soil temp [w/m2/k]
         cgrnds     ! deriv of soil latent heat flux wrt soil temp [w/m**2/k]
 
-!------------------------ LOCAL VARIABLES ------------------------------
+!-------------------------- Local Variables ----------------------------
    integer i
    integer niters,&! maximum number of iterations for surface temperature
        iter,      &! iteration index
        nmozsgn     ! number of times moz changes sign
 
    real(r8) :: &
-       beta,      &! coefficient of conective velocity [-]
+       beta,      &! coefficient of convective velocity [-]
        displax,   &! zero-displacement height [m]
        dth,       &! diff of virtual temp. between ref. height and surface
        dqh,       &! diff of humidity between ref. height and surface
@@ -277,7 +277,7 @@ CONTAINS
        xt,        &!
        xq,        &!
        zii,       &! convective boundary height [m]
-       zldis,     &! reference height "minus" zero displacement heght [m]
+       zldis,     &! reference height "minus" zero displacement height [m]
        z0mg,      &! roughness length over ground, momentum [m]
        z0hg,      &! roughness length over ground, sensible heat [m]
        z0qg        ! roughness length over ground, latent heat [m]
@@ -285,7 +285,7 @@ CONTAINS
    real, parameter :: zsice = 0.04  ! sea ice aerodynamic roughness length [m]
 
 !-----------------------------------------------------------------------
-! potential temperatur at the reference height
+! potential temperature at the reference height
       beta = 1.      ! -  (in computing W_*)
       zii = 1000.    ! m  (pbl height)
 
@@ -299,7 +299,7 @@ CONTAINS
 
       CALL qsadv(tssea,psrf,eg,degdT,qsatg,qsatgdT)
 
-! potential temperatur at the reference height
+! potential temperature at the reference height
       thm = tm + 0.0098*ht              ! intermediate variable equivalent to
                                         ! tm*(pgcm/psrf)**(rgas/cpair)
       th = tm*(100000./psrf)**(rgas/cpair) ! potential T
@@ -329,7 +329,7 @@ CONTAINS
             ustar=vonkar*um/log(zldis/z0mg)
          ENDDO
 
-      ELSE IF(nint(oro).eq.2)THEN     ! sea ice
+      ELSEIF(nint(oro).eq.2)THEN     ! sea ice
          z0mg = zsice
          z0qg = z0mg
          z0hg = z0mg
@@ -385,7 +385,7 @@ CONTAINS
       ENDDO ITERATION                         ! END stability iteration
       !----------------------------------------------------------------
 
-! Get derivative of fluxes with repect to ground temperature
+! Get derivative of fluxes with respect to ground temperature
       ram    = 1./(ustar*ustar/um)
       rah    = 1./(vonkar/fh*ustar)
       raw    = 1./(vonkar/fq*ustar)
@@ -419,19 +419,19 @@ CONTAINS
    SUBROUTINE srftsb(isrfty,deltim,fnt,dfntdt,snowh,tsbsf)
 
 !-----------------------------------------------------------------------
-! Compute surface and subsurface temperatures over sea-ice surfaces.
+!  Compute surface and subsurface temperatures over sea-ice surfaces.
 !
-! Sea ice temperatures are specified in 'plsice' layers of fixed
-! thickness and thermal properties.  The forecast temperatures are
-! determined from a backward/IMPLICIT diffusion calculation using
-! linearized sensible/latent heat fluxes. The bottom ocean temperature
-! is fixed at -2C, allowing heat flux exchange with underlying ocean.
+!  Sea ice temperatures are specified in 'plsice' layers of fixed
+!  thickness and thermal properties.  The forecast temperatures are
+!  determined from a backward/IMPLICIT diffusion calculation using
+!  linearized sensible/latent heat fluxes. The bottom ocean temperature
+!  is fixed at -2C, allowing heat flux exchange with underlying ocean.
 !
-! Sub-surface layers are indexed 1 at the surface, increasing downwards
-! to plsice.  Layers have mid-points and interfaces between layers.
+!  Sub-surface layers are indexed 1 at the surface, increasing downwards
+!  to plsice.  Layers have mid-points and interfaces between layers.
 !
-! Temperatures are defined at mid-points, WHILE fluxes between layers
-! and the top/bottom media are defined at layer interfaces.
+!  Temperatures are defined at mid-points, WHILE fluxes between layers
+!  and the top/bottom media are defined at layer interfaces.
 !
 !-----------------------------------------------------------------------
 
@@ -440,7 +440,7 @@ CONTAINS
    USE MOD_Utils
    IMPLICIT NONE
 
-!------------------------------Arguments--------------------------------
+!-------------------------- Dummy Arguments ----------------------------
 
    integer, parameter :: psrfty = 7  ! Number of surface types
    integer, parameter :: plsice = 4  ! number of seaice levels
@@ -453,7 +453,7 @@ CONTAINS
 
    real(r8), intent(inout) :: tsbsf(1:plsice) ! surface/sub-surface tmps
 
-!---------------------------Local variables-----------------------------
+!-------------------------- Local Variables ----------------------------
 
    integer :: j, jndx        ! sub-surface layer index
 
@@ -489,7 +489,7 @@ CONTAINS
    real(r8) tkbot  ! bottom layer top interf thermal conduct
    real(r8) tkmns  ! layer bottom interface thermal conduct
    real(r8) tkpls  ! layer top interface thermal conductivity
-   real(r8) tksnow ! snow thermal conducitivity
+   real(r8) tksnow ! snow thermal conductivity
    real(r8) tktop  ! top layer bottom interface thermal conduct
    real(r8) tmp    ! crt - dfntdt(i)*rztop
    real(r8) zbot   ! bottom layer thickness
@@ -555,7 +555,7 @@ CONTAINS
 ! define logical for snow covered surfaces:
       scvr = snowh.gt.0.
 
-! define thermal properities for each sub/surface layer, starting
+! define thermal properties for each sub/surface layer, starting
 ! with the top layer
       jndx    = isrfty
       thck = thckly(jndx,1)
@@ -571,7 +571,7 @@ CONTAINS
       tk(1)    = tkty
 
 ! modify layer 1 fields for snow cover IF present
-! snow equivlnt depth times snow liquid water depth gives the physical
+! snow equivalent depth times snow liquid water depth gives the physical
 ! depth of snow for thermal conduction computation; snow is mixed
 ! uniformly by mass with the top surface layer
       IF(scvr) THEN
@@ -619,7 +619,7 @@ CONTAINS
          rhs(1) = diag(1)*tin(1) + fnt*rztop - fbt*rztop + htsrc(1)
 
 ! more than one layer: top layer first
-      ELSE IF (plsice.gt.1) THEN
+      ELSEIF (plsice.gt.1) THEN
 
          crt       = cmass(1)*rho(1)*rdtime
          ztop      = z(1) - z(0)
@@ -677,3 +677,4 @@ CONTAINS
    END SUBROUTINE srftsb
 
 END MODULE MOD_SimpleOcean
+! ---------- EOP ------------

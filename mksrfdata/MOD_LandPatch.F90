@@ -2,8 +2,8 @@
 
 MODULE MOD_LandPatch
 
-!------------------------------------------------------------------------------------
-! DESCRIPTION:
+!-----------------------------------------------------------------------
+! !DESCRIPTION:
 !
 !    Build pixelset "landpatch".
 !
@@ -17,23 +17,20 @@ MODULE MOD_LandPatch
 !
 !    "landpatch" refers to pixelset PATCH.
 !
-! Created by Shupeng Zhang, May 2023
+!  Created by Shupeng Zhang, May 2023
 !    porting codes from Hua Yuan's OpenMP version to MPI parallel version.
-!------------------------------------------------------------------------------------
+!-----------------------------------------------------------------------
 
    USE MOD_Precision
    USE MOD_Grid
    USE MOD_Pixelset
    USE MOD_Vars_Global
    USE MOD_Const_LC
-#ifdef SinglePoint
-   USE MOD_SingleSrfdata
-#endif
    IMPLICIT NONE
 
    ! ---- Instance ----
    integer :: numpatch
-   type(grid_type)     :: gpatch
+   type(grid_type)     :: grid_patch
    type(pixelset_type) :: landpatch
 
    type(subset_type)   :: elm_patch
@@ -84,58 +81,30 @@ CONTAINS
 
       write(cyear,'(i4.4)') lc_year
       IF (p_is_master) THEN
-         write(*,'(A)') 'Making land patches :'
+         write(*,'(A)') 'Making land patches:'
       ENDIF
-
-#ifdef SinglePoint
-#ifdef CROP
-      IF ((SITE_landtype == CROPLAND) .and. USE_SITE_pctcrop) THEN
-         RETURN
-      ENDIF
-#endif
-
-      numpatch = 1
-
-      allocate (landpatch%eindex (numpatch))
-      allocate (landpatch%ipxstt (numpatch))
-      allocate (landpatch%ipxend (numpatch))
-      allocate (landpatch%settyp (numpatch))
-      allocate (landpatch%ielm   (numpatch))
-
-      landpatch%eindex(:) = 1
-      landpatch%ielm  (:) = 1
-      landpatch%ipxstt(:) = 1
-      landpatch%ipxend(:) = 1
-      landpatch%settyp(:) = SITE_landtype
-
-      landpatch%nset = numpatch
-      CALL landpatch%set_vecgs
-
-      RETURN
-#endif
 
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-#ifndef SinglePoint
       IF (p_is_io) THEN
-         CALL allocate_block_data (gpatch, patchdata)
+
+         CALL allocate_block_data (grid_patch, patchdata)
 
 #ifndef LULC_USGS
          ! add parameter input for time year
          file_patch = trim(DEF_dir_rawdata)//'landtypes/landtype-igbp-modis-'//trim(cyear)//'.nc'
 #else
          !TODO: need usgs land cover type data
-         file_patch = trim(DEF_dir_rawdata) //'/landtypes/landtype_usgs_update.nc'
+         file_patch = trim(DEF_dir_rawdata) //'/landtypes/landtype-usgs-update.nc'
 #endif
-         CALL ncio_read_block (file_patch, 'landtype', gpatch, patchdata)
+         CALL ncio_read_block (file_patch, 'landtype', grid_patch, patchdata)
 
 #ifdef USEMPI
-         CALL aggregation_data_daemon (gpatch, data_i4_2d_in1 = patchdata)
+         CALL aggregation_data_daemon (grid_patch, data_i4_2d_in1 = patchdata)
 #endif
       ENDIF
-#endif
 
       IF (p_is_worker) THEN
 
@@ -170,20 +139,16 @@ CONTAINS
 
             allocate (types (ipxstt:ipxend))
 
-#ifndef SinglePoint
 #ifdef CATCHMENT
-            CALL aggregation_request_data (landhru, iset, gpatch, zip = .false., &
+            CALL aggregation_request_data (landhru, iset, grid_patch, zip = .false., &
 #else
-            CALL aggregation_request_data (landelm, iset, gpatch, zip = .false., &
+            CALL aggregation_request_data (landelm, iset, grid_patch, zip = .false., &
 #endif
                data_i4_2d_in1 = patchdata, data_i4_2d_out1 = ibuff)
 
 
             types(:) = ibuff
             deallocate (ibuff)
-#else
-            types(:) = SITE_landtype
-#endif
 
 #ifdef CATCHMENT
             IF (landhru%settyp(iset) <= 0) THEN
@@ -204,7 +169,13 @@ CONTAINS
                DO ipxl = ipxstt, ipxend
                   IF (types(ipxl) > 0) THEN
                      IF (patchtypes(types(ipxl)) == 0) THEN
-                        types(ipxl) = 1
+                        ! Deal with cropland separately for fast PC
+                        IF (DEF_FAST_PC .and. &
+                           (types(ipxl)==CROPLAND .or. types(ipxl)==14)) THEN
+                           types(ipxl) = CROPLAND
+                        ELSE
+                           types(ipxl) = 1
+                        ENDIF
                      ENDIF
                   ENDIF
                ENDDO
@@ -290,16 +261,6 @@ CONTAINS
 
       CALL landpatch%set_vecgs
 
-      IF (DEF_LANDONLY) THEN
-         IF ((p_is_worker) .and. (numpatch > 0)) THEN
-            allocate(msk(numpatch))
-            msk = (landpatch%settyp /= 0)
-         ENDIF
-
-         CALL landpatch%pset_pack (msk, numpatch)
-
-         IF (allocated(msk)) deallocate(msk)
-      ENDIF
 
 #if (!defined(URBAN_MODEL) && !defined(CROP))
 #ifdef USEMPI
@@ -315,12 +276,14 @@ CONTAINS
       write(*,'(A,I12,A)') 'Total: ', numpatch, ' patches.'
 #endif
 
+IF ( .not. DEF_Output_2mWMO ) THEN
       CALL elm_patch%build (landelm, landpatch, use_frac = .true.)
 #ifdef CATCHMENT
       CALL hru_patch%build (landhru, landpatch, use_frac = .true.)
 #endif
 
       CALL write_patchfrac (DEF_dir_landdata, lc_year)
+ENDIF
 #endif
 
    END SUBROUTINE landpatch_build

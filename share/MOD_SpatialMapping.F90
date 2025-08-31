@@ -2,18 +2,18 @@
 
 MODULE MOD_SpatialMapping
 
-!--------------------------------------------------------------------------------!
-! DESCRIPTION:                                                                   !
-!                                                                                !
-!    Spatial Mapping module.                                                     !
-!                                                                                !
-! Created by Shupeng Zhang, May 2024                                             !
-!--------------------------------------------------------------------------------!
+!--------------------------------------------------------------------------------
+! !DESCRIPTION:
+!
+!    Spatial Mapping module.
+!
+!  Created by Shupeng Zhang, May 2024
+!--------------------------------------------------------------------------------
 
    USE MOD_Precision
    USE MOD_Grid
    USE MOD_DataType
-   USE MOD_Vars_Global, only : spval
+   USE MOD_Vars_Global, only: spval
    IMPLICIT NONE
 
    ! ------
@@ -26,10 +26,10 @@ MODULE MOD_SpatialMapping
       integer :: npset
       integer, allocatable :: npart(:)
       type(pointer_int32_2d), allocatable :: address (:)
-      
+
       logical  :: has_missing_value = .false.
       real(r8) :: missing_value     = spval
-      
+
       type(pointer_real8_1d), allocatable :: areapart(:) ! intersection area
       real(r8), allocatable               :: areapset(:)
       type(block_data_real8_2d)           :: areagrid
@@ -41,24 +41,24 @@ MODULE MOD_SpatialMapping
 
       procedure, PUBLIC :: set_missing_value   => spatial_mapping_set_missing_value
 
-      ! 1) from pixelset to grid 
+      ! 1) from pixelset to grid
       procedure, PRIVATE :: pset2grid_2d => spatial_mapping_pset2grid_2d
       procedure, PRIVATE :: pset2grid_3d => spatial_mapping_pset2grid_3d
       procedure, PRIVATE :: pset2grid_4d => spatial_mapping_pset2grid_4d
       generic,   PUBLIC  :: pset2grid    => pset2grid_2d, pset2grid_3d, pset2grid_4d
-      
+
       procedure, PUBLIC  :: pset2grid_max   => spatial_mapping_pset2grid_max
       procedure, PUBLIC  :: pset2grid_split => spatial_mapping_pset2grid_split
 
       procedure, PUBLIC  :: get_sumarea  => spatial_mapping_get_sumarea
-      
+
       ! 2) from grid to pixelset
       procedure, PRIVATE :: grid2pset_2d => spatial_mapping_grid2pset_2d
       procedure, PRIVATE :: grid2pset_3d => spatial_mapping_grid2pset_3d
       generic,   PUBLIC  :: grid2pset    => grid2pset_2d, grid2pset_3d
 
-      procedure, PUBLIC  :: grid2pset_dominant => spatial_mapping_dominant_2d 
-      
+      procedure, PUBLIC  :: grid2pset_dominant => spatial_mapping_dominant_2d
+
       ! 3) between grid and intersections
       procedure, PUBLIC  :: grid2part => spatial_mapping_grid2part
       procedure, PUBLIC  :: part2grid => spatial_mapping_part2grid
@@ -68,6 +68,8 @@ MODULE MOD_SpatialMapping
       procedure, PUBLIC  :: part2pset => spatial_mapping_part2pset
 
       procedure, PUBLIC  :: allocate_part => spatial_mapping_allocate_part
+      procedure, PUBLIC  :: deallocate_part => spatial_mapping_deallocate_part
+      procedure, PUBLIC  :: forc_free_mem => forc_free_mem_spatial_mapping
 
       final :: spatial_mapping_free_mem
 
@@ -106,12 +108,13 @@ CONTAINS
    integer,  allocatable :: ipt(:)
    logical,  allocatable :: msk(:)
 
-   integer  :: ie, iset
+   integer  :: ie, iset, iblkme
    integer  :: ng, ig, ng_all, iloc
    integer  :: npxl, ipxl, ilat, ilon
    integer  :: iworker, iproc, idest, isrc, nrecv
    integer  :: rmesg(2), smesg(2)
    integer  :: iy, ix, xblk, yblk, xloc, yloc
+   integer  :: ipxstt, ipxend
    real(r8) :: lat_s, lat_n, lon_w, lon_e, area
    logical  :: skip, is_new
 
@@ -121,27 +124,29 @@ CONTAINS
 #endif
 
       IF (p_is_master) THEN
-         
+
          write(*,"(A, I0, A, I0, A)") &
             'Making areal weighted mapping between pixel set and grid: ', &
             fgrid%nlat, ' grids in latitude ', fgrid%nlon, ' grids in longitude.'
 
+#ifndef SinglePoint
          IF (.not. (lon_between_floor(pixel%edgew, fgrid%lon_w(1), fgrid%lon_e(fgrid%nlon)) &
             .and. lon_between_ceil(pixel%edgee, fgrid%lon_w(1), fgrid%lon_e(fgrid%nlon)))) THEN
-            write(*,'(A)') 'Warning: Grid does not cover longitude range of modeling region.' 
+            write(*,'(A)') 'Warning: Grid does not cover longitude range of modeling region.'
          ENDIF
 
          IF (fgrid%yinc == 1) THEN
             IF (.not. ((pixel%edges >= fgrid%lat_s(1)) &
                .and. (pixel%edgen <= fgrid%lat_n(fgrid%nlat)))) THEN
-               write(*,'(A)') 'Warning: Grid does not cover latitude range of modeling region.' 
+               write(*,'(A)') 'Warning: Grid does not cover latitude range of modeling region.'
             ENDIF
          ELSE
             IF (.not. ((pixel%edges >= fgrid%lat_s(fgrid%nlat)) &
                .and. (pixel%edgen <= fgrid%lat_n(1)))) THEN
-               write(*,'(A)') 'Warning: Grid does not cover latitude range of modeling region.' 
+               write(*,'(A)') 'Warning: Grid does not cover latitude range of modeling region.'
             ENDIF
          ENDIF
+#endif
 
       ENDIF
 
@@ -152,8 +157,46 @@ CONTAINS
       allocate (this%grid%xcnt (size(fgrid%xcnt)));  this%grid%xcnt = fgrid%xcnt
       allocate (this%grid%ycnt (size(fgrid%ycnt)));  this%grid%ycnt = fgrid%ycnt
 
+#ifdef SinglePoint
+      allocate (this%glist (0:0))
+      allocate (this%glist(0)%ilat (1))
+      allocate (this%glist(0)%ilon (1))
+
+      allocate (this%npart   (pixelset%nset))
+      allocate (this%address (pixelset%nset))
+      allocate (this%areapset(pixelset%nset))
+      allocate (this%areapart(pixelset%nset))
+      DO iset = 1, pixelset%nset
+         allocate (this%address(iset)%val (2,1))
+         allocate (this%areapart(iset)%val  (1))
+      ENDDO
+
+      this%glist(0)%ng = 1
+      this%glist(0)%ilat(1) = find_nearest_south (SITE_lat_location, fgrid%nlat, fgrid%lat_s)
+      this%glist(0)%ilon(1) = find_nearest_west  (SITE_lon_location, fgrid%nlon, fgrid%lon_w)
+
+      this%npset = pixelset%nset
+      this%npart   (:) = 1
+      this%areapset(:) = 1.
+
+      DO iset = 1, pixelset%nset
+         this%address(iset)%val  = reshape((/0,1/), (/2,1/))
+         this%areapart(iset)%val = 1.
+      ENDDO
+
+      CALL allocate_block_data (fgrid, this%areagrid)
+      DO iblkme = 1, gblock%nblkme
+         xblk = gblock%xblkme(iblkme)
+         yblk = gblock%yblkme(iblkme)
+         this%areagrid%blk(xblk,yblk)%val = 1.
+      ENDDO
+
+      RETURN
+#endif
+
+
       IF (p_is_worker) THEN
-      
+
          this%npset = pixelset%nset
 
          allocate (afrac (pixelset%nset))
@@ -191,7 +234,17 @@ CONTAINS
             allocate (gfrom(iset)%ilon(npxl))
 
             gfrom(iset)%ng = 0
-            DO ipxl = pixelset%ipxstt(iset), pixelset%ipxend(iset)
+
+            ipxstt = pixelset%ipxstt(iset)
+            ipxend = pixelset%ipxend(iset)
+
+            ! deal with 2m WMO patch
+            IF (ipxstt==-1 .and. ipxend==-1) THEN
+               ipxstt = 1
+               ipxend = npxl
+            ENDIF
+
+            DO ipxl = ipxstt, ipxend
 
                ilat = mesh(ie)%ilat(ipxl)
                ilon = mesh(ie)%ilon(ipxl)
@@ -348,7 +401,7 @@ CONTAINS
          allocate (this%npart (pixelset%nset))
 
          DO iset = 1, pixelset%nset
-            
+
             ng = gfrom(iset)%ng
 
             this%npart(iset) = ng
@@ -403,7 +456,7 @@ CONTAINS
 
             CALL mpi_send (smesg, 2, MPI_INTEGER, &
                idest, mpi_tag_mesg, p_comm_glb, p_err)
- 
+
             IF (this%glist(iproc)%ng > 0) THEN
                CALL mpi_send (this%glist(iproc)%ilon, this%glist(iproc)%ng, MPI_INTEGER, &
                   idest, mpi_tag_data, p_comm_glb, p_err)
@@ -457,7 +510,7 @@ CONTAINS
 
       IF (p_is_io) CALL allocate_block_data (fgrid, this%areagrid)
       CALL this%get_sumarea (this%areagrid)
-      
+
 
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
@@ -489,7 +542,7 @@ CONTAINS
    ! Local variables
    integer,  allocatable :: ys(:), yn(:), xw(:), xe(:)
    integer,  allocatable :: xlist(:), ylist(:), ipt(:)
-   
+
    real(r8), allocatable :: rlon_pset(:), rlat_pset(:)
    real(r8), allocatable :: nwgt(:), swgt(:), wwgt(:), ewgt(:)
 
@@ -509,27 +562,27 @@ CONTAINS
 #endif
 
       IF (p_is_master) THEN
-         
-         write(*,*) 
+
+         write(*,*)
          write(*,"(A, I0, A, I0, A)") &
             'Building bilinear interpolation from grid to pixel set: ', &
             fgrid%nlat, ' grids in latitude ', fgrid%nlon, ' grids in longitude.'
          write(*,*)
-         
+
          IF (.not. (lon_between_floor(pixel%edgew, fgrid%lon_w(1), fgrid%lon_e(fgrid%nlon)) &
             .and. lon_between_ceil(pixel%edgee, fgrid%lon_w(1), fgrid%lon_e(fgrid%nlon)))) THEN
-            write(*,'(A)') 'Warning: Grid does not cover longitude range of modeling region.' 
+            write(*,'(A)') 'Warning: Grid does not cover longitude range of modeling region.'
          ENDIF
 
          IF (fgrid%yinc == 1) THEN
             IF (.not. ((pixel%edges >= fgrid%lat_s(1)) &
                .and. (pixel%edgen <= fgrid%lat_n(fgrid%nlat)))) THEN
-               write(*,'(A)') 'Warning: Grid does not cover latitude range of modeling region.' 
+               write(*,'(A)') 'Warning: Grid does not cover latitude range of modeling region.'
             ENDIF
          ELSE
             IF (.not. ((pixel%edges >= fgrid%lat_s(fgrid%nlat)) &
                .and. (pixel%edgen <= fgrid%lat_n(1)))) THEN
-               write(*,'(A)') 'Warning: Grid does not cover latitude range of modeling region.' 
+               write(*,'(A)') 'Warning: Grid does not cover latitude range of modeling region.'
             ENDIF
          ENDIF
 
@@ -546,14 +599,14 @@ CONTAINS
       allocate (this%grid%ycnt (size(fgrid%ycnt)));  this%grid%ycnt = fgrid%ycnt
 
       IF (p_is_worker) THEN
-      
+
          allocate (this%grid%lat_s(this%grid%nlat));  this%grid%lat_s = fgrid%lat_s
          allocate (this%grid%lat_n(this%grid%nlat));  this%grid%lat_n = fgrid%lat_n
          allocate (this%grid%lon_w(this%grid%nlon));  this%grid%lon_w = fgrid%lon_w
          allocate (this%grid%lon_e(this%grid%nlon));  this%grid%lon_e = fgrid%lon_e
          allocate (this%grid%rlon (this%grid%nlon));  CALL this%grid%set_rlon ()
          allocate (this%grid%rlat (this%grid%nlat));  CALL this%grid%set_rlat ()
-      
+
          this%npset = pixelset%nset
 
          allocate (yn (this%npset))
@@ -564,7 +617,7 @@ CONTAINS
          allocate (rlat_pset (this%npset))
 
          CALL pixelset%get_lonlat_radian (rlon_pset, rlat_pset)
-         
+
          allocate (xlist(4*this%npset))
          allocate (ylist(4*this%npset))
 
@@ -574,7 +627,7 @@ CONTAINS
          allocate (ewgt (this%npset))
 
          nglist = 0
-         
+
          DO iset = 1, this%npset
 
             IF (this%grid%rlat(1) > this%grid%rlat(this%grid%nlat)) THEN
@@ -605,7 +658,7 @@ CONTAINS
                   yn(iset) = 1
                   ys(iset) = 1
                ENDIF
-            ENDIF 
+            ENDIF
 
             IF (yn(iset) /= ys(iset)) THEN
                latn = this%grid%rlat(yn(iset))
@@ -618,7 +671,7 @@ CONTAINS
                nwgt(iset) = 1.0
                swgt(iset) = 0.0
             ENDIF
-                     
+
 
             lon = rlon_pset(iset)*180.0/pi
             CALL normalize_longitude (lon)
@@ -626,13 +679,13 @@ CONTAINS
             DO iwest = 1, this%grid%nlon
                lonw = this%grid%rlon(iwest) *180.0/pi
                CALL normalize_longitude (lonw)
-               
+
                ieast = mod(iwest,this%grid%nlon) + 1
                lone  = this%grid%rlon(ieast)*180.0/pi
                CALL normalize_longitude (lone)
 
                IF (lon_between_floor(lon, lonw, lone)) EXIT
-            ENDDO 
+            ENDDO
 
             xw(iset) = iwest
             xe(iset) = ieast
@@ -655,7 +708,7 @@ CONTAINS
 
                ENDIF
             ENDIF
-            
+
             IF (xw(iset) /= xe(iset)) THEN
                lonw = this%grid%rlon(xw(iset))
                lone = this%grid%rlon(xe(iset))
@@ -667,7 +720,7 @@ CONTAINS
                wwgt(iset) = 1.0
                ewgt(iset) = 0.0
             ENDIF
-            
+
             CALL insert_into_sorted_list2 ( xw(iset), yn(iset), nglist, xlist, ylist, iloc)
             CALL insert_into_sorted_list2 ( xe(iset), yn(iset), nglist, xlist, ylist, iloc)
             CALL insert_into_sorted_list2 ( xw(iset), ys(iset), nglist, xlist, ylist, iloc)
@@ -699,7 +752,7 @@ CONTAINS
             IF (ng > 0) THEN
                allocate (this%glist(iproc)%ilat (ng))
                allocate (this%glist(iproc)%ilon (ng))
-            
+
 #ifdef USEMPI
                this%glist(iproc)%ilon = pack(xlist(1:nglist), msk)
                this%glist(iproc)%ilat = pack(ylist(1:nglist), msk)
@@ -784,7 +837,7 @@ CONTAINS
             allocate (this%areapart(iset)%val(4))
 
             areathis = 0.
-         
+
             ie = pixelset%ielm(iset)
             DO ipxl = pixelset%ipxstt(iset), pixelset%ipxend(iset)
                areathis = areathis + areaquad (&
@@ -859,7 +912,7 @@ CONTAINS
          ENDDO
 
       ENDIF
-      
+
       IF (p_is_worker) THEN
          IF (this%npset > 0) THEN
             allocate (this%areapset (this%npset))
@@ -871,7 +924,7 @@ CONTAINS
 
       IF (p_is_io)  CALL allocate_block_data (fgrid, this%areagrid)
       CALL this%get_sumarea (this%areagrid)
-      
+
 
       IF (allocated(this%grid%lat_s)) deallocate(this%grid%lat_s)
       IF (allocated(this%grid%lat_n)) deallocate(this%grid%lat_n)
@@ -879,7 +932,7 @@ CONTAINS
       IF (allocated(this%grid%lon_e)) deallocate(this%grid%lon_e)
       IF (allocated(this%grid%rlon )) deallocate(this%grid%rlon )
       IF (allocated(this%grid%rlat )) deallocate(this%grid%rlat )
-      
+
       IF (allocated(yn)) deallocate(yn)
       IF (allocated(ys)) deallocate(ys)
       IF (allocated(xw)) deallocate(xw)
@@ -887,7 +940,7 @@ CONTAINS
 
       IF (allocated(rlon_pset)) deallocate(rlon_pset)
       IF (allocated(rlat_pset)) deallocate(rlat_pset)
-      
+
       IF (allocated(nwgt)) deallocate(nwgt)
       IF (allocated(swgt)) deallocate(swgt)
       IF (allocated(wwgt)) deallocate(wwgt)
@@ -960,7 +1013,7 @@ CONTAINS
             xblk = gblock%xblkme(iblkme)
             yblk = gblock%yblkme(iblkme)
 
-            WHERE (gdata%blk(xblk,yblk)%val == missing_value) 
+            WHERE (gdata%blk(xblk,yblk)%val == missing_value)
                this%areagrid%blk(xblk,yblk)%val = 0.
             ENDWHERE
          ENDDO
@@ -989,7 +1042,7 @@ CONTAINS
 
 
          DO iset = 1, this%npset
-            
+
             this%areapset(iset) = 0.
 
             DO ipart = 1, this%npart(iset)
@@ -1002,7 +1055,7 @@ CONTAINS
                   this%areapset(iset) = this%areapset(iset) + this%areapart(iset)%val(ipart)
                ENDIF
             ENDDO
-                  
+
             IF (present(pmask)) THEN
                pmask(iset) = (this%areapset(iset) > 0.)
             ENDIF
@@ -1497,7 +1550,7 @@ CONTAINS
    USE MOD_Grid
    USE MOD_DataType
    USE MOD_SPMD_Task
-   USE MOD_Vars_Global, only : spval
+   USE MOD_Vars_Global, only: spval
    IMPLICIT NONE
 
    class (spatial_mapping_type) :: this
@@ -1859,7 +1912,7 @@ CONTAINS
    USE MOD_Pixelset
    USE MOD_DataType
    USE MOD_SPMD_Task
-   USE MOD_Vars_Global, only : spval
+   USE MOD_Vars_Global, only: spval
    IMPLICIT NONE
 
    class (spatial_mapping_type) :: this
@@ -1924,9 +1977,9 @@ CONTAINS
 #endif
             ENDIF
          ENDDO
-               
+
          DO iset = 1, this%npset
-            
+
             IF (this%areapset(iset) > 0.) THEN
 
                pdata(iset) = 0.
@@ -1935,8 +1988,10 @@ CONTAINS
                   iproc = this%address(iset)%val(1,ipart)
                   iloc  = this%address(iset)%val(2,ipart)
 
-                  pdata(iset) = pdata(iset) &
-                     + pbuff(iproc)%val(iloc) * this%areapart(iset)%val(ipart)
+                  IF (this%areapart(iset)%val(ipart) > 0) THEN
+                     pdata(iset) = pdata(iset) &
+                        + pbuff(iproc)%val(iloc) * this%areapart(iset)%val(ipart)
+                  ENDIF
                ENDDO
 
                pdata(iset) = pdata(iset) / this%areapset(iset)
@@ -1966,7 +2021,7 @@ CONTAINS
    USE MOD_Pixelset
    USE MOD_DataType
    USE MOD_SPMD_Task
-   USE MOD_Vars_Global, only : spval
+   USE MOD_Vars_Global, only: spval
    IMPLICIT NONE
 
    class (spatial_mapping_type) :: this
@@ -2038,14 +2093,16 @@ CONTAINS
 
             IF (this%areapset(iset) > 0.) THEN
 
-               pdata(:,iset) = 0. 
+               pdata(:,iset) = 0.
 
                DO ipart = 1, this%npart(iset)
                   iproc = this%address(iset)%val(1,ipart)
                   iloc  = this%address(iset)%val(2,ipart)
 
-                  pdata(:,iset) = pdata(:,iset) &
-                     + pbuff(iproc)%val(:,iloc) * this%areapart(iset)%val(ipart)
+                  IF (this%areapart(iset)%val(ipart) > 0) THEN
+                     pdata(:,iset) = pdata(:,iset) &
+                        + pbuff(iproc)%val(:,iloc) * this%areapart(iset)%val(ipart)
+                  ENDIF
                ENDDO
 
                pdata(:,iset) = pdata(:,iset) / this%areapset(iset)
@@ -2075,7 +2132,7 @@ CONTAINS
    USE MOD_Pixelset
    USE MOD_DataType
    USE MOD_SPMD_Task
-   USE MOD_Vars_Global, only : spval
+   USE MOD_Vars_Global, only: spval
    IMPLICIT NONE
 
    class (spatial_mapping_type) :: this
@@ -2172,7 +2229,7 @@ CONTAINS
    USE MOD_Pixelset
    USE MOD_DataType
    USE MOD_SPMD_Task
-   USE MOD_Vars_Global, only : spval
+   USE MOD_Vars_Global, only: spval
    IMPLICIT NONE
 
    class (spatial_mapping_type) :: this
@@ -2315,7 +2372,7 @@ CONTAINS
       ENDIF
 
       IF (p_is_io) THEN
-         
+
          CALL flush_block_data (gdata, 0.0_r8)
 
          DO iproc = 0, p_np_worker-1
@@ -2351,7 +2408,7 @@ CONTAINS
             xblk = gblock%xblkme(iblkme)
             yblk = gblock%yblkme(iblkme)
 
-            WHERE (this%areagrid%blk(xblk,yblk)%val > 0) 
+            WHERE (this%areagrid%blk(xblk,yblk)%val > 0)
                gdata%blk(xblk,yblk)%val = &
                   gdata%blk(xblk,yblk)%val / this%areagrid%blk(xblk,yblk)%val
             ELSEWHERE
@@ -2381,7 +2438,7 @@ CONTAINS
    USE MOD_Pixelset
    USE MOD_DataType
    USE MOD_SPMD_Task
-   USE MOD_Vars_Global, only : spval
+   USE MOD_Vars_Global, only: spval
    IMPLICIT NONE
 
    class (spatial_mapping_type) :: this
@@ -2407,8 +2464,8 @@ CONTAINS
             xblk = gblock%xblkme(iblkme)
             yblk = gblock%yblkme(iblkme)
 
-            WHERE (sumdata%blk(xblk,yblk)%val /= this%missing_value) 
-               sumdata%blk(xblk,yblk)%val = gdata%blk(xblk,yblk)%val / sumdata%blk(xblk,yblk)%val 
+            WHERE (sumdata%blk(xblk,yblk)%val /= this%missing_value)
+               sumdata%blk(xblk,yblk)%val = gdata%blk(xblk,yblk)%val / sumdata%blk(xblk,yblk)%val
             ENDWHERE
          ENDDO
 
@@ -2441,7 +2498,7 @@ CONTAINS
    USE MOD_Grid
    USE MOD_DataType
    USE MOD_SPMD_Task
-   USE MOD_Vars_Global, only : spval
+   USE MOD_Vars_Global, only: spval
    IMPLICIT NONE
 
    class (spatial_mapping_type) :: this
@@ -2453,7 +2510,7 @@ CONTAINS
    integer :: iset
 
       IF (p_is_worker) THEN
-                  
+
          pdata(:) = spval
 
          DO iset = 1, this%npset
@@ -2481,7 +2538,7 @@ CONTAINS
    integer :: iset
 
       IF (p_is_worker) THEN
-         
+
          IF (this%npset > 0) THEN
             allocate (datapart (this%npset))
          ENDIF
@@ -2495,6 +2552,36 @@ CONTAINS
       ENDIF
 
    END SUBROUTINE spatial_mapping_allocate_part
+
+   !-----------------------------------------------------
+   SUBROUTINE spatial_mapping_deallocate_part (this, datapart)
+
+   USE MOD_SPMD_Task
+   USE MOD_DataType
+   IMPLICIT NONE
+
+   class (spatial_mapping_type) :: this
+
+   type(pointer_real8_1d), allocatable :: datapart (:)
+
+   ! Local variables
+   integer :: iset
+
+      IF (p_is_worker) THEN
+
+         DO iset = 1, this%npset
+            IF (this%npart(iset) > 0) THEN
+               deallocate (datapart(iset)%val)
+            ENDIF
+         ENDDO
+
+         IF (this%npset > 0) THEN
+            deallocate (datapart)
+         ENDIF
+
+      ENDIF
+
+   END SUBROUTINE spatial_mapping_deallocate_part
 
    !-----------------------------------------------------
    SUBROUTINE spatial_mapping_free_mem (this)
@@ -2512,7 +2599,7 @@ CONTAINS
 
       IF (allocated (this%grid%xloc))   deallocate (this%grid%xloc)
       IF (allocated (this%grid%yloc))   deallocate (this%grid%yloc)
-      
+
       IF (allocated (this%grid%xcnt))   deallocate (this%grid%xcnt)
       IF (allocated (this%grid%ycnt))   deallocate (this%grid%ycnt)
 
@@ -2554,5 +2641,63 @@ CONTAINS
       ENDIF
 
    END SUBROUTINE spatial_mapping_free_mem
+
+   SUBROUTINE forc_free_mem_spatial_mapping(this)
+
+   USE MOD_SPMD_Task
+   IMPLICIT NONE
+
+   class (spatial_mapping_type) :: this
+
+   ! Local variables
+   integer :: iproc, iset
+
+      IF (allocated (this%grid%xblk))   deallocate (this%grid%xblk)
+      IF (allocated (this%grid%yblk))   deallocate (this%grid%yblk)
+
+      IF (allocated (this%grid%xloc))   deallocate (this%grid%xloc)
+      IF (allocated (this%grid%yloc))   deallocate (this%grid%yloc)
+
+      IF (allocated (this%grid%xcnt))   deallocate (this%grid%xcnt)
+      IF (allocated (this%grid%ycnt))   deallocate (this%grid%ycnt)
+
+      IF (allocated(this%glist)) THEN
+         DO iproc = lbound(this%glist,1), ubound(this%glist,1)
+            IF (allocated(this%glist(iproc)%ilat)) deallocate (this%glist(iproc)%ilat)
+            IF (allocated(this%glist(iproc)%ilon)) deallocate (this%glist(iproc)%ilon)
+         ENDDO
+
+         deallocate (this%glist)
+      ENDIF
+
+      IF (p_is_worker) THEN
+
+         IF (allocated(this%npart)) deallocate(this%npart)
+
+         IF (allocated(this%address)) THEN
+            DO iset = lbound(this%address,1), ubound(this%address,1)
+               IF (allocated(this%address(iset)%val)) THEN
+                  deallocate (this%address(iset)%val)
+               ENDIF
+            ENDDO
+
+            deallocate (this%address)
+         ENDIF
+
+         IF (allocated(this%areapart)) THEN
+            DO iset = lbound(this%areapart,1), ubound(this%areapart,1)
+               IF (allocated(this%areapart(iset)%val)) THEN
+                  deallocate (this%areapart(iset)%val)
+               ENDIF
+            ENDDO
+
+            deallocate (this%areapart)
+         ENDIF
+
+         IF (allocated(this%areapset)) deallocate(this%areapset)
+
+      ENDIF
+
+   END SUBROUTINE forc_free_mem_spatial_mapping
 
 END MODULE MOD_SpatialMapping

@@ -1,0 +1,337 @@
+#!/bin/bash
+
+
+Help()
+{
+#DISPLAY help
+   echo "----------------------------- Usage ---------------------------------------"
+   echo "   Descripion: create CoLM simulation namelist files  "
+
+   echo '---------------------------------------------------------------------------'
+   echo 'Syntax: ./create_namelist -p $CasePath -n CaseName [ -t $startyr ] [ -e $endyr ]'
+   echo '        [ -d $RAWDATA ] [ -r $RUNTIME ] [ -a $reslat ] [ -o $reslat ] [ -f $Forcing ]'
+   echo '        [ -S $EDGES ] [ -N $EDGEN ] [ -E $EDGEE ] [ -W $EDGEW ]'
+   echo '        [ -x $NX_BLOCK ] [ -y $NY_BLOCK ] [ -g $NGROUP ]'
+   echo '!--------------------------------------------------------------------------'
+   echo options:
+   echo '  -p The path of the destimation case, which you want to create '
+   echo    '(including case name but without ''/'' at end of case path)'
+   echo
+   echo '  -n The name of the namelist'
+   echo
+   echo '  -t|--startyr (optional) ${startyr} is the start year of the simulation:'
+   echo
+   echo '          ${startyr} (default: 1980)'
+   echo '          Parameter should be a positive integer number to indicate the '
+   echo '          start year of the simulation.'
+   echo
+   echo '  -e|--endyr (optional) ${endyr} is the end year of the simulation: '
+   echo '       (i.e. ${endyr}=${startyr} if the simulation period is only one year)'
+   echo
+   echo '          ${endyr} (default: 2000 or 1980 if "--spinup sasund" is set up)'
+   echo '          Parameter should be a positive integer number to indicate the'
+   echo '          end year of the simulation. if "--spinup sasund" is set up, '
+   echo '          ${startyr}=${endyr}'
+   echo
+   echo '  -f|--forcing (optional) ${Forcing} is the name of meteorological forcing'
+   echo '       dataset, you may choose from following list:'
+   echo
+   echo '  -d|--rawdata (optional) ${RAWDATA} is the name of meteorological forcing'
+   echo '       dataset, you may choose from following list:'
+   echo
+   echo '  -r|--runtime (optional) ${RUNTIME} is the name of meteorological forcing'
+   echo '       dataset, you may choose from following list:'
+   echo
+   echo '  -a|--reslat (optional) ${reslat} is the grid resolution of latitude'
+   echo
+   echo '  -o|--reslon (optional) ${reslon} is the grid resolution of longitude'
+   echo 
+   echo '  -l|--landmask (optional) ${LandMask} is the filename with path of landmask file'
+   echo
+   echo '  -S|--south    (optional) ${EDGES} latitude of the south edge of simulation.'
+   echo
+   echo '  -N|--south    (optional) ${EDGEN} latitude of the north edge of simulation.'
+   echo
+   echo '  -W|--south    (optional) ${EDGEW} longitude of the west edge of simulation.'
+   echo
+   echo '  -E|--south    (optional) ${EDGEE} longitude of the east edge of simulation.'
+   echo
+   echo '  -i|--sasuspinup (optional) if present, sasu spinup is used.'
+   echo
+   echo '  -y|--nyblock (optional) number of latitudinal block.'
+   echo
+   echo '  -x|--nxblock (optional) number of longittudinal block.'
+   echo
+   echo '  -g|--ngroup (optional)  size of each mpi group.'
+   echo
+   echo -h display command information
+}
+
+CreateNamelist()
+{
+   CASEPATH=$1
+   CASENAME=$2
+   NMLNAME=$3
+   startyr=$4
+   endyr=$5
+   RAWDATA=$6
+   RUNTIME=$7
+   reslon=$8
+   reslat=$9
+   Forcing=${10}
+   ISUSESASU=${11}
+   LandMask=${12}
+   EDGES=${13}
+   EDGEN=${14}
+   EDGEW=${15}
+   EDGEE=${16}
+   NX_BLOCK=${17}
+   NY_BLOCK=${18}
+   NGROUP=${19}
+
+   if [ $ISUSESASU == False ];then
+      ISUSESASU=""
+   else
+      ISUSESASU='DEF_USE_SASU = .true.'	
+   fi
+   if [ $LandMask == False ];then
+      LandMask=""
+   fi
+
+cat>${CASEPATH}/${CASENAME}/${NMLNAME}<<EOF
+&nl_colm
+
+   DEF_CASE_NAME = '$CASENAME'
+
+   DEF_domain%edges = $EDGES
+   DEF_domain%edgen = $EDGEN
+   DEF_domain%edgew = $EDGEW
+   DEF_domain%edgee = $EDGEE
+
+   DEF_nx_blocks = ${NX_BLOCK}
+   DEF_ny_blocks = ${NY_BLOCK}
+   DEF_PIO_groupsize = ${NGROUP}
+
+   DEF_simulation_time%greenwich    = .TRUE.
+   DEF_simulation_time%start_year   = $startyr
+   DEF_simulation_time%start_month  = 1
+   DEF_simulation_time%start_day    = 1
+   DEF_simulation_time%start_sec    = 0
+   DEF_simulation_time%end_year     = $endyr
+   DEF_simulation_time%end_month    = 1
+   DEF_simulation_time%end_day      = 1
+   DEF_simulation_time%end_sec      = 0
+   DEF_simulation_time%spinup_year  = 0
+   DEF_simulation_time%spinup_month = 1
+   DEF_simulation_time%spinup_day   = 365
+   DEF_simulation_time%spinup_sec   = 86400
+
+   DEF_simulation_time%timestep     = 1800.
+
+   DEF_dir_rawdata  = '$RAWDATA/'
+   DEF_dir_runtime  = '$RUNTIME/'
+   DEF_dir_output   = '$CASEPATH/'
+
+   ! ----- land units and land sets -----
+   ! for GRIDBASED
+   DEF_GRIDBASED_lon_res = $reslon
+   DEF_GRIDBASED_lat_res = $reslat
+
+   ! LAI setting
+   DEF_LAI_MONTHLY = .true.
+   DEF_LAI_CHANGE_YEARLY = .false.
+
+   DEF_USE_CN_INIT = .true.
+   DEF_file_cn_init = '$RUNTIME/cnsteadystate.nc'
+   ${LandMask}
+   ${ISUSESASU}
+
+   ! Canopy DEF Interception scheme selection
+   DEF_Interception_scheme=1 !1:CoLM2014；2:CLM4.5; 3:CLM5; 4:Noah-MP; 5:MATSIRO; 6:VIC
+!   DEF_USE_IRRIGATION = .true.
+
+   ! ----- forcing -----
+   ! Options :
+   ! PRINCETON | GSWP3   | QIAN  | CRUNCEPV4 | CRUNCEPV7 | ERA5LAND | ERA5 |  MSWX
+   ! WFDE5     | CRUJRA  | WFDEI | JRA55     | GDAS      | CMFD     | POINT
+   DEF_forcing_namelist = '$CASEPATH/$CASENAME/bld/run/${Forcing}.nml'
+
+   ! ----- history -----
+   DEF_HIST_lon_res = ${reslon}
+   DEF_HIST_lat_res = ${reslat}
+   DEF_WRST_FREQ = 'YEARLY' ! write restart file frequency: HOURLY/DAILY/MONTHLY/YEARLY
+   DEF_HIST_FREQ = 'MONTHLY' ! write history file frequency: HOURLY/DAILY/MONTHLY/YEARLY
+   DEF_HIST_groupby = 'MONTH' ! history in one file: DAY/MONTH/YEAR
+   DEF_HIST_mode = 'one' ! history in one or block
+   DEF_REST_CompressLevel = 1
+   DEF_HIST_CompressLevel = 1
+
+   DEF_HIST_vars_namelist = '$CASEPATH/$CASENAME/history.nml'
+   DEF_HIST_vars_out_default = .true.
+
+/
+EOF
+
+}
+
+while getopts ":hip:n:t:e:d:r:a:o:f:l:S:N:W:E:x:y:g:" options ;
+do
+    case $options in
+      p) CASENAMEPATH="$OPTARG" ;;
+      n) NMLNAME="$OPTARG"     ;;
+      t) startyr="$OPTARG"  ;;
+      e) endyr="$OPTARG"    ;;
+      d) RAWDATA="$OPTARG"  ;;
+      r) RUNTIME="$OPTARG"  ;;
+      a) reslat="$OPTARG"   ;;
+      o) reslon="$OPTARG"   ;;
+      f) Forcing="$OPTARG"   ;;
+      i) ISUSESASU=True     ;;
+      l) LandMask="$OPTARG"  ;;
+      S) EDGES="$OPTARG"     ;;
+      N) EDGEN="$OPTARG"     ;;
+      W) EDGEW="$OPTARG"     ;;
+      E) EDGEE="$OPTARG"     ;;
+      x) NX_BLOCK="$OPTARG"  ;;
+      y) NY_BLOCK="$OPTARG"  ;;
+      g) NGROUP="$OPTARG"    ;;
+      h) Help; exit;;
+      *) echo "invalid option: $option";exit ;;
+    esac
+done
+
+if [ -z "$ISUSESASU" ];then
+   ISUSESASU=False
+fi
+
+if [ -z "${CASENAMEPATH}" ];then
+   echo 
+   echo 'Error: -s option is missing. See the syntax:'
+   Help
+   exit
+fi
+
+if [ "${CASENAMEPATH:0:1}" == '/' ] || [ "${CASENAMEPATH:0:1}"=='~' ];then
+   CASENAME=`echo "${CASENAMEPATH##*/}"`
+   CASEPATH=`echo "${CASENAMEPATH%/*}"`
+   echo $CASENAME
+   echo $CASEPATH
+else
+   TMPPATHNAME=$PWD/$CASENAMEPATH
+   CASENAME=`echo "${TMPPATHNAME##*/}"`
+   CASEPATH=`echo "${TMPPATHNAME%/*}"`
+   echo $CASEPATH
+   echo $CASENAME
+fi
+
+if [ -z "${NMLNAME}" ];then
+   NMLNAME=input_${CASENAME}.nml
+fi
+
+if [ -z "${RAWDATA}" ];then
+   echo 
+   echo 'Error: -d option is missing. See the syntax:'
+   Help
+   exit
+fi
+
+if [ -z "${RUNTIME}" ];then
+   echo 
+   echo 'Error: -r option is missing. See the syntax:'
+   Help
+   exit
+fi
+
+if [ -z "${startyr}" ];then
+   echo
+   echo "Note: -t option is absent, set startyr 1980 as the default."
+   echo
+   startyr=1980
+fi
+
+if [ -z "${endyr}" ];then
+   echo
+   echo "Note: -e option is absent, set endyr 2000 as the default."
+   echo
+   endyr=2000
+fi
+
+if [ -z "${reslat}" ];then
+   echo
+   echo "Note: -a option is absent, set reslat 0.5 as the default."
+   echo
+   reslat=0.5
+fi
+
+if [ -z "${reslon}" ];then
+   echo
+   echo "Note: -o option is absent, set reslon 0.5 as the default."
+   echo
+   reslon=0.5
+fi
+   
+if [ -z "${EDGES}" ];then
+   echo
+   echo "Note: -S option is absent, set EDGES -90 as the default."
+   echo
+   EDGES=-90
+fi
+
+if [ -z "${EDGEN}" ];then
+   echo
+   echo "Note: -N option is absent, set EDGEN 90 as the default."
+   echo
+   EDGEN=90
+fi
+
+if [ -z "${EDGEW}" ];then
+   echo
+   echo "Note: -S option is absent, set EDGEW -180 as the default."
+   echo
+   EDGEW=-180
+fi
+
+if [ -z "${EDGEE}" ];then
+   echo
+   echo "Note: -E option is absent, set EDGEE 180 as the default."
+   echo
+   EDGEE=180
+fi
+
+if [ -z "${Forcing}" ];then
+   echo
+   echo "Note: -f option is absent, set Forcing GSWP as the default."
+   echo
+   Forcing=CRUJRA
+fi
+
+if [ -z "${LandMask}" ];then
+   echo
+   echo "Note: -l option is absent, no land mask file is used for DEF_file_mesh."
+   echo
+   LandMask=False
+fi
+
+if [ -z "${NX_BLOCK}" ];then
+   echo
+   echo "Note: -x option is absent, DEF_nx_block = 18"
+   echo
+   NX_BLOCK=18
+fi
+
+if [ -z "${NY_BLOCK}" ];then
+   echo
+   echo "Note: -y option is absent, DEF_ny_block = 9"
+   echo
+   NY_BLOCK=9
+fi
+
+if [ -z "${NGROUP}" ];then
+   echo
+   echo "Note: -g option is absent, DEF_PIO_groupsize = 9"
+   echo
+   NGROUP=24
+fi
+
+CreateNamelist $CASEPATH $CASENAME $NMLNAME $startyr $endyr $RAWDATA $RUNTIME $reslon $reslat $Forcing $ISUSESASU $LandMask $EDGES $EDGEN $EDGEW $EDGEE $NX_BLOCK $NY_BLOCK $NGROUP
+

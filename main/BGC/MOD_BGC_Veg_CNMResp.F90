@@ -4,17 +4,17 @@ MODULE MOD_BGC_Veg_CNMResp
 
 !-----------------------------------------------------------------------------------------------------
 ! !DESCRIPTION:
-! This module calculates plant maintenance respiration 
+! This module calculates plant maintenance respiration
 !
-! !REFERENCE:
+! !REFERENCES:
 ! Atkin OK, Bloomfield KJ, Reich PB, Tjoelker MG, Asner GP, Bonal D et al (2015) Global variability in leaf respiration
-! in relation to climate, plant functional types and leaf traits. New Phytologist 206:614–636
+! in relation to climate, plant functional types and leaf traits. New Phytologist 206:614-636
 !
 ! !ORIGINAL:
 ! The Community Land Model version 5.0 (CLM5)
 !
 ! !REVISION:
-! Xingjie Lu, 2021, revised the CLM5 code to be compatible with CoLM code sturcture.
+! Xingjie Lu, 2021, revised the CLM5 code to be compatible with CoLM code structure.
 
    USE MOD_Precision
    USE MOD_BGC_Vars_TimeInvariants, only: &
@@ -32,9 +32,9 @@ MODULE MOD_BGC_Veg_CNMResp
        leaf_mr_p, froot_mr_p, livestem_mr_p, livecroot_mr_p, grain_mr_p
    USE MOD_Const_PFT, only: &
        woody, rootfr_p
- 
+
    IMPLICIT NONE
- 
+
    PUBLIC CNMResp
 
 CONTAINS
@@ -68,22 +68,22 @@ CONTAINS
 
 ! column loop to calculate temperature factors in each soil layer
       DO j=1,nl_soil
-  
+
          ! calculate temperature corrections for each soil layer, for USE in
          ! estimating fine root maintenance respiration with depth
          tcsoi(j) = Q10**((t_soisno(j,i) - 273.15_r8 - 20.0_r8)/10.0_r8)
       ENDDO
-  
+
       ! calculate maintenance respiration fluxes in
       ! gC/m2/s for each of the live plant tissues.
       ! Leaf and live wood MR
-  
+
       tc = Q10**((tref(i) - 273.15_r8 - 20.0_r8)/10.0_r8)
-  
+
       !RF: acclimation of root and stem respiration fluxes
       ! n.b. we DO not yet know IF this is defensible scientifically (awaiting data analysis)
       ! turning this on will increase R and decrease productivity in boreal forests, A LOT. :)
-  
+
       DO m = ps, pe
          ivt = pftclass(m)
          IF (sigf_p(m) == 1) THEN
@@ -91,7 +91,7 @@ CONTAINS
          ELSE !nosno
             leaf_mr_p(m) = 0._r8
          ENDIF
-  
+
          IF (woody(ivt) == 1) THEN
             livestem_mr_p (m) = livestemn_p (m)*br*tc
             livecroot_mr_p(m) = livecrootn_p(m)*br_root*tc
@@ -100,9 +100,9 @@ CONTAINS
             grain_mr_p    (m) = grainn_p    (m)*br*tc
          ENDIF
          ! soil and patch loop for fine root
-  
+
          DO j = 1,nl_soil
-  
+
          ! Fine root MR
          ! crootfr(j) sums to 1.0 over all soil layers, and
          ! describes the fraction of root mass for carbon that is in each

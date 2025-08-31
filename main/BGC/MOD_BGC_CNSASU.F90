@@ -19,7 +19,7 @@ MODULE MOD_BGC_CNSASU
 ! !ORIGINAL:
 ! The Community Land Model version 5.1 (CLM5.1) unreleased version developed by Xingjie Lu
 !
-! !REFERENCE:
+! !REFERENCES:
 ! Lu, X., Du, Z., Huang, Y., Lawrence, D., Kluzek, E., Collier, N., Lombardozzi, D., Sobhani, N., Schuur, E.A. and Luo, Y., 2020. 
 ! Full implementation of matrix approach to biogeochemistry MODULE of CLM5. Journal of Advances in Modeling Earth Systems, 12(11), e2020MS002105.  
 ! Liao, C., Lu, X., Huang Y., Tao F., Lawrence, D., Koven C., Oleson, K., Wieder, W., Kluzek, E., Huang, X., Luo, Y. (in submission)
@@ -30,11 +30,13 @@ MODULE MOD_BGC_CNSASU
 !                   USE accumulated transfer fluxes to calculate the matrix.
 
    USE MOD_Precision
+   USE MOD_Namelist, only: DEF_USE_SASU, DEF_USE_DiagMatrix
    USE MOD_BGC_Vars_TimeInvariants, only: &
        i_met_lit, i_cel_lit, i_lig_lit, i_cwd, i_soil1, i_soil2, i_soil3, floating_cn_ratio
  
    USE MOD_BGC_Vars_TimeVariables, only: &
        decomp_cpools_vr           , decomp_npools_vr           , decomp0_cpools_vr          , decomp0_npools_vr          , &
+       decomp_cpools_vr_Cap       , decomp_npools_vr_Cap       , &
        I_met_c_vr_acc             , I_cel_c_vr_acc             , I_lig_c_vr_acc             , I_cwd_c_vr_acc             , &
        AKX_met_to_soil1_c_vr_acc  , AKX_cel_to_soil1_c_vr_acc  , AKX_lig_to_soil2_c_vr_acc  , AKX_soil1_to_soil2_c_vr_acc, &
        AKX_cwd_to_cel_c_vr_acc    , AKX_cwd_to_lig_c_vr_acc    , AKX_soil1_to_soil3_c_vr_acc, AKX_soil2_to_soil1_c_vr_acc, &
@@ -60,6 +62,20 @@ MODULE MOD_BGC_CNSASU
        livecrootc_p      , livecrootc_storage_p , livecrootc_xfer_p , livecrootc0_p        , livecrootc0_storage_p, livecrootc0_xfer_p, &
        deadcrootc_p      , deadcrootc_storage_p , deadcrootc_xfer_p , deadcrootc0_p        , deadcrootc0_storage_p, deadcrootc0_xfer_p, &
        grainc_p          , grainc_storage_p     , grainc_xfer_p     , grainc0_p            , grainc0_storage_p    , grainc0_xfer_p    , &
+
+       leafcCap_p        , leafc_storageCap_p      , leafc_xferCap_p      , &
+       frootcCap_p       , frootc_storageCap_p     , frootc_xferCap_p     , &
+       livestemcCap_p    , livestemc_storageCap_p  , livestemc_xferCap_p  , &
+       deadstemcCap_p    , deadstemc_storageCap_p  , deadstemc_xferCap_p  , &
+       livecrootcCap_p   , livecrootc_storageCap_p , livecrootc_xferCap_p , &
+       deadcrootcCap_p   , deadcrootc_storageCap_p , deadcrootc_xferCap_p , &
+ 
+       leafnCap_p        , leafn_storageCap_p      , leafn_xferCap_p      , &
+       frootnCap_p       , frootn_storageCap_p     , frootn_xferCap_p     , &
+       livestemnCap_p    , livestemn_storageCap_p  , livestemn_xferCap_p  , &
+       deadstemnCap_p    , deadstemn_storageCap_p  , deadstemn_xferCap_p  , &
+       livecrootnCap_p   , livecrootn_storageCap_p , livecrootn_xferCap_p , &
+       deadcrootnCap_p   , deadcrootn_storageCap_p , deadcrootn_xferCap_p , &
  
        leafn_p           , leafn_storage_p      , leafn_xfer_p      , leafn0_p             , leafn0_storage_p     , leafn0_xfer_p     , &
        frootn_p          , frootn_storage_p     , frootn_xfer_p     , frootn0_p            , frootn0_storage_p    , frootn0_xfer_p    , &
@@ -425,14 +441,54 @@ CONTAINS
                   vegmatrixn_cap(k,1) = epsi
                ENDIF
             ENDDO
-            deadstemc_p         (m) = vegmatrixc_cap(ideadstem,1)
-            deadstemc_storage_p (m) = vegmatrixc_cap(ideadstem_st,1)
-            deadcrootc_p        (m) = vegmatrixc_cap(ideadcroot,1)
-            deadcrootc_storage_p(m) = vegmatrixc_cap(ideadcroot_st,1)
-            deadstemn_p         (m) = vegmatrixn_cap(ideadstem,1)
-            deadstemn_storage_p (m) = vegmatrixn_cap(ideadstem_st,1)
-            deadcrootn_p        (m) = vegmatrixn_cap(ideadcroot,1)
-            deadcrootn_storage_p(m) = vegmatrixn_cap(ideadcroot_st,1)
+            IF(DEF_USE_DiagMatrix)THEN 
+               leafcCap_p              (m) = vegmatrixc_cap(ileaf         ,1)
+               leafc_storageCap_p      (m) = vegmatrixc_cap(ileaf_st      ,1)
+               leafc_xferCap_p         (m) = vegmatrixc_cap(ileaf_xf      ,1)           
+               frootcCap_p             (m) = vegmatrixc_cap(ifroot        ,1)
+               frootc_storageCap_p     (m) = vegmatrixc_cap(ifroot_st     ,1)
+               frootc_xferCap_p        (m) = vegmatrixc_cap(ifroot_xf     ,1)           
+               livestemcCap_p          (m) = vegmatrixc_cap(ilivestem     ,1)
+               livestemc_storageCap_p  (m) = vegmatrixc_cap(ilivestem_st  ,1)
+               livestemc_xferCap_p     (m) = vegmatrixc_cap(ilivestem_xf  ,1)           
+               deadstemcCap_p          (m) = vegmatrixc_cap(ideadstem     ,1)
+               deadstemc_storageCap_p  (m) = vegmatrixc_cap(ideadstem_st  ,1)
+               deadstemc_xferCap_p     (m) = vegmatrixc_cap(ideadstem_xf  ,1)           
+               livecrootcCap_p         (m) = vegmatrixc_cap(ilivecroot    ,1)
+               livecrootc_storageCap_p (m) = vegmatrixc_cap(ilivecroot_st ,1)
+               livecrootc_xferCap_p    (m) = vegmatrixc_cap(ilivecroot_xf ,1)           
+               deadcrootcCap_p         (m) = vegmatrixc_cap(ideadcroot    ,1)
+               deadcrootc_storageCap_p (m) = vegmatrixc_cap(ideadcroot_st ,1)
+               deadcrootc_xferCap_p    (m) = vegmatrixc_cap(ideadcroot_xf ,1)           
+               leafnCap_p              (m) = vegmatrixn_cap(ileaf         ,1)
+               leafn_storageCap_p      (m) = vegmatrixn_cap(ileaf_st      ,1)
+               leafn_xferCap_p         (m) = vegmatrixn_cap(ileaf_xf      ,1)           
+               frootnCap_p             (m) = vegmatrixn_cap(ifroot        ,1)
+               frootn_storageCap_p     (m) = vegmatrixn_cap(ifroot_st     ,1)
+               frootn_xferCap_p        (m) = vegmatrixn_cap(ifroot_xf     ,1)           
+               livestemnCap_p          (m) = vegmatrixn_cap(ilivestem     ,1)
+               livestemn_storageCap_p  (m) = vegmatrixn_cap(ilivestem_st  ,1)
+               livestemn_xferCap_p     (m) = vegmatrixn_cap(ilivestem_xf  ,1)           
+               deadstemnCap_p          (m) = vegmatrixn_cap(ideadstem     ,1)
+               deadstemn_storageCap_p  (m) = vegmatrixn_cap(ideadstem_st  ,1)
+               deadstemn_xferCap_p     (m) = vegmatrixn_cap(ideadstem_xf  ,1)           
+               livecrootnCap_p         (m) = vegmatrixn_cap(ilivecroot    ,1)
+               livecrootn_storageCap_p (m) = vegmatrixn_cap(ilivecroot_st ,1)
+               livecrootn_xferCap_p    (m) = vegmatrixn_cap(ilivecroot_xf ,1)           
+               deadcrootnCap_p         (m) = vegmatrixn_cap(ideadcroot    ,1)
+               deadcrootn_storageCap_p (m) = vegmatrixn_cap(ideadcroot_st ,1)
+               deadcrootn_xferCap_p    (m) = vegmatrixn_cap(ideadcroot_xf ,1)           
+            ENDIF
+            IF(DEF_USE_SASU)then
+               deadstemc_p         (m) = vegmatrixc_cap(ideadstem,1)
+               deadstemc_storage_p (m) = vegmatrixc_cap(ideadstem_st,1)
+               deadcrootc_p        (m) = vegmatrixc_cap(ideadcroot,1)
+               deadcrootc_storage_p(m) = vegmatrixc_cap(ideadcroot_st,1)
+               deadstemn_p         (m) = vegmatrixn_cap(ideadstem,1)
+               deadstemn_storage_p (m) = vegmatrixn_cap(ideadstem_st,1)
+               deadcrootn_p        (m) = vegmatrixn_cap(ideadcroot,1)
+               deadcrootn_storage_p(m) = vegmatrixn_cap(ideadcroot_st,1)
+            ENDIF
          ENDDO
   
          AK_soil_acc (1:ndecomp_pools_vr,1:ndecomp_pools_vr) = 0._r8
@@ -619,42 +675,52 @@ CONTAINS
             ENDDO
          ENDDO
                      
-         DO k = 1, ndecomp_pools
-            DO j = 1, nl_soil
-               IF((soilmatrixc_cap(j+(k-1)*nl_soil,1)/decomp0_cpools_vr(j,k,i) .gt. 100 .and. soilmatrixc_cap(j+(k-1)*nl_soil,1) .gt. 1.e+5_r8  &
-              .or. soilmatrixn_cap(j+(k-1)*nl_soil,1)/decomp0_npools_vr(j,k,i) .gt. 100 .and. soilmatrixn_cap(j+(k-1)*nl_soil,1) .gt. 1.e+3_r8) &
-              .or. i .eq. i_cwd .and. (soilmatrixc_cap(j+(k-1)*nl_soil,1)/decomp0_cpools_vr(j,k,i) .gt. 100 .and. soilmatrixc_cap(j+(k-1)*nl_soil,1) .gt. 1.e+5_r8  &
-              .or. soilmatrixn_cap(j+(k-1)*nl_soil,1)/decomp0_npools_vr(j,k,i) .gt. 100 .and. soilmatrixn_cap(j+(k-1)*nl_soil,1) .gt. 1.e+3_r8) )THEN
-                  soilmatrixc_cap(j+(k-1)*nl_soil,1) = decomp_cpools_vr(j,k,i)
-                  soilmatrixn_cap(j+(k-1)*nl_soil,1) = decomp_npools_vr(j,k,i)
-               ENDIF
-            ENDDO
-         ENDDO
-  
-         IF(any(soilmatrixc_cap(:,1) .gt. 1.e+8_r8) .or. any(soilmatrixn_cap(:,1) .gt. 1.e+8_r8))THEN
+         IF(DEF_USE_DiagMatrix)THEN
             DO k = 1, ndecomp_pools
                DO j = 1, nl_soil
-                  soilmatrixc_cap(j+(k-1)*nl_soil,1) = decomp_cpools_vr(j,k,i)
-                  soilmatrixn_cap(j+(k-1)*nl_soil,1) = decomp_npools_vr(j,k,i)
+                  decomp_cpools_vr_Cap(j,k,i) = soilmatrixc_cap(j+(k-1)*nl_soil,1)
+                  decomp_npools_vr_Cap(j,k,i) = soilmatrixn_cap(j+(k-1)*nl_soil,1)
                ENDDO
             ENDDO
          ENDIF
-  
-         ! IF spin up is on, the capacity replaces the pool size with capacity.
-         ! Copy the capacity into a 3D variable, and be ready to write to history files.
-  
-         DO k = 1, ndecomp_pools 
-            DO j = 1, nl_soil
-               decomp_cpools_vr(j,k,i) = soilmatrixc_cap(j+(k-1)*nl_soil,1)
-               IF(floating_cn_ratio(k))THEN
-                  decomp_npools_vr(j,k,i) = soilmatrixn_cap(j+(k-1)*nl_soil,1)
-               ELSE
-                  decomp_npools_vr(j,k,i) = decomp_cpools_vr(j,k,i) / cn_decomp_pools(j,k,i)
-               ENDIF
+         IF(DEF_USE_SASU)THEN
+            DO k = 1, ndecomp_pools
+               DO j = 1, nl_soil
+                  IF((soilmatrixc_cap(j+(k-1)*nl_soil,1)/decomp0_cpools_vr(j,k,i) .gt. 100 .and. soilmatrixc_cap(j+(k-1)*nl_soil,1) .gt. 1.e+5_r8  &
+                 .or. soilmatrixn_cap(j+(k-1)*nl_soil,1)/decomp0_npools_vr(j,k,i) .gt. 100 .and. soilmatrixn_cap(j+(k-1)*nl_soil,1) .gt. 1.e+3_r8) &
+                 .or. i .eq. i_cwd .and. (soilmatrixc_cap(j+(k-1)*nl_soil,1)/decomp0_cpools_vr(j,k,i) .gt. 100 .and. soilmatrixc_cap(j+(k-1)*nl_soil,1) .gt. 1.e+5_r8  &
+                 .or. soilmatrixn_cap(j+(k-1)*nl_soil,1)/decomp0_npools_vr(j,k,i) .gt. 100 .and. soilmatrixn_cap(j+(k-1)*nl_soil,1) .gt. 1.e+3_r8) )THEN
+                     soilmatrixc_cap(j+(k-1)*nl_soil,1) = decomp_cpools_vr(j,k,i)
+                     soilmatrixn_cap(j+(k-1)*nl_soil,1) = decomp_npools_vr(j,k,i)
+                  ENDIF
+               ENDDO
             ENDDO
-         ENDDO
-         
-         skip_balance_check(i) = .true.
+     
+            IF(any(soilmatrixc_cap(:,1) .gt. 1.e+8_r8) .or. any(soilmatrixn_cap(:,1) .gt. 1.e+8_r8))THEN
+               DO k = 1, ndecomp_pools
+                  DO j = 1, nl_soil
+                     soilmatrixc_cap(j+(k-1)*nl_soil,1) = decomp_cpools_vr(j,k,i)
+                     soilmatrixn_cap(j+(k-1)*nl_soil,1) = decomp_npools_vr(j,k,i)
+                  ENDDO
+               ENDDO
+            ENDIF
+     
+            ! IF spin up is on, the capacity replaces the pool size with capacity.
+            ! Copy the capacity into a 3D variable, and be ready to write to history files.
+     
+            DO k = 1, ndecomp_pools 
+               DO j = 1, nl_soil
+                  decomp_cpools_vr(j,k,i) = soilmatrixc_cap(j+(k-1)*nl_soil,1)
+                  IF(floating_cn_ratio(k))THEN
+                     decomp_npools_vr(j,k,i) = soilmatrixn_cap(j+(k-1)*nl_soil,1)
+                  ELSE
+                     decomp_npools_vr(j,k,i) = decomp_cpools_vr(j,k,i) / cn_decomp_pools(j,k,i)
+                  ENDIF
+               ENDDO
+            ENDDO
+            
+            skip_balance_check(i) = .true.
+         ENDIF
   
          ! Reset to accumulation variables to 0 at END of each year
          DO m=ps, pe

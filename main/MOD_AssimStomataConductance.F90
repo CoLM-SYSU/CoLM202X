@@ -15,6 +15,7 @@ MODULE MOD_AssimStomataConductance
 ! PRIVATE MEMBER FUNCTIONS:
    PRIVATE :: sortin
    PRIVATE :: calc_photo_params
+   PRIVATE :: WUE_solver
 
 
 !-----------------------------------------------------------------------
@@ -25,55 +26,60 @@ CONTAINS
 
    SUBROUTINE stomata (vmax25,effcon,slti,hlti,shti, &
                        hhti,trda,trdm,trop,g1,g0,gradm,binter,tm, &
-                       psrf,po2m,pco2m,pco2a,ea,ei,tlef,par &
+                       psrf,po2m,pco2m,pco2a,ea,ei,tlef,par, &
 !Ozone stress variables
-                       ,o3coefv,o3coefg &
+                       o3coefv,o3coefg, &
 !End ozone stress variables
-                       ,rb,ra,rstfac,cint,assim,respc,rst &
-                               )
+!WUE stomata model parameter
+                       lambda, &
+!End WUE stomata model parameter
+                       rb,ra,rstfac,cint,assim,respc,rst )
 
 !=======================================================================
 !
-!  ! DESCRIPTION:
-!     calculation of canopy photosynthetic rate using the integrated
-!     model relating assimilation and stomatal conductance.
+! !DESCRIPTION:
+!  calculation of canopy photosynthetic rate using the integrated
+!  model relating assimilation and stomatal conductance.
 !
-!     Original author: Yongjiu Dai, 08/11/2001
+!  Original author: Yongjiu Dai, 08/11/2001
 !
-!     Revision author: Xingjie Lu, 2021
+! !REFERENCES:
+!  Dai et al., 2004: A two-big-leaf model for canopy temperature,
+!  photosynthesis and stomatal conductance. J. Climate, 17: 2281-2299.
 !
-!     Reference: Dai et al., 2004: A two-big-leaf model for canopy temperature,
-!         photosynthesis and stomatal conductance. J. Climate, 17: 2281-2299.
 !
+!  units are converted from mks to biological units in this routine.
 !
-!     units are converted from mks to biological units in this routine.
+!                       units
+!                      -------
 !
-!                          units
-!                         -------
+!     pco2m, pco2a, pco2i, po2m             : pascals
+!     co2a, co2s, co2i, h2oa, h2os, h2oa    : mol mol-1
+!     vmax25, respcp, assim, gs, gb, ga     : mol m-2 s-1
+!     effcon                                : mol co2 mol quanta-1
+!     1/rb, 1/ra, 1/rst                     : m s-1
 !
-!      pco2m, pco2a, pco2i, po2m                : pascals
-!      co2a, co2s, co2i, h2oa, h2os, h2oa       : mol mol-1
-!      vmax25, respcp, assim, gs, gb, ga        : mol m-2 s-1
-!      effcon                                   : mol co2 mol quanta-1
-!      1/rb, 1/ra, 1/rst                        : m s-1
+!                    conversions
+!                   -------------
 !
-!                       conversions
-!                      -------------
+!     1 mol h2o           = 0.018 kg
+!     1 mol co2           = 0.044 kg
+!     h2o (mol mol-1)     = ea / psrf ( pa pa-1 )
+!     h2o (mol mol-1)     = q*mm/(q*mm + 1)
+!     gs  (co2)           = gs (h2o) * 1./1.6
+!     gs  (mol m-2 s-1 )  = gs (m s-1) * 44.6*tf/t*p/po
+!     par (mol m-2 s-1 )  = par(w m-2) * 4.6*1.e-6
+!     mm  (molair/molh2o) = 1.611
 !
-!      1 mol h2o           = 0.018 kg
-!      1 mol co2           = 0.044 kg
-!      h2o (mol mol-1)     = ea / psrf ( pa pa-1 )
-!      h2o (mol mol-1)     = q*mm/(q*mm + 1)
-!      gs  (co2)           = gs (h2o) * 1./1.6
-!      gs  (mol m-2 s-1 )  = gs (m s-1) * 44.6*tf/t*p/po
-!      par (mol m-2 s-1 )  = par(w m-2) * 4.6*1.e-6
-!      mm  (molair/molh2o) = 1.611
+! !REVISIONS:
+!  2021, Xingjie Lu: Add ozone stree and WUE model
 !
 !----------------------------------------------------------------------
 
    USE MOD_Precision
    IMPLICIT NONE
 
+!-------------------------- Dummy Arguments ----------------------------
    real(r8),intent(in) :: &
       effcon,       &! quantum efficiency of RuBP regeneration (mol CO2 / mol quanta)
       vmax25,       &! maximum carboxylation rate at 25 C at canopy top
@@ -105,8 +111,12 @@ CONTAINS
       o3coefg,      &
 !End ozone stress variables
 
+!WUE stomata model parameter
+      lambda,       &! marginal water cost of carbon gain ((mol h2o) (mol co2)-1)
+!End WUE stomata model parameter
+
       rb,           &! boundary resistance from canopy to cas (s m-1)
-      ra,           &! aerodynamic resistance from cas to refence height (s m-1)
+      ra,           &! aerodynamic resistance from cas to reference height (s m-1)
       rstfac         ! canopy resistance stress factors to soil moisture
 
    real(r8),intent(in), dimension(3) :: &
@@ -119,7 +129,7 @@ CONTAINS
 
    real(r8)  gammas
 
-!-------------------- local --------------------------------------------
+!-------------------------- Local Variables ----------------------------
 
    integer, parameter :: iterationtotal = 6   ! total iteration number in pco2i calculation
 
@@ -140,11 +150,11 @@ CONTAINS
 
       atheta,       &! wc, we coupling parameter
       btheta,       &! wc & we, ws coupling parameter
-      omss,         &! intermediate calcuation for oms
+      omss,         &! intermediate calculation for oms
       omc,          &! rubisco limited assimilation (omega-c: mol m-2 s-1)
       ome,          &! light limited assimilation (omega-e: mol m-2 s-1)
       oms,          &! sink limited assimilation (omega-s: mol m-2 s-1)
-      omp,          &! intermediate calcuation for omc, ome
+      omp,          &! intermediate calculation for omc, ome
 
       co2m,         &! co2 concentration in atmos (mol mol-1)
       co2a,         &! co2 concentration at cas (mol mol-1)
@@ -153,6 +163,8 @@ CONTAINS
       co2i,         &! internal co2 concentration (mol mol-1)
       pco2in,       &! internal co2 concentration at the new iteration (pa)
       pco2i,        &! internal co2 concentration (pa)
+      pco2i_c,      &! internal co2 concentration when Rubisco is limited (pa)
+      pco2i_e,      &! internal co2 concentration when RuBP regeneration is limited (pa)
       es,           &! canopy surface h2o vapor pressure (pa)
 
       sqrtin,       &! intermediate calculation for quadratic
@@ -169,6 +181,7 @@ CONTAINS
       range                    !
 
    integer ic
+!-----------------------------------------------------------------------
 
       CALL calc_photo_params(tlef, po2m, par , psrf, rstfac, rb, effcon, vmax25, &
                              trop, slti, hlti, shti, hhti, trda, trdm, cint, &
@@ -195,8 +208,15 @@ CONTAINS
 
       ITERATION_LOOP: DO ic = 1, iterationtotal
 
-         CALL sortin(eyy, pco2y, range, gammas, ic, iterationtotal)
-         pco2i =  pco2y(ic)
+         !IF(.not. DEF_USE_WUEST .or. epar .lt. 1.e-12)THEN
+         IF(.not. DEF_USE_WUEST .or. abs(c4 - 1) .lt. 0.001)THEN
+            CALL sortin(eyy, pco2y, range, gammas, ic, iterationtotal)
+            pco2i   = pco2y(ic)
+            pco2i_c = pco2i
+            pco2i_e = pco2i
+         ELSE
+            CALL WUE_solver(gammas, lambda, co2a, ei, ea, psrf, pco2i_c, pco2i_e)
+         ENDIF
 
 !-----------------------------------------------------------------------
 !                      NET ASSIMILATION
@@ -213,15 +233,21 @@ CONTAINS
          atheta = 0.877
          btheta = 0.95
 
-         omc = vm   * ( pco2i-gammas ) / ( pco2i + rrkk ) * c3 + vm * c4
-         ome = epar * ( pco2i-gammas ) / ( pco2i+2.*gammas ) * c3 + epar * c4
-         oms   = omss * c3 + omss*pco2i * c4
+         ! As if DEF_USE_WUEST=.false., pco2i_c=pco2i_e=pco2i
+         omc = vm   * ( pco2i_c-gammas ) / ( pco2i_c + rrkk ) * c3 + vm * c4
+         ome = epar * ( pco2i_e-gammas ) / ( pco2i_e+2.*gammas ) * c3 + epar * c4
+         !IF(.not. DEF_USE_WUEST .or. epar .lt. 1.e-12)THEN
+         IF(.not. DEF_USE_WUEST .or. abs(c4 - 1) .lt. 0.001)THEN
+            oms = omss * c3 + omss*pco2i * c4
 
-         sqrtin= max( 0., ( (ome+omc)**2 - 4.*atheta*ome*omc ) )
-         omp   = ( ( ome+omc ) - sqrt( sqrtin ) ) / ( 2.*atheta )
-         sqrtin= max( 0., ( (omp+oms)**2 - 4.*btheta*omp*oms ) )
-         assim = max( 0., ( ( oms+omp ) - sqrt( sqrtin ) ) / ( 2.*btheta ))
-
+            sqrtin= max( 0., ( (ome+omc)**2 - 4.*atheta*ome*omc ) )
+            omp   = ( ( ome+omc ) - sqrt( sqrtin ) ) / ( 2.*atheta )
+            sqrtin= max( 0., ( (omp+oms)**2 - 4.*btheta*omp*oms ) )
+            assim = max( 0., ( ( oms+omp ) - sqrt( sqrtin ) ) / ( 2.*btheta ))
+         ELSE
+            assim = max( 0., min(omc, ome))
+         ENDIF
+         !print*,'assimn',assim,omc,ome
          assimn= ( assim - respc)                         ! mol m-2 s-1
 
 !-----------------------------------------------------------------------
@@ -274,35 +300,51 @@ CONTAINS
          co2st = max( co2st,1.e-5 )
 
          assmt = max( 1.e-12, assimn )
-         IF(DEF_USE_MEDLYNST)THEN
-            vpd   = amax1((ei - ea),50._r8) * 1.e-3 ! in kpa
-            acp   = 1.6*assmt/co2st             ! in mol m-2 s-1
-            aquad = 1._r8
-            bquad = -2*(g0*1.e-6 + acp) - (g1*acp)**2/(gbh2o*vpd)   ! in mol m-2 s-1
-            cquad = (g0*1.e-6)**2 + (2*g0*1.e-6+acp*(1-g1**2)/vpd)*acp  ! in (mol m-2 s-1)**2
 
-            sqrtin= max( 0., ( bquad**2 - 4.*aquad*cquad ) )
-            gsh2o = ( -bquad + sqrt ( sqrtin ) ) / (2.*aquad)
-
+         !IF(DEF_USE_WUEST .and. epar .ge. 1.e-12)THEN
+         IF(DEF_USE_WUEST .and. .not. abs(c4 - 1) .lt. 0.001)THEN
+            IF(omc .lt. ome)THEN
+               pco2i = pco2i_c
+            ELSE
+               pco2i = pco2i_e
+            ENDIF
+            gsh2o = assmt / (co2a - pco2i/psrf)*1.6
+            pco2in = pco2i ! No need to iteratively solve pco2i for WUE model.
+                           ! Let pco2in = pco2i to exit loop.
+            IF(pco2i .gt. pco2a)THEN
+               write(*,*) 'warning: pco2i greater than pco2a, use bb model'
+            ENDIF
          ELSE
-            hcdma = ei*co2st / ( gradm*assmt )
+            IF(DEF_USE_MEDLYNST)THEN
+               vpd   = amax1((ei - ea),50._r8) * 1.e-3 ! in kpa
+               acp   = 1.6*assmt/co2st                 ! in mol m-2 s-1
+               aquad = 1._r8
+               bquad = -2*(g0*1.e-6 + acp) - (g1*acp)**2/(gbh2o*vpd)       ! in mol m-2 s-1
+               cquad = (g0*1.e-6)**2 + (2*g0*1.e-6+acp*(1-g1**2)/vpd)*acp  ! in (mol m-2 s-1)**2
 
-            aquad = hcdma
-            bquad = gbh2o*hcdma - ei - bintc*hcdma
-            cquad = -gbh2o*( ea + hcdma*bintc )
+               sqrtin= max( 0., ( bquad**2 - 4.*aquad*cquad ) )
+               gsh2o = ( -bquad + sqrt ( sqrtin ) ) / (2.*aquad)
 
-            sqrtin= max( 0., ( bquad**2 - 4.*aquad*cquad ) )
-            gsh2o = ( -bquad + sqrt ( sqrtin ) ) / (2.*aquad)
+            ELSE
+               hcdma = ei*co2st / ( gradm*assmt )
 
-            es  = ( gsh2o-bintc ) * hcdma                   ! pa
-            es  = min( es, ei )
-            es  = max( es, 1.e-2)
+               aquad = hcdma
+               bquad = gbh2o*hcdma - ei - bintc*hcdma
+               cquad = -gbh2o*( ea + hcdma*bintc )
 
-            gsh2o = es/hcdma + bintc                        ! mol m-2 s-1
+               sqrtin= max( 0., ( bquad**2 - 4.*aquad*cquad ) )
+               gsh2o = ( -bquad + sqrt ( sqrtin ) ) / (2.*aquad)
+
+               es  = ( gsh2o-bintc ) * hcdma                   ! pa
+               es  = min( es, ei )
+               es  = max( es, 1.e-2)
+
+               gsh2o = es/hcdma + bintc                        ! mol m-2 s-1
+            ENDIF
+
+            pco2in = ( co2s - 1.6 * assimn / gsh2o )*psrf      ! pa
          ENDIF
-
-         pco2in = ( co2s - 1.6 * assimn / gsh2o )*psrf   ! pa
-         eyy(ic) = pco2i - pco2in                        ! pa
+         eyy(ic) = pco2i - pco2in                              ! pa
 
 !-----------------------------------------------------------------------
 
@@ -330,12 +372,13 @@ CONTAINS
    USE MOD_Precision
    IMPLICIT NONE
 
-   integer, intent(in) :: ic,iterationtotal
+!-------------------------- Dummy Arguments ----------------------------
+   integer,  intent(in) :: ic,iterationtotal
    real(r8), intent(in) :: range
    real(r8), intent(in) :: gammas
    real(r8), intent(inout), dimension(iterationtotal) :: eyy, pco2y
 
-!----- Local -----------------------------------------------------------
+!-------------------------- Local Variables ----------------------------
    integer i, j, n, i1, i2, i3, is, isp, ix
    real(r8) a, b, pmin, emin, eyy_a
    real(r8) pco2b, pco2yl, pco2yq
@@ -418,6 +461,7 @@ CONTAINS
    USE MOD_Precision
    IMPLICIT NONE
 
+!-------------------------- Dummy Arguments ----------------------------
    real(r8),intent(in) :: &
             tlef,     &! leaf temperature (K)
             po2m,     &! O2 concentration in atmos. (pascals)
@@ -451,6 +495,7 @@ CONTAINS
             c3,       &! c3 vegetation : 1; 0 for c4
             c4         ! c4 vegetation : 1; 0 for c3
 
+!-------------------------- Local Variables ----------------------------
     real(r8) :: &
             qt,       &! (tleaf - 298.16) / 10
             kc,       &! Michaelis-Menten constant for co2
@@ -463,7 +508,7 @@ CONTAINS
             respcp,   &! respiration fraction of vmax (mol co2 m-2 s-1)
             tprcor     ! coefficient for unit transfer
 
-!=======================================================================
+!-----------------------------------------------------------------------
 
       c3 = 0.
       IF( effcon .gt. 0.07 ) c3 = 1.
@@ -502,21 +547,21 @@ CONTAINS
       vm = vm * cint(1)
 
       rgas = 8.314467591                 ! universal gas constant (J mol-1 K-1)
-!---> jmax25 = 2.39 * vmax25 - 14.2e-6        ! (mol m-2 s-1)
-!--->      jmax25 = 2.1 * vmax25        ! (mol m-2 s-1)
+!---> jmax25 = 2.39 * vmax25 - 14.2e-6   ! (mol m-2 s-1)
+!---> jmax25 = 2.1 * vmax25              ! (mol m-2 s-1)
 !/05/2014/
-      jmax25 = 1.97 * vmax25       ! (mol m-2 s-1)
+      jmax25 = 1.97 * vmax25             ! (mol m-2 s-1)
       jmax = jmax25 * exp( 37.e3 * (tlef - trop) / (rgas*trop*tlef) ) * &
              ( 1. + exp( (710.*trop-220.e3)/(rgas*trop) ) ) / &
              ( 1. + exp( (710.*tlef-220.e3)/(rgas*tlef) ) )
-                                   ! 37000  (J mol-1)
-                                   ! 220000 (J mol-1)
-                                   ! 710    (J K-1)
+                                         ! 37000  (J mol-1)
+                                         ! 220000 (J mol-1)
+                                         ! 710    (J K-1)
 
       jmax = jmax * rstfac
       jmax = jmax * cint(2)
 
-!--->      epar = min(4.6e-6 * par * effcon, 0.25*jmax)
+!---> epar = min(4.6e-6 * par * effcon, 0.25*jmax)
 ! /05/2014/
       epar = min(4.6e-6 * par * effcon, jmax)
 
@@ -539,19 +584,20 @@ CONTAINS
       gbh2o  = 1./rb * tprcor/tlef                    ! mol m-2 s-1
 
 ! rb is for single leaf, but here the flux is for canopy, thus
-       ! Xingjie Lu: rb has already been converted to canopy scale,
-       ! thus, there is no need for gbh2o *cint(3) (sunlit/shaded LAI)
-!      gbh2o  = gbh2o * cint(3)
+      ! Xingjie Lu: rb has already been converted to canopy scale,
+      ! thus, there is no need for gbh2o *cint(3) (sunlit/shaded LAI)
+!     gbh2o  = gbh2o * cint(3)
 
    END SUBROUTINE calc_photo_params
 
-   SUBROUTINE update_photosyn(tlef, po2m, pco2m, pco2a, par, psrf, rstfac, rb, gsh2o, &
-                             effcon, vmax25, gradm, trop, slti, hlti, shti, hhti, trda, trdm, cint, &
+   SUBROUTINE update_photosyn(tlef, po2m, pco2m, pco2a, par, psrf, rstfac, rb, gsh2o,&
+                             effcon, vmax25, gradm, trop, slti, hlti, shti, hhti, trda, trdm, cint,&
                              assim, respc)
 
    USE MOD_Precision
    IMPLICIT NONE
 
+!-------------------------- Dummy Arguments ----------------------------
    real(r8),intent(in) :: &
             tlef,     &! leaf temperature (K)
             po2m,     &! O2 concentration in atmos. (pascals)
@@ -582,6 +628,7 @@ CONTAINS
             assim,    &! canopy assimilation rate (mol m-2 s-1)
             respc      ! canopy respiration (mol m-2 s-1)
 
+!-------------------------- Local Variables ----------------------------
    real(r8) ::        &
             vm,       &! maximum catalytic activity of Rubison (mol co2 m-2 s-1)
             epar,     &! electron transport rate (mol electron m-2 s-1)
@@ -620,6 +667,7 @@ CONTAINS
             range                    !
 
    integer ic
+!-----------------------------------------------------------------------
 
       CALL calc_photo_params(tlef, po2m, par , psrf, rstfac, rb, effcon, vmax25, &
                              trop, slti, hlti, shti, hhti, trda, trdm, cint, &
@@ -656,12 +704,16 @@ CONTAINS
 
          omc = vm   * ( pco2i-gammas ) / ( pco2i + rrkk ) * c3 + vm * c4
          ome = epar * ( pco2i-gammas ) / ( pco2i+2.*gammas ) * c3 + epar * c4
-         oms = omss * c3 + omss*pco2i * c4
+         IF(.not. DEF_USE_WUEST .or. abs(c4 - 1) .lt. 0.001)THEN
+            oms = omss * c3 + omss*pco2i * c4
 
-         sqrtin= max( 0., ( (ome+omc)**2 - 4.*atheta*ome*omc ) )
-         omp   = ( ( ome+omc ) - sqrt( sqrtin ) ) / ( 2.*atheta )
-         sqrtin= max( 0., ( (omp+oms)**2 - 4.*btheta*omp*oms ) )
-         assim = max( 0., ( ( oms+omp ) - sqrt( sqrtin ) ) / ( 2.*btheta ))
+            sqrtin= max( 0., ( (ome+omc)**2 - 4.*atheta*ome*omc ) )
+            omp   = ( ( ome+omc ) - sqrt( sqrtin ) ) / ( 2.*atheta )
+            sqrtin= max( 0., ( (omp+oms)**2 - 4.*btheta*omp*oms ) )
+            assim = max( 0., ( ( oms+omp ) - sqrt( sqrtin ) ) / ( 2.*btheta ))
+         ELSE
+            assim = max( 0., min(omc, ome))
+         ENDIF
 
          assimn= ( assim - respc)                         ! mol m-2 s-1
 
@@ -709,11 +761,11 @@ CONTAINS
 !
 !-----------------------------------------------------------------------
 
-         co2s = co2a - 1.37*assimn/gbh2o                   ! mol mol-1
+         co2s = co2a - 1.37*assimn/gbh2o                  ! mol mol-1
 
          pco2in = ( co2s - 1.6 * assimn / gsh2o )*psrf    ! pa
 
-         eyy(ic) = pco2i - pco2in                          ! pa
+         eyy(ic) = pco2i - pco2in                         ! pa
 
 !-----------------------------------------------------------------------
 
@@ -722,6 +774,59 @@ CONTAINS
       ENDDO ITERATION_LOOP_UPDATE
 
    END SUBROUTINE update_photosyn
+
+   SUBROUTINE WUE_solver(gammas, lambda, co2a, ei, ea, psrf, pco2i_c, pco2i_e)
+
+!-----------------------------------------------------------------------
+! Solve internal co2 concentration for Rubisco limit and RuBP regeneration limit.
+!
+! When Rubisco is limit (omc < ome), solve following equation (Liang et al., 2023, S18a)
+! for pco2i_c:
+!  {1-(1.6*D)/[lambda*(gammas+rrkk)]} * co2i_c^2                                        &
+!    - {2*co2a+[1.6*D*(rrkk-gammas)]/[lambda*(gammas+rrkk)]-(1.6*D)/lambda} * co2i_c    &
+!    + {co2a^2 - (1.6*D*co2a)/lambda + (1.6*D*rrkk*gammas)/[lambda*(gammas+rrkk)]}    = 0
+!
+! When RuBP is limit (omc>=ome), solve following equation (Liang et al., 2023, S18b)
+! for pco2i_e:
+!  [1-(1.6*D)/(3*lambda*gammas)] * co2i_e^2                                             &
+!    - [2*co2a-(3.2*D)/(3*lambda)] * co2i_e                                             &
+!    + [co2a^2 - (1.6*D*co2a)/lambda + (3.2*D*gammas)/(3*lambda)]                     = 0
+!-----------------------------------------------------------------------
+
+   USE MOD_Precision
+   IMPLICIT NONE
+
+!-------------------------- Dummy Arguments ----------------------------
+   real(r8),intent(in) :: &
+            gammas,   &! CO2 compensation point (pa)
+            lambda,   &! marginal water use efficiency ((mol h2o) (mol co2)-1)
+            co2a,     &! co2 concentration at cas ((mol co2) (mol air)-1)
+            ea,       &! canopy air space vapor pressure (pa)
+            ei,       &! saturation h2o vapor pressure in leaf stomata (pa)
+            psrf       ! air pressure (pa)
+
+   real(r8),intent(out) :: &
+            pco2i_c,  &! internal co2 concentration when Rubisco is limited (pa)
+            pco2i_e    ! internal co2 concentration when RuBP regeneration is limited (pa)
+
+!-------------------------- Local Variables ----------------------------
+   real(r8) :: &
+            D,        &! leaf-to-air-vapour mole fraction difference ((mol h2o) (mol air)-1)
+            co2i_c,   &! internal co2 concentration when Rubisco is limited ((mol co2) (mol air)-1)
+            co2i_e     ! internal co2 concentration when RuBP is limited ((mol co2) (mol air)-1)
+
+!-----------------------------------------------------------------------
+
+      ! solve co2i_c
+      D = amax1((ei - ea),50._r8) / psrf
+
+      co2i_c = co2a - sqrt(1.6*D*(amax1(co2a-gammas/psrf,0._r8))/lambda)
+      co2i_e = co2a - co2a / ( 1 + 1.37 * sqrt(lambda * gammas/psrf / D))
+
+      pco2i_c = co2i_c * psrf
+      pco2i_e = co2i_e * psrf
+
+   END SUBROUTINE WUE_solver
 
 END MODULE MOD_AssimStomataConductance
 ! -------------- EOP ---------------

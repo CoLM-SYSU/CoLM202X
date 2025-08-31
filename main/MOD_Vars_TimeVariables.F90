@@ -1,17 +1,17 @@
 #include <define.h>
 
-! -------------------------------
+!-----------------------------------------------------------------------
 ! Created by Yongjiu Dai, 03/2014
-! -------------------------------
+!-----------------------------------------------------------------------
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
 MODULE MOD_Vars_PFTimeVariables
-! -----------------------------------------------------------------
+!-----------------------------------------------------------------------
 ! !DESCRIPTION:
-! Define PFT time variables
+!  Define PFT time variables
 !
-! Added by Hua Yuan, 08/2019
-! -----------------------------------------------------------------
+!  Added by Hua Yuan, 08/2019
+!-----------------------------------------------------------------------
 
    USE MOD_Precision
    USE MOD_TimeManager
@@ -21,14 +21,15 @@ MODULE MOD_Vars_PFTimeVariables
 
    IMPLICIT NONE
    SAVE
-! -----------------------------------------------------------------
-! Time-varying state variables which reaquired by restart run
+!-----------------------------------------------------------------------
+! Time-varying state variables which required by restart run
 
    ! for LULC_IGBP_PFT or LULC_IGBP_PC
    real(r8), allocatable :: tleaf_p      (:) !shaded leaf temperature [K]
    real(r8), allocatable :: ldew_p       (:) !depth of water on foliage [mm]
    real(r8), allocatable :: ldew_rain_p  (:) !depth of rain on foliage [mm]
    real(r8), allocatable :: ldew_snow_p  (:) !depth of snow on foliage [mm]
+   real(r8), allocatable :: fwet_snow_p  (:) !vegetation snow fractional cover [-]
    real(r8), allocatable :: sigf_p       (:) !fraction of veg cover, excluding snow-covered veg [-]
    real(r8), allocatable :: tlai_p       (:) !leaf area index
    real(r8), allocatable :: lai_p        (:) !leaf area index
@@ -44,13 +45,14 @@ MODULE MOD_Vars_PFTimeVariables
    real(r8), allocatable :: extkd_p      (:) !diffuse and scattered diffuse PAR extinction coefficient
    !TODO@yuan: to check the below for PC whether they are needed
    real(r8), allocatable :: tref_p       (:) !2 m height air temperature [kelvin]
+   real(r8), allocatable :: t2m_wmo_p    (:) !2 m WMO air temperature [kelvin]
    real(r8), allocatable :: qref_p       (:) !2 m height air specific humidity
    real(r8), allocatable :: rst_p        (:) !canopy stomatal resistance (s/m)
    real(r8), allocatable :: z0m_p        (:) !effective roughness [m]
 ! Plant Hydraulic variables
    real(r8), allocatable :: vegwp_p    (:,:) !vegetation water potential [mm]
    real(r8), allocatable :: gs0sun_p     (:) !working copy of sunlit stomata conductance
-   real(r8), allocatable :: gs0sha_p     (:) !working copy of shalit stomata conductance
+   real(r8), allocatable :: gs0sha_p     (:) !working copy of shaded stomata conductance
 ! END plant hydraulic variables
 ! Ozone Stress Variables
    real(r8), allocatable :: o3coefv_sun_p(:) !Ozone stress factor for photosynthesis on sunlit leaf
@@ -83,9 +85,9 @@ CONTAINS
 !-----------------------------------------------------------------------
 
    SUBROUTINE allocate_PFTimeVariables ()
-! ------------------------------------------------------
-! Allocates memory for CoLM 1d [numpft] variables
-! ------------------------------------------------------
+   !--------------------------------------------------------------------
+   ! Allocates memory for CoLM 1d [numpft] variables
+   !--------------------------------------------------------------------
    USE MOD_Precision
    USE MOD_SPMD_Task
    USE MOD_LandPFT
@@ -98,6 +100,7 @@ CONTAINS
             allocate (ldew_p       (numpft)) ; ldew_p       (:) = spval !depth of water on foliage [mm]
             allocate (ldew_rain_p  (numpft)) ; ldew_rain_p  (:) = spval !depth of rain on foliage [mm]
             allocate (ldew_snow_p  (numpft)) ; ldew_snow_p  (:) = spval !depth of snow on foliage [mm]
+            allocate (fwet_snow_p  (numpft)) ; fwet_snow_p  (:) = spval !vegetation snow fractional cover [-]
             allocate (sigf_p       (numpft)) ; sigf_p       (:) = spval !fraction of veg cover, excluding snow-covered veg [-]
             allocate (tlai_p       (numpft)) ; tlai_p       (:) = spval !leaf area index
             allocate (lai_p        (numpft)) ; lai_p        (:) = spval !leaf area index
@@ -112,10 +115,11 @@ CONTAINS
             allocate (extkb_p      (numpft)) ; extkb_p      (:) = spval !(k, g(mu)/mu) direct solar extinction coefficient
             allocate (extkd_p      (numpft)) ; extkd_p      (:) = spval !diffuse and scattered diffuse PAR extinction coefficient
             allocate (tref_p       (numpft)) ; tref_p       (:) = spval !2 m height air temperature [kelvin]
+            allocate (t2m_wmo_p    (numpft)) ; t2m_wmo_p    (:) = spval !2 m WMO air temperature [kelvin]
             allocate (qref_p       (numpft)) ; qref_p       (:) = spval !2 m height air specific humidity
             allocate (rst_p        (numpft)) ; rst_p        (:) = spval !canopy stomatal resistance (s/m)
             allocate (z0m_p        (numpft)) ; z0m_p        (:) = spval !effective roughness [m]
-! Plant Hydraulic variables; draulic variables
+! Plant Hydraulic variables
             allocate (vegwp_p(1:nvegwcs,numpft)); vegwp_p (:,:) = spval
             allocate (gs0sun_p     (numpft)); gs0sun_p      (:) = spval
             allocate (gs0sha_p     (numpft)); gs0sha_p      (:) = spval
@@ -151,31 +155,32 @@ CONTAINS
 
       character(len=*), intent(in) :: file_restart
 
-      CALL ncio_read_vector (file_restart, 'tleaf_p  ', landpft, tleaf_p    ) !
-      CALL ncio_read_vector (file_restart, 'ldew_p   ', landpft, ldew_p     ) !
-      CALL ncio_read_vector (file_restart, 'ldew_rain_p', landpft, ldew_rain_p) !depth of rain on foliage [mm]
-      CALL ncio_read_vector (file_restart, 'ldew_snow_p', landpft, ldew_snow_p) !depth of snow on foliage [mm]
-      CALL ncio_read_vector (file_restart, 'sigf_p   ', landpft, sigf_p     ) !
-      CALL ncio_read_vector (file_restart, 'tlai_p   ', landpft, tlai_p     ) !
-      CALL ncio_read_vector (file_restart, 'lai_p    ', landpft, lai_p      ) !
-!     CALL ncio_read_vector (file_restart, 'laisun_p ', landpft, laisun_p   ) !
-!     CALL ncio_read_vector (file_restart, 'laisha_p ', landpft, laisha_p   ) !
-      CALL ncio_read_vector (file_restart, 'tsai_p   ', landpft, tsai_p     ) !
-      CALL ncio_read_vector (file_restart, 'sai_p    ', landpft, sai_p      ) !
-      CALL ncio_read_vector (file_restart, 'ssun_p   ', 2,2, landpft, ssun_p) !
-      CALL ncio_read_vector (file_restart, 'ssha_p   ', 2,2, landpft, ssha_p) !
-      CALL ncio_read_vector (file_restart, 'thermk_p ', landpft, thermk_p   ) !
-      CALL ncio_read_vector (file_restart, 'fshade_p ', landpft, fshade_p   ) !
-      CALL ncio_read_vector (file_restart, 'extkb_p  ', landpft, extkb_p    ) !
-      CALL ncio_read_vector (file_restart, 'extkd_p  ', landpft, extkd_p    ) !
-      CALL ncio_read_vector (file_restart, 'tref_p   ', landpft, tref_p     ) !
-      CALL ncio_read_vector (file_restart, 'qref_p   ', landpft, qref_p     ) !
-      CALL ncio_read_vector (file_restart, 'rst_p    ', landpft, rst_p      ) !
-      CALL ncio_read_vector (file_restart, 'z0m_p    ', landpft, z0m_p      ) !
+      CALL ncio_read_vector (file_restart, 'tleaf_p  ',  landpft, tleaf_p     )
+      CALL ncio_read_vector (file_restart, 'ldew_p   ',  landpft, ldew_p      )
+      CALL ncio_read_vector (file_restart, 'ldew_rain_p',landpft, ldew_rain_p )
+      CALL ncio_read_vector (file_restart, 'ldew_snow_p',landpft, ldew_snow_p )
+      CALL ncio_read_vector (file_restart, 'fwet_snow_p',landpft, fwet_snow_p )
+      CALL ncio_read_vector (file_restart, 'sigf_p   ',  landpft, sigf_p      )
+      CALL ncio_read_vector (file_restart, 'tlai_p   ',  landpft, tlai_p      )
+      CALL ncio_read_vector (file_restart, 'lai_p    ',  landpft, lai_p       )
+!     CALL ncio_read_vector (file_restart, 'laisun_p ',  landpft, laisun_p    )
+!     CALL ncio_read_vector (file_restart, 'laisha_p ',  landpft, laisha_p    )
+      CALL ncio_read_vector (file_restart, 'tsai_p   ',  landpft, tsai_p      )
+      CALL ncio_read_vector (file_restart, 'sai_p    ',  landpft, sai_p       )
+      CALL ncio_read_vector (file_restart, 'ssun_p   ',  2,2, landpft, ssun_p )
+      CALL ncio_read_vector (file_restart, 'ssha_p   ',  2,2, landpft, ssha_p )
+      CALL ncio_read_vector (file_restart, 'thermk_p ',  landpft, thermk_p    )
+      CALL ncio_read_vector (file_restart, 'fshade_p ',  landpft, fshade_p    )
+      CALL ncio_read_vector (file_restart, 'extkb_p  ',  landpft, extkb_p     )
+      CALL ncio_read_vector (file_restart, 'extkd_p  ',  landpft, extkd_p     )
+      CALL ncio_read_vector (file_restart, 'tref_p   ',  landpft, tref_p      )
+      CALL ncio_read_vector (file_restart, 'qref_p   ',  landpft, qref_p      )
+      CALL ncio_read_vector (file_restart, 'rst_p    ',  landpft, rst_p       )
+      CALL ncio_read_vector (file_restart, 'z0m_p    ',  landpft, z0m_p       )
 IF(DEF_USE_PLANTHYDRAULICS)THEN
-      CALL ncio_read_vector (file_restart, 'vegwp_p  ', nvegwcs, landpft, vegwp_p ) !
-      CALL ncio_read_vector (file_restart, 'gs0sun_p ', landpft, gs0sun_p   ) !
-      CALL ncio_read_vector (file_restart, 'gs0sha_p ', landpft, gs0sha_p   ) !
+      CALL ncio_read_vector (file_restart, 'vegwp_p  ',  nvegwcs, landpft, vegwp_p )
+      CALL ncio_read_vector (file_restart, 'gs0sun_p ',  landpft, gs0sun_p   )
+      CALL ncio_read_vector (file_restart, 'gs0sha_p ',  landpft, gs0sha_p   )
 ENDIF
 IF(DEF_USE_OZONESTRESS)THEN
       CALL ncio_read_vector (file_restart, 'lai_old_p    ', landpft, lai_old_p    , defval = 0._r8)
@@ -194,8 +199,8 @@ ENDIF
 
    SUBROUTINE WRITE_PFTimeVariables (file_restart)
 
-   USE MOD_Namelist, only : DEF_REST_CompressLevel, DEF_USE_PLANTHYDRAULICS, DEF_USE_OZONESTRESS, &
-                            DEF_USE_IRRIGATION
+   USE MOD_Namelist, only: DEF_REST_CompressLevel, DEF_USE_PLANTHYDRAULICS, DEF_USE_OZONESTRESS, &
+                           DEF_USE_IRRIGATION
    USE MOD_LandPFT
    USE MOD_NetCDFVector
    USE MOD_Vars_Global
@@ -216,31 +221,32 @@ IF(DEF_USE_PLANTHYDRAULICS)THEN
       CALL ncio_define_dimension_vector (file_restart, landpft, 'vegnodes', nvegwcs)
 ENDIF
 
-      CALL ncio_write_vector (file_restart, 'tleaf_p  ', 'pft', landpft, tleaf_p  , compress) !
-      CALL ncio_write_vector (file_restart, 'ldew_p   ', 'pft', landpft, ldew_p   , compress) !
-      CALL ncio_write_vector (file_restart, 'ldew_rain_p', 'pft', landpft, ldew_rain_p, compress) !depth of rain on foliage [mm]
-      CALL ncio_write_vector (file_restart, 'ldew_snow_p', 'pft', landpft, ldew_snow_p, compress) !depth of snow on foliage [mm]
-      CALL ncio_write_vector (file_restart, 'sigf_p   ', 'pft', landpft, sigf_p   , compress) !
-      CALL ncio_write_vector (file_restart, 'tlai_p   ', 'pft', landpft, tlai_p   , compress) !
-      CALL ncio_write_vector (file_restart, 'lai_p    ', 'pft', landpft, lai_p    , compress) !
-!     CALL ncio_write_vector (file_restart, 'laisun_p ', 'pft', landpft, laisun_p , compress) !
-!     CALL ncio_write_vector (file_restart, 'laisha_p ', 'pft', landpft, laisha_p , compress) !
-      CALL ncio_write_vector (file_restart, 'tsai_p   ', 'pft', landpft, tsai_p   , compress) !
-      CALL ncio_write_vector (file_restart, 'sai_p    ', 'pft', landpft, sai_p    , compress) !
-      CALL ncio_write_vector (file_restart, 'ssun_p   ', 'band', 2, 'rtyp', 2, 'pft', landpft, ssun_p, compress) !
-      CALL ncio_write_vector (file_restart, 'ssha_p   ', 'band', 2, 'rtyp', 2, 'pft', landpft, ssha_p, compress) !
-      CALL ncio_write_vector (file_restart, 'thermk_p ', 'pft', landpft, thermk_p , compress) !
-      CALL ncio_write_vector (file_restart, 'fshade_p ', 'pft', landpft, fshade_p , compress) !
-      CALL ncio_write_vector (file_restart, 'extkb_p  ', 'pft', landpft, extkb_p  , compress) !
-      CALL ncio_write_vector (file_restart, 'extkd_p  ', 'pft', landpft, extkd_p  , compress) !
-      CALL ncio_write_vector (file_restart, 'tref_p   ', 'pft', landpft, tref_p   , compress) !
-      CALL ncio_write_vector (file_restart, 'qref_p   ', 'pft', landpft, qref_p   , compress) !
-      CALL ncio_write_vector (file_restart, 'rst_p    ', 'pft', landpft, rst_p    , compress) !
-      CALL ncio_write_vector (file_restart, 'z0m_p    ', 'pft', landpft, z0m_p    , compress) !
+      CALL ncio_write_vector (file_restart, 'tleaf_p  ', 'pft', landpft, tleaf_p  , compress)
+      CALL ncio_write_vector (file_restart, 'ldew_p   ', 'pft', landpft, ldew_p   , compress)
+      CALL ncio_write_vector (file_restart, 'ldew_rain_p','pft',landpft,ldew_rain_p,compress)
+      CALL ncio_write_vector (file_restart, 'ldew_snow_p','pft',landpft,ldew_snow_p,compress)
+      CALL ncio_write_vector (file_restart, 'fwet_snow_p','pft',landpft,fwet_snow_p,compress)
+      CALL ncio_write_vector (file_restart, 'sigf_p   ', 'pft', landpft, sigf_p   , compress)
+      CALL ncio_write_vector (file_restart, 'tlai_p   ', 'pft', landpft, tlai_p   , compress)
+      CALL ncio_write_vector (file_restart, 'lai_p    ', 'pft', landpft, lai_p    , compress)
+!     CALL ncio_write_vector (file_restart, 'laisun_p ', 'pft', landpft, laisun_p , compress)
+!     CALL ncio_write_vector (file_restart, 'laisha_p ', 'pft', landpft, laisha_p , compress)
+      CALL ncio_write_vector (file_restart, 'tsai_p   ', 'pft', landpft, tsai_p   , compress)
+      CALL ncio_write_vector (file_restart, 'sai_p    ', 'pft', landpft, sai_p    , compress)
+      CALL ncio_write_vector (file_restart, 'ssun_p   ', 'band', 2, 'rtyp', 2, 'pft', landpft, ssun_p, compress)
+      CALL ncio_write_vector (file_restart, 'ssha_p   ', 'band', 2, 'rtyp', 2, 'pft', landpft, ssha_p, compress)
+      CALL ncio_write_vector (file_restart, 'thermk_p ', 'pft', landpft, thermk_p , compress)
+      CALL ncio_write_vector (file_restart, 'fshade_p ', 'pft', landpft, fshade_p , compress)
+      CALL ncio_write_vector (file_restart, 'extkb_p  ', 'pft', landpft, extkb_p  , compress)
+      CALL ncio_write_vector (file_restart, 'extkd_p  ', 'pft', landpft, extkd_p  , compress)
+      CALL ncio_write_vector (file_restart, 'tref_p   ', 'pft', landpft, tref_p   , compress)
+      CALL ncio_write_vector (file_restart, 'qref_p   ', 'pft', landpft, qref_p   , compress)
+      CALL ncio_write_vector (file_restart, 'rst_p    ', 'pft', landpft, rst_p    , compress)
+      CALL ncio_write_vector (file_restart, 'z0m_p    ', 'pft', landpft, z0m_p    , compress)
 IF(DEF_USE_PLANTHYDRAULICS)THEN
-      CALL ncio_write_vector (file_restart, 'vegwp_p  '  , 'vegnodes', nvegwcs, 'pft',   landpft, vegwp_p, compress)
-      CALL ncio_write_vector (file_restart, 'gs0sun_p '  , 'pft', landpft, gs0sun_p   , compress) !
-      CALL ncio_write_vector (file_restart, 'gs0sha_p '  , 'pft', landpft, gs0sha_p   , compress) !
+      CALL ncio_write_vector (file_restart, 'vegwp_p  ', 'vegnodes', nvegwcs,  'pft', landpft, vegwp_p, compress)
+      CALL ncio_write_vector (file_restart, 'gs0sun_p ', 'pft', landpft, gs0sun_p   , compress)
+      CALL ncio_write_vector (file_restart, 'gs0sha_p ', 'pft', landpft, gs0sha_p   , compress)
 ENDIF
 IF(DEF_USE_OZONESTRESS)THEN
       CALL ncio_write_vector (file_restart, 'lai_old_p    ', 'pft', landpft, lai_old_p    , compress)
@@ -259,49 +265,51 @@ ENDIF
 
 
    SUBROUTINE deallocate_PFTimeVariables
-! --------------------------------------------------
-! Deallocates memory for CoLM 1d [numpft/numpc] variables
-! --------------------------------------------------
+   !--------------------------------------------------------------------
+   ! Deallocates memory for CoLM 1d [numpft/numpc] variables
+   !--------------------------------------------------------------------
    USE MOD_SPMD_Task
    USE MOD_LandPFT
 
       IF (p_is_worker) THEN
          IF (numpft > 0) THEN
-            deallocate (tleaf_p  ) !leaf temperature [K]
-            deallocate (ldew_p   ) !depth of water on foliage [mm]
-            deallocate (ldew_rain_p)
-            deallocate (ldew_snow_p)
-            deallocate (sigf_p   ) !fraction of veg cover, excluding snow-covered veg [-]
-            deallocate (tlai_p   ) !leaf area index
-            deallocate (lai_p    ) !leaf area index
-            deallocate (laisun_p ) !leaf area index
-            deallocate (laisha_p ) !leaf area index
-            deallocate (tsai_p   ) !stem area index
-            deallocate (sai_p    ) !stem area index
-            deallocate (ssun_p   ) !sunlit canopy absorption for solar radiation (0-1)
-            deallocate (ssha_p   ) !shaded canopy absorption for solar radiation (0-1)
-            deallocate (thermk_p ) !canopy gap fraction for tir radiation
-            deallocate (fshade_p ) !canopy gap fraction for tir radiation
-            deallocate (extkb_p  ) !(k, g(mu)/mu) direct solar extinction coefficient
-            deallocate (extkd_p  ) !diffuse and scattered diffuse PAR extinction coefficient
-            deallocate (tref_p   ) !2 m height air temperature [kelvin]
-            deallocate (qref_p   ) !2 m height air specific humidity
-            deallocate (rst_p    ) !canopy stomatal resistance (s/m)
-            deallocate (z0m_p    ) !effective roughness [m]
+            deallocate (tleaf_p        )  ! leaf temperature [K]
+            deallocate (ldew_p         )  ! depth of water on foliage [mm]
+            deallocate (ldew_rain_p    )  ! depth of rain on foliage [mm]
+            deallocate (ldew_snow_p    )  ! depth of snow on foliage [mm]
+            deallocate (fwet_snow_p    )  ! vegetation snow fractional cover [-]
+            deallocate (sigf_p         )  ! fraction of veg cover, excluding snow-covered veg [-]
+            deallocate (tlai_p         )  ! leaf area index
+            deallocate (lai_p          )  ! leaf area index
+            deallocate (laisun_p       )  ! leaf area index
+            deallocate (laisha_p       )  ! leaf area index
+            deallocate (tsai_p         )  ! stem area index
+            deallocate (sai_p          )  ! stem area index
+            deallocate (ssun_p         )  ! sunlit canopy absorption for solar radiation (0-1)
+            deallocate (ssha_p         )  ! shaded canopy absorption for solar radiation (0-1)
+            deallocate (thermk_p       )  ! canopy gap fraction for tir radiation
+            deallocate (fshade_p       )  ! canopy gap fraction for tir radiation
+            deallocate (extkb_p        )  ! (k, g(mu)/mu) direct solar extinction coefficient
+            deallocate (extkd_p        )  ! diffuse and scattered diffuse PAR extinction coefficient
+            deallocate (tref_p         )  ! 2 m height air temperature [kelvin]
+            deallocate (t2m_wmo_p      )  ! 2 m WMO air temperature [kelvin]
+            deallocate (qref_p         )  ! 2 m height air specific humidity
+            deallocate (rst_p          )  ! canopy stomatal resistance (s/m)
+            deallocate (z0m_p          )  ! effective roughness [m]
 ! Plant Hydraulic variables
-            deallocate (vegwp_p  ) !vegetation water potential [mm]
-            deallocate (gs0sun_p ) !working copy of sunlit stomata conductance
-            deallocate (gs0sha_p ) !working copy of shalit stomata conductance
+            deallocate (vegwp_p        )  ! vegetation water potential [mm]
+            deallocate (gs0sun_p       )  ! working copy of sunlit stomata conductance
+            deallocate (gs0sha_p       )  ! working copy of shaded stomata conductance
 ! END plant hydraulic variables
 ! Ozone Stress variables
-            deallocate (o3coefv_sun_p ) !Ozone stress factor for photosynthesis on sunlit leaf
-            deallocate (o3coefv_sha_p ) !Ozone stress factor for photosynthesis on shaded leaf
-            deallocate (o3coefg_sun_p ) !Ozone stress factor for stomata on sunlit leaf
-            deallocate (o3coefg_sha_p ) !Ozone stress factor for stomata on shaded leaf
-            deallocate (lai_old_p     ) !lai in last time step
-            deallocate (o3uptakesun_p ) !Ozone does, sunlit leaf (mmol O3/m^2)
-            deallocate (o3uptakesha_p ) !Ozone does, shaded leaf (mmol O3/m^2)
-            deallocate (irrig_method_p)
+            deallocate (o3coefv_sun_p  )  ! Ozone stress factor for photosynthesis on sunlit leaf
+            deallocate (o3coefv_sha_p  )  ! Ozone stress factor for photosynthesis on shaded leaf
+            deallocate (o3coefg_sun_p  )  ! Ozone stress factor for stomata on sunlit leaf
+            deallocate (o3coefg_sha_p  )  ! Ozone stress factor for stomata on shaded leaf
+            deallocate (lai_old_p      )  ! lai in last time step
+            deallocate (o3uptakesun_p  )  ! Ozone does, sunlit leaf (mmol O3/m^2)
+            deallocate (o3uptakesha_p  )  ! Ozone does, shaded leaf (mmol O3/m^2)
+            deallocate (irrig_method_p )
 ! Ozone Stress variables
          ENDIF
       ENDIF
@@ -316,47 +324,49 @@ ENDIF
    SUBROUTINE check_PFTimeVariables
 
    USE MOD_RangeCheck
-   USE MOD_Namelist, only : DEF_USE_PLANTHYDRAULICS, DEF_USE_OZONESTRESS, DEF_USE_IRRIGATION
+   USE MOD_Namelist, only: DEF_USE_PLANTHYDRAULICS, DEF_USE_OZONESTRESS, DEF_USE_IRRIGATION
 
    IMPLICIT NONE
 
-      CALL check_vector_data ('tleaf_p  ', tleaf_p  )      !
-      CALL check_vector_data ('ldew_p   ', ldew_p   )      !
-      CALL check_vector_data ('ldew_rain_p', ldew_rain_p ) !depth of rain on foliage [mm]
-      CALL check_vector_data ('ldew_snow_p', ldew_snow_p ) !depth of snow on foliage [mm]
-      CALL check_vector_data ('sigf_p   ', sigf_p   )      !
-      CALL check_vector_data ('tlai_p   ', tlai_p   )      !
-      CALL check_vector_data ('lai_p    ', lai_p    )      !
-      CALL check_vector_data ('laisun_p ', lai_p    )      !
-      CALL check_vector_data ('laisha_p ', lai_p    )      !
-      CALL check_vector_data ('tsai_p   ', tsai_p   )      !
-      CALL check_vector_data ('sai_p    ', sai_p    )      !
-      CALL check_vector_data ('ssun_p   ', ssun_p   )      !
-      CALL check_vector_data ('ssha_p   ', ssha_p   )      !
-      CALL check_vector_data ('thermk_p ', thermk_p )      !
-      CALL check_vector_data ('fshade_p ', fshade_p )      !
-      CALL check_vector_data ('extkb_p  ', extkb_p  )      !
-      CALL check_vector_data ('extkd_p  ', extkd_p  )      !
-      CALL check_vector_data ('tref_p   ', tref_p   )      !
-      CALL check_vector_data ('qref_p   ', qref_p   )      !
-      CALL check_vector_data ('rst_p    ', rst_p    )      !
-      CALL check_vector_data ('z0m_p    ', z0m_p    )      !
+      CALL check_vector_data ('       tleaf_p', tleaf_p        )
+      CALL check_vector_data ('        ldew_p', ldew_p         )
+      CALL check_vector_data ('   ldew_rain_p', ldew_rain_p    )
+      CALL check_vector_data ('   ldew_snow_p', ldew_snow_p    )
+      CALL check_vector_data ('   fwet_snow_p', fwet_snow_p    )
+      CALL check_vector_data ('        sigf_p', sigf_p         )
+      CALL check_vector_data ('        tlai_p', tlai_p         )
+      CALL check_vector_data ('         lai_p', lai_p          )
+      CALL check_vector_data ('      laisun_p', lai_p          )
+      CALL check_vector_data ('      laisha_p', lai_p          )
+      CALL check_vector_data ('        tsai_p', tsai_p         )
+      CALL check_vector_data ('         sai_p', sai_p          )
+      CALL check_vector_data ('        ssun_p', ssun_p         )
+      CALL check_vector_data ('        ssha_p', ssha_p         )
+      CALL check_vector_data ('      thermk_p', thermk_p       )
+      CALL check_vector_data ('      fshade_p', fshade_p       )
+      CALL check_vector_data ('       extkb_p', extkb_p        )
+      CALL check_vector_data ('       extkd_p', extkd_p        )
+      CALL check_vector_data ('        tref_p', tref_p         )
+      CALL check_vector_data ('     t2m_wmo_p', t2m_wmo_p      )
+      CALL check_vector_data ('        qref_p', qref_p         )
+      CALL check_vector_data ('         rst_p', rst_p          )
+      CALL check_vector_data ('         z0m_p', z0m_p          )
 IF(DEF_USE_PLANTHYDRAULICS)THEN
-      CALL check_vector_data ('vegwp_p  ', vegwp_p  )      !
-      CALL check_vector_data ('gs0sun_p ', gs0sun_p )      !
-      CALL check_vector_data ('gs0sha_p ', gs0sha_p )      !
+      CALL check_vector_data ('       vegwp_p', vegwp_p        )
+      CALL check_vector_data ('      gs0sun_p', gs0sun_p       )
+      CALL check_vector_data ('      gs0sha_p', gs0sha_p       )
 ENDIF
 IF(DEF_USE_OZONESTRESS)THEN
-      CALL check_vector_data ('o3coefv_sun_p', o3coefv_sun_p)
-      CALL check_vector_data ('o3coefv_sha_p', o3coefv_sha_p)
-      CALL check_vector_data ('o3coefg_sun_p', o3coefg_sun_p)
-      CALL check_vector_data ('o3coefg_sha_p', o3coefg_sha_p)
-      CALL check_vector_data ('lai_old_p    ', lai_old_p    )
-      CALL check_vector_data ('o3uptakesun_p', o3uptakesun_p)
-      CALL check_vector_data ('o3uptakesha_p', o3uptakesha_p)
+      CALL check_vector_data (' o3coefv_sun_p', o3coefv_sun_p  )
+      CALL check_vector_data (' o3coefv_sha_p', o3coefv_sha_p  )
+      CALL check_vector_data (' o3coefg_sun_p', o3coefg_sun_p  )
+      CALL check_vector_data (' o3coefg_sha_p', o3coefg_sha_p  )
+      CALL check_vector_data ('     lai_old_p', lai_old_p      )
+      CALL check_vector_data (' o3uptakesun_p', o3uptakesun_p  )
+      CALL check_vector_data (' o3uptakesha_p', o3uptakesha_p  )
 ENDIF
 IF(DEF_USE_IRRIGATION)THEN
-      CALL check_vector_data ('irrig_method_p', irrig_method_p)
+      CALL check_vector_data ('irrig_method_p', irrig_method_p )
 ENDIF
 
 #ifdef BGC
@@ -384,16 +394,19 @@ MODULE MOD_Vars_TimeVariables
    USE MOD_BGC_Vars_TimeVariables
 #endif
 #ifdef CatchLateralFlow
-   USE MOD_Hydro_Vars_TimeVariables
+   USE MOD_Catch_Vars_TimeVariables
 #endif
 #ifdef URBAN_MODEL
    USE MOD_Urban_Vars_TimeVariables
+#endif
+#ifdef EXTERNAL_LAKE
+   USE MOD_Lake_TimeVars
 #endif
 
    IMPLICIT NONE
    SAVE
 ! -----------------------------------------------------------------
-! Time-varying state variables which reaquired by restart run
+! Time-varying state variables which required by restart run
    real(r8), allocatable :: z_sno       (:,:) ! node depth [m]
    real(r8), allocatable :: dz_sno      (:,:) ! interface depth [m]
    real(r8), allocatable :: t_soisno    (:,:) ! soil temperature [K]
@@ -407,7 +420,7 @@ MODULE MOD_Vars_TimeVariables
 !Plant Hydraulic variables
    real(r8), allocatable :: vegwp       (:,:) ! vegetation water potential [mm]
    real(r8), allocatable :: gs0sun        (:) ! working copy of sunlit stomata conductance
-   real(r8), allocatable :: gs0sha        (:) ! working copy of shalit stomata conductance
+   real(r8), allocatable :: gs0sha        (:) ! working copy of shaded stomata conductance
 !END plant hydraulic variables
 !Ozone stress variables
    real(r8), allocatable :: o3coefv_sun   (:) ! Ozone stress factor for photosynthesis on sunlit leaf
@@ -433,6 +446,7 @@ MODULE MOD_Vars_TimeVariables
    real(r8), allocatable :: ldew          (:) ! depth of water on foliage [mm]
    real(r8), allocatable :: ldew_rain     (:) ! depth of rain on foliage [mm]
    real(r8), allocatable :: ldew_snow     (:) ! depth of rain on foliage [mm]
+   real(r8), allocatable :: fwet_snow     (:) ! vegetation snow fractional cover [-]
    real(r8), allocatable :: sag           (:) ! non dimensional snow age [-]
    real(r8), allocatable :: scv           (:) ! snow cover, water equivalent [mm]
    real(r8), allocatable :: snowdp        (:) ! snow depth [meter]
@@ -462,7 +476,7 @@ MODULE MOD_Vars_TimeVariables
    real(r8), allocatable :: wdsrf         (:) ! depth of surface water [mm]
    real(r8), allocatable :: rss           (:) ! soil surface resistance [s/m]
 
-   real(r8), allocatable :: t_lake      (:,:) ! lake layer teperature [K]
+   real(r8), allocatable :: t_lake      (:,:) ! lake layer temperature [K]
    real(r8), allocatable :: lake_icefrac(:,:) ! lake mass fraction of lake layer that is frozen
    real(r8), allocatable :: savedtke1     (:) ! top level eddy conductivity (W/m K)
 
@@ -479,6 +493,7 @@ MODULE MOD_Vars_TimeVariables
 
    real(r8), allocatable :: trad          (:) ! radiative temperature of surface [K]
    real(r8), allocatable :: tref          (:) ! 2 m height air temperature [kelvin]
+   real(r8), allocatable :: t2m_wmo       (:) ! 2 m WMO air temperature [kelvin]
    real(r8), allocatable :: qref          (:) ! 2 m height air specific humidity
    real(r8), allocatable :: rst           (:) ! canopy stomatal resistance (s/m)
    real(r8), allocatable :: emis          (:) ! averaged bulk surface emissivity
@@ -514,6 +529,7 @@ MODULE MOD_Vars_TimeVariables
    integer , allocatable :: irrig_method_rice1     (:) ! irrigation method for rice1 (0-3)
    integer , allocatable :: irrig_method_rice2     (:) ! irrigation method for rice2 (0-3)
    integer , allocatable :: irrig_method_sugarcane (:) ! irrigation method for sugarcane (0-3)
+
    ! PUBLIC MEMBER FUNCTIONS:
    PUBLIC :: allocate_TimeVariables
    PUBLIC :: deallocate_TimeVariables
@@ -531,9 +547,9 @@ CONTAINS
 !-----------------------------------------------------------------------
 
    SUBROUTINE allocate_TimeVariables
-! --------------------------------------------------------------------
-! Allocates memory for CoLM 1d [numpatch] variables
-! ------------------------------------------------------
+   !--------------------------------------------------------------------
+   ! Allocates memory for CoLM 1d [numpatch] variables
+   !--------------------------------------------------------------------
 
    USE MOD_Precision
    USE MOD_Vars_Global
@@ -556,6 +572,7 @@ CONTAINS
             allocate (h2osoi            (1:nl_soil,numpatch)); h2osoi      (:,:) = spval
             allocate (rootr             (1:nl_soil,numpatch)); rootr       (:,:) = spval
             allocate (rootflux          (1:nl_soil,numpatch)); rootflux    (:,:) = spval
+            
 !Plant Hydraulic variables
             allocate (vegwp             (1:nvegwcs,numpatch)); vegwp       (:,:) = spval
             allocate (gs0sun                      (numpatch)); gs0sun        (:) = spval
@@ -585,6 +602,7 @@ CONTAINS
             allocate (ldew                        (numpatch)); ldew          (:) = spval
             allocate (ldew_rain                   (numpatch)); ldew_rain     (:) = spval
             allocate (ldew_snow                   (numpatch)); ldew_snow     (:) = spval
+            allocate (fwet_snow                   (numpatch)); fwet_snow     (:) = spval
             allocate (sag                         (numpatch)); sag           (:) = spval
             allocate (scv                         (numpatch)); scv           (:) = spval
             allocate (snowdp                      (numpatch)); snowdp        (:) = spval
@@ -630,6 +648,7 @@ CONTAINS
 
             allocate (trad                        (numpatch)); trad          (:) = spval
             allocate (tref                        (numpatch)); tref          (:) = spval
+            allocate (t2m_wmo                     (numpatch)); t2m_wmo       (:) = spval
             allocate (qref                        (numpatch)); qref          (:) = spval
             allocate (rst                         (numpatch)); rst           (:) = spval
             allocate (emis                        (numpatch)); emis          (:) = spval
@@ -678,11 +697,15 @@ CONTAINS
 #endif
 
 #ifdef CatchLateralFlow
-      CALL allocate_HydroTimeVariables
+      CALL allocate_CatchTimeVariables
 #endif
 
 #ifdef URBAN_MODEL
       CALL allocate_UrbanTimeVariables
+#endif
+
+#ifdef EXTERNAL_LAKE
+      CALL allocate_LakeTimeVars
 #endif
 
    END SUBROUTINE allocate_TimeVariables
@@ -695,9 +718,9 @@ CONTAINS
    USE MOD_LandPatch, only: numpatch
    IMPLICIT NONE
 
-      ! --------------------------------------------------
-      ! Deallocates memory for CoLM 1d [numpatch] variables
-      ! --------------------------------------------------
+   !--------------------------------------------------------------------
+   ! Deallocates memory for CoLM 1d [numpatch] variables
+   !--------------------------------------------------------------------
 
       IF (p_is_worker) THEN
 
@@ -741,6 +764,7 @@ CONTAINS
             deallocate (ldew                   )
             deallocate (ldew_rain              )
             deallocate (ldew_snow              )
+            deallocate (fwet_snow              )
             deallocate (sag                    )
             deallocate (scv                    )
             deallocate (snowdp                 )
@@ -787,6 +811,7 @@ CONTAINS
 
             deallocate (trad                   )
             deallocate (tref                   )
+            deallocate (t2m_wmo                )
             deallocate (qref                   )
             deallocate (rst                    )
             deallocate (emis                   )
@@ -815,14 +840,15 @@ CONTAINS
             deallocate (fgrndday               )
             deallocate (potential_evapotranspiration)
 
-            deallocate ( irrig_method_corn     )
-            deallocate ( irrig_method_swheat   )
-            deallocate ( irrig_method_wwheat   )
-            deallocate ( irrig_method_soybean  )
-            deallocate ( irrig_method_cotton   )
-            deallocate ( irrig_method_rice1    )
-            deallocate ( irrig_method_rice2    )
-            deallocate ( irrig_method_sugarcane)
+            deallocate (irrig_method_corn      )
+            deallocate (irrig_method_swheat    )
+            deallocate (irrig_method_wwheat    )
+            deallocate (irrig_method_soybean   )
+            deallocate (irrig_method_cotton    )
+            deallocate (irrig_method_rice1     )
+            deallocate (irrig_method_rice2     )
+            deallocate (irrig_method_sugarcane )
+
          ENDIF
       ENDIF
 
@@ -835,18 +861,22 @@ CONTAINS
 #endif
 
 #ifdef CatchLateralFlow
-      CALL deallocate_HydroTimeVariables
+      CALL deallocate_CatchTimeVariables
 #endif
 
 #if (defined URBAN_MODEL)
       CALL deallocate_UrbanTimeVariables
 #endif
 
+#ifdef EXTERNAL_LAKE
+      CALL deallocate_LakeTimeVars
+#endif
+
    END SUBROUTINE deallocate_TimeVariables
 
 
    !---------------------------------------
-   FUNCTION save_to_restart (idate, deltim, itstamp, ptstamp) result(rwrite)
+   FUNCTION save_to_restart (idate, deltim, itstamp, ptstamp, etstamp) result(rwrite)
 
    USE MOD_Namelist
    IMPLICIT NONE
@@ -855,7 +885,7 @@ CONTAINS
 
    integer,  intent(in) :: idate(3)
    real(r8), intent(in) :: deltim
-   type(timestamp), intent(in) :: itstamp, ptstamp
+   type(timestamp), intent(in) :: itstamp, ptstamp, etstamp
 
 
       ! added by yuan, 08/31/2014
@@ -871,28 +901,34 @@ CONTAINS
       CASE ('YEARLY')
          rwrite = isendofyear(idate, deltim)
       CASE default
+         rwrite = .false.
          write(*,*) 'Warning: Please USE one of TIMESTEP/HOURLY/DAILY/MONTHLY/YEARLY for restart frequency.'
+         write(*,*) '         Set to FALSE by default.                                                     '
       ENDSELECT
 
       IF (rwrite) THEN
-         rwrite = (ptstamp < itstamp)
+         rwrite = ((ptstamp <= itstamp) .or. isendofyear(idate,deltim))
       ENDIF
+
+      rwrite = rwrite .or. (.not. (itstamp < etstamp))
 
    END FUNCTION save_to_restart
 
-   !---------------------------------------
+
    SUBROUTINE WRITE_TimeVariables (idate, lc_year, site, dir_restart)
 
-   !=======================================================================
+   !====================================================================
    ! Original version: Yongjiu Dai, September 15, 1999, 03/2014
-   !=======================================================================
+   !====================================================================
 
    USE MOD_SPMD_Task
-   USE MOD_Namelist, only : DEF_REST_CompressLevel, DEF_USE_PLANTHYDRAULICS, DEF_USE_OZONESTRESS, &
-                            DEF_USE_IRRIGATION
+   USE MOD_Namelist, only: DEF_REST_CompressLevel, DEF_USE_PLANTHYDRAULICS, DEF_USE_OZONESTRESS, &
+                           DEF_USE_IRRIGATION, DEF_USE_Dynamic_Lake, SITE_landtype
    USE MOD_LandPatch
    USE MOD_NetCDFVector
    USE MOD_Vars_Global
+   USE MOD_Vars_TimeInvariants, only: dz_lake
+   USE MOD_Const_LC, only: patchtypes
    IMPLICIT NONE
 
    integer, intent(in) :: idate(3)
@@ -938,7 +974,7 @@ ENDIF
       CALL ncio_define_dimension_vector (file_restart, landpatch, 'band', 2)
       CALL ncio_define_dimension_vector (file_restart, landpatch, 'rtyp', 2)
 
-      ! Time-varying state variables which reaquired by restart run
+      ! Time-varying state variables which required by restart run
       CALL ncio_write_vector (file_restart, 'z_sno   '   , 'snow', -maxsnl, 'patch', landpatch, z_sno , compress)                 ! node depth [m]
       CALL ncio_write_vector (file_restart, 'dz_sno  '   , 'snow', -maxsnl, 'patch', landpatch, dz_sno, compress)                 ! interface depth [m]
       CALL ncio_write_vector (file_restart, 't_soisno'   , 'soilsnow', nl_soil-maxsnl, 'patch', landpatch, t_soisno   , compress) ! soil temperature [K]
@@ -947,9 +983,9 @@ ENDIF
       CALL ncio_write_vector (file_restart, 'smp',         'soil', nl_soil, 'patch', landpatch, smp, compress)                    ! soil matrix potential [mm]
       CALL ncio_write_vector (file_restart, 'hk',          'soil', nl_soil, 'patch', landpatch, hk, compress)                     ! hydraulic conductivity [mm h2o/s]
 IF(DEF_USE_PLANTHYDRAULICS)THEN
-      CALL ncio_write_vector (file_restart, 'vegwp',  'vegnodes', nvegwcs,  'patch', landpatch, vegwp, compress)               ! vegetation water potential [mm]
-      CALL ncio_write_vector (file_restart, 'gs0sun',    'patch', landpatch, gs0sun, compress)                                 ! working copy of sunlit stomata conductance
-      CALL ncio_write_vector (file_restart, 'gs0sha',    'patch', landpatch, gs0sha, compress)                                 ! working copy of shalit stomata conductance
+      CALL ncio_write_vector (file_restart, 'vegwp',  'vegnodes', nvegwcs,  'patch', landpatch, vegwp, compress)        ! vegetation water potential [mm]
+      CALL ncio_write_vector (file_restart, 'gs0sun',    'patch', landpatch, gs0sun, compress)                          ! working copy of sunlit stomata conductance
+      CALL ncio_write_vector (file_restart, 'gs0sha',    'patch', landpatch, gs0sha, compress)                          ! working copy of shalit stomata conductance
 ENDIF
 IF(DEF_USE_OZONESTRESS)THEN
       CALL ncio_write_vector (file_restart, 'lai_old    ', 'patch', landpatch, lai_old    , compress)
@@ -961,6 +997,7 @@ ENDIF
       CALL ncio_write_vector (file_restart, 'ldew    '   , 'patch', landpatch, ldew      , compress)                    ! depth of water on foliage [mm]
       CALL ncio_write_vector (file_restart, 'ldew_rain'  , 'patch', landpatch, ldew_rain , compress)                    ! depth of water on foliage [mm]
       CALL ncio_write_vector (file_restart, 'ldew_snow'  , 'patch', landpatch, ldew_snow , compress)                    ! depth of water on foliage [mm]
+      CALL ncio_write_vector (file_restart, 'fwet_snow'  , 'patch', landpatch, fwet_snow , compress)                    ! vegetation snow fractional cover [-]
       CALL ncio_write_vector (file_restart, 'sag     '   , 'patch', landpatch, sag       , compress)                    ! non dimensional snow age [-]
       CALL ncio_write_vector (file_restart, 'scv     '   , 'patch', landpatch, scv       , compress)                    ! snow cover, water equivalent [mm]
       CALL ncio_write_vector (file_restart, 'snowdp  '   , 'patch', landpatch, snowdp    , compress)                    ! snow depth [meter]
@@ -987,9 +1024,12 @@ ENDIF
       CALL ncio_write_vector (file_restart, 'wdsrf   '   , 'patch', landpatch, wdsrf     , compress)                    ! depth of surface water [mm]
       CALL ncio_write_vector (file_restart, 'rss     '   , 'patch', landpatch, rss       , compress)                    ! soil surface resistance [s/m]
 
-      CALL ncio_write_vector (file_restart, 't_lake  '   , 'lake', nl_lake, 'patch', landpatch, t_lake      , compress) !
-      CALL ncio_write_vector (file_restart, 'lake_icefrc', 'lake', nl_lake, 'patch', landpatch, lake_icefrac, compress) !
-      CALL ncio_write_vector (file_restart, 'savedtke1  ', 'patch', landpatch, savedtke1   , compress)                  !
+IF (DEF_USE_Dynamic_Lake) THEN
+      CALL ncio_write_vector (file_restart, 'dz_lake'    , 'lake', nl_lake, 'patch', landpatch, dz_lake     , compress)
+ENDIF
+      CALL ncio_write_vector (file_restart, 't_lake  '   , 'lake', nl_lake, 'patch', landpatch, t_lake      , compress)
+      CALL ncio_write_vector (file_restart, 'lake_icefrc', 'lake', nl_lake, 'patch', landpatch, lake_icefrac, compress)
+      CALL ncio_write_vector (file_restart, 'savedtke1  ', 'patch', landpatch, savedtke1   , compress)
       CALL ncio_write_vector (file_restart, 'snw_rds  ', 'snow', -maxsnl, 'patch', landpatch, snw_rds  , compress)
       CALL ncio_write_vector (file_restart, 'mss_bcpho', 'snow', -maxsnl, 'patch', landpatch, mss_bcpho, compress)
       CALL ncio_write_vector (file_restart, 'mss_bcphi', 'snow', -maxsnl, 'patch', landpatch, mss_bcphi, compress)
@@ -1001,7 +1041,7 @@ ENDIF
       CALL ncio_write_vector (file_restart, 'mss_dst4 ', 'snow', -maxsnl, 'patch', landpatch, mss_dst4 , compress)
       CALL ncio_write_vector (file_restart, 'ssno_lyr', 'band', 2, 'rtyp', 2, 'snowp1', -maxsnl+1, 'patch', landpatch, ssno_lyr, compress)
 
-      ! Additional va_vectorriables required by reginal model (such as WRF ) RSM)
+      ! Additional va_vectorriables required by regional model (such as WRF ) RSM)
       CALL ncio_write_vector (file_restart, 'trad ', 'patch', landpatch, trad , compress) ! radiative temperature of surface [K]
       CALL ncio_write_vector (file_restart, 'tref ', 'patch', landpatch, tref , compress) ! 2 m height air temperature [kelvin]
       CALL ncio_write_vector (file_restart, 'qref ', 'patch', landpatch, qref , compress) ! 2 m height air specific humidity
@@ -1018,31 +1058,39 @@ ENDIF
       CALL ncio_write_vector (file_restart, 'fq   ', 'patch', landpatch, fq   , compress) ! integral of profile FUNCTION for moisture
 
 IF (DEF_USE_IRRIGATION) THEN
-      CALL Ncio_write_vector (file_restart, 'irrig_rate            ' , 'patch',landpatch,irrig_rate            , compress)
-      CALL Ncio_write_vector (file_restart, 'deficit_irrig         ' , 'patch',landpatch,deficit_irrig         , compress)
-      CALL Ncio_write_vector (file_restart, 'sum_irrig             ' , 'patch',landpatch,sum_irrig             , compress)
-      CALL Ncio_write_vector (file_restart, 'sum_irrig_count       ' , 'patch',landpatch,sum_irrig_count       , compress)
-      CALL Ncio_write_vector (file_restart, 'n_irrig_steps_left    ' , 'patch',landpatch,n_irrig_steps_left    , compress)
-      CALL Ncio_write_vector (file_restart, 'tairday               ' , 'patch',landpatch,tairday               , compress)
-      CALL Ncio_write_vector (file_restart, 'usday                 ' , 'patch',landpatch,usday                 , compress)
-      CALL Ncio_write_vector (file_restart, 'vsday                 ' , 'patch',landpatch,vsday                 , compress)
-      CALL Ncio_write_vector (file_restart, 'pairday               ' , 'patch',landpatch,pairday               , compress)
-      CALL Ncio_write_vector (file_restart, 'rnetday               ' , 'patch',landpatch,rnetday               , compress)
-      CALL Ncio_write_vector (file_restart, 'fgrndday              ' , 'patch',landpatch,fgrndday              , compress)
-      CALL Ncio_write_vector (file_restart, 'potential_evapotranspiration', 'patch',landpatch, potential_evapotranspiration, compress)
-      CALL Ncio_write_vector (file_restart, 'irrig_method_corn     ' , 'patch',landpatch,irrig_method_corn     , compress)
-      CALL Ncio_write_vector (file_restart, 'irrig_method_swheat   ' , 'patch',landpatch,irrig_method_swheat   , compress)
-      CALL Ncio_write_vector (file_restart, 'irrig_method_wwheat   ' , 'patch',landpatch,irrig_method_wwheat   , compress)
-      CALL Ncio_write_vector (file_restart, 'irrig_method_soybean  ' , 'patch',landpatch,irrig_method_soybean  , compress)
-      CALL Ncio_write_vector (file_restart, 'irrig_method_cotton   ' , 'patch',landpatch,irrig_method_cotton   , compress)
-      CALL Ncio_write_vector (file_restart, 'irrig_method_rice1    ' , 'patch',landpatch,irrig_method_rice1    , compress)
-      CALL Ncio_write_vector (file_restart, 'irrig_method_rice2    ' , 'patch',landpatch,irrig_method_rice2    , compress)
-      CALL Ncio_write_vector (file_restart, 'irrig_method_sugarcane' , 'patch',landpatch,irrig_method_sugarcane, compress)
+      CALL ncio_write_vector (file_restart, 'irrig_rate            ' , 'patch',landpatch,irrig_rate            , compress)
+      CALL ncio_write_vector (file_restart, 'deficit_irrig         ' , 'patch',landpatch,deficit_irrig         , compress)
+      CALL ncio_write_vector (file_restart, 'sum_irrig             ' , 'patch',landpatch,sum_irrig             , compress)
+      CALL ncio_write_vector (file_restart, 'sum_irrig_count       ' , 'patch',landpatch,sum_irrig_count       , compress)
+      CALL ncio_write_vector (file_restart, 'n_irrig_steps_left    ' , 'patch',landpatch,n_irrig_steps_left    , compress)
+      CALL ncio_write_vector (file_restart, 'tairday               ' , 'patch',landpatch,tairday               , compress)
+      CALL ncio_write_vector (file_restart, 'usday                 ' , 'patch',landpatch,usday                 , compress)
+      CALL ncio_write_vector (file_restart, 'vsday                 ' , 'patch',landpatch,vsday                 , compress)
+      CALL ncio_write_vector (file_restart, 'pairday               ' , 'patch',landpatch,pairday               , compress)
+      CALL ncio_write_vector (file_restart, 'rnetday               ' , 'patch',landpatch,rnetday               , compress)
+      CALL ncio_write_vector (file_restart, 'fgrndday              ' , 'patch',landpatch,fgrndday              , compress)
+      CALL ncio_write_vector (file_restart, 'potential_evapotranspiration', 'patch',landpatch, &
+                                                                                   potential_evapotranspiration, compress)
+      CALL ncio_write_vector (file_restart, 'irrig_method_corn     ' , 'patch',landpatch,irrig_method_corn     , compress)
+      CALL ncio_write_vector (file_restart, 'irrig_method_swheat   ' , 'patch',landpatch,irrig_method_swheat   , compress)
+      CALL ncio_write_vector (file_restart, 'irrig_method_wwheat   ' , 'patch',landpatch,irrig_method_wwheat   , compress)
+      CALL ncio_write_vector (file_restart, 'irrig_method_soybean  ' , 'patch',landpatch,irrig_method_soybean  , compress)
+      CALL ncio_write_vector (file_restart, 'irrig_method_cotton   ' , 'patch',landpatch,irrig_method_cotton   , compress)
+      CALL ncio_write_vector (file_restart, 'irrig_method_rice1    ' , 'patch',landpatch,irrig_method_rice1    , compress)
+      CALL ncio_write_vector (file_restart, 'irrig_method_rice2    ' , 'patch',landpatch,irrig_method_rice2    , compress)
+      CALL ncio_write_vector (file_restart, 'irrig_method_sugarcane' , 'patch',landpatch,irrig_method_sugarcane, compress)
 ENDIF
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
+#ifdef SinglePoint
+      IF (patchtypes(SITE_landtype) == 0) THEN
+         file_restart = trim(dir_restart)// '/'//trim(cdate)//'/' // trim(site) //'_restart_pft_'//trim(cdate)//'_lc'//trim(cyear)//'.nc'
+         CALL WRITE_PFTimeVariables (file_restart)
+      ENDIF
+#else
       file_restart = trim(dir_restart)// '/'//trim(cdate)//'/' // trim(site) //'_restart_pft_'//trim(cdate)//'_lc'//trim(cyear)//'.nc'
       CALL WRITE_PFTimeVariables (file_restart)
+#endif
 #endif
 
 #if (defined BGC)
@@ -1052,21 +1100,26 @@ ENDIF
 
 #if (defined CatchLateralFlow)
       file_restart = trim(dir_restart)// '/'//trim(cdate)//'/' // trim(site) //'_restart_basin_'//trim(cdate)//'_lc'//trim(cyear)//'.nc'
-      CALL WRITE_HydroTimeVariables (file_restart)
+      CALL WRITE_CatchTimeVariables (file_restart)
 #endif
 
 #if (defined URBAN_MODEL)
       file_restart = trim(dir_restart)// '/'//trim(cdate)//'/' // trim(site) //'_restart_urban_'//trim(cdate)//'_lc'//trim(cyear)//'.nc'
       CALL WRITE_UrbanTimeVariables (file_restart)
 #endif
+
+#ifdef EXTERNAL_LAKE
+      CALL WRITE_LakeTimeVars (idate, lc_year, site, dir_restart)
+#endif
+
    END SUBROUTINE WRITE_TimeVariables
 
-   !---------------------------------------
+
    SUBROUTINE READ_TimeVariables (idate, lc_year, site, dir_restart)
 
-   !=======================================================================
+   !====================================================================
    ! Original version: Yongjiu Dai, September 15, 1999, 03/2014
-   !=======================================================================
+   !====================================================================
 
    USE MOD_Namelist
    USE MOD_SPMD_Task
@@ -1076,6 +1129,8 @@ ENDIF
 #endif
    USE MOD_LandPatch
    USE MOD_Vars_Global
+   USE MOD_Vars_TimeInvariants, only: dz_lake
+   USE MOD_Const_LC, only: patchtypes
 
    IMPLICIT NONE
 
@@ -1093,7 +1148,7 @@ ENDIF
 #endif
 
       IF (p_is_master) THEN
-         write(*,'(/,A26)') 'Loading Time Variables ...'
+         write(*,*) 'Loading Time Variables ...'
       ENDIF
 
       ! land cover type year
@@ -1102,7 +1157,7 @@ ENDIF
       write(cdate,'(i4.4,"-",i3.3,"-",i5.5)') idate(1), idate(2), idate(3)
       file_restart = trim(dir_restart)// '/'//trim(cdate)//'/' // trim(site) //'_restart_'//trim(cdate)//'_lc'//trim(cyear)//'.nc'
 
-      ! Time-varying state variables which reaquired by restart run
+      ! Time-varying state variables which required by restart run
       CALL ncio_read_vector (file_restart, 'z_sno   '   , -maxsnl, landpatch, z_sno )             ! node depth [m]
       CALL ncio_read_vector (file_restart, 'dz_sno  '   , -maxsnl, landpatch, dz_sno)             ! interface depth [m]
       CALL ncio_read_vector (file_restart, 't_soisno'   , nl_soil-maxsnl, landpatch, t_soisno   ) ! soil temperature [K]
@@ -1113,18 +1168,14 @@ ENDIF
 IF(DEF_USE_PLANTHYDRAULICS)THEN
       CALL ncio_read_vector (file_restart, 'vegwp',       nvegwcs,        landpatch, vegwp      ) ! vegetation water potential [mm]
       CALL ncio_read_vector (file_restart, 'gs0sun  ',    landpatch, gs0sun     ) ! working copy of sunlit stomata conductance
-      CALL ncio_read_vector (file_restart, 'gs0sha  ',    landpatch, gs0sha     ) ! working copy of shalit stomata conductance
-ENDIF
-IF(DEF_USE_OZONESTRESS)THEN
-      CALL ncio_read_vector (file_restart, 'lai_old    ', landpatch, lai_old    )
-      CALL ncio_read_vector (file_restart, 'o3uptakesun', landpatch, o3uptakesun)
-      CALL ncio_read_vector (file_restart, 'o3uptakesha', landpatch, o3uptakesha)
+      CALL ncio_read_vector (file_restart, 'gs0sha  ',    landpatch, gs0sha     ) ! working copy of shaded stomata conductance
 ENDIF
       CALL ncio_read_vector (file_restart, 't_grnd  '   , landpatch, t_grnd     ) ! ground surface temperature [K]
       CALL ncio_read_vector (file_restart, 'tleaf   '   , landpatch, tleaf      ) ! leaf temperature [K]
       CALL ncio_read_vector (file_restart, 'ldew    '   , landpatch, ldew       ) ! depth of water on foliage [mm]
       CALL ncio_read_vector (file_restart, 'ldew_rain'  , landpatch, ldew_rain  ) ! depth of rain on foliage [mm]
       CALL ncio_read_vector (file_restart, 'ldew_snow'  , landpatch, ldew_snow  ) ! depth of snow on foliage [mm]
+      CALL ncio_read_vector (file_restart, 'fwet_snow'  , landpatch, fwet_snow  ) ! vegetation snow fractional cover [-]
       CALL ncio_read_vector (file_restart, 'sag     '   , landpatch, sag        ) ! non dimensional snow age [-]
       CALL ncio_read_vector (file_restart, 'scv     '   , landpatch, scv        ) ! snow cover, water equivalent [mm]
       CALL ncio_read_vector (file_restart, 'snowdp  '   , landpatch, snowdp     ) ! snow depth [meter]
@@ -1137,6 +1188,11 @@ ENDIF
       CALL ncio_read_vector (file_restart, 'sai     '   , landpatch, sai        ) ! stem area index
       CALL ncio_read_vector (file_restart, 'tsai    '   , landpatch, tsai       ) ! stem area index
       CALL ncio_read_vector (file_restart, 'coszen  '   , landpatch, coszen     ) ! cosine of solar zenith angle
+IF(DEF_USE_OZONESTRESS)THEN
+      CALL ncio_read_vector (file_restart, 'lai_old    ', landpatch, lai_old    )
+      CALL ncio_read_vector (file_restart, 'o3uptakesun', landpatch, o3uptakesun)
+      CALL ncio_read_vector (file_restart, 'o3uptakesha', landpatch, o3uptakesha)
+ENDIF
       CALL ncio_read_vector (file_restart, 'alb     '   , 2, 2, landpatch, alb  ) ! averaged albedo [-]
       CALL ncio_read_vector (file_restart, 'ssun    '   , 2, 2, landpatch, ssun ) ! sunlit canopy absorption for solar radiation (0-1)
       CALL ncio_read_vector (file_restart, 'ssha    '   , 2, 2, landpatch, ssha ) ! shaded canopy absorption for solar radiation (0-1)
@@ -1151,22 +1207,25 @@ ENDIF
       CALL ncio_read_vector (file_restart, 'wdsrf   '   , landpatch, wdsrf      ) ! depth of surface water [mm]
       CALL ncio_read_vector (file_restart, 'rss     '   , landpatch, rss        ) ! soil surface resistance [s/m]
 
-      CALL ncio_read_vector (file_restart, 't_lake  '   , nl_lake, landpatch, t_lake      ) !
-      CALL ncio_read_vector (file_restart, 'lake_icefrc', nl_lake, landpatch, lake_icefrac) !
-      CALL ncio_read_vector (file_restart, 'savedtke1', landpatch, savedtke1)     !
+IF (DEF_USE_Dynamic_Lake) THEN
+      CALL ncio_read_vector (file_restart, 'dz_lake'    , nl_lake, landpatch, dz_lake     )
+ENDIF
+      CALL ncio_read_vector (file_restart, 't_lake  '   , nl_lake, landpatch, t_lake      )
+      CALL ncio_read_vector (file_restart, 'lake_icefrc', nl_lake, landpatch, lake_icefrac)
+      CALL ncio_read_vector (file_restart, 'savedtke1', landpatch, savedtke1)
 
-      CALL ncio_read_vector (file_restart, 'snw_rds  ', -maxsnl, landpatch, snw_rds  ) !
-      CALL ncio_read_vector (file_restart, 'mss_bcpho', -maxsnl, landpatch, mss_bcpho) !
-      CALL ncio_read_vector (file_restart, 'mss_bcphi', -maxsnl, landpatch, mss_bcphi) !
-      CALL ncio_read_vector (file_restart, 'mss_ocpho', -maxsnl, landpatch, mss_ocpho) !
-      CALL ncio_read_vector (file_restart, 'mss_ocphi', -maxsnl, landpatch, mss_ocphi) !
-      CALL ncio_read_vector (file_restart, 'mss_dst1 ', -maxsnl, landpatch, mss_dst1 ) !
-      CALL ncio_read_vector (file_restart, 'mss_dst2 ', -maxsnl, landpatch, mss_dst2 ) !
-      CALL ncio_read_vector (file_restart, 'mss_dst3 ', -maxsnl, landpatch, mss_dst3 ) !
-      CALL ncio_read_vector (file_restart, 'mss_dst4 ', -maxsnl, landpatch, mss_dst4 ) !
-      CALL ncio_read_vector (file_restart, 'ssno_lyr', 2,2, -maxsnl+1, landpatch, ssno_lyr) !
+      CALL ncio_read_vector (file_restart, 'snw_rds  ', -maxsnl, landpatch, snw_rds  )
+      CALL ncio_read_vector (file_restart, 'mss_bcpho', -maxsnl, landpatch, mss_bcpho)
+      CALL ncio_read_vector (file_restart, 'mss_bcphi', -maxsnl, landpatch, mss_bcphi)
+      CALL ncio_read_vector (file_restart, 'mss_ocpho', -maxsnl, landpatch, mss_ocpho)
+      CALL ncio_read_vector (file_restart, 'mss_ocphi', -maxsnl, landpatch, mss_ocphi)
+      CALL ncio_read_vector (file_restart, 'mss_dst1 ', -maxsnl, landpatch, mss_dst1 )
+      CALL ncio_read_vector (file_restart, 'mss_dst2 ', -maxsnl, landpatch, mss_dst2 )
+      CALL ncio_read_vector (file_restart, 'mss_dst3 ', -maxsnl, landpatch, mss_dst3 )
+      CALL ncio_read_vector (file_restart, 'mss_dst4 ', -maxsnl, landpatch, mss_dst4 )
+      CALL ncio_read_vector (file_restart, 'ssno_lyr', 2,2, -maxsnl+1, landpatch, ssno_lyr)
 
-      ! Additional variables required by reginal model (such as WRF ) RSM)
+      ! Additional variables required by regional model (such as WRF ) RSM)
       CALL ncio_read_vector (file_restart, 'trad ', landpatch, trad ) ! radiative temperature of surface [K]
       CALL ncio_read_vector (file_restart, 'tref ', landpatch, tref ) ! 2 m height air temperature [kelvin]
       CALL ncio_read_vector (file_restart, 'qref ', landpatch, qref ) ! 2 m height air specific humidity
@@ -1194,7 +1253,8 @@ IF (DEF_USE_IRRIGATION) THEN
       CALL ncio_read_vector (file_restart, 'pairday               ' , landpatch, pairday               )
       CALL ncio_read_vector (file_restart, 'rnetday               ' , landpatch, rnetday               )
       CALL ncio_read_vector (file_restart, 'fgrndday              ' , landpatch, fgrndday              )
-      CALL ncio_read_vector (file_restart, 'potential_evapotranspiration' , landpatch, potential_evapotranspiration)
+      CALL ncio_read_vector (file_restart, 'potential_evapotranspiration' , landpatch,&
+                                                                           potential_evapotranspiration)
       CALL ncio_read_vector (file_restart, 'irrig_method_corn     ' , landpatch, irrig_method_corn     )
       CALL ncio_read_vector (file_restart, 'irrig_method_swheat   ' , landpatch, irrig_method_swheat   )
       CALL ncio_read_vector (file_restart, 'irrig_method_wwheat   ' , landpatch, irrig_method_wwheat   )
@@ -1206,8 +1266,15 @@ IF (DEF_USE_IRRIGATION) THEN
 ENDIF
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
+#ifdef SinglePoint
+      IF (patchtypes(SITE_landtype) == 0) THEN
+         file_restart = trim(dir_restart)// '/'//trim(cdate)//'/' // trim(site) //'_restart_pft_'//trim(cdate)//'_lc'//trim(cyear)//'.nc'
+         CALL READ_PFTimeVariables (file_restart)
+      ENDIF
+#else
       file_restart = trim(dir_restart)// '/'//trim(cdate)//'/' // trim(site) //'_restart_pft_'//trim(cdate)//'_lc'//trim(cyear)//'.nc'
       CALL READ_PFTimeVariables (file_restart)
+#endif
 #endif
 
 #if (defined BGC)
@@ -1217,12 +1284,16 @@ ENDIF
 
 #if (defined CatchLateralFlow)
       file_restart = trim(dir_restart)// '/'//trim(cdate)//'/' // trim(site) //'_restart_basin_'//trim(cdate)//'_lc'//trim(cyear)//'.nc'
-      CALL READ_HydroTimeVariables (file_restart)
+      CALL READ_CatchTimeVariables (file_restart)
 #endif
 
 #if (defined URBAN_MODEL)
       file_restart = trim(dir_restart)// '/'//trim(cdate)//'/' // trim(site) //'_restart_urban_'//trim(cdate)//'_lc'//trim(cyear)//'.nc'
       CALL READ_UrbanTimeVariables (file_restart)
+#endif
+
+#ifdef EXTERNAL_LAKE
+      CALL READ_LakeTimeVars(idate, lc_year, site, dir_restart)
 #endif
 
 #ifdef RangeCheck
@@ -1235,14 +1306,15 @@ ENDIF
 
    END SUBROUTINE READ_TimeVariables
 
-  !---------------------------------------
+
 #ifdef RangeCheck
    SUBROUTINE check_TimeVariables ()
 
    USE MOD_SPMD_Task
    USE MOD_RangeCheck
    USE MOD_Namelist, only: DEF_USE_PLANTHYDRAULICS, DEF_USE_OZONESTRESS, DEF_USE_IRRIGATION, &
-                           DEF_USE_SNICAR
+                           DEF_USE_SNICAR, DEF_USE_Dynamic_Lake
+   USE MOD_Vars_TimeInvariants, only: dz_lake
 
    IMPLICIT NONE
 
@@ -1258,6 +1330,7 @@ ENDIF
       CALL check_vector_data ('ldew        [mm]   ', ldew       ) ! depth of water on foliage [mm]
       CALL check_vector_data ('ldew_rain   [mm]   ', ldew_rain  ) ! depth of rain on foliage [mm]
       CALL check_vector_data ('ldew_snow   [mm]   ', ldew_snow  ) ! depth of snow on foliage [mm]
+      CALL check_vector_data ('fwet_snow   [mm]   ', fwet_snow  ) ! vegetation snow fractional cover [-]
       CALL check_vector_data ('sag         [-]    ', sag        ) ! non dimensional snow age [-]
       CALL check_vector_data ('scv         [mm]   ', scv        ) ! snow cover, water equivalent [mm]
       CALL check_vector_data ('snowdp      [m]    ', snowdp     ) ! snow depth [meter]
@@ -1283,6 +1356,9 @@ ENDIF
       CALL check_vector_data ('wetwat      [mm]   ', wetwat     ) ! water storage in wetland [mm]
       CALL check_vector_data ('wdsrf       [mm]   ', wdsrf      ) ! depth of surface water [mm]
       CALL check_vector_data ('rss         [s/m]  ', rss        ) ! soil surface resistance [s/m]
+IF (DEF_USE_Dynamic_Lake) THEN
+      CALL check_vector_data ('dz_lake     [m]    ', dz_lake     )!
+ENDIF
       CALL check_vector_data ('t_lake      [K]    ', t_lake      )!
       CALL check_vector_data ('lake_icefrc [-]    ', lake_icefrac)!
       CALL check_vector_data ('savedtke1   [W/m K]', savedtke1   )!
@@ -1296,7 +1372,7 @@ ENDIF
 IF(DEF_USE_PLANTHYDRAULICS)THEN
       CALL check_vector_data ('vegwp       [m]    ', vegwp      ) ! vegetation water potential [mm]
       CALL check_vector_data ('gs0sun      []     ', gs0sun     ) ! working copy of sunlit stomata conductance
-      CALL check_vector_data ('gs0sha      []     ', gs0sha     ) ! working copy of shalit stomata conductance
+      CALL check_vector_data ('gs0sha      []     ', gs0sha     ) ! working copy of shaded stomata conductance
 ENDIF
 IF(DEF_USE_OZONESTRESS)THEN
       CALL check_vector_data ('o3coefv_sun        ', o3coefv_sun)
@@ -1309,16 +1385,16 @@ IF(DEF_USE_OZONESTRESS)THEN
 ENDIF
 
 IF (DEF_USE_SNICAR) THEN
-      CALL check_vector_data ('snw_rds     [m-6]  ',  snw_rds   ) !
-      CALL check_vector_data ('mss_bcpho   [Kg]   ',  mss_bcpho ) !
-      CALL check_vector_data ('mss_bcphi   [Kg]   ',  mss_bcphi ) !
-      CALL check_vector_data ('mss_ocpho   [Kg]   ',  mss_ocpho ) !
-      CALL check_vector_data ('mss_ocphi   [Kg]   ',  mss_ocphi ) !
-      CALL check_vector_data ('mss_dst1    [Kg]   ',  mss_dst1  ) !
-      CALL check_vector_data ('mss_dst2    [Kg]   ',  mss_dst2  ) !
-      CALL check_vector_data ('mss_dst3    [Kg]   ',  mss_dst3  ) !
-      CALL check_vector_data ('mss_dst4    [Kg]   ',  mss_dst4  ) !
-      CALL check_vector_data ('ssno_lyr    [-]    ',  ssno_lyr  ) !
+      CALL check_vector_data ('snw_rds     [m-6]  ',  snw_rds   )
+      CALL check_vector_data ('mss_bcpho   [Kg]   ',  mss_bcpho )
+      CALL check_vector_data ('mss_bcphi   [Kg]   ',  mss_bcphi )
+      CALL check_vector_data ('mss_ocpho   [Kg]   ',  mss_ocpho )
+      CALL check_vector_data ('mss_ocphi   [Kg]   ',  mss_ocphi )
+      CALL check_vector_data ('mss_dst1    [Kg]   ',  mss_dst1  )
+      CALL check_vector_data ('mss_dst2    [Kg]   ',  mss_dst2  )
+      CALL check_vector_data ('mss_dst3    [Kg]   ',  mss_dst3  )
+      CALL check_vector_data ('mss_dst4    [Kg]   ',  mss_dst4  )
+      CALL check_vector_data ('ssno_lyr    [-]    ',  ssno_lyr  )
 ENDIF
 
 IF (DEF_USE_IRRIGATION) THEN
@@ -1333,7 +1409,8 @@ IF (DEF_USE_IRRIGATION) THEN
       CALL check_vector_data ('pairday               ' , pairday               )
       CALL check_vector_data ('rnetday               ' , rnetday               )
       CALL check_vector_data ('fgrndday              ' , fgrndday              )
-      CALL check_vector_data ('potential_evapotranspiration' , potential_evapotranspiration)
+      CALL check_vector_data ('potential_evapotranspiration' ,&
+                                                   potential_evapotranspiration)
       CALL check_vector_data ('irrig_method_corn     ' , irrig_method_corn     )
       CALL check_vector_data ('irrig_method_swheat   ' , irrig_method_swheat   )
       CALL check_vector_data ('irrig_method_wwheat   ' , irrig_method_wwheat   )
@@ -1350,6 +1427,10 @@ ENDIF
 
 #if (defined BGC)
       CALL check_BGCTimeVariables
+#endif
+
+#ifdef EXTERNAL_LAKE
+      CALL CHECK_LakeTimeVars
 #endif
 
 #ifdef USEMPI

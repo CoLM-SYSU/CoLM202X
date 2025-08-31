@@ -2,15 +2,15 @@
 
 SUBROUTINE Aggregation_SoilBrightness ( &
       gland, dir_rawdata, dir_model_landdata, lc_year)
-! ----------------------------------------------------------------------
-! Creates land model surface dataset from original "raw" data files -
-!     data with 30 arc seconds resolution
+!-----------------------------------------------------------------------
+!  Creates land model surface dataset from original "raw" data files -
+!      data with 30 arc seconds resolution
 !
-! Created by Yongjiu Dai, 03/2014
+!  Created by Yongjiu Dai, 03/2014
 !
-! REVISIONS:
-! Shupeng Zhang, 01/2022: porting codes to MPI parallel version.
-! ----------------------------------------------------------------------
+! !REVISIONS:
+!  Shupeng Zhang, 01/2022: porting codes to MPI parallel version.
+!-----------------------------------------------------------------------
 
    USE MOD_Precision
    USE MOD_Namelist
@@ -18,6 +18,7 @@ SUBROUTINE Aggregation_SoilBrightness ( &
    USE MOD_Block
    USE MOD_Grid
    USE MOD_LandPatch
+   USE MOD_Land2mWMO
    USE MOD_NetCDFBlock
    USE MOD_NetCDFVector
 #ifdef RangeCheck
@@ -25,10 +26,6 @@ SUBROUTINE Aggregation_SoilBrightness ( &
 #endif
    USE MOD_AggregationRequestData
    USE MOD_Utils
-#ifdef SinglePoint
-   USE MOD_SingleSrfdata
-#endif
-
 #ifdef SrfdataDiag
    USE MOD_SrfdataDiag
 #endif
@@ -59,6 +56,7 @@ SUBROUTINE Aggregation_SoilBrightness ( &
 
    integer :: ii, L
    integer :: ipatch, iblkme, iblk, jblk, ix, iy
+   integer :: wmo_src
    real(r8), allocatable :: soil_one(:)
 
 #ifdef SrfdataDiag
@@ -99,12 +97,6 @@ SUBROUTINE Aggregation_SoilBrightness ( &
       ENDIF
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
-#endif
-
-#ifdef SinglePoint
-      IF (USE_SITE_soilreflectance) THEN
-         RETURN
-      ENDIF
 #endif
 
 ! -------------------------------------------------------------------------------------
@@ -162,12 +154,22 @@ SUBROUTINE Aggregation_SoilBrightness ( &
 
          DO ipatch = 1, numpatch
             L = landpatch%settyp(ipatch)
+
+            IF (ipatch == wmo_patch(landpatch%ielm(ipatch))) THEN
+               wmo_src = wmo_source (landpatch%ielm(ipatch))
+
+               soil_s_v_alb(ipatch) = soil_s_v_alb(wmo_src)
+
+               CYCLE
+            ENDIF
+
 #ifdef LULC_USGS
             IF(L/=16 .and. L/=24)THEN  ! NOT OCEAN(0)/WATER BODIES(16)/GLACIER and ICESHEET(24)
 #else
             IF(L/=17 .and. L/=15)THEN  ! NOT OCEAN(0)/WATER BODIES(17)/GLACIER and ICE SHEET(15)
 #endif
-               CALL aggregation_request_data (landpatch, ipatch, gland, zip = USE_zip_for_aggregation, &
+               CALL aggregation_request_data (landpatch, ipatch, gland, &
+                  zip = USE_zip_for_aggregation, &
                   data_r8_2d_in1 = a_s_v_refl, data_r8_2d_out1 = soil_one)
                soil_s_v_alb (ipatch) = median (soil_one, size(soil_one))
 
@@ -198,12 +200,22 @@ SUBROUTINE Aggregation_SoilBrightness ( &
 
          DO ipatch = 1, numpatch
             L = landpatch%settyp(ipatch)
+
+            IF (ipatch == wmo_patch(landpatch%ielm(ipatch))) THEN
+               wmo_src = wmo_source (landpatch%ielm(ipatch))
+
+               soil_d_v_alb(ipatch) = soil_d_v_alb(wmo_src)
+
+               CYCLE
+            ENDIF
+
 #ifdef LULC_USGS
             IF(L/=16 .and. L/=24)THEN  ! NOT OCEAN(0)/WATER BODIES(16)/GLACIER and ICESHEET(24)
 #else
             IF(L/=17 .and. L/=15)THEN  ! NOT OCEAN(0)/WATER BODIES(17)/GLACIER and ICE SHEET(15)
 #endif
-               CALL aggregation_request_data (landpatch, ipatch, gland, zip = USE_zip_for_aggregation, &
+               CALL aggregation_request_data (landpatch, ipatch, gland, &
+                  zip = USE_zip_for_aggregation, &
                   data_r8_2d_in1 = a_d_v_refl, data_r8_2d_out1 = soil_one)
                soil_d_v_alb (ipatch) = median (soil_one, size(soil_one))
 
@@ -234,12 +246,22 @@ SUBROUTINE Aggregation_SoilBrightness ( &
 
          DO ipatch = 1, numpatch
             L = landpatch%settyp(ipatch)
+
+            IF (ipatch == wmo_patch(landpatch%ielm(ipatch))) THEN
+               wmo_src = wmo_source (landpatch%ielm(ipatch))
+
+               soil_s_n_alb(ipatch) = soil_s_n_alb(wmo_src)
+
+               CYCLE
+            ENDIF
+
 #ifdef LULC_USGS
             IF(L/=16 .and. L/=24)THEN  ! NOT OCEAN(0)/WATER BODIES(16)/GLACIER and ICESHEET(24)
 #else
             IF(L/=17 .and. L/=15)THEN  ! NOT OCEAN(0)/WATER BODIES(17)/GLACIER and ICE SHEET(15)
 #endif
-               CALL aggregation_request_data (landpatch, ipatch, gland, zip = USE_zip_for_aggregation, &
+               CALL aggregation_request_data (landpatch, ipatch, gland, &
+                  zip = USE_zip_for_aggregation, &
                   data_r8_2d_in1 = a_s_n_refl, data_r8_2d_out1 = soil_one)
                soil_s_n_alb (ipatch) = median (soil_one, size(soil_one))
 
@@ -270,12 +292,22 @@ SUBROUTINE Aggregation_SoilBrightness ( &
 
          DO ipatch = 1, numpatch
             L = landpatch%settyp(ipatch)
+
+            IF (ipatch == wmo_patch(landpatch%ielm(ipatch))) THEN
+               wmo_src = wmo_source (landpatch%ielm(ipatch))
+
+               soil_d_n_alb(ipatch) = soil_d_n_alb(wmo_src)
+
+               CYCLE
+            ENDIF
+
 #ifdef LULC_USGS
             IF(L/=16 .and. L/=24)THEN  ! NOT OCEAN(0)/WATER BODIES(16)/GLACIER and ICESHEET(24)
 #else
             IF(L/=17 .and. L/=15)THEN  ! NOT OCEAN(0)/WATER BODIES(17)/GLACIER and ICE SHEET(15)
 #endif
-               CALL aggregation_request_data (landpatch, ipatch, gland, zip = USE_zip_for_aggregation, &
+               CALL aggregation_request_data (landpatch, ipatch, gland, &
+                  zip = USE_zip_for_aggregation, &
                   data_r8_2d_in1 = a_d_n_refl, data_r8_2d_out1 = soil_one)
                soil_d_n_alb (ipatch) = median (soil_one, size(soil_one))
 
@@ -301,25 +333,26 @@ SUBROUTINE Aggregation_SoilBrightness ( &
       CALL check_vector_data ('d_n_alb ', soil_d_n_alb)
 #endif
 
-#ifndef SinglePoint
       ! (1) Write-out the albedo of visible of the saturated soil
       lndname = trim(landdir)//'/soil_s_v_alb_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
       CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
-      CALL ncio_write_vector (lndname, 'soil_s_v_alb', 'patch', landpatch, soil_s_v_alb, DEF_Srfdata_CompressLevel)
+      CALL ncio_write_vector (lndname, 'soil_s_v_alb', 'patch', &
+         landpatch, soil_s_v_alb, DEF_Srfdata_CompressLevel)
 
 #ifdef SrfdataDiag
       typpatch = (/(ityp, ityp = 0, N_land_classification)/)
       lndname  = trim(dir_model_landdata) // '/diag/soil_brightness_patch_' // trim(cyear) // '.nc'
       CALL srfdata_map_and_write (soil_s_v_alb, landpatch%settyp, typpatch, m_patch2diag, &
-         -1.0e36_r8, lndname, 'soil_s_v_alb', compress = 1, write_mode = 'one')
+         -1.0e36_r8, lndname, 'soil_s_v_alb', compress = 1, write_mode = 'one', create_mode=.true.)
 #endif
 
       ! (2) Write-out the albedo of visible of the dry soil
       lndname = trim(landdir)//'/soil_d_v_alb_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
       CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
-      CALL ncio_write_vector (lndname, 'soil_d_v_alb', 'patch', landpatch, soil_d_v_alb, DEF_Srfdata_CompressLevel)
+      CALL ncio_write_vector (lndname, 'soil_d_v_alb', 'patch', &
+         landpatch, soil_d_v_alb, DEF_Srfdata_CompressLevel)
 
 #ifdef SrfdataDiag
       typpatch = (/(ityp, ityp = 0, N_land_classification)/)
@@ -332,7 +365,8 @@ SUBROUTINE Aggregation_SoilBrightness ( &
       lndname = trim(landdir)//'/soil_s_n_alb_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
       CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
-      CALL ncio_write_vector (lndname, 'soil_s_n_alb', 'patch', landpatch, soil_s_n_alb, DEF_Srfdata_CompressLevel)
+      CALL ncio_write_vector (lndname, 'soil_s_n_alb', 'patch', &
+         landpatch, soil_s_n_alb, DEF_Srfdata_CompressLevel)
 
 #ifdef SrfdataDiag
       typpatch = (/(ityp, ityp = 0, N_land_classification)/)
@@ -345,20 +379,14 @@ SUBROUTINE Aggregation_SoilBrightness ( &
       lndname = trim(landdir)//'/soil_d_n_alb_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
       CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
-      CALL ncio_write_vector (lndname, 'soil_d_n_alb', 'patch', landpatch, soil_d_n_alb, DEF_Srfdata_CompressLevel)
+      CALL ncio_write_vector (lndname, 'soil_d_n_alb', 'patch', &
+         landpatch, soil_d_n_alb, DEF_Srfdata_CompressLevel)
 
 #ifdef SrfdataDiag
       typpatch = (/(ityp, ityp = 0, N_land_classification)/)
       lndname  = trim(dir_model_landdata) // '/diag/soil_brightness_patch_' // trim(cyear) // '.nc'
       CALL srfdata_map_and_write (soil_d_n_alb, landpatch%settyp, typpatch, m_patch2diag, &
          -1.0e36_r8, lndname, 'soil_d_n_alb', compress = 1, write_mode = 'one')
-#endif
-
-#else
-      SITE_soil_s_v_alb = soil_s_v_alb(1)
-      SITE_soil_d_v_alb = soil_d_v_alb(1)
-      SITE_soil_s_n_alb = soil_s_n_alb(1)
-      SITE_soil_d_n_alb = soil_d_n_alb(1)
 #endif
 
       ! Deallocate the allocatable array

@@ -27,9 +27,9 @@ CONTAINS
 
 !-----------------------------------------------------------------------
 
-   SUBROUTINE albland (ipatch, patchtype, deltim,&
+   SUBROUTINE albland (ipatch,patchtype,deltim,&
                       soil_s_v_alb,soil_d_v_alb,soil_s_n_alb,soil_d_n_alb,&
-                      chil,rho,tau,fveg,green,lai,sai,coszen,&
+                      chil,rho,tau,fveg,green,lai,sai,fwet_snow,coszen,&
                       wt,fsno,scv,scvold,sag,ssw,pg_snow,forc_t,t_grnd,t_soisno,dz_soisno,&
                       snl,wliq_soisno,wice_soisno,snw_rds,snofrz,&
                       mss_bcpho,mss_bcphi,mss_ocpho,mss_ocphi,&
@@ -37,39 +37,44 @@ CONTAINS
                       alb,ssun,ssha,ssoi,ssno,ssno_lyr,thermk,extkb,extkd)
 
 !=======================================================================
-! Calculates fragmented albedos (direct and diffuse) in
-! wavelength regions split at 0.7um.
+!  Calculates fragmented albedos (direct and diffuse) in
+!  wavelength regions split at 0.7um.
 !
-! (1) soil albedos: as in BATS formulations, which are the function of
-!     soil color and moisture in the surface soil layer
-! (2) snow albedos: as in BATS formulations, which are inferred from
-!     the calculations of Wiscombe and Warren (1980) and the snow model
-!     and data of Anderson(1976), and the function of snow age, grain size,
-!     solar zenith angle, pollution, the amount of the fresh snow
-! (3) canopy albedo: two-stream approximation model
-! (4) glacier albedos: as in BATS, which are set to constants (0.8 for visible beam,
-!     0.55 for near-infrared)
-! (5) lake and wetland albedos: as in BATS, which depend on cosine solar zenith angle,
-!     based on data in Henderson-Sellers (1986). The frozen lake and wetland albedos
-!     are set to constants (0.6 for visible beam, 0.4 for near-infrared)
-! (6) over the snow covered tile, the surface albedo is estimated by a linear
-!     combination of albedos for snow, canopy and bare soil (or lake, wetland, glacier).
+!  (1) soil albedos: as in BATS formulations, which are the function of
+!      soil color and moisture in the surface soil layer
+!  (2) snow albedos: as in BATS formulations, which are inferred from
+!      the calculations of Wiscombe and Warren (1980) and the snow model
+!      and data of Anderson(1976), and the function of snow age, grain
+!      size, solar zenith angle, pollution, the amount of the fresh snow
+!  (3) canopy albedo: two-stream approximation model
+!  (4) glacier albedos: as in BATS, which are set to constants (0.8 for
+!      visible beam, 0.55 for near-infrared)
+!  (5) lake and wetland albedos: as in BATS, which depend on cosine solar
+!      zenith angle, based on data in Henderson-Sellers (1986). The
+!      frozen lake and wetland albedos are set to constants (0.6 for
+!      visible beam, 0.4 for near-infrared)
+!  (6) over the snow covered tile, the surface albedo is estimated by a
+!      linear combination of albedos for snow, canopy and bare soil (or
+!      lake, wetland, glacier).
 !
-! Original author : Yongjiu Dai, 09/15/1999; 08/30/2002, 03/2014
+!  Original author: Yongjiu Dai, 09/15/1999; 08/30/2002, 03/2014
 !
 ! !REVISIONS:
-! Hua Yuan, 12/2019: added a wrap FUNCTION for PFT calculation, details see
-!                    twostream_wrap() added a wrap FUNCTION for PC (3D) calculation,
-!                    details see ThreeDCanopy_wrap()
+!  12/2019, Hua Yuan: added a wrap FUNCTION for PFT calculation, details
+!           see twostream_wrap() added a wrap FUNCTION for PC (3D)
+!           calculation, details see ThreeDCanopy_wrap()
 !
-! Hua Yuan, 03/2020: added an improved two-stream model, details see
-!                    twostream_mod()
+!  03/2020, Hua Yuan: added an improved two-stream model, details see
+!           twostream_mod()
 !
-! Hua Yuan, 08/2020: account for stem optical property effects in twostream
-!                    model
+!  08/2020, Hua Yuan: account for stem optical property effects in
+!           twostream model
 !
-! Hua Yuan, 01/2023: CALL SNICAR model to calculate snow albedo&absorption,
-!                    added SNICAR related variables
+!  01/2023, Hua Yuan: CALL SNICAR model to calculate snow
+!           albedo&absorption, added SNICAR related variables
+!
+!  04/2024, Hua Yuan: add option to account for vegetation snow process
+!
 !=======================================================================
 
    USE MOD_Precision
@@ -90,38 +95,39 @@ CONTAINS
 
    IMPLICIT NONE
 
-!------------------------- Dummy Arguments -----------------------------
+!-------------------------- Dummy Arguments ----------------------------
 ! ground cover index
    integer, intent(in) :: &
-        ipatch,       &! patch index
-        patchtype      ! land patch type (0=soil, 1=urban or built-up, 2=wetland,
-                       ! 3=land ice, 4=deep lake)
+        ipatch,        &! patch index
+        patchtype       ! land patch type (0=soil, 1=urban or built-up, 2=wetland,
+                        ! 3=land ice, 4=water body)
    integer, intent(in) :: &
-        snl            ! number of snow layers
+        snl             ! number of snow layers
 
    real(r8), intent(in) :: &
-        deltim,       &! seconds in a time step [second]
-        soil_s_v_alb, &! albedo of visible of the saturated soil
-        soil_d_v_alb, &! albedo of visible of the dry soil
-        soil_s_n_alb, &! albedo of near infrared of the saturated soil
-        soil_d_n_alb, &! albedo of near infrared of the dry soil
-        chil,         &! leaf angle distribution factor
-        rho(2,2),     &! leaf reflectance (iw=iband, il=life and dead)
-        tau(2,2),     &! leaf transmittance (iw=iband, il=life and dead)
-        fveg,         &! fractional vegetation cover [-]
-        green,        &! green leaf fraction
-        lai,          &! leaf area index (LAI+SAI) [m2/m2]
-        sai,          &! stem area index (LAI+SAI) [m2/m2]
+        deltim,        &! seconds in a time step [second]
+        soil_s_v_alb,  &! albedo of visible of the saturated soil
+        soil_d_v_alb,  &! albedo of visible of the dry soil
+        soil_s_n_alb,  &! albedo of near infrared of the saturated soil
+        soil_d_n_alb,  &! albedo of near infrared of the dry soil
+        chil,          &! leaf angle distribution factor
+        rho(2,2),      &! leaf reflectance (iw=iband, il=life and dead)
+        tau(2,2),      &! leaf transmittance (iw=iband, il=life and dead)
+        fveg,          &! fractional vegetation cover [-]
+        green,         &! green leaf fraction
+        lai,           &! leaf area index (LAI+SAI) [m2/m2]
+        sai,           &! stem area index (LAI+SAI) [m2/m2]
+        fwet_snow,     &! vegetation snow fractional cover [-]
 
-        coszen,       &! cosine of solar zenith angle [-]
-        wt,           &! fraction of vegetation covered by snow [-]
-        fsno,         &! fraction of soil covered by snow [-]
-        ssw,          &! water volumetric content of soil surface layer [m3/m3]
-        scv,          &! snow cover, water equivalent [mm]
-        scvold,       &! snow cover for previous time step [mm]
-        pg_snow,      &! snowfall onto ground including canopy runoff [kg/(m2 s)]
-        forc_t,       &! atmospheric temperature [K]
-        t_grnd         ! ground surface temperature [K]
+        coszen,        &! cosine of solar zenith angle [-]
+        wt,            &! fraction of vegetation covered by snow [-]
+        fsno,          &! fraction of soil covered by snow [-]
+        ssw,           &! water volumetric content of soil surface layer [m3/m3]
+        scv,           &! snow cover, water equivalent [mm]
+        scvold,        &! snow cover for previous time step [mm]
+        pg_snow,       &! snowfall onto ground including canopy runoff [kg/(m2 s)]
+        forc_t,        &! atmospheric temperature [K]
+        t_grnd          ! ground surface temperature [K]
 
    real(r8), intent(in) :: &
         wliq_soisno  ( maxsnl+1:0 ), &! liquid water (kg/m2)
@@ -144,104 +150,104 @@ CONTAINS
    real(r8), intent(inout) :: sag     ! non dimensional snow age [-]
 
    real(r8), intent(out) :: &
-        alb(2,2),     &! averaged albedo [-]
-        ssun(2,2),    &! sunlit canopy absorption for solar radiation
-        ssha(2,2),    &! shaded canopy absorption for solar radiation,
-                       ! normalized by the incident flux
-        thermk,       &! canopy gap fraction for tir radiation
-        extkb,        &! (k, g(mu)/mu) direct solar extinction coefficient
-        extkd          ! diffuse and scattered diffuse PAR extinction coefficient
+        alb(2,2),      &! averaged albedo [-]
+        ssun(2,2),     &! sunlit canopy absorption for solar radiation
+        ssha(2,2),     &! shaded canopy absorption for solar radiation,
+                        ! normalized by the incident flux
+        thermk,        &! canopy gap fraction for tir radiation
+        extkb,         &! (k, g(mu)/mu) direct solar extinction coefficient
+        extkd           ! diffuse and scattered diffuse PAR extinction coefficient
 
    real(r8), intent(out) :: &
-        ssoi(2,2),    &! ground soil absorption [-]
-        ssno(2,2),    &! ground snow absorption [-]
+        ssoi(2,2),     &! ground soil absorption [-]
+        ssno(2,2),     &! ground snow absorption [-]
         ssno_lyr(2,2,maxsnl+1:1) ! ground snow layer absorption, by SNICAR [-]
 
-!-------------------------- Local variables ----------------------------
+!-------------------------- Local Variables ----------------------------
 
    real(r8) :: &!
-      age,          &! factor to reduce visible snow alb due to snow age [-]
-      albg0,        &! temporary varaiable [-]
-      albsoi(2,2),  &! soil albedo [-]
-      albsno(2,2),  &! snow albedo [-]
-      albsno_pur(2,2),&! snow albedo [-]
-      albsno_bc (2,2),&! snow albedo [-]
-      albsno_oc (2,2),&! snow albedo [-]
-      albsno_dst(2,2),&! snow albedo [-]
-      albg(2,2),    &! albedo, ground
-      albv(2,2),    &! albedo, vegetation [-]
-      alb_s_inc,    &! decrease in soil albedo due to wetness [-]
-      beta0,        &! upscattering parameter for direct beam [-]
-      cff,          &! snow alb correction factor for zenith angle > 60 [-]
-      conn,         &! constant (=0.5) for visible snow alb calculation [-]
-      cons,         &! constant (=0.2) for nir snow albedo calculation [-]
-      czen,         &! cosine of solar zenith angle > 0 [-]
-      czf,          &! solar zenith correction for new snow albedo [-]
-      dfalbl,       &! snow albedo for diffuse nir radiation [-]
-      dfalbs,       &! snow albedo for diffuse visible solar radiation [-]
-      dralbl,       &! snow albedo for visible radiation [-]
-      dralbs,       &! snow albedo for near infrared radiation [-]
-      lsai,         &! leaf and stem area index (LAI+SAI) [m2/m2]
-      sl,           &! factor that helps control alb zenith dependence [-]
-      snal0,        &! alb for visible,incident on new snow (zen ang<60) [-]
-      snal1,        &! alb for NIR, incident on new snow (zen angle<60) [-]
-      upscat,       &! upward scattered fraction for direct beam [-]
-      tran(2,3)      ! canopy transmittances for solar radiation
+      age,             &! factor to reduce visible snow alb due to snow age [-]
+      albg0,           &! temporary variable [-]
+      albsoi(2,2),     &! soil albedo [-]
+      albsno(2,2),     &! snow albedo [-]
+      albsno_pur(2,2), &! snow albedo [-]
+      albsno_bc (2,2), &! snow albedo [-]
+      albsno_oc (2,2), &! snow albedo [-]
+      albsno_dst(2,2), &! snow albedo [-]
+      albg(2,2),       &! albedo, ground
+      albv(2,2),       &! albedo, vegetation [-]
+      alb_s_inc,       &! decrease in soil albedo due to wetness [-]
+      beta0,           &! upscattering parameter for direct beam [-]
+      cff,             &! snow alb correction factor for zenith angle > 60 [-]
+      conn,            &! constant (=0.5) for visible snow alb calculation [-]
+      cons,            &! constant (=0.2) for nir snow albedo calculation [-]
+      czen,            &! cosine of solar zenith angle > 0 [-]
+      czf,             &! solar zenith correction for new snow albedo [-]
+      dfalbl,          &! snow albedo for diffuse nir radiation [-]
+      dfalbs,          &! snow albedo for diffuse vis radiation [-]
+      dralbl,          &! snow albedo for direct nir radiation [-]
+      dralbs,          &! snow albedo for direct vis radiation [-]
+      lsai,            &! leaf and stem area index (LAI+SAI) [m2/m2]
+      sl,              &! factor that helps control alb zenith dependence [-]
+      snal0,           &! alb for visible,incident on new snow (zen ang<60) [-]
+      snal1,           &! alb for NIR, incident on new snow (zen angle<60) [-]
+      upscat,          &! upward scattered fraction for direct beam [-]
+      tran(2,3)         ! canopy transmittances for solar radiation
 
    integer ps, pe
-   logical do_capsnow      ! true => DO snow capping
-   logical use_snicar_frc  ! true: IF radiative forcing is being calculated, first estimate clean-snow albedo
-   logical use_snicar_ad   ! true: use SNICAR_AD_RT, false: use SNICAR_RT
+   logical do_capsnow      !true => DO snow capping
+   logical use_snicar_frc  !true: IF radiative forcing is calculated,
+                           !first estimate clean-snow albedo
+   logical use_snicar_ad   !true: use SNICAR_AD_RT, false: use SNICAR_RT
 
-   real(r8) snwcp_ice                        !excess precipitation due to snow capping [kg m-2 s-1]
-   real(r8) mss_cnc_bcphi ( maxsnl+1:0 )     !mass concentration of hydrophilic BC (col,lyr) [kg/kg]
-   real(r8) mss_cnc_bcpho ( maxsnl+1:0 )     !mass concentration of hydrophobic BC (col,lyr) [kg/kg]
-   real(r8) mss_cnc_ocphi ( maxsnl+1:0 )     !mass concentration of hydrophilic OC (col,lyr) [kg/kg]
-   real(r8) mss_cnc_ocpho ( maxsnl+1:0 )     !mass concentration of hydrophobic OC (col,lyr) [kg/kg]
-   real(r8) mss_cnc_dst1  ( maxsnl+1:0 )     !mass concentration of dust aerosol species 1 (col,lyr) [kg/kg]
-   real(r8) mss_cnc_dst2  ( maxsnl+1:0 )     !mass concentration of dust aerosol species 2 (col,lyr) [kg/kg]
-   real(r8) mss_cnc_dst3  ( maxsnl+1:0 )     !mass concentration of dust aerosol species 3 (col,lyr) [kg/kg]
-   real(r8) mss_cnc_dst4  ( maxsnl+1:0 )     !mass concentration of dust aerosol species 4 (col,lyr) [kg/kg]
+   real(r8) snwcp_ice                     !excess precipitation due to snow capping [kg m-2 s-1]
+   real(r8) mss_cnc_bcphi ( maxsnl+1:0 )  !mass concentration of hydrophilic BC [kg/kg]
+   real(r8) mss_cnc_bcpho ( maxsnl+1:0 )  !mass concentration of hydrophobic BC [kg/kg]
+   real(r8) mss_cnc_ocphi ( maxsnl+1:0 )  !mass concentration of hydrophilic OC [kg/kg]
+   real(r8) mss_cnc_ocpho ( maxsnl+1:0 )  !mass concentration of hydrophobic OC [kg/kg]
+   real(r8) mss_cnc_dst1  ( maxsnl+1:0 )  !mass concentration of dust aerosol species 1 [kg/kg]
+   real(r8) mss_cnc_dst2  ( maxsnl+1:0 )  !mass concentration of dust aerosol species 2 [kg/kg]
+   real(r8) mss_cnc_dst3  ( maxsnl+1:0 )  !mass concentration of dust aerosol species 3 [kg/kg]
+   real(r8) mss_cnc_dst4  ( maxsnl+1:0 )  !mass concentration of dust aerosol species 4 [kg/kg]
 
 ! ----------------------------------------------------------------------
 ! 1. Initial set
 ! ----------------------------------------------------------------------
 
 ! visible and near infrared band albedo for new snow
-      snal0 = 0.85     ! visible band
-      snal1 = 0.65     ! near infrared
+      snal0 = 0.85         !visible band
+      snal1 = 0.65         !near infrared
 
 ! ----------------------------------------------------------------------
 ! set default soil and vegetation albedos and solar absorption
-      !TODO: need double check
-      alb (:,:) = 1.   ! averaged
-      albg(:,:) = 1.   ! ground
-      albv(:,:) = 1.   ! vegetation
-      ssun(:,:) = 0.   ! sunlit leaf absorption
-      ssha(:,:) = 0.   ! shaded leaf absorption
-      tran(:,1) = 0.   ! incident direct  radiation duffuse transmittance
-      tran(:,2) = 1.   ! incident diffuse radiation diffuse transmittance
-      tran(:,3) = 1.   ! incident direct  radiation direct  transmittance
+      alb (:,:) = 1.       !averaged
+      albg(:,:) = 1.       !ground
+      albv(:,:) = 1.       !vegetation
+      ssun(:,:) = 0.       !sunlit leaf absorption
+      ssha(:,:) = 0.       !shaded leaf absorption
+      tran(:,1) = 0.       !incident direct  radiation diffuse transmittance
+      tran(:,2) = 1.       !incident diffuse radiation diffuse transmittance
+      tran(:,3) = 1.       !incident direct  radiation direct  transmittance
 
-      ! 07/06/2023, yuan: use the values of previous timestep.
+      ! 07/06/2023, yuan: use the values of previous timestep
       ! for nighttime longwave calculations.
-      !thermk    = 1.e-3
+      !thermk   = 1.e-3
       IF (lai+sai <= 1.e-6) THEN
          thermk = 1.
       ENDIF
       extkb     = 1.
       extkd     = 0.718
 
-      albsno    (:,:) = 0.     !set initial snow albedo
-      albsno_pur(:,:) = 0.     !set initial pure snow albedo
-      albsno_bc (:,:) = 0.     !set initial BC   snow albedo
-      albsno_oc (:,:) = 0.     !set initial OC   snow albedo
-      albsno_dst(:,:) = 0.     !set initial dust snow albedo
+      albsno    (:,:) = 1. !set initial snow albedo
+      albsno_pur(:,:) = 1. !set initial pure snow albedo
+      albsno_bc (:,:) = 1. !set initial BC   snow albedo
+      albsno_oc (:,:) = 1. !set initial OC   snow albedo
+      albsno_dst(:,:) = 1. !set initial dust snow albedo
 
       ! soil and snow absorption
-      ssoi      (:,:) = 0.     !set initial soil absorption
-      ssno      (:,:) = 0.     !set initial snow absorption
-      ssno_lyr(:,:,:) = 0.     !set initial snow layer absorption
+      ssoi      (:,:) = 0. !set initial soil absorption
+      ssno      (:,:) = 0. !set initial snow absorption
+      ssno_lyr(:,:,:) = 0. !set initial snow layer absorption
 
 IF (patchtype == 0) THEN
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
@@ -263,9 +269,9 @@ ENDIF
 !  (based on new snow level state, after SnowFilter is rebuilt.
 !  NEEDS TO BE AFTER SnowFiler is rebuilt, otherwise there
 !  can be zero snow layers but an active column in filter)
-
-      snwcp_ice   = 0.0       !excess precipitation due to snow capping [kg m-2 s-1]
-      do_capsnow  = .false.   !true => DO snow capping
+IF (DEF_USE_SNICAR) THEN
+      snwcp_ice  = 0.0     !excess precipitation due to snow capping [kg m-2 s-1]
+      do_capsnow = .false. !true => DO snow capping
 
       CALL AerosolMasses( deltim, snl ,do_capsnow ,&
            wice_soisno(:0),wliq_soisno(:0),snwcp_ice      ,snw_rds       ,&
@@ -279,24 +285,23 @@ ENDIF
 ! ----------------------------------------------------------------------
 ! Snow aging routine based on Flanner and Zender (2006), Linking snowpack
 ! microphysics and albedo evolution, JGR, and Brun (1989), Investigation of
-! wet-snow metamorphism in respect of liquid-water content, Ann. Glaciol.
+! wet-snow metamorphism in respect of liquid-water content, Ann. Glacial.
 
-      CALL SnowAge_grain(   deltim ,snl    ,dz_soisno(:1)  ,&
-           pg_snow         ,snwcp_ice      ,snofrz         ,&
+      CALL SnowAge_grain(  deltim ,snl    ,dz_soisno(:1)  ,&
+           pg_snow        ,snwcp_ice      ,snofrz         ,&
 
-           do_capsnow      ,fsno           ,scv            ,&
-           wliq_soisno (:0),wice_soisno(:0),&
-           t_soisno    (:1),t_grnd         ,&
-           forc_t          ,snw_rds         )
-
+           do_capsnow     ,fsno           ,scv            ,&
+           wliq_soisno(:0),wice_soisno(:0),t_soisno(:1)   ,&
+           t_grnd         ,forc_t         ,snw_rds         )
+ENDIF
 ! ----------------------------------------------------------------------
 
-      lsai=lai+sai
-      IF(coszen<=0.) THEN
-         RETURN  !only DO albedo when coszen > 0
+      lsai = lai + sai
+      IF(coszen <= -0.3) THEN
+         RETURN  !only DO albedo when coszen > -0.3
       ENDIF
 
-      czen=max(coszen,0.001)
+      czen = max(coszen, 0.001)
 
 ! ----------------------------------------------------------------------
 ! 2. get albedo over land
@@ -309,12 +314,12 @@ ENDIF
          albg(:,2) = albg(:,1)           !diffused albedos setting
 
 ! 2.2 albedos for permanent ice sheet.
-      ELSE IF(patchtype == 3) THEN       !permanent ice sheet
+      ELSEIF (patchtype == 3) THEN       !permanent ice sheet
          albg(1,:) = 0.8
          albg(2,:) = 0.55
 
 ! 2.3 albedo for inland water
-      ELSE IF(patchtype >= 4) THEN
+      ELSEIF (patchtype >= 4) THEN
          albg0 = 0.05/(czen+0.15)
          albg(:,1) = albg0
          albg(:,2) = 0.1                 !Subin (2012)
@@ -339,7 +344,7 @@ ENDIF
          IF (.not. DEF_USE_SNICAR) THEN
             cons = 0.2
             conn = 0.5
-            sl   = 2.0               !sl helps control albedo zenith dependence
+            sl   = 2.0    !sl helps control albedo zenith dependence
 
             ! 05/02/2023, Dai: move from CoLMMAIN.F90
             ! update the snow age
@@ -367,18 +372,19 @@ ENDIF
          ELSE
 
             ! 01/09/2023, yuan: CALL SNICAR for snow albedo
-            use_snicar_frc = .false.  !  true: IF radiative forcing is being calculated, first estimate clean-snow albedo
+            use_snicar_frc = .false.  !  true: IF radiative forcing is being calculated,
+                                      !  first estimate clean-snow albedo
             use_snicar_ad  = .true.   !  use true: use SNICAR_AD_RT, false: use SNICAR_RT
 
-            CALL SnowAlbedo(     use_snicar_frc ,use_snicar_ad  ,coszen         ,&
+            CALL SnowAlbedo(     use_snicar_frc ,use_snicar_ad  ,czen           ,&
                  albg(:,1)      ,albg(:,2)      ,snl            ,fsno           ,&
                  scv            ,wliq_soisno    ,wice_soisno    ,snw_rds        ,&
 
                  mss_cnc_bcphi  ,mss_cnc_bcpho  ,mss_cnc_ocphi  ,mss_cnc_ocpho  ,&
                  mss_cnc_dst1   ,mss_cnc_dst2   ,mss_cnc_dst3   ,mss_cnc_dst4   ,&
 
-                 albsno(:,1)    ,albsno(:,2)    ,albsno_pur(:,1),albsno_pur(:,2),&
-                 albsno_bc(:,1) ,albsno_bc(:,2) ,albsno_oc(:,1) ,albsno_oc(:,2) ,&
+                 albsno    (:,1),albsno    (:,2),albsno_pur(:,1),albsno_pur(:,2),&
+                 albsno_bc (:,1),albsno_bc (:,2),albsno_oc (:,1),albsno_oc (:,2),&
                  albsno_dst(:,1),albsno_dst(:,2),ssno_lyr(1,1,:),ssno_lyr(2,1,:),&
                  ssno_lyr(1,2,:),ssno_lyr(2,2,:))
 
@@ -397,26 +403,25 @@ ENDIF
 ! ----------------------------------------------------------------------
 ! 4. canopy albedos: two stream approximation or 3D canopy radiation transfer
 ! ----------------------------------------------------------------------
-      IF (lai+sai > 1e-6) THEN
+      IF (lai+sai > 1e-6 .and. patchtype < 3) THEN
+
+         ! initialization
+         albv(:,:) = albg(:,:)
 
          IF (patchtype == 0) THEN  !soil patches
 
 #if (defined LULC_USGS || defined LULC_IGBP)
-            CALL twostream (chil,rho,tau,green,lai,sai,&
+            CALL twostream (chil,rho,tau,green,lai,sai,fwet_snow,&
                             czen,albg,albv,tran,thermk,extkb,extkd,ssun,ssha)
 
             ! 08/31/2023, yuan: to be consistent with PFT and PC
-            !albv(:,:) = (1.-  wt)*albv(:,:) + wt*albsno(:,:)
-            !alb (:,:) = (1.-fveg)*albg(:,:) + fveg*albv(:,:)
             alb(:,:) = albv(:,:)
 #endif
          ELSE  !other patchtypes (/=0)
-            CALL twostream (chil,rho,tau,green,lai,sai,&
+            CALL twostream (chil,rho,tau,green,lai,sai,fwet_snow,&
                             czen,albg,albv,tran,thermk,extkb,extkd,ssun,ssha)
 
             ! 08/31/2023, yuan: to be consistent with PFT and PC
-            !albv(:,:) = (1.-  wt)*albv(:,:) + wt*albsno(:,:)
-            !alb (:,:) = (1.-fveg)*albg(:,:) + fveg*albv(:,:)
             alb(:,:) = albv(:,:)
 
          ENDIF
@@ -430,18 +435,17 @@ ENDIF
 #endif
 
 #ifdef LULC_IGBP_PC
-         !NOTE: if patchclass is CROPLAND, using twostream model
-         IF (patchclass(ipatch) == CROPLAND) THEN
-            CALL twostream_wrap (ipatch, czen, albg, albv, tran, ssun, ssha)
-            alb(:,:) = albv(:,:)
-         ELSE
-            CALL ThreeDCanopy_wrap (ipatch, czen, albg, albv, tran, ssun, ssha)
-            alb(:,:) = albv(:,:)
-         ENDIF
+         ! Only process nature PFTs using 3D model if set DEF_PC_CROP_SPLIT true
+         CALL ThreeDCanopy_wrap (ipatch, czen, albg, albv, tran, ssun, ssha)
+
+         ! Process crop PFTs using 1D model if set DEF_PC_CROP_SPLIT true
+         CALL twostream_wrap (ipatch, czen, albg, albv, tran, ssun, ssha)
+
+         alb(:,:) = albv(:,:)
 #endif
       ENDIF
 
-      ! treat soil/snow albedo in direct and diffuse respectively
+      ! treat soil/snow absorption in direct and diffuse respectively
       ssoi(1,1) = tran(1,1)*(1.-albsoi(1,2)) + tran(1,3)*(1-albsoi(1,1))
       ssoi(2,1) = tran(2,1)*(1.-albsoi(2,2)) + tran(2,3)*(1-albsoi(2,1))
       ssoi(1,2) = tran(1,2)*(1.-albsoi(1,2))
@@ -457,22 +461,23 @@ ENDIF
    END SUBROUTINE albland
 
 
-   SUBROUTINE twostream ( chil, rho, tau, green, lai, sai, &
+   SUBROUTINE twostream ( chil, rho, tau, green, lai, sai, fwet_snow, &
               coszen, albg, albv, tran, thermk, extkb, extkd, ssun, ssha )
 
 !-----------------------------------------------------------------------
 !
-!     calculation of canopy albedos via two stream approximation (direct
-!     and diffuse ) and partition of incident solar
+!  calculation of canopy albedos via two stream approximation (direct
+!  and diffuse ) and partition of incident solar
 !
-! Original author: Yongjiu Dai, June 11, 2001
+!  Original author: Yongjiu Dai, June 11, 2001
 !
 !-----------------------------------------------------------------------
 
    USE MOD_Precision
+   USE MOD_Namelist, only: DEF_VEG_SNOW
    IMPLICIT NONE
 
-! parameters
+!-------------------------- Dummy Arguments ----------------------------
    real(r8), intent(in) :: &
           ! static parameters associated with vegetation type
             chil,          &! leaf angle distribution factor
@@ -482,7 +487,8 @@ ENDIF
           ! time-space varying vegetation parameters
             green,         &! green leaf fraction
             lai,           &! leaf area index of exposed canopy (snow-free)
-            sai             ! stem area index
+            sai,           &! stem area index
+            fwet_snow       ! vegetation snow fractional cover [-]
 
 ! environmental variables
    real(r8), intent(in) :: &
@@ -500,7 +506,7 @@ ENDIF
             ssha(2,2)       ! shaded canopy absorption for solar radiation,
                             ! normalized by the incident flux
 
-!-------------------------- local -----------------------------------
+!-------------------------- Local Variables ----------------------------
    real(r8) :: &
             lsai,          &! lai+sai
             sai_,          &! sai=0 for USGS, no stem
@@ -512,7 +518,7 @@ ENDIF
             zmu2,          &! (zmu * zmu)
             as,            &! (a-s(mu))
             upscat,        &! (omega-beta)
-            betao,         &! (beta-0)
+            beta0,         &! (beta-0)
             psi,           &! (h)
 
             be,            &! (b)
@@ -556,31 +562,37 @@ ENDIF
             eup(2,2),      &! (integral of i_up*exp(-kx) )
             edown(2,2)      ! (integral of i_down*exp(-kx) )
 
-   integer iw                !
+   ! vegetation snow optical properties
+   real(r8) :: upscat_sno = 0.5   !upscat parameter for snow
+   real(r8) :: beta0_sno  = 0.5   !beta0 parameter for snow
+   real(r8) :: scat_sno(2)        !snow single scattering albedo
+   data scat_sno(1), scat_sno(2) /0.8, 0.4/   ! 1:vis, 2: nir
+
+   integer iw               ! band iterator
 
 !-----------------------------------------------------------------------
-! projected area of phytoelements in direction of mu and
+! projected area of photo elements in direction of mu and
 ! average inverse diffuse optical depth per unit leaf area
 
-      phi1 = 0.5 - 0.633 * chil - 0.33 * chil * chil
-      phi2 = 0.877 * ( 1. - 2. * phi1 )
+      phi1  = 0.5 - 0.633 * chil - 0.33 * chil * chil
+      phi2  = 0.877 * ( 1. - 2. * phi1 )
 
-      proj = phi1 + phi2 * coszen
-      extkb = (phi1 + phi2 * coszen) / coszen
+      proj  = phi1 + phi2 * coszen
+      extkb = proj / coszen
 
       extkd = 0.719
 
       IF (abs(phi1).gt.1.e-6 .and. abs(phi2).gt.1.e-6) THEN
          zmu = 1. / phi2 * ( 1. - phi1 / phi2 * log ( ( phi1 + phi2 ) / phi1 ) )
-      ELSE IF (abs(phi1).le.1.e-6) THEN
+      ELSEIF (abs(phi1).le.1.e-6) THEN
          zmu = 1./0.877
-      ELSE IF (abs(phi2).le.1.e-6) THEN
+      ELSEIF (abs(phi2).le.1.e-6) THEN
          zmu = 1./(2.*phi1)
       ENDIF
       zmu2 = zmu * zmu
 
-#if(defined LULC_USGS)
-      ! yuan: to be consistance with CoLM2014, no stem considered
+#if (defined LULC_USGS)
+      ! yuan: to be consistent with CoLM2014, no stem considered
       ! for twostream and leaf optical property calculations
       sai_ = 0.
 #else
@@ -603,19 +615,27 @@ ENDIF
 !-----------------------------------------------------------------------
 
 ! account for stem optical property effects
-      scat = lai/lsai * ( tau(iw,1) + rho(iw,1) ) + &
-            sai_/lsai * ( tau(iw,2) + rho(iw,2) )
+      scat =  lai/lsai * ( tau(iw,1) + rho(iw,1) ) &
+           + sai_/lsai * ( tau(iw,2) + rho(iw,2) )
 
       as = scat / 2. * proj / ( proj + coszen * phi2 )
       as = as * ( 1. - coszen * phi1 / ( proj + coszen * phi2 ) * &
-               log ( ( proj + coszen * phi2 + coszen * phi1 ) / ( coszen * phi1 ) ) )
+                 log ( ( proj + coszen * phi2 + coszen * phi1 ) / ( coszen * phi1 ) ) )
 
 ! account for stem optical property effects
       upscat = lai/lsai*tau(iw,1) + sai_/lsai*tau(iw,2)
       ! 09/12/2014, yuan: a bug, change 1. - chil -> 1. + chil
-      upscat = 0.5 * ( scat + ( scat - 2. * upscat ) * &
-               (( 1. + chil ) / 2. ) ** 2 )
-      betao = ( 1. + zmu * extkb ) / ( scat * zmu * extkb ) * as
+      upscat = 0.5 * ( scat + (scat - 2.*upscat) * ((1. + chil) / 2.) ** 2 )
+      beta0  = ( 1. + zmu * extkb ) / ( scat * zmu * extkb ) * as
+
+! account for snow on vegetation
+      ! modify scat, upscat and beta0
+      ! USE: fwet_snow, snow properties, scatter vis0.8, nir0.4, upscat0.5, beta0.5
+      IF ( DEF_VEG_SNOW ) THEN
+         scat   =   (1.-fwet_snow)*scat        + fwet_snow*scat_sno(iw)
+         upscat = ( (1.-fwet_snow)*scat*upscat + fwet_snow*scat_sno(iw)*upscat_sno ) / scat
+         beta0  = ( (1.-fwet_snow)*scat*beta0  + fwet_snow*scat_sno(iw)*beta0_sno  ) / scat
+      ENDIF
 
 !-----------------------------------------------------------------------
 !     intermediate variables identified in appendix of SE-85.
@@ -623,8 +643,8 @@ ENDIF
 
       be = 1. - scat + upscat
       ce = upscat
-      de = scat * zmu * extkb * betao
-      fe = scat * zmu * extkb * ( 1. - betao )
+      de = scat * zmu * extkb * beta0
+      fe = scat * zmu * extkb * ( 1. - beta0 )
 
       psi = sqrt(be**2 - ce**2)/zmu
       power1 = min( psi*lsai, 50. )
@@ -651,7 +671,7 @@ ENDIF
 
       sigma = ( zmu * extkb ) ** 2 + ( ce**2 - be**2 )
 
-      IF (abs(sigma) .gt. 1.e-10) THEN     !<======
+      IF (abs(sigma) .gt. 1.e-10) THEN
 
          hh1 = h1 / sigma
          hh4 = h4 / sigma
@@ -681,7 +701,7 @@ ENDIF
                      + hh5 * (1. - s1*s2) / (extkb + psi) &
                      + hh6 * (1. - s2/s1) / (extkb - psi)
 
-      ELSE                               !<======
+      ELSE
 
          m1 = f1 * s1
          m2 = f2 / s1
@@ -701,21 +721,18 @@ ENDIF
          hh6 = hh3 * p2 / ce
 
          albv(iw,1) =  - h1 / (2.*extkb*zmu2) + hh2 + hh3
-         tran(iw,1) = 1./ce * ( -h1 / (2.*extkb*zmu2) * &
-                                ( p3*lsai + p4 / (2.*extkb) ) - de ) * s2 &
-                     + hh5 * s1 + hh6 / s1
+         tran(iw,1) = 1./ce * ( -h1/(2.*extkb*zmu2) * (p3*lsai + p4/(2.*extkb)) - de ) * s2 &
+                    + hh5 * s1 + hh6 / s1
 
          eup(iw,1) = (hh2 - h1/(2.*extkb*zmu2)) * (1. - s2*s2) / (2.*extkb) &
                    + hh3 * (lsai - 0.) &
                    + h1/(2.*extkb*zmu2) * ( lsai*s2*s2 - (1. - s2*s2)/(2.*extkb) )
 
-         edown(iw,1) = (hh5 - (h1*p4/(4.*extkb*extkb*zmu) + de)/ce) * &
-                             (1. - s2*s2) / (2.*extkb) &
+         edown(iw,1) = (hh5 - (h1*p4/(4.*extkb*extkb*zmu) + de)/ce) * (1. - s2*s2)/(2.*extkb) &
                      + hh6 * (lsai - 0.) &
-                     + h1*p3/(ce*4.*extkb*extkb*zmu2) * &
-                                         ( lsai*s2*s2 - (1. - s2*s2)/(2.*extkb) )
+                     + h1*p3/(ce*4.*extkb*extkb*zmu2) * (lsai*s2*s2 - (1. - s2*s2)/(2.*extkb) )
 
-      ENDIF                              !<======
+      ENDIF
 
       ssun(iw,1) = (1.-scat) * ( 1.-s2 + 1. / zmu * (eup(iw,1) + edown(iw,1)) )
       ssha(iw,1) = scat * (1.-s2) &
@@ -746,12 +763,12 @@ ENDIF
       tran(iw,2) = hh9 * s1 + hh10 / s1
 
       IF (abs(sigma) .gt. 1.e-10) THEN
-         eup(iw,2)   = hh7 * (1. - s1*s2) / (extkb + psi) &
-                     + hh8 * (1. - s2/s1) / (extkb - psi)
-         edown(iw,2) = hh9 * (1. - s1*s2) / (extkb + psi) &
+         eup(iw,2)   = hh7  * (1. - s1*s2) / (extkb + psi) &
+                     + hh8  * (1. - s2/s1) / (extkb - psi)
+         edown(iw,2) = hh9  * (1. - s1*s2) / (extkb + psi) &
                      + hh10 * (1. - s2/s1) / (extkb - psi)
       ELSE
-         eup(iw,2)   = hh7 * (1. - s1*s2) / ( extkb + psi) + hh8 * (lsai - 0.)
+         eup(iw,2)   = hh7 * (1. - s1*s2) / ( extkb + psi) + hh8  * (lsai - 0.)
          edown(iw,2) = hh9 * (1. - s1*s2) / ( extkb + psi) + hh10 * (lsai - 0.)
       ENDIF
 
@@ -761,16 +778,16 @@ ENDIF
 
       ENDDO           ! WAVE_BAND_LOOP
 
-! 03/06/2020, yuan: add direct transmittance (s2) to
-!                   tran for incident direct case
-! 03/14/2020, yuan: save direct T to 3rd position of tran
+      ! 03/06/2020, yuan: add direct transmittance (s2) to
+      !                   tran for incident direct case
+      ! 03/14/2020, yuan: save direct T to 3rd position of tran
       tran(:,3) = s2
 
    END SUBROUTINE twostream
 
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
-   SUBROUTINE twostream_mod ( chil, rho, tau, green, lai, sai, &
+   SUBROUTINE twostream_mod ( chil, rho, tau, green, lai, sai, fwet_snow, &
               coszen, albg, albv, tran, thermk, extkb, extkd, ssun, ssha )
 
 !-----------------------------------------------------------------------
@@ -778,21 +795,23 @@ ENDIF
 ! !DESCRIPTION:
 !     An improved two stream approximation
 !
-! Original author: Yongjiu Dai, June 11, 2001
-!                  Hua Yuan, 03/2020
+!  Original author: Yongjiu Dai, June 11, 2001
+!                   Hua Yuan, 03/2020
 !
-! REFERENCES:
-! 1) Yuan, H., Dai, Y., Dickinson, R. E., Pinty, B., Shangguan, W., Zhang, S.,
-! et al. (2017). Reexamination and further development of two-stream canopy
-! radiative transfer models for global land modeling. Journal of Advances in
-! Modeling Earth Systems, 9(1), 113–129. https://doi.org/10.1002/2016MS000773
+! !REFERENCES:
+!  1) Yuan, H., Dai, Y., Dickinson, R. E., Pinty, B., Shangguan, W.,
+!  Zhang, S., et al. (2017). Reexamination and further development of
+!  two-stream canopy radiative transfer models for global land modeling.
+!  Journal of Advances in Modeling Earth Systems, 9(1), 113-129.
+!  https://doi.org/10.1002/2016MS000773
 !
 !-----------------------------------------------------------------------
 
    USE MOD_Precision
+   USE MOD_Namelist, only: DEF_VEG_SNOW
    IMPLICIT NONE
 
-! parameters
+!-------------------------- Dummy Arguments ----------------------------
    real(r8), intent(in) :: &
           ! static parameters associated with vegetation type
             chil,          &! leaf angle distribution factor
@@ -802,11 +821,12 @@ ENDIF
           ! time-space varying vegetation parameters
             green,         &! green leaf fraction
             lai,           &! leaf area index of exposed canopy (snow-free)
-            sai             ! stem area index
+            sai,           &! stem area index
+            fwet_snow       ! vegetation snow fractional cover [-]
 
 ! environmental variables
    real(r8), intent(in) :: &
-            coszen,        &! consine of solar zenith angle
+            coszen,        &! cosine of solar zenith angle
             albg(2,2)       ! albedos of ground
 
 ! output
@@ -820,7 +840,7 @@ ENDIF
             ssha(2,2)       ! shaded canopy absorption for solar radiation,
                             ! normalized by the incident flux
 
-!-------------------------- local -----------------------------------
+!-------------------------- Local Variables ----------------------------
    real(r8) :: &
             lsai,          &! lai+sai
             phi1,          &! (phi-1)
@@ -831,7 +851,7 @@ ENDIF
             zmu2,          &! (zmu * zmu)
             as,            &! (a-s(mu))
             upscat,        &! (omega-beta)
-            betao,         &! (beta-0)
+            beta0,         &! (beta-0)
             psi,           &! (h)
 
             be,            &! (b)
@@ -875,6 +895,12 @@ ENDIF
             eup,           &! (integral of i_up*exp(-kx) )
             edw             ! (integral of i_down*exp(-kx) )
 
+   ! vegetation snow optical properties
+   real(r8) :: upscat_sno = 0.5   !upscatter parameter for snow
+   real(r8) :: beta0_sno  = 0.5   !beta0 parameter for snow
+   real(r8) :: scat_sno(2)        !snow single scattering albedo
+   data scat_sno(1), scat_sno(2) /0.8, 0.4/   ! 1:vis, 2: nir
+
    integer iw                ! band loop index
    integer ic                ! direct/diffuse loop index
 
@@ -884,19 +910,19 @@ ENDIF
    real(r8) :: s2d, extkbd, sall(2,2), q, ssun_rev
 
 !-----------------------------------------------------------------------
-! projected area of phytoelements in direction of mu and
+! projected area of photo elements in direction of mu and
 ! average inverse diffuse optical depth per unit leaf area
 
-      phi1 = 0.5 - 0.633 * chil - 0.33 * chil * chil
-      phi2 = 0.877 * ( 1. - 2. * phi1 )
+      phi1  = 0.5 - 0.633 * chil - 0.33 * chil * chil
+      phi2  = 0.877 * ( 1. - 2. * phi1 )
 
       extkd = 0.719
 
       IF (abs(phi1).gt.1.e-6 .and. abs(phi2).gt.1.e-6) THEN
          zmu = 1. / phi2 * ( 1. - phi1 / phi2 * log ( ( phi1 + phi2 ) / phi1 ) )
-      ELSE IF (abs(phi1).le.1.e-6) THEN
+      ELSEIF (abs(phi1).le.1.e-6) THEN
          zmu = 1./0.877
-      ELSE IF (abs(phi2).le.1.e-6) THEN
+      ELSEIF (abs(phi2).le.1.e-6) THEN
          zmu = 1./(2.*phi1)
       ENDIF
       zmu2 = zmu * zmu
@@ -929,8 +955,8 @@ ENDIF
          cosz  = coszen
       ENDIF
 
-      proj = phi1 + phi2 * cosz
-      extkb = (phi1 + phi2 * cosz) / cosz
+      proj  = phi1 + phi2 * cosz
+      extkb = proj / cosz
 
 !-----------------------------------------------------------------------
 !     calculate average scattering coefficient, leaf projection and
@@ -945,20 +971,28 @@ ENDIF
 
       as = scat / 2. * proj / ( proj + cosz * phi2 )
       as = as * ( 1. - cosz * phi1 / ( proj + cosz * phi2 ) * &
-               log ( ( proj + cosz * phi2 + cosz * phi1 ) / ( cosz * phi1 ) ) )
+                 log ( ( proj + cosz * phi2 + cosz * phi1 ) / ( cosz * phi1 ) ) )
 
 ! + stem optical properties
       ! scat ~ omega
       ! upscat ~ betail*scat
-      ! betao ~ betadl
+      ! beta0 ~ betadl
       ! scat-2.*upscat ~ rho - tau
       upscat = lai/lsai*tau(iw,1) + sai/lsai*tau(iw,2)
-      upscat = 0.5 * ( scat + ( scat - 2. * upscat ) * &
-               (( 1. + chil ) / 2. ) ** 2 )
-      betao = ( 1. + zmu * extkb ) / ( scat * zmu * extkb ) * as
+      upscat = 0.5 * ( scat + (scat - 2.*upscat) * ((1. + chil) / 2.) ** 2 )
+      beta0  = ( 1. + zmu * extkb ) / ( scat * zmu * extkb ) * as
 
       ! [MODI 1]
-      betao = 0.5_r8 * ( scat + 1._r8/extkb*(1._r8+chil)**2/4._r8*(wrho-wtau) )/scat
+      beta0 = 0.5_r8 * ( scat + 1._r8/extkb*(1._r8+chil)**2/4._r8*(wrho-wtau) )/scat
+
+! account for snow on vegetation
+      ! modify scat, upscat and beta0
+      ! USE: fwet_snow, snow properties, scatter vis0.8, nir0.4, upscat0.5, beta0.5
+      IF ( DEF_VEG_SNOW ) THEN
+         scat   =   (1.-fwet_snow)*scat        + fwet_snow*scat_sno(iw)
+         upscat = ( (1.-fwet_snow)*scat*upscat + fwet_snow*scat_sno(iw)*upscat_sno ) / scat
+         beta0  = ( (1.-fwet_snow)*scat*beta0  + fwet_snow*scat_sno(iw)*beta0_sno  ) / scat
+      ENDIF
 
 !-----------------------------------------------------------------------
 !     intermediate variables identified in appendix of SE-85.
@@ -966,8 +1000,8 @@ ENDIF
 
       be = 1. - scat + upscat
       ce = upscat
-      de = scat * zmu * extkb * betao
-      fe = scat * zmu * extkb * ( 1. - betao )
+      de = scat * zmu * extkb * beta0
+      fe = scat * zmu * extkb * ( 1. - beta0 )
 
       psi = sqrt(be**2 - ce**2)/zmu
       power1 = min( psi*lsai, 50. )
@@ -999,7 +1033,7 @@ ENDIF
          extkbd = extkb
       ENDIF
 
-      IF (abs(sigma) .gt. 1.e-10) THEN     !<======
+      IF (abs(sigma) .gt. 1.e-10) THEN
 
          hh1 = h1 / sigma
          hh4 = h4 / sigma
@@ -1029,7 +1063,7 @@ ENDIF
              + hh5 * (1. - s2d*s1) / (extkbd + psi) &
              + hh6 * (1. - s2d/s1) / (extkbd - psi)
 
-      ELSE                               !<======
+      ELSE
 
          m1 = f1 * s1
          m2 = f2 / s1
@@ -1050,20 +1084,19 @@ ENDIF
 
          albv(iw,ic) =  - h1 / ((extkb+extkbd)*zmu2) + hh2 + hh3
          tran(iw,ic) = 1./ce * ( -h1 / ((extkb+extkbd)*zmu2) * &
-            ( p3*lsai + p4 / (extkb+extkbd) ) - de ) * s2 &
-            + hh5 * s1 + hh6 / s1
+                       ( p3*lsai + p4 / (extkb+extkbd) ) - de ) * s2 &
+                     + hh5 * s1 + hh6 / s1
 
          eup = (hh2 - h1/((extkb+extkbd)*zmu2)) * (1. - s2*s2d)/(extkb+extkbd) &
-            + hh3 * (lsai - 0.) &
-            + h1/((extkb+extkbd)*zmu2) * ( lsai*s2*s2d - (1. - s2*s2d)/(extkb+extkbd) )
+             + hh3 * (lsai - 0.) &
+             + h1/((extkb+extkbd)*zmu2) * ( lsai*s2*s2d - (1. - s2*s2d)/(extkb+extkbd) )
 
          edw = (hh5 - (h1*p4/((extkb+extkbd)*(extkb+extkbd)*zmu) + de)/ce) * &
-            (1. - s2*s2d) / (extkb+extkbd) &
-            + hh6 * (lsai - 0.) &
-            + h1*p3/(ce*(extkb+extkbd)*(extkb+extkbd)*zmu2) * &
-            ( lsai*s2*s2d - (1. - s2*s2d)/(extkb+extkbd) )
+               (1. - s2*s2d) / (extkb+extkbd) + hh6 * (lsai - 0.) &
+             + h1*p3/(ce*(extkb+extkbd)*(extkb+extkbd)*zmu2) * &
+               ( lsai*s2*s2d - (1. - s2*s2d)/(extkb+extkbd) )
 
-      ENDIF                              !<======
+      ENDIF
 
       sall(iw,ic) = 1. - albv(iw,ic) - (1.-albgblk)*(tran(iw,ic)+s2)
 
@@ -1087,7 +1120,7 @@ ENDIF
           + hh6 * (1._r8/s1/s2d - 1._r8) / (psi + extkbd)
 
       ssun_rev = s2d * (1._r8 - scat) * &
-         ( extkb*(1._r8-s2/s2d)/(extkb-extkbd) + 1._r8 / zmu * (eup + edw ) )
+                 ( extkb*(1._r8-s2/s2d)/(extkb-extkbd) + 1._r8 / zmu * (eup + edw ) )
 
       ! -----------------------------------------------------------
       ! consider the multiple reflectance between canopy and ground
@@ -1102,9 +1135,9 @@ ENDIF
          ! re-calculate the absorption, transmission and albedo
          ! for direct radiation
 
-! 03/06/2020, yuan: tran originally meant diffuse flow, now the direct
-!                   transmittance is also included
-! 03/14/2020, yuan: treat soil albedo in direct/diffuse cases
+         ! 03/06/2020, yuan: tran originally meant diffuse flow, now the direct
+         !                   transmittance is also included
+         ! 03/14/2020, yuan: treat soil albedo in direct/diffuse cases
          IF (ic == 1) THEN
             tran(iw,ic) = (s2d*albg(iw,1)*albv(iw,2) + tran(iw,ic)) / (1.-q)
             tran(:,3)   = s2d
@@ -1132,7 +1165,7 @@ ENDIF
 
       ENDDO !ic
 
-      End DO !iw
+      ENDDO !iw
 
       ! restore extkb
       extkb = extkbd
@@ -1148,38 +1181,42 @@ ENDIF
 !-----------------------------------------------------------------------
 !
 ! !DESCRIPTION:
-! A Wrap subroutine to calculate PFT radiation using two-stream model
+!  A Wrap subroutine to calculate PFT radiation using two-stream model
 !
-! Created by Hua Yuan, 03/2020
+!  Created by Hua Yuan, 03/2020
 !
 !-----------------------------------------------------------------------
-      USE MOD_Precision
-      USE MOD_LandPFT
-      USE MOD_Const_PFT
-      USE MOD_Vars_PFTimeInvariants
-      USE MOD_Vars_PFTimeVariables
-      IMPLICIT NONE
+   USE MOD_Precision
+   USE MOD_LandPFT
+   USE MOD_Const_PFT
+   USE MOD_Vars_PFTimeInvariants
+   USE MOD_Vars_PFTimeVariables
+   USE MOD_Namelist, only: DEF_USE_PC, DEF_PC_CROP_SPLIT
+   IMPLICIT NONE
 
-      ! parameters
-      integer, intent(in) :: &
-            ipatch          ! patch index
+!-------------------------- Dummy Arguments ----------------------------
+   integer, intent(in) :: &
+         ipatch          ! patch index
 
-      ! environmental variables
-      real(r8), intent(in) ::  &
-            coszen,        &! consine of solar zenith angle
-            albg(2,2)       ! albedos of ground
+   ! environmental variables
+   real(r8), intent(in) ::  &
+         coszen,        &! cosine of solar zenith angle
+         albg(2,2)       ! albedos of ground
 
-      ! output
-      real(r8), intent(out) :: &
-            albv(2,2),     &! albedo, vegetation [-]
-            tran(2,3),     &! canopy transmittances for solar radiation
-            ssun(2,2),     &! sunlit canopy absorption for solar radiation
-            ssha(2,2)       ! shaded canopy absorption for solar radiation,
-                            ! normalized by the incident flux
+   ! output
+   real(r8), intent(inout) :: &
+         albv(2,2),     &! albedo, vegetation [-]
+         tran(2,3),     &! canopy transmittances for solar radiation
+         ssun(2,2),     &! sunlit canopy absorption for solar radiation
+         ssha(2,2)       ! shaded canopy absorption for solar radiation,
+                         ! normalized by the incident flux
 
-      integer :: i, p, ps, pe
-      real(r8), allocatable :: tran_p(:,:,:)
-      real(r8), allocatable :: albv_p(:,:,:)
+!-------------------------- Local Variables ----------------------------
+   integer :: i, p, ps, pe
+   real(r8), allocatable :: tran_p(:,:,:)
+   real(r8), allocatable :: albv_p(:,:,:)
+
+!-----------------------------------------------------------------------
 
       ps = patch_pft_s(ipatch)
       pe = patch_pft_e(ipatch)
@@ -1189,10 +1226,19 @@ ENDIF
 
       DO i = ps, pe
          p = pftclass(i)
+
+         ! If defined DEF_PC_CROP_SPLIT, for crop PFTs, use 1D twostream model;
+         ! Otherwise, set their value to PC 3D model results.
+         IF ( DEF_USE_PC .and. (.not.DEF_PC_CROP_SPLIT .or. p.lt.15) ) THEN
+            albv_p(:,:,i) = albv(:,:)
+            tran_p(:,:,i) = tran(:,:)
+            CYCLE
+         ENDIF
+
          IF (lai_p(i)+sai_p(i) > 1.e-6) THEN
             CALL twostream_mod (chil_p(p),rho_p(:,:,p),tau_p(:,:,p),1.,lai_p(i),sai_p(i),&
-               coszen,albg,albv_p(:,:,i),tran_p(:,:,i),thermk_p(i),&
-               extkb_p(i),extkd_p(i),ssun_p(:,:,i),ssha_p(:,:,i))
+                 fwet_snow_p(i),coszen,albg,albv_p(:,:,i),tran_p(:,:,i),thermk_p(i),&
+                 extkb_p(i),extkd_p(i),ssun_p(:,:,i),ssha_p(:,:,i))
          ELSE
             albv_p(:,:,i) = albg(:,:)
             ssun_p(:,:,i) = 0.
@@ -1225,9 +1271,8 @@ ENDIF
       tran(2,2) = sum( tran_p(2,2,ps:pe)*pftfrac(ps:pe) )
       tran(2,3) = sum( tran_p(2,3,ps:pe)*pftfrac(ps:pe) )
 
-      !NOTE: fordebug only below
       IF (ssun(1,1)<0 .or. ssun(1,2)<0 .or. ssun(2,1)<0 .or. ssun(2,2)<0) THEN
-         print *, 'Warning:negative albedo',ipatch
+         print *, 'Warning: negative ssun in albedo calculation!',ipatch
          print *, ssun
       ENDIF
 
@@ -1246,10 +1291,10 @@ ENDIF
 !=======================================================================
 
    USE MOD_Precision
-   USE MOD_Const_Physical, only : tfrz
+   USE MOD_Const_Physical, only: tfrz
    IMPLICIT NONE
 
-!-------------------------- Dummy Argument -----------------------------
+!-------------------------- Dummy Arguments ----------------------------
 
    real(r8), intent(in) :: deltim ! seconds in a time step [second]
    real(r8), intent(in) :: tg     ! temperature of soil at surface [K]
@@ -1257,7 +1302,7 @@ ENDIF
    real(r8), intent(in) :: scvold ! snow cover for previous time step [mm]
    real(r8), intent(inout) :: sag ! non dimensional snow age [-]
 
-!-------------------------- Local variables ----------------------------
+!-------------------------- Local Variables ----------------------------
 
    real(r8) :: age1   ! snow aging factor due to crystal growth [-]
    real(r8) :: age2   ! snow aging factor due to surface growth [-]
@@ -1272,12 +1317,12 @@ ENDIF
       IF(scv <= 0.) THEN
          sag = 0.
 !
-! Over antarctica
+! Over Antarctica
 !
-      ELSE IF (scv > 800.) THEN
+      ELSEIF (scv > 800.) THEN
          sag = 0.
 !
-! Away from antarctica
+! Away from Antarctica
 !
       ELSE
          age3  = 0.3
@@ -1306,31 +1351,32 @@ ENDIF
                           albgrd_dst    ,albgri_dst    ,flx_absdv     ,flx_absdn     ,&
                           flx_absiv     ,flx_absin      )
 
-   ! !DESCRIPTION:
-   ! The calling sequence is:
-   ! -> SNICAR_RT:   snow albedos: direct beam (SNICAR)
-   !    or
-   !    SNICAR_AD_RT: snow albedos: direct beam (SNICAR-AD)
-   ! -> SNICAR_RT:   snow albedos: diffuse (SNICAR)
-   !    or
-   !    SNICAR_AD_RT:   snow albedos: diffuse (SNICAR-AD)
-   !
-   ! ORIGINAL:
-   ! 1) The Community Land Model version5.0 (CLM5.0)
-   ! 2) Energy Exascale Earth System Model version 2.0 (E3SM v2.0) Land Model (ELM v2.0)
-   !
-   ! REFERENCES:
-   ! 1) Flanner et al, 2021, SNICAR-ADv3: a community tool for modeling spectral snow albedo.
-   ! Geosci. Model Dev., 14, 7673–7704, https://doi.org/10.5194/gmd-14-7673-2021
-   ! 2) Hao et al., 2023, Improving snow albedo modeling in the E3SM land model (version 2.0)
-   ! and assessing its impacts on snow and surface fluxes over the Tibetan Plateau.
-   ! Geosci. Model Dev., 16, 75–94, https://doi.org/10.5194/gmd-16-75-2023
-   !
-   ! REVISIONS:
-   ! Yongjiu Dai, and Hua Yuan, December, 2022 : ASSEMBLING and FITTING
-
-   !-----------------------------------------------------------------------
-   ! !USES:
+!-----------------------------------------------------------------------
+! !DESCRIPTION:
+!  The calling sequence is:
+!  -> SNICAR_RT:   snow albedos: direct beam (SNICAR)
+!     or
+!     SNICAR_AD_RT: snow albedos: direct beam (SNICAR-AD)
+!  -> SNICAR_RT:   snow albedos: diffuse (SNICAR)
+!     or
+!     SNICAR_AD_RT:   snow albedos: diffuse (SNICAR-AD)
+!
+! !ORIGINAL:
+!  1) The Community Land Model version5.0 (CLM5.0)
+!  2) Energy Exascale Earth System Model version 2.0 (E3SM v2.0) Land Model (ELM v2.0)
+!
+! !REFERENCES:
+!  1) Flanner et al, 2021, SNICAR-ADv3: a community tool for modeling spectral snow albedo.
+!  Geosci. Model Dev., 14, 7673-7704, https://doi.org/10.5194/gmd-14-7673-2021
+!  2) Hao et al., 2023, Improving snow albedo modeling in the E3SM land model (version 2.0)
+!  and assessing its impacts on snow and surface fluxes over the Tibetan Plateau.
+!  Geosci. Model Dev., 16, 75-94, https://doi.org/10.5194/gmd-16-75-2023
+!
+! !REVISIONS:
+!  Yongjiu Dai, and Hua Yuan, December, 2022 : ASSEMBLING and FITTING
+!
+!-----------------------------------------------------------------------
+! !USES:
    USE MOD_Vars_Global, only: maxsnl
    USE MOD_SnowSnicar, only: SNICAR_RT, SNICAR_AD_RT
 
@@ -1341,38 +1387,39 @@ ENDIF
    IMPLICIT NONE
 
 !-------------------------------------------------------------------------
-! temporay setting
+! temporary setting
 
-   integer, parameter :: numrad  = 2            !  number of solar radiation bands: vis, nir
-   integer, parameter :: sno_nbr_aer = 8        !  number of aerosol species in snowpack
-   logical, parameter :: DO_SNO_OC   = .true.   !  parameter to include organic carbon (OC)
-   logical, parameter :: DO_SNO_AER  = .true.   !  parameter to include aerosols in snowpack radiative calculations
-   integer, parameter :: subgridflag = 1        !  = 0 USE subgrid fluxes, = 1 not USE subgrid fluxes
+   integer, parameter :: numrad  = 2            ! number of solar radiation bands: vis, nir
+   integer, parameter :: sno_nbr_aer = 8        ! number of aerosol species in snowpack
+   logical, parameter :: DO_SNO_OC   = .true.   ! to include organic carbon (OC)
+   logical, parameter :: DO_SNO_AER  = .true.   ! to include aerosols in snow radiative calculations
+   integer, parameter :: subgridflag = 1        ! = 0 USE subgrid fluxes, = 1 not USE subgrid fluxes
    !
    ! !ARGUMENTS:
    !
-   logical , intent(in) :: use_snicar_frc       !  true: IF radiative forcing is being calculated, first estimate clean-snow albedo
-   logical , intent(in) :: use_snicar_ad        !  true: USE SNICAR_AD_RT, false: USE SNICAR_RT
+   logical , intent(in) :: use_snicar_frc       ! true: IF radiative forcing is being calculated,
+                                                ! first estimate clean-snow albedo
+   logical , intent(in) :: use_snicar_ad        ! true: USE SNICAR_AD_RT, false: USE SNICAR_RT
 
    real(r8), intent(in) :: coszen_col                   ! cosine of solar zenith angle
    real(r8), intent(in) :: albsod        ( numrad )     ! direct-beam soil albedo (col,bnd) [frc]
    real(r8), intent(in) :: albsoi        ( numrad )     ! diffuse soil albedo (col,bnd) [frc]
 
    integer , intent(in) :: snl                          ! negative number of snow layers (col) [nbr]
-   real(r8), intent(in) :: frac_sno                     ! fraction of ground covered by snow (0 to 1)
+   real(r8), intent(in) :: frac_sno                     ! fraction of ground covered by snow (0-1)
    real(r8), intent(in) :: h2osno                       ! snow water equivalent (mm H2O)
    real(r8), intent(in) :: h2osno_liq    ( maxsnl+1:0 ) ! liquid water content (col,lyr) [kg/m2]
    real(r8), intent(in) :: h2osno_ice    ( maxsnl+1:0 ) ! ice lens content (col,lyr) [kg/m2]
    real(r8), intent(in) :: snw_rds       ( maxsnl+1:0 ) ! snow grain radius (col,lyr) [microns]
 
-   real(r8), intent(in) :: mss_cnc_bcphi ( maxsnl+1:0 ) ! mass concentration of hydrophilic BC (col,lyr) [kg/kg]
-   real(r8), intent(in) :: mss_cnc_bcpho ( maxsnl+1:0 ) ! mass concentration of hydrophobic BC (col,lyr) [kg/kg]
-   real(r8), intent(in) :: mss_cnc_ocphi ( maxsnl+1:0 ) ! mass concentration of hydrophilic OC (col,lyr) [kg/kg]
-   real(r8), intent(in) :: mss_cnc_ocpho ( maxsnl+1:0 ) ! mass concentration of hydrophobic OC (col,lyr) [kg/kg]
-   real(r8), intent(in) :: mss_cnc_dst1  ( maxsnl+1:0 ) ! mass concentration of dust aerosol species 1 (col,lyr) [kg/kg]
-   real(r8), intent(in) :: mss_cnc_dst2  ( maxsnl+1:0 ) ! mass concentration of dust aerosol species 2 (col,lyr) [kg/kg]
-   real(r8), intent(in) :: mss_cnc_dst3  ( maxsnl+1:0 ) ! mass concentration of dust aerosol species 3 (col,lyr) [kg/kg]
-   real(r8), intent(in) :: mss_cnc_dst4  ( maxsnl+1:0 ) ! mass concentration of dust aerosol species 4 (col,lyr) [kg/kg]
+   real(r8), intent(in) :: mss_cnc_bcphi ( maxsnl+1:0 ) ! mass conc. of hydrophilic BC [kg/kg]
+   real(r8), intent(in) :: mss_cnc_bcpho ( maxsnl+1:0 ) ! mass conc. of hydrophobic BC [kg/kg]
+   real(r8), intent(in) :: mss_cnc_ocphi ( maxsnl+1:0 ) ! mass conc. of hydrophilic OC [kg/kg]
+   real(r8), intent(in) :: mss_cnc_ocpho ( maxsnl+1:0 ) ! mass conc. of hydrophobic OC [kg/kg]
+   real(r8), intent(in) :: mss_cnc_dst1  ( maxsnl+1:0 ) ! mass conc. of dust aerosol 1 [kg/kg]
+   real(r8), intent(in) :: mss_cnc_dst2  ( maxsnl+1:0 ) ! mass conc. of dust aerosol 2 [kg/kg]
+   real(r8), intent(in) :: mss_cnc_dst3  ( maxsnl+1:0 ) ! mass conc. of dust aerosol 3 [kg/kg]
+   real(r8), intent(in) :: mss_cnc_dst4  ( maxsnl+1:0 ) ! mass conc. of dust aerosol 4 [kg/kg]
 
    real(r8), intent(out) :: albgrd       ( numrad )     ! ground albedo (direct)
    real(r8), intent(out) :: albgri       ( numrad )     ! ground albedo (diffuse)
@@ -1384,10 +1431,10 @@ ENDIF
    real(r8), intent(out) :: albgri_oc    ( numrad )     ! ground albedo without OC (diffuse)
    real(r8), intent(out) :: albgrd_dst   ( numrad )     ! ground albedo without dust (direct)
    real(r8), intent(out) :: albgri_dst   ( numrad )     ! ground albedo without dust (diffuse)
-   real(r8), intent(out) :: flx_absdv    ( maxsnl+1:1 ) ! direct flux absorption factor (col,lyr): VIS [frc]
-   real(r8), intent(out) :: flx_absdn    ( maxsnl+1:1 ) ! direct flux absorption factor (col,lyr): NIR [frc]
-   real(r8), intent(out) :: flx_absiv    ( maxsnl+1:1 ) ! diffuse flux absorption factor (col,lyr): VIS [frc]
-   real(r8), intent(out) :: flx_absin    ( maxsnl+1:1 ) ! diffuse flux absorption factor (col,lyr): NIR [frc]
+   real(r8), intent(out) :: flx_absdv    ( maxsnl+1:1 ) ! direct flux absorption factor  VIS [frc]
+   real(r8), intent(out) :: flx_absdn    ( maxsnl+1:1 ) ! direct flux absorption factor  NIR [frc]
+   real(r8), intent(out) :: flx_absiv    ( maxsnl+1:1 ) ! diffuse flux absorption factor VIS [frc]
+   real(r8), intent(out) :: flx_absin    ( maxsnl+1:1 ) ! diffuse flux absorption factor NIR [frc]
 
    !-----------------------------------------------------------------------
    !
@@ -1399,46 +1446,51 @@ ENDIF
    integer  :: flg_slr      ! flag for SNICAR (=1 IF direct, =2 IF diffuse)
    integer  :: flg_snw_ice  ! flag for SNICAR (=1 when called from ELM, =2 when called from sea-ice)
 
-   real(r8) :: mss_cnc_aer_in_frc_pur (maxsnl+1:0,sno_nbr_aer) ! mass concentration of aerosol species for forcing calculation (zero) (col,lyr,aer) [kg kg-1]
-   real(r8) :: mss_cnc_aer_in_frc_bc  (maxsnl+1:0,sno_nbr_aer) ! mass concentration of aerosol species for BC forcing (col,lyr,aer) [kg kg-1]
-   real(r8) :: mss_cnc_aer_in_frc_oc  (maxsnl+1:0,sno_nbr_aer) ! mass concentration of aerosol species for OC forcing (col,lyr,aer) [kg kg-1]
-   real(r8) :: mss_cnc_aer_in_frc_dst (maxsnl+1:0,sno_nbr_aer) ! mass concentration of aerosol species for dust forcing (col,lyr,aer) [kg kg-1]
-   real(r8) :: mss_cnc_aer_in_fdb     (maxsnl+1:0,sno_nbr_aer) ! mass concentration of all aerosol species for feedback calculation (col,lyr,aer) [kg kg-1]
+   ! mass concentration of aerosol species for forcing calculation (zero) (lyr,aer) [kg kg-1]
+   real(r8) :: mss_cnc_aer_in_frc_pur (maxsnl+1:0,sno_nbr_aer)
+   ! mass concentration of aerosol species for BC forcing (lyr,aer) [kg kg-1]
+   real(r8) :: mss_cnc_aer_in_frc_bc  (maxsnl+1:0,sno_nbr_aer)
+   ! mass concentration of aerosol species for OC forcing (lyr,aer) [kg kg-1]
+   real(r8) :: mss_cnc_aer_in_frc_oc  (maxsnl+1:0,sno_nbr_aer)
+   ! mass concentration of aerosol species for dust forcing (lyr,aer) [kg kg-1]
+   real(r8) :: mss_cnc_aer_in_frc_dst (maxsnl+1:0,sno_nbr_aer)
+   ! mass concentration of all aerosol species for feedback calculation (lyr,aer) [kg kg-1]
+   real(r8) :: mss_cnc_aer_in_fdb     (maxsnl+1:0,sno_nbr_aer)
 
-   real(r8) :: albsfc       (numrad)             ! albedo of surface underneath snow (col,bnd)
-   real(r8) :: albsnd       (numrad)             ! snow albedo (direct)
-   real(r8) :: albsni       (numrad)             ! snow albedo (diffuse)
-   real(r8) :: albsnd_pur   (numrad)             ! direct pure snow albedo (radiative forcing)
-   real(r8) :: albsni_pur   (numrad)             ! diffuse pure snow albedo (radiative forcing)
-   real(r8) :: albsnd_bc    (numrad)             ! direct snow albedo without BC (radiative forcing)
-   real(r8) :: albsni_bc    (numrad)             ! diffuse snow albedo without BC (radiative forcing)
-   real(r8) :: albsnd_oc    (numrad)             ! direct snow albedo without OC (radiative forcing)
-   real(r8) :: albsni_oc    (numrad)             ! diffuse snow albedo without OC (radiative forcing)
-   real(r8) :: albsnd_dst   (numrad)             ! direct snow albedo without dust (radiative forcing)
-   real(r8) :: albsni_dst   (numrad)             ! diffuse snow albedo without dust (radiative forcing)
-   real(r8) :: flx_absd_snw (maxsnl+1:1,numrad)  ! flux absorption factor for just snow (direct) [frc]
-   real(r8) :: flx_absi_snw (maxsnl+1:1,numrad)  ! flux absorption factor for just snow (diffuse) [frc]
-   real(r8) :: foo_snw      (maxsnl+1:1,numrad)  ! dummy array for forcing calls
+   real(r8) :: albsfc       (numrad)            ! albedo of surface underneath snow (col,bnd)
+   real(r8) :: albsnd       (numrad)            ! snow albedo (direct)
+   real(r8) :: albsni       (numrad)            ! snow albedo (diffuse)
+   real(r8) :: albsnd_pur   (numrad)            ! direct pure snow albedo
+   real(r8) :: albsni_pur   (numrad)            ! diffuse pure snow albedo
+   real(r8) :: albsnd_bc    (numrad)            ! direct snow albedo without BC
+   real(r8) :: albsni_bc    (numrad)            ! diffuse snow albedo without BC
+   real(r8) :: albsnd_oc    (numrad)            ! direct snow albedo without OC
+   real(r8) :: albsni_oc    (numrad)            ! diffuse snow albedo without OC
+   real(r8) :: albsnd_dst   (numrad)            ! direct snow albedo without dust
+   real(r8) :: albsni_dst   (numrad)            ! diffuse snow albedo without dust
+   real(r8) :: flx_absd_snw (maxsnl+1:1,numrad) ! flux absorption for just snow (direct) [frc]
+   real(r8) :: flx_absi_snw (maxsnl+1:1,numrad) ! flux absorption for just snow (diffuse) [frc]
+   real(r8) :: foo_snw      (maxsnl+1:1,numrad) ! dummy array for forcing calls
 
-   integer  :: snw_rds_in   (maxsnl+1:0)         ! snow grain size sent to SNICAR (col,lyr) [microns]
+   integer  :: snw_rds_in   (maxsnl+1:0)        ! snow grain size sent to SNICAR (col,lyr) [microns]
 
-   integer , parameter :: nband =numrad          ! number of solar radiation waveband classes
+   integer , parameter :: nband =numrad         ! number of solar radiation waveband classes
 
    !-----------------------------------------------------------------------
 
       ! Initialize output because solar radiation only done IF coszen > 0
 
       DO ib = 1, numrad
-         albgrd(ib)     = 0._r8
-         albgri(ib)     = 0._r8
-         albgrd_pur(ib) = 0._r8
-         albgri_pur(ib) = 0._r8
-         albgrd_bc(ib)  = 0._r8
-         albgri_bc(ib)  = 0._r8
-         albgrd_oc(ib)  = 0._r8
-         albgri_oc(ib)  = 0._r8
-         albgrd_dst(ib) = 0._r8
-         albgri_dst(ib) = 0._r8
+         albgrd(ib)     = 1._r8
+         albgri(ib)     = 1._r8
+         albgrd_pur(ib) = 1._r8
+         albgri_pur(ib) = 1._r8
+         albgrd_bc(ib)  = 1._r8
+         albgri_bc(ib)  = 1._r8
+         albgrd_oc(ib)  = 1._r8
+         albgri_oc(ib)  = 1._r8
+         albgrd_dst(ib) = 1._r8
+         albgri_dst(ib) = 1._r8
          DO i=maxsnl+1,1,1
             flx_absdv(i) = 0._r8
             flx_absdn(i) = 0._r8
@@ -1848,7 +1900,8 @@ ENDIF
       DO ib = 1, nband
          IF (coszen_col > 0._r8) THEN
             ! ground albedo was originally computed in SoilAlbedo, but is now computed here
-            ! because the order of SoilAlbedo and SNICAR_RT/SNICAR_AD_RT was switched for SNICAR/SNICAR_AD_RT.
+            ! because the order of SoilAlbedo and SNICAR_RT/SNICAR_AD_RT
+            ! was switched for SNICAR/SNICAR_AD_RT.
             ! 09/01/2023, yuan: change to only snow albedo, the same below
             !albgrd(ib) = albsod(ib)*(1._r8-frac_sno) + albsnd(ib)*frac_sno
             !albgri(ib) = albsoi(ib)*(1._r8-frac_sno) + albsni(ib)*frac_sno
@@ -1894,7 +1947,7 @@ ENDIF
                           ((1.-frac_sno)*(1-albsod(ib))*(flx_absd_snw(i,ib)/(1.-albsnd(ib))))
                      flx_absiv(i) = flx_absi_snw(i,ib)*frac_sno + &
                           ((1.-frac_sno)*(1-albsoi(ib))*(flx_absi_snw(i,ib)/(1.-albsni(ib))))
-                  elseif (ib == 2) THEN
+                  ELSEIF (ib == 2) THEN
                      flx_absdn(i) = flx_absd_snw(i,ib)*frac_sno + &
                           ((1.-frac_sno)*(1-albsod(ib))*(flx_absd_snw(i,ib)/(1.-albsnd(ib))))
                      flx_absin(i) = flx_absi_snw(i,ib)*frac_sno + &
@@ -1902,11 +1955,11 @@ ENDIF
                   ENDIF
                ELSE
                   IF (ib == 1) THEN
-                     flx_absdv(i) = flx_absd_snw(i,ib)*(1.-albsnd(ib))
-                     flx_absiv(i) = flx_absi_snw(i,ib)*(1.-albsni(ib))
-                  elseif (ib == 2) THEN
-                     flx_absdn(i) = flx_absd_snw(i,ib)*(1.-albsnd(ib))
-                     flx_absin(i) = flx_absi_snw(i,ib)*(1.-albsni(ib))
+                     flx_absdv(i) = flx_absd_snw(i,ib)!*(1.-albsnd(ib))
+                     flx_absiv(i) = flx_absi_snw(i,ib)!*(1.-albsni(ib))
+                  ELSEIF (ib == 2) THEN
+                     flx_absdn(i) = flx_absd_snw(i,ib)!*(1.-albsnd(ib))
+                     flx_absin(i) = flx_absi_snw(i,ib)!*(1.-albsni(ib))
                   ENDIF
                ENDIF
             ENDDO
@@ -1941,13 +1994,13 @@ ENDIF
 ! Approximation for Solar Radiation in the NCAR Community Climate Model,
 ! Journal of Geophysical Research, Vol 97, D7, pp7603-7612).
 !
-! yongjiu dai and xin-zhong liang (08/01/2001)
+! Yongjiu Dai and Xin-Zhong Liang (08/01/2001)
 !-----------------------------------------------------------------------
 
    USE MOD_Precision
    IMPLICIT NONE
 
-!------------------------------Arguments--------------------------------
+!-------------------------- Dummy Arguments ----------------------------
 
    real(r8), intent(in) :: oro       ! /ocean(0)/seaice(2) flag
    real(r8), intent(in) :: scv       ! snow water equivalent) [mm]
@@ -1956,7 +2009,7 @@ ENDIF
    real(r8), intent(out) :: alb(2,2) ! srf alb for direct (diffuse) rad 0.2-0.7 micro-ms
                                      ! Srf alb for direct (diffuse) rad 0.7-5.0 micro-ms
 
-!---------------------------Local variables-----------------------------
+!-------------------------- Local Variables ----------------------------
 
    real(r8) frsnow       ! horizontal fraction of snow cover
    real(r8) snwhgt       ! physical snow height

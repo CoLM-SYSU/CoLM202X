@@ -3,7 +3,7 @@
 MODULE MOD_NetCDFSerial
 
 !----------------------------------------------------------------------------------
-! DESCRIPTION:
+! !DESCRIPTION:
 !
 !    High-level Subroutines to read and write variables in files with netCDF format.
 !
@@ -14,10 +14,10 @@ MODULE MOD_NetCDFSerial
 !               Notice: each file CONTAINS vector data in one block.
 !    3. Block : read blocked data by IO
 !               Notice: input file is a single file.
-!    
+!
 !    This MODULE CONTAINS subroutines of "1. Serial".
 !
-! Created by Shupeng Zhang, May 2023
+!  Created by Shupeng Zhang, May 2023
 !----------------------------------------------------------------------------------
 
    USE netcdf
@@ -76,6 +76,7 @@ MODULE MOD_NetCDFSerial
 
    INTERFACE ncio_read_part_serial
       MODULE procedure ncio_read_part_serial_int32_2d
+      MODULE procedure ncio_read_part_serial_real8_2d
    END INTERFACE ncio_read_part_serial
 
    INTERFACE ncio_read_period_serial
@@ -119,7 +120,7 @@ MODULE MOD_NetCDFSerial
       MODULE procedure ncio_write_serial_real8_4d_time
    END INTERFACE ncio_write_serial_time
 
-   PUBLIC :: get_time_now   
+   PUBLIC :: get_time_now
 
    PUBLIC :: ncio_write_colm_dimension
 
@@ -127,9 +128,9 @@ CONTAINS
 
    ! ----
    SUBROUTINE nccheck (status, trace)
-      
+
    USE MOD_SPMD_Task
-   IMPLICIT NONE 
+   IMPLICIT NONE
 
    integer, intent(in) :: status
    character(len=*), intent(in), optional :: trace
@@ -166,15 +167,15 @@ CONTAINS
 
    ! ----
    character(len=27) FUNCTION get_time_now ()
-      
+
    IMPLICIT NONE
    character(len=8)  :: date
    character(len=10) :: time
    character(len=5)  :: zone
 
       CALL date_and_time(date, time, zone)
-      get_time_now = date(1:8)//'-'//time(1:2)//':'//time(3:4)//':'//time(5:6) & 
-                     //' UTC'//zone(1:3)//':'//zone(4:5) 
+      get_time_now = date(1:8)//'-'//time(1:2)//':'//time(3:4)//':'//time(5:6) &
+                     //' UTC'//zone(1:3)//':'//zone(4:5)
 
    END FUNCTION get_time_now
 
@@ -310,16 +311,18 @@ CONTAINS
    END SUBROUTINE ncio_inquire_varsize
 
    !---------------------------------------------------------
-   logical FUNCTION ncio_var_exist (filename, dataname)
+   logical FUNCTION ncio_var_exist (filename, dataname, readflag)
 
    USE netcdf
    IMPLICIT NONE
 
    character(len=*), intent(in) :: filename
    character(len=*), intent(in) :: dataname
+   logical, optional,intent(in) :: readflag
 
    ! Local variables
    integer :: ncid, varid, status
+   logical :: readflag_
 
       status = nf90_open(trim(filename), NF90_NOWRITE, ncid)
       IF (status == nf90_noerr) THEN
@@ -330,7 +333,13 @@ CONTAINS
          ncio_var_exist = .false.
       ENDIF
 
-      IF (.not. ncio_var_exist) THEN
+      IF (present(readflag)) THEN
+         readflag_ = readflag
+      ELSE
+         readflag_ = .true.
+      ENDIF
+
+      IF ((.not. ncio_var_exist) .and. trim(filename) /= 'null' .and. readflag_) THEN
          write(*,*) 'Warning: ', trim(dataname), ' not found in ', trim(filename)
       ENDIF
 
@@ -590,6 +599,7 @@ CONTAINS
    ! Local variables
    integer :: ncid, varid
    integer, allocatable :: varsize(:)
+   integer :: dsp, nread
 
       CALL check_ncfile_exist (filename)
 
@@ -598,7 +608,19 @@ CONTAINS
 
       CALL nccheck( nf90_open(trim(filename), NF90_NOWRITE, ncid) )
       CALL nccheck( nf90_inq_varid(ncid, trim(dataname), varid) )
-      CALL nccheck( nf90_get_var(ncid, varid, rdata) )
+
+      IF ((varsize(1) > 1000) .and. (varsize(2) > 100000)) THEN
+         dsp = 0
+         DO WHILE (dsp < varsize(2))
+            nread = min(100000,varsize(2)-dsp)
+            CALL nccheck (nf90_get_var(ncid, varid, &
+               rdata(1:varsize(1),dsp+1:dsp+nread), (/1,dsp+1/), (/varsize(1),nread/)))
+            dsp = dsp + nread
+         ENDDO
+      ELSE
+         CALL nccheck( nf90_get_var(ncid, varid, rdata) )
+      ENDIF
+
       CALL nccheck( nf90_close(ncid) )
 
       deallocate (varsize)
@@ -648,6 +670,7 @@ CONTAINS
    ! Local variables
    integer :: ncid, varid
    integer, allocatable :: varsize(:)
+   integer :: dsp, nread
 
       CALL check_ncfile_exist (filename)
 
@@ -656,7 +679,19 @@ CONTAINS
 
       CALL nccheck( nf90_open(trim(filename), NF90_NOWRITE, ncid) )
       CALL nccheck( nf90_inq_varid(ncid, trim(dataname), varid) )
-      CALL nccheck( nf90_get_var(ncid, varid, rdata) )
+
+      IF ((varsize(1) > 1000) .and. (varsize(2) > 100000)) THEN
+         dsp = 0
+         DO WHILE (dsp < varsize(2))
+            nread = min(100000,varsize(2)-dsp)
+            CALL nccheck (nf90_get_var(ncid, varid, &
+               rdata(1:varsize(1),dsp+1:dsp+nread), (/1,dsp+1/), (/varsize(1),nread/)))
+            dsp = dsp + nread
+         ENDDO
+      ELSE
+         CALL nccheck( nf90_get_var(ncid, varid, rdata) )
+      ENDIF
+
       CALL nccheck( nf90_close(ncid) )
 
       deallocate (varsize)
@@ -794,7 +829,7 @@ CONTAINS
       ENDIF
 
 #ifdef USEMPI
-      CALL mpi_bcast (rdata, 1, MPI_INTEGER, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (rdata, 1, MPI_INTEGER, p_address_master, p_comm_glb, p_err)
 #endif
 
    END SUBROUTINE ncio_read_bcast_serial_int32_0d
@@ -815,7 +850,7 @@ CONTAINS
       ENDIF
 
 #ifdef USEMPI
-      CALL mpi_bcast (rdata, 1, MPI_REAL8, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (rdata, 1, MPI_REAL8, p_address_master, p_comm_glb, p_err)
 #endif
 
    END SUBROUTINE ncio_read_bcast_serial_real8_0d
@@ -837,9 +872,9 @@ CONTAINS
       ENDIF
 
 #ifdef USEMPI
-      CALL mpi_bcast (vlen, 1, MPI_INTEGER, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (vlen, 1, MPI_INTEGER, p_address_master, p_comm_glb, p_err)
       IF (.not. p_is_master)  allocate (rdata (vlen))
-      CALL mpi_bcast (rdata, vlen, MPI_INTEGER, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (rdata, vlen, MPI_INTEGER, p_address_master, p_comm_glb, p_err)
 #endif
 
    END SUBROUTINE ncio_read_bcast_serial_int32_1d
@@ -861,9 +896,9 @@ CONTAINS
       ENDIF
 
 #ifdef USEMPI
-      CALL mpi_bcast (vsize, 2, MPI_INTEGER, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (vsize, 2, MPI_INTEGER, p_address_master, p_comm_glb, p_err)
       IF (.not. p_is_master)  allocate (rdata (vsize(1), vsize(2)))
-      CALL mpi_bcast (rdata, vsize(1)*vsize(2), MPI_INTEGER, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (rdata, vsize(1)*vsize(2), MPI_INTEGER, p_address_master, p_comm_glb, p_err)
 #endif
 
    END SUBROUTINE ncio_read_bcast_serial_int32_2d
@@ -887,9 +922,9 @@ CONTAINS
       ENDIF
 
 #ifdef USEMPI
-      CALL mpi_bcast (vlen, 1, MPI_INTEGER, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (vlen, 1, MPI_INTEGER, p_address_master, p_comm_glb, p_err)
       IF (.not. p_is_master)  allocate (rdata (vlen))
-      CALL mpi_bcast (rdata, vlen, MPI_REAL8, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (rdata, vlen, MPI_REAL8, p_address_master, p_comm_glb, p_err)
 #endif
 
    END SUBROUTINE ncio_read_bcast_serial_real8_1d
@@ -913,9 +948,9 @@ CONTAINS
       ENDIF
 
 #ifdef USEMPI
-      CALL mpi_bcast (vsize, 2, MPI_INTEGER, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (vsize, 2, MPI_INTEGER, p_address_master, p_comm_glb, p_err)
       IF (.not. p_is_master)  allocate (rdata (vsize(1),vsize(2)))
-      CALL mpi_bcast (rdata, vsize(1)*vsize(2), MPI_REAL8, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (rdata, vsize(1)*vsize(2), MPI_REAL8, p_address_master, p_comm_glb, p_err)
 #endif
 
    END SUBROUTINE ncio_read_bcast_serial_real8_2d
@@ -939,9 +974,9 @@ CONTAINS
       ENDIF
 
 #ifdef USEMPI
-      CALL mpi_bcast (vsize, 3, MPI_INTEGER, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (vsize, 3, MPI_INTEGER, p_address_master, p_comm_glb, p_err)
       IF (.not. p_is_master)  allocate (rdata (vsize(1),vsize(2),vsize(3)))
-      CALL mpi_bcast (rdata, vsize(1)*vsize(2)*vsize(3), MPI_REAL8, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (rdata, vsize(1)*vsize(2)*vsize(3), MPI_REAL8, p_address_master, p_comm_glb, p_err)
 #endif
 
    END SUBROUTINE ncio_read_bcast_serial_real8_3d
@@ -965,9 +1000,9 @@ CONTAINS
       ENDIF
 
 #ifdef USEMPI
-      CALL mpi_bcast (vsize, 4, MPI_INTEGER, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (vsize, 4, MPI_INTEGER, p_address_master, p_comm_glb, p_err)
       IF (.not. p_is_master)  allocate (rdata (vsize(1),vsize(2),vsize(3),vsize(4)))
-      CALL mpi_bcast (rdata, vsize(1)*vsize(2)*vsize(3)*vsize(4), MPI_REAL8, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (rdata, vsize(1)*vsize(2)*vsize(3)*vsize(4), MPI_REAL8, p_address_master, p_comm_glb, p_err)
 #endif
 
    END SUBROUTINE ncio_read_bcast_serial_real8_4d
@@ -991,9 +1026,9 @@ CONTAINS
       ENDIF
 
 #ifdef USEMPI
-      CALL mpi_bcast (vsize, 5, MPI_INTEGER, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (vsize, 5, MPI_INTEGER, p_address_master, p_comm_glb, p_err)
       IF (.not. p_is_master)  allocate (rdata (vsize(1),vsize(2),vsize(3),vsize(4),vsize(5)))
-      CALL mpi_bcast (rdata, vsize(1)*vsize(2)*vsize(3)*vsize(4)*vsize(5), MPI_REAL8, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (rdata, vsize(1)*vsize(2)*vsize(3)*vsize(4)*vsize(5), MPI_REAL8, p_address_master, p_comm_glb, p_err)
 #endif
 
    END SUBROUTINE ncio_read_bcast_serial_real8_5d
@@ -1021,9 +1056,9 @@ CONTAINS
       ENDIF
 
 #ifdef USEMPI
-      CALL mpi_bcast (vlen, 1, MPI_INTEGER, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (vlen, 1, MPI_INTEGER, p_address_master, p_comm_glb, p_err)
       IF (.not. p_is_master)  allocate (rdata (vlen))
-      CALL mpi_bcast (rdata, vlen, MPI_LOGICAL, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (rdata, vlen, MPI_LOGICAL, p_address_master, p_comm_glb, p_err)
 #endif
 
    END SUBROUTINE ncio_read_bcast_serial_logical_1d
@@ -1055,6 +1090,32 @@ CONTAINS
    END SUBROUTINE ncio_read_part_serial_int32_2d
 
    !---------------------------------------------------------
+   SUBROUTINE ncio_read_part_serial_real8_2d (filename, dataname, datastt, dataend, rdata)
+
+   USE netcdf
+   IMPLICIT NONE
+
+   character(len=*), intent(in) :: filename
+   character(len=*), intent(in) :: dataname
+   integer,  intent(in) :: datastt(2), dataend(2)
+   real(r8), allocatable, intent(out) :: rdata (:,:)
+
+   ! Local variables
+   integer :: ncid, varid
+
+      CALL check_ncfile_exist (filename)
+
+      allocate (rdata (datastt(1):dataend(1), datastt(2):dataend(2)) )
+
+      CALL nccheck( nf90_open(trim(filename), NF90_NOWRITE, ncid) )
+      CALL nccheck( nf90_inq_varid(ncid, trim(dataname), varid) )
+      CALL nccheck( nf90_get_var(ncid, varid, rdata, &
+         (/datastt(1),datastt(2)/), (/dataend(1)-datastt(1)+1, dataend(2)-datastt(2)+1/)) )
+      CALL nccheck( nf90_close(ncid) )
+
+   END SUBROUTINE ncio_read_part_serial_real8_2d
+
+   !---------------------------------------------------------
    SUBROUTINE ncio_read_period_serial_real8_2d (filename, dataname, timestt, timeend, rdata)
 
    USE netcdf
@@ -1071,7 +1132,7 @@ CONTAINS
    integer, allocatable :: varsize(:)
 
       CALL check_ncfile_exist (filename)
-   
+
       CALL ncio_inquire_varsize (filename, dataname, varsize)
 
       allocate (rdata (varsize(1), varsize(2), timestt:timeend) )
@@ -1920,7 +1981,7 @@ CONTAINS
    integer :: timelen, minutes
 
       minutes = minutes_since_1900 (time_component(1), time_component(2), time_component(3))
-      
+
       IF (present(adjust)) THEN
          SELECTCASE (trim(adjustl(adjust)))
          CASE ('HOURLY')
@@ -1931,7 +1992,7 @@ CONTAINS
             minutes = minutes - 21600
          CASE ('YEARLY')
             minutes = minutes - 262800
-         ENDSELECT 
+         ENDSELECT
       ENDIF
 
       CALL nccheck( nf90_open(trim(filename), NF90_WRITE, ncid) )
@@ -1982,7 +2043,7 @@ CONTAINS
    IMPLICIT NONE
 
    character (len=*), intent(in) :: filename
-   character (len=*), intent(in) :: lastname 
+   character (len=*), intent(in) :: lastname
    integer, intent(in)  :: lastvalue
    integer, intent(out) :: ilast
 
@@ -1991,7 +2052,7 @@ CONTAINS
    integer, allocatable :: lastvalue_f(:)
 
       CALL nccheck( nf90_open(trim(filename), NF90_WRITE, ncid) )
-      
+
       status = nf90_inq_varid(ncid, trim(lastname), varid)
 
       IF (status == NF90_NOERR) THEN
@@ -2026,7 +2087,7 @@ CONTAINS
       ENDIF
 
       CALL nccheck( nf90_put_var(ncid, varid, lastvalue, (/ilast/)) )
-      
+
       CALL nccheck( nf90_close(ncid) )
 
    END SUBROUTINE ncio_write_lastdim
@@ -2278,7 +2339,7 @@ CONTAINS
    !----------------------
    SUBROUTINE ncio_write_colm_dimension (filename)
 
-   USE MOD_Vars_Global, only : nl_soil, maxsnl, nl_lake, nvegwcs
+   USE MOD_Vars_Global, only: nl_soil, maxsnl, nl_lake, nvegwcs
    IMPLICIT NONE
 
    character(len=*), intent(in) :: filename
@@ -2305,7 +2366,7 @@ CONTAINS
       CALL ncio_define_dimension (filename, 'lake', nl_lake)
       CALL ncio_write_serial (filename, 'lake', lakelayers, 'lake')
       CALL ncio_put_attr_str (filename, 'lake', 'long_name', 'vertical lake layers')
-      
+
       vegnodes = (/(i, i = 1,nvegwcs)/)
       CALL ncio_define_dimension (filename, 'vegnodes', nvegwcs)
       CALL ncio_write_serial (filename, 'vegnodes', vegnodes, 'vegnodes')
@@ -2319,6 +2380,6 @@ CONTAINS
       CALL ncio_write_serial (filename, 'rtyp', (/1,2/), 'rtyp')
       CALL ncio_put_attr_str (filename, 'rtyp', 'long_name', '1 = direct; 2 = diffuse')
 
-   END SUBROUTINE ncio_write_colm_dimension 
+   END SUBROUTINE ncio_write_colm_dimension
 
 END MODULE MOD_NetCDFSerial

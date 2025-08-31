@@ -1,0 +1,120 @@
+&NRUNVER
+LADPSTP  = .FALSE.                     ! true: use adaptive time step
+LFPLAIN  = .TRUE.                      ! true: consider floodplain (false: only river channel)
+LKINE    = .FALSE.                     ! true: use kinematic wave
+LFLDOUT  = .TRUE.                      ! true: floodplain flow (high-water channel flow) active
+LPTHOUT  = .TRUE.                      ! true: activate bifurcation scheme
+LDAMOUT  = .FALSE.                     ! true: activate dam operation (under development)
+LLEVEE   = .FALSE.                     ! true: activate levee scheme  (under development)
+
+
+LROSPLIT     = .FALSE.                          ! true: input if surface (Qs) and sub-surface (Qsb) runoff
+LWEVAP       = .TRUE.                          ! true: input water evaporation to extract from floodplain
+LWEVAPFIX    = .TRUE.                          ! true: water balance closure extracting water from evap when available
+LWINFILT     = .FALSE.                          ! true: input water infiltration to extract from floodplain
+LWINFILTFIX  = .FALSE.                          ! true: water balance closure extracting water from Infiltration when available
+LWEXTRACTRIV = .FALSE.                          ! true: also extract water from rivers 
+LSLOPEMOUTH  = .FALSE.                          ! true: prescribe water level slope == elevation slope on river month
+
+LGDWDLY  = .FALSE.                              ! true: Activate ground water reservoir and delay
+LSLPMIX  = .FALSE.                              ! true: activate mixed kinematic and local inertia based on slope
+
+LMEANSL  = .FALSE.                              ! true: boundary condition for mean sea level
+LSEALEV  = .FALSE.                              ! true: boundary condition for variable sea level
+!LOUTINS  = .FALSE.                             ! true: diagnose instantaneous discharge 
+
+LRESTART = .FALSE.                              ! true: initial condition from restart file
+LSTOONLY = .FALSE.                              ! true: storage only restart (mainly for data assimilation)
+LOUTPUT  = .TRUE.                               ! true: use standard output (to file)
+LOUTINI  = .FALSE.                              ! true: output initial storage (netCDF only)
+
+LGRIDMAP = .TRUE.                               ! true: for standard XY gridded 2D map
+LLEAPYR  = .TRUE.                               ! true: neglect leap year (Feb29 skipped)
+
+LMAPEND  = .FALSE.                              ! true: for map data endian conversion
+LSTG_ES  = .FALSE.                              ! true: for Vector Processor optimization (CMF_OPT_FLDSTG_ES) 
+/
+&NDIMTIME
+CDIMINFO = "../CaMa/map/CaMaMap4CoLM_glb_0.25in_0.25out/glb_0.25in_0.25out-diminfo.txt"               ! text file for dimention information
+DT       = 21600                                                                            ! time step length (sec)
+IFRQ_INP = 6                                                                               ! input forcing update frequency (hour)
+/
+&NPARAM
+PMANRIV  = 0.03D0                      ! manning coefficient river
+PMANFLD  = 0.10D0                      ! manning coefficient floodplain
+PGRV     = 9.8D0                       ! gravity accerelation
+PDSTMTH  = 10000.D0                    ! downstream distance at river mouth [m]
+PCADP    = 0.7                         ! CFL coefficient
+PMINSLP  = 1.D-5                       ! minimum slope (kinematic wave)
+IMIS     = -9999                       ! missing value for integer
+RMIS     = 1.E36                       ! missing value for real*4
+DMIS     = 1.E36                       ! missing value for real*8
+CSUFBIN  = '.bin'                      ! file suffix for plain binary 2D map
+CSUFVEC  = '.vec'                      ! file suffix for plain binary 1D vector
+CSUFPTH  = '.pth'                      ! file suffix for plain binary bifurcation channel
+CSUFCDF  = '.nc'                       ! file suffix for netCDF
+/
+&NSIMTIME
+SYEAR   = 1900                            !  start year : will not gonna used in here
+SMON    = 01                           !  month      : will not gonna used in here
+SDAY    = 01                             !  day        : will not gonna used in here
+SHOUR   = 00                        !  hour       : will not gonna used in here
+EYEAR   = 2024                     		!  end year   : will not gonna used in here
+EMON    = 01                        	!  month      : will not gonna used in here
+EDAY    = 01                        	!  day        : will not gonna used in here
+EHOUR   = 00                        	!  hour       : will not gonna used in here
+/
+&NMAP
+LMAPCDF    = .FALSE.                ! * true for netCDF map input
+CNEXTXY    = "../CaMa/map/CaMaMap4CoLM_glb_0.25in_0.25out/nextxy.bin"              ! river network nextxy
+CGRAREA    = "../CaMa/map/CaMaMap4CoLM_glb_0.25in_0.25out/ctmare.bin"              ! catchment area
+CELEVTN    = "../CaMa/map/CaMaMap4CoLM_glb_0.25in_0.25out/elevtn.bin"              ! bank top elevation
+CNXTDST    = "../CaMa/map/CaMaMap4CoLM_glb_0.25in_0.25out/nxtdst.bin"              ! distance to next outlet
+CRIVLEN    = "../CaMa/map/CaMaMap4CoLM_glb_0.25in_0.25out/rivlen.bin"              ! river channel length
+CFLDHGT    = "../CaMa/map/CaMaMap4CoLM_glb_0.25in_0.25out/fldhgt.bin"              ! floodplain elevation profile
+CRIVWTH    = "../CaMa/map/CaMaMap4CoLM_glb_0.25in_0.25out/rivwth_gwdlr.bin"        ! channel width
+CRIVHGT    = "../CaMa/map/CaMaMap4CoLM_glb_0.25in_0.25out/rivhgt.bin"              ! channel depth
+CRIVMAN    = "../CaMa/map/CaMaMap4CoLM_glb_0.25in_0.25out/rivman.bin"              ! river manning coefficient
+CPTHOUT    = "../CaMa/map/CaMaMap4CoLM_glb_0.25in_0.25out/bifprm.txt"              ! bifurcation channel table
+CGDWDLY    = ""              							    ! Groundwater Delay Parameter
+CMEANSL    = ""              							    ! mean sea level
+CRIVCLINC  = ""            							        ! * river map netcdf
+CRIVPARNC  = ""            							        ! * river parameter netcdf (width, height, manning, ground water delay)
+CMEANSLNC  = ""            							        ! * mean sea level netCDF
+!CMPIREG    = "../CaMa/map/CaMaMap4CoLM_glb_0.25in_0.25out/mpireg-2.bin"
+/
+&NRESTART
+CRESTSTO = ""               ! restart file
+CRESTDIR = "./"               ! restart directory
+CVNREST  = "restart"                ! restart variable name
+LRESTCDF = .FALSE.                 ! * true for netCDF restart file
+IFRQ_RST = 0                 ! restart write frequency (1-24: hour, 0:end of run)
+/
+&NFORCE
+LINTERP   = .TRUE.                  ! true for runoff interpolation using input matrix
+LINPEND   = .TRUE.                  ! true for runoff endian conversion
+LITRPCDF  = .FALSE.                  ! * true for netCDF input matrix
+CINPMAT   = "../CaMa/map/CaMaMap4CoLM_glb_0.25in_0.25out/glb_0.25in_0.25out-inpmat.bin"                ! input matrix file name
+DROFUNIT  = 1.0                 ! runoff unit conversion
+/
+&NOUTPUT
+COUTDIR  = "../../cases/"                ! OUTPUT DIRECTORY
+!CVARSOUT="wevap,winfilt,rivout,rivsto,rivdph,rivvel,fldout,fldsto,flddph,fldfrc,fldare,sfcelv,outflw,storge,pthflw,pthout,maxsto,maxflw,maxdph" # list output variable (comma separated)
+CVARSOUT = "wevap,outflw,fldout,flddph,fldfrc,fldare,runoff,outflw_ocean"               ! Comma-separated list of output variables to save 
+COUTTAG  = "test"! Output Tag Name for each experiment
+LOUTVEC  = .FALSE.                      ! TRUE FOR VECTORIAL OUTPUT, FALSE FOR NX,NY OUTPUT
+LOUTCDF  = .TRUE.                  ! * true for netcdf outptu false for binary
+NDLEVEL  = 1                           ! * NETCDF DEFLATION LEVEL 
+IFRQ_OUT = 1                 ! output data write frequency (hour)
+/
+&NDAMOUT
+CDAMFILE = "../CaMa/map/dam_params_glb_15min/"         ! dam paramter file
+LDAMOPT  = "V13"                                       ! LIS H22 H06 V13 
+LDAMTXT  = .TRUE.                                      ! true: dam inflow-outflw txt output
+LDAMH22  = .FALSE.                                     ! True to use Hanazaki 2022 dam scheme. (False for Yamazaki&Funato scheme)
+LDAMYBY  = .FALSE.                                     ! .TRUE. to use Year-By-Year dam activation scheme. .False. for All-reservoirs-in scheme
+LiVnorm  = .FALSE.                                     ! .TRUE. to use Noemal Volume as initial reservoir storage. False for zero-additional storage.
+
+/
+
+ 

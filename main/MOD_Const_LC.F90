@@ -4,19 +4,20 @@ MODULE MOD_Const_LC
 
 !-----------------------------------------------------------------------
 ! !DESCRIPTION:
-! Constant values set for land cover types
+!  Constant values set for land cover types
 !
-! Created by Hua Yuan, 08/2019
+!  Created by Hua Yuan, 08/2019
 !
 ! !REVISIONS:
-! Hua Yuan, 08/2019: initial version adapted from IniTimeConst.F90 of CoLM2014
-! Hua Yuan, 08/2019: added constants values for IGBP land cover types
-! Xingjie Lu, 05/2023: added Plant Hydraulics Paramters
+!  08/2019, Hua Yuan: initial version adapted from IniTimeConst.F90 of CoLM2014
+!  08/2019, Hua Yuan: added constants values for IGBP land cover types
+!  05/2023, Xingjie Lu: added Plant Hydraulics Parameters
 !
+!-----------------------------------------------------------------------
 ! !USES:
    USE MOD_Precision
    USE MOD_Vars_Global
-   USE MOD_Namelist, only : DEF_USE_PLANTHYDRAULICS
+   USE MOD_Namelist, only: DEF_USE_PLANTHYDRAULICS
 
    IMPLICIT NONE
    SAVE
@@ -24,7 +25,7 @@ MODULE MOD_Const_LC
 #ifdef LULC_USGS
 
 ! GLCC USGS Land Use/Land Cover System Legend
-!---------------------------
+!-----------------------------------------------------------------------
 ! 0  Ocean
 ! 1  Urban and Built-Up Land
 ! 2  Dryland Cropland and Pasture
@@ -51,6 +52,33 @@ MODULE MOD_Const_LC
 !23  Bare Ground Tundra
 !24  Snow or Ice
 
+   character(len=256) :: patchclassname (0:N_land_classification) = &
+      (/'0 Ocean                                       ', &
+        '1 Urban and Built-Up Land                     ', &
+        '2 Dryland Cropland and Pasture                ', &
+        '3 Irrigated Cropland and Pasture              ', &
+        '4 Mixed Dryland/Irrigated Cropland and Pasture', &
+        '5 Cropland/Grassland Mosaic                   ', &
+        '6 Cropland/Woodland Mosaic                    ', &
+        '7 Grassland                                   ', &
+        '8 Shrubland                                   ', &
+        '9 Mixed Shrubland/Grassland                   ', &
+        '10 Savanna                                    ', &
+        '11 Deciduous Broadleaf Forest                 ', &
+        '12 Deciduous Needleleaf Forest                ', &
+        '13 Evergreen Broadleaf Forest                 ', &
+        '14 Evergreen Needleleaf Forest                ', &
+        '15 Mixed Forest                               ', &
+        '16 Inland Water                               ', &
+        '17 Herbaceous Wetland                         ', &
+        '18 Wooded Wetland                             ', &
+        '19 Barren or Sparsely Vegetated               ', &
+        '20 Herbaceous Tundra                          ', &
+        '21 Wooded Tundra                              ', &
+        '22 Mixed Tundra                               ', &
+        '23 Bare Ground Tundra                         ', &
+        '24 Snow or Ice                                '/)
+
    ! land patch types
    ! 0: soil, 1: urban, 2: wetland, 3: ice, 4: lake
    integer , parameter, dimension(N_land_classification) :: patchtypes_usgs &
@@ -71,7 +99,7 @@ MODULE MOD_Const_LC
           0.5,  17.0,   0.5,   0.5,   0.5,   0.5,   0.5,   0.5/)
 
    ! Look-up table canopy bottom height
-   ! 01/06/2020, yuan: adjust hbop: grass/shrub -> 0, tree->1
+   ! 01/06/2020, yuan: adjust hbot: grass/shrub -> 0, tree->1
    real(r8), parameter, dimension(N_land_classification) :: hbot0_usgs &
      !=(/0.01,  0.01,  0.01,  0.01,  0.01,  0.01,  0.01,   0.1,&
      !    0.1,   0.1,  11.5,   8.5,   1.0,   8.5,  10.0,   0.1,&
@@ -109,13 +137,13 @@ MODULE MOD_Const_LC
            0.010, -0.300,  0.250,  0.010,  0.100,  0.010,  0.125, -0.300,&
           -0.300,  0.100,  0.010, -0.300, -0.300, -0.300, -0.300, -0.300/)
 
-   ! reflectance of green leaf in virsible band
+   ! reflectance of green leaf in visible band
    real(r8), parameter, dimension(N_land_classification) :: rhol_vis_usgs &
       = (/0.105,  0.105,  0.105,  0.105,  0.105,  0.105,  0.105,  0.100,&
           0.100,  0.105,  0.100,  0.070,  0.100,  0.070,  0.070,  0.105,&
           0.105,  0.100,  0.100,  0.105,  0.105,  0.105,  0.105,  0.105/)
 
-   ! reflectance of dead leaf in virsible band
+   ! reflectance of dead leaf in visible band
    real(r8), parameter, dimension(N_land_classification) :: rhos_vis_usgs &
       = (/0.360,  0.360,  0.360,  0.360,  0.360,  0.360,  0.360,  0.160,&
           0.160,  0.360,  0.160,  0.160,  0.160,  0.160,  0.160,  0.360,&
@@ -258,7 +286,7 @@ MODULE MOD_Const_LC
           2.012,  1.964,  1.955,  1.953,  1.303,  2.175,  1.631,  2.608,&
           2.608,  1.631,  8.992,  8.992,  8.992,  8.992,  0.978,  2.608/)
 
-! Plant Hydraulics Paramters
+   ! Plant Hydraulics Parameters
    real(r8), parameter, dimension(N_land_classification) :: kmax_sun0_usgs &
       = (/     0., 2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008,&
           2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008,&
@@ -317,11 +345,18 @@ MODULE MOD_Const_LC
           3.95, 3.95, 3.95, 3.95, 3.95, 3.95, &
           3.95, 3.95, 3.95,   0., 3.95, 3.95, &
             0., 3.95, 3.95, 3.95,   0.,   0./)
+
+   ! lambda for WUE stomata model
+   real(r8), parameter, dimension(N_land_classification) :: lambda_usgs &
+      = (/1000., 1000., 1000., 1000., 1000., 1000., &
+          1000., 1000., 1000., 1000., 1000., 1000., &
+          1000., 1000., 1000., 1000., 1000., 1000., &
+          1000., 1000., 1000., 1000., 1000., 1000./)
 !end plant hydraulic parameters
 #else
 
 ! MODIS IGBP Land Use/Land Cover System Legend
-!---------------------------
+!-----------------------------------------------------------------------
 ! 0  Ocean
 ! 1  Evergreen Needleleaf Forests
 ! 2  Evergreen Broadleaf Forests
@@ -341,6 +376,17 @@ MODULE MOD_Const_LC
 !16  Barren
 !17  Water Bodies
 
+   character(len=256) :: patchclassname (0:N_land_classification) = &
+      (/'0 Ocean                               ', '1 Evergreen Needleleaf Forests        ', &
+        '2 Evergreen Broadleaf Forests         ', '3 Deciduous Needleleaf Forests        ', &
+        '4 Deciduous Broadleaf Forests         ', '5 Mixed Forests                       ', &
+        '6 Closed Shrublands                   ', '7 Open Shrublands                     ', &
+        '8 Woody Savannas                      ', '9 Savannas                            ', &
+        '10 Grasslands                         ', '11 Permanent Wetlands                 ', &
+        '12 Croplands                          ', '13 Urban and Built-up Lands           ', &
+        '14 Cropland/Natural Vegetation Mosaics', '15 Permanent Snow and Ice             ', &
+        '16 Barren                             ', '17 Water Bodies                       ' /)
+
    ! land patch types
    ! 0: soil, 1: urban, 2: wetland, 3: ice, 4: lake
    integer , parameter, dimension(N_land_classification) :: patchtypes_igbp &
@@ -350,23 +396,24 @@ MODULE MOD_Const_LC
 
    ! Look-up table canopy top height
    !NOTE: now read from input NetCDF file
+   ! shrub land 0.5m? grass like land 1m? all set to 0.5
    real(r8), parameter, dimension(N_land_classification) :: htop0_igbp &
+     !=(/17.0,  35.0,  17.0,  20.0,  20.0,   0.5,   0.5,   1.0,&
+     !    1.0,   1.0,   1.0,   1.0,   1.0,   1.0,   1.0,   1.0,&
+     !    1.0 /)
       =(/17.0,  35.0,  17.0,  20.0,  20.0,   0.5,   0.5,   1.0,&
-          1.0,   1.0,   1.0,   1.0,   1.0,   1.0,   1.0,   1.0,&
-          1.0 /)
-     !=(/17.0,  35.0,  17.0,  20.0,  20.0,   0.5,   0.5,   0.5,&
-     !    0.5,   0.5,   0.5,   0.5,   1.0,   0.5,   0.5,   0.5,&
-     !    0.5 /)
+          0.5,   0.5,   0.5,   0.5,   1.0,   0.5,   0.5,   0.5,&
+          0.5 /)
 
    ! Look-up table canopy bottom height
    ! 01/06/2020, yuan: adjust hbop: grass/shrub -> 0, tree->1
    real(r8), parameter, dimension(N_land_classification) :: hbot0_igbp &
-      =(/ 8.5,   1.0,   8.5,  11.5,  10.0,   0.1,   0.1,   0.1,&
-          0.1,  0.01,  0.01,  0.01,   0.3,  0.01,  0.01,  0.01,&
-          0.01 /)
-     !=(/ 1.0,   1.0,   1.0,   1.0,   1.0,   0.0,   0.0,   0.0,&
-     !    0.1,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,&
-     !    0.0 /)
+     !=(/ 8.5,   1.0,   8.5,  11.5,  10.0,   0.1,   0.1,   0.1,&
+     !    0.1,  0.01,  0.01,  0.01,   0.3,  0.01,  0.01,  0.01,&
+     !   0.01 /)
+      =(/ 1.0,   1.0,   1.0,   1.0,   1.0,   0.0,   0.0,   0.0,&
+          0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,&
+          0.0 /)
 
    ! Look-up table vegetation fractional cover
    real(r8), parameter, dimension(N_land_classification) :: fveg0_igbp &
@@ -394,13 +441,13 @@ MODULE MOD_Const_LC
            0.010, -0.300,  0.100, -0.300,  0.010, -0.300,  0.010,  0.010,&
            0.010 /)
 
-   ! reflectance of green leaf in virsible band
+   ! reflectance of green leaf in visible band
    real(r8), parameter, dimension(N_land_classification) :: rhol_vis_igbp &
       = (/0.070,  0.100,  0.070,  0.100,  0.070,  0.105,  0.105,  0.105,&
           0.105,  0.105,  0.105,  0.105,  0.105,  0.105,  0.105,  0.105,&
           0.105 /)
 
-   ! reflectance of dead leaf in virsible band
+   ! reflectance of dead leaf in visible band
    real(r8), parameter, dimension(N_land_classification) :: rhos_vis_igbp &
       = (/0.160,  0.160,  0.160,  0.160,  0.160,  0.160,  0.160,  0.160,&
           0.160,  0.360,  0.160,  0.360,  0.160,  0.360,  0.160,  0.160,&
@@ -540,7 +587,7 @@ MODULE MOD_Const_LC
           1.627,  2.608,  2.608,  2.614,  2.614,  2.614,  2.608,  0.978,&
           2.608 /)
 
-! Plant Hydraulics Paramters
+   ! Plant Hydraulics Parameters
    real(r8), parameter, dimension(N_land_classification) :: kmax_sun0_igbp &
       = (/2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008, &
           2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008, &
@@ -589,8 +636,14 @@ MODULE MOD_Const_LC
    real(r8), parameter, dimension(N_land_classification) :: ck0_igbp &
       = (/3.95, 3.95, 3.95, 3.95, 3.95, 3.95, &
           3.95, 3.95, 3.95, 3.95, 3.95, 3.95, &
-          3.95, 3.95,   0.,   0.,   0.  /)
-!end plant hydraulic parameters
+          3.95, 3.95, 3.95, 3.95, 3.95  /)
+   !end plant hydraulic parameters
+
+   ! lambda for WUE stomata model
+   real(r8), parameter, dimension(N_land_classification) :: lambda_igbp &
+      = (/1000., 1000., 1000., 1000., 1000., 1000., &
+          1000., 1000., 1000., 1000., 1000., 1000., &
+          1000., 1000., 1000., 1000., 1000./)
 #endif
 
    real(r8), dimension(N_land_classification) :: &
@@ -620,15 +673,17 @@ MODULE MOD_Const_LC
       hlti,       &! 1/2 point of low temperature inhibition function (s4)
       extkn,      &! coefficient of leaf nitrogen allocation
 
+      lambda,     &! marginal water cost of carbon gain (mol mol-1)
+
       d50,        &! depth at 50% roots
       beta         ! coefficient of root profile
 
 ! Plant Hydraulic Parameters
    real(r8), dimension(N_land_classification) :: &
-      kmax_sun,   &! Plant Hydraulics Paramters (TODO@Xingjie Lu, please give more details and below)
-      kmax_sha,   &! Plant Hydraulics Paramters
-      kmax_xyl,   &! Plant Hydraulics Paramters
-      kmax_root,  &! Plant Hydraulics Paramters
+      kmax_sun,   &! Plant Hydraulics Parameters (TODO@Xingjie Lu, please give more details)
+      kmax_sha,   &! Plant Hydraulics Parameters
+      kmax_xyl,   &! Plant Hydraulics Parameters
+      kmax_root,  &! Plant Hydraulics Parameters
       psi50_sun,  &! water potential at 50% loss of sunlit leaf tissue conductance (mmH2O)
       psi50_sha,  &! water potential at 50% loss of shaded leaf tissue conductance (mmH2O)
       psi50_xyl,  &! water potential at 50% loss of xylem tissue conductance (mmH2O)
@@ -657,6 +712,7 @@ CONTAINS
 
    SUBROUTINE Init_LC_Const
 
+   USE MOD_Namelist
    IMPLICIT NONE
 
    integer :: i, nsl
@@ -698,6 +754,9 @@ IF (DEF_USE_PLANTHYDRAULICS) THEN
       psi50_xyl  (:) = psi50_xyl0_usgs (:)
       psi50_root (:) = psi50_root0_usgs(:)
       ck         (:) = ck0_usgs        (:)
+ENDIF
+IF (DEF_USE_WUEST)THEN
+      lambda     (:) = lambda_usgs     (:)
 ENDIF
       roota      (:) = roota_usgs      (:)
       rootb      (:) = rootb_usgs      (:)
@@ -746,6 +805,9 @@ IF(DEF_USE_PLANTHYDRAULICS)THEN
       psi50_xyl  (:) = psi50_xyl0_igbp (:)
       psi50_root (:) = psi50_root0_igbp(:)
       ck         (:) = ck0_igbp        (:)
+ENDIF
+IF (DEF_USE_WUEST)THEN
+      lambda     (:) = lambda_igbp     (:)
 ENDIF
       roota      (:) = roota_igbp      (:)
       rootb      (:) = rootb_igbp      (:)

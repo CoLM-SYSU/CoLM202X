@@ -11,7 +11,7 @@ MODULE MOD_BGC_Veg_CNVegStructUpdate
 ! The Community Land Model version 5.0 (CLM5)
 !
 ! REVISION:
-! Xingjie Lu, 2021, revised the CLM5 code to be compatible with CoLM code sturcture.
+! Xingjie Lu, 2021, revised the CLM5 code to be compatible with CoLM code structure.
 !
 
    USE MOD_Precision
@@ -20,7 +20,7 @@ MODULE MOD_BGC_Veg_CNVegStructUpdate
                                  npcropmin, ntmp_corn, nirrig_tmp_corn, ntrp_corn, nirrig_trp_corn, &
                                  nsugarcane, nirrig_sugarcane, nmiscanthus, nirrig_miscanthus, &
                                  nswitchgrass, nirrig_switchgrass, noveg
- 
+
    USE MOD_Vars_PFTimeVariables, only: lai_p, tlai_p, tsai_p, leafc_p, deadstemc_p, harvdate_p
    USE MOD_Vars_TimeVariables, only: lai, tlai
 #ifdef CROP
@@ -28,7 +28,7 @@ MODULE MOD_BGC_Veg_CNVegStructUpdate
 #endif
    USE MOD_Vars_PFTimeInvariants, only: pftclass, pftfrac
    USE MOD_BGC_Vars_TimeVariables, only: farea_burned
-   USE MOD_Const_PFT, only : dsladlai, slatop, laimx, woody
+   USE MOD_Const_PFT, only: dsladlai, slatop, laimx, woody
    !CLM5
    PUBLIC :: CNVegStructUpdate
   !-----------------------------------------------------------------------
@@ -37,13 +37,13 @@ CONTAINS
 
   !-----------------------------------------------------------------------
    SUBROUTINE CNVegStructUpdate(i,ps,pe,deltim,npcropmin)
-          
+
    integer,intent(in)  :: i         ! patch index
    integer,intent(in)  :: ps        ! start pft index
    integer,intent(in)  :: pe        ! END pft index
    real(r8),intent(in) :: deltim    ! time step in seconds
    integer,intent(in)  :: npcropmin ! first crop pft index
-   
+
    ! !LOCAL VARIABLES:
    integer  :: p,c,g      ! indices
    integer  :: fp         ! lake filter indices
@@ -70,33 +70,33 @@ CONTAINS
 !   crop    tsai_alpha,tsai_min = 0.0,0.1
 !   noncrop tsai_alpha,tsai_min = 0.5,1.0  (includes bare soil and urban)
 !-------------------------------------------------------------------------------
-    
+
       ! patch loop
 
       lai (i) = 0._r8
       DO m = ps, pe
          ivt = pftclass(m)
          IF (ivt /= noveg) THEN
-   
+
             tlai_old = tlai_p(m) ! n-1 value
             tsai_old = tsai_p(m) ! n-1 value
-   
+
             IF(DEF_USE_LAIFEEDBACK)THEN
                tlai_p(m) = slatop(ivt) * leafc_p(m)
                tlai_p(m) = max(0._r8, tlai_p(m))
                lai_p (m) = tlai_p(m)
             ENDIF
-   
+
             ! update the stem area index and height based on LAI, stem mass, and veg type.
             ! With the exception of htop for woody vegetation, this follows the DGVM logic.
-   
+
             ! tsai formula from Zeng et. al. 2002, Journal of Climate, p1835 (see notes)
             ! Assumes doalb time step .eq. CLM time step, SAI min and monthly decay factor
             ! alpha are set by PFT, and alpha is scaled to CLM time step by multiplying by
             ! deltim and dividing by dtsmonth (seconds in average 30 day month)
             ! tsai_min scaled by 0.5 to match MODIS satellite derived values
             IF (ivt == nc3crop .or. ivt == nc3irrig) THEN ! generic crops
-   
+
                tsai_alpha = 1.0_r8-1.0_r8*deltim/dtsmonth
                tsai_min = 0.1_r8
             ELSE
@@ -105,17 +105,17 @@ CONTAINS
             ENDIF
             tsai_min = tsai_min * 0.5_r8
             tsai_p(m) = max(tsai_alpha*tsai_old+max(tlai_old-tlai_p(m),0._r8),tsai_min)
-   
+
             ! calculate vegetation physiological parameters used in biomass heat storage
             !
             IF (woody(ivt) == 1._r8) THEN
-   
+
                ! trees and shrubs for now have a very simple allometry, with hard-wired
                ! stem taper (height:radius) and nstem from PFT parameter file
             ELSE IF (ivt >= npcropmin) THEN ! prognostic crops
 #ifdef CROP
                IF (tlai_p(m) >= laimx(ivt)) peaklai_p(m) = 1 ! used in CNAllocation
-  
+
                IF (ivt == ntmp_corn .or. ivt == nirrig_tmp_corn .or. &
                    ivt == ntrp_corn .or. ivt == nirrig_trp_corn .or. &
                    ivt == nsugarcane .or. ivt == nirrig_sugarcane .or. &
@@ -125,7 +125,7 @@ CONTAINS
                ELSE
                   tsai_p(m) = 0.2_r8 * tlai_p(m)
                ENDIF
-  
+
                ! "stubble" after harvest
                IF(DEF_USE_Fire)THEN
                   IF (harvdate_p(m) < 999 .and. tlai_p(m) == 0._r8) THEN
@@ -135,18 +135,18 @@ CONTAINS
                ENDIF
 #endif
             ENDIF
-  
+
          ENDIF
 
-! adjust lai and sai for burying by snow. 
-! snow burial fraction for short vegetation (e.g. grasses, crops) changes with vegetation height 
+! adjust lai and sai for burying by snow.
+! snow burial fraction for short vegetation (e.g. grasses, crops) changes with vegetation height
 ! accounts for a 20% bending factor, as used in Lombardozzi et al. (2018) GRL 45(18), 9889-9897
 
 ! NOTE: The following snow burial code is duplicated in SatellitePhenologyMod.
 ! Changes in one place should be accompanied by similar changes in the other.
          lai(i) = lai(i) + lai_p(m) * pftfrac(m)
       ENDDO
-      tlai(i) = lai(i) 
+      tlai(i) = lai(i)
 
    END SUBROUTINE CNVegStructUpdate
 

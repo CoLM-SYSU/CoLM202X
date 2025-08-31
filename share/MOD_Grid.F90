@@ -3,28 +3,28 @@
 MODULE MOD_Grid
 
 !-------------------------------------------------------------------------------
-! DESCRIPTION:
+! !DESCRIPTION:
 !
-!    Definition of latitude-longitude grids and data types related to grids. 
+!    Definition of latitude-longitude grids and data types related to grids.
 !
 !    Latitude-longitude grid can be defined by
 !    1. "name"   : frequently used grids is predefined in this MODULE;
 !    2. "ndims"  : how many longitude and latitude grids are used globally;
 !    3. "res"    : longitude and latitude resolutions in radian
-!    4. "center" : longitude and latitude grid centers, and the border lines 
+!    4. "center" : longitude and latitude grid centers, and the border lines
 !                  are defined by center lines of grid centers; the region
 !                  boundaries is optional.
 !    5. "file"   : read grid informations from a file, the variables are
 !                  'lat_s', 'lat_n', 'lon_w', 'lon_e'
 !    6. "copy"   : copy grid informations from an existing grid
-! 
+!
 !    Grid centers in radian can be calculated by using "set_rlon" and "set_rlat"
-! 
+!
 !    Two additional data types are defined:
 !    1. "grid_list_type"   : list of grid boxes;
 !    2. "grid_concat_type" : used to concatenate grids distributed in blocks.
-! 
-! Created by Shupeng Zhang, May 2023
+!
+!  Created by Shupeng Zhang, May 2023
 !-------------------------------------------------------------------------------
 
    USE MOD_Precision
@@ -406,7 +406,7 @@ CONTAINS
          CALL ncio_read_bcast_serial (filename, latname, lat_in)
          CALL ncio_read_bcast_serial (filename, lonname, lon_in)
          CALL this%define_by_center (lat_in, lon_in)
-         
+
          deallocate (lat_in, lon_in)
       ENDIF
 
@@ -458,6 +458,32 @@ CONTAINS
       ELSE
          this%yinc = -1
       ENDIF
+
+      ! align grid
+      DO ilon = 1, this%nlon-1
+         IF (lon_between_ceil(this%lon_e(ilon), this%lon_w(ilon+1), this%lon_e(ilon+1))) THEN
+            this%lon_e(ilon) = this%lon_w(ilon+1)
+         ELSE
+            this%lon_w(ilon+1) = this%lon_e(ilon)
+         ENDIF
+      ENDDO
+
+      IF (this%nlon > 1) THEN
+         ilon = this%nlon
+         IF (lon_between_ceil(this%lon_e(ilon), this%lon_w(1), this%lon_e(1))) THEN
+            this%lon_e(ilon) = this%lon_w(1)
+         ENDIF
+      ENDIF
+
+      DO ilat = 1, this%nlat-1
+         IF (this%yinc == 1) THEN
+            this%lat_n(ilat)   = max(this%lat_n(ilat),this%lat_s(ilat+1))
+            this%lat_s(ilat+1) = this%lat_n(ilat)
+         ELSEIF (this%yinc == -1) THEN
+            this%lat_s(ilat)   = min(this%lat_s(ilat),this%lat_n(ilat+1))
+            this%lat_n(ilat+1) = this%lat_s(ilat)
+         ENDIF
+      ENDDO
 
    END SUBROUTINE grid_normalize
 
@@ -652,7 +678,7 @@ CONTAINS
 
    USE MOD_Precision
    USE MOD_Utils
-   USE MOD_Vars_Global, only : pi
+   USE MOD_Vars_Global, only: pi
    IMPLICIT NONE
 
    class (grid_type) :: this
@@ -684,7 +710,7 @@ CONTAINS
 
    USE MOD_Precision
    USE MOD_Utils
-   USE MOD_Vars_Global, only : pi
+   USE MOD_Vars_Global, only: pi
    IMPLICIT NONE
 
    class (grid_type) :: this
@@ -838,7 +864,7 @@ CONTAINS
       ilonloc = 0
       DO WHILE (.true.)
          ilon = mod(ilon,grid%nlon) + 1
-         IF (grid%xblk(ilon) /= iblk) THEN
+         IF ((grid%xblk(ilon) /= iblk) .or. (grid%xloc(ilon) == 1)) THEN
             this%nxseg = this%nxseg + 1
             iblk = grid%xblk(ilon)
          ENDIF
@@ -873,7 +899,7 @@ CONTAINS
       DO WHILE (.true.)
          ilon = mod(ilon,grid%nlon) + 1
          ilonloc = ilonloc + 1
-         IF (grid%xblk(ilon) /= iblk) THEN
+         IF ((grid%xblk(ilon) /= iblk) .or. (grid%xloc(ilon) == 1)) THEN
             ixseg = ixseg + 1
             iblk = grid%xblk(ilon)
             this%xsegs(ixseg)%blk  = iblk

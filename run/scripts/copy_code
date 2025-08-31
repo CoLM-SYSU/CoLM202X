@@ -1,0 +1,122 @@
+#!/bin/bash
+
+Help()
+{
+#DISPLAY help
+   echo "-------------------- Usage ----------------------------------------------------"
+   echo "Descripion:clone CoLM simulation case from an existing case"
+
+   echo "-------------------------------------------------------------------------------"
+   echo 'Syntax: ./copy_code -s $SourcePath -d $DestinationPath'
+   echo !--------------------------------------------------------------------------------
+   echo
+   echo 'eg. ./copy_code -s ~/CoLM/cases/TEST1/bld -d /home/luxj/CoLM202X/cases/TEST2/bld'
+   echo '  which will copy the code under case ~/CoLM/cases/TEST1 to the code under the case '
+   echo "/home/luxj/CoLM202X/cases/TEST2"
+   echo
+   echo 'or  ./copy_code -s ~/CoLM/ -d /home/luxj/CoLM202X/cases/TEST2/bld'
+   echo '  which will copy the code under  ~/CoLM to the code under the case '
+   echo "/home/luxj/CoLM202X/cases/TEST2"
+   echo 
+   echo options:
+   echo "-s (optional) "'$SourcePath'" is the path of the source code, which location your"
+   echo " want to copy from (including case name and 'bld' folder, but without ''/'' at"
+   echo " end of case path)"
+   echo " if -s optioin is not present, copy source code from the ROOT"
+   echo
+   echo "-d The path of the destimation code, which location you want to copy to "
+   echo "(including case name and "'bld'" folder but without ''/'' at end of case path)"
+   echo
+   echo -h display command information
+}
+
+CopyCode()
+{ 
+
+   SourcePathName=$1
+   DestPathName=$2
+   mkdir -p $DestPathName
+   cd $SourcePathName
+   
+   if [ -f Makefile ];then
+      cp -p Makefile $DestPathName/
+   fi
+   for files1 in *
+   do
+      if [ -f $files1 ];then
+         cp -p $files1 $DestPathName/
+      else
+         if [ -d $files1 ];then
+            mkdir -p $DestPathName/$files1
+            cd $SourcePathName/$files1
+            echo copy $files1
+            if [ $files1 = extends -o $files1 = include -o $files1 = run -o $files1 = preprocess ];then
+               cp -pr * $DestPathName/$files1/
+            else
+               if [ $files1 = cases ];then
+                  echo ignore cases directory
+               else
+                  if [ $files1 = postprocess ];then
+                     cp -p *F90 $DestPathName/$files1/
+                  else
+                     for files2 in *
+                     do 
+                        if [ -d $files2 ];then
+                           mkdir -p $DestPathName/$files1/$files2/
+                           cd $SourcePathName/$files1/$files2
+                           echo copy $files1/$files2
+                           for files3 in *
+                           do
+                              if echo $files3 | grep -q -E '.F90$'
+                              then
+                                 cp -p $files3 $DestPathName/$files1/$files2/
+                              fi
+                           done
+			   if [ -f Makefile ];then
+			      cp -p Makefile $DestPathName/$files1/$files2/
+			   fi
+                           cd ../
+                        else 
+                           if echo $files2 | grep -q -E '.F90$'
+                           then
+                              cp -p $files2 $DestPathName/$files1/
+                           fi
+                        fi
+                     done
+		     if [ -f Makefile ];then
+                        cp -p Makefile $DestPathName/$files1/
+                     fi
+                  fi
+               fi
+            fi
+            cd ..
+         fi
+      fi
+   done
+}
+
+
+while getopts ":hs:d:" options ;
+do
+    case $options in
+      s) Source="$OPTARG" ;;
+      d) Destination="$OPTARG"  ;;
+      h) Help; exit;;
+      *) echo "invalid option: $@";exit ;;
+    esac
+done
+
+if [ -z "${Source}" ] || [ -z "${Destination}" ]; then
+   echo
+   echo 'Error: either "-s" or "-d" is missing' 
+   echo
+   Help
+   exit
+else 
+   if [ ! -d "${Source}" ];then
+      echo Source folder does not exist or is not a folder
+   fi
+   echo "copy source code: $Source"
+   echo "to destimation: $Destination"
+   CopyCode $Source $Destination
+fi

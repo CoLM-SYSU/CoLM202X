@@ -1,15 +1,16 @@
 #include <define.h>
 
 MODULE MOD_SoilSurfaceResistance
-! -----------------------------------------------------------------------
+!-----------------------------------------------------------------------
 ! !DESCRIPTION:
-! Calculate the soil surface resistance with multiple parameterization schemes
+!  Calculate the soil surface resistance with multiple parameterization
+!  schemes
 !
-! Created by Zhuo Liu and Hua Yuan, 06/2023
+!  Created by Zhuo Liu and Hua Yuan, 06/2023
 !
 ! !REVISIONS:
 !
-! -----------------------------------------------------------------------
+!-----------------------------------------------------------------------
 ! !USE
 
    USE MOD_Precision
@@ -47,15 +48,15 @@ CONTAINS
 
 !=======================================================================
 ! !DESCRIPTION:
-! Main SUBROUTINE to CALL soil resistance model
-! - Options for soil surface resistance schemes
+!  Main SUBROUTINE to CALL soil resistance model
+!  - Options for soil surface resistance schemes
 !    1: SL14, Swenson and Lawrence (2014)
 !    2: SZ09, Sakaguchi and Zeng (2009)
 !    3: TR13, Tang and Riley (2013)
 !    4: LP92, Lee and Pielke (1992)
 !    5: S92,  Sellers et al (1992)
 !
-! NOTE: Support for both Campbell and VG soil parameters.
+!  NOTE: Support for both Campbell and VG soil parameters.
 !=======================================================================
 
    USE MOD_Precision
@@ -64,9 +65,7 @@ CONTAINS
    USE MOD_Hydro_SoilFunction
    IMPLICIT NONE
 
-
-!-----------------------Argument-----------------------------------------
-
+!-------------------------- Dummy Arguments ----------------------------
    integer, intent(in) :: &
         nl_soil                       ! upper bound of array
 
@@ -76,15 +75,18 @@ CONTAINS
         porsl       (1:nl_soil),     &! soil porosity [-]
         psi0        (1:nl_soil),     &! saturated soil suction [mm] (NEGATIVE)
 #ifdef Campbell_SOIL_MODEL
-        bsw         (1:nl_soil),     &! clapp and hornbereger "b" parameter [-]
+        bsw         (1:nl_soil),     &! clapp and hornberger "b" parameter [-]
 #endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
         theta_r     (1:nl_soil),     &! residual moisture content [-]
-        alpha_vgm   (1:nl_soil),     &! a parameter corresponding approximately to the inverse of the air-entry value
+        ! a parameter corresponding approximately to the inverse of the air-entry value
+        alpha_vgm   (1:nl_soil),     &
         n_vgm       (1:nl_soil),     &! pore-connectivity parameter [dimensionless]
         L_vgm       (1:nl_soil),     &! a shape parameter [dimensionless]
-        sc_vgm      (1:nl_soil),     &! saturation at the air entry value in the classical vanGenuchten model [-]
-        fc_vgm      (1:nl_soil),     &! a scaling factor by using air entry value in the Mualem model [-]
+        ! saturation at the air entry value in the classical vanGenuchten model [-]
+        sc_vgm      (1:nl_soil),     &
+        ! a scaling factor by using air entry value in the Mualem model [-]
+        fc_vgm      (1:nl_soil),     &
 #endif
         dz_soisno   (1:nl_soil),     &! layer thickness [m]
         t_soisno    (1:nl_soil),     &! soil/snow skin temperature [K]
@@ -96,10 +98,10 @@ CONTAINS
    real(r8), intent(out) :: &
         rss                           ! soil surface resistance [s/m]
 
-!-----------------------Local Variables------------------------------
+!-------------------------- Local Variables ----------------------------
 
    REAL(r8) :: &
-        wx,               &! patitial volume of ice and water of surface layer
+        wx,               &! partial volume of ice and water of surface layer
         vol_liq,          &! water content by volume [m3/m3]
         s_node,           &! vol_liq/porosity
         smp_node,         &! matrix potential [m]
@@ -123,8 +125,7 @@ CONTAINS
         fac_fc,           &! temporal variable for calculating wx/wfc
         B                  ! bunsen solubility coefficient
 
-!-----------------------End Variables list---------------------------
-
+!-----------------------------------------------------------------------
 
       ! calculate the top soil volumetric water content (m3/m3), soil matrix potential
       ! and soil hydraulic conductivity
@@ -225,6 +226,7 @@ CONTAINS
 
       SELECTCASE (DEF_RSS_SCHEME)
 
+!-----------------------------------------------------------------------
       ! calculate rss by SL14
       CASE (1)
          dsl = dz_soisno(1)*max(1.e-6_r8,(0.8*eff_porosity - vol_liq)) &
@@ -234,9 +236,8 @@ CONTAINS
          dsl = min(dsl,0.2_r8)
 
          rss = dsl/dg
-         !fordebug only
-         !write(*,*) dsl, dg, aird, vol_liq/porsl(1), eff_porosity, wice_soisno(1),vol_liq, rss
 
+!-----------------------------------------------------------------------
       ! calculate rss by SZ09
       CASE (2)
          dsl = dz_soisno(1)*(exp((1._r8 - vol_liq/porsl(1))**5) - 1._r8)/ (exp(1._r8) - 1._r8)
@@ -245,6 +246,7 @@ CONTAINS
 
          rss = dsl/dg
 
+!-----------------------------------------------------------------------
       ! calculate rss by TR13
       CASE (3)
          ! TR13, Eq. (11) and Eq. (12):
@@ -255,6 +257,7 @@ CONTAINS
          rss_1 = rg_1 + rw_1
          rss   = 1.0/rss_1
 
+!-----------------------------------------------------------------------
       ! LP92 beta scheme
       CASE (4)
          wx  = (max(wliq_soisno(1),1.e-6)/denh2o+wice_soisno(1)/denice)/dz_soisno(1)
@@ -262,13 +265,13 @@ CONTAINS
          fac = max(fac , 0.001_r8)
 #ifdef Campbell_SOIL_MODEL
          wfc = porsl(1)*(0.1/(86400.*hksati(1)))**(1./(2.*bsw(1)+3.))
-         !NOTE: CoLM wfc = (-339.9/soil_psi_s_l(ipatch))**(-1.0*soil_lambda_l(ipatch)) * soil_theta_s_l(ipatch)
+         !NOTE: CoLM wfc = (-339.9/soil_psi_s_l(ipatch))**(-1.0*soil_lambda_l(ipatch))
+         !               * soil_theta_s_l(ipatch)
          !wfc = porsl(1)*(-3399._r8/psi0(1))**(-1./bsw(1))
 #endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
          wfc = theta_r(1)+(porsl(1)-theta_r(1))*(1+(alpha_vgm(1)*339.9)**n_vgm(1))**(1.0/n_vgm(1)-1)
 #endif
-         !write(*,*) wfc  !fordebug only
 
          ! Lee and Pielke 1992 beta
          IF (wx < wfc ) THEN  !when water content of ths top layer is less than that at F.C.
@@ -279,6 +282,7 @@ CONTAINS
             rss  = 1._r8
          ENDIF
 
+!-----------------------------------------------------------------------
       ! Sellers, 1992
       CASE (5)
          wx  = (max(wliq_soisno(1),1.e-6)/denh2o+wice_soisno(1)/denice)/dz_soisno(1)
@@ -289,6 +293,7 @@ CONTAINS
                                       !for wet soil according to Noah-MP v5
       ENDSELECT
 
+!-----------------------------------------------------------------------
       ! account for snow fractional cover for rss
       IF (DEF_RSS_SCHEME .ne. 4) THEN
          ! with 1/rss = fsno/rss_snow + (1-fsno)/rss_soil,
@@ -311,3 +316,4 @@ CONTAINS
    END Subroutine SoilSurfaceResistance
 
 END MODULE MOD_SoilSurfaceResistance
+! ---------- EOP ------------

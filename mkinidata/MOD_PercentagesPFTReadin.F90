@@ -19,9 +19,6 @@ CONTAINS
    USE MOD_SPMD_Task
    USE MOD_NetCDFVector
    USE MOD_LandPatch
-#ifdef CROP
-   USE MOD_LandCrop
-#endif
 #ifdef RangeCheck
    USE MOD_RangeCheck
 #endif
@@ -43,6 +40,10 @@ CONTAINS
 
       write(cyear,'(i4.4)') lc_year
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
+#ifdef SinglePoint
+      IF (patchtypes(SITE_landtype) /= 0) RETURN
+#endif
+
 #ifndef SinglePoint
       lndname = trim(dir_landdata)//'/pctpft/'//trim(cyear)//'/pct_pfts.nc'
       CALL ncio_read_vector (lndname, 'pct_pfts', landpft, pftfrac)

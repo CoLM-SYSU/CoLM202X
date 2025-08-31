@@ -1,15 +1,16 @@
 #include <define.h>
 
 MODULE MOD_Vars_Global
-!-------------------------------------------------------------------------------
+!-----------------------------------------------------------------------
 !
 ! !DESCRIPTION:
-! Define some global variables
+!  Define some global variables
 !
-! REVISIONS:
-! Hua Yuan, 08/2019: initial version partly adapted from CoLM2014
-! TODO ...
+! !REVISIONS:
+!  Hua Yuan, 08/2019: initial version partly adapted from CoLM2014
+!  TODO ...
 !
+!-----------------------------------------------------------------------
 ! !USES:
    USE MOD_Precision
    USE MOD_Namelist
@@ -22,6 +23,8 @@ MODULE MOD_Vars_Global
    ! GLCC USGS land cover named index (could be added IF needed)
    integer, parameter :: URBAN     = 1
    integer, parameter :: WATERBODY = 16
+   integer, parameter :: WETLAND   = 17
+   integer, parameter :: CROPLAND  = 7
 #else
    ! MODIS IGBP number of land cover category
    integer, parameter :: N_land_classification = 17
@@ -54,6 +57,12 @@ MODULE MOD_Vars_Global
    integer, parameter :: nl_roof   = 10
    integer, parameter :: nl_wall   = 10
    integer, parameter :: nvegwcs   = 4  ! number of vegetation water potential nodes
+
+   ! used for downscaling
+   integer, parameter :: num_slope_type       = 4
+   integer, parameter :: num_zenith           = 101
+   integer, parameter :: num_zenith_parameter = 3
+   integer, parameter :: num_azimuth          = 16
 
    ! bgc variables
    integer, parameter :: ndecomp_pools        = 7
@@ -108,7 +117,7 @@ MODULE MOD_Vars_Global
    real(r8), parameter :: irrig_max_cphase = 4._r8           ! crop phenology when end irrigation
    integer , parameter :: irrig_time_per_day = 14400         ! irrigation last time
 
-   ! PUBLIC MEMBER FUNCTIONS:
+! PUBLIC MEMBER FUNCTIONS:
    PUBLIC :: Init_GlobalVars
 
 CONTAINS

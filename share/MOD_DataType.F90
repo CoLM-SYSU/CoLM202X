@@ -3,9 +3,9 @@
 MODULE MOD_DataType
 
 !-----------------------------------------------------------------------
-! DESCRIPTION:
+! !DESCRIPTION:
 !
-!    Definations of data types used in CoLM.
+!    Definitions of data types used in CoLM.
 !
 !    Most frequently used data types in CoLM are "blocked" data types
 !    including,
@@ -13,14 +13,14 @@ MODULE MOD_DataType
 !    2. Blocked 2D data of 8-byte float type;
 !    3. Blocked 3D data of 8-byte float type;
 !    4. Blocked 4D data of 8-byte float type;
-!    
-!    Subroutines are used to 
+!
+!    Subroutines are used to
 !    1. allocate memory;
 !    2. flush data values;
 !    3. copy data;
 !    4. do linear transformation and interpolations.
-!   
-! Created by Shupeng Zhang, May 2023
+!
+!  Created by Shupeng Zhang, May 2023
 !-----------------------------------------------------------------------
 
    USE MOD_Precision
@@ -29,42 +29,42 @@ MODULE MOD_DataType
    !-------
    type :: pointer_real8_1d
       real(r8), allocatable :: val(:)
-   CONTAINS 
+   CONTAINS
       final :: pointer_real8_1d_free_mem
    END type pointer_real8_1d
 
    !-------
    type :: pointer_int8_1d
       integer(1), allocatable :: val(:)
-   CONTAINS 
+   CONTAINS
       final :: pointer_int8_1d_free_mem
    END type pointer_int8_1d
 
    !-------
    type :: pointer_int32_1d
       integer, allocatable :: val(:)
-   CONTAINS 
+   CONTAINS
       final :: pointer_int32_1d_free_mem
    END type pointer_int32_1d
 
    !-------
    type :: pointer_int64_1d
       integer*8, allocatable :: val(:)
-   CONTAINS 
+   CONTAINS
       final :: pointer_int64_1d_free_mem
    END type pointer_int64_1d
 
    !-------
    type :: pointer_logic_1d
       logical, allocatable :: val(:)
-   CONTAINS 
+   CONTAINS
       final :: pointer_logic_1d_free_mem
    END type pointer_logic_1d
 
    !-------
    type :: pointer_int32_2d
       integer, allocatable :: val (:,:)
-   CONTAINS 
+   CONTAINS
       final :: pointer_int32_2d_free_mem
    END type pointer_int32_2d
 
@@ -77,7 +77,7 @@ MODULE MOD_DataType
    !-------
    type :: pointer_real8_2d
       real(r8), allocatable :: val (:,:)
-   CONTAINS 
+   CONTAINS
       final :: pointer_real8_2d_free_mem
    END type pointer_real8_2d
 
@@ -90,7 +90,7 @@ MODULE MOD_DataType
    !-------
    type :: pointer_real8_3d
       real(r8), allocatable :: val (:,:,:)
-   CONTAINS 
+   CONTAINS
       final :: pointer_real8_3d_free_mem
    END type pointer_real8_3d
 
@@ -104,7 +104,7 @@ MODULE MOD_DataType
    !-------
    type :: pointer_real8_4d
       real(r8), allocatable :: val (:,:,:,:)
-   CONTAINS 
+   CONTAINS
       final :: pointer_real8_4d_free_mem
    END type pointer_real8_4d
 
@@ -151,7 +151,7 @@ CONTAINS
          deallocate(this%val)
       ENDIF
 
-   END SUBROUTINE pointer_real8_1d_free_mem 
+   END SUBROUTINE pointer_real8_1d_free_mem
 
    !------------------
    SUBROUTINE pointer_int8_1d_free_mem (this)
@@ -164,7 +164,7 @@ CONTAINS
          deallocate(this%val)
       ENDIF
 
-   END SUBROUTINE pointer_int8_1d_free_mem 
+   END SUBROUTINE pointer_int8_1d_free_mem
 
    !------------------
    SUBROUTINE pointer_int32_1d_free_mem (this)
@@ -177,7 +177,7 @@ CONTAINS
          deallocate(this%val)
       ENDIF
 
-   END SUBROUTINE pointer_int32_1d_free_mem 
+   END SUBROUTINE pointer_int32_1d_free_mem
 
    !------------------
    SUBROUTINE pointer_int64_1d_free_mem (this)
@@ -190,7 +190,7 @@ CONTAINS
          deallocate(this%val)
       ENDIF
 
-   END SUBROUTINE pointer_int64_1d_free_mem 
+   END SUBROUTINE pointer_int64_1d_free_mem
 
    !------------------
    SUBROUTINE pointer_logic_1d_free_mem (this)
@@ -203,7 +203,7 @@ CONTAINS
          deallocate(this%val)
       ENDIF
 
-   END SUBROUTINE pointer_logic_1d_free_mem 
+   END SUBROUTINE pointer_logic_1d_free_mem
 
    !------------------
    SUBROUTINE pointer_int32_2d_free_mem (this)
@@ -216,7 +216,7 @@ CONTAINS
          deallocate(this%val)
       ENDIF
 
-   END SUBROUTINE pointer_int32_2d_free_mem 
+   END SUBROUTINE pointer_int32_2d_free_mem
 
    !------------------
    SUBROUTINE allocate_block_data_int32_2d (grid, gdata)
@@ -234,7 +234,7 @@ CONTAINS
 
       allocate (gdata%blk (gblock%nxblk,gblock%nyblk))
 
-      DO iblkme = 1, gblock%nblkme 
+      DO iblkme = 1, gblock%nblkme
          iblk = gblock%xblkme(iblkme)
          jblk = gblock%yblkme(iblkme)
          allocate (gdata%blk(iblk,jblk)%val (grid%xcnt(iblk), grid%ycnt(jblk)))
@@ -265,7 +265,7 @@ CONTAINS
          deallocate (this%blk)
       ENDIF
 
-   END SUBROUTINE block_data_int32_2d_free_mem 
+   END SUBROUTINE block_data_int32_2d_free_mem
 
    !------------------
    SUBROUTINE pointer_real8_2d_free_mem (this)
@@ -278,7 +278,7 @@ CONTAINS
          deallocate(this%val)
       ENDIF
 
-   END SUBROUTINE pointer_real8_2d_free_mem 
+   END SUBROUTINE pointer_real8_2d_free_mem
 
    !------------------
    SUBROUTINE allocate_block_data_real8_2d (grid, gdata)
@@ -296,7 +296,7 @@ CONTAINS
 
       allocate (gdata%blk (gblock%nxblk,gblock%nyblk))
 
-      DO iblkme = 1, gblock%nblkme 
+      DO iblkme = 1, gblock%nblkme
          iblk = gblock%xblkme(iblkme)
          jblk = gblock%yblkme(iblkme)
          allocate (gdata%blk(iblk,jblk)%val (grid%xcnt(iblk), grid%ycnt(jblk)))
@@ -314,7 +314,7 @@ CONTAINS
 
       ! Local variables
       integer :: iblk, jblk
-      
+
       IF (allocated (this%blk)) THEN
          DO jblk = 1, gblock%nyblk
             DO iblk = 1, gblock%nxblk
@@ -326,8 +326,8 @@ CONTAINS
 
          deallocate (this%blk)
       ENDIF
-      
-   END SUBROUTINE block_data_real8_2d_free_mem 
+
+   END SUBROUTINE block_data_real8_2d_free_mem
 
    !------------------
    SUBROUTINE pointer_real8_3d_free_mem (this)
@@ -340,7 +340,7 @@ CONTAINS
          deallocate(this%val)
       ENDIF
 
-   END SUBROUTINE pointer_real8_3d_free_mem 
+   END SUBROUTINE pointer_real8_3d_free_mem
 
    !------------------
    SUBROUTINE allocate_block_data_real8_3d (grid, gdata, ndim1, lb1)
@@ -359,7 +359,7 @@ CONTAINS
    integer :: iblkme, iblk, jblk
 
       allocate (gdata%blk (gblock%nxblk,gblock%nyblk))
-      
+
       IF (present(lb1)) THEN
          gdata%lb1 = lb1
       ELSE
@@ -368,7 +368,7 @@ CONTAINS
 
       gdata%ub1 = gdata%lb1-1+ndim1
 
-      DO iblkme = 1, gblock%nblkme 
+      DO iblkme = 1, gblock%nblkme
          iblk = gblock%xblkme(iblkme)
          jblk = gblock%yblkme(iblkme)
          allocate (gdata%blk(iblk,jblk)%val (gdata%lb1:gdata%ub1, grid%xcnt(iblk), grid%ycnt(jblk)))
@@ -399,7 +399,7 @@ CONTAINS
          deallocate (this%blk)
       ENDIF
 
-   END SUBROUTINE block_data_real8_3d_free_mem 
+   END SUBROUTINE block_data_real8_3d_free_mem
 
    !------------------
    SUBROUTINE pointer_real8_4d_free_mem (this)
@@ -412,7 +412,7 @@ CONTAINS
          deallocate(this%val)
       ENDIF
 
-   END SUBROUTINE pointer_real8_4d_free_mem 
+   END SUBROUTINE pointer_real8_4d_free_mem
 
    !------------------
    SUBROUTINE allocate_block_data_real8_4d (grid, gdata, ndim1, ndim2, lb1, lb2)
@@ -448,7 +448,7 @@ CONTAINS
 
       gdata%ub2 = gdata%lb2-1+ndim2
 
-      DO iblkme = 1, gblock%nblkme 
+      DO iblkme = 1, gblock%nblkme
          iblk = gblock%xblkme(iblkme)
          jblk = gblock%yblkme(iblkme)
          allocate (gdata%blk(iblk,jblk)%val ( &
@@ -480,7 +480,7 @@ CONTAINS
          deallocate (this%blk)
       ENDIF
 
-   END SUBROUTINE block_data_real8_4d_free_mem 
+   END SUBROUTINE block_data_real8_4d_free_mem
 
    !------------------
    SUBROUTINE flush_block_data_real8_2d (gdata, spval)
@@ -496,7 +496,7 @@ CONTAINS
    ! Local variables
    integer :: iblkme, iblk, jblk
 
-      DO iblkme = 1, gblock%nblkme 
+      DO iblkme = 1, gblock%nblkme
          iblk = gblock%xblkme(iblkme)
          jblk = gblock%yblkme(iblkme)
          gdata%blk(iblk,jblk)%val = spval
@@ -518,7 +518,7 @@ CONTAINS
    ! Local variables
    integer :: iblkme, iblk, jblk
 
-      DO iblkme = 1, gblock%nblkme 
+      DO iblkme = 1, gblock%nblkme
          iblk = gblock%xblkme(iblkme)
          jblk = gblock%yblkme(iblkme)
          gdata%blk(iblk,jblk)%val = spval
@@ -540,7 +540,7 @@ CONTAINS
    ! Local variables
    integer :: iblkme, iblk, jblk
 
-      DO iblkme = 1, gblock%nblkme 
+      DO iblkme = 1, gblock%nblkme
          iblk = gblock%xblkme(iblkme)
          jblk = gblock%yblkme(iblkme)
          gdata%blk(iblk,jblk)%val = spval
@@ -562,7 +562,7 @@ CONTAINS
    ! Local variables
    integer :: iblkme, iblk, jblk
 
-      DO iblkme = 1, gblock%nblkme 
+      DO iblkme = 1, gblock%nblkme
          iblk = gblock%xblkme(iblkme)
          jblk = gblock%yblkme(iblkme)
          gdata%blk(iblk,jblk)%val = spval
@@ -586,7 +586,7 @@ CONTAINS
    integer :: iblkme, iblk, jblk
 
       IF (present(scl)) THEN
-         DO iblkme = 1, gblock%nblkme 
+         DO iblkme = 1, gblock%nblkme
             iblk = gblock%xblkme(iblkme)
             jblk = gblock%yblkme(iblkme)
             gdata%blk(iblk,jblk)%val = gdata%blk(iblk,jblk)%val * scl
@@ -594,7 +594,7 @@ CONTAINS
       ENDIF
 
       IF (present(dsp)) THEN
-         DO iblkme = 1, gblock%nblkme 
+         DO iblkme = 1, gblock%nblkme
             iblk = gblock%xblkme(iblkme)
             jblk = gblock%yblkme(iblkme)
             gdata%blk(iblk,jblk)%val = gdata%blk(iblk,jblk)%val + dsp
@@ -618,7 +618,7 @@ CONTAINS
    ! Local variables
    integer :: iblkme, iblk, jblk
 
-      DO iblkme = 1, gblock%nblkme 
+      DO iblkme = 1, gblock%nblkme
          iblk = gblock%xblkme(iblkme)
          jblk = gblock%yblkme(iblkme)
          IF (present(sca)) THEN
@@ -640,13 +640,13 @@ CONTAINS
    IMPLICIT NONE
 
    type(block_data_real8_2d), intent(in)    :: gdata_from1, gdata_from2
-   real(r8), intent(in) :: alp1, alp2 
+   real(r8), intent(in) :: alp1, alp2
    type(block_data_real8_2d), intent(inout) :: gdata_to
 
    ! Local variables
    integer :: iblkme, iblk, jblk
 
-      DO iblkme = 1, gblock%nblkme 
+      DO iblkme = 1, gblock%nblkme
          iblk = gblock%xblkme(iblkme)
          jblk = gblock%yblkme(iblkme)
          gdata_to%blk(iblk,jblk)%val = &
@@ -662,7 +662,7 @@ CONTAINS
    USE MOD_Precision
    USE MOD_Block
    USE MOD_SPMD_Task
-   USE MOD_Vars_Global, only : spval
+   USE MOD_Vars_Global, only: spval
    IMPLICIT NONE
 
    type(block_data_real8_2d), intent(inout) :: gdata
@@ -676,7 +676,7 @@ CONTAINS
 
          IF (.not. present(spv)) THEN
 
-            DO iblkme = 1, gblock%nblkme 
+            DO iblkme = 1, gblock%nblkme
                iblk = gblock%xblkme(iblkme)
                jblk = gblock%yblkme(iblkme)
                WHERE (sumdata%blk(iblk,jblk)%val > 0.)
@@ -684,12 +684,12 @@ CONTAINS
                      gdata%blk(iblk,jblk)%val / sumdata%blk(iblk,jblk)%val
                ELSEWHERE
                   gdata%blk(iblk,jblk)%val = spval
-               ENDWHERE 
+               ENDWHERE
             ENDDO
 
          ELSE
 
-            DO iblkme = 1, gblock%nblkme 
+            DO iblkme = 1, gblock%nblkme
                iblk = gblock%xblkme(iblkme)
                jblk = gblock%yblkme(iblkme)
                WHERE ((sumdata%blk(iblk,jblk)%val > 0.) .and. (gdata%blk(iblk,jblk)%val /= spv))
@@ -697,7 +697,7 @@ CONTAINS
                      gdata%blk(iblk,jblk)%val / sumdata%blk(iblk,jblk)%val
                ELSEWHERE
                   gdata%blk(iblk,jblk)%val = spv
-               ENDWHERE 
+               ENDWHERE
             ENDDO
 
          ENDIF
@@ -705,5 +705,5 @@ CONTAINS
       ENDIF
 
    END SUBROUTINE block_data_division
-      
+
 END MODULE MOD_DataType

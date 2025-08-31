@@ -4,37 +4,45 @@ SUBROUTINE soil_hydraulic_parameters(BD,SAND,CLAY,SOC,SOILDEPTH,&
            VGM_theta_r_Rose,VGM_alpha_Rose,VGM_n_Rose,k_s_Rose)
 
 !-----------------------------------------------------------------------
-! DESCRIPTION:
-! Calculate soil hydraulic parameters of soil water retension models (Brooks and Corey, 1964 & van Genuchten, 1980)
-! and soil saturated hydraulic conductivity with multiple soil Pedotransfer functions by using the rawdata soil properties.
+! !DESCRIPTION:
+!  Calculate soil hydraulic parameters of soil water retension models
+!  (Brooks and Corey, 1964 & van Genuchten, 1980) and soil saturated
+!  hydraulic conductivity with multiple soil Pedotransfer functions by
+!  using the rawdata soil properties.
 !
-! REFERENCES:
-! (1) Dai et al.,2013: Development of a China Dataset of Soil
-!     Hydraulic Parameters Using Pedotransfer Functions for Land Surface Modeling.
-!     J. of Hydrometeorology, 14: 869-887. DOI: 10.1175/JHM-D-12-0149.1
-! (2) Dai et al.,2019: A Global High-Resolution Data Set of Soil Hydraulic and Thermal Properties
-!     for Land Surface Modeling. J. of Advances in Modeling Earth Systems, DOI: 10.1029/2019MS001784
+! !REFERENCES:
+!  (1) Dai et al.,2013: Development of a China Dataset of Soil
+!      Hydraulic Parameters Using Pedotransfer Functions for Land
+!      Surface Modeling.  J. of Hydrometeorology, 14: 869-887. DOI:
+!      10.1175/JHM-D-12-0149.1
+!  (2) Dai et al.,2019: A Global High-Resolution Data Set of Soil
+!      Hydraulic and Thermal Properties for Land Surface Modeling. J. of
+!      Advances in Modeling Earth Systems, DOI: 10.1029/2019MS001784
 !
-! Original author: Yongjiu Dai, Wei Shangguan, 12/2013/
+!  Original author: Yongjiu Dai, Wei Shangguan, 12/2013/
 !
-! Rivisions:
-! Yongjiu Dai, Nan Wei and Yonggen Zhang,
-!          06/2018: add more highly cited or newly developped soil Pedotransfer functions.
-! Nan Wei, 01/2019: add algorithms for fitting soil hydraulic parameters by multiple soil Pedotransfer functions.
-! Yongjiu Dai and Nan Wei,
-!          06/2019: consider the gravel effects on soil hydraulic parameters
-! ----------------------------------------------------------------------
-use MOD_Precision
+! !REVISIONS:
+!  06/2018, Yongjiu Dai, Nan Wei and Yonggen Zhang:
+!           add more highly cited or newly developed soil Pedotransfer
+!           functions.
+!
+!  01/2019, Nan Wei: add algorithms for fitting soil hydraulic
+!           parameters by multiple soil Pedotransfer functions.
+!
+!  06/2019, Yongjiu Dai and Nan Wei:
+!           consider the gravel effects on soil hydraulic parameters
+!-----------------------------------------------------------------------
+USE MOD_Precision
 
 IMPLICIT NONE
 
-real(r8), intent(in) :: SAND ! percent sand particle-size distribution (%, weight)
-real(r8), intent(in) :: CLAY ! percent clay particle-size distribution (%, weight)
-real(r8), intent(in) :: SOC  ! soil organic carbon concentration (%, weight)
-real(r8), intent(in) :: BD   ! bulk density (g cm-3)
-real(r8), intent(in) :: SOILDEPTH ! soil depth (cm)
-real(r8), intent(in) :: vf_gravels_ss! volumetric fraction of gravels
-real(r8), intent(in) :: phi          ! saturated water content (cm3/cm3)
+real(r8), intent(in) :: SAND             ! percent sand particle-size distribution (%, weight)
+real(r8), intent(in) :: CLAY             ! percent clay particle-size distribution (%, weight)
+real(r8), intent(in) :: SOC              ! soil organic carbon concentration (%, weight)
+real(r8), intent(in) :: BD               ! bulk density (g cm-3)
+real(r8), intent(in) :: SOILDEPTH        ! soil depth (cm)
+real(r8), intent(in) :: vf_gravels_ss    ! volumetric fraction of gravels
+real(r8), intent(in) :: phi              ! saturated water content (cm3/cm3)
 real(r8), intent(in) :: VGM_theta_r_Rose ! residual moisture content by Rosetta H3
 real(r8), intent(in) :: VGM_alpha_Rose   ! a parameter corresponding approximately to the inverse of the air-entry value by Rosetta H3
 real(r8), intent(in) :: VGM_n_Rose       ! a shape parameter by Rosetta H3
@@ -43,21 +51,21 @@ real(r8), intent(in) :: k_s_Rose         ! saturated hydraulic conductivity (cm/
 real(r8), intent(out) :: CampBC_psi_s    ! matric potential at saturation (cm)
 real(r8), intent(out) :: CampBC_lambda_s ! pore size distribution index (dimensionless)
 
-real(r8), intent(out) :: k_s      ! saturated hydraulic conductivity (cm/day)
+real(r8), intent(out) :: k_s             ! saturated hydraulic conductivity (cm/day)
 
-real(r8), intent(out) :: VGM_theta_r ! residual moisture content
-real(r8), intent(out) :: VGM_alpha   ! a parameter corresponding approximately to the inverse of the air-entry value
-real(r8), intent(out) :: VGM_n       ! a shape parameter
-real(r8), intent(out) :: VGM_L       ! pore-connectivity parameter
+real(r8), intent(out) :: VGM_theta_r     ! residual moisture content
+real(r8), intent(out) :: VGM_alpha       ! a parameter corresponding approximately to the inverse of the air-entry value
+real(r8), intent(out) :: VGM_n           ! a shape parameter
+real(r8), intent(out) :: VGM_L           ! pore-connectivity parameter
 
 real(r8) SOM, TOPSOIL, BD_om, BD_minerals,a,vf_gravels_s
 
 ! --------------------------------------------------------------------
-      if(SOILDEPTH < 30.)then   ! cm
-         TOPSOIL=1.  ! 1 if A or E horizon
-      else
-         TOPSOIL=0.  ! 0 if the subsoil
-      endif
+      IF(SOILDEPTH < 30.)THEN   ! cm
+         TOPSOIL=1.  ! 1 IF A or E horizon
+      ELSE
+         TOPSOIL=0.  ! 0 IF the subsoil
+      ENDIF
 
       SOM=1.724*SOC
       vf_gravels_s = vf_gravels_ss/100.
@@ -68,12 +76,12 @@ real(r8) SOM, TOPSOIL, BD_om, BD_minerals,a,vf_gravels_s
 ! Parameters of the retention curve of FINE EARTH
 ! ---------------------------------------------------------------------
       CALL CampBC(BD,SAND,CLAY,SOM,SOC,phi,CampBC_psi_s,CampBC_lambda_s)
-      if (vf_gravels_s > 0.2) CampBC_psi_s = 1.25 * CampBC_psi_s * (1 - vf_gravels_s)
+      IF (vf_gravels_s > 0.2) CampBC_psi_s = 1.25 * CampBC_psi_s * (1 - vf_gravels_s)
 
 ! ---------------------------------------------------------------------
 !*SOIL hydraulic parameters in the van Genuchten and Mualem functions
 ! ---------------------------------------------------------------------
-      call VGM(BD,SAND,CLAY,SOM,SOC,TOPSOIL,phi,VGM_theta_r,VGM_alpha,VGM_n,VGM_L,&
+      CALL VGM(BD,SAND,CLAY,SOM,SOC,TOPSOIL,phi,VGM_theta_r,VGM_alpha,VGM_n,VGM_L,&
                VGM_theta_r_Rose,VGM_alpha_Rose,VGM_n_Rose)
 
 ! ---------------------------------------------------------------------
@@ -86,7 +94,7 @@ real(r8) SOM, TOPSOIL, BD_om, BD_minerals,a,vf_gravels_s
 ! ---------------------------------------------------------------------
       a   = k_s
       k_s = a * (1.-1.1*vf_gravels_s)                     ! (Bouwer and Rice, 1984)
-      if(k_s <= 0.0) k_s = a * (1.-vf_gravels_s)
+      IF(k_s <= 0.0) k_s = a * (1.-vf_gravels_s)
 !      k_s = k_s * (1.-vf_gravels_s)/(1.0+vf_gravels_s)   ! (Peck and Watson, 1979)
 !***  k_s = k_s * (1.-vf_gravels_s)                       ! (Brakensiek et al., 1986; Bagarello and Iovino, 2007)
 
@@ -111,13 +119,13 @@ SUBROUTINE CampBC(BD,SAND,CLAY,SOM,SOC,phi,psi_s,lambda_s)
 !
 ! Original author: Yongjiu Dai, Wei Shangguan, 12/2013/
 !
-! Rivisions:
+! Revisions:
 ! Yongjiu Dai, Nan Wei and Yonggen Zhang,
-!          06/2018: add more highly cited or newly developped soil Pedotransfer functions.
+!          06/2018: add more highly cited or newly developed soil Pedotransfer functions.
 ! Nan Wei, 01/2019: add algorithms for fitting soil hydraulic parameters by multiple soil Pedotransfer functions.
 ! ----------------------------------------------------
-use MOD_Precision
-use MOD_Utils
+USE MOD_Precision
+USE MOD_Utils
 
 IMPLICIT NONE
 real(r8), intent(in) :: BD   ! bulk density (g cm-3)
@@ -127,19 +135,19 @@ real(r8), intent(in) :: SOM  ! percent organic matter (%, weight)
 real(r8), intent(in) :: SOC  ! percent organic carbon (%, weight)
 real(r8), intent(in) :: phi  ! saturated water content (cm3/cm3)
 
-REAL(r8), INTENT(OUT) :: psi_s  ! MATRIC POTENTIAL AT SATURATION ! cm
-REAL(r8), INTENT(OUT) :: lambda_s !
+real(r8), intent(out) :: psi_s  ! MATRIC POTENTIAL AT SATURATION ! cm
+real(r8), intent(out) :: lambda_s !
 
 integer, parameter :: nc = 8  !  the number of PTFs in estimating SW retention parameters in the Campbell model
-logical c(12) ! indicate wheather a soil is in an class
+logical c(12) ! indicate whether a soil is in an class
 ! soil_classes=c('Sa','LoSa','SaLo','Lo','SaClLo','SaCl','ClLo','SiLo','Si','SiClLo','SiCl','Cl')
 
-REAL(r8) CH_b(12),CH_ths(12),CH_psi_s(12)
+real(r8) CH_b(12),CH_ths(12),CH_psi_s(12)
 data CH_b    /4.05 ,4.38,4.9  ,5.39 ,7.12,10.4 ,8.52  ,4.9  ,5.3  ,7.75 ,10.4 ,11.4/
 data CH_ths  /0.395,0.41,0.435,0.451,0.42,0.426,0.476 ,0.485,0.485,0.477,0.492,0.482/
 data CH_psi_s/12.10,9.0 ,21.8 ,47.80,29.9,15.3 ,63.0  ,78.6 ,78.6 ,35.6 ,49.0 ,40.5/  ! unit is cm
 
-REAL(r8) Cosby0_b(12),Cosby_psi_s(12),Cosby_ths(12)
+real(r8) Cosby0_b(12),Cosby_psi_s(12),Cosby_ths(12)
 data Cosby0_b   /2.790,4.260,4.740,5.250,6.660,10.73,8.170,5.330,5.330,8.720,10.39,11.55/
 data Cosby_psi_s/0.069,0.036,0.141,0.355,0.135,0.098,0.263,0.759,0.759,0.617,0.324,0.468/
 data Cosby_ths  /0.339,0.421,0.434,0.439,0.404,0.406,0.465,0.476,0.476,0.464,0.468,0.468/
@@ -148,7 +156,7 @@ integer i, itype
 real(r8) SILT
 real(r8) d_g, sigma_g, h_es, h_b
 real(r8) a, b, z, z33, zs33, zs, z1500, str
-REAL(r8) psi(nc), lambda(nc)
+real(r8) psi(nc), lambda(nc)
 
 ! local variables for estimating the optimal parameters using the fitting methods
 integer ,parameter :: npoint       = 24
@@ -218,7 +226,7 @@ external SW_CB_dist
 ! 4) Rawls and Brakenssiek (1989):
 ! Rawls, W. J., & Brakensiek, D. L. (1989). Estimation of soil water retention and hydraulic properties.
 ! In H. J. Morel‐Seytoux (Ed.), Unsaturated flow in hydrologic modeling, NATO ASI Series
-! (Series C: Mathematical and Physical Sciences) (Vol. 275, pp. 275–300).
+! (Series C: Mathematical and Physical Sciences) (Vol. 275, pp. 275-300).
 !
 ! PTFs were developed from about 18,000 samples from the national soil characterization
 ! database that the clay activity ratio along with texture to characterized
@@ -250,7 +258,7 @@ external SW_CB_dist
 ! these function should NOT be applied to organic soils (organic carbon content >5%)
 ! and/or soils of small dry bulk density (<0.9 g/cm3)
 ! -------------------------------------------------------------
-      if(SOC < 5. .or. BD > 0.9)then
+      IF(SOC < 5. .or. BD > 0.9)THEN
       psi(5)=-10.0**(-4.9840297533+0.0509226283*SAND+0.1575152771*SILT &
               +0.1240901644*BD-0.1640033143*SOC &
               -0.0021767278*SILT**2+0.00001438224*SILT**3 &
@@ -260,11 +268,11 @@ external SW_CB_dist
                -0.4542769707*BD-0.0497915563*SOC+3.294687e-04*SAND**2-1.689056e-06*SAND**3 &
                +0.0011225373*SOC**2)
       ydatc(5,:) = (-1.0*xdat/psi(5))**(-1.0*lambda(5)) * phi
-      else
+      ELSE
          lambda(5)=-1.0e36
          psi(5)=-1.0e36
          ydatc(5,:) = -1.0e36
-      endif
+      ENDIF
 
 ! ----------------------------------------------------------
 ! 6) Williams, J., P. Ross, and K. Bristow. 1992. Prediction of the Campbell water retention
@@ -284,18 +292,18 @@ external SW_CB_dist
 ! ----------------------------------------------------------
       CALL USDA_soil_classes(SILT,CLAY,c)
 
-      if(c(1))  itype = 12 ! ic = 'Cl'      clay
-      if(c(2))  itype = 11 ! ic = 'SiCl'    silty clay
-      if(c(3))  itype = 6  ! ic = 'SaCl'    sandy clay
-      if(c(4))  itype = 7  ! ic = 'ClLo'    clay loam
-      if(c(5))  itype = 10 ! ic = 'SiClLo'  silty clay loam
-      if(c(6))  itype = 5  ! ic = 'SaClLo'  sandy clay loam
-      if(c(7))  itype = 4  ! ic = 'Lo'      loam
-      if(c(8))  itype = 8  ! ic = 'SiLo'    silty loam
-      if(c(9))  itype = 3  ! ic = 'SaLo'    sandy loam
-      if(c(10)) itype = 9  ! ic = 'Si'      silt
-      if(c(11)) itype = 2  ! ic = 'LoSa'    loamy sand
-      if(c(12)) itype = 1  ! ic = 'Sa'      sand
+      IF(c(1))  itype = 12 ! ic = 'Cl'      clay
+      IF(c(2))  itype = 11 ! ic = 'SiCl'    silty clay
+      IF(c(3))  itype = 6  ! ic = 'SaCl'    sandy clay
+      IF(c(4))  itype = 7  ! ic = 'ClLo'    clay loam
+      IF(c(5))  itype = 10 ! ic = 'SiClLo'  silty clay loam
+      IF(c(6))  itype = 5  ! ic = 'SaClLo'  sandy clay loam
+      IF(c(7))  itype = 4  ! ic = 'Lo'      loam
+      IF(c(8))  itype = 8  ! ic = 'SiLo'    silty loam
+      IF(c(9))  itype = 3  ! ic = 'SaLo'    sandy loam
+      IF(c(10)) itype = 9  ! ic = 'Si'      silt
+      IF(c(11)) itype = 2  ! ic = 'LoSa'    loamy sand
+      IF(c(12)) itype = 1  ! ic = 'Sa'      sand
 
       lambda(7)=1.0/CH_b(itype)
       psi(7)=-CH_psi_s(itype)  ! cm
@@ -306,24 +314,24 @@ external SW_CB_dist
       ydatc(8,:) = (-1.0*xdat/psi(8))**(-1.0*lambda(8)) * phi
 
 ! ----------------------------------------------------------
-      do i = 1, nc
-         if(lambda(i) > 1. .or. lambda(i) <= 0.) then
+      DO i = 1, nc
+         IF(lambda(i) > 1. .or. lambda(i) <= 0.) THEN
             lambda(i)=-1.0e36
             ydatc(i,:)=-1.0e36
-         end if
-         if(psi(i) < -300. .or. psi(i) >= 0.) then
+         ENDIF
+         IF(psi(i) < -300. .or. psi(i) >= 0.) THEN
             psi(i)=-1.0e36
             ydatc(i,:)=-1.0e36
-         end if
-      enddo
+         ENDIF
+      ENDDO
 
       m = 0
-      do i = 1, nc
-         if(abs(ydatc(i,1)) < 1.0e10) then
+      DO i = 1, nc
+         IF(abs(ydatc(i,1)) < 1.0e10) THEN
             m = m+1
             ydatc(m,:) = ydatc(i,:)
-         end if
-      enddo
+         ENDIF
+      ENDDO
 
       ldfjac = npoint
       allocate(fjac(npoint,n))
@@ -346,14 +354,14 @@ external SW_CB_dist
       nprint = 0
       isiter = 1
 
-      call lmder ( SW_CB_dist, npoint, n, x, fvec, fjac, ldfjac, ftol, xtol, gtol, maxfev, &
+      CALL lmder ( SW_CB_dist, npoint, n, x, fvec, fjac, ldfjac, ftol, xtol, gtol, maxfev, &
                    diag, mode, factor, nprint, info, nfev, njev, ipvt, qtf,&
                    xdat, npoint, ydatc, m, phi, isiter)
 
-      if( x(1) >= -300. .and. x(1) < 0.0 .and. x(2) > 0.0 .and. x(2) <= 1.0 .and. isiter == 1)then
+      IF( x(1) >= -300. .and. x(1) < 0.0 .and. x(2) > 0.0 .and. x(2) <= 1.0 .and. isiter == 1)THEN
          psi_s    = x(1)
          lambda_s = x(2)
-      end if
+      ENDIF
 
       deallocate(fjac)
       deallocate(fvec)
@@ -385,13 +393,13 @@ SUBROUTINE VGM(BD,sand,clay,SOM,SOC,TOPSOIL,phi,theta_r_l,alpha_l,n_l,L_l,&
 !
 ! Original author: Yongjiu Dai, Wei Shangguan, 12/2013/
 !
-! Rivisions:
+! Revisions:
 ! Yongjiu Dai, Nan Wei and Yonggen Zhang,
-!          06/2018: add more highly cited or newly developped soil Pedotransfer functions.
+!          06/2018: add more highly cited or newly developed soil Pedotransfer functions.
 ! Nan Wei, 01/2019: add algorithms for fitting soil hydraulic parameters by multiple soil Pedotransfer functions.
 ! ----------------------------------------------------
-use MOD_Precision
-use MOD_Utils
+USE MOD_Precision
+USE MOD_Utils
 
 IMPLICIT NONE
 
@@ -437,13 +445,13 @@ data PRajkai/0.0,3.0,10.0,32.0,500.0,2512.0,15849.0,1259000.0/
 data PRawls02/0.0,100.0,200.0,330.0,600.0,1000.0,2000.0,4000.0,7000.0,10000.0,15000.0/
 data PRawls03/0.0,200.0,300.0,600.0,1000.0,2000.0,4000.0,7000.0,10000.0,15000.0/
 
-logical c(12) ! indicate wheather a soil is in an class
-REAL(r8) CP_thr(12),CP_alpha(12),CP_n(12)
+logical c(12) ! indicate whether a soil is in an class
+real(r8) CP_thr(12),CP_alpha(12),CP_n(12)
 data CP_thr  /0.045,0.057,0.065,0.078,0.095,0.1  ,0.095,0.067,0.034,0.089,0.07 ,0.068/
 data CP_alpha/0.145,0.124,0.075,0.036,0.019,0.027,0.019,0.02 ,0.016,0.01 ,0.005,0.008/
 data CP_n    /2.68 ,2.28 ,1.89 ,1.56 ,1.31 ,1.23 ,1.31 ,1.41 ,1.37 ,1.23 ,1.09 ,1.09/
 
-REAL(r8) RoH1_thr(12),RoH1_alpha(12),RoH1_n(12)
+real(r8) RoH1_thr(12),RoH1_alpha(12),RoH1_n(12)
 data RoH1_thr  /0.055,0.058,0.061,0.09, 0.093,0.147,0.107,0.083,0.065,0.12, 0.124,0.131/
 data RoH1_alpha/0.033,0.025,0.016,0.006,0.012,0.025,0.01, 0.003,0.006,0.006,0.01, 0.009/
 data RoH1_n    /2.895,1.697,1.457,1.421,1.305,1.237,1.391,1.552,1.577,1.434,1.273,1.255/
@@ -469,7 +477,7 @@ silt=100.-sand-clay
 ! 1) Rawls and Brakenssiek (1989):
 ! Rawls, W. J., & Brakensiek, D. L. (1989). Estimation of soil water retention and hydraulic properties.
 ! In H. J. Morel‐Seytoux (Ed.), Unsaturated flow in hydrologic modeling, NATO ASI Series
-! (Series C: Mathematical and Physical Sciences) (Vol. 275, pp. 275–300).
+! (Series C: Mathematical and Physical Sciences) (Vol. 275, pp. 275-300).
 !
 ! 12,000 samples from the National Soil Characterization database
 ! the PTF is applicable for soil:
@@ -501,7 +509,7 @@ ydatv(1,:) = theta_r(1)+(phi - theta_r(1))*(1+(alpha(1)*xdat)**n(1))**(1.0/n(1)-
 !
 ! Wosten et al. (1999) analyzed the all-Europe database and derived
 ! the following PTFs to estimate van Genuchten parameters:
-! where topsoil is an ordinal variable having the value of 1 or
+! WHERE topsoil is an ordinal variable having the value of 1 or
 ! of 0. %silt is the percentage of soil (2mm-50mm), BD= bulk density (g/cm3 = Mg/m3)
 ! the PTFs developd by using the European HYdraulic PRoperties of European Soils (HYPRES)
 ! soil database (5521 horizons)
@@ -528,17 +536,17 @@ ydatv(2,:) = theta_r(2)+(phi - theta_r(2))*(1+(alpha(2)*xdat)**n(2))**(1.0/n(2)-
 ! 3) Wosten et al. (1999):
 ! FAO class
 ! ------------------------------------------
-if(clay.GT.60.) then
+IF(clay.gt.60.) THEN
    iclass=5
-else if(clay.GT.35.) then
+ELSEIF(clay.gt.35.) THEN
    iclass=4
-else if(sand.LT.15.) then
+ELSEIF(sand.lt.15.) THEN
    iclass=3
-else if(sand.GT.65.0.AND.clay.LT.18.0) then
+ELSEIF(sand.gt.65.0.and.clay.lt.18.0) THEN
    iclass=1
-else
+ELSE
    iclass=2
-endif
+ENDIF
 
 j=iclass+nint(TOPSOIL)*5
 
@@ -572,18 +580,18 @@ ydatv(4,:) = theta_r(4)+(phi - theta_r(4))*(1+(alpha(4)*xdat)**n(4))**(1.0/n(4)-
 ! ------------------------------------------
       CALL USDA_soil_classes(SILT,CLAY,c)
 
-      if(c(1))  itype = 12 ! ic = 'Cl'      clay
-      if(c(2))  itype = 11 ! ic = 'SiCl'    silty clay
-      if(c(3))  itype = 6  ! ic = 'SaCl'    sandy clay
-      if(c(4))  itype = 7  ! ic = 'ClLo'    clay loam
-      if(c(5))  itype = 10 ! ic = 'SiClLo'  silty clay loam
-      if(c(6))  itype = 5  ! ic = 'SaClLo'  sandy clay loam
-      if(c(7))  itype = 4  ! ic = 'Lo'      loam
-      if(c(8))  itype = 8  ! ic = 'SiLo'    silty loam
-      if(c(9))  itype = 3  ! ic = 'SaLo'    sandy loam
-      if(c(10)) itype = 9  ! ic = 'Si'      silt
-      if(c(11)) itype = 2  ! ic = 'LoSa'    loamy sand
-      if(c(12)) itype = 1  ! ic = 'Sa'      sand
+      IF(c(1))  itype = 12 ! ic = 'Cl'      clay
+      IF(c(2))  itype = 11 ! ic = 'SiCl'    silty clay
+      IF(c(3))  itype = 6  ! ic = 'SaCl'    sandy clay
+      IF(c(4))  itype = 7  ! ic = 'ClLo'    clay loam
+      IF(c(5))  itype = 10 ! ic = 'SiClLo'  silty clay loam
+      IF(c(6))  itype = 5  ! ic = 'SaClLo'  sandy clay loam
+      IF(c(7))  itype = 4  ! ic = 'Lo'      loam
+      IF(c(8))  itype = 8  ! ic = 'SiLo'    silty loam
+      IF(c(9))  itype = 3  ! ic = 'SaLo'    sandy loam
+      IF(c(10)) itype = 9  ! ic = 'Si'      silt
+      IF(c(11)) itype = 2  ! ic = 'LoSa'    loamy sand
+      IF(c(12)) itype = 1  ! ic = 'Sa'      sand
 
       theta_r(5)=RoH1_thr(itype)
       alpha(5)=RoH1_alpha(itype)
@@ -598,12 +606,12 @@ ydatv(4,:) = theta_r(4)+(phi - theta_r(4))*(1+(alpha(4)*xdat)**n(4))**(1.0/n(4)-
       alpha(6)  =VGM_alpha_Rose
       n(6)      =VGM_n_Rose
       L(6)      =0.5
-      if (theta_r(6) .lt. 0.0 .or. theta_r(6)  .gt. phi .or. alpha(6) .lt. 0.00001 .or. &
-          alpha(6)   .gt. 1.  .or. n(6)        .lt. 1.1 .or. n(6)     .gt. 10.    )then
+      IF (theta_r(6) .lt. 0.0 .or. theta_r(6)  .gt. phi .or. alpha(6) .lt. 0.00001 .or. &
+          alpha(6)   .gt. 1.  .or. n(6)        .lt. 1.1 .or. n(6)     .gt. 10.    )THEN
           ydatv(6,:) = -1.0e36
-      else
+      ELSE
           ydatv(6,:) = theta_r(6)+(phi - theta_r(6))*(1+(alpha(6)*xdat)**n(6))**(1.0/n(6)-1)
-      end if
+      ENDIF
 
 ! ------------------------------------------
 ! 7) Gupta, S.C., and W.E. Larson. 1979. Estimating soil water retention characteristics from
@@ -611,7 +619,7 @@ ydatv(4,:) = theta_r(4)+(phi - theta_r(4))*(1+(alpha(4)*xdat)**n(4))**(1.0/n(4)-
 ! ------------------------------------------
       Call GuLar(CLAY,SILT,SAND,SOC,BD,Theta)
       Theta(1)=phi
-      call VGpar(Pgupta,Theta,13,PG,4,50)
+      CALL VGpar(Pgupta,Theta,13,PG,4,50)
       theta_r(7)=PG(1)
       alpha(7)=PG(3)
       n(7)=PG(4)
@@ -620,22 +628,22 @@ ydatv(4,:) = theta_r(4)+(phi - theta_r(4))*(1+(alpha(4)*xdat)**n(4))**(1.0/n(4)-
 
 ! ------------------------------------------
 ! 8) Carsel and Parrish 1988. Developing joint probability distributions of soil water
-!    retention characteristics. Water Resources Research, 24(5), 755–769.
+!    retention characteristics. Water Resources Research, 24(5), 755-769.
 ! ------------------------------------------
       CALL USDA_soil_classes(SILT,CLAY,c)
 
-      if(c(1))  itype = 12 ! ic = 'Cl'      clay
-      if(c(2))  itype = 11 ! ic = 'SiCl'    silty clay
-      if(c(3))  itype = 6  ! ic = 'SaCl'    sandy clay
-      if(c(4))  itype = 7  ! ic = 'ClLo'    clay loam
-      if(c(5))  itype = 10 ! ic = 'SiClLo'  silty clay loam
-      if(c(6))  itype = 5  ! ic = 'SaClLo'  sandy clay loam
-      if(c(7))  itype = 4  ! ic = 'Lo'      loam
-      if(c(8))  itype = 8  ! ic = 'SiLo'    silty loam
-      if(c(9))  itype = 3  ! ic = 'SaLo'    sandy loam
-      if(c(10)) itype = 9  ! ic = 'Si'      silt
-      if(c(11)) itype = 2  ! ic = 'LoSa'    loamy sand
-      if(c(12)) itype = 1  ! ic = 'Sa'      sand
+      IF(c(1))  itype = 12 ! ic = 'Cl'      clay
+      IF(c(2))  itype = 11 ! ic = 'SiCl'    silty clay
+      IF(c(3))  itype = 6  ! ic = 'SaCl'    sandy clay
+      IF(c(4))  itype = 7  ! ic = 'ClLo'    clay loam
+      IF(c(5))  itype = 10 ! ic = 'SiClLo'  silty clay loam
+      IF(c(6))  itype = 5  ! ic = 'SaClLo'  sandy clay loam
+      IF(c(7))  itype = 4  ! ic = 'Lo'      loam
+      IF(c(8))  itype = 8  ! ic = 'SiLo'    silty loam
+      IF(c(9))  itype = 3  ! ic = 'SaLo'    sandy loam
+      IF(c(10)) itype = 9  ! ic = 'Si'      silt
+      IF(c(11)) itype = 2  ! ic = 'LoSa'    loamy sand
+      IF(c(12)) itype = 1  ! ic = 'Sa'      sand
 
       theta_r(8)=CP_thr(itype)
       alpha(8)=CP_alpha(itype)
@@ -649,7 +657,7 @@ ydatv(4,:) = theta_r(4)+(phi - theta_r(4))*(1+(alpha(4)*xdat)**n(4))**(1.0/n(4)-
 ! ------------------------------------------
       Call Rawls82(CLAY,SILT,SAND,SOC,Theta)
       Theta(1)=phi
-      call VGpar(PRawls02,Theta,11,PG,4,50)
+      CALL VGpar(PRawls02,Theta,11,PG,4,50)
       theta_r(9)=PG(1)
       alpha(9)=PG(3)
       n(9)=PG(4)
@@ -662,7 +670,7 @@ ydatv(4,:) = theta_r(4)+(phi - theta_r(4))*(1+(alpha(4)*xdat)**n(4))**(1.0/n(4)-
 ! ------------------------------------------
       CALL Rawls83(CLAY,SILT,SAND,BD,SOC,Theta)
       Theta(1)=phi
-      call VGpar(PRawls03,Theta,10,PG,4,50)
+      CALL VGpar(PRawls03,Theta,10,PG,4,50)
       theta_r(10)=PG(1)
       alpha(10)=PG(3)
       n(10)=PG(4)
@@ -675,7 +683,7 @@ ydatv(4,:) = theta_r(4)+(phi - theta_r(4))*(1+(alpha(4)*xdat)**n(4))**(1.0/n(4)-
 ! ------------------------------------------
       Call Tomasella(CLAY,SILT,SOC,Theta)
       Theta(1)=phi
-      call VGpar(PTomasella,Theta,9,PG,4,50)
+      CALL VGpar(PTomasella,Theta,9,PG,4,50)
       theta_r(11)=PG(1)
       alpha(11)=PG(3)
       n(11)=PG(4)
@@ -683,28 +691,28 @@ ydatv(4,:) = theta_r(4)+(phi - theta_r(4))*(1+(alpha(4)*xdat)**n(4))**(1.0/n(4)-
       ydatv(11,:) = theta_r(11)+(phi - theta_r(11))*(1+(alpha(11)*xdat)**n(11))**(1.0/n(11)-1)
 
 ! ----------------------------------------------------------
-      do i = 1, nv
-         if(theta_r(i) > phi .or. theta_r(i) < 0.0) then
+      DO i = 1, nv
+         IF(theta_r(i) > phi .or. theta_r(i) < 0.0) THEN
             theta_r(i)=-1.0e36
             ydatv(i,:)=-1.0e36
-         end if
-         if(alpha(i) < 1.0e-5 .or. alpha(i) > 1.0) then
+         ENDIF
+         IF(alpha(i) < 1.0e-5 .or. alpha(i) > 1.0) THEN
             alpha(i)  =-1.0e36
             ydatv(i,:)=-1.0e36
-         end if
-         if(n(i) < 1.1 .or. n(i) > 10.0) then
+         ENDIF
+         IF(n(i) < 1.1 .or. n(i) > 10.0) THEN
             n(i)      =-1.0e36
             ydatv(i,:)=-1.0e36
-         end if
-      enddo
+         ENDIF
+      ENDDO
 
       m = 0
-      do i = 1, nv
-         if(abs(ydatv(i,1)) < 1.0e10) then
+      DO i = 1, nv
+         IF(abs(ydatv(i,1)) < 1.0e10) THEN
             m = m+1
             ydatv(m,:) = ydatv(i,:)
-         end if
-      enddo
+         ENDIF
+      ENDDO
 
       ldfjac = npoint
       allocate(fjac(npoint,n1))
@@ -730,16 +738,16 @@ ydatv(4,:) = theta_r(4)+(phi - theta_r(4))*(1+(alpha(4)*xdat)**n(4))**(1.0/n(4)-
       nprint = 0
       isiter = 1
 
-      call lmder ( SW_VG_dist, npoint, n1, x, fvec, fjac, ldfjac, ftol, xtol, gtol, maxfev, &
+      CALL lmder ( SW_VG_dist, npoint, n1, x, fvec, fjac, ldfjac, ftol, xtol, gtol, maxfev, &
                    diag, mode, factor, nprint, info, nfev, njev, ipvt, qtf, &
                    xdat, npoint, ydatv, m, phi, isiter )
 
-      if ( x(1) >= 0.0 .and. x(1) <= phi .and. x(2) >= 1.0e-5 .and. x(2) <= 1.0 .and. &
-           x(3) >= 1.1 .and. x(3) <= 10.0 .and. isiter == 1) then
+      IF ( x(1) >= 0.0 .and. x(1) <= phi .and. x(2) >= 1.0e-5 .and. x(2) <= 1.0 .and. &
+           x(3) >= 1.1 .and. x(3) <= 10.0 .and. isiter == 1) THEN
           theta_r_l = x(1)
           alpha_l   = x(2)
           n_l       = x(3)
-      end if
+      ENDIF
 
       deallocate(fjac)
       deallocate(fvec)
@@ -761,10 +769,10 @@ SUBROUTINE ksat(BD,SOM,SOC,SAND,CLAY,TOPSOIL,phi,psi,lambda,k_s,k_s_Rose)
 !
 ! Original author: Yongjiu Dai, Wei Shangguan, 12/2013/
 !
-! Rivisions:
-! Yongjiu Dai, Nan Wei and Yonggen Zhang, 06/2018: add more highly cited or newly developped soil Pedotransfer functions.
+! Revisions:
+! Yongjiu Dai, Nan Wei and Yonggen Zhang, 06/2018: add more highly cited or newly developed soil Pedotransfer functions.
 ! ----------------------------------------------------
-use MOD_Precision
+USE MOD_Precision
 
 IMPLICIT NONE
 real(r8), intent(in) :: BD   ! bulk density (g cm-3)
@@ -774,11 +782,11 @@ real(r8), intent(in) :: SAND ! percentage of sand particle-size distribution (%,
 real(r8), intent(in) :: CLAY ! percentage of clay particle-size distribution (%, weight)
 real(r8), intent(in) :: psi  ! (cm)
 real(r8), intent(in) :: lambda  !
-real(r8), intent(in) :: TOPSOIL ! 1 if A or E horizon, 0 if the subsoil
+real(r8), intent(in) :: TOPSOIL ! 1 IF A or E horizon, 0 IF the subsoil
 real(r8), intent(in) :: phi     ! saturated water content (cm3/cm3)
 real(r8), intent(in) :: k_s_Rose
 
-REAL(r8), INTENT(OUT) :: k_s  ! SATURATED HYDRAULIC CONDUCTIVITY (m/d)
+real(r8), intent(out) :: k_s  ! SATURATED HYDRAULIC CONDUCTIVITY (m/d)
 
 integer i,j,iclass
 real(r8) k(23)        ! SATURATED HYDRAULIC CONDUCTIVITY (m/d)
@@ -786,7 +794,7 @@ real(r8) :: SILT      ! percentage of silt particle-size distribution
 real(r8) :: theta_33  ! the water content at a potential of -33 kPa
 real(r8) :: phi_e     ! phi minus theta_33
 real(r8) x,B,zs,z33,zs33,z1500,lam_g,d_g,sigma_g
-logical c(12) ! indicate wheather a soil is in an class
+logical c(12) ! indicate whether a soil is in an class
 integer itype
 real params(7,10)
 data params/0.025,0.403,0.0383,1.3774,0.2740, 1.2500,60.000, &
@@ -924,7 +932,7 @@ data cosby_ks/0.82,0.3,-0.13,-0.32,-0.2,0.01,-0.46,-0.4,-0.4,-0.54,-0.72,-0.86/ 
 !
 ! d_g=geometric mean particle size (mm),
 ! sigma_g=geometric standard deviation of the particle size distribution,
-! Note that this formula would lead to extremely inaccurate results if the bulk density
+! Note that this formula would lead to extremely inaccurate results IF the bulk density
 ! were low (BD << 1 ).  ! the arithmetic means 1.025mm for sand (2-0.05mm),
 ! 0.026mm for silt (0.05-0.002mm), 0.001 for clay (<0.002mm)
 ! ----------------------------------------------------------
@@ -943,11 +951,11 @@ data cosby_ks/0.82,0.3,-0.13,-0.32,-0.2,0.01,-0.46,-0.4,-0.4,-0.54,-0.72,-0.86/ 
 !
 ! using soils from Belgium.
 ! ---------------------------------------------
-      if(SOM > 0.01)then
+      IF(SOM > 0.01)THEN
       k(13)=exp(20.62-0.96*log(CLAY)-0.66*log(SAND)-0.46*log(SOM)-8.43*BD)                 ! cm/d
-      else
+      ELSE
          k(13)=-1.e36
-      endif
+      ENDIF
 
 ! ---------------------------------------------
 ! 14) Wosten et al. (1999):
@@ -955,9 +963,9 @@ data cosby_ks/0.82,0.3,-0.13,-0.32,-0.2,0.01,-0.46,-0.4,-0.4,-0.54,-0.72,-0.86/ 
 ! database of hydraulic properties of European soils. Geoderma 90,169-185.
 !
 ! HYPRES (EU-wide) soil samples 5521 soil horizons
-! where TOPSOIL which is a categorical variable, having a value of 1
-! if the soil sample comes from the topsoil (i.e., A or E horizon,
-! according to the FAO soil classification [FAO, 1990] or 0 if it is from the subsoil).
+! WHERE TOPSOIL which is a categorical variable, having a value of 1
+! IF the soil sample comes from the topsoil (i.e., A or E horizon,
+! according to the FAO soil classification [FAO, 1990] or 0 IF it is from the subsoil).
 ! topsoil: 2.272 < k < 60
 ! subsoil: 4.0 < k < 70.0
 ! oganic: 8.0
@@ -968,14 +976,14 @@ data cosby_ks/0.82,0.3,-0.13,-0.32,-0.2,0.01,-0.46,-0.4,-0.4,-0.54,-0.72,-0.86/ 
 ! 0.9 <BD  <1.9,   mean 1.46,  s.d. 0.19
 ! 0.01<k <2423,  mean 129,   s.d. 293
 ! ---------------------------------------------
-      if(SAND>0.49 .or. SILT<81.16 .or. CLAY<80. .or. (BD>0.9 .and. BD<1.9))then
+      IF(SAND>0.49 .or. SILT<81.16 .or. CLAY<80. .or. (BD>0.9 .and. BD<1.9))THEN
       k(14)=exp(7.75+0.0352*SILT+0.93*(TOPSOIL)-0.967*BD**2 &
              - 0.000484*(CLAY)**2-0.000322*(SILT)**2 + 0.001/(SILT) &
              - 0.0748/SOM-0.643*log(SILT)-0.01398*BD*CLAY-0.1673*BD*SOM &
              + 0.02986*(TOPSOIL)*CLAY-0.03305*(TOPSOIL)*SILT)                              ! cm/d
-      else
+      ELSE
          k(14)=-1.e36
-      endif
+      ENDIF
 
 ! -------------------------------------------
 ! 15) Merdun (2010) MLR:
@@ -991,11 +999,11 @@ data cosby_ks/0.82,0.3,-0.13,-0.32,-0.2,0.01,-0.46,-0.4,-0.4,-0.54,-0.72,-0.86/ 
 ! 0.59 < BD   <1.76   mean 1.42     s.d. 0.22
 ! 0.1 < k < 3844.8 (cm/d); mean: 334.0
 ! -------------------------------------------
-      if(((SAND>=2.0) .and. (SAND<=96.0)) .AND. &
-         ((SILT>=1.0) .and. (SILT<=90.0)) .AND. &
-         ((CLAY>=0.1) .and. (CLAY<=63.3)) .AND. &
-         ((SOM>=0.01) .and. (SOM<=21.4))  .AND. &
-         ((BD>=0.59)  .and. (BD<=1.76)))then
+      IF(((SAND>=2.0) .and. (SAND<=96.0)) .and. &
+         ((SILT>=1.0) .and. (SILT<=90.0)) .and. &
+         ((CLAY>=0.1) .and. (CLAY<=63.3)) .and. &
+         ((SOM>=0.01) .and. (SOM<=21.4))  .and. &
+         ((BD>=0.59)  .and. (BD<=1.76)))THEN
          k(15)=9509.-14437.*SILT/100.-8169.*BD &
                 -860.1*SOM+2332.*(SILT/100.)**2+1620.*BD**2+9.113*SOM**2 &
                 +7547.*SILT/100.*BD+985.1*SILT/100.*SOM+381.4*BD*SOM                       ! cm/d
@@ -1005,9 +1013,9 @@ data cosby_ks/0.82,0.3,-0.13,-0.32,-0.2,0.01,-0.46,-0.4,-0.4,-0.54,-0.72,-0.86/ 
                 -728.977*SOM+2100.45*(SILT/100.)**2+1666.81*BD**2 &
                 +6.79971*SOM**2+6597.450*SILT/100.*BD &
                 +736.149*SILT/100.*SOM+371.5434*BD*SOM                                     ! cm/d
-      else
+      ELSE
          k(15:16)=-1.0e36
-      endif
+      ENDIF
 
 ! ----------------------------------------------------------
 ! 17) Aimrun and Amin (2009):
@@ -1025,16 +1033,16 @@ data cosby_ks/0.82,0.3,-0.13,-0.32,-0.2,0.01,-0.46,-0.4,-0.4,-0.54,-0.72,-0.86/ 
 ! 0.026 mm for silt particle size, 0.001 mm for silt particle size.
 ! the predicted value: 0.126<k<2.33; mean: 0.489 cm/d
 ! ----------------------------------------------------------
-      if(((SILT>=19.84) .and. (SILT<=57.25)) .AND. &
-         ((CLAY>=32.22) .and. (CLAY<=76.80)) .AND. &
-         ((SOM>=0.07)   .and. (SOM <=29.35)) .AND. &
-         ((BD>=0.62)    .and. (BD<=1.91   )))then
+      IF(((SILT>=19.84) .and. (SILT<=57.25)) .and. &
+         ((CLAY>=32.22) .and. (CLAY<=76.80)) .and. &
+         ((SOM>=0.07)   .and. (SOM <=29.35)) .and. &
+         ((BD>=0.62)    .and. (BD<=1.91   )))THEN
          d_g=exp(SAND/100.*log(1.025)+SILT/100.*log(0.026)+CLAY/100.*log(0.001))
          k(17)=100.0*exp(-2.368+3.846*BD+0.091*SOM-6.203*log(BD) &
                 -0.343*log(SOM)-2.334*log(CLAY)-0.411*log(d_g))                            ! cm/d
-      else
+      ELSE
          k(17)=-1.0e36
-      endif
+      ENDIF
 
 ! ------------------------------------------
 ! 18) Weynants et al. (2009):
@@ -1049,34 +1057,34 @@ data cosby_ks/0.82,0.3,-0.13,-0.32,-0.2,0.01,-0.46,-0.4,-0.4,-0.54,-0.72,-0.86/ 
 ! 0.89 < BD   < 1.77 (g cm-3)
 ! the theta_r could be 0.
 ! ------------------------------------------
-      if(((SAND>=5.6) .and. (SAND<=97.8)) .AND. &
-         ((CLAY>=0.)  .and. (CLAY<=54.5)) .AND. &
-         ((SOC>=0.01) .and. (SOC<=6.6))   .AND. &
-         ((BD>=0.89)  .and. (BD<=1.77)))then
+      IF(((SAND>=5.6) .and. (SAND<=97.8)) .and. &
+         ((CLAY>=0.)  .and. (CLAY<=54.5)) .and. &
+         ((SOC>=0.01) .and. (SOC<=6.6))   .and. &
+         ((BD>=0.89)  .and. (BD<=1.77)))THEN
          k(18)=exp(1.9582+0.0308*SAND-0.6142*BD-0.1566*SOC/10.)
-      else
+      ELSE
          k(18)=-1.0e36
-      endif
+      ENDIF
 
-      do i = 1, 18
-!         if(k(i) >=9000.) k(i)=-1.0e36
-         if(k(i) < 0.01) k(i)=-1.0e36
-      enddo
+      DO i = 1, 18
+!         IF(k(i) >=9000.) k(i)=-1.0e36
+         IF(k(i) < 0.01) k(i)=-1.0e36
+      ENDDO
 
 ! ------------------------------------------
 ! 19) Wosten et al. (1999):
 ! FAO class
-if(CLAY.gt.60.) then
+IF(CLAY.gt.60.) THEN
    iclass=5
-else if(CLAY.gt.35.) then
+ELSEIF(CLAY.gt.35.) THEN
    iclass=4
-else if(SAND.lt.15.) then
+ELSEIF(SAND.lt.15.) THEN
    iclass=3
-else if(SAND.gt.65.0.AND.CLAY.lt.18.0) then
+ELSEIF(SAND.gt.65.0.and.CLAY.lt.18.0) THEN
    iclass=1
-else
+ELSE
    iclass=2
-endif
+ENDIF
 
 j=iclass+nint(TOPSOIL)*5
 
@@ -1086,18 +1094,18 @@ k(19)=params(7,j)
 ! soil_classes=c('Sa','LoSa','SaLo','Lo','SaClLo','SaCl','ClLo','SiLo','Si','SiClLo','SiCl','Cl')
       CALL USDA_soil_classes(SILT,CLAY,c)
 
-      if(c(1))  itype = 12 ! ic = 'Cl'      clay
-      if(c(2))  itype = 11 ! ic = 'SiCl'    silty clay
-      if(c(3))  itype = 6  ! ic = 'SaCl'    sandy clay
-      if(c(4))  itype = 7  ! ic = 'ClLo'    clay loam
-      if(c(5))  itype = 10 ! ic = 'SiClLo'  silty clay loam
-      if(c(6))  itype = 5  ! ic = 'SaClLo'  sandy clay loam
-      if(c(7))  itype = 4  ! ic = 'Lo'      loam
-      if(c(8))  itype = 8  ! ic = 'SiLo'    silty loam
-      if(c(9))  itype = 3  ! ic = 'SaLo'    sandy loam
-      if(c(10)) itype = 9  ! ic = 'Si'      silt
-      if(c(11)) itype = 2  ! ic = 'LoSa'    loamy sand
-      if(c(12)) itype = 1  ! ic = 'Sa'      sand
+      IF(c(1))  itype = 12 ! ic = 'Cl'      clay
+      IF(c(2))  itype = 11 ! ic = 'SiCl'    silty clay
+      IF(c(3))  itype = 6  ! ic = 'SaCl'    sandy clay
+      IF(c(4))  itype = 7  ! ic = 'ClLo'    clay loam
+      IF(c(5))  itype = 10 ! ic = 'SiClLo'  silty clay loam
+      IF(c(6))  itype = 5  ! ic = 'SaClLo'  sandy clay loam
+      IF(c(7))  itype = 4  ! ic = 'Lo'      loam
+      IF(c(8))  itype = 8  ! ic = 'SiLo'    silty loam
+      IF(c(9))  itype = 3  ! ic = 'SaLo'    sandy loam
+      IF(c(10)) itype = 9  ! ic = 'Si'      silt
+      IF(c(11)) itype = 2  ! ic = 'LoSa'    loamy sand
+      IF(c(12)) itype = 1  ! ic = 'Sa'      sand
 
 ! Rahmati et al., 2018, Table 10
       k(20)=rahmati_ks_es(itype)*24.0         ! cm/h -> cm/d
@@ -1128,7 +1136,7 @@ END SUBROUTINE ksat
 !
 ! Yongjiu Dai, 12/2013, 06/2018
 ! ----------------------------------------------------
-!use MOD_Precision
+!USE MOD_Precision
 !
 !IMPLICIT NONE
 !
@@ -1142,7 +1150,7 @@ END SUBROUTINE ksat
 !
 !real(r8) theta_s(18)
 !real(r8) SOM  ! percent organic matter (%, weight)
-!real(r8) TOPSOIL  ! 1 if A or E horizon, 0 if the subsoil
+!real(r8) TOPSOIL  ! 1 IF A or E horizon, 0 IF the subsoil
 !real(r8) phi ! soil porosity (cm3 cm-3)
 !real(r8) silt     ! percent silt particle-size distribution (%)
 !real(r8) x,z1,z2
@@ -1160,11 +1168,11 @@ END SUBROUTINE ksat
 !            0.010,0.538,0.0168,1.0730,0.0680, 0.0001, 8.235/
 !
 !! ---------------------------------------------------------
-!      if(soildepth < 30.)then   ! cm
-!         TOPSOIL=1.  ! 1 if A or E horizon
-!      else
-!         TOPSOIL=0.  ! 0 if the subsoil
-!      endif
+!      IF(soildepth < 30.)THEN   ! cm
+!         TOPSOIL=1.  ! 1 IF A or E horizon
+!      ELSE
+!         TOPSOIL=0.  ! 0 IF the subsoil
+!      ENDIF
 !
 !      SOM=1.724*SOC
 !
@@ -1226,11 +1234,11 @@ END SUBROUTINE ksat
 !! Estimating generalized soil water characteristics from texture.
 !! Soil Sci. Soc. Am. J. 50: 1031-1036
 !! ------------------------------------------------------------
-!      if((sand>=5.0) .and. (clay>=5.0 .and. clay<=60.))then
+!      IF((sand>=5.0) .and. (clay>=5.0 .and. clay<=60.))THEN
 !         theta_s(7)=0.332-0.0007251*sand+0.1276*log10(clay)
-!      else
+!      ELSE
 !         theta_s(7)=-1.e36
-!      endif
+!      ENDIF
 !
 !! ------------------------------------------------------------
 !! 8) Vereeken et al. (1989):
@@ -1247,7 +1255,7 @@ END SUBROUTINE ksat
 !!
 !! Wosten et al. (1999) analyzed the all-Europe database and derived
 !! the following PTFs to estimate van Genuchten parameters:
-!! where topsoil is an ordinal variable having the value of 1 or
+!! WHERE topsoil is an ordinal variable having the value of 1 or
 !! of 0. %silt is the percentage of soil (2mm-50mm), BD= bulk density (g/cm3 = Mg/m3)
 !! the PTFs developd by using the European HYdraulic PRoperties of European Soils (HYPRES)
 !! soil database (5521 horizons)
@@ -1261,17 +1269,17 @@ END SUBROUTINE ksat
 !
 !! 10) Wosten et al. (1999):
 !! FAO class
-!      if(clay.GT.60.) then
+!      IF(clay.gt.60.) THEN
 !         iclass=5
-!      else if(clay.GT.35.) then
+!      ELSEIF(clay.gt.35.) THEN
 !         iclass=4
-!      else if(sand.LT.15.) then
+!      ELSEIF(sand.lt.15.) THEN
 !         iclass=3
-!      else if(sand.GT.65.0.AND.clay.LT.18.0) then
+!      ELSEIF(sand.gt.65.0.and.clay.lt.18.0) THEN
 !         iclass=1
-!      else
+!      ELSE
 !         iclass=2
-!      endif
+!      ENDIF
 !
 !      j=iclass+nint(TOPSOIL)*5
 !      theta_s(10)=params(2,j)
@@ -1283,16 +1291,16 @@ END SUBROUTINE ksat
 !!
 !! 286 soil horizons of the soil physical properties database of England and Wales
 !! set the value of the residual water content equal to zero
-!! these function should NOT be applied to organic soils (organic carbon content >5%)
+!! these function should not be applied to organic soils (organic carbon content >5%)
 !! and/or soils of small dry bulk density (<0.9 g/cm3)
 !! -------------------------------------------------------------
-!      if(SOC < 5. .or. BD > 0.9)then
+!      IF(SOC < 5. .or. BD > 0.9)THEN
 !         theta_s(11)=0.2345971971 &
 !                 +0.0046614221*sand+0.0088163314*silt+0.0064338641*clay-0.3028160229*BD &
 !                 +1.79762e-05*(sand)**2-3.134631e-05*(silt)**2
-!      else
+!      ELSE
 !         theta_s(11)=-1.0e36
-!      endif
+!      ENDIF
 !
 !! -------------------------------------------
 !! 12) Merdun (2010) MLR PTFs:
@@ -1308,11 +1316,11 @@ END SUBROUTINE ksat
 !! 0.59 < BD   <1.76   mean 1.42     s.d. 0.22
 !! 0.274 < theta_s < 0.837; mean: 0.443
 !! -------------------------------------------
-!      if(((sand>=2.0) .and. (sand<=96.0)) .AND. &
-!         ((silt>=1.0) .and. (silt<=90.0)) .AND. &
-!         ((clay>=0.1) .and. (clay<=63.3)) .AND. &
-!         ((SOM>=0.01) .and. (SOM<=21.4))  .AND. &
-!         ((BD>=0.59)  .and. (BD<=1.76)))then
+!      IF(((sand>=2.0) .and. (sand<=96.0)) .and. &
+!         ((silt>=1.0) .and. (silt<=90.0)) .and. &
+!         ((clay>=0.1) .and. (clay<=63.3)) .and. &
+!         ((SOM>=0.01) .and. (SOM<=21.4))  .and. &
+!         ((BD>=0.59)  .and. (BD<=1.76)))THEN
 !         theta_s(12)=1.391-0.289*clay/100.-1.007*BD &
 !                    -0.026*SOM-0.096*(clay/100.)**2+0.22*BD**2-0.00039*SOM**2 &
 !                    +0.3*clay/100.*BD+0.0233*clay/100.*SOM+0.0229*BD*SOM
@@ -1321,9 +1329,9 @@ END SUBROUTINE ksat
 !         theta_s(13)=1.419680-0.37696*clay/100.-1.04082*BD &
 !                    -0.02362*SOM+0.08548*(clay/100.)**2+0.23091*BD**2+0.00002*SOM**2+0.32229*clay/100.*BD &
 !                    +0.004189*clay/100.*SOM +0.022525*BD*SOM
-!      else
+!      ELSE
 !         theta_s(12:13)=-1.0e36
-!      endif
+!      ENDIF
 !
 !! ----------------------------------------------------------
 !! 14) Saxton and Rawls (2006):
@@ -1340,7 +1348,7 @@ END SUBROUTINE ksat
 !! SOM  < 8  %(w)
 !! clay < 60 %(w).
 !! ----------------------------------------------------------
-!      if((clay<=60.0) .and. (SOM<=8.0) .and. (BD>=1.0 .and. BD<=1.8))then
+!      IF((clay<=60.0) .and. (SOM<=8.0) .and. (BD>=1.0 .and. BD<=1.8))THEN
 !         x=-0.251*sand/100.+0.195*clay/100.+0.011*SOM &
 !           +0.006*(sand/100.*SOM)-0.027*(clay/100.*SOM) &
 !           +0.452*(sand/100.*clay/100.)+0.299
@@ -1349,10 +1357,10 @@ END SUBROUTINE ksat
 !           -0.018*(sand/100.*SOM)-0.027*(clay/100.*SOM) &
 !           -0.584*(sand/100.*clay/100.)+0.078)
 !         theta_s(14)=z1+z2-0.097*sand/100.+0.043
-!         if(theta_s(14) <= z2) theta_s(14) = -1.0e36  ! theta_s < field capacity
-!      else
+!         IF(theta_s(14) <= z2) theta_s(14) = -1.0e36  ! theta_s < field capacity
+!      ELSE
 !         theta_s(14)=-1.0e36
-!      endif
+!      ENDIF
 !
 !! ----------------------------------------------------------
 !! 15) Tomasella and Hodnett (1998):
@@ -1377,15 +1385,15 @@ END SUBROUTINE ksat
 !! 1.2 < BD   <1.59      mean 1.42        s.d. 0.01
 !! all 63 samples: theta_s=0.477 +/- 0.006
 !! ------------------------------------------
-!      if(((sand>=8.98) .and. (sand<=93.03)) .AND. &
-!         ((silt>=1.74) .and. (silt<=79.5))  .AND. &
-!         ((clay>=0.54) .and. (clay<=27.12)) .AND. &
-!         ((SOM>=0.12)  .and. (SOM<=1.54))   .AND. &
-!         ((BD>=1.2)    .and. (BD<=1.59)))    then
+!      IF(((sand>=8.98) .and. (sand<=93.03)) .and. &
+!         ((silt>=1.74) .and. (silt<=79.5))  .and. &
+!         ((clay>=0.54) .and. (clay<=27.12)) .and. &
+!         ((SOM>=0.12)  .and. (SOM<=1.54))   .and. &
+!         ((BD>=1.2)    .and. (BD<=1.59)))    THEN
 !         theta_s(16)=exp(-1.531+0.212*log(sand)+0.006*silt-0.051*SOM-0.566*log(BD))
-!      else
+!      ELSE
 !         theta_s(16)=-1.0e36
-!      endif
+!      ENDIF
 !
 !! ----------------------------------------------------------
 !! 17) Al Majou et al (2007)
@@ -1412,17 +1420,17 @@ END SUBROUTINE ksat
 !! the residual water content was fixed at 0.01 cm3 cm-3
 !! except for texture coarse for which it was fixed at 0.025 cm3 cm-3
 !! ----------------------------------------------------------
-!      if(((sand>=0.1) .and. (sand<=90.1)) .AND. &
-!         ((silt>=2.8) .and. (sand<=82.1)) .AND. &
-!         ((clay>=1.9) .and. (clay<=92.9)) .AND. &
-!         ((SOC>=0.0)  .and. (SOC<=2.88 )) .AND. &
-!         ((BD>=1.0)   .and. (BD<=1.84)))   then
+!      IF(((sand>=0.1) .and. (sand<=90.1)) .and. &
+!         ((silt>=2.8) .and. (sand<=82.1)) .and. &
+!         ((clay>=1.9) .and. (clay<=92.9)) .and. &
+!         ((SOC>=0.0)  .and. (SOC<=2.88 )) .and. &
+!         ((BD>=1.0)   .and. (BD<=1.84)))   THEN
 !         theta_s(17)=1.1658-0.0032*clay-0.4737*BD+2.0e-07*(silt)**2-0.0001*(SOC)**2 &
 !                    +0.0373/(SOC)+0.0131/silt-0.0072*log(silt)+0.00003*(SOC)*clay+0.0022*BD*clay &
 !                    -0.0002*BD*(SOC)-0.0001*silt
-!      else
+!      ELSE
 !         theta_s(17)=-1.0e36
-!      endif
+!      ENDIF
 !
 !! ------------------------------------------
 !! 18) Weynants et al. (2009):
@@ -1437,18 +1445,18 @@ END SUBROUTINE ksat
 !! 0.89 < BD   < 1.77 (g cm-3)
 !! the theta_r could be 0.
 !! ------------------------------------------
-!      if(((sand>=5.6) .and. (sand<=97.8)) .AND. &
-!         ((clay>=0.)  .and. (clay<=54.5)) .AND. &
-!         ((SOC>=0.01) .and. (SOC<=6.6))   .AND. &
-!         ((BD>=0.89)  .and. (BD<=1.77)))then
+!      IF(((sand>=5.6) .and. (sand<=97.8)) .and. &
+!         ((clay>=0.)  .and. (clay<=54.5)) .and. &
+!         ((SOC>=0.01) .and. (SOC<=6.6))   .and. &
+!         ((BD>=0.89)  .and. (BD<=1.77)))THEN
 !         theta_s(18)=0.6355+0.0013*clay-0.1631*BD
-!      else
+!      ELSE
 !         theta_s(18)=-1.0e36
-!      endif
+!      ENDIF
 !
-!      do i = 1, 18
-!         if(abs(theta_s(i)) > 0.8) theta_s(i)=-1.0e36
-!      enddo
+!      DO i = 1, 18
+!         IF(abs(theta_s(i)) > 0.8) theta_s(i)=-1.0e36
+!      ENDDO
 !
 !! ------------------------------------------
 !! THE MEDIAN VALUE
@@ -1461,7 +1469,7 @@ END SUBROUTINE ksat
 !======================
 SUBROUTINE debar(a,n,x)
 !======================
-use MOD_Precision
+USE MOD_Precision
 
 IMPLICIT NONE
 integer n
@@ -1472,12 +1480,12 @@ real(r8), allocatable :: c(:)
 real(r8), external :: median
 
       ii = 0
-      do i = 1, n
-         if(abs(a(i)) < 1.0e10)then
+      DO i = 1, n
+         IF(abs(a(i)) < 1.0e10)THEN
            ii = ii + 1
            tmp(ii) = a(i)
-         endif
-      enddo
+         ENDIF
+      ENDDO
       allocate (c(ii))
       c = tmp(1:ii)
       x =  median(c,ii)
@@ -1486,7 +1494,7 @@ real(r8), external :: median
 END SUBROUTINE debar
 
 SUBROUTINE GuLar(Clay,Silt,Sand,OC,BD,Theta)
-use MOD_Precision
+USE MOD_Precision
 IMPLICIT NONE
 real(r8) Clay,Silt,Sand,OC,BD
 real(r8) a(5,12),Theta(14)
@@ -1505,13 +1513,13 @@ real(r8) OM
             0.076,1.3340,5.802,2.653,21.450, &
             -0.059,1.142,5.766,2.228,26.710/
 	OM=OC*1.724
-      do i=1,12
+      DO i=1,12
       Theta(i+1)=(Sand*a(1,i)+Silt*a(2,i)+Clay*a(3,i)+OM*a(4,i)+BD*a(5,i))/1000.
-      enddo
+      ENDDO
 END SUBROUTINE GuLar
 
 SUBROUTINE Rajkai(Clay,Sand,BD,OC,Theta)
-use MOD_Precision
+USE MOD_Precision
 IMPLICIT NONE
 real(r8) Clay,Sand,BD,OC
 real(r8) b(6,8), Theta(14)
@@ -1526,30 +1534,30 @@ real(r8) Silt,X1,X2
               1.39,    0.36,      0,        0,       0,  0.220 , &
               0.73,       0,   0.32,        0,  0.0018,       0/
 	Silt=100-Clay-Sand
-        do i=1,8
-           select case (i)
-		case (1)
+        DO i=1,8
+           select CASE (i)
+		CASE (1)
 			X1=BD
 			X2=Silt
-		case (2,3)
+		CASE (2,3)
 			X2=Sand
-		case(4)
+		CASE(4)
 			X2=Clay+Silt
-		case(5)
+		CASE(5)
 			X1=Clay+Silt
 			X2=Sand/Silt
-		case(6,7)
+		CASE(6,7)
 			X2=OC*1.724
-		case(8)
+		CASE(8)
 			X1=Clay
 	   End select
 	   Theta(i)=(b(1,i)+b(2,i)*X1+b(3,i)*X2+b(4,i)*X1*X2+b(5,i)*X1*X1 &
       	            +b(6,i)*X2*X2)/100.
-	end do
+	ENDDO
 END SUBROUTINE Rajkai
 
 SUBROUTINE Rawls82(Clay,Silt,Sand,OC,Theta)
-use MOD_Precision
+USE MOD_Precision
 IMPLICIT NONE
 real(r8) Clay,Silt,Sand,OC
 real(r8) a(5,10), Theta(14)
@@ -1564,13 +1572,13 @@ integer i
              0.0216 ,        0  ,   0.0006  , 0.0050 ,  0.0167, &
              0.0205 ,        0  ,   0.0005  , 0.0049 ,  0.0154, &
              0.0260 ,        0  ,       0   , 0.0050 ,  0.0158/
-      do i=1,10
+      DO i=1,10
       Theta(i+1)=a(1,i)+Sand*a(2,i)+Silt*a(3,i)+Clay*a(4,i)+OC*a(5,i)
-      enddo
+      ENDDO
 END SUBROUTINE Rawls82
 
 SUBROUTINE Rawls83(Clay,Silt,Sand,BD,OC,Theta)
-use MOD_Precision
+USE MOD_Precision
 IMPLICIT NONE
 real(r8) Clay,Silt,Sand,BD,OC
 real(r8) a(5,9), Theta(14)
@@ -1584,13 +1592,13 @@ integer i
              0.1155 ,  -0.0005  , 0.0045 ,  0.0143, -0.0253, &
              0.1005 ,  -0.0004  , 0.0044 ,  0.0133, -0.0218, &
              0.0854 ,  -0.0004  , 0.0044 ,  0.0122, -0.0182/
-      do i=1,9
+      DO i=1,9
       Theta(i+1)=a(1,i)+Sand*a(2,i)+Clay*a(3,i)+OC*a(4,i)+BD*a(5,i)
-      enddo
+      ENDDO
 END SUBROUTINE Rawls83
 
 SUBROUTINE Tomasella(Clay,Silt,OC,Theta)
-use MOD_Precision
+USE MOD_Precision
 IMPLICIT NONE
 real(r8) Clay,Silt,OC
 real(r8) a(4,9),Theta(14)
@@ -1604,9 +1612,9 @@ integer i
 	 	 3.198,0,0.369,0.351, &
 	 	 1.567,0,0.258,0.361, &
 	 	  0.91,0, 0.15,0.396/
-      do i=1,9
+      DO i=1,9
       Theta(i)=(a(1,i)+a(2,i)*OC+a(3,i)*Silt+a(4,i)*Clay)/100.
-      enddo
+      ENDDO
 END SUBROUTINE Tomasella
 
 
@@ -1616,7 +1624,7 @@ END SUBROUTINE Tomasella
 !     equation of soil water retention: ThR, ThS, Alpha,n, m
 !     The van Genuchten's equation is used in its traditional form:
 !       Theta = (ThS-ThR)/(1+(alpha*P)^n)^(1-1/n)
-!     where Theta stands for volumetric water content and P stands
+!     WHERE Theta stands for volumetric water content and P stands
 !     for suction (or for absolute value of the matric potential)
 !     The program uses raw water retention data
 !
@@ -1634,7 +1642,7 @@ END SUBROUTINE Tomasella
 !  +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 SUBROUTINE VGpar(x,y,nob,b,np,mit)
-use MOD_Precision
+USE MOD_Precision
 IMPLICIT NONE
 integer nob,np,mit
 real(r8) y(nob),x(nob),f(50),r(50),st(5),b(5),e(5),&
@@ -1653,25 +1661,25 @@ real(r8) sdev,ssq,sum,sum1,sum2,sum3,step,temp,tmp,an,angle
       IER=0
       ga = 0.02
       sumb = 0.0
-      call model(b,np,f,nob,x)
-      do 10 k = 1,nob
+      CALL model(b,np,f,nob,x)
+      DO 10 k = 1,nob
       z = y(k) - f(k)
       r(k) = z
-      if(abs(z) .gt. 1.0e-37) sumb = sumb + z * z
+      IF(abs(z) .gt. 1.0e-37) sumb = sumb + z * z
  10   continue
 
-      do 200 nit = 1,mit
+      DO 200 nit = 1,mit
       ssq = sumb
       ga = 0.1 * ga
-      do 30 j = 1,np
+      DO 30 j = 1,np
       temp = b(j)
       b(j) = 1.01 * b(j)
-      call model(b,np,dz,nob,x)
-      do 15 i = 1,nob
+      CALL model(b,np,dz,nob,x)
+      DO 15 i = 1,nob
       delz(i,j) = dz(i)
  15   continue
       sum = 0.0
-      do 20 k = 1,nob
+      DO 20 k = 1,nob
       delz(k,j) = 100.0 * (delz(k,j) - f(k))
       tmp = delz(k,j) * r(k)
       sum = sum + tmp
@@ -1681,10 +1689,10 @@ real(r8) sdev,ssq,sum,sum1,sum2,sum3,step,temp,tmp,an,angle
       c(j) = temp
  30   continue
       sum3 = 0.0
-      do 60 i = 1,np
-      do 50 j = 1,i
+      DO 60 i = 1,np
+      DO 50 j = 1,i
       sum = 0.0
-      do 40 k = 1,nob
+      DO 40 k = 1,nob
       temp = delz(k,i) * delz(k,j)
       sum = sum + temp
  40   continue
@@ -1692,26 +1700,26 @@ real(r8) sdev,ssq,sum,sum1,sum2,sum3,step,temp,tmp,an,angle
       d(i,j) = d(j,i)
  50   continue
       e(i) = sqrt(d(i,i))
-      If(e(i).LE.0.) then
+      If(e(i).le.0.) THEN
        IER=1
        Goto 500
       Endif
       q(i) = q(i) / e(i)
-      if(abs(q(i)) .gt. 1.0e-37) sum3 = sum3 + q(i) * q(i)
+      IF(abs(q(i)) .gt. 1.0e-37) sum3 = sum3 + q(i) * q(i)
  60   continue
- 70   do 90 i = 1,np
-      do 80 j = 1,i
+ 70   DO 90 i = 1,np
+      DO 80 j = 1,i
       a(j,i) = d(j,i) / e(j) / e(i)
       a(i,j) = a(j,i)
  80   continue
  90   continue
-      do 100 i = 1,np
+      DO 100 i = 1,np
       p(i) = q(i)
  100  a(i,i) = a(i,i) + ga
-      call matinv(a,np,p)
+      CALL matinv(a,np,p)
       sum1 = 0.0
       sum2 = 0.0
-      do 110 i = 1,np
+      DO 110 i = 1,np
       temp = p(i) * q(i)
       sum1 = sum1 + temp
       temp = p(i) * p(i)
@@ -1720,42 +1728,42 @@ real(r8) sdev,ssq,sum,sum1,sum2,sum3,step,temp,tmp,an,angle
       an = sqrt((sum1/sum2)*(sum1/sum3))
       angle = 57.2958 * atan((sqrt(abs(1-an**2)))/an)
       step = 1.0
- 120  do 130 i = 1,np
+ 120  DO 130 i = 1,np
  130  b(i) = p(i) * step / e(i) + c(i)
-      do 140 i = 1,np
-      if(c(i)*b(i) .le. 0.0) go to 160
+      DO 140 i = 1,np
+      IF(c(i)*b(i) .le. 0.0) go to 160
  140  continue
       sumb = 0.0
-      call model(b,np,f,nob,x)
-      do 150 k = 1,nob
+      CALL model(b,np,f,nob,x)
+      DO 150 k = 1,nob
       z = y(k) - f(k)
       r(k) = z
-      if(abs(z) .gt. 1.0e-37) sumb = sumb + z*z
+      IF(abs(z) .gt. 1.0e-37) sumb = sumb + z*z
  150  continue
-      if(sumb-ssq .lt. 1.0e-8) go to 180
- 160  if(angle .gt. 30.0) go to 170
+      IF(sumb-ssq .lt. 1.0e-8) go to 180
+ 160  IF(angle .gt. 30.0) go to 170
       step = 0.5 * step
       go to 120
  170  ga = 10.0 * ga
       go to 70
- 180  do 190 i = 1,np
-      if(abs(c(i)-b(i)) .gt. eps*abs(b(i))) go to 200
+ 180  DO 190 i = 1,np
+      IF(abs(c(i)-b(i)) .gt. eps*abs(b(i))) go to 200
  190  continue
       go to 210
  200  continue
- 210  call matinv(d,np,p)
+ 210  CALL matinv(d,np,p)
       sdev = sqrt(sumb/float(nob-np))
-      do 220 i = 1,np
+      DO 220 i = 1,np
       e(i) = sqrt(amax1(d(i,i),1.0e-20))
       st(i) = e(i) * sdev
  220  continue
 
- 500  return
+ 500  RETURN
 
 END SUBROUTINE VGpar
 
 SUBROUTINE matinv(a,np,b)
-use MOD_Precision
+USE MOD_Precision
 IMPLICIT NONE
 integer np
 real(r8) a(10,10),b(np)
@@ -1763,25 +1771,25 @@ integer indx1(10),indx2(10)
 integer i,j,k,l,ir,ic
 real(r8) p,amax
 
-      do 10 j = 1,np
+      DO 10 j = 1,np
  10   indx1(j) = 0
       i = 0
  20   amax = -1.0
-      do 40 j = 1,np
-      if(indx1(j) .ne. 0) go to 40
-      do 30 k = 1,np
-      if(indx1(k) .ne. 0) go to 30
+      DO 40 j = 1,np
+      IF(indx1(j) .ne. 0) go to 40
+      DO 30 k = 1,np
+      IF(indx1(k) .ne. 0) go to 30
       p = abs(a(j,k))
-      if(p .le. amax) go to 30
+      IF(p .le. amax) go to 30
       ir = j
       ic = k
       amax = p
  30   continue
  40   continue
-      if(amax .le. 0.0) go to 120
+      IF(amax .le. 0.0) go to 120
       indx1(ic) = ir
-      if(ir .eq. ic) go to 60
-      do 50 l = 1,np
+      IF(ir .eq. ic) go to 60
+      DO 50 l = 1,np
       p = a(ir,l)
       a(ir,l) = a(ic,l)
       a(ic,l) = p
@@ -1793,15 +1801,15 @@ real(r8) p,amax
       indx2(i) = ic
  60   p = 1.0 / a(ic,ic)
       a(ic,ic) = 1.0
-      do 70 l = 1,np
+      DO 70 l = 1,np
       a(ic,l) = a(ic,l) * p
  70   continue
       b(ic) = b(ic) * p
-      do 90 k = 1,np
-      if(k .eq. ic) go to 90
+      DO 90 k = 1,np
+      IF(k .eq. ic) go to 90
       p = a(k,ic)
       a(k,ic) = 0.0
-      do 80 l = 1,np
+      DO 80 l = 1,np
       a(k,l) = a(k,l) - a(ic,l) * p
  80   continue
       b(k) = b(k) - b(ic) * p
@@ -1809,35 +1817,35 @@ real(r8) p,amax
       go to 20
  100  ic = indx2(i)
       ir = indx1(ic)
-      do 110 k = 1,np
+      DO 110 k = 1,np
       p = a(k,ir)
       a(k,ir) = a(k,ic)
       a(k,ic) = p
  110  continue
       i = i - 1
- 120  if(i .gt. 0) go to 100
+ 120  IF(i .gt. 0) go to 100
 
 END SUBROUTINE matinv
 
 
 SUBROUTINE model(b,np,y,nob,x)
-use MOD_Precision
+USE MOD_Precision
 IMPLICIT NONE
-integer, INTENT(in) :: np,nob
-real(r8), INTENT(inout) :: b(np),x(nob)
-real(r8), INTENT(out) :: y(nob)
+integer, intent(in) :: np,nob
+real(r8), intent(inout) :: b(np),x(nob)
+real(r8), intent(out) :: y(nob)
 integer i
-      if(b(3) .gt. 1.)      b(3) = 1.
-      if(b(3) .lt. 0.00001) b(3) = 0.00001
-      if(b(4) .gt. 10.) b(4) = 10.
-      if(b(4) .lt. 1.1) b(4) = 1.1
-      do i = 1,nob
+      IF(b(3) .gt. 1.)      b(3) = 1.
+      IF(b(3) .lt. 0.00001) b(3) = 0.00001
+      IF(b(4) .gt. 10.) b(4) = 10.
+      IF(b(4) .lt. 1.1) b(4) = 1.1
+      DO i = 1,nob
          y(i)=b(1)+(b(2)-b(1))/(1+(b(3)*x(i))**b(4))**(1.-1/b(4))
-      end do
+      ENDDO
 END SUBROUTINE model
 
 
-subroutine SW_CB_dist ( m, n, x, fvec, fjac, ldfjac, iflag, xdat, npoint, ydatc, nptf, phi, isiter)
+SUBROUTINE SW_CB_dist ( m, n, x, fvec, fjac, ldfjac, iflag, xdat, npoint, ydatc, nptf, phi, isiter)
 
 !=================================================================
 ! DESCRIPTION:
@@ -1848,46 +1856,46 @@ subroutine SW_CB_dist ( m, n, x, fvec, fjac, ldfjac, iflag, xdat, npoint, ydatc,
 ! Created by Nan Wei, 01/2019
 ! ----------------------------------------------------------------
 
-      use MOD_Precision
-      implicit none
+      USE MOD_Precision
+      IMPLICIT NONE
 
       integer m,n,ldfjac,iflag,i,nptf,isiter,npoint
       real(r8) x(n),fjac(ldfjac,n),fvec(m),xdat(npoint),ydatc(nptf,npoint),phi
 
-      if ( iflag == 0 ) then
+      IF ( iflag == 0 ) THEN
 
          print*,x
 
-      else if ( iflag == 1 ) then
+      ELSEIF ( iflag == 1 ) THEN
 
-         if (x(1) >= 0.0) then
+         IF (x(1) >= 0.0) THEN
              isiter = 0
-             return
-         end if
+             RETURN
+         ENDIF
 
-         do i = 1, m
+         DO i = 1, m
             fvec(i) = sum(((-1.0*xdat(i)/x(1))**(-1.0*x(2)) * phi - ydatc(:,i))**2)
-         end do
+         ENDDO
 
-      else if ( iflag == 2 ) then
+      ELSEIF ( iflag == 2 ) THEN
 
-         if (x(1) >= 0.0) then
+         IF (x(1) >= 0.0) THEN
              isiter = 0
-             return
-         end if
+             RETURN
+         ENDIF
 
-         do i = 1, m
+         DO i = 1, m
             fjac(i,1) = sum(2.0*((-1.0*xdat(i)/x(1))**(-1.0*x(2)) * phi - ydatc(:,i))*&
                         phi * x(2) * (-1.0*xdat(i)/x(1))**(-1.0*x(2)) / x(1))
             fjac(i,2) = sum(-2.0*((-1.0*xdat(i)/x(1))**(-1.0*x(2)) * phi - ydatc(:,i))*&
                         phi * (-1.0*xdat(i)/x(1))**(-1.0*x(2)) * log(-1.0*xdat(i)/x(1)))
-         end do
+         ENDDO
 
-      end if
+      ENDIF
 
-end subroutine SW_CB_dist
+END SUBROUTINE SW_CB_dist
 
-subroutine SW_VG_dist ( m, n, x, fvec, fjac, ldfjac, iflag, xdat, npoint, ydatv, nptf, phi, isiter )
+SUBROUTINE SW_VG_dist ( m, n, x, fvec, fjac, ldfjac, iflag, xdat, npoint, ydatv, nptf, phi, isiter )
 
 !=================================================================
 ! DESCRIPTION:
@@ -1898,35 +1906,35 @@ subroutine SW_VG_dist ( m, n, x, fvec, fjac, ldfjac, iflag, xdat, npoint, ydatv,
 ! Created by Nan Wei, 01/2019
 ! ----------------------------------------------------------------
 
-      use MOD_Precision
-      implicit none
+      USE MOD_Precision
+      IMPLICIT NONE
 
       integer m,n,ldfjac,iflag,i,nptf,isiter,npoint
       real(r8) x(n),fjac(ldfjac,n),fvec(m),xdat(npoint),ydatv(nptf,npoint),phi
 
-      if ( iflag == 0 ) then
+      IF ( iflag == 0 ) THEN
 
          print*,x
 
-      else if ( iflag == 1 ) then
+      ELSEIF ( iflag == 1 ) THEN
 
-         if (x(2) <= 0.0 .or. x(3) <= 0.1) then
+         IF (x(2) <= 0.0 .or. x(3) <= 0.1) THEN
              isiter = 0
-             return
-         end if
+             RETURN
+         ENDIF
 
-         do i = 1, m
+         DO i = 1, m
             fvec(i) = sum((x(1) + (phi - x(1))*(1+(x(2)*xdat(i))**x(3))**(1.0/x(3)-1) - ydatv(:,i))**2)
-         end do
+         ENDDO
 
-      else if ( iflag == 2 ) then
+      ELSEIF ( iflag == 2 ) THEN
 
-         if (x(2) <= 0.0 .or. x(3) <= 0.1) then
+         IF (x(2) <= 0.0 .or. x(3) <= 0.1) THEN
              isiter = 0
-             return
-         end if
+             RETURN
+         ENDIF
 
-         do i = 1, m
+         DO i = 1, m
             fjac(i,1) = sum(2*(x(1) + (phi - x(1))*(1+(x(2)*xdat(i))**x(3))**(1.0/x(3)-1) - ydatv(:,i))*&
                         (1 - (1+(x(2)*xdat(i))**x(3))**(1.0/x(3)-1)))
             fjac(i,2) = sum(2*(x(1) + (phi - x(1))*(1+(x(2)*xdat(i))**x(3))**(1.0/x(3)-1) - ydatv(:,i))*&
@@ -1935,8 +1943,8 @@ subroutine SW_VG_dist ( m, n, x, fvec, fjac, ldfjac, iflag, xdat, npoint, ydatv,
                         (phi - x(1)) * (1+(x(2)*xdat(i))**x(3))**(1.0/x(3)-1) *&
                      ((1.0-x(3))*(x(2)*xdat(i))**x(3)*log(x(2)*xdat(i))/(x(3)*(1+(x(2)*xdat(i))**x(3))) &
                         - log(1+(x(2)*xdat(i))**x(3))/x(3)**2))
-         end do
+         ENDDO
 
-      end if
+      ENDIF
 
-end subroutine SW_VG_dist
+END SUBROUTINE SW_VG_dist

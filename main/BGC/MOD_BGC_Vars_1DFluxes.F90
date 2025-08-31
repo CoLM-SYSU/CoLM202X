@@ -4,7 +4,7 @@ MODULE MOD_BGC_Vars_1DFluxes
 #ifdef BGC
 !---------------------------------------------------------------------------------------------------------
 ! !DESCRIPTION
-! Define, allocate, and deallocate biogeochmeical flux variables at patch level
+! Define, allocate, and deallocate biogeochemical flux variables at patch level
 
 ! !ORIGINAL:
 ! Xingjie Lu, 2022, created the original version
@@ -59,7 +59,7 @@ MODULE MOD_BGC_Vars_1DFluxes
    real(r8), allocatable :: grainc_to_seed             (:) ! grain to crop seed carbon (gC m-2 s-1)
    real(r8), allocatable :: grainn_to_cropprodn        (:) ! grain to crop production nitrogen (gN m-2 s-1)
    real(r8), allocatable :: cropprod1c_loss            (:) ! loss rate of 1-yr crop production carbon (gC m-2 s-1)
- 
+
  ! decomposition carbon fluxes
    real(r8), allocatable :: decomp_cpools_sourcesink   (:,:,:)       ! vertical resolved: the input of litter & soil carbon pools (donor or receiver) from phenology-associated litterfall and decomposition (gC m-3 timestep-1)
    real(r8), allocatable :: decomp_ctransfer_vr        (:,:,:)       ! vertical resolved: the non-respiratory portion of potential carbon transfer from one litter & soil carbon pool to another (gC m-3 s-1)
@@ -69,7 +69,7 @@ MODULE MOD_BGC_Vars_1DFluxes
    real(r8), allocatable :: m_decomp_cpools_to_fire_vr (:,:,:)       ! vertical resolved: the carbon from decomposition pools to fire emissions (gC m-3 s-1)
    real(r8), allocatable :: decomp_cpools_transport_tendency(:,:,:)  ! vertical resolved: the carbon tendency due to vertical transport in decomposition carbon pools (gC m-3 s-1)
    real(r8), allocatable :: som_c_leached              (:)           ! total soil organic matter C loss from vertical transport (gC m-2 s-1)
- 
+
  ! vegetation to decomposition carbon fluxes
    real(r8), allocatable :: phenology_to_met_c       (:,:) ! phenology-associated plant C loss to metabolic litter C (gC m-3 s-1)
    real(r8), allocatable :: phenology_to_cel_c       (:,:) ! phenology-associated plant C loss to cellulosic litter C (gC m-3 s-1)
@@ -82,7 +82,7 @@ MODULE MOD_BGC_Vars_1DFluxes
    real(r8), allocatable :: fire_mortality_to_cel_c  (:,:) ! fire mortality-associated plant C loss to cellulosic litter C (gC m-3 s-1)
    real(r8), allocatable :: fire_mortality_to_lig_c  (:,:) ! fire mortality-associated plant C loss to lignin litter C (gC m-3 s-1)
    real(r8), allocatable :: fire_mortality_to_cwdc   (:,:) ! fire mortality-associated plant C loss to coarse woody debris C (gC m-3 s-1)
- 
+
  ! decomposition nitrogen fluxes
    real(r8), allocatable :: decomp_npools_sourcesink   (:,:,:)       ! vertical resolved: the the input of litter & soil nitrogen pools (donor or receiver) (gN m-3 timestep)
    real(r8), allocatable :: decomp_ntransfer_vr        (:,:,:)       ! vertical resolved: the nitrogen flux transfer from one litter & soil nitrogen pool to another (gN m-3 s-1)
@@ -91,7 +91,7 @@ MODULE MOD_BGC_Vars_1DFluxes
    real(r8), allocatable :: m_decomp_npools_to_fire_vr (:,:,:)       ! vertical resolved: the litter & soil nitrogen loss associated to the fire (gN m-3 s-1)
    real(r8), allocatable :: decomp_npools_transport_tendency(:,:,:)  ! vertical resolved: the nitrogen tendency due to vertical transport in decomposition nitrogen pools (gN m-3 s-1)
    real(r8), allocatable :: som_n_leached              (:)           ! total soil organic matter N loss from vertical transport (gN m-2 s-1)
- 
+
  ! vegetation to decomposition nitrogen fluxes
    real(r8), allocatable :: phenology_to_met_n       (:,:)   ! phenology-associated plant N loss to metabolic litter N (gN m-3 s-1)
    real(r8), allocatable :: phenology_to_cel_n       (:,:)   ! phenology-associated plant N loss to cellulosic litter N (gN m-3 s-1)
@@ -104,7 +104,7 @@ MODULE MOD_BGC_Vars_1DFluxes
    real(r8), allocatable :: fire_mortality_to_cel_n  (:,:)   ! fire mortality-associated plant N loss to cellulosic litter N (gN m-3 s-1)
    real(r8), allocatable :: fire_mortality_to_lig_n  (:,:)   ! fire mortality-associated plant N loss to lignin litter N (gN m-3 s-1)
    real(r8), allocatable :: fire_mortality_to_cwdn   (:,:)   ! fire mortality-associated plant N loss to coarse woody debris N (gN m-3 s-1)
- 
+
    real(r8), allocatable :: sminn_leached_vr         (:,:)   ! vertical resolved: soil mineral N loss due to leaching (gN m-3 s-1)
    real(r8), allocatable :: smin_no3_leached_vr      (:,:)   ! vertical resolved: soil mineral NO3 loss due to leaching (gN m-3 s-1)
    real(r8), allocatable :: smin_no3_runoff_vr       (:,:)   ! vertical resolved: soil mineral NO3 loss due to runoff (gN m-3 s-1)
@@ -148,7 +148,7 @@ MODULE MOD_BGC_Vars_1DFluxes
    real(r8), allocatable :: smin_no3_leached         (:)     ! soil mineral NO3 loss due to leaching (gN m-2 s-1)
    real(r8), allocatable :: smin_no3_runoff          (:)     ! soil mineral NO3 loss due to runoff (gN m-2 s-1)
  !----------------- end BGC variables -----------------------------------
- 
+
  ! PUBLIC MEMBER FUNCTIONS:
    PUBLIC :: allocate_1D_BGCFluxes
    PUBLIC :: deallocate_1D_BGCFluxes
@@ -325,7 +325,7 @@ CONTAINS
    USE MOD_LandPatch
 
       IF (p_is_worker) THEN
- 
+
          IF (numpatch > 0) THEN
 
 ! bgc variables
@@ -373,8 +373,8 @@ CONTAINS
             deallocate (grainc_to_seed             )
             deallocate (grainn_to_cropprodn        )
             deallocate (cropprod1c_loss            )
- 
- 
+
+
  ! decomposition carbon fluxes
             deallocate (decomp_cpools_sourcesink   )
             deallocate (decomp_ctransfer_vr        )
@@ -384,7 +384,7 @@ CONTAINS
             deallocate (m_decomp_cpools_to_fire_vr )
             deallocate (decomp_cpools_transport_tendency)
             deallocate (som_c_leached              )
- 
+
  ! vegetation to decomposition carbon fluxes
             deallocate (phenology_to_met_c       )
             deallocate (phenology_to_cel_c       )
@@ -397,7 +397,7 @@ CONTAINS
             deallocate (fire_mortality_to_cel_c  )
             deallocate (fire_mortality_to_lig_c  )
             deallocate (fire_mortality_to_cwdc   )
- 
+
  ! decomposition nitrogen fluxes
             deallocate (decomp_npools_sourcesink   )
             deallocate (decomp_ntransfer_vr        )
@@ -406,7 +406,7 @@ CONTAINS
             deallocate (m_decomp_npools_to_fire_vr )
             deallocate (decomp_npools_transport_tendency)
             deallocate (som_n_leached              )
- 
+
  ! vegetation to decomposition nitrogen fluxes
             deallocate (phenology_to_met_n       )
             deallocate (phenology_to_cel_n       )
@@ -419,7 +419,7 @@ CONTAINS
             deallocate (fire_mortality_to_cel_n  )
             deallocate (fire_mortality_to_lig_n  )
             deallocate (fire_mortality_to_cwdn   )
- 
+
             deallocate (sminn_leached_vr         )
             deallocate (smin_no3_leached_vr      )
             deallocate (smin_no3_runoff_vr       )

@@ -1,0 +1,68 @@
+&nl_colm_forcing
+
+  ! ----- forcing -----
+   DEF_dir_forcing  ='/share/home/dq013/zhwei/colm/data/CoLM_Forcing/IsoGSM/'
+
+   DEF_forcing%dataset           = 'IsoGSM'
+   DEF_forcing%solarin_all_band  = .true.
+   DEF_forcing%HEIGHT_V          = 50.0
+   DEF_forcing%HEIGHT_T          = 40.
+   DEF_forcing%HEIGHT_Q          = 40.
+
+   DEF_forcing%NVAR              = 8        ! variable number of forcing data
+   DEF_forcing%startyr           = 1980     ! start year of forcing data
+   DEF_forcing%startmo           = 1        ! start month of forcing data
+   DEF_forcing%endyr             = 2024     ! end year of forcing data
+   DEF_forcing%endmo             = 12       ! end month of forcing data
+   DEF_forcing%dtime             = 21600 21600 21600 21600 21600 21600 21600 21600
+   DEF_forcing%offset            = 10800 10800 10800 10800 10800 10800 0 10800
+   DEF_forcing%nlands            = 1        ! land grid number in 1d
+
+   DEF_forcing%leapyear          = .true.   ! leapyear calendar
+   DEF_forcing%data2d            = .true.   ! data in 2 dimension (lon, lat)
+   DEF_forcing%hightdim          = .false.  ! have "z" dimension
+   DEF_forcing%dim2d             = .false.   ! lat/lon value in 2 dimension (lon, lat)
+
+   DEF_forcing%latname           = 'lat' ! dimension name of latitude
+   DEF_forcing%lonname           = 'lon' ! dimension name of longitude
+
+   DEF_forcing%groupby           = 'year'  ! file grouped by year/month 
+
+   DEF_forcing%fprefix(1) = 'IsoGSM_temperature'
+   DEF_forcing%fprefix(2) = 'IsoGSM_Q'
+   DEF_forcing%fprefix(3) = 'IsoGSM_Pressure'
+   DEF_forcing%fprefix(4) = 'IsoGSM_prate'
+   DEF_forcing%fprefix(5) = 'IsoGSM_Wind'
+   DEF_forcing%fprefix(6) = 'IsoGSM_Wind'
+   DEF_forcing%fprefix(7) = 'IsoGSM_Radiation'
+   DEF_forcing%fprefix(8) = 'IsoGSM_Radiation'
+
+
+   DEF_forcing%vname    = 'tmp2m' 'spfh2m' 'pressfc' 'pratesfc' 'ugrd10m' 'vgrd10m' 'dswrfsfc' 'dlwrfsfc'
+   DEF_forcing%timelog  = 'instant' 'instant' 'instant' 'forward' 'instant' 'instant' 'forward' 'forward'
+   DEF_forcing%tintalgo = 'linear' 'linear' 'linear' 'nearest' 'linear' 'linear' 'coszen' 'linear'
+
+   DEF_forcing%precipitation_O18_fprefix        = 'IsoGSM_prate'
+   DEF_forcing%precipitation_O18_vname          = 'prate1sfc'
+   DEF_forcing%precipitation_O18_tintalgo       = 'linear'
+   DEF_forcing%precipitation_O18_dtime          = 21600
+   DEF_forcing%precipitation_O18_offset         = 10800
+
+   DEF_forcing%precipitation_H2_fprefix        = 'IsoGSM_prate'
+   DEF_forcing%precipitation_H2_vname          = 'prate2sfc'
+   DEF_forcing%precipitation_H2_tintalgo       = 'linear'
+   DEF_forcing%precipitation_H2_dtime          = 21600
+   DEF_forcing%precipitation_H2_offset         = 10800
+
+   DEF_forcing%water_vapor_O18_fprefix         = 'IsoGSM_Q'
+   DEF_forcing%water_vapor_O18_vname           = 'spfh12m'
+   DEF_forcing%water_vapor_O18_tintalgo        = 'linear'
+   DEF_forcing%water_vapor_O18_dtime           = 21600
+   DEF_forcing%water_vapor_O18_offset          = 10800
+
+   DEF_forcing%water_vapor_H2_fprefix        = 'IsoGSM_Q'
+   DEF_forcing%water_vapor_H2_vname          = 'spfh22m'
+   DEF_forcing%water_vapor_H2_tintalgo       = 'linear'
+   DEF_forcing%water_vapor_H2_dtime          = 21600
+   DEF_forcing%water_vapor_H2_offset         = 10800
+/

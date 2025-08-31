@@ -22,15 +22,49 @@ MODULE MOD_Urban_Shortwave
 
 CONTAINS
 
-   !-------------------------------------------------
-   SUBROUTINE UrbanOnlyShortwave ( theta, HW, fb, fgper, H, &
-         aroof, awall, agimp, agper, fwsun, sroof, swsun, swsha, sgimp, sgper, albu)
+
+   SUBROUTINE UrbanOnlyShortwave ( theta, HL, fb, fgper, H, &
+        aroof, awall, agimp, agper, fwsun, sroof, swsun, swsha, sgimp, sgper, albu)
+
+!-----------------------------------------------------------------------
+!                Sun
+!                 \\\
+!                  \\\
+!                         ______
+!                        |++++++|              roof
+!                        |++++++|             ______
+!                        |++++++|            |++++++|
+!                    ______+++++|            |++++++|
+!                   |++++++|++++|            |++++++|
+!            sunlit |[]++[]|++++|            |++++++| shaded
+!             wall  |++++++|                 |++++++|  wall
+!                   |[]++[]|                 |++++++|
+!                   |++++++|  impervious/pervious ground
+!         __________|++++++|____________________________________
+!
+!
+! !DESCRIPTION:
+!
+!  Calculate the ground shadow area, the area of the sunny and shady
+!  walls taking into account mutual shading between buildings;
+!  calculate the visibility factor F between the sky, walls, and
+!  ground; calculate the initial radiation reaching each component
+!  surface, considering multiple scattering processes, and establish
+!  the radiation transfer balance equation for both incident direct
+!  and diffuse radiation cases for solving.
+!
+!  Created by Hua Yuan, 09/2021
+!
+! !REVISIONS:
+!
+!-----------------------------------------------------------------------
 
    IMPLICIT NONE
 
+!-------------------------- Dummy Arguments ----------------------------
    real(r8), intent(in) :: &
         theta,      &! Sun zenith angle [radian]
-        HW,         &! Ratio of building height to ground width [-]
+        HL,         &! Ratio of building height to their side length [-]
         fb,         &! Fraction of building area [-]
         fgper,      &! Fraction of impervious ground [-]
         H            ! Building average height [m]
@@ -47,15 +81,14 @@ CONTAINS
         swsun(2),   &! Urban sunlit wall absorption [-]
         swsha(2),   &! Urban shaded wall absorption [-]
         sgimp(2),   &! Urban impervious ground absorption [-]
-        sgper(2),   &! Urban pervious gournd absorption [-]
+        sgper(2),   &! Urban pervious ground absorption [-]
         albu(2)      ! Urban overall albedo [-]
 
-   ! Local variables
-   !-------------------------------------------------
+!-------------------------- Local Variables ----------------------------
    real(r8) ::    &
         W,          &! Urban ground average width [m]
         L,          &! Urban building average length [m]
-        HL,         &! Ratio of H to L, H/L [-]
+        HW,         &! Ratio of H to W, H/W [-]
         fg,         &! Fraction of ground [-]
         fgimp,      &! Weight of pervious ground [-]
 
@@ -77,17 +110,19 @@ CONTAINS
 
         A(4,4),     &! Radiation transfer matrix
         Ainv(4,4),  &! Inverse of Radiation transfer matrix
-        B(4),       &! Vectors of incident radition on each surface
+        B(4),       &! Vectors of incident radiation on each surface
         X(4)         ! Radiation emit from each surface in balance condition
 
    ! Temporal
    real(r8) :: fac1, fac2, eb
 
-      ! Claculate urban structure parameters
+!-----------------------------------------------------------------------
+
+      ! Calculate urban structure parameters
       !-------------------------------------------------
-      W  = H/HW
-      L  = W*sqrt(fb)/(1-sqrt(fb))
-      HL = H/L !NOTE: Same as: HL = HW*(1-sqrt(fb))/sqrt(fb)
+      !W  = H/HW
+      !L  = W*sqrt(fb)/(1-sqrt(fb))
+      !HL = H/L !NOTE: Same as: HL = HW*(1-sqrt(fb))/sqrt(fb)
       fg = 1. - fb
 
       fgimp = 1. - fgper
@@ -147,10 +182,10 @@ CONTAINS
       Egimp = Eg*fgimp
       Egper = Eg*fgper
 
-      ! Vector of first scattering radiatioin on each surface
+      ! Vector of first scattering radiation on each surface
       B(:) = (/Ewsun*awall, Ewsha*awall, Egimp*agimp, Egper*agper/)
 
-      ! Matrix computing to revole multiple reflections
+      ! Matrix computing to resolve multiple reflections
       X = matmul(Ainv, B)
 
       !-------------------------------------------------
@@ -185,7 +220,7 @@ CONTAINS
       Egimp = Eg*fgimp
       Egper = Eg*fgper
 
-      ! Vector of first scattering radiatioin on each surface
+      ! Vector of first scattering radiation on each surface
       B(:) = (/Ewsun*awall, Ewsha*awall, Egimp*agimp, Egper*agper/)
 
       ! Equation solve
@@ -219,21 +254,58 @@ CONTAINS
       ! roof absorption
       sroof = 1. - aroof
 
-      ! albedo accout for both roof and urban's wall and ground
+      ! albedo account for both roof and urban's wall and ground
       albu = aroof*fb + albu*fg
 
    END SUBROUTINE UrbanOnlyShortwave
 
-   !-------------------------------------------------
-   SUBROUTINE UrbanVegShortwave ( theta, HW, fb, fgper, H, &
+
+   SUBROUTINE UrbanVegShortwave ( theta, HL, fb, fgper, H, &
          aroof, awall, agimp, agper, lai, sai, fv, hv, rho, tau, &
          fwsun, sroof, swsun, swsha, sgimp, sgper, sveg, albu )
 
+!-----------------------------------------------------------------------
+!                Sun
+!                 \\\
+!                  \\\
+!                         ______
+!                        |++++++|              roof
+!                        |++++++|             ______
+!                        |++++++|    ___     |++++++|
+!                    ______+++++|   |||||    |++++++|
+!                   |++++++|++++|  |||||||   |++++++|
+!            sunlit |[]++[]|++++|   |||||    |++++++| shaded
+!             wall  |++++++|          | tree |++++++|  wall
+!                   |[]++[]|          |      |++++++|
+!                   |++++++|  impervious/pervious ground
+!         __________|++++++|____________________________________
+!
+!
+! !DESCRIPTION:
+!
+!  The process of shortwave radiation transfer in a city considering
+!  vegetation (trees only) is based on the radiation transfer without
+!  vegetation (UrbanOnlyShortwave), taking into account the visibility
+!  factors F between the various components including the vegetation, in
+!  order to calculate the radiation transfer matrix during radiation
+!  balance. A similar method is used to solve the radiation absorption
+!  of walls, ground, and vegetation. The additional part compared to
+!  urban radiation transfer without vegetation (UrbanOnlyShortwave) is
+!  the consideration of the visibility factors and shadow area
+!  calculation including the vegetation.
+!
+!  Created by Hua Yuan, 09/2021
+!
+! !REVISIONS:
+!
+!-----------------------------------------------------------------------
+
    IMPLICIT NONE
 
+!-------------------------- Dummy Arguments ----------------------------
    real(r8), intent(in) :: &
         theta,      &! Sun zenith angle [radian]
-        HW,         &! Ratio of building height to ground width [-]
+        HL,         &! Ratio of building height to their side length [-]
         fb,         &! Fraction of building area [-]
         fgper,      &! Fraction of impervious ground [-]
         H            ! Building average height [m]
@@ -258,18 +330,17 @@ CONTAINS
         swsun(2),   &! Urban sunlit wall absorption [-]
         swsha(2),   &! Urban shaded wall absorption [-]
         sgimp(2),   &! Urban impervious ground absorption [-]
-        sgper(2),   &! Urban pervious gournd absorption [-]
+        sgper(2),   &! Urban pervious ground absorption [-]
         sveg(2),    &! Urban building tree absorption [-]
         albu(2)      ! Urban overall albedo [-]
 
-   ! Local variables
-   !-------------------------------------------------
-   real(r16),parameter:: DD1=1.0_r16 !quad accuracy real number
+!-------------------------- Local Variables ----------------------------
+   real(r16),parameter :: DD1=1.0_r16 !quad accuracy real number
 
    real(r8) :: &
         W,          &! Urban ground average width
         L,          &! Urban building average length
-        HL,         &! Ratio of H to L, H/L [-]
+        HW,         &! Ratio of H to W, H/W [-]
         fg,         &! Fraction of ground [-]
         fgimp,      &! Weight of pervious ground [-]
 
@@ -323,7 +394,7 @@ CONTAINS
    !-------------------------------------------------
    real(r8) :: A(5,5)     !Radiation transfer matrix
    real(r8) :: Ainv(5,5)  !Inverse of Radiation transfer matrix
-   real(r8) :: B(5)       !Vectors of incident radition on each surface
+   real(r8) :: B(5)       !Vectors of incident radiation on each surface
    real(r8) :: X(5)       !Radiation emit from each surface in balance condition
 
    ! Temporal
@@ -333,17 +404,19 @@ CONTAINS
    real(r8) :: phi_dif    !Temporal
    real(r8) :: pa2        !Temporal
    real(r8) :: lsai       !lai+sai
+!-----------------------------------------------------------------------
 
-      ! Claculate urban structure parameters
+      ! Calculate urban structure parameters
       !-------------------------------------------------
-      W  = H/HW
-      L  = W*sqrt(fb)/(1-sqrt(fb))
-      HL = H/L !NOTE: Same as: HL = HW*(1-sqrt(fb))/sqrt(fb)
+      !W  = H/HW
+      !L  = W*sqrt(fb)/(1-sqrt(fb))
+      !HL = H/L !NOTE: Same as: HL = HW*(1-sqrt(fb))/sqrt(fb)
+      L  = H/HL
       fg = 1. - fb
 
       fgimp = 1. - fgper
 
-      ! Calculate transmittion and albedo of tree
+      ! Calculate transmission and albedo of tree
       !-------------------------------------------------
       lsai = (lai+sai)*fv/cos(PI/3)/ShadowTree(fv, PI/3)
       Td = tee(DD1*3/8.*lsai)
@@ -381,7 +454,7 @@ CONTAINS
       Sv  = ShadowTree(fv_, PI/3)
 
       ! Overlapped shadow between tree and building
-      ! (to groud only)
+      ! (to ground only)
       Svw = Sv * (Sw-Sw_)
 
       ! convert Sv to ground ratio
@@ -406,7 +479,7 @@ CONTAINS
       Sv  = ShadowTree(fv_, PI/3)
 
       ! Overlapped shadow between tree and building
-      ! (to groud only)
+      ! (to ground only)
       Svw = Sv * (Sw-Sw_)
 
       ! convert Sv to ground ratio
@@ -470,7 +543,7 @@ CONTAINS
       ! Calculate sunlit wall fraction
       !-------------------------------------------------
 
-      ! Builing wall shadow
+      ! Building wall shadow
       Sw = ShadowWall_dir(fb/fg, HL, theta)
 
       Sw_ = Sw; fv_ = fv;
@@ -482,7 +555,7 @@ CONTAINS
       Sv = ShadowTree(fv_, theta)
 
       ! Overlapped shadow between tree and building
-      ! (to groud only)
+      ! (to ground only)
       Svw = (Sw-Sw_) * Sv
 
       ! convert Sv to ground ratio
@@ -503,11 +576,20 @@ CONTAINS
       ! Calculate radiation transfer matrix
       !   AX = B
       !-------------------------------------------------
-      A(1,:) = (/1-Fww_*fwsun*awall,  -Fww_*fwsun*awall, -Fgw_*fwsun*awall, -Fgw_*fwsun*awall, -Fvw*fwsun*awall/)
-      A(2,:) = (/ -Fww_*fwsha*awall, 1-Fww_*fwsha*awall, -Fgw_*fwsha*awall, -Fgw_*fwsha*awall, -Fvw*fwsha*awall/)
-      A(3,:) = (/ -Fwg_*fgimp*agimp,  -Fwg_*fgimp*agimp,             1._r8,             0._r8, -Fvg*fgimp*agimp/)
-      A(4,:) = (/ -Fwg_*fgper*agper,  -Fwg_*fgper*agper,             0._r8,             1._r8, -Fvg*fgper*agper/)
-      A(5,:) = (/ -Fwv*av          ,  -Fwv*av          , -Fgv*av          , -Fgv*av          ,            1._r8/)
+      A(1,:) = (/1-Fww_*fwsun*awall,  -Fww_*fwsun*awall, &
+                  -Fgw_*fwsun*awall,  -Fgw_*fwsun*awall, -Fvw*fwsun*awall/)
+
+      A(2,:) = (/ -Fww_*fwsha*awall, 1-Fww_*fwsha*awall, &
+                  -Fgw_*fwsha*awall,  -Fgw_*fwsha*awall, -Fvw*fwsha*awall/)
+
+      A(3,:) = (/ -Fwg_*fgimp*agimp,  -Fwg_*fgimp*agimp, &
+                              1._r8,              0._r8, -Fvg*fgimp*agimp/)
+
+      A(4,:) = (/ -Fwg_*fgper*agper,  -Fwg_*fgper*agper, &
+                              0._r8,              1._r8, -Fvg*fgper*agper/)
+
+      A(5,:) = (/ -Fwv*av          ,  -Fwv*av          , &
+                  -Fgv*av          ,  -Fgv*av          ,            1._r8/)
 
       ! Inverse of matrix A
       Ainv = MatrixInverse(A)
@@ -524,10 +606,10 @@ CONTAINS
       Egper = Eg*fgper
       Ev    = Sv
 
-      ! Vector of first scattering radiatioin on each surface
+      ! Vector of first scattering radiation on each surface
       B(:) = (/Ewsun*awall, Ewsha*awall, Egimp*agimp, Egper*agper, Ev*av/)
 
-      ! Matrix computing to revole multiple reflections
+      ! Matrix computing to resolve multiple reflections
       X = matmul(Ainv, B)
 
       !-------------------------------------------------
@@ -564,7 +646,7 @@ CONTAINS
       Egper = Eg*fgper
       Ev    = Fsv
 
-      ! Vector of first scattering radiatioin on each surface
+      ! Vector of first scattering radiation on each surface
       B(:) = (/Ewsun*awall, Ewsha*awall, Egimp*agimp, Egper*agper, Ev*av/)
 
       ! Equation solve
@@ -572,7 +654,7 @@ CONTAINS
 
       ! Radiation absorption by each surface
       !NOTE: for 3D, absorption per unit area: 4*HL*fb/fg
-      !      for canyon: aborption per unit area: 2*HW
+      !      for canyon: absorption per unit area: 2*HW
       swsun(2) = X(1)/awall*(1-awall)!/(4*fwsun*HL*fb/fg)
       swsha(2) = X(2)/awall*(1-awall)!/(4*fwsha*HL*fb/fg)
       sgimp(2) = X(3)/agimp*(1-agimp)!/fgimp
@@ -600,13 +682,13 @@ CONTAINS
       ! roof absorption
       sroof = 1. - aroof
 
-      ! albedo accout for both roof and urban's wall and ground
+      ! albedo account for both roof and urban's wall and ground
       albu = aroof*fb + albu*fg
 
    END SUBROUTINE UrbanVegShortwave
 
    !-------------------------------------------------
-   ! claculate shadow of wall for incident direct radiation
+   ! calculate shadow of wall for incident direct radiation
    FUNCTION ShadowWall_dir(f, HL, theta) result(Sw)
 
    IMPLICIT NONE
@@ -622,7 +704,7 @@ CONTAINS
    END FUNCTION ShadowWall_dir
 
    !-------------------------------------------------
-   ! claculate shadow of wall for incident diffuse radiation
+   ! calculate shadow of wall for incident diffuse radiation
    FUNCTION ShadowWall_dif(f, HL) result(Sw)
 
    IMPLICIT NONE
@@ -637,7 +719,7 @@ CONTAINS
    END FUNCTION ShadowWall_dif
 
    !-------------------------------------------------
-   ! claculate shadow of tree
+   ! calculate shadow of tree
    FUNCTION ShadowTree(f, theta) result(Sv)
 
    IMPLICIT NONE
@@ -692,3 +774,4 @@ CONTAINS
    END FUNCTION MatrixInverse
 
 END MODULE MOD_Urban_Shortwave
+! ---------- EOP ------------

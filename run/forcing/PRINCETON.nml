@@ -1,33 +1,33 @@
 &nl_colm_forcing
-  
-  ! ----- forcing -----
-   DEF_dir_forcing  = '/tera06/zhwei/CoLM_Forcing/princeton-r/' 
 
-   DEF_forcing%dataset           = 'PRINCETON' 
-   DEF_forcing%solarin_all_band  = .true.  
-   DEF_forcing%HEIGHT_V          = 50.0    
+  ! ----- forcing -----
+   DEF_dir_forcing  = '/shr03/CoLM_Forcing/princeton-r/'
+
+   DEF_forcing%dataset           = 'PRINCETON'
+   DEF_forcing%solarin_all_band  = .true.
+   DEF_forcing%HEIGHT_V          = 50.0
    DEF_forcing%HEIGHT_T          = 40.
    DEF_forcing%HEIGHT_Q          = 40.
-   
-   DEF_forcing%NVAR              = 8        ! variable number of forcing data
-   DEF_forcing%startyr           = 1948     ! start year of forcing data  
-   DEF_forcing%startmo           = 1        ! start month of forcing data
-   DEF_forcing%endyr             = 2006     ! end year of forcing data
-   DEF_forcing%endmo             = 12       ! end month of forcing data
+
+   DEF_forcing%NVAR              = 8           ! variable number of forcing data
+   DEF_forcing%startyr           = 1948        ! start year of forcing data
+   DEF_forcing%startmo           = 1           ! start month of forcing data
+   DEF_forcing%endyr             = 2006        ! end year of forcing data
+   DEF_forcing%endmo             = 12          ! end month of forcing data
    DEF_forcing%dtime             = 10800 10800 10800 10800 10800 10800 10800 10800
    DEF_forcing%offset            = 0 0 0 0 0 0 0 0
-   DEF_forcing%nlands            = 1        ! land grid number in 1d
-   
-   DEF_forcing%leapyear          = .true.   ! leapyear calendar
-   DEF_forcing%data2d            = .true.   ! data in 2 dimension (lon, lat)
-   DEF_forcing%hightdim          = .false.  ! have "z" dimension
-   DEF_forcing%dim2d             = .false.  ! lat/lon value in 2 dimension (lon, lat)
-   
+   DEF_forcing%nlands            = 1           ! land grid number in 1d
+
+   DEF_forcing%leapyear          = .true.      ! leapyear calendar
+   DEF_forcing%data2d            = .true.      ! data in 2 dimension (lon, lat)
+   DEF_forcing%hightdim          = .false.     ! have "z" dimension
+   DEF_forcing%dim2d             = .false.     ! lat/lon value in 2 dimension (lon, lat)
+
    DEF_forcing%latname           = 'latitude'  ! dimension name of latitude
    DEF_forcing%lonname           = 'longitude' ! dimension name of longitude
-   
-   DEF_forcing%groupby           = 'year'  ! file grouped by year/month
-   
+
+   DEF_forcing%groupby           = 'year'      ! file grouped by year/month
+
    DEF_forcing%fprefix(1) = 'tas/tas_3hourly_'
    DEF_forcing%fprefix(2) = 'shum/shum_3hourly_'
    DEF_forcing%fprefix(3) = 'pres/pres_3hourly_'
@@ -37,8 +37,9 @@
    DEF_forcing%fprefix(7) = 'dswrf/dswrf_3hourly_'
    DEF_forcing%fprefix(8) = 'dlwrf/dlwrf_3hourly_'
 
-   
-   DEF_forcing%vname    = 'tas' 'shum' 'pres' 'prcp' 'NULL' 'wind' 'dswrf' 'dlwrf' 
+
+   DEF_forcing%vname    = 'tas' 'shum' 'pres' 'prcp' 'NULL' 'wind' 'dswrf' 'dlwrf'
+   DEF_forcing%timelog  = 'instant' 'instant' 'instant' 'forward' 'instant' 'instant' 'forward' 'forward'
    DEF_forcing%tintalgo = 'linear' 'linear' 'linear' 'nearest' 'NULL' 'linear' 'coszen' 'linear'
 
 /

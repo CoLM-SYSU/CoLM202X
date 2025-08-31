@@ -1,33 +1,33 @@
 &nl_colm_forcing
-   
-   ! ----- forcing -----
-   DEF_dir_forcing  = '/tera06/zhwei/CoLM_Forcing/GSWP3/' 
 
-   DEF_forcing%dataset           = 'GSWP3' 
-   DEF_forcing%solarin_all_band  = .true.  
-   DEF_forcing%HEIGHT_V          = 50.0    
+   ! ----- forcing -----
+   DEF_dir_forcing  = '/shr03/CoLM_Forcing/GSWP3/'
+
+   DEF_forcing%dataset           = 'GSWP3'
+   DEF_forcing%solarin_all_band  = .true.
+   DEF_forcing%HEIGHT_V          = 50.0
    DEF_forcing%HEIGHT_T          = 40.
    DEF_forcing%HEIGHT_Q          = 40.
-   
+
    DEF_forcing%NVAR              = 8        ! variable number of forcing data
-   DEF_forcing%startyr           = 1950     ! start year of forcing data  
+   DEF_forcing%startyr           = 1950     ! start year of forcing data
    DEF_forcing%startmo           = 1        ! start month of forcing data
    DEF_forcing%endyr             = 2014     ! end year of forcing data
    DEF_forcing%endmo             = 12       ! end month of forcing data
    DEF_forcing%dtime             = 10800 10800 10800 10800 0 10800 10800 10800
    DEF_forcing%offset            = 5400 5400 5400 5400 0 5400 0 5400
    DEF_forcing%nlands            = 1        ! land grid number in 1d
-   
-   DEF_forcing%leapyear          = .false.   ! leapyear calendar
+
+   DEF_forcing%leapyear          = .false.  ! leapyear calendar
    DEF_forcing%data2d            = .true.   ! data in 2 dimension (lon, lat)
    DEF_forcing%hightdim          = .false.  ! have "z" dimension
-   DEF_forcing%dim2d             = .true.  ! lat/lon value in 2 dimension (lon, lat)
-   
-   DEF_forcing%latname           = 'LATIXY'  ! dimension name of latitude
+   DEF_forcing%dim2d             = .true.   ! lat/lon value in 2 dimension (lon, lat)
+
+   DEF_forcing%latname           = 'LATIXY' ! dimension name of latitude
    DEF_forcing%lonname           = 'LONGXY' ! dimension name of longitude
-   
+
    DEF_forcing%groupby           = 'month'  ! file grouped by year/month
-   
+
    DEF_forcing%fprefix(1) = 'TPHWL/clmforc.GSWP3.c2011.0.5x0.5.TPQWL.'
    DEF_forcing%fprefix(2) = 'TPHWL/clmforc.GSWP3.c2011.0.5x0.5.TPQWL.'
    DEF_forcing%fprefix(3) = 'TPHWL/clmforc.GSWP3.c2011.0.5x0.5.TPQWL.'
@@ -36,8 +36,9 @@
    DEF_forcing%fprefix(6) = 'TPHWL/clmforc.GSWP3.c2011.0.5x0.5.TPQWL.'
    DEF_forcing%fprefix(7) = 'Solar/clmforc.GSWP3.c2011.0.5x0.5.Solr.'
    DEF_forcing%fprefix(8) = 'TPHWL/clmforc.GSWP3.c2011.0.5x0.5.TPQWL.'
-   
-   DEF_forcing%vname    = 'TBOT' 'QBOT' 'PSRF' 'PRECTmms' 'NULL' 'WIND' 'FSDS' 'FLDS' 
+
+   DEF_forcing%vname    = 'TBOT' 'QBOT' 'PSRF' 'PRECTmms' 'NULL' 'WIND' 'FSDS' 'FLDS'
+   DEF_forcing%timelog  = 'instant' 'instant' 'instant' 'forward' 'instant' 'instant' 'forward' 'forward'
    DEF_forcing%tintalgo = 'linear' 'linear' 'linear' 'nearest' 'NULL' 'linear' 'coszen' 'linear'
 
 /
