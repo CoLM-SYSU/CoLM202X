@@ -83,6 +83,7 @@ OBJS_MKSRFDATA = \
 				  Aggregation_Topography.o          \
 				  Aggregation_TopoWetness.o         \
 				  Aggregation_TopographyFactors.o   \
+				  Aggregation_TopographyFactors_Simple.o \
 				  Aggregation_Urban.o               \
 				  Aggregation_SoilTexture.o         \
 				  MOD_Lulcc_TransferTrace.o         \
