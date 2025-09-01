@@ -67,8 +67,7 @@ CONTAINS
       CALL element_neighbour_init  (lc_year)
       CALL river_lake_network_init ()
       CALL subsurface_network_init ()
-
-      CALL readin_reservoir_data   ()
+      CALL reservoir_init          ()
 
       CALL write_catch_parameters  ()
 
@@ -98,7 +97,7 @@ CONTAINS
    ! ----------
    SUBROUTINE lateral_flow (deltime)
 
-   USE MOD_Namelist,  only: DEF_USE_Dynamic_Lake
+   USE MOD_Namelist,  only: DEF_Reservoir_Method, DEF_USE_Dynamic_Lake
    USE MOD_Mesh,      only: numelm
    USE MOD_LandHRU,   only: landhru,  numhru,    elm_hru
    USE MOD_LandPatch, only: numpatch, elm_patch, hru_patch
@@ -160,6 +159,12 @@ CONTAINS
          IF (numbsnhru > 0) wdsrf_bsnhru_ta (:) = 0.
          IF (numbsnhru > 0) momen_bsnhru_ta (:) = 0.
 
+         IF (DEF_Reservoir_Method > 0) THEN
+            IF (numresv > 0) volresv_ta  (:) = 0.
+            IF (numresv > 0) qresv_in_ta (:) = 0.
+            IF (numresv > 0) qresv_out_ta(:) = 0.
+         ENDIF
+
          CALL worker_push_subset_data (iam_elm, iam_bsn, elm_hru, basin_hru, wdsrf_hru, wdsrf_bsnhru)
 
          DO istep = 1, nsubstep
@@ -196,6 +201,14 @@ CONTAINS
             ELSE WHERE
                veloc_bsnhru_ta = 0.
             END WHERE
+         ENDIF
+
+         IF (DEF_Reservoir_Method > 0) THEN
+            IF (numresv > 0) THEN
+               volresv_ta  (:) = volresv_ta  (:) / deltime
+               qresv_in_ta (:) = qresv_in_ta (:) / deltime
+               qresv_out_ta(:) = qresv_out_ta(:) / deltime
+            ENDIF
          ENDIF
 
          ! update surface water depth on patches
@@ -372,6 +385,7 @@ CONTAINS
       CALL river_lake_network_final ()
       CALL subsurface_network_final ()
       CALL basin_network_final      ()
+      CALL reservoir_final          ()
 
 #ifdef CoLMDEBUG
       IF (allocated(patcharea)) deallocate(patcharea)
