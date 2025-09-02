@@ -335,7 +335,7 @@ CONTAINS
                      qresv_in(irsv) = - sum_hflux_riv(i)
                      volresv (irsv) = lakeinfo(i)%volume( wdsrf_bsn(i) )
 
-                     IF (wdsrf_bsn(i) >= RIVERMIN) THEN
+                     IF (volresv(irsv) > 1.e-4 * volresv_total(irsv)) THEN
                         CALL reservoir_operation (DEF_Reservoir_Method, &
                            irsv, qresv_in(irsv), volresv(irsv), qresv_out(irsv))
                      ELSE

@@ -62,7 +62,7 @@ CONTAINS
    USE MOD_NetCDFSerial
    USE MOD_Utils
    USE MOD_Catch_BasinNetwork,     only : numbasin, basinindex
-   USE MOD_Catch_RiverLakeNetwork, only : lake_id,  bedelv_ds, wtsrfelv, lakeinfo
+   USE MOD_Catch_RiverLakeNetwork, only : lake_id,  wtsrfelv, bedelv, lakeinfo
 
    IMPLICIT NONE
 
@@ -88,7 +88,7 @@ CONTAINS
 
       IF (p_is_master) THEN
 
-         lake_info_file = trim(DEF_dir_runtime)//'HydroLAKES_Reservoir.txt'
+         lake_info_file = trim(DEF_dir_runtime)//'/reservoir/HydroLAKES_Reservoir.txt'
 
          funit = 101
          open (funit, file = trim(lake_info_file), action = 'READ')
@@ -251,7 +251,7 @@ CONTAINS
                   IF (lake_type(ibasin) == 2) THEN
                      irsv = irsv + 1
                      bsn2resv (ibasin) = irsv
-                     volresv_total (irsv) = lakeinfo(ibasin)%volume( dam_elv(ibasin) )
+                     volresv_total (irsv) = lakeinfo(ibasin)%volume( dam_elv(ibasin)-bedelv(ibasin) )
                      volresv_emerg (irsv) = volresv_total(irsv) * 0.94
                      volresv_adjust(irsv) = volresv_total(irsv) * 0.77
                      volresv_normal(irsv) = volresv_total(irsv) * 0.7
@@ -269,7 +269,7 @@ CONTAINS
             CALL ncio_read_serial (basin_info_file, 'ilat_outlet', ilat_outlet_basin)
             CALL ncio_read_serial (basin_info_file, 'ilon_outlet', ilon_outlet_basin)
 
-            resv_info_file = trim(DEF_dir_runtime)//'qmean_qflood_of_reservoir.nc'
+            resv_info_file = trim(DEF_dir_runtime)//'/reservoir/qmean_qflood_of_reservoir.nc'
             CALL ncio_read_serial (resv_info_file, 'hylak_id',    lake_id_resv    )
             CALL ncio_read_serial (resv_info_file, 'ilat_outlet', ilat_outlet_resv)
             CALL ncio_read_serial (resv_info_file, 'ilon_outlet', ilon_outlet_resv)
@@ -295,6 +295,72 @@ CONTAINS
                   ENDDO
                ENDIF
             ENDDO
+
+         ENDIF
+
+#ifdef USEMPI
+         IF (p_is_master) THEN
+            DO iworker = 0, p_np_worker-1
+
+               CALL mpi_recv (mesg(1:2), 2, MPI_INTEGER, &
+                  MPI_ANY_SOURCE, mpi_tag_mesg, p_comm_glb, p_stat, p_err)
+               isrc  = mesg(1)
+               nrecv = mesg(2)
+
+               IF (nrecv > 0) THEN
+
+                  allocate (resv_bsn_id (nrecv))
+                  allocate (rcache (nrecv))
+
+                  CALL mpi_recv (resv_bsn_id, nrecv, MPI_INTEGER, isrc, mpi_tag_data, p_comm_glb, p_stat, p_err)
+
+                  idest = isrc
+
+                  rcache = all_qmean_basin(resv_bsn_id)
+                  CALL mpi_send (rcache, nrecv, MPI_REAL8, idest, mpi_tag_data, p_comm_glb, p_err)
+
+                  rcache = all_qflood_basin(resv_bsn_id)
+                  CALL mpi_send (rcache, nrecv, MPI_REAL8, idest, mpi_tag_data, p_comm_glb, p_err)
+
+                  deallocate (resv_bsn_id)
+                  deallocate (rcache)
+
+               ENDIF
+            ENDDO
+         ENDIF
+
+         IF (p_is_worker) THEN
+
+            mesg(1:2) = (/p_iam_glb, numresv/)
+            CALL mpi_send (mesg(1:2), 2, MPI_INTEGER, p_address_master, mpi_tag_mesg, p_comm_glb, p_err)
+
+            IF (numresv > 0) THEN
+               CALL mpi_send (resv_bsn_id, numresv, MPI_INTEGER, &
+                  p_address_master, mpi_tag_data, p_comm_glb, p_err)
+
+               CALL mpi_recv (qresv_mean, numresv, MPI_REAL8, &
+                  p_address_master, mpi_tag_data, p_comm_glb, p_stat, p_err)
+
+               CALL mpi_recv (qresv_flood, numresv, MPI_REAL8, &
+                  p_address_master, mpi_tag_data, p_comm_glb, p_stat, p_err)
+            ENDIF
+         ENDIF
+#else
+         IF (numresv > 0) THEN
+            qresv_mean  = all_qmean_basin (resv_bsn_id)
+            qresv_flood = all_qflood_basin(resv_bsn_id)
+         ENDIF
+#endif
+
+         IF (p_is_worker) THEN
+            IF (numresv > 0) THEN
+               qresv_normal = volresv_normal*0.7/(180*86400) + qresv_mean*0.25
+               qresv_adjust = (qresv_normal + qresv_flood) * 0.5
+            ENDIF
+         ENDIF
+
+
+         IF (p_is_master) THEN
 
             allocate (order (nbasin)); order = (/(ibasin,ibasin=1,nbasin)/)
 
@@ -358,65 +424,6 @@ CONTAINS
                   ENDIF
                ENDDO
             ENDIF
-         ENDIF
-
-#ifdef USEMPI
-         IF (p_is_master) THEN
-            DO iworker = 0, p_np_worker-1
-
-               CALL mpi_recv (mesg(1:2), 2, MPI_INTEGER, &
-                  MPI_ANY_SOURCE, mpi_tag_mesg, p_comm_glb, p_stat, p_err)
-               isrc  = mesg(1)
-               nrecv = mesg(2)
-
-               IF (nrecv > 0) THEN
-
-                  allocate (resv_bsn_id (nrecv))
-                  allocate (rcache (nrecv))
-
-                  CALL mpi_recv (resv_bsn_id, nrecv, MPI_INTEGER, isrc, mpi_tag_data, p_comm_glb, p_stat, p_err)
-
-                  idest = isrc
-
-                  rcache = all_qmean_basin(resv_bsn_id)
-                  CALL mpi_send (rcache, nrecv, MPI_REAL8, idest, mpi_tag_data, p_comm_glb, p_err)
-
-                  rcache = all_qflood_basin(resv_bsn_id)
-                  CALL mpi_send (rcache, nrecv, MPI_REAL8, idest, mpi_tag_data, p_comm_glb, p_err)
-
-                  deallocate (resv_bsn_id)
-                  deallocate (rcache)
-
-               ENDIF
-            ENDDO
-         ENDIF
-
-         IF (p_is_worker) THEN
-
-            mesg(1:2) = (/p_iam_glb, numresv/)
-            CALL mpi_send (mesg(1:2), 2, MPI_INTEGER, p_address_master, mpi_tag_mesg, p_comm_glb, p_err)
-
-            IF (numresv > 0) THEN
-               CALL mpi_send (resv_bsn_id, numresv, MPI_INTEGER, &
-                  p_address_master, mpi_tag_data, p_comm_glb, p_err)
-
-               CALL mpi_recv (qresv_mean, numresv, MPI_REAL8, &
-                  p_address_master, mpi_tag_data, p_comm_glb, p_stat, p_err)
-
-               CALL mpi_recv (qresv_flood, numresv, MPI_REAL8, &
-                  p_address_master, mpi_tag_data, p_comm_glb, p_stat, p_err)
-            ENDIF
-         ENDIF
-#else
-         IF (numresv > 0) THEN
-            qresv_mean  = all_qmean_basin (resv_bsn_id)
-            qresv_flood = all_qflood_basin(resv_bsn_id)
-         ENDIF
-#endif
-
-         IF (numresv > 0) THEN
-            qresv_normal = volresv_normal*0.7/(180*86400) + qresv_mean*0.25
-            qresv_adjust = (qresv_normal + qresv_flood) * 0.5
          ENDIF
 
       ENDIF
@@ -491,7 +498,8 @@ CONTAINS
             varout(resv_loc2glb(irsv)) = varout(resv_loc2glb(irsv)) + varin(irsv)
          ENDDO
 #ifdef USEMPI
-         CALL mpi_reduce (MPI_IN_PLACE, varout, numresv_uniq, MPI_REAL8, MPI_SUM, p_comm_glb, p_err)
+         CALL mpi_reduce (MPI_IN_PLACE, varout, numresv_uniq, MPI_REAL8, &
+            MPI_SUM, p_root, p_comm_worker, p_err)
 #endif
       ENDIF
 
