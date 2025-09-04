@@ -288,7 +288,17 @@ CONTAINS
             allocate (varhist (numresv_uniq))
 
             IF (DEF_hist_vars%volresv) THEN
+
+               IF (p_is_worker) THEN
+                  IF (numresv > 0) THEN
+                     WHERE (a_volresv /= spval)
+                        a_volresv = a_volresv / nac_basin
+                     END WHERE
+                  ENDIF
+               ENDIF
+
                CALL reservoir_gather_var (a_volresv, varhist)
+
                IF (p_is_master) THEN
                   CALL ncio_write_serial_time (file_hist_basin, 'volresv', &
                      itime_in_file, varhist, 'reservoir', 'time', DEF_HIST_CompressLevel)
@@ -300,7 +310,17 @@ CONTAINS
             ENDIF
 
             IF (DEF_hist_vars%qresv_in) THEN
+
+               IF (p_is_worker) THEN
+                  IF (numresv > 0) THEN
+                     WHERE (a_qresv_in /= spval)
+                        a_qresv_in = a_qresv_in / nac_basin
+                     END WHERE
+                  ENDIF
+               ENDIF
+
                CALL reservoir_gather_var (a_qresv_in, varhist)
+
                IF (p_is_master) THEN
                   CALL ncio_write_serial_time (file_hist_basin, 'qresv_in', &
                      itime_in_file, varhist, 'reservoir', 'time', DEF_HIST_CompressLevel)
@@ -312,7 +332,17 @@ CONTAINS
             ENDIF
 
             IF (DEF_hist_vars%qresv_out) THEN
+
+               IF (p_is_worker) THEN
+                  IF (numresv > 0) THEN
+                     WHERE (a_qresv_out /= spval)
+                        a_qresv_out = a_qresv_out / nac_basin
+                     END WHERE
+                  ENDIF
+               ENDIF
+
                CALL reservoir_gather_var (a_qresv_out, varhist)
+
                IF (p_is_master) THEN
                   CALL ncio_write_serial_time (file_hist_basin, 'qresv_out', &
                      itime_in_file, varhist, 'reservoir', 'time', DEF_HIST_CompressLevel)

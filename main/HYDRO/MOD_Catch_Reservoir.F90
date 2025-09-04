@@ -10,19 +10,9 @@ MODULE MOD_Catch_Reservoir
 ! Created by Shupeng Zhang, July 2025
 !-----------------------------------------------------------------------
    USE MOD_Precision
+   USE MOD_Catch_BasinNetwork, only : numbasin, basinindex, numresv, bsn2resv, lake_id, lake_type
 
-   integer,  allocatable :: lake_type     (:)  ! lake type: 0: not lake;
-                                               !            1: natural lake;
-                                               !            2: reservoir;
-                                               !            3: natural lake with dam
    real(r8), allocatable :: dam_elv       (:)  ! dam elevation [m]
-
-   integer :: numresv
-   integer,  allocatable :: bsn2resv      (:)
-
-   integer :: numresv_uniq
-   integer,  allocatable :: resv_hylak_id (:)  ! HydroLAKE ID of reservoir
-   integer,  allocatable :: resv_loc2glb  (:)  ! global index of reservoir
 
    ! parameters
    real(r8), allocatable :: volresv_total (:)  ! total reservoir volume      [m^3]
@@ -45,6 +35,10 @@ MODULE MOD_Catch_Reservoir
    real(r8), allocatable :: qresv_in_ta   (:)  ! inflow to reservoir    [m^3/s]
    real(r8), allocatable :: qresv_out_ta  (:)  ! outflow from reservoir [m^3/s]
 
+   integer :: numresv_uniq
+   integer,  allocatable :: resv_hylak_id (:)  ! HydroLAKE ID of reservoir
+   integer,  allocatable :: resv_loc2glb  (:)  ! global index of reservoir
+
    ! -- PUBLIC SUBROUTINEs --
    PUBLIC :: reservoir_init
    PUBLIC :: reservoir_operation
@@ -61,234 +55,99 @@ CONTAINS
    USE MOD_Namelist
    USE MOD_NetCDFSerial
    USE MOD_Utils
-   USE MOD_Catch_BasinNetwork,     only : numbasin, basinindex
-   USE MOD_Catch_RiverLakeNetwork, only : lake_id,  wtsrfelv, bedelv, lakeinfo
+   USE MOD_Catch_RiverLakeNetwork, only : wtsrfelv, bedelv, lakeinfo
 
    IMPLICIT NONE
 
    ! Local variables
-   character(len=256) :: lake_info_file, basin_info_file, resv_info_file
-   integer :: funit, maxlakeid, this_lak_id, this_lak_typ, numlake, ierr
-   integer :: mesg(2), isrc, idest, iworker
+   character(len=256) :: basin_info_file, resv_info_file
+   integer :: maxlakeid, mesg(2), isrc, idest, iworker
 
-   integer,  allocatable :: all_lak_typ(:), senddata(:), recvdata(:)
+   integer,  allocatable :: lake_id_basin (:), ilat_outlet_basin(:), ilon_outlet_basin(:)
+   integer,  allocatable :: lake_id_resv  (:), ilat_outlet_resv (:), ilon_outlet_resv (:)
+   integer,  allocatable :: lake_type_resv(:), lake_id2typ      (:)
+   integer,  allocatable :: resv_bsn_id   (:), idlist           (:)
 
-   integer,  allocatable :: lake_id_basin(:), ilat_outlet_basin(:), ilon_outlet_basin(:)
-   integer,  allocatable :: lake_id_resv (:), ilat_outlet_resv (:), ilon_outlet_resv (:)
+   real(r8), allocatable :: all_vol_basin (:), all_qmean_basin  (:), all_qflood_basin (:)
+   real(r8), allocatable :: all_vol_resv  (:), all_qmean_resv   (:), all_qflood_resv  (:)
 
-   real(r8), allocatable :: all_qmean_basin(:), all_qflood_basin(:)
-   real(r8), allocatable :: all_qresv_mean (:), all_qresv_flood (:)
-
-   integer,  allocatable :: resv_bsn_id(:), order(:)
    real(r8), allocatable :: rcache(:)
-
-   integer :: nbasin, ibasin, irsv, nrecv
-
+   integer :: nbasin, ibasin, irsv, nrecv, nrsv, iloc
 
 
+      IF (p_is_worker) THEN
+
+         IF (numresv > 0) THEN
+
+            allocate (dam_elv       (numresv))
+
+            allocate (volresv_total (numresv))
+            allocate (volresv_emerg (numresv))
+            allocate (volresv_adjust(numresv))
+            allocate (volresv_normal(numresv))
+
+            allocate (qresv_mean    (numresv))
+            allocate (qresv_flood   (numresv))
+            allocate (qresv_adjust  (numresv))
+            allocate (qresv_normal  (numresv))
+
+            allocate (volresv       (numresv))
+            allocate (qresv_in      (numresv))
+            allocate (qresv_out     (numresv))
+
+            allocate (volresv_ta    (numresv))
+            allocate (qresv_in_ta   (numresv))
+            allocate (qresv_out_ta  (numresv))
+
+         ENDIF
+      ENDIF
+
+      ! read in parameters from file.
       IF (p_is_master) THEN
 
-         lake_info_file = trim(DEF_dir_runtime)//'/reservoir/HydroLAKES_Reservoir.txt'
+         basin_info_file = DEF_CatchmentMesh_data
+         CALL ncio_read_serial (basin_info_file, 'lake_id',     lake_id_basin    )
+         CALL ncio_read_serial (basin_info_file, 'ilat_outlet', ilat_outlet_basin)
+         CALL ncio_read_serial (basin_info_file, 'ilon_outlet', ilon_outlet_basin)
 
-         funit = 101
-         open (funit, file = trim(lake_info_file), action = 'READ')
+         maxlakeid = maxval(lake_id_basin)
+         IF (maxlakeid > 0) THEN
 
-         maxlakeid = 0
-         read(funit,*,iostat=ierr) ! skip first header line
-         DO WHILE (.true.)
-            read(funit,*,iostat=ierr) this_lak_id
-            IF (ierr /= 0) exit
-            maxlakeid = max(maxlakeid, this_lak_id)
-         ENDDO
-
-         allocate (all_lak_typ (maxlakeid))
-         all_lak_typ(:) = 0
-
-         rewind (funit)
-         read(funit,*,iostat=ierr)
-         DO WHILE (.true.)
-            read(funit,*,iostat=ierr) this_lak_id, this_lak_typ
-            IF (ierr /= 0) exit
-            all_lak_typ(this_lak_id) = this_lak_typ
-         ENDDO
-
-         close (funit)
-
-      ENDIF
-
-      IF (p_is_worker) THEN
-         allocate (lake_type (numbasin));   lake_type(:) = 0
-      ENDIF
-
-#ifdef USEMPI
-      CALL mpi_barrier (p_comm_glb, p_err)
-
-      IF (p_is_worker) THEN
-
-         IF (numbasin > 0) THEN
-            numlake = count(lake_id > 0)
-         ELSE
-            numlake = 0
-         ENDIF
-
-         mesg = (/p_iam_glb, numlake/)
-         CALL mpi_send (mesg, 2, MPI_INTEGER, p_address_master, &
-            mpi_tag_mesg, p_comm_glb, p_err)
-
-         IF (numlake > 0) THEN
-
-            allocate (senddata (numlake))
-            senddata = pack(lake_id, lake_id > 0)
-            CALL mpi_send (senddata, numlake, MPI_INTEGER, &
-               p_address_master, mpi_tag_data, p_comm_glb, p_err)
-
-            allocate (recvdata (numlake))
-            CALL mpi_recv (recvdata, numlake, MPI_INTEGER, &
-               p_address_master, mpi_tag_data, p_comm_glb, p_stat, p_err)
-            CALL unpack_inplace (recvdata, lake_id > 0, lake_type)
-
-            deallocate (senddata)
-            deallocate (recvdata)
-         ENDIF
-
-      ENDIF
-
-      IF (p_is_master) THEN
-         DO iworker = 0, p_np_worker-1
-
-            CALL mpi_recv (mesg, 2, MPI_INTEGER, MPI_ANY_SOURCE, &
-               mpi_tag_mesg, p_comm_glb, p_stat, p_err)
-
-            isrc    = mesg(1)
-            numlake = mesg(2)
-            IF (numlake > 0) THEN
-
-               allocate(recvdata (numlake))
-               CALL mpi_recv (recvdata, numlake, MPI_INTEGER, &
-                  isrc, mpi_tag_data, p_comm_glb, p_stat, p_err)
-
-               allocate(senddata (numlake))
-
-               senddata = all_lak_typ(recvdata)
-               CALL mpi_send (senddata, numlake, MPI_INTEGER, &
-                  isrc, mpi_tag_data, p_comm_glb, p_err)
-
-               deallocate (recvdata)
-               deallocate (senddata)
-            ENDIF
-
-         ENDDO
-      ENDIF
-
-      CALL mpi_barrier (p_comm_glb, p_err)
-#else
-
-      DO ibasin = 1, numbasin
-         IF (lake_id(ibasin) > 0) THEN
-            lake_type(ibasin) = all_lak_typ(lake_id(ibasin))
-         ENDIF
-      ENDDO
-
-#endif
-
-
-      IF (p_is_worker) THEN
-
-         allocate (dam_elv (numbasin))
-         dam_elv(:) = spval
-
-         DO ibasin = 1, numbasin
-            IF ((lake_type(ibasin) == 2) .or. (lake_type(ibasin) == 3)) THEN
-               dam_elv(ibasin) = wtsrfelv(ibasin)
-            ENDIF
-         ENDDO
-      ENDIF
-
-
-
-      IF (DEF_Reservoir_Method == 1) THEN
-
-         IF (p_is_worker) THEN
-            IF (numbasin > 0) THEN
-
-               numresv = count(lake_type == 2)
-
-               IF (numresv > 0) THEN
-                  allocate (volresv_total (numresv))
-                  allocate (volresv_emerg (numresv))
-                  allocate (volresv_adjust(numresv))
-                  allocate (volresv_normal(numresv))
-
-                  allocate (qresv_mean    (numresv))
-                  allocate (qresv_flood   (numresv))
-                  allocate (qresv_adjust  (numresv))
-                  allocate (qresv_normal  (numresv))
-
-                  allocate (volresv       (numresv))
-                  allocate (qresv_in      (numresv))
-                  allocate (qresv_out     (numresv))
-
-                  allocate (volresv_ta    (numresv))
-                  allocate (qresv_in_ta   (numresv))
-                  allocate (qresv_out_ta  (numresv))
-               ENDIF
-
-            ELSE
-               numresv = 0
-            ENDIF
-         ENDIF
-
-         IF (p_is_worker) THEN
-            IF (numresv > 0) THEN
-
-               allocate (resv_bsn_id (numresv))
-               resv_bsn_id = pack(basinindex, lake_type == 2)
-
-               allocate (bsn2resv (numbasin))
-
-               irsv = 0
-               DO ibasin = 1, numbasin
-                  IF (lake_type(ibasin) == 2) THEN
-                     irsv = irsv + 1
-                     bsn2resv (ibasin) = irsv
-                     volresv_total (irsv) = lakeinfo(ibasin)%volume( dam_elv(ibasin)-bedelv(ibasin) )
-                     volresv_emerg (irsv) = volresv_total(irsv) * 0.94
-                     volresv_adjust(irsv) = volresv_total(irsv) * 0.77
-                     volresv_normal(irsv) = volresv_total(irsv) * 0.7
-                  ENDIF
-               ENDDO
-
-            ENDIF
-         ENDIF
-
-         ! read in parameters from file.
-         IF (p_is_master) THEN
-
-            basin_info_file = DEF_CatchmentMesh_data
-            CALL ncio_read_serial (basin_info_file, 'lake_id',     lake_id_basin    )
-            CALL ncio_read_serial (basin_info_file, 'ilat_outlet', ilat_outlet_basin)
-            CALL ncio_read_serial (basin_info_file, 'ilon_outlet', ilon_outlet_basin)
-
-            resv_info_file = trim(DEF_dir_runtime)//'/reservoir/qmean_qflood_of_reservoir.nc'
+            resv_info_file = trim(DEF_dir_runtime)//'/HydroLAKES_Reservoir.nc'
             CALL ncio_read_serial (resv_info_file, 'hylak_id',    lake_id_resv    )
+            CALL ncio_read_serial (resv_info_file, 'lake_type',   lake_type_resv  )
             CALL ncio_read_serial (resv_info_file, 'ilat_outlet', ilat_outlet_resv)
             CALL ncio_read_serial (resv_info_file, 'ilon_outlet', ilon_outlet_resv)
-            CALL ncio_read_serial (resv_info_file, 'qmean',  all_qresv_mean )
-            CALL ncio_read_serial (resv_info_file, 'qflood', all_qresv_flood)
+            CALL ncio_read_serial (resv_info_file, 'volresv', all_vol_resv   )
+            CALL ncio_read_serial (resv_info_file, 'qmean',   all_qmean_resv )
+            CALL ncio_read_serial (resv_info_file, 'qflood',  all_qflood_resv)
+
+
+            allocate (lake_id2typ (-1:maxlakeid))
+            lake_id2typ(:) = 0
+
+            DO irsv = 1, size(lake_id_resv)
+               IF (lake_id_resv(irsv) <= maxlakeid) THEN
+                  lake_id2typ(lake_id_resv(irsv)) = lake_type_resv(irsv)
+               ENDIF
+            ENDDO
+
 
             nbasin = size(lake_id_basin)
 
+            allocate(all_vol_basin    (nbasin));  all_vol_basin   (:) = spval
             allocate(all_qmean_basin  (nbasin));  all_qmean_basin (:) = spval
             allocate(all_qflood_basin (nbasin));  all_qflood_basin(:) = spval
 
             DO ibasin = 1, nbasin
-               IF (all_lak_typ(lake_id_basin(ibasin)) == 2) THEN
+               IF (lake_id2typ(lake_id_basin(ibasin)) >= 2) THEN
                   DO irsv = 1, size(lake_id_resv)
                      IF (lake_id_basin(ibasin) == lake_id_resv(irsv)) THEN
                         IF (ilat_outlet_basin(ibasin) == ilat_outlet_resv(irsv)) THEN
                            IF (ilon_outlet_basin(ibasin) == ilon_outlet_resv(irsv)) THEN
-                              all_qmean_basin (ibasin) = all_qresv_mean (irsv)
-                              all_qflood_basin(ibasin) = all_qresv_flood(irsv)
+                              all_vol_basin   (ibasin) = all_vol_resv   (irsv)
+                              all_qmean_basin (ibasin) = all_qmean_resv (irsv)
+                              all_qflood_basin(ibasin) = all_qflood_resv(irsv)
                            ENDIF
                         ENDIF
                      ENDIF
@@ -298,148 +157,160 @@ CONTAINS
 
          ENDIF
 
-#ifdef USEMPI
-         IF (p_is_master) THEN
-            DO iworker = 0, p_np_worker-1
+      ENDIF
 
-               CALL mpi_recv (mesg(1:2), 2, MPI_INTEGER, &
-                  MPI_ANY_SOURCE, mpi_tag_mesg, p_comm_glb, p_stat, p_err)
-               isrc  = mesg(1)
-               nrecv = mesg(2)
-
-               IF (nrecv > 0) THEN
-
-                  allocate (resv_bsn_id (nrecv))
-                  allocate (rcache (nrecv))
-
-                  CALL mpi_recv (resv_bsn_id, nrecv, MPI_INTEGER, isrc, mpi_tag_data, p_comm_glb, p_stat, p_err)
-
-                  idest = isrc
-
-                  rcache = all_qmean_basin(resv_bsn_id)
-                  CALL mpi_send (rcache, nrecv, MPI_REAL8, idest, mpi_tag_data, p_comm_glb, p_err)
-
-                  rcache = all_qflood_basin(resv_bsn_id)
-                  CALL mpi_send (rcache, nrecv, MPI_REAL8, idest, mpi_tag_data, p_comm_glb, p_err)
-
-                  deallocate (resv_bsn_id)
-                  deallocate (rcache)
-
-               ENDIF
-            ENDDO
-         ENDIF
-
-         IF (p_is_worker) THEN
-
-            mesg(1:2) = (/p_iam_glb, numresv/)
-            CALL mpi_send (mesg(1:2), 2, MPI_INTEGER, p_address_master, mpi_tag_mesg, p_comm_glb, p_err)
-
-            IF (numresv > 0) THEN
-               CALL mpi_send (resv_bsn_id, numresv, MPI_INTEGER, &
-                  p_address_master, mpi_tag_data, p_comm_glb, p_err)
-
-               CALL mpi_recv (qresv_mean, numresv, MPI_REAL8, &
-                  p_address_master, mpi_tag_data, p_comm_glb, p_stat, p_err)
-
-               CALL mpi_recv (qresv_flood, numresv, MPI_REAL8, &
-                  p_address_master, mpi_tag_data, p_comm_glb, p_stat, p_err)
-            ENDIF
-         ENDIF
-#else
+      IF (p_is_worker) THEN
          IF (numresv > 0) THEN
-            qresv_mean  = all_qmean_basin (resv_bsn_id)
-            qresv_flood = all_qflood_basin(resv_bsn_id)
+            allocate (resv_bsn_id (numresv))
+            resv_bsn_id = pack(basinindex, lake_type >= 2)
          ENDIF
+      ENDIF
+
+#ifdef USEMPI
+      IF (p_is_master) THEN
+         DO iworker = 0, p_np_worker-1
+
+            CALL mpi_recv (mesg(1:2), 2, MPI_INTEGER, &
+               MPI_ANY_SOURCE, mpi_tag_mesg, p_comm_glb, p_stat, p_err)
+            isrc  = mesg(1)
+            nrecv = mesg(2)
+
+            IF (nrecv > 0) THEN
+
+               allocate (resv_bsn_id (nrecv))
+               allocate (rcache (nrecv))
+
+               CALL mpi_recv (resv_bsn_id, nrecv, MPI_INTEGER, isrc, mpi_tag_data, p_comm_glb, p_stat, p_err)
+
+               idest = isrc
+
+               rcache = all_vol_basin(resv_bsn_id)
+               CALL mpi_send (rcache, nrecv, MPI_REAL8, idest, mpi_tag_data, p_comm_glb, p_err)
+
+               rcache = all_qmean_basin(resv_bsn_id)
+               CALL mpi_send (rcache, nrecv, MPI_REAL8, idest, mpi_tag_data, p_comm_glb, p_err)
+
+               rcache = all_qflood_basin(resv_bsn_id)
+               CALL mpi_send (rcache, nrecv, MPI_REAL8, idest, mpi_tag_data, p_comm_glb, p_err)
+
+               deallocate (resv_bsn_id)
+               deallocate (rcache)
+
+            ENDIF
+         ENDDO
+      ENDIF
+
+      IF (p_is_worker) THEN
+
+         mesg(1:2) = (/p_iam_glb, numresv/)
+         CALL mpi_send (mesg(1:2), 2, MPI_INTEGER, p_address_master, mpi_tag_mesg, p_comm_glb, p_err)
+
+         IF (numresv > 0) THEN
+            CALL mpi_send (resv_bsn_id, numresv, MPI_INTEGER, &
+               p_address_master, mpi_tag_data, p_comm_glb, p_err)
+
+            CALL mpi_recv (volresv_total, numresv, MPI_REAL8, &
+               p_address_master, mpi_tag_data, p_comm_glb, p_stat, p_err)
+
+            CALL mpi_recv (qresv_mean, numresv, MPI_REAL8, &
+               p_address_master, mpi_tag_data, p_comm_glb, p_stat, p_err)
+
+            CALL mpi_recv (qresv_flood, numresv, MPI_REAL8, &
+               p_address_master, mpi_tag_data, p_comm_glb, p_stat, p_err)
+         ENDIF
+      ENDIF
+#else
+      IF (numresv > 0) THEN
+         volresv_total = all_vol_basin   (resv_bsn_id)
+         qresv_mean    = all_qmean_basin (resv_bsn_id)
+         qresv_flood   = all_qflood_basin(resv_bsn_id)
+      ENDIF
 #endif
 
-         IF (p_is_worker) THEN
-            IF (numresv > 0) THEN
-               qresv_normal = volresv_normal*0.7/(180*86400) + qresv_mean*0.25
-               qresv_adjust = (qresv_normal + qresv_flood) * 0.5
+      IF (p_is_worker) THEN
+         DO ibasin = 1, numbasin
+            IF (lake_type(ibasin) >= 2) THEN
+
+               irsv = bsn2resv(ibasin)
+
+               dam_elv(irsv) = bedelv(ibasin) + lakeinfo(ibasin)%surface( volresv_total(irsv) )
+               dam_elv(irsv) = max(wtsrfelv(ibasin), dam_elv(irsv))
+               volresv_total(irsv) = lakeinfo(ibasin)%volume( dam_elv(irsv)-bedelv(ibasin) )
+
+               volresv_emerg (irsv) = volresv_total(irsv) * 0.94
+               volresv_adjust(irsv) = volresv_total(irsv) * 0.77
+               volresv_normal(irsv) = volresv_total(irsv) * 0.7
+
+               qresv_normal(irsv) = volresv_normal(irsv)*0.7/(180*86400) + qresv_mean(irsv)*0.25
+               qresv_adjust(irsv) = (qresv_normal(irsv) + qresv_flood(irsv)) * 0.5
             ENDIF
-         ENDIF
+         ENDDO
+      ENDIF
 
 
-         IF (p_is_master) THEN
+      IF (p_is_master) THEN
 
-            allocate (order (nbasin)); order = (/(ibasin,ibasin=1,nbasin)/)
+         nrsv = count(lake_id2typ(lake_id_basin) >= 2)
 
-            CALL quicksort (nbasin, lake_id_basin, order)
+         IF (nrsv > 0) THEN
 
-            deallocate (order)
+            allocate (idlist (nrsv))
 
             numresv_uniq = 0
-            DO ibasin = 1, nbasin
-               IF (lake_id_basin(ibasin) > 0) THEN
-                  IF (all_lak_typ(lake_id_basin(ibasin)) == 2) THEN
-                     IF (ibasin == 1) THEN
-                        numresv_uniq = 1
-                     ELSE
-                        IF (lake_id_basin(ibasin) /= lake_id_basin(ibasin-1)) THEN
-                           numresv_uniq = numresv_uniq + 1
-                        ENDIF
-                     ENDIF
-                  ENDIF
+            DO ibasin = 1, size(lake_id_basin)
+               IF (lake_id2typ(lake_id_basin(ibasin)) >= 2) THEN
+                  CALL insert_into_sorted_list1 ( &
+                     lake_id_basin(ibasin), numresv_uniq, idlist, iloc)
                ENDIF
             ENDDO
 
-            IF (numresv_uniq > 0) THEN
-               allocate (resv_hylak_id (numresv_uniq))
-               numresv_uniq = 0
-               DO ibasin = 1, nbasin
-                  IF (lake_id_basin(ibasin) > 0) THEN
-                     IF (all_lak_typ(lake_id_basin(ibasin)) == 2) THEN
-                        IF (ibasin == 1) THEN
-                           numresv_uniq = 1
-                           resv_hylak_id(numresv_uniq) = lake_id_basin(ibasin)
-                        ELSE
-                           IF (lake_id_basin(ibasin) /= lake_id_basin(ibasin-1)) THEN
-                              numresv_uniq = numresv_uniq + 1
-                              resv_hylak_id(numresv_uniq) = lake_id_basin(ibasin)
-                           ENDIF
-                        ENDIF
-                     ENDIF
-                  ENDIF
-               ENDDO
-            ENDIF
+            allocate (resv_hylak_id (numresv_uniq))
+            resv_hylak_id = idlist(1:numresv_uniq)
 
-         ENDIF
+            deallocate (idlist)
 
-#ifdef USEMPI
-         CALL mpi_bcast (numresv_uniq, 1, MPI_INTEGER, p_address_master, p_comm_glb, p_err)
-
-         IF (numresv_uniq > 0) THEN
-            IF (.not. p_is_master)  allocate (resv_hylak_id (numresv_uniq))
-            CALL mpi_bcast (resv_hylak_id, numresv_uniq, MPI_INTEGER, p_address_master, p_comm_glb, p_err)
-         ENDIF
-#endif
-
-         IF (p_is_worker) THEN
-            IF (numresv > 0) THEN
-               allocate (resv_loc2glb (numresv))
-               DO ibasin = 1, numbasin
-                  IF (lake_type(ibasin) == 2) THEN
-                     resv_loc2glb(bsn2resv(ibasin)) = &
-                        find_in_sorted_list1 (lake_id(ibasin), numresv_uniq, resv_hylak_id)
-                  ENDIF
-               ENDDO
-            ENDIF
+         ELSE
+            numresv_uniq = 0
          ENDIF
 
       ENDIF
 
-      IF (allocated(all_lak_typ      )) deallocate (all_lak_typ      )
+#ifdef USEMPI
+      CALL mpi_bcast (numresv_uniq, 1, MPI_INTEGER, p_address_master, p_comm_glb, p_err)
+
+      IF (numresv_uniq > 0) THEN
+         IF (.not. p_is_master)  allocate (resv_hylak_id (numresv_uniq))
+         CALL mpi_bcast (resv_hylak_id, numresv_uniq, MPI_INTEGER, p_address_master, p_comm_glb, p_err)
+      ENDIF
+#endif
+
+      IF (p_is_worker) THEN
+         IF (numresv > 0) THEN
+            allocate (resv_loc2glb (numresv))
+            DO ibasin = 1, numbasin
+               IF (lake_type(ibasin) >= 2) THEN
+                  resv_loc2glb(bsn2resv(ibasin)) = &
+                     find_in_sorted_list1 (lake_id(ibasin), numresv_uniq, resv_hylak_id)
+               ENDIF
+            ENDDO
+         ENDIF
+      ENDIF
+
+
+      IF (allocated(lake_id2typ      )) deallocate (lake_id2typ      )
       IF (allocated(lake_id_basin    )) deallocate (lake_id_basin    )
       IF (allocated(ilat_outlet_basin)) deallocate (ilat_outlet_basin)
       IF (allocated(ilon_outlet_basin)) deallocate (ilon_outlet_basin)
       IF (allocated(lake_id_resv     )) deallocate (lake_id_resv     )
+      IF (allocated(lake_type_resv   )) deallocate (lake_type_resv   )
       IF (allocated(ilat_outlet_resv )) deallocate (ilat_outlet_resv )
       IF (allocated(ilon_outlet_resv )) deallocate (ilon_outlet_resv )
       IF (allocated(all_qmean_basin  )) deallocate (all_qmean_basin  )
       IF (allocated(all_qflood_basin )) deallocate (all_qflood_basin )
-      IF (allocated(all_qresv_mean   )) deallocate (all_qresv_mean   )
-      IF (allocated(all_qresv_flood  )) deallocate (all_qresv_flood  )
+      IF (allocated(all_qmean_resv   )) deallocate (all_qmean_resv   )
+      IF (allocated(all_qflood_resv  )) deallocate (all_qflood_resv  )
       IF (allocated(resv_bsn_id      )) deallocate (resv_bsn_id      )
+
 
    END SUBROUTINE reservoir_init
 
@@ -498,8 +369,13 @@ CONTAINS
             varout(resv_loc2glb(irsv)) = varout(resv_loc2glb(irsv)) + varin(irsv)
          ENDDO
 #ifdef USEMPI
-         CALL mpi_reduce (MPI_IN_PLACE, varout, numresv_uniq, MPI_REAL8, &
-            MPI_SUM, p_root, p_comm_worker, p_err)
+         IF (p_iam_worker == p_root) THEN
+            CALL mpi_reduce (MPI_IN_PLACE, varout, numresv_uniq, MPI_REAL8, &
+               MPI_SUM, p_root, p_comm_worker, p_err)
+         ELSE
+            CALL mpi_reduce (varout, varout, numresv_uniq, MPI_REAL8, &
+               MPI_SUM, p_root, p_comm_worker, p_err)
+         ENDIF
 #endif
       ENDIF
 
@@ -521,11 +397,10 @@ CONTAINS
 
    IMPLICIT NONE
 
-      IF (allocated(lake_type     )) deallocate (lake_type     )
       IF (allocated(dam_elv       )) deallocate (dam_elv       )
 
-      IF (allocated(bsn2resv      )) deallocate (bsn2resv      )
       IF (allocated(resv_hylak_id )) deallocate (resv_hylak_id )
+      IF (allocated(resv_loc2glb  )) deallocate (resv_loc2glb  )
 
       IF (allocated(volresv_total )) deallocate (volresv_total )
       IF (allocated(volresv_emerg )) deallocate (volresv_emerg )
