@@ -25,6 +25,8 @@ MODULE MOD_Catch_Reservoir
    real(r8), allocatable :: qresv_adjust  (:)  ! adjustment reservoir outflow   [m^3/s]
    real(r8), allocatable :: qresv_normal  (:)  ! normal reservoir outflow       [m^3/s]
 
+   integer,  allocatable :: dam_build_year(:)  ! year in which the dam/barrier was built
+
    ! time variables
    real(r8), allocatable :: volresv       (:)  ! reservoir water volume  [m^3]
    real(r8), allocatable :: qresv_in      (:)  ! reservoir inflow        [m^3/s]
@@ -67,11 +69,13 @@ CONTAINS
    integer,  allocatable :: lake_id_resv  (:), ilat_outlet_resv (:), ilon_outlet_resv (:)
    integer,  allocatable :: lake_type_resv(:), lake_id2typ      (:)
    integer,  allocatable :: resv_bsn_id   (:), idlist           (:)
+   integer,  allocatable :: all_year_basin(:), all_year_resv    (:)
 
    real(r8), allocatable :: all_vol_basin (:), all_qmean_basin  (:), all_qflood_basin (:)
    real(r8), allocatable :: all_vol_resv  (:), all_qmean_resv   (:), all_qflood_resv  (:)
 
    real(r8), allocatable :: rcache(:)
+   integer,  allocatable :: icache(:)
    integer :: nbasin, ibasin, irsv, nrecv, nrsv, iloc
 
 
@@ -99,6 +103,8 @@ CONTAINS
             allocate (qresv_in_ta   (numresv))
             allocate (qresv_out_ta  (numresv))
 
+            allocate (dam_build_year(numresv))
+
          ENDIF
       ENDIF
 
@@ -122,6 +128,7 @@ CONTAINS
             CALL ncio_read_serial (resv_info_file, 'qmean',   all_qmean_resv )
             CALL ncio_read_serial (resv_info_file, 'qflood',  all_qflood_resv)
 
+            CALL ncio_read_serial (resv_info_file, 'build_year', all_year_resv)
 
             allocate (lake_id2typ (-1:maxlakeid))
             lake_id2typ(:) = 0
@@ -138,6 +145,7 @@ CONTAINS
             allocate(all_vol_basin    (nbasin));  all_vol_basin   (:) = spval
             allocate(all_qmean_basin  (nbasin));  all_qmean_basin (:) = spval
             allocate(all_qflood_basin (nbasin));  all_qflood_basin(:) = spval
+            allocate(all_year_basin   (nbasin));  all_year_basin  (:) = -99
 
             DO ibasin = 1, nbasin
                IF (lake_id2typ(lake_id_basin(ibasin)) >= 2) THEN
@@ -148,6 +156,7 @@ CONTAINS
                               all_vol_basin   (ibasin) = all_vol_resv   (irsv)
                               all_qmean_basin (ibasin) = all_qmean_resv (irsv)
                               all_qflood_basin(ibasin) = all_qflood_resv(irsv)
+                              all_year_basin  (ibasin) = all_year_resv  (irsv)
                            ENDIF
                         ENDIF
                      ENDIF
@@ -179,6 +188,7 @@ CONTAINS
 
                allocate (resv_bsn_id (nrecv))
                allocate (rcache (nrecv))
+               allocate (icache (nrecv))
 
                CALL mpi_recv (resv_bsn_id, nrecv, MPI_INTEGER, isrc, mpi_tag_data, p_comm_glb, p_stat, p_err)
 
@@ -193,8 +203,12 @@ CONTAINS
                rcache = all_qflood_basin(resv_bsn_id)
                CALL mpi_send (rcache, nrecv, MPI_REAL8, idest, mpi_tag_data, p_comm_glb, p_err)
 
+               icache = all_year_basin(resv_bsn_id)
+               CALL mpi_send (icache, nrecv, MPI_INTEGER, idest, mpi_tag_data, p_comm_glb, p_err)
+
                deallocate (resv_bsn_id)
                deallocate (rcache)
+               deallocate (icache)
 
             ENDIF
          ENDDO
@@ -217,13 +231,17 @@ CONTAINS
 
             CALL mpi_recv (qresv_flood, numresv, MPI_REAL8, &
                p_address_master, mpi_tag_data, p_comm_glb, p_stat, p_err)
+
+            CALL mpi_recv (dam_build_year, numresv, MPI_INTEGER, &
+               p_address_master, mpi_tag_data, p_comm_glb, p_stat, p_err)
          ENDIF
       ENDIF
 #else
       IF (numresv > 0) THEN
-         volresv_total = all_vol_basin   (resv_bsn_id)
-         qresv_mean    = all_qmean_basin (resv_bsn_id)
-         qresv_flood   = all_qflood_basin(resv_bsn_id)
+         volresv_total  = all_vol_basin   (resv_bsn_id)
+         qresv_mean     = all_qmean_basin (resv_bsn_id)
+         qresv_flood    = all_qflood_basin(resv_bsn_id)
+         dam_build_year = all_year_basin  (resv_bsn_id)
       ENDIF
 #endif
 
@@ -309,6 +327,8 @@ CONTAINS
       IF (allocated(all_qflood_basin )) deallocate (all_qflood_basin )
       IF (allocated(all_qmean_resv   )) deallocate (all_qmean_resv   )
       IF (allocated(all_qflood_resv  )) deallocate (all_qflood_resv  )
+      IF (allocated(all_year_basin   )) deallocate (all_year_basin   )
+      IF (allocated(all_year_resv    )) deallocate (all_year_resv    )
       IF (allocated(resv_bsn_id      )) deallocate (resv_bsn_id      )
 
 
@@ -327,6 +347,10 @@ CONTAINS
    real(r8) :: q1
 
       IF (method == 1) THEN
+         ! *** Reference ***
+         ! [1] Mizuki Funato, Dai Yamazaki, Dung Trung Vu.
+         ! Development of an Improved Reservoir Operation Scheme for Global Flood Modeling (CaMa-Flood v4.20).
+         ! ESS Open Archive . October 24, 2024.
 
          IF (vol > volresv_emerg(irsv)) THEN
             qout = max(qin, qresv_flood(irsv))
@@ -411,6 +435,8 @@ CONTAINS
       IF (allocated(qresv_flood   )) deallocate (qresv_flood   )
       IF (allocated(qresv_adjust  )) deallocate (qresv_adjust  )
       IF (allocated(qresv_normal  )) deallocate (qresv_normal  )
+
+      IF (allocated(dam_build_year)) deallocate (dam_build_year)
 
       IF (allocated(volresv       )) deallocate (volresv       )
       IF (allocated(qresv_in      )) deallocate (qresv_in      )

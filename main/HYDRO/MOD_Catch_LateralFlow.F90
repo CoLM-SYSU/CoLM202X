@@ -95,7 +95,7 @@ CONTAINS
    END SUBROUTINE lateral_flow_init
 
    ! ----------
-   SUBROUTINE lateral_flow (deltime)
+   SUBROUTINE lateral_flow (year, deltime)
 
    USE MOD_Namelist,  only: DEF_Reservoir_Method, DEF_USE_Dynamic_Lake
    USE MOD_Mesh,      only: numelm
@@ -117,6 +117,7 @@ CONTAINS
    USE MOD_RangeCheck
    IMPLICIT NONE
 
+   integer,  intent(in) :: year
    real(r8), intent(in) :: deltime
 
    ! Local Variables
@@ -173,7 +174,7 @@ CONTAINS
             CALL hillslope_flow (deltime/nsubstep)
 
             ! (2) ----------------------- River and Lake flow. ------------------------
-            CALL river_lake_flow (deltime/nsubstep)
+            CALL river_lake_flow (year, deltime/nsubstep)
 
             dt_average = dt_average + deltime/nsubstep/ntimestep_riverlake
 
@@ -204,11 +205,17 @@ CONTAINS
          ENDIF
 
          IF (DEF_Reservoir_Method > 0) THEN
-            IF (numresv > 0) THEN
-               volresv_ta  (:) = volresv_ta  (:) / deltime
-               qresv_in_ta (:) = qresv_in_ta (:) / deltime
-               qresv_out_ta(:) = qresv_out_ta(:) / deltime
-            ENDIF
+            DO i = 1, numresv
+               IF (year >= dam_build_year(i)) THEN
+                  volresv_ta  (i) = volresv_ta  (i) / deltime
+                  qresv_in_ta (i) = qresv_in_ta (i) / deltime
+                  qresv_out_ta(i) = qresv_out_ta(i) / deltime
+               ELSE
+                  volresv_ta  (i) = spval
+                  qresv_in_ta (i) = spval
+                  qresv_out_ta(i) = spval
+               ENDIF
+            ENDDO
          ENDIF
 
          ! update surface water depth on patches

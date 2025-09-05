@@ -305,6 +305,7 @@ CONTAINS
                   IF (itime_in_file == 1) THEN
                      CALL ncio_put_attr (file_hist_basin, 'volresv', 'long_name', 'reservoir water volume')
                      CALL ncio_put_attr (file_hist_basin, 'volresv', 'units',     'm^3')
+                     CALL ncio_put_attr (file_hist_basin, 'volresv', 'missing_value', spval)
                   ENDIF
                ENDIF
             ENDIF
@@ -327,6 +328,7 @@ CONTAINS
                   IF (itime_in_file == 1) THEN
                      CALL ncio_put_attr (file_hist_basin, 'qresv_in', 'long_name', 'reservoir inflow')
                      CALL ncio_put_attr (file_hist_basin, 'qresv_in', 'units',     'm^3/s')
+                     CALL ncio_put_attr (file_hist_basin, 'qresv_in', 'missing_value', spval)
                   ENDIF
                ENDIF
             ENDIF
@@ -349,6 +351,7 @@ CONTAINS
                   IF (itime_in_file == 1) THEN
                      CALL ncio_put_attr (file_hist_basin, 'qresv_out', 'long_name', 'reservoir outflow')
                      CALL ncio_put_attr (file_hist_basin, 'qresv_out', 'units',     'm^3/s')
+                     CALL ncio_put_attr (file_hist_basin, 'qresv_out', 'missing_value', spval)
                   ENDIF
                ENDIF
             ENDIF

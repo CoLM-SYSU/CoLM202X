@@ -33,7 +33,7 @@ MODULE MOD_Catch_RiverLakeFlow
 CONTAINS
 
    ! ---------
-   SUBROUTINE river_lake_flow (dt)
+   SUBROUTINE river_lake_flow (year, dt)
 
    USE MOD_SPMD_Task
    USE MOD_Namelist, only : DEF_Reservoir_Method
@@ -47,6 +47,7 @@ CONTAINS
    USE MOD_Const_Physical, only: grav
    IMPLICIT NONE
 
+   integer,  intent(in) :: year
    real(r8), intent(in) :: dt
 
    ! Local Variables
@@ -188,7 +189,9 @@ CONTAINS
                      bedelv_fc = max(bedelv(i), bedelv_ds(i))
                      IF ((lake_type(i) == 2) .or. (lake_type(i) == 3)) THEN
                         ! for reservoir (type=2) or controlled lake (type=3)
-                        bedelv_fc = max(bedelv_fc, dam_elv(bsn2resv(i)))
+                        IF (year >= dam_build_year(bsn2resv(i))) THEN
+                           bedelv_fc = max(bedelv_fc, dam_elv(bsn2resv(i)))
+                        ENDIF
                      ENDIF
                      height_up = max(0., wdsrf_bsn(i)   +bedelv(i)   -bedelv_fc)
                      height_dn = max(0., wdsrf_bsn_ds(i)+bedelv_ds(i)-bedelv_fc)
@@ -330,26 +333,32 @@ CONTAINS
                DO i = 1, numbasin
                   IF (.not. bsnfilter(i)) CYCLE
                   IF (lake_type(i) == 2) THEN
+                     IF (year >= dam_build_year(bsn2resv(i))) THEN
 
-                     irsv = bsn2resv(i)
-                     qresv_in(irsv) = - sum_hflux_riv(i)
-                     volresv (irsv) = lakeinfo(i)%volume( wdsrf_bsn(i) )
+                        irsv = bsn2resv(i)
+                        qresv_in(irsv) = - sum_hflux_riv(i)
+                        volresv (irsv) = lakeinfo(i)%volume( wdsrf_bsn(i) )
 
-                     IF (volresv(irsv) > 1.e-4 * volresv_total(irsv)) THEN
-                        CALL reservoir_operation (DEF_Reservoir_Method, &
-                           irsv, qresv_in(irsv), volresv(irsv), qresv_out(irsv))
+                        IF (volresv(irsv) > 1.e-4 * volresv_total(irsv)) THEN
+                           CALL reservoir_operation (DEF_Reservoir_Method, &
+                              irsv, qresv_in(irsv), volresv(irsv), qresv_out(irsv))
+                        ELSE
+                           qresv_out (irsv) = 0.
+                        ENDIF
+
+                        hflux_fc(i) = qresv_out(irsv)
+                        mflux_fc(i) = qresv_out(irsv) * sqrt(2*grav*wdsrf_bsn(i))
+
+                        sum_hflux_riv(i) = sum_hflux_riv(i) + hflux_fc(i)
+                        sum_mflux_riv(i) = sum_mflux_riv(i) + mflux_fc(i)
+
+                        hflux_resv(i) = - hflux_fc(i)
+                        mflux_resv(i) = - mflux_fc(i)
+
                      ELSE
-                        qresv_out (irsv) = 0.
+                        hflux_resv(i) = 0.
+                        mflux_resv(i) = 0.
                      ENDIF
-
-                     hflux_fc(i) = qresv_out(irsv)
-                     mflux_fc(i) = qresv_out(irsv) * sqrt(2*grav*wdsrf_bsn(i))
-
-                     sum_hflux_riv(i) = sum_hflux_riv(i) + hflux_fc(i)
-                     sum_mflux_riv(i) = sum_mflux_riv(i) + mflux_fc(i)
-
-                     hflux_resv(i) = - hflux_fc(i)
-                     mflux_resv(i) = - mflux_fc(i)
                   ELSE
                      hflux_resv(i) = 0.
                      mflux_resv(i) = 0.
@@ -534,17 +543,20 @@ CONTAINS
                      hs = basin_hru%substt(i)
                      he = basin_hru%subend(i)
                      DO j = hs, he
-                        wdsrf_bsnhru(j) = max(wdsrf_bsn(i) - (lakeinfo(i)%depth(1) - lakeinfo(i)%depth0(j-hs+1)), 0.)
+                        wdsrf_bsnhru(j) = &
+                           max(wdsrf_bsn(i) - (lakeinfo(i)%depth(1) - lakeinfo(i)%depth0(j-hs+1)), 0.)
                         wdsrf_bsnhru_ta(j) = wdsrf_bsnhru_ta(j) + wdsrf_bsnhru(j) * dt_all(irivsys(i))
                      ENDDO
                   ENDIF
 
                   IF (DEF_Reservoir_Method > 0) THEN
                      IF (lake_type(i) == 2) THEN
-                        irsv = bsn2resv(i)
-                        volresv_ta  (irsv) = volresv_ta  (irsv) + volresv  (irsv) * dt_all(irivsys(i))
-                        qresv_in_ta (irsv) = qresv_in_ta (irsv) + qresv_in (irsv) * dt_all(irivsys(i))
-                        qresv_out_ta(irsv) = qresv_out_ta(irsv) + qresv_out(irsv) * dt_all(irivsys(i))
+                        IF (year >= dam_build_year(bsn2resv(i))) THEN
+                           irsv = bsn2resv(i)
+                           volresv_ta  (irsv) = volresv_ta  (irsv) + volresv  (irsv) * dt_all(irivsys(i))
+                           qresv_in_ta (irsv) = qresv_in_ta (irsv) + qresv_in (irsv) * dt_all(irivsys(i))
+                           qresv_out_ta(irsv) = qresv_out_ta(irsv) + qresv_out(irsv) * dt_all(irivsys(i))
+                        ENDIF
                      ENDIF
                   ENDIF
 
