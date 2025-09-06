@@ -377,28 +377,54 @@ CONTAINS
    SUBROUTINE reservoir_gather_var (varin, varout)
 
    USE MOD_SPMD_Task
+   USE MOD_Vars_Global, only: spval
    IMPLICIT NONE
 
    real(r8), intent(in)  :: varin  (:)
    real(r8), intent(out) :: varout (:)
 
    ! local variables
-   integer :: irsv
+   integer :: irsv, iworker
+   real(r8), allocatable :: varall (:,:)
 
       IF (numresv_uniq == 0) RETURN
 
       IF (p_is_worker) THEN
-         varout(:) = 0.
+         varout(:) = spval
          DO irsv = 1, numresv
-            varout(resv_loc2glb(irsv)) = varout(resv_loc2glb(irsv)) + varin(irsv)
+            IF (varin(irsv) /= spval) THEN
+               IF (varout(resv_loc2glb(irsv)) /= spval) THEN
+                  varout(resv_loc2glb(irsv)) = varout(resv_loc2glb(irsv)) + varin(irsv)
+               ELSE
+                  varout(resv_loc2glb(irsv)) = varin(irsv)
+               ENDIF
+            ENDIF
          ENDDO
 #ifdef USEMPI
          IF (p_iam_worker == p_root) THEN
-            CALL mpi_reduce (MPI_IN_PLACE, varout, numresv_uniq, MPI_REAL8, &
-               MPI_SUM, p_root, p_comm_worker, p_err)
-         ELSE
-            CALL mpi_reduce (varout, varout, numresv_uniq, MPI_REAL8, &
-               MPI_SUM, p_root, p_comm_worker, p_err)
+            allocate (varall (numresv_uniq,0:p_np_worker-1))
+         ENDIF
+
+         CALL mpi_gather (varout, numresv_uniq, MPI_REAL8, &
+            varall, numresv_uniq, MPI_REAL8, p_root, p_comm_worker, p_err)
+
+         IF (p_iam_worker == p_root) THEN
+
+            DO irsv = 1, numresv_uniq
+               DO iworker = 0, p_np_worker-1
+                  IF (iworker /= p_root) THEN
+                     IF (varall(irsv,iworker) /= spval) THEN
+                        IF (varout(irsv) /= spval) THEN
+                           varout(irsv) = varout(irsv) + varall(irsv,iworker)
+                        ELSE
+                           varout(irsv) = varall(irsv,iworker)
+                        ENDIF
+                     ENDIF
+                  ENDIF
+               ENDDO
+            ENDDO
+
+            deallocate (varall)
          ENDIF
 #endif
       ENDIF
