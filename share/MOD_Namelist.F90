@@ -313,6 +313,7 @@ MODULE MOD_Namelist
    ! ----- lateral flow related -----
    logical :: DEF_USE_EstimatedRiverDepth     = .true.
    character(len=256) :: DEF_ElementNeighbour_file = 'null'
+   integer :: DEF_Reservoir_Method = 0
 
    character(len=5)   :: DEF_precip_phase_discrimination_scheme = 'II'
    character(len=256) :: DEF_SSP='585' ! Co2 path for CMIP6 future scenario.
@@ -895,6 +896,9 @@ MODULE MOD_Namelist
       logical :: discharge                        = .true.
       logical :: wdsrf_hru                        = .true.
       logical :: veloc_hru                        = .true.
+      logical :: volresv                          = .true.
+      logical :: qresv_in                         = .true.
+      logical :: qresv_out                        = .true.
 
       logical :: sensors                          = .true.
 
@@ -1033,6 +1037,7 @@ CONTAINS
       DEF_Aerosol_Readin,                     &
       DEF_Aerosol_Clim,                       &
       DEF_USE_EstimatedRiverDepth,            &
+      DEF_Reservoir_Method,                   &
 
       DEF_precip_phase_discrimination_scheme, &
 
@@ -1617,6 +1622,7 @@ CONTAINS
       CALL mpi_bcast (DEF_Aerosol_Clim                       ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
 
       CALL mpi_bcast (DEF_USE_EstimatedRiverDepth            ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_Reservoir_Method                   ,1   ,mpi_integer   ,p_address_master ,p_comm_glb ,p_err)
 
       CALL mpi_bcast (DEF_HISTORY_IN_VECTOR                  ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
 
@@ -2174,6 +2180,9 @@ CONTAINS
       CALL sync_hist_vars_one (DEF_hist_vars%discharge   , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%wdsrf_hru   , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%veloc_hru   , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%volresv     , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%qresv_in    , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%qresv_out   , set_defaults)
 
       CALL sync_hist_vars_one (DEF_hist_vars%sensors     , set_defaults)
 

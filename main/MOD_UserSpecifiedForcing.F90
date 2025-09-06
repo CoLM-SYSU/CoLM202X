@@ -563,22 +563,22 @@ CONTAINS
          !DESCRIPTION
          !===========
             !--- The China Meteorological Forcing Dataset version 2.0
-   
+
          !data source:
          !-------------------
             !--https://data.tpdc.ac.cn/en/data/e60dfd96-5fd8-493f-beae-e8e5d24dece4
-   
+
          !References:
          !-------------------
             !---He, J., Yang, K., Li, X., Tang, W., Shao, C., Jiang, Y., Ding, B. 2024.
             !   The China Meteorological Forcing Dataset (CMFD) version 2.0.
             !   National Tibetan Plateau/Third Pole Environment Data Center,
             !   https://doi.org/10.11888/Atmos.tpdc.300398. https://cstr.cn/18406.11.Atmos.tpdc.300398.
-   
+
             !REVISION HISTORY
          !----------------
             !---
-   
+
             metfilename = '/'//trim(fprefix(var_i))//trim(yearstr)//trim(monthstr)//'.nc'
       CASE ('CMIP6')
       !DESCRIPTION
@@ -652,25 +652,25 @@ CONTAINS
          !DESCRIPTION
          !===========
             !--- Isotopes-incorporated Global Spectral Model (IsoGSM)
-   
+
          !data source:
          !-------------------
             !---https://isotope.iis.u-tokyo.ac.jp/about-our-lab?lang=en
-   
+
          !References:
          !-------------------
-            !---Bong, H., Cauquoin, A., Okazaki, A., Chang, E.-C., Werner, M., Wei, Z., et al. (2024). 
-            !   Process-based intercomparison of water isotope-enabled models and reanalysis nudging effects. 
-            !   Journal of Geophysical Research: Atmospheres, 129, e2023JD038719. 
+            !---Bong, H., Cauquoin, A., Okazaki, A., Chang, E.-C., Werner, M., Wei, Z., et al. (2024).
+            !   Process-based intercomparison of water isotope-enabled models and reanalysis nudging effects.
+            !   Journal of Geophysical Research: Atmospheres, 129, e2023JD038719.
             !   https://doi.org/10.1029/2023JD038719
-   
+
          !REVISION HISTORY
          !----------------
             !---2025.03.23   Zhongwang Wei @ SYSU: add the isotope forcing data
-   
+
             metfilename = '/'//trim(fprefix(var_i))//'_'//trim(yearstr)//'.nc'
 
-      
+
       CASE ('POINT')
          metfilename = '/'//trim(fprefix(1))
       END select
@@ -685,7 +685,7 @@ CONTAINS
 
  ! preprocess for forcing data [not applicable yet for PRINCETON]
  ! ------------------------------------------------------------
-   SUBROUTINE metpreprocess(grid, forcn)
+   SUBROUTINE metpreprocess(grid, forcn, has_missing_value, forcfirst, missing_value)
 
    USE MOD_Const_Physical
    USE MOD_Namelist
@@ -697,6 +697,9 @@ CONTAINS
    IMPLICIT NONE
    type(grid_type), intent(in) :: grid
    type(block_data_real8_2d), intent(inout) :: forcn(:)
+   type(block_data_real8_2d), intent(in)    :: forcfirst
+   logical,  intent(in) :: has_missing_value
+   real(r8), intent(in) :: missing_value
 
    integer  :: iblkme, ib, jb, i, j
    real(r8) :: es, esdT, qsat_tmp, dqsat_tmpdT, e, ea
@@ -722,6 +725,12 @@ CONTAINS
 
             DO j = 1, grid%ycnt(jb)
                DO i = 1, grid%xcnt(ib)
+
+                  IF (has_missing_value) THEN
+                     IF (forcfirst%blk(ib,jb)%val(i,j) == missing_value) THEN
+                        CYCLE
+                     ENDIF
+                  ENDIF
 
                   select CASE (trim(DEF_forcing%dataset))
 
