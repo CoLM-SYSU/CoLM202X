@@ -1,0 +1,111 @@
+&nl_colm
+
+! Author: Shupeng Zhang 
+! Description : include soil state init from data.
+
+   DEF_CASE_NAME = 'test_vic_para_global'
+   !DEF_file_mesh='/stu01/guoqj23/data/landtype/mask_zhujiang_0.5deg/mask_landtype9.nc'
+   !DEF_file_mesh='/stu01/guoqj23/data/landtype_mask/china_mask.nc'
+
+   DEF_domain%edges = -90
+   DEF_domain%edgen = 90
+   DEF_domain%edgew = -180
+   DEF_domain%edgee = 180
+
+   DEF_simulation_time%greenwich    = .TRUE.
+   DEF_simulation_time%start_year   = 2000
+   DEF_simulation_time%start_month  = 1
+   DEF_simulation_time%start_day    = 1
+   DEF_simulation_time%start_sec    = 0
+   DEF_simulation_time%end_year     = 2010
+   DEF_simulation_time%end_month    = 1
+   DEF_simulation_time%end_day      = 1
+   DEF_simulation_time%end_sec      = 0
+   DEF_simulation_time%spinup_year  = 2000
+   DEF_simulation_time%spinup_month = 1
+   DEF_simulation_time%spinup_day   = 1
+   DEF_simulation_time%spinup_sec   = 0
+   DEF_simulation_time%spinup_repeat = 0
+
+   DEF_simulation_time%timestep     = 1800.
+
+   DEF_dir_rawdata = '/shr03/CoLMrawdata/'
+   DEF_dir_runtime = '/shr03/CoLMruntime/'
+   DEF_dir_output = '/stu01/guoqj23/CoLM202X/cases/'
+
+   !---- Run off setting ----
+   DEF_file_VIC_para = './vic_para.txt'
+   DEF_VIC_OPT = .true.
+   DEF_file_VIC_OPT = '/stu01/guoqj23/CoLM202X/CoLM202X-20250829/vic_para.nc'
+   DEF_Runoff_SCHEME = 1
+
+   !---- LAI setting ----
+   DEF_LC_YEAR = 2005
+
+   !---- Urban options ----
+   ! urban type options
+   ! Options :
+   ! 1: NCAR Urban Classification, 3 urban type with Tall Building, High Density and Medium Density
+   ! 2: LCZ Classification, 10 urban type with LCZ 1-10
+   DEF_URBAN_type_scheme = 1
+
+   DEF_LAI_CHANGE_YEARLY=.false.
+   DEF_RSS_SCHEME = 1
+   ! urban module options
+   DEF_URBAN_ONLY = .false.
+   DEF_URBAN_TREE = .true.
+   DEF_URBAN_WATER= .true.
+   DEF_URBAN_BEM  = .true.
+   DEF_URBAN_LUCY = .true.
+   ! -----------------------
+
+   ! Canopy DEF Interception scheme selection
+   DEF_Interception_scheme=1 !1:CoLM2014；2:CLM4.5; 3:CLM5; 4:Noah-MP; 5:MATSIRO; 6:VIC
+
+   ! ---- Hydrology module ----
+   DEF_USE_SUPERCOOL_WATER         = .false.
+   DEF_USE_VariablySaturatedFlow   = .false.
+   DEF_USE_PLANTHYDRAULICS         = .false.
+   ! --------------------------
+
+   ! ---- SNICAR ----
+   DEF_USE_SNICAR     = .false.
+   DEF_Aerosol_Readin = .true.
+   DEF_Aerosol_Clim   = .false.
+   ! ----------------
+
+   ! ---- Ozone MODULE ----
+   DEF_USE_OZONESTRESS = .false.
+   DEF_USE_OZONEDATA   = .false.
+   ! ----------------------
+
+   ! ---- Bedrock ----
+   DEF_USE_BEDROCK = .false.
+   ! -----------------
+
+   ! ---- Forcing Downscalling ----
+   DEF_USE_Forcing_Downscaling        = .false.
+   DEF_DS_precipitation_adjust_scheme = 'II'
+   DEF_DS_longwave_adjust_scheme      = 'II'
+   
+   ! ----- forcing -----
+   DEF_forcing_namelist = '/stu01/guoqj23/CoLM202X/CoLM202X-20250830/run/forcing/GSWP3.nml'
+
+   ! ----- land units and land sets -----
+   ! for GRIDBASED
+   DEF_GRIDBASED_lon_res = 0.5
+   DEF_GRIDBASED_lat_res = 0.5
+
+   ! ----- history -----
+   DEF_hist_lon_res = 0.5
+   DEF_hist_lat_res = 0.5
+   DEF_WRST_FREQ = 'YEARLY'   ! write restart file frequency: HOURLY/DAILY/MONTHLY/YEARLY
+   DEF_HIST_FREQ = 'MONTHLY'    ! write history file frequency: HOURLY/DAILY/MONTHLY/YEARLY
+   DEF_HIST_groupby = 'YEAR'  ! history in one file: DAY/MONTH/YEAR
+   DEF_REST_CompressLevel = 0
+   DEF_HIST_CompressLevel = 0
+   
+   !DEF_hist_vars_namelist = '/stu01/guoqj23/CoLM202X/CoLM202X-0314vicsingle/run/history.nml'
+   !DEF_hist_vars_out_default = .false.
+
+/
