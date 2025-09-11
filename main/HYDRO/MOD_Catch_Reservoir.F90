@@ -73,6 +73,7 @@ CONTAINS
 
    real(r8), allocatable :: all_vol_basin (:), all_qmean_basin  (:), all_qflood_basin (:)
    real(r8), allocatable :: all_vol_resv  (:), all_qmean_resv   (:), all_qflood_resv  (:)
+   real(r8), allocatable :: all_dhgt_basin(:), all_dhgt_resv    (:), dam_height       (:)
 
    real(r8), allocatable :: rcache(:)
    integer,  allocatable :: icache(:)
@@ -105,6 +106,8 @@ CONTAINS
 
             allocate (dam_build_year(numresv))
 
+            allocate (dam_height    (numresv))
+
          ENDIF
       ENDIF
 
@@ -129,6 +132,7 @@ CONTAINS
             CALL ncio_read_serial (resv_info_file, 'qflood',  all_qflood_resv)
 
             CALL ncio_read_serial (resv_info_file, 'build_year', all_year_resv)
+            CALL ncio_read_serial (resv_info_file, 'dam_height', all_dhgt_resv)
 
             allocate (lake_id2typ (-1:maxlakeid))
             lake_id2typ(:) = 0
@@ -146,6 +150,7 @@ CONTAINS
             allocate(all_qmean_basin  (nbasin));  all_qmean_basin (:) = spval
             allocate(all_qflood_basin (nbasin));  all_qflood_basin(:) = spval
             allocate(all_year_basin   (nbasin));  all_year_basin  (:) = -99
+            allocate(all_dhgt_basin   (nbasin));  all_dhgt_basin  (:) = spval
 
             DO ibasin = 1, nbasin
                IF (lake_id2typ(lake_id_basin(ibasin)) >= 2) THEN
@@ -157,6 +162,7 @@ CONTAINS
                               all_qmean_basin (ibasin) = all_qmean_resv (irsv)
                               all_qflood_basin(ibasin) = all_qflood_resv(irsv)
                               all_year_basin  (ibasin) = all_year_resv  (irsv)
+                              all_dhgt_basin  (ibasin) = all_dhgt_resv  (irsv)
                            ENDIF
                         ENDIF
                      ENDIF
@@ -206,6 +212,9 @@ CONTAINS
                icache = all_year_basin(resv_bsn_id)
                CALL mpi_send (icache, nrecv, MPI_INTEGER, idest, mpi_tag_data, p_comm_glb, p_err)
 
+               rcache = all_dhgt_basin(resv_bsn_id)
+               CALL mpi_send (rcache, nrecv, MPI_REAL8, idest, mpi_tag_data, p_comm_glb, p_err)
+
                deallocate (resv_bsn_id)
                deallocate (rcache)
                deallocate (icache)
@@ -234,6 +243,9 @@ CONTAINS
 
             CALL mpi_recv (dam_build_year, numresv, MPI_INTEGER, &
                p_address_master, mpi_tag_data, p_comm_glb, p_stat, p_err)
+
+            CALL mpi_recv (dam_height, numresv, MPI_REAL8, &
+               p_address_master, mpi_tag_data, p_comm_glb, p_stat, p_err)
          ENDIF
       ENDIF
 #else
@@ -242,6 +254,7 @@ CONTAINS
          qresv_mean     = all_qmean_basin (resv_bsn_id)
          qresv_flood    = all_qflood_basin(resv_bsn_id)
          dam_build_year = all_year_basin  (resv_bsn_id)
+         dam_height     = all_dhgt_basin  (resv_bsn_id)
       ENDIF
 #endif
 
@@ -251,16 +264,19 @@ CONTAINS
 
                irsv = bsn2resv(ibasin)
 
-               dam_elv(irsv) = bedelv(ibasin) + lakeinfo(ibasin)%surface( volresv_total(irsv) )
-               dam_elv(irsv) = max(wtsrfelv(ibasin), dam_elv(irsv))
-               volresv_total(irsv) = lakeinfo(ibasin)%volume( dam_elv(irsv)-bedelv(ibasin) )
+               dam_height(irsv) = max(dam_height(irsv), wtsrfelv(ibasin)-bedelv(ibasin))
+               dam_height(irsv) = max(dam_height(irsv), lakeinfo(ibasin)%surface(volresv_total(irsv)))
+               dam_height(irsv) = min(dam_height(irsv), 335.)
+
+               dam_elv       (irsv) = bedelv(ibasin) + dam_height(irsv)
+               volresv_total (irsv) = lakeinfo(ibasin)%volume( dam_height(irsv) )
 
                volresv_emerg (irsv) = volresv_total(irsv) * 0.94
                volresv_adjust(irsv) = volresv_total(irsv) * 0.77
                volresv_normal(irsv) = volresv_total(irsv) * 0.7
 
-               qresv_normal(irsv) = volresv_normal(irsv)*0.7/(180*86400) + qresv_mean(irsv)*0.25
-               qresv_adjust(irsv) = (qresv_normal(irsv) + qresv_flood(irsv)) * 0.5
+               qresv_normal  (irsv) = volresv_normal(irsv)*0.7/(180*86400) + qresv_mean(irsv)*0.25
+               qresv_adjust  (irsv) = (qresv_normal(irsv) + qresv_flood(irsv)) * 0.5
             ENDIF
          ENDDO
       ENDIF
@@ -329,6 +345,9 @@ CONTAINS
       IF (allocated(all_qflood_resv  )) deallocate (all_qflood_resv  )
       IF (allocated(all_year_basin   )) deallocate (all_year_basin   )
       IF (allocated(all_year_resv    )) deallocate (all_year_resv    )
+      IF (allocated(all_dhgt_basin   )) deallocate (all_dhgt_basin   )
+      IF (allocated(all_dhgt_resv    )) deallocate (all_dhgt_resv    )
+      IF (allocated(dam_height       )) deallocate (dam_height       )
       IF (allocated(resv_bsn_id      )) deallocate (resv_bsn_id      )
 
 

@@ -72,7 +72,7 @@ CONTAINS
    real(r8) :: veloct_fc, height_fc, momen_fc, zsurf_fc
    real(r8) :: bedelv_fc, height_up, height_dn
    real(r8) :: vwave_up, vwave_dn, hflux_up, hflux_dn, mflux_up, mflux_dn
-   real(r8) :: totalvolume, loss, friction, dvol, nextl, nexta, nextv, ddep
+   real(r8) :: totalvolume, friction, dvol, nextl, nexta, nextv, ddep
    real(r8),  allocatable :: dt_res(:), dt_all(:), dt_tmp(:)
    logical,   allocatable :: hmask(:), bsnfilter(:)
 
