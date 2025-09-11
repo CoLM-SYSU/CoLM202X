@@ -834,6 +834,58 @@ else
 	    exit
 	    ;;
       esac
+   else
+      if [ "$IsDefBGC" == "#define" ];then
+	 echo IsDefBGC is $IsDefBGC use grid_g720x360 resolution
+         GridName=grid_g720x360
+         IsDefGrid="#define"
+         IsDefCatch="#undef"
+         IsDefUnstr="#undef"
+         IsDefSingl="#undef"
+         EDGES=-90
+         EDGEN=90
+         EDGEE=180
+         EDGEW=-180
+         RESLAT=0.5
+         RESLON=0.5
+         if [ "$SubgridName" == "igbp" ];then
+            nx_block=18
+            ny_block=9
+            nGroup=54
+         else
+            nx_block=18
+            ny_block=9
+            nGroup=36
+         fi
+      else
+	 if [ "$IsDefBGC" == "#undef" ];then
+            IsDefGrid="#define"
+	    IsDefCatch="#undef"
+	    IsDefUnstr="#undef"
+	    IsDefSingl="#undef"
+	    EDGES=-90
+	    EDGEN=90
+	    EDGEE=180
+	    EDGEW=-180
+            RESLAT=1.875
+            RESLON=2.5
+	    if [ "$SubgridName" == "igbp" ];then
+  	       nx_block=18
+	       ny_block=9
+	       nGroup=24
+	    else
+	       nx_block=18
+	       ny_block=9
+	       nGroup=15
+            fi
+	 else
+            echo IsDefBGC $IsDefBGC is invalid
+	    exit
+	 fi
+      fi
+
+
+      GridName=grid_g144x960
    fi
 
    if [ ! -z "$SoilModel" ];then
@@ -930,6 +982,9 @@ mkdir -p $CASEPATH/$CASENAME
 cd $CASEPATH/$CASENAME
 mkdir -p history
 mkdir -p restart
+if [ -L landdata ];then
+   rm landdata
+fi
 if [ -d landdata ];then
    rm -rf landdata
 else
@@ -939,6 +994,9 @@ ENDYEAR=`expr $endyr + 1`
 #echo startyr is $startyr
 FORCINGDIR=${FORCINGPATH}/${FORCINGPATHNAME}
 
+echo "${ROOT}/run/scripts/create_namelist -p $CASEPATH/${CASENAME} -n input_${CASENAME}.nml -t $startyr -e $ENDYEAR -d $RAWDATA \
+                            -r $RUNTIME -o ${RESLON} -a ${RESLAT} -f ${Forcing} -l $LandMask \
+                            -S $EDGES -N $EDGEN -W $EDGEW -E $EDGEE -x ${nx_block} -y ${ny_block} -g ${nGroup}"
 ${ROOT}/run/scripts/create_namelist -p $CASEPATH/${CASENAME} -n input_${CASENAME}.nml -t $startyr -e $ENDYEAR -d $RAWDATA \
 	                    -r $RUNTIME -o ${RESLON} -a ${RESLAT} -f ${Forcing} -l $LandMask \
 			    -S $EDGES -N $EDGEN -W $EDGEW -E $EDGEE -x ${nx_block} -y ${ny_block} -g ${nGroup}

@@ -210,8 +210,8 @@ CONTAINS
 !     IF(idate(1) .gt. 2021)iyear = 2021
 !     write(syear,"(I4.4)")  iyear
 !     write(smonth,"(I2.2)") month
-!      file_ozone = trim(DEF_dir_runtime) // '/Ozone//Global/OZONE-setgrid.nc'
-      file_ozone = '/share/home/dq010/CoLM/data/rawdata/CROP-NITRIF/CoLMruntime/Ozone//Global/OZONE-setgrid.nc'
+      file_ozone = trim(DEF_dir_runtime) // '/Ozone//Global/OZONE-setgrid.nc'
+!      file_ozone = '/share/home/dq010/CoLM/data/rawdata/CROP-NITRIF/CoLMruntime/Ozone//Global/OZONE-setgrid.nc'
 
       CALL ncio_read_bcast_serial (file_ozone, 'lat', lat)
       CALL ncio_read_bcast_serial (file_ozone, 'lon', lon)
@@ -254,8 +254,8 @@ CONTAINS
    integer :: iyear, itime
    character(len=8) :: syear, smonth
 
-!      file_ozone = trim(DEF_dir_runtime) // '/Ozone/Global/OZONE-setgrid.nc'
-      file_ozone = '/share/home/dq010/CoLM/data/rawdata/CROP-NITRIF/CoLMruntime/Ozone/Global/OZONE-setgrid.nc'
+      file_ozone = trim(DEF_dir_runtime) // '/Ozone/Global/OZONE-setgrid.nc'
+!      file_ozone = '/share/home/dq010/CoLM/data/rawdata/CROP-NITRIF/CoLMruntime/Ozone/Global/OZONE-setgrid.nc'
       IF(time%sec/10800 .ne. (time%sec+int(deltim))/10800)then
          itime = (time%sec - int(deltim)) / 10800 + (min(time%day,365) - 1) * 8 + 1
          CALL ncio_read_block_time (file_ozone, 'OZONE', grid_ozone, itime, f_ozone)
