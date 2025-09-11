@@ -114,10 +114,15 @@ MODULE MOD_Vars_Global
    integer , parameter :: irrig_start_time = 21600           ! local time of irrigation start
    real(r8), parameter :: irrig_max_depth  = 1._r8           ! max irrigation depth
    real(r8), parameter :: irrig_threshold_fraction = 1._r8   ! irrigation thershold
+   real(r8), parameter :: irrig_supply_fraction = 1._r8      ! irrigation supply thershold
    real(r8), parameter :: irrig_min_cphase = 1._r8           ! crop phenology when begin irrigation
    real(r8), parameter :: irrig_max_cphase = 4._r8           ! crop phenology when end irrigation
    integer , parameter :: irrig_time_per_day = 14400         ! irrigation last time
-
+   integer , parameter :: irrig_method_drip = 1              ! irrigation method
+   integer , parameter :: irrig_method_sprinkler = 2         ! irrigation method
+   integer , parameter :: irrig_method_flood = 3             ! irrigation method
+   integer , parameter :: irrig_method_paddy = 4             ! irrigation method
+   real(r8), parameter :: pondmxc = 100.0                    ! ponding depth (mm)
 ! PUBLIC MEMBER FUNCTIONS:
    PUBLIC :: Init_GlobalVars
 

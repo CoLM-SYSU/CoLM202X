@@ -1207,12 +1207,18 @@ ENDIF
                ENDIF
             ENDDO
          ENDIF
-      IF(DEF_USE_IRRIGATION)THEN
-         irrig_rate(:) = 0._r8
-         deficit_irrig(:) = 0._r8
-         sum_irrig(:) = 0._r8
-         sum_irrig_count(:) = 0._r8
-         n_irrig_steps_left(:) = 0
+      IF (p_is_worker) THEN
+         IF(DEF_USE_IRRIGATION)THEN
+            sum_irrig(:) = 0._r8  
+            sum_deficit_irrig(:) = 0._r8      
+            sum_irrig_count(:) = 0._r8
+            waterstorage(:) = 0._r8
+            DO i = 1, numpatch
+               zwt_stand(i) = zwt(i) + 1._r8
+               zwt_stand(i) = max(0., zwt_stand(i))
+               zwt_stand(i) = min(80., zwt_stand(i))
+            ENDDO   
+         ENDIF
       ENDIF
 #endif
 #endif

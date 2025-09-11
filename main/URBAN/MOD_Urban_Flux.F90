@@ -879,7 +879,7 @@ CONTAINS
          hroof          ,hlr            ,nurb           ,fcover         ,&
          ewall          ,egimp          ,egper          ,ev             ,&
          htop           ,hbot           ,lai            ,sai            ,&
-         sqrtdi         ,effcon         ,vmax25         ,slti           ,&
+         sqrtdi         ,effcon         ,vmax25         ,c3c4           ,slti,&
          hlti           ,shti           ,hhti           ,trda           ,&
          trdm           ,trop           ,g1             ,g0             ,&
          gradm          ,binter         ,extkn          ,extkd          ,&
@@ -1001,6 +1001,9 @@ CONTAINS
         dewmx,        &! maximum dew
         trsmx0,       &! max transpiration for moist soil+100% veg.  [mm/s]
         etrc           ! maximum possible transpiration rate (mm/s)
+   
+   integer,  intent(in) :: &
+        c3c4       ! 1: C3, 0: C4
 
    ! Status of surface
    real(r8), intent(in) :: &
@@ -1723,7 +1726,7 @@ CONTAINS
 ! note: calculate resistance for leaves
 !-----------------------------------------------------------------------
 
-            CALL stomata (vmax25,effcon ,slti   ,hlti   ,&
+            CALL stomata (vmax25,effcon ,c3c4   ,slti   ,hlti   ,&
                shti    ,hhti    ,trda   ,trdm   ,trop   ,&
                g1      ,g0      ,gradm  ,binter ,thm    ,&
                psrf    ,po2m    ,pco2m  ,pco2a  ,eah    ,&
@@ -1736,7 +1739,7 @@ CONTAINS
             rs_ = rs
 
 IF ( DEF_URBAN_Irrigation .and. rstfac < rstfac_irrig ) THEN
-            CALL stomata (vmax25,effcon ,slti   ,hlti   ,&
+            CALL stomata (vmax25,effcon ,c3c4   ,slti   ,hlti   ,&
                shti    ,hhti    ,trda   ,trdm   ,trop   ,&
                g1      ,g0      ,gradm  ,binter ,thm    ,&
                psrf    ,po2m    ,pco2m  ,pco2a  ,eah    ,&

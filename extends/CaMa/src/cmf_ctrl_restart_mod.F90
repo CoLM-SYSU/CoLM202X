@@ -111,13 +111,13 @@ IF( LPTHOUT )THEN
   D1PTHFLW(:,:)=0._JPRB
   D1PTHFLW_PRE(:,:)=0._JPRB
 ENDIF
-IF( LDAMOUT ) then
+IF( LDAMOUT ) THEN
   P2DAMSTO(:,:)=0._JPRD   !!! added LDAMOUT
 ENDIF
-IF( LLEVEE ) then
+IF( LLEVEE ) THEN
   P2LEVSTO(:,:)=0._JPRD   !!! added LLEVEE
 ENDIF
-IF( LGDWDLY ) then
+IF( LGDWDLY ) THEN
   P2GDWSTO(:,:)=0._JPRD
 ENDIF
 
@@ -127,7 +127,7 @@ ELSE
   CALL READ_REST_BIN
 ENDIF
 
-IF( LSTOONLY )THEN          !!  storage only restart
+IF( LSTOONLY ) THEN          !!  storage only restart
   D2FLDSTO_PRE(:,:)=REAL(P2FLDSTO(:,:),KIND=JPRB)
 ENDIF
 

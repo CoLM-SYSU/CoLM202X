@@ -276,10 +276,17 @@ MODULE MOD_Vars_1DAccFluxes
    real(r8), allocatable :: a_grainc_to_seed        (:)
    real(r8), allocatable :: a_fert_to_sminn         (:)
 
-   real(r8), allocatable :: a_irrig_rate            (:)
-   real(r8), allocatable :: a_deficit_irrig         (:)
-   real(r8), allocatable :: a_sum_irrig             (:)
-   real(r8), allocatable :: a_sum_irrig_count       (:)
+   real(r8), allocatable :: a_sum_irrig          (:)
+   real(r8), allocatable :: a_sum_deficit_irrig  (:)
+   real(r8), allocatable :: a_sum_irrig_count    (:)
+   real(r8), allocatable :: a_waterstorage       (:)
+   real(r8), allocatable :: a_groundwater_demand (:)
+   real(r8), allocatable :: a_groundwater_supply (:)
+   real(r8), allocatable :: a_reservoirriver_demand(:)
+   real(r8), allocatable :: a_reservoirriver_supply(:)
+   real(r8), allocatable :: a_reservoir_supply     (:)
+   real(r8), allocatable :: a_river_supply         (:)
+   real(r8), allocatable :: a_runoff_supply        (:)
 #endif
    real(r8), allocatable :: a_ndep_to_sminn         (:)
    real(r8), allocatable :: a_abm                   (:)
@@ -698,10 +705,17 @@ CONTAINS
             allocate (a_grainc_to_seed     (numpatch))
             allocate (a_fert_to_sminn      (numpatch))
 
-            allocate (a_irrig_rate         (numpatch))
-            allocate (a_deficit_irrig      (numpatch))
             allocate (a_sum_irrig          (numpatch))
+            allocate (a_sum_deficit_irrig  (numpatch))
             allocate (a_sum_irrig_count    (numpatch))
+            allocate (a_waterstorage       (numpatch))
+            allocate (a_groundwater_demand (numpatch))
+            allocate (a_groundwater_supply (numpatch))
+            allocate (a_reservoirriver_demand(numpatch))
+            allocate (a_reservoirriver_supply(numpatch))
+            allocate (a_reservoir_supply     (numpatch))
+            allocate (a_river_supply         (numpatch))
+            allocate (a_runoff_supply        (numpatch))
 #endif
             allocate (a_ndep_to_sminn      (numpatch))
 
@@ -1127,10 +1141,17 @@ CONTAINS
             deallocate (a_grainc_to_seed     )
             deallocate (a_fert_to_sminn      )
 
-            deallocate (a_irrig_rate         )
-            deallocate (a_deficit_irrig      )
             deallocate (a_sum_irrig          )
+            deallocate (a_sum_deficit_irrig  )
             deallocate (a_sum_irrig_count    )
+            deallocate (a_waterstorage       )
+            deallocate (a_groundwater_demand )
+            deallocate (a_groundwater_supply )
+            deallocate (a_reservoirriver_demand)
+            deallocate (a_reservoirriver_supply)
+            deallocate (a_reservoir_supply     )
+            deallocate (a_river_supply         )
+            deallocate (a_runoff_supply        )
 #endif
             deallocate (a_ndep_to_sminn      )
 
@@ -1554,10 +1575,18 @@ CONTAINS
             a_grainc_to_cropprodc(:) = spval
             a_grainc_to_seed     (:) = spval
             a_fert_to_sminn      (:) = spval
-            a_irrig_rate         (:) = spval
-            a_deficit_irrig      (:) = spval
+
             a_sum_irrig          (:) = spval
+            a_sum_deficit_irrig  (:) = spval
             a_sum_irrig_count    (:) = spval
+            a_waterstorage       (:) = spval
+            a_groundwater_demand (:) = spval
+            a_groundwater_supply (:) = spval
+            a_reservoirriver_demand(:) = spval
+            a_reservoirriver_supply(:) = spval
+            a_reservoir_supply     (:) = spval
+            a_river_supply         (:) = spval
+            a_runoff_supply        (:) = spval
 #endif
             a_ndep_to_sminn      (:) = spval
 
@@ -2109,15 +2138,16 @@ CONTAINS
             CALL acc1d (grainc_to_seed     ,   a_grainc_to_seed     )
             CALL acc1d (fert_to_sminn      ,   a_fert_to_sminn      )
 
-           !CALL acc1d (irrig_rate         ,   a_irrig_rate         )
-           !CALL acc1d (deficit_irrig      ,   a_deficit_irrig      )
-           !CALL acc1d (sum_irrig          ,   a_sum_irrig          )
-           !CALL acc1d (sum_irrig_count    ,   a_sum_irrig_count    )
-            CALL acc1d (irrig_rate         ,   a_irrig_rate         )
-            CALL acc1d (deficit_irrig      ,   a_deficit_irrig      )
             a_sum_irrig = sum_irrig
             a_sum_irrig_count = sum_irrig_count
-
+            a_waterstorage = waterstorage
+            CALL acc1d (groundwater_demand   ,   a_groundwater_demand )
+            CALL acc1d (groundwater_supply   ,   a_groundwater_supply )
+            CALL acc1d (reservoirriver_demand,  a_reservoirriver_demand)
+            CALL acc1d (reservoirriver_supply,  a_reservoirriver_supply)
+            CALL acc1d (reservoir_supply     ,  a_reservoir_supply)
+            CALL acc1d (river_supply         ,  a_river_supply)
+            CALL acc1d (runoff_supply        ,  a_runoff_supply)
 #endif
             CALL acc1d (ndep_to_sminn      ,   a_ndep_to_sminn      )
             IF(DEF_USE_FIRE)THEN

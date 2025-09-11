@@ -109,7 +109,7 @@ WRITE(LOGNAM,*)   "LOUTCDF:  ", LOUTCDF
 IF( LOUTCDF )THEN
   WRITE(LOGNAM,*) "NDLEVEL:  ", NDLEVEL
 ENDIF
-if( LOUTVEC )THEN
+IF( LOUTVEC )THEN
   WRITE(LOGNAM,*) "LOUTVEC:  ", LOUTVEC
 ENDIF
 WRITE(LOGNAM,*)   "IFRQ_OUT  ", IFRQ_OUT
@@ -220,7 +220,6 @@ DO JF=1,NVARSOUT
       VAROUT(JF)%CVNAME=CVNAMES(JF)
       VAROUT(JF)%CVLNAME='flooded area'
       VAROUT(JF)%CVUNITS='m2'
-
     CASE ('sfcelv')
       VAROUT(JF)%CVNAME=CVNAMES(JF)
       VAROUT(JF)%CVLNAME='water surface elevation'
@@ -243,7 +242,6 @@ DO JF=1,NVARSOUT
       VAROUT(JF)%CVNAME=CVNAMES(JF)
       VAROUT(JF)%CVLNAME='total storage (river+floodplain)'
       VAROUT(JF)%CVUNITS='m3'
-
     CASE ('pthflw')
       VAROUT(JF)%CVNAME=CVNAMES(JF)
       VAROUT(JF)%CVLNAME='bifurcation channel discharge'
@@ -254,7 +252,6 @@ DO JF=1,NVARSOUT
       VAROUT(JF)%CVLNAME='net bifurcation discharge'
       VAROUT(JF)%CVUNITS='m3/s'
       VAROUT(JF)%AGGREGATE=2
-
     CASE ('maxsto')
       VAROUT(JF)%CVNAME=CVNAMES(JF)
       VAROUT(JF)%CVLNAME='daily maximum storage'
@@ -270,7 +267,6 @@ DO JF=1,NVARSOUT
       VAROUT(JF)%CVLNAME='daily maximum river depth'
       VAROUT(JF)%CVUNITS='m' 
       VAROUT(JF)%AGGREGATE=3
-
     CASE ('runoff')
       VAROUT(JF)%CVNAME=CVNAMES(JF)
       VAROUT(JF)%CVLNAME='Surface runoff'
@@ -281,7 +277,6 @@ DO JF=1,NVARSOUT
       VAROUT(JF)%CVLNAME='sub-surface runoff'
       VAROUT(JF)%CVUNITS='m3/s' 
       VAROUT(JF)%AGGREGATE=2
-
     CASE ('damsto')   !!! added
       VAROUT(JF)%CVNAME=CVNAMES(JF)
       VAROUT(JF)%CVLNAME='reservoir storage'
@@ -291,7 +286,6 @@ DO JF=1,NVARSOUT
       VAROUT(JF)%CVLNAME='reservoir inflow'
       VAROUT(JF)%CVUNITS='m3/s' 
       VAROUT(JF)%AGGREGATE=2
-
     CASE ('levsto')   !!! added
       VAROUT(JF)%CVNAME=CVNAMES(JF)
       VAROUT(JF)%CVLNAME='protected area storage'
@@ -300,7 +294,6 @@ DO JF=1,NVARSOUT
       VAROUT(JF)%CVNAME=CVNAMES(JF)
       VAROUT(JF)%CVLNAME='protected area depth'
       VAROUT(JF)%CVUNITS='m' 
-
     CASE ('gdwsto')
       VAROUT(JF)%CVNAME=CVNAMES(JF)
       VAROUT(JF)%CVLNAME='ground water storage'
@@ -319,7 +312,6 @@ DO JF=1,NVARSOUT
       VAROUT(JF)%CVLNAME='ground water discharge'
       VAROUT(JF)%CVUNITS='m3/s'  
       VAROUT(JF)%AGGREGATE=2
-
     CASE ('wevap')
       VAROUT(JF)%CVNAME=CVNAMES(JF)
       VAROUT(JF)%CVLNAME='water evaporation'
@@ -351,7 +343,7 @@ DO JF=1,NVARSOUT
 !  ELSE
 !    CALL CREATE_OUTBIN
 !  ENDIF
-END DO
+ENDDO
 
 IRECOUT=0  ! Initialize Output record to 1 (shared in netcdf & binary)
 
@@ -381,8 +373,6 @@ ELSE                   !!  2D default map output
     WRITE(LOGNAM,*) "output file opened in unit: ", TRIM(VAROUT(JF)%CFILE), VAROUT(JF)%BINID
   ENDIF
 ENDIF
-
-
 END SUBROUTINE CREATE_OUTBIN
 !==========================================================
 !+
@@ -513,7 +503,6 @@ IF ( MOD(JHOUR,IFRQ_OUT)==0 .and. JMIN==0 ) THEN             ! JHOUR: end of tim
         D2VEC => D2RIVVEL_oAVG
       CASE ('fldout')
         D2VEC => D2FLDOUT_oAVG
-
       CASE ('flddph')
         D2VEC => D2FLDDPH
       CASE ('fldfrc')
@@ -522,7 +511,6 @@ IF ( MOD(JHOUR,IFRQ_OUT)==0 .and. JMIN==0 ) THEN             ! JHOUR: end of tim
         D2VEC => D2FLDARE
       CASE ('sfcelv')
         D2VEC => D2SFCELV
-
       CASE ('totout')
         D2VEC => D2OUTFLW_oAVG
       CASE ('outflw')            !!  compatibility for previous file name
@@ -531,7 +519,6 @@ IF ( MOD(JHOUR,IFRQ_OUT)==0 .and. JMIN==0 ) THEN             ! JHOUR: end of tim
         D2VEC => D2STORGE
       CASE ('storge')            !!  compatibility for previous file name
         D2VEC => D2STORGE
-
       CASE ('pthout')
         IF( .not. LPTHOUT ) CYCLE
         D2VEC => D2PTHOUT_oAVG
@@ -543,11 +530,9 @@ IF ( MOD(JHOUR,IFRQ_OUT)==0 .and. JMIN==0 ) THEN             ! JHOUR: end of tim
         D2VEC =>  D2RIVDPH_oMAX
       CASE ('maxsto')
         D2VEC =>  D2STORGE_oMAX
-
       CASE ('outins')
         IF( .not. LOUTINS ) CYCLE
         D2VEC =>  D2OUTINS
-
       CASE ('gwsto')
         IF( .not. LGDWDLY ) CYCLE
         D2COPY=REAL(P2GDWSTO,KIND=JPRB)
@@ -562,7 +547,6 @@ IF ( MOD(JHOUR,IFRQ_OUT)==0 .and. JMIN==0 ) THEN             ! JHOUR: end of tim
       CASE ('gdwrtn')
         IF( .not. LGDWDLY ) CYCLE
         D2VEC =>  D2GDWRTN_oAVG
-
       CASE ('runoff')             !!  compatibility for previous file name
         D2VEC =>  D2RUNOFF_oAVG  
       CASE ('runoffsub')           !!  compatibility for previous file name
@@ -585,7 +569,6 @@ IF ( MOD(JHOUR,IFRQ_OUT)==0 .and. JMIN==0 ) THEN             ! JHOUR: end of tim
       CASE ('daminf')   !!! added
         IF( .not. LDAMOUT ) CYCLE
         D2VEC =>  d2daminf_oAVG
-
       CASE ('levsto')   !!! added
         IF( .not. LLEVEE ) CYCLE
         D2COPY=REAL(P2LEVSTO,KIND=JPRB)
@@ -593,7 +576,6 @@ IF ( MOD(JHOUR,IFRQ_OUT)==0 .and. JMIN==0 ) THEN             ! JHOUR: end of tim
       CASE ('levdph')   !!! added
         IF( .not. LLEVEE ) CYCLE
         D2VEC =>  D2LEVDPH
-
       CASE DEFAULT
 !        WRITE(LOGNAM,*) VAROUT(JF)%CVNAME, ' Not defined in CMF_OUTPUT_MOD'
 !#ifdef IFS_CMF
@@ -634,7 +616,7 @@ IF ( MOD(JHOUR,IFRQ_OUT)==0 .and. JMIN==0 ) THEN             ! JHOUR: end of tim
         ENDIF
       ENDIF
     ENDIF
-  END DO
+  ENDDO
 
   WRITE(LOGNAM,*) 'CMF::OUTPUT_WRITE: end'
 

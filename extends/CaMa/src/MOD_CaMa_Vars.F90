@@ -28,20 +28,43 @@ MODULE MOD_CaMa_Vars
    USE MOD_Precision
    USE MOD_Grid
    USE MOD_DataType
-   USE PARKIND1,                  only: JPRB
-
+   USE PARKIND1,                 only: JPRB
    USE MOD_SpatialMapping
    USE YOS_CMF_INPUT,            only: RMIS, DMIS
-   USE MOD_Vars_Global,    only: spval
-
+   USE MOD_Vars_Global,          only: spval
+   USE YOS_CMF_INPUT,            ONLY: LOGNAM
 
    real(r8) :: nacc                                        ! number of accumulation
    real(r8), allocatable         :: a_rnof_cama (:)        ! on worker : total runoff [mm/s]
    type(block_data_real8_2d)     :: f_rnof_cama            ! on IO     : total runoff [mm/s]
    real(r8), allocatable         :: runoff_2d (:,:)        ! on Master : total runoff [mm/s]
+   
+   !!!!!!!!!!!! added by shulei
+   real(r8), allocatable         :: a_dirrig_cama (:)      ! on worker : total runoff [mm/s]
+   real(r8), allocatable         :: dirrig_tmp(:)
+   real(r8), allocatable         :: dirrig_day(:)
+   type(block_data_real8_2d)     :: f_dirrig_cama          ! on IO     : total runoff [mm/s]
+   real(r8), allocatable         :: dirrig_2d (:,:)        ! on Master : total runoff [mm/s]
+   real(r8), allocatable         :: dirrig_2d_orig (:,:)
+   !!!!!!!!!!!! added by shulei
+
+   !!!!!!!!!!!! added by shulei
+   real(r8), allocatable         :: withdrawal_cama (:)    ! on worker : total runoff [mm/s]
+   real(r8), allocatable         :: withdrawal_riv_cama (:)! on worker : total runoff [mm/s]
+   real(r8), allocatable         :: withdrawal_dam_cama (:)! on worker : total runoff [mm/s]
+   real(r8), allocatable         :: withdrawal_rof_cama (:)! on worker : total runoff [mm/s]
+   type(block_data_real8_2d)     :: f_withdrawal_cama      ! on IO     : total runoff [mm/s]
+   type(block_data_real8_2d)     :: f_withdrawal_riv_cama  ! on IO     : total runoff [mm/s]
+   type(block_data_real8_2d)     :: f_withdrawal_dam_cama  ! on IO     : total runoff [mm/s]
+   type(block_data_real8_2d)     :: f_withdrawal_rof_cama  ! on IO     : total runoff [mm/s]
+   real(r8), allocatable         :: withdrawal_tmp (:,:)       ! on Master : total runoff [mm/s]
+   real(r8), allocatable         :: withdrawal_riv_tmp (:,:)   ! on Master : total runoff [mm/s]
+   real(r8), allocatable         :: withdrawal_dam_tmp (:,:)   ! on Master : total runoff [mm/s]
+   real(r8), allocatable         :: withdrawal_rof_tmp (:,:)   ! on Master : total runoff [mm/s]
+   !!!!!!!!!!!! added by shulei
 
    real(r8), allocatable         :: flddepth_cama (:)      ! on worker : flddepth [m]
-   type(block_data_real8_2d)      :: f_flddepth_cama        ! on IO     : flddepth [m]
+   type(block_data_real8_2d)     :: f_flddepth_cama        ! on IO     : flddepth [m]
    real(r8), allocatable         :: flddepth_tmp(:,:)
 
    real(r8), allocatable         :: fldfrc_cama (:)        ! on worker : flddepth [m]
@@ -115,7 +138,9 @@ MODULE MOD_CaMa_Vars
    PUBLIC :: accumulate_cama_fluxes
    PUBLIC :: allocate_2D_cama_Fluxes
    PUBLIC :: colm2cama_real8
+   PUBLIC :: colmvar2cama_real8
    PUBLIC :: cama2colm_real8
+   PUBLIC :: camavar2colm_real8
    PUBLIC :: hist_out_cama
 
 CONTAINS
@@ -145,6 +170,7 @@ CONTAINS
             allocate (a_rnof_cama(numpatch))
             allocate (a_fevpg_fld(numpatch))
             allocate (a_finfg_fld(numpatch))
+            allocate (a_dirrig_cama(numpatch))
          ENDIF
       ENDIF
 
@@ -172,6 +198,7 @@ CONTAINS
             deallocate (a_rnof_cama)
             deallocate (a_fevpg_fld)
             deallocate (a_finfg_fld)
+            deallocate (a_dirrig_cama)
          ENDIF
       ENDIF
 
@@ -203,6 +230,7 @@ CONTAINS
             a_rnof_cama (:) = spval
             a_fevpg_fld (:) = spval
             a_finfg_fld (:) = spval
+            a_dirrig_cama(:)= spval
          ENDIF
       ENDIF
 
@@ -224,9 +252,12 @@ CONTAINS
    USE MOD_Precision
    USE MOD_SPMD_Task
    USE MOD_Vars_1DFluxes, only: rnof
+   USE MOD_Vars_TimeVariables, only: reservoirriver_demand
    USE MOD_LandPatch, only: numpatch
 
    IMPLICIT NONE
+
+      integer :: i
 
       IF (p_is_worker) THEN
          IF (numpatch > 0) THEN
@@ -234,7 +265,15 @@ CONTAINS
             CALL acc1d_cama (rnof, a_rnof_cama)
             CALL acc1d_cama (fevpg_fld, a_fevpg_fld)
             CALL acc1d_cama (finfg_fld, a_finfg_fld)
+            call acc1d_cama (reservoirriver_demand, a_dirrig_cama)
          ENDIF
+
+         ! DO i = 1, numpatch
+         !    IF (a_rnof_cama(i) .GT. 1.E3) THEN
+         !       WRITE(LOGNAM,*) "LHB debug line270: ipatch, rnof, a_rnof_cama ---> ", i, rnof(i), a_rnof_cama(i)
+         !    ENDIF
+         ! ENDDO
+
       ENDIF
 
    END SUBROUTINE accumulate_cama_fluxes
@@ -301,6 +340,11 @@ CONTAINS
          !TODO: check the following variables
          CALL allocate_block_data (grid, f_fevpg_fld)      ! inundation evaporation [m/s]
          CALL allocate_block_data (grid, f_finfg_fld)      ! inundation re-infiltration [m/s]
+         CALL allocate_block_data (grid, f_dirrig_cama)
+         CALL allocate_block_data (grid, f_withdrawal_cama)
+         CALL allocate_block_data (grid, f_withdrawal_riv_cama)
+         CALL allocate_block_data (grid, f_withdrawal_dam_cama)
+         CALL allocate_block_data (grid, f_withdrawal_rof_cama)
       ENDIF
 
    END SUBROUTINE allocate_2D_cama_Fluxes
@@ -697,6 +741,11 @@ CONTAINS
                            IOVar%blk(xblk,yblk)%val(xloc,yloc) = spval
                         ENDIF
 
+                        ! IF (IOVar%blk(xblk,yblk)%val(xloc,yloc) .GT. 1E3) THEN
+                        !    WRITE(*,*) "LHB debug line745: ix, iy, data ---> ", sumwt%blk(xblk,yblk)%val(xloc,yloc)
+                        !    WRITE(*,*) "LHB debug line746: ix, iy, data ---> ", IOVar%blk(xblk,yblk)%val(xloc,yloc)
+                        ! ENDIF
+
                      ENDDO
                   ENDDO
 
@@ -708,6 +757,170 @@ CONTAINS
       IF (p_is_master) THEN
          DO idata = 1, cama_gather%ndatablk
             CALL mpi_recv (rmesg, 3, MPI_INTEGER, MPI_ANY_SOURCE, 10011, p_comm_glb, p_stat, p_err)
+            isrc  = rmesg(1)
+            ixseg = rmesg(2)
+            iyseg = rmesg(3)
+
+            xdsp = cama_gather%xsegs(ixseg)%gdsp
+            ydsp = cama_gather%ysegs(iyseg)%gdsp
+            xcnt = cama_gather%xsegs(ixseg)%cnt
+            ycnt = cama_gather%ysegs(iyseg)%cnt
+
+            allocate (rbuf(xcnt,ycnt))
+            CALL mpi_recv (rbuf, xcnt * ycnt, MPI_DOUBLE, &
+               isrc, 10011, p_comm_glb, p_stat, p_err)
+            MasterVar (xdsp+1:xdsp+xcnt,ydsp+1:ydsp+ycnt) = rbuf
+
+            ! DO xloc = 1, xcnt
+            !    DO yloc = 1, ycnt
+            !       IF (rbuf(xloc,yloc) .GT. 1E3) THEN
+            !          WRITE(LOGNAM,*) "LHB debug line770: rmesg ---> ", isrc, ixseg, iyseg, xdsp, ydsp, xloc, yloc
+            !          WRITE(LOGNAM,*) "LHB debug line770: data ---> ", rbuf(xloc,yloc), MasterVar (xdsp+1:xdsp+xcnt,ydsp+1:ydsp+ycnt)
+            !       ENDIF
+            !    ENDDO
+            ! ENDDO
+
+
+            deallocate (rbuf)
+         ENDDO
+
+      ELSEIF (p_is_io) THEN
+         DO iyseg = 1, cama_gather%nyseg
+            DO ixseg = 1, cama_gather%nxseg
+
+               iblk = cama_gather%xsegs(ixseg)%blk
+               jblk = cama_gather%ysegs(iyseg)%blk
+
+               IF (gblock%pio(iblk,jblk) == p_iam_glb) THEN
+                  xdsp = cama_gather%xsegs(ixseg)%bdsp
+                  ydsp = cama_gather%ysegs(iyseg)%bdsp
+                  xcnt = cama_gather%xsegs(ixseg)%cnt
+                  ycnt = cama_gather%ysegs(iyseg)%cnt
+
+                  allocate (sbuf (xcnt,ycnt))
+                  sbuf = IOVar%blk(iblk,jblk)%val(xdsp+1:xdsp+xcnt,ydsp+1:ydsp+ycnt)
+
+                  ! IF (p_iam_glb == 103) THEN
+                  !    DO xloc = 1, xcnt
+                  !       DO yloc = 1, ycnt
+                  !          WRITE(*,*) "LHB debug line808: rmesg ---> ", p_iam_glb, ixseg, iyseg, xdsp, ydsp, xloc, yloc
+                  !          WRITE(*,*) "LHB debug line808: data ---> ", sbuf(xloc,yloc), IOVar%blk(iblk,jblk)%val(xdsp+xloc,ydsp+yloc)
+                  !       ENDDO
+                  !    ENDDO
+                  ! ENDIF 
+
+                  smesg = (/p_iam_glb, ixseg, iyseg/)
+                  CALL mpi_send (smesg, 3, MPI_INTEGER, &
+                     p_address_master, 10011, p_comm_glb, p_err)
+                  CALL mpi_send (sbuf, xcnt*ycnt, MPI_DOUBLE, &
+                     p_address_master, 10011, p_comm_glb, p_err)
+
+                  deallocate (sbuf)
+
+               ENDIF
+            ENDDO
+         ENDDO
+      ENDIF
+
+      IF (allocated(filter)) deallocate(filter)
+
+   END SUBROUTINE colm2cama_real8
+
+   SUBROUTINE colmvar2cama_real8 (WorkerVar, IOVar, MasterVar)
+      !DESCRIPTION
+      !===========
+      ! This subrountine is used for mapping colm output to cama input. 
+      ! colm output is total irrigation demands at each grid cell
+
+      !ANCILLARY FUNCTIONS AND SUBROUTINES
+      !-------------------
+      !* :SUBROUTINE:"allocate_block_data"                      :  allocate data into block
+
+      !REVISION HISTORY
+      !----------------
+      ! 2023.02.23  Zhongwang Wei @ SYSU
+
+      USE MOD_Precision
+      USE MOD_Namelist
+      USE MOD_TimeManager
+      USE MOD_SPMD_Task
+      USE MOD_Block
+      USE MOD_DataType
+      USE MOD_LandPatch
+      USE MOD_Vars_TimeInvariants, only: patchtype
+      USE MOD_Forcing, only: forcmask_pch
+
+      IMPLICIT NONE
+
+      real(r8),                  intent(inout) :: WorkerVar(:)    !varialbe on worker processer
+      TYPE(block_data_real8_2d), intent(inout) :: IOVar           !varialbe on IO processer
+      real(r8),                  INTENT(inout) :: MasterVar(:,:)  !varialbe on master processer
+
+      type(block_data_real8_2d) :: sumwt                          !sum of weight
+      logical,  allocatable     :: filter(:)                      !filter for patchtype
+      !----------------------- Dummy argument --------------------------------
+      integer :: xblk, yblk, xloc, yloc
+      integer :: iblk, jblk, idata, ixseg, iyseg
+      integer :: rmesg(3), smesg(3), isrc
+      real(r8), allocatable :: rbuf(:,:), sbuf(:,:), vdata(:,:)
+      integer :: xdsp, ydsp, xcnt, ycnt
+
+      IF (p_is_master) THEN
+         MasterVar(:,:) = spval
+      ENDIF
+
+
+      IF (p_is_worker) THEN
+         WHERE (WorkerVar /= spval)
+            WorkerVar = WorkerVar
+         endwhere
+ 
+
+         IF (numpatch > 0) THEN
+            allocate (filter (numpatch))
+
+            filter(:) = patchtype < 99
+            IF (DEF_forcing%has_missing_value) THEN
+               filter = filter .and. forcmask_pch
+            ENDIF
+         ENDIF
+      ENDIF
+ 
+      CALL mp2g_cama%pset2grid (WorkerVar, IOVar, spv = spval, msk = filter)
+
+      IF (p_is_io) CALL allocate_block_data (gcama, sumwt)
+      call mp2g_cama%get_sumarea (sumwt, filter)
+
+      IF (p_is_io) then
+         do yblk = 1, gblock%nyblk
+            do xblk = 1, gblock%nxblk
+               IF (gblock%pio(xblk,yblk) == p_iam_glb) then
+                  do yloc = 1, gcama%ycnt(yblk)
+                     do xloc = 1, gcama%xcnt(xblk)
+
+                        IF (sumwt%blk(xblk,yblk)%val(xloc,yloc) > 0.00001) then
+                           IF (IOVar%blk(xblk,yblk)%val(xloc,yloc) /= spval) THEN
+                              ! if(IOVar%blk(xblk,yblk)%val(xloc,yloc).gt.0)THEN
+                              !    write(*,*),"LHB debug line848 withdraw error : IOVar, sumwt -----> ",&
+                              !       IOVar%blk(xblk,yblk)%val(xloc,yloc), sumwt%blk(xblk,yblk)%val(xloc,yloc), xblk, yblk, xloc, yloc
+                              ! endif
+                              IOVar%blk(xblk,yblk)%val(xloc,yloc) &
+                                 = IOVar%blk(xblk,yblk)%val(xloc,yloc) * 1000000.0D0
+                           ENDIF
+                        else
+                           IOVar%blk(xblk,yblk)%val(xloc,yloc) = spval
+                        endif
+                     enddo
+                  enddo
+               endif
+            enddo
+         enddo
+      endif
+     
+      IF (p_is_master) THEN
+         DO idata = 1, cama_gather%ndatablk      
+            CALL mpi_recv (rmesg, 3, MPI_INTEGER, MPI_ANY_SOURCE, 10011, p_comm_glb, p_stat, p_err)
+
             isrc  = rmesg(1)
             ixseg = rmesg(2)
             iyseg = rmesg(3)
@@ -752,10 +965,10 @@ CONTAINS
             ENDDO
          ENDDO
       ENDIF
-
+      
       IF (allocated(filter)) deallocate(filter)
 
-   END SUBROUTINE colm2cama_real8
+   END SUBROUTINE colmvar2cama_real8
 
    SUBROUTINE cama2colm_real8 (MasterVar, IOVar, WorkerVar)
 
@@ -851,6 +1064,101 @@ CONTAINS
       CALL mg2p_cama%grid2pset (IOVar, WorkerVar) !mapping grid to pset_type
 
    END SUBROUTINE cama2colm_real8
+
+   SUBROUTINE camavar2colm_real8 (MasterVar, IOVar, WorkerVar)
+
+      !DESCRIPTION
+      !===========
+      ! This subrountine is used for mapping cama-flood output to colm input
+      ! cama-flood output is total irrigation demands at each grid cell
+
+      !ANCILLARY FUNCTIONS AND SUBROUTINES
+      !-------------------
+      !* :SUBROUTINE:"mg2p_cama%map_aweighted"                 :  mapping grid to pset_type
+
+      !REVISION HISTORY
+      !----------------
+      ! 2023.02.23  Zhongwang Wei @ SYSU
+      ! 2022.?      Zhongwang Wei and ShuPeng Zhang @ SYSU
+
+      USE MOD_Precision
+      USE MOD_Namelist
+      USE MOD_TimeManager
+      USE MOD_SPMD_Task
+      USE MOD_Block
+      USE MOD_DataType
+      USE MOD_LandPatch
+      USE MOD_Vars_TimeInvariants, only: patchtype
+      USE MOD_Grid
+
+      IMPLICIT NONE
+
+      real(r8),                  INTENT(in)    :: MasterVar (:,:) ! Variable at master processor
+      type(block_data_real8_2d), INTENT(inout) :: IOVar           ! Variable at io processor
+      real(r8),                  intent(inout) :: WorkerVar (:)   ! Variable at worker processor
+
+      integer :: xblk    , yblk    , xloc ,  yloc
+      integer :: iblk    , jblk    , idata,  ixseg,  iyseg
+      integer :: rmesg(2), smesg(2), isrc ,  iproc
+      integer :: xdsp    , ydsp    , xcnt ,  ycnt
+      real(r8), allocatable :: rbuf(:,:), sbuf(:,:), vdata(:,:)
+
+      IF (p_is_master) THEN
+         DO iyseg = 1, cama_gather%nyseg
+            DO ixseg = 1, cama_gather%nxseg
+               iblk = cama_gather%xsegs(ixseg)%blk
+               jblk = cama_gather%ysegs(iyseg)%blk
+
+               IF (gblock%pio(iblk,jblk) >= 0) THEN
+                  xdsp = cama_gather%xsegs(ixseg)%gdsp
+                  ydsp = cama_gather%ysegs(iyseg)%gdsp
+                  xcnt = cama_gather%xsegs(ixseg)%cnt
+                  ycnt = cama_gather%ysegs(iyseg)%cnt
+
+                  allocate (sbuf (xcnt,ycnt))
+                  sbuf = MasterVar (xdsp+1:xdsp+xcnt, ydsp+1:ydsp+ycnt)
+                  smesg = (/ixseg, iyseg/)
+                  CALL mpi_send (smesg, 2, MPI_INTEGER, &
+                     gblock%pio(iblk,jblk), 10000, p_comm_glb, p_err)
+                  CALL mpi_send (sbuf, xcnt*ycnt, MPI_DOUBLE, &
+                     gblock%pio(iblk,jblk), 10000, p_comm_glb, p_err)
+                  deallocate (sbuf)
+               ENDIF
+            ENDDO
+         ENDDO
+
+         DO iproc = 0, p_np_io-1
+            smesg = (/0, 0/)
+            CALL mpi_send(smesg, 2, MPI_INTEGER, p_address_io(iproc), 10000, p_comm_glb, p_err)
+         ENDDO
+      ELSEIF  (p_is_io) THEN
+         DO WHILE (.true.)
+            call mpi_recv (rmesg, 2, MPI_INTEGER, p_address_master, 10000, p_comm_glb, p_stat, p_err)
+            ixseg = rmesg(1)
+            iyseg = rmesg(2)
+
+            IF ((ixseg > 0) .and. (iyseg > 0)) THEN
+               iblk = cama_gather%xsegs(ixseg)%blk
+               jblk = cama_gather%ysegs(iyseg)%blk
+               xdsp = cama_gather%xsegs(ixseg)%bdsp
+               ydsp = cama_gather%ysegs(iyseg)%bdsp
+               xcnt = cama_gather%xsegs(ixseg)%cnt
+               ycnt = cama_gather%ysegs(iyseg)%cnt
+
+               allocate (rbuf(xcnt,ycnt))
+               call mpi_recv (rbuf, xcnt*ycnt, MPI_DOUBLE, &
+                  p_address_master, 10000, p_comm_glb, p_stat, p_err)
+               IOVar%blk(iblk,jblk)%val(xdsp+1:xdsp+xcnt,ydsp+1:ydsp+ycnt)= rbuf
+               !write(*,*) "LHB debug line1037 withdraw error : ixseg, iyseg, IOVar -----> ", ixseg, iyseg, rbuf
+               deallocate (rbuf)
+            ELSE
+               exit
+            ENDIF
+         ENDDO
+      ENDIF
+
+      CALL mg2p_cama%grid2pset_varvalue (IOVar, WorkerVar) !mapping grid to pset_type
+   END SUBROUTINE camavar2colm_real8
 
 #endif
 

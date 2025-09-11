@@ -99,8 +99,8 @@ ENDIF
 
       !! Used in CoLM
 IF( LWINFILT ) THEN  !! additional prognostics for LWINFILT
-    allocate( D2WINFILT(NSEQMAX,1)     )
-    D2WEVAP(:,:)=0._JPRB
+  ALLOCATE( D2WINFILT(NSEQMAX,1)     )
+  D2WEVAP(:,:)=0._JPRB
 ENDIF
 !! keep these variables even when LGDWDLY is not used. (for simplifying runoff calculation)
 ALLOCATE( P2GDWSTO(NSEQMAX,1)     )
@@ -150,7 +150,7 @@ DO ISEQ=NSEQRIV+1,NSEQALL     !! river mouth grid (NSEQALL, not NSEQRIV)
   P2RIVSTO(ISEQ,1)=DDPH*D2RIVLEN(ISEQ,1)*D2RIVWTH(ISEQ,1)
   P2RIVSTO(ISEQ,1)=MIN( P2RIVSTO(ISEQ,1),D2RIVSTOMAX(ISEQ,1)*1._JPRD )
   D2RIVDPH_PRE(ISEQ,1)=DDPH
-END DO
+ENDDO
 !$OMP END PARALLEL DO SIMD
 
 !! For Usual River Grid (from downstream to upstream). OMP cannot be applied
@@ -165,7 +165,7 @@ DO ISEQ=NSEQRIV,1, -1
   P2RIVSTO(ISEQ,1)=DDPH*D2RIVLEN(ISEQ,1)*D2RIVWTH(ISEQ,1)
   P2RIVSTO(ISEQ,1)=MIN(  P2RIVSTO(ISEQ,1),D2RIVSTOMAX(ISEQ,1)*1._JPRD )
   D2RIVDPH_PRE(ISEQ,1)=DDPH
-END DO
+ENDDO
     
 END SUBROUTINE STORAGE_SEA_SURFACE
 ! ==================================================

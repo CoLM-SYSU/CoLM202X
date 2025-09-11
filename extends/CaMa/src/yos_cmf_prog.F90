@@ -30,7 +30,7 @@ REAL(KIND=JPRB),ALLOCATABLE,TARGET     :: D2RUNOFF(:,:)         !! input runoff 
 REAL(KIND=JPRB),ALLOCATABLE,TARGET     :: D2ROFSUB(:,:)         !! input sub-surface runoff [m3/s]
    !TODO: check d2wevap and d2winfilt units!
 REAL(KIND=JPRB),ALLOCATABLE,TARGET     :: D2WEVAP(:,:)          !! input Evaporation [m3/s]
-real(KIND=JPRB),allocatable,target  :: D2WINFILT(:,:)        !! input Infiltration [m3/s]
+real(KIND=JPRB),allocatable,target     :: D2WINFILT(:,:)        !! input Infiltration [m3/s]
 
 !================================================
 !*** river & floodpain
@@ -62,6 +62,15 @@ REAL(KIND=JPRB),ALLOCATABLE,TARGET     :: D1PTHFLW_PRE(:,:)     !! flood path ou
 !!!*** dam variables
 REAL(KIND=JPRD),ALLOCATABLE,TARGET     :: P2DAMSTO(:,:)         !! reservoir storage [m3]
 REAL(KIND=JPRD),ALLOCATABLE,TARGET     :: P2DAMINF(:,:)         !! reservoir inflow [m3/s]; discharge before operation
+
+!================================================
+REAL(KIND=JPRB),ALLOCATABLE,TARGET     :: dirrig_cama(:,:)
+REAL(KIND=JPRB),ALLOCATABLE,TARGET     :: dirrig_cama_orig(:,:)
+REAL(KIND=JPRB),ALLOCATABLE,TARGET     :: dirrig_cama_unmt(:,:)
+REAL(KIND=JPRB),ALLOCATABLE,TARGET     :: release_cama(:,:)
+REAL(KIND=JPRB),ALLOCATABLE,TARGET     :: release_cama_riv(:,:)
+REAL(KIND=JPRB),ALLOCATABLE,TARGET     :: release_cama_dam(:,:)
+REAL(KIND=JPRB),ALLOCATABLE,TARGET     :: release_cama_rof(:,:)
 
 !================================================
 !!!*** levee variables

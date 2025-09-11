@@ -158,7 +158,7 @@ DO ISEQ=1, NSEQALL
     D2LEVFRC(ISEQ,1)=1._JPRB   !! If no levee, all area is unprotected/
   ENDIF
   D2LEVFRC(ISEQ,1)=MAX(0._JPRB,MIN(1._JPRB,D2LEVFRC(ISEQ,1)))
-END DO
+ENDDO
 !$OMP END PARALLEL DO SIMD
 
 !$OMP PARALLEL DO
@@ -173,7 +173,7 @@ DO ISEQ=1, NSEQALL
     D2FLDGRD(ISEQ,1,I) = (D2FLDHGT(ISEQ,1,I)-DHGTPRE) * DWTH_inc**(-1.)
     DSTO_fil = D2FLDSTOMAX(ISEQ,1,I)
     DHGTPRE = D2FLDHGT(ISEQ,1,I)
-  END DO
+  ENDDO
 
 ! Levee parameters calculation
   IF( D2LEVHGT(ISEQ,1) == 0._JPRB )THEN ! Grid without levee, treat everything as unprotected
@@ -235,7 +235,7 @@ DO ISEQ=1, NSEQALL
       DHGTPRE = D2FLDHGT(ISEQ,1,I)
       I=I+1
       IF( I>NLFP ) EXIT
-    END DO
+    ENDDO
 
     !! calculate levee fill volume
     IF( I<=NLFP )THEN 
@@ -253,7 +253,7 @@ DO ISEQ=1, NSEQALL
     ENDIF
   ENDIF
 
-END DO
+ENDDO
 !$OMP END PARALLEL DO
 
 END SUBROUTINE CMF_LEVEE_INIT
@@ -317,7 +317,7 @@ DO ISEQ=1, NSEQALL
         DDPH_fil = DDPH_fil + D2FLDGRD(ISEQ,1,I) * DWTH_inc
         I=I+1
         IF( I>NLFP ) EXIT
-      END DO
+      ENDDO
 
       ! water depth at unprotected area
       IF( I<=NLFP )THEN
@@ -393,7 +393,7 @@ DO ISEQ=1, NSEQALL
         DDPH_fil = D2FLDHGT(ISEQ,1,I) - D2BASHGT(ISEQ,1)
         I=I+1
         IF( I>NLFP ) EXIT
-      END DO
+      ENDDO
 
       IF( I<=NLFP )THEN
         DSTO_add = DSTOALL - DSTO_fil
@@ -427,7 +427,7 @@ DO ISEQ=1, NSEQALL
         DDPH_fil = DDPH_fil + D2FLDGRD(ISEQ,1,I) * DWTH_inc
         I=I+1
         IF( I>NLFP ) EXIT
-      END DO
+      ENDDO
 
       IF( I<=NLFP )THEN
         DSTO_add =  DSTOALL - DSTO_fil
@@ -466,7 +466,7 @@ DO ISEQ=1, NSEQALL
     P2LEVSTO(ISEQ,1) = 0._JPRD
     D2LEVDPH(ISEQ,1) = 0._JPRB
   ENDIF
-END DO
+ENDDO
 !$OMP END PARALLEL DO
 
 !$OMP PARALLEL DO SIMD REDUCTION(+:P0GLBSTONEW2,P0GLBRIVSTO,P0GLBFLDSTO,P0GLBLEVSTO,P0GLBFLDARE)

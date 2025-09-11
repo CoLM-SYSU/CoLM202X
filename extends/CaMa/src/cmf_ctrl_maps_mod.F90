@@ -29,6 +29,7 @@ CHARACTER(LEN=256)              :: CELEVTN         !! bank top elevation
 CHARACTER(LEN=256)              :: CNXTDST         !! distance to next outlet
 CHARACTER(LEN=256)              :: CRIVLEN         !! river channel length
 CHARACTER(LEN=256)              :: CFLDHGT         !! floodplain elevation profile
+CHARACTER(LEN=256)              :: CGRDARE         !! grid area
 !* river channel parameters
 CHARACTER(LEN=256)              :: CRIVWTH         !! channel width
 CHARACTER(LEN=256)              :: CRIVHGT         !! channel depth
@@ -46,7 +47,7 @@ CHARACTER(LEN=256)              :: CRIVPARNC       !! river parameter netcdf (WI
 CHARACTER(LEN=256)              :: CMEANSLNC       !! mean sea level netCDF
 CHARACTER(LEN=256)              :: CMPIREGNC       !! MPI region map in netcdf
 
-NAMELIST/NMAP/     CNEXTXY,  CGRAREA,  CELEVTN,  CNXTDST, CRIVLEN, CFLDHGT, &
+NAMELIST/NMAP/     CNEXTXY,  CGRAREA,  CELEVTN,  CNXTDST, CRIVLEN, CFLDHGT, CGRDARE, &
                    CRIVWTH,  CRIVHGT,  CRIVMAN,  CPTHOUT, CGDWDLY, CMEANSL, &
                    CMPIREG,  LMAPCDF,  CRIVCLINC,CRIVPARNC,CMEANSLNC,CMPIREGNC
 
@@ -81,6 +82,7 @@ CELEVTN="./elevtn.bin"
 CNXTDST="./nxtdst.bin"
 CRIVLEN="./rivlen.bin"
 CFLDHGT="./fldhgt.bin"
+CGRDARE="./grdare.bin"
 
 CRIVWTH="./rivwth.bin"
 CRIVHGT="./rivhgt.bin"
@@ -120,6 +122,7 @@ ELSE
   WRITE(LOGNAM,*)   "CNXTDST:   ", TRIM(CNXTDST)
   WRITE(LOGNAM,*)   "CRIVLEN:   ", TRIM(CRIVLEN)
   WRITE(LOGNAM,*)   "CFLDHGT:   ", TRIM(CFLDHGT)
+  WRITE(LOGNAM,*)   "CGRDARE:   ", TRIM(CGRDARE)
 
   WRITE(LOGNAM,*)   "CRIVWTH:   ", TRIM(CRIVWTH)
   WRITE(LOGNAM,*)   "CRIVHGT:   ", TRIM(CRIVHGT)
@@ -338,8 +341,8 @@ DO IY=1, NY
     IF( I2NEXTX(IX,IY)/=IMIS ) THEN
       I2REGION(IX,IY)=1
     ENDIF
-  END DO
-END DO
+  ENDDO
+ENDDO
 !$OMP END PARALLEL DO
 
 !*** read MPI region map
@@ -365,8 +368,8 @@ END DO
   DO IY=1, NY
     DO IX=1, NX
       REGIONALL=MAX( REGIONALL, I2REGION(IX,IY) )
-    END DO
-  END DO
+    ENDDO
+  ENDDO
 !$OMP END PARALLEL DO
 #endif
 
@@ -381,15 +384,15 @@ DO IY=1, NY
       IREGION=I2REGION(IX,IY)
       REGIONGRID(IREGION)=REGIONGRID(IREGION)+1
     ENDIF
-  END DO
-END DO
+  ENDDO
+ENDDO
 
 NSEQMAX=0
 NSEQMAX_MPI=0
 DO IREGION=1, REGIONALL
   IF( IREGION==REGIONTHIS ) NSEQMAX=REGIONGRID(IREGION)
   NSEQMAX_MPI=MAX(NSEQMAX,REGIONGRID(IREGION))  !! maximum nseqmax among all MPI region
-END DO
+ENDDO
 
 WRITE(LOGNAM,*) 'CALC_REGION: REGIONALL= ', REGIONALL
 WRITE(LOGNAM,*) 'CALC_REGION: NSEQMAX='   , NSEQMAX
@@ -437,8 +440,8 @@ DO IY=1, NY
       NUPST(JX,JY)=NUPST(JX,JY)+1
       UPNMAX=max(UPNMAX,NUPST(JX,JY))
     ENDIF
-  END DO
-END DO
+  ENDDO
+ENDDO
 
 ! register upmost grid in 1d sequence
 ISEQ=0
@@ -452,8 +455,8 @@ DO IY=1, NY
         I2VECTOR(IX,IY)=ISEQ
       ENDIF
     ENDIF
-  END DO
-END DO
+  ENDDO
+ENDDO
 ISEQ1=1
 ISEQ2=ISEQ
 
@@ -474,10 +477,10 @@ DO WHILE( AGAIN==1 )
       I2VECTOR(JX,JY)=JSEQ
       AGAIN=1
     ENDIF
-  END DO
+  ENDDO
   ISEQ1=ISEQ2+1
   ISEQ2=JSEQ
-END DO
+ENDDO
 NSEQRIV=JSEQ    !! END OF RIVER-LINK GRID
 
 ISEQ=NSEQRIV
@@ -489,8 +492,8 @@ DO IY=1, NY
       I1SEQY(ISEQ)=IY
       I2VECTOR(IX,IY)=ISEQ
     ENDIF
-  END DO
-END DO
+  ENDDO
+ENDDO
 NSEQALL=ISEQ    !! END OF RIVER-MOUTH GRID
 
 DO ISEQ=1, NSEQALL
@@ -503,7 +506,7 @@ DO ISEQ=1, NSEQALL
   ELSE
     I1NEXT(ISEQ)=I2NEXTX(IX,IY)
   ENDIF
-END DO
+ENDDO
 
 DEALLOCATE(NUPST,UPNOW)
 
@@ -520,7 +523,7 @@ WRITE(LOGNAM,*) 'CALC_1DSEQ: NSEQALL='   , NSEQALL
     JSEQ=I1NEXT(ISEQ)
     I1UPN(JSEQ)=I1UPN(JSEQ)+1
     I1UPST(JSEQ,I1UPN(JSEQ))=ISEQ
-  END DO
+  ENDDO
 !!ENDIF
 
 END SUBROUTINE CALC_1D_SEQ
@@ -575,21 +578,21 @@ DO IPTH=1, NPTHOUT
   DO ILEV=1, NPTHLEV
     IF( ILEV==1 )THEN            !!ILEV=1: water channel bifurcation. consider bifurcation channel depth
       PWTH=PTH_WTH(IPTH,ILEV)
-      IF( PWTH>0 )then
+      IF( PWTH>0 )THEN
         PTH_ELV(IPTH,ILEV)=PELV - PDPH
       ELSE
         PTH_ELV(IPTH,ILEV)=1.E20
       ENDIF
     ELSE
       PWTH=PTH_WTH(IPTH,ILEV)
-      IF( PWTH>0 )then
+      IF( PWTH>0 )THEN
         PTH_ELV(IPTH,ILEV)=PELV + ILEV - 2.0    !! ILEV=2: bank top level 
       ELSE
         PTH_ELV(IPTH,ILEV)=1.E20
       ENDIF
     ENDIF
-  END DO
-END DO
+  ENDDO
+ENDDO
 CLOSE(TMPNAM)
 
 DO ILEV=1, NPTHLEV
@@ -598,7 +601,7 @@ DO ILEV=1, NPTHLEV
   ELSE
     PTH_MAN(ILEV)=PMANFLD
   ENDIF
-END DO
+ENDDO
 
 IF (NPTHOUT /= NPTHOUT1) THEN
   WRITE(LOGNAM,*)"Bifuraction channel outside of domain. Only valid:", NPTHOUT1
@@ -611,7 +614,7 @@ ENDIF
   DO ISEQ=1, NSEQMAX
     ONMAX=max(ONMAX,OCOUNT(ISEQ))
     INMAX=max(INMAX,ICOUNT(ISEQ))
-  END DO
+  ENDDO
   WRITE(LOGNAM,*) "Max # of Bifuraction channel in each grid (Out, Inf):", ONMAX, INMAX
   
   ALLOCATE(I1P_OUT(NSEQMAX,ONMAX))
@@ -634,7 +637,7 @@ ENDIF
       I1P_INFN(JSEQ)=I1P_INFN(JSEQ)+1
       I1P_INF(JSEQ,I1P_INFN(JSEQ))=IPTH
     ENDIF
-  END DO
+  ENDDO
 !!ENDIF
 
 END SUBROUTINE READ_BIFPARAM
@@ -658,7 +661,7 @@ USE YOS_CMF_MAP,    ONLY: D2NXTDST, D2GRAREA, D2ELEVTN, D2RIVLEN, &
                         & D2RIVWTH, D2RIVHGT, D2FLDHGT, D2RIVELV, &
                         & D2FLDGRD, D2RIVMAN, D2RIVSTOMAX, D2FLDSTOMAX,  &
                         & DFRCINC,  NSEQMAX,  D2MEANSL, D2DWNELV, &
-                        & D2GDWDLY, I2MASK
+                        & D2GDWDLY, I2MASK, R2GRDARE
 IMPLICIT NONE
 !================================================
 WRITE(LOGNAM,*) ""
@@ -678,7 +681,8 @@ ALLOCATE( D2RIVMAN(NSEQMAX,1) )
 ALLOCATE( D2MEANSL(NSEQMAX,1) )
 ALLOCATE( D2DWNELV(NSEQMAX,1) )
 ALLOCATE( D2GDWDLY(NSEQMAX,1) )
-ALLOCATE( I2MASK(NSEQMAX,1) )
+ALLOCATE( I2MASK(NSEQMAX,1)   )
+ALLOCATE( R2GRDARE(NX,NY)     )
 
 D2GRAREA(:,:)  =0._JPRB
 D2ELEVTN(:,:)  =0._JPRB
@@ -692,6 +696,7 @@ D2MEANSL(:,:)  =0._JPRB
 D2DWNELV(:,:)  =0._JPRB
 D2GDWDLY(:,:)  =0._JPRB
 I2MASK(:,:)    =0._JPIM     !! mask for calculation (IFS slopemix: Kinemacti Wave for Mask=1; Reservoir: dam=2, dam upstream=1)
+R2GRDARE(:,:)  =0._JPRB
 
 !============================
 ! *** 2. Read topo map
@@ -792,6 +797,13 @@ DO ILFP=1,NLFP
   CALL mapR2vecD(R2TEMP,D2TEMP)
   D2FLDHGT(:,:,ILFP)= D2TEMP(:,:)
 ENDDO
+CLOSE(TMPNAM)
+
+WRITE(LOGNAM,*)'TOPO_INIT: grid area : ',TRIM(CGRDARE)
+OPEN(TMPNAM,FILE=TRIM(CGRDARE),FORM='UNFORMATTED',ACCESS='DIRECT',RECL=4*NX*NY)
+READ(TMPNAM,REC=1) R2TEMP(:,:)
+  IF( LMAPEND ) CALL CONV_END(R2TEMP,NX,NY)
+R2GRDARE(:,:) = R2TEMP(:,:)
 CLOSE(TMPNAM)
 
 !*** river channel / groundwater parameters)
@@ -992,8 +1004,8 @@ DO ISEQ=1, NSEQMAX
     D2FLDGRD(ISEQ,1,I) = (D2FLDHGT(ISEQ,1,I)-DHGTPRE) * DWTHINC**(-1.)
     DSTOPRE = D2FLDSTOMAX(ISEQ,1,I)
     DHGTPRE = D2FLDHGT(ISEQ,1,I)
-  END DO
-END DO
+  ENDDO
+ENDDO
 !$OMP END PARALLEL DO
 
 !

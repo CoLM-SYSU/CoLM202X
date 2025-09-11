@@ -107,7 +107,7 @@ LINPDAY =.FALSE.
 LINTERP =.FALSE.
 LITRPCDF=.FALSE.
 CINPMAT ="NONE"
-      DROFUNIT=1._JPRB             !! defaults mm/day -> m3/m2/s
+DROFUNIT=1._JPRB             !! defaults mm/day -> m3/m2/s
 
 CROFDIR="./runoff/"
 CROFPRE="Roff____"           !! defaults runoff file name Roff____YYYYMMDD.one
@@ -145,6 +145,7 @@ WRITE(LOGNAM,*)     "LINPDAY:   ", LINPDAY
 WRITE(LOGNAM,*)     "LINTERP:   ", LINTERP
 WRITE(LOGNAM,*)     "LITRPCDF:  ", LITRPCDF
 WRITE(LOGNAM,*)     "CINPMAT:   ", TRIM(CINPMAT)
+WRITE(LOGNAM,*)     "DROFUNIT:  ", DROFUNIT
 WRITE(LOGNAM,*)     "LROSPLIT:  ", LROSPLIT
 IF( LINPDAY )THEN
   WRITE(LOGNAM,*)   "CROFDIR:   ", TRIM(CROFDIR)
@@ -346,7 +347,7 @@ CALL NCERROR ( NF90_INQ_VARID(NCID,'inpa',VARID),'getting id' )
 CALL NCERROR ( NF90_GET_VAR(NCID,VARID,D2TMP,(/1,1,1/),(/NX,NY,INPN/)),'reading data' ) 
 DO INPI=1, INPN
   CALL mapD2vecD(D2TMP(:,:,INPI:INPI),INPA(:,INPI:INPI))
-END DO
+ENDDO
 DEALLOCATE( D2TMP )
 
 !** input matrix IXIN
@@ -357,7 +358,7 @@ CALL NCERROR ( NF90_INQ_VARID(NCID,'inpx',VARID),'getting id' )
 CALL NCERROR ( NF90_GET_VAR(NCID,VARID,I2TMP,(/1,1,1/),(/NX,NY,INPN/)),'reading data' ) 
 DO INPI=1, INPN
   CALL mapI2vecI(I2TMP(:,:,INPI:INPI),INPX(:,INPI:INPI))
-END DO
+ENDDO
 
 !** input matrix IYIN
 WRITE(LOGNAM,*)'INIT_MAP: inpy:',TRIM(CINPMAT)
@@ -365,7 +366,7 @@ CALL NCERROR ( NF90_INQ_VARID(NCID,'inpy',VARID),'getting id' )
 CALL NCERROR ( NF90_GET_VAR(NCID,VARID,I2TMP,(/1,1,1/),(/NX,NY,INPN/)),'reading data' ) 
 DO INPI=1, INPN
   CALL mapI2vecI(I2TMP(:,:,INPI:INPI),INPY(:,INPI:INPI))
-END DO
+ENDDO
 
 DEALLOCATE( I2TMP )
 
@@ -456,7 +457,7 @@ DO INPI=1, INPN
    CALL mapI2vecI(I2TMP,INPY(:,INPI:INPI))
   READ(TMPNAM,REC=2*INPN+INPI) R2TMP
    CALL mapR2vecD( R2TMP,INPA(:,INPI:INPI))
-END DO
+ENDDO
 
 CLOSE(TMPNAM)
 DEALLOCATE(I2TMP,R2TMP)
@@ -795,15 +796,14 @@ DO ISEQ=1, NSEQMAX
         WRITE(LOGNAM,*)  'XXX',ISEQ,INPI,IXIN,IYIN
         CYCLE
       ENDIF
-
-      IF( PBUFFIN(IXIN,IYIN).NE.RMIS )THEN
+      IF( PBUFFIN(IXIN,IYIN).GE.0._JPRB )THEN
         PBUFFOUT(ISEQ,1) = PBUFFOUT(ISEQ,1) + PBUFFIN(IXIN,IYIN) * INPA(ISEQ,INPI) / DROFUNIT   !! DTIN removed in v395
       ENDIF
       IF( CMF_CheckNanB(PBUFFIN(IXIN,IYIN),0._JPRB) ) PBUFFOUT(ISEQ,1)=0._JPRB  !! treat NaN runoff input 
     ENDIF
-  END DO
-            PBUFFOUT(ISEQ,1)=MAX(PBUFFOUT(ISEQ,1), 0._JPRB)
-END DO
+  ENDDO
+  PBUFFOUT(ISEQ,1)=MAX(PBUFFOUT(ISEQ,1), 0._JPRB)
+ENDDO
 !$OMP END PARALLEL DO
 END SUBROUTINE ROFF_INTERP
 !==========================================================
@@ -812,7 +812,7 @@ END SUBROUTINE ROFF_INTERP
 !==========================================================
 SUBROUTINE CONV_RESOL(PBUFFIN,PBUFFOUT)
 !! use runoff data without any interporlation. map resolution & runoff resolution should be same
-USE YOS_CMF_MAP,             ONLY: NSEQMAX, D2GRAREA
+USE YOS_CMF_MAP,             ONLY: NSEQALL, NSEQMAX, D2GRAREA
 USE YOS_CMF_INPUT,           ONLY: RMIS
 USE CMF_UTILS_MOD,           ONLY: mapD2vecD
 IMPLICIT NONE
@@ -834,8 +834,9 @@ DO ISEQ=1, NSEQMAX
   ELSE
     PBUFFOUT(ISEQ,1)=0._JPRB
   ENDIF
-END DO
+ENDDO
 !$OMP END PARALLEL DO SIMD
+
 END SUBROUTINE CONV_RESOL
 !==========================================================
 

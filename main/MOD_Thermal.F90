@@ -37,7 +37,7 @@ CONTAINS
                        rss           ,gssun_out     ,gssha_out     ,assimsun_out  ,&
                        etrsun_out    ,assimsha_out  ,etrsha_out    ,&
 !photosynthesis and plant hydraulic variables
-                       effcon        ,vmax25        ,hksati        ,smp     ,hk   ,&
+                       effcon        ,vmax25        ,c3c4          ,hksati        ,smp     ,hk   ,&
                        kmax_sun      ,kmax_sha      ,kmax_xyl      ,kmax_root     ,&
                        psi50_sun     ,psi50_sha     ,psi50_xyl     ,psi50_root    ,&
                        ck            ,vegwp         ,gs0sun        ,gs0sha        ,&
@@ -251,6 +251,9 @@ CONTAINS
        dz_soisno(lb:nl_soil),    &! layer thickness [m]
        z_soisno (lb:nl_soil),    &! node depth [m]
        zi_soisno(lb-1:nl_soil)    ! interface depth [m]
+
+   integer , intent(in) :: &
+       c3c4 ! C3/C4 plant type
 
    real(r8), intent(in) :: &
        sabg_snow_lyr(lb:1)        ! snow layer absorption
@@ -660,7 +663,7 @@ IF ( patchtype==0.and.DEF_USE_LCT .or. patchtype>0 ) THEN
 
          CALL LeafTemperature(ipatch,1,deltim,csoilc   ,dewmx       ,htvp        ,&
                  lai         ,sai         ,htop        ,hbot        ,sqrtdi      ,&
-                 effcon      ,vmax25      ,slti        ,hlti        ,shti        ,&
+                 effcon      ,vmax25      ,c3c4        ,slti        ,hlti        ,shti        ,&
                  hhti        ,trda        ,trdm        ,trop        ,g1          ,&
                  g0          ,gradm       ,binter      ,extkn       ,extkb       ,&
                  extkd       ,forc_hgt_u  ,forc_hgt_t  ,forc_hgt_q  ,forc_us     ,&
@@ -819,7 +822,7 @@ IF (patchtype == 0) THEN
 
             CALL LeafTemperature(ipatch,p,deltim  ,csoilc          ,dewmx           ,htvp           ,&
                  lai_p(i)        ,sai_p(i)        ,htop_p(i)       ,hbot_p(i)       ,sqrtdi_p(p)    ,&
-                 effcon_p(p)     ,vmax25_p(p)     ,slti_p(p)       ,hlti_p(p)       ,shti_p(p)      ,&
+                 effcon_p(p)     ,vmax25_p(p)     ,c3c4_p(p)       ,slti_p(p)       ,hlti_p(p)       ,shti_p(p)      ,&
                  hhti_p(p)       ,trda_p(p)       ,trdm_p(p)       ,trop_p(p)       ,g1_p(p)        ,&
                  g0_p(p)         ,gradm_p(p)      ,binter_p(p)     ,extkn_p(p)      ,extkb_p(i)     ,&
                  extkd_p(i)      ,forc_hgt_u      ,forc_hgt_t      ,forc_hgt_q      ,forc_us        ,&

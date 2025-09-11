@@ -108,7 +108,7 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
 
              ! VEGETATION INFORMATION
                htop(i),         hbot(i),         sqrtdi(m),                        &
-               effcon(m),       vmax25(m),                                         &
+               effcon(m),       vmax25(m),       c3c4(m),                          &
                kmax_sun(m),     kmax_sha(m),     kmax_xyl(m),     kmax_root(m),    &
                psi50_sun(m),    psi50_sha(m),    psi50_xyl(m),    psi50_root(m),   &
                ck(m),           slti(m),         hlti(m),         shti(m),         &
@@ -239,7 +239,7 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
 
           ! VEGETATION INFORMATION
             htop(i)         ,hbot(i)         ,sqrtdi(m)       ,chil(m)         ,&
-            effcon(m)       ,vmax25(m)       ,slti(m)         ,hlti(m)         ,&
+            effcon(m)       ,vmax25(m)       ,c3c4(m)         ,slti(m)         ,hlti(m)         ,&
             shti(m)         ,hhti(m)         ,trda(m)         ,trdm(m)         ,&
             trop(m)         ,g1(m)           ,g0(m)           ,gradm(m)        ,&
             binter(m)       ,extkn(m)        ,rho(1:,1:,m)    ,tau(1:,1:,m)    ,&
@@ -290,7 +290,7 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
             dfwsun(u)       ,t_room(u)       ,troof_inner(u)  ,twsun_inner(u)  ,&
             twsha_inner(u)  ,t_roommax(u)    ,t_roommin(u)    ,tafu(u)         ,&
 
-            zwt(i)          ,wa(i)                                             ,&
+            zwt(i)          ,wdsrf(i)        ,wa(i)                            ,&
             t_lake(1:,i)    ,lake_icefrac(1:,i),               savedtke1(i)    ,&
 
           ! SNICAR snow model related

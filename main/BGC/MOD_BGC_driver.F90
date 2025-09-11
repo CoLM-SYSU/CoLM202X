@@ -114,7 +114,7 @@
       CALL CNGResp(i, ps, pe, npcropmin)
 #ifdef CROP
       IF(DEF_USE_IRRIGATION)THEN
-         CALL CalIrrigationNeeded(i,ps,pe,idate,nl_soil,nbedrock,z_soi,dz_soi,deltim,dlon,npcropmin)
+         CALL CalIrrigationNeeded(i,idate,nl_soil,nbedrock,z_soi,zi_soi,dz_soi,deltim,dlon,npcropmin)
       ENDIF
 #endif
       ! update vegetation pools from phenology, allocation and nitrogen uptake
