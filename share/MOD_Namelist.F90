@@ -1160,6 +1160,12 @@ CONTAINS
          ENDIF
 #endif
 
+         IF (DEF_Runoff_SCHEME == 1) THEN
+            DEF_file_VIC_para = trim(DEF_dir_runtime)//'/vic_para.txt'
+            IF (DEF_VIC_OPT) THEN
+               DEF_file_VIC_OPT = trim(DEF_dir_runtime)//'vic_para.nc'
+            ENDIF
+         ENDIF
 
 ! ----- subgrid type related ------ Macros&Namelist conflicts and dependency management
 
