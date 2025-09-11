@@ -683,7 +683,7 @@ CONTAINS
 
    END SUBROUTINE check_vector_data_real8_4d
 
-   
+
    ! ----------
    SUBROUTINE check_vector_data_real8_5d (varname, vdata, spv_in, limits)
 
@@ -695,7 +695,7 @@ CONTAINS
    character(len=*), intent(in)   :: varname
    real(r8), intent(in)           :: vdata(:,:,:,:,:)
    real(r8), intent(in), optional :: spv_in
-   real(r8), intent(in), optional :: limits(2) 
+   real(r8), intent(in), optional :: limits(2)
 
    ! Local variables
    real(r8) :: vmin, vmax, spv
@@ -793,7 +793,7 @@ CONTAINS
       ENDIF
 
    END SUBROUTINE check_vector_data_real8_5d
-   
+
 
    ! ----------
    SUBROUTINE check_vector_data_int32_1d (varname, vdata, spv_in)

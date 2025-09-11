@@ -33,9 +33,10 @@ MODULE MOD_Catch_RiverLakeFlow
 CONTAINS
 
    ! ---------
-   SUBROUTINE river_lake_flow (dt)
+   SUBROUTINE river_lake_flow (year, dt)
 
    USE MOD_SPMD_Task
+   USE MOD_Namelist, only : DEF_Reservoir_Method
    USE MOD_Utils
    USE MOD_Catch_BasinNetwork
    USE MOD_Catch_HillslopeNetwork
@@ -46,10 +47,11 @@ CONTAINS
    USE MOD_Const_Physical, only: grav
    IMPLICIT NONE
 
+   integer,  intent(in) :: year
    real(r8), intent(in) :: dt
 
    ! Local Variables
-   integer  :: hs, he, i, j
+   integer  :: hs, he, i, j, irsv
    real(r8) :: dt_this
 
    real(r8),  allocatable :: wdsrf_bsn_ds(:)
@@ -60,6 +62,9 @@ CONTAINS
    real(r16), allocatable :: mflux_fc(:)
    real(r16), allocatable :: zgrad_dn(:)
 
+   real(r16), allocatable :: hflux_resv(:)
+   real(r16), allocatable :: mflux_resv(:)
+
    real(r16), allocatable :: sum_hflux_riv(:)
    real(r16), allocatable :: sum_mflux_riv(:)
    real(r16), allocatable :: sum_zgrad_riv(:)
@@ -67,7 +72,7 @@ CONTAINS
    real(r8) :: veloct_fc, height_fc, momen_fc, zsurf_fc
    real(r8) :: bedelv_fc, height_up, height_dn
    real(r8) :: vwave_up, vwave_dn, hflux_up, hflux_dn, mflux_up, mflux_dn
-   real(r8) :: totalvolume, loss, friction, dvol, nextl, nexta, nextv, ddep
+   real(r8) :: totalvolume, friction, dvol, nextl, nexta, nextv, ddep
    real(r8),  allocatable :: dt_res(:), dt_all(:), dt_tmp(:)
    logical,   allocatable :: hmask(:), bsnfilter(:)
 
@@ -109,6 +114,7 @@ CONTAINS
          ENDDO
 
          IF (numbasin > 0) THEN
+
             allocate (wdsrf_bsn_ds  (numbasin))
             allocate (veloc_riv_ds  (numbasin))
             allocate (momen_riv_ds  (numbasin))
@@ -119,6 +125,12 @@ CONTAINS
             allocate (sum_mflux_riv (numbasin))
             allocate (sum_zgrad_riv (numbasin))
             allocate (bsnfilter     (numbasin))
+
+            IF (DEF_Reservoir_Method > 0) THEN
+               allocate (hflux_resv (numbasin))
+               allocate (mflux_resv (numbasin))
+            ENDIF
+
          ENDIF
 
          allocate (dt_res (numrivsys))
@@ -175,6 +187,12 @@ CONTAINS
                   ! reconstruction of height of water near interface
                   IF (riverdown(i) > 0) THEN
                      bedelv_fc = max(bedelv(i), bedelv_ds(i))
+                     IF ((lake_type(i) == 2) .or. (lake_type(i) == 3)) THEN
+                        ! for reservoir (type=2) or controlled lake (type=3)
+                        IF (year >= dam_build_year(bsn2resv(i))) THEN
+                           bedelv_fc = max(bedelv_fc, dam_elv(bsn2resv(i)))
+                        ENDIF
+                     ENDIF
                      height_up = max(0., wdsrf_bsn(i)   +bedelv(i)   -bedelv_fc)
                      height_dn = max(0., wdsrf_bsn_ds(i)+bedelv_ds(i)-bedelv_fc)
                   ELSEIF (riverdown(i) == 0) THEN ! for river mouth
@@ -283,9 +301,12 @@ CONTAINS
                      mask = hillslope_basin(i)%hand <= wdsrf_bsn(i) + handmin(i)))
                ENDIF
 
-               IF (reservoir_id(i) > 0) THEN
-                  IF (wdsrf_bsn(i) <= lakeinfo(i)%depth(1)) THEN
-                     hflux_fc(i) = min(hflux_fc(i), 0.)
+               ! reservoir operation.
+               IF (DEF_Reservoir_Method > 0) THEN
+                  IF (lake_type(i) == 2) THEN
+                     hflux_fc(i) = 0.
+                     mflux_fc(i) = 0.
+                     zgrad_dn(i) = 0.
                   ENDIF
                ENDIF
 
@@ -304,6 +325,49 @@ CONTAINS
 
             IF (numbasin > 0) THEN
                hflux_fc = - hflux_fc;  mflux_fc = - mflux_fc;  zgrad_dn = - zgrad_dn
+            ENDIF
+
+            ! reservoir operation.
+            IF (DEF_Reservoir_Method > 0) THEN
+
+               DO i = 1, numbasin
+                  IF (.not. bsnfilter(i)) CYCLE
+                  IF (lake_type(i) == 2) THEN
+                     IF (year >= dam_build_year(bsn2resv(i))) THEN
+
+                        irsv = bsn2resv(i)
+                        qresv_in(irsv) = - sum_hflux_riv(i)
+                        volresv (irsv) = lakeinfo(i)%volume( wdsrf_bsn(i) )
+
+                        IF (volresv(irsv) > 1.e-4 * volresv_total(irsv)) THEN
+                           CALL reservoir_operation (DEF_Reservoir_Method, &
+                              irsv, qresv_in(irsv), volresv(irsv), qresv_out(irsv))
+                        ELSE
+                           qresv_out (irsv) = 0.
+                        ENDIF
+
+                        hflux_fc(i) = qresv_out(irsv)
+                        mflux_fc(i) = qresv_out(irsv) * sqrt(2*grav*wdsrf_bsn(i))
+
+                        sum_hflux_riv(i) = sum_hflux_riv(i) + hflux_fc(i)
+                        sum_mflux_riv(i) = sum_mflux_riv(i) + mflux_fc(i)
+
+                        hflux_resv(i) = - hflux_fc(i)
+                        mflux_resv(i) = - mflux_fc(i)
+
+                     ELSE
+                        hflux_resv(i) = 0.
+                        mflux_resv(i) = 0.
+                     ENDIF
+                  ELSE
+                     hflux_resv(i) = 0.
+                     mflux_resv(i) = 0.
+                  ENDIF
+               ENDDO
+
+               CALL push_to_downstream (hflux_resv, sum_hflux_riv, bsnfilter)
+               CALL push_to_downstream (mflux_resv, sum_mflux_riv, bsnfilter)
+
             ENDIF
 
             DO i = 1, numbasin
@@ -479,9 +543,21 @@ CONTAINS
                      hs = basin_hru%substt(i)
                      he = basin_hru%subend(i)
                      DO j = hs, he
-                        wdsrf_bsnhru(j) = max(wdsrf_bsn(i) - (lakeinfo(i)%depth(1) - lakeinfo(i)%depth0(j-hs+1)), 0.)
+                        wdsrf_bsnhru(j) = &
+                           max(wdsrf_bsn(i) - (lakeinfo(i)%depth(1) - lakeinfo(i)%depth0(j-hs+1)), 0.)
                         wdsrf_bsnhru_ta(j) = wdsrf_bsnhru_ta(j) + wdsrf_bsnhru(j) * dt_all(irivsys(i))
                      ENDDO
+                  ENDIF
+
+                  IF (DEF_Reservoir_Method > 0) THEN
+                     IF (lake_type(i) == 2) THEN
+                        IF (year >= dam_build_year(bsn2resv(i))) THEN
+                           irsv = bsn2resv(i)
+                           volresv_ta  (irsv) = volresv_ta  (irsv) + volresv  (irsv) * dt_all(irivsys(i))
+                           qresv_in_ta (irsv) = qresv_in_ta (irsv) + qresv_in (irsv) * dt_all(irivsys(i))
+                           qresv_out_ta(irsv) = qresv_out_ta(irsv) + qresv_out(irsv) * dt_all(irivsys(i))
+                        ENDIF
+                     ENDIF
                   ENDIF
 
                ENDIF
@@ -501,6 +577,8 @@ CONTAINS
          IF (allocated(hflux_fc     )) deallocate(hflux_fc     )
          IF (allocated(mflux_fc     )) deallocate(mflux_fc     )
          IF (allocated(zgrad_dn     )) deallocate(zgrad_dn     )
+         IF (allocated(hflux_resv   )) deallocate(hflux_resv   )
+         IF (allocated(mflux_resv   )) deallocate(mflux_resv   )
          IF (allocated(sum_hflux_riv)) deallocate(sum_hflux_riv)
          IF (allocated(sum_mflux_riv)) deallocate(sum_mflux_riv)
          IF (allocated(sum_zgrad_riv)) deallocate(sum_zgrad_riv)
