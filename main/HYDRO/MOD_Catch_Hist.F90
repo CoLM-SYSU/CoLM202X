@@ -403,9 +403,11 @@ CONTAINS
 
          IF (numhru > 0) a_xsubs_hru(:) = spval
 
-         IF (numresv > 0) a_volresv  (:) = spval
-         IF (numresv > 0) a_qresv_in (:) = spval
-         IF (numresv > 0) a_qresv_out(:) = spval
+         IF (DEF_Reservoir_Method > 0) THEN
+            IF (numresv > 0) a_volresv  (:) = spval
+            IF (numresv > 0) a_qresv_in (:) = spval
+            IF (numresv > 0) a_qresv_out(:) = spval
+         ENDIF
 
       ENDIF
 
