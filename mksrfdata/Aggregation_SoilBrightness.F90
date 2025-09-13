@@ -342,7 +342,7 @@ SUBROUTINE Aggregation_SoilBrightness ( &
 
 #ifdef SrfdataDiag
       typpatch = (/(ityp, ityp = 0, N_land_classification)/)
-      lndname  = trim(dir_model_landdata) // '/diag/soil_brightness_patch_' // trim(cyear) // '.nc'
+      lndname  = trim(dir_model_landdata) // '/diag/soil_brightness_' // trim(cyear) // '.nc'
       CALL srfdata_map_and_write (soil_s_v_alb, landpatch%settyp, typpatch, m_patch2diag, &
          -1.0e36_r8, lndname, 'soil_s_v_alb', compress = 1, write_mode = 'one', create_mode=.true.)
 #endif
@@ -356,7 +356,7 @@ SUBROUTINE Aggregation_SoilBrightness ( &
 
 #ifdef SrfdataDiag
       typpatch = (/(ityp, ityp = 0, N_land_classification)/)
-      lndname  = trim(dir_model_landdata) // '/diag/soil_brightness_patch_' // trim(cyear) // '.nc'
+      lndname  = trim(dir_model_landdata) // '/diag/soil_brightness_' // trim(cyear) // '.nc'
       CALL srfdata_map_and_write (soil_d_v_alb, landpatch%settyp, typpatch, m_patch2diag, &
          -1.0e36_r8, lndname, 'soil_d_v_alb', compress = 1, write_mode = 'one')
 #endif
@@ -370,7 +370,7 @@ SUBROUTINE Aggregation_SoilBrightness ( &
 
 #ifdef SrfdataDiag
       typpatch = (/(ityp, ityp = 0, N_land_classification)/)
-      lndname  = trim(dir_model_landdata) // '/diag/soil_brightness_patch_' // trim(cyear) // '.nc'
+      lndname  = trim(dir_model_landdata) // '/diag/soil_brightness_' // trim(cyear) // '.nc'
       CALL srfdata_map_and_write (soil_s_n_alb, landpatch%settyp, typpatch, m_patch2diag, &
          -1.0e36_r8, lndname, 'soil_s_n_alb', compress = 1, write_mode = 'one')
 #endif
@@ -384,7 +384,7 @@ SUBROUTINE Aggregation_SoilBrightness ( &
 
 #ifdef SrfdataDiag
       typpatch = (/(ityp, ityp = 0, N_land_classification)/)
-      lndname  = trim(dir_model_landdata) // '/diag/soil_brightness_patch_' // trim(cyear) // '.nc'
+      lndname  = trim(dir_model_landdata) // '/diag/soil_brightness_' // trim(cyear) // '.nc'
       CALL srfdata_map_and_write (soil_d_n_alb, landpatch%settyp, typpatch, m_patch2diag, &
          -1.0e36_r8, lndname, 'soil_d_n_alb', compress = 1, write_mode = 'one')
 #endif

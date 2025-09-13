@@ -341,7 +341,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
          lndname  = trim(dir_model_landdata) // '/diag/soil_parameters_' // trim(cyear) // '.nc'
          CALL srfdata_map_and_write (vf_quartz_mineral_s_patches, landpatch%settyp, typpatch, m_patch2diag, &
             -1.0e36_r8, lndname, 'vf_quartz_mineral_s_l'//trim(c), compress = 1, write_mode = 'one', &
-            create_mode=.true.)
+            create_mode = (nsl==1))
 #endif
 
          ! (2) volumetric fraction of gravels
