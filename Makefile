@@ -54,6 +54,7 @@ OBJS_SHARED =    \
 				  MOD_LandElm.o                \
 				  MOD_LandHRU.o                \
 				  MOD_LandPatch.o              \
+				  MOD_Land2mWMO.o              \
 				  MOD_LandCrop.o               \
 				  MOD_LandPFT.o                \
 				  MOD_LandUrban.o              \
@@ -82,6 +83,7 @@ OBJS_MKSRFDATA = \
 				  Aggregation_Topography.o          \
 				  Aggregation_TopoWetness.o         \
 				  Aggregation_TopographyFactors.o   \
+				  Aggregation_TopographyFactors_Simple.o \
 				  Aggregation_Urban.o               \
 				  Aggregation_SoilTexture.o         \
 				  MOD_Lulcc_TransferTrace.o         \
@@ -262,8 +264,6 @@ OBJS_MAIN = \
 				MOD_BGC_Veg_CNNDynamics.o                 \
 				MOD_BGC_Veg_CNFireBase.o                  \
 				MOD_BGC_Veg_CNFireLi2016.o                \
-				MOD_Irrigation.o                          \
-				MOD_BGC_driver.o                          \
 				MOD_Vars_2DForcing.o                      \
 				MOD_UserSpecifiedForcing.o                \
 				MOD_ForcingDownscaling.o                  \
@@ -306,6 +306,8 @@ OBJS_MAIN = \
 				MOD_Thermal.o                             \
 				MOD_Vars_1DAccFluxes.o                    \
 				MOD_CaMa_Vars.o                           \
+				MOD_Irrigation.o                          \
+				MOD_BGC_driver.o                          \
 				MOD_HistWriteBack.o                       \
 				MOD_HistGridded.o                         \
 				MOD_HistVector.o                          \

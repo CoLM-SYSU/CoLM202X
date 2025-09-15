@@ -51,6 +51,11 @@ CONTAINS
    type(block_data_int32_2d)  :: f_xy_irrig
    type(spatial_mapping_type) :: mg2pft_irrig
 
+   character(len=256) :: file_irrigalloc
+   type(grid_type)    :: grid_irrigalloc
+   type(block_data_real8_2d)  :: f_xy_irrigalloc
+   type(spatial_mapping_type) :: mg2p_irrigalloc
+
    character(len=256) :: file_fert
    type(grid_type)    :: grid_fert
    type(block_data_real8_2d) :: f_xy_fert
@@ -317,6 +322,54 @@ CONTAINS
       IF (allocated (plantdate_tmp))    deallocate(plantdate_tmp)
       IF (allocated (fertnitro_tmp))    deallocate(fertnitro_tmp)
       IF (allocated (irrig_method_tmp)) deallocate(irrig_method_tmp)
+
+      IF (DEF_IRRIGATION_ALLOCATION == 3) THEN 
+         ! (5) Read in irrigation allocated to groundwater
+         file_irrigalloc = trim(DEF_dir_runtime) // '/crop/surfdata_irrigation_allocation.nc'
+
+         CALL ncio_read_bcast_serial (file_irrigalloc, 'lat', lat)
+         CALL ncio_read_bcast_serial (file_irrigalloc, 'lon', lon)
+
+         CALL grid_irrigalloc%define_by_center (lat, lon)
+
+         IF (p_is_io) THEN
+            CALL allocate_block_data (grid_irrigalloc, f_xy_irrigalloc)
+         ENDIF
+
+         call mg2p_irrigalloc%build_arealweighted (grid_irrigalloc, landpatch)
+
+         IF (allocated(lon)) deallocate(lon)
+         IF (allocated(lat)) deallocate(lat)
+
+         IF (p_is_worker) THEN
+            irrig_gw_alloc(:) = 0._r8
+         ENDIF
+
+         IF (p_is_io) THEN
+            CALL ncio_read_block (file_irrigalloc, 'irrig_gw_alloc', grid_irrigalloc, f_xy_irrigalloc)
+         ENDIF
+
+         call mg2p_irrigalloc%grid2pset (f_xy_irrigalloc, irrig_gw_alloc)
+
+#ifdef RangeCheck
+         CALL check_vector_data ('irrigation goundwater allocation ', irrig_gw_alloc)
+#endif
+
+         ! (6) Read in irrigation allocated to surfacewater
+         IF (p_is_worker) THEN
+            irrig_sw_alloc(:) = 0._r8
+         ENDIF
+
+         IF (p_is_io) THEN
+            CALL ncio_read_block (file_irrigalloc, 'irrig_sw_alloc', grid_irrigalloc, f_xy_irrigalloc)
+         ENDIF
+
+         call mg2p_irrigalloc%grid2pset (f_xy_irrigalloc, irrig_sw_alloc)
+
+#ifdef RangeCheck
+         CALL check_vector_data ('irrigation surfacewater allocation ', irrig_sw_alloc)
+#endif
+      ENDIF
 
    END SUBROUTINE CROP_readin
 

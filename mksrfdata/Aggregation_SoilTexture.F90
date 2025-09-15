@@ -20,6 +20,7 @@ SUBROUTINE Aggregation_SoilTexture ( &
    USE MOD_SPMD_Task
    USE MOD_Grid
    USE MOD_LandPatch
+   USE MOD_Land2mWMO
    USE MOD_NetCDFVector
    USE MOD_NetCDFBlock
 #ifdef RangeCheck
@@ -43,6 +44,7 @@ SUBROUTINE Aggregation_SoilTexture ( &
    ! ---------------------------------------------------------------
    character(len=256) :: landdir, lndname, cyear
    integer :: ipatch
+   integer :: wmo_src
 
    type(block_data_int32_2d) :: soiltext
    integer, allocatable :: soiltext_patches(:), soiltext_one(:)
@@ -81,6 +83,15 @@ SUBROUTINE Aggregation_SoilTexture ( &
          IF (numpatch > 0) allocate (soiltext_patches (numpatch))
 
          DO ipatch = 1, numpatch
+
+            IF (ipatch == wmo_patch(landpatch%ielm(ipatch))) THEN
+               wmo_src = wmo_source (landpatch%ielm(ipatch))
+
+               soiltext_patches(ipatch) = soiltext_patches(wmo_src)
+
+               CYCLE
+            ENDIF
+
             CALL aggregation_request_data (landpatch, ipatch, gland, &
                zip = USE_zip_for_aggregation, &
                data_i4_2d_in1 = soiltext, data_i4_2d_out1 = soiltext_one)
@@ -115,7 +126,8 @@ SUBROUTINE Aggregation_SoilTexture ( &
       ENDIF
 
       CALL srfdata_map_and_write (soiltext_r8, landpatch%settyp, typpatch,  &
-         m_patch2diag, -1., lndname, 'soiltexture', compress = 1, write_mode = 'one')
+         m_patch2diag, -1., lndname, 'soiltexture', compress = 1, write_mode = 'one', &
+         create_mode=.true.)
 
       IF (allocated(soiltext_r8)) deallocate(soiltext_r8)
 #endif

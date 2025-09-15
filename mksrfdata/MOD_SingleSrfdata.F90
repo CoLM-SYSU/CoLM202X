@@ -1421,12 +1421,12 @@ CONTAINS
    logical, intent(in), optional :: mkrun
 
    ! Local Variables
-   real(r8), allocatable, dimension(:,:)     :: hlrbld , wtrd   , ncar_ht, ncar_wt
-   real(r8), allocatable, dimension(:,:)     :: emroof , emwall , emimrd , emperd
-   real(r8), allocatable, dimension(:,:)     :: throof , thwall , tbmin  , tbmax
-   real(r8), allocatable, dimension(:,:,:)   :: cvroof , cvwall , cvimrd , &
-                                                tkroof , tkwall , tkimrd
-   real(r8), allocatable, dimension(:,:,:,:) :: albroof, albwall, albimrd, albperd
+   real(r8), allocatable, dimension(:,:)     :: hwrbld_ncar , fgper_ncar  , htroof_ncar , wtroof_ncar
+   real(r8), allocatable, dimension(:,:)     :: emroof_ncar , emwall_ncar , emgimp_ncar , emgper_ncar
+   real(r8), allocatable, dimension(:,:)     :: thkroof_ncar, thkwall_ncar, tbldmin_ncar, tbldmax_ncar
+   real(r8), allocatable, dimension(:,:,:)   :: cvroof_ncar , cvwall_ncar , cvgimp_ncar , &
+                                                tkroof_ncar , tkwall_ncar , tkgimp_ncar
+   real(r8), allocatable, dimension(:,:,:,:) :: albroof_ncar, albwall_ncar, albgimp_ncar, albgper_ncar
 
    real(r8) :: lat_in, lon_in
    real(r8) :: LAI, lakedepth, slp, asp, zenith_angle
@@ -1837,107 +1837,107 @@ ENDIF
 IF (DEF_URBAN_type_scheme == 1) THEN
          filename = trim(DEF_dir_rawdata)//'urban/NCAR_urban_properties.nc'
 
-         CALL ncio_read_bcast_serial (filename,  "WTLUNIT_ROOF"  , ncar_wt  )
-         CALL ncio_read_bcast_serial (filename,  "HT_ROOF"       , ncar_ht  )
-         CALL ncio_read_bcast_serial (filename,  "CANYON_HWR"    , hlrbld   )
-         CALL ncio_read_bcast_serial (filename,  "WTROAD_PERV"   , wtrd     )
-         CALL ncio_read_bcast_serial (filename,  "EM_ROOF"       , emroof   )
-         CALL ncio_read_bcast_serial (filename,  "EM_WALL"       , emwall   )
-         CALL ncio_read_bcast_serial (filename,  "EM_IMPROAD"    , emimrd   )
-         CALL ncio_read_bcast_serial (filename,  "EM_PERROAD"    , emperd   )
-         CALL ncio_read_bcast_serial (filename,  "ALB_ROOF"      , albroof  )
-         CALL ncio_read_bcast_serial (filename,  "ALB_WALL"      , albwall  )
-         CALL ncio_read_bcast_serial (filename,  "ALB_IMPROAD"   , albimrd  )
-         CALL ncio_read_bcast_serial (filename,  "ALB_PERROAD"   , albperd  )
-         CALL ncio_read_bcast_serial (filename,  "TK_ROOF"       , tkroof   )
-         CALL ncio_read_bcast_serial (filename,  "TK_WALL"       , tkwall   )
-         CALL ncio_read_bcast_serial (filename,  "TK_IMPROAD"    , tkimrd   )
-         CALL ncio_read_bcast_serial (filename,  "CV_ROOF"       , cvroof   )
-         CALL ncio_read_bcast_serial (filename,  "CV_WALL"       , cvwall   )
-         CALL ncio_read_bcast_serial (filename,  "CV_IMPROAD"    , cvimrd   )
-         CALL ncio_read_bcast_serial (filename,  "THICK_ROOF"    , throof   )
-         CALL ncio_read_bcast_serial (filename,  "THICK_WALL"    , thwall   )
-         CALL ncio_read_bcast_serial (filename,  "T_BUILDING_MIN", tbmin    )
-         CALL ncio_read_bcast_serial (filename,  "T_BUILDING_MAX", tbmax    )
+         CALL ncio_read_bcast_serial (filename,  "WTLUNIT_ROOF"  , wtroof_ncar )
+         CALL ncio_read_bcast_serial (filename,  "HT_ROOF"       , htroof_ncar )
+         CALL ncio_read_bcast_serial (filename,  "CANYON_HWR"    , hwrbld_ncar )
+         CALL ncio_read_bcast_serial (filename,  "WTROAD_PERV"   , fgper_ncar  )
+         CALL ncio_read_bcast_serial (filename,  "EM_ROOF"       , emroof_ncar )
+         CALL ncio_read_bcast_serial (filename,  "EM_WALL"       , emwall_ncar )
+         CALL ncio_read_bcast_serial (filename,  "EM_IMPROAD"    , emgimp_ncar )
+         CALL ncio_read_bcast_serial (filename,  "EM_PERROAD"    , emgper_ncar )
+         CALL ncio_read_bcast_serial (filename,  "ALB_ROOF"      , albroof_ncar)
+         CALL ncio_read_bcast_serial (filename,  "ALB_WALL"      , albwall_ncar)
+         CALL ncio_read_bcast_serial (filename,  "ALB_IMPROAD"   , albgimp_ncar)
+         CALL ncio_read_bcast_serial (filename,  "ALB_PERROAD"   , albgper_ncar)
+         CALL ncio_read_bcast_serial (filename,  "TK_ROOF"       , tkroof_ncar )
+         CALL ncio_read_bcast_serial (filename,  "TK_WALL"       , tkwall_ncar )
+         CALL ncio_read_bcast_serial (filename,  "TK_IMPROAD"    , tkgimp_ncar )
+         CALL ncio_read_bcast_serial (filename,  "CV_ROOF"       , cvroof_ncar )
+         CALL ncio_read_bcast_serial (filename,  "CV_WALL"       , cvwall_ncar )
+         CALL ncio_read_bcast_serial (filename,  "CV_IMPROAD"    , cvgimp_ncar )
+         CALL ncio_read_bcast_serial (filename,  "THICK_ROOF"    , thkroof_ncar)
+         CALL ncio_read_bcast_serial (filename,  "THICK_WALL"    , thkwall_ncar)
+         CALL ncio_read_bcast_serial (filename,  "T_BUILDING_MIN", tbldmin_ncar)
+         CALL ncio_read_bcast_serial (filename,  "T_BUILDING_MAX", tbldmax_ncar)
 
          rid  = SITE_ncar_rid
          utyp = SITE_urbtyp
 
-         IF (.not. u_site_emr    ) SITE_em_roof   = emroof(utyp, rid)
-         IF (.not. u_site_emw    ) SITE_em_wall   = emwall(utyp, rid)
-         IF (.not. u_site_emgimp ) SITE_em_gimp   = emimrd(utyp, rid)
-         IF (.not. u_site_emgper ) SITE_em_gper   = emperd(utyp, rid)
+         IF (.not. u_site_emr    ) SITE_em_roof   = emroof_ncar(utyp, rid)
+         IF (.not. u_site_emw    ) SITE_em_wall   = emwall_ncar(utyp, rid)
+         IF (.not. u_site_emgimp ) SITE_em_gimp   = emgimp_ncar(utyp, rid)
+         IF (.not. u_site_emgper ) SITE_em_gper   = emgper_ncar(utyp, rid)
 
-         IF (.not. u_site_tbmax  ) SITE_t_roommax = tbmax (utyp, rid)
-         IF (.not. u_site_tbmin  ) SITE_t_roommin = tbmin (utyp, rid)
+         IF (.not. u_site_tbmax  ) SITE_t_roommax = tbldmax_ncar (utyp, rid)
+         IF (.not. u_site_tbmin  ) SITE_t_roommin = tbldmin_ncar (utyp, rid)
 
-         IF (.not. u_site_thickr ) SITE_thickroof = throof(utyp, rid)
-         IF (.not. u_site_thickw ) SITE_thickwall = thwall(utyp, rid)
+         IF (.not. u_site_thickr ) SITE_thickroof = thkroof_ncar(utyp, rid)
+         IF (.not. u_site_thickw ) SITE_thickwall = thkwall_ncar(utyp, rid)
 
          IF (.not. u_site_cvr   ) THEN
             allocate( SITE_cv_roof (nl_roof) )
-            SITE_cv_roof(:) = cvroof(utyp, rid, :)
+            SITE_cv_roof(:) = cvroof_ncar(utyp, rid, :)
          ENDIF
 
          IF (.not. u_site_cvw   ) THEN
             allocate( SITE_cv_wall (nl_wall) )
-            SITE_cv_wall(:) = cvwall(utyp, rid, :)
+            SITE_cv_wall(:) = cvwall_ncar(utyp, rid, :)
          ENDIF
 
          IF (.not. u_site_cvgimp) THEN
             allocate( SITE_cv_gimp (nl_soil) )
-            SITE_cv_gimp(:) = cvimrd(utyp, rid, :)
+            SITE_cv_gimp(:) = cvgimp_ncar(utyp, rid, :)
          ENDIF
 
          IF (.not. u_site_tkr   ) THEN
             allocate( SITE_tk_roof (nl_roof) )
-            SITE_tk_roof(:) = tkroof(utyp, rid, :)
+            SITE_tk_roof(:) = tkroof_ncar(utyp, rid, :)
          ENDIF
 
          IF (.not. u_site_tkw   ) THEN
             allocate( SITE_tk_wall (nl_wall) )
-            SITE_tk_wall(:) = tkwall(utyp, rid, :)
+            SITE_tk_wall(:) = tkwall_ncar(utyp, rid, :)
          ENDIF
 
          IF (.not. u_site_tkgimp) THEN
             allocate( SITE_tk_gimp (nl_soil) )
-            SITE_tk_gimp(:) = tkimrd(utyp, rid, :)
+            SITE_tk_gimp(:) = tkgimp_ncar(utyp, rid, :)
          ENDIF
 
          IF (.not. u_site_albr   ) THEN
             allocate( SITE_alb_roof (2, 2) )
-            SITE_alb_roof(:,:) = albroof(utyp, rid, :, :)
+            SITE_alb_roof(:,:) = albroof_ncar(utyp, rid, :, :)
          ENDIF
 
          IF (.not. u_site_albw   ) THEN
             allocate( SITE_alb_wall (2, 2) )
-            SITE_alb_wall(:,:) = albwall(utyp, rid, :, :)
+            SITE_alb_wall(:,:) = albwall_ncar(utyp, rid, :, :)
          ENDIF
 
          IF (.not. u_site_albgimp) THEN
             allocate( SITE_alb_gimp (2, 2) )
-            SITE_alb_gimp(:,:) = albimrd(utyp, rid, :, :)
+            SITE_alb_gimp(:,:) = albgimp_ncar(utyp, rid, :, :)
          ENDIF
 
          IF (.not. u_site_albgper) THEN
             allocate( SITE_alb_gper (2, 2) )
-            SITE_alb_gper(:,:) = albperd(utyp, rid, :, :)
+            SITE_alb_gper(:,:) = albgper_ncar(utyp, rid, :, :)
          ENDIF
 
-         IF (.not. u_site_hlr  ) SITE_hlr   = hlrbld(utyp, rid)
-         IF (.not. u_site_fgper) SITE_fgimp = 1-wtrd(utyp, rid)
+         IF (.not. u_site_hlr  ) SITE_hlr   = hwrbld_ncar(utyp, rid)
+         IF (.not. u_site_fgper) SITE_fgimp = 1-fgper_ncar(utyp, rid)
 ELSE
          utyp = SITE_urbtyp
-         IF (.not. u_site_emr   ) SITE_em_roof = emroof_lcz   (utyp)
-         IF (.not. u_site_emw   ) SITE_em_wall = emwall_lcz   (utyp)
-         IF (.not. u_site_emgimp) SITE_em_gimp = emimproad_lcz(utyp)
-         IF (.not. u_site_emgper) SITE_em_gper = emperroad_lcz(utyp)
+         IF (.not. u_site_emr   ) SITE_em_roof = emroof_lcz(utyp)
+         IF (.not. u_site_emw   ) SITE_em_wall = emwall_lcz(utyp)
+         IF (.not. u_site_emgimp) SITE_em_gimp = emgimp_lcz(utyp)
+         IF (.not. u_site_emgper) SITE_em_gper = emgper_lcz(utyp)
 
-         IF (.not. u_site_tbmax) SITE_t_roommax = 297.65
-         IF (.not. u_site_tbmin) SITE_t_roommin = 290.65
+         IF (.not. u_site_tbmax) SITE_t_roommax = tbldmax_lcz(utyp)
+         IF (.not. u_site_tbmin) SITE_t_roommin = tbldmin_lcz(utyp)
 
-         IF (.not. u_site_thickr) SITE_thickroof = thickroof_lcz(utyp)
-         IF (.not. u_site_thickw) SITE_thickwall = thickwall_lcz(utyp)
+         IF (.not. u_site_thickr) SITE_thickroof = thkroof_lcz(utyp)
+         IF (.not. u_site_thickw) SITE_thickwall = thkwall_lcz(utyp)
 
          IF (.not. u_site_cvr   ) THEN
             allocate( SITE_cv_roof (nl_roof) )
@@ -1951,7 +1951,7 @@ ELSE
 
          IF (.not. u_site_cvgimp) THEN
             allocate( SITE_cv_gimp (nl_soil) )
-            SITE_cv_gimp(:) = cvimproad_lcz(utyp)
+            SITE_cv_gimp(:) = cvgimp_lcz(utyp)
          ENDIF
 
          IF (.not. u_site_tkr   ) THEN
@@ -1966,7 +1966,7 @@ ELSE
 
          IF (.not. u_site_tkgimp) THEN
             allocate( SITE_tk_gimp (nl_soil) )
-            SITE_tk_gimp(:) = tkimproad_lcz(utyp)
+            SITE_tk_gimp(:) = tkgimp_lcz(utyp)
          ENDIF
 
          IF (.not. u_site_albr   ) THEN
@@ -1981,17 +1981,23 @@ ELSE
 
          IF (.not. u_site_albgimp) THEN
             allocate( SITE_alb_gimp (2, 2) )
-            SITE_alb_gimp(:,:) = albimproad_lcz(utyp)
+            SITE_alb_gimp(:,:) = albgimp_lcz(utyp)
          ENDIF
 
          IF (.not. u_site_albgper) THEN
             allocate( SITE_alb_gper (2, 2) )
-            SITE_alb_gper(:,:) = albperroad_lcz(utyp)
+            SITE_alb_gper(:,:) = albgper_lcz(utyp)
          ENDIF
 
-         IF (.not. u_site_hlr  ) SITE_hlr   = canyonhwr_lcz(utyp)
-         IF (.not. u_site_fgper) SITE_fgimp = 1-wtperroad_lcz(utyp)/(1-SITE_froof)
+         IF (.not. u_site_hlr  ) SITE_hlr   = hwrbld_lcz(utyp)
+
+         IF (.not. u_site_fgper) SITE_fgimp = 1-fgper_lcz(utyp)/(1-SITE_froof)
 ENDIF
+
+IF (DEF_USE_CANYON_HWR) THEN
+         SITE_hlr =SITE_hlr*(1-sqrt(SITE_froof))/sqrt(SITE_froof)
+ENDIF
+
          ! (6) lake depth
          readflag         = u_site_lakedepth
          u_site_lakedepth = readflag .and. ncio_var_exist(fsrfdata,'lakedepth',readflag)

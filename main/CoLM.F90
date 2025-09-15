@@ -77,6 +77,10 @@ PROGRAM CoLM
    USE MOD_LightningData
 #endif
 
+#ifdef CROP
+   USE MOD_CropReadin
+#endif
+
 #ifdef LULCC
    USE MOD_Lulcc_Driver
 #endif
@@ -360,6 +364,10 @@ PROGRAM CoLM
       ENDIF
 #endif
 
+#ifdef CROP
+   CALL CROP_readin ()
+#endif
+
 #if (defined CatchLateralFlow)
       CALL lateral_flow_init (lc_year)
 #endif
@@ -466,7 +474,7 @@ PROGRAM CoLM
 
 
 #if (defined CatchLateralFlow)
-         CALL lateral_flow (deltim)
+         CALL lateral_flow (idate(1), deltim)
 #endif
 
 #if (defined CaMa_Flood)

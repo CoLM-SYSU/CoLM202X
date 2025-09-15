@@ -18,6 +18,7 @@ SUBROUTINE Aggregation_PercentagesPFT (gland, dir_rawdata, dir_model_landdata, l
    USE MOD_SPMD_Task
    USE MOD_Grid
    USE MOD_LandPatch
+   USE MOD_Land2mWMO
 #ifdef CROP
    USE MOD_LandCrop
 #endif
@@ -61,7 +62,8 @@ SUBROUTINE Aggregation_PercentagesPFT (gland, dir_rawdata, dir_model_landdata, l
    real(r8), allocatable :: pct_pfts(:)
 #endif
    integer  :: ipatch, ipc, ipft, p
-   real(r8) :: sumarea
+   integer  :: wmo_pth
+   real(r8) :: sumarea, sum_pct_pfts
 #ifdef SrfdataDiag
    integer :: typpft(0:N_PFT-1)
 #ifdef CROP
@@ -102,8 +104,18 @@ SUBROUTINE Aggregation_PercentagesPFT (gland, dir_rawdata, dir_model_landdata, l
       IF (p_is_worker) THEN
 
          allocate(pct_pfts (numpft))
+         pct_pfts(:) = 0.
 
          DO ipatch = 1, numpatch
+
+            wmo_pth = wmo_patch(landpatch%ielm(ipatch))
+            IF (ipatch == wmo_pth) THEN
+               ipft = patch_pft_s(ipatch)
+
+               pct_pfts(ipft) = 1.
+
+               CYCLE
+            ENDIF
 
 #ifndef CROP
             IF (patchtypes(landpatch%settyp(ipatch)) == 0) THEN
@@ -129,9 +141,17 @@ SUBROUTINE Aggregation_PercentagesPFT (gland, dir_rawdata, dir_model_landdata, l
                   pct_pfts(ipft) = sum(pct_pft_one(p,:) / pct_one * area_one) / sumarea
                ENDDO
 
-               pct_pfts(patch_pft_s(ipatch):patch_pft_e(ipatch)) =    &
-                  pct_pfts(patch_pft_s(ipatch):patch_pft_e(ipatch))   &
-                  / sum(pct_pfts(patch_pft_s(ipatch):patch_pft_e(ipatch)))
+               sum_pct_pfts = sum(pct_pfts(patch_pft_s(ipatch):patch_pft_e(ipatch)))
+
+               IF (sum_pct_pfts > 0) THEN
+                  pct_pfts(patch_pft_s(ipatch):patch_pft_e(ipatch)) = &
+                     pct_pfts(patch_pft_s(ipatch):patch_pft_e(ipatch)) / sum_pct_pfts
+               ELSE
+                  ! in case of no PFT exist, but there is a patch type:
+                  ! set bare soil 100%, be consistent with MOD_LandPFT.F90
+                  pct_pfts(patch_pft_s(ipatch)) = 1.
+               ENDIF
+
 #ifdef CROP
             ELSEIF (landpatch%settyp(ipatch) == CROPLAND) THEN
                pct_pfts(patch_pft_s(ipatch):patch_pft_e(ipatch)) = 1.
@@ -164,7 +184,8 @@ SUBROUTINE Aggregation_PercentagesPFT (gland, dir_rawdata, dir_model_landdata, l
       lndname = trim(dir_model_landdata)//'/diag/pftfrac_elm_'//trim(cyear)//'.nc'
       CALL srfdata_map_and_write (pct_pfts, landpft%settyp, typpft, m_pft2diag, &
          -1.0e36_r8, lndname, 'pftfrac_elm', compress = 1, write_mode = 'one',  &
-         defval=0._r8, stat_mode = 'fraction', pctshared = landpft%pctshared)
+         defval=0._r8, stat_mode = 'fraction', pctshared = landpft%pctshared,   &
+         create_mode=.true.)
 #endif
 
       IF (p_is_worker) THEN
@@ -186,7 +207,8 @@ SUBROUTINE Aggregation_PercentagesPFT (gland, dir_rawdata, dir_model_landdata, l
       lndname = trim(dir_model_landdata) // '/diag/cropfrac_elm_' // trim(cyear) // '.nc'
       CALL srfdata_map_and_write (cropfrac, cropclass, typcrop, m_patch2diag,   &
          -1.0e36_r8, lndname, 'cropfrac_elm', compress = 1, write_mode = 'one', &
-         defval=0._r8, tat_mode = 'fraction', pctshared = landpatch%pctshared)
+         defval=0._r8, stat_mode = 'fraction', pctshared = landpatch%pctshared, &
+         create_mode=.true.)
 #endif
 #endif
 

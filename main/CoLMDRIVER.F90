@@ -21,7 +21,7 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
    USE MOD_Vars_TimeVariables
    USE MOD_Vars_1DForcing
    USE MOD_Vars_1DFluxes
-   USE MOD_LandPatch, only: numpatch
+   USE MOD_LandPatch, only: numpatch,landpatch
    USE MOD_LandUrban, only: patch2urban
    USE MOD_Namelist, only: DEF_forcing, DEF_URBAN_RUN
    USE MOD_Forcing, only: forcmask_pch
@@ -62,8 +62,12 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
             IF (.not. forcmask_pch(i)) CYCLE
          ENDIF
 
-         ! Apply patch mask
-         IF (.not. patchmask(i)) CYCLE
+         ! Apply patch mask, but still run virtual 2m WMO patch (patch ipxstt=-1)
+         IF (DEF_Output_2mWMO) THEN
+            IF (.not. patchmask(i) .and. (landpatch%ipxstt(i)>0) ) CYCLE
+         ELSE
+            IF (.not. patchmask(i)) CYCLE
+         ENDIF
 
          m = patchclass(i)
 
@@ -104,7 +108,7 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
 
              ! VEGETATION INFORMATION
                htop(i),         hbot(i),         sqrtdi(m),                        &
-               effcon(m),       vmax25(m),                                         &
+               effcon(m),       vmax25(m),       c3c4(m),                          &
                kmax_sun(m),     kmax_sha(m),     kmax_xyl(m),     kmax_root(m),    &
                psi50_sun(m),    psi50_sha(m),    psi50_xyl(m),    psi50_root(m),   &
                ck(m),           slti(m),         hlti(m),         shti(m),         &
@@ -159,8 +163,8 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
                taux(i),         tauy(i),         fsena(i),        fevpa(i),        &
                lfevpa(i),       fsenl(i),        fevpl(i),        etr(i),          &
                fseng(i),        fevpg(i),        olrg(i),         fgrnd(i),        &
-               trad(i),         tref(i),         qref(i),         frcsat(i),       &
-               rsur(i),         &
+               trad(i),         tref(i),         qref(i),         t2m_wmo(i),      &
+               frcsat(i),       rsur(i),         &
                rsur_se(i),      rsur_ie(i),      rnof(i),         qintr(i),        &
                qinfl(i),        qdrip(i),        rst(i),          assim(i),        &
                respc(i),        sabvsun(i),      sabvsha(i),      sabg(i),         &
@@ -235,7 +239,7 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
 
           ! VEGETATION INFORMATION
             htop(i)         ,hbot(i)         ,sqrtdi(m)       ,chil(m)         ,&
-            effcon(m)       ,vmax25(m)       ,slti(m)         ,hlti(m)         ,&
+            effcon(m)       ,vmax25(m)       ,c3c4(m)         ,slti(m)         ,hlti(m)         ,&
             shti(m)         ,hhti(m)         ,trda(m)         ,trdm(m)         ,&
             trop(m)         ,g1(m)           ,g0(m)           ,gradm(m)        ,&
             binter(m)       ,extkn(m)        ,rho(1:,1:,m)    ,tau(1:,1:,m)    ,&
@@ -286,7 +290,7 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
             dfwsun(u)       ,t_room(u)       ,troof_inner(u)  ,twsun_inner(u)  ,&
             twsha_inner(u)  ,t_roommax(u)    ,t_roommin(u)    ,tafu(u)         ,&
 
-            zwt(i)          ,wa(i)                                             ,&
+            zwt(i)          ,wdsrf(i)        ,wa(i)                            ,&
             t_lake(1:,i)    ,lake_icefrac(1:,i),               savedtke1(i)    ,&
 
           ! SNICAR snow model related

@@ -286,7 +286,7 @@ fi
 
 if [ -z "${EDGEW}" ];then
    echo
-   echo "Note: -S option is absent, set EDGEW -180 as the default."
+   echo "Note: -W option is absent, set EDGEW -180 as the default."
    echo
    EDGEW=-180
 fi
@@ -300,7 +300,7 @@ fi
 
 if [ -z "${Forcing}" ];then
    echo
-   echo "Note: -f option is absent, set Forcing GSWP as the default."
+   echo "Note: -f option is absent, set Forcing CRUJRA as the default."
    echo
    Forcing=CRUJRA
 fi

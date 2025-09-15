@@ -63,6 +63,7 @@ PROGRAM MKSRFDATA
    USE MOD_LandHRU
 #endif
    USE MOD_LandPatch
+   USE MOD_Land2mWMO
    USE MOD_SrfdataRestart
    USE MOD_Const_LC
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
@@ -265,6 +266,11 @@ PROGRAM MKSRFDATA
          CALL grid_topo_factor%define_from_file (lndname,"lat","lon")
       ENDIF
 
+      ! define grid for global topography-based factors
+      IF (DEF_USE_Forcing_Downscaling_Simple) THEN
+         CALL grid_topo_factor%define_by_name ('colm_500m')
+      ENDIF
+
       ! add by dong, only test for making urban data
 #ifdef URBAN_MODEL
       CALL grid_urban%define_by_name      ('colm_500m')
@@ -300,6 +306,10 @@ PROGRAM MKSRFDATA
          CALL pixel%assimilate_grid (grid_topo_factor)
       ENDIF
 
+      IF (DEF_USE_Forcing_Downscaling_Simple) THEN
+         CALL pixel%assimilate_grid (grid_topo_factor)
+      ENDIF
+
 #ifdef URBAN_MODEL
       CALL pixel%assimilate_grid (grid_urban     )
       CALL pixel%assimilate_grid (grid_urban_500m)
@@ -331,6 +341,10 @@ PROGRAM MKSRFDATA
       ENDIF
 
       IF (DEF_USE_Forcing_Downscaling) THEN
+         CALL pixel%map_to_grid (grid_topo_factor)
+      ENDIF
+
+      IF (DEF_USE_Forcing_Downscaling_Simple) THEN
          CALL pixel%map_to_grid (grid_topo_factor)
       ENDIF
 
@@ -377,6 +391,12 @@ PROGRAM MKSRFDATA
 #ifdef CROP
       CALL landcrop_build (lc_year)
 #endif
+
+      ! build land 2m WMO patches
+      CALL land2mwmo_init
+      IF (DEF_Output_2mWMO) THEN
+         CALL land2mwmo_build(lc_year)
+      ENDIF
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
       CALL landpft_build  (lc_year)
@@ -461,6 +481,11 @@ IF (.not. (skip_rest)) THEN
             trim(DEF_DS_HiresTopographyDataDir), dir_landdata, lc_year)
       ENDIF
 
+      IF (DEF_USE_Forcing_Downscaling_Simple) THEN
+         CALL Aggregation_TopographyFactors_Simple (grid_topo_factor, &
+            trim(DEF_DS_HiresTopographyDataDir), dir_landdata, lc_year)
+      ENDIF
+      
 #ifdef URBAN_MODEL
       CALL Aggregation_urban (dir_rawdata, dir_landdata, lc_year, &
                               grid_urban_5km, grid_urban_500m)
@@ -469,6 +494,9 @@ IF (.not. (skip_rest)) THEN
       CALL Aggregation_SoilTexture     (grid_soil, dir_rawdata, dir_landdata, lc_year)
 
 ENDIF
+
+      ! deallocate 2m WMO log array
+      CALL land2mwmo_final
 
 ! ................................................................
 ! 4. Write out time info.

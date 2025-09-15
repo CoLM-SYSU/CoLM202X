@@ -317,6 +317,9 @@ CONTAINS
         lambda,        &! marginal water cost of carbon gain
         extkn           ! coefficient of leaf nitrogen allocation
 
+   integer, dimension(ps:pe)  :: &
+        c3c4 ! C3/C4 plant type
+
    real(r8), dimension(ps:pe) :: &
         kmax_sun,      &! Plant Hydraulics Parameters
         kmax_sha,      &! Plant Hydraulics Parameters
@@ -557,6 +560,7 @@ CONTAINS
 
          effcon     (i) = effcon_p     (p)
          vmax25     (i) = vmax25_p     (p)
+         c3c4       (i) = c3c4_p       (p)
          shti       (i) = shti_p       (p)
          hhti       (i) = hhti_p       (p)
          slti       (i) = slti_p       (p)
@@ -1160,7 +1164,7 @@ CONTAINS
 
 ! note: calculate resistance for sunlit/shaded leaves
 !-----------------------------------------------------------------------
-               CALL stomata ( vmax25(i)    ,effcon(i) ,slti(i)   ,hlti(i)   ,&
+               CALL stomata ( vmax25(i)    ,effcon(i) ,c3c4(i)   ,slti(i)   ,hlti(i)   ,&
                     shti(i)    ,hhti(i)    ,trda(i)   ,trdm(i)   ,trop(i)   ,&
                     g1(i)      ,g0(i)      ,gradm(i)  ,binter(i) ,thm       ,&
                     psrf       ,po2m       ,pco2m     ,pco2a     ,eah       ,&
@@ -1172,7 +1176,7 @@ CONTAINS
                     rbsun      ,raw        ,rstfacsun(i),cintsun(:,i),&
                     assimsun(i),respcsun(i),rssun(i)   )
 
-               CALL stomata ( vmax25(i)    ,effcon(i) ,slti(i)   ,hlti(i)   ,&
+               CALL stomata ( vmax25(i)    ,effcon(i) ,c3c4(i)   ,slti(i)   ,hlti(i)   ,&
                     shti(i)    ,hhti(i)    ,trda(i)   ,trdm(i)   ,trop(i)   ,&
                     g1(i)      ,g0(i)      ,gradm(i)  ,binter(i) ,thm       ,&
                     psrf       ,po2m       ,pco2m     ,pco2a     ,eah       ,&
@@ -1207,11 +1211,11 @@ CONTAINS
                   gssha(i) = gssha(i) * laisha(i)
 
                   CALL update_photosyn(tl(i), po2m, pco2m, pco2a, parsun(i), psrf, rstfacsun(i), &
-                     rb(i), gssun(i), effcon(i), vmax25(i), gradm(i), trop(i), slti(i), hlti(i), &
+                     rb(i), gssun(i), effcon(i), vmax25(i), c3c4(i), gradm(i), trop(i), slti(i), hlti(i), &
                      shti(i), hhti(i), trda(i), trdm(i), cintsun(:,i), assimsun(i), respcsun(i))
 
                   CALL update_photosyn(tl(i), po2m, pco2m, pco2a, parsha(i), psrf, rstfacsha(i), &
-                     rb(i), gssha(i), effcon(i), vmax25(i), gradm(i), trop(i), slti(i), hlti(i), &
+                     rb(i), gssha(i), effcon(i), vmax25(i), c3c4(i), gradm(i), trop(i), slti(i), hlti(i), &
                      shti(i), hhti(i), trda(i), trdm(i), cintsha(:,i), assimsha(i), respcsha(i))
 
                   ! leaf scale stomata resistance

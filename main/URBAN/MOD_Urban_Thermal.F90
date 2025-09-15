@@ -61,7 +61,7 @@ CONTAINS
         z_wall         ,zi_roofsno     ,zi_gimpsno     ,zi_gpersno     ,&
         zi_lakesno     ,zi_wall        ,dz_lake        ,lakedepth      ,&
         dewmx          ,sqrtdi         ,rootfr         ,effcon         ,&
-        vmax25         ,slti           ,hlti           ,shti           ,&
+        vmax25         ,c3c4           ,slti           ,hlti           ,shti,&
         hhti           ,trda           ,trdm           ,trop           ,&
         g1             ,g0             ,gradm          ,binter         ,&
         extkn          ,lambda                                         ,&
@@ -276,6 +276,9 @@ CONTAINS
         binter              ,&! conductance-photosynthesis intercept
         lambda              ,&! marginal water cost of carbon gain
         extkn                ! coefficient of leaf nitrogen allocation
+   
+   integer , intent(in) :: &
+        c3c4                              ! 1 for C3, 0 for C4
 
    real(r8), intent(in) :: &
         fsno_roof                      ,&! fraction of ground covered by snow
@@ -871,7 +874,7 @@ CONTAINS
             hroof          ,hlr            ,nurb           ,fcover         ,&
             ewall          ,egimp          ,egper          ,ev             ,&
             htop           ,hbot           ,lai            ,sai            ,&
-            sqrtdi         ,effcon         ,vmax25         ,slti           ,&
+            sqrtdi         ,effcon         ,vmax25         ,c3c4           ,slti,&
             hlti           ,shti           ,hhti           ,trda           ,&
             trdm           ,trop           ,g1             ,g0             ,&
             gradm          ,binter         ,extkn          ,extkd          ,&

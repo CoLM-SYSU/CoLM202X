@@ -199,6 +199,12 @@ MODULE MOD_Const_LC
           0.08, 0.08, 0.08, 0.08, 0.08, 0.08, 0.08, 0.08,&
           0.08, 0.08, 0.08, 0.05, 0.05, 0.05, 0.05, 0.05/)
 
+   !c3c4 flag
+   integer, parameter, dimension(N_land_classification) :: c3c4_usgs &
+      = (/1, 1, 1, 1, 1, 1, 1, 1,&
+          1, 1, 1, 1, 1, 1, 1, 1,&
+          1, 1, 1, 0, 0, 0, 0, 0/)
+
    ! conductance-photosynthesis slope parameter
    !TODO: no C4, 4.0 may have problem
    real(r8), parameter, dimension(N_land_classification) :: g1_usgs &
@@ -502,6 +508,12 @@ MODULE MOD_Const_LC
       = (/0.08, 0.08, 0.08, 0.08, 0.08, 0.08, 0.08, 0.08,&
           0.08, 0.08, 0.08, 0.08, 0.08, 0.08, 0.08, 0.08,&
           0.08 /)
+   
+   !c3c4 flag
+   integer, parameter, dimension(N_land_classification) :: c3c4_igbp &
+      = (/1, 1, 1, 1, 1, 1, 1, 1,&
+          1, 1, 1, 1, 1, 1, 1, 1,&
+          1 /)
 
    ! conductance-photosynthesis slope parameter
    real(r8), parameter, dimension(N_land_classification) :: g1_igbp &
@@ -678,6 +690,8 @@ MODULE MOD_Const_LC
       d50,        &! depth at 50% roots
       beta         ! coefficient of root profile
 
+   integer, dimension(N_land_classification) :: c3c4 ! c3c4 flag
+
 ! Plant Hydraulic Parameters
    real(r8), dimension(N_land_classification) :: &
       kmax_sun,   &! Plant Hydraulics Parameters (TODO@Xingjie Lu, please give more details)
@@ -729,6 +743,7 @@ CONTAINS
       chil       (:) = chil_usgs       (:)
       vmax25     (:) = vmax25_usgs     (:) * 1.e-6
       effcon     (:) = effcon_usgs     (:)
+      c3c4       (:) = c3c4_usgs       (:)
       g1         (:) = g1_usgs         (:)
       g0         (:) = g0_usgs         (:)
       gradm      (:) = gradm_usgs      (:)
@@ -780,6 +795,7 @@ ENDIF
       chil       (:) = chil_igbp       (:)
       vmax25     (:) = vmax25_igbp     (:) * 1.e-6
       effcon     (:) = effcon_igbp     (:)
+      c3c4       (:) = c3c4_igbp       (:)
       g1         (:) = g1_igbp         (:)
       g0         (:) = g0_igbp         (:)
       gradm      (:) = gradm_igbp      (:)

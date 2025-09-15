@@ -288,6 +288,14 @@ CONTAINS
                CYCLE
             ENDIF
 
+            ! 2m WMO virtual patch, modeling but not for aggregation
+IF (DEF_Output_2mWMO) THEN
+            IF (landpatch%ipxstt(ipatch) == -1) THEN
+               patchmask(ipatch) = .false.
+               CYCLE
+            ENDIF
+ENDIF
+
          ENDDO
 
 #ifndef SinglePoint
@@ -419,6 +427,16 @@ CONTAINS
          CALL ncio_read_vector (lndname, 'cur_patches', landpatch, cur_patches)
 #endif
        ENDIF
+       
+      IF (DEF_USE_Forcing_Downscaling_Simple) THEN
+         lndname = trim(DEF_dir_landdata) // '/topography/'//trim(cyear)//'/slp_type_patches.nc'      ! slope
+         CALL ncio_read_vector (lndname, 'slp_type_patches', num_aspect_type, landpatch, slp_type_patches)
+         lndname = trim(DEF_dir_landdata) // '/topography/'//trim(cyear)//'/asp_type_patches.nc'      ! aspect
+         CALL ncio_read_vector (lndname, 'asp_type_patches', num_aspect_type, landpatch, asp_type_patches)
+         lndname = trim(DEF_dir_landdata) // '/topography/'//trim(cyear)//'/cur_patches.nc'           ! curvature
+         CALL ncio_read_vector (lndname, 'cur_patches', landpatch, cur_patches)
+      ENDIF
+
 ! ................................
 ! 1.6 Initialize TUNABLE constants
 ! ................................
@@ -1189,12 +1207,18 @@ CONTAINS
                ENDIF
             ENDDO
          ENDIF
-      IF(DEF_USE_IRRIGATION)THEN
-         irrig_rate(:) = 0._r8
-         deficit_irrig(:) = 0._r8
-         sum_irrig(:) = 0._r8
-         sum_irrig_count(:) = 0._r8
-         n_irrig_steps_left(:) = 0
+      IF (p_is_worker) THEN
+         IF(DEF_USE_IRRIGATION)THEN
+            sum_irrig(:) = 0._r8  
+            sum_deficit_irrig(:) = 0._r8      
+            sum_irrig_count(:) = 0._r8
+            waterstorage(:) = 0._r8
+            DO i = 1, numpatch
+               zwt_stand(i) = zwt(i) + 1._r8
+               zwt_stand(i) = max(0., zwt_stand(i))
+               zwt_stand(i) = min(80., zwt_stand(i))
+            ENDDO   
+         ENDIF
       ENDIF
 #endif
 #endif

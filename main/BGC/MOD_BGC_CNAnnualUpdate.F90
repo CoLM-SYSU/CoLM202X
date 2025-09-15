@@ -5,7 +5,7 @@ MODULE MOD_BGC_CNAnnualUpdate
 
 !------------------------------------------------------------------------------------------------------
 ! !DESCRIPTION:
-! On the radiation time step, update annual summation variables mostly for phenology module:
+! On the radiation time step, update annual summation variables mostly for phenology modules:
 ! annsum_potential_gpp : annual sum of potential gpp of last year is used to calculate the available 
 !                        retranslocation N 
 ! annmax_retransn      : maximum of retranslocation N pool size of last year in a whole year, used to 

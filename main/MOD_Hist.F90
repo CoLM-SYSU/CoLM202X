@@ -111,7 +111,7 @@ CONTAINS
    USE MOD_Namelist
    USE MOD_TimeManager
    USE MOD_SPMD_Task
-   USE MOD_Vars_1DAccFluxes
+   USE MOD_Vars_1DAccFluxes, filter_dt_ => filter_dt
    USE MOD_Vars_1DFluxes, only: nsensor
    USE MOD_Vars_TimeVariables, only: wa, wat, wetwat, wdsrf
    USE MOD_Block
@@ -160,9 +160,18 @@ CONTAINS
    character(len=10) :: cdate
 
    type(block_data_real8_2d) :: sumarea
+   type(block_data_real8_2d) :: sumarea_dt
    type(block_data_real8_2d) :: sumarea_urb
-   real(r8), allocatable ::  vecacc (:)
-   logical,  allocatable ::  filter (:)
+   real(r8), allocatable ::  vecacc     (:)
+   logical,  allocatable ::  filter     (:)
+   logical,  allocatable ::  filter_dt  (:)
+
+#ifdef CROP
+   type(block_data_real8_2d) :: sumarea_crop                        
+   type(block_data_real8_2d) :: sumarea_irrig
+   logical,  allocatable ::  filter_crop (:)
+   logical,  allocatable ::  filter_irrig (:)
+#endif
 
    integer i, u
 #ifdef URBAN_MODEL
@@ -241,12 +250,19 @@ CONTAINS
 
          IF (p_is_worker) THEN
             IF (numpatch > 0) THEN
-               allocate (filter (numpatch))
-               allocate (vecacc (numpatch))
+               allocate (filter    (numpatch))
+               allocate (filter_dt (numpatch))
+               allocate (vecacc    (numpatch))
             ENDIF
 #ifdef URBAN_MODEL
             IF (numurban > 0) THEN
                allocate (filter_urb (numurban))
+            ENDIF
+#endif
+#ifdef CROP
+            IF (numpatch > 0) THEN
+               allocate (filter_crop (numpatch))
+               allocate (filter_irrig (numpatch))
             ENDIF
 #endif
          ENDIF
@@ -254,8 +270,13 @@ CONTAINS
          IF (HistForm == 'Gridded') THEN
             IF (p_is_io) THEN
                CALL allocate_block_data (ghist, sumarea)
+               CALL allocate_block_data (ghist, sumarea_dt)
 #ifdef URBAN_MODEL
                CALL allocate_block_data (ghist, sumarea_urb)
+#endif
+#ifdef CROP
+               CALL allocate_block_data (ghist, sumarea_crop)
+               CALL allocate_block_data (ghist, sumarea_irrig)
 #endif
             ENDIF
          ENDIF
@@ -272,12 +293,15 @@ CONTAINS
                   filter = filter .and. forcmask_pch
                ENDIF
 
-               filter = filter .and. patchmask
+               filter    = filter .and. patchmask
+               filter_dt = filter .and. patchmask .and. (nac_dt > 0)
+
             ENDIF
          ENDIF
 
          IF (HistForm == 'Gridded') THEN
             CALL mp2g_hist%get_sumarea (sumarea, filter)
+            CALL mp2g_hist%get_sumarea (sumarea_dt, filter_dt)
          ENDIF
 
          IF (HistForm == 'Gridded') THEN
@@ -288,6 +312,65 @@ CONTAINS
                   compress = 1, longname = 'land fraction', units = '-')
             ENDIF
          ENDIF
+
+#ifdef CROP
+         IF (p_is_worker) THEN
+            IF (numpatch > 0) THEN
+               filter_crop(:) = patchtype < 99
+               filter_crop(:) = patchclass == 12
+
+               IF (DEF_forcing%has_missing_value) THEN
+                  filter_crop = filter_crop .and. forcmask_pch
+               ENDIF
+
+               filter_crop = filter_crop .and. patchmask
+            ENDIF
+         ENDIF
+
+         IF (HistForm == 'Gridded') THEN
+            CALL mp2g_hist%get_sumarea (sumarea_crop, filter_crop)
+         ENDIF
+
+         IF (HistForm == 'Gridded') THEN
+            IF (trim(file_hist) /= trim(file_last)) THEN
+               CALL hist_write_var_real8_2d (file_hist, 'croparea', ghist, 1, sumarea_crop, &
+                  compress = 1, longname = 'crop area', units = 'km2')
+            ENDIF
+         ENDIF
+
+         IF (DEF_USE_IRRIGATION) THEN
+            IF (p_is_worker) THEN
+               IF (numpatch > 0) THEN
+                  DO i=1,numpatch
+                     IF(patchclass(i) == 12)THEN
+                        IF((pftclass(patch_pft_s(i)).GE.npcropmin).and.(MOD(pftclass(patch_pft_s(i)),2).EQ.0))THEN
+                           filter_irrig(i) = .true.
+                        ELSE
+                           filter_irrig(i) = .false.
+                        ENDIF
+                     ELSE
+                        filter_irrig(i) = .false.
+                     ENDIF
+                  ENDDO
+                  IF (DEF_forcing%has_missing_value) THEN
+                     filter_irrig = filter_irrig .and. forcmask_pch
+                  ENDIF
+                  filter_irrig = filter_irrig .and. patchmask
+               ENDIF
+            ENDIF
+         ENDIF
+
+         IF (HistForm == 'Gridded') THEN
+            CALL mp2g_hist%get_sumarea (sumarea_irrig, filter_irrig)
+         ENDIF
+
+         IF (HistForm == 'Gridded') THEN
+            IF (trim(file_hist) /= trim(file_last)) THEN
+               CALL hist_write_var_real8_2d (file_hist, 'irrigarea', ghist, 1, sumarea_irrig, &
+                  compress = 1, longname = 'irrigation area', units = 'km2')
+            ENDIF
+         ENDIF
+#endif
 
          ! wind in eastward direction [m/s]
          CALL write_history_variable_2d ( DEF_hist_vars%xy_us, &
@@ -640,8 +723,9 @@ CONTAINS
 
          ! averaged albedo [visible, direct; direct, diffuse]
          CALL write_history_variable_4d ( DEF_hist_vars%alb, &
-            a_alb, file_hist, 'f_alb', itime_in_file, 'band', 1, 2, 'rtyp', 1, 2, sumarea, filter, &
-            'averaged albedo direct','%')
+            a_alb, file_hist, 'f_alb', itime_in_file, &
+            'band', 1, 2, 'rtyp', 1, 2, sumarea_dt, filter_dt, &
+            'averaged albedo','-',nac_dt)
 
          ! averaged bulk surface emissivity
          CALL write_history_variable_2d ( DEF_hist_vars%emis, &
@@ -662,6 +746,13 @@ CONTAINS
          CALL write_history_variable_2d ( DEF_hist_vars%tref, &
             a_tref, file_hist, 'f_tref', itime_in_file, sumarea, filter, &
             '2 m height air temperature','kelvin')
+
+IF (DEF_Output_2mWMO) THEN
+         ! 2 m WMO air temperature [kelvin]
+         CALL write_history_variable_2d ( DEF_hist_vars%t2m_wmo, &
+            a_t2m_wmo, file_hist, 'f_t2m_wmo', itime_in_file, sumarea, filter, &
+            '2 m WMO air temperature','kelvin')
+ENDIF
 
          ! 2 m height air specific humidity [kg/kg]
          CALL write_history_variable_2d ( DEF_hist_vars%qref, &
@@ -1266,23 +1357,135 @@ CONTAINS
              a_fert_to_sminn, file_hist, 'f_fert_to_sminn', itime_in_file, sumarea, filter, &
              'fertilization','gN/m2/s')
 
-         IF(DEF_USE_IRRIGATION)THEN
-            ! irrigation rate mm/s in 4h is averaged to the given time resolution mm/s
-            CALL write_history_variable_2d ( DEF_hist_vars%irrig_rate, &
-               a_irrig_rate, file_hist, 'f_irrig_rate', itime_in_file, sumarea, filter, &
-               'irrigation rate mm/s in 4h is averaged to the given time resolution mm/s','mm/s')
-            !  still need irrigation amounts
-            CALL write_history_variable_2d ( DEF_hist_vars%deficit_irrig, &
-               a_deficit_irrig, file_hist, 'f_deficit_irrig', itime_in_file, sumarea, filter, &
-               'still need irrigation amounts','kg/m2')
+         IF (DEF_USE_IRRIGATION) THEN
+            IF (p_is_worker) THEN
+               IF (numpatch > 0) THEN
+                  DO i=1,numpatch
+                     IF(patchclass(i) == 12)THEN
+                        IF((pftclass(patch_pft_s(i)).GE.npcropmin).and.(MOD(pftclass(patch_pft_s(i)),2).EQ.0))THEN
+                           filter_irrig(i) = .true.
+                        ELSE
+                           filter_irrig(i) = .false.
+                        ENDIF
+                     ELSE
+                        filter_irrig(i) = .false.
+                     ENDIF
+                  ENDDO
+                  IF (DEF_forcing%has_missing_value) THEN
+                     filter_irrig = filter_irrig .and. forcmask_pch
+                  ENDIF
+                  filter_irrig = filter_irrig .and. patchmask
+               ENDIF
+            ENDIF
+
+            IF (HistForm == 'Gridded') THEN
+               CALL mp2g_hist%get_sumarea (sumarea_irrig, filter_irrig)
+            ENDIF
+
             !  total irrigation amounts at growing season
+            IF (p_is_worker) THEN
+               IF (numpatch > 0) THEN
+                  vecacc (:) = a_sum_irrig (:)
+               ENDIF
+            ENDIF
             CALL write_history_variable_2d ( DEF_hist_vars%sum_irrig, &
-               a_sum_irrig, file_hist, 'f_sum_irrig', itime_in_file, sumarea, filter, &
+               vecacc, file_hist, 'f_sum_irrig', itime_in_file, sumarea_irrig, filter_irrig, &
                'total irrigation amounts at growing season','kg/m2')
+
+            !  total irrigation amounts demand at growing season
+            IF (p_is_worker) THEN
+               IF (numpatch > 0) THEN
+                  vecacc (:) = a_sum_deficit_irrig (:)
+               ENDIF
+            ENDIF
+            CALL write_history_variable_2d ( DEF_hist_vars%sum_deficit_irrig, &
+               vecacc, file_hist, 'f_sum_deficit_irrig', itime_in_file, sumarea_irrig, filter_irrig, &
+               'total irrigation amounts demand at growing season','kg/m2')
+
             ! total irrigation times at growing season
             CALL write_history_variable_2d ( DEF_hist_vars%sum_irrig_count, &
-               a_sum_irrig_count, file_hist, 'f_sum_irrig_count', itime_in_file, sumarea, filter, &
+               a_sum_irrig_count, file_hist, 'f_sum_irrig_count', itime_in_file, sumarea_irrig, filter_irrig, &
                'total irrigation times at growing season','-')
+
+            ! irrigation waterstorage [kg/m2]
+            IF (p_is_worker) THEN
+               IF (numpatch > 0) THEN
+                  vecacc (:) = a_waterstorage (:)
+               ENDIF
+            ENDIF
+            CALL write_history_variable_2d ( DEF_hist_vars%waterstorage, &
+               vecacc, file_hist, 'f_waterstorage', itime_in_file, sumarea_irrig, filter_irrig, &
+               'irrigation waterstorage','kg/m2')
+
+            ! irrigation demand for ground water [kg/m2]
+            IF (p_is_worker) THEN
+               IF (numpatch > 0) THEN
+                  vecacc (:) = a_groundwater_demand (:)
+               ENDIF
+            ENDIF
+            CALL write_history_variable_2d ( DEF_hist_vars%groundwater_demand, &
+               vecacc, file_hist, 'f_groundwater_demand', itime_in_file, sumarea_irrig, filter_irrig, &
+               'irrigation demand for ground water','kg/m2')
+
+            ! irrigation supply from ground water [kg/m2]
+            IF (p_is_worker) THEN
+               IF (numpatch > 0) THEN
+                  vecacc (:) = a_groundwater_supply (:)
+               ENDIF
+            ENDIF
+            CALL write_history_variable_2d ( DEF_hist_vars%groundwater_supply, &
+               vecacc, file_hist, 'f_groundwater_supply', itime_in_file, sumarea_irrig, filter_irrig, &
+               'irrigation supply from ground water','kg/m2')
+
+            ! irrigation demand for reservoir or river [kg/m2]
+            IF (p_is_worker) THEN
+               IF (numpatch > 0) THEN
+                  vecacc (:) = a_reservoirriver_demand (:)
+               ENDIF
+            ENDIF
+            CALL write_history_variable_2d ( DEF_hist_vars%reservoirriver_demand, &
+               vecacc, file_hist, 'f_reservoirriver_demand', itime_in_file, sumarea_irrig, filter_irrig, &
+               'irrigation demand for reservoir or river','kg/m2')
+            
+            ! irrigation supply from reservoir or river [kg/m2]
+            IF (p_is_worker) THEN
+               IF (numpatch > 0) THEN
+                  vecacc (:) = a_reservoirriver_supply (:)
+               ENDIF
+            ENDIF
+            CALL write_history_variable_2d ( DEF_hist_vars%reservoirriver_supply, &
+               vecacc, file_hist, 'f_reservoirriver_supply', itime_in_file, sumarea_irrig, filter_irrig, &
+               'irrigation supply from reservoir or river','kg/m2')
+            
+            ! irrigation supply from reservoir [kg/m2]
+            IF (p_is_worker) THEN
+               IF (numpatch > 0) THEN
+                  vecacc (:) = a_reservoir_supply (:)
+               ENDIF
+            ENDIF
+            CALL write_history_variable_2d ( DEF_hist_vars%reservoirriver_supply, &
+               vecacc, file_hist, 'f_reservoir_supply', itime_in_file, sumarea_irrig, filter_irrig, &
+               'irrigation supply from reservoir','kg/m2')
+
+            ! irrigation supply from river [kg/m2]
+            IF (p_is_worker) THEN
+               IF (numpatch > 0) THEN
+                  vecacc (:) = a_river_supply (:)
+               ENDIF
+            ENDIF
+            CALL write_history_variable_2d ( DEF_hist_vars%reservoirriver_supply, &
+               vecacc, file_hist, 'f_river_supply', itime_in_file, sumarea_irrig, filter_irrig, &
+               'irrigation supply from river','kg/m2')
+            
+            ! irrigation supply from runoff [kg/m2]
+            IF (p_is_worker) THEN
+               IF (numpatch > 0) THEN
+                  vecacc (:) = a_runoff_supply (:)
+               ENDIF
+            ENDIF
+            CALL write_history_variable_2d ( DEF_hist_vars%reservoirriver_supply, &
+               vecacc, file_hist, 'f_runoff_supply', itime_in_file, sumarea_irrig, filter_irrig, &
+               'irrigation supply from runoff','kg/m2')   
          ENDIF
 #endif
 
@@ -4038,44 +4241,44 @@ CONTAINS
          ENDIF
 
          ! incident direct beam vis solar radiation at local noon (W/m2)
-         CALL write_history_variable_ln ( DEF_hist_vars%solvdln, &
+         CALL write_history_variable_2d ( DEF_hist_vars%solvdln, &
             a_solvdln, file_hist, 'f_solvdln', itime_in_file, sumarea, filter, &
-            'incident direct beam vis solar radiation at local noon(W/m2)','W/m2')
+            'incident direct beam vis solar radiation at local noon(W/m2)','W/m2',nac_ln)
 
          ! incident diffuse beam vis solar radiation at local noon (W/m2)
-         CALL write_history_variable_ln ( DEF_hist_vars%solviln, &
+         CALL write_history_variable_2d ( DEF_hist_vars%solviln, &
             a_solviln, file_hist, 'f_solviln', itime_in_file, sumarea, filter, &
-            'incident diffuse beam vis solar radiation at local noon(W/m2)','W/m2')
+            'incident diffuse beam vis solar radiation at local noon(W/m2)','W/m2',nac_ln)
 
          ! incident direct beam nir solar radiation at local noon (W/m2)
-         CALL write_history_variable_ln ( DEF_hist_vars%solndln, &
+         CALL write_history_variable_2d ( DEF_hist_vars%solndln, &
             a_solndln, file_hist, 'f_solndln', itime_in_file, sumarea, filter, &
-            'incident direct beam nir solar radiation at local noon(W/m2)','W/m2')
+            'incident direct beam nir solar radiation at local noon(W/m2)','W/m2',nac_ln)
 
          ! incident diffuse beam nir solar radiation at local noon (W/m2)
-         CALL write_history_variable_ln ( DEF_hist_vars%solniln, &
+         CALL write_history_variable_2d ( DEF_hist_vars%solniln, &
             a_solniln, file_hist, 'f_solniln', itime_in_file, sumarea, filter, &
-            'incident diffuse beam nir solar radiation at local noon(W/m2)','W/m2')
+            'incident diffuse beam nir solar radiation at local noon(W/m2)','W/m2',nac_ln)
 
          ! reflected direct beam vis solar radiation at local noon (W/m2)
-         CALL write_history_variable_ln ( DEF_hist_vars%srvdln, &
+         CALL write_history_variable_2d ( DEF_hist_vars%srvdln, &
             a_srvdln, file_hist, 'f_srvdln', itime_in_file, sumarea, filter, &
-            'reflected direct beam vis solar radiation at local noon(W/m2)','W/m2')
+            'reflected direct beam vis solar radiation at local noon(W/m2)','W/m2',nac_ln)
 
          ! reflected diffuse beam vis solar radiation at local noon (W/m2)
-         CALL write_history_variable_ln ( DEF_hist_vars%srviln, &
+         CALL write_history_variable_2d ( DEF_hist_vars%srviln, &
             a_srviln, file_hist, 'f_srviln', itime_in_file, sumarea, filter, &
-            'reflected diffuse beam vis solar radiation at local noon(W/m2)','W/m2')
+            'reflected diffuse beam vis solar radiation at local noon(W/m2)','W/m2',nac_ln)
 
          ! reflected direct beam nir solar radiation at local noon (W/m2)
-         CALL write_history_variable_ln ( DEF_hist_vars%srndln, &
+         CALL write_history_variable_2d ( DEF_hist_vars%srndln, &
             a_srndln, file_hist, 'f_srndln', itime_in_file, sumarea, filter, &
-            'reflected direct beam nir solar radiation at local noon(W/m2)','W/m2')
+            'reflected direct beam nir solar radiation at local noon(W/m2)','W/m2',nac_ln)
 
          ! reflected diffuse beam nir solar radiation at local noon(W/m2)
-         CALL write_history_variable_ln ( DEF_hist_vars%srniln, &
+         CALL write_history_variable_2d ( DEF_hist_vars%srniln, &
             a_srniln, file_hist, 'f_srniln', itime_in_file, sumarea, filter, &
-            'reflected diffuse beam nir solar radiation at local noon(W/m2)','W/m2')
+            'reflected diffuse beam nir solar radiation at local noon(W/m2)','W/m2',nac_ln)
 
 
          IF ((p_is_worker) .and. (numpatch > 0)) THEN
@@ -4103,9 +4306,10 @@ CONTAINS
          CALL hist_basin_out (file_hist, idate)
 #endif
 
-         IF (allocated(filter)) deallocate (filter)
+         IF (allocated(filter    )) deallocate (filter    )
+         IF (allocated(filter_dt )) deallocate (filter_dt )
 #ifdef URBAN_MODEL
-         IF (allocated(filter_urb)) deallocate(filter_urb)
+         IF (allocated(filter_urb)) deallocate (filter_urb)
 #endif
 
          CALL FLUSH_acc_fluxes ()
@@ -4125,7 +4329,9 @@ CONTAINS
 
    SUBROUTINE write_history_variable_2d ( is_hist, &
          acc_vec, file_hist, varname, itime_in_file, sumarea, filter, &
-         longname, units)
+         longname, units, acc_num)
+
+   USE MOD_Vars_1DAccFluxes, only: nac
 
    IMPLICIT NONE
 
@@ -4140,8 +4346,25 @@ CONTAINS
 
    type(block_data_real8_2d), intent(in) :: sumarea
    logical, intent(in) :: filter(:)
+   real(r8), intent(in), optional  :: acc_num(:)
 
       IF (.not. is_hist) RETURN
+
+#ifndef SinglePoint
+      IF ( .not. present(acc_num) ) THEN
+         IF (p_is_worker) &
+            WHERE (acc_vec /= spval) acc_vec = acc_vec / nac
+      ELSE
+         IF (p_is_worker)  &
+            WHERE (acc_vec/=spval .and. acc_num>0) acc_vec = acc_vec / acc_num
+      ENDIF
+#else
+      IF ( .not. present(acc_num) ) THEN
+         WHERE (acc_vec /= spval)  acc_vec = acc_vec / nac
+      ELSE
+         WHERE (acc_vec/=spval .and. acc_num>0) acc_vec = acc_vec / acc_num
+      ENDIF
+#endif
 
       select CASE (HistForm)
       CASE ('Gridded')
@@ -4189,12 +4412,13 @@ CONTAINS
             acc_vec, file_hist, varname, itime_in_file, sumarea, filter, longname, units)
 #if (defined UNSTRUCTURED || defined CATCHMENT)
       CASE ('Vector')
+         !TODO: currently, it is not applicable to urban variables
          CALL aggregate_to_vector_and_write_2d ( &
             acc_vec, file_hist, varname, itime_in_file, filter, longname, units)
 #endif
 #ifdef SinglePoint
       CASE ('Single')
-         CALL single_write_urb_2d ( &
+         CALL single_write_2d ( &
             acc_vec, file_hist, varname, itime_in_file, longname, units)
 #endif
       END select
@@ -4253,7 +4477,7 @@ CONTAINS
    SUBROUTINE write_history_variable_4d ( is_hist,   &
          acc_vec, file_hist, varname, itime_in_file, &
          dim1name, lb1, ndim1, dim2name, lb2, ndim2, &
-         sumarea, filter, longname, units)
+         sumarea, filter, longname, units, acc_num)
 
    IMPLICIT NONE
 
@@ -4270,8 +4494,39 @@ CONTAINS
    logical, intent(in) :: filter(:)
    character (len=*), intent(in) :: longname
    character (len=*), intent(in) :: units
+   real(r8), intent(in), optional:: acc_num(:)
+
+   ! Local variables
+   integer :: i1, i2
 
       IF (.not. is_hist) RETURN
+
+#ifndef SinglePoint
+      IF ( .not. present(acc_num) ) THEN
+         IF (p_is_worker) &
+            WHERE (acc_vec /= spval) acc_vec = acc_vec / nac
+      ELSE
+         IF (p_is_worker) THEN
+            DO i1 = lbound(acc_vec,1), ubound(acc_vec,1)
+               DO i2 = lbound(acc_vec,2), ubound(acc_vec,2)
+                  WHERE (acc_vec(i1,i2,:)/=spval .and. acc_num>0) &
+                        acc_vec(i1,i2,:) = acc_vec(i1,i2,:) / acc_num
+               ENDDO
+            ENDDO
+         ENDIF
+      ENDIF
+#else
+      IF ( .not. present(acc_num) ) THEN
+         WHERE (acc_vec /= spval)  acc_vec = acc_vec / nac
+      ELSE
+         DO i1 = lbound(acc_vec,1), ubound(acc_vec,1)
+            DO i2 = lbound(acc_vec,2), ubound(acc_vec,2)
+               WHERE (acc_vec(i1,i2,:)/=spval .and. acc_num>0) &
+                     acc_vec(i1,i2,:) = acc_vec(i1,i2,:) / acc_num
+            ENDDO
+         ENDDO
+      ENDIF
+#endif
 
       select CASE (HistForm)
       CASE ('Gridded')
@@ -4292,44 +4547,6 @@ CONTAINS
       END select
 
    END SUBROUTINE write_history_variable_4d
-
-
-   SUBROUTINE write_history_variable_ln ( is_hist, &
-         acc_vec, file_hist, varname, itime_in_file, sumarea, filter, &
-         longname, units)
-
-   IMPLICIT NONE
-
-   logical, intent(in) :: is_hist
-
-   real(r8), intent(inout) :: acc_vec(:)
-   character(len=*), intent(in) :: file_hist
-   character(len=*), intent(in) :: varname
-   integer, intent(in) :: itime_in_file
-
-   type(block_data_real8_2d), intent(in) :: sumarea
-   logical,  intent(in) :: filter(:)
-   character (len=*), intent(in), optional :: longname
-   character (len=*), intent(in), optional :: units
-
-      IF (.not. is_hist) RETURN
-
-      select CASE (HistForm)
-      CASE ('Gridded')
-         CALL flux_map_and_write_ln ( &
-            acc_vec, file_hist, varname, itime_in_file, sumarea, filter, longname, units)
-#if (defined UNSTRUCTURED || defined CATCHMENT)
-      CASE ('Vector')
-         CALL aggregate_to_vector_and_write_ln ( &
-            acc_vec, file_hist, varname, itime_in_file, filter, longname, units)
-#endif
-#ifdef SinglePoint
-      CASE ('Single')
-         CALL single_write_ln (acc_vec, file_hist, varname, itime_in_file, longname, units)
-#endif
-      END select
-
-   END SUBROUTINE write_history_variable_ln
 
 
    SUBROUTINE hist_write_time (filename, filelast, dataname, time, itime)
