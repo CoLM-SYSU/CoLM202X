@@ -132,6 +132,7 @@ SUBROUTINE Aggregation_PercentagesPFT (gland, dir_rawdata, dir_model_landdata, l
                pct_pft_one(N_PFT_modis-1,:) = 0.
 #endif
 
+               pct_pft_one = max(pct_pft_one , 0.0)
                pct_one = sum(pct_pft_one, dim=1)
                pct_one = max(pct_one, 1.0e-6)
                sumarea = sum(area_one)
