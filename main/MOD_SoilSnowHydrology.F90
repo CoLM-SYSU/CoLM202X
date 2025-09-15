@@ -1048,8 +1048,6 @@ ENDIF
                wice_soisno(j) = 0.
             ENDIF
          ENDDO
-
-         IF (wblc > 0.) wa = wa - wblc
       ENDIF
 
 #ifndef CatchLateralFlow

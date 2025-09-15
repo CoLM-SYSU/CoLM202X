@@ -474,7 +474,7 @@ PROGRAM CoLM
 
 
 #if (defined CatchLateralFlow)
-         CALL lateral_flow (deltim)
+         CALL lateral_flow (idate(1), deltim)
 #endif
 
 #if (defined CaMa_Flood)

@@ -80,6 +80,7 @@ CONTAINS
    USE MOD_PercentagesPFTReadin
    USE MOD_SoilParametersReadin
    USE MOD_SoilTextureReadin
+   USE MOD_VicParaReadin
 #ifdef SinglePoint
    USE MOD_SingleSrfdata
 #endif
@@ -427,6 +428,16 @@ ENDIF
          CALL ncio_read_vector (lndname, 'cur_patches', landpatch, cur_patches)
 #endif
        ENDIF
+       
+      IF (DEF_USE_Forcing_Downscaling_Simple) THEN
+         lndname = trim(DEF_dir_landdata) // '/topography/'//trim(cyear)//'/slp_type_patches.nc'      ! slope
+         CALL ncio_read_vector (lndname, 'slp_type_patches', num_aspect_type, landpatch, slp_type_patches)
+         lndname = trim(DEF_dir_landdata) // '/topography/'//trim(cyear)//'/asp_type_patches.nc'      ! aspect
+         CALL ncio_read_vector (lndname, 'asp_type_patches', num_aspect_type, landpatch, asp_type_patches)
+         lndname = trim(DEF_dir_landdata) // '/topography/'//trim(cyear)//'/cur_patches.nc'           ! curvature
+         CALL ncio_read_vector (lndname, 'cur_patches', landpatch, cur_patches)
+      ENDIF
+
 ! ................................
 ! 1.6 Initialize TUNABLE constants
 ! ................................
@@ -507,6 +518,9 @@ ENDIF
       ENDIF
 
       IF (DEF_Runoff_SCHEME == 1) THEN
+         IF (DEF_VIC_OPT) THEN
+            CALL vicpara_readin ()
+         ELSE
          IF (p_is_master) THEN
             txt_id = 111
             open(txt_id, file=trim(DEF_file_VIC_para), status='old', form='formatted')
@@ -531,6 +545,7 @@ ENDIF
                vic_Ws       = vic_Ws_
                vic_c        = vic_c_
             ENDIF
+         ENDIF
          ENDIF
       ELSE
          IF (p_is_worker) THEN

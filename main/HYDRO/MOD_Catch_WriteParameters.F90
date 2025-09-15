@@ -5,7 +5,7 @@ MODULE MOD_Catch_WriteParameters
 
 CONTAINS
 
-   SUBROUTINE write_catch_parameters 
+   SUBROUTINE write_catch_parameters
 
    USE MOD_Precision
    USE MOD_SPMD_Task
@@ -13,6 +13,7 @@ CONTAINS
    USE MOD_NetCDFSerial
    USE MOD_Catch_IO
    USE MOD_ElmVector
+   USE MOD_Catch_Reservoir
    USE MOD_Vars_TimeInvariants,  only : wf_sand, wf_clay, wf_om, wf_gravels, patchclass
    USE MOD_Catch_SubsurfaceFlow, only : hillslope_element, lake_id_elm
    USE MOD_HRUVector,   only : totalnumhru, hru_data_address, eindx_hru, htype_hru
@@ -24,7 +25,7 @@ CONTAINS
 
    character(len=256) :: file_parameters
    character(len=1)   :: slev
-   real(r8), allocatable :: hrupara(:)
+   real(r8), allocatable :: hrupara(:), varpara(:)
    integer :: ilev, i, ps, pe, ielm, ihru, j
 
       file_parameters = trim(DEF_dir_output) // '/' // trim(DEF_CASE_NAME) // '/catch_parameters.nc'
@@ -47,9 +48,9 @@ CONTAINS
       ENDIF
 
       DO ilev = 1, 5
-         
-         write(slev,'(i1.1)') ilev 
-        
+
+         write(slev,'(i1.1)') ilev
+
          ! sand
          IF (p_is_worker) THEN
             DO i = 1, numhru
@@ -61,7 +62,7 @@ CONTAINS
 
          CALL vector_write_basin (&
             file_parameters, hrupara, numhru, totalnumhru, 'wf_sand_l'//slev, 'hydrounit', hru_data_address)
-         
+
          ! clay
          IF (p_is_worker) THEN
             DO i = 1, numhru
@@ -73,8 +74,8 @@ CONTAINS
 
          CALL vector_write_basin (&
             file_parameters, hrupara, numhru, totalnumhru, 'wf_clay_l'//slev, 'hydrounit', hru_data_address)
-         
-         ! organic matter 
+
+         ! organic matter
          IF (p_is_worker) THEN
             DO i = 1, numhru
                ps = hru_patch%substt(i)
@@ -85,8 +86,8 @@ CONTAINS
 
          CALL vector_write_basin (&
             file_parameters, hrupara, numhru, totalnumhru, 'wf_om_l'//slev, 'hydrounit', hru_data_address)
-         
-         ! silt 
+
+         ! silt
          IF (p_is_worker) THEN
             DO i = 1, numhru
                ps = hru_patch%substt(i)
@@ -125,7 +126,7 @@ CONTAINS
             ENDIF
          ENDDO
       ENDIF
-         
+
       CALL vector_write_basin (&
          file_parameters, hrupara, numhru, totalnumhru, 'slope_length', 'hydrounit', hru_data_address)
 
@@ -147,10 +148,10 @@ CONTAINS
             ENDIF
          ENDDO
       ENDIF
-         
+
       CALL vector_write_basin (&
          file_parameters, hrupara, numhru, totalnumhru, 'elevation', 'hydrounit', hru_data_address)
-      
+
       IF (p_is_master) THEN
          CALL ncio_put_attr (file_parameters, 'elevation', 'units', 'm')
          CALL ncio_put_attr (file_parameters, 'elevation', 'missing_value', spval)
@@ -175,7 +176,7 @@ CONTAINS
             ENDIF
          ENDDO
       ENDIF
-         
+
       CALL vector_write_basin (&
          file_parameters, hrupara, numhru, totalnumhru, 'slope_ratio', 'hydrounit', hru_data_address)
 
@@ -185,6 +186,43 @@ CONTAINS
       ENDIF
 
       IF (allocated(hrupara)) deallocate(hrupara)
+
+
+      ! ----- reservoirs -----
+      IF (DEF_Reservoir_Method > 0) THEN
+         IF (numresv_uniq > 0) THEN
+
+            IF (p_is_master) THEN
+               CALL ncio_define_dimension (file_parameters, 'reservoir', numresv_uniq)
+               CALL ncio_write_serial (file_parameters, 'resv_hylak_id' , resv_hylak_id, 'reservoir')
+               CALL ncio_put_attr     (file_parameters, 'resv_hylak_id' , 'long_name', &
+                  'HydroLAKE ID of reservoirs')
+            ENDIF
+
+            allocate (varpara (numresv_uniq))
+
+            CALL reservoir_gather_var (volresv_total, varpara)
+            IF (p_is_master) THEN
+               CALL ncio_write_serial (file_parameters, 'volresv_total', varpara, 'reservoir', 1)
+               CALL ncio_put_attr     (file_parameters, 'volresv_total', 'units', 'm^3')
+            ENDIF
+
+            CALL reservoir_gather_var (qresv_mean, varpara)
+            IF (p_is_master) THEN
+               CALL ncio_write_serial (file_parameters, 'qresv_mean', varpara, 'reservoir', 1)
+               CALL ncio_put_attr     (file_parameters, 'qresv_mean', 'units', 'm^3/s')
+            ENDIF
+
+            CALL reservoir_gather_var (qresv_flood, varpara)
+            IF (p_is_master) THEN
+               CALL ncio_write_serial (file_parameters, 'qresv_flood', varpara, 'reservoir', 1)
+               CALL ncio_put_attr     (file_parameters, 'qresv_flood', 'units', 'm^3/s')
+            ENDIF
+
+            deallocate (varpara)
+
+         ENDIF
+      ENDIF
 
    END SUBROUTINE write_catch_parameters
 
