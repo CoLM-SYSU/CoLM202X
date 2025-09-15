@@ -268,6 +268,8 @@ MODULE MOD_Namelist
 
    integer :: DEF_Runoff_SCHEME = 3
    character(len=256) :: DEF_file_VIC_para = 'null'
+   character(len=256) :: DEF_file_VIC_OPT = 'null'
+   logical :: DEF_VIC_OPT = .false.
 
    integer :: DEF_TOPMOD_method = 0
 
@@ -1018,6 +1020,8 @@ CONTAINS
       DEF_SPLIT_SOILSNOW,                     &
       DEF_VEG_SNOW,                           &
       DEF_file_VIC_para,                      &
+      DEF_file_VIC_OPT,                       &
+      DEF_VIC_OPT,                            & !add by Qijia Guo @ sysu
 
       DEF_dir_existing_srfdata,               &
       USE_srfdata_from_larger_region,         &
@@ -1176,6 +1180,12 @@ CONTAINS
          ENDIF
 #endif
 
+         IF (DEF_Runoff_SCHEME == 1) THEN
+            DEF_file_VIC_para = trim(DEF_dir_runtime)//'/vic/vic_para.txt'
+            IF (DEF_VIC_OPT) THEN
+               DEF_file_VIC_OPT = trim(DEF_dir_runtime)//'vic/vic_para.nc'
+            ENDIF
+         ENDIF
 
 ! ----- subgrid type related ------ Macros&Namelist conflicts and dependency management
 
@@ -1573,7 +1583,9 @@ CONTAINS
       CALL mpi_bcast (DEF_RSS_SCHEME                         ,1   ,mpi_integer   ,p_address_master ,p_comm_glb ,p_err)
       ! 02/2024, added by Shupeng Zhang
       CALL mpi_bcast (DEF_Runoff_SCHEME                      ,1   ,mpi_integer   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_VIC_OPT                            ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_file_VIC_para                      ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_file_VIC_OPT                       ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_TOPMOD_method                      ,1   ,mpi_integer   ,p_address_master ,p_comm_glb ,p_err)
       ! 08/2023, added by hua yuan
       CALL mpi_bcast (DEF_SPLIT_SOILSNOW                     ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
