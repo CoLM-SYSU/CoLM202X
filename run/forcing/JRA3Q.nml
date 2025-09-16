@@ -12,7 +12,7 @@
    DEF_forcing%NVAR              = 8        ! variable number of forcing data
    DEF_forcing%startyr           = 2003     ! start year of forcing data
    DEF_forcing%startmo           = 1        ! start month of forcing data
-   DEF_forcing%endyr             = 2023     ! end year of forcing data
+   DEF_forcing%endyr             = 2024     ! end year of forcing data
    DEF_forcing%endmo             = 12       ! end month of forcing data
    DEF_forcing%dtime             = 3600 3600 3600 3600 3600 3600 3600 3600
    DEF_forcing%offset            = 0 0 0 1800 0 0 0 1800
