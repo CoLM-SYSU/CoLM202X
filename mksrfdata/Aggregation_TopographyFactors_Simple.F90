@@ -12,6 +12,7 @@ SUBROUTINE Aggregation_TopographyFactors_Simple ( &
    USE MOD_SPMD_Task
    USE MOD_Grid
    USE MOD_LandPatch
+   USE MOD_Land2mWMO
    USE MOD_NetCDFVector
    USE MOD_NetCDFBlock
 #ifdef RangeCheck
@@ -38,6 +39,7 @@ SUBROUTINE Aggregation_TopographyFactors_Simple ( &
    ! ---------------------------------------------------------------
    character(len=256) :: landdir, lndname, cyear
    character(len=3)   :: sdir, sdir1
+   integer  :: wmo_src
 
    type (block_data_real8_3d) :: slp_grid    ! slope
    type (block_data_real8_3d) :: asp_grid    ! aspect
@@ -115,6 +117,17 @@ SUBROUTINE Aggregation_TopographyFactors_Simple ( &
 
       ! aggregate loop
       DO ipatch = 1, numpatch
+
+         IF (ipatch == wmo_patch(landpatch%ielm(ipatch))) THEN
+            wmo_src = wmo_source (landpatch%ielm(ipatch))
+
+            cur_patches     (  ipatch) = cur_patches     (  wmo_src)
+            asp_type_patches(:,ipatch) = asp_type_patches(:,wmo_src)
+            slp_type_patches(:,ipatch) = slp_type_patches(:,wmo_src)
+
+            CYCLE
+         ENDIF
+
          CALL aggregation_request_data (landpatch, ipatch, grid_topo_factor, &
             zip = USE_zip_for_aggregation, area = area_one, &
             data_r8_2d_in1 = cur_grid,   data_r8_2d_out1 = cur_one, &

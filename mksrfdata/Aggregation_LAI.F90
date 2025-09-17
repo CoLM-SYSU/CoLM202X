@@ -497,6 +497,7 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
                      IF (allocated(pct_one)) deallocate(pct_one)
                      allocate(pct_one(size(area_one)))
 
+                     pct_pft_one = max(pct_pft_one , 0.0)
                      pct_one = sum(pct_pft_one,dim=1)
                      pct_one = max(pct_one, 1.0e-6)
 
@@ -642,6 +643,7 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
                   IF (allocated(pct_one)) deallocate(pct_one)
                   allocate(pct_one(size(area_one)))
 
+                  pct_pft_one = max(pct_pft_one , 0.0)
                   pct_one = sum(pct_pft_one,dim=1)
                   pct_one = max(pct_one, 1.0e-6)
 
