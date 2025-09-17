@@ -29,6 +29,7 @@ MODULE MOD_BGC_Veg_CNVegStructUpdate
    USE MOD_Vars_PFTimeInvariants, only: pftclass, pftfrac
    USE MOD_BGC_Vars_TimeVariables, only: farea_burned
    USE MOD_Const_PFT, only: dsladlai, slatop, laimx, woody
+
    !CLM5
    PUBLIC :: CNVegStructUpdate
   !-----------------------------------------------------------------------
@@ -58,6 +59,8 @@ CONTAINS
 
    real(r8), parameter :: dtsmonth = 2592000._r8 ! number of seconds in a 30 day month (60x60x24x30)
    real(r8), parameter :: frac_sno_threshold = 0.999_r8  ! frac_sno values greater than this are treated as 1
+   real(r8), parameter :: natlaimx = 8._r8
+   real(r8), parameter :: theta = 0.8_r8 
    integer m, ivt
 !-----------------------------------------------------------------------
 ! tsai formula from Zeng et. al. 2002, Journal of Climate, p1835
@@ -82,7 +85,9 @@ CONTAINS
             tsai_old = tsai_p(m) ! n-1 value
 
             IF(DEF_USE_LAIFEEDBACK)THEN
-               tlai_p(m) = slatop(ivt) * leafc_p(m)
+               tlai_p(m) = ((natlaimx + slatop(ivt) * leafc_p(m)) &
+                         - sqrt((natlaimx + slatop(ivt) * leafc_p(m))**2 &
+                         - 4 * theta * natlaimx * slatop(ivt) * leafc_p(m)))/ (2*theta)
                tlai_p(m) = max(0._r8, tlai_p(m))
                lai_p (m) = tlai_p(m)
             ENDIF

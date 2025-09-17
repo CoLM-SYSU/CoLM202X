@@ -1013,11 +1013,11 @@ ENDIF
                      DO m = ps, pe
                         ivt = pftclass(m)
                         IF(isevg(ivt))THEN
-                           leafc_p            (m) = leafcin_p(m)
+                           leafc_p            (m) = amin1(leafcin_p(m),300._r8)
                            frootc_p           (m) = frootcin_p(m)
                         ELSE
-                           leafc_p            (m) = leafcin_p(m)
-                           leafc_storage_p    (m) = leafc_storagein_p(m)
+                           leafc_p            (m) = amin1(leafcin_p(m),300._r8)
+                           leafc_storage_p    (m) = amin1(leafc_storagein_p(m),600._r8)
                            frootc_p           (m) = frootcin_p(m)
                            frootc_storage_p   (m) = frootc_storagein_p(m)
                         ENDIF
