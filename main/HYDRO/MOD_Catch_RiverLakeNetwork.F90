@@ -94,7 +94,7 @@ MODULE MOD_Catch_RiverLakeNetwork
 CONTAINS
 
    ! ----------
-   SUBROUTINE river_lake_network_init ()
+   SUBROUTINE river_lake_network_init (patcharea)
 
    USE MOD_SPMD_Task
    USE MOD_Namelist
@@ -110,6 +110,8 @@ CONTAINS
    USE MOD_UserDefFun
    USE MOD_Vars_TimeInvariants, only: lakedepth
    IMPLICIT NONE
+
+   real(r8), intent(in) :: patcharea (:)
 
    ! Local Variables
    character(len=256) :: river_file, rivdpt_file
@@ -140,12 +142,12 @@ CONTAINS
    logical, allocatable :: bsnfilter(:)
 
    ! for lakes
-   integer :: ps, pe, nsublake, hs, he, ihru, ipxl
+   integer :: ps, pe, nsublake, hs, he, ihru
    integer,  allocatable :: all_lake_id    (:), lake_id_elm     (:)
    integer , allocatable :: lakedown_id_elm(:), lakedown_id_bsn (:)
    real(r8), allocatable :: lakedepth_hru  (:), lakedepth_bsnhru(:)
    real(r8), allocatable :: lakeoutlet_elm (:), lakeoutlet_bsn  (:)
-   real(r8), allocatable :: lakearea_hru   (:), lakearea_bsnhru (:)
+   real(r8), allocatable :: unitarea_hru   (:), unitarea_bsnhru (:)
 
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
@@ -183,7 +185,7 @@ CONTAINS
 
       ! step 2: Estimate river depth by using runoff data.
       IF (use_calc_rivdpt) THEN
-         CALL calc_riverdepth_from_runoff ()
+         CALL calc_riverdepth_from_runoff (patcharea)
       ENDIF
 
 #ifdef USEMPI
@@ -512,8 +514,8 @@ CONTAINS
          IF (numbasin > 0)  allocate (lakedown_id_bsn (numbasin))
          IF (numelm > 0)    allocate (lakeoutlet_elm  (numelm))
          IF (numbasin > 0)  allocate (lakeoutlet_bsn  (numbasin))
-         IF (numhru > 0)    allocate (lakearea_hru    (numhru))
-         IF (numbsnhru > 0) allocate (lakearea_bsnhru (numbsnhru))
+         IF (numhru > 0)    allocate (unitarea_hru    (numhru))
+         IF (numbsnhru > 0) allocate (unitarea_bsnhru (numbsnhru))
 
          DO ibasin = 1, numbasin
 
@@ -536,29 +538,23 @@ CONTAINS
 
       IF (p_is_worker) THEN
 
+         unitarea_hru   = 0.
          lakedepth_hru  = 0.
          lakeoutlet_elm = 0.
-         lakearea_hru   = 0.
 
          DO ielm = 1, numelm
-            IF (lake_id_elm(ielm) > 0) THEN
-               hs = elm_hru%substt(ielm)
-               he = elm_hru%subend(ielm)
-               DO ihru = hs, he
-                  ps = hru_patch%substt(ihru)
-                  pe = hru_patch%subend(ihru)
+            hs = elm_hru%substt(ielm)
+            he = elm_hru%subend(ielm)
+            DO ihru = hs, he
+               ps = hru_patch%substt(ihru)
+               pe = hru_patch%subend(ihru)
 
+               unitarea_hru(ihru) = sum(patcharea(ps:pe))
+
+               IF (lake_id_elm(ielm) > 0) THEN
                   lakedepth_hru(ihru) = maxval(lakedepth(ps:pe))
-
-                  lakearea_hru(ihru) = 0.
-                  DO ipxl = landhru%ipxstt(ihru), landhru%ipxend(ihru)
-                     lakearea_hru(ihru) = lakearea_hru(ihru) &
-                        + 1.0e6 * areaquad ( &
-                        pixel%lat_s(mesh(ielm)%ilat(ipxl)), pixel%lat_n(mesh(ielm)%ilat(ipxl)), &
-                        pixel%lon_w(mesh(ielm)%ilon(ipxl)), pixel%lon_e(mesh(ielm)%ilon(ipxl)) )
-                  ENDDO
-               ENDDO
-            ENDIF
+               ENDIF
+            ENDDO
 
             IF (lakedown_id_elm(ielm) /= 0) THEN
                inb = findloc_ud(elementneighbour(ielm)%glbindex == lakedown_id_elm(ielm))
@@ -569,15 +565,15 @@ CONTAINS
 
       CALL worker_push_data (iam_elm, iam_bsn, lakeoutlet_elm, lakeoutlet_bsn)
 
+      CALL worker_push_subset_data (iam_elm, iam_bsn, elm_hru, basin_hru, unitarea_hru,  unitarea_bsnhru )
       CALL worker_push_subset_data (iam_elm, iam_bsn, elm_hru, basin_hru, lakedepth_hru, lakedepth_bsnhru)
-      CALL worker_push_subset_data (iam_elm, iam_bsn, elm_hru, basin_hru, lakearea_hru,  lakearea_bsnhru )
 
       IF (allocated (lake_id_elm    )) deallocate (lake_id_elm    )
       IF (allocated (lakedepth_hru  )) deallocate (lakedepth_hru  )
       IF (allocated (lakedown_id_elm)) deallocate (lakedown_id_elm)
       IF (allocated (lakedown_id_bsn)) deallocate (lakedown_id_bsn)
       IF (allocated (lakeoutlet_elm )) deallocate (lakeoutlet_elm )
-      IF (allocated (lakearea_hru   )) deallocate (lakearea_hru   )
+      IF (allocated (unitarea_hru   )) deallocate (unitarea_hru   )
 
       IF (p_is_worker) THEN
 
@@ -597,7 +593,12 @@ CONTAINS
 
             DO ibasin = 1, numbasin
 
+               hs = basin_hru%substt(ibasin)
+               he = basin_hru%subend(ibasin)
+
                IF (lake_id(ibasin) == 0) THEN
+
+                  hillslope_basin(ibasin)%area = unitarea_bsnhru(hs:he)
 
                   riverarea(ibasin) = hillslope_basin(ibasin)%area(1)
                   riverwth (ibasin) = riverarea(ibasin) / riverlen(ibasin)
@@ -611,10 +612,9 @@ CONTAINS
                   wtsrfelv(ibasin) = riverelv(ibasin)
                   bedelv  (ibasin) = riverelv(ibasin) - riverdpth(ibasin)
 
-               ELSEIF (lake_id(ibasin) > 0) THEN
+                  handmin(ibasin) = minval(hillslope_basin(ibasin)%hand)
 
-                  hs = basin_hru%substt(ibasin)
-                  he = basin_hru%subend(ibasin)
+               ELSEIF (lake_id(ibasin) > 0) THEN
 
                   wtsrfelv(ibasin) = basinelv(ibasin)
 
@@ -628,7 +628,7 @@ CONTAINS
                   allocate (lakeinfo(ibasin)%depth0 (nsublake))
                   allocate (lakeinfo(ibasin)%depth  (nsublake))
 
-                  lakeinfo(ibasin)%area  = lakearea_bsnhru (hs:he)
+                  lakeinfo(ibasin)%area  = unitarea_bsnhru (hs:he)
                   lakeinfo(ibasin)%depth = lakedepth_bsnhru(hs:he)
 
                   ! area data in HRU order
@@ -663,11 +663,13 @@ CONTAINS
 
                   deallocate (order)
 
+               ELSEIF (lake_id(ibasin) < 0) THEN
+
+                  hillslope_basin(ibasin)%area = unitarea_bsnhru(hs:he)
+                  handmin(ibasin) = minval(hillslope_basin(ibasin)%hand)
+
                ENDIF
 
-               IF (lake_id(ibasin) <= 0) THEN
-                  handmin(ibasin) = minval(hillslope_basin(ibasin)%hand)
-               ENDIF
             ENDDO
          ENDIF
 
@@ -718,7 +720,7 @@ CONTAINS
 
       IF (allocated (lakedepth_bsnhru)) deallocate (lakedepth_bsnhru)
       IF (allocated (lakeoutlet_bsn  )) deallocate (lakeoutlet_bsn  )
-      IF (allocated (lakearea_bsnhru )) deallocate (lakearea_bsnhru )
+      IF (allocated (unitarea_bsnhru )) deallocate (unitarea_bsnhru )
 
       IF (allocated(basin_sorted  )) deallocate(basin_sorted  )
       IF (allocated(basin_order   )) deallocate(basin_order   )
@@ -834,7 +836,7 @@ CONTAINS
    END SUBROUTINE push_to_downstream
 
    ! ----- retrieve river depth from runoff -----
-   SUBROUTINE calc_riverdepth_from_runoff ()
+   SUBROUTINE calc_riverdepth_from_runoff (patcharea)
 
    USE MOD_SPMD_Task
    USE MOD_Namelist
@@ -848,8 +850,11 @@ CONTAINS
    USE MOD_Grid
    USE MOD_SpatialMapping
    USE MOD_LandElm
+   USE MOD_LandPatch
    USE MOD_ElmVector
    IMPLICIT NONE
+
+   real(r8), intent(in) :: patcharea (:)
 
    ! Local Variables
    character(len=256) :: file_rnof, file_rivdpt
@@ -860,7 +865,7 @@ CONTAINS
    real(r8), allocatable :: bsnrnof(:) , bsndis(:)
    integer,  allocatable :: nups_riv(:), iups_riv(:), b_up2down(:)
 
-   integer :: i, j, ithis, ib, jb, iblkme, ipxl
+   integer :: i, j, ithis, ib, jb, iblkme, ps, pe
    integer :: iwork, mesg(2), isrc, ndata
    real(r8), allocatable :: rcache(:)
    real(r8) :: myarea
@@ -902,13 +907,9 @@ CONTAINS
          IF (numelm > 0) THEN
             bsnrnof = bsnrnof /24.0/3600.0 ! from m/day to m/s
             DO i = 1, numelm
-               myarea = 0.
-               DO ipxl = landelm%ipxstt(i), landelm%ipxend(i)
-                  myarea = myarea + 1.0e6 * areaquad ( &
-                     pixel%lat_s(mesh(i)%ilat(ipxl)), pixel%lat_n(mesh(i)%ilat(ipxl)), &
-                     pixel%lon_w(mesh(i)%ilon(ipxl)), pixel%lon_e(mesh(i)%ilon(ipxl)) )
-               ENDDO
-
+               ps = elm_patch%substt(i)
+               pe = elm_patch%subend(i)
+               myarea = sum(patcharea(ps:pe))
                ! total runoff in basin, from m/s to m3/s
                bsnrnof(i) = bsnrnof(i) * myarea
             ENDDO

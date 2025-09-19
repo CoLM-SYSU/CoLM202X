@@ -58,7 +58,6 @@ CONTAINS
    integer , allocatable :: nhru_all(:), nhru_in_bsn(:)
 
    integer , allocatable :: indxhru (:,:)
-   real(r8), allocatable :: areahru (:,:)
    real(r8), allocatable :: handhru (:,:)
    real(r8), allocatable :: elvahru (:,:)
    real(r8), allocatable :: plenhru (:,:)
@@ -79,7 +78,6 @@ CONTAINS
 
          CALL ncio_read_serial (hillslope_network_file, 'basin_numhru',        nhru_all)
          CALL ncio_read_serial (hillslope_network_file, 'hydrounit_index',      indxhru)
-         CALL ncio_read_serial (hillslope_network_file, 'hydrounit_area',       areahru)
          CALL ncio_read_serial (hillslope_network_file, 'hydrounit_hand',       handhru)
          CALL ncio_read_serial (hillslope_network_file, 'hydrounit_elva',       elvahru)
          CALL ncio_read_serial (hillslope_network_file, 'hydrounit_pathlen',    plenhru)
@@ -124,11 +122,6 @@ CONTAINS
                   icache(:,irecv) = indxhru(:,eid(irecv))
                ENDDO
                CALL mpi_send (icache, maxnumhru*nrecv, MPI_INTEGER, idest, mpi_tag_data, p_comm_glb, p_err)
-
-               DO irecv = 1, nrecv
-                  rcache(:,irecv) = areahru(:,eid(irecv))
-               ENDDO
-               CALL mpi_send (rcache, maxnumhru*nrecv, MPI_REAL8, idest, mpi_tag_data, p_comm_glb, p_err)
 
                DO irecv = 1, nrecv
                   rcache(:,irecv) = handhru(:,eid(irecv))
@@ -183,11 +176,6 @@ CONTAINS
                icache(:,ie) = indxhru(:,elmindex(ie))
             ENDDO
             indxhru = icache
-
-            DO ie = 1, ne
-               rcache(:,ie) = areahru(:,elmindex(ie))
-            ENDDO
-            areahru = rcache
 
             DO ie = 1, ne
                rcache(:,ie) = handhru(:,elmindex(ie))
@@ -249,10 +237,6 @@ CONTAINS
             CALL mpi_recv (indxhru, maxnumhru*ne, MPI_INTEGER, &
                p_address_master, mpi_tag_data, p_comm_glb, p_stat, p_err)
 
-            allocate (areahru (maxnumhru,ne))
-            CALL mpi_recv (areahru, maxnumhru*ne, MPI_REAL8, &
-               p_address_master, mpi_tag_data, p_comm_glb, p_stat, p_err)
-
             allocate (handhru (maxnumhru,ne))
             CALL mpi_recv (handhru, maxnumhru*ne, MPI_REAL8, &
                p_address_master, mpi_tag_data, p_comm_glb, p_stat, p_err)
@@ -306,7 +290,6 @@ CONTAINS
                allocate (hillslope_network(ie)%inext (nhru))
 
                hillslope_network(ie)%indx = indxhru(1:nhru,ie)
-               hillslope_network(ie)%area = areahru(1:nhru,ie) * 1.0e6 ! km^2 to m^2
                hillslope_network(ie)%hand = handhru(1:nhru,ie)         ! m
                hillslope_network(ie)%elva = elvahru(1:nhru,ie)         ! m
                hillslope_network(ie)%plen = plenhru(1:nhru,ie) * 1.0e3 ! km to m
@@ -360,7 +343,6 @@ CONTAINS
       IF (allocated(nhru_in_bsn)) deallocate(nhru_in_bsn)
 
       IF (allocated(indxhru)) deallocate(indxhru)
-      IF (allocated(areahru)) deallocate(areahru)
       IF (allocated(handhru)) deallocate(handhru)
       IF (allocated(elvahru)) deallocate(elvahru)
       IF (allocated(plenhru)) deallocate(plenhru)

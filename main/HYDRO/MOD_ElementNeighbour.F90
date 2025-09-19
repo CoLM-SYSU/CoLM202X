@@ -53,7 +53,7 @@ MODULE MOD_ElementNeighbour
 CONTAINS
 
    ! ----------
-   SUBROUTINE element_neighbour_init (lc_year)
+   SUBROUTINE element_neighbour_init (patcharea, lc_year)
 
    USE MOD_SPMD_Task
    USE MOD_Namelist
@@ -66,7 +66,8 @@ CONTAINS
    USE MOD_Utils
    IMPLICIT NONE
 
-   integer, intent(in) :: lc_year    ! which year of land cover data used
+   integer,  intent(in) :: lc_year    ! which year of land cover data used
+   real(r8), intent(in) :: patcharea (:)
 
    ! Local Variables
    character(len=256) :: neighbour_file
@@ -108,7 +109,7 @@ CONTAINS
    type(pointer_real8_1d), allocatable :: area_nb (:)  ! m^2
    type(pointer_real8_1d), allocatable :: elva_nb (:)  ! m
 
-   integer :: ipxl, istt, iend
+   integer :: istt, iend
 
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
@@ -490,15 +491,9 @@ CONTAINS
             allocate (area_b(numelm))
             allocate (elva_b(numelm))
             DO ielm = 1, numelm
-               area_b(ielm) = 0
-               DO ipxl = 1, mesh(ielm)%npxl
-                  area_b(ielm) = area_b(ielm) + 1.0e6 * areaquad ( &
-                     pixel%lat_s(mesh(ielm)%ilat(ipxl)), pixel%lat_n(mesh(ielm)%ilat(ipxl)), &
-                     pixel%lon_w(mesh(ielm)%ilon(ipxl)), pixel%lon_e(mesh(ielm)%ilon(ipxl)) )
-               ENDDO
-
                istt = elm_patch%substt(ielm)
                iend = elm_patch%subend(ielm)
+               area_b(ielm) = sum(patcharea(istt:iend))
                elva_b(ielm) = sum(elv_patches(istt:iend) * elm_patch%subfrc(istt:iend))
 
                elementneighbour(ielm)%myarea = area_b(ielm)
