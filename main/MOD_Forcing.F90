@@ -232,13 +232,13 @@ CONTAINS
       IF ((DEF_USE_Forcing_Downscaling).or.(DEF_USE_Forcing_Downscaling_Simple)) THEN
 
          IF (p_is_io) CALL allocate_block_data (gforc, topo_grid)
-         CALL mg2p_forc%pset2grid (forc_topo, topo_grid, patchmask)
+         CALL mg2p_forc%pset2grid (forc_topo, topo_grid, msk = patchmask)
 
          CALL mg2p_forc%get_sumarea(areagrid, patchmask)
          CALL block_data_division (topo_grid, areagrid)
 
          IF (p_is_io) CALL allocate_block_data (gforc, maxelv_grid)
-         CALL mg2p_forc%pset2grid_max (forc_topo, maxelv_grid, patchmask)
+         CALL mg2p_forc%pset2grid_max (forc_topo, maxelv_grid, msk = patchmask)
 
 
          CALL mg2p_forc%allocate_part (forc_topo_grid  )
