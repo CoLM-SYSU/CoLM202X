@@ -254,6 +254,7 @@ SUBROUTINE Aggregation_ForestHeight ( &
                data_r8_3d_in1 = pftPCT, data_r8_3d_out1 = pct_one, n1_r8_3d_in1 = 16, lb1_r8_3d_in1 = 0)
 
             htop_patches(ipatch) = sum(htop_one * area_one) / sum(area_one)
+            pct_one = max(pct_one , 0.0)
 
 #ifndef CROP
             IF (patchtypes(landpatch%settyp(ipatch)) == 0) THEN
