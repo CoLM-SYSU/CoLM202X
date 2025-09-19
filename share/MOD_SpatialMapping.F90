@@ -230,20 +230,21 @@ CONTAINS
             ie = pixelset%ielm(iset)
             npxl = pixelset%ipxend(iset) - pixelset%ipxstt(iset) + 1
 
-            allocate (afrac(iset)%val (npxl))
-            allocate (gfrom(iset)%ilat(npxl))
-            allocate (gfrom(iset)%ilon(npxl))
-
-            gfrom(iset)%ng = 0
-
             ipxstt = pixelset%ipxstt(iset)
             ipxend = pixelset%ipxend(iset)
 
             ! deal with 2m WMO patch
             IF (ipxstt==-1 .and. ipxend==-1) THEN
                ipxstt = 1
-               ipxend = npxl
+               ipxend = mesh(ie)%npxl
+               npxl   = mesh(ie)%npxl
             ENDIF
+
+            allocate (afrac(iset)%val (npxl))
+            allocate (gfrom(iset)%ilat(npxl))
+            allocate (gfrom(iset)%ilon(npxl))
+
+            gfrom(iset)%ng = 0
 
             DO ipxl = ipxstt, ipxend
 
@@ -554,6 +555,7 @@ CONTAINS
    integer  :: iworker, iproc, iio, idest, isrc, nrecv
    integer  :: rmesg(2), smesg(2)
    integer  :: iy, ix, xblk, yblk, xloc, yloc
+   integer  :: ipxstt, ipxend
 
    real(r8) :: lon, lonw, lone, latn, lats
    real(r8) :: distn, dists, distw, diste, diffw, diffe, areathis
@@ -840,7 +842,17 @@ CONTAINS
             areathis = 0.
 
             ie = pixelset%ielm(iset)
-            DO ipxl = pixelset%ipxstt(iset), pixelset%ipxend(iset)
+
+            ipxstt = pixelset%ipxstt(iset)
+            ipxend = pixelset%ipxend(iset)
+
+            ! deal with 2m WMO patch
+            IF (ipxstt==-1 .and. ipxend==-1) THEN
+               ipxstt = 1
+               ipxend = mesh(ie)%npxl
+            ENDIF
+
+            DO ipxl = ipxstt, ipxend
                areathis = areathis + areaquad (&
                   pixel%lat_s(mesh(ie)%ilat(ipxl)), pixel%lat_n(mesh(ie)%ilat(ipxl)), &
                   pixel%lon_w(mesh(ie)%ilon(ipxl)), pixel%lon_e(mesh(ie)%ilon(ipxl)) )
