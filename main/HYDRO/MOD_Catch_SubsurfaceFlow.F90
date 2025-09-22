@@ -50,7 +50,7 @@ MODULE MOD_Catch_SubsurfaceFlow
 CONTAINS
 
    ! ----------
-   SUBROUTINE subsurface_network_init ()
+   SUBROUTINE subsurface_network_init (patcharea)
 
    USE MOD_SPMD_Task
    USE MOD_Utils
@@ -64,7 +64,9 @@ CONTAINS
    USE MOD_Vars_TimeInvariants,    only: patchtype, lakedepth
    IMPLICIT NONE
 
-   integer :: ielm, inb, i, ihru, ps, pe, ipatch, ipxl
+   real(r8), intent(in) :: patcharea (:)
+
+   integer :: ielm, inb, i, ihru, ps, pe, ipatch
 
    real(r8), allocatable :: agwt_b(:)
    real(r8), allocatable :: islake(:)
@@ -102,18 +104,15 @@ CONTAINS
                DO i = 1, hillslope_element(ielm)%nhru
 
                   hillslope_element(ielm)%agwt(i) = 0
+                  hillslope_element(ielm)%area(i) = 0
 
                   ihru = hillslope_element(ielm)%ihru(i)
                   ps = hru_patch%substt(ihru)
                   pe = hru_patch%subend(ihru)
                   DO ipatch = ps, pe
+                     hillslope_element(ielm)%area(i) = hillslope_element(ielm)%area(i) + patcharea(ipatch)
                      IF (patchtype(ipatch) <= 2) THEN
-                        DO ipxl = landpatch%ipxstt(ipatch), landpatch%ipxend(ipatch)
-                           hillslope_element(ielm)%agwt(i) = hillslope_element(ielm)%agwt(i) &
-                              + 1.0e6 * areaquad ( &
-                              pixel%lat_s(mesh(ielm)%ilat(ipxl)), pixel%lat_n(mesh(ielm)%ilat(ipxl)), &
-                              pixel%lon_w(mesh(ielm)%ilon(ipxl)), pixel%lon_e(mesh(ielm)%ilon(ipxl)) )
-                        ENDDO
+                        hillslope_element(ielm)%agwt(i) = hillslope_element(ielm)%agwt(i) + patcharea(ipatch)
                      ENDIF
                   ENDDO
 
