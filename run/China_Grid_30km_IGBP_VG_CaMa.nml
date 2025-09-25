@@ -3,7 +3,7 @@
 ! Author: Shupeng Zhang 
 ! Description : include soil state init from data.
 
-   DEF_CASE_NAME = 'test-with-cama3'
+   DEF_CASE_NAME = 'cama3'
 
    DEF_domain%edges = 5.0
    DEF_domain%edgen = 55.0
@@ -48,7 +48,7 @@
 
    DEF_USE_PLANTHYDRAULICS = .false.
 
-   DEF_CaMa_Namelist='/share/home/dq013/zhwei/colm/script/CoLM202X/run/CaMa/cama_flood_China_30km_natural.nml'
+   DEF_CaMa_Namelist='/share/home/dq013/zhwei/colm/script/CoLM202X/run/CaMa/cama_flood_China_30km_dam.nml'
    ! ----- forcing -----
    ! Options :
    ! PRINCETON | GSWP3   | QIAN  | CRUNCEPV4 | CRUNCEPV7 | ERA5LAND | ERA5  | MSWX

@@ -267,13 +267,6 @@ CONTAINS
             CALL acc1d_cama (finfg_fld, a_finfg_fld)
             call acc1d_cama (reservoirriver_demand, a_dirrig_cama)
          ENDIF
-
-         ! DO i = 1, numpatch
-         !    IF (a_rnof_cama(i) .GT. 1.E3) THEN
-         !       WRITE(LOGNAM,*) "LHB debug line270: ipatch, rnof, a_rnof_cama ---> ", i, rnof(i), a_rnof_cama(i)
-         !    ENDIF
-         ! ENDDO
-
       ENDIF
 
    END SUBROUTINE accumulate_cama_fluxes
@@ -740,12 +733,6 @@ CONTAINS
                         ELSE
                            IOVar%blk(xblk,yblk)%val(xloc,yloc) = spval
                         ENDIF
-
-                        ! IF (IOVar%blk(xblk,yblk)%val(xloc,yloc) .GT. 1E3) THEN
-                        !    WRITE(*,*) "LHB debug line745: ix, iy, data ---> ", sumwt%blk(xblk,yblk)%val(xloc,yloc)
-                        !    WRITE(*,*) "LHB debug line746: ix, iy, data ---> ", IOVar%blk(xblk,yblk)%val(xloc,yloc)
-                        ! ENDIF
-
                      ENDDO
                   ENDDO
 
@@ -771,16 +758,6 @@ CONTAINS
                isrc, 10011, p_comm_glb, p_stat, p_err)
             MasterVar (xdsp+1:xdsp+xcnt,ydsp+1:ydsp+ycnt) = rbuf
 
-            ! DO xloc = 1, xcnt
-            !    DO yloc = 1, ycnt
-            !       IF (rbuf(xloc,yloc) .GT. 1E3) THEN
-            !          WRITE(LOGNAM,*) "LHB debug line770: rmesg ---> ", isrc, ixseg, iyseg, xdsp, ydsp, xloc, yloc
-            !          WRITE(LOGNAM,*) "LHB debug line770: data ---> ", rbuf(xloc,yloc), MasterVar (xdsp+1:xdsp+xcnt,ydsp+1:ydsp+ycnt)
-            !       ENDIF
-            !    ENDDO
-            ! ENDDO
-
-
             deallocate (rbuf)
          ENDDO
 
@@ -799,15 +776,6 @@ CONTAINS
 
                   allocate (sbuf (xcnt,ycnt))
                   sbuf = IOVar%blk(iblk,jblk)%val(xdsp+1:xdsp+xcnt,ydsp+1:ydsp+ycnt)
-
-                  ! IF (p_iam_glb == 103) THEN
-                  !    DO xloc = 1, xcnt
-                  !       DO yloc = 1, ycnt
-                  !          WRITE(*,*) "LHB debug line808: rmesg ---> ", p_iam_glb, ixseg, iyseg, xdsp, ydsp, xloc, yloc
-                  !          WRITE(*,*) "LHB debug line808: data ---> ", sbuf(xloc,yloc), IOVar%blk(iblk,jblk)%val(xdsp+xloc,ydsp+yloc)
-                  !       ENDDO
-                  !    ENDDO
-                  ! ENDIF 
 
                   smesg = (/p_iam_glb, ixseg, iyseg/)
                   CALL mpi_send (smesg, 3, MPI_INTEGER, &

@@ -370,9 +370,6 @@ CONTAINS
                         dirrig_cama(i,j) = dirrig_2d(i,j)/1000.0 ! kg -> m3
                      ENDIF
 
-                     ! IF (ZBUFF(i,j,1) .GT. 1.E3) THEN
-                     !    WRITE(LOGNAM,*) "LHB debug line367: i, j, runoff ---> ", i, j, ZBUFF(i,j,1), runoff_2d(i,j)
-                     ! ENDIF
 
                   ENDDO
                ENDDO
