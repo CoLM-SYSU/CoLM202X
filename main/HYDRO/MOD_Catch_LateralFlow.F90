@@ -38,10 +38,8 @@ MODULE MOD_Catch_LateralFlow
    integer, parameter :: nsubstep = 20
    real(r8) :: dt_average
 
-#ifdef CoLMDEBUG
    real(r8) :: landarea
    real(r8), allocatable :: patcharea (:)  ! m^2
-#endif
 
 CONTAINS
 
@@ -60,29 +58,22 @@ CONTAINS
 
    integer, intent(in) :: lc_year    ! which year of land cover data used
 
-#ifdef CoLMDEBUG
-   integer :: ip ,ie, ipxl
-#endif
+   integer :: ip, ie, ipxl
 
-      CALL element_neighbour_init  (lc_year)
-      CALL river_lake_network_init ()
-      CALL subsurface_network_init ()
-      CALL reservoir_init          ()
-
-      CALL write_catch_parameters  ()
-
-#ifdef CoLMDEBUG
       IF (p_is_worker) THEN
-         allocate (patcharea (numpatch))
-         DO ip = 1, numpatch
-            patcharea(ip) = 0.
-            ie = landpatch%ielm(ip)
-            DO ipxl = landpatch%ipxstt(ip), landpatch%ipxend(ip)
-               patcharea(ip) = patcharea(ip) + 1.0e6 * areaquad ( &
-                  pixel%lat_s(mesh(ie)%ilat(ipxl)), pixel%lat_n(mesh(ie)%ilat(ipxl)), &
-                  pixel%lon_w(mesh(ie)%ilon(ipxl)), pixel%lon_e(mesh(ie)%ilon(ipxl)) )
+
+         IF (numpatch > 0) THEN
+            allocate (patcharea (numpatch))
+            patcharea(:) = 0.
+            DO ip = 1, numpatch
+               ie = landpatch%ielm(ip)
+               DO ipxl = landpatch%ipxstt(ip), landpatch%ipxend(ip)
+                  patcharea(ip) = patcharea(ip) + 1.0e6 * areaquad ( &
+                     pixel%lat_s(mesh(ie)%ilat(ipxl)), pixel%lat_n(mesh(ie)%ilat(ipxl)), &
+                     pixel%lon_w(mesh(ie)%ilon(ipxl)), pixel%lon_e(mesh(ie)%ilon(ipxl)) )
+               ENDDO
             ENDDO
-         ENDDO
+         ENDIF
 
          landarea = 0.
          IF (numpatch > 0) landarea = sum(patcharea)
@@ -90,7 +81,14 @@ CONTAINS
          CALL mpi_allreduce (MPI_IN_PLACE, landarea, 1, MPI_REAL8, MPI_SUM, p_comm_worker, p_err)
 #endif
       ENDIF
-#endif
+
+      CALL element_neighbour_init  (patcharea, lc_year)
+      CALL river_lake_network_init (patcharea)
+      CALL subsurface_network_init (patcharea)
+      CALL reservoir_init          ()
+
+      CALL write_catch_parameters  ()
+
 
    END SUBROUTINE lateral_flow_init
 
@@ -125,7 +123,9 @@ CONTAINS
    real(r8) :: rnofsrf, sumarea
    real(r8), allocatable :: wdsrf_p (:), wdsrf_hru_p (:)
 #ifdef CoLMDEBUG
-   real(r8) :: dtolw, toldis
+   real(r8) :: dtolw, tolwat, toldis, maxdvol, maxdvol_g, sumdvol
+   integer  :: hs, he, imax, bidmax
+   real(r8), allocatable :: wdsrf_bsnhru_p(:), delvol(:)
 #endif
 
       IF (p_is_worker) THEN
@@ -167,6 +167,13 @@ CONTAINS
          ENDIF
 
          CALL worker_push_subset_data (iam_elm, iam_bsn, elm_hru, basin_hru, wdsrf_hru, wdsrf_bsnhru)
+
+#ifdef CoLMDEBUG
+         IF (numbsnhru > 0) THEN
+            allocate (wdsrf_bsnhru_p (numbsnhru))
+            wdsrf_bsnhru_p = wdsrf_bsnhru
+         ENDIF
+#endif
 
          DO istep = 1, nsubstep
 
@@ -293,6 +300,86 @@ CONTAINS
             ENDIF
          ENDDO
 
+#ifdef CoLMDEBUG
+         IF (numbasin > 0)  THEN
+
+            allocate (delvol (numbasin))
+
+            delvol(:) = 0
+            DO i = numbasin, 1, -1
+               hs = basin_hru%substt(i)
+               he = basin_hru%subend(i)
+
+               IF (lake_id(i) <= 0) THEN
+                  delvol(i) = delvol(i) &
+                     + sum((wdsrf_bsnhru_p(hs:he) - wdsrf_bsnhru(hs:he))* hillslope_basin(i)%area)
+               ELSE
+                  delvol(i) = delvol(i) &
+                     + sum((wdsrf_bsnhru_p(hs:he) - wdsrf_bsnhru(hs:he))* lakeinfo(i)%area0)
+               ENDIF
+
+               IF ((riverdown(i) == 0) .or. (riverdown(i) == -3)) THEN
+                  delvol(i) = delvol(i) - discharge_ta(i) * deltime
+               ENDIF
+
+               IF (riversystem == -1) THEN
+                  j0 = i; j = ilocdown(i)
+                  DO WHILE (j > 0)
+
+                     delvol(j)  = delvol(j) + delvol(j0)
+                     delvol(j0) = 0
+
+                     IF ((j > i) .and. (ilocdown(j) > 0)) THEN
+                        j0 = j; j = ilocdown(j)
+                     ELSE
+                        EXIT
+                     ENDIF
+                  ENDDO
+               ENDIF
+            ENDDO
+
+            sumdvol = sum(delvol)
+
+            IF (riversystem /= -1) THEN
+               maxdvol = sum(delvol)
+#ifdef USEMPI
+               CALL mpi_allreduce (MPI_IN_PLACE, maxdvol, 1, MPI_REAL8, MPI_SUM, p_comm_rivsys, p_err)
+               maxdvol = abs(maxdvol)
+               imax = findloc_ud(riverdown <= 0)
+               IF (imax > 0) THEN
+                  bidmax = basinindex(imax)
+               ELSE
+                  bidmax = 0
+               ENDIF
+               CALL mpi_allreduce (MPI_IN_PLACE, bidmax, 1, MPI_INTEGER, MPI_MAX, p_comm_rivsys, p_err)
+#endif
+            ELSE
+               imax    = maxloc(abs(delvol),dim=1)
+               maxdvol = abs(delvol(imax))
+               bidmax  = basinindex(imax)
+            ENDIF
+
+         ELSE
+            maxdvol = 0.
+            bidmax  = 0
+            sumdvol = 0.
+         ENDIF
+
+#ifdef USEMPI
+         CALL mpi_allreduce (maxdvol, maxdvol_g, 1, MPI_REAL8, MPI_MAX, p_comm_worker, p_err)
+         IF (maxdvol < maxdvol_g) THEN
+            bidmax = 0
+         ENDIF
+         CALL mpi_allreduce (MPI_IN_PLACE, bidmax,  1, MPI_INTEGER, MPI_MAX, p_comm_worker, p_err)
+         CALL mpi_allreduce (MPI_IN_PLACE, sumdvol, 1, MPI_REAL8,   MPI_SUM, p_comm_worker, p_err)
+#else
+         maxdvol_g = maxdvol
+#endif
+
+         IF (allocated(wdsrf_bsnhru_p)) deallocate(wdsrf_bsnhru_p)
+         IF (allocated(delvol        )) deallocate(delvol        )
+#endif
+
          ! (3) ------------------- Subsurface lateral flow -------------------
          CALL subsurface_flow (deltime)
 
@@ -326,9 +413,6 @@ CONTAINS
             ENDDO
          ENDIF
 
-         IF (allocated(wdsrf_p    )) deallocate(wdsrf_p    )
-         IF (allocated(wdsrf_hru_p)) deallocate(wdsrf_hru_p)
-
       ENDIF
 
 #ifdef RangeCheck
@@ -353,7 +437,8 @@ CONTAINS
          toldis = 0
 
          IF (numpatch > 0) THEN
-            dtolw = sum(patcharea * xwsur) / 1.e3 * deltime
+            dtolw  = sum(patcharea * xwsur  ) / 1.e3 * deltime
+            tolwat = sum(patcharea * wdsrf_p) / 1.e3
          ENDIF
          IF (numbasin > 0) THEN
             toldis = sum(discharge_ta*deltime, mask = (riverdown == 0) .or. (riverdown == -3))
@@ -362,11 +447,14 @@ CONTAINS
 
 #ifdef USEMPI
          CALL mpi_allreduce (MPI_IN_PLACE, dtolw,  1, MPI_REAL8, MPI_SUM, p_comm_worker, p_err)
+         CALL mpi_allreduce (MPI_IN_PLACE, tolwat, 1, MPI_REAL8, MPI_SUM, p_comm_worker, p_err)
          CALL mpi_allreduce (MPI_IN_PLACE, toldis, 1, MPI_REAL8, MPI_SUM, p_comm_worker, p_err)
 #endif
          IF (p_iam_worker == 0) THEN
+            write(*,'(A,E9.2,A,I0,A,E9.2,A)') 'River system error: max ', maxdvol_g, &
+               ' m^3 in river mouth ', bidmax, ', total ', sumdvol, ' m^3'
             write(*,'(A,F12.2,A,ES8.1,A,ES10.3,A)') 'Total surface water error: ', dtolw, &
-               '(m^3) in area ', landarea, '(m^2), discharge ', toldis, '(m^3)'
+               ' m^3 of total ', tolwat, ' m^3, discharge ', toldis, ' m^3'
          ENDIF
 
          dtolw = 0
@@ -376,11 +464,14 @@ CONTAINS
 #endif
          IF (p_iam_worker == 0) THEN
             write(*,'(A,F12.2,A,ES8.1,A)') 'Total ground  water error: ', dtolw, &
-               '(m^3) in area ', landarea, '(m^2)'
+               ' m^3 in area  ', landarea, ' m^2'
          ENDIF
       ENDIF
 #endif
 #endif
+
+      IF (allocated(wdsrf_p    )) deallocate(wdsrf_p    )
+      IF (allocated(wdsrf_hru_p)) deallocate(wdsrf_hru_p)
 
    END SUBROUTINE lateral_flow
 
@@ -394,9 +485,7 @@ CONTAINS
       CALL basin_network_final      ()
       CALL reservoir_final          ()
 
-#ifdef CoLMDEBUG
       IF (allocated(patcharea)) deallocate(patcharea)
-#endif
 
    END SUBROUTINE lateral_flow_final
 
