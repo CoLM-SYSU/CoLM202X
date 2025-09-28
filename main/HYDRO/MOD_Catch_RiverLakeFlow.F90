@@ -189,7 +189,8 @@ CONTAINS
                      bedelv_fc = max(bedelv(i), bedelv_ds(i))
                      IF ((lake_type(i) == 2) .or. (lake_type(i) == 3)) THEN
                         ! for reservoir (type=2) or controlled lake (type=3)
-                        IF (year >= dam_build_year(bsn2resv(i))) THEN
+                        IF ((DEF_Reservoir_Method > 0) &
+                           .and. (year >= dam_build_year(bsn2resv(i)))) THEN
                            bedelv_fc = max(bedelv_fc, dam_elv(bsn2resv(i)))
                         ENDIF
                      ENDIF
