@@ -4,7 +4,7 @@ LFPLAIN  = .TRUE.                      ! true: consider floodplain (false: only 
 LKINE    = .FALSE.                     ! true: use kinematic wave
 LFLDOUT  = .TRUE.                      ! true: floodplain flow (high-water channel flow) active
 LPTHOUT  = .TRUE.                      ! true: activate bifurcation scheme
-LDAMOUT  = .FALSE.                     ! true: activate dam operation 
+LDAMOUT  = .TRUE.                     ! true: activate dam operation 
 LLEVEE   = .FALSE.                     ! true: activate levee scheme  (under development)
 
 
@@ -35,7 +35,7 @@ LMAPEND  = .FALSE.                              ! true: for map data endian conv
 LSTG_ES  = .FALSE.                              ! true: for Vector Processor optimization (CMF_OPT_FLDSTG_ES) 
 /
 &NDIMTIME
-CDIMINFO = "/share/home/dq013/zhwei/colm/script/CoLM202X_20250724/extends/CaMa/map/China_15min_natural/diminfo_15min_China.txt"                       ! text file for dimention information
+CDIMINFO = "/share/home/dq013/zhwei/colm/data/cama_map/China_15min_dam/diminfo_15min_China.txt"                       ! text file for dimention information
 DT       = 21600                                                                            ! time step length (sec)
 IFRQ_INP = 6                                                                               ! input forcing update frequency (hour)
 /
@@ -66,16 +66,17 @@ EHOUR   = 00                        	!  hour       : will not gonna used in here
 /
 &NMAP
 LMAPCDF    = .FALSE.                ! * true for netCDF map input
-CNEXTXY    = "/share/home/dq013/zhwei/colm/script/CoLM202X_20250724/extends/CaMa/map/China_15min_natural/nextxy.bin"              ! river network nextxy
-CGRAREA    = "/share/home/dq013/zhwei/colm/script/CoLM202X_20250724/extends/CaMa/map/China_15min_natural/ctmare.bin"              ! catchment area
-CELEVTN    = "/share/home/dq013/zhwei/colm/script/CoLM202X_20250724/extends/CaMa/map/China_15min_natural/elevtn.bin"              ! bank top elevation
-CNXTDST    = "/share/home/dq013/zhwei/colm/script/CoLM202X_20250724/extends/CaMa/map/China_15min_natural/nxtdst.bin"              ! distance to next outlet
-CRIVLEN    = "/share/home/dq013/zhwei/colm/script/CoLM202X_20250724/extends/CaMa/map/China_15min_natural/rivlen.bin"              ! river channel length
-CFLDHGT    = "/share/home/dq013/zhwei/colm/script/CoLM202X_20250724/extends/CaMa/map/China_15min_natural/fldhgt.bin"              ! floodplain elevation profile
-CRIVWTH    = "/share/home/dq013/zhwei/colm/script/CoLM202X_20250724/extends/CaMa/map/China_15min_natural/rivwth_gwdlr.bin"        ! channel width
-CRIVHGT    = "/share/home/dq013/zhwei/colm/script/CoLM202X_20250724/extends/CaMa/map/China_15min_natural/rivhgt.bin"              ! channel depth
-CRIVMAN    = "/share/home/dq013/zhwei/colm/script/CoLM202X_20250724/extends/CaMa/map/China_15min_natural/rivman.bin"              ! river manning coefficient
-CPTHOUT    = "/share/home/dq013/zhwei/colm/script/CoLM202X_20250724/extends/CaMa/map/China_15min_natural/bifprm.txt"              ! bifurcation channel table
+CNEXTXY    = "/share/home/dq013/zhwei/colm/data/cama_map/China_15min_dam/nextxy.bin"              ! river network nextxy
+CGRAREA    = "/share/home/dq013/zhwei/colm/data/cama_map/China_15min_dam/ctmare.bin"              ! catchment area
+CELEVTN    = "/share/home/dq013/zhwei/colm/data/cama_map/China_15min_dam/elevtn.bin"              ! bank top elevation
+CNXTDST    = "/share/home/dq013/zhwei/colm/data/cama_map/China_15min_dam/nxtdst.bin"              ! distance to next outlet
+CRIVLEN    = "/share/home/dq013/zhwei/colm/data/cama_map/China_15min_dam/rivlen.bin"              ! river channel length
+CFLDHGT    = "/share/home/dq013/zhwei/colm/data/cama_map/China_15min_dam/fldhgt.bin"              ! floodplain elevation profile
+CRIVWTH    = "/share/home/dq013/zhwei/colm/data/cama_map/China_15min_dam/rivwth_gwdlr.bin"        ! channel width
+CRIVHGT    = "/share/home/dq013/zhwei/colm/data/cama_map/China_15min_dam/rivhgt.bin"              ! channel depth
+CRIVMAN    = "/share/home/dq013/zhwei/colm/data/cama_map/China_15min_dam/rivman.bin"              ! river manning coefficient
+CPTHOUT    = "/share/home/dq013/zhwei/colm/data/cama_map/China_15min_dam/bifprm.txt"              ! bifurcation channel table
+CGRDARE    = "/share/home/dq013/zhwei/colm/data/cama_map/China_15min_dam/grdare.bin"
 CGDWDLY    = ""              							    ! Groundwater Delay Parameter
 CMEANSL    = ""              							    ! mean sea level
 CRIVCLINC  = ""            							        ! * river map netcdf
@@ -94,7 +95,7 @@ IFRQ_RST = 0                 ! restart write frequency (1-24: hour, 0:end of run
 LINTERP   = .TRUE.                  ! true for runoff interpolation using input matrix
 LINPEND   = .TRUE.                  ! true for runoff endian conversion
 LITRPCDF  = .FALSE.                  ! * true for netCDF input matrix
-CINPMAT   = "/share/home/dq013/zhwei/colm/script/CoLM202X_20250724/extends/CaMa/map/China_15min_natural/inpmat_15min_China.bin"                ! input matrix file name
+CINPMAT   = "/share/home/dq013/zhwei/colm/data/cama_map/China_15min_dam/inpmat_15min_China.bin"                ! input matrix file name
 DROFUNIT  = 1.0                 ! runoff unit conversion
 /
 &NOUTPUT
@@ -108,5 +109,11 @@ NDLEVEL  = 1                           ! * NETCDF DEFLATION LEVEL
 IFRQ_OUT = 1                 ! output data write frequency (hour)
 /
 
-
+&NDAMOUT
+CDAMFILE = "/share/home/dq013/zhwei/colm/data/cama_map/China_15min_dam/dam_param.csv"               ! Reservoir Parameter File
+LDAMTXT  = .TRUE.                      ! True for text-based reservoir data output
+LDAMH22  = .FALSE.                     ! True to use Hanazaki 2022 dam scheme. (False for Yamazaki&Funato scheme)
+LDAMYBY  = .FALSE.                     ! .TRUE. to use Year-By-Year dam activation scheme. .False. for All-reservoirs-in scheme
+LiVnorm  = .FALSE.                     ! .TRUE. to use Noemal Volume as initial reservoir storage. False for zero-additional storage.
+/
  

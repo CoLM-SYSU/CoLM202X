@@ -50,6 +50,10 @@
 
 ! 6. If defined, CaMa-Flood model will be used.
 #define CaMa_Flood
+#if (defined SinglePoint)
+#undef CaMa_Flood
+#endif
+
 
 ! 7. If defined, BGC model is used.
 #define BGC
